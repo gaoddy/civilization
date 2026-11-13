@@ -1,0 +1,37 @@
+---
+id: gongjianshou
+card_type: 随从
+name: 弓箭手
+tribe: 人类
+subtype: 兵种
+level: 1
+era: 史前
+attack: 2
+health: 2
+keywords: [战吼]
+is_scholar: false
+source: 素材
+---
+
+# 弓箭手
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | gongjianshou |
+| 名称 | 弓箭手 |
+| 类型 | 随从 |
+| 流派 | 人类 |
+| 子类 | 兵种 |
+| 星级 | 1 |
+| 时代 | 史前 |
+| 攻击力 | 2 |
+| 生命值 | 2 |
+| 关键词 | 战吼 |
+| 学者 | 否 |
+| 来源 | 素材 |
+
+## 效果
+
+战吼：对一个敌方随从造成 1 点伤害
