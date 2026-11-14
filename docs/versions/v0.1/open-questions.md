@@ -24,8 +24,6 @@
 | 服务端部署编排与多实例切分维度 | 部署 | M2 联机内测前确定 | [服务端技术基线](technical/architecture/server-stack.md) |
 | 客户端工程目录与构建导出流程未定 | 实现 | 搭建客户端工程前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
 | 客户端测试框架未定 | 实现 | 搭建客户端工程前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
-| 移动端纳入首版后的人周估算 | 排期 | 当前 22–31 人周未含移动端适配与两端验收，需在 M1 结束后重估 | [版本规划与风险](../../version-roadmap.md) |
-| 全量 220 张卡牌纳入 M0 后是否需要重估 22–31 人周 | 排期 | M0 前重估；当前估算未含卡牌数据产出 | [版本规划与风险](../../version-roadmap.md) |
 
 ## 文档结构
 
