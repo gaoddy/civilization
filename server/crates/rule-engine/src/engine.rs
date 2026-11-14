@@ -237,9 +237,15 @@ impl Engine {
             return;
         };
         for minion in &mut player.board {
-            let amount = self
+            let layers = self
                 .static_breed(&minion.card_id)
                 .saturating_add(minion.breed);
+            // 金色随从的关键词触发两次；繁衍等价于 N×2。
+            let amount = if minion.golden {
+                layers.saturating_mul(2)
+            } else {
+                layers
+            };
             minion.growth_health_only = minion.growth_health_only.saturating_add(amount);
             // `breed_applied` 记录本实例累计已通过繁衍获得的生命。
             minion.breed_applied = minion.breed_applied.saturating_add(amount);

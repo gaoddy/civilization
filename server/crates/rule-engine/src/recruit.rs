@@ -221,17 +221,30 @@ pub(crate) fn reroll(
     roll_player(engine, state, seat, false);
 
     let mut events = vec![GameEvent::ShopRolled { seat }];
+    events.extend(maybe_fire_first_refresh(engine, state, seat));
+    Ok(Outcome::with(events))
+}
+
+/// 若本回合尚未触发首次刷新，则触发一次并清除标记；否则返回空事件。
+///
+/// 手动 `RerollShop` 与效果驱动的 `RefreshShop` 共用这一闸门；升时代重抽与
+/// 回合开始自动刷新不调用本函数。
+pub(crate) fn maybe_fire_first_refresh(
+    engine: &mut Engine,
+    state: &mut GameState,
+    seat: Seat,
+) -> Vec<GameEvent> {
     let pending = state
         .players
         .get(usize::from(seat))
         .is_some_and(|player| player.first_refresh_pending);
-    if pending {
-        if let Some(player) = state.players.get_mut(usize::from(seat)) {
-            player.first_refresh_pending = false;
-        }
-        events.extend(fire_first_refresh(engine, state, seat));
+    if !pending {
+        return Vec::new();
     }
-    Ok(Outcome::with(events))
+    if let Some(player) = state.players.get_mut(usize::from(seat)) {
+        player.first_refresh_pending = false;
+    }
+    fire_first_refresh(engine, state, seat)
 }
 
 /// 触发本座位本回合的首次刷新效果：先英雄被动，再棋盘随从按站位从左到右。

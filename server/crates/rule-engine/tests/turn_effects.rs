@@ -218,6 +218,23 @@ fn breed_adds_health_each_turn() {
 }
 
 #[test]
+fn golden_breed_doubles_health() {
+    let (mut engine, mut state) = setup(1);
+    place(&mut state, 0, 1, "breed2");
+    state.players[0].board[0].golden = true;
+
+    engine.start_turn(&mut state).expect("开始回合应成功");
+
+    let minion = board_minion(&state, 0, 0);
+    assert_eq!(
+        minion.growth_health_only, 4,
+        "金色繁衍 2 触发两次，等价于 +4 生命"
+    );
+    assert_eq!(minion.breed_applied, 4, "记录实际应用的繁衍量");
+    assert_eq!(minion.growth, 0);
+}
+
+#[test]
 fn breed_includes_dynamic_layers() {
     let (mut engine, mut state) = setup(1);
     place(&mut state, 0, 1, "breed1");
@@ -451,6 +468,34 @@ fn refresh_shop_free_sets_cost_zero() {
 }
 
 #[test]
+fn effect_refresh_fires_first_refresh_once() {
+    let (mut engine, mut state) = setup(1);
+    state.players[0].hero = Some("galileo".to_string());
+    state.players[0].gold = 5;
+    state.players[0].first_refresh_pending = true;
+
+    let events = engine.apply_op(
+        &mut state,
+        &effect("OnActivate|RefreshShop|self|free=true"),
+        &ctx(0),
+        None,
+    );
+
+    assert!(events.contains(&GameEvent::ShopRolled { seat: 0 }));
+    assert_eq!(state.players[0].shop.len(), 7, "效果刷新也触发观测");
+    assert!(!state.players[0].first_refresh_pending);
+
+    let events = engine.apply_op(
+        &mut state,
+        &effect("OnActivate|RefreshShop|self|free=true"),
+        &ctx(0),
+        None,
+    );
+    assert!(events.contains(&GameEvent::ShopRolled { seat: 0 }));
+    assert_eq!(state.players[0].shop.len(), 6, "首次刷新每回合只触发一次");
+}
+
+#[test]
 fn refresh_shop_paid_costs_one_gold() {
     let (mut engine, mut state) = setup(1);
     state.players[0].gold = 5;
@@ -594,6 +639,39 @@ fn gain_minion_from_shop_moves_to_hand() {
         "共享池只扣一次"
     );
     assert_eq!(player.shop, shop_before, "from=shop 不移除商店槽位");
+}
+
+#[test]
+fn gain_minion_runs_triple_check() {
+    let (mut engine, mut state) = setup(2);
+    state.players[0].era = Era::Primitive;
+    let expected = first_eligible(&engine, &state, 2).expect("原始时代应有可选随从");
+    state.players[0].hand = (0..2)
+        .map(|_| HandCard {
+            card_id: expected.clone(),
+            golden: false,
+        })
+        .collect();
+
+    let events = engine.apply_op(
+        &mut state,
+        &effect("OnActivate|GainMinion|self|from=shop,level=current,to=hand"),
+        &ctx(0),
+        None,
+    );
+
+    assert!(
+        events.iter().any(|event| matches!(
+            event,
+            GameEvent::TripleFormed { seat: 0, card_id } if card_id == &expected
+        )),
+        "获得第三张同名随从应触发三连"
+    );
+    let golden = state.players[0]
+        .board
+        .iter()
+        .find(|minion| minion.card_id == expected && minion.golden);
+    assert!(golden.is_some(), "三连应合成金色随从");
 }
 
 #[test]

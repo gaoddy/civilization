@@ -18,17 +18,24 @@ const MAX_SHOP_SLOTS: usize = 7;
 impl Engine {
     /// `RefreshShop{free}`：立即重抽当前座位商店。
     ///
-    /// `free = true` 不扣金币、不消耗本回合免费刷新额度，也不触发
-    /// `OnFirstRefresh`；否则走普通刷新路径（金币与首次刷新触发一致）。
+    /// `free = true` 不扣金币、不消耗本回合免费刷新额度；无论免费与否，
+    /// 都通过与手动刷新相同的每回合闸门触发 `OnFirstRefresh`。
     pub(crate) fn apply_refresh_shop(
         &mut self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
     ) -> Vec<GameEvent> {
+        if state.players.get(usize::from(ctx.seat)).is_none() {
+            return Vec::new();
+        }
         if effect.params.free.unwrap_or(false) {
             crate::recruit::roll_player(self, state, ctx.seat, false);
-            vec![GameEvent::ShopRolled { seat: ctx.seat }]
+            let mut events = vec![GameEvent::ShopRolled { seat: ctx.seat }];
+            events.extend(crate::recruit::maybe_fire_first_refresh(
+                self, state, ctx.seat,
+            ));
+            events
         } else {
             match crate::recruit::reroll(self, state, ctx.seat) {
                 Ok(outcome) => outcome.events,
@@ -68,7 +75,7 @@ impl Engine {
             let Some(card_id) =
                 first_eligible(&self.catalog, &state.pool, &state.enabled_tribes, star)
             else {
-                continue;
+                break;
             };
             if let Some(pool) = state.pool.get_mut(&card_id) {
                 *pool = pool.saturating_sub(1);
@@ -124,7 +131,8 @@ impl Engine {
                 golden: false,
             });
         }
-        Vec::new()
+        // 获得随从后与购买/打出/发现一致，立即执行三连判定。
+        self.check_triple(state, ctx.seat)
     }
 }
 
