@@ -47,6 +47,4 @@
 
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
-| 设计总纲 §7 写「关键词 10」，关键词文档与卡牌数据为 13 个 | 版本基线一致性 | 需确认以哪处为准；本次重构未改写结论 | [设计总纲](product/overview/design-overview.md) §7、[关键词与机制](product/rules/keywords-and-mechanics.md) |
-| 实体文档 `id` 与文件名使用下划线（如 `alan_turing.md`），与文档命名的小写 kebab-case 规则冲突 | 文档命名与数据契约 | 改为 kebab 需同步 `id` 规则 `^[a-z][a-z0-9_]*$`、全部实体与校验器，需单独决定 | [卡牌规范与数据](product/content/card-system.md) §1 |
-| 仓库缺少根 `AGENTS.md` 的协作原则与 runbook 位置声明 | 仓库治理 | 是否按项目接入流程补建 | 仓库根目录 |
+| 仓库缺少根 `AGENTS.md` 的协作原则、runbook 位置声明与项目事实 | 仓库治理 | 按项目接入流程补建；用户规模等产品数据需先确认，不能留空占位 | 仓库根目录 |

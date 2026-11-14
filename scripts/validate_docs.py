@@ -14,7 +14,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v0.1" / "product" / "content"
 
-ID_RE = re.compile(r"[a-z][a-z0-9_]*")
+ID_RE = re.compile(r"[a-z][a-z0-9-]*")
 KEYWORD_RE = re.compile(
     r"^(无|战吼|亡语|复生|嘲讽|护盾|连击|传染|最优攻击|繁衍 \d+|装配 \d+|播种|进化)$"
 )
