@@ -13,7 +13,7 @@
 1. 新玩家第一局能在 3 分钟内完成一次购买与出战；
 2. 老玩家能连续打 20 局而不觉得每局都一样；
 3. 8 人完整对局在 20–30 分钟内结束；
-4. 天梯前 100 局不出现单一流派胜率超过 60%。
+4. 前 100 局不出现单一流派胜率超过 60%。
 
 ## 能力清单
 
@@ -27,7 +27,10 @@
 | 英雄卡 | 13 张，技能写在卡的 `skills` 中 |
 | 技能 | 118 个，全部经卡牌 `skills` 引用 |
 | 关键词 | 13 个：通用 10 个 + 机械、植物、生物专属 3 个 |
-| 模式 | 会战（默认）、比赛 |
+| 模式 | 会战（默认）、比赛；均为房间制、不计分 |
+| 成局 | 创建房间、6 位房间码、好友邀请；首版不做自动匹配 |
+| 账号 | 仅手机号验证码登录；好友与房间跨端同步 |
+| 好友 | 最近对局与玩家 ID 添加、申请、列表、邀请加入房间 |
 | 成就 | 6 个 |
 | 客户端 | 桌面端 + 移动端，共用同一套规则引擎与协议 |
 | 新手引导 | 不做教学局，只做界面提示与高亮 |
@@ -43,7 +46,7 @@
 4. [卡牌规范与数据](product/content/card-system.md)（含「英雄卡」小节）与[卡牌索引](product/content/cards/README.md)
 5. [技能规范与数据](product/content/skill-system.md) 与[技能索引](product/content/skills/README.md)
 6. [平衡测算](product/content/balance-analysis.md)（从卡表回算的校验输出）
-7. [模式与成就](product/systems/modes-and-achievements.md)
+7. [模式与成就](product/systems/modes-and-achievements.md)、[房间与邀请](product/systems/rooms-and-invites.md) 与[好友](product/systems/friends.md)
 8. [联网与技术架构](technical/architecture/network-architecture.md)
 
 ## 文档导航
