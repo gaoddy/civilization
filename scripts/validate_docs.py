@@ -36,6 +36,23 @@ SOURCES = {"素材", "新增"}
 CARD_TYPES = {"随从", "效果"}
 SKILL_TRIGGERS = {"主动使用", "首次刷新时", "战斗开始时"}
 ACHIEVEMENT_EVENTS = {"时代升级", "关键词组合", "成长触发", "卡牌使用", "三连合成"}
+EFFECT_TRIGGERS = {
+    "OnPlay", "OnPlayEffect", "OnUse", "OnActivate", "OnTurnStart",
+    "OnFirstRefresh", "OnCombatStart", "OnDealDamage", "OnDeath",
+    "OnFriendlyDeath", "OnEnemyDeath", "OnAllySummon", "OnAllyGrowth",
+    "OnAllyEvolve", "OnCombatEnd", "Aura", "ConditionalAura",
+}
+EFFECT_OPS = {
+    "Growth", "ModifyStats", "GrantKeyword", "RemoveGrowth", "CannotAttack",
+    "DealDamage", "Summon", "Copy", "Discover", "RefreshShop", "AddShopSlot",
+    "GainMinion",
+}
+SELECTOR_SIDES = {"friendly", "enemy", "both", "self", "target"}
+DURATIONS = {"permanent", "combat"}
+EVENT_TRIGGERS = {
+    "OnEnemyDeath", "OnFriendlyDeath", "OnAllySummon", "OnAllyGrowth",
+    "OnAllyEvolve", "OnDealDamage", "OnCombatEnd", "OnUse",
+}
 ACHIEVEMENT_FIELDS = ["id", "name", "event", "condition", "count", "reward", "affects_power"]
 RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16),
@@ -45,7 +62,7 @@ KW_UNLOCK = {"繁衍": 1, "嘲讽": 2, "连击": 3, "最优攻击": 3, "传染":
 EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 14, "封建": 27, "工业": 14, "现代": 36, "未来": 32}
 EXPECT_TRIBE = {"学者": 36, "生物": 30, "人类": 36, "机械": 33, "植物": 21, "病毒": 20}
 EXPECT_LEVEL = {1: 22, 2: 37, 3: 37, 4: 28, 5: 25, 6: 15, 7: 12}
-SKILL_FIELDS = ["id", "text"]
+SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
                  "attack", "health", "is_scholar", "source"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "tribe", "cost", "match_text"]
@@ -84,6 +101,102 @@ def parse_front_matter(path):
         else:
             data[key.strip()] = raw
     return data
+
+
+def check_selector(selector, chunk):
+    """选择器写作 self / target / <阵营>:<选取>[:<筛选>...]。"""
+    if selector in ("self", "target"):
+        return []
+    segments = selector.split(":")
+    if segments[0] not in SELECTOR_SIDES:
+        return [f"选择器阵营非法 {selector!r}（{chunk}）"]
+    if len(segments) < 2 or not segments[1]:
+        return [f"选择器缺少选取 {selector!r}（{chunk}）"]
+    return []
+
+
+def parse_effects(value):
+    """解析单个技能的 effects 字段，返回 (effects, errors)。"""
+    if isinstance(value, list):
+        if not value:
+            return [], []
+        return [], [f"effects 不能写成非空列表 {value!r}"]
+    raw = str(value).strip()
+    if raw == "[]":
+        return [], []
+    effects, errors = [], []
+    for chunk in raw.split(";"):
+        chunk = chunk.strip()
+        if not chunk:
+            errors.append("effects 含空效果段")
+            continue
+        parts = chunk.split("|")
+        if len(parts) not in (3, 4):
+            errors.append(f"effects 段数非法（需 3–4 段）: {chunk!r}")
+            continue
+        trigger, op, selector = (p.strip() for p in parts[:3])
+        params = {}
+        if len(parts) == 4:
+            for pair in parts[3].split(","):
+                pair = pair.strip()
+                if not pair:
+                    continue
+                if "=" not in pair:
+                    errors.append(f"参数缺少 =: {pair!r}（{chunk}）")
+                    continue
+                key, val = pair.split("=", 1)
+                params[key.strip()] = val.strip()
+        if trigger not in EFFECT_TRIGGERS:
+            errors.append(f"未知触发 {trigger!r}（{chunk}）")
+        if op not in EFFECT_OPS:
+            errors.append(f"未知原语 {op!r}（{chunk}）")
+        errors.extend(check_selector(selector, chunk))
+        duration = params.get("duration")
+        if duration and duration not in DURATIONS:
+            errors.append(f"duration 非法 {duration!r}（{chunk}）")
+        effects.append({"trigger": trigger, "op": op,
+                        "selector": selector, "params": params})
+    return ([], errors) if errors else (effects, errors)
+
+
+def allowed_triggers(text):
+    """按技能文本的固定前缀推出允许的触发时机；无法判定时返回 None。"""
+    text = text.strip()
+    if "直到回合结束" in text:
+        return None
+    if text.startswith("战吼"):
+        return {"OnPlay"}
+    if text.startswith("亡语"):
+        return {"OnDeath"}
+    if text.startswith("战斗开始时"):
+        return {"OnCombatStart"}
+    if text.startswith("回合开始时"):
+        return {"OnTurnStart"}
+    if text.startswith("每回合首次刷新"):
+        return {"OnFirstRefresh"}
+    if text.startswith("每当"):
+        return EVENT_TRIGGERS
+    if text.startswith("你的") and "随从获得" in text:
+        return {"Aura"}
+    if text.startswith("若你控制"):
+        return {"ConditionalAura"}
+    return None
+
+
+def check_text_trigger(text, effects_raw):
+    """卡面文本前缀必须与 effects 的触发时机一致。"""
+    allowed = allowed_triggers(text)
+    if allowed is None:
+        return []
+    effects, errors = parse_effects(effects_raw)
+    if errors:
+        return []
+    if not effects:
+        return [f"文本含触发语义，但 effects 为 []: {text!r}"]
+    bad = [e["trigger"] for e in effects if e["trigger"] not in allowed]
+    if bad:
+        return [f"触发时机 {bad} 与文本 {text!r} 不一致（允许 {sorted(allowed)}）"]
+    return []
 
 
 def load(kind, required):
@@ -209,6 +322,12 @@ def check_skills():
         keyword = skill.get("keyword")
         if keyword and not SKILL_KEYWORD_RE.fullmatch(str(keyword)):
             fail(f"{name}: 关键词非法 {keyword!r}")
+        raw_effects = skill.get("effects")
+        parsed_effects, effect_errors = parse_effects(raw_effects)
+        for message in effect_errors:
+            fail(f"{name}: {message}")
+        for message in check_text_trigger(skill["text"], raw_effects):
+            fail(f"{name}: {message}")
         path = ROOT / "skills" / name
         table = parse_attr_table(path)
         if table is None:
