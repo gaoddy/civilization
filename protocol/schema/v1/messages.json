@@ -1,0 +1,31 @@
+{
+  "v": 1,
+  "directions": {
+    "c2s": {
+      "AuthRequest": "messages.schema.json#/$defs/AuthRequest",
+      "CreateRoom": "messages.schema.json#/$defs/CreateRoom",
+      "JoinRoom": "messages.schema.json#/$defs/JoinRoom",
+      "LeaveRoom": "messages.schema.json#/$defs/LeaveRoom",
+      "Ready": "messages.schema.json#/$defs/Ready",
+      "SelectHeroCard": "messages.schema.json#/$defs/SelectHeroCard",
+      "Intent": "messages.schema.json#/$defs/Intent",
+      "SkipAnimation": "messages.schema.json#/$defs/SkipAnimation",
+      "RequestSnapshot": "messages.schema.json#/$defs/RequestSnapshot",
+      "Reconnect": "messages.schema.json#/$defs/Reconnect",
+      "FriendRequest": "messages.schema.json#/$defs/FriendRequest"
+    },
+    "s2c": {
+      "AuthResult": "messages.schema.json#/$defs/AuthResult",
+      "RoomUpdate": "messages.schema.json#/$defs/RoomUpdate",
+      "GameStarted": "messages.schema.json#/$defs/GameStarted",
+      "Snapshot": "messages.schema.json#/$defs/Snapshot",
+      "StateUpdate": "messages.schema.json#/$defs/StateUpdate",
+      "PhaseChanged": "messages.schema.json#/$defs/PhaseChanged",
+      "TimerWarning": "messages.schema.json#/$defs/TimerWarning",
+      "CombatResult": "messages.schema.json#/$defs/CombatResult",
+      "GameOver": "messages.schema.json#/$defs/GameOver",
+      "Error": "messages.schema.json#/$defs/Error",
+      "FriendUpdate": "messages.schema.json#/$defs/FriendUpdate"
+    }
+  }
+}

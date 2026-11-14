@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "id": "m_phasechanged",
+  "type": "PhaseChanged",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 106,
+  "payload": {
+    "phase": "Combat",
+    "turn": 7,
+    "deadline": "2026-11-15T10:00:15Z"
+  }
+}

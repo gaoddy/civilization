@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civilization.local/protocol/v1/intents.schema.json",
+  "title": "玩家意图 v1",
+  "$defs": {
+    "Intent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "slot"],
+          "properties": {
+            "kind": { "const": "BuyMinion" },
+            "slot": { "type": "integer", "minimum": 0, "maximum": 5, "description": "商店槽位" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "minionId"],
+          "properties": {
+            "kind": { "const": "SellMinion" },
+            "minionId": { "type": "string", "description": "要出售的随从实例 id" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "RerollShop" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "UpgradeEra" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "handIndex"],
+          "properties": {
+            "kind": { "const": "PlayCard" },
+            "handIndex": { "type": "integer", "minimum": 0, "maximum": 9, "description": "手牌位置" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "fromIndex", "toIndex"],
+          "properties": {
+            "kind": { "const": "RearrangeBoard" },
+            "fromIndex": { "type": "integer", "minimum": 0, "maximum": 6 },
+            "toIndex": { "type": "integer", "minimum": 0, "maximum": 6 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "FreezeShop" },
+            "slot": { "type": ["integer", "null"], "minimum": 0, "maximum": 5, "description": "null 表示全部槽位" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "skillId"],
+          "properties": {
+            "kind": { "const": "UseHeroPower" },
+            "skillId": { "type": "string" },
+            "targetMinionId": { "type": "string", "description": "需要目标的技能才填" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "EndRecruit" }
+          }
+        }
+      ]
+    }
+  }
+}

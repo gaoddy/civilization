@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civilization.local/protocol/v1/errors.schema.json",
+  "title": "协议错误码 v1",
+  "$defs": {
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "NOT_ENOUGH_GOLD",
+        "SHOP_SLOT_EMPTY",
+        "NO_SPACE",
+        "INVALID_STAGE",
+        "NO_SUCH_MINION",
+        "ALREADY_MAX_ERA",
+        "CARD_NOT_IN_HAND",
+        "HERO_POWER_LIMIT",
+        "NO_VALID_TARGET",
+        "TARGET_NOT_ALLOWED",
+        "AUTH_FAILED",
+        "TOKEN_EXPIRED",
+        "AUTH_RATE_LIMITED",
+        "SESSION_REPLACED",
+        "BAD_PAYLOAD",
+        "UNKNOWN_TYPE",
+        "RATE_LIMITED",
+        "NOT_IN_ROOM",
+        "ROOM_NOT_FOUND",
+        "ROOM_FULL",
+        "SEQUENCE_STALE",
+        "INTERNAL_ERROR"
+      ],
+      "description": "稳定错误码，只增不改"
+    },
+    "ErrorMessage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "retryable"],
+      "properties": {
+        "code": { "$ref": "errors.schema.json#/$defs/ErrorCode", "description": "错误码" },
+        "message": { "type": "string", "description": "面向日志的错误说明，不作为 UI 文案" },
+        "clientIntentId": { "type": "string", "description": "被拒绝意图的 clientIntentId" },
+        "retryable": { "type": "boolean", "description": "是否可原样重试" }
+      }
+    }
+  }
+}

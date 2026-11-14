@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "id": "m_friendupdate",
+  "type": "FriendUpdate",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 111,
+  "payload": {
+    "friends": [
+      {
+        "playerId": "p_04",
+        "displayName": "Ada",
+        "online": true
+      }
+    ]
+  }
+}

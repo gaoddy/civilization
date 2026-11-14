@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "id": "m_authrequest",
+  "type": "AuthRequest",
+  "ts": "2026-11-15T10:00:00Z",
+  "payload": {
+    "phone": "13800000000",
+    "code": "123456"
+  }
+}

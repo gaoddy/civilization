@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civilization.local/protocol/v1/view.schema.json",
+  "title": "玩家可见状态视图 v1",
+  "$defs": {
+    "Phase": {
+      "type": "string",
+      "enum": ["Lobby", "Recruit", "Combat", "Settle", "GameOver"],
+      "description": "对局阶段"
+    },
+    "ShopSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "cardId", "frozen"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "cardId": { "type": ["string", "null"], "description": "空槽位为 null" },
+        "frozen": { "type": "boolean" }
+      }
+    },
+    "HandCard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "cardId", "playable", "disabledReason"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0, "maximum": 9 },
+        "cardId": { "type": "string" },
+        "playable": { "type": "boolean", "description": "服务端算好的可打出提示" },
+        "disabledReason": { "type": ["string", "null"], "description": "不可操作时的错误码" }
+      }
+    },
+    "BoardMinion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "minionId", "cardId", "golden", "attack", "health", "keywords", "sellable"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0, "maximum": 6 },
+        "minionId": { "type": "string", "description": "随从实例 id" },
+        "cardId": { "type": "string" },
+        "golden": { "type": "boolean" },
+        "attack": { "type": "integer", "minimum": 0 },
+        "health": { "type": "integer", "minimum": 0 },
+        "keywords": { "type": "array", "items": { "type": "string" }, "description": "当前生效的关键词" },
+        "sellable": { "type": "boolean" }
+      }
+    },
+    "PlayerSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["playerId", "seat", "displayName", "hp", "era", "alive", "boardCount", "heroCardId", "recruited"],
+      "properties": {
+        "playerId": { "type": "string" },
+        "seat": { "type": "integer", "minimum": 0, "maximum": 7 },
+        "displayName": { "type": "string" },
+        "hp": { "type": "integer" },
+        "era": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "alive": { "type": "boolean" },
+        "boardCount": { "type": "integer", "minimum": 0, "maximum": 7 },
+        "heroCardId": { "type": ["string", "null"], "description": "开局选择前为 null" },
+        "recruited": { "type": "boolean", "description": "本回合是否已结束招募" }
+      }
+    },
+    "ShopAffordance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "buyable", "disabledReason"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "buyable": { "type": "boolean" },
+        "disabledReason": { "type": ["string", "null"] }
+      }
+    },
+    "HandAffordance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "playable", "disabledReason"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0, "maximum": 9 },
+        "playable": { "type": "boolean" },
+        "disabledReason": { "type": ["string", "null"] }
+      }
+    },
+    "BoardAffordance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "sellable", "disabledReason"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0, "maximum": 6 },
+        "sellable": { "type": "boolean" },
+        "disabledReason": { "type": ["string", "null"] }
+      }
+    },
+    "Affordances": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shopSlots", "handCards", "boardMinions", "canReroll", "canUpgradeEra",
+                   "upgradeDisabledReason", "canUseHeroPower", "canEndRecruit"],
+      "properties": {
+        "shopSlots": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/ShopAffordance" } },
+        "handCards": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/HandAffordance" } },
+        "boardMinions": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/BoardAffordance" } },
+        "canReroll": { "type": "boolean" },
+        "canUpgradeEra": { "type": "boolean" },
+        "upgradeDisabledReason": { "type": ["string", "null"] },
+        "canUseHeroPower": { "type": "boolean" },
+        "canEndRecruit": { "type": "boolean" }
+      }
+    },
+    "GameEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["MinionBought", "MinionSold", "ShopRolled", "EraUpgraded",
+                   "TripleFormed", "CardDiscovered", "DamageTaken", "PlayerEliminated"]
+        },
+        "playerId": { "type": "string", "description": "事件涉及的玩家，可省略表示自己" },
+        "cardId": { "type": "string" },
+        "minionId": { "type": "string" },
+        "amount": { "type": "integer", "description": "伤害等数值" }
+      }
+    },
+    "PlayerView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roomId", "phase", "turn", "phaseDeadline", "self", "players", "enabledFactions"],
+      "properties": {
+        "roomId": { "type": "string" },
+        "phase": { "$ref": "view.schema.json#/$defs/Phase" },
+        "turn": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "phaseDeadline": { "type": "string", "format": "date-time" },
+        "self": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["playerId", "seat", "hp", "era", "gold", "heroCardId", "heroPower",
+                       "shop", "hand", "board", "rerollCost", "upgradeCost", "recruited", "affordances"],
+          "properties": {
+            "playerId": { "type": "string" },
+            "seat": { "type": "integer", "minimum": 0, "maximum": 7 },
+            "hp": { "type": "integer" },
+            "era": { "type": "integer", "minimum": 1, "maximum": 7 },
+            "gold": { "type": "integer", "minimum": 0 },
+            "heroCardId": { "type": ["string", "null"] },
+            "heroPower": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["skillId", "usesLeft"],
+              "properties": {
+                "skillId": { "type": ["string", "null"] },
+                "usesLeft": { "type": "integer", "minimum": 0 }
+              }
+            },
+            "shop": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/ShopSlot" } },
+            "hand": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/HandCard" } },
+            "board": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/BoardMinion" } },
+            "rerollCost": { "type": "integer", "minimum": 0 },
+            "upgradeCost": { "type": ["integer", "null"], "minimum": 2, "description": "满时代为 null" },
+            "recruited": { "type": "boolean" },
+            "affordances": { "$ref": "view.schema.json#/$defs/Affordances" }
+          }
+        },
+        "players": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/PlayerSummary" } },
+        "enabledFactions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 5,
+          "maxItems": 5,
+          "description": "本局启用的 5 个流派"
+        }
+      }
+    }
+  }
+}
