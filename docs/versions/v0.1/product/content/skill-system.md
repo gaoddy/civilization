@@ -111,11 +111,11 @@ python3 scripts/validate_docs.py
 
 1. 技能文档 118 份，`id` 等于文件名且在技能命名空间内唯一；
 2. 技能属性表与 front matter 一致；
-3. 被效果牌引用的技能必须有 `match_text`；主动技能必须有 `name` 与 `match_text`，`cost` 与 `uses_per_turn` 成对出现且取值在 0–2 / 1–2 内；
+3. 被效果牌引用的技能必须有 `match_text`；主动技能必须有 `name` 与 `match_text`，`cost` 与 `uses_per_turn` 成对出现且取值在 0–2 / 1–2 内；填写了 `name` 的技能必须有 `match_text`；
 4. 每张效果牌至少引用 1 个技能；7 张无效果随从的 `skills` 为空且 `## 效果` 为「无」；
 5. 卡牌 `## 效果` 与所引用技能 `text` 按顺序拼接的结果一致；
 6. 卡牌属性表的「技能」「关键词」行与 front matter、技能 `keyword` 一致；主动技能的属性表含「费用」「每回合次数」两行；
-7. 英雄卡恰好 13 张，非英雄随从与效果牌不得有 `is_hero`；卡牌不得残留已废弃的英雄技能字段或英雄技能小节；
+7. 英雄卡恰好 13 张，非英雄随从与效果牌不得有 `is_hero`；卡牌不得残留旧版独立的技能字段或小节；
 8. 每个技能都有 `effects` 字段，DSL 按[关键词与机制](../rules/keywords-and-mechanics.md) §9.4 校验：段数 3–4 段、触发与动作原语在白名单内、选择器合法、`duration` 取值合法、参数写作 `key=value`；
 9. 技能文本的固定前缀与触发时机一致：「战吼」对应 `OnPlay`、「亡语」对应 `OnDeath`、「战斗开始时」对应 `OnCombatStart`、「回合开始时」对应 `OnTurnStart`、「每回合首次刷新时」对应 `OnFirstRefresh`、「每当」对应事件类触发、`你的…随从获得` 句式对应 `Aura`、「若你控制」对应 `ConditionalAura`。
 

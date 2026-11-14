@@ -6,7 +6,7 @@
     skills: [技能 id, ...]
     skill: 技能 id
 卡牌分两类：card_type=随从 必须有攻击力/生命值；card_type=效果 必须没有。
-随从与效果牌都通过 skills 引用技能实体，英雄技能也在其中；效果文本与关键词由被引用技能派生。
+随从与效果牌都通过 skills 引用技能实体；效果文本与关键词由被引用技能派生。
 """
 
 import collections
@@ -441,6 +441,8 @@ def skill_field_errors(skill):
             messages.append(f"{name}: 每回合次数非法 {skill['uses_per_turn']!r}")
         if not skill.get("name") or not skill.get("match_text"):
             messages.append(f"{name}: 主动技能必须填写 name 与 match_text")
+    elif skill.get("name") and not skill.get("match_text"):
+        messages.append(f"{name}: 有 name 的技能必须填写 match_text")
     return messages
 
 
