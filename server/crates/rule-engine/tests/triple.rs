@@ -79,12 +79,12 @@ fn pool_count(state: &GameState, card_id: &str) -> u16 {
     state.pool.get(card_id).copied().unwrap_or(0)
 }
 
-/// 用互不相同的随从填满棋盘，避免填充本身触发三连。
-fn fill_board_distinct(state: &mut GameState, seat: Seat, count: usize) {
+/// 用互不相同、且排除指定卡牌的随从填满棋盘，避免填充本身触发三连。
+fn fill_board_distinct(state: &mut GameState, seat: Seat, count: usize, exclude: &str) {
     let ids: Vec<String> = test_catalog()
         .cards
         .values()
-        .filter(|card| card.card_type == CardType::Minion && !card.is_hero)
+        .filter(|card| card.card_type == CardType::Minion && !card.is_hero && card.id != exclude)
         .map(|card| card.id.clone())
         .take(count)
         .collect();
@@ -94,6 +94,16 @@ fn fill_board_distinct(state: &mut GameState, seat: Seat, count: usize) {
         .enumerate()
         .map(|(index, card_id)| dummy(500 + index as InstanceId, card_id))
         .collect();
+}
+
+fn effect_card_id() -> String {
+    test_catalog()
+        .cards
+        .values()
+        .find(|card| card.card_type == CardType::Effect)
+        .expect("数据中应存在效果牌")
+        .id
+        .clone()
 }
 
 #[test]
@@ -440,7 +450,7 @@ fn hand_triple_goes_to_board_when_board_has_room() {
 fn hand_triple_stays_in_hand_when_board_full() {
     let (engine, mut state) = setup(11);
     let card_id = minion_id(2);
-    fill_board_distinct(&mut state, 0, engine.catalog.config.board_slots);
+    fill_board_distinct(&mut state, 0, engine.catalog.config.board_slots, &card_id);
     let board_before: Vec<InstanceId> = state.players[0]
         .board
         .iter()
@@ -552,4 +562,79 @@ fn golden_battlecry_triggers_twice() {
 
     assert_eq!(state.players[0].board.len(), 1);
     assert!(state.players[0].board[0].golden);
+}
+
+#[test]
+fn hand_effect_cards_never_form_triple() {
+    let (engine, mut state) = setup(15);
+    let effect_id = effect_card_id();
+    let minion = minion_id(2);
+    state.players[0].hand = vec![
+        hand_card(&effect_id),
+        hand_card(&effect_id),
+        hand_card(&effect_id),
+    ];
+    state.players[0].board = vec![dummy(10, &minion)];
+
+    let events = engine.check_triple(&mut state, 0);
+
+    assert!(events.is_empty(), "效果牌不参与三连");
+    assert!(state.pending.is_empty(), "效果牌不产生发现待选");
+    assert_eq!(state.players[0].board.len(), 1, "棋盘不增加非法随从");
+    assert_eq!(state.players[0].board[0].card_id, minion);
+    assert_eq!(state.players[0].hand.len(), 3, "三张效果牌都保留");
+    assert!(
+        state.players[0]
+            .hand
+            .iter()
+            .all(|card| card.card_id == effect_id && !card.golden)
+    );
+}
+
+#[test]
+fn one_check_forms_multiple_triples() {
+    let (engine, mut state) = setup(16);
+    let card_id = minion_id(2);
+    state.players[0].board = vec![
+        dummy(10, &card_id),
+        dummy(11, &card_id),
+        dummy(12, &card_id),
+    ];
+    state.players[0].hand = vec![
+        hand_card(&card_id),
+        hand_card(&card_id),
+        hand_card(&card_id),
+    ];
+
+    let events = engine.check_triple(&mut state, 0);
+
+    assert_eq!(
+        events,
+        vec![
+            GameEvent::TripleFormed {
+                seat: 0,
+                card_id: card_id.clone(),
+            },
+            GameEvent::TripleFormed {
+                seat: 0,
+                card_id: card_id.clone(),
+            },
+        ],
+        "六张同名副本一次调用合成两次"
+    );
+    assert!(state.players[0].hand.is_empty());
+    assert_eq!(state.players[0].board.len(), 2);
+    assert!(
+        state.players[0]
+            .board
+            .iter()
+            .all(|minion| minion.golden && minion.card_id == card_id)
+    );
+    assert_eq!(state.pending.len(), 2, "两次三连各产生一个发现待选");
+    assert!(
+        state
+            .pending
+            .iter()
+            .all(|pending| matches!(pending, PendingChoice::Discover { seat: 0, .. }))
+    );
 }

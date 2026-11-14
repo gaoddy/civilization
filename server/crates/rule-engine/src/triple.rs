@@ -29,7 +29,7 @@ impl Engine {
     /// 只读卡牌目录，所有状态变化都写入传入的 `state`。
     pub fn check_triple(&self, state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
         let mut events = Vec::new();
-        while let Some((card_id, copies)) = find_triple(state, seat) {
+        while let Some((card_id, copies)) = self.find_triple(state, seat) {
             let Some(source) = self.form_golden(state, seat, &card_id, &copies) else {
                 break;
             };
@@ -146,6 +146,47 @@ impl Engine {
         }
         Some(chosen)
     }
+
+    /// 找出该座位最早出现、且至少有三张非金色副本的随从卡牌。
+    ///
+    /// 棋盘与手牌都要在目录中查得到且为随从；效果牌、缺失 id 与金色随从都不参与。
+    fn find_triple(&self, state: &GameState, seat: Seat) -> Option<(String, Vec<Copy>)> {
+        let player = state.players.get(usize::from(seat))?;
+        let is_minion = |card_id: &str| {
+            self.catalog
+                .cards
+                .get(card_id)
+                .is_some_and(|card| card.card_type == CardType::Minion)
+        };
+        let mut entries: Vec<(&str, Copy)> = Vec::new();
+        for minion in &player.board {
+            if !minion.golden && is_minion(&minion.card_id) {
+                entries.push((minion.card_id.as_str(), Copy::Board(minion.instance_id)));
+            }
+        }
+        for (index, card) in player.hand.iter().enumerate() {
+            if !card.golden && is_minion(&card.card_id) {
+                entries.push((card.card_id.as_str(), Copy::Hand(index)));
+            }
+        }
+
+        let mut examined: BTreeSet<&str> = BTreeSet::new();
+        for (card_id, _) in &entries {
+            if !examined.insert(card_id) {
+                continue;
+            }
+            let copies: Vec<Copy> = entries
+                .iter()
+                .filter(|(entry_id, _)| entry_id == card_id)
+                .take(3)
+                .map(|(_, copy)| *copy)
+                .collect();
+            if copies.len() == 3 {
+                return Some((card_id.to_string(), copies));
+            }
+        }
+        None
+    }
 }
 
 /// 把实例原地升级为金色：保留全部成长与来源字段，清空本回合行动状态。
@@ -153,39 +194,6 @@ fn make_golden(minion: &mut MinionInstance) {
     minion.golden = true;
     minion.attacks_left = 0;
     minion.cannot_attack = false;
-}
-
-/// 找出该座位最早出现、且至少有三张非金色副本的卡牌。
-fn find_triple(state: &GameState, seat: Seat) -> Option<(String, Vec<Copy>)> {
-    let player = state.players.get(usize::from(seat))?;
-    let mut entries: Vec<(&str, Copy)> = Vec::new();
-    for minion in &player.board {
-        if !minion.golden {
-            entries.push((minion.card_id.as_str(), Copy::Board(minion.instance_id)));
-        }
-    }
-    for (index, card) in player.hand.iter().enumerate() {
-        if !card.golden {
-            entries.push((card.card_id.as_str(), Copy::Hand(index)));
-        }
-    }
-
-    let mut examined: BTreeSet<&str> = BTreeSet::new();
-    for (card_id, _) in &entries {
-        if !examined.insert(card_id) {
-            continue;
-        }
-        let copies: Vec<Copy> = entries
-            .iter()
-            .filter(|(entry_id, _)| entry_id == card_id)
-            .take(3)
-            .map(|(_, copy)| *copy)
-            .collect();
-        if copies.len() == 3 {
-            return Some((card_id.to_string(), copies));
-        }
-    }
-    None
 }
 
 /// 发现候选：随从、非英雄、指定星级、流派启用或通用、共享池有剩余。
