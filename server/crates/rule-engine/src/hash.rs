@@ -89,19 +89,29 @@ pub fn state_hash(state: &GameState) -> u64 {
 
     hasher.len(state.pending.len());
     for choice in &state.pending {
-        hasher.u8(0); // PendingChoice 目前只有 Discover 变体
         match choice {
             crate::state::PendingChoice::Discover {
                 seat,
                 candidates,
                 source,
             } => {
+                hasher.u8(0);
                 hasher.u8(*seat);
                 hasher.len(candidates.len());
                 for candidate in candidates {
                     hasher.str(candidate);
                 }
                 hasher.u64(*source);
+            }
+            crate::state::PendingChoice::Evolve {
+                seat,
+                source,
+                remaining,
+            } => {
+                hasher.u8(1);
+                hasher.u8(*seat);
+                hasher.u64(*source);
+                hasher.u8(*remaining);
             }
         }
     }

@@ -2,10 +2,12 @@
 //!
 //! 三连只统计棋盘与手牌中的同名非金色随从；效果牌、金色随从与共享池都不参与。
 //! 每次获得随从后调用 [`Engine::check_triple`]，直到不再产生新的三连。
+//! `Op::Discover` 的三选一与三连发现共用同一候选抽取口径。
 
 use std::collections::BTreeSet;
 
 use crate::data::{Card, CardType, Tribe};
+use crate::effects::{Effect, EffectCtx};
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::recruit::new_minion;
@@ -129,6 +131,14 @@ impl Engine {
     fn discover_candidates(&self, state: &mut GameState, card_id: &str) -> Option<Vec<String>> {
         let card = self.catalog.cards.get(card_id)?;
         let level = card.level.saturating_add(1).min(6);
+        Some(self.draw_discover_candidates(state, level))
+    }
+
+    /// 从指定星级的合格池中无放回抽取最多三张不重复候选。
+    ///
+    /// 合格池按卡牌 id 顺序枚举，随机只走 [`Stream::Discover`]，且每抽一张推进一次；
+    /// 三连发现与效果发现共用这一口径（关键词机制 §8 的「三选一」）。
+    fn draw_discover_candidates(&self, state: &mut GameState, level: u8) -> Vec<String> {
         let mut remaining: Vec<String> = self
             .catalog
             .cards
@@ -144,7 +154,42 @@ impl Engine {
             let index = state.rng.below(Stream::Discover, remaining.len() as u64) as usize;
             chosen.push(remaining.remove(index));
         }
-        Some(chosen)
+        chosen
+    }
+
+    /// 执行招募侧 `Discover{pool, choose}`：抽取候选并登记一条发现待选。
+    ///
+    /// - `pool = tribe` 表示「本局启用的流派」；省略或其它取值同样按启用流派处理。
+    /// - 星级与玩家当前时代相同（本局时代 = 商店等级，见核心规则 §4.1）。
+    /// - 没有任何合格候选时不登记待选。
+    /// - 抽取时立即推进 [`Stream::Discover`] 并写入候选，重放结果确定；
+    ///   被选择时才扣 1 份共享池（`choose_discover`）。
+    pub(crate) fn apply_discover(
+        &mut self,
+        state: &mut GameState,
+        effect: &Effect,
+        ctx: &EffectCtx,
+    ) -> Vec<GameEvent> {
+        let Some(level) = state
+            .players
+            .get(usize::from(ctx.seat))
+            .map(|player| player.era as u8)
+        else {
+            return Vec::new();
+        };
+        if effect.params.choose.unwrap_or(1) == 0 {
+            return Vec::new();
+        }
+        let candidates = self.draw_discover_candidates(state, level);
+        if candidates.is_empty() {
+            return Vec::new();
+        }
+        state.pending.push_back(PendingChoice::Discover {
+            seat: ctx.seat,
+            candidates,
+            source: ctx.source.unwrap_or(0),
+        });
+        Vec::new()
     }
 
     /// 找出该座位最早出现、且至少有三张非金色副本的随从卡牌。

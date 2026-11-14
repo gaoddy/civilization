@@ -1,10 +1,10 @@
 //! 效果执行器：把解析完成的效果 AST 落成对局状态变化。
 //!
 //! 本模块实现招募阶段的六个即时动作（成长、属性修改、赋予关键词、移除成长、
-//! 禁止攻击、造成伤害）与商店类原语（刷新商店、增加槽位、获得随从），以及
-//! `OnPlay` / `OnPlayEffect` / `OnActivate` / `OnUse` / `OnTurnStart` /
-//! `OnFirstRefresh` 六个触发时机。召唤、复制、发现由 Task 13–14 实现；
-//! 光环由 Task 11 实现；战斗内触发由 Task 13 实现。
+//! 禁止攻击、造成伤害）、商店类原语（刷新商店、增加槽位、获得随从）与召唤、
+//! 复制、发现，以及 `OnPlay` / `OnPlayEffect` / `OnActivate` / `OnUse` /
+//! `OnTurnStart` / `OnFirstRefresh` 六个触发时机。光环由 Task 11 实现；
+//! 发现候选取自 `triple.rs`，进化见 `evolve.rs`；战斗内触发由 Task 13 实现。
 //!
 //! 规则口径见 `docs/versions/v0.1/product/rules/keywords-and-mechanics.md`
 //! §2、§3、§8、§9、§10。所有随机性只来自 [`Stream::Effects`]，集合与遍历顺序
@@ -170,7 +170,7 @@ impl Engine {
                 self.apply_recruit_copy(state, effect, &targets, ctx);
                 Vec::new()
             }
-            Op::Discover => Vec::new(),
+            Op::Discover => self.apply_discover(state, effect, ctx),
         }
     }
 
@@ -269,7 +269,7 @@ impl Engine {
     }
 
     /// 收集一张卡牌在指定触发时机下的效果，按技能顺序与文本顺序执行。
-    fn run_card_effects(
+    pub(crate) fn run_card_effects(
         &mut self,
         state: &mut GameState,
         card_id: &str,
@@ -331,7 +331,7 @@ impl Engine {
         events
     }
 
-    fn card_has_trigger(&self, card_id: &str, trigger: Trigger) -> bool {
+    pub(crate) fn card_has_trigger(&self, card_id: &str, trigger: Trigger) -> bool {
         let Some(card) = self.catalog.cards.get(card_id) else {
             return false;
         };
@@ -710,7 +710,7 @@ impl Engine {
     }
 
     /// 召唤后触发同一棋盘上其他随从的 `OnAllySummon`。
-    fn fire_ally_summon_recruit(
+    pub(crate) fn fire_ally_summon_recruit(
         &mut self,
         state: &mut GameState,
         seat: Seat,

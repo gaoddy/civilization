@@ -610,17 +610,28 @@ fn add_shop_slot_skips_when_no_eligible_card() {
 fn gain_minion_from_shop_moves_to_hand() {
     let (mut engine, mut state) = setup(2);
     state.players[0].era = Era::Primitive;
+    // 商店里放一张 2 星随从：获得它时清空槽位、扣 1 份池。
+    let expected = engine
+        .catalog
+        .cards
+        .values()
+        .find(|card| {
+            card.card_type == CardType::Minion
+                && !card.is_hero
+                && card.level == 2
+                && (card.tribe == Tribe::General || state.enabled_tribes.contains(&card.tribe))
+        })
+        .expect("原始时代应有 2 星随从")
+        .id
+        .clone();
     state.players[0].shop = vec![
         Some(ShopSlot {
-            card_id: "breed1".to_string(),
+            card_id: expected.clone(),
             frozen: true,
         });
         6
     ];
-
-    let expected = first_eligible(&engine, &state, 2).expect("原始时代应有可选随从");
     let pool_before = state.pool.get(&expected).copied().unwrap_or(0);
-    let shop_before = state.players[0].shop.clone();
 
     let events = engine.apply_op(
         &mut state,
@@ -638,20 +649,42 @@ fn gain_minion_from_shop_moves_to_hand() {
         pool_before - 1,
         "共享池只扣一次"
     );
-    assert_eq!(player.shop, shop_before, "from=shop 不移除商店槽位");
+    assert_eq!(
+        player.shop[0], None,
+        "from=shop 获得的是商店槽位本身，槽位随之清空"
+    );
 }
 
 #[test]
 fn gain_minion_runs_triple_check() {
     let (mut engine, mut state) = setup(2);
     state.players[0].era = Era::Primitive;
-    let expected = first_eligible(&engine, &state, 2).expect("原始时代应有可选随从");
+    let expected = engine
+        .catalog
+        .cards
+        .values()
+        .find(|card| {
+            card.card_type == CardType::Minion
+                && !card.is_hero
+                && card.level == 2
+                && (card.tribe == Tribe::General || state.enabled_tribes.contains(&card.tribe))
+        })
+        .expect("原始时代应有 2 星随从")
+        .id
+        .clone();
     state.players[0].hand = (0..2)
         .map(|_| HandCard {
             card_id: expected.clone(),
             golden: false,
         })
         .collect();
+    state.players[0].shop = vec![
+        Some(ShopSlot {
+            card_id: expected.clone(),
+            frozen: false,
+        });
+        6
+    ];
 
     let events = engine.apply_op(
         &mut state,

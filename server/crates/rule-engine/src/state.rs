@@ -104,10 +104,19 @@ pub struct PlayerState {
 /// 等待玩家做出的选择。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PendingChoice {
+    /// 三连或效果驱动的发现：从 `candidates` 中选一张进入手牌，扣 1 份共享池。
     Discover {
         seat: Seat,
         candidates: Vec<String>,
         source: InstanceId,
+    },
+    /// 进化：来源随从从 `EVOLVE_CHOICES` 中选一项，`remaining` 为还需选择的次数。
+    ///
+    /// 进化不算发现：不扣池、不进手牌，结算在来源随从身上完成。
+    Evolve {
+        seat: Seat,
+        source: InstanceId,
+        remaining: u8,
     },
 }
 

@@ -249,7 +249,10 @@ fn discover_offers_three_candidates_of_next_level() {
         seat,
         candidates,
         source,
-    } = pending;
+    } = pending
+    else {
+        panic!("三连只登记发现待选");
+    };
     assert_eq!(*seat, 0);
     assert_eq!(*source, 10, "来源为金色随从的实例编号");
     assert_eq!(candidates.len(), 3, "候选最多三张");
@@ -290,7 +293,9 @@ fn discover_level_six_stays_at_six() {
     );
 
     let pending = state.pending.front().expect("应写入发现待选");
-    let PendingChoice::Discover { candidates, .. } = pending;
+    let PendingChoice::Discover { candidates, .. } = pending else {
+        panic!("三连只登记发现待选");
+    };
     assert!(!candidates.is_empty());
     let catalog = test_catalog();
     for candidate in candidates {

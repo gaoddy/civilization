@@ -331,7 +331,7 @@ impl Engine {
     }
 
     /// 卡牌是否通过技能 `keyword` 携带某个常驻关键词。
-    fn card_has_keyword(&self, card_id: &str, keyword: &str) -> bool {
+    pub(crate) fn card_has_keyword(&self, card_id: &str, keyword: &str) -> bool {
         self.catalog
             .cards
             .get(card_id)

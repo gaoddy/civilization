@@ -5,6 +5,7 @@
 //! 解析在加载期完成，未知触发、原语、选择器、筛选或参数都会直接报错。
 
 mod aura;
+mod evolve;
 mod exec;
 mod parse;
 mod shop_effects;

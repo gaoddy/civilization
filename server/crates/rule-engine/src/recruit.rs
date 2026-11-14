@@ -150,6 +150,7 @@ fn buy(
         card_id,
     }];
     if to_board {
+        engine.register_evolve(state, seat, instance_id);
         events.extend(engine.fire(
             state,
             Trigger::OnPlay,
@@ -161,6 +162,8 @@ fn buy(
                 golden: false,
             },
         ));
+        events.extend(engine.check_triple(state, seat));
+        engine.fire_ally_evolve_recruit(state, seat, instance_id);
     }
     if card_type == CardType::Minion {
         events.extend(engine.check_triple(state, seat));
@@ -399,6 +402,9 @@ fn play_card(
             ));
             state.next_instance_id = following_instance_id;
 
+            // 先登记进化、再结算战吼（关键词机制 §2.2）；战吼结算完毕后才触发
+            // 友方进化。战吼带出的效果牌与响应在本次意图内同步结算，不跨意图排队。
+            engine.register_evolve(state, seat, instance_id);
             let mut events = engine.fire(
                 state,
                 Trigger::OnPlay,
@@ -411,6 +417,7 @@ fn play_card(
                 },
             );
             events.extend(engine.check_triple(state, seat));
+            engine.fire_ally_evolve_recruit(state, seat, instance_id);
             Ok(Outcome::with(events))
         }
     }
@@ -552,18 +559,24 @@ fn end_recruit(state: &mut GameState) -> Result<Outcome, Reject> {
     }]))
 }
 
+/// `ChooseDiscover`：消费该座位在队列中最靠前的待选，其他座位的待选不受影响。
+///
+/// 发现待选与进化待选共用该意图：`choice` 对发现是候选下标，对进化是选项下标
+/// （`0` = +2/+2，`1` = 护盾，`2` = 复生，见 `effects::evolve`）。
 fn choose_discover(
-    engine: &Engine,
+    engine: &mut Engine,
     state: &mut GameState,
     seat: Seat,
     choice: u8,
 ) -> Result<Outcome, Reject> {
-    // 消费该座位在队列中最靠前的待选，其他座位的待选不受影响。
     let index = state
         .pending
         .iter()
         .position(|pending| match pending {
             PendingChoice::Discover {
+                seat: pending_seat, ..
+            }
+            | PendingChoice::Evolve {
                 seat: pending_seat, ..
             } => *pending_seat == seat,
         })
@@ -584,6 +597,15 @@ fn choose_discover(
                     format!("发现候选下标 {choice} 越界"),
                 )
             })?,
+        Some(PendingChoice::Evolve { .. }) => {
+            return match engine.resolve_evolve_choice(state, index, choice) {
+                Ok(()) => Ok(Outcome::empty()),
+                Err(()) => Err(Reject::new(
+                    RejectCode::InvalidChoice,
+                    format!("进化选项下标 {choice} 越界"),
+                )),
+            };
+        }
         None => {
             return Err(Reject::new(
                 RejectCode::InvalidStage,
