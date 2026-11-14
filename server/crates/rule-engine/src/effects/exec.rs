@@ -19,7 +19,7 @@ use crate::effects::{
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::rng::Stream;
-use crate::state::{GameState, InstanceId, MinionInstance, Modifier, Phase, Seat};
+use crate::state::{GameState, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat};
 
 /// 禁止攻击时写入 `granted` 的占位关键词，用于记录该标记的时长来源。
 const CANNOT_ATTACK_KEYWORD: &str = "禁攻";
@@ -135,10 +135,16 @@ impl Engine {
                 Vec::new()
             }
             Op::CannotAttack => {
+                // 卡面「本场无法攻击」是唯一写法；省略 duration 时按 `Combat` 处理，
+                // 否则 `Instant` 标记将永远没有清除时点。
+                let duration = match effect.params.duration {
+                    Duration::Instant => Duration::Combat,
+                    other => other,
+                };
                 for id in targets {
                     if let Some((_, minion)) = locate_mut(state, id) {
                         minion.cannot_attack = true;
-                        record_grant(minion, CANNOT_ATTACK_KEYWORD, effect.params.duration, true);
+                        record_grant(minion, CANNOT_ATTACK_KEYWORD, duration, false);
                     }
                 }
                 Vec::new()
@@ -285,19 +291,21 @@ impl Engine {
         let Some(player) = state.players.get(usize::from(ctx.seat)) else {
             return Vec::new();
         };
-        let owners: Vec<(InstanceId, String)> = player
+        let owners: Vec<(InstanceId, String, bool)> = player
             .board
             .iter()
-            .map(|minion| (minion.instance_id, minion.card_id.clone()))
+            .map(|minion| (minion.instance_id, minion.card_id.clone(), minion.golden))
             .collect();
 
         let mut events = Vec::new();
-        for (instance_id, card_id) in owners {
+        for (instance_id, card_id, golden) in owners {
             if !self.card_has_trigger(&card_id, Trigger::OnUse) {
                 continue;
             }
             let mut owner_ctx = *ctx;
             owner_ctx.source = Some(instance_id);
+            // §2.6：金色随从的响应效果同样连续触发两次。
+            owner_ctx.golden = golden;
             events.extend(self.run_card_effects(state, &card_id, Trigger::OnUse, &owner_ctx));
         }
         events
@@ -339,20 +347,23 @@ impl Engine {
     }
 
     /// 阵营池：己方为当前座位棋盘；敌方为其余存活座位；招募阶段敌方为空。
+    /// 阵营池，按座位升序合并；`Both` 时己方座位处于其自然顺序位置。
     fn side_ids(&self, state: &GameState, side: Side, ctx: &EffectCtx) -> Vec<InstanceId> {
-        let mut ids = Vec::new();
-        let include_friendly = matches!(side, Side::Friendly | Side::Both);
         let include_enemy =
             matches!(side, Side::Enemy | Side::Both) && state.phase != Phase::Recruit;
+        let mut ids = Vec::new();
 
-        if include_friendly && let Some(player) = state.players.get(usize::from(ctx.seat)) {
-            ids.extend(player.board.iter().map(|minion| minion.instance_id));
-        }
-        if include_enemy {
-            for player in &state.players {
-                if player.seat == ctx.seat || player.eliminated || player.hp <= 0 {
-                    continue;
-                }
+        let mut players: Vec<&PlayerState> = state.players.iter().collect();
+        players.sort_by_key(|player| player.seat);
+        for player in players {
+            let friendly = player.seat == ctx.seat;
+            let enemy = !friendly && !player.eliminated && player.hp > 0;
+            let selected = match side {
+                Side::Friendly => friendly,
+                Side::Enemy => include_enemy && enemy,
+                Side::Both => friendly || (include_enemy && enemy),
+            };
+            if selected {
                 ids.extend(player.board.iter().map(|minion| minion.instance_id));
             }
         }

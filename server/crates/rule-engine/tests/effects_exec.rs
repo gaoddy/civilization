@@ -365,7 +365,7 @@ fn times_if_changes_times_by_tribe() {
     assert_eq!(
         board_minion(&state, 0, 1).growth,
         1,
-        "其他目标仍是两次基础值"
+        "非植物目标按基础 times=1 结算"
     );
 }
 
@@ -684,4 +684,79 @@ fn golden_minion_played_from_hand_doubles_battlecry() {
         2,
         "金色战吼连续触发两次，+1/+1 变为 +2/+2"
     );
+}
+
+#[test]
+fn golden_on_use_responder_triggers_twice() {
+    fn responder_effect_count(golden: bool) -> usize {
+        let (mut engine, mut state) = setup();
+        let mut responder = minion(1, "yanhuashi");
+        responder.golden = golden;
+        state.players[0].board.push(responder);
+        state.players[0].hand.push(rule_engine::state::HandCard {
+            card_id: "aolinpike-jidian".to_string(),
+            golden: false,
+        });
+        engine
+            .apply(
+                &mut state,
+                0,
+                Intent::PlayCard {
+                    hand_index: 0,
+                    target: Some(1),
+                },
+            )
+            .expect("打出效果牌应成功");
+        assert_eq!(state.players[0].board[0].card_id, "yanhuashi");
+        state.players[0].board[0].mods.len()
+    }
+
+    assert_eq!(responder_effect_count(false), 1, "普通随从响应一次");
+    assert_eq!(responder_effect_count(true), 2, "金色随从响应两次");
+}
+
+#[test]
+fn both_side_merges_in_ascending_seat_order() {
+    let (engine, mut state) = setup();
+    state.phase = Phase::Combat;
+    place(&mut state, 1, 11, "yezhu");
+    place(&mut state, 3, 31, "yezhu");
+    place(&mut state, 5, 51, "yezhu");
+
+    let both = effect("OnCombatStart|DealDamage|both:all|amount=1");
+    let seat_five = EffectCtx { seat: 5, ..ctx(5) };
+    assert_eq!(
+        engine.resolve_selector(&state, &both.selector, &seat_five),
+        vec![11, 31, 51],
+        "双方池按座位升序合并，己方座位处于自然位置"
+    );
+}
+
+#[test]
+fn cannot_attack_without_duration_clears_at_settle() {
+    let (mut engine, mut state) = setup();
+    place(&mut state, 0, 1, "yezhu");
+
+    engine.apply_op(
+        &mut state,
+        &effect("OnCombatStart|CannotAttack|friendly:all"),
+        &ctx(0),
+        None,
+    );
+
+    let minion = board_minion(&state, 0, 0);
+    assert!(minion.cannot_attack);
+    assert!(
+        minion
+            .granted
+            .iter()
+            .any(|(name, duration)| name == "禁攻" && *duration == Duration::Combat),
+        "省略 duration 时按 combat 记录"
+    );
+
+    state.phase = Phase::Settle;
+    engine.resolve_settle(&mut state).expect("结算应成功");
+    let minion = board_minion(&state, 0, 0);
+    assert!(!minion.cannot_attack, "无 duration 的禁攻在 Settle 前解除");
+    assert!(minion.granted.is_empty());
 }

@@ -101,7 +101,7 @@ pub enum Duration {
     Combat,
 }
 
-/// 关键词及其层数；`繁衍` / `装配` 可携带 `Some(N)`。
+/// 关键词及其层数；`繁衍` / `装配` / `传染` 可携带 `Some(N)`。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum KeywordSpec {
     Keyword(String, Option<i32>),
