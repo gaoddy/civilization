@@ -1,0 +1,38 @@
+---
+id: schrodinger
+card_type: 随从
+name: 薛定谔
+tribe: 学者
+subtype: 量子
+level: 7
+era: 未来
+attack: 0
+health: 26
+skills: [keyword-divine-shield, combatstart-random-enemy-contagion-2]
+is_scholar: true
+source: 新增
+---
+
+# 薛定谔
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | schrodinger |
+| 名称 | 薛定谔 |
+| 类型 | 随从 |
+| 流派 | 学者 |
+| 子类 | 量子 |
+| 星级 | 7 |
+| 时代 | 未来 |
+| 攻击力 | 0 |
+| 生命值 | 26 |
+| 关键词 | 护盾 |
+| 技能 | keyword-divine-shield；combatstart-random-enemy-contagion-2 |
+| 学者 | 是 |
+| 来源 | 新增 |
+
+## 效果
+
+护盾：抵消一次伤害；战斗开始时，使一个随机敌方随从获得 2 层传染

@@ -42,9 +42,9 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"繁衍": 1, "嘲讽": 2, "连击": 3, "最优攻击": 3, "传染": 3, "复生": 4, "护盾": 5}
-EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 14, "封建": 27, "工业": 14, "现代": 36, "未来": 20}
-EXPECT_TRIBE = {"学者": 33, "生物": 28, "人类": 34, "机械": 30, "植物": 20, "病毒": 19}
-EXPECT_LEVEL = {1: 22, 2: 37, 3: 37, 4: 28, 5: 25, 6: 15}
+EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 14, "封建": 27, "工业": 14, "现代": 36, "未来": 32}
+EXPECT_TRIBE = {"学者": 36, "生物": 30, "人类": 36, "机械": 33, "植物": 21, "病毒": 20}
+EXPECT_LEVEL = {1: 22, 2: 37, 3: 37, 4: 28, 5: 25, 6: 15, 7: 12}
 SKILL_FIELDS = ["id", "text"]
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
                  "attack", "health", "is_scholar", "source"]
@@ -385,7 +385,7 @@ def check_cards(skill_map):
             fail(f"{name}: 费用越界 {c['cost']}")
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"随从": 164, "效果": 36}:
+    if counts != {"随从": 176, "效果": 36}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]
