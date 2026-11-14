@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "id": "m_authresult",
+  "type": "AuthResult",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 101,
+  "payload": {
+    "playerId": "p_03",
+    "token": "tok_abc",
+    "expiresAt": "2026-12-15T10:00:00Z"
+  }
+}

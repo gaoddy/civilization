@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "id": "m_intent",
+  "type": "Intent",
+  "ts": "2026-11-15T10:00:00Z",
+  "payload": {
+    "clientIntentId": "ci_2",
+    "intent": {
+      "kind": "EndRecruit"
+    }
+  }
+}

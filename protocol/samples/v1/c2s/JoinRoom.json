@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "id": "m_joinroom",
+  "type": "JoinRoom",
+  "ts": "2026-11-15T10:00:00Z",
+  "payload": {
+    "code": "8F2A1B"
+  }
+}

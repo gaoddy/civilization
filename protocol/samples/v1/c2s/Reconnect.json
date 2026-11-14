@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "id": "m_reconnect",
+  "type": "Reconnect",
+  "ts": "2026-11-15T10:00:00Z",
+  "payload": {
+    "roomId": "r_8f2a",
+    "lastSeq": 100
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "v": 1,
+  "id": "m_combatresult",
+  "type": "CombatResult",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 108,
+  "payload": {
+    "ownBoard": [
+      {
+        "index": 0,
+        "minionId": "mi_1",
+        "cardId": "huo",
+        "golden": false,
+        "attack": 3,
+        "health": 4,
+        "keywords": [
+          "战吼"
+        ],
+        "sellable": true
+      }
+    ],
+    "opponentBoard": [
+      {
+        "index": 0,
+        "minionId": "mi_1",
+        "cardId": "huo",
+        "golden": false,
+        "attack": 3,
+        "health": 4,
+        "keywords": [
+          "战吼"
+        ],
+        "sellable": true
+      }
+    ],
+    "actions": [
+      {
+        "kind": "Attack",
+        "sourceIndex": 0,
+        "targetIndex": 0,
+        "damage": 3
+      }
+    ],
+    "damage": 9,
+    "winnerId": "p_03"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "v": 1,
+  "id": "m_roomupdate",
+  "type": "RoomUpdate",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 102,
+  "payload": {
+    "roomId": "r_8f2a",
+    "code": "8F2A1B",
+    "hostId": "p_00",
+    "phase": "Lobby",
+    "players": [
+      {
+        "playerId": "p_00",
+        "displayName": "Ada",
+        "ready": true,
+        "isHost": true,
+        "heroCardId": null
+      }
+    ]
+  }
+}

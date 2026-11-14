@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "id": "m_error",
+  "type": "Error",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 110,
+  "payload": {
+    "code": "NOT_ENOUGH_GOLD",
+    "message": "金币不足",
+    "clientIntentId": "ci_1",
+    "retryable": false
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "v": 1,
+  "id": "m_stateupdate",
+  "type": "StateUpdate",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 101,
+  "payload": {
+    "view": {
+      "roomId": "r_8f2a",
+      "phase": "Recruit",
+      "turn": 7,
+      "phaseDeadline": "2026-11-15T10:01:30Z",
+      "enabledFactions": [
+        "人类",
+        "机械",
+        "生物",
+        "植物",
+        "学者"
+      ],
+      "self": {
+        "playerId": "p_03",
+        "seat": 3,
+        "hp": 31,
+        "era": 3,
+        "gold": 5,
+        "heroCardId": "darwin",
+        "heroPower": {
+          "skillId": "darwin-skill",
+          "usesLeft": 1
+        },
+        "shop": [
+          {
+            "index": 0,
+            "cardId": "huo",
+            "frozen": false
+          },
+          {
+            "index": 1,
+            "cardId": "lun",
+            "frozen": false
+          },
+          {
+            "index": 2,
+            "cardId": null,
+            "frozen": false
+          },
+          {
+            "index": 3,
+            "cardId": "che",
+            "frozen": true
+          },
+          {
+            "index": 4,
+            "cardId": null,
+            "frozen": false
+          },
+          {
+            "index": 5,
+            "cardId": "fei",
+            "frozen": false
+          }
+        ],
+        "hand": [
+          {
+            "index": 0,
+            "cardId": "dia",
+            "playable": true,
+            "disabledReason": null
+          }
+        ],
+        "board": [
+          {
+            "index": 0,
+            "minionId": "mi_1",
+            "cardId": "huo",
+            "golden": false,
+            "attack": 3,
+            "health": 4,
+            "keywords": [
+              "战吼"
+            ],
+            "sellable": true
+          }
+        ],
+        "rerollCost": 1,
+        "upgradeCost": 5,
+        "recruited": false,
+        "affordances": {
+          "shopSlots": [
+            {
+              "index": 0,
+              "buyable": true,
+              "disabledReason": null
+            },
+            {
+              "index": 1,
+              "buyable": false,
+              "disabledReason": "NOT_ENOUGH_GOLD"
+            },
+            {
+              "index": 2,
+              "buyable": false,
+              "disabledReason": "NOT_ENOUGH_GOLD"
+            },
+            {
+              "index": 3,
+              "buyable": false,
+              "disabledReason": "NOT_ENOUGH_GOLD"
+            },
+            {
+              "index": 4,
+              "buyable": false,
+              "disabledReason": "NOT_ENOUGH_GOLD"
+            },
+            {
+              "index": 5,
+              "buyable": false,
+              "disabledReason": "NOT_ENOUGH_GOLD"
+            }
+          ],
+          "handCards": [
+            {
+              "index": 0,
+              "playable": true,
+              "disabledReason": null
+            }
+          ],
+          "boardMinions": [
+            {
+              "index": 0,
+              "sellable": true,
+              "disabledReason": null
+            }
+          ],
+          "canReroll": true,
+          "canUpgradeEra": true,
+          "upgradeDisabledReason": null,
+          "canUseHeroPower": true,
+          "canEndRecruit": true
+        }
+      },
+      "players": [
+        {
+          "playerId": "p_00",
+          "seat": 0,
+          "displayName": "Ada",
+          "hp": 40,
+          "era": 1,
+          "alive": true,
+          "boardCount": 0,
+          "heroCardId": null,
+          "recruited": false
+        },
+        {
+          "playerId": "p_03",
+          "seat": 3,
+          "displayName": "Bob",
+          "hp": 31,
+          "era": 3,
+          "alive": true,
+          "boardCount": 1,
+          "heroCardId": "darwin",
+          "recruited": false
+        }
+      ]
+    },
+    "events": []
+  }
+}
