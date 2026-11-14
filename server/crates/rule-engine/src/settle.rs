@@ -15,7 +15,9 @@ use crate::engine::Engine;
 use crate::error::EngineError;
 use crate::events::GameEvent;
 use crate::rng::Stream;
-use crate::state::{GameState, InstanceId, MinionInstance, Phase, PlayerState, Seat};
+use crate::state::{
+    AuraEffect, GameState, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat,
+};
 
 /// 配对在放弃"排除上一场对手"前最多重洗的次数。
 const PAIRING_ATTEMPTS: u8 = 100;
@@ -33,6 +35,9 @@ pub struct Pairing {
 impl Engine {
     /// 结束招募：生成本回合配对并进入 `Combat`。只做配对，不模拟战斗。
     pub fn finish_recruit(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+        if state.phase == Phase::Recruit {
+            self.recompute_auras(state);
+        }
         finish_recruit(state)
     }
 
@@ -43,7 +48,9 @@ impl Engine {
 
     /// 结算伤害、淘汰与排名；正常结束时停留在 `Settle`，游戏结束时进入 `GameOver`。
     pub fn resolve_settle(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
-        resolve_settle(&self.catalog.config, state)
+        let result = resolve_settle(&self.catalog.config, state);
+        self.recompute_auras(state);
+        result
     }
 }
 
@@ -183,9 +190,11 @@ fn resolve_real(
     events: &mut Vec<GameEvent>,
 ) {
     let (a, b) = (pairing.a, pairing.b);
-    // 快照必须在战斗改变棋盘之前截取。
-    let board_a = board_of(state, a).to_vec();
-    let board_b = board_of(state, b).to_vec();
+    // 快照必须在战斗改变棋盘之前截取；光环只折叠进战斗克隆，持久快照保持原样。
+    let raw_a = board_of(state, a).to_vec();
+    let raw_b = board_of(state, b).to_vec();
+    let board_a = fold_auras(catalog, &state.auras, &raw_a);
+    let board_b = fold_auras(catalog, &state.auras, &raw_b);
 
     let first = match state.last_winner {
         Some(winner) if winner == a || winner == b => winner,
@@ -220,8 +229,8 @@ fn resolve_real(
     state.last_won.insert(winner);
     state.previous_opponent.insert(a, Some(b));
     state.previous_opponent.insert(b, Some(a));
-    state.previous_board.insert(a, board_a);
-    state.previous_board.insert(b, board_b);
+    state.previous_board.insert(a, raw_a);
+    state.previous_board.insert(b, raw_b);
 
     events.push(GameEvent::CombatResolved {
         winner,
@@ -237,8 +246,14 @@ fn resolve_mirror(
     seat: Seat,
     events: &mut Vec<GameEvent>,
 ) {
-    let board = board_of(state, seat).to_vec();
-    let ghost = mirror_ghost(state, seat);
+    let current = board_of(state, seat).to_vec();
+    let board = fold_auras(catalog, &state.auras, &current);
+    let ghost = match state.previous_board.get(&seat) {
+        Some(previous) if !previous.is_empty() => strip_ghost(previous),
+        // 由当前阵容构建幽灵时，幽灵只保留永久属性；先剥离临时修正，
+        // 再把当前光环折叠回来（光环数值是派生而非 `mods` 中的持久记录）。
+        _ => fold_auras(catalog, &state.auras, &strip_ghost(&current)),
+    };
 
     let log = combat::simulate(catalog, &board, &ghost, seat, seat, seat, &mut state.rng);
     let won = log.defender_survivors.is_empty() && !log.attacker_survivors.is_empty();
@@ -246,13 +261,54 @@ fn resolve_mirror(
         state.last_won.insert(seat);
         state.last_winner = Some(seat);
     }
-    state.previous_board.insert(seat, board);
+    state.previous_board.insert(seat, current);
 
     events.push(GameEvent::CombatResolved {
         winner: seat,
         loser: seat,
         damage: 0,
     });
+}
+
+/// 把光环派生值折叠进一份棋盘克隆，供战斗模拟使用。
+///
+/// 原始随从不受影响：数值以永久 `Modifier` 追加，关键词以永久授予追加（同名只
+/// 保留一次）。若目标在折叠前生命 > 0、折叠后 ≤ 0，则收窄负向生命修正，使总
+/// 生命恰好为 1（§3.2「光环失效不致死」）。
+pub fn fold_auras(
+    catalog: &Catalog,
+    auras: &BTreeMap<InstanceId, AuraEffect>,
+    board: &[MinionInstance],
+) -> Vec<MinionInstance> {
+    let mut folded = board.to_vec();
+    for minion in &mut folded {
+        let Some(aura) = auras.get(&minion.instance_id) else {
+            continue;
+        };
+        let attack = aura.attack;
+        let mut health = aura.health;
+        let before = combat::effective_health(catalog, minion);
+        if before > 0 && before.saturating_add(health) <= 0 {
+            health = 1 - before;
+        }
+        if attack != 0 || health != 0 {
+            minion.mods.push(Modifier {
+                attack,
+                health,
+                duration: Duration::Permanent,
+            });
+        }
+        for keyword in &aura.keywords {
+            if !minion
+                .granted
+                .iter()
+                .any(|(existing, _)| existing == keyword)
+            {
+                minion.granted.push((keyword.clone(), Duration::Permanent));
+            }
+        }
+    }
+    folded
 }
 
 /// 某个座位的镜像幽灵阵容：优先取上一场快照，缺失或为空时退回当前阵容。

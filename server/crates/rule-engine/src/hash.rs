@@ -106,6 +106,18 @@ pub fn state_hash(state: &GameState) -> u64 {
         }
     }
 
+    hasher.len(state.auras.len());
+    for (instance_id, aura) in &state.auras {
+        hasher.u64(*instance_id);
+        hasher.i32(aura.attack);
+        hasher.i32(aura.health);
+        hasher.len(aura.keywords.len());
+        for keyword in &aura.keywords {
+            hasher.str(keyword);
+        }
+        hasher.bool(aura.floor_one);
+    }
+
     hasher.len(state.ranking.len());
     for seat in &state.ranking {
         hasher.u8(*seat);

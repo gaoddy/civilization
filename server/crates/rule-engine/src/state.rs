@@ -35,6 +35,19 @@ pub struct Modifier {
     pub duration: Duration,
 }
 
+/// 某个棋盘实例当前生效的光环派生值。
+///
+/// 光环只存在于派生缓存中，绝不写入 [`MinionInstance::mods`] 或
+/// [`MinionInstance::granted`]；战斗快照折叠时才临时并入克隆。
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct AuraEffect {
+    pub attack: i32,
+    pub health: i32,
+    pub keywords: BTreeSet<String>,
+    /// 受到任一光环作用；用于战斗快照的生命下限 1。
+    pub floor_one: bool,
+}
+
 /// 棋盘上的随从实例。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MinionInstance {
@@ -119,4 +132,6 @@ pub struct GameState {
     /// 已确定的排名（从第 1 名到末名）；出局者先进入尾部，结束时补齐。
     pub ranking: Vec<Seat>,
     pub next_instance_id: InstanceId,
+    /// 按实例编号索引的光环派生值；每次区域变化后全量重算。
+    pub auras: BTreeMap<InstanceId, AuraEffect>,
 }

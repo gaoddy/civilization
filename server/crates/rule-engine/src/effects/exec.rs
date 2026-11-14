@@ -387,7 +387,7 @@ impl Engine {
             .collect()
     }
 
-    fn filter_matches(
+    pub(crate) fn filter_matches(
         &self,
         state: &GameState,
         filter: &Filter,

@@ -67,6 +67,7 @@ impl Engine {
             pending: VecDeque::new(),
             ranking,
             next_instance_id: 1,
+            auras: BTreeMap::new(),
         };
 
         (Engine { catalog }, state)
@@ -134,6 +135,7 @@ impl Engine {
             }
             events.extend(self.roll_shop(state, seat as Seat));
         }
+        self.recompute_auras(state);
         Ok(events)
     }
 
@@ -174,6 +176,7 @@ impl Engine {
             }
             events.extend(self.roll_shop(state, seat as Seat));
         }
+        self.recompute_auras(state);
         Ok(events)
     }
 
@@ -184,7 +187,9 @@ impl Engine {
         seat: Seat,
         intent: Intent,
     ) -> Result<Outcome, Reject> {
-        recruit::apply(self, state, seat, intent)
+        let outcome = recruit::apply(self, state, seat, intent)?;
+        self.recompute_auras(state);
+        Ok(outcome)
     }
 
     /// 重抽指定玩家的商店，保留冻结槽位；返回 `ShopRolled` 事件。
