@@ -10,7 +10,6 @@ attack: 4
 health: 5
 skills: [keyword-optimal-attack]
 is_scholar: false
-source: 素材
 ---
 
 # 机器狗
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 最优攻击 |
 | 技能 | keyword-optimal-attack |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

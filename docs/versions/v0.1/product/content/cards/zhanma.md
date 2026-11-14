@@ -10,7 +10,6 @@ attack: 6
 health: 7
 skills: [keyword-evolve]
 is_scholar: false
-source: 新增
 ---
 
 # 战马
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 进化 |
 | 技能 | keyword-evolve |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

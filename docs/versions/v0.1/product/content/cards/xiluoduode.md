@@ -10,7 +10,6 @@ attack: 0
 health: 6
 skills: [battlecry-friendly-plus-0-plus-2]
 is_scholar: true
-source: 新增
 ---
 
 # 希罗多德
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-2 |
 | 学者 | 是 |
-| 来源 | 新增 |
 
 ## 效果
 

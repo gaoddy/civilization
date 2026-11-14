@@ -10,7 +10,6 @@ attack: 1
 health: 3
 skills: [keyword-sow]
 is_scholar: false
-source: 新增
 ---
 
 # 苔藓
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

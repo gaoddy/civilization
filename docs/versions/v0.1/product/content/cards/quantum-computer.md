@@ -10,7 +10,6 @@ attack: 7
 health: 9
 skills: [keyword-divine-shield, keyword-assemble-2]
 is_scholar: false
-source: 新增
 ---
 
 # 量子计算机
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 护盾；装配 2 |
 | 技能 | keyword-divine-shield；keyword-assemble-2 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

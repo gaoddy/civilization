@@ -10,7 +10,6 @@ attack: 9
 health: 11
 skills: [keyword-contagion, combatstart-all-enemies-contagion-1]
 is_scholar: false
-source: 新增
 ---
 
 # 基因工程病毒
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-all-enemies-contagion-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

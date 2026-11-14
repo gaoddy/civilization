@@ -10,7 +10,6 @@ attack: 5
 health: 8
 skills: [keyword-assemble-2]
 is_scholar: false
-source: 新增
 ---
 
 # 蒸汽机
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

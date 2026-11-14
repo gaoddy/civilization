@@ -10,7 +10,6 @@ attack: 0
 health: 5
 skills: [battlecry-friendly-plus-0-plus-1]
 is_scholar: true
-source: 素材
 ---
 
 # 欧几里得
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-1 |
 | 学者 | 是 |
-| 来源 | 素材 |
 
 ## 效果
 

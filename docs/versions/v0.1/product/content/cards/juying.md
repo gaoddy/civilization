@@ -10,7 +10,6 @@ attack: 3
 health: 4
 skills: [trigger-friendly-death-self-plus-1-attack]
 is_scholar: false
-source: 新增
 ---
 
 # 巨鹰
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | trigger-friendly-death-self-plus-1-attack |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

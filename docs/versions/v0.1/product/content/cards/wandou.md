@@ -10,7 +10,6 @@ attack: 1
 health: 2
 skills: [keyword-breed-1]
 is_scholar: false
-source: 素材
 ---
 
 # 豌豆
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 繁衍 1 |
 | 技能 | keyword-breed-1 |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

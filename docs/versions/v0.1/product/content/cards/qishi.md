@@ -10,7 +10,6 @@ attack: 3
 health: 5
 skills: [keyword-taunt]
 is_scholar: false
-source: 素材
 ---
 
 # 骑士
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

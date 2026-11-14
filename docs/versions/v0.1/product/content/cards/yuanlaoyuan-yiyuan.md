@@ -10,7 +10,6 @@ attack: 4
 health: 6
 skills: [battlecry-other-friendly-humans-plus-1-attack]
 is_scholar: false
-source: 新增
 ---
 
 # 元老院议员
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

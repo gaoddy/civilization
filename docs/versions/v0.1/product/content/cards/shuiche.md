@@ -10,7 +10,6 @@ attack: 2
 health: 5
 skills: [keyword-assemble-1]
 is_scholar: false
-source: 新增
 ---
 
 # 水车
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

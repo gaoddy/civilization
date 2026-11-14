@@ -10,7 +10,6 @@ attack: 8
 health: 13
 skills: [keyword-sow, aura-plant-plus-1-plus-1]
 is_scholar: false
-source: 新增
 ---
 
 # 世界树
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 播种 |
 | 技能 | keyword-sow；aura-plant-plus-1-plus-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

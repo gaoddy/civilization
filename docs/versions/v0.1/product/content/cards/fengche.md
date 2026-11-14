@@ -10,7 +10,6 @@ attack: 3
 health: 6
 skills: [keyword-assemble-1, trigger-turn-start-self-plus-0-plus-1]
 is_scholar: false
-source: 新增
 ---
 
 # 风车
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1；trigger-turn-start-self-plus-0-plus-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

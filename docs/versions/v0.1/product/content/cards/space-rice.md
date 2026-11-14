@@ -10,7 +10,6 @@ attack: 6
 health: 12
 skills: [keyword-sow, keyword-breed-3]
 is_scholar: false
-source: 新增
 ---
 
 # 太空水稻
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 播种；繁衍 3 |
 | 技能 | keyword-sow；keyword-breed-3 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

@@ -10,7 +10,6 @@ attack: 0
 health: 16
 skills: [aura-biology-plus-1-plus-1]
 is_scholar: true
-source: 素材
 ---
 
 # 达尔文
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 无 |
 | 技能 | aura-biology-plus-1-plus-1 |
 | 学者 | 是 |
-| 来源 | 素材 |
 
 ## 效果
 

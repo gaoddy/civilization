@@ -10,7 +10,6 @@ attack: 2
 health: 3
 skills: [deathrattle-all-enemies-minus-1-health]
 is_scholar: false
-source: 素材
 ---
 
 # 天花
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-minus-1-health |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

@@ -10,7 +10,6 @@ attack: 3
 health: 4
 skills: [battlecry-random-enemy-damage-1]
 is_scholar: false
-source: 新增
 ---
 
 # 攻城槌
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-random-enemy-damage-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

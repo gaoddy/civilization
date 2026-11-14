@@ -10,7 +10,6 @@ attack: 7
 health: 10
 skills: [battlecry-friendly-growth-once]
 is_scholar: false
-source: 素材
 ---
 
 # 大猩猩科科
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

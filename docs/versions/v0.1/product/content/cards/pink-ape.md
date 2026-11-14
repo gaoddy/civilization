@@ -10,7 +10,6 @@ attack: 5
 health: 7
 skills: [battlecry-self-growth-twice]
 is_scholar: false
-source: 素材
 ---
 
 # 带粉色头套的猩猩
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 战吼 |
 | 技能 | battlecry-self-growth-twice |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

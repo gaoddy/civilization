@@ -10,7 +10,6 @@ attack: 1
 health: 3
 skills: [deathrattle-summon-termite]
 is_scholar: false
-source: 素材
 ---
 
 # 实验小鼠
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-termite |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

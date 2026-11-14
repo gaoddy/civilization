@@ -10,7 +10,6 @@ attack: 3
 health: 5
 skills: [combatstart-random-enemy-contagion-1]
 is_scholar: false
-source: 新增
 ---
 
 # 雅典瘟疫
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

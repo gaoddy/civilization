@@ -10,7 +10,6 @@ attack: 2
 health: 5
 skills: [deathrattle-all-friendly-plus-0-plus-1]
 is_scholar: false
-source: 新增
 ---
 
 # 猛犸象
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | deathrattle-all-friendly-plus-0-plus-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

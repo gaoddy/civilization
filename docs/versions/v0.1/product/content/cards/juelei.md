@@ -10,7 +10,6 @@ attack: 2
 health: 4
 skills: [keyword-sow, keyword-breed-2]
 is_scholar: false
-source: 新增
 ---
 
 # 蕨类
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 播种；繁衍 2 |
 | 技能 | keyword-sow；keyword-breed-2 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

@@ -10,7 +10,6 @@ attack: 1
 health: 2
 skills: [battlecry-friendly-growth-once]
 is_scholar: false
-source: 新增
 ---
 
 # 信鸽
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

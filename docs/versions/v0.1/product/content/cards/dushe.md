@@ -10,7 +10,6 @@ attack: 2
 health: 4
 skills: [deathrattle-random-enemy-minus-1-attack]
 is_scholar: false
-source: 新增
 ---
 
 # 毒蛇
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | deathrattle-random-enemy-minus-1-attack |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

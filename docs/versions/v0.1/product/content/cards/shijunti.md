@@ -10,7 +10,6 @@ attack: 1
 health: 2
 skills: [deathrattle-random-enemy-hp-minus-1]
 is_scholar: false
-source: 新增
 ---
 
 # 噬菌体
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 亡语 |
 | 技能 | deathrattle-random-enemy-hp-minus-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

@@ -10,7 +10,6 @@ attack: 3
 health: 3
 skills: [battlecry-friendly-virus-plus-1-attack]
 is_scholar: false
-source: 新增
 ---
 
 # 狂犬病
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-virus-plus-1-attack |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

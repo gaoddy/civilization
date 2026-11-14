@@ -10,7 +10,6 @@ attack: 4
 health: 9
 skills: [deathrattle-summon-2-2-hela-cell-clone]
 is_scholar: false
-source: 素材
 ---
 
 # 海拉细胞
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-2-2-hela-cell-clone |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

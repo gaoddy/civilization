@@ -10,7 +10,6 @@ attack: 3
 health: 5
 skills: [keyword-sow, keyword-breed-1]
 is_scholar: false
-source: 新增
 ---
 
 # 巨花
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 播种；繁衍 1 |
 | 技能 | keyword-sow；keyword-breed-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

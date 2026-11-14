@@ -10,7 +10,6 @@ attack: 3
 health: 4
 skills: [keyword-taunt]
 is_scholar: false
-source: 新增
 ---
 
 # 斗兽场狮子
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

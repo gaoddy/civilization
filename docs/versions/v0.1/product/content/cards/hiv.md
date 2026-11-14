@@ -10,7 +10,6 @@ attack: 5
 health: 6
 skills: [keyword-contagion]
 is_scholar: false
-source: 素材
 ---
 
 # 艾滋病毒
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 传染 |
 | 技能 | keyword-contagion |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 
