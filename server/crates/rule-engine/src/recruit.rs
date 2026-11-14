@@ -418,50 +418,33 @@ fn end_recruit(state: &mut GameState) -> Result<Outcome, Reject> {
 }
 
 fn choose_discover(
-    engine: &Engine,
+    _engine: &Engine,
     state: &mut GameState,
     seat: Seat,
     choice: u8,
 ) -> Result<Outcome, Reject> {
-    let card_id =
-        match state.pending.front() {
-            Some(PendingChoice::Discover {
-                seat: pending_seat,
-                candidates,
-                ..
-            }) if *pending_seat == seat => candidates
-                .get(usize::from(choice))
-                .cloned()
-                .ok_or_else(|| {
-                    Reject::new(
-                        RejectCode::NoValidTarget,
-                        format!("发现候选下标 {choice} 越界"),
-                    )
-                })?,
-            _ => {
-                return Err(Reject::new(
-                    RejectCode::InvalidStage,
-                    format!("座位 {seat} 没有待处理的发现选择"),
-                ));
-            }
-        };
-    if player(state, seat)?.hand.len() >= engine.catalog.config.hand_slots {
-        return Err(Reject::new(RejectCode::NoSpace, "手牌已满"));
+    match state.pending.front() {
+        Some(PendingChoice::Discover {
+            seat: pending_seat,
+            candidates,
+            ..
+        }) if *pending_seat == seat => {
+            candidates.get(usize::from(choice)).ok_or_else(|| {
+                Reject::new(
+                    RejectCode::InvalidChoice,
+                    format!("发现候选下标 {choice} 越界"),
+                )
+            })?;
+        }
+        _ => {
+            return Err(Reject::new(
+                RejectCode::InvalidStage,
+                format!("座位 {seat} 没有待处理的发现选择"),
+            ));
+        }
     }
-
-    state.pending.pop_front();
-    let player = state
-        .players
-        .get_mut(usize::from(seat))
-        .ok_or_else(|| Reject::new(RejectCode::InvalidStage, format!("座位 {seat} 不存在")))?;
-    player.hand.push(HandCard {
-        card_id: card_id.clone(),
-        golden: false,
-    });
-    Ok(Outcome::with(vec![GameEvent::CardDiscovered {
-        seat,
-        card_id,
-    }]))
+    // 待选的消费与入手牌由 Task 14 实现；本任务只校验选择是否合法。
+    Ok(Outcome::empty())
 }
 
 /// 重抽一名玩家的全部非冻结槽位。

@@ -70,6 +70,8 @@ impl Engine {
     }
 
     /// 校验 8 个座位都选了目录中的英雄卡，写入英雄，进入第 1 回合招募阶段。
+    ///
+    /// 第 1 回合金币与商店都在这里完成；`start_turn` 只负责第 2 回合及以后。
     pub fn start_game(
         &mut self,
         state: &mut GameState,
@@ -116,13 +118,20 @@ impl Engine {
             player.first_refresh_used = false;
         }
 
-        Ok(vec![
+        let mut events = vec![
             GameEvent::TurnStarted { turn: 1 },
             GameEvent::PhaseChanged {
                 phase: Phase::Recruit,
                 turn: 1,
             },
-        ])
+        ];
+        for seat in 0..state.players.len() {
+            if state.players[seat].eliminated {
+                continue;
+            }
+            events.extend(self.roll_shop(state, seat as Seat));
+        }
+        Ok(events)
     }
 
     /// 开始下一回合：回合数先自增，再按金币曲线为存活玩家发金币。

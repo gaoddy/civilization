@@ -298,6 +298,7 @@ fn sell_returns_gold_and_pool() {
 fn sell_golden_returns_three() {
     let (mut engine, mut state) = setup(8);
     let card_id = minion_id(2);
+    let before_pool = pool_count(&state, &card_id);
     let mut golden = dummy(43, &card_id);
     golden.golden = true;
     state.players[0].board.push(golden);
@@ -308,6 +309,11 @@ fn sell_golden_returns_three() {
         .expect("出售金色随从应成功");
 
     assert_eq!(state.players[0].gold, 3);
+    assert_eq!(
+        pool_count(&state, &card_id),
+        before_pool + 1,
+        "金色随从也只归还 1 份池"
+    );
 }
 
 #[test]
@@ -875,7 +881,7 @@ fn choose_discover_without_pending_rejects_invalid_stage() {
 }
 
 #[test]
-fn choose_discover_out_of_range_rejects() {
+fn choose_discover_out_of_range_rejects_invalid_choice() {
     let (mut engine, mut state) = setup(34);
     state
         .pending
@@ -888,12 +894,12 @@ fn choose_discover_out_of_range_rejects() {
 
     let result = engine.apply(&mut state, 0, Intent::ChooseDiscover { choice: 5 });
 
-    assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
+    assert_eq!(result.unwrap_err().code, RejectCode::InvalidChoice);
     assert_eq!(before, state_hash(&state));
 }
 
 #[test]
-fn choose_discover_adds_card_to_hand() {
+fn choose_discover_valid_choice_is_accepted_without_consuming() {
     let (mut engine, mut state) = setup(35);
     state
         .pending
@@ -905,16 +911,69 @@ fn choose_discover_adds_card_to_hand() {
 
     let outcome = engine
         .apply(&mut state, 0, Intent::ChooseDiscover { choice: 1 })
-        .expect("选择发现结果应成功");
+        .expect("合法的发现选择应被接受");
 
-    assert_eq!(
-        outcome.events,
-        vec![GameEvent::CardDiscovered {
-            seat: 0,
-            card_id: "b".to_string(),
-        }]
-    );
-    assert_eq!(state.players[0].hand.len(), 1);
-    assert_eq!(state.players[0].hand[0].card_id, "b");
-    assert!(state.pending.is_empty());
+    assert!(outcome.events.is_empty(), "消费待选由 Task 14 负责");
+    assert!(state.players[0].hand.is_empty());
+    assert_eq!(state.pending.len(), 1, "本任务不消费待选");
+}
+
+#[test]
+fn buy_ignores_target_instance_id() {
+    let (mut engine, mut state) = setup(36);
+    let card_id = minion_id(1);
+    set_shop(&mut state, 0, &[Some(card_id.clone())]);
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::BuyMinion {
+                slot: 0,
+                target: Some(9999),
+            },
+        )
+        .expect("本任务的目标字段应被忽略");
+
+    assert_eq!(state.players[0].board.len(), 1);
+    assert_eq!(state.players[0].board[0].card_id, card_id);
+    assert_eq!(state.players[0].gold, 0);
+}
+
+#[test]
+fn start_game_fills_turn_one_shops() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [36; 32]);
+    let catalog = test_catalog();
+
+    let events = engine
+        .start_game(&mut state, &heroes())
+        .expect("开局应成功");
+    let rolled = events
+        .iter()
+        .filter(|event| matches!(event, GameEvent::ShopRolled { .. }))
+        .count();
+    assert_eq!(rolled, 8, "开局为每名玩家刷新一次商店");
+
+    for seat in 0..8 {
+        let shop = &state.players[seat].shop;
+        assert_eq!(shop.len(), catalog.config.shop_slots);
+        assert!(
+            shop.iter().any(Option::is_some),
+            "座位 {seat} 的第 1 回合商店应有卡"
+        );
+        for slot in shop.iter().flatten() {
+            let card = catalog
+                .cards
+                .get(&slot.card_id)
+                .expect("商店卡牌应存在于目录");
+            assert!(!card.is_hero, "第 1 回合商店不应出现英雄卡 {}", card.id);
+        }
+    }
+
+    let events = engine.start_turn(&mut state).expect("开始下一回合");
+    let rolled = events
+        .iter()
+        .filter(|event| matches!(event, GameEvent::ShopRolled { .. }))
+        .count();
+    assert_eq!(rolled, 8, "start_turn 仍为每名玩家刷新一次");
 }
