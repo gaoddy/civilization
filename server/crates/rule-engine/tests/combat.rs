@@ -342,10 +342,10 @@ fn reborn_returns_once_with_one_health() {
 }
 
 #[test]
-fn simultaneous_death_resolves_left_to_right() {
+fn dying_target_does_not_counterattack() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 3, 1, &[]);
-    add_card(&mut catalog, "b", 2, 2, &[]);
+    add_card(&mut catalog, "a", 3, 2, &[]);
+    add_card(&mut catalog, "b", 2, 3, &[]);
 
     let log = simulate(
         &catalog,
@@ -357,14 +357,59 @@ fn simultaneous_death_resolves_left_to_right() {
         &mut rng(),
     );
 
+    // 攻击力 3 直接击杀 3 血目标；目标已死亡，不能反击攻击力 2 的 A。
+    assert_eq!(death_order(&log), vec![2], "只有目标死亡");
+    assert_eq!(log.attacker_survivors, vec![1], "A 未受反击伤害");
+    assert!(log.defender_survivors.is_empty());
+    assert_eq!(log.winner, Some(0));
+    assert_eq!(log.action_count, 1);
+}
+
+fn zero_health(instance_id: InstanceId, card_id: &str) -> MinionInstance {
+    let mut subject = minion(instance_id, card_id);
+    subject.mods.push(Modifier {
+        attack: 0,
+        health: -5,
+        duration: Duration::Permanent,
+    });
+    subject
+}
+
+#[test]
+fn death_queue_orders_attacker_side_then_left_to_right() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "corpse", 0, 1, &[]);
+    add_card(&mut catalog, "fighter", 0, 10, &[]);
+    add_card(&mut catalog, "d1", 0, 1, &[]);
+    add_card(&mut catalog, "d2", 0, 1, &["复生"]);
+
+    let log = simulate(
+        &catalog,
+        &[zero_health(1, "corpse"), minion(2, "fighter")],
+        &[zero_health(3, "d1"), zero_health(4, "d2")],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
+
     assert_eq!(
         death_order(&log),
-        vec![1, 2],
-        "同时死亡时攻击方优先，再按站位从左到右"
+        vec![1, 3, 4],
+        "攻击方零血随从先处理，再按防御方站位从左到右"
     );
-    assert!(log.attacker_survivors.is_empty());
-    assert!(log.defender_survivors.is_empty());
-    assert_eq!(log.winner, None, "双方同时清场由 Task 9 用玩家字段判定");
+    assert_eq!(reborn_count(&log), 1, "只有带复生的 d2 复活");
+    let reborn_index = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Reborn { minion } if *minion == 4))
+        .expect("d2 应复生");
+    assert_eq!(
+        log.actions[reborn_index - 1],
+        CombatAction::Death { minion: 4 }
+    );
+    assert_eq!(log.attacker_survivors, vec![2]);
+    assert_eq!(log.defender_survivors, vec![4], "复生后的 d2 回到场上");
 }
 
 #[test]

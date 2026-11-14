@@ -199,7 +199,8 @@ impl SideBoard {
             let tokens = starting_tokens(catalog, minion);
             minion.attacks_left = tokens;
             health.push(current);
-            alive.push(current > 0);
+            // 战斗开始前生命已 ≤0 的随从先视为在场，由开场死亡结算统一处理。
+            alive.push(true);
             token_counts.push(tokens);
         }
         Self {
@@ -337,8 +338,12 @@ fn resolve_attack(
         actions.push(CombatAction::ContagionApplied { target: target_id });
     }
 
-    // (c) 反击：目标在这次攻击中仍然在场即反击，护盾不阻止其出手。
-    let counter = effective_attack(catalog, &defending.minions[target_index]);
+    // (c) 反击：目标在主伤害后仍存活（当前生命 > 0）才反击。
+    let counter = if defending.health[target_index] > 0 {
+        effective_attack(catalog, &defending.minions[target_index])
+    } else {
+        0
+    };
     if counter > 0 {
         let attacker = &mut attacking.minions[attacker_index];
         let shielded = keywords(catalog, attacker).contains(DIVINE_SHIELD) && !attacker.shield_used;
@@ -359,6 +364,22 @@ fn resolve_attack(
     });
 
     // 死亡队列：攻击方在前，防御方在后，各自按站位从左到右。
+    process_deaths(catalog, attacking, defending, actions);
+
+    // 推进攻击令牌。
+    let attacker = &mut attacking.minions[attacker_index];
+    attacker.attacks_left = attacker.attacks_left.saturating_sub(1);
+}
+
+/// 处理当前生命 ≤ 0 的随从：攻击方在前、防御方在后，各侧从左到右。
+///
+/// 带「复生」且本场未触发过的随从以 1 点生命复活并重置攻击令牌。
+fn process_deaths(
+    catalog: &Catalog,
+    attacking: &mut SideBoard,
+    defending: &mut SideBoard,
+    actions: &mut Vec<CombatAction>,
+) {
     let mut dead = Vec::new();
     for index in 0..attacking.minions.len() {
         if attacking.alive[index] && attacking.health[index] <= 0 {
@@ -390,10 +411,6 @@ fn resolve_attack(
             board.alive[index] = false;
         }
     }
-
-    // 推进攻击令牌。
-    let attacker = &mut attacking.minions[attacker_index];
-    attacker.attacks_left = attacker.attacks_left.saturating_sub(1);
 }
 
 /// 模拟一场战斗。
@@ -411,6 +428,13 @@ pub fn simulate(
     let mut attacker_side = SideBoard::new(catalog, attacker);
     let mut defender_side = SideBoard::new(catalog, defender);
     let mut actions = Vec::new();
+    // 开场先结算生命已 ≤0 的随从（攻击方在前），复生者可重新入场。
+    process_deaths(
+        catalog,
+        &mut attacker_side,
+        &mut defender_side,
+        &mut actions,
+    );
     let mut action_count: u16 = 0;
     let mut attacker_turn = first == attacker_seat;
 
