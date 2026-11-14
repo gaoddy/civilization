@@ -201,6 +201,9 @@ fn resolve_real(
         _ => state.first_seat,
     };
     let log = combat::simulate(catalog, &board_a, &board_b, a, b, first, &mut state.rng);
+    // 战斗内写入的传染层数（以及成长记录）需要回到持久棋盘；其余字段保持不变。
+    write_back_persistent(state, a, &log.attacker_final);
+    write_back_persistent(state, b, &log.defender_final);
     let winner = match log.winner {
         Some(winner) => winner,
         None => tie_break(state, a, b),
@@ -503,6 +506,25 @@ fn player(state: &GameState, seat: Seat) -> Option<&PlayerState> {
 
 fn player_mut(state: &mut GameState, seat: Seat) -> Option<&mut PlayerState> {
     state.players.iter_mut().find(|player| player.seat == seat)
+}
+
+/// 把战斗结束时的克隆中需要持久化的字段写回存储随从（按 `instance_id` 匹配）。
+///
+/// 只写传染层数与成长记录；临时修正、授予关键词、护盾/复生等战斗标记保持原样。
+fn write_back_persistent(state: &mut GameState, seat: Seat, final_board: &[MinionInstance]) {
+    let Some(player) = player_mut(state, seat) else {
+        return;
+    };
+    for stored in &mut player.board {
+        if let Some(updated) = final_board
+            .iter()
+            .find(|minion| minion.instance_id == stored.instance_id)
+        {
+            stored.contagion = updated.contagion;
+            stored.growth = updated.growth;
+            stored.growth_health_only = updated.growth_health_only;
+        }
+    }
 }
 
 fn board_of(state: &GameState, seat: Seat) -> &[MinionInstance] {

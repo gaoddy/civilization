@@ -1,9 +1,10 @@
 //! 效果执行器：把解析完成的效果 AST 落成对局状态变化。
 //!
 //! 本模块实现招募阶段的六个即时动作（成长、属性修改、赋予关键词、移除成长、
-//! 禁止攻击、造成伤害）以及 `OnPlay` / `OnPlayEffect` / `OnActivate` / `OnUse`
-//! 四个触发时机。召唤、复制、发现、刷新商店、增加商店槽位、获得随从由
-//! Task 12–14 实现；光环由 Task 11 实现；战斗内触发由 Task 13 实现。
+//! 禁止攻击、造成伤害）与商店类原语（刷新商店、增加槽位、获得随从），以及
+//! `OnPlay` / `OnPlayEffect` / `OnActivate` / `OnUse` / `OnTurnStart` /
+//! `OnFirstRefresh` 六个触发时机。召唤、复制、发现由 Task 13–14 实现；
+//! 光环由 Task 11 实现；战斗内触发由 Task 13 实现。
 //!
 //! 规则口径见 `docs/versions/v0.1/product/rules/keywords-and-mechanics.md`
 //! §2、§3、§8、§9、§10。所有随机性只来自 [`Stream::Effects`]，集合与遍历顺序
@@ -52,12 +53,14 @@ impl Engine {
         ctx: EffectCtx,
     ) -> Vec<GameEvent> {
         match trigger {
-            Trigger::OnPlay | Trigger::OnPlayEffect | Trigger::OnActivate => {
-                match self.owner_card_id(state, trigger, &ctx) {
-                    Some(card_id) => self.run_card_effects(state, &card_id, trigger, &ctx),
-                    None => Vec::new(),
-                }
-            }
+            Trigger::OnPlay
+            | Trigger::OnPlayEffect
+            | Trigger::OnActivate
+            | Trigger::OnTurnStart
+            | Trigger::OnFirstRefresh => match self.owner_card_id(state, trigger, &ctx) {
+                Some(card_id) => self.run_card_effects(state, &card_id, trigger, &ctx),
+                None => Vec::new(),
+            },
             Trigger::OnUse => self.fire_on_use(state, &ctx),
             _ => Vec::new(),
         }
@@ -150,13 +153,13 @@ impl Engine {
                 Vec::new()
             }
             Op::DealDamage => self.apply_deal_damage(state, effect, &targets),
-            // Task 12–14 实现。
+            Op::RefreshShop => self.apply_refresh_shop(state, effect, ctx),
+            Op::AddShopSlot => self.apply_add_shop_slot(state, effect, ctx),
+            Op::GainMinion => self.apply_gain_minion(state, effect, ctx),
+            // Task 13–14 实现。
             Op::Summon => Vec::new(),
             Op::Copy => Vec::new(),
             Op::Discover => Vec::new(),
-            Op::RefreshShop => Vec::new(),
-            Op::AddShopSlot => Vec::new(),
-            Op::GainMinion => Vec::new(),
         }
     }
 
@@ -241,13 +244,15 @@ impl Engine {
             Trigger::OnPlay | Trigger::OnPlayEffect => {
                 ctx.source.and_then(|id| board_card_id(state, ctx.seat, id))
             }
-            Trigger::OnActivate => match ctx.source {
-                Some(id) => board_card_id(state, ctx.seat, id),
-                None => state
-                    .players
-                    .get(usize::from(ctx.seat))
-                    .and_then(|player| player.hero.clone()),
-            },
+            Trigger::OnActivate | Trigger::OnTurnStart | Trigger::OnFirstRefresh => {
+                match ctx.source {
+                    Some(id) => board_card_id(state, ctx.seat, id),
+                    None => state
+                        .players
+                        .get(usize::from(ctx.seat))
+                        .and_then(|player| player.hero.clone()),
+                }
+            }
             _ => None,
         }
     }

@@ -56,6 +56,10 @@ pub struct CombatLog {
     pub defender_survivors: Vec<InstanceId>,
     pub winner: Option<Seat>,
     pub action_count: u16,
+    /// 战斗结束时的攻击方随从克隆；供结算层回写持久字段（传染、成长）。
+    pub attacker_final: Vec<MinionInstance>,
+    /// 战斗结束时的防守方随从克隆；供结算层回写持久字段（传染、成长）。
+    pub defender_final: Vec<MinionInstance>,
 }
 
 /// 卡面基础攻击力；金色翻倍。
@@ -531,5 +535,7 @@ pub fn simulate(
         defender_survivors: defender_side.survivors(),
         winner,
         action_count,
+        attacker_final: attacker_side.minions,
+        defender_final: defender_side.minions,
     }
 }

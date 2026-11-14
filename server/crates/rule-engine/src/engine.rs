@@ -2,13 +2,15 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+use crate::combat;
 use crate::data::{CardType, Catalog, Era, Tribe};
+use crate::effects::{Duration, EffectCtx, Trigger};
 use crate::error::EngineError;
 use crate::events::GameEvent;
 use crate::intent::{Intent, Outcome, Reject};
 use crate::recruit;
 use crate::rng::{RngStreams, Stream};
-use crate::state::{GameState, Phase, PlayerState, Seat};
+use crate::state::{GameState, InstanceId, Modifier, Phase, PlayerState, Seat};
 
 /// 固定 8 人对局。
 const PLAYER_COUNT: Seat = 8;
@@ -44,6 +46,7 @@ impl Engine {
                 damage_dealt: 0,
                 eliminated: false,
                 first_refresh_used: false,
+                first_refresh_pending: true,
             })
             .collect();
 
@@ -120,6 +123,7 @@ impl Engine {
         for player in &mut state.players {
             player.gold = gold;
             player.first_refresh_used = false;
+            player.first_refresh_pending = true;
         }
 
         let mut events = vec![
@@ -139,10 +143,14 @@ impl Engine {
         Ok(events)
     }
 
-    /// 开始下一回合：回合数先自增，再按金币曲线为存活玩家发金币。
+    /// 开始下一回合：先结算回合开始效果，再发金币并刷新商店。
     ///
     /// `start_game` 已经发过第 1 回合金币，因此本方法不用于第 1 回合。
     /// 结算完成后调用时接受 `Settle`，并发出进入 `Recruit` 的 `PhaseChanged`。
+    ///
+    /// 回合开始顺序固定（关键词机制 §2.1）：每个未出局玩家按座位升序，
+    /// 其棋盘按站位从左到右依次结算繁衍、传染与其他 `OnTurnStart` 效果；
+    /// 全部效果结算完毕后，才发放本回合金币并刷新商店。
     pub fn start_turn(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
         let turn = state
             .turn
@@ -158,8 +166,8 @@ impl Engine {
             if player.eliminated {
                 continue;
             }
-            player.gold = gold;
             player.first_refresh_used = false;
+            player.first_refresh_pending = true;
             player.turns_in_era = player.turns_in_era.saturating_add(1);
         }
 
@@ -169,6 +177,28 @@ impl Engine {
                 phase: Phase::Recruit,
                 turn,
             });
+        }
+
+        // (a) 繁衍 → (b) 传染 → (c) 其他回合开始效果；座位升序、站位从左到右。
+        let seats: Vec<Seat> = state
+            .players
+            .iter()
+            .filter(|player| !player.eliminated)
+            .map(|player| player.seat)
+            .collect();
+        for seat in seats {
+            self.apply_breed(state, seat);
+            self.apply_contagion(state, seat);
+            events.extend(self.fire_turn_start(state, seat));
+        }
+        self.recompute_auras(state);
+
+        // 回合开始效果全部结算后，才发金币并刷新商店。
+        for player in &mut state.players {
+            if player.eliminated {
+                continue;
+            }
+            player.gold = gold;
         }
         for seat in 0..state.players.len() {
             if state.players[seat].eliminated {
@@ -196,6 +226,100 @@ impl Engine {
     pub fn roll_shop(&mut self, state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
         recruit::roll_player(self, state, seat, true);
         vec![GameEvent::ShopRolled { seat }]
+    }
+
+    /// 繁衍：每回合为棋盘随从增加固定层数 + `breed` 层数的生命值。
+    ///
+    /// 固定层数来自卡牌所引用技能 `keyword` 中的「繁衍 N」（无数字按 1）。
+    /// 繁衍只加生命、不加攻击；学者同样只获得生命。
+    fn apply_breed(&self, state: &mut GameState, seat: Seat) {
+        let Some(player) = state.players.get_mut(usize::from(seat)) else {
+            return;
+        };
+        for minion in &mut player.board {
+            let amount = self
+                .static_breed(&minion.card_id)
+                .saturating_add(minion.breed);
+            minion.growth_health_only = minion.growth_health_only.saturating_add(amount);
+            // `breed_applied` 记录本实例累计已通过繁衍获得的生命。
+            minion.breed_applied = minion.breed_applied.saturating_add(amount);
+        }
+    }
+
+    fn static_breed(&self, card_id: &str) -> i32 {
+        let Some(card) = self.catalog.cards.get(card_id) else {
+            return 0;
+        };
+        let mut total = 0i32;
+        for skill_id in &card.skills {
+            let Some(keyword) = self
+                .catalog
+                .skills
+                .get(skill_id)
+                .and_then(|skill| skill.keyword.as_deref())
+            else {
+                continue;
+            };
+            let Some(rest) = keyword.strip_prefix("繁衍") else {
+                continue;
+            };
+            let rest = rest.trim();
+            let layers = if rest.is_empty() {
+                1
+            } else {
+                rest.parse::<i32>().unwrap_or(1)
+            };
+            total = total.saturating_add(layers);
+        }
+        total
+    }
+
+    /// 传染：每层施加一个永久 -1 生命修正，然后移除生命降至 0 的随从。
+    fn apply_contagion(&self, state: &mut GameState, seat: Seat) {
+        let Some(player) = state.players.get_mut(usize::from(seat)) else {
+            return;
+        };
+        for minion in &mut player.board {
+            if minion.contagion > 0 {
+                minion.mods.push(Modifier {
+                    attack: 0,
+                    health: -minion.contagion,
+                    duration: Duration::Permanent,
+                });
+            }
+        }
+        let catalog = &self.catalog;
+        player
+            .board
+            .retain(|minion| combat::effective_health(catalog, minion) > 0);
+        // Task 13 的接缝：传染致死的随从当前直接移出棋盘，尚不触发亡语与死亡结算。
+    }
+
+    /// 按站位从左到右触发棋盘随从的 `OnTurnStart`；金色随从由执行器触发两次。
+    fn fire_turn_start(&mut self, state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
+        let Some(player) = state.players.get(usize::from(seat)) else {
+            return Vec::new();
+        };
+        let owners: Vec<(InstanceId, bool)> = player
+            .board
+            .iter()
+            .map(|minion| (minion.instance_id, minion.golden))
+            .collect();
+        let mut events = Vec::new();
+        for (instance_id, golden) in owners {
+            events.extend(self.fire(
+                state,
+                Trigger::OnTurnStart,
+                EffectCtx {
+                    seat,
+                    source: Some(instance_id),
+                    target: None,
+                    event_target: None,
+                    golden,
+                },
+            ));
+        }
+        events
     }
 
     fn first_turn_gold(&self) -> u8 {

@@ -7,6 +7,7 @@
 mod aura;
 mod exec;
 mod parse;
+mod shop_effects;
 
 pub use exec::{EffectCtx, effect_coverage};
 pub use parse::parse_effects;

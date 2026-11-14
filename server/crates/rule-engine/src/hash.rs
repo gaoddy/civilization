@@ -164,6 +164,7 @@ fn hash_player(hasher: &mut Hasher, player: &PlayerState) {
     hasher.i32(player.damage_dealt);
     hasher.bool(player.eliminated);
     hasher.bool(player.first_refresh_used);
+    hasher.bool(player.first_refresh_pending);
 }
 
 fn hash_minions(hasher: &mut Hasher, minions: &[MinionInstance]) {

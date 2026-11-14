@@ -97,6 +97,8 @@ pub struct PlayerState {
     pub damage_dealt: i32,
     pub eliminated: bool,
     pub first_refresh_used: bool,
+    /// 本回合的首次刷新是否尚未触发 `OnFirstRefresh`。
+    pub first_refresh_pending: bool,
 }
 
 /// 等待玩家做出的选择。

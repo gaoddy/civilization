@@ -195,7 +195,11 @@ fn sell(state: &mut GameState, seat: Seat, minion: InstanceId) -> Result<Outcome
     Ok(Outcome::with(vec![GameEvent::MinionSold { seat, minion }]))
 }
 
-fn reroll(engine: &Engine, state: &mut GameState, seat: Seat) -> Result<Outcome, Reject> {
+pub(crate) fn reroll(
+    engine: &mut Engine,
+    state: &mut GameState,
+    seat: Seat,
+) -> Result<Outcome, Reject> {
     let player = player(state, seat)?;
     let cost = u8::from(player.first_refresh_used);
     player
@@ -215,7 +219,69 @@ fn reroll(engine: &Engine, state: &mut GameState, seat: Seat) -> Result<Outcome,
 
     // 手动刷新取消所有冻结并重抽全部槽位。
     roll_player(engine, state, seat, false);
-    Ok(Outcome::with(vec![GameEvent::ShopRolled { seat }]))
+
+    let mut events = vec![GameEvent::ShopRolled { seat }];
+    let pending = state
+        .players
+        .get(usize::from(seat))
+        .is_some_and(|player| player.first_refresh_pending);
+    if pending {
+        if let Some(player) = state.players.get_mut(usize::from(seat)) {
+            player.first_refresh_pending = false;
+        }
+        events.extend(fire_first_refresh(engine, state, seat));
+    }
+    Ok(Outcome::with(events))
+}
+
+/// 触发本座位本回合的首次刷新效果：先英雄被动，再棋盘随从按站位从左到右。
+///
+/// 未携带 `OnFirstRefresh` 效果的卡牌由执行器收集为空；金色随从由执行器触发两次。
+pub(crate) fn fire_first_refresh(
+    engine: &mut Engine,
+    state: &mut GameState,
+    seat: Seat,
+) -> Vec<GameEvent> {
+    let Some(player) = state.players.get(usize::from(seat)) else {
+        return Vec::new();
+    };
+    let hero = player.hero.clone();
+    let owners: Vec<(InstanceId, String, bool)> = player
+        .board
+        .iter()
+        .map(|minion| (minion.instance_id, minion.card_id.clone(), minion.golden))
+        .collect();
+
+    let mut events = Vec::new();
+    if let Some(hero_id) = hero {
+        events.extend(engine.fire_card(
+            state,
+            &hero_id,
+            Trigger::OnFirstRefresh,
+            EffectCtx {
+                seat,
+                source: None,
+                target: None,
+                event_target: None,
+                golden: false,
+            },
+        ));
+    }
+    for (instance_id, card_id, golden) in owners {
+        events.extend(engine.fire_card(
+            state,
+            &card_id,
+            Trigger::OnFirstRefresh,
+            EffectCtx {
+                seat,
+                source: Some(instance_id),
+                target: None,
+                event_target: None,
+                golden,
+            },
+        ));
+    }
+    events
 }
 
 fn upgrade(engine: &Engine, state: &mut GameState, seat: Seat) -> Result<Outcome, Reject> {
@@ -556,12 +622,15 @@ pub(crate) fn roll_player(
         .get(era_index(current.era))
         .copied();
     let old_shop = current.shop.clone();
+    // 商店恢复为基础槽位数；追加槽位只在本次刷新结果中保留。
+    let slot_count = engine.catalog.config.shop_slots;
 
     let (rng, pool, tribes) = (&mut state.rng, &state.pool, &state.enabled_tribes);
-    let mut new_shop = Vec::with_capacity(old_shop.len());
-    for slot in &old_shop {
+    let mut new_shop = Vec::with_capacity(slot_count);
+    for index in 0..slot_count {
+        let slot = old_shop.get(index);
         if preserve_frozen
-            && let Some(existing) = slot
+            && let Some(Some(existing)) = slot
             && existing.frozen
         {
             new_shop.push(Some(existing.clone()));
