@@ -1,7 +1,7 @@
 //! 玩家意图与拒绝码：`Engine::apply` 的唯一输入与错误输出。
 //!
-//! 意图只描述玩家想做什么，不含座位；座位由 [`crate::engine::Engine::apply_for`]
-//! 指定（[`crate::engine::Engine::apply`] 是作用于 0 号座位的便捷入口）。
+//! 意图只描述玩家想做什么，不含座位；座位由 [`crate::engine::Engine::apply`]
+//! 显式指定。
 
 use crate::events::GameEvent;
 use crate::state::InstanceId;

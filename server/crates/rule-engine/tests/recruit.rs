@@ -106,6 +106,7 @@ fn buy_deducts_gold_and_pool() {
     let outcome = engine
         .apply(
             &mut state,
+            0,
             Intent::BuyMinion {
                 slot: 0,
                 target: None,
@@ -150,6 +151,7 @@ fn buy_effect_card_goes_to_hand_and_costs_card_cost() {
     let outcome = engine
         .apply(
             &mut state,
+            0,
             Intent::BuyMinion {
                 slot: 0,
                 target: None,
@@ -182,6 +184,7 @@ fn buy_without_gold_rejects_without_mutating() {
 
     let result = engine.apply(
         &mut state,
+        0,
         Intent::BuyMinion {
             slot: 0,
             target: None,
@@ -200,6 +203,7 @@ fn buy_empty_slot_rejects() {
 
     let result = engine.apply(
         &mut state,
+        0,
         Intent::BuyMinion {
             slot: 0,
             target: None,
@@ -211,6 +215,7 @@ fn buy_empty_slot_rejects() {
 
     let out_of_range = engine.apply(
         &mut state,
+        0,
         Intent::BuyMinion {
             slot: 99,
             target: None,
@@ -231,6 +236,7 @@ fn buy_when_board_and_hand_full_rejects() {
 
     let result = engine.apply(
         &mut state,
+        0,
         Intent::BuyMinion {
             slot: 0,
             target: None,
@@ -251,6 +257,7 @@ fn buy_routes_to_hand_when_board_is_full() {
     engine
         .apply(
             &mut state,
+            0,
             Intent::BuyMinion {
                 slot: 0,
                 target: None,
@@ -272,7 +279,7 @@ fn sell_returns_gold_and_pool() {
     let before_pool = pool_count(&state, &card_id);
 
     let outcome = engine
-        .apply(&mut state, Intent::SellMinion { minion: 42 })
+        .apply(&mut state, 0, Intent::SellMinion { minion: 42 })
         .expect("出售应成功");
 
     assert_eq!(
@@ -297,7 +304,7 @@ fn sell_golden_returns_three() {
     state.players[0].gold = 0;
 
     engine
-        .apply(&mut state, Intent::SellMinion { minion: 43 })
+        .apply(&mut state, 0, Intent::SellMinion { minion: 43 })
         .expect("出售金色随从应成功");
 
     assert_eq!(state.players[0].gold, 3);
@@ -308,7 +315,7 @@ fn sell_missing_minion_rejects() {
     let (mut engine, mut state) = setup(9);
     let before = state_hash(&state);
 
-    let result = engine.apply(&mut state, Intent::SellMinion { minion: 777 });
+    let result = engine.apply(&mut state, 0, Intent::SellMinion { minion: 777 });
 
     assert_eq!(result.unwrap_err().code, RejectCode::NoSuchMinion);
     assert_eq!(before, state_hash(&state));
@@ -323,14 +330,14 @@ fn reroll_first_is_free_then_costs_one() {
     assert!(!state.players[0].first_refresh_used);
 
     let outcome = engine
-        .apply(&mut state, Intent::RerollShop)
+        .apply(&mut state, 0, Intent::RerollShop)
         .expect("首次刷新免费");
     assert_eq!(outcome.events, vec![GameEvent::ShopRolled { seat: 0 }]);
     assert_eq!(state.players[0].gold, 3);
     assert!(state.players[0].first_refresh_used);
 
     engine
-        .apply(&mut state, Intent::RerollShop)
+        .apply(&mut state, 0, Intent::RerollShop)
         .expect("第二次刷新应扣 1 金");
     assert_eq!(state.players[0].gold, 2);
     assert_eq!(pool_count(&state, &card_id), before_pool, "刷新不扣池");
@@ -343,7 +350,7 @@ fn reroll_without_gold_rejects() {
     state.players[0].first_refresh_used = true;
     let before = state_hash(&state);
 
-    let result = engine.apply(&mut state, Intent::RerollShop);
+    let result = engine.apply(&mut state, 0, Intent::RerollShop);
 
     assert_eq!(result.unwrap_err().code, RejectCode::NotEnoughGold);
     assert_eq!(before, state_hash(&state));
@@ -356,11 +363,11 @@ fn upgrade_era_costs_and_rerolls() {
     let frozen_card = minion_id(2);
     set_shop(&mut state, 0, &[Some(frozen_card.clone())]);
     engine
-        .apply(&mut state, Intent::FreezeShop { slot: Some(0) })
+        .apply(&mut state, 0, Intent::FreezeShop { slot: Some(0) })
         .expect("冻结应成功");
 
     let outcome = engine
-        .apply(&mut state, Intent::UpgradeEra)
+        .apply(&mut state, 0, Intent::UpgradeEra)
         .expect("升时代应成功");
 
     assert_eq!(state.players[0].era, Era::Primitive);
@@ -384,7 +391,7 @@ fn upgrade_era_costs_and_rerolls() {
     );
 
     engine
-        .apply(&mut state, Intent::RerollShop)
+        .apply(&mut state, 0, Intent::RerollShop)
         .expect("升时代后的首次手动刷新仍应免费");
     assert_eq!(state.players[0].gold, 5);
 }
@@ -395,7 +402,7 @@ fn upgrade_without_gold_rejects() {
     state.players[0].gold = 4;
     let before = state_hash(&state);
 
-    let result = engine.apply(&mut state, Intent::UpgradeEra);
+    let result = engine.apply(&mut state, 0, Intent::UpgradeEra);
 
     assert_eq!(result.unwrap_err().code, RejectCode::NotEnoughGold);
     assert_eq!(before, state_hash(&state));
@@ -408,7 +415,7 @@ fn upgrade_at_future_rejects() {
     state.players[0].gold = 200;
     let before = state_hash(&state);
 
-    let result = engine.apply(&mut state, Intent::UpgradeEra);
+    let result = engine.apply(&mut state, 0, Intent::UpgradeEra);
 
     assert_eq!(result.unwrap_err().code, RejectCode::AlreadyMaxEra);
     assert_eq!(before, state_hash(&state));
@@ -427,6 +434,7 @@ fn play_minion_from_hand_moves_to_board() {
     let outcome = engine
         .apply(
             &mut state,
+            0,
             Intent::PlayCard {
                 hand_index: 0,
                 target: None,
@@ -454,6 +462,7 @@ fn play_effect_card_leaves_hand_without_events() {
     let outcome = engine
         .apply(
             &mut state,
+            0,
             Intent::PlayCard {
                 hand_index: 0,
                 target: None,
@@ -473,6 +482,7 @@ fn play_card_out_of_range_rejects() {
 
     let result = engine.apply(
         &mut state,
+        0,
         Intent::PlayCard {
             hand_index: 3,
             target: None,
@@ -496,6 +506,7 @@ fn play_minion_with_full_board_rejects() {
 
     let result = engine.apply(
         &mut state,
+        0,
         Intent::PlayCard {
             hand_index: 0,
             target: None,
@@ -512,7 +523,7 @@ fn rearrange_moves_minion_to_target_index() {
     state.players[0].board = vec![dummy(1, "a"), dummy(2, "b"), dummy(3, "c")];
 
     let outcome = engine
-        .apply(&mut state, Intent::RearrangeBoard { from: 0, to: 2 })
+        .apply(&mut state, 0, Intent::RearrangeBoard { from: 0, to: 2 })
         .expect("换位应成功");
     assert!(outcome.events.is_empty());
     let order: Vec<InstanceId> = state.players[0]
@@ -523,7 +534,7 @@ fn rearrange_moves_minion_to_target_index() {
     assert_eq!(order, vec![2, 3, 1], "移除后在目标下标重新插入");
 
     engine
-        .apply(&mut state, Intent::RearrangeBoard { from: 1, to: 1 })
+        .apply(&mut state, 0, Intent::RearrangeBoard { from: 1, to: 1 })
         .expect("同位置应为空操作");
     let order: Vec<InstanceId> = state.players[0]
         .board
@@ -540,7 +551,7 @@ fn rearrange_out_of_range_rejects() {
     let before = state_hash(&state);
 
     for (from, to) in [(0u8, 2u8), (2, 0), (5, 5)] {
-        let result = engine.apply(&mut state, Intent::RearrangeBoard { from, to });
+        let result = engine.apply(&mut state, 0, Intent::RearrangeBoard { from, to });
         assert_eq!(
             result.unwrap_err().code,
             RejectCode::NoSuchMinion,
@@ -562,7 +573,7 @@ fn freeze_persists_next_turn_and_reroll_clears() {
     );
 
     engine
-        .apply(&mut state, Intent::FreezeShop { slot: Some(0) })
+        .apply(&mut state, 0, Intent::FreezeShop { slot: Some(0) })
         .expect("冻结应成功");
     assert!(state.players[0].shop[0].as_ref().unwrap().frozen);
     assert!(!state.players[0].shop[1].as_ref().unwrap().frozen);
@@ -575,7 +586,7 @@ fn freeze_persists_next_turn_and_reroll_clears() {
     assert!(kept.frozen, "冻结标记跨回合保留");
 
     engine
-        .apply(&mut state, Intent::RerollShop)
+        .apply(&mut state, 0, Intent::RerollShop)
         .expect("手动刷新应成功");
     assert!(
         state.players[0]
@@ -593,7 +604,7 @@ fn freeze_with_none_freezes_all_slots() {
     set_shop(&mut state, 0, &[Some(minion_id(1)), Some(minion_id(2))]);
 
     engine
-        .apply(&mut state, Intent::FreezeShop { slot: None })
+        .apply(&mut state, 0, Intent::FreezeShop { slot: None })
         .expect("冻结全部应成功");
 
     assert!(
@@ -611,7 +622,7 @@ fn freeze_empty_slot_rejects() {
     set_shop(&mut state, 0, &[None]);
     let before = state_hash(&state);
 
-    let result = engine.apply(&mut state, Intent::FreezeShop { slot: Some(0) });
+    let result = engine.apply(&mut state, 0, Intent::FreezeShop { slot: Some(0) });
 
     assert_eq!(result.unwrap_err().code, RejectCode::ShopSlotEmpty);
     assert_eq!(before, state_hash(&state));
@@ -626,6 +637,7 @@ fn use_hero_power_respects_cost_and_uses() {
     engine
         .apply(
             &mut state,
+            0,
             Intent::UseHeroPower {
                 skill_id: "division-of-labor".to_string(),
                 target: None,
@@ -641,6 +653,7 @@ fn use_hero_power_respects_cost_and_uses() {
     let before = state_hash(&state);
     let exhausted = engine.apply(
         &mut state,
+        0,
         Intent::UseHeroPower {
             skill_id: "division-of-labor".to_string(),
             target: None,
@@ -658,6 +671,7 @@ fn use_hero_power_respects_cost_and_uses() {
     engine
         .apply(
             &mut state,
+            0,
             Intent::UseHeroPower {
                 skill_id: "division-of-labor".to_string(),
                 target: None,
@@ -673,6 +687,7 @@ fn use_passive_or_unknown_hero_power_rejects() {
 
     let passive = engine.apply(
         &mut state,
+        0,
         Intent::UseHeroPower {
             skill_id: "observation".to_string(),
             target: None,
@@ -682,6 +697,7 @@ fn use_passive_or_unknown_hero_power_rejects() {
 
     let unknown = engine.apply(
         &mut state,
+        0,
         Intent::UseHeroPower {
             skill_id: "not-a-skill".to_string(),
             target: None,
@@ -692,6 +708,7 @@ fn use_passive_or_unknown_hero_power_rejects() {
     state.players[0].hero = Some("galileo".to_string());
     let hero_without_skill = engine.apply(
         &mut state,
+        0,
         Intent::UseHeroPower {
             skill_id: "observation".to_string(),
             target: None,
@@ -711,6 +728,7 @@ fn use_hero_power_without_gold_rejects() {
 
     let result = engine.apply(
         &mut state,
+        0,
         Intent::UseHeroPower {
             skill_id: "division-of-labor".to_string(),
             target: None,
@@ -736,7 +754,7 @@ fn intent_outside_recruit_rejects() {
         Intent::ChooseDiscover { choice: 0 },
         Intent::EndRecruit,
     ] {
-        let result = engine.apply(&mut state, intent);
+        let result = engine.apply(&mut state, 0, intent);
         assert_eq!(result.unwrap_err().code, RejectCode::InvalidStage);
     }
     assert_eq!(before, state_hash(&state));
@@ -747,7 +765,7 @@ fn end_recruit_enters_combat() {
     let (mut engine, mut state) = setup(28);
 
     let outcome = engine
-        .apply(&mut state, Intent::EndRecruit)
+        .apply(&mut state, 0, Intent::EndRecruit)
         .expect("结束招募应成功");
 
     assert_eq!(state.phase, Phase::Combat);
@@ -760,7 +778,7 @@ fn end_recruit_enters_combat() {
     );
 
     let after = state_hash(&state);
-    let again = engine.apply(&mut state, Intent::EndRecruit);
+    let again = engine.apply(&mut state, 0, Intent::EndRecruit);
     assert_eq!(again.unwrap_err().code, RejectCode::InvalidStage);
     assert_eq!(after, state_hash(&state));
 }
@@ -775,7 +793,7 @@ fn reroll_with_empty_star_retries_then_leaves_slot_empty() {
     }
 
     let outcome = engine
-        .apply(&mut state, Intent::RerollShop)
+        .apply(&mut state, 0, Intent::RerollShop)
         .expect("空层重试后不应失败");
     assert_eq!(outcome.events, vec![GameEvent::ShopRolled { seat: 0 }]);
     assert!(
@@ -850,7 +868,7 @@ fn choose_discover_without_pending_rejects_invalid_stage() {
     let (mut engine, mut state) = setup(33);
     let before = state_hash(&state);
 
-    let result = engine.apply(&mut state, Intent::ChooseDiscover { choice: 0 });
+    let result = engine.apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 });
 
     assert_eq!(result.unwrap_err().code, RejectCode::InvalidStage);
     assert_eq!(before, state_hash(&state));
@@ -868,7 +886,7 @@ fn choose_discover_out_of_range_rejects() {
         });
     let before = state_hash(&state);
 
-    let result = engine.apply(&mut state, Intent::ChooseDiscover { choice: 5 });
+    let result = engine.apply(&mut state, 0, Intent::ChooseDiscover { choice: 5 });
 
     assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
     assert_eq!(before, state_hash(&state));
@@ -886,7 +904,7 @@ fn choose_discover_adds_card_to_hand() {
         });
 
     let outcome = engine
-        .apply(&mut state, Intent::ChooseDiscover { choice: 1 })
+        .apply(&mut state, 0, Intent::ChooseDiscover { choice: 1 })
         .expect("选择发现结果应成功");
 
     assert_eq!(

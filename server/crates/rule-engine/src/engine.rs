@@ -164,15 +164,8 @@ impl Engine {
         Ok(events)
     }
 
-    /// 执行一条意图；这是 M0 简报约定的入口，作用于 0 号座位。
-    ///
-    /// 需要指定座位时使用 [`Engine::apply_for`]。
-    pub fn apply(&mut self, state: &mut GameState, intent: Intent) -> Result<Outcome, Reject> {
-        self.apply_for(state, 0, intent)
-    }
-
     /// 以指定座位执行一条意图；拒绝时状态保持不变。
-    pub fn apply_for(
+    pub fn apply(
         &mut self,
         state: &mut GameState,
         seat: Seat,

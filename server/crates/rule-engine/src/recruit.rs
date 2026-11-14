@@ -17,7 +17,7 @@ use crate::state::{
 /// 空星级最多重抽的次数；用尽后槽位留空。
 const EMPTY_STAR_RETRIES: u32 = 5;
 
-/// 按意图分派；调用方已用 [`crate::engine::Engine::apply_for`] 指定座位。
+/// 按意图分派；调用方已用 [`crate::engine::Engine::apply`] 指定座位。
 pub(crate) fn apply(
     engine: &Engine,
     state: &mut GameState,
