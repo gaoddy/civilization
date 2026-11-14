@@ -109,9 +109,14 @@ def load(kind, required):
 
 def body_text(path):
     text = path.read_text(encoding="utf-8")
-    if "## 效果" not in text:
+    marker = "## 效果"
+    if marker not in text:
         return "无"
-    return text.split("## 效果", 1)[1].strip()
+    rest = text.split(marker, 1)[1]
+    next_heading = re.search(r"(?m)^## ", rest)
+    if next_heading:
+        rest = rest[:next_heading.start()]
+    return rest.strip()
 
 
 def parse_attr_table(path):
@@ -306,9 +311,9 @@ def check_cards(skill_map):
     minions = [c for c in raw if c["card_type"] == "随从"]
     effects = [c for c in raw if c["card_type"] == "效果"]
 
-    skillless = [c for c in minions if "skills" not in c]
+    skillless = [c for c in minions if not card_skills(c)]
     if len(skillless) != 7:
-        fail(f"无技能随从 {len(skillless)} 张，期望 7 张（skills 缺失）")
+        fail(f"无技能随从 {len(skillless)} 张，期望 7 张（skills 缺失或为空）")
     for c in skillless:
         if body_text(ROOT / "cards" / c["_file"]) != "无":
             fail(f"{c['_file']}: 无技能随从的「## 效果」必须为「无」")
