@@ -27,15 +27,15 @@
 | 英雄卡 | 13 张，技能写在卡的 `skills` 中 |
 | 技能 | 118 个，全部经卡牌 `skills` 引用 |
 | 关键词 | 13 个：通用 10 个 + 机械、植物、生物专属 3 个 |
-| 模式 | 会战（默认）、比赛；均为房间制、不计分 |
+| 模式 | 会战（默认）；房间制、不计分 |
 | 成局 | 创建房间、6 位房间码、好友邀请；首版不做自动匹配 |
-| 账号 | 仅手机号验证码登录；好友与房间跨端同步 |
+| 账号 | 仅手机号验证码登录；好友与房间状态由服务端同步 |
 | 好友 | 最近对局与玩家 ID 添加、申请、列表、邀请加入房间 |
-| 成就 | 6 个 |
-| 客户端 | 桌面端 + 移动端，Godot 4 + GDScript 同一份客户端工程与协议；规则只在服务端运行 |
+| 数据后台 | 对局统计与赛后数据回顾 |
+| 客户端 | 桌面端，Godot 4 + GDScript；规则只在服务端运行 |
 | 服务端 | Rust；规则引擎与房间服务同进程，权威结算全部在服务端 |
 | 新手引导 | 不做教学局，只做界面提示与高亮 |
-| 扩展层 | 场景、陨落、英雄坐镇、大决战默认关闭 |
+| 扩展层 | 场景、陨落、英雄坐镇、大决战只保留配置项，默认关闭，首版不上线 |
 
 ## 阅读顺序
 
@@ -47,7 +47,7 @@
 4. [卡牌规范与数据](product/content/card-system.md)（含「英雄卡」小节）与[卡牌索引](product/content/cards/README.md)
 5. [技能规范与数据](product/content/skill-system.md) 与[技能索引](product/content/skills/README.md)
 6. [平衡测算](product/content/balance-analysis.md)（从卡表回算的校验输出）
-7. [模式与成就](product/systems/modes-and-achievements.md)、[房间与邀请](product/systems/rooms-and-invites.md) 与[好友](product/systems/friends.md)
+7. [模式](product/systems/modes.md)、[房间与邀请](product/systems/rooms-and-invites.md) 与[好友](product/systems/friends.md)
 8. [联网与技术架构](technical/architecture/network-architecture.md)
 
 ## 文档导航
