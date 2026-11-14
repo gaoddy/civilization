@@ -113,9 +113,17 @@ python3 scripts/validate_docs.py
 4. 每张效果牌至少引用 1 个技能；7 张无效果随从的 `skills` 为空且 `## 效果` 为「无」；
 5. 卡牌 `## 效果` 与所引用技能 `text` 按顺序拼接的结果一致；
 6. 卡牌属性表的「技能」「关键词」行与 front matter、技能 `keyword` 一致；
-7. 英雄的 `skill` 指向存在的技能。
+7. 英雄的 `skill` 指向存在的技能；
+8. 每个技能都有 `effects` 字段，DSL 按[关键词与机制](../rules/keywords-and-mechanics.md) §9.4 校验：段数 3–4 段、触发与动作原语在白名单内、选择器合法、`duration` 取值合法、参数写作 `key=value`；
+9. 技能文本的固定前缀与触发时机一致：「战吼」对应 `OnPlay`、「亡语」对应 `OnDeath`、「战斗开始时」对应 `OnCombatStart`、「回合开始时」对应 `OnTurnStart`、「每回合首次刷新时」对应 `OnFirstRefresh`、「每当」对应事件类触发、`你的…随从获得` 句式对应 `Aura`、「若你控制」对应 `ConditionalAura`。
 
 期望：末行输出 `随从 176 张、效果牌 36 张、技能 118 个、英雄 13 位、成就 6 个，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
+
+`effects` 的解析与校验函数有独立单元测试，改动校验逻辑后运行：
+
+```bash
+python3 -m unittest discover -s tests -v
+```
 
 ## 相关文档
 
