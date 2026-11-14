@@ -8,7 +8,7 @@ level: 4
 era: 现代
 attack: 5
 health: 6
-keywords: [传染]
+skills: [keyword-contagion]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 5 |
 | 生命值 | 6 |
 | 关键词 | 传染 |
+| 技能 | keyword-contagion |
 | 学者 | 否 |
 | 来源 | 素材 |
 

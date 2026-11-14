@@ -8,7 +8,7 @@ level: 4
 era: 封建
 attack: 4
 health: 7
-keywords: []
+skills: [combatstart-random-enemy-contagion-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 4 |
 | 生命值 | 7 |
 | 关键词 | 无 |
+| 技能 | combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

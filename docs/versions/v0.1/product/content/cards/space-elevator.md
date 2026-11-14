@@ -8,7 +8,7 @@ level: 6
 era: 未来
 attack: 8
 health: 14
-keywords: [护盾, 装配 1]
+skills: [keyword-divine-shield, keyword-assemble-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 8 |
 | 生命值 | 14 |
 | 关键词 | 护盾；装配 1 |
+| 技能 | keyword-divine-shield；keyword-assemble-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

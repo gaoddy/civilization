@@ -8,7 +8,7 @@ level: 3
 era: 原始
 attack: 5
 health: 4
-keywords: [进化]
+skills: [keyword-evolve]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 5 |
 | 生命值 | 4 |
 | 关键词 | 进化 |
+| 技能 | keyword-evolve |
 | 学者 | 否 |
 | 来源 | 新增 |
 

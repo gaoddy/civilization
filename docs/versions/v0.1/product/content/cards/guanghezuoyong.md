@@ -6,6 +6,7 @@ level: 2
 tribe: 植物
 cost: 1
 match_text: 同左
+skills: [trigger-friendly-plant-breed-2]
 ---
 
 # 光合作用
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 2 |
 | 流派 | 植物 |
+| 技能 | trigger-friendly-plant-breed-2 |
 | 费用 | 1 |
 | 比赛模式替换 | 同左 |
 

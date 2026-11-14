@@ -6,6 +6,7 @@ level: 2
 tribe: 学者
 cost: 1
 match_text: 同左
+skills: [combatstart-remove-top-attack-enemy-growth]
 ---
 
 # 狂人日记
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 2 |
 | 流派 | 学者 |
+| 技能 | combatstart-remove-top-attack-enemy-growth |
 | 费用 | 1 |
 | 比赛模式替换 | 同左 |
 

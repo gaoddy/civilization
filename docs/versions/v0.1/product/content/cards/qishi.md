@@ -8,7 +8,7 @@ level: 2
 era: 封建
 attack: 3
 health: 5
-keywords: [嘲讽]
+skills: [keyword-taunt]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 3 |
 | 生命值 | 5 |
 | 关键词 | 嘲讽 |
+| 技能 | keyword-taunt |
 | 学者 | 否 |
 | 来源 | 素材 |
 

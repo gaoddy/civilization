@@ -8,7 +8,7 @@ level: 3
 era: 原始
 attack: 4
 health: 5
-keywords: []
+skills: [trigger-friendly-evolve-self-plus-1-plus-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 4 |
 | 生命值 | 5 |
 | 关键词 | 无 |
+| 技能 | trigger-friendly-evolve-self-plus-1-plus-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

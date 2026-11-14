@@ -6,6 +6,7 @@ level: 5
 tribe: 机械
 cost: 3
 match_text: 同左
+skills: [trigger-mech-optimal-attack-this-turn]
 ---
 
 # 人工智能
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 5 |
 | 流派 | 机械 |
+| 技能 | trigger-mech-optimal-attack-this-turn |
 | 费用 | 3 |
 | 比赛模式替换 | 同左 |
 

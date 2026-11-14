@@ -8,7 +8,7 @@ level: 1
 era: 原始
 attack: 1
 health: 2
-keywords: [播种]
+skills: [keyword-sow]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 1 |
 | 生命值 | 2 |
 | 关键词 | 播种 |
+| 技能 | keyword-sow |
 | 学者 | 否 |
 | 来源 | 新增 |
 

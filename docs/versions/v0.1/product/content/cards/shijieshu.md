@@ -8,7 +8,7 @@ level: 6
 era: 未来
 attack: 8
 health: 13
-keywords: [播种]
+skills: [keyword-sow, aura-plant-plus-1-plus-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 8 |
 | 生命值 | 13 |
 | 关键词 | 播种 |
+| 技能 | keyword-sow；aura-plant-plus-1-plus-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

@@ -8,7 +8,7 @@ level: 1
 era: 史前
 attack: 1
 health: 2
-keywords: [亡语]
+skills: [deathrattle-random-enemy-hp-minus-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 1 |
 | 生命值 | 2 |
 | 关键词 | 亡语 |
+| 技能 | deathrattle-random-enemy-hp-minus-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

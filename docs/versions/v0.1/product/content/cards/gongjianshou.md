@@ -8,7 +8,7 @@ level: 1
 era: 史前
 attack: 2
 health: 2
-keywords: [战吼]
+skills: [battlecry-random-enemy-damage-1]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 2 |
 | 生命值 | 2 |
 | 关键词 | 战吼 |
+| 技能 | battlecry-random-enemy-damage-1 |
 | 学者 | 否 |
 | 来源 | 素材 |
 

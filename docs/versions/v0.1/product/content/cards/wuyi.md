@@ -8,7 +8,7 @@ level: 2
 era: 原始
 attack: 3
 health: 5
-keywords: [战吼]
+skills: [battlecry-friendly-growth-plant-twice]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 3 |
 | 生命值 | 5 |
 | 关键词 | 战吼 |
+| 技能 | battlecry-friendly-growth-plant-twice |
 | 学者 | 否 |
 | 来源 | 新增 |
 

@@ -8,7 +8,7 @@ level: 4
 era: 封建
 attack: 5
 health: 8
-keywords: [连击]
+skills: [keyword-windfury]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 5 |
 | 生命值 | 8 |
 | 关键词 | 连击 |
+| 技能 | keyword-windfury |
 | 学者 | 否 |
 | 来源 | 新增 |
 

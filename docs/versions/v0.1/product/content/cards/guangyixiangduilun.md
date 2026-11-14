@@ -6,6 +6,7 @@ level: 5
 tribe: 通用
 cost: 3
 match_text: 同左
+skills: [trigger-all-friendly-plus-1-plus-1]
 ---
 
 # 广义相对论
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 5 |
 | 流派 | 通用 |
+| 技能 | trigger-all-friendly-plus-1-plus-1 |
 | 费用 | 3 |
 | 比赛模式替换 | 同左 |
 

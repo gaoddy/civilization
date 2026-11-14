@@ -6,6 +6,7 @@ level: 4
 tribe: 生物
 cost: 2
 match_text: 改为三选一固定池
+skills: [trigger-discover-tribe-minion]
 ---
 
 # 进化论
@@ -19,6 +20,7 @@ match_text: 改为三选一固定池
 | 类型 | 效果 |
 | 星级 | 4 |
 | 流派 | 生物 |
+| 技能 | trigger-discover-tribe-minion |
 | 费用 | 2 |
 | 比赛模式替换 | 改为三选一固定池 |
 

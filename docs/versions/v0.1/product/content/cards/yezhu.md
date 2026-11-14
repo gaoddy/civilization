@@ -8,7 +8,7 @@ level: 1
 era: 原始
 attack: 2
 health: 2
-keywords: [战吼]
+skills: [battlecry-self-plus-1-health]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 2 |
 | 生命值 | 2 |
 | 关键词 | 战吼 |
+| 技能 | battlecry-self-plus-1-health |
 | 学者 | 否 |
 | 来源 | 新增 |
 

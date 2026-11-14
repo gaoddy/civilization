@@ -8,7 +8,7 @@ level: 2
 era: 史前
 attack: 2
 health: 3
-keywords: []
+skills: [trigger-enemy-death-self-plus-1-plus-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 2 |
 | 生命值 | 3 |
 | 关键词 | 无 |
+| 技能 | trigger-enemy-death-self-plus-1-plus-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

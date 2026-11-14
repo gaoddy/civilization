@@ -8,7 +8,6 @@ level: 2
 era: 史前
 attack: 2
 health: 5
-keywords: []
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +28,7 @@ source: 素材
 | 攻击力 | 2 |
 | 生命值 | 5 |
 | 关键词 | 无 |
+| 技能 | 无 |
 | 学者 | 否 |
 | 来源 | 素材 |
 

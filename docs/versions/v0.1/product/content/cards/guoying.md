@@ -8,7 +8,7 @@ level: 1
 era: 史前
 attack: 1
 health: 2
-keywords: [繁衍 1]
+skills: [keyword-breed-1]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 1 |
 | 生命值 | 2 |
 | 关键词 | 繁衍 1 |
+| 技能 | keyword-breed-1 |
 | 学者 | 否 |
 | 来源 | 素材 |
 

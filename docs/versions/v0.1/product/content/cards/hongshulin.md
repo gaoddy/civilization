@@ -8,7 +8,7 @@ level: 5
 era: 现代
 attack: 6
 health: 11
-keywords: [繁衍 2, 播种]
+skills: [keyword-sow, keyword-breed-2]
 is_scholar: false
 source: 新增
 ---
@@ -28,7 +28,8 @@ source: 新增
 | 时代 | 现代 |
 | 攻击力 | 6 |
 | 生命值 | 11 |
-| 关键词 | 繁衍 2；播种 |
+| 关键词 | 播种；繁衍 2 |
+| 技能 | keyword-sow；keyword-breed-2 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

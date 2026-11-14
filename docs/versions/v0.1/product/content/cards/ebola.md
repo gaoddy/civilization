@@ -8,7 +8,7 @@ level: 5
 era: 现代
 attack: 8
 health: 8
-keywords: [传染]
+skills: [keyword-contagion, combatstart-random-enemy-contagion-2]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 8 |
 | 生命值 | 8 |
 | 关键词 | 传染 |
+| 技能 | keyword-contagion；combatstart-random-enemy-contagion-2 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

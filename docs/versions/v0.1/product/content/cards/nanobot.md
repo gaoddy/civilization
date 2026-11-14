@@ -8,7 +8,7 @@ level: 5
 era: 未来
 attack: 6
 health: 11
-keywords: [最优攻击, 装配 1]
+skills: [keyword-optimal-attack, keyword-assemble-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 6 |
 | 生命值 | 11 |
 | 关键词 | 最优攻击；装配 1 |
+| 技能 | keyword-optimal-attack；keyword-assemble-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

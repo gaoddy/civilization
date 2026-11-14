@@ -8,7 +8,7 @@ level: 1
 era: 原始
 attack: 2
 health: 2
-keywords: []
+skills: [trigger-2-humans-self-plus-1-plus-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 2 |
 | 生命值 | 2 |
 | 关键词 | 无 |
+| 技能 | trigger-2-humans-self-plus-1-plus-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

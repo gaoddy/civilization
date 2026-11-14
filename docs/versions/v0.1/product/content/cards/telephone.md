@@ -8,7 +8,7 @@ level: 4
 era: 现代
 attack: 6
 health: 7
-keywords: [装配 1]
+skills: [keyword-assemble-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 6 |
 | 生命值 | 7 |
 | 关键词 | 装配 1 |
+| 技能 | keyword-assemble-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

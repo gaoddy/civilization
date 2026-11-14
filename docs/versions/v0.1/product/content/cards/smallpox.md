@@ -8,7 +8,7 @@ level: 2
 era: 原始
 attack: 2
 health: 3
-keywords: [亡语]
+skills: [deathrattle-all-enemies-minus-1-health]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 2 |
 | 生命值 | 3 |
 | 关键词 | 亡语 |
+| 技能 | deathrattle-all-enemies-minus-1-health |
 | 学者 | 否 |
 | 来源 | 素材 |
 

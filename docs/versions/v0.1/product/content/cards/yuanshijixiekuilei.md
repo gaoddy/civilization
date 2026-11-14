@@ -8,7 +8,6 @@ level: 3
 era: 原始
 attack: 3
 health: 6
-keywords: []
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +28,7 @@ source: 素材
 | 攻击力 | 3 |
 | 生命值 | 6 |
 | 关键词 | 无 |
+| 技能 | 无 |
 | 学者 | 否 |
 | 来源 | 素材 |
 

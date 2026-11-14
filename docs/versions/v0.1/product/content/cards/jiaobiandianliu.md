@@ -6,6 +6,7 @@ level: 3
 tribe: 通用
 cost: 2
 match_text: 同左
+skills: [trigger-friendly-plus-2-attack-this-turn]
 ---
 
 # 交变电流
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 3 |
 | 流派 | 通用 |
+| 技能 | trigger-friendly-plus-2-attack-this-turn |
 | 费用 | 2 |
 | 比赛模式替换 | 同左 |
 

@@ -8,7 +8,7 @@ level: 4
 era: 现代
 attack: 4
 health: 9
-keywords: [亡语]
+skills: [deathrattle-summon-2-2-hela-cell-clone]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 4 |
 | 生命值 | 9 |
 | 关键词 | 亡语 |
+| 技能 | deathrattle-summon-2-2-hela-cell-clone |
 | 学者 | 否 |
 | 来源 | 素材 |
 

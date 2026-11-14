@@ -8,7 +8,7 @@ level: 6
 era: 现代
 attack: 10
 health: 12
-keywords: [装配 2]
+skills: [keyword-assemble-2, battlecry-all-mech-growth-once-no-keyword]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 10 |
 | 生命值 | 12 |
 | 关键词 | 装配 2 |
+| 技能 | keyword-assemble-2；battlecry-all-mech-growth-once-no-keyword |
 | 学者 | 否 |
 | 来源 | 新增 |
 
