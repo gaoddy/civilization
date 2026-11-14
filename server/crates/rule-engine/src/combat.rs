@@ -169,9 +169,13 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
 }
 
 /// 战斗开始时该随从拥有的行动令牌数。
+///
+/// 「连击」对学者不生效（学者攻击力为 0），学者固定只有 1 个令牌。
 fn starting_tokens(catalog: &Catalog, minion: &MinionInstance) -> u8 {
     if minion.cannot_attack {
         0
+    } else if is_scholar(catalog, minion) {
+        1
     } else if keywords(catalog, minion).contains(WINDFURY) {
         2
     } else {
@@ -339,29 +343,40 @@ fn resolve_attack(
     }
 
     // (c) 反击：目标在主伤害后仍存活（当前生命 > 0）才反击。
+    // 反击造成的伤害用攻击者的护盾规则结算；被护盾抵消时不额外记录事件。
     let counter = if defending.health[target_index] > 0 {
         effective_attack(catalog, &defending.minions[target_index])
     } else {
         0
     };
+    let mut counter_damage = 0;
     if counter > 0 {
         let attacker = &mut attacking.minions[attacker_index];
         let shielded = keywords(catalog, attacker).contains(DIVINE_SHIELD) && !attacker.shield_used;
         if shielded {
             attacker.shield_used = true;
         } else {
+            counter_damage = counter;
             attacking.health[attacker_index] =
                 attacking.health[attacker_index].saturating_sub(counter);
         }
     }
 
-    // (d) 主伤害事件在死亡处理之前记录。
+    // (d) 主伤害事件先于反击事件与死亡处理记录。
     actions.push(CombatAction::Attack {
         attacker: attacker_id,
         target: target_id,
         damage,
         blocked,
     });
+    if counter_damage > 0 {
+        actions.push(CombatAction::Attack {
+            attacker: target_id,
+            target: attacker_id,
+            damage: counter_damage,
+            blocked: false,
+        });
+    }
 
     // 死亡队列：攻击方在前，防御方在后，各自按站位从左到右。
     process_deaths(catalog, attacking, defending, actions);

@@ -127,7 +127,7 @@ fn contagion_count(log: &CombatLog) -> usize {
 }
 
 #[test]
-fn basic_attack_and_counterattack() {
+fn attack_kills_target_without_counterattack() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "a", 3, 3, &[]);
     add_card(&mut catalog, "b", 2, 3, &[]);
@@ -142,14 +142,40 @@ fn basic_attack_and_counterattack() {
         &mut rng(),
     );
 
-    // A 打 B 3 点（B 死于 0 血）；B 的反击不单独记录为 Attack 事件，
-    // 其效果由 simultaneous_death_resolves_left_to_right 覆盖。
+    // A 打 B 3 点（B 死于 0 血）；死亡目标不再反击。
     assert_eq!(attacks(&log), vec![(1, 2, 3, false)], "只记录主伤害事件");
     assert_eq!(death_order(&log), vec![2]);
-    assert_eq!(log.attacker_survivors, vec![1]);
+    assert_eq!(log.attacker_survivors, vec![1], "攻击方未受反击伤害");
     assert!(log.defender_survivors.is_empty());
     assert_eq!(log.winner, Some(0));
     assert_eq!(log.action_count, 1);
+}
+
+#[test]
+fn surviving_target_counters_and_kills_attacker() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a", 2, 2, &[]);
+    add_card(&mut catalog, "b", 3, 3, &[]);
+
+    let log = simulate(
+        &catalog,
+        &[minion(1, "a")],
+        &[minion(2, "b")],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
+
+    assert_eq!(
+        attacks(&log),
+        vec![(1, 2, 2, false), (2, 1, 3, false)],
+        "主伤害 2 后目标仍存活，反击 3 击杀攻击方"
+    );
+    assert_eq!(death_order(&log), vec![1]);
+    assert!(log.attacker_survivors.is_empty());
+    assert_eq!(log.defender_survivors, vec![2]);
+    assert_eq!(log.winner, Some(1));
 }
 
 #[test]
@@ -190,14 +216,17 @@ fn divine_shield_blocks_one_hit() {
 
     let attack_list = attacks(&log);
     assert_eq!(attack_list[0], (1, 2, 0, true), "第一击被护盾抵消");
-    assert_eq!(attack_list[2], (1, 2, 2, false), "护盾耗尽后正常掉血");
+    assert!(
+        attack_list.contains(&(1, 2, 2, false)),
+        "护盾耗尽后同一随从再次命中并掉血"
+    );
 }
 
 #[test]
 fn windfury_attacks_twice() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a1", 1, 10, &["连击"]);
-    add_card(&mut catalog, "a2", 1, 10, &[]);
+    add_card(&mut catalog, "a1", 0, 10, &["连击"]);
+    add_card(&mut catalog, "a2", 0, 10, &[]);
     add_card(&mut catalog, "b", 0, 20, &[]);
 
     let log = simulate(
@@ -415,8 +444,8 @@ fn death_queue_orders_attacker_side_then_left_to_right() {
 #[test]
 fn combat_stops_at_200_actions() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 1, 1000, &["连击"]);
-    add_card(&mut catalog, "b", 1, 1_000_000, &[]);
+    add_card(&mut catalog, "a", 0, 1, &["连击"]);
+    add_card(&mut catalog, "b", 0, 100, &[]);
 
     // 攻击方 100 个连击随从 = 200 个令牌，足以把行动数推到上限。
     let attacker_board: Vec<MinionInstance> = (1..=100).map(|index| minion(index, "a")).collect();
@@ -433,7 +462,7 @@ fn combat_stops_at_200_actions() {
 
     assert_eq!(log.action_count, 200, "行动数达到 200 必须停止");
     assert_eq!(attacks(&log).len(), 200);
-    // 双方均存活，防御方总生命更高，按总生命判胜。
+    // 双方均存活且总生命相同（100 vs 100），按座位号小者判胜。
     assert_eq!(log.winner, Some(1));
     assert_eq!(log.attacker_survivors.len(), 100);
     assert_eq!(log.defender_survivors, vec![500]);
@@ -479,7 +508,11 @@ fn zero_attack_does_not_counterattack() {
         &mut rng(),
     );
     assert_eq!(attacks(&log)[0], (1, 2, 3, false));
-    assert_eq!(attacks(&log)[1], (2, 1, 0, false), "0 攻防守方不反击");
+    let defender_main = attacks(&log)
+        .into_iter()
+        .find(|event| event.0 == 2)
+        .expect("防御方应轮到出手");
+    assert_eq!(defender_main, (2, 1, 0, false), "0 攻防守方不反击");
 }
 
 #[test]
@@ -491,22 +524,95 @@ fn cannot_attack_is_skipped() {
 
     let mut bound = minion(1, "bound");
     bound.cannot_attack = true;
+    // 防守方也禁攻，避免反击事件干扰「谁发起攻击」的断言。
+    let mut defender = minion(3, "b");
+    defender.cannot_attack = true;
     let log = simulate(
         &catalog,
         &[bound, minion(2, "free")],
-        &[minion(3, "b")],
+        &[defender],
         0,
         1,
         0,
         &mut rng(),
     );
 
-    let attacker_ids: Vec<InstanceId> = attacks(&log)
+    assert!(
+        attacks(&log).iter().all(|event| event.0 != 1),
+        "禁攻随从被指针跳过"
+    );
+    assert_eq!(attacks(&log)[0].0, 2, "指针停在可攻击随从上");
+}
+
+#[test]
+fn defender_acts_first_when_first_seat_is_defender() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a", 1, 10, &[]);
+    add_card(&mut catalog, "b", 1, 10, &[]);
+
+    let log = simulate(
+        &catalog,
+        &[minion(1, "a")],
+        &[minion(2, "b")],
+        0,
+        1,
+        1,
+        &mut rng(),
+    );
+
+    assert_eq!(attacks(&log)[0], (2, 1, 1, false), "先手方应为防御方");
+}
+
+#[test]
+fn scholar_granted_windfury_still_attacks_once() {
+    let mut catalog = test_catalog();
+    add_card_with(&mut catalog, "scholar", Tribe::Scholar, 0, 10, &[]);
+    add_card(&mut catalog, "b", 0, 20, &[]);
+
+    let mut scholar = minion(1, "scholar");
+    scholar.granted.push(("连击".to_string(), Duration::Combat));
+    let log = simulate(&catalog, &[scholar], &[minion(2, "b")], 0, 1, 0, &mut rng());
+
+    let scholar_attacks = attacks(&log)
         .into_iter()
-        .map(|event| event.0)
-        .filter(|id| *id != 3)
-        .collect();
-    assert_eq!(attacker_ids, vec![2], "禁攻随从被指针跳过");
+        .filter(|event| event.0 == 1)
+        .count();
+    assert_eq!(scholar_attacks, 1, "连击对学者不生效，只有 1 个令牌");
+}
+
+#[test]
+fn reborn_attacker_keeps_its_spent_token() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a", 2, 2, &["复生"]);
+    add_card(&mut catalog, "b", 3, 3, &[]);
+
+    let log = simulate(
+        &catalog,
+        &[minion(1, "a")],
+        &[minion(2, "b")],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
+
+    // 核心规则 §5.2 第 7 步死亡结算后第 8 步才扣减令牌：
+    // 复生重置令牌后再扣掉本次攻击的 1 个，因此本场不会再出手。
+    let death_index = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Death { minion } if *minion == 1))
+        .expect("攻击方应死亡");
+    assert_eq!(
+        log.actions[death_index + 1],
+        CombatAction::Reborn { minion: 1 }
+    );
+    let attacks_by_attacker = attacks(&log)
+        .into_iter()
+        .filter(|event| event.0 == 1)
+        .count();
+    assert_eq!(attacks_by_attacker, 1, "复生后令牌已耗尽，不再攻击");
+    assert!(log.attacker_survivors.is_empty());
 }
 
 #[test]
