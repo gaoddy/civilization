@@ -1,9 +1,10 @@
-# 07 · 联网与技术架构
+# 联网与技术架构
 
-> 编号：07
-> 依赖：00-设计总纲（§8）、02-核心规则、06-英雄与技能
-> 状态：已写（v0.1）
-> 注意：**技术栈尚未确定**。本册只锁定与实现无关的架构约束与协议形状；语言、框架、部署形态留待开发启动前决定。
+> 依赖：[设计总纲](../../product/overview/design-overview.md)（§8）、[核心规则](../../product/rules/core-rules.md)、[英雄与技能](../../product/content/hero-system.md)
+> 状态：方案未实施
+> 注意：**技术栈尚未确定**。本文只锁定与实现无关的架构约束与协议形状；语言、框架、部署形态留待开发启动前决定。
+
+本文描述服务端权威、确定性随机、协议、重连与反作弊约束；不描述具体技术选型与实现。归属版本技术基线。
 
 ## 1. 架构总览
 
@@ -55,7 +56,7 @@
 
 ## 3. 对局服务状态机
 
-对局状态机与 02 分册 §2 一致（`Lobby` / `Recruit` / `Combat` / `Settle` / `GameOver`）。服务端额外维护：
+对局状态机与 [核心规则](../../product/rules/core-rules.md) §2 一致（`Lobby` / `Recruit` / `Combat` / `Settle` / `GameOver`）。服务端额外维护：
 
 - `phaseDeadline`：本阶段截止时间戳；
 - `pendingIntents`：已接收但未结算的意图队列；
@@ -101,14 +102,14 @@
 
 | 方向 | 类型 | 说明 |
 | --- | --- | --- |
-| C→S | `Intent` | 玩家意图，`payload` 为 02 分册的意图名与参数 |
+| C→S | `Intent` | 玩家意图，`payload` 为 [核心规则](../../product/rules/core-rules.md)的意图名与参数 |
 | S→C | `StateDelta` | 状态增量（只含该玩家可见的部分） |
 | S→C | `CombatResult` | 战斗最终结果：双方阵容快照、行动序列、伤害、胜负 |
 | S→C | `Snapshot` | 全量状态快照，用于开局与重连 |
 | C→S | `Reconnect` | 重连请求，携带 `lastSeq` |
 | S→C | `PhaseChanged` | 阶段切换与截止时间 |
-| S→C | `TimerWarning` | 招募阶段剩余 10 秒提醒（见 02 分册 §8.1） |
-| S→C | `Error` | 意图被拒绝，含返回码（见 02 分册 §3） |
+| S→C | `TimerWarning` | 招募阶段剩余 10 秒提醒（见 [核心规则](../../product/rules/core-rules.md) §8.1） |
+| S→C | `Error` | 意图被拒绝，含返回码（见 [核心规则](../../product/rules/core-rules.md) §3） |
 
 ### 5.3 一次完整回合的序列
 
@@ -211,10 +212,10 @@ S→C  PhaseChanged{phase:Recruit, turn:8, deadline:+90000}
 
 ### 10.4 平衡测试
 
-用 AI 自动对局跑 10 万局，输出各流派胜率、平均回合数、平均伤害；这是 08 分册自检指标的数据来源。
+用 AI 自动对局跑 10 万局，输出各流派胜率、平均回合数、平均伤害；这是 [数值与经济](../../product/systems/economy-and-numbers.md)自检指标的数据来源。
 
-## 待决问题
+## 相关文档
 
-- 技术栈未定：客户端建议 Web（TypeScript + Canvas/DOM），服务端建议 Node（与客户端共用规则引擎）或 Go（性能更好但引擎需重写）。**在选型前不得开始实现规则引擎以外的基础设施。**
-- 是否需要"观战延迟 30 秒"？首版不做观战，暂不决定。
-- 对局状态是否需要持久化到数据库，还是只存意图日志 + 种子？倾向只存后者，快照只做进程内崩溃恢复。
+- [核心规则](../../product/rules/core-rules.md)
+- [设计总纲](../../product/overview/design-overview.md)
+- [技术基线](../README.md)
