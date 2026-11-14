@@ -63,5 +63,30 @@ class HeroCardAttrsTest(unittest.TestCase):
         )
 
 
+class RealHeroCardsTest(unittest.TestCase):
+    def test_real_hero_cards_reference_valid_skills(self):
+        skills = {}
+        for path in sorted((vd.ROOT / "skills").glob("*.md")):
+            if path.name == "README.md":
+                continue
+            doc = vd.parse_front_matter(path)
+            skills[doc["id"]] = doc
+        heroes = []
+        for path in sorted((vd.ROOT / "cards").glob("*.md")):
+            if path.name == "README.md":
+                continue
+            doc = vd.parse_front_matter(path)
+            if doc.get("is_hero") is True:
+                heroes.append(doc)
+
+        self.assertEqual(len(heroes), 13)
+        self.assertEqual(len({doc["hero_skill"] for doc in heroes}), 13)
+        for doc in heroes:
+            skill = skills.get(doc["hero_skill"])
+            self.assertIsNotNone(skill, f"{doc['id']}: hero_skill 不存在")
+            self.assertTrue(skill.get("name"), f"{doc['id']}: 英雄技能缺少 name")
+            self.assertTrue(skill.get("match_text"), f"{doc['id']}: 英雄技能缺少 match_text")
+
+
 if __name__ == "__main__":
     unittest.main()
