@@ -2,15 +2,17 @@
 
 > 依赖：[概念与定位](../overview/concept-and-positioning.md)、[关键词与机制](../rules/keywords-and-mechanics.md)、[卡牌规范与数据](card-system.md)、[数值与经济](../systems/economy-and-numbers.md)
 > 状态：方案未实施
-> 数据：`docs/versions/v0.1/product/content/heroes/`（10 份，文件名 = id）
+> 数据：`docs/versions/v0.1/product/content/heroes/`（13 份，文件名 = id）
 
 本文描述英雄技能设计规则、效果牌分工与校验；不描述具体实现与后续版本英雄。归属版本产品基线的内容。
 
 ## 1. 英雄
 
-共 10 位英雄，每位一个文档：`docs/versions/v0.1/product/content/heroes/<id>.md`。名称、简介、学科、技能、费用、类型、次数、触发时机与效果以各文档的 front matter 与正文为准，本文不重复列出。
+共 13 位英雄，每位一个文档：`docs/versions/v0.1/product/content/heroes/<id>.md`。名称、简介、学科、技能、费用、类型、次数、触发时机与效果以各文档的 front matter 与正文为准，本文不重复列出。
 
 **素材合并说明**：素材中「居里夫人」与「玛丽·居里」是同一个人，已合并为 marie-curie 玛丽·居里；合并后英雄总数为 9，因此新增 galileo 伽利略·伽利莱补齐 10 位。素材里的 10 条英雄记录中，只有 9 位不重复人物。
+
+**流派补全**：10 位英雄覆盖不到机械、病毒、人类三个流派，因此从[内容素材库](../../../../content-backlog.md)取回 edison 托马斯·爱迪生（机械）、pasteur 路易·巴斯德（病毒）、adam-smith 亚当·斯密（人类）补齐到 13 位；三人在素材库中的条目已移除。
 
 ## 2. 技能设计规则
 
@@ -31,6 +33,7 @@
 | `skill_uses_per_turn` | 整数 | 1–2 | 每回合可用次数，默认 1；鲁迅为 2 |
 | `skill_trigger` | 枚举 | 主动使用 / 首次刷新时 / 战斗开始时 | 主动技能固定为「主动使用」 |
 | `skill_text` | 字符串 | 自由 | 效果文本，写法遵循 [关键词与机制](../rules/keywords-and-mechanics.md) §9 |
+| `match_text` | 字符串 | 自由 | **必填**；比赛模式下的确定性替换，与原效果相同写「同左」，随机效果必须写明替换后的固定目标或固定池 |
 
 技能效果与效果牌共用 `Trigger × Selector × Op × Duration` 结构（见 [关键词与机制](../rules/keywords-and-mechanics.md) §9），不另设一套原语。
 
@@ -60,9 +63,9 @@
 python3 scripts/validate_docs.py
 ```
 
-它检查 10 位英雄的数量、`id` 与名称唯一、`id` 格式与文件名一致、`summary` 非空且与正文「## 简介」一致、费用 0–2、被动技能费用为 0、`skill_uses_per_turn` 为 1 或 2、`skill_trigger` 在枚举内，并同时校验 120 张随从与 30 张效果牌。
+它检查 13 位英雄的数量、`id` 与名称唯一、`id` 格式与文件名一致、`summary` 与 `match_text` 非空、`summary` 与正文「## 简介」一致、费用 0–2、被动技能费用为 0、`skill_uses_per_turn` 为 1 或 2、`skill_trigger` 在枚举内，并同时校验 120 张随从与 30 张效果牌。
 
-期望：末行输出 `随从 120 张、效果牌 30 张、英雄 10 位，校验通过`，退出码 0；失败时逐条打印违规并返回 1。
+期望：末行输出 `随从 120 张、效果牌 30 张、英雄 13 位，校验通过`，退出码 0；失败时逐条打印违规并返回 1。
 
 ## 相关文档
 
