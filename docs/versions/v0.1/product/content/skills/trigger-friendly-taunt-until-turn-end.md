@@ -1,6 +1,7 @@
 ---
 id: trigger-friendly-taunt-until-turn-end
 text: 使一个友方随从获得嘲讽直到回合结束
+effects: OnPlayEffect|GrantKeyword|friendly:single|keyword=嘲讽,duration=combat
 match_text: 同左
 ---
 

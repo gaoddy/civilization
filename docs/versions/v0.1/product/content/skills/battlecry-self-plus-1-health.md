@@ -2,6 +2,7 @@
 id: battlecry-self-plus-1-health
 keyword: 战吼
 text: 战吼：获得 +1 生命值
+effects: OnPlay|ModifyStats|self|health=1,duration=permanent
 ---
 
 # battlecry-self-plus-1-health

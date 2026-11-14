@@ -1,6 +1,7 @@
 ---
 id: trigger-copy-hand-minion
 text: 复制你手牌中的一张随从牌
+effects: OnPlayEffect|Copy|self|from=hand,type=随从,to=hand
 match_text: 同左
 ---
 

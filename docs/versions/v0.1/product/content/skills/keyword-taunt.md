@@ -2,6 +2,7 @@
 id: keyword-taunt
 keyword: 嘲讽
 text: 嘲讽
+effects: []
 ---
 
 # keyword-taunt

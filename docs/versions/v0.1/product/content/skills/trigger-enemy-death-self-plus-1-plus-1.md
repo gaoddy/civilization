@@ -1,6 +1,7 @@
 ---
 id: trigger-enemy-death-self-plus-1-plus-1
 text: 每当一个敌方随从死亡，获得 +1/+1
+effects: OnEnemyDeath|ModifyStats|self|attack=1,health=1,duration=permanent
 ---
 
 # trigger-enemy-death-self-plus-1-plus-1

@@ -1,6 +1,7 @@
 ---
 id: trigger-all-friendly-growth-once
 text: 使你的随从各获得一次成长
+effects: OnPlayEffect|Growth|friendly:all|times=1
 match_text: 同左
 ---
 

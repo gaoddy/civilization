@@ -2,6 +2,7 @@
 id: keyword-breed-3
 keyword: 繁衍 3
 text: 繁衍 3：回合开始时获得 +3 生命
+effects: []
 ---
 
 # keyword-breed-3

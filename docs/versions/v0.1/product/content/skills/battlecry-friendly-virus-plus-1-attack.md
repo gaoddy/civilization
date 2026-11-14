@@ -2,6 +2,7 @@
 id: battlecry-friendly-virus-plus-1-attack
 keyword: 战吼
 text: 战吼：使一个友方病毒随从获得 +1 攻击力
+effects: OnPlay|ModifyStats|friendly:single:tribe=病毒|attack=1,duration=permanent
 ---
 
 # battlecry-friendly-virus-plus-1-attack

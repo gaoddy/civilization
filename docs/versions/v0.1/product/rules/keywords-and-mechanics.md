@@ -96,14 +96,14 @@
 
 | 时长 | 卡面写法 | 清除时点 |
 | --- | --- | --- |
-| `permanent` | 获得 N 次成长 | 随从离开战场 |
+| `permanent` | 获得 N 次成长 / 获得 +X 攻击力 / 获得 +Y 生命值 | 随从离开战场 |
 | `combat` | 直到本回合结束 | `Settle` 前（§2.5） |
 | `instant` | 无后缀 | 结算完即止 |
 
 - 卡面文本统一写「直到本回合结束」；「直到回合结束」「本回合」不再作为独立说法。
 - **成长**是永久记录，写进随从的 `growth` 计数，出售或合成时保留在卡上。
 - 成长 1 次默认 +1/+1；`healthOnly` 的成长与学者的成长只加生命值，即 +0/+1。
-- 素材里的"加成"必须二选一：能一直保留的写「成长」，只管这一场的写「直到本回合结束」。
+- 素材里的"加成"按保留方式分三类：成长写「获得 N 次成长」；单边数值的永久修改写「获得 +X 攻击力」或「获得 +Y 生命值」；只管这一场的写「直到本回合结束」。
 
 ### 3.2 光环
 
@@ -201,6 +201,9 @@
 | 进化 | `OnPlay`（专有关键词，先选后结算） | 招募 · 入场 |
 | 回合开始 | `OnTurnStart` | 招募 · 回合开始 |
 | 使用效果牌 | `OnPlayEffect` | 招募 · 任意时刻 |
+| 主动使用 | `OnActivate` | 招募 · 玩家发起 |
+| 响应使用效果牌 | `OnUse` | 招募 · 打出时 |
+| 每回合首次刷新 | `OnFirstRefresh` | 招募 · 刷新时 |
 | 战斗开始时 | `OnCombatStart` | 战斗 · 快照后 |
 | 造成伤害后 | `OnDealDamage` | 战斗 · 每次伤害 |
 | 死亡时 | `OnDeath` | 战斗 · 死亡结算 |
@@ -215,37 +218,94 @@
 
 **触发队列**：效果产生的新触发进入队列尾部，先进先出；单场战斗的触发总数上限为 200，达到上限后不再触发新效果（与 [核心规则](core-rules.md) §5.2 的行动上限同源，防止递归）。
 
+**`OnPlayEffect` 与 `OnUse` 的分工**：`OnPlayEffect` 是效果牌自身技能的触发，描述「这张牌打出时做什么」；`OnUse` 是其他技能对"有玩家打出效果牌"这一事件的响应，描述「每当有人打出效果牌时做什么」，不改变被打出牌的效果。
+
 ## 9. 效果表达模型
 
 ### 9.1 结构
 
-技能是效果文本的实体，卡牌与英雄都通过引用技能获得效果。一条技能效果由四段组成：`Trigger × Selector × Op × Duration`；英雄技能与卡牌技能共用同一结构，英雄只在宿主上额外带费用、触发时机与每回合次数（见[技能规范与数据](../content/skill-system.md)与[英雄与技能](../content/hero-system.md)）。
+技能是效果文本的实体，卡牌与英雄都通过引用技能获得效果。一条技能效果由四段组成：`Trigger × Selector × Op × Duration`；英雄技能与卡牌技能共用同一结构，英雄只在宿主上额外带费用、触发时机与每回合次数（见[技能规范与数据](../content/skill-system.md)与[英雄与技能](../content/hero-system.md)）。静态光环以 `Aura` / `ConditionalAura` 作为触发登记（§8），动作仍复用 §9.3 的常规原语，不单设光环原语。
 
 ### 9.2 选择器
 
 | 维度 | 取值 |
 | --- | --- |
 | 区域 | 战场 / 手牌 |
-| 阵营 | 己方 / 敌方 / 双方 / 自身 |
-| 筛选 | 流派、子类、卡名、是否学者、是否带某关键词、「其他」 |
+| 阵营 | 己方 / 敌方 / 双方 / 自身 / 事件目标 |
+| 筛选 | 流派、子类、卡名、类型、是否学者、是否带某关键词、「其他」 |
 | 选取 | 玩家指定 / 随机（走种子）/ 最左侧 / 最左侧及相邻 / 攻击力最高 / 全部 / 随机 N 个 |
 
 ### 9.3 动作原语
 
 | 原语 | 结构 | 说明 |
 | --- | --- | --- |
-| 成长 | `Growth {selector, times, healthOnly}` | 永久；`healthOnly` 只加生命值 |
-| 属性修改 | `ModifyStats {selector, attack, health, duration, canKill}` | 临时增益与负向修改 |
-| 赋予关键词 | `GrantKeyword {selector, keyword, value, duration}` | 含赋予繁衍 N |
+| 成长 | `Growth {selector, times, healthOnly, timesIf}` | 永久；`healthOnly` 只加生命值；`timesIf` 按流派改次数 |
+| 属性修改 | `ModifyStats {selector, attack, health, duration, canKill}` | 永久、临时与负向修改 |
+| 赋予关键词 | `GrantKeyword {selector, keyword, value, duration}` | 含赋予繁衍 N、传染层数 |
 | 移除成长 | `RemoveGrowth {selector}` | 移除全部成长 |
 | 禁止攻击 | `CannotAttack {selector, duration}` | 本场无法攻击 |
 | 伤害 | `DealDamage {selector, amount, source}` | 经过护盾与复生 |
-| 召唤 | `Summon {tokenId 或 cardId, count}` | Token 见 [Token 注册表](../content/tokens/README.md) |
+| 召唤 | `Summon {selector, token 或 card, count}` | 召唤位置由 `selector` 决定；`token` 取注册表 id，`card` 取牌池卡 id |
 | 复制 | `Copy {selector, to}` | `to` 为手牌或战场 |
 | 发现 | `Discover {pool, choose}` | 三选一 |
 | 刷新商店 | `RefreshShop {free, extra}` | 英雄专用 |
+| 增加商店槽位 | `AddShopSlot {era, count}` | 英雄专用；商店额外出现 `count` 张 `era=current` 的随从 |
 | 获得随从 | `GainMinion {from, level, to}` | 英雄专用 |
-| 光环 | `Aura {filter, attack, health, keywords, excludeSelf}` | 静态，持续求值 |
+
+光环不单设原语：静态光环在 §8 登记为 `Aura` / `ConditionalAura` 触发，其动作写 `ModifyStats` 或 `GrantKeyword`，并显式带 `duration=permanent`。
+
+### 9.4 数据语法
+
+技能实体用 `effects` 字段记录结构化效果（见[技能规范与数据](../content/skill-system.md) §2），单行 DSL：
+
+```
+<effect>[ ; <effect>...]
+<effect> = <trigger>|<op>|<selector>[|<params>]
+```
+
+- 段之间用 `|`；效果之间用 `;`；参数之间用 `,`，参数写作 `key=value`，同一效果内键不重复；没有参数时省略第 4 段；
+- 技能没有可结构化行为、只有关键词时写 `[]`。
+
+**选择器**：
+
+| 写法 | 含义 |
+| --- | --- |
+| `self` | 技能携带者自身 |
+| `target` | 触发事件的目标（如「它」指获得成长的那个随从） |
+| `<阵营>:<选取>[:<筛选>...]` | 按阵营与选取方式取一组随从 |
+
+- 阵营：`friendly` / `enemy` / `both`；
+- 选取：`single`（玩家指定）/ `all` / `random` / `leftmost` / `leftmost+adjacent` / `topAttack`；
+- 筛选：`tribe=<流派>`、`subtype=<子类>`、`name=<卡名>`、`type=<随从|效果>`、`other=<true|false>`；多个筛选并列即同时满足。
+
+**参数**：
+
+| 参数 | 取值 | 用于 |
+| --- | --- | --- |
+| `times` / `count` / `amount` / `attack` / `health` / `value` / `extra` | 整数（可为负） | 次数、数量、伤害与数值改动 |
+| `duration` | `permanent` / `combat` | 见 §3.1；省略按 `instant` |
+| `canKill` | `true` / `false` | 负向修改是否可致死 |
+| `healthOnly` | `true` / `false` | 成长只加生命值 |
+| `timesIf` | `<流派>:<次数>` | 目标属于该流派时改次数 |
+| `condition` | `count:<阵营>:<筛选>:<比较符><数值>` | 控制数量条件，如 `count:friendly:tribe=人类:>=3` |
+| `when` | `<筛选>` | 限定触发事件的对象，如 `when=tribe=生物` |
+| `keyword` | §1 词表基名 | 赋予的关键词；`繁衍` / `装配` 另带 `value` |
+| `token` / `card` | Token 注册表 id / 卡牌 id | 召唤目标；`Summon` 二者取一 |
+| `to` | `hand` / `board` | 复制或获得的目标区域 |
+| `from` | `hand` / `board` / `shop` | 复制或获得的来源 |
+| `type` | `随从` / `效果` | 从手牌复制时限定卡牌类型 |
+| `pool` / `choose` | 发现池、可选数量 | `Discover` |
+| `free` | `true` / `false` | 免费刷新 |
+| `era` / `level` | `current` 或具体值 | 商店槽位时代、获得随从的星级 |
+
+示例：
+
+- `OnPlay|Growth|friendly:single|times=2`
+- `OnCombatStart|DealDamage|enemy:leftmost|amount=3`
+- `Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent`
+- `OnActivate|Copy|self|from=hand,type=随从,to=hand`
+
+`effects` 是机器字段，不进入 `## 属性` 表；`## 效果` 仍由技能 `text` 渲染，与 `effects` 语义一致。卡牌与英雄不重复记录 `effects`——它们通过 `skills` / `skill` 引用技能，效果由技能实体统一维护。
 
 ## 10. 属性求值顺序
 

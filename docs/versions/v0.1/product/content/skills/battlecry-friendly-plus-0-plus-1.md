@@ -2,6 +2,7 @@
 id: battlecry-friendly-plus-0-plus-1
 keyword: 战吼
 text: 战吼：使一个友方随从获得 +0/+1
+effects: OnPlay|ModifyStats|friendly:single|health=1,duration=permanent
 ---
 
 # battlecry-friendly-plus-0-plus-1

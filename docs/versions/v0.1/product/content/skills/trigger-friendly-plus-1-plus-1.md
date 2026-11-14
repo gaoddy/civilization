@@ -1,6 +1,7 @@
 ---
 id: trigger-friendly-plus-1-plus-1
 text: 使一个友方随从获得 +1/+1
+effects: OnPlayEffect|ModifyStats|friendly:single|attack=1,health=1,duration=permanent
 match_text: 同左
 ---
 

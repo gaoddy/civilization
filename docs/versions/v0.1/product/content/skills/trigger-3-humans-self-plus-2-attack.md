@@ -1,6 +1,7 @@
 ---
 id: trigger-3-humans-self-plus-2-attack
 text: 若你控制至少 3 个人类，获得 +2 攻击力
+effects: ConditionalAura|ModifyStats|self|attack=2,duration=permanent,condition=count:friendly:tribe=人类:>=3
 ---
 
 # trigger-3-humans-self-plus-2-attack

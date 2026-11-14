@@ -1,6 +1,7 @@
 ---
 id: combatstart-remove-top-attack-enemy-growth
 text: 战斗开始时，移除敌方攻击力最高随从的全部成长
+effects: OnCombatStart|RemoveGrowth|enemy:topAttack
 match_text: 同左
 ---
 

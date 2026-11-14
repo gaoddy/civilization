@@ -2,6 +2,7 @@
 id: keyword-contagion
 keyword: 传染
 text: 传染：造成伤害后，目标每回合 -1 生命
+effects: []
 ---
 
 # keyword-contagion

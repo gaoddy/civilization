@@ -2,6 +2,7 @@
 id: hero-faraday-cage
 name: 法拉第笼
 text: 使一个友方随从获得护盾
+effects: OnActivate|GrantKeyword|friendly:single|keyword=护盾,duration=permanent
 match_text: 同左
 ---
 

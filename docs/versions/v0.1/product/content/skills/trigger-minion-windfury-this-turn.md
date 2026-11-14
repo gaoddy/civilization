@@ -1,6 +1,7 @@
 ---
 id: trigger-minion-windfury-this-turn
 text: 使一个随从本回合获得连击
+effects: OnPlayEffect|GrantKeyword|friendly:single|keyword=连击,duration=combat
 match_text: 同左
 ---
 

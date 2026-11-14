@@ -1,6 +1,7 @@
 ---
 id: trigger-friendly-human-death-plus-1-plus-1
 text: 每当一个友方人类随从死亡，获得 +1/+1
+effects: OnFriendlyDeath|ModifyStats|self|attack=1,health=1,duration=permanent,when=tribe=人类
 ---
 
 # trigger-friendly-human-death-plus-1-plus-1

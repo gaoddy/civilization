@@ -2,6 +2,7 @@
 id: battlecry-all-friendly-growth-twice
 keyword: 战吼
 text: 战吼：使你的所有随从获得两次成长
+effects: OnPlay|Growth|friendly:all|times=2
 ---
 
 # battlecry-all-friendly-growth-twice

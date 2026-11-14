@@ -2,6 +2,7 @@
 id: hero-shout
 name: 呐喊
 text: 使一个友方随从获得一次成长
+effects: OnActivate|Growth|friendly:single|times=1
 match_text: 同左
 ---
 

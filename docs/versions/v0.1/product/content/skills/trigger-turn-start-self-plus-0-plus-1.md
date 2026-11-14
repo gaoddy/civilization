@@ -1,6 +1,7 @@
 ---
 id: trigger-turn-start-self-plus-0-plus-1
 text: 回合开始时获得 +0/+1
+effects: OnTurnStart|ModifyStats|self|health=1,duration=permanent
 ---
 
 # trigger-turn-start-self-plus-0-plus-1

@@ -1,6 +1,7 @@
 ---
 id: aura-all-plus-0-plus-1
 text: 你的随从获得 +0/+1
+effects: Aura|ModifyStats|friendly:all|health=1,duration=permanent
 ---
 
 # aura-all-plus-0-plus-1

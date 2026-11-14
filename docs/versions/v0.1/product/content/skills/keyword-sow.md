@@ -2,6 +2,7 @@
 id: keyword-sow
 keyword: 播种
 text: 播种：死亡时召唤一个 1/1 的幼苗
+effects: OnDeath|Summon|self|token=seedling,count=1
 ---
 
 # keyword-sow

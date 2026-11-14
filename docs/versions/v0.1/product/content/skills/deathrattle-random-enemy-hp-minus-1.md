@@ -2,6 +2,7 @@
 id: deathrattle-random-enemy-hp-minus-1
 keyword: 亡语
 text: 亡语：使随机一个敌方随从获得 -1 生命值
+effects: OnDeath|ModifyStats|enemy:random|health=-1,duration=combat
 ---
 
 # deathrattle-random-enemy-hp-minus-1

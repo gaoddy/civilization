@@ -1,6 +1,7 @@
 ---
 id: combatstart-leftmost-damage-4
 text: 战斗开始时，对敌方最左侧随从造成 4 点伤害
+effects: OnCombatStart|DealDamage|enemy:leftmost|amount=4
 match_text: 同左
 ---
 

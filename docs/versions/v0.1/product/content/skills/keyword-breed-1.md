@@ -2,6 +2,7 @@
 id: keyword-breed-1
 keyword: 繁衍 1
 text: 繁衍 1：回合开始时获得 +1 生命
+effects: []
 ---
 
 # keyword-breed-1

@@ -2,6 +2,7 @@
 id: keyword-optimal-attack
 keyword: 最优攻击
 text: 最优攻击：无视嘲讽，优先攻击可被击杀的目标
+effects: []
 ---
 
 # keyword-optimal-attack

@@ -1,6 +1,7 @@
 ---
 id: trigger-copy-friendly-minion
 text: 复制一个友方随从
+effects: OnPlayEffect|Copy|friendly:single|to=hand
 match_text: 同左
 ---
 

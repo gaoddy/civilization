@@ -1,6 +1,7 @@
 ---
 id: trigger-all-friendly-plus-1-plus-1
 text: 使你的所有随从获得 +1/+1
+effects: OnPlayEffect|ModifyStats|friendly:all|attack=1,health=1,duration=permanent
 match_text: 同左
 ---
 
