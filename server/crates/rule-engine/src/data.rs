@@ -13,7 +13,7 @@ pub enum CardType {
     Effect,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
 pub enum Tribe {
     #[serde(rename = "人类")]
     Human,
@@ -31,7 +31,7 @@ pub enum Tribe {
     General,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
 #[repr(u8)]
 pub enum Era {
     #[serde(rename = "史前")]

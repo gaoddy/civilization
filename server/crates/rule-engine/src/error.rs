@@ -27,3 +27,15 @@ impl Error for CatalogError {
         }
     }
 }
+
+/// 引擎动作被拒绝的原因，消息面向日志与调试。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EngineError(pub String);
+
+impl fmt::Display for EngineError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl Error for EngineError {}
