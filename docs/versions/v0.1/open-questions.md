@@ -9,8 +9,12 @@
 | 平衡推演未考虑 8 人局的牌池争抢 | 平衡 | 需要实测校准 | [平衡测算](product/content/balance-analysis.md) |
 | 随从统一 3 金币是否让高星级卡缺乏稀缺感 | 经济 | 首版保留统一价，观察 6 星卡出现时机 | [数值与经济](product/systems/economy-and-numbers.md) |
 | 是否允许「卖血升级」 | 单局节奏 | 规则允许，观察是否成为唯一解 | [数值与经济](product/systems/economy-and-numbers.md) |
-| 学者「血量上浮 30%」在 6 星是否过高 | 平衡 | 观察，必要时降到 20% | [平衡测算](product/content/balance-analysis.md) |
+| 学者「血量上浮 30%」在 6/7 星是否过高 | 平衡 | 观察，必要时降到 20% | [平衡测算](product/content/balance-analysis.md) |
 | 6 星卡中学者占 5 张是否会让终局过度偏向学者 | 平衡 | 首版先观察，必要时降 1–2 张为 5 星 | [卡牌规范与数据](product/content/card-system.md) |
+| 7 星 12 张中学者占 3 张（费米、海森堡、薛定谔）是否偏高 | 平衡 | 观察终局学者占比；判据 7 已设为 ≤ 30% | [平衡测算](product/content/balance-analysis.md) |
+| 7 星池每张 5 份在 8 人局是否过少 | 平衡 | M0 模拟后校准 | [数值与经济](product/systems/economy-and-numbers.md) |
+| 升满七段的实测回合是否落在 12–14 | 节奏 | M0 模拟后校准 | [数值与经济](product/systems/economy-and-numbers.md) |
+| 古典段一次开放三个关键词是否让前期复杂度陡增 | 平衡 | 观察新手首局 | [关键词与机制](product/rules/keywords-and-mechanics.md) |
 
 ## 技术与版本
 
@@ -18,6 +22,7 @@
 | --- | --- | --- | --- |
 | 技术栈未定：客户端 Web（TypeScript + Canvas/DOM），服务端 Node 或 Go | 架构与实现 | 由用户选型；选型前只做与语言无关的规则引擎 | [联网与技术架构](technical/architecture/network-architecture.md) |
 | 移动端纳入首版后的人周估算 | 排期 | 当前 22–31 人周未含移动端适配与两端验收，需在 M1 结束后重估 | [版本规划与风险](../../version-roadmap.md) |
+| 七时代是否需要重估 22–31 人周 | 排期 | M0 前重估 | [版本规划与风险](../../version-roadmap.md) |
 
 ## 文档结构
 

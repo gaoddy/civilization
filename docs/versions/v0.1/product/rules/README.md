@@ -6,4 +6,4 @@
 | --- | --- |
 | [核心规则](core-rules.md) | 对局房间、阶段状态机、玩家意图、招募与战斗结算、淘汰与异常 |
 | [关键词与机制](keywords-and-mechanics.md) | 关键词判定、结算顺序、临时增益与效果文本模板 |
-| [时代与场景](eras-and-scenarios.md) | 五时代推进与场景规则 |
+| [时代与场景](eras-and-scenarios.md) | 七时代推进与场景规则 |
