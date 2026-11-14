@@ -13,7 +13,7 @@ effects: OnPlay|Growth|friendly:single:tribe=植物|times=1
 | --- | --- |
 | id | battlecry-friendly-plant-growth-once |
 | 关键词 | 战吼 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

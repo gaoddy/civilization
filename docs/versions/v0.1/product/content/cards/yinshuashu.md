@@ -22,7 +22,7 @@ skills: [trigger-copy-hand-minion]
 | 流派 | 学者 |
 | 技能 | trigger-copy-hand-minion |
 | 费用 | 2 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

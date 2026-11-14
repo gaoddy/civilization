@@ -22,7 +22,7 @@ skills: [combatstart-remove-all-human-growth]
 | 流派 | 病毒 |
 | 技能 | combatstart-remove-all-human-growth |
 | 费用 | 3 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

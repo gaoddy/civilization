@@ -22,7 +22,7 @@ skills: [combatstart-leftmost-damage-6]
 | 流派 | 通用 |
 | 技能 | combatstart-leftmost-damage-6 |
 | 费用 | 3 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

@@ -12,7 +12,7 @@ effects: Aura|GrantKeyword|friendly:all:tribe=机械|keyword=最优攻击,durati
 | --- | --- |
 | id | aura-mech-optimal-attack |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

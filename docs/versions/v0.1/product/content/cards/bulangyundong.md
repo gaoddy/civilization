@@ -22,7 +22,7 @@ skills: [combatstart-random-enemy-damage-2]
 | 流派 | 通用 |
 | 技能 | combatstart-random-enemy-damage-2 |
 | 费用 | 1 |
-| 比赛模式替换 | 战斗开始时，对敌方最左侧随从造成 2 点伤害 |
+| 确定性替换 | 战斗开始时，对敌方最左侧随从造成 2 点伤害 |
 
 ## 效果
 

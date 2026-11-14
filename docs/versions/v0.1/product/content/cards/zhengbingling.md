@@ -22,7 +22,7 @@ skills: [trigger-other-friendly-humans-plus-1-attack]
 | 流派 | 人类 |
 | 技能 | trigger-other-friendly-humans-plus-1-attack |
 | 费用 | 2 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

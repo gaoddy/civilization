@@ -12,7 +12,7 @@ effects: OnAllyEvolve|ModifyStats|self|attack=1,health=1,duration=permanent
 | --- | --- |
 | id | trigger-friendly-evolve-self-plus-1-plus-1 |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

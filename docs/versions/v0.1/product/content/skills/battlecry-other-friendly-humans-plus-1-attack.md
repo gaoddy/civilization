@@ -13,7 +13,7 @@ effects: OnPlay|ModifyStats|friendly:all:tribe=人类:other=true|attack=1,durati
 | --- | --- |
 | id | battlecry-other-friendly-humans-plus-1-attack |
 | 关键词 | 战吼 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

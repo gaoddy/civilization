@@ -22,7 +22,7 @@ skills: [trigger-friendly-growth-twice]
 | 流派 | 通用 |
 | 技能 | trigger-friendly-growth-twice |
 | 费用 | 2 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

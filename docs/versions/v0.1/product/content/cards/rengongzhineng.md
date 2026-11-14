@@ -22,7 +22,7 @@ skills: [trigger-mech-optimal-attack-this-turn]
 | 流派 | 机械 |
 | 技能 | trigger-mech-optimal-attack-this-turn |
 | 费用 | 3 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

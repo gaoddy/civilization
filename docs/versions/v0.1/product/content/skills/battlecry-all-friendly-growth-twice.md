@@ -13,7 +13,7 @@ effects: OnPlay|Growth|friendly:all|times=2
 | --- | --- |
 | id | battlecry-all-friendly-growth-twice |
 | 关键词 | 战吼 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

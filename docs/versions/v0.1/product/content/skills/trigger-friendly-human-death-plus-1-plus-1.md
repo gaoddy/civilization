@@ -12,7 +12,7 @@ effects: OnFriendlyDeath|ModifyStats|self|attack=1,health=1,duration=permanent,w
 | --- | --- |
 | id | trigger-friendly-human-death-plus-1-plus-1 |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

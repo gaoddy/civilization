@@ -13,7 +13,7 @@ effects: OnDeath|GrantKeyword|enemy:all|keyword=传染,value=1,duration=permanen
 | --- | --- |
 | id | deathrattle-all-enemies-contagion-1 |
 | 关键词 | 亡语 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

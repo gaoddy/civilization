@@ -22,7 +22,7 @@ skills: [trigger-discover-tribe-minion]
 | 流派 | 生物 |
 | 技能 | trigger-discover-tribe-minion |
 | 费用 | 2 |
-| 比赛模式替换 | 改为三选一固定池 |
+| 确定性替换 | 改为三选一固定池 |
 
 ## 效果
 

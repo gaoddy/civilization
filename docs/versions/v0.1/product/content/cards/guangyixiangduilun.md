@@ -22,7 +22,7 @@ skills: [trigger-all-friendly-plus-1-plus-1]
 | 流派 | 通用 |
 | 技能 | trigger-all-friendly-plus-1-plus-1 |
 | 费用 | 3 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

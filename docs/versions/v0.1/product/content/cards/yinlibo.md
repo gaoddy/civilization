@@ -22,7 +22,7 @@ skills: [combatstart-all-enemies-minus-1-attack]
 | 流派 | 通用 |
 | 技能 | combatstart-all-enemies-minus-1-attack |
 | 费用 | 2 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

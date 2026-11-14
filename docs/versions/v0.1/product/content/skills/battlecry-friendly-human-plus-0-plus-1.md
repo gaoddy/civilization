@@ -13,7 +13,7 @@ effects: OnPlay|ModifyStats|friendly:single:tribe=人类|health=1,duration=perma
 | --- | --- |
 | id | battlecry-friendly-human-plus-0-plus-1 |
 | 关键词 | 战吼 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

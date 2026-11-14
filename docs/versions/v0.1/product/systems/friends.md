@@ -91,5 +91,5 @@
 ## 相关文档
 
 - [房间与邀请](rooms-and-invites.md)
-- [模式与成就](modes-and-achievements.md)
+- [模式](modes.md)
 - [待确认事项](../../open-questions.md)

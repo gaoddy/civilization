@@ -12,7 +12,7 @@ effects: Aura|ModifyStats|friendly:all:tribe=植物|attack=2,health=2,duration=p
 | --- | --- |
 | id | aura-plant-plus-2-plus-2 |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

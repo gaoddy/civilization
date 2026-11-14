@@ -12,7 +12,7 @@ effects: Aura|ModifyStats|friendly:all:tribe=学者|health=2,duration=permanent
 | --- | --- |
 | id | aura-scholar-plus-0-plus-2 |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

@@ -13,7 +13,7 @@ effects: OnPlay|Growth|friendly:single|times=1,timesIf=植物:2
 | --- | --- |
 | id | battlecry-friendly-growth-plant-twice |
 | 关键词 | 战吼 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

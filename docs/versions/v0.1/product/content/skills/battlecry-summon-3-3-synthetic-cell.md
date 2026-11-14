@@ -13,7 +13,7 @@ effects: OnPlay|Summon|self|token=synthetic-cell-token,count=1
 | --- | --- |
 | id | battlecry-summon-3-3-synthetic-cell |
 | 关键词 | 战吼 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 
