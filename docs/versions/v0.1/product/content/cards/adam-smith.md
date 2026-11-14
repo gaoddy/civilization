@@ -8,7 +8,7 @@ level: 4
 era: 工业
 attack: 6
 health: 8
-skills: [hero-division-of-labor]
+skills: [division-of-labor]
 is_scholar: false
 is_hero: true
 ---
@@ -29,7 +29,7 @@ is_hero: true
 | 攻击力 | 6 |
 | 生命值 | 8 |
 | 关键词 | 无 |
-| 技能 | hero-division-of-labor |
+| 技能 | division-of-labor |
 | 学者 | 否 |
 | 英雄资格 | 是 |
 

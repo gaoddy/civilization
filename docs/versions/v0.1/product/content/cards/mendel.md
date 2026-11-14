@@ -8,7 +8,7 @@ level: 4
 era: 现代
 attack: 0
 health: 12
-skills: [battlecry-friendly-plant-growth-once, hero-heredity]
+skills: [battlecry-friendly-plant-growth-once, heredity]
 is_scholar: true
 is_hero: true
 ---
@@ -29,7 +29,7 @@ is_hero: true
 | 攻击力 | 0 |
 | 生命值 | 12 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-friendly-plant-growth-once；hero-heredity |
+| 技能 | battlecry-friendly-plant-growth-once；heredity |
 | 学者 | 是 |
 | 英雄资格 | 是 |
 

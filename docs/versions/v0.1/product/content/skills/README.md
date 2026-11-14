@@ -64,19 +64,19 @@
 | [deathrattle-random-enemy-minus-1-health](deathrattle-random-enemy-minus-1-health.md) | 亡语 | 亡语：使随机一个敌方随从获得 -1 生命 | 1 |
 | [deathrattle-summon-2-2-hela-cell-clone](deathrattle-summon-2-2-hela-cell-clone.md) | 亡语 | 亡语：召唤一个 2/2 的海拉细胞（复制体） | 1 |
 | [deathrattle-summon-termite](deathrattle-summon-termite.md) | 亡语 | 亡语：召唤一个 1/2 的白蚁 | 1 |
-| [交流电](hero-alternating-current.md) | 无 | 使一个友方随从获得最优攻击直到回合结束 | 1 |
-| [分工](hero-division-of-labor.md) | 无 | 使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次 | 1 |
-| [高效算法](hero-efficient-algorithm.md) | 无 | 刷新商店并获得一张当前星级的随从 | 1 |
-| [进化](hero-evolution-discovery.md) | 无 | 发现一张本局启用的流派随从 | 1 |
-| [法拉第笼](hero-faraday-cage.md) | 无 | 使一个友方随从获得护盾 | 1 |
-| [遗传](hero-heredity.md) | 无 | 使一个友方植物随从获得一次成长 | 1 |
-| [发明工厂](hero-invention-factory.md) | 无 | 使你的其他机械随从各获得一次成长 | 1 |
-| [光速出击](hero-light-speed-strike.md) | 无 | 使一个友方随从本回合获得连击 | 1 |
-| [微生物学](hero-microbiology.md) | 无 | 战斗开始时使敌方最左侧随从获得 1 层传染 | 1 |
-| [观测](hero-observation.md) | 无 | 每回合首次刷新时额外出现一张当前时代的随机随从 | 1 |
-| [放射](hero-radiation.md) | 无 | 战斗开始时对随机一个敌方随从造成 2 点伤害 | 1 |
-| [呐喊](hero-shout.md) | 无 | 使一个友方随从获得一次成长 | 1 |
-| [万能手稿](hero-universal-manuscript.md) | 无 | 复制一张你手牌中的随从牌 | 1 |
+| [交流电](alternating-current.md) | 无 | 使一个友方随从获得最优攻击直到回合结束 | 1 |
+| [分工](division-of-labor.md) | 无 | 使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次 | 1 |
+| [高效算法](efficient-algorithm.md) | 无 | 刷新商店并获得一张当前星级的随从 | 1 |
+| [进化](evolution-discovery.md) | 无 | 发现一张本局启用的流派随从 | 1 |
+| [法拉第笼](faraday-cage.md) | 无 | 使一个友方随从获得护盾 | 1 |
+| [遗传](heredity.md) | 无 | 使一个友方植物随从获得一次成长 | 1 |
+| [发明工厂](invention-factory.md) | 无 | 使你的其他机械随从各获得一次成长 | 1 |
+| [光速出击](light-speed-strike.md) | 无 | 使一个友方随从本回合获得连击 | 1 |
+| [微生物学](microbiology.md) | 无 | 战斗开始时使敌方最左侧随从获得 1 层传染 | 1 |
+| [观测](observation.md) | 无 | 每回合首次刷新时额外出现一张当前时代的随机随从 | 1 |
+| [放射](radiation.md) | 无 | 战斗开始时对随机一个敌方随从造成 2 点伤害 | 1 |
+| [呐喊](shout.md) | 无 | 使一个友方随从获得一次成长 | 1 |
+| [万能手稿](universal-manuscript.md) | 无 | 复制一张你手牌中的随从牌 | 1 |
 | [keyword-assemble-1](keyword-assemble-1.md) | 装配 1 | 装配 1：进入战场时，使你的其他机械随从各获得 1 次成长 | 8 |
 | [keyword-assemble-2](keyword-assemble-2.md) | 装配 2 | 装配 2：进入战场时，使你的其他机械随从各获得 2 次成长 | 7 |
 | [keyword-breed-1](keyword-breed-1.md) | 繁衍 1 | 繁衍 1：回合开始时获得 +1 生命 | 7 |

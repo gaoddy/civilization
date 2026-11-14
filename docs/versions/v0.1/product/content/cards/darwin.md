@@ -8,7 +8,7 @@ level: 5
 era: 现代
 attack: 0
 health: 16
-skills: [aura-biology-plus-1-plus-1, hero-evolution-discovery]
+skills: [aura-biology-plus-1-plus-1, evolution-discovery]
 is_scholar: true
 is_hero: true
 ---
@@ -29,7 +29,7 @@ is_hero: true
 | 攻击力 | 0 |
 | 生命值 | 16 |
 | 关键词 | 无 |
-| 技能 | aura-biology-plus-1-plus-1；hero-evolution-discovery |
+| 技能 | aura-biology-plus-1-plus-1；evolution-discovery |
 | 学者 | 是 |
 | 英雄资格 | 是 |
 

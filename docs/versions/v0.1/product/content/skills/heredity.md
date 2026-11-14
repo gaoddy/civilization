@@ -1,5 +1,5 @@
 ---
-id: hero-heredity
+id: heredity
 name: 遗传
 text: 使一个友方植物随从获得一次成长
 effects: OnActivate|Growth|friendly:single:tribe=植物|times=1
@@ -14,7 +14,7 @@ match_text: 同左
 
 | 属性 | 值 |
 | --- | --- |
-| id | hero-heredity |
+| id | heredity |
 | 关键词 | 无 |
 | 比赛模式替换 | 同左 |
 | 费用 | 1 |

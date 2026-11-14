@@ -8,7 +8,7 @@ level: 6
 era: 现代
 attack: 0
 health: 20
-skills: [hero-efficient-algorithm]
+skills: [efficient-algorithm]
 is_scholar: true
 is_hero: true
 ---
@@ -29,7 +29,7 @@ is_hero: true
 | 攻击力 | 0 |
 | 生命值 | 20 |
 | 关键词 | 无 |
-| 技能 | hero-efficient-algorithm |
+| 技能 | efficient-algorithm |
 | 学者 | 是 |
 | 英雄资格 | 是 |
 

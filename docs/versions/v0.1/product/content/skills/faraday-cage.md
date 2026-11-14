@@ -1,5 +1,5 @@
 ---
-id: hero-faraday-cage
+id: faraday-cage
 name: 法拉第笼
 text: 使一个友方随从获得护盾
 effects: OnActivate|GrantKeyword|friendly:single|keyword=护盾,duration=permanent
@@ -14,7 +14,7 @@ match_text: 同左
 
 | 属性 | 值 |
 | --- | --- |
-| id | hero-faraday-cage |
+| id | faraday-cage |
 | 关键词 | 无 |
 | 比赛模式替换 | 同左 |
 | 费用 | 2 |

@@ -8,7 +8,7 @@ level: 5
 era: 现代
 attack: 0
 health: 16
-skills: [battlecry-friendly-growth-twice, hero-radiation]
+skills: [battlecry-friendly-growth-twice, radiation]
 is_scholar: true
 is_hero: true
 ---
@@ -29,7 +29,7 @@ is_hero: true
 | 攻击力 | 0 |
 | 生命值 | 16 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-friendly-growth-twice；hero-radiation |
+| 技能 | battlecry-friendly-growth-twice；radiation |
 | 学者 | 是 |
 | 英雄资格 | 是 |
 

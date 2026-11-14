@@ -8,7 +8,7 @@ level: 5
 era: 工业
 attack: 9
 health: 11
-skills: [hero-invention-factory]
+skills: [invention-factory]
 is_scholar: false
 is_hero: true
 ---
@@ -29,7 +29,7 @@ is_hero: true
 | 攻击力 | 9 |
 | 生命值 | 11 |
 | 关键词 | 无 |
-| 技能 | hero-invention-factory |
+| 技能 | invention-factory |
 | 学者 | 否 |
 | 英雄资格 | 是 |
 

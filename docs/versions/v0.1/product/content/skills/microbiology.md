@@ -1,5 +1,5 @@
 ---
-id: hero-microbiology
+id: microbiology
 name: 微生物学
 text: 战斗开始时使敌方最左侧随从获得 1 层传染
 effects: OnCombatStart|GrantKeyword|enemy:leftmost|keyword=传染,value=1,duration=permanent
@@ -12,7 +12,7 @@ match_text: 同左
 
 | 属性 | 值 |
 | --- | --- |
-| id | hero-microbiology |
+| id | microbiology |
 | 关键词 | 无 |
 | 比赛模式替换 | 同左 |
 

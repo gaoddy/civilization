@@ -8,7 +8,7 @@ level: 5
 era: 工业
 attack: 0
 health: 16
-skills: [hero-alternating-current]
+skills: [alternating-current]
 is_scholar: true
 is_hero: true
 ---
@@ -29,7 +29,7 @@ is_hero: true
 | 攻击力 | 0 |
 | 生命值 | 16 |
 | 关键词 | 无 |
-| 技能 | hero-alternating-current |
+| 技能 | alternating-current |
 | 学者 | 是 |
 | 英雄资格 | 是 |
 

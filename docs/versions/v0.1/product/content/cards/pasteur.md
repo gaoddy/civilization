@@ -8,7 +8,7 @@ level: 5
 era: 工业
 attack: 7
 health: 10
-skills: [hero-microbiology]
+skills: [microbiology]
 is_scholar: false
 is_hero: true
 ---
@@ -29,7 +29,7 @@ is_hero: true
 | 攻击力 | 7 |
 | 生命值 | 10 |
 | 关键词 | 无 |
-| 技能 | hero-microbiology |
+| 技能 | microbiology |
 | 学者 | 否 |
 | 英雄资格 | 是 |
 
