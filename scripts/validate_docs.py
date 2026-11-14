@@ -27,9 +27,9 @@ SKILL_TRIGGERS = {"主动使用", "首次刷新时", "战斗开始时"}
 RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26}
-EXPECT_ERA = {"史前": 24, "原始": 24, "封建": 24, "现代": 30, "未来": 18}
-EXPECT_TRIBE = {"学者": 28, "生物": 24, "人类": 24, "机械": 22, "植物": 12, "病毒": 10}
-EXPECT_LEVEL = {1: 18, 2: 24, 3: 26, 4: 22, 5: 18, 6: 12}
+EXPECT_ERA = {"史前": 27, "原始": 26, "封建": 27, "现代": 36, "未来": 20}
+EXPECT_TRIBE = {"学者": 28, "生物": 24, "人类": 28, "机械": 22, "植物": 18, "病毒": 16}
+EXPECT_LEVEL = {1: 19, 2: 28, 3: 28, 4: 24, 5: 22, 6: 15}
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
                  "attack", "health", "keywords", "is_scholar", "source"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "tribe", "cost", "match_text"]
@@ -234,7 +234,7 @@ def check_cards():
             fail(f"{name}: 费用越界 {c['cost']}")
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"随从": 120, "效果": 30}:
+    if counts != {"随从": 136, "效果": 30}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]

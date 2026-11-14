@@ -1,0 +1,37 @@
+---
+id: weijingzhanshi
+card_type: 随从
+name: 维京战士
+tribe: 人类
+subtype: 兵种
+level: 4
+era: 封建
+attack: 6
+health: 9
+keywords: [嘲讽]
+is_scholar: false
+source: 新增
+---
+
+# 维京战士
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | weijingzhanshi |
+| 名称 | 维京战士 |
+| 类型 | 随从 |
+| 流派 | 人类 |
+| 子类 | 兵种 |
+| 星级 | 4 |
+| 时代 | 封建 |
+| 攻击力 | 6 |
+| 生命值 | 9 |
+| 关键词 | 嘲讽 |
+| 学者 | 否 |
+| 来源 | 新增 |
+
+## 效果
+
+嘲讽
