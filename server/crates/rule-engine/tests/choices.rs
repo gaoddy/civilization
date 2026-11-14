@@ -162,6 +162,23 @@ fn discover_candidates_at(state: &GameState, index: usize) -> Option<Vec<String>
     }
 }
 
+/// 第 `index` 条待选的进化剩余次数；不是进化待选时返回 `None`。
+fn evolve_remaining(state: &GameState, index: usize) -> Option<u8> {
+    match state.pending.get(index) {
+        Some(PendingChoice::Evolve { remaining, .. }) => Some(*remaining),
+        _ => None,
+    }
+}
+
+/// 进化夹具中的观察者。
+fn watcher(state: &GameState) -> &MinionInstance {
+    state.players[0]
+        .board
+        .iter()
+        .find(|minion| minion.card_id == "watcher")
+        .expect("观察者仍在场")
+}
+
 fn pending_count(state: &GameState) -> usize {
     state.pending.len()
 }
@@ -743,6 +760,12 @@ fn evolve_choice_stats_is_applied_and_triggers_ally_evolve() {
     let (mut engine, mut state) = evolve_fixture();
     let evolver = play_evolver(&mut engine, &mut state, "evolver");
 
+    assert_eq!(evolve_remaining(&state, 0), Some(1), "进化待选择");
+    assert!(
+        watcher(&state).mods.is_empty(),
+        "选择结算前不得触发 OnAllyEvolve"
+    );
+
     engine
         .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
         .expect("选择 +2/+2 应成功");
@@ -757,12 +780,8 @@ fn evolve_choice_stats_is_applied_and_triggers_ally_evolve() {
     assert_eq!(minion.mods[0].health, 2);
     assert_eq!(pending_count(&state), 0);
 
-    let watcher = state.players[0]
-        .board
-        .iter()
-        .find(|minion| minion.card_id == "watcher")
-        .expect("观察者仍在场");
-    assert_eq!(watcher.mods.len(), 1, "友方进化应触发 OnAllyEvolve");
+    let watcher = watcher(&state);
+    assert_eq!(watcher.mods.len(), 1, "选择结算后恰好触发一次 OnAllyEvolve");
     assert_eq!((watcher.mods[0].attack, watcher.mods[0].health), (1, 1));
 }
 
@@ -788,11 +807,7 @@ fn evolve_choice_divine_shield_grants_keyword() {
 
 #[test]
 fn evolve_golden_chooses_twice() {
-    let (mut engine, mut state) = setup(2);
-    add_skill(
-        &mut engine.catalog,
-        skill("keyword-evolve", Some("进化"), "[]", None),
-    );
+    let (mut engine, mut state) = evolve_fixture();
     add_minion(
         &mut engine.catalog,
         "golden-evolver",
@@ -804,17 +819,21 @@ fn evolve_golden_chooses_twice() {
         card_id: "golden-evolver".to_string(),
         golden: true,
     }];
-    state.next_instance_id = 2;
     let evolver = play_evolver(&mut engine, &mut state, "golden-evolver");
 
-    let remaining = match &state.pending[0] {
-        PendingChoice::Evolve { remaining, .. } => *remaining,
-        other => panic!("应为进化待选，实为 {other:?}"),
-    };
-    assert_eq!(remaining, 2, "金色进化连续选两次");
+    assert_eq!(evolve_remaining(&state, 0), Some(2), "金色进化连续选两次");
+    assert!(
+        watcher(&state).mods.is_empty(),
+        "第一次选择前不得触发 OnAllyEvolve"
+    );
     engine
         .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
         .expect("第一次选择");
+    assert_eq!(evolve_remaining(&state, 0), Some(1), "第一次选择后仍待选");
+    assert!(
+        watcher(&state).mods.is_empty(),
+        "进化未完成前不得触发 OnAllyEvolve"
+    );
     engine
         .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
         .expect("第二次选择可重复选同一项");
@@ -826,6 +845,62 @@ fn evolve_golden_chooses_twice() {
         .expect("进化随从仍在场");
     let total: i32 = minion.mods.iter().map(|modifier| modifier.attack).sum();
     assert_eq!(total, 4, "同一项可重复选择，+2/+2 累计两次");
+    let watcher = watcher(&state);
+    assert_eq!(
+        watcher.mods.len(),
+        1,
+        "金色进化是一次入场进化：观察者只触发一次（观察者非金色）"
+    );
+    assert_eq!((watcher.mods[0].attack, watcher.mods[0].health), (1, 1));
+}
+
+#[test]
+fn evolve_golden_watcher_triggers_twice() {
+    let (mut engine, mut state) = evolve_fixture();
+    add_minion(
+        &mut engine.catalog,
+        "golden-evolver",
+        Tribe::Biology,
+        (1, 4, 4),
+        &["keyword-evolve"],
+    );
+    state.players[0].hand = vec![HandCard {
+        card_id: "golden-evolver".to_string(),
+        golden: true,
+    }];
+    state.players[0].board[0].golden = true;
+    play_evolver(&mut engine, &mut state, "golden-evolver");
+    assert!(watcher(&state).mods.is_empty());
+
+    engine
+        .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
+        .expect("第一次选择");
+    engine
+        .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
+        .expect("第二次选择");
+
+    // 一次进化事件；金色观察者自身「触发两次」连续执行，加两段 +1/+1。
+    assert_eq!(watcher(&state).mods.len(), 2);
+}
+
+#[test]
+fn evolve_skipped_before_choice_does_not_trigger_ally_evolve() {
+    let (mut engine, mut state) = evolve_fixture();
+    let evolver = play_evolver(&mut engine, &mut state, "evolver");
+
+    // 战吼结算后来源被移出战场（例如出售）：进化不再发生，观察者不触发。
+    state.players[0]
+        .board
+        .retain(|minion| minion.instance_id != evolver);
+    assert!(watcher(&state).mods.is_empty());
+    engine
+        .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
+        .expect("来源离场时选择被丢弃");
+    assert!(
+        watcher(&state).mods.is_empty(),
+        "未完成的进化不触发 OnAllyEvolve"
+    );
+    assert_eq!(pending_count(&state), 0);
 }
 
 #[test]

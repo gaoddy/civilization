@@ -178,7 +178,7 @@ impl Engine {
                 );
                 self.fire_ally_summon_recruit(state, ctx.seat, instance_id);
                 let events = self.check_triple(state, ctx.seat);
-                self.fire_ally_evolve_recruit(state, ctx.seat, instance_id);
+                self.fire_evolve_after_enter(state, ctx.seat, instance_id);
                 return events;
             }
             Zone::Shop => unreachable!(),

@@ -7,6 +7,7 @@
 //!
 //! 进化以 [`PendingChoice::Evolve`] 表达，只在招募阶段存在；选择由
 //! `recruit::choose_discover` 与发现共用 FIFO 与按座位的消费规则。
+//! `OnAllyEvolve` 只在进化实际完成（最后一次选择结算完）时触发。
 
 use crate::data::Tribe;
 use crate::effects::{Duration, EffectCtx, Trigger};
@@ -107,15 +108,46 @@ impl Engine {
             if let Some(PendingChoice::Evolve { remaining, .. }) = state.pending.get_mut(index) {
                 *remaining = remaining.saturating_sub(1);
             }
+            // 金色：第一项已生效，但整次进化尚未完成，继续等待下一次选择。
+            // 两次选择连续发生，中间不插入观察者效果（§2.6）。
         } else {
             state.pending.remove(index);
+            // 进化实际完成（最后一次选择结算完）后才触发 `OnAllyEvolve`。
+            self.fire_ally_evolve_recruit(state, seat, source);
         }
         Ok(())
     }
 
-    /// 来源随从结算完战吼后，触发该座位其他随从的 `OnAllyEvolve`，按站位从左到右。
+    /// 入场路径调用：来源登记了进化则等选择结算，否则当场按「进化」处理。
     ///
-    /// `event_target` 为进化来源；金色观察者由执行器连续触发两次。
+    /// 数据中带「进化」关键词的卡总会在入场时登记待选；已登记时由选择结算触发。
+    /// 未登记的情形（没有进化、学者、来源已离场或未找到）在这里按「未发生进化」
+    /// 处理，即不触发——`OnAllyEvolve` 不再是入场副作用，而是选择结果的副作用。
+    pub(crate) fn fire_evolve_after_enter(
+        &mut self,
+        state: &mut GameState,
+        seat: Seat,
+        entered: InstanceId,
+    ) {
+        let waiting = state.pending.iter().any(|pending| {
+            matches!(
+                pending,
+                PendingChoice::Evolve { seat: pending_seat, source, .. }
+                    if *pending_seat == seat && *source == entered
+            )
+        });
+        if !waiting {
+            self.fire_ally_evolve_recruit(state, seat, entered);
+        }
+    }
+
+    /// 触发该座位其他随从的 `OnAllyEvolve`，按站位从左到右。
+    ///
+    /// 只在进化实际完成时调用：进入战场路径在来源没有登记进化时直接调用，
+    /// 登记了进化的来源等 `resolve_evolve_choice` 结算完最后一次选择再调用。
+    /// 金色进化的两次选择算两次独立进化：每次选完各触发一次，连续两次之间
+    /// 不插入其他随从效果，观察者自身的金色「触发两次」照常生效。
+    /// `event_target` 为进化来源。
     pub(crate) fn fire_ally_evolve_recruit(
         &mut self,
         state: &mut GameState,

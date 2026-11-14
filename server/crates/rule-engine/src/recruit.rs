@@ -163,7 +163,7 @@ fn buy(
             },
         ));
         events.extend(engine.check_triple(state, seat));
-        engine.fire_ally_evolve_recruit(state, seat, instance_id);
+        engine.fire_evolve_after_enter(state, seat, instance_id);
     }
     if card_type == CardType::Minion {
         events.extend(engine.check_triple(state, seat));
@@ -402,8 +402,9 @@ fn play_card(
             ));
             state.next_instance_id = following_instance_id;
 
-            // 先登记进化、再结算战吼（关键词机制 §2.2）；战吼结算完毕后才触发
-            // 友方进化。战吼带出的效果牌与响应在本次意图内同步结算，不跨意图排队。
+            // 先登记进化、再结算战吼（关键词机制 §2.2）。登记了进化的来源等到
+            // 玩家选择结算完再触发 OnAllyEvolve；战吼带出的效果牌与响应在本次
+            // 意图内同步结算，不跨意图排队。
             engine.register_evolve(state, seat, instance_id);
             let mut events = engine.fire(
                 state,
@@ -417,7 +418,7 @@ fn play_card(
                 },
             );
             events.extend(engine.check_triple(state, seat));
-            engine.fire_ally_evolve_recruit(state, seat, instance_id);
+            engine.fire_evolve_after_enter(state, seat, instance_id);
             Ok(Outcome::with(events))
         }
     }
