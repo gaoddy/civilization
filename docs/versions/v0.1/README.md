@@ -2,7 +2,7 @@
 
 本文是 v0.1 的版本入口，描述版本主题、目标、能力清单、状态与文档导航；不复制产品与技术基线内容。
 
-> 状态：规划中
+> 状态：开发中
 
 ## 主题
 
@@ -56,6 +56,7 @@
 - 技术基线：[technical/README.md](technical/README.md)
 - 玩家向介绍：[游戏介绍](product/overview/game-intro.md)
 - 未确认事项：[open-questions.md](open-questions.md)
+- 已实现现状：[当前实现状态](../../current/README.md)
 - 跨版本路线：[版本路线与风险](../../version-roadmap.md)、[内容素材库](../../content-backlog.md)
 
 ## 数据与校验

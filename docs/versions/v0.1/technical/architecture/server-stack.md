@@ -1,6 +1,6 @@
 # 服务端技术基线
 
-> 状态：方案未实施
+> 状态：M0 已实施（`rule-engine`、`sim`）；`protocol`、`room-service` 未实施
 > 依赖：[设计总纲](../../product/overview/design-overview.md)（§8）、[联网与技术架构](network-architecture.md)
 
 本文记录 v0.1 服务端已确定的技术选型、工程形态与确定性约束；不描述客户端选型、接口字段与具体实现。未确定事项见[待确认事项](../../open-questions.md)。
@@ -22,7 +22,7 @@
 
 ## 2. 工程形态
 
-服务端为 Cargo workspace，规则引擎与房间服务通过 crate 边界隔离：
+服务端为 Cargo workspace，规则引擎与房间服务通过 crate 边界隔离。当前已建 `rule-engine`（纯库）与 `sim`（CLI 模拟器与确定性 AI），`protocol` 与 `room-service` 在 M1 建立：
 
 ```
 server/

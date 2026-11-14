@@ -7,7 +7,7 @@
 | 路径 | 职责 |
 | --- | --- |
 | [versions/](versions/README.md) | 未实现版本的规划与目标形态 |
-| `current/` | 当前代码已实现的状态；当前没有已实现内容，首个版本实现后再建 |
+| [current/](current/README.md) | 当前代码已实现的状态；只写现状，不复制版本规划 |
 | `releases/` | 已发布版本的更新内容；当前没有发版记录，首次发版时再建 |
 | `plan/` | 实施计划，本地保留、不提交 |
 
@@ -15,7 +15,7 @@
 
 | 版本 | 状态 | 文档 |
 | --- | --- | --- |
-| v0.1 | 规划中 | [v0.1](versions/v0.1/README.md) |
+| v0.1 | 开发中 | [v0.1](versions/v0.1/README.md) |
 | v0.2 | 规划中 | [v0.2](versions/v0.2/README.md) |
 
 版本状态与后续版本的内容增量见[版本总览](versions/README.md)。

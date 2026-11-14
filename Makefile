@@ -29,7 +29,7 @@ protocol-check:
 	$(PYTHON) scripts/gen_protocol_docs.py --check
 
 m0-determinism:
-	cd server && cargo test -p sim --test sim_cli replay_same_log_twice_has_same_hash
+	cd server && cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash
 
 m0-batch:
 	cd server && cargo run -q -p sim -- batch --games 1000 --seed 1 --out ../output/m0-batch.json
