@@ -31,15 +31,17 @@ AURA_VALUE_RE = re.compile(
 TRIBE_KEYWORD = {"装配": "机械", "播种": "植物", "进化": "生物"}
 TRIBES = {"人类", "机械", "生物", "植物", "病毒", "学者"}
 EFFECT_TRIBES = TRIBES | {"通用"}
-ERAS = ["史前", "原始", "封建", "现代", "未来"]
+ERAS = ["史前", "原始", "古典", "封建", "工业", "现代", "未来"]
 SOURCES = {"素材", "新增"}
 CARD_TYPES = {"随从", "效果"}
 SKILL_TRIGGERS = {"主动使用", "首次刷新时", "战斗开始时"}
 ACHIEVEMENT_EVENTS = {"时代升级", "关键词组合", "成长触发", "卡牌使用", "三连合成"}
 ACHIEVEMENT_FIELDS = ["id", "name", "event", "condition", "count", "reward", "affects_power"]
 RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
-         4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16)}
-CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26}
+         4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16),
+         7: (10, 15, 14, 20)}
+CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
+KW_UNLOCK = {"繁衍": 1, "嘲讽": 2, "连击": 3, "最优攻击": 3, "传染": 3, "复生": 4, "护盾": 5}
 EXPECT_ERA = {"史前": 27, "原始": 26, "封建": 27, "现代": 36, "未来": 20}
 EXPECT_TRIBE = {"学者": 28, "生物": 24, "人类": 28, "机械": 22, "植物": 18, "病毒": 16}
 EXPECT_LEVEL = {1: 19, 2: 28, 3: 28, 4: 24, 5: 22, 6: 15}
@@ -295,6 +297,18 @@ def check_hero_intros(heroes):
             fail(f"{h['_file']}: 简介与 front matter 不一致")
 
 
+def check_keyword_unlock(minions, skill_map):
+    actual = {}
+    for c in minions:
+        for k in derived_keywords(c, skill_map):
+            base = k.split()[0]
+            if base in KW_UNLOCK:
+                actual[base] = min(actual.get(base, 99), c["level"])
+    for keyword, era_level in KW_UNLOCK.items():
+        if actual.get(keyword) != era_level:
+            fail(f"关键词 {keyword} 的最小星级为 {actual.get(keyword)}，期望 {era_level}")
+
+
 def check_cards(skill_map):
     raw = load("cards", ["id", "name", "card_type", "level", "tribe"])
     for doc in raw:
@@ -468,6 +482,7 @@ def main():
     skills = check_skills()
     skill_map = {s["id"]: s for s in skills}
     raw, minions, effects = check_cards(skill_map)
+    check_keyword_unlock(minions, skill_map)
     heroes = check_heroes(skill_map)
     check_skill_context(skill_map, heroes, effects)
     achievements = check_achievements()
@@ -484,6 +499,10 @@ def main():
     print("时代", dict(collections.Counter(c["era"] for c in minions)))
     print("流派", dict(collections.Counter(c["tribe"] for c in minions)))
     print("星级", dict(collections.Counter(c["level"] for c in minions)))
+    print("关键词", dict(sorted(collections.Counter(
+        k.split()[0] for c in minions for k in derived_keywords(c, skill_map)).items())))
+    print("技能引用", dict(sorted(collections.Counter(
+        sid for c in raw for sid in card_skills(c)).items())))
     print(f"随从 {len(minions)} 张、效果牌 {len(effects)} 张、技能 {len(skills)} 个、"
           f"英雄 {len(heroes)} 位、成就 {len(achievements)} 个，校验通过")
     return 0
