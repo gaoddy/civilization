@@ -78,8 +78,10 @@ pub struct GameStats {
     pub era_upgrade_turns: [Option<u8>; 8],
     /// 本局三连次数。
     pub triples: u32,
-    /// 第 20 回合开始时存活人数；对局未到第 20 回合为 `None`。
+    /// 第 20 回合招募开始前的存活人数；对局未到第 20 回合为 `None`。
     pub survivors_at_turn_20: Option<u8>,
+    /// 对局结束时的存活人数。
+    pub survivors_at_end: u8,
     /// 每次战斗失败的伤害（一方被判负记一次）。
     pub damage_per_loss: Vec<i32>,
     /// 冠军座位（排名第 1）。
@@ -94,6 +96,7 @@ impl Default for GameStats {
             era_upgrade_turns: [None; 8],
             triples: 0,
             survivors_at_turn_20: None,
+            survivors_at_end: 0,
             damage_per_loss: Vec::new(),
             winner: 0,
             winner_tribe: Tribe::General,
@@ -208,6 +211,9 @@ fn drive(engine: &mut Engine, state: &mut GameState, seed: u64) -> Result<GameLo
         run_turn(engine, state, &mut steps, &mut stats)?;
         if state.turn == 20 && stats.survivors_at_turn_20.is_none() {
             stats.survivors_at_turn_20 = Some(alive_count(state));
+        }
+        if state.phase == Phase::GameOver && stats.survivors_at_end == 0 {
+            stats.survivors_at_end = alive_count(state);
         }
 
         engine.finish_recruit(state)?;

@@ -4,10 +4,10 @@
 
 | 文档 | 内容 |
 | --- | --- |
-| [technical/](technical/README.md) | 已实现的技术现状：工程结构、引擎边界、数据生成、命令与验证方式 |
+| [technical/](technical/README.md) | 已实现的技术现状：工程结构、引擎边界、数据生成、命令、报告字段与验证方式 |
 
 | 里程碑 | 状态 | 验证结果 | 实现文档 |
 | --- | --- | --- | --- |
-| v0.1 M0 规则可跑 | 已实现 | 七类验证标准全部通过并有越界登记，见[规则引擎与模拟器](technical/rule-engine-and-simulator.md) | [规则引擎与模拟器](technical/rule-engine-and-simulator.md) |
+| v0.1 M0 规则可跑 | 已实现 | 七类验证标准由验证矩阵命令与报告字段支撑，见[规则引擎与模拟器](technical/rule-engine-and-simulator.md) §5；数值基线的口径问题登记在 v0.1 待确认事项 | [规则引擎与模拟器](technical/rule-engine-and-simulator.md) |
 
 M1 及之后的里程碑尚未实现。

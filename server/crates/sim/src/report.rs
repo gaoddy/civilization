@@ -22,16 +22,35 @@ pub struct Report {
     pub seed: u64,
     /// 各流派冠军数，按流派中文名升序；未夺冠的流派不出现。
     pub wins_by_tribe: BTreeMap<String, u64>,
-    /// 平均对局回合数 = 各局结束回合之和 / 局数，向下取整；单位为「回合」（第 1 回合起算）。
+    /// 各流派夺冠率（整数千分比）= 该流派 `wins_by_tribe` × 1000 / `games`，向下取整；
+    /// 全部流派（含 0）均出现，键与 `wins_by_tribe` 的流派名一致。
+    pub win_rate_permille_by_tribe: BTreeMap<String, u64>,
+    /// 平均对局回合数 = 各局结束回合之和 / 局数，向下取整；单位为「回合」（第 1 回合起算，
+    /// 结束回合即对局结束时的 `turn`）。
     pub avg_turns: u64,
-    /// 每名玩家首次升时代的回合，对 8 名玩家取平均 = 已记录首次升时代回合之和 /
-    /// 记录到升时代的玩家数，向下取整；对局结束时仍未升到下一时代的玩家不计入。
-    pub era_upgrade_turns: u64,
+    /// 每座位首次升时代的回合累加（下标为座位 0..8）= 各局同一座位
+    /// `stats.era_upgrade_turns` 之和，对局结束时仍未升到下一时代的座位计 0。
+    pub era_upgrade_turns_by_seat: [u64; 8],
+    /// 每座位首次升时代的平均回合（下标为座位 0..8）= 上项 / `games`，向下取整；
+    /// 未升级的座位按 0 计入，因此会拉低平均值。
+    pub avg_era_upgrade_turn_by_seat: [u64; 8],
+    /// 全座位首次升时代的平均回合 = 已记录首次升时代回合之和 / 记录到升时代的
+    /// （座位, 对局）次数，向下取整；对局结束时仍未升到下一时代的座位不计入。
+    /// 没有任何升时代记录时为 `null`。
+    pub avg_era_upgrade_turn: Option<u64>,
+    /// 有首次升时代记录的人数（座位 × 对局）。
+    pub era_upgrade_count: u64,
     /// 每局三连次数之和 / 局数，向下取整。
     pub triples_per_game: u64,
-    /// 打到第 20 回合的对局中，第 20 回合开始时平均存活人数（存活人数之和 /
-    /// 到达第 20 回合的局数，向下取整）；没有对局到达第 20 回合时为 `null`。
+    /// 到达第 20 回合的对局数（`stats.survivors_at_turn_20` 非空）。
+    pub games_reaching_turn_20: u64,
+    /// 上述对局在第 20 回合开始时平均存活人数（存活人数之和 / `games_reaching_turn_20`，
+    /// 向下取整）；没有对局到达第 20 回合时为 `null`。
     pub survivors_at_turn_20: Option<u64>,
+    /// 每局结束回合为 20 的对局数（对局在第 20 回合结算后结束）。
+    pub games_ended_on_turn_20: u64,
+    /// 1000 局（全部对局）平均结束存活人数 = 各局结束存活人数之和 / 局数，向下取整。
+    pub avg_survivors_at_end: u64,
     /// 每次战斗失败的平均伤害（全部败者伤害之和 / 败者次数，向下取整）；
     /// 没有败者时为 `null`。
     pub avg_damage_per_loss: Option<u64>,
@@ -44,11 +63,14 @@ pub fn build(batch: &BatchJson) -> Report {
     let games = batch.games.len() as u64;
     let mut wins_by_tribe: BTreeMap<String, u64> = BTreeMap::new();
     let mut turns_sum = 0u64;
+    let mut era_by_seat = [0u64; 8];
     let mut era_sum = 0u64;
     let mut era_count = 0u64;
     let mut triples_sum = 0u64;
     let mut survivors_sum = 0u64;
     let mut survivors_games = 0u64;
+    let mut ended_on_turn_20 = 0u64;
+    let mut survivors_at_end_sum = 0u64;
     let mut damage_sum = 0u64;
     let mut losses = 0u64;
     let mut final_hashes = Vec::with_capacity(batch.games.len());
@@ -58,9 +80,16 @@ pub fn build(batch: &BatchJson) -> Report {
             .entry(tribe_name(game.stats.winner_tribe).to_string())
             .or_insert(0) += 1;
         turns_sum += u64::from(game.turns);
-        for turn in game.stats.era_upgrade_turns.iter().flatten() {
-            era_sum += u64::from(*turn);
-            era_count += 1;
+        if game.turns == 20 {
+            ended_on_turn_20 += 1;
+        }
+        survivors_at_end_sum += u64::from(game.stats.survivors_at_end);
+        for (seat, turn) in game.stats.era_upgrade_turns.iter().enumerate() {
+            if let Some(turn) = turn {
+                era_by_seat[seat] += u64::from(*turn);
+                era_sum += u64::from(*turn);
+                era_count += 1;
+            }
         }
         triples_sum += u64::from(game.stats.triples);
         if let Some(survivors) = game.stats.survivors_at_turn_20 {
@@ -74,14 +103,41 @@ pub fn build(batch: &BatchJson) -> Report {
         final_hashes.push(format_hash(game.final_hash));
     }
 
+    let all_tribes = [
+        Tribe::Human,
+        Tribe::Machine,
+        Tribe::Biology,
+        Tribe::Plant,
+        Tribe::Virus,
+        Tribe::Scholar,
+        Tribe::General,
+    ];
+    let win_rate_permille_by_tribe = all_tribes
+        .iter()
+        .map(|tribe| {
+            let wins = wins_by_tribe.get(tribe_name(*tribe)).copied().unwrap_or(0);
+            (
+                tribe_name(*tribe).to_string(),
+                divide(wins.saturating_mul(1000), games),
+            )
+        })
+        .collect();
+
     Report {
         games,
         seed: batch.seed,
         wins_by_tribe,
+        win_rate_permille_by_tribe,
         avg_turns: divide(turns_sum, games),
-        era_upgrade_turns: divide(era_sum, era_count),
+        era_upgrade_turns_by_seat: era_by_seat,
+        avg_era_upgrade_turn_by_seat: era_by_seat.map(|sum| divide(sum, games)),
+        avg_era_upgrade_turn: (era_count > 0).then(|| divide(era_sum, era_count)),
+        era_upgrade_count: era_count,
         triples_per_game: divide(triples_sum, games),
+        games_reaching_turn_20: survivors_games,
         survivors_at_turn_20: (survivors_games > 0).then(|| divide(survivors_sum, survivors_games)),
+        games_ended_on_turn_20: ended_on_turn_20,
+        avg_survivors_at_end: divide(survivors_at_end_sum, games),
         avg_damage_per_loss: (losses > 0).then(|| divide(damage_sum, losses)),
         final_hashes,
     }
@@ -191,6 +247,7 @@ fn stats_to_json(stats: &GameStats, turns: u8) -> Value {
         "era_upgrade_turns": era,
         "triples": stats.triples,
         "survivors_at_turn_20": stats.survivors_at_turn_20,
+        "survivors_at_end": stats.survivors_at_end,
         "damage_per_loss": stats.damage_per_loss,
         "winner_seat": stats.winner,
         "winner_tribe": tribe_name(stats.winner_tribe),
@@ -362,6 +419,11 @@ fn stats_from_json(value: &Value) -> Result<GameStats, String> {
         .get("survivors_at_turn_20")
         .and_then(Value::as_u64)
         .and_then(|survivors| u8::try_from(survivors).ok());
+    let survivors_at_end = value
+        .get("survivors_at_end")
+        .and_then(Value::as_u64)
+        .and_then(|survivors| u8::try_from(survivors).ok())
+        .unwrap_or(0);
     let mut damage_per_loss = Vec::new();
     if let Some(list) = value.get("damage_per_loss").and_then(Value::as_array) {
         for entry in list {
@@ -386,6 +448,7 @@ fn stats_from_json(value: &Value) -> Result<GameStats, String> {
         era_upgrade_turns,
         triples,
         survivors_at_turn_20,
+        survivors_at_end,
         damage_per_loss,
         winner,
         winner_tribe,
@@ -436,12 +499,40 @@ pub fn report_to_json(report: &Report) -> Value {
     object.insert("games".into(), json!(report.games));
     object.insert("seed".into(), json!(report.seed));
     object.insert("wins_by_tribe".into(), json!(report.wins_by_tribe));
+    object.insert(
+        "win_rate_permille_by_tribe".into(),
+        json!(report.win_rate_permille_by_tribe),
+    );
     object.insert("avg_turns".into(), json!(report.avg_turns));
-    object.insert("era_upgrade_turns".into(), json!(report.era_upgrade_turns));
+    object.insert(
+        "era_upgrade_turns_by_seat".into(),
+        json!(report.era_upgrade_turns_by_seat),
+    );
+    object.insert(
+        "avg_era_upgrade_turn_by_seat".into(),
+        json!(report.avg_era_upgrade_turn_by_seat),
+    );
+    object.insert(
+        "avg_era_upgrade_turn".into(),
+        json!(report.avg_era_upgrade_turn),
+    );
+    object.insert("era_upgrade_count".into(), json!(report.era_upgrade_count));
     object.insert("triples_per_game".into(), json!(report.triples_per_game));
+    object.insert(
+        "games_reaching_turn_20".into(),
+        json!(report.games_reaching_turn_20),
+    );
     object.insert(
         "survivors_at_turn_20".into(),
         json!(report.survivors_at_turn_20),
+    );
+    object.insert(
+        "games_ended_on_turn_20".into(),
+        json!(report.games_ended_on_turn_20),
+    );
+    object.insert(
+        "avg_survivors_at_end".into(),
+        json!(report.avg_survivors_at_end),
     );
     object.insert(
         "avg_damage_per_loss".into(),

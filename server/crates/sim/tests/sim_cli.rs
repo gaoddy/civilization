@@ -126,9 +126,16 @@ fn report_contains_required_fields() {
         "seed",
         "wins_by_tribe",
         "avg_turns",
-        "era_upgrade_turns",
+        "win_rate_permille_by_tribe",
+        "era_upgrade_turns_by_seat",
+        "avg_era_upgrade_turn_by_seat",
+        "avg_era_upgrade_turn",
+        "era_upgrade_count",
         "triples_per_game",
+        "games_reaching_turn_20",
         "survivors_at_turn_20",
+        "games_ended_on_turn_20",
+        "avg_survivors_at_end",
         "avg_damage_per_loss",
         "final_hashes",
     ] {
@@ -136,6 +143,27 @@ fn report_contains_required_fields() {
     }
     assert_eq!(value["games"].as_u64(), Some(4));
     assert_eq!(value["final_hashes"].as_array().map(Vec::len), Some(4));
+    assert_eq!(
+        value["era_upgrade_turns_by_seat"].as_array().map(Vec::len),
+        Some(8)
+    );
+    assert_eq!(
+        value["win_rate_permille_by_tribe"]
+            .as_object()
+            .map(|m| m.len()),
+        Some(7),
+        "7 个流派都应出现夺冠率"
+    );
+    let permille_sum: u64 = value["win_rate_permille_by_tribe"]
+        .as_object()
+        .expect("夺冠率为对象")
+        .values()
+        .map(|rate| rate.as_u64().expect("夺冠率为整数"))
+        .sum();
+    assert!(
+        permille_sum <= 4000,
+        "各流派夺冠率千分比之和不应超过总局数 * 1000"
+    );
 }
 
 #[test]
