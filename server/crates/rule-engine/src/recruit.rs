@@ -328,7 +328,7 @@ fn play_card(
                     source: Some(instance_id),
                     target,
                     event_target: None,
-                    golden: false,
+                    golden: hand_card.golden,
                 },
             );
             events.extend(engine.check_triple(state, seat));

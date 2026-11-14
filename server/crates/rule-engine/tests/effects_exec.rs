@@ -637,3 +637,51 @@ fn selector_picks_cover_leftmost_adjacent_top_attack_and_other() {
         "other=true 排除来源"
     );
 }
+
+#[test]
+fn grant_contagion_stacks_layer() {
+    let (mut engine, mut state) = setup();
+    place(&mut state, 0, 1, "yezhu");
+
+    engine.apply_op(
+        &mut state,
+        &effect("OnCombatStart|GrantKeyword|friendly:all|keyword=传染,value=2"),
+        &ctx(0),
+        None,
+    );
+
+    assert_eq!(
+        board_minion(&state, 0, 0).contagion,
+        2,
+        "传染层数写入 contagion，不进入 granted"
+    );
+}
+
+#[test]
+fn golden_minion_played_from_hand_doubles_battlecry() {
+    let (mut engine, mut state) = setup();
+    place(&mut state, 0, 1, "yezhu");
+    state.next_instance_id = 100;
+    state.players[0].hand.push(rule_engine::state::HandCard {
+        card_id: "xinge".to_string(),
+        golden: true,
+    });
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                target: Some(1),
+            },
+        )
+        .expect("打出金色随从应成功");
+
+    assert!(state.players[0].board[1].golden, "手牌金色标记保留到棋盘");
+    assert_eq!(
+        board_minion(&state, 0, 0).growth,
+        2,
+        "金色战吼连续触发两次，+1/+1 变为 +2/+2"
+    );
+}

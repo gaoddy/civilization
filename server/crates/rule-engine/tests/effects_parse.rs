@@ -123,7 +123,7 @@ fn parses_structured_params() {
     let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=传染,value=1").unwrap();
     assert!(matches!(
         e[0].params.keyword,
-        Some(KeywordSpec::Keyword(ref name, None)) if name == "传染"
+        Some(KeywordSpec::Keyword(ref name, Some(1))) if name == "传染"
     ));
     assert_eq!(e[0].params.value, Some(1));
 
@@ -206,4 +206,21 @@ fn catalog_rejects_unknown_effect_at_load() {
         }
         other => panic!("expected rule error, got {other:?}"),
     }
+}
+
+#[test]
+fn parses_contagion_layer_from_value() {
+    let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=传染,value=2").unwrap();
+    assert!(matches!(
+        e[0].params.keyword,
+        Some(KeywordSpec::Keyword(ref name, Some(2))) if name == "传染"
+    ));
+}
+
+#[test]
+fn parses_deal_damage_can_kill() {
+    let e = parse_effects("OnCombatStart|DealDamage|enemy:random|amount=3,canKill=false").unwrap();
+    assert_eq!(e[0].op, Op::DealDamage);
+    assert_eq!(e[0].params.amount, Some(3));
+    assert_eq!(e[0].params.can_kill, Some(false));
 }

@@ -308,11 +308,11 @@ fn parse_params(op: Op, raw: Option<&str>, chunk: &str) -> (Params, Vec<String>)
         }
     }
 
-    // 繁衍 / 装配 的层数可以直接写在 keyword 上，也可以由 value 参数承载；
+    // 繁衍 / 装配 / 传染 的层数可以直接写在 keyword 上，也可以由 value 参数承载；
     // 后者统一规范化为 `Keyword(name, Some(n))`，供执行器只读 keyword。
     if let Some(KeywordSpec::Keyword(base, level)) = &mut params.keyword
         && level.is_none()
-        && matches!(base.as_str(), "繁衍" | "装配")
+        && matches!(base.as_str(), "繁衍" | "装配" | "传染")
         && let Some(value) = params.value
     {
         *level = Some(value);
@@ -353,7 +353,7 @@ fn op_spec(op: Op) -> OpSpec {
         ),
         Op::RemoveGrowth => (&[], &["condition", "when"], &[]),
         Op::CannotAttack => (&[], &["duration"], &[]),
-        Op::DealDamage => (&["amount"], &["when"], &[]),
+        Op::DealDamage => (&["amount"], &["when", "canKill"], &[]),
         Op::Summon => (
             &["count"],
             &["token", "card", "when"],

@@ -156,8 +156,9 @@ impl Engine {
 
     /// 解析选择器（只读）；`random` 在克隆的随机流上取样，不推进真实状态。
     ///
-    /// 执行路径使用内部的 [`Engine::resolve_selector_mut`]，它会推进
-    /// [`Stream::Effects`]，因此两者在同一状态下得到相同的随机目标。
+    /// 执行路径使用内部的 [`Engine::resolve_selector_mut`]，它会在每次随机选取时
+    /// 恰好推进一次 [`Stream::Effects`]，因此同一状态下查询与执行选出的目标一致，
+    /// 且执行序列的随机消费量与效果段数一一对应，确定性保持不变。
     pub fn resolve_selector(
         &self,
         state: &GameState,
