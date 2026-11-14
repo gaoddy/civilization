@@ -24,6 +24,7 @@ AURA_VALUE_RE = re.compile(
 )
 TRIBE_KEYWORD = {"装配": "机械", "播种": "植物", "进化": "生物"}
 TRIBES = {"人类", "机械", "生物", "植物", "病毒", "学者"}
+EFFECT_TRIBES = TRIBES | {"通用"}
 ERAS = ["史前", "原始", "封建", "现代", "未来"]
 SOURCES = {"素材", "新增"}
 CARD_TYPES = {"随从", "效果"}
@@ -230,8 +231,8 @@ def check_cards():
         name = c["name"]
         if "attack" in c or "health" in c:
             fail(f"{name}: 效果牌不得有 attack/health")
-        if c["tribe"] not in TRIBES:
-            fail(f"{name}: 流派非法 {c['tribe']!r}")
+        if c["tribe"] not in EFFECT_TRIBES:
+            fail(f"{name}: 效果牌流派非法 {c['tribe']!r}")
         if c["level"] not in RANGE:
             fail(f"{name}: 星级非法 {c['level']!r}")
         if not 0 <= c["cost"] <= 4:

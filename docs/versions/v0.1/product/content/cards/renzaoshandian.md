@@ -3,7 +3,7 @@ id: renzaoshandian
 name: 人造闪电
 card_type: 效果
 level: 3
-tribe: 学者
+tribe: 通用
 cost: 2
 match_text: 同左
 ---
@@ -18,7 +18,7 @@ match_text: 同左
 | 名称 | 人造闪电 |
 | 类型 | 效果 |
 | 星级 | 3 |
-| 流派 | 学者 |
+| 流派 | 通用 |
 | 费用 | 2 |
 | 比赛模式替换 | 同左 |
 

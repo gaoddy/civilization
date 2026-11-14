@@ -3,7 +3,7 @@ id: erfenfa
 name: 二分法
 card_type: 效果
 level: 1
-tribe: 学者
+tribe: 通用
 cost: 0
 match_text: 同左
 ---
@@ -18,7 +18,7 @@ match_text: 同左
 | 名称 | 二分法 |
 | 类型 | 效果 |
 | 星级 | 1 |
-| 流派 | 学者 |
+| 流派 | 通用 |
 | 费用 | 0 |
 | 比赛模式替换 | 同左 |
 

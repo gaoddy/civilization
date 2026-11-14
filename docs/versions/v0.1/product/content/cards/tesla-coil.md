@@ -3,7 +3,7 @@ id: tesla-coil
 name: 特斯拉线圈
 card_type: 效果
 level: 4
-tribe: 学者
+tribe: 通用
 cost: 3
 match_text: 同左
 ---
@@ -18,7 +18,7 @@ match_text: 同左
 | 名称 | 特斯拉线圈 |
 | 类型 | 效果 |
 | 星级 | 4 |
-| 流派 | 学者 |
+| 流派 | 通用 |
 | 费用 | 3 |
 | 比赛模式替换 | 同左 |
 
