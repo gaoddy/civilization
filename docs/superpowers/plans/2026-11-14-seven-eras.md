@@ -624,9 +624,9 @@ git commit -m "docs: 回写七时代卡池统计与平衡口径"
 
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
-| 7 星池每张 5 份在 8 人局是否过少 | 平衡 | M0 模拟后校准 | [数值与经济](product/systems/economy-and-numbers.md) |
-| 升满七段的实测回合是否落在 12–14 | 节奏 | M0 模拟后校准 | [数值与经济](product/systems/economy-and-numbers.md) |
-| 古典段一次开放三个关键词是否让前期复杂度陡增 | 平衡 | 观察新手首局 | [关键词与机制](product/rules/keywords-and-mechanics.md) |
+| 7 星池每张 5 份在 8 人局是否过少 | 平衡 | M0 模拟后校准 | [数值与经济](../../versions/v0.1/product/systems/economy-and-numbers.md) |
+| 升满七段的实测回合是否落在 12–14 | 节奏 | M0 模拟后校准 | [数值与经济](../../versions/v0.1/product/systems/economy-and-numbers.md) |
+| 古典段一次开放三个关键词是否让前期复杂度陡增 | 平衡 | 观察新手首局 | [关键词与机制](../../versions/v0.1/product/rules/keywords-and-mechanics.md) |
 | 七时代是否需要重估 22–31 人周 | 排期 | M0 前重估 | [版本规划与风险](../../version-roadmap.md) |
 
 - [ ] **Step 5: 验证**
