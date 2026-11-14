@@ -41,3 +41,55 @@ fn hash_changes_when_state_changes() {
     s.players[0].hp -= 1;
     assert_ne!(before, state_hash(&s));
 }
+
+#[test]
+fn start_game_rejects_missing_seat() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32]);
+    let mut heroes = heroes();
+    heroes.remove(&7);
+    assert!(engine.start_game(&mut state, &heroes).is_err());
+}
+
+#[test]
+fn start_game_rejects_non_hero_card() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32]);
+    let mut heroes = heroes();
+    let non_hero = test_catalog()
+        .cards
+        .values()
+        .find(|card| !card.is_hero)
+        .expect("数据中应存在非英雄卡")
+        .id
+        .clone();
+    heroes.insert(3, non_hero);
+    assert!(engine.start_game(&mut state, &heroes).is_err());
+}
+
+#[test]
+fn start_game_rejects_unknown_card_id() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32]);
+    let mut heroes = heroes();
+    heroes.insert(3, "does-not-exist".to_string());
+    assert!(engine.start_game(&mut state, &heroes).is_err());
+}
+
+#[test]
+fn start_game_rejects_duplicate_heroes_without_mutating_state() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32]);
+    let mut heroes = heroes();
+    let first = heroes.get(&0).expect("座位 0 应有英雄").clone();
+    heroes.insert(1, first);
+    let before = state_hash(&state);
+    assert!(engine.start_game(&mut state, &heroes).is_err());
+    assert_eq!(before, state_hash(&state));
+    assert_eq!(state.phase, rule_engine::state::Phase::Lobby);
+}
+
+#[test]
+fn start_game_rejects_truncated_players_without_mutating_state() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32]);
+    state.players.pop();
+    let before = state_hash(&state);
+    assert!(engine.start_game(&mut state, &heroes()).is_err());
+    assert_eq!(before, state_hash(&state));
+}

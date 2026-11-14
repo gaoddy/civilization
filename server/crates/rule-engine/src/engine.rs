@@ -73,6 +73,14 @@ impl Engine {
         state: &mut GameState,
         heroes: &BTreeMap<Seat, String>,
     ) -> Result<Vec<GameEvent>, EngineError> {
+        if state.players.len() != usize::from(PLAYER_COUNT) {
+            return Err(EngineError(format!(
+                "对局状态需要 {PLAYER_COUNT} 名玩家，实际为 {}",
+                state.players.len()
+            )));
+        }
+
+        let mut seen_heroes = BTreeSet::new();
         for seat in 0..PLAYER_COUNT {
             let card_id = heroes
                 .get(&seat)
@@ -84,6 +92,9 @@ impl Engine {
                 .ok_or_else(|| EngineError(format!("英雄卡 {card_id} 不在卡牌目录中")))?;
             if !card.is_hero {
                 return Err(EngineError(format!("卡牌 {card_id} 不是英雄卡")));
+            }
+            if !seen_heroes.insert(card_id.as_str()) {
+                return Err(EngineError(format!("英雄卡 {card_id} 被重复选择")));
             }
         }
 
