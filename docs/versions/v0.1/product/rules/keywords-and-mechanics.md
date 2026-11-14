@@ -2,7 +2,7 @@
 
 > 依赖：[设计总纲](../overview/design-overview.md)（§6.6、§6.8）、[核心规则](core-rules.md)（§5）
 > 状态：方案未实施
-> 说明：本文是卡牌文本的唯一词表。[卡牌规范与数据](../content/card-system.md)、[英雄与技能](../content/hero-system.md)与实现中的效果解析器只能使用这里的词与模板；出现新词必须先进本表并回写 00-设计总纲。
+> 说明：本文是卡牌文本的唯一词表。[卡牌规范与数据](../content/card-system.md)（含「英雄卡」小节）与实现中的效果解析器只能使用这里的词与模板；出现新词必须先进本表并回写 00-设计总纲。
 
 本文描述关键词判定、结算顺序、临时增益与效果文本模板；不描述具体卡牌与数值曲线。归属版本产品基线的规则。
 
@@ -85,7 +85,7 @@
 
 排在 [核心规则](core-rules.md) §5.1 的前置之后、§5.2 的行动循环之前。
 
-1. 英雄被动先结算，按先手方 → 后手方；
+1. 英雄卡的被动技能先结算，按先手方 → 后手方；
 2. 随从效果按先手方 → 后手方，各自按站位从左到右，单卡文本从上到下；
 3. 每条效果结算后立即执行死亡判定与死亡结算（§2.4）；
 4. 招募阶段触发、但因目标在敌方而延迟的战吼，在本阶段结算；该随从若已离场，效果取消。
@@ -192,7 +192,7 @@
 
 ## 8. 触发时机
 
-一条卡牌或英雄效果只能使用下表中的时机，不允许自由描述。
+一条卡牌（含英雄卡）效果只能使用下表中的时机，不允许自由描述。
 
 | 时机 | 标识符 | 阶段 |
 | --- | --- | --- |
@@ -224,7 +224,7 @@
 
 ### 9.1 结构
 
-技能是效果文本的实体，卡牌与英雄都通过引用技能获得效果。一条技能效果由四段组成：`Trigger × Selector × Op × Duration`；英雄技能与卡牌技能共用同一结构，英雄只在宿主上额外带费用、触发时机与每回合次数（见[技能规范与数据](../content/skill-system.md)与[英雄与技能](../content/hero-system.md)）。静态光环以 `Aura` / `ConditionalAura` 作为触发登记（§8），动作仍复用 §9.3 的常规原语，不单设光环原语。
+技能是效果文本的实体，卡牌（含英雄卡）通过 `skills` / `hero_skill` 引用技能获得效果。一条技能效果由四段组成：`Trigger × Selector × Op × Duration`；英雄技能与随从技能共用同一结构，英雄卡只在宿主上额外带费用、触发时机与每回合次数（见[技能规范与数据](../content/skill-system.md)）。静态光环以 `Aura` / `ConditionalAura` 作为触发登记（§8），动作仍复用 §9.3 的常规原语，不单设光环原语。
 
 ### 9.2 选择器
 
@@ -248,9 +248,9 @@
 | 召唤 | `Summon {selector, token 或 card, count}` | 召唤位置由 `selector` 决定；`token` 取注册表 id，`card` 取牌池卡 id |
 | 复制 | `Copy {selector, to}` | `to` 为手牌或战场 |
 | 发现 | `Discover {pool, choose}` | 三选一 |
-| 刷新商店 | `RefreshShop {free, extra}` | 英雄专用 |
-| 增加商店槽位 | `AddShopSlot {era, count}` | 英雄专用；商店额外出现 `count` 张 `era=current` 的随从 |
-| 获得随从 | `GainMinion {from, level, to}` | 英雄专用 |
+| 刷新商店 | `RefreshShop {free, extra}` | 英雄技能专用 |
+| 增加商店槽位 | `AddShopSlot {era, count}` | 英雄技能专用；商店额外出现 `count` 张 `era=current` 的随从 |
+| 获得随从 | `GainMinion {from, level, to}` | 英雄技能专用 |
 
 光环不单设原语：静态光环在 §8 登记为 `Aura` / `ConditionalAura` 触发，其动作写 `ModifyStats` 或 `GrantKeyword`，并显式带 `duration=permanent`。
 
@@ -305,7 +305,7 @@
 - `Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent`
 - `OnActivate|Copy|self|from=hand,type=随从,to=hand`
 
-`effects` 是机器字段，不进入 `## 属性` 表；`## 效果` 仍由技能 `text` 渲染，与 `effects` 语义一致。卡牌与英雄不重复记录 `effects`——它们通过 `skills` / `skill` 引用技能，效果由技能实体统一维护。
+`effects` 是机器字段，不进入 `## 属性` 表；`## 效果` 仍由技能 `text` 渲染，与 `effects` 语义一致。卡牌不重复记录 `effects`——它们通过 `skills` / `hero_skill` 引用技能，效果由技能实体统一维护。
 
 ## 10. 属性求值顺序
 

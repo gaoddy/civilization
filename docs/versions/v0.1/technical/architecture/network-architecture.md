@@ -1,6 +1,6 @@
 # 联网与技术架构
 
-> 依赖：[设计总纲](../../product/overview/design-overview.md)（§8）、[核心规则](../../product/rules/core-rules.md)、[英雄与技能](../../product/content/hero-system.md)
+> 依赖：[设计总纲](../../product/overview/design-overview.md)（§8）、[核心规则](../../product/rules/core-rules.md)、[卡牌规范与数据](../../product/content/card-system.md)（含「英雄卡」小节）
 > 状态：方案未实施
 > 注意：**技术栈尚未确定**。本文只锁定与实现无关的架构约束与协议形状；语言、框架、部署形态留待开发启动前决定。
 
@@ -133,7 +133,7 @@ S→C  PhaseChanged{phase:Recruit, turn:8, deadline:+90000}
 
 ### 6.1 快照内容
 
-`Snapshot` 只包含该玩家可见的信息：自己的完整状态（手牌、金币、商店、时代、生命、英雄技能）、公共信息（回合数、阶段、存活玩家、各玩家生命与阵容规模）、以及自己的 `seq` 水位。对手的手牌、金币、商店内容绝不进入快照。
+`Snapshot` 只包含该玩家可见的信息：自己的完整状态（手牌、金币、商店、时代、生命、所选英雄卡的技能）、公共信息（回合数、阶段、存活玩家、各玩家生命与阵容规模）、以及自己的 `seq` 水位。对手的手牌、金币、商店内容绝不进入快照。
 
 ### 6.2 重连算法
 
