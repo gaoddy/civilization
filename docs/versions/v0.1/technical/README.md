@@ -6,4 +6,4 @@
 | --- | --- |
 | [architecture/](architecture/README.md) | 联网与技术架构约束 |
 
-技术栈尚未确定，相关事项见[待确认事项](../open-questions.md)。
+客户端已确定为 Godot 4 + GDScript，见[客户端技术基线](architecture/client-stack.md)；服务端技术栈尚未确定，相关事项见[待确认事项](../open-questions.md)。
