@@ -27,3 +27,7 @@ skills: [trigger-mech-optimal-attack-this-turn]
 ## 效果
 
 你的机械随从获得最优攻击直到回合结束
+
+## 出处
+
+1956 年达特茅斯会议首次提出「人工智能」一词，标志该学科诞生。
