@@ -48,7 +48,7 @@ impl Engine {
             .collect();
 
         let previous_opponent = (0..PLAYER_COUNT).map(|seat| (seat, None)).collect();
-        let ranking = (0..PLAYER_COUNT).collect();
+        let ranking = Vec::new();
 
         let state = GameState {
             turn: 0,
@@ -61,6 +61,9 @@ impl Engine {
             previous_opponent,
             previous_board: BTreeMap::new(),
             last_winner: None,
+            pairings: Vec::new(),
+            pending_settle: BTreeMap::new(),
+            last_won: BTreeSet::new(),
             pending: VecDeque::new(),
             ranking,
             next_instance_id: 1,
@@ -137,6 +140,7 @@ impl Engine {
     /// 开始下一回合：回合数先自增，再按金币曲线为存活玩家发金币。
     ///
     /// `start_game` 已经发过第 1 回合金币，因此本方法不用于第 1 回合。
+    /// 结算完成后调用时接受 `Settle`，并发出进入 `Recruit` 的 `PhaseChanged`。
     pub fn start_turn(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
         let turn = state
             .turn

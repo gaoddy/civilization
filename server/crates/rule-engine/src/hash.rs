@@ -69,6 +69,24 @@ pub fn state_hash(state: &GameState) -> u64 {
         None => hasher.u8(0),
     }
 
+    hasher.len(state.pairings.len());
+    for pairing in &state.pairings {
+        hasher.u8(pairing.a);
+        hasher.u8(pairing.b);
+        hasher.bool(pairing.mirror);
+    }
+
+    hasher.len(state.pending_settle.len());
+    for (seat, damage) in &state.pending_settle {
+        hasher.u8(*seat);
+        hasher.i32(*damage);
+    }
+
+    hasher.len(state.last_won.len());
+    for seat in &state.last_won {
+        hasher.u8(*seat);
+    }
+
     hasher.len(state.pending.len());
     for choice in &state.pending {
         hasher.u8(0); // PendingChoice 目前只有 Discover 变体

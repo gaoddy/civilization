@@ -9,6 +9,8 @@ use crate::data::{Era, Tribe};
 use crate::effects::Duration;
 use crate::rng::RngStreams;
 
+pub use crate::settle::Pairing;
+
 /// 座位号，0..8。
 pub type Seat = u8;
 
@@ -107,7 +109,14 @@ pub struct GameState {
     pub previous_opponent: BTreeMap<Seat, Option<Seat>>,
     pub previous_board: BTreeMap<Seat, Vec<MinionInstance>>,
     pub last_winner: Option<Seat>,
+    /// 本回合配对结果，由招募结束写入、结算结束清空。
+    pub pairings: Vec<Pairing>,
+    /// 本回合每名败者将受到的伤害，由战斗结算写入、结算清空。
+    pub pending_settle: BTreeMap<Seat, i32>,
+    /// 本回合赢下自己战斗的座位（镜像获胜计入，镜像失败不计）。
+    pub last_won: BTreeSet<Seat>,
     pub pending: VecDeque<PendingChoice>,
+    /// 已确定的排名（从第 1 名到末名）；出局者先进入尾部，结束时补齐。
     pub ranking: Vec<Seat>,
     pub next_instance_id: InstanceId,
 }

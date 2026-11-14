@@ -10,5 +10,6 @@ pub mod hash;
 pub mod intent;
 pub mod recruit;
 pub mod rng;
+pub mod settle;
 pub mod state;
 pub mod triple;

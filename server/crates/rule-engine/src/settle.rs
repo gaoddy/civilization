@@ -1,0 +1,432 @@
+//! 回合结算：配对、把战斗接入回合、伤害、淘汰与排名。
+//!
+//! 规则口径见 `docs/versions/v0.1/product/rules/core-rules.md`
+//! §5.3–§5.4、§7、§8.3。配对随机性只来自 [`Stream::Matchmaking`]，
+//! 战斗随机性全部发生在 [`crate::combat::simulate`] 内部；本模块不含浮点，
+//! 也不读取时间、环境或全局随机源。
+
+use std::cmp::Ordering;
+use std::collections::{BTreeMap, BTreeSet};
+
+use crate::combat;
+use crate::data::{Catalog, Era, GameConfig};
+use crate::engine::Engine;
+use crate::error::EngineError;
+use crate::events::GameEvent;
+use crate::rng::Stream;
+use crate::state::{GameState, InstanceId, MinionInstance, Phase, PlayerState, Seat};
+
+/// 配对在放弃"排除上一场对手"前最多重洗的次数。
+const PAIRING_ATTEMPTS: u8 = 100;
+
+/// 一对配对。
+///
+/// `mirror == true` 时 `b == a`，表示 `a` 对战自己上一场阵容的镜像幽灵。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Pairing {
+    pub a: Seat,
+    pub b: Seat,
+    pub mirror: bool,
+}
+
+impl Engine {
+    /// 结束招募：生成本回合配对并进入 `Combat`。只做配对，不模拟战斗。
+    pub fn finish_recruit(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+        finish_recruit(state)
+    }
+
+    /// 按配对顺序模拟全部战斗，写入伤害、对手与阵容快照，进入 `Settle`。
+    pub fn resolve_combat(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+        resolve_combat(&self.catalog, state)
+    }
+
+    /// 结算伤害、淘汰与排名；正常结束时停留在 `Settle`，游戏结束时进入 `GameOver`。
+    pub fn resolve_settle(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+        resolve_settle(&self.catalog.config, state)
+    }
+}
+
+/// 为存活玩家生成配对。
+///
+/// 存活玩家按座位升序排列后用 Fisher–Yates 洗牌，相邻两项成对；
+/// 奇数人数时洗牌结果最后一名获得镜像配对。整轮最多重洗
+/// [`PAIRING_ATTEMPTS`] 次以避开上一场对手，全部失败时采用最后一次洗牌。
+/// 本函数只读取 `state.rng` 与 `state.previous_opponent`。
+pub fn pair_round(state: &mut GameState) -> Vec<Pairing> {
+    let mut alive: Vec<Seat> = state
+        .players
+        .iter()
+        .filter(|player| !player.eliminated && player.hp > 0)
+        .map(|player| player.seat)
+        .collect();
+    alive.sort_unstable();
+
+    if alive.is_empty() {
+        return Vec::new();
+    }
+
+    let mut last = Vec::new();
+    for _ in 0..PAIRING_ATTEMPTS {
+        fisher_yates(&mut alive, state);
+        last = pair_adjacent(&alive);
+        if !repeats_previous_opponent(&last, &state.previous_opponent) {
+            return last;
+        }
+    }
+    last
+}
+
+/// 受到伤害 = 败者时代 + ceil(胜方存活随从星级和 / 2)，并夹在配置的上下限内。
+pub fn damage_formula(config: &GameConfig, loser_era: Era, winner_stars_sum: u32) -> i32 {
+    let era = loser_era as i32;
+    let stars = winner_stars_sum.saturating_add(1) / 2;
+    era.saturating_add(stars as i32)
+        .max(config.damage_floor)
+        .min(config.damage_cap)
+}
+
+fn fisher_yates(alive: &mut [Seat], state: &mut GameState) {
+    for index in (1..alive.len()).rev() {
+        let bound = (index + 1) as u64;
+        let other = state.rng.below(Stream::Matchmaking, bound) as usize;
+        alive.swap(index, other);
+    }
+}
+
+fn pair_adjacent(alive: &[Seat]) -> Vec<Pairing> {
+    let mut pairings = Vec::with_capacity(alive.len().div_ceil(2));
+    let mut index = 0;
+    while index + 1 < alive.len() {
+        pairings.push(Pairing {
+            a: alive[index],
+            b: alive[index + 1],
+            mirror: false,
+        });
+        index += 2;
+    }
+    if let Some(&seat) = alive.get(index) {
+        pairings.push(Pairing {
+            a: seat,
+            b: seat,
+            mirror: true,
+        });
+    }
+    pairings
+}
+
+fn repeats_previous_opponent(
+    pairings: &[Pairing],
+    previous: &BTreeMap<Seat, Option<Seat>>,
+) -> bool {
+    pairings.iter().any(|pairing| {
+        if pairing.mirror {
+            return false;
+        }
+        previous_opponent(previous, pairing.a) == Some(pairing.b)
+            || previous_opponent(previous, pairing.b) == Some(pairing.a)
+    })
+}
+
+fn previous_opponent(previous: &BTreeMap<Seat, Option<Seat>>, seat: Seat) -> Option<Seat> {
+    previous.get(&seat).copied().flatten()
+}
+
+fn finish_recruit(state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+    if state.phase != Phase::Recruit {
+        return Err(EngineError(format!(
+            "当前阶段 {:?} 不能结束招募",
+            state.phase
+        )));
+    }
+    state.pairings = pair_round(state);
+    state.phase = Phase::Combat;
+    Ok(vec![GameEvent::PhaseChanged {
+        phase: Phase::Combat,
+        turn: state.turn,
+    }])
+}
+
+fn resolve_combat(catalog: &Catalog, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+    if state.phase != Phase::Combat {
+        return Err(EngineError(format!(
+            "当前阶段 {:?} 不能结算战斗",
+            state.phase
+        )));
+    }
+
+    let pairings = state.pairings.clone();
+    let mut events = Vec::new();
+    for pairing in pairings {
+        if pairing.mirror {
+            resolve_mirror(catalog, state, pairing.a, &mut events);
+        } else {
+            resolve_real(catalog, state, pairing, &mut events);
+        }
+    }
+
+    state.phase = Phase::Settle;
+    events.push(GameEvent::PhaseChanged {
+        phase: Phase::Settle,
+        turn: state.turn,
+    });
+    Ok(events)
+}
+
+fn resolve_real(
+    catalog: &Catalog,
+    state: &mut GameState,
+    pairing: Pairing,
+    events: &mut Vec<GameEvent>,
+) {
+    let (a, b) = (pairing.a, pairing.b);
+    // 快照必须在战斗改变棋盘之前截取。
+    let board_a = board_of(state, a).to_vec();
+    let board_b = board_of(state, b).to_vec();
+
+    let first = match state.last_winner {
+        Some(winner) if winner == a || winner == b => winner,
+        _ => state.first_seat,
+    };
+    let log = combat::simulate(catalog, &board_a, &board_b, a, b, first, &mut state.rng);
+    let winner = match log.winner {
+        Some(winner) => winner,
+        None => tie_break(state, a, b),
+    };
+    let loser = if winner == a { b } else { a };
+
+    let survivors: BTreeSet<InstanceId> = if winner == a {
+        log.attacker_survivors.iter().copied().collect()
+    } else {
+        log.defender_survivors.iter().copied().collect()
+    };
+    let winner_board = if winner == a { &board_a } else { &board_b };
+    let stars = winner_board
+        .iter()
+        .filter(|minion| survivors.contains(&minion.instance_id))
+        .map(|minion| card_level(catalog, &minion.card_id))
+        .fold(0u32, u32::saturating_add);
+
+    let damage = damage_formula(&catalog.config, player_era(state, loser), stars);
+    state.pending_settle.insert(loser, damage);
+    if let Some(player) = player_mut(state, winner) {
+        player.damage_dealt = player.damage_dealt.saturating_add(damage);
+    }
+
+    state.last_winner = Some(winner);
+    state.last_won.insert(winner);
+    state.previous_opponent.insert(a, Some(b));
+    state.previous_opponent.insert(b, Some(a));
+    state.previous_board.insert(a, board_a);
+    state.previous_board.insert(b, board_b);
+
+    events.push(GameEvent::CombatResolved {
+        winner,
+        loser,
+        damage,
+    });
+}
+
+/// 镜像幽灵：不造成、也不承受真实伤害；胜者记入 `last_won`，败者什么都不发生。
+fn resolve_mirror(
+    catalog: &Catalog,
+    state: &mut GameState,
+    seat: Seat,
+    events: &mut Vec<GameEvent>,
+) {
+    let board = board_of(state, seat).to_vec();
+    let ghost = match state.previous_board.get(&seat) {
+        Some(previous) if !previous.is_empty() => strip_ghost(previous),
+        _ => strip_ghost(&board),
+    };
+
+    let log = combat::simulate(catalog, &board, &ghost, seat, seat, seat, &mut state.rng);
+    let won = log.defender_survivors.is_empty() && !log.attacker_survivors.is_empty();
+    if won {
+        state.last_won.insert(seat);
+        state.last_winner = Some(seat);
+    }
+    state.previous_board.insert(seat, board);
+
+    events.push(GameEvent::CombatResolved {
+        winner: seat,
+        loser: seat,
+        damage: 0,
+    });
+}
+
+/// 幽灵快照只保留永久属性：卡面基础值、成长、繁衍与传染层。
+///
+/// 临时修正 `mods` 与授予关键词 `granted` 一律丢弃；战斗内的临时标记
+/// （护盾已用、复生已用、剩余攻击次数等）也重置。
+fn strip_ghost(board: &[MinionInstance]) -> Vec<MinionInstance> {
+    board
+        .iter()
+        .map(|minion| MinionInstance {
+            instance_id: minion.instance_id,
+            card_id: minion.card_id.clone(),
+            golden: minion.golden,
+            growth: minion.growth,
+            growth_health_only: minion.growth_health_only,
+            breed: minion.breed,
+            breed_applied: 0,
+            contagion: minion.contagion,
+            granted: Vec::new(),
+            mods: Vec::new(),
+            shield_used: false,
+            reborn_used: false,
+            attacks_left: 0,
+            cannot_attack: false,
+        })
+        .collect()
+}
+
+fn resolve_settle(
+    config: &GameConfig,
+    state: &mut GameState,
+) -> Result<Vec<GameEvent>, EngineError> {
+    if state.phase != Phase::Settle {
+        return Err(EngineError(format!(
+            "当前阶段 {:?} 不能结算伤害",
+            state.phase
+        )));
+    }
+
+    let mut events = Vec::new();
+    let pending = std::mem::take(&mut state.pending_settle);
+    for (seat, damage) in pending {
+        if let Some(player) = player_mut(state, seat) {
+            player.hp = player.hp.saturating_sub(damage);
+            events.push(GameEvent::DamageTaken {
+                seat,
+                amount: damage,
+            });
+        }
+    }
+    state.pending_settle.clear();
+
+    let mut newly_eliminated = Vec::new();
+    let mut seats: Vec<Seat> = state.players.iter().map(|player| player.seat).collect();
+    seats.sort_unstable();
+    for seat in seats {
+        let eliminated_already = match player(state, seat) {
+            Some(player) => player.eliminated,
+            None => true,
+        };
+        let hp = player(state, seat).map(|player| player.hp).unwrap_or(1);
+        if eliminated_already || hp > 0 {
+            continue;
+        }
+        let alive_before = state
+            .players
+            .iter()
+            .filter(|player| !player.eliminated)
+            .count() as u8;
+        if let Some(player) = player_mut(state, seat) {
+            player.eliminated = true;
+        }
+        newly_eliminated.push(seat);
+        events.push(GameEvent::PlayerEliminated {
+            seat,
+            place: alive_before,
+        });
+    }
+
+    if !newly_eliminated.is_empty() {
+        let mut ranking: Vec<Seat> = newly_eliminated.iter().rev().copied().collect();
+        ranking.extend(state.ranking.iter().copied());
+        state.ranking = ranking;
+    }
+    state.pairings.clear();
+
+    let alive: Vec<Seat> = state
+        .players
+        .iter()
+        .filter(|player| !player.eliminated)
+        .map(|player| player.seat)
+        .collect();
+
+    if let Some(&survivor) = alive.first().filter(|_| alive.len() == 1) {
+        let mut ranking = vec![survivor];
+        ranking.extend(state.ranking.iter().copied());
+        state.ranking = ranking;
+        state.phase = Phase::GameOver;
+        events.push(GameEvent::GameOver {
+            ranking: state.ranking.clone(),
+        });
+    } else if state.turn >= config.turn_limit {
+        let mut ranked = alive;
+        ranked.sort_by(|&left, &right| compare_alive(state, left, right));
+        ranked.extend(state.ranking.iter().copied());
+        state.ranking = ranked;
+        state.phase = Phase::GameOver;
+        events.push(GameEvent::GameOver {
+            ranking: state.ranking.clone(),
+        });
+    }
+
+    Ok(events)
+}
+
+/// 第 20 回合收束时的排名优先级：生命 → 上战胜者 → 累计伤害 → 座位。
+fn compare_alive(state: &GameState, left: Seat, right: Seat) -> Ordering {
+    let (left_player, right_player) = match (player(state, left), player(state, right)) {
+        (Some(left_player), Some(right_player)) => (left_player, right_player),
+        _ => return left.cmp(&right),
+    };
+    let left_won = state.last_won.contains(&left);
+    let right_won = state.last_won.contains(&right);
+    right_player
+        .hp
+        .cmp(&left_player.hp)
+        .then_with(|| right_won.cmp(&left_won))
+        .then_with(|| right_player.damage_dealt.cmp(&left_player.damage_dealt))
+        .then_with(|| left.cmp(&right))
+}
+
+/// 双方同时清场时按 §5.3 判胜：生命高 → 累计伤害高 → 座位小。
+fn tie_break(state: &GameState, a: Seat, b: Seat) -> Seat {
+    match (player(state, a), player(state, b)) {
+        (Some(left), Some(right)) => {
+            if left.hp != right.hp {
+                return if left.hp > right.hp { a } else { b };
+            }
+            if left.damage_dealt != right.damage_dealt {
+                return if left.damage_dealt > right.damage_dealt {
+                    a
+                } else {
+                    b
+                };
+            }
+            a.min(b)
+        }
+        _ => a.min(b),
+    }
+}
+
+fn player(state: &GameState, seat: Seat) -> Option<&PlayerState> {
+    state.players.iter().find(|player| player.seat == seat)
+}
+
+fn player_mut(state: &mut GameState, seat: Seat) -> Option<&mut PlayerState> {
+    state.players.iter_mut().find(|player| player.seat == seat)
+}
+
+fn board_of(state: &GameState, seat: Seat) -> &[MinionInstance] {
+    player(state, seat)
+        .map(|player| player.board.as_slice())
+        .unwrap_or(&[])
+}
+
+fn player_era(state: &GameState, seat: Seat) -> Era {
+    player(state, seat)
+        .map(|player| player.era)
+        .unwrap_or(Era::Prehistoric)
+}
+
+fn card_level(catalog: &Catalog, card_id: &str) -> u32 {
+    catalog
+        .cards
+        .get(card_id)
+        .map(|card| u32::from(card.level))
+        .unwrap_or(0)
+}
