@@ -20,7 +20,7 @@
 
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
-| 技术栈未定：客户端 Web（TypeScript + Canvas/DOM），服务端 Node 或 Go | 架构与实现 | 由用户选型；选型前只做与语言无关的规则引擎 | [联网与技术架构](technical/architecture/network-architecture.md) |
+| 技术栈未定：客户端 Web（TypeScript + Canvas/DOM），服务端 Node 或 Go | 架构与实现 | 由用户选型；选型前只做与语言无关的服务端规则引擎 | [联网与技术架构](technical/architecture/network-architecture.md) |
 | 移动端纳入首版后的人周估算 | 排期 | 当前 22–31 人周未含移动端适配与两端验收，需在 M1 结束后重估 | [版本规划与风险](../../version-roadmap.md) |
 | 七时代是否需要重估 22–31 人周 | 排期 | M0 前重估 | [版本规划与风险](../../version-roadmap.md) |
 
