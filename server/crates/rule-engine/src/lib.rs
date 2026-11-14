@@ -10,3 +10,4 @@ pub mod intent;
 pub mod recruit;
 pub mod rng;
 pub mod state;
+pub mod triple;

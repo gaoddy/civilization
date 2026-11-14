@@ -74,10 +74,19 @@ fn dummy(instance_id: InstanceId, card_id: &str) -> MinionInstance {
 }
 
 fn fill_board(state: &mut GameState, seat: Seat, count: usize) {
-    let card_id = minion_id(1);
+    let catalog = test_catalog();
+    let ids: Vec<String> = catalog
+        .cards
+        .values()
+        .filter(|card| card.card_type == CardType::Minion && !card.is_hero)
+        .map(|card| card.id.clone())
+        .take(count)
+        .collect();
     let player = &mut state.players[usize::from(seat)];
-    player.board = (0..count)
-        .map(|index| dummy(1_000 + index as InstanceId, &card_id))
+    player.board = ids
+        .iter()
+        .enumerate()
+        .map(|(index, card_id)| dummy(1_000 + index as InstanceId, card_id))
         .collect();
 }
 
@@ -899,23 +908,34 @@ fn choose_discover_out_of_range_rejects_invalid_choice() {
 }
 
 #[test]
-fn choose_discover_valid_choice_is_accepted_without_consuming() {
+fn choose_discover_valid_choice_consumes_and_adds_to_hand() {
     let (mut engine, mut state) = setup(35);
+    let chosen = minion_id(2);
+    let before_pool = pool_count(&state, &chosen);
     state
         .pending
         .push_back(rule_engine::state::PendingChoice::Discover {
             seat: 0,
-            candidates: vec!["a".to_string(), "b".to_string()],
+            candidates: vec![chosen.clone(), minion_id(3)],
             source: 1,
         });
 
     let outcome = engine
-        .apply(&mut state, 0, Intent::ChooseDiscover { choice: 1 })
-        .expect("合法的发现选择应被接受");
+        .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
+        .expect("合法的发现选择应被消费");
 
-    assert!(outcome.events.is_empty(), "消费待选由 Task 14 负责");
-    assert!(state.players[0].hand.is_empty());
-    assert_eq!(state.pending.len(), 1, "本任务不消费待选");
+    assert_eq!(
+        outcome.events,
+        vec![GameEvent::CardDiscovered {
+            seat: 0,
+            card_id: chosen.clone(),
+        }]
+    );
+    assert_eq!(state.players[0].hand.len(), 1);
+    assert_eq!(state.players[0].hand[0].card_id, chosen);
+    assert!(!state.players[0].hand[0].golden);
+    assert!(state.pending.is_empty(), "消费后待选被移除");
+    assert_eq!(pool_count(&state, &chosen), before_pool - 1);
 }
 
 #[test]

@@ -142,11 +142,15 @@ fn buy(
         });
     }
 
-    Ok(Outcome::with(vec![GameEvent::MinionBought {
+    let mut events = vec![GameEvent::MinionBought {
         seat,
         slot,
         card_id,
-    }]))
+    }];
+    if card.card_type == CardType::Minion {
+        events.extend(engine.check_triple(state, seat));
+    }
+    Ok(Outcome::with(events))
 }
 
 fn sell(state: &mut GameState, seat: Seat, minion: InstanceId) -> Result<Outcome, Reject> {
@@ -288,7 +292,7 @@ fn play_card(
                 hand_card.golden,
             ));
             state.next_instance_id = following_instance_id;
-            Ok(Outcome::empty())
+            Ok(Outcome::with(engine.check_triple(state, seat)))
         }
     }
 }
@@ -418,33 +422,66 @@ fn end_recruit(state: &mut GameState) -> Result<Outcome, Reject> {
 }
 
 fn choose_discover(
-    _engine: &Engine,
+    engine: &Engine,
     state: &mut GameState,
     seat: Seat,
     choice: u8,
 ) -> Result<Outcome, Reject> {
-    match state.pending.front() {
-        Some(PendingChoice::Discover {
-            seat: pending_seat,
-            candidates,
-            ..
-        }) if *pending_seat == seat => {
-            candidates.get(usize::from(choice)).ok_or_else(|| {
+    // 消费该座位在队列中最靠前的待选，其他座位的待选不受影响。
+    let index = state
+        .pending
+        .iter()
+        .position(|pending| match pending {
+            PendingChoice::Discover {
+                seat: pending_seat, ..
+            } => *pending_seat == seat,
+        })
+        .ok_or_else(|| {
+            Reject::new(
+                RejectCode::InvalidStage,
+                format!("座位 {seat} 没有待处理的发现选择"),
+            )
+        })?;
+
+    let card_id = match state.pending.get(index) {
+        Some(PendingChoice::Discover { candidates, .. }) => candidates
+            .get(usize::from(choice))
+            .cloned()
+            .ok_or_else(|| {
                 Reject::new(
                     RejectCode::InvalidChoice,
                     format!("发现候选下标 {choice} 越界"),
                 )
-            })?;
-        }
-        _ => {
+            })?,
+        None => {
             return Err(Reject::new(
                 RejectCode::InvalidStage,
                 format!("座位 {seat} 没有待处理的发现选择"),
             ));
         }
+    };
+
+    let hand_slots = engine.catalog.config.hand_slots;
+    if player(state, seat)?.hand.len() >= hand_slots {
+        return Err(Reject::new(RejectCode::NoSpace, "手牌已满"));
     }
-    // 待选的消费与入手牌由 Task 14 实现；本任务只校验选择是否合法。
-    Ok(Outcome::empty())
+
+    state.pending.remove(index);
+    if let Some(count) = state.pool.get_mut(&card_id) {
+        *count = count.saturating_sub(1);
+    }
+    let player = state
+        .players
+        .get_mut(usize::from(seat))
+        .ok_or_else(|| Reject::new(RejectCode::InvalidStage, format!("座位 {seat} 不存在")))?;
+    player.hand.push(HandCard {
+        card_id: card_id.clone(),
+        golden: false,
+    });
+
+    let mut events = vec![GameEvent::CardDiscovered { seat, card_id }];
+    events.extend(engine.check_triple(state, seat));
+    Ok(Outcome::with(events))
 }
 
 /// 重抽一名玩家的全部非冻结槽位。
@@ -545,7 +582,7 @@ fn is_eligible(card: &Card, pool: &BTreeMap<String, u16>, tribes: &BTreeSet<Trib
     card.tribe == Tribe::General || tribes.contains(&card.tribe)
 }
 
-fn new_minion(instance_id: InstanceId, card_id: &str, golden: bool) -> MinionInstance {
+pub(crate) fn new_minion(instance_id: InstanceId, card_id: &str, golden: bool) -> MinionInstance {
     MinionInstance {
         instance_id,
         card_id: card_id.to_string(),

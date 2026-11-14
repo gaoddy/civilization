@@ -53,7 +53,7 @@ pub enum RejectCode {
     HeroPowerLimit,
     NoValidTarget,
     TargetNotAllowed,
-    /// 待选（如发现）的候选下标非法；消费待选本身由 Task 14 实现。
+    /// 待选（如发现）的候选下标非法。
     InvalidChoice,
 }
 
