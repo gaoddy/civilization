@@ -3,13 +3,11 @@ id: galileo
 name: 伽利略·伽利莱
 summary: 每回合首次刷新额外出牌的信息型物理英雄。
 discipline: 物理
-skill_name: 观测
+skill: hero-observation
 skill_cost: 0
 skill_type: 被动
 skill_uses_per_turn: 1
 skill_trigger: 首次刷新时
-skill_text: 每回合首次刷新时额外出现一张当前时代的随机随从
-match_text: 额外出现的随从固定为当前时代当前星级排序第一张
 ---
 
 # 伽利略·伽利莱

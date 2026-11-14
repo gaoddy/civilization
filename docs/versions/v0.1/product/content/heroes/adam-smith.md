@@ -3,13 +3,11 @@ id: adam-smith
 name: 亚当·斯密
 summary: 以人类数量为条件的成长型经济学英雄。
 discipline: 经济学
-skill_name: 分工
+skill: hero-division-of-labor
 skill_cost: 1
 skill_type: 主动
 skill_uses_per_turn: 1
 skill_trigger: 主动使用
-skill_text: 使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次
-match_text: 同左
 ---
 
 # 亚当·斯密

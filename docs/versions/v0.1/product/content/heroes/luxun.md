@@ -3,13 +3,11 @@ id: luxun
 name: 鲁迅
 summary: 以技能换成长的文学英雄，适合新手稳定滚雪球。
 discipline: 文学
-skill_name: 呐喊
+skill: hero-shout
 skill_cost: 1
 skill_type: 主动
 skill_uses_per_turn: 2
 skill_trigger: 主动使用
-skill_text: 使一个友方随从获得一次成长；每回合可用 2 次
-match_text: 同左
 ---
 
 # 鲁迅

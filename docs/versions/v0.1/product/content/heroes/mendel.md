@@ -3,13 +3,11 @@ id: mendel
 name: 格雷戈尔·约翰·孟德尔
 summary: 植物体系专属的成长型生物英雄。
 discipline: 生物
-skill_name: 遗传
+skill: hero-heredity
 skill_cost: 1
 skill_type: 主动
 skill_uses_per_turn: 1
 skill_trigger: 主动使用
-skill_text: 使一个友方植物随从获得一次成长
-match_text: 同左
 ---
 
 # 格雷戈尔·约翰·孟德尔
