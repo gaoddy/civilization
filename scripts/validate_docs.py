@@ -90,8 +90,8 @@ SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "tribe", "cost", "match_text"]
-HERO_FIELDS = ["id", "name", "summary", "discipline", "skill", "skill_cost",
-               "skill_type", "skill_uses_per_turn", "skill_trigger"]
+HERO_CARD_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
+                    "hero_skill_uses_per_turn", "hero_skill_trigger"]
 
 errors = []
 
@@ -386,19 +386,33 @@ def derived_keywords(doc, skill_map):
     return keywords
 
 
+def hero_skill_text(skill):
+    return f"{skill['name']}：{skill['text']}"
+
+
 def expected_card_attrs(doc, skill_map):
     skills = card_skills(doc)
     skill_value = "；".join(skills) if skills else "无"
     keyword_list = derived_keywords(doc, skill_map)
     keyword_value = "；".join(keyword_list) if keyword_list else "无"
     if doc["card_type"] == "随从":
-        return {
+        attrs = {
             "id": doc["id"], "名称": doc["name"], "类型": doc["card_type"],
             "流派": doc["tribe"], "子类": doc["subtype"], "星级": str(doc["level"]),
             "时代": doc["era"], "攻击力": str(doc["attack"]),
             "生命值": str(doc["health"]), "关键词": keyword_value,
             "技能": skill_value, "学者": "是" if doc["is_scholar"] else "否",
+            "英雄资格": "是" if doc.get("is_hero") else "否",
         }
+        if doc.get("is_hero"):
+            attrs.update({
+                "英雄技能": doc["hero_skill"],
+                "英雄技能费用": str(doc["hero_skill_cost"]),
+                "英雄技能类型": doc["hero_skill_type"],
+                "每回合次数": str(doc["hero_skill_uses_per_turn"]),
+                "触发时机": doc["hero_skill_trigger"],
+            })
+        return attrs
     return {
         "id": doc["id"], "名称": doc["name"], "类型": doc["card_type"],
         "星级": str(doc["level"]), "流派": doc["tribe"],
