@@ -851,8 +851,8 @@ impl Engine {
         setup: &CombatSetup<'_>,
     ) {
         let first = field.first_side;
-        // 英雄被动固定按「攻击方 → 防守方」结算（§2.7 控制器裁定）。
-        for side in [0, 1] {
+        // §2.7.1：英雄被动按先手方 → 后手方结算。
+        for side in [first, 1 - first] {
             let hero = if side == 0 {
                 setup.attacker_hero
             } else {

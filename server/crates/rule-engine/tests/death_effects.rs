@@ -615,3 +615,86 @@ fn turn_start_contagion_death_fires_deathrattle_and_sow() {
         "播种在招募侧召唤幼苗"
     );
 }
+
+/// §2.7.1：英雄被动与随从效果都按「先手方 → 后手方」结算。
+///
+/// 本用例让防守方成为先手方：
+/// - 先手英雄（防守方）的范围伤害先击杀己方 5 血随从 P，后手英雄的 `both:all`
+///   增益因此选不到已死亡的 P；
+/// - 先手随从（防守方）的范围伤害在后手随从 N 自己的 `OnCombatStart` 之前击杀 N，
+///   所以 N 只留下后手英雄施加的 +1 攻击。
+#[test]
+fn combat_start_heroes_follow_first_side_order() {
+    let (mut engine, _state) = setup();
+    add_card(
+        &mut engine,
+        "hero-a",
+        Tribe::Human,
+        0,
+        30,
+        &[(None, "OnCombatStart|DealDamage|both:all|amount=5")],
+    );
+    add_card(
+        &mut engine,
+        "hero-b",
+        Tribe::Human,
+        0,
+        30,
+        &[(
+            None,
+            "OnCombatStart|ModifyStats|both:all|attack=1,duration=permanent",
+        )],
+    );
+    add_card(&mut engine, "p", Tribe::Human, 0, 5, &[]);
+    add_card(
+        &mut engine,
+        "n",
+        Tribe::Human,
+        0,
+        10,
+        &[(
+            None,
+            "OnCombatStart|ModifyStats|self|attack=1,duration=permanent",
+        )],
+    );
+    add_card(
+        &mut engine,
+        "d",
+        Tribe::Human,
+        0,
+        20,
+        &[(None, "OnCombatStart|DealDamage|enemy:all|amount=10")],
+    );
+
+    // 防守方（座位 1）为先手方。
+    let log = simulate_with(
+        &engine,
+        &[minion(1, "n")],
+        &[minion(2, "p"), minion(3, "d")],
+        0,
+        1,
+        1,
+        &mut rng(),
+        CombatSetup {
+            attacker_hero: Some("hero-b"),
+            defender_hero: Some("hero-a"),
+            ..CombatSetup::default()
+        },
+    );
+
+    assert_eq!(
+        mods_attack(final_minion(&log, 2)),
+        0,
+        "先手方（防守方）英雄先结算，已死亡的 P 不再获得后手英雄的增益"
+    );
+    assert_eq!(
+        mods_attack(final_minion(&log, 1)),
+        1,
+        "先手方随从先结算，N 在被击杀前没有机会触发自身效果（只留下后手英雄的 +1）"
+    );
+    assert_eq!(
+        mods_attack(final_minion(&log, 3)),
+        1,
+        "后手方英雄的增益仍应结算到存活随从上"
+    );
+}
