@@ -6,8 +6,9 @@ discipline: 物理
 skill_name: 人造闪电
 skill_cost: 1
 skill_type: 主动
+skill_uses_per_turn: 1
+skill_trigger: 主动使用
 skill_text: 使一个友方随从获得 +2 攻击力直到回合结束
-series: ""
 ---
 
 # 尼古拉·特斯拉

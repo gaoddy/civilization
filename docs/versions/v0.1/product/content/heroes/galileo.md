@@ -6,8 +6,9 @@ discipline: 物理
 skill_name: 观测
 skill_cost: 0
 skill_type: 被动
+skill_uses_per_turn: 1
+skill_trigger: 首次刷新时
 skill_text: 每回合首次刷新时额外出现一张当前时代的随机随从
-series: 新增
 ---
 
 # 伽利略·伽利莱

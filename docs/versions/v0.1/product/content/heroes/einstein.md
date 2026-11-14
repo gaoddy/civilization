@@ -6,8 +6,9 @@ discipline: 物理
 skill_name: 光速出击
 skill_cost: 1
 skill_type: 主动
+skill_uses_per_turn: 1
+skill_trigger: 主动使用
 skill_text: 使一个友方随从本回合获得连击
-series: ""
 ---
 
 # 阿尔伯特·爱因斯坦

@@ -6,8 +6,9 @@ discipline: 计算机
 skill_name: 高效算法
 skill_cost: 2
 skill_type: 主动
+skill_uses_per_turn: 1
+skill_trigger: 主动使用
 skill_text: 刷新商店并获得一张当前星级的随从
-series: 极客
 ---
 
 # 高德纳

@@ -23,6 +23,7 @@ TRIBES = {"人类", "机械", "生物", "植物", "病毒", "学者"}
 ERAS = ["史前", "原始", "封建", "现代", "未来"]
 SOURCES = {"素材", "新增"}
 CARD_TYPES = {"随从", "效果"}
+SKILL_TRIGGERS = {"主动使用", "首次刷新时", "战斗开始时"}
 RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26}
@@ -255,7 +256,8 @@ def check_cards():
 
 def check_heroes():
     heroes = load("heroes", ["id", "name", "summary", "discipline", "skill_name",
-                             "skill_cost", "skill_type", "skill_text", "series"])
+                             "skill_cost", "skill_type", "skill_uses_per_turn",
+                             "skill_trigger", "skill_text"])
     if len(heroes) != 10:
         fail(f"英雄数量 {len(heroes)}，期望 10")
     for key in ("id", "name"):
@@ -272,7 +274,24 @@ def check_heroes():
             fail(f"{h['name']}: 费用越界 {h['skill_cost']}")
         if h["skill_type"] == "被动" and h["skill_cost"] != 0:
             fail(f"{h['name']}: 被动技能费用必须为 0")
+        if h["skill_uses_per_turn"] not in (1, 2):
+            fail(f"{h['name']}: 每回合次数非法 {h['skill_uses_per_turn']!r}")
+        if h["skill_trigger"] not in SKILL_TRIGGERS:
+            fail(f"{h['name']}: 技能触发时机非法 {h['skill_trigger']!r}")
+        if h["skill_type"] == "主动" and h["skill_trigger"] != "主动使用":
+            fail(f"{h['name']}: 主动技能的触发时机必须为「主动使用」")
+        if h["skill_type"] == "被动" and h["skill_trigger"] == "主动使用":
+            fail(f"{h['name']}: 被动技能不能使用「主动使用」触发")
     return heroes
+
+
+def check_enemy_selectors(raw):
+    picks = ("随机", "最左侧", "攻击力最高", "全体")
+    for doc in raw:
+        text = body_text(ROOT / "cards" / doc["_file"])
+        for phrase in ("对一个敌方随从", "使一个敌方随从"):
+            if phrase in text and not any(pick in text for pick in picks):
+                fail(f"{doc['_file']}: 单体敌方目标缺少选择器（随机/最左侧/攻击力最高/全体）")
 
 
 def main():
@@ -280,6 +299,7 @@ def main():
     heroes = check_heroes()
     check_attr_tables(raw)
     check_hero_intros(heroes)
+    check_enemy_selectors(raw)
     if errors:
         print(f"违规 {len(errors)}")
         for item in errors:

@@ -6,8 +6,9 @@ discipline: 生物
 skill_name: 进化
 skill_cost: 2
 skill_type: 主动
+skill_uses_per_turn: 1
+skill_trigger: 主动使用
 skill_text: 发现一张本局启用的流派随从
-series: ""
 ---
 
 # 查尔斯·罗伯特·达尔文

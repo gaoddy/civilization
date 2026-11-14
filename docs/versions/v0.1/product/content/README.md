@@ -8,4 +8,5 @@
 | [卡牌索引](cards/README.md) | 150 张卡牌实体文档 |
 | [英雄与技能](hero-system.md) | 英雄技能设计规则、效果牌分工与校验 |
 | [英雄索引](heroes/README.md) | 10 位英雄实体文档 |
+| [Token 注册表](tokens/README.md) | 不进牌池的衍生随从 |
 | [平衡测算](balance-analysis.md) | 流派×星级强度矩阵、阵容推演与失衡判据 |
