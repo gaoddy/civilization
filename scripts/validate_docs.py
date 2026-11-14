@@ -267,9 +267,14 @@ def check_card_rendering(raw, skill_map):
             fail(f"{doc['_file']}: 「## 效果」与技能文本拼接不一致：{actual!r} != {expected!r}")
 
 
-def keyword_cost(keywords):
+def keyword_cost(card, skill_map):
     total = 0
-    for k in keywords:
+    summon_like = any(
+        marker in sid
+        for sid in card_skills(card)
+        for marker in ("summon", "copy", "discover")
+    )
+    for k in derived_keywords(card, skill_map):
         if k == "嘲讽":
             total += .5
         elif k == "护盾":
@@ -283,7 +288,7 @@ def keyword_cost(keywords):
         elif k.startswith("装配"):
             total += 2 + 2 * (int(k.split()[1]) - 1)
         elif k in ("战吼", "亡语"):
-            total += 2
+            total += 4 if summon_like else 2
     return total
 
 
@@ -352,11 +357,17 @@ def check_cards(skill_map):
         if c["is_scholar"] and c["attack"] != 0:
             fail(f"{name}: 学者攻击力必须为 0")
         if c["is_scholar"]:
+            expected_health = RANGE[c["level"]][3] * 1.3
+            if abs(c["health"] - expected_health) > 1:
+                fail(
+                    f"{name}: 学者生命值 {c['health']} 偏离 {c['level']} 星生命上限×1.3"
+                    f"（{expected_health:g}）超过 1 点"
+                )
             continue
         lo, hi, lh, hh = RANGE[c["level"]]
         if not (lo <= c["attack"] <= hi and lh <= c["health"] <= hh):
             fail(f"{name}: 数值 {c['attack']}/{c['health']} 越出 {c['level']} 星区间")
-        if c["attack"] + c["health"] + keyword_cost(derived_keywords(c, skill_map)) > CAP[c["level"]]:
+        if c["attack"] + c["health"] + keyword_cost(c, skill_map) > CAP[c["level"]]:
             fail(f"{name}: 超模")
 
     for c in minions:
