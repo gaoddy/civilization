@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""校验 docs/versions/v0.1/product/content 下的技能与卡牌实体文档。
+"""校验 docs/versions/v0.1/product/content 下的技能与卡牌实体文档，
+以及 docs/versions/v0.2/product/content 下的成就实体文档。
 
 只使用标准库；front matter 仅支持本项目生成的三种形式：
     key: 标量
@@ -15,6 +16,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v0.1" / "product" / "content"
+V02_ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v0.2" / "product" / "content"
 
 ID_RE = re.compile(r"[a-z][a-z0-9-]*")
 KEYWORD_RE = re.compile(
@@ -294,9 +296,9 @@ def check_text_trigger(text, effects_raw):
     return []
 
 
-def load(kind, required):
+def load(kind, required, root=ROOT):
     docs = []
-    for path in sorted((ROOT / kind).glob("*.md")):
+    for path in sorted((root / kind).glob("*.md")):
         if path.name == "README.md":
             continue
         try:
@@ -409,7 +411,7 @@ def expected_card_attrs(doc, skill_map):
         "id": doc["id"], "名称": doc["name"], "类型": doc["card_type"],
         "星级": str(doc["level"]), "流派": doc["tribe"],
         "技能": skill_value, "费用": str(doc["cost"]),
-        "比赛模式替换": doc["match_text"],
+        "确定性替换": doc["match_text"],
     }
 
 
@@ -417,7 +419,7 @@ def expected_skill_attrs(skill):
     attrs = {
         "id": skill["id"],
         "关键词": skill.get("keyword") or "无",
-        "比赛模式替换": skill.get("match_text") or "不适用",
+        "确定性替换": skill.get("match_text") or "不适用",
     }
     if "cost" in skill:
         attrs["费用"] = str(skill["cost"])
@@ -692,7 +694,7 @@ def check_hero_cards(cards, minions, effects):
 
 
 def check_achievements():
-    achievements = load("achievements", ACHIEVEMENT_FIELDS)
+    achievements = load("achievements", ACHIEVEMENT_FIELDS, V02_ROOT)
     if len(achievements) != 6:
         fail(f"成就数量 {len(achievements)}，期望 6")
     for key in ("id", "name"):
@@ -759,7 +761,8 @@ def main():
     print("技能引用", dict(sorted(collections.Counter(
         sid for c in raw for sid in card_skills(c)).items())))
     print(f"随从 {len(minions)} 张、效果牌 {len(effects)} 张、技能 {len(skills)} 个、"
-          f"英雄卡 {len(hero_cards)} 张、成就 {len(achievements)} 个，校验通过")
+          f"英雄卡 {len(hero_cards)} 张，校验通过")
+    print(f"v0.2 成就 {len(achievements)} 个，校验通过")
     return 0
 
 

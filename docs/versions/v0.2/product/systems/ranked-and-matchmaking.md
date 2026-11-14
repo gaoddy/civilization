@@ -1,6 +1,6 @@
 # 天梯与匹配
 
-> 依赖：[核心规则](../../../v0.1/product/rules/core-rules.md)、[设计总纲](../../../v0.1/product/overview/design-overview.md)（§6.11、§6.12）、[模式与成就](../../../v0.1/product/systems/modes-and-achievements.md)、[好友](../../../v0.1/product/systems/friends.md)、[房间与邀请](../../../v0.1/product/systems/rooms-and-invites.md)
+> 依赖：[核心规则](../../../v0.1/product/rules/core-rules.md)、[设计总纲](../../../v0.1/product/overview/design-overview.md)（§6.11、§6.12）、[模式](../../../v0.1/product/systems/modes.md)、[成就](achievements.md)、[好友](../../../v0.1/product/systems/friends.md)、[房间与邀请](../../../v0.1/product/systems/rooms-and-invites.md)
 > 状态：方案未实施
 > 版本：v0.2 增量
 
@@ -157,5 +157,6 @@
 
 - [房间与邀请](../../../v0.1/product/systems/rooms-and-invites.md)
 - [好友](../../../v0.1/product/systems/friends.md)
-- [模式与成就](../../../v0.1/product/systems/modes-and-achievements.md)
+- [模式](../../../v0.1/product/systems/modes.md)
+- [成就](achievements.md)
 - [待确认事项](../../open-questions.md)
