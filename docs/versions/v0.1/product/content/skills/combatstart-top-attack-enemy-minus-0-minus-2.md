@@ -1,6 +1,7 @@
 ---
 id: combatstart-top-attack-enemy-minus-0-minus-2
 text: 战斗开始时，使敌方攻击力最高的随从获得 -0/-2
+effects: OnCombatStart|ModifyStats|enemy:topAttack|health=-2,duration=combat
 match_text: 同左
 ---
 

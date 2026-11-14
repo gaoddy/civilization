@@ -2,6 +2,7 @@
 id: hero-universal-manuscript
 name: 万能手稿
 text: 复制一张你手牌中的随从牌
+effects: OnActivate|Copy|self|from=hand,to=hand
 match_text: 同左
 ---
 

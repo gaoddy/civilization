@@ -2,6 +2,7 @@
 id: battlecry-friendly-plant-growth-once
 keyword: 战吼
 text: 战吼：使一个友方植物随从获得一次成长
+effects: OnPlay|Growth|friendly:single:tribe=植物|times=1
 ---
 
 # battlecry-friendly-plant-growth-once

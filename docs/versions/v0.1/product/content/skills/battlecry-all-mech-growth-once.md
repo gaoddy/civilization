@@ -2,6 +2,7 @@
 id: battlecry-all-mech-growth-once
 keyword: 战吼
 text: 战吼：使你的所有机械随从获得一次成长
+effects: OnPlay|Growth|friendly:all:tribe=机械|times=1
 ---
 
 # battlecry-all-mech-growth-once

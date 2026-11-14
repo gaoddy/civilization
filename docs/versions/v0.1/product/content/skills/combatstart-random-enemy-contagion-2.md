@@ -1,6 +1,7 @@
 ---
 id: combatstart-random-enemy-contagion-2
 text: 战斗开始时，使一个随机敌方随从获得 2 层传染
+effects: OnCombatStart|GrantKeyword|enemy:random|keyword=传染,value=2,duration=permanent
 ---
 
 # combatstart-random-enemy-contagion-2

@@ -2,6 +2,7 @@
 id: hero-observation
 name: 观测
 text: 每回合首次刷新时额外出现一张当前时代的随机随从
+effects: OnFirstRefresh|AddShopSlot|self|era=current,count=1
 match_text: 额外出现的随从固定为当前时代当前星级排序第一张
 ---
 

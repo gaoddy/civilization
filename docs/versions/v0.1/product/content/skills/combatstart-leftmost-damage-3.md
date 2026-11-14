@@ -1,6 +1,7 @@
 ---
 id: combatstart-leftmost-damage-3
 text: 战斗开始时，对敌方最左侧随从造成 3 点伤害
+effects: OnCombatStart|DealDamage|enemy:leftmost|amount=3
 match_text: 同左
 ---
 

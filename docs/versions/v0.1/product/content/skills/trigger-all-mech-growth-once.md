@@ -1,6 +1,7 @@
 ---
 id: trigger-all-mech-growth-once
 text: 使你的机械随从各获得一次成长
+effects: OnPlayEffect|Growth|friendly:all:tribe=机械|times=1
 match_text: 同左
 ---
 

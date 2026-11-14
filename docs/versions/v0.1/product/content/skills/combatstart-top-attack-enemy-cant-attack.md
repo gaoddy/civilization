@@ -1,6 +1,7 @@
 ---
 id: combatstart-top-attack-enemy-cant-attack
 text: 战斗开始时，使敌方攻击力最高的随从本回合无法攻击
+effects: OnCombatStart|CannotAttack|enemy:topAttack|duration=combat
 match_text: 同左
 ---
 

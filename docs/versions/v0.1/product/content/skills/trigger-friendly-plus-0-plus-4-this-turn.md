@@ -1,6 +1,7 @@
 ---
 id: trigger-friendly-plus-0-plus-4-this-turn
 text: 使一个友方随从获得 +0/+4 直到回合结束
+effects: OnPlayEffect|ModifyStats|friendly:single|health=4,duration=combat
 match_text: 同左
 ---
 

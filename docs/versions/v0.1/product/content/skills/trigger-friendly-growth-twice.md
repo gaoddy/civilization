@@ -1,6 +1,7 @@
 ---
 id: trigger-friendly-growth-twice
 text: 使一个友方随从获得两次成长
+effects: OnPlayEffect|Growth|friendly:single|times=2
 match_text: 同左
 ---
 

@@ -2,6 +2,7 @@
 id: keyword-windfury
 keyword: 连击
 text: 连击：每回合可攻击两次
+effects: []
 ---
 
 # keyword-windfury

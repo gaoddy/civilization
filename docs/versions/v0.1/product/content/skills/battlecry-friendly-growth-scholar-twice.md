@@ -2,6 +2,7 @@
 id: battlecry-friendly-growth-scholar-twice
 keyword: 战吼
 text: 战吼：使一个友方随从获得一次成长；若其为学者，改为两次
+effects: OnPlay|Growth|friendly:single|times=1,timesIf=学者:2
 ---
 
 # battlecry-friendly-growth-scholar-twice

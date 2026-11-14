@@ -1,6 +1,7 @@
 ---
 id: trigger-friendly-growth-extra-plus-0-plus-1
 text: 每当一个友方随从获得成长，它额外获得 +0/+1
+effects: OnAllyGrowth|ModifyStats|target|health=1,duration=permanent
 ---
 
 # trigger-friendly-growth-extra-plus-0-plus-1

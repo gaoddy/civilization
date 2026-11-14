@@ -2,6 +2,7 @@
 id: hero-efficient-algorithm
 name: 高效算法
 text: 刷新商店并获得一张当前星级的随从
+effects: OnActivate|RefreshShop|self|free=true;OnActivate|GainMinion|self|from=shop,level=current,to=hand
 match_text: 获得的随从固定为当前星级排序第一张
 ---
 

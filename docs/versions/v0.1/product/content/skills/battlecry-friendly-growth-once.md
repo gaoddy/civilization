@@ -2,6 +2,7 @@
 id: battlecry-friendly-growth-once
 keyword: 战吼
 text: 战吼：使一个友方随从获得一次成长
+effects: OnPlay|Growth|friendly:single|times=1
 ---
 
 # battlecry-friendly-growth-once

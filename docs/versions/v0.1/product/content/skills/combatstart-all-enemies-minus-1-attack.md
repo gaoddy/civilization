@@ -1,6 +1,7 @@
 ---
 id: combatstart-all-enemies-minus-1-attack
 text: 战斗开始时，使敌方所有随从获得 -1 攻击力
+effects: OnCombatStart|ModifyStats|enemy:all|attack=-1,duration=combat
 match_text: 同左
 ---
 

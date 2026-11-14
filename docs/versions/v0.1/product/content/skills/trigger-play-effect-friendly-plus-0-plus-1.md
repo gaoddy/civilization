@@ -1,6 +1,7 @@
 ---
 id: trigger-play-effect-friendly-plus-0-plus-1
 text: 每当你使用一张效果牌，使一个友方随从获得 +0/+1
+effects: OnUse|ModifyStats|friendly:single|health=1,duration=permanent
 ---
 
 # trigger-play-effect-friendly-plus-0-plus-1

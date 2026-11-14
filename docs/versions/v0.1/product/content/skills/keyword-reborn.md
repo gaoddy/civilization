@@ -2,6 +2,7 @@
 id: keyword-reborn
 keyword: 复生
 text: 复生：以 1 点生命复活一次
+effects: []
 ---
 
 # keyword-reborn
