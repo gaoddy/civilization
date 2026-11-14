@@ -50,6 +50,7 @@
 
 - 产品基线：[product/README.md](product/README.md)
 - 技术基线：[technical/README.md](technical/README.md)
+- 玩家向介绍：[游戏介绍](product/overview/game-intro.md)
 - 未确认事项：[open-questions.md](open-questions.md)
 - 跨版本路线：[版本路线与风险](../../version-roadmap.md)、[内容素材库](../../content-backlog.md)
 
