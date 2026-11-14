@@ -29,6 +29,8 @@ ERAS = ["史前", "原始", "封建", "现代", "未来"]
 SOURCES = {"素材", "新增"}
 CARD_TYPES = {"随从", "效果"}
 SKILL_TRIGGERS = {"主动使用", "首次刷新时", "战斗开始时"}
+ACHIEVEMENT_EVENTS = {"时代升级", "关键词组合", "成长触发", "卡牌使用", "三连合成"}
+ACHIEVEMENT_FIELDS = ["id", "name", "event", "condition", "count", "reward", "affects_power"]
 RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26}
@@ -239,7 +241,7 @@ def check_cards():
             fail(f"{name}: 费用越界 {c['cost']}")
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"随从": 136, "效果": 30}:
+    if counts != {"随从": 136, "效果": 32}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]
@@ -292,6 +294,27 @@ def check_heroes():
     return heroes
 
 
+def check_achievements():
+    achievements = load("achievements", ACHIEVEMENT_FIELDS)
+    if len(achievements) != 6:
+        fail(f"成就数量 {len(achievements)}，期望 6")
+    for key in ("id", "name"):
+        values = [a[key] for a in achievements]
+        dup = [v for v, n in collections.Counter(values).items() if n > 1]
+        if dup:
+            fail(f"成就 {key} 重复: {dup}")
+    for a in achievements:
+        if a["event"] not in ACHIEVEMENT_EVENTS:
+            fail(f"{a['name']}: 成就事件非法 {a['event']!r}")
+        if not isinstance(a["count"], int) or a["count"] < 1:
+            fail(f"{a['name']}: 成就次数必须为正整数")
+        if not isinstance(a["affects_power"], bool):
+            fail(f"{a['name']}: affects_power 必须为布尔")
+        if not a["condition"] or not a["reward"]:
+            fail(f"{a['name']}: condition 或 reward 为空")
+    return achievements
+
+
 def check_auras(minions):
     for c in minions:
         text = body_text(ROOT / "cards" / c["_file"])
@@ -316,6 +339,7 @@ def check_enemy_selectors(raw):
 def main():
     raw, minions, effects = check_cards()
     heroes = check_heroes()
+    achievements = check_achievements()
     check_attr_tables(raw)
     check_hero_intros(heroes)
     check_enemy_selectors(raw)
@@ -325,7 +349,7 @@ def main():
         for item in errors:
             print(" -", item)
         return 1
-    print(f"随从 {len(minions)} 张、效果牌 {len(effects)} 张、英雄 {len(heroes)} 位，校验通过")
+    print(f"随从 {len(minions)} 张、效果牌 {len(effects)} 张、英雄 {len(heroes)} 位、成就 {len(achievements)} 个，校验通过")
     print("时代", dict(collections.Counter(c["era"] for c in minions)))
     print("流派", dict(collections.Counter(c["tribe"] for c in minions)))
     print("星级", dict(collections.Counter(c["level"] for c in minions)))
