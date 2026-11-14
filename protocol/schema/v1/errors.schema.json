@@ -14,6 +14,7 @@
         "ALREADY_MAX_ERA",
         "CARD_NOT_IN_HAND",
         "HERO_POWER_LIMIT",
+        "INVALID_CHOICE",
         "NO_VALID_TARGET",
         "TARGET_NOT_ALLOWED",
         "AUTH_FAILED",

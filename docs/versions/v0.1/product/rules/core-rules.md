@@ -50,7 +50,7 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 
 **通用规则**：同一回合内，`BuyMinion` / `RerollShop` / `UpgradeEra` / `PlayCard` / `UseHeroPower` 共用同一个金币池，顺序不限；金币不跨回合累积，多余部分清零。
 
-**补充返回码**：`NO_VALID_TARGET`（主动技能或效果牌没有合法目标，见 [卡牌规范与数据](../content/card-system.md) §2.1「英雄卡」）；`TARGET_NOT_ALLOWED`（招募阶段试图指定敌方目标）。
+**补充返回码**：`NO_VALID_TARGET`（主动技能或效果牌没有合法目标，见 [卡牌规范与数据](../content/card-system.md) §2.1「英雄卡」）；`TARGET_NOT_ALLOWED`（招募阶段试图指定敌方目标）；`INVALID_CHOICE`（`ChooseDiscover` 的候选索引不合法）。
 
 ## 4. 招募阶段细则
 
