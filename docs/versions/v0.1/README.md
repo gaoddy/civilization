@@ -24,6 +24,7 @@
 | 流派 | 6 个，每局启用 5 个（学者固定启用） |
 | 卡牌 | 136 张随从 + 32 张效果牌 |
 | 英雄 | 13 位，各带 1 个英雄技能 |
+| 技能 | 118 个，卡牌与英雄共享引用 |
 | 关键词 | 13 个：通用 10 个 + 机械、植物、生物专属 3 个 |
 | 模式 | 会战（默认）、比赛 |
 | 成就 | 6 个 |
@@ -51,4 +52,4 @@
 
 ## 数据与校验
 
-卡牌与英雄实体文档是唯一数据源，字段规范见[卡牌规范与数据](product/content/card-system.md)；每次修改后运行 `python3 scripts/validate_docs.py`。
+卡牌、英雄与技能实体文档是唯一数据源；卡牌与英雄字段规范见[卡牌规范与数据](product/content/card-system.md)与[英雄与技能](product/content/hero-system.md)，技能字段规范见[技能规范与数据](product/content/skill-system.md)；每次修改后运行 `python3 scripts/validate_docs.py`。

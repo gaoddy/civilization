@@ -8,6 +8,7 @@
 | [卡牌索引](cards/README.md) | 168 张卡牌实体文档 |
 | [英雄与技能](hero-system.md) | 英雄技能设计规则、效果牌分工与校验 |
 | [英雄索引](heroes/README.md) | 13 位英雄实体文档 |
+| [技能规范与数据](skill-system.md) | 技能字段规范、引用与渲染规则、共享规则、数据总览与校验方式 |
 | [技能索引](skills/README.md) | 118 个技能实体文档 |
 | [Token 注册表](tokens/README.md) | 不进牌池的衍生随从 |
 | [成就索引](achievements/README.md) | 6 个成就实体文档 |
