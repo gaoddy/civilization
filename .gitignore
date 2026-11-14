@@ -13,3 +13,6 @@ venv/
 
 # 临时输出
 output/
+
+# 实施计划（本地，不提交）
+docs/plan/
