@@ -1,21 +1,25 @@
 //! 战斗行动循环与关键词判定。
 //!
-//! 本模块只做纯数值与关键词结算，不触发战吼、亡语、光环等效果
-//! （由后续任务接入）。所有输入都是只读快照，`simulate` 在克隆上结算，
+//! 本模块负责纯数值结算、关键词判定，以及战斗内效果（战斗开始、死亡结算、
+//! 召唤、复制）的接入点。所有输入都是只读快照，`simulate` 在克隆上结算，
 //! 调用方的棋盘不会被修改；随机性只来自 [`Stream::Combat`]。
 //!
 //! 规则口径见 `docs/versions/v0.1/product/rules/core-rules.md` §5.1–§5.4
-//! 与 `keywords-and-mechanics.md` §1、§2.3–§2.4、§10。
+//! 与 `keywords-and-mechanics.md` §1、§2.3–§2.7、§10。
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::data::{Catalog, Tribe};
-use crate::effects::Duration;
+use crate::effects::{Duration, EffectCtx, Trigger};
+use crate::engine::Engine;
+use crate::recruit::new_minion;
 use crate::rng::{RngStreams, Stream};
 use crate::state::{InstanceId, MinionInstance, Modifier, Seat};
 
 /// 每场战斗的行动上限，防止死亡循环。
 const MAX_ACTIONS: u16 = 200;
+/// 单场战斗的效果触发总数上限（关键词 §8）。
+pub(crate) const MAX_TRIGGERS: u16 = 200;
 
 /// 关键词：连击。
 const WINDFURY: &str = "连击";
@@ -29,6 +33,10 @@ const REBORN: &str = "复生";
 const CONTAGION: &str = "传染";
 /// 关键词：最优攻击。
 const OPTIMAL_ATTACK: &str = "最优攻击";
+/// 关键词：播种。
+const SOW: &str = "播种";
+/// 播种召唤的 token。
+pub(crate) const SEEDLING_TOKEN: &str = "seedling";
 
 /// 战斗中的一条动作记录。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -48,6 +56,14 @@ pub enum CombatAction {
     ContagionApplied { target: InstanceId },
 }
 
+/// 战斗中复制进手牌的记录；由结算层在战斗结束后写入持久手牌。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CombatHandCopy {
+    pub seat: Seat,
+    pub card_id: String,
+    pub golden: bool,
+}
+
 /// 一场战斗的结算结果。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CombatLog {
@@ -56,19 +72,65 @@ pub struct CombatLog {
     pub defender_survivors: Vec<InstanceId>,
     pub winner: Option<Seat>,
     pub action_count: u16,
+    /// 本场战斗累计触发的效果次数。
+    pub trigger_count: u16,
+    /// 本场战斗召唤出的随从数量。
+    pub summon_count: u16,
+    /// 召唤 card 时从共享池扣除的份数，战斗结束后由结算层写回。
+    pub pool_spent: BTreeMap<String, u16>,
+    /// 战斗中复制进手牌的卡牌，战斗结束后由结算层写回。
+    pub hand_copies: Vec<CombatHandCopy>,
+    /// 战斗使用的下一个实例编号；调用方可据此推进 `GameState::next_instance_id`。
+    pub next_instance_id: InstanceId,
     /// 战斗结束时的攻击方随从克隆；供结算层回写持久字段（传染、成长）。
     pub attacker_final: Vec<MinionInstance>,
     /// 战斗结束时的防守方随从克隆；供结算层回写持久字段（传染、成长）。
     pub defender_final: Vec<MinionInstance>,
 }
 
-/// 卡面基础攻击力；金色翻倍。
+/// 战斗开始前由调用方补充的上下文。
+#[derive(Debug, Clone, Copy)]
+pub struct CombatSetup<'a> {
+    /// 攻击方英雄卡 id；用于结算英雄被动。
+    pub attacker_hero: Option<&'a str>,
+    /// 防守方英雄卡 id；用于结算英雄被动。
+    pub defender_hero: Option<&'a str>,
+    /// 战斗局部的实例编号起点；缺省时取双方最大编号 + 1。
+    pub next_instance_id: Option<InstanceId>,
+    /// 共享牌池快照；仅用于判断召唤 card 时是否扣池。
+    pub pool: Option<&'a BTreeMap<String, u16>>,
+    /// 攻击方手牌数量，用于判断复制进手牌是否有空位。
+    pub attacker_hand: usize,
+    /// 防守方手牌数量。
+    pub defender_hand: usize,
+    /// 手牌上限。
+    pub hand_slots: usize,
+}
+
+impl Default for CombatSetup<'_> {
+    fn default() -> Self {
+        Self {
+            attacker_hero: None,
+            defender_hero: None,
+            next_instance_id: None,
+            pool: None,
+            attacker_hand: 0,
+            defender_hand: 0,
+            hand_slots: usize::MAX,
+        }
+    }
+}
+
+/// 卡面基础攻击力；token 取注册表数值，金色翻倍。
 fn base_attack(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    let base = catalog
-        .cards
-        .get(&minion.card_id)
-        .and_then(|card| card.attack)
-        .unwrap_or(0);
+    let base = match catalog.tokens.get(&minion.card_id) {
+        Some(token) => token.attack,
+        None => catalog
+            .cards
+            .get(&minion.card_id)
+            .and_then(|card| card.attack)
+            .unwrap_or(0),
+    };
     if minion.golden {
         base.saturating_mul(2)
     } else {
@@ -76,13 +138,16 @@ fn base_attack(catalog: &Catalog, minion: &MinionInstance) -> i32 {
     }
 }
 
-/// 卡面基础生命值；金色翻倍。
+/// 卡面基础生命值；token 取注册表数值，金色翻倍。
 fn base_health(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    let base = catalog
-        .cards
-        .get(&minion.card_id)
-        .and_then(|card| card.health)
-        .unwrap_or(0);
+    let base = match catalog.tokens.get(&minion.card_id) {
+        Some(token) => token.health,
+        None => catalog
+            .cards
+            .get(&minion.card_id)
+            .and_then(|card| card.health)
+            .unwrap_or(0),
+    };
     if minion.golden {
         base.saturating_mul(2)
     } else {
@@ -149,10 +214,15 @@ pub fn effective_health_with(
 
 /// 随从当前生效的关键词集合。
 ///
-/// 由所引用技能的 `keyword` 字段派生，并并入尚未失效的授予关键词；
+/// 由所引用技能的 `keyword` 字段与 token 注册表派生，并并入尚未失效的授予关键词；
 /// `Instant` 授予在战斗前就已结算完毕，视为不存在。未知关键词原样保留。
 pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
     let mut result = BTreeSet::new();
+    if let Some(token) = catalog.tokens.get(&minion.card_id) {
+        for keyword in &token.keywords {
+            result.insert(keyword.clone());
+        }
+    }
     if let Some(card) = catalog.cards.get(&minion.card_id) {
         for skill_id in &card.skills {
             if let Some(keyword) = catalog
@@ -188,11 +258,12 @@ fn starting_tokens(catalog: &Catalog, minion: &MinionInstance) -> u8 {
 }
 
 /// 一方的战斗内状态。输入随从被克隆后在这里结算。
-struct SideBoard {
-    minions: Vec<MinionInstance>,
-    health: Vec<i32>,
-    alive: Vec<bool>,
-    starting_tokens: Vec<u8>,
+#[derive(Debug, Clone)]
+pub(crate) struct SideBoard {
+    pub(crate) minions: Vec<MinionInstance>,
+    pub(crate) health: Vec<i32>,
+    pub(crate) alive: Vec<bool>,
+    pub(crate) starting_tokens: Vec<u8>,
     pointer: usize,
 }
 
@@ -241,6 +312,15 @@ impl SideBoard {
             .collect()
     }
 
+    fn alive_ids(&self) -> Vec<InstanceId> {
+        self.minions
+            .iter()
+            .zip(&self.alive)
+            .filter(|(_, alive)| **alive)
+            .map(|(minion, _)| minion.instance_id)
+            .collect()
+    }
+
     /// 返回当前应出手的随从下标；跳过已死亡或无令牌者。
     fn find_attacker(&mut self) -> Option<usize> {
         while self.pointer < self.minions.len() {
@@ -250,6 +330,359 @@ impl SideBoard {
             self.pointer += 1;
         }
         None
+    }
+}
+
+/// 战斗局部的棋盘：双方克隆、座位、实例编号计数器与触发预算。
+#[derive(Debug, Clone)]
+pub struct BattleField {
+    pub(crate) seats: [Seat; 2],
+    pub(crate) sides: [SideBoard; 2],
+    pub(crate) next_instance_id: InstanceId,
+    pub(crate) triggers: u16,
+    pub(crate) summon_count: u16,
+    pub(crate) actions: Vec<CombatAction>,
+    pub(crate) hand_copies: Vec<CombatHandCopy>,
+    pub(crate) pool: BTreeMap<String, u16>,
+    pub(crate) pool_spent: BTreeMap<String, u16>,
+    pub(crate) hand_len: [usize; 2],
+    pub(crate) hand_slots: usize,
+    /// 正在结算死亡；嵌套触发产生的死亡留给外层循环处理。
+    pub(crate) resolving: bool,
+    pub(crate) first_side: usize,
+}
+
+impl BattleField {
+    fn new(
+        catalog: &Catalog,
+        attacker: &[MinionInstance],
+        defender: &[MinionInstance],
+        attacker_seat: Seat,
+        defender_seat: Seat,
+        first: Seat,
+        setup: CombatSetup<'_>,
+    ) -> Self {
+        let max_id = attacker
+            .iter()
+            .chain(defender.iter())
+            .map(|minion| minion.instance_id)
+            .max()
+            .unwrap_or(0);
+        let next_instance_id = setup
+            .next_instance_id
+            .unwrap_or(1)
+            // 兼容调用方未推进分配器的情况：至少避开双方棋盘上已有的编号。
+            .max(max_id.saturating_add(1));
+        Self {
+            seats: [attacker_seat, defender_seat],
+            sides: [
+                SideBoard::new(catalog, attacker),
+                SideBoard::new(catalog, defender),
+            ],
+            next_instance_id,
+            triggers: 0,
+            summon_count: 0,
+            actions: Vec::new(),
+            hand_copies: Vec::new(),
+            pool: setup.pool.cloned().unwrap_or_default(),
+            pool_spent: BTreeMap::new(),
+            hand_len: [setup.attacker_hand, setup.defender_hand],
+            hand_slots: setup.hand_slots,
+            resolving: false,
+            first_side: if first == attacker_seat { 0 } else { 1 },
+        }
+    }
+
+    pub(crate) fn seat(&self, side: usize) -> Seat {
+        self.seats[side]
+    }
+
+    pub(crate) fn side_of(&self, seat: Seat) -> Option<usize> {
+        if self.seats[0] == seat {
+            Some(0)
+        } else if self.seats[1] == seat {
+            Some(1)
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn locate(&self, id: InstanceId) -> Option<(usize, usize)> {
+        for side in 0..2 {
+            if let Some(index) = self.sides[side]
+                .minions
+                .iter()
+                .position(|minion| minion.instance_id == id)
+            {
+                return Some((side, index));
+            }
+        }
+        None
+    }
+
+    pub(crate) fn minion(&self, id: InstanceId) -> Option<&MinionInstance> {
+        self.locate(id)
+            .map(|(side, index)| &self.sides[side].minions[index])
+    }
+
+    pub(crate) fn minion_mut(&mut self, id: InstanceId) -> Option<&mut MinionInstance> {
+        let (side, index) = self.locate(id)?;
+        Some(&mut self.sides[side].minions[index])
+    }
+
+    pub(crate) fn is_alive(&self, id: InstanceId) -> bool {
+        self.locate(id)
+            .map(|(side, index)| self.sides[side].alive[index])
+            .unwrap_or(false)
+    }
+
+    pub(crate) fn alive_ids(&self, side: usize) -> Vec<InstanceId> {
+        self.sides[side].alive_ids()
+    }
+
+    pub(crate) fn new_instance_id(&mut self) -> InstanceId {
+        let id = self.next_instance_id;
+        self.next_instance_id = self.next_instance_id.saturating_add(1);
+        id
+    }
+
+    /// 取得一次效果触发额度；达到 200 次后返回 `false`。
+    pub(crate) fn take_trigger(&mut self) -> bool {
+        if self.triggers >= MAX_TRIGGERS {
+            return false;
+        }
+        self.triggers = self.triggers.saturating_add(1);
+        true
+    }
+
+    /// 在棋盘右侧追加一个随从；返回实例编号。
+    pub(crate) fn append(
+        &mut self,
+        catalog: &Catalog,
+        side: usize,
+        mut minion: MinionInstance,
+    ) -> InstanceId {
+        let id = minion.instance_id;
+        let health = effective_health(catalog, &minion);
+        let tokens = starting_tokens(catalog, &minion);
+        minion.attacks_left = tokens;
+        self.sides[side].minions.push(minion);
+        self.sides[side].health.push(health);
+        self.sides[side].alive.push(true);
+        self.sides[side].starting_tokens.push(tokens);
+        id
+    }
+
+    /// 在指定站位插入一个随从；返回实例编号。
+    pub(crate) fn insert_at(
+        &mut self,
+        catalog: &Catalog,
+        side: usize,
+        position: usize,
+        mut minion: MinionInstance,
+    ) -> InstanceId {
+        let id = minion.instance_id;
+        let health = effective_health(catalog, &minion);
+        let tokens = starting_tokens(catalog, &minion);
+        minion.attacks_left = tokens;
+        let board = &mut self.sides[side];
+        let position = position.min(board.minions.len());
+        if position <= board.pointer {
+            board.pointer += 1;
+        }
+        board.minions.insert(position, minion);
+        board.health.insert(position, health);
+        board.alive.insert(position, true);
+        board.starting_tokens.insert(position, tokens);
+        id
+    }
+
+    pub(crate) fn modify_stats(&mut self, id: InstanceId, modifier: Modifier) {
+        if let Some((side, index)) = self.locate(id) {
+            let health = modifier.health;
+            self.sides[side].minions[index].mods.push(modifier);
+            self.sides[side].health[index] = self.sides[side].health[index].saturating_add(health);
+        }
+    }
+
+    /// 获得成长；`health_only` 时只增加生命。
+    pub(crate) fn add_growth(&mut self, id: InstanceId, times: i32, health_only: bool) {
+        if let Some((side, index)) = self.locate(id) {
+            let minion = &mut self.sides[side].minions[index];
+            if health_only {
+                minion.growth_health_only = minion.growth_health_only.saturating_add(times);
+            } else {
+                minion.growth = minion.growth.saturating_add(times);
+            }
+            self.sides[side].health[index] = self.sides[side].health[index].saturating_add(times);
+        }
+    }
+
+    /// 移除全部成长，同时扣减当前生命。
+    pub(crate) fn remove_growth(&mut self, id: InstanceId) {
+        if let Some((side, index)) = self.locate(id) {
+            let minion = &mut self.sides[side].minions[index];
+            let removed = minion
+                .growth
+                .saturating_add(minion.growth_health_only)
+                .max(0);
+            minion.growth = 0;
+            minion.growth_health_only = 0;
+            self.sides[side].health[index] = self.sides[side].health[index].saturating_sub(removed);
+        }
+    }
+
+    /// 造成伤害；`can_kill = false` 时最多降到 1 点生命。
+    pub(crate) fn deal_damage(&mut self, id: InstanceId, amount: i32, can_kill: bool) {
+        if let Some((side, index)) = self.locate(id) {
+            let current = self.sides[side].health[index];
+            let damage = if can_kill {
+                amount.max(0)
+            } else {
+                amount.max(0).min((current - 1).max(0))
+            };
+            self.sides[side].health[index] = current.saturating_sub(damage);
+        }
+    }
+
+    pub(crate) fn cannot_attack(&mut self, id: InstanceId) {
+        if let Some(minion) = self.minion_mut(id) {
+            minion.cannot_attack = true;
+            minion.attacks_left = 0;
+        }
+    }
+
+    /// 记录一次复制进手牌；手牌已满时返回 `false`。
+    pub(crate) fn record_hand_copy(&mut self, seat: Seat, card_id: &str, golden: bool) -> bool {
+        let Some(side) = self.side_of(seat) else {
+            return false;
+        };
+        if self.hand_len[side] >= self.hand_slots {
+            return false;
+        }
+        self.hand_len[side] = self.hand_len[side].saturating_add(1);
+        self.hand_copies.push(CombatHandCopy {
+            seat,
+            card_id: card_id.to_string(),
+            golden,
+        });
+        true
+    }
+
+    /// 记录一次召唤 card 的扣池；池中无剩余份数时不扣。
+    pub(crate) fn record_pool_spend(&mut self, card_id: &str) {
+        let available = self
+            .pool
+            .get(card_id)
+            .copied()
+            .unwrap_or(0)
+            .saturating_sub(self.pool_spent.get(card_id).copied().unwrap_or(0));
+        if available > 0 {
+            let entry = self.pool_spent.entry(card_id.to_string()).or_insert(0);
+            *entry = entry.saturating_add(1);
+        }
+    }
+
+    /// 结算当前生命 ≤0 的随从：死亡 → 亡语 → 播种 → 复生，再触发友方/敌方死亡。
+    pub(crate) fn resolve_deaths(
+        &mut self,
+        engine: Option<&Engine>,
+        catalog: &Catalog,
+        rng: &mut RngStreams,
+    ) {
+        if self.resolving {
+            return;
+        }
+        self.resolving = true;
+        loop {
+            let mut dead = Vec::new();
+            for side in 0..2 {
+                for index in 0..self.sides[side].minions.len() {
+                    if self.sides[side].alive[index] && self.sides[side].health[index] <= 0 {
+                        // 死亡效果可能插入随从导致下标移动，队列只记录 (阵营, 实例编号)。
+                        dead.push((side, self.sides[side].minions[index].instance_id));
+                    }
+                }
+            }
+            if dead.is_empty() {
+                break;
+            }
+
+            let mut dead_ids = Vec::new();
+            for (side, id) in dead {
+                // 重新定位当前仍处于死亡态的实例；插入随从会移动下标。
+                let Some(index) = (0..self.sides[side].minions.len()).find(|index| {
+                    self.sides[side].minions[*index].instance_id == id
+                        && self.sides[side].alive[*index]
+                        && self.sides[side].health[*index] <= 0
+                }) else {
+                    continue;
+                };
+                let id = self.sides[side].minions[index].instance_id;
+                let golden = self.sides[side].minions[index].golden;
+                let card_id = self.sides[side].minions[index].card_id.clone();
+                self.actions.push(CombatAction::Death { minion: id });
+                self.sides[side].alive[index] = false;
+
+                if let Some(engine) = engine {
+                    let ctx = EffectCtx {
+                        seat: self.seats[side],
+                        source: Some(id),
+                        target: None,
+                        event_target: None,
+                        golden,
+                    };
+                    engine.fire_combat_death(self, rng, &card_id, ctx);
+                    if keywords(catalog, &self.sides[side].minions[index]).contains(SOW)
+                        && catalog.tokens.contains_key(SEEDLING_TOKEN)
+                    {
+                        let count = if golden { 2 } else { 1 };
+                        for _ in 0..count {
+                            let instance =
+                                new_minion(self.new_instance_id(), SEEDLING_TOKEN, false);
+                            let summoned = self.append(catalog, side, instance);
+                            self.summon_count = self.summon_count.saturating_add(1);
+                            engine.fire_ally_summon(self, rng, side, summoned);
+                        }
+                    }
+                }
+
+                let can_reborn = keywords(catalog, &self.sides[side].minions[index])
+                    .contains(REBORN)
+                    && !self.sides[side].minions[index].reborn_used;
+                if can_reborn {
+                    let board = &mut self.sides[side];
+                    board.minions[index].reborn_used = true;
+                    board.health[index] = 1;
+                    board.alive[index] = true;
+                    board.minions[index].attacks_left = board.starting_tokens[index];
+                    self.actions.push(CombatAction::Reborn { minion: id });
+                }
+                dead_ids.push((side, id));
+            }
+
+            if let Some(engine) = engine {
+                for (side, dead_id) in &dead_ids {
+                    engine.fire_combat_board_trigger(
+                        self,
+                        rng,
+                        Trigger::OnFriendlyDeath,
+                        *side,
+                        Some(*dead_id),
+                        Some(*dead_id),
+                    );
+                    engine.fire_combat_board_trigger(
+                        self,
+                        rng,
+                        Trigger::OnEnemyDeath,
+                        1 - *side,
+                        Some(*dead_id),
+                        Some(*dead_id),
+                    );
+                }
+            }
+        }
+        self.resolving = false;
     }
 }
 
@@ -306,75 +739,88 @@ fn pick_target(
 
 /// 结算一次攻击，并处理双方死亡。
 fn resolve_attack(
+    engine: Option<&Engine>,
     catalog: &Catalog,
-    attacking: &mut SideBoard,
-    defending: &mut SideBoard,
+    field: &mut BattleField,
+    attacking_side: usize,
     attacker_index: usize,
     rng: &mut RngStreams,
-    actions: &mut Vec<CombatAction>,
 ) {
-    let Some(target_index) =
-        pick_target(catalog, &attacking.minions[attacker_index], defending, rng)
-    else {
+    let defending_side = 1 - attacking_side;
+    let attacker_id = field.sides[attacking_side].minions[attacker_index].instance_id;
+
+    let Some(target_index) = pick_target(
+        catalog,
+        &field.sides[attacking_side].minions[attacker_index],
+        &field.sides[defending_side],
+        rng,
+    ) else {
         return;
     };
 
-    let attacker_id = attacking.minions[attacker_index].instance_id;
-    let target_id = defending.minions[target_index].instance_id;
-    let attack = effective_attack(catalog, &attacking.minions[attacker_index]);
-    let attacker_keywords = keywords(catalog, &attacking.minions[attacker_index]);
+    let target_id = field.sides[defending_side].minions[target_index].instance_id;
+    let attack = effective_attack(
+        catalog,
+        &field.sides[attacking_side].minions[attacker_index],
+    );
+    let attacker_keywords = keywords(
+        catalog,
+        &field.sides[attacking_side].minions[attacker_index],
+    );
 
     // (a) 护盾或掉血。
     let mut damage = 0;
     let mut blocked = false;
     {
-        let target = &mut defending.minions[target_index];
+        let target = &field.sides[defending_side].minions[target_index];
         let shielded = keywords(catalog, target).contains(DIVINE_SHIELD) && !target.shield_used;
         if shielded {
-            target.shield_used = true;
+            field.sides[defending_side].minions[target_index].shield_used = true;
             blocked = true;
         } else {
             damage = attack;
-            defending.health[target_index] = defending.health[target_index].saturating_sub(damage);
+            field.sides[defending_side].health[target_index] =
+                field.sides[defending_side].health[target_index].saturating_sub(damage);
         }
     }
 
     // (b) 传染只在造成实际伤害时叠加。
     if attacker_keywords.contains(CONTAGION) && damage > 0 {
-        let target = &mut defending.minions[target_index];
+        let target = &mut field.sides[defending_side].minions[target_index];
         target.contagion = target.contagion.saturating_add(1);
-        actions.push(CombatAction::ContagionApplied { target: target_id });
+        field
+            .actions
+            .push(CombatAction::ContagionApplied { target: target_id });
     }
 
     // (c) 反击：目标在主伤害后仍存活（当前生命 > 0）才反击。
-    // 反击造成的伤害用攻击者的护盾规则结算；被护盾抵消时不额外记录事件。
-    let counter = if defending.health[target_index] > 0 {
-        effective_attack(catalog, &defending.minions[target_index])
+    let counter = if field.sides[defending_side].health[target_index] > 0 {
+        effective_attack(catalog, &field.sides[defending_side].minions[target_index])
     } else {
         0
     };
     let mut counter_damage = 0;
     if counter > 0 {
-        let attacker = &mut attacking.minions[attacker_index];
+        let attacker = &field.sides[attacking_side].minions[attacker_index];
         let shielded = keywords(catalog, attacker).contains(DIVINE_SHIELD) && !attacker.shield_used;
         if shielded {
-            attacker.shield_used = true;
+            field.sides[attacking_side].minions[attacker_index].shield_used = true;
         } else {
             counter_damage = counter;
-            attacking.health[attacker_index] =
-                attacking.health[attacker_index].saturating_sub(counter);
+            field.sides[attacking_side].health[attacker_index] =
+                field.sides[attacking_side].health[attacker_index].saturating_sub(counter);
         }
     }
 
     // (d) 主伤害事件先于反击事件与死亡处理记录。
-    actions.push(CombatAction::Attack {
+    field.actions.push(CombatAction::Attack {
         attacker: attacker_id,
         target: target_id,
         damage,
         blocked,
     });
     if counter_damage > 0 {
-        actions.push(CombatAction::Attack {
+        field.actions.push(CombatAction::Attack {
             attacker: target_id,
             target: attacker_id,
             damage: counter_damage,
@@ -382,59 +828,43 @@ fn resolve_attack(
         });
     }
 
+    // (e) 造成伤害后，在本次交换的死亡判定前触发 `OnDealDamage`。
+    if let Some(engine) = engine {
+        if damage > 0 {
+            engine.fire_combat_single(
+                field,
+                rng,
+                attacker_id,
+                Trigger::OnDealDamage,
+                Some(target_id),
+            );
+        }
+        if counter_damage > 0 {
+            engine.fire_combat_single(
+                field,
+                rng,
+                target_id,
+                Trigger::OnDealDamage,
+                Some(attacker_id),
+            );
+        }
+    }
+
     // 死亡队列：攻击方在前，防御方在后，各自按站位从左到右。
-    process_deaths(catalog, attacking, defending, actions);
+    field.resolve_deaths(engine, catalog, rng);
 
-    // 推进攻击令牌。
-    let attacker = &mut attacking.minions[attacker_index];
-    attacker.attacks_left = attacker.attacks_left.saturating_sub(1);
-}
-
-/// 处理当前生命 ≤ 0 的随从：攻击方在前、防御方在后，各侧从左到右。
-///
-/// 带「复生」且本场未触发过的随从以 1 点生命复活并重置攻击令牌。
-fn process_deaths(
-    catalog: &Catalog,
-    attacking: &mut SideBoard,
-    defending: &mut SideBoard,
-    actions: &mut Vec<CombatAction>,
-) {
-    let mut dead = Vec::new();
-    for index in 0..attacking.minions.len() {
-        if attacking.alive[index] && attacking.health[index] <= 0 {
-            dead.push((true, index));
-        }
-    }
-    for index in 0..defending.minions.len() {
-        if defending.alive[index] && defending.health[index] <= 0 {
-            dead.push((false, index));
-        }
-    }
-    for (is_attacker_side, index) in dead {
-        let board = if is_attacker_side {
-            &mut *attacking
-        } else {
-            &mut *defending
-        };
-        let id = board.minions[index].instance_id;
-        actions.push(CombatAction::Death { minion: id });
-        let can_reborn = keywords(catalog, &board.minions[index]).contains(REBORN)
-            && !board.minions[index].reborn_used;
-        if can_reborn {
-            board.minions[index].reborn_used = true;
-            board.health[index] = 1;
-            board.alive[index] = true;
-            board.minions[index].attacks_left = board.starting_tokens[index];
-            actions.push(CombatAction::Reborn { minion: id });
-        } else {
-            board.alive[index] = false;
-        }
+    // 推进攻击令牌（按实例编号定位，避免召唤导致的下标移动）。
+    if let Some((side, index)) = field.locate(attacker_id) {
+        field.sides[side].minions[index].attacks_left = field.sides[side].minions[index]
+            .attacks_left
+            .saturating_sub(1);
     }
 }
 
 /// 模拟一场战斗。
 ///
 /// 输入不会被修改；`first` 为战先手方座位，用于决定行动顺序。
+/// 本入口不结算卡牌效果，供纯数值测试使用；需要效果时使用 [`simulate_with`]。
 pub fn simulate(
     catalog: &Catalog,
     attacker: &[MinionInstance],
@@ -444,69 +874,116 @@ pub fn simulate(
     first: Seat,
     rng: &mut RngStreams,
 ) -> CombatLog {
-    let mut attacker_side = SideBoard::new(catalog, attacker);
-    let mut defender_side = SideBoard::new(catalog, defender);
-    let mut actions = Vec::new();
-    // 开场先结算生命已 ≤0 的随从（攻击方在前），复生者可重新入场。
-    process_deaths(
+    simulate_inner(
         catalog,
-        &mut attacker_side,
-        &mut defender_side,
-        &mut actions,
+        attacker,
+        defender,
+        attacker_seat,
+        defender_seat,
+        first,
+        rng,
+        None,
+        CombatSetup::default(),
+    )
+}
+
+/// 模拟一场战斗，并结算战斗开始、死亡、召唤等卡牌效果。
+#[allow(clippy::too_many_arguments)]
+pub fn simulate_with(
+    engine: &Engine,
+    attacker: &[MinionInstance],
+    defender: &[MinionInstance],
+    attacker_seat: Seat,
+    defender_seat: Seat,
+    first: Seat,
+    rng: &mut RngStreams,
+    setup: CombatSetup<'_>,
+) -> CombatLog {
+    simulate_inner(
+        &engine.catalog,
+        attacker,
+        defender,
+        attacker_seat,
+        defender_seat,
+        first,
+        rng,
+        Some(engine),
+        setup,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn simulate_inner(
+    catalog: &Catalog,
+    attacker: &[MinionInstance],
+    defender: &[MinionInstance],
+    attacker_seat: Seat,
+    defender_seat: Seat,
+    first: Seat,
+    rng: &mut RngStreams,
+    engine: Option<&Engine>,
+    setup: CombatSetup<'_>,
+) -> CombatLog {
+    let mut field = BattleField::new(
+        catalog,
+        attacker,
+        defender,
+        attacker_seat,
+        defender_seat,
+        first,
+        setup,
     );
+
+    // 开场先结算生命已 ≤0 的随从（攻击方在前），复生者可重新入场。
+    field.resolve_deaths(engine, catalog, rng);
+
+    if let Some(engine) = engine {
+        engine.fire_combat_start(&mut field, rng, &setup);
+        field.resolve_deaths(Some(engine), catalog, rng);
+    }
+
     let mut action_count: u16 = 0;
     let mut attacker_turn = first == attacker_seat;
 
     while action_count < MAX_ACTIONS {
-        if attacker_side.alive_count() == 0 || defender_side.alive_count() == 0 {
+        if field.sides[0].alive_count() == 0 || field.sides[1].alive_count() == 0 {
             break;
         }
 
         let current_index = if attacker_turn {
-            attacker_side.find_attacker()
+            field.sides[0].find_attacker()
         } else {
-            defender_side.find_attacker()
+            field.sides[1].find_attacker()
         };
-        let (acting_is_attacker, attacker_index) = match current_index {
-            Some(index) => (attacker_turn, index),
+        let (acting_side, attacker_index) = match current_index {
+            Some(index) => (if attacker_turn { 0 } else { 1 }, index),
             None => {
                 let other_index = if attacker_turn {
-                    defender_side.find_attacker()
+                    field.sides[1].find_attacker()
                 } else {
-                    attacker_side.find_attacker()
+                    field.sides[0].find_attacker()
                 };
                 match other_index {
-                    Some(index) => (!attacker_turn, index),
+                    Some(index) => (if attacker_turn { 1 } else { 0 }, index),
                     None => break,
                 }
             }
         };
 
-        if acting_is_attacker {
-            resolve_attack(
-                catalog,
-                &mut attacker_side,
-                &mut defender_side,
-                attacker_index,
-                rng,
-                &mut actions,
-            );
-        } else {
-            resolve_attack(
-                catalog,
-                &mut defender_side,
-                &mut attacker_side,
-                attacker_index,
-                rng,
-                &mut actions,
-            );
-        }
+        resolve_attack(
+            engine,
+            catalog,
+            &mut field,
+            acting_side,
+            attacker_index,
+            rng,
+        );
         action_count += 1;
-        attacker_turn = !acting_is_attacker;
+        attacker_turn = acting_side == 1;
     }
 
-    let attacker_alive = attacker_side.alive_count();
-    let defender_alive = defender_side.alive_count();
+    let attacker_alive = field.sides[0].alive_count();
+    let defender_alive = field.sides[1].alive_count();
     let winner = match (attacker_alive, defender_alive) {
         (0, 0) => None,
         (0, _) => Some(defender_seat),
@@ -515,8 +992,8 @@ pub fn simulate(
         // 由结算层按 §5.3（生命 → 累计伤害 → 座位）判定。
         _ if action_count >= MAX_ACTIONS => None,
         _ => {
-            let attacker_health = attacker_side.total_health();
-            let defender_health = defender_side.total_health();
+            let attacker_health = field.sides[0].total_health();
+            let defender_health = field.sides[1].total_health();
             if attacker_health != defender_health {
                 Some(if attacker_health > defender_health {
                     attacker_seat
@@ -530,12 +1007,17 @@ pub fn simulate(
     };
 
     CombatLog {
-        actions,
-        attacker_survivors: attacker_side.survivors(),
-        defender_survivors: defender_side.survivors(),
+        actions: std::mem::take(&mut field.actions),
+        attacker_survivors: field.sides[0].survivors(),
+        defender_survivors: field.sides[1].survivors(),
         winner,
         action_count,
-        attacker_final: attacker_side.minions,
-        defender_final: defender_side.minions,
+        trigger_count: field.triggers,
+        summon_count: field.summon_count,
+        pool_spent: std::mem::take(&mut field.pool_spent),
+        hand_copies: std::mem::take(&mut field.hand_copies),
+        next_instance_id: field.next_instance_id,
+        attacker_final: field.sides[0].minions.clone(),
+        defender_final: field.sides[1].minions.clone(),
     }
 }

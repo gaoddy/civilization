@@ -281,24 +281,70 @@ impl Engine {
     }
 
     /// 传染：每层施加一个永久 -1 生命修正，然后移除生命降至 0 的随从。
-    fn apply_contagion(&self, state: &mut GameState, seat: Seat) {
-        let Some(player) = state.players.get_mut(usize::from(seat)) else {
-            return;
+    ///
+    /// 传染致死的随从在移除后结算亡语，再按「播种」召唤幼苗；复生只作用于战斗，
+    /// 不在回合开始生效。
+    fn apply_contagion(&mut self, state: &mut GameState, seat: Seat) {
+        let dead = {
+            let Some(player) = state.players.get_mut(usize::from(seat)) else {
+                return;
+            };
+            for minion in &mut player.board {
+                if minion.contagion > 0 {
+                    minion.mods.push(Modifier {
+                        attack: 0,
+                        health: -minion.contagion,
+                        duration: Duration::Permanent,
+                    });
+                }
+            }
+            let board = std::mem::take(&mut player.board);
+            let mut kept = Vec::with_capacity(board.len());
+            let mut dead = Vec::new();
+            for minion in board {
+                if combat::effective_health(&self.catalog, &minion) > 0 {
+                    kept.push(minion);
+                } else {
+                    dead.push(minion);
+                }
+            }
+            player.board = kept;
+            dead
         };
-        for minion in &mut player.board {
-            if minion.contagion > 0 {
-                minion.mods.push(Modifier {
-                    attack: 0,
-                    health: -minion.contagion,
-                    duration: Duration::Permanent,
-                });
+
+        for minion in dead {
+            let ctx = EffectCtx {
+                seat,
+                source: Some(minion.instance_id),
+                target: None,
+                event_target: None,
+                golden: minion.golden,
+            };
+            self.fire_death_recruit(state, &minion.card_id, &ctx);
+            if self.card_has_keyword(&minion.card_id, "播种") {
+                let count = if minion.golden { 2 } else { 1 };
+                for _ in 0..count {
+                    let _ = self.summon_recruit(state, seat, combat::SEEDLING_TOKEN, None, false);
+                }
             }
         }
-        let catalog = &self.catalog;
-        player
-            .board
-            .retain(|minion| combat::effective_health(catalog, minion) > 0);
-        // Task 13 的接缝：传染致死的随从当前直接移出棋盘，尚不触发亡语与死亡结算。
+    }
+
+    /// 卡牌是否通过技能 `keyword` 携带某个常驻关键词。
+    fn card_has_keyword(&self, card_id: &str, keyword: &str) -> bool {
+        self.catalog
+            .cards
+            .get(card_id)
+            .map(|card| {
+                card.skills.iter().any(|skill_id| {
+                    self.catalog
+                        .skills
+                        .get(skill_id)
+                        .and_then(|skill| skill.keyword.as_deref())
+                        == Some(keyword)
+                })
+            })
+            .unwrap_or(false)
     }
 
     /// 按站位从左到右触发棋盘随从的 `OnTurnStart`；金色随从由执行器触发两次。

@@ -16,7 +16,7 @@ use crate::error::EngineError;
 use crate::events::GameEvent;
 use crate::rng::Stream;
 use crate::state::{
-    AuraEffect, GameState, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat,
+    AuraEffect, GameState, HandCard, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat,
 };
 
 /// 配对在放弃"排除上一场对手"前最多重洗的次数。
@@ -43,7 +43,7 @@ impl Engine {
 
     /// 按配对顺序模拟全部战斗，写入伤害、对手与阵容快照，进入 `Settle`。
     pub fn resolve_combat(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
-        resolve_combat(&self.catalog, state)
+        resolve_combat(self, state)
     }
 
     /// 结算伤害、淘汰与排名；正常结束时停留在 `Settle`，游戏结束时进入 `GameOver`。
@@ -154,7 +154,7 @@ fn finish_recruit(state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> 
     }])
 }
 
-fn resolve_combat(catalog: &Catalog, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
     if state.phase != Phase::Combat {
         return Err(EngineError(format!(
             "当前阶段 {:?} 不能结算战斗",
@@ -169,9 +169,9 @@ fn resolve_combat(catalog: &Catalog, state: &mut GameState) -> Result<Vec<GameEv
     let mut events = Vec::new();
     for pairing in pairings {
         if pairing.mirror {
-            resolve_mirror(catalog, state, pairing.a, &mut events);
+            resolve_mirror(engine, state, pairing.a, &mut events);
         } else {
-            resolve_real(catalog, state, pairing, &mut events);
+            resolve_real(engine, state, pairing, &mut events);
         }
     }
 
@@ -184,11 +184,12 @@ fn resolve_combat(catalog: &Catalog, state: &mut GameState) -> Result<Vec<GameEv
 }
 
 fn resolve_real(
-    catalog: &Catalog,
+    engine: &Engine,
     state: &mut GameState,
     pairing: Pairing,
     events: &mut Vec<GameEvent>,
 ) {
+    let catalog = &engine.catalog;
     let (a, b) = (pairing.a, pairing.b);
     // 快照必须在战斗改变棋盘之前截取；光环只折叠进战斗克隆，持久快照保持原样。
     let raw_a = board_of(state, a).to_vec();
@@ -200,7 +201,28 @@ fn resolve_real(
         Some(winner) if winner == a || winner == b => winner,
         _ => state.first_seat,
     };
-    let log = combat::simulate(catalog, &board_a, &board_b, a, b, first, &mut state.rng);
+    let attacker_hero = hero_of(state, a);
+    let defender_hero = hero_of(state, b);
+    let setup = combat::CombatSetup {
+        attacker_hero: attacker_hero.as_deref(),
+        defender_hero: defender_hero.as_deref(),
+        next_instance_id: Some(state.next_instance_id),
+        pool: Some(&state.pool),
+        attacker_hand: hand_len(state, a),
+        defender_hand: hand_len(state, b),
+        hand_slots: catalog.config.hand_slots,
+    };
+    let log = combat::simulate_with(
+        engine,
+        &board_a,
+        &board_b,
+        a,
+        b,
+        first,
+        &mut state.rng,
+        setup,
+    );
+    write_back_combat_log(catalog, state, &log);
     // 战斗内写入的传染层数（以及成长记录）需要回到持久棋盘；其余字段保持不变。
     write_back_persistent(state, a, &log.attacker_final);
     write_back_persistent(state, b, &log.defender_final);
@@ -243,17 +265,35 @@ fn resolve_real(
 }
 
 /// 镜像幽灵：不造成、也不承受真实伤害；胜者记入 `last_won`，败者什么都不发生。
-fn resolve_mirror(
-    catalog: &Catalog,
-    state: &mut GameState,
-    seat: Seat,
-    events: &mut Vec<GameEvent>,
-) {
+fn resolve_mirror(engine: &Engine, state: &mut GameState, seat: Seat, events: &mut Vec<GameEvent>) {
+    let catalog = &engine.catalog;
     let current = board_of(state, seat).to_vec();
     let board = fold_auras(catalog, &state.auras, &current);
     let ghost = mirror_ghost_with_auras(catalog, state, seat);
 
-    let log = combat::simulate(catalog, &board, &ghost, seat, seat, seat, &mut state.rng);
+    // 镜像战斗同样结算效果，但不写回牌池、手牌或持久棋盘。
+    let hero = hero_of(state, seat);
+    let setup = combat::CombatSetup {
+        attacker_hero: hero.as_deref(),
+        // 幽灵快照没有英雄卡，防御方被动不结算。
+        defender_hero: None,
+        next_instance_id: Some(state.next_instance_id),
+        pool: None,
+        attacker_hand: hand_len(state, seat),
+        defender_hand: 0,
+        hand_slots: catalog.config.hand_slots,
+    };
+    let log = combat::simulate_with(
+        engine,
+        &board,
+        &ghost,
+        seat,
+        seat,
+        seat,
+        &mut state.rng,
+        setup,
+    );
+    state.next_instance_id = state.next_instance_id.max(log.next_instance_id);
     let won = log.defender_survivors.is_empty() && !log.attacker_survivors.is_empty();
     if won {
         state.last_won.insert(seat);
@@ -525,6 +565,40 @@ fn write_back_persistent(state: &mut GameState, seat: Seat, final_board: &[Minio
             stored.growth_health_only = updated.growth_health_only;
         }
     }
+}
+
+/// 把战斗日志里的持久副作用写回对局状态：
+/// 召唤 card 扣池、`to=hand` 复制进手牌、推进实例编号。
+///
+/// 召唤物与复制品不进战场；死亡不改变持久棋盘。
+fn write_back_combat_log(catalog: &Catalog, state: &mut GameState, log: &combat::CombatLog) {
+    for (card_id, spent) in &log.pool_spent {
+        if let Some(count) = state.pool.get_mut(card_id) {
+            *count = count.saturating_sub(*spent);
+        }
+    }
+    for copy in &log.hand_copies {
+        let Some(player) = player_mut(state, copy.seat) else {
+            continue;
+        };
+        if player.hand.len() < catalog.config.hand_slots {
+            player.hand.push(HandCard {
+                card_id: copy.card_id.clone(),
+                golden: copy.golden,
+            });
+        }
+    }
+    state.next_instance_id = state.next_instance_id.max(log.next_instance_id);
+}
+
+fn hero_of(state: &GameState, seat: Seat) -> Option<String> {
+    player(state, seat).and_then(|player| player.hero.clone())
+}
+
+fn hand_len(state: &GameState, seat: Seat) -> usize {
+    player(state, seat)
+        .map(|player| player.hand.len())
+        .unwrap_or(0)
 }
 
 fn board_of(state: &GameState, seat: Seat) -> &[MinionInstance] {
