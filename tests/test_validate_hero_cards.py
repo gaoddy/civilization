@@ -166,6 +166,17 @@ class ActiveSkillFieldTest(unittest.TestCase):
                             for m in messages), messages)
 
 
+class SkillRefsTest(unittest.TestCase):
+    def test_unknown_skill_reference_is_rejected(self):
+        doc = base_doc(_file="einstein.md", skills=["no-such-skill"])
+        errors = vd.skill_ref_errors(doc, {"battlecry-all-friendly-growth-once": {}})
+        self.assertEqual(errors, ["einstein.md: 引用的技能不存在 'no-such-skill'"])
+
+    def test_known_skill_reference_passes(self):
+        doc = base_doc(_file="einstein.md", skills=["battlecry-all-friendly-growth-once"])
+        self.assertEqual(vd.skill_ref_errors(doc, {"battlecry-all-friendly-growth-once": {}}), [])
+
+
 class HeroCardsTest(unittest.TestCase):
     HERO_IDS = ["adam-smith", "darwin", "davinci", "edison", "einstein",
                 "faraday", "galileo", "knuth", "luxun", "marie-curie",

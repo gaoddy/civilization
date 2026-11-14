@@ -564,6 +564,12 @@ def check_keyword_unlock(minions, skill_map):
             fail(f"关键词 {keyword} 的最小星级为 {actual.get(keyword)}，期望 {era_level}")
 
 
+def skill_ref_errors(doc, skill_map):
+    """卡牌引用的技能必须在技能池中存在。"""
+    return [f"{doc['_file']}: 引用的技能不存在 {sid!r}"
+            for sid in card_skills(doc) if sid not in skill_map]
+
+
 def check_cards(skill_map):
     raw = load("cards", ["id", "name", "card_type", "level", "tribe"])
     for doc in raw:
@@ -574,9 +580,8 @@ def check_cards(skill_map):
             fail(f"{doc['_file']}: skills 必须是列表，实为 {raw_skills!r}")
         if "keywords" in doc:
             fail(f"{doc['_file']}: 残留旧字段 keywords，应改用 skills")
-        for sid in card_skills(doc):
-            if sid not in skill_map:
-                fail(f"{doc['_file']}: 引用的技能不存在 {sid!r}")
+        for message in skill_ref_errors(doc, skill_map):
+            fail(message)
     minions = [c for c in raw if c["card_type"] == "随从"]
     effects = [c for c in raw if c["card_type"] == "效果"]
 
