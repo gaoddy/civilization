@@ -1,0 +1,443 @@
+//! 模拟器库：确定性 AI、整局驱动、批量运行与基线报告。
+//!
+//! 所有随机性只来自 [`Engine::new`] 注入的种子；本库不读时钟、不读环境变量，
+//! 不使用浮点参与任何判定。
+
+pub mod ai;
+pub mod report;
+
+use std::collections::BTreeMap;
+
+use rule_engine::data::{Catalog, Tribe};
+use rule_engine::engine::Engine;
+use rule_engine::error::EngineError;
+use rule_engine::hash::state_hash;
+use rule_engine::intent::Intent;
+use rule_engine::state::{GameState, Phase, Seat};
+
+/// 固定 8 人对局，与引擎一致。
+pub const PLAYER_COUNT: Seat = 8;
+
+/// 单局最大驱动步数上限：防止 AI 缺陷导致死循环。正常对局远低于此值。
+pub const MAX_STEPS_PER_GAME: usize = 200_000;
+
+/// 单座位在单个回合内最多重规划次数：防止引擎给出与 AI 计划不一致的拒绝后原地打转。
+const MAX_REPLANS_PER_SEAT_TURN: usize = 64;
+
+/// 一局中按顺序执行的一条意图。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IntentRecord {
+    pub seat: Seat,
+    pub intent: Intent,
+}
+
+/// 驱动记录的类型。
+///
+/// 各座位在 `EndRecruit` 之后串行进入战斗与结算，因此每条意图之后都必须标出
+/// 该座位是否结束招募，重放时才能精确复现引擎调用顺序。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Step {
+    /// 该座位执行了一条招募意图。
+    Intent,
+    /// 该座位提交 `EndRecruit` 成功。
+    EndSeat,
+    /// 全部玩家结束招募后的 `finish_recruit`。
+    FinishRecruit,
+    /// `resolve_combat`。
+    ResolveCombat,
+    /// `resolve_settle`（可能进入 `GameOver`）。
+    ResolveSettle,
+    /// 进入下一回合的 `start_turn`。
+    StartTurn,
+}
+
+/// 一条驱动记录：`seat` 只对 `Intent` / `EndSeat` 有意义。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StepRecord {
+    pub seat: Seat,
+    pub intent: Intent,
+    pub step: Step,
+}
+
+/// 对局日志，`replay` 的唯一输入，也是批量模式的逐局记录。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GameLog {
+    pub seed: u64,
+    pub steps: Vec<StepRecord>,
+    pub final_hash: u64,
+    pub ranking: Vec<Seat>,
+    pub turns: u8,
+    /// 局内统计，供报告使用，不参与重放。
+    pub stats: GameStats,
+}
+
+/// 单局统计。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GameStats {
+    /// 每名玩家首次升到下一时代的回合；对局结束时仍未升级为 `None`。
+    pub era_upgrade_turns: [Option<u8>; 8],
+    /// 本局三连次数。
+    pub triples: u32,
+    /// 第 20 回合开始时存活人数；对局未到第 20 回合为 `None`。
+    pub survivors_at_turn_20: Option<u8>,
+    /// 每次战斗失败的伤害（一方被判负记一次）。
+    pub damage_per_loss: Vec<i32>,
+    /// 冠军座位（排名第 1）。
+    pub winner: Seat,
+    /// 冠军最终阵容的流派。
+    pub winner_tribe: Tribe,
+}
+
+impl Default for GameStats {
+    fn default() -> Self {
+        Self {
+            era_upgrade_turns: [None; 8],
+            triples: 0,
+            survivors_at_turn_20: None,
+            damage_per_loss: Vec::new(),
+            winner: 0,
+            winner_tribe: Tribe::General,
+        }
+    }
+}
+
+/// 批量结果：每局一条日志。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BatchJson {
+    pub seed: u64,
+    pub games: Vec<GameLog>,
+}
+
+/// 第 i 局的种子：`seed + game_index`（64 位回绕）。
+pub fn derive_seed(seed: u64, game_index: usize) -> u64 {
+    seed.wrapping_add(game_index as u64)
+}
+
+/// 引擎 32 字节种子与日志 64 位种子之间的对应：前 8 字节按小端写日志种子，其余三组
+/// 8 字节由该种子经固定混合常数派生。日志只记录 64 位种子，重放时由它重建同样的
+/// 32 字节，因此重放与原始对局使用完全相同的随机流。
+pub fn seed_from_u64(seed: u64) -> [u8; 32] {
+    let mut bytes = [0u8; 32];
+    bytes[..8].copy_from_slice(&seed.to_le_bytes());
+    bytes[8..16].copy_from_slice(&seed.wrapping_mul(0x9e37_79b9_7f4a_7c15).to_le_bytes());
+    bytes[16..24].copy_from_slice(&seed.wrapping_add(0xd1b5_4a32_d192_ed03).to_le_bytes());
+    bytes[24..32].copy_from_slice(&seed.rotate_left(29).to_le_bytes());
+    bytes
+}
+
+/// 目录中按卡牌 id 升序的前 8 张英雄卡，依次分配给座位 0..8。
+pub fn assign_heroes(catalog: &Catalog) -> Result<BTreeMap<Seat, String>, EngineError> {
+    let heroes: BTreeMap<Seat, String> = catalog
+        .cards
+        .values()
+        .filter(|card| card.is_hero)
+        .take(usize::from(PLAYER_COUNT))
+        .enumerate()
+        .map(|(index, card)| (index as Seat, card.id.clone()))
+        .collect();
+    if heroes.len() != usize::from(PLAYER_COUNT) {
+        return Err(EngineError(format!(
+            "目录中英雄卡不足 {PLAYER_COUNT} 张，实际 {}",
+            heroes.len()
+        )));
+    }
+    Ok(heroes)
+}
+
+/// 加载仓库中已提交的 v0.1 数据（编译期嵌入，不依赖当前目录）。
+pub fn embedded_catalog() -> Result<Catalog, EngineError> {
+    Catalog::from_json(
+        include_str!("../../../data/v0.1/cards.json"),
+        include_str!("../../../data/v0.1/skills.json"),
+        include_str!("../../../data/v0.1/tokens.json"),
+        include_str!("../../../data/v0.1/config.json"),
+    )
+    .map_err(|err| EngineError(format!("加载卡牌目录失败: {err}")))
+}
+
+fn check_players(players: usize) -> Result<(), EngineError> {
+    if players != usize::from(PLAYER_COUNT) {
+        return Err(EngineError(format!(
+            "只支持 {PLAYER_COUNT} 人局，实际 {players}"
+        )));
+    }
+    Ok(())
+}
+
+/// 以库内目录跑一局；`seed` 为日志与引擎种子。
+pub fn run_game(catalog: Catalog, seed: u64) -> Result<GameLog, EngineError> {
+    let (mut engine, mut state) = Engine::new(catalog, seed_from_u64(seed));
+    play_game(&mut engine, &mut state, seed, usize::from(PLAYER_COUNT))
+}
+
+/// 在已构造好的引擎与状态下跑完整一局：开局、逐回合驱动到 `GameOver`。
+pub fn play_game(
+    engine: &mut Engine,
+    state: &mut GameState,
+    seed: u64,
+    players: usize,
+) -> Result<GameLog, EngineError> {
+    check_players(players)?;
+    let heroes = assign_heroes(&engine.catalog)?;
+    engine.start_game(state, &heroes)?;
+    drive(engine, state, seed)
+}
+
+/// 批量跑 `games` 局：第 i 局种子为 `seed + i`。`players` 只允许 8。
+pub fn run_games(games: usize, seed: u64, players: usize) -> Result<BatchJson, EngineError> {
+    check_players(players)?;
+    let catalog = embedded_catalog()?;
+    let mut logs = Vec::with_capacity(games);
+    for index in 0..games {
+        let game_seed = derive_seed(seed, index);
+        logs.push(run_game(catalog.clone(), game_seed)?);
+    }
+    Ok(BatchJson { seed, games: logs })
+}
+
+/// 驱动主循环：`Recruit` 阶段逐座位执行 AI 意图直到 `EndRecruit`，
+/// 然后 `finish_recruit` → `resolve_combat` → `resolve_settle` → `start_turn`，
+/// 直到 `GameOver`。
+fn drive(engine: &mut Engine, state: &mut GameState, seed: u64) -> Result<GameLog, EngineError> {
+    let mut steps = Vec::new();
+    let mut stats = GameStats::default();
+    if state.turn >= 20 {
+        stats.survivors_at_turn_20 = Some(alive_count(state));
+    }
+    while state.phase != Phase::GameOver {
+        run_turn(engine, state, &mut steps, &mut stats)?;
+        if state.turn == 20 && stats.survivors_at_turn_20.is_none() {
+            stats.survivors_at_turn_20 = Some(alive_count(state));
+        }
+
+        engine.finish_recruit(state)?;
+        steps.push(boundary(Step::FinishRecruit));
+        engine.resolve_combat(state)?;
+        steps.push(boundary(Step::ResolveCombat));
+        let events = engine.resolve_settle(state)?;
+        steps.push(boundary(Step::ResolveSettle));
+        for event in &events {
+            if let rule_engine::events::GameEvent::DamageTaken { amount, .. } = event {
+                stats.damage_per_loss.push(*amount);
+            }
+        }
+        if state.phase != Phase::GameOver {
+            engine.start_turn(state)?;
+            steps.push(boundary(Step::StartTurn));
+        }
+    }
+    finish_stats(engine, state, &mut stats);
+    Ok(GameLog {
+        seed,
+        steps,
+        final_hash: state_hash(state),
+        ranking: state.ranking.clone(),
+        turns: state.turn,
+        stats,
+    })
+}
+
+fn boundary(step: Step) -> StepRecord {
+    StepRecord {
+        seat: 0,
+        intent: Intent::EndRecruit,
+        step,
+    }
+}
+
+fn alive_count(state: &GameState) -> u8 {
+    u8::try_from(
+        state
+            .players
+            .iter()
+            .filter(|player| !player.eliminated)
+            .count(),
+    )
+    .unwrap_or(u8::MAX)
+}
+
+fn finish_stats(engine: &Engine, state: &GameState, stats: &mut GameStats) {
+    let winner = state.ranking.first().copied().unwrap_or(0);
+    stats.winner = winner;
+    stats.winner_tribe = state
+        .players
+        .get(usize::from(winner))
+        .map(|player| {
+            ai::dominant_tribe(
+                player.board.iter().map(|minion| minion.card_id.as_str()),
+                &engine.catalog,
+            )
+        })
+        .unwrap_or(Tribe::General);
+}
+
+/// 一个招募回合：未出局座位按座位升序，各自反复执行 AI 意图直到 `EndRecruit`。
+///
+/// 引擎的 `EndRecruit` 只标记该座位（`recruit_done`），全员未出局玩家结束后阶段才变为
+/// `Combat`；本函数退出时阶段必为 `Combat`，随后由 `finish_recruit` 生成配对。
+fn run_turn(
+    engine: &mut Engine,
+    state: &mut GameState,
+    steps: &mut Vec<StepRecord>,
+    stats: &mut GameStats,
+) -> Result<(), EngineError> {
+    let turn = state.turn;
+    for seat in 0..PLAYER_COUNT {
+        if state.players[usize::from(seat)].eliminated {
+            continue;
+        }
+        if state.players[usize::from(seat)].recruit_done {
+            continue;
+        }
+        let mut replans = 0usize;
+        let mut blocked: Vec<Intent> = Vec::new();
+        loop {
+            let Some(intent) = ai::plan(state, seat, &engine.catalog, &blocked) else {
+                return Err(EngineError(format!(
+                    "座位 {seat} 在回合 {turn} 无可执行意图（阶段 {:?}）",
+                    state.phase
+                )));
+            };
+            let ends = matches!(intent, Intent::EndRecruit);
+            match engine.apply(state, seat, intent.clone()) {
+                Ok(outcome) => {
+                    blocked.clear();
+                    record_outcome(&outcome.events, seat, turn, stats);
+                    steps.push(StepRecord {
+                        seat,
+                        intent,
+                        step: if ends { Step::EndSeat } else { Step::Intent },
+                    });
+                    if steps.len() > MAX_STEPS_PER_GAME {
+                        return Err(EngineError("驱动步数超过上限，疑似死循环".into()));
+                    }
+                    if ends {
+                        break;
+                    }
+                }
+                Err(reject) => {
+                    if !ai::planning_reject(reject.code) {
+                        return Err(EngineError(format!(
+                            "座位 {seat} 在回合 {turn} 的意图 {intent:?} 被拒绝: {} {}",
+                            reject.code.as_str(),
+                            reject.message
+                        )));
+                    }
+                    replans += 1;
+                    if replans > MAX_REPLANS_PER_SEAT_TURN {
+                        return Err(EngineError(format!(
+                            "座位 {seat} 在回合 {turn} 重规划次数超限，最后拒绝: {} {}",
+                            reject.code.as_str(),
+                            reject.message
+                        )));
+                    }
+                    // 状态未变：本轮跳过被拒意图，换下一条候选（见 `ai::plan`）。
+                    blocked.push(intent);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn record_outcome(
+    events: &[rule_engine::events::GameEvent],
+    seat: Seat,
+    turn: u8,
+    stats: &mut GameStats,
+) {
+    use rule_engine::events::GameEvent;
+    let slot = usize::from(seat);
+    for event in events {
+        match event {
+            GameEvent::TripleFormed {
+                seat: found_seat, ..
+            } if *found_seat == seat => {
+                stats.triples += 1;
+            }
+            GameEvent::EraUpgraded { seat: up_seat, .. } if *up_seat == seat => {
+                if let Some(entry) = stats.era_upgrade_turns.get_mut(slot)
+                    && entry.is_none()
+                {
+                    *entry = Some(turn);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// 重放一条对局日志：逐条复现引擎调用，并要求最终哈希与排名与日志一致。
+///
+/// 返回重放得到的最终状态哈希。
+pub fn replay(log: &GameLog) -> Result<u64, EngineError> {
+    let (mut engine, mut state) = Engine::new(embedded_catalog()?, seed_from_u64(log.seed));
+    let heroes = assign_heroes(&engine.catalog)?;
+    engine.start_game(&mut state, &heroes)?;
+    for (index, record) in log.steps.iter().enumerate() {
+        step_engine(&mut engine, &mut state, record)
+            .map_err(|err| EngineError(format!("第 {index} 条记录复现失败: {err}")))?;
+    }
+    if state.phase != Phase::GameOver {
+        return Err(EngineError(format!(
+            "日志复现结束后阶段为 {:?}，未到 GameOver",
+            state.phase
+        )));
+    }
+    let hash = state_hash(&state);
+    if hash != log.final_hash {
+        return Err(EngineError(format!(
+            "重放哈希不一致：期望 {:016x}，实际 {hash:016x}",
+            log.final_hash
+        )));
+    }
+    if state.ranking != log.ranking {
+        return Err(EngineError("重放排名不一致".into()));
+    }
+    Ok(hash)
+}
+
+fn step_engine(
+    engine: &mut Engine,
+    state: &mut GameState,
+    record: &StepRecord,
+) -> Result<(), EngineError> {
+    match record.step {
+        Step::Intent | Step::EndSeat => engine
+            .apply(state, record.seat, record.intent.clone())
+            .map(|_| ())
+            .map_err(|reject| {
+                EngineError(format!(
+                    "座位 {} 的意图 {:?} 被拒绝: {} {}",
+                    record.seat,
+                    record.intent,
+                    reject.code.as_str(),
+                    reject.message
+                ))
+            }),
+        Step::FinishRecruit => engine.finish_recruit(state).map(|_| ()),
+        Step::ResolveCombat => engine.resolve_combat(state).map(|_| ()),
+        Step::ResolveSettle => engine.resolve_settle(state).map(|_| ()),
+        Step::StartTurn => engine.start_turn(state).map(|_| ()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn seed_from_u64_is_deterministic() {
+        for seed in [0u64, 1, 2, u64::MAX, 0x0123_4567_89ab_cdef] {
+            let bytes = seed_from_u64(seed);
+            assert_eq!(seed_from_u64(seed), bytes);
+            assert_eq!(&bytes[..8], &seed.to_le_bytes());
+        }
+        assert_ne!(seed_from_u64(0), seed_from_u64(1));
+    }
+
+    #[test]
+    fn embedded_catalog_loads() {
+        assert!(embedded_catalog().is_ok());
+    }
+}

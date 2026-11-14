@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/rule-engine"]
+members = ["crates/rule-engine", "crates/sim"]
 resolver = "3"
 
 [workspace.package]

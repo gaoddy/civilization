@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: test lint audit data data-check protocol protocol-check
+.PHONY: test lint audit data data-check protocol protocol-check m0-determinism m0-batch m0-report
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -27,3 +27,12 @@ protocol-check:
 	$(PYTHON) scripts/validate_protocol.py
 	$(PYTHON) scripts/gen_protocol_gdscript.py --check
 	$(PYTHON) scripts/gen_protocol_docs.py --check
+
+m0-determinism:
+	cd server && cargo test -p sim --test sim_cli replay_same_log_twice_has_same_hash
+
+m0-batch:
+	cd server && cargo run -q -p sim -- batch --games 1000 --seed 1 --out ../output/m0-batch.json
+
+m0-report:
+	cd server && cargo run -q -p sim -- report --log ../output/m0-batch.json
