@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+pub mod combat;
 pub mod data;
 pub mod effects;
 pub mod engine;
