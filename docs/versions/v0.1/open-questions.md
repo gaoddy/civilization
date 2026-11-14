@@ -20,7 +20,6 @@
 | 未来社会 5 星与 6 星池的分配比例 | 商店概率 | 首版按 60/40，上线后用遥测校准 | [时代与场景](product/rules/eras-and-scenarios.md) |
 | 场景是否在排位模式中完全随机 | 模式规则 | 倾向排位随机、比赛固定为「陆地」 | [时代与场景](product/rules/eras-and-scenarios.md) |
 | 「新增」卡占比 63% 是否需要在文案层补科学史出处 | 文案与内容 | 倾向每张新增卡写一句来源说明 | [卡牌规范与数据](product/content/card-system.md) |
-| 人类暂无专属效果牌是否需要在下一轮补 2 张 | 内容与平衡 | 首版依赖通用牌与英雄技能，观察人类玩家的工具是否够用 | [英雄与技能](product/content/hero-system.md) |
 | 6 星卡中学者占 5 张是否会让终局过度偏向学者 | 平衡 | 首版先观察，必要时降 1–2 张为 5 星 | [卡牌规范与数据](product/content/card-system.md) |
 | 英雄与随从同名是否会造成混淆 | UI | 倾向保留，UI 用边框区分 | [英雄与技能](product/content/hero-system.md) |
 | 达尔文的「发现」是否应该在首版加入 | 平衡与确定性 | 倾向保留，限制每回合 1 次 | [英雄与技能](product/content/hero-system.md) |
