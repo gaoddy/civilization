@@ -92,23 +92,15 @@ impl Engine {
         Vec::new()
     }
 
-    /// `GainMinion{from, level, to}`：按 `level` 获得一张随从，放到 `to`。
+    /// `GainMinion{from, level, to}`：按 `level` 从商店获得一张随从，放到 `to`。
     ///
     /// - `level = current` 为玩家当前时代，其余为具体星级。
-    /// - `from = shop`：在有效商店槽位中按卡牌目录顺序选第一张合格随从，清空该槽位。
-    ///   没有合格槽位时不获得（不凭空从共享池取卡）。
-    /// - `from = hand`：手牌中第一张合格随从作为模板，池中有份数时扣 1，池空时
-    ///   仍创建副本（核心规则 §6.7「池空时创建副本但不扣池」）；手牌为空时不获得。
+    /// - `from` 只接受 `shop`（省略同样按 `shop`）；其它取值在加载期已被拒绝
+    ///   （`effects::parse`），这里不再做运行期兜底。
+    /// - `from = shop`：在有效商店槽位中按卡牌目录顺序选第一张合格随从，清空该槽位，
+    ///   共享池扣 1。没有合格槽位时不获得（不凭空从共享池取卡）。
     /// - `to = hand`：进入手牌，手牌满时不获得；`to = board`：进入战场最右侧，
-    ///   棋盘满时不获得。`to = shop` 不是合法目标，不获得。
-    ///
-    /// `from = board` 与 `to = shop` 都按「不获得、不改动状态、不产生事件」处理：
-    /// - `GainMinion` 是主动技能专用的「从牌库获得」（关键词机制 §9.3），任务简报
-    ///   声明的 `from` 取值在 CLI 中只解析出 `shop` / `hand` / `board`，而数据里
-    ///   棋盘随从进手牌一律写 `Copy`（不扣池，核心规则 §6.8）；
-    /// - `to` 在产品中只取手牌或战场。
-    ///
-    /// 因此本实现不为这两个组合发明「从棋盘取卡」的语义。
+    ///   棋盘满时不获得；`to = shop` 不是合法目标，不获得。
     ///
     /// 获得后与购买/发现一致立即执行三连判定。
     pub(crate) fn apply_gain_minion(
@@ -144,24 +136,11 @@ impl Engine {
             return Vec::new();
         }
 
-        let (card_id, slot) = match effect.params.from {
-            Some(Zone::Shop) => {
-                let Some(found) =
-                    first_shop_slot(&self.catalog, &state.enabled_tribes, star, &player.shop)
-                else {
-                    return Vec::new();
-                };
-                (found.0, Some(found.1))
-            }
-            Some(Zone::Hand) => {
-                let Some(card) = player.hand.iter().find(|card| {
-                    is_level_minion(&self.catalog, &card.card_id, star, &state.enabled_tribes)
-                }) else {
-                    return Vec::new();
-                };
-                (card.card_id.clone(), None)
-            }
-            Some(Zone::Board) | None => return Vec::new(),
+        // 加载期已保证 `from` 只能是 shop（或省略）。
+        let Some((card_id, slot)) =
+            first_shop_slot(&self.catalog, &state.enabled_tribes, star, &player.shop)
+        else {
+            return Vec::new();
         };
 
         if let Some(count) = state.pool.get_mut(&card_id) {
@@ -169,9 +148,7 @@ impl Engine {
         }
         let instance_id = state.next_instance_id;
         let player = &mut state.players[usize::from(ctx.seat)];
-        if let Some(slot) = slot
-            && let Some(shop_slot) = player.shop.get_mut(slot)
-        {
+        if let Some(shop_slot) = player.shop.get_mut(slot) {
             *shop_slot = None;
         }
         match to {

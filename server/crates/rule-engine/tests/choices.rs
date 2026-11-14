@@ -1,12 +1,14 @@
 //! 发现、复制与待选交互（Task 14）。
 //!
 //! 覆盖 `Op::Discover` 产生的 `PendingChoice::Discover`、`ChooseDiscover` 的
-//! FIFO 消费与拒绝码、`Op::GainMinion` 的 `from` / `to` / `level` 组合，
+//! FIFO 消费与拒绝码、`Op::GainMinion`（`from=shop`，`to` / `level` 组合），
 //! 以及进化（`Evolve`）与 `OnAllyEvolve` 的招募侧结算。
+//!
+//! `GainMinion` 的 `from` 只接受 `shop`：其它取值在加载期报错的用例见文件末尾。
 
 mod common;
 
-use common::test_catalog;
+use common::{CARDS_JSON, CONFIG_JSON, SKILLS_JSON, TOKENS_JSON, test_catalog};
 use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
 use rule_engine::effects::{Effect, EffectCtx, parse_effects};
 use rule_engine::engine::Engine;
@@ -559,68 +561,6 @@ fn gain_minion_from_empty_shop_is_a_no_op() {
 }
 
 #[test]
-fn gain_minion_from_hand_creates_closeable_missing_copy() {
-    let (mut engine, mut state) = setup(2);
-    let card_id = first_minion_of_level(&engine.catalog, 1);
-    state.players[0].hand = vec![hand_card(&card_id)];
-    let pool_before = pool_count(&state, &card_id);
-
-    engine.apply_op(
-        &mut state,
-        &effect("OnActivate|GainMinion|self|from=hand,level=1,to=hand"),
-        &ctx(0),
-        None,
-    );
-
-    assert_eq!(
-        state.players[0].hand.len(),
-        2,
-        "从手牌获得不会消耗原牌，手牌 +1"
-    );
-    assert!(
-        state.players[0]
-            .hand
-            .iter()
-            .all(|card| card.card_id == card_id)
-    );
-    assert_eq!(pool_count(&state, &card_id), pool_before - 1, "池只扣一次");
-}
-
-#[test]
-fn gain_minion_from_hand_pool_empty_still_creates_copy() {
-    let (mut engine, mut state) = setup(2);
-    let card_id = first_minion_of_level(&engine.catalog, 2);
-    state.pool.insert(card_id.clone(), 0);
-    state.players[0].era = rule_engine::data::Era::Primitive;
-    state.players[0].hand = vec![hand_card(&card_id)];
-
-    engine.apply_op(
-        &mut state,
-        &effect("OnActivate|GainMinion|self|from=hand,level=current,to=hand"),
-        &ctx(0),
-        None,
-    );
-
-    assert_eq!(state.players[0].hand.len(), 2, "池空时创建副本");
-    assert_eq!(pool_count(&state, &card_id), 0);
-}
-
-#[test]
-fn gain_minion_from_hand_with_empty_hand_is_a_no_op() {
-    let (mut engine, mut state) = setup(2);
-    let before = state_hash(&state);
-
-    engine.apply_op(
-        &mut state,
-        &effect("OnActivate|GainMinion|self|from=hand,level=1,to=hand"),
-        &ctx(0),
-        None,
-    );
-
-    assert_eq!(before, state_hash(&state));
-}
-
-#[test]
 fn gain_minion_to_board_places_new_minion() {
     let (mut engine, mut state) = setup(2);
     let card_id = first_minion_of_level(&engine.catalog, 1);
@@ -957,4 +897,70 @@ fn evolve_cards_without_evolve_do_not_register_choice() {
         .expect("打出应成功");
 
     assert_eq!(pending_count(&state), 0);
+}
+
+// ---------------------------------------------------------------------------
+// GainMinion 的 from 只接受 shop（加载期校验）
+// ---------------------------------------------------------------------------
+
+/// 用已提交数据构造一个把指定技能 `effects` 替换掉的 skills.json。
+fn skills_with_effects(skill_id: &str, effects: &str) -> String {
+    let mut skills: serde_json::Value = serde_json::from_str(SKILLS_JSON).expect("技能数据合法");
+    let target = skills
+        .as_array_mut()
+        .expect("技能数据应为数组")
+        .iter_mut()
+        .find(|skill| skill["id"] == skill_id)
+        .expect("技能应存在于已提交数据");
+    target["effects"] = serde_json::Value::String(effects.to_string());
+    skills.to_string()
+}
+
+#[test]
+fn gain_minion_from_board_fails_at_load() {
+    let skills = skills_with_effects(
+        "efficient-algorithm",
+        "OnActivate|RefreshShop|self|free=true;OnActivate|GainMinion|self|from=board,level=current,to=hand",
+    );
+    let error = Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON)
+        .expect_err("from=board 必须在加载期失败");
+    let message = error.to_string();
+    assert!(
+        message.contains("efficient-algorithm"),
+        "错误应带技能 id：{message}"
+    );
+    assert!(message.contains("from"), "错误应指出参数：{message}");
+}
+
+#[test]
+fn gain_minion_from_hand_fails_at_load() {
+    let skills = skills_with_effects(
+        "efficient-algorithm",
+        "OnActivate|GainMinion|self|from=hand,level=current,to=hand",
+    );
+    assert!(
+        Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON).is_err(),
+        "from=hand 必须在加载期失败"
+    );
+}
+
+#[test]
+fn gain_minion_from_shop_or_omitted_loads() {
+    for effects in [
+        "OnActivate|GainMinion|self|from=shop,level=current,to=hand",
+        "OnActivate|GainMinion|self|level=3,to=board",
+    ] {
+        let skills = skills_with_effects("efficient-algorithm", effects);
+        Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON)
+            .unwrap_or_else(|error| panic!("{effects} 应能加载：{error}"));
+    }
+}
+
+#[test]
+fn copy_still_accepts_hand_and_board_from() {
+    // 值域校验只约束 GainMinion；Copy 的 from=hand 仍合法。
+    for from in ["hand", "board"] {
+        let raw = format!("OnActivate|Copy|self|from={from},to=hand");
+        parse_effects(&raw).unwrap_or_else(|errors| panic!("{raw} 应能解析：{errors:?}"));
+    }
 }

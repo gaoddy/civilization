@@ -393,7 +393,16 @@ fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> R
         "token" => params.token = Some(non_empty(key, value, chunk)?),
         "card" => params.card = Some(non_empty(key, value, chunk)?),
         "to" => params.to = Some(parse_zone(key, value, chunk)?),
-        "from" => params.from = Some(parse_zone(key, value, chunk)?),
+        "from" => {
+            let zone = parse_zone(key, value, chunk)?;
+            // 只有 GainMinion 限定 from 的取值；Copy 仍接受 hand / board / shop。
+            if op == Op::GainMinion && zone != Zone::Shop {
+                return Err(format!(
+                    "GainMinion 的 from 只接受 shop，实为 {value:?}（{chunk}）"
+                ));
+            }
+            params.from = Some(zone);
+        }
         "type" => params.card_type = Some(parse_card_type(value, chunk)?),
         "pool" => params.pool = Some(non_empty(key, value, chunk)?),
         "choose" => {
