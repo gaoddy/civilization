@@ -32,6 +32,18 @@ pub(crate) fn apply(
         ));
     }
 
+    // `EndRecruit` 表示「本玩家结束招募」：已结束座位的重复提交由 [`end_recruit`] 拒绝，
+    // 其余招募意图在已结束座位上一律拒绝（见下方守卫）。
+    if intent == Intent::EndRecruit {
+        return end_recruit(state, seat);
+    }
+    if recruit_done(state, seat) {
+        return Err(Reject::new(
+            RejectCode::InvalidStage,
+            format!("座位 {seat} 已结束本回合招募"),
+        ));
+    }
+
     match intent {
         Intent::BuyMinion { slot, target } => buy(engine, state, seat, slot, target),
         Intent::SellMinion { minion } => sell(state, seat, minion),
@@ -45,7 +57,7 @@ pub(crate) fn apply(
         Intent::UseHeroPower { skill_id, target } => {
             use_hero_power(engine, state, seat, &skill_id, target)
         }
-        Intent::EndRecruit => end_recruit(state),
+        Intent::EndRecruit => unreachable!("EndRecruit 在分派前处理"),
         Intent::ChooseDiscover { choice } => choose_discover(engine, state, seat, choice),
     }
 }
@@ -552,7 +564,40 @@ fn use_hero_power(
     Ok(Outcome::with(events))
 }
 
-fn end_recruit(state: &mut GameState) -> Result<Outcome, Reject> {
+/// 该座位是否已在本回合提交 `EndRecruit`（不存在的座位视为未结束，由调用方报错）。
+fn recruit_done(state: &GameState, seat: Seat) -> bool {
+    state
+        .players
+        .get(usize::from(seat))
+        .is_some_and(|player| player.recruit_done)
+}
+
+/// 本玩家结束招募：只标记该座位。所有未出局玩家都结束后才进入 `Combat`，
+/// 并在该次结果中发出唯一一条 `PhaseChanged { Combat }`；出局座位不计入就绪。
+/// 已结束座位的重复提交返回 `InvalidStage` 且不改变状态。
+fn end_recruit(state: &mut GameState, seat: Seat) -> Result<Outcome, Reject> {
+    match state.players.get_mut(usize::from(seat)) {
+        Some(player) if !player.recruit_done => player.recruit_done = true,
+        Some(_) => {
+            return Err(Reject::new(
+                RejectCode::InvalidStage,
+                format!("座位 {seat} 已结束本回合招募"),
+            ));
+        }
+        None => {
+            return Err(Reject::new(
+                RejectCode::InvalidStage,
+                format!("座位 {seat} 不存在"),
+            ));
+        }
+    }
+    let all_done = state
+        .players
+        .iter()
+        .all(|player| player.eliminated || player.recruit_done);
+    if !all_done {
+        return Ok(Outcome::empty());
+    }
     state.phase = Phase::Combat;
     Ok(Outcome::with(vec![GameEvent::PhaseChanged {
         phase: Phase::Combat,

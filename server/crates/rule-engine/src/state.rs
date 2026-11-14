@@ -99,6 +99,8 @@ pub struct PlayerState {
     pub first_refresh_used: bool,
     /// 本回合的首次刷新是否尚未触发 `OnFirstRefresh`。
     pub first_refresh_pending: bool,
+    /// 本回合是否已提交 `EndRecruit`（本玩家结束招募）；全员结束或超时后才进入 `Combat`。
+    pub recruit_done: bool,
 }
 
 /// 等待玩家做出的选择。

@@ -47,6 +47,7 @@ impl Engine {
                 eliminated: false,
                 first_refresh_used: false,
                 first_refresh_pending: true,
+                recruit_done: false,
             })
             .collect();
 
@@ -124,6 +125,7 @@ impl Engine {
             player.gold = gold;
             player.first_refresh_used = false;
             player.first_refresh_pending = true;
+            player.recruit_done = false;
         }
 
         let mut events = vec![
@@ -163,6 +165,7 @@ impl Engine {
         state.phase = Phase::Recruit;
         for player in &mut state.players {
             player.hero_uses.clear();
+            player.recruit_done = false;
             if player.eliminated {
                 continue;
             }

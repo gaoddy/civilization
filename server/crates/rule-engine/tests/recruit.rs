@@ -776,13 +776,51 @@ fn intent_outside_recruit_rejects() {
 }
 
 #[test]
-fn end_recruit_enters_combat() {
+fn end_recruit_marks_seat_until_all_ready() {
+    // 核心规则 §2/§3：EndRecruit 只表示「本玩家结束招募」，全员结束后才进入 Combat。
     let (mut engine, mut state) = setup(28);
 
     let outcome = engine
         .apply(&mut state, 0, Intent::EndRecruit)
         .expect("结束招募应成功");
 
+    assert_eq!(state.phase, Phase::Recruit, "单个座位结束不推进阶段");
+    assert!(outcome.events.is_empty(), "未全员结束时不发 PhaseChanged");
+    assert!(state.players[0].recruit_done, "该座位标记为已结束");
+
+    // 其余座位仍可执行招募意图，已结束的座位不可再执行。
+    state.players[1].gold = 10;
+    let shop_before = state.players[1].shop.clone();
+    engine
+        .apply(&mut state, 1, Intent::RerollShop)
+        .expect("其他座位仍可招募");
+    assert_ne!(state.players[1].shop, shop_before, "其他座位刷新应生效");
+    let before = state_hash(&state);
+    let reject = engine.apply(&mut state, 0, Intent::RerollShop);
+    assert_eq!(reject.unwrap_err().code, RejectCode::InvalidStage);
+    assert_eq!(
+        before,
+        state_hash(&state),
+        "已结束座位的意图被拒绝且不改状态"
+    );
+
+    // 重复 EndRecruit 被拒绝且状态不变。
+    let before = state_hash(&state);
+    let again = engine.apply(&mut state, 0, Intent::EndRecruit);
+    assert_eq!(again.unwrap_err().code, RejectCode::InvalidStage);
+    assert_eq!(before, state_hash(&state));
+
+    // 其余座位逐个结束，只有最后一个结束的座位带来 PhaseChanged → Combat。
+    for seat in 1..7 {
+        let outcome = engine
+            .apply(&mut state, seat, Intent::EndRecruit)
+            .expect("结束招募应成功");
+        assert_eq!(state.phase, Phase::Recruit);
+        assert!(outcome.events.is_empty());
+    }
+    let outcome = engine
+        .apply(&mut state, 7, Intent::EndRecruit)
+        .expect("最后一名结束招募应成功");
     assert_eq!(state.phase, Phase::Combat);
     assert_eq!(
         outcome.events,
@@ -791,11 +829,36 @@ fn end_recruit_enters_combat() {
             turn: state.turn,
         }]
     );
+}
 
-    let after = state_hash(&state);
-    let again = engine.apply(&mut state, 0, Intent::EndRecruit);
-    assert_eq!(again.unwrap_err().code, RejectCode::InvalidStage);
-    assert_eq!(after, state_hash(&state));
+#[test]
+fn end_recruit_ignores_eliminated_seats() {
+    let (mut engine, mut state) = setup(33);
+    state.players[7].eliminated = true;
+    for seat in 0..7 {
+        engine
+            .apply(&mut state, seat, Intent::EndRecruit)
+            .expect("结束招募应成功");
+    }
+    assert_eq!(state.phase, Phase::Combat, "出局座位不计入就绪");
+}
+
+#[test]
+fn recruit_done_is_hashed_and_reset_each_turn() {
+    let (mut engine, mut state) = setup(34);
+    let before = state_hash(&state);
+    state.players[0].recruit_done = true;
+    assert_ne!(before, state_hash(&state), "招募就绪标记计入状态哈希");
+    state.players[0].recruit_done = false;
+
+    engine
+        .apply(&mut state, 0, Intent::EndRecruit)
+        .expect("结束招募应成功");
+    engine.start_turn(&mut state).expect("进入下一回合");
+    assert!(
+        state.players.iter().all(|player| !player.recruit_done),
+        "新回合重置全员就绪标记"
+    );
 }
 
 #[test]

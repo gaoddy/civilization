@@ -209,6 +209,42 @@ fn finish_recruit_pairs_alive_players_and_enters_combat() {
 }
 
 #[test]
+fn finish_recruit_after_timeout_enters_combat() {
+    // 超时路径：未全员 EndRecruit，阶段仍为 Recruit，finish_recruit 生成配对并推进。
+    let (mut engine, mut state) = Engine::new(test_catalog(), [6; 32]);
+    state.phase = Phase::Recruit;
+
+    let events = engine.finish_recruit(&mut state).unwrap();
+
+    assert_eq!(state.phase, Phase::Combat);
+    assert_eq!(state.pairings.len(), 4);
+    assert_eq!(
+        events,
+        vec![GameEvent::PhaseChanged {
+            phase: Phase::Combat,
+            turn: state.turn,
+        }]
+    );
+}
+
+#[test]
+fn finish_recruit_pairs_without_phase_event_after_all_ready() {
+    // 全员 EndRecruit 后阶段已进入 Combat：finish_recruit 只生成配对，不重复发阶段事件。
+    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32]);
+    state.phase = Phase::Recruit;
+    for player in &mut state.players {
+        player.recruit_done = true;
+    }
+    state.phase = Phase::Combat;
+
+    let events = engine.finish_recruit(&mut state).unwrap();
+
+    assert_eq!(state.phase, Phase::Combat);
+    assert_eq!(state.pairings.len(), 4);
+    assert!(events.is_empty(), "阶段事件已在全员结束时发出");
+}
+
+#[test]
 fn combat_resolution_applies_damage_and_history() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
     add_minion_card(&mut engine.catalog, "big", 3, 10, 10);

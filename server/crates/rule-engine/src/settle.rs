@@ -139,14 +139,22 @@ fn previous_opponent(previous: &BTreeMap<Seat, Option<Seat>>, seat: Seat) -> Opt
     previous.get(&seat).copied().flatten()
 }
 
+/// 配对并进入 `Combat`。全员 `EndRecruit` 时阶段已由 `end_recruit` 推进到 `Combat`
+/// （`PhaseChanged` 已发出），这里只生成配对；`Recruit` 阶段进入本函数（超时推进）时
+/// 生成配对并发出 `PhaseChanged`。
 fn finish_recruit(state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
-    if state.phase != Phase::Recruit {
+    // 全员 `EndRecruit` 时阶段已由 `end_recruit` 推进到 `Combat`，此时只生成配对；
+    // `Recruit` 只可能是超时等未全员结束的推进路径。
+    if state.phase != Phase::Recruit && state.phase != Phase::Combat {
         return Err(EngineError(format!(
             "当前阶段 {:?} 不能结束招募",
             state.phase
         )));
     }
     state.pairings = pair_round(state);
+    if state.phase == Phase::Combat {
+        return Ok(Vec::new());
+    }
     state.phase = Phase::Combat;
     Ok(vec![GameEvent::PhaseChanged {
         phase: Phase::Combat,
