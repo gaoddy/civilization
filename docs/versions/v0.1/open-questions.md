@@ -19,8 +19,9 @@
 | 金色随从「战吼触发两次」是否包含召唤类效果 | 卡牌文本 | 倾向是，需要逐卡确认 | [关键词与机制](product/rules/keywords-and-mechanics.md) |
 | 未来社会 5 星与 6 星池的分配比例 | 商店概率 | 首版按 60/40，上线后用遥测校准 | [时代与场景](product/rules/eras-and-scenarios.md) |
 | 场景是否在排位模式中完全随机 | 模式规则 | 倾向排位随机、比赛固定为「陆地」 | [时代与场景](product/rules/eras-and-scenarios.md) |
-| 「新增」卡占比 58% 是否需要在文案层补科学史出处 | 文案与内容 | 倾向每张新增卡写一句来源说明 | [卡牌规范与数据](product/content/card-system.md) |
-| 6 星卡中学者占 7 张是否会让终局过度偏向学者 | 平衡 | 首版先观察，必要时降 1–2 张为 5 星 | [卡牌规范与数据](product/content/card-system.md) |
+| 「新增」卡占比 63% 是否需要在文案层补科学史出处 | 文案与内容 | 倾向每张新增卡写一句来源说明 | [卡牌规范与数据](product/content/card-system.md) |
+| 效果牌的 `tribe` 是否参与商店的流派概率 | 商店与内容分类 | 待确认；确认前不改现有 19 张学者效果牌的归属 | [卡牌规范与数据](product/content/card-system.md) |
+| 6 星卡中学者占 5 张是否会让终局过度偏向学者 | 平衡 | 首版先观察，必要时降 1–2 张为 5 星 | [卡牌规范与数据](product/content/card-system.md) |
 | 英雄与随从同名是否会造成混淆 | UI | 倾向保留，UI 用边框区分 | [英雄与技能](product/content/hero-system.md) |
 | 达尔文的「发现」是否应该在首版加入 | 平衡与确定性 | 倾向保留，限制每回合 1 次 | [英雄与技能](product/content/hero-system.md) |
 | 随从统一 3 金币是否让高星级卡缺乏稀缺感 | 经济 | 首版保留统一价，观察 6 星卡出现时机 | [数值与经济](product/systems/economy-and-numbers.md) |
