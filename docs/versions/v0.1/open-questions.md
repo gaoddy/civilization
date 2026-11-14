@@ -20,7 +20,8 @@
 
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
-| 服务端技术栈未定：Node 或 Go | 架构与实现 | 由用户选型；选型前只做与语言无关的服务端规则引擎 | [联网与技术架构](technical/architecture/network-architecture.md) |
+| 服务端工程目录落点与 workspace 拆分细度 | 实现 | 搭建服务端工程前确定 | [服务端技术基线](technical/architecture/server-stack.md) |
+| 服务端部署编排与多实例切分维度 | 部署 | M2 联机内测前确定 | [服务端技术基线](technical/architecture/server-stack.md) |
 | 客户端工程目录与构建导出流程未定 | 实现 | 搭建客户端工程前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
 | 客户端测试框架未定 | 实现 | 搭建客户端工程前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
 | 移动端纳入首版后的人周估算 | 排期 | 当前 22–31 人周未含移动端适配与两端验收，需在 M1 结束后重估 | [版本规划与风险](../../version-roadmap.md) |
