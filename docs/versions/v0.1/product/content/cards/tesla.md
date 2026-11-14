@@ -8,13 +8,9 @@ level: 5
 era: 工业
 attack: 0
 health: 16
+skills: [hero-alternating-current]
 is_scholar: true
 is_hero: true
-hero_skill: hero-alternating-current
-hero_skill_cost: 2
-hero_skill_type: 主动
-hero_skill_uses_per_turn: 1
-hero_skill_trigger: 主动使用
 ---
 
 # 特斯拉
@@ -33,22 +29,13 @@ hero_skill_trigger: 主动使用
 | 攻击力 | 0 |
 | 生命值 | 16 |
 | 关键词 | 无 |
-| 技能 | 无 |
+| 技能 | hero-alternating-current |
 | 学者 | 是 |
 | 英雄资格 | 是 |
-| 英雄技能 | hero-alternating-current |
-| 英雄技能费用 | 2 |
-| 英雄技能类型 | 主动 |
-| 每回合次数 | 1 |
-| 触发时机 | 主动使用 |
 
 ## 效果
 
-无
-
-## 英雄技能
-
-交流电：使一个友方随从获得最优攻击直到回合结束
+使一个友方随从获得最优攻击直到回合结束
 
 ## 设计说明
 

@@ -8,13 +8,9 @@ level: 5
 era: 现代
 attack: 0
 health: 16
+skills: [hero-shout]
 is_scholar: true
 is_hero: true
-hero_skill: hero-shout
-hero_skill_cost: 1
-hero_skill_type: 主动
-hero_skill_uses_per_turn: 2
-hero_skill_trigger: 主动使用
 ---
 
 # 鲁迅
@@ -33,22 +29,13 @@ hero_skill_trigger: 主动使用
 | 攻击力 | 0 |
 | 生命值 | 16 |
 | 关键词 | 无 |
-| 技能 | 无 |
+| 技能 | hero-shout |
 | 学者 | 是 |
 | 英雄资格 | 是 |
-| 英雄技能 | hero-shout |
-| 英雄技能费用 | 1 |
-| 英雄技能类型 | 主动 |
-| 每回合次数 | 2 |
-| 触发时机 | 主动使用 |
 
 ## 效果
 
-无
-
-## 英雄技能
-
-呐喊：使一个友方随从获得一次成长
+使一个友方随从获得一次成长
 
 ## 设计说明
 

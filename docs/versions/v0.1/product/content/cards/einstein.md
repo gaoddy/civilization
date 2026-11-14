@@ -8,14 +8,9 @@ level: 5
 era: 现代
 attack: 0
 health: 16
-skills: [battlecry-all-friendly-growth-once]
+skills: [battlecry-all-friendly-growth-once, hero-light-speed-strike]
 is_scholar: true
 is_hero: true
-hero_skill: hero-light-speed-strike
-hero_skill_cost: 1
-hero_skill_type: 主动
-hero_skill_uses_per_turn: 1
-hero_skill_trigger: 主动使用
 ---
 
 # 爱因斯坦
@@ -34,22 +29,13 @@ hero_skill_trigger: 主动使用
 | 攻击力 | 0 |
 | 生命值 | 16 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-all-friendly-growth-once |
+| 技能 | battlecry-all-friendly-growth-once；hero-light-speed-strike |
 | 学者 | 是 |
 | 英雄资格 | 是 |
-| 英雄技能 | hero-light-speed-strike |
-| 英雄技能费用 | 1 |
-| 英雄技能类型 | 主动 |
-| 每回合次数 | 1 |
-| 触发时机 | 主动使用 |
 
 ## 效果
 
-战吼：使你的所有随从获得一次成长
-
-## 英雄技能
-
-光速出击：使一个友方随从本回合获得连击
+战吼：使你的所有随从获得一次成长；使一个友方随从本回合获得连击
 
 ## 设计说明
 

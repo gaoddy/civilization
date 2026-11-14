@@ -8,13 +8,9 @@ level: 6
 era: 现代
 attack: 0
 health: 20
+skills: [hero-efficient-algorithm]
 is_scholar: true
 is_hero: true
-hero_skill: hero-efficient-algorithm
-hero_skill_cost: 2
-hero_skill_type: 主动
-hero_skill_uses_per_turn: 1
-hero_skill_trigger: 主动使用
 ---
 
 # 高德纳
@@ -33,22 +29,13 @@ hero_skill_trigger: 主动使用
 | 攻击力 | 0 |
 | 生命值 | 20 |
 | 关键词 | 无 |
-| 技能 | 无 |
+| 技能 | hero-efficient-algorithm |
 | 学者 | 是 |
 | 英雄资格 | 是 |
-| 英雄技能 | hero-efficient-algorithm |
-| 英雄技能费用 | 2 |
-| 英雄技能类型 | 主动 |
-| 每回合次数 | 1 |
-| 触发时机 | 主动使用 |
 
 ## 效果
 
-无
-
-## 英雄技能
-
-高效算法：刷新商店并获得一张当前星级的随从
+刷新商店并获得一张当前星级的随从
 
 ## 设计说明
 

@@ -3,6 +3,8 @@ id: hero-light-speed-strike
 name: 光速出击
 text: 使一个友方随从本回合获得连击
 effects: OnActivate|GrantKeyword|friendly:single|keyword=连击,duration=combat
+cost: 1
+uses_per_turn: 1
 match_text: 同左
 ---
 
@@ -15,6 +17,8 @@ match_text: 同左
 | id | hero-light-speed-strike |
 | 关键词 | 无 |
 | 比赛模式替换 | 同左 |
+| 费用 | 1 |
+| 每回合次数 | 1 |
 
 ## 效果
 

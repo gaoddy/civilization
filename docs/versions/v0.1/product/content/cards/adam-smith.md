@@ -8,13 +8,9 @@ level: 4
 era: 工业
 attack: 6
 health: 8
+skills: [hero-division-of-labor]
 is_scholar: false
 is_hero: true
-hero_skill: hero-division-of-labor
-hero_skill_cost: 1
-hero_skill_type: 主动
-hero_skill_uses_per_turn: 1
-hero_skill_trigger: 主动使用
 ---
 
 # 亚当·斯密
@@ -33,22 +29,13 @@ hero_skill_trigger: 主动使用
 | 攻击力 | 6 |
 | 生命值 | 8 |
 | 关键词 | 无 |
-| 技能 | 无 |
+| 技能 | hero-division-of-labor |
 | 学者 | 否 |
 | 英雄资格 | 是 |
-| 英雄技能 | hero-division-of-labor |
-| 英雄技能费用 | 1 |
-| 英雄技能类型 | 主动 |
-| 每回合次数 | 1 |
-| 触发时机 | 主动使用 |
 
 ## 效果
 
-无
-
-## 英雄技能
-
-分工：使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次
+使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次
 
 ## 设计说明
 

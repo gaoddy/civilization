@@ -8,13 +8,9 @@ level: 5
 era: 工业
 attack: 7
 health: 10
+skills: [hero-microbiology]
 is_scholar: false
 is_hero: true
-hero_skill: hero-microbiology
-hero_skill_cost: 0
-hero_skill_type: 被动
-hero_skill_uses_per_turn: 1
-hero_skill_trigger: 战斗开始时
 ---
 
 # 巴斯德
@@ -33,22 +29,13 @@ hero_skill_trigger: 战斗开始时
 | 攻击力 | 7 |
 | 生命值 | 10 |
 | 关键词 | 无 |
-| 技能 | 无 |
+| 技能 | hero-microbiology |
 | 学者 | 否 |
 | 英雄资格 | 是 |
-| 英雄技能 | hero-microbiology |
-| 英雄技能费用 | 0 |
-| 英雄技能类型 | 被动 |
-| 每回合次数 | 1 |
-| 触发时机 | 战斗开始时 |
 
 ## 效果
 
-无
-
-## 英雄技能
-
-微生物学：战斗开始时使敌方最左侧随从获得 1 层传染
+战斗开始时使敌方最左侧随从获得 1 层传染
 
 ## 设计说明
 

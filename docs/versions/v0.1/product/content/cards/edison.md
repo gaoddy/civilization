@@ -8,13 +8,9 @@ level: 5
 era: 工业
 attack: 9
 health: 11
+skills: [hero-invention-factory]
 is_scholar: false
 is_hero: true
-hero_skill: hero-invention-factory
-hero_skill_cost: 2
-hero_skill_type: 主动
-hero_skill_uses_per_turn: 1
-hero_skill_trigger: 主动使用
 ---
 
 # 爱迪生
@@ -33,22 +29,13 @@ hero_skill_trigger: 主动使用
 | 攻击力 | 9 |
 | 生命值 | 11 |
 | 关键词 | 无 |
-| 技能 | 无 |
+| 技能 | hero-invention-factory |
 | 学者 | 否 |
 | 英雄资格 | 是 |
-| 英雄技能 | hero-invention-factory |
-| 英雄技能费用 | 2 |
-| 英雄技能类型 | 主动 |
-| 每回合次数 | 1 |
-| 触发时机 | 主动使用 |
 
 ## 效果
 
-无
-
-## 英雄技能
-
-发明工厂：使你的其他机械随从各获得一次成长
+使你的其他机械随从各获得一次成长
 
 ## 设计说明
 

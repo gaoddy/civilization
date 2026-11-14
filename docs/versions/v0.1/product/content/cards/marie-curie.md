@@ -8,14 +8,9 @@ level: 5
 era: 现代
 attack: 0
 health: 16
-skills: [battlecry-friendly-growth-twice]
+skills: [battlecry-friendly-growth-twice, hero-radiation]
 is_scholar: true
 is_hero: true
-hero_skill: hero-radiation
-hero_skill_cost: 0
-hero_skill_type: 被动
-hero_skill_uses_per_turn: 1
-hero_skill_trigger: 战斗开始时
 ---
 
 # 玛丽·居里
@@ -34,22 +29,13 @@ hero_skill_trigger: 战斗开始时
 | 攻击力 | 0 |
 | 生命值 | 16 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-friendly-growth-twice |
+| 技能 | battlecry-friendly-growth-twice；hero-radiation |
 | 学者 | 是 |
 | 英雄资格 | 是 |
-| 英雄技能 | hero-radiation |
-| 英雄技能费用 | 0 |
-| 英雄技能类型 | 被动 |
-| 每回合次数 | 1 |
-| 触发时机 | 战斗开始时 |
 
 ## 效果
 
-战吼：使一个友方随从获得两次成长
-
-## 英雄技能
-
-放射：战斗开始时对随机一个敌方随从造成 2 点伤害
+战吼：使一个友方随从获得两次成长；战斗开始时对随机一个敌方随从造成 2 点伤害
 
 ## 设计说明
 
