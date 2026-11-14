@@ -574,16 +574,13 @@ fn recruit_done(state: &GameState, seat: Seat) -> bool {
 
 /// 本玩家结束招募：只标记该座位。所有未出局玩家都结束后才进入 `Combat`，
 /// 并在该次结果中发出唯一一条 `PhaseChanged { Combat }`；出局座位不计入就绪。
-/// 已结束座位的重复提交返回 `InvalidStage` 且不改变状态。
+/// 已结束座位的重复提交成功且无副作用（核心规则 §3：`EndRecruit` 前置条件只是「处于
+/// `Recruit`」，失败返回码为「—」，重复提交时仍处于 `Recruit`）；不在 `Recruit` 阶段时
+/// 由 [`apply`] 顶层检查返回 `InvalidStage`。
 fn end_recruit(state: &mut GameState, seat: Seat) -> Result<Outcome, Reject> {
     match state.players.get_mut(usize::from(seat)) {
         Some(player) if !player.recruit_done => player.recruit_done = true,
-        Some(_) => {
-            return Err(Reject::new(
-                RejectCode::InvalidStage,
-                format!("座位 {seat} 已结束本回合招募"),
-            ));
-        }
+        Some(_) => return Ok(Outcome::empty()),
         None => {
             return Err(Reject::new(
                 RejectCode::InvalidStage,

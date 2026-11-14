@@ -804,11 +804,14 @@ fn end_recruit_marks_seat_until_all_ready() {
         "已结束座位的意图被拒绝且不改状态"
     );
 
-    // 重复 EndRecruit 被拒绝且状态不变。
+    // 未全员前重复 EndRecruit 仍然成功且无副作用（核心规则 §3：前置条件只有「处于
+    // Recruit」，失败返回码为「—」）。
     let before = state_hash(&state);
-    let again = engine.apply(&mut state, 0, Intent::EndRecruit);
-    assert_eq!(again.unwrap_err().code, RejectCode::InvalidStage);
-    assert_eq!(before, state_hash(&state));
+    let again = engine
+        .apply(&mut state, 0, Intent::EndRecruit)
+        .expect("未全员前重复 EndRecruit 应成功");
+    assert!(again.events.is_empty(), "重复提交不发事件");
+    assert_eq!(before, state_hash(&state), "重复提交不改变状态");
 
     // 其余座位逐个结束，只有最后一个结束的座位带来 PhaseChanged → Combat。
     for seat in 1..7 {
@@ -829,6 +832,12 @@ fn end_recruit_marks_seat_until_all_ready() {
             turn: state.turn,
         }]
     );
+
+    // 全员就绪进入 Combat 后，重复提交不再处于 Recruit，返回 InvalidStage 且不改状态。
+    let before = state_hash(&state);
+    let reject = engine.apply(&mut state, 0, Intent::EndRecruit);
+    assert_eq!(reject.unwrap_err().code, RejectCode::InvalidStage);
+    assert_eq!(before, state_hash(&state));
 }
 
 #[test]

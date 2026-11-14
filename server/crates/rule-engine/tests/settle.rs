@@ -228,6 +228,26 @@ fn finish_recruit_after_timeout_enters_combat() {
 }
 
 #[test]
+fn finish_recruit_is_idempotent_after_all_ready() {
+    // 全员就绪进入 Combat 后连续调用：配对与状态哈希都不变。
+    let (mut engine, mut state) = Engine::new(test_catalog(), [8; 32]);
+    state.phase = Phase::Recruit;
+    let _ = engine.finish_recruit(&mut state).unwrap();
+    assert_eq!(state.phase, Phase::Combat);
+    assert_eq!(state.pairings.len(), 4);
+    let pairings = state.pairings.clone();
+    let before = state_hash(&state);
+
+    let events = engine.finish_recruit(&mut state).unwrap();
+    let second = engine.finish_recruit(&mut state).unwrap();
+
+    assert!(events.is_empty());
+    assert!(second.is_empty());
+    assert_eq!(state.pairings, pairings, "重复调用不重新配对");
+    assert_eq!(state_hash(&state), before, "重复调用不改变状态");
+}
+
+#[test]
 fn finish_recruit_pairs_without_phase_event_after_all_ready() {
     // 全员 EndRecruit 后阶段已进入 Combat：finish_recruit 只生成配对，不重复发阶段事件。
     let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32]);
@@ -236,11 +256,13 @@ fn finish_recruit_pairs_without_phase_event_after_all_ready() {
         player.recruit_done = true;
     }
     state.phase = Phase::Combat;
+    state.pairings.clear();
+    assert!(state.pairings.is_empty());
 
     let events = engine.finish_recruit(&mut state).unwrap();
 
     assert_eq!(state.phase, Phase::Combat);
-    assert_eq!(state.pairings.len(), 4);
+    assert_eq!(state.pairings.len(), 4, "Combat 且无配对时补齐一次");
     assert!(events.is_empty(), "阶段事件已在全员结束时发出");
 }
 

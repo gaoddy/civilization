@@ -140,11 +140,15 @@ fn previous_opponent(previous: &BTreeMap<Seat, Option<Seat>>, seat: Seat) -> Opt
 }
 
 /// 配对并进入 `Combat`。全员 `EndRecruit` 时阶段已由 `end_recruit` 推进到 `Combat`
-/// （`PhaseChanged` 已发出），这里只生成配对；`Recruit` 阶段进入本函数（超时推进）时
+/// （`PhaseChanged` 已发出），这里只补齐配对；`Recruit` 阶段进入本函数（超时推进）时
 /// 生成配对并发出 `PhaseChanged`。
+///
+/// `Combat` 分支幂等：已有配对时直接返回空事件，不重新配对（不消耗 matchmaking 流、
+/// 不覆盖对战），重复调用不改变状态。
 fn finish_recruit(state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
-    // 全员 `EndRecruit` 时阶段已由 `end_recruit` 推进到 `Combat`，此时只生成配对；
-    // `Recruit` 只可能是超时等未全员结束的推进路径。
+    if state.phase == Phase::Combat && !state.pairings.is_empty() {
+        return Ok(Vec::new());
+    }
     if state.phase != Phase::Recruit && state.phase != Phase::Combat {
         return Err(EngineError(format!(
             "当前阶段 {:?} 不能结束招募",
