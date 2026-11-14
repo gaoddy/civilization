@@ -5,6 +5,8 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use crate::data::{CardType, Catalog, Era, Tribe};
 use crate::error::EngineError;
 use crate::events::GameEvent;
+use crate::intent::{Intent, Outcome, Reject};
+use crate::recruit;
 use crate::rng::{RngStreams, Stream};
 use crate::state::{GameState, Phase, PlayerState, Seat};
 
@@ -137,11 +139,13 @@ impl Engine {
         state.turn = turn;
         state.phase = Phase::Recruit;
         for player in &mut state.players {
+            player.hero_uses.clear();
             if player.eliminated {
                 continue;
             }
             player.gold = gold;
             player.first_refresh_used = false;
+            player.turns_in_era = player.turns_in_era.saturating_add(1);
         }
 
         let mut events = vec![GameEvent::TurnStarted { turn }];
@@ -151,7 +155,36 @@ impl Engine {
                 turn,
             });
         }
+        for seat in 0..state.players.len() {
+            if state.players[seat].eliminated {
+                continue;
+            }
+            events.extend(self.roll_shop(state, seat as Seat));
+        }
         Ok(events)
+    }
+
+    /// 执行一条意图；这是 M0 简报约定的入口，作用于 0 号座位。
+    ///
+    /// 需要指定座位时使用 [`Engine::apply_for`]。
+    pub fn apply(&mut self, state: &mut GameState, intent: Intent) -> Result<Outcome, Reject> {
+        self.apply_for(state, 0, intent)
+    }
+
+    /// 以指定座位执行一条意图；拒绝时状态保持不变。
+    pub fn apply_for(
+        &mut self,
+        state: &mut GameState,
+        seat: Seat,
+        intent: Intent,
+    ) -> Result<Outcome, Reject> {
+        recruit::apply(self, state, seat, intent)
+    }
+
+    /// 重抽指定玩家的商店，保留冻结槽位；返回 `ShopRolled` 事件。
+    pub fn roll_shop(&mut self, state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
+        recruit::roll_player(self, state, seat, true);
+        vec![GameEvent::ShopRolled { seat }]
     }
 
     fn first_turn_gold(&self) -> u8 {
