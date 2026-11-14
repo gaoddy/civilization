@@ -13,7 +13,7 @@ effects: OnDeath|ModifyStats|enemy:all:tribe=人类|health=-2,duration=combat
 | --- | --- |
 | id | deathrattle-all-enemies-humans-minus-2-health |
 | 关键词 | 亡语 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

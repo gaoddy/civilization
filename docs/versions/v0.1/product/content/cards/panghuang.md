@@ -22,7 +22,7 @@ skills: [combatstart-top-attack-enemy-cant-attack]
 | 流派 | 学者 |
 | 技能 | combatstart-top-attack-enemy-cant-attack |
 | 费用 | 1 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

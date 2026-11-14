@@ -13,7 +13,7 @@ effects: OnPlay|ModifyStats|self|health=1,duration=permanent
 | --- | --- |
 | id | battlecry-self-plus-1-health |
 | 关键词 | 战吼 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

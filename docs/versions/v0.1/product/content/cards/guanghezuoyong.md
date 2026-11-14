@@ -22,7 +22,7 @@ skills: [trigger-friendly-plant-breed-2]
 | 流派 | 植物 |
 | 技能 | trigger-friendly-plant-breed-2 |
 | 费用 | 1 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

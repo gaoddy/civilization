@@ -12,7 +12,7 @@ effects: OnCombatStart|GrantKeyword|enemy:random|keyword=传染,value=2,duration
 | --- | --- |
 | id | combatstart-random-enemy-contagion-2 |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

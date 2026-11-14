@@ -12,7 +12,7 @@ effects: OnUse|ModifyStats|friendly:single|health=1,duration=permanent
 | --- | --- |
 | id | trigger-play-effect-friendly-plus-0-plus-1 |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

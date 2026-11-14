@@ -22,7 +22,7 @@ skills: [combatstart-top-attack-enemy-minus-0-minus-2]
 | 流派 | 病毒 |
 | 技能 | combatstart-top-attack-enemy-minus-0-minus-2 |
 | 费用 | 1 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

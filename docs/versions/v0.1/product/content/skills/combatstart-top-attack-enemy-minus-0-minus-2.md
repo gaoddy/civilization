@@ -13,7 +13,7 @@ match_text: 同左
 | --- | --- |
 | id | combatstart-top-attack-enemy-minus-0-minus-2 |
 | 关键词 | 无 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

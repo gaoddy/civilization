@@ -22,7 +22,7 @@ skills: [trigger-friendly-taunt-until-turn-end]
 | 流派 | 通用 |
 | 技能 | trigger-friendly-taunt-until-turn-end |
 | 费用 | 0 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

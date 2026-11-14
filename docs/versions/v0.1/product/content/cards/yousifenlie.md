@@ -22,7 +22,7 @@ skills: [trigger-copy-friendly-minion]
 | 流派 | 生物 |
 | 技能 | trigger-copy-friendly-minion |
 | 费用 | 2 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

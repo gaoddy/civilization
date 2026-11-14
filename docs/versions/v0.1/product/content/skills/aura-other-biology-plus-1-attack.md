@@ -12,7 +12,7 @@ effects: Aura|ModifyStats|friendly:all:tribe=生物:other=true|attack=1,duration
 | --- | --- |
 | id | aura-other-biology-plus-1-attack |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

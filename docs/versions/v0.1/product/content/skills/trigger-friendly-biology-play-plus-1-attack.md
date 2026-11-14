@@ -12,7 +12,7 @@ effects: OnAllySummon|ModifyStats|self|attack=1,duration=permanent,when=tribe=�
 | --- | --- |
 | id | trigger-friendly-biology-play-plus-1-attack |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

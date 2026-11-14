@@ -13,7 +13,7 @@ match_text: 改为三选一固定池
 | --- | --- |
 | id | trigger-discover-tribe-minion |
 | 关键词 | 无 |
-| 比赛模式替换 | 改为三选一固定池 |
+| 确定性替换 | 改为三选一固定池 |
 
 ## 效果
 

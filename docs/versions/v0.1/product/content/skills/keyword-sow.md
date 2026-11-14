@@ -13,7 +13,7 @@ effects: OnDeath|Summon|self|token=seedling,count=1
 | --- | --- |
 | id | keyword-sow |
 | 关键词 | 播种 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

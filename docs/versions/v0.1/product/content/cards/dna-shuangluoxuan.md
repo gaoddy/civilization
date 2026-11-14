@@ -22,7 +22,7 @@ skills: [trigger-friendly-growth-thrice]
 | 流派 | 生物 |
 | 技能 | trigger-friendly-growth-thrice |
 | 费用 | 2 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

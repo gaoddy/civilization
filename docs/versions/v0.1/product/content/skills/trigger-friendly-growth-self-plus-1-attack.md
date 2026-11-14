@@ -12,7 +12,7 @@ effects: OnAllyGrowth|ModifyStats|self|attack=1,duration=permanent
 | --- | --- |
 | id | trigger-friendly-growth-self-plus-1-attack |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

@@ -13,7 +13,7 @@ effects: OnPlay|Growth|friendly:all:tribe=机械|times=1
 | --- | --- |
 | id | battlecry-all-mech-growth-once |
 | 关键词 | 战吼 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

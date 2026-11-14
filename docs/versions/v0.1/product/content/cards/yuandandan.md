@@ -22,7 +22,7 @@ skills: [combatstart-all-enemies-damage-5]
 | 流派 | 通用 |
 | 技能 | combatstart-all-enemies-damage-5 |
 | 费用 | 4 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

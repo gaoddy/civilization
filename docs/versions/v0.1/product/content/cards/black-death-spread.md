@@ -22,7 +22,7 @@ skills: [combatstart-all-enemies-contagion-1]
 | 流派 | 病毒 |
 | 技能 | combatstart-all-enemies-contagion-1 |
 | 费用 | 3 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

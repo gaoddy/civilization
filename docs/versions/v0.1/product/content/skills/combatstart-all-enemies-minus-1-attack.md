@@ -13,7 +13,7 @@ match_text: 同左
 | --- | --- |
 | id | combatstart-all-enemies-minus-1-attack |
 | 关键词 | 无 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

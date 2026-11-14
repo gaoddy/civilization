@@ -13,7 +13,7 @@ effects: OnPlay|ModifyStats|friendly:all:name=弓箭手|attack=2,duration=perman
 | --- | --- |
 | id | battlecry-friendly-archers-plus-2-attack |
 | 关键词 | 战吼 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

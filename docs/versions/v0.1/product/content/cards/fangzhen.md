@@ -22,7 +22,7 @@ skills: [trigger-friendly-human-taunt-until-turn-end]
 | 流派 | 人类 |
 | 技能 | trigger-friendly-human-taunt-until-turn-end |
 | 费用 | 1 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

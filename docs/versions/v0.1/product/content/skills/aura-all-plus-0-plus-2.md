@@ -12,7 +12,7 @@ effects: Aura|ModifyStats|friendly:all|health=2,duration=permanent
 | --- | --- |
 | id | aura-all-plus-0-plus-2 |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

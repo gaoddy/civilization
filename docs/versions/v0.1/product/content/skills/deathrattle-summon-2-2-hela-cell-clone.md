@@ -13,7 +13,7 @@ effects: OnDeath|Summon|self|token=hela-cell-token,count=1
 | --- | --- |
 | id | deathrattle-summon-2-2-hela-cell-clone |
 | 关键词 | 亡语 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

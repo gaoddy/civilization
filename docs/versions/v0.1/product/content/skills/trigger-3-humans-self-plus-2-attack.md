@@ -12,7 +12,7 @@ effects: ConditionalAura|ModifyStats|self|attack=2,duration=permanent,condition=
 | --- | --- |
 | id | trigger-3-humans-self-plus-2-attack |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

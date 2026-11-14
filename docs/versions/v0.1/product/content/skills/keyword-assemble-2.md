@@ -13,7 +13,7 @@ effects: OnPlay|Growth|friendly:all:tribe=机械:other=true|times=2
 | --- | --- |
 | id | keyword-assemble-2 |
 | 关键词 | 装配 2 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

@@ -22,7 +22,7 @@ skills: [trigger-friendly-plus-2-attack]
 | 流派 | 通用 |
 | 技能 | trigger-friendly-plus-2-attack |
 | 费用 | 0 |
-| 比赛模式替换 | 同左 |
+| 确定性替换 | 同左 |
 
 ## 效果
 

@@ -13,7 +13,7 @@ effects: OnCombatStart|DealDamage|enemy:random|amount=2
 | --- | --- |
 | id | battlecry-random-enemy-damage-2 |
 | 关键词 | 战吼 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 

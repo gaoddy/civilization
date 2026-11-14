@@ -12,7 +12,7 @@ effects: OnDeath|ModifyStats|enemy:random|attack=-1,duration=combat
 | --- | --- |
 | id | deathrattle-random-enemy-minus-1-attack |
 | 关键词 | 无 |
-| 比赛模式替换 | 不适用 |
+| 确定性替换 | 不适用 |
 
 ## 效果
 
