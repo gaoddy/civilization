@@ -27,3 +27,7 @@ skills: [trigger-all-friendly-growth-once]
 ## 效果
 
 使你的随从各获得一次成长
+
+## 出处
+
+古代奥林匹克赛会始于公元前 776 年，在奥林匹亚每四年举行一次。

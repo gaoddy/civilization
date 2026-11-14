@@ -27,3 +27,7 @@ skills: [trigger-friendly-taunt-until-turn-end]
 ## 效果
 
 使一个友方随从获得嘲讽直到回合结束
+
+## 出处
+
+「阿Q精神」出自鲁迅 1921 年发表的《阿Q正传》，指以精神胜利法自我安慰。

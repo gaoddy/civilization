@@ -27,3 +27,7 @@ skills: [trigger-minion-windfury-this-turn]
 ## 效果
 
 使一个随从本回合获得连击
+
+## 出处
+
+1905 年爱因斯坦提出狭义相对论，建立时间与空间的相对性。

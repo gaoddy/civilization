@@ -27,3 +27,7 @@ skills: [combatstart-top-attack-enemy-cant-attack]
 ## 效果
 
 战斗开始时，使敌方攻击力最高的随从本回合无法攻击
+
+## 出处
+
+《彷徨》是鲁迅 1926 年出版的小说集，收录《祝福》《伤逝》等作品。

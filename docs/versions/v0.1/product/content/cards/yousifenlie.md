@@ -27,3 +27,7 @@ skills: [trigger-copy-friendly-minion]
 ## 效果
 
 复制一个友方随从
+
+## 出处
+
+有丝分裂过程在 1870 年代由弗莱明等细胞学家系统描述。

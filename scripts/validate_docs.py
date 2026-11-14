@@ -331,6 +331,18 @@ def body_text(path):
     return rest.strip()
 
 
+def source_section(text):
+    """返回「## 出处」小节正文；无小节返回 None，空小节返回空串。"""
+    match = re.search(r"(?m)^## 出处\s*$", text)
+    if not match:
+        return None
+    rest = text[match.end():]
+    next_heading = re.search(r"(?m)^## ", rest)
+    if next_heading:
+        rest = rest[:next_heading.start()]
+    return rest.strip()
+
+
 def parse_attr_table(path):
     text = path.read_text(encoding="utf-8")
     match = re.search(r"## 属性\n\n((?:\|.*\n)+)", text)
@@ -481,6 +493,17 @@ def check_card_rendering(raw, skill_map):
         actual = body_text(ROOT / "cards" / doc["_file"])
         if actual != expected:
             fail(f"{doc['_file']}: 「## 效果」与技能文本拼接不一致：{actual!r} != {expected!r}")
+
+
+def check_card_sources(raw):
+    for doc in raw:
+        text = (ROOT / "cards" / doc["_file"]).read_text(encoding="utf-8")
+        section = source_section(text)
+        if section is None or not section:
+            fail(f"{doc['_file']}: 缺少「## 出处」或内容为空")
+            continue
+        if doc.get("source") == "素材" and "素材原始笔记" not in section:
+            fail(f"{doc['_file']}: 素材卡出处缺少来源归属「素材原始笔记」")
 
 
 def keyword_cost(card, skill_map):
@@ -715,6 +738,7 @@ def main():
     achievements = check_achievements()
     check_attr_tables(raw, skill_map)
     check_card_rendering(raw, skill_map)
+    check_card_sources(raw)
     check_hero_intros(heroes)
     check_enemy_selectors(raw)
     check_auras(minions)

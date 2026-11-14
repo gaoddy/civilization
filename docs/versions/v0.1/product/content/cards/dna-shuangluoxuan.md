@@ -27,3 +27,7 @@ skills: [trigger-friendly-growth-thrice]
 ## 效果
 
 使一个友方随从获得三次成长
+
+## 出处
+
+1953 年沃森与克里克提出 DNA 双螺旋结构模型。

@@ -27,3 +27,7 @@ skills: [combatstart-leftmost-damage-6]
 ## 效果
 
 战斗开始时，对敌方最左侧随从造成 6 点伤害
+
+## 出处
+
+1905 年爱因斯坦提出质能等价公式 E=mc²。

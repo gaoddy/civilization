@@ -27,3 +27,7 @@ skills: [combatstart-remove-all-human-growth]
 ## 效果
 
 战斗开始时，移除所有人类随从的全部成长
+
+## 出处
+
+1987 年齐多夫定成为首个获批的抗 HIV 药物，1996 年鸡尾酒疗法显著延长患者寿命。

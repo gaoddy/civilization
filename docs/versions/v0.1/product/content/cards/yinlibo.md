@@ -27,3 +27,7 @@ skills: [combatstart-all-enemies-minus-1-attack]
 ## 效果
 
 战斗开始时，使敌方所有随从获得 -1 攻击力
+
+## 出处
+
+引力波由广义相对论预言，2015 年 LIGO 首次直接探测到其信号。

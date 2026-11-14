@@ -27,3 +27,7 @@ skills: [trigger-friendly-human-taunt-until-turn-end]
 ## 效果
 
 使一个友方人类随从获得嘲讽直到回合结束
+
+## 出处
+
+方阵是古希腊与马其顿重装步兵的核心战术，士兵以长矛与盾牌密集排列。

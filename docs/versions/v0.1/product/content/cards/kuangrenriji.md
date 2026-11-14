@@ -27,3 +27,7 @@ skills: [combatstart-remove-top-attack-enemy-growth]
 ## 效果
 
 战斗开始时，移除敌方攻击力最高随从的全部成长
+
+## 出处
+
+《狂人日记》是鲁迅 1918 年发表的中国第一篇现代白话小说。

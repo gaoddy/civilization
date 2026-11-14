@@ -27,3 +27,7 @@ skills: [trigger-other-friendly-humans-plus-1-attack]
 ## 效果
 
 使你的其他人类随从各获得 +1 攻击力
+
+## 出处
+
+近代义务兵役制始于 1798 年法国《儒尔当法》，要求适龄男性登记服役。
