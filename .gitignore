@@ -16,3 +16,6 @@ output/
 
 # 实施计划（本地，不提交）
 docs/plan/
+
+# Rust 构建产物
+server/target/
