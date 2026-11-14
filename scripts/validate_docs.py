@@ -18,6 +18,10 @@ ID_RE = re.compile(r"[a-z][a-z0-9-]*")
 KEYWORD_RE = re.compile(
     r"^(无|战吼|亡语|复生|嘲讽|护盾|连击|传染|最优攻击|繁衍 \d+|装配 \d+|播种|进化)$"
 )
+AURA_RE = re.compile(r"^你的(其他)?(人类|机械|生物|植物|病毒|学者)?随从获得 ?(.+)$")
+AURA_VALUE_RE = re.compile(
+    r"^(?:\+\d+/\+\d+|\+\d+ 攻击力|\+\d+ 生命值|最优攻击|嘲讽|护盾|复生|连击)$"
+)
 TRIBE_KEYWORD = {"装配": "机械", "播种": "植物", "进化": "生物"}
 TRIBES = {"人类", "机械", "生物", "植物", "病毒", "学者"}
 ERAS = ["史前", "原始", "封建", "现代", "未来"]
@@ -287,6 +291,18 @@ def check_heroes():
     return heroes
 
 
+def check_auras(minions):
+    for c in minions:
+        text = body_text(ROOT / "cards" / c["_file"])
+        for part in re.split(r"[；;]", text):
+            part = part.strip()
+            if not (part.startswith("你的") and "随从获得" in part):
+                continue
+            match = AURA_RE.fullmatch(part)
+            if not match or not AURA_VALUE_RE.fullmatch(match.group(3)):
+                fail(f"{c['_file']}: 光环句式不合法 {part!r}")
+
+
 def check_enemy_selectors(raw):
     picks = ("随机", "最左侧", "攻击力最高", "全体")
     for doc in raw:
@@ -302,6 +318,7 @@ def main():
     check_attr_tables(raw)
     check_hero_intros(heroes)
     check_enemy_selectors(raw)
+    check_auras(minions)
     if errors:
         print(f"违规 {len(errors)}")
         for item in errors:
