@@ -1,9 +1,13 @@
 PYTHON ?= python3
 
-.PHONY: test audit data data-check protocol protocol-check
+.PHONY: test lint audit data data-check protocol protocol-check
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
+	cd server && cargo test --workspace
+
+lint:
+	cd server && cargo fmt --check && cargo clippy --workspace --all-targets -- -D warnings
 
 audit:
 	$(PYTHON) scripts/audit_effects.py
