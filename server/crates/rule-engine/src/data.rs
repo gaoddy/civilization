@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use serde::Deserialize;
 
+use crate::effects::parse_effects;
 use crate::error::CatalogError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -144,6 +145,21 @@ impl Catalog {
                     )));
                 }
             }
+        }
+
+        let mut effect_errors = Vec::new();
+        for skill in skill_map.values() {
+            if let Err(errors) = parse_effects(&skill.effects) {
+                for error in errors {
+                    effect_errors.push(format!(
+                        "skills.json: 技能 {} 的 effects 非法: {error}",
+                        skill.id
+                    ));
+                }
+            }
+        }
+        if !effect_errors.is_empty() {
+            return Err(CatalogError::Rule(effect_errors.join("\n")));
         }
 
         Ok(Catalog {
