@@ -1,0 +1,38 @@
+---
+id: feijiehe
+card_type: 随从
+name: 肺结核
+tribe: 病毒
+subtype: 疾病
+level: 3
+era: 工业
+attack: 3
+health: 5
+skills: [keyword-contagion]
+is_scholar: false
+source: 新增
+---
+
+# 肺结核
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | feijiehe |
+| 名称 | 肺结核 |
+| 类型 | 随从 |
+| 流派 | 病毒 |
+| 子类 | 疾病 |
+| 星级 | 3 |
+| 时代 | 工业 |
+| 攻击力 | 3 |
+| 生命值 | 5 |
+| 关键词 | 传染 |
+| 技能 | keyword-contagion |
+| 学者 | 否 |
+| 来源 | 新增 |
+
+## 效果
+
+传染：造成伤害后，目标每回合 -1 生命

@@ -1,0 +1,38 @@
+---
+id: zhengqi-jiche
+card_type: 随从
+name: 蒸汽机车
+tribe: 机械
+subtype: 交通
+level: 3
+era: 工业
+attack: 4
+health: 6
+skills: [keyword-taunt]
+is_scholar: false
+source: 新增
+---
+
+# 蒸汽机车
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | zhengqi-jiche |
+| 名称 | 蒸汽机车 |
+| 类型 | 随从 |
+| 流派 | 机械 |
+| 子类 | 交通 |
+| 星级 | 3 |
+| 时代 | 工业 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
+| 关键词 | 嘲讽 |
+| 技能 | keyword-taunt |
+| 学者 | 否 |
+| 来源 | 新增 |
+
+## 效果
+
+嘲讽
