@@ -10,7 +10,6 @@ attack: 0
 health: 20
 skills: [aura-scholar-plus-0-plus-3]
 is_scholar: true
-source: 新增
 ---
 
 # 卡尔·萨根
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | aura-scholar-plus-0-plus-3 |
 | 学者 | 是 |
-| 来源 | 新增 |
 
 ## 效果
 

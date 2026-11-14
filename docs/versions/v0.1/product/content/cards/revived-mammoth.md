@@ -10,7 +10,6 @@ attack: 8
 health: 12
 skills: [keyword-reborn, keyword-evolve]
 is_scholar: false
-source: 新增
 ---
 
 # 复活猛犸
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 复生；进化 |
 | 技能 | keyword-reborn；keyword-evolve |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

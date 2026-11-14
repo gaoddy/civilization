@@ -10,7 +10,6 @@ attack: 0
 health: 20
 skills: [aura-all-plus-0-plus-2]
 is_scholar: true
-source: 新增
 ---
 
 # 库尔特·哥德尔
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | aura-all-plus-0-plus-2 |
 | 学者 | 是 |
-| 来源 | 新增 |
 
 ## 效果
 

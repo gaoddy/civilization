@@ -10,7 +10,6 @@ attack: 2
 health: 2
 skills: [trigger-2-humans-self-plus-1-plus-1]
 is_scholar: false
-source: 新增
 ---
 
 # 部落战士
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | trigger-2-humans-self-plus-1-plus-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

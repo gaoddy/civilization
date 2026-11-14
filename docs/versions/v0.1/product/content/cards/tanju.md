@@ -10,7 +10,6 @@ attack: 6
 health: 10
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 is_scholar: false
-source: 新增
 ---
 
 # 炭疽
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

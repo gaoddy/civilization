@@ -32,7 +32,6 @@ TRIBE_KEYWORD = {"装配": "机械", "播种": "植物", "进化": "生物"}
 TRIBES = {"人类", "机械", "生物", "植物", "病毒", "学者"}
 EFFECT_TRIBES = TRIBES | {"通用"}
 ERAS = ["史前", "原始", "古典", "封建", "工业", "现代", "未来"]
-SOURCES = {"素材", "新增"}
 CARD_TYPES = {"随从", "效果"}
 SKILL_TRIGGERS = {"主动使用", "首次刷新时", "战斗开始时"}
 ACHIEVEMENT_EVENTS = {"时代升级", "关键词组合", "成长触发", "卡牌使用", "三连合成"}
@@ -89,7 +88,7 @@ EXPECT_TRIBE = {"学者": 36, "生物": 30, "人类": 36, "机械": 33, "植物"
 EXPECT_LEVEL = {1: 22, 2: 37, 3: 37, 4: 28, 5: 25, 6: 15, 7: 12}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
-                 "attack", "health", "is_scholar", "source"]
+                 "attack", "health", "is_scholar"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "tribe", "cost", "match_text"]
 HERO_FIELDS = ["id", "name", "summary", "discipline", "skill", "skill_cost",
                "skill_type", "skill_uses_per_turn", "skill_trigger"]
@@ -399,7 +398,6 @@ def expected_card_attrs(doc, skill_map):
             "时代": doc["era"], "攻击力": str(doc["attack"]),
             "生命值": str(doc["health"]), "关键词": keyword_value,
             "技能": skill_value, "学者": "是" if doc["is_scholar"] else "否",
-            "来源": doc["source"],
         }
     return {
         "id": doc["id"], "名称": doc["name"], "类型": doc["card_type"],
@@ -501,9 +499,6 @@ def check_card_sources(raw):
         section = source_section(text)
         if section is None or not section:
             fail(f"{doc['_file']}: 缺少「## 出处」或内容为空")
-            continue
-        if doc.get("source") == "素材" and "素材原始笔记" not in section:
-            fail(f"{doc['_file']}: 素材卡出处缺少来源归属「素材原始笔记」")
 
 
 def keyword_cost(card, skill_map):
@@ -586,8 +581,6 @@ def check_cards(skill_map):
             fail(f"{name}: 流派非法 {c['tribe']!r}")
         if c["era"] not in ERAS:
             fail(f"{name}: 时代非法 {c['era']!r}")
-        if c["source"] not in SOURCES:
-            fail(f"{name}: 来源非法 {c['source']!r}")
         if c["level"] not in RANGE:
             fail(f"{name}: 星级非法 {c['level']!r}")
             continue

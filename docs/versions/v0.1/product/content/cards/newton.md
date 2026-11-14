@@ -10,7 +10,6 @@ attack: 0
 health: 16
 skills: [battlecry-friendly-growth-twice]
 is_scholar: true
-source: 素材
 ---
 
 # 牛顿
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-twice |
 | 学者 | 是 |
-| 来源 | 素材 |
 
 ## 效果
 

@@ -10,7 +10,6 @@ attack: 3
 health: 4
 skills: [battlecry-friendly-plus-1-attack]
 is_scholar: false
-source: 新增
 ---
 
 # 猛犸猎人
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-1-attack |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

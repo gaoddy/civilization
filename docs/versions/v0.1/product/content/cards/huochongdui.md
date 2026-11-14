@@ -10,7 +10,6 @@ attack: 5
 health: 8
 skills: [keyword-windfury]
 is_scholar: false
-source: 新增
 ---
 
 # 火铳队
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

@@ -10,7 +10,6 @@ attack: 0
 health: 26
 skills: [keyword-divine-shield, combatstart-random-enemy-contagion-2]
 is_scholar: true
-source: 新增
 ---
 
 # 薛定谔
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；combatstart-random-enemy-contagion-2 |
 | 学者 | 是 |
-| 来源 | 新增 |
 
 ## 效果
 

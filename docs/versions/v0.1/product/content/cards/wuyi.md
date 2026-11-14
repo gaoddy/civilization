@@ -10,7 +10,6 @@ attack: 3
 health: 5
 skills: [battlecry-friendly-growth-plant-twice]
 is_scholar: false
-source: 新增
 ---
 
 # 巫医
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-plant-twice |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

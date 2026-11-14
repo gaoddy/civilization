@@ -10,7 +10,6 @@ attack: 0
 health: 16
 skills: [keyword-divine-shield]
 is_scholar: true
-source: 新增
 ---
 
 # 法拉第
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield |
 | 学者 | 是 |
-| 来源 | 新增 |
 
 ## 效果
 

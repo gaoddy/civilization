@@ -10,7 +10,6 @@ attack: 6
 health: 12
 skills: [battlecry-summon-3-3-synthetic-cell]
 is_scholar: false
-source: 新增
 ---
 
 # 人造子宫
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-summon-3-3-synthetic-cell |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

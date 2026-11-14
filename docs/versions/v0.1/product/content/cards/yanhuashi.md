@@ -10,7 +10,6 @@ attack: 0
 health: 5
 skills: [trigger-play-effect-friendly-plus-0-plus-1]
 is_scholar: true
-source: 新增
 ---
 
 # 岩画师
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | trigger-play-effect-friendly-plus-0-plus-1 |
 | 学者 | 是 |
-| 来源 | 新增 |
 
 ## 效果
 

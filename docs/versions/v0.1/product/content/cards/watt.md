@@ -10,7 +10,6 @@ attack: 0
 health: 12
 skills: [aura-mech-plus-2-plus-2]
 is_scholar: true
-source: 新增
 ---
 
 # 瓦特
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | aura-mech-plus-2-plus-2 |
 | 学者 | 是 |
-| 来源 | 新增 |
 
 ## 效果
 

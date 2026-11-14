@@ -10,7 +10,6 @@ attack: 0
 health: 9
 skills: [battlecry-friendly-growth-once]
 is_scholar: true
-source: 素材
 ---
 
 # 李耳
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once |
 | 学者 | 是 |
-| 来源 | 素材 |
 
 ## 效果
 

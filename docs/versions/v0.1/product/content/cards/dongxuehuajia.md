@@ -10,7 +10,6 @@ attack: 1
 health: 3
 skills: [battlecry-friendly-plus-1-health]
 is_scholar: false
-source: 新增
 ---
 
 # 洞穴画家
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-1-health |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

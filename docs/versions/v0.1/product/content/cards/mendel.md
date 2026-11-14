@@ -10,7 +10,6 @@ attack: 0
 health: 12
 skills: [battlecry-friendly-plant-growth-once]
 is_scholar: true
-source: 素材
 ---
 
 # 孟德尔
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plant-growth-once |
 | 学者 | 是 |
-| 来源 | 素材 |
 
 ## 效果
 

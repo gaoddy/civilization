@@ -10,7 +10,6 @@ attack: 3
 health: 6
 skills: [battlecry-friendly-human-plus-0-plus-1]
 is_scholar: false
-source: 素材
 ---
 
 # 电饭煲
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-human-plus-0-plus-1 |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

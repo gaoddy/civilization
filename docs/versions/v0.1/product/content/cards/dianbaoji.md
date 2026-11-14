@@ -10,7 +10,6 @@ attack: 4
 health: 5
 skills: [combatstart-leftmost-damage-3]
 is_scholar: false
-source: 新增
 ---
 
 # 电报机
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | combatstart-leftmost-damage-3 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

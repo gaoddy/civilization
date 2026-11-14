@@ -10,7 +10,6 @@ attack: 0
 health: 26
 skills: [keyword-reborn, deathrattle-all-enemies-minus-1-health]
 is_scholar: true
-source: 素材
 ---
 
 # 海森堡
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 复生；亡语 |
 | 技能 | keyword-reborn；deathrattle-all-enemies-minus-1-health |
 | 学者 | 是 |
-| 来源 | 素材 |
 
 ## 效果
 

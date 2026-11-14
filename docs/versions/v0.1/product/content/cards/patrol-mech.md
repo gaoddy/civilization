@@ -10,7 +10,6 @@ attack: 7
 health: 11
 skills: [keyword-taunt]
 is_scholar: false
-source: 素材
 ---
 
 # 巡逻机甲
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

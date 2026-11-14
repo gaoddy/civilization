@@ -9,7 +9,6 @@ era: 史前
 attack: 3
 health: 5
 is_scholar: false
-source: 素材
 ---
 
 # 斯巴达勇士
@@ -30,7 +29,6 @@ source: 素材
 | 关键词 | 无 |
 | 技能 | 无 |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

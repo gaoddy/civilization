@@ -10,7 +10,6 @@ attack: 4
 health: 5
 skills: [trigger-friendly-evolve-self-plus-1-plus-1]
 is_scholar: false
-source: 新增
 ---
 
 # 始祖兽
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | trigger-friendly-evolve-self-plus-1-plus-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

@@ -10,7 +10,6 @@ attack: 4
 health: 6
 skills: [keyword-taunt, trigger-3-humans-self-plus-1-plus-1]
 is_scholar: false
-source: 新增
 ---
 
 # 罗马军团兵
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；trigger-3-humans-self-plus-1-plus-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

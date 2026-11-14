@@ -10,7 +10,6 @@ attack: 2
 health: 4
 skills: [deathrattle-random-enemy-minus-1-health]
 is_scholar: false
-source: 新增
 ---
 
 # 肺炎链球菌
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 亡语 |
 | 技能 | deathrattle-random-enemy-minus-1-health |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

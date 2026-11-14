@@ -10,7 +10,6 @@ attack: 1
 health: 3
 skills: [battlecry-friendly-plus-0-plus-1]
 is_scholar: false
-source: 新增
 ---
 
 # 城邦公民
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

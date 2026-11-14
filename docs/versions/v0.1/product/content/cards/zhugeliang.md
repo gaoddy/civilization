@@ -10,7 +10,6 @@ attack: 3
 health: 6
 skills: [battlecry-friendly-archers-plus-2-attack]
 is_scholar: false
-source: 素材
 ---
 
 # 诸葛亮
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-archers-plus-2-attack |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

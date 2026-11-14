@@ -10,7 +10,6 @@ attack: 12
 health: 18
 skills: [keyword-divine-shield]
 is_scholar: false
-source: 新增
 ---
 
 # 戴森球
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

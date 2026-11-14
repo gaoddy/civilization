@@ -10,7 +10,6 @@ attack: 5
 health: 7
 skills: [trigger-3-humans-self-plus-2-attack]
 is_scholar: false
-source: 新增
 ---
 
 # 拳击手
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | trigger-3-humans-self-plus-2-attack |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

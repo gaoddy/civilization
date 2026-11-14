@@ -10,7 +10,6 @@ attack: 0
 health: 20
 skills: [aura-mech-optimal-attack]
 is_scholar: true
-source: 素材
 ---
 
 # 艾伦·图灵
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 无 |
 | 技能 | aura-mech-optimal-attack |
 | 学者 | 是 |
-| 来源 | 素材 |
 
 ## 效果
 

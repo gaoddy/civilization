@@ -10,7 +10,6 @@ attack: 10
 health: 12
 skills: [keyword-assemble-2, battlecry-all-mech-growth-once-no-keyword]
 is_scholar: false
-source: 新增
 ---
 
 # 无线电报
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；battlecry-all-mech-growth-once-no-keyword |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

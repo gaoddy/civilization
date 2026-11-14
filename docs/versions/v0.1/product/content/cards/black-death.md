@@ -10,7 +10,6 @@ attack: 5
 health: 6
 skills: [deathrattle-all-enemies-humans-minus-2-health]
 is_scholar: false
-source: 素材
 ---
 
 # 黑死病
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-humans-minus-2-health |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

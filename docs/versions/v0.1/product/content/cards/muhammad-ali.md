@@ -10,7 +10,6 @@ attack: 9
 health: 11
 skills: [keyword-windfury]
 is_scholar: false
-source: 素材
 ---
 
 # 穆罕默德·阿里
@@ -31,7 +30,6 @@ source: 素材
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
 | 学者 | 否 |
-| 来源 | 素材 |
 
 ## 效果
 

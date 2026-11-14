@@ -10,7 +10,6 @@ attack: 4
 health: 7
 skills: [keyword-reborn, keyword-evolve]
 is_scholar: false
-source: 新增
 ---
 
 # 克隆羊多莉
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 复生；进化 |
 | 技能 | keyword-reborn；keyword-evolve |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

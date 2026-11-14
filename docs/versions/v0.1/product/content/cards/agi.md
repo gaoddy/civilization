@@ -10,7 +10,6 @@ attack: 0
 health: 20
 skills: [battlecry-all-friendly-growth-twice]
 is_scholar: true
-source: 新增
 ---
 
 # 通用人工智能
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-growth-twice |
 | 学者 | 是 |
-| 来源 | 新增 |
 
 ## 效果
 

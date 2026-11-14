@@ -10,7 +10,6 @@ attack: 0
 health: 16
 skills: [battlecry-all-mech-growth-once]
 is_scholar: true
-source: 新增
 ---
 
 # 克劳德·香农
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-mech-growth-once |
 | 学者 | 是 |
-| 来源 | 新增 |
 
 ## 效果
 

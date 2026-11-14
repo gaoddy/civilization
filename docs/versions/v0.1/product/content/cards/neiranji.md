@@ -10,7 +10,6 @@ attack: 6
 health: 8
 skills: [keyword-optimal-attack]
 is_scholar: false
-source: 新增
 ---
 
 # 内燃机
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 最优攻击 |
 | 技能 | keyword-optimal-attack |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

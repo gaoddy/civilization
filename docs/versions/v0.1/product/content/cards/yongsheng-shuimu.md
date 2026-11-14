@@ -10,7 +10,6 @@ attack: 10
 health: 20
 skills: [keyword-reborn]
 is_scholar: false
-source: 新增
 ---
 
 # 永生水母
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 复生 |
 | 技能 | keyword-reborn |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

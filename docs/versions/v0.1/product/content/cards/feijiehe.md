@@ -10,7 +10,6 @@ attack: 3
 health: 5
 skills: [keyword-contagion]
 is_scholar: false
-source: 新增
 ---
 
 # 肺结核
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 传染 |
 | 技能 | keyword-contagion |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

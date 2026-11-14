@@ -10,7 +10,6 @@ attack: 7
 health: 11
 skills: [battlecry-other-friendly-humans-plus-1-attack]
 is_scholar: false
-source: 新增
 ---
 
 # 工厂主
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

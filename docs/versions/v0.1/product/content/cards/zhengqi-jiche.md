@@ -10,7 +10,6 @@ attack: 4
 health: 6
 skills: [keyword-taunt]
 is_scholar: false
-source: 新增
 ---
 
 # 蒸汽机车
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

@@ -10,7 +10,6 @@ attack: 3
 health: 4
 skills: [combatstart-if-2-biology-self-plus-2-attack]
 is_scholar: false
-source: 新增
 ---
 
 # 剑齿虎
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 无 |
 | 技能 | combatstart-if-2-biology-self-plus-2-attack |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 

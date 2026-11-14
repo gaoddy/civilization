@@ -10,7 +10,6 @@ attack: 8
 health: 14
 skills: [keyword-divine-shield, keyword-assemble-1]
 is_scholar: false
-source: 新增
 ---
 
 # 太空电梯
@@ -31,7 +30,6 @@ source: 新增
 | 关键词 | 护盾；装配 1 |
 | 技能 | keyword-divine-shield；keyword-assemble-1 |
 | 学者 | 否 |
-| 来源 | 新增 |
 
 ## 效果
 
