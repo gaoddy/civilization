@@ -462,8 +462,8 @@ fn combat_stops_at_200_actions() {
 
     assert_eq!(log.action_count, 200, "行动数达到 200 必须停止");
     assert_eq!(attacks(&log).len(), 200);
-    // 双方均存活且总生命相同（100 vs 100），按座位号小者判胜。
-    assert_eq!(log.winner, Some(1));
+    // 行动数到上限而双方仍有存活者：§8.3 视为平局，交给结算层按 §5.3 判定。
+    assert_eq!(log.winner, None);
     assert_eq!(log.attacker_survivors.len(), 100);
     assert_eq!(log.defender_survivors, vec![500]);
 }

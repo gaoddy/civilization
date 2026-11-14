@@ -507,6 +507,9 @@ pub fn simulate(
         (0, 0) => None,
         (0, _) => Some(defender_seat),
         (_, 0) => Some(attacker_seat),
+        // 行动数到达上限而双方仍有存活者：按规则 §8.3 视为平局，
+        // 由结算层按 §5.3（生命 → 累计伤害 → 座位）判定。
+        _ if action_count >= MAX_ACTIONS => None,
         _ => {
             let attacker_health = attacker_side.total_health();
             let defender_health = defender_side.total_health();

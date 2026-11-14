@@ -1,13 +1,13 @@
 mod common;
 
 use common::test_catalog;
-use rule_engine::data::{Card, CardType, Catalog, Era, Tribe};
+use rule_engine::data::{Card, CardType, Catalog, Era, Skill, Tribe};
 use rule_engine::effects::Duration;
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::rng::RngStreams;
-use rule_engine::settle::{Pairing, damage_formula, pair_round};
+use rule_engine::settle::{Pairing, damage_formula, mirror_ghost, pair_round, strip_ghost};
 use rule_engine::state::{MinionInstance, Modifier, Phase, Seat};
 
 /// 往目录里插入一张合成随从卡，避免测试依赖真实卡面数值。
@@ -25,6 +25,50 @@ fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, heal
             attack: Some(attack),
             health: Some(health),
             skills: Vec::new(),
+            is_scholar: false,
+            is_hero: false,
+            cost: Some(1),
+            match_text: None,
+        },
+    );
+}
+
+/// 插入一张带单个关键词的合成随从卡。
+fn add_keyword_card(
+    catalog: &mut Catalog,
+    id: &str,
+    level: u8,
+    attack: i32,
+    health: i32,
+    keyword: &str,
+) {
+    let skill_id = format!("{id}-keyword");
+    catalog.skills.insert(
+        skill_id.clone(),
+        Skill {
+            id: skill_id.clone(),
+            name: None,
+            keyword: Some(keyword.to_string()),
+            text: String::new(),
+            effects: String::new(),
+            cost: None,
+            uses_per_turn: None,
+            match_text: None,
+        },
+    );
+    catalog.cards.insert(
+        id.to_string(),
+        Card {
+            id: id.to_string(),
+            card_type: CardType::Minion,
+            name: id.to_string(),
+            tribe: Tribe::Human,
+            subtype: None,
+            level,
+            era: None,
+            attack: Some(attack),
+            health: Some(health),
+            skills: vec![skill_id],
             is_scholar: false,
             is_hero: false,
             cost: Some(1),
@@ -398,10 +442,14 @@ fn wrong_phase_calls_are_rejected_without_mutation() {
     assert_eq!(before, state_hash(&state));
 
     state.phase = Phase::Recruit;
+    let before = state_hash(&state);
     assert!(engine.resolve_combat(&mut state).is_err());
+    assert_eq!(before, state_hash(&state));
 
     state.phase = Phase::Combat;
+    let before = state_hash(&state);
     assert!(engine.resolve_settle(&mut state).is_err());
+    assert_eq!(before, state_hash(&state));
 
     state.phase = Phase::Settle;
     assert!(engine.resolve_settle(&mut state).is_ok());
@@ -421,6 +469,213 @@ fn start_turn_accepts_settle_and_returns_to_recruit() {
         phase: Phase::Recruit,
         turn: 4,
     }));
+}
+
+#[test]
+fn mirror_ghost_falls_back_to_current_board() {
+    let (_, mut state) = Engine::new(test_catalog(), [13; 32]);
+    state.players[0].board = vec![minion(7, "weak")];
+
+    // 上一场快照缺失。
+    let ghost = mirror_ghost(&state, 0);
+    assert_eq!(ghost.len(), 1);
+    assert_eq!(ghost[0].instance_id, 7);
+
+    // 上一场快照为空。
+    state.previous_board.insert(0, Vec::new());
+    let ghost = mirror_ghost(&state, 0);
+    assert_eq!(ghost.len(), 1);
+    assert_eq!(ghost[0].instance_id, 7);
+}
+
+#[test]
+fn mirror_ghost_keeps_growth_breed_and_contagion() {
+    let mut source = minion(1, "weak");
+    source.growth = 2;
+    source.growth_health_only = 3;
+    source.breed = 4;
+    source.breed_applied = 5;
+    source.contagion = 6;
+    source.mods = vec![Modifier {
+        attack: 9,
+        health: 9,
+        duration: Duration::Combat,
+    }];
+    source.granted = vec![("嘲讽".to_string(), Duration::Combat)];
+    source.shield_used = true;
+    source.reborn_used = true;
+    source.attacks_left = 2;
+    source.cannot_attack = true;
+
+    let ghost = strip_ghost(&[source]);
+    assert_eq!(ghost.len(), 1);
+    let ghost = &ghost[0];
+    assert_eq!(ghost.growth, 2);
+    assert_eq!(ghost.growth_health_only, 3);
+    assert_eq!(ghost.breed, 4);
+    assert_eq!(ghost.contagion, 6);
+    assert_eq!(ghost.breed_applied, 0);
+    assert!(ghost.mods.is_empty());
+    assert!(ghost.granted.is_empty());
+    assert!(!ghost.shield_used);
+    assert!(!ghost.reborn_used);
+    assert_eq!(ghost.attacks_left, 0);
+    assert!(!ghost.cannot_attack);
+}
+
+#[test]
+fn four_pairs_emit_events_in_pairing_order_and_record_opponents() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [14; 32]);
+    add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
+    add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
+
+    state.phase = Phase::Combat;
+    for seat in 0..8u64 {
+        let card_id = if seat % 2 == 0 { "strong" } else { "weak" };
+        state.players[seat as usize].board = vec![minion(seat + 100, card_id)];
+    }
+    let expected = [(0, 1), (2, 3), (4, 5), (6, 7)];
+    state.pairings = expected
+        .iter()
+        .map(|&(a, b)| Pairing {
+            a,
+            b,
+            mirror: false,
+        })
+        .collect();
+
+    let events = engine.resolve_combat(&mut state).unwrap();
+
+    let resolved: Vec<&GameEvent> = events
+        .iter()
+        .filter(|event| matches!(event, GameEvent::CombatResolved { .. }))
+        .collect();
+    assert_eq!(resolved.len(), 4);
+    for (index, &(a, b)) in expected.iter().enumerate() {
+        match resolved[index] {
+            GameEvent::CombatResolved {
+                winner,
+                loser,
+                damage,
+            } => {
+                assert_eq!((*winner, *loser), (a, b));
+                assert!(*damage >= 1);
+            }
+            _ => panic!("第 {index} 个事件应为 CombatResolved"),
+        }
+        assert_eq!(state.previous_opponent.get(&a), Some(&Some(b)));
+        assert_eq!(state.previous_opponent.get(&b), Some(&Some(a)));
+    }
+    assert_eq!(
+        events.last(),
+        Some(&GameEvent::PhaseChanged {
+            phase: Phase::Settle,
+            turn: state.turn,
+        })
+    );
+}
+
+#[test]
+fn action_cap_draw_uses_settle_seat_tiebreak() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [12; 32]);
+    add_keyword_card(&mut engine.catalog, "wind", 1, 0, 1, "连击");
+    add_minion_card(&mut engine.catalog, "wall", 1, 0, 100);
+
+    // 100 个 0 攻连击随从共 200 个令牌，把行动数推到上限而双方仍存活。
+    state.phase = Phase::Combat;
+    state.first_seat = 1;
+    state.players[0].board = vec![minion(500, "wall")];
+    state.players[1].board = (1..=100).map(|index| minion(index, "wind")).collect();
+    state.pairings = vec![Pairing {
+        a: 1,
+        b: 0,
+        mirror: false,
+    }];
+
+    let events = engine.resolve_combat(&mut state).unwrap();
+
+    // 生命与累计伤害相同，按座位号小者判胜：座位 0。
+    assert_eq!(state.last_winner, Some(0));
+    assert!(state.last_won.contains(&0));
+    assert_eq!(
+        events.first(),
+        Some(&GameEvent::CombatResolved {
+            winner: 0,
+            loser: 1,
+            damage: 2,
+        })
+    );
+}
+
+#[test]
+fn last_won_resets_each_round_and_feeds_turn_20_ranking() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [15; 32]);
+    add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
+    add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
+
+    // 第 1 回合：座位 0 击败座位 1。
+    state.phase = Phase::Combat;
+    state.players[0].board = vec![minion(1, "strong")];
+    state.players[1].board = vec![minion(2, "weak")];
+    for seat in 2..8u64 {
+        state.players[seat as usize].board = vec![minion(seat + 10, "weak")];
+    }
+    state.pairings = [(0, 1), (2, 3), (4, 5), (6, 7)]
+        .iter()
+        .map(|&(a, b)| Pairing {
+            a,
+            b,
+            mirror: false,
+        })
+        .collect();
+    engine.resolve_combat(&mut state).unwrap();
+    assert!(state.last_won.contains(&0));
+
+    // 第 2 回合：座位 0 输给座位 2，座位 1 获胜；last_won 只反映本回合。
+    state.phase = Phase::Combat;
+    state.players[0].board = vec![minion(101, "weak")];
+    state.players[1].board = vec![minion(102, "strong")];
+    state.players[2].board = vec![minion(103, "strong")];
+    state.players[3].board = vec![minion(104, "weak")];
+    state.players[4].board = vec![minion(105, "strong")];
+    state.players[5].board = vec![minion(106, "weak")];
+    state.players[6].board = vec![minion(107, "strong")];
+    state.players[7].board = vec![minion(108, "weak")];
+    state.pairings = [(0, 2), (1, 3), (4, 5), (6, 7)]
+        .iter()
+        .map(|&(a, b)| Pairing {
+            a,
+            b,
+            mirror: false,
+        })
+        .collect();
+    engine.resolve_combat(&mut state).unwrap();
+    assert!(
+        !state.last_won.contains(&0),
+        "上一回合的胜者不应残留在 last_won"
+    );
+    assert!(state.last_won.contains(&1));
+
+    // 第 20 回合：生命与累计伤害相同，只有上一场胜者能区分名次。
+    state.turn = 20;
+    state.phase = Phase::Settle;
+    for player in &mut state.players {
+        player.hp = 20;
+        player.damage_dealt = 0;
+    }
+    state.pending_settle.clear();
+    engine.resolve_settle(&mut state).unwrap();
+
+    assert_eq!(state.phase, Phase::GameOver);
+    assert_eq!(state.ranking, vec![1, 2, 4, 6, 0, 3, 5, 7]);
+    let index_of = |seat: Seat| {
+        state
+            .ranking
+            .iter()
+            .position(|candidate| *candidate == seat)
+            .expect("名次应包含全部座位")
+    };
+    assert!(index_of(1) < index_of(0), "上一场胜者应排在败者之前");
 }
 
 #[test]

@@ -154,6 +154,9 @@ fn resolve_combat(catalog: &Catalog, state: &mut GameState) -> Result<Vec<GameEv
         )));
     }
 
+    // `last_won` 描述"本回合赢下自己战斗"的座位，每回合重新统计。
+    state.last_won.clear();
+
     let pairings = state.pairings.clone();
     let mut events = Vec::new();
     for pairing in pairings {
@@ -234,10 +237,7 @@ fn resolve_mirror(
     events: &mut Vec<GameEvent>,
 ) {
     let board = board_of(state, seat).to_vec();
-    let ghost = match state.previous_board.get(&seat) {
-        Some(previous) if !previous.is_empty() => strip_ghost(previous),
-        _ => strip_ghost(&board),
-    };
+    let ghost = mirror_ghost(state, seat);
 
     let log = combat::simulate(catalog, &board, &ghost, seat, seat, seat, &mut state.rng);
     let won = log.defender_survivors.is_empty() && !log.attacker_survivors.is_empty();
@@ -254,11 +254,21 @@ fn resolve_mirror(
     });
 }
 
+/// 某个座位的镜像幽灵阵容：优先取上一场快照，缺失或为空时退回当前阵容。
+///
+/// 返回值已经过 [`strip_ghost`] 处理。
+pub fn mirror_ghost(state: &GameState, seat: Seat) -> Vec<MinionInstance> {
+    match state.previous_board.get(&seat) {
+        Some(previous) if !previous.is_empty() => strip_ghost(previous),
+        _ => strip_ghost(board_of(state, seat)),
+    }
+}
+
 /// 幽灵快照只保留永久属性：卡面基础值、成长、繁衍与传染层。
 ///
 /// 临时修正 `mods` 与授予关键词 `granted` 一律丢弃；战斗内的临时标记
 /// （护盾已用、复生已用、剩余攻击次数等）也重置。
-fn strip_ghost(board: &[MinionInstance]) -> Vec<MinionInstance> {
+pub fn strip_ghost(board: &[MinionInstance]) -> Vec<MinionInstance> {
     board
         .iter()
         .map(|minion| MinionInstance {
@@ -302,8 +312,6 @@ fn resolve_settle(
             });
         }
     }
-    state.pending_settle.clear();
-
     let mut newly_eliminated = Vec::new();
     let mut seats: Vec<Seat> = state.players.iter().map(|player| player.seat).collect();
     seats.sort_unstable();
