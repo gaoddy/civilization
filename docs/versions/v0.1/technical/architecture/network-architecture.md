@@ -90,17 +90,23 @@
 
 ```json
 {
+  "v": 1,
+  "id": "m_01J8Z3K4",
   "seq": 1287,
   "roomId": "r_8f2a",
   "playerId": "p_03",
-  "type": "StateDelta",
+  "replyTo": "ci_7f3a",
+  "type": "StateUpdate",
   "payload": {},
-  "ts": 1763100000000
+  "ts": "2026-11-15T10:00:00Z"
 }
 ```
 
-- `seq` 单调递增，客户端据此检测丢包与乱序；
-- `playerId` 为 `null` 表示广播给全房间；
+- `v` 是协议主版本，v0.1 固定为 `1`；
+- `id` 是发送方生成的唯一消息 id，`replyTo` 只在直接回复某条消息时填写；
+- `seq` 是该玩家的消息序号，单调递增；被隐藏信息过滤的事件不占序号，客户端只检测单调性；
+- `playerId` 是接收者；下行消息逐玩家发送，不存在广播；
+- `ts` 为 RFC 3339 UTC 字符串；
 - `type` 是唯一的路由键，未知类型必须被忽略而不是报错（向后兼容）。
 
 ### 5.2 消息清单
@@ -108,44 +114,48 @@
 | 方向 | 类型 | 说明 |
 | --- | --- | --- |
 | C→S | `Intent` | 玩家意图，`payload` 为 [核心规则](../../product/rules/core-rules.md)的意图名与参数 |
-| S→C | `StateDelta` | 状态增量（只含该玩家可见的部分） |
+| S→C | `StateUpdate` | 该玩家可见的完整状态视图 + 本次结算产生的动画事件 |
 | S→C | `CombatResult` | 战斗最终结果：双方阵容快照、行动序列、伤害、胜负 |
-| S→C | `Snapshot` | 全量状态快照，用于开局与重连 |
+| S→C | `Snapshot` | 全量可见视图，用于开局与重连 |
 | C→S | `Reconnect` | 重连请求，携带 `lastSeq` |
 | S→C | `PhaseChanged` | 阶段切换与截止时间 |
 | S→C | `TimerWarning` | 招募阶段剩余 10 秒提醒（见 [核心规则](../../product/rules/core-rules.md) §8.1） |
 | S→C | `Error` | 意图被拒绝，含返回码（见 [核心规则](../../product/rules/core-rules.md) §3） |
 
+完整消息集合（含认证、房间与好友）与字段清单见[通信协议](protocol.md)与[协议字段表](protocol-messages.md)。
+
 ### 5.3 一次完整回合的序列
 
 ```
 C→S  Intent{BuyMinion, slot:2}
-S→C  StateDelta{seq:101, gold:1, board:[...], shop:[...]}
+S→C  StateUpdate{seq:101, view:{gold:1, board:[...], shop:[...]}, events:[...]}
 C→S  Intent{EndRecruit}
 S→C  PhaseChanged{phase:Combat, deadline:+15000}
 S→C  CombatResult{seq:102, actions:[...], damage:9, winner:p_03}
-S→C  StateDelta{seq:103, hp:31, board:[...]}
+S→C  StateUpdate{seq:103, view:{hp:31, board:[...]}, events:[...]}
 S→C  PhaseChanged{phase:Recruit, turn:8, deadline:+90000}
 ```
 
 ### 5.4 意图的幂等性
 
 - 每个意图带客户端生成的 `clientIntentId`；服务端对同一 id 只处理一次；
+- 去重表只存在于房间进程内，随房间生命周期保留，不持久化；重复到达返回原结果；
 - 意图被拒绝时返回 `Error{clientIntentId, code}`，客户端据此结束该次操作的即时反馈，并以服务端状态为准；客户端没有可回滚的本地规则结果。
 
 ## 6. 快照与重连
 
 ### 6.1 快照内容
 
-`Snapshot` 只包含该玩家可见的信息：自己的完整状态（手牌、金币、商店、时代、生命、所选英雄卡的技能）、公共信息（回合数、阶段、存活玩家、各玩家生命与阵容规模）、以及自己的 `seq` 水位。对手的手牌、金币、商店内容绝不进入快照。
+`Snapshot` 只包含该玩家可见的信息：自己的完整状态（手牌、金币、商店、时代、生命、所选英雄卡的技能）、公共信息（回合数、阶段、存活玩家、各玩家生命与阵容规模）、以及自己的 `seq` 水位。对手的手牌、金币、商店内容绝不进入快照。`Snapshot` 携带当前 `seq`，不递增序号。
 
 ### 6.2 重连算法
 
-1. 客户端发送 `Reconnect{roomId, playerId, lastSeq}`；
-2. 服务端校验会话令牌，返回 `Snapshot{seq: S}`；
-3. 客户端丢弃本地状态，载入快照；
-4. 服务端继续推送 `seq > S` 的增量事件；
-5. 若断线超过 30 秒，服务端已启用 AI 托管，重连后玩家立即接管，托管期间产生的状态通过增量补齐。
+1. 客户端先发送 `AuthRequest{token}` 完成认证；
+2. 客户端发送 `Reconnect{roomId, lastSeq}`；
+3. 服务端返回 `Snapshot`，携带当前 `seq`；
+4. 客户端丢弃本地状态，载入快照；
+5. 服务端继续推送 `seq` 大于快照值的事件；因为每次都是完整视图，不补发历史事件；
+6. 若断线超过 30 秒，服务端已启用 AI 托管，重连后玩家立即接管，托管期间产生的状态已包含在快照中。
 
 ### 6.3 掉线与托管
 
@@ -175,7 +185,7 @@ S→C  PhaseChanged{phase:Recruit, turn:8, deadline:+90000}
 ### 7.3 客户端篡改的检测面
 
 - 客户端不执行规则，无法自行生成或推进游戏状态；客户端上报的任何数据都不作为真相；
-- 客户端无法伪造 `seq` 之后的状态，因为每次变化都必须有服务端的 `StateDelta`；
+- 客户端无法伪造 `seq` 之后的状态，因为每次变化都必须有服务端的 `StateUpdate`；
 - 对局结束的哈希校验能发现"改内存但没改服务端"的作弊者（其上报数据会与服务端重算不符）。
 
 ## 8. 匹配与房间
@@ -213,7 +223,7 @@ S→C  PhaseChanged{phase:Recruit, turn:8, deadline:+90000}
 
 ### 10.3 协议测试
 
-- 乱序、重复、丢失的 `StateDelta` 不能让客户端进入非法状态；
+- 乱序、重复、丢失的 `StateUpdate` 不能让客户端进入非法状态；`seq ≤ 当前` 的消息直接丢弃；
 - 未知 `type` 必须被忽略；
 - 重连后状态哈希必须与服务端一致。
 

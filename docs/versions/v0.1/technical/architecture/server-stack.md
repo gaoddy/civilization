@@ -36,6 +36,8 @@ server/
 
 依赖方向固定为 `room-service → protocol`、`room-service → rule-engine`；`rule-engine` 不依赖 `protocol`、tokio、sqlx 或任何 I/O 库。这样[联网与技术架构](network-architecture.md) §2.1 的"引擎无副作用"由编译期依赖图保证，不靠人工约束。
 
+协议契约的唯一来源是仓库根 `protocol/schema/v1/`（JSON Schema draft 2020-12），不手写与 schema 不一致的 Rust 类型。workspace 建立后，`protocol` crate 用 `typify` 从 schema 生成 `protocol/generated/protocol.rs` 并随源提交；生成入口与漂移检测见[通信协议](protocol.md) §8。本轮只有 schema 与样例，Rust 生成在搭建 workspace 时启用。
+
 ## 3. 确定性约束
 
 协议与规则要求见[联网与技术架构](network-architecture.md)第 4 节与第 10 节。Rust 实现额外固定以下三条：
