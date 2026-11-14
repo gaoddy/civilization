@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civilization.local/protocol/v1/envelope.schema.json",
+  "title": "协议信封 v1",
+  "$defs": {
+    "ClientEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "id", "type", "ts", "payload"],
+      "properties": {
+        "v": { "const": 1, "description": "协议主版本" },
+        "id": { "type": "string", "minLength": 1, "description": "发送方生成的唯一消息 id" },
+        "type": { "type": "string", "minLength": 1, "description": "消息类型，唯一路由键" },
+        "ts": { "type": "string", "format": "date-time", "description": "RFC 3339 UTC 时间" },
+        "roomId": { "type": ["string", "null"], "description": "未进房间时为 null" },
+        "playerId": { "type": ["string", "null"], "description": "认证前为 null" },
+        "replyTo": { "type": "string", "description": "回复的上行消息 id" },
+        "payload": { "type": "object", "description": "由 type 决定的结构" }
+      }
+    },
+    "ServerEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "id", "type", "seq", "ts", "payload"],
+      "properties": {
+        "v": { "const": 1, "description": "协议主版本" },
+        "id": { "type": "string", "minLength": 1, "description": "服务端生成的唯一消息 id" },
+        "type": { "type": "string", "minLength": 1, "description": "消息类型，唯一路由键" },
+        "seq": { "type": "integer", "minimum": 1, "description": "发给该玩家的消息序号，单调递增" },
+        "ts": { "type": "string", "format": "date-time", "description": "RFC 3339 UTC 时间" },
+        "roomId": { "type": ["string", "null"], "description": "未进房间时为 null" },
+        "playerId": { "type": ["string", "null"], "description": "接收者 playerId" },
+        "replyTo": { "type": "string", "description": "回复的上行消息 id" },
+        "payload": { "type": "object", "description": "由 type 决定的结构" }
+      }
+    }
+  }
+}

@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civilization.local/protocol/v1/messages.schema.json",
+  "title": "协议消息载荷 v1",
+  "$defs": {
+    "AuthRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["phone", "code"],
+          "properties": {
+            "phone": { "type": "string", "description": "手机号" },
+            "code": { "type": "string", "description": "短信验证码" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["token"],
+          "properties": {
+            "token": { "type": "string", "description": "上次登录返回的令牌" }
+          }
+        }
+      ]
+    },
+    "CreateRoom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "JoinRoom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code"],
+      "properties": {
+        "code": { "type": "string", "description": "6 位房间码" }
+      }
+    },
+    "LeaveRoom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "Ready": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ready"],
+      "properties": {
+        "ready": { "type": "boolean" }
+      }
+    },
+    "SelectHeroCard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cardId"],
+      "properties": {
+        "cardId": { "type": "string" }
+      }
+    },
+    "Intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clientIntentId", "intent"],
+      "properties": {
+        "clientIntentId": { "type": "string", "minLength": 1, "description": "客户端生成，用于幂等" },
+        "intent": { "$ref": "intents.schema.json#/$defs/Intent" }
+      }
+    },
+    "SkipAnimation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "RequestSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "Reconnect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roomId", "lastSeq"],
+      "properties": {
+        "roomId": { "type": "string" },
+        "lastSeq": { "type": "integer", "minimum": 0, "description": "客户端最后收到的 seq" }
+      }
+    },
+    "FriendRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["toPlayerId"],
+      "properties": {
+        "toPlayerId": { "type": "string" }
+      }
+    },
+    "AuthResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["playerId", "token", "expiresAt"],
+      "properties": {
+        "playerId": { "type": "string" },
+        "token": { "type": "string" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "RoomUpdate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roomId", "code", "hostId", "phase", "players"],
+      "properties": {
+        "roomId": { "type": "string" },
+        "code": { "type": "string", "description": "6 位房间码" },
+        "hostId": { "type": "string" },
+        "phase": { "$ref": "view.schema.json#/$defs/Phase" },
+        "players": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["playerId", "displayName", "ready", "isHost", "heroCardId"],
+            "properties": {
+              "playerId": { "type": "string" },
+              "displayName": { "type": "string" },
+              "ready": { "type": "boolean" },
+              "isHost": { "type": "boolean" },
+              "heroCardId": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "GameStarted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["view"],
+      "properties": {
+        "view": { "$ref": "view.schema.json#/$defs/PlayerView" }
+      }
+    },
+    "Snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["view"],
+      "properties": {
+        "view": { "$ref": "view.schema.json#/$defs/PlayerView" }
+      }
+    },
+    "StateUpdate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["view", "events"],
+      "properties": {
+        "view": { "$ref": "view.schema.json#/$defs/PlayerView" },
+        "events": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/GameEvent" } }
+      }
+    },
+    "PhaseChanged": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "turn", "deadline"],
+      "properties": {
+        "phase": { "$ref": "view.schema.json#/$defs/Phase" },
+        "turn": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "deadline": { "type": "string", "format": "date-time" }
+      }
+    },
+    "TimerWarning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["secondsLeft"],
+      "properties": {
+        "secondsLeft": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "CombatResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ownBoard", "opponentBoard", "actions", "damage", "winnerId"],
+      "properties": {
+        "ownBoard": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/BoardMinion" } },
+        "opponentBoard": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/BoardMinion" } },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind"],
+            "properties": {
+              "kind": { "type": "string", "description": "动作类型，具体取值由规则引擎实现确定" },
+              "sourceIndex": { "type": ["integer", "null"] },
+              "targetIndex": { "type": ["integer", "null"] },
+              "damage": { "type": ["integer", "null"] }
+            }
+          }
+        },
+        "damage": { "type": "integer", "minimum": 0, "description": "本场战斗败者受到的伤害" },
+        "winnerId": { "type": ["string", "null"], "description": "本场胜者；玩家自己的 playerId 表示胜" }
+      }
+    },
+    "GameOver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ranking", "seed"],
+      "properties": {
+        "ranking": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["playerId", "place"],
+            "properties": {
+              "playerId": { "type": "string" },
+              "place": { "type": "integer", "minimum": 1, "maximum": 8 }
+            }
+          }
+        },
+        "seed": { "type": "string", "description": "会战模式对局结束后公开的种子" }
+      }
+    },
+    "Error": { "$ref": "errors.schema.json#/$defs/ErrorMessage" },
+    "FriendUpdate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["friends"],
+      "properties": {
+        "friends": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["playerId", "displayName", "online"],
+            "properties": {
+              "playerId": { "type": "string" },
+              "displayName": { "type": "string" },
+              "online": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
