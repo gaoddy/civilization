@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""校验 docs/data 下的卡牌与英雄实体文档。
+"""校验 docs/versions/v0.1/product/content 下的卡牌与英雄实体文档。
 
 只使用标准库；front matter 仅支持本项目生成的两种形式：
     key: 标量
@@ -12,7 +12,7 @@ import pathlib
 import re
 import sys
 
-ROOT = pathlib.Path(__file__).resolve().parent
+ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v0.1" / "product" / "content"
 
 ID_RE = re.compile(r"[a-z][a-z0-9_]*")
 KEYWORD_RE = re.compile(
@@ -70,6 +70,8 @@ def parse_front_matter(path):
 def load(kind, required):
     docs = []
     for path in sorted((ROOT / kind).glob("*.md")):
+        if path.name == "README.md":
+            continue
         try:
             doc = parse_front_matter(path)
         except ValueError as exc:
