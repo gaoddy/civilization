@@ -91,7 +91,6 @@ MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "tribe", "cost", "match_text"]
 LEGACY_HERO_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
                       "hero_skill_uses_per_turn", "hero_skill_trigger"]
-HERO_SKILL_PREFIX = "hero-"
 
 errors = []
 
@@ -427,7 +426,7 @@ def expected_skill_attrs(skill):
 
 
 def skill_field_errors(skill):
-    """主动技能字段成对性与取值、hero-* 技能必填项的校验消息。"""
+    """主动技能字段成对性与取值的校验消息。"""
     name = skill["_file"]
     messages = []
     has_cost = "cost" in skill
@@ -442,11 +441,6 @@ def skill_field_errors(skill):
             messages.append(f"{name}: 每回合次数非法 {skill['uses_per_turn']!r}")
         if not skill.get("name") or not skill.get("match_text"):
             messages.append(f"{name}: 主动技能必须填写 name 与 match_text")
-    if str(skill["id"]).startswith(HERO_SKILL_PREFIX):
-        if not skill.get("name"):
-            messages.append(f"{name}: hero-* 技能缺少 name")
-        if not skill.get("match_text"):
-            messages.append(f"{name}: hero-* 技能缺少 match_text")
     return messages
 
 
@@ -668,24 +662,10 @@ def check_cards(skill_map):
     return raw, minions, effects
 
 
-def check_hero_cards(cards, minions, effects, skill_map):
+def check_hero_cards(cards, minions, effects):
     hero_cards = [c for c in minions if c.get("is_hero") is True]
     if len(hero_cards) != 13:
         fail(f"英雄卡 {len(hero_cards)} 张，期望 13")
-    referenced = collections.Counter()
-    for c in hero_cards:
-        hero_refs = [sid for sid in card_skills(c) if sid.startswith(HERO_SKILL_PREFIX)]
-        if len(hero_refs) != 1:
-            fail(f"{c['_file']}: 英雄卡必须恰好引用 1 个 hero-* 技能，实为 {hero_refs}")
-            continue
-        sid = hero_refs[0]
-        if sid not in skill_map:
-            fail(f"{c['_file']}: hero-* 技能不存在 {sid!r}")
-            continue
-        referenced[sid] += 1
-    for sid in sorted(sid for sid in skill_map if sid.startswith(HERO_SKILL_PREFIX)):
-        if referenced[sid] != 1:
-            fail(f"{sid}: 必须恰好被 1 张英雄卡引用，实为 {referenced[sid]}")
     for c in minions:
         if c.get("is_hero") is True:
             continue
@@ -751,7 +731,7 @@ def main():
     skill_map = {s["id"]: s for s in skills}
     raw, minions, effects = check_cards(skill_map)
     check_keyword_unlock(minions, skill_map)
-    hero_cards = check_hero_cards(raw, minions, effects, skill_map)
+    hero_cards = check_hero_cards(raw, minions, effects)
     check_skill_context(skill_map, effects)
     achievements = check_achievements()
     check_attr_tables(raw, skill_map)

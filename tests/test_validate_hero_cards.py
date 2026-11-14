@@ -78,8 +78,23 @@ class SkillAttrsTest(unittest.TestCase):
         self.assertNotIn("每回合次数", attrs)
 
 
+HERO_SKILLS = {
+    "alternating-current", "division-of-labor", "efficient-algorithm",
+    "evolution-discovery", "faraday-cage", "heredity", "invention-factory",
+    "light-speed-strike", "microbiology", "observation", "radiation",
+    "shout", "universal-manuscript",
+}
+
+
 class RealHeroCardsTest(unittest.TestCase):
-    def test_real_hero_cards_reference_one_hero_skill(self):
+    def test_no_skill_id_keeps_hero_prefix(self):
+        for path in sorted((vd.ROOT / "skills").glob("*.md")):
+            if path.name == "README.md":
+                continue
+            doc = vd.parse_front_matter(path)
+            self.assertFalse(doc["id"].startswith("hero-"), doc["id"])
+
+    def test_real_hero_cards_reference_renamed_skills(self):
         skills = {}
         for path in sorted((vd.ROOT / "skills").glob("*.md")):
             if path.name == "README.md":
@@ -94,20 +109,16 @@ class RealHeroCardsTest(unittest.TestCase):
             doc = vd.parse_front_matter(path)
             if doc.get("is_hero") is True:
                 heroes.append(doc)
-                hero_refs = [
-                    sid for sid in vd.card_skills(doc)
-                    if sid.startswith(vd.HERO_SKILL_PREFIX)
-                ]
-                self.assertEqual(len(hero_refs), 1, doc["id"])
-                referenced[hero_refs[0]] += 1
+                refs = [sid for sid in vd.card_skills(doc) if sid in HERO_SKILLS]
+                self.assertEqual(len(refs), 1, doc["id"])
+                referenced[refs[0]] += 1
 
         self.assertEqual(len(heroes), 13)
-        hero_skills = {sid for sid in skills if sid.startswith(vd.HERO_SKILL_PREFIX)}
-        self.assertEqual(set(referenced), hero_skills)
+        self.assertEqual(set(referenced), HERO_SKILLS)
         self.assertEqual(set(referenced.values()), {1})
 
-        active = [sid for sid in hero_skills if "cost" in skills[sid]]
-        passive = [sid for sid in hero_skills if "cost" not in skills[sid]]
+        active = [sid for sid in HERO_SKILLS if "cost" in skills[sid]]
+        passive = [sid for sid in HERO_SKILLS if "cost" not in skills[sid]]
         self.assertEqual(len(active), 10)
         self.assertEqual(len(passive), 3)
         for sid in active:
@@ -148,47 +159,41 @@ class ActiveSkillFieldTest(unittest.TestCase):
         self.assertEqual(self.errors(cost=1, uses_per_turn=2), [])
 
 
-class HeroSkillRefsTest(unittest.TestCase):
+class HeroCardsTest(unittest.TestCase):
     HERO_IDS = ["adam-smith", "darwin", "davinci", "edison", "einstein",
                 "faraday", "galileo", "knuth", "luxun", "marie-curie",
                 "mendel", "pasteur", "tesla"]
 
-    def run_check(self, skills_by_card, skill_ids):
-        heroes = []
-        for card_id, skills in zip(self.HERO_IDS, skills_by_card):
-            heroes.append({"_file": f"{card_id}.md", "id": card_id,
-                           "name": card_id, "skills": skills, "is_hero": True})
-        skill_map = {sid: {"_file": f"{sid}.md", "id": sid,
-                           "name": sid, "text": "", "match_text": "同左"}
-                     for sid in skill_ids}
+    def run_check(self, count, extra_minions=(), extra_effects=()):
+        heroes = [{"_file": f"{card_id}.md", "id": card_id, "name": card_id,
+                   "skills": [], "is_hero": True}
+                  for card_id in self.HERO_IDS[:count]]
+        minions = list(heroes) + list(extra_minions)
+        effects = list(extra_effects)
         vd.errors.clear()
-        vd.check_hero_cards(heroes, heroes, [], skill_map)
+        vd.check_hero_cards(minions + effects, minions, effects)
         return list(vd.errors)
 
-    def test_card_with_two_hero_skills_is_rejected(self):
-        ids = [f"hero-s{i}" for i in range(13)]
-        skills = [[sid] for sid in ids]
-        skills[0] = [ids[0], ids[1]]
-        errors = self.run_check(skills, ids)
-        self.assertTrue(any("恰好引用 1 个 hero-* 技能" in e for e in errors), errors)
+    def test_thirteen_heroes_pass(self):
+        self.assertEqual(self.run_check(13), [])
 
-    def test_card_with_no_hero_skill_is_rejected(self):
-        ids = [f"hero-s{i}" for i in range(13)]
-        skills = [[sid] for sid in ids]
-        skills[0] = []
-        errors = self.run_check(skills, ids)
-        self.assertTrue(any("恰好引用 1 个 hero-* 技能" in e for e in errors), errors)
+    def test_twelve_heroes_are_rejected(self):
+        errors = self.run_check(12)
+        self.assertTrue(any("期望 13" in e for e in errors), errors)
 
-    def test_unreferenced_hero_skill_is_rejected(self):
-        ids = [f"hero-s{i}" for i in range(13)]
-        skills = [[sid] for sid in ids]
-        errors = self.run_check(skills, ids + ["hero-orphan"])
-        self.assertTrue(any("hero-orphan" in e and "恰好被 1 张英雄卡引用" in e
-                            for e in errors), errors)
+    def test_non_hero_minion_with_is_hero_field_is_rejected(self):
+        errors = self.run_check(13, extra_minions=[
+            {"_file": "luxun.md", "id": "fake", "name": "fake",
+             "skills": [], "is_hero": False},
+        ])
+        self.assertTrue(any("非英雄随从不得有 is_hero" in e for e in errors), errors)
 
-    def test_valid_mapping_passes(self):
-        ids = [f"hero-s{i}" for i in range(13)]
-        self.assertEqual(self.run_check([[sid] for sid in ids], ids), [])
+    def test_effect_card_with_is_hero_is_rejected(self):
+        errors = self.run_check(13, extra_effects=[
+            {"_file": "luxun.md", "id": "effect", "name": "effect",
+             "skills": [], "is_hero": True, "card_type": "效果"},
+        ])
+        self.assertTrue(any("效果牌不得有 is_hero" in e for e in errors), errors)
 
 
 if __name__ == "__main__":
