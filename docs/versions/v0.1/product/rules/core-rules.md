@@ -14,7 +14,7 @@
 - 对局在第 20 回合结束后强制收束（见 §7）。
 - 房间必须有 8 名真人就绪才进入对局，**不设 AI 补位**；人数不足时房间保持 `Lobby` 继续等待。
 - 断线与 AFK 由 AI 托管（§8.1），托管只接管已有座位，不改变对局人数。
-- 开局时，每位玩家从卡池的 13 张 `is_hero` 卡中选 1 张作为英雄；选择不消耗牌池份数、不进入手牌或战场，多人可以选择同一张。买到的同名英雄卡按普通随从结算，只获得 `skills`，不获得 `hero_skill`。
+- 开局时，每位玩家从卡池的 13 张 `is_hero` 卡中选 1 张作为英雄；选择不消耗牌池份数、不进入手牌或战场，多人可以选择同一张。买到的同名英雄卡按普通随从结算，并获得该卡的全部 `skills`（含其中的主动与被动技能）。
 
 ## 2. 阶段状态机
 
@@ -45,12 +45,12 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 | `PlayCard` | 处于 `Recruit`；卡在手中；场上/手牌空间允许 | 无（费用在获得该牌时已支付） | 从手牌打出（效果牌即时结算；随从入场触发战吼） | `CARD_NOT_IN_HAND` / `NO_SPACE` |
 | `RearrangeBoard` | 处于 `Recruit` | 无 | 交换两个随从的站位 | `NO_SUCH_MINION` |
 | `FreezeShop` | 处于 `Recruit` | 无 | 冻结当前槽位到下回合开始 | — |
-| `UseHeroPower` | 处于 `Recruit`；费用足够；本回合次数未用尽 | −技能费用 | 执行所选英雄卡的 `hero_skill` | `NOT_ENOUGH_GOLD` / `HERO_POWER_LIMIT` |
+| `UseHeroPower` | 处于 `Recruit`；费用足够；本回合次数未用尽 | −技能的 `cost` | 使用所选英雄卡上的一个主动技能，次数受该技能 `uses_per_turn` 限制 | `NOT_ENOUGH_GOLD` / `HERO_POWER_LIMIT` |
 | `EndRecruit` | 处于 `Recruit` | 无 | 本玩家结束招募 | — |
 
 **通用规则**：同一回合内，`BuyMinion` / `RerollShop` / `UpgradeEra` / `PlayCard` / `UseHeroPower` 共用同一个金币池，顺序不限；金币不跨回合累积，多余部分清零。
 
-**补充返回码**：`NO_VALID_TARGET`（英雄技能或效果牌没有合法目标，见 [卡牌规范与数据](../content/card-system.md) §2.1「英雄卡」）；`TARGET_NOT_ALLOWED`（招募阶段试图指定敌方目标）。
+**补充返回码**：`NO_VALID_TARGET`（主动技能或效果牌没有合法目标，见 [卡牌规范与数据](../content/card-system.md) §2.1「英雄卡」）；`TARGET_NOT_ALLOWED`（招募阶段试图指定敌方目标）。
 
 ## 4. 招募阶段细则
 
@@ -89,7 +89,7 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 1. 锁定双方阵容快照，**招募阶段的任何操作在战斗阶段不可见、不可改**。
 2. 每个随从获得 `attackTokens`：普通 1，连击 2。护盾记 1 层，护盾被消耗后不再恢复。
 3. 先手方：上一场战斗的胜者先手；首回合由对局种子决定。
-4. **战斗开始时**：按 [关键词与机制](keywords-and-mechanics.md) §2.7 结算英雄卡的被动技能、延迟战吼与所有 `OnCombatStart` 效果，之后才进入 §5.2 行动循环。
+4. **战斗开始时**：按 [关键词与机制](keywords-and-mechanics.md) §2.7 结算所选英雄卡上的被动技能、延迟战吼与所有 `OnCombatStart` 效果，之后才进入 §5.2 行动循环。
 
 ### 5.2 行动循环
 

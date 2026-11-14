@@ -130,7 +130,7 @@
 学者是唯一一个由关键词体系强制约束的流派，规则如下（与 [设计总纲](../overview/design-overview.md) §6.6 一致）：
 
 1. 学者的 `attack` 恒为 0，卡牌数据中不允许出现非 0 值；
-2. 任何攻击力加成对学者无效，包括：成长、临时增益、光环、效果牌、英雄技能；
+2. 任何攻击力加成对学者无效，包括：成长、临时增益、光环、效果牌、主动技能；
 3. 学者的成长只产生 +生命值（成长 1 次 = +0/+1）；
 4. 学者可以被攻击、被击杀、被嘲讽、被护盾、被复生；
 5. 学者的反击伤害为 0，因此不触发传染，也不触发任何"造成伤害后"的效果；
@@ -224,7 +224,7 @@
 
 ### 9.1 结构
 
-技能是效果文本的实体，卡牌（含英雄卡）通过 `skills` / `hero_skill` 引用技能获得效果。一条技能效果由四段组成：`Trigger × Selector × Op × Duration`；英雄技能与随从技能共用同一结构，英雄卡只在宿主上额外带费用、触发时机与每回合次数（见[技能规范与数据](../content/skill-system.md)）。静态光环以 `Aura` / `ConditionalAura` 作为触发登记（§8），动作仍复用 §9.3 的常规原语，不单设光环原语。
+技能是效果文本的实体，卡牌（含英雄卡）一律通过 `skills` 引用技能获得效果，英雄技能也在其中。一条技能效果由四段组成：`Trigger × Selector × Op × Duration`；主动技能在技能实体上带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀确定时机（见[技能规范与数据](../content/skill-system.md)）。静态光环以 `Aura` / `ConditionalAura` 作为触发登记（§8），动作仍复用 §9.3 的常规原语，不单设光环原语。
 
 ### 9.2 选择器
 
@@ -248,9 +248,9 @@
 | 召唤 | `Summon {selector, token 或 card, count}` | 召唤位置由 `selector` 决定；`token` 取注册表 id，`card` 取牌池卡 id |
 | 复制 | `Copy {selector, to}` | `to` 为手牌或战场 |
 | 发现 | `Discover {pool, choose}` | 三选一 |
-| 刷新商店 | `RefreshShop {free, extra}` | 英雄技能专用 |
-| 增加商店槽位 | `AddShopSlot {era, count}` | 英雄技能专用；商店额外出现 `count` 张 `era=current` 的随从 |
-| 获得随从 | `GainMinion {from, level, to}` | 英雄技能专用 |
+| 刷新商店 | `RefreshShop {free, extra}` | `hero-*` 技能专用 |
+| 增加商店槽位 | `AddShopSlot {era, count}` | `hero-*` 技能专用；商店额外出现 `count` 张 `era=current` 的随从 |
+| 获得随从 | `GainMinion {from, level, to}` | `hero-*` 技能专用 |
 
 光环不单设原语：静态光环在 §8 登记为 `Aura` / `ConditionalAura` 触发，其动作写 `ModifyStats` 或 `GrantKeyword`，并显式带 `duration=permanent`。
 
@@ -305,7 +305,7 @@
 - `Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent`
 - `OnActivate|Copy|self|from=hand,type=随从,to=hand`
 
-`effects` 是机器字段，不进入 `## 属性` 表；`## 效果` 仍由技能 `text` 渲染，与 `effects` 语义一致。卡牌不重复记录 `effects`——它们通过 `skills` / `hero_skill` 引用技能，效果由技能实体统一维护。
+`effects` 是机器字段，不进入 `## 属性` 表；`## 效果` 仍由技能 `text` 渲染，与 `effects` 语义一致。卡牌不重复记录 `effects`——它们通过 `skills` 引用技能，效果由技能实体统一维护。
 
 ## 10. 属性求值顺序
 
