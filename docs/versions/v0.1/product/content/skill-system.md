@@ -115,7 +115,7 @@ python3 scripts/validate_docs.py
 4. 每张效果牌至少引用 1 个技能；7 张无效果随从的 `skills` 为空且 `## 效果` 为「无」；
 5. 卡牌 `## 效果` 与所引用技能 `text` 按顺序拼接的结果一致；
 6. 卡牌属性表的「技能」「关键词」行与 front matter、技能 `keyword` 一致；主动技能的属性表含「费用」「每回合次数」两行；
-7. 13 张英雄卡各在 `skills` 中恰好引用 1 个 `hero-*` 技能，每个 `hero-*` 技能恰好被 1 张英雄卡引用；卡牌不得残留 `hero_skill*` 字段或「## 英雄技能」小节；
+7. 13 张英雄卡各在 `skills` 中恰好引用 1 个 `hero-*` 技能，每个 `hero-*` 技能恰好被 1 张英雄卡引用；卡牌不得残留已废弃的英雄技能字段或英雄技能小节；
 8. 每个技能都有 `effects` 字段，DSL 按[关键词与机制](../rules/keywords-and-mechanics.md) §9.4 校验：段数 3–4 段、触发与动作原语在白名单内、选择器合法、`duration` 取值合法、参数写作 `key=value`；
 9. 技能文本的固定前缀与触发时机一致：「战吼」对应 `OnPlay`、「亡语」对应 `OnDeath`、「战斗开始时」对应 `OnCombatStart`、「回合开始时」对应 `OnTurnStart`、「每回合首次刷新时」对应 `OnFirstRefresh`、「每当」对应事件类触发、`你的…随从获得` 句式对应 `Aura`、「若你控制」对应 `ConditionalAura`。
 
