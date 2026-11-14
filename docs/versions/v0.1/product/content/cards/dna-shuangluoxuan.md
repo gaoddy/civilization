@@ -6,6 +6,7 @@ level: 4
 tribe: 生物
 cost: 2
 match_text: 同左
+skills: [trigger-friendly-growth-thrice]
 ---
 
 # DNA双螺旋结构
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 4 |
 | 流派 | 生物 |
+| 技能 | trigger-friendly-growth-thrice |
 | 费用 | 2 |
 | 比赛模式替换 | 同左 |
 

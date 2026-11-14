@@ -6,6 +6,7 @@ level: 6
 tribe: 通用
 cost: 4
 match_text: 同左
+skills: [combatstart-all-enemies-damage-5]
 ---
 
 # 原子弹
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 6 |
 | 流派 | 通用 |
+| 技能 | combatstart-all-enemies-damage-5 |
 | 费用 | 4 |
 | 比赛模式替换 | 同左 |
 

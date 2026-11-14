@@ -8,7 +8,7 @@ level: 6
 era: 未来
 attack: 8
 health: 16
-keywords: []
+skills: [aura-mech-plus-2-plus-2]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 8 |
 | 生命值 | 16 |
 | 关键词 | 无 |
+| 技能 | aura-mech-plus-2-plus-2 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

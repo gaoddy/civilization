@@ -8,7 +8,7 @@ level: 2
 era: 原始
 attack: 2
 health: 4
-keywords: []
+skills: [trigger-friendly-human-play-plus-1-attack]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 2 |
 | 生命值 | 4 |
 | 关键词 | 无 |
+| 技能 | trigger-friendly-human-play-plus-1-attack |
 | 学者 | 否 |
 | 来源 | 新增 |
 

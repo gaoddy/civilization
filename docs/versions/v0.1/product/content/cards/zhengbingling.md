@@ -6,6 +6,7 @@ level: 3
 tribe: 人类
 cost: 2
 match_text: 同左
+skills: [trigger-other-friendly-humans-plus-1-attack]
 ---
 
 # 征兵令
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 3 |
 | 流派 | 人类 |
+| 技能 | trigger-other-friendly-humans-plus-1-attack |
 | 费用 | 2 |
 | 比赛模式替换 | 同左 |
 

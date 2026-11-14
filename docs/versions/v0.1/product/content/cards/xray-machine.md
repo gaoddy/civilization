@@ -8,7 +8,7 @@ level: 4
 era: 现代
 attack: 6
 health: 6
-keywords: [最优攻击]
+skills: [keyword-optimal-attack]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 6 |
 | 生命值 | 6 |
 | 关键词 | 最优攻击 |
+| 技能 | keyword-optimal-attack |
 | 学者 | 否 |
 | 来源 | 素材 |
 

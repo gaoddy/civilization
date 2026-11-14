@@ -8,7 +8,7 @@ level: 2
 era: 原始
 attack: 3
 health: 3
-keywords: []
+skills: [aura-other-biology-plus-1-attack]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 3 |
 | 生命值 | 3 |
 | 关键词 | 无 |
+| 技能 | aura-other-biology-plus-1-attack |
 | 学者 | 否 |
 | 来源 | 新增 |
 

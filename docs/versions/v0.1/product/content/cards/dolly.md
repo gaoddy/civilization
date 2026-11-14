@@ -8,7 +8,7 @@ level: 4
 era: 未来
 attack: 4
 health: 7
-keywords: [复生, 进化]
+skills: [keyword-reborn, keyword-evolve]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 4 |
 | 生命值 | 7 |
 | 关键词 | 复生；进化 |
+| 技能 | keyword-reborn；keyword-evolve |
 | 学者 | 否 |
 | 来源 | 新增 |
 

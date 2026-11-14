@@ -6,6 +6,7 @@ level: 4
 tribe: 通用
 cost: 2
 match_text: 同左
+skills: [combatstart-leftmost-and-adjacent-damage-2]
 ---
 
 # 球状闪电
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 4 |
 | 流派 | 通用 |
+| 技能 | combatstart-leftmost-and-adjacent-damage-2 |
 | 费用 | 2 |
 | 比赛模式替换 | 同左 |
 

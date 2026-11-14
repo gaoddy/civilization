@@ -6,6 +6,7 @@ level: 4
 tribe: 通用
 cost: 2
 match_text: 同左
+skills: [trigger-minion-windfury-this-turn]
 ---
 
 # 狭义相对论
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 4 |
 | 流派 | 通用 |
+| 技能 | trigger-minion-windfury-this-turn |
 | 费用 | 2 |
 | 比赛模式替换 | 同左 |
 

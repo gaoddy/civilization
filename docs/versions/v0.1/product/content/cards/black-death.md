@@ -8,7 +8,7 @@ level: 4
 era: 封建
 attack: 5
 health: 6
-keywords: [亡语]
+skills: [deathrattle-all-enemies-humans-minus-2-health]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 5 |
 | 生命值 | 6 |
 | 关键词 | 亡语 |
+| 技能 | deathrattle-all-enemies-humans-minus-2-health |
 | 学者 | 否 |
 | 来源 | 素材 |
 

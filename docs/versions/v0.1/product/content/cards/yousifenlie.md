@@ -6,6 +6,7 @@ level: 3
 tribe: 生物
 cost: 2
 match_text: 同左
+skills: [trigger-copy-friendly-minion]
 ---
 
 # 有丝分裂
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 3 |
 | 流派 | 生物 |
+| 技能 | trigger-copy-friendly-minion |
 | 费用 | 2 |
 | 比赛模式替换 | 同左 |
 

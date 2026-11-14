@@ -8,7 +8,7 @@ level: 5
 era: 现代
 attack: 7
 health: 11
-keywords: [嘲讽]
+skills: [keyword-taunt]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 7 |
 | 生命值 | 11 |
 | 关键词 | 嘲讽 |
+| 技能 | keyword-taunt |
 | 学者 | 否 |
 | 来源 | 素材 |
 

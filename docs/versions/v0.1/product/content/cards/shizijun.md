@@ -8,7 +8,7 @@ level: 5
 era: 封建
 attack: 7
 health: 9
-keywords: [嘲讽]
+skills: [keyword-taunt, trigger-friendly-human-death-plus-1-plus-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 7 |
 | 生命值 | 9 |
 | 关键词 | 嘲讽 |
+| 技能 | keyword-taunt；trigger-friendly-human-death-plus-1-plus-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

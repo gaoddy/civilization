@@ -3,13 +3,11 @@ id: pasteur
 name: 路易·巴斯德
 summary: 用跨回合传染持续削弱敌方的病毒英雄。
 discipline: 微生物学
-skill_name: 微生物学
+skill: hero-microbiology
 skill_cost: 0
 skill_type: 被动
 skill_uses_per_turn: 1
 skill_trigger: 战斗开始时
-skill_text: 战斗开始时使敌方最左侧随从获得 1 层传染
-match_text: 同左
 ---
 
 # 路易·巴斯德

@@ -8,7 +8,7 @@ level: 1
 era: 原始
 attack: 0
 health: 5
-keywords: [战吼]
+skills: [battlecry-friendly-plus-0-plus-1]
 is_scholar: true
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 0 |
 | 生命值 | 5 |
 | 关键词 | 战吼 |
+| 技能 | battlecry-friendly-plus-0-plus-1 |
 | 学者 | 是 |
 | 来源 | 素材 |
 

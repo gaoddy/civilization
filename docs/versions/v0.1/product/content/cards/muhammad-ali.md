@@ -8,7 +8,7 @@ level: 6
 era: 现代
 attack: 9
 health: 11
-keywords: [连击]
+skills: [keyword-windfury]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 9 |
 | 生命值 | 11 |
 | 关键词 | 连击 |
+| 技能 | keyword-windfury |
 | 学者 | 否 |
 | 来源 | 素材 |
 

@@ -6,6 +6,7 @@ level: 3
 tribe: 学者
 cost: 2
 match_text: 同左
+skills: [trigger-copy-hand-minion]
 ---
 
 # 印刷术
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 3 |
 | 流派 | 学者 |
+| 技能 | trigger-copy-hand-minion |
 | 费用 | 2 |
 | 比赛模式替换 | 同左 |
 

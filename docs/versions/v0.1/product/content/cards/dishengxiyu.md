@@ -6,6 +6,7 @@ level: 1
 tribe: 通用
 cost: 1
 match_text: 同左
+skills: [trigger-friendly-plus-1-plus-1]
 ---
 
 # 低声细语
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 1 |
 | 流派 | 通用 |
+| 技能 | trigger-friendly-plus-1-plus-1 |
 | 费用 | 1 |
 | 比赛模式替换 | 同左 |
 

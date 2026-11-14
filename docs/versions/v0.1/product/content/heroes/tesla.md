@@ -3,13 +3,11 @@ id: tesla
 name: 尼古拉·特斯拉
 summary: 用最优攻击绕过嘲讽点杀的进攻型物理英雄。
 discipline: 物理
-skill_name: 交流电
+skill: hero-alternating-current
 skill_cost: 2
 skill_type: 主动
 skill_uses_per_turn: 1
 skill_trigger: 主动使用
-skill_text: 使一个友方随从获得最优攻击直到回合结束
-match_text: 同左
 ---
 
 # 尼古拉·特斯拉

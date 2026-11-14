@@ -6,6 +6,7 @@ level: 4
 tribe: 通用
 cost: 3
 match_text: 同左
+skills: [combatstart-all-enemies-damage-2]
 ---
 
 # 特斯拉线圈
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 4 |
 | 流派 | 通用 |
+| 技能 | combatstart-all-enemies-damage-2 |
 | 费用 | 3 |
 | 比赛模式替换 | 同左 |
 

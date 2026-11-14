@@ -8,7 +8,7 @@ level: 5
 era: 未来
 attack: 0
 health: 16
-keywords: [战吼]
+skills: [battlecry-friendly-growth-twice]
 is_scholar: true
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 0 |
 | 生命值 | 16 |
 | 关键词 | 战吼 |
+| 技能 | battlecry-friendly-growth-twice |
 | 学者 | 是 |
 | 来源 | 新增 |
 

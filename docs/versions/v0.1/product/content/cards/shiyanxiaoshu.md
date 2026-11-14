@@ -8,7 +8,7 @@ level: 1
 era: 史前
 attack: 1
 health: 3
-keywords: [亡语]
+skills: [deathrattle-summon-1-1-termite]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 1 |
 | 生命值 | 3 |
 | 关键词 | 亡语 |
+| 技能 | deathrattle-summon-1-1-termite |
 | 学者 | 否 |
 | 来源 | 素材 |
 

@@ -8,7 +8,7 @@ level: 6
 era: 未来
 attack: 8
 health: 12
-keywords: [播种, 繁衍 3]
+skills: [keyword-sow, keyword-breed-3]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 8 |
 | 生命值 | 12 |
 | 关键词 | 播种；繁衍 3 |
+| 技能 | keyword-sow；keyword-breed-3 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""校验 docs/versions/v0.1/product/content 下的卡牌与英雄实体文档。
+"""校验 docs/versions/v0.1/product/content 下的技能、卡牌与英雄实体文档。
 
-只使用标准库；front matter 仅支持本项目生成的两种形式：
+只使用标准库；front matter 仅支持本项目生成的三种形式：
     key: 标量
-    keywords: [词 1, 词 2]
+    skills: [技能 id, ...]
+    skill: 技能 id
 卡牌分两类：card_type=随从 必须有攻击力/生命值；card_type=效果 必须没有。
+卡牌与英雄通过 skills/skill 引用技能实体，效果文本与关键词由被引用技能派生。
 """
 
 import collections
@@ -17,6 +19,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v
 ID_RE = re.compile(r"[a-z][a-z0-9-]*")
 KEYWORD_RE = re.compile(
     r"^(无|战吼|亡语|复生|嘲讽|护盾|连击|传染|最优攻击|繁衍 \d+|装配 \d+|播种|进化)$"
+)
+# 技能上的 keyword 是携带者自身登记的常驻关键词，不接受卡牌层的「无」哨兵值。
+SKILL_KEYWORD_RE = re.compile(
+    r"^(战吼|亡语|复生|嘲讽|护盾|连击|传染|最优攻击|繁衍 \d+|装配 \d+|播种|进化)$"
 )
 AURA_RE = re.compile(r"^你的(其他)?(人类|机械|生物|植物|病毒|学者)?随从获得 ?(.+)$")
 AURA_VALUE_RE = re.compile(
@@ -37,9 +43,12 @@ CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26}
 EXPECT_ERA = {"史前": 27, "原始": 26, "封建": 27, "现代": 36, "未来": 20}
 EXPECT_TRIBE = {"学者": 28, "生物": 24, "人类": 28, "机械": 22, "植物": 18, "病毒": 16}
 EXPECT_LEVEL = {1: 19, 2: 28, 3: 28, 4: 24, 5: 22, 6: 15}
+SKILL_FIELDS = ["id", "text"]
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
-                 "attack", "health", "keywords", "is_scholar", "source"]
+                 "attack", "health", "is_scholar", "source"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "tribe", "cost", "match_text"]
+HERO_FIELDS = ["id", "name", "summary", "discipline", "skill", "skill_cost",
+               "skill_type", "skill_uses_per_turn", "skill_trigger"]
 
 errors = []
 
@@ -100,9 +109,14 @@ def load(kind, required):
 
 def body_text(path):
     text = path.read_text(encoding="utf-8")
-    if "## 效果" not in text:
+    marker = "## 效果"
+    if marker not in text:
         return "无"
-    return text.split("## 效果", 1)[1].strip()
+    rest = text.split(marker, 1)[1]
+    next_heading = re.search(r"(?m)^## ", rest)
+    if next_heading:
+        rest = rest[:next_heading.start()]
+    return rest.strip()
 
 
 def parse_attr_table(path):
@@ -119,31 +133,120 @@ def parse_attr_table(path):
     return rows
 
 
-def expected_attrs(doc, text):
+def card_skills(doc):
+    value = doc.get("skills")
+    return value if isinstance(value, list) else []
+
+
+def rendered_text(doc, skill_map):
+    """按 skills 顺序拼接技能 text；引用缺失时返回 None 交由引用校验报告。"""
+    parts = []
+    for sid in card_skills(doc):
+        skill = skill_map.get(sid)
+        if skill is None:
+            return None
+        parts.append(skill["text"])
+    return "；".join(parts) if parts else "无"
+
+
+def derived_keywords(doc, skill_map):
+    keywords = []
+    seen = set()
+    for sid in card_skills(doc):
+        skill = skill_map.get(sid)
+        if skill is None:
+            continue
+        keyword = skill.get("keyword")
+        if keyword and keyword not in seen:
+            seen.add(keyword)
+            keywords.append(keyword)
+    return keywords
+
+
+def expected_card_attrs(doc, skill_map):
+    skills = card_skills(doc)
+    skill_value = "；".join(skills) if skills else "无"
+    keyword_list = derived_keywords(doc, skill_map)
+    keyword_value = "；".join(keyword_list) if keyword_list else "无"
     if doc["card_type"] == "随从":
-        kw = "；".join(doc["keywords"]) if doc["keywords"] else "无"
         return {
             "id": doc["id"], "名称": doc["name"], "类型": doc["card_type"],
             "流派": doc["tribe"], "子类": doc["subtype"], "星级": str(doc["level"]),
             "时代": doc["era"], "攻击力": str(doc["attack"]),
-            "生命值": str(doc["health"]), "关键词": kw,
-            "学者": "是" if doc["is_scholar"] else "否", "来源": doc["source"],
+            "生命值": str(doc["health"]), "关键词": keyword_value,
+            "技能": skill_value, "学者": "是" if doc["is_scholar"] else "否",
+            "来源": doc["source"],
         }
     return {
         "id": doc["id"], "名称": doc["name"], "类型": doc["card_type"],
         "星级": str(doc["level"]), "流派": doc["tribe"],
-        "费用": str(doc["cost"]), "比赛模式替换": doc["match_text"],
+        "技能": skill_value, "费用": str(doc["cost"]),
+        "比赛模式替换": doc["match_text"],
     }
 
 
-def check_attr_tables(raw):
+def expected_skill_attrs(skill):
+    return {
+        "id": skill["id"],
+        "关键词": skill.get("keyword") or "无",
+        "比赛模式替换": skill.get("match_text") or "不适用",
+    }
+
+
+def check_skills():
+    skills = load("skills", SKILL_FIELDS)
+    if len(skills) != 118:
+        fail(f"技能数量 {len(skills)}，期望 118")
+    dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
+    if dup:
+        fail(f"技能 id 重复: {dup}")
+    for skill in skills:
+        name = skill["_file"]
+        if not str(skill["text"]).strip():
+            fail(f"{name}: text 为空")
+        keyword = skill.get("keyword")
+        if keyword and not SKILL_KEYWORD_RE.fullmatch(str(keyword)):
+            fail(f"{name}: 关键词非法 {keyword!r}")
+        path = ROOT / "skills" / name
+        table = parse_attr_table(path)
+        if table is None:
+            fail(f"{name}: 缺少「## 属性」表")
+            continue
+        expected = expected_skill_attrs(skill)
+        for key, value in expected.items():
+            if table.get(key) != value:
+                fail(f"{name}: 属性表 {key}={table.get(key)!r}，front matter 为 {value!r}")
+        extra = set(table) - set(expected)
+        if extra:
+            fail(f"{name}: 属性表多出字段 {sorted(extra)}")
+        if body_text(path) != skill["text"]:
+            fail(f"{name}: 「## 效果」与 text 不一致")
+    return skills
+
+
+def check_skill_context(skill_map, heroes, effects):
+    hero_refs = {h["skill"] for h in heroes if h.get("skill") in skill_map}
+    effect_refs = {sid for c in effects for sid in card_skills(c)}
+    for sid in sorted(hero_refs):
+        skill = skill_map[sid]
+        if not skill.get("name"):
+            fail(f"{skill['_file']}: 被英雄引用的技能缺少 name")
+        if not skill.get("match_text"):
+            fail(f"{skill['_file']}: 被英雄引用的技能缺少 match_text")
+    for sid in sorted(effect_refs):
+        skill = skill_map.get(sid)
+        if skill is not None and not skill.get("match_text"):
+            fail(f"{skill['_file']}: 被效果牌引用的技能缺少 match_text")
+
+
+def check_attr_tables(raw, skill_map):
     for doc in raw:
         path = ROOT / "cards" / doc["_file"]
         table = parse_attr_table(path)
         if table is None:
             fail(f"{doc['_file']}: 缺少「## 属性」表")
             continue
-        expected = expected_attrs(doc, body_text(path))
+        expected = expected_card_attrs(doc, skill_map)
         for key, value in expected.items():
             if table.get(key) != value:
                 fail(f"{doc['_file']}: 属性表 {key}={table.get(key)!r}，front matter 为 {value!r}")
@@ -152,9 +255,19 @@ def check_attr_tables(raw):
             fail(f"{doc['_file']}: 属性表多出字段 {sorted(extra)}")
 
 
-def keyword_cost(card):
+def check_card_rendering(raw, skill_map):
+    for doc in raw:
+        expected = rendered_text(doc, skill_map)
+        if expected is None:
+            continue
+        actual = body_text(ROOT / "cards" / doc["_file"])
+        if actual != expected:
+            fail(f"{doc['_file']}: 「## 效果」与技能文本拼接不一致：{actual!r} != {expected!r}")
+
+
+def keyword_cost(keywords):
     total = 0
-    for k in card["keywords"]:
+    for k in keywords:
         if k == "嘲讽":
             total += .5
         elif k == "护盾":
@@ -182,13 +295,28 @@ def check_hero_intros(heroes):
             fail(f"{h['_file']}: 简介与 front matter 不一致")
 
 
-def check_cards():
+def check_cards(skill_map):
     raw = load("cards", ["id", "name", "card_type", "level", "tribe"])
     for doc in raw:
         if doc["card_type"] not in CARD_TYPES:
             fail(f"{doc['_file']}: card_type 非法 {doc['card_type']!r}")
+        raw_skills = doc.get("skills")
+        if raw_skills is not None and not isinstance(raw_skills, list):
+            fail(f"{doc['_file']}: skills 必须是列表，实为 {raw_skills!r}")
+        if "keywords" in doc:
+            fail(f"{doc['_file']}: 残留旧字段 keywords，应改用 skills")
+        for sid in card_skills(doc):
+            if sid not in skill_map:
+                fail(f"{doc['_file']}: 引用的技能不存在 {sid!r}")
     minions = [c for c in raw if c["card_type"] == "随从"]
     effects = [c for c in raw if c["card_type"] == "效果"]
+
+    skillless = [c for c in minions if not card_skills(c)]
+    if len(skillless) != 7:
+        fail(f"无技能随从 {len(skillless)} 张，期望 7 张（skills 缺失或为空）")
+    for c in skillless:
+        if body_text(ROOT / "cards" / c["_file"]) != "无":
+            fail(f"{c['_file']}: 无技能随从的「## 效果」必须为「无」")
 
     for c in minions:
         missing = [k for k in MINION_FIELDS if k not in c]
@@ -214,13 +342,13 @@ def check_cards():
         lo, hi, lh, hh = RANGE[c["level"]]
         if not (lo <= c["attack"] <= hi and lh <= c["health"] <= hh):
             fail(f"{name}: 数值 {c['attack']}/{c['health']} 越出 {c['level']} 星区间")
-        if c["attack"] + c["health"] + keyword_cost(c) > CAP[c["level"]]:
+        if c["attack"] + c["health"] + keyword_cost(derived_keywords(c, skill_map)) > CAP[c["level"]]:
             fail(f"{name}: 超模")
 
     for c in minions:
-        for k in c.get("keywords", []):
+        for k in derived_keywords(c, skill_map):
             if not KEYWORD_RE.fullmatch(k):
-                fail(f"{c['name']}: 关键词非法 {k!r}")
+                fail(f"{c['name']}: 派生关键词非法 {k!r}")
             base = k.split()[0]
             if base in TRIBE_KEYWORD and c["tribe"] != TRIBE_KEYWORD[base]:
                 fail(f"{c['name']}: 专属词 {k!r} 与流派 {c['tribe']} 越界")
@@ -231,6 +359,8 @@ def check_cards():
             fail(f"{c['_file']}: 效果牌缺字段 {missing}")
             continue
         name = c["name"]
+        if not card_skills(c):
+            fail(f"{c['_file']}: 效果牌缺技能，skills 不能为空")
         if "attack" in c or "health" in c:
             fail(f"{name}: 效果牌不得有 attack/health")
         if c["tribe"] not in EFFECT_TRIBES:
@@ -261,10 +391,8 @@ def check_cards():
     return raw, minions, effects
 
 
-def check_heroes():
-    heroes = load("heroes", ["id", "name", "summary", "discipline", "skill_name",
-                             "skill_cost", "skill_type", "skill_uses_per_turn",
-                             "skill_trigger", "skill_text", "match_text"])
+def check_heroes(skill_map):
+    heroes = load("heroes", HERO_FIELDS)
     if len(heroes) != 13:
         fail(f"英雄数量 {len(heroes)}，期望 13")
     for key in ("id", "name"):
@@ -273,10 +401,10 @@ def check_heroes():
         if dup:
             fail(f"英雄 {key} 重复: {dup}")
     for h in heroes:
+        if h["skill"] not in skill_map:
+            fail(f"{h['_file']}: skill 指向不存在的技能 {h['skill']!r}")
         if not h["summary"]:
             fail(f"{h['name']}: 简介为空")
-        if not h["match_text"]:
-            fail(f"{h['name']}: match_text 为空")
         if h["skill_type"] not in ("主动", "被动"):
             fail(f"{h['name']}: 技能类型非法 {h['skill_type']!r}")
         if not 0 <= h["skill_cost"] <= 2:
@@ -337,10 +465,14 @@ def check_enemy_selectors(raw):
 
 
 def main():
-    raw, minions, effects = check_cards()
-    heroes = check_heroes()
+    skills = check_skills()
+    skill_map = {s["id"]: s for s in skills}
+    raw, minions, effects = check_cards(skill_map)
+    heroes = check_heroes(skill_map)
+    check_skill_context(skill_map, heroes, effects)
     achievements = check_achievements()
-    check_attr_tables(raw)
+    check_attr_tables(raw, skill_map)
+    check_card_rendering(raw, skill_map)
     check_hero_intros(heroes)
     check_enemy_selectors(raw)
     check_auras(minions)
@@ -349,10 +481,11 @@ def main():
         for item in errors:
             print(" -", item)
         return 1
-    print(f"随从 {len(minions)} 张、效果牌 {len(effects)} 张、英雄 {len(heroes)} 位、成就 {len(achievements)} 个，校验通过")
     print("时代", dict(collections.Counter(c["era"] for c in minions)))
     print("流派", dict(collections.Counter(c["tribe"] for c in minions)))
     print("星级", dict(collections.Counter(c["level"] for c in minions)))
+    print(f"随从 {len(minions)} 张、效果牌 {len(effects)} 张、技能 {len(skills)} 个、"
+          f"英雄 {len(heroes)} 位、成就 {len(achievements)} 个，校验通过")
     return 0
 
 

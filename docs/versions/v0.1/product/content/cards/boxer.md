@@ -8,7 +8,7 @@ level: 4
 era: 现代
 attack: 5
 health: 7
-keywords: []
+skills: [trigger-3-humans-self-plus-2-attack]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 5 |
 | 生命值 | 7 |
 | 关键词 | 无 |
+| 技能 | trigger-3-humans-self-plus-2-attack |
 | 学者 | 否 |
 | 来源 | 新增 |
 

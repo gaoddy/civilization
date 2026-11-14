@@ -6,6 +6,7 @@ level: 2
 tribe: 人类
 cost: 1
 match_text: 同左
+skills: [trigger-friendly-human-taunt-until-turn-end]
 ---
 
 # 方阵
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 2 |
 | 流派 | 人类 |
+| 技能 | trigger-friendly-human-taunt-until-turn-end |
 | 费用 | 1 |
 | 比赛模式替换 | 同左 |
 

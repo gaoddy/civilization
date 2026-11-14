@@ -3,13 +3,11 @@ id: faraday
 name: 迈克尔·法拉第
 summary: 用护盾保护核心随从的防御型物理英雄。
 discipline: 物理
-skill_name: 法拉第笼
+skill: hero-faraday-cage
 skill_cost: 2
 skill_type: 主动
 skill_uses_per_turn: 1
 skill_trigger: 主动使用
-skill_text: 使一个友方随从获得护盾
-match_text: 同左
 ---
 
 # 迈克尔·法拉第

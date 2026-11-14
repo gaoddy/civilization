@@ -8,7 +8,7 @@ level: 3
 era: 现代
 attack: 4
 health: 5
-keywords: [战吼]
+skills: [battlecry-friendly-growth-once]
 is_scholar: false
 source: 素材
 ---
@@ -29,6 +29,7 @@ source: 素材
 | 攻击力 | 4 |
 | 生命值 | 5 |
 | 关键词 | 战吼 |
+| 技能 | battlecry-friendly-growth-once |
 | 学者 | 否 |
 | 来源 | 素材 |
 

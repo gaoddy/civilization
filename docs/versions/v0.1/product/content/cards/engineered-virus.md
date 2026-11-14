@@ -8,7 +8,7 @@ level: 6
 era: 未来
 attack: 9
 health: 11
-keywords: [传染]
+skills: [keyword-contagion, combatstart-all-enemies-contagion-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 9 |
 | 生命值 | 11 |
 | 关键词 | 传染 |
+| 技能 | keyword-contagion；combatstart-all-enemies-contagion-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

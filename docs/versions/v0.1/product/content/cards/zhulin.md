@@ -8,7 +8,7 @@ level: 3
 era: 封建
 attack: 3
 health: 6
-keywords: [播种]
+skills: [keyword-sow, aura-other-plants-plus-0-plus-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 3 |
 | 生命值 | 6 |
 | 关键词 | 播种 |
+| 技能 | keyword-sow；aura-other-plants-plus-0-plus-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

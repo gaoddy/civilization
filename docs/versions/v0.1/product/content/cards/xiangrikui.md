@@ -8,7 +8,7 @@ level: 2
 era: 史前
 attack: 2
 health: 4
-keywords: [繁衍 2]
+skills: [keyword-breed-2]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 2 |
 | 生命值 | 4 |
 | 关键词 | 繁衍 2 |
+| 技能 | keyword-breed-2 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

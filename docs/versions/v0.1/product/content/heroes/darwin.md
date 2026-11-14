@@ -3,13 +3,11 @@ id: darwin
 name: 查尔斯·罗伯特·达尔文
 summary: 提供流派随从发现的稳定性生物英雄。
 discipline: 生物
-skill_name: 进化
+skill: hero-evolution-discovery
 skill_cost: 2
 skill_type: 主动
 skill_uses_per_turn: 1
 skill_trigger: 主动使用
-skill_text: 发现一张本局启用的流派随从
-match_text: 改为三选一固定池
 ---
 
 # 查尔斯·罗伯特·达尔文

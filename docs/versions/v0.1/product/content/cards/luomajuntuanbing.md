@@ -8,7 +8,7 @@ level: 3
 era: 封建
 attack: 4
 health: 6
-keywords: [嘲讽]
+skills: [keyword-taunt, trigger-3-humans-self-plus-1-plus-1]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 4 |
 | 生命值 | 6 |
 | 关键词 | 嘲讽 |
+| 技能 | keyword-taunt；trigger-3-humans-self-plus-1-plus-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 

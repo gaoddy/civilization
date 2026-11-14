@@ -8,7 +8,7 @@ level: 2
 era: 史前
 attack: 3
 health: 4
-keywords: []
+skills: [combatstart-if-2-biology-self-plus-2-attack]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 3 |
 | 生命值 | 4 |
 | 关键词 | 无 |
+| 技能 | combatstart-if-2-biology-self-plus-2-attack |
 | 学者 | 否 |
 | 来源 | 新增 |
 

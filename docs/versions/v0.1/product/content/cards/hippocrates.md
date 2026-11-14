@@ -8,7 +8,7 @@ level: 3
 era: 原始
 attack: 0
 health: 9
-keywords: []
+skills: [trigger-friendly-growth-extra-plus-0-plus-1]
 is_scholar: true
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 0 |
 | 生命值 | 9 |
 | 关键词 | 无 |
+| 技能 | trigger-friendly-growth-extra-plus-0-plus-1 |
 | 学者 | 是 |
 | 来源 | 新增 |
 

@@ -3,13 +3,11 @@ id: edison
 name: 托马斯·爱迪生
 summary: 用主动成长推动机械体系滚雪球的工程英雄。
 discipline: 工程
-skill_name: 发明工厂
+skill: hero-invention-factory
 skill_cost: 2
 skill_type: 主动
 skill_uses_per_turn: 1
 skill_trigger: 主动使用
-skill_text: 使你的其他机械随从各获得一次成长
-match_text: 同左
 ---
 
 # 托马斯·爱迪生

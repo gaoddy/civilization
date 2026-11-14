@@ -8,7 +8,7 @@ level: 5
 era: 未来
 attack: 6
 health: 12
-keywords: [战吼]
+skills: [battlecry-summon-3-3-synthetic-cell]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 6 |
 | 生命值 | 12 |
 | 关键词 | 战吼 |
+| 技能 | battlecry-summon-3-3-synthetic-cell |
 | 学者 | 否 |
 | 来源 | 新增 |
 

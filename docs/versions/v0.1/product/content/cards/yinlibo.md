@@ -6,6 +6,7 @@ level: 4
 tribe: 通用
 cost: 2
 match_text: 同左
+skills: [combatstart-all-enemies-minus-1-attack]
 ---
 
 # 引力波
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 4 |
 | 流派 | 通用 |
+| 技能 | combatstart-all-enemies-minus-1-attack |
 | 费用 | 2 |
 | 比赛模式替换 | 同左 |
 

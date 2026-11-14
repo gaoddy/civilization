@@ -8,7 +8,7 @@ level: 6
 era: 未来
 attack: 8
 health: 13
-keywords: [护盾]
+skills: [keyword-divine-shield]
 is_scholar: false
 source: 新增
 ---
@@ -29,6 +29,7 @@ source: 新增
 | 攻击力 | 8 |
 | 生命值 | 13 |
 | 关键词 | 护盾 |
+| 技能 | keyword-divine-shield |
 | 学者 | 否 |
 | 来源 | 新增 |
 

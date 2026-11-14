@@ -6,6 +6,7 @@ level: 2
 tribe: 学者
 cost: 1
 match_text: 同左
+skills: [combatstart-top-attack-enemy-cant-attack]
 ---
 
 # 彷徨
@@ -19,6 +20,7 @@ match_text: 同左
 | 类型 | 效果 |
 | 星级 | 2 |
 | 流派 | 学者 |
+| 技能 | combatstart-top-attack-enemy-cant-attack |
 | 费用 | 1 |
 | 比赛模式替换 | 同左 |
 

@@ -8,7 +8,7 @@ level: 2
 era: 史前
 attack: 2
 health: 4
-keywords: [繁衍 1, 播种]
+skills: [keyword-sow, keyword-breed-1]
 is_scholar: false
 source: 新增
 ---
@@ -28,7 +28,8 @@ source: 新增
 | 时代 | 史前 |
 | 攻击力 | 2 |
 | 生命值 | 4 |
-| 关键词 | 繁衍 1；播种 |
+| 关键词 | 播种；繁衍 1 |
+| 技能 | keyword-sow；keyword-breed-1 |
 | 学者 | 否 |
 | 来源 | 新增 |
 
