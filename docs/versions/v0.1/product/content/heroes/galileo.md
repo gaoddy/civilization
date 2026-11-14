@@ -9,6 +9,7 @@ skill_type: 被动
 skill_uses_per_turn: 1
 skill_trigger: 首次刷新时
 skill_text: 每回合首次刷新时额外出现一张当前时代的随机随从
+match_text: 额外出现的随从固定为当前时代当前星级排序第一张
 ---
 
 # 伽利略·伽利莱

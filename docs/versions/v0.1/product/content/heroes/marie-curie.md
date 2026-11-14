@@ -9,6 +9,7 @@ skill_type: 被动
 skill_uses_per_turn: 1
 skill_trigger: 战斗开始时
 skill_text: 战斗开始时对随机一个敌方随从造成 2 点伤害
+match_text: 战斗开始时，对敌方最左侧随从造成 2 点伤害
 ---
 
 # 玛丽·居里

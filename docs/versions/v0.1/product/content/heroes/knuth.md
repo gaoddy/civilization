@@ -9,6 +9,7 @@ skill_type: 主动
 skill_uses_per_turn: 1
 skill_trigger: 主动使用
 skill_text: 刷新商店并获得一张当前星级的随从
+match_text: 获得的随从固定为当前星级排序第一张
 ---
 
 # 高德纳

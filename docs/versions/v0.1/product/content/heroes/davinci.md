@@ -9,6 +9,7 @@ skill_type: 主动
 skill_uses_per_turn: 1
 skill_trigger: 主动使用
 skill_text: 复制一张你手牌中的随从牌
+match_text: 同左
 ---
 
 # 列奥纳多·达·芬奇

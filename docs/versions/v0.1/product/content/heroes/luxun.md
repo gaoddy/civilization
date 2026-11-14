@@ -9,6 +9,7 @@ skill_type: 主动
 skill_uses_per_turn: 2
 skill_trigger: 主动使用
 skill_text: 使一个友方随从获得一次成长；每回合可用 2 次
+match_text: 同左
 ---
 
 # 鲁迅

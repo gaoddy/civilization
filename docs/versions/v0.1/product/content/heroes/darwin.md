@@ -9,6 +9,7 @@ skill_type: 主动
 skill_uses_per_turn: 1
 skill_trigger: 主动使用
 skill_text: 发现一张本局启用的流派随从
+match_text: 改为三选一固定池
 ---
 
 # 查尔斯·罗伯特·达尔文

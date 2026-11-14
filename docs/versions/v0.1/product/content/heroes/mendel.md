@@ -9,6 +9,7 @@ skill_type: 主动
 skill_uses_per_turn: 1
 skill_trigger: 主动使用
 skill_text: 使一个友方植物随从获得一次成长
+match_text: 同左
 ---
 
 # 格雷戈尔·约翰·孟德尔

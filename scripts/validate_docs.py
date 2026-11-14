@@ -257,9 +257,9 @@ def check_cards():
 def check_heroes():
     heroes = load("heroes", ["id", "name", "summary", "discipline", "skill_name",
                              "skill_cost", "skill_type", "skill_uses_per_turn",
-                             "skill_trigger", "skill_text"])
-    if len(heroes) != 10:
-        fail(f"英雄数量 {len(heroes)}，期望 10")
+                             "skill_trigger", "skill_text", "match_text"])
+    if len(heroes) != 13:
+        fail(f"英雄数量 {len(heroes)}，期望 13")
     for key in ("id", "name"):
         values = [h[key] for h in heroes]
         dup = [v for v, n in collections.Counter(values).items() if n > 1]
@@ -268,6 +268,8 @@ def check_heroes():
     for h in heroes:
         if not h["summary"]:
             fail(f"{h['name']}: 简介为空")
+        if not h["match_text"]:
+            fail(f"{h['name']}: match_text 为空")
         if h["skill_type"] not in ("主动", "被动"):
             fail(f"{h['name']}: 技能类型非法 {h['skill_type']!r}")
         if not 0 <= h["skill_cost"] <= 2:
