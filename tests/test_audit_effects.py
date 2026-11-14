@@ -1,0 +1,22 @@
+import pathlib, sys, tempfile, unittest
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import audit_effects
+SKILLS = ROOT / "docs/versions/v0.1/product/content/skills"
+
+class AuditEffectsTest(unittest.TestCase):
+    def test_all_committed_skills_are_clean(self):
+        report = audit_effects.audit(SKILLS)
+        self.assertEqual(report.violations, [])
+        self.assertEqual(report.skill_count, 118)
+        self.assertEqual(sum(report.matrix.values()), 109)  # 108 个技能的 109 段效果
+    def test_times_if_without_times_is_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = pathlib.Path(tmp) / "bad.md"
+            p.write_text("---\nid: bad\ntext: 战吼：成长\neffects: OnPlay|Growth|friendly:single|timesIf=人类:2\n---\n")
+            self.assertTrue(any("timesIf" in v for v in audit_effects.audit(pathlib.Path(tmp)).violations))
+    def test_when_on_play_is_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = pathlib.Path(tmp) / "bad.md"
+            p.write_text("---\nid: bad\ntext: 战吼：成长\neffects: OnPlay|Growth|self|times=1,when=tribe=人类\n---\n")
+            self.assertTrue(any("when" in v for v in audit_effects.audit(pathlib.Path(tmp)).violations))
