@@ -6,7 +6,7 @@ use rule_engine::data::{Card, CardType, Skill, Tribe};
 use rule_engine::engine::Engine;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
-use rule_engine::settle::fold_auras;
+use rule_engine::settle::{Pairing, fold_auras, mirror_ghost_with_auras};
 use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat};
 
 fn setup() -> (Engine, GameState) {
@@ -338,4 +338,110 @@ fn state_hash_includes_auras() {
     );
 
     assert_ne!(state_hash(&state), state_hash(&with_aura));
+}
+
+#[test]
+fn mirror_ghost_from_previous_board_includes_auras() {
+    let (mut engine, mut state) = setup();
+    place(&mut state, 0, 1, "qinghao");
+    place(&mut state, 0, 2, "juzi");
+    engine.recompute_auras(&mut state);
+
+    // 上一场快照保留原始实例编号，光环缓存可按同一 InstanceId 命中。
+    let raw = state.players[0].board.clone();
+    state.previous_board.insert(0, raw.clone());
+
+    let ghost = mirror_ghost_with_auras(&engine.catalog, &state, 0);
+    let ghost_juzi = ghost
+        .iter()
+        .find(|minion| minion.instance_id == 2)
+        .expect("幽灵应包含上一场随从");
+    assert_eq!(
+        combat::effective_health(&engine.catalog, ghost_juzi),
+        4,
+        "幽灵应叠加 +1 生命光环（基础 3 + 光环 1）"
+    );
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, ghost_juzi),
+        2,
+        "幽灵应叠加 +1 攻击光环（基础 1 + 光环 1）"
+    );
+}
+
+#[test]
+fn mirror_fight_does_not_mutate_stored_state() {
+    let (mut engine, mut state) = setup();
+    place(&mut state, 0, 1, "qinghao");
+    place(&mut state, 0, 2, "juzi");
+    engine.recompute_auras(&mut state);
+
+    let before = state.players[0].board.clone();
+    state.previous_board.insert(0, before.clone());
+    state.phase = Phase::Combat;
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        mirror: true,
+    }];
+
+    engine
+        .resolve_combat(&mut state)
+        .expect("镜像战斗应成功结算");
+
+    assert_eq!(state.players[0].board, before, "战斗不得修改持久随从实例");
+    assert_eq!(
+        state.previous_board.get(&0),
+        Some(&before),
+        "上一场快照应保持原始（未折叠光环）内容"
+    );
+    for minion in &state.players[0].board {
+        assert!(minion.mods.is_empty(), "光环不得写入持久 mods");
+        assert!(minion.granted.is_empty(), "光环不得写入持久 granted");
+    }
+}
+
+#[test]
+fn aura_top_attack_picks_highest_attack() {
+    let (mut engine, mut state) = setup();
+    add_aura_source(
+        &mut engine,
+        "test-top-attack",
+        Tribe::General,
+        "Aura|ModifyStats|friendly:topAttack:other=true|attack=1,duration=permanent",
+    );
+    place(&mut state, 0, 1, "test-top-attack");
+    place(&mut state, 0, 2, "baiyi");
+    place(&mut state, 0, 3, "menghu");
+
+    engine.recompute_auras(&mut state);
+
+    assert!(
+        !state.auras.contains_key(&2),
+        "低攻击力目标不应被 topAttack 选中"
+    );
+    assert_eq!(
+        state.auras.get(&3).map(|aura| aura.attack),
+        Some(1),
+        "topAttack 应选中攻击力最高的随从"
+    );
+}
+
+#[test]
+fn aura_single_without_target_has_no_targets() {
+    let (mut engine, mut state) = setup();
+    add_aura_source(
+        &mut engine,
+        "test-single",
+        Tribe::General,
+        "Aura|ModifyStats|friendly:single|attack=1,duration=permanent",
+    );
+    place(&mut state, 0, 1, "test-single");
+    place(&mut state, 0, 2, "baiyi");
+
+    engine.recompute_auras(&mut state);
+
+    assert!(
+        state.auras.is_empty(),
+        "没有显式目标的光环 single 不应产生任何加成"
+    );
 }

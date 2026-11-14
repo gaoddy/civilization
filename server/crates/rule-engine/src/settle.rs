@@ -248,12 +248,7 @@ fn resolve_mirror(
 ) {
     let current = board_of(state, seat).to_vec();
     let board = fold_auras(catalog, &state.auras, &current);
-    let ghost = match state.previous_board.get(&seat) {
-        Some(previous) if !previous.is_empty() => strip_ghost(previous),
-        // 由当前阵容构建幽灵时，幽灵只保留永久属性；先剥离临时修正，
-        // 再把当前光环折叠回来（光环数值是派生而非 `mods` 中的持久记录）。
-        _ => fold_auras(catalog, &state.auras, &strip_ghost(&current)),
-    };
+    let ghost = mirror_ghost_with_auras(catalog, state, seat);
 
     let log = combat::simulate(catalog, &board, &ghost, seat, seat, seat, &mut state.rng);
     let won = log.defender_survivors.is_empty() && !log.attacker_survivors.is_empty();
@@ -319,6 +314,18 @@ pub fn mirror_ghost(state: &GameState, seat: Seat) -> Vec<MinionInstance> {
         Some(previous) if !previous.is_empty() => strip_ghost(previous),
         _ => strip_ghost(board_of(state, seat)),
     }
+}
+
+/// 折叠当前光环后的镜像幽灵阵容。
+///
+/// `previous_board` 快照保留原始实例编号，`state.auras` 以同一 `InstanceId`
+/// 为键，因此上一场快照与当前阵容两条分支都能直接查到对应光环。
+pub fn mirror_ghost_with_auras(
+    catalog: &Catalog,
+    state: &GameState,
+    seat: Seat,
+) -> Vec<MinionInstance> {
+    fold_auras(catalog, &state.auras, &mirror_ghost(state, seat))
 }
 
 /// 幽灵快照只保留永久属性：卡面基础值、成长、繁衍与传染层。

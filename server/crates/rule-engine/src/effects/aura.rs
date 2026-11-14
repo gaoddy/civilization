@@ -8,7 +8,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::data::Catalog;
+use crate::combat;
 use crate::effects::{
     Compare, Effect, EffectCtx, KeywordSpec, Op, Pick, Selector, Side, Trigger, parse_effects,
 };
@@ -35,9 +35,9 @@ impl Engine {
             let Some(player) = state.players.iter().find(|player| player.seat == seat) else {
                 continue;
             };
-            for (source, effects) in self.aura_sources(&self.catalog, player) {
+            for (source, effects) in self.aura_sources(player) {
                 for effect in effects {
-                    if !self.aura_active(state, &effect, seat, source) {
+                    if !self.aura_active(state, player, &effect, source) {
                         continue;
                     }
                     for target in aura_targets(self, state, &effect, player, source) {
@@ -51,11 +51,7 @@ impl Engine {
     }
 
     /// 收集某玩家所有光环来源：棋盘点顺序的随从，然后是英雄卡。
-    fn aura_sources(
-        &self,
-        catalog: &Catalog,
-        player: &PlayerState,
-    ) -> Vec<(Option<InstanceId>, Vec<Effect>)> {
+    fn aura_sources(&self, player: &PlayerState) -> Vec<(Option<InstanceId>, Vec<Effect>)> {
         let mut sources: Vec<(Option<InstanceId>, String)> = player
             .board
             .iter()
@@ -67,12 +63,12 @@ impl Engine {
 
         let mut result = Vec::with_capacity(sources.len());
         for (source, card_id) in sources {
-            let Some(card) = catalog.cards.get(&card_id) else {
+            let Some(card) = self.catalog.cards.get(&card_id) else {
                 continue;
             };
             let mut effects = Vec::new();
             for skill_id in &card.skills {
-                let Some(skill) = catalog.skills.get(skill_id) else {
+                let Some(skill) = self.catalog.skills.get(skill_id) else {
                     continue;
                 };
                 let Ok(parsed) = parse_effects(&skill.effects) else {
@@ -93,14 +89,14 @@ impl Engine {
     fn aura_active(
         &self,
         state: &GameState,
+        player: &PlayerState,
         effect: &Effect,
-        seat: Seat,
         source: Option<InstanceId>,
     ) -> bool {
         match effect.trigger {
             Trigger::Aura => true,
             Trigger::ConditionalAura => effect.params.condition.as_ref().is_some_and(|condition| {
-                self.condition_holds_on_board(state, condition, seat, source)
+                self.condition_holds_on_board(state, player, condition, source)
             }),
             _ => false,
         }
@@ -110,17 +106,14 @@ impl Engine {
     fn condition_holds_on_board(
         &self,
         state: &GameState,
+        player: &PlayerState,
         condition: &crate::effects::Condition,
-        seat: Seat,
         source: Option<InstanceId>,
     ) -> bool {
-        let Some(player) = state.players.iter().find(|player| player.seat == seat) else {
-            return false;
-        };
         if matches!(condition.side, Side::Enemy) {
             return compare_count(0, condition.compare, condition.count);
         }
-        let ctx = aura_ctx(seat, source);
+        let ctx = aura_ctx(player.seat, source);
         let count = player
             .board
             .iter()
@@ -176,21 +169,48 @@ fn aura_targets(
                 })
                 .map(|minion| minion.instance_id)
                 .collect();
-            pick_targets(pool, *pick)
+            pick_targets(engine, state, pool, *pick)
         }
     }
 }
 
-/// 光环不使用随机选取；未在数据中出现的选取方式按确定规则退化。
-fn pick_targets(pool: Vec<InstanceId>, pick: Pick) -> Vec<InstanceId> {
+/// 选取语义与 `exec::apply_pick` 对齐。
+///
+/// `TopAttack` 取攻击力最高者（并列时按棋盘顺序取前者）；没有显式目标的
+/// `Single`、以及需要随机流的 `Random` 在光环求值中不产生目标（光环不消耗随机流）。
+fn pick_targets(
+    engine: &Engine,
+    state: &GameState,
+    pool: Vec<InstanceId>,
+    pick: Pick,
+) -> Vec<InstanceId> {
     match pick {
         Pick::All => pool,
-        Pick::Leftmost | Pick::Single | Pick::TopAttack => {
-            pool.first().copied().into_iter().collect()
-        }
+        Pick::Single | Pick::Random => Vec::new(),
+        Pick::Leftmost => pool.first().copied().into_iter().collect(),
         Pick::LeftmostAdjacent => pool.iter().take(2).copied().collect(),
-        Pick::Random => Vec::new(),
+        Pick::TopAttack => {
+            let mut best: Option<(InstanceId, i32)> = None;
+            for id in pool {
+                let Some(attack) = board_attack(engine, state, id) else {
+                    continue;
+                };
+                if best.is_none_or(|(_, current)| attack > current) {
+                    best = Some((id, attack));
+                }
+            }
+            best.map(|(id, _)| vec![id]).unwrap_or_default()
+        }
     }
+}
+
+fn board_attack(engine: &Engine, state: &GameState, id: InstanceId) -> Option<i32> {
+    state
+        .players
+        .iter()
+        .flat_map(|player| player.board.iter())
+        .find(|minion| minion.instance_id == id)
+        .map(|minion| combat::effective_attack(&engine.catalog, minion))
 }
 
 fn aura_ctx(seat: Seat, source: Option<InstanceId>) -> EffectCtx {
