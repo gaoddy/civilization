@@ -4,14 +4,16 @@
 //! 一段效果写作 `<触发>|<原语>|<选择器>|<参数,...>`，多段用 `;` 分隔。
 //! 解析在加载期完成，未知触发、原语、选择器、筛选或参数都会直接报错。
 
+mod exec;
 mod parse;
 
+pub use exec::{EffectCtx, effect_coverage};
 pub use parse::parse_effects;
 
 use crate::data::CardType;
 
 /// 效果触发时机。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Trigger {
     OnPlay,
     OnPlayEffect,
@@ -33,7 +35,7 @@ pub enum Trigger {
 }
 
 /// 效果原语。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Op {
     Growth,
     ModifyStats,

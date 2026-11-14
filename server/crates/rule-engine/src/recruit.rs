@@ -5,6 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::data::{Card, CardType, Era, Tribe};
+use crate::effects::{EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::intent::{Intent, Outcome, Reject, RejectCode};
@@ -19,7 +20,7 @@ const EMPTY_STAR_RETRIES: u32 = 5;
 
 /// 按意图分派；调用方已用 [`crate::engine::Engine::apply`] 指定座位。
 pub(crate) fn apply(
-    engine: &Engine,
+    engine: &mut Engine,
     state: &mut GameState,
     seat: Seat,
     intent: Intent,
@@ -50,11 +51,11 @@ pub(crate) fn apply(
 }
 
 fn buy(
-    engine: &Engine,
+    engine: &mut Engine,
     state: &mut GameState,
     seat: Seat,
     slot: u8,
-    _target: Option<InstanceId>,
+    target: Option<InstanceId>,
 ) -> Result<Outcome, Reject> {
     let card_id = player(state, seat)?
         .shop
@@ -76,7 +77,8 @@ fn buy(
         ));
     }
 
-    let cost = match card.card_type {
+    let card_type = card.card_type;
+    let cost = match card_type {
         CardType::Minion => 3,
         CardType::Effect => card.cost.unwrap_or(3),
     };
@@ -84,7 +86,7 @@ fn buy(
     let current = player(state, seat)?;
     let board_room = current.board.len() < config.board_slots;
     let hand_room = current.hand.len() < config.hand_slots;
-    let to_board = match card.card_type {
+    let to_board = match card_type {
         CardType::Minion => {
             if !board_room && !hand_room {
                 return Err(Reject::new(RejectCode::NoSpace, "棋盘与手牌均已满"));
@@ -103,7 +105,7 @@ fn buy(
         .checked_sub(cost)
         .ok_or_else(|| Reject::new(RejectCode::NotEnoughGold, format!("需要 {cost} 金币")))?;
 
-    if card.card_type == CardType::Minion && state.pool.get(&card_id).copied().unwrap_or(0) == 0 {
+    if card_type == CardType::Minion && state.pool.get(&card_id).copied().unwrap_or(0) == 0 {
         return Err(Reject::new(
             RejectCode::ShopSlotEmpty,
             format!("卡牌 {card_id} 的共享池已空"),
@@ -127,7 +129,7 @@ fn buy(
     if let Some(shop_slot) = player.shop.get_mut(usize::from(slot)) {
         *shop_slot = None;
     }
-    if card.card_type == CardType::Minion
+    if card_type == CardType::Minion
         && let Some(count) = state.pool.get_mut(&card_id)
     {
         *count = count.saturating_sub(1);
@@ -147,7 +149,20 @@ fn buy(
         slot,
         card_id,
     }];
-    if card.card_type == CardType::Minion {
+    if to_board {
+        events.extend(engine.fire(
+            state,
+            Trigger::OnPlay,
+            EffectCtx {
+                seat,
+                source: Some(instance_id),
+                target,
+                event_target: None,
+                golden: false,
+            },
+        ));
+    }
+    if card_type == CardType::Minion {
         events.extend(engine.check_triple(state, seat));
     }
     Ok(Outcome::with(events))
@@ -237,11 +252,11 @@ fn upgrade(engine: &Engine, state: &mut GameState, seat: Seat) -> Result<Outcome
 }
 
 fn play_card(
-    engine: &Engine,
+    engine: &mut Engine,
     state: &mut GameState,
     seat: Seat,
     hand_index: u8,
-    _target: Option<InstanceId>,
+    target: Option<InstanceId>,
 ) -> Result<Outcome, Reject> {
     let index = usize::from(hand_index);
     let hand_card = player(state, seat)?
@@ -254,10 +269,11 @@ fn play_card(
                 format!("手牌下标 {hand_index} 不存在"),
             )
         })?;
-    let card = engine
+    let card_type = engine
         .catalog
         .cards
         .get(&hand_card.card_id)
+        .map(|card| card.card_type)
         .ok_or_else(|| {
             Reject::new(
                 RejectCode::CardNotInHand,
@@ -265,13 +281,24 @@ fn play_card(
             )
         })?;
 
-    match card.card_type {
+    match card_type {
         CardType::Effect => {
             let player = state.players.get_mut(usize::from(seat)).ok_or_else(|| {
                 Reject::new(RejectCode::InvalidStage, format!("座位 {seat} 不存在"))
             })?;
             player.hand.remove(index);
-            Ok(Outcome::empty())
+
+            let ctx = EffectCtx {
+                seat,
+                source: None,
+                target,
+                event_target: None,
+                golden: false,
+            };
+            let mut events =
+                engine.fire_card(state, &hand_card.card_id, Trigger::OnPlayEffect, ctx);
+            events.extend(engine.fire(state, Trigger::OnUse, ctx));
+            Ok(Outcome::with(events))
         }
         CardType::Minion => {
             if player(state, seat)?.board.len() >= engine.catalog.config.board_slots {
@@ -292,7 +319,20 @@ fn play_card(
                 hand_card.golden,
             ));
             state.next_instance_id = following_instance_id;
-            Ok(Outcome::with(engine.check_triple(state, seat)))
+
+            let mut events = engine.fire(
+                state,
+                Trigger::OnPlay,
+                EffectCtx {
+                    seat,
+                    source: Some(instance_id),
+                    target,
+                    event_target: None,
+                    golden: false,
+                },
+            );
+            events.extend(engine.check_triple(state, seat));
+            Ok(Outcome::with(events))
         }
     }
 }
@@ -355,11 +395,11 @@ fn freeze(state: &mut GameState, seat: Seat, slot: Option<u8>) -> Result<Outcome
 }
 
 fn use_hero_power(
-    engine: &Engine,
+    engine: &mut Engine,
     state: &mut GameState,
     seat: Seat,
     skill_id: &str,
-    _target: Option<InstanceId>,
+    target: Option<InstanceId>,
 ) -> Result<Outcome, Reject> {
     let player = player(state, seat)?;
     let hero_id = player
@@ -410,7 +450,19 @@ fn use_hero_power(
     player.gold = remaining_gold;
     let uses = player.hero_uses.entry(skill_id.to_string()).or_insert(0);
     *uses = uses.saturating_add(1);
-    Ok(Outcome::empty())
+
+    let events = engine.fire(
+        state,
+        Trigger::OnActivate,
+        EffectCtx {
+            seat,
+            source: None,
+            target,
+            event_target: None,
+            golden: false,
+        },
+    );
+    Ok(Outcome::with(events))
 }
 
 fn end_recruit(state: &mut GameState) -> Result<Outcome, Reject> {

@@ -10,6 +10,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::combat;
 use crate::data::{Catalog, Era, GameConfig};
+use crate::effects::Duration;
 use crate::engine::Engine;
 use crate::error::EngineError;
 use crate::events::GameEvent;
@@ -290,6 +291,26 @@ pub fn strip_ghost(board: &[MinionInstance]) -> Vec<MinionInstance> {
         .collect()
 }
 
+/// 清除所有棋盘随从的 `combat` 时长效果：临时修正、临时关键词与禁攻标记。
+///
+/// 「禁攻」用 `granted` 中的占位条目记录来源时长；只有不再剩任何「禁攻」授予时
+/// 才清除布尔标记，因此 `permanent` 的禁攻会保留到下一回合。
+fn clear_combat_duration(state: &mut GameState) {
+    for player in &mut state.players {
+        for minion in &mut player.board {
+            minion
+                .mods
+                .retain(|modifier| modifier.duration != Duration::Combat);
+            minion
+                .granted
+                .retain(|(_, duration)| *duration != Duration::Combat);
+            if !minion.granted.iter().any(|(keyword, _)| keyword == "禁攻") {
+                minion.cannot_attack = false;
+            }
+        }
+    }
+}
+
 fn resolve_settle(
     config: &GameConfig,
     state: &mut GameState,
@@ -302,6 +323,8 @@ fn resolve_settle(
     }
 
     let mut events = Vec::new();
+    // §2.5：进入 Settle 前清除本回合临时增益与临时关键词。
+    clear_combat_duration(state);
     let pending = std::mem::take(&mut state.pending_settle);
     for (seat, damage) in pending {
         if let Some(player) = player_mut(state, seat) {
