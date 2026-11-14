@@ -43,7 +43,7 @@
 
 `skill_cost`、`skill_type`、`skill_uses_per_turn`、`skill_trigger` 属于英雄而非技能：同一技能被不同宿主引用时，触发时机、费用与次数各自决定。技能的 `name` 与 `match_text` 由被引用的技能实体提供。
 
-技能效果与效果牌共用 `Trigger × Selector × Op × Duration` 结构（见[关键词与机制](../rules/keywords-and-mechanics.md) §9 与[技能规范与数据](skill-system.md)），不另设一套原语。
+技能效果与效果牌共用 `Trigger × Selector × Op × Duration` 结构（见[关键词与机制](../rules/keywords-and-mechanics.md) §9 与[技能规范与数据](skill-system.md)），不另设一套原语。英雄技能的结构化效果记录在所引用技能实体的 `effects` 字段，英雄文档只保留引用与宿主字段，不重复记录效果。
 
 ## 3. 36 张效果牌
 
