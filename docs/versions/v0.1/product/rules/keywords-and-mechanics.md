@@ -224,7 +224,7 @@
 
 ### 9.1 结构
 
-技能是效果文本的实体，卡牌（含英雄卡）一律通过 `skills` 引用技能获得效果，英雄技能也在其中。一条技能效果由四段组成：`Trigger × Selector × Op × Duration`；主动技能在技能实体上带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀确定时机（见[技能规范与数据](../content/skill-system.md)）。静态光环以 `Aura` / `ConditionalAura` 作为触发登记（§8），动作仍复用 §9.3 的常规原语，不单设光环原语。
+技能是效果文本的实体，卡牌（含英雄卡）一律通过 `skills` 引用技能获得效果。一条技能效果由四段组成：`Trigger × Selector × Op × Duration`；主动技能在技能实体上带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀确定时机（见[技能规范与数据](../content/skill-system.md)）。静态光环以 `Aura` / `ConditionalAura` 作为触发登记（§8），动作仍复用 §9.3 的常规原语，不单设光环原语。
 
 ### 9.2 选择器
 
@@ -248,9 +248,9 @@
 | 召唤 | `Summon {selector, token 或 card, count}` | 召唤位置由 `selector` 决定；`token` 取注册表 id，`card` 取牌池卡 id |
 | 复制 | `Copy {selector, to}` | `to` 为手牌或战场 |
 | 发现 | `Discover {pool, choose}` | 三选一 |
-| 刷新商店 | `RefreshShop {free, extra}` | `hero-*` 技能专用 |
-| 增加商店槽位 | `AddShopSlot {era, count}` | `hero-*` 技能专用；商店额外出现 `count` 张 `era=current` 的随从 |
-| 获得随从 | `GainMinion {from, level, to}` | `hero-*` 技能专用 |
+| 刷新商店 | `RefreshShop {free, extra}` | 主动技能专用 |
+| 增加商店槽位 | `AddShopSlot {era, count}` | 主动技能专用；商店额外出现 `count` 张 `era=current` 的随从 |
+| 获得随从 | `GainMinion {from, level, to}` | 主动技能专用 |
 
 光环不单设原语：静态光环在 §8 登记为 `Aura` / `ConditionalAura` 触发，其动作写 `ModifyStats` 或 `GrantKeyword`，并显式带 `duration=permanent`。
 
