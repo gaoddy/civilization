@@ -22,10 +22,10 @@
 | 对局 | 8 名真人、40 点生命、招募 / 战斗 / 结算三段状态机；不设 AI 补位 |
 | 时代 | 7 个：史前、原始、古典、封建、工业、现代、未来 |
 | 流派 | 6 个，每局启用 5 个（学者固定启用） |
-| 卡牌 | 176 张随从 + 36 张效果牌 |
+| 卡牌 | 184 张随从（含 13 张英雄卡）+ 36 张效果牌 |
 | 星级 | 1–7 |
-| 英雄 | 13 位，各带 1 个英雄技能 |
-| 技能 | 118 个，卡牌与英雄共享引用 |
+| 英雄卡 | 13 张，各带 1 个英雄技能 |
+| 技能 | 118 个，卡牌（含英雄卡）共享引用 |
 | 关键词 | 13 个：通用 10 个 + 机械、植物、生物专属 3 个 |
 | 模式 | 会战（默认）、比赛 |
 | 成就 | 6 个 |
@@ -40,8 +40,8 @@
 1. [设计总纲](product/overview/design-overview.md) 与[概念与定位](product/overview/concept-and-positioning.md)
 2. [核心规则](product/rules/core-rules.md)、[关键词与机制](product/rules/keywords-and-mechanics.md)、[时代与场景](product/rules/eras-and-scenarios.md)
 3. [数值与经济](product/systems/economy-and-numbers.md)
-4. [卡牌规范与数据](product/content/card-system.md) 与[卡牌索引](product/content/cards/README.md)
-5. [英雄与技能](product/content/hero-system.md) 与[英雄索引](product/content/heroes/README.md)
+4. [卡牌规范与数据](product/content/card-system.md)（含「英雄卡」小节）与[卡牌索引](product/content/cards/README.md)
+5. [技能规范与数据](product/content/skill-system.md) 与[技能索引](product/content/skills/README.md)
 6. [平衡测算](product/content/balance-analysis.md)（从卡表回算的校验输出）
 7. [模式与成就](product/systems/modes-and-achievements.md)
 8. [联网与技术架构](technical/architecture/network-architecture.md)
@@ -56,4 +56,4 @@
 
 ## 数据与校验
 
-卡牌、英雄与技能实体文档是唯一数据源；卡牌与英雄字段规范见[卡牌规范与数据](product/content/card-system.md)与[英雄与技能](product/content/hero-system.md)，技能字段规范见[技能规范与数据](product/content/skill-system.md)；每次修改后运行 `python3 scripts/validate_docs.py`。
+卡牌与技能实体文档是唯一数据源；卡牌字段规范（含「英雄卡」小节）见[卡牌规范与数据](product/content/card-system.md)，技能字段规范见[技能规范与数据](product/content/skill-system.md)；每次修改后运行 `python3 scripts/validate_docs.py`。
