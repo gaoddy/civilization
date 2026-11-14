@@ -201,6 +201,7 @@
 | 进化 | `OnPlay`（专有关键词，先选后结算） | 招募 · 入场 |
 | 回合开始 | `OnTurnStart` | 招募 · 回合开始 |
 | 使用效果牌 | `OnPlayEffect` | 招募 · 任意时刻 |
+| 主动使用 | `OnActivate` | 招募 · 玩家发起 |
 | 响应使用效果牌 | `OnUse` | 招募 · 打出时 |
 | 每回合首次刷新 | `OnFirstRefresh` | 招募 · 刷新时 |
 | 战斗开始时 | `OnCombatStart` | 战斗 · 快照后 |
@@ -248,6 +249,7 @@
 | 复制 | `Copy {selector, to}` | `to` 为手牌或战场 |
 | 发现 | `Discover {pool, choose}` | 三选一 |
 | 刷新商店 | `RefreshShop {free, extra}` | 英雄专用 |
+| 增加商店槽位 | `AddShopSlot {era, count}` | 英雄专用；商店额外出现 `count` 张 `era=current` 的随从 |
 | 获得随从 | `GainMinion {from, level, to}` | 英雄专用 |
 
 光环不单设原语：静态光环在 §8 登记为 `Aura` / `ConditionalAura` 触发，其动作写 `ModifyStats` 或 `GrantKeyword`，并显式带 `duration=permanent`。
