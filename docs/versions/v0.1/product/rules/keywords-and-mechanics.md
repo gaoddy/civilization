@@ -245,7 +245,7 @@
 | 移除成长 | `RemoveGrowth {selector}` | 移除全部成长 |
 | 禁止攻击 | `CannotAttack {selector, duration}` | 本场无法攻击 |
 | 伤害 | `DealDamage {selector, amount, source}` | 经过护盾与复生 |
-| 召唤 | `Summon {selector, tokenId 或 cardId, count}` | 召唤位置由 `selector` 决定；Token 见 [Token 注册表](../content/tokens/README.md) |
+| 召唤 | `Summon {selector, token 或 card, count}` | 召唤位置由 `selector` 决定；`token` 取注册表 id，`card` 取牌池卡 id |
 | 复制 | `Copy {selector, to}` | `to` 为手牌或战场 |
 | 发现 | `Discover {pool, choose}` | 三选一 |
 | 刷新商店 | `RefreshShop {free, extra}` | 英雄专用 |
@@ -260,15 +260,50 @@
 
 ```
 <effect>[ ; <effect>...]
-<effect> = <trigger>|<op>|<selector>|<params>
+<effect> = <trigger>|<op>|<selector>[|<params>]
 ```
 
-- 段之间用 `|`，效果之间用 `;`，参数之间用 `,`，参数写作 `key=value`；
-- 技能没有可结构化行为、只有关键词时写 `[]`；
-- 选择器写作 `<阵营>:<选取>[:<筛选>...]`，筛选写作 `key=value`；自身写 `self`，事件目标写 `target`；
-- 示例：`OnPlay|Growth|friendly:single|times=2`、`OnCombatStart|DealDamage|enemy:leftmost|amount=3`、`Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent`；
-- `duration` 取 `permanent` / `combat`；`keyword` 取 §1 词表；`token` 取 Token 注册表 id；`card` 取卡牌 id；`to` 取 `hand` / `board`；
-- `condition` 写作 `count:<阵营>:<筛选>:<比较符><数值>`；`timesIf` 写作 `<流派>:<次数>`；`when` 用筛选语法限定触发事件。
+- 段之间用 `|`；效果之间用 `;`；参数之间用 `,`，参数写作 `key=value`，同一效果内键不重复；没有参数时省略第 4 段；
+- 技能没有可结构化行为、只有关键词时写 `[]`。
+
+**选择器**：
+
+| 写法 | 含义 |
+| --- | --- |
+| `self` | 技能携带者自身 |
+| `target` | 触发事件的目标（如「它」指获得成长的那个随从） |
+| `<阵营>:<选取>[:<筛选>...]` | 按阵营与选取方式取一组随从 |
+
+- 阵营：`friendly` / `enemy` / `both`；
+- 选取：`single`（玩家指定）/ `all` / `random` / `leftmost` / `leftmost+adjacent` / `topAttack`；
+- 筛选：`tribe=<流派>`、`subtype=<子类>`、`name=<卡名>`、`type=<随从|效果>`、`other=<true|false>`；多个筛选并列即同时满足。
+
+**参数**：
+
+| 参数 | 取值 | 用于 |
+| --- | --- | --- |
+| `times` / `count` / `amount` / `attack` / `health` / `value` / `extra` | 整数（可为负） | 次数、数量、伤害与数值改动 |
+| `duration` | `permanent` / `combat` | 见 §3.1；省略按 `instant` |
+| `canKill` | `true` / `false` | 负向修改是否可致死 |
+| `healthOnly` | `true` / `false` | 成长只加生命值 |
+| `timesIf` | `<流派>:<次数>` | 目标属于该流派时改次数 |
+| `condition` | `count:<阵营>:<筛选>:<比较符><数值>` | 控制数量条件，如 `count:friendly:tribe=人类:>=3` |
+| `when` | `<筛选>` | 限定触发事件的对象，如 `when=tribe=生物` |
+| `keyword` | §1 词表基名 | 赋予的关键词；`繁衍` / `装配` 另带 `value` |
+| `token` / `card` | Token 注册表 id / 卡牌 id | 召唤目标；`Summon` 二者取一 |
+| `to` | `hand` / `board` | 复制或获得的目标区域 |
+| `from` | `hand` / `board` / `shop` | 复制或获得的来源 |
+| `type` | `随从` / `效果` | 从手牌复制时限定卡牌类型 |
+| `pool` / `choose` | 发现池、可选数量 | `Discover` |
+| `free` | `true` / `false` | 免费刷新 |
+| `era` / `level` | `current` 或具体值 | 商店槽位时代、获得随从的星级 |
+
+示例：
+
+- `OnPlay|Growth|friendly:single|times=2`
+- `OnCombatStart|DealDamage|enemy:leftmost|amount=3`
+- `Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent`
+- `OnActivate|Copy|self|from=hand,type=随从,to=hand`
 
 `effects` 是机器字段，不进入 `## 属性` 表；`## 效果` 仍由技能 `text` 渲染，与 `effects` 语义一致。卡牌与英雄不重复记录 `effects`——它们通过 `skills` / `skill` 引用技能，效果由技能实体统一维护。
 

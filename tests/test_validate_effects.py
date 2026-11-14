@@ -74,6 +74,69 @@ class ParseEffectsTest(unittest.TestCase):
         errors = vd.check_text_trigger("战斗开始时，对敌方所有随从造成 2 点伤害", "OnPlay|DealDamage|enemy:all|amount=2")
         self.assertTrue(errors)
 
+    def test_delayed_battlecry_enemy_effect_may_use_combat_start(self):
+        errors = vd.check_text_trigger("战吼：对随机一个敌方随从造成 1 点伤害", "OnCombatStart|DealDamage|enemy:random|amount=1")
+        self.assertEqual(errors, [])
+
+    def test_until_turn_end_suffix_does_not_skip_prefix_check(self):
+        errors = vd.check_text_trigger(
+            "战吼：使一个友方随从获得嘲讽直到回合结束",
+            "OnDeath|GrantKeyword|friendly:single|keyword=嘲讽,duration=combat",
+        )
+        self.assertTrue(errors)
+
+    def test_unknown_pick_rejected(self):
+        effects, errors = vd.parse_effects("OnPlay|Growth|friendly:singel|times=1")
+        self.assertEqual(effects, [])
+        self.assertTrue(any("选取" in e for e in errors))
+
+    def test_unknown_filter_key_rejected(self):
+        effects, errors = vd.parse_effects("OnPlay|Growth|friendly:all:tirbe=机械|times=1")
+        self.assertEqual(effects, [])
+        self.assertTrue(any("筛选" in e for e in errors))
+
+    def test_unknown_filter_value_rejected(self):
+        effects, errors = vd.parse_effects("OnPlay|Growth|friendly:all:tribe=龙|times=1")
+        self.assertEqual(effects, [])
+        self.assertTrue(any("tribe" in e for e in errors))
+
+    def test_missing_required_param_rejected(self):
+        effects, errors = vd.parse_effects("OnPlay|Summon|self|count=1")
+        self.assertEqual(effects, [])
+        self.assertTrue(any("token" in e or "card" in e for e in errors))
+
+    def test_non_numeric_amount_rejected(self):
+        effects, errors = vd.parse_effects("OnPlay|DealDamage|enemy:all|amount=two")
+        self.assertEqual(effects, [])
+        self.assertTrue(any("amount" in e for e in errors))
+
+    def test_duplicate_param_key_rejected(self):
+        effects, errors = vd.parse_effects("OnPlay|ModifyStats|self|attack=1,attack=2")
+        self.assertEqual(effects, [])
+        self.assertTrue(any("重复" in e for e in errors))
+
+    def test_unknown_keyword_value_rejected(self):
+        effects, errors = vd.parse_effects("OnPlay|GrantKeyword|friendly:all|keyword=不存在,duration=permanent")
+        self.assertEqual(effects, [])
+        self.assertTrue(any("keyword" in e for e in errors))
+
+    def test_aura_cannot_deal_damage(self):
+        effects, errors = vd.parse_effects("Aura|DealDamage|enemy:all|amount=1")
+        self.assertEqual(effects, [])
+        self.assertTrue(any("光环" in e for e in errors))
+
+    def test_bad_condition_rejected(self):
+        effects, errors = vd.parse_effects(
+            "ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:人类:>=2"
+        )
+        self.assertEqual(effects, [])
+        self.assertTrue(any("condition" in e for e in errors))
+
+    def test_copy_accepts_card_type_filter(self):
+        effects, errors = vd.parse_effects("OnPlayEffect|Copy|self|from=hand,type=随从,to=hand")
+        self.assertEqual(errors, [])
+        self.assertEqual(len(effects), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

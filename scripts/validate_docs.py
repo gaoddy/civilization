@@ -48,7 +48,32 @@ EFFECT_OPS = {
     "GainMinion",
 }
 SELECTOR_SIDES = {"friendly", "enemy", "both", "self", "target"}
+SELECTOR_PICKS = {"single", "all", "random", "leftmost", "leftmost+adjacent", "topAttack"}
+FILTER_KEYS = {"tribe", "subtype", "name", "type", "other"}
 DURATIONS = {"permanent", "combat"}
+KEYWORD_BASES = {"战吼", "亡语", "复生", "嘲讽", "护盾", "连击", "传染",
+                 "最优攻击", "播种", "进化", "繁衍", "装配"}
+NUMERIC_KEYS = {"times", "count", "amount", "attack", "health", "value", "extra"}
+AURA_OPS = {"ModifyStats", "GrantKeyword"}
+OP_SPEC = {
+    "Growth": ({"times"}, {"healthOnly", "timesIf", "condition", "when"}, {("times",)}),
+    "ModifyStats": (set(), {"attack", "health", "duration", "canKill", "condition", "when"},
+                    {("attack", "health")}),
+    "GrantKeyword": ({"keyword"}, {"value", "duration", "condition", "when"}, set()),
+    "RemoveGrowth": (set(), {"condition", "when"}, set()),
+    "CannotAttack": (set(), {"duration"}, set()),
+    "DealDamage": ({"amount"}, {"source", "when"}, set()),
+    "Summon": ({"count"}, {"token", "card", "when"}, {("token", "card")}),
+    "Copy": ({"to"}, {"from", "type"}, set()),
+    "Discover": ({"pool"}, {"choose"}, set()),
+    "RefreshShop": (set(), {"free", "extra"}, set()),
+    "AddShopSlot": ({"era", "count"}, set(), set()),
+    "GainMinion": ({"level", "to"}, {"from"}, set()),
+}
+CONDITION_RE = re.compile(
+    r"^count:(friendly|enemy|both):[a-z]+=[^:]+:(>=|<=|==|>|<)\d+$"
+)
+TIMES_IF_RE = re.compile(r"^(人类|机械|生物|植物|病毒|学者):\d+$")
 EVENT_TRIGGERS = {
     "OnEnemyDeath", "OnFriendlyDeath", "OnAllySummon", "OnAllyGrowth",
     "OnAllyEvolve", "OnDealDamage", "OnCombatEnd", "OnUse",
@@ -103,16 +128,87 @@ def parse_front_matter(path):
     return data
 
 
+def check_filters(segments, chunk):
+    """筛选写作 key=value；返回错误列表。"""
+    errors = []
+    for segment in segments:
+        if not segment:
+            continue
+        if "=" not in segment:
+            errors.append(f"筛选缺少 =: {segment!r}（{chunk}）")
+            continue
+        key, val = segment.split("=", 1)
+        key, val = key.strip(), val.strip()
+        if key not in FILTER_KEYS:
+            errors.append(f"未知筛选键 {key!r}（{chunk}）")
+        elif key == "tribe" and val not in TRIBES:
+            errors.append(f"tribe 取值非法 {val!r}（{chunk}）")
+        elif key == "type" and val not in CARD_TYPES:
+            errors.append(f"type 取值非法 {val!r}（{chunk}）")
+        elif key == "other" and val not in ("true", "false"):
+            errors.append(f"other 取值非法 {val!r}（{chunk}）")
+        elif not val:
+            errors.append(f"筛选 {key!r} 缺少取值（{chunk}）")
+    return errors
+
+
 def check_selector(selector, chunk):
     """选择器写作 self / target / <阵营>:<选取>[:<筛选>...]。"""
     if selector in ("self", "target"):
         return []
     segments = selector.split(":")
+    errors = []
     if segments[0] not in SELECTOR_SIDES:
-        return [f"选择器阵营非法 {selector!r}（{chunk}）"]
+        errors.append(f"选择器阵营非法 {selector!r}（{chunk}）")
     if len(segments) < 2 or not segments[1]:
-        return [f"选择器缺少选取 {selector!r}（{chunk}）"]
-    return []
+        errors.append(f"选择器缺少选取 {selector!r}（{chunk}）")
+    elif segments[1] not in SELECTOR_PICKS:
+        errors.append(f"选择器选取非法 {segments[1]!r}（{chunk}）")
+    errors.extend(check_filters(segments[2:], chunk))
+    return errors
+
+
+def check_params(op, params, chunk):
+    """按原语规格校验参数键、必填项与取值格式。"""
+    spec = OP_SPEC.get(op)
+    if spec is None:
+        return []
+    required, optional, one_of = spec
+    errors = []
+    unknown = set(params) - required - optional
+    if unknown:
+        errors.append(f"参数 {sorted(unknown)} 不属于原语 {op}（{chunk}）")
+    missing = required - set(params)
+    if missing:
+        errors.append(f"原语 {op} 缺少必填参数 {sorted(missing)}（{chunk}）")
+    for group in one_of:
+        if set(group) & set(params):
+            break
+    else:
+        if one_of:
+            errors.append(f"原语 {op} 缺少 {[sorted(g) for g in one_of]} 之一（{chunk}）")
+    for key, val in params.items():
+        if key in NUMERIC_KEYS and not re.fullmatch(r"-?\d+", val):
+            errors.append(f"参数 {key} 必须为整数，实为 {val!r}（{chunk}）")
+        elif key == "level" and val not in ("current",) and not re.fullmatch(r"\d+", val):
+            errors.append(f"参数 level 非法 {val!r}（{chunk}）")
+        elif key == "duration" and val not in DURATIONS:
+            errors.append(f"duration 非法 {val!r}（{chunk}）")
+        elif key in ("to", "from") and val not in ("hand", "board", "shop"):
+            errors.append(f"参数 {key} 非法 {val!r}（{chunk}）")
+        elif key == "type" and val not in CARD_TYPES:
+            errors.append(f"参数 type 非法 {val!r}（{chunk}）")
+        elif key == "keyword" and val.split()[0] not in KEYWORD_BASES:
+            errors.append(f"keyword 非法 {val!r}（{chunk}）")
+        elif key == "condition" and not CONDITION_RE.fullmatch(val):
+            errors.append(f"condition 格式非法 {val!r}（{chunk}）")
+        elif key == "timesIf" and not TIMES_IF_RE.fullmatch(val):
+            errors.append(f"timesIf 格式非法 {val!r}（{chunk}）")
+        elif key == "when" and (
+            "=" not in val or val.split("=", 1)[0] not in FILTER_KEYS
+        ):
+            errors.append(f"when 格式非法 {val!r}（{chunk}）")
+    return errors
 
 
 def parse_effects(value):
@@ -145,15 +241,18 @@ def parse_effects(value):
                     errors.append(f"参数缺少 =: {pair!r}（{chunk}）")
                     continue
                 key, val = pair.split("=", 1)
-                params[key.strip()] = val.strip()
+                key = key.strip()
+                if key in params:
+                    errors.append(f"参数重复 {key!r}（{chunk}）")
+                params[key] = val.strip()
         if trigger not in EFFECT_TRIGGERS:
             errors.append(f"未知触发 {trigger!r}（{chunk}）")
         if op not in EFFECT_OPS:
             errors.append(f"未知原语 {op!r}（{chunk}）")
         errors.extend(check_selector(selector, chunk))
-        duration = params.get("duration")
-        if duration and duration not in DURATIONS:
-            errors.append(f"duration 非法 {duration!r}（{chunk}）")
+        errors.extend(check_params(op, params, chunk))
+        if trigger in ("Aura", "ConditionalAura") and op not in AURA_OPS:
+            errors.append(f"光环触发只能用 {sorted(AURA_OPS)}，实为 {op}（{chunk}）")
         effects.append({"trigger": trigger, "op": op,
                         "selector": selector, "params": params})
     return ([], errors) if errors else (effects, errors)
@@ -162,10 +261,8 @@ def parse_effects(value):
 def allowed_triggers(text):
     """按技能文本的固定前缀推出允许的触发时机；无法判定时返回 None。"""
     text = text.strip()
-    if "直到回合结束" in text:
-        return None
     if text.startswith("战吼"):
-        return {"OnPlay"}
+        return {"OnPlay", "OnCombatStart"}
     if text.startswith("亡语"):
         return {"OnDeath"}
     if text.startswith("战斗开始时"):
@@ -176,7 +273,7 @@ def allowed_triggers(text):
         return {"OnFirstRefresh"}
     if text.startswith("每当"):
         return EVENT_TRIGGERS
-    if text.startswith("你的") and "随从获得" in text:
+    if text.startswith("你的") and "随从获得" in text and "直到回合结束" not in text:
         return {"Aura"}
     if text.startswith("若你控制"):
         return {"ConditionalAura"}
