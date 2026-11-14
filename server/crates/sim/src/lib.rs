@@ -212,9 +212,6 @@ fn drive(engine: &mut Engine, state: &mut GameState, seed: u64) -> Result<GameLo
         if state.turn == 20 && stats.survivors_at_turn_20.is_none() {
             stats.survivors_at_turn_20 = Some(alive_count(state));
         }
-        if state.phase == Phase::GameOver && stats.survivors_at_end == 0 {
-            stats.survivors_at_end = alive_count(state);
-        }
 
         engine.finish_recruit(state)?;
         steps.push(boundary(Step::FinishRecruit));
@@ -232,6 +229,8 @@ fn drive(engine: &mut Engine, state: &mut GameState, seed: u64) -> Result<GameLo
             steps.push(boundary(Step::StartTurn));
         }
     }
+    // 循环出口必定是 `GameOver`：在此采样一次结束时的存活人数，不用 0 当「未采样」哨兵。
+    stats.survivors_at_end = alive_count(state);
     finish_stats(engine, state, &mut stats);
     Ok(GameLog {
         seed,
@@ -249,6 +248,11 @@ fn boundary(step: Step) -> StepRecord {
         intent: Intent::EndRecruit,
         step,
     }
+}
+
+/// 当前存活（未淘汰）的玩家数；驱动在 `GameOver` 时用它记录 `stats.survivors_at_end`。
+pub fn alive_players(state: &GameState) -> u8 {
+    alive_count(state)
 }
 
 fn alive_count(state: &GameState) -> u8 {

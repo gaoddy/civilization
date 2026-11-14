@@ -154,16 +154,37 @@ fn report_contains_required_fields() {
         Some(7),
         "7 个流派都应出现夺冠率"
     );
-    let permille_sum: u64 = value["win_rate_permille_by_tribe"]
+    let rates = value["win_rate_permille_by_tribe"]
         .as_object()
-        .expect("夺冠率为对象")
+        .expect("夺冠率为对象");
+    let permille_sum: u64 = rates
         .values()
         .map(|rate| rate.as_u64().expect("夺冠率为整数"))
         .sum();
+    let games = value["games"].as_u64().expect("games 为整数");
+    // 按注释口径断言上界；下界由「夺冠局数之和 = 局数」间接保证，并核对每个流派与计数一致。
     assert!(
-        permille_sum <= 4000,
-        "各流派夺冠率千分比之和不应超过总局数 * 1000"
+        permille_sum <= games * 1_000,
+        "各流派夺冠率千分比之和不应超过局数 * 1000（实际 {permille_sum}，局数 {games}）"
     );
+    let wins_total: u64 = value["wins_by_tribe"]
+        .as_object()
+        .expect("wins_by_tribe 为对象")
+        .values()
+        .map(|count| count.as_u64().expect("计数为整数"))
+        .sum();
+    assert_eq!(wins_total, games, "各流派夺冠局数之和应等于局数");
+    let wins = value["wins_by_tribe"]
+        .as_object()
+        .expect("wins_by_tribe 为对象");
+    for (tribe, count) in wins {
+        let expected = count.as_u64().expect("计数为整数") * 1_000 / games;
+        assert_eq!(
+            rates[tribe].as_u64(),
+            Some(expected),
+            "流派 {tribe} 夺冠率应为 夺冠局数 * 1000 / 局数（向下取整）"
+        );
+    }
 }
 
 #[test]

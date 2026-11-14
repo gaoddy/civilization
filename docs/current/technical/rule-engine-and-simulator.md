@@ -120,11 +120,11 @@ tests/                       # Python 标准库 unittest
 | `games_reaching_turn_20` | `survivors_at_turn_20` 非空的局数 |
 | `survivors_at_turn_20` | 上述对局在第 20 回合招募开始前的平均存活人数，向下取整；无此类局为 `null` |
 | `games_ended_on_turn_20` | 结束回合为 20 的局数 |
-| `avg_survivors_at_end` | 各局结束时的存活人数之和 / 局数，向下取整；当前规则下第 20 回合收束（或决出唯一幸存者）时已无存活玩家，实测为 0 |
+| `avg_survivors_at_end` | 各局结束时的存活人数之和 / 局数，向下取整。「结束时存活人数」在 `GameOver` 时刻采样（驱动循环退出后取一次）。第 20 回合收束时 `resolve_settle` 只做排序与收束，不淘汰剩余玩家（淘汰只发生在生命归零时），未被淘汰的玩家都会被计入，因此该值不保证为 0；seed 1 的 1000 局实测分布为 1 人 62 局、2 人 333 局、3 人 468 局、4 人 124 局、5 人 13 局，平均 2.693（向下取整报告为 2） |
 | `avg_damage_per_loss` | 每次战斗失败的伤害之和 / 败者次数，向下取整 |
 | `final_hashes` | 每局最终状态哈希（16 位小写十六进制，按局序） |
 
-`sim play` 的单局日志 `stats` 含 `era_upgrade_turns`（8 个座位各自的首次升时代回合，未升为 `null`）、`survivors_at_turn_20`、`survivors_at_end`、`damage_per_loss`、`winner_seat`、`winner_tribe`。
+`sim play` 的单局日志 `stats` 含 `era_upgrade_turns`（8 个座位各自的首次升时代回合，未升为 `null`）、`survivors_at_turn_20`（第 20 回合招募开始前）、`survivors_at_end`（`GameOver` 时刻）、`damage_per_loss`、`winner_seat`、`winner_tribe`。
 
 ## 7. 规则用例清单
 
