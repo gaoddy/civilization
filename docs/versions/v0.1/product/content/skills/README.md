@@ -62,8 +62,8 @@
 | [deathrattle-random-enemy-hp-minus-1](deathrattle-random-enemy-hp-minus-1.md) | 亡语 | 亡语：使随机一个敌方随从获得 -1 生命值 | 1 |
 | [deathrattle-random-enemy-minus-1-attack](deathrattle-random-enemy-minus-1-attack.md) | 无 | 亡语：使随机一个敌方随从获得 -1 攻击力 | 1 |
 | [deathrattle-random-enemy-minus-1-health](deathrattle-random-enemy-minus-1-health.md) | 亡语 | 亡语：使随机一个敌方随从获得 -1 生命 | 1 |
-| [deathrattle-summon-1-1-termite](deathrattle-summon-1-1-termite.md) | 亡语 | 亡语：召唤一个 1/1 的白蚁 | 1 |
 | [deathrattle-summon-2-2-hela-cell-clone](deathrattle-summon-2-2-hela-cell-clone.md) | 亡语 | 亡语：召唤一个 2/2 的海拉细胞（复制体） | 1 |
+| [deathrattle-summon-termite](deathrattle-summon-termite.md) | 亡语 | 亡语：召唤一个 1/2 的白蚁 | 1 |
 | [交流电](hero-alternating-current.md) | 无 | 使一个友方随从获得最优攻击直到回合结束 | 1 |
 | [分工](hero-division-of-labor.md) | 无 | 使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次 | 1 |
 | [高效算法](hero-efficient-algorithm.md) | 无 | 刷新商店并获得一张当前星级的随从 | 1 |

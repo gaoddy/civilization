@@ -8,7 +8,7 @@ level: 1
 era: 史前
 attack: 1
 health: 3
-skills: [deathrattle-summon-1-1-termite]
+skills: [deathrattle-summon-termite]
 is_scholar: false
 source: 素材
 ---
@@ -29,10 +29,10 @@ source: 素材
 | 攻击力 | 1 |
 | 生命值 | 3 |
 | 关键词 | 亡语 |
-| 技能 | deathrattle-summon-1-1-termite |
+| 技能 | deathrattle-summon-termite |
 | 学者 | 否 |
 | 来源 | 素材 |
 
 ## 效果
 
-亡语：召唤一个 1/1 的白蚁
+亡语：召唤一个 1/2 的白蚁
