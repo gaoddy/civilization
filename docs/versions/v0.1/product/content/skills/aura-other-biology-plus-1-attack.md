@@ -1,0 +1,18 @@
+---
+id: aura-other-biology-plus-1-attack
+text: 你的其他生物随从获得 +1 攻击力
+---
+
+# aura-other-biology-plus-1-attack
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | aura-other-biology-plus-1-attack |
+| 关键词 | 无 |
+| 比赛模式替换 | 不适用 |
+
+## 效果
+
+你的其他生物随从获得 +1 攻击力

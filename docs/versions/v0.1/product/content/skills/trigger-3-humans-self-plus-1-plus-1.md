@@ -1,0 +1,18 @@
+---
+id: trigger-3-humans-self-plus-1-plus-1
+text: 若你控制至少 3 个人类，获得 +1/+1
+---
+
+# trigger-3-humans-self-plus-1-plus-1
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | trigger-3-humans-self-plus-1-plus-1 |
+| 关键词 | 无 |
+| 比赛模式替换 | 不适用 |
+
+## 效果
+
+若你控制至少 3 个人类，获得 +1/+1

@@ -1,0 +1,19 @@
+---
+id: deathrattle-all-enemies-contagion-1
+keyword: 亡语
+text: 亡语：使敌方所有随从获得 1 层传染
+---
+
+# deathrattle-all-enemies-contagion-1
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | deathrattle-all-enemies-contagion-1 |
+| 关键词 | 亡语 |
+| 比赛模式替换 | 不适用 |
+
+## 效果
+
+亡语：使敌方所有随从获得 1 层传染
