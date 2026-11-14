@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""校验 docs/versions/v0.1/product/content 下的技能、卡牌与英雄实体文档。
+"""校验 docs/versions/v0.1/product/content 下的技能与卡牌实体文档。
 
 只使用标准库；front matter 仅支持本项目生成的三种形式：
     key: 标量
     skills: [技能 id, ...]
     skill: 技能 id
 卡牌分两类：card_type=随从 必须有攻击力/生命值；card_type=效果 必须没有。
-卡牌与英雄通过 skills/skill 引用技能实体，效果文本与关键词由被引用技能派生。
+随从卡与英雄卡通过 skills / hero_skill 引用技能实体，效果文本与关键词由被引用技能派生。
 """
 
 import collections
@@ -83,9 +83,9 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"繁衍": 1, "嘲讽": 2, "连击": 3, "最优攻击": 3, "传染": 3, "复生": 4, "护盾": 5}
-EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 14, "封建": 27, "工业": 14, "现代": 36, "未来": 32}
-EXPECT_TRIBE = {"学者": 36, "生物": 30, "人类": 36, "机械": 33, "植物": 21, "病毒": 20}
-EXPECT_LEVEL = {1: 22, 2: 37, 3: 37, 4: 28, 5: 25, 6: 15, 7: 12}
+EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 14, "封建": 29, "工业": 18, "现代": 38, "未来": 32}
+EXPECT_TRIBE = {"学者": 41, "生物": 30, "人类": 37, "机械": 34, "植物": 21, "病毒": 21}
+EXPECT_LEVEL = {1: 22, 2: 37, 3: 37, 4: 30, 5: 30, 6: 16, 7: 12}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
@@ -330,9 +330,9 @@ def body_text(path):
     return rest.strip()
 
 
-def source_section(text):
-    """返回「## 出处」小节正文；无小节返回 None，空小节返回空串。"""
-    match = re.search(r"(?m)^## 出处\s*$", text)
+def section_text(text, heading):
+    """返回指定「## <heading>」小节正文；无小节返回 None，空小节返回空串。"""
+    match = re.search(rf"(?m)^## {re.escape(heading)}\s*$", text)
     if not match:
         return None
     rest = text[match.end():]
@@ -340,6 +340,11 @@ def source_section(text):
     if next_heading:
         rest = rest[:next_heading.start()]
     return rest.strip()
+
+
+def source_section(text):
+    """返回「## 出处」小节正文；无小节返回 None，空小节返回空串。"""
+    return section_text(text, "出处")
 
 
 def parse_attr_table(path):
@@ -466,15 +471,16 @@ def check_skills():
     return skills
 
 
-def check_skill_context(skill_map, heroes, effects):
-    hero_refs = {h["skill"] for h in heroes if h.get("skill") in skill_map}
+def check_skill_context(skill_map, cards, effects):
+    hero_refs = {c["hero_skill"] for c in cards
+                 if c.get("is_hero") is True and c.get("hero_skill") in skill_map}
     effect_refs = {sid for c in effects for sid in card_skills(c)}
     for sid in sorted(hero_refs):
         skill = skill_map[sid]
         if not skill.get("name"):
-            fail(f"{skill['_file']}: 被英雄引用的技能缺少 name")
+            fail(f"{skill['_file']}: 被 hero_skill 引用的技能缺少 name")
         if not skill.get("match_text"):
-            fail(f"{skill['_file']}: 被英雄引用的技能缺少 match_text")
+            fail(f"{skill['_file']}: 被 hero_skill 引用的技能缺少 match_text")
     for sid in sorted(effect_refs):
         skill = skill_map.get(sid)
         if skill is not None and not skill.get("match_text"):
@@ -540,16 +546,6 @@ def keyword_cost(card, skill_map):
     return total
 
 
-def check_hero_intros(heroes):
-    for h in heroes:
-        text = (ROOT / "heroes" / h["_file"]).read_text(encoding="utf-8")
-        match = re.search(r"## 简介\n\n(.+?)\n", text)
-        if not match:
-            fail(f"{h['_file']}: 缺少「## 简介」")
-        elif match.group(1).strip() != h["summary"]:
-            fail(f"{h['_file']}: 简介与 front matter 不一致")
-
-
 def check_keyword_unlock(minions, skill_map):
     actual = {}
     for c in minions:
@@ -579,8 +575,8 @@ def check_cards(skill_map):
     effects = [c for c in raw if c["card_type"] == "效果"]
 
     skillless = [c for c in minions if not card_skills(c)]
-    if len(skillless) != 7:
-        fail(f"无技能随从 {len(skillless)} 张，期望 7 张（skills 缺失或为空）")
+    if len(skillless) != 15:
+        fail(f"无技能随从 {len(skillless)} 张，期望 15 张（skills 缺失或为空）")
     for c in skillless:
         if body_text(ROOT / "cards" / c["_file"]) != "无":
             fail(f"{c['_file']}: 无技能随从的「## 效果」必须为「无」")
@@ -642,7 +638,7 @@ def check_cards(skill_map):
             fail(f"{name}: 费用越界 {c['cost']}")
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"随从": 176, "效果": 36}:
+    if counts != {"随从": 184, "效果": 36}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]
@@ -662,35 +658,69 @@ def check_cards(skill_map):
     return raw, minions, effects
 
 
-def check_heroes(skill_map):
-    heroes = load("heroes", HERO_FIELDS)
-    if len(heroes) != 13:
-        fail(f"英雄数量 {len(heroes)}，期望 13")
-    for key in ("id", "name"):
-        values = [h[key] for h in heroes]
-        dup = [v for v, n in collections.Counter(values).items() if n > 1]
-        if dup:
-            fail(f"英雄 {key} 重复: {dup}")
-    for h in heroes:
-        if h["skill"] not in skill_map:
-            fail(f"{h['_file']}: skill 指向不存在的技能 {h['skill']!r}")
-        if not h["summary"]:
-            fail(f"{h['name']}: 简介为空")
-        if h["skill_type"] not in ("主动", "被动"):
-            fail(f"{h['name']}: 技能类型非法 {h['skill_type']!r}")
-        if not 0 <= h["skill_cost"] <= 2:
-            fail(f"{h['name']}: 费用越界 {h['skill_cost']}")
-        if h["skill_type"] == "被动" and h["skill_cost"] != 0:
-            fail(f"{h['name']}: 被动技能费用必须为 0")
-        if h["skill_uses_per_turn"] not in (1, 2):
-            fail(f"{h['name']}: 每回合次数非法 {h['skill_uses_per_turn']!r}")
-        if h["skill_trigger"] not in SKILL_TRIGGERS:
-            fail(f"{h['name']}: 技能触发时机非法 {h['skill_trigger']!r}")
-        if h["skill_type"] == "主动" and h["skill_trigger"] != "主动使用":
-            fail(f"{h['name']}: 主动技能的触发时机必须为「主动使用」")
-        if h["skill_type"] == "被动" and h["skill_trigger"] == "主动使用":
-            fail(f"{h['name']}: 被动技能不能使用「主动使用」触发")
-    return heroes
+def check_hero_cards(minions, effects, skill_map):
+    hero_cards = [c for c in minions if c.get("is_hero") is True]
+    if len(hero_cards) != 13:
+        fail(f"英雄卡 {len(hero_cards)} 张，期望 13")
+    refs = []
+    for c in hero_cards:
+        missing = [k for k in HERO_CARD_FIELDS if k not in c]
+        if missing:
+            fail(f"{c['_file']}: 英雄卡缺字段 {missing}")
+            continue
+        name = c["name"]
+        skill = skill_map.get(c["hero_skill"])
+        if skill is None:
+            fail(f"{name}: hero_skill 指向不存在的技能 {c['hero_skill']!r}")
+        else:
+            if not skill.get("name") or not skill.get("match_text"):
+                fail(f"{name}: 英雄技能 {c['hero_skill']!r} 缺少 name 或 match_text")
+        if c["hero_skill_type"] not in ("主动", "被动"):
+            fail(f"{name}: 英雄技能类型非法 {c['hero_skill_type']!r}")
+        if not 0 <= c["hero_skill_cost"] <= 2:
+            fail(f"{name}: 英雄技能费用越界 {c['hero_skill_cost']}")
+        if c["hero_skill_type"] == "被动" and c["hero_skill_cost"] != 0:
+            fail(f"{name}: 被动英雄技能费用必须为 0")
+        if c["hero_skill_uses_per_turn"] not in (1, 2):
+            fail(f"{name}: 每回合次数非法 {c['hero_skill_uses_per_turn']!r}")
+        if c["hero_skill_trigger"] not in SKILL_TRIGGERS:
+            fail(f"{name}: 英雄技能触发时机非法 {c['hero_skill_trigger']!r}")
+        if c["hero_skill_type"] == "主动" and c["hero_skill_trigger"] != "主动使用":
+            fail(f"{name}: 主动英雄技能的触发时机必须为「主动使用」")
+        if c["hero_skill_type"] == "被动" and c["hero_skill_trigger"] == "主动使用":
+            fail(f"{name}: 被动英雄技能不能使用「主动使用」触发")
+        refs.append(c["hero_skill"])
+    dup = [v for v, n in collections.Counter(refs).items() if n > 1]
+    if dup:
+        fail(f"hero_skill 重复: {dup}")
+    for c in minions:
+        if c.get("is_hero") is True:
+            continue
+        extra = [k for k in HERO_CARD_FIELDS + ["is_hero"] if k in c]
+        if extra:
+            fail(f"{c['_file']}: 非英雄随从不得有英雄字段 {extra}")
+    for c in effects:
+        extra = [k for k in HERO_CARD_FIELDS + ["is_hero"] if k in c]
+        if extra:
+            fail(f"{c['_file']}: 效果牌不得有英雄字段 {extra}")
+    return hero_cards
+
+
+def check_hero_skill_rendering(cards, skill_map):
+    for doc in cards:
+        section = section_text(
+            (ROOT / "cards" / doc["_file"]).read_text(encoding="utf-8"), "英雄技能"
+        )
+        if doc.get("is_hero") is True:
+            skill = skill_map.get(doc.get("hero_skill"))
+            if skill is None:
+                continue
+            expected = hero_skill_text(skill)
+            if section != expected:
+                fail(f"{doc['_file']}: 「## 英雄技能」与 hero_skill 渲染不一致："
+                     f"{section!r} != {expected!r}")
+        elif section is not None:
+            fail(f"{doc['_file']}: 非英雄卡不得有「## 英雄技能」小节")
 
 
 def check_achievements():
@@ -740,13 +770,13 @@ def main():
     skill_map = {s["id"]: s for s in skills}
     raw, minions, effects = check_cards(skill_map)
     check_keyword_unlock(minions, skill_map)
-    heroes = check_heroes(skill_map)
-    check_skill_context(skill_map, heroes, effects)
+    hero_cards = check_hero_cards(minions, effects, skill_map)
+    check_skill_context(skill_map, raw, effects)
     achievements = check_achievements()
     check_attr_tables(raw, skill_map)
     check_card_rendering(raw, skill_map)
+    check_hero_skill_rendering(raw, skill_map)
     check_card_sources(raw)
-    check_hero_intros(heroes)
     check_enemy_selectors(raw)
     check_auras(minions)
     if errors:
@@ -762,7 +792,7 @@ def main():
     print("技能引用", dict(sorted(collections.Counter(
         sid for c in raw for sid in card_skills(c)).items())))
     print(f"随从 {len(minions)} 张、效果牌 {len(effects)} 张、技能 {len(skills)} 个、"
-          f"英雄 {len(heroes)} 位、成就 {len(achievements)} 个，校验通过")
+          f"英雄卡 {len(hero_cards)} 张、成就 {len(achievements)} 个，校验通过")
     return 0
 
 

@@ -30,6 +30,7 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | trigger-play-effect-friendly-plus-0-plus-1 |
 | 学者 | 是 |
+| 英雄资格 | 否 |
 
 ## 效果
 

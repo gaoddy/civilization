@@ -30,6 +30,7 @@ is_scholar: false
 | 关键词 | 最优攻击 |
 | 技能 | keyword-optimal-attack |
 | 学者 | 否 |
+| 英雄资格 | 否 |
 
 ## 效果
 

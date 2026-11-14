@@ -10,6 +10,12 @@ attack: 0
 health: 16
 skills: [battlecry-friendly-growth-twice]
 is_scholar: true
+is_hero: true
+hero_skill: hero-radiation
+hero_skill_cost: 0
+hero_skill_type: 被动
+hero_skill_uses_per_turn: 1
+hero_skill_trigger: 战斗开始时
 ---
 
 # 玛丽·居里
@@ -30,10 +36,26 @@ is_scholar: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-twice |
 | 学者 | 是 |
+| 英雄资格 | 是 |
+| 英雄技能 | hero-radiation |
+| 英雄技能费用 | 0 |
+| 英雄技能类型 | 被动 |
+| 每回合次数 | 1 |
+| 触发时机 | 战斗开始时 |
 
 ## 效果
 
 战吼：使一个友方随从获得两次成长
+
+## 英雄技能
+
+放射：战斗开始时对随机一个敌方随从造成 2 点伤害
+
+## 设计说明
+
+- 定位：被动输出，战斗开始时稳定造成 2 点伤害。
+- 平衡边界：随机目标必须走种子；比赛模式下改为「对最左侧敌方随从造成 2 点伤害」。
+- 与其他伤害效果的叠加：先结算英雄卡的被动技能，再结算战斗。
 
 ## 出处
 

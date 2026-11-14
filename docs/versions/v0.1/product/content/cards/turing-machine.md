@@ -30,6 +30,7 @@ is_scholar: false
 | 关键词 | 最优攻击；装配 2 |
 | 技能 | keyword-optimal-attack；keyword-assemble-2 |
 | 学者 | 否 |
+| 英雄资格 | 否 |
 
 ## 效果
 

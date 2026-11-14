@@ -30,6 +30,7 @@ is_scholar: true
 | 关键词 | 复生；亡语 |
 | 技能 | keyword-reborn；deathrattle-all-enemies-minus-1-health |
 | 学者 | 是 |
+| 英雄资格 | 否 |
 
 ## 效果
 

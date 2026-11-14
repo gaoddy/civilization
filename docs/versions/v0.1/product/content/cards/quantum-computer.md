@@ -30,6 +30,7 @@ is_scholar: false
 | 关键词 | 护盾；装配 2 |
 | 技能 | keyword-divine-shield；keyword-assemble-2 |
 | 学者 | 否 |
+| 英雄资格 | 否 |
 
 ## 效果
 

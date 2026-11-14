@@ -10,6 +10,12 @@ attack: 0
 health: 16
 skills: [keyword-divine-shield]
 is_scholar: true
+is_hero: true
+hero_skill: hero-faraday-cage
+hero_skill_cost: 2
+hero_skill_type: 主动
+hero_skill_uses_per_turn: 1
+hero_skill_trigger: 主动使用
 ---
 
 # 法拉第
@@ -30,10 +36,26 @@ is_scholar: true
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield |
 | 学者 | 是 |
+| 英雄资格 | 是 |
+| 英雄技能 | hero-faraday-cage |
+| 英雄技能费用 | 2 |
+| 英雄技能类型 | 主动 |
+| 每回合次数 | 1 |
+| 触发时机 | 主动使用 |
 
 ## 效果
 
 护盾：抵消一次伤害
+
+## 英雄技能
+
+法拉第笼：使一个友方随从获得护盾
+
+## 设计说明
+
+- 定位：保护核心随从，用一次护盾换一次免伤。
+- 平衡边界：护盾按关键词规则不叠加，最多 1 层；只能指定己方随从；已带护盾的随从重复使用不产生额外效果。
+- 与旧效果的区别：旧版 +0/+4 只提高生命值上限，护盾直接抵消一次伤害，对高攻单次攻击更有价值。
 
 ## 出处
 

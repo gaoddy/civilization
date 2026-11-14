@@ -30,6 +30,7 @@ is_scholar: false
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-all-enemies-contagion-1 |
 | 学者 | 否 |
+| 英雄资格 | 否 |
 
 ## 效果
 

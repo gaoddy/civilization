@@ -30,6 +30,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-summon-3-3-synthetic-cell |
 | 学者 | 否 |
+| 英雄资格 | 否 |
 
 ## 效果
 

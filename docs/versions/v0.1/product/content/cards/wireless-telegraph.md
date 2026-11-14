@@ -30,6 +30,7 @@ is_scholar: false
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；battlecry-all-mech-growth-once-no-keyword |
 | 学者 | 否 |
+| 英雄资格 | 否 |
 
 ## 效果
 

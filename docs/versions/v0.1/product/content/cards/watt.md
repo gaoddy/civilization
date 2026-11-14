@@ -30,6 +30,7 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | aura-mech-plus-2-plus-2 |
 | 学者 | 是 |
+| 英雄资格 | 否 |
 
 ## 效果
 

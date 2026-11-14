@@ -30,6 +30,7 @@ is_scholar: false
 | 关键词 | 复生；进化 |
 | 技能 | keyword-reborn；keyword-evolve |
 | 学者 | 否 |
+| 英雄资格 | 否 |
 
 ## 效果
 

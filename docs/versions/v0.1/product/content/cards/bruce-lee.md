@@ -30,6 +30,7 @@ is_scholar: false
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
 | 学者 | 否 |
+| 英雄资格 | 否 |
 
 ## 效果
 

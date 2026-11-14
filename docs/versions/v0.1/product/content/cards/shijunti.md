@@ -30,6 +30,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-random-enemy-hp-minus-1 |
 | 学者 | 否 |
+| 英雄资格 | 否 |
 
 ## 效果
 
