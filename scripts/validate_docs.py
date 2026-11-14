@@ -91,7 +91,6 @@ MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "tribe", "cost", "match_text"]
 LEGACY_HERO_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
                       "hero_skill_uses_per_turn", "hero_skill_trigger"]
-ACTIVE_SKILL_FIELDS = ["cost", "uses_per_turn"]
 HERO_SKILL_PREFIX = "hero-"
 
 errors = []
@@ -427,6 +426,30 @@ def expected_skill_attrs(skill):
     return attrs
 
 
+def skill_field_errors(skill):
+    """主动技能字段成对性与取值、hero-* 技能必填项的校验消息。"""
+    name = skill["_file"]
+    messages = []
+    has_cost = "cost" in skill
+    has_uses = "uses_per_turn" in skill
+    if has_cost != has_uses:
+        messages.append(f"{name}: cost 与 uses_per_turn 必须成对出现")
+    if has_cost:
+        if type(skill["cost"]) is not int or not 0 <= skill["cost"] <= 2:
+            messages.append(f"{name}: 技能费用越界 {skill['cost']!r}")
+        if has_uses and (type(skill["uses_per_turn"]) is not int
+                         or skill["uses_per_turn"] not in (1, 2)):
+            messages.append(f"{name}: 每回合次数非法 {skill['uses_per_turn']!r}")
+        if not skill.get("name") or not skill.get("match_text"):
+            messages.append(f"{name}: 主动技能必须填写 name 与 match_text")
+    if str(skill["id"]).startswith(HERO_SKILL_PREFIX):
+        if not skill.get("name"):
+            messages.append(f"{name}: hero-* 技能缺少 name")
+        if not skill.get("match_text"):
+            messages.append(f"{name}: hero-* 技能缺少 match_text")
+    return messages
+
+
 def check_skills():
     skills = load("skills", SKILL_FIELDS)
     if len(skills) != 118:
@@ -441,22 +464,8 @@ def check_skills():
         keyword = skill.get("keyword")
         if keyword and not SKILL_KEYWORD_RE.fullmatch(str(keyword)):
             fail(f"{name}: 关键词非法 {keyword!r}")
-        has_cost = "cost" in skill
-        has_uses = "uses_per_turn" in skill
-        if has_cost != has_uses:
-            fail(f"{name}: cost 与 uses_per_turn 必须成对出现")
-        if has_cost:
-            if not isinstance(skill["cost"], int) or not 0 <= skill["cost"] <= 2:
-                fail(f"{name}: 技能费用越界 {skill['cost']!r}")
-            if skill["uses_per_turn"] not in (1, 2):
-                fail(f"{name}: 每回合次数非法 {skill['uses_per_turn']!r}")
-            if not skill.get("name") or not skill.get("match_text"):
-                fail(f"{name}: 主动技能必须填写 name 与 match_text")
-        if str(skill["id"]).startswith(HERO_SKILL_PREFIX):
-            if not skill.get("name"):
-                fail(f"{name}: hero-* 技能缺少 name")
-            if not skill.get("match_text"):
-                fail(f"{name}: hero-* 技能缺少 match_text")
+        for message in skill_field_errors(skill):
+            fail(message)
         raw_effects = skill.get("effects")
         parsed_effects, effect_errors = parse_effects(raw_effects)
         for message in effect_errors:

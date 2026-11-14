@@ -116,5 +116,80 @@ class RealHeroCardsTest(unittest.TestCase):
             self.assertNotIn("uses_per_turn", skills[sid], sid)
 
 
+class ActiveSkillFieldTest(unittest.TestCase):
+    def errors(self, **fields):
+        skill = {"_file": "hero-shout.md", "id": "hero-shout",
+                 "name": "呐喊", "text": "使一个友方随从获得一次成长",
+                 "match_text": "同左"}
+        skill.update(fields)
+        return vd.skill_field_errors(skill)
+
+    def test_cost_without_uses_is_rejected(self):
+        messages = self.errors(cost=1)
+        self.assertTrue(any("必须成对出现" in m for m in messages), messages)
+
+    def test_uses_without_cost_is_rejected(self):
+        messages = self.errors(uses_per_turn=1)
+        self.assertTrue(any("必须成对出现" in m for m in messages), messages)
+
+    def test_cost_out_of_range_is_rejected(self):
+        messages = self.errors(cost=3, uses_per_turn=1)
+        self.assertTrue(any("技能费用越界" in m for m in messages), messages)
+
+    def test_uses_out_of_range_is_rejected(self):
+        messages = self.errors(cost=1, uses_per_turn=3)
+        self.assertTrue(any("每回合次数非法" in m for m in messages), messages)
+
+    def test_boolean_cost_is_rejected(self):
+        messages = self.errors(cost=True, uses_per_turn=1)
+        self.assertTrue(any("技能费用越界" in m for m in messages), messages)
+
+    def test_legal_active_skill_passes(self):
+        self.assertEqual(self.errors(cost=1, uses_per_turn=2), [])
+
+
+class HeroSkillRefsTest(unittest.TestCase):
+    HERO_IDS = ["adam-smith", "darwin", "davinci", "edison", "einstein",
+                "faraday", "galileo", "knuth", "luxun", "marie-curie",
+                "mendel", "pasteur", "tesla"]
+
+    def run_check(self, skills_by_card, skill_ids):
+        heroes = []
+        for card_id, skills in zip(self.HERO_IDS, skills_by_card):
+            heroes.append({"_file": f"{card_id}.md", "id": card_id,
+                           "name": card_id, "skills": skills, "is_hero": True})
+        skill_map = {sid: {"_file": f"{sid}.md", "id": sid,
+                           "name": sid, "text": "", "match_text": "同左"}
+                     for sid in skill_ids}
+        vd.errors.clear()
+        vd.check_hero_cards(heroes, heroes, [], skill_map)
+        return list(vd.errors)
+
+    def test_card_with_two_hero_skills_is_rejected(self):
+        ids = [f"hero-s{i}" for i in range(13)]
+        skills = [[sid] for sid in ids]
+        skills[0] = [ids[0], ids[1]]
+        errors = self.run_check(skills, ids)
+        self.assertTrue(any("恰好引用 1 个 hero-* 技能" in e for e in errors), errors)
+
+    def test_card_with_no_hero_skill_is_rejected(self):
+        ids = [f"hero-s{i}" for i in range(13)]
+        skills = [[sid] for sid in ids]
+        skills[0] = []
+        errors = self.run_check(skills, ids)
+        self.assertTrue(any("恰好引用 1 个 hero-* 技能" in e for e in errors), errors)
+
+    def test_unreferenced_hero_skill_is_rejected(self):
+        ids = [f"hero-s{i}" for i in range(13)]
+        skills = [[sid] for sid in ids]
+        errors = self.run_check(skills, ids + ["hero-orphan"])
+        self.assertTrue(any("hero-orphan" in e and "恰好被 1 张英雄卡引用" in e
+                            for e in errors), errors)
+
+    def test_valid_mapping_passes(self):
+        ids = [f"hero-s{i}" for i in range(13)]
+        self.assertEqual(self.run_check([[sid] for sid in ids], ids), [])
+
+
 if __name__ == "__main__":
     unittest.main()
