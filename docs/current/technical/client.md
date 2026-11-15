@@ -16,7 +16,9 @@ client/
     game_store.gd            # 认证、房间与 PlayerView 的全局状态
     ws_client.gd             # WebSocketPeer、自动重连、信封编解码与分发
     card_db.gd               # 只读卡牌/技能展示表
-  ui/ui.gd                   # 场景共用控件工具与统一导航入口（class_name UI）
+  ui/
+    ui.gd                    # 场景共用控件工具、共享构件与统一导航入口（class_name UI）
+    theme.gd                 # 三层视觉令牌与 StyleBox 工厂（class_name UITheme）
   scenes/
     login.tscn/.gd           # 登录
     lobby.tscn/.gd           # 大厅
@@ -48,7 +50,7 @@ client/
 | 登录 | 输入服务器地址、手机号、固定验证码 `123456` 与显示名；认证成功后进入大厅 |
 | 大厅 | 创建房间或凭 6 位房间码加入；收到 `RoomUpdate` 后进入房间 |
 | 房间 | 展示房间码与成员、选择英雄、准备/取消准备、离开房间；开局完全由服务端决定 |
-| 对局 | 商店、手牌、棋盘、玩家列表、倒计时、战报与事件；十种意图对应操作；`pendingChoices` 弹层；目标缺失时按 `NO_VALID_TARGET` 补选目标 |
+| 对局 | 酒馆战棋式三栏布局：顶栏回合/计时/属性，左栏 8 人积分榜，中区招募视图（对手席位、7 槽棋盘、商店、手牌）或战斗视图（双方英雄、双方随从、结果横幅），右栏我的英雄/英雄技能/结束招募/战报；十种意图对应操作；`pendingChoices` 弹层；目标缺失时按 `NO_VALID_TARGET` 补选目标 |
 | 结算 | 按服务端 `ranking` 展示名次与 `seed`；返回大厅时用令牌重新认证 |
 
 - 对局界面整块读取 `GameStore.view`，每次 `view_changed` 重建；按钮可用性只取 `affordances` / `playable` / `can*`，不做本地推导。冻结与左右移位没有对应的服务端 affordance，按 `phase`、`self.recruited` 与下标做本地门控，与服务端拒绝条件保持一致。
@@ -63,6 +65,8 @@ client/
 - 商店与手牌使用 `HFlowContainer` 自动换行，左侧内容放入 `ScrollContainer`，1280×720 下不会因手牌或商店变长而溢出。
 - 战斗只展示服务端 `CombatResult` 的胜者、伤害与双方随从数，不本地重放结算。
 - 返回大厅不使用 `LeaveRoom`（非大厅阶段会被拒绝），而是清除房间状态后重新连接并以令牌认证。
+- 对局页的三栏结构、页面状态与数据来源见[对局页](../product/ui/pages/game.md)；颜色、字号、间距与圆角来自 `UITheme`，页面不写死视觉值。招募阶段与战斗阶段共用同一页面，战斗与结算阶段隐藏招募视图、英雄技能与结束招募，节点保留以便阶段恢复。
+- 冒烟测试额外断言对局页的 8 座积分榜、7 槽棋盘（含空位）、招募/战斗视图互斥、双方随从行与结果横幅。
 
 ## 4. 生成物与命令
 
