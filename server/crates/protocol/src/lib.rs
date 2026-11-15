@@ -91,6 +91,21 @@ pub enum ServerMessage {
     FriendUpdate(FriendUpdate),
 }
 
+/// 已知 s2c 消息类型名，与 `messages.json#/directions/s2c` 一致。
+const SERVER_MESSAGE_TYPES: [&str; 11] = [
+    "AuthResult",
+    "RoomUpdate",
+    "GameStarted",
+    "Snapshot",
+    "StateUpdate",
+    "PhaseChanged",
+    "TimerWarning",
+    "CombatResult",
+    "GameOver",
+    "Error",
+    "FriendUpdate",
+];
+
 /// 从 payload 值反序列化；失败统一为 `BAD_PAYLOAD`。
 fn parse_payload<T: DeserializeOwned>(payload: Value) -> Result<T, ProtocolError> {
     serde_json::from_value(payload).map_err(|_| ProtocolError("BAD_PAYLOAD"))
@@ -122,36 +137,49 @@ impl ServerEnvelope {
     /// 构造一个下行信封。`seq` 必须从 1 起（协议要求单调递增）；`id` 由进程内
     /// 计数器生成，保证本进程内唯一。
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// `seq` 为 0（协议要求从 1 起）或 `payload` 不是 JSON 对象时 panic。
-    pub fn new(kind: &str, seq: u64, payload: Value) -> Self {
+    /// - `seq == 0`（协议要求从 1 起）返回 `BAD_PAYLOAD`。
+    /// - `kind` 不是 11 种已知 s2c 类型之一返回 `UNKNOWN_TYPE`。
+    pub fn new(
+        kind: &str,
+        seq: u64,
+        payload: serde_json::Map<String, serde_json::Value>,
+    ) -> Result<ServerEnvelope, ProtocolError> {
+        if !SERVER_MESSAGE_TYPES.contains(&kind) {
+            return Err(ProtocolError("UNKNOWN_TYPE"));
+        }
+        let seq = std::num::NonZeroU64::new(seq).ok_or(ProtocolError("BAD_PAYLOAD"))?;
+
         use std::sync::atomic::{AtomicU64, Ordering};
         static NEXT_ID: AtomicU64 = AtomicU64::new(1);
         let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
-        Self {
-            id: ServerEnvelopeId::try_from(format!("srv_{id}")).expect("消息 id 非空"),
-            payload: match payload {
-                Value::Object(map) => map,
-                _ => panic!("下行 payload 必须是 JSON 对象"),
-            },
+        Ok(Self {
+            id: ServerEnvelopeId::try_from(format!("srv_{id}")).expect("进程内计数生成的 id 非空"),
+            payload,
             player_id: None,
             reply_to: None,
             room_id: None,
-            seq: std::num::NonZeroU64::new(seq).expect("seq 必须从 1 开始"),
+            seq,
             ts: chrono::Utc::now(),
-            type_: ServerEnvelopeType::try_from(kind.to_string()).expect("消息类型非空"),
+            type_: ServerEnvelopeType::try_from(kind.to_string()).expect("已校验的 s2c 类型名非空"),
             v: Value::from(1),
-        }
+        })
     }
 
     /// 把可序列化的载荷编码成 JSON 对象后构造信封。
+    ///
+    /// # Errors
+    ///
+    /// 错误语义同 [`ServerEnvelope::new`]；序列化失败或载荷不是 JSON 对象时
+    /// 返回 `BAD_PAYLOAD`。
     pub fn encode(kind: &str, seq: u64, payload: &impl Serialize) -> Result<Self, ProtocolError> {
         let payload = serde_json::to_value(payload).map_err(|_| ProtocolError("BAD_PAYLOAD"))?;
-        if !payload.is_object() {
-            return Err(ProtocolError("BAD_PAYLOAD"));
-        }
-        Ok(Self::new(kind, seq, payload))
+        let map = match payload {
+            Value::Object(map) => map,
+            _ => return Err(ProtocolError("BAD_PAYLOAD")),
+        };
+        Self::new(kind, seq, map)
     }
 
     /// 按 `type` 把 `payload` 反序列化为具体载荷。错误语义同 [`ClientEnvelope::parse`]。

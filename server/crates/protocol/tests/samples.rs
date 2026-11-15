@@ -118,3 +118,58 @@ fn unknown_intent_kind_is_rejected() {
     let envelope: ClientEnvelope = serde_json::from_value(value).unwrap();
     assert!(envelope.parse().is_err());
 }
+
+/// 取 `s2c/StateUpdate.json` 的 payload 对象作为合法下行载荷。
+fn state_update_payload() -> serde_json::Map<String, Value> {
+    let path = samples_dir("s2c").join("StateUpdate.json");
+    let value: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    value["payload"]
+        .as_object()
+        .expect("StateUpdate 样例缺少 payload 对象")
+        .clone()
+}
+
+#[test]
+fn server_envelope_new_and_encode_roundtrip_to_state_update() {
+    let payload = state_update_payload();
+
+    let from_new = ServerEnvelope::new("StateUpdate", 1, payload.clone()).unwrap();
+    assert!(matches!(
+        from_new.parse().unwrap(),
+        ServerMessage::StateUpdate(_)
+    ));
+
+    let from_encode = ServerEnvelope::encode("StateUpdate", 1, &Value::Object(payload)).unwrap();
+    assert!(matches!(
+        from_encode.parse().unwrap(),
+        ServerMessage::StateUpdate(_)
+    ));
+}
+
+#[test]
+fn server_envelope_new_rejects_zero_seq() {
+    let payload = state_update_payload();
+
+    assert_eq!(
+        ServerEnvelope::new("StateUpdate", 0, payload.clone()).unwrap_err(),
+        ProtocolError("BAD_PAYLOAD")
+    );
+    assert_eq!(
+        ServerEnvelope::encode("StateUpdate", 0, &Value::Object(payload)).unwrap_err(),
+        ProtocolError("BAD_PAYLOAD")
+    );
+}
+
+#[test]
+fn server_envelope_new_rejects_unknown_kind() {
+    let payload = state_update_payload();
+
+    assert_eq!(
+        ServerEnvelope::new("NoSuchType", 1, payload.clone()).unwrap_err(),
+        ProtocolError("UNKNOWN_TYPE")
+    );
+    assert_eq!(
+        ServerEnvelope::encode("NoSuchType", 1, &Value::Object(payload)).unwrap_err(),
+        ProtocolError("UNKNOWN_TYPE")
+    );
+}
