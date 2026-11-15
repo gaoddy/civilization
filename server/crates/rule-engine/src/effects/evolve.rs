@@ -17,7 +17,8 @@ use crate::state::{GameState, InstanceId, MinionInstance, Modifier, PendingChoic
 /// 进化的三项选项，下标即 `Intent::ChooseDiscover.choice` 的取值。
 ///
 /// 与关键词机制 §1「进化：从 +2/+2、护盾、复生中选择一个」逐项对应。
-pub(crate) const EVOLVE_CHOICES: [&str; 3] = ["+2/+2", "护盾", "复生"];
+/// 视图层下发 [`crate::view::PendingChoiceView::Evolve`] 时直接使用这份列表。
+pub const EVOLVE_CHOICES: [&str; 3] = ["+2/+2", "护盾", "复生"];
 
 /// `+2/+2` 选项的数值。
 const EVOLVE_STATS: i32 = 2;
