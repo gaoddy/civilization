@@ -9,8 +9,10 @@ pub mod auth;
 pub mod clock;
 pub mod envelope;
 pub mod error;
+pub mod room;
 
 pub use auth::{DEV_SMS_CODE, SESSION_TTL_MS, Session, SessionStore};
 pub use clock::{Clock, FixedClock, SystemClock};
 pub use envelope::SeatChannel;
 pub use error::error_message;
+pub use room::{PlayerSlot, Room, RoomError, RoomId, RoomRegistry, SEAT_COUNT};
