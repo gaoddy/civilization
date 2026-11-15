@@ -244,6 +244,7 @@ C 的额外成本集中在 GDScript 侧：无成熟代码生成器，只生成�
 | 规则（来源：核心规则 §3） | `NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE` | 意图被拒绝 |
 | 协议 | `AUTH_FAILED`、`TOKEN_EXPIRED`、`AUTH_RATE_LIMITED`、`SESSION_REPLACED` | 认证 |
 | 协议 | `BAD_PAYLOAD`、`UNKNOWN_TYPE`、`RATE_LIMITED`、`NOT_IN_ROOM`、`ROOM_NOT_FOUND`、`ROOM_FULL`、`SEQUENCE_STALE`、`INTERNAL_ERROR` | 请求与传输 |
+| 协议 | `NOT_HOST`、`HERO_NOT_SELECTED`、`ROOM_NOT_READY` | 大堂可纠正拒绝：仅房主可开始、需先选英雄、开局条件未满足 |
 
 - 错误码枚举写入 `protocol/schema/v1/errors.schema.json`，Rust 端用 `match` 穷尽；新增错误码必须同时更新该文件与核心规则的返回码表。
 

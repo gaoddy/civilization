@@ -77,7 +77,7 @@ impl Engine {
         (Engine { catalog }, state)
     }
 
-    /// 校验 8 个座位都选了目录中的英雄卡，写入英雄，进入第 1 回合招募阶段。
+    /// 校验 8 个座位都选了目录中的英雄卡，允许重复；写入英雄，进入第 1 回合招募阶段。
     ///
     /// 第 1 回合金币与商店都在这里完成；`start_turn` 只负责第 2 回合及以后。
     pub fn start_game(
@@ -92,7 +92,6 @@ impl Engine {
             )));
         }
 
-        let mut seen_heroes = BTreeSet::new();
         for seat in 0..PLAYER_COUNT {
             let card_id = heroes
                 .get(&seat)
@@ -104,9 +103,6 @@ impl Engine {
                 .ok_or_else(|| EngineError(format!("英雄卡 {card_id} 不在卡牌目录中")))?;
             if !card.is_hero {
                 return Err(EngineError(format!("卡牌 {card_id} 不是英雄卡")));
-            }
-            if !seen_heroes.insert(card_id.as_str()) {
-                return Err(EngineError(format!("英雄卡 {card_id} 被重复选择")));
             }
         }
 

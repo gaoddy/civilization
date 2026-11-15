@@ -47,6 +47,7 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 | `FreezeShop` | 处于 `Recruit` | 无 | 冻结当前槽位到下回合开始 | — |
 | `UseHeroPower` | 处于 `Recruit`；费用足够；本回合次数未用尽 | −技能的 `cost` | 使用所选英雄卡上的一个主动技能，次数受该技能 `uses_per_turn` 限制 | `NOT_ENOUGH_GOLD` / `HERO_POWER_LIMIT` |
 | `EndRecruit` | 处于 `Recruit` | 无 | 本玩家结束招募 | — |
+| `ChooseDiscover` | 存在本座位的待选 | 无 | 消费最靠前的待选 | `INVALID_CHOICE` |
 
 **通用规则**：同一回合内，`BuyMinion` / `RerollShop` / `UpgradeEra` / `PlayCard` / `UseHeroPower` 共用同一个金币池，顺序不限；金币不跨回合累积，多余部分清零。
 

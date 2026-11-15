@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: test lint audit data data-check protocol protocol-check m0-check m0-determinism m0-batch m0-report
+.PHONY: test lint audit data data-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -28,7 +28,23 @@ protocol-check:
 	$(PYTHON) scripts/gen_protocol_gdscript.py --check
 	$(PYTHON) scripts/gen_protocol_docs.py --check
 
+protocol-rs:
+	cd server && cargo run -q -p protocol-gen
+
+protocol-rs-check:
+	cd server && cargo run -q -p protocol-gen -- --check
+
 m0-check:
+	$(MAKE) data-check
+	$(MAKE) test
+	$(MAKE) lint
+	$(MAKE) m0-determinism
+
+# M1a 收尾验收入口。e2e 由 `make test` 的 `cargo test --workspace` 覆盖，
+# 不在此单独再跑：那会用真实 WebSocket 起 8 个 bot 跑两次。
+m1-check:
+	$(MAKE) protocol-rs-check
+	$(MAKE) protocol-check
 	$(MAKE) data-check
 	$(MAKE) test
 	$(MAKE) lint

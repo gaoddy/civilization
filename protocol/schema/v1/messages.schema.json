@@ -11,7 +11,8 @@
           "required": ["phone", "code"],
           "properties": {
             "phone": { "type": "string", "description": "手机号" },
-            "code": { "type": "string", "description": "短信验证码" }
+            "code": { "type": "string", "description": "短信验证码" },
+            "displayName": { "type": "string", "minLength": 1, "maxLength": 20, "description": "缺省由服务端生成「玩家N」" }
           }
         },
         {
@@ -19,7 +20,8 @@
           "additionalProperties": false,
           "required": ["token"],
           "properties": {
-            "token": { "type": "string", "description": "上次登录返回的令牌" }
+            "token": { "type": "string", "description": "上次登录返回的令牌" },
+            "displayName": { "type": "string", "minLength": 1, "maxLength": 20, "description": "缺省由服务端生成「玩家N」" }
           }
         }
       ]
@@ -60,7 +62,7 @@
         "cardId": { "type": "string" }
       }
     },
-    "Intent": {
+    "IntentMessage": {
       "type": "object",
       "additionalProperties": false,
       "required": ["clientIntentId", "intent"],
@@ -147,7 +149,12 @@
       "additionalProperties": false,
       "required": ["view"],
       "properties": {
-        "view": { "$ref": "view.schema.json#/$defs/PlayerView" }
+        "view": { "$ref": "view.schema.json#/$defs/PlayerView" },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "快照对应的座位消息序号；与信封 seq 一致，M1 新增可选字段"
+        }
       }
     },
     "StateUpdate": {
@@ -194,12 +201,26 @@
               "kind": { "type": "string", "description": "动作类型，具体取值由规则引擎实现确定" },
               "sourceIndex": { "type": ["integer", "null"] },
               "targetIndex": { "type": ["integer", "null"] },
-              "damage": { "type": ["integer", "null"] }
+              "damage": { "type": ["integer", "null"] },
+              "sourceSide": {
+                "type": ["string", "null"],
+                "enum": ["own", "opponent", null],
+                "description": "sourceIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有来源下标"
+              },
+              "targetSide": {
+                "type": ["string", "null"],
+                "enum": ["own", "opponent", null],
+                "description": "targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标"
+              }
             }
           }
         },
         "damage": { "type": "integer", "minimum": 0, "description": "本场战斗败者受到的伤害" },
-        "winnerId": { "type": ["string", "null"], "description": "本场胜者；玩家自己的 playerId 表示胜" }
+        "winnerId": { "type": ["string", "null"], "description": "本场胜者；玩家自己的 playerId 表示胜" },
+        "mirror": {
+          "type": "boolean",
+          "description": "true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0"
+        }
       }
     },
     "GameOver": {

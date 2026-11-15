@@ -1,6 +1,6 @@
 # 规则引擎与模拟器
 
-> 状态：已实现（v0.1 M0）
+> 状态：已实现（v0.1 M0；M1a 的增量见[房间服务与联网](room-service.md)）
 > 代码：`server/crates/rule-engine`、`server/crates/sim`、`scripts/`、`Makefile`
 
 本文记录 v0.1 M0 已实现的规则引擎与模拟器的现状：工程结构、引擎边界、数据生成、命令与验证方式；不描述产品规则与后续里程碑规划。
@@ -21,21 +21,24 @@ server/
       src/state.rs           # GameState / PlayerState / MinionInstance
       src/data.rs            # Catalog 与加载期校验（deny_unknown_fields）
       src/effects/           # DSL 解析（parse）、解释执行（exec）、光环（auras）
-      src/intent.rs          # 十种引擎意图（含内部 ChooseDiscover）与 12 个拒绝码（协议侧 11 个）
+      src/intent.rs          # 协议十种意图（含 ChooseDiscover）与 11 个规则拒绝码（各自映射到对应的协议错误码）
       src/engine.rs          # Engine::new / apply / start_game / start_turn
       src/recruit.rs         # 商店、买/卖/刷新/冻结/升时代/打出/结束招募
       src/triple.rs          # 三连与发现
       src/combat.rs          # 战斗模拟
       src/settle.rs          # 配对、finish_recruit、伤害、淘汰、排名
-      src/rng.rs             # xoshiro256++ 与五个标签流
+      src/rng.rs             # xoshiro256++ 与五个标签流；seed_from_u64（M1a 由 sim 迁入）
       src/hash.rs            # FNV-1a 规范编码与状态哈希
-      tests/                 # 11 个集成测试文件
+      src/view.rs            # 逐座位视图 SeatView（M1a 新增，供 room-service 映射协议视图）
+      tests/                 # 13 个集成测试文件
     sim/                     # 可执行：CLI 模拟器 + 确定性 AI
-      src/lib.rs             # run_games / play_game / replay
-      src/ai.rs              # 确定性 AI 策略
+      src/lib.rs             # run_games / play_game / replay；重导出 rule_engine::rng::seed_from_u64
+      src/ai.rs              # M0 确定性 AI 策略（为保基线未改动）
+      src/bot/               # M1a：view 驱动的机器人（brain.rs）与真实 WebSocket 客户端（client.rs）
       src/report.rs          # 日志与基线报告
-      src/main.rs            # play / batch / replay / report / check
+      src/main.rs            # play / batch / replay / report / check / bot
       tests/sim_cli.rs       # CLI 冒烟与字段契约
+      tests/sim_bot.rs       # 机器人决策优先级
       tests/sim_determinism.rs # 同一局重放 100 次
 scripts/
   gen_card_data.py           # 实体文档 → server/data/v0.1/*.json
@@ -47,20 +50,20 @@ scripts/
 tests/                       # Python 标准库 unittest
 ```
 
-依赖方向固定为 `sim → rule-engine`；`rule-engine` 不依赖 `sim`、tokio、sqlx、协议 crate，不做文件 I/O，不读时钟与环境变量。
+依赖方向固定为 `sim → protocol`、`sim → rule-engine`；`rule-engine` 不依赖 `sim`、tokio、sqlx、协议 crate，不做文件 I/O，不读时钟与环境变量。
 
 ## 2. 引擎边界
 
 - `Engine::apply(state, seat, intent)` 是唯一的状态变更入口，返回 `Outcome`（本意图产生的事件）；拒绝时返回 `Reject { code, message }` 且不改变状态。
 - 拒绝码与核心规则 §3 一致：`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE`。
-- 九种招募意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UseHeroPower`、`EndRecruit`；发现选择 `ChooseDiscover` 是引擎内部的第十种意图，不属于协议意图。
+- 协议十种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`。`ChooseDiscover` 是协议意图之一，服务层映射为引擎同义意图，用于消费引擎产生的 `PendingChoice`（发现或进化待选）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
 - `BuyMinion`、`PlayCard`、`UseHeroPower` 带 `target: Option<InstanceId>`，M0 由 AI 自动选择目标。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。
 - `settle::finish_recruit` 幂等：`Recruit` 阶段（超时路径）生成配对并切 `Combat`；`Combat` 阶段只补齐一次配对，不重复发事件、不重复配对。
 - 阶段推进由驱动方按固定顺序调用 `finish_recruit` / `resolve_combat` / `resolve_settle` / `start_turn`，引擎不自行推进时间。
 - `rule-engine` 顶部 `#![forbid(unsafe_code)]`；结算只用整数，容器用 `BTreeMap` 与有序 `Vec`。
-- M0 不产出 `PlayerView`；视图与协议映射在 M1 建立。
+- M1a 起引擎提供只读逐座位视图 `rule_engine::view::view(&Engine, &GameState, Seat) -> Option<SeatView>`；`SeatView` 是引擎自有类型，不依赖协议 crate，由 `room-service::view::to_protocol` 映射为协议 `PlayerView`。
 
 ## 3. 卡牌数据生成
 
@@ -82,10 +85,11 @@ tests/                       # Python 标准库 unittest
 | `make m0-determinism` | 运行 `sim_determinism::replay_same_log_100_times_has_same_hash`：同一局用 `sim replay` 重放 100 次，哈希全部一致 |
 | `make m0-batch` | 1000 局 8 AI 批量对局（seed 1），写入 `output/m0-batch.json` |
 | `make m0-check` | `make data-check && make test && make lint && make m0-determinism`（计划中的 M0 汇总门禁） |
+| `make m1-check` | M1a 汇合门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism`；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service.md) |
 | `make m0-report` | 先校验批量日志（`sim check --expect-games 1000`：局数、每局 8 名排名），再生成基线报告（字段口径见第 6 节）；输出同时写入 `output/m0-report.log`。可用 `M0_BATCH_LOG`、`M0_GAMES` 指向其他批量日志与局数 |
 | `python3 scripts/validate_docs.py` | 文档与实体数据校验 |
 
-模拟器直接调用：`sim play --seed N`、`sim batch --games N --seed N --out PATH`、`sim replay --log PATH`、`sim report --log PATH`、`sim check --log PATH [--expect-games N]`；参数错误、模拟失败或日志校验不通过以非零码退出。
+模拟器直接调用：`sim play --seed N`、`sim batch --games N --seed N --out PATH`、`sim replay --log PATH`、`sim report --log PATH`、`sim check --log PATH [--expect-games N]`、`sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID [--room CODE] [--create] [--intent-seed N]`；参数错误、模拟失败或日志校验不通过以非零码退出。`sim bot` 的细节见[房间服务与联网](room-service.md)第 11 节。
 
 ## 5. 验证方式
 

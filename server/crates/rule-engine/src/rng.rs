@@ -129,3 +129,15 @@ fn splitmix64(state: &mut u64) -> u64 {
     z = (z ^ (z >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
     z ^ (z >> 31)
 }
+
+/// 引擎 32 字节种子与日志 64 位种子之间的对应：前 8 字节按小端写日志种子，其余三组
+/// 8 字节由该种子经固定混合常数派生。日志只记录 64 位种子，重放时由它重建同样的
+/// 32 字节，因此重放与原始对局使用完全相同的随机流。
+pub fn seed_from_u64(seed: u64) -> [u8; 32] {
+    let mut bytes = [0u8; 32];
+    bytes[..8].copy_from_slice(&seed.to_le_bytes());
+    bytes[8..16].copy_from_slice(&seed.wrapping_mul(0x9e37_79b9_7f4a_7c15).to_le_bytes());
+    bytes[16..24].copy_from_slice(&seed.wrapping_add(0xd1b5_4a32_d192_ed03).to_le_bytes());
+    bytes[24..32].copy_from_slice(&seed.rotate_left(29).to_le_bytes());
+    bytes
+}

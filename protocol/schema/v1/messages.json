@@ -8,7 +8,7 @@
       "LeaveRoom": "messages.schema.json#/$defs/LeaveRoom",
       "Ready": "messages.schema.json#/$defs/Ready",
       "SelectHeroCard": "messages.schema.json#/$defs/SelectHeroCard",
-      "Intent": "messages.schema.json#/$defs/Intent",
+      "Intent": "messages.schema.json#/$defs/IntentMessage",
       "SkipAnimation": "messages.schema.json#/$defs/SkipAnimation",
       "RequestSnapshot": "messages.schema.json#/$defs/RequestSnapshot",
       "Reconnect": "messages.schema.json#/$defs/Reconnect",

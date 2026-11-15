@@ -13,6 +13,7 @@
         "NO_SUCH_MINION",
         "ALREADY_MAX_ERA",
         "CARD_NOT_IN_HAND",
+        "HERO_NOT_SELECTED",
         "HERO_POWER_LIMIT",
         "INVALID_CHOICE",
         "NO_VALID_TARGET",
@@ -25,8 +26,10 @@
         "UNKNOWN_TYPE",
         "RATE_LIMITED",
         "NOT_IN_ROOM",
+        "NOT_HOST",
         "ROOM_NOT_FOUND",
         "ROOM_FULL",
+        "ROOM_NOT_READY",
         "SEQUENCE_STALE",
         "INTERNAL_ERROR"
       ],
