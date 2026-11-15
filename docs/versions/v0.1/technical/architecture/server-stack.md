@@ -1,6 +1,6 @@
 # 服务端技术基线
 
-> 状态：M0 已实施（`rule-engine`、`sim`）；`protocol`、`room-service` 未实施
+> 状态：M0 已实施（`rule-engine`、`sim`）；M1a 已实施（`protocol`、`room-service`）
 > 依赖：[设计总纲](../../product/overview/design-overview.md)（§8）、[联网与技术架构](network-architecture.md)
 
 本文记录 v0.1 服务端已确定的技术选型、工程形态与确定性约束；不描述客户端选型、接口字段与具体实现。未确定事项见[待确认事项](../../open-questions.md)。
@@ -22,21 +22,23 @@
 
 ## 2. 工程形态
 
-服务端为 Cargo workspace，规则引擎与房间服务通过 crate 边界隔离。当前已建 `rule-engine`（纯库）与 `sim`（CLI 模拟器与确定性 AI），`protocol` 与 `room-service` 在 M1 建立：
+服务端为 Cargo workspace，规则引擎与房间服务通过 crate 边界隔离。当前已建 `rule-engine`（纯库）、`sim`（CLI 模拟器与确定性 AI）、`protocol`（生成的消息与视图类型）与 `room-service`（WebSocket 房间服务），当前状态见[房间服务与联网](../../../../current/technical/room-service.md)：
 
 ```
 server/
   Cargo.toml            # workspace 与依赖版本锁定
   rust-toolchain.toml   # 工具链版本
   crates/
-    rule-engine/        # 纯库：状态、意图校验、效果结算、战斗、数据表加载
+    rule-engine/        # 纯库：状态、意图校验、效果结算、战斗、数据表加载、逐座位视图
     protocol/           # 事件信封与消息类型，serde 派生
-    room-service/       # 可执行：会话、阶段计时、广播、重连、持久化
+    protocol-gen/       # 由 schema 生成 protocol/generated/protocol.rs
+    room-service/       # 可执行：会话、阶段计时、广播、重连
+    sim/                # 可执行：模拟器与机器人客户端
 ```
 
 依赖方向固定为 `room-service → protocol`、`room-service → rule-engine`；`rule-engine` 不依赖 `protocol`、tokio、sqlx 或任何 I/O 库。这样[联网与技术架构](network-architecture.md) §2.1 的"引擎无副作用"由编译期依赖图保证，不靠人工约束。
 
-协议契约的唯一来源是仓库根 `protocol/schema/v1/`（JSON Schema draft 2020-12），不手写与 schema 不一致的 Rust 类型。workspace 建立后，`protocol` crate 用 `typify` 从 schema 生成 `protocol/generated/protocol.rs` 并随源提交；生成入口与漂移检测见[通信协议](protocol.md) §8。本轮只有 schema 与样例，Rust 生成在搭建 workspace 时启用。
+协议契约的唯一来源是仓库根 `protocol/schema/v1/`（JSON Schema draft 2020-12），不手写与 schema 不一致的 Rust 类型。`protocol` crate 用 `typify` 从 schema 生成 `protocol/generated/protocol.rs` 并随源提交；GDScript 常量生成到 `protocol/generated/protocol.gd`，同样随源提交。生成入口为 `make protocol-rs` / `make protocol`，漂移检测为 `make protocol-rs-check` / `make protocol-check`，详见[通信协议](protocol.md) §8。
 
 ## 3. 确定性约束
 
