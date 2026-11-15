@@ -103,14 +103,33 @@ fn buys_most_expensive_buyable_slot() {
 
     let intent = next_intent(&view, &catalog(), 0).expect("有可买槽位时应当给出意图");
     match intent {
-        Intent::BuyMinion {
-            slot,
+        Intent::BuyMinion { slot } => assert_eq!(slot, 1),
+        other => panic!("期望 BuyMinion，实际 {other:?}"),
+    }
+}
+
+#[test]
+fn plays_hand_before_buying() {
+    // 买入一律入手牌，机器人必须先把手牌随从打上棋盘，避免手牌堵塞购买。
+    let view = view(
+        10,
+        json!([{ "index": 0, "cardId": "adam-smith", "frozen": false }]),
+        json!([{ "index": 0, "buyable": true, "disabledReason": null }]),
+        json!([{ "index": 0, "playable": true, "disabledReason": null }]),
+        json!([]),
+        true,
+    );
+
+    let intent = next_intent(&view, &catalog(), 0).expect("有可打手牌时应当给出意图");
+    match intent {
+        Intent::PlayCard {
+            hand_index,
             target_minion_id,
         } => {
-            assert_eq!(slot, 1);
+            assert_eq!(hand_index, 0);
             assert_eq!(target_minion_id, None, "M1 机器人不填目标");
         }
-        other => panic!("期望 BuyMinion，实际 {other:?}"),
+        other => panic!("期望 PlayCard，实际 {other:?}"),
     }
 }
 
@@ -167,22 +186,22 @@ fn retries_rejected_intent_with_friendly_target() {
 
     let retried = retry_with_target(
         &view,
-        &Intent::BuyMinion {
-            slot: 2,
+        &Intent::PlayCard {
+            hand_index: 2,
             target_minion_id: None,
         },
     )
     .expect("有己方随从时应能补选");
 
     match retried {
-        Intent::BuyMinion {
-            slot,
+        Intent::PlayCard {
+            hand_index,
             target_minion_id,
         } => {
-            assert_eq!(slot, 2, "重发保留原槽位");
+            assert_eq!(hand_index, 2, "重发保留原手牌下标");
             assert_eq!(target_minion_id.as_deref(), Some("minion-7"));
         }
-        other => panic!("期望 BuyMinion，实际 {other:?}"),
+        other => panic!("期望 PlayCard，实际 {other:?}"),
     }
 }
 
@@ -232,8 +251,8 @@ fn does_not_retry_without_board_or_for_targetless_intent() {
     assert!(
         retry_with_target(
             &empty,
-            &Intent::BuyMinion {
-                slot: 0,
+            &Intent::PlayCard {
+                hand_index: 0,
                 target_minion_id: None,
             }
         )

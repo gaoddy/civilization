@@ -336,10 +336,7 @@ fn filtered_events_reach_only_own_seat_via_state_update() {
     let updates = task.handle(RoomCommand::Intent {
         player_id: "p0".to_string(),
         client_intent_id: "buy-e2e".to_string(),
-        intent: ProtocolIntent::BuyMinion {
-            slot,
-            target_minion_id: None,
-        },
+        intent: ProtocolIntent::BuyMinion { slot },
     });
 
     assert_eq!(updates.len(), 8, "购买改变公开摘要，应广播给全部 8 个座位");
@@ -406,20 +403,27 @@ fn private_intent_broadcasts_updated_public_summary_to_all_seats() {
     let (mut task, _clock) = task();
     let slot = first_nonempty_slot(&task, 0);
 
-    // 购买前：座位 B 看到的座位 A 棋盘数为 0。
+    // 买入只入手牌，公开摘要不变；打上棋盘后座位 B 才能看到棋盘数变化。
+    task.handle(RoomCommand::Intent {
+        player_id: "p0".to_string(),
+        client_intent_id: "buy-broadcast".to_string(),
+        intent: ProtocolIntent::BuyMinion { slot },
+    });
+
+    // 打牌前：座位 B 看到的座位 A 棋盘数为 0。
     let before = task
         .state_update(1)
         .expect("座位 1 状态应可用")
         .view
         .players[0]
         .board_count;
-    assert_eq!(before, 0, "开局时座位 0 的棋盘应为空");
+    assert_eq!(before, 0, "买入不入场，座位 0 的棋盘仍为空");
 
     let updates = task.handle(RoomCommand::Intent {
         player_id: "p0".to_string(),
-        client_intent_id: "buy-broadcast".to_string(),
-        intent: ProtocolIntent::BuyMinion {
-            slot,
+        client_intent_id: "play-broadcast".to_string(),
+        intent: ProtocolIntent::PlayCard {
+            hand_index: 0,
             target_minion_id: None,
         },
     });

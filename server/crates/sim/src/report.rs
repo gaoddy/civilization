@@ -279,9 +279,7 @@ fn ranking_to_json(ranking: &[Seat]) -> Value {
 /// 意图的 JSON 形式，字段名使用 snake_case。
 pub fn intent_to_json(intent: &Intent) -> Value {
     match intent {
-        Intent::BuyMinion { slot, target } => json!({
-            "kind": "buy_minion", "slot": slot, "target": target,
-        }),
+        Intent::BuyMinion { slot } => json!({ "kind": "buy_minion", "slot": slot }),
         Intent::SellMinion { minion } => json!({ "kind": "sell_minion", "minion": minion }),
         Intent::RerollShop => json!({ "kind": "reroll_shop" }),
         Intent::UpgradeEra => json!({ "kind": "upgrade_era" }),
@@ -428,7 +426,6 @@ fn intent_from_json(value: &Value) -> Result<Intent, String> {
     Ok(match kind {
         "buy_minion" => Intent::BuyMinion {
             slot: field("slot")?,
-            target,
         },
         "sell_minion" => Intent::SellMinion {
             minion: value

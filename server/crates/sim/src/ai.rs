@@ -19,13 +19,14 @@ const REROLL_PRICE: u8 = 1;
 
 /// 选择下一条意图；座位已出局时返回 `None`。
 ///
-/// 优先级（brief「买得起的最贵卡 → 填满棋盘 → 升时代 → 刷新 → EndRecruit」，
-/// 英雄技能在可支付且次数未用尽时使用，任何待选先消费）：
+/// 优先级：待选 → 英雄技能 → 打出手牌随从（腾出手牌空位） → 购买 → 升时代 → 刷新 → `EndRecruit`。
+/// 英雄技能在可支付且次数未用尽时使用，任何待选先消费；买入一律入手牌，
+/// 因此先把手牌里的随从打上棋盘，避免手牌积压后买不了牌。
 /// 1. 消费待选（发现 / 进化），否则无法结束招募；
 /// 2. 英雄技能：可支付、本回合次数未用尽且有可收益目标时使用（见 [`hero_power_use`]）；
-/// 3. 购买：买得起的最贵卡（金币 → 卡牌等级 → 槽位下标小的优先）；
-/// 4. 填满棋盘：手牌有随从且棋盘有空位时打出；棋盘已满时若商店还有腾不出位置的
-///    随从，就卖掉本回合最弱的随从；
+/// 3. 填满棋盘：手牌有随从且棋盘有空位时打出；棋盘与手牌都满时卖出本回合最弱的随从，
+///    腾出棋盘空位让手牌能继续打出；
+/// 4. 购买：买得起的最贵卡（金币 → 卡牌等级 → 槽位下标小的优先），手牌满则不买；
 /// 5. 升时代：金币够付当前时代的 `era_costs` 时升级；
 /// 6. 刷新：商店没有买得起的随从时刷新一次（每回合最多触发一次：刷新后商店仍买不起时，
 ///    剩余金币已不足以再付一次刷新费，AI 转向升时代或结束）；
@@ -50,8 +51,8 @@ pub fn plan(
     let candidates = [
         choose_pending(state, player, catalog),
         choose_hero_power(player, catalog),
-        choose_buy(state, player, catalog),
         choose_fill_board(state, player, catalog),
+        choose_buy(state, player, catalog),
         can_upgrade(player, catalog).then_some(Intent::UpgradeEra),
         choose_reroll(player, catalog),
     ];
@@ -253,17 +254,17 @@ fn strongest_target(player: &PlayerState, catalog: &Catalog) -> Option<u64> {
 /// 购买候选的排序键：价格 → 卡牌等级 → 槽位下标小者优先。
 type CandidateKey = (u8, u8, std::cmp::Reverse<u8>);
 
-/// 商店中买得起且能放入的候选里按降序键排列后的第一个槽位：
-/// 金币 → 卡牌等级 → 槽位下标小的优先。`minion_only` 为真时只看随从。
+/// 商店中买得起且能放入手牌的候选里按降序键排列后的第一个槽位：
+/// 金币 → 卡牌等级 → 槽位下标小的优先。买入一律入手牌，因此只看手牌是否有空位。
 fn best_affordable(
     state: &GameState,
     player: &PlayerState,
     catalog: &Catalog,
     gold: u8,
-    minion_only: bool,
 ) -> Option<u8> {
-    let board_room = player.board.len() < catalog.config.board_slots;
-    let hand_room = player.hand.len() < catalog.config.hand_slots;
+    if player.hand.len() >= catalog.config.hand_slots {
+        return None;
+    }
     let mut best: Option<(CandidateKey, u8)> = None;
     for (slot_index, slot) in player.shop.iter().enumerate() {
         let Some(slot) = slot else { continue };
@@ -273,23 +274,12 @@ fn best_affordable(
         if card.is_hero {
             continue;
         }
-        let fits = match card.card_type {
-            CardType::Minion => {
-                if minion_only && !board_room {
-                    continue;
-                }
-                if !board_room && !hand_room {
-                    continue;
-                }
-                if state.pool.get(&card.id).copied().unwrap_or(0) == 0 {
-                    continue;
-                }
-                true
-            }
-            CardType::Effect => !minion_only && hand_room,
-        };
+        if card.card_type == CardType::Minion && state.pool.get(&card.id).copied().unwrap_or(0) == 0
+        {
+            continue;
+        }
         let cost = buy_cost(card);
-        if !fits || gold < cost {
+        if gold < cost {
             continue;
         }
         let Ok(slot_u8) = u8::try_from(slot_index) else {
@@ -304,10 +294,11 @@ fn best_affordable(
 }
 
 fn choose_buy(state: &GameState, player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
-    best_affordable(state, player, catalog, player.gold, false)
-        .map(|slot| Intent::BuyMinion { slot, target: None })
+    best_affordable(state, player, catalog, player.gold).map(|slot| Intent::BuyMinion { slot })
 }
 
+/// 棋盘有空位时把手牌里的随从打上棋盘；手牌已满导致买不了牌时，
+/// 卖出本回合最弱的随从腾出棋盘空位，让手牌能继续打出。
 fn choose_fill_board(state: &GameState, player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
     let minion_in_hand = player.hand.iter().enumerate().find(|(_, card)| {
         catalog
@@ -322,44 +313,15 @@ fn choose_fill_board(state: &GameState, player: &PlayerState, catalog: &Catalog)
             target: None,
         });
     }
-    // 棋盘已满：如果仍有随从在商店里因为没位置而买不了，就卖掉本回合最弱的随从。
-    if best_affordable(state, player, catalog, player.gold, true).is_some() {
+    if player.hand.len() < catalog.config.hand_slots {
         return None;
     }
-    let cheapest = cheapest_minion(state, player, catalog)?;
     let (instance_id, golden) = weakest_minion(player, catalog)?;
     let gold_after = player.gold.saturating_add(if golden { 3 } else { 1 });
-    if gold_after >= cheapest {
-        return Some(Intent::SellMinion {
-            minion: instance_id,
-        });
-    }
-    None
-}
-
-/// 商店中最便宜的随从价格（池中有货）。
-fn cheapest_minion(state: &GameState, player: &PlayerState, catalog: &Catalog) -> Option<u8> {
-    let mut cheapest: Option<(u8, u8)> = None;
-    for (slot_index, slot) in player.shop.iter().enumerate() {
-        let Some(slot) = slot else { continue };
-        let Some(card) = catalog.cards.get(&slot.card_id) else {
-            continue;
-        };
-        if card.is_hero || card.card_type != CardType::Minion {
-            continue;
-        }
-        if state.pool.get(&card.id).copied().unwrap_or(0) == 0 {
-            continue;
-        }
-        let Ok(slot_u8) = u8::try_from(slot_index) else {
-            continue;
-        };
-        let candidate = (buy_cost(card), slot_u8);
-        if cheapest.is_none_or(|current| candidate < current) {
-            cheapest = Some(candidate);
-        }
-    }
-    cheapest.map(|(cost, _)| cost)
+    best_affordable(state, player, catalog, gold_after)?;
+    Some(Intent::SellMinion {
+        minion: instance_id,
+    })
 }
 
 /// 棋盘上最弱的随从：(实例编号, 是否金色)。先按强度升序，同强度取实例编号小者。

@@ -5,8 +5,8 @@
 //!
 //! 优先级严格固定：
 //! 1. 消费 `pendingChoices`；
-//! 2. 购买买得起的最贵商店槽位；
-//! 3. 打出一张可打出的手牌；
+//! 2. 打出一张可打出的手牌（买入一律入手牌，先腾出手牌空位）；
+//! 3. 购买买得起的最贵商店槽位；
 //! 4. 升时代；
 //! 5. 刷新商店；
 //! 6. `EndRecruit`。
@@ -36,17 +36,14 @@ pub fn next_intent(view: &PlayerView, catalog: &Catalog, seed: u64) -> Option<In
     if let Some(choice) = pending_choice(me, seed) {
         return Some(Intent::ChooseDiscover { choice });
     }
-    if let Some((slot, _cost)) = best_shop_slot(me, catalog) {
-        return Some(Intent::BuyMinion {
-            slot,
-            target_minion_id: None,
-        });
-    }
     if let Some(hand_index) = first_playable_hand(me) {
         return Some(Intent::PlayCard {
             hand_index,
             target_minion_id: None,
         });
+    }
+    if let Some((slot, _cost)) = best_shop_slot(me, catalog) {
+        return Some(Intent::BuyMinion { slot });
     }
     if me.affordances.can_upgrade_era {
         return Some(Intent::UpgradeEra);
@@ -142,10 +139,6 @@ pub fn retry_with_target(view: &PlayerView, rejected: &Intent) -> Option<Intent>
     }
     let target = view.self_.board.first()?.minion_id.clone();
     match rejected {
-        Intent::BuyMinion { slot, .. } => Some(Intent::BuyMinion {
-            slot: *slot,
-            target_minion_id: Some(target),
-        }),
         Intent::PlayCard { hand_index, .. } => Some(Intent::PlayCard {
             hand_index: *hand_index,
             target_minion_id: Some(target),

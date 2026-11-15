@@ -122,10 +122,7 @@ fn end_recruit(player: &str, client_intent_id: &str) -> RoomCommand {
 }
 
 fn buy(slot: i64) -> ProtocolIntent {
-    ProtocolIntent::BuyMinion {
-        slot,
-        target_minion_id: None,
-    }
+    ProtocolIntent::BuyMinion { slot }
 }
 
 /// 第一个非空商店槽位。
@@ -295,11 +292,20 @@ fn unspent_pending_choice_does_not_block_timeout() {
     let slot = first_nonempty_slot(&task, 0);
     let updates = task.handle(command("p0", "discover-buy", buy(slot)));
     assert!(error_codes(&updates).is_empty(), "购买应成功");
+    let played = task.handle(command(
+        "p0",
+        "discover-play",
+        ProtocolIntent::PlayCard {
+            hand_index: 0,
+            target_minion_id: None,
+        },
+    ));
+    assert!(error_codes(&played).is_empty(), "打出应成功");
 
     let view = task.player_view(0).expect("视图应可用");
     assert!(
         !view.self_.pending_choices.is_empty(),
-        "购买应留下未消费的发现待选"
+        "打出应留下未消费的发现待选"
     );
 
     clock.advance(90_000);
@@ -419,7 +425,19 @@ fn sell_minion_succeeds_and_refunds_gold() {
     assert!(error_codes(&bought).is_empty(), "购买应成功");
 
     let view = task.player_view(0).expect("视图应可用");
-    assert_eq!(view.self_.board.len(), 1, "购买后棋盘应有 1 个随从");
+    assert_eq!(view.self_.hand.len(), 1, "买入的牌进入手牌");
+    assert!(view.self_.board.is_empty(), "买入不入场");
+    task.handle(command(
+        "p0",
+        "sell-play",
+        ProtocolIntent::PlayCard {
+            hand_index: 0,
+            target_minion_id: None,
+        },
+    ));
+
+    let view = task.player_view(0).expect("视图应可用");
+    assert_eq!(view.self_.board.len(), 1, "打出的随从应上棋盘");
     let gold_after_buy = view.self_.gold;
     let minion_id = view.self_.board[0].minion_id.clone();
 
@@ -447,12 +465,29 @@ fn play_card_succeeds() {
     let bought = task.handle(command("p0", "play-buy", buy(slot)));
     assert!(error_codes(&bought).is_empty(), "购买应成功");
 
-    // 购买触发了 OnPlay 发现：先消费待选，让卡进入手牌。
+    let bought_view = task.player_view(0).expect("视图应可用");
+    assert_eq!(bought_view.self_.hand.len(), 1, "买入的牌进入手牌");
+    assert!(
+        bought_view.self_.pending_choices.is_empty(),
+        "买入不入场，不触发 OnPlay 发现"
+    );
+
+    // 打出手牌随从才触发 OnPlay 发现。
+    let first_play = task.handle(command(
+        "p0",
+        "play-first",
+        ProtocolIntent::PlayCard {
+            hand_index: 0,
+            target_minion_id: None,
+        },
+    ));
+    assert!(error_codes(&first_play).is_empty(), "打出手牌应成功");
+
     let pending = task.player_view(0).expect("视图应可用");
     assert_eq!(
         pending.self_.pending_choices.len(),
         1,
-        "购买应留下一条发现待选"
+        "打出应留下一条发现待选"
     );
     let chosen = task.handle(command(
         "p0",
@@ -490,28 +525,76 @@ fn play_card_succeeds() {
     );
 }
 
+/// 把手牌里的随从依次打上棋盘；买入只入手牌，需要显式 `PlayCard`。
+///
+/// 棋盘已有随从时，需要目标的战吼必须指定目标；先按无目标发送，
+/// 收到 `NoValidTarget` 后带己方第一个随从重发同一意图。
+fn play_hand_minions(task: &mut GameTask, tag: &str) {
+    let catalog = catalog();
+    for round in 0..10 {
+        let view = task.player_view(0).expect("视图应可用");
+        let Some(card) = view.self_.hand.iter().find(|card| {
+            catalog
+                .cards
+                .get(&card.card_id)
+                .is_some_and(|card| card.card_type == CardType::Minion)
+        }) else {
+            return;
+        };
+        let hand_index = card.index;
+        let updates = task.handle(command(
+            "p0",
+            &format!("{tag}-play-{round}"),
+            ProtocolIntent::PlayCard {
+                hand_index,
+                target_minion_id: None,
+            },
+        ));
+        if error_codes(&updates) == vec![ErrorCode::NoValidTarget] {
+            let target = task
+                .player_view(0)
+                .expect("视图应可用")
+                .self_
+                .board
+                .first()
+                .expect("存在合法目标时棋盘非空")
+                .minion_id
+                .clone();
+            let retried = task.handle(command(
+                "p0",
+                &format!("{tag}-play-target-{round}"),
+                ProtocolIntent::PlayCard {
+                    hand_index,
+                    target_minion_id: Some(target),
+                },
+            ));
+            assert!(
+                error_codes(&retried).is_empty(),
+                "带目标重发应成功：{:?}",
+                error_codes(&retried)
+            );
+            continue;
+        }
+        assert!(
+            error_codes(&updates).is_empty(),
+            "打出手牌随从应成功：{:?}",
+            error_codes(&updates)
+        );
+    }
+}
+
 #[test]
 fn rearrange_board_succeeds() {
     let (mut task, clock) = task();
-    let slot = first_nonempty_slot(&task, 0);
-    task.handle(command("p0", "rearrange-buy-1", buy(slot)));
-    advance_turn(&mut task, &clock);
-    let slot = first_nonempty_slot(&task, 0);
-    // 棋盘已有随从时，带目标战吼的随从需要指定目标才能买入。
-    let target = task.player_view(0).expect("视图应可用").self_.board[0]
-        .minion_id
-        .clone();
-    task.handle(command(
-        "p0",
-        "rearrange-buy-2",
-        ProtocolIntent::BuyMinion {
-            slot,
-            target_minion_id: Some(target),
-        },
-    ));
+    for round in 0..2 {
+        let slot = first_nonempty_slot(&task, 0);
+        task.handle(command("p0", &format!("rearrange-buy-{round}"), buy(slot)));
+        play_hand_minions(&mut task, &format!("rearrange-{round}"));
+        advance_turn(&mut task, &clock);
+    }
 
     let before = task.player_view(0).expect("视图应可用");
-    assert_eq!(before.self_.board.len(), 2, "两个回合应买入 2 个随从");
+    assert_eq!(before.self_.board.len(), 2, "两个回合应打上 2 个随从");
     let order: Vec<String> = before
         .self_
         .board
@@ -571,12 +654,20 @@ fn choose_discover_consumes_pending_choice() {
     let (mut task, _clock) = task_with(catalog_with_discover_on_play());
     let slot = first_nonempty_slot(&task, 0);
     task.handle(command("p0", "discover-buy", buy(slot)));
+    task.handle(command(
+        "p0",
+        "discover-play",
+        ProtocolIntent::PlayCard {
+            hand_index: 0,
+            target_minion_id: None,
+        },
+    ));
 
     let before = task.player_view(0).expect("视图应可用");
     assert_eq!(
         before.self_.pending_choices.len(),
         1,
-        "购买应留下一条发现待选"
+        "打出应留下一条发现待选"
     );
 
     let updates = task.handle(command(
