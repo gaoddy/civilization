@@ -14,9 +14,11 @@ audit:
 
 data:
 	$(PYTHON) scripts/gen_card_data.py
+	$(PYTHON) scripts/gen_client_data.py
 
 data-check:
 	$(PYTHON) scripts/gen_card_data.py --check
+	$(PYTHON) scripts/gen_client_data.py --check
 	$(PYTHON) scripts/audit_effects.py
 
 protocol:

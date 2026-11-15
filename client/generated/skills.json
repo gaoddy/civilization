@@ -1,0 +1,1182 @@
+[
+  {
+    "cost": 2,
+    "effects": "OnActivate|GrantKeyword|friendly:single|keyword=最优攻击,duration=combat",
+    "id": "alternating-current",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "交流电",
+    "text": "使一个友方随从获得最优攻击直到回合结束",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all|health=1,duration=permanent",
+    "id": "aura-all-plus-0-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的随从获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all|health=2,duration=permanent",
+    "id": "aura-all-plus-0-plus-2",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的随从获得 +0/+2",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:tribe=生物|attack=1,health=1,duration=permanent",
+    "id": "aura-biology-plus-1-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的生物随从获得 +1/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|GrantKeyword|friendly:all:tribe=机械|keyword=最优攻击,duration=permanent",
+    "id": "aura-mech-optimal-attack",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的机械随从获得最优攻击",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent",
+    "id": "aura-mech-plus-2-plus-2",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的机械随从获得 +2/+2",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:tribe=生物:other=true|attack=1,duration=permanent",
+    "id": "aura-other-biology-plus-1-attack",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的其他生物随从获得 +1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:tribe=植物:other=true|health=1,duration=permanent",
+    "id": "aura-other-plants-plus-0-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的其他植物随从获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:tribe=植物|attack=1,health=1,duration=permanent",
+    "id": "aura-plant-plus-1-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的植物随从获得 +1/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:tribe=植物|attack=2,health=2,duration=permanent",
+    "id": "aura-plant-plus-2-plus-2",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的植物随从获得 +2/+2",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:tribe=学者|health=2,duration=permanent",
+    "id": "aura-scholar-plus-0-plus-2",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的学者随从获得 +0/+2",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:tribe=学者|health=3,duration=permanent",
+    "id": "aura-scholar-plus-0-plus-3",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的学者随从获得 +0/+3",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:all|times=1",
+    "id": "battlecry-all-friendly-growth-once",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使你的所有随从获得一次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:all|times=2",
+    "id": "battlecry-all-friendly-growth-twice",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使你的所有随从获得两次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|ModifyStats|friendly:all|health=1,duration=permanent",
+    "id": "battlecry-all-friendly-plus-0-plus-1",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使你的所有随从获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:all:tribe=机械|times=1",
+    "id": "battlecry-all-mech-growth-once",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使你的所有机械随从获得一次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:all:tribe=机械|times=1",
+    "id": "battlecry-all-mech-growth-once-no-keyword",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使你的所有机械随从获得一次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|ModifyStats|friendly:all:name=弓箭手|attack=2,duration=permanent",
+    "id": "battlecry-friendly-archers-plus-2-attack",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使你的弓箭手获得 +2 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:single|times=1",
+    "id": "battlecry-friendly-growth-once",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方随从获得一次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:single|times=1,timesIf=植物:2",
+    "id": "battlecry-friendly-growth-plant-twice",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方随从获得一次成长；若其为植物，改为两次",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:single|times=1,timesIf=学者:2",
+    "id": "battlecry-friendly-growth-scholar-twice",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方随从获得一次成长；若其为学者，改为两次",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:single|times=2",
+    "id": "battlecry-friendly-growth-twice",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方随从获得两次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|ModifyStats|friendly:single:tribe=人类|health=1,duration=permanent",
+    "id": "battlecry-friendly-human-plus-0-plus-1",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方人类随从获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:single:tribe=机械|times=1",
+    "id": "battlecry-friendly-mech-growth-once",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方机械随从获得一次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:single:tribe=植物|times=1",
+    "id": "battlecry-friendly-plant-growth-once",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方植物随从获得一次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|ModifyStats|friendly:single|health=1,duration=permanent",
+    "id": "battlecry-friendly-plus-0-plus-1",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方随从获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|ModifyStats|friendly:single|health=2,duration=permanent",
+    "id": "battlecry-friendly-plus-0-plus-2",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方随从获得 +0/+2",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|ModifyStats|friendly:single|attack=1,duration=permanent",
+    "id": "battlecry-friendly-plus-1-attack",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方随从获得 +1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|ModifyStats|friendly:single|health=1,duration=permanent",
+    "id": "battlecry-friendly-plus-1-health",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方随从获得 +1 生命值",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|ModifyStats|friendly:single:tribe=病毒|attack=1,duration=permanent",
+    "id": "battlecry-friendly-virus-plus-1-attack",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方病毒随从获得 +1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|ModifyStats|friendly:all:tribe=人类:other=true|attack=1,duration=permanent",
+    "id": "battlecry-other-friendly-humans-plus-1-attack",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使你的其他人类随从获得 +1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:random|amount=1",
+    "id": "battlecry-random-enemy-damage-1",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：对随机一个敌方随从造成 1 点伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:random|amount=2",
+    "id": "battlecry-random-enemy-damage-2",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：对随机一个敌方随从造成 2 点伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|self|times=2",
+    "id": "battlecry-self-growth-twice",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：获得两次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|ModifyStats|self|health=1,duration=permanent",
+    "id": "battlecry-self-plus-1-health",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：获得 +1 生命值",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Summon|self|token=synthetic-cell-token,count=1",
+    "id": "battlecry-summon-3-3-synthetic-cell",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：召唤一个 3/3 的合成细胞（幼体）",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|GrantKeyword|enemy:all|keyword=传染,value=1,duration=permanent",
+    "id": "combatstart-all-enemies-contagion-1",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，使敌方所有随从获得 1 层传染",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:all|amount=2",
+    "id": "combatstart-all-enemies-damage-2",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，对敌方所有随从造成 2 点伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:all|amount=5",
+    "id": "combatstart-all-enemies-damage-5",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，对敌方所有随从造成 5 点伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|ModifyStats|enemy:all|attack=-1,duration=combat",
+    "id": "combatstart-all-enemies-minus-1-attack",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，使敌方所有随从获得 -1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|ModifyStats|self|attack=2,duration=permanent,condition=count:friendly:tribe=生物:>=2",
+    "id": "combatstart-if-2-biology-self-plus-2-attack",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "战斗开始时，若你控制至少 2 个生物，获得 +2 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:leftmost+adjacent|amount=2",
+    "id": "combatstart-leftmost-and-adjacent-damage-2",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，对敌方最左侧随从及其相邻随从造成 2 点伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:leftmost|amount=3",
+    "id": "combatstart-leftmost-damage-3",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，对敌方最左侧随从造成 3 点伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:leftmost|amount=4",
+    "id": "combatstart-leftmost-damage-4",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，对敌方最左侧随从造成 4 点伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:leftmost|amount=6",
+    "id": "combatstart-leftmost-damage-6",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，对敌方最左侧随从造成 6 点伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|GrantKeyword|enemy:random|keyword=传染,value=1,duration=permanent",
+    "id": "combatstart-random-enemy-contagion-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "战斗开始时，使一个随机敌方随从获得 1 层传染",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|GrantKeyword|enemy:random|keyword=传染,value=2,duration=permanent",
+    "id": "combatstart-random-enemy-contagion-2",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "战斗开始时，使一个随机敌方随从获得 2 层传染",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:random|amount=2",
+    "id": "combatstart-random-enemy-damage-2",
+    "keyword": null,
+    "match_text": "战斗开始时，对敌方最左侧随从造成 2 点伤害",
+    "name": null,
+    "text": "战斗开始时，随机对一个敌方随从造成 2 点伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|RemoveGrowth|both:all:tribe=人类",
+    "id": "combatstart-remove-all-human-growth",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，移除所有人类随从的全部成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|RemoveGrowth|enemy:topAttack",
+    "id": "combatstart-remove-top-attack-enemy-growth",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，移除敌方攻击力最高随从的全部成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|CannotAttack|enemy:topAttack|duration=combat",
+    "id": "combatstart-top-attack-enemy-cant-attack",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，使敌方攻击力最高的随从本回合无法攻击",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|ModifyStats|enemy:topAttack|health=-2,duration=combat",
+    "id": "combatstart-top-attack-enemy-minus-0-minus-2",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "战斗开始时，使敌方攻击力最高的随从获得 -0/-2",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnDeath|GrantKeyword|enemy:all|keyword=传染,value=1,duration=permanent",
+    "id": "deathrattle-all-enemies-contagion-1",
+    "keyword": "亡语",
+    "match_text": null,
+    "name": null,
+    "text": "亡语：使敌方所有随从获得 1 层传染",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnDeath|ModifyStats|enemy:all:tribe=人类|health=-2,duration=combat",
+    "id": "deathrattle-all-enemies-humans-minus-2-health",
+    "keyword": "亡语",
+    "match_text": null,
+    "name": null,
+    "text": "亡语：使敌方所有人类随从获得 -2 生命",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnDeath|ModifyStats|enemy:all|health=-1,duration=combat",
+    "id": "deathrattle-all-enemies-minus-1-health",
+    "keyword": "亡语",
+    "match_text": null,
+    "name": null,
+    "text": "亡语：使敌方所有随从获得 -1 生命",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnDeath|ModifyStats|friendly:all|health=1,duration=permanent",
+    "id": "deathrattle-all-friendly-plus-0-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "亡语：使你的所有随从获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnDeath|ModifyStats|enemy:random|health=-1,duration=combat",
+    "id": "deathrattle-random-enemy-hp-minus-1",
+    "keyword": "亡语",
+    "match_text": null,
+    "name": null,
+    "text": "亡语：使随机一个敌方随从获得 -1 生命值",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnDeath|ModifyStats|enemy:random|attack=-1,duration=combat",
+    "id": "deathrattle-random-enemy-minus-1-attack",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "亡语：使随机一个敌方随从获得 -1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnDeath|ModifyStats|enemy:random|health=-1,duration=combat",
+    "id": "deathrattle-random-enemy-minus-1-health",
+    "keyword": "亡语",
+    "match_text": null,
+    "name": null,
+    "text": "亡语：使随机一个敌方随从获得 -1 生命",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnDeath|Summon|self|token=hela-cell-token,count=1",
+    "id": "deathrattle-summon-2-2-hela-cell-clone",
+    "keyword": "亡语",
+    "match_text": null,
+    "name": null,
+    "text": "亡语：召唤一个 2/2 的海拉细胞（复制体）",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnDeath|Summon|self|card=baiyi,count=1",
+    "id": "deathrattle-summon-termite",
+    "keyword": "亡语",
+    "match_text": null,
+    "name": null,
+    "text": "亡语：召唤一个 1/2 的白蚁",
+    "uses_per_turn": null
+  },
+  {
+    "cost": 1,
+    "effects": "OnActivate|Growth|friendly:single:tribe=人类|times=1,timesIf=人类:2,condition=count:friendly:tribe=人类:>=3",
+    "id": "division-of-labor",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "分工",
+    "text": "使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 2,
+    "effects": "OnActivate|RefreshShop|self|free=true;OnActivate|GainMinion|self|from=shop,level=current,to=hand",
+    "id": "efficient-algorithm",
+    "keyword": null,
+    "match_text": "获得的随从固定为当前星级排序第一张",
+    "name": "高效算法",
+    "text": "刷新商店并获得一张当前星级的随从",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 2,
+    "effects": "OnActivate|Discover|self|pool=tribe,choose=1",
+    "id": "evolution-discovery",
+    "keyword": null,
+    "match_text": "改为三选一固定池",
+    "name": "进化",
+    "text": "发现一张本局启用的流派随从",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 2,
+    "effects": "OnActivate|GrantKeyword|friendly:single|keyword=护盾,duration=permanent",
+    "id": "faraday-cage",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "法拉第笼",
+    "text": "使一个友方随从获得护盾",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 1,
+    "effects": "OnActivate|Growth|friendly:single:tribe=植物|times=1",
+    "id": "heredity",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "遗传",
+    "text": "使一个友方植物随从获得一次成长",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 2,
+    "effects": "OnActivate|Growth|friendly:all:tribe=机械:other=true|times=1",
+    "id": "invention-factory",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "发明工厂",
+    "text": "使你的其他机械随从各获得一次成长",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:all:tribe=机械:other=true|times=1",
+    "id": "keyword-assemble-1",
+    "keyword": "装配 1",
+    "match_text": null,
+    "name": null,
+    "text": "装配 1：进入战场时，使你的其他机械随从各获得 1 次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:all:tribe=机械:other=true|times=2",
+    "id": "keyword-assemble-2",
+    "keyword": "装配 2",
+    "match_text": null,
+    "name": null,
+    "text": "装配 2：进入战场时，使你的其他机械随从各获得 2 次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "[]",
+    "id": "keyword-breed-1",
+    "keyword": "繁衍 1",
+    "match_text": null,
+    "name": null,
+    "text": "繁衍 1：回合开始时获得 +1 生命",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "[]",
+    "id": "keyword-breed-2",
+    "keyword": "繁衍 2",
+    "match_text": null,
+    "name": null,
+    "text": "繁衍 2：回合开始时获得 +2 生命",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "[]",
+    "id": "keyword-breed-3",
+    "keyword": "繁衍 3",
+    "match_text": null,
+    "name": null,
+    "text": "繁衍 3：回合开始时获得 +3 生命",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "[]",
+    "id": "keyword-contagion",
+    "keyword": "传染",
+    "match_text": null,
+    "name": null,
+    "text": "传染：造成伤害后，目标每回合 -1 生命",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "[]",
+    "id": "keyword-divine-shield",
+    "keyword": "护盾",
+    "match_text": null,
+    "name": null,
+    "text": "护盾：抵消一次伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "[]",
+    "id": "keyword-evolve",
+    "keyword": "进化",
+    "match_text": null,
+    "name": null,
+    "text": "进化：从 +2/+2、护盾、复生中选择一个",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "[]",
+    "id": "keyword-optimal-attack",
+    "keyword": "最优攻击",
+    "match_text": null,
+    "name": null,
+    "text": "最优攻击：无视嘲讽，优先攻击可被击杀的目标",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "[]",
+    "id": "keyword-reborn",
+    "keyword": "复生",
+    "match_text": null,
+    "name": null,
+    "text": "复生：以 1 点生命复活一次",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnDeath|Summon|self|token=seedling,count=1",
+    "id": "keyword-sow",
+    "keyword": "播种",
+    "match_text": null,
+    "name": null,
+    "text": "播种：死亡时召唤一个 1/1 的幼苗",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "[]",
+    "id": "keyword-taunt",
+    "keyword": "嘲讽",
+    "match_text": null,
+    "name": null,
+    "text": "嘲讽",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "[]",
+    "id": "keyword-windfury",
+    "keyword": "连击",
+    "match_text": null,
+    "name": null,
+    "text": "连击：每回合可攻击两次",
+    "uses_per_turn": null
+  },
+  {
+    "cost": 1,
+    "effects": "OnActivate|GrantKeyword|friendly:single|keyword=连击,duration=combat",
+    "id": "light-speed-strike",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "光速出击",
+    "text": "使一个友方随从本回合获得连击",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|GrantKeyword|enemy:leftmost|keyword=传染,value=1,duration=permanent",
+    "id": "microbiology",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "微生物学",
+    "text": "战斗开始时使敌方最左侧随从获得 1 层传染",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnFirstRefresh|AddShopSlot|self|era=current,count=1",
+    "id": "observation",
+    "keyword": null,
+    "match_text": "额外出现的随从固定为当前时代当前星级排序第一张",
+    "name": "观测",
+    "text": "每回合首次刷新时额外出现一张当前时代的随机随从",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:random|amount=2",
+    "id": "radiation",
+    "keyword": null,
+    "match_text": "战斗开始时，对敌方最左侧随从造成 2 点伤害",
+    "name": "放射",
+    "text": "战斗开始时对随机一个敌方随从造成 2 点伤害",
+    "uses_per_turn": null
+  },
+  {
+    "cost": 1,
+    "effects": "OnActivate|Growth|friendly:single|times=1",
+    "id": "shout",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "呐喊",
+    "text": "使一个友方随从获得一次成长",
+    "uses_per_turn": 2
+  },
+  {
+    "cost": null,
+    "effects": "ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:tribe=人类:>=2",
+    "id": "trigger-2-humans-self-plus-1-attack",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "若你控制至少 2 个人类，获得 +1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "ConditionalAura|ModifyStats|self|attack=1,health=1,duration=permanent,condition=count:friendly:tribe=人类:>=2",
+    "id": "trigger-2-humans-self-plus-1-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "若你控制至少 2 个人类，获得 +1/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "ConditionalAura|ModifyStats|self|attack=1,health=1,duration=permanent,condition=count:friendly:tribe=人类:>=3",
+    "id": "trigger-3-humans-self-plus-1-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "若你控制至少 3 个人类，获得 +1/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "ConditionalAura|ModifyStats|self|attack=2,duration=permanent,condition=count:friendly:tribe=人类:>=3",
+    "id": "trigger-3-humans-self-plus-2-attack",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "若你控制至少 3 个人类，获得 +2 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|Growth|friendly:all|times=1",
+    "id": "trigger-all-friendly-growth-once",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使你的随从各获得一次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|ModifyStats|friendly:all|attack=1,health=1,duration=permanent",
+    "id": "trigger-all-friendly-plus-1-plus-1",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使你的所有随从获得 +1/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|Growth|friendly:all:tribe=机械|times=1",
+    "id": "trigger-all-mech-growth-once",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使你的机械随从各获得一次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|Copy|friendly:single|to=hand",
+    "id": "trigger-copy-friendly-minion",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "复制一个友方随从",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|Copy|self|from=hand,type=随从,to=hand",
+    "id": "trigger-copy-hand-minion",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "复制你手牌中的一张随从牌",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|Discover|self|pool=tribe,choose=1",
+    "id": "trigger-discover-tribe-minion",
+    "keyword": null,
+    "match_text": "改为三选一固定池",
+    "name": null,
+    "text": "发现一张本局流派的随从",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnEnemyDeath|ModifyStats|self|attack=1,health=1,duration=permanent",
+    "id": "trigger-enemy-death-self-plus-1-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "每当一个敌方随从死亡，获得 +1/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnAllySummon|ModifyStats|self|attack=1,duration=permanent,when=tribe=生物",
+    "id": "trigger-friendly-biology-play-plus-1-attack",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "每当一个友方生物随从进入战场，获得 +1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnFriendlyDeath|ModifyStats|self|attack=1,duration=permanent",
+    "id": "trigger-friendly-death-self-plus-1-attack",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "每当一个友方随从死亡，获得 +1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnAllyEvolve|ModifyStats|self|attack=1,health=1,duration=permanent",
+    "id": "trigger-friendly-evolve-self-plus-1-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "每当一个友方随从进化，获得 +1/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnAllyGrowth|ModifyStats|target|health=1,duration=permanent",
+    "id": "trigger-friendly-growth-extra-plus-0-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "每当一个友方随从获得成长，它额外获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnAllyGrowth|ModifyStats|self|attack=1,duration=permanent",
+    "id": "trigger-friendly-growth-self-plus-1-attack",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "每当一个友方随从获得成长，获得 +1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|Growth|friendly:single|times=3",
+    "id": "trigger-friendly-growth-thrice",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使一个友方随从获得三次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|Growth|friendly:single|times=2",
+    "id": "trigger-friendly-growth-twice",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使一个友方随从获得两次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnFriendlyDeath|ModifyStats|self|attack=1,health=1,duration=permanent,when=tribe=人类",
+    "id": "trigger-friendly-human-death-plus-1-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "每当一个友方人类随从死亡，获得 +1/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnAllySummon|ModifyStats|self|attack=1,duration=permanent,when=tribe=人类",
+    "id": "trigger-friendly-human-play-plus-1-attack",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "每当一个友方人类随从进入战场，获得 +1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|GrantKeyword|friendly:single:tribe=人类|keyword=嘲讽,duration=combat",
+    "id": "trigger-friendly-human-taunt-until-turn-end",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使一个友方人类随从获得嘲讽直到回合结束",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|GrantKeyword|friendly:single:tribe=植物|keyword=繁衍,value=2,duration=permanent",
+    "id": "trigger-friendly-plant-breed-2",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使一个友方植物随从获得繁衍 2",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|ModifyStats|friendly:single|health=4,duration=combat",
+    "id": "trigger-friendly-plus-0-plus-4-this-turn",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使一个友方随从获得 +0/+4 直到回合结束",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|ModifyStats|friendly:single|attack=1,health=1,duration=permanent",
+    "id": "trigger-friendly-plus-1-plus-1",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使一个友方随从获得 +1/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|ModifyStats|friendly:single|attack=2,duration=permanent",
+    "id": "trigger-friendly-plus-2-attack",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使一个友方随从获得 +2 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|ModifyStats|friendly:single|attack=2,duration=combat",
+    "id": "trigger-friendly-plus-2-attack-this-turn",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使一个友方随从获得 +2 攻击力直到回合结束",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|GrantKeyword|friendly:single|keyword=嘲讽,duration=combat",
+    "id": "trigger-friendly-taunt-until-turn-end",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使一个友方随从获得嘲讽直到回合结束",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|GrantKeyword|friendly:all:tribe=机械|keyword=最优攻击,duration=combat",
+    "id": "trigger-mech-optimal-attack-this-turn",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "你的机械随从获得最优攻击直到回合结束",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|GrantKeyword|friendly:single|keyword=连击,duration=combat",
+    "id": "trigger-minion-windfury-this-turn",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使一个随从本回合获得连击",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlayEffect|ModifyStats|friendly:all:tribe=人类:other=true|attack=1,duration=permanent",
+    "id": "trigger-other-friendly-humans-plus-1-attack",
+    "keyword": null,
+    "match_text": "同左",
+    "name": null,
+    "text": "使你的其他人类随从各获得 +1 攻击力",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnUse|ModifyStats|friendly:single|health=1,duration=permanent",
+    "id": "trigger-play-effect-friendly-plus-0-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "每当你使用一张效果牌，使一个友方随从获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnTurnStart|ModifyStats|self|health=1,duration=permanent",
+    "id": "trigger-turn-start-self-plus-0-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "回合开始时获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": 2,
+    "effects": "OnActivate|Copy|self|from=hand,type=随从,to=hand",
+    "id": "universal-manuscript",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "万能手稿",
+    "text": "复制一张你手牌中的随从牌",
+    "uses_per_turn": 1
+  }
+]
