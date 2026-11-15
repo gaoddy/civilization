@@ -74,7 +74,7 @@ m1b-build:
 	cd server && cargo build -q -p room-service -p sim
 
 m1b-e2e: m1b-build
-	bash scripts/m1b_e2e.sh
+	GODOT="$(GODOT)" bash scripts/m1b_e2e.sh
 
 m0-determinism:
 	cd server && cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash
