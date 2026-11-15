@@ -112,35 +112,18 @@ fn three_same_minions_become_golden() {
     let card_id = minion_id(1);
     state.players[0].gold = 30;
 
-    for _ in 0..2 {
-        set_shop(&mut state, 0, &[Some(card_id.clone())]);
-        engine
-            .apply(
-                &mut state,
-                0,
-                Intent::BuyMinion {
-                    slot: 0,
-                    target: None,
-                },
-            )
-            .expect("购买随从应成功");
-    }
-    state.players[0].board[0].growth = 7;
-    state.players[0].board[0].breed = 3;
-    state.players[0].board[0].shield_used = true;
-    state.players[0].board[1].growth = 11;
+    // 棋盘一张带成长与增殖，手牌一张同名；买入的第二张同样进手牌后立即做三连。
+    let mut base = dummy(900, &card_id);
+    base.growth = 7;
+    base.breed = 3;
+    base.shield_used = true;
+    state.players[0].board.push(base);
+    state.players[0].hand.push(hand_card(&card_id));
     let base_id = state.players[0].board[0].instance_id;
 
     set_shop(&mut state, 0, &[Some(card_id.clone())]);
     let outcome = engine
-        .apply(
-            &mut state,
-            0,
-            Intent::BuyMinion {
-                slot: 0,
-                target: None,
-            },
-        )
+        .apply(&mut state, 0, Intent::BuyMinion { slot: 0 })
         .expect("第三张购买应成功");
 
     assert!(

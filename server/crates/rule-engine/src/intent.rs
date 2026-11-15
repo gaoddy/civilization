@@ -9,11 +9,8 @@ use crate::state::InstanceId;
 /// 招募阶段玩家可以提交的九种意图。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Intent {
-    /// 购买商店槽位；`target` 留给 Task 10 的战吼/效果执行。
-    BuyMinion {
-        slot: u8,
-        target: Option<InstanceId>,
-    },
+    /// 购买商店槽位；买到的牌进入手牌，不需要目标。
+    BuyMinion { slot: u8 },
     /// 出售棋盘上的随从。
     SellMinion { minion: InstanceId },
     /// 刷新商店。

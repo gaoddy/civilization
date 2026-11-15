@@ -45,7 +45,7 @@ pub(crate) fn apply(
     }
 
     match intent {
-        Intent::BuyMinion { slot, target } => buy(engine, state, seat, slot, target),
+        Intent::BuyMinion { slot } => buy(engine, state, seat, slot),
         Intent::SellMinion { minion } => sell(state, seat, minion),
         Intent::RerollShop => reroll(engine, state, seat),
         Intent::UpgradeEra => upgrade(engine, state, seat),
@@ -64,10 +64,10 @@ pub(crate) fn apply(
 
 /// `BuyMinion` 的只读预检：只校验该意图自身的条件，不修改状态、不消耗随机流。
 ///
-/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// **不校验** `Recruit` 阶段、`recruit_done` 与 `eliminated`；调用方（视图层）
 /// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 ///
-/// `target` 只影响效果结算，不参与意图能否提交的判定，因此不在参数中。
+/// 买入的牌一律进入手牌，因此只校验手牌是否有空位，与棋盘无关。
 pub(crate) fn check_buy(
     engine: &Engine,
     state: &GameState,
@@ -101,22 +101,9 @@ pub(crate) fn check_buy(
     };
     let config = &engine.catalog.config;
     let current = player(state, seat)?;
-    let board_room = current.board.len() < config.board_slots;
-    let hand_room = current.hand.len() < config.hand_slots;
-    let to_board = match card_type {
-        CardType::Minion => {
-            if !board_room && !hand_room {
-                return Err(Reject::new(RejectCode::NoSpace, "棋盘与手牌均已满"));
-            }
-            board_room
-        }
-        CardType::Effect => {
-            if !hand_room {
-                return Err(Reject::new(RejectCode::NoSpace, "手牌已满"));
-            }
-            false
-        }
-    };
+    if current.hand.len() >= config.hand_slots {
+        return Err(Reject::new(RejectCode::NoSpace, "手牌已满"));
+    }
     current
         .gold
         .checked_sub(cost)
@@ -128,23 +115,18 @@ pub(crate) fn check_buy(
             format!("卡牌 {card_id} 的共享池已空"),
         ));
     }
-
-    // 只有随从上棋盘时才需要预留一个新的实例编号。
-    if to_board {
-        state
-            .next_instance_id
-            .checked_add(1)
-            .ok_or_else(|| Reject::new(RejectCode::NoSpace, "随从实例编号已耗尽"))?;
-    }
     Ok(())
 }
 
+/// 购买：扣金币、清空槽位、从共享池扣 1 张，牌一律进入手牌。
+///
+/// 买入不入场，因此不触发战吼、不登记进化，也不需要目标与实例编号；
+/// 随从要上棋盘须另提交 `PlayCard`。随从买入后仍立即做三连判定（手牌参与三连）。
 fn buy(
     engine: &mut Engine,
     state: &mut GameState,
     seat: Seat,
     slot: u8,
-    target: Option<InstanceId>,
 ) -> Result<Outcome, Reject> {
     check_buy(engine, state, seat, slot)?;
 
@@ -166,43 +148,11 @@ fn buy(
         CardType::Minion => 3,
         CardType::Effect => card.cost.unwrap_or(3),
     };
-    let config = &engine.catalog.config;
     let current = player(state, seat).expect("check_buy 已保证座位存在");
-    let board_room = current.board.len() < config.board_slots;
-    let to_board = match card_type {
-        CardType::Minion => board_room,
-        CardType::Effect => false,
-    };
     let remaining_gold = current
         .gold
         .checked_sub(cost)
         .expect("check_buy 已保证金币足够");
-
-    let instance_id = state.next_instance_id;
-    let following_instance_id = if to_board {
-        instance_id
-            .checked_add(1)
-            .expect("check_buy 已保证实例编号未耗尽")
-    } else {
-        instance_id
-    };
-
-    // 随从入场触发战吼：先做目标预检，失败时金币、商店、池与随机流都不变化。
-    if to_board {
-        let ctx = EffectCtx {
-            seat,
-            source: Some(instance_id),
-            target,
-            event_target: None,
-            golden: false,
-        };
-        engine.check_targets(
-            state,
-            &engine.effects_of(&card_id, Trigger::OnPlay),
-            &ctx,
-            false,
-        )?;
-    }
 
     let player = state
         .players
@@ -217,36 +167,16 @@ fn buy(
     {
         *count = count.saturating_sub(1);
     }
-    if to_board {
-        state.next_instance_id = following_instance_id;
-        player.board.push(new_minion(instance_id, &card_id, false));
-    } else {
-        player.hand.push(HandCard {
-            card_id: card_id.clone(),
-            golden: false,
-        });
-    }
+    player.hand.push(HandCard {
+        card_id: card_id.clone(),
+        golden: false,
+    });
 
     let mut events = vec![GameEvent::MinionBought {
         seat,
         slot,
         card_id,
     }];
-    if to_board {
-        engine.register_evolve(state, seat, instance_id);
-        events.extend(engine.fire(
-            state,
-            Trigger::OnPlay,
-            EffectCtx {
-                seat,
-                source: Some(instance_id),
-                target,
-                event_target: None,
-                golden: false,
-            },
-        ));
-        engine.fire_evolve_after_enter(state, seat, instance_id);
-    }
     if card_type == CardType::Minion {
         events.extend(engine.check_triple(state, seat));
     }
@@ -1289,10 +1219,7 @@ mod tests {
                     state.players[0].gold = 0;
                     (engine, state)
                 }),
-                intent: Intent::BuyMinion {
-                    slot: 0,
-                    target: None,
-                },
+                intent: Intent::BuyMinion { slot: 0 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
                 expected: RejectCode::NotEnoughGold,
                 expected_message: None,
@@ -1304,10 +1231,7 @@ mod tests {
                     set_shop(&mut state, 0, &[None, None]);
                     (engine, state)
                 }),
-                intent: Intent::BuyMinion {
-                    slot: 0,
-                    target: None,
-                },
+                intent: Intent::BuyMinion { slot: 0 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
                 expected: RejectCode::ShopSlotEmpty,
                 expected_message: Some("商店槽位 0 为空"),
@@ -1320,10 +1244,7 @@ mod tests {
                     state.players[0].gold = 0;
                     (engine, state)
                 }),
-                intent: Intent::BuyMinion {
-                    slot: 0,
-                    target: None,
-                },
+                intent: Intent::BuyMinion { slot: 0 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
                 expected: RejectCode::ShopSlotEmpty,
                 expected_message: Some("商店槽位 0 为空"),
@@ -1337,10 +1258,7 @@ mod tests {
                     state.pool.insert(card_id, 0);
                     (engine, state)
                 }),
-                intent: Intent::BuyMinion {
-                    slot: 0,
-                    target: None,
-                },
+                intent: Intent::BuyMinion { slot: 0 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
                 expected: RejectCode::ShopSlotEmpty,
                 expected_message: None,
@@ -1355,16 +1273,13 @@ mod tests {
                     state.players[0].gold = 0;
                     (engine, state)
                 }),
-                intent: Intent::BuyMinion {
-                    slot: 0,
-                    target: None,
-                },
+                intent: Intent::BuyMinion { slot: 0 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
                 expected: RejectCode::NotEnoughGold,
                 expected_message: Some("需要 3 金币"),
             },
             Case {
-                name: "棋盘与手牌都满买卡",
+                name: "手牌满时买卡",
                 setup: Box::new(|| {
                     let (engine, mut state) = setup(104);
                     set_shop(&mut state, 0, &[Some(minion_id(1))]);
@@ -1372,13 +1287,10 @@ mod tests {
                     fill_hand(&mut state, 0, 10);
                     (engine, state)
                 }),
-                intent: Intent::BuyMinion {
-                    slot: 0,
-                    target: None,
-                },
+                intent: Intent::BuyMinion { slot: 0 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
                 expected: RejectCode::NoSpace,
-                expected_message: Some("棋盘与手牌均已满"),
+                expected_message: Some("手牌已满"),
             },
             Case {
                 name: "棋盘手牌满且金币为 0 优先报空间不足",
@@ -1390,10 +1302,7 @@ mod tests {
                     state.players[0].gold = 0;
                     (engine, state)
                 }),
-                intent: Intent::BuyMinion {
-                    slot: 0,
-                    target: None,
-                },
+                intent: Intent::BuyMinion { slot: 0 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
                 expected: RejectCode::NoSpace,
                 expected_message: None,

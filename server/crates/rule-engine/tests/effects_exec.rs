@@ -463,7 +463,7 @@ fn on_activate_respects_cost_and_uses() {
 }
 
 #[test]
-fn buy_fires_on_play_after_bought_event() {
+fn buy_enters_hand_then_play_fires_on_play() {
     let (mut engine, mut state) = setup();
     state.players[0].gold = 10;
     state.players[0].shop = vec![Some(ShopSlot {
@@ -472,14 +472,7 @@ fn buy_fires_on_play_after_bought_event() {
     })];
 
     let outcome = engine
-        .apply(
-            &mut state,
-            0,
-            Intent::BuyMinion {
-                slot: 0,
-                target: None,
-            },
-        )
+        .apply(&mut state, 0, Intent::BuyMinion { slot: 0 })
         .expect("购买应成功");
 
     assert_eq!(
@@ -490,10 +483,24 @@ fn buy_fires_on_play_after_bought_event() {
             card_id: "yezhu".to_string(),
         }
     );
-    let bought = board_minion(&state, 0, 0);
-    assert_eq!(bought.mods.len(), 1, "战吼：获得 +1 生命");
-    assert_eq!(bought.mods[0].health, 1);
-    assert_eq!(bought.mods[0].duration, Duration::Permanent);
+    assert_eq!(state.players[0].hand.len(), 1, "买入只入手牌");
+    assert!(state.players[0].board.is_empty(), "买入不入场");
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                target: None,
+            },
+        )
+        .expect("打出应成功");
+
+    let played = board_minion(&state, 0, 0);
+    assert_eq!(played.mods.len(), 1, "战吼：获得 +1 生命");
+    assert_eq!(played.mods[0].health, 1);
+    assert_eq!(played.mods[0].duration, Duration::Permanent);
 }
 
 #[test]

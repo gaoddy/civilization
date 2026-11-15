@@ -106,21 +106,15 @@ fn pool_count(state: &GameState, card_id: &str) -> u16 {
 }
 
 #[test]
-fn buy_deducts_gold_and_pool() {
+fn buy_deducts_gold_and_pool_and_goes_to_hand() {
     let (mut engine, mut state) = setup(1);
     let card_id = minion_id(1);
     set_shop(&mut state, 0, &[Some(card_id.clone())]);
     let before_pool = pool_count(&state, &card_id);
+    let before_instance = state.next_instance_id;
 
     let outcome = engine
-        .apply(
-            &mut state,
-            0,
-            Intent::BuyMinion {
-                slot: 0,
-                target: None,
-            },
-        )
+        .apply(&mut state, 0, Intent::BuyMinion { slot: 0 })
         .expect("购买应成功");
 
     assert_eq!(
@@ -133,22 +127,18 @@ fn buy_deducts_gold_and_pool() {
     );
     assert_eq!(state.players[0].gold, 0, "随从统一 3 金");
     assert_eq!(pool_count(&state, &card_id), before_pool - 1);
-    assert_eq!(state.players[0].board.len(), 1);
     assert_eq!(state.players[0].shop[0], None);
-    let instance = &state.players[0].board[0];
-    assert_eq!(instance.card_id, card_id);
-    assert_eq!(instance.instance_id, state.next_instance_id - 1);
-    assert!(!instance.golden);
-    assert_eq!(instance.growth, 0);
-    assert_eq!(instance.growth_health_only, 0);
-    assert_eq!(instance.breed, 0);
-    assert_eq!(instance.contagion, 0);
-    assert!(instance.granted.is_empty());
-    assert!(instance.mods.is_empty());
-    assert!(!instance.shield_used);
-    assert!(!instance.reborn_used);
-    assert_eq!(instance.attacks_left, 0);
-    assert!(!instance.cannot_attack);
+    assert!(
+        state.players[0].board.is_empty(),
+        "买入不入场，须另提交 PlayCard"
+    );
+    assert_eq!(
+        state.next_instance_id, before_instance,
+        "买入不分配实例编号"
+    );
+    assert_eq!(state.players[0].hand.len(), 1);
+    assert_eq!(state.players[0].hand[0].card_id, card_id);
+    assert!(!state.players[0].hand[0].golden);
 }
 
 #[test]
@@ -158,14 +148,7 @@ fn buy_effect_card_goes_to_hand_and_costs_card_cost() {
     set_shop(&mut state, 0, &[Some(card_id.clone())]);
 
     let outcome = engine
-        .apply(
-            &mut state,
-            0,
-            Intent::BuyMinion {
-                slot: 0,
-                target: None,
-            },
-        )
+        .apply(&mut state, 0, Intent::BuyMinion { slot: 0 })
         .expect("购买效果牌应成功");
 
     assert_eq!(
@@ -191,14 +174,7 @@ fn buy_without_gold_rejects_without_mutating() {
     state.players[0].gold = 0;
     let before = state_hash(&state);
 
-    let result = engine.apply(
-        &mut state,
-        0,
-        Intent::BuyMinion {
-            slot: 0,
-            target: None,
-        },
-    );
+    let result = engine.apply(&mut state, 0, Intent::BuyMinion { slot: 0 });
 
     assert_eq!(result.unwrap_err().code, RejectCode::NotEnoughGold);
     assert_eq!(before, state_hash(&state));
@@ -210,71 +186,41 @@ fn buy_empty_slot_rejects() {
     set_shop(&mut state, 0, &[None, None]);
     let before = state_hash(&state);
 
-    let result = engine.apply(
-        &mut state,
-        0,
-        Intent::BuyMinion {
-            slot: 0,
-            target: None,
-        },
-    );
+    let result = engine.apply(&mut state, 0, Intent::BuyMinion { slot: 0 });
 
     assert_eq!(result.unwrap_err().code, RejectCode::ShopSlotEmpty);
     assert_eq!(before, state_hash(&state));
 
-    let out_of_range = engine.apply(
-        &mut state,
-        0,
-        Intent::BuyMinion {
-            slot: 99,
-            target: None,
-        },
-    );
+    let out_of_range = engine.apply(&mut state, 0, Intent::BuyMinion { slot: 99 });
     assert_eq!(out_of_range.unwrap_err().code, RejectCode::ShopSlotEmpty);
     assert_eq!(before, state_hash(&state));
 }
 
 #[test]
-fn buy_when_board_and_hand_full_rejects() {
+fn buy_when_hand_full_rejects_even_with_board_room() {
     let (mut engine, mut state) = setup(5);
     let card_id = minion_id(1);
     set_shop(&mut state, 0, &[Some(card_id)]);
-    fill_board(&mut state, 0, 7);
     fill_hand(&mut state, 0, 10);
     let before = state_hash(&state);
 
-    let result = engine.apply(
-        &mut state,
-        0,
-        Intent::BuyMinion {
-            slot: 0,
-            target: None,
-        },
-    );
+    let result = engine.apply(&mut state, 0, Intent::BuyMinion { slot: 0 });
 
     assert_eq!(result.unwrap_err().code, RejectCode::NoSpace);
     assert_eq!(before, state_hash(&state));
 }
 
 #[test]
-fn buy_routes_to_hand_when_board_is_full() {
+fn buy_enters_hand_even_when_board_has_room() {
     let (mut engine, mut state) = setup(6);
     let card_id = minion_id(1);
     set_shop(&mut state, 0, &[Some(card_id.clone())]);
-    fill_board(&mut state, 0, 7);
 
     engine
-        .apply(
-            &mut state,
-            0,
-            Intent::BuyMinion {
-                slot: 0,
-                target: None,
-            },
-        )
-        .expect("棋盘满时应入手牌");
+        .apply(&mut state, 0, Intent::BuyMinion { slot: 0 })
+        .expect("棋盘有空位时也应入手牌");
 
-    assert_eq!(state.players[0].board.len(), 7);
+    assert!(state.players[0].board.is_empty());
     assert_eq!(state.players[0].hand.len(), 1);
     assert_eq!(state.players[0].hand[0].card_id, card_id);
 }
@@ -762,10 +708,7 @@ fn intent_outside_recruit_rejects() {
 
     for intent in [
         Intent::RerollShop,
-        Intent::BuyMinion {
-            slot: 0,
-            target: None,
-        },
+        Intent::BuyMinion { slot: 0 },
         Intent::ChooseDiscover { choice: 0 },
         Intent::EndRecruit,
     ] {
@@ -916,7 +859,7 @@ fn reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects() {
     assert!(shop.iter().all(Option::is_none), "全池耗尽后槽位留空");
     for slot in 0..u8::try_from(shop.len()).expect("槽位数可放入 u8") {
         let reject = engine
-            .apply(&mut state, 0, Intent::BuyMinion { slot, target: None })
+            .apply(&mut state, 0, Intent::BuyMinion { slot })
             .expect_err("空槽不可购买");
         assert_eq!(reject.code, RejectCode::ShopSlotEmpty, "槽位 {slot}");
     }
@@ -1044,25 +987,22 @@ fn choose_discover_valid_choice_consumes_and_adds_to_hand() {
 }
 
 #[test]
-fn buy_ignores_target_instance_id() {
+fn buy_fires_no_battlecry_until_played() {
     let (mut engine, mut state) = setup(36);
-    let card_id = minion_id(1);
-    set_shop(&mut state, 0, &[Some(card_id.clone())]);
+    put_champion(&mut state, 0, 9_000, "adam-smith");
+    set_shop(&mut state, 0, &[Some(BATTLECRY_TARGET.to_string())]);
 
     engine
-        .apply(
-            &mut state,
-            0,
-            Intent::BuyMinion {
-                slot: 0,
-                target: Some(9999),
-            },
-        )
-        .expect("本任务的目标字段应被忽略");
+        .apply(&mut state, 0, Intent::BuyMinion { slot: 0 })
+        .expect("买入带战吼的随从不应报错");
 
-    assert_eq!(state.players[0].board.len(), 1);
-    assert_eq!(state.players[0].board[0].card_id, card_id);
-    assert_eq!(state.players[0].gold, 0);
+    assert_eq!(state.players[0].hand.len(), 1, "买入只入手牌");
+    let champion = state.players[0]
+        .board
+        .iter()
+        .find(|minion| minion.instance_id == 9_000)
+        .expect("原有随从仍在棋盘");
+    assert_eq!(champion.growth, 0, "买入不入场，不结算战吼");
 }
 
 #[test]
@@ -1122,17 +1062,20 @@ fn put_champion(state: &mut GameState, seat: Seat, instance_id: InstanceId, card
 }
 
 #[test]
-fn buy_battlecry_without_target_rejects_and_keeps_state() {
+fn play_battlecry_without_target_rejects_and_keeps_state() {
     let (mut engine, mut state) = setup(40);
     put_champion(&mut state, 0, 9_000, "adam-smith");
-    set_shop(&mut state, 0, &[Some(BATTLECRY_TARGET.to_string())]);
+    state.players[0].hand.push(HandCard {
+        card_id: BATTLECRY_TARGET.to_string(),
+        golden: false,
+    });
     let before = state_hash(&state);
 
     let result = engine.apply(
         &mut state,
         0,
-        Intent::BuyMinion {
-            slot: 0,
+        Intent::PlayCard {
+            hand_index: 0,
             target: None,
         },
     );
@@ -1141,22 +1084,25 @@ fn buy_battlecry_without_target_rejects_and_keeps_state() {
     assert_eq!(
         before,
         state_hash(&state),
-        "拒绝后金币、商店、池与随机流不变"
+        "拒绝后手牌、棋盘、金币与随机流不变"
     );
 }
 
 #[test]
-fn buy_battlecry_with_unknown_target_rejects() {
+fn play_battlecry_with_unknown_target_rejects() {
     let (mut engine, mut state) = setup(41);
     put_champion(&mut state, 0, 9_000, "adam-smith");
-    set_shop(&mut state, 0, &[Some(BATTLECRY_TARGET.to_string())]);
+    state.players[0].hand.push(HandCard {
+        card_id: BATTLECRY_TARGET.to_string(),
+        golden: false,
+    });
     let before = state_hash(&state);
 
     let result = engine.apply(
         &mut state,
         0,
-        Intent::BuyMinion {
-            slot: 0,
+        Intent::PlayCard {
+            hand_index: 0,
             target: Some(9_999),
         },
     );
@@ -1166,21 +1112,24 @@ fn buy_battlecry_with_unknown_target_rejects() {
 }
 
 #[test]
-fn buy_battlecry_with_target_applies_effect() {
+fn play_battlecry_with_target_applies_effect() {
     let (mut engine, mut state) = setup(42);
     put_champion(&mut state, 0, 9_000, "adam-smith");
-    set_shop(&mut state, 0, &[Some(BATTLECRY_TARGET.to_string())]);
+    state.players[0].hand.push(HandCard {
+        card_id: BATTLECRY_TARGET.to_string(),
+        golden: false,
+    });
 
     engine
         .apply(
             &mut state,
             0,
-            Intent::BuyMinion {
-                slot: 0,
+            Intent::PlayCard {
+                hand_index: 0,
                 target: Some(9_000),
             },
         )
-        .expect("带合法目标应购买成功");
+        .expect("带合法目标应打出成功");
 
     let target = state.players[0]
         .board
@@ -1188,21 +1137,26 @@ fn buy_battlecry_with_target_applies_effect() {
         .find(|minion| minion.instance_id == 9_000)
         .expect("目标随从仍在棋盘");
     assert_eq!(target.growth, 1, "战吼成长命中目标");
+    assert_eq!(state.players[0].board.len(), 2, "打出的随从进入棋盘");
+    assert!(state.players[0].hand.is_empty());
 }
 
 #[test]
-fn buy_battlecry_with_empty_pool_is_allowed() {
+fn play_battlecry_with_empty_pool_is_allowed() {
     let (mut engine, mut state) = setup(43);
     // 目标筛「机械」，己方只有学者与即将入场的学者，池为空。
     put_champion(&mut state, 0, 9_000, "gutenberg");
-    set_shop(&mut state, 0, &[Some(BATTLECRY_TRIBE_TARGET.to_string())]);
+    state.players[0].hand.push(HandCard {
+        card_id: BATTLECRY_TRIBE_TARGET.to_string(),
+        golden: false,
+    });
 
     engine
         .apply(
             &mut state,
             0,
-            Intent::BuyMinion {
-                slot: 0,
+            Intent::PlayCard {
+                hand_index: 0,
                 target: None,
             },
         )
