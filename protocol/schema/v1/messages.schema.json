@@ -149,7 +149,12 @@
       "additionalProperties": false,
       "required": ["view"],
       "properties": {
-        "view": { "$ref": "view.schema.json#/$defs/PlayerView" }
+        "view": { "$ref": "view.schema.json#/$defs/PlayerView" },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "快照对应的座位消息序号；与信封 seq 一致，M1 新增可选字段"
+        }
       }
     },
     "StateUpdate": {

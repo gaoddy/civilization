@@ -3884,6 +3884,11 @@ impl ::std::default::Default for SkipAnimation {
 ///    "view"
 ///  ],
 ///  "properties": {
+///    "seq": {
+///      "description": "快照对应的座位消息序号；与信封 seq 一致，M1 新增可选字段",
+///      "type": "integer",
+///      "minimum": 1.0
+///    },
 ///    "view": {
 ///      "$ref": "#/$defs/PlayerView"
 ///    }
@@ -3895,6 +3900,9 @@ impl ::std::default::Default for SkipAnimation {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Snapshot {
+    ///快照对应的座位消息序号；与信封 seq 一致，M1 新增可选字段
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub seq: ::std::option::Option<::std::num::NonZeroU64>,
     pub view: PlayerView,
 }
 impl ::std::convert::From<&Snapshot> for Snapshot {

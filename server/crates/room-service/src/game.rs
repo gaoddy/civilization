@@ -16,7 +16,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use protocol::server::{CombatResult, ErrorMessage, GameOver, StateUpdate};
+use protocol::server::{CombatResult, ErrorMessage, GameOver, Snapshot, StateUpdate};
 use protocol::view::GameEvent as ProtocolGameEvent;
 use protocol::{ErrorCode, GameOverRankingItem, ProtocolError, ServerEnvelope};
 use rule_engine::data::Catalog;
@@ -43,6 +43,9 @@ pub const RECRUIT_SECONDS: u64 = 90;
 /// 剩余多少秒时下发计时警告（由连接层使用，M1a 只暴露常量与 [`GameTask::seconds_left`]）。
 pub const TIMER_WARNING_SECONDS: u64 = 10;
 
+/// 断线后座位的保留时长（毫秒）。超过该时长座位被标记离线，但不释放座位、不结束对局。
+pub const RECONNECT_GRACE_MS: u64 = 30_000;
+
 /// 一条来自连接层的房间命令。
 #[derive(Debug)]
 pub enum RoomCommand {
@@ -56,15 +59,19 @@ pub enum RoomCommand {
         client_intent_id: String,
         intent: protocol::intents::Intent,
     },
-    /// 请求当前全量视图。
+    /// 请求当前全量视图；与重连共用同一条快照路径。
     RequestSnapshot { player_id: String },
-    /// 断线重连；`last_seq`/`out` 由 Task 11 的连接层消费，本任务只回当前视图。
+    /// 断线重连；本次连接的下行发送端替换为 `out`，并回一条全量快照。
+    ///
+    /// `last_seq` 在 M1 只用于判断是否需要历史重放；本版本一律不重放，因此新旧
+    /// 序号都回全量快照。
     Reconnect {
         player_id: String,
         last_seq: u64,
         out: mpsc::Sender<ServerEnvelope>,
     },
-    /// 连接断开；在线标记由 Task 11 的连接层维护，本任务不改变对局状态。
+    /// 连接断开；记录断开时刻，超过 [`RECONNECT_GRACE_MS`] 后由 [`GameTask::tick`]
+    /// 标记离线。对局状态与座位不因断线改变。
     Disconnect { player_id: String },
 }
 
@@ -84,6 +91,9 @@ pub enum UpdateKind {
     /// 该座位视角有变化，应下发 `StateUpdate`；`events` 是已按该座位过滤的
     /// 协议事件，连同视图一起下发给同一个接收者。
     View { events: Vec<ProtocolGameEvent> },
+    /// 全量快照；载荷在编码时由 [`GameTask::player_view`] 生成，`Snapshot.seq`
+    /// 与该条信封的 `seq` 一致。
+    Snapshot,
     /// 一场战斗的逐座位回放。
     CombatResult(Box<CombatResult>),
     /// 对局结束：排名与公开种子。
@@ -118,6 +128,12 @@ pub struct GameTask {
     room_id: String,
     /// 当前招募阶段的截止时刻（Unix epoch 毫秒）。
     phase_deadline_ms: u64,
+    /// 每个座位当前连接的下行发送端；重连时被替换，供连接层（Task 12）投递更新。
+    senders: BTreeMap<Seat, mpsc::Sender<ServerEnvelope>>,
+    /// 座位是否在线；断线宽限期结束后置为 `false`，重连恢复。
+    connected: [bool; SEAT_COUNT],
+    /// 断线起始时刻（Unix epoch 毫秒）；`None` 表示当前未处于断线宽限期。
+    disconnected_at_ms: [Option<u64>; SEAT_COUNT],
 }
 
 impl GameTask {
@@ -178,6 +194,9 @@ impl GameTask {
             seed,
             room_id: String::new(),
             phase_deadline_ms,
+            senders: BTreeMap::new(),
+            connected: [true; SEAT_COUNT],
+            disconnected_at_ms: [None; SEAT_COUNT],
         })
     }
 
@@ -231,6 +250,20 @@ impl GameTask {
             .unwrap_or(0)
     }
 
+    /// 座位是否在线。宽限期内仍返回 `true`；超过 [`RECONNECT_GRACE_MS`] 后由
+    /// [`GameTask::tick`] 置为 `false`，重连后恢复。越界座位视为离线。
+    pub fn is_connected(&self, seat: Seat) -> bool {
+        self.connected
+            .get(usize::from(seat))
+            .copied()
+            .unwrap_or(false)
+    }
+
+    /// 座位当前绑定的下行发送端；连接层（Task 12）用它投递编码后的信封。
+    pub fn sender(&self, seat: Seat) -> Option<&mpsc::Sender<ServerEnvelope>> {
+        self.senders.get(&seat)
+    }
+
     /// 把一条更新编码成该座位自己的下行信封，并按座位递增 `seq`。
     ///
     /// 不同座位的序号互相独立；同一座位每调用一次递增一次。
@@ -253,6 +286,22 @@ impl GameTask {
                 ("StateUpdate", payload_map(&state_update)?)
             }
             UpdateKind::CombatResult(result) => ("CombatResult", payload_map(result.as_ref())?),
+            UpdateKind::Snapshot => {
+                // 先取该座位下一个序号，再把它写进载荷；随后 `bind` 分配的序号
+                // 与载荷里的 `Snapshot.seq` 必然一致（单线程 `&mut self` 下无并发）。
+                let next = self
+                    .channels
+                    .get(&seat)
+                    .ok_or(ProtocolError("BAD_PAYLOAD"))?
+                    .next_seq()
+                    .saturating_add(1);
+                let seq = std::num::NonZeroU64::new(next).ok_or(ProtocolError("BAD_PAYLOAD"))?;
+                let snapshot = Snapshot {
+                    seq: Some(seq),
+                    view: self.player_view(seat).ok_or(ProtocolError("BAD_PAYLOAD"))?,
+                };
+                ("Snapshot", payload_map(&snapshot)?)
+            }
             UpdateKind::GameOver(game_over) => ("GameOver", payload_map(game_over)?),
             UpdateKind::Error(error) => ("Error", payload_map(error)?),
         };
@@ -276,19 +325,13 @@ impl GameTask {
                 // 对局开始后大厅操作一律属于当前阶段不允许。
                 self.player_error(&player_id, None, ErrorCode::InvalidStage, "对局已开始")
             }
-            RoomCommand::RequestSnapshot { player_id } => self.view_for_player(&player_id),
+            RoomCommand::RequestSnapshot { player_id } => self.snapshot_for_player(&player_id),
             RoomCommand::Reconnect {
                 player_id,
-                last_seq: _,
-                out: _,
-            } => {
-                // 真正的重连补发由 Task 11 处理；这里只给当前视图。
-                self.view_for_player(&player_id)
-            }
-            RoomCommand::Disconnect { player_id: _ } => {
-                // 在线标记由 Task 11 的连接层维护；对局状态不因断线改变。
-                Vec::new()
-            }
+                last_seq,
+                out,
+            } => self.reconnect(&player_id, last_seq, out),
+            RoomCommand::Disconnect { player_id } => self.mark_disconnect(&player_id),
             RoomCommand::Intent {
                 player_id,
                 client_intent_id,
@@ -300,14 +343,17 @@ impl GameTask {
     /// 计时检查：未到点返回空；到点串行推进到下一回合。
     ///
     /// 幂等：推进后阶段离开 `Recruit`，同一毫秒再次调用返回空。
+    ///
+    /// 顺序为「先推进阶段，再处理断线宽限」：阶段推进是时间语义的一部分，必须与
+    /// 连接状态无关地按时发生；断线标记只影响可观测的在线状态，安排在推进之后，
+    /// 不会改变原有阶段推进的调用次数与顺序。
     pub fn tick(&mut self) -> Vec<SeatUpdate> {
-        if self.state.phase != Phase::Recruit {
-            return Vec::new();
+        let mut updates = Vec::new();
+        if self.state.phase == Phase::Recruit && self.clock.now_ms() >= self.phase_deadline_ms {
+            updates = self.advance_phase(Vec::new()).unwrap_or_default();
         }
-        if self.clock.now_ms() < self.phase_deadline_ms {
-            return Vec::new();
-        }
-        self.advance_phase(Vec::new()).unwrap_or_default()
+        updates.extend(self.expire_disconnects());
+        updates
     }
 
     /// 意图处理：先查去重表，再映射到引擎意图并执行。
@@ -497,6 +543,14 @@ impl GameTask {
         }
     }
 
+    /// 快照更新：载荷由编码时的当前视图生成。
+    fn snapshot_update(&self, seat: Seat) -> SeatUpdate {
+        SeatUpdate {
+            player_id: self.seats[usize::from(seat)].player_id.clone(),
+            kind: UpdateKind::Snapshot,
+        }
+    }
+
     /// 按座位过滤事件并生成视图更新。
     ///
     /// 每个座位最多收到一条视图更新：`recipients` 里的座位即使没有事件也推送
@@ -519,14 +573,87 @@ impl GameTask {
         updates
     }
 
-    /// 已知玩家回当前视图；未知玩家回 `NOT_IN_ROOM`。
-    fn view_for_player(&self, player_id: &str) -> Vec<SeatUpdate> {
+    /// 已知玩家回全量快照；未知玩家回 `NOT_IN_ROOM`。
+    ///
+    /// `RequestSnapshot` 与 `Reconnect` 共用本路径，快照内容只由该座位当前视图决定，
+    /// 不依赖是否发生过断线。
+    fn snapshot_for_player(&self, player_id: &str) -> Vec<SeatUpdate> {
         match self.seat_of.get(player_id).copied() {
-            Some(seat) => vec![self.view_update(seat)],
+            Some(seat) => vec![self.snapshot_update(seat)],
             None => {
                 vec![self.error_update(player_id, None, ErrorCode::NotInRoom, "玩家不在房间内")]
             }
         }
+    }
+
+    /// 绑定新的下行发送端并回全量快照。
+    ///
+    /// M1 不做历史重放：无论 `last_seq` 是否落后于当前序号，都以全量快照补齐。
+    /// 快照序号由 [`GameTask::envelope_for`] 在该座位下一个序号上分配，必然大于
+    /// 重连前的最后一条消息。
+    fn reconnect(
+        &mut self,
+        player_id: &str,
+        last_seq: u64,
+        out: mpsc::Sender<ServerEnvelope>,
+    ) -> Vec<SeatUpdate> {
+        let Some(seat) = self.seat_of.get(player_id).copied() else {
+            return vec![self.error_update(
+                player_id,
+                None,
+                ErrorCode::NotInRoom,
+                "玩家不在房间内",
+            )];
+        };
+
+        // M1 只回全量快照，`last_seq` 不参与重放判断；保留参数供后续版本使用。
+        let _ = last_seq;
+        let index = usize::from(seat);
+        self.senders.insert(seat, out);
+        self.connected[index] = true;
+        self.disconnected_at_ms[index] = None;
+        vec![self.snapshot_update(seat)]
+    }
+
+    /// 记录断线时刻；座位与对局状态保持不变。
+    ///
+    /// 重复断线只保留第一次时刻，避免连接层抖动无限延长宽限期。未知玩家返回
+    /// `NOT_IN_ROOM`。
+    fn mark_disconnect(&mut self, player_id: &str) -> Vec<SeatUpdate> {
+        let Some(seat) = self.seat_of.get(player_id).copied() else {
+            return vec![self.error_update(
+                player_id,
+                None,
+                ErrorCode::NotInRoom,
+                "玩家不在房间内",
+            )];
+        };
+        let index = usize::from(seat);
+        if self.disconnected_at_ms[index].is_none() {
+            self.disconnected_at_ms[index] = Some(self.clock.now_ms());
+        }
+        Vec::new()
+    }
+
+    /// 把超过 [`RECONNECT_GRACE_MS`] 的断线座位标记离线，每个座位只通知一次。
+    fn expire_disconnects(&mut self) -> Vec<SeatUpdate> {
+        let now = self.clock.now_ms();
+        let mut updates = Vec::new();
+        for seat in 0..SEAT_COUNT as Seat {
+            let index = usize::from(seat);
+            let Some(since) = self.disconnected_at_ms[index] else {
+                continue;
+            };
+            if now < since.saturating_add(RECONNECT_GRACE_MS) {
+                continue;
+            }
+            self.disconnected_at_ms[index] = None;
+            if self.connected[index] {
+                self.connected[index] = false;
+                updates.push(self.view_update(seat));
+            }
+        }
+        updates
     }
 
     /// 只针对已知玩家的错误；未知玩家退化为 `NOT_IN_ROOM`。

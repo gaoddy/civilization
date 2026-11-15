@@ -19,7 +19,8 @@ pub use clock::{Clock, FixedClock, SystemClock};
 pub use envelope::SeatChannel;
 pub use error::error_message;
 pub use game::{
-    Deduped, GameTask, RECRUIT_SECONDS, RoomCommand, SeatUpdate, TIMER_WARNING_SECONDS, UpdateKind,
+    Deduped, GameTask, RECONNECT_GRACE_MS, RECRUIT_SECONDS, RoomCommand, SeatUpdate,
+    TIMER_WARNING_SECONDS, UpdateKind,
 };
 pub use room::{PlayerSlot, Room, RoomError, RoomId, RoomRegistry, SEAT_COUNT};
 pub use view::SeatInfo;
