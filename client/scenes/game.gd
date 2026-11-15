@@ -12,8 +12,8 @@ var _turn_label: Label
 var _timer_label: Label
 var _stats_label: Label
 var _status: Label
-var _shop_row: HBoxContainer
-var _hand_row: HBoxContainer
+var _shop_row: HFlowContainer
+var _hand_row: HFlowContainer
 var _board_box: VBoxContainer
 var _players_box: VBoxContainer
 var _log_text: RichTextLabel
@@ -109,18 +109,29 @@ func _build() -> void:
     var left := VBoxContainer.new()
     left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     left.add_theme_constant_override("separation", 6)
-    left.add_child(UI.label("商店", 18))
-    _shop_row = HBoxContainer.new()
-    _shop_row.add_theme_constant_override("separation", 6)
-    left.add_child(_shop_row)
-    left.add_child(UI.label("手牌", 18))
-    _hand_row = HBoxContainer.new()
-    _hand_row.add_theme_constant_override("separation", 6)
-    left.add_child(_hand_row)
-    left.add_child(UI.label("棋盘", 18))
+    var scroll := ScrollContainer.new()
+    scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    left.add_child(scroll)
+    var left_content := VBoxContainer.new()
+    left_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    left_content.add_theme_constant_override("separation", 6)
+    scroll.add_child(left_content)
+    left_content.add_child(UI.label("商店", 18))
+    _shop_row = HFlowContainer.new()
+    _shop_row.add_theme_constant_override("h_separation", 6)
+    _shop_row.add_theme_constant_override("v_separation", 6)
+    left_content.add_child(_shop_row)
+    left_content.add_child(UI.label("手牌", 18))
+    _hand_row = HFlowContainer.new()
+    _hand_row.add_theme_constant_override("h_separation", 6)
+    _hand_row.add_theme_constant_override("v_separation", 6)
+    left_content.add_child(_hand_row)
+    left_content.add_child(UI.label("棋盘", 18))
     _board_box = VBoxContainer.new()
     _board_box.add_theme_constant_override("separation", 4)
-    left.add_child(_board_box)
+    left_content.add_child(_board_box)
     body.add_child(left)
 
     var right := VBoxContainer.new()
@@ -140,6 +151,7 @@ func _build() -> void:
     body.add_child(right)
 
     _status = UI.label("", 14)
+    _status.name = "StatusLabel"
     root.add_child(_status)
 
     _overlay = Control.new()
@@ -183,6 +195,7 @@ func _refresh() -> void:
     _refresh_log()
     _refresh_overlay(self_state, recruited)
     _refresh_connection()
+    _prune_target_requests()
 
 
 func _refresh_actions(self_state: Dictionary, recruited: bool) -> void:
@@ -510,20 +523,38 @@ func _optional_text(value: Variant) -> String:
 
 func _send_intent(intent: Dictionary) -> String:
     _intent_counter += 1
-    return Net.send(Protocol.MSG_INTENT, {
+    var intent_id := Net.send(Protocol.MSG_INTENT, {
         "clientIntentId": "ui-%d-%d" % [Time.get_ticks_usec(), _intent_counter],
         "intent": intent,
     })
+    if intent_id == "":
+        _status.text = "未连接，操作未发出"
+    return intent_id
+
+
+func _remember_target_request(intent_id: String, intent: Dictionary) -> void:
+    if intent_id == "":
+        return
+    if _target_requests.size() >= 32:
+        _target_requests.clear()
+    _target_requests[intent_id] = {"intent": intent, "turn": GameStore.turn}
+
+
+func _prune_target_requests() -> void:
+    for intent_id in _target_requests.keys():
+        var entry: Dictionary = _target_requests[intent_id]
+        if int(entry.get("turn", 0)) != GameStore.turn:
+            _target_requests.erase(intent_id)
 
 
 func _on_buy(index: int) -> void:
     var intent := {"kind": Protocol.INTENT_BUY_MINION, "slot": index}
-    _target_requests[_send_intent(intent)] = intent
+    _remember_target_request(_send_intent(intent), intent)
 
 
 func _on_play(hand_index: int) -> void:
     var intent := {"kind": Protocol.INTENT_PLAY_CARD, "handIndex": hand_index}
-    _target_requests[_send_intent(intent)] = intent
+    _remember_target_request(_send_intent(intent), intent)
 
 
 func _on_sell(minion_id: String) -> void:
@@ -616,13 +647,23 @@ func _refresh_overlay_now() -> void:
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
     var intent_id := str(GameStore.last_error.get("clientIntentId", ""))
-    _status.text = "%s：%s" % [code, str(GameStore.last_error.get("message", ""))]
+    _status.text = UI.error_text(code)
+    _status.tooltip_text = str(GameStore.last_error.get("message", ""))
     if code == Protocol.ERROR_NO_VALID_TARGET and _target_requests.has(intent_id):
-        _target_intent = _target_requests[intent_id]
+        var entry: Dictionary = _target_requests[intent_id]
+        _target_intent = entry.get("intent", {})
         _target_requests.erase(intent_id)
         _target_title = "该操作需要目标"
         _target_required = true
         _refresh_overlay_now()
+        return
+    match UI.error_route(code):
+        "lobby":
+            GameStore.reset_room()
+            get_tree().change_scene_to_file("res://scenes/lobby.tscn")
+        "login":
+            GameStore.reset_session()
+            get_tree().change_scene_to_file("res://scenes/login.tscn")
 
 
 func _on_game_over() -> void:

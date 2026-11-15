@@ -12,6 +12,7 @@ func _ready() -> void:
     _build()
     GameStore.room_changed.connect(_on_room_changed)
     GameStore.game_started.connect(_on_game_started)
+    GameStore.view_changed.connect(_on_view_changed)
     GameStore.error_received.connect(_on_error)
     _refresh()
 
@@ -177,15 +178,31 @@ func _on_game_started() -> void:
     _goto_game()
 
 
+func _on_view_changed() -> void:
+    # 重连或晚到的视图：只要对局已经开始，就直接进入对局。
+    if not GameStore.view.is_empty() and GameStore.phase != Protocol.PHASE_LOBBY:
+        _goto_game()
+
+
 func _goto_game() -> void:
     get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 
 func _on_error() -> void:
-    _status.text = "%s：%s" % [
-        str(GameStore.last_error.get("code", "")),
-        str(GameStore.last_error.get("message", "")),
-    ]
+    var code := str(GameStore.last_error.get("code", ""))
+    _status.text = UI.error_text(code)
+    _status.tooltip_text = str(GameStore.last_error.get("message", ""))
+    match _error_route(code):
+        "lobby":
+            GameStore.reset_room()
+            get_tree().change_scene_to_file("res://scenes/lobby.tscn")
+        "login":
+            GameStore.reset_session()
+            get_tree().change_scene_to_file("res://scenes/login.tscn")
+
+
+func _error_route(code: String) -> String:
+    return UI.error_route(code)
 
 
 func _optional_text(value: Variant) -> String:
