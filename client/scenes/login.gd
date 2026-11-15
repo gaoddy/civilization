@@ -80,7 +80,7 @@ func _on_connected() -> void:
 
 
 func _on_auth_changed() -> void:
-    get_tree().change_scene_to_file("res://scenes/lobby.tscn")
+    UI.navigate(self, "res://scenes/lobby.tscn")
 
 
 func _on_disconnected() -> void:

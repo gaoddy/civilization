@@ -64,4 +64,4 @@ func _my_place_text() -> String:
 func _on_back_pressed() -> void:
     GameStore.reset_room()
     Net.relogin()
-    get_tree().change_scene_to_file("res://scenes/lobby.tscn")
+    UI.navigate(self, "res://scenes/lobby.tscn")

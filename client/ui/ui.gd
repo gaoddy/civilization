@@ -9,6 +9,18 @@ static func clear(node: Node) -> void:
         child.queue_free()
 
 
+## 页面导航入口。change_scene_to_file 会立即把当前场景摘下，摘下后的页面仍连着
+## GameStore 等 autoload 信号，回调再取场景树会拿到 null；这里以「是否仍在树上」
+## 作为唯一判定，离树页面的导航直接丢弃。
+static func navigate(page: Node, path: String) -> bool:
+    if page == null or not is_instance_valid(page) or not page.is_inside_tree():
+        return false
+    var tree := page.get_tree()
+    if tree == null:
+        return false
+    return tree.change_scene_to_file(path) == OK
+
+
 static func label(text: String, size := 16) -> Label:
     var node := Label.new()
     node.text = text

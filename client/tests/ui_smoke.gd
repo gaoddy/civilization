@@ -21,6 +21,7 @@ func _ready() -> void:
     await _check_expired_gate()
     await _check_stale_view_gate()
     await _check_disconnected_send()
+    await _check_navigation_guard()
     await _check_error_route()
     await _check_reset_session()
     await _check_error_text()
@@ -203,6 +204,29 @@ func _check_disconnected_send() -> void:
     GameStore.view = {}
     GameStore.turn = 1
     GameStore.deadline = ""
+
+
+func _check_navigation_guard() -> void:
+    # 页面被切走后仍连着 GameStore 信号：再次触发导航时不能访问已失效的场景树。
+    GameStore.player_id = "p0"
+    GameStore.room_id = "r_test"
+    GameStore.room_code = "ABC123"
+    GameStore.phase = "Recruit"
+    GameStore.view = FixtureScript.view()
+    var instance := await _check_scene("res://scenes/room.tscn", false)
+    if instance == null:
+        return
+    var before = get_tree().current_scene
+    remove_child(instance)
+    _expect(not instance.is_inside_tree(), "移出树后房间场景应已离树")
+    _expect(not UI.navigate(instance, "res://scenes/game.tscn"), "已离树的页面不应再执行导航")
+    GameStore.view_changed.emit()
+    _expect(get_tree().current_scene == before, "已离树的房间场景不应改变当前场景")
+    instance.queue_free()
+    GameStore.view = {}
+    GameStore.room_id = ""
+    GameStore.room_code = ""
+    GameStore.phase = ""
 
 
 func _check_error_route() -> void:

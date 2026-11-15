@@ -16,7 +16,7 @@ client/
     game_store.gd            # 认证、房间与 PlayerView 的全局状态
     ws_client.gd             # WebSocketPeer、自动重连、信封编解码与分发
     card_db.gd               # 只读卡牌/技能展示表
-  ui/ui.gd                   # 场景共用控件工具（class_name UI）
+  ui/ui.gd                   # 场景共用控件工具与统一导航入口（class_name UI）
   scenes/
     login.tscn/.gd           # 登录
     lobby.tscn/.gd           # 大厅
@@ -24,7 +24,7 @@ client/
     game.tscn/.gd            # 对局
     result.tscn/.gd          # 结算
   tests/
-    ui_smoke.tscn/.gd        # 五场景无头实例化冒烟
+    ui_smoke.tscn/.gd        # 五场景无头实例化冒烟与离树导航守卫
     fixture.gd               # 冒烟用最小 PlayerView
     headless_game.tscn/.gd   # 无头对局驱动（1 客户端 + 7 机器人）
   generated/
@@ -58,6 +58,7 @@ client/
 - 状态栏文案按错误码取 `UI.error_text` 的固定中文；协议 `message` 只进 tooltip，不作为 UI 文案。
 - `UI.error_route` 决定错误后的去向：认证类错误回登录并清空会话，`NOT_IN_ROOM` / `ROOM_NOT_FOUND` 回大厅并清空房间；其余错误留在当前页面。
 - 未连接时点击操作不会静默丢弃：状态栏提示「未连接，操作未发出」，发送失败不登记目标重试。目标重试表按回合清理并设上限。
+- 页面切换统一走 `UI.navigate(page, path)`：`change_scene_to_file` 会立即把当前场景摘下，而页面仍连着 `GameStore` 等 autoload 信号；摘下后的回调再取 `get_tree()` 会得到 `null`。`UI.navigate` 以「页面仍在树上」为唯一判定，离树页面的导航直接丢弃并返回 `false`，场景脚本不再直接调用 `get_tree().change_scene_to_file`。
 - 房间场景同时监听 `view_changed`：重连或晚到的视图显示对局已开始时直接进入对局；房间不存在或已不在房间时回大厅。
 - 商店与手牌使用 `HFlowContainer` 自动换行，左侧内容放入 `ScrollContainer`，1280×720 下不会因手牌或商店变长而溢出。
 - 战斗只展示服务端 `CombatResult` 的胜者、伤害与双方随从数，不本地重放结算。

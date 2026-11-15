@@ -660,11 +660,11 @@ func _on_error() -> void:
     match UI.error_route(code):
         "lobby":
             GameStore.reset_room()
-            get_tree().change_scene_to_file("res://scenes/lobby.tscn")
+            UI.navigate(self, "res://scenes/lobby.tscn")
         "login":
             GameStore.reset_session()
-            get_tree().change_scene_to_file("res://scenes/login.tscn")
+            UI.navigate(self, "res://scenes/login.tscn")
 
 
 func _on_game_over() -> void:
-    get_tree().change_scene_to_file("res://scenes/result.tscn")
+    UI.navigate(self, "res://scenes/result.tscn")

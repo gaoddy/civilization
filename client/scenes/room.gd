@@ -164,7 +164,7 @@ func _on_ready_pressed() -> void:
 func _on_leave_pressed() -> void:
     Net.send(Protocol.MSG_LEAVE_ROOM, {})
     GameStore.reset_room()
-    get_tree().change_scene_to_file("res://scenes/lobby.tscn")
+    UI.navigate(self, "res://scenes/lobby.tscn")
 
 
 func _on_room_changed() -> void:
@@ -185,7 +185,7 @@ func _on_view_changed() -> void:
 
 
 func _goto_game() -> void:
-    get_tree().change_scene_to_file("res://scenes/game.tscn")
+    UI.navigate(self, "res://scenes/game.tscn")
 
 
 func _on_error() -> void:
@@ -195,10 +195,10 @@ func _on_error() -> void:
     match _error_route(code):
         "lobby":
             GameStore.reset_room()
-            get_tree().change_scene_to_file("res://scenes/lobby.tscn")
+            UI.navigate(self, "res://scenes/lobby.tscn")
         "login":
             GameStore.reset_session()
-            get_tree().change_scene_to_file("res://scenes/login.tscn")
+            UI.navigate(self, "res://scenes/login.tscn")
 
 
 func _error_route(code: String) -> String:

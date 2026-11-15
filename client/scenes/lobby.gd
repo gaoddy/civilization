@@ -71,7 +71,7 @@ func _on_join_pressed() -> void:
 
 
 func _on_room_changed() -> void:
-    get_tree().change_scene_to_file("res://scenes/room.tscn")
+    UI.navigate(self, "res://scenes/room.tscn")
 
 
 func _on_auth_changed() -> void:
@@ -85,4 +85,4 @@ func _on_error() -> void:
     _status.tooltip_text = str(GameStore.last_error.get("message", ""))
     if UI.error_route(code) == "login":
         GameStore.reset_session()
-        get_tree().change_scene_to_file("res://scenes/login.tscn")
+        UI.navigate(self, "res://scenes/login.tscn")
