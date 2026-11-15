@@ -1,0 +1,87 @@
+# 设计令牌
+
+> 状态：已实现
+> 定义：`client/ui/theme.gd`
+> 使用：页面与组件通过 `UITheme.metric` 与 `UI` 构件取值，不直接写视觉值。
+
+## 1. 分层
+
+| 层 | 内容 | 引用方向 |
+| --- | --- | --- |
+| 原子（primitive） | 色板原始值、字号、间距、圆角刻度 | 不引用其他层 |
+| 语义（semantic） | 按用途命名的颜色、字体、间距、圆角 | 只引用原子层 |
+| 组件与场景（metric） | 组件尺寸与页面骨架宽度 | 只引用语义层 |
+
+## 2. 语义颜色
+
+| 令牌 | 取值 | 用途 |
+| --- | --- | --- |
+| `color-bg` | `#070a0f` | 页面背景、弹层遮罩基色 |
+| `color-surface` | `#0c1118` | 区块面板 |
+| `color-surface-raised` | `#121925` | 卡片、座位行、商店槽 |
+| `color-surface-sunken` | `#1a2331` | 下沉容器 |
+| `color-border` | `#243044` | 常规描边 |
+| `color-border-strong` | `#33435c` | 可交互卡片描边 |
+| `color-text` | `#e9eef7` | 主文本 |
+| `color-text-dim` | `#b7c3d6` | 次要文本、状态行 |
+| `color-text-muted` | `#8494ac` | 元信息、禁用文本 |
+| `color-accent` | `#f0c66b` | 金色强调、本人席位、计时 |
+| `color-accent-strong` | `#b98a2f` | 主按钮底色 |
+| `color-success` | `#5fce86` | 胜利、已准备 |
+| `color-danger` | `#e2666b` | 失败、生命、断线 |
+| `color-info` | `#62a8e8` | 时代、中性提示 |
+
+## 3. 字体
+
+| 令牌 | 字号 | 用途 |
+| --- | --- | --- |
+| `font-caption` | 11 | 元信息、关键词、标记 |
+| `font-body-sm` | 12 | 座位名、手牌、状态行 |
+| `font-body` | 14 | 区块标题、按钮 |
+| `font-title` | 16 | 随从攻防、英雄名 |
+| `font-title-lg` | 18 | 回合标题、顶栏数值 |
+| `font-display` | 22 | 战斗结果横幅、弹层标题 |
+| `font-hero` | 28 | 预留，当前页面未使用 |
+
+## 4. 间距与圆角
+
+| 令牌 | 取值 | | 令牌 | 取值 |
+| --- | --- | --- | --- | --- |
+| `space-2xs` | 2 | | `radius-sm` | 4 |
+| `space-xs` | 4 | | `radius-md` | 8 |
+| `space-sm` | 6 | | `radius-lg` | 12 |
+| `space-md` | 8 | | `radius-pill` | 16 |
+| `space-lg` | 12 | | | |
+| `space-xl` | 16 | | | |
+| `space-2xl` | 24 | | | |
+| `space-3xl` | 32 | | | |
+
+语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行，经 `UI.apply_dim` 应用。
+
+## 5. 组件与场景度量
+
+| 令牌 | 取值 | 用途 |
+| --- | --- | --- |
+| `rail-width` | 196 | 左栏积分榜宽度 |
+| `side-width` | 272 | 右栏宽度 |
+| `opponent-tile-width` / `-height` | 96 / 52 | 对手席位小卡 |
+| `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
+| `hero-tile-width` | 150 | 英雄小卡宽度（右栏按栏宽覆盖） |
+| `minion-card-width` / `-height` | 98 / 122 | 棋盘随从卡 |
+| `shop-card-width` / `-height` | 108 / 88 | 商店槽 |
+| `hand-card-width` / `-height` | 142 / 84 | 手牌卡 |
+
+## 6. 部落色
+
+| 部落 | 令牌 | 取值 |
+| --- | --- | --- |
+| 人类 | `blue-400` | `#62a8e8` |
+| 学者 | `purple-400` | `#b28ce6` |
+| 机械 | `slate-400` | `#93a6bd` |
+| 生物 | `green-400` | `#5fce86` |
+| 病毒 | `rose-400` | `#d9799b` |
+| 植物 | `lime-400` | `#a3cf61` |
+| 通用 | `sand-400` | `#cdb98c` |
+| 未取到部落 | `color-border-strong` | `#33435c` |
+
+部落色只用于头像块的描边与名字首字，不改变布局与结构。
