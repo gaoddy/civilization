@@ -16,6 +16,7 @@ func _ready() -> void:
     for path in SCENES:
         await _check_scene(path, true)
     await _check_game()
+    await _check_result()
     if _failures == 0:
         print("UI_SMOKE_OK")
         get_tree().quit(0)
@@ -56,4 +57,25 @@ func _check_game() -> void:
             _failures += 1
     instance.queue_free()
     GameStore.view = {}
+
+
+func _check_result() -> void:
+    GameStore.ranking = [
+        {"playerId": "p0", "place": 1},
+        {"playerId": "p1", "place": 2},
+    ]
+    GameStore.game_seed = "abc123"
+    var instance := await _check_scene("res://scenes/result.tscn", false)
+    if instance == null:
+        return
+    var list = instance.find_child("RankingList", true, false)
+    if list == null:
+        push_error("结算场景缺少 RankingList")
+        _failures += 1
+    elif list.get_child_count() != 2:
+        push_error("结算场景排名行数为 %d，期望 2" % list.get_child_count())
+        _failures += 1
+    instance.queue_free()
+    GameStore.ranking = []
+    GameStore.game_seed = ""
 

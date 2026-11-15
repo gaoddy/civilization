@@ -3,12 +3,14 @@ extends Control
 
 var _status: Label
 var _code_input: LineEdit
+var _greeting: Label
 
 
 func _ready() -> void:
     _build()
     GameStore.room_changed.connect(_on_room_changed)
     GameStore.error_received.connect(_on_error)
+    GameStore.auth_changed.connect(_on_auth_changed)
     if not Net.is_open():
         _status.text = "未连接服务器"
 
@@ -30,7 +32,8 @@ func _build() -> void:
     margin.add_child(box)
 
     box.add_child(UI.label("大厅", 28))
-    box.add_child(UI.label("已登录：%s  %s" % [GameStore.display_name, GameStore.player_id], 14))
+    _greeting = UI.label("已登录：%s  %s" % [GameStore.display_name, GameStore.player_id], 14)
+    box.add_child(_greeting)
     box.add_child(HSeparator.new())
 
     var create := UI.button("创建房间")
@@ -69,6 +72,11 @@ func _on_join_pressed() -> void:
 
 func _on_room_changed() -> void:
     get_tree().change_scene_to_file("res://scenes/room.tscn")
+
+
+func _on_auth_changed() -> void:
+    _greeting.text = "已登录：%s  %s" % [GameStore.display_name, GameStore.player_id]
+    _status.text = "连接已恢复"
 
 
 func _on_error() -> void:

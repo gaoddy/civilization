@@ -40,6 +40,20 @@ func disconnect_from_server() -> void:
         disconnected.emit()
 
 
+func relogin() -> void:
+    """关闭当前连接并用已有令牌重新认证，用于对局结束后回到大厅。"""
+    _want_connection = true
+    _pending_reconnect = false
+    if socket != null:
+        socket.close()
+        socket = null
+    if _was_open:
+        _was_open = false
+        disconnected.emit()
+    _retry_left = 0.0
+    _open()
+
+
 func is_open() -> bool:
     return socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN
 
