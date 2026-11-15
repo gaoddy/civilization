@@ -1,0 +1,21 @@
+; Engine configuration file.
+; 由仓库维护，Godot 编辑器可能重写此文件。
+config_version=5
+
+[application]
+config/name="Civilization"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[autoload]
+GameStore="*res://autoload/game_store.gd"
+CardDB="*res://autoload/card_db.gd"
+Net="*res://autoload/ws_client.gd"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
