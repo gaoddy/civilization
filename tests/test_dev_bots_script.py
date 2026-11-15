@@ -28,9 +28,14 @@ SERVER_STUB = textwrap.dedent(
 )
 
 # 不解析 argv：脚本传的是 `dev --connect ws://... --intent-seed ...`。
+# 给了 SIM_PID_FILE 就把自身 PID 写进去，测试据此确认 sim 真的启动过。
 SIM_STUB = textwrap.dedent(
     """
     import os, sys, time
+    pid_file = os.environ.get("SIM_PID_FILE")
+    if pid_file:
+        with open(pid_file, "w", encoding="utf-8") as handle:
+            handle.write(str(os.getpid()))
     time.sleep(float(os.environ.get("STUB_SLEEP", "0.2")))
     sys.exit(int(os.environ.get("STUB_EXIT", "0")))
     """
@@ -47,6 +52,14 @@ def port_open(port: int) -> bool:
     with socket.socket() as sock:
         sock.settimeout(0.2)
         return sock.connect_ex(("127.0.0.1", port)) == 0
+
+
+def process_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    return True
 
 
 class DevBotsScriptTest(unittest.TestCase):
@@ -119,28 +132,39 @@ class DevBotsScriptTest(unittest.TestCase):
         for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
             with self.subTest(sig=sig):
                 port = free_port()
-                # 桩 sim 存活足够久，保证脚本收到信号时它还在等。
-                proc = self.spawn(port, {"STUB_SLEEP": "120"})
+                pid_file = pathlib.Path(self.tmp.name) / f"sim-{sig.value}.pid"
+                # 桩 sim 存活足够久，且先把 PID 落盘：等到 pid 文件出现再发信号，
+                # 才真的在考「脚本收到了 sim 的 PID 之后会不会收掉它」。
+                proc = self.spawn(
+                    port, {"STUB_SLEEP": "120", "SIM_PID_FILE": str(pid_file)}
+                )
                 deadline = time.time() + 10
-                while time.time() < deadline and not port_open(port):
+                while time.time() < deadline and not (
+                    port_open(port) and pid_file.exists() and pid_file.read_text()
+                ):
                     if proc.poll() is not None:
-                        # 桩子进程继承了管道，这里不能再 communicate（会等桩退出）。
                         self.fail(f"{sig!r}: 脚本提前退出，退出码 {proc.returncode}")
                     time.sleep(0.05)
                 self.assertTrue(port_open(port), f"{sig!r}: 桩服务端未在 10 秒内监听")
+                sim_pid = int(pid_file.read_text())
 
                 os.kill(proc.pid, sig)  # 只打脚本，不打整组
                 try:
                     output, _ = proc.communicate(timeout=10)
                 except subprocess.TimeoutExpired:
-                    self.fail(f"{sig!r}: 脚本收到信号后 10 秒内没有退出（trap 被前台 sim 挡住）")
+                    self.fail(
+                        f"{sig!r}: 脚本收到信号后 10 秒内没有退出"
+                        f"（pid={proc.pid}，sim_pid={sim_pid}）"
+                    )
 
+                self.assertEqual(proc.returncode, 128 + sig.value, output)
                 deadline = time.time() + 5
-                while time.time() < deadline and port_open(port):
+                while time.time() < deadline and (
+                    port_open(port) or process_alive(sim_pid)
+                ):
                     time.sleep(0.05)
-                self.assertFalse(
-                    port_open(port), f"{sig!r}: 脚本退出后端口 {port} 仍被占用：{output}"
-                )
+                self.assertFalse(port_open(port), f"{sig!r}: 端口 {port} 仍被占用")
+                self.assertFalse(process_alive(sim_pid), f"{sig!r}: sim 进程仍存活")
 
 
 if __name__ == "__main__":

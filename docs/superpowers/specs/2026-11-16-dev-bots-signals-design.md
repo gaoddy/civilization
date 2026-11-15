@@ -24,14 +24,15 @@
 `sim` 改为后台启动并记 `SIM_PID`，然后 `wait "$SIM_PID"` 取退出码。`cleanup` 同时关两个进程，并补 `HUP`：
 
 ```bash
-trap cleanup EXIT INT TERM HUP
-cleanup() {
-  kill "$SIM_PID" "$SERVER_PID" 2>/dev/null || true
-  wait "$SIM_PID" "$SERVER_PID" 2>/dev/null || true
-}
+trap cleanup EXIT
+trap 'on_signal; exit 130' INT
+trap 'on_signal; exit 143' TERM
+trap 'on_signal; exit 129' HUP
 ```
 
-`wait` 要放在 `set +e` 或 `|| true` 里，否则 `set -e` 会在 `sim` 非零退出时提前终止，透传的退出码就丢了。
+终止信号的 trap 必须**收完子进程就退出**：只 `cleanup` 不 `exit` 时，信号若落在 trap 安装与 `wait` 之间，脚本会继续往下起 `sim` 然后干等到对局结束。trap 也要在拉起任何子进程之前装好，否则信号落在启动与安装之间，服务端就成了孤儿。
+
+`wait` **不要**放进 `|| true` 里：`set -e` 让脚本以 `wait` 的返回码退出，这正是要的退出码透传；加 `|| true` 反而把 3 变成 0。
 
 `SERVER_BIN` 与 `SIM_BIN` 支持环境变量覆盖，默认仍是 `server/target/debug/` 下两个二进制：
 
@@ -42,20 +43,20 @@ cleanup() {
 
 ### 测试
 
-新增 `tests/test_dev_bots_script.py`（标准库 unittest，与仓库其余 Python 测试一致）。每个用例在 `tmp_path` 等价的临时目录里生成两个桩：
+新增 `tests/test_dev_bots_script.py`（标准库 unittest，与仓库其余 Python 测试一致）。每个用例在临时目录里生成两个桩：
 
 - 服务端桩：一个 Python 脚本，绑定并 listen 指定端口后 sleep，直到被杀。
-- `sim` 桩：一个 shell 脚本，sleep 指定秒数后以指定退出码退出。
+- `sim` 桩：一个 Python 脚本，把自身 PID 写进 `SIM_PID_FILE`（用于确认它真的启动过），sleep 指定秒数后以指定退出码退出。
 
 三个用例：
 
 | 用例 | 断言 |
 | --- | --- |
 | 端口被占用 | 先起一个占位进程占住端口，再跑脚本；退出码 1，stdout 含「端口 X 已被占用」与 `DEV_PORT=<X+1>` |
-| SIGTERM 清理 | 端口空闲，起脚本，等「房间码」类输出不再出现后发 SIGTERM；脚本退出后，服务端桩端口已释放，桩进程消失 |
+| 终止信号清理 | 端口空闲，起脚本，等桩端口监听且 sim 已把 PID 落盘后发信号（TERM / INT / HUP 各一次）；脚本退出码为 `128 + 信号值`，服务端端口已释放，sim 进程消失 |
 | 退出码透传 | `sim` 桩以 3 退出，脚本退出码为 3 |
 
-脚本在测试里用 `subprocess.Popen(..., start_new_session=True)` 起，这样发信号能打到整组；发信号用 `os.killpg`。
+脚本在测试里用 `subprocess.Popen(..., start_new_session=True)` 起；发信号用 `os.kill(脚本 PID, sig)` **只打脚本**，不用 `os.killpg`——打整组会把桩进程一并杀掉，测不出脚本自己的清理逻辑。
 
 ## 删除的断言
 
