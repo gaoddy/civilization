@@ -51,7 +51,8 @@ pub struct SeatCombatReport {
     pub actions: Vec<combat::CombatAction>,
     /// 本场战斗造成的伤害；镜像战恒为 0。
     pub damage: i32,
-    /// 本场胜者；镜像未获胜时为 `None`。
+    /// 本场胜者：真实战恒为 `Some`（`tie_break` 必判出胜者）；
+    /// 镜像战获胜为 `Some(seat)`，未获胜为 `None`。
     pub winner: Option<Seat>,
 }
 
