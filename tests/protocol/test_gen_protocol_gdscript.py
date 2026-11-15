@@ -31,6 +31,13 @@ class GenGdscriptTest(unittest.TestCase):
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_client_output_matches_default_output(self):
+        content = gen.render(ROOT / "protocol/schema/v1", gen.load_mapping())
+        self.assertEqual(gen.CLIENT_OUTPUT, ROOT / "client" / "generated" / "protocol.gd")
+        self.assertEqual(gen.CLIENT_OUTPUT.read_text(encoding="utf-8"), content)
+        self.assertEqual(gen.CLIENT_OUTPUT.read_text(encoding="utf-8"),
+                         gen.DEFAULT_OUTPUT.read_text(encoding="utf-8"))
+
     def test_check_mode_fails_on_different_content(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = pathlib.Path(tmp) / "protocol.gd"

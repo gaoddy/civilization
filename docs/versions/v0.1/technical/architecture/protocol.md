@@ -61,7 +61,7 @@
 ## 8. 契约来源与生成
 
 - 唯一来源：`protocol/schema/v1/*.schema.json`（JSON Schema draft 2020-12）与 `messages.json`。
-- 生成物：`protocol/generated/protocol.gd`（GDScript 常量）与[协议字段表](protocol-messages.md)；生成物随源提交。
+- 生成物：`protocol/generated/protocol.gd` 与 `client/generated/protocol.gd`（GDScript 常量，两处内容一致）以及[协议字段表](protocol-messages.md)；生成物随源提交。
 - 命令：`make protocol` 重新生成；`make protocol-check` 校验样例并检测生成物漂移。
 - 客户端不做完整运行时校验，只检查 `type`、`v` 与关键字段存在性；字段级契约由服务端与样例校验保证。
 

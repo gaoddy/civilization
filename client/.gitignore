@@ -1,0 +1,3 @@
+# Godot 导入缓存
+.godot/
+*.uid

@@ -30,10 +30,9 @@
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
 | 服务端部署编排与多实例切分维度 | 部署 | M2 联机内测前确定 | [服务端技术基线](technical/architecture/server-stack.md) |
-| 客户端工程目录与构建导出流程未定 | 实现 | 搭建客户端工程前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
-| 客户端测试框架未定 | 实现 | 搭建客户端工程前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
 | GDScript 生成器是否值得长期维护 | 实现 | 先用最小生成物（常量与字段名）观察；维护成本高于收益时退回手写常量并由样例测试兜底 | [通信协议](technical/architecture/protocol.md) |
 | 观战只读视图的字段裁剪 | 实现 | v0.1 不做观战，视图按可被第三方只读消费设计，裁剪规则待观战时确定 | [通信协议](technical/architecture/protocol.md) |
+| 缺少目标时的服务端校验 | 实现 | `TargetNotAllowed` / `NoValidTarget` 已定义但服务端从不构造：`Pick::Single` 无目标时静默不结算，客户端因此收不到 `NO_VALID_TARGET`，无法补选目标。M1b 客户端已实现收到该错误后补选并重发，需服务端补齐返回时机后再端到端验证 | [通信协议](technical/architecture/protocol.md)、[客户端现状](../../../current/technical/client.md) |
 | 协议 crate 生成物位置 | 实现 | M0 只建了 `rule-engine` 与 `sim` 两个 crate，`protocol` crate 尚未建立；M1 统一为仓库根 `protocol/generated/protocol.rs` 生成、crate 依赖生成文件，并回写 [服务端技术基线](technical/architecture/server-stack.md) | [协议设计](../../superpowers/specs/2026-11-15-protocol-design.md) §8 |
 | `PlayerView` 字段不足 | 实现 | 当前 schema 不能表达对手阵容、淘汰名次、当前对手与托管状态；M1 按「先改 schema + 样例，再改两端」补齐，并与引擎视图映射同批落地 | [协议设计](../../superpowers/specs/2026-11-15-protocol-design.md) |
 | 招募结束与遗留待选的先后 | 实现 | M0 允许仍有发现待选时提交 `EndRecruit`；M1 协议层再定是否拒绝该顺序 | [核心规则](product/rules/core-rules.md) §6 |

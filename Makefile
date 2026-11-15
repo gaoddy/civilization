@@ -1,6 +1,7 @@
 PYTHON ?= python3
+GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
 
-.PHONY: test lint audit data data-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check
+.PHONY: test lint audit data data-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-check client-smoke m1b-build m1b-e2e
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -14,9 +15,11 @@ audit:
 
 data:
 	$(PYTHON) scripts/gen_card_data.py
+	$(PYTHON) scripts/gen_client_data.py
 
 data-check:
 	$(PYTHON) scripts/gen_card_data.py --check
+	$(PYTHON) scripts/gen_client_data.py --check
 	$(PYTHON) scripts/audit_effects.py
 
 protocol:
@@ -49,6 +52,29 @@ m1-check:
 	$(MAKE) test
 	$(MAKE) lint
 	$(MAKE) m0-determinism
+
+# 客户端工程导入与静态边界检查。
+client-import:
+	$(GODOT) --headless --path client --import
+
+client-check:
+	$(MAKE) protocol-check
+	$(MAKE) data-check
+	$(PYTHON) -m unittest tests.test_client_boundary -v
+	$(MAKE) client-import
+
+client-smoke:
+	@mkdir -p output
+	$(GODOT) --headless --path client res://tests/ui_smoke.tscn 2>&1 | tee output/client-smoke.log
+	@grep -q "UI_SMOKE_OK" output/client-smoke.log
+	@! grep -q "SCRIPT ERROR" output/client-smoke.log
+
+# 1 个 Godot 客户端 + 7 个机器人的无头端到端。
+m1b-build:
+	cd server && cargo build -q -p room-service -p sim
+
+m1b-e2e: m1b-build
+	GODOT="$(GODOT)" bash scripts/m1b_e2e.sh
 
 m0-determinism:
 	cd server && cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash

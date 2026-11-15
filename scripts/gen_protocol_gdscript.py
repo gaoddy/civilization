@@ -17,6 +17,7 @@ from validate_protocol import load_mapping  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "protocol" / "generated" / "protocol.gd"
+CLIENT_OUTPUT = ROOT / "client" / "generated" / "protocol.gd"
 
 
 def _const_name(value):
@@ -83,21 +84,25 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--output", type=pathlib.Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--client-output", type=pathlib.Path, default=CLIENT_OUTPUT)
     args = parser.parse_args(argv)
 
     mapping = load_mapping()
     content = render(ROOT / "protocol" / "schema" / "v1", mapping)
+    targets = [args.output, args.client_output]
 
     if args.check:
-        existing = args.output.read_text() if args.output.exists() else ""
-        if existing != content:
-            print(f"{args.output} 与 schema 不一致，请运行 make protocol", file=sys.stderr)
-            return 1
+        for target in targets:
+            existing = target.read_text(encoding="utf-8") if target.exists() else ""
+            if existing != content:
+                print(f"{target} 与 schema 不一致，请运行 make protocol", file=sys.stderr)
+                return 1
         return 0
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(content)
-    print(f"已生成 {args.output}")
+    for target in targets:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+        print(f"已生成 {target}")
     return 0
 
 

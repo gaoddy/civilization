@@ -4,9 +4,9 @@
 //! 做决策，不启网络、不跑引擎。
 
 use protocol::intents::Intent;
-use protocol::view::PlayerView;
+use protocol::view::{Phase, PlayerView};
 use serde_json::{Value, json};
-use sim::bot::brain::next_intent;
+use sim::bot::brain::{next_intent, recover_after_error};
 
 /// 构造一份最小但完整的 `PlayerView`。
 ///
@@ -120,4 +120,24 @@ fn ends_recruit_when_nothing_else_is_possible() {
 
     let intent = next_intent(&view, &catalog(), 0).expect("无可做时应当结束招募");
     assert!(matches!(intent, Intent::EndRecruit), "实际 {intent:?}");
+}
+
+#[test]
+fn recovers_from_rejected_intent_by_ending_recruit() {
+    // 服务端拒绝意图后机器人不能停在原地：仍在招募且可结束时补发 EndRecruit。
+    let view = view(10, json!([]), json!([]), json!([]), json!([]), true);
+
+    let intent = recover_after_error(&view).expect("招募中收到错误后应当结束招募");
+    assert!(matches!(intent, Intent::EndRecruit), "实际 {intent:?}");
+}
+
+#[test]
+fn does_not_recover_outside_recruit() {
+    let mut combat = view(10, json!([]), json!([]), json!([]), json!([]), true);
+    combat.phase = Phase::Combat;
+    assert!(recover_after_error(&combat).is_none());
+
+    let mut recruited = view(10, json!([]), json!([]), json!([]), json!([]), true);
+    recruited.self_.recruited = true;
+    assert!(recover_after_error(&recruited).is_none());
 }

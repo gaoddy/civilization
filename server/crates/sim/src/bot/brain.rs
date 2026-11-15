@@ -115,3 +115,18 @@ fn first_playable_hand(me: &PlayerViewSelf) -> Option<i64> {
         .map(|affordance| affordance.index)
         .min()
 }
+
+/// 收到服务端错误后的兜底意图。
+///
+/// 机器人只有在视图变化时才决策，被拒绝的意图不会带来新视图；没有兜底就会
+/// 停在原地直到回合超时。仍在招募且可以结束时补发 `EndRecruit`，其余情况返回
+/// `None`，由调用方决定是否降级。
+pub fn recover_after_error(view: &PlayerView) -> Option<Intent> {
+    if view.phase != Phase::Recruit {
+        return None;
+    }
+    if view.self_.recruited || !view.self_.affordances.can_end_recruit {
+        return None;
+    }
+    Some(Intent::EndRecruit)
+}
