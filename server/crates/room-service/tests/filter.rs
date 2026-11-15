@@ -342,9 +342,13 @@ fn filtered_events_reach_only_own_seat_via_state_update() {
         },
     });
 
-    assert_eq!(updates.len(), 1, "购买是私有操作，只应产生操作者的一条更新");
-    assert_eq!(updates[0].player_id, "p0");
-    let UpdateKind::View { events } = &updates[0].kind else {
+    assert_eq!(updates.len(), 8, "购买改变公开摘要，应广播给全部 8 个座位");
+
+    let owner = updates
+        .iter()
+        .find(|update| update.player_id == "p0")
+        .expect("操作者应收到更新");
+    let UpdateKind::View { events } = &owner.kind else {
         panic!("购买应产生 View 更新");
     };
     assert!(
@@ -355,7 +359,13 @@ fn filtered_events_reach_only_own_seat_via_state_update() {
     );
 
     // 经信封编码后再解析 JSON，确认下发载荷里确实带上了事件。
-    let envelope = task.envelope_for(&updates[0]).expect("更新应能编码");
+    let owner_index = updates
+        .iter()
+        .position(|update| update.player_id == "p0")
+        .expect("操作者更新应存在");
+    let envelope = task
+        .envelope_for(&updates[owner_index])
+        .expect("更新应能编码");
     let payload = serde_json::to_value(&envelope.payload).expect("载荷应可序列化");
     let kinds: Vec<&str> = payload["events"]
         .as_array()
@@ -368,20 +378,74 @@ fn filtered_events_reach_only_own_seat_via_state_update() {
         "座位 0 的下行事件应含 MinionBought，实际为 {kinds:?}"
     );
 
-    // 其他座位既没有收到这条更新，快照事件的载荷也不含它。
+    // 其他座位也收到视图，但事件为空：私有信息不随广播泄漏。
     for seat in 1..8 {
+        let update = updates
+            .iter()
+            .find(|update| update.player_id == format!("p{seat}"))
+            .unwrap_or_else(|| panic!("座位 {seat} 也应收到视图更新"));
+        let UpdateKind::View { events } = &update.kind else {
+            panic!("座位 {seat} 的更新应为 View");
+        };
         assert!(
-            !updates
-                .iter()
-                .any(|update| update.player_id == format!("p{seat}")),
-            "座位 {seat} 不应收到购买者的私有更新"
-        );
-        let state_update = task.state_update(seat).expect("状态应可用");
-        assert!(
-            state_update.events.is_empty(),
+            events.is_empty(),
             "座位 {seat} 的 StateUpdate.events 不得包含其他座位的购买事件"
         );
+        assert!(
+            task.state_update(seat)
+                .expect("状态应可用")
+                .events
+                .is_empty(),
+            "座位 {seat} 的快照事件也不得包含私有购买事件"
+        );
     }
+}
+
+#[test]
+fn private_intent_broadcasts_updated_public_summary_to_all_seats() {
+    let (mut task, _clock) = task();
+    let slot = first_nonempty_slot(&task, 0);
+
+    // 购买前：座位 B 看到的座位 A 棋盘数为 0。
+    let before = task
+        .state_update(1)
+        .expect("座位 1 状态应可用")
+        .view
+        .players[0]
+        .board_count;
+    assert_eq!(before, 0, "开局时座位 0 的棋盘应为空");
+
+    let updates = task.handle(RoomCommand::Intent {
+        player_id: "p0".to_string(),
+        client_intent_id: "buy-broadcast".to_string(),
+        intent: ProtocolIntent::BuyMinion {
+            slot,
+            target_minion_id: None,
+        },
+    });
+
+    // 座位 B 立即收到视图，且视图里对手棋盘数已变化。
+    let viewer = updates
+        .iter()
+        .find(|update| update.player_id == "p1")
+        .expect("座位 B 应立即收到视图更新");
+    let UpdateKind::View { events } = &viewer.kind else {
+        panic!("座位 B 的更新应为 View");
+    };
+    assert!(events.is_empty(), "座位 B 不应收到座位 A 的私有事件");
+
+    // 经信封编码后按 JSON 断言，确认下发载荷本身已带上新的 boardCount。
+    let index = updates
+        .iter()
+        .position(|update| update.player_id == "p1")
+        .expect("座位 B 更新应存在");
+    let envelope = task.envelope_for(&updates[index]).expect("更新应能编码");
+    let payload = serde_json::to_value(&envelope.payload).expect("载荷应可序列化");
+    let board_count = payload["view"]["players"][0]["boardCount"]
+        .as_i64()
+        .expect("boardCount 应为整数");
+    assert_eq!(board_count, 1, "座位 B 应立刻看到座位 A 的棋盘数为 1");
+    assert_eq!(payload["events"].as_array().map(Vec::len), Some(0));
 }
 
 /// 从 `StateUpdate` JSON 载荷里取出事件 kind 列表。

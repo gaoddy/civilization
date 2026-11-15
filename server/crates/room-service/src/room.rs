@@ -369,21 +369,70 @@ impl RoomRegistry {
     /// 房主发起开局：校验房主、阶段、人数与准备状态，成功后把阶段推进到 `Recruit`。
     ///
     /// 与纯查询 [`Self::start_ready`] 分开，便于轮询与命令处理各自调用。
+    ///
+    /// 需要「先构造对局、成功后再提交阶段」的调用方（例如 `room-service::net`）
+    /// 应改用 [`Self::start_heroes`] + [`Self::commit_start`]：本方法在构造对局
+    /// 之前就推进阶段，构造失败会把房间卡在 `Recruit`。
     pub fn try_start(
         &mut self,
         room_id: &str,
         player_id: &str,
     ) -> Result<BTreeMap<Seat, String>, RoomError> {
-        let room = self.rooms.get_mut(room_id).ok_or(RoomError::NotFound)?;
+        let heroes = self.start_heroes(room_id, player_id)?;
+        self.commit_start(room_id)?;
+        Ok(heroes)
+    }
+
+    /// 开局校验的第一步：只校验房主、阶段、人数与准备状态并返回英雄表，
+    /// **不改变房间阶段**，也不消耗任何资源。
+    ///
+    /// 与 [`Self::commit_start`] 配合使用：调用方先构造对局驱动，成功后再提交阶段，
+    /// 避免构造成本失败时房间已离开 `Lobby`。
+    pub fn start_heroes(
+        &self,
+        room_id: &str,
+        player_id: &str,
+    ) -> Result<BTreeMap<Seat, String>, RoomError> {
+        let room = self.rooms.get(room_id).ok_or(RoomError::NotFound)?;
         if room.host_id != player_id {
             return Err(RoomError::NotHost);
         }
         if room.phase != Phase::Lobby {
             return Err(RoomError::WrongPhase);
         }
-        let heroes = room.start_ready().ok_or(RoomError::RoomNotReady)?;
+        room.start_ready().ok_or(RoomError::RoomNotReady)
+    }
+
+    /// 开局校验的第二步：把已通过校验的房间从 `Lobby` 推进到 `Recruit`。
+    ///
+    /// 重复提交返回 [`RoomError::WrongPhase`]，不会回退阶段。
+    pub fn commit_start(&mut self, room_id: &str) -> Result<(), RoomError> {
+        let room = self.rooms.get_mut(room_id).ok_or(RoomError::NotFound)?;
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
         room.phase = Phase::Recruit;
-        Ok(heroes)
+        Ok(())
+    }
+
+    /// 删除房间及其房间码索引；房间已经不存在时返回 `None`。
+    ///
+    /// 对局结束时由房间 task 调用：注册表是房间码回收的唯一入口，不能绕过它直接
+    /// 改内部表。只按 `room_id` 定位，`by_code` 用房间自身记录的房间码同步移除。
+    pub fn remove(&mut self, room_id: &str) -> Option<Room> {
+        let room = self.rooms.remove(room_id)?;
+        self.by_code.remove(&room.code);
+        Some(room)
+    }
+
+    /// 当前存活房间数；供测试断言回收。
+    pub fn len(&self) -> usize {
+        self.rooms.len()
+    }
+
+    /// 是否没有任何房间。
+    pub fn is_empty(&self) -> bool {
+        self.rooms.is_empty()
     }
 
     /// 只读查询房间。

@@ -72,6 +72,43 @@ fn task() -> (GameTask, FixedClock) {
     task_with(catalog())
 }
 
+/// 给所有 1 级随从追加「打出时发现」技能：任何一次购买都会留下待选，
+/// 用于在不改引擎的前提下确定性构造 `ChooseDiscover`。
+fn catalog_with_discover_on_play() -> Catalog {
+    let mut catalog = catalog();
+    catalog.skills.insert(
+        "test-discover-on-play".to_string(),
+        Skill {
+            id: "test-discover-on-play".to_string(),
+            name: None,
+            keyword: None,
+            text: "发现一张随从".to_string(),
+            effects: "OnPlay|Discover|self|pool=tribe,choose=1".to_string(),
+            cost: None,
+            uses_per_turn: None,
+            match_text: None,
+        },
+    );
+    let token_ids: BTreeSet<String> = catalog.tokens.keys().cloned().collect();
+    for card in catalog.cards.values_mut() {
+        if card.card_type == CardType::Minion
+            && card.level == 1
+            && !card.is_hero
+            && !token_ids.contains(&card.id)
+        {
+            card.skills.push("test-discover-on-play".to_string());
+        }
+    }
+    catalog
+}
+
+/// 从当前招募回合空过到下一回合（超时推进，含战斗与结算）。
+fn advance_turn(task: &mut GameTask, clock: &FixedClock) {
+    clock.advance(90_000);
+    let updates = task.tick();
+    assert!(!updates.is_empty(), "到点应推进到下一回合");
+}
+
 fn command(player: &str, client_intent_id: &str, intent: ProtocolIntent) -> RoomCommand {
     RoomCommand::Intent {
         player_id: player.to_string(),
@@ -254,33 +291,7 @@ fn recruit_timer_fires_at_ninety_seconds() {
 
 #[test]
 fn unspent_pending_choice_does_not_block_timeout() {
-    // 给所有 1 级随从追加「打出时发现」技能，购买任意商店随从都会留下待选。
-    let mut catalog = catalog();
-    catalog.skills.insert(
-        "test-discover-on-play".to_string(),
-        Skill {
-            id: "test-discover-on-play".to_string(),
-            name: None,
-            keyword: None,
-            text: "发现一张随从".to_string(),
-            effects: "OnPlay|Discover|self|pool=tribe,choose=1".to_string(),
-            cost: None,
-            uses_per_turn: None,
-            match_text: None,
-        },
-    );
-    let token_ids: BTreeSet<String> = catalog.tokens.keys().cloned().collect();
-    for card in catalog.cards.values_mut() {
-        if card.card_type == CardType::Minion
-            && card.level == 1
-            && !card.is_hero
-            && !token_ids.contains(&card.id)
-        {
-            card.skills.push("test-discover-on-play".to_string());
-        }
-    }
-
-    let (mut task, clock) = task_with(catalog);
+    let (mut task, clock) = task_with(catalog_with_discover_on_play());
     let slot = first_nonempty_slot(&task, 0);
     let updates = task.handle(command("p0", "discover-buy", buy(slot)));
     assert!(error_codes(&updates).is_empty(), "购买应成功");
@@ -347,26 +358,23 @@ fn seq_increases_per_seat_independently() {
     let (mut task, _clock) = task();
     let slot = first_nonempty_slot(&task, 0);
 
-    // 座位 0 的私有操作只推进座位 0 的序号。
+    // 广播给全部 8 个座位：每个座位各消耗一次自己的序号，互不影响。
     let updates = task.handle(command("p0", "seq-buy", buy(slot)));
     let seqs = envelope_seqs(&mut task, &updates);
-    assert_eq!(seqs, vec![1]);
-    assert_eq!(task.channel_seq(0), 1);
-    assert_eq!(task.channel_seq(1), 0);
+    assert_eq!(seqs, vec![1; 8], "每个座位都应各推进到 1");
+    for seat in 0..8 {
+        assert_eq!(task.channel_seq(seat), 1, "座位 {seat} 序号应为 1");
+    }
 
-    // 座位 1 的私有操作只推进座位 1 的序号。
-    let updates = task.handle(command("p1", "seq-reroll", ProtocolIntent::RerollShop));
-    let seqs = envelope_seqs(&mut task, &updates);
-    assert_eq!(seqs, vec![1]);
-    assert_eq!(task.channel_seq(1), 1);
-    assert_eq!(task.channel_seq(0), 1);
-
-    // 座位 0 再做一次私有操作，只有座位 0 继续递增。
-    let updates = task.handle(command("p0", "seq-reroll", ProtocolIntent::RerollShop));
-    let seqs = envelope_seqs(&mut task, &updates);
+    // 同一条 (playerId, clientIntentId) 重发只回操作者自己的视图，
+    // 不重新广播，因此只有座位 0 的序号继续递增。
+    let repeat = task.handle(command("p0", "seq-buy", buy(slot)));
+    let seqs = envelope_seqs(&mut task, &repeat);
     assert_eq!(seqs, vec![2]);
     assert_eq!(task.channel_seq(0), 2);
-    assert_eq!(task.channel_seq(1), 1);
+    for seat in 1..8 {
+        assert_eq!(task.channel_seq(seat), 1, "座位 {seat} 序号不应变化");
+    }
 }
 
 #[test]
@@ -394,6 +402,197 @@ fn intent_from_unknown_player_is_rejected() {
     let after =
         serde_json::to_string(&task.state_update(0).expect("状态应可用")).expect("状态应可序列化");
     assert_eq!(before, after, "未知玩家的意图不得改变状态");
+}
+
+// ---------------------------------------------------------------------------
+// 十种协议意图的服务层成功路径
+//
+// bot 只发送一部分意图，这些用例经 `GameTask::handle(RoomCommand::Intent)`
+// 覆盖其余分支，断言可观察的视图变化。
+// ---------------------------------------------------------------------------
+
+#[test]
+fn sell_minion_succeeds_and_refunds_gold() {
+    let (mut task, _clock) = task();
+    let slot = first_nonempty_slot(&task, 0);
+    let bought = task.handle(command("p0", "sell-buy", buy(slot)));
+    assert!(error_codes(&bought).is_empty(), "购买应成功");
+
+    let view = task.player_view(0).expect("视图应可用");
+    assert_eq!(view.self_.board.len(), 1, "购买后棋盘应有 1 个随从");
+    let gold_after_buy = view.self_.gold;
+    let minion_id = view.self_.board[0].minion_id.clone();
+
+    let updates = task.handle(command(
+        "p0",
+        "sell-1",
+        ProtocolIntent::SellMinion { minion_id },
+    ));
+    assert!(error_codes(&updates).is_empty(), "出售应成功");
+
+    let after = task.player_view(0).expect("视图应可用");
+    assert!(after.self_.board.is_empty(), "出售后棋盘随从数应下降为 0");
+    assert_eq!(
+        after.self_.gold,
+        gold_after_buy + 1,
+        "出售非金色随从应返还 1 金币"
+    );
+    assert_eq!(updates.len(), 8, "出售也应广播视图给所有座位");
+}
+
+#[test]
+fn play_card_succeeds() {
+    let (mut task, _clock) = task_with(catalog_with_discover_on_play());
+    let slot = first_nonempty_slot(&task, 0);
+    let bought = task.handle(command("p0", "play-buy", buy(slot)));
+    assert!(error_codes(&bought).is_empty(), "购买应成功");
+
+    // 购买触发了 OnPlay 发现：先消费待选，让卡进入手牌。
+    let pending = task.player_view(0).expect("视图应可用");
+    assert_eq!(
+        pending.self_.pending_choices.len(),
+        1,
+        "购买应留下一条发现待选"
+    );
+    let chosen = task.handle(command(
+        "p0",
+        "play-choose",
+        ProtocolIntent::ChooseDiscover { choice: 0 },
+    ));
+    assert!(error_codes(&chosen).is_empty(), "选择发现应成功");
+
+    let before = task.player_view(0).expect("视图应可用");
+    assert_eq!(before.self_.hand.len(), 1, "选择后卡应进入手牌");
+    let board_before = before.self_.board.len();
+
+    let played = task.handle(command(
+        "p0",
+        "play-1",
+        ProtocolIntent::PlayCard {
+            hand_index: 0,
+            target_minion_id: None,
+        },
+    ));
+    assert!(error_codes(&played).is_empty(), "打出手牌应成功");
+
+    let after = task.player_view(0).expect("视图应可用");
+    assert_eq!(after.self_.hand.len(), 0, "打出手牌后手牌数应下降");
+    assert_eq!(
+        after.self_.board.len(),
+        board_before + 1,
+        "打出的随从应进入棋盘"
+    );
+}
+
+#[test]
+fn rearrange_board_succeeds() {
+    let (mut task, clock) = task();
+    let slot = first_nonempty_slot(&task, 0);
+    task.handle(command("p0", "rearrange-buy-1", buy(slot)));
+    advance_turn(&mut task, &clock);
+    let slot = first_nonempty_slot(&task, 0);
+    task.handle(command("p0", "rearrange-buy-2", buy(slot)));
+
+    let before = task.player_view(0).expect("视图应可用");
+    assert_eq!(before.self_.board.len(), 2, "两个回合应买入 2 个随从");
+    let order: Vec<String> = before
+        .self_
+        .board
+        .iter()
+        .map(|minion| minion.minion_id.clone())
+        .collect();
+    assert_ne!(order[0], order[1], "两个随从实例应不同");
+
+    let updates = task.handle(command(
+        "p0",
+        "rearrange-1",
+        ProtocolIntent::RearrangeBoard {
+            from_index: 0,
+            to_index: 1,
+        },
+    ));
+    assert!(error_codes(&updates).is_empty(), "调整站位应成功");
+
+    let after = task.player_view(0).expect("视图应可用");
+    assert_eq!(
+        after.self_.board[0].minion_id, order[1],
+        "0 号位应换成原来的 1 号随从"
+    );
+    assert_eq!(
+        after.self_.board[1].minion_id, order[0],
+        "1 号位应换成原来的 0 号随从"
+    );
+}
+
+#[test]
+fn freeze_shop_succeeds() {
+    let (mut task, _clock) = task();
+    let slot = first_nonempty_slot(&task, 0);
+
+    let updates = task.handle(command(
+        "p0",
+        "freeze-1",
+        ProtocolIntent::FreezeShop { slot: Some(slot) },
+    ));
+    assert!(error_codes(&updates).is_empty(), "冻结应成功");
+
+    let view = task.player_view(0).expect("视图应可用");
+    let frozen = view
+        .self_
+        .shop
+        .iter()
+        .find(|shop_slot| shop_slot.index == slot)
+        .expect("被冻结的槽位应仍在商店里");
+    assert!(frozen.frozen, "冻结后该槽位应带冻结标记");
+    for other in view.self_.shop.iter().filter(|s| s.index != slot) {
+        assert!(!other.frozen, "未指定的槽位不应被冻结");
+    }
+}
+
+#[test]
+fn choose_discover_consumes_pending_choice() {
+    let (mut task, _clock) = task_with(catalog_with_discover_on_play());
+    let slot = first_nonempty_slot(&task, 0);
+    task.handle(command("p0", "discover-buy", buy(slot)));
+
+    let before = task.player_view(0).expect("视图应可用");
+    assert_eq!(
+        before.self_.pending_choices.len(),
+        1,
+        "购买应留下一条发现待选"
+    );
+
+    let updates = task.handle(command(
+        "p0",
+        "discover-choose",
+        ProtocolIntent::ChooseDiscover { choice: 0 },
+    ));
+    assert!(error_codes(&updates).is_empty(), "选择发现应成功");
+
+    let after = task.player_view(0).expect("视图应可用");
+    assert!(after.self_.pending_choices.is_empty(), "选择后待选应被消费");
+    assert_eq!(after.self_.hand.len(), 1, "选择的卡应进入手牌");
+}
+
+#[test]
+fn upgrade_era_succeeds() {
+    let (mut task, clock) = task();
+    // 空过前三回合进入第 4 回合，金币曲线给到 5，正好够升时代。
+    for _ in 0..3 {
+        advance_turn(&mut task, &clock);
+    }
+
+    let before = task.player_view(0).expect("视图应可用");
+    assert_eq!(before.turn.get(), 4, "应进入第 4 回合");
+    assert_eq!(before.self_.era.get(), 1, "开局时代应为 1");
+    assert_eq!(before.self_.gold, 5, "第 4 回合金币应为 5");
+
+    let updates = task.handle(command("p0", "upgrade-era", ProtocolIntent::UpgradeEra));
+    assert!(error_codes(&updates).is_empty(), "金币足够时升时代应成功");
+
+    let after = task.player_view(0).expect("视图应可用");
+    assert_eq!(after.self_.era.get(), 2, "升级后时代应增加");
+    assert_eq!(after.self_.gold, 0, "升级应扣除 5 金币");
 }
 
 // ---------------------------------------------------------------------------

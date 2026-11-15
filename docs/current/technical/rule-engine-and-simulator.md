@@ -21,7 +21,7 @@ server/
       src/state.rs           # GameState / PlayerState / MinionInstance
       src/data.rs            # Catalog 与加载期校验（deny_unknown_fields）
       src/effects/           # DSL 解析（parse）、解释执行（exec）、光环（auras）
-      src/intent.rs          # 十种引擎意图（含内部 ChooseDiscover）与 11 个拒绝码（与协议错误码一一对应）
+      src/intent.rs          # 协议十种意图（含 ChooseDiscover）与 11 个规则拒绝码（各自映射到对应的协议错误码）
       src/engine.rs          # Engine::new / apply / start_game / start_turn
       src/recruit.rs         # 商店、买/卖/刷新/冻结/升时代/打出/结束招募
       src/triple.rs          # 三连与发现
@@ -56,7 +56,7 @@ tests/                       # Python 标准库 unittest
 
 - `Engine::apply(state, seat, intent)` 是唯一的状态变更入口，返回 `Outcome`（本意图产生的事件）；拒绝时返回 `Reject { code, message }` 且不改变状态。
 - 拒绝码与核心规则 §3 一致：`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE`。
-- 九种招募意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UseHeroPower`、`EndRecruit`；发现选择 `ChooseDiscover` 是引擎内部的第十种意图，不属于协议意图。
+- 协议十种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`。`ChooseDiscover` 是协议意图之一，服务层映射为引擎同义意图，用于消费引擎产生的 `PendingChoice`（发现或进化待选）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
 - `BuyMinion`、`PlayCard`、`UseHeroPower` 带 `target: Option<InstanceId>`，M0 由 AI 自动选择目标。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。

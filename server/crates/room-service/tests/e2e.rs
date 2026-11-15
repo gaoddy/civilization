@@ -475,6 +475,94 @@ async fn lobby_room_is_retired_after_last_player_leaves() {
     println!("hub_len after leave = {}", state.hub_len().await);
 }
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn finished_game_room_is_removed_from_registry() {
+    let clock: Arc<dyn Clock> = Arc::new(SystemClock);
+    let (addr, router, state) = room_service::bind_state("127.0.0.1:0", clock)
+        .await
+        .expect("绑定端口应当成功");
+    tokio::spawn(async move {
+        let _ = room_service::serve(addr, router).await;
+    });
+    wait_for_server(addr).await;
+
+    let url = format!("ws://{addr}/ws");
+    let heroes = hero_cards();
+    let (code_tx, code_rx) = oneshot::channel();
+    let host = tokio::spawn(run(BotConfig {
+        url: url.clone(),
+        room: String::new(),
+        name: "bot0".to_string(),
+        hero: heroes[0].clone(),
+        create: true,
+        intent_seed: 11,
+        room_code_sink: Some(code_tx),
+    }));
+    let room_code = tokio::time::timeout(Duration::from_secs(10), code_rx)
+        .await
+        .expect("10 秒内应能拿到房间码")
+        .expect("建房 bot 不应提前退出");
+
+    let mut handles = vec![host];
+    for (index, hero) in heroes.iter().enumerate().skip(1) {
+        let index = u64::try_from(index).unwrap_or(0);
+        handles.push(tokio::spawn(run(BotConfig {
+            url: url.clone(),
+            room: room_code.clone(),
+            name: format!("bot{index}"),
+            hero: hero.clone(),
+            create: false,
+            intent_seed: index + 11,
+            room_code_sink: None,
+        })));
+    }
+    tokio::time::timeout(Duration::from_secs(120), async move {
+        for handle in handles {
+            handle
+                .await
+                .expect("bot 任务不应 panic")
+                .expect("bot 应正常结束");
+        }
+    })
+    .await
+    .expect("对局应在 120 秒内结束");
+
+    // bot 结束后连接全部关闭；房间 task 应在最后一轮回收检查中同时摘除 hub 与注册表。
+    let retired = tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            let hub = state.hub_len().await;
+            let rooms = state.rooms.lock().await.len();
+            if hub == 0 && rooms == 0 {
+                return;
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+    })
+    .await;
+    assert!(
+        retired.is_ok(),
+        "对局结束且连接全断后，房间应从 hub 与注册表消失"
+    );
+    println!("registry rooms after game over = 0");
+
+    // 旧房间码必须回收为 ROOM_NOT_FOUND，而不是 WrongPhase/INVALID_STAGE。
+    let mut late = RawClient::connect(addr).await;
+    let _ = authenticate(&mut late, "late-joiner").await;
+    late.send("JoinRoom", json!({ "code": room_code })).await;
+    let (_, message) = tokio::time::timeout(Duration::from_secs(5), late.recv())
+        .await
+        .expect("加入旧房间码应收到响应")
+        .expect("连接不应关闭");
+    match message {
+        ServerMessage::Error(error) => assert_eq!(
+            error.code,
+            ErrorCode::RoomNotFound,
+            "旧房间码应返回 ROOM_NOT_FOUND"
+        ),
+        other => panic!("期望 Error，实际 {other:?}"),
+    }
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn lobby_disconnect_releases_seat() {
     let addr = start_server().await;

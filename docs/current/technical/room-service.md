@@ -106,7 +106,7 @@ protocol/
 
 - `CombatResult` 的动作类型固定为 `attack|death|reborn|contagion`；下标与侧别都**相对接收该消息的座位**：己方棋盘标 `own`、对手标 `opponent`。`own_board`/`opponent_board` 是接收座位视角的两份战前快照；召唤物等不在快照中的实例，下标与侧别都为 `null`。
 - `mirror` 原样取自战斗报告；镜像战只向该座位发一条 `CombatResult`（报告里只有它自己的一条）。
-- `View` 更新按「该座位视角有变化」推送：私有操作只推操作者；`EndRecruit` 的 `recruited` 公开摘要与阶段推进、回合开始推给所有座位。
+- `View` 更新广播给全部 8 个座位：任何改变房间可见状态的操作都会推送 `StateUpdate`，因为对手的公开摘要（`boardCount`、`recruited`、阶段与回合）人人可见。事件仍按座位过滤：本人收到自己的私有事件，其他座位的 `events` 为空数组。
 
 ## 9. 断线重连
 
@@ -164,10 +164,11 @@ m1-check:
 | 静态检查 | `make lint` → `cargo fmt --check`、`cargo clippy --workspace --all-targets -- -D warnings` | 无警告 | 0 |
 | 确定性 | `make m0-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 40.6 s） | 0 |
 
-## 13. 与设计的两处偏差
+## 13. 与设计的三处偏差
 
 1. 设计 §5.4 写 `view(state, seat, catalog) -> PlayerView`；因 `rule-engine` 不依赖 `protocol`，改为引擎返回自有 `SeatView`，由 `room-service::view::to_protocol` 做机械映射。规则判定仍全部在引擎。
 2. 设计 §5.5 写「AI 决策改为同时接受 `PlayerView`」；为保住 M0 基线（`ai.rs` 的策略直接决定 1000 局基线数值），改为新增 view 驱动的 `sim/src/bot/brain.rs`，`ai.rs` 保持不动。
+3. 设计 §5.2 要求存 `tokenHash` 与 connection；M1a 在内存中保存明文 token，且不建立 connection 索引。令牌只存在于内存、有效期 24 小时、不落盘；`Session` 的 `Debug` 输出已把 `token` 标为 `<redacted>`，避免日志泄漏。
 
 ## 相关文档
 

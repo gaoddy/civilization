@@ -14,10 +14,10 @@
 //!   当前座位视图生成，含未消费的 `pendingChoices`。
 //! - 断线保留窗口（[`RECONNECT_GRACE_MS`]）是服务端内部状态：超时只把座位标记为
 //!   离线，不释放座位、不结束对局，也不向任何座位下发通知；客户端靠重连快照恢复。
-//! - `View` 更新按「该座位视角有变化」推送：私有操作只推操作者；全员可见的变化
-//!   （`EndRecruit` 的 `recruited` 标记、阶段推进、回合开始）推给所有座位。
-//!   事件按 [`for_seat`] 的规则过滤后随该座位的 `StateUpdate.events` 一起下发；
-//!   战斗结果只走逐座位 `CombatResult`。
+//! - 任何改变房间可见状态的操作都向全部 8 个座位推送 `View`：公开摘要（对手
+//!   `boardCount`、`recruited` 标记、阶段与回合）人人都能看到。事件仍按
+//!   [`for_seat`] 的规则过滤——本人收到自己的私有事件，其他人收到 `events` 为空的
+//!   视图；战斗结果只走逐座位 `CombatResult`。
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -489,8 +489,6 @@ impl GameTask {
                 return vec![self.error_update(&player_id, Some(&client_intent_id), code, message)];
             }
         };
-        let ends_recruit = matches!(engine_intent, EngineIntent::EndRecruit);
-
         match self.engine.apply(&mut self.state, seat, engine_intent) {
             Ok(outcome) => {
                 self.dedup.insert(key, Deduped::Applied);
@@ -502,12 +500,10 @@ impl GameTask {
                         }
                     };
                 }
-                let mut recipients = vec![seat];
-                if ends_recruit {
-                    // `recruited` 是所有座位可见的公开摘要字段，全员推视图。
-                    recipients.extend((0..SEAT_COUNT as Seat).filter(|other| *other != seat));
-                }
-                self.view_updates(&outcome.events, &recipients)
+                // 私有意图也会改变公开摘要（例如对手的 `boardCount`），因此对全部座位
+                // 推送视图；事件仍按座位过滤，其他人的 `events` 为空。
+                let all_seats: Vec<Seat> = (0..SEAT_COUNT as Seat).collect();
+                self.view_updates(&outcome.events, &all_seats)
             }
             Err(reject) => {
                 let code = error_code_of(reject.code);

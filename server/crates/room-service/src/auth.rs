@@ -5,6 +5,7 @@
 //! 时清除，M1 不跑后台清理任务。
 
 use std::collections::BTreeMap;
+use std::fmt;
 
 use chrono::{DateTime, Utc};
 use protocol::client::AuthRequest;
@@ -21,7 +22,7 @@ pub const DEV_SMS_CODE: &str = "123456";
 pub const SESSION_TTL_MS: u64 = 24 * 60 * 60 * 1000;
 
 /// 认证成功后返回的会话。
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Session {
     /// 服务端生成的不透明玩家 id。
     pub player_id: String,
@@ -31,6 +32,18 @@ pub struct Session {
     pub display_name: String,
     /// 过期时刻（Unix epoch 毫秒）。
     expires_at_ms: u64,
+}
+
+/// 手写 `Debug`：`token` 是 24 小时有效的明文续登凭证，任何 `{:?}` 都不得泄漏。
+impl fmt::Debug for Session {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Session")
+            .field("player_id", &self.player_id)
+            .field("token", &"<redacted>")
+            .field("display_name", &self.display_name)
+            .field("expires_at_ms", &self.expires_at_ms)
+            .finish()
+    }
 }
 
 impl Session {

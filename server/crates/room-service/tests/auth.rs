@@ -95,6 +95,29 @@ fn auth_token_round_trip() {
 }
 
 #[test]
+fn session_debug_redacts_token() {
+    let clock = FixedClock::new(NOW_MS);
+    let mut store = SessionStore::new();
+    let session = store
+        .authenticate(&phone_auth("13800000001", DEV_SMS_CODE), &clock)
+        .expect("认证成功");
+
+    let debug = format!("{session:?}");
+    assert!(
+        !debug.contains(&session.token),
+        "Debug 输出不得包含明文 token：{debug}"
+    );
+    assert!(
+        debug.contains("<redacted>"),
+        "token 字段应标记为 <redacted>：{debug}"
+    );
+    assert!(
+        debug.contains(&session.player_id),
+        "非敏感字段仍应出现在 Debug 输出中"
+    );
+}
+
+#[test]
 fn fixed_clock_is_controllable() {
     let clock = FixedClock::new(1_000);
     assert_eq!(clock.now_ms(), 1_000);

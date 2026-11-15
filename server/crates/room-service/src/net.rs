@@ -713,10 +713,12 @@ impl RoomTask {
     /// 房间 task 是否应自行回收：注册表里的房间已不存在，或对局结束且所有连接已离开。
     ///
     /// `hub` 持有房间入口的发送端，是 task 存活的唯一原因；因此摘除 hub 条目必须在
-    /// 房间 task 内完成，随后 loop 才能退出。
+    /// 房间 task 内完成，随后 loop 才能退出。对局结束时还要经注册表删除房间
+    /// （含 `by_code`），否则长驻服务会按局数线性累积死数据、房间码永不回收。
     async fn retire_if_done(&mut self) -> bool {
         if self.game_over && self.senders.is_empty() {
             self.state.hub.lock().await.remove(&self.room_id);
+            self.state.rooms.lock().await.remove(&self.room_id);
             return true;
         }
         let gone = {
@@ -960,14 +962,17 @@ impl RoomTask {
         }
     }
 
-    /// 大厅 → 对局交接：`try_start` 成功后在同一 task 内构造 `GameTask`。
+    /// 大厅 → 对局交接：先校验并取得英雄表，构造 `GameTask` 成功后才提交阶段。
+    ///
+    /// 这样 `GameTask::new` 失败时房间仍停留在 `Lobby`，玩家可以正常 `Leave`，
+    /// 注册表也会在最后一人离开时回收，不会留下「已离开大厅但没有对局」的死房间。
     async fn start_game(&mut self) {
         let prepared = {
-            let mut rooms = self.state.rooms.lock().await;
+            let rooms = self.state.rooms.lock().await;
             let Some(host) = rooms.room(&self.room_id).map(|room| room.host_id.clone()) else {
                 return;
             };
-            match rooms.try_start(&self.room_id, &host) {
+            match rooms.start_heroes(&self.room_id, &host) {
                 Ok(heroes) => rooms
                     .room(&self.room_id)
                     .map(|room| (heroes, room.players())),
@@ -993,11 +998,24 @@ impl RoomTask {
         ) {
             Ok(game) => game.with_room_id(self.room_id.clone()),
             Err(error) => {
+                // 阶段尚未提交，房间仍在 `Lobby`；错误只通知当前连接，玩家可重试或离开。
                 self.broadcast_lobby_error("INTERNAL_ERROR", &error.to_string())
                     .await;
                 return;
             }
         };
+
+        // 对局构造成功后才提交阶段。
+        {
+            let mut rooms = self.state.rooms.lock().await;
+            if let Err(error) = rooms.commit_start(&self.room_id) {
+                let code = error.code().to_string();
+                let message = error.to_string();
+                drop(rooms);
+                self.broadcast_lobby_error(&code, &message).await;
+                return;
+            }
+        }
 
         // 每次建连的发送端都先绑定（首次连接也走这里），随后 `GameStarted` 用同一
         // 座位通道编号，保证序号连续。
@@ -1151,5 +1169,95 @@ impl RoomTask {
         for player_id in player_ids {
             self.send_lobby_error(&player_id, code, message).await;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use protocol::client::AuthRequest;
+    use rule_engine::state::Phase;
+
+    use super::*;
+    use crate::auth::SessionStore;
+    use crate::clock::FixedClock;
+
+    const HEROES: [&str; 8] = [
+        "adam-smith",
+        "darwin",
+        "davinci",
+        "edison",
+        "einstein",
+        "faraday",
+        "galileo",
+        "knuth",
+    ];
+
+    fn session(store: &mut SessionStore, clock: &FixedClock, name: &str) -> Session {
+        store
+            .authenticate(
+                &AuthRequest::Variant0 {
+                    code: "123456".to_string(),
+                    display_name: Some(name.to_string().try_into().expect("展示名合法")),
+                    phone: "13800000000".to_string(),
+                },
+                clock,
+            )
+            .expect("开发验证码应登录成功")
+    }
+
+    /// `GameTask::new` 失败时，房间必须仍在 `Lobby`，且玩家可以正常离开。
+    #[tokio::test]
+    async fn game_task_failure_leaves_room_in_lobby() {
+        let clock = FixedClock::new(1_000_000);
+        let mut state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+        let mut store = SessionStore::new();
+
+        let (room_id, host_id) = {
+            let mut rooms = state.rooms.lock().await;
+            let host = session(&mut store, &clock, "房主");
+            let host_id = host.player_id.clone();
+            let created = rooms.create(&host);
+            let room_id = created.id.clone();
+            let code = created.code.clone();
+
+            let mut players = vec![host];
+            for index in 1..8 {
+                let player = session(&mut store, &clock, &format!("玩家{index}"));
+                rooms.join(&code, &player).expect("加入成功");
+                players.push(player);
+            }
+            for (seat, player) in players.iter().enumerate() {
+                rooms
+                    .select_hero(&room_id, &player.player_id, HEROES[seat], &state.catalog)
+                    .expect("选英雄成功");
+                rooms
+                    .ready(&room_id, &player.player_id, true)
+                    .expect("准备成功");
+            }
+            assert!(rooms.start_ready(&room_id).is_some(), "应满足开局条件");
+            (room_id, host_id)
+        };
+
+        // 移除一张已选英雄卡，使 `GameTask::new` 必然失败。
+        state.catalog.cards.remove(HEROES[7]);
+
+        let mut task = RoomTask {
+            state,
+            room_id: room_id.clone(),
+            seed: 7,
+            game: None,
+            senders: BTreeMap::new(),
+            game_over: false,
+        };
+        task.start_game().await;
+
+        assert!(task.game.is_none(), "构造失败不应保存对局");
+        let mut rooms = task.state.rooms.lock().await;
+        let phase = rooms.room(&room_id).expect("房间应仍存在").phase;
+        assert_eq!(phase, Phase::Lobby, "构造失败后房间必须留在 Lobby");
+        assert!(
+            rooms.leave(&room_id, &host_id).is_ok(),
+            "Lobby 阶段房主应能正常离开"
+        );
     }
 }
