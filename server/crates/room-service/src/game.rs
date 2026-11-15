@@ -301,6 +301,17 @@ impl GameTask {
         true
     }
 
+    /// 把该座位的下行序号推进到至少 `seq`。
+    ///
+    /// 连接层与房间 task 共享会话级序号下限：对局通道可能是在连接层发过若干
+    /// 大厅消息之后才绑定/使用的，编码前先把通道抬到当前下限，保证 `seq` 跨来源
+    /// 也严格递增（`Snapshot.seq` 与信封 `seq` 因此仍一致）。
+    pub fn set_seq_floor(&mut self, seat: Seat, seq: u64) {
+        if let Some(channel) = self.channels.get_mut(&seat) {
+            channel.set_next_seq(seq);
+        }
+    }
+
     /// 构造该座位的 `GameStarted` 下行信封。
     ///
     /// 大厅 → 对局交接时使用：载荷是开局瞬间的 `PlayerView`，`seq` 继续沿用该座位

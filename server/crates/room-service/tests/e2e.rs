@@ -3,7 +3,7 @@
 //! 这是 M1a 唯一允许使用真实 [`SystemClock`] 的测试。
 
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use futures_util::{SinkExt, StreamExt};
 use protocol::server::RoomUpdate;
@@ -28,6 +28,32 @@ fn hero_cards() -> Vec<String> {
         .collect()
 }
 
+/// 建立 WS 连接；服务端 `bind` 探测端口后立刻释放，`serve` 再重新绑定，两者之间
+/// 存在短暂空窗。默认并行跑多个用例时先到者可能撞上 `ConnectionRefused`，因此
+/// 测试侧统一在这里重试，不改变生产签名。
+async fn connect_with_retry(url: &str) -> ClientWs {
+    let deadline = Instant::now() + Duration::from_secs(2);
+    let mut delay = Duration::from_millis(10);
+    loop {
+        match tokio_tungstenite::connect_async(url).await {
+            Ok((ws, _response)) => return ws,
+            Err(error) => {
+                if Instant::now() >= deadline {
+                    panic!("2 秒内无法连接 {url}: {error}");
+                }
+                tokio::time::sleep(delay).await;
+                delay = (delay * 2).min(Duration::from_millis(50));
+            }
+        }
+    }
+}
+
+/// 等 `serve` 真正绑定端口：用一次成功握手作为就绪信号，随后丢弃探针连接。
+async fn wait_for_server(addr: std::net::SocketAddr) {
+    let url = format!("ws://{addr}/ws");
+    drop(connect_with_retry(&url).await);
+}
+
 async fn start_server() -> std::net::SocketAddr {
     let clock: Arc<dyn Clock> = Arc::new(SystemClock);
     let (addr, router) = room_service::bind("127.0.0.1:0", clock)
@@ -36,6 +62,7 @@ async fn start_server() -> std::net::SocketAddr {
     tokio::spawn(async move {
         let _ = room_service::serve(addr, router).await;
     });
+    wait_for_server(addr).await;
     addr
 }
 
@@ -133,9 +160,7 @@ struct RawClient {
 
 impl RawClient {
     async fn connect(addr: std::net::SocketAddr) -> Self {
-        let (ws, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/ws"))
-            .await
-            .expect("应能连上服务端");
+        let ws = connect_with_retry(&format!("ws://{addr}/ws")).await;
         Self { ws, next_id: 0 }
     }
 
@@ -347,6 +372,79 @@ async fn joined_connection_errors_use_room_seq() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn leave_room_then_error_keeps_seq_monotonic() {
+    let addr = start_server().await;
+    let mut client = RawClient::connect(addr).await;
+    let _ = authenticate(&mut client, "leaver-seq").await;
+    client.send("CreateRoom", json!({})).await;
+    let (first_seq, message) = client.recv().await.expect("应收到 RoomUpdate");
+    assert!(
+        matches!(message, ServerMessage::RoomUpdate(_)),
+        "实际 {message:?}"
+    );
+
+    // 再收一条大厅消息，把该会话的序号推进到多条之后。
+    client.send("RequestSnapshot", json!({})).await;
+    let (last_seq, message) = client.recv().await.expect("应收到 RoomUpdate");
+    assert!(
+        matches!(message, ServerMessage::RoomUpdate(_)),
+        "实际 {message:?}"
+    );
+    assert!(last_seq > first_seq, "大厅消息序号应递增");
+
+    // 离开房间后连接层改走 direct 通道；新的 Error 必须接在最后一条房间消息之后。
+    client.send("LeaveRoom", json!({})).await;
+    client.send("Ready", json!({ "ready": true })).await;
+    let (error_seq, message) = tokio::time::timeout(Duration::from_secs(5), client.recv())
+        .await
+        .expect("应收到 Error")
+        .expect("连接不应关闭");
+    match message {
+        ServerMessage::Error(error) => assert_eq!(error.code, ErrorCode::NotInRoom),
+        other => panic!("期望 Error，实际 {other:?}"),
+    }
+    assert!(
+        error_seq > last_seq,
+        "离房后错误 seq={error_seq} 应严格大于离房前最后一条 seq={last_seq}"
+    );
+    println!("leave seq: last={last_seq} error={error_seq}");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn stale_disconnect_does_not_release_reconnected_seat() {
+    let addr = start_server().await;
+    let mut old = RawClient::connect(addr).await;
+    let (player_id, token) = authenticate(&mut old, "reconn-seat").await;
+    old.send("CreateRoom", json!({})).await;
+    let room = wait_room_update(&mut old).await;
+
+    // 新连接用 token 重连同一房间、同一座位：房间 task 登记新代次。
+    let mut new = RawClient::connect(addr).await;
+    let new_player_id = authenticate_with_token(&mut new, &token).await;
+    assert_eq!(new_player_id, player_id, "重连应复用同一 player_id");
+    new.send("Reconnect", json!({ "roomId": room.room_id, "lastSeq": 0 }))
+        .await;
+    let reconnected = wait_room_update(&mut new).await;
+    assert_eq!(reconnected.players.len(), 1);
+
+    // 旧连接迟到关闭不得释放新连接的座位。
+    drop(old);
+    tokio::time::sleep(Duration::from_millis(300)).await;
+
+    new.send("RequestSnapshot", json!({})).await;
+    let after = wait_room_update(&mut new).await;
+    assert_eq!(
+        after.players.len(),
+        1,
+        "旧连接断开不应释放新连接已重新占用的座位"
+    );
+    println!(
+        "reconnected seat still online: players={}",
+        after.players.len()
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn lobby_room_is_retired_after_last_player_leaves() {
     let clock: Arc<dyn Clock> = Arc::new(SystemClock);
     let (addr, router, state) = room_service::bind_state("127.0.0.1:0", clock)
@@ -355,6 +453,7 @@ async fn lobby_room_is_retired_after_last_player_leaves() {
     tokio::spawn(async move {
         let _ = room_service::serve(addr, router).await;
     });
+    wait_for_server(addr).await;
 
     let mut client = RawClient::connect(addr).await;
     let _ = authenticate(&mut client, "leaver").await;
@@ -411,9 +510,7 @@ async fn lobby_disconnect_releases_seat() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn rejects_envelope_with_unknown_version() {
     let addr = start_server().await;
-    let (mut ws, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/ws"))
-        .await
-        .expect("应能连上服务端");
+    let mut ws = connect_with_retry(&format!("ws://{addr}/ws")).await;
 
     let envelope = json!({
         "v": 2,
