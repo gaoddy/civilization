@@ -62,7 +62,10 @@ pub(crate) fn apply(
     }
 }
 
-/// `BuyMinion` 的只读预检：只判断能否提交，不修改状态、不推进随机流。
+/// `BuyMinion` 的只读预检：只校验该意图自身的条件，不修改状态、不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 ///
 /// `target` 只影响效果结算，不参与意图能否提交的判定，因此不在参数中。
 pub(crate) fn check_buy(
@@ -233,7 +236,10 @@ fn buy(
     Ok(Outcome::with(events))
 }
 
-/// `SellMinion` 的只读预检：只校验座位与随从存在。
+/// `SellMinion` 的只读预检：只校验座位与随从存在，不修改状态、不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 pub(crate) fn check_sell(state: &GameState, seat: Seat, minion: InstanceId) -> Result<(), Reject> {
     player(state, seat)?
         .board
@@ -273,7 +279,11 @@ fn sell(state: &mut GameState, seat: Seat, minion: InstanceId) -> Result<Outcome
     Ok(Outcome::with(vec![GameEvent::MinionSold { seat, minion }]))
 }
 
-/// `RerollShop` 的只读预检：首次刷新免费，之后每次 1 金。
+/// `RerollShop` 的只读预检：首次刷新免费、之后每次 1 金的费用校验，不修改状态、
+/// 不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 pub(crate) fn check_reroll(state: &GameState, seat: Seat) -> Result<(), Reject> {
     let player = player(state, seat)?;
     let cost = u8::from(player.first_refresh_used);
@@ -384,7 +394,10 @@ pub(crate) fn fire_first_refresh(
     events
 }
 
-/// `UpgradeEra` 的只读预检：未到未来时代且金币足够。
+/// `UpgradeEra` 的只读预检：未到未来时代且金币足够，不修改状态、不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 pub(crate) fn check_upgrade(engine: &Engine, state: &GameState, seat: Seat) -> Result<(), Reject> {
     let player = player(state, seat)?;
     next_era(player.era).ok_or_else(|| Reject::new(RejectCode::AlreadyMaxEra, "已处于未来时代"))?;
@@ -438,6 +451,10 @@ fn upgrade(engine: &Engine, state: &mut GameState, seat: Seat) -> Result<Outcome
 }
 
 /// `PlayCard` 的只读预检：手牌下标合法；随从还需要棋盘有空位与可用实例编号。
+/// 不修改状态、不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 ///
 /// `target` 只影响效果结算，不参与意图能否提交的判定，因此不在参数中。
 pub(crate) fn check_play_card(
@@ -564,7 +581,11 @@ fn play_card(
     }
 }
 
-/// `RearrangeBoard` 的只读预检：两个下标都必须落在棋盘范围内。
+/// `RearrangeBoard` 的只读预检：两个下标都必须落在棋盘范围内，不修改状态、
+/// 不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 pub(crate) fn check_rearrange(
     state: &GameState,
     seat: Seat,
@@ -602,6 +623,10 @@ fn rearrange(state: &mut GameState, seat: Seat, from: u8, to: u8) -> Result<Outc
 }
 
 /// `FreezeShop` 的只读预检：指定槽位时必须非空；冻结全部槽位无需额外条件。
+/// 不修改状态、不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 pub(crate) fn check_freeze(state: &GameState, seat: Seat, slot: Option<u8>) -> Result<(), Reject> {
     let player = player(state, seat)?;
     if let Some(slot) = slot {
@@ -647,6 +672,10 @@ fn freeze(state: &mut GameState, seat: Seat, slot: Option<u8>) -> Result<Outcome
 }
 
 /// `UseHeroPower` 的只读预检：技能属于当前英雄、是主动技能、次数未用尽且金币足够。
+/// 不修改状态、不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 ///
 /// `target` 只影响效果结算，不参与意图能否提交的判定，因此不在参数中。
 pub(crate) fn check_hero_power(
@@ -751,7 +780,10 @@ fn recruit_done(state: &GameState, seat: Seat) -> bool {
         .is_some_and(|player| player.recruit_done)
 }
 
-/// `EndRecruit` 的只读预检：只校验座位存在。
+/// `EndRecruit` 的只读预检：只校验座位存在，不修改状态、不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 ///
 /// `Recruit` 阶段由 [`apply`] 顶层保证；已结束座位的重复提交是幂等成功，不是拒绝。
 pub(crate) fn check_end_recruit(state: &GameState, seat: Seat) -> Result<(), Reject> {
@@ -807,6 +839,10 @@ fn pending_index(state: &GameState, seat: Seat) -> Option<usize> {
 }
 
 /// `ChooseDiscover` 的只读预检：本座位有待选、下标合法；发现还需要手牌有空位。
+/// 不修改状态、不消耗随机流。
+///
+/// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
+/// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
 ///
 /// 越界优先于手牌已满；进化不做手牌检查。
 pub(crate) fn check_choose_discover(
@@ -1173,10 +1209,16 @@ mod tests {
         setup: SetupFn,
         intent: Intent,
         check: CheckFn,
+        expected: RejectCode,
+        /// 逐字锁定拒绝消息（仅对需要锚定的用例填写）。
+        expected_message: Option<&'static str>,
     }
 
     /// 每个拒绝场景同时走 `Engine::apply` 与对应 `check_*`：
-    /// 断言两者拒绝码一致，且 `check_*` 与 `apply` 都不改变状态哈希。
+    /// 断言两者拒绝码都等于显式 `expected`（三者相等），指定用例的拒绝消息逐字一致，
+    /// 且 `check_*` 与 `apply` 都不改变状态哈希。
+    ///
+    /// 组合条件用例让夹具同时满足两个失败条件，从而锁住校验优先级。
     #[test]
     fn check_agrees_with_apply_on_rejects() {
         let cases = vec![
@@ -1193,6 +1235,8 @@ mod tests {
                     target: None,
                 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
+                expected: RejectCode::NotEnoughGold,
+                expected_message: None,
             },
             Case {
                 name: "空槽位买卡",
@@ -1206,6 +1250,24 @@ mod tests {
                     target: None,
                 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
+                expected: RejectCode::ShopSlotEmpty,
+                expected_message: Some("商店槽位 0 为空"),
+            },
+            Case {
+                name: "空槽位且金币为 0 优先报空槽位",
+                setup: Box::new(|| {
+                    let (engine, mut state) = setup(118);
+                    set_shop(&mut state, 0, &[None]);
+                    state.players[0].gold = 0;
+                    (engine, state)
+                }),
+                intent: Intent::BuyMinion {
+                    slot: 0,
+                    target: None,
+                },
+                check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
+                expected: RejectCode::ShopSlotEmpty,
+                expected_message: Some("商店槽位 0 为空"),
             },
             Case {
                 name: "共享池为空买卡",
@@ -1221,6 +1283,26 @@ mod tests {
                     target: None,
                 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
+                expected: RejectCode::ShopSlotEmpty,
+                expected_message: None,
+            },
+            Case {
+                name: "共享池空且金币为 0 优先报金币不足",
+                setup: Box::new(|| {
+                    let (engine, mut state) = setup(119);
+                    let card_id = minion_id(1);
+                    set_shop(&mut state, 0, &[Some(card_id.clone())]);
+                    state.pool.insert(card_id, 0);
+                    state.players[0].gold = 0;
+                    (engine, state)
+                }),
+                intent: Intent::BuyMinion {
+                    slot: 0,
+                    target: None,
+                },
+                check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
+                expected: RejectCode::NotEnoughGold,
+                expected_message: Some("需要 3 金币"),
             },
             Case {
                 name: "棋盘与手牌都满买卡",
@@ -1236,12 +1318,34 @@ mod tests {
                     target: None,
                 },
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
+                expected: RejectCode::NoSpace,
+                expected_message: Some("棋盘与手牌均已满"),
+            },
+            Case {
+                name: "棋盘手牌满且金币为 0 优先报空间不足",
+                setup: Box::new(|| {
+                    let (engine, mut state) = setup(120);
+                    set_shop(&mut state, 0, &[Some(minion_id(1))]);
+                    fill_board(&mut state, 0, 7);
+                    fill_hand(&mut state, 0, 10);
+                    state.players[0].gold = 0;
+                    (engine, state)
+                }),
+                intent: Intent::BuyMinion {
+                    slot: 0,
+                    target: None,
+                },
+                check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
+                expected: RejectCode::NoSpace,
+                expected_message: None,
             },
             Case {
                 name: "非法出售实例",
                 setup: Box::new(|| setup(105)),
                 intent: Intent::SellMinion { minion: 777 },
                 check: Box::new(|_, state| check_sell(state, 0, 777)),
+                expected: RejectCode::NoSuchMinion,
+                expected_message: None,
             },
             Case {
                 name: "金币不足刷新",
@@ -1253,6 +1357,8 @@ mod tests {
                 }),
                 intent: Intent::RerollShop,
                 check: Box::new(|_, state| check_reroll(state, 0)),
+                expected: RejectCode::NotEnoughGold,
+                expected_message: None,
             },
             Case {
                 name: "金币不足升时代",
@@ -1263,6 +1369,8 @@ mod tests {
                 }),
                 intent: Intent::UpgradeEra,
                 check: Box::new(|engine, state| check_upgrade(engine, state, 0)),
+                expected: RejectCode::NotEnoughGold,
+                expected_message: None,
             },
             Case {
                 name: "满时代升级",
@@ -1274,6 +1382,8 @@ mod tests {
                 }),
                 intent: Intent::UpgradeEra,
                 check: Box::new(|engine, state| check_upgrade(engine, state, 0)),
+                expected: RejectCode::AlreadyMaxEra,
+                expected_message: None,
             },
             Case {
                 name: "手牌下标越界",
@@ -1283,6 +1393,8 @@ mod tests {
                     target: None,
                 },
                 check: Box::new(|engine, state| check_play_card(engine, state, 0, 3)),
+                expected: RejectCode::CardNotInHand,
+                expected_message: None,
             },
             Case {
                 name: "棋盘已满打出手牌随从",
@@ -1300,6 +1412,8 @@ mod tests {
                     target: None,
                 },
                 check: Box::new(|engine, state| check_play_card(engine, state, 0, 0)),
+                expected: RejectCode::NoSpace,
+                expected_message: Some("棋盘已满"),
             },
             Case {
                 name: "站位下标越界",
@@ -1310,6 +1424,8 @@ mod tests {
                 }),
                 intent: Intent::RearrangeBoard { from: 0, to: 2 },
                 check: Box::new(|_, state| check_rearrange(state, 0, 0, 2)),
+                expected: RejectCode::NoSuchMinion,
+                expected_message: None,
             },
             Case {
                 name: "冻结空槽位",
@@ -1320,6 +1436,8 @@ mod tests {
                 }),
                 intent: Intent::FreezeShop { slot: Some(0) },
                 check: Box::new(|_, state| check_freeze(state, 0, Some(0))),
+                expected: RejectCode::ShopSlotEmpty,
+                expected_message: None,
             },
             Case {
                 name: "金币不足使用英雄技能",
@@ -1335,21 +1453,33 @@ mod tests {
                 check: Box::new(|engine, state| {
                     check_hero_power(engine, state, 0, "division-of-labor")
                 }),
+                expected: RejectCode::NotEnoughGold,
+                expected_message: None,
             },
             Case {
                 name: "被动技能不能主动使用",
-                setup: Box::new(|| setup(114)),
+                setup: Box::new(|| {
+                    let (engine, mut state) = setup(114);
+                    // 座位 0 默认是 adam-smith；改成 galileo 才能走到
+                    // 「技能属于英雄但没有 cost」的被动分支。
+                    state.players[0].hero = Some("galileo".to_string());
+                    (engine, state)
+                }),
                 intent: Intent::UseHeroPower {
                     skill_id: "observation".to_string(),
                     target: None,
                 },
                 check: Box::new(|engine, state| check_hero_power(engine, state, 0, "observation")),
+                expected: RejectCode::HeroPowerLimit,
+                expected_message: Some("技能 observation 是被动技能，不能主动使用"),
             },
             Case {
                 name: "无待选时选择发现",
                 setup: Box::new(|| setup(115)),
                 intent: Intent::ChooseDiscover { choice: 0 },
                 check: Box::new(|engine, state| check_choose_discover(engine, state, 0, 0)),
+                expected: RejectCode::InvalidStage,
+                expected_message: None,
             },
             Case {
                 name: "发现候选下标越界",
@@ -1364,6 +1494,8 @@ mod tests {
                 }),
                 intent: Intent::ChooseDiscover { choice: 5 },
                 check: Box::new(|engine, state| check_choose_discover(engine, state, 0, 5)),
+                expected: RejectCode::InvalidChoice,
+                expected_message: Some("发现候选下标 5 越界"),
             },
             Case {
                 name: "手牌已满时选择发现",
@@ -1379,6 +1511,25 @@ mod tests {
                 }),
                 intent: Intent::ChooseDiscover { choice: 0 },
                 check: Box::new(|engine, state| check_choose_discover(engine, state, 0, 0)),
+                expected: RejectCode::NoSpace,
+                expected_message: None,
+            },
+            Case {
+                name: "手牌满且发现下标越界优先报下标越界",
+                setup: Box::new(|| {
+                    let (engine, mut state) = setup(121);
+                    fill_hand(&mut state, 0, 10);
+                    state.pending.push_back(PendingChoice::Discover {
+                        seat: 0,
+                        candidates: vec![minion_id(1), minion_id(2)],
+                        source: 1,
+                    });
+                    (engine, state)
+                }),
+                intent: Intent::ChooseDiscover { choice: 5 },
+                check: Box::new(|engine, state| check_choose_discover(engine, state, 0, 5)),
+                expected: RejectCode::InvalidChoice,
+                expected_message: None,
             },
         ];
 
@@ -1386,21 +1537,41 @@ mod tests {
             let (mut engine, mut state) = (case.setup)();
             let before = state_hash(&state);
 
-            let checked = (case.check)(&engine, &state);
+            let checked = (case.check)(&engine, &state).unwrap_err();
             assert_eq!(
                 before,
                 state_hash(&state),
                 "{}：check_* 不得修改状态",
                 case.name
             );
-
-            let applied = engine.apply(&mut state, 0, case.intent.clone());
             assert_eq!(
-                checked.unwrap_err().code,
-                applied.unwrap_err().code,
-                "{}：check_* 与 apply 的拒绝码应一致",
+                checked.code, case.expected,
+                "{}：check_* 的拒绝码应等于显式期望",
                 case.name
             );
+            if let Some(message) = case.expected_message {
+                assert_eq!(
+                    checked.message, message,
+                    "{}：check_* 的拒绝消息应逐字保留",
+                    case.name
+                );
+            }
+
+            let applied = engine
+                .apply(&mut state, 0, case.intent.clone())
+                .unwrap_err();
+            assert_eq!(
+                applied.code, case.expected,
+                "{}：apply 的拒绝码应等于显式期望",
+                case.name
+            );
+            if let Some(message) = case.expected_message {
+                assert_eq!(
+                    applied.message, message,
+                    "{}：apply 的拒绝消息应逐字保留",
+                    case.name
+                );
+            }
             assert_eq!(
                 before,
                 state_hash(&state),
@@ -1408,5 +1579,56 @@ mod tests {
                 case.name
             );
         }
+    }
+
+    /// `check_choose_discover` 的 `Evolve` 分支：越界选项与 `apply` 一致拒绝。
+    #[test]
+    fn check_choose_discover_evolve_branch_rejects_out_of_range() {
+        let (mut engine, mut state) = setup(122);
+        state.players[0].board.push(dummy(1, &minion_id(1)));
+        state.pending.push_back(PendingChoice::Evolve {
+            seat: 0,
+            source: 1,
+            remaining: 1,
+        });
+        let before = state_hash(&state);
+
+        let checked = check_choose_discover(&engine, &state, 0, 5).unwrap_err();
+        assert_eq!(before, state_hash(&state), "check_* 不得修改状态");
+        assert_eq!(checked.code, RejectCode::InvalidChoice);
+        assert_eq!(checked.message, "进化选项下标 5 越界");
+
+        let applied = engine
+            .apply(&mut state, 0, Intent::ChooseDiscover { choice: 5 })
+            .unwrap_err();
+        assert_eq!(applied.code, RejectCode::InvalidChoice);
+        assert_eq!(applied.message, checked.message, "两条路径的拒绝消息应一致");
+        assert_eq!(before, state_hash(&state), "apply 拒绝后不得修改状态");
+    }
+
+    /// `check_choose_discover` 的 `Evolve` 分支：合法选项预检通过，`apply` 消费待选。
+    #[test]
+    fn check_choose_discover_evolve_choice_consumes_pending() {
+        let (mut engine, mut state) = setup(123);
+        state.players[0].board.push(dummy(1, &minion_id(1)));
+        state.pending.push_back(PendingChoice::Evolve {
+            seat: 0,
+            source: 1,
+            remaining: 1,
+        });
+        let before = state_hash(&state);
+
+        check_choose_discover(&engine, &state, 0, 0).expect("合法进化选项应通过预检");
+        assert_eq!(before, state_hash(&state), "check_* 不得修改状态");
+
+        let pending_before = state.pending.len();
+        engine
+            .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
+            .expect("合法进化选项应被消费");
+        assert_eq!(
+            state.pending.len(),
+            pending_before - 1,
+            "apply 应消费该进化待选"
+        );
     }
 }
