@@ -70,10 +70,22 @@ client/
 | `make client-check` | 协议/数据漂移 + 客户端边界断言 + 工程导入 |
 | `make client-smoke` | 无头实例化五个场景，要求输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR` |
 | `make m1b-e2e` | 启动服务端、Godot 无头客户端与 7 个 `sim bot`，要求输出 `M1B_E2E_OK` |
+| `make dev-bots` | 启动服务端与 7 个机器人并打印房间码，供开发者用桌面客户端作为第 8 人手动联调 |
 
 Godot 可执行文件通过 `GODOT` 变量覆盖，默认自动探测 `godot` 或 `/Applications/Godot.app/Contents/MacOS/Godot`。
 
 ## 5. 运行方式
+
+手动联调的最省事用法是 `make dev-bots`：
+
+```
+make dev-bots                                       # 终端 1，起服务端与 7 个机器人
+/Applications/Godot.app/Contents/MacOS/Godot --path client   # 终端 2，大厅填房间码
+```
+
+命令打印两行 `ROOM_CODE=<6 位>` 与提示后等待，开发者在客户端大厅输入该房间码、选英雄并准备，8 人齐自动开局；整局结束后命令自行退出并释放端口，Ctrl-C 也可一次退出全部进程。端口被占用时立即失败，用 `make dev-bots DEV_PORT=8081` 换端口。需要自定义机器人名字或英雄时改用下面的手动方式。
+
+手动方式：
 
 ```
 make m1b-build
