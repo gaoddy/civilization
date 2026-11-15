@@ -672,7 +672,9 @@ dependencies = [
  "rule-engine",
  "serde",
  "serde_json",
+ "sim",
  "tokio",
+ "tokio-tungstenite",
  "uuid",
 ]
 
@@ -856,9 +858,13 @@ dependencies = [
 name = "sim"
 version = "0.1.0"
 dependencies = [
+ "futures-util",
+ "protocol",
  "rule-engine",
  "serde",
  "serde_json",
+ "tokio",
+ "tokio-tungstenite",
 ]
 
 [[package]]

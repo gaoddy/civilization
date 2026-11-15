@@ -11,8 +11,88 @@ pub mod envelope;
 pub mod error;
 pub mod filter;
 pub mod game;
+pub mod net;
 pub mod room;
 pub mod view;
+
+use std::net::SocketAddr;
+use std::sync::Arc;
+
+use axum::Router;
+use rule_engine::data::Catalog;
+use tokio::sync::Mutex;
+
+const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
+const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
+const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
+const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
+
+/// 服务共享状态。
+///
+/// 锁粒度：会话表与房间注册表各自一把 [`tokio::sync::Mutex`]，只在短操作内持有、
+/// 不跨网络等待；房间内的权威可变状态由每个房间的写者任务串行持有（见 [`net`]）。
+#[derive(Clone)]
+pub struct AppState {
+    pub sessions: Arc<Mutex<SessionStore>>,
+    pub rooms: Arc<Mutex<RoomRegistry>>,
+    pub clock: Arc<dyn Clock>,
+    pub catalog: Catalog,
+    /// 已创建房间 → 房间任务入口（含房间码与对局种子）。
+    pub hub: Arc<Mutex<net::RoomHub>>,
+}
+
+impl AppState {
+    /// 用仓库内嵌的 v0.1 数据装配共享状态。
+    ///
+    /// # Errors
+    ///
+    /// 卡表加载失败时返回错误文本。
+    pub fn new(clock: Arc<dyn Clock>) -> Result<Self, String> {
+        let catalog = Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
+            .map_err(|err| format!("加载卡牌目录失败: {err}"))?;
+        Ok(Self {
+            sessions: Arc::new(Mutex::new(SessionStore::new())),
+            rooms: Arc::new(Mutex::new(RoomRegistry::new())),
+            clock,
+            catalog,
+            hub: Arc::new(Mutex::new(net::RoomHub::default())),
+        })
+    }
+}
+
+/// 绑定监听地址并构造路由，便于测试拿到系统分配的真实端口。
+///
+/// `listen` 写 `127.0.0.1:0` 时由系统分配端口。本函数只探测端口后立即释放监听器，
+/// 实际服务由 [`serve`] 重新绑定同一地址完成。
+///
+/// # Errors
+///
+/// 地址无法解析、端口绑定失败或卡表加载失败。
+pub async fn bind(listen: &str, clock: Arc<dyn Clock>) -> Result<(SocketAddr, Router), String> {
+    let state = AppState::new(clock)?;
+    let listener = tokio::net::TcpListener::bind(listen)
+        .await
+        .map_err(|err| format!("监听 {listen} 失败: {err}"))?;
+    let addr = listener
+        .local_addr()
+        .map_err(|err| format!("读取监听地址失败: {err}"))?;
+    drop(listener);
+    Ok((addr, net::router(state)))
+}
+
+/// 在指定地址上启动 HTTP/WebSocket 服务，直到进程被关闭。
+///
+/// # Errors
+///
+/// 端口绑定失败或服务异常退出。
+pub async fn serve(addr: SocketAddr, router: Router) -> Result<(), String> {
+    let listener = tokio::net::TcpListener::bind(addr)
+        .await
+        .map_err(|err| format!("监听 {addr} 失败: {err}"))?;
+    axum::serve(listener, router)
+        .await
+        .map_err(|err| format!("服务退出: {err}"))
+}
 
 pub use auth::{DEV_SMS_CODE, SESSION_TTL_MS, Session, SessionStore};
 pub use clock::{Clock, FixedClock, SystemClock};

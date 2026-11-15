@@ -22,7 +22,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use protocol::server::{CombatResult, ErrorMessage, GameOver, Snapshot, StateUpdate};
+use protocol::server::{CombatResult, ErrorMessage, GameOver, GameStarted, Snapshot, StateUpdate};
 use protocol::view::GameEvent as ProtocolGameEvent;
 use protocol::{ErrorCode, GameOverRankingItem, ProtocolError, ServerEnvelope};
 use rule_engine::data::Catalog;
@@ -294,8 +294,25 @@ impl GameTask {
         true
     }
 
-    /// 把一条更新编码成该座位自己的下行信封，并按座位递增 `seq`。
+    /// 构造该座位的 `GameStarted` 下行信封。
     ///
+    /// 大厅 → 对局交接时使用：载荷是开局瞬间的 `PlayerView`，`seq` 继续沿用该座位
+    /// 在大厅阶段已经推进过的通道，保证同一连接的序号单调递增。
+    ///
+    /// 座位不存在或视图/载荷无法编码时返回 `None`。
+    pub fn game_started_for(&mut self, seat: Seat) -> Option<ServerEnvelope> {
+        let view = self.player_view(seat)?;
+        let payload = payload_map(&GameStarted { view }).ok()?;
+        let channel = self.channels.get_mut(&seat)?;
+        let mut envelope = channel.bind("GameStarted", payload).ok()?;
+        envelope.player_id = Some(self.seats[usize::from(seat)].player_id.clone());
+        if !self.room_id.is_empty() {
+            envelope.room_id = Some(self.room_id.clone());
+        }
+        Some(envelope)
+    }
+
+    /// 把一条更新编码成该座位自己的下行信封，并按座位递增 `seq`。
     /// 不同座位的序号互相独立；同一座位每调用一次递增一次。
     ///
     /// # Errors

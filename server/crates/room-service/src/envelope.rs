@@ -40,4 +40,12 @@ impl SeatChannel {
     pub fn next_seq(&self) -> u64 {
         self.next_seq
     }
+
+    /// 把已分配序号推进到 `seq`（只前进不后退）。
+    ///
+    /// 连接层在认证阶段用独立的通道下发 `AuthResult`，入房后要保证该座位后续
+    /// 大厅/对局消息的序号继续递增，避免同一玩家看到重复 `seq`。
+    pub fn set_next_seq(&mut self, seq: u64) {
+        self.next_seq = self.next_seq.max(seq);
+    }
 }

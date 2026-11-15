@@ -126,6 +126,11 @@ impl Room {
             .find(|slot| slot.player_id == player_id)
     }
 
+    /// 按 `player_id` 取可变座位槽位；供连接层维护该座位的下行序号。
+    pub fn slot_entry_mut(&mut self, player_id: &str) -> Option<&mut PlayerSlot> {
+        self.slot_mut(player_id)
+    }
+
     fn is_occupied(&self, player_id: &str) -> bool {
         self.slots.values().any(|slot| slot.player_id == player_id)
     }
@@ -384,6 +389,11 @@ impl RoomRegistry {
     /// 只读查询房间。
     pub fn room(&self, room_id: &str) -> Option<&Room> {
         self.rooms.get(room_id)
+    }
+
+    /// 可变查询房间；供房间任务维护大厅成员的下行序号。
+    pub fn room_mut(&mut self, room_id: &str) -> Option<&mut Room> {
+        self.rooms.get_mut(room_id)
     }
 
     /// 构造大厅下行视图；玩家按座位号升序排列，房间不存在返回 `None`。

@@ -4,6 +4,7 @@
 //! 不使用浮点参与任何判定。
 
 pub mod ai;
+pub mod bot;
 pub mod report;
 
 use std::collections::BTreeMap;

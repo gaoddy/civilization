@@ -15,7 +15,9 @@ const USAGE: &str = "用法：
   sim batch  --games N --seed N --out PATH [--players 8]
   sim replay --log PATH
   sim report --log PATH
-  sim check  --log PATH [--expect-games N]";
+  sim check  --log PATH [--expect-games N]
+  sim bot    --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
+             [--room CODE] [--create] [--intent-seed N]";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -111,12 +113,53 @@ fn run(args: &[String]) -> Result<(), String> {
             );
             Ok(())
         }
+        "bot" => run_bot(rest),
         "--help" | "-h" | "help" => {
             println!("{USAGE}");
             Ok(())
         }
         other => Err(format!("未知子命令 {other}\n{USAGE}")),
     }
+}
+
+/// `sim bot --connect`：连接真实服务端并打一局。
+fn run_bot(args: &[String]) -> Result<(), String> {
+    let options = parse_options_with_flags(
+        args,
+        &["--connect", "--room", "--name", "--hero", "--intent-seed"],
+        &["--create"],
+    )?;
+    let url = options.required("--connect")?.to_string();
+    let name = options.required("--name")?.to_string();
+    let hero = options.required("--hero")?.to_string();
+    let room = options.values.get("--room").cloned().unwrap_or_default();
+    let create = options.values.contains_key("--create");
+    let intent_seed = match options.values.get("--intent-seed") {
+        Some(_) => options.required_u64("--intent-seed")?,
+        None => 0,
+    };
+
+    let config = sim::bot::client::BotConfig {
+        url,
+        room,
+        name,
+        hero,
+        create,
+        intent_seed,
+        room_code_sink: None,
+    };
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .map_err(|err| format!("创建 tokio 运行时失败: {err}"))?;
+    let outcome = runtime.block_on(sim::bot::client::run(config))?;
+
+    let ranking: Vec<Value> = outcome
+        .ranking
+        .iter()
+        .map(|(player_id, place)| serde_json::json!({ "playerId": player_id, "place": place }))
+        .collect();
+    print_json(&serde_json::json!({ "ranking": ranking, "turns": outcome.turns }))
 }
 
 fn print_json(value: &Value) -> Result<(), String> {
@@ -187,6 +230,15 @@ impl Options {
 }
 
 fn parse_options(args: &[String], allowed: &[&str]) -> Result<Options, String> {
+    parse_options_with_flags(args, allowed, &[])
+}
+
+/// 解析 `--key value` / `--key=value` 选项；`flags` 中的开关不取取值。
+fn parse_options_with_flags(
+    args: &[String],
+    allowed: &[&str],
+    flags: &[&str],
+) -> Result<Options, String> {
     let mut values = BTreeMap::new();
     let mut index = 0;
     while index < args.len() {
@@ -197,6 +249,14 @@ fn parse_options(args: &[String], allowed: &[&str]) -> Result<Options, String> {
         };
         if !key.starts_with("--") {
             return Err(format!("意外的参数 {arg}\n{USAGE}"));
+        }
+        if flags.contains(&key.as_str()) {
+            if inline.is_some() {
+                return Err(format!("开关 {key} 不接受取值"));
+            }
+            values.insert(key, "true".to_string());
+            index += 1;
+            continue;
         }
         if !allowed.contains(&key.as_str()) {
             return Err(format!("未知参数 {key}\n{USAGE}"));

@@ -1,16 +1,18 @@
-//! room-service 命令行入口。
-//!
-//! 本任务只解析 `--listen` 并打印监听意图；WebSocket 路由由后续任务接入。
+//! room-service 命令行入口：启动 WebSocket 房间服务。
 
 use std::process::ExitCode;
+use std::sync::Arc;
+
+use room_service::{SystemClock, bind, serve};
 
 const DEFAULT_LISTEN: &str = "127.0.0.1:8080";
 
 const USAGE: &str = "用法：room-service [--listen ADDR]
-  --listen ADDR  监听地址，默认 127.0.0.1:8080";
+  --listen ADDR  监听地址，默认 127.0.0.1:8080（写 127.0.0.1:0 由系统分配端口）";
 
-fn main() -> ExitCode {
-    match run(std::env::args().skip(1).collect()) {
+#[tokio::main]
+async fn main() -> ExitCode {
+    match run(std::env::args().skip(1).collect()).await {
         Ok(()) => ExitCode::SUCCESS,
         Err(message) => {
             eprintln!("room-service: {message}");
@@ -19,7 +21,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn run(args: Vec<String>) -> Result<(), String> {
+async fn run(args: Vec<String>) -> Result<(), String> {
     let mut listen = DEFAULT_LISTEN.to_string();
     let mut iter = args.into_iter();
     while let Some(arg) = iter.next() {
@@ -40,6 +42,9 @@ fn run(args: Vec<String>) -> Result<(), String> {
             other => return Err(format!("未知参数：{other}\n{USAGE}")),
         }
     }
-    println!("room-service: 准备监听 {listen}（WebSocket 路由尚未接入）");
-    Ok(())
+
+    let clock: Arc<dyn room_service::Clock> = Arc::new(SystemClock);
+    let (addr, router) = bind(&listen, clock).await?;
+    println!("room-service: 监听 ws://{addr}/ws");
+    serve(addr, router).await
 }
