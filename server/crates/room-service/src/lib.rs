@@ -58,6 +58,31 @@ impl AppState {
             hub: Arc::new(Mutex::new(net::RoomHub::default())),
         })
     }
+
+    /// 当前存活房间 task 的数量；供测试断言房间回收。
+    pub async fn hub_len(&self) -> usize {
+        self.hub.lock().await.len()
+    }
+}
+
+/// 绑定监听地址并构造路由，同时返回共享状态（测试用它观察房间回收）。
+///
+/// # Errors
+///
+/// 同 [`bind`]。
+pub async fn bind_state(
+    listen: &str,
+    clock: Arc<dyn Clock>,
+) -> Result<(SocketAddr, Router, AppState), String> {
+    let state = AppState::new(clock)?;
+    let listener = tokio::net::TcpListener::bind(listen)
+        .await
+        .map_err(|err| format!("监听 {listen} 失败: {err}"))?;
+    let addr = listener
+        .local_addr()
+        .map_err(|err| format!("读取监听地址失败: {err}"))?;
+    drop(listener);
+    Ok((addr, net::router(state.clone()), state))
 }
 
 /// 绑定监听地址并构造路由，便于测试拿到系统分配的真实端口。
@@ -69,15 +94,8 @@ impl AppState {
 ///
 /// 地址无法解析、端口绑定失败或卡表加载失败。
 pub async fn bind(listen: &str, clock: Arc<dyn Clock>) -> Result<(SocketAddr, Router), String> {
-    let state = AppState::new(clock)?;
-    let listener = tokio::net::TcpListener::bind(listen)
-        .await
-        .map_err(|err| format!("监听 {listen} 失败: {err}"))?;
-    let addr = listener
-        .local_addr()
-        .map_err(|err| format!("读取监听地址失败: {err}"))?;
-    drop(listener);
-    Ok((addr, net::router(state)))
+    let (addr, router, _state) = bind_state(listen, clock).await?;
+    Ok((addr, router))
 }
 
 /// 在指定地址上启动 HTTP/WebSocket 服务，直到进程被关闭。

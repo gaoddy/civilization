@@ -79,6 +79,13 @@ pub enum RoomCommand {
     /// 连接断开；记录断开时刻，超过 [`RECONNECT_GRACE_MS`] 后由 [`GameTask::tick`]
     /// 标记离线。对局状态与座位不因断线改变。
     Disconnect { player_id: String },
+    /// 入房之后的连接层错误；由房间 task 统一走该座位的下行通道编码下发，
+    /// 保证同一玩家的 `seq` 单调递增（不另开连接层计数器）。
+    Error {
+        player_id: String,
+        code: String,
+        message: String,
+    },
 }
 
 /// 要发给某个座位的一条更新信号。
@@ -384,6 +391,14 @@ impl GameTask {
                 client_intent_id,
                 intent,
             } => self.handle_intent(player_id, client_intent_id, intent),
+            RoomCommand::Error {
+                player_id,
+                code,
+                message,
+            } => {
+                let code = code.parse().unwrap_or(ErrorCode::InternalError);
+                self.player_error(&player_id, None, code, message)
+            }
         }
     }
 

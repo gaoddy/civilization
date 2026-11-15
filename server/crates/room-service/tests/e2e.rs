@@ -1,4 +1,4 @@
-//! 端到端测试：真实 WebSocket 服务 + 8 个机器人打完一局。
+//! 端到端测试：真实 WebSocket 服务、8 个机器人完整对局、重连与房间生命周期。
 //!
 //! 这是 M1a 唯一允许使用真实 [`SystemClock`] 的测试。
 
@@ -6,12 +6,15 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use futures_util::{SinkExt, StreamExt};
+use protocol::server::RoomUpdate;
 use protocol::{ErrorCode, ServerEnvelope, ServerMessage};
 use room_service::clock::{Clock, SystemClock};
-use serde_json::json;
+use serde_json::{Value, json};
 use sim::bot::client::{BotConfig, run};
+use tokio::net::TcpStream;
 use tokio::sync::oneshot;
 use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
 /// 取仓库内嵌卡表里卡牌 id 升序的前 8 张英雄。
 fn hero_cards() -> Vec<String> {
@@ -117,6 +120,294 @@ async fn eight_bots_finish_a_game() {
     assert_eq!(places, (1..=8).collect::<Vec<u8>>(), "名次应覆盖 1..=8");
 }
 
+// ---------------------------------------------------------------------------
+// 原始 WS 客户端：用于重连、序号与房间生命周期测试。
+// ---------------------------------------------------------------------------
+
+type ClientWs = WebSocketStream<MaybeTlsStream<TcpStream>>;
+
+struct RawClient {
+    ws: ClientWs,
+    next_id: u64,
+}
+
+impl RawClient {
+    async fn connect(addr: std::net::SocketAddr) -> Self {
+        let (ws, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/ws"))
+            .await
+            .expect("应能连上服务端");
+        Self { ws, next_id: 0 }
+    }
+
+    async fn send(&mut self, kind: &str, payload: Value) {
+        self.next_id += 1;
+        let envelope = json!({
+            "v": 1,
+            "id": format!("raw_{}", self.next_id),
+            "type": kind,
+            "ts": "2026-01-01T00:00:00Z",
+            "payload": payload,
+        });
+        self.ws
+            .send(Message::Text(envelope.to_string().into()))
+            .await
+            .expect("发送应当成功");
+    }
+
+    /// 取下一条下行消息与其 `seq`；连接关闭时返回 `None`。
+    async fn recv(&mut self) -> Option<(u64, ServerMessage)> {
+        while let Some(item) = self.ws.next().await {
+            match item {
+                Ok(Message::Text(text)) => {
+                    let envelope: ServerEnvelope =
+                        serde_json::from_str(text.as_str()).expect("下行信封应能解析");
+                    let seq = envelope.seq.get();
+                    let message = envelope.parse().expect("下行载荷应能解析");
+                    return Some((seq, message));
+                }
+                Ok(Message::Close(_)) => return None,
+                Ok(_) => continue,
+                Err(_) => return None,
+            }
+        }
+        None
+    }
+}
+
+async fn authenticate(client: &mut RawClient, name: &str) -> (String, String) {
+    client
+        .send(
+            "AuthRequest",
+            json!({ "phone": "13800000000", "code": "123456", "displayName": name }),
+        )
+        .await;
+    loop {
+        let (_, message) = client.recv().await.expect("认证期间连接不应关闭");
+        match message {
+            ServerMessage::AuthResult(result) => return (result.player_id, result.token),
+            ServerMessage::Error(error) => panic!("认证失败: {} {}", error.code, error.message),
+            _ => {}
+        }
+    }
+}
+
+async fn authenticate_with_token(client: &mut RawClient, token: &str) -> String {
+    client
+        .send(
+            "AuthRequest",
+            json!({ "token": token, "displayName": "reconnect" }),
+        )
+        .await;
+    loop {
+        let (_, message) = client.recv().await.expect("认证期间连接不应关闭");
+        match message {
+            ServerMessage::AuthResult(result) => return result.player_id,
+            ServerMessage::Error(error) => {
+                panic!("token 认证失败: {} {}", error.code, error.message)
+            }
+            _ => {}
+        }
+    }
+}
+
+async fn wait_room_update(client: &mut RawClient) -> RoomUpdate {
+    loop {
+        let (_, message) = client.recv().await.expect("等待 RoomUpdate 时连接关闭");
+        if let ServerMessage::RoomUpdate(update) = message {
+            return update;
+        }
+    }
+}
+
+struct GameFixture {
+    room_id: String,
+    /// `(player_id, token)`，按座位顺序。
+    identities: Vec<(String, String)>,
+    /// 保持 8 条连接存活；丢弃即断线。
+    clients: Vec<RawClient>,
+}
+
+/// 用 8 条原始连接建好房间、选英雄并准备，直到收到 `GameStarted`。
+async fn start_eight_raw_clients(addr: std::net::SocketAddr) -> GameFixture {
+    let heroes = hero_cards();
+    let mut clients = Vec::with_capacity(8);
+    let mut identities = Vec::with_capacity(8);
+
+    let mut host = RawClient::connect(addr).await;
+    let (player_id, token) = authenticate(&mut host, "host").await;
+    host.send("CreateRoom", json!({})).await;
+    let room = wait_room_update(&mut host).await;
+    let room_id = room.room_id.clone();
+    let room_code = room.code.clone();
+    host.send("SelectHeroCard", json!({ "cardId": heroes[0] }))
+        .await;
+    host.send("Ready", json!({ "ready": true })).await;
+    clients.push(host);
+    identities.push((player_id, token));
+
+    for (index, hero) in heroes.iter().enumerate().skip(1) {
+        let mut client = RawClient::connect(addr).await;
+        let (player_id, token) = authenticate(&mut client, &format!("p{index}")).await;
+        client.send("JoinRoom", json!({ "code": room_code })).await;
+        let _ = wait_room_update(&mut client).await;
+        client
+            .send("SelectHeroCard", json!({ "cardId": hero }))
+            .await;
+        client.send("Ready", json!({ "ready": true })).await;
+        clients.push(client);
+        identities.push((player_id, token));
+    }
+
+    // 等最后一条 Ready 真正触发开局，避免后续重连落在大厅阶段。
+    let started = tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            let (_, message) = clients[0]
+                .recv()
+                .await
+                .expect("等待 GameStarted 时连接关闭");
+            if matches!(message, ServerMessage::GameStarted(_)) {
+                return;
+            }
+        }
+    })
+    .await;
+    assert!(started.is_ok(), "8 人准备后应收到 GameStarted");
+
+    GameFixture {
+        room_id,
+        identities,
+        clients,
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn reconnect_with_token_returns_snapshot() {
+    let addr = start_server().await;
+    let fixture = start_eight_raw_clients(addr).await;
+    // 保持 8 条原始连接存活到断言结束。
+    let _keep_alive = &fixture.clients;
+    let (host_player_id, host_token) = fixture.identities[0].clone();
+
+    let mut reconnected = RawClient::connect(addr).await;
+    let player_id = authenticate_with_token(&mut reconnected, &host_token).await;
+    assert_eq!(player_id, host_player_id, "token 续登应拿到同一 player_id");
+
+    reconnected
+        .send(
+            "Reconnect",
+            json!({ "roomId": fixture.room_id, "lastSeq": 0 }),
+        )
+        .await;
+
+    let (_, message) = tokio::time::timeout(Duration::from_secs(5), reconnected.recv())
+        .await
+        .expect("重连应在 5 秒内返回快照")
+        .expect("重连连接不应关闭");
+    match message {
+        ServerMessage::Snapshot(snapshot) => {
+            assert_eq!(snapshot.view.room_id, fixture.room_id, "快照应带上 roomId");
+            assert!(!snapshot.view.room_id.is_empty(), "roomId 不应为空串");
+            assert_eq!(snapshot.view.turn.get(), 1, "尚无人行动，回合应为 1");
+            println!(
+                "reconnect snapshot: room_id={} turn={} phase={:?}",
+                snapshot.view.room_id, snapshot.view.turn, snapshot.view.phase
+            );
+        }
+        other => panic!("期望 Snapshot，实际 {other:?}"),
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn joined_connection_errors_use_room_seq() {
+    let addr = start_server().await;
+    let mut client = RawClient::connect(addr).await;
+    let _ = authenticate(&mut client, "seq").await;
+    client.send("CreateRoom", json!({})).await;
+    let (last_seq, message) = client.recv().await.expect("应收到 RoomUpdate");
+    assert!(
+        matches!(message, ServerMessage::RoomUpdate(_)),
+        "实际 {message:?}"
+    );
+
+    // 入房后再次建房：错误必须走房间的下行通道，序号继续递增。
+    client.send("CreateRoom", json!({})).await;
+    let (error_seq, message) = tokio::time::timeout(Duration::from_secs(5), client.recv())
+        .await
+        .expect("应收到 Error")
+        .expect("连接不应关闭");
+    match message {
+        ServerMessage::Error(error) => assert_eq!(error.code, ErrorCode::InvalidStage),
+        other => panic!("期望 Error，实际 {other:?}"),
+    }
+    assert!(
+        error_seq > last_seq,
+        "入房后错误 seq={error_seq} 应大于最后一条 seq={last_seq}"
+    );
+    println!("room seq: last={last_seq} error={error_seq}");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn lobby_room_is_retired_after_last_player_leaves() {
+    let clock: Arc<dyn Clock> = Arc::new(SystemClock);
+    let (addr, router, state) = room_service::bind_state("127.0.0.1:0", clock)
+        .await
+        .expect("绑定端口应当成功");
+    tokio::spawn(async move {
+        let _ = room_service::serve(addr, router).await;
+    });
+
+    let mut client = RawClient::connect(addr).await;
+    let _ = authenticate(&mut client, "leaver").await;
+    client.send("CreateRoom", json!({})).await;
+    let _ = wait_room_update(&mut client).await;
+    client.send("LeaveRoom", json!({})).await;
+    drop(client);
+
+    let retired = tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            if state.hub_len().await == 0 {
+                return;
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+    })
+    .await;
+    assert!(retired.is_ok(), "最后一人离开后房间 task 应被回收");
+    println!("hub_len after leave = {}", state.hub_len().await);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn lobby_disconnect_releases_seat() {
+    let addr = start_server().await;
+    let mut host = RawClient::connect(addr).await;
+    let _ = authenticate(&mut host, "seat-host").await;
+    host.send("CreateRoom", json!({})).await;
+    let room = wait_room_update(&mut host).await;
+    assert_eq!(room.players.len(), 1);
+
+    let mut guest = RawClient::connect(addr).await;
+    let _ = authenticate(&mut guest, "seat-guest").await;
+    guest.send("JoinRoom", json!({ "code": room.code })).await;
+    let joined = wait_room_update(&mut guest).await;
+    assert_eq!(joined.players.len(), 2);
+
+    // 大厅阶段断线应立即释放座位。
+    drop(guest);
+    let released = tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            host.send("RequestSnapshot", json!({})).await;
+            if let Some((_, ServerMessage::RoomUpdate(update))) = host.recv().await
+                && update.players.len() == 1
+            {
+                return;
+            }
+        }
+    })
+    .await;
+    assert!(released.is_ok(), "大厅断线后座位应被释放");
+    println!("lobby players after disconnect = 1");
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn rejects_envelope_with_unknown_version() {
     let addr = start_server().await;
@@ -137,21 +428,29 @@ async fn rejects_envelope_with_unknown_version() {
 
     let next = tokio::time::timeout(Duration::from_secs(5), ws.next())
         .await
-        .expect("服务端应返回错误或关闭连接");
-    match next {
-        Some(Ok(Message::Text(text))) => {
-            let envelope: ServerEnvelope =
-                serde_json::from_str(text.as_str()).expect("下行信封应能解析");
-            match envelope.parse().expect("下行载荷应能解析") {
-                ServerMessage::Error(error) => {
-                    assert_eq!(error.code, ErrorCode::BadPayload);
-                }
-                other => panic!("期望 Error，实际 {other:?}"),
-            }
+        .expect("服务端应先返回错误")
+        .expect("服务端不应无响应");
+    let text = match next {
+        Ok(Message::Text(text)) => text.as_str().to_string(),
+        other => panic!("期望先收到 Error 文本，实际 {other:?}"),
+    };
+    let envelope: ServerEnvelope = serde_json::from_str(&text).expect("下行信封应能解析");
+    match envelope.parse().expect("下行载荷应能解析") {
+        ServerMessage::Error(error) => {
+            assert!(
+                matches!(error.code, ErrorCode::BadPayload | ErrorCode::UnknownType),
+                "期望 BAD_PAYLOAD/UNKNOWN_TYPE，实际 {}",
+                error.code
+            );
         }
-        Some(Ok(Message::Close(_))) | None => {
-            // 直接关闭连接同样满足「不按 v1 语义执行」。
-        }
-        other => panic!("期望 Error 或关闭，实际 {other:?}"),
+        other => panic!("期望 Error，实际 {other:?}"),
+    }
+
+    // 收到错误之后才允许关闭。
+    let closed = tokio::time::timeout(Duration::from_secs(2), ws.next()).await;
+    match closed {
+        Ok(Some(Ok(Message::Close(_)))) | Ok(None) | Ok(Some(Err(_))) => {}
+        Ok(Some(Ok(other))) => panic!("错误后应关闭连接，实际收到 {other:?}"),
+        Err(_) => panic!("错误后连接未在 2 秒内关闭"),
     }
 }

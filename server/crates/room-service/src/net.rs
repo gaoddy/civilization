@@ -40,7 +40,7 @@ use crate::AppState;
 use crate::auth::Session;
 use crate::envelope::SeatChannel;
 use crate::error::error_message;
-use crate::game::{GameTask, RoomCommand, SeatUpdate};
+use crate::game::{GameTask, RoomCommand, SeatUpdate, UpdateKind};
 
 /// 每个连接下行队列的容量；连接写不动时房间 task 用 `try_send` 丢弃而不是阻塞。
 const OUTBOUND_CAPACITY: usize = 64;
@@ -74,6 +74,21 @@ impl RoomHub {
     /// 按房间 id 取入口。
     pub fn get(&self, room_id: &str) -> Option<RoomHandle> {
         self.rooms.get(room_id).cloned()
+    }
+
+    /// 摘除房间入口；房间 task 自行回收时调用。
+    pub fn remove(&mut self, room_id: &str) -> Option<RoomHandle> {
+        self.rooms.remove(room_id)
+    }
+
+    /// 当前登记的房间数；供测试断言回收。
+    pub fn len(&self) -> usize {
+        self.rooms.len()
+    }
+
+    /// 是否没有登记任何房间。
+    pub fn is_empty(&self) -> bool {
+        self.rooms.is_empty()
     }
 }
 
@@ -134,44 +149,58 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
         let envelope: ClientEnvelope = match serde_json::from_str(&text) {
             Ok(envelope) => envelope,
             Err(_) => {
-                send_error(
+                route_error(
+                    &room,
+                    session.as_ref(),
                     &out_tx,
                     &mut direct,
                     "BAD_PAYLOAD",
                     "上行信封无法解析",
-                    false,
                 );
                 break;
             }
         };
         // 生成类型不校验 `v`：连接层显式拒绝非 v1，避免按 v1 语义执行 v2 载荷。
         if envelope.v.as_u64() != Some(1) {
-            send_error(
+            route_error(
+                &room,
+                session.as_ref(),
                 &out_tx,
                 &mut direct,
                 "BAD_PAYLOAD",
                 "不支持的协议版本",
-                false,
             );
             break;
         }
         let message = match envelope.parse() {
             Ok(message) => message,
             Err(error) => {
-                send_error(&out_tx, &mut direct, error.0, "上行载荷与类型不匹配", false);
+                route_error(
+                    &room,
+                    session.as_ref(),
+                    &out_tx,
+                    &mut direct,
+                    error.0,
+                    "上行载荷与类型不匹配",
+                );
                 continue;
             }
         };
 
         match message {
             ClientMessage::AuthRequest(request) => {
-                // 已入房后重新认证：先按旧账号离开原房间，再切换会话。
-                if let Some((_, tx)) = room.take()
-                    && let Some(previous) = &session
-                {
-                    let _ = tx.send(RoomMessage::Detach {
-                        player_id: previous.player_id.clone(),
-                    });
+                // 入房后不允许在同一连接上重新认证：否则会切换 player_id 并破坏
+                // 该连接已使用的下行序号；重连应使用新连接 + token。
+                if room.is_some() {
+                    route_error(
+                        &room,
+                        session.as_ref(),
+                        &out_tx,
+                        &mut direct,
+                        "INVALID_STAGE",
+                        "已在房间中，不能重新认证",
+                    );
+                    continue;
                 }
                 let result = state
                     .sessions
@@ -197,7 +226,14 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                     continue;
                 };
                 if room.is_some() {
-                    send_error(&out_tx, &mut direct, "INVALID_STAGE", "已在房间中", false);
+                    route_error(
+                        &room,
+                        session.as_ref(),
+                        &out_tx,
+                        &mut direct,
+                        "INVALID_STAGE",
+                        "已在房间中",
+                    );
                     continue;
                 }
                 let created = state.rooms.lock().await.create(&authorized);
@@ -231,7 +267,14 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                     continue;
                 };
                 if room.is_some() {
-                    send_error(&out_tx, &mut direct, "INVALID_STAGE", "已在房间中", false);
+                    route_error(
+                        &room,
+                        session.as_ref(),
+                        &out_tx,
+                        &mut direct,
+                        "INVALID_STAGE",
+                        "已在房间中",
+                    );
                     continue;
                 }
                 let joined = {
@@ -245,6 +288,12 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                         bump_lobby_seq(&state, &room_id, &authorized.player_id, direct.next_seq())
                             .await;
                         let Some(handle) = state.hub.lock().await.get(&room_id) else {
+                            // 先改注册表后查 hub：失败必须回滚刚加入的座位。
+                            let _ = state
+                                .rooms
+                                .lock()
+                                .await
+                                .leave(&room_id, &authorized.player_id);
                             send_error(
                                 &out_tx,
                                 &mut direct,
@@ -265,6 +314,52 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                         send_error(&out_tx, &mut direct, &code, &error.to_string(), false);
                     }
                 }
+            }
+            ClientMessage::Reconnect(request) => {
+                // 真实重连路径：新 WS 连接 → AuthRequest(token) → Reconnect。
+                // 此时连接本地还没有房间，必须用 `roomId` 从 hub 找回房间 task。
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                if room.is_some() {
+                    route_error(
+                        &room,
+                        session.as_ref(),
+                        &out_tx,
+                        &mut direct,
+                        "INVALID_STAGE",
+                        "当前连接已在房间中",
+                    );
+                    continue;
+                }
+                let Some(handle) = state.hub.lock().await.get(&request.room_id) else {
+                    send_error(&out_tx, &mut direct, "ROOM_NOT_FOUND", "房间不存在", false);
+                    continue;
+                };
+                let is_member = {
+                    let rooms = state.rooms.lock().await;
+                    rooms
+                        .room(&request.room_id)
+                        .and_then(|room| room.seat_of(&authorized.player_id))
+                        .is_some()
+                };
+                if !is_member {
+                    send_error(
+                        &out_tx,
+                        &mut direct,
+                        "NOT_IN_ROOM",
+                        "会话不属于该房间",
+                        false,
+                    );
+                    continue;
+                }
+                let _ = handle.tx.send(RoomMessage::Command(RoomCommand::Reconnect {
+                    player_id: authorized.player_id.clone(),
+                    last_seq: request.last_seq,
+                    out: out_tx.clone(),
+                }));
+                room = Some((request.room_id, handle.tx));
             }
             ClientMessage::LeaveRoom(_) => {
                 let Some(authorized) = session.clone() else {
@@ -291,18 +386,13 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                 let message = match map_room_message(other, &authorized.player_id, &out_tx) {
                     Ok(message) => message,
                     Err((code, text)) => {
-                        send_error(&out_tx, &mut direct, code, text, false);
+                        route_error(&room, session.as_ref(), &out_tx, &mut direct, code, text);
                         continue;
                     }
                 };
                 if tx.send(message).is_err() {
-                    send_error(
-                        &out_tx,
-                        &mut direct,
-                        "INTERNAL_ERROR",
-                        "房间任务已停止",
-                        false,
-                    );
+                    // 房间 task 已停止，连接无从继续。
+                    break;
                 }
             }
         }
@@ -400,6 +490,32 @@ fn send_error(
     );
 }
 
+/// 下发一条连接层错误。
+///
+/// 入房之后一律经房间 task 走该座位的统一下行通道（大厅用 `slot.channel`、对局用
+/// `GameTask::envelope_for`），避免连接层独立计数器产生倒退的 `seq`。
+/// 只有入房之前才走连接自己的 `direct` 通道。
+fn route_error(
+    room: &Option<(String, mpsc::UnboundedSender<RoomMessage>)>,
+    session: Option<&Session>,
+    out: &mpsc::Sender<ServerEnvelope>,
+    direct: &mut SeatChannel,
+    code: &str,
+    message: &str,
+) {
+    if let Some((_, tx)) = room
+        && let Some(authorized) = session
+    {
+        let _ = tx.send(RoomMessage::Command(RoomCommand::Error {
+            player_id: authorized.player_id.clone(),
+            code: code.to_string(),
+            message: message.to_string(),
+        }));
+        return;
+    }
+    send_error(out, direct, code, message, false);
+}
+
 /// 让该座位的大厅下行序号从连接层已用过的序号之后继续。
 async fn bump_lobby_seq(state: &AppState, room_id: &str, player_id: &str, used_seq: u64) {
     let mut rooms = state.rooms.lock().await;
@@ -433,6 +549,7 @@ fn spawn_room_task(
         seed,
         game: None,
         senders: BTreeMap::new(),
+        game_over: false,
     };
     tokio::spawn(async move {
         let mut ticker = time::interval(TICK_INTERVAL);
@@ -446,6 +563,9 @@ fn spawn_room_task(
                 },
                 _ = ticker.tick() => task.on_tick(),
             }
+            if task.retire_if_done().await {
+                break;
+            }
         }
     });
 }
@@ -458,13 +578,35 @@ struct RoomTask {
     game: Option<GameTask>,
     /// 大厅阶段的下行发送端；对局阶段发送端由 `GameTask` 持有副本。
     senders: BTreeMap<String, mpsc::Sender<ServerEnvelope>>,
+    /// 是否已经向所有座位下发过 `GameOver`。
+    game_over: bool,
 }
 
 impl RoomTask {
+    /// 房间 task 是否应自行回收：注册表里的房间已不存在，或对局结束且所有连接已离开。
+    ///
+    /// `hub` 持有房间入口的发送端，是 task 存活的唯一原因；因此摘除 hub 条目必须在
+    /// 房间 task 内完成，随后 loop 才能退出。
+    async fn retire_if_done(&mut self) -> bool {
+        if self.game_over && self.senders.is_empty() {
+            self.state.hub.lock().await.remove(&self.room_id);
+            return true;
+        }
+        let gone = {
+            let rooms = self.state.rooms.lock().await;
+            rooms.room(&self.room_id).is_none()
+        };
+        if gone {
+            self.state.hub.lock().await.remove(&self.room_id);
+            return true;
+        }
+        false
+    }
+
     async fn on_message(&mut self, message: RoomMessage) {
         match message {
             RoomMessage::Attach { player_id, out } => self.attach(player_id, out).await,
-            RoomMessage::Detach { player_id } => self.detach(player_id),
+            RoomMessage::Detach { player_id } => self.detach(player_id).await,
             RoomMessage::Leave { player_id } => self.leave(player_id).await,
             RoomMessage::Command(command) => self.on_command(command).await,
             RoomMessage::Ignore => {}
@@ -492,10 +634,21 @@ impl RoomTask {
         }
     }
 
-    fn detach(&mut self, player_id: String) {
+    async fn detach(&mut self, player_id: String) {
         self.senders.remove(&player_id);
-        if let Some(game) = self.game.as_mut() {
-            game.handle(RoomCommand::Disconnect { player_id });
+        if self.game.is_some() {
+            if let Some(game) = self.game.as_mut() {
+                game.handle(RoomCommand::Disconnect { player_id });
+            }
+            return;
+        }
+        // 大厅没有对局状态需要保护：断线立即离开并释放座位，避免永久占位。
+        let result = {
+            let mut rooms = self.state.rooms.lock().await;
+            rooms.leave(&self.room_id, &player_id)
+        };
+        if result.is_ok() {
+            self.broadcast_room_update().await;
         }
     }
 
@@ -582,10 +735,17 @@ impl RoomTask {
                 last_seq: _,
                 out,
             } => self.attach(player_id, out).await,
-            RoomCommand::Disconnect { player_id } => self.detach(player_id),
+            RoomCommand::Disconnect { player_id } => self.detach(player_id).await,
             RoomCommand::Intent { player_id, .. } => {
                 self.send_lobby_error(&player_id, "INVALID_STAGE", "对局尚未开始")
                     .await;
+            }
+            RoomCommand::Error {
+                player_id,
+                code,
+                message,
+            } => {
+                self.send_lobby_error(&player_id, &code, &message).await;
             }
         }
     }
@@ -656,6 +816,9 @@ impl RoomTask {
             return;
         };
         for update in updates {
+            if matches!(&update.kind, UpdateKind::GameOver(_)) {
+                self.game_over = true;
+            }
             let Ok(envelope) = game.envelope_for(&update) else {
                 continue;
             };
