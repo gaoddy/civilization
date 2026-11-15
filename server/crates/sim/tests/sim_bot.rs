@@ -6,7 +6,7 @@
 use protocol::intents::Intent;
 use protocol::view::{Phase, PlayerView};
 use serde_json::{Value, json};
-use sim::bot::brain::{next_intent, recover_after_error};
+use sim::bot::brain::{next_intent, recover_after_error, retry_with_target};
 
 /// 构造一份最小但完整的 `PlayerView`。
 ///
@@ -140,4 +140,110 @@ fn does_not_recover_outside_recruit() {
     let mut recruited = view(10, json!([]), json!([]), json!([]), json!([]), true);
     recruited.self_.recruited = true;
     assert!(recover_after_error(&recruited).is_none());
+}
+
+/// 给视图补一个己方随从，用于目标补选。
+fn with_board(mut view: PlayerView, minion_id: &str) -> PlayerView {
+    view.self_.board.push(protocol::view::BoardMinion {
+        attack: 1,
+        card_id: "adam-smith".to_string(),
+        golden: false,
+        health: 1,
+        index: 0,
+        keywords: Vec::new(),
+        minion_id: minion_id.to_string(),
+        sellable: true,
+    });
+    view
+}
+
+#[test]
+fn retries_rejected_intent_with_friendly_target() {
+    // 服务端返回 NO_VALID_TARGET 后，机器人应给被拒意图补上己方随从并重发。
+    let view = with_board(
+        view(10, json!([]), json!([]), json!([]), json!([]), true),
+        "minion-7",
+    );
+
+    let retried = retry_with_target(
+        &view,
+        &Intent::BuyMinion {
+            slot: 2,
+            target_minion_id: None,
+        },
+    )
+    .expect("有己方随从时应能补选");
+
+    match retried {
+        Intent::BuyMinion {
+            slot,
+            target_minion_id,
+        } => {
+            assert_eq!(slot, 2, "重发保留原槽位");
+            assert_eq!(target_minion_id.as_deref(), Some("minion-7"));
+        }
+        other => panic!("期望 BuyMinion，实际 {other:?}"),
+    }
+}
+
+#[test]
+fn retries_play_and_hero_power_with_target() {
+    let view = with_board(
+        view(10, json!([]), json!([]), json!([]), json!([]), true),
+        "minion-3",
+    );
+
+    let played = retry_with_target(
+        &view,
+        &Intent::PlayCard {
+            hand_index: 1,
+            target_minion_id: None,
+        },
+    )
+    .expect("手牌也可补选目标");
+    assert!(matches!(
+        played,
+        Intent::PlayCard {
+            hand_index: 1,
+            target_minion_id: Some(ref id),
+        } if id == "minion-3"
+    ));
+
+    let powered = retry_with_target(
+        &view,
+        &Intent::UseHeroPower {
+            skill_id: "light-speed-strike".to_string(),
+            target_minion_id: None,
+        },
+    )
+    .expect("技能也可补选目标");
+    assert!(matches!(
+        powered,
+        Intent::UseHeroPower {
+            ref skill_id,
+            target_minion_id: Some(ref id),
+        } if skill_id == "light-speed-strike" && id == "minion-3"
+    ));
+}
+
+#[test]
+fn does_not_retry_without_board_or_for_targetless_intent() {
+    let empty = view(10, json!([]), json!([]), json!([]), json!([]), true);
+    assert!(
+        retry_with_target(
+            &empty,
+            &Intent::BuyMinion {
+                slot: 0,
+                target_minion_id: None,
+            }
+        )
+        .is_none(),
+        "没有己方随从时无法补选"
+    );
+
+    let view = with_board(empty, "minion-1");
+    assert!(
+        retry_with_target(&view, &Intent::RerollShop).is_none(),
+        "不需要目标的意图不重发"
+    );
 }

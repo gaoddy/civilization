@@ -8,8 +8,10 @@
 //! 「自身视角有新变化」的视图做一次决策，避免重连广播导致的重复意图。
 
 use futures_util::{SinkExt, StreamExt};
+use protocol::ErrorCode;
 use protocol::ServerEnvelope;
 use protocol::ServerMessage;
+use protocol::intents::Intent;
 use protocol::view::PlayerView;
 use rule_engine::data::Catalog;
 use serde_json::{Value, json};
@@ -157,6 +159,36 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                     "bot {} 收到错误 {}: {}",
                     config.name, error.code, error.message
                 );
+                // 目标缺失：按被拒意图补上己方第一个随从重发。服务端只在存在
+                // 合法目标时返回该错误，因此棋盘非空即可补选。
+                let retried = if error.code == ErrorCode::NoValidTarget {
+                    error
+                        .client_intent_id
+                        .as_deref()
+                        .and_then(|id| memory.rejected(id).cloned())
+                        .and_then(|intent| {
+                            memory
+                                .view
+                                .as_ref()
+                                .and_then(|view| brain::retry_with_target(view, &intent))
+                        })
+                } else {
+                    None
+                };
+                if let Some(intent) = retried {
+                    let intent_value = serde_json::to_value(&intent)
+                        .map_err(|err| format!("序列化意图失败: {err}"))?;
+                    let client_intent_id = memory.next_intent_id(&config.name);
+                    memory.remember(client_intent_id.clone(), intent);
+                    send(
+                        &mut ws,
+                        "Intent",
+                        json!({ "clientIntentId": client_intent_id, "intent": intent_value }),
+                        &mut seq,
+                    )
+                    .await?;
+                    continue;
+                }
                 // 被拒绝的意图不会带来新视图，机器人不会自己重试；补发兜底意图，
                 // 避免整局停在招募阶段等超时。每个回合最多补发一次。
                 let recovery = memory.view.as_ref().and_then(|view| {
@@ -171,6 +203,7 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                     let intent_value = serde_json::to_value(&intent)
                         .map_err(|err| format!("序列化意图失败: {err}"))?;
                     let client_intent_id = memory.next_intent_id(&config.name);
+                    memory.remember(client_intent_id.clone(), intent);
                     send(
                         &mut ws,
                         "Intent",
@@ -235,7 +268,12 @@ struct BotMemory {
     intents: u64,
     /// 最近一次补发兜底意图的回合。
     recovery_turn: Option<u8>,
+    /// 尚未确认的意图，按 `clientIntentId` 找回被拒的意图用于补选目标。
+    pending: Vec<(String, Intent)>,
 }
+
+/// 未确认意图的保留上限；只需覆盖「发出一条后收到下一条错误」的流水线深度。
+const PENDING_LIMIT: usize = 8;
 
 impl BotMemory {
     fn new() -> Self {
@@ -244,6 +282,7 @@ impl BotMemory {
             view: None,
             intents: 0,
             recovery_turn: None,
+            pending: Vec::new(),
         }
     }
 
@@ -251,6 +290,23 @@ impl BotMemory {
         let id = format!("{name}-{}", self.intents);
         self.intents = self.intents.saturating_add(1);
         id
+    }
+
+    /// 记下一条已发出的意图，供被拒后补选目标。
+    fn remember(&mut self, client_intent_id: String, intent: Intent) {
+        if self.pending.len() >= PENDING_LIMIT {
+            self.pending.remove(0);
+        }
+        self.pending.push((client_intent_id, intent));
+    }
+
+    /// 按 `clientIntentId` 找回被拒意图。
+    fn rejected(&self, client_intent_id: &str) -> Option<&Intent> {
+        self.pending
+            .iter()
+            .rev()
+            .find(|(id, _)| id == client_intent_id)
+            .map(|(_, intent)| intent)
     }
 }
 
@@ -277,6 +333,7 @@ async fn decide(
     let client_intent_id = memory.next_intent_id(&config.name);
     let intent_value =
         serde_json::to_value(&intent).map_err(|err| format!("序列化意图失败: {err}"))?;
+    memory.remember(client_intent_id.clone(), intent.clone());
     send(
         ws,
         "Intent",
