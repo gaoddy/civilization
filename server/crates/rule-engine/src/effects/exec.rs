@@ -19,6 +19,7 @@ use crate::effects::{
 };
 use crate::engine::Engine;
 use crate::events::GameEvent;
+use crate::intent::{Reject, RejectCode};
 use crate::recruit::new_minion;
 use crate::rng::{RngStreams, Stream};
 use crate::state::{
@@ -269,13 +270,11 @@ impl Engine {
     }
 
     /// 收集一张卡牌在指定触发时机下的效果，按技能顺序与文本顺序执行。
-    pub(crate) fn run_card_effects(
-        &mut self,
-        state: &mut GameState,
-        card_id: &str,
-        trigger: Trigger,
-        ctx: &EffectCtx,
-    ) -> Vec<GameEvent> {
+    /// 收集一张卡在指定触发时机下的全部效果。
+    ///
+    /// 与执行路径的过滤口径一致：只取该时机、且招募阶段的 `OnPlay` 不含敌方选择器
+    /// （这类战吼延迟到战斗开始，§2.7.4）。
+    pub(crate) fn effects_of(&self, card_id: &str, trigger: Trigger) -> Vec<Effect> {
         let Some(card) = self.catalog.cards.get(card_id) else {
             return Vec::new();
         };
@@ -288,13 +287,23 @@ impl Engine {
                     parsed
                         .into_iter()
                         .filter(|effect| effect.trigger == trigger)
-                        // 招募阶段无法指定敌方目标：这类战吼延迟到战斗开始（§2.7.4）。
                         .filter(|effect| {
                             !(trigger == Trigger::OnPlay && is_enemy_selector(&effect.selector))
                         }),
                 );
             }
         }
+        effects
+    }
+
+    pub(crate) fn run_card_effects(
+        &mut self,
+        state: &mut GameState,
+        card_id: &str,
+        trigger: Trigger,
+        ctx: &EffectCtx,
+    ) -> Vec<GameEvent> {
+        let effects = self.effects_of(card_id, trigger);
 
         let passes = if ctx.golden { 2 } else { 1 };
         let mut events = Vec::new();
@@ -329,6 +338,91 @@ impl Engine {
             events.extend(self.run_card_effects(state, &card_id, Trigger::OnUse, &owner_ctx));
         }
         events
+    }
+
+    /// 意图执行前的只读目标预检。
+    ///
+    /// 口径（core-rules §4.4/§4.5）：效果需要单一显式目标时，若存在合法目标而
+    /// `target` 缺失或不在池中，返回 `NoValidTarget`。池为空时的处理由
+    /// `reject_on_empty_pool` 决定：主动技能按卡牌文档视为不可用（拒绝），
+    /// 战吼与效果牌允许提交、效果落空。
+    ///
+    /// 池只含意图提交前已存在的随从：即将入场的随从客户端还看不到实例编号，
+    /// 把它算进池会让「棋盘为空时买入带目标战吼的随从」变成无法补选的死锁。
+    ///
+    /// 只读：不修改状态、不消耗随机流，调用方可在任何状态修改之前失败返回。
+    pub(crate) fn check_targets(
+        &self,
+        state: &GameState,
+        effects: &[Effect],
+        ctx: &EffectCtx,
+        reject_on_empty_pool: bool,
+    ) -> Result<(), Reject> {
+        for effect in effects {
+            if let Some(condition) = &effect.params.condition
+                && !self.condition_holds(state, condition, ctx)
+            {
+                continue;
+            }
+            match &effect.selector {
+                Selector::Target => {
+                    let chosen = ctx.target.or(ctx.event_target);
+                    if chosen.is_none_or(|id| locate(state, id).is_none()) {
+                        return Err(reject_no_valid_target());
+                    }
+                }
+                Selector::Side {
+                    side,
+                    pick: Pick::Single,
+                    filters,
+                } => {
+                    let pool = self.filtered_side(state, *side, filters, ctx);
+                    if pool.is_empty() {
+                        if reject_on_empty_pool {
+                            return Err(reject_no_valid_target());
+                        }
+                        continue;
+                    }
+                    let chosen = ctx.target.or(ctx.event_target);
+                    if !chosen.is_some_and(|id| pool.contains(&id)) {
+                        return Err(reject_no_valid_target());
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+
+    /// 打出效果牌时，本座位所有 `OnUse` 响应效果的目标预检。
+    pub(crate) fn check_on_use_targets(
+        &self,
+        state: &GameState,
+        ctx: &EffectCtx,
+    ) -> Result<(), Reject> {
+        let Some(player) = state.players.get(usize::from(ctx.seat)) else {
+            return Ok(());
+        };
+        let owners: Vec<(InstanceId, String, bool)> = player
+            .board
+            .iter()
+            .map(|minion| (minion.instance_id, minion.card_id.clone(), minion.golden))
+            .collect();
+        for (instance_id, card_id, golden) in owners {
+            if !self.card_has_trigger(&card_id, Trigger::OnUse) {
+                continue;
+            }
+            let mut owner_ctx = *ctx;
+            owner_ctx.source = Some(instance_id);
+            owner_ctx.golden = golden;
+            self.check_targets(
+                state,
+                &self.effects_of(&card_id, Trigger::OnUse),
+                &owner_ctx,
+                false,
+            )?;
+        }
+        Ok(())
     }
 
     pub(crate) fn card_has_trigger(&self, card_id: &str, trigger: Trigger) -> bool {
@@ -1438,6 +1532,10 @@ pub fn effect_coverage(catalog: &Catalog) -> BTreeMap<(Trigger, Op), usize> {
         }
     }
     coverage
+}
+
+fn reject_no_valid_target() -> Reject {
+    Reject::new(RejectCode::NoValidTarget, "该效果需要一个合法目标")
 }
 
 fn locate(state: &GameState, id: InstanceId) -> Option<(Seat, &MinionInstance)> {

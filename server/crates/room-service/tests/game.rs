@@ -464,13 +464,19 @@ fn play_card_succeeds() {
     let before = task.player_view(0).expect("视图应可用");
     assert_eq!(before.self_.hand.len(), 1, "选择后卡应进入手牌");
     let board_before = before.self_.board.len();
+    // 棋盘已有随从时，需要目标的效果必须指定目标。
+    let target = before
+        .self_
+        .board
+        .first()
+        .map(|minion| minion.minion_id.clone());
 
     let played = task.handle(command(
         "p0",
         "play-1",
         ProtocolIntent::PlayCard {
             hand_index: 0,
-            target_minion_id: None,
+            target_minion_id: target,
         },
     ));
     assert!(error_codes(&played).is_empty(), "打出手牌应成功");
@@ -491,7 +497,18 @@ fn rearrange_board_succeeds() {
     task.handle(command("p0", "rearrange-buy-1", buy(slot)));
     advance_turn(&mut task, &clock);
     let slot = first_nonempty_slot(&task, 0);
-    task.handle(command("p0", "rearrange-buy-2", buy(slot)));
+    // 棋盘已有随从时，带目标战吼的随从需要指定目标才能买入。
+    let target = task.player_view(0).expect("视图应可用").self_.board[0]
+        .minion_id
+        .clone();
+    task.handle(command(
+        "p0",
+        "rearrange-buy-2",
+        ProtocolIntent::BuyMinion {
+            slot,
+            target_minion_id: Some(target),
+        },
+    ));
 
     let before = task.player_view(0).expect("视图应可用");
     assert_eq!(before.self_.board.len(), 2, "两个回合应买入 2 个随从");

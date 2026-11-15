@@ -1102,3 +1102,198 @@ fn start_game_fills_turn_one_shops() {
         .count();
     assert_eq!(rolled, 8, "start_turn 仍为每名玩家刷新一次");
 }
+
+// ---- 目标校验：需要单一显式目标的效果 ----
+//
+// 口径：存在合法目标但未指定或指定不合法 → `NO_VALID_TARGET`，整条意图被拒绝且
+// 不产生任何状态变化；池为空 → 允许执行、效果落空。
+
+/// 战吼「使一个友方随从获得成长」，需要目标。
+const BATTLECRY_TARGET: &str = "bisheng";
+/// 战吼「使一个友方机械获得成长」，己方无机械时池为空。
+const BATTLECRY_TRIBE_TARGET: &str = "archimedes";
+/// 效果牌「使一个友方随从获得 +1/+1」，需要目标。
+const EFFECT_CARD_TARGET: &str = "chengbang-faling";
+
+fn put_champion(state: &mut GameState, seat: Seat, instance_id: InstanceId, card_id: &str) {
+    state.players[usize::from(seat)]
+        .board
+        .push(dummy(instance_id, card_id));
+}
+
+#[test]
+fn buy_battlecry_without_target_rejects_and_keeps_state() {
+    let (mut engine, mut state) = setup(40);
+    put_champion(&mut state, 0, 9_000, "adam-smith");
+    set_shop(&mut state, 0, &[Some(BATTLECRY_TARGET.to_string())]);
+    let before = state_hash(&state);
+
+    let result = engine.apply(
+        &mut state,
+        0,
+        Intent::BuyMinion {
+            slot: 0,
+            target: None,
+        },
+    );
+
+    assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
+    assert_eq!(
+        before,
+        state_hash(&state),
+        "拒绝后金币、商店、池与随机流不变"
+    );
+}
+
+#[test]
+fn buy_battlecry_with_unknown_target_rejects() {
+    let (mut engine, mut state) = setup(41);
+    put_champion(&mut state, 0, 9_000, "adam-smith");
+    set_shop(&mut state, 0, &[Some(BATTLECRY_TARGET.to_string())]);
+    let before = state_hash(&state);
+
+    let result = engine.apply(
+        &mut state,
+        0,
+        Intent::BuyMinion {
+            slot: 0,
+            target: Some(9_999),
+        },
+    );
+
+    assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
+    assert_eq!(before, state_hash(&state));
+}
+
+#[test]
+fn buy_battlecry_with_target_applies_effect() {
+    let (mut engine, mut state) = setup(42);
+    put_champion(&mut state, 0, 9_000, "adam-smith");
+    set_shop(&mut state, 0, &[Some(BATTLECRY_TARGET.to_string())]);
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::BuyMinion {
+                slot: 0,
+                target: Some(9_000),
+            },
+        )
+        .expect("带合法目标应购买成功");
+
+    let target = state.players[0]
+        .board
+        .iter()
+        .find(|minion| minion.instance_id == 9_000)
+        .expect("目标随从仍在棋盘");
+    assert_eq!(target.growth, 1, "战吼成长命中目标");
+}
+
+#[test]
+fn buy_battlecry_with_empty_pool_is_allowed() {
+    let (mut engine, mut state) = setup(43);
+    // 目标筛「机械」，己方只有学者与即将入场的学者，池为空。
+    put_champion(&mut state, 0, 9_000, "gutenberg");
+    set_shop(&mut state, 0, &[Some(BATTLECRY_TRIBE_TARGET.to_string())]);
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::BuyMinion {
+                slot: 0,
+                target: None,
+            },
+        )
+        .expect("池为空时按落空处理，不拒绝");
+
+    assert_eq!(state.players[0].board.len(), 2);
+}
+
+#[test]
+fn play_effect_card_without_target_rejects_and_keeps_hand() {
+    let (mut engine, mut state) = setup(44);
+    put_champion(&mut state, 0, 9_000, "adam-smith");
+    state.players[0].hand.push(HandCard {
+        card_id: EFFECT_CARD_TARGET.to_string(),
+        golden: false,
+    });
+    let before = state_hash(&state);
+
+    let result = engine.apply(
+        &mut state,
+        0,
+        Intent::PlayCard {
+            hand_index: 0,
+            target: None,
+        },
+    );
+
+    assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
+    assert_eq!(before, state_hash(&state), "拒绝后手牌与状态不变");
+}
+
+#[test]
+fn play_effect_card_with_empty_pool_is_allowed_and_whiffs() {
+    let (mut engine, mut state) = setup(45);
+    state.players[0].hand.push(HandCard {
+        card_id: EFFECT_CARD_TARGET.to_string(),
+        golden: false,
+    });
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                target: None,
+            },
+        )
+        .expect("池为空时允许打出，效果落空");
+
+    assert!(state.players[0].hand.is_empty(), "效果牌已离开手牌");
+}
+
+#[test]
+fn hero_power_without_target_rejects_and_keeps_uses() {
+    let (mut engine, mut state) = setup(46);
+    // 亚当·斯密：condition 要求己方至少 3 个人类，池非空才进入目标校验。
+    put_champion(&mut state, 0, 9_000, "chengbang-gongmin");
+    put_champion(&mut state, 0, 9_001, "dongxuehuajia");
+    put_champion(&mut state, 0, 9_002, "mengmalieren");
+    let before = state_hash(&state);
+
+    let result = engine.apply(
+        &mut state,
+        0,
+        Intent::UseHeroPower {
+            skill_id: "division-of-labor".to_string(),
+            target: None,
+        },
+    );
+
+    assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
+    assert_eq!(before, state_hash(&state), "拒绝后金币与技能次数不变");
+}
+
+#[test]
+fn hero_power_with_empty_pool_rejects() {
+    // 卡牌文档：场上没有合法目标时技能不可用（返回 NO_VALID_TARGET）。
+    let (mut engine, mut state) = setup(47);
+    state.players[0].hero = Some("luxun".to_string());
+    let before = state_hash(&state);
+
+    let result = engine.apply(
+        &mut state,
+        0,
+        Intent::UseHeroPower {
+            skill_id: "shout".to_string(),
+            target: None,
+        },
+    );
+
+    assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
+    assert_eq!(before, state_hash(&state), "拒绝后金币与技能次数不变");
+}
