@@ -1,0 +1,3656 @@
+// 本文件由 `cargo run -p protocol-gen` 生成，不要手改。
+/// Error types.
+pub mod error {
+    /// Error from a `TryFrom` or `FromStr` implementation.
+    pub struct ConversionError(::std::borrow::Cow<'static, str>);
+    impl ::std::error::Error for ConversionError {}
+    impl ::std::fmt::Display for ConversionError {
+        fn fmt(
+            &self,
+            f: &mut ::std::fmt::Formatter<'_>,
+        ) -> Result<(), ::std::fmt::Error> {
+            ::std::fmt::Display::fmt(&self.0, f)
+        }
+    }
+    impl ::std::fmt::Debug for ConversionError {
+        fn fmt(
+            &self,
+            f: &mut ::std::fmt::Formatter<'_>,
+        ) -> Result<(), ::std::fmt::Error> {
+            ::std::fmt::Debug::fmt(&self.0, f)
+        }
+    }
+    impl From<&'static str> for ConversionError {
+        fn from(value: &'static str) -> Self {
+            Self(value.into())
+        }
+    }
+    impl From<String> for ConversionError {
+        fn from(value: String) -> Self {
+            Self(value.into())
+        }
+    }
+}
+///`Affordances`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "boardMinions",
+///    "canEndRecruit",
+///    "canReroll",
+///    "canUpgradeEra",
+///    "canUseHeroPower",
+///    "handCards",
+///    "shopSlots",
+///    "upgradeDisabledReason"
+///  ],
+///  "properties": {
+///    "boardMinions": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/BoardAffordance"
+///      }
+///    },
+///    "canEndRecruit": {
+///      "type": "boolean"
+///    },
+///    "canReroll": {
+///      "type": "boolean"
+///    },
+///    "canUpgradeEra": {
+///      "type": "boolean"
+///    },
+///    "canUseHeroPower": {
+///      "type": "boolean"
+///    },
+///    "handCards": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/HandAffordance"
+///      }
+///    },
+///    "heroPowerDisabledReason": {
+///      "description": "不可使用英雄技能时的错误码",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "shopSlots": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/ShopAffordance"
+///      }
+///    },
+///    "upgradeDisabledReason": {
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct Affordances {
+    #[serde(rename = "boardMinions")]
+    pub board_minions: ::std::vec::Vec<BoardAffordance>,
+    #[serde(rename = "canEndRecruit")]
+    pub can_end_recruit: bool,
+    #[serde(rename = "canReroll")]
+    pub can_reroll: bool,
+    #[serde(rename = "canUpgradeEra")]
+    pub can_upgrade_era: bool,
+    #[serde(rename = "canUseHeroPower")]
+    pub can_use_hero_power: bool,
+    #[serde(rename = "handCards")]
+    pub hand_cards: ::std::vec::Vec<HandAffordance>,
+    ///不可使用英雄技能时的错误码
+    #[serde(
+        rename = "heroPowerDisabledReason",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub hero_power_disabled_reason: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "shopSlots")]
+    pub shop_slots: ::std::vec::Vec<ShopAffordance>,
+    #[serde(rename = "upgradeDisabledReason")]
+    pub upgrade_disabled_reason: ::std::option::Option<::std::string::String>,
+}
+impl ::std::convert::From<&Affordances> for Affordances {
+    fn from(value: &Affordances) -> Self {
+        value.clone()
+    }
+}
+///`AuthRequest`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "oneOf": [
+///    {
+///      "type": "object",
+///      "required": [
+///        "code",
+///        "phone"
+///      ],
+///      "properties": {
+///        "code": {
+///          "description": "短信验证码",
+///          "type": "string"
+///        },
+///        "displayName": {
+///          "description": "缺省由服务端生成「玩家N」",
+///          "type": "string",
+///          "maxLength": 20,
+///          "minLength": 1
+///        },
+///        "phone": {
+///          "description": "手机号",
+///          "type": "string"
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "token"
+///      ],
+///      "properties": {
+///        "displayName": {
+///          "description": "缺省由服务端生成「玩家N」",
+///          "type": "string",
+///          "maxLength": 20,
+///          "minLength": 1
+///        },
+///        "token": {
+///          "description": "上次登录返回的令牌",
+///          "type": "string"
+///        }
+///      },
+///      "additionalProperties": false
+///    }
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(untagged, deny_unknown_fields)]
+pub enum AuthRequest {
+    Variant0 {
+        ///短信验证码
+        code: ::std::string::String,
+        ///缺省由服务端生成「玩家N」
+        #[serde(
+            rename = "displayName",
+            default,
+            skip_serializing_if = "::std::option::Option::is_none"
+        )]
+        display_name: ::std::option::Option<AuthRequestVariant0DisplayName>,
+        ///手机号
+        phone: ::std::string::String,
+    },
+    Variant1 {
+        ///缺省由服务端生成「玩家N」
+        #[serde(
+            rename = "displayName",
+            default,
+            skip_serializing_if = "::std::option::Option::is_none"
+        )]
+        display_name: ::std::option::Option<AuthRequestVariant1DisplayName>,
+        ///上次登录返回的令牌
+        token: ::std::string::String,
+    },
+}
+impl ::std::convert::From<&Self> for AuthRequest {
+    fn from(value: &AuthRequest) -> Self {
+        value.clone()
+    }
+}
+///缺省由服务端生成「玩家N」
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "缺省由服务端生成「玩家N」",
+///  "type": "string",
+///  "maxLength": 20,
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct AuthRequestVariant0DisplayName(::std::string::String);
+impl ::std::ops::Deref for AuthRequestVariant0DisplayName {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<AuthRequestVariant0DisplayName> for ::std::string::String {
+    fn from(value: AuthRequestVariant0DisplayName) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&AuthRequestVariant0DisplayName>
+for AuthRequestVariant0DisplayName {
+    fn from(value: &AuthRequestVariant0DisplayName) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for AuthRequestVariant0DisplayName {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() > 20usize {
+            return Err("longer than 20 characters".into());
+        }
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for AuthRequestVariant0DisplayName {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for AuthRequestVariant0DisplayName {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for AuthRequestVariant0DisplayName {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for AuthRequestVariant0DisplayName {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///缺省由服务端生成「玩家N」
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "缺省由服务端生成「玩家N」",
+///  "type": "string",
+///  "maxLength": 20,
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct AuthRequestVariant1DisplayName(::std::string::String);
+impl ::std::ops::Deref for AuthRequestVariant1DisplayName {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<AuthRequestVariant1DisplayName> for ::std::string::String {
+    fn from(value: AuthRequestVariant1DisplayName) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&AuthRequestVariant1DisplayName>
+for AuthRequestVariant1DisplayName {
+    fn from(value: &AuthRequestVariant1DisplayName) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for AuthRequestVariant1DisplayName {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() > 20usize {
+            return Err("longer than 20 characters".into());
+        }
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for AuthRequestVariant1DisplayName {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for AuthRequestVariant1DisplayName {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for AuthRequestVariant1DisplayName {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for AuthRequestVariant1DisplayName {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`AuthResult`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "expiresAt",
+///    "playerId",
+///    "token"
+///  ],
+///  "properties": {
+///    "expiresAt": {
+///      "type": "string",
+///      "format": "date-time"
+///    },
+///    "playerId": {
+///      "type": "string"
+///    },
+///    "token": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct AuthResult {
+    #[serde(rename = "expiresAt")]
+    pub expires_at: ::chrono::DateTime<::chrono::offset::Utc>,
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+    pub token: ::std::string::String,
+}
+impl ::std::convert::From<&AuthResult> for AuthResult {
+    fn from(value: &AuthResult) -> Self {
+        value.clone()
+    }
+}
+///`BoardAffordance`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "disabledReason",
+///    "index",
+///    "sellable"
+///  ],
+///  "properties": {
+///    "disabledReason": {
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "index": {
+///      "type": "integer",
+///      "maximum": 6.0,
+///      "minimum": 0.0
+///    },
+///    "sellable": {
+///      "type": "boolean"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct BoardAffordance {
+    #[serde(rename = "disabledReason")]
+    pub disabled_reason: ::std::option::Option<::std::string::String>,
+    pub index: i64,
+    pub sellable: bool,
+}
+impl ::std::convert::From<&BoardAffordance> for BoardAffordance {
+    fn from(value: &BoardAffordance) -> Self {
+        value.clone()
+    }
+}
+///`BoardMinion`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "attack",
+///    "cardId",
+///    "golden",
+///    "health",
+///    "index",
+///    "keywords",
+///    "minionId",
+///    "sellable"
+///  ],
+///  "properties": {
+///    "attack": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "cardId": {
+///      "type": "string"
+///    },
+///    "golden": {
+///      "type": "boolean"
+///    },
+///    "health": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "index": {
+///      "type": "integer",
+///      "maximum": 6.0,
+///      "minimum": 0.0
+///    },
+///    "keywords": {
+///      "description": "当前生效的关键词",
+///      "type": "array",
+///      "items": {
+///        "type": "string"
+///      }
+///    },
+///    "minionId": {
+///      "description": "随从实例 id",
+///      "type": "string"
+///    },
+///    "sellable": {
+///      "type": "boolean"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct BoardMinion {
+    pub attack: u64,
+    #[serde(rename = "cardId")]
+    pub card_id: ::std::string::String,
+    pub golden: bool,
+    pub health: u64,
+    pub index: i64,
+    ///当前生效的关键词
+    pub keywords: ::std::vec::Vec<::std::string::String>,
+    ///随从实例 id
+    #[serde(rename = "minionId")]
+    pub minion_id: ::std::string::String,
+    pub sellable: bool,
+}
+impl ::std::convert::From<&BoardMinion> for BoardMinion {
+    fn from(value: &BoardMinion) -> Self {
+        value.clone()
+    }
+}
+///`ClientEnvelope`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "id",
+///    "payload",
+///    "ts",
+///    "type",
+///    "v"
+///  ],
+///  "properties": {
+///    "id": {
+///      "description": "发送方生成的唯一消息 id",
+///      "type": "string",
+///      "minLength": 1
+///    },
+///    "payload": {
+///      "description": "由 type 决定的结构",
+///      "type": "object"
+///    },
+///    "playerId": {
+///      "description": "认证前为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "replyTo": {
+///      "description": "回复的上行消息 id",
+///      "type": "string"
+///    },
+///    "roomId": {
+///      "description": "未进房间时为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "ts": {
+///      "description": "RFC 3339 UTC 时间",
+///      "type": "string",
+///      "format": "date-time"
+///    },
+///    "type": {
+///      "description": "消息类型，唯一路由键",
+///      "type": "string",
+///      "minLength": 1
+///    },
+///    "v": {
+///      "description": "协议主版本",
+///      "const": 1
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct ClientEnvelope {
+    ///发送方生成的唯一消息 id
+    pub id: ClientEnvelopeId,
+    ///由 type 决定的结构
+    pub payload: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+    ///认证前为 null
+    #[serde(
+        rename = "playerId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub player_id: ::std::option::Option<::std::string::String>,
+    ///回复的上行消息 id
+    #[serde(
+        rename = "replyTo",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub reply_to: ::std::option::Option<::std::string::String>,
+    ///未进房间时为 null
+    #[serde(
+        rename = "roomId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub room_id: ::std::option::Option<::std::string::String>,
+    ///RFC 3339 UTC 时间
+    pub ts: ::chrono::DateTime<::chrono::offset::Utc>,
+    ///消息类型，唯一路由键
+    #[serde(rename = "type")]
+    pub type_: ClientEnvelopeType,
+    ///协议主版本
+    pub v: ::serde_json::Value,
+}
+impl ::std::convert::From<&ClientEnvelope> for ClientEnvelope {
+    fn from(value: &ClientEnvelope) -> Self {
+        value.clone()
+    }
+}
+///发送方生成的唯一消息 id
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "发送方生成的唯一消息 id",
+///  "type": "string",
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct ClientEnvelopeId(::std::string::String);
+impl ::std::ops::Deref for ClientEnvelopeId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<ClientEnvelopeId> for ::std::string::String {
+    fn from(value: ClientEnvelopeId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&ClientEnvelopeId> for ClientEnvelopeId {
+    fn from(value: &ClientEnvelopeId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for ClientEnvelopeId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for ClientEnvelopeId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for ClientEnvelopeId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for ClientEnvelopeId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///消息类型，唯一路由键
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "消息类型，唯一路由键",
+///  "type": "string",
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct ClientEnvelopeType(::std::string::String);
+impl ::std::ops::Deref for ClientEnvelopeType {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<ClientEnvelopeType> for ::std::string::String {
+    fn from(value: ClientEnvelopeType) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&ClientEnvelopeType> for ClientEnvelopeType {
+    fn from(value: &ClientEnvelopeType) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for ClientEnvelopeType {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for ClientEnvelopeType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for ClientEnvelopeType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for ClientEnvelopeType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeType {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`CombatResult`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "actions",
+///    "damage",
+///    "opponentBoard",
+///    "ownBoard",
+///    "winnerId"
+///  ],
+///  "properties": {
+///    "actions": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "kind"
+///        ],
+///        "properties": {
+///          "damage": {
+///            "type": [
+///              "integer",
+///              "null"
+///            ]
+///          },
+///          "kind": {
+///            "description": "动作类型，具体取值由规则引擎实现确定",
+///            "type": "string"
+///          },
+///          "sourceIndex": {
+///            "type": [
+///              "integer",
+///              "null"
+///            ]
+///          },
+///          "targetIndex": {
+///            "type": [
+///              "integer",
+///              "null"
+///            ]
+///          }
+///        },
+///        "additionalProperties": false
+///      }
+///    },
+///    "damage": {
+///      "description": "本场战斗败者受到的伤害",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "opponentBoard": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/BoardMinion"
+///      }
+///    },
+///    "ownBoard": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/BoardMinion"
+///      }
+///    },
+///    "winnerId": {
+///      "description": "本场胜者；玩家自己的 playerId 表示胜",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CombatResult {
+    pub actions: ::std::vec::Vec<CombatResultActionsItem>,
+    ///本场战斗败者受到的伤害
+    pub damage: u64,
+    #[serde(rename = "opponentBoard")]
+    pub opponent_board: ::std::vec::Vec<BoardMinion>,
+    #[serde(rename = "ownBoard")]
+    pub own_board: ::std::vec::Vec<BoardMinion>,
+    ///本场胜者；玩家自己的 playerId 表示胜
+    #[serde(rename = "winnerId")]
+    pub winner_id: ::std::option::Option<::std::string::String>,
+}
+impl ::std::convert::From<&CombatResult> for CombatResult {
+    fn from(value: &CombatResult) -> Self {
+        value.clone()
+    }
+}
+///`CombatResultActionsItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "kind"
+///  ],
+///  "properties": {
+///    "damage": {
+///      "type": [
+///        "integer",
+///        "null"
+///      ]
+///    },
+///    "kind": {
+///      "description": "动作类型，具体取值由规则引擎实现确定",
+///      "type": "string"
+///    },
+///    "sourceIndex": {
+///      "type": [
+///        "integer",
+///        "null"
+///      ]
+///    },
+///    "targetIndex": {
+///      "type": [
+///        "integer",
+///        "null"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CombatResultActionsItem {
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub damage: ::std::option::Option<i64>,
+    ///动作类型，具体取值由规则引擎实现确定
+    pub kind: ::std::string::String,
+    #[serde(
+        rename = "sourceIndex",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub source_index: ::std::option::Option<i64>,
+    #[serde(
+        rename = "targetIndex",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub target_index: ::std::option::Option<i64>,
+}
+impl ::std::convert::From<&CombatResultActionsItem> for CombatResultActionsItem {
+    fn from(value: &CombatResultActionsItem) -> Self {
+        value.clone()
+    }
+}
+///`CreateRoom`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CreateRoom {}
+impl ::std::convert::From<&CreateRoom> for CreateRoom {
+    fn from(value: &CreateRoom) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for CreateRoom {
+    fn default() -> Self {
+        Self {}
+    }
+}
+///`Error`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "$ref": "#/$defs/ErrorMessage"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(transparent)]
+pub struct Error(pub ErrorMessage);
+impl ::std::ops::Deref for Error {
+    type Target = ErrorMessage;
+    fn deref(&self) -> &ErrorMessage {
+        &self.0
+    }
+}
+impl ::std::convert::From<Error> for ErrorMessage {
+    fn from(value: Error) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&Error> for Error {
+    fn from(value: &Error) -> Self {
+        value.clone()
+    }
+}
+impl ::std::convert::From<ErrorMessage> for Error {
+    fn from(value: ErrorMessage) -> Self {
+        Self(value)
+    }
+}
+///稳定错误码，只增不改
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "稳定错误码，只增不改",
+///  "type": "string",
+///  "enum": [
+///    "NOT_ENOUGH_GOLD",
+///    "SHOP_SLOT_EMPTY",
+///    "NO_SPACE",
+///    "INVALID_STAGE",
+///    "NO_SUCH_MINION",
+///    "ALREADY_MAX_ERA",
+///    "CARD_NOT_IN_HAND",
+///    "HERO_POWER_LIMIT",
+///    "INVALID_CHOICE",
+///    "NO_VALID_TARGET",
+///    "TARGET_NOT_ALLOWED",
+///    "AUTH_FAILED",
+///    "TOKEN_EXPIRED",
+///    "AUTH_RATE_LIMITED",
+///    "SESSION_REPLACED",
+///    "BAD_PAYLOAD",
+///    "UNKNOWN_TYPE",
+///    "RATE_LIMITED",
+///    "NOT_IN_ROOM",
+///    "ROOM_NOT_FOUND",
+///    "ROOM_FULL",
+///    "SEQUENCE_STALE",
+///    "INTERNAL_ERROR"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum ErrorCode {
+    #[serde(rename = "NOT_ENOUGH_GOLD")]
+    NotEnoughGold,
+    #[serde(rename = "SHOP_SLOT_EMPTY")]
+    ShopSlotEmpty,
+    #[serde(rename = "NO_SPACE")]
+    NoSpace,
+    #[serde(rename = "INVALID_STAGE")]
+    InvalidStage,
+    #[serde(rename = "NO_SUCH_MINION")]
+    NoSuchMinion,
+    #[serde(rename = "ALREADY_MAX_ERA")]
+    AlreadyMaxEra,
+    #[serde(rename = "CARD_NOT_IN_HAND")]
+    CardNotInHand,
+    #[serde(rename = "HERO_POWER_LIMIT")]
+    HeroPowerLimit,
+    #[serde(rename = "INVALID_CHOICE")]
+    InvalidChoice,
+    #[serde(rename = "NO_VALID_TARGET")]
+    NoValidTarget,
+    #[serde(rename = "TARGET_NOT_ALLOWED")]
+    TargetNotAllowed,
+    #[serde(rename = "AUTH_FAILED")]
+    AuthFailed,
+    #[serde(rename = "TOKEN_EXPIRED")]
+    TokenExpired,
+    #[serde(rename = "AUTH_RATE_LIMITED")]
+    AuthRateLimited,
+    #[serde(rename = "SESSION_REPLACED")]
+    SessionReplaced,
+    #[serde(rename = "BAD_PAYLOAD")]
+    BadPayload,
+    #[serde(rename = "UNKNOWN_TYPE")]
+    UnknownType,
+    #[serde(rename = "RATE_LIMITED")]
+    RateLimited,
+    #[serde(rename = "NOT_IN_ROOM")]
+    NotInRoom,
+    #[serde(rename = "ROOM_NOT_FOUND")]
+    RoomNotFound,
+    #[serde(rename = "ROOM_FULL")]
+    RoomFull,
+    #[serde(rename = "SEQUENCE_STALE")]
+    SequenceStale,
+    #[serde(rename = "INTERNAL_ERROR")]
+    InternalError,
+}
+impl ::std::convert::From<&Self> for ErrorCode {
+    fn from(value: &ErrorCode) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for ErrorCode {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::NotEnoughGold => f.write_str("NOT_ENOUGH_GOLD"),
+            Self::ShopSlotEmpty => f.write_str("SHOP_SLOT_EMPTY"),
+            Self::NoSpace => f.write_str("NO_SPACE"),
+            Self::InvalidStage => f.write_str("INVALID_STAGE"),
+            Self::NoSuchMinion => f.write_str("NO_SUCH_MINION"),
+            Self::AlreadyMaxEra => f.write_str("ALREADY_MAX_ERA"),
+            Self::CardNotInHand => f.write_str("CARD_NOT_IN_HAND"),
+            Self::HeroPowerLimit => f.write_str("HERO_POWER_LIMIT"),
+            Self::InvalidChoice => f.write_str("INVALID_CHOICE"),
+            Self::NoValidTarget => f.write_str("NO_VALID_TARGET"),
+            Self::TargetNotAllowed => f.write_str("TARGET_NOT_ALLOWED"),
+            Self::AuthFailed => f.write_str("AUTH_FAILED"),
+            Self::TokenExpired => f.write_str("TOKEN_EXPIRED"),
+            Self::AuthRateLimited => f.write_str("AUTH_RATE_LIMITED"),
+            Self::SessionReplaced => f.write_str("SESSION_REPLACED"),
+            Self::BadPayload => f.write_str("BAD_PAYLOAD"),
+            Self::UnknownType => f.write_str("UNKNOWN_TYPE"),
+            Self::RateLimited => f.write_str("RATE_LIMITED"),
+            Self::NotInRoom => f.write_str("NOT_IN_ROOM"),
+            Self::RoomNotFound => f.write_str("ROOM_NOT_FOUND"),
+            Self::RoomFull => f.write_str("ROOM_FULL"),
+            Self::SequenceStale => f.write_str("SEQUENCE_STALE"),
+            Self::InternalError => f.write_str("INTERNAL_ERROR"),
+        }
+    }
+}
+impl ::std::str::FromStr for ErrorCode {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "NOT_ENOUGH_GOLD" => Ok(Self::NotEnoughGold),
+            "SHOP_SLOT_EMPTY" => Ok(Self::ShopSlotEmpty),
+            "NO_SPACE" => Ok(Self::NoSpace),
+            "INVALID_STAGE" => Ok(Self::InvalidStage),
+            "NO_SUCH_MINION" => Ok(Self::NoSuchMinion),
+            "ALREADY_MAX_ERA" => Ok(Self::AlreadyMaxEra),
+            "CARD_NOT_IN_HAND" => Ok(Self::CardNotInHand),
+            "HERO_POWER_LIMIT" => Ok(Self::HeroPowerLimit),
+            "INVALID_CHOICE" => Ok(Self::InvalidChoice),
+            "NO_VALID_TARGET" => Ok(Self::NoValidTarget),
+            "TARGET_NOT_ALLOWED" => Ok(Self::TargetNotAllowed),
+            "AUTH_FAILED" => Ok(Self::AuthFailed),
+            "TOKEN_EXPIRED" => Ok(Self::TokenExpired),
+            "AUTH_RATE_LIMITED" => Ok(Self::AuthRateLimited),
+            "SESSION_REPLACED" => Ok(Self::SessionReplaced),
+            "BAD_PAYLOAD" => Ok(Self::BadPayload),
+            "UNKNOWN_TYPE" => Ok(Self::UnknownType),
+            "RATE_LIMITED" => Ok(Self::RateLimited),
+            "NOT_IN_ROOM" => Ok(Self::NotInRoom),
+            "ROOM_NOT_FOUND" => Ok(Self::RoomNotFound),
+            "ROOM_FULL" => Ok(Self::RoomFull),
+            "SEQUENCE_STALE" => Ok(Self::SequenceStale),
+            "INTERNAL_ERROR" => Ok(Self::InternalError),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for ErrorCode {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for ErrorCode {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for ErrorCode {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`ErrorMessage`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "code",
+///    "message",
+///    "retryable"
+///  ],
+///  "properties": {
+///    "clientIntentId": {
+///      "description": "被拒绝意图的 clientIntentId",
+///      "type": "string"
+///    },
+///    "code": {
+///      "description": "错误码",
+///      "$ref": "#/$defs/ErrorCode"
+///    },
+///    "message": {
+///      "description": "面向日志的错误说明，不作为 UI 文案",
+///      "type": "string"
+///    },
+///    "retryable": {
+///      "description": "是否可原样重试",
+///      "type": "boolean"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct ErrorMessage {
+    ///被拒绝意图的 clientIntentId
+    #[serde(
+        rename = "clientIntentId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub client_intent_id: ::std::option::Option<::std::string::String>,
+    ///错误码
+    pub code: ErrorCode,
+    ///面向日志的错误说明，不作为 UI 文案
+    pub message: ::std::string::String,
+    ///是否可原样重试
+    pub retryable: bool,
+}
+impl ::std::convert::From<&ErrorMessage> for ErrorMessage {
+    fn from(value: &ErrorMessage) -> Self {
+        value.clone()
+    }
+}
+///`FriendRequest`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "toPlayerId"
+///  ],
+///  "properties": {
+///    "toPlayerId": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct FriendRequest {
+    #[serde(rename = "toPlayerId")]
+    pub to_player_id: ::std::string::String,
+}
+impl ::std::convert::From<&FriendRequest> for FriendRequest {
+    fn from(value: &FriendRequest) -> Self {
+        value.clone()
+    }
+}
+///`FriendUpdate`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "friends"
+///  ],
+///  "properties": {
+///    "friends": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "displayName",
+///          "online",
+///          "playerId"
+///        ],
+///        "properties": {
+///          "displayName": {
+///            "type": "string"
+///          },
+///          "online": {
+///            "type": "boolean"
+///          },
+///          "playerId": {
+///            "type": "string"
+///          }
+///        },
+///        "additionalProperties": false
+///      }
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct FriendUpdate {
+    pub friends: ::std::vec::Vec<FriendUpdateFriendsItem>,
+}
+impl ::std::convert::From<&FriendUpdate> for FriendUpdate {
+    fn from(value: &FriendUpdate) -> Self {
+        value.clone()
+    }
+}
+///`FriendUpdateFriendsItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "displayName",
+///    "online",
+///    "playerId"
+///  ],
+///  "properties": {
+///    "displayName": {
+///      "type": "string"
+///    },
+///    "online": {
+///      "type": "boolean"
+///    },
+///    "playerId": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct FriendUpdateFriendsItem {
+    #[serde(rename = "displayName")]
+    pub display_name: ::std::string::String,
+    pub online: bool,
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+}
+impl ::std::convert::From<&FriendUpdateFriendsItem> for FriendUpdateFriendsItem {
+    fn from(value: &FriendUpdateFriendsItem) -> Self {
+        value.clone()
+    }
+}
+///`GameEvent`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "kind"
+///  ],
+///  "properties": {
+///    "amount": {
+///      "description": "伤害等数值",
+///      "type": "integer"
+///    },
+///    "cardId": {
+///      "type": "string"
+///    },
+///    "kind": {
+///      "type": "string",
+///      "enum": [
+///        "MinionBought",
+///        "MinionSold",
+///        "ShopRolled",
+///        "EraUpgraded",
+///        "TripleFormed",
+///        "CardDiscovered",
+///        "DamageTaken",
+///        "PlayerEliminated"
+///      ]
+///    },
+///    "minionId": {
+///      "type": "string"
+///    },
+///    "playerId": {
+///      "description": "事件涉及的玩家，可省略表示自己",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct GameEvent {
+    ///伤害等数值
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub amount: ::std::option::Option<i64>,
+    #[serde(
+        rename = "cardId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub card_id: ::std::option::Option<::std::string::String>,
+    pub kind: GameEventKind,
+    #[serde(
+        rename = "minionId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub minion_id: ::std::option::Option<::std::string::String>,
+    ///事件涉及的玩家，可省略表示自己
+    #[serde(
+        rename = "playerId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub player_id: ::std::option::Option<::std::string::String>,
+}
+impl ::std::convert::From<&GameEvent> for GameEvent {
+    fn from(value: &GameEvent) -> Self {
+        value.clone()
+    }
+}
+///`GameEventKind`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "enum": [
+///    "MinionBought",
+///    "MinionSold",
+///    "ShopRolled",
+///    "EraUpgraded",
+///    "TripleFormed",
+///    "CardDiscovered",
+///    "DamageTaken",
+///    "PlayerEliminated"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum GameEventKind {
+    MinionBought,
+    MinionSold,
+    ShopRolled,
+    EraUpgraded,
+    TripleFormed,
+    CardDiscovered,
+    DamageTaken,
+    PlayerEliminated,
+}
+impl ::std::convert::From<&Self> for GameEventKind {
+    fn from(value: &GameEventKind) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for GameEventKind {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::MinionBought => f.write_str("MinionBought"),
+            Self::MinionSold => f.write_str("MinionSold"),
+            Self::ShopRolled => f.write_str("ShopRolled"),
+            Self::EraUpgraded => f.write_str("EraUpgraded"),
+            Self::TripleFormed => f.write_str("TripleFormed"),
+            Self::CardDiscovered => f.write_str("CardDiscovered"),
+            Self::DamageTaken => f.write_str("DamageTaken"),
+            Self::PlayerEliminated => f.write_str("PlayerEliminated"),
+        }
+    }
+}
+impl ::std::str::FromStr for GameEventKind {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "MinionBought" => Ok(Self::MinionBought),
+            "MinionSold" => Ok(Self::MinionSold),
+            "ShopRolled" => Ok(Self::ShopRolled),
+            "EraUpgraded" => Ok(Self::EraUpgraded),
+            "TripleFormed" => Ok(Self::TripleFormed),
+            "CardDiscovered" => Ok(Self::CardDiscovered),
+            "DamageTaken" => Ok(Self::DamageTaken),
+            "PlayerEliminated" => Ok(Self::PlayerEliminated),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for GameEventKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for GameEventKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for GameEventKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`GameOver`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "ranking",
+///    "seed"
+///  ],
+///  "properties": {
+///    "ranking": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "place",
+///          "playerId"
+///        ],
+///        "properties": {
+///          "place": {
+///            "type": "integer",
+///            "maximum": 8.0,
+///            "minimum": 1.0
+///          },
+///          "playerId": {
+///            "type": "string"
+///          }
+///        },
+///        "additionalProperties": false
+///      }
+///    },
+///    "seed": {
+///      "description": "会战模式对局结束后公开的种子",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct GameOver {
+    pub ranking: ::std::vec::Vec<GameOverRankingItem>,
+    ///会战模式对局结束后公开的种子
+    pub seed: ::std::string::String,
+}
+impl ::std::convert::From<&GameOver> for GameOver {
+    fn from(value: &GameOver) -> Self {
+        value.clone()
+    }
+}
+///`GameOverRankingItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "place",
+///    "playerId"
+///  ],
+///  "properties": {
+///    "place": {
+///      "type": "integer",
+///      "maximum": 8.0,
+///      "minimum": 1.0
+///    },
+///    "playerId": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct GameOverRankingItem {
+    pub place: ::std::num::NonZeroU64,
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+}
+impl ::std::convert::From<&GameOverRankingItem> for GameOverRankingItem {
+    fn from(value: &GameOverRankingItem) -> Self {
+        value.clone()
+    }
+}
+///`GameStarted`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "view"
+///  ],
+///  "properties": {
+///    "view": {
+///      "$ref": "#/$defs/PlayerView"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct GameStarted {
+    pub view: PlayerView,
+}
+impl ::std::convert::From<&GameStarted> for GameStarted {
+    fn from(value: &GameStarted) -> Self {
+        value.clone()
+    }
+}
+///`HandAffordance`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "disabledReason",
+///    "index",
+///    "playable"
+///  ],
+///  "properties": {
+///    "disabledReason": {
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "index": {
+///      "type": "integer",
+///      "maximum": 9.0,
+///      "minimum": 0.0
+///    },
+///    "playable": {
+///      "type": "boolean"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct HandAffordance {
+    #[serde(rename = "disabledReason")]
+    pub disabled_reason: ::std::option::Option<::std::string::String>,
+    pub index: i64,
+    pub playable: bool,
+}
+impl ::std::convert::From<&HandAffordance> for HandAffordance {
+    fn from(value: &HandAffordance) -> Self {
+        value.clone()
+    }
+}
+///`HandCard`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "cardId",
+///    "disabledReason",
+///    "index",
+///    "playable"
+///  ],
+///  "properties": {
+///    "cardId": {
+///      "type": "string"
+///    },
+///    "disabledReason": {
+///      "description": "不可操作时的错误码",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "index": {
+///      "type": "integer",
+///      "maximum": 9.0,
+///      "minimum": 0.0
+///    },
+///    "playable": {
+///      "description": "服务端算好的可打出提示",
+///      "type": "boolean"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct HandCard {
+    #[serde(rename = "cardId")]
+    pub card_id: ::std::string::String,
+    ///不可操作时的错误码
+    #[serde(rename = "disabledReason")]
+    pub disabled_reason: ::std::option::Option<::std::string::String>,
+    pub index: i64,
+    ///服务端算好的可打出提示
+    pub playable: bool,
+}
+impl ::std::convert::From<&HandCard> for HandCard {
+    fn from(value: &HandCard) -> Self {
+        value.clone()
+    }
+}
+///`Intent`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "oneOf": [
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind",
+///        "slot"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "BuyMinion"
+///        },
+///        "slot": {
+///          "description": "商店槽位",
+///          "type": "integer",
+///          "maximum": 5.0,
+///          "minimum": 0.0
+///        },
+///        "targetMinionId": {
+///          "description": "战吼或效果需要目标时填",
+///          "type": "string"
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind",
+///        "minionId"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "SellMinion"
+///        },
+///        "minionId": {
+///          "description": "要出售的随从实例 id",
+///          "type": "string"
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "RerollShop"
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "UpgradeEra"
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "handIndex",
+///        "kind"
+///      ],
+///      "properties": {
+///        "handIndex": {
+///          "description": "手牌位置",
+///          "type": "integer",
+///          "maximum": 9.0,
+///          "minimum": 0.0
+///        },
+///        "kind": {
+///          "const": "PlayCard"
+///        },
+///        "targetMinionId": {
+///          "description": "战吼或效果需要目标时填",
+///          "type": "string"
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "fromIndex",
+///        "kind",
+///        "toIndex"
+///      ],
+///      "properties": {
+///        "fromIndex": {
+///          "type": "integer",
+///          "maximum": 6.0,
+///          "minimum": 0.0
+///        },
+///        "kind": {
+///          "const": "RearrangeBoard"
+///        },
+///        "toIndex": {
+///          "type": "integer",
+///          "maximum": 6.0,
+///          "minimum": 0.0
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "FreezeShop"
+///        },
+///        "slot": {
+///          "description": "null 表示全部槽位",
+///          "type": [
+///            "integer",
+///            "null"
+///          ],
+///          "maximum": 5.0,
+///          "minimum": 0.0
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind",
+///        "skillId"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "UseHeroPower"
+///        },
+///        "skillId": {
+///          "type": "string"
+///        },
+///        "targetMinionId": {
+///          "description": "需要目标的技能才填",
+///          "type": "string"
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "EndRecruit"
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "choice",
+///        "kind"
+///      ],
+///      "properties": {
+///        "choice": {
+///          "description": "发现为候选下标，进化为选项下标",
+///          "type": "integer",
+///          "maximum": 2.0,
+///          "minimum": 0.0
+///        },
+///        "kind": {
+///          "const": "ChooseDiscover"
+///        }
+///      },
+///      "additionalProperties": false
+///    }
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(tag = "kind", deny_unknown_fields)]
+pub enum Intent {
+    BuyMinion {
+        ///商店槽位
+        slot: i64,
+        ///战吼或效果需要目标时填
+        #[serde(
+            rename = "targetMinionId",
+            default,
+            skip_serializing_if = "::std::option::Option::is_none"
+        )]
+        target_minion_id: ::std::option::Option<::std::string::String>,
+    },
+    SellMinion {
+        ///要出售的随从实例 id
+        #[serde(rename = "minionId")]
+        minion_id: ::std::string::String,
+    },
+    RerollShop,
+    UpgradeEra,
+    PlayCard {
+        ///手牌位置
+        #[serde(rename = "handIndex")]
+        hand_index: i64,
+        ///战吼或效果需要目标时填
+        #[serde(
+            rename = "targetMinionId",
+            default,
+            skip_serializing_if = "::std::option::Option::is_none"
+        )]
+        target_minion_id: ::std::option::Option<::std::string::String>,
+    },
+    RearrangeBoard {
+        #[serde(rename = "fromIndex")]
+        from_index: i64,
+        #[serde(rename = "toIndex")]
+        to_index: i64,
+    },
+    FreezeShop {
+        ///null 表示全部槽位
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        slot: ::std::option::Option<i64>,
+    },
+    UseHeroPower {
+        #[serde(rename = "skillId")]
+        skill_id: ::std::string::String,
+        ///需要目标的技能才填
+        #[serde(
+            rename = "targetMinionId",
+            default,
+            skip_serializing_if = "::std::option::Option::is_none"
+        )]
+        target_minion_id: ::std::option::Option<::std::string::String>,
+    },
+    EndRecruit,
+    ChooseDiscover {
+        ///发现为候选下标，进化为选项下标
+        choice: i64,
+    },
+}
+impl ::std::convert::From<&Self> for Intent {
+    fn from(value: &Intent) -> Self {
+        value.clone()
+    }
+}
+///`IntentMessage`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "clientIntentId",
+///    "intent"
+///  ],
+///  "properties": {
+///    "clientIntentId": {
+///      "description": "客户端生成，用于幂等",
+///      "type": "string",
+///      "minLength": 1
+///    },
+///    "intent": {
+///      "$ref": "#/$defs/Intent"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct IntentMessage {
+    ///客户端生成，用于幂等
+    #[serde(rename = "clientIntentId")]
+    pub client_intent_id: IntentMessageClientIntentId,
+    pub intent: Intent,
+}
+impl ::std::convert::From<&IntentMessage> for IntentMessage {
+    fn from(value: &IntentMessage) -> Self {
+        value.clone()
+    }
+}
+///客户端生成，用于幂等
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "客户端生成，用于幂等",
+///  "type": "string",
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct IntentMessageClientIntentId(::std::string::String);
+impl ::std::ops::Deref for IntentMessageClientIntentId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<IntentMessageClientIntentId> for ::std::string::String {
+    fn from(value: IntentMessageClientIntentId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&IntentMessageClientIntentId> for IntentMessageClientIntentId {
+    fn from(value: &IntentMessageClientIntentId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for IntentMessageClientIntentId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for IntentMessageClientIntentId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for IntentMessageClientIntentId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for IntentMessageClientIntentId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for IntentMessageClientIntentId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`JoinRoom`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "code"
+///  ],
+///  "properties": {
+///    "code": {
+///      "description": "6 位房间码",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct JoinRoom {
+    ///6 位房间码
+    pub code: ::std::string::String,
+}
+impl ::std::convert::From<&JoinRoom> for JoinRoom {
+    fn from(value: &JoinRoom) -> Self {
+        value.clone()
+    }
+}
+///`LeaveRoom`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct LeaveRoom {}
+impl ::std::convert::From<&LeaveRoom> for LeaveRoom {
+    fn from(value: &LeaveRoom) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for LeaveRoom {
+    fn default() -> Self {
+        Self {}
+    }
+}
+///`PendingChoice`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "oneOf": [
+///    {
+///      "type": "object",
+///      "required": [
+///        "candidates",
+///        "kind"
+///      ],
+///      "properties": {
+///        "candidates": {
+///          "description": "三选一的候选 cardId",
+///          "type": "array",
+///          "items": {
+///            "type": "string"
+///          }
+///        },
+///        "kind": {
+///          "description": "固定为 discover",
+///          "const": "discover"
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind",
+///        "options"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "description": "固定为 evolve",
+///          "const": "evolve"
+///        },
+///        "options": {
+///          "description": "进化选项",
+///          "type": "array",
+///          "items": {
+///            "type": "string"
+///          }
+///        }
+///      },
+///      "additionalProperties": false
+///    }
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(tag = "kind", deny_unknown_fields)]
+pub enum PendingChoice {
+    #[serde(rename = "discover")]
+    Discover {
+        ///三选一的候选 cardId
+        candidates: ::std::vec::Vec<::std::string::String>,
+    },
+    #[serde(rename = "evolve")]
+    Evolve {
+        ///进化选项
+        options: ::std::vec::Vec<::std::string::String>,
+    },
+}
+impl ::std::convert::From<&Self> for PendingChoice {
+    fn from(value: &PendingChoice) -> Self {
+        value.clone()
+    }
+}
+///对局阶段
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "对局阶段",
+///  "type": "string",
+///  "enum": [
+///    "Lobby",
+///    "Recruit",
+///    "Combat",
+///    "Settle",
+///    "GameOver"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum Phase {
+    Lobby,
+    Recruit,
+    Combat,
+    Settle,
+    GameOver,
+}
+impl ::std::convert::From<&Self> for Phase {
+    fn from(value: &Phase) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for Phase {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Lobby => f.write_str("Lobby"),
+            Self::Recruit => f.write_str("Recruit"),
+            Self::Combat => f.write_str("Combat"),
+            Self::Settle => f.write_str("Settle"),
+            Self::GameOver => f.write_str("GameOver"),
+        }
+    }
+}
+impl ::std::str::FromStr for Phase {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "Lobby" => Ok(Self::Lobby),
+            "Recruit" => Ok(Self::Recruit),
+            "Combat" => Ok(Self::Combat),
+            "Settle" => Ok(Self::Settle),
+            "GameOver" => Ok(Self::GameOver),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for Phase {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for Phase {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for Phase {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`PhaseChanged`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "deadline",
+///    "phase",
+///    "turn"
+///  ],
+///  "properties": {
+///    "deadline": {
+///      "type": "string",
+///      "format": "date-time"
+///    },
+///    "phase": {
+///      "$ref": "#/$defs/Phase"
+///    },
+///    "turn": {
+///      "type": "integer",
+///      "maximum": 20.0,
+///      "minimum": 1.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct PhaseChanged {
+    pub deadline: ::chrono::DateTime<::chrono::offset::Utc>,
+    pub phase: Phase,
+    pub turn: ::std::num::NonZeroU64,
+}
+impl ::std::convert::From<&PhaseChanged> for PhaseChanged {
+    fn from(value: &PhaseChanged) -> Self {
+        value.clone()
+    }
+}
+///`PlayerSummary`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "alive",
+///    "boardCount",
+///    "displayName",
+///    "era",
+///    "heroCardId",
+///    "hp",
+///    "managed",
+///    "playerId",
+///    "recruited",
+///    "seat"
+///  ],
+///  "properties": {
+///    "alive": {
+///      "type": "boolean"
+///    },
+///    "boardCount": {
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 0.0
+///    },
+///    "displayName": {
+///      "type": "string"
+///    },
+///    "era": {
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 1.0
+///    },
+///    "heroCardId": {
+///      "description": "开局选择前为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "hp": {
+///      "type": "integer"
+///    },
+///    "managed": {
+///      "description": "当前是否由 AI 托管",
+///      "type": "boolean"
+///    },
+///    "placement": {
+///      "description": "最终名次，对局结束前为 null",
+///      "type": [
+///        "integer",
+///        "null"
+///      ]
+///    },
+///    "playerId": {
+///      "type": "string"
+///    },
+///    "recruited": {
+///      "description": "本回合是否已结束招募",
+///      "type": "boolean"
+///    },
+///    "seat": {
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct PlayerSummary {
+    pub alive: bool,
+    #[serde(rename = "boardCount")]
+    pub board_count: i64,
+    #[serde(rename = "displayName")]
+    pub display_name: ::std::string::String,
+    pub era: ::std::num::NonZeroU64,
+    ///开局选择前为 null
+    #[serde(rename = "heroCardId")]
+    pub hero_card_id: ::std::option::Option<::std::string::String>,
+    pub hp: i64,
+    ///当前是否由 AI 托管
+    pub managed: bool,
+    ///最终名次，对局结束前为 null
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub placement: ::std::option::Option<i64>,
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+    ///本回合是否已结束招募
+    pub recruited: bool,
+    pub seat: i64,
+}
+impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
+    fn from(value: &PlayerSummary) -> Self {
+        value.clone()
+    }
+}
+///`PlayerView`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "enabledFactions",
+///    "phase",
+///    "phaseDeadline",
+///    "players",
+///    "roomId",
+///    "self",
+///    "turn"
+///  ],
+///  "properties": {
+///    "enabledFactions": {
+///      "description": "本局启用的 5 个流派",
+///      "type": "array",
+///      "items": {
+///        "type": "string"
+///      },
+///      "maxItems": 5,
+///      "minItems": 5
+///    },
+///    "opponentPlayerId": {
+///      "description": "当前战斗对手；招募阶段或未配对时为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "phase": {
+///      "$ref": "#/$defs/Phase"
+///    },
+///    "phaseDeadline": {
+///      "type": "string",
+///      "format": "date-time"
+///    },
+///    "players": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/PlayerSummary"
+///      }
+///    },
+///    "roomId": {
+///      "type": "string"
+///    },
+///    "self": {
+///      "type": "object",
+///      "required": [
+///        "affordances",
+///        "board",
+///        "era",
+///        "gold",
+///        "hand",
+///        "heroCardId",
+///        "heroPower",
+///        "hp",
+///        "pendingChoices",
+///        "playerId",
+///        "recruited",
+///        "rerollCost",
+///        "seat",
+///        "shop",
+///        "upgradeCost"
+///      ],
+///      "properties": {
+///        "affordances": {
+///          "$ref": "#/$defs/Affordances"
+///        },
+///        "board": {
+///          "type": "array",
+///          "items": {
+///            "$ref": "#/$defs/BoardMinion"
+///          }
+///        },
+///        "era": {
+///          "type": "integer",
+///          "maximum": 7.0,
+///          "minimum": 1.0
+///        },
+///        "gold": {
+///          "type": "integer",
+///          "minimum": 0.0
+///        },
+///        "hand": {
+///          "type": "array",
+///          "items": {
+///            "$ref": "#/$defs/HandCard"
+///          }
+///        },
+///        "heroCardId": {
+///          "type": [
+///            "string",
+///            "null"
+///          ]
+///        },
+///        "heroPower": {
+///          "type": "object",
+///          "required": [
+///            "skillId",
+///            "usesLeft"
+///          ],
+///          "properties": {
+///            "skillId": {
+///              "type": [
+///                "string",
+///                "null"
+///              ]
+///            },
+///            "usesLeft": {
+///              "type": "integer",
+///              "minimum": 0.0
+///            }
+///          },
+///          "additionalProperties": false
+///        },
+///        "hp": {
+///          "type": "integer"
+///        },
+///        "pendingChoices": {
+///          "description": "本座位待处理的发现或进化选择，按先到先处理排序",
+///          "type": "array",
+///          "items": {
+///            "$ref": "#/$defs/PendingChoice"
+///          }
+///        },
+///        "playerId": {
+///          "type": "string"
+///        },
+///        "recruited": {
+///          "type": "boolean"
+///        },
+///        "rerollCost": {
+///          "type": "integer",
+///          "minimum": 0.0
+///        },
+///        "seat": {
+///          "type": "integer",
+///          "maximum": 7.0,
+///          "minimum": 0.0
+///        },
+///        "shop": {
+///          "type": "array",
+///          "items": {
+///            "$ref": "#/$defs/ShopSlot"
+///          }
+///        },
+///        "upgradeCost": {
+///          "description": "满时代为 null",
+///          "type": [
+///            "integer",
+///            "null"
+///          ],
+///          "minimum": 2.0
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    "turn": {
+///      "type": "integer",
+///      "maximum": 20.0,
+///      "minimum": 1.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct PlayerView {
+    ///本局启用的 5 个流派
+    #[serde(rename = "enabledFactions")]
+    pub enabled_factions: [::std::string::String; 5usize],
+    ///当前战斗对手；招募阶段或未配对时为 null
+    #[serde(
+        rename = "opponentPlayerId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub opponent_player_id: ::std::option::Option<::std::string::String>,
+    pub phase: Phase,
+    #[serde(rename = "phaseDeadline")]
+    pub phase_deadline: ::chrono::DateTime<::chrono::offset::Utc>,
+    pub players: ::std::vec::Vec<PlayerSummary>,
+    #[serde(rename = "roomId")]
+    pub room_id: ::std::string::String,
+    #[serde(rename = "self")]
+    pub self_: PlayerViewSelf,
+    pub turn: ::std::num::NonZeroU64,
+}
+impl ::std::convert::From<&PlayerView> for PlayerView {
+    fn from(value: &PlayerView) -> Self {
+        value.clone()
+    }
+}
+///`PlayerViewSelf`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "affordances",
+///    "board",
+///    "era",
+///    "gold",
+///    "hand",
+///    "heroCardId",
+///    "heroPower",
+///    "hp",
+///    "pendingChoices",
+///    "playerId",
+///    "recruited",
+///    "rerollCost",
+///    "seat",
+///    "shop",
+///    "upgradeCost"
+///  ],
+///  "properties": {
+///    "affordances": {
+///      "$ref": "#/$defs/Affordances"
+///    },
+///    "board": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/BoardMinion"
+///      }
+///    },
+///    "era": {
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 1.0
+///    },
+///    "gold": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "hand": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/HandCard"
+///      }
+///    },
+///    "heroCardId": {
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "heroPower": {
+///      "type": "object",
+///      "required": [
+///        "skillId",
+///        "usesLeft"
+///      ],
+///      "properties": {
+///        "skillId": {
+///          "type": [
+///            "string",
+///            "null"
+///          ]
+///        },
+///        "usesLeft": {
+///          "type": "integer",
+///          "minimum": 0.0
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    "hp": {
+///      "type": "integer"
+///    },
+///    "pendingChoices": {
+///      "description": "本座位待处理的发现或进化选择，按先到先处理排序",
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/PendingChoice"
+///      }
+///    },
+///    "playerId": {
+///      "type": "string"
+///    },
+///    "recruited": {
+///      "type": "boolean"
+///    },
+///    "rerollCost": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "seat": {
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 0.0
+///    },
+///    "shop": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/ShopSlot"
+///      }
+///    },
+///    "upgradeCost": {
+///      "description": "满时代为 null",
+///      "type": [
+///        "integer",
+///        "null"
+///      ],
+///      "minimum": 2.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct PlayerViewSelf {
+    pub affordances: Affordances,
+    pub board: ::std::vec::Vec<BoardMinion>,
+    pub era: ::std::num::NonZeroU64,
+    pub gold: u64,
+    pub hand: ::std::vec::Vec<HandCard>,
+    #[serde(rename = "heroCardId")]
+    pub hero_card_id: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "heroPower")]
+    pub hero_power: PlayerViewSelfHeroPower,
+    pub hp: i64,
+    ///本座位待处理的发现或进化选择，按先到先处理排序
+    #[serde(rename = "pendingChoices")]
+    pub pending_choices: ::std::vec::Vec<PendingChoice>,
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+    pub recruited: bool,
+    #[serde(rename = "rerollCost")]
+    pub reroll_cost: u64,
+    pub seat: i64,
+    pub shop: ::std::vec::Vec<ShopSlot>,
+    ///满时代为 null
+    #[serde(rename = "upgradeCost")]
+    pub upgrade_cost: ::std::option::Option<i64>,
+}
+impl ::std::convert::From<&PlayerViewSelf> for PlayerViewSelf {
+    fn from(value: &PlayerViewSelf) -> Self {
+        value.clone()
+    }
+}
+///`PlayerViewSelfHeroPower`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "skillId",
+///    "usesLeft"
+///  ],
+///  "properties": {
+///    "skillId": {
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "usesLeft": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct PlayerViewSelfHeroPower {
+    #[serde(rename = "skillId")]
+    pub skill_id: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "usesLeft")]
+    pub uses_left: u64,
+}
+impl ::std::convert::From<&PlayerViewSelfHeroPower> for PlayerViewSelfHeroPower {
+    fn from(value: &PlayerViewSelfHeroPower) -> Self {
+        value.clone()
+    }
+}
+///`Ready`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "ready"
+///  ],
+///  "properties": {
+///    "ready": {
+///      "type": "boolean"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct Ready {
+    pub ready: bool,
+}
+impl ::std::convert::From<&Ready> for Ready {
+    fn from(value: &Ready) -> Self {
+        value.clone()
+    }
+}
+///`Reconnect`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "lastSeq",
+///    "roomId"
+///  ],
+///  "properties": {
+///    "lastSeq": {
+///      "description": "客户端最后收到的 seq",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "roomId": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct Reconnect {
+    ///客户端最后收到的 seq
+    #[serde(rename = "lastSeq")]
+    pub last_seq: u64,
+    #[serde(rename = "roomId")]
+    pub room_id: ::std::string::String,
+}
+impl ::std::convert::From<&Reconnect> for Reconnect {
+    fn from(value: &Reconnect) -> Self {
+        value.clone()
+    }
+}
+///`RequestSnapshot`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RequestSnapshot {}
+impl ::std::convert::From<&RequestSnapshot> for RequestSnapshot {
+    fn from(value: &RequestSnapshot) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for RequestSnapshot {
+    fn default() -> Self {
+        Self {}
+    }
+}
+///`RoomUpdate`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "code",
+///    "hostId",
+///    "phase",
+///    "players",
+///    "roomId"
+///  ],
+///  "properties": {
+///    "code": {
+///      "description": "6 位房间码",
+///      "type": "string"
+///    },
+///    "hostId": {
+///      "type": "string"
+///    },
+///    "phase": {
+///      "$ref": "#/$defs/Phase"
+///    },
+///    "players": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "displayName",
+///          "heroCardId",
+///          "isHost",
+///          "playerId",
+///          "ready"
+///        ],
+///        "properties": {
+///          "displayName": {
+///            "type": "string"
+///          },
+///          "heroCardId": {
+///            "type": [
+///              "string",
+///              "null"
+///            ]
+///          },
+///          "isHost": {
+///            "type": "boolean"
+///          },
+///          "playerId": {
+///            "type": "string"
+///          },
+///          "ready": {
+///            "type": "boolean"
+///          }
+///        },
+///        "additionalProperties": false
+///      }
+///    },
+///    "roomId": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RoomUpdate {
+    ///6 位房间码
+    pub code: ::std::string::String,
+    #[serde(rename = "hostId")]
+    pub host_id: ::std::string::String,
+    pub phase: Phase,
+    pub players: ::std::vec::Vec<RoomUpdatePlayersItem>,
+    #[serde(rename = "roomId")]
+    pub room_id: ::std::string::String,
+}
+impl ::std::convert::From<&RoomUpdate> for RoomUpdate {
+    fn from(value: &RoomUpdate) -> Self {
+        value.clone()
+    }
+}
+///`RoomUpdatePlayersItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "displayName",
+///    "heroCardId",
+///    "isHost",
+///    "playerId",
+///    "ready"
+///  ],
+///  "properties": {
+///    "displayName": {
+///      "type": "string"
+///    },
+///    "heroCardId": {
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "isHost": {
+///      "type": "boolean"
+///    },
+///    "playerId": {
+///      "type": "string"
+///    },
+///    "ready": {
+///      "type": "boolean"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RoomUpdatePlayersItem {
+    #[serde(rename = "displayName")]
+    pub display_name: ::std::string::String,
+    #[serde(rename = "heroCardId")]
+    pub hero_card_id: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "isHost")]
+    pub is_host: bool,
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+    pub ready: bool,
+}
+impl ::std::convert::From<&RoomUpdatePlayersItem> for RoomUpdatePlayersItem {
+    fn from(value: &RoomUpdatePlayersItem) -> Self {
+        value.clone()
+    }
+}
+///`SelectHeroCard`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "cardId"
+///  ],
+///  "properties": {
+///    "cardId": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct SelectHeroCard {
+    #[serde(rename = "cardId")]
+    pub card_id: ::std::string::String,
+}
+impl ::std::convert::From<&SelectHeroCard> for SelectHeroCard {
+    fn from(value: &SelectHeroCard) -> Self {
+        value.clone()
+    }
+}
+///`ServerEnvelope`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "id",
+///    "payload",
+///    "seq",
+///    "ts",
+///    "type",
+///    "v"
+///  ],
+///  "properties": {
+///    "id": {
+///      "description": "服务端生成的唯一消息 id",
+///      "type": "string",
+///      "minLength": 1
+///    },
+///    "payload": {
+///      "description": "由 type 决定的结构",
+///      "type": "object"
+///    },
+///    "playerId": {
+///      "description": "接收者 playerId",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "replyTo": {
+///      "description": "回复的上行消息 id",
+///      "type": "string"
+///    },
+///    "roomId": {
+///      "description": "未进房间时为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "seq": {
+///      "description": "发给该玩家的消息序号，单调递增",
+///      "type": "integer",
+///      "minimum": 1.0
+///    },
+///    "ts": {
+///      "description": "RFC 3339 UTC 时间",
+///      "type": "string",
+///      "format": "date-time"
+///    },
+///    "type": {
+///      "description": "消息类型，唯一路由键",
+///      "type": "string",
+///      "minLength": 1
+///    },
+///    "v": {
+///      "description": "协议主版本",
+///      "const": 1
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct ServerEnvelope {
+    ///服务端生成的唯一消息 id
+    pub id: ServerEnvelopeId,
+    ///由 type 决定的结构
+    pub payload: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+    ///接收者 playerId
+    #[serde(
+        rename = "playerId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub player_id: ::std::option::Option<::std::string::String>,
+    ///回复的上行消息 id
+    #[serde(
+        rename = "replyTo",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub reply_to: ::std::option::Option<::std::string::String>,
+    ///未进房间时为 null
+    #[serde(
+        rename = "roomId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub room_id: ::std::option::Option<::std::string::String>,
+    ///发给该玩家的消息序号，单调递增
+    pub seq: ::std::num::NonZeroU64,
+    ///RFC 3339 UTC 时间
+    pub ts: ::chrono::DateTime<::chrono::offset::Utc>,
+    ///消息类型，唯一路由键
+    #[serde(rename = "type")]
+    pub type_: ServerEnvelopeType,
+    ///协议主版本
+    pub v: ::serde_json::Value,
+}
+impl ::std::convert::From<&ServerEnvelope> for ServerEnvelope {
+    fn from(value: &ServerEnvelope) -> Self {
+        value.clone()
+    }
+}
+///服务端生成的唯一消息 id
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "服务端生成的唯一消息 id",
+///  "type": "string",
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct ServerEnvelopeId(::std::string::String);
+impl ::std::ops::Deref for ServerEnvelopeId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<ServerEnvelopeId> for ::std::string::String {
+    fn from(value: ServerEnvelopeId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&ServerEnvelopeId> for ServerEnvelopeId {
+    fn from(value: &ServerEnvelopeId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for ServerEnvelopeId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for ServerEnvelopeId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for ServerEnvelopeId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for ServerEnvelopeId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for ServerEnvelopeId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///消息类型，唯一路由键
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "消息类型，唯一路由键",
+///  "type": "string",
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct ServerEnvelopeType(::std::string::String);
+impl ::std::ops::Deref for ServerEnvelopeType {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<ServerEnvelopeType> for ::std::string::String {
+    fn from(value: ServerEnvelopeType) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&ServerEnvelopeType> for ServerEnvelopeType {
+    fn from(value: &ServerEnvelopeType) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for ServerEnvelopeType {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for ServerEnvelopeType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for ServerEnvelopeType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for ServerEnvelopeType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for ServerEnvelopeType {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`ShopAffordance`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "buyable",
+///    "disabledReason",
+///    "index"
+///  ],
+///  "properties": {
+///    "buyable": {
+///      "type": "boolean"
+///    },
+///    "disabledReason": {
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "index": {
+///      "type": "integer",
+///      "maximum": 5.0,
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct ShopAffordance {
+    pub buyable: bool,
+    #[serde(rename = "disabledReason")]
+    pub disabled_reason: ::std::option::Option<::std::string::String>,
+    pub index: i64,
+}
+impl ::std::convert::From<&ShopAffordance> for ShopAffordance {
+    fn from(value: &ShopAffordance) -> Self {
+        value.clone()
+    }
+}
+///`ShopSlot`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "cardId",
+///    "frozen",
+///    "index"
+///  ],
+///  "properties": {
+///    "cardId": {
+///      "description": "空槽位为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "frozen": {
+///      "type": "boolean"
+///    },
+///    "index": {
+///      "type": "integer",
+///      "maximum": 5.0,
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct ShopSlot {
+    ///空槽位为 null
+    #[serde(rename = "cardId")]
+    pub card_id: ::std::option::Option<::std::string::String>,
+    pub frozen: bool,
+    pub index: i64,
+}
+impl ::std::convert::From<&ShopSlot> for ShopSlot {
+    fn from(value: &ShopSlot) -> Self {
+        value.clone()
+    }
+}
+///`SkipAnimation`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct SkipAnimation {}
+impl ::std::convert::From<&SkipAnimation> for SkipAnimation {
+    fn from(value: &SkipAnimation) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for SkipAnimation {
+    fn default() -> Self {
+        Self {}
+    }
+}
+///`Snapshot`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "view"
+///  ],
+///  "properties": {
+///    "view": {
+///      "$ref": "#/$defs/PlayerView"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct Snapshot {
+    pub view: PlayerView,
+}
+impl ::std::convert::From<&Snapshot> for Snapshot {
+    fn from(value: &Snapshot) -> Self {
+        value.clone()
+    }
+}
+///`StateUpdate`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "events",
+///    "view"
+///  ],
+///  "properties": {
+///    "events": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/GameEvent"
+///      }
+///    },
+///    "view": {
+///      "$ref": "#/$defs/PlayerView"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct StateUpdate {
+    pub events: ::std::vec::Vec<GameEvent>,
+    pub view: PlayerView,
+}
+impl ::std::convert::From<&StateUpdate> for StateUpdate {
+    fn from(value: &StateUpdate) -> Self {
+        value.clone()
+    }
+}
+///`TimerWarning`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "secondsLeft"
+///  ],
+///  "properties": {
+///    "secondsLeft": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct TimerWarning {
+    #[serde(rename = "secondsLeft")]
+    pub seconds_left: u64,
+}
+impl ::std::convert::From<&TimerWarning> for TimerWarning {
+    fn from(value: &TimerWarning) -> Self {
+        value.clone()
+    }
+}

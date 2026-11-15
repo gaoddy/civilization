@@ -1,0 +1,11 @@
+[package]
+name = "protocol-gen"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+typify = "0.4"
+serde_json = "1"
+prettyplease = "0.2"
+syn = { version = "2", features = ["full"] }
+schemars = "0.8"

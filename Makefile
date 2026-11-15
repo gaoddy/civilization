@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: test lint audit data data-check protocol protocol-check m0-check m0-determinism m0-batch m0-report
+.PHONY: test lint audit data data-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -27,6 +27,12 @@ protocol-check:
 	$(PYTHON) scripts/validate_protocol.py
 	$(PYTHON) scripts/gen_protocol_gdscript.py --check
 	$(PYTHON) scripts/gen_protocol_docs.py --check
+
+protocol-rs:
+	cd server && cargo run -q -p protocol-gen
+
+protocol-rs-check:
+	cd server && cargo run -q -p protocol-gen -- --check
 
 m0-check:
 	$(MAKE) data-check
