@@ -1678,6 +1678,15 @@ impl ::std::convert::From<&FriendUpdateFriendsItem> for FriendUpdateFriendsItem 
 ///      "description": "PhaseChanged 事件进入的阶段",
 ///      "$ref": "#/$defs/Phase"
 ///    },
+///    "place": {
+///      "description": "PlayerEliminated 事件对该座位判定的名次；其他事件为 null",
+///      "type": [
+///        "integer",
+///        "null"
+///      ],
+///      "maximum": 8.0,
+///      "minimum": 1.0
+///    },
 ///    "playerId": {
 ///      "description": "事件涉及的玩家，可省略表示自己",
 ///      "type": "string"
@@ -1730,6 +1739,9 @@ pub struct GameEvent {
     ///PhaseChanged 事件进入的阶段
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub phase: ::std::option::Option<Phase>,
+    ///PlayerEliminated 事件对该座位判定的名次；其他事件为 null
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub place: ::std::option::Option<::std::num::NonZeroU64>,
     ///事件涉及的玩家，可省略表示自己
     #[serde(
         rename = "playerId",

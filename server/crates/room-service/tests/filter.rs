@@ -106,14 +106,19 @@ fn purchase_events_only_reach_owning_seat() {
     };
 
     assert!(
-        for_seat(&event, 0).is_none(),
+        for_seat(&event, 0, &seats()).is_none(),
         "买随从是私有信息，不得发给其他座位"
     );
 
-    let mapped = for_seat(&event, 2).expect("操作者应收到自己的购买事件");
+    let mapped = for_seat(&event, 2, &seats()).expect("操作者应收到自己的购买事件");
     assert_eq!(mapped.kind, GameEventKind::MinionBought);
     assert_eq!(mapped.card_id.as_deref(), Some("baiyi"));
     assert_eq!(mapped.seat, Some(2));
+    assert_eq!(
+        mapped.player_id.as_deref(),
+        Some("p2"),
+        "私有事件的 playerId 必须显式填本人"
+    );
 }
 
 #[test]
@@ -121,9 +126,19 @@ fn elimination_is_visible_to_all() {
     let event = GameEvent::PlayerEliminated { seat: 3, place: 5 };
 
     for seat in 0..8 {
-        let mapped = for_seat(&event, seat).expect("淘汰是公开信息，应发给所有座位");
+        let mapped = for_seat(&event, seat, &seats()).expect("淘汰是公开信息，应发给所有座位");
         assert_eq!(mapped.kind, GameEventKind::PlayerEliminated);
         assert_eq!(mapped.seat, Some(3), "事件应标明被淘汰的座位");
+        assert_eq!(
+            mapped.player_id.as_deref(),
+            Some("p3"),
+            "公开事件必须给出被淘汰座位的 playerId，不能省略成「自己」"
+        );
+        assert_eq!(
+            mapped.place,
+            std::num::NonZeroU64::new(5),
+            "淘汰事件应带名次"
+        );
     }
 }
 
@@ -137,7 +152,7 @@ fn combat_resolved_is_never_sent() {
 
     for seat in 0..8 {
         assert!(
-            for_seat(&event, seat).is_none(),
+            for_seat(&event, seat, &seats()).is_none(),
             "战斗结果只走 CombatResult，不得出现在 StateUpdate.events"
         );
     }
@@ -159,7 +174,7 @@ fn public_turn_events_reach_all_seats() {
     for seat in 0..8 {
         let mapped: Vec<_> = events
             .iter()
-            .map(|event| for_seat(event, seat).expect("回合与阶段变化应发给所有座位"))
+            .map(|event| for_seat(event, seat, &seats()).expect("回合与阶段变化应发给所有座位"))
             .collect();
         assert_eq!(mapped[0].kind, GameEventKind::TurnStarted);
         assert_eq!(mapped[0].turn, std::num::NonZeroU64::new(3));
@@ -167,6 +182,9 @@ fn public_turn_events_reach_all_seats() {
         assert_eq!(mapped[1].turn, std::num::NonZeroU64::new(3));
         assert_eq!(mapped[2].kind, GameEventKind::GameOver);
         assert_eq!(mapped[2].ranking, vec![0, 1, 2, 3, 4, 5, 6, 7]);
+        for mapped in &mapped {
+            assert_eq!(mapped.player_id, None, "回合/阶段/终局事件不指向单个玩家");
+        }
     }
 }
 
@@ -362,6 +380,82 @@ fn filtered_events_reach_only_own_seat_via_state_update() {
         assert!(
             state_update.events.is_empty(),
             "座位 {seat} 的 StateUpdate.events 不得包含其他座位的购买事件"
+        );
+    }
+}
+
+/// 从 `StateUpdate` JSON 载荷里取出事件 kind 列表。
+fn event_kinds(events: &[serde_json::Value]) -> Vec<String> {
+    events
+        .iter()
+        .map(|event| {
+            event["kind"]
+                .as_str()
+                .expect("事件 kind 应为字符串")
+                .to_string()
+        })
+        .collect()
+}
+
+#[test]
+fn advance_phase_attaches_filtered_public_events() {
+    let (mut task, _clock) = task();
+
+    // 全员结束招募：最后一条意图触发 finish_recruit → resolve_combat →
+    // resolve_settle → start_turn，事件应随每个座位的 StateUpdate 下发。
+    let mut last = Vec::new();
+    for seat in 0..8 {
+        last = task.handle(RoomCommand::Intent {
+            player_id: format!("p{seat}"),
+            client_intent_id: format!("end-{seat}"),
+            intent: ProtocolIntent::EndRecruit,
+        });
+    }
+
+    let mut events_by_player: BTreeMap<String, Vec<serde_json::Value>> = BTreeMap::new();
+    for update in &last {
+        if !matches!(update.kind, UpdateKind::View { .. }) {
+            continue;
+        }
+        // 只经信封编码后按 JSON 断言，不读内部 Vec 绕过过滤。
+        let envelope = task.envelope_for(update).expect("更新应能编码");
+        let payload = serde_json::to_value(&envelope.payload).expect("载荷应可序列化");
+        let events = payload["events"]
+            .as_array()
+            .expect("events 应为数组")
+            .clone();
+        events_by_player.insert(update.player_id.clone(), events);
+    }
+
+    assert_eq!(
+        events_by_player.len(),
+        8,
+        "阶段推进后 8 个座位都应收到带事件的视图"
+    );
+
+    let seat0 = &events_by_player["p0"];
+    let seat0_kinds = event_kinds(seat0);
+    assert!(
+        seat0_kinds.contains(&"PhaseChanged".to_string()),
+        "座位 0 的 StateUpdate.events 应含 PhaseChanged，实际为 {seat0_kinds:?}"
+    );
+    assert!(
+        seat0_kinds.contains(&"DamageTaken".to_string()),
+        "战斗结算后应含 DamageTaken，实际为 {seat0_kinds:?}"
+    );
+
+    // 公开伤害事件必须标明被打的玩家，不能留空让客户端当成自己。
+    for event in seat0 {
+        if event["kind"] == "DamageTaken" {
+            assert!(event["playerId"].is_string(), "DamageTaken 必须带 playerId");
+        }
+    }
+
+    for (player, events) in &events_by_player {
+        let kinds = event_kinds(events);
+        assert!(
+            !kinds.iter().any(|kind| kind == "CombatResolved"),
+            "座位 {player} 的事件流不得包含 CombatResolved，实际为 {kinds:?}"
         );
     }
 }

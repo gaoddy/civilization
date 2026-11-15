@@ -125,6 +125,7 @@
         "cardId": { "type": "string" },
         "minionId": { "type": "string" },
         "amount": { "type": "integer", "description": "伤害等数值" },
+        "place": { "type": ["integer", "null"], "minimum": 1, "maximum": 8, "description": "PlayerEliminated 事件对该座位判定的名次；其他事件为 null" },
         "turn": { "type": "integer", "minimum": 1, "maximum": 20, "description": "TurnStarted/PhaseChanged 事件对应的回合号" },
         "phase": { "$ref": "view.schema.json#/$defs/Phase", "description": "PhaseChanged 事件进入的阶段" },
         "ranking": {

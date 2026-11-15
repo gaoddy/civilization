@@ -506,7 +506,7 @@ impl GameTask {
         for seat in 0..SEAT_COUNT as Seat {
             let filtered: Vec<ProtocolGameEvent> = events
                 .iter()
-                .filter_map(|event| for_seat(event, seat))
+                .filter_map(|event| for_seat(event, seat, &self.seats))
                 .collect();
             if filtered.is_empty() && !recipients.contains(&seat) {
                 continue;

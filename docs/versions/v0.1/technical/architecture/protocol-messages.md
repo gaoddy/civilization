@@ -277,6 +277,7 @@
 | `cardId` | string | 否 |  |
 | `minionId` | string | 否 |  |
 | `amount` | integer | 否 | 伤害等数值 |
+| `place` | integer | null | 否 | PlayerEliminated 事件对该座位判定的名次；其他事件为 null |
 | `turn` | integer | 否 | TurnStarted/PhaseChanged 事件对应的回合号 |
 | `phase` | Phase | 否 | PhaseChanged 事件进入的阶段 |
 | `ranking` | array<integer> | 否 | GameOver 事件的座位排名，从第 1 名起 |

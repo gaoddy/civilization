@@ -29,70 +29,104 @@ use crate::view::{SeatInfo, board_minion_from, phase_to_protocol};
 /// 把引擎事件映射为发给 `seat` 的协议事件；不需要发的事件返回 `None`。
 ///
 /// 私有事件只在 `event.seat == seat` 时下发；公开事件对所有座位都返回 `Some`。
-/// 协议没有携带的细节（如购买槽位、淘汰名次）不另行造字段，接收方以
+/// 事件涉及某个座位时，`playerId` 填该座位的 `player_id`（私有事件即本人），
+/// `seat` 也一并携带；`TurnStarted`/`PhaseChanged`/`GameOver` 不指向单个玩家，
+/// `playerId` 保持 `null`。
+/// 协议没有携带的细节（如购买槽位、升级后的时代）不另行造字段，接收方以
 /// `PlayerView` 的公开摘要为准。
-pub fn for_seat(event: &GameEvent, seat: Seat) -> Option<ProtocolGameEvent> {
+pub fn for_seat(event: &GameEvent, seat: Seat, seats: &[SeatInfo; 8]) -> Option<ProtocolGameEvent> {
     match event {
         GameEvent::MinionBought {
             seat: owner,
             card_id,
             ..
-        } => private(*owner, seat).then(|| {
-            protocol_event(GameEventKind::MinionBought, Some(*owner)).with_card_id(card_id.clone())
-        }),
+        } => {
+            if !private(*owner, seat) {
+                return None;
+            }
+            Some(
+                protocol_event(GameEventKind::MinionBought, Some(*owner), seats)?
+                    .with_card_id(card_id.clone()),
+            )
+        }
         GameEvent::MinionSold {
             seat: owner,
             minion,
-        } => private(*owner, seat).then(|| {
-            protocol_event(GameEventKind::MinionSold, Some(*owner))
-                .with_minion_id(minion.to_string())
-        }),
+        } => {
+            if !private(*owner, seat) {
+                return None;
+            }
+            Some(
+                protocol_event(GameEventKind::MinionSold, Some(*owner), seats)?
+                    .with_minion_id(minion.to_string()),
+            )
+        }
         GameEvent::ShopRolled { seat: owner } => {
-            private(*owner, seat).then(|| protocol_event(GameEventKind::ShopRolled, Some(*owner)))
+            if !private(*owner, seat) {
+                return None;
+            }
+            protocol_event(GameEventKind::ShopRolled, Some(*owner), seats)
         }
         GameEvent::EraUpgraded { seat: owner, .. } => {
-            private(*owner, seat).then(|| protocol_event(GameEventKind::EraUpgraded, Some(*owner)))
+            if !private(*owner, seat) {
+                return None;
+            }
+            protocol_event(GameEventKind::EraUpgraded, Some(*owner), seats)
         }
         GameEvent::TripleFormed {
             seat: owner,
             card_id,
-        } => private(*owner, seat).then(|| {
-            protocol_event(GameEventKind::TripleFormed, Some(*owner)).with_card_id(card_id.clone())
-        }),
+        } => {
+            if !private(*owner, seat) {
+                return None;
+            }
+            Some(
+                protocol_event(GameEventKind::TripleFormed, Some(*owner), seats)?
+                    .with_card_id(card_id.clone()),
+            )
+        }
         GameEvent::CardDiscovered {
             seat: owner,
             card_id,
-        } => private(*owner, seat).then(|| {
-            protocol_event(GameEventKind::CardDiscovered, Some(*owner))
-                .with_card_id(card_id.clone())
-        }),
+        } => {
+            if !private(*owner, seat) {
+                return None;
+            }
+            Some(
+                protocol_event(GameEventKind::CardDiscovered, Some(*owner), seats)?
+                    .with_card_id(card_id.clone()),
+            )
+        }
         GameEvent::DamageTaken {
             seat: target,
             amount,
         } => {
-            let mut event = protocol_event(GameEventKind::DamageTaken, Some(*target));
+            let mut event = protocol_event(GameEventKind::DamageTaken, Some(*target), seats)?;
             event.amount = Some(i64::from(*amount));
             Some(event)
         }
         GameEvent::PlayerEliminated {
-            seat: eliminated, ..
-        } => Some(protocol_event(
-            GameEventKind::PlayerEliminated,
-            Some(*eliminated),
-        )),
+            seat: eliminated,
+            place,
+        } => {
+            let mut event =
+                protocol_event(GameEventKind::PlayerEliminated, Some(*eliminated), seats)?;
+            event.place = NonZeroU64::new(u64::from(*place));
+            Some(event)
+        }
         GameEvent::TurnStarted { turn } => {
-            let mut event = protocol_event(GameEventKind::TurnStarted, None);
+            let mut event = protocol_event(GameEventKind::TurnStarted, None, seats)?;
             event.turn = turn_of(*turn);
             Some(event)
         }
         GameEvent::PhaseChanged { phase, turn } => {
-            let mut event = protocol_event(GameEventKind::PhaseChanged, None);
+            let mut event = protocol_event(GameEventKind::PhaseChanged, None, seats)?;
             event.phase = Some(phase_to_protocol(*phase));
             event.turn = turn_of(*turn);
             Some(event)
         }
         GameEvent::GameOver { ranking } => {
-            let mut event = protocol_event(GameEventKind::GameOver, None);
+            let mut event = protocol_event(GameEventKind::GameOver, None, seats)?;
             event.ranking = ranking.iter().map(|seat| i64::from(*seat)).collect();
             Some(event)
         }
@@ -148,18 +182,30 @@ fn private(owner: Seat, seat: Seat) -> bool {
 }
 
 /// 构造一条只有 `kind` 与 `seat` 的事件；其余可选字段保持缺省。
-fn protocol_event(kind: GameEventKind, seat: Option<Seat>) -> ProtocolGameEvent {
-    ProtocolGameEvent {
+///
+/// `seat` 指向事件涉及的座位时，`playerId` 填该座位的玩家 id；座位越界说明
+/// 调用方数据损坏，返回 `None`。不指向单个玩家的事件 `playerId` 为 `null`。
+fn protocol_event(
+    kind: GameEventKind,
+    seat: Option<Seat>,
+    seats: &[SeatInfo; 8],
+) -> Option<ProtocolGameEvent> {
+    let player_id = match seat {
+        Some(seat) => Some(seats.get(usize::from(seat))?.player_id.clone()),
+        None => None,
+    };
+    Some(ProtocolGameEvent {
         amount: None,
         card_id: None,
         kind,
         minion_id: None,
         phase: None,
-        player_id: None,
+        place: None,
+        player_id,
         ranking: Vec::new(),
         seat: seat.map(i64::from),
         turn: None,
-    }
+    })
 }
 
 /// 引擎回合号转协议非零回合号；回合从 1 起，0 视为不携带。
