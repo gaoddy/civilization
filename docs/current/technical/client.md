@@ -102,15 +102,16 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 - 客户端创建房间后把 6 位房间码发给 7 个机器人；8 人全部选好英雄并准备后服务端自动开局。
 - 机器人参数与协议顺序见[房间服务与联网](room-service.md) §11。
-- 无头验收用 `make m1b-e2e`：客户端自动建房并写入房间码，脚本再拉起 7 个机器人，结束后输出 `M1B_GAME_OVER place=<n> seed=<seed> ranking=<n> intents=<n> errors=<n> soft=<n>`；脚本校验名次、8 人排名、种子、意图数，并要求错误全部落在「状态已变化」白名单（`NO_SPACE`、`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`），其余错误为 0，服务端与机器人日志无 panic。
+- 无头验收用 `make m1b-e2e`：客户端自动建房并写入房间码，脚本再拉起 7 个机器人，结束后输出 `M1B_GAME_OVER place=<n> seed=<seed> ranking=<n> intents=<n> errors=<n> soft=<n>`；脚本校验名次、8 人排名、种子、意图数，并要求错误全部落在预期白名单（`NO_SPACE`、`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY` 与补选目标后的 `NO_VALID_TARGET`），其余错误为 0，服务端与机器人日志无 panic。
 - 无头驱动不等上一条意图确认就按新视图继续决策，服务端按最新状态拒绝属预期；因此 `errors` 与 `soft` 必须相等。驱动另外对同一回合的同一商店槽位只提交一次购买（刷新后允许再次购买），避免重复购买同一槽位。
+- 驱动按 `clientIntentId` 找回被拒意图，收到 `NO_VALID_TARGET` 时补上棋盘第一个己方随从重发；`sim bot` 的处理方式相同（见[房间服务与联网](room-service.md) §11）。
 - 默认端口 `18080` 被其他进程占用时，脚本会因监听失败退出；用 `M1B_PORT=<端口> make m1b-e2e` 覆盖，脚本与客户端读取同一个变量。
 
 ## 6. 与设计的偏差
 
 1. 设计 §5.6 只要求“1 个客户端 + 7 个机器人人工验收”；实现额外提供 `client/tests/headless_game.*` 与 `make m1b-e2e`，用真实客户端栈（Net + GameStore）自动打完一局，作为协议与视图消费的回归证据。该驱动不点击 UI，五场景可读性仍由 `make client-smoke` 与手动运行保证。
 2. 卡牌展示表新增 `display_cost`：随从固定 3、效果牌取文档 `cost`，仅用于显示；规则判定仍全部在服务端。
-3. `BuyMinion` / `PlayCard` 的 `targetMinionId` 不预先询问：先按无目标发送，收到 `NO_VALID_TARGET` 后再弹出己方随从列表并带目标重发同一意图。当前服务端尚未在无目标时返回该错误码（见[待确认事项](../../versions/v0.1/open-questions.md)），实际表现为效果不结算；该重试路径已实现但没有端到端触发条件。
+3. `BuyMinion` / `PlayCard` 的 `targetMinionId` 不预先询问：先按无目标发送，收到 `NO_VALID_TARGET` 后再弹出己方随从列表并带目标重发同一意图。服务端在存在合法目标而未指定时返回该错误；主动技能在池为空时也返回该错误（技能不可用），随从战吼与效果牌则放行并让效果落空（见[房间服务与联网](room-service.md) §7）。
 4. 英雄技能在己方有随从时先弹出可选目标列表，含「不指定目标」；己方无随从时直接无目标发送。
 
 ## 相关文档
