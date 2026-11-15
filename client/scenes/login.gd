@@ -89,8 +89,7 @@ func _on_disconnected() -> void:
 
 
 func _on_error() -> void:
-    _status.text = "%s：%s" % [
-        str(GameStore.last_error.get("code", "")),
-        str(GameStore.last_error.get("message", "")),
-    ]
+    var code := str(GameStore.last_error.get("code", ""))
+    _status.text = UI.error_text(code)
+    _status.tooltip_text = str(GameStore.last_error.get("message", ""))
     _login_button.disabled = false
