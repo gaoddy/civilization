@@ -19,3 +19,6 @@ docs/plan/
 
 # Rust 构建产物
 server/target/
+
+# 任务 worktree
+.worktrees/
