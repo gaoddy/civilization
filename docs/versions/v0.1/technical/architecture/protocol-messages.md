@@ -330,7 +330,6 @@
 | `(根)` | oneOf | 是 | 下列分支任选其一 |
 | `分支1.kind` | object | 是 |  |
 | `分支1.slot` | integer | 是 | 商店槽位 |
-| `分支1.targetMinionId` | string | 否 | 战吼或效果需要目标时填 |
 | `分支2.kind` | object | 是 |  |
 | `分支2.minionId` | string | 是 | 要出售的随从实例 id |
 | `分支3.kind` | object | 是 |  |

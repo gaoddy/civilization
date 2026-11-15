@@ -64,7 +64,6 @@
 | --- | --- | --- |
 | `rail-width` | 196 | 左栏积分榜宽度 |
 | `side-width` | 272 | 右栏宽度 |
-| `opponent-tile-width` / `-height` | 96 / 52 | 对手席位小卡 |
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
 | `hero-tile-width` | 150 | 英雄小卡宽度（右栏按栏宽覆盖） |
 | `minion-card-width` / `-height` | 98 / 122 | 棋盘随从卡 |

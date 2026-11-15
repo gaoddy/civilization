@@ -58,7 +58,7 @@ tests/                       # Python 标准库 unittest
 - 拒绝码与核心规则 §3 一致：`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE`。
 - 协议十种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`。`ChooseDiscover` 是协议意图之一，服务层映射为引擎同义意图，用于消费引擎产生的 `PendingChoice`（发现或进化待选）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
-- `BuyMinion`、`PlayCard`、`UseHeroPower` 带 `target: Option<InstanceId>`，M0 由 AI 自动选择目标。
+- `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼、不分配实例编号；`PlayCard` 与 `UseHeroPower` 带 `target: Option<InstanceId>`，M0 由 AI 自动选择目标。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。
 - `settle::finish_recruit` 幂等：`Recruit` 阶段（超时路径）生成配对并切 `Combat`；`Combat` 阶段只补齐一次配对，不重复发事件、不重复配对。
 - 阶段推进由驱动方按固定顺序调用 `finish_recruit` / `resolve_combat` / `resolve_settle` / `start_turn`，引擎不自行推进时间。
