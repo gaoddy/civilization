@@ -279,9 +279,9 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `(根)` | oneOf | 是 | 下列分支任选其一 |
-| `分支1.kind` | object | 是 |  |
+| `分支1.kind` | object | 是 | 固定为 discover |
 | `分支1.candidates` | array<string> | 是 | 三选一的候选 cardId |
-| `分支2.kind` | object | 是 |  |
+| `分支2.kind` | object | 是 | 固定为 evolve |
 | `分支2.options` | array<string> | 是 | 进化选项 |
 
 ### PlayerView

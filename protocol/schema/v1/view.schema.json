@@ -132,7 +132,7 @@
           "additionalProperties": false,
           "required": ["kind", "candidates"],
           "properties": {
-            "kind": { "const": "discover" },
+            "kind": { "const": "discover", "description": "固定为 discover" },
             "candidates": { "type": "array", "items": { "type": "string" }, "description": "三选一的候选 cardId" }
           }
         },
@@ -141,7 +141,7 @@
           "additionalProperties": false,
           "required": ["kind", "options"],
           "properties": {
-            "kind": { "const": "evolve" },
+            "kind": { "const": "evolve", "description": "固定为 evolve" },
             "options": { "type": "array", "items": { "type": "string" }, "description": "进化选项" }
           }
         }
