@@ -74,15 +74,17 @@ fn start_game_rejects_unknown_card_id() {
 }
 
 #[test]
-fn start_game_rejects_duplicate_heroes_without_mutating_state() {
+fn start_game_allows_duplicate_heroes() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32]);
     let mut heroes = heroes();
     let first = heroes.get(&0).expect("座位 0 应有英雄").clone();
-    heroes.insert(1, first);
-    let before = state_hash(&state);
-    assert!(engine.start_game(&mut state, &heroes).is_err());
-    assert_eq!(before, state_hash(&state));
-    assert_eq!(state.phase, rule_engine::state::Phase::Lobby);
+    heroes.insert(1, first.clone());
+    engine
+        .start_game(&mut state, &heroes)
+        .expect("多人局允许重复选择同一张英雄卡");
+    assert_eq!(state.players[0].hero.as_deref(), Some(first.as_str()));
+    assert_eq!(state.players[1].hero.as_deref(), Some(first.as_str()));
+    assert_eq!(state.phase, rule_engine::state::Phase::Recruit);
 }
 
 #[test]
