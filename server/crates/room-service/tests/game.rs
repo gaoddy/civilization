@@ -395,3 +395,248 @@ fn intent_from_unknown_player_is_rejected() {
         serde_json::to_string(&task.state_update(0).expect("状态应可用")).expect("状态应可序列化");
     assert_eq!(before, after, "未知玩家的意图不得改变状态");
 }
+
+// ---------------------------------------------------------------------------
+// GameOver 终局路径
+// ---------------------------------------------------------------------------
+
+/// 空阵容下逐回合超时推进，直到对局结束；返回最后一批更新。
+fn reach_game_over(task: &mut GameTask, clock: &FixedClock) -> Vec<SeatUpdate> {
+    for _ in 0..30 {
+        clock.advance(90_000);
+        let updates = task.tick();
+        assert!(!updates.is_empty(), "每个回合到点都应推进");
+        if task.player_view(0).expect("视图应可用").phase == protocol::view::Phase::GameOver {
+            return updates;
+        }
+    }
+    panic!("30 个回合内应结束对局");
+}
+
+#[test]
+fn game_over_emits_ranking_and_seed() {
+    let (mut task, clock) = task();
+    let updates = reach_game_over(&mut task, &clock);
+
+    assert_eq!(
+        task.player_view(0).expect("视图应可用").phase,
+        protocol::view::Phase::GameOver
+    );
+
+    let game_overs: Vec<&protocol::server::GameOver> = updates
+        .iter()
+        .filter_map(|update| match &update.kind {
+            UpdateKind::GameOver(game_over) => Some(game_over),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(game_overs.len(), 8, "8 个座位各收到一份 GameOver");
+
+    let expected_seed = format!("{SEED:016x}");
+    for game_over in &game_overs {
+        assert_eq!(game_over.seed, expected_seed);
+    }
+
+    // 每份载荷都包含完整排名：名次 1..=8 互不重复，玩家覆盖 8 个座位。
+    for game_over in &game_overs {
+        let places: BTreeSet<u64> = game_over
+            .ranking
+            .iter()
+            .map(|item| item.place.get())
+            .collect();
+        assert_eq!(places, (1..=8_u64).collect::<BTreeSet<_>>());
+        let players: BTreeSet<&str> = game_over
+            .ranking
+            .iter()
+            .map(|item| item.player_id.as_str())
+            .collect();
+        assert_eq!(players.len(), 8);
+    }
+}
+
+#[test]
+fn intent_after_game_over_is_rejected() {
+    let (mut task, clock) = task();
+    reach_game_over(&mut task, &clock);
+
+    let updates = task.handle(end_recruit("p0", "late-intent"));
+    assert_eq!(error_codes(&updates), vec![ErrorCode::InvalidStage]);
+    assert_eq!(
+        task.player_view(0).expect("视图应可用").phase,
+        protocol::view::Phase::GameOver,
+        "拒绝的意图不得改变阶段"
+    );
+}
+
+#[test]
+fn tick_after_game_over_returns_empty() {
+    let (mut task, clock) = task();
+    reach_game_over(&mut task, &clock);
+
+    clock.advance(90_000);
+    assert!(task.tick().is_empty(), "结束后不再推进");
+}
+
+// ---------------------------------------------------------------------------
+// 战斗动作侧别与镜像标记
+// ---------------------------------------------------------------------------
+
+fn fixture_minion(instance_id: u64) -> rule_engine::state::MinionInstance {
+    rule_engine::state::MinionInstance {
+        instance_id,
+        card_id: "baiyi".to_string(),
+        golden: false,
+        growth: 0,
+        growth_health_only: 0,
+        breed: 0,
+        breed_applied: 0,
+        contagion: 0,
+        granted: Vec::new(),
+        mods: Vec::new(),
+        shield_used: false,
+        reborn_used: false,
+        attacks_left: 1,
+        cannot_attack: false,
+    }
+}
+
+/// 双方各两个随从的真实战斗报告；含一条「攻防互换」的反击动作。
+fn real_report(seat: Seat) -> rule_engine::settle::SeatCombatReport {
+    use rule_engine::combat::CombatAction;
+    rule_engine::settle::SeatCombatReport {
+        seat,
+        opponent_seat: Some(seat + 1),
+        mirror: false,
+        own_board: vec![fixture_minion(101), fixture_minion(102)],
+        opponent_board: vec![fixture_minion(201), fixture_minion(202)],
+        actions: vec![
+            // 己方 0 号攻击对手 0 号。
+            CombatAction::Attack {
+                attacker: 101,
+                target: 201,
+                damage: 2,
+                blocked: false,
+            },
+            // 反击：对手 1 号攻击己方 1 号。
+            CombatAction::Attack {
+                attacker: 202,
+                target: 102,
+                damage: 1,
+                blocked: false,
+            },
+            CombatAction::Death { minion: 201 },
+            CombatAction::ContagionApplied { target: 102 },
+        ],
+        damage: 3,
+        winner: Some(seat),
+    }
+}
+
+#[test]
+fn combat_action_indices_carry_side() {
+    use protocol::CombatResultActionsItemSourceSide as SourceSide;
+    use protocol::CombatResultActionsItemTargetSide as TargetSide;
+
+    let (task, _clock) = task();
+    let mut reports = BTreeMap::new();
+    reports.insert(2, real_report(2));
+
+    let updates = task.combat_updates(&reports);
+    assert_eq!(updates.len(), 1);
+    let UpdateKind::CombatResult(result) = &updates[0].kind else {
+        panic!("应生成 CombatResult");
+    };
+
+    let mut saw_own_source = false;
+    let mut saw_opponent_source = false;
+    for action in &result.actions {
+        if let Some(index) = action.source_index {
+            let side = action
+                .source_side
+                .expect("有 sourceIndex 就必须有 sourceSide");
+            let board = match side {
+                SourceSide::Own => &result.own_board,
+                SourceSide::Opponent => &result.opponent_board,
+            };
+            assert!(
+                (index as usize) < board.len(),
+                "sourceIndex 必须能按侧别在对应棋盘取到随从"
+            );
+            match side {
+                SourceSide::Own => saw_own_source = true,
+                SourceSide::Opponent => saw_opponent_source = true,
+            }
+        }
+        if let Some(index) = action.target_index {
+            let side = action
+                .target_side
+                .expect("有 targetIndex 就必须有 targetSide");
+            let board = match side {
+                TargetSide::Own => &result.own_board,
+                TargetSide::Opponent => &result.opponent_board,
+            };
+            assert!(
+                (index as usize) < board.len(),
+                "targetIndex 必须能按侧别在对应棋盘取到随从"
+            );
+        }
+    }
+    assert!(saw_own_source, "应至少有一条己方来源的动作");
+    assert!(saw_opponent_source, "反击动作的来源必须标为对手棋盘");
+
+    // 具体侧别与下标：己方 0 号 -> 对手 0 号；对手 1 号 -> 己方 1 号。
+    assert_eq!(result.actions[0].source_side, Some(SourceSide::Own));
+    assert_eq!(result.actions[0].source_index, Some(0));
+    assert_eq!(result.actions[0].target_side, Some(TargetSide::Opponent));
+    assert_eq!(result.actions[0].target_index, Some(0));
+    assert_eq!(result.actions[1].source_side, Some(SourceSide::Opponent));
+    assert_eq!(result.actions[1].source_index, Some(1));
+    assert_eq!(result.actions[1].target_side, Some(TargetSide::Own));
+    assert_eq!(result.actions[1].target_index, Some(1));
+}
+
+#[test]
+fn mirror_combat_result_is_marked() {
+    use rule_engine::combat::CombatAction;
+
+    let (task, _clock) = task();
+    let mirror = rule_engine::settle::SeatCombatReport {
+        seat: 1,
+        opponent_seat: None,
+        mirror: true,
+        own_board: vec![fixture_minion(101)],
+        opponent_board: vec![fixture_minion(101)],
+        actions: vec![CombatAction::Attack {
+            attacker: 101,
+            target: 101,
+            damage: 1,
+            blocked: false,
+        }],
+        damage: 0,
+        winner: Some(1),
+    };
+    let mut reports = BTreeMap::new();
+    reports.insert(1, mirror);
+
+    let updates = task.combat_updates(&reports);
+    assert_eq!(updates.len(), 1, "镜像战只产生 1 条 CombatResult");
+    assert_eq!(updates[0].player_id, "p1");
+    let UpdateKind::CombatResult(result) = &updates[0].kind else {
+        panic!("应生成 CombatResult");
+    };
+    assert_eq!(result.mirror, Some(true));
+}
+
+#[test]
+fn real_combat_result_is_not_marked() {
+    let (task, _clock) = task();
+    let mut reports = BTreeMap::new();
+    reports.insert(2, real_report(2));
+
+    let updates = task.combat_updates(&reports);
+    assert_eq!(updates.len(), 1);
+    let UpdateKind::CombatResult(result) = &updates[0].kind else {
+        panic!("应生成 CombatResult");
+    };
+    assert_eq!(result.mirror, Some(false));
+}

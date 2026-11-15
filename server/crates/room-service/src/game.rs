@@ -16,10 +16,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use protocol::server::{CombatResult, ErrorMessage, GameOver, StateUpdate};
-use protocol::{
-    CombatResultActionsItem, ErrorCode, GameOverRankingItem, ProtocolError, ServerEnvelope,
-};
-use rule_engine::combat::CombatAction;
+use protocol::{ErrorCode, GameOverRankingItem, ProtocolError, ServerEnvelope};
 use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
 use rule_engine::error::EngineError;
@@ -34,7 +31,7 @@ use tokio::sync::mpsc;
 use crate::clock::Clock;
 use crate::envelope::SeatChannel;
 use crate::room::{PlayerSlot, SEAT_COUNT};
-use crate::view::{SeatInfo, board_minion_from, to_protocol};
+use crate::view::{SeatInfo, combat_result, to_protocol};
 
 /// 每个招募回合的时长（秒）。
 pub const RECRUIT_SECONDS: u64 = 90;
@@ -402,6 +399,23 @@ impl GameTask {
         }
     }
 
+    /// 把逐座位战斗报告转成 `CombatResult` 更新：一份报告对应一条更新。
+    ///
+    /// 镜像战在 `outcome.reports` 里只有该座位自己的一条，因此只会产生 1 条更新。
+    pub fn combat_updates(&self, reports: &BTreeMap<Seat, SeatCombatReport>) -> Vec<SeatUpdate> {
+        reports
+            .iter()
+            .map(|(&seat, report)| SeatUpdate {
+                player_id: self.seats[usize::from(seat)].player_id.clone(),
+                kind: UpdateKind::CombatResult(Box::new(combat_result(
+                    &self.engine.catalog,
+                    report,
+                    &self.seats,
+                ))),
+            })
+            .collect()
+    }
+
     /// 招募阶段结束后的唯一推进路径。
     ///
     /// `finish_recruit → resolve_combat → 逐座位 CombatResult → resolve_settle →
@@ -412,12 +426,7 @@ impl GameTask {
         let outcome = self.engine.resolve_combat(&mut self.state)?;
 
         let mut updates = Vec::with_capacity(SEAT_COUNT * 2 + outcome.reports.len());
-        for (&seat, report) in &outcome.reports {
-            updates.push(SeatUpdate {
-                player_id: self.seats[usize::from(seat)].player_id.clone(),
-                kind: UpdateKind::CombatResult(Box::new(self.combat_result(report))),
-            });
-        }
+        updates.extend(self.combat_updates(&outcome.reports));
 
         self.engine.resolve_settle(&mut self.state)?;
         if self.state.phase != Phase::GameOver {
@@ -443,77 +452,6 @@ impl GameTask {
         }
 
         Ok(updates)
-    }
-
-    /// 逐座位战斗报告转协议 `CombatResult`；不重跑战斗、不修改状态。
-    fn combat_result(&self, report: &SeatCombatReport) -> CombatResult {
-        let own_board = report
-            .own_board
-            .iter()
-            .enumerate()
-            .map(|(index, minion)| board_minion_from(&self.engine.catalog, index, minion, false))
-            .collect();
-        let opponent_board = report
-            .opponent_board
-            .iter()
-            .enumerate()
-            .map(|(index, minion)| board_minion_from(&self.engine.catalog, index, minion, false))
-            .collect();
-        let actions = report
-            .actions
-            .iter()
-            .map(|action| self.combat_action(report, action))
-            .collect();
-
-        CombatResult {
-            actions,
-            damage: u64::try_from(report.damage).unwrap_or(0),
-            opponent_board,
-            own_board,
-            winner_id: report
-                .winner
-                .map(|seat| self.seats[usize::from(seat)].player_id.clone()),
-        }
-    }
-
-    /// 战斗动作转协议：`kind` 固定为 `attack|death|reborn|contagion`，
-    /// 下标分别指向该座位视角的 `ownBoard` / `opponentBoard`。
-    fn combat_action(
-        &self,
-        report: &SeatCombatReport,
-        action: &CombatAction,
-    ) -> CombatResultActionsItem {
-        match action {
-            CombatAction::Attack {
-                attacker,
-                target,
-                damage,
-                blocked,
-            } => CombatResultActionsItem {
-                damage: Some(if *blocked { 0 } else { i64::from(*damage) }),
-                kind: "attack".to_string(),
-                source_index: index_of(report, *attacker).map(|index| index as i64),
-                target_index: index_of(report, *target).map(|index| index as i64),
-            },
-            CombatAction::Death { minion } => CombatResultActionsItem {
-                damage: None,
-                kind: "death".to_string(),
-                source_index: index_of(report, *minion).map(|index| index as i64),
-                target_index: None,
-            },
-            CombatAction::Reborn { minion } => CombatResultActionsItem {
-                damage: None,
-                kind: "reborn".to_string(),
-                source_index: index_of(report, *minion).map(|index| index as i64),
-                target_index: None,
-            },
-            CombatAction::ContagionApplied { target } => CombatResultActionsItem {
-                damage: None,
-                kind: "contagion".to_string(),
-                source_index: None,
-                target_index: index_of(report, *target).map(|index| index as i64),
-            },
-        }
     }
 
     /// 对局结束载荷：排名（`place` 从 1 起）与 16 位十六进制种子。
@@ -690,19 +628,6 @@ fn error_code_of(code: RejectCode) -> ErrorCode {
 }
 
 /// 该实例在战斗报告双方阵容中的下标（先本方、后对手）。
-fn index_of(report: &SeatCombatReport, minion: InstanceId) -> Option<usize> {
-    report
-        .own_board
-        .iter()
-        .position(|candidate| candidate.instance_id == minion)
-        .or_else(|| {
-            report
-                .opponent_board
-                .iter()
-                .position(|candidate| candidate.instance_id == minion)
-        })
-}
-
 /// 任意可序列化载荷转 JSON 对象；不是对象时返回 `BAD_PAYLOAD`。
 fn payload_map<T: serde::Serialize>(payload: &T) -> Result<Map<String, Value>, ProtocolError> {
     match serde_json::to_value(payload).map_err(|_| ProtocolError("BAD_PAYLOAD"))? {

@@ -95,8 +95,11 @@
 | `actions[].sourceIndex` | integer | null | 否 |  |
 | `actions[].targetIndex` | integer | null | 否 |  |
 | `actions[].damage` | integer | null | 否 |  |
+| `actions[].sourceSide` | enum | 否 | sourceIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有来源下标 |
+| `actions[].targetSide` | enum | 否 | targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标 |
 | `damage` | integer | 是 | 本场战斗败者受到的伤害 |
 | `winnerId` | string | null | 是 | 本场胜者；玩家自己的 playerId 表示胜 |
+| `mirror` | boolean | 否 | true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0 |
 
 ### Error
 

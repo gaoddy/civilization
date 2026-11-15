@@ -12,11 +12,15 @@ use protocol::view::{
     Affordances, BoardAffordance, BoardMinion, HandAffordance, HandCard, PendingChoice,
     PlayerSummary, PlayerView, ShopAffordance, ShopSlot,
 };
-use protocol::{PlayerViewSelf, PlayerViewSelfHeroPower, ProtocolError};
-use rule_engine::combat;
+use protocol::{
+    CombatResult, CombatResultActionsItem, CombatResultActionsItemSourceSide,
+    CombatResultActionsItemTargetSide, PlayerViewSelf, PlayerViewSelfHeroPower, ProtocolError,
+};
+use rule_engine::combat::{self, CombatAction};
 use rule_engine::data::Catalog;
 use rule_engine::intent::RejectCode;
-use rule_engine::state::{MinionInstance, Phase};
+use rule_engine::settle::SeatCombatReport;
+use rule_engine::state::{InstanceId, MinionInstance, Phase};
 use rule_engine::view::{PendingChoiceView, PlayerSummaryView, SeatView, SelfView, ShopSlotView};
 
 /// 座位上的玩家身份：协议里只需要 `playerId` 与展示名。
@@ -97,6 +101,144 @@ pub fn board_minion_from(
         minion_id: minion.instance_id.to_string(),
         sellable,
     }
+}
+
+/// 一条战斗动作涉及的棋盘侧别（相对接收该消息的座位）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Side {
+    Own,
+    Opponent,
+}
+
+/// 把引擎的逐座位战斗报告转换为协议 `CombatResult`。
+///
+/// 协议只有一组 `sourceIndex`/`targetIndex`，两侧棋盘的下标可能重叠，因此每条
+/// 动作额外标注 `sourceSide`/`targetSide`（`own`/`opponent`，相对接收座位）。
+/// 召唤物等不在战前快照里的实例找不到下标时，下标与侧别都写 `null`。
+/// `mirror` 原样取自报告，镜像战为 `true`。
+pub fn combat_result(
+    catalog: &Catalog,
+    report: &SeatCombatReport,
+    seats: &[SeatInfo; 8],
+) -> CombatResult {
+    let own_board = report
+        .own_board
+        .iter()
+        .enumerate()
+        .map(|(index, minion)| board_minion_from(catalog, index, minion, false))
+        .collect();
+    let opponent_board = report
+        .opponent_board
+        .iter()
+        .enumerate()
+        .map(|(index, minion)| board_minion_from(catalog, index, minion, false))
+        .collect();
+    let actions = report
+        .actions
+        .iter()
+        .map(|action| combat_action(report, action))
+        .collect();
+
+    CombatResult {
+        actions,
+        damage: u64::try_from(report.damage).unwrap_or(0),
+        mirror: Some(report.mirror),
+        opponent_board,
+        own_board,
+        winner_id: report
+            .winner
+            .and_then(|seat| seats.get(usize::from(seat)))
+            .map(|info| info.player_id.clone()),
+    }
+}
+
+/// 战斗动作转协议：`kind` 固定为 `attack|death|reborn|contagion`。
+fn combat_action(report: &SeatCombatReport, action: &CombatAction) -> CombatResultActionsItem {
+    match action {
+        CombatAction::Attack {
+            attacker,
+            target,
+            damage,
+            blocked,
+        } => {
+            let source = locate(report, *attacker);
+            let target = locate(report, *target);
+            CombatResultActionsItem {
+                damage: Some(if *blocked { 0 } else { i64::from(*damage) }),
+                kind: "attack".to_string(),
+                source_index: source.map(|(index, _)| index as i64),
+                source_side: source.map(|(_, side)| source_side(side)),
+                target_index: target.map(|(index, _)| index as i64),
+                target_side: target.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Death { minion } => {
+            let source = locate(report, *minion);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "death".to_string(),
+                source_index: source.map(|(index, _)| index as i64),
+                source_side: source.map(|(_, side)| source_side(side)),
+                target_index: None,
+                target_side: None,
+            }
+        }
+        CombatAction::Reborn { minion } => {
+            let source = locate(report, *minion);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "reborn".to_string(),
+                source_index: source.map(|(index, _)| index as i64),
+                source_side: source.map(|(_, side)| source_side(side)),
+                target_index: None,
+                target_side: None,
+            }
+        }
+        CombatAction::ContagionApplied { target } => {
+            let target = locate(report, *target);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "contagion".to_string(),
+                source_index: None,
+                source_side: None,
+                target_index: target.map(|(index, _)| index as i64),
+                target_side: target.map(|(_, side)| target_side(side)),
+            }
+        }
+    }
+}
+
+fn source_side(side: Side) -> CombatResultActionsItemSourceSide {
+    match side {
+        Side::Own => CombatResultActionsItemSourceSide::Own,
+        Side::Opponent => CombatResultActionsItemSourceSide::Opponent,
+    }
+}
+
+fn target_side(side: Side) -> CombatResultActionsItemTargetSide {
+    match side {
+        Side::Own => CombatResultActionsItemTargetSide::Own,
+        Side::Opponent => CombatResultActionsItemTargetSide::Opponent,
+    }
+}
+
+/// 在该座位视角的两份棋盘里定位实例：先本方、后对手。
+///
+/// 真实战斗的实例编号全局唯一；镜像战的幽灵快照会复用编号，此时先命中本方即
+/// 可（两份棋盘内容相同）。
+fn locate(report: &SeatCombatReport, minion: InstanceId) -> Option<(usize, Side)> {
+    if let Some(index) = report
+        .own_board
+        .iter()
+        .position(|candidate| candidate.instance_id == minion)
+    {
+        return Some((index, Side::Own));
+    }
+    report
+        .opponent_board
+        .iter()
+        .position(|candidate| candidate.instance_id == minion)
+        .map(|index| (index, Side::Opponent))
 }
 
 fn self_to_protocol(

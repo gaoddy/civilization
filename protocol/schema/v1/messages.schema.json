@@ -196,12 +196,26 @@
               "kind": { "type": "string", "description": "动作类型，具体取值由规则引擎实现确定" },
               "sourceIndex": { "type": ["integer", "null"] },
               "targetIndex": { "type": ["integer", "null"] },
-              "damage": { "type": ["integer", "null"] }
+              "damage": { "type": ["integer", "null"] },
+              "sourceSide": {
+                "type": ["string", "null"],
+                "enum": ["own", "opponent", null],
+                "description": "sourceIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有来源下标"
+              },
+              "targetSide": {
+                "type": ["string", "null"],
+                "enum": ["own", "opponent", null],
+                "description": "targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标"
+              }
             }
           }
         },
         "damage": { "type": "integer", "minimum": 0, "description": "本场战斗败者受到的伤害" },
-        "winnerId": { "type": ["string", "null"], "description": "本场胜者；玩家自己的 playerId 表示胜" }
+        "winnerId": { "type": ["string", "null"], "description": "本场胜者；玩家自己的 playerId 表示胜" },
+        "mirror": {
+          "type": "boolean",
+          "description": "true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0"
+        }
       }
     },
     "GameOver": {

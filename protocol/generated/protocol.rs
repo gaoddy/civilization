@@ -843,10 +843,34 @@ impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeType {
 ///              "null"
 ///            ]
 ///          },
+///          "sourceSide": {
+///            "description": "sourceIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有来源下标",
+///            "type": [
+///              "string",
+///              "null"
+///            ],
+///            "enum": [
+///              "own",
+///              "opponent",
+///              null
+///            ]
+///          },
 ///          "targetIndex": {
 ///            "type": [
 ///              "integer",
 ///              "null"
+///            ]
+///          },
+///          "targetSide": {
+///            "description": "targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标",
+///            "type": [
+///              "string",
+///              "null"
+///            ],
+///            "enum": [
+///              "own",
+///              "opponent",
+///              null
 ///            ]
 ///          }
 ///        },
@@ -857,6 +881,10 @@ impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeType {
 ///      "description": "本场战斗败者受到的伤害",
 ///      "type": "integer",
 ///      "minimum": 0.0
+///    },
+///    "mirror": {
+///      "description": "true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0",
+///      "type": "boolean"
 ///    },
 ///    "opponentBoard": {
 ///      "type": "array",
@@ -888,6 +916,9 @@ pub struct CombatResult {
     pub actions: ::std::vec::Vec<CombatResultActionsItem>,
     ///本场战斗败者受到的伤害
     pub damage: u64,
+    ///true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub mirror: ::std::option::Option<bool>,
     #[serde(rename = "opponentBoard")]
     pub opponent_board: ::std::vec::Vec<BoardMinion>,
     #[serde(rename = "ownBoard")]
@@ -928,10 +959,34 @@ impl ::std::convert::From<&CombatResult> for CombatResult {
 ///        "null"
 ///      ]
 ///    },
+///    "sourceSide": {
+///      "description": "sourceIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有来源下标",
+///      "type": [
+///        "string",
+///        "null"
+///      ],
+///      "enum": [
+///        "own",
+///        "opponent",
+///        null
+///      ]
+///    },
 ///    "targetIndex": {
 ///      "type": [
 ///        "integer",
 ///        "null"
+///      ]
+///    },
+///    "targetSide": {
+///      "description": "targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标",
+///      "type": [
+///        "string",
+///        "null"
+///      ],
+///      "enum": [
+///        "own",
+///        "opponent",
+///        null
 ///      ]
 ///    }
 ///  },
@@ -952,16 +1007,198 @@ pub struct CombatResultActionsItem {
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub source_index: ::std::option::Option<i64>,
+    ///sourceIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有来源下标
+    #[serde(
+        rename = "sourceSide",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub source_side: ::std::option::Option<CombatResultActionsItemSourceSide>,
     #[serde(
         rename = "targetIndex",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub target_index: ::std::option::Option<i64>,
+    ///targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标
+    #[serde(
+        rename = "targetSide",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub target_side: ::std::option::Option<CombatResultActionsItemTargetSide>,
 }
 impl ::std::convert::From<&CombatResultActionsItem> for CombatResultActionsItem {
     fn from(value: &CombatResultActionsItem) -> Self {
         value.clone()
+    }
+}
+///sourceIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有来源下标
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "sourceIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有来源下标",
+///  "type": "string",
+///  "enum": [
+///    "own",
+///    "opponent"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum CombatResultActionsItemSourceSide {
+    #[serde(rename = "own")]
+    Own,
+    #[serde(rename = "opponent")]
+    Opponent,
+}
+impl ::std::convert::From<&Self> for CombatResultActionsItemSourceSide {
+    fn from(value: &CombatResultActionsItemSourceSide) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for CombatResultActionsItemSourceSide {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Own => f.write_str("own"),
+            Self::Opponent => f.write_str("opponent"),
+        }
+    }
+}
+impl ::std::str::FromStr for CombatResultActionsItemSourceSide {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "own" => Ok(Self::Own),
+            "opponent" => Ok(Self::Opponent),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for CombatResultActionsItemSourceSide {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for CombatResultActionsItemSourceSide {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for CombatResultActionsItemSourceSide {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标",
+///  "type": "string",
+///  "enum": [
+///    "own",
+///    "opponent"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum CombatResultActionsItemTargetSide {
+    #[serde(rename = "own")]
+    Own,
+    #[serde(rename = "opponent")]
+    Opponent,
+}
+impl ::std::convert::From<&Self> for CombatResultActionsItemTargetSide {
+    fn from(value: &CombatResultActionsItemTargetSide) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for CombatResultActionsItemTargetSide {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Own => f.write_str("own"),
+            Self::Opponent => f.write_str("opponent"),
+        }
+    }
+}
+impl ::std::str::FromStr for CombatResultActionsItemTargetSide {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "own" => Ok(Self::Own),
+            "opponent" => Ok(Self::Opponent),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for CombatResultActionsItemTargetSide {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for CombatResultActionsItemTargetSide {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for CombatResultActionsItemTargetSide {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
     }
 }
 ///`CreateRoom`
