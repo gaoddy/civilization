@@ -1038,6 +1038,7 @@ impl ::std::convert::From<ErrorMessage> for Error {
 ///    "NO_SUCH_MINION",
 ///    "ALREADY_MAX_ERA",
 ///    "CARD_NOT_IN_HAND",
+///    "HERO_NOT_SELECTED",
 ///    "HERO_POWER_LIMIT",
 ///    "INVALID_CHOICE",
 ///    "NO_VALID_TARGET",
@@ -1050,8 +1051,10 @@ impl ::std::convert::From<ErrorMessage> for Error {
 ///    "UNKNOWN_TYPE",
 ///    "RATE_LIMITED",
 ///    "NOT_IN_ROOM",
+///    "NOT_HOST",
 ///    "ROOM_NOT_FOUND",
 ///    "ROOM_FULL",
+///    "ROOM_NOT_READY",
 ///    "SEQUENCE_STALE",
 ///    "INTERNAL_ERROR"
 ///  ]
@@ -1085,6 +1088,8 @@ pub enum ErrorCode {
     AlreadyMaxEra,
     #[serde(rename = "CARD_NOT_IN_HAND")]
     CardNotInHand,
+    #[serde(rename = "HERO_NOT_SELECTED")]
+    HeroNotSelected,
     #[serde(rename = "HERO_POWER_LIMIT")]
     HeroPowerLimit,
     #[serde(rename = "INVALID_CHOICE")]
@@ -1109,10 +1114,14 @@ pub enum ErrorCode {
     RateLimited,
     #[serde(rename = "NOT_IN_ROOM")]
     NotInRoom,
+    #[serde(rename = "NOT_HOST")]
+    NotHost,
     #[serde(rename = "ROOM_NOT_FOUND")]
     RoomNotFound,
     #[serde(rename = "ROOM_FULL")]
     RoomFull,
+    #[serde(rename = "ROOM_NOT_READY")]
+    RoomNotReady,
     #[serde(rename = "SEQUENCE_STALE")]
     SequenceStale,
     #[serde(rename = "INTERNAL_ERROR")]
@@ -1133,6 +1142,7 @@ impl ::std::fmt::Display for ErrorCode {
             Self::NoSuchMinion => f.write_str("NO_SUCH_MINION"),
             Self::AlreadyMaxEra => f.write_str("ALREADY_MAX_ERA"),
             Self::CardNotInHand => f.write_str("CARD_NOT_IN_HAND"),
+            Self::HeroNotSelected => f.write_str("HERO_NOT_SELECTED"),
             Self::HeroPowerLimit => f.write_str("HERO_POWER_LIMIT"),
             Self::InvalidChoice => f.write_str("INVALID_CHOICE"),
             Self::NoValidTarget => f.write_str("NO_VALID_TARGET"),
@@ -1145,8 +1155,10 @@ impl ::std::fmt::Display for ErrorCode {
             Self::UnknownType => f.write_str("UNKNOWN_TYPE"),
             Self::RateLimited => f.write_str("RATE_LIMITED"),
             Self::NotInRoom => f.write_str("NOT_IN_ROOM"),
+            Self::NotHost => f.write_str("NOT_HOST"),
             Self::RoomNotFound => f.write_str("ROOM_NOT_FOUND"),
             Self::RoomFull => f.write_str("ROOM_FULL"),
+            Self::RoomNotReady => f.write_str("ROOM_NOT_READY"),
             Self::SequenceStale => f.write_str("SEQUENCE_STALE"),
             Self::InternalError => f.write_str("INTERNAL_ERROR"),
         }
@@ -1165,6 +1177,7 @@ impl ::std::str::FromStr for ErrorCode {
             "NO_SUCH_MINION" => Ok(Self::NoSuchMinion),
             "ALREADY_MAX_ERA" => Ok(Self::AlreadyMaxEra),
             "CARD_NOT_IN_HAND" => Ok(Self::CardNotInHand),
+            "HERO_NOT_SELECTED" => Ok(Self::HeroNotSelected),
             "HERO_POWER_LIMIT" => Ok(Self::HeroPowerLimit),
             "INVALID_CHOICE" => Ok(Self::InvalidChoice),
             "NO_VALID_TARGET" => Ok(Self::NoValidTarget),
@@ -1177,8 +1190,10 @@ impl ::std::str::FromStr for ErrorCode {
             "UNKNOWN_TYPE" => Ok(Self::UnknownType),
             "RATE_LIMITED" => Ok(Self::RateLimited),
             "NOT_IN_ROOM" => Ok(Self::NotInRoom),
+            "NOT_HOST" => Ok(Self::NotHost),
             "ROOM_NOT_FOUND" => Ok(Self::RoomNotFound),
             "ROOM_FULL" => Ok(Self::RoomFull),
+            "ROOM_NOT_READY" => Ok(Self::RoomNotReady),
             "SEQUENCE_STALE" => Ok(Self::SequenceStale),
             "INTERNAL_ERROR" => Ok(Self::InternalError),
             _ => Err("invalid value".into()),

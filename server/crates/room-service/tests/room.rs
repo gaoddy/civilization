@@ -3,6 +3,7 @@
 //! 覆盖建房、加入/离开、英雄选择、准备与开局前置判定，以及 `RoomUpdate` 视图。
 //! 房间码与座位分配均为确定性行为，测试直接断言具体取值。
 
+use protocol::ErrorCode;
 use protocol::client::AuthRequest;
 use room_service::auth::{Session, SessionStore};
 use room_service::clock::FixedClock;
@@ -33,6 +34,62 @@ fn session(store: &mut SessionStore, clock: &FixedClock, name: &str) -> Session 
             clock,
         )
         .expect("开发验证码应登录成功")
+}
+
+/// 8 个座位各用一张不同的英雄卡，便于断言座位与英雄的对应关系。
+const HEROES: [&str; SEAT_COUNT] = [
+    "adam-smith",
+    "darwin",
+    "davinci",
+    "edison",
+    "einstein",
+    "faraday",
+    "galileo",
+    "knuth",
+];
+
+/// 建一个 8 人满座的大厅房间，返回注册表、房间 id、房间码与按座位号排列的会话。
+fn lobby_room() -> (RoomRegistry, String, String, Vec<Session>) {
+    let clock = FixedClock::new(1_000_000);
+    let mut store = SessionStore::new();
+    let mut registry = RoomRegistry::with_seed(0);
+
+    let host = session(&mut store, &clock, "房主");
+    let room = registry.create(&host);
+    let room_id = room.id.clone();
+    let code = room.code.clone();
+
+    let mut players = vec![host];
+    for index in 1..SEAT_COUNT {
+        let player = session(&mut store, &clock, &format!("玩家{index}"));
+        registry.join(&code, &player).expect("加入成功");
+        players.push(player);
+    }
+    (registry, room_id, code, players)
+}
+
+/// 在满座大厅里让所有人选好不同英雄并准备，但仍停留在 `Lobby`。
+fn ready_room() -> (RoomRegistry, String, String, Vec<Session>) {
+    let (mut registry, room_id, code, players) = lobby_room();
+    let catalog = catalog();
+    for (seat, player) in players.iter().enumerate() {
+        registry
+            .select_hero(&room_id, &player.player_id, HEROES[seat], &catalog)
+            .expect("选英雄成功");
+        registry
+            .ready(&room_id, &player.player_id, true)
+            .expect("准备成功");
+    }
+    (registry, room_id, code, players)
+}
+
+/// 已完成 `try_start`、阶段推进到 `Recruit` 的房间。
+fn started_room() -> (RoomRegistry, String, String, Vec<Session>) {
+    let (mut registry, room_id, code, players) = ready_room();
+    registry
+        .try_start(&room_id, &players[0].player_id)
+        .expect("全员就绪后应能开局");
+    (registry, room_id, code, players)
 }
 
 #[test]
@@ -199,17 +256,16 @@ fn select_hero_rejects_non_hero() {
     let room = registry.create(&host);
     let room_id = room.id.clone();
 
-    assert_eq!(
-        registry
-            .select_hero(&room_id, &host.player_id, "agi", &catalog)
-            .expect_err("非英雄卡不能作为英雄"),
-        RoomError::Unknown("NOT_A_HERO_CARD".to_string())
-    );
+    let error = registry
+        .select_hero(&room_id, &host.player_id, "agi", &catalog)
+        .expect_err("非英雄卡不能作为英雄");
+    assert_eq!(error, RoomError::NotAHeroCard);
+    assert_eq!(error.code(), ErrorCode::InvalidChoice);
     assert_eq!(
         registry
             .select_hero(&room_id, &host.player_id, "no-such-card", &catalog)
             .expect_err("不存在的卡不能作为英雄"),
-        RoomError::Unknown("NOT_A_HERO_CARD".to_string())
+        RoomError::NotAHeroCard
     );
 }
 
@@ -232,12 +288,8 @@ fn ready_without_hero_rejected() {
     let error = registry
         .ready(&room_id, &host.player_id, true)
         .expect_err("未选英雄就准备应被拒绝");
-    assert_eq!(error, RoomError::Unknown("HERO_NOT_SELECTED".to_string()));
-    assert_eq!(
-        error.code(),
-        "INVALID_STAGE",
-        "schema 无 HERO_NOT_SELECTED，下行取语义最接近的 INVALID_STAGE"
-    );
+    assert_eq!(error, RoomError::HeroNotSelected);
+    assert_eq!(error.code(), ErrorCode::HeroNotSelected);
 
     // 选完英雄后即可准备。
     registry
@@ -265,12 +317,11 @@ fn try_start_by_non_host_rejected() {
         .select_hero(&room_id, &second.player_id, "adam-smith", &catalog)
         .expect("选英雄成功");
 
-    assert_eq!(
-        registry
-            .try_start(&room_id, &second.player_id)
-            .expect_err("非房主不能开始"),
-        RoomError::NotHost
-    );
+    let error = registry
+        .try_start(&room_id, &second.player_id)
+        .expect_err("非房主不能开始");
+    assert_eq!(error, RoomError::NotHost);
+    assert_eq!(error.code(), ErrorCode::NotHost);
 }
 
 #[test]
@@ -293,8 +344,8 @@ fn try_start_with_missing_players_rejected() {
     let error = registry
         .try_start(&room_id, &host.player_id)
         .expect_err("人数不足不能开始");
-    assert_eq!(error, RoomError::Unknown("ROOM_NOT_READY".to_string()));
-    assert_eq!(error.code(), "INVALID_STAGE");
+    assert_eq!(error, RoomError::RoomNotReady);
+    assert_eq!(error.code(), ErrorCode::RoomNotReady);
     assert_eq!(
         registry.room(&room_id).unwrap().phase,
         Phase::Lobby,
@@ -496,15 +547,12 @@ fn leave_unknown_room_or_player_rejected() {
         registry
             .leave(&room_id, &outsider.player_id)
             .expect_err("不在房间里"),
-        RoomError::Unknown("NOT_IN_ROOM".to_string())
+        RoomError::NotInRoom
     );
-    assert_eq!(
-        registry
-            .leave(&room_id, &outsider.player_id)
-            .expect_err("不在房间里")
-            .code(),
-        "NOT_IN_ROOM"
-    );
+    let error = registry
+        .leave(&room_id, &outsider.player_id)
+        .expect_err("不在房间里");
+    assert_eq!(error.code(), ErrorCode::NotInRoom);
 }
 
 #[test]
@@ -522,6 +570,135 @@ fn ready_unknown_player_rejected() {
         registry
             .ready(&room_id, &outsider.player_id, false)
             .expect_err("不在房间里"),
-        RoomError::Unknown("NOT_IN_ROOM".to_string())
+        RoomError::NotInRoom
     );
+}
+
+#[test]
+fn try_start_success_advances_to_recruit() {
+    let (mut registry, room_id, _code, players) = ready_room();
+    assert_eq!(
+        registry.room(&room_id).unwrap().phase,
+        Phase::Lobby,
+        "try_start 前应仍在大厅"
+    );
+
+    let heroes = registry
+        .try_start(&room_id, &players[0].player_id)
+        .expect("8 人齐且全部准备时应能开局");
+
+    assert_eq!(heroes.len(), SEAT_COUNT);
+    for (seat, _) in players.iter().enumerate() {
+        assert_eq!(
+            heroes.get(&(seat as u8)).map(String::as_str),
+            Some(HEROES[seat]),
+            "座位 {seat} 的英雄应与所选一致"
+        );
+    }
+    assert_eq!(
+        registry.room(&room_id).unwrap().phase,
+        Phase::Recruit,
+        "开局成功后应推进到 Recruit"
+    );
+}
+
+#[test]
+fn try_start_twice_rejects_invalid_stage() {
+    let (mut registry, room_id, _code, players) = started_room();
+
+    let error = registry
+        .try_start(&room_id, &players[0].player_id)
+        .expect_err("已开局的房间不能再次开始");
+    assert_eq!(error, RoomError::WrongPhase);
+    assert_eq!(error.code(), ErrorCode::InvalidStage);
+    assert_eq!(
+        registry.room(&room_id).unwrap().phase,
+        Phase::Recruit,
+        "重复开始不得回退或重复推进阶段"
+    );
+}
+
+#[test]
+fn non_lobby_rejects_join_ready_select_and_leave() {
+    let (mut registry, room_id, code, players) = started_room();
+    let catalog = catalog();
+
+    let clock = FixedClock::new(1_000_000);
+    let mut store = SessionStore::new();
+    let newcomer = session(&mut store, &clock, "迟到玩家");
+
+    // 满座 + 已开局：阶段检查必须先于 ROOM_FULL。
+    assert_eq!(
+        registry.join(&code, &newcomer).expect_err("开局后不能加入"),
+        RoomError::WrongPhase
+    );
+    assert_eq!(
+        registry
+            .ready(&room_id, &players[1].player_id, false)
+            .expect_err("开局后不能改准备"),
+        RoomError::WrongPhase
+    );
+    assert_eq!(
+        registry
+            .select_hero(&room_id, &players[1].player_id, HEROES[2], &catalog)
+            .expect_err("开局后不能改英雄"),
+        RoomError::WrongPhase
+    );
+    assert_eq!(
+        registry
+            .leave(&room_id, &players[1].player_id)
+            .expect_err("开局后不能走大厅离开"),
+        RoomError::WrongPhase
+    );
+
+    let room = registry.room(&room_id).expect("房间仍存在");
+    assert_eq!(room.players().len(), SEAT_COUNT, "成员集合应保持不变");
+    assert_eq!(
+        room.seat_of(&players[1].player_id),
+        Some(1),
+        "座位不应被释放或重排"
+    );
+    assert_eq!(
+        registry.room_update(&room_id).unwrap().players.len(),
+        SEAT_COUNT
+    );
+    assert_eq!(room.phase, Phase::Recruit);
+}
+
+#[test]
+fn start_ready_is_false_after_game_started() {
+    let (registry, room_id, _code, _players) = started_room();
+
+    assert!(
+        registry.start_ready(&room_id).is_none(),
+        "开局后注册表查询不应再报告可以开始"
+    );
+    assert!(
+        registry.room(&room_id).unwrap().start_ready().is_none(),
+        "Room::start_ready 在非 Lobby 阶段应返回 None"
+    );
+}
+
+#[test]
+fn error_codes_exist_in_schema() {
+    let cases = [
+        (RoomError::NotFound, "ROOM_NOT_FOUND"),
+        (RoomError::Full, "ROOM_FULL"),
+        (RoomError::NotHost, "NOT_HOST"),
+        (RoomError::WrongPhase, "INVALID_STAGE"),
+        (RoomError::HeroNotSelected, "HERO_NOT_SELECTED"),
+        (RoomError::RoomNotReady, "ROOM_NOT_READY"),
+        (RoomError::NotAHeroCard, "INVALID_CHOICE"),
+        (RoomError::NotInRoom, "NOT_IN_ROOM"),
+        (RoomError::Unknown("保留原因".to_string()), "INTERNAL_ERROR"),
+    ];
+
+    for (error, expected) in cases {
+        let code = error.code();
+        let json = serde_json::to_value(code).expect("ErrorCode 应可序列化");
+        assert_eq!(json.as_str(), Some(expected), "{error:?} 的协议码不符");
+        let round_trip: ErrorCode =
+            serde_json::from_value(json).expect("序列化出的码必须是 schema 中的 ErrorCode");
+        assert_eq!(round_trip, code);
+    }
 }

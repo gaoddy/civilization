@@ -61,6 +61,9 @@ impl PlayerSlot {
 }
 
 /// 大厅里的一个房间。
+///
+/// 阶段为 `Lobby` 时成员集合可变；进入 `Recruit` 后成员集合冻结，加入、准备、
+/// 选英雄与离开都会被拒绝，对局中的断线由 Task 11 的 `Disconnect` 处理。
 #[derive(Debug, Clone)]
 pub struct Room {
     pub id: RoomId,
@@ -97,8 +100,12 @@ impl Room {
 
     /// 纯查询：8 个座位全部占用、全部准备且全部选好英雄时返回 `座位 → 英雄卡`。
     ///
-    /// 只读，不改变阶段；实际开局由 [`RoomRegistry::try_start`] 或 Task 9 驱动执行。
+    /// 只读，不改变阶段；非 `Lobby` 阶段成员集合已冻结，一律返回 `None`。
+    /// 实际开局由 [`RoomRegistry::try_start`] 或 Task 9 驱动执行。
     pub fn start_ready(&self) -> Option<BTreeMap<Seat, String>> {
+        if self.phase != Phase::Lobby {
+            return None;
+        }
         if self.slots.len() != SEAT_COUNT {
             return None;
         }
@@ -126,8 +133,8 @@ impl Room {
 
 /// 房间操作失败原因。
 ///
-/// 变体保持稳定；下行错误码经 [`RoomError::code`] 映射为
-/// `protocol/schema/v1/errors.schema.json` 中的已知取值。
+/// 变体保持稳定；下行错误码经 [`RoomError::code`] 精确映射为
+/// `protocol/schema/v1/errors.schema.json` 中的 `ErrorCode`。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RoomError {
     /// 房间码或房间标识不存在。
@@ -136,26 +143,37 @@ pub enum RoomError {
     Full,
     /// 只有房主能开始对局。
     NotHost,
-    /// 其他拒绝原因；字符串是内部语义标签，不一定等于协议错误码。
+    /// 非 `Lobby` 阶段不允许改变大厅成员或大厅状态。
+    WrongPhase,
+    /// 准备前必须已选英雄。
+    HeroNotSelected,
+    /// 人数不足、未全部准备或未全部选英雄，不能开始。
+    RoomNotReady,
+    /// 卡不存在或不是英雄卡。
+    NotAHeroCard,
+    /// 玩家不在房间里。
+    NotInRoom,
+    /// 其他保留原因；字符串是内部说明，不作为协议错误码。
     Unknown(String),
 }
 
 impl RoomError {
     /// 映射到协议错误码。
     ///
-    /// schema 中不存在 `NOT_HOST`、`HERO_NOT_SELECTED`、`ROOM_NOT_READY`，
-    /// 这三类统一取语义最接近的 `INVALID_STAGE`（当前状态/角色不允许该操作）；
-    /// 非英雄卡取 `INVALID_CHOICE`；不在房间取现有的 `NOT_IN_ROOM`。
-    pub fn code(&self) -> &str {
+    /// 返回生成枚举 [`protocol::ErrorCode`] 而非字符串，映射写错会编译失败。
+    /// `Unknown` 没有对应的客户端可纠正语义，统一退化 `INTERNAL_ERROR`。
+    pub fn code(&self) -> protocol::ErrorCode {
+        use protocol::ErrorCode;
         match self {
-            Self::NotFound => "ROOM_NOT_FOUND",
-            Self::Full => "ROOM_FULL",
-            Self::NotHost => "INVALID_STAGE",
-            Self::Unknown(reason) => match reason.as_str() {
-                "NOT_IN_ROOM" => "NOT_IN_ROOM",
-                "NOT_A_HERO_CARD" => "INVALID_CHOICE",
-                _ => "INVALID_STAGE",
-            },
+            Self::NotFound => ErrorCode::RoomNotFound,
+            Self::Full => ErrorCode::RoomFull,
+            Self::NotHost => ErrorCode::NotHost,
+            Self::WrongPhase => ErrorCode::InvalidStage,
+            Self::HeroNotSelected => ErrorCode::HeroNotSelected,
+            Self::RoomNotReady => ErrorCode::RoomNotReady,
+            Self::NotAHeroCard => ErrorCode::InvalidChoice,
+            Self::NotInRoom => ErrorCode::NotInRoom,
+            Self::Unknown(_) => ErrorCode::InternalError,
         }
     }
 }
@@ -166,6 +184,11 @@ impl fmt::Display for RoomError {
             Self::NotFound => f.write_str("房间不存在"),
             Self::Full => f.write_str("房间已满"),
             Self::NotHost => f.write_str("只有房主可以开始对局"),
+            Self::WrongPhase => f.write_str("当前阶段不允许该操作"),
+            Self::HeroNotSelected => f.write_str("请先选择英雄"),
+            Self::RoomNotReady => f.write_str("人数不足或尚未全部准备"),
+            Self::NotAHeroCard => f.write_str("不是可选的英雄卡"),
+            Self::NotInRoom => f.write_str("玩家不在房间内"),
             Self::Unknown(reason) => f.write_str(reason),
         }
     }
@@ -229,9 +252,14 @@ impl RoomRegistry {
     /// 按房间码加入，坐第一个空位（座位号从 0 起）。
     ///
     /// 同一玩家重复加入同一房间是幂等的：返回已有房间，不占新座位。
+    /// 非 `Lobby` 阶段成员集合已冻结，先于满座判断返回 [`RoomError::WrongPhase`]。
     pub fn join(&mut self, code: &str, player: &Session) -> Result<&mut Room, RoomError> {
         let room_id = self.by_code.get(code).cloned().ok_or(RoomError::NotFound)?;
         let room = self.rooms.get_mut(&room_id).expect("索引与房间表一致");
+
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
 
         if room.is_occupied(&player.player_id) {
             return Ok(room);
@@ -247,12 +275,17 @@ impl RoomRegistry {
     /// 离开房间。座位立即空出且编号不重排；之后加入的玩家占用最小空位。
     ///
     /// 房主离开时，房主转给座位号最小的剩余玩家；最后一名玩家离开后房间销毁。
+    /// 只有 `Lobby` 阶段允许离开；开局后的断线由 Task 11 的 `Disconnect` 处理，
+    /// 不走本方法，避免房间成员与对局座位发散。
     pub fn leave(&mut self, room_id: &str, player_id: &str) -> Result<(), RoomError> {
         let Some(room) = self.rooms.get_mut(room_id) else {
             return Err(RoomError::NotFound);
         };
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
         let Some(seat) = room.seat_of(player_id) else {
-            return Err(RoomError::Unknown("NOT_IN_ROOM".to_string()));
+            return Err(RoomError::NotInRoom);
         };
         room.slots.remove(&seat);
 
@@ -280,19 +313,24 @@ impl RoomRegistry {
     }
 
     /// 设置准备状态；准备前必须先选英雄。
+    ///
+    /// 非 `Lobby` 阶段成员集合已冻结，返回 [`RoomError::WrongPhase`]。
     pub fn ready(&mut self, room_id: &str, player_id: &str, ready: bool) -> Result<(), RoomError> {
         let room = self.rooms.get_mut(room_id).ok_or(RoomError::NotFound)?;
-        let slot = room
-            .slot_mut(player_id)
-            .ok_or_else(|| RoomError::Unknown("NOT_IN_ROOM".to_string()))?;
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
+        let slot = room.slot_mut(player_id).ok_or(RoomError::NotInRoom)?;
         if ready && slot.hero_card_id.is_none() {
-            return Err(RoomError::Unknown("HERO_NOT_SELECTED".to_string()));
+            return Err(RoomError::HeroNotSelected);
         }
         slot.ready = ready;
         Ok(())
     }
 
     /// 选择英雄。卡必须存在且 `is_hero`；允许与其他座位重复选择同一张卡。
+    ///
+    /// 非 `Lobby` 阶段成员集合已冻结，返回 [`RoomError::WrongPhase`]。
     pub fn select_hero(
         &mut self,
         room_id: &str,
@@ -301,11 +339,14 @@ impl RoomRegistry {
         catalog: &Catalog,
     ) -> Result<(), RoomError> {
         let room = self.rooms.get_mut(room_id).ok_or(RoomError::NotFound)?;
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
         if !room.is_occupied(player_id) {
-            return Err(RoomError::Unknown("NOT_IN_ROOM".to_string()));
+            return Err(RoomError::NotInRoom);
         }
         if !catalog.cards.get(card_id).is_some_and(|card| card.is_hero) {
-            return Err(RoomError::Unknown("NOT_A_HERO_CARD".to_string()));
+            return Err(RoomError::NotAHeroCard);
         }
 
         let slot = room.slot_mut(player_id).expect("上面已确认玩家在房间内");
@@ -320,7 +361,7 @@ impl RoomRegistry {
         self.rooms.get(room_id)?.start_ready()
     }
 
-    /// 房主发起开局：校验房主、人数与准备状态，成功后把阶段推进到 `Recruit`。
+    /// 房主发起开局：校验房主、阶段、人数与准备状态，成功后把阶段推进到 `Recruit`。
     ///
     /// 与纯查询 [`Self::start_ready`] 分开，便于轮询与命令处理各自调用。
     pub fn try_start(
@@ -333,11 +374,9 @@ impl RoomRegistry {
             return Err(RoomError::NotHost);
         }
         if room.phase != Phase::Lobby {
-            return Err(RoomError::Unknown("INVALID_STAGE".to_string()));
+            return Err(RoomError::WrongPhase);
         }
-        let heroes = room
-            .start_ready()
-            .ok_or_else(|| RoomError::Unknown("ROOM_NOT_READY".to_string()))?;
+        let heroes = room.start_ready().ok_or(RoomError::RoomNotReady)?;
         room.phase = Phase::Recruit;
         Ok(heroes)
     }
