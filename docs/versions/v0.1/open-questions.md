@@ -37,6 +37,8 @@
 | 发现的选择消息 | 实现 | 核心规则 §3 的九种意图没有「选择发现结果」；M0 用引擎内部 `ChooseDiscover`（越界返回 `INVALID_CHOICE`），M1 在协议中新增同义意图并同步 schema、样例、生成物与核心规则 | [核心规则](product/rules/core-rules.md) §3、§6 |
 | `PlayerView` 字段不足 | 实现 | 当前 schema 不能表达对手阵容、淘汰名次、当前对手与托管状态；M1 按「先改 schema + 样例，再改两端」补齐，并与引擎视图映射同批落地 | [协议设计](../../superpowers/specs/2026-11-15-protocol-design.md) |
 | 招募结束与遗留待选的先后 | 实现 | M0 允许仍有发现待选时提交 `EndRecruit`；M1 协议层再定是否拒绝该顺序 | [核心规则](product/rules/core-rules.md) §6 |
+| M0 重放未比对事件序列 | 实现 | `make m0-determinism` 与 `sim replay` 只比对终局哈希与排名，未比对事件序列；规格的「确定性」要求事件序列一致，M1 前补事件序列摘要比对 | [规则引擎与模拟器](technical/rule-engine-and-simulator.md) |
+| `survivors_at_turn_20` 采样时点 | 实现 | 实现中在 `drive` 循环内、第 20 回合 `resolve_settle` 返回后（检查 `state.turn == 20`）采样，即第 20 回合结算后的存活人数；文档原写「招募开始前」，与实现及 `games_reaching_turn_20` = `games_ended_on_turn_20` 的观测一致，但语义需确认（是否改为第 20 回合招募开始前或回合开始前采样） | [规则引擎与模拟器](technical/rule-engine-and-simulator.md) |
 
 ## 文档结构
 

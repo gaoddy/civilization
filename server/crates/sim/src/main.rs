@@ -1,4 +1,4 @@
-//! 模拟器命令行：`play`、`batch`、`replay`、`report` 四个子命令。
+//! 模拟器命令行：`play`、`batch`、`replay`、`report`、`check` 五个子命令。
 //!
 //! 结果写入 stdout（JSON）；任何参数错误、模拟失败或日志不一致都以非零码退出，
 //! 并只向 stderr 输出原因。不读时钟与环境变量。
@@ -14,7 +14,8 @@ const USAGE: &str = "用法：
   sim play   --seed N [--players 8]
   sim batch  --games N --seed N --out PATH [--players 8]
   sim replay --log PATH
-  sim report --log PATH";
+  sim report --log PATH
+  sim check  --log PATH [--expect-games N]";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -84,8 +85,31 @@ fn run(args: &[String]) -> Result<(), String> {
             let path = options.required("--log")?;
             let value = read_json(Path::new(path))?;
             let batch = report::batch_from_json(&value)?;
+            let check = report::check_m0_batch(&batch, None)?;
             let summary = report::build(&batch);
-            print_json(&report::report_to_json(&summary))
+            print_json(&report::report_to_json(&summary))?;
+            // 校验摘要写到 stderr，stdout 保持纯 JSON。
+            eprintln!(
+                "已校验 {} 局：排名条目 {}，全部可判定",
+                check.valid_games, check.ranking_entries
+            );
+            Ok(())
+        }
+        "check" => {
+            let options = parse_options(rest, &["--log", "--expect-games"])?;
+            let path = options.required("--log")?;
+            let expected = match options.values.get("--expect-games") {
+                Some(_) => Some(options.required_u64("--expect-games")?),
+                None => None,
+            };
+            let value = read_json(Path::new(path))?;
+            let batch = report::batch_from_json(&value)?;
+            let check = report::check_m0_batch(&batch, expected)?;
+            println!(
+                "已校验 {} 局（期望 {} 局）：排名条目 {}，全部可判定",
+                check.games, check.expected_games, check.ranking_entries
+            );
+            Ok(())
         }
         "--help" | "-h" | "help" => {
             println!("{USAGE}");

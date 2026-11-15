@@ -78,7 +78,8 @@ pub struct GameStats {
     pub era_upgrade_turns: [Option<u8>; 8],
     /// 本局三连次数。
     pub triples: u32,
-    /// 第 20 回合招募开始前的存活人数；对局未到第 20 回合为 `None`。
+    /// 第 20 回合结算后的存活人数；对局未到第 20 回合为 `None`。
+    /// 采样时点为第 20 回合 `resolve_settle` 完成之后、开始下一回合之前（见 open-questions）。
     pub survivors_at_turn_20: Option<u8>,
     /// 对局结束时的存活人数。
     pub survivors_at_end: u8,

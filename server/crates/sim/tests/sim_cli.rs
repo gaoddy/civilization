@@ -234,3 +234,118 @@ fn ai_choose_is_deterministic_for_seat() {
     assert!(a.is_some());
     let _: &GameState = &state;
 }
+
+fn sample_game_json(seed: u64) -> Value {
+    let (code, stdout, stderr) = run(&["play", "--seed", &seed.to_string()]);
+    assert_eq!(code, 0, "stderr: {stderr}");
+    serde_json::from_str(&stdout).expect("stdout 应是对局 JSON")
+}
+
+#[test]
+fn game_from_json_rejects_missing_final_hash() {
+    let mut json = sample_game_json(3);
+    json.as_object_mut().unwrap().remove("final_hash");
+    let error = report::game_from_json(&json).expect_err("缺 final_hash 应报错");
+    assert!(
+        error.contains("final_hash"),
+        "错误应指出 final_hash：{error}"
+    );
+}
+
+#[test]
+fn game_from_json_rejects_missing_or_unknown_winner_fields() {
+    let base = sample_game_json(4);
+
+    let mut no_tribe = base.clone();
+    no_tribe["stats"]
+        .as_object_mut()
+        .unwrap()
+        .remove("winner_tribe");
+    let error = report::game_from_json(&no_tribe).expect_err("缺 winner_tribe 应报错");
+    assert!(
+        error.contains("winner_tribe"),
+        "错误应指出 winner_tribe：{error}"
+    );
+
+    let mut unknown_tribe = base.clone();
+    unknown_tribe["stats"]["winner_tribe"] = Value::from("龙");
+    let error = report::game_from_json(&unknown_tribe).expect_err("未知 winner_tribe 应报错");
+    assert!(error.contains("龙"), "错误应带上未知流派名：{error}");
+
+    let mut no_seat = base.clone();
+    no_seat["stats"]
+        .as_object_mut()
+        .unwrap()
+        .remove("winner_seat");
+    let error = report::game_from_json(&no_seat).expect_err("缺 winner_seat 应报错");
+    assert!(
+        error.contains("winner_seat"),
+        "错误应指出 winner_seat：{error}"
+    );
+
+    report::game_from_json(&base).expect("完整日志应能解析");
+}
+
+#[test]
+fn check_accepts_batch_and_reports_counts() {
+    let batch = sim::run_games(3, 1, 8).expect("批量模拟应能完成");
+    let json = report::batch_to_json(&batch);
+    let path = temp_path("check-ok.json");
+    std::fs::write(&path, serde_json::to_string(&json).unwrap()).expect("应能写日志");
+    let path_text = path.to_str().unwrap();
+
+    let (code, stdout, stderr) = run(&["check", "--log", path_text, "--expect-games", "3"]);
+    assert_eq!(code, 0, "stderr: {stderr}");
+    assert!(
+        stdout.contains("已校验 3 局（期望 3 局）"),
+        "stdout: {stdout}"
+    );
+    assert!(stdout.contains("排名条目 24"), "stdout: {stdout}");
+
+    // report 同样校验，校验摘要写 stderr，stdout 仍是纯 JSON。
+    let (code, stdout, stderr) = run(&["report", "--log", path_text]);
+    assert_eq!(code, 0, "stderr: {stderr}");
+    let _: Value = serde_json::from_str(&stdout).expect("report stdout 应是纯 JSON");
+    assert!(stderr.contains("已校验 3 局"), "stderr: {stderr}");
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn check_fails_on_expect_games_mismatch() {
+    let batch = sim::run_games(2, 1, 8).expect("批量模拟应能完成");
+    let json = report::batch_to_json(&batch);
+    let path = temp_path("check-mismatch.json");
+    std::fs::write(&path, serde_json::to_string(&json).unwrap()).expect("应能写日志");
+
+    let (code, stdout, stderr) = run(&[
+        "check",
+        "--log",
+        path.to_str().unwrap(),
+        "--expect-games",
+        "1000",
+    ]);
+    assert_ne!(code, 0, "局数不符应非零退出");
+    assert!(stdout.is_empty(), "失败时 stdout 应为空");
+    assert!(stderr.contains("局数不符"), "stderr: {stderr}");
+    assert!(stderr.contains("2 局，期望 1000 局"), "stderr: {stderr}");
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn check_fails_on_incomplete_ranking() {
+    let mut batch = sim::run_games(4, 1, 8).expect("批量模拟应能完成");
+    batch.games[2].ranking.truncate(7);
+    let error = report::check_m0_batch(&batch, None).expect_err("排名不足应报错");
+    assert!(error.contains("1/4 局异常"), "错误应给出计数：{error}");
+    assert!(error.contains("第 2 局"), "错误应指出局序：{error}");
+
+    let mut batch = sim::run_games(4, 1, 8).expect("批量模拟应能完成");
+    batch.games[1].ranking.swap(0, 1);
+    batch.games[1].ranking[1] = batch.games[1].ranking[0];
+    let error = report::check_m0_batch(&batch, None).expect_err("座位重复应报错");
+    assert!(error.contains("座位重复"), "错误应指出座位重复：{error}");
+
+    let batch = sim::run_games(4, 1, 8).expect("批量模拟应能完成");
+    let check = report::check_m0_batch(&batch, Some(4)).expect("完整批量应通过");
+    assert_eq!(check.ranking_entries, 32);
+}

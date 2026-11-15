@@ -890,6 +890,39 @@ fn reroll_with_empty_star_retries_then_leaves_slot_empty() {
 }
 
 #[test]
+fn reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects() {
+    let (mut engine, mut state) = setup(29);
+    // 全池耗尽：清空共享池后，1 星权重的候选只剩不耗池的效果牌。
+    // 把 1 星效果牌 aq-jingshen、dishengxiyu、erfenfa（不耗池）从本次目录中移除，
+    // 抽卡候选于是全部为空。
+    engine.catalog.config.shop_weights[0] = [100, 0, 0, 0, 0, 0, 0];
+    engine.catalog.cards.remove("aq-jingshen");
+    engine.catalog.cards.remove("erfenfa");
+    engine.catalog.cards.remove("dishengxiyu");
+    for count in state.pool.values_mut() {
+        *count = 0;
+    }
+    // 先清空槽位，确保本次刷新全部重新抽卡（不保留原有上架卡）。
+    for slot in state.players[0].shop.iter_mut() {
+        *slot = None;
+    }
+
+    let outcome = engine
+        .apply(&mut state, 0, Intent::RerollShop)
+        .expect("空池重试后不应失败");
+    assert_eq!(outcome.events, vec![GameEvent::ShopRolled { seat: 0 }]);
+    let shop = &state.players[0].shop;
+    assert_eq!(shop.len(), 6, "商店仍保留基础槽位数");
+    assert!(shop.iter().all(Option::is_none), "全池耗尽后槽位留空");
+    for slot in 0..u8::try_from(shop.len()).expect("槽位数可放入 u8") {
+        let reject = engine
+            .apply(&mut state, 0, Intent::BuyMinion { slot, target: None })
+            .expect_err("空槽不可购买");
+        assert_eq!(reject.code, RejectCode::ShopSlotEmpty, "槽位 {slot}");
+    }
+}
+
+#[test]
 fn hero_cards_never_appear_in_shop() {
     let (mut engine, mut state) = setup(30);
     // 只刷 6 星：该星级同时有英雄卡 knuth 与普通随从。

@@ -143,6 +143,71 @@ pub fn build(batch: &BatchJson) -> Report {
     }
 }
 
+/// M0 批量日志校验结果。
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct BatchCheck {
+    /// 批量日志中的局数。
+    pub games: u64,
+    /// 期望局数；未指定 `--expect-games` 时等于 `games`（只校验逐局契约）。
+    pub expected_games: u64,
+    /// 全部对局共记录的排名条目数（每局应为 8）。
+    pub ranking_entries: u64,
+    /// 逐局全部通过的局数。
+    pub valid_games: u64,
+}
+
+/// 校验批量日志满足 M0 的「稳定性」与「可判定」：局数与期望一致，且每局排名恰为
+/// 8 个不同座位、名次从第 1 名连续排到第 8 名。
+///
+/// 返回首个错误的描述与全部失败计数；通过时返回计数摘要。
+pub fn check_m0_batch(
+    batch: &BatchJson,
+    expected_games: Option<u64>,
+) -> Result<BatchCheck, String> {
+    let games = batch.games.len() as u64;
+    let expected_games = expected_games.unwrap_or(games);
+    if games != expected_games {
+        return Err(format!(
+            "局数不符：批量日志 {games} 局，期望 {expected_games} 局"
+        ));
+    }
+    let mut bad_ranking = 0u64;
+    let mut first_error = None;
+    let mut ranking_entries = 0u64;
+    for (index, game) in batch.games.iter().enumerate() {
+        ranking_entries += game.ranking.len() as u64;
+        let mut seats = game.ranking.clone();
+        seats.sort_unstable();
+        let error = if game.ranking.len() != usize::from(PLAYER_COUNT) {
+            Some(format!(
+                "排名 {} 条，应为 {PLAYER_COUNT}",
+                game.ranking.len()
+            ))
+        } else if seats != (0..PLAYER_COUNT).collect::<Vec<Seat>>() {
+            Some("排名座位重复或越界".to_string())
+        } else {
+            None
+        };
+        if let Some(error) = error {
+            bad_ranking += 1;
+            if first_error.is_none() {
+                first_error = Some(format!("第 {index} 局（种子 {}）：{error}", game.seed));
+            }
+        }
+    }
+    if let Some(error) = first_error {
+        return Err(format!(
+            "排名未全部判定：{bad_ranking}/{games} 局异常，首例 {error}"
+        ));
+    }
+    Ok(BatchCheck {
+        games,
+        expected_games,
+        ranking_entries,
+        valid_games: games,
+    })
+}
+
 fn divide(numerator: u64, denominator: u64) -> u64 {
     if denominator == 0 {
         0
@@ -262,7 +327,8 @@ pub fn batch_to_json(batch: &BatchJson) -> Value {
     json!({ "seed": batch.seed, "games": games })
 }
 
-/// 解析单局 JSON（日志文件中的一局）。统计字段缺失时使用默认值。
+/// 解析单局 JSON（日志文件中的一局）。`seed`、`intents`、`final_hash` 与 `stats` 中的
+/// `winner_tribe` / `winner_seat` 缺失或非法时返回错误，不做静默回落。
 pub fn game_from_json(value: &Value) -> Result<GameLog, String> {
     let seed = value
         .get("seed")
@@ -305,9 +371,8 @@ pub fn game_from_json(value: &Value) -> Result<GameLog, String> {
     let final_hash = value
         .get("final_hash")
         .and_then(Value::as_str)
-        .map(parse_hash)
-        .transpose()?
-        .unwrap_or(0);
+        .ok_or("日志缺少 final_hash")?;
+    let final_hash = parse_hash(final_hash)?;
     let ranking = match value.get("ranking").and_then(Value::as_array) {
         Some(ranking) => ranking
             .iter()
@@ -438,12 +503,13 @@ fn stats_from_json(value: &Value) -> Result<GameStats, String> {
         .get("winner_seat")
         .and_then(Value::as_u64)
         .and_then(|seat| u8::try_from(seat).ok())
-        .unwrap_or(0);
-    let winner_tribe = value
+        .ok_or("stats 缺少 winner_seat")?;
+    let winner_tribe_name = value
         .get("winner_tribe")
         .and_then(Value::as_str)
-        .and_then(tribe_from_name)
-        .unwrap_or(Tribe::General);
+        .ok_or("stats 缺少 winner_tribe")?;
+    let winner_tribe = tribe_from_name(winner_tribe_name)
+        .ok_or_else(|| format!("stats 的 winner_tribe「{winner_tribe_name}」不是已知流派"))?;
     Ok(GameStats {
         era_upgrade_turns,
         triples,
@@ -486,9 +552,11 @@ pub fn batch_from_json(value: &Value) -> Result<BatchJson, String> {
     let games = value
         .get("games")
         .and_then(Value::as_array)
-        .ok_or("批量日志缺少 games")?
+        .ok_or("批量日志缺少 games")?;
+    let games = games
         .iter()
-        .map(game_from_json)
+        .enumerate()
+        .map(|(index, game)| game_from_json(game).map_err(|err| format!("第 {index} 局: {err}")))
         .collect::<Result<Vec<GameLog>, String>>()?;
     Ok(BatchJson { seed, games })
 }

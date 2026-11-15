@@ -32,7 +32,7 @@ pub(crate) fn apply(
         ));
     }
 
-    // `EndRecruit` 表示「本玩家结束招募」：已结束座位的重复提交由 [`end_recruit`] 拒绝，
+    // `EndRecruit` 表示「本玩家结束招募」：已结束座位的重复提交由 [`end_recruit`] 幂等成功，
     // 其余招募意图在已结束座位上一律拒绝（见下方守卫）。
     if intent == Intent::EndRecruit {
         return end_recruit(state, seat);
@@ -174,7 +174,6 @@ fn buy(
                 golden: false,
             },
         ));
-        events.extend(engine.check_triple(state, seat));
         engine.fire_evolve_after_enter(state, seat, instance_id);
     }
     if card_type == CardType::Minion {
@@ -337,7 +336,7 @@ fn upgrade(engine: &Engine, state: &mut GameState, seat: Seat) -> Result<Outcome
     player.era = next;
     player.turns_in_era = 0;
 
-    // 升时代附带的免费重抽不清冻结、也不消耗本回合的免费刷新。
+    // 升时代附带的免费重抽取消冻结、也不消耗本回合的免费刷新（core-rules.md:61）。
     roll_player(engine, state, seat, false);
     Ok(Outcome::with(vec![
         GameEvent::EraUpgraded { seat, era: next },

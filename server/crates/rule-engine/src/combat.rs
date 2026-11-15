@@ -41,7 +41,8 @@ pub(crate) const SEEDLING_TOKEN: &str = "seedling";
 /// 战斗中的一条动作记录。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CombatAction {
-    /// 一次主伤害结算；反击不单独记录。
+    /// 一次伤害结算：`resolve_attack` 的主伤害先记录一条；目标存活并造成反击伤害时，
+    /// 反击以「攻防互换」的 `Attack` 再记录一条。
     Attack {
         attacker: InstanceId,
         target: InstanceId,
