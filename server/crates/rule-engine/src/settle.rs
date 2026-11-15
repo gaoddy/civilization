@@ -32,6 +32,36 @@ pub struct Pairing {
     pub mirror: bool,
 }
 
+/// 单座位视角的一场战斗报告。
+///
+/// 报告只由 [`Engine::resolve_combat`] 的本次调用返回，不写入 [`GameState`]，
+/// 因此不参与 `state_hash`。阵容为战前快照，且已折叠光环——客户端看到的是
+/// 实际参战的数值。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SeatCombatReport {
+    pub seat: Seat,
+    /// 非镜像战为对手座位；镜像战为 `None`。
+    pub opponent_seat: Option<Seat>,
+    pub mirror: bool,
+    /// 本方战前阵容（已折叠光环）。
+    pub own_board: Vec<MinionInstance>,
+    /// 非镜像战为对手战前阵容；镜像战为幽灵阵容。
+    pub opponent_board: Vec<MinionInstance>,
+    /// 本场战斗的行动序列。
+    pub actions: Vec<combat::CombatAction>,
+    /// 本场战斗造成的伤害；镜像战恒为 0。
+    pub damage: i32,
+    /// 本场胜者；镜像未获胜时为 `None`。
+    pub winner: Option<Seat>,
+}
+
+/// 一次战斗结算的完整产物：事件流与逐座位报告。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CombatOutcome {
+    pub events: Vec<GameEvent>,
+    pub reports: BTreeMap<Seat, SeatCombatReport>,
+}
+
 impl Engine {
     /// 结束招募：生成本回合配对并进入 `Combat`。只做配对，不模拟战斗。
     pub fn finish_recruit(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
@@ -42,7 +72,9 @@ impl Engine {
     }
 
     /// 按配对顺序模拟全部战斗，写入伤害、对手与阵容快照，进入 `Settle`。
-    pub fn resolve_combat(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+    ///
+    /// 返回的事件流与逐座位战斗报告；报告不写入 `GameState`，不影响 `state_hash`。
+    pub fn resolve_combat(&mut self, state: &mut GameState) -> Result<CombatOutcome, EngineError> {
         resolve_combat(self, state)
     }
 
@@ -166,7 +198,7 @@ fn finish_recruit(state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> 
     }])
 }
 
-fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<CombatOutcome, EngineError> {
     if state.phase != Phase::Combat {
         return Err(EngineError(format!(
             "当前阶段 {:?} 不能结算战斗",
@@ -179,11 +211,12 @@ fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<Vec<GameEven
 
     let pairings = state.pairings.clone();
     let mut events = Vec::new();
+    let mut reports = BTreeMap::new();
     for pairing in pairings {
         if pairing.mirror {
-            resolve_mirror(engine, state, pairing.a, &mut events);
+            resolve_mirror(engine, state, pairing.a, &mut events, &mut reports);
         } else {
-            resolve_real(engine, state, pairing, &mut events);
+            resolve_real(engine, state, pairing, &mut events, &mut reports);
         }
     }
 
@@ -192,7 +225,7 @@ fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<Vec<GameEven
         phase: Phase::Settle,
         turn: state.turn,
     });
-    Ok(events)
+    Ok(CombatOutcome { events, reports })
 }
 
 fn resolve_real(
@@ -200,6 +233,7 @@ fn resolve_real(
     state: &mut GameState,
     pairing: Pairing,
     events: &mut Vec<GameEvent>,
+    reports: &mut BTreeMap<Seat, SeatCombatReport>,
 ) {
     let catalog = &engine.catalog;
     let (a, b) = (pairing.a, pairing.b);
@@ -269,6 +303,35 @@ fn resolve_real(
     state.previous_board.insert(a, raw_a);
     state.previous_board.insert(b, raw_b);
 
+    // 报告只从本次调用返回：双方各自视角的阵容互换，行动序列与伤害相同。
+    let actions = log.actions;
+    reports.insert(
+        a,
+        SeatCombatReport {
+            seat: a,
+            opponent_seat: Some(b),
+            mirror: false,
+            own_board: board_a.clone(),
+            opponent_board: board_b.clone(),
+            actions: actions.clone(),
+            damage,
+            winner: Some(winner),
+        },
+    );
+    reports.insert(
+        b,
+        SeatCombatReport {
+            seat: b,
+            opponent_seat: Some(a),
+            mirror: false,
+            own_board: board_b,
+            opponent_board: board_a,
+            actions,
+            damage,
+            winner: Some(winner),
+        },
+    );
+
     events.push(GameEvent::CombatResolved {
         winner,
         loser,
@@ -277,7 +340,13 @@ fn resolve_real(
 }
 
 /// 镜像幽灵：不造成、也不承受真实伤害；胜者记入 `last_won`，败者什么都不发生。
-fn resolve_mirror(engine: &Engine, state: &mut GameState, seat: Seat, events: &mut Vec<GameEvent>) {
+fn resolve_mirror(
+    engine: &Engine,
+    state: &mut GameState,
+    seat: Seat,
+    events: &mut Vec<GameEvent>,
+    reports: &mut BTreeMap<Seat, SeatCombatReport>,
+) {
     let catalog = &engine.catalog;
     let current = board_of(state, seat).to_vec();
     let board = fold_auras(catalog, &state.auras, &current);
@@ -312,6 +381,21 @@ fn resolve_mirror(engine: &Engine, state: &mut GameState, seat: Seat, events: &m
         state.last_winner = Some(seat);
     }
     state.previous_board.insert(seat, current);
+
+    // 镜像战没有对手座位，胜利才记录胜者；幽灵不产生真实伤害。
+    reports.insert(
+        seat,
+        SeatCombatReport {
+            seat,
+            opponent_seat: None,
+            mirror: true,
+            own_board: board,
+            opponent_board: ghost,
+            actions: log.actions,
+            damage: 0,
+            winner: won.then_some(seat),
+        },
+    );
 
     events.push(GameEvent::CombatResolved {
         winner: seat,

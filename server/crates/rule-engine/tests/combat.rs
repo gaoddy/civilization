@@ -9,8 +9,11 @@ use rule_engine::combat::{
 };
 use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
 use rule_engine::effects::Duration;
+use rule_engine::engine::Engine;
+use rule_engine::hash::state_hash;
 use rule_engine::rng::RngStreams;
-use rule_engine::state::{InstanceId, MinionInstance, Modifier};
+use rule_engine::settle::Pairing;
+use rule_engine::state::{InstanceId, MinionInstance, Modifier, Phase};
 
 /// 往测试目录里插入一张合成卡牌，避免测试依赖真实卡面数值。
 fn add_card_with(
@@ -692,4 +695,108 @@ fn keywords_merge_card_and_active_grants() {
         .map(str::to_string)
         .collect();
     assert_eq!(keywords(&catalog, &subject), expected);
+}
+
+/// 构造一场真实配对战斗：座位 0、1 存活，其余标淘汰。
+fn real_combat_state() -> (Engine, rule_engine::state::GameState) {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    add_card(&mut engine.catalog, "combat-big", 5, 5, &[]);
+    add_card(&mut engine.catalog, "combat-small", 1, 1, &[]);
+    state.phase = Phase::Combat;
+    for seat in 2..8 {
+        state.players[seat].eliminated = true;
+    }
+    state.players[0].board = vec![minion(10, "combat-big")];
+    state.players[1].board = vec![minion(20, "combat-small")];
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 1,
+        mirror: false,
+    }];
+    (engine, state)
+}
+
+#[test]
+fn resolve_combat_returns_one_report_per_participant() {
+    let (mut engine, mut state) = real_combat_state();
+
+    let outcome = engine.resolve_combat(&mut state).unwrap();
+
+    assert_eq!(outcome.reports.len(), 2, "真实战斗双方各一条");
+    let report_a = outcome.reports.get(&0).expect("座位 a 的报告");
+    let report_b = outcome.reports.get(&1).expect("座位 b 的报告");
+    assert!(!report_a.mirror && !report_b.mirror);
+    assert_eq!(report_a.opponent_seat, Some(1));
+    assert_eq!(report_b.opponent_seat, Some(0));
+    assert_eq!(report_a.own_board.len(), 1, "own_board 是战前阵容");
+    assert_eq!(report_a.own_board[0].instance_id, 10);
+    assert_eq!(report_a.opponent_board.len(), 1);
+    assert_eq!(report_a.opponent_board[0].instance_id, 20);
+    assert_eq!(report_b.own_board[0].instance_id, 20);
+    assert_eq!(report_b.opponent_board[0].instance_id, 10);
+    assert!(!report_a.actions.is_empty(), "行动序列随报告返回");
+    assert_eq!(report_a.actions, report_b.actions, "双方看到同一份行动序列");
+    assert_eq!(report_a.damage, report_b.damage, "双方看到同一份伤害");
+    assert_eq!(report_a.winner, Some(0));
+    assert_eq!(report_b.winner, Some(0));
+    assert_eq!(
+        outcome.events.first(),
+        Some(&rule_engine::events::GameEvent::CombatResolved {
+            winner: 0,
+            loser: 1,
+            damage: report_a.damage,
+        }),
+        "原有事件流不变"
+    );
+}
+
+#[test]
+fn mirror_report_has_no_opponent_seat() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32]);
+    add_card(&mut engine.catalog, "combat-strong", 10, 10, &[]);
+    add_card(&mut engine.catalog, "combat-weak", 1, 1, &[]);
+    state.phase = Phase::Combat;
+    for seat in 1..8 {
+        state.players[seat].eliminated = true;
+    }
+    state.players[0].board = vec![minion(1, "combat-strong")];
+    state
+        .previous_board
+        .insert(0, vec![minion(2, "combat-weak")]);
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        mirror: true,
+    }];
+
+    let outcome = engine.resolve_combat(&mut state).unwrap();
+
+    assert_eq!(outcome.reports.len(), 1, "镜像战只有一条报告");
+    let report = outcome.reports.get(&0).expect("座位 0 的报告");
+    assert!(report.mirror);
+    assert_eq!(report.opponent_seat, None);
+    assert_eq!(report.damage, 0);
+    assert_eq!(report.own_board[0].instance_id, 1);
+    assert_eq!(report.opponent_board[0].instance_id, 2, "对手阵容是幽灵");
+    assert!(!report.actions.is_empty());
+    assert_eq!(report.winner, Some(0));
+}
+
+fn state_hash_after_combat() -> u64 {
+    let (mut engine, mut state) = real_combat_state();
+    let outcome = engine.resolve_combat(&mut state).unwrap();
+    // 保留报告并读取，模拟服务端需要这份数据；报告不得进入 GameState。
+    assert_eq!(outcome.reports.len(), 2);
+    let _actions = &outcome.reports.get(&0).unwrap().actions;
+    state_hash(&state)
+}
+
+#[test]
+fn combat_reports_do_not_change_state_hash() {
+    // 两次相同的 seed 与相同操作序列：一份取用报告，一份只丢哈希前不触碰报告。
+    let with_reports = state_hash_after_combat();
+    let (mut engine, mut state) = real_combat_state();
+    engine.resolve_combat(&mut state).unwrap();
+    let discarded = state_hash(&state);
+    assert_eq!(with_reports, discarded);
 }

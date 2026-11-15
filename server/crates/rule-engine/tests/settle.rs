@@ -284,7 +284,7 @@ fn combat_resolution_applies_damage_and_history() {
         mirror: false,
     }];
 
-    let events = engine.resolve_combat(&mut state).unwrap();
+    let events = engine.resolve_combat(&mut state).unwrap().events;
 
     // 胜方 1 张 3 星随从：ceil(3 / 2) = 2；败者时代 2，合计 4。
     assert_eq!(state.pending_settle.get(&1), Some(&4));
@@ -336,7 +336,7 @@ fn mirror_ghost_keeps_only_permanent_stats() {
         mirror: true,
     }];
 
-    let events = engine.resolve_combat(&mut state).unwrap();
+    let events = engine.resolve_combat(&mut state).unwrap().events;
 
     assert!(state.last_won.contains(&0), "剥除临时属性后应由玩家获胜");
     assert!(state.pending_settle.is_empty());
@@ -373,7 +373,7 @@ fn mirror_loss_does_not_damage_or_streak() {
         mirror: true,
     }];
 
-    let events = engine.resolve_combat(&mut state).unwrap();
+    let events = engine.resolve_combat(&mut state).unwrap().events;
 
     assert_eq!(state.players[0].hp, 40);
     assert!(state.pending_settle.is_empty());
@@ -602,7 +602,7 @@ fn four_pairs_emit_events_in_pairing_order_and_record_opponents() {
         })
         .collect();
 
-    let events = engine.resolve_combat(&mut state).unwrap();
+    let events = engine.resolve_combat(&mut state).unwrap().events;
 
     let resolved: Vec<&GameEvent> = events
         .iter()
@@ -650,7 +650,7 @@ fn action_cap_draw_uses_settle_seat_tiebreak() {
         mirror: false,
     }];
 
-    let events = engine.resolve_combat(&mut state).unwrap();
+    let events = engine.resolve_combat(&mut state).unwrap().events;
 
     // 生命与累计伤害相同，按座位号小者判胜：座位 0。
     assert_eq!(state.last_winner, Some(0));
