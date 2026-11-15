@@ -12,7 +12,9 @@
 | `(根)` | oneOf | 是 | 下列分支任选其一 |
 | `分支1.phone` | string | 是 | 手机号 |
 | `分支1.code` | string | 是 | 短信验证码 |
+| `分支1.displayName` | string | 否 | 缺省由服务端生成「玩家N」 |
 | `分支2.token` | string | 是 | 上次登录返回的令牌 |
+| `分支2.displayName` | string | 否 | 缺省由服务端生成「玩家N」 |
 
 ### CreateRoom
 
@@ -221,6 +223,8 @@
 | `boardCount` | integer | 是 |  |
 | `heroCardId` | string | null | 是 | 开局选择前为 null |
 | `recruited` | boolean | 是 | 本回合是否已结束招募 |
+| `placement` | integer | null | 否 | 最终名次，对局结束前为 null |
+| `managed` | boolean | 是 | 当前是否由 AI 托管 |
 
 ### ShopAffordance
 
@@ -257,6 +261,7 @@
 | `canUpgradeEra` | boolean | 是 |  |
 | `upgradeDisabledReason` | string | null | 是 |  |
 | `canUseHeroPower` | boolean | 是 |  |
+| `heroPowerDisabledReason` | string | null | 否 | 不可使用英雄技能时的错误码 |
 | `canEndRecruit` | boolean | 是 |  |
 
 ### GameEvent
@@ -269,6 +274,16 @@
 | `minionId` | string | 否 |  |
 | `amount` | integer | 否 | 伤害等数值 |
 
+### PendingChoice
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `(根)` | oneOf | 是 | 下列分支任选其一 |
+| `分支1.kind` | object | 是 |  |
+| `分支1.candidates` | array<string> | 是 | 三选一的候选 cardId |
+| `分支2.kind` | object | 是 |  |
+| `分支2.options` | array<string> | 是 | 进化选项 |
+
 ### PlayerView
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -277,6 +292,7 @@
 | `phase` | Phase | 是 |  |
 | `turn` | integer | 是 |  |
 | `phaseDeadline` | string | 是 |  |
+| `opponentPlayerId` | string | null | 否 | 当前战斗对手；招募阶段或未配对时为 null |
 | `self` | object | 是 |  |
 | `self.playerId` | string | 是 |  |
 | `self.seat` | integer | 是 |  |
@@ -293,6 +309,7 @@
 | `self.rerollCost` | integer | 是 |  |
 | `self.upgradeCost` | integer | null | 是 | 满时代为 null |
 | `self.recruited` | boolean | 是 |  |
+| `self.pendingChoices` | array<PendingChoice> | 是 | 本座位待处理的发现或进化选择，按先到先处理排序 |
 | `self.affordances` | Affordances | 是 |  |
 | `players` | array<PlayerSummary> | 是 |  |
 | `enabledFactions` | array<string> | 是 | 本局启用的 5 个流派 |
@@ -304,12 +321,14 @@
 | `(根)` | oneOf | 是 | 下列分支任选其一 |
 | `分支1.kind` | object | 是 |  |
 | `分支1.slot` | integer | 是 | 商店槽位 |
+| `分支1.targetMinionId` | string | 否 | 战吼或效果需要目标时填 |
 | `分支2.kind` | object | 是 |  |
 | `分支2.minionId` | string | 是 | 要出售的随从实例 id |
 | `分支3.kind` | object | 是 |  |
 | `分支4.kind` | object | 是 |  |
 | `分支5.kind` | object | 是 |  |
 | `分支5.handIndex` | integer | 是 | 手牌位置 |
+| `分支5.targetMinionId` | string | 否 | 战吼或效果需要目标时填 |
 | `分支6.kind` | object | 是 |  |
 | `分支6.fromIndex` | integer | 是 |  |
 | `分支6.toIndex` | integer | 是 |  |
@@ -319,6 +338,8 @@
 | `分支8.skillId` | string | 是 |  |
 | `分支8.targetMinionId` | string | 否 | 需要目标的技能才填 |
 | `分支9.kind` | object | 是 |  |
+| `分支10.kind` | object | 是 |  |
+| `分支10.choice` | integer | 是 | 发现为候选下标，进化为选项下标 |
 
 ### ErrorCode
 

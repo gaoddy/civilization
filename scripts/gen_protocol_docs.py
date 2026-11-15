@@ -82,7 +82,8 @@ def render(schema_dir, mapping):
     for direction, heading in (("c2s", "上行消息（C→S）"), ("s2c", "下行消息（S→C）")):
         lines.extend([f"## {heading}", ""])
         for name in sorted(mapping["directions"][direction]):
-            lines.extend(_table(name, messages[name]))
+            def_name = mapping["directions"][direction][name].rsplit("/", 1)[-1]
+            lines.extend(_table(name, messages[def_name]))
 
     lines.extend(["## 共享类型", ""])
     for filename in ("view.schema.json", "intents.schema.json", "errors.schema.json"):

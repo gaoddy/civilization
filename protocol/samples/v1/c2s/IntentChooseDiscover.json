@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "id": "c-13",
+  "type": "Intent",
+  "ts": "2026-11-15T10:00:13Z",
+  "roomId": "r-1",
+  "playerId": "p-3",
+  "payload": {
+    "clientIntentId": "ci-13",
+    "intent": {
+      "kind": "ChooseDiscover",
+      "choice": 1
+    }
+  }
+}

@@ -29,6 +29,7 @@ const MSG_TIMER_WARNING := "TimerWarning"
 
 # 意图
 const INTENT_BUY_MINION := "BuyMinion"
+const INTENT_CHOOSE_DISCOVER := "ChooseDiscover"
 const INTENT_END_RECRUIT := "EndRecruit"
 const INTENT_FREEZE_SHOP := "FreezeShop"
 const INTENT_PLAY_CARD := "PlayCard"
@@ -82,6 +83,7 @@ const EVENT_PLAYER_ELIMINATED := "PlayerEliminated"
 
 # PlayerView 字段名
 const FIELD_ENABLED_FACTIONS := "enabledFactions"
+const FIELD_OPPONENT_PLAYER_ID := "opponentPlayerId"
 const FIELD_PHASE := "phase"
 const FIELD_PHASE_DEADLINE := "phaseDeadline"
 const FIELD_PLAYERS := "players"

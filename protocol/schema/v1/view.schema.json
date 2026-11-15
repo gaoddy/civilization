@@ -47,7 +47,7 @@
     "PlayerSummary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["playerId", "seat", "displayName", "hp", "era", "alive", "boardCount", "heroCardId", "recruited"],
+      "required": ["playerId", "seat", "displayName", "hp", "era", "alive", "boardCount", "heroCardId", "recruited", "managed"],
       "properties": {
         "playerId": { "type": "string" },
         "seat": { "type": "integer", "minimum": 0, "maximum": 7 },
@@ -57,7 +57,9 @@
         "alive": { "type": "boolean" },
         "boardCount": { "type": "integer", "minimum": 0, "maximum": 7 },
         "heroCardId": { "type": ["string", "null"], "description": "开局选择前为 null" },
-        "recruited": { "type": "boolean", "description": "本回合是否已结束招募" }
+        "recruited": { "type": "boolean", "description": "本回合是否已结束招募" },
+        "placement": { "type": ["integer", "null"], "description": "最终名次，对局结束前为 null" },
+        "managed": { "type": "boolean", "description": "当前是否由 AI 托管" }
       }
     },
     "ShopAffordance": {
@@ -103,6 +105,7 @@
         "canUpgradeEra": { "type": "boolean" },
         "upgradeDisabledReason": { "type": ["string", "null"] },
         "canUseHeroPower": { "type": "boolean" },
+        "heroPowerDisabledReason": { "type": ["string", "null"], "description": "不可使用英雄技能时的错误码" },
         "canEndRecruit": { "type": "boolean" }
       }
     },
@@ -122,6 +125,28 @@
         "amount": { "type": "integer", "description": "伤害等数值" }
       }
     },
+    "PendingChoice": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "candidates"],
+          "properties": {
+            "kind": { "const": "discover" },
+            "candidates": { "type": "array", "items": { "type": "string" }, "description": "三选一的候选 cardId" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "options"],
+          "properties": {
+            "kind": { "const": "evolve" },
+            "options": { "type": "array", "items": { "type": "string" }, "description": "进化选项" }
+          }
+        }
+      ]
+    },
     "PlayerView": {
       "type": "object",
       "additionalProperties": false,
@@ -131,11 +156,12 @@
         "phase": { "$ref": "view.schema.json#/$defs/Phase" },
         "turn": { "type": "integer", "minimum": 1, "maximum": 20 },
         "phaseDeadline": { "type": "string", "format": "date-time" },
+        "opponentPlayerId": { "type": ["string", "null"], "description": "当前战斗对手；招募阶段或未配对时为 null" },
         "self": {
           "type": "object",
           "additionalProperties": false,
           "required": ["playerId", "seat", "hp", "era", "gold", "heroCardId", "heroPower",
-                       "shop", "hand", "board", "rerollCost", "upgradeCost", "recruited", "affordances"],
+                       "shop", "hand", "board", "rerollCost", "upgradeCost", "recruited", "pendingChoices", "affordances"],
           "properties": {
             "playerId": { "type": "string" },
             "seat": { "type": "integer", "minimum": 0, "maximum": 7 },
@@ -158,6 +184,7 @@
             "rerollCost": { "type": "integer", "minimum": 0 },
             "upgradeCost": { "type": ["integer", "null"], "minimum": 2, "description": "满时代为 null" },
             "recruited": { "type": "boolean" },
+            "pendingChoices": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/PendingChoice" }, "description": "本座位待处理的发现或进化选择，按先到先处理排序" },
             "affordances": { "$ref": "view.schema.json#/$defs/Affordances" }
           }
         },

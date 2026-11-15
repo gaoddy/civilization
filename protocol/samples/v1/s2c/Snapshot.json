@@ -85,6 +85,7 @@
         "rerollCost": 1,
         "upgradeCost": 5,
         "recruited": false,
+        "pendingChoices": [],
         "affordances": {
           "shopSlots": [
             {
@@ -149,7 +150,8 @@
           "alive": true,
           "boardCount": 0,
           "heroCardId": null,
-          "recruited": false
+          "recruited": false,
+          "managed": false
         },
         {
           "playerId": "p_03",
@@ -160,7 +162,8 @@
           "alive": true,
           "boardCount": 1,
           "heroCardId": "darwin",
-          "recruited": false
+          "recruited": false,
+          "managed": false
         }
       ]
     }
