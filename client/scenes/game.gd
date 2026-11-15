@@ -1,7 +1,7 @@
 extends Control
 ## 对局：按酒馆战棋结构呈现服务端 PlayerView 与 affordances，操作只发协议意图。
 ##
-## 布局：顶栏（回合/计时/属性）— 左栏积分榜 — 中区（招募：对手席、我方棋盘、商店、手牌；
+## 布局：顶栏（回合/计时/属性）— 左栏积分榜 — 中区（招募：商店、我方棋盘、手牌；
 ## 战斗：双方英雄与随从、结果横幅）— 右栏（我的英雄、英雄技能、结束招募、战报）— 状态行。
 
 const PHASE_TEXT := {
@@ -35,7 +35,6 @@ var _players_rail: VBoxContainer
 
 # 中区 · 招募。
 var _recruit_panel: VBoxContainer
-var _opponents_row: HFlowContainer
 var _board_row: HFlowContainer
 var _board_hint: Label
 var _shop_row: HFlowContainer
@@ -189,16 +188,39 @@ func _build_recruit_panel() -> Control:
     _recruit_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _recruit_panel.add_theme_constant_override("separation", UITheme.space("space-sm"))
 
-    # 对手席位行：酒馆战棋房间上方的一圈对手。
-    var opponents_panel := UI.card_panel("surface")
-    opponents_panel.name = "OpponentsPanel"
-    var opponents_box := VBoxContainer.new()
-    opponents_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    opponents_panel.add_child(opponents_box)
-    opponents_box.add_child(UI.section_title("对手"))
-    _opponents_row = _flow_row("OpponentsRow")
-    opponents_box.add_child(_opponents_row)
-    _recruit_panel.add_child(opponents_panel)
+    # 商店：6 个槽位与刷新/升时代/冻结。
+    var shop_panel := UI.card_panel("surface")
+    shop_panel.name = "ShopPanel"
+    var shop_box := VBoxContainer.new()
+    shop_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    shop_panel.add_child(shop_box)
+
+    var shop_head := HBoxContainer.new()
+    shop_head.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    shop_head.add_child(UI.section_title("商店"))
+    var shop_spacer := Control.new()
+    shop_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    shop_head.add_child(shop_spacer)
+
+    _reroll_button = UI.styled_button("刷新", "default", 28)
+    _reroll_button.name = "RerollButton"
+    _reroll_button.pressed.connect(_on_reroll)
+    shop_head.add_child(_reroll_button)
+
+    _upgrade_button = UI.styled_button("升时代", "default", 28)
+    _upgrade_button.name = "UpgradeButton"
+    _upgrade_button.pressed.connect(_on_upgrade)
+    shop_head.add_child(_upgrade_button)
+
+    _freeze_button = UI.styled_button("冻结商店", "default", 28)
+    _freeze_button.name = "FreezeButton"
+    _freeze_button.pressed.connect(_on_freeze)
+    shop_head.add_child(_freeze_button)
+    shop_box.add_child(shop_head)
+
+    _shop_row = _flow_row("ShopRow")
+    shop_box.add_child(_shop_row)
+    _recruit_panel.add_child(shop_panel)
 
     # 我方棋盘。
     var board_panel := UI.card_panel("surface")
@@ -233,40 +255,6 @@ func _build_recruit_panel() -> Control:
     bottom_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
     board_box.add_child(bottom_spacer)
     _recruit_panel.add_child(board_panel)
-
-    # 商店：6 个槽位与刷新/升时代/冻结。
-    var shop_panel := UI.card_panel("surface")
-    shop_panel.name = "ShopPanel"
-    var shop_box := VBoxContainer.new()
-    shop_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    shop_panel.add_child(shop_box)
-
-    var shop_head := HBoxContainer.new()
-    shop_head.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    shop_head.add_child(UI.section_title("商店"))
-    var shop_spacer := Control.new()
-    shop_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    shop_head.add_child(shop_spacer)
-
-    _reroll_button = UI.styled_button("刷新", "default", 28)
-    _reroll_button.name = "RerollButton"
-    _reroll_button.pressed.connect(_on_reroll)
-    shop_head.add_child(_reroll_button)
-
-    _upgrade_button = UI.styled_button("升时代", "default", 28)
-    _upgrade_button.name = "UpgradeButton"
-    _upgrade_button.pressed.connect(_on_upgrade)
-    shop_head.add_child(_upgrade_button)
-
-    _freeze_button = UI.styled_button("冻结商店", "default", 28)
-    _freeze_button.name = "FreezeButton"
-    _freeze_button.pressed.connect(_on_freeze)
-    shop_head.add_child(_freeze_button)
-    shop_box.add_child(shop_head)
-
-    _shop_row = _flow_row("ShopRow")
-    shop_box.add_child(_shop_row)
-    _recruit_panel.add_child(shop_panel)
 
     # 手牌：横向滚动。
     var hand_panel := UI.card_panel("surface")
@@ -504,49 +492,10 @@ func _seat_row(player: Dictionary) -> PanelContainer:
 
 
 func _refresh_recruit(self_state: Dictionary, recruited: bool, phase: String) -> void:
-    _refresh_opponents()
     _refresh_board(self_state, recruited, phase)
     _refresh_shop(self_state)
     _refresh_hand(self_state)
     _refresh_actions(self_state, recruited, phase)
-
-
-func _refresh_opponents() -> void:
-    UI.clear(_opponents_row)
-    var shown := 0
-    for player in _sorted_players(GameStore.view):
-        if str(player.get("playerId", "")) == GameStore.player_id:
-            continue
-        if not bool(player.get("alive", true)):
-            continue
-        _opponents_row.add_child(_opponent_tile(player))
-        shown += 1
-    if shown == 0:
-        _opponents_row.add_child(UI.empty_hint("暂无对手"))
-
-
-func _opponent_tile(player: Dictionary) -> PanelContainer:
-    var panel := UI.card_panel("row")
-    panel.name = "OpponentTile"
-    panel.custom_minimum_size = Vector2(UITheme.metric("opponent-tile-width"), UITheme.metric("opponent-tile-height"))
-    var row := HBoxContainer.new()
-    row.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    panel.add_child(row)
-    row.add_child(UI.avatar(_optional_text(player.get("heroCardId")), UITheme.metric("avatar-sm")))
-
-    var lines := VBoxContainer.new()
-    lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    lines.add_theme_constant_override("separation", 0)
-    row.add_child(lines)
-
-    var name_label := UI.label(_optional_text(player.get("displayName")), UITheme.font_size("font-caption"), false)
-    name_label.max_lines_visible = 1
-    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    lines.add_child(name_label)
-    var meta := UI.label("HP %d" % int(player.get("hp", 0)), UITheme.font_size("font-caption"), false)
-    meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    lines.add_child(meta)
-    return panel
 
 
 func _refresh_board(self_state: Dictionary, recruited: bool, phase: String) -> void:
@@ -1043,8 +992,8 @@ func _prune_target_requests() -> void:
 
 
 func _on_buy(index: int) -> void:
-    var intent := {"kind": Protocol.INTENT_BUY_MINION, "slot": index}
-    _remember_target_request(_send_intent(intent), intent)
+    # 买入只入手牌，不涉及目标，因此不登记补选目标。
+    _send_intent({"kind": Protocol.INTENT_BUY_MINION, "slot": index})
 
 
 func _on_play(hand_index: int) -> void:

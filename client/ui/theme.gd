@@ -113,8 +113,6 @@ const SEMANTIC_OPACITY := {
 const SCENARIO := {
 	"rail-width": 196,
 	"side-width": 272,
-	"opponent-tile-width": 96,
-	"opponent-tile-height": 52,
 	"avatar-sm": 22,
 	"avatar-md": 30,
 	"avatar-lg": 38,

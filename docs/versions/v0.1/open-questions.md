@@ -25,7 +25,7 @@
 
 ## 技术与版本
 
-> 已在 M1 解决并从下表移除：「单目标选择的意图参数」——`BuyMinion`、`PlayCard` 已带可选 `targetMinionId`，schema、样例、生成物与核心规则同步；「发现的选择消息」——`ChooseDiscover` 已是协议十种意图之一，服务层映射为引擎意图并消费 `PendingChoice`；「缺少目标时的服务端校验」——`NO_VALID_TARGET` 已由引擎在意图执行前返回，客户端与机器人补选路径端到端生效。
+> 已在 M1 解决并从下表移除：「单目标选择的意图参数」——`PlayCard` 已带可选 `targetMinionId`，schema、样例、生成物与核心规则同步（`BuyMinion` 买入一律入手牌，不需要目标）；「发现的选择消息」——`ChooseDiscover` 已是协议十种意图之一，服务层映射为引擎意图并消费 `PendingChoice`；「缺少目标时的服务端校验」——`NO_VALID_TARGET` 已由引擎在意图执行前返回，客户端与机器人补选路径端到端生效。
 
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |

@@ -453,14 +453,7 @@ fn triple_discover_pending_is_consumed_by_choose() {
         vec![Some(&card_id), None, None, None, None, None],
     );
     let outcome = engine
-        .apply(
-            &mut state,
-            0,
-            Intent::BuyMinion {
-                slot: 0,
-                target: None,
-            },
-        )
+        .apply(&mut state, 0, Intent::BuyMinion { slot: 0 })
         .expect("购买应成功");
     assert!(
         outcome

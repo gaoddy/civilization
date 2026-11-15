@@ -126,7 +126,7 @@ func _check_game() -> void:
 
 
 func _check_game_layout() -> void:
-    # 招募阶段：积分榜 8 座、棋盘 7 槽、右栏英雄卡；战斗视图隐藏。
+    # 招募阶段：积分榜 8 座、中区自上而下为商店/我方棋盘/手牌、棋盘 7 槽、右栏英雄卡；战斗视图隐藏。
     GameStore.player_id = "p0"
     GameStore.phase = "Recruit"
     GameStore.turn = 3
@@ -142,6 +142,25 @@ func _check_game_layout() -> void:
     var combat = instance.find_child("CombatPanel", true, false)
     _expect(recruit != null and recruit.visible, "招募阶段应显示招募视图")
     _expect(combat != null and not combat.visible, "招募阶段不应显示战斗视图")
+    _expect(
+        instance.find_child("OpponentsPanel", true, false) == null,
+        "招募中区不含对手面板，对手信息只在积分榜",
+    )
+    _expect(
+        instance.find_child("OpponentsRow", true, false) == null,
+        "招募中区不含对手席位行",
+    )
+    var shop = instance.find_child("ShopPanel", true, false)
+    var board_panel = instance.find_child("BoardPanel", true, false)
+    var hand = instance.find_child("HandPanel", true, false)
+    _expect(shop != null and shop.get_parent() == recruit, "商店应位于招募中区")
+    _expect(board_panel != null and board_panel.get_parent() == recruit, "我方棋盘应位于招募中区")
+    _expect(hand != null and hand.get_parent() == recruit, "手牌应位于招募中区")
+    if shop != null and board_panel != null and hand != null:
+        _expect(
+            shop.get_index() < board_panel.get_index() and board_panel.get_index() < hand.get_index(),
+            "招募中区顺序应为商店、我方棋盘、手牌",
+        )
     var board = instance.find_child("BoardRow", true, false)
     _expect(board != null and board.get_child_count() == 7, "棋盘应有 7 个槽位（含空位）")
     _expect(instance.find_child("HeroTile", true, false) != null, "右栏应显示我的英雄卡")

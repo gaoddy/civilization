@@ -11,8 +11,7 @@
           "required": ["kind", "slot"],
           "properties": {
             "kind": { "const": "BuyMinion" },
-            "slot": { "type": "integer", "minimum": 0, "maximum": 5, "description": "商店槽位" },
-            "targetMinionId": { "type": "string", "description": "战吼或效果需要目标时填" }
+            "slot": { "type": "integer", "minimum": 0, "maximum": 5, "description": "商店槽位" }
           }
         },
         {
