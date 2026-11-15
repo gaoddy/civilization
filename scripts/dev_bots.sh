@@ -29,14 +29,32 @@ fi
 
 mkdir -p "$LOG_DIR"
 
-"$SERVER_BIN" --listen "127.0.0.1:${PORT}" >"$SERVER_LOG" 2>&1 &
-SERVER_PID=$!
+SIM_PID=""
+SERVER_PID=""
 
 cleanup() {
-  kill "$SERVER_PID" 2>/dev/null || true
-  wait "$SERVER_PID" 2>/dev/null || true
+  for pid in "$SIM_PID" "$SERVER_PID"; do
+    if [ -n "$pid" ]; then
+      kill "$pid" 2>/dev/null || true
+    fi
+  done
+  # 裸 wait 收该 shell 的全部子进程：SIM_PID 还未赋值时也不会漏掉服务端。
+  wait 2>/dev/null || true
 }
-trap cleanup EXIT INT TERM
+
+# 终止信号必须收完子进程就退出：如果只 cleanup 不 exit，脚本会继续往下起
+# `sim`，然后干等到对局结束——信号就白发了。trap 也要在拉起任何子进程之前
+# 装好，否则信号落在启动与安装之间，服务端就成了孤儿。
+on_signal() {
+  cleanup
+}
+trap cleanup EXIT
+trap 'on_signal; exit 130' INT
+trap 'on_signal; exit 143' TERM
+trap 'on_signal; exit 129' HUP
+
+"$SERVER_BIN" --listen "127.0.0.1:${PORT}" >"$SERVER_LOG" 2>&1 &
+SERVER_PID=$!
 
 ready=0
 for _ in $(seq 1 100); do

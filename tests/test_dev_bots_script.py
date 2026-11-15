@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import time
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -70,7 +71,7 @@ class DevBotsScriptTest(unittest.TestCase):
         for proc in self.procs:
             try:
                 os.killpg(proc.pid, signal.SIGKILL)
-            except ProcessLookupError:
+            except (ProcessLookupError, PermissionError):
                 pass
             if proc.poll() is None:
                 try:
@@ -113,6 +114,33 @@ class DevBotsScriptTest(unittest.TestCase):
         proc = self.spawn(port, {"STUB_EXIT": "3"})
         output, _ = proc.communicate(timeout=30)
         self.assertEqual(proc.returncode, 3, output)
+
+    def test_termination_signals_kill_both_children(self):
+        for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+            with self.subTest(sig=sig):
+                port = free_port()
+                # 桩 sim 存活足够久，保证脚本收到信号时它还在等。
+                proc = self.spawn(port, {"STUB_SLEEP": "120"})
+                deadline = time.time() + 10
+                while time.time() < deadline and not port_open(port):
+                    if proc.poll() is not None:
+                        # 桩子进程继承了管道，这里不能再 communicate（会等桩退出）。
+                        self.fail(f"{sig!r}: 脚本提前退出，退出码 {proc.returncode}")
+                    time.sleep(0.05)
+                self.assertTrue(port_open(port), f"{sig!r}: 桩服务端未在 10 秒内监听")
+
+                os.kill(proc.pid, sig)  # 只打脚本，不打整组
+                try:
+                    output, _ = proc.communicate(timeout=10)
+                except subprocess.TimeoutExpired:
+                    self.fail(f"{sig!r}: 脚本收到信号后 10 秒内没有退出（trap 被前台 sim 挡住）")
+
+                deadline = time.time() + 5
+                while time.time() < deadline and port_open(port):
+                    time.sleep(0.05)
+                self.assertFalse(
+                    port_open(port), f"{sig!r}: 脚本退出后端口 {port} 仍被占用：{output}"
+                )
 
 
 if __name__ == "__main__":
