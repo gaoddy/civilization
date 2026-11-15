@@ -10,8 +10,8 @@ PORT=${DEV_PORT:-8080}
 URL="ws://127.0.0.1:${PORT}/ws"
 LOG_DIR="$ROOT/output/dev-bots"
 SERVER_LOG="$LOG_DIR/server.log"
-SERVER_BIN="$ROOT/server/target/debug/room-service"
-SIM_BIN="$ROOT/server/target/debug/sim"
+SERVER_BIN=${DEV_SERVER_BIN:-"$ROOT/server/target/debug/room-service"}
+SIM_BIN=${DEV_SIM_BIN:-"$ROOT/server/target/debug/sim"}
 
 for bin in "$SERVER_BIN" "$SIM_BIN"; do
   if [ ! -x "$bin" ]; then
@@ -59,4 +59,6 @@ if ! kill -0 "$SERVER_PID" 2>/dev/null; then
   exit 1
 fi
 
-"$SIM_BIN" dev --connect "$URL" "$@"
+"$SIM_BIN" dev --connect "$URL" "$@" &
+SIM_PID=$!
+wait "$SIM_PID"
