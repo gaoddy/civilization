@@ -778,13 +778,7 @@ fn map_intent(intent: protocol::intents::Intent) -> Result<EngineIntent, ErrorCo
     use protocol::intents::Intent as Protocol;
 
     match intent {
-        Protocol::BuyMinion {
-            slot,
-            target_minion_id,
-        } => Ok(EngineIntent::BuyMinion {
-            slot: to_u8(slot)?,
-            target: parse_target(target_minion_id)?,
-        }),
+        Protocol::BuyMinion { slot } => Ok(EngineIntent::BuyMinion { slot: to_u8(slot)? }),
         Protocol::SellMinion { minion_id } => Ok(EngineIntent::SellMinion {
             minion: minion_id
                 .parse::<InstanceId>()

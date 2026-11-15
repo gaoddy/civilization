@@ -2121,10 +2121,6 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///          "type": "integer",
 ///          "maximum": 5.0,
 ///          "minimum": 0.0
-///        },
-///        "targetMinionId": {
-///          "description": "战吼或效果需要目标时填",
-///          "type": "string"
 ///        }
 ///      },
 ///      "additionalProperties": false
@@ -2299,13 +2295,6 @@ pub enum Intent {
     BuyMinion {
         ///商店槽位
         slot: i64,
-        ///战吼或效果需要目标时填
-        #[serde(
-            rename = "targetMinionId",
-            default,
-            skip_serializing_if = "::std::option::Option::is_none"
-        )]
-        target_minion_id: ::std::option::Option<::std::string::String>,
     },
     SellMinion {
         ///要出售的随从实例 id
