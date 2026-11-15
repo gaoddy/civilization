@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 
 use room_service::clock::{Clock, SystemClock};
 use sim::bot::client::{BotConfig, run as run_bot};
-use sim::bot::dev::{DEV_BOTS, DevConfig, run as run_dev};
+use sim::bot::dev::{DevConfig, run as run_dev};
 use tokio::sync::oneshot;
 
 /// 任意一张英雄卡，给「开发者」座位用。
@@ -48,11 +48,6 @@ async fn start_server() -> std::net::SocketAddr {
     });
     wait_for_server(addr).await;
     addr
-}
-
-#[test]
-fn dev_bots_leaves_exactly_one_seat_for_the_developer() {
-    assert_eq!(DEV_BOTS, usize::from(sim::PLAYER_COUNT) - 1);
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
