@@ -92,6 +92,10 @@ protocol/
 - `Applied` 重发只回该座位当前视图的空事件 `StateUpdate`，不重复执行、不重复广播。
 - `Rejected` 重发同一条 `Error`（同一错误码与消息），不重新判定。
 - 未知玩家直接回 `NOT_IN_ROOM`，不进入去重表；非招募阶段的意图会写入去重表，重复提交返回同一条 `INVALID_STAGE` 错误。
+- 意图先做只读预检再修改状态：拒绝时 `GameState` 与随机流逐字节不变，客户端可原样重发。
+- 需要单一显式目标的效果（`target` 选择器，或 `friendly:single` 这类 `Side` + `Pick::Single`）在存在合法目标而未指定或目标不合法时返回 `NO_VALID_TARGET`。池为空时按效果来源区分：主动技能返回该错误（卡牌文档规定此时技能不可用），随从战吼与效果牌放行、效果落空。合法池只含意图提交前已存在的随从：即将入场的随从客户端还看不到实例编号，算进池会让「棋盘为空时买入带目标战吼的随从」无法补选。
+- 目标预检不放进 `check_*`：这些函数同时用于生成视图 `affordances`，而视图层永远没有目标，加入目标判断会把需要补选的操作误标为不可用。
+- 预检覆盖买入随从的战吼、打出效果牌（`OnPlayEffect` 与全体 `OnUse` 响应）、打出手牌随从的战吼与英雄主动技能。
 
 ## 8. 逐座位过滤与战斗回放
 
@@ -134,6 +138,7 @@ sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
 - `--connect`、`--name`、`--hero` 必填；`--room` 加入既有房间（与 `--create` 二选一，`--create` 时忽略 `--room`）；`--create` 建房并把房间码输出到 stdout 首行 `ROOM_CODE=<code>`；`--intent-seed` 默认 0，只用于在发现候选间做确定性选择。
 - 协议顺序固定：`AuthRequest` →（`CreateRoom` | `JoinRoom`）→ `SelectHeroCard` → `Ready` → 等 `GameStarted` → 循环按 brain 决策发送 `IntentMessage`，直到 `GameOver`。
 - 每个意图使用确定性递增的 `clientIntentId`（`{name}-{counter}`）；客户端只对「自身视角有新变化」的视图做一次决策，避免重播视图导致重复意图。
+- 收到 `NO_VALID_TARGET` 时按 `clientIntentId` 找回被拒意图，补上棋盘第一个己方随从重发；没有随从时退回 `EndRecruit` 兜底。
 - `bot/brain.rs` **只读** `PlayerView`（含服务端算好的 `affordances`）与静态卡表，不链接引擎判定、不读时钟与环境变量、不使用浮点；优先级固定为：消费 `pendingChoices` → 买最贵可买槽位 → 打最小下标可打手牌 → 升时代 → 刷新 → `EndRecruit`。
 - `sim/src/ai.rs` 为保 M0 基线数值**未改动**；新增的是 view 驱动的 `bot/brain.rs`。
 

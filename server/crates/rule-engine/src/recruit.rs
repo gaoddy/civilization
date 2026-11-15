@@ -187,6 +187,23 @@ fn buy(
         instance_id
     };
 
+    // 随从入场触发战吼：先做目标预检，失败时金币、商店、池与随机流都不变化。
+    if to_board {
+        let ctx = EffectCtx {
+            seat,
+            source: Some(instance_id),
+            target,
+            event_target: None,
+            golden: false,
+        };
+        engine.check_targets(
+            state,
+            &engine.effects_of(&card_id, Trigger::OnPlay),
+            &ctx,
+            false,
+        )?;
+    }
+
     let player = state
         .players
         .get_mut(usize::from(seat))
@@ -523,12 +540,6 @@ fn play_card(
 
     match card_type {
         CardType::Effect => {
-            let player = state
-                .players
-                .get_mut(usize::from(seat))
-                .expect("check_play_card 已保证座位存在");
-            player.hand.remove(index);
-
             let ctx = EffectCtx {
                 seat,
                 source: None,
@@ -536,17 +547,45 @@ fn play_card(
                 event_target: None,
                 golden: false,
             };
+            engine.check_targets(
+                state,
+                &engine.effects_of(&hand_card.card_id, Trigger::OnPlayEffect),
+                &ctx,
+                false,
+            )?;
+            engine.check_on_use_targets(state, &ctx)?;
+
+            let player = state
+                .players
+                .get_mut(usize::from(seat))
+                .expect("check_play_card 已保证座位存在");
+            player.hand.remove(index);
+
             let mut events =
                 engine.fire_card(state, &hand_card.card_id, Trigger::OnPlayEffect, ctx);
             events.extend(engine.fire(state, Trigger::OnUse, ctx));
             Ok(Outcome::with(events))
         }
         CardType::Minion => {
+            let instance_id = state.next_instance_id;
+            let ctx = EffectCtx {
+                seat,
+                source: Some(instance_id),
+                target,
+                event_target: None,
+                golden: hand_card.golden,
+            };
+            engine.check_targets(
+                state,
+                &engine.effects_of(&hand_card.card_id, Trigger::OnPlay),
+                &ctx,
+                false,
+            )?;
+
             let following_instance_id = state
                 .next_instance_id
                 .checked_add(1)
                 .expect("check_play_card 已保证实例编号未耗尽");
-            let instance_id = state.next_instance_id;
             let player = state
                 .players
                 .get_mut(usize::from(seat))
@@ -736,6 +775,26 @@ fn use_hero_power(
     target: Option<InstanceId>,
 ) -> Result<Outcome, Reject> {
     check_hero_power(engine, state, seat, skill_id)?;
+
+    let hero_id = player(state, seat)
+        .expect("check_hero_power 已保证座位存在")
+        .hero
+        .clone()
+        .expect("check_hero_power 已保证英雄存在");
+    let ctx = EffectCtx {
+        seat,
+        source: None,
+        target,
+        event_target: None,
+        golden: false,
+    };
+    // 主动技能的效果来自英雄卡：预检口径与 `fire(OnActivate)` 一致。
+    engine.check_targets(
+        state,
+        &engine.effects_of(&hero_id, Trigger::OnActivate),
+        &ctx,
+        true,
+    )?;
 
     let player = player(state, seat).expect("check_hero_power 已保证座位存在");
     let cost = engine

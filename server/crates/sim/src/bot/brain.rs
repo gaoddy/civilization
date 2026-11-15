@@ -130,3 +130,30 @@ pub fn recover_after_error(view: &PlayerView) -> Option<Intent> {
     }
     Some(Intent::EndRecruit)
 }
+
+/// 收到 `NO_VALID_TARGET` 后，给被拒意图补上己方第一个随从并重发。
+///
+/// 服务端要求「存在合法目标时」必须指定目标；机器人没有交互界面，按棋盘顺序取
+/// 第一个己方随从作为确定性选择。棋盘为空说明该效果本可落空（服务端不会返回
+/// 该错误），返回 `None` 交给兜底逻辑。
+pub fn retry_with_target(view: &PlayerView, rejected: &Intent) -> Option<Intent> {
+    if view.phase != Phase::Recruit {
+        return None;
+    }
+    let target = view.self_.board.first()?.minion_id.clone();
+    match rejected {
+        Intent::BuyMinion { slot, .. } => Some(Intent::BuyMinion {
+            slot: *slot,
+            target_minion_id: Some(target),
+        }),
+        Intent::PlayCard { hand_index, .. } => Some(Intent::PlayCard {
+            hand_index: *hand_index,
+            target_minion_id: Some(target),
+        }),
+        Intent::UseHeroPower { skill_id, .. } => Some(Intent::UseHeroPower {
+            skill_id: skill_id.clone(),
+            target_minion_id: Some(target),
+        }),
+        _ => None,
+    }
+}

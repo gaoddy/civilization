@@ -14,9 +14,13 @@ var _errors := 0
 var _soft_errors := 0
 var _last_fingerprint := ""
 var _pending_buys: Dictionary = {}
+var _pending_intents: Dictionary = {}
 var _reroll_count := 0
 var _last_turn := 0
 var _code_written := false
+
+## 未确认意图的保留上限，只需覆盖「发出一条后收到下一条错误」的流水线深度。
+const PENDING_LIMIT := 8
 
 
 func _ready() -> void:
@@ -194,10 +198,27 @@ func _send_intent(intent: Dictionary) -> void:
     _intents_sent += 1
     var intent_id := "headless-%d-%d" % [Time.get_ticks_usec(), _intent_counter]
     print("M1B_INTENT %s %s" % [intent_id, JSON.stringify(intent)])
+    if _pending_intents.size() >= PENDING_LIMIT:
+        _pending_intents.erase(_pending_intents.keys()[0])
+    _pending_intents[intent_id] = intent.duplicate(true)
     Net.send(Protocol.MSG_INTENT, {
         "clientIntentId": intent_id,
         "intent": intent,
     })
+
+
+## 服务端要求「存在合法目标时必须指定」，无头驱动按棋盘顺序自动补选第一个己方随从。
+func _retry_with_target(intent: Dictionary) -> bool:
+    var board: Array = GameStore.view.get("self", {}).get("board", [])
+    if board.is_empty():
+        return false
+    var target := str(board[0].get("minionId", ""))
+    if target == "":
+        return false
+    var retried: Dictionary = intent.duplicate(true)
+    retried["targetMinionId"] = target
+    _send_intent(retried)
+    return true
 
 
 func _write_room_code(code: String) -> void:
@@ -234,9 +255,16 @@ func _on_game_over() -> void:
 
 func _on_error() -> void:
     _errors += 1
+    var code := str(GameStore.last_error.get("code", ""))
+    # 目标缺失是正常交互：补上己方第一个随从重发，计入软错误。
+    if code == Protocol.ERROR_NO_VALID_TARGET:
+        var rejected_id := str(GameStore.last_error.get("clientIntentId", ""))
+        if _pending_intents.has(rejected_id) and _retry_with_target(_pending_intents[rejected_id]):
+            _soft_errors += 1
+            push_warning("M1B 补选目标后重发（intent=%s）" % rejected_id)
+            return
     # 被拒绝的购买允许重试，不再视为待确认。
     _pending_buys.clear()
-    var code := str(GameStore.last_error.get("code", ""))
     if code in [
         Protocol.ERROR_NO_SPACE,
         Protocol.ERROR_NOT_ENOUGH_GOLD,
