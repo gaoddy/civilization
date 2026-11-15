@@ -20,6 +20,10 @@ func _ready() -> void:
     await _check_recruited_gate()
     await _check_expired_gate()
     await _check_stale_view_gate()
+    await _check_disconnected_send()
+    await _check_error_route()
+    await _check_reset_session()
+    await _check_error_text()
     await _check_result()
     if _failures == 0:
         print("UI_SMOKE_OK")
@@ -175,6 +179,62 @@ func _check_stale_view_gate() -> void:
     GameStore.view = {}
     GameStore.turn = 1
     GameStore.deadline = ""
+
+
+func _check_disconnected_send() -> void:
+    # 未连接时点击操作要明确提示「未发出」，不能静默吞掉。
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.view = FixtureScript.view()
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var reroll = instance.find_child("RerollButton", true, false)
+    var status = instance.find_child("StatusLabel", true, false)
+    if reroll == null or status == null:
+        _expect(false, "对局场景缺少 RerollButton 或 StatusLabel")
+    else:
+        reroll.pressed.emit()
+        await get_tree().process_frame
+        _expect(str(status.text).contains("未连接"), "未连接时操作应提示未发出，实际：%s" % status.text)
+    instance.queue_free()
+    GameStore.view = {}
+    GameStore.turn = 1
+    GameStore.deadline = ""
+
+
+func _check_error_route() -> void:
+    var instance := await _check_scene("res://scenes/room.tscn", true)
+    if instance == null:
+        return
+    if not instance.has_method("_error_route"):
+        _expect(false, "房间场景缺少 _error_route")
+        return
+    _expect(instance._error_route("NOT_IN_ROOM") == "lobby", "NOT_IN_ROOM 应回大厅")
+    _expect(instance._error_route("ROOM_NOT_FOUND") == "lobby", "ROOM_NOT_FOUND 应回大厅")
+    _expect(instance._error_route("NOT_ENOUGH_GOLD") == "", "规则错误不应切场景")
+    _expect(instance._error_route("TOKEN_EXPIRED") == "login", "令牌过期应回登录")
+
+
+func _check_reset_session() -> void:
+    GameStore.player_id = "p0"
+    GameStore.token = "t0"
+    GameStore.room_id = "r0"
+    GameStore.room_code = "ABC123"
+    GameStore.view = FixtureScript.view()
+    GameStore.reset_session()
+    _expect(GameStore.player_id == "", "reset_session 应清空 player_id")
+    _expect(GameStore.token == "", "reset_session 应清空 token")
+    _expect(GameStore.room_id == "", "reset_session 应清空 room_id")
+    _expect(GameStore.view.is_empty(), "reset_session 应清空 view")
+
+
+func _check_error_text() -> void:
+    _expect(UI.error_text("NOT_ENOUGH_GOLD") == "金币不足", "NOT_ENOUGH_GOLD 应有中文文案")
+    _expect(UI.error_text("INVALID_STAGE") == "当前阶段不能执行该操作", "INVALID_STAGE 应有中文文案")
+    _expect(UI.error_text("SOME_UNKNOWN_CODE") == "SOME_UNKNOWN_CODE", "未知错误码应回退为原文")
 
 
 func _check_result() -> void:

@@ -11,7 +11,11 @@ var _ready_sent := false
 var _intent_counter := 0
 var _intents_sent := 0
 var _errors := 0
+var _soft_errors := 0
 var _last_fingerprint := ""
+var _pending_buys: Dictionary = {}
+var _reroll_count := 0
+var _last_turn := 0
 var _code_written := false
 
 
@@ -93,7 +97,32 @@ func _on_view() -> void:
     if fingerprint == _last_fingerprint:
         return
     _last_fingerprint = fingerprint
+    if OS.get_environment("M1B_DEBUG") != "":
+        _debug_view(view, self_state)
     _act(self_state)
+
+
+func _debug_view(view: Dictionary, self_state: Dictionary) -> void:
+    var shop := PackedStringArray()
+    for slot in self_state.get("shop", []):
+        var card = slot.get("cardId")
+        shop.append("%d:%s" % [int(slot.get("index", 0)), "null" if card == null else str(card)])
+    var buyable := PackedStringArray()
+    for slot_aff in self_state.get("affordances", {}).get("shopSlots", []):
+        if bool(slot_aff.get("buyable", false)):
+            buyable.append(str(int(slot_aff.get("index", 0))))
+    print("M1B_VIEW seq=%d turn=%d gold=%d hp=%d era=%d hand=%d board=%d recruited=%s shop=[%s] buyable=[%s]" % [
+        GameStore.last_seq,
+        int(view.get("turn", 0)),
+        int(self_state.get("gold", 0)),
+        int(self_state.get("hp", 0)),
+        int(self_state.get("era", 0)),
+        self_state.get("hand", []).size(),
+        self_state.get("board", []).size(),
+        str(bool(self_state.get("recruited", false))),
+        ",".join(shop),
+        ",".join(buyable),
+    ])
 
 
 func _act(self_state: Dictionary) -> void:
@@ -105,6 +134,11 @@ func _act(self_state: Dictionary) -> void:
         _send_intent({"kind": Protocol.INTENT_CHOOSE_DISCOVER, "choice": 0})
         return
 
+    var turn := int(GameStore.view.get("turn", 0))
+    if turn != _last_turn:
+        _last_turn = turn
+        _pending_buys.clear()
+        _reroll_count = 0
     var aff: Dictionary = self_state.get("affordances", {})
     var best_slot := -1
     var best_cost := -1
@@ -113,6 +147,8 @@ func _act(self_state: Dictionary) -> void:
         if card_id == "":
             continue
         var index := int(slot.get("index", 0))
+        if _pending_buys.has(_buy_key(index)):
+            continue
         var slot_aff := _find_by_index(aff.get("shopSlots", []), index)
         if not bool(slot_aff.get("buyable", false)):
             continue
@@ -121,6 +157,7 @@ func _act(self_state: Dictionary) -> void:
             best_cost = cost
             best_slot = index
     if best_slot >= 0:
+        _pending_buys[_buy_key(best_slot)] = true
         _send_intent({"kind": Protocol.INTENT_BUY_MINION, "slot": best_slot})
         return
 
@@ -133,6 +170,7 @@ func _act(self_state: Dictionary) -> void:
         _send_intent({"kind": Protocol.INTENT_UPGRADE_ERA})
         return
     if bool(aff.get("canReroll", false)):
+        _reroll_count += 1
         _send_intent({"kind": Protocol.INTENT_REROLL_SHOP})
         return
     if bool(aff.get("canEndRecruit", false)):
@@ -144,6 +182,11 @@ func _find_by_index(items: Array, index: int) -> Dictionary:
         if int(item.get("index", -1)) == index:
             return item
     return {}
+
+
+func _buy_key(slot: int) -> String:
+    # 同一回合内同一槽位只买一次；刷新后槽位重填，允许再次购买。
+    return "%d:%d" % [slot, _reroll_count]
 
 
 func _send_intent(intent: Dictionary) -> void:
@@ -178,19 +221,30 @@ func _on_game_over() -> void:
     for entry in GameStore.ranking:
         if str(entry.get("playerId", "")) == GameStore.player_id:
             place = int(entry.get("place", 0))
-    print("M1B_GAME_OVER place=%d seed=%s ranking=%d intents=%d errors=%d" % [
+    print("M1B_GAME_OVER place=%d seed=%s ranking=%d intents=%d errors=%d soft=%d" % [
         place,
         GameStore.game_seed,
         GameStore.ranking.size(),
         _intents_sent,
         _errors,
+        _soft_errors,
     ])
     get_tree().quit(0)
 
 
 func _on_error() -> void:
     _errors += 1
+    # 被拒绝的购买允许重试，不再视为待确认。
+    _pending_buys.clear()
     var code := str(GameStore.last_error.get("code", ""))
+    if code in [
+        Protocol.ERROR_NO_SPACE,
+        Protocol.ERROR_NOT_ENOUGH_GOLD,
+        Protocol.ERROR_SHOP_SLOT_EMPTY,
+    ]:
+        # 驱动会在上一意图尚未确认时继续决策，服务端按最新状态拒绝属于预期；
+        # 这三类不计为缺陷，其余任何错误都判失败。
+        _soft_errors += 1
     push_warning("M1B 收到错误 %s：%s（intent=%s）" % [
         code,
         str(GameStore.last_error.get("message", "")),
