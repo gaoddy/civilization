@@ -1,4 +1,4 @@
-//! 模拟器命令行：`play`、`batch`、`replay`、`report`、`check` 五个子命令。
+//! 模拟器命令行：`play`、`batch`、`replay`、`report`、`check`、`bot`、`dev` 七个子命令。
 //!
 //! 结果写入 stdout（JSON）；任何参数错误、模拟失败或日志不一致都以非零码退出，
 //! 并只向 stderr 输出原因。不读时钟与环境变量。
@@ -17,7 +17,9 @@ const USAGE: &str = "用法：
   sim report --log PATH
   sim check  --log PATH [--expect-games N]
   sim bot    --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
-             [--room CODE] [--create] [--intent-seed N]";
+             [--room CODE] [--create] [--intent-seed N]
+  sim dev    --connect ws://HOST:PORT/ws [--intent-seed N]
+             起 7 个机器人建房并加入，打印房间码后等第 8 人（开发者）";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -114,6 +116,7 @@ fn run(args: &[String]) -> Result<(), String> {
             Ok(())
         }
         "bot" => run_bot(rest),
+        "dev" => run_dev(rest),
         "--help" | "-h" | "help" => {
             println!("{USAGE}");
             Ok(())
@@ -160,6 +163,56 @@ fn run_bot(args: &[String]) -> Result<(), String> {
         .map(|(player_id, place)| serde_json::json!({ "playerId": player_id, "place": place }))
         .collect();
     print_json(&serde_json::json!({ "ranking": ranking, "turns": outcome.turns }))
+}
+
+/// `sim dev --connect`：起 7 个机器人建房，打印房间码后等开发者作为第 8 人入座。
+///
+/// 房间码要在开局前就打到终端，因此先经通道取码并打印，再等整局结束。
+fn run_dev(args: &[String]) -> Result<(), String> {
+    let options = parse_options(args, &["--connect", "--intent-seed"])?;
+    let url = options.required("--connect")?.to_string();
+    let intent_seed = match options.values.get("--intent-seed") {
+        Some(_) => options.required_u64("--intent-seed")?,
+        None => 0,
+    };
+
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .map_err(|err| format!("创建 tokio 运行时失败: {err}"))?;
+
+    let (code_tx, code_rx) = tokio::sync::oneshot::channel();
+    let handle = runtime.spawn(sim::bot::dev::run(sim::bot::dev::DevConfig {
+        url,
+        intent_seed,
+        room_code_sink: Some(code_tx),
+        run_timeout: std::time::Duration::from_secs(900),
+    }));
+
+    let code = match runtime.block_on(code_rx) {
+        Ok(code) => code,
+        // 通道关闭说明 `run` 在取码前就返回了；取回它的错误，否则调用方
+        // 只看到「未取得房间码」，看不到连接被拒或认证失败的原因。
+        Err(_) => {
+            return match runtime.block_on(handle) {
+                Ok(Err(err)) => Err(err),
+                Ok(Ok(_)) => Err("建房机器人提前结束，未取得房间码".to_string()),
+                Err(err) => Err(format!("dev 任务异常: {err}")),
+            };
+        }
+    };
+    println!("ROOM_CODE={code}");
+    println!("在客户端大厅输入房间码 {code}，选英雄并准备后自动开局。");
+
+    let outcome = runtime
+        .block_on(handle)
+        .map_err(|err| format!("dev 任务异常: {err}"))??;
+    println!(
+        "DEV_DONE turns={} ranking={}",
+        outcome.turns,
+        outcome.ranking.len()
+    );
+    Ok(())
 }
 
 fn print_json(value: &Value) -> Result<(), String> {

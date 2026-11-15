@@ -95,11 +95,19 @@ pub async fn run(config: DevConfig) -> Result<DevOutcome, String> {
     let room_code = match tokio::time::timeout(ROOM_CODE_TIMEOUT, code_rx).await {
         Ok(Ok(code)) => code,
         Ok(Err(_)) => {
-            abort_all(&mut handles).await;
-            return Err("建房机器人提前退出，未取得房间码".to_string());
+            // 建房机器人已退出。取回它的真实错误，否则调用方只看到
+            // 「未取得房间码」，看不到连接被拒或认证失败的原因。
+            let host = handles.remove(0);
+            let detail = match host.await {
+                Ok(Err(err)) => err,
+                Ok(Ok(_)) => "建房机器人提前结束，未取得房间码".to_string(),
+                Err(err) => format!("建房机器人任务异常: {err}"),
+            };
+            abort_all(&mut handles);
+            return Err(format!("建房失败: {detail}"));
         }
         Err(_) => {
-            abort_all(&mut handles).await;
+            abort_all(&mut handles);
             return Err(format!(
                 "{} 秒内未取得房间码：服务端可能未启动",
                 ROOM_CODE_TIMEOUT.as_secs()
@@ -126,7 +134,7 @@ pub async fn run(config: DevConfig) -> Result<DevOutcome, String> {
     let results = match joined {
         Ok(results) => results,
         Err(_) => {
-            abort_all(&mut handles).await;
+            abort_all(&mut handles);
             return Err(format!(
                 "未完成开局：开发者未进房并准备，或对局未结束（{} 秒）",
                 run_timeout.as_secs()
@@ -148,7 +156,7 @@ pub async fn run(config: DevConfig) -> Result<DevOutcome, String> {
         }
     }
     if let Some(message) = failure {
-        abort_all(&mut handles).await;
+        abort_all(&mut handles);
         return Err(message);
     }
 
@@ -164,13 +172,11 @@ pub async fn run(config: DevConfig) -> Result<DevOutcome, String> {
 }
 
 /// 取消仍然存活的机器人任务。对已结束的任务 `abort` 是空操作。
-async fn abort_all(handles: &mut Vec<JoinHandle<Result<BotOutcome, String>>>) {
+fn abort_all(handles: &mut Vec<JoinHandle<Result<BotOutcome, String>>>) {
     for handle in handles.iter() {
         handle.abort();
     }
-    for handle in handles.drain(..) {
-        let _ = handle.await;
-    }
+    handles.clear();
 }
 
 #[cfg(test)]
