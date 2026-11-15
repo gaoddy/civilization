@@ -8,6 +8,12 @@
 //! - 意图去重键为 `(player_id, clientIntentId)`，表只增不删、随房间销毁。
 //! - 每个座位有独立的 [`SeatChannel`]，`seq` 由 [`GameTask::envelope_for`] 在编码
 //!   下行消息时按座位各自递增，互不影响。
+//! - 下行发送端由 `GameTask` 单一持有：首次建连与重连都经 [`GameTask::bind_sender`]
+//!   注册，连接层只借用投递，避免两份所有权在重连后指向不同连接。
+//! - 重连与快照请求共用全量 `Snapshot` 路径（M1 不重放历史），快照载荷在编码时由
+//!   当前座位视图生成，含未消费的 `pendingChoices`。
+//! - 断线保留窗口（[`RECONNECT_GRACE_MS`]）是服务端内部状态：超时只把座位标记为
+//!   离线，不释放座位、不结束对局，也不向任何座位下发通知；客户端靠重连快照恢复。
 //! - `View` 更新按「该座位视角有变化」推送：私有操作只推操作者；全员可见的变化
 //!   （`EndRecruit` 的 `recruited` 标记、阶段推进、回合开始）推给所有座位。
 //!   事件按 [`for_seat`] 的规则过滤后随该座位的 `StateUpdate.events` 一起下发；
@@ -128,9 +134,12 @@ pub struct GameTask {
     room_id: String,
     /// 当前招募阶段的截止时刻（Unix epoch 毫秒）。
     phase_deadline_ms: u64,
-    /// 每个座位当前连接的下行发送端；重连时被替换，供连接层（Task 12）投递更新。
+    /// 每个座位当前连接的下行发送端；首次建连经 [`GameTask::bind_sender`] 注册，
+    /// 重连时被替换。所有权只在这里，连接层通过 [`GameTask::sender`] 借用投递。
     senders: BTreeMap<Seat, mpsc::Sender<ServerEnvelope>>,
-    /// 座位是否在线；断线宽限期结束后置为 `false`，重连恢复。
+    /// 座位是否在线；属于服务端内部状态，不通过下行消息下发。
+    ///
+    /// 断线宽限期结束后置为 `false`，重连（`Reconnect` / `bind_sender`）恢复。
     connected: [bool; SEAT_COUNT],
     /// 断线起始时刻（Unix epoch 毫秒）；`None` 表示当前未处于断线宽限期。
     disconnected_at_ms: [Option<u64>; SEAT_COUNT],
@@ -260,8 +269,29 @@ impl GameTask {
     }
 
     /// 座位当前绑定的下行发送端；连接层（Task 12）用它投递编码后的信封。
+    ///
+    /// 首次 WS 建连也必须先通过 [`GameTask::bind_sender`] 或
+    /// [`RoomCommand::Reconnect`] 注册发送端；两条路径写同一张表，所有权只在本结构。
     pub fn sender(&self, seat: Seat) -> Option<&mpsc::Sender<ServerEnvelope>> {
         self.senders.get(&seat)
+    }
+
+    /// 绑定或替换座位当前连接的下行发送端。
+    ///
+    /// 首次连接与断线重连共用本方法：连接层在每次 WS 建连时调用（或发
+    /// [`RoomCommand::Reconnect`]），避免 `GameTask` 与连接层各持一份发送端。
+    /// 绑定同时恢复在线状态并清空断线宽限。
+    ///
+    /// 返回 `false` 表示 `player_id` 不在房间里，此时不保存发送端。
+    pub fn bind_sender(&mut self, player_id: &str, out: mpsc::Sender<ServerEnvelope>) -> bool {
+        let Some(seat) = self.seat_of.get(player_id).copied() else {
+            return false;
+        };
+        let index = usize::from(seat);
+        self.senders.insert(seat, out);
+        self.connected[index] = true;
+        self.disconnected_at_ms[index] = None;
+        true
     }
 
     /// 把一条更新编码成该座位自己的下行信封，并按座位递增 `seq`。
@@ -352,7 +382,7 @@ impl GameTask {
         if self.state.phase == Phase::Recruit && self.clock.now_ms() >= self.phase_deadline_ms {
             updates = self.advance_phase(Vec::new()).unwrap_or_default();
         }
-        updates.extend(self.expire_disconnects());
+        self.expire_disconnects();
         updates
     }
 
@@ -573,16 +603,15 @@ impl GameTask {
         updates
     }
 
-    /// 已知玩家回全量快照；未知玩家回 `NOT_IN_ROOM`。
+    /// 已知玩家回全量快照；未知玩家直接忽略。
     ///
     /// `RequestSnapshot` 与 `Reconnect` 共用本路径，快照内容只由该座位当前视图决定，
-    /// 不依赖是否发生过断线。
+    /// 不依赖是否发生过断线。未知玩家不产出更新：`envelope_for` 无法为不存在的
+    /// 座位编码，返回错误更新只会制造无法投递的消息。
     fn snapshot_for_player(&self, player_id: &str) -> Vec<SeatUpdate> {
         match self.seat_of.get(player_id).copied() {
             Some(seat) => vec![self.snapshot_update(seat)],
-            None => {
-                vec![self.error_update(player_id, None, ErrorCode::NotInRoom, "玩家不在房间内")]
-            }
+            None => Vec::new(),
         }
     }
 
@@ -597,36 +626,25 @@ impl GameTask {
         last_seq: u64,
         out: mpsc::Sender<ServerEnvelope>,
     ) -> Vec<SeatUpdate> {
-        let Some(seat) = self.seat_of.get(player_id).copied() else {
-            return vec![self.error_update(
-                player_id,
-                None,
-                ErrorCode::NotInRoom,
-                "玩家不在房间内",
-            )];
-        };
-
         // M1 只回全量快照，`last_seq` 不参与重放判断；保留参数供后续版本使用。
         let _ = last_seq;
-        let index = usize::from(seat);
-        self.senders.insert(seat, out);
-        self.connected[index] = true;
-        self.disconnected_at_ms[index] = None;
+        if !self.bind_sender(player_id, out) {
+            // 未知玩家的重连直接忽略，不产出无法编码的更新。
+            return Vec::new();
+        }
+        let Some(seat) = self.seat_of.get(player_id).copied() else {
+            return Vec::new();
+        };
         vec![self.snapshot_update(seat)]
     }
 
     /// 记录断线时刻；座位与对局状态保持不变。
     ///
-    /// 重复断线只保留第一次时刻，避免连接层抖动无限延长宽限期。未知玩家返回
-    /// `NOT_IN_ROOM`。
+    /// 重复断线只保留第一次时刻，避免连接层抖动无限延长宽限期。未知玩家的断开不是
+    /// 错误，直接忽略。
     fn mark_disconnect(&mut self, player_id: &str) -> Vec<SeatUpdate> {
         let Some(seat) = self.seat_of.get(player_id).copied() else {
-            return vec![self.error_update(
-                player_id,
-                None,
-                ErrorCode::NotInRoom,
-                "玩家不在房间内",
-            )];
+            return Vec::new();
         };
         let index = usize::from(seat);
         if self.disconnected_at_ms[index].is_none() {
@@ -635,10 +653,12 @@ impl GameTask {
         Vec::new()
     }
 
-    /// 把超过 [`RECONNECT_GRACE_MS`] 的断线座位标记离线，每个座位只通知一次。
-    fn expire_disconnects(&mut self) -> Vec<SeatUpdate> {
+    /// 把超过 [`RECONNECT_GRACE_MS`] 的断线座位标记离线。
+    ///
+    /// 断线保留窗口是服务端内部状态，不产出任何下行更新：槽位与在线状态只供
+    /// 连接层查询，客户端重连时靠 [`RoomCommand::Reconnect`] 拿全量快照。
+    fn expire_disconnects(&mut self) {
         let now = self.clock.now_ms();
-        let mut updates = Vec::new();
         for seat in 0..SEAT_COUNT as Seat {
             let index = usize::from(seat);
             let Some(since) = self.disconnected_at_ms[index] else {
@@ -648,12 +668,8 @@ impl GameTask {
                 continue;
             }
             self.disconnected_at_ms[index] = None;
-            if self.connected[index] {
-                self.connected[index] = false;
-                updates.push(self.view_update(seat));
-            }
+            self.connected[index] = false;
         }
-        updates
     }
 
     /// 只针对已知玩家的错误；未知玩家退化为 `NOT_IN_ROOM`。

@@ -196,16 +196,21 @@ fn disconnect_keeps_seat_for_thirty_seconds() {
     });
 
     clock.advance(29_000);
+    let updates = task.tick();
     assert_eq!(task.seat_of("p3"), Some(3), "宽限期内座位不得释放");
-    assert!(task.is_connected(3), "宽限期内仍视为在座");
+    assert!(task.is_connected(3), "宽限期内仍视为在线");
+    assert!(
+        updates.iter().all(|update| update.player_id != "p3"),
+        "宽限期内不产生下行更新"
+    );
 
     clock.advance(2_000);
     let updates = task.tick();
     assert_eq!(task.seat_of("p3"), Some(3), "超过宽限期座位仍然保留");
     assert!(!task.is_connected(3), "超过 30 秒应标记离线");
     assert!(
-        updates.iter().any(|update| update.player_id == "p3"),
-        "离线标记应产生一条属于该座位的更新"
+        updates.iter().all(|update| update.player_id != "p3"),
+        "离线是内部状态，不下发通知"
     );
 }
 
@@ -219,19 +224,30 @@ fn disconnect_marks_offline_after_grace() {
     assert!(task.is_connected(4));
 
     clock.advance(30_000);
-    let updates = task.tick();
+    task.tick();
     assert!(!task.is_connected(4), "恰好 30 秒也应离线");
-    assert_eq!(task.seat_of("p4"), Some(4));
-    assert!(
-        updates.iter().any(|update| update.player_id == "p4"),
-        "离线后应通过 tick 通知连接层"
-    );
+    assert_eq!(task.seat_of("p4"), Some(4), "离线不释放座位");
 
-    // 再次 tick 不应重复产生离线通知。
+    // 再次 tick 不应恢复在线，也不产生该座位的更新。
+    assert!(task.tick().iter().all(|update| update.player_id != "p4"));
+    assert!(!task.is_connected(4));
+}
+
+#[test]
+fn bind_sender_registers_first_connection() {
+    let (mut task, _clock) = task();
+
+    let (out, _rx) = mpsc::channel(4);
+    assert!(task.bind_sender("p6", out), "已知玩家应绑定成功");
+    assert!(task.sender(6).is_some(), "首次连接也应持有发送端");
+
+    let (unknown, _unknown_rx) = mpsc::channel(4);
     assert!(
-        task.tick().iter().all(|update| update.player_id != "p4"),
-        "离线标记只发一次"
+        !task.bind_sender("nobody", unknown),
+        "未知玩家绑定应返回 false"
     );
+    let bound = (0..8).filter(|seat| task.sender(*seat).is_some()).count();
+    assert_eq!(bound, 1, "只有已知玩家的座位持有发送端");
 }
 
 #[test]
