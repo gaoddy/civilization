@@ -38,6 +38,15 @@ class GenGdscriptTest(unittest.TestCase):
         self.assertEqual(gen.CLIENT_OUTPUT.read_text(encoding="utf-8"),
                          gen.DEFAULT_OUTPUT.read_text(encoding="utf-8"))
 
+    def test_explicit_output_writes_only_that_target(self):
+        custom = pathlib.Path("/tmp/custom-protocol.gd")
+        self.assertEqual(gen.output_targets(custom), [custom])
+        self.assertEqual(gen.output_targets(custom, pathlib.Path("/tmp/client.gd")),
+                         [custom, pathlib.Path("/tmp/client.gd")])
+        self.assertEqual(gen.output_targets(), [gen.DEFAULT_OUTPUT, gen.CLIENT_OUTPUT])
+        self.assertEqual(gen.output_targets(client_output=pathlib.Path("/tmp/client.gd")),
+                         [gen.DEFAULT_OUTPUT, pathlib.Path("/tmp/client.gd")])
+
     def test_check_mode_fails_on_different_content(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = pathlib.Path(tmp) / "protocol.gd"

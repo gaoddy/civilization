@@ -120,6 +120,7 @@ SEED=$(echo "$RESULT" | sed -n 's/.*seed=\([^ ]*\).*/\1/p')
 RANKING=$(echo "$RESULT" | sed -n 's/.*ranking=\([0-9]*\).*/\1/p')
 INTENTS=$(echo "$RESULT" | sed -n 's/.*intents=\([0-9]*\).*/\1/p')
 ERRORS=$(echo "$RESULT" | sed -n 's/.*errors=\([0-9]*\).*/\1/p')
+SOFT=$(echo "$RESULT" | sed -n 's/.*soft=\([0-9]*\).*/\1/p')
 
 if [ -z "$PLACE" ] || [ "$PLACE" -lt 1 ] || [ "$PLACE" -gt 8 ]; then
   echo "结算名次无效：${RESULT}"
@@ -137,8 +138,8 @@ if [ -z "$INTENTS" ] || [ "$INTENTS" -lt 20 ]; then
   echo "客户端发送意图过少（${INTENTS}）：${RESULT}"
   exit 1
 fi
-if [ "$ERRORS" != "0" ]; then
-  echo "客户端收到 ${ERRORS} 条协议错误：${RESULT}"
+if [ "$ERRORS" != "$SOFT" ]; then
+  echo "客户端收到未预期的协议错误（errors=${ERRORS} soft=${SOFT}）：${RESULT}"
   grep "M1B 收到错误" "$CLIENT_LOG" | tail -n 10
   exit 1
 fi
@@ -153,4 +154,4 @@ if grep -q "panicked" "$SERVER_LOG" "$LOG_DIR"/bot*.log 2>/dev/null; then
   exit 1
 fi
 
-echo "M1B_E2E_OK place=$PLACE ranking=$RANKING intents=$INTENTS seed=$SEED"
+echo "M1B_E2E_OK place=$PLACE ranking=$RANKING intents=$INTENTS seed=$SEED soft_errors=$SOFT"

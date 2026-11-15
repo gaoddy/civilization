@@ -3,7 +3,6 @@ extends Node
 
 signal connected
 signal disconnected
-signal envelope_received(type: String, payload: Dictionary, seq: int)
 
 const RETRY_SECONDS := 3.0
 const DEFAULT_URL := "ws://127.0.0.1:8080/ws"
@@ -70,9 +69,9 @@ func send(type: String, payload: Dictionary) -> String:
         "ts": Time.get_datetime_string_from_system(true) + "Z",
         "payload": payload,
     }
-    socket.send_text(JSON.stringify(envelope))
+    if socket.send_text(JSON.stringify(envelope)) != OK:
+        return ""
     return id
-
 
 func _process(delta: float) -> void:
     if socket == null:
@@ -108,6 +107,9 @@ func _tick_retry(delta: float) -> void:
 func _open() -> void:
     if socket != null:
         socket.close()
+        socket = null
+    # 替换连接后重新开始：避免旧连接的 _was_open 让新连接漏发 connected 与续连。
+    _was_open = false
     socket = WebSocketPeer.new()
     var err := socket.connect_to_url(url)
     if err != OK:
@@ -136,7 +138,6 @@ func _on_packet(text: String) -> void:
     var payload = parsed.get("payload", {})
     if not (payload is Dictionary):
         payload = {}
-    envelope_received.emit(type, payload, seq)
     GameStore.handle(type, payload)
     if type == Protocol.MSG_AUTH_RESULT and _pending_reconnect:
         _pending_reconnect = false

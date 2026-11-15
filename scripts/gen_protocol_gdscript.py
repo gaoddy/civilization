@@ -80,16 +80,26 @@ def render(schema_dir, mapping):
     return "\n".join(lines)
 
 
+def output_targets(output=None, client_output=None):
+    """本次要写入的路径：显式 --output 时只写该目标，否则写默认与客户端两处。"""
+    if output is not None:
+        targets = [output]
+        if client_output is not None:
+            targets.append(client_output)
+        return targets
+    return [DEFAULT_OUTPUT, client_output if client_output is not None else CLIENT_OUTPUT]
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
-    parser.add_argument("--output", type=pathlib.Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--client-output", type=pathlib.Path, default=CLIENT_OUTPUT)
+    parser.add_argument("--output", type=pathlib.Path, default=None)
+    parser.add_argument("--client-output", type=pathlib.Path, default=None)
     args = parser.parse_args(argv)
 
     mapping = load_mapping()
     content = render(ROOT / "protocol" / "schema" / "v1", mapping)
-    targets = [args.output, args.client_output]
+    targets = output_targets(args.output, args.client_output)
 
     if args.check:
         for target in targets:

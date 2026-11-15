@@ -36,7 +36,7 @@ client/
 
 ## 2. 全局状态与网络层
 
-- `GameStore`：保存 `playerId`、`token`、`roomId`、`roomCode`、房间成员、`PlayerView`、`lastSeq`、排名与种子。`handle(type, payload)` 只做字段搬运，发出 `auth_changed`、`room_changed`、`view_changed`、`game_started`、`game_over`、`error_received`、`combat_received` 信号。
+- `GameStore`：保存 `playerId`、`token`、`roomId`、`roomCode`、房间成员、`PlayerView`、`lastSeq`、排名与种子。`handle(type, payload)` 只做字段搬运，发出 `auth_changed`、`room_changed`、`view_changed`、`game_started`、`game_over`、`error_received` 信号；`reset_room()` 清空房间，`reset_session()` 再清空身份与令牌。
 - `Net`：持有一个 `WebSocketPeer`，`_process` 中轮询；连接建立后先认证，断线每 3 秒自动重连。重连时以令牌发 `AuthRequest`，若仍在房间再发 `Reconnect{roomId, lastSeq}`，由服务端回全量 `Snapshot`。
 - 下行信封只校验 `v == 1` 与 `type`，`payload` 原样交给 `GameStore`；未知类型忽略。上行信封为 `{v, id, type, ts, payload}`，`id` 由时间戳与计数器生成。
 - `CardDB`：启动时读取 `client/generated/{cards,skills,tokens}.json`，提供卡名、技能文本与展示费用；不参与任何规则判定。
@@ -55,6 +55,11 @@ client/
 - 操作还要求视图自身的 `turn` 与 `GameStore.turn` 一致：新回合的 `PhaseChanged` 会先于新视图到达，旧视图只展示、不可操作，避免用上一回合的商店发意图。
 - 倒计时由 `phaseDeadline` 计算；归零后结束招募、刷新、购买、出牌、出售与重排按钮一并禁用，只等服务端推进阶段。
 - 已结束招募（`self.recruited`）后只展示界面，不再发起意图，也不弹待选弹层。
+- 状态栏文案按错误码取 `UI.error_text` 的固定中文；协议 `message` 只进 tooltip，不作为 UI 文案。
+- `UI.error_route` 决定错误后的去向：认证类错误回登录并清空会话，`NOT_IN_ROOM` / `ROOM_NOT_FOUND` 回大厅并清空房间；其余错误留在当前页面。
+- 未连接时点击操作不会静默丢弃：状态栏提示「未连接，操作未发出」，发送失败不登记目标重试。目标重试表按回合清理并设上限。
+- 房间场景同时监听 `view_changed`：重连或晚到的视图显示对局已开始时直接进入对局；房间不存在或已不在房间时回大厅。
+- 商店与手牌使用 `HFlowContainer` 自动换行，左侧内容放入 `ScrollContainer`，1280×720 下不会因手牌或商店变长而溢出。
 - 战斗只展示服务端 `CombatResult` 的胜者、伤害与双方随从数，不本地重放结算。
 - 返回大厅不使用 `LeaveRoom`（非大厅阶段会被拒绝），而是清除房间状态后重新连接并以令牌认证。
 
@@ -85,7 +90,9 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 - 客户端创建房间后把 6 位房间码发给 7 个机器人；8 人全部选好英雄并准备后服务端自动开局。
 - 机器人参数与协议顺序见[房间服务与联网](room-service.md) §11。
-- 无头验收用 `make m1b-e2e`：客户端自动建房并写入房间码，脚本再拉起 7 个机器人，结束后输出 `M1B_GAME_OVER place=<n> seed=<seed> ranking=<n> intents=<n> errors=<n>`；脚本校验名次、8 人排名、种子、意图数与客户端协议错误数为 0，并要求服务端与机器人日志无 panic。
+- 无头验收用 `make m1b-e2e`：客户端自动建房并写入房间码，脚本再拉起 7 个机器人，结束后输出 `M1B_GAME_OVER place=<n> seed=<seed> ranking=<n> intents=<n> errors=<n> soft=<n>`；脚本校验名次、8 人排名、种子、意图数，并要求错误全部落在「状态已变化」白名单（`NO_SPACE`、`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`），其余错误为 0，服务端与机器人日志无 panic。
+- 无头驱动不等上一条意图确认就按新视图继续决策，服务端按最新状态拒绝属预期；因此 `errors` 与 `soft` 必须相等。驱动另外对同一回合的同一商店槽位只提交一次购买（刷新后允许再次购买），避免重复购买同一槽位。
+- 默认端口 `18080` 被其他进程占用时，脚本会因监听失败退出；用 `M1B_PORT=<端口> make m1b-e2e` 覆盖，脚本与客户端读取同一个变量。
 
 ## 6. 与设计的偏差
 

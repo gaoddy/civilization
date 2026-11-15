@@ -80,7 +80,9 @@ func _on_auth_changed() -> void:
 
 
 func _on_error() -> void:
-    _status.text = "%s：%s" % [
-        str(GameStore.last_error.get("code", "")),
-        str(GameStore.last_error.get("message", "")),
-    ]
+    var code := str(GameStore.last_error.get("code", ""))
+    _status.text = UI.error_text(code)
+    _status.tooltip_text = str(GameStore.last_error.get("message", ""))
+    if UI.error_route(code) == "login":
+        GameStore.reset_session()
+        get_tree().change_scene_to_file("res://scenes/login.tscn")

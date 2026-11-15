@@ -7,8 +7,6 @@ signal view_changed
 signal game_started
 signal game_over
 signal error_received
-signal combat_received
-signal connection_changed
 
 var player_id := ""
 var token := ""
@@ -66,7 +64,6 @@ func handle(type: String, payload: Dictionary) -> void:
             view_changed.emit()
         Protocol.MSG_COMBAT_RESULT:
             last_combat = payload
-            combat_received.emit()
             view_changed.emit()
         Protocol.MSG_GAME_OVER:
             ranking = payload.get("ranking", [])
@@ -106,6 +103,13 @@ func reset_room() -> void:
     timer_seconds = -1
 
 
+func reset_session() -> void:
+    reset_room()
+    player_id = ""
+    token = ""
+    display_name = ""
+
+
 func player_name(pid: String) -> String:
     if pid == "":
         return ""
@@ -116,10 +120,3 @@ func player_name(pid: String) -> String:
         if str(player.get("playerId", "")) == pid:
             return str(player.get("displayName", pid))
     return pid
-
-
-func my_summary() -> Dictionary:
-    for player in view.get("players", []):
-        if str(player.get("playerId", "")) == player_id:
-            return player
-    return {}
