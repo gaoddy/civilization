@@ -1,7 +1,7 @@
 PYTHON ?= python3
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
 
-.PHONY: test lint audit data data-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-check client-smoke m1b-build m1b-e2e
+.PHONY: test lint audit data data-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-check client-smoke m1b-build m1b-e2e dev-bots
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -75,6 +75,12 @@ m1b-build:
 
 m1b-e2e: m1b-build
 	GODOT="$(GODOT)" bash scripts/m1b_e2e.sh
+
+# 本地联调：起服务端与 7 个机器人，打印房间码后等开发者在大厅加入。
+DEV_PORT ?= 8080
+
+dev-bots: m1b-build
+	DEV_PORT=$(DEV_PORT) bash scripts/dev_bots.sh
 
 m0-determinism:
 	cd server && cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash

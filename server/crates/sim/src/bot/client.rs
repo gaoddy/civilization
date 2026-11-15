@@ -29,11 +29,12 @@ pub struct BotConfig {
     pub name: String,
     /// 选择的英雄卡 id。
     pub hero: String,
-    /// true 表示建房并把房间码输出到 stdout（首行 `ROOM_CODE=<code>`）。
+    /// true 表示建房；未提供 `room_code_sink` 时把房间码输出到 stdout（`ROOM_CODE=<code>`），
+    /// 提供了则由调用方展示。
     pub create: bool,
     /// brain 在发现候选间做确定性选择时使用的种子。
     pub intent_seed: u64,
-    /// 供测试在进程内取到房间码；CLI 不使用。
+    /// 供调用方在进程内取到房间码。提供时由调用方展示房间码，不打印 `ROOM_CODE`。
     pub room_code_sink: Option<tokio::sync::oneshot::Sender<String>>,
 }
 
@@ -80,10 +81,13 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
     }
     let room_code = wait_room_update(&mut ws).await?;
     if config.create {
-        if let Some(sink) = config.room_code_sink.take() {
-            let _ = sink.send(room_code.clone());
+        // 有 sink 时调用方自己负责展示房间码（`sim dev` 会打印两行提示），此处不重复。
+        match config.room_code_sink.take() {
+            Some(sink) => {
+                let _ = sink.send(room_code.clone());
+            }
+            None => println!("ROOM_CODE={room_code}"),
         }
-        println!("ROOM_CODE={room_code}");
     }
 
     send(
