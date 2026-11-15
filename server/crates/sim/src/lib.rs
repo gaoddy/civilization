@@ -15,6 +15,10 @@ use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
 use rule_engine::state::{GameState, Phase, Seat};
 
+/// 引擎 32 字节种子与日志 64 位种子之间的对应，实现已迁至
+/// [`rule_engine::rng::seed_from_u64`]，此处保持 `sim` 对外 API 不变。
+pub use rule_engine::rng::seed_from_u64;
+
 /// 固定 8 人对局，与引擎一致。
 pub const PLAYER_COUNT: Seat = 8;
 
@@ -115,18 +119,6 @@ pub struct BatchJson {
 /// 第 i 局的种子：`seed + game_index`（64 位回绕）。
 pub fn derive_seed(seed: u64, game_index: usize) -> u64 {
     seed.wrapping_add(game_index as u64)
-}
-
-/// 引擎 32 字节种子与日志 64 位种子之间的对应：前 8 字节按小端写日志种子，其余三组
-/// 8 字节由该种子经固定混合常数派生。日志只记录 64 位种子，重放时由它重建同样的
-/// 32 字节，因此重放与原始对局使用完全相同的随机流。
-pub fn seed_from_u64(seed: u64) -> [u8; 32] {
-    let mut bytes = [0u8; 32];
-    bytes[..8].copy_from_slice(&seed.to_le_bytes());
-    bytes[8..16].copy_from_slice(&seed.wrapping_mul(0x9e37_79b9_7f4a_7c15).to_le_bytes());
-    bytes[16..24].copy_from_slice(&seed.wrapping_add(0xd1b5_4a32_d192_ed03).to_le_bytes());
-    bytes[24..32].copy_from_slice(&seed.rotate_left(29).to_le_bytes());
-    bytes
 }
 
 /// 目录中按卡牌 id 升序的前 8 张英雄卡，依次分配给座位 0..8。

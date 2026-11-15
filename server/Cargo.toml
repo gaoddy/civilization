@@ -1,5 +1,11 @@
 [workspace]
-members = ["crates/rule-engine", "crates/sim", "crates/protocol-gen", "crates/protocol"]
+members = [
+    "crates/rule-engine",
+    "crates/sim",
+    "crates/protocol-gen",
+    "crates/protocol",
+    "crates/room-service",
+]
 resolver = "3"
 
 [workspace.package]
