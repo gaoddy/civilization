@@ -34,7 +34,7 @@ pub struct BotConfig {
     pub create: bool,
     /// brain 在发现候选间做确定性选择时使用的种子。
     pub intent_seed: u64,
-    /// 供测试在进程内取到房间码；CLI 不使用。
+    /// 供调用方在进程内取到房间码。提供时由调用方展示房间码，不打印 `ROOM_CODE`。
     pub room_code_sink: Option<tokio::sync::oneshot::Sender<String>>,
 }
 
