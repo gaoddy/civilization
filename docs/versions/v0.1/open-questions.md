@@ -30,8 +30,6 @@
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
 | 服务端部署编排与多实例切分维度 | 部署 | M2 联机内测前确定 | [服务端技术基线](technical/architecture/server-stack.md) |
-| 客户端工程目录与构建导出流程未定 | 实现 | 搭建客户端工程前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
-| 客户端测试框架未定 | 实现 | 搭建客户端工程前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
 | GDScript 生成器是否值得长期维护 | 实现 | 先用最小生成物（常量与字段名）观察；维护成本高于收益时退回手写常量并由样例测试兜底 | [通信协议](technical/architecture/protocol.md) |
 | 观战只读视图的字段裁剪 | 实现 | v0.1 不做观战，视图按可被第三方只读消费设计，裁剪规则待观战时确定 | [通信协议](technical/architecture/protocol.md) |
 | 协议 crate 生成物位置 | 实现 | M0 只建了 `rule-engine` 与 `sim` 两个 crate，`protocol` crate 尚未建立；M1 统一为仓库根 `protocol/generated/protocol.rs` 生成、crate 依赖生成文件，并回写 [服务端技术基线](technical/architecture/server-stack.md) | [协议设计](../../superpowers/specs/2026-11-15-protocol-design.md) §8 |
