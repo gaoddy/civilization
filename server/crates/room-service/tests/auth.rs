@@ -138,3 +138,97 @@ fn seat_channel_seq_starts_at_one_and_increments() {
         .expect("失败后仍可继续 bind");
     assert_eq!(envelope.seq.get(), 5);
 }
+
+#[test]
+fn tokens_are_not_guessable_sequence() {
+    let clock = FixedClock::new(NOW_MS);
+    let mut store = SessionStore::new();
+
+    let first = store
+        .authenticate(&phone_auth("13800000001", DEV_SMS_CODE), &clock)
+        .expect("首次认证成功");
+    let second = store
+        .authenticate(&phone_auth("13800000002", DEV_SMS_CODE), &clock)
+        .expect("第二次认证成功");
+
+    assert!(
+        first.token.len() >= 32,
+        "token 长度应至少 32：{}",
+        first.token
+    );
+    assert!(
+        second.token.len() >= 32,
+        "token 长度应至少 32：{}",
+        second.token
+    );
+    assert_ne!(first.token, second.token, "token 必须互不相同");
+    assert!(!first.token.starts_with("tok_"));
+    assert!(!second.token.starts_with("tok_"));
+}
+
+#[test]
+fn player_id_does_not_contain_phone() {
+    let clock = FixedClock::new(NOW_MS);
+    let mut store = SessionStore::new();
+    let phone = "13800000000";
+
+    let session = store
+        .authenticate(&phone_auth(phone, DEV_SMS_CODE), &clock)
+        .expect("认证成功");
+    assert!(
+        !session.player_id.contains(phone),
+        "playerId 不得包含手机号：{}",
+        session.player_id
+    );
+}
+
+#[test]
+fn expired_token_is_removed_from_store() {
+    let clock = FixedClock::new(NOW_MS);
+    let mut store = SessionStore::new();
+
+    let session = store
+        .authenticate(&phone_auth("13800000001", DEV_SMS_CODE), &clock)
+        .expect("首次认证成功");
+    assert_eq!(store.created_sessions(), 1);
+
+    clock.advance(DAY_MS);
+    let err = store
+        .authenticate(&token_auth(&session.token), &clock)
+        .expect_err("过期令牌必须被拒绝");
+    assert_eq!(err.code, ErrorCode::TokenExpired);
+
+    // 访问过期令牌时已把它从两表移除，清理函数找不到任何条目。
+    assert_eq!(store.created_sessions(), 0);
+    assert_eq!(store.purge_expired(&clock), 0);
+}
+
+#[test]
+fn purge_expired_removes_only_expired() {
+    let clock = FixedClock::new(NOW_MS);
+    let mut store = SessionStore::new();
+
+    let first = store
+        .authenticate(&phone_auth("13800000001", DEV_SMS_CODE), &clock)
+        .expect("首个会话认证成功");
+
+    // 推进到首个会话过期；第二个会话在此时创建，尚未过期。
+    clock.advance(DAY_MS);
+    let second = store
+        .authenticate(&phone_auth("13800000002", DEV_SMS_CODE), &clock)
+        .expect("第二个会话认证成功");
+    assert_eq!(store.created_sessions(), 2);
+
+    assert_eq!(store.purge_expired(&clock), 1);
+    assert_eq!(store.created_sessions(), 1);
+
+    let again = store
+        .authenticate(&token_auth(&second.token), &clock)
+        .expect("未过期令牌仍可认证");
+    assert_eq!(again.player_id, second.player_id);
+
+    let err = store
+        .authenticate(&token_auth(&first.token), &clock)
+        .expect_err("已清理的过期令牌必须被拒绝");
+    assert_eq!(err.code, ErrorCode::TokenExpired);
+}

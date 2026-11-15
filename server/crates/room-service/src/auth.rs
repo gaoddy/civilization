@@ -1,13 +1,15 @@
 //! 会话认证：手机号 + 开发验证码登录，或令牌续登。
 //!
-//! 存储为进程内 `BTreeMap`，确定性、无 I/O；`playerId` 与 `token` 都是服务端生成的
-//! 不透明串，不暴露手机号。
+//! 存储为进程内 `BTreeMap`，无 I/O；`playerId` 与 `token` 都是服务端生成的不可预测
+//! 不透明串，不暴露手机号。过期会话在下次被访问或调用 [`SessionStore::purge_expired`]
+//! 时清除，M1 不跑后台清理任务。
 
 use std::collections::BTreeMap;
 
 use chrono::{DateTime, Utc};
 use protocol::client::AuthRequest;
 use protocol::server::{AuthResult, ErrorMessage};
+use uuid::Uuid;
 
 use crate::clock::Clock;
 use crate::error::error_message;
@@ -52,9 +54,8 @@ impl Session {
 pub struct SessionStore {
     by_player: BTreeMap<String, Session>,
     by_token: BTreeMap<String, String>,
-    next_player: u64,
-    next_token: u64,
-    created_sessions: u64,
+    /// 已创建会话的单调序号，只用于生成 `玩家N`，不因清理而回退。
+    session_ordinal: u64,
 }
 
 impl SessionStore {
@@ -88,17 +89,15 @@ impl SessionStore {
                     return Err(error_message("AUTH_FAILED", "短信验证码错误", false));
                 }
 
-                self.created_sessions = self.created_sessions.saturating_add(1);
+                self.session_ordinal = self.session_ordinal.saturating_add(1);
                 let display_name = match display_name {
                     Some(name) => String::from(name.clone()),
-                    None => format!("玩家{}", self.created_sessions),
+                    None => format!("玩家{}", self.session_ordinal),
                 };
 
-                self.next_player = self.next_player.saturating_add(1);
-                self.next_token = self.next_token.saturating_add(1);
                 let session = Session {
-                    player_id: format!("p_{}", self.next_player),
-                    token: format!("tok_{}", self.next_token),
+                    player_id: format!("p_{}", Uuid::new_v4().simple()),
+                    token: Uuid::new_v4().simple().to_string(),
                     display_name,
                     expires_at_ms: clock.now_ms().saturating_add(SESSION_TTL_MS),
                 };
@@ -110,17 +109,18 @@ impl SessionStore {
                 Ok(session)
             }
             AuthRequest::Variant1 { token, .. } => {
-                let player_id = self
-                    .by_token
-                    .get(token)
-                    .cloned()
-                    .ok_or_else(token_expired)?;
-                let session = self
-                    .by_player
-                    .get(&player_id)
-                    .cloned()
-                    .ok_or_else(token_expired)?;
+                let Some(player_id) = self.by_token.get(token).cloned() else {
+                    return Err(token_expired());
+                };
+                let Some(session) = self.by_player.get(&player_id).cloned() else {
+                    // 孤立令牌：会话已不在，顺手清掉。
+                    self.by_token.remove(token);
+                    return Err(token_expired());
+                };
                 if clock.now_ms() >= session.expires_at_ms {
+                    // 过期会话在被访问时即从两张表移除，避免无界增长。
+                    self.by_player.remove(&player_id);
+                    self.by_token.remove(token);
                     return Err(token_expired());
                 }
                 Ok(session)
@@ -128,9 +128,33 @@ impl SessionStore {
         }
     }
 
-    /// 已创建的会话总数（测试与指标用）。
+    /// 清除所有已过期会话，返回清除的会话条数。
+    ///
+    /// 先收集过期令牌再逐个移除，避免边遍历边修改表。
+    pub fn purge_expired(&mut self, clock: &dyn Clock) -> usize {
+        let now = clock.now_ms();
+        let expired: Vec<String> = self
+            .by_token
+            .iter()
+            .filter(|(_, player_id)| {
+                self.by_player
+                    .get(*player_id)
+                    .is_none_or(|session| now >= session.expires_at_ms)
+            })
+            .map(|(token, _)| token.clone())
+            .collect();
+
+        for token in &expired {
+            if let Some(player_id) = self.by_token.remove(token) {
+                self.by_player.remove(&player_id);
+            }
+        }
+        expired.len()
+    }
+
+    /// 当前活跃会话数（测试与指标用）。
     pub fn created_sessions(&self) -> u64 {
-        self.created_sessions
+        self.by_player.len() as u64
     }
 }
 
