@@ -118,7 +118,7 @@ func _open() -> void:
 func _resume_session() -> void:
     if GameStore.token == "":
         return
-    send("AuthRequest", {"token": GameStore.token})
+    send(Protocol.MSG_AUTH_REQUEST, {"token": GameStore.token})
     _pending_reconnect = GameStore.room_id != ""
 
 
@@ -138,6 +138,6 @@ func _on_packet(text: String) -> void:
         payload = {}
     envelope_received.emit(type, payload, seq)
     GameStore.handle(type, payload)
-    if type == "AuthResult" and _pending_reconnect:
+    if type == Protocol.MSG_AUTH_RESULT and _pending_reconnect:
         _pending_reconnect = false
-        send("Reconnect", {"roomId": GameStore.room_id, "lastSeq": GameStore.last_seq})
+        send(Protocol.MSG_RECONNECT, {"roomId": GameStore.room_id, "lastSeq": GameStore.last_seq})

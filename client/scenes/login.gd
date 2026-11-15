@@ -76,7 +76,7 @@ func _on_connected() -> void:
     if display_name != "":
         payload["displayName"] = display_name
         GameStore.display_name = display_name
-    Net.send("AuthRequest", payload)
+    Net.send(Protocol.MSG_AUTH_REQUEST, payload)
 
 
 func _on_auth_changed() -> void:

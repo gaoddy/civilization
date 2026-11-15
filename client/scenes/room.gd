@@ -53,6 +53,7 @@ func _build() -> void:
     left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     left.add_child(UI.label("成员", 18))
     _players = VBoxContainer.new()
+    _players.name = "PlayerList"
     _players.add_theme_constant_override("separation", 6)
     left.add_child(_players)
     body.add_child(left)
@@ -101,7 +102,7 @@ func _refresh() -> void:
     var my_ready := false
     for player in GameStore.room_players:
         var player_id := str(player.get("playerId", ""))
-        var hero_id := str(player.get("heroCardId", ""))
+        var hero_id := _optional_text(player.get("heroCardId"))
         var is_host := bool(player.get("isHost", false))
         var is_ready := bool(player.get("ready", false))
         var hero_name := CardDB.display_name(hero_id) if hero_id != "" else "未选英雄"
@@ -110,9 +111,12 @@ func _refresh() -> void:
             marks.append("房主")
         if player_id == GameStore.player_id:
             marks.append("我")
-        var suffix := "（%s）" % "、".join(marks) if not marks.is_empty() else ""
+        var display := _optional_text(player.get("displayName"))
+        if display == "":
+            display = player_id
+        var suffix := "（%s）" % _join_cn(marks) if not marks.is_empty() else ""
         var line := "%s%s  %s  %s" % [
-            str(player.get("displayName", player_id)),
+            display,
             suffix,
             hero_name,
             "已准备" if is_ready else "未准备",
@@ -144,7 +148,7 @@ func _on_pick_hero() -> void:
     if index < 0:
         return
     var card_id := str(_hero_picker.get_item_metadata(index))
-    Net.send("SelectHeroCard", {"cardId": card_id})
+    Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": card_id})
     _status.text = "已提交英雄：%s" % CardDB.display_name(card_id)
 
 
@@ -153,17 +157,17 @@ func _on_ready_pressed() -> void:
     for player in GameStore.room_players:
         if str(player.get("playerId", "")) == GameStore.player_id:
             my_ready = bool(player.get("ready", false))
-    Net.send("Ready", {"ready": not my_ready})
+    Net.send(Protocol.MSG_READY, {"ready": not my_ready})
 
 
 func _on_leave_pressed() -> void:
-    Net.send("LeaveRoom", {})
+    Net.send(Protocol.MSG_LEAVE_ROOM, {})
     GameStore.reset_room()
     get_tree().change_scene_to_file("res://scenes/lobby.tscn")
 
 
 func _on_room_changed() -> void:
-    if GameStore.phase != "Lobby" and not GameStore.view.is_empty():
+    if GameStore.phase != Protocol.PHASE_LOBBY and not GameStore.view.is_empty():
         _goto_game()
     else:
         _refresh()
@@ -182,3 +186,16 @@ func _on_error() -> void:
         str(GameStore.last_error.get("code", "")),
         str(GameStore.last_error.get("message", "")),
     ]
+
+
+func _optional_text(value: Variant) -> String:
+    if value == null:
+        return ""
+    return str(value)
+
+
+func _join_cn(values: Array) -> String:
+    var parts := PackedStringArray()
+    for value in values:
+        parts.append(str(value))
+    return "、".join(parts)

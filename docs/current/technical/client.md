@@ -51,8 +51,10 @@ client/
 | 对局 | 商店、手牌、棋盘、玩家列表、倒计时、战报与事件；十种意图对应操作；`pendingChoices` 弹层；目标缺失时按 `NO_VALID_TARGET` 补选目标 |
 | 结算 | 按服务端 `ranking` 展示名次与 `seed`；返回大厅时用令牌重新认证 |
 
-- 对局界面整块读取 `GameStore.view`，每次 `view_changed` 重建；按钮可用性只取 `affordances` / `playable` / `can*`，不做本地推导。
-- 倒计时由 `phaseDeadline` 计算，仅用于展示；阶段推进只认服务端 `StateUpdate`。
+- 对局界面整块读取 `GameStore.view`，每次 `view_changed` 重建；按钮可用性只取 `affordances` / `playable` / `can*`，不做本地推导。冻结与左右移位没有对应的服务端 affordance，按 `phase`、`self.recruited` 与下标做本地门控，与服务端拒绝条件保持一致。
+- 操作还要求视图自身的 `turn` 与 `GameStore.turn` 一致：新回合的 `PhaseChanged` 会先于新视图到达，旧视图只展示、不可操作，避免用上一回合的商店发意图。
+- 倒计时由 `phaseDeadline` 计算；归零后结束招募、刷新、购买、出牌、出售与重排按钮一并禁用，只等服务端推进阶段。
+- 已结束招募（`self.recruited`）后只展示界面，不再发起意图，也不弹待选弹层。
 - 战斗只展示服务端 `CombatResult` 的胜者、伤害与双方随从数，不本地重放结算。
 - 返回大厅不使用 `LeaveRoom`（非大厅阶段会被拒绝），而是清除房间状态后重新连接并以令牌认证。
 
@@ -83,13 +85,14 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 - 客户端创建房间后把 6 位房间码发给 7 个机器人；8 人全部选好英雄并准备后服务端自动开局。
 - 机器人参数与协议顺序见[房间服务与联网](room-service.md) §11。
-- 无头验收用 `make m1b-e2e`：客户端自动建房并写入房间码，脚本再拉起 7 个机器人，结束后输出 `M1B_GAME_OVER place=<n> seed=<seed>`。
+- 无头验收用 `make m1b-e2e`：客户端自动建房并写入房间码，脚本再拉起 7 个机器人，结束后输出 `M1B_GAME_OVER place=<n> seed=<seed> ranking=<n> intents=<n> errors=<n>`；脚本校验名次、8 人排名、种子、意图数与客户端协议错误数为 0，并要求服务端与机器人日志无 panic。
 
 ## 6. 与设计的偏差
 
 1. 设计 §5.6 只要求“1 个客户端 + 7 个机器人人工验收”；实现额外提供 `client/tests/headless_game.*` 与 `make m1b-e2e`，用真实客户端栈（Net + GameStore）自动打完一局，作为协议与视图消费的回归证据。该驱动不点击 UI，五场景可读性仍由 `make client-smoke` 与手动运行保证。
 2. 卡牌展示表新增 `display_cost`：随从固定 3、效果牌取文档 `cost`，仅用于显示；规则判定仍全部在服务端。
-3. `BuyMinion` / `PlayCard` 的 `targetMinionId` 不预先询问：服务端返回 `NO_VALID_TARGET` 后，客户端弹出己方随从列表并带目标重发同一意图。
+3. `BuyMinion` / `PlayCard` 的 `targetMinionId` 不预先询问：先按无目标发送，收到 `NO_VALID_TARGET` 后再弹出己方随从列表并带目标重发同一意图。当前服务端尚未在无目标时返回该错误码（见[待确认事项](../../versions/v0.1/open-questions.md)），实际表现为效果不结算；该重试路径已实现但没有端到端触发条件。
+4. 英雄技能在己方有随从时先弹出可选目标列表，含「不指定目标」；己方无随从时直接无目标发送。
 
 ## 相关文档
 

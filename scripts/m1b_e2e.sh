@@ -48,6 +48,11 @@ if [ "$ready" -ne 1 ]; then
   tail -n 20 "$SERVER_LOG"
   exit 1
 fi
+if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+  echo "服务端启动后立即退出（端口可能被其他进程占用）"
+  tail -n 20 "$SERVER_LOG"
+  exit 1
+fi
 
 M1B_URL="$URL" \
 M1B_CODE_FILE="$CODE_FILE" \
@@ -109,4 +114,43 @@ if grep -q "SCRIPT ERROR" "$CLIENT_LOG"; then
   exit 1
 fi
 
-echo "M1B_E2E_OK"
+RESULT=$(grep "M1B_GAME_OVER" "$CLIENT_LOG" | tail -n 1)
+PLACE=$(echo "$RESULT" | sed -n 's/.*place=\([0-9]*\).*/\1/p')
+SEED=$(echo "$RESULT" | sed -n 's/.*seed=\([^ ]*\).*/\1/p')
+RANKING=$(echo "$RESULT" | sed -n 's/.*ranking=\([0-9]*\).*/\1/p')
+INTENTS=$(echo "$RESULT" | sed -n 's/.*intents=\([0-9]*\).*/\1/p')
+ERRORS=$(echo "$RESULT" | sed -n 's/.*errors=\([0-9]*\).*/\1/p')
+
+if [ -z "$PLACE" ] || [ "$PLACE" -lt 1 ] || [ "$PLACE" -gt 8 ]; then
+  echo "结算名次无效：${RESULT}"
+  exit 1
+fi
+if [ "$RANKING" != "8" ]; then
+  echo "结算排名应为 8 人，实际 ${RANKING}：${RESULT}"
+  exit 1
+fi
+if [ -z "$SEED" ]; then
+  echo "结算缺少种子：${RESULT}"
+  exit 1
+fi
+if [ -z "$INTENTS" ] || [ "$INTENTS" -lt 20 ]; then
+  echo "客户端发送意图过少（${INTENTS}）：${RESULT}"
+  exit 1
+fi
+if [ "$ERRORS" != "0" ]; then
+  echo "客户端收到 ${ERRORS} 条协议错误：${RESULT}"
+  grep "M1B 收到错误" "$CLIENT_LOG" | tail -n 10
+  exit 1
+fi
+if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+  echo "服务端在客户端结束后已退出"
+  tail -n 40 "$SERVER_LOG"
+  exit 1
+fi
+if grep -q "panicked" "$SERVER_LOG" "$LOG_DIR"/bot*.log 2>/dev/null; then
+  echo "服务端或机器人出现 panic"
+  grep -n "panicked" "$SERVER_LOG" "$LOG_DIR"/bot*.log 2>/dev/null | tail -n 5
+  exit 1
+fi
+
+echo "M1B_E2E_OK place=$PLACE ranking=$RANKING intents=$INTENTS seed=$SEED"

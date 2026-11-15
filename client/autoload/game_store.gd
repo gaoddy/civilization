@@ -34,21 +34,21 @@ var timer_seconds := -1
 
 func handle(type: String, payload: Dictionary) -> void:
     match type:
-        "AuthResult":
+        Protocol.MSG_AUTH_RESULT:
             player_id = str(payload.get("playerId", ""))
             token = str(payload.get("token", ""))
             auth_changed.emit()
-        "RoomUpdate":
+        Protocol.MSG_ROOM_UPDATE:
             room_id = str(payload.get("roomId", ""))
             room_code = str(payload.get("code", ""))
             room_players = payload.get("players", [])
-            phase = str(payload.get("phase", "Lobby"))
+            phase = str(payload.get("phase", Protocol.PHASE_LOBBY))
             room_changed.emit()
-        "GameStarted":
+        Protocol.MSG_GAME_STARTED:
             _apply_view(payload.get("view", {}))
             game_started.emit()
             view_changed.emit()
-        "StateUpdate", "Snapshot":
+        Protocol.MSG_STATE_UPDATE, Protocol.MSG_SNAPSHOT:
             _apply_view(payload.get("view", {}))
             for event in payload.get("events", []):
                 if event is Dictionary:
@@ -56,24 +56,24 @@ func handle(type: String, payload: Dictionary) -> void:
             while event_log.size() > 30:
                 event_log.pop_front()
             view_changed.emit()
-        "PhaseChanged":
+        Protocol.MSG_PHASE_CHANGED:
             phase = str(payload.get("phase", phase))
             turn = int(payload.get("turn", turn))
             deadline = str(payload.get("deadline", deadline))
             view_changed.emit()
-        "TimerWarning":
+        Protocol.MSG_TIMER_WARNING:
             timer_seconds = int(payload.get("secondsLeft", -1))
             view_changed.emit()
-        "CombatResult":
+        Protocol.MSG_COMBAT_RESULT:
             last_combat = payload
             combat_received.emit()
             view_changed.emit()
-        "GameOver":
+        Protocol.MSG_GAME_OVER:
             ranking = payload.get("ranking", [])
             game_seed = str(payload.get("seed", ""))
-            phase = "GameOver"
+            phase = Protocol.PHASE_GAME_OVER
             game_over.emit()
-        "Error":
+        Protocol.MSG_ERROR:
             last_error = payload
             error_received.emit()
         _:

@@ -60,7 +60,6 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
         .map_err(|err| format!("连接 {} 失败: {err}", config.url))?;
 
     let mut seq = 0_u64;
-    let mut intent_counter = 0_u64;
     let catalog = crate::embedded_catalog().map_err(|err| err.to_string())?;
 
     authenticate(&mut ws, &config, &mut seq).await?;
@@ -97,7 +96,7 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
     send(&mut ws, "Ready", json!({ "ready": true }), &mut seq).await?;
 
     let mut turns = 1_u8;
-    let mut last_fingerprint = String::new();
+    let mut memory = BotMemory::new();
     while let Some(message) = receive(&mut ws).await? {
         match message {
             ServerMessage::GameStarted(started) => {
@@ -107,8 +106,7 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                     &config,
                     &catalog,
                     &started.view,
-                    &mut last_fingerprint,
-                    &mut intent_counter,
+                    &mut memory,
                     &mut seq,
                 )
                 .await?;
@@ -120,8 +118,7 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                     &config,
                     &catalog,
                     &snapshot.view,
-                    &mut last_fingerprint,
-                    &mut intent_counter,
+                    &mut memory,
                     &mut seq,
                 )
                 .await?;
@@ -133,8 +130,7 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                     &config,
                     &catalog,
                     &update.view,
-                    &mut last_fingerprint,
-                    &mut intent_counter,
+                    &mut memory,
                     &mut seq,
                 )
                 .await?;
@@ -157,6 +153,28 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                     "bot {} 收到错误 {}: {}",
                     config.name, error.code, error.message
                 );
+                // 被拒绝的意图不会带来新视图，机器人不会自己重试；补发兜底意图，
+                // 避免整局停在招募阶段等超时。每个回合最多补发一次。
+                let recovery = memory.view.as_ref().and_then(|view| {
+                    let turn = turn_of(view);
+                    if memory.recovery_turn == Some(turn) {
+                        return None;
+                    }
+                    brain::recover_after_error(view).map(|intent| (turn, intent))
+                });
+                if let Some((turn, intent)) = recovery {
+                    memory.recovery_turn = Some(turn);
+                    let intent_value = serde_json::to_value(&intent)
+                        .map_err(|err| format!("序列化意图失败: {err}"))?;
+                    let client_intent_id = memory.next_intent_id(&config.name);
+                    send(
+                        &mut ws,
+                        "Intent",
+                        json!({ "clientIntentId": client_intent_id, "intent": intent_value }),
+                        &mut seq,
+                    )
+                    .await?;
+                }
             }
             _ => {}
         }
@@ -203,28 +221,56 @@ async fn wait_room_update(ws: &mut Ws) -> Result<String, String> {
     Err("连接在进入房间前关闭".into())
 }
 
+/// 机器人跨消息保留的决策记忆。
+struct BotMemory {
+    /// 上一次已决策视图的指纹。
+    fingerprint: String,
+    /// 最近一次已决策的视图，用于错误兜底。
+    view: Option<PlayerView>,
+    /// 已发送的意图数，参与 `clientIntentId`。
+    intents: u64,
+    /// 最近一次补发兜底意图的回合。
+    recovery_turn: Option<u8>,
+}
+
+impl BotMemory {
+    fn new() -> Self {
+        Self {
+            fingerprint: String::new(),
+            view: None,
+            intents: 0,
+            recovery_turn: None,
+        }
+    }
+
+    fn next_intent_id(&mut self, name: &str) -> String {
+        let id = format!("{name}-{}", self.intents);
+        self.intents = self.intents.saturating_add(1);
+        id
+    }
+}
+
 /// 对一份视图做一次决策；视图与上次已决策的完全一致时跳过。
 async fn decide(
     ws: &mut Ws,
     config: &BotConfig,
     catalog: &Catalog,
     view: &PlayerView,
-    last_fingerprint: &mut String,
-    intent_counter: &mut u64,
+    memory: &mut BotMemory,
     seq: &mut u64,
 ) -> Result<(), String> {
     let self_json = serde_json::to_string(&view.self_).unwrap_or_default();
     let fingerprint = format!("{:?}|{}|{self_json}", view.phase, view.turn);
-    if fingerprint == *last_fingerprint {
+    if fingerprint == memory.fingerprint {
         return Ok(());
     }
-    *last_fingerprint = fingerprint;
+    memory.fingerprint = fingerprint;
+    memory.view = Some(view.clone());
 
     let Some(intent) = brain::next_intent(view, catalog, config.intent_seed) else {
         return Ok(());
     };
-    let client_intent_id = format!("{}-{intent_counter}", config.name);
-    *intent_counter = intent_counter.saturating_add(1);
+    let client_intent_id = memory.next_intent_id(&config.name);
     let intent_value =
         serde_json::to_value(&intent).map_err(|err| format!("序列化意图失败: {err}"))?;
     send(

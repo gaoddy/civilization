@@ -58,7 +58,7 @@ func _build() -> void:
 
 func _on_create_pressed() -> void:
     _status.text = "正在创建房间…"
-    Net.send("CreateRoom", {})
+    Net.send(Protocol.MSG_CREATE_ROOM, {})
 
 
 func _on_join_pressed() -> void:
@@ -67,7 +67,7 @@ func _on_join_pressed() -> void:
         _status.text = "请输入房间码"
         return
     _status.text = "正在加入 %s …" % code
-    Net.send("JoinRoom", {"code": code})
+    Net.send(Protocol.MSG_JOIN_ROOM, {"code": code})
 
 
 func _on_room_changed() -> void:

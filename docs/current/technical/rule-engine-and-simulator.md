@@ -91,6 +91,8 @@ tests/                       # Python 标准库 unittest
 
 模拟器直接调用：`sim play --seed N`、`sim batch --games N --seed N --out PATH`、`sim replay --log PATH`、`sim report --log PATH`、`sim check --log PATH [--expect-games N]`、`sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID [--room CODE] [--create] [--intent-seed N]`；参数错误、模拟失败或日志校验不通过以非零码退出。`sim bot` 的细节见[房间服务与联网](room-service.md)第 11 节。
 
+`sim bot` 只在视图变化时决策；服务端拒绝意图不会带来新视图，因此收到 `Error` 后每回合最多补发一次 `EndRecruit`（`brain::recover_after_error`），避免整局停在招募阶段等超时。该兜底由 `make m1b-e2e` 的稳定运行暴露并覆盖。
+
 ## 5. 验证方式
 
 验证矩阵：`make data-check && python3 scripts/validate_docs.py && make m0-check && make m0-batch && make m0-report`（其中 `make m0-check` = `make data-check && make test && make lint && make m0-determinism`）。

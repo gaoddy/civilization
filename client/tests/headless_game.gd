@@ -9,6 +9,8 @@ var _room_requested := false
 var _hero_sent := false
 var _ready_sent := false
 var _intent_counter := 0
+var _intents_sent := 0
+var _errors := 0
 var _last_fingerprint := ""
 var _code_written := false
 
@@ -46,7 +48,7 @@ func _on_connected() -> void:
         "code": "123456",
         "displayName": GameStore.display_name,
     }
-    Net.send("AuthRequest", payload)
+    Net.send(Protocol.MSG_AUTH_REQUEST, payload)
 
 
 func _on_auth() -> void:
@@ -55,9 +57,9 @@ func _on_auth() -> void:
     _room_requested = true
     var room := OS.get_environment("M1B_ROOM")
     if room != "":
-        Net.send("JoinRoom", {"code": room})
+        Net.send(Protocol.MSG_JOIN_ROOM, {"code": room})
     else:
-        Net.send("CreateRoom", {})
+        Net.send(Protocol.MSG_CREATE_ROOM, {})
 
 
 func _on_room() -> void:
@@ -72,18 +74,20 @@ func _on_room() -> void:
         if player.get("heroCardId") == null and not _hero_sent:
             _hero_sent = true
             var hero := OS.get_environment("M1B_HERO")
-            Net.send("SelectHeroCard", {"cardId": hero if hero != "" else "darwin"})
+            Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": hero if hero != "" else "darwin"})
         if not bool(player.get("ready", false)) and not _ready_sent:
             _ready_sent = true
-            Net.send("Ready", {"ready": true})
+            Net.send(Protocol.MSG_READY, {"ready": true})
 
 
 func _on_view() -> void:
-    if _finished or GameStore.phase != "Recruit":
+    if _finished or GameStore.phase != Protocol.PHASE_RECRUIT:
         return
     var view: Dictionary = GameStore.view
     var self_state: Dictionary = view.get("self", {})
     if self_state.is_empty():
+        return
+    if int(view.get("turn", 0)) != GameStore.turn:
         return
     var fingerprint := "%d|%s" % [int(view.get("turn", 0)), JSON.stringify(self_state)]
     if fingerprint == _last_fingerprint:
@@ -93,9 +97,12 @@ func _on_view() -> void:
 
 
 func _act(self_state: Dictionary) -> void:
+    if bool(self_state.get("recruited", false)):
+        return
+
     var choices: Array = self_state.get("pendingChoices", [])
     if not choices.is_empty():
-        _send_intent({"kind": "ChooseDiscover", "choice": 0})
+        _send_intent({"kind": Protocol.INTENT_CHOOSE_DISCOVER, "choice": 0})
         return
 
     var aff: Dictionary = self_state.get("affordances", {})
@@ -114,22 +121,22 @@ func _act(self_state: Dictionary) -> void:
             best_cost = cost
             best_slot = index
     if best_slot >= 0:
-        _send_intent({"kind": "BuyMinion", "slot": best_slot})
+        _send_intent({"kind": Protocol.INTENT_BUY_MINION, "slot": best_slot})
         return
 
     for card in self_state.get("hand", []):
         if bool(card.get("playable", false)):
-            _send_intent({"kind": "PlayCard", "handIndex": int(card.get("index", 0))})
+            _send_intent({"kind": Protocol.INTENT_PLAY_CARD, "handIndex": int(card.get("index", 0))})
             return
 
     if bool(aff.get("canUpgradeEra", false)):
-        _send_intent({"kind": "UpgradeEra"})
+        _send_intent({"kind": Protocol.INTENT_UPGRADE_ERA})
         return
     if bool(aff.get("canReroll", false)):
-        _send_intent({"kind": "RerollShop"})
+        _send_intent({"kind": Protocol.INTENT_REROLL_SHOP})
         return
     if bool(aff.get("canEndRecruit", false)):
-        _send_intent({"kind": "EndRecruit"})
+        _send_intent({"kind": Protocol.INTENT_END_RECRUIT})
 
 
 func _find_by_index(items: Array, index: int) -> Dictionary:
@@ -141,8 +148,11 @@ func _find_by_index(items: Array, index: int) -> Dictionary:
 
 func _send_intent(intent: Dictionary) -> void:
     _intent_counter += 1
-    Net.send("Intent", {
-        "clientIntentId": "headless-%d-%d" % [Time.get_ticks_usec(), _intent_counter],
+    _intents_sent += 1
+    var intent_id := "headless-%d-%d" % [Time.get_ticks_usec(), _intent_counter]
+    print("M1B_INTENT %s %s" % [intent_id, JSON.stringify(intent)])
+    Net.send(Protocol.MSG_INTENT, {
+        "clientIntentId": intent_id,
         "intent": intent,
     })
 
@@ -168,12 +178,28 @@ func _on_game_over() -> void:
     for entry in GameStore.ranking:
         if str(entry.get("playerId", "")) == GameStore.player_id:
             place = int(entry.get("place", 0))
-    print("M1B_GAME_OVER place=%d seed=%s" % [place, GameStore.game_seed])
+    print("M1B_GAME_OVER place=%d seed=%s ranking=%d intents=%d errors=%d" % [
+        place,
+        GameStore.game_seed,
+        GameStore.ranking.size(),
+        _intents_sent,
+        _errors,
+    ])
     get_tree().quit(0)
 
 
 func _on_error() -> void:
+    _errors += 1
     var code := str(GameStore.last_error.get("code", ""))
-    push_warning("M1B 收到错误 %s：%s" % [code, str(GameStore.last_error.get("message", ""))])
-    if code in ["AUTH_FAILED", "TOKEN_EXPIRED", "ROOM_NOT_FOUND", "ROOM_FULL"]:
+    push_warning("M1B 收到错误 %s：%s（intent=%s）" % [
+        code,
+        str(GameStore.last_error.get("message", "")),
+        str(GameStore.last_error.get("clientIntentId", "")),
+    ])
+    if code in [
+        Protocol.ERROR_AUTH_FAILED,
+        Protocol.ERROR_TOKEN_EXPIRED,
+        Protocol.ERROR_ROOM_NOT_FOUND,
+        Protocol.ERROR_ROOM_FULL,
+    ]:
         get_tree().quit(3)
