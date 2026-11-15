@@ -33,25 +33,23 @@ SIM_PID=""
 SERVER_PID=""
 
 cleanup() {
-  for pid in "$SIM_PID" "$SERVER_PID"; do
+  # 也收 jobs -p：信号可能落在 `cmd &` 与 `PID=$!` 之间，那时 PID 还是空的。
+  for pid in "$SIM_PID" "$SERVER_PID" $(jobs -p); do
     if [ -n "$pid" ]; then
       kill "$pid" 2>/dev/null || true
     fi
   done
-  # 裸 wait 收该 shell 的全部子进程：SIM_PID 还未赋值时也不会漏掉服务端。
+  # 裸 wait 收该 shell 的全部子进程：上面的 PID 还没赋值时也不会漏掉。
   wait 2>/dev/null || true
 }
 
 # 终止信号必须收完子进程就退出：如果只 cleanup 不 exit，脚本会继续往下起
 # `sim`，然后干等到对局结束——信号就白发了。trap 也要在拉起任何子进程之前
 # 装好，否则信号落在启动与安装之间，服务端就成了孤儿。
-on_signal() {
-  cleanup
-}
 trap cleanup EXIT
-trap 'on_signal; exit 130' INT
-trap 'on_signal; exit 143' TERM
-trap 'on_signal; exit 129' HUP
+trap 'cleanup; exit 130' INT
+trap 'cleanup; exit 143' TERM
+trap 'cleanup; exit 129' HUP
 
 "$SERVER_BIN" --listen "127.0.0.1:${PORT}" >"$SERVER_LOG" 2>&1 &
 SERVER_PID=$!

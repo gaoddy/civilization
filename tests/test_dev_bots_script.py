@@ -83,7 +83,9 @@ class DevBotsScriptTest(unittest.TestCase):
         """用例失败时收尸：桩都留在脚本所在的进程组里。"""
         for proc in self.procs:
             try:
-                os.killpg(proc.pid, signal.SIGKILL)
+                # PID 可能已被复用；只有确认它仍是该组的组长才按组杀。
+                if os.getpgid(proc.pid) == proc.pid:
+                    os.killpg(proc.pid, signal.SIGKILL)
             except (ProcessLookupError, PermissionError):
                 pass
             if proc.poll() is None:
