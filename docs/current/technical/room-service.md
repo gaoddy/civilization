@@ -53,7 +53,7 @@ protocol/
 - 路由只有 `GET /ws`（`axum::routing::get`），升级后进入连接 task；`AppState` 内嵌 v0.1 的 `cards.json`、`skills.json`、`tokens.json`、`config.json`。
 - 连接拓扑：每个连接一个读端 task 与一个写端 task；每个房间一个房间 task（单写者，独占 `Room`/`GameTask` 可变状态）。连接层从不直接改房间状态，只投递 `RoomMessage`。
 - 上行统一为 `ClientEnvelope { v, id, type, ts, payload }`。**生成类型不校验 `v`**：连接层显式拒绝 `v != 1`，回 `BAD_PAYLOAD`（`不支持的协议版本`）后关闭连接，避免按 v1 语义执行 v2 载荷。
-- `envelope.parse()` 按 `type` 判别并校验 `payload` 结构；类型与载荷不匹配时回 `BAD_PAYLOAD`（`上行载荷与类型不匹配`）并继续读下一条，不关闭连接。
+- `envelope.parse()` 按 `type` 判别并校验 `payload` 结构；未知 `type` 回 `UNKNOWN_TYPE`，载荷不匹配回 `BAD_PAYLOAD`（`上行载荷与类型不匹配`），两者都继续读下一条，不关闭连接。
 - 未入房时，连接层错误走连接自己的 `SeatChannel`；入房后一律经房间 task 走该座位的统一下行通道，保证序号跨来源单调。
 
 ## 4. 下行序号
@@ -91,7 +91,7 @@ protocol/
 - 去重键为 `(playerId, clientIntentId)`；表只增不删，随房间销毁。
 - `Applied` 重发只回该座位当前视图的空事件 `StateUpdate`，不重复执行、不重复广播。
 - `Rejected` 重发同一条 `Error`（同一错误码与消息），不重新判定。
-- 未知玩家、非招募阶段的意图也写入去重表，重复提交行为一致。
+- 未知玩家直接回 `NOT_IN_ROOM`，不进入去重表；非招募阶段的意图会写入去重表，重复提交返回同一条 `INVALID_STAGE` 错误。
 
 ## 8. 逐座位过滤与战斗回放
 

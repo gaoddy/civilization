@@ -21,7 +21,7 @@ server/
       src/state.rs           # GameState / PlayerState / MinionInstance
       src/data.rs            # Catalog 与加载期校验（deny_unknown_fields）
       src/effects/           # DSL 解析（parse）、解释执行（exec）、光环（auras）
-      src/intent.rs          # 十种引擎意图（含内部 ChooseDiscover）与 12 个拒绝码（协议侧 11 个）
+      src/intent.rs          # 十种引擎意图（含内部 ChooseDiscover）与 11 个拒绝码（与协议错误码一一对应）
       src/engine.rs          # Engine::new / apply / start_game / start_turn
       src/recruit.rs         # 商店、买/卖/刷新/冻结/升时代/打出/结束招募
       src/triple.rs          # 三连与发现
@@ -30,7 +30,7 @@ server/
       src/rng.rs             # xoshiro256++ 与五个标签流；seed_from_u64（M1a 由 sim 迁入）
       src/hash.rs            # FNV-1a 规范编码与状态哈希
       src/view.rs            # 逐座位视图 SeatView（M1a 新增，供 room-service 映射协议视图）
-      tests/                 # 11 个集成测试文件
+      tests/                 # 13 个集成测试文件
     sim/                     # 可执行：CLI 模拟器 + 确定性 AI
       src/lib.rs             # run_games / play_game / replay；重导出 rule_engine::rng::seed_from_u64
       src/ai.rs              # M0 确定性 AI 策略（为保基线未改动）

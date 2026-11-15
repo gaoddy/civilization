@@ -22,7 +22,7 @@
 
 ## 2. 工程形态
 
-服务端为 Cargo workspace，规则引擎与房间服务通过 crate 边界隔离。当前已建 `rule-engine`（纯库）、`sim`（CLI 模拟器与确定性 AI）、`protocol`（生成的消息与视图类型）与 `room-service`（WebSocket 房间服务），当前状态见[房间服务与联网](../../../../current/technical/room-service.md)：
+服务端为 Cargo workspace，规则引擎与房间服务通过 crate 边界隔离。当前已建 `rule-engine`（纯库）、`sim`（CLI 模拟器与确定性 AI）、`protocol`（生成的消息与视图类型）、`protocol-gen`（协议生成器）与 `room-service`（WebSocket 房间服务），当前状态见[房间服务与联网](../../../../current/technical/room-service.md)：
 
 ```
 server/
