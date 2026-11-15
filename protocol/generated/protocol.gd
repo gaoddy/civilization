@@ -83,6 +83,9 @@ const EVENT_TRIPLE_FORMED := "TripleFormed"
 const EVENT_CARD_DISCOVERED := "CardDiscovered"
 const EVENT_DAMAGE_TAKEN := "DamageTaken"
 const EVENT_PLAYER_ELIMINATED := "PlayerEliminated"
+const EVENT_TURN_STARTED := "TurnStarted"
+const EVENT_PHASE_CHANGED := "PhaseChanged"
+const EVENT_GAME_OVER := "GameOver"
 
 # PlayerView 字段名
 const FIELD_ENABLED_FACTIONS := "enabledFactions"

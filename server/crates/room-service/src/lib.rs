@@ -9,6 +9,7 @@ pub mod auth;
 pub mod clock;
 pub mod envelope;
 pub mod error;
+pub mod filter;
 pub mod game;
 pub mod room;
 pub mod view;

@@ -162,7 +162,7 @@ fn duplicate_client_intent_id_executes_once() {
     assert!(error_codes(&second).is_empty(), "重发不应报错");
     assert_eq!(second.len(), 1, "重发只回操作者自己的视图");
     assert_eq!(second[0].player_id, "p0");
-    assert!(matches!(second[0].kind, UpdateKind::View));
+    assert!(matches!(second[0].kind, UpdateKind::View { .. }));
 
     let gold_after_second = task.player_view(0).expect("视图应可用").self_.gold;
     assert_eq!(gold_after_second, gold_after_first, "金币只能扣一次");

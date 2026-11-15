@@ -273,9 +273,13 @@
 | --- | --- | --- | --- |
 | `kind` | enum | 是 |  |
 | `playerId` | string | 否 | 事件涉及的玩家，可省略表示自己 |
+| `seat` | integer | 否 | 事件涉及的座位；客户端可经 PlayerView.players 映射到 playerId |
 | `cardId` | string | 否 |  |
 | `minionId` | string | 否 |  |
 | `amount` | integer | 否 | 伤害等数值 |
+| `turn` | integer | 否 | TurnStarted/PhaseChanged 事件对应的回合号 |
+| `phase` | Phase | 否 | PhaseChanged 事件进入的阶段 |
+| `ranking` | array<integer> | 否 | GameOver 事件的座位排名，从第 1 名起 |
 
 ### PendingChoice
 

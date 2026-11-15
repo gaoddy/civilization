@@ -1665,15 +1665,43 @@ impl ::std::convert::From<&FriendUpdateFriendsItem> for FriendUpdateFriendsItem 
 ///        "TripleFormed",
 ///        "CardDiscovered",
 ///        "DamageTaken",
-///        "PlayerEliminated"
+///        "PlayerEliminated",
+///        "TurnStarted",
+///        "PhaseChanged",
+///        "GameOver"
 ///      ]
 ///    },
 ///    "minionId": {
 ///      "type": "string"
 ///    },
+///    "phase": {
+///      "description": "PhaseChanged 事件进入的阶段",
+///      "$ref": "#/$defs/Phase"
+///    },
 ///    "playerId": {
 ///      "description": "事件涉及的玩家，可省略表示自己",
 ///      "type": "string"
+///    },
+///    "ranking": {
+///      "description": "GameOver 事件的座位排名，从第 1 名起",
+///      "type": "array",
+///      "items": {
+///        "type": "integer",
+///        "maximum": 7.0,
+///        "minimum": 0.0
+///      }
+///    },
+///    "seat": {
+///      "description": "事件涉及的座位；客户端可经 PlayerView.players 映射到 playerId",
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 0.0
+///    },
+///    "turn": {
+///      "description": "TurnStarted/PhaseChanged 事件对应的回合号",
+///      "type": "integer",
+///      "maximum": 20.0,
+///      "minimum": 1.0
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -1699,6 +1727,9 @@ pub struct GameEvent {
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub minion_id: ::std::option::Option<::std::string::String>,
+    ///PhaseChanged 事件进入的阶段
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub phase: ::std::option::Option<Phase>,
     ///事件涉及的玩家，可省略表示自己
     #[serde(
         rename = "playerId",
@@ -1706,6 +1737,15 @@ pub struct GameEvent {
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub player_id: ::std::option::Option<::std::string::String>,
+    ///GameOver 事件的座位排名，从第 1 名起
+    #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+    pub ranking: ::std::vec::Vec<i64>,
+    ///事件涉及的座位；客户端可经 PlayerView.players 映射到 playerId
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub seat: ::std::option::Option<i64>,
+    ///TurnStarted/PhaseChanged 事件对应的回合号
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub turn: ::std::option::Option<::std::num::NonZeroU64>,
 }
 impl ::std::convert::From<&GameEvent> for GameEvent {
     fn from(value: &GameEvent) -> Self {
@@ -1727,7 +1767,10 @@ impl ::std::convert::From<&GameEvent> for GameEvent {
 ///    "TripleFormed",
 ///    "CardDiscovered",
 ///    "DamageTaken",
-///    "PlayerEliminated"
+///    "PlayerEliminated",
+///    "TurnStarted",
+///    "PhaseChanged",
+///    "GameOver"
 ///  ]
 ///}
 /// ```
@@ -1753,6 +1796,9 @@ pub enum GameEventKind {
     CardDiscovered,
     DamageTaken,
     PlayerEliminated,
+    TurnStarted,
+    PhaseChanged,
+    GameOver,
 }
 impl ::std::convert::From<&Self> for GameEventKind {
     fn from(value: &GameEventKind) -> Self {
@@ -1770,6 +1816,9 @@ impl ::std::fmt::Display for GameEventKind {
             Self::CardDiscovered => f.write_str("CardDiscovered"),
             Self::DamageTaken => f.write_str("DamageTaken"),
             Self::PlayerEliminated => f.write_str("PlayerEliminated"),
+            Self::TurnStarted => f.write_str("TurnStarted"),
+            Self::PhaseChanged => f.write_str("PhaseChanged"),
+            Self::GameOver => f.write_str("GameOver"),
         }
     }
 }
@@ -1787,6 +1836,9 @@ impl ::std::str::FromStr for GameEventKind {
             "CardDiscovered" => Ok(Self::CardDiscovered),
             "DamageTaken" => Ok(Self::DamageTaken),
             "PlayerEliminated" => Ok(Self::PlayerEliminated),
+            "TurnStarted" => Ok(Self::TurnStarted),
+            "PhaseChanged" => Ok(Self::PhaseChanged),
+            "GameOver" => Ok(Self::GameOver),
             _ => Err("invalid value".into()),
         }
     }

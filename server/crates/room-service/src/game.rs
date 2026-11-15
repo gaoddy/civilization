@@ -10,16 +10,19 @@
 //!   下行消息时按座位各自递增，互不影响。
 //! - `View` 更新按「该座位视角有变化」推送：私有操作只推操作者；全员可见的变化
 //!   （`EndRecruit` 的 `recruited` 标记、阶段推进、回合开始）推给所有座位。
-//!   M1a 不为公共摘要做逐字段差量，Task 10 会在此基础上做真正的逐座位事件过滤。
+//!   事件按 [`for_seat`] 的规则过滤后随该座位的 `StateUpdate.events` 一起下发；
+//!   战斗结果只走逐座位 `CombatResult`。
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use protocol::server::{CombatResult, ErrorMessage, GameOver, StateUpdate};
+use protocol::view::GameEvent as ProtocolGameEvent;
 use protocol::{ErrorCode, GameOverRankingItem, ProtocolError, ServerEnvelope};
 use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
 use rule_engine::error::EngineError;
+use rule_engine::events::GameEvent as EngineEvent;
 use rule_engine::intent::{Intent as EngineIntent, RejectCode};
 use rule_engine::rng::seed_from_u64;
 use rule_engine::settle::SeatCombatReport;
@@ -30,8 +33,9 @@ use tokio::sync::mpsc;
 
 use crate::clock::Clock;
 use crate::envelope::SeatChannel;
+use crate::filter::{combat_result, for_seat};
 use crate::room::{PlayerSlot, SEAT_COUNT};
-use crate::view::{SeatInfo, combat_result, to_protocol};
+use crate::view::{SeatInfo, to_protocol};
 
 /// 每个招募回合的时长（秒）。
 pub const RECRUIT_SECONDS: u64 = 90;
@@ -77,8 +81,9 @@ pub struct SeatUpdate {
 /// 更新类型。
 #[derive(Debug)]
 pub enum UpdateKind {
-    /// 该座位视角有变化，应下发 `StateUpdate`（当前实现事件为空，Task 10 补过滤后的事件）。
-    View,
+    /// 该座位视角有变化，应下发 `StateUpdate`；`events` 是已按该座位过滤的
+    /// 协议事件，连同视图一起下发给同一个接收者。
+    View { events: Vec<ProtocolGameEvent> },
     /// 一场战斗的逐座位回放。
     CombatResult(Box<CombatResult>),
     /// 对局结束：排名与公开种子。
@@ -205,10 +210,15 @@ impl GameTask {
         .ok()
     }
 
-    /// 指定座位当前的全量 `StateUpdate`；事件流在 Task 9 为空。
+    /// 指定座位当前的全量 `StateUpdate`；快照请求不携带事件。
     pub fn state_update(&self, seat: Seat) -> Option<StateUpdate> {
+        self.state_update_with(seat, &[])
+    }
+
+    /// 带事件的 `StateUpdate`；`events` 必须已按该座位过滤。
+    fn state_update_with(&self, seat: Seat, events: &[ProtocolGameEvent]) -> Option<StateUpdate> {
         Some(StateUpdate {
-            events: Vec::new(),
+            events: events.to_vec(),
             view: self.player_view(seat)?,
         })
     }
@@ -236,9 +246,9 @@ impl GameTask {
             .ok_or(ProtocolError("BAD_PAYLOAD"))?;
 
         let (kind, payload) = match &update.kind {
-            UpdateKind::View => {
+            UpdateKind::View { events } => {
                 let state_update = self
-                    .state_update(seat)
+                    .state_update_with(seat, events)
                     .ok_or(ProtocolError("BAD_PAYLOAD"))?;
                 ("StateUpdate", payload_map(&state_update)?)
             }
@@ -297,7 +307,7 @@ impl GameTask {
         if self.clock.now_ms() < self.phase_deadline_ms {
             return Vec::new();
         }
-        self.advance_phase().unwrap_or_default()
+        self.advance_phase(Vec::new()).unwrap_or_default()
     }
 
     /// 意图处理：先查去重表，再映射到引擎意图并执行。
@@ -363,26 +373,22 @@ impl GameTask {
         let ends_recruit = matches!(engine_intent, EngineIntent::EndRecruit);
 
         match self.engine.apply(&mut self.state, seat, engine_intent) {
-            Ok(_outcome) => {
+            Ok(outcome) => {
                 self.dedup.insert(key, Deduped::Applied);
                 if self.state.phase == Phase::Combat {
-                    return match self.advance_phase() {
+                    return match self.advance_phase(outcome.events) {
                         Ok(updates) => updates,
                         Err(error) => {
                             self.player_error(&player_id, None, ErrorCode::InternalError, error.0)
                         }
                     };
                 }
-                let mut updates = vec![self.view_update(seat)];
+                let mut recipients = vec![seat];
                 if ends_recruit {
                     // `recruited` 是所有座位可见的公开摘要字段，全员推视图。
-                    for other in 0..SEAT_COUNT as Seat {
-                        if other != seat {
-                            updates.push(self.view_update(other));
-                        }
-                    }
+                    recipients.extend((0..SEAT_COUNT as Seat).filter(|other| *other != seat));
                 }
-                updates
+                self.view_updates(&outcome.events, &recipients)
             }
             Err(reject) => {
                 let code = error_code_of(reject.code);
@@ -421,25 +427,32 @@ impl GameTask {
     /// `finish_recruit → resolve_combat → 逐座位 CombatResult → resolve_settle →
     /// （非 GameOver）start_turn`，随后重设招募截止时刻。`Combat`/`Settle` 不设
     /// 玩家输入窗口，全部同步完成。
-    fn advance_phase(&mut self) -> Result<Vec<SeatUpdate>, EngineError> {
-        self.engine.finish_recruit(&mut self.state)?;
+    ///
+    /// `events` 是进入本方法前已产生的事件（例如最后一条 `EndRecruit` 的
+    /// `PhaseChanged`）；四步推进各自返回的事件会按时间顺序合并后，再按座位
+    /// 过滤随视图下发。
+    fn advance_phase(
+        &mut self,
+        mut events: Vec<EngineEvent>,
+    ) -> Result<Vec<SeatUpdate>, EngineError> {
+        events.extend(self.engine.finish_recruit(&mut self.state)?);
         let outcome = self.engine.resolve_combat(&mut self.state)?;
+        events.extend(outcome.events);
 
         let mut updates = Vec::with_capacity(SEAT_COUNT * 2 + outcome.reports.len());
         updates.extend(self.combat_updates(&outcome.reports));
 
-        self.engine.resolve_settle(&mut self.state)?;
+        events.extend(self.engine.resolve_settle(&mut self.state)?);
         if self.state.phase != Phase::GameOver {
-            self.engine.start_turn(&mut self.state)?;
+            events.extend(self.engine.start_turn(&mut self.state)?);
             self.phase_deadline_ms = self
                 .clock
                 .now_ms()
                 .saturating_add(RECRUIT_SECONDS.saturating_mul(1000));
         }
 
-        for seat in 0..SEAT_COUNT as Seat {
-            updates.push(self.view_update(seat));
-        }
+        let all_seats: Vec<Seat> = (0..SEAT_COUNT as Seat).collect();
+        updates.extend(self.view_updates(&events, &all_seats));
 
         if self.state.phase == Phase::GameOver {
             let game_over = self.game_over_payload();
@@ -480,8 +493,30 @@ impl GameTask {
     fn view_update(&self, seat: Seat) -> SeatUpdate {
         SeatUpdate {
             player_id: self.seats[usize::from(seat)].player_id.clone(),
-            kind: UpdateKind::View,
+            kind: UpdateKind::View { events: Vec::new() },
         }
+    }
+
+    /// 按座位过滤事件并生成视图更新。
+    ///
+    /// 每个座位最多收到一条视图更新：`recipients` 里的座位即使没有事件也推送
+    /// （用于公开摘要变化或快照）；其余座位只有在本批事件过滤后非空时才推送。
+    fn view_updates(&self, events: &[EngineEvent], recipients: &[Seat]) -> Vec<SeatUpdate> {
+        let mut updates = Vec::new();
+        for seat in 0..SEAT_COUNT as Seat {
+            let filtered: Vec<ProtocolGameEvent> = events
+                .iter()
+                .filter_map(|event| for_seat(event, seat))
+                .collect();
+            if filtered.is_empty() && !recipients.contains(&seat) {
+                continue;
+            }
+            updates.push(SeatUpdate {
+                player_id: self.seats[usize::from(seat)].player_id.clone(),
+                kind: UpdateKind::View { events: filtered },
+            });
+        }
+        updates
     }
 
     /// 已知玩家回当前视图；未知玩家回 `NOT_IN_ROOM`。
@@ -627,7 +662,6 @@ fn error_code_of(code: RejectCode) -> ErrorCode {
     }
 }
 
-/// 该实例在战斗报告双方阵容中的下标（先本方、后对手）。
 /// 任意可序列化载荷转 JSON 对象；不是对象时返回 `BAD_PAYLOAD`。
 fn payload_map<T: serde::Serialize>(payload: &T) -> Result<Map<String, Value>, ProtocolError> {
     match serde_json::to_value(payload).map_err(|_| ProtocolError("BAD_PAYLOAD"))? {
