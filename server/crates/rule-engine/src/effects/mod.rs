@@ -12,6 +12,8 @@ mod shop_effects;
 
 pub use exec::{EffectCtx, effect_coverage};
 pub use parse::parse_effects;
+// 招募意图预检需要校验进化选项下标，但不触发结算。
+pub(crate) use evolve::EVOLVE_CHOICES;
 
 use crate::data::CardType;
 
