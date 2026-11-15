@@ -7,7 +7,8 @@
 use std::collections::BTreeMap;
 use std::time::Duration;
 
-use futures_util::future::join_all;
+use futures_util::StreamExt;
+use futures_util::stream::FuturesUnordered;
 use rule_engine::data::Card;
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
@@ -130,37 +131,12 @@ pub async fn run(config: DevConfig) -> Result<DevOutcome, String> {
         })));
     }
 
-    let joined = tokio::time::timeout(run_timeout, join_all(handles.iter_mut())).await;
-    let results = match joined {
-        Ok(results) => results,
-        Err(_) => {
-            abort_all(&mut handles);
-            return Err(format!(
-                "未完成开局：开发者未进房并准备，或对局未结束（{} 秒）",
-                run_timeout.as_secs()
-            ));
-        }
+    let results = match wait_all(&mut handles, run_timeout).await {
+        Ok(outcomes) => outcomes,
+        Err(message) => return Err(message),
     };
-
-    let mut outcomes = Vec::with_capacity(results.len());
-    let mut failure = None;
-    for (index, result) in results.into_iter().enumerate() {
-        match result {
-            Ok(Ok(outcome)) => outcomes.push(outcome),
-            Ok(Err(err)) => {
-                failure.get_or_insert(format!("bot{index} 失败: {err}"));
-            }
-            Err(err) => {
-                failure.get_or_insert(format!("bot{index} 任务异常: {err}"));
-            }
-        }
-    }
-    if let Some(message) = failure {
-        abort_all(&mut handles);
-        return Err(message);
-    }
-
-    let first = outcomes
+    // 结果按机器人序号收集，`wait_all` 已保证顺序。
+    let first = results
         .into_iter()
         .next()
         .ok_or_else(|| "没有机器人返回结果".to_string())?;
@@ -169,6 +145,60 @@ pub async fn run(config: DevConfig) -> Result<DevOutcome, String> {
         turns: first.turns,
         ranking: first.ranking,
     })
+}
+
+/// 并发等待所有机器人，任一失败立即取消其余机器人并返回错误。
+///
+/// 不能用 `join_all`：它要等所有 handle 结束才返回，一个机器人提前失败时
+/// 其余的仍在等开发者入房，真实原因会被 `run_timeout` 超时掩盖。
+///
+/// 返回值按机器人序号排列。失败时错误消息写明是哪个 bot。
+async fn wait_all(
+    handles: &mut Vec<JoinHandle<Result<BotOutcome, String>>>,
+    run_timeout: Duration,
+) -> Result<Vec<BotOutcome>, String> {
+    let deadline = tokio::time::Instant::now() + run_timeout;
+    let mut outcomes: Vec<Option<BotOutcome>> = vec![None; handles.len()];
+
+    // `&mut JoinHandle` 本身是 `Future`，因此可以在不改所有权的情况下并发等待，
+    // 失败时仍能对剩余 handle 调 `abort`。
+    let mut pending = FuturesUnordered::new();
+    for (index, handle) in handles.iter_mut().enumerate() {
+        pending.push(async move { (index, handle.await) });
+    }
+
+    let failure = loop {
+        let next = match tokio::time::timeout_at(deadline, pending.next()).await {
+            Ok(next) => next,
+            Err(_) => {
+                break Some(format!(
+                    "未完成开局：开发者未进房并准备，或对局未结束（{} 秒）",
+                    run_timeout.as_secs()
+                ));
+            }
+        };
+        let (index, joined) = match next {
+            Some(item) => item,
+            // 全部结束。缺口由末尾的逐项检查报告。
+            None => break None,
+        };
+        match joined {
+            Ok(Ok(outcome)) => outcomes[index] = Some(outcome),
+            Ok(Err(err)) => break Some(format!("bot{index} 失败: {err}")),
+            Err(err) => break Some(format!("bot{index} 任务异常: {err}")),
+        }
+    };
+    drop(pending);
+
+    if let Some(message) = failure {
+        abort_all(handles);
+        return Err(message);
+    }
+    outcomes
+        .into_iter()
+        .enumerate()
+        .map(|(index, outcome)| outcome.ok_or_else(|| format!("bot{index} 未返回结果")))
+        .collect()
 }
 
 /// 取消仍然存活的机器人任务。对已结束的任务 `abort` 是空操作。
@@ -181,11 +211,58 @@ fn abort_all(handles: &mut Vec<JoinHandle<Result<BotOutcome, String>>>) {
 
 #[cfg(test)]
 mod tests {
-    use super::take_heroes;
+    use std::time::{Duration, Instant};
+
+    use super::{BotOutcome, take_heroes, wait_all};
 
     #[test]
     fn take_heroes_fails_when_catalog_has_too_few_heroes() {
         let error = take_heroes(&std::collections::BTreeMap::new(), 7).expect_err("空卡表应报错");
         assert!(error.contains("至少需要 7 张"), "实际：{error}");
+    }
+
+    #[tokio::test]
+    async fn wait_all_reports_the_failing_bot_without_waiting_for_the_timeout() {
+        let mut handles = vec![
+            tokio::spawn(async { Err("连接被服务端关闭".to_string()) }),
+            tokio::spawn(async {
+                std::future::pending::<()>().await;
+                Ok(BotOutcome {
+                    turns: 0,
+                    ranking: Vec::new(),
+                })
+            }),
+        ];
+        let started = Instant::now();
+        let error = wait_all(&mut handles, Duration::from_secs(30))
+            .await
+            .expect_err("bot0 失败时应收敛为错误");
+        assert!(
+            error.contains("bot0"),
+            "错误应指出失败的机器人，实际：{error}"
+        );
+        assert!(
+            started.elapsed() < Duration::from_secs(5),
+            "不应等到 30 秒超时才返回，实际耗时 {:?}",
+            started.elapsed()
+        );
+    }
+
+    #[tokio::test]
+    async fn wait_all_returns_every_outcome_in_order() {
+        let mut handles = Vec::new();
+        for turns in 1..=3_u8 {
+            handles.push(tokio::spawn(async move {
+                Ok(BotOutcome {
+                    turns,
+                    ranking: Vec::new(),
+                })
+            }));
+        }
+        let outcomes = wait_all(&mut handles, Duration::from_secs(30))
+            .await
+            .expect("全部成功时应返回结果");
+        let turns: Vec<u8> = outcomes.iter().map(|outcome| outcome.turns).collect();
+        assert_eq!(turns, vec![1, 2, 3], "结果应按机器人序号排列");
     }
 }

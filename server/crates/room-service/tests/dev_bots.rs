@@ -107,16 +107,26 @@ async fn dev_run_finishes_a_game_once_the_developer_joins() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn dev_run_gives_up_when_nobody_joins() {
     let addr = start_server().await;
+    let started = Instant::now();
     let error = run_dev(DevConfig {
         url: format!("ws://{addr}/ws"),
         intent_seed: 1,
         room_code_sink: None,
-        run_timeout: Duration::from_millis(300),
+        run_timeout: Duration::from_secs(1),
     })
     .await
     .expect_err("无人进房时应超时报错");
     assert!(
         error.contains("未完成开局"),
         "错误消息应说明超时原因，实际：{error}"
+    );
+    assert!(
+        error.contains("1 秒"),
+        "错误消息应带出实际超时门槛，实际：{error}"
+    );
+    assert!(
+        started.elapsed() >= Duration::from_secs(1),
+        "应等满超时门槛才放弃，实际耗时 {:?}",
+        started.elapsed()
     );
 }

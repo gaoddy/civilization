@@ -22,7 +22,8 @@ done
 
 if (exec 3<>"/dev/tcp/127.0.0.1/${PORT}") 2>/dev/null; then
   exec 3>&-
-  echo "端口 ${PORT} 已被占用，用 make dev-bots DEV_PORT=8081 换端口"
+  echo "端口 ${PORT} 已被占用，用 make dev-bots DEV_PORT=$((PORT + 1)) 换端口"
+  echo "换端口后客户端登录页的「服务器」字段也要改成 ws://127.0.0.1:$((PORT + 1))/ws"
   exit 1
 fi
 
