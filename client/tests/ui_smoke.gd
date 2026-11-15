@@ -17,6 +17,8 @@ func _ready() -> void:
         await _check_scene(path, true)
     await _check_room_null_hero()
     await _check_game()
+    await _check_game_layout()
+    await _check_combat_layout()
     await _check_recruited_gate()
     await _check_expired_gate()
     await _check_stale_view_gate()
@@ -121,6 +123,65 @@ func _check_game() -> void:
     instance.queue_free()
     GameStore.view = {}
     GameStore.turn = 1
+
+
+func _check_game_layout() -> void:
+    # 招募阶段：积分榜 8 座、棋盘 7 槽、右栏英雄卡；战斗视图隐藏。
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = FixtureScript.game_view()
+    GameStore.last_combat = {}
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var rail = instance.find_child("PlayersRail", true, false)
+    _expect(rail != null and rail.get_child_count() == 8, "积分榜应有 8 个座位")
+    var recruit = instance.find_child("RecruitPanel", true, false)
+    var combat = instance.find_child("CombatPanel", true, false)
+    _expect(recruit != null and recruit.visible, "招募阶段应显示招募视图")
+    _expect(combat != null and not combat.visible, "招募阶段不应显示战斗视图")
+    var board = instance.find_child("BoardRow", true, false)
+    _expect(board != null and board.get_child_count() == 7, "棋盘应有 7 个槽位（含空位）")
+    _expect(instance.find_child("HeroTile", true, false) != null, "右栏应显示我的英雄卡")
+    instance.queue_free()
+    GameStore.view = {}
+    GameStore.last_combat = {}
+    GameStore.turn = 1
+
+
+func _check_combat_layout() -> void:
+    # 战斗阶段：战斗视图替换招募视图，双方随从行与结果横幅取自 CombatResult。
+    GameStore.player_id = "p0"
+    GameStore.phase = "Combat"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view := FixtureScript.game_view()
+    view["phase"] = "Combat"
+    view["opponentPlayerId"] = "p2"
+    GameStore.view = view
+    GameStore.last_combat = FixtureScript.combat_result()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var recruit = instance.find_child("RecruitPanel", true, false)
+    var combat = instance.find_child("CombatPanel", true, false)
+    _expect(combat != null and combat.visible, "战斗阶段应显示战斗视图")
+    _expect(recruit != null and not recruit.visible, "战斗阶段不应显示招募视图")
+    var banner = instance.find_child("CombatBanner", true, false)
+    _expect(banner != null and str(banner.text).contains("胜利"), "战斗横幅应显示结果")
+    var opponent_row = instance.find_child("CombatOpponentRow", true, false)
+    _expect(opponent_row != null and opponent_row.get_child_count() == 2, "对手随从行应为 2 张")
+    var own_row = instance.find_child("CombatOwnRow", true, false)
+    _expect(own_row != null and own_row.get_child_count() == 3, "我方随从行应为 3 张")
+    var end_button = instance.find_child("EndButton", true, false)
+    _expect(end_button != null and not end_button.visible, "战斗阶段不应显示结束招募按钮")
+    instance.queue_free()
+    GameStore.view = {}
+    GameStore.last_combat = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
 
 
 func _check_recruited_gate() -> void:

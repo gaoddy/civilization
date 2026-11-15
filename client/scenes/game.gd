@@ -1,5 +1,8 @@
 extends Control
-## 对局：只读服务端 PlayerView 与 affordances，操作只发协议意图。
+## 对局：按酒馆战棋结构呈现服务端 PlayerView 与 affordances，操作只发协议意图。
+##
+## 布局：顶栏（回合/计时/属性）— 左栏积分榜 — 中区（招募：对手席、我方棋盘、商店、手牌；
+## 战斗：双方英雄与随从、结果横幅）— 右栏（我的英雄、英雄技能、结束招募、战报）— 状态行。
 
 const PHASE_TEXT := {
     Protocol.PHASE_RECRUIT: "招募",
@@ -8,22 +11,7 @@ const PHASE_TEXT := {
     Protocol.PHASE_GAME_OVER: "结束",
 }
 
-var _turn_label: Label
-var _timer_label: Label
-var _stats_label: Label
-var _status: Label
-var _shop_row: HFlowContainer
-var _hand_row: HFlowContainer
-var _board_box: VBoxContainer
-var _players_box: VBoxContainer
-var _log_text: RichTextLabel
-var _hero_power_button: Button
-var _reroll_button: Button
-var _upgrade_button: Button
-var _freeze_button: Button
-var _end_button: Button
-var _overlay: Control
-
+# 页面级状态与门槛。
 var _intent_counter := 0
 var _target_requests: Dictionary = {}
 var _target_intent: Dictionary = {}
@@ -32,6 +20,46 @@ var _target_required := false
 var _elapsed := 0.0
 var _deadline_expired := false
 var _view_stale := false
+
+# 顶栏。
+var _turn_label: Label
+var _timer_label: Label
+var _hp_pill: Label
+var _era_pill: Label
+var _gold_pill: Label
+var _conn_label: Label
+var _status: Label
+
+# 左栏积分榜。
+var _players_rail: VBoxContainer
+
+# 中区 · 招募。
+var _recruit_panel: VBoxContainer
+var _opponents_row: HFlowContainer
+var _board_row: HFlowContainer
+var _board_hint: Label
+var _shop_row: HFlowContainer
+var _hand_row: HFlowContainer
+var _reroll_button: Button
+var _upgrade_button: Button
+var _freeze_button: Button
+
+# 中区 · 战斗。
+var _combat_root: Control
+var _combat_body: VBoxContainer
+var _combat_opponent_strip: HBoxContainer
+var _combat_opponent_row: HFlowContainer
+var _combat_banner: Label
+var _combat_own_row: HFlowContainer
+var _combat_self_strip: HBoxContainer
+
+# 右栏。
+var _self_hero_box: VBoxContainer
+var _hero_power_button: Button
+var _end_button: Button
+var _log_text: RichTextLabel
+
+var _overlay: Control
 
 
 func _ready() -> void:
@@ -45,113 +73,38 @@ func _ready() -> void:
     _update_timer()
 
 
+# ── 构建 ──────────────────────────────────────────────────────────────────
+
 func _build() -> void:
     var background := ColorRect.new()
-    background.color = Color("10141c")
+    background.color = UITheme.color("color-bg")
     background.set_anchors_preset(Control.PRESET_FULL_RECT)
     add_child(background)
 
     var margin := MarginContainer.new()
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)
     for side in ["left", "right", "top", "bottom"]:
-        margin.add_theme_constant_override("margin_" + side, 16)
+        margin.add_theme_constant_override("margin_" + side, UITheme.space("space-xl"))
     add_child(margin)
 
     var root := VBoxContainer.new()
-    root.add_theme_constant_override("separation", 8)
+    root.add_theme_constant_override("separation", UITheme.space("space-md"))
     margin.add_child(root)
 
-    var top := HBoxContainer.new()
-    top.add_theme_constant_override("separation", 18)
-    _turn_label = UI.label("", 20)
-    top.add_child(_turn_label)
-    _timer_label = UI.label("—", 20)
-    top.add_child(_timer_label)
-    var spacer := Control.new()
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    top.add_child(spacer)
-    _stats_label = UI.label("", 20)
-    top.add_child(_stats_label)
-    root.add_child(top)
-
-    var actions := HBoxContainer.new()
-    actions.add_theme_constant_override("separation", 8)
-    _reroll_button = UI.button("刷新")
-    _reroll_button.name = "RerollButton"
-    _reroll_button.pressed.connect(_on_reroll)
-    actions.add_child(_reroll_button)
-    _upgrade_button = UI.button("升时代")
-    _upgrade_button.pressed.connect(_on_upgrade)
-    actions.add_child(_upgrade_button)
-    _freeze_button = UI.button("冻结商店")
-    _freeze_button.name = "FreezeButton"
-    _freeze_button.pressed.connect(_on_freeze)
-    actions.add_child(_freeze_button)
-    _hero_power_button = UI.button("英雄技能")
-    _hero_power_button.name = "HeroPowerButton"
-    _hero_power_button.pressed.connect(_on_hero_power)
-    actions.add_child(_hero_power_button)
-    var action_spacer := Control.new()
-    action_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    actions.add_child(action_spacer)
-    _end_button = UI.button("结束招募")
-    _end_button.name = "EndButton"
-    _end_button.pressed.connect(_on_end_recruit)
-    actions.add_child(_end_button)
-    root.add_child(actions)
-    root.add_child(HSeparator.new())
+    root.add_child(_build_header())
 
     var body := HBoxContainer.new()
     body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    body.add_theme_constant_override("separation", 16)
+    body.add_theme_constant_override("separation", UITheme.space("space-lg"))
     root.add_child(body)
 
-    var left := VBoxContainer.new()
-    left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    left.add_theme_constant_override("separation", 6)
-    var scroll := ScrollContainer.new()
-    scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    left.add_child(scroll)
-    var left_content := VBoxContainer.new()
-    left_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    left_content.add_theme_constant_override("separation", 6)
-    scroll.add_child(left_content)
-    left_content.add_child(UI.label("商店", 18))
-    _shop_row = HFlowContainer.new()
-    _shop_row.add_theme_constant_override("h_separation", 6)
-    _shop_row.add_theme_constant_override("v_separation", 6)
-    left_content.add_child(_shop_row)
-    left_content.add_child(UI.label("手牌", 18))
-    _hand_row = HFlowContainer.new()
-    _hand_row.add_theme_constant_override("h_separation", 6)
-    _hand_row.add_theme_constant_override("v_separation", 6)
-    left_content.add_child(_hand_row)
-    left_content.add_child(UI.label("棋盘", 18))
-    _board_box = VBoxContainer.new()
-    _board_box.add_theme_constant_override("separation", 4)
-    left_content.add_child(_board_box)
-    body.add_child(left)
+    body.add_child(_build_players_rail())
+    body.add_child(_build_center())
+    body.add_child(_build_side())
 
-    var right := VBoxContainer.new()
-    right.custom_minimum_size = Vector2(340, 0)
-    right.add_theme_constant_override("separation", 6)
-    right.add_child(UI.label("玩家", 18))
-    _players_box = VBoxContainer.new()
-    _players_box.add_theme_constant_override("separation", 3)
-    right.add_child(_players_box)
-    right.add_child(UI.label("战报与事件", 18))
-    _log_text = RichTextLabel.new()
-    _log_text.fit_content = false
-    _log_text.scroll_active = true
-    _log_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _log_text.custom_minimum_size = Vector2(0, 220)
-    right.add_child(_log_text)
-    body.add_child(right)
-
-    _status = UI.label("", 14)
+    _status = UI.label("", UITheme.font_size("font-body-sm"))
     _status.name = "StatusLabel"
+    _status.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
     root.add_child(_status)
 
     _overlay = Control.new()
@@ -160,6 +113,273 @@ func _build() -> void:
     _overlay.visible = false
     add_child(_overlay)
 
+
+func _build_header() -> Control:
+    var panel := UI.card_panel("surface")
+    panel.name = "Header"
+    panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    var row := HBoxContainer.new()
+    row.add_theme_constant_override("separation", UITheme.space("space-md"))
+    panel.add_child(row)
+
+    _turn_label = UI.label("", UITheme.font_size("font-title-lg"), false)
+    _turn_label.name = "TurnLabel"
+    row.add_child(_turn_label)
+
+    _conn_label = UI.label("", UITheme.font_size("font-body-sm"), false)
+    _conn_label.name = "ConnectionLabel"
+    _conn_label.add_theme_color_override("font_color", UITheme.color("color-danger"))
+    row.add_child(_conn_label)
+
+    var spacer := Control.new()
+    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_child(spacer)
+
+    _hp_pill = UI.pill_label("", "danger", "font-title")
+    _hp_pill.name = "HpPill"
+    row.add_child(_hp_pill)
+    _era_pill = UI.pill_label("", "info", "font-title")
+    _era_pill.name = "EraPill"
+    row.add_child(_era_pill)
+    _gold_pill = UI.pill_label("", "accent", "font-title")
+    _gold_pill.name = "GoldPill"
+    row.add_child(_gold_pill)
+    _timer_label = UI.pill_label("—", "accent", "font-title")
+    _timer_label.name = "TimerLabel"
+    row.add_child(_timer_label)
+    return panel
+
+
+func _build_players_rail() -> Control:
+    var panel := UI.card_panel("surface")
+    panel.name = "PlayersPanel"
+    panel.custom_minimum_size = Vector2(UITheme.metric("rail-width"), 0)
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    panel.add_child(box)
+    box.add_child(UI.section_title("积分榜"))
+
+    var scroll := ScrollContainer.new()
+    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    box.add_child(scroll)
+
+    _players_rail = VBoxContainer.new()
+    _players_rail.name = "PlayersRail"
+    _players_rail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _players_rail.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    scroll.add_child(_players_rail)
+    return panel
+
+
+func _build_center() -> Control:
+    var center := VBoxContainer.new()
+    center.name = "CenterPanel"
+    center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    center.add_theme_constant_override("separation", UITheme.space("space-md"))
+    center.add_child(_build_recruit_panel())
+    center.add_child(_build_combat_panel())
+    return center
+
+
+func _build_recruit_panel() -> Control:
+    _recruit_panel = VBoxContainer.new()
+    _recruit_panel.name = "RecruitPanel"
+    _recruit_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _recruit_panel.add_theme_constant_override("separation", UITheme.space("space-sm"))
+
+    # 对手席位行：酒馆战棋房间上方的一圈对手。
+    var opponents_panel := UI.card_panel("surface")
+    opponents_panel.name = "OpponentsPanel"
+    var opponents_box := VBoxContainer.new()
+    opponents_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    opponents_panel.add_child(opponents_box)
+    opponents_box.add_child(UI.section_title("对手"))
+    _opponents_row = _flow_row("OpponentsRow")
+    opponents_box.add_child(_opponents_row)
+    _recruit_panel.add_child(opponents_panel)
+
+    # 我方棋盘。
+    var board_panel := UI.card_panel("surface")
+    board_panel.name = "BoardPanel"
+    board_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    var board_box := VBoxContainer.new()
+    board_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    board_panel.add_child(board_box)
+
+    var board_head := HBoxContainer.new()
+    board_head.add_child(UI.section_title("我方棋盘"))
+    _board_hint = UI.label("", UITheme.font_size("font-caption"), false)
+    _board_hint.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    _board_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _board_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    board_head.add_child(_board_hint)
+    board_box.add_child(board_head)
+
+    var top_spacer := Control.new()
+    top_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    board_box.add_child(top_spacer)
+
+    var board_scroll := ScrollContainer.new()
+    board_scroll.custom_minimum_size = Vector2(0, UITheme.metric("minion-card-height"))
+    board_scroll.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    board_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    board_box.add_child(board_scroll)
+    _board_row = _flow_row("BoardRow")
+    board_scroll.add_child(_board_row)
+
+    var bottom_spacer := Control.new()
+    bottom_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    board_box.add_child(bottom_spacer)
+    _recruit_panel.add_child(board_panel)
+
+    # 商店：6 个槽位与刷新/升时代/冻结。
+    var shop_panel := UI.card_panel("surface")
+    shop_panel.name = "ShopPanel"
+    var shop_box := VBoxContainer.new()
+    shop_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    shop_panel.add_child(shop_box)
+
+    var shop_head := HBoxContainer.new()
+    shop_head.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    shop_head.add_child(UI.section_title("商店"))
+    var shop_spacer := Control.new()
+    shop_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    shop_head.add_child(shop_spacer)
+
+    _reroll_button = UI.styled_button("刷新", "default", 28)
+    _reroll_button.name = "RerollButton"
+    _reroll_button.pressed.connect(_on_reroll)
+    shop_head.add_child(_reroll_button)
+
+    _upgrade_button = UI.styled_button("升时代", "default", 28)
+    _upgrade_button.name = "UpgradeButton"
+    _upgrade_button.pressed.connect(_on_upgrade)
+    shop_head.add_child(_upgrade_button)
+
+    _freeze_button = UI.styled_button("冻结商店", "default", 28)
+    _freeze_button.name = "FreezeButton"
+    _freeze_button.pressed.connect(_on_freeze)
+    shop_head.add_child(_freeze_button)
+    shop_box.add_child(shop_head)
+
+    _shop_row = _flow_row("ShopRow")
+    shop_box.add_child(_shop_row)
+    _recruit_panel.add_child(shop_panel)
+
+    # 手牌：横向滚动。
+    var hand_panel := UI.card_panel("surface")
+    hand_panel.name = "HandPanel"
+    var hand_box := VBoxContainer.new()
+    hand_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    hand_panel.add_child(hand_box)
+    hand_box.add_child(UI.section_title("手牌"))
+
+    var hand_scroll := ScrollContainer.new()
+    hand_scroll.custom_minimum_size = Vector2(0, UITheme.metric("hand-card-height") + UITheme.space("space-md"))
+    hand_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    hand_box.add_child(hand_scroll)
+    _hand_row = _flow_row("HandRow")
+    hand_scroll.add_child(_hand_row)
+    _recruit_panel.add_child(hand_panel)
+    return _recruit_panel
+
+
+func _build_combat_panel() -> Control:
+    _combat_root = UI.card_panel("surface")
+    _combat_root.name = "CombatPanel"
+    _combat_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _combat_root.visible = false
+
+    _combat_body = VBoxContainer.new()
+    _combat_body.name = "CombatBody"
+    _combat_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _combat_body.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    _combat_root.add_child(_combat_body)
+
+    _combat_opponent_strip = HBoxContainer.new()
+    _combat_opponent_strip.name = "CombatOpponentStrip"
+    _combat_opponent_strip.add_theme_constant_override("separation", UITheme.space("space-md"))
+    _combat_body.add_child(_combat_opponent_strip)
+
+    _combat_body.add_child(UI.section_title("对手随从"))
+    _combat_opponent_row = _flow_row("CombatOpponentRow")
+    _combat_body.add_child(_combat_opponent_row)
+
+    _combat_banner = UI.label("", UITheme.font_size("font-display"), false)
+    _combat_banner.name = "CombatBanner"
+    _combat_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _combat_banner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _combat_body.add_child(_combat_banner)
+
+    _combat_body.add_child(UI.section_title("我方随从"))
+    _combat_own_row = _flow_row("CombatOwnRow")
+    _combat_body.add_child(_combat_own_row)
+
+    var strip_spacer := Control.new()
+    strip_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _combat_body.add_child(strip_spacer)
+
+    _combat_self_strip = HBoxContainer.new()
+    _combat_self_strip.name = "CombatSelfStrip"
+    _combat_self_strip.add_theme_constant_override("separation", UITheme.space("space-md"))
+    _combat_body.add_child(_combat_self_strip)
+    return _combat_root
+
+
+func _build_side() -> Control:
+    var side := VBoxContainer.new()
+    side.name = "SidePanel"
+    side.custom_minimum_size = Vector2(UITheme.metric("side-width"), 0)
+    side.add_theme_constant_override("separation", UITheme.space("space-sm"))
+
+    var hero_panel := UI.card_panel("surface")
+    hero_panel.name = "SelfHeroPanel"
+    _self_hero_box = VBoxContainer.new()
+    _self_hero_box.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    hero_panel.add_child(_self_hero_box)
+    side.add_child(hero_panel)
+
+    _hero_power_button = UI.styled_button("英雄技能", "default", 40)
+    _hero_power_button.name = "HeroPowerButton"
+    _hero_power_button.pressed.connect(_on_hero_power)
+    side.add_child(_hero_power_button)
+
+    _end_button = UI.styled_button("结束招募", "primary", 46)
+    _end_button.name = "EndButton"
+    _end_button.pressed.connect(_on_end_recruit)
+    side.add_child(_end_button)
+
+    var log_panel := UI.card_panel("surface")
+    log_panel.name = "LogPanel"
+    log_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    var log_box := VBoxContainer.new()
+    log_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    log_panel.add_child(log_box)
+    log_box.add_child(UI.section_title("战报与事件"))
+    _log_text = RichTextLabel.new()
+    _log_text.name = "LogText"
+    _log_text.fit_content = false
+    _log_text.scroll_active = true
+    _log_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _log_text.add_theme_font_size_override("normal_font_size", UITheme.font_size("font-body-sm"))
+    _log_text.add_theme_color_override("default_color", UITheme.color("color-text-dim"))
+    log_box.add_child(_log_text)
+    side.add_child(log_panel)
+    return side
+
+
+func _flow_row(node_name: String) -> HFlowContainer:
+    var row := HFlowContainer.new()
+    row.name = node_name
+    row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_theme_constant_override("h_separation", UITheme.space("space-sm"))
+    row.add_theme_constant_override("v_separation", UITheme.space("space-sm"))
+    return row
+
+
+# ── 刷新 ──────────────────────────────────────────────────────────────────
 
 func _process(delta: float) -> void:
     _elapsed += delta
@@ -176,46 +396,261 @@ func _refresh() -> void:
 
     var self_state: Dictionary = view.get("self", {})
     var recruited := bool(self_state.get("recruited", false))
+    var phase := str(view.get("phase", GameStore.phase))
     _view_stale = int(view.get("turn", 0)) != GameStore.turn
-    _turn_label.text = "第 %d 回合 · %s" % [
-        int(view.get("turn", 1)),
-        PHASE_TEXT.get(str(view.get("phase", "")), str(view.get("phase", ""))),
-    ]
-    _stats_label.text = "生命 %d   时代 %d   金币 %d" % [
-        int(self_state.get("hp", 0)),
-        int(self_state.get("era", 1)),
-        int(self_state.get("gold", 0)),
-    ]
 
-    _refresh_actions(self_state, recruited)
-    _refresh_shop(self_state)
-    _refresh_hand(self_state)
-    _refresh_board(self_state, recruited)
+    _refresh_header(view, self_state, phase)
     _refresh_players(view)
+
+    var in_combat := phase == Protocol.PHASE_COMBAT or phase == Protocol.PHASE_SETTLE
+    _set_combat_mode(in_combat)
+    if in_combat:
+        _refresh_combat(view)
+    else:
+        _refresh_recruit(self_state, recruited, phase)
+
+    _refresh_side(self_state)
     _refresh_log()
     _refresh_overlay(self_state, recruited)
     _refresh_connection()
     _prune_target_requests()
 
 
-func _refresh_actions(self_state: Dictionary, recruited: bool) -> void:
+func _refresh_header(view: Dictionary, self_state: Dictionary, phase: String) -> void:
+    _turn_label.text = "第 %d 回合 · %s" % [
+        int(view.get("turn", 1)),
+        PHASE_TEXT.get(phase, phase),
+    ]
+    _hp_pill.text = "♥ %d" % int(self_state.get("hp", 0))
+    _era_pill.text = "时代 %d" % int(self_state.get("era", 1))
+    _gold_pill.text = "● %d 金" % int(self_state.get("gold", 0))
+
+
+func _refresh_players(view: Dictionary) -> void:
+    UI.clear(_players_rail)
+    var players: Array = _sorted_players(view)
+    if players.is_empty():
+        _players_rail.add_child(UI.empty_hint("暂无玩家"))
+        return
+    for player in players:
+        _players_rail.add_child(_seat_row(player))
+
+
+func _sorted_players(view: Dictionary) -> Array:
+    var players: Array = view.get("players", []).duplicate()
+    players.sort_custom(func(a, b): return int(a.get("seat", 0)) < int(b.get("seat", 0)))
+    return players
+
+
+func _seat_row(player: Dictionary) -> PanelContainer:
+    var player_id := str(player.get("playerId", ""))
+    var is_self := player_id == GameStore.player_id
+    var alive := bool(player.get("alive", true))
+    var panel := UI.card_panel("accent-row" if is_self else "row")
+    panel.name = "SeatRow"
+    panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    if not alive:
+        UI.apply_dim(panel)
+
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
+    panel.add_child(box)
+
+    var row := HBoxContainer.new()
+    row.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    box.add_child(row)
+    row.add_child(UI.avatar(_optional_text(player.get("heroCardId")), UITheme.metric("avatar-md")))
+
+    var info := VBoxContainer.new()
+    info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    info.add_theme_constant_override("separation", 0)
+    row.add_child(info)
+
+    var name_row := HBoxContainer.new()
+    name_row.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    info.add_child(name_row)
+
+    var name_label := UI.label(_optional_text(player.get("displayName")), UITheme.font_size("font-body-sm"), false)
+    name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    name_label.max_lines_visible = 1
+    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    if is_self:
+        name_label.add_theme_color_override("font_color", UITheme.color("color-accent"))
+    name_row.add_child(name_label)
+
+    var marks := PackedStringArray()
+    if is_self:
+        marks.append("我")
+    if player.get("placement") != null:
+        marks.append("第 %d 名" % int(player.get("placement")))
+    if not alive:
+        marks.append("淘汰")
+    elif bool(player.get("recruited", false)):
+        marks.append("已招募")
+    if not marks.is_empty():
+        var mark := UI.label("、".join(marks), UITheme.font_size("font-caption"), false)
+        mark.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+        name_row.add_child(mark)
+
+    var meta := UI.label("HP %d · 时代%d · 随从%d" % [
+        int(player.get("hp", 0)),
+        int(player.get("era", 1)),
+        int(player.get("boardCount", 0)),
+    ], UITheme.font_size("font-caption"), false)
+    meta.clip_text = true
+    meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    info.add_child(meta)
+    return panel
+
+
+func _refresh_recruit(self_state: Dictionary, recruited: bool, phase: String) -> void:
+    _refresh_opponents()
+    _refresh_board(self_state, recruited, phase)
+    _refresh_shop(self_state)
+    _refresh_hand(self_state)
+    _refresh_actions(self_state, recruited, phase)
+
+
+func _refresh_opponents() -> void:
+    UI.clear(_opponents_row)
+    var shown := 0
+    for player in _sorted_players(GameStore.view):
+        if str(player.get("playerId", "")) == GameStore.player_id:
+            continue
+        if not bool(player.get("alive", true)):
+            continue
+        _opponents_row.add_child(_opponent_tile(player))
+        shown += 1
+    if shown == 0:
+        _opponents_row.add_child(UI.empty_hint("暂无对手"))
+
+
+func _opponent_tile(player: Dictionary) -> PanelContainer:
+    var panel := UI.card_panel("row")
+    panel.name = "OpponentTile"
+    panel.custom_minimum_size = Vector2(UITheme.metric("opponent-tile-width"), UITheme.metric("opponent-tile-height"))
+    var row := HBoxContainer.new()
+    row.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    panel.add_child(row)
+    row.add_child(UI.avatar(_optional_text(player.get("heroCardId")), UITheme.metric("avatar-sm")))
+
+    var lines := VBoxContainer.new()
+    lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    lines.add_theme_constant_override("separation", 0)
+    row.add_child(lines)
+
+    var name_label := UI.label(_optional_text(player.get("displayName")), UITheme.font_size("font-caption"), false)
+    name_label.max_lines_visible = 1
+    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    lines.add_child(name_label)
+    var meta := UI.label("HP %d" % int(player.get("hp", 0)), UITheme.font_size("font-caption"), false)
+    meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    lines.add_child(meta)
+    return panel
+
+
+func _refresh_board(self_state: Dictionary, recruited: bool, phase: String) -> void:
+    UI.clear(_board_row)
     var aff: Dictionary = self_state.get("affordances", {})
-    var phase := str(GameStore.view.get("phase", ""))
-    _reroll_button.text = "刷新（%d 金）" % int(self_state.get("rerollCost", 0))
-    _reroll_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canReroll", false))
-    var upgrade_cost = self_state.get("upgradeCost")
-    if upgrade_cost != null:
-        _upgrade_button.text = "升时代（%d 金）" % int(upgrade_cost)
-    else:
-        _upgrade_button.text = "时代已满"
-    _upgrade_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canUpgradeEra", false))
-    _upgrade_button.tooltip_text = "" if aff.get("upgradeDisabledReason") == null else str(aff.get("upgradeDisabledReason"))
-    var power: Dictionary = self_state.get("heroPower", {})
-    _hero_power_button.text = "英雄技能（剩 %d）" % int(power.get("usesLeft", 0))
-    _hero_power_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canUseHeroPower", false))
-    _freeze_button.disabled = _view_stale or _deadline_expired or phase != Protocol.PHASE_RECRUIT or recruited
-    _end_button.text = "已结束招募" if recruited else "结束招募"
-    _end_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canEndRecruit", false))
+    var board: Array = self_state.get("board", [])
+    var can_rearrange := not _view_stale and not _deadline_expired and phase == Protocol.PHASE_RECRUIT and not recruited
+    _board_hint.text = "随从 %d/7" % board.size()
+    for position in board.size():
+        var minion: Dictionary = board[position]
+        var minion_aff := _find_by_index(aff.get("boardMinions", []), int(minion.get("index", position)))
+        _board_row.add_child(_minion_card(minion, minion_aff, can_rearrange, position, board.size()))
+    for _position in range(board.size(), 7):
+        _board_row.add_child(_empty_slot())
+
+
+func _empty_slot() -> PanelContainer:
+    var panel := UI.card_panel("empty")
+    panel.name = "EmptySlot"
+    panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), UITheme.metric("minion-card-height"))
+    var hint := UI.empty_hint("空位")
+    hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    panel.add_child(hint)
+    return panel
+
+
+func _minion_card(
+    minion: Dictionary,
+    minion_aff: Dictionary,
+    can_rearrange: bool,
+    position: int,
+    total: int,
+    read_only := false,
+) -> PanelContainer:
+    var minion_index := int(minion.get("index", position))
+    var panel := UI.card_panel("raised-tight")
+    panel.name = "BoardMinion%d" % minion_index
+    panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), 0 if read_only else UITheme.metric("minion-card-height"))
+
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
+    panel.add_child(box)
+
+    var head := HBoxContainer.new()
+    head.add_theme_constant_override("separation", UITheme.space("space-2xs"))
+    box.add_child(head)
+    var name_label := UI.label(CardDB.display_name(str(minion.get("cardId", ""))), UITheme.font_size("font-body-sm"), false)
+    name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    name_label.max_lines_visible = 1
+    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    head.add_child(name_label)
+    if bool(minion.get("golden", false)):
+        var star := UI.label("★", UITheme.font_size("font-caption"), false)
+        star.add_theme_color_override("font_color", UITheme.color("color-accent"))
+        head.add_child(star)
+
+    var stats := UI.label("%d / %d" % [
+        int(minion.get("attack", 0)),
+        int(minion.get("health", 0)),
+    ], UITheme.font_size("font-title"), false)
+    box.add_child(stats)
+
+    var keywords := _join_cn(minion.get("keywords", []))
+    var keyword_label := UI.label(keywords if keywords != "" else "—", UITheme.font_size("font-caption"), false)
+    keyword_label.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    keyword_label.max_lines_visible = 1
+    keyword_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    box.add_child(keyword_label)
+
+    var spacer := Control.new()
+    spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    box.add_child(spacer)
+
+    if read_only:
+        return panel
+
+    var actions := HBoxContainer.new()
+    actions.name = "Actions"
+    actions.add_theme_constant_override("separation", UITheme.space("space-2xs"))
+    box.add_child(actions)
+    var sell := _compact_button("出售")
+    sell.disabled = _view_stale or _deadline_expired or not bool(minion_aff.get("sellable", false))
+    if minion_aff.get("disabledReason") != null:
+        sell.tooltip_text = UI.error_text(str(minion_aff.get("disabledReason")))
+    sell.pressed.connect(_on_sell.bind(str(minion.get("minionId", ""))))
+    actions.add_child(sell)
+
+    var left := _compact_button("←")
+    left.disabled = not can_rearrange or position <= 0
+    left.pressed.connect(_on_rearrange.bind(minion_index, minion_index - 1))
+    actions.add_child(left)
+
+    var right := _compact_button("→")
+    right.disabled = not can_rearrange or position >= total - 1
+    right.pressed.connect(_on_rearrange.bind(minion_index, minion_index + 1))
+    actions.add_child(right)
+    return panel
+
+
+func _compact_button(text: String) -> Button:
+    var node := UI.styled_button(text, "micro", 20)
+    node.add_theme_font_size_override("font_size", UITheme.font_size("font-caption"))
+    node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    return node
 
 
 func _refresh_shop(self_state: Dictionary) -> void:
@@ -224,9 +659,9 @@ func _refresh_shop(self_state: Dictionary) -> void:
     for slot in self_state.get("shop", []):
         var index := int(slot.get("index", 0))
         var card_id := _optional_text(slot.get("cardId"))
-        var button := UI.button("")
+        var button := UI.styled_button("", "slot", UITheme.metric("shop-card-height"))
         button.name = "ShopSlot%d" % index
-        button.custom_minimum_size = Vector2(132, 92)
+        button.custom_minimum_size = Vector2(UITheme.metric("shop-card-width"), UITheme.metric("shop-card-height"))
         if card_id == "":
             button.text = "空槽"
             button.disabled = true
@@ -240,88 +675,173 @@ func _refresh_shop(self_state: Dictionary) -> void:
             var slot_aff := _find_by_index(aff.get("shopSlots", []), index)
             button.disabled = _view_stale or _deadline_expired or not bool(slot_aff.get("buyable", false))
             if slot_aff.get("disabledReason") != null:
-                button.tooltip_text = str(slot_aff.get("disabledReason"))
+                button.tooltip_text = UI.error_text(str(slot_aff.get("disabledReason")))
             button.pressed.connect(_on_buy.bind(index))
         _shop_row.add_child(button)
 
 
 func _refresh_hand(self_state: Dictionary) -> void:
     UI.clear(_hand_row)
-    for card in self_state.get("hand", []):
+    var hand: Array = self_state.get("hand", [])
+    if hand.is_empty():
+        _hand_row.add_child(UI.empty_hint("手牌为空"))
+        return
+    for card in hand:
         var index := int(card.get("index", 0))
         var card_id := str(card.get("cardId", ""))
-        var button := UI.button("%s\n%s" % [CardDB.display_name(card_id), CardDB.display_text(card_id)])
+        var button := UI.styled_button("", "slot", UITheme.metric("hand-card-height"))
         button.name = "HandCard%d" % index
-        button.custom_minimum_size = Vector2(150, 80)
+        button.custom_minimum_size = Vector2(UITheme.metric("hand-card-width"), UITheme.metric("hand-card-height"))
+        button.text = "%s\n%s" % [CardDB.display_name(card_id), CardDB.display_text(card_id)]
+        button.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
+        button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+        button.clip_text = true
+        button.tooltip_text = CardDB.display_text(card_id)
         button.disabled = _view_stale or _deadline_expired or not bool(card.get("playable", false))
         if card.get("disabledReason") != null:
-            button.tooltip_text = str(card.get("disabledReason"))
+            button.tooltip_text = UI.error_text(str(card.get("disabledReason")))
         button.pressed.connect(_on_play.bind(index))
         _hand_row.add_child(button)
 
 
-func _refresh_board(self_state: Dictionary, recruited: bool) -> void:
-    UI.clear(_board_box)
-    var phase := str(GameStore.view.get("phase", ""))
+func _refresh_actions(self_state: Dictionary, recruited: bool, phase: String) -> void:
     var aff: Dictionary = self_state.get("affordances", {})
-    for minion in self_state.get("board", []):
-        var index := int(minion.get("index", 0))
-        var row := HBoxContainer.new()
-        row.name = "BoardMinion%d" % index
-        row.add_theme_constant_override("separation", 6)
-        var keywords := _join_cn(minion.get("keywords", []))
-        var label := UI.label("%s  %d/%d  %s" % [
-            CardDB.display_name(str(minion.get("cardId", ""))),
-            int(minion.get("attack", 0)),
-            int(minion.get("health", 0)),
-            keywords,
-        ], 15)
-        label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-        row.add_child(label)
+    _reroll_button.text = "刷新 %d 金" % int(self_state.get("rerollCost", 0))
+    _reroll_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canReroll", false))
 
-        var minion_aff := _find_by_index(aff.get("boardMinions", []), index)
-        var sell := UI.button("出售")
-        sell.disabled = _view_stale or _deadline_expired or not bool(minion_aff.get("sellable", false))
-        sell.pressed.connect(_on_sell.bind(str(minion.get("minionId", ""))))
-        row.add_child(sell)
+    var upgrade_cost = self_state.get("upgradeCost")
+    if upgrade_cost != null:
+        _upgrade_button.text = "升时代 %d 金" % int(upgrade_cost)
+    else:
+        _upgrade_button.text = "时代已满"
+    _upgrade_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canUpgradeEra", false))
+    _upgrade_button.tooltip_text = "" if aff.get("upgradeDisabledReason") == null else UI.error_text(str(aff.get("upgradeDisabledReason")))
 
-        var can_rearrange := not _view_stale and not _deadline_expired and phase == Protocol.PHASE_RECRUIT and not recruited
-        var left := UI.button("←")
-        left.disabled = not can_rearrange or index <= 0
-        left.pressed.connect(_on_rearrange.bind(index, index - 1))
-        row.add_child(left)
+    var power: Dictionary = self_state.get("heroPower", {})
+    _hero_power_button.text = "英雄技能（剩 %d）" % int(power.get("usesLeft", 0))
+    _hero_power_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canUseHeroPower", false))
+    _hero_power_button.tooltip_text = "" if aff.get("heroPowerDisabledReason") == null else UI.error_text(str(aff.get("heroPowerDisabledReason")))
 
-        var right := UI.button("→")
-        right.disabled = not can_rearrange or index >= self_state.get("board", []).size() - 1
-        right.pressed.connect(_on_rearrange.bind(index, index + 1))
-        row.add_child(right)
-        _board_box.add_child(row)
+    _freeze_button.disabled = _view_stale or _deadline_expired or phase != Protocol.PHASE_RECRUIT or recruited
+    _end_button.text = "已结束招募" if recruited else "结束招募"
+    _end_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canEndRecruit", false))
 
 
-func _refresh_players(view: Dictionary) -> void:
-    UI.clear(_players_box)
+func _refresh_side(self_state: Dictionary) -> void:
+    UI.clear(_self_hero_box)
+    var hero_id := _optional_text(self_state.get("heroCardId"))
+    _self_hero_box.add_child(UI.hero_tile(hero_id, UITheme.metric("side-width") - UITheme.space("space-2xl")))
+
+    var stat_line := UI.label("生命 %d · 时代 %d · 金币 %d" % [
+        int(self_state.get("hp", 0)),
+        int(self_state.get("era", 1)),
+        int(self_state.get("gold", 0)),
+    ], UITheme.font_size("font-body-sm"), false)
+    stat_line.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+    _self_hero_box.add_child(stat_line)
+
+    var power: Dictionary = self_state.get("heroPower", {})
+    var skill_id := _optional_text(power.get("skillId"))
+    var skill_text := CardDB.display_text(skill_id) if skill_id != "" else ""
+    if skill_text != "":
+        var skill := UI.label(skill_text, UITheme.font_size("font-caption"))
+        skill.max_lines_visible = 2
+        skill.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+        skill.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+        _self_hero_box.add_child(skill)
+
+
+func _set_combat_mode(in_combat: bool) -> void:
+    _recruit_panel.visible = not in_combat
+    _combat_root.visible = in_combat
+    _hero_power_button.visible = not in_combat
+    _end_button.visible = not in_combat
+
+
+func _refresh_combat(view: Dictionary) -> void:
+    _fill_combat_strip(_combat_opponent_strip, _opponent_of(view), "对手")
+    _fill_combat_strip(_combat_self_strip, _self_player(view), "我")
+    UI.clear(_combat_opponent_row)
+    UI.clear(_combat_own_row)
+
+    var combat: Dictionary = GameStore.last_combat
+    if combat.is_empty():
+        _combat_banner.text = "等待战斗结果…"
+        _combat_banner.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+        _combat_opponent_row.add_child(UI.empty_hint("—"))
+        _combat_own_row.add_child(UI.empty_hint("—"))
+        return
+
+    var opponent_board: Array = combat.get("opponentBoard", [])
+    var own_board: Array = combat.get("ownBoard", [])
+    if opponent_board.is_empty():
+        _combat_opponent_row.add_child(UI.empty_hint("对手没有随从"))
+    for minion in opponent_board:
+        _combat_opponent_row.add_child(_minion_card(minion, {}, false, 0, opponent_board.size(), true))
+    if own_board.is_empty():
+        _combat_own_row.add_child(UI.empty_hint("我方没有随从"))
+    for minion in own_board:
+        _combat_own_row.add_child(_minion_card(minion, {}, false, 0, own_board.size(), true))
+
+    var winner = combat.get("winnerId")
+    var result := "平局"
+    var variant := "accent"
+    if winner != null:
+        if str(winner) == GameStore.player_id:
+            result = "胜利"
+            variant = "success"
+        else:
+            result = "失败"
+            variant = "danger"
+    var mirror := "（镜像）" if bool(combat.get("mirror", false)) else ""
+    _combat_banner.text = "%s%s · 伤害 %d · 我方 %d vs 对手 %d" % [
+        result,
+        mirror,
+        int(combat.get("damage", 0)),
+        own_board.size(),
+        opponent_board.size(),
+    ]
+    _combat_banner.add_theme_color_override("font_color", UITheme.color("color-" + variant) if variant != "accent" else UITheme.color("color-accent"))
+
+
+func _fill_combat_strip(container: HBoxContainer, player: Dictionary, fallback: String) -> void:
+    UI.clear(container)
+    var hero_id := _optional_text(player.get("heroCardId"))
+    container.add_child(UI.avatar(hero_id, UITheme.metric("avatar-lg")))
+
+    var lines := VBoxContainer.new()
+    lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    lines.add_theme_constant_override("separation", 0)
+    container.add_child(lines)
+
+    var display := _optional_text(player.get("displayName"))
+    var name_label := UI.label(display if display != "" else fallback, UITheme.font_size("font-title"), false)
+    lines.add_child(name_label)
+
+    var meta := UI.label("HP %d · 时代 %d · 随从 %d" % [
+        int(player.get("hp", 0)),
+        int(player.get("era", 1)),
+        int(player.get("boardCount", 0)),
+    ], UITheme.font_size("font-caption"), false)
+    meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    lines.add_child(meta)
+
+
+func _opponent_of(view: Dictionary) -> Dictionary:
+    var opponent_id := _optional_text(view.get("opponentPlayerId"))
+    if opponent_id == "":
+        return {}
     for player in view.get("players", []):
-        var marks := []
-        if bool(player.get("alive", true)) == false:
-            marks.append("淘汰")
-        if bool(player.get("recruited", false)):
-            marks.append("已招募")
-        if player.get("placement") != null:
-            marks.append("第 %d 名" % int(player.get("placement")))
+        if str(player.get("playerId", "")) == opponent_id:
+            return player
+    return {}
+
+
+func _self_player(view: Dictionary) -> Dictionary:
+    for player in view.get("players", []):
         if str(player.get("playerId", "")) == GameStore.player_id:
-            marks.append("我")
-        var line := "%d号 %s%s  HP %d  时代 %d  随从 %d" % [
-            int(player.get("seat", 0)),
-            _optional_text(player.get("displayName")),
-            "（%s）" % _join_cn(marks) if not marks.is_empty() else "",
-            int(player.get("hp", 0)),
-            int(player.get("era", 1)),
-            int(player.get("boardCount", 0)),
-        ]
-        var label := UI.label(line, 14)
-        if str(player.get("playerId", "")) == GameStore.player_id:
-            label.modulate = Color("8fd3ff")
-        _players_box.add_child(label)
+            return player
+    return view.get("self", {})
 
 
 func _refresh_log() -> void:
@@ -365,113 +885,9 @@ func _event_text(event: Dictionary) -> String:
     return " ".join(PackedStringArray(parts))
 
 
-func _join_cn(values: Array) -> String:
-    var parts := PackedStringArray()
-    for value in values:
-        parts.append(str(value))
-    return "、".join(parts)
-
-
-func _join_lines(values: Array) -> String:
-    var parts := PackedStringArray()
-    for value in values:
-        parts.append(str(value))
-    return "\n".join(parts)
-
-
-func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
-    UI.clear(_overlay)
-    var choices: Array = self_state.get("pendingChoices", [])
-    if _view_stale or _deadline_expired or recruited:
-        _target_intent = {}
-        _overlay.visible = false
-        return
-    if not _target_intent.is_empty():
-        _build_target_overlay(self_state)
-    elif not choices.is_empty():
-        _build_choice_overlay(choices[0])
-    else:
-        _overlay.visible = false
-
-
-func _overlay_frame(title: String, parent: VBoxContainer) -> void:
-    _overlay.visible = true
-    var shade := ColorRect.new()
-    shade.color = Color(0, 0, 0, 0.65)
-    shade.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _overlay.add_child(shade)
-    var center := CenterContainer.new()
-    center.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _overlay.add_child(center)
-    var panel := UI.panel()
-    panel.custom_minimum_size = Vector2(420, 0)
-    center.add_child(panel)
-    var margin := MarginContainer.new()
-    for side in ["left", "right", "top", "bottom"]:
-        margin.add_theme_constant_override("margin_" + side, 16)
-    panel.add_child(margin)
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", 8)
-    margin.add_child(box)
-    box.add_child(UI.label(title, 20))
-    for child in parent.get_children():
-        parent.remove_child(child)
-        box.add_child(child)
-
-
-func _build_choice_overlay(choice: Dictionary) -> void:
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", 8)
-    var kind := str(choice.get("kind", ""))
-    if kind == "discover":
-        box.add_child(UI.label("发现：选择一张卡牌", 16))
-        var index := 0
-        for card_id in choice.get("candidates", []):
-            var button := UI.button("%s\n%s" % [
-                CardDB.display_name(str(card_id)),
-                CardDB.display_text(str(card_id)),
-            ])
-            button.pressed.connect(_on_choose.bind(index))
-            box.add_child(button)
-            index += 1
-    else:
-        box.add_child(UI.label("进化：选择一项", 16))
-        var index := 0
-        for option in choice.get("options", []):
-            var button := UI.button(str(option))
-            button.pressed.connect(_on_choose.bind(index))
-            box.add_child(button)
-            index += 1
-    _overlay_frame("待选择", box)
-
-
-func _build_target_overlay(self_state: Dictionary) -> void:
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", 8)
-    box.add_child(UI.label(_target_title, 16))
-    if not _target_required:
-        var skip := UI.button("不指定目标")
-        skip.pressed.connect(_on_target_skip)
-        box.add_child(skip)
-    for minion in self_state.get("board", []):
-        var button := UI.button("%s  %d/%d" % [
-            CardDB.display_name(str(minion.get("cardId", ""))),
-            int(minion.get("attack", 0)),
-            int(minion.get("health", 0)),
-        ])
-        button.pressed.connect(_on_target_chosen.bind(str(minion.get("minionId", ""))))
-        box.add_child(button)
-    var cancel := UI.button("取消")
-    cancel.pressed.connect(_on_target_cancel)
-    box.add_child(cancel)
-    _overlay_frame("选择目标", box)
-
-
 func _refresh_connection() -> void:
-    if not Net.is_open() and not GameStore.view.is_empty():
-        _status.text = "连接已断开，正在自动重连…"
-    elif Net.is_open() and _status.text.begins_with("连接已断开"):
-        _status.text = ""
+    var disconnected := not Net.is_open() and not GameStore.view.is_empty()
+    _conn_label.text = "未连接 · 正在重连" if disconnected else ""
 
 
 func _update_timer() -> void:
@@ -508,18 +924,97 @@ func _unix_from_rfc3339(value: String) -> float:
     return Time.get_unix_time_from_datetime_string(text)
 
 
-func _find_by_index(items: Array, index: int) -> Dictionary:
-    for item in items:
-        if int(item.get("index", -1)) == index:
-            return item
-    return {}
+# ── 弹层 ──────────────────────────────────────────────────────────────────
+
+func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
+    UI.clear(_overlay)
+    var choices: Array = self_state.get("pendingChoices", [])
+    if _view_stale or _deadline_expired or recruited:
+        _target_intent = {}
+        _overlay.visible = false
+        return
+    if not _target_intent.is_empty():
+        _build_target_overlay(self_state)
+    elif not choices.is_empty():
+        _build_choice_overlay(choices[0])
+    else:
+        _overlay.visible = false
 
 
-func _optional_text(value: Variant) -> String:
-    if value == null:
-        return ""
-    return str(value)
+func _overlay_frame(title: String, parent: VBoxContainer) -> void:
+    _overlay.visible = true
+    var shade := ColorRect.new()
+    shade.color = UITheme.alpha("color-bg", 0.72)
+    shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _overlay.add_child(shade)
+    var center := CenterContainer.new()
+    center.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _overlay.add_child(center)
+    var panel := UI.card_panel("raised")
+    panel.custom_minimum_size = Vector2(420, 0)
+    center.add_child(panel)
+    var margin := MarginContainer.new()
+    for side in ["left", "right", "top", "bottom"]:
+        margin.add_theme_constant_override("margin_" + side, UITheme.space("space-xl"))
+    panel.add_child(margin)
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", UITheme.space("space-md"))
+    margin.add_child(box)
+    box.add_child(UI.label(title, UITheme.font_size("font-display"), false))
+    for child in parent.get_children():
+        parent.remove_child(child)
+        box.add_child(child)
 
+
+func _build_choice_overlay(choice: Dictionary) -> void:
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", UITheme.space("space-md"))
+    var kind := str(choice.get("kind", ""))
+    if kind == "discover":
+        box.add_child(UI.label("发现：选择一张卡牌", UITheme.font_size("font-body")))
+        var index := 0
+        for card_id in choice.get("candidates", []):
+            var button := UI.styled_button("%s\n%s" % [
+                CardDB.display_name(str(card_id)),
+                CardDB.display_text(str(card_id)),
+            ], "slot", 64)
+            button.pressed.connect(_on_choose.bind(index))
+            box.add_child(button)
+            index += 1
+    else:
+        box.add_child(UI.label("进化：选择一项", UITheme.font_size("font-body")))
+        var index := 0
+        for option in choice.get("options", []):
+            var button := UI.styled_button(str(option), "slot", 44)
+            button.pressed.connect(_on_choose.bind(index))
+            box.add_child(button)
+            index += 1
+    _overlay_frame("待选择", box)
+
+
+func _build_target_overlay(self_state: Dictionary) -> void:
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", UITheme.space("space-md"))
+    box.add_child(UI.label(_target_title, UITheme.font_size("font-body")))
+    if not _target_required:
+        var skip := UI.styled_button("不指定目标", "default", 36)
+        skip.pressed.connect(_on_target_skip)
+        box.add_child(skip)
+    for minion in self_state.get("board", []):
+        var button := UI.styled_button("%s  %d/%d" % [
+            CardDB.display_name(str(minion.get("cardId", ""))),
+            int(minion.get("attack", 0)),
+            int(minion.get("health", 0)),
+        ], "slot", 40)
+        button.pressed.connect(_on_target_chosen.bind(str(minion.get("minionId", ""))))
+        box.add_child(button)
+    var cancel := UI.styled_button("取消", "default", 36)
+    cancel.pressed.connect(_on_target_cancel)
+    box.add_child(cancel)
+    _overlay_frame("选择目标", box)
+
+
+# ── 意图 ──────────────────────────────────────────────────────────────────
 
 func _send_intent(intent: Dictionary) -> String:
     _intent_counter += 1
@@ -644,6 +1139,8 @@ func _refresh_overlay_now() -> void:
     _refresh_overlay(self_state, bool(self_state.get("recruited", false)))
 
 
+# ── 错误与结算 ────────────────────────────────────────────────────────────
+
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
     var intent_id := str(GameStore.last_error.get("clientIntentId", ""))
@@ -668,3 +1165,32 @@ func _on_error() -> void:
 
 func _on_game_over() -> void:
     UI.navigate(self, "res://scenes/result.tscn")
+
+
+# ── 工具 ──────────────────────────────────────────────────────────────────
+
+func _find_by_index(items: Array, index: int) -> Dictionary:
+    for item in items:
+        if int(item.get("index", -1)) == index:
+            return item
+    return {}
+
+
+func _optional_text(value: Variant) -> String:
+    if value == null:
+        return ""
+    return str(value)
+
+
+func _join_cn(values: Array) -> String:
+    var parts := PackedStringArray()
+    for value in values:
+        parts.append(str(value))
+    return "、".join(parts)
+
+
+func _join_lines(values: Array) -> String:
+    var parts := PackedStringArray()
+    for value in values:
+        parts.append(str(value))
+    return "\n".join(parts)
