@@ -10,7 +10,7 @@ use rule_engine::data::CardType;
 use rule_engine::engine::Engine;
 use rule_engine::intent::RejectCode;
 use rule_engine::state::{
-    GameState, HandCard, MinionInstance, PendingChoice, Phase, Seat, ShopSlot,
+    AuraEffect, GameState, HandCard, MinionInstance, PendingChoice, Phase, Seat, ShopSlot,
 };
 use rule_engine::view::{
     Affordances, PendingChoiceView, PlayerSummaryView, SeatView, SelfView, placement_of, view,
@@ -31,6 +31,22 @@ fn minion_id() -> String {
         .values()
         .find(|card| card.card_type == CardType::Minion && !card.is_hero)
         .expect("数据中应存在非英雄随从")
+        .id
+        .clone()
+}
+
+/// 目录中第一张非英雄、非学者且攻击力为正的随从卡（光环数值断言需要）。
+fn positive_attack_minion_id() -> String {
+    test_catalog()
+        .cards
+        .values()
+        .find(|card| {
+            card.card_type == CardType::Minion
+                && !card.is_hero
+                && !card.is_scholar
+                && card.attack.is_some_and(|attack| attack > 0)
+        })
+        .expect("数据中应存在攻击力为正的非学者随从")
         .id
         .clone()
 }
@@ -310,8 +326,80 @@ fn opponent_seat_follows_pairings() {
 }
 
 #[test]
+fn board_view_folds_auras_into_stats_and_keywords() {
+    let (engine, mut state) = setup();
+    let card = positive_attack_minion_id();
+    state.players[0].board.push(dummy(1, &card));
+
+    let before = view(&engine, &state, 0)
+        .expect("座位 0 的视图应存在")
+        .self_view
+        .board[0]
+        .clone();
+    assert!(
+        !before.keywords.contains(&"光环测试词".to_string()),
+        "前提：未加光环时不存在该关键词"
+    );
+
+    state.auras.insert(
+        1,
+        AuraEffect {
+            attack: 2,
+            health: 1,
+            keywords: ["护盾".to_string(), "光环测试词".to_string()]
+                .into_iter()
+                .collect(),
+            floor_one: true,
+        },
+    );
+
+    let after = view(&engine, &state, 0)
+        .expect("座位 0 的视图应存在")
+        .self_view
+        .board[0]
+        .clone();
+    assert_eq!(after.attack, before.attack + 2, "攻击力应折叠光环加成");
+    assert_eq!(after.health, before.health + 1, "生命值应折叠光环加成");
+    assert!(
+        after.keywords.contains(&"护盾".to_string()),
+        "关键词应包含光环授予的护盾"
+    );
+    assert!(
+        after.keywords.contains(&"光环测试词".to_string()),
+        "关键词应包含光环授予的自定义关键词"
+    );
+}
+
+#[test]
+fn placement_is_hidden_before_game_over() {
+    let (engine, mut state) = setup();
+    // 对局进行中的真实形态：淘汰 2 人后新出局者前插，下标 +1 并非名次。
+    state.ranking = vec![2, 0, 7, 6, 5, 4];
+    assert_eq!(state.phase, Phase::Recruit);
+
+    let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
+    assert!(
+        seat_view
+            .players
+            .iter()
+            .all(|summary| summary.placement.is_none()),
+        "对局结束前所有 placement 都必须为 None"
+    );
+    assert_eq!(placement_of(&state, 2), None);
+    assert_eq!(placement_of(&state, 0), None);
+
+    state.phase = Phase::GameOver;
+    state.ranking = vec![1, 3, 2, 0, 7, 6, 5, 4];
+    assert_eq!(placement_of(&state, 1), Some(1));
+    assert_eq!(placement_of(&state, 3), Some(2));
+    assert_eq!(placement_of(&state, 0), Some(4));
+}
+
+#[test]
 fn placement_comes_from_ranking() {
     let (engine, mut state) = setup();
+    // 名次只在 `GameOver` 阶段公开；此处构造完整榜单。
+    state.phase = Phase::GameOver;
     state.ranking = vec![5, 2];
 
     assert_eq!(placement_of(&state, 5), Some(1));

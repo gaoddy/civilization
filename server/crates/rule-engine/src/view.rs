@@ -19,6 +19,7 @@ use crate::recruit::{
     check_buy, check_end_recruit, check_hero_power, check_play_card, check_reroll, check_sell,
     check_upgrade,
 };
+use crate::settle;
 use crate::state::{GameState, PendingChoice, Phase, PlayerState, Seat};
 
 /// 一个座位当前可见的全部状态。
@@ -301,8 +302,9 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         })
         .collect();
 
-    let board = player
-        .board
+    // 棋盘数值与关键词必须先折叠光环，否则客户端看到的是未加成的数值。
+    let folded_board = settle::fold_auras(&engine.catalog, &state.auras, &player.board);
+    let board = folded_board
         .iter()
         .enumerate()
         .map(|(index, minion)| BoardMinionView {
@@ -398,8 +400,14 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
     })
 }
 
-/// `ranking` 下标 + 1；未进入排名返回 `None`。
+/// `ranking` 下标 + 1；仅在 `GameOver` 阶段公开名次，其余阶段返回 `None`。
+///
+/// 对局进行中 `ranking` 只是「已出局者在前、存活者补齐在尾部」的临时块，
+/// 下标 + 1 并不等于最终名次；协议要求结束前 `placement` 为 `null`。
 pub fn placement_of(state: &GameState, seat: Seat) -> Option<u8> {
+    if state.phase != Phase::GameOver {
+        return None;
+    }
     state
         .ranking
         .iter()
