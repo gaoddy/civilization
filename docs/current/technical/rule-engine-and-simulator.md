@@ -169,6 +169,7 @@ tests/                       # Python 标准库 unittest
 
 - **`current` 是唯一真相，各层只是构成。**「层和等于 `current`」不是不变量：受击与复生会让二者偏离，`damage()` 返回 `层和 - current`。
 - 变更一律走方法，分量与 `current` 同步：`add_growth` / `add_permanent` / `add_turn` / `set_aura` / `clear_turn` / `remove_growth` / `set_initial`。`apply_damage` 只扣 `current`，`revive_to` 只写 `current`；除这三者外没有直接写 `current` 的公开入口。
+- `StatComponent` 的字段保持 `pub`：集成测试与 `room-service` 需要直接读取各层，视图也要逐项复制。因此「不直接写 `current`」靠约定与评审保证，不是类型约束；新增代码只能经上面列出的方法改动分量。
 - 初始值在 `MinionInstance::new` 时解析：token 取 token 注册表，普通卡取卡牌攻防，金色 ×2；`is_scholar` 同时确定并存储。
 - 读取口 `attack()` / `health()` 返回 `max(0, current)`；学者 `attack()` 恒为 0，但各层照常累积。战斗内部死亡判定直接用原始 `stats.health.current <= 0`，不经过非负夹紧。
 - 视图 `view::MinionStatsView` / `StatBreakdownView` 把攻防映射为 `initial`、`permanent`（= `growth + permanent`）、`turn`、`aura`、`damage`、`current` 六项；在可达的下发状态下满足 `initial + permanent + turn + aura - damage == current`（复生造成的负 `damage` 只存在于战斗内部，不下发）。学者攻击六层全为 0。`health.current` 在视图中夹到 0，招募期负血量由 `damage` 吸收。`BoardMinion` 协议的 `stats` 与顶层 `attack` / `health` 复用同一口径。
