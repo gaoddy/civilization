@@ -24,6 +24,9 @@ var _spacer: Control = null
 var _original_order: Array = []
 var _preview_index := -1
 
+## 手牌拖拽期间监听指针位置，只在无效落点上显示禁止光标。
+var _watching_hand_drag := false
+
 
 func _ready() -> void:
     set_process(false)
@@ -34,8 +37,12 @@ func _notification(what: int) -> void:
         var payload = get_viewport().gui_get_drag_data()
         if payload is Dictionary and payload.has("minionId"):
             begin_drag(payload)
+        elif payload is Dictionary and payload.has("handIndex"):
+            _watching_hand_drag = true
+            set_process(true)
     elif what == NOTIFICATION_DRAG_END:
         end_drag()
+        _stop_hand_watch()
 
 
 ## 开始棋盘卡拖拽预览：隐藏被拖卡片，在它原来的位置放一个同尺寸透明占位。
@@ -87,6 +94,8 @@ func end_drag() -> void:
 
 
 func _process(_delta: float) -> void:
+    if _watching_hand_drag:
+        _update_hand_cursor()
     if _drag_id == "":
         return
     # 拖拽途中视图重建会整块换掉棋盘子节点：旧卡与占位失效时按取消收尾。
@@ -106,6 +115,38 @@ func _process(_delta: float) -> void:
         return
     _preview_index = index
     move_child(_spacer, _gap_child_index(index))
+
+
+## 手牌拖拽的落点判定：空位仍可放置；棋盘外、已满或需要目标却悬停在空白处拒绝。
+func hand_drop_accepted(global_point: Vector2, payload: Dictionary) -> bool:
+    if not get_global_rect().has_point(global_point):
+        return false
+    var local: Vector2 = get_global_transform().affine_inverse() * global_point
+    return not _resolve(local, payload).is_empty()
+
+
+## 拖拽过程中按指针所在位置切换光标：只有无效落点显示禁止。
+func _update_hand_cursor() -> void:
+    var viewport := get_viewport()
+    if viewport == null or not viewport.gui_is_dragging():
+        _stop_hand_watch()
+        return
+    var payload = viewport.gui_get_drag_data()
+    if not (payload is Dictionary) or not payload.has("handIndex"):
+        _stop_hand_watch()
+        return
+    var accepted := hand_drop_accepted(get_global_mouse_position(), payload)
+    Input.set_default_cursor_shape(Input.CURSOR_ARROW if accepted else Input.CURSOR_FORBIDDEN)
+
+
+## 停止手牌拖拽光标监听并恢复正常指针。
+func _stop_hand_watch() -> void:
+    if not _watching_hand_drag:
+        return
+    _watching_hand_drag = false
+    Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+    if _drag_id == "":
+        set_process(false)
 
 
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:

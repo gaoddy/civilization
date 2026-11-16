@@ -21,6 +21,7 @@ func _ready() -> void:
     await _check_board_capacity_from_view()
     await _check_combat_layout()
     await _check_hand_drag_emits_position()
+    await _check_hand_drag_cursor_rule()
     await _check_board_drag_reorders()
     await _check_board_sell_drop()
     await _check_drag_rejected_for_target_effect_on_blank()
@@ -836,6 +837,54 @@ func _check_hand_drag_emits_position() -> void:
     instance.queue_free()
     await get_tree().process_frame
     _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 手牌拖拽光标规则：空位仍可放置；棋盘外、已满与需要目标的空白落点为无效区域。
+func _check_hand_drag_cursor_rule() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [
+        FixtureScript.board_minion("mi_1", "baiyi", 0),
+        FixtureScript.board_minion("mi_2", "airplane", 1),
+    ]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var board_row = instance.find_child("BoardRow", true, false)
+    var hand_card = instance.find_child("HandCard0", true, false)
+    if board_row != null and hand_card != null:
+        var payload: Dictionary = hand_card.payload.duplicate()
+        var empty_slot: Control = null
+        for child in board_row.get_children():
+            if child is Control and child.name == "EmptySlot":
+                empty_slot = child
+                break
+        _expect(empty_slot != null, "棋盘应渲染空位")
+        if empty_slot != null:
+            var empty_point: Vector2 = empty_slot.get_global_rect().get_center()
+            _expect(board_row.hand_drop_accepted(empty_point, payload), "空位仍应接受随从牌")
+            board_row.board_full = true
+            _expect(not board_row.hand_drop_accepted(empty_point, payload), "棋盘已满时空位应无效")
+            board_row.board_full = false
+            var target_payload := {"handIndex": 0, "cardKind": "effect", "requiresTarget": true}
+            _expect(
+                not board_row.hand_drop_accepted(empty_point, target_payload),
+                "需要目标的效果牌落在空位应无效"
+            )
+        var outside := Vector2(board_row.get_global_rect().end.x + 200, board_row.get_global_rect().get_center().y)
+        _expect(not board_row.hand_drop_accepted(outside, payload), "棋盘外应为无效落点")
+    instance.queue_free()
+    await get_tree().process_frame
     GameStore.view = {}
     GameStore.turn = 1
 
