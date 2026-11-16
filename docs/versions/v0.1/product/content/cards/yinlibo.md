@@ -3,6 +3,7 @@ id: yinlibo
 name: 引力波
 card_type: 效果
 level: 4
+era: 未来
 tribe: 通用
 cost: 2
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [combatstart-all-enemies-minus-1-attack]
 | 名称 | 引力波 |
 | 类型 | 效果 |
 | 星级 | 4 |
+| 时代 | 未来 |
 | 流派 | 通用 |
 | 技能 | combatstart-all-enemies-minus-1-attack |
 | 费用 | 2 |

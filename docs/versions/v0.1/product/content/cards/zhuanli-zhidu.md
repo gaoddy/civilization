@@ -3,6 +3,7 @@ id: zhuanli-zhidu
 name: 专利制度
 card_type: 效果
 level: 4
+era: 封建
 tribe: 通用
 cost: 2
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-all-mech-growth-once]
 | 名称 | 专利制度 |
 | 类型 | 效果 |
 | 星级 | 4 |
+| 时代 | 封建 |
 | 流派 | 通用 |
 | 技能 | trigger-all-mech-growth-once |
 | 费用 | 2 |

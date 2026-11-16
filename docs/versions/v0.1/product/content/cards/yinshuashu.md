@@ -3,6 +3,7 @@ id: yinshuashu
 name: 印刷术
 card_type: 效果
 level: 3
+era: 封建
 tribe: 学者
 cost: 2
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-copy-hand-minion]
 | 名称 | 印刷术 |
 | 类型 | 效果 |
 | 星级 | 3 |
+| 时代 | 封建 |
 | 流派 | 学者 |
 | 技能 | trigger-copy-hand-minion |
 | 费用 | 2 |

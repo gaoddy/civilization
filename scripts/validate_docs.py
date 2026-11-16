@@ -84,13 +84,13 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"繁衍": 1, "嘲讽": 2, "连击": 3, "最优攻击": 3, "传染": 3, "复生": 4, "护盾": 5}
-EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 14, "封建": 29, "工业": 18, "现代": 38, "未来": 32}
+EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 18, "封建": 32, "工业": 28, "现代": 49, "未来": 40}
 EXPECT_TRIBE = {"学者": 41, "生物": 30, "人类": 37, "机械": 34, "植物": 21, "病毒": 21}
 EXPECT_LEVEL = {1: 22, 2: 37, 3: 37, 4: 30, 5: 30, 6: 16, 7: 12}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
-EFFECT_FIELDS = ["id", "name", "card_type", "level", "tribe", "cost", "match_text"]
+EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "tribe", "cost", "match_text"]
 LEGACY_HERO_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
                       "hero_skill_uses_per_turn", "hero_skill_trigger"]
 
@@ -409,7 +409,7 @@ def expected_card_attrs(doc, skill_map):
         return attrs
     return {
         "id": doc["id"], "名称": doc["name"], "类型": doc["card_type"],
-        "星级": str(doc["level"]), "流派": doc["tribe"],
+        "星级": str(doc["level"]), "时代": doc.get("era", ""), "流派": doc["tribe"],
         "技能": skill_value, "费用": str(doc["cost"]),
         "确定性替换": doc["match_text"],
     }
@@ -662,8 +662,10 @@ def check_cards(skill_map):
         if dup:
             fail(f"{label}名称重复: {dup}")
 
-    for label, expected, field in (("时代", EXPECT_ERA, "era"),
-                                   ("流派", EXPECT_TRIBE, "tribe"),
+    actual_era = collections.Counter(c.get("era") for c in raw)
+    if dict(actual_era) != EXPECT_ERA:
+        fail(f"卡牌时代分布不符: {dict(actual_era)}")
+    for label, expected, field in (("流派", EXPECT_TRIBE, "tribe"),
                                    ("星级", EXPECT_LEVEL, "level")):
         actual = collections.Counter(c[field] for c in minions)
         if dict(actual) != expected:

@@ -3,6 +3,7 @@ id: xiayixiangduilun
 name: 狭义相对论
 card_type: 效果
 level: 4
+era: 未来
 tribe: 通用
 cost: 2
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-minion-windfury-this-turn]
 | 名称 | 狭义相对论 |
 | 类型 | 效果 |
 | 星级 | 4 |
+| 时代 | 未来 |
 | 流派 | 通用 |
 | 技能 | trigger-minion-windfury-this-turn |
 | 费用 | 2 |

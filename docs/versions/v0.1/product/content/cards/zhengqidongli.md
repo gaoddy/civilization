@@ -3,6 +3,7 @@ id: zhengqidongli
 name: 蒸汽动力
 card_type: 效果
 level: 4
+era: 工业
 tribe: 机械
 cost: 2
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-all-mech-growth-once]
 | 名称 | 蒸汽动力 |
 | 类型 | 效果 |
 | 星级 | 4 |
+| 时代 | 工业 |
 | 流派 | 机械 |
 | 技能 | trigger-all-mech-growth-once |
 | 费用 | 2 |

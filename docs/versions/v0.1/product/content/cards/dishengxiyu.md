@@ -3,6 +3,7 @@ id: dishengxiyu
 name: 低声细语
 card_type: 效果
 level: 1
+era: 现代
 tribe: 通用
 cost: 1
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-friendly-plus-1-plus-1]
 | 名称 | 低声细语 |
 | 类型 | 效果 |
 | 星级 | 1 |
+| 时代 | 现代 |
 | 流派 | 通用 |
 | 技能 | trigger-friendly-plus-1-plus-1 |
 | 费用 | 1 |

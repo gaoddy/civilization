@@ -3,6 +3,7 @@ id: guangdianxiaoying
 name: 光电效应
 card_type: 效果
 level: 3
+era: 工业
 tribe: 通用
 cost: 1
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [combatstart-leftmost-damage-3]
 | 名称 | 光电效应 |
 | 类型 | 效果 |
 | 星级 | 3 |
+| 时代 | 工业 |
 | 流派 | 通用 |
 | 技能 | combatstart-leftmost-damage-3 |
 | 费用 | 1 |

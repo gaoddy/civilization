@@ -3,6 +3,7 @@ id: qiuzhuangshandian
 name: 球状闪电
 card_type: 效果
 level: 4
+era: 工业
 tribe: 通用
 cost: 2
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [combatstart-leftmost-and-adjacent-damage-2]
 | 名称 | 球状闪电 |
 | 类型 | 效果 |
 | 星级 | 4 |
+| 时代 | 工业 |
 | 流派 | 通用 |
 | 技能 | combatstart-leftmost-and-adjacent-damage-2 |
 | 费用 | 2 |
