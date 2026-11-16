@@ -70,8 +70,9 @@ protocol/
 - 入房：坐最小空位；同一玩家重复加入同一房间幂等。非 `Lobby` 阶段成员集合冻结，加入/准备/选英雄/离开都返回 `INVALID_STAGE`。
 - 英雄候选：建房与入房时按房间码派生的种子把全部 `is_hero` 卡 id 升序后做确定性 Fisher–Yates 洗牌，再按进房顺序每 4 张切给一名玩家（`CANDIDATE_COUNT`），因此同房间内各玩家候选互不重复；候选保存在 `PlayerSlot.hero_candidates`，重进与重连都不重抽。
 - 选英雄校验：卡必须存在、`is_hero`，且在本人候选内（否则 `NOT_CANDIDATE` → `INVALID_CHOICE`）；座位已 `ready` 时再选返回 `INVALID_STAGE`。
-- 候选下发：`RoomUpdate.players[].heroCandidates` 只在发给本人的那份里填充，其余座位为 `null`；广播按座位逐个序列化，不共用 payload。
-- 大厅断线：`Detach` 不再立即释放座位，而是标记离线并记录 `disconnected_at_ms`；房间 task 的 tick 调用 `tick_disconnects`，超过 `RECONNECT_GRACE_MS` 才按原规则释放座位。`Leave` 命令仍立即释放。
+- 候选下发：`RoomUpdate.players[].heroCandidates` 只在发给本人的那份里填充，其余座位为 `null`；广播按座位逐个序列化，不共用 payload。这是展示规则而非机密：选中的 `heroCardId` 仍对全体成员可见，候选分组也能由房间码确定性复算。
+- 候选池校验：`AppState::new` 要求英雄卡数 ≥ `SEAT_COUNT * CANDIDATE_COUNT`（当前 32），不足时拒绝启动；否则最后几名玩家会拿到空候选，房间永远开不了局。
+- 大厅断线：`Detach` 不再立即释放座位，而是标记离线并记录 `disconnected_at_ms`；房间 task 的 tick 调用 `tick_disconnects`，超过 `RECONNECT_GRACE_MS` 才按原规则释放座位。`Leave` 命令仍立即释放。座位已被释放后再 `Reconnect` 回 `NOT_IN_ROOM`，并摘除该座位的下行登记。
 - 离开：座位立即空出且不重排；房主离开时转给座位号最小的剩余玩家；**大厅最后一人离开即销毁房间**（注册表同时删 `by_code` 与 `rooms`）。
 - 开局：8 个座位全部占用、全部准备且全部选好英雄后，由房主 `try_start` 把阶段推进到 `Recruit`，并在同一房间 task 内构造 `GameTask`。
 - 房间 task 在 `hub` 条目被摘除后退出：`RoomTask::retire_if_done` 在「对局已结束且无连接」或「注册表已无该房间」时摘除 `hub` 条目并结束循环。
@@ -134,7 +135,7 @@ protocol/
 - 对局内断线：座位保留 30 秒（`RECONNECT_GRACE_MS`）。窗口内重连回一条全量 `Snapshot`；超过窗口只把座位标记为离线，不释放座位、不结束对局，也不向其他座位下发通知。
 - `Combat` 阶段重连：快照之后追加补发该座位本场 `CombatResult`（报告保留到 `finish_combat` 为止），客户端据此按 `phaseDeadline` 续播。
 - 重连与 `RequestSnapshot` 共用全量快照路径；M1 **不重放历史**，`last_seq` 不参与判断，一律回全量快照，快照序号必然大于重连前最后一条。
-- 大厅断线：没有对局状态需要保护，立即离开并释放座位，随后广播 `RoomUpdate`。
+- 大厅断线：保留座位一个 `RECONNECT_GRACE_MS`（30 秒）宽限，超时由房间 tick 释放并广播 `RoomUpdate`；宽限内 `Reconnect` 回同一座位与同一组候选。
 - 连接代次：每次 `Attach`/`Reconnect` 带进程内唯一 `generation`；`Detach`/`Leave` 只在代次与当前登记一致时生效，避免新旧连接并存时旧连接迟到关闭误释放座位。
 - M1 不做托管：`PlayerSummary.managed` 恒为 `false`。
 
