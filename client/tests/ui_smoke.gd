@@ -281,21 +281,30 @@ func _check_room_hero_picker() -> void:
     var confirm := instance.find_child("ConfirmButton", true, false)
     _expect(confirm != null and confirm.disabled, "未选中时确认按钮应禁用")
 
-    # 布局：内容收进居中卡片，不占满全屏；确认键与候选行同轴。
+    # 布局：面板铺满整屏且尺寸固定，内容块在面板内居中；确认键与候选行同轴。
     var panel := instance.find_child("DraftPanel", true, false)
     _expect(panel != null, "缺少 DraftPanel")
+    var column := instance.find_child("DraftColumn", true, false)
+    _expect(column != null, "缺少 DraftColumn")
     if panel != null:
         var page_rect: Rect2 = instance.get_global_rect()
         var panel_rect: Rect2 = panel.get_global_rect()
-        _expect(panel_rect.size.x < page_rect.size.x,
-            "内容面板不应占满全屏宽，实际：%s" % panel_rect.size)
         _expect(
-            absf(panel_rect.get_center().x - page_rect.get_center().x) <= 1.0
-            and absf(panel_rect.get_center().y - page_rect.get_center().y) <= 1.0,
-            "内容面板应在页面中居中，面板中心 %s，页面中心 %s" % [
-                panel_rect.get_center(), page_rect.get_center(),
-            ],
+            absf(panel_rect.size.x - page_rect.size.x) <= 1.0
+            and absf(panel_rect.size.y - page_rect.size.y) <= 1.0,
+            "面板应铺满整屏，实际 %s，页面 %s" % [panel_rect.size, page_rect.size],
         )
+        if column != null:
+            var column_rect: Rect2 = column.get_global_rect()
+            _expect(column_rect.size.x < panel_rect.size.x,
+                "内容块不应随面板铺满，实际宽度：%s" % column_rect.size.x)
+            _expect(
+                absf(column_rect.get_center().x - page_rect.get_center().x) <= 1.0
+                and absf(column_rect.get_center().y - page_rect.get_center().y) <= 1.0,
+                "内容块应在面板内居中，内容中心 %s，页面中心 %s" % [
+                    column_rect.get_center(), page_rect.get_center(),
+                ],
+            )
     if confirm != null and candidates != null:
         _expect(
             absf(confirm.get_global_rect().get_center().x - candidates.get_global_rect().get_center().x) <= 1.0,

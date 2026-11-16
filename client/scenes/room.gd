@@ -45,24 +45,25 @@ func _build() -> void:
     _dismiss.gui_input.connect(_on_dismiss_input)
     add_child(_dismiss)
 
-    # 内容按候选行宽度收窄并整体居中：页面不铺满全屏，确认键与候选行同轴。
-    var center := CenterContainer.new()
-    center.name = "CenterFrame"
-    center.set_anchors_preset(Control.PRESET_FULL_RECT)
-    center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    add_child(center)
-
+    # 面板铺满整屏、尺寸不随内容变化；内容块在面板内水平与垂直居中。
     var panel := UI.card_panel("surface")
     panel.name = "DraftPanel"
+    panel.set_anchors_preset(Control.PRESET_FULL_RECT)
     # 面板只做视觉容器：空白处的点击要落到 `SkillDismissLayer`。
     panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    center.add_child(panel)
+    add_child(panel)
+
+    var center := CenterContainer.new()
+    center.name = "ContentCenter"
+    center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    panel.add_child(center)
 
     var root := VBoxContainer.new()
+    root.name = "DraftColumn"
     root.add_theme_constant_override("separation", UITheme.space("space-md"))
     # 页面容器一律放行鼠标：空白处的点击要落到 `SkillDismissLayer`，候选卡自己处理点击。
     root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    panel.add_child(root)
+    center.add_child(root)
 
     _others = HBoxContainer.new()
     _others.name = "OtherPlayers"
@@ -76,7 +77,7 @@ func _build() -> void:
     title.mouse_filter = Control.MOUSE_FILTER_IGNORE
     root.add_child(title)
 
-    # 候选固定 4 张、单行展示：HBox 的最小宽度就是整行宽度，面板据此收窄并居中。
+    # 候选固定 4 张、单行展示：候选行按整行宽度居中，不决定面板尺寸。
     _candidates = HBoxContainer.new()
     _candidates.name = "HeroCandidates"
     _candidates.alignment = BoxContainer.ALIGNMENT_CENTER
