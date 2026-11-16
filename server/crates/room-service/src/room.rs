@@ -183,10 +183,9 @@ impl Room {
             .values()
             .filter_map(|slot| slot.candidate_segment)
             .collect();
-        let segment = (0..).find(|index| !used.contains(index));
-        let Some(segment) = segment else {
-            return;
-        };
+        let segment = (0..)
+            .find(|index| !used.contains(index))
+            .unwrap_or(used.len());
         let start = segment * CANDIDATE_COUNT;
         if start >= heroes.len() {
             return;
