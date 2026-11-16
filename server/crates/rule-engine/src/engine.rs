@@ -63,7 +63,6 @@ impl Engine {
             first_seat,
             enabled_tribes,
             previous_opponent,
-            previous_board: BTreeMap::new(),
             last_winner: None,
             pairings: Vec::new(),
             pending_settle: BTreeMap::new(),

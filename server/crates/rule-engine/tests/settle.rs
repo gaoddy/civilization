@@ -3,14 +3,13 @@ mod common;
 use std::collections::BTreeSet;
 
 use common::test_catalog;
-use rule_engine::combat::CombatAction;
+use rule_engine::combat;
 use rule_engine::data::{Card, CardType, Catalog, Era, Skill, Tribe};
-use rule_engine::effects::Duration;
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::rng::RngStreams;
-use rule_engine::settle::{Pairing, damage_formula, mirror_ghost, pair_round, strip_ghost};
+use rule_engine::settle::{Pairing, damage_formula, ghost_board, pair_round};
 use rule_engine::state::{MinionInstance, Phase, Seat};
 
 /// 往目录里插入一张合成随从卡，避免测试依赖真实卡面数值。
@@ -104,7 +103,7 @@ fn pairing_avoids_previous_opponent_when_possible() {
         state.rng = RngStreams::from_seed([n; 32]);
         let pairings = pair_round(&mut state);
         assert_eq!(pairings.len(), 4);
-        assert!(pairings.iter().all(|pairing| !pairing.mirror));
+        assert!(pairings.iter().all(|pairing| pairing.ghost.is_none()));
         assert!(
             !pairings.iter().any(|pairing| {
                 (pairing.a == 0 && pairing.b == 1) || (pairing.a == 1 && pairing.b == 0)
@@ -141,19 +140,70 @@ fn pairing_retries_are_bounded_and_deterministic() {
 }
 
 #[test]
-fn odd_player_gets_mirror_ghost() {
+fn odd_player_fights_random_eliminated_ghost() {
     let (_, mut state) = Engine::new(test_catalog(), [3; 32]);
-    // 座位 7 生命归零但尚未标记出局，同样不参与配对。
+    // 座位 7 生命归零但尚未标记出局，同样不参与配对；座位 2、5 已出局。
+    state.players[7].hp = 0;
+    state.players[2].eliminated = true;
+    state.players[5].eliminated = true;
+    state.ranking = vec![5, 2];
+
+    let pairings = pair_round(&mut state);
+    assert_eq!(pairings.len(), 3);
+    assert_eq!(covered_seats(&pairings), vec![0, 1, 3, 4, 6]);
+
+    let ghosts: Vec<&Pairing> = pairings.iter().filter(|p| p.ghost.is_some()).collect();
+    assert_eq!(ghosts.len(), 1);
+    assert!(
+        matches!(ghosts[0].ghost, Some(2) | Some(5)),
+        "幽灵必须是某名出局者"
+    );
+    assert_eq!(ghosts[0].a, ghosts[0].b);
+}
+
+#[test]
+fn odd_player_without_eliminated_still_fights_empty_ghost() {
+    let (_, mut state) = Engine::new(test_catalog(), [3; 32]);
     state.players[7].hp = 0;
 
     let pairings = pair_round(&mut state);
     assert_eq!(pairings.len(), 4);
-    assert_eq!(covered_seats(&pairings), (0..7).collect::<Vec<Seat>>());
+    let lone: Vec<&Pairing> = pairings.iter().filter(|p| p.a == p.b).collect();
+    assert_eq!(lone.len(), 1, "落单座位仍必须产生配对");
+    assert_eq!(lone[0].ghost, None, "没有出局者时幽灵为空");
+}
 
-    let mirrors: Vec<&Pairing> = pairings.iter().filter(|pairing| pairing.mirror).collect();
-    assert_eq!(mirrors.len(), 1);
-    assert_eq!(mirrors[0].a, mirrors[0].b);
-    assert!(mirrors[0].a < 7);
+#[test]
+fn ghost_seat_draw_is_deterministic_per_seed() {
+    let (_, mut base) = Engine::new(test_catalog(), [3; 32]);
+    base.players[7].hp = 0;
+    base.players[2].eliminated = true;
+    base.players[5].eliminated = true;
+    base.ranking = vec![5, 2];
+
+    let ghost_of = |pairings: &[Pairing]| {
+        pairings
+            .iter()
+            .find(|pairing| pairing.a == pairing.b)
+            .and_then(|pairing| pairing.ghost)
+    };
+
+    let mut first = base.clone();
+    first.rng = RngStreams::from_seed([17; 32]);
+    let mut second = first.clone();
+    let first_ghost = ghost_of(&pair_round(&mut first));
+    let second_ghost = ghost_of(&pair_round(&mut second));
+    assert_eq!(first_ghost, second_ghost, "同一颗种子必须抽到同一名幽灵");
+    assert!(matches!(first_ghost, Some(2) | Some(5)));
+
+    let mut seen = BTreeSet::new();
+    for seed in 0..64u8 {
+        let mut state = base.clone();
+        state.rng = RngStreams::from_seed([seed; 32]);
+        let ghost = ghost_of(&pair_round(&mut state)).expect("有出局者时必须抽到幽灵");
+        seen.insert(ghost);
+    }
+    assert_eq!(seen, BTreeSet::from([2, 5]), "不同种子应能抽到全部出局者");
 }
 
 #[test]
@@ -269,7 +319,7 @@ fn combat_resolution_applies_damage_and_history() {
     state.pairings = vec![Pairing {
         a: 0,
         b: 1,
-        mirror: false,
+        ghost: None,
     }];
 
     let events = engine.resolve_combat(&mut state).unwrap().events;
@@ -282,8 +332,6 @@ fn combat_resolution_applies_damage_and_history() {
     assert!(state.last_won.contains(&0));
     assert_eq!(state.previous_opponent.get(&0), Some(&Some(1)));
     assert_eq!(state.previous_opponent.get(&1), Some(&Some(0)));
-    assert_eq!(state.previous_board.get(&0).map(Vec::len), Some(1));
-    assert_eq!(state.previous_board.get(&1).map(Vec::len), Some(1));
     assert_eq!(state.phase, Phase::Settle);
     assert_eq!(
         events,
@@ -302,96 +350,159 @@ fn combat_resolution_applies_damage_and_history() {
 }
 
 #[test]
-fn mirror_ghost_keeps_only_permanent_stats() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32]);
-    add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
+fn ghost_loss_damages_like_real_combat() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    add_minion_card(&mut engine.catalog, "strong", 2, 10, 10);
+    add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
+
+    state.phase = Phase::Combat;
+    state.players[0].board = vec![minion(&engine.catalog, 1, "weak")];
+    state.players[3].eliminated = true;
+    state.players[3].board = vec![minion(&engine.catalog, 2, "strong")];
+    state.ranking = vec![3];
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        ghost: Some(3),
+    }];
+
+    let outcome = engine.resolve_combat(&mut state).unwrap();
+
+    let damage = *state
+        .pending_settle
+        .get(&0)
+        .expect("幽灵获胜后落单座位应被扣血");
+    assert!(damage > 0);
+    assert!(!state.last_won.contains(&0), "输给幽灵不应计入胜者");
+    let report = outcome.reports.get(&0).expect("幽灵战应有该座位的报告");
+    assert!(report.mirror);
+    assert_eq!(report.opponent_seat, Some(3));
+    assert_eq!(report.damage, damage);
+    assert_eq!(report.winner, Some(3), "幽灵获胜时战报胜者是幽灵归属座位");
+}
+
+#[test]
+fn ghost_win_writes_last_won() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    add_minion_card(&mut engine.catalog, "strong", 2, 10, 10);
     add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
 
     state.phase = Phase::Combat;
     state.players[0].board = vec![minion(&engine.catalog, 1, "strong")];
-    // 幽灵基础 1/1，却带有巨额临时增益与授予关键词；剥除后应被一击击杀。
-    let mut ghost = minion(&engine.catalog, 2, "weak");
-    ghost.stats.attack.add_turn(100);
-    ghost.stats.health.add_turn(100);
-    ghost.granted = vec![("嘲讽".to_string(), Duration::Combat)];
-    state.previous_board.insert(0, vec![ghost]);
+    state.players[3].eliminated = true;
+    state.players[3].board = vec![minion(&engine.catalog, 2, "weak")];
+    state.ranking = vec![3];
     state.pairings = vec![Pairing {
         a: 0,
         b: 0,
-        mirror: true,
+        ghost: Some(3),
     }];
 
-    let events = engine.resolve_combat(&mut state).unwrap().events;
+    let outcome = engine.resolve_combat(&mut state).unwrap();
 
-    assert!(state.last_won.contains(&0), "剥除临时属性后应由玩家获胜");
+    assert!(state.last_won.contains(&0));
+    assert_eq!(state.last_winner, Some(0));
     assert!(state.pending_settle.is_empty());
-    assert_eq!(state.players[0].hp, 40);
-    assert_eq!(
-        events.first(),
-        Some(&GameEvent::CombatResolved {
-            winner: 0,
-            loser: 0,
-            damage: 0,
-        })
-    );
-    assert_eq!(
-        events.last(),
-        Some(&GameEvent::PhaseChanged {
-            phase: Phase::Settle,
-            turn: state.turn,
-        })
-    );
+    let report = outcome.reports.get(&0).expect("幽灵战应有该座位的报告");
+    assert_eq!(report.damage, 0);
+    assert_eq!(report.winner, Some(0));
 }
 
 #[test]
-fn mirror_loss_does_not_damage_or_streak() {
+fn ghost_board_keeps_permanent_stats() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    add_minion_card(&mut engine.catalog, "plain", 1, 2, 3);
+    let mut ghost = minion(&engine.catalog, 7, "plain");
+    ghost.stats.attack.add_permanent(3);
+    ghost.stats.health.add_permanent(3);
+    state.players[3].eliminated = true;
+    state.players[3].board = vec![ghost];
+
+    let board = ghost_board(&engine, &state, Some(3));
+
+    assert_eq!(board.len(), 1);
+    assert_eq!(board[0].stats.attack.permanent, 3);
+    assert_eq!(board[0].stats.health.permanent, 3);
+}
+
+#[test]
+fn ghost_board_folds_own_aura() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    state.players[3].eliminated = true;
+    state.players[3].board = vec![
+        minion(&engine.catalog, 1, "qinghao"),
+        minion(&engine.catalog, 2, "juzi"),
+    ];
+    engine.recompute_auras(&mut state);
+    assert!(
+        !state.auras.contains_key(&1),
+        "出局者实例不在共享光环缓存中"
+    );
+
+    let board = ghost_board(&engine, &state, Some(3));
+
+    let juzi = board
+        .iter()
+        .find(|minion| minion.instance_id == 2)
+        .expect("幽灵应包含出局者棋盘");
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, juzi),
+        2,
+        "受惠随从应叠加出局者自己的 +1 攻击光环"
+    );
+    assert_eq!(
+        combat::effective_health(&engine.catalog, juzi),
+        4,
+        "受惠随从应叠加出局者自己的 +1 生命光环"
+    );
+    assert!(state.auras.is_empty(), "幽灵光环不得写回 state.auras");
+}
+
+#[test]
+fn ghost_board_of_none_is_empty() {
+    let (engine, state) = Engine::new(test_catalog(), [4; 32]);
+
+    assert!(ghost_board(&engine, &state, None).is_empty());
+}
+
+#[test]
+fn ghost_fight_with_empty_ghost_still_resolves() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
+
+    state.phase = Phase::Combat;
+    state.players[0].board = vec![minion(&engine.catalog, 1, "strong")];
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        ghost: None,
+    }];
+
+    let outcome = engine.resolve_combat(&mut state).unwrap();
+
+    let report = outcome.reports.get(&0).expect("空幽灵同样应有报告");
+    assert!(report.mirror);
+    assert!(report.opponent_board.is_empty());
+    assert!(state.last_won.contains(&0));
+    assert!(state.pending_settle.is_empty());
+}
+
+#[test]
+fn ghost_report_renumbers_disjoint_ids() {
+    // 幽灵与己方实例编号重叠时，报告里的动作只能靠重新编号区分侧别。
     let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32]);
     add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
     add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
 
     state.phase = Phase::Combat;
     state.players[0].board = vec![minion(&engine.catalog, 1, "weak")];
-    state
-        .previous_board
-        .insert(0, vec![minion(&engine.catalog, 2, "strong")]);
+    state.players[3].eliminated = true;
+    state.players[3].board = vec![minion(&engine.catalog, 1, "strong")];
+    state.ranking = vec![3];
     state.pairings = vec![Pairing {
         a: 0,
         b: 0,
-        mirror: true,
-    }];
-
-    let events = engine.resolve_combat(&mut state).unwrap().events;
-
-    assert_eq!(state.players[0].hp, 40);
-    assert!(state.pending_settle.is_empty());
-    assert!(state.last_won.is_empty());
-    assert_eq!(
-        events.first(),
-        Some(&GameEvent::CombatResolved {
-            winner: 0,
-            loser: 0,
-            damage: 0,
-        })
-    );
-}
-
-#[test]
-fn mirror_report_uses_ghost_ids_disjoint_from_own_board() {
-    // 同一随从跨回合保留时，幽灵快照与当前阵容共用实例编号；报告里的动作只带
-    // 实例编号，重号会让「幽灵攻击」被当成己方随从的动作。
-    let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32]);
-    add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
-    add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
-
-    state.phase = Phase::Combat;
-    state.players[0].board = vec![minion(&engine.catalog, 1, "weak")];
-    state
-        .previous_board
-        .insert(0, vec![minion(&engine.catalog, 1, "strong")]);
-    state.pairings = vec![Pairing {
-        a: 0,
-        b: 0,
-        mirror: true,
+        ghost: Some(3),
     }];
 
     let report = engine
@@ -399,7 +510,7 @@ fn mirror_report_uses_ghost_ids_disjoint_from_own_board() {
         .unwrap()
         .reports
         .remove(&0)
-        .expect("镜像座位应有一份报告");
+        .expect("幽灵座位应有一份报告");
 
     let own: BTreeSet<u64> = report
         .own_board
@@ -416,19 +527,63 @@ fn mirror_report_uses_ghost_ids_disjoint_from_own_board() {
         "己方与幽灵的实例编号不能重叠：己方 {own:?}，幽灵 {ghost:?}"
     );
     assert_eq!(report.own_board[0].instance_id, 1, "己方编号保持原值");
+}
 
-    // 幽灵方 10/10 攻击己方 1/1：这条动作的来源必须在幽灵棋盘上。
-    let ghost_attack = report
-        .actions
-        .iter()
-        .find_map(|action| match action {
-            CombatAction::Attack { attacker, .. } if ghost.contains(attacker) => Some(*attacker),
-            _ => None,
-        })
-        .expect("幽灵应至少攻击一次");
+#[test]
+fn mutual_wipe_in_real_combat_is_a_draw() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    state.phase = Phase::Combat;
+    state.players[0].board = vec![];
+    state.players[1].board = vec![];
+    state.last_winner = Some(1);
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 1,
+        ghost: None,
+    }];
+
+    let outcome = engine.resolve_combat(&mut state).unwrap();
+
+    assert!(state.pending_settle.is_empty(), "互清不应扣任何一方的血");
+    assert!(state.last_won.is_empty(), "互清不产生胜者");
+    assert_eq!(state.last_winner, Some(1), "平局不改变先手");
+    for seat in [0u8, 1u8] {
+        let report = outcome.reports.get(&seat).expect("双方都应收到报告");
+        assert_eq!(report.winner, None);
+        assert_eq!(report.damage, 0);
+    }
     assert!(
-        !own.contains(&ghost_attack),
-        "幽灵攻击的来源 {ghost_attack} 不应落在己方棋盘"
+        outcome
+            .events
+            .iter()
+            .any(|event| matches!(event, GameEvent::CombatDrawn { a: 0, b: 1 }))
+    );
+}
+
+#[test]
+fn ghost_mutual_wipe_is_a_draw() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    // 落单座位与幽灵都为空阵容 → 双方同回合清场。
+    state.phase = Phase::Combat;
+    state.players[0].board = vec![];
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        ghost: None,
+    }];
+
+    let outcome = engine.resolve_combat(&mut state).unwrap();
+
+    assert!(state.pending_settle.is_empty(), "平局不应扣血");
+    assert!(!state.last_won.contains(&0), "平局不应计入胜者");
+    let report = outcome.reports.get(&0).expect("幽灵平局同样产生报告");
+    assert_eq!(report.winner, None);
+    assert_eq!(report.damage, 0);
+    assert!(
+        outcome
+            .events
+            .iter()
+            .any(|event| matches!(event, GameEvent::CombatDrawn { a: 0, b: 0 }))
     );
 }
 
@@ -574,64 +729,6 @@ fn start_turn_accepts_settle_and_returns_to_recruit() {
 }
 
 #[test]
-fn mirror_ghost_falls_back_to_current_board() {
-    let (engine, mut state) = Engine::new(test_catalog(), [13; 32]);
-    state.players[0].board = vec![minion(&engine.catalog, 7, "weak")];
-
-    // 上一场快照缺失。
-    let ghost = mirror_ghost(&state, 0);
-    assert_eq!(ghost.len(), 1);
-    assert_eq!(ghost[0].instance_id, 7);
-
-    // 上一场快照为空。
-    state.previous_board.insert(0, Vec::new());
-    let ghost = mirror_ghost(&state, 0);
-    assert_eq!(ghost.len(), 1);
-    assert_eq!(ghost[0].instance_id, 7);
-}
-
-#[test]
-fn mirror_ghost_keeps_growth_breed_and_contagion() {
-    // 用显式定义的卡，避免缺卡回落 0/0 让「initial + growth」恰好成立。
-    let mut catalog = test_catalog();
-    add_minion_card(&mut catalog, "weak", 1, 1, 1);
-    let mut source = minion(&catalog, 1, "weak");
-    source.stats.attack.add_growth(2);
-    source.stats.health.add_growth(2);
-    source.stats.health.add_growth(3);
-    source.breed = 4;
-    source.breed_applied = 5;
-    source.contagion = 6;
-    source.stats.attack.add_turn(9);
-    source.stats.health.add_turn(9);
-    source.granted = vec![("嘲讽".to_string(), Duration::Combat)];
-    source.shield_used = true;
-    source.reborn_used = true;
-    source.attacks_left = 2;
-    source.cannot_attack = true;
-
-    let ghost = strip_ghost(&[source]);
-    assert_eq!(ghost.len(), 1);
-    let ghost = &ghost[0];
-    assert_eq!(ghost.stats.attack.growth, 2);
-    assert_eq!(ghost.stats.health.growth, 5);
-    assert_eq!(ghost.breed, 4);
-    assert_eq!(ghost.contagion, 6);
-    assert_eq!(ghost.breed_applied, 0);
-    assert_eq!((ghost.stats.attack.turn, ghost.stats.health.turn), (0, 0));
-    assert_eq!(
-        (ghost.stats.attack.current, ghost.stats.health.current),
-        (3, 6),
-        "幽灵 current 按 initial + growth 重算"
-    );
-    assert!(ghost.granted.is_empty());
-    assert!(!ghost.shield_used);
-    assert!(!ghost.reborn_used);
-    assert_eq!(ghost.attacks_left, 0);
-    assert!(!ghost.cannot_attack);
-}
-
-#[test]
 fn four_pairs_emit_events_in_pairing_order_and_record_opponents() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [14; 32]);
     add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
@@ -645,11 +742,7 @@ fn four_pairs_emit_events_in_pairing_order_and_record_opponents() {
     let expected = [(0, 1), (2, 3), (4, 5), (6, 7)];
     state.pairings = expected
         .iter()
-        .map(|&(a, b)| Pairing {
-            a,
-            b,
-            mirror: false,
-        })
+        .map(|&(a, b)| Pairing { a, b, ghost: None })
         .collect();
 
     let events = engine.resolve_combat(&mut state).unwrap().events;
@@ -699,7 +792,7 @@ fn action_cap_draw_uses_settle_seat_tiebreak() {
     state.pairings = vec![Pairing {
         a: 1,
         b: 0,
-        mirror: false,
+        ghost: None,
     }];
 
     let events = engine.resolve_combat(&mut state).unwrap().events;
@@ -732,11 +825,7 @@ fn last_won_resets_each_round_and_feeds_turn_20_ranking() {
     }
     state.pairings = [(0, 1), (2, 3), (4, 5), (6, 7)]
         .iter()
-        .map(|&(a, b)| Pairing {
-            a,
-            b,
-            mirror: false,
-        })
+        .map(|&(a, b)| Pairing { a, b, ghost: None })
         .collect();
     engine.resolve_combat(&mut state).unwrap();
     assert!(state.last_won.contains(&0));
@@ -753,11 +842,7 @@ fn last_won_resets_each_round_and_feeds_turn_20_ranking() {
     state.players[7].board = vec![minion(&engine.catalog, 108, "weak")];
     state.pairings = [(0, 2), (1, 3), (4, 5), (6, 7)]
         .iter()
-        .map(|&(a, b)| Pairing {
-            a,
-            b,
-            mirror: false,
-        })
+        .map(|&(a, b)| Pairing { a, b, ghost: None })
         .collect();
     engine.resolve_combat(&mut state).unwrap();
     assert!(
@@ -797,7 +882,7 @@ fn new_settle_fields_participate_in_state_hash() {
     with_pairing.pairings.push(Pairing {
         a: 0,
         b: 1,
-        mirror: false,
+        ghost: None,
     });
     assert_ne!(before, state_hash(&with_pairing));
 

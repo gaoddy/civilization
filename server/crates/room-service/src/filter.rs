@@ -134,6 +134,8 @@ pub fn for_seat(event: &GameEvent, seat: Seat, seats: &[SeatInfo; 8]) -> Option<
         }
         // 战斗结果只走 CombatResult，避免同一场战斗在事件流里出现两次。
         GameEvent::CombatResolved { .. } => None,
+        // 互清平局同样只供观测，不对应协议事件。
+        GameEvent::CombatDrawn { .. } => None,
     }
 }
 

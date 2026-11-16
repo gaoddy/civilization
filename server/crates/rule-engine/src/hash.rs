@@ -55,12 +55,6 @@ pub fn state_hash(state: &GameState) -> u64 {
         }
     }
 
-    hasher.len(state.previous_board.len());
-    for (seat, board) in &state.previous_board {
-        hasher.u8(*seat);
-        hash_minions(&mut hasher, board);
-    }
-
     match state.last_winner {
         Some(seat) => {
             hasher.u8(1);
@@ -73,7 +67,13 @@ pub fn state_hash(state: &GameState) -> u64 {
     for pairing in &state.pairings {
         hasher.u8(pairing.a);
         hasher.u8(pairing.b);
-        hasher.bool(pairing.mirror);
+        match pairing.ghost {
+            Some(seat) => {
+                hasher.u8(1);
+                hasher.u8(seat);
+            }
+            None => hasher.u8(0),
+        }
     }
 
     hasher.len(state.pending_settle.len());

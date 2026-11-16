@@ -482,6 +482,37 @@ fn event_kinds(events: &[serde_json::Value]) -> Vec<String> {
 fn combat_stage_attaches_filtered_public_events() {
     let (mut task, clock) = task();
 
+    // 互清判平局后，空棋盘对战不再产生伤害：先让座位 0 上场一个随从，
+    // 保证本回合至少有一场真实战分出胜负。
+    let slot = first_nonempty_slot(&task, 0);
+    task.handle(RoomCommand::Intent {
+        player_id: "p0".to_string(),
+        client_intent_id: "buy-for-combat".to_string(),
+        intent: ProtocolIntent::BuyMinion { slot },
+    });
+    task.handle(RoomCommand::Intent {
+        player_id: "p0".to_string(),
+        client_intent_id: "play-for-combat".to_string(),
+        intent: ProtocolIntent::PlayCard {
+            hand_index: 0,
+            position: None,
+            target_minion_id: None,
+        },
+    });
+    // 战吼需要目标的随从会留下目标待选，未结算时该座位无法结束招募。
+    let view = task.player_view(0).expect("视图应可用");
+    if matches!(
+        view.self_.pending_choices.first(),
+        Some(protocol::view::PendingChoice::Target { .. })
+    ) {
+        let minion_id = view.self_.board[0].minion_id.clone();
+        task.handle(RoomCommand::Intent {
+            player_id: "p0".to_string(),
+            client_intent_id: "target-for-combat".to_string(),
+            intent: ProtocolIntent::ChooseTarget { minion_id },
+        });
+    }
+
     // 全员结束招募：最后一条意图触发 finish_recruit → resolve_combat，阶段停在
     // Combat 演示；阶段事件应随每个座位的 StateUpdate 下发。
     let mut last = Vec::new();

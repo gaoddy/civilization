@@ -713,7 +713,7 @@ fn contagion_persists_across_combat() {
     state.pairings = vec![Pairing {
         a: 0,
         b: 1,
-        mirror: false,
+        ghost: None,
     }];
     place(&engine.catalog, &mut state, 0, 1, "contagious");
     place(&engine.catalog, &mut state, 1, 2, "target");
@@ -740,7 +740,7 @@ fn contagion_persists_across_combat() {
 }
 
 #[test]
-fn mirror_combat_does_not_write_back() {
+fn ghost_combat_does_not_write_back() {
     let (mut engine, mut state) = setup(3);
     state.phase = Phase::Combat;
     state.turn = 2;
@@ -749,17 +749,24 @@ fn mirror_combat_does_not_write_back() {
     state.pairings = vec![Pairing {
         a: 0,
         b: 0,
-        mirror: true,
+        ghost: Some(3),
     }];
-    place(&engine.catalog, &mut state, 0, 1, "contagious");
-    place(&engine.catalog, &mut state, 0, 2, "target");
+    place(&engine.catalog, &mut state, 0, 1, "target");
+    state.players[3].eliminated = true;
+    place(&engine.catalog, &mut state, 3, 2, "contagious");
+    let own_before = state.players[0].board.clone();
+    let ghost_before = state.players[3].board.clone();
 
-    engine.resolve_combat(&mut state).expect("镜像战斗应成功");
+    engine.resolve_combat(&mut state).expect("幽灵战斗应成功");
 
-    assert_eq!(state.players[0].board[0].contagion, 0);
-    assert_eq!(state.players[0].board[1].contagion, 0);
-    assert_eq!(state.players[0].board[0].stats.attack.growth, 0);
-    assert_eq!(state.players[0].board[1].stats.health.growth, 0);
+    assert_eq!(
+        state.players[0].board, own_before,
+        "战斗不得修改落单座位持久随从"
+    );
+    assert_eq!(
+        state.players[3].board, ghost_before,
+        "幽灵座位棋盘不得被写回"
+    );
 }
 
 #[test]

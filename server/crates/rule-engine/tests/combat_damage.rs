@@ -10,7 +10,7 @@ use rule_engine::combat::{CombatAction, CombatSetup, simulate, simulate_with};
 use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
-use rule_engine::settle::{Pairing, strip_ghost};
+use rule_engine::settle::Pairing;
 use rule_engine::state::{InstanceId, MinionInstance, Phase};
 
 fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_list: &[&str]) {
@@ -266,7 +266,7 @@ fn combat_write_back_restores_full_health() {
     state.pairings = vec![Pairing {
         a: 0,
         b: 1,
-        mirror: false,
+        ghost: None,
     }];
     state.players[0].hp = 30;
     state.players[1].hp = 30;
@@ -302,30 +302,28 @@ fn combat_write_back_restores_full_health() {
     assert_eq!(attack.aura, 0);
 }
 
-/// 7) 幽灵快照只保留 `initial` 与 `growth`，`current` 等于两者之和。
+/// 7) 幽灵阵容保留出局者的成长与永久层，只不携带战斗临时层。
 #[test]
-fn strip_ghost_keeps_only_initial_and_growth() {
+fn ghost_board_keeps_initial_growth_and_permanent() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "plain", 3, 4, &[]);
     let mut original = minion(&catalog, 1, "plain");
     original.stats.attack.add_growth(2);
     original.stats.attack.add_permanent(5);
-    original.stats.attack.add_turn(7);
-    original.stats.attack.set_aura(3);
     original.stats.health.add_growth(1);
     original.stats.health.add_permanent(-2);
-    original.stats.health.add_turn(4);
-    original.stats.health.set_aura(6);
-    original.stats.health.apply_damage(9);
 
-    let ghost = &strip_ghost(std::slice::from_ref(&original))[0];
+    // 已出局者的最终阵容原样参战：成长与永久层都保留，只有战斗临时层不参与。
+    let (engine, mut state) = Engine::new(catalog, [29u8; 32]);
+    state.players[3].eliminated = true;
+    state.players[3].board = vec![original];
 
-    for stat in [&ghost.stats.attack, &ghost.stats.health] {
-        assert_eq!(stat.permanent, 0);
-        assert_eq!(stat.turn, 0);
-        assert_eq!(stat.aura, 0);
-        assert_eq!(stat.current, stat.initial.saturating_add(stat.growth));
-    }
-    assert_eq!(ghost.stats.attack.current, 5);
-    assert_eq!(ghost.stats.health.current, 5);
+    let ghost = &rule_engine::settle::ghost_board(&engine, &state, Some(3))[0];
+
+    assert_eq!(ghost.stats.attack.permanent, 5);
+    assert_eq!(ghost.stats.health.permanent, -2);
+    assert_eq!(ghost.stats.attack.growth, 2);
+    assert_eq!(ghost.stats.health.growth, 1);
+    assert_eq!(ghost.stats.attack.turn, 0);
+    assert_eq!(ghost.stats.attack.aura, 0);
 }

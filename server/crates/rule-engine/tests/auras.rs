@@ -6,7 +6,7 @@ use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
 use rule_engine::engine::Engine;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
-use rule_engine::settle::{Pairing, fold_auras, mirror_ghost_with_auras};
+use rule_engine::settle::{Pairing, fold_auras};
 use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat};
 
 fn setup() -> (Engine, GameState) {
@@ -337,59 +337,34 @@ fn state_hash_includes_auras() {
 }
 
 #[test]
-fn mirror_ghost_from_previous_board_includes_auras() {
+fn ghost_fight_does_not_mutate_stored_state() {
     let (mut engine, mut state) = setup();
     place(&engine.catalog, &mut state, 0, 1, "qinghao");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
-    engine.recompute_auras(&mut state);
-
-    // 上一场快照保留原始实例编号，光环缓存可按同一 InstanceId 命中。
-    let raw = state.players[0].board.clone();
-    state.previous_board.insert(0, raw.clone());
-
-    let ghost = mirror_ghost_with_auras(&engine.catalog, &state, 0);
-    let ghost_juzi = ghost
-        .iter()
-        .find(|minion| minion.instance_id == 2)
-        .expect("幽灵应包含上一场随从");
-    assert_eq!(
-        combat::effective_health(&engine.catalog, ghost_juzi),
-        4,
-        "幽灵应叠加 +1 生命光环（基础 3 + 光环 1）"
-    );
-    assert_eq!(
-        combat::effective_attack(&engine.catalog, ghost_juzi),
-        2,
-        "幽灵应叠加 +1 攻击光环（基础 1 + 光环 1）"
-    );
-}
-
-#[test]
-fn mirror_fight_does_not_mutate_stored_state() {
-    let (mut engine, mut state) = setup();
-    place(&engine.catalog, &mut state, 0, 1, "qinghao");
-    place(&engine.catalog, &mut state, 0, 2, "juzi");
+    place(&engine.catalog, &mut state, 3, 3, "juzi");
+    state.players[3].eliminated = true;
     engine.recompute_auras(&mut state);
 
     let before = state.players[0].board.clone();
-    state.previous_board.insert(0, before.clone());
+    let before_ghost = state.players[3].board.clone();
+    let before_auras = state.auras.clone();
     state.phase = Phase::Combat;
     state.pairings = vec![Pairing {
         a: 0,
         b: 0,
-        mirror: true,
+        ghost: Some(3),
     }];
 
     engine
         .resolve_combat(&mut state)
-        .expect("镜像战斗应成功结算");
+        .expect("幽灵战斗应成功结算");
 
     assert_eq!(state.players[0].board, before, "战斗不得修改持久随从实例");
     assert_eq!(
-        state.previous_board.get(&0),
-        Some(&before),
-        "上一场快照应保持原始（未折叠光环）内容"
+        state.players[3].board, before_ghost,
+        "幽灵座位棋盘不得被写回"
     );
+    assert_eq!(state.auras, before_auras, "幽灵光环不得写回共享缓存");
     for minion in &state.players[0].board {
         assert_eq!(minion.stats.attack.aura, 0, "光环不得写入持久实例");
         assert!(minion.granted.is_empty(), "光环不得写入持久 granted");

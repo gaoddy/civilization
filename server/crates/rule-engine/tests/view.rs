@@ -270,7 +270,7 @@ fn opponent_seat_follows_pairings() {
     state.pairings = vec![rule_engine::state::Pairing {
         a: 0,
         b: 3,
-        mirror: false,
+        ghost: None,
     }];
 
     assert_eq!(
@@ -291,7 +291,7 @@ fn opponent_seat_follows_pairings() {
     state.pairings = vec![rule_engine::state::Pairing {
         a: 0,
         b: 0,
-        mirror: true,
+        ghost: Some(0),
     }];
     assert_eq!(
         view(&engine, &state, 0)
