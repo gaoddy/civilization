@@ -14,7 +14,6 @@ var _skill_layer: Control
 var _skill_panel: VBoxContainer
 
 var _selected_hero := ""
-var _card_buttons: Dictionary = {}
 
 
 func _ready() -> void:
@@ -117,7 +116,6 @@ func _render_others() -> void:
 ## 底部：本人候选卡。选中态加描边，已确认后全部禁用。
 func _render_candidates() -> void:
     UI.clear(_candidates)
-    _card_buttons.clear()
 
     var candidates := GameStore.my_hero_candidates()
     if candidates.is_empty():
@@ -129,7 +127,6 @@ func _render_candidates() -> void:
         var id := str(hero_id)
         var card := _build_card(id, locked)
         _candidates.add_child(card)
-        _card_buttons[id] = card
 
 
 ## 候选卡：部落色封面铺满、居中首字水印、底部居中名字。
