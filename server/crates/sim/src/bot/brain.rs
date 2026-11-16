@@ -11,7 +11,8 @@
 //! 5. 刷新商店；
 //! 6. `EndRecruit`。
 //!
-//! `targetMinionId` 一律不填：M1 机器人只做不需要目标的操作。
+//! `targetMinionId` 只在手牌声明 `requiresTarget` 时预填己方第一个随从，
+//! 其余情况不填：M1 机器人只做不需要目标的操作。
 
 use protocol::PlayerViewSelf;
 use protocol::intents::Intent;
@@ -40,7 +41,7 @@ pub fn next_intent(view: &PlayerView, catalog: &Catalog, seed: u64) -> Option<In
         return Some(Intent::PlayCard {
             hand_index,
             position: None,
-            target_minion_id: None,
+            target_minion_id: prefill_target(me, hand_index),
         });
     }
     if let Some((slot, _cost)) = best_shop_slot(me, catalog) {
@@ -118,6 +119,22 @@ fn first_playable_hand(me: &PlayerViewSelf) -> Option<i64> {
         .filter(|affordance| affordance.playable)
         .map(|affordance| affordance.index)
         .min()
+}
+
+/// 出牌时预填的目标：视图声明该牌需要目标时取己方第一个随从。
+///
+/// 不预填的话，服务端在存在合法目标时一定会拒绝（`NO_VALID_TARGET`），机器人
+/// 还要再走一轮「被拒 → 补选 → 重发」。棋盘为空说明该效果可落空，返回 `None`。
+fn prefill_target(me: &PlayerViewSelf, hand_index: i64) -> Option<String> {
+    let requires_target = me
+        .hand
+        .iter()
+        .find(|card| card.index == hand_index)
+        .is_some_and(|card| card.requires_target);
+    if !requires_target {
+        return None;
+    }
+    Some(me.board.first()?.minion_id.clone())
 }
 
 /// 收到服务端错误后的兜底意图。

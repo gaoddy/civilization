@@ -22,6 +22,9 @@ func _ready() -> void:
     await _check_combat_layout()
     await _check_hand_drag_emits_position()
     await _check_hand_drag_cursor_rule()
+    await _check_hand_drag_drops_on_empty_slot()
+    await _check_hand_drag_drops_on_minion_card()
+    await _check_board_drag_sells_over_shop_slot()
     await _check_board_drag_reorders()
     await _check_board_sell_drop()
     await _check_drag_rejected_for_target_effect_on_blank()
@@ -75,6 +78,39 @@ func _push_motion(instance: Node, canvas_point: Vector2) -> void:
     var event := InputEventMouseMotion.new()
     event.position = canvas_point
     event.global_position = canvas_point
+    instance.get_viewport().push_input(event, true)
+    await get_tree().process_frame
+
+
+## 按住左键的鼠标移动；`relative` 用于累计拖拽阈值。
+func _push_motion_held(instance: Node, canvas_point: Vector2, relative: Vector2) -> void:
+    var event := InputEventMouseMotion.new()
+    event.position = canvas_point
+    event.global_position = canvas_point
+    event.relative = relative
+    event.button_mask = MOUSE_BUTTON_MASK_LEFT
+    instance.get_viewport().push_input(event, true)
+    await get_tree().process_frame
+
+
+## 真实鼠标拖拽：按下起手、越过阈值、移动到落点、松手。
+func _real_drag(instance: Node, start: Vector2, target: Vector2) -> void:
+    await _push_motion(instance, start)
+    await _push_button(instance, start, true)
+    await _push_motion_held(instance, start + Vector2(24, 0), Vector2(24, 0))
+    await _push_motion_held(instance, target, target - start - Vector2(24, 0))
+    await _push_button(instance, target, false)
+    await get_tree().process_frame
+
+
+## 画布坐标处的鼠标按下/松开事件。
+func _push_button(instance: Node, canvas_point: Vector2, pressed: bool) -> void:
+    var event := InputEventMouseButton.new()
+    event.button_index = MOUSE_BUTTON_LEFT
+    event.pressed = pressed
+    event.position = canvas_point
+    event.global_position = canvas_point
+    event.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
     instance.get_viewport().push_input(event, true)
     await get_tree().process_frame
 
@@ -885,6 +921,148 @@ func _check_hand_drag_cursor_rule() -> void:
         _expect(not board_row.hand_drop_accepted(outside, payload), "棋盘外应为无效落点")
     instance.queue_free()
     await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 真实鼠标事件走完「手牌拖到棋盘空位」：引擎的命中判定必须把落点交给 BoardDrop。
+func _check_hand_drag_drops_on_empty_slot() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi", 0)]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var board_row = instance.find_child("BoardRow", true, false)
+    var hand_card = instance.find_child("HandCard0", true, false)
+    var empty_slot: Control = null
+    if board_row != null:
+        for child in board_row.get_children():
+            if child is Control and child.name == "EmptySlot":
+                empty_slot = child
+                break
+    _expect(hand_card != null and bool(hand_card.drag_allowed), "手牌应允许拖拽")
+    _expect(empty_slot != null, "棋盘应渲染空位")
+    if hand_card != null and empty_slot != null:
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var start: Vector2 = hand_card.get_global_rect().get_center()
+        var target: Vector2 = empty_slot.get_global_rect().get_center()
+        await _push_motion(instance, start)
+        await _push_button(instance, start, true)
+        await _push_motion_held(instance, start + Vector2(24, 0), Vector2(24, 0))
+        await _push_motion_held(instance, target, target - start - Vector2(24, 0))
+        var viewport = instance.get_viewport()
+        _expect(viewport.gui_is_dragging(), "超过拖拽阈值后应进入拖拽状态")
+        await _push_button(instance, target, false)
+        await get_tree().process_frame
+        _expect(captured.size() == 1, "手牌落在空位应产生一条出牌意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(str(intent.get("kind", "")) == Protocol.INTENT_PLAY_CARD, "落点意图应为出牌")
+            _expect(int(intent.get("handIndex", -1)) == 0, "出牌意图应带手牌下标 0")
+            _expect(intent.has("position"), "随从牌落点应带 position")
+        if viewport.gui_is_dragging():
+            viewport.gui_cancel_drag()
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 手牌拖到已有随从卡上：引擎命中判定同样要放行，落点取该卡下标。
+func _check_hand_drag_drops_on_minion_card() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi", 0)]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var hand_card = instance.find_child("HandCard0", true, false)
+    var minion_card = instance.find_child("BoardMinion0", true, false)
+    _expect(hand_card != null and minion_card != null, "场景应渲染手牌与棋盘随从卡")
+    if hand_card != null and minion_card != null:
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        await _real_drag(
+            instance,
+            hand_card.get_global_rect().get_center(),
+            minion_card.get_global_rect().get_center()
+        )
+        _expect(captured.size() == 1, "手牌落在随从卡上应产生一条出牌意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(str(intent.get("kind", "")) == Protocol.INTENT_PLAY_CARD, "落点意图应为出牌")
+            _expect(int(intent.get("position", -1)) == 0, "落在首张卡上应插到下标 0，实际 %s" % [intent])
+        var viewport = instance.get_viewport()
+        if viewport != null and viewport.gui_is_dragging():
+            viewport.gui_cancel_drag()
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 棋盘卡拖到商店槽位按钮上松手：出售落点必须越过槽位按钮交给商店面板。
+func _check_board_drag_sells_over_shop_slot() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi", 0)]
+    view["self"]["affordances"]["boardMinions"] = [
+        {"index": 0, "sellable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var card = instance.find_child("BoardMinion0", true, false)
+    var shop_slot = instance.find_child("ShopSlot0", true, false)
+    _expect(card is BoardCard and shop_slot != null, "场景应渲染棋盘随从卡与商店槽位")
+    if card is BoardCard and shop_slot is Control:
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        # 用引擎的 force_drag 起手，再用真实鼠标事件移动与松手。
+        card.force_drag(card.payload.duplicate(), Control.new())
+        await get_tree().process_frame
+        var target: Vector2 = shop_slot.get_global_rect().get_center()
+        await _push_motion_held(instance, target, target - card.get_global_rect().get_center())
+        await _push_button(instance, target, false)
+        await get_tree().process_frame
+        _expect(captured.size() == 1, "拖到商店槽位上松手应产生一条出售意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(str(intent.get("kind", "")) == Protocol.INTENT_SELL_MINION, "落点意图应为出售")
+            _expect(str(intent.get("minionId", "")) == "mi_1", "出售意图应带随从 id")
+        var viewport = instance.get_viewport()
+        if viewport != null and viewport.gui_is_dragging():
+            viewport.gui_cancel_drag()
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
     GameStore.view = {}
     GameStore.turn = 1
 

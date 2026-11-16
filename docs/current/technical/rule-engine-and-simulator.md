@@ -99,7 +99,7 @@ tests/                       # Python 标准库 unittest
 
 `sim bot` 只在视图变化时决策；服务端拒绝意图不会带来新视图，因此收到 `Error` 后每回合最多补发一次 `EndRecruit`（`brain::recover_after_error`），避免整局停在招募阶段等超时。该兜底由 `make m1b-e2e` 的稳定运行暴露并覆盖。
 
-`sim bot` 的意图表同步扩到十一种：`pendingChoices` 头部为 `target` 时发 `ChooseTarget { minion }`，取己方棋盘最左侧随从；`PlayCard` 一律带 `position: None`（追加到最右）。`sim/src/ai.rs`（M0 基线）同样按该规则消费目标待选。
+`sim bot` 的意图表同步扩到十一种：`pendingChoices` 头部为 `target` 时发 `ChooseTarget { minion }`，取己方棋盘最左侧随从；`PlayCard` 一律带 `position: None`（追加到最右），并读手牌视图 `requiresTarget`：为真且棋盘非空时预填己方第一个随从为目标，棋盘为空时不填（效果可落空）。`sim/src/ai.rs`（M0 基线）同样按该规则消费目标待选。
 
 ## 5. 验证方式
 

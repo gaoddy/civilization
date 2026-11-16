@@ -62,6 +62,27 @@ fn catalog() -> rule_engine::data::Catalog {
     sim::embedded_catalog().expect("内嵌卡表应能加载")
 }
 
+/// 给视图补上手牌与棋盘，用于需要目标的效果牌决策。
+fn with_hand_and_board(mut view: PlayerView, hand_cards: Value, board: Value) -> PlayerView {
+    view.self_.hand = serde_json::from_value(hand_cards).expect("手牌样例应当能反序列化");
+    view.self_.board = serde_json::from_value(board).expect("棋盘样例应当能反序列化");
+    view
+}
+
+/// 棋盘随从样例；`index` 与 `minionId` 由调用方给出。
+fn board_minion(minion_id: &str, index: u64) -> Value {
+    json!({
+        "attack": 1,
+        "cardId": "adam-smith",
+        "golden": false,
+        "health": 1,
+        "index": index,
+        "keywords": [],
+        "minionId": minion_id,
+        "sellable": true
+    })
+}
+
 #[test]
 fn consumes_pending_choice_first() {
     // 即使商店有买得起的最贵卡，也必须先消费待选。
@@ -130,8 +151,82 @@ fn plays_hand_before_buying() {
         } => {
             assert_eq!(hand_index, 0);
             assert_eq!(position, None, "机器人不指定落点，一律追加");
-            assert_eq!(target_minion_id, None, "M1 机器人不填目标");
+            assert_eq!(target_minion_id, None, "视图未声明需要目标时不填目标");
         }
+        other => panic!("期望 PlayCard，实际 {other:?}"),
+    }
+}
+
+#[test]
+fn targets_first_board_minion_when_hand_requires_target() {
+    // 需要目标的牌不带目标会被服务端拒绝（NO_VALID_TARGET），白跑一轮往返回合。
+    // 棋盘非空时机器人应直接带上己方第一个随从。
+    let view = view(
+        10,
+        json!([]),
+        json!([]),
+        json!([{ "index": 0, "playable": true, "disabledReason": null }]),
+        json!([]),
+        true,
+    );
+    let view = with_hand_and_board(
+        view,
+        json!([{
+            "index": 0,
+            "cardId": "yuandandan",
+            "disabledReason": null,
+            "playable": true,
+            "requiresTarget": true
+        }]),
+        json!([board_minion("mi_1", 0)]),
+    );
+
+    let intent = next_intent(&view, &catalog(), 0).expect("有可打手牌时应当给出意图");
+    match intent {
+        Intent::PlayCard {
+            hand_index,
+            target_minion_id,
+            ..
+        } => {
+            assert_eq!(hand_index, 0);
+            assert_eq!(
+                target_minion_id.as_deref(),
+                Some("mi_1"),
+                "需要目标的牌应预填己方第一个随从"
+            );
+        }
+        other => panic!("期望 PlayCard，实际 {other:?}"),
+    }
+}
+
+#[test]
+fn omits_target_when_hand_requires_target_but_board_is_empty() {
+    // 目标池为空时服务端允许落空，机器人不应凭空编造目标。
+    let view = view(
+        10,
+        json!([]),
+        json!([]),
+        json!([{ "index": 0, "playable": true, "disabledReason": null }]),
+        json!([]),
+        true,
+    );
+    let view = with_hand_and_board(
+        view,
+        json!([{
+            "index": 0,
+            "cardId": "yuandandan",
+            "disabledReason": null,
+            "playable": true,
+            "requiresTarget": true
+        }]),
+        json!([]),
+    );
+
+    let intent = next_intent(&view, &catalog(), 0).expect("有可打手牌时应当给出意图");
+    match intent {
+        Intent::PlayCard {
+            target_minion_id, ..
+        } => assert_eq!(target_minion_id, None, "棋盘为空时不填目标"),
         other => panic!("期望 PlayCard，实际 {other:?}"),
     }
 }
