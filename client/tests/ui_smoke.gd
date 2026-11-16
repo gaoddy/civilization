@@ -41,6 +41,73 @@ func _expect(condition: bool, message: String) -> void:
         _failures += 1
 
 
+## 在卡片局部坐标处用真实鼠标移动事件模拟悬停。
+func _hover(instance: Node, card: Control, local: Vector2) -> void:
+    await _push_motion(instance, card.get_global_rect().position + local)
+
+
+func _push_motion(instance: Node, canvas_point: Vector2) -> void:
+    # 传入画布坐标并令 in_local_coords = true：Godot 在 _input 之前按画布变换
+    # 换算位置（1280x720 视口被缩放到无头窗口），页面再按同一变换反算，
+    # 与 get_global_rect() 同一坐标系。
+    var event := InputEventMouseMotion.new()
+    event.position = canvas_point
+    event.global_position = canvas_point
+    instance.get_viewport().push_input(event, true)
+    await get_tree().process_frame
+
+
+## 战斗只读卡（CombatOwnRow / CombatOpponentRow）同样触发详情。
+func _check_combat_detail(instance: Node) -> void:
+    var detail = instance.find_child("MinionDetailPanel", true, false)
+    var own_row = instance.find_child("CombatOwnRow", true, false)
+    var opponent_row = instance.find_child("CombatOpponentRow", true, false)
+    if detail == null or own_row == null or opponent_row == null:
+        _expect(false, "战斗视图缺少详情面板或随从行")
+        return
+    for row in [own_row, opponent_row]:
+        if row.get_child_count() == 0:
+            _expect(false, "战斗随从行为空")
+            continue
+        var card: Control = row.get_child(0)
+        await _hover(instance, card, card.size / 2)
+        _expect(detail.is_visible_in_tree(), "战斗卡 %s 悬停应显示详情面板" % card.name)
+        _expect(detail.mouse_filter == Control.MOUSE_FILTER_IGNORE, "详情面板不应拦截鼠标")
+    await _push_motion(instance, Vector2(-40, -40))
+    _expect(not detail.is_visible_in_tree(), "移出战斗卡矩形应隐藏详情面板")
+
+
+func _check_detail_without_stats() -> void:
+    # stats 缺失（旧服务端 / 部分回放）时面板只显示当前攻防。
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"][0].erase("stats")
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var detail = instance.find_child("MinionDetailPanel", true, false)
+    var card = instance.find_child("BoardMinion0", true, false)
+    if detail == null or card == null:
+        _expect(false, "对局场景缺少详情面板或棋盘随从")
+    else:
+        await get_tree().process_frame
+        await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
+        _expect(detail.is_visible_in_tree(), "缺少 stats 时详情面板仍应显示")
+        var text := _node_text(detail)
+        _expect(text.contains("当前") and text.contains("3 / 4"), "缺少 stats 时应显示当前攻防：%s" % text)
+        for absent in ["初始", "永久", "回合", "光环", "受击"]:
+            _expect(not text.contains(absent), "缺少 stats 时不应出现「%s」：%s" % [absent, text])
+    instance.queue_free()
+    GameStore.view = {}
+    GameStore.deadline = ""
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
 func _node_text(node: Node) -> String:
     var text := ""
     for child in node.find_children("*", "Label", true, false):
@@ -114,20 +181,27 @@ func _check_game() -> void:
     if empty_slot != null:
         _expect(str(empty_slot.text).begins_with("空槽"), "空商店槽应显示「空槽」，实际：%s" % empty_slot.text)
     var detail = instance.find_child("MinionDetailPanel", true, false)
+    var detail_layer = instance.find_child("MinionDetailLayer", true, false)
     _expect(detail != null, "对局页应有随从详情面板")
-    _expect(detail != null and not detail.visible, "详情面板默认隐藏")
+    _expect(detail != null and not detail.is_visible_in_tree(), "详情面板默认隐藏")
+    _expect(detail_layer != null and not detail_layer.is_visible_in_tree(), "详情层默认隐藏")
     var card = instance.find_child("BoardMinion0", true, false)
     if detail != null and card != null:
-        card.mouse_entered.emit()
-        await get_tree().process_frame
-        _expect(detail.visible, "悬停棋盘随从应显示详情面板")
+        await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
+        _expect(detail.is_visible_in_tree(), "悬停棋盘随从应显示详情面板")
         var text := _node_text(detail)
         for expected in ["初始", "3 / 4", "永久", "+1 / +2", "回合", "+0 / -2", "光环", "+0 / +1", "受击", "0 / -3", "当前", "4 / 2"]:
             _expect(text.contains(expected), "详情面板应包含「%s」：%s" % [expected, text])
         _expect(not text.contains("-0"), "非负构成项应带 +：%s" % text)
-        card.mouse_exited.emit()
-        await get_tree().process_frame
-        _expect(not detail.visible, "离开棋盘随从应隐藏详情面板")
+        # 指针落在卡片内按钮区域（STOP 子控件）继续移动，面板保持可见。
+        var actions = card.find_child("Actions", true, false)
+        if actions != null and actions.get_child_count() > 0:
+            var button: Control = actions.get_child(0)
+            await _push_motion(instance, button.get_global_rect().get_center())
+            _expect(detail.is_visible_in_tree(), "指针落在卡片按钮上时详情面板应保持可见")
+        _expect(detail.mouse_filter == Control.MOUSE_FILTER_IGNORE, "详情面板不应拦截鼠标")
+        await _hover(instance, card, Vector2(card.size.x / 2, card.size.y + 24))
+        _expect(not detail.is_visible_in_tree(), "移出棋盘随从矩形应隐藏详情面板")
     var power = instance.find_child("HeroPowerButton", true, false)
     if power == null:
         _expect(false, "对局场景缺少 HeroPowerButton")
@@ -143,6 +217,8 @@ func _check_game() -> void:
                     has_skip = true
         _expect(has_skip, "英雄技能弹层应提供「不指定目标」")
     instance.queue_free()
+    await get_tree().process_frame
+    await _check_detail_without_stats()
     GameStore.view = {}
     GameStore.turn = 1
 
@@ -218,6 +294,7 @@ func _check_combat_layout() -> void:
     _expect(own_row != null and own_row.get_child_count() == 3, "我方随从行应为 3 张")
     var end_button = instance.find_child("EndButton", true, false)
     _expect(end_button != null and not end_button.visible, "战斗阶段不应显示结束招募按钮")
+    await _check_combat_detail(instance)
     instance.queue_free()
     GameStore.view = {}
     GameStore.last_combat = {}

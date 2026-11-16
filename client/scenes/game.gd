@@ -63,6 +63,8 @@ var _overlay: Control
 # 随从详情：覆盖全屏但不拦截输入，层级位于选择浮层之上。
 var _detail_layer: Control
 var _detail_panel: PanelContainer
+var _detail_cards: Array = []
+var _hover_card: Control = null
 
 
 func _ready() -> void:
@@ -400,6 +402,7 @@ func _process(delta: float) -> void:
 
 func _refresh() -> void:
     _hide_detail()
+    _detail_cards.clear()
     var view: Dictionary = GameStore.view
     if view.is_empty():
         _status.text = "等待对局状态…"
@@ -589,6 +592,7 @@ func _minion_card(
     box.add_child(keyword_label)
 
     var spacer := Control.new()
+    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
     box.add_child(spacer)
 
@@ -910,9 +914,12 @@ const DETAIL_ROW_TEXT := {
 
 
 ## 棋盘随从卡统一挂详情：悬停进入/离开、鼠标左键按下/松开、触摸按下/松开。
+## 卡内按钮与 spacer 必须是 STOP/IGNORE 混合，祖先悬停通知会被子控件截断，
+## 因此真正的矩形命中判断放在 _input，这里只保留就近的进入/离开兜底。
 func _attach_detail(card: Control, minion: Dictionary) -> void:
+    card.set_meta("detail_minion", minion)
+    _detail_cards.append(card)
     card.mouse_entered.connect(_show_detail.bind(minion, card))
-    card.mouse_exited.connect(_hide_detail)
     card.gui_input.connect(_on_card_gui_input.bind(minion, card))
 
 
@@ -921,19 +928,54 @@ func _on_card_gui_input(event: InputEvent, minion: Dictionary, card: Control) ->
         if event.pressed:
             _show_detail(minion, card)
         else:
-            _hide_detail()
+            _update_detail_hover(card.get_global_rect().position + event.position)
     elif event is InputEventScreenTouch:
         if event.pressed:
             _show_detail(minion, card)
         else:
+            _update_detail_hover(card.get_global_rect().position + event.position)
+
+
+## 跨子控件的真实命中判断：指针落在卡片矩形内即显示，移出才隐藏。
+func _input(event: InputEvent) -> void:
+    if _detail_layer == null:
+        return
+    if event is InputEventMouseMotion:
+        _update_detail_hover(_canvas_point(event.position))
+    elif event is InputEventScreenTouch:
+        _update_detail_hover(_canvas_point(event.position))
+    elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+        _update_detail_hover(_canvas_point(event.position))
+
+
+## 视口坐标转为画布坐标，与 get_global_rect() 同一坐标系。
+func _canvas_point(viewport_point: Vector2) -> Vector2:
+    return get_viewport().get_canvas_transform().affine_inverse() * viewport_point
+
+
+func _update_detail_hover(point: Vector2) -> void:
+    var found: Control = null
+    for card in _detail_cards:
+        if is_instance_valid(card) and card.is_visible_in_tree() and card.get_global_rect().has_point(point):
+            found = card
+            break
+    if found == null:
+        if _hover_card != null:
             _hide_detail()
+        return
+    if found == _hover_card and _detail_panel != null and _detail_panel.visible:
+        return
+    _show_detail(found.get_meta("detail_minion", {}), found)
 
 
 func _show_detail(minion: Dictionary, anchor: Control) -> void:
     if _detail_panel == null or anchor == null or not is_instance_valid(anchor):
         return
+    if not is_instance_valid(_hover_card) or _hover_card != anchor:
+        _hover_card = anchor
     UI.clear(_detail_panel)
     var box := VBoxContainer.new()
+    box.mouse_filter = Control.MOUSE_FILTER_IGNORE
     box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     _detail_panel.add_child(box)
 
@@ -950,8 +992,8 @@ func _show_detail(minion: Dictionary, anchor: Control) -> void:
             int(minion.get("health", 0)),
         ]))
     else:
-        var attack: Dictionary = stats.get("attack", {})
-        var health: Dictionary = stats.get("health", {})
+        var attack: Dictionary = _stat_layers(stats.get("attack"))
+        var health: Dictionary = _stat_layers(stats.get("health"))
         for layer in DETAIL_ROWS:
             var a := int(attack.get(layer, 0))
             var h := int(health.get(layer, 0))
@@ -991,6 +1033,13 @@ func _hide_detail() -> void:
         _detail_panel.visible = false
     if _detail_layer != null:
         _detail_layer.visible = false
+    _hover_card = null
+
+
+func _stat_layers(value: Variant) -> Dictionary:
+    if typeof(value) == TYPE_DICTIONARY:
+        return value
+    return {}
 
 
 func _detail_row(prefix: String, value: String) -> HBoxContainer:
