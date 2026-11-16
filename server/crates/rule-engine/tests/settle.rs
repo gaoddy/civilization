@@ -460,9 +460,15 @@ fn ghost_board_folds_own_aura() {
 
 #[test]
 fn ghost_board_of_none_is_empty() {
-    let (engine, state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    add_minion_card(&mut engine.catalog, "plain", 1, 2, 3);
+    // 棋盘上有随从也不能让「没有幽灵」凭空产出阵容。
+    state.players[0].board = vec![minion(&engine.catalog, 1, "plain")];
 
-    assert!(ghost_board(&engine, &state, None).is_empty());
+    assert!(
+        ghost_board(&engine, &state, None).is_empty(),
+        "ghost 为 None 时幽灵阵容必须为空"
+    );
 }
 
 #[test]
@@ -527,6 +533,23 @@ fn ghost_report_renumbers_disjoint_ids() {
         "己方与幽灵的实例编号不能重叠：己方 {own:?}，幽灵 {ghost:?}"
     );
     assert_eq!(report.own_board[0].instance_id, 1, "己方编号保持原值");
+
+    // 幽灵方 10/10 攻击己方 1/1：这条动作的来源必须在幽灵棋盘上，
+    // 否则重号会让「幽灵攻击」被当成己方随从的动作。
+    let ghost_attack = report
+        .actions
+        .iter()
+        .find_map(|action| match action {
+            combat::CombatAction::Attack { attacker, .. } if ghost.contains(attacker) => {
+                Some(*attacker)
+            }
+            _ => None,
+        })
+        .expect("幽灵应至少攻击一次");
+    assert!(
+        !own.contains(&ghost_attack),
+        "幽灵攻击的来源 {ghost_attack} 不应落在己方棋盘"
+    );
 }
 
 #[test]

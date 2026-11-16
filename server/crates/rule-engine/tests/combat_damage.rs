@@ -302,7 +302,7 @@ fn combat_write_back_restores_full_health() {
     assert_eq!(attack.aura, 0);
 }
 
-/// 7) 幽灵阵容保留出局者的成长与永久层，只不携带战斗临时层。
+/// 7) 幽灵阵容原样保留出局者棋盘的成长/永久层；战斗临时层的清理由上游负责。
 #[test]
 fn ghost_board_keeps_initial_growth_and_permanent() {
     let mut catalog = test_catalog();
@@ -310,10 +310,16 @@ fn ghost_board_keeps_initial_growth_and_permanent() {
     let mut original = minion(&catalog, 1, "plain");
     original.stats.attack.add_growth(2);
     original.stats.attack.add_permanent(5);
+    original.stats.attack.add_turn(7);
+    original.stats.attack.set_aura(3);
     original.stats.health.add_growth(1);
     original.stats.health.add_permanent(-2);
+    original.stats.health.add_turn(4);
+    original.stats.health.set_aura(6);
 
-    // 已出局者的最终阵容原样参战：成长与永久层都保留，只有战斗临时层不参与。
+    // `ghost_board` 不做剥离：`turn` 层与战斗光环在玩家出局的那次结算里
+    // 已由 `clear_combat_duration` 清掉，能进入死后棋盘的临时层本就为 0。
+    // 这里直接构造未经结算的棋盘，用来确认 `ghost_board` 不额外改写任何层。
     let (engine, mut state) = Engine::new(catalog, [29u8; 32]);
     state.players[3].eliminated = true;
     state.players[3].board = vec![original];
@@ -324,6 +330,9 @@ fn ghost_board_keeps_initial_growth_and_permanent() {
     assert_eq!(ghost.stats.health.permanent, -2);
     assert_eq!(ghost.stats.attack.growth, 2);
     assert_eq!(ghost.stats.health.growth, 1);
-    assert_eq!(ghost.stats.attack.turn, 0);
-    assert_eq!(ghost.stats.attack.aura, 0);
+    // 没有光环来源时 `fold_auras` 不覆盖 aura 层，临时层与战斗光环保持输入值。
+    assert_eq!(ghost.stats.attack.turn, 7);
+    assert_eq!(ghost.stats.health.turn, 4);
+    assert_eq!(ghost.stats.attack.aura, 3);
+    assert_eq!(ghost.stats.health.aura, 6);
 }

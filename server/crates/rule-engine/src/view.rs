@@ -393,7 +393,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .collect();
 
     let opponent_seat = state.pairings.iter().find_map(|pairing| {
-        if pairing.ghost.is_some() || (pairing.a != seat && pairing.b != seat) {
+        if pairing.is_ghost() || (pairing.a != seat && pairing.b != seat) {
             return None;
         }
         Some(if pairing.a == seat {

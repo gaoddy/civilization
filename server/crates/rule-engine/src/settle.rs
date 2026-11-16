@@ -35,6 +35,16 @@ pub struct Pairing {
     pub ghost: Option<Seat>,
 }
 
+impl Pairing {
+    /// 是否幽灵战：落单配对（`a == b`）或已标注幽灵归属座位。
+    ///
+    /// `pair_round` 的重试阶段幽灵尚未抽取，此时仅由 `a == b` 成立；
+    /// 结算与视图统一用本判据，避免两处各写一套。
+    pub fn is_ghost(&self) -> bool {
+        self.a == self.b || self.ghost.is_some()
+    }
+}
+
 /// 单座位视角的一场战斗报告。
 ///
 /// 报告只由 [`Engine::resolve_combat`] 的本次调用返回，不写入 [`GameState`]，
@@ -121,13 +131,13 @@ pub fn pair_round(state: &mut GameState) -> Vec<Pairing> {
     }
 
     // 只有存在落单配对时才抽一次幽灵；偶数人数局面的随机流保持不变。
-    let ghost = if pairings.iter().any(|pairing| pairing.a == pairing.b) {
+    let ghost = if pairings.iter().any(Pairing::is_ghost) {
         ghost_seat(state)
     } else {
         None
     };
     for pairing in &mut pairings {
-        if pairing.a == pairing.b {
+        if pairing.is_ghost() {
             pairing.ghost = ghost;
         }
     }
@@ -190,7 +200,9 @@ fn repeats_previous_opponent(
     previous: &BTreeMap<Seat, Option<Seat>>,
 ) -> bool {
     pairings.iter().any(|pairing| {
-        if pairing.ghost.is_some() {
+        // 重试循环内 ghost 尚未填充，`is_ghost()` 此时等价于 `a == b`；
+        // 落单配对不参与「上一场对手」比较。
+        if pairing.is_ghost() {
             return false;
         }
         previous_opponent(previous, pairing.a) == Some(pairing.b)
@@ -249,7 +261,7 @@ fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<CombatOutcom
     let mut events = Vec::new();
     let mut reports = BTreeMap::new();
     for pairing in pairings {
-        if pairing.a == pairing.b {
+        if pairing.is_ghost() {
             resolve_ghost(engine, state, pairing, &mut events, &mut reports);
         } else {
             resolve_real(engine, state, pairing, &mut events, &mut reports);
