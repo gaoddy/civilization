@@ -146,16 +146,6 @@ fn three_same_minions_become_golden() {
     assert!(golden.shield_used, "保留最早副本的护盾状态");
     assert_eq!(golden.attacks_left, 0);
     assert!(!golden.cannot_attack);
-    // MinionInstance 不存基础攻防：金色标志由展示/战斗层按卡面 ×2 计算。
-    let card = test_catalog()
-        .cards
-        .get(&card_id)
-        .cloned()
-        .expect("卡牌应存在");
-    assert!(
-        card.attack.is_some() && card.health.is_some(),
-        "随从应有卡面攻防"
-    );
     assert_eq!(state.pending.len(), 1, "三连应产生一个发现待选");
 }
 

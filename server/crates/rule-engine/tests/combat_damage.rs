@@ -112,7 +112,7 @@ fn attacks(log: &rule_engine::combat::CombatLog) -> Vec<(InstanceId, InstanceId,
         .collect()
 }
 
-/// 1) 攻击主伤害写入 `stats.health.current`，层和不变，`damage()` 等于掉血量。
+/// 1) 攻击主伤害写入 `stats.health.current`，层和不变，`damage()` 等于累计已受伤害（本例仅一次命中）。
 #[test]
 fn attack_damage_updates_current_only() {
     let mut catalog = test_catalog();
@@ -129,7 +129,11 @@ fn attack_damage_updates_current_only() {
     let hit = &log.defender_final[0].stats.health;
     assert_eq!(hit.current, 2, "生命从 5 降到 2");
     assert_eq!(hit.layers(), 5, "伤害不改层和");
-    assert_eq!(hit.damage(), 3, "damage() 等于本次掉血量");
+    assert_eq!(
+        hit.damage(),
+        3,
+        "damage() 等于累计已受伤害（本例仅一次命中）"
+    );
     assert_eq!(hit.growth, 0);
     assert_eq!(attacks(&log), vec![(1, 2, 3, false)], "记录一次主伤害");
 }
@@ -210,7 +214,6 @@ fn cannot_kill_damage_floors_at_one() {
 
     let target = &log.defender_final[0].stats.health;
     assert_eq!(target.current, 1, "非致死伤害夹在 1");
-    assert_ne!(target.current, 0, "不会降到 0");
     assert_eq!(target.layers(), 4);
     assert_eq!(target.damage(), 3, "实际造成 3 点伤害");
 }
@@ -242,14 +245,16 @@ fn reborn_revives_current_to_one_beyond_layers() {
 #[test]
 fn combat_write_back_restores_full_health() {
     let mut catalog = test_catalog();
-    // 战斗开始给自身叠加永久与回合层，验证这些战斗内临时层不会写回。
+    // 战斗开始给自身叠加永久与回合层，验证这些战斗内临时层不会写回；
+    // 同时让幸存者在战斗中真实掉 2 点生命，确保战后满血不是「本来就没掉血」。
     add_effect_card(
         &mut catalog,
         "survivor",
         5,
         5,
         "OnCombatStart|ModifyStats|self|attack=5,health=5,duration=permanent;\
-         OnCombatStart|ModifyStats|self|attack=3,health=3,duration=combat",
+         OnCombatStart|ModifyStats|self|attack=3,health=3,duration=combat;\
+         OnCombatStart|DealDamage|self|amount=2",
     );
     add_card(&mut catalog, "weakling", 0, 1, &[]);
 
@@ -275,6 +280,11 @@ fn combat_write_back_restores_full_health() {
     // 战前已有成长层：战后应按 `initial + growth` 满血。
     state.players[0].board[0].stats.attack.add_growth(1);
     state.players[0].board[0].stats.health.add_growth(2);
+    // 战斗只作用于克隆，持久实例不会因战斗扣血；这里先扣 2 点，让写回的
+    // 「按层和重算当前值（满血进入下一回合）」契约成为可观测行为。
+    state.players[0].board[0].stats.health.apply_damage(2);
+    assert_eq!(state.players[0].board[0].stats.health.current, 5);
+    assert_eq!(state.players[0].board[0].stats.health.layers(), 7);
 
     engine.resolve_combat(&mut state).expect("战斗结算应成功");
 
