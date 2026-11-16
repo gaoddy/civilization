@@ -177,7 +177,7 @@ m1-check:
 | 协议 Rust 生成物 | `make protocol-rs-check` → `cargo run -q -p protocol-gen -- --check` | 无差异 | 0 |
 | 协议生成物 | `make protocol-check` → `validate_protocol.py`、`gen_protocol_gdscript.py --check`、`gen_protocol_docs.py --check` | `协议样例校验通过`，GDScript 与字段表无漂移 | 0 |
 | 卡牌数据 | `make data-check` → `gen_card_data.py --check`、`audit_effects.py` | `生成数据无漂移`、`审计通过` | 0 |
-| 测试 | `make test` → `unittest discover`、`cargo test --workspace` | Python `Ran 70 tests ... OK`；workspace 全部 `test result: ok`，其中 `room-service` 集成测试 91 个（auth 10、e2e 9、filter 14、game 24、reconnect 9、room 22、dev_bots 2），e2e 用例 `eight_bots_finish_a_game` 通过 | 0 |
+| 测试 | `make test` → `unittest discover`、`cargo test --workspace` | Python `Ran 70 tests ... OK`；workspace 全部 `test result: ok`，其中 `room-service` 集成测试 90 个（auth 10、e2e 9、filter 14、game 24、reconnect 9、room 22、dev_bots 2），e2e 用例 `eight_bots_finish_a_game` 通过 | 0 |
 | 静态检查 | `make lint` → `cargo fmt --check`、`cargo clippy --workspace --all-targets -- -D warnings` | 无警告 | 0 |
 | 确定性 | `make m0-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 22 s） | 0 |
 
