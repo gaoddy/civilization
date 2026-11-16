@@ -764,7 +764,7 @@ impl RoomTask {
         let now = self.state.clock.now_ms();
         let expired = {
             let mut rooms = self.state.rooms.lock().await;
-            rooms.tick_disconnects(now)
+            rooms.tick_disconnects(&self.room_id, now)
         };
         if expired.is_empty() {
             return;

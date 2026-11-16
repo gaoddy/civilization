@@ -881,7 +881,11 @@ fn reconnect_within_grace_restores_same_candidates() {
         .mark_disconnected(&room_id, &player, 1_000_000)
         .expect("标记断线成功");
     // 宽限期内：未超时，座位不被回收。
-    assert!(registry.tick_disconnects(1_000_000 + 29_000).is_empty());
+    assert!(
+        registry
+            .tick_disconnects(&room_id, 1_000_000 + 29_000)
+            .is_empty()
+    );
 
     registry
         .mark_reconnected(&room_id, &player)
@@ -904,9 +908,13 @@ fn grace_expiry_releases_seat() {
     registry
         .mark_disconnected(&room_id, &player, 1_000_000)
         .expect("标记断线成功");
-    assert!(registry.tick_disconnects(1_000_000 + 29_000).is_empty());
+    assert!(
+        registry
+            .tick_disconnects(&room_id, 1_000_000 + 29_000)
+            .is_empty()
+    );
 
-    let released = registry.tick_disconnects(1_000_000 + 30_000);
+    let released = registry.tick_disconnects(&room_id, 1_000_000 + 30_000);
     assert_eq!(released, vec![player.clone()], "超时座位应被释放");
     assert_eq!(
         registry

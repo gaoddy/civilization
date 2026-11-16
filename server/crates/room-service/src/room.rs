@@ -476,36 +476,30 @@ impl RoomRegistry {
         Ok(())
     }
 
-    /// 释放断线超过 [`RECONNECT_GRACE_MS`] 的座位，返回被释放的 player_id。
+    /// 释放指定房间里断线超过 [`RECONNECT_GRACE_MS`] 的座位，返回被释放的 player_id。
     ///
-    /// 只释放大厅阶段的座位；对局中的断线由 `GameTask` 自己维护，不走这里。
-    /// 返回值按释放顺序排列，调用方据此广播新的大厅视图。
-    pub fn tick_disconnects(&mut self, now_ms: u64) -> Vec<String> {
-        let mut expired = Vec::new();
-        let room_ids: Vec<RoomId> = self.rooms.keys().cloned().collect();
-        for room_id in room_ids {
-            let Some(room) = self.rooms.get(&room_id) else {
-                continue;
-            };
-            if room.phase != Phase::Lobby {
-                continue;
-            }
-            let victims: Vec<String> = room
-                .slots
-                .values()
-                .filter(|slot| {
-                    slot.disconnected_at_ms
-                        .is_some_and(|at| now_ms.saturating_sub(at) >= RECONNECT_GRACE_MS)
-                })
-                .map(|slot| slot.player_id.clone())
-                .collect();
-            for player_id in victims {
-                if self.leave(&room_id, &player_id).is_ok() {
-                    expired.push(player_id);
-                }
-            }
+    /// 只处理一个大厅房间：房间 task 各管自己，避免某个房间的 tick 释放别人房间的
+    /// 座位却无法通知对方广播。对局中的断线由 `GameTask` 自己维护，不走这里。
+    pub fn tick_disconnects(&mut self, room_id: &str, now_ms: u64) -> Vec<String> {
+        let Some(room) = self.rooms.get(room_id) else {
+            return Vec::new();
+        };
+        if room.phase != Phase::Lobby {
+            return Vec::new();
         }
-        expired
+        let victims: Vec<String> = room
+            .slots
+            .values()
+            .filter(|slot| {
+                slot.disconnected_at_ms
+                    .is_some_and(|at| now_ms.saturating_sub(at) >= RECONNECT_GRACE_MS)
+            })
+            .map(|slot| slot.player_id.clone())
+            .collect();
+        victims
+            .into_iter()
+            .filter(|player_id| self.leave(room_id, player_id).is_ok())
+            .collect()
     }
 
     /// 纯查询：房间是否满足开局条件；满足时返回 `座位 → 英雄卡`。
