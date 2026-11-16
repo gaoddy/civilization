@@ -891,10 +891,13 @@ func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
     for minion in alive:
         wanted.append(str(minion.get("minionId", "")))
 
-    # 先摘掉不再需要的卡片（阵亡或被服务端撤回的随从）。
+    # 先摘掉不再需要的卡片（阵亡或被服务端撤回的随从），以及非卡片的占位提示：
+    # 战报未到时 `_refresh_combat` 会在行内放一条等待提示，战报到达后必须随之清掉。
     var existing: Dictionary = {}
     for child in row.get_children():
         if not (child is Control) or not child.has_meta("minion_id"):
+            row.remove_child(child)
+            child.queue_free()
             continue
         var minion_id := str(child.get_meta("minion_id"))
         if wanted.has(minion_id) and not existing.has(minion_id):

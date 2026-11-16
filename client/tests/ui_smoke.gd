@@ -33,6 +33,7 @@ func _ready() -> void:
     await _check_combat_reborn_reappears()
     await _check_summon_inserts_at_alive_rank()
     await _check_stale_combat_not_shown()
+    await _check_combat_placeholder_cleared()
     await _check_target_pending_overlay()
     await _check_choose_target_sends_intent()
     await _check_overlay_hidden_in_combat()
@@ -568,6 +569,51 @@ func _check_stale_combat_not_shown() -> void:
     GameStore.turn = 1
     GameStore.phase = ""
     GameStore.deadline = ""
+
+
+## 战斗中重连：Snapshot 先到、CombatResult 后到，先显示的等待提示必须随战报清掉。
+func _check_combat_placeholder_cleared() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Combat"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view := FixtureScript.game_view()
+    view["phase"] = "Combat"
+    view["opponentPlayerId"] = "p2"
+    GameStore.view = view
+    _clear_combat()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var opponent_row = instance.find_child("CombatOpponentRow", true, false)
+    _expect(_placeholder_count(opponent_row) == 1, "战报未到时对手行应显示 1 条等待提示")
+
+    # 战报到达（生产路径由 `CombatResult` 消息写入）。
+    _set_combat(FixtureScript.combat_result())
+    instance._refresh()
+    _expect(_placeholder_count(opponent_row) == 0, "战报到达后等待提示应消失，实际仍有 %d 条"
+        % _placeholder_count(opponent_row))
+    _expect(opponent_row != null and opponent_row.get_child_count() == 2,
+        "对手行应只剩 2 张战报随从，实际 %d 个节点"
+        % (0 if opponent_row == null else opponent_row.get_child_count()))
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    _clear_combat()
+    GameStore.turn = 1
+    GameStore.phase = ""
+    GameStore.deadline = ""
+
+
+## 行内的等待提示：是控件但没有 `minion_id` 元数据（随从卡一定带该元数据）。
+func _placeholder_count(row: Node) -> int:
+    if row == null:
+        return 0
+    var count := 0
+    for child in row.get_children():
+        if child is Control and not child.has_meta("minion_id"):
+            count += 1
+    return count
 
 
 ## 棋盘容量取视图：空位数量与提示跟随 `boardSlots`，满场判定用同一数值。
