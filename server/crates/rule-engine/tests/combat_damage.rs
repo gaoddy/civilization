@@ -304,7 +304,7 @@ fn combat_write_back_restores_full_health() {
 
 /// 7) 幽灵阵容原样保留出局者棋盘的成长/永久层；战斗临时层的清理由上游负责。
 #[test]
-fn ghost_board_keeps_initial_growth_and_permanent() {
+fn ghost_board_keeps_growth_and_permanent() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "plain", 3, 4, &[]);
     let mut original = minion(&catalog, 1, "plain");
