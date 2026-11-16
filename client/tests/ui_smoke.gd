@@ -292,7 +292,46 @@ func _check_room_hero_picker() -> void:
         _expect(confirm.disabled, "未连接时确认按钮必须禁用")
         _expect(str(status.text).contains("未连接"), "未连接时状态行应提示，实际：%s" % status.text)
 
+        # 浮层整体不得拦截鼠标：它盖在候选行与确认按钮之上，一旦拦截就再也改不了选。
+        _expect(not _blocks_mouse(layer), "技能浮层及其子节点不得拦截鼠标点击")
+        # 点浮层以外的空白关闭选中。
+        var dismiss := instance.find_child("SkillDismissLayer", true, false)
+        _expect(dismiss != null and dismiss.visible, "选中后应出现关闭浮层的空白层")
+        if dismiss != null:
+            dismiss.emit_signal("gui_input", _press_event())
+            await get_tree().process_frame
+            _expect(not layer.visible, "点浮层外空白应关闭技能浮层")
+
     instance.queue_free()
+
+    # 断线要立刻反映到页面上：连接信号不经过 RoomUpdate，页面必须自己订阅。
+    _fake_connect()
+    GameStore.room_players = [
+        {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
+         "heroCardId": null, "heroCandidates": ["gauss", "mozi", "luban", "shenkuo"]},
+        {"playerId": "p1", "displayName": "玩家B", "ready": false, "isHost": false,
+         "heroCardId": null, "heroCandidates": null},
+    ]
+    var online := await _check_scene("res://scenes/room.tscn", false)
+    if online != null:
+        var online_cards := online.find_child("HeroCandidates", true, false)
+        var online_confirm := online.find_child("ConfirmButton", true, false)
+        var online_status := online.find_child("StatusLabel", true, false)
+        if online_cards != null and online_cards.get_child_count() > 0:
+            online_cards.get_child(0).emit_signal("gui_input", _press_event())
+            await get_tree().process_frame
+            _expect(online_confirm != null and not online_confirm.disabled,
+                "已连接并选中后可确认")
+            # 断线时 `Net` 先清掉连接再发信号，页面必须据此立刻重算状态。
+            _fake_disconnect()
+            Net.disconnected.emit()
+            await get_tree().process_frame
+            _expect(online_confirm != null and online_confirm.disabled,
+                "断线后确认按钮必须立刻禁用")
+            _expect(online_status != null and str(online_status.text).contains("未连接"),
+                "断线后状态行应立刻提示未连接，实际：%s" % (str(online_status.text) if online_status != null else ""))
+        online.queue_free()
+    _fake_disconnect()
 
     # 已确认：候选卡锁定且不再响应点击，确认按钮禁用并标「已确认」。
     GameStore.room_players = [
@@ -326,6 +365,16 @@ func _press_event() -> InputEventMouseButton:
     event.button_index = MOUSE_BUTTON_LEFT
     event.pressed = true
     return event
+
+
+## 递归检查控件树里是否有会拦截鼠标（STOP）的节点。
+func _blocks_mouse(node: Node) -> bool:
+    if node is Control and (node as Control).mouse_filter == Control.MOUSE_FILTER_STOP:
+        return true
+    for child in node.get_children():
+        if _blocks_mouse(child):
+            return true
+    return false
 
 
 func _check_game() -> void:

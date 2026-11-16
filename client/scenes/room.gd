@@ -10,6 +10,7 @@ var _others: HBoxContainer
 var _candidates: HFlowContainer
 var _confirm: Button
 var _status: Label
+var _dismiss: Control
 var _skill_layer: Control
 var _skill_panel: VBoxContainer
 
@@ -22,6 +23,9 @@ func _ready() -> void:
     GameStore.game_started.connect(_on_game_started)
     GameStore.view_changed.connect(_on_view_changed)
     GameStore.error_received.connect(_on_error)
+    # 断线不产生房间或视图消息：直接订阅连接状态，否则「未连接」永远不刷新。
+    Net.connected.connect(_sync_state)
+    Net.disconnected.connect(_sync_state)
     _refresh()
 
 
@@ -29,27 +33,45 @@ func _build() -> void:
     var background := ColorRect.new()
     background.color = UITheme.color("color-bg")
     background.set_anchors_preset(Control.PRESET_FULL_RECT)
+    background.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(background)
+
+    # 点浮层外的空白关闭选中：铺满全屏、位于内容之下，候选卡仍然优先接收点击。
+    _dismiss = Control.new()
+    _dismiss.name = "SkillDismissLayer"
+    _dismiss.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _dismiss.mouse_filter = Control.MOUSE_FILTER_STOP
+    _dismiss.visible = false
+    _dismiss.gui_input.connect(_on_dismiss_input)
+    add_child(_dismiss)
 
     var root := VBoxContainer.new()
     root.add_theme_constant_override("separation", UITheme.space("space-md"))
+    # 页面容器一律放行鼠标：空白处的点击要落到 `SkillDismissLayer`，候选卡自己处理点击。
+    root.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var margin := UI.margin(root, UITheme.space("space-lg"))
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+    margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(margin)
 
     _others = HBoxContainer.new()
     _others.name = "OtherPlayers"
+    _others.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _others.add_theme_constant_override("separation", UITheme.space("space-md"))
     root.add_child(_others)
 
     var spacer := Control.new()
     spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     root.add_child(spacer)
 
-    root.add_child(UI.section_title("请选择英雄"))
+    var title := UI.section_title("请选择英雄")
+    title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    root.add_child(title)
 
     _candidates = HFlowContainer.new()
     _candidates.name = "HeroCandidates"
+    _candidates.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _candidates.add_theme_constant_override("h_separation", UITheme.space("space-md"))
     _candidates.add_theme_constant_override("v_separation", UITheme.space("space-md"))
     root.add_child(_candidates)
@@ -67,6 +89,7 @@ func _build() -> void:
 
 
 func _build_skill_layer() -> void:
+    # 视觉层在最上层但整体忽略鼠标：浮层不得挡住候选卡与确认按钮。
     _skill_layer = Control.new()
     _skill_layer.name = "SkillLayer"
     _skill_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -75,21 +98,28 @@ func _build_skill_layer() -> void:
     add_child(_skill_layer)
 
     var panel := UI.card_panel("raised")
+    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    panel.name = "SkillPanel"
     panel.set_anchors_preset(Control.PRESET_CENTER)
     panel.custom_minimum_size = Vector2(320, 0)
+    # 居中预设按控件当前位置摆放；尺寸由内容撑开时向两侧生长才是真正居中。
+    panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+    panel.grow_vertical = Control.GROW_DIRECTION_BOTH
     _skill_layer.add_child(panel)
 
     _skill_panel = VBoxContainer.new()
+    _skill_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _skill_panel.add_theme_constant_override("separation", UITheme.space("space-sm"))
     panel.add_child(_skill_panel)
 
 
 func _refresh() -> void:
-    # 重连或晚到的 RoomUpdate：已确认时用服务端记下的英雄恢复选中态，再重绘。
-    if _selected_hero == "" and _is_confirmed():
+    # 重连或晚到的 RoomUpdate：以服务端的已选英雄为准，避免多端不一致。
+    if _is_confirmed():
         _selected_hero = GameStore.my_hero_id()
     _render_others()
     _render_candidates()
+    _show_skill(_selected_hero)
     _sync_state()
 
 
@@ -139,6 +169,8 @@ func _build_card(hero_id: String, locked: bool) -> PanelContainer:
     card.mouse_filter = Control.MOUSE_FILTER_STOP
 
     var box := UITheme.panel_style("raised")
+    # 封面要铺满整张卡：面板样式默认带 `space-lg` 内边距，会把封面缩进一圈。
+    box.set_content_margin_all(0)
     if hero_id == _selected_hero:
         box.border_color = UITheme.color("color-accent")
         box.set_border_width_all(2)
@@ -190,16 +222,31 @@ func _on_card_input(event: InputEvent, hero_id: String) -> void:
     if _is_confirmed():
         return
     if _selected_hero == hero_id:
-        _selected_hero = ""
+        _select("")
     else:
-        _selected_hero = hero_id
+        _select(hero_id)
+
+
+## 点浮层以外的空白：取消选中并收起浮层。
+func _on_dismiss_input(event: InputEvent) -> void:
+    if not (event is InputEventMouseButton):
+        return
+    var mouse := event as InputEventMouseButton
+    if mouse.pressed and mouse.button_index == MOUSE_BUTTON_LEFT:
+        _select("")
+
+
+## 切换选中态：重绘候选卡、换浮层内容并刷新按钮可用性。
+func _select(hero_id: String) -> void:
+    _selected_hero = hero_id
     _render_candidates()
-    _show_skill(hero_id if _selected_hero == hero_id else "")
+    _show_skill(hero_id)
     _sync_state()
 
 
 func _show_skill(hero_id: String) -> void:
     UI.clear(_skill_panel)
+    _dismiss.visible = hero_id != ""
     if hero_id == "":
         _skill_layer.visible = false
         return
@@ -270,12 +317,16 @@ func _error_route(code: String) -> String:
 
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
-    _status.text = UI.error_text(code)
-    _status.tooltip_text = str(GameStore.last_error.get("message", ""))
     match _error_route(code):
         "lobby":
             GameStore.reset_room()
             UI.navigate(self, "res://scenes/lobby.tscn")
+            return
         "login":
             GameStore.reset_session()
             UI.navigate(self, "res://scenes/login.tscn")
+            return
+    _status.text = UI.error_text(code)
+    _status.tooltip_text = str(GameStore.last_error.get("message", ""))
+    # 请求被拒时没有新的 RoomUpdate：按当前状态重算按钮，否则会一直停在禁用。
+    _sync_state()
