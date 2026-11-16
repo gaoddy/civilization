@@ -550,8 +550,8 @@ fn coverage_counts_all_effect_segments() {
     let coverage = effect_coverage(&catalog);
 
     let total: usize = coverage.values().sum();
-    assert_eq!(total, 109, "已提交数据的全部效果段都应被统计");
-    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&13));
+    assert_eq!(total, 122, "已提交数据的全部效果段都应被统计");
+    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&15));
     assert_eq!(coverage.get(&(Trigger::OnPlay, Op::ModifyStats)), Some(&10));
     assert_eq!(coverage.get(&(Trigger::OnUse, Op::ModifyStats)), Some(&1));
 

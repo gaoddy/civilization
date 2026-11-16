@@ -50,6 +50,7 @@ use crate::auth::Session;
 use crate::envelope::SeatChannel;
 use crate::error::error_message;
 use crate::game::{GameTask, RoomCommand, SeatUpdate, UpdateKind};
+use crate::room::seed_for_code;
 
 /// 每个连接下行队列的容量；连接写不动时房间 task 用 `try_send` 丢弃而不是阻塞。
 const OUTBOUND_CAPACITY: usize = 64;
@@ -305,7 +306,7 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                     );
                     continue;
                 }
-                let created = state.rooms.lock().await.create(&authorized);
+                let created = state.rooms.lock().await.create(&authorized, &state.catalog);
                 let seed = seed_for_code(&created.code);
                 let (tx, rx) = mpsc::unbounded_channel();
                 state.hub.lock().await.insert(
@@ -353,7 +354,7 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                 let joined = {
                     let mut rooms = state.rooms.lock().await;
                     rooms
-                        .join(&request.code, &authorized)
+                        .join(&request.code, &authorized, &state.catalog)
                         .map(|joined_room| joined_room.id.clone())
                 };
                 match joined {
@@ -655,15 +656,6 @@ fn route_error(
 }
 
 /// 房间码派生的确定性对局种子（FNV-1a 64 位）。
-pub fn seed_for_code(code: &str) -> u64 {
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
-    for byte in code.as_bytes() {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    hash
-}
-
 fn spawn_room_task(
     state: AppState,
     room_id: String,
@@ -688,7 +680,7 @@ fn spawn_room_task(
                     Some(message) => task.on_message(message).await,
                     None => break,
                 },
-                _ = ticker.tick() => task.on_tick(),
+                _ = ticker.tick() => task.on_tick().await,
             }
             if task.retire_if_done().await {
                 break;
@@ -762,11 +754,25 @@ impl RoomTask {
         }
     }
 
-    fn on_tick(&mut self) {
+    async fn on_tick(&mut self) {
         if let Some(game) = self.game.as_mut() {
             let updates = game.tick();
             self.deliver(updates);
+            return;
         }
+        // 大厅没有对局：只处理断线宽限超时的座位释放。
+        let now = self.state.clock.now_ms();
+        let expired = {
+            let mut rooms = self.state.rooms.lock().await;
+            rooms.tick_disconnects(&self.room_id, now)
+        };
+        if expired.is_empty() {
+            return;
+        }
+        for player_id in expired {
+            self.senders.remove(&player_id);
+        }
+        self.broadcast_room_update().await;
     }
 
     async fn attach(
@@ -795,7 +801,18 @@ impl RoomTask {
             };
             self.deliver(updates);
         } else {
-            self.send_room_update_to(&player_id).await;
+            let result = {
+                let mut rooms = self.state.rooms.lock().await;
+                rooms.mark_reconnected(&self.room_id, &player_id)
+            };
+            if result.is_err() {
+                // 宽限期已过、座位已被释放：连接不再属于该房间。
+                self.send_lobby_error(&player_id, "NOT_IN_ROOM", "座位已释放")
+                    .await;
+                self.senders.remove(&player_id);
+                return;
+            }
+            self.broadcast_room_update().await;
         }
     }
 
@@ -830,6 +847,16 @@ impl RoomTask {
             };
             self.deliver(updates);
         } else {
+            let result = {
+                let mut rooms = self.state.rooms.lock().await;
+                rooms.mark_reconnected(&self.room_id, &player_id)
+            };
+            if result.is_err() {
+                self.send_lobby_error(&player_id, "NOT_IN_ROOM", "座位已释放")
+                    .await;
+                self.senders.remove(&player_id);
+                return;
+            }
             self.send_room_update_to(&player_id).await;
         }
     }
@@ -846,10 +873,11 @@ impl RoomTask {
             }
             return;
         }
-        // 大厅没有对局状态需要保护：断线立即离开并释放座位，避免永久占位。
+        // 大厅断线保留座位与候选一个宽限期，重连能拿回同一组；超时由 tick 释放。
+        let now = self.state.clock.now_ms();
         let result = {
             let mut rooms = self.state.rooms.lock().await;
-            rooms.leave(&self.room_id, &player_id)
+            rooms.mark_disconnected(&self.room_id, &player_id, now)
         };
         if result.is_ok() {
             self.broadcast_room_update().await;
@@ -1074,25 +1102,30 @@ impl RoomTask {
             .collect();
 
         let mut rooms = self.state.rooms.lock().await;
-        let Some(update) = rooms.room_update(&self.room_id) else {
-            return;
-        };
-        let Ok(value) = serde_json::to_value(&update) else {
-            return;
-        };
-        let Value::Object(payload) = value else {
-            return;
-        };
+        // 每个座位单独序列化：`heroCandidates` 只出现在本人那份里。
+        let mut payloads = Vec::new();
+        for (player_id, out, floor) in &targets {
+            let Some(update) = rooms.room_update_for(&self.room_id, player_id) else {
+                continue;
+            };
+            let Ok(value) = serde_json::to_value(&update) else {
+                continue;
+            };
+            let Value::Object(payload) = value else {
+                continue;
+            };
+            payloads.push((player_id.clone(), out.clone(), floor.clone(), payload));
+        }
         let Some(room) = rooms.room_mut(&self.room_id) else {
             return;
         };
         let mut envelopes = Vec::new();
-        for (player_id, out, floor) in targets {
+        for (player_id, out, floor, payload) in payloads {
             let Some(slot) = room.slot_entry_mut(&player_id) else {
                 continue;
             };
             slot.channel.set_next_seq(floor.current());
-            if let Ok(envelope) = slot.channel.bind("RoomUpdate", payload.clone()) {
+            if let Ok(envelope) = slot.channel.bind("RoomUpdate", payload) {
                 floor.record(envelope.seq.get());
                 envelopes.push((out, envelope));
             }
@@ -1110,7 +1143,7 @@ impl RoomTask {
         let out = sender.out.clone();
         let floor = sender.floor.clone();
         let mut rooms = self.state.rooms.lock().await;
-        let Some(update) = rooms.room_update(&self.room_id) else {
+        let Some(update) = rooms.room_update_for(&self.room_id, player_id) else {
             return;
         };
         let Ok(value) = serde_json::to_value(&update) else {
@@ -1140,13 +1173,6 @@ impl RoomTask {
         };
         let out = sender.out.clone();
         let floor = sender.floor.clone();
-        let mut rooms = self.state.rooms.lock().await;
-        let Some(slot) = rooms
-            .room_mut(&self.room_id)
-            .and_then(|room| room.slot_entry_mut(player_id))
-        else {
-            return;
-        };
         let payload = error_message(code, message, false);
         let Ok(value) = serde_json::to_value(&payload) else {
             return;
@@ -1154,8 +1180,20 @@ impl RoomTask {
         let Value::Object(payload) = value else {
             return;
         };
-        slot.channel.set_next_seq(floor.current());
-        let Ok(envelope) = slot.channel.bind("Error", payload) else {
+
+        // 座位可能已被宽限超时释放，此时没有 `slot.channel` 可用；但仍然必须把错误
+        // 发出去，否则客户端收不到任何回包、会停在一个不能离开的大厅页面上。
+        // 这种情况下用一条以当前下行序号为起点的新通道，保证 `seq` 继续递增。
+        let mut fresh = SeatChannel::new();
+        fresh.set_next_seq(floor.current());
+        let mut rooms = self.state.rooms.lock().await;
+        let channel = rooms
+            .room_mut(&self.room_id)
+            .and_then(|room| room.slot_entry_mut(player_id))
+            .map(|slot| &mut slot.channel)
+            .unwrap_or(&mut fresh);
+        channel.set_next_seq(floor.current());
+        let Ok(envelope) = channel.bind("Error", payload) else {
             return;
         };
         floor.record(envelope.seq.get());
@@ -1180,17 +1218,6 @@ mod tests {
     use crate::auth::SessionStore;
     use crate::clock::FixedClock;
 
-    const HEROES: [&str; 8] = [
-        "adam-smith",
-        "darwin",
-        "davinci",
-        "edison",
-        "einstein",
-        "faraday",
-        "galileo",
-        "knuth",
-    ];
-
     fn session(store: &mut SessionStore, clock: &FixedClock, name: &str) -> Session {
         store
             .authenticate(
@@ -1211,34 +1238,42 @@ mod tests {
         let mut state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
         let mut store = SessionStore::new();
 
-        let (room_id, host_id) = {
+        let (room_id, host_id, last_hero) = {
             let mut rooms = state.rooms.lock().await;
             let host = session(&mut store, &clock, "房主");
             let host_id = host.player_id.clone();
-            let created = rooms.create(&host);
+            let created = rooms.create(&host, &state.catalog);
             let room_id = created.id.clone();
             let code = created.code.clone();
 
             let mut players = vec![host];
             for index in 1..8 {
                 let player = session(&mut store, &clock, &format!("玩家{index}"));
-                rooms.join(&code, &player).expect("加入成功");
+                rooms
+                    .join(&code, &player, &state.catalog)
+                    .expect("加入成功");
                 players.push(player);
             }
-            for (seat, player) in players.iter().enumerate() {
+            let mut last_hero = String::new();
+            for player in &players {
+                let hero = rooms
+                    .candidates_of(&room_id, &player.player_id)
+                    .and_then(|list| list.into_iter().next())
+                    .expect("每人都有候选");
                 rooms
-                    .select_hero(&room_id, &player.player_id, HEROES[seat], &state.catalog)
+                    .select_hero(&room_id, &player.player_id, &hero, &state.catalog)
                     .expect("选英雄成功");
                 rooms
                     .ready(&room_id, &player.player_id, true)
                     .expect("准备成功");
+                last_hero = hero;
             }
             assert!(rooms.start_ready(&room_id).is_some(), "应满足开局条件");
-            (room_id, host_id)
+            (room_id, host_id, last_hero)
         };
 
         // 移除一张已选英雄卡，使 `GameTask::new` 必然失败。
-        state.catalog.cards.remove(HEROES[7]);
+        state.catalog.cards.remove(&last_hero);
 
         let mut task = RoomTask {
             state,
@@ -1258,5 +1293,59 @@ mod tests {
             rooms.leave(&room_id, &host_id).is_ok(),
             "Lobby 阶段房主应能正常离开"
         );
+    }
+
+    /// 座位已被宽限超时释放时，重连仍必须收到 `NOT_IN_ROOM`，不能静默丢弃。
+    ///
+    /// 客户端在这条路径上没有任何超时兜底：收不到回包就会停在选英雄页，
+    /// 而该页没有离开入口。
+    #[tokio::test]
+    async fn released_seat_still_receives_lobby_error() {
+        let clock = FixedClock::new(1_000_000);
+        let state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+        let mut store = SessionStore::new();
+
+        let (room_id, player_id) = {
+            let mut rooms = state.rooms.lock().await;
+            let host = session(&mut store, &clock, "掉线玩家");
+            let player_id = host.player_id.clone();
+            let created = rooms.create(&host, &state.catalog);
+            let room_id = created.id.clone();
+            // 模拟宽限超时：座位已被注册表释放。
+            rooms.leave(&room_id, &player_id).expect("大厅可以离开");
+            (room_id, player_id)
+        };
+
+        let (out, mut rx) = mpsc::channel::<ServerEnvelope>(8);
+        let mut task = RoomTask {
+            state,
+            room_id,
+            seed: 7,
+            game: None,
+            senders: BTreeMap::new(),
+            game_over: false,
+        };
+        task.senders.insert(
+            player_id.clone(),
+            SeatSender {
+                out,
+                floor: SeqFloor::default(),
+                generation: 1,
+            },
+        );
+
+        task.send_lobby_error(&player_id, "NOT_IN_ROOM", "座位已释放")
+            .await;
+
+        let envelope = tokio::time::timeout(std::time::Duration::from_millis(200), rx.recv())
+            .await
+            .expect("座位已释放时也必须下发错误")
+            .expect("下行通道不应关闭");
+        match envelope.parse().expect("下行载荷应能解析") {
+            protocol::ServerMessage::Error(error) => {
+                assert_eq!(error.code, protocol::ErrorCode::NotInRoom);
+            }
+            other => panic!("期望 Error，实际 {other:?}"),
+        }
     }
 }

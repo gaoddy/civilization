@@ -84,9 +84,9 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"繁衍": 1, "嘲讽": 2, "连击": 3, "最优攻击": 3, "传染": 3, "复生": 4, "护盾": 5}
-EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 14, "封建": 29, "工业": 18, "现代": 38, "未来": 32}
-EXPECT_TRIBE = {"学者": 41, "生物": 30, "人类": 37, "机械": 34, "植物": 21, "病毒": 21}
-EXPECT_LEVEL = {1: 22, 2: 37, 3: 37, 4: 30, 5: 30, 6: 16, 7: 12}
+EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 16, "封建": 37, "工业": 22, "现代": 43, "未来": 32}
+EXPECT_TRIBE = {"学者": 49, "生物": 30, "人类": 43, "机械": 37, "植物": 22, "病毒": 22}
+EXPECT_LEVEL = {1: 22, 2: 37, 3: 38, 4: 40, 5: 37, 6: 17, 7: 12}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
@@ -450,8 +450,8 @@ def skill_field_errors(skill):
 
 def check_skills():
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 118:
-        fail(f"技能数量 {len(skills)}，期望 118")
+    if len(skills) != 131:
+        fail(f"技能数量 {len(skills)}，期望 131")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
@@ -651,7 +651,7 @@ def check_cards(skill_map):
             fail(f"{name}: 费用越界 {c['cost']}")
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"随从": 184, "效果": 36}:
+    if counts != {"随从": 203, "效果": 36}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]
@@ -673,8 +673,8 @@ def check_cards(skill_map):
 
 def check_hero_cards(cards, minions, effects):
     hero_cards = [c for c in minions if c.get("is_hero") is True]
-    if len(hero_cards) != 13:
-        fail(f"英雄卡 {len(hero_cards)} 张，期望 13")
+    if len(hero_cards) != 32:
+        fail(f"英雄卡 {len(hero_cards)} 张，期望 32")
     for c in minions:
         if c.get("is_hero") is True:
             continue

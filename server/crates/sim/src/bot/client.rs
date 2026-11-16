@@ -12,6 +12,7 @@ use protocol::ErrorCode;
 use protocol::ServerEnvelope;
 use protocol::ServerMessage;
 use protocol::intents::Intent;
+use protocol::server::RoomUpdate;
 use protocol::view::PlayerView;
 use rule_engine::data::Catalog;
 use serde_json::{Value, json};
@@ -81,7 +82,8 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
         )
         .await?;
     }
-    let room_code = wait_room_update(&mut ws).await?;
+    let room_update = wait_room_update(&mut ws).await?;
+    let room_code = room_update.code.clone();
     if config.create {
         // 有 sink 时调用方自己负责展示房间码（`sim dev` 会打印两行提示），此处不重复。
         match config.room_code_sink.take() {
@@ -92,10 +94,12 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
         }
     }
 
+    // 英雄只能从服务端分配给本人的候选里选：优先用配置的英雄，不在候选里就退到第一张。
+    let hero = pick_hero(&room_update, &config.hero)?;
     send(
         &mut ws,
         "SelectHeroCard",
-        json!({ "cardId": config.hero }),
+        json!({ "cardId": hero }),
         &mut seq,
     )
     .await?;
@@ -245,10 +249,29 @@ async fn authenticate(ws: &mut Ws, config: &BotConfig, seq: &mut u64) -> Result<
     Err("连接在认证完成前关闭".into())
 }
 
-async fn wait_room_update(ws: &mut Ws) -> Result<String, String> {
+/// 从本人的 `RoomUpdate` 里挑一张候选英雄。
+///
+/// 服务端只给本人填充 `heroCandidates`，机器人必须在这组候选里选；
+/// 配置里的英雄不在候选内时退到第一张，保证机器人总能进入准备状态。
+fn pick_hero(update: &RoomUpdate, preferred: &str) -> Result<String, String> {
+    let candidates = update
+        .players
+        .iter()
+        .flat_map(|item| item.hero_candidates.clone().unwrap_or_default())
+        .collect::<Vec<_>>();
+    if candidates.iter().any(|id| id == preferred) {
+        return Ok(preferred.to_string());
+    }
+    candidates
+        .into_iter()
+        .next()
+        .ok_or_else(|| "服务端未下发英雄候选".to_string())
+}
+
+async fn wait_room_update(ws: &mut Ws) -> Result<RoomUpdate, String> {
     while let Some(message) = receive(ws).await? {
         match message {
-            ServerMessage::RoomUpdate(update) => return Ok(update.code),
+            ServerMessage::RoomUpdate(update) => return Ok(update),
             ServerMessage::Error(error) => {
                 return Err(format!("进入房间失败: {} {}", error.code, error.message));
             }

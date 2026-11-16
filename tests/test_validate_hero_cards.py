@@ -94,7 +94,7 @@ class RealHeroCardsTest(unittest.TestCase):
             doc = vd.parse_front_matter(path)
             self.assertFalse(doc["id"].startswith("hero-"), doc["id"])
 
-    def test_real_hero_cards_reference_renamed_skills(self):
+    def test_real_hero_cards_reference_existing_skills(self):
         skills = {}
         for path in sorted((vd.ROOT / "skills").glob("*.md")):
             if path.name == "README.md":
@@ -102,20 +102,21 @@ class RealHeroCardsTest(unittest.TestCase):
             doc = vd.parse_front_matter(path)
             skills[doc["id"]] = doc
 
-        heroes, referenced = [], collections.Counter()
+        heroes = []
         for path in sorted((vd.ROOT / "cards").glob("*.md")):
             if path.name == "README.md":
                 continue
             doc = vd.parse_front_matter(path)
             if doc.get("is_hero") is True:
                 heroes.append(doc)
-                refs = [sid for sid in vd.card_skills(doc) if sid in HERO_SKILLS]
-                self.assertEqual(len(refs), 1, doc["id"])
-                referenced[refs[0]] += 1
+                self.assertTrue(vd.card_skills(doc), doc["id"])
+                for sid in vd.card_skills(doc):
+                    self.assertIn(sid, skills, f"{doc['id']} 引用了不存在的技能 {sid}")
 
-        self.assertEqual(len(heroes), 13)
-        self.assertEqual(set(referenced), HERO_SKILLS)
-        self.assertEqual(set(referenced.values()), {1})
+        self.assertEqual(len(heroes), 32)
+        # 13 张原英雄各有一个专属技能，扩到 32 张后这些技能仍被引用。
+        referenced = {sid for doc in heroes for sid in vd.card_skills(doc)}
+        self.assertLessEqual(HERO_SKILLS, referenced)
 
         active = [sid for sid in HERO_SKILLS if "cost" in skills[sid]]
         passive = [sid for sid in HERO_SKILLS if "cost" not in skills[sid]]
@@ -125,6 +126,7 @@ class RealHeroCardsTest(unittest.TestCase):
             self.assertIn("uses_per_turn", skills[sid], sid)
         for sid in passive:
             self.assertNotIn("uses_per_turn", skills[sid], sid)
+
 
 
 class ActiveSkillFieldTest(unittest.TestCase):
@@ -180,7 +182,11 @@ class SkillRefsTest(unittest.TestCase):
 class HeroCardsTest(unittest.TestCase):
     HERO_IDS = ["adam-smith", "darwin", "davinci", "edison", "einstein",
                 "faraday", "galileo", "knuth", "luxun", "marie-curie",
-                "mendel", "pasteur", "tesla"]
+                "mendel", "pasteur", "tesla", "gauss", "lavoisier", "rutherford",
+                "linnaeus", "lamarck", "morgan", "mozi", "luban", "shenkuo",
+                "simaqian", "quyuan", "zhangzhongjing", "beethoven",
+                "shakespeare", "zhenghe", "wright-brothers", "stephenson",
+                "fleming", "lisshi"]
 
     def run_check(self, count, extra_minions=(), extra_effects=()):
         heroes = [{"_file": f"{card_id}.md", "id": card_id, "name": card_id,
@@ -192,22 +198,22 @@ class HeroCardsTest(unittest.TestCase):
         vd.check_hero_cards(minions + effects, minions, effects)
         return list(vd.errors)
 
-    def test_thirteen_heroes_pass(self):
-        self.assertEqual(self.run_check(13), [])
+    def test_thirty_two_heroes_pass(self):
+        self.assertEqual(self.run_check(32), [])
 
-    def test_twelve_heroes_are_rejected(self):
-        errors = self.run_check(12)
-        self.assertTrue(any("期望 13" in e for e in errors), errors)
+    def test_thirty_one_heroes_are_rejected(self):
+        errors = self.run_check(31)
+        self.assertTrue(any("期望 32" in e for e in errors), errors)
 
     def test_non_hero_minion_with_is_hero_field_is_rejected(self):
-        errors = self.run_check(13, extra_minions=[
+        errors = self.run_check(32, extra_minions=[
             {"_file": "luxun.md", "id": "fake", "name": "fake",
              "skills": [], "is_hero": False},
         ])
         self.assertTrue(any("非英雄随从不得有 is_hero" in e for e in errors), errors)
 
     def test_effect_card_with_is_hero_is_rejected(self):
-        errors = self.run_check(13, extra_effects=[
+        errors = self.run_check(32, extra_effects=[
             {"_file": "luxun.md", "id": "effect", "name": "effect",
              "skills": [], "is_hero": True, "card_type": "效果"},
         ])

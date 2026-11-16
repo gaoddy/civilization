@@ -906,14 +906,15 @@ fn combat_reports_do_not_mutate_state_fields() {
 #[test]
 fn combat_state_hash_matches_golden_baseline() {
     // 场景：seed [4; 32]、座位 0 随从 10 带光环、配对 0 vs 1。
-    // 随从属性改为分层模型后哈希编码变化，金标准同步更新；行为不变，
-    // 任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
+    // 随从属性改为分层模型后哈希编码变化，金标准同步更新；英雄卡从 13 张扩到 32 张
+    // 后共享池条目随之增加，金标准再次同步；行为不变，任何 GameState 字段或随机流
+    // 消耗顺序变化仍会使该值改变。
     let (mut engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "0f78f686b20a215f",
+        "ede932827c108494",
         "固定场景的 state_hash 金标准"
     );
 }

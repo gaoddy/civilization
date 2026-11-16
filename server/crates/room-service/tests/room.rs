@@ -36,33 +36,30 @@ fn session(store: &mut SessionStore, clock: &FixedClock, name: &str) -> Session 
         .expect("开发验证码应登录成功")
 }
 
-/// 8 个座位各用一张不同的英雄卡，便于断言座位与英雄的对应关系。
-const HEROES: [&str; SEAT_COUNT] = [
-    "adam-smith",
-    "darwin",
-    "davinci",
-    "edison",
-    "einstein",
-    "faraday",
-    "galileo",
-    "knuth",
-];
+/// 玩家候选里的第一张，用于在「只能从本人候选中选」的规则下完成选英雄。
+fn first_candidate(registry: &RoomRegistry, room_id: &str, player_id: &str) -> String {
+    registry
+        .candidates_of(room_id, player_id)
+        .and_then(|list| list.into_iter().next())
+        .unwrap_or_else(|| panic!("{player_id} 应有候选"))
+}
 
 /// 建一个 8 人满座的大厅房间，返回注册表、房间 id、房间码与按座位号排列的会话。
 fn lobby_room() -> (RoomRegistry, String, String, Vec<Session>) {
     let clock = FixedClock::new(1_000_000);
     let mut store = SessionStore::new();
     let mut registry = RoomRegistry::with_seed(0);
+    let catalog = catalog();
 
     let host = session(&mut store, &clock, "房主");
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog);
     let room_id = room.id.clone();
     let code = room.code.clone();
 
     let mut players = vec![host];
     for index in 1..SEAT_COUNT {
         let player = session(&mut store, &clock, &format!("玩家{index}"));
-        registry.join(&code, &player).expect("加入成功");
+        registry.join(&code, &player, &catalog).expect("加入成功");
         players.push(player);
     }
     (registry, room_id, code, players)
@@ -72,9 +69,10 @@ fn lobby_room() -> (RoomRegistry, String, String, Vec<Session>) {
 fn ready_room() -> (RoomRegistry, String, String, Vec<Session>) {
     let (mut registry, room_id, code, players) = lobby_room();
     let catalog = catalog();
-    for (seat, player) in players.iter().enumerate() {
+    for player in &players {
+        let hero = first_candidate(&registry, &room_id, &player.player_id);
         registry
-            .select_hero(&room_id, &player.player_id, HEROES[seat], &catalog)
+            .select_hero(&room_id, &player.player_id, &hero, &catalog)
             .expect("选英雄成功");
         registry
             .ready(&room_id, &player.player_id, true)
@@ -99,7 +97,7 @@ fn create_assigns_host_to_seat0() {
     let host = session(&mut store, &clock, "房主");
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog());
 
     assert_eq!(room.code.len(), 6, "房间码应为 6 位");
     assert!(
@@ -121,7 +119,7 @@ fn create_assigns_host_to_seat0() {
 
     // 同一 seed 的两个注册表生成同一房间码，保证测试可预期。
     let mut other = RoomRegistry::with_seed(0);
-    assert_eq!(other.create(&host).code, room.code);
+    assert_eq!(other.create(&host, &catalog()).code, room.code);
 }
 
 #[test]
@@ -131,11 +129,13 @@ fn join_fills_seats_in_order() {
     let host = session(&mut store, &clock, "房主");
 
     let mut registry = RoomRegistry::with_seed(0);
-    let code = registry.create(&host).code.clone();
+    let code = registry.create(&host, &catalog()).code.clone();
 
     for expected_seat in 1..SEAT_COUNT {
         let player = session(&mut store, &clock, &format!("玩家{expected_seat}"));
-        let room = registry.join(&code, &player).expect("未满时应能加入");
+        let room = registry
+            .join(&code, &player, &catalog())
+            .expect("未满时应能加入");
         assert_eq!(
             room.seat_of(&player.player_id),
             Some(expected_seat as u8),
@@ -151,18 +151,22 @@ fn join_rejects_ninth_player() {
     let host = session(&mut store, &clock, "房主");
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog());
     let room_id = room.id.clone();
     let code = room.code.clone();
 
     for index in 1..SEAT_COUNT {
         let player = session(&mut store, &clock, &format!("玩家{index}"));
-        registry.join(&code, &player).expect("前 8 人应能加入");
+        registry
+            .join(&code, &player, &catalog())
+            .expect("前 8 人应能加入");
     }
 
     let ninth = session(&mut store, &clock, "第九人");
     assert_eq!(
-        registry.join(&code, &ninth).expect_err("满座后应拒绝"),
+        registry
+            .join(&code, &ninth, &catalog())
+            .expect_err("满座后应拒绝"),
         RoomError::Full
     );
     assert_eq!(
@@ -184,7 +188,7 @@ fn join_unknown_code_returns_not_found() {
     let mut registry = RoomRegistry::with_seed(0);
     assert_eq!(
         registry
-            .join("AAAAAA", &player)
+            .join("AAAAAA", &player, &catalog())
             .expect_err("不存在的房间码"),
         RoomError::NotFound
     );
@@ -197,12 +201,12 @@ fn join_same_player_twice_is_idempotent() {
     let host = session(&mut store, &clock, "房主");
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog());
     let room_id = room.id.clone();
     let code = room.code.clone();
 
     registry
-        .join(&code, &host)
+        .join(&code, &host, &catalog())
         .expect("同一玩家重复加入应幂等成功");
 
     assert_eq!(registry.room_update(&room_id).unwrap().players.len(), 1);
@@ -221,27 +225,28 @@ fn select_hero_accepts_duplicate_card() {
     let catalog = catalog();
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog);
     let room_id = room.id.clone();
     let code = room.code.clone();
-    registry.join(&code, &second).expect("加入成功");
+    registry.join(&code, &second, &catalog).expect("加入成功");
 
+    let host_hero = first_candidate(&registry, &room_id, &host.player_id);
+    let second_hero = first_candidate(&registry, &room_id, &second.player_id);
     registry
-        .select_hero(&room_id, &host.player_id, "adam-smith", &catalog)
+        .select_hero(&room_id, &host.player_id, &host_hero, &catalog)
         .expect("房主选英雄成功");
     registry
-        .select_hero(&room_id, &second.player_id, "adam-smith", &catalog)
-        .expect("重复选择同一张英雄卡必须被允许");
+        .select_hero(&room_id, &second.player_id, &second_hero, &catalog)
+        .expect("第二名玩家从自己的候选中选英雄成功");
 
     let room = registry.room(&room_id).expect("房间存在");
     assert_eq!(
         room.slot(0).unwrap().hero_card_id.as_deref(),
-        Some("adam-smith")
+        Some(host_hero.as_str())
     );
     assert_eq!(
         room.slot(1).unwrap().hero_card_id.as_deref(),
-        Some("adam-smith"),
-        "两个座位允许选择同一张英雄卡"
+        Some(second_hero.as_str())
     );
 }
 
@@ -253,7 +258,7 @@ fn select_hero_rejects_non_hero() {
     let catalog = catalog();
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog);
     let room_id = room.id.clone();
 
     let error = registry
@@ -277,7 +282,7 @@ fn ready_without_hero_rejected() {
     let catalog = catalog();
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog);
     let room_id = room.id.clone();
 
     // 取消准备始终允许。
@@ -292,8 +297,9 @@ fn ready_without_hero_rejected() {
     assert_eq!(error.code(), ErrorCode::HeroNotSelected);
 
     // 选完英雄后即可准备。
+    let hero = first_candidate(&registry, &room_id, &host.player_id);
     registry
-        .select_hero(&room_id, &host.player_id, "adam-smith", &catalog)
+        .select_hero(&room_id, &host.player_id, &hero, &catalog)
         .expect("选英雄成功");
     registry
         .ready(&room_id, &host.player_id, true)
@@ -309,12 +315,13 @@ fn try_start_by_non_host_rejected() {
     let catalog = catalog();
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog);
     let room_id = room.id.clone();
     let code = room.code.clone();
-    registry.join(&code, &second).expect("加入成功");
+    registry.join(&code, &second, &catalog).expect("加入成功");
+    let hero = first_candidate(&registry, &room_id, &second.player_id);
     registry
-        .select_hero(&room_id, &second.player_id, "adam-smith", &catalog)
+        .select_hero(&room_id, &second.player_id, &hero, &catalog)
         .expect("选英雄成功");
 
     let error = registry
@@ -332,10 +339,11 @@ fn try_start_with_missing_players_rejected() {
     let catalog = catalog();
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog);
     let room_id = room.id.clone();
+    let hero = first_candidate(&registry, &room_id, &host.player_id);
     registry
-        .select_hero(&room_id, &host.player_id, "adam-smith", &catalog)
+        .select_hero(&room_id, &host.player_id, &hero, &catalog)
         .expect("选英雄成功");
     registry
         .ready(&room_id, &host.player_id, true)
@@ -361,21 +369,22 @@ fn start_ready_requires_all_ready() {
     let catalog = catalog();
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog);
     let room_id = room.id.clone();
     let code = room.code.clone();
 
     let mut players = vec![host];
     for index in 1..SEAT_COUNT {
         let player = session(&mut store, &clock, &format!("玩家{index}"));
-        registry.join(&code, &player).expect("加入成功");
+        registry.join(&code, &player, &catalog).expect("加入成功");
         players.push(player);
     }
 
-    // 8 人齐、全部选了同一个英雄（重复英雄允许），但只准备 7 人。
+    // 8 人齐、各自从本人候选里选好英雄，但只准备 7 人。
     for player in &players {
+        let hero = first_candidate(&registry, &room_id, &player.player_id);
         registry
-            .select_hero(&room_id, &player.player_id, "adam-smith", &catalog)
+            .select_hero(&room_id, &player.player_id, &hero, &catalog)
             .expect("选英雄成功");
     }
     for player in players.iter().take(SEAT_COUNT - 1) {
@@ -393,8 +402,16 @@ fn start_ready_requires_all_ready() {
         .expect("最后一人准备成功");
     let heroes = registry.start_ready(&room_id).expect("全员就绪后应可开局");
     assert_eq!(heroes.len(), SEAT_COUNT);
-    for seat in 0..SEAT_COUNT as u8 {
-        assert_eq!(heroes.get(&seat).map(String::as_str), Some("adam-smith"));
+    for (seat, player) in players.iter().enumerate() {
+        let expected = registry
+            .candidates_of(&room_id, &player.player_id)
+            .and_then(|list| list.into_iter().next())
+            .expect("候选存在");
+        assert_eq!(
+            heroes.get(&(seat as u8)),
+            Some(&expected),
+            "座位 {seat} 的英雄应取自本人候选"
+        );
     }
 
     // `start_ready` 是纯查询，不改变阶段。
@@ -414,12 +431,13 @@ fn room_update_lists_players_and_host() {
     let catalog = catalog();
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog);
     let room_id = room.id.clone();
     let code = room.code.clone();
-    registry.join(&code, &second).expect("加入成功");
+    registry.join(&code, &second, &catalog).expect("加入成功");
+    let hero = first_candidate(&registry, &room_id, &second.player_id);
     registry
-        .select_hero(&room_id, &second.player_id, "adam-smith", &catalog)
+        .select_hero(&room_id, &second.player_id, &hero, &catalog)
         .expect("选英雄成功");
 
     let update = registry.room_update(&room_id).expect("房间存在");
@@ -440,7 +458,7 @@ fn room_update_lists_players_and_host() {
     assert!(!update.players[1].is_host);
     assert_eq!(
         update.players[1].hero_card_id.as_deref(),
-        Some("adam-smith")
+        Some(hero.as_str())
     );
 }
 
@@ -453,11 +471,15 @@ fn leave_frees_seat() {
     let third = session(&mut store, &clock, "玩家3");
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog());
     let room_id = room.id.clone();
     let code = room.code.clone();
-    registry.join(&code, &second).expect("玩家2 加入");
-    registry.join(&code, &third).expect("玩家3 加入");
+    registry
+        .join(&code, &second, &catalog())
+        .expect("玩家2 加入");
+    registry
+        .join(&code, &third, &catalog())
+        .expect("玩家3 加入");
 
     registry
         .leave(&room_id, &second.player_id)
@@ -475,7 +497,9 @@ fn leave_frees_seat() {
 
     // 新玩家占用第一个空位（座位 1），而不是追加到末尾。
     let fourth = session(&mut store, &clock, "玩家4");
-    let room = registry.join(&code, &fourth).expect("加入空位成功");
+    let room = registry
+        .join(&code, &fourth, &catalog())
+        .expect("加入空位成功");
     assert_eq!(room.seat_of(&fourth.player_id), Some(1));
 }
 
@@ -488,11 +512,15 @@ fn leave_host_transfers_host_to_lowest_seat() {
     let third = session(&mut store, &clock, "玩家3");
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog());
     let room_id = room.id.clone();
     let code = room.code.clone();
-    registry.join(&code, &second).expect("玩家2 加入");
-    registry.join(&code, &third).expect("玩家3 加入");
+    registry
+        .join(&code, &second, &catalog())
+        .expect("玩家2 加入");
+    registry
+        .join(&code, &third, &catalog())
+        .expect("玩家3 加入");
 
     registry.leave(&room_id, &host.player_id).expect("房主离开");
 
@@ -512,7 +540,7 @@ fn leave_last_player_removes_room() {
     let host = session(&mut store, &clock, "房主");
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog());
     let room_id = room.id.clone();
     let code = room.code.clone();
 
@@ -521,7 +549,9 @@ fn leave_last_player_removes_room() {
 
     let newcomer = session(&mut store, &clock, "新玩家");
     assert_eq!(
-        registry.join(&code, &newcomer).expect_err("房间码应失效"),
+        registry
+            .join(&code, &newcomer, &catalog())
+            .expect_err("房间码应失效"),
         RoomError::NotFound
     );
 }
@@ -534,7 +564,7 @@ fn leave_unknown_room_or_player_rejected() {
     let outsider = session(&mut store, &clock, "路人");
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog());
     let room_id = room.id.clone();
 
     assert_eq!(
@@ -563,7 +593,7 @@ fn ready_unknown_player_rejected() {
     let outsider = session(&mut store, &clock, "路人");
 
     let mut registry = RoomRegistry::with_seed(0);
-    let room = registry.create(&host);
+    let room = registry.create(&host, &catalog());
     let room_id = room.id.clone();
 
     assert_eq!(
@@ -588,11 +618,24 @@ fn try_start_success_advances_to_recruit() {
         .expect("8 人齐且全部准备时应能开局");
 
     assert_eq!(heroes.len(), SEAT_COUNT);
-    for (seat, _) in players.iter().enumerate() {
+    for (seat, player) in players.iter().enumerate() {
+        let selected = registry
+            .room(&room_id)
+            .and_then(|room| {
+                room.slot(seat as u8)
+                    .and_then(|slot| slot.hero_card_id.clone())
+            })
+            .unwrap_or_else(|| panic!("座位 {seat} 已选英雄"));
         assert_eq!(
-            heroes.get(&(seat as u8)).map(String::as_str),
-            Some(HEROES[seat]),
+            heroes.get(&(seat as u8)),
+            Some(&selected),
             "座位 {seat} 的英雄应与所选一致"
+        );
+        assert!(
+            registry
+                .candidates_of(&room_id, &player.player_id)
+                .is_some_and(|list| list.contains(&selected)),
+            "座位 {seat} 的英雄必须来自本人候选"
         );
     }
     assert_eq!(
@@ -629,7 +672,9 @@ fn non_lobby_rejects_join_ready_select_and_leave() {
 
     // 满座 + 已开局：阶段检查必须先于 ROOM_FULL。
     assert_eq!(
-        registry.join(&code, &newcomer).expect_err("开局后不能加入"),
+        registry
+            .join(&code, &newcomer, &catalog)
+            .expect_err("开局后不能加入"),
         RoomError::WrongPhase
     );
     assert_eq!(
@@ -638,9 +683,13 @@ fn non_lobby_rejects_join_ready_select_and_leave() {
             .expect_err("开局后不能改准备"),
         RoomError::WrongPhase
     );
+    let other_hero = registry
+        .candidates_of(&room_id, &players[1].player_id)
+        .and_then(|list| list.into_iter().last())
+        .expect("候选存在");
     assert_eq!(
         registry
-            .select_hero(&room_id, &players[1].player_id, HEROES[2], &catalog)
+            .select_hero(&room_id, &players[1].player_id, &other_hero, &catalog)
             .expect_err("开局后不能改英雄"),
         RoomError::WrongPhase
     );
@@ -680,6 +729,203 @@ fn start_ready_is_false_after_game_started() {
 }
 
 #[test]
+fn each_seat_gets_four_distinct_candidates() {
+    let (registry, room_id, _code, players) = ready_room();
+    let mut seen = std::collections::BTreeSet::new();
+    for player in &players {
+        let candidates = registry
+            .candidates_of(&room_id, &player.player_id)
+            .expect("每个座位都应有候选");
+        assert_eq!(candidates.len(), 4, "{}", player.player_id);
+        for id in candidates {
+            assert!(seen.insert(id), "候选不得重复");
+        }
+    }
+    assert_eq!(seen.len(), SEAT_COUNT * 4, "8 人 × 4 张应互不重复");
+}
+
+#[test]
+fn released_seat_candidates_come_back_to_the_pool() {
+    let (mut registry, room_id, _code, players) = lobby_room();
+    let catalog = catalog();
+    let leaving = players[1].player_id.clone();
+    let freed = registry.candidates_of(&room_id, &leaving).expect("有候选");
+
+    registry.leave(&room_id, &leaving).expect("离开成功");
+    let newcomer = session(
+        &mut SessionStore::new(),
+        &FixedClock::new(1_000_000),
+        "新玩家",
+    );
+    let code = registry.room(&room_id).expect("房间存在").code.clone();
+    registry
+        .join(&code, &newcomer, &catalog)
+        .expect("加入空位成功");
+
+    let reclaimed = registry
+        .candidates_of(&room_id, &newcomer.player_id)
+        .expect("新玩家应有候选");
+    assert_eq!(reclaimed.len(), 4, "空出的段应完整交还给下一名玩家");
+    assert_eq!(reclaimed, freed, "回收的段应与离开玩家原本的候选一致");
+}
+
+#[test]
+fn candidates_are_only_visible_to_their_owner() {
+    let (registry, room_id, _code, players) = ready_room();
+    let viewer = &players[0].player_id;
+    let update = registry
+        .room_update_for(&room_id, viewer)
+        .expect("房间存在");
+
+    let own = update
+        .players
+        .iter()
+        .find(|item| &item.player_id == viewer)
+        .expect("本人应在列表里");
+    assert_eq!(
+        own.hero_candidates.as_ref().map(Vec::len),
+        Some(4),
+        "本人应收到 4 张候选"
+    );
+
+    for item in update
+        .players
+        .iter()
+        .filter(|item| &item.player_id != viewer)
+    {
+        assert_eq!(
+            item.hero_candidates, None,
+            "其他玩家的候选不得下发：{}",
+            item.player_id
+        );
+    }
+}
+
+#[test]
+fn select_hero_outside_candidates_is_rejected() {
+    let (mut registry, room_id, _code, players) = lobby_room();
+    let catalog = catalog();
+    let player = &players[0].player_id;
+
+    let candidates = registry.candidates_of(&room_id, player).expect("有候选");
+    let outside = catalog
+        .cards
+        .values()
+        .find(|card| card.is_hero && !candidates.contains(&card.id))
+        .map(|card| card.id.clone())
+        .expect("存在不在候选里的英雄卡");
+
+    let error = registry
+        .select_hero(&room_id, player, &outside, &catalog)
+        .expect_err("候选外的英雄必须被拒绝");
+    assert_eq!(error, RoomError::NotCandidate);
+    assert_eq!(error.code(), ErrorCode::InvalidChoice);
+    assert_eq!(
+        registry
+            .room(&room_id)
+            .and_then(|room| room.slot(0).and_then(|slot| slot.hero_card_id.clone())),
+        None,
+        "被拒绝的选择不得写入座位"
+    );
+}
+
+#[test]
+fn select_hero_after_ready_is_rejected() {
+    let (mut registry, room_id, _code, players) = ready_room();
+    let catalog = catalog();
+    let player = &players[0].player_id;
+
+    let candidates = registry.candidates_of(&room_id, player).expect("有候选");
+    let others: Vec<String> = candidates.iter().skip(1).cloned().collect();
+    let error = registry
+        .select_hero(&room_id, player, &others[0], &catalog)
+        .expect_err("确认后不可改选");
+    assert_eq!(error, RoomError::WrongPhase);
+    assert_eq!(
+        registry
+            .room(&room_id)
+            .and_then(|room| room.slot(0).and_then(|slot| slot.hero_card_id.clone()))
+            .as_deref(),
+        Some(candidates[0].as_str()),
+        "已确认的英雄不得改变"
+    );
+}
+
+#[test]
+fn detach_marks_disconnected_and_keeps_seat() {
+    let (mut registry, room_id, _code, players) = lobby_room();
+    let player = &players[1].player_id;
+    let before = registry.candidates_of(&room_id, player).expect("有候选");
+
+    registry
+        .mark_disconnected(&room_id, player, 1_000_000)
+        .expect("标记断线成功");
+
+    let room = registry.room(&room_id).expect("房间存在");
+    assert_eq!(room.seat_of(player), Some(1), "宽限期内座位必须保留");
+    assert!(!room.slot(1).unwrap().connected, "座位应标记为离线");
+    assert_eq!(
+        registry.candidates_of(&room_id, player),
+        Some(before),
+        "断线不得重抽候选"
+    );
+}
+
+#[test]
+fn reconnect_within_grace_restores_same_candidates() {
+    let (mut registry, room_id, _code, players) = lobby_room();
+    let player = players[1].player_id.clone();
+    let before = registry.candidates_of(&room_id, &player).expect("有候选");
+
+    registry
+        .mark_disconnected(&room_id, &player, 1_000_000)
+        .expect("标记断线成功");
+    // 宽限期内：未超时，座位不被回收。
+    assert!(
+        registry
+            .tick_disconnects(&room_id, 1_000_000 + 29_000)
+            .is_empty()
+    );
+
+    registry
+        .mark_reconnected(&room_id, &player)
+        .expect("重连成功");
+    let room = registry.room(&room_id).expect("房间存在");
+    assert_eq!(room.seat_of(&player), Some(1), "重连应回到原座位");
+    assert!(room.slot(1).unwrap().connected, "重连后应标记为在线");
+    assert_eq!(
+        registry.candidates_of(&room_id, &player),
+        Some(before),
+        "重连必须取回同一组候选"
+    );
+}
+
+#[test]
+fn grace_expiry_releases_seat() {
+    let (mut registry, room_id, _code, players) = lobby_room();
+    let player = players[1].player_id.clone();
+
+    registry
+        .mark_disconnected(&room_id, &player, 1_000_000)
+        .expect("标记断线成功");
+    assert!(
+        registry
+            .tick_disconnects(&room_id, 1_000_000 + 29_000)
+            .is_empty()
+    );
+
+    let released = registry.tick_disconnects(&room_id, 1_000_000 + 30_000);
+    assert_eq!(released, vec![player.clone()], "超时座位应被释放");
+    assert_eq!(
+        registry
+            .room(&room_id)
+            .and_then(|room| room.seat_of(&player)),
+        None,
+        "宽限超时后座位应释放"
+    );
+}
+
+#[test]
 fn error_codes_exist_in_schema() {
     let cases = [
         (RoomError::NotFound, "ROOM_NOT_FOUND"),
@@ -690,6 +936,7 @@ fn error_codes_exist_in_schema() {
         (RoomError::RoomNotReady, "ROOM_NOT_READY"),
         (RoomError::NotAHeroCard, "INVALID_CHOICE"),
         (RoomError::NotInRoom, "NOT_IN_ROOM"),
+        (RoomError::NotCandidate, "INVALID_CHOICE"),
         (RoomError::Unknown("保留原因".to_string()), "INTERNAL_ERROR"),
     ];
 

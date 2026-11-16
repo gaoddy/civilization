@@ -124,7 +124,12 @@
               "displayName": { "type": "string" },
               "ready": { "type": "boolean" },
               "isHost": { "type": "boolean" },
-              "heroCardId": { "type": ["string", "null"] }
+              "heroCardId": { "type": ["string", "null"] },
+              "heroCandidates": {
+                "type": ["array", "null"],
+                "items": { "type": "string" },
+                "description": "本座位可选的英雄卡 id；只在发给本人的 RoomUpdate 中下发"
+              }
             }
           }
         }

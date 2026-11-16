@@ -31,6 +31,16 @@
   },
   {
     "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:tribe=生物|health=1,duration=permanent",
+    "id": "aura-biology-plus-0-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的生物随从获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
     "effects": "Aura|ModifyStats|friendly:all:tribe=生物|attack=1,health=1,duration=permanent",
     "id": "aura-biology-plus-1-plus-1",
     "keyword": null,
@@ -71,12 +81,32 @@
   },
   {
     "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:tribe=机械:other=true|attack=1,health=1,duration=permanent",
+    "id": "aura-other-mech-plus-1-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的其他机械随从获得 +1/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
     "effects": "Aura|ModifyStats|friendly:all:tribe=植物:other=true|health=1,duration=permanent",
     "id": "aura-other-plants-plus-0-plus-1",
     "keyword": null,
     "match_text": null,
     "name": null,
     "text": "你的其他植物随从获得 +0/+1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "Aura|ModifyStats|friendly:all:other=true|health=1,duration=permanent",
+    "id": "aura-other-plus-0-plus-1",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "你的其他随从获得 +0/+1",
     "uses_per_turn": null
   },
   {
@@ -117,6 +147,16 @@
     "match_text": null,
     "name": null,
     "text": "你的学者随从获得 +0/+3",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": "OnPlay|Growth|friendly:all:tribe=生物|times=1",
+    "id": "battlecry-all-biology-growth-once",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使你的所有生物随从获得一次成长",
     "uses_per_turn": null
   },
   {
@@ -311,6 +351,16 @@
   },
   {
     "cost": null,
+    "effects": "OnPlay|Growth|friendly:single:tribe=植物|times=2",
+    "id": "battlecry-plant-growth-twice",
+    "keyword": "战吼",
+    "match_text": null,
+    "name": null,
+    "text": "战吼：使一个友方植物随从获得两次成长",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
     "effects": "OnCombatStart|DealDamage|enemy:random|amount=1",
     "id": "battlecry-random-enemy-damage-1",
     "keyword": "战吼",
@@ -357,6 +407,36 @@
     "match_text": null,
     "name": null,
     "text": "战吼：召唤一个 3/3 的合成细胞（幼体）",
+    "uses_per_turn": null
+  },
+  {
+    "cost": 2,
+    "effects": "OnActivate|GrantKeyword|friendly:single:tribe=生物|keyword=进化,duration=permanent",
+    "id": "biology-evolve",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "获得性状",
+    "text": "使一个友方生物随从获得进化",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 1,
+    "effects": "OnActivate|GrantKeyword|friendly:single|keyword=最优攻击,duration=combat",
+    "id": "combat-optimal-attack",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "航线",
+    "text": "使一个友方随从获得最优攻击直到回合结束",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": null,
+    "effects": "OnCombatStart|DealDamage|enemy:random|amount=3",
+    "id": "combat-random-enemy-damage-3",
+    "keyword": null,
+    "match_text": null,
+    "name": null,
+    "text": "战斗开始时对随机一个敌方随从造成 3 点伤害",
     "uses_per_turn": null
   },
   {
@@ -631,6 +711,16 @@
   },
   {
     "cost": 2,
+    "effects": "OnActivate|CannotAttack|enemy:random|duration=combat",
+    "id": "enemy-random-cannot-attack",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "非攻",
+    "text": "使随机一个敌方随从本回合无法攻击",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 2,
     "effects": "OnActivate|Discover|self|pool=tribe,choose=1",
     "id": "evolution-discovery",
     "keyword": null,
@@ -651,12 +741,32 @@
   },
   {
     "cost": 1,
+    "effects": "OnActivate|RefreshShop|self|free=true",
+    "id": "free-refresh",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "启航",
+    "text": "免费刷新一次商店",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 1,
     "effects": "OnActivate|Growth|friendly:single:tribe=植物|times=1",
     "id": "heredity",
     "keyword": null,
     "match_text": "同左",
     "name": "遗传",
     "text": "使一个友方植物随从获得一次成长",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 2,
+    "effects": "OnActivate|Growth|friendly:single:tribe=人类|times=2",
+    "id": "human-growth-twice",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "技艺",
+    "text": "使一个友方人类随从获得两次成长",
     "uses_per_turn": 1
   },
   {
@@ -838,6 +948,16 @@
     "name": "放射",
     "text": "战斗开始时对随机一个敌方随从造成 2 点伤害",
     "uses_per_turn": null
+  },
+  {
+    "cost": 1,
+    "effects": "OnActivate|Growth|friendly:single:tribe=学者|times=2",
+    "id": "scholar-growth-twice",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "推演",
+    "text": "使一个友方学者随从获得两次成长",
+    "uses_per_turn": 1
   },
   {
     "cost": 1,
@@ -1177,6 +1297,16 @@
     "match_text": "同左",
     "name": "万能手稿",
     "text": "复制一张你手牌中的随从牌",
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 1,
+    "effects": "OnActivate|Growth|friendly:single:tribe=病毒|times=1",
+    "id": "virus-growth-once",
+    "keyword": null,
+    "match_text": "同左",
+    "name": "培养",
+    "text": "使一个友方病毒随从获得一次成长",
     "uses_per_turn": 1
   }
 ]

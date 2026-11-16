@@ -18,6 +18,7 @@ use rule_engine::state::{Phase, Seat};
 
 use crate::auth::Session;
 use crate::envelope::SeatChannel;
+use crate::game::RECONNECT_GRACE_MS;
 
 /// 每局固定 8 个座位。
 pub const SEAT_COUNT: usize = 8;
@@ -27,6 +28,9 @@ const CODE_ALPHABET: &[u8] = b"23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 
 /// 房间码长度。
 const CODE_LEN: usize = 6;
+
+/// 每名玩家分到的候选英雄数量。
+pub const CANDIDATE_COUNT: usize = 4;
 
 /// 房间标识；进程内唯一，不对外暴露给玩家。
 pub type RoomId = String;
@@ -41,10 +45,16 @@ pub struct PlayerSlot {
     pub display_name: String,
     pub ready: bool,
     pub hero_card_id: Option<String>,
+    /// 该座位可选的英雄卡 id；只在发给本人的 `RoomUpdate` 中下发。
+    pub hero_candidates: Vec<String>,
+    /// 候选取自洗好序列的第几段；座位释放时随之回收，避免候选池被永久占位。
+    pub candidate_segment: Option<usize>,
     /// 该座位的下行信封序号分配器。
     pub channel: SeatChannel,
-    /// 连接是否在线；断线重连由 Task 11 维护。
+    /// 连接是否在线；大厅断线与重连由连接层维护。
     pub connected: bool,
+    /// 大厅断线时刻（Unix epoch 毫秒）；在线时为 `None`。
+    pub disconnected_at_ms: Option<u64>,
 }
 
 impl PlayerSlot {
@@ -54,8 +64,11 @@ impl PlayerSlot {
             display_name: session.display_name.clone(),
             ready: false,
             hero_card_id: None,
+            hero_candidates: Vec::new(),
+            candidate_segment: None,
             channel: SeatChannel::new(),
             connected: true,
+            disconnected_at_ms: None,
         }
     }
 }
@@ -98,6 +111,14 @@ impl Room {
         self.slots.values().cloned().collect()
     }
 
+    /// 指定玩家本人的候选；玩家不在房间里返回 `None`。
+    pub fn candidates_of(&self, player_id: &str) -> Option<&[String]> {
+        self.slots
+            .values()
+            .find(|slot| slot.player_id == player_id)
+            .map(|slot| slot.hero_candidates.as_slice())
+    }
+
     /// 纯查询：8 个座位全部占用、全部准备且全部选好英雄时返回 `座位 → 英雄卡`。
     ///
     /// 只读，不改变阶段；非 `Lobby` 阶段成员集合已冻结，一律返回 `None`。
@@ -134,6 +155,48 @@ impl Room {
     fn is_occupied(&self, player_id: &str) -> bool {
         self.slots.values().any(|slot| slot.player_id == player_id)
     }
+
+    /// 按房间种子洗出的英雄序列给一名玩家切出一组候选。
+    ///
+    /// 洗牌与切段都是确定性的：同一房间、同一批 `is_hero` 卡表、同一进房顺序，
+    /// 得到同一组候选。英雄总数不足时最后几人会拿到空候选；这种情况由
+    /// [`crate::AppState::new`] 在装配阶段直接拒绝启动，不走这条降级路径。
+    fn assign_candidates(&mut self, player_id: &str, catalog: &Catalog) {
+        if self
+            .candidates_of(player_id)
+            .is_some_and(|candidates| !candidates.is_empty())
+        {
+            return;
+        }
+        let mut heroes: Vec<String> = catalog
+            .cards
+            .values()
+            .filter(|card| card.is_hero)
+            .map(|card| card.id.clone())
+            .collect();
+        heroes.sort();
+        shuffle(&mut heroes, seed_for_code(&self.code));
+
+        // 段号取当前座位里最小的未用段：座位释放后段号自动空出，候选池不会被永久占满。
+        let used: Vec<usize> = self
+            .slots
+            .values()
+            .filter_map(|slot| slot.candidate_segment)
+            .collect();
+        let segment = (0..)
+            .find(|index| !used.contains(index))
+            .unwrap_or(used.len());
+        let start = segment * CANDIDATE_COUNT;
+        if start >= heroes.len() {
+            return;
+        }
+        let end = (start + CANDIDATE_COUNT).min(heroes.len());
+        let picked = heroes[start..end].to_vec();
+        if let Some(slot) = self.slot_mut(player_id) {
+            slot.hero_candidates = picked;
+            slot.candidate_segment = Some(segment);
+        }
+    }
 }
 
 /// 房间操作失败原因。
@@ -158,6 +221,8 @@ pub enum RoomError {
     NotAHeroCard,
     /// 玩家不在房间里。
     NotInRoom,
+    /// 所选英雄不在本人的候选里。
+    NotCandidate,
     /// 其他保留原因；字符串是内部说明，不作为协议错误码。
     Unknown(String),
 }
@@ -178,6 +243,7 @@ impl RoomError {
             Self::RoomNotReady => ErrorCode::RoomNotReady,
             Self::NotAHeroCard => ErrorCode::InvalidChoice,
             Self::NotInRoom => ErrorCode::NotInRoom,
+            Self::NotCandidate => ErrorCode::InvalidChoice,
             Self::Unknown(_) => ErrorCode::InternalError,
         }
     }
@@ -194,6 +260,7 @@ impl fmt::Display for RoomError {
             Self::RoomNotReady => f.write_str("人数不足或尚未全部准备"),
             Self::NotAHeroCard => f.write_str("不是可选的英雄卡"),
             Self::NotInRoom => f.write_str("玩家不在房间内"),
+            Self::NotCandidate => f.write_str("不在可选英雄范围内"),
             Self::Unknown(reason) => f.write_str(reason),
         }
     }
@@ -228,7 +295,9 @@ impl RoomRegistry {
     }
 
     /// 建房：创建者坐 0 号座位并成为房主，阶段为 `Lobby`。
-    pub fn create(&mut self, host: &Session) -> Room {
+    ///
+    /// 建房时立即给房主切出一组候选英雄，使房主不等其他人也能看到自己的候选。
+    pub fn create(&mut self, host: &Session, catalog: &Catalog) -> Room {
         let (id, code) = loop {
             let sequence = self.next_room_seq;
             self.next_room_seq = self.next_room_seq.saturating_add(1);
@@ -241,13 +310,14 @@ impl RoomRegistry {
 
         let mut slots = BTreeMap::new();
         slots.insert(0, PlayerSlot::from_session(host));
-        let room = Room {
+        let mut room = Room {
             id: id.clone(),
             code: code.clone(),
             host_id: host.player_id.clone(),
             phase: Phase::Lobby,
             slots,
         };
+        room.assign_candidates(&host.player_id, catalog);
         // 注册表持有权威副本；返回值供调用者立即广播大厅视图。
         self.rooms.insert(id.clone(), room.clone());
         self.by_code.insert(code, id);
@@ -258,7 +328,12 @@ impl RoomRegistry {
     ///
     /// 同一玩家重复加入同一房间是幂等的：返回已有房间，不占新座位。
     /// 非 `Lobby` 阶段成员集合已冻结，先于满座判断返回 [`RoomError::WrongPhase`]。
-    pub fn join(&mut self, code: &str, player: &Session) -> Result<&mut Room, RoomError> {
+    pub fn join(
+        &mut self,
+        code: &str,
+        player: &Session,
+        catalog: &Catalog,
+    ) -> Result<&mut Room, RoomError> {
         let room_id = self.by_code.get(code).cloned().ok_or(RoomError::NotFound)?;
         let room = self.rooms.get_mut(&room_id).expect("索引与房间表一致");
 
@@ -274,6 +349,7 @@ impl RoomRegistry {
             .find(|seat| !room.slots.contains_key(seat))
             .ok_or(RoomError::Full)?;
         room.slots.insert(seat, PlayerSlot::from_session(player));
+        room.assign_candidates(&player.player_id, catalog);
         Ok(room)
     }
 
@@ -333,7 +409,7 @@ impl RoomRegistry {
         Ok(())
     }
 
-    /// 选择英雄。卡必须存在且 `is_hero`；允许与其他座位重复选择同一张卡。
+    /// 选择英雄。卡必须存在、`is_hero`，且在本人的候选里；确认后不可改选。
     ///
     /// 非 `Lobby` 阶段成员集合已冻结，返回 [`RoomError::WrongPhase`]。
     pub fn select_hero(
@@ -353,10 +429,76 @@ impl RoomRegistry {
         if !catalog.cards.get(card_id).is_some_and(|card| card.is_hero) {
             return Err(RoomError::NotAHeroCard);
         }
+        if room.slot_mut(player_id).is_some_and(|slot| slot.ready) {
+            return Err(RoomError::WrongPhase);
+        }
+        if !room
+            .candidates_of(player_id)
+            .is_some_and(|candidates| candidates.iter().any(|id| id == card_id))
+        {
+            return Err(RoomError::NotCandidate);
+        }
 
         let slot = room.slot_mut(player_id).expect("上面已确认玩家在房间内");
         slot.hero_card_id = Some(card_id.to_string());
         Ok(())
+    }
+
+    /// 指定玩家的候选英雄；房间或玩家不存在返回 `None`。
+    pub fn candidates_of(&self, room_id: &str, player_id: &str) -> Option<Vec<String>> {
+        self.rooms
+            .get(room_id)?
+            .candidates_of(player_id)
+            .map(<[_]>::to_vec)
+    }
+
+    /// 标记座位离线但保留座位与候选，用于大厅断线宽限。
+    pub fn mark_disconnected(
+        &mut self,
+        room_id: &str,
+        player_id: &str,
+        now_ms: u64,
+    ) -> Result<(), RoomError> {
+        let room = self.rooms.get_mut(room_id).ok_or(RoomError::NotFound)?;
+        let slot = room.slot_mut(player_id).ok_or(RoomError::NotInRoom)?;
+        slot.connected = false;
+        slot.disconnected_at_ms = Some(now_ms);
+        Ok(())
+    }
+
+    /// 标记座位重新在线并清除断线时刻；座位与候选保持不变。
+    pub fn mark_reconnected(&mut self, room_id: &str, player_id: &str) -> Result<(), RoomError> {
+        let room = self.rooms.get_mut(room_id).ok_or(RoomError::NotFound)?;
+        let slot = room.slot_mut(player_id).ok_or(RoomError::NotInRoom)?;
+        slot.connected = true;
+        slot.disconnected_at_ms = None;
+        Ok(())
+    }
+
+    /// 释放指定房间里断线超过 [`RECONNECT_GRACE_MS`] 的座位，返回被释放的 player_id。
+    ///
+    /// 只处理一个大厅房间：房间 task 各管自己，避免某个房间的 tick 释放别人房间的
+    /// 座位却无法通知对方广播。对局中的断线由 `GameTask` 自己维护，不走这里。
+    pub fn tick_disconnects(&mut self, room_id: &str, now_ms: u64) -> Vec<String> {
+        let Some(room) = self.rooms.get(room_id) else {
+            return Vec::new();
+        };
+        if room.phase != Phase::Lobby {
+            return Vec::new();
+        }
+        let victims: Vec<String> = room
+            .slots
+            .values()
+            .filter(|slot| {
+                slot.disconnected_at_ms
+                    .is_some_and(|at| now_ms.saturating_sub(at) >= RECONNECT_GRACE_MS)
+            })
+            .map(|slot| slot.player_id.clone())
+            .collect();
+        victims
+            .into_iter()
+            .filter(|player_id| self.leave(room_id, player_id).is_ok())
+            .collect()
     }
 
     /// 纯查询：房间是否满足开局条件；满足时返回 `座位 → 英雄卡`。
@@ -458,6 +600,7 @@ impl RoomRegistry {
                 .map(|slot| RoomUpdatePlayersItem {
                     display_name: slot.display_name.clone(),
                     hero_card_id: slot.hero_card_id.clone(),
+                    hero_candidates: None,
                     is_host: slot.player_id == room.host_id,
                     player_id: slot.player_id.clone(),
                     ready: slot.ready,
@@ -466,11 +609,56 @@ impl RoomRegistry {
             room_id: room.id.clone(),
         })
     }
+
+    /// 构造只给 `viewer` 的 `RoomUpdate`：只有该玩家那一项带 `hero_candidates`。
+    ///
+    /// 广播必须逐个座位序列化，否则候选会随共用 payload 泄露给其他玩家。
+    pub fn room_update_for(&self, room_id: &str, viewer: &str) -> Option<RoomUpdate> {
+        let mut update = self.room_update(room_id)?;
+        for item in &mut update.players {
+            item.hero_candidates = if item.player_id == viewer {
+                self.rooms
+                    .get(room_id)?
+                    .candidates_of(viewer)
+                    .map(<[_]>::to_vec)
+            } else {
+                None
+            };
+        }
+        Some(update)
+    }
 }
 
 impl Default for RoomRegistry {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// 房间码派生的确定性种子（FNV-1a 64 位）。
+///
+/// 房间码在同一进程内唯一且确定，因此「同房间码 → 同种子 → 同候选分组」成立，
+/// 且不引入随机源或新依赖。
+pub fn seed_for_code(code: &str) -> u64 {
+    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+    for byte in code.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    hash
+}
+
+/// 用 `seed` 做确定性 Fisher–Yates 洗牌。
+///
+/// 只用整数线性同余推进种子，不引入随机源；同种子同输入得到同顺序。
+fn shuffle(items: &mut [String], seed: u64) {
+    let mut state = seed | 1;
+    for index in (1..items.len()).rev() {
+        state = state
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
+        let swap_with = (state >> 33) as usize % (index + 1);
+        items.swap(index, swap_with);
     }
 }
 
