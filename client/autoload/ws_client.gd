@@ -8,7 +8,9 @@ const RETRY_SECONDS := 3.0
 const DEFAULT_URL := "ws://127.0.0.1:8080/ws"
 
 var url := DEFAULT_URL
-var socket: WebSocketPeer = null
+## 连接句柄：生产环境恒为 `WebSocketPeer`；冒烟可替换成只实现就绪状态的桩，
+## 以便在没有服务端时验证「已连接」分支。`null` 表示未连接。
+var socket = null
 
 var _want_connection := false
 var _was_open := false
@@ -79,7 +81,7 @@ func _process(delta: float) -> void:
         return
 
     socket.poll()
-    var state := socket.get_ready_state()
+    var state: int = socket.get_ready_state()
     if state == WebSocketPeer.STATE_OPEN:
         if not _was_open:
             _was_open = true
@@ -111,7 +113,7 @@ func _open() -> void:
     # 替换连接后重新开始：避免旧连接的 _was_open 让新连接漏发 connected 与续连。
     _was_open = false
     socket = WebSocketPeer.new()
-    var err := socket.connect_to_url(url)
+    var err: int = socket.connect_to_url(url)
     if err != OK:
         push_error("连接 %s 失败：%s" % [url, error_string(err)])
         socket = null

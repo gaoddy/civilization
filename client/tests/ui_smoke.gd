@@ -18,16 +18,21 @@ func _ready() -> void:
     await _check_room_null_hero()
     await _check_game()
     await _check_game_layout()
+    await _check_board_capacity_from_view()
     await _check_combat_layout()
     await _check_hand_drag_emits_position()
     await _check_drag_rejected_for_target_effect_on_blank()
     await _check_drag_rejected_when_board_full()
     await _check_drag_disabled_when_stale_or_expired()
     await _check_drag_cancelled_after_view_rebuild()
+    await _check_drop_gate()
     await _check_combat_playback()
     await _check_combat_banner_after_tail()
     await _check_combat_resume_from_deadline()
     await _check_combat_playback_uses_sides()
+    await _check_combat_reborn_reappears()
+    await _check_summon_inserts_at_alive_rank()
+    await _check_stale_combat_not_shown()
     await _check_target_pending_overlay()
     await _check_choose_target_sends_intent()
     await _check_overlay_hidden_in_combat()
@@ -269,7 +274,7 @@ func _check_game_layout() -> void:
     GameStore.turn = 3
     GameStore.deadline = "2030-01-01T00:00:00Z"
     GameStore.view = FixtureScript.game_view()
-    GameStore.last_combat = {}
+    _clear_combat()
     var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
         return
@@ -306,7 +311,7 @@ func _check_game_layout() -> void:
     _expect(instance.find_child("HeroTile", true, false) != null, "右栏应显示我的英雄卡")
     instance.queue_free()
     GameStore.view = {}
-    GameStore.last_combat = {}
+    _clear_combat()
     GameStore.turn = 1
 
 
@@ -320,7 +325,7 @@ func _check_combat_layout() -> void:
     view["phase"] = "Combat"
     view["opponentPlayerId"] = "p2"
     GameStore.view = view
-    GameStore.last_combat = FixtureScript.combat_result()
+    _set_combat(FixtureScript.combat_result())
     var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
         return
@@ -347,7 +352,7 @@ func _check_combat_layout() -> void:
     await _check_combat_detail(instance)
     instance.queue_free()
     GameStore.view = {}
-    GameStore.last_combat = {}
+    _clear_combat()
     GameStore.turn = 1
     GameStore.phase = ""
 
@@ -370,13 +375,244 @@ func _combat_instance(deadline: String) -> Node:
     view["phase"] = "Combat"
     view["opponentPlayerId"] = "p2"
     GameStore.view = view
-    GameStore.last_combat = FixtureScript.combat_result()
+    _set_combat(FixtureScript.combat_result())
     return await _check_scene("res://scenes/game.tscn", false)
 
 
 func _stats_text(panel: Control) -> String:
     var stats = panel.find_child("Stats", true, false)
     return "" if stats == null else str(stats.text)
+
+
+## 给当前回合装上战报（生产路径由 `CombatResult` 消息写入，这里直接摆状态）。
+func _set_combat(combat: Dictionary) -> void:
+    GameStore.last_combat = combat
+    GameStore.last_combat_turn = GameStore.turn
+
+
+func _clear_combat() -> void:
+    GameStore.last_combat = {}
+    GameStore.last_combat_turn = -1
+
+
+## 装作已连接：`Net.is_open()` 只看 `socket` 的就绪状态。
+func _fake_connect() -> void:
+    Net.socket = FixtureScript.FakeSocket.new()
+
+
+func _fake_disconnect() -> void:
+    Net.socket = null
+
+
+## 落点门控：拖拽期间阶段改变、结束招募、视图过期、倒计时归零、断线或进入
+## 目标待选时，落点不构造意图。
+func _check_drop_gate() -> void:
+    var gate: Callable = Callable(load("res://scenes/game.gd"), "drop_gate")
+    _expect(gate.call(Protocol.PHASE_RECRUIT, false, false, true, false, false), "正常招募态应允许落点")
+    _expect(not gate.call(Protocol.PHASE_COMBAT, false, false, true, false, false), "战斗阶段不应允许落点")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, true, false, true), "已结束招募不应允许落点")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, true, false, true, false, false), "视图过期不应允许落点")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, true, true, false, false), "倒计时归零不应允许落点")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, false, false, false), "未连接不应允许落点")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, true, true, false), "目标待选不应允许落点")
+
+    # 端到端：拖拽数据有效但连接已断，落点不产生意图。
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi", 0)]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    _fake_connect()
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    var hand_card = instance.find_child("HandCard0", true, false)
+    var board_row = instance.find_child("BoardRow", true, false)
+    if hand_card != null and board_row != null:
+        var payload: Dictionary = hand_card.payload.duplicate()
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var local: Vector2 = Vector2(4, 4)
+        board_row._drop_data(local, payload)
+        await get_tree().process_frame
+        _expect(captured.size() == 1, "已连接时落点应产生意图，实际 %d 条" % captured.size())
+        captured.clear()
+        _fake_disconnect()
+        board_row._drop_data(local, payload)
+        await get_tree().process_frame
+        _expect(captured.is_empty(), "断线后落点不应产生意图，实际 %d 条" % captured.size())
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+    GameStore.deadline = ""
+
+
+## 阵亡卡立即离场，复生后回到原相对位置。
+func _check_combat_reborn_reappears() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Combat"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view := FixtureScript.game_view()
+    view["phase"] = "Combat"
+    view["opponentPlayerId"] = "p2"
+    GameStore.view = view
+    _set_combat(FixtureScript.combat_result_with_reborn())
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _clear_combat()
+        return
+    var own_row = instance.find_child("CombatOwnRow", true, false)
+    _expect(own_row != null and own_row.get_child_count() == 2, "阵亡前我方行应为 2 张")
+    if own_row != null:
+        instance._process(0.32)
+        _expect(own_row.get_child_count() == 1, "阵亡后我方行应只剩 1 张，实际 %d" % own_row.get_child_count())
+        if own_row.get_child_count() == 1:
+            _expect(str(own_row.get_child(0).get_meta("minion_id", "")) == "mi_1", "留下的是 mi_1")
+        instance._process(0.32)
+        _expect(own_row.get_child_count() == 2, "复生后我方行应回到 2 张，实际 %d" % own_row.get_child_count())
+        if own_row.get_child_count() == 2:
+            _expect(str(own_row.get_child(0).get_meta("minion_id", "")) == "mi_0", "复生随从回到原位置 0")
+            _expect(_stats_text(own_row.get_child(0)) == "7 / 6", "复生后数值取服务端快照")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    _clear_combat()
+    GameStore.turn = 1
+    GameStore.phase = ""
+    GameStore.deadline = ""
+
+
+## 召唤按存活序列下标插入：阵亡锚点不参与计数。
+func _check_summon_inserts_at_alive_rank() -> void:
+    var playback := CombatPlayback.new()
+    playback.start(
+        [
+            {
+                "kind": "death",
+                "sourceSide": "own",
+                "target": {"minionId": "mi_0", "attack": 1, "health": 0, "alive": false},
+            },
+            {
+                "kind": "summon",
+                "summon": {
+                    "side": "own",
+                    "position": 1,
+                    "minion": {"minionId": "mi_9", "cardId": "seedling", "attack": 1, "health": 1},
+                },
+            },
+        ],
+        [
+            {"minionId": "mi_0", "cardId": "baiyi", "attack": 1, "health": 1, "alive": true},
+            {"minionId": "mi_1", "cardId": "airplane", "attack": 2, "health": 2, "alive": true},
+            {"minionId": "mi_2", "cardId": "bisheng", "attack": 3, "health": 3, "alive": true},
+        ],
+        []
+    )
+    playback.advance(320.0)
+    playback.advance(320.0)
+    var ids: Array = []
+    for minion in playback.own:
+        ids.append(str(minion.get("minionId", "")))
+    # 存活序列此时是 mi_1、mi_2；rank 1 应插在 mi_2 之前，即向量下标 2
+    # （mi_0 的阵亡条目仍占向量下标 0）。
+    _expect(ids == ["mi_0", "mi_1", "mi_9", "mi_2"], "召唤应按存活下标插入，实际顺序 %s" % [ids])
+
+
+## 回合号不匹配时（`CombatResult` 属于上一回合），不展示旧战报也不播演示。
+func _check_stale_combat_not_shown() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Combat"
+    GameStore.turn = 4
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view := FixtureScript.game_view()
+    view["phase"] = "Combat"
+    view["opponentPlayerId"] = "p2"
+    GameStore.view = view
+    GameStore.last_combat = FixtureScript.combat_result()
+    GameStore.last_combat_turn = 3
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _clear_combat()
+        return
+    var own_row = instance.find_child("CombatOwnRow", true, false)
+    var banner = instance.find_child("CombatBanner", true, false)
+    var log_text = instance.find_child("LogText", true, false)
+    _expect(own_row != null and own_row.get_child_count() == 0, "上一回合战报不应渲染随从行")
+    _expect(banner != null and not banner.visible, "上一回合战报不应显示横幅")
+    _expect(log_text != null and not str(log_text.text).contains("[战斗]"), "战报行不应显示上一回合战斗：%s"
+        % ("" if log_text == null else str(log_text.text)))
+    instance.queue_free()
+    await get_tree().process_frame
+
+    # 同一份战报标成本回合后恢复展示。
+    GameStore.last_combat_turn = 4
+    var fresh := await _check_scene("res://scenes/game.tscn", false)
+    if fresh != null:
+        var fresh_row = fresh.find_child("CombatOwnRow", true, false)
+        _expect(fresh_row != null and fresh_row.get_child_count() == 3, "本回合战报应渲染 3 张随从")
+        fresh.queue_free()
+        await get_tree().process_frame
+    GameStore.view = {}
+    _clear_combat()
+    GameStore.turn = 1
+    GameStore.phase = ""
+    GameStore.deadline = ""
+
+
+## 棋盘容量取视图：空位数量与提示跟随 `boardSlots`，满场判定用同一数值。
+func _check_board_capacity_from_view() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["boardSlots"] = 5
+    view["self"]["board"] = [
+        FixtureScript.board_minion("mi_1", "baiyi", 0),
+        FixtureScript.board_minion("mi_2", "airplane", 1),
+    ]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var board_row = instance.find_child("BoardRow", true, false)
+    var hint = instance.find_child("BoardHint", true, false)
+    _expect(board_row != null and board_row.get_child_count() == 5,
+        "容量为 5 时棋盘应有 5 个槽位，实际 %s" % ("null" if board_row == null else str(board_row.get_child_count())))
+    _expect(hint != null and str(hint.text) == "随从 2/5", "提示应取视图容量：%s" % ("null" if hint == null else hint.text))
+    _expect(board_row != null and not board_row.board_full, "2/5 不应判定为满场")
+
+    # 同一视图改成满场：槽位数量与满场标记都跟着容量走。
+    view["self"]["board"] = []
+    for index in 5:
+        view["self"]["board"].append(FixtureScript.board_minion("mi_%d" % index, "baiyi", index))
+    view["self"]["affordances"]["boardMinions"] = []
+    GameStore.view = view
+    GameStore.view_changed.emit()
+    await get_tree().process_frame
+    _expect(hint != null and str(hint.text) == "随从 5/5", "满场提示应取视图容量：%s" % ("null" if hint == null else hint.text))
+    _expect(board_row != null and board_row.board_full, "5/5 应判定为满场")
+    _expect(board_row != null and board_row.get_child_count() == 5,
+        "满场时不应再追加空位，实际 %s" % ("null" if board_row == null else str(board_row.get_child_count())))
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
 
 
 ## 逐动作播放：每 320ms 应用一条动作，数值只取服务端下发值。
@@ -394,8 +630,7 @@ func _check_combat_playback() -> void:
     _expect(_stats_text(own_row.get_child(0)) == "7 / 6", "第一条攻击后我方首卡应为 7/6，实际 %s" % _stats_text(own_row.get_child(0)))
     _expect(_stats_text(opponent_row.get_child(0)) == "6 / 2", "第一条攻击后对手首卡应为 6/2，实际 %s" % _stats_text(opponent_row.get_child(0)))
     instance._process(0.32)
-    _expect(opponent_row.get_child_count() == 2, "阵亡随从仍占位")
-    _expect(opponent_row.get_child(0).self_modulate.a < 1.0, "阵亡随从应变暗")
+    _expect(opponent_row.get_child_count() == 1, "阵亡随从应立即离开行内，实际 %d 张" % opponent_row.get_child_count())
     instance._process(0.32)
     _expect(own_row.get_child_count() == 4, "召唤后我方行应为 4 张，实际 %d" % own_row.get_child_count())
     if own_row.get_child_count() == 4:
@@ -403,7 +638,7 @@ func _check_combat_playback() -> void:
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
-    GameStore.last_combat = {}
+    _clear_combat()
     GameStore.turn = 1
     GameStore.phase = ""
 
@@ -423,7 +658,7 @@ func _check_combat_banner_after_tail() -> void:
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
-    GameStore.last_combat = {}
+    _clear_combat()
     GameStore.turn = 1
     GameStore.phase = ""
 
@@ -445,14 +680,16 @@ func _check_combat_resume_from_deadline() -> void:
         own_row != null and own_row.get_child_count() == 4,
         "续播应按已过时间落地召唤：实际 %d 张" % (0 if own_row == null else own_row.get_child_count())
     )
-    _expect(opponent_row != null and opponent_row.get_child_count() == 2, "对手阵亡随从仍占位")
-    if opponent_row != null and opponent_row.get_child_count() > 0:
-        _expect(opponent_row.get_child(0).self_modulate.a < 1.0, "续播点前的阵亡动作应立即落地")
+    _expect(
+        opponent_row != null and opponent_row.get_child_count() == 1,
+        "续播点前的阵亡动作应立即落地（阵亡卡离场）：实际 %d 张"
+        % (0 if opponent_row == null else opponent_row.get_child_count())
+    )
     _expect(banner != null and not banner.visible, "横幅停留未走完时不应显示横幅")
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
-    GameStore.last_combat = {}
+    _clear_combat()
     GameStore.turn = 1
     GameStore.phase = ""
     GameStore.deadline = ""
@@ -464,6 +701,7 @@ func _check_hand_drag_emits_position() -> void:
     GameStore.phase = "Recruit"
     GameStore.turn = 3
     GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
     var view: Dictionary = FixtureScript.view()
     view["self"]["board"] = [
         FixtureScript.board_minion("mi_1", "baiyi", 0),
@@ -546,6 +784,7 @@ func _check_hand_drag_emits_position() -> void:
             )
     instance.queue_free()
     await get_tree().process_frame
+    _fake_disconnect()
     GameStore.view = {}
     GameStore.turn = 1
 
@@ -779,7 +1018,7 @@ func _check_overlay_hidden_in_combat() -> void:
     view["opponentPlayerId"] = "p2"
     view["self"]["pendingChoices"] = [{"kind": "discover", "candidates": ["huo", "lun", "che"]}]
     GameStore.view = view
-    GameStore.last_combat = FixtureScript.combat_result()
+    _set_combat(FixtureScript.combat_result())
     var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
         return
@@ -794,7 +1033,7 @@ func _check_overlay_hidden_in_combat() -> void:
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
-    GameStore.last_combat = {}
+    _clear_combat()
     GameStore.turn = 1
     GameStore.phase = ""
 
@@ -806,7 +1045,7 @@ func _check_last_combat_cleared_on_next_recruit() -> void:
     var combat_view: Dictionary = FixtureScript.view()
     combat_view["phase"] = "Combat"
     GameStore.handle(Protocol.MSG_STATE_UPDATE, {"view": combat_view, "events": []})
-    GameStore.last_combat = FixtureScript.combat_result()
+    _set_combat(FixtureScript.combat_result())
     _expect(not GameStore.last_combat.is_empty(), "战斗阶段应保留本场战报")
 
     var recruit_view: Dictionary = FixtureScript.view()

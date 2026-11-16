@@ -274,6 +274,7 @@ func _build_recruit_panel() -> Control:
     var board_head := HBoxContainer.new()
     board_head.add_child(UI.section_title("我方棋盘"))
     _board_hint = UI.label("", UITheme.font_size("font-caption"), false)
+    _board_hint.name = "BoardHint"
     _board_hint.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     _board_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _board_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -560,15 +561,21 @@ func _refresh_board(self_state: Dictionary, recruited: bool, phase: String) -> v
     UI.clear(_board_row)
     var aff: Dictionary = self_state.get("affordances", {})
     var board: Array = self_state.get("board", [])
+    var slots := _board_slots()
     var can_rearrange := not _view_stale and not _deadline_expired and not _target_pending and phase == Protocol.PHASE_RECRUIT and not recruited
-    _board_row.board_full = board.size() >= 7
-    _board_hint.text = "随从 %d/7" % board.size()
+    _board_row.board_full = board.size() >= slots
+    _board_hint.text = "随从 %d/%d" % [board.size(), slots]
     for position in board.size():
         var minion: Dictionary = board[position]
         var minion_aff := _find_by_index(aff.get("boardMinions", []), int(minion.get("index", position)))
         _board_row.add_child(_minion_card(minion, minion_aff, can_rearrange, position, board.size()))
-    for _position in range(board.size(), 7):
+    for _position in range(board.size(), slots):
         _board_row.add_child(_empty_slot())
+
+
+## 棋盘容量：以服务端下发的视图为准，字段缺失（旧服务端）时回退 7。
+func _board_slots() -> int:
+    return maxi(int(GameStore.view.get("boardSlots", 7)), 1)
 
 
 func _empty_slot() -> PanelContainer:
@@ -826,13 +833,13 @@ func _set_combat_mode(in_combat: bool) -> void:
 func _refresh_combat(view: Dictionary) -> void:
     _fill_combat_strip(_combat_opponent_strip, _opponent_of(view), "对手")
     _fill_combat_strip(_combat_self_strip, _self_player(view), "我")
-    var combat: Dictionary = GameStore.last_combat
-    if combat.is_empty():
+    if not GameStore.combat_is_current():
         _combat_banner.visible = false
         UI.clear(_combat_opponent_row)
         UI.clear(_combat_own_row)
         _combat_opponent_row.add_child(UI.empty_hint("等待战斗动作…"))
         return
+    var combat: Dictionary = GameStore.last_combat
     if _combat_turn != GameStore.turn:
         _start_combat(combat)
     _render_combat_rows()
@@ -853,12 +860,12 @@ func _start_combat(combat: Dictionary) -> void:
     _combat_turn = GameStore.turn
 
 
-## 演示进行中：阶段为战斗、播放器属于本回合、有战报且尚未播完。
+## 演示进行中：阶段为战斗、播放器属于本回合、有本回合战报且尚未播完。
 func _combat_playing() -> bool:
     return (
         GameStore.phase == Protocol.PHASE_COMBAT
         and _combat_turn == GameStore.turn
-        and not GameStore.last_combat.is_empty()
+        and GameStore.combat_is_current()
         and not _combat.is_finished()
     )
 
@@ -869,15 +876,22 @@ func _render_combat_rows() -> void:
     _reconcile_row(_combat_own_row, _combat.own)
 
 
-## 把一行对齐到 `minions`：按下标复用同实例的卡片，多余的同步释放。
+## 把一行对齐到 `minions` 里的存活条目：按下标复用同实例的卡片，多余的同步释放。
 ##
+## 播放器保留阵亡条目作为顺序锚点（与引擎一致），但行内只渲染存活随从：
+## 阵亡卡立刻消失，复生后重新按存活序列的位置出现。
 ## 复用靠卡片上的 `minion_id` 元数据：不依赖外部映射表，重画多少次都幂等。
 func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
-    var wanted: Array = []
+    var alive: Array = []
     for minion in minions:
+        if bool(minion.get("alive", true)):
+            alive.append(minion)
+
+    var wanted: Array = []
+    for minion in alive:
         wanted.append(str(minion.get("minionId", "")))
 
-    # 先摘掉不再需要的卡片（服务端撤回的随从；本版本不会出现，保留兜底）。
+    # 先摘掉不再需要的卡片（阵亡或被服务端撤回的随从）。
     var existing: Dictionary = {}
     for child in row.get_children():
         if not (child is Control) or not child.has_meta("minion_id"):
@@ -889,8 +903,8 @@ func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
             row.remove_child(child)
             child.queue_free()
 
-    for position in minions.size():
-        var minion: Dictionary = minions[position]
+    for position in alive.size():
+        var minion: Dictionary = alive[position]
         var minion_id := str(minion.get("minionId", ""))
         var panel: Control = existing.get(minion_id)
         if panel == null:
@@ -900,8 +914,6 @@ func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
         var stats = panel.find_child("Stats", true, false)
         if stats != null:
             stats.text = "%d / %d" % [int(minion.get("attack", 0)), int(minion.get("health", 0))]
-        var alive := bool(minion.get("alive", true))
-        panel.self_modulate = Color(1, 1, 1, 1) if alive else Color(1, 1, 1, 0.45)
         row.move_child(panel, position)
 
 
@@ -979,7 +991,7 @@ func _self_player(view: Dictionary) -> Dictionary:
 
 func _refresh_log() -> void:
     var lines: Array = []
-    if not GameStore.last_combat.is_empty():
+    if GameStore.combat_is_current():
         lines.append(_combat_text())
     var events: Array = GameStore.event_log
     var start := maxi(0, events.size() - 8)
@@ -1403,8 +1415,13 @@ func _on_buy(index: int) -> void:
 
 
 ## 棋盘落点回调：出牌的唯一入口。拖拽途中视图已重建时按取消处理。
+##
+## 拖拽期间状态可能已经变化（视图重建、换回合、开战、断线、进入目标待选），
+## 落点必须重新过一遍与拖拽起始同一组门控，任一不满足都不构造意图。
 func _on_board_dropped(data: Dictionary, position: int, target_minion_id: String) -> void:
     if int(data.get("epoch", -1)) != _view_epoch:
+        return
+    if not _can_play_now():
         return
     var intent := {"kind": Protocol.INTENT_PLAY_CARD, "handIndex": int(data.get("handIndex", 0))}
     if str(data.get("cardKind", "")) == "minion":
@@ -1412,6 +1429,37 @@ func _on_board_dropped(data: Dictionary, position: int, target_minion_id: String
     elif target_minion_id != "":
         intent["targetMinionId"] = target_minion_id
     _remember_target_request(_send_intent(intent), intent)
+
+
+## 落点门控的实时复查：与 `drag_gate` 同源，但用手牌之外的状态（是否已结束招募）。
+static func drop_gate(
+    phase: String,
+    stale: bool,
+    expired: bool,
+    connected: bool,
+    target_pending: bool,
+    recruited: bool
+) -> bool:
+    return (
+        phase == Protocol.PHASE_RECRUIT
+        and not stale
+        and not expired
+        and connected
+        and not target_pending
+        and not recruited
+    )
+
+
+## 落点门控的实时复查：拖拽期间状态可能已经变化，落点按当前页面状态重判。
+func _can_play_now() -> bool:
+    return drop_gate(
+        str(GameStore.view.get("phase", GameStore.phase)),
+        _view_stale,
+        _deadline_expired,
+        Net.is_open(),
+        _target_pending,
+        bool(GameStore.view.get("self", {}).get("recruited", false))
+    )
 
 
 func _on_sell(minion_id: String) -> void:
