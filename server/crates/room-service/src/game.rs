@@ -788,10 +788,17 @@ fn map_intent(intent: protocol::intents::Intent) -> Result<EngineIntent, ErrorCo
         Protocol::UpgradeEra => Ok(EngineIntent::UpgradeEra),
         Protocol::PlayCard {
             hand_index,
+            position,
             target_minion_id,
         } => Ok(EngineIntent::PlayCard {
             hand_index: to_u8(hand_index)?,
+            position: position.map(to_u8).transpose()?,
             target: parse_target(target_minion_id)?,
+        }),
+        Protocol::ChooseTarget { minion_id } => Ok(EngineIntent::ChooseTarget {
+            minion: minion_id
+                .parse::<InstanceId>()
+                .map_err(|_| ErrorCode::NoSuchMinion)?,
         }),
         Protocol::RearrangeBoard {
             from_index,

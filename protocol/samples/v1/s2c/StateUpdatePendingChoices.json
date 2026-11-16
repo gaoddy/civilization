@@ -65,7 +65,8 @@
             "index": 0,
             "cardId": "dia",
             "playable": true,
-            "disabledReason": null
+            "disabledReason": null,
+            "requiresTarget": false
           }
         ],
         "board": [
@@ -101,6 +102,10 @@
               "health",
               "keyword"
             ]
+          },
+          {
+            "kind": "target",
+            "sourceMinionId": "mi_1"
           }
         ],
         "affordances": {

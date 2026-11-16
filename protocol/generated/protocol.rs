@@ -2062,7 +2062,8 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 ///    "cardId",
 ///    "disabledReason",
 ///    "index",
-///    "playable"
+///    "playable",
+///    "requiresTarget"
 ///  ],
 ///  "properties": {
 ///    "cardId": {
@@ -2083,6 +2084,10 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 ///    "playable": {
 ///      "description": "服务端算好的可打出提示",
 ///      "type": "boolean"
+///    },
+///    "requiresTarget": {
+///      "description": "该牌是否需要玩家指定单一目标",
+///      "type": "boolean"
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -2100,6 +2105,9 @@ pub struct HandCard {
     pub index: i64,
     ///服务端算好的可打出提示
     pub playable: bool,
+    ///该牌是否需要玩家指定单一目标
+    #[serde(rename = "requiresTarget")]
+    pub requires_target: bool,
 }
 impl ::std::convert::From<&HandCard> for HandCard {
     fn from(value: &HandCard) -> Self {
@@ -2188,6 +2196,12 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///        },
 ///        "kind": {
 ///          "const": "PlayCard"
+///        },
+///        "position": {
+///          "description": "插入站位；缺省追加到最右",
+///          "type": "integer",
+///          "maximum": 6.0,
+///          "minimum": 0.0
 ///        },
 ///        "targetMinionId": {
 ///          "description": "战吼或效果需要目标时填",
@@ -2291,6 +2305,23 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///        }
 ///      },
 ///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind",
+///        "minionId"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "ChooseTarget"
+///        },
+///        "minionId": {
+///          "description": "目标随从实例 id",
+///          "type": "string"
+///        }
+///      },
+///      "additionalProperties": false
 ///    }
 ///  ]
 ///}
@@ -2314,6 +2345,9 @@ pub enum Intent {
         ///手牌位置
         #[serde(rename = "handIndex")]
         hand_index: i64,
+        ///插入站位；缺省追加到最右
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        position: ::std::option::Option<i64>,
         ///战吼或效果需要目标时填
         #[serde(
             rename = "targetMinionId",
@@ -2348,6 +2382,11 @@ pub enum Intent {
     ChooseDiscover {
         ///发现为候选下标，进化为选项下标
         choice: i64,
+    },
+    ChooseTarget {
+        ///目标随从实例 id
+        #[serde(rename = "minionId")]
+        minion_id: ::std::string::String,
     },
 }
 impl ::std::convert::From<&Self> for Intent {
@@ -2679,6 +2718,24 @@ impl ::std::convert::From<&MinionStats> for MinionStats {
 ///        }
 ///      },
 ///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind",
+///        "sourceMinionId"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "description": "固定为 target",
+///          "const": "target"
+///        },
+///        "sourceMinionId": {
+///          "description": "触发该待选的随从",
+///          "type": "string"
+///        }
+///      },
+///      "additionalProperties": false
 ///    }
 ///  ]
 ///}
@@ -2696,6 +2753,12 @@ pub enum PendingChoice {
     Evolve {
         ///进化选项
         options: ::std::vec::Vec<::std::string::String>,
+    },
+    #[serde(rename = "target")]
+    Target {
+        ///触发该待选的随从
+        #[serde(rename = "sourceMinionId")]
+        source_minion_id: ::std::string::String,
     },
 }
 impl ::std::convert::From<&Self> for PendingChoice {
@@ -3948,30 +4011,6 @@ pub struct ShopSlot {
 impl ::std::convert::From<&ShopSlot> for ShopSlot {
     fn from(value: &ShopSlot) -> Self {
         value.clone()
-    }
-}
-///`SkipAnimation`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "object",
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct SkipAnimation {}
-impl ::std::convert::From<&SkipAnimation> for SkipAnimation {
-    fn from(value: &SkipAnimation) -> Self {
-        value.clone()
-    }
-}
-impl ::std::default::Default for SkipAnimation {
-    fn default() -> Self {
-        Self {}
     }
 }
 ///`Snapshot`

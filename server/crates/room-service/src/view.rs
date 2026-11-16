@@ -125,6 +125,7 @@ fn self_to_protocol(
                 .find(|candidate| candidate.index == card.index);
             HandCard {
                 card_id: card.card_id.clone(),
+                requires_target: card.requires_target,
                 disabled_reason: affordance
                     .and_then(|candidate| candidate.disabled_reason)
                     .map(reject_reason),
@@ -261,6 +262,9 @@ fn pending_to_protocol(pending: &PendingChoiceView) -> PendingChoice {
         },
         PendingChoiceView::Evolve { options } => PendingChoice::Evolve {
             options: options.clone(),
+        },
+        PendingChoiceView::Target { source_minion_id } => PendingChoice::Target {
+            source_minion_id: source_minion_id.to_string(),
         },
     }
 }

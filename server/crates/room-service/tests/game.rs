@@ -159,6 +159,40 @@ fn error_codes(updates: &[SeatUpdate]) -> Vec<ErrorCode> {
         .collect()
 }
 
+
+/// 消费队首的目标待选：取己方最左侧随从发 `ChooseTarget`。
+///
+/// 战吼需要目标的随从入场后不再阻塞出牌，而是留下一目标待选；
+/// 待选期间该座位不能执行其它招募意图，测试须先结算它。
+fn resolve_target_pending(task: &mut GameTask, tag: &str) -> bool {
+    let view = task.player_view(0).expect("视图应可用");
+    let is_target = matches!(
+        view.self_.pending_choices.first(),
+        Some(protocol::view::PendingChoice::Target { .. })
+    );
+    if !is_target {
+        return false;
+    }
+    let minion_id = view
+        .self_
+        .board
+        .first()
+        .expect("目标待选存在时棋盘非空")
+        .minion_id
+        .clone();
+    let updates = task.handle(command(
+        "p0",
+        &format!("{tag}-choose-target"),
+        ProtocolIntent::ChooseTarget { minion_id },
+    ));
+    assert!(
+        error_codes(&updates).is_empty(),
+        "选定战吼目标应成功：{:?}",
+        error_codes(&updates)
+    );
+    true
+}
+
 #[test]
 fn game_advances_to_recruit_with_shop_and_gold() {
     let (task, _clock) = task();
@@ -297,6 +331,7 @@ fn unspent_pending_choice_does_not_block_timeout() {
         "discover-play",
         ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: None,
         },
     ));
@@ -432,9 +467,11 @@ fn sell_minion_succeeds_and_refunds_gold() {
         "sell-play",
         ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: None,
         },
     ));
+    resolve_target_pending(&mut task, "sell-play");
 
     let view = task.player_view(0).expect("视图应可用");
     assert_eq!(view.self_.board.len(), 1, "打出的随从应上棋盘");
@@ -491,10 +528,13 @@ fn play_card_succeeds() {
         "play-first",
         ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: None,
         },
     ));
     assert!(error_codes(&first_play).is_empty(), "打出手牌应成功");
+    // 并列的目标战吼会把整段 `OnPlay`（含发现）延后到选定目标之后。
+    resolve_target_pending(&mut task, "play-first");
 
     let pending = task.player_view(0).expect("视图应可用");
     assert_eq!(
@@ -524,10 +564,12 @@ fn play_card_succeeds() {
         "play-1",
         ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: target,
         },
     ));
     assert!(error_codes(&played).is_empty(), "打出手牌应成功");
+    resolve_target_pending(&mut task, "play-1");
 
     let after = task.player_view(0).expect("视图应可用");
     assert_eq!(after.self_.hand.len(), 0, "打出手牌后手牌数应下降");
@@ -560,39 +602,17 @@ fn play_hand_minions(task: &mut GameTask, tag: &str) {
             &format!("{tag}-play-{round}"),
             ProtocolIntent::PlayCard {
                 hand_index,
+                position: None,
                 target_minion_id: None,
             },
         ));
-        if error_codes(&updates) == vec![ErrorCode::NoValidTarget] {
-            let target = task
-                .player_view(0)
-                .expect("视图应可用")
-                .self_
-                .board
-                .first()
-                .expect("存在合法目标时棋盘非空")
-                .minion_id
-                .clone();
-            let retried = task.handle(command(
-                "p0",
-                &format!("{tag}-play-target-{round}"),
-                ProtocolIntent::PlayCard {
-                    hand_index,
-                    target_minion_id: Some(target),
-                },
-            ));
-            assert!(
-                error_codes(&retried).is_empty(),
-                "带目标重发应成功：{:?}",
-                error_codes(&retried)
-            );
-            continue;
-        }
         assert!(
             error_codes(&updates).is_empty(),
             "打出手牌随从应成功：{:?}",
             error_codes(&updates)
         );
+        // 需要目标的战吼入场后留下目标待选，待选期间该座位不能继续招募。
+        while resolve_target_pending(task, &format!("{tag}-{round}")) {}
     }
 }
 
@@ -672,9 +692,11 @@ fn choose_discover_consumes_pending_choice() {
         "discover-play",
         ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: None,
         },
     ));
+    resolve_target_pending(&mut task, "discover-play");
 
     let before = task.player_view(0).expect("视图应可用");
     assert_eq!(

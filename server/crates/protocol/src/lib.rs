@@ -18,7 +18,7 @@ pub use generated::*;
 pub mod client {
     pub use crate::{
         AuthRequest, CreateRoom, FriendRequest, IntentMessage, JoinRoom, LeaveRoom, Ready,
-        Reconnect, RequestSnapshot, SelectHeroCard, SkipAnimation,
+        Reconnect, RequestSnapshot, SelectHeroCard,
     };
 }
 
@@ -69,7 +69,6 @@ pub enum ClientMessage {
     Ready(Ready),
     SelectHeroCard(SelectHeroCard),
     Intent(IntentMessage),
-    SkipAnimation(SkipAnimation),
     RequestSnapshot(RequestSnapshot),
     Reconnect(Reconnect),
     FriendRequest(FriendRequest),
@@ -124,7 +123,6 @@ impl ClientEnvelope {
             "Ready" => parse_payload(payload()).map(ClientMessage::Ready),
             "SelectHeroCard" => parse_payload(payload()).map(ClientMessage::SelectHeroCard),
             "Intent" => parse_payload(payload()).map(ClientMessage::Intent),
-            "SkipAnimation" => parse_payload(payload()).map(ClientMessage::SkipAnimation),
             "RequestSnapshot" => parse_payload(payload()).map(ClientMessage::RequestSnapshot),
             "Reconnect" => parse_payload(payload()).map(ClientMessage::Reconnect),
             "FriendRequest" => parse_payload(payload()).map(ClientMessage::FriendRequest),

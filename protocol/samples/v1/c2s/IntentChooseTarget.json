@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "id": "c-15",
+  "type": "Intent",
+  "ts": "2026-11-15T10:00:15Z",
+  "roomId": "r-1",
+  "playerId": "p-3",
+  "payload": {
+    "clientIntentId": "ci-15",
+    "intent": {
+      "kind": "ChooseTarget",
+      "minionId": "21"
+    }
+  }
+}

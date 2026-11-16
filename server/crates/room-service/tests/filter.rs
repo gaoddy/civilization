@@ -411,6 +411,7 @@ fn private_intent_broadcasts_updated_public_summary_to_all_seats() {
         client_intent_id: "play-broadcast".to_string(),
         intent: ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: None,
         },
     });

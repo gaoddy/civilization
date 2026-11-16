@@ -21,11 +21,12 @@
     "HandCard": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "cardId", "playable", "disabledReason"],
+      "required": ["index", "cardId", "playable", "requiresTarget", "disabledReason"],
       "properties": {
         "index": { "type": "integer", "minimum": 0, "maximum": 9 },
         "cardId": { "type": "string" },
         "playable": { "type": "boolean", "description": "服务端算好的可打出提示" },
+        "requiresTarget": { "type": "boolean", "description": "该牌是否需要玩家指定单一目标" },
         "disabledReason": { "type": ["string", "null"], "description": "不可操作时的错误码" }
       }
     },
@@ -178,6 +179,15 @@
           "properties": {
             "kind": { "const": "evolve", "description": "固定为 evolve" },
             "options": { "type": "array", "items": { "type": "string" }, "description": "进化选项" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "sourceMinionId"],
+          "properties": {
+            "kind": { "const": "target", "description": "固定为 target" },
+            "sourceMinionId": { "type": "string", "description": "触发该待选的随从" }
           }
         }
       ]

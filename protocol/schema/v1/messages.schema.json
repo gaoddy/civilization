@@ -71,12 +71,6 @@
         "intent": { "$ref": "intents.schema.json#/$defs/Intent" }
       }
     },
-    "SkipAnimation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [],
-      "properties": {}
-    },
     "RequestSnapshot": {
       "type": "object",
       "additionalProperties": false,
