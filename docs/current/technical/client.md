@@ -10,9 +10,10 @@
 
 ```
 client/
-  project.godot              # 主场景 login.tscn；autoload：GameStore、CardDB、Net
+  project.godot              # 主场景 login.tscn；autoload：WindowSizer、GameStore、CardDB、Net
   .gitignore                 # 忽略 .godot/ 与 *.uid
   autoload/
+    window_sizer.gd          # 启动时按当前屏幕可用区域 90% 设置窗口并居中
     game_store.gd            # 认证、房间与 PlayerView 的全局状态
     ws_client.gd             # WebSocketPeer、自动重连、信封编解码与分发
     card_db.gd               # 只读卡牌/技能展示表
@@ -38,6 +39,8 @@ client/
     skills.json              # 技能展示表
     tokens.json              # Token 展示表
 ```
+
+窗口启动时由 `WindowSizer` 按当前屏幕可用区域（`screen_get_usable_rect`，已排除菜单栏与 Dock）的 90% 设置尺寸并居中；无头模式下跳过。逻辑视口固定 1280×720，窗口尺寸变化由 `canvas_items` 等比缩放，页面不感知实际窗口大小。
 
 ## 2. 全局状态与网络层
 
