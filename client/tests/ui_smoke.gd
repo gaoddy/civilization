@@ -21,6 +21,8 @@ func _ready() -> void:
     await _check_board_capacity_from_view()
     await _check_combat_layout()
     await _check_hand_drag_emits_position()
+    await _check_board_drag_reorders()
+    await _check_board_sell_drop()
     await _check_drag_rejected_for_target_effect_on_blank()
     await _check_drag_rejected_when_board_full()
     await _check_drag_disabled_when_stale_or_expired()
@@ -225,23 +227,26 @@ func _check_game() -> void:
         for expected in ["初始", "3 / 4", "永久", "+1 / +2", "回合", "+0 / -2", "光环", "+0 / +1", "受击", "0 / -3", "当前", "4 / 2"]:
             _expect(text.contains(expected), "详情面板应包含「%s」：%s" % [expected, text])
         _expect(not text.contains("-0"), "非负构成项应带 +：%s" % text)
-        # 指针落在卡片内按钮区域（STOP 子控件）继续移动，面板保持可见。
-        var actions = card.find_child("Actions", true, false)
-        if actions != null and actions.get_child_count() > 0:
-            var button: Control = actions.get_child(0)
-            await _push_motion(instance, button.get_global_rect().get_center())
-            _expect(detail.is_visible_in_tree(), "指针落在卡片按钮上时详情面板应保持可见")
+        _expect(card.find_child("Actions", true, false) == null, "棋盘随从卡不应再显示出售/移位按钮")
         _expect(detail.mouse_filter == Control.MOUSE_FILTER_IGNORE, "详情面板不应拦截鼠标")
-        # 详情面板覆盖按钮时只读：真实点击应穿透到下层按钮。
-        if actions != null and actions.get_child_count() > 0:
-            var sell: Button = actions.get_child(0)
-            detail.position = sell.get_global_rect().position
-            var hits := {"count": 0}
-            sell.pressed.connect(func() -> void: hits["count"] += 1)
-            await _push_click(instance, sell.get_global_rect().get_center())
-            _expect(int(hits["count"]) == 1, "详情面板覆盖时点击应触发下层按钮")
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y + 24))
         _expect(not detail.is_visible_in_tree(), "移出棋盘随从矩形应隐藏详情面板")
+    # 时代在所有位置显示具体名称（夹具自我时代 2、对手时代 1）。
+    var era_pill = instance.find_child("EraPill", true, false)
+    _expect(
+        era_pill != null and str(era_pill.text) == "时代 原始",
+        "顶栏应显示具体时代名，实际：%s" % (era_pill.text if era_pill != null else "缺失")
+    )
+    var self_hero = instance.find_child("SelfHeroPanel", true, false)
+    _expect(
+        self_hero != null and _node_text(self_hero).contains("时代 原始"),
+        "右侧属性行应显示具体时代名"
+    )
+    var players_rail = instance.find_child("PlayersRail", true, false)
+    if players_rail != null:
+        var rail_text := _node_text(players_rail)
+        _expect(rail_text.contains("时代 原始"), "积分榜本人行应显示时代名：%s" % rail_text)
+        _expect(rail_text.contains("时代 史前"), "积分榜对手行应显示时代名：%s" % rail_text)
     # 重新显示详情，再打开选择浮层，确认浮层会隐藏详情层。
     if detail != null and card != null:
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
@@ -828,6 +833,129 @@ func _check_hand_drag_emits_position() -> void:
                 tail_captured.size() == 1 and int(tail_captured[0].get("position", -1)) == 2,
                 "落在末尾空白应为随从数 2，实际 %s" % [tail_captured]
             )
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 棋盘卡拖拽换位：拖起后隐藏原卡，拖到末尾松手发出「移除后插入下标」意图。
+func _check_board_drag_reorders() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [
+        FixtureScript.board_minion("mi_1", "baiyi", 0),
+        FixtureScript.board_minion("mi_2", "airplane", 1),
+        FixtureScript.board_minion("mi_3", "huo", 2),
+    ]
+    view["self"]["affordances"]["boardMinions"] = [
+        {"index": 0, "sellable": true, "disabledReason": null},
+        {"index": 1, "sellable": true, "disabledReason": null},
+        {"index": 2, "sellable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var board_row = instance.find_child("BoardRow", true, false)
+    var card = instance.find_child("BoardMinion1", true, false)
+    _expect(card is BoardCard, "棋盘随从卡应为 BoardCard")
+    if board_row != null and card is BoardCard:
+        var payload: Dictionary = card.payload.duplicate()
+        _expect(card.drag_allowed, "招募阶段且已连接时棋盘卡应允许拖拽")
+        _expect(int(payload.get("epoch", -1)) == int(instance._view_epoch), "棋盘卡拖拽数据应带当前视图版本")
+        _expect(str(payload.get("minionId", "")) == "mi_2", "拖拽数据应带随从 id")
+        _expect(int(payload.get("fromIndex", -1)) == 1, "拖拽数据应带原下标")
+        # 用引擎的 force_drag 走真实的拖拽开始通知，验证 BoardDrop 会进入预览态。
+        card.force_drag(payload.duplicate(), Control.new())
+        await get_tree().process_frame
+        _expect(board_row._drag_id == "mi_2", "拖拽开始通知应触发棋盘预览")
+        _expect(not card.visible, "拖起后原卡应隐藏，不留占位框")
+        # 占位下标要跳过隐藏原卡：gap 2（末尾）落在第 3 个非占位子节点之前。
+        _expect(board_row._gap_child_index(2) == 3, "末尾插入下标应换算到隐藏卡位之后")
+        var last = instance.find_child("BoardMinion2", true, false)
+        if last != null:
+            var local: Vector2 = board_row.get_global_transform().affine_inverse() * (
+                last.get_global_rect().end + Vector2(8, last.size.y * 0.5)
+            )
+            _expect(board_row._can_drop_data(local, payload), "棋盘卡应能落在棋盘内")
+            var captured: Array = []
+            instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+            board_row._drop_data(local, payload)
+            await get_tree().process_frame
+            _expect(captured.size() == 1, "一次换位落点只应产生一条意图，实际 %d" % captured.size())
+            if captured.size() == 1:
+                var intent: Dictionary = captured[0]
+                _expect(str(intent.get("kind", "")) == Protocol.INTENT_REARRANGE_BOARD, "落点意图应为换位")
+                _expect(int(intent.get("fromIndex", -1)) == 1, "换位意图应带原下标 1")
+                _expect(int(intent.get("toIndex", -1)) == 2, "拖到末尾应插到下标 2，实际 %s" % [intent])
+        _expect(card.visible, "落点后应恢复原卡可见")
+        var viewport = instance.get_viewport()
+        if viewport != null and viewport.has_method("gui_cancel_drag"):
+            viewport.gui_cancel_drag()
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 商店出售落点：只接受可出售的棋盘卡；手牌与不可卖随从拒绝。
+func _check_board_sell_drop() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi", 0)]
+    view["self"]["affordances"]["boardMinions"] = [
+        {"index": 0, "sellable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var shop = instance.find_child("ShopPanel", true, false)
+    var card = instance.find_child("BoardMinion0", true, false)
+    _expect(shop is SellDrop, "商店面板应为出售落点")
+    if shop != null and card is BoardCard:
+        _expect(shop.enabled, "招募阶段且已连接时商店应接受出售拖拽")
+        var payload: Dictionary = card.payload.duplicate()
+        _expect(
+            not shop._can_drop_data(Vector2.ZERO, {"handIndex": 0, "cardKind": "minion"}),
+            "手牌不应能拖到商店出售"
+        )
+        var unsellable := payload.duplicate()
+        unsellable["sellable"] = false
+        _expect(not shop._can_drop_data(Vector2.ZERO, unsellable), "不可出售的随从不应被商店接受")
+        _expect(shop._can_drop_data(Vector2.ZERO, payload), "可出售随从应被商店接受")
+        var hint = instance.find_child("SellHint", true, false)
+        _expect(
+            hint != null and hint.visible and str(hint.text).contains("+1 金"),
+            "悬停商店应提示松手出售与返还金币"
+        )
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        shop._drop_data(Vector2.ZERO, payload)
+        await get_tree().process_frame
+        _expect(captured.size() == 1, "出售落点应产生一条意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(str(intent.get("kind", "")) == Protocol.INTENT_SELL_MINION, "落点意图应为出售")
+            _expect(str(intent.get("minionId", "")) == "mi_1", "出售意图应带随从 id")
+        _expect(hint != null and not hint.visible, "松手后出售提示应隐藏")
+        # 金色随从返还 3 金；提示由拖拽数据里的 golden 决定。
+        var golden: Dictionary = payload.duplicate()
+        golden["golden"] = true
+        _expect(shop._can_drop_data(Vector2.ZERO, golden), "金色随从应被商店接受")
+        _expect(hint != null and str(hint.text).contains("+3 金"), "金色随从应提示返还 3 金")
+        shop._clear_hover()
     instance.queue_free()
     await get_tree().process_frame
     _fake_disconnect()

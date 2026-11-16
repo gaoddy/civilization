@@ -5,6 +5,17 @@ var cards: Dictionary = {}
 var skills: Dictionary = {}
 var tokens: Dictionary = {}
 
+## 时代序号到展示名，与服务端 `Era` 枚举一致（1–7）。
+const ERA_NAMES := {
+    1: "史前",
+    2: "原始",
+    3: "古典",
+    4: "封建",
+    5: "工业",
+    6: "现代",
+    7: "未来",
+}
+
 
 func _ready() -> void:
     _load_table("res://generated/cards.json", cards)
@@ -49,6 +60,11 @@ func display_text(id: String) -> String:
 
 func display_cost(id: String) -> int:
     return int(card(id).get("display_cost", 0))
+
+
+## 时代展示名；未知序号回退为数字文本。
+func era_name(era: int) -> String:
+    return str(ERA_NAMES.get(era, str(era)))
 
 
 func heroes() -> Array:
