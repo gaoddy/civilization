@@ -309,6 +309,13 @@ pub enum PendingChoice {
         source: InstanceId,
         remaining: u8,
     },
+    /// 战吼已入场但尚未选定目标；`card_id` / `golden` 用于选定后重建效果上下文。
+    Target {
+        seat: Seat,
+        source: InstanceId,
+        card_id: String,
+        golden: bool,
+    },
 }
 
 /// 整局对局状态，`state_hash` 的输入。

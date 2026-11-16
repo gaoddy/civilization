@@ -33,12 +33,13 @@ pub fn next_intent(view: &PlayerView, catalog: &Catalog, seed: u64) -> Option<In
         return None;
     }
 
-    if let Some(choice) = pending_choice(me, seed) {
-        return Some(Intent::ChooseDiscover { choice });
+    if let Some(intent) = pending_intent(me, seed) {
+        return Some(intent);
     }
     if let Some(hand_index) = first_playable_hand(me) {
         return Some(Intent::PlayCard {
             hand_index,
+            position: None,
             target_minion_id: None,
         });
     }
@@ -57,8 +58,9 @@ pub fn next_intent(view: &PlayerView, catalog: &Catalog, seed: u64) -> Option<In
     None
 }
 
-/// 待选队列的第一条。发现按 `seed` 取候选下标，进化固定取 0（与 M0 AI 一致）。
-fn pending_choice(me: &PlayerViewSelf, seed: u64) -> Option<i64> {
+/// 待选队列的第一条。发现按 `seed` 取候选下标，进化固定取 0（与 M0 AI 一致），
+/// 目标待选取棋盘最左侧随从。
+fn pending_intent(me: &PlayerViewSelf, seed: u64) -> Option<Intent> {
     match me.pending_choices.first()? {
         PendingChoice::Discover { candidates } => {
             let index = if candidates.is_empty() {
@@ -66,9 +68,14 @@ fn pending_choice(me: &PlayerViewSelf, seed: u64) -> Option<i64> {
             } else {
                 (seed % candidates.len() as u64) as usize
             };
-            Some(i64::try_from(index).unwrap_or(0))
+            Some(Intent::ChooseDiscover {
+                choice: i64::try_from(index).unwrap_or(0),
+            })
         }
-        PendingChoice::Evolve { .. } => Some(0),
+        PendingChoice::Evolve { .. } => Some(Intent::ChooseDiscover { choice: 0 }),
+        PendingChoice::Target { .. } => Some(Intent::ChooseTarget {
+            minion_id: me.board.first()?.minion_id.clone(),
+        }),
     }
 }
 
@@ -146,8 +153,10 @@ pub fn retry_with_target(view: &PlayerView, rejected: &Intent) -> Option<Intent>
         Intent::PlayCard {
             hand_index,
             target_minion_id,
+            ..
         } => target_minion_id.is_none().then_some(Intent::PlayCard {
             hand_index: *hand_index,
+            position: None,
             target_minion_id: Some(target),
         }),
         Intent::UseHeroPower {

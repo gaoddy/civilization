@@ -578,7 +578,6 @@ fn map_room_message(
                 player_id,
             }))
         }
-        ClientMessage::SkipAnimation(_) => Ok(RoomMessage::Ignore),
         ClientMessage::Reconnect(_) => {
             let _ = out;
             Err(("INTERNAL_ERROR", "重连入口不应进入房间命令路由"))

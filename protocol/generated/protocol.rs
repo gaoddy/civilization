@@ -811,6 +811,55 @@ impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeType {
             })
     }
 }
+///`CombatMinionState`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "alive",
+///    "attack",
+///    "health",
+///    "minionId"
+///  ],
+///  "properties": {
+///    "alive": {
+///      "type": "boolean"
+///    },
+///    "attack": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "health": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "minionId": {
+///      "description": "随从实例 id",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CombatMinionState {
+    pub alive: bool,
+    pub attack: u64,
+    pub health: u64,
+    ///随从实例 id
+    #[serde(rename = "minionId")]
+    pub minion_id: ::std::string::String,
+}
+impl ::std::convert::From<&CombatMinionState> for CombatMinionState {
+    fn from(value: &CombatMinionState) -> Self {
+        value.clone()
+    }
+}
 ///`CombatResult`
 ///
 /// <details><summary>JSON schema</summary>
@@ -844,9 +893,19 @@ impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeType {
 ///            "description": "动作类型，具体取值由规则引擎实现确定",
 ///            "type": "string"
 ///          },
+///          "source": {
+///            "$ref": "#/$defs/CombatMinionState"
+///          },
 ///          "sourceIndex": {
 ///            "type": [
 ///              "integer",
+///              "null"
+///            ]
+///          },
+///          "sourceMinionId": {
+///            "description": "动作来源随从实例 id；死亡、复生、召唤等无来源动作为 null",
+///            "type": [
+///              "string",
 ///              "null"
 ///            ]
 ///          },
@@ -862,9 +921,47 @@ impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeType {
 ///              null
 ///            ]
 ///          },
+///          "summon": {
+///            "type": "object",
+///            "required": [
+///              "minion",
+///              "position",
+///              "side"
+///            ],
+///            "properties": {
+///              "minion": {
+///                "$ref": "#/$defs/BoardMinion"
+///              },
+///              "position": {
+///                "description": "在该侧棋盘中的插入下标",
+///                "type": "integer",
+///                "maximum": 6.0,
+///                "minimum": 0.0
+///              },
+///              "side": {
+///                "description": "相对接收该消息的座位",
+///                "type": "string",
+///                "enum": [
+///                  "own",
+///                  "opponent"
+///                ]
+///              }
+///            },
+///            "additionalProperties": false
+///          },
+///          "target": {
+///            "$ref": "#/$defs/CombatMinionState"
+///          },
 ///          "targetIndex": {
 ///            "type": [
 ///              "integer",
+///              "null"
+///            ]
+///          },
+///          "targetMinionId": {
+///            "description": "动作目标随从实例 id；死亡、复生、召唤等无目标动作为 null",
+///            "type": [
+///              "string",
 ///              "null"
 ///            ]
 ///          },
@@ -960,9 +1057,19 @@ impl ::std::convert::From<&CombatResult> for CombatResult {
 ///      "description": "动作类型，具体取值由规则引擎实现确定",
 ///      "type": "string"
 ///    },
+///    "source": {
+///      "$ref": "#/$defs/CombatMinionState"
+///    },
 ///    "sourceIndex": {
 ///      "type": [
 ///        "integer",
+///        "null"
+///      ]
+///    },
+///    "sourceMinionId": {
+///      "description": "动作来源随从实例 id；死亡、复生、召唤等无来源动作为 null",
+///      "type": [
+///        "string",
 ///        "null"
 ///      ]
 ///    },
@@ -978,9 +1085,47 @@ impl ::std::convert::From<&CombatResult> for CombatResult {
 ///        null
 ///      ]
 ///    },
+///    "summon": {
+///      "type": "object",
+///      "required": [
+///        "minion",
+///        "position",
+///        "side"
+///      ],
+///      "properties": {
+///        "minion": {
+///          "$ref": "#/$defs/BoardMinion"
+///        },
+///        "position": {
+///          "description": "在该侧棋盘中的插入下标",
+///          "type": "integer",
+///          "maximum": 6.0,
+///          "minimum": 0.0
+///        },
+///        "side": {
+///          "description": "相对接收该消息的座位",
+///          "type": "string",
+///          "enum": [
+///            "own",
+///            "opponent"
+///          ]
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    "target": {
+///      "$ref": "#/$defs/CombatMinionState"
+///    },
 ///    "targetIndex": {
 ///      "type": [
 ///        "integer",
+///        "null"
+///      ]
+///    },
+///    "targetMinionId": {
+///      "description": "动作目标随从实例 id；死亡、复生、召唤等无目标动作为 null",
+///      "type": [
+///        "string",
 ///        "null"
 ///      ]
 ///    },
@@ -1008,12 +1153,21 @@ pub struct CombatResultActionsItem {
     pub damage: ::std::option::Option<i64>,
     ///动作类型，具体取值由规则引擎实现确定
     pub kind: ::std::string::String,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub source: ::std::option::Option<CombatMinionState>,
     #[serde(
         rename = "sourceIndex",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub source_index: ::std::option::Option<i64>,
+    ///动作来源随从实例 id；死亡、复生、召唤等无来源动作为 null
+    #[serde(
+        rename = "sourceMinionId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub source_minion_id: ::std::option::Option<::std::string::String>,
     ///sourceIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有来源下标
     #[serde(
         rename = "sourceSide",
@@ -1021,12 +1175,23 @@ pub struct CombatResultActionsItem {
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub source_side: ::std::option::Option<CombatResultActionsItemSourceSide>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub summon: ::std::option::Option<CombatResultActionsItemSummon>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub target: ::std::option::Option<CombatMinionState>,
     #[serde(
         rename = "targetIndex",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub target_index: ::std::option::Option<i64>,
+    ///动作目标随从实例 id；死亡、复生、召唤等无目标动作为 null
+    #[serde(
+        rename = "targetMinionId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub target_minion_id: ::std::option::Option<::std::string::String>,
     ///targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标
     #[serde(
         rename = "targetSide",
@@ -1117,6 +1282,140 @@ for CombatResultActionsItemSourceSide {
 }
 impl ::std::convert::TryFrom<::std::string::String>
 for CombatResultActionsItemSourceSide {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`CombatResultActionsItemSummon`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "minion",
+///    "position",
+///    "side"
+///  ],
+///  "properties": {
+///    "minion": {
+///      "$ref": "#/$defs/BoardMinion"
+///    },
+///    "position": {
+///      "description": "在该侧棋盘中的插入下标",
+///      "type": "integer",
+///      "maximum": 6.0,
+///      "minimum": 0.0
+///    },
+///    "side": {
+///      "description": "相对接收该消息的座位",
+///      "type": "string",
+///      "enum": [
+///        "own",
+///        "opponent"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CombatResultActionsItemSummon {
+    pub minion: BoardMinion,
+    ///在该侧棋盘中的插入下标
+    pub position: i64,
+    ///相对接收该消息的座位
+    pub side: CombatResultActionsItemSummonSide,
+}
+impl ::std::convert::From<&CombatResultActionsItemSummon>
+for CombatResultActionsItemSummon {
+    fn from(value: &CombatResultActionsItemSummon) -> Self {
+        value.clone()
+    }
+}
+///相对接收该消息的座位
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "相对接收该消息的座位",
+///  "type": "string",
+///  "enum": [
+///    "own",
+///    "opponent"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum CombatResultActionsItemSummonSide {
+    #[serde(rename = "own")]
+    Own,
+    #[serde(rename = "opponent")]
+    Opponent,
+}
+impl ::std::convert::From<&Self> for CombatResultActionsItemSummonSide {
+    fn from(value: &CombatResultActionsItemSummonSide) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for CombatResultActionsItemSummonSide {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Own => f.write_str("own"),
+            Self::Opponent => f.write_str("opponent"),
+        }
+    }
+}
+impl ::std::str::FromStr for CombatResultActionsItemSummonSide {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "own" => Ok(Self::Own),
+            "opponent" => Ok(Self::Opponent),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for CombatResultActionsItemSummonSide {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for CombatResultActionsItemSummonSide {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for CombatResultActionsItemSummonSide {
     type Error = self::error::ConversionError;
     fn try_from(
         value: ::std::string::String,
@@ -2062,7 +2361,8 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 ///    "cardId",
 ///    "disabledReason",
 ///    "index",
-///    "playable"
+///    "playable",
+///    "requiresTarget"
 ///  ],
 ///  "properties": {
 ///    "cardId": {
@@ -2083,6 +2383,10 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 ///    "playable": {
 ///      "description": "服务端算好的可打出提示",
 ///      "type": "boolean"
+///    },
+///    "requiresTarget": {
+///      "description": "该牌是否需要玩家指定单一目标",
+///      "type": "boolean"
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -2100,6 +2404,9 @@ pub struct HandCard {
     pub index: i64,
     ///服务端算好的可打出提示
     pub playable: bool,
+    ///该牌是否需要玩家指定单一目标
+    #[serde(rename = "requiresTarget")]
+    pub requires_target: bool,
 }
 impl ::std::convert::From<&HandCard> for HandCard {
     fn from(value: &HandCard) -> Self {
@@ -2188,6 +2495,12 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///        },
 ///        "kind": {
 ///          "const": "PlayCard"
+///        },
+///        "position": {
+///          "description": "插入站位；缺省追加到最右",
+///          "type": "integer",
+///          "maximum": 6.0,
+///          "minimum": 0.0
 ///        },
 ///        "targetMinionId": {
 ///          "description": "战吼或效果需要目标时填",
@@ -2291,6 +2604,23 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///        }
 ///      },
 ///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind",
+///        "minionId"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "ChooseTarget"
+///        },
+///        "minionId": {
+///          "description": "目标随从实例 id",
+///          "type": "string"
+///        }
+///      },
+///      "additionalProperties": false
 ///    }
 ///  ]
 ///}
@@ -2314,6 +2644,9 @@ pub enum Intent {
         ///手牌位置
         #[serde(rename = "handIndex")]
         hand_index: i64,
+        ///插入站位；缺省追加到最右
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        position: ::std::option::Option<i64>,
         ///战吼或效果需要目标时填
         #[serde(
             rename = "targetMinionId",
@@ -2348,6 +2681,11 @@ pub enum Intent {
     ChooseDiscover {
         ///发现为候选下标，进化为选项下标
         choice: i64,
+    },
+    ChooseTarget {
+        ///目标随从实例 id
+        #[serde(rename = "minionId")]
+        minion_id: ::std::string::String,
     },
 }
 impl ::std::convert::From<&Self> for Intent {
@@ -2679,6 +3017,24 @@ impl ::std::convert::From<&MinionStats> for MinionStats {
 ///        }
 ///      },
 ///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind",
+///        "sourceMinionId"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "description": "固定为 target",
+///          "const": "target"
+///        },
+///        "sourceMinionId": {
+///          "description": "触发该待选的随从",
+///          "type": "string"
+///        }
+///      },
+///      "additionalProperties": false
 ///    }
 ///  ]
 ///}
@@ -2696,6 +3052,12 @@ pub enum PendingChoice {
     Evolve {
         ///进化选项
         options: ::std::vec::Vec<::std::string::String>,
+    },
+    #[serde(rename = "target")]
+    Target {
+        ///触发该待选的随从
+        #[serde(rename = "sourceMinionId")]
+        source_minion_id: ::std::string::String,
     },
 }
 impl ::std::convert::From<&Self> for PendingChoice {
@@ -3948,30 +4310,6 @@ pub struct ShopSlot {
 impl ::std::convert::From<&ShopSlot> for ShopSlot {
     fn from(value: &ShopSlot) -> Self {
         value.clone()
-    }
-}
-///`SkipAnimation`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "object",
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct SkipAnimation {}
-impl ::std::convert::From<&SkipAnimation> for SkipAnimation {
-    fn from(value: &SkipAnimation) -> Self {
-        value.clone()
-    }
-}
-impl ::std::default::Default for SkipAnimation {
-    fn default() -> Self {
-        Self {}
     }
 }
 ///`Snapshot`

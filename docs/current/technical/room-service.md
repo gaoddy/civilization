@@ -76,15 +76,23 @@ protocol/
 
 | 常量 | 值 | 含义 |
 | --- | --- | --- |
-| `RECRUIT_SECONDS` | 90 | 每个招募回合时长（秒） |
+| `RECRUIT_SECONDS` | 90 | 开局与首回合的固定招募时长（秒） |
+| `PACE_MS` | 320 | 单条战斗动作的演示时长（毫秒） |
+| `TAIL_MS` | 2000 | 演示播完后的结果横幅停留（毫秒） |
+| `ROUND_BUDGET_MS` | 150000 | 一个回合的总预算：招募 + 演示（毫秒） |
 | `TIMER_WARNING_SECONDS` | 10 | 剩余秒数警告阈值（M1a 只暴露常量与 `seconds_left`） |
 | `RECONNECT_GRACE_MS` | 30000 | 对局内断线保留窗口（毫秒） |
 | `SEAT_COUNT` | 8 | 固定座位数 |
 
 - 计时只走注入的 `Clock`，不读系统时间；房间 task 每 100 ms（`TICK_INTERVAL`）调用一次 `GameTask::tick`。
 - 达到招募截止时刻时由服务端自动推进，不需要客户端 `EndRecruit`；全员结束招募也走同一条路径。
-- 唯一推进链为 `finish_recruit → resolve_combat → 逐座位 CombatResult → resolve_settle → start_turn`；`Combat`/`Settle` 不设玩家输入窗口，全部同步完成。推到 `GameOver` 时逐座位下发 `GameOver`（排名从 1 起、种子为 16 位十六进制）。
-- 推进幂等：推进后阶段离开 `Recruit`，同一毫秒再次 `tick` 返回空。
+- 阶段推进分两步，`Combat` 是真实存在的时间段：
+  - `enter_combat`：`finish_recruit → resolve_combat` → 存本场逐座位报告与演示时长 `T` → 阶段停在 `Combat`，`deadline = now + T`，逐座位下发 `CombatResult`。
+  - `finish_combat`：由 `tick` 在 `Combat` 到点时调用 → `resolve_settle` →（非 `GameOver`）`start_turn`，下一回合招募截止为 `now + (150000 − T)`。
+- 演示时长 `T = max(各座位 actions 数量) × PACE_MS + TAIL_MS`，不设上限；`recruit_budget_ms` 把差额夹到 0，演示超预算时下一回合招募截止即 `now`。
+- 推到 `GameOver` 时逐座位下发 `GameOver`（排名从 1 起、种子为 16 位十六进制），不开始新的招募。
+- 推进幂等：进入演示后阶段离开 `Recruit`，演示期间再次 `tick` 返回空；演示到点后阶段离开 `Combat`。
+- 引擎 `resolve_combat` 会把阶段推到 `Settle`：`enter_combat` 随后把阶段拨回 `Combat` 并丢弃 `Settle` 阶段的 `PhaseChanged`，`finish_combat` 结算前再拨回 `Settle`，客户端在整场演示期间只看到 `Combat`。
 
 ## 7. 意图去重
 
@@ -108,13 +116,17 @@ protocol/
 | `TurnStarted`、`PhaseChanged`、`GameOver` | 全房间可见 | 不指向单个玩家，`playerId` 为 `null` |
 | `CombatResolved` | 不下发 | 战斗结果改走逐座位 `CombatResult`，避免重复 |
 
-- `CombatResult` 的动作类型固定为 `attack|death|reborn|contagion`；下标与侧别都**相对接收该消息的座位**：己方棋盘标 `own`、对手标 `opponent`。`own_board`/`opponent_board` 是接收座位视角的两份战前快照；召唤物等不在快照中的实例，下标与侧别都为 `null`。
-- `mirror` 原样取自战斗报告；镜像战只向该座位发一条 `CombatResult`（报告里只有它自己的一条）。
+- `CombatResult` 的动作类型固定为 `attack|death|reborn|contagion|summon`；侧别相对接收该消息的座位：己方棋盘标 `own`、对手标 `opponent`。`ownBoard`/`opponentBoard` 是接收座位视角的两份战前快照。
+- 每条动作带受影响随从的实例 id 与动作后的状态：`attack` 带 `sourceMinionId`/`targetMinionId` 与 `source`/`target`（各含 `minionId`、`attack`、`health`、`alive`）；`death`/`reborn`/`contagion` 只带 `target`；`summon` 带 `summon{side, position, minion}`，`minion` 是完整的随从对象。客户端按这些下发值逐条落地，不做数值推算。
+- `sourceIndex`/`targetIndex` 是战前快照下标，`sourceSide`/`targetSide` 指明它属于哪一侧（`own`/`opponent`，相对接收座位）；召唤物等不在快照中的实例下标与侧别为 `null`，位置改由 `summon.position` 给出。
+- `mirror` 原样取自战斗报告；镜像战只向该座位发一条 `CombatResult`（报告里只有它自己的一条）。镜像战的幽灵在引擎 `resolve_mirror` 里折叠光环后被重新编号，与己方棋盘不相交，因此动作的实例编号在两侧可判。
+- `summon.minion` 的攻击与生命取该动作的状态快照（含光环与战斗内加成），卡面字段（`cardId`/`golden`/`keywords`）来自动作本身；快照缺失时才退回卡面基础值。
 - `View` 更新广播给全部 8 个座位：任何改变房间可见状态的操作都会推送 `StateUpdate`，因为对手的公开摘要（`boardCount`、`recruited`、阶段与回合）人人可见。事件仍按座位过滤：本人收到自己的私有事件，其他座位的 `events` 为空数组。
 
 ## 9. 断线重连
 
 - 对局内断线：座位保留 30 秒（`RECONNECT_GRACE_MS`）。窗口内重连回一条全量 `Snapshot`；超过窗口只把座位标记为离线，不释放座位、不结束对局，也不向其他座位下发通知。
+- `Combat` 阶段重连：快照之后追加补发该座位本场 `CombatResult`（报告保留到 `finish_combat` 为止），客户端据此按 `phaseDeadline` 续播。
 - 重连与 `RequestSnapshot` 共用全量快照路径；M1 **不重放历史**，`last_seq` 不参与判断，一律回全量快照，快照序号必然大于重连前最后一条。
 - 大厅断线：没有对局状态需要保护，立即离开并释放座位，随后广播 `RoomUpdate`。
 - 连接代次：每次 `Attach`/`Reconnect` 带进程内唯一 `generation`；`Detach`/`Leave` 只在代次与当前登记一致时生效，避免新旧连接并存时旧连接迟到关闭误释放座位。
@@ -139,8 +151,8 @@ sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
 - 协议顺序固定：`AuthRequest` →（`CreateRoom` | `JoinRoom`）→ `SelectHeroCard` → `Ready` → 等 `GameStarted` → 循环按 brain 决策发送 `IntentMessage`，直到 `GameOver`。
 - 每个意图使用确定性递增的 `clientIntentId`（`{name}-{counter}`）；客户端只对「自身视角有新变化」的视图做一次决策，避免重播视图导致重复意图。
 - 收到 `NO_VALID_TARGET` 时按 `clientIntentId` 找回被拒意图，补上棋盘第一个己方随从重发；没有随从时退回 `EndRecruit` 兜底。
-- `bot/brain.rs` **只读** `PlayerView`（含服务端算好的 `affordances`）与静态卡表，不链接引擎判定、不读时钟与环境变量、不使用浮点；优先级固定为：消费 `pendingChoices` → 打最小下标可打手牌 → 买最贵可买槽位 → 升时代 → 刷新 → `EndRecruit`。
-- `sim/src/ai.rs` 为保 M0 基线数值**未改动**；新增的是 view 驱动的 `bot/brain.rs`。
+- `bot/brain.rs` **只读** `PlayerView`（含服务端算好的 `affordances`）与静态卡表，不链接引擎判定、不读时钟与环境变量、不使用浮点；优先级固定为：消费 `pendingChoices`（发现/进化发 `ChooseDiscover`，目标待选发 `ChooseTarget` 取棋盘最左随从）→ 打最小下标可打手牌 → 买最贵可买槽位 → 升时代 → 刷新 → `EndRecruit`。
+- `sim/src/ai.rs` 只新增 `PendingChoice::Target` 的确定性分支与 `PlayCard.position: None`（追加到最右），其余策略未改动，M0 基线数值不变；view 驱动的新逻辑在 `bot/brain.rs`。
 
 ## 12. 命令与验收证据
 
@@ -158,21 +170,21 @@ m1-check:
 
 **e2e 由 `make test` 覆盖**：`make test` 的 `cargo test --workspace` 已包含 `room-service/tests/e2e.rs`（真实 WebSocket 起 8 个 bot 打完一局），因此 `m1-check` 不单独再跑一次 e2e，避免重复起 8 个 bot。
 
-下表为 `make m1-check` 一次实际运行的结果（整体退出码 0，总耗时约 96 秒）：
+下表为 `make m1-check` 一次实际运行的结果（整体退出码 0，总耗时约 13 分钟，其中 `dev_bots` 单跑约 242 秒）：
 
 | 步骤 | 命令 | 结果摘要 | 退出码 |
 | --- | --- | --- | --- |
 | 协议 Rust 生成物 | `make protocol-rs-check` → `cargo run -q -p protocol-gen -- --check` | 无差异 | 0 |
 | 协议生成物 | `make protocol-check` → `validate_protocol.py`、`gen_protocol_gdscript.py --check`、`gen_protocol_docs.py --check` | `协议样例校验通过`，GDScript 与字段表无漂移 | 0 |
 | 卡牌数据 | `make data-check` → `gen_card_data.py --check`、`audit_effects.py` | `生成数据无漂移`、`审计通过` | 0 |
-| 测试 | `make test` → `unittest discover`、`cargo test --workspace` | Python `Ran 55 tests ... OK`；workspace 全部 `test result: ok`，其中 `room-service` 集成测试 72 个（auth 9、e2e 8、filter 9、game 16、reconnect 8、room 22），e2e 用例 `eight_bots_finish_a_game` 通过（约 1.00 s） | 0 |
+| 测试 | `make test` → `unittest discover`、`cargo test --workspace` | Python `Ran 70 tests ... OK`；workspace 全部 `test result: ok`，其中 `room-service` 集成测试 90 个（auth 10、e2e 9、filter 14、game 24、reconnect 9、room 22、dev_bots 2），e2e 用例 `eight_bots_finish_a_game` 通过 | 0 |
 | 静态检查 | `make lint` → `cargo fmt --check`、`cargo clippy --workspace --all-targets -- -D warnings` | 无警告 | 0 |
-| 确定性 | `make m0-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 40.6 s） | 0 |
+| 确定性 | `make m0-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 22 s） | 0 |
 
 ## 13. 与设计的三处偏差
 
 1. 设计 §5.4 写 `view(state, seat, catalog) -> PlayerView`；因 `rule-engine` 不依赖 `protocol`，改为引擎返回自有 `SeatView`，由 `room-service::view::to_protocol` 做机械映射。规则判定仍全部在引擎。
-2. 设计 §5.5 写「AI 决策改为同时接受 `PlayerView`」；为保住 M0 基线（`ai.rs` 的策略直接决定 1000 局基线数值），改为新增 view 驱动的 `sim/src/bot/brain.rs`，`ai.rs` 保持不动。
+2. 设计 §5.5 写「AI 决策改为同时接受 `PlayerView`」；为保住 M0 基线（`ai.rs` 的策略直接决定 1000 局基线数值），改为新增 view 驱动的 `sim/src/bot/brain.rs`，`ai.rs` 仍只读引擎状态、不接受 `PlayerView`（本需求只加了 `PendingChoice::Target` 的确定性分支与 `PlayCard.position: None`）。
 3. 设计 §5.2 要求存 `tokenHash` 与 connection；M1a 在内存中保存明文 token，且不建立 connection 索引。令牌只存在于内存、有效期 24 小时、不落盘；`Session` 的 `Debug` 输出已把 `token` 标为 `<redacted>`，避免日志泄漏。
 
 ## 相关文档

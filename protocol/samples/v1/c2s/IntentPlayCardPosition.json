@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "id": "c-14",
+  "type": "Intent",
+  "ts": "2026-11-15T10:00:14Z",
+  "roomId": "r-1",
+  "playerId": "p-3",
+  "payload": {
+    "clientIntentId": "ci-14",
+    "intent": {
+      "kind": "PlayCard",
+      "handIndex": 0,
+      "position": 2
+    }
+  }
+}

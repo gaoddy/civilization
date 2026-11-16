@@ -124,9 +124,11 @@ fn plays_hand_before_buying() {
     match intent {
         Intent::PlayCard {
             hand_index,
+            position,
             target_minion_id,
         } => {
             assert_eq!(hand_index, 0);
+            assert_eq!(position, None, "机器人不指定落点，一律追加");
             assert_eq!(target_minion_id, None, "M1 机器人不填目标");
         }
         other => panic!("期望 PlayCard，实际 {other:?}"),
@@ -189,6 +191,7 @@ fn retries_rejected_intent_with_friendly_target() {
         &view,
         &Intent::PlayCard {
             hand_index: 2,
+            position: None,
             target_minion_id: None,
         },
     )
@@ -197,9 +200,11 @@ fn retries_rejected_intent_with_friendly_target() {
     match retried {
         Intent::PlayCard {
             hand_index,
+            position,
             target_minion_id,
         } => {
             assert_eq!(hand_index, 2, "重发保留原手牌下标");
+            assert_eq!(position, None, "补选目标不改落点");
             assert_eq!(target_minion_id.as_deref(), Some("minion-7"));
         }
         other => panic!("期望 PlayCard，实际 {other:?}"),
@@ -217,6 +222,7 @@ fn retries_play_and_hero_power_with_target() {
         &view,
         &Intent::PlayCard {
             hand_index: 1,
+            position: None,
             target_minion_id: None,
         },
     )
@@ -225,7 +231,9 @@ fn retries_play_and_hero_power_with_target() {
         played,
         Intent::PlayCard {
             hand_index: 1,
+            position: None,
             target_minion_id: Some(ref id),
+            ..
         } if id == "minion-3"
     ));
 
@@ -254,6 +262,7 @@ fn does_not_retry_without_board_or_for_targetless_intent() {
             &empty,
             &Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target_minion_id: None,
             }
         )
@@ -282,6 +291,7 @@ fn does_not_retry_an_intent_that_already_targets() {
             &view,
             &Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target_minion_id: Some("minion-3".to_string()),
             }
         )

@@ -19,6 +19,19 @@ func _ready() -> void:
     await _check_game()
     await _check_game_layout()
     await _check_combat_layout()
+    await _check_hand_drag_emits_position()
+    await _check_drag_rejected_for_target_effect_on_blank()
+    await _check_drag_rejected_when_board_full()
+    await _check_drag_disabled_when_stale_or_expired()
+    await _check_drag_cancelled_after_view_rebuild()
+    await _check_combat_playback()
+    await _check_combat_banner_after_tail()
+    await _check_combat_resume_from_deadline()
+    await _check_combat_playback_uses_sides()
+    await _check_target_pending_overlay()
+    await _check_choose_target_sends_intent()
+    await _check_overlay_hidden_in_combat()
+    await _check_last_combat_cleared_on_next_recruit()
     await _check_recruited_gate()
     await _check_expired_gate()
     await _check_stale_view_gate()
@@ -279,12 +292,15 @@ func _check_game_layout() -> void:
     var hand = instance.find_child("HandPanel", true, false)
     _expect(shop != null and shop.get_parent() == recruit, "商店应位于招募中区")
     _expect(board_panel != null and board_panel.get_parent() == recruit, "我方棋盘应位于招募中区")
-    _expect(hand != null and hand.get_parent() == recruit, "手牌应位于招募中区")
-    if shop != null and board_panel != null and hand != null:
+    var center = instance.find_child("CenterPanel", true, false)
+    _expect(hand != null and hand.get_parent() == center, "手牌应位于中区（招募与战斗共用）")
+    if shop != null and board_panel != null:
         _expect(
-            shop.get_index() < board_panel.get_index() and board_panel.get_index() < hand.get_index(),
-            "招募中区顺序应为商店、我方棋盘、手牌",
+            shop.get_index() < board_panel.get_index(),
+            "招募中区顺序应为商店、我方棋盘",
         )
+    if hand != null and combat != null:
+        _expect(hand.get_index() > combat.get_index(), "手牌应位于战斗视图之下")
     var board = instance.find_child("BoardRow", true, false)
     _expect(board != null and board.get_child_count() == 7, "棋盘应有 7 个槽位（含空位）")
     _expect(instance.find_child("HeroTile", true, false) != null, "右栏应显示我的英雄卡")
@@ -312,20 +328,522 @@ func _check_combat_layout() -> void:
     var combat = instance.find_child("CombatPanel", true, false)
     _expect(combat != null and combat.visible, "战斗阶段应显示战斗视图")
     _expect(recruit != null and not recruit.visible, "战斗阶段不应显示招募视图")
+    var hand_panel = instance.find_child("HandPanel", true, false)
+    _expect(hand_panel != null and hand_panel.visible, "演示期间手牌仍应可见")
     var banner = instance.find_child("CombatBanner", true, false)
-    _expect(banner != null and str(banner.text).contains("胜利"), "战斗横幅应显示结果")
+    _expect(banner != null and not banner.visible, "动作播完前不应显示结果横幅")
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
     _expect(opponent_row != null and opponent_row.get_child_count() == 2, "对手随从行应为 2 张")
     var own_row = instance.find_child("CombatOwnRow", true, false)
     _expect(own_row != null and own_row.get_child_count() == 3, "我方随从行应为 3 张")
     var end_button = instance.find_child("EndButton", true, false)
     _expect(end_button != null and not end_button.visible, "战斗阶段不应显示结束招募按钮")
+    var power_button = instance.find_child("HeroPowerButton", true, false)
+    _expect(power_button != null and not power_button.visible, "演示期间不应显示英雄技能按钮")
+    _expect(instance.find_child("ShopPanel", true, false) != null, "商店节点仍在招募面板内")
+    var hand_card = instance.find_child("HandCard0", true, false)
+    _expect(hand_card != null and not hand_card.drag_allowed, "演示期间手牌不可拖动")
+    await _check_combat_no_skip_entry(instance)
     await _check_combat_detail(instance)
     instance.queue_free()
     GameStore.view = {}
     GameStore.last_combat = {}
     GameStore.turn = 1
     GameStore.phase = ""
+
+
+## 演示期间没有跳过或加速入口。
+func _check_combat_no_skip_entry(instance: Node) -> void:
+    for child in instance.find_children("*", "Button", true, false):
+        var text := str((child as Button).text)
+        _expect(not text.contains("跳过"), "演示不应提供「跳过」：%s" % text)
+        _expect(not text.contains("加速"), "演示不应提供「加速」：%s" % text)
+
+
+## 构造战斗阶段的场景，返回实例（调用方负责释放）。
+func _combat_instance(deadline: String) -> Node:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Combat"
+    GameStore.turn = 3
+    GameStore.deadline = deadline
+    var view := FixtureScript.game_view()
+    view["phase"] = "Combat"
+    view["opponentPlayerId"] = "p2"
+    GameStore.view = view
+    GameStore.last_combat = FixtureScript.combat_result()
+    return await _check_scene("res://scenes/game.tscn", false)
+
+
+func _stats_text(panel: Control) -> String:
+    var stats = panel.find_child("Stats", true, false)
+    return "" if stats == null else str(stats.text)
+
+
+## 逐动作播放：每 320ms 应用一条动作，数值只取服务端下发值。
+func _check_combat_playback() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    var own_row = instance.find_child("CombatOwnRow", true, false)
+    var opponent_row = instance.find_child("CombatOpponentRow", true, false)
+    if own_row == null or opponent_row == null:
+        _expect(false, "战斗视图缺少随从行")
+        instance.queue_free()
+        return
+    instance._process(0.32)
+    _expect(_stats_text(own_row.get_child(0)) == "7 / 6", "第一条攻击后我方首卡应为 7/6，实际 %s" % _stats_text(own_row.get_child(0)))
+    _expect(_stats_text(opponent_row.get_child(0)) == "6 / 2", "第一条攻击后对手首卡应为 6/2，实际 %s" % _stats_text(opponent_row.get_child(0)))
+    instance._process(0.32)
+    _expect(opponent_row.get_child_count() == 2, "阵亡随从仍占位")
+    _expect(opponent_row.get_child(0).self_modulate.a < 1.0, "阵亡随从应变暗")
+    instance._process(0.32)
+    _expect(own_row.get_child_count() == 4, "召唤后我方行应为 4 张，实际 %d" % own_row.get_child_count())
+    if own_row.get_child_count() == 4:
+        _expect(str(own_row.get_child(1).get_meta("minion_id", "")) == "mi_9", "召唤随从应插到下标 1")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.last_combat = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+## 播完动作并经过 TAIL_MS 后才显示胜负横幅。
+func _check_combat_banner_after_tail() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    var banner = instance.find_child("CombatBanner", true, false)
+    for _step in range(4):
+        instance._process(0.32)
+    _expect(banner != null and not banner.visible, "动作刚播完且未到横幅停留时不应显示横幅")
+    instance._process(2.0)
+    _expect(banner != null and banner.visible, "横幅停留结束后应显示横幅")
+    _expect(banner != null and str(banner.text).contains("胜利"), "横幅应显示胜负：%s" % ("" if banner == null else str(banner.text)))
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.last_combat = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+## 演示中重连：按 phaseDeadline 反推进度，已播动作不重播。
+func _check_combat_resume_from_deadline() -> void:
+    # 总时长 = 3 × 320 + 2000 = 2960ms；`phaseDeadline` 只剩 2 秒时，1 秒
+    # 前就该播完 3 条动作并留在横幅停留里——续播点直接落到 960ms，不从头重播。
+    var deadline := Time.get_datetime_string_from_unix_time(
+        int(Time.get_unix_time_from_system()) + 2, true
+    ) + "Z"
+    var instance := await _combat_instance(deadline)
+    if instance == null:
+        return
+    var own_row = instance.find_child("CombatOwnRow", true, false)
+    var opponent_row = instance.find_child("CombatOpponentRow", true, false)
+    var banner = instance.find_child("CombatBanner", true, false)
+    _expect(
+        own_row != null and own_row.get_child_count() == 4,
+        "续播应按已过时间落地召唤：实际 %d 张" % (0 if own_row == null else own_row.get_child_count())
+    )
+    _expect(opponent_row != null and opponent_row.get_child_count() == 2, "对手阵亡随从仍占位")
+    if opponent_row != null and opponent_row.get_child_count() > 0:
+        _expect(opponent_row.get_child(0).self_modulate.a < 1.0, "续播点前的阵亡动作应立即落地")
+    _expect(banner != null and not banner.visible, "横幅停留未走完时不应显示横幅")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.last_combat = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+    GameStore.deadline = ""
+
+
+## 拖拽出牌：随从牌落在两张卡之间，落点下标取指针左半边的那张卡。
+func _check_hand_drag_emits_position() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [
+        FixtureScript.board_minion("mi_1", "baiyi", 0),
+        FixtureScript.board_minion("mi_2", "airplane", 1),
+    ]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    _expect(
+        instance.drag_gate(Protocol.PHASE_RECRUIT, false, false, true, false, true),
+        "招募阶段、视图新鲜、已连接且可打出时手牌应允许拖拽"
+    )
+    var hand_card = instance.find_child("HandCard0", true, false)
+    _expect(hand_card != null, "对局场景缺少 HandCard0")
+    var board_row = instance.find_child("BoardRow", true, false)
+    _expect(board_row != null, "对局场景缺少 BoardRow")
+    if hand_card != null and board_row != null:
+        _expect(str(hand_card.payload.get("cardKind", "")) == "minion", "archimedes 是随从牌，cardKind 应为 minion")
+        _expect(int(hand_card.payload.get("epoch", -1)) == int(instance._view_epoch), "拖拽数据应带当前视图版本")
+        # 直接以「允许拖拽」的姿态验证落点换算：指针在第二张卡左半边。
+        var payload: Dictionary = hand_card.payload.duplicate()
+        var second: Control = null
+        for child in board_row.get_children():
+            if child is Control and child.has_meta("minion_id"):
+                second = child
+        _expect(second != null, "棋盘应有两张随从卡")
+        if second != null:
+            var local: Vector2 = board_row.get_global_transform().affine_inverse() * (second.get_global_rect().position + Vector2(4, 4))
+            _expect(
+                board_row._can_drop_data(local, payload),
+                "随从牌应能落在随从卡上"
+            )
+            var captured: Array = []
+            instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+            board_row._drop_data(local, payload)
+            await get_tree().process_frame
+            _expect(captured.size() == 1, "一次落点只应产生一条意图，实际 %d" % captured.size())
+            if captured.size() == 1:
+                var intent: Dictionary = captured[0]
+                _expect(str(intent.get("kind", "")) == Protocol.INTENT_PLAY_CARD, "落点意图应为 PlayCard")
+                _expect(int(intent.get("handIndex", -1)) == 0, "落点意图应带手牌下标")
+                _expect(int(intent.get("position", -1)) == 1, "落在第二张卡上应插到位置 1")
+        # 落在第一张卡上 → 0；落在末尾空白 → 随从数。
+        var first: Control = null
+        var last: Control = null
+        for child in board_row.get_children():
+            if child is Control and child.has_meta("minion_id"):
+                if first == null:
+                    first = child
+                last = child
+        if first != null and last != null:
+            var on_first: Vector2 = board_row.get_global_transform().affine_inverse() * (first.get_global_rect().position + Vector2(4, 4))
+            var first_captured: Array = []
+            var collector := func(intent: Dictionary) -> void: first_captured.append(intent)
+            instance.intent_sent.connect(collector)
+            board_row._drop_data(on_first, payload)
+            await get_tree().process_frame
+            instance.intent_sent.disconnect(collector)
+            _expect(
+                first_captured.size() == 1 and int(first_captured[0].get("position", -1)) == 0,
+                "落在第一张卡上应为位置 0，实际 %s" % [first_captured]
+            )
+            var after_last: Vector2 = board_row.get_global_transform().affine_inverse() * (
+                last.get_global_rect().end + Vector2(24, last.get_global_rect().size.y * 0.5)
+            )
+            var tail_captured: Array = []
+            var tail_collector := func(intent: Dictionary) -> void: tail_captured.append(intent)
+            instance.intent_sent.connect(tail_collector)
+            board_row._drop_data(after_last, payload)
+            await get_tree().process_frame
+            instance.intent_sent.disconnect(tail_collector)
+            _expect(
+                tail_captured.size() == 1 and int(tail_captured[0].get("position", -1)) == 2,
+                "落在末尾空白应为随从数 2，实际 %s" % [tail_captured]
+            )
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 棋盘已满时棋盘区域一律不接收随从牌，落在随从卡上也直接取消。
+func _check_drag_rejected_when_board_full() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    var board: Array = []
+    for index in 7:
+        board.append(FixtureScript.board_minion("mi_%d" % index, "baiyi", index))
+    view["self"]["board"] = board
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var board_row = instance.find_child("BoardRow", true, false)
+    var hand_card = instance.find_child("HandCard0", true, false)
+    if board_row != null and hand_card != null:
+        var payload: Dictionary = hand_card.payload.duplicate()
+        var last: Control = null
+        for child in board_row.get_children():
+            if child is Control and child.has_meta("minion_id"):
+                last = child
+        _expect(last != null, "满棋盘应有 7 张随从卡")
+        if last != null:
+            var on_card: Vector2 = board_row.get_global_transform().affine_inverse() * (last.get_global_rect().position + Vector2(4, 4))
+            _expect(not board_row._can_drop_data(on_card, payload), "棋盘满时随从牌不应落在随从卡上")
+            var blank := Vector2(board_row.size.x + 200, board_row.size.y + 100)
+            _expect(not board_row._can_drop_data(blank, payload), "棋盘满时随从牌不应接受空白落点")
+            var captured: Array = []
+            instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+            board_row._drop_data(on_card, payload)
+            await get_tree().process_frame
+            _expect(captured.is_empty(), "棋盘满时落点不应产生意图，实际 %d 条" % captured.size())
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 需要目标的效果牌只能落在随从卡上；空白落点拒绝。
+func _check_drag_rejected_for_target_effect_on_blank() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi")]
+    view["self"]["hand"] = [FixtureScript.hand("erfenfa", true)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var board_row = instance.find_child("BoardRow", true, false)
+    var payload := {
+        "epoch": 0,
+        "handIndex": 0,
+        "cardId": "erfenfa",
+        "cardKind": "effect",
+        "requiresTarget": true,
+    }
+    if board_row != null:
+        var card: Control = null
+        for child in board_row.get_children():
+            if child is Control and child.has_meta("minion_id"):
+                card = child
+        _expect(card != null, "棋盘应有一张随从卡")
+        if card != null:
+            var on_card: Vector2 = board_row.get_global_transform().affine_inverse() * card.get_global_rect().get_center()
+            _expect(board_row._can_drop_data(on_card, payload), "需要目标的效果牌应能落在随从卡上")
+            var blank := Vector2(board_row.size.x + 200, board_row.size.y + 100)
+            _expect(not board_row._can_drop_data(blank, payload), "需要目标的效果牌不应接受空白落点")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 视图过期、倒计时归零、未连接、目标待选或不可打出时，拖拽不开始。
+func _check_drag_disabled_when_stale_or_expired() -> void:
+    var gate: Callable = Callable(load("res://scenes/game.gd"), "drag_gate")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, true, false, true, false, true), "视图过期时不应允许拖拽")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, true, true, false, true), "倒计时归零时不应允许拖拽")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, false, false, true), "未连接时不应允许拖拽")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, true, true, true), "目标待选期间不应允许拖拽")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, true, false, false), "不可打出的手牌不应允许拖拽")
+    _expect(not gate.call(Protocol.PHASE_COMBAT, false, false, true, false, true), "非招募阶段不应允许拖拽")
+
+    # 不允许拖拽的手牌，`_get_drag_data` 直接返回 null（拖拽根本不开始）。
+    var card := HandCard.new()
+    card.payload = {"handIndex": 0, "cardKind": "minion"}
+    card.drag_allowed = false
+    _expect(card._get_drag_data(Vector2.ZERO) == null, "不允许拖拽时不应交出拖拽数据")
+    card.free()
+
+
+## 拖拽途中视图重建后，落点数据已过期，不应再发出意图。
+func _check_drag_cancelled_after_view_rebuild() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var hand_card = instance.find_child("HandCard0", true, false)
+    var board_row = instance.find_child("BoardRow", true, false)
+    if hand_card != null and board_row != null:
+        var payload: Dictionary = hand_card.payload.duplicate()
+        GameStore.view_changed.emit()
+        await get_tree().process_frame
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var local: Vector2 = Vector2(4, 4)
+        if board_row._can_drop_data(local, payload):
+            board_row._drop_data(local, payload)
+        await get_tree().process_frame
+        _expect(captured.is_empty(), "视图重建后旧拖拽数据不应产生意图，实际 %d 条" % captured.size())
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 目标待选的视图夹具：队首是 target 待选，棋盘两个随从。
+func _target_pending_view() -> Dictionary:
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [
+        FixtureScript.board_minion("mi_1", "baiyi", 0),
+        FixtureScript.board_minion("mi_2", "airplane", 1),
+    ]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["pendingChoices"] = [
+        {"kind": "target", "sourceMinionId": "mi_1"},
+    ]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    return view
+
+
+## 目标待选：浮层只列候选随从，没有任何退出路径，且所有招募控件被阻塞。
+func _check_target_pending_overlay() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = _target_pending_view()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var overlay = instance.find_child("ChooserOverlay", true, false)
+    _expect(overlay != null and overlay.visible, "目标待选应弹出选择浮层")
+    if overlay != null:
+        var buttons: Array = []
+        for child in overlay.find_children("*", "Button", true, false):
+            buttons.append(child)
+        _expect(buttons.size() == 2, "浮层内应只有 2 个候选随从按钮，实际 %d" % buttons.size())
+        var texts: Array = []
+        for button in buttons:
+            texts.append(str(button.text))
+            _expect(not str(button.text).contains("取消"), "目标待选不应提供取消：%s" % button.text)
+            _expect(not str(button.text).contains("不指定目标"), "目标待选不应提供跳过：%s" % button.text)
+        _expect(texts.size() == 2 and str(texts[0]).begins_with("★ "), "触发待选的随从应被高亮：%s" % str(texts))
+    for name in ["RerollButton", "UpgradeButton", "FreezeButton", "EndButton", "HeroPowerButton"]:
+        var button = instance.find_child(name, true, false)
+        _expect(button != null and button.disabled, "目标待选期间 %s 应禁用" % name)
+    var hand_card = instance.find_child("HandCard0", true, false)
+    _expect(hand_card != null and not hand_card.drag_allowed, "目标待选期间手牌不应允许拖拽")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 选中候选后只发一条 ChooseTarget。
+func _check_choose_target_sends_intent() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = _target_pending_view()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var overlay = instance.find_child("ChooserOverlay", true, false)
+    var captured: Array = []
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    if overlay != null:
+        # 第二个候选是 mi_2（第一个是触发待选的 mi_1）。
+        var candidates: Array = overlay.find_children("*", "Button", true, false)
+        if candidates.size() >= 2:
+            candidates[1].pressed.emit()
+    await get_tree().process_frame
+    _expect(captured.size() == 1, "选中候选只应发出 1 条意图，实际 %d" % captured.size())
+    if captured.size() == 1:
+        var intent: Dictionary = captured[0]
+        _expect(str(intent.get("kind", "")) == Protocol.INTENT_CHOOSE_TARGET, "应发出 ChooseTarget")
+        _expect(str(intent.get("minionId", "")) == "mi_2", "应带上被选随从 id")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 战斗阶段即使留有跨回合的发现待选，也不能把招募弹层盖在演示上。
+func _check_overlay_hidden_in_combat() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Combat"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view := FixtureScript.game_view()
+    view["phase"] = "Combat"
+    view["opponentPlayerId"] = "p2"
+    view["self"]["pendingChoices"] = [{"kind": "discover", "candidates": ["huo", "lun", "che"]}]
+    GameStore.view = view
+    GameStore.last_combat = FixtureScript.combat_result()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var overlay = instance.find_child("ChooserOverlay", true, false)
+    _expect(overlay != null and not overlay.visible, "战斗阶段不应弹出招募待选弹层")
+    var captured: Array = []
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    instance._on_choose(0)
+    instance._on_choose_target("mi_1")
+    await get_tree().process_frame
+    _expect(captured.is_empty(), "战斗阶段不应发出待选意图，实际 %d 条" % captured.size())
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.last_combat = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+## 进入新回合招募时必须丢弃上一场战报：没有本回合 `CombatResult` 的座位
+## （未配对、已出局）否则会把旧战斗当成新战斗重播。
+func _check_last_combat_cleared_on_next_recruit() -> void:
+    GameStore.reset_room()
+    var combat_view: Dictionary = FixtureScript.view()
+    combat_view["phase"] = "Combat"
+    GameStore.handle(Protocol.MSG_STATE_UPDATE, {"view": combat_view, "events": []})
+    GameStore.last_combat = FixtureScript.combat_result()
+    _expect(not GameStore.last_combat.is_empty(), "战斗阶段应保留本场战报")
+
+    var recruit_view: Dictionary = FixtureScript.view()
+    recruit_view["turn"] = 4
+    GameStore.handle(Protocol.MSG_STATE_UPDATE, {"view": recruit_view, "events": []})
+    _expect(
+        GameStore.last_combat.is_empty(),
+        "进入下一回合招募后应清空上一场战报，实际 %s" % [GameStore.last_combat]
+    )
+    GameStore.reset_room()
+
+
+## 双方实例编号相同时（镜像战），动作必须按服务端下发侧别落地，不能只看 id。
+func _check_combat_playback_uses_sides() -> void:
+    var playback := CombatPlayback.new()
+    playback.start(
+        [
+            {
+                "kind": "attack",
+                "sourceSide": "own",
+                "targetSide": "opponent",
+                "source": {"minionId": "mi_0", "attack": 1, "health": 2, "alive": true},
+                "target": {"minionId": "mi_0", "attack": 3, "health": 4, "alive": true},
+            },
+        ],
+        [{"minionId": "mi_0", "cardId": "baiyi", "attack": 5, "health": 5, "alive": true}],
+        [{"minionId": "mi_0", "cardId": "baiyi", "attack": 6, "health": 6, "alive": true}]
+    )
+    playback.advance(320.0)
+    _expect(
+        int(playback.own[0].get("attack", 0)) == 1 and int(playback.own[0].get("health", 0)) == 2,
+        "己方随从应写入 source 状态：实际 %s" % [playback.own[0]]
+    )
+    _expect(
+        int(playback.opponent[0].get("attack", 0)) == 3 and int(playback.opponent[0].get("health", 0)) == 4,
+        "对手随从应写入 target 状态：实际 %s" % [playback.opponent[0]]
+    )
 
 
 func _check_recruited_gate() -> void:

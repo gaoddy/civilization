@@ -74,6 +74,8 @@ pub struct ShopSlotView {
 pub struct HandCardView {
     pub index: u8,
     pub card_id: String,
+    /// 该牌是否需要玩家指定单一目标（效果牌口径，随从牌恒为 `false`）。
+    pub requires_target: bool,
 }
 
 /// 单项属性（攻击或生命）的分层构成视图。
@@ -130,8 +132,16 @@ pub struct PlayerSummaryView {
 /// 等待该座位做出的选择。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PendingChoiceView {
-    Discover { candidates: Vec<String> },
-    Evolve { options: Vec<String> },
+    Discover {
+        candidates: Vec<String>,
+    },
+    Evolve {
+        options: Vec<String>,
+    },
+    /// 战吼目标待选：候选恒为本座位当前棋盘上的全部随从，不在视图里下发。
+    Target {
+        source_minion_id: u64,
+    },
 }
 
 /// 本座位各操作的可用性；`*_disabled_reason` 在可操作时为 `None`。
@@ -180,7 +190,13 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
 
     // 阶段门控集中在这里；`check_*` 只做意图内校验。
     let activatable = state.phase == Phase::Recruit && !player.eliminated;
-    let gate = if activatable && !player.recruit_done {
+    // 队首是目标待选时，该座位只能选定目标：其余操作一律按阶段不可用处理。
+    let head_is_target = state
+        .pending
+        .iter()
+        .find(|pending| pending_seat(pending) == seat)
+        .is_some_and(|pending| matches!(pending, PendingChoice::Target { .. }));
+    let gate = if activatable && !player.recruit_done && !head_is_target {
         None
     } else {
         Some(RejectCode::InvalidStage)
@@ -304,8 +320,8 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         },
     };
 
-    // 已结束招募时重复 `EndRecruit` 幂等成功；出局或非招募阶段不可操作。
-    let can_end_recruit = activatable && check_end_recruit(state, seat).is_ok();
+    // 已结束招募时重复 `EndRecruit` 幂等成功；出局、非招募阶段或目标待选期间不可操作。
+    let can_end_recruit = activatable && !head_is_target && check_end_recruit(state, seat).is_ok();
 
     let shop = player
         .shop
@@ -324,6 +340,8 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .enumerate()
         .map(|(index, hand_card)| HandCardView {
             index: u8::try_from(index).unwrap_or(u8::MAX),
+            requires_target: engine
+                .requires_target(&hand_card.card_id, crate::effects::Trigger::OnPlayEffect),
             card_id: hand_card.card_id.clone(),
         })
         .collect();
@@ -360,6 +378,9 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                     .iter()
                     .map(|option| (*option).to_string())
                     .collect(),
+            },
+            PendingChoice::Target { source, .. } => PendingChoiceView::Target {
+                source_minion_id: *source,
             },
         })
         .into_iter()
@@ -475,7 +496,9 @@ pub fn placement_of(state: &GameState, seat: Seat) -> Option<u8> {
 
 fn pending_seat(pending: &PendingChoice) -> Seat {
     match pending {
-        PendingChoice::Discover { seat, .. } | PendingChoice::Evolve { seat, .. } => *seat,
+        PendingChoice::Discover { seat, .. }
+        | PendingChoice::Evolve { seat, .. }
+        | PendingChoice::Target { seat, .. } => *seat,
     }
 }
 

@@ -80,10 +80,15 @@ func handle(type: String, payload: Dictionary) -> void:
 func _apply_view(value) -> void:
     if not (value is Dictionary) or value.is_empty():
         return
+    var previous_phase := phase
     view = value
     phase = str(view.get("phase", phase))
     turn = int(view.get("turn", turn))
     deadline = str(view.get("phaseDeadline", deadline))
+    # 战报只属于刚结束的这一场：离开战斗（回到招募）即丢弃，否则没有本回合
+    # `CombatResult` 的座位（未配对、已出局、消息丢失）会把旧战斗当新战斗重播。
+    if previous_phase == Protocol.PHASE_COMBAT and phase != Protocol.PHASE_COMBAT:
+        last_combat = {}
 
 
 func reset_room() -> void:

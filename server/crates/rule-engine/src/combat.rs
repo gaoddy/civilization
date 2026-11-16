@@ -38,8 +38,19 @@ const SOW: &str = "播种";
 /// 播种召唤的 token。
 pub(crate) const SEEDLING_TOKEN: &str = "seedling";
 
-/// 战斗中的一条动作记录。
+/// 某条动作执行后，一个受影响随从的现场状态。
+///
+/// 只读派生自战斗现场，不参与 `state_hash`；客户端按它渲染，不做任何算术。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MinionSnapshot {
+    pub instance_id: InstanceId,
+    pub attack: i32,
+    pub health: i32,
+    pub alive: bool,
+}
+
+/// 战斗中的一条动作记录。
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CombatAction {
     /// 一次伤害结算：`resolve_attack` 的主伤害先记录一条；目标存活并造成反击伤害时，
     /// 反击以「攻防互换」的 `Attack` 再记录一条。
@@ -55,6 +66,15 @@ pub enum CombatAction {
     Reborn { minion: InstanceId },
     /// 目标被叠加一层传染。
     ContagionApplied { target: InstanceId },
+    /// 战斗中召唤：`seat` 为召唤方座位，`position` 为插入后的下标；
+    /// `card_id` / `golden` 供房间服务补全展示数据（召唤物不在战前快照里）。
+    Summon {
+        minion: InstanceId,
+        card_id: String,
+        golden: bool,
+        seat: Seat,
+        position: u8,
+    },
 }
 
 /// 战斗中复制进手牌的记录；由结算层在战斗结束后写入持久手牌。
@@ -69,6 +89,8 @@ pub struct CombatHandCopy {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CombatLog {
     pub actions: Vec<CombatAction>,
+    /// 与 `actions` 同序同长：每条动作写入时，受影响随从动作后的状态。
+    pub states: Vec<Vec<MinionSnapshot>>,
     pub attacker_survivors: Vec<InstanceId>,
     pub defender_survivors: Vec<InstanceId>,
     pub winner: Option<Seat>,
@@ -293,6 +315,7 @@ pub struct BattleField {
     pub(crate) triggers: u16,
     pub(crate) summon_count: u16,
     pub(crate) actions: Vec<CombatAction>,
+    pub(crate) states: Vec<Vec<MinionSnapshot>>,
     pub(crate) hand_copies: Vec<CombatHandCopy>,
     pub(crate) pool: BTreeMap<String, u16>,
     pub(crate) pool_spent: BTreeMap<String, u16>,
@@ -334,6 +357,7 @@ impl BattleField {
             triggers: 0,
             summon_count: 0,
             actions: Vec::new(),
+            states: Vec::new(),
             hand_copies: Vec::new(),
             pool: setup.pool.cloned().unwrap_or_default(),
             pool_spent: BTreeMap::new(),
@@ -381,6 +405,33 @@ impl BattleField {
         Some(&mut self.sides[side].minions[index])
     }
 
+    /// 记录一条动作及其受影响随从的动作后状态。
+    ///
+    /// `actions` 与 `states` 严格同序同长，调用方必须成对传入。
+    pub(crate) fn push_action(&mut self, action: CombatAction, states: Vec<MinionSnapshot>) {
+        self.actions.push(action);
+        self.states.push(states);
+    }
+
+    /// 取某个随从的现场状态（含光环折叠后的数值）；不在场上时为 `None`。
+    fn snapshot_of(&self, catalog: &Catalog, id: InstanceId) -> Option<MinionSnapshot> {
+        let (side, index) = self.locate(id)?;
+        let minion = &self.sides[side].minions[index];
+        Some(MinionSnapshot {
+            instance_id: id,
+            attack: effective_attack(catalog, minion),
+            health: effective_health(catalog, minion),
+            alive: self.sides[side].alive[index],
+        })
+    }
+
+    /// 收集若干随从的现场状态，跳过已不在场上的编号。
+    fn snapshots(&self, catalog: &Catalog, ids: &[InstanceId]) -> Vec<MinionSnapshot> {
+        ids.iter()
+            .filter_map(|id| self.snapshot_of(catalog, *id))
+            .collect()
+    }
+
     pub(crate) fn is_alive(&self, id: InstanceId) -> bool {
         self.locate(id)
             .map(|(side, index)| self.sides[side].alive[index])
@@ -407,6 +458,9 @@ impl BattleField {
     }
 
     /// 在棋盘右侧追加一个随从；返回实例编号。
+    ///
+    /// 同时记录一条 `Summon` 动作（战斗中出现的随从都不在战前快照里，
+    /// 客户端只能靠这条动作渲染出来）。
     pub(crate) fn append(
         &mut self,
         catalog: &Catalog,
@@ -414,11 +468,25 @@ impl BattleField {
         mut minion: MinionInstance,
     ) -> InstanceId {
         let id = minion.instance_id;
+        let card_id = minion.card_id.clone();
+        let golden = minion.golden;
         let tokens = starting_tokens(catalog, &minion);
         minion.attacks_left = tokens;
         self.sides[side].minions.push(minion);
         self.sides[side].alive.push(true);
         self.sides[side].starting_tokens.push(tokens);
+        let position = self.sides[side].minions.len() - 1;
+        let states = self.snapshots(catalog, &[id]);
+        self.push_action(
+            CombatAction::Summon {
+                minion: id,
+                card_id,
+                golden,
+                seat: self.seats[side],
+                position: u8::try_from(position).unwrap_or(u8::MAX),
+            },
+            states,
+        );
         id
     }
 
@@ -431,6 +499,8 @@ impl BattleField {
         mut minion: MinionInstance,
     ) -> InstanceId {
         let id = minion.instance_id;
+        let card_id = minion.card_id.clone();
+        let golden = minion.golden;
         let tokens = starting_tokens(catalog, &minion);
         minion.attacks_left = tokens;
         let board = &mut self.sides[side];
@@ -441,6 +511,17 @@ impl BattleField {
         board.minions.insert(position, minion);
         board.alive.insert(position, true);
         board.starting_tokens.insert(position, tokens);
+        let states = self.snapshots(catalog, &[id]);
+        self.push_action(
+            CombatAction::Summon {
+                minion: id,
+                card_id,
+                golden,
+                seat: self.seats[side],
+                position: u8::try_from(position).unwrap_or(u8::MAX),
+            },
+            states,
+        );
         id
     }
 
@@ -587,8 +668,9 @@ impl BattleField {
                 let id = self.sides[side].minions[index].instance_id;
                 let golden = self.sides[side].minions[index].golden;
                 let card_id = self.sides[side].minions[index].card_id.clone();
-                self.actions.push(CombatAction::Death { minion: id });
                 self.sides[side].alive[index] = false;
+                let states = self.snapshots(catalog, &[id]);
+                self.push_action(CombatAction::Death { minion: id }, states);
 
                 if let Some(engine) = engine {
                     let ctx = EffectCtx {
@@ -623,7 +705,8 @@ impl BattleField {
                     board.minions[index].stats.health.revive_to(1);
                     board.alive[index] = true;
                     board.minions[index].attacks_left = board.starting_tokens[index];
-                    self.actions.push(CombatAction::Reborn { minion: id });
+                    let states = self.snapshots(catalog, &[id]);
+                    self.push_action(CombatAction::Reborn { minion: id }, states);
                 }
                 dead_ids.push((side, id));
             }
@@ -754,9 +837,8 @@ fn resolve_attack(
     if attacker_keywords.contains(CONTAGION) && damage > 0 {
         let target = &mut field.sides[defending_side].minions[target_index];
         target.contagion = target.contagion.saturating_add(1);
-        field
-            .actions
-            .push(CombatAction::ContagionApplied { target: target_id });
+        let states = field.snapshots(catalog, &[target_id]);
+        field.push_action(CombatAction::ContagionApplied { target: target_id }, states);
     }
 
     // (c) 反击：目标在主伤害后仍存活（当前生命 > 0）才反击。
@@ -783,19 +865,27 @@ fn resolve_attack(
     }
 
     // (d) 主伤害事件先于反击事件与死亡处理记录。
-    field.actions.push(CombatAction::Attack {
-        attacker: attacker_id,
-        target: target_id,
-        damage,
-        blocked,
-    });
+    let main_states = field.snapshots(catalog, &[attacker_id, target_id]);
+    field.push_action(
+        CombatAction::Attack {
+            attacker: attacker_id,
+            target: target_id,
+            damage,
+            blocked,
+        },
+        main_states,
+    );
     if counter_damage > 0 {
-        field.actions.push(CombatAction::Attack {
-            attacker: target_id,
-            target: attacker_id,
-            damage: counter_damage,
-            blocked: false,
-        });
+        let counter_states = field.snapshots(catalog, &[target_id, attacker_id]);
+        field.push_action(
+            CombatAction::Attack {
+                attacker: target_id,
+                target: attacker_id,
+                damage: counter_damage,
+                blocked: false,
+            },
+            counter_states,
+        );
     }
 
     // (e) 造成伤害后，在本次交换的死亡判定前触发 `OnDealDamage`。
@@ -978,6 +1068,7 @@ fn simulate_inner(
 
     CombatLog {
         actions: std::mem::take(&mut field.actions),
+        states: std::mem::take(&mut field.states),
         attacker_survivors: field.sides[0].survivors(),
         defender_survivors: field.sides[1].survivors(),
         winner,

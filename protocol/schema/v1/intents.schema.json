@@ -46,6 +46,7 @@
           "properties": {
             "kind": { "const": "PlayCard" },
             "handIndex": { "type": "integer", "minimum": 0, "maximum": 9, "description": "手牌位置" },
+            "position": { "type": "integer", "minimum": 0, "maximum": 6, "description": "插入站位；缺省追加到最右" },
             "targetMinionId": { "type": "string", "description": "战吼或效果需要目标时填" }
           }
         },
@@ -93,6 +94,15 @@
           "properties": {
             "kind": { "const": "ChooseDiscover" },
             "choice": { "type": "integer", "minimum": 0, "maximum": 2, "description": "发现为候选下标，进化为选项下标" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "minionId"],
+          "properties": {
+            "kind": { "const": "ChooseTarget" },
+            "minionId": { "type": "string", "description": "目标随从实例 id" }
           }
         }
       ]

@@ -135,6 +135,9 @@ func _act(self_state: Dictionary) -> void:
 
     var choices: Array = self_state.get("pendingChoices", [])
     if not choices.is_empty():
+        if str(choices[0].get("kind", "")) == "target":
+            _choose_target(self_state)
+            return
         _send_intent({"kind": Protocol.INTENT_CHOOSE_DISCOVER, "choice": 0})
         return
 
@@ -219,6 +222,17 @@ func _retry_with_target(intent: Dictionary) -> bool:
     retried["targetMinionId"] = target
     _send_intent(retried)
     return true
+
+
+## 战吼目标待选：同样取棋盘第一个随从，走 `ChooseTarget` 而不是补发原意图。
+func _choose_target(self_state: Dictionary) -> void:
+    var board: Array = self_state.get("board", [])
+    if board.is_empty():
+        push_error("M1B 目标待选时棋盘为空，无法选择目标")
+        get_tree().quit(4)
+        return
+    var target := str(board[0].get("minionId", ""))
+    _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "minionId": target})
 
 
 func _write_room_code(code: String) -> void:

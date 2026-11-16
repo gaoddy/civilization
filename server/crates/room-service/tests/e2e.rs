@@ -105,7 +105,7 @@ async fn eight_bots_finish_a_game() {
         })));
     }
 
-    let outcomes = tokio::time::timeout(Duration::from_secs(120), async move {
+    let outcomes = tokio::time::timeout(Duration::from_secs(600), async move {
         let mut outcomes = Vec::with_capacity(handles.len());
         for (index, handle) in handles.into_iter().enumerate() {
             let outcome = handle
@@ -117,7 +117,7 @@ async fn eight_bots_finish_a_game() {
         outcomes
     })
     .await
-    .expect("对局应在 120 秒内结束");
+    .expect("对局应在 600 秒内结束");
 
     // 每个 bot 都应拿到完整的 8 条排名；建房 bot 的排名作为权威断言。
     for (index, outcome) in outcomes.iter().enumerate() {
@@ -516,7 +516,7 @@ async fn finished_game_room_is_removed_from_registry() {
             room_code_sink: None,
         })));
     }
-    tokio::time::timeout(Duration::from_secs(120), async move {
+    tokio::time::timeout(Duration::from_secs(600), async move {
         for handle in handles {
             handle
                 .await
@@ -525,7 +525,7 @@ async fn finished_game_room_is_removed_from_registry() {
         }
     })
     .await
-    .expect("对局应在 120 秒内结束");
+    .expect("对局应在 600 秒内结束");
 
     // bot 结束后连接全部关闭；房间 task 应在最后一轮回收检查中同时摘除 hub 与注册表。
     let retired = tokio::time::timeout(Duration::from_secs(10), async {

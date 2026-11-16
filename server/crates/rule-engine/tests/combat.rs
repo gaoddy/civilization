@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use common::test_catalog;
 use rule_engine::combat::{
     CombatAction, CombatLog, effective_attack, effective_attack_with, effective_health,
-    effective_health_with, keywords, simulate,
+    effective_health_with, keywords, simulate, simulate_with,
 };
 use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
 use rule_engine::effects::Duration;
@@ -912,4 +912,118 @@ fn mixed_real_and_mirror_reports_cover_exactly_three_seats() {
     assert_eq!(outcome.reports.get(&0).unwrap().opponent_seat, Some(1));
     assert_eq!(outcome.reports.get(&1).unwrap().opponent_seat, Some(0));
     assert_eq!(outcome.reports.get(&2).unwrap().opponent_seat, None);
+}
+
+// ---- 动作后状态快照与召唤 ----
+
+fn combat_log(
+    catalog: &Catalog,
+    attacker: &[MinionInstance],
+    defender: &[MinionInstance],
+) -> CombatLog {
+    simulate(catalog, attacker, defender, 0, 1, 0, &mut rng())
+}
+
+#[test]
+fn combat_states_parallel_actions() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a", 3, 3, &[]);
+    add_card(&mut catalog, "b", 2, 5, &[]);
+
+    let log = combat_log(
+        &catalog,
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
+    );
+
+    assert!(!log.actions.is_empty(), "应有动作");
+    assert_eq!(
+        log.actions.len(),
+        log.states.len(),
+        "状态快照与动作同序同长"
+    );
+    for states in &log.states {
+        assert!(!states.is_empty(), "每条动作至少记录一个受影响随从");
+    }
+}
+
+#[test]
+fn attack_states_match_field_after_damage() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a", 3, 3, &[]);
+    add_card(&mut catalog, "b", 2, 5, &[]);
+
+    let log = combat_log(
+        &catalog,
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
+    );
+
+    let index = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Attack { .. }))
+        .expect("应至少有一次攻击");
+    let states = &log.states[index];
+    assert_eq!(states.len(), 2, "攻击记录攻方与受方各一条");
+    assert_eq!(states[0].instance_id, 1, "第一条是攻方");
+    assert_eq!(states[0].attack, 3);
+    assert_eq!(states[0].health, 1, "攻方已被反击 2 点，取动作后的现场值");
+    assert!(states[0].alive);
+    assert_eq!(states[1].instance_id, 2, "第二条是受方");
+    assert_eq!(states[1].health, 2, "受方动作后生命为 5 - 3");
+    assert!(states[1].alive);
+}
+
+#[test]
+fn summon_action_records_position_and_seat() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "killer", 10, 10, &[]);
+    add_card(&mut catalog, "sower", 1, 1, &["播种"]);
+    catalog.tokens.insert(
+        "seedling".to_string(),
+        rule_engine::data::Token {
+            id: "seedling".to_string(),
+            name: "幼苗".to_string(),
+            attack: 1,
+            health: 1,
+            keywords: Vec::new(),
+        },
+    );
+
+    let (engine, _state) = Engine::new(catalog.clone(), [7; 32]);
+    let log = simulate_with(
+        &engine,
+        &[minion(&catalog, 1, "killer")],
+        &[minion(&catalog, 2, "sower")],
+        0,
+        1,
+        0,
+        &mut rng(),
+        Default::default(),
+    );
+
+    let index = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Summon { .. }))
+        .expect("播种亡语应产生召唤动作");
+    let CombatAction::Summon {
+        minion: summoned,
+        seat,
+        position,
+        card_id,
+        ..
+    } = &log.actions[index]
+    else {
+        unreachable!("已确认是召唤动作");
+    };
+    assert_eq!(*seat, 1, "召唤方为防守方座位");
+    assert_eq!(*position, 1, "阵亡随从仍占位，召唤物追加到它右侧");
+    assert_eq!(card_id, "seedling");
+    assert_eq!(
+        log.states[index][0].instance_id, *summoned,
+        "召唤的状态快照指向新随从"
+    );
+    assert!(log.states[index][0].alive, "新随从存活");
 }

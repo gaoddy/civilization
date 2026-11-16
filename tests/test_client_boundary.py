@@ -42,5 +42,36 @@ class ClientBoundaryTest(unittest.TestCase):
         self.assertEqual(offenders, [], "\n".join(offenders))
 
 
+    def test_play_card_only_from_drag(self):
+        """出牌只有拖拽一条路径：手牌没有点击回调，PlayCard 只在落点回调里构造。"""
+        source = (CLIENT / "scenes" / "game.gd").read_text(encoding="utf-8")
+        self.assertNotIn("_on_play", source)
+        owner = None
+        offenders = []
+        for number, line in enumerate(source.splitlines(), 1):
+            match = re.match(r"^func (\w+)\(", line)
+            if match:
+                owner = match.group(1)
+            if "INTENT_PLAY_CARD" in line and owner != "_on_board_dropped":
+                offenders.append(f"{number}: {line.strip()}（位于 {owner}）")
+        self.assertEqual(offenders, [], "\n".join(offenders))
+
+    def test_hand_card_has_no_click_callback(self):
+        """HandCard 只提供拖拽数据，不接点击。"""
+        source = (CLIENT / "scenes" / "hand_card.gd").read_text(encoding="utf-8")
+        self.assertNotIn("pressed.connect", source)
+        self.assertIn("_get_drag_data", source)
+
+    def test_headless_driver_consumes_target_pending(self):
+        """无头驱动必须先按队首待选类型分派：目标待选发 ChooseTarget，不能一律当发现。"""
+        source = (CLIENT / "tests" / "headless_game.gd").read_text(encoding="utf-8")
+        self.assertIn('str(choices[0].get("kind", "")) == "target"', source)
+        self.assertIn("Protocol.INTENT_CHOOSE_TARGET", source)
+        act = source.split("func _act(", 1)[1].split("\nfunc ", 1)[0]
+        target_branch = act.index("_choose_target")
+        discover_branch = act.index("Protocol.INTENT_CHOOSE_DISCOVER")
+        self.assertLess(target_branch, discover_branch, "目标待选分支必须先于发现分支")
+
+
 if __name__ == "__main__":
     unittest.main()

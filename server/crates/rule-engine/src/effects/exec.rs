@@ -344,6 +344,24 @@ impl Engine {
     /// 把它算进池会让「棋盘为空时买入带目标战吼的随从」变成无法补选的死锁。
     ///
     /// 只读：不修改状态、不消耗随机流，调用方可在任何状态修改之前失败返回。
+    /// 该卡在该触发时机下是否存在「需要玩家指定单一目标」的效果。
+    ///
+    /// 只看选择器：`Selector::Target`，或 `Selector::Side { pick: Pick::Single, .. }`。
+    /// **不考虑 `condition`**：条件依赖运行时状态，本判定要能在没有座位上下文时回答，
+    /// 因此是保守超集——视图只用它做交互提示，真正的池判定在 `check_targets`。
+    pub fn requires_target(&self, card_id: &str, trigger: Trigger) -> bool {
+        self.effects_of(card_id, trigger).iter().any(|effect| {
+            matches!(
+                effect.selector,
+                Selector::Target
+                    | Selector::Side {
+                        pick: Pick::Single,
+                        ..
+                    }
+            )
+        })
+    }
+
     pub(crate) fn check_targets(
         &self,
         state: &GameState,

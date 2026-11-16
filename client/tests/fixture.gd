@@ -27,7 +27,7 @@ static func view() -> Dictionary:
                 {"index": 5, "cardId": "fei", "frozen": false},
             ],
             "hand": [
-                {"index": 0, "cardId": "dia", "playable": true, "disabledReason": null},
+                {"index": 0, "cardId": "dia", "playable": true, "requiresTarget": false, "disabledReason": null},
             ],
             "board": [
                 {
@@ -128,8 +128,8 @@ static func game_view() -> Dictionary:
         {"index": 5, "cardId": "bisheng", "frozen": false},
     ]
     view["self"]["hand"] = [
-        {"index": 0, "cardId": "archimedes", "playable": true, "disabledReason": null},
-        {"index": 1, "cardId": "boxer", "playable": false, "disabledReason": "NO_SPACE"},
+        {"index": 0, "cardId": "archimedes", "playable": true, "requiresTarget": false, "disabledReason": null},
+        {"index": 1, "cardId": "boxer", "playable": false, "requiresTarget": false, "disabledReason": "NO_SPACE"},
     ]
     view["self"]["affordances"]["handCards"] = [
         {"index": 0, "playable": true, "disabledReason": null},
@@ -160,7 +160,7 @@ static func game_view() -> Dictionary:
     return view
 
 
-## 战斗结果夹具：双方英雄与随从、伤害与胜者，字段与 CombatResult 一致。
+## 战斗结果夹具：双方英雄与随从、动作序列、伤害与胜者，字段与 CombatResult 一致。
 static func combat_result() -> Dictionary:
     return {
         "ownBoard": [
@@ -172,10 +172,66 @@ static func combat_result() -> Dictionary:
             _minion(0, "mo_0", "aristotle", 6, 8, ["嘲讽"]),
             _minion(1, "mo_1", "bisheng", 5, 5, []),
         ],
-        "actions": [],
+        "actions": [
+            {
+                "kind": "attack",
+                "sourceMinionId": "mi_0",
+                "targetMinionId": "mo_0",
+                "damage": 6,
+                "source": {"minionId": "mi_0", "attack": 7, "health": 6, "alive": true},
+                "target": {"minionId": "mo_0", "attack": 6, "health": 2, "alive": true},
+            },
+            {
+                "kind": "death",
+                "target": {"minionId": "mo_0", "attack": 6, "health": 0, "alive": false},
+            },
+            {
+                "kind": "summon",
+                "summon": {
+                    "side": "own",
+                    "position": 1,
+                    "minion": {
+                        "minionId": "mi_9",
+                        "cardId": "seedling",
+                        "golden": false,
+                        "attack": 1,
+                        "health": 1,
+                        "keywords": [],
+                    },
+                },
+            },
+        ],
         "damage": 5,
         "winnerId": "p0",
         "mirror": false,
+    }
+
+
+## 手牌条目夹具：`requires_target` 决定它是否需要选目标。
+static func hand(card_id: String, requires_target: bool) -> Dictionary:
+    return {
+        "index": 0,
+        "cardId": card_id,
+        "playable": true,
+        "requiresTarget": requires_target,
+        "disabledReason": null,
+    }
+
+
+## 棋盘随从夹具：只填落点判定与展示需要的字段。
+##
+## `index` 必须与随从在 `self.board` 中的下标一致：页面把它写进卡片的
+## `minion_index` 元数据，落点判定据此换算插入下标。
+static func board_minion(minion_id: String, card_id: String, index := 0) -> Dictionary:
+    return {
+        "index": index,
+        "minionId": minion_id,
+        "cardId": card_id,
+        "golden": false,
+        "attack": 3,
+        "health": 4,
+        "keywords": [],
+        "sellable": true,
     }
 
 

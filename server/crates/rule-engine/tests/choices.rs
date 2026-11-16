@@ -17,7 +17,7 @@ use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
 use rule_engine::rng::Stream;
 use rule_engine::state::{
-    GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase, ShopSlot,
+    GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase, Seat, ShopSlot,
 };
 
 // ---------------------------------------------------------------------------
@@ -716,6 +716,7 @@ fn play_evolver(engine: &mut Engine, state: &mut GameState, card_id: &str) -> In
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: None,
             },
         )
@@ -966,6 +967,7 @@ fn evolve_cards_without_evolve_do_not_register_choice() {
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: None,
             },
         )
@@ -1037,5 +1039,38 @@ fn copy_still_accepts_hand_and_board_from() {
     for from in ["hand", "board"] {
         let raw = format!("OnActivate|Copy|self|from={from},to=hand");
         parse_effects(&raw).unwrap_or_else(|errors| panic!("{raw} 应能解析：{errors:?}"));
+    }
+}
+
+#[test]
+fn hash_covers_target_pending() {
+    let (_, state) = setup(2);
+    let target =
+        |seat: Seat, source: InstanceId, card_id: &str, golden: bool| PendingChoice::Target {
+            seat,
+            source,
+            card_id: card_id.to_string(),
+            golden,
+        };
+    let mut with_base = state.clone();
+    with_base
+        .pending
+        .push_back(target(0, 1, "fangzhiji", false));
+    let base_hash = state_hash(&with_base);
+
+    let variants: Vec<PendingChoice> = vec![
+        target(1, 1, "fangzhiji", false),
+        target(0, 2, "fangzhiji", false),
+        target(0, 1, "bisheng", false),
+        target(0, 1, "fangzhiji", true),
+    ];
+    for variant in variants {
+        let mut other = state.clone();
+        other.pending.push_back(variant.clone());
+        assert_ne!(
+            base_hash,
+            state_hash(&other),
+            "待选字段不同应产生不同哈希：{variant:?}"
+        );
     }
 }

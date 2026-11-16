@@ -8,7 +8,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[2] / "protocol" / "schema" / "v1"
 
 EXPECTED_C2S = {"AuthRequest", "CreateRoom", "JoinRoom", "LeaveRoom", "Ready",
-                "SelectHeroCard", "Intent", "SkipAnimation", "RequestSnapshot",
+                "SelectHeroCard", "Intent", "RequestSnapshot",
                 "Reconnect", "FriendRequest"}
 EXPECTED_S2C = {"AuthResult", "RoomUpdate", "GameStarted", "Snapshot",
                 "StateUpdate", "PhaseChanged", "TimerWarning", "CombatResult",
@@ -35,9 +35,12 @@ class SchemaIntegrityTest(unittest.TestCase):
         referenced = set()
         for direction in ("c2s", "s2c"):
             for name, target in mapping["directions"][direction].items():
-                self.assertEqual(target, f"messages.schema.json#/$defs/{name}")
-                self.assertIn(name, defs, f"{direction}.{name}")
-                referenced.add(name)
+                # 载荷可以指向同方向的任意 $def（如 `Intent` → `IntentMessage`）。
+                prefix = "messages.schema.json#/$defs/"
+                self.assertTrue(target.startswith(prefix), f"{direction}.{name}: {target}")
+                def_name = target[len(prefix):]
+                self.assertIn(def_name, defs, f"{direction}.{name}")
+                referenced.add(def_name)
         self.assertEqual(referenced, set(defs), "messages.schema.json 存在未被映射的 $def")
 
 

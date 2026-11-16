@@ -71,10 +71,55 @@
     ],
     "actions": [
       {
-        "kind": "Attack",
+        "kind": "attack",
         "sourceIndex": 0,
         "targetIndex": 0,
-        "damage": 3
+        "sourceSide": "own",
+        "targetSide": "opponent",
+        "sourceMinionId": "mi_1",
+        "targetMinionId": "mi_1",
+        "damage": 3,
+        "source": {
+          "minionId": "mi_1",
+          "attack": 3,
+          "health": 1,
+          "alive": true
+        },
+        "target": {
+          "minionId": "mi_1",
+          "attack": 3,
+          "health": 1,
+          "alive": true
+        }
+      },
+      {
+        "kind": "death",
+        "sourceIndex": 0,
+        "sourceSide": "opponent",
+        "sourceMinionId": "mi_1",
+        "target": {
+          "minionId": "mi_1",
+          "attack": 3,
+          "health": 0,
+          "alive": false
+        }
+      },
+      {
+        "kind": "summon",
+        "summon": {
+          "side": "opponent",
+          "position": 1,
+          "minion": {
+            "index": 1,
+            "minionId": "mi_9",
+            "cardId": "baiyi",
+            "golden": false,
+            "attack": 1,
+            "health": 1,
+            "keywords": [],
+            "sellable": false
+          }
+        }
       }
     ],
     "damage": 9,

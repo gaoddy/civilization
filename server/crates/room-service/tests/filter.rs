@@ -14,7 +14,7 @@ use room_service::filter::{combat_result, for_seat};
 use room_service::game::{GameTask, RoomCommand, UpdateKind};
 use room_service::room::PlayerSlot;
 use room_service::view::SeatInfo;
-use rule_engine::combat::CombatAction;
+use rule_engine::combat::{self, CombatAction};
 use rule_engine::data::Catalog;
 use rule_engine::events::GameEvent;
 use rule_engine::settle::SeatCombatReport;
@@ -54,7 +54,16 @@ fn minion(instance_id: u64) -> MinionInstance {
     minion
 }
 
-/// 真实战斗报告：双方各两个随从，含一条被护盾挡下的攻击。
+fn snapshot(instance_id: u64, attack: i32, health: i32, alive: bool) -> combat::MinionSnapshot {
+    combat::MinionSnapshot {
+        instance_id,
+        attack,
+        health,
+        alive,
+    }
+}
+
+/// 真实战斗报告：双方各两个随从，含被护盾挡下的攻击、死亡、复生、传染与一次召唤。
 fn real_report(seat: Seat) -> SeatCombatReport {
     SeatCombatReport {
         seat,
@@ -78,6 +87,21 @@ fn real_report(seat: Seat) -> SeatCombatReport {
             CombatAction::Death { minion: 201 },
             CombatAction::Reborn { minion: 102 },
             CombatAction::ContagionApplied { target: 102 },
+            CombatAction::Summon {
+                minion: 301,
+                card_id: "baiyi".to_string(),
+                golden: false,
+                seat: seat + 1,
+                position: 2,
+            },
+        ],
+        states: vec![
+            vec![snapshot(101, 2, 2, true), snapshot(201, 1, 0, false)],
+            vec![snapshot(202, 1, 1, true), snapshot(102, 1, 1, true)],
+            vec![snapshot(201, 1, 0, false)],
+            vec![snapshot(102, 1, 1, true)],
+            vec![snapshot(102, 1, 1, true)],
+            vec![snapshot(301, 1, 1, true)],
         ],
         damage: 3,
         winner: Some(seat),
@@ -219,7 +243,7 @@ fn combat_result_maps_action_indices() {
 #[test]
 fn combat_result_actions_use_fixed_kinds() {
     let result = combat_result(&catalog(), &real_report(2), &seats());
-    let allowed = ["attack", "death", "reborn", "contagion"];
+    let allowed = ["attack", "death", "reborn", "contagion", "summon"];
 
     for action in &result.actions {
         assert!(
@@ -236,7 +260,7 @@ fn combat_result_actions_use_fixed_kinds() {
         .collect();
     assert_eq!(
         kinds,
-        vec!["attack", "attack", "death", "reborn", "contagion"]
+        vec!["attack", "attack", "death", "reborn", "contagion", "summon"]
     );
 }
 
@@ -255,6 +279,7 @@ fn mirror_combat_result_marked_mirror() {
             damage: 1,
             blocked: false,
         }],
+        states: vec![vec![snapshot(101, 1, 1, true), snapshot(101, 1, 1, true)]],
         damage: 0,
         winner: Some(1),
     };
@@ -411,6 +436,7 @@ fn private_intent_broadcasts_updated_public_summary_to_all_seats() {
         client_intent_id: "play-broadcast".to_string(),
         intent: ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: None,
         },
     });
@@ -453,11 +479,11 @@ fn event_kinds(events: &[serde_json::Value]) -> Vec<String> {
 }
 
 #[test]
-fn advance_phase_attaches_filtered_public_events() {
-    let (mut task, _clock) = task();
+fn combat_stage_attaches_filtered_public_events() {
+    let (mut task, clock) = task();
 
-    // 全员结束招募：最后一条意图触发 finish_recruit → resolve_combat →
-    // resolve_settle → start_turn，事件应随每个座位的 StateUpdate 下发。
+    // 全员结束招募：最后一条意图触发 finish_recruit → resolve_combat，阶段停在
+    // Combat 演示；阶段事件应随每个座位的 StateUpdate 下发。
     let mut last = Vec::new();
     for seat in 0..8 {
         last = task.handle(RoomCommand::Intent {
@@ -494,13 +520,42 @@ fn advance_phase_attaches_filtered_public_events() {
         seat0_kinds.contains(&"PhaseChanged".to_string()),
         "座位 0 的 StateUpdate.events 应含 PhaseChanged，实际为 {seat0_kinds:?}"
     );
+    assert_eq!(
+        task.player_view(0).expect("视图应可用").phase,
+        protocol::view::Phase::Combat,
+        "演示阶段应停在 Combat"
+    );
+
+    // 演示到点结算：伤害事件随下一回合的视图下发。
+    let demo_ms = last
+        .iter()
+        .filter_map(|update| match &update.kind {
+            UpdateKind::CombatResult(result) => Some(result.actions.len()),
+            _ => None,
+        })
+        .max()
+        .unwrap_or(0);
+    clock.advance((demo_ms as u64) * 320 + 2_000);
+    let settle = task.tick();
+    let mut damage_events = Vec::new();
+    for update in &settle {
+        if !matches!(update.kind, UpdateKind::View { .. }) {
+            continue;
+        }
+        let envelope = task.envelope_for(update).expect("更新应能编码");
+        let payload = serde_json::to_value(&envelope.payload).expect("载荷应可序列化");
+        let events = payload["events"].as_array().cloned().unwrap_or_default();
+        damage_events.extend(events);
+    }
+
+    let kinds = event_kinds(&damage_events);
     assert!(
-        seat0_kinds.contains(&"DamageTaken".to_string()),
-        "战斗结算后应含 DamageTaken，实际为 {seat0_kinds:?}"
+        kinds.contains(&"DamageTaken".to_string()),
+        "战斗结算后应含 DamageTaken，实际为 {kinds:?}"
     );
 
     // 公开伤害事件必须标明被打的玩家，不能留空让客户端当成自己。
-    for event in seat0 {
+    for event in &damage_events {
         if event["kind"] == "DamageTaken" {
             assert!(event["playerId"].is_string(), "DamageTaken 必须带 playerId");
         }
@@ -513,4 +568,124 @@ fn advance_phase_attaches_filtered_public_events() {
             "座位 {player} 的事件流不得包含 CombatResolved，实际为 {kinds:?}"
         );
     }
+}
+
+#[test]
+fn combat_attack_carries_minion_ids_and_states() {
+    let catalog = catalog();
+    let result = combat_result(&catalog, &real_report(0), &seats());
+
+    let attack = &result.actions[0];
+    assert_eq!(attack.kind, "attack");
+    assert_eq!(attack.source_minion_id.as_deref(), Some("101"));
+    assert_eq!(attack.target_minion_id.as_deref(), Some("201"));
+    let source = attack.source.as_ref().expect("攻击应带攻方状态");
+    assert_eq!(source.minion_id, "101");
+    assert_eq!(source.attack, 2);
+    assert_eq!(source.health, 2);
+    assert!(source.alive);
+    let target = attack.target.as_ref().expect("攻击应带受方状态");
+    assert_eq!(target.health, 0, "受方动作后生命直接取服务端快照");
+    assert!(!target.alive);
+
+    let blocked = &result.actions[1];
+    assert_eq!(blocked.damage, Some(0), "护盾抵消时伤害为 0");
+    assert_eq!(
+        blocked.target.as_ref().map(|state| state.health),
+        Some(1),
+        "被挡下的攻击不改生命"
+    );
+}
+
+#[test]
+fn combat_summon_maps_side_position_and_minion() {
+    let catalog = catalog();
+    let result = combat_result(&catalog, &real_report(0), &seats());
+
+    let summon = result.actions[5]
+        .summon
+        .as_ref()
+        .expect("召唤动作应带 summon");
+    assert_eq!(
+        summon.side,
+        protocol::CombatResultActionsItemSummonSide::Opponent
+    );
+    assert_eq!(summon.position, 2);
+    assert_eq!(summon.minion.index, 2, "minion.index 与插入下标一致");
+    assert_eq!(summon.minion.minion_id, "301");
+    assert_eq!(summon.minion.card_id, "baiyi");
+    assert!(!summon.minion.sellable, "演示中的随从不可出售");
+
+    let own_report = SeatCombatReport {
+        seat: 0,
+        own_board: vec![minion(101)],
+        opponent_board: vec![minion(201)],
+        actions: vec![CombatAction::Summon {
+            minion: 301,
+            card_id: "baiyi".to_string(),
+            golden: false,
+            seat: 0,
+            position: 1,
+        }],
+        states: vec![vec![snapshot(301, 1, 1, true)]],
+        ..real_report(0)
+    };
+    let own = combat_result(&catalog, &own_report, &seats());
+    assert_eq!(
+        own.actions[0].summon.as_ref().map(|summon| summon.side),
+        Some(protocol::CombatResultActionsItemSummonSide::Own),
+        "召唤方与接收座位相同时 side 为 own"
+    );
+}
+
+#[test]
+fn combat_summon_uses_state_snapshot_values() {
+    // 召唤物可能带光环/战斗内加成：展示数值取动作的状态快照，而不是卡面基础值。
+    let catalog = catalog();
+    let report = SeatCombatReport {
+        seat: 0,
+        own_board: vec![minion(101)],
+        opponent_board: vec![minion(201)],
+        actions: vec![CombatAction::Summon {
+            minion: 301,
+            card_id: "baiyi".to_string(),
+            golden: false,
+            seat: 0,
+            position: 1,
+        }],
+        // baiyi 卡面 1/2，这里给出加成后的 5/7。
+        states: vec![vec![snapshot(301, 5, 7, true)]],
+        ..real_report(0)
+    };
+
+    let result = combat_result(&catalog, &report, &seats());
+    let summon = result.actions[0]
+        .summon
+        .as_ref()
+        .expect("召唤动作应带 summon");
+    assert_eq!(summon.minion.attack, 5, "召唤物攻击取状态快照");
+    assert_eq!(summon.minion.health, 7, "召唤物生命取状态快照");
+    assert_eq!(summon.minion.card_id, "baiyi", "卡面信息仍来自动作");
+}
+
+#[test]
+fn combat_death_and_reborn_carry_target_state() {
+    let catalog = catalog();
+    let result = combat_result(&catalog, &real_report(0), &seats());
+
+    let death = result.actions[2]
+        .target
+        .as_ref()
+        .expect("死亡动作带 target 状态");
+    assert_eq!(death.minion_id, "201");
+    assert!(!death.alive, "死亡后存活为 false");
+    assert_eq!(death.health, 0);
+
+    let reborn = result.actions[3]
+        .target
+        .as_ref()
+        .expect("复生动作带 target 状态");
+    assert_eq!(reborn.minion_id, "102");
+    assert!(reborn.alive);
+    assert_eq!(reborn.health, 1, "复生后生命为 1");
 }

@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use protocol::ErrorCode;
 use protocol::intents::Intent as ProtocolIntent;
-use room_service::clock::FixedClock;
+use room_service::clock::{Clock, FixedClock};
 use room_service::envelope::SeatChannel;
 use room_service::game::{GameTask, RoomCommand, SeatUpdate, UpdateKind};
 use room_service::room::PlayerSlot;
@@ -102,11 +102,34 @@ fn catalog_with_discover_on_play() -> Catalog {
     catalog
 }
 
-/// 从当前招募回合空过到下一回合（超时推进，含战斗与结算）。
+/// 服务端演示节奏：单条动作播放时长。
+const PACE_MS: u64 = 320;
+/// 服务端演示节奏：结果横幅停留。
+const TAIL_MS: u64 = 2_000;
+
+/// 一批更新对应的演示时长：动作数最大者 × [`PACE_MS`] + [`TAIL_MS`]。
+fn combat_demo_ms(updates: &[SeatUpdate]) -> u64 {
+    let max_actions = updates
+        .iter()
+        .filter_map(|update| match &update.kind {
+            UpdateKind::CombatResult(result) => Some(result.actions.len()),
+            _ => None,
+        })
+        .max()
+        .unwrap_or(0);
+    (max_actions as u64) * PACE_MS + TAIL_MS
+}
+
+/// 从当前招募回合空过到下一回合招募：先到点进入战斗演示，再等演示结束结算。
+///
+/// 招募截止按回合预算 150 秒扣演示时长得出，取预算上限即可覆盖首回合的固定 90 秒。
 fn advance_turn(task: &mut GameTask, clock: &FixedClock) {
-    clock.advance(90_000);
+    clock.advance(150_000);
     let updates = task.tick();
-    assert!(!updates.is_empty(), "到点应推进到下一回合");
+    assert!(!updates.is_empty(), "到点应进入战斗演示");
+    clock.advance(combat_demo_ms(&updates));
+    let updates = task.tick();
+    assert!(!updates.is_empty(), "演示结束应推进到下一回合");
 }
 
 fn command(player: &str, client_intent_id: &str, intent: ProtocolIntent) -> RoomCommand {
@@ -157,6 +180,39 @@ fn error_codes(updates: &[SeatUpdate]) -> Vec<ErrorCode> {
             _ => None,
         })
         .collect()
+}
+
+/// 消费队首的目标待选：取己方最左侧随从发 `ChooseTarget`。
+///
+/// 战吼需要目标的随从入场后不再阻塞出牌，而是留下一目标待选；
+/// 待选期间该座位不能执行其它招募意图，测试须先结算它。
+fn resolve_target_pending(task: &mut GameTask, tag: &str) -> bool {
+    let view = task.player_view(0).expect("视图应可用");
+    let is_target = matches!(
+        view.self_.pending_choices.first(),
+        Some(protocol::view::PendingChoice::Target { .. })
+    );
+    if !is_target {
+        return false;
+    }
+    let minion_id = view
+        .self_
+        .board
+        .first()
+        .expect("目标待选存在时棋盘非空")
+        .minion_id
+        .clone();
+    let updates = task.handle(command(
+        "p0",
+        &format!("{tag}-choose-target"),
+        ProtocolIntent::ChooseTarget { minion_id },
+    ));
+    assert!(
+        error_codes(&updates).is_empty(),
+        "选定战吼目标应成功：{:?}",
+        error_codes(&updates)
+    );
+    true
 }
 
 #[test]
@@ -237,16 +293,23 @@ fn rejected_intent_does_not_change_state() {
 }
 
 #[test]
-fn all_seats_end_recruit_advances_to_combat_then_settle() {
-    let (mut task, _clock) = task();
+fn all_end_recruit_stays_in_combat_until_deadline() {
+    let (mut task, clock) = task();
 
     let mut combat_seats = BTreeSet::new();
+    let mut demo_ms = 0;
     for seat in 0..8 {
         let updates = task.handle(end_recruit(&format!("p{seat}"), &format!("end-{seat}")));
         assert!(
             error_codes(&updates).is_empty(),
             "座位 {seat} 结束招募应成功"
         );
+        if updates
+            .iter()
+            .any(|update| matches!(update.kind, UpdateKind::CombatResult(_)))
+        {
+            demo_ms = combat_demo_ms(&updates);
+        }
         for update in updates {
             if matches!(update.kind, UpdateKind::CombatResult(_)) {
                 combat_seats.insert(update.player_id);
@@ -258,6 +321,24 @@ fn all_seats_end_recruit_advances_to_combat_then_settle() {
     let view = task.player_view(0).expect("视图应可用");
     assert_eq!(
         view.phase,
+        protocol::view::Phase::Combat,
+        "全员结束后应停在战斗演示阶段"
+    );
+    assert_eq!(view.turn.get(), 1, "演示期间回合不变");
+
+    clock.advance(demo_ms - 1);
+    assert!(task.tick().is_empty(), "演示未到点不应推进");
+    assert_eq!(
+        task.player_view(0).expect("视图应可用").phase,
+        protocol::view::Phase::Combat,
+        "演示未到点仍停在战斗阶段"
+    );
+
+    clock.advance(1);
+    assert!(!task.tick().is_empty(), "演示到点应推进");
+    let view = task.player_view(0).expect("视图应可用");
+    assert_eq!(
+        view.phase,
         protocol::view::Phase::Recruit,
         "战斗与结算后进入下一回合招募"
     );
@@ -265,25 +346,85 @@ fn all_seats_end_recruit_advances_to_combat_then_settle() {
 }
 
 #[test]
+fn next_recruit_deadline_discounts_combat_duration() {
+    let (mut task, clock) = task();
+
+    let mut demo_ms = 0;
+    for seat in 0..8 {
+        let updates = task.handle(end_recruit(&format!("p{seat}"), &format!("end-{seat}")));
+        if updates
+            .iter()
+            .any(|update| matches!(update.kind, UpdateKind::CombatResult(_)))
+        {
+            demo_ms = combat_demo_ms(&updates);
+        }
+    }
+    assert!(demo_ms >= TAIL_MS, "演示时长至少包含横幅停留");
+
+    clock.advance(demo_ms);
+    assert!(!task.tick().is_empty(), "演示到点应推进");
+
+    let deadline = task.player_view(0).expect("视图应可用").phase_deadline;
+    let expected = chrono::DateTime::<chrono::Utc>::from_timestamp_millis(
+        i64::try_from(clock.now_ms() + (150_000 - demo_ms)).expect("时刻应可表示"),
+    )
+    .expect("时刻应合法");
+    assert_eq!(deadline, expected, "下回合招募截止应为 now + (150000 − T)");
+}
+
+#[test]
+fn game_over_after_combat_skips_new_recruit() {
+    let (mut task, clock) = task();
+    // 活到出局阶段：空阵容逐回合超时推进，直到只剩 1 人。
+    let mut game_over = false;
+    for _ in 0..30 {
+        clock.advance(150_000);
+        let updates = task.tick();
+        assert!(!updates.is_empty(), "每回合到点都应进入演示");
+        clock.advance(combat_demo_ms(&updates));
+        let updates = task.tick();
+        assert!(!updates.is_empty(), "演示到点都应推进");
+        game_over =
+            task.player_view(0).expect("视图应可用").phase == protocol::view::Phase::GameOver;
+        if game_over {
+            break;
+        }
+    }
+    assert!(game_over, "30 个回合内应结束对局");
+
+    // 结束那一刻起不再推进：没有新的招募截止，tick 返回空。
+    clock.advance(150_000);
+    assert!(task.tick().is_empty(), "结束后不再推进");
+}
+
+#[test]
 fn recruit_timer_fires_at_ninety_seconds() {
     let (mut task, clock) = task();
 
+    // 首回合招募时长是固定的 90 秒（之后按回合预算扣演示时长）。
     clock.advance(90_000);
     let updates = task.tick();
-    assert!(!updates.is_empty(), "到点应推进阶段");
+    assert!(!updates.is_empty(), "到点应进入战斗演示");
     assert!(
         updates
             .iter()
             .any(|update| matches!(update.kind, UpdateKind::CombatResult(_))),
-        "推进应下发 CombatResult"
+        "进入演示应下发 CombatResult"
+    );
+    assert_eq!(
+        task.player_view(0).expect("视图应可用").phase,
+        protocol::view::Phase::Combat,
+        "到点先进入战斗演示"
     );
 
+    // 同一毫秒重复 tick 幂等：演示未到点不推进。
+    assert!(task.tick().is_empty(), "重复 tick 不得再次推进");
+
+    clock.advance(combat_demo_ms(&updates));
+    task.tick();
     let view = task.player_view(0).expect("视图应可用");
     assert_eq!(view.phase, protocol::view::Phase::Recruit);
     assert_eq!(view.turn.get(), 2);
-
-    // 同一毫秒重复 tick 幂等。
-    assert!(task.tick().is_empty(), "重复 tick 不得再次推进");
 }
 
 #[test]
@@ -297,6 +438,7 @@ fn unspent_pending_choice_does_not_block_timeout() {
         "discover-play",
         ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: None,
         },
     ));
@@ -308,9 +450,11 @@ fn unspent_pending_choice_does_not_block_timeout() {
         "打出应留下未消费的发现待选"
     );
 
-    clock.advance(90_000);
+    clock.advance(150_000);
     let updates = task.tick();
     assert!(!updates.is_empty(), "待选未消费不应阻塞超时推进");
+    clock.advance(combat_demo_ms(&updates));
+    task.tick();
     assert_eq!(task.player_view(0).expect("视图应可用").turn.get(), 2);
 }
 
@@ -432,9 +576,11 @@ fn sell_minion_succeeds_and_refunds_gold() {
         "sell-play",
         ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: None,
         },
     ));
+    resolve_target_pending(&mut task, "sell-play");
 
     let view = task.player_view(0).expect("视图应可用");
     assert_eq!(view.self_.board.len(), 1, "打出的随从应上棋盘");
@@ -491,10 +637,13 @@ fn play_card_succeeds() {
         "play-first",
         ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: None,
         },
     ));
     assert!(error_codes(&first_play).is_empty(), "打出手牌应成功");
+    // 并列的目标战吼会把整段 `OnPlay`（含发现）延后到选定目标之后。
+    resolve_target_pending(&mut task, "play-first");
 
     let pending = task.player_view(0).expect("视图应可用");
     assert_eq!(
@@ -524,10 +673,12 @@ fn play_card_succeeds() {
         "play-1",
         ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: target,
         },
     ));
     assert!(error_codes(&played).is_empty(), "打出手牌应成功");
+    resolve_target_pending(&mut task, "play-1");
 
     let after = task.player_view(0).expect("视图应可用");
     assert_eq!(after.self_.hand.len(), 0, "打出手牌后手牌数应下降");
@@ -560,39 +711,17 @@ fn play_hand_minions(task: &mut GameTask, tag: &str) {
             &format!("{tag}-play-{round}"),
             ProtocolIntent::PlayCard {
                 hand_index,
+                position: None,
                 target_minion_id: None,
             },
         ));
-        if error_codes(&updates) == vec![ErrorCode::NoValidTarget] {
-            let target = task
-                .player_view(0)
-                .expect("视图应可用")
-                .self_
-                .board
-                .first()
-                .expect("存在合法目标时棋盘非空")
-                .minion_id
-                .clone();
-            let retried = task.handle(command(
-                "p0",
-                &format!("{tag}-play-target-{round}"),
-                ProtocolIntent::PlayCard {
-                    hand_index,
-                    target_minion_id: Some(target),
-                },
-            ));
-            assert!(
-                error_codes(&retried).is_empty(),
-                "带目标重发应成功：{:?}",
-                error_codes(&retried)
-            );
-            continue;
-        }
         assert!(
             error_codes(&updates).is_empty(),
             "打出手牌随从应成功：{:?}",
             error_codes(&updates)
         );
+        // 需要目标的战吼入场后留下目标待选，待选期间该座位不能继续招募。
+        while resolve_target_pending(task, &format!("{tag}-{round}")) {}
     }
 }
 
@@ -672,9 +801,11 @@ fn choose_discover_consumes_pending_choice() {
         "discover-play",
         ProtocolIntent::PlayCard {
             hand_index: 0,
+            position: None,
             target_minion_id: None,
         },
     ));
+    resolve_target_pending(&mut task, "discover-play");
 
     let before = task.player_view(0).expect("视图应可用");
     assert_eq!(
@@ -723,9 +854,12 @@ fn upgrade_era_succeeds() {
 /// 空阵容下逐回合超时推进，直到对局结束；返回最后一批更新。
 fn reach_game_over(task: &mut GameTask, clock: &FixedClock) -> Vec<SeatUpdate> {
     for _ in 0..30 {
-        clock.advance(90_000);
+        clock.advance(150_000);
         let updates = task.tick();
-        assert!(!updates.is_empty(), "每个回合到点都应推进");
+        assert!(!updates.is_empty(), "每个回合到点都应进入演示");
+        clock.advance(combat_demo_ms(&updates));
+        let updates = task.tick();
+        assert!(!updates.is_empty(), "演示到点都应推进");
         if task.player_view(0).expect("视图应可用").phase == protocol::view::Phase::GameOver {
             return updates;
         }
@@ -793,7 +927,7 @@ fn tick_after_game_over_returns_empty() {
     let (mut task, clock) = task();
     reach_game_over(&mut task, &clock);
 
-    clock.advance(90_000);
+    clock.advance(150_000);
     assert!(task.tick().is_empty(), "结束后不再推进");
 }
 
@@ -834,6 +968,48 @@ fn real_report(seat: Seat) -> rule_engine::settle::SeatCombatReport {
             },
             CombatAction::Death { minion: 201 },
             CombatAction::ContagionApplied { target: 102 },
+        ],
+        states: vec![
+            vec![
+                rule_engine::combat::MinionSnapshot {
+                    instance_id: 101,
+                    attack: 2,
+                    health: 2,
+                    alive: true,
+                },
+                rule_engine::combat::MinionSnapshot {
+                    instance_id: 201,
+                    attack: 1,
+                    health: 0,
+                    alive: false,
+                },
+            ],
+            vec![
+                rule_engine::combat::MinionSnapshot {
+                    instance_id: 202,
+                    attack: 1,
+                    health: 1,
+                    alive: true,
+                },
+                rule_engine::combat::MinionSnapshot {
+                    instance_id: 102,
+                    attack: 1,
+                    health: 1,
+                    alive: true,
+                },
+            ],
+            vec![rule_engine::combat::MinionSnapshot {
+                instance_id: 201,
+                attack: 1,
+                health: 0,
+                alive: false,
+            }],
+            vec![rule_engine::combat::MinionSnapshot {
+                instance_id: 102,
+                attack: 1,
+                health: 1,
+                alive: true,
+            }],
         ],
         damage: 3,
         winner: Some(seat),
@@ -943,6 +1119,12 @@ fn mirror_combat_result_is_marked() {
             damage: 1,
             blocked: false,
         }],
+        states: vec![vec![rule_engine::combat::MinionSnapshot {
+            instance_id: 101,
+            attack: 1,
+            health: 1,
+            alive: true,
+        }]],
         damage: 0,
         winner: Some(1),
     };

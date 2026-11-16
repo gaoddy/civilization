@@ -6,7 +6,7 @@
 use crate::events::GameEvent;
 use crate::state::InstanceId;
 
-/// 招募阶段玩家可以提交的九种意图。
+/// 招募阶段玩家可以提交的十一种意图。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Intent {
     /// 购买商店槽位；买到的牌进入手牌，不需要目标。
@@ -17,9 +17,11 @@ pub enum Intent {
     RerollShop,
     /// 升级时代。
     UpgradeEra,
-    /// 打出手牌；`target` 留给 Task 10 的效果执行。
+    /// 打出手牌；`position` 是随从的插入下标（缺省追加到最右），
+    /// `target` 是效果牌的目标随从。
     PlayCard {
         hand_index: u8,
+        position: Option<u8>,
         target: Option<InstanceId>,
     },
     /// 调整棋盘站位。
@@ -35,6 +37,8 @@ pub enum Intent {
     EndRecruit,
     /// 从待选发现结果中选择一张；本任务只在 `Recruit` 阶段接受。
     ChooseDiscover { choice: u8 },
+    /// 为队首的目标待选指定一个我方棋盘上的随从。
+    ChooseTarget { minion: InstanceId },
 }
 
 /// 意图被拒绝的原因，与核心规则 §3 的返回码一一对应。

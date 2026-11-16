@@ -21,7 +21,7 @@ server/
       src/state.rs           # GameState / PlayerState / MinionInstance / MinionStats
       src/data.rs            # Catalog 与加载期校验（deny_unknown_fields）
       src/effects/           # DSL 解析（parse）、解释执行（exec）、光环（auras）
-      src/intent.rs          # 协议十种意图（含 ChooseDiscover）与 11 个规则拒绝码（各自映射到对应的协议错误码）
+      src/intent.rs          # 协议十一种意图（含 ChooseDiscover、ChooseTarget）与 11 个规则拒绝码（各自映射到对应的协议错误码）
       src/engine.rs          # Engine::new / apply / start_game / start_turn
       src/recruit.rs         # 商店、买/卖/刷新/冻结/升时代/打出/结束招募
       src/triple.rs          # 三连与发现
@@ -33,7 +33,7 @@ server/
       tests/                 # 17 个集成测试文件
     sim/                     # 可执行：CLI 模拟器 + 确定性 AI
       src/lib.rs             # run_games / play_game / replay；重导出 rule_engine::rng::seed_from_u64
-      src/ai.rs              # M0 确定性 AI 策略（为保基线未改动）
+      src/ai.rs              # M0 确定性 AI 策略（按视图消费目标待选）
       src/bot/               # M1a：view 驱动的机器人（brain.rs）与真实 WebSocket 客户端（client.rs）
       src/report.rs          # 日志与基线报告
       src/main.rs            # play / batch / replay / report / check / bot
@@ -56,9 +56,12 @@ tests/                       # Python 标准库 unittest
 
 - `Engine::apply(state, seat, intent)` 是唯一的状态变更入口，返回 `Outcome`（本意图产生的事件）；拒绝时返回 `Reject { code, message }` 且不改变状态。
 - 拒绝码与核心规则 §3 一致：`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE`。
-- 协议十种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`。`ChooseDiscover` 是协议意图之一，服务层映射为引擎同义意图，用于消费引擎产生的 `PendingChoice`（发现或进化待选）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。
+- 协议十一种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`、`ChooseTarget`。`ChooseDiscover` 与 `ChooseTarget` 都用于消费引擎产生的 `PendingChoice`（发现/进化、目标）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。
+- `PlayCard { hand_index, position, target }`：`position` 只对随从牌生效，是入场后的插入下标，`None` 表示追加到最右；超出当前随从数返回 `INVALID_CHOICE`。效果牌不带落点：目标缺失或不在合法池内时整条意图返回 `NO_VALID_TARGET`，合法池为空时效果落空、意图仍生效。随从牌入场后判定战吼：未带 `target` 且合法池非空时推入 `PendingChoice::Target`，由 `ChooseTarget { minion }` 指定目标；合法池为空（含被过滤器收窄为空）时战吼直接落空、不产生待选。
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
 - `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼、不分配实例编号；`PlayCard` 与 `UseHeroPower` 带 `target: Option<InstanceId>`，M0 由 AI 自动选择目标。
+- `PendingChoice::Target { seat, source, card_id, golden }`：目标待选期间该座位除 `ChooseTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。目标待选在 `finish_recruit` 进入战斗前作废（战吼落空）；发现与进化待选允许留到下回合。`ChooseTarget` 要求队首是目标待选、目标是我方棋盘上的随从，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果。
+- `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。
 - `settle::finish_recruit` 幂等：`Recruit` 阶段（超时路径）生成配对并切 `Combat`；`Combat` 阶段只补齐一次配对，不重复发事件、不重复配对。
 - 阶段推进由驱动方按固定顺序调用 `finish_recruit` / `resolve_combat` / `resolve_settle` / `start_turn`，引擎不自行推进时间。
@@ -95,6 +98,8 @@ tests/                       # Python 标准库 unittest
 `sim dev` 起 7 个机器人：第 0 个建房并把房间码打印为 `ROOM_CODE=<code>`，其余 6 个在取到码后并发加入，给开发者留出恰好一个座位。英雄卡按 id 升序取自内嵌卡表，第 `index` 个机器人的意图种子为 `intent_seed + index`。取房间码超时 10 秒，取到码后等待开局与整局结束的总超时 900 秒；超时或任一机器人失败时取消其余机器人并以非零码退出。
 
 `sim bot` 只在视图变化时决策；服务端拒绝意图不会带来新视图，因此收到 `Error` 后每回合最多补发一次 `EndRecruit`（`brain::recover_after_error`），避免整局停在招募阶段等超时。该兜底由 `make m1b-e2e` 的稳定运行暴露并覆盖。
+
+`sim bot` 的意图表同步扩到十一种：`pendingChoices` 头部为 `target` 时发 `ChooseTarget { minion }`，取己方棋盘最左侧随从；`PlayCard` 一律带 `position: None`（追加到最右）。`sim/src/ai.rs`（M0 基线）同样按该规则消费目标待选。
 
 ## 5. 验证方式
 
@@ -143,7 +148,7 @@ tests/                       # Python 标准库 unittest
 | 规则章节 | 用例文件 |
 | --- | --- |
 | 核心规则 §2 阶段状态机、§7 淘汰排名、§8 边界 | `rule-engine/tests/settle.rs`、`recruit.rs` |
-| 核心规则 §3 九种意图与 11 个失败码 | `rule-engine/tests/recruit.rs` |
+| 核心规则 §3 十一种意图与 11 个失败码 | `rule-engine/tests/recruit.rs`、`choices.rs` |
 | 核心规则 §4 招募细则 | `rule-engine/tests/recruit.rs`、`choices.rs`；商店重试后仍空即空槽，此时 `BuyMinion` 返回 `SHOP_SLOT_EMPTY`（`reroll_with_empty_star_retries_then_leaves_slot_empty`、`reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects`） |
 | 核心规则 §5 战斗与伤害公式 | `rule-engine/tests/combat.rs` |
 | 核心规则 §6 三连与发现 | `rule-engine/tests/triple.rs`、`choices.rs` |
@@ -179,8 +184,10 @@ tests/                       # Python 标准库 unittest
 - `BattleField::apply_damage(id, amount, can_kill)`（`server/crates/rule-engine/src/combat.rs`）是唯一的战斗掉血入口，只扣 `stats.health.current`；`deal_damage` 是同义包装。攻击主伤害与反击伤害都走它。`can_kill = false` 时最多把当前生命降到 1，`can_kill = true` 时允许降到 0 或更低，由死亡判定按 `current <= 0` 处理。
 - 复生直接调用 `MinionStats::revive_to(1)`，把 `current` 置为 1，允许大于层和；这是 `current` 正向偏离层和的唯一入口，不复用 `apply_damage`。
 - `SideBoard` 不再持有独立生命数组，战斗内所有当前生命读写都落在 `stats.health.current`。
+- `CombatLog` 除动作序列外记录与动作同序同长的 `states`：每条动作执行后受影响随从的快照 `MinionSnapshot { instance_id, attack, health, alive }`——`attack` 一条带攻方与受方两个快照，`death`/`reborn`/`contagion`/`summon` 各带一个。召唤动作 `CombatAction::Summon { minion, card_id, golden, seat, position }` 记录实际插入下标，召唤物不在战前快照中，位置只从该字段读取；它的那条快照带召唤瞬间的实际攻防（含光环折叠与战斗内加成），房间服务用它填展示数值。
 - 战后 `write_back_persistent`（`server/crates/rule-engine/src/settle.rs`）只回写 `contagion` 与 `stats.*.growth`；持久棋盘上的随从按层和重算当前值（满血进入下一回合），死亡不改变持久棋盘，战斗伤害、回合效果与光环都不回写。
 - 进入结算时 `clear_combat_duration` 调用 `clear_turn` 清除攻防的 `turn` 层，同时保留 `granted` 的时长清理与禁攻规则。
 - `strip_ghost` 只保留 `initial + growth`，丢弃 `permanent`、`turn`、`aura` 与受击差值，并按 `initial + growth` 重算 `current`；`breed`、`contagion` 保留，`breed_applied` 重置；授予关键词与战斗内临时标记一并重置。
+- 镜像战（`settle.rs::resolve_mirror`）在折叠光环后用 `renumber_ghost` 给幽灵重新编号：快照沿用原 `instance_id`，同一随从跨回合保留时与当前阵容重号，战斗内的按 id 定位会让幽灵的伤害落到己方克隆上。改号只发生在本次模拟的克隆里，`previous_board` 与分配器不受影响。
 - 光环只经 `fold_auras` 折叠进克隆：把 `state.auras` 的派生值写入克隆的 `aura` 层并保留「光环失效不致死」的夹紧，持久实例的 `aura` 层始终为 0。
 - `hash.rs` 编码 `stats` 各分量（含 `current`）与 `is_scholar`；编码变化会改变状态哈希，同代码重放仍保持确定。

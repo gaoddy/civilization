@@ -6,8 +6,9 @@
 //! - [`for_seat`]：把引擎事件映射为发给指定座位的协议事件。购买、卖出、刷新、
 //!   升级、三连与发现属于隐藏信息，只发给操作者；伤害、淘汰、回合、阶段与终局
 //!   属于公开信息，发给所有座位；战斗结果不下发（改走 [`combat_result`]）。
-//! - [`combat_result`]：把逐座位战斗报告映射为协议 `CombatResult`，动作类型固定
-//!   为 `attack`/`death`/`reborn`/`contagion`，下标与侧别都相对接收该消息的座位。
+//! - [`combat_result`]：把逐座位战斗报告映射为协议 `CombatResult`，动作类型固定为
+//!   `attack`/`death`/`reborn`/`contagion`/`summon`，下标与侧别都相对接收该消息的座位；
+//!   每条动作还携带随从 id 与动作后的攻防/存活，客户端按值渲染。
 //!
 //! 本模块是纯函数层：不读时钟、不做 I/O。
 
@@ -15,14 +16,15 @@ use std::num::NonZeroU64;
 
 use protocol::view::GameEvent as ProtocolGameEvent;
 use protocol::{
-    CombatResult, CombatResultActionsItem, CombatResultActionsItemSourceSide,
+    CombatMinionState, CombatResult, CombatResultActionsItem, CombatResultActionsItemSourceSide,
+    CombatResultActionsItemSummon, CombatResultActionsItemSummonSide,
     CombatResultActionsItemTargetSide, GameEventKind,
 };
-use rule_engine::combat::CombatAction;
+use rule_engine::combat::{self, CombatAction};
 use rule_engine::data::Catalog;
 use rule_engine::events::GameEvent;
 use rule_engine::settle::SeatCombatReport;
-use rule_engine::state::{InstanceId, Seat};
+use rule_engine::state::{InstanceId, MinionInstance, Seat};
 
 use crate::view::{SeatInfo, board_minion_from, phase_to_protocol};
 
@@ -157,10 +159,15 @@ pub fn combat_result(
         .enumerate()
         .map(|(index, minion)| board_minion_from(catalog, index, minion, false))
         .collect();
+    // 动作与状态快照同序同长（引擎保证）；长度不齐时按动作数截断。
     let actions = report
         .actions
         .iter()
-        .map(|action| combat_action(report, action))
+        .enumerate()
+        .map(|(index, action)| {
+            let states = report.states.get(index).map_or(&[][..], Vec::as_slice);
+            combat_action(catalog, report, action, states)
+        })
         .collect();
 
     CombatResult {
@@ -174,6 +181,11 @@ pub fn combat_result(
             .and_then(|seat| seats.get(usize::from(seat)))
             .map(|info| info.player_id.clone()),
     }
+}
+
+/// 协议字段为无符号，引擎数值下限 0。
+fn non_negative(value: i32) -> u64 {
+    u64::try_from(value).unwrap_or(0)
 }
 
 /// 私有事件是否应发给该座位。
@@ -237,8 +249,31 @@ enum Side {
     Opponent,
 }
 
-/// 战斗动作转协议：`kind` 固定为 `attack|death|reborn|contagion`。
-fn combat_action(report: &SeatCombatReport, action: &CombatAction) -> CombatResultActionsItem {
+/// 引擎的状态快照转协议；生命与攻击下限 0。
+fn minion_state(snapshot: &combat::MinionSnapshot) -> CombatMinionState {
+    CombatMinionState {
+        alive: snapshot.alive,
+        attack: non_negative(snapshot.attack),
+        health: non_negative(snapshot.health),
+        minion_id: snapshot.instance_id.to_string(),
+    }
+}
+
+/// 同下标的第一份状态快照；长度不齐时由调用方截断，这里只兜底取第一条。
+fn state_at(states: &[combat::MinionSnapshot], index: usize) -> Option<CombatMinionState> {
+    states.get(index).map(minion_state)
+}
+
+/// 战斗动作转协议：`kind` 为 `attack|death|reborn|contagion|summon`。
+///
+/// 新字段（`sourceMinionId` / `targetMinionId` / `source` / `target` / `summon`）
+/// 是客户端的渲染依据；旧的下标与侧别字段保留，供兼容渲染与调试。
+fn combat_action(
+    catalog: &Catalog,
+    report: &SeatCombatReport,
+    action: &CombatAction,
+    states: &[combat::MinionSnapshot],
+) -> CombatResultActionsItem {
     match action {
         CombatAction::Attack {
             attacker,
@@ -246,48 +281,108 @@ fn combat_action(report: &SeatCombatReport, action: &CombatAction) -> CombatResu
             damage,
             blocked,
         } => {
-            let source = locate(report, *attacker);
-            let target = locate(report, *target);
+            let attacker_slot = locate(report, *attacker);
+            let target_slot = locate(report, *target);
             CombatResultActionsItem {
                 damage: Some(if *blocked { 0 } else { i64::from(*damage) }),
                 kind: "attack".to_string(),
-                source_index: source.map(|(index, _)| index as i64),
-                source_side: source.map(|(_, side)| source_side(side)),
-                target_index: target.map(|(index, _)| index as i64),
-                target_side: target.map(|(_, side)| target_side(side)),
+                source: state_at(states, 0),
+                source_index: attacker_slot.map(|(index, _)| index as i64),
+                source_minion_id: Some(attacker.to_string()),
+                source_side: attacker_slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 1),
+                target_index: target_slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: target_slot.map(|(_, side)| target_side(side)),
             }
         }
         CombatAction::Death { minion } => {
-            let source = locate(report, *minion);
+            let slot = locate(report, *minion);
             CombatResultActionsItem {
                 damage: None,
                 kind: "death".to_string(),
-                source_index: source.map(|(index, _)| index as i64),
-                source_side: source.map(|(_, side)| source_side(side)),
+                source: None,
+                source_index: slot.map(|(index, _)| index as i64),
+                source_minion_id: None,
+                source_side: slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 0),
                 target_index: None,
+                target_minion_id: Some(minion.to_string()),
                 target_side: None,
             }
         }
         CombatAction::Reborn { minion } => {
-            let source = locate(report, *minion);
+            let slot = locate(report, *minion);
             CombatResultActionsItem {
                 damage: None,
                 kind: "reborn".to_string(),
-                source_index: source.map(|(index, _)| index as i64),
-                source_side: source.map(|(_, side)| source_side(side)),
+                source: None,
+                source_index: slot.map(|(index, _)| index as i64),
+                source_minion_id: None,
+                source_side: slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 0),
                 target_index: None,
+                target_minion_id: Some(minion.to_string()),
                 target_side: None,
             }
         }
         CombatAction::ContagionApplied { target } => {
-            let target = locate(report, *target);
+            let slot = locate(report, *target);
             CombatResultActionsItem {
                 damage: None,
                 kind: "contagion".to_string(),
+                source: None,
                 source_index: None,
+                source_minion_id: None,
                 source_side: None,
-                target_index: target.map(|(index, _)| index as i64),
-                target_side: target.map(|(_, side)| target_side(side)),
+                summon: None,
+                target: state_at(states, 0),
+                target_index: slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: slot.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Summon {
+            minion,
+            card_id,
+            golden,
+            seat,
+            position,
+        } => {
+            // 召唤物不在战前快照里：卡面信息来自动作，攻防取该动作的状态快照
+            // （带光环与战斗内加成），缺失时才退回卡面基础值。
+            let instance = MinionInstance::new(catalog, *minion, card_id, *golden);
+            let side = if *seat == report.seat {
+                CombatResultActionsItemSummonSide::Own
+            } else {
+                CombatResultActionsItemSummonSide::Opponent
+            };
+            let mut board_minion =
+                board_minion_from(catalog, usize::from(*position), &instance, false);
+            if let Some(snapshot) = states.first() {
+                board_minion.attack = non_negative(snapshot.attack);
+                board_minion.health = non_negative(snapshot.health);
+                board_minion.stats = None;
+            }
+            CombatResultActionsItem {
+                damage: None,
+                kind: "summon".to_string(),
+                source: None,
+                source_index: None,
+                source_minion_id: None,
+                source_side: None,
+                summon: Some(CombatResultActionsItemSummon {
+                    minion: board_minion,
+                    position: i64::from(*position),
+                    side,
+                }),
+                target: None,
+                target_index: None,
+                target_minion_id: None,
+                target_side: None,
             }
         }
     }
@@ -309,8 +404,8 @@ fn target_side(side: Side) -> CombatResultActionsItemTargetSide {
 
 /// 在该座位视角的两份棋盘里定位实例：先本方、后对手。
 ///
-/// 真实战斗的实例编号全局唯一；镜像战的幽灵快照会复用编号，此时先命中本方即
-/// 可（两份棋盘内容相同）。
+/// 镜像战的幽灵在结算层已重新编号，与己方棋盘不相交，因此这里不会撞号；
+/// 若将来仍出现重号，先命中本方是既有取舍（两份棋盘内容相同）。
 fn locate(report: &SeatCombatReport, minion: InstanceId) -> Option<(usize, Side)> {
     if let Some(index) = report
         .own_board
