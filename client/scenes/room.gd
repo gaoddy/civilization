@@ -7,7 +7,7 @@ extends Control
 const CARD_SIZE := Vector2(160, 200)
 
 var _others: HBoxContainer
-var _candidates: HFlowContainer
+var _candidates: HBoxContainer
 var _confirm: Button
 var _status: Label
 var _dismiss: Control
@@ -45,44 +45,55 @@ func _build() -> void:
     _dismiss.gui_input.connect(_on_dismiss_input)
     add_child(_dismiss)
 
+    # 内容按候选行宽度收窄并整体居中：页面不铺满全屏，确认键与候选行同轴。
+    var center := CenterContainer.new()
+    center.name = "CenterFrame"
+    center.set_anchors_preset(Control.PRESET_FULL_RECT)
+    center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(center)
+
+    var panel := UI.card_panel("surface")
+    panel.name = "DraftPanel"
+    # 面板只做视觉容器：空白处的点击要落到 `SkillDismissLayer`。
+    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    center.add_child(panel)
+
     var root := VBoxContainer.new()
     root.add_theme_constant_override("separation", UITheme.space("space-md"))
     # 页面容器一律放行鼠标：空白处的点击要落到 `SkillDismissLayer`，候选卡自己处理点击。
     root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    var margin := UI.margin(root, UITheme.space("space-lg"))
-    margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-    margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    add_child(margin)
+    panel.add_child(root)
 
     _others = HBoxContainer.new()
     _others.name = "OtherPlayers"
+    _others.alignment = BoxContainer.ALIGNMENT_CENTER
     _others.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _others.add_theme_constant_override("separation", UITheme.space("space-md"))
     root.add_child(_others)
 
-    var spacer := Control.new()
-    spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    root.add_child(spacer)
-
     var title := UI.section_title("请选择英雄")
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     title.mouse_filter = Control.MOUSE_FILTER_IGNORE
     root.add_child(title)
 
-    _candidates = HFlowContainer.new()
+    # 候选固定 4 张、单行展示：HBox 的最小宽度就是整行宽度，面板据此收窄并居中。
+    _candidates = HBoxContainer.new()
     _candidates.name = "HeroCandidates"
+    _candidates.alignment = BoxContainer.ALIGNMENT_CENTER
     _candidates.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _candidates.add_theme_constant_override("h_separation", UITheme.space("space-md"))
-    _candidates.add_theme_constant_override("v_separation", UITheme.space("space-md"))
+    _candidates.add_theme_constant_override("separation", UITheme.space("space-md"))
     root.add_child(_candidates)
 
     _confirm = UI.styled_button("确认", "primary", 36)
     _confirm.name = "ConfirmButton"
+    # 纵向容器默认拉满整行宽；确认键按自身宽度居中，与其他内容同轴。
+    _confirm.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     _confirm.pressed.connect(_on_confirm_pressed)
     root.add_child(_confirm)
 
     _status = UI.label("", UITheme.font_size("font-body-sm"))
     _status.name = "StatusLabel"
+    _status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     root.add_child(_status)
 
     _build_skill_layer()
