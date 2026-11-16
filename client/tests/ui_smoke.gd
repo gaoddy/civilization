@@ -41,6 +41,13 @@ func _expect(condition: bool, message: String) -> void:
         _failures += 1
 
 
+func _node_text(node: Node) -> String:
+    var text := ""
+    for child in node.find_children("*", "Label", true, false):
+        text += str(child.text) + "\n"
+    return text
+
+
 func _check_scene(path: String, free_after: bool) -> Node:
     var packed = load(path)
     if packed == null:
@@ -106,6 +113,21 @@ func _check_game() -> void:
     var empty_slot = instance.find_child("ShopSlot2", true, false)
     if empty_slot != null:
         _expect(str(empty_slot.text).begins_with("空槽"), "空商店槽应显示「空槽」，实际：%s" % empty_slot.text)
+    var detail = instance.find_child("MinionDetailPanel", true, false)
+    _expect(detail != null, "对局页应有随从详情面板")
+    _expect(detail != null and not detail.visible, "详情面板默认隐藏")
+    var card = instance.find_child("BoardMinion0", true, false)
+    if detail != null and card != null:
+        card.mouse_entered.emit()
+        await get_tree().process_frame
+        _expect(detail.visible, "悬停棋盘随从应显示详情面板")
+        var text := _node_text(detail)
+        for expected in ["初始", "3 / 4", "永久", "+1 / +2", "回合", "+0 / -2", "光环", "+0 / +1", "受击", "0 / -3", "当前", "4 / 2"]:
+            _expect(text.contains(expected), "详情面板应包含「%s」：%s" % [expected, text])
+        _expect(not text.contains("-0"), "非负构成项应带 +：%s" % text)
+        card.mouse_exited.emit()
+        await get_tree().process_frame
+        _expect(not detail.visible, "离开棋盘随从应隐藏详情面板")
     var power = instance.find_child("HeroPowerButton", true, false)
     if power == null:
         _expect(false, "对局场景缺少 HeroPowerButton")
