@@ -1365,6 +1365,7 @@ mod tests {
                 setup: Box::new(|| setup(109)),
                 intent: Intent::PlayCard {
                     hand_index: 3,
+                    position: None,
                     target: None,
                 },
                 check: Box::new(|engine, state| check_play_card(engine, state, 0, 3)),
@@ -1384,6 +1385,7 @@ mod tests {
                 }),
                 intent: Intent::PlayCard {
                     hand_index: 0,
+                    position: None,
                     target: None,
                 },
                 check: Box::new(|engine, state| check_play_card(engine, state, 0, 0)),

@@ -74,6 +74,8 @@ pub struct ShopSlotView {
 pub struct HandCardView {
     pub index: u8,
     pub card_id: String,
+    /// 该牌是否需要玩家指定单一目标（效果牌口径，随从牌恒为 `false`）。
+    pub requires_target: bool,
 }
 
 /// 单项属性（攻击或生命）的分层构成视图。
@@ -324,6 +326,8 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .enumerate()
         .map(|(index, hand_card)| HandCardView {
             index: u8::try_from(index).unwrap_or(u8::MAX),
+            requires_target: engine
+                .requires_target(&hand_card.card_id, crate::effects::Trigger::OnPlayEffect),
             card_id: hand_card.card_id.clone(),
         })
         .collect();

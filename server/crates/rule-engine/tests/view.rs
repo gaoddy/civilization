@@ -504,3 +504,48 @@ fn unknown_seat_has_no_view() {
     let (engine, state) = setup();
     assert!(view(&engine, &state, 8).is_none());
 }
+
+#[test]
+fn hand_card_requires_target_for_target_effect_card() {
+    let (engine, mut state) = setup();
+    state.players[0].hand.push(HandCard {
+        card_id: "chengbang-faling".to_string(),
+        golden: false,
+    });
+
+    let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
+    assert!(
+        seat_view.self_view.hand[0].requires_target,
+        "friendly:single 的效果牌需要目标"
+    );
+}
+
+#[test]
+fn hand_card_requires_target_false_for_plain_effect_card() {
+    let (engine, mut state) = setup();
+    state.players[0].hand.push(HandCard {
+        card_id: "aolinpike-jidian".to_string(),
+        golden: false,
+    });
+
+    let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
+    assert!(
+        !seat_view.self_view.hand[0].requires_target,
+        "friendly:all 不需要指定单一目标"
+    );
+}
+
+#[test]
+fn hand_card_requires_target_false_for_minion_card() {
+    let (engine, mut state) = setup();
+    state.players[0].hand.push(HandCard {
+        card_id: "archimedes".to_string(),
+        golden: false,
+    });
+
+    let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
+    assert!(
+        !seat_view.self_view.hand[0].requires_target,
+        "视图口径为 OnPlayEffect，随从牌恒为 false"
+    );
+}

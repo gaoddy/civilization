@@ -716,6 +716,7 @@ fn play_evolver(engine: &mut Engine, state: &mut GameState, card_id: &str) -> In
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: None,
             },
         )
@@ -966,6 +967,7 @@ fn evolve_cards_without_evolve_do_not_register_choice() {
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: None,
             },
         )

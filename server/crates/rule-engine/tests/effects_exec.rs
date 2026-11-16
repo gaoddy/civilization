@@ -485,6 +485,7 @@ fn buy_enters_hand_then_play_fires_on_play() {
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: None,
             },
         )
@@ -509,6 +510,7 @@ fn play_effect_card_fires_effect_then_on_use() {
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: Some(1),
             },
         )
@@ -648,6 +650,7 @@ fn golden_minion_played_from_hand_doubles_battlecry() {
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: Some(1),
             },
         )
@@ -678,6 +681,7 @@ fn golden_on_use_responder_triggers_twice() {
                 0,
                 Intent::PlayCard {
                     hand_index: 0,
+                    position: None,
                     target: Some(1),
                 },
             )
