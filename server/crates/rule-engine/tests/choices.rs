@@ -110,23 +110,8 @@ fn set_shop(state: &mut GameState, seat: usize, slots: Vec<Option<&str>>) {
         .collect();
 }
 
-fn dummy(instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: card_id.to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 0,
-        cannot_attack: false,
-    }
+fn dummy(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
+    MinionInstance::new(catalog, instance_id, card_id, false)
 }
 
 fn hand_card(card_id: &str) -> HandCard {
@@ -599,7 +584,7 @@ fn gain_minion_to_board_with_full_board_is_a_no_op() {
     let (mut engine, mut state) = setup(2);
     let board_slots = engine.catalog.config.board_slots;
     state.players[0].board = (1..=board_slots as InstanceId)
-        .map(|id| dummy(id, "sickly"))
+        .map(|id| dummy(&engine.catalog, id, "sickly"))
         .collect();
     state.next_instance_id = board_slots as InstanceId + 1;
     let before = state_hash(&state);
@@ -618,7 +603,10 @@ fn gain_minion_to_board_with_full_board_is_a_no_op() {
 fn gain_minion_to_board_runs_triple_check() {
     let (mut engine, mut state) = setup(2);
     let card_id = first_minion_of_level(&engine.catalog, 1);
-    state.players[0].board = vec![dummy(1, &card_id), dummy(2, &card_id)];
+    state.players[0].board = vec![
+        dummy(&engine.catalog, 1, &card_id),
+        dummy(&engine.catalog, 2, &card_id),
+    ];
     state.next_instance_id = 3;
     set_shop(
         &mut state,
@@ -716,7 +704,7 @@ fn evolve_fixture() -> (Engine, GameState) {
         &["trigger-ally-evolve"],
     );
     state.players[0].hand = vec![hand_card("evolver")];
-    state.players[0].board = vec![dummy(1, "watcher")];
+    state.players[0].board = vec![dummy(&engine.catalog, 1, "watcher")];
     state.next_instance_id = 2;
     (engine, state)
 }
@@ -754,8 +742,9 @@ fn evolve_choice_stats_is_applied_and_triggers_ally_evolve() {
     let evolver = play_evolver(&mut engine, &mut state, "evolver");
 
     assert_eq!(evolve_remaining(&state, 0), Some(1), "进化待选择");
-    assert!(
-        watcher(&state).mods.is_empty(),
+    assert_eq!(
+        watcher(&state).stats.attack.permanent,
+        0,
         "选择结算前不得触发 OnAllyEvolve"
     );
 
@@ -768,14 +757,19 @@ fn evolve_choice_stats_is_applied_and_triggers_ally_evolve() {
         .iter()
         .find(|minion| minion.instance_id == evolver)
         .expect("进化随从仍在场");
-    assert_eq!(minion.mods.len(), 1);
-    assert_eq!(minion.mods[0].attack, 2);
-    assert_eq!(minion.mods[0].health, 2);
+    assert_eq!(minion.stats.attack.permanent, 2);
+    assert_eq!(minion.stats.health.permanent, 2);
     assert_eq!(pending_count(&state), 0);
 
     let watcher = watcher(&state);
-    assert_eq!(watcher.mods.len(), 1, "选择结算后恰好触发一次 OnAllyEvolve");
-    assert_eq!((watcher.mods[0].attack, watcher.mods[0].health), (1, 1));
+    assert_eq!(
+        (
+            watcher.stats.attack.permanent,
+            watcher.stats.health.permanent
+        ),
+        (1, 1),
+        "选择结算后恰好触发一次 OnAllyEvolve"
+    );
 }
 
 #[test]
@@ -815,16 +809,18 @@ fn evolve_golden_chooses_twice() {
     let evolver = play_evolver(&mut engine, &mut state, "golden-evolver");
 
     assert_eq!(evolve_remaining(&state, 0), Some(2), "金色进化连续选两次");
-    assert!(
-        watcher(&state).mods.is_empty(),
+    assert_eq!(
+        watcher(&state).stats.attack.permanent,
+        0,
         "第一次选择前不得触发 OnAllyEvolve"
     );
     engine
         .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
         .expect("第一次选择");
     assert_eq!(evolve_remaining(&state, 0), Some(1), "第一次选择后仍待选");
-    assert!(
-        watcher(&state).mods.is_empty(),
+    assert_eq!(
+        watcher(&state).stats.attack.permanent,
+        0,
         "进化未完成前不得触发 OnAllyEvolve"
     );
     engine
@@ -836,15 +832,19 @@ fn evolve_golden_chooses_twice() {
         .iter()
         .find(|minion| minion.instance_id == evolver)
         .expect("进化随从仍在场");
-    let total: i32 = minion.mods.iter().map(|modifier| modifier.attack).sum();
-    assert_eq!(total, 4, "同一项可重复选择，+2/+2 累计两次");
+    assert_eq!(
+        minion.stats.attack.permanent, 4,
+        "同一项可重复选择，+2/+2 累计两次"
+    );
     let watcher = watcher(&state);
     assert_eq!(
-        watcher.mods.len(),
-        1,
+        (
+            watcher.stats.attack.permanent,
+            watcher.stats.health.permanent
+        ),
+        (1, 1),
         "金色进化是一次入场进化：观察者只触发一次（观察者非金色）"
     );
-    assert_eq!((watcher.mods[0].attack, watcher.mods[0].health), (1, 1));
 }
 
 #[test]
@@ -863,7 +863,7 @@ fn evolve_golden_watcher_triggers_twice() {
     }];
     state.players[0].board[0].golden = true;
     play_evolver(&mut engine, &mut state, "golden-evolver");
-    assert!(watcher(&state).mods.is_empty());
+    assert_eq!(watcher(&state).stats.attack.permanent, 0);
 
     engine
         .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
@@ -873,7 +873,7 @@ fn evolve_golden_watcher_triggers_twice() {
         .expect("第二次选择");
 
     // 一次进化事件；金色观察者自身「触发两次」连续执行，加两段 +1/+1。
-    assert_eq!(watcher(&state).mods.len(), 2);
+    assert_eq!(watcher(&state).stats.attack.permanent, 2);
 }
 
 #[test]
@@ -885,12 +885,13 @@ fn evolve_skipped_before_choice_does_not_trigger_ally_evolve() {
     state.players[0]
         .board
         .retain(|minion| minion.instance_id != evolver);
-    assert!(watcher(&state).mods.is_empty());
+    assert_eq!(watcher(&state).stats.attack.permanent, 0);
     engine
         .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
         .expect("来源离场时选择被丢弃");
-    assert!(
-        watcher(&state).mods.is_empty(),
+    assert_eq!(
+        watcher(&state).stats.attack.permanent,
+        0,
         "未完成的进化不触发 OnAllyEvolve"
     );
     assert_eq!(pending_count(&state), 0);
@@ -926,7 +927,10 @@ fn evolve_bonus_does_not_trigger_onsummon_twice() {
         (1, 1, 1),
         &["trigger-ally-summon"],
     );
-    state.players[0].board = vec![dummy(1, "evolver"), dummy(2, "summon-watcher")];
+    state.players[0].board = vec![
+        dummy(&engine.catalog, 1, "evolver"),
+        dummy(&engine.catalog, 2, "summon-watcher"),
+    ];
     state.next_instance_id = 3;
     // 只观察「选择进化」这一步：观察者已经入场，不计它自己带出的入场触发。
     state.pending.push_back(PendingChoice::Evolve {
@@ -944,7 +948,10 @@ fn evolve_bonus_does_not_trigger_onsummon_twice() {
         .iter()
         .find(|minion| minion.card_id == "summon-watcher")
         .expect("观察者仍在场");
-    assert!(watcher.mods.is_empty(), "选择进化不会再次触发 OnAllySummon");
+    assert_eq!(
+        watcher.stats.attack.permanent, 0,
+        "选择进化不会再次触发 OnAllySummon"
+    );
 }
 
 #[test]

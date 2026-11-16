@@ -3,15 +3,13 @@ mod common;
 use common::test_catalog;
 use rule_engine::combat;
 use rule_engine::data::{Card, CardType, Catalog, Era, Skill, Tribe};
-use rule_engine::effects::{Duration, Effect, EffectCtx, parse_effects};
+use rule_engine::effects::{Effect, EffectCtx, parse_effects};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
 use rule_engine::settle::Pairing;
-use rule_engine::state::{
-    GameState, HandCard, InstanceId, MinionInstance, Modifier, Phase, Seat, ShopSlot,
-};
+use rule_engine::state::{GameState, HandCard, InstanceId, MinionInstance, Phase, Seat, ShopSlot};
 
 /// 往目录里插入一张合成随从卡，带一个技能（`keyword` + `effects`）。
 fn add_card(
@@ -131,29 +129,14 @@ fn setup(seed: u8) -> (Engine, GameState) {
     (engine, state)
 }
 
-fn minion(instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: card_id.to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 0,
-        cannot_attack: false,
-    }
+fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
+    MinionInstance::new(catalog, instance_id, card_id, false)
 }
 
-fn place(state: &mut GameState, seat: Seat, id: InstanceId, card_id: &str) {
+fn place(catalog: &Catalog, state: &mut GameState, seat: Seat, id: InstanceId, card_id: &str) {
     state.players[usize::from(seat)]
         .board
-        .push(minion(id, card_id));
+        .push(minion(catalog, id, card_id));
 }
 
 fn effect(raw: &str) -> Effect {
@@ -201,63 +184,63 @@ fn first_eligible(engine: &Engine, state: &GameState, star: u8) -> Option<String
 #[test]
 fn breed_adds_health_each_turn() {
     let (mut engine, mut state) = setup(1);
-    place(&mut state, 0, 1, "breed2");
+    place(&engine.catalog, &mut state, 0, 1, "breed2");
 
     engine.start_turn(&mut state).expect("开始回合应成功");
 
     let minion = board_minion(&state, 0, 0);
-    assert_eq!(minion.growth_health_only, 2, "繁衍 2 每回合 +2 生命");
+    assert_eq!(minion.stats.health.growth, 2, "繁衍 2 每回合 +2 生命");
     assert_eq!(minion.breed_applied, 2, "记录累计已应用的繁衍量");
-    assert_eq!(minion.growth, 0, "繁衍不加攻击");
+    assert_eq!(minion.stats.attack.growth, 0, "繁衍不加攻击");
     assert_eq!(combat::effective_health(&engine.catalog, minion), 4);
 
     engine.start_turn(&mut state).expect("开始下一回合应成功");
     let minion = board_minion(&state, 0, 0);
-    assert_eq!(minion.growth_health_only, 4, "第二回合继续 +2");
+    assert_eq!(minion.stats.health.growth, 4, "第二回合继续 +2");
     assert_eq!(minion.breed_applied, 4);
 }
 
 #[test]
 fn golden_breed_doubles_health() {
     let (mut engine, mut state) = setup(1);
-    place(&mut state, 0, 1, "breed2");
+    place(&engine.catalog, &mut state, 0, 1, "breed2");
     state.players[0].board[0].golden = true;
 
     engine.start_turn(&mut state).expect("开始回合应成功");
 
     let minion = board_minion(&state, 0, 0);
     assert_eq!(
-        minion.growth_health_only, 4,
+        minion.stats.health.growth, 4,
         "金色繁衍 2 触发两次，等价于 +4 生命"
     );
     assert_eq!(minion.breed_applied, 4, "记录实际应用的繁衍量");
-    assert_eq!(minion.growth, 0);
+    assert_eq!(minion.stats.attack.growth, 0);
 }
 
 #[test]
 fn breed_includes_dynamic_layers() {
     let (mut engine, mut state) = setup(1);
-    place(&mut state, 0, 1, "breed1");
+    place(&engine.catalog, &mut state, 0, 1, "breed1");
     state.players[0].board[0].breed = 3;
 
     engine.start_turn(&mut state).expect("开始回合应成功");
 
     let minion = board_minion(&state, 0, 0);
-    assert_eq!(minion.growth_health_only, 4, "固定 1 + 授予 3");
+    assert_eq!(minion.stats.health.growth, 4, "固定 1 + 授予 3");
     assert_eq!(minion.breed_applied, 4);
-    assert_eq!(minion.growth, 0);
+    assert_eq!(minion.stats.attack.growth, 0);
 }
 
 #[test]
 fn scholar_breed_adds_health_only() {
     let (mut engine, mut state) = setup(1);
-    place(&mut state, 0, 1, "scholar-breed");
+    place(&engine.catalog, &mut state, 0, 1, "scholar-breed");
 
     engine.start_turn(&mut state).expect("开始回合应成功");
 
     let minion = board_minion(&state, 0, 0);
-    assert_eq!(minion.growth_health_only, 2);
-    assert_eq!(minion.growth, 0);
+    assert_eq!(minion.stats.health.growth, 2);
+    assert_eq!(minion.stats.attack.growth, 0);
     assert_eq!(combat::effective_attack(&engine.catalog, minion), 0);
     assert_eq!(combat::effective_health(&engine.catalog, minion), 6);
 }
@@ -265,30 +248,23 @@ fn scholar_breed_adds_health_only() {
 #[test]
 fn breed_resolves_before_contagion() {
     let (mut engine, mut state) = setup(1);
-    place(&mut state, 0, 1, "breed2");
+    place(&engine.catalog, &mut state, 0, 1, "breed2");
     state.players[0].board[0].contagion = 2;
 
     engine.start_turn(&mut state).expect("开始回合应成功");
 
     let board = &state.players[0].board;
     assert_eq!(board.len(), 1, "先 +2 再 -2，随从应存活");
-    assert_eq!(board[0].growth_health_only, 2);
-    assert_eq!(
-        board[0].mods,
-        vec![Modifier {
-            attack: 0,
-            health: -2,
-            duration: Duration::Permanent,
-        }]
-    );
+    assert_eq!(board[0].stats.health.growth, 2);
+    assert_eq!(board[0].stats.health.permanent, -2);
     assert_eq!(combat::effective_health(&engine.catalog, &board[0]), 2);
 }
 
 #[test]
 fn contagion_decrements_health_and_can_kill() {
     let (mut engine, mut state) = setup(1);
-    place(&mut state, 0, 1, "sickly");
-    place(&mut state, 0, 2, "sickly");
+    place(&engine.catalog, &mut state, 0, 1, "sickly");
+    place(&engine.catalog, &mut state, 0, 2, "sickly");
     state.players[0].board[0].contagion = 5;
     state.players[0].board[1].contagion = 1;
 
@@ -297,22 +273,15 @@ fn contagion_decrements_health_and_can_kill() {
     let board = &state.players[0].board;
     assert_eq!(board.len(), 1, "生命降至 0 的随从在回合开始时死亡");
     assert_eq!(board[0].instance_id, 2);
-    assert_eq!(
-        board[0].mods,
-        vec![Modifier {
-            attack: 0,
-            health: -1,
-            duration: Duration::Permanent,
-        }]
-    );
+    assert_eq!(board[0].stats.health.permanent, -1);
     assert_eq!(combat::effective_health(&engine.catalog, &board[0]), 1);
 }
 
 #[test]
 fn turn_start_effect_runs_left_to_right() {
     let (mut engine, mut state) = setup(1);
-    place(&mut state, 0, 1, "turn9");
-    place(&mut state, 0, 2, "turn7");
+    place(&engine.catalog, &mut state, 0, 1, "turn9");
+    place(&engine.catalog, &mut state, 0, 2, "turn7");
 
     let events = engine.start_turn(&mut state).expect("开始回合应成功");
 
@@ -329,7 +298,7 @@ fn turn_start_effect_runs_left_to_right() {
 #[test]
 fn golden_turn_start_effect_runs_twice() {
     let (mut engine, mut state) = setup(1);
-    place(&mut state, 0, 1, "turn9");
+    place(&engine.catalog, &mut state, 0, 1, "turn9");
     state.players[0].board[0].golden = true;
 
     let events = engine.start_turn(&mut state).expect("开始回合应成功");
@@ -347,12 +316,12 @@ fn golden_turn_start_effect_runs_twice() {
 #[test]
 fn turn_start_skips_eliminated_players() {
     let (mut engine, mut state) = setup(1);
-    place(&mut state, 0, 1, "breed2");
+    place(&engine.catalog, &mut state, 0, 1, "breed2");
     state.players[0].eliminated = true;
 
     engine.start_turn(&mut state).expect("开始回合应成功");
 
-    assert_eq!(state.players[0].board[0].growth_health_only, 0);
+    assert_eq!(state.players[0].board[0].stats.health.growth, 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -746,8 +715,8 @@ fn contagion_persists_across_combat() {
         b: 1,
         mirror: false,
     }];
-    place(&mut state, 0, 1, "contagious");
-    place(&mut state, 1, 2, "target");
+    place(&engine.catalog, &mut state, 0, 1, "contagious");
+    place(&engine.catalog, &mut state, 1, 2, "target");
 
     engine.resolve_combat(&mut state).expect("战斗结算应成功");
 
@@ -755,13 +724,19 @@ fn contagion_persists_across_combat() {
         state.players[1].board[0].contagion, 1,
         "战斗内叠加的传染层数写回持久随从"
     );
-    assert_eq!(state.players[1].board[0].growth, 0);
-    assert_eq!(state.players[1].board[0].growth_health_only, 0);
-    assert!(
-        state.players[1].board[0].mods.is_empty(),
-        "光环折叠产生的临时修正不写回"
-    );
-    assert!(state.players[0].board[0].mods.is_empty());
+    assert_eq!(state.players[1].board[0].stats.attack.growth, 0);
+    assert_eq!(state.players[1].board[0].stats.health.growth, 0);
+    // 战斗内光环折叠与伤害产生的临时层都不写回持久随从。
+    let defender = board_minion(&state, 1, 0);
+    assert_eq!(defender.stats.attack.turn, 0);
+    assert_eq!(defender.stats.health.turn, 0);
+    assert_eq!(defender.stats.attack.aura, 0);
+    assert_eq!(defender.stats.health.aura, 0);
+    let attacker = board_minion(&state, 0, 0);
+    assert_eq!(attacker.stats.attack.turn, 0);
+    assert_eq!(attacker.stats.health.turn, 0);
+    assert_eq!(attacker.stats.attack.aura, 0);
+    assert_eq!(attacker.stats.health.aura, 0);
 }
 
 #[test]
@@ -776,23 +751,23 @@ fn mirror_combat_does_not_write_back() {
         b: 0,
         mirror: true,
     }];
-    place(&mut state, 0, 1, "contagious");
-    place(&mut state, 0, 2, "target");
+    place(&engine.catalog, &mut state, 0, 1, "contagious");
+    place(&engine.catalog, &mut state, 0, 2, "target");
 
     engine.resolve_combat(&mut state).expect("镜像战斗应成功");
 
     assert_eq!(state.players[0].board[0].contagion, 0);
     assert_eq!(state.players[0].board[1].contagion, 0);
-    assert_eq!(state.players[0].board[0].growth, 0);
-    assert_eq!(state.players[0].board[1].growth_health_only, 0);
+    assert_eq!(state.players[0].board[0].stats.attack.growth, 0);
+    assert_eq!(state.players[0].board[1].stats.health.growth, 0);
 }
 
 #[test]
 fn turn_start_keeps_b_tree_ordering() {
     // 座位顺序固定：先结算座位 0，再结算座位 1。
     let (mut engine, mut state) = setup(1);
-    place(&mut state, 1, 2, "turn7");
-    place(&mut state, 0, 1, "turn9");
+    place(&engine.catalog, &mut state, 1, 2, "turn7");
+    place(&engine.catalog, &mut state, 0, 1, "turn9");
     state.players[1].board[0].breed = 0;
 
     let events = engine.start_turn(&mut state).expect("开始回合应成功");

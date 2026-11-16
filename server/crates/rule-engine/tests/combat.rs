@@ -67,23 +67,8 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
     add_card_with(catalog, id, Tribe::Human, attack, health, keyword_list);
 }
 
-fn minion(instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: card_id.to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 0,
-        cannot_attack: false,
-    }
+fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
+    MinionInstance::new(catalog, instance_id, card_id, false)
 }
 
 fn rng() -> RngStreams {
@@ -137,8 +122,8 @@ fn attack_kills_target_without_counterattack() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "b")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
         0,
         1,
         0,
@@ -162,8 +147,8 @@ fn surviving_target_counters_and_kills_attacker() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "b")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
         0,
         1,
         0,
@@ -190,8 +175,8 @@ fn taunt_forces_target() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "plain"), minion(3, "taunt")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "plain"), minion(&catalog, 3, "taunt")],
         0,
         1,
         0,
@@ -209,8 +194,8 @@ fn divine_shield_blocks_one_hit() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "b")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
         0,
         1,
         0,
@@ -234,8 +219,8 @@ fn windfury_attacks_twice() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a1"), minion(2, "a2")],
-        &[minion(3, "b")],
+        &[minion(&catalog, 1, "a1"), minion(&catalog, 2, "a2")],
+        &[minion(&catalog, 3, "b")],
         0,
         1,
         0,
@@ -260,8 +245,8 @@ fn optimal_attack_prefers_killable() {
 
     let prefers_kill = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "taunt"), minion(3, "weak")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "taunt"), minion(&catalog, 3, "weak")],
         0,
         1,
         0,
@@ -275,8 +260,8 @@ fn optimal_attack_prefers_killable() {
 
     let falls_back = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "taunt"), minion(4, "sturdy")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "taunt"), minion(&catalog, 4, "sturdy")],
         0,
         1,
         0,
@@ -297,8 +282,8 @@ fn contagion_applies_after_damage() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "b")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
         0,
         1,
         0,
@@ -330,8 +315,8 @@ fn contagion_skipped_when_blocked() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "b")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
         0,
         1,
         0,
@@ -351,8 +336,8 @@ fn reborn_returns_once_with_one_health() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "b")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
         0,
         1,
         0,
@@ -381,8 +366,8 @@ fn dying_target_does_not_counterattack() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "b")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
         0,
         1,
         0,
@@ -397,13 +382,9 @@ fn dying_target_does_not_counterattack() {
     assert_eq!(log.action_count, 1);
 }
 
-fn zero_health(instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    let mut subject = minion(instance_id, card_id);
-    subject.mods.push(Modifier {
-        attack: 0,
-        health: -5,
-        duration: Duration::Permanent,
-    });
+fn zero_health(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
+    let mut subject = minion(catalog, instance_id, card_id);
+    subject.stats.health.add_permanent(-5);
     subject
 }
 
@@ -417,8 +398,14 @@ fn death_queue_orders_attacker_side_then_left_to_right() {
 
     let log = simulate(
         &catalog,
-        &[zero_health(1, "corpse"), minion(2, "fighter")],
-        &[zero_health(3, "d1"), zero_health(4, "d2")],
+        &[
+            zero_health(&catalog, 1, "corpse"),
+            minion(&catalog, 2, "fighter"),
+        ],
+        &[
+            zero_health(&catalog, 3, "d1"),
+            zero_health(&catalog, 4, "d2"),
+        ],
         0,
         1,
         0,
@@ -451,12 +438,14 @@ fn combat_stops_at_200_actions() {
     add_card(&mut catalog, "b", 0, 100, &[]);
 
     // 攻击方 100 个连击随从 = 200 个令牌，足以把行动数推到上限。
-    let attacker_board: Vec<MinionInstance> = (1..=100).map(|index| minion(index, "a")).collect();
+    let attacker_board: Vec<MinionInstance> = (1..=100)
+        .map(|index| minion(&catalog, index, "a"))
+        .collect();
 
     let log = simulate(
         &catalog,
         &attacker_board,
-        &[minion(500, "b")],
+        &[minion(&catalog, 500, "b")],
         2,
         1,
         2,
@@ -479,8 +468,8 @@ fn zero_attack_does_not_counterattack() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "scholar")],
-        &[minion(2, "b")],
+        &[minion(&catalog, 1, "scholar")],
+        &[minion(&catalog, 2, "b")],
         0,
         1,
         0,
@@ -503,8 +492,8 @@ fn zero_attack_does_not_counterattack() {
     add_card(&mut catalog, "defender", 0, 10, &[]);
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "defender")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "defender")],
         0,
         1,
         0,
@@ -525,14 +514,14 @@ fn cannot_attack_is_skipped() {
     add_card(&mut catalog, "free", 5, 10, &[]);
     add_card(&mut catalog, "b", 0, 20, &[]);
 
-    let mut bound = minion(1, "bound");
+    let mut bound = minion(&catalog, 1, "bound");
     bound.cannot_attack = true;
     // 防守方也禁攻，避免反击事件干扰「谁发起攻击」的断言。
-    let mut defender = minion(3, "b");
+    let mut defender = minion(&catalog, 3, "b");
     defender.cannot_attack = true;
     let log = simulate(
         &catalog,
-        &[bound, minion(2, "free")],
+        &[bound, minion(&catalog, 2, "free")],
         &[defender],
         0,
         1,
@@ -555,8 +544,8 @@ fn defender_acts_first_when_first_seat_is_defender() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "b")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
         0,
         1,
         1,
@@ -572,9 +561,17 @@ fn scholar_granted_windfury_still_attacks_once() {
     add_card_with(&mut catalog, "scholar", Tribe::Scholar, 0, 10, &[]);
     add_card(&mut catalog, "b", 0, 20, &[]);
 
-    let mut scholar = minion(1, "scholar");
+    let mut scholar = minion(&catalog, 1, "scholar");
     scholar.granted.push(("连击".to_string(), Duration::Combat));
-    let log = simulate(&catalog, &[scholar], &[minion(2, "b")], 0, 1, 0, &mut rng());
+    let log = simulate(
+        &catalog,
+        &[scholar],
+        &[minion(&catalog, 2, "b")],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
 
     let scholar_attacks = attacks(&log)
         .into_iter()
@@ -591,8 +588,8 @@ fn reborn_attacker_keeps_its_spent_token() {
 
     let log = simulate(
         &catalog,
-        &[minion(1, "a")],
-        &[minion(2, "b")],
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
         0,
         1,
         0,
@@ -624,22 +621,17 @@ fn effective_stats_follow_evaluation_order() {
     add_card(&mut catalog, "a", 2, 3, &[]);
     add_card_with(&mut catalog, "scholar", Tribe::Scholar, 9, 4, &[]);
 
-    let mut monster = minion(1, "a");
+    let mut monster = minion(&catalog, 1, "a");
     monster.golden = true;
-    monster.growth = 2;
-    monster.growth_health_only = 1;
-    monster.mods = vec![
-        Modifier {
-            attack: 1,
-            health: 1,
-            duration: Duration::Permanent,
-        },
-        Modifier {
-            attack: 2,
-            health: 3,
-            duration: Duration::Combat,
-        },
-    ];
+    monster.stats.attack.set_initial(4);
+    monster.stats.health.set_initial(6);
+    monster.stats.attack.add_growth(2);
+    monster.stats.health.add_growth(2);
+    monster.stats.health.add_growth(1);
+    monster.stats.attack.add_permanent(1);
+    monster.stats.health.add_permanent(1);
+    monster.stats.attack.add_turn(2);
+    monster.stats.health.add_turn(3);
     // 金色卡面 2/3 -> 4/6，成长 +2 攻击、+2/+1 生命，修正 +3/+4。
     assert_eq!(effective_attack(&catalog, &monster), 9);
     assert_eq!(effective_health(&catalog, &monster), 13);
@@ -652,26 +644,20 @@ fn effective_stats_follow_evaluation_order() {
     assert_eq!(effective_attack_with(&catalog, &monster, &auras), 14);
     assert_eq!(effective_health_with(&catalog, &monster, &auras), 11);
 
-    let mut scholar = minion(2, "scholar");
-    scholar.growth = 3;
-    scholar.mods = vec![Modifier {
-        attack: 7,
-        health: 0,
-        duration: Duration::Permanent,
-    }];
+    let mut scholar = minion(&catalog, 2, "scholar");
+    scholar.stats.attack.add_growth(3);
+    scholar.stats.health.add_growth(3);
+    scholar.stats.attack.add_permanent(7);
     assert_eq!(effective_attack(&catalog, &scholar), 0, "学者攻击力强制 0");
     assert_eq!(effective_health(&catalog, &scholar), 7);
 
-    let mut floored = minion(3, "a");
-    floored.mods = vec![Modifier {
-        attack: -10,
-        health: -10,
-        duration: Duration::Combat,
-    }];
+    let mut floored = minion(&catalog, 3, "a");
+    floored.stats.attack.add_turn(-10);
+    floored.stats.health.add_turn(-10);
     assert_eq!(effective_attack(&catalog, &floored), 0);
     assert_eq!(effective_health(&catalog, &floored), 0);
 
-    let missing = minion(4, "missing-card");
+    let missing = minion(&catalog, 4, "missing-card");
     assert_eq!(effective_attack(&catalog, &missing), 0);
     assert_eq!(effective_health(&catalog, &missing), 0);
     assert!(keywords(&catalog, &missing).is_empty());
@@ -682,7 +668,7 @@ fn keywords_merge_card_and_active_grants() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "a", 1, 1, &["嘲讽"]);
 
-    let mut subject = minion(1, "a");
+    let mut subject = minion(&catalog, 1, "a");
     subject.granted = vec![
         ("护盾".to_string(), Duration::Permanent),
         ("连击".to_string(), Duration::Combat),
@@ -706,8 +692,8 @@ fn real_combat_state() -> (Engine, rule_engine::state::GameState) {
     for seat in 2..8 {
         state.players[seat].eliminated = true;
     }
-    state.players[0].board = vec![minion(10, "combat-big")];
-    state.players[1].board = vec![minion(20, "combat-small")];
+    state.players[0].board = vec![minion(&engine.catalog, 10, "combat-big")];
+    state.players[1].board = vec![minion(&engine.catalog, 20, "combat-small")];
     // 座位 0 的随从带一条光环：报告里的 own_board / opponent_board 必须是
     // 折叠后的数值，而持久棋盘仍保留原始值。
     state.auras.insert(
@@ -765,7 +751,8 @@ fn resolve_combat_returns_one_report_per_participant() {
         5
     );
     assert!(!keywords(&engine.catalog, &state.players[0].board[0]).contains("护盾"));
-    assert!(state.players[0].board[0].mods.is_empty());
+    assert_eq!(state.players[0].board[0].stats.attack.layers(), 5);
+    assert_eq!(state.players[0].board[0].stats.health.layers(), 5);
     assert!(state.players[0].board[0].granted.is_empty());
     assert!(!report_a.actions.is_empty(), "行动序列随报告返回");
     assert_eq!(report_a.actions, report_b.actions, "双方看到同一份行动序列");
@@ -792,10 +779,10 @@ fn mirror_report_has_no_opponent_seat() {
     for seat in 1..8 {
         state.players[seat].eliminated = true;
     }
-    state.players[0].board = vec![minion(1, "combat-strong")];
+    state.players[0].board = vec![minion(&engine.catalog, 1, "combat-strong")];
     state
         .previous_board
-        .insert(0, vec![minion(2, "combat-weak")]);
+        .insert(0, vec![minion(&engine.catalog, 2, "combat-weak")]);
     state.pairings = vec![Pairing {
         a: 0,
         b: 0,
@@ -876,15 +863,15 @@ fn combat_reports_do_not_mutate_state_fields() {
 
 #[test]
 fn combat_state_hash_matches_golden_baseline() {
-    // 金标准取自原始实现提交 8e035b2（resolve_combat 返回 CombatOutcome），
     // 场景：seed [4; 32]、座位 0 随从 10 带光环、配对 0 vs 1。
-    // 本提交仅补测试、未改实现；任何 GameState 字段或随机流消耗顺序变化都会使该值改变。
+    // 随从属性改为分层模型后哈希编码变化，金标准同步更新；行为不变，
+    // 任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
     let (mut engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "c132b43558676edb",
+        "0f78f686b20a215f",
         "固定场景的 state_hash 金标准"
     );
 }
@@ -899,9 +886,9 @@ fn mixed_real_and_mirror_reports_cover_exactly_three_seats() {
     for seat in 3..8 {
         state.players[seat].eliminated = true;
     }
-    state.players[0].board = vec![minion(30, "combat-a")];
-    state.players[1].board = vec![minion(31, "combat-b")];
-    state.players[2].board = vec![minion(32, "combat-c")];
+    state.players[0].board = vec![minion(&engine.catalog, 30, "combat-a")];
+    state.players[1].board = vec![minion(&engine.catalog, 31, "combat-b")];
+    state.players[2].board = vec![minion(&engine.catalog, 32, "combat-c")];
     state.pairings = vec![
         Pairing {
             a: 0,

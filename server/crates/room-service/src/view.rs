@@ -12,12 +12,17 @@ use protocol::view::{
     Affordances, BoardAffordance, BoardMinion, HandAffordance, HandCard, PendingChoice,
     PlayerSummary, PlayerView, ShopAffordance, ShopSlot,
 };
-use protocol::{PlayerViewSelf, PlayerViewSelfHeroPower, ProtocolError};
+use protocol::{
+    MinionStatBreakdown, MinionStats, PlayerViewSelf, PlayerViewSelfHeroPower, ProtocolError,
+};
 use rule_engine::combat;
 use rule_engine::data::Catalog;
 use rule_engine::intent::RejectCode;
 use rule_engine::state::{MinionInstance, Phase};
-use rule_engine::view::{PendingChoiceView, PlayerSummaryView, SeatView, SelfView, ShopSlotView};
+use rule_engine::view::{
+    MinionStatsView, PendingChoiceView, PlayerSummaryView, SeatView, SelfView, ShopSlotView,
+    StatBreakdownView, stats_breakdown,
+};
 
 /// 座位上的玩家身份：协议里只需要 `playerId` 与展示名。
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -96,6 +101,7 @@ pub fn board_minion_from(
         keywords: combat::keywords(catalog, minion).into_iter().collect(),
         minion_id: minion.instance_id.to_string(),
         sellable,
+        stats: Some(stats_to_protocol(&stats_breakdown(minion))),
     }
 }
 
@@ -146,6 +152,7 @@ fn self_to_protocol(
                 keywords: minion.keywords.clone(),
                 minion_id: minion.minion_id.to_string(),
                 sellable: affordance.is_some_and(|candidate| candidate.sellable),
+                stats: Some(stats_to_protocol(&minion.stats)),
             }
         })
         .collect();
@@ -255,6 +262,25 @@ fn pending_to_protocol(pending: &PendingChoiceView) -> PendingChoice {
         PendingChoiceView::Evolve { options } => PendingChoice::Evolve {
             options: options.clone(),
         },
+    }
+}
+
+/// 引擎分层构成转协议；字段一一对应，`current` 已在引擎视图夹非负。
+fn stats_to_protocol(stats: &MinionStatsView) -> MinionStats {
+    MinionStats {
+        attack: breakdown_to_protocol(&stats.attack),
+        health: breakdown_to_protocol(&stats.health),
+    }
+}
+
+fn breakdown_to_protocol(breakdown: &StatBreakdownView) -> MinionStatBreakdown {
+    MinionStatBreakdown {
+        aura: i64::from(breakdown.aura),
+        current: non_negative(breakdown.current),
+        damage: non_negative(breakdown.damage),
+        initial: non_negative(breakdown.initial),
+        permanent: i64::from(breakdown.permanent),
+        turn: i64::from(breakdown.turn),
     }
 }
 

@@ -213,6 +213,25 @@
 | `health` | integer | 是 |  |
 | `keywords` | array<string> | 是 | 当前生效的关键词 |
 | `sellable` | boolean | 是 |  |
+| `stats` | MinionStats | 否 | 攻防分层构成；旧客户端可忽略 |
+
+### MinionStatBreakdown
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `initial` | integer | 是 | 基础值 |
+| `permanent` | integer | 是 | 成长与永久增量之和 |
+| `turn` | integer | 是 | 本回合临时增量，可为负 |
+| `aura` | integer | 是 | 光环派生增量，可为负 |
+| `damage` | integer | 是 | 层和与当前值之差 |
+| `current` | integer | 是 | 当前实际值 |
+
+### MinionStats
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `attack` | MinionStatBreakdown | 是 |  |
+| `health` | MinionStatBreakdown | 是 |  |
 
 ### PlayerSummary
 

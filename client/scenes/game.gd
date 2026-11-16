@@ -60,6 +60,12 @@ var _log_text: RichTextLabel
 
 var _overlay: Control
 
+# 随从详情：覆盖全屏但不拦截输入，层级位于选择浮层之上。
+var _detail_layer: Control
+var _detail_panel: PanelContainer
+var _detail_cards: Array = []
+var _hover_card: Control = null
+
 
 func _ready() -> void:
     _build()
@@ -111,6 +117,24 @@ func _build() -> void:
     _overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
     _overlay.visible = false
     add_child(_overlay)
+
+    _build_detail_layer()
+
+
+func _build_detail_layer() -> void:
+    _detail_layer = Control.new()
+    _detail_layer.name = "MinionDetailLayer"
+    _detail_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _detail_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _detail_layer.visible = false
+    add_child(_detail_layer)
+
+    _detail_panel = UI.card_panel("raised")
+    _detail_panel.name = "MinionDetailPanel"
+    _detail_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _detail_panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width") + UITheme.space("space-2xl"), 0)
+    _detail_panel.visible = false
+    _detail_layer.add_child(_detail_panel)
 
 
 func _build_header() -> Control:
@@ -377,6 +401,8 @@ func _process(delta: float) -> void:
 
 
 func _refresh() -> void:
+    _hide_detail()
+    _detail_cards.clear()
     var view: Dictionary = GameStore.view
     if view.is_empty():
         _status.text = "等待对局状态…"
@@ -566,9 +592,11 @@ func _minion_card(
     box.add_child(keyword_label)
 
     var spacer := Control.new()
+    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
     box.add_child(spacer)
 
+    _attach_detail(panel, minion)
     if read_only:
         return panel
 
@@ -873,6 +901,183 @@ func _unix_from_rfc3339(value: String) -> float:
     return Time.get_unix_time_from_datetime_string(text)
 
 
+# ── 随从详情 ──────────────────────────────────────────────────────────────
+
+const DETAIL_ROWS := ["initial", "permanent", "turn", "aura", "damage"]
+const DETAIL_ROW_TEXT := {
+    "initial": "初始",
+    "permanent": "永久",
+    "turn": "回合",
+    "aura": "光环",
+    "damage": "受击",
+}
+
+
+## 棋盘随从卡统一挂详情：悬停进入/离开、鼠标左键按下/松开、触摸按下/松开。
+## 卡内按钮与 spacer 必须是 STOP/IGNORE 混合，祖先悬停通知会被子控件截断，
+## 因此真正的矩形命中判断放在 _input，这里只保留就近的进入/离开兜底。
+func _attach_detail(card: Control, minion: Dictionary) -> void:
+    card.set_meta("detail_minion", minion)
+    _detail_cards.append(card)
+    card.mouse_entered.connect(_show_detail.bind(minion, card))
+    card.gui_input.connect(_on_card_gui_input.bind(minion, card))
+
+
+func _on_card_gui_input(event: InputEvent, minion: Dictionary, card: Control) -> void:
+    if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+        if event.pressed:
+            _show_detail(minion, card)
+        else:
+            _update_detail_hover(card.get_global_rect().position + event.position)
+    elif event is InputEventScreenTouch:
+        if event.pressed:
+            _show_detail(minion, card)
+        else:
+            _update_detail_hover(card.get_global_rect().position + event.position)
+
+
+## 跨子控件的真实命中判断：指针落在卡片矩形内即显示，移出才隐藏。
+func _input(event: InputEvent) -> void:
+    if _detail_layer == null:
+        return
+    if event is InputEventMouseMotion:
+        _update_detail_hover(_canvas_point(event.position))
+    elif event is InputEventScreenTouch:
+        _update_detail_hover(_canvas_point(event.position))
+    elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+        _update_detail_hover(_canvas_point(event.position))
+
+
+## 视口坐标转为画布坐标，与 get_global_rect() 同一坐标系。
+func _canvas_point(viewport_point: Vector2) -> Vector2:
+    return get_viewport().get_canvas_transform().affine_inverse() * viewport_point
+
+
+func _update_detail_hover(point: Vector2) -> void:
+    # 模态浮层打开时详情层会盖住浮层内容，直接隐藏且不再响应悬停。
+    if _overlay != null and _overlay.visible:
+        _hide_detail()
+        return
+    var found: Control = null
+    for card in _detail_cards:
+        if is_instance_valid(card) and card.is_visible_in_tree() and card.get_global_rect().has_point(point):
+            found = card
+            break
+    if found == null:
+        if _hover_card != null:
+            _hide_detail()
+        return
+    if found == _hover_card and _detail_panel != null and _detail_panel.visible:
+        return
+    _show_detail(found.get_meta("detail_minion", {}), found)
+
+
+func _show_detail(minion: Dictionary, anchor: Control) -> void:
+    if _detail_panel == null or anchor == null or not is_instance_valid(anchor):
+        return
+    if not is_instance_valid(_hover_card) or _hover_card != anchor:
+        _hover_card = anchor
+    UI.clear(_detail_panel)
+    var box := VBoxContainer.new()
+    box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
+    _detail_panel.add_child(box)
+
+    var card_id := str(minion.get("cardId", ""))
+    var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-title"), false)
+    name_label.max_lines_visible = 1
+    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    box.add_child(name_label)
+
+    var stats: Dictionary = minion.get("stats", {})
+    if typeof(stats) != TYPE_DICTIONARY or stats.is_empty():
+        box.add_child(_detail_row("当前", "%d / %d" % [
+            int(minion.get("attack", 0)),
+            int(minion.get("health", 0)),
+        ]))
+    else:
+        var attack: Dictionary = _stat_layers(stats.get("attack"))
+        var health: Dictionary = _stat_layers(stats.get("health"))
+        for layer in DETAIL_ROWS:
+            var a := int(attack.get(layer, 0))
+            var h := int(health.get(layer, 0))
+            if layer == "damage" and a == 0 and h == 0:
+                continue
+            var label := str(DETAIL_ROW_TEXT[layer])
+            if layer == "initial":
+                box.add_child(_detail_row(label, "%d / %d" % [a, h]))
+            elif layer == "damage":
+                box.add_child(_detail_row(label, "%s / %s" % [_damage_text(a), _damage_text(h)]))
+            else:
+                box.add_child(_detail_row(label, "%s / %s" % [_signed(a), _signed(h)]))
+        box.add_child(_detail_row("当前", "%d / %d" % [
+            int(attack.get("current", 0)),
+            int(health.get("current", 0)),
+        ]))
+
+    _detail_layer.visible = true
+    _detail_panel.visible = true
+    _place_detail(anchor.get_global_rect())
+
+
+## 以卡片全局矩形右上角内侧为锚点，按视口尺寸夹紧面板位置。
+func _place_detail(card_rect: Rect2) -> void:
+    var viewport := get_viewport_rect().size
+    var panel_size := _detail_panel.get_combined_minimum_size()
+    var margin := UITheme.space("space-xs")
+    var x := card_rect.end.x - panel_size.x
+    var y := card_rect.position.y
+    x = clampf(x, margin, maxf(margin, viewport.x - panel_size.x - margin))
+    y = clampf(y, margin, maxf(margin, viewport.y - panel_size.y - margin))
+    _detail_panel.position = Vector2(x, y)
+
+
+func _hide_detail() -> void:
+    if _detail_panel != null:
+        _detail_panel.visible = false
+    if _detail_layer != null:
+        _detail_layer.visible = false
+    _hover_card = null
+
+
+func _stat_layers(value: Variant) -> Dictionary:
+    if typeof(value) == TYPE_DICTIONARY:
+        return value
+    return {}
+
+
+func _detail_row(prefix: String, value: String) -> HBoxContainer:
+    var row := HBoxContainer.new()
+    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    row.add_theme_constant_override("separation", UITheme.space("space-md"))
+    var key := UI.label(prefix, UITheme.font_size("font-body-sm"), false)
+    key.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    key.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+    row.add_child(key)
+    var spacer := Control.new()
+    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_child(spacer)
+    var text := UI.label(value, UITheme.font_size("font-body-sm"), false)
+    text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    row.add_child(text)
+    return row
+
+
+func _signed(value: int) -> String:
+    return "+%d" % value if value >= 0 else str(value)
+
+
+## 受击行以「损失量」呈现：层和高于当前量为负数，复生超过层和为正数。
+func _damage_text(value: int) -> String:
+    if value > 0:
+        return "-%d" % value
+    if value < 0:
+        return "+%d" % -value
+    return "0"
+
+
 # ── 弹层 ──────────────────────────────────────────────────────────────────
 
 func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
@@ -892,6 +1097,7 @@ func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
 
 func _overlay_frame(title: String, parent: VBoxContainer) -> void:
     _overlay.visible = true
+    _hide_detail()
     var shade := ColorRect.new()
     shade.color = UITheme.alpha("color-bg", 0.72)
     shade.set_anchors_preset(Control.PRESET_FULL_RECT)

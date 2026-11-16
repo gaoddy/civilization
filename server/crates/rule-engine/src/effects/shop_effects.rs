@@ -160,6 +160,7 @@ impl Engine {
                 state.next_instance_id = instance_id.saturating_add(1);
                 // 新随从进入战场：先登记进化，再结算它自己的战吼与友方入场触发。
                 state.players[usize::from(ctx.seat)].board.push(new_minion(
+                    &self.catalog,
                     instance_id,
                     &card_id,
                     false,

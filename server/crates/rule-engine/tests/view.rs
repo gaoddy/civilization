@@ -52,23 +52,8 @@ fn positive_attack_minion_id() -> String {
 }
 
 /// 构造一个最小可用的棋盘随从实例。
-fn dummy(instance_id: u64, card_id: &str) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: card_id.to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 0,
-        cannot_attack: false,
-    }
+fn dummy(engine: &Engine, instance_id: u64, card_id: &str) -> MinionInstance {
+    MinionInstance::new(&engine.catalog, instance_id, card_id, false)
 }
 
 fn set_shop(state: &mut GameState, seat: Seat, ids: &[Option<String>]) {
@@ -329,7 +314,7 @@ fn opponent_seat_follows_pairings() {
 fn board_view_folds_auras_into_stats_and_keywords() {
     let (engine, mut state) = setup();
     let card = positive_attack_minion_id();
-    state.players[0].board.push(dummy(1, &card));
+    state.players[0].board.push(dummy(&engine, 1, &card));
 
     let before = view(&engine, &state, 0)
         .expect("座位 0 的视图应存在")
@@ -360,6 +345,25 @@ fn board_view_folds_auras_into_stats_and_keywords() {
         .clone();
     assert_eq!(after.attack, before.attack + 2, "攻击力应折叠光环加成");
     assert_eq!(after.health, before.health + 1, "生命值应折叠光环加成");
+    assert_eq!(after.stats.attack.aura, 2, "光环进入攻击的 aura 层");
+    assert_eq!(after.stats.health.aura, 1, "光环进入生命的 aura 层");
+    assert_eq!(
+        after.stats.attack.current, after.attack,
+        "构成当前量与原字段一致"
+    );
+    assert_eq!(
+        after.stats.health.current, after.health,
+        "构成当前量与原字段一致"
+    );
+    assert_eq!(
+        after.stats.attack.initial
+            + after.stats.attack.permanent
+            + after.stats.attack.turn
+            + after.stats.attack.aura
+            - after.stats.attack.damage,
+        after.stats.attack.current,
+        "攻击各层与受击自洽"
+    );
     assert!(
         after.keywords.contains(&"护盾".to_string()),
         "关键词应包含光环授予的护盾"
@@ -455,7 +459,7 @@ fn recruited_seat_cannot_act_but_can_end_recruit() {
         card_id: card.clone(),
         golden: false,
     });
-    state.players[0].board.push(dummy(1, &card));
+    state.players[0].board.push(dummy(&engine, 1, &card));
     state.players[0].gold = 10;
     state.players[0].recruit_done = true;
 
@@ -486,7 +490,7 @@ fn eliminated_seat_disables_all_affordances() {
         card_id: card.clone(),
         golden: false,
     });
-    state.players[0].board.push(dummy(1, &card));
+    state.players[0].board.push(dummy(&engine, 1, &card));
     state.players[0].gold = 10;
     state.players[0].eliminated = true;
 

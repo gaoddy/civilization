@@ -9,7 +9,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::data::{Catalog, Tribe};
+use crate::data::Catalog;
 use crate::effects::{Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::recruit::new_minion;
@@ -122,91 +122,41 @@ impl Default for CombatSetup<'_> {
     }
 }
 
-/// 卡面基础攻击力；token 取注册表数值，金色翻倍。
-fn base_attack(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    let base = match catalog.tokens.get(&minion.card_id) {
-        Some(token) => token.attack,
-        None => catalog
-            .cards
-            .get(&minion.card_id)
-            .and_then(|card| card.attack)
-            .unwrap_or(0),
-    };
-    if minion.golden {
-        base.saturating_mul(2)
-    } else {
-        base
-    }
-}
-
-/// 卡面基础生命值；token 取注册表数值，金色翻倍。
-fn base_health(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    let base = match catalog.tokens.get(&minion.card_id) {
-        Some(token) => token.health,
-        None => catalog
-            .cards
-            .get(&minion.card_id)
-            .and_then(|card| card.health)
-            .unwrap_or(0),
-    };
-    if minion.golden {
-        base.saturating_mul(2)
-    } else {
-        base
-    }
-}
-
-fn is_scholar(catalog: &Catalog, minion: &MinionInstance) -> bool {
-    catalog
-        .cards
-        .get(&minion.card_id)
-        .map(|card| card.tribe == Tribe::Scholar)
-        .unwrap_or(false)
-}
-
 /// 当前攻击力；不包含光环。
-pub fn effective_attack(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    effective_attack_with(catalog, minion, &[])
+pub fn effective_attack(_catalog: &Catalog, minion: &MinionInstance) -> i32 {
+    minion.attack()
 }
 
 /// 当前攻击力，含外部传入的光环修正。
 ///
 /// 学者在最后一步被强制为 0，下限为 0。
 pub fn effective_attack_with(
-    catalog: &Catalog,
+    _catalog: &Catalog,
     minion: &MinionInstance,
     auras: &[Modifier],
 ) -> i32 {
-    let mut value = base_attack(catalog, minion).saturating_add(minion.growth);
-    for modifier in &minion.mods {
-        value = value.saturating_add(modifier.attack);
-    }
+    let mut value = minion.attack();
     for aura in auras {
         value = value.saturating_add(aura.attack);
     }
-    if is_scholar(catalog, minion) {
+    if minion.is_scholar {
         value = 0;
     }
     value.max(0)
 }
 
 /// 当前生命值；不包含光环。
-pub fn effective_health(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    effective_health_with(catalog, minion, &[])
+pub fn effective_health(_catalog: &Catalog, minion: &MinionInstance) -> i32 {
+    minion.health()
 }
 
 /// 当前生命值，含外部传入的光环修正；下限为 0。
 pub fn effective_health_with(
-    catalog: &Catalog,
+    _catalog: &Catalog,
     minion: &MinionInstance,
     auras: &[Modifier],
 ) -> i32 {
-    let mut value = base_health(catalog, minion)
-        .saturating_add(minion.growth)
-        .saturating_add(minion.growth_health_only);
-    for modifier in &minion.mods {
-        value = value.saturating_add(modifier.health);
-    }
+    let mut value = minion.health();
     for aura in auras {
         value = value.saturating_add(aura.health);
     }
@@ -249,7 +199,7 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
 fn starting_tokens(catalog: &Catalog, minion: &MinionInstance) -> u8 {
     if minion.cannot_attack {
         0
-    } else if is_scholar(catalog, minion) {
+    } else if minion.is_scholar {
         1
     } else if keywords(catalog, minion).contains(WINDFURY) {
         2
@@ -262,7 +212,6 @@ fn starting_tokens(catalog: &Catalog, minion: &MinionInstance) -> u8 {
 #[derive(Debug, Clone)]
 pub(crate) struct SideBoard {
     pub(crate) minions: Vec<MinionInstance>,
-    pub(crate) health: Vec<i32>,
     pub(crate) alive: Vec<bool>,
     pub(crate) starting_tokens: Vec<u8>,
     pointer: usize,
@@ -271,21 +220,17 @@ pub(crate) struct SideBoard {
 impl SideBoard {
     fn new(catalog: &Catalog, board: &[MinionInstance]) -> Self {
         let mut minions = board.to_vec();
-        let mut health = Vec::with_capacity(minions.len());
         let mut alive = Vec::with_capacity(minions.len());
         let mut token_counts = Vec::with_capacity(minions.len());
         for minion in &mut minions {
-            let current = effective_health(catalog, minion);
             let tokens = starting_tokens(catalog, minion);
             minion.attacks_left = tokens;
-            health.push(current);
             // 战斗开始前生命已 ≤0 的随从先视为在场，由开场死亡结算统一处理。
             alive.push(true);
             token_counts.push(tokens);
         }
         Self {
             minions,
-            health,
             alive,
             starting_tokens: token_counts,
             pointer: 0,
@@ -297,11 +242,13 @@ impl SideBoard {
     }
 
     fn total_health(&self) -> i32 {
-        self.health
+        self.minions
             .iter()
             .zip(&self.alive)
             .filter(|(_, alive)| **alive)
-            .fold(0i32, |sum, (health, _)| sum.saturating_add(*health))
+            .fold(0i32, |sum, (minion, _)| {
+                sum.saturating_add(minion.stats.health.current)
+            })
     }
 
     fn survivors(&self) -> Vec<InstanceId> {
@@ -322,10 +269,13 @@ impl SideBoard {
             .collect()
     }
 
-    /// 返回当前应出手的随从下标；跳过已死亡或无令牌者。
+    /// 返回当前应出手的随从下标；跳过已死亡、生命 ≤0 或无令牌者。
     fn find_attacker(&mut self) -> Option<usize> {
         while self.pointer < self.minions.len() {
-            if self.alive[self.pointer] && self.minions[self.pointer].attacks_left > 0 {
+            if self.alive[self.pointer]
+                && self.minions[self.pointer].stats.health.current > 0
+                && self.minions[self.pointer].attacks_left > 0
+            {
                 return Some(self.pointer);
             }
             self.pointer += 1;
@@ -464,11 +414,9 @@ impl BattleField {
         mut minion: MinionInstance,
     ) -> InstanceId {
         let id = minion.instance_id;
-        let health = effective_health(catalog, &minion);
         let tokens = starting_tokens(catalog, &minion);
         minion.attacks_left = tokens;
         self.sides[side].minions.push(minion);
-        self.sides[side].health.push(health);
         self.sides[side].alive.push(true);
         self.sides[side].starting_tokens.push(tokens);
         id
@@ -483,7 +431,6 @@ impl BattleField {
         mut minion: MinionInstance,
     ) -> InstanceId {
         let id = minion.instance_id;
-        let health = effective_health(catalog, &minion);
         let tokens = starting_tokens(catalog, &minion);
         minion.attacks_left = tokens;
         let board = &mut self.sides[side];
@@ -492,58 +439,75 @@ impl BattleField {
             board.pointer += 1;
         }
         board.minions.insert(position, minion);
-        board.health.insert(position, health);
         board.alive.insert(position, true);
         board.starting_tokens.insert(position, tokens);
         id
     }
 
     pub(crate) fn modify_stats(&mut self, id: InstanceId, modifier: Modifier) {
-        if let Some((side, index)) = self.locate(id) {
-            let health = modifier.health;
-            self.sides[side].minions[index].mods.push(modifier);
-            self.sides[side].health[index] = self.sides[side].health[index].saturating_add(health);
+        let Some((side, index)) = self.locate(id) else {
+            return;
+        };
+        let minion = &mut self.sides[side].minions[index];
+        // 分层写入自身会同步 `current`，不再维护平行生命数组。
+        match modifier.duration {
+            Duration::Combat => {
+                minion.stats.attack.add_turn(modifier.attack);
+                minion.stats.health.add_turn(modifier.health);
+            }
+            // `Instant` 在数据中未使用；保持现有「永不清除」语义。
+            Duration::Permanent | Duration::Instant => {
+                minion.stats.attack.add_permanent(modifier.attack);
+                minion.stats.health.add_permanent(modifier.health);
+            }
         }
     }
 
     /// 获得成长；`health_only` 时只增加生命。
     pub(crate) fn add_growth(&mut self, id: InstanceId, times: i32, health_only: bool) {
-        if let Some((side, index)) = self.locate(id) {
-            let minion = &mut self.sides[side].minions[index];
-            if health_only {
-                minion.growth_health_only = minion.growth_health_only.saturating_add(times);
-            } else {
-                minion.growth = minion.growth.saturating_add(times);
-            }
-            self.sides[side].health[index] = self.sides[side].health[index].saturating_add(times);
+        let Some((side, index)) = self.locate(id) else {
+            return;
+        };
+        let minion = &mut self.sides[side].minions[index];
+        if health_only {
+            minion.stats.health.add_growth(times);
+        } else {
+            minion.stats.attack.add_growth(times);
+            minion.stats.health.add_growth(times);
         }
     }
 
     /// 移除全部成长，同时扣减当前生命。
     pub(crate) fn remove_growth(&mut self, id: InstanceId) {
-        if let Some((side, index)) = self.locate(id) {
-            let minion = &mut self.sides[side].minions[index];
-            let removed = minion
-                .growth
-                .saturating_add(minion.growth_health_only)
-                .max(0);
-            minion.growth = 0;
-            minion.growth_health_only = 0;
-            self.sides[side].health[index] = self.sides[side].health[index].saturating_sub(removed);
-        }
+        let Some(minion) = self.minion_mut(id) else {
+            return;
+        };
+        // 成长对攻防各记一层；生命侧同时包含「成长」与「只加生命」两种来源，
+        // `remove_growth` 会按生命层增量同步扣减 `current`。
+        minion.stats.attack.remove_growth();
+        minion.stats.health.remove_growth();
     }
 
-    /// 造成伤害；`can_kill = false` 时最多降到 1 点生命。
+    /// 唯一的战斗掉血入口：只写 `stats.health.current`。
+    ///
+    /// `can_kill = false` 时最多把当前生命降到 1；`can_kill = true` 时允许降到
+    /// 0 或更低，由死亡判定统一处理。
+    pub(crate) fn apply_damage(&mut self, id: InstanceId, amount: i32, can_kill: bool) {
+        let Some(minion) = self.minion_mut(id) else {
+            return;
+        };
+        let amount = amount.max(0);
+        let damage = if can_kill {
+            amount
+        } else {
+            amount.min(minion.stats.health.current.saturating_sub(1).max(0))
+        };
+        minion.stats.health.apply_damage(damage);
+    }
+
+    /// 效果层伤害入口；与 [`BattleField::apply_damage`] 同义。
     pub(crate) fn deal_damage(&mut self, id: InstanceId, amount: i32, can_kill: bool) {
-        if let Some((side, index)) = self.locate(id) {
-            let current = self.sides[side].health[index];
-            let damage = if can_kill {
-                amount.max(0)
-            } else {
-                amount.max(0).min((current - 1).max(0))
-            };
-            self.sides[side].health[index] = current.saturating_sub(damage);
-        }
+        self.apply_damage(id, amount, can_kill);
     }
 
     pub(crate) fn cannot_attack(&mut self, id: InstanceId) {
@@ -599,7 +563,8 @@ impl BattleField {
             let mut dead = Vec::new();
             for side in 0..2 {
                 for index in 0..self.sides[side].minions.len() {
-                    if self.sides[side].alive[index] && self.sides[side].health[index] <= 0 {
+                    let health = self.sides[side].minions[index].stats.health.current;
+                    if self.sides[side].alive[index] && health <= 0 {
                         // 死亡效果可能插入随从导致下标移动，队列只记录 (阵营, 实例编号)。
                         dead.push((side, self.sides[side].minions[index].instance_id));
                     }
@@ -615,7 +580,7 @@ impl BattleField {
                 let Some(index) = (0..self.sides[side].minions.len()).find(|index| {
                     self.sides[side].minions[*index].instance_id == id
                         && self.sides[side].alive[*index]
-                        && self.sides[side].health[*index] <= 0
+                        && self.sides[side].minions[*index].stats.health.current <= 0
                 }) else {
                     continue;
                 };
@@ -640,7 +605,7 @@ impl BattleField {
                         let count = if golden { 2 } else { 1 };
                         for _ in 0..count {
                             let instance =
-                                new_minion(self.new_instance_id(), SEEDLING_TOKEN, false);
+                                new_minion(catalog, self.new_instance_id(), SEEDLING_TOKEN, false);
                             let summoned = self.append(catalog, side, instance);
                             self.summon_count = self.summon_count.saturating_add(1);
                             engine.fire_ally_summon(self, rng, side, summoned);
@@ -654,7 +619,8 @@ impl BattleField {
                 if can_reborn {
                     let board = &mut self.sides[side];
                     board.minions[index].reborn_used = true;
-                    board.health[index] = 1;
+                    // 直接置当前生命为 1，允许与层和无关联（复生不走伤害入口）。
+                    board.minions[index].stats.health.revive_to(1);
                     board.alive[index] = true;
                     board.minions[index].attacks_left = board.starting_tokens[index];
                     self.actions.push(CombatAction::Reborn { minion: id });
@@ -713,7 +679,7 @@ fn pick_target(
                 let target = &defender.minions[*index];
                 let shielded =
                     keywords(catalog, target).contains(DIVINE_SHIELD) && !target.shield_used;
-                !shielded && attack >= defender.health[*index]
+                !shielded && attack >= defender.minions[*index].stats.health.current
             })
             .collect();
         if !killable.is_empty() {
@@ -780,8 +746,7 @@ fn resolve_attack(
             blocked = true;
         } else {
             damage = attack;
-            field.sides[defending_side].health[target_index] =
-                field.sides[defending_side].health[target_index].saturating_sub(damage);
+            field.apply_damage(target_id, damage, true);
         }
     }
 
@@ -795,7 +760,12 @@ fn resolve_attack(
     }
 
     // (c) 反击：目标在主伤害后仍存活（当前生命 > 0）才反击。
-    let counter = if field.sides[defending_side].health[target_index] > 0 {
+    let counter = if field.sides[defending_side].minions[target_index]
+        .stats
+        .health
+        .current
+        > 0
+    {
         effective_attack(catalog, &field.sides[defending_side].minions[target_index])
     } else {
         0
@@ -808,8 +778,7 @@ fn resolve_attack(
             field.sides[attacking_side].minions[attacker_index].shield_used = true;
         } else {
             counter_damage = counter;
-            field.sides[attacking_side].health[attacker_index] =
-                field.sides[attacking_side].health[attacker_index].saturating_sub(counter);
+            field.apply_damage(attacker_id, counter, true);
         }
     }
 

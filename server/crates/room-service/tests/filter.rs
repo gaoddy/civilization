@@ -49,22 +49,9 @@ fn seats() -> [SeatInfo; 8] {
 }
 
 fn minion(instance_id: u64) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: "baiyi".to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 1,
-        cannot_attack: false,
-    }
+    let mut minion = MinionInstance::new(&catalog(), instance_id, "baiyi", false);
+    minion.attacks_left = 1;
+    minion
 }
 
 /// 真实战斗报告：双方各两个随从，含一条被护盾挡下的攻击。

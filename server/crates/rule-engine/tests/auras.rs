@@ -2,7 +2,7 @@ mod common;
 
 use common::test_catalog;
 use rule_engine::combat;
-use rule_engine::data::{Card, CardType, Skill, Tribe};
+use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
 use rule_engine::engine::Engine;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
@@ -19,29 +19,14 @@ fn setup() -> (Engine, GameState) {
     (engine, state)
 }
 
-fn minion(instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: card_id.to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 0,
-        cannot_attack: false,
-    }
+fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
+    MinionInstance::new(catalog, instance_id, card_id, false)
 }
 
-fn place(state: &mut GameState, seat: Seat, id: InstanceId, card_id: &str) {
+fn place(catalog: &Catalog, state: &mut GameState, seat: Seat, id: InstanceId, card_id: &str) {
     state.players[usize::from(seat)]
         .board
-        .push(minion(id, card_id));
+        .push(minion(catalog, id, card_id));
 }
 
 fn board_minion(state: &GameState, seat: Seat, id: InstanceId) -> &MinionInstance {
@@ -99,8 +84,8 @@ fn aura_buffs_all_friendly_machines_except_self_if_other() {
         "Aura|ModifyStats|friendly:all:tribe=机械:other=true|attack=2,health=2,duration=permanent",
     );
     // 来源自身是机械，`other=true` 应排除；另一台机械获得 +2/+2。
-    place(&mut state, 0, 1, "test-mech-other");
-    place(&mut state, 0, 2, "shilunche");
+    place(&engine.catalog, &mut state, 0, 1, "test-mech-other");
+    place(&engine.catalog, &mut state, 0, 2, "shilunche");
 
     engine.recompute_auras(&mut state);
 
@@ -117,8 +102,8 @@ fn aura_buffs_all_friendly_machines_except_self_if_other() {
 fn aura_recomputes_when_source_leaves() {
     let (mut engine, mut state) = setup();
     // 青蒿：你的植物随从获得 +1/+1（含自身）。
-    place(&mut state, 0, 1, "qinghao");
-    place(&mut state, 0, 2, "juzi");
+    place(&engine.catalog, &mut state, 0, 1, "qinghao");
+    place(&engine.catalog, &mut state, 0, 2, "juzi");
 
     engine.recompute_auras(&mut state);
     assert_eq!(
@@ -143,8 +128,8 @@ fn aura_health_floor_is_one() {
         Tribe::General,
         "Aura|ModifyStats|friendly:all:tribe=生物:other=true|health=-5,duration=permanent",
     );
-    place(&mut state, 0, 1, "test-minus");
-    place(&mut state, 0, 2, "baiyi");
+    place(&engine.catalog, &mut state, 0, 1, "test-minus");
+    place(&engine.catalog, &mut state, 0, 2, "baiyi");
     assert_eq!(
         combat::effective_health(&engine.catalog, board_minion(&state, 0, 2)),
         2
@@ -173,7 +158,14 @@ fn aura_health_floor_is_one() {
         2,
         "光环不应写入持久状态"
     );
-    assert!(board_minion(&state, 0, 2).mods.is_empty());
+    assert_eq!(
+        (
+            board_minion(&state, 0, 2).stats.attack.aura,
+            board_minion(&state, 0, 2).stats.health.aura
+        ),
+        (0, 0),
+        "光环不得写入持久实例"
+    );
 }
 
 #[test]
@@ -191,9 +183,9 @@ fn same_keyword_from_two_sources_applies_once() {
         Tribe::General,
         "Aura|GrantKeyword|friendly:all|keyword=嘲讽,duration=permanent",
     );
-    place(&mut state, 0, 1, "test-taunt-a");
-    place(&mut state, 0, 2, "test-taunt-b");
-    place(&mut state, 0, 3, "baiyi");
+    place(&engine.catalog, &mut state, 0, 1, "test-taunt-a");
+    place(&engine.catalog, &mut state, 0, 2, "test-taunt-b");
+    place(&engine.catalog, &mut state, 0, 3, "baiyi");
 
     engine.recompute_auras(&mut state);
 
@@ -206,12 +198,12 @@ fn same_keyword_from_two_sources_applies_once() {
 fn conditional_aura_requires_condition() {
     let (mut engine, mut state) = setup();
     // 燧石矛兵：友方人类 >= 2 时自身获得 +1 攻击力。
-    place(&mut state, 0, 1, "suishimaobing");
+    place(&engine.catalog, &mut state, 0, 1, "suishimaobing");
 
     engine.recompute_auras(&mut state);
     assert!(!state.auras.contains_key(&1), "条件不满足时条件光环不生效");
 
-    place(&mut state, 0, 2, "buluozhanshi");
+    place(&engine.catalog, &mut state, 0, 2, "buluozhanshi");
     engine.recompute_auras(&mut state);
     assert_eq!(
         state.auras.get(&1).map(|aura| (aura.attack, aura.health)),
@@ -224,7 +216,7 @@ fn conditional_aura_requires_condition() {
 fn aura_does_not_stack_self() {
     let (mut engine, mut state) = setup();
     // 亚里士多德：你的随从获得 +0/+1（含自身），只应生效一次。
-    place(&mut state, 0, 1, "aristotle");
+    place(&engine.catalog, &mut state, 0, 1, "aristotle");
 
     engine.recompute_auras(&mut state);
 
@@ -235,8 +227,8 @@ fn aura_does_not_stack_self() {
 #[test]
 fn aura_never_crosses_seats() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "qinghao");
-    place(&mut state, 1, 2, "juzi");
+    place(&engine.catalog, &mut state, 0, 1, "qinghao");
+    place(&engine.catalog, &mut state, 1, 2, "juzi");
 
     engine.recompute_auras(&mut state);
 
@@ -256,7 +248,7 @@ fn aura_folds_into_combat_snapshot_only() {
     let (mut engine, mut state) = setup();
     // 达尔文（英雄）：你的生物随从获得 +1/+1。
     state.players[0].hero = Some("darwin".to_string());
-    place(&mut state, 0, 1, "baiyi");
+    place(&engine.catalog, &mut state, 0, 1, "baiyi");
 
     engine.recompute_auras(&mut state);
     assert_eq!(
@@ -289,15 +281,19 @@ fn aura_folds_into_combat_snapshot_only() {
         stored_attack,
         "持久状态的属性不因折叠改变"
     );
-    assert!(board_minion(&state, 0, 1).mods.is_empty());
+    assert_eq!(
+        board_minion(&state, 0, 1).stats.attack.aura,
+        0,
+        "光环不写回持久实例的光环层"
+    );
     assert!(board_minion(&state, 0, 1).granted.is_empty());
 }
 
 #[test]
 fn recompute_is_idempotent() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "qinghao");
-    place(&mut state, 0, 2, "juzi");
+    place(&engine.catalog, &mut state, 0, 1, "qinghao");
+    place(&engine.catalog, &mut state, 0, 2, "juzi");
 
     engine.recompute_auras(&mut state);
     let first = state.auras.clone();
@@ -310,7 +306,7 @@ fn recompute_is_idempotent() {
 fn apply_recomputes_auras() {
     let (mut engine, mut state) = setup();
     state.players[0].hero = Some("darwin".to_string());
-    place(&mut state, 0, 1, "baiyi");
+    place(&engine.catalog, &mut state, 0, 1, "baiyi");
 
     engine
         .apply(&mut state, 0, Intent::FreezeShop { slot: None })
@@ -343,8 +339,8 @@ fn state_hash_includes_auras() {
 #[test]
 fn mirror_ghost_from_previous_board_includes_auras() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "qinghao");
-    place(&mut state, 0, 2, "juzi");
+    place(&engine.catalog, &mut state, 0, 1, "qinghao");
+    place(&engine.catalog, &mut state, 0, 2, "juzi");
     engine.recompute_auras(&mut state);
 
     // 上一场快照保留原始实例编号，光环缓存可按同一 InstanceId 命中。
@@ -371,8 +367,8 @@ fn mirror_ghost_from_previous_board_includes_auras() {
 #[test]
 fn mirror_fight_does_not_mutate_stored_state() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "qinghao");
-    place(&mut state, 0, 2, "juzi");
+    place(&engine.catalog, &mut state, 0, 1, "qinghao");
+    place(&engine.catalog, &mut state, 0, 2, "juzi");
     engine.recompute_auras(&mut state);
 
     let before = state.players[0].board.clone();
@@ -395,7 +391,7 @@ fn mirror_fight_does_not_mutate_stored_state() {
         "上一场快照应保持原始（未折叠光环）内容"
     );
     for minion in &state.players[0].board {
-        assert!(minion.mods.is_empty(), "光环不得写入持久 mods");
+        assert_eq!(minion.stats.attack.aura, 0, "光环不得写入持久实例");
         assert!(minion.granted.is_empty(), "光环不得写入持久 granted");
     }
 }
@@ -409,9 +405,9 @@ fn aura_top_attack_picks_highest_attack() {
         Tribe::General,
         "Aura|ModifyStats|friendly:topAttack:other=true|attack=1,duration=permanent",
     );
-    place(&mut state, 0, 1, "test-top-attack");
-    place(&mut state, 0, 2, "baiyi");
-    place(&mut state, 0, 3, "menghu");
+    place(&engine.catalog, &mut state, 0, 1, "test-top-attack");
+    place(&engine.catalog, &mut state, 0, 2, "baiyi");
+    place(&engine.catalog, &mut state, 0, 3, "menghu");
 
     engine.recompute_auras(&mut state);
 
@@ -435,8 +431,8 @@ fn aura_single_without_target_has_no_targets() {
         Tribe::General,
         "Aura|ModifyStats|friendly:single|attack=1,duration=permanent",
     );
-    place(&mut state, 0, 1, "test-single");
-    place(&mut state, 0, 2, "baiyi");
+    place(&engine.catalog, &mut state, 0, 1, "test-single");
+    place(&engine.catalog, &mut state, 0, 2, "baiyi");
 
     engine.recompute_auras(&mut state);
 

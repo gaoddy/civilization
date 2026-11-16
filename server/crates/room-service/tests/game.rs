@@ -438,6 +438,19 @@ fn sell_minion_succeeds_and_refunds_gold() {
 
     let view = task.player_view(0).expect("视图应可用");
     assert_eq!(view.self_.board.len(), 1, "打出的随从应上棋盘");
+    let minion = &view.self_.board[0];
+    let stats = minion.stats.as_ref().expect("服务端应下发攻防分层构成");
+    assert_eq!(stats.attack.current, minion.attack, "攻击当前量与顶层一致");
+    assert_eq!(stats.health.current, minion.health, "生命当前量与顶层一致");
+    assert_eq!(
+        stats.attack.initial as i128
+            + stats.attack.permanent as i128
+            + stats.attack.turn as i128
+            + stats.attack.aura as i128
+            - stats.attack.damage as i128,
+        stats.attack.current as i128,
+        "攻击各层与受击自洽"
+    );
     let gold_after_buy = view.self_.gold;
     let minion_id = view.self_.board[0].minion_id.clone();
 
@@ -789,22 +802,10 @@ fn tick_after_game_over_returns_empty() {
 // ---------------------------------------------------------------------------
 
 fn fixture_minion(instance_id: u64) -> rule_engine::state::MinionInstance {
-    rule_engine::state::MinionInstance {
-        instance_id,
-        card_id: "baiyi".to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 1,
-        cannot_attack: false,
-    }
+    let mut minion =
+        rule_engine::state::MinionInstance::new(&catalog(), instance_id, "baiyi", false);
+    minion.attacks_left = 1;
+    minion
 }
 
 /// 双方各两个随从的真实战斗报告；含一条「攻防互换」的反击动作。
@@ -900,6 +901,29 @@ fn combat_action_indices_carry_side() {
     assert_eq!(result.actions[1].source_index, Some(1));
     assert_eq!(result.actions[1].target_side, Some(TargetSide::Own));
     assert_eq!(result.actions[1].target_index, Some(1));
+
+    // 战斗回放的双方棋盘同样携带分层构成，当前量与顶层一致。
+    for minion in result.own_board.iter().chain(result.opponent_board.iter()) {
+        let stats = minion.stats.as_ref().expect("战斗回放也应下发攻防分层构成");
+        assert_eq!(stats.attack.current, minion.attack);
+        assert_eq!(stats.health.current, minion.health);
+        assert_eq!(
+            stats.attack.initial as i128
+                + stats.attack.permanent as i128
+                + stats.attack.turn as i128
+                + stats.attack.aura as i128
+                - stats.attack.damage as i128,
+            stats.attack.current as i128
+        );
+        assert_eq!(
+            stats.health.initial as i128
+                + stats.health.permanent as i128
+                + stats.health.turn as i128
+                + stats.health.aura as i128
+                - stats.health.damage as i128,
+            stats.health.current as i128
+        );
+    }
 }
 
 #[test]

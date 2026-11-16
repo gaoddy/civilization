@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use common::test_catalog;
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
-use rule_engine::data::{Card, CardType, Skill, Token, Tribe};
+use rule_engine::data::{Card, CardType, Catalog, Skill, Token, Tribe};
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
 use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat};
@@ -86,23 +86,8 @@ fn add_token(engine: &mut Engine, id: &str, attack: i32, health: i32) {
     );
 }
 
-fn minion(instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: card_id.to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 0,
-        cannot_attack: false,
-    }
+fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
+    MinionInstance::new(catalog, instance_id, card_id, false)
 }
 
 fn rng() -> RngStreams {
@@ -158,10 +143,7 @@ fn reborn_count(log: &CombatLog) -> usize {
 }
 
 fn mods_attack(minion: &MinionInstance) -> i32 {
-    minion
-        .mods
-        .iter()
-        .fold(0i32, |sum, modifier| sum.saturating_add(modifier.attack))
+    minion.stats.attack.permanent
 }
 
 fn final_minion(log: &CombatLog, id: InstanceId) -> &MinionInstance {
@@ -193,7 +175,11 @@ fn deathrattle_runs_before_reborn() {
     );
     add_card(&mut engine, "brute", Tribe::Human, 1, 10, &[]);
 
-    let log = battle(&engine, &[minion(1, "ratter")], &[minion(2, "brute")]);
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "ratter")],
+        &[minion(&engine.catalog, 2, "brute")],
+    );
 
     assert_eq!(deaths(&log).first(), Some(&1), "首次死亡来自带亡语的随从");
     assert_eq!(reborn_count(&log), 1, "复生恰好触发一次");
@@ -218,7 +204,11 @@ fn sow_summons_seedling_on_death() {
     );
     add_card(&mut engine, "killer", Tribe::Human, 1, 10, &[]);
 
-    let log = battle(&engine, &[minion(1, "sower")], &[minion(2, "killer")]);
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "sower")],
+        &[minion(&engine.catalog, 2, "killer")],
+    );
 
     assert_eq!(log.summon_count, 1);
     assert!(
@@ -246,8 +236,8 @@ fn summon_card_deducts_pool_and_waits_when_empty() {
     pool.insert("termite".to_string(), 1u16);
     let with_copy = battle_with(
         &engine,
-        &[minion(1, "summoner")],
-        &[minion(2, "stomper")],
+        &[minion(&engine.catalog, 1, "summoner")],
+        &[minion(&engine.catalog, 2, "stomper")],
         CombatSetup {
             pool: Some(&pool),
             ..CombatSetup::default()
@@ -263,8 +253,8 @@ fn summon_card_deducts_pool_and_waits_when_empty() {
     let empty_pool = BTreeMap::new();
     let without_copy = battle_with(
         &engine,
-        &[minion(3, "summoner")],
-        &[minion(4, "stomper")],
+        &[minion(&engine.catalog, 3, "summoner")],
+        &[minion(&engine.catalog, 4, "stomper")],
         CombatSetup {
             pool: Some(&empty_pool),
             ..CombatSetup::default()
@@ -314,8 +304,14 @@ fn friendly_death_triggers_only_for_owner() {
 
     let log = battle_first(
         &engine,
-        &[minion(1, "watcher"), minion(2, "victim")],
-        &[minion(3, "enemy-watcher"), minion(4, "brute")],
+        &[
+            minion(&engine.catalog, 1, "watcher"),
+            minion(&engine.catalog, 2, "victim"),
+        ],
+        &[
+            minion(&engine.catalog, 3, "enemy-watcher"),
+            minion(&engine.catalog, 4, "brute"),
+        ],
         1,
     );
 
@@ -350,7 +346,11 @@ fn enemy_death_triggers_for_opponent() {
         &[(Some("嘲讽"), "[]")],
     );
 
-    let log = battle(&engine, &[minion(1, "avenger")], &[minion(2, "prey")]);
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "avenger")],
+        &[minion(&engine.catalog, 2, "prey")],
+    );
 
     assert_eq!(mods_attack(final_minion(&log, 1)), 2);
 }
@@ -395,8 +395,8 @@ fn combat_start_order_heroes_then_minions() {
 
     let log = battle_with(
         &engine,
-        &[minion(1, "minion0")],
-        &[minion(2, "defender0")],
+        &[minion(&engine.catalog, 1, "minion0")],
+        &[minion(&engine.catalog, 2, "defender0")],
         CombatSetup {
             attacker_hero: Some("hero"),
             ..CombatSetup::default()
@@ -428,7 +428,11 @@ fn delayed_battlecry_enemy_target_runs_at_combat_start() {
     );
     add_card(&mut engine, "target", Tribe::Human, 0, 3, &[]);
 
-    let log = battle(&engine, &[minion(1, "delayed")], &[minion(2, "target")]);
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "delayed")],
+        &[minion(&engine.catalog, 2, "target")],
+    );
 
     assert_eq!(
         log.actions.first(),
@@ -462,8 +466,8 @@ fn delayed_battlecry_cancelled_if_source_left() {
 
     let log = battle_with(
         &engine,
-        &[minion(1, "tank")],
-        &[minion(2, "delayed")],
+        &[minion(&engine.catalog, 1, "tank")],
+        &[minion(&engine.catalog, 2, "delayed")],
         CombatSetup {
             attacker_hero: Some("hero"),
             ..CombatSetup::default()
@@ -490,7 +494,7 @@ fn copy_minion_to_hand_does_not_deduct_pool() {
 
     let log = battle_with(
         &engine,
-        &[minion(1, "copier")],
+        &[minion(&engine.catalog, 1, "copier")],
         &[],
         CombatSetup {
             hand_slots: 10,
@@ -530,7 +534,10 @@ fn on_ally_summon_fires_after_summon() {
 
     let log = battle(
         &engine,
-        &[minion(1, "summoner"), minion(2, "observer")],
+        &[
+            minion(&engine.catalog, 1, "summoner"),
+            minion(&engine.catalog, 2, "observer"),
+        ],
         &[],
     );
 
@@ -558,7 +565,7 @@ fn trigger_budget_caps_effects() {
         ],
     );
 
-    let log = battle(&engine, &[minion(1, "loop")], &[]);
+    let log = battle(&engine, &[minion(&engine.catalog, 1, "loop")], &[]);
 
     assert_eq!(log.trigger_count, 200, "单场战斗触发上限为 200");
 }
@@ -587,8 +594,12 @@ fn turn_start_contagion_death_fires_deathrattle_and_sow() {
     );
     add_card(&mut engine, "friend", Tribe::Plant, 0, 5, &[]);
 
-    state.players[0].board.push(minion(1, "dying"));
-    state.players[0].board.push(minion(2, "friend"));
+    state.players[0]
+        .board
+        .push(minion(&engine.catalog, 1, "dying"));
+    state.players[0]
+        .board
+        .push(minion(&engine.catalog, 2, "friend"));
     state.players[0].board[0].contagion = 5;
     // 测试使用固定实例编号；把分配器推进到其后，避免召唤物与手写编号冲突。
     state.next_instance_id = 3;
@@ -669,8 +680,11 @@ fn combat_start_heroes_follow_first_side_order() {
     // 防守方（座位 1）为先手方。
     let log = simulate_with(
         &engine,
-        &[minion(1, "n")],
-        &[minion(2, "p"), minion(3, "d")],
+        &[minion(&engine.catalog, 1, "n")],
+        &[
+            minion(&engine.catalog, 2, "p"),
+            minion(&engine.catalog, 3, "d"),
+        ],
         0,
         1,
         1,

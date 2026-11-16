@@ -172,6 +172,7 @@ fn with_board(mut view: PlayerView, minion_id: &str) -> PlayerView {
         keywords: Vec::new(),
         minion_id: minion_id.to_string(),
         sellable: true,
+        stats: None,
     });
     view
 }

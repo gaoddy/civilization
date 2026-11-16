@@ -41,7 +41,32 @@
         "attack": { "type": "integer", "minimum": 0 },
         "health": { "type": "integer", "minimum": 0 },
         "keywords": { "type": "array", "items": { "type": "string" }, "description": "当前生效的关键词" },
-        "sellable": { "type": "boolean" }
+        "sellable": { "type": "boolean" },
+        "stats": { "$ref": "view.schema.json#/$defs/MinionStats", "description": "攻防分层构成；旧客户端可忽略" }
+      }
+    },
+    "MinionStatBreakdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initial", "permanent", "turn", "aura", "damage", "current"],
+      "description": "单项属性的分层构成；在可达的下发状态下 initial + permanent + turn + aura - damage = current",
+      "properties": {
+        "initial": { "type": "integer", "minimum": 0, "description": "基础值" },
+        "permanent": { "type": "integer", "description": "成长与永久增量之和" },
+        "turn": { "type": "integer", "description": "本回合临时增量，可为负" },
+        "aura": { "type": "integer", "description": "光环派生增量，可为负" },
+        "damage": { "type": "integer", "minimum": 0, "description": "层和与当前值之差" },
+        "current": { "type": "integer", "minimum": 0, "description": "当前实际值" }
+      }
+    },
+    "MinionStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attack", "health"],
+      "description": "随从攻击与生命的分层构成",
+      "properties": {
+        "attack": { "$ref": "view.schema.json#/$defs/MinionStatBreakdown" },
+        "health": { "$ref": "view.schema.json#/$defs/MinionStatBreakdown" }
       }
     },
     "PlayerSummary": {
