@@ -220,6 +220,7 @@ fn game_advances_to_recruit_with_shop_and_gold() {
     let (task, _clock) = task();
 
     let view = task.player_view(0).expect("座位 0 视图应可用");
+    assert_eq!(view.board_slots.get(), 7, "视图下发棋盘容量");
     let expected_gold = catalog()
         .config
         .gold_curve

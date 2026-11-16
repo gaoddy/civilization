@@ -376,7 +376,7 @@ fn combat_action(
                 source_side: None,
                 summon: Some(CombatResultActionsItemSummon {
                     minion: board_minion,
-                    position: i64::from(*position),
+                    position: u64::from(*position),
                     side,
                 }),
                 target: None,

@@ -42,6 +42,7 @@ pub fn to_protocol(
     room_id: &str,
     deadline: &str,
     seats: &[SeatInfo; 8],
+    board_slots: usize,
 ) -> Result<PlayerView, ProtocolError> {
     let seat_index = usize::from(seat_view.seat);
     let me = seats.get(seat_index).ok_or(ProtocolError("BAD_PAYLOAD"))?;
@@ -68,6 +69,8 @@ pub fn to_protocol(
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(PlayerView {
+        board_slots: NonZeroU64::new(u64::try_from(board_slots).unwrap_or(u64::MAX))
+            .ok_or(ProtocolError("BAD_PAYLOAD"))?,
         enabled_factions,
         opponent_player_id: seat_view
             .opponent_seat
@@ -97,7 +100,7 @@ pub fn board_minion_from(
         card_id: minion.card_id.clone(),
         golden: minion.golden,
         health: non_negative(combat::effective_health(catalog, minion)),
-        index: i64::try_from(index).unwrap_or(i64::MAX),
+        index: u64::try_from(index).unwrap_or(u64::MAX),
         keywords: combat::keywords(catalog, minion).into_iter().collect(),
         minion_id: minion.instance_id.to_string(),
         sellable,
@@ -149,7 +152,7 @@ fn self_to_protocol(
                 card_id: minion.card_id.clone(),
                 golden: minion.golden,
                 health: non_negative(minion.health),
-                index: i64::from(minion.index),
+                index: u64::from(minion.index),
                 keywords: minion.keywords.clone(),
                 minion_id: minion.minion_id.to_string(),
                 sellable: affordance.is_some_and(|candidate| candidate.sellable),
