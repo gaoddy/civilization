@@ -20,7 +20,9 @@ use crate::recruit::{
     check_upgrade,
 };
 use crate::settle;
-use crate::state::{GameState, PendingChoice, Phase, PlayerState, Seat};
+use crate::state::{
+    GameState, MinionInstance, PendingChoice, Phase, PlayerState, Seat, StatComponent,
+};
 
 /// 一个座位当前可见的全部状态。
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -74,6 +76,28 @@ pub struct HandCardView {
     pub card_id: String,
 }
 
+/// 单项属性（攻击或生命）的分层构成视图。
+///
+/// `permanent` 已把可移除的成长与不可移除的永久增量合并；
+/// `damage` 为层和与已夹非负的 `current` 之差，保证
+/// `initial + permanent + turn + aura - damage == current`。
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct StatBreakdownView {
+    pub initial: i32,
+    pub permanent: i32,
+    pub turn: i32,
+    pub aura: i32,
+    pub damage: i32,
+    pub current: i32,
+}
+
+/// 随从攻击与生命的分层构成视图。
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct MinionStatsView {
+    pub attack: StatBreakdownView,
+    pub health: StatBreakdownView,
+}
+
 /// 棋盘随从的公开视图。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoardMinionView {
@@ -83,6 +107,8 @@ pub struct BoardMinionView {
     pub golden: bool,
     pub attack: i32,
     pub health: i32,
+    /// 攻击与生命的当前量与分层构成。
+    pub stats: MinionStatsView,
     /// 当前生效的关键词，按字典序。
     pub keywords: Vec<String>,
 }
@@ -314,6 +340,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
             golden: minion.golden,
             attack: combat::effective_attack(&engine.catalog, minion),
             health: combat::effective_health(&engine.catalog, minion),
+            stats: stats_view(minion),
             keywords: combat::keywords(&engine.catalog, minion)
                 .into_iter()
                 .collect(),
@@ -398,6 +425,42 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
             .map(|tribe| tribe_name(*tribe).to_string())
             .collect(),
     })
+}
+
+/// 构造随从的分层构成视图。
+///
+/// `current` 先取 [`MinionInstance::attack`] / [`MinionInstance::health`]
+/// （已夹非负），再反推 `damage`，因此招募期负血量会被 `damage` 吸收。
+/// 学者攻击沿用 `attack()` 的口径：六层全部投影为 0，存储层保留加成。
+///
+/// 服务层的协议映射复用它，保证规则引擎与服务端视图口径一致。
+pub fn stats_view(minion: &MinionInstance) -> MinionStatsView {
+    MinionStatsView {
+        attack: if minion.is_scholar {
+            StatBreakdownView::default()
+        } else {
+            breakdown(&minion.stats.attack, minion.attack())
+        },
+        health: breakdown(&minion.stats.health, minion.health()),
+    }
+}
+
+/// 单项属性的分层构成；`permanent` 合并成长与其他永久增量。
+fn breakdown(stat: &StatComponent, current: i32) -> StatBreakdownView {
+    let permanent = stat.growth.saturating_add(stat.permanent);
+    let layers = stat
+        .initial
+        .saturating_add(permanent)
+        .saturating_add(stat.turn)
+        .saturating_add(stat.aura);
+    StatBreakdownView {
+        initial: stat.initial,
+        permanent,
+        turn: stat.turn,
+        aura: stat.aura,
+        damage: layers.saturating_sub(current),
+        current,
+    }
 }
 
 /// `ranking` 下标 + 1；仅在 `GameOver` 阶段公开名次，其余阶段返回 `None`。

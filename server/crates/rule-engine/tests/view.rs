@@ -345,6 +345,25 @@ fn board_view_folds_auras_into_stats_and_keywords() {
         .clone();
     assert_eq!(after.attack, before.attack + 2, "攻击力应折叠光环加成");
     assert_eq!(after.health, before.health + 1, "生命值应折叠光环加成");
+    assert_eq!(after.stats.attack.aura, 2, "光环进入攻击的 aura 层");
+    assert_eq!(after.stats.health.aura, 1, "光环进入生命的 aura 层");
+    assert_eq!(
+        after.stats.attack.current, after.attack,
+        "构成当前量与原字段一致"
+    );
+    assert_eq!(
+        after.stats.health.current, after.health,
+        "构成当前量与原字段一致"
+    );
+    assert_eq!(
+        after.stats.attack.initial
+            + after.stats.attack.permanent
+            + after.stats.attack.turn
+            + after.stats.attack.aura
+            - after.stats.attack.damage,
+        after.stats.attack.current,
+        "攻击各层与受击自洽"
+    );
     assert!(
         after.keywords.contains(&"护盾".to_string()),
         "关键词应包含光环授予的护盾"

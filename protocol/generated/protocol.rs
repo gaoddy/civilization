@@ -519,6 +519,10 @@ impl ::std::convert::From<&BoardAffordance> for BoardAffordance {
 ///    },
 ///    "sellable": {
 ///      "type": "boolean"
+///    },
+///    "stats": {
+///      "description": "攻防分层构成；旧客户端可忽略",
+///      "$ref": "#/$defs/MinionStats"
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -540,6 +544,9 @@ pub struct BoardMinion {
     #[serde(rename = "minionId")]
     pub minion_id: ::std::string::String,
     pub sellable: bool,
+    ///攻防分层构成；旧客户端可忽略
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub stats: ::std::option::Option<MinionStats>,
 }
 impl ::std::convert::From<&BoardMinion> for BoardMinion {
     fn from(value: &BoardMinion) -> Self {
@@ -2517,6 +2524,111 @@ impl ::std::convert::From<&LeaveRoom> for LeaveRoom {
 impl ::std::default::Default for LeaveRoom {
     fn default() -> Self {
         Self {}
+    }
+}
+///单项属性的分层构成；initial + permanent + turn + aura - damage = current
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "单项属性的分层构成；initial + permanent + turn + aura - damage = current",
+///  "type": "object",
+///  "required": [
+///    "aura",
+///    "current",
+///    "damage",
+///    "initial",
+///    "permanent",
+///    "turn"
+///  ],
+///  "properties": {
+///    "aura": {
+///      "description": "光环派生增量，可为负",
+///      "type": "integer"
+///    },
+///    "current": {
+///      "description": "当前实际值",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "damage": {
+///      "description": "层和与当前值之差",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "initial": {
+///      "description": "基础值",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "permanent": {
+///      "description": "成长与永久增量之和",
+///      "type": "integer"
+///    },
+///    "turn": {
+///      "description": "本回合临时增量，可为负",
+///      "type": "integer"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct MinionStatBreakdown {
+    ///光环派生增量，可为负
+    pub aura: i64,
+    ///当前实际值
+    pub current: u64,
+    ///层和与当前值之差
+    pub damage: u64,
+    ///基础值
+    pub initial: u64,
+    ///成长与永久增量之和
+    pub permanent: i64,
+    ///本回合临时增量，可为负
+    pub turn: i64,
+}
+impl ::std::convert::From<&MinionStatBreakdown> for MinionStatBreakdown {
+    fn from(value: &MinionStatBreakdown) -> Self {
+        value.clone()
+    }
+}
+///随从攻击与生命的分层构成
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "随从攻击与生命的分层构成",
+///  "type": "object",
+///  "required": [
+///    "attack",
+///    "health"
+///  ],
+///  "properties": {
+///    "attack": {
+///      "$ref": "#/$defs/MinionStatBreakdown"
+///    },
+///    "health": {
+///      "$ref": "#/$defs/MinionStatBreakdown"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct MinionStats {
+    pub attack: MinionStatBreakdown,
+    pub health: MinionStatBreakdown,
+}
+impl ::std::convert::From<&MinionStats> for MinionStats {
+    fn from(value: &MinionStats) -> Self {
+        value.clone()
     }
 }
 ///`PendingChoice`
