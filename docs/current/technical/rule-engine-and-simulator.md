@@ -182,9 +182,12 @@ tests/                       # Python 标准库 unittest
 ## 9. 战斗伤害、复生与快照
 
 - `BattleField::apply_damage(id, amount, can_kill)`（`server/crates/rule-engine/src/combat.rs`）是唯一的战斗掉血入口，只扣 `stats.health.current`；`deal_damage` 是同义包装。攻击主伤害与反击伤害都走它。`can_kill = false` 时最多把当前生命降到 1，`can_kill = true` 时允许降到 0 或更低，由死亡判定按 `current <= 0` 处理。
+- 战斗棋盘与招募棋盘同容量：`BattleField::has_room`（`alive_count(side) < catalog.config.board_slots`，v0.1 为 7）是所有进场路径的唯一闸门——召唤效果（含左邻插入与追加）、`Copy` 到棋盘、死亡结算的播种召唤、复生，容量不足时一律作废：不扣牌池、不生成实例编号、不触发 `OnAllySummon`、不增加 `summon_count`。阵亡随从留在向量里但不计数。
+- 同一时点的进场顺序固定为**死亡 → 召唤 → 复生**：死亡先把 `alive` 置 false，存活数立即减一；亡语与播种召唤占用空出的位置；复生最后检查容量，被召唤占满时保持阵亡（`reborn_used` 照常置 true，本场不再尝试）。
+- `append` / `insert_at` 返回 `Option<InstanceId>`，容量不足返回 `None`，调用方据此跳过召唤计数与联动触发。写入 `CombatAction::Summon.position` 的是 `alive_rank`——该随从在**存活随从序列**中的下标（已阵亡条目不计数），值域由 `board_slots` 决定；向量下标仍用于维持阵亡锚点的顺序。
 - 复生直接调用 `MinionStats::revive_to(1)`，把 `current` 置为 1，允许大于层和；这是 `current` 正向偏离层和的唯一入口，不复用 `apply_damage`。
 - `SideBoard` 不再持有独立生命数组，战斗内所有当前生命读写都落在 `stats.health.current`。
-- `CombatLog` 除动作序列外记录与动作同序同长的 `states`：每条动作执行后受影响随从的快照 `MinionSnapshot { instance_id, attack, health, alive }`——`attack` 一条带攻方与受方两个快照，`death`/`reborn`/`contagion`/`summon` 各带一个。召唤动作 `CombatAction::Summon { minion, card_id, golden, seat, position }` 记录实际插入下标，召唤物不在战前快照中，位置只从该字段读取；它的那条快照带召唤瞬间的实际攻防（含光环折叠与战斗内加成），房间服务用它填展示数值。
+- `CombatLog` 除动作序列外记录与动作同序同长的 `states`：每条动作执行后受影响随从的快照 `MinionSnapshot { instance_id, attack, health, alive }`——`attack` 一条带攻方与受方两个快照，`death`/`reborn`/`contagion`/`summon` 各带一个。召唤动作 `CombatAction::Summon { minion, card_id, golden, seat, position }` 记录插入位置，`position` 是该随从在存活随从序列中的下标（阵亡条目不计数，上界由 `board_slots` 决定），召唤物不在战前快照中，位置只从该字段读取；它的那条快照带召唤瞬间的实际攻防（含光环折叠与战斗内加成），房间服务用它填展示数值。
 - 战后 `write_back_persistent`（`server/crates/rule-engine/src/settle.rs`）只回写 `contagion` 与 `stats.*.growth`；持久棋盘上的随从按层和重算当前值（满血进入下一回合），死亡不改变持久棋盘，战斗伤害、回合效果与光环都不回写。
 - 进入结算时 `clear_combat_duration` 调用 `clear_turn` 清除攻防的 `turn` 层，同时保留 `granted` 的时长清理与禁攻规则。
 - `strip_ghost` 只保留 `initial + growth`，丢弃 `permanent`、`turn`、`aura` 与受击差值，并按 `initial + growth` 重算 `current`；`breed`、`contagion` 保留，`breed_applied` 重置；授予关键词与战斗内临时标记一并重置。

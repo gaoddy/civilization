@@ -6,7 +6,8 @@ extends RefCounted
 ## `banner_visible()` 为真。重连时用 `seek()` 直接跳到服务端 `phaseDeadline`
 ## 反推出的进度，已播动作不会重播。
 ##
-## 列表保留已阵亡随从（引擎同样保留），这样 `summon.position` 与引擎下标一致。
+## 列表保留已阵亡随从（引擎同样保留），页面据此按存活序列渲染；服务端下发的
+## `summon.position` 是存活序列下标，插入时用 [`alive_insert_index`] 换算。
 
 ## 单条动作的播放时长（与服务端 room-service 的 PACE_MS 一致）。
 const PACE_MS := 320
@@ -122,7 +123,10 @@ func _find_on(side: String, minion_id: String) -> Dictionary:
     return {}
 
 
-## 召唤：按服务端给出的侧别与下标插入完整随从（下标与引擎一致）。
+## 召唤：按服务端给出的侧别与存活序列下标插入完整随从。
+##
+## `position` 是召唤后该随从在**存活随从序列**中的下标，已阵亡条目不计数；
+## 因此不能直接当向量下标用，要找到第 `position` 个存活条目之前插入。
 func _apply_summon(summon: Variant) -> void:
     if not (summon is Dictionary):
         return
@@ -133,8 +137,23 @@ func _apply_summon(summon: Variant) -> void:
     var minion: Dictionary = (minion_value as Dictionary).duplicate(true)
     minion["alive"] = true
     var target := own if str(data.get("side", "")) == "own" else opponent
-    var position := clampi(int(data.get("position", target.size())), 0, target.size())
-    target.insert(position, minion)
+    var rank := maxi(int(data.get("position", 0)), 0)
+    target.insert(alive_insert_index(target, rank), minion)
+
+
+## 存活序列下标换算成向量下标：第 `rank` 个存活条目之前的位置。
+##
+## 前面的阵亡条目继续占位，因此返回值不小于 `rank`；`rank` 达到存活数时
+## 追加到最后一个存活条目之后（若没有存活条目则追加到列表末尾）。
+static func alive_insert_index(board: Array, rank: int) -> int:
+    var alive := 0
+    for index in board.size():
+        if not bool((board[index] as Dictionary).get("alive", true)):
+            continue
+        if alive == rank:
+            return index
+        alive += 1
+    return board.size()
 
 
 ## 在双方列表里按实例 id 找随从字典；找不到返回空字典。

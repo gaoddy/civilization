@@ -67,6 +67,48 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
     add_card_with(catalog, id, Tribe::Human, attack, health, keyword_list);
 }
 
+/// 给已有卡牌追加一个带效果串的技能，用于构造召唤、复制等战斗内效果。
+fn add_effect_skill(
+    catalog: &mut Catalog,
+    card_id: &str,
+    skill_id: &str,
+    keyword: &str,
+    effects: &str,
+) {
+    catalog.skills.insert(
+        skill_id.to_string(),
+        Skill {
+            id: skill_id.to_string(),
+            name: None,
+            keyword: Some(keyword.to_string()),
+            text: String::new(),
+            effects: effects.to_string(),
+            cost: None,
+            uses_per_turn: None,
+            match_text: None,
+        },
+    );
+    catalog
+        .cards
+        .get_mut(card_id)
+        .expect("卡牌应存在")
+        .skills
+        .push(skill_id.to_string());
+}
+
+fn add_seedling_token(catalog: &mut Catalog) {
+    catalog.tokens.insert(
+        "seedling".to_string(),
+        rule_engine::data::Token {
+            id: "seedling".to_string(),
+            name: "幼苗".to_string(),
+            attack: 1,
+            health: 1,
+            keywords: Vec::new(),
+        },
+    );
+}
+
 fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
     MinionInstance::new(catalog, instance_id, card_id, false)
 }
@@ -1019,11 +1061,137 @@ fn summon_action_records_position_and_seat() {
         unreachable!("已确认是召唤动作");
     };
     assert_eq!(*seat, 1, "召唤方为防守方座位");
-    assert_eq!(*position, 1, "阵亡随从仍占位，召唤物追加到它右侧");
+    assert_eq!(*position, 0, "阵亡随从不计入存活序列，召唤物是唯一存活随从");
     assert_eq!(card_id, "seedling");
     assert_eq!(
         log.states[index][0].instance_id, *summoned,
         "召唤的状态快照指向新随从"
     );
     assert!(log.states[index][0].alive, "新随从存活");
+}
+
+#[test]
+fn deathrattle_summon_uses_alive_rank_and_stops_at_capacity() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "killer", 1000, 1000, &[]);
+    add_card(&mut catalog, "summoner", 1, 1, &["嘲讽"]);
+    add_card(&mut catalog, "filler", 0, 10000, &[]);
+    add_effect_skill(
+        &mut catalog,
+        "summoner",
+        "summoner-death-summon",
+        "亡语",
+        "OnDeath|Summon|self|token=seedling,count=2",
+    );
+    add_seedling_token(&mut catalog);
+
+    let (engine, _state) = Engine::new(catalog.clone(), [7; 32]);
+    let mut defender = vec![minion(&catalog, 100, "summoner")];
+    defender.extend((1..7).map(|index| minion(&catalog, 100 + index, "filler")));
+    let log = simulate_with(
+        &engine,
+        &[minion(&catalog, 1, "killer")],
+        &defender,
+        0,
+        1,
+        0,
+        &mut rng(),
+        Default::default(),
+    );
+
+    let positions: Vec<u8> = log
+        .actions
+        .iter()
+        .filter_map(|action| match action {
+            CombatAction::Summon {
+                seat: 1, position, ..
+            } => Some(*position),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(positions.len(), 1, "存活已满后的第二次召唤作废");
+    assert_eq!(positions[0], 6, "位置是存活序列下标，不把阵亡的召唤者计入");
+    assert_eq!(log.summon_count, 1, "作废的召唤不计入召唤数");
+}
+
+#[test]
+fn reborn_fizzles_when_summon_filled_the_board() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "killer", 1000, 1000, &[]);
+    add_card(&mut catalog, "reborner", 1, 1, &["复生", "嘲讽"]);
+    add_card(&mut catalog, "filler", 0, 10000, &[]);
+    add_effect_skill(
+        &mut catalog,
+        "reborner",
+        "reborner-death-summon",
+        "亡语",
+        "OnDeath|Summon|self|token=seedling,count=1",
+    );
+    add_seedling_token(&mut catalog);
+
+    let (engine, _state) = Engine::new(catalog.clone(), [7; 32]);
+    let mut defender = vec![minion(&catalog, 100, "reborner")];
+    defender.extend((1..7).map(|index| minion(&catalog, 100 + index, "filler")));
+    let log = simulate_with(
+        &engine,
+        &[minion(&catalog, 1, "killer")],
+        &defender,
+        0,
+        1,
+        0,
+        &mut rng(),
+        Default::default(),
+    );
+
+    assert_eq!(
+        log.actions
+            .iter()
+            .filter(|action| matches!(action, CombatAction::Summon { seat: 1, .. }))
+            .count(),
+        1,
+        "死亡空出的位置先由召唤占用"
+    );
+    assert!(
+        !log.actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Reborn { minion: 100 })),
+        "召唤占满后复生作废"
+    );
+}
+
+#[test]
+fn combat_copy_to_board_fizzles_when_board_is_full() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "killer", 1000, 1000, &[]);
+    add_card(&mut catalog, "copier", 1, 1, &[]);
+    add_card(&mut catalog, "filler", 0, 10000, &[]);
+    add_effect_skill(
+        &mut catalog,
+        "copier",
+        "copier-combat-copy",
+        "",
+        "OnCombatStart|Copy|friendly:leftmost|to=board",
+    );
+
+    let (engine, _state) = Engine::new(catalog.clone(), [7; 32]);
+    let mut defender = vec![minion(&catalog, 100, "copier")];
+    defender.extend((1..7).map(|index| minion(&catalog, 100 + index, "filler")));
+    let log = simulate_with(
+        &engine,
+        &[minion(&catalog, 1, "killer")],
+        &defender,
+        0,
+        1,
+        0,
+        &mut rng(),
+        Default::default(),
+    );
+
+    assert!(
+        !log.actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Summon { .. })),
+        "满场时复制到棋盘作废，不产生召唤动作"
+    );
+    assert_eq!(log.summon_count, 0);
 }

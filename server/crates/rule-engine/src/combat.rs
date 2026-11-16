@@ -66,8 +66,9 @@ pub enum CombatAction {
     Reborn { minion: InstanceId },
     /// 目标被叠加一层传染。
     ContagionApplied { target: InstanceId },
-    /// 战斗中召唤：`seat` 为召唤方座位，`position` 为插入后的下标；
-    /// `card_id` / `golden` 供房间服务补全展示数据（召唤物不在战前快照里）。
+    /// 战斗中召唤：`seat` 为召唤方座位，`position` 为插入后该随从在
+    /// **存活随从序列**中的下标；`card_id` / `golden` 供房间服务补全展示数据
+    /// （召唤物不在战前快照里）。
     Summon {
         minion: InstanceId,
         card_id: String,
@@ -442,6 +443,28 @@ impl BattleField {
         self.sides[side].alive_ids()
     }
 
+    /// 某一侧的存活随从数量；阵亡条目仍留在向量里，但不计入容量。
+    pub(crate) fn alive_count(&self, side: usize) -> usize {
+        self.sides[side]
+            .alive
+            .iter()
+            .filter(|alive| **alive)
+            .count()
+    }
+
+    /// 向量下标之前（不含该下标）的存活随从数量，用于对外发存活序列下标。
+    fn alive_rank(&self, side: usize, index: usize) -> usize {
+        self.sides[side].alive[..index]
+            .iter()
+            .filter(|alive| **alive)
+            .count()
+    }
+
+    /// 该侧是否还有空位；容量取目录配置的 `board_slots`。
+    pub(crate) fn has_room(&self, catalog: &Catalog, side: usize) -> bool {
+        self.alive_count(side) < catalog.config.board_slots
+    }
+
     pub(crate) fn new_instance_id(&mut self) -> InstanceId {
         let id = self.next_instance_id;
         self.next_instance_id = self.next_instance_id.saturating_add(1);
@@ -457,16 +480,19 @@ impl BattleField {
         true
     }
 
-    /// 在棋盘右侧追加一个随从；返回实例编号。
+    /// 在棋盘右侧追加一个随从；容量不足时返回 `None`，不改变棋盘。
     ///
     /// 同时记录一条 `Summon` 动作（战斗中出现的随从都不在战前快照里，
-    /// 客户端只能靠这条动作渲染出来）。
+    /// 客户端只能靠这条动作渲染出来）；`position` 是存活序列下标。
     pub(crate) fn append(
         &mut self,
         catalog: &Catalog,
         side: usize,
         mut minion: MinionInstance,
-    ) -> InstanceId {
+    ) -> Option<InstanceId> {
+        if !self.has_room(catalog, side) {
+            return None;
+        }
         let id = minion.instance_id;
         let card_id = minion.card_id.clone();
         let golden = minion.golden;
@@ -475,7 +501,8 @@ impl BattleField {
         self.sides[side].minions.push(minion);
         self.sides[side].alive.push(true);
         self.sides[side].starting_tokens.push(tokens);
-        let position = self.sides[side].minions.len() - 1;
+        let index = self.sides[side].minions.len() - 1;
+        let position = self.alive_rank(side, index);
         let states = self.snapshots(catalog, &[id]);
         self.push_action(
             CombatAction::Summon {
@@ -487,17 +514,20 @@ impl BattleField {
             },
             states,
         );
-        id
+        Some(id)
     }
 
-    /// 在指定站位插入一个随从；返回实例编号。
+    /// 在指定站位插入一个随从；容量不足时返回 `None`，不改变棋盘。
     pub(crate) fn insert_at(
         &mut self,
         catalog: &Catalog,
         side: usize,
         position: usize,
         mut minion: MinionInstance,
-    ) -> InstanceId {
+    ) -> Option<InstanceId> {
+        if !self.has_room(catalog, side) {
+            return None;
+        }
         let id = minion.instance_id;
         let card_id = minion.card_id.clone();
         let golden = minion.golden;
@@ -511,6 +541,7 @@ impl BattleField {
         board.minions.insert(position, minion);
         board.alive.insert(position, true);
         board.starting_tokens.insert(position, tokens);
+        let rank = self.alive_rank(side, position);
         let states = self.snapshots(catalog, &[id]);
         self.push_action(
             CombatAction::Summon {
@@ -518,11 +549,11 @@ impl BattleField {
                 card_id,
                 golden,
                 seat: self.seats[side],
-                position: u8::try_from(position).unwrap_or(u8::MAX),
+                position: u8::try_from(rank).unwrap_or(u8::MAX),
             },
             states,
         );
-        id
+        Some(id)
     }
 
     pub(crate) fn modify_stats(&mut self, id: InstanceId, modifier: Modifier) {
@@ -686,9 +717,14 @@ impl BattleField {
                     {
                         let count = if golden { 2 } else { 1 };
                         for _ in 0..count {
+                            if !self.has_room(catalog, side) {
+                                break;
+                            }
                             let instance =
                                 new_minion(catalog, self.new_instance_id(), SEEDLING_TOKEN, false);
-                            let summoned = self.append(catalog, side, instance);
+                            let Some(summoned) = self.append(catalog, side, instance) else {
+                                break;
+                            };
                             self.summon_count = self.summon_count.saturating_add(1);
                             engine.fire_ally_summon(self, rng, side, summoned);
                         }
@@ -697,7 +733,9 @@ impl BattleField {
 
                 let can_reborn = keywords(catalog, &self.sides[side].minions[index])
                     .contains(REBORN)
-                    && !self.sides[side].minions[index].reborn_used;
+                    && !self.sides[side].minions[index].reborn_used
+                    // 死亡 → 召唤 → 复生：召唤占满棋盘时复生作废。
+                    && self.has_room(catalog, side);
                 if can_reborn {
                     let board = &mut self.sides[side];
                     board.minions[index].reborn_used = true;

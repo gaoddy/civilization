@@ -552,20 +552,34 @@ fn on_ally_summon_fires_after_summon() {
 #[test]
 fn trigger_budget_caps_effects() {
     let (mut engine, _state) = setup();
-    add_token(&mut engine, "spawn", 0, 1);
     add_card(
         &mut engine,
-        "loop",
+        "loop-a",
         Tribe::Human,
         0,
         10,
         &[
-            (None, "OnCombatStart|Summon|self|token=spawn,count=1"),
-            (None, "OnAllySummon|Summon|self|token=spawn,count=1"),
+            (None, "OnCombatStart|Growth|self|times=1"),
+            (None, "OnAllyGrowth|Growth|self|times=1"),
         ],
     );
+    add_card(
+        &mut engine,
+        "loop-b",
+        Tribe::Human,
+        0,
+        10,
+        &[(None, "OnAllyGrowth|Growth|self|times=1")],
+    );
 
-    let log = battle(&engine, &[minion(&engine.catalog, 1, "loop")], &[]);
+    let log = battle(
+        &engine,
+        &[
+            minion(&engine.catalog, 1, "loop-a"),
+            minion(&engine.catalog, 2, "loop-b"),
+        ],
+        &[],
+    );
 
     assert_eq!(log.trigger_count, 200, "单场战斗触发上限为 200");
 }

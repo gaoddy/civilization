@@ -666,6 +666,11 @@ fn combat_summon_uses_state_snapshot_values() {
     assert_eq!(summon.minion.attack, 5, "召唤物攻击取状态快照");
     assert_eq!(summon.minion.health, 7, "召唤物生命取状态快照");
     assert_eq!(summon.minion.card_id, "baiyi", "卡面信息仍来自动作");
+    assert_eq!(summon.position, 1, "位置原样取自动作");
+    assert_eq!(
+        summon.minion.index, 1,
+        "召唤物的 index 与 position 同为存活序列下标"
+    );
 }
 
 #[test]

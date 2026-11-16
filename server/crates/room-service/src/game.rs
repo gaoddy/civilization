@@ -257,6 +257,7 @@ impl GameTask {
             &self.room_id,
             &self.deadline_rfc3339(),
             &self.seats,
+            self.engine.catalog.config.board_slots,
         )
         .ok()
     }

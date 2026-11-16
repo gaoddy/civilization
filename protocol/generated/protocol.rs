@@ -502,8 +502,8 @@ impl ::std::convert::From<&BoardAffordance> for BoardAffordance {
 ///      "minimum": 0.0
 ///    },
 ///    "index": {
+///      "description": "该随从在当前存活随从序列中的下标；上界由 PlayerView.boardSlots 决定",
 ///      "type": "integer",
-///      "maximum": 6.0,
 ///      "minimum": 0.0
 ///    },
 ///    "keywords": {
@@ -537,7 +537,8 @@ pub struct BoardMinion {
     pub card_id: ::std::string::String,
     pub golden: bool,
     pub health: u64,
-    pub index: i64,
+    ///该随从在当前存活随从序列中的下标；上界由 PlayerView.boardSlots 决定
+    pub index: u64,
     ///当前生效的关键词
     pub keywords: ::std::vec::Vec<::std::string::String>,
     ///随从实例 id
@@ -933,9 +934,8 @@ impl ::std::convert::From<&CombatMinionState> for CombatMinionState {
 ///                "$ref": "#/$defs/BoardMinion"
 ///              },
 ///              "position": {
-///                "description": "在该侧棋盘中的插入下标",
+///                "description": "召唤后该随从在存活随从序列中的插入下标；上界由 PlayerView.boardSlots 决定",
 ///                "type": "integer",
-///                "maximum": 6.0,
 ///                "minimum": 0.0
 ///              },
 ///              "side": {
@@ -1097,9 +1097,8 @@ impl ::std::convert::From<&CombatResult> for CombatResult {
 ///          "$ref": "#/$defs/BoardMinion"
 ///        },
 ///        "position": {
-///          "description": "在该侧棋盘中的插入下标",
+///          "description": "召唤后该随从在存活随从序列中的插入下标；上界由 PlayerView.boardSlots 决定",
 ///          "type": "integer",
-///          "maximum": 6.0,
 ///          "minimum": 0.0
 ///        },
 ///        "side": {
@@ -1306,9 +1305,8 @@ for CombatResultActionsItemSourceSide {
 ///      "$ref": "#/$defs/BoardMinion"
 ///    },
 ///    "position": {
-///      "description": "在该侧棋盘中的插入下标",
+///      "description": "召唤后该随从在存活随从序列中的插入下标；上界由 PlayerView.boardSlots 决定",
 ///      "type": "integer",
-///      "maximum": 6.0,
 ///      "minimum": 0.0
 ///    },
 ///    "side": {
@@ -1328,8 +1326,8 @@ for CombatResultActionsItemSourceSide {
 #[serde(deny_unknown_fields)]
 pub struct CombatResultActionsItemSummon {
     pub minion: BoardMinion,
-    ///在该侧棋盘中的插入下标
-    pub position: i64,
+    ///召唤后该随从在存活随从序列中的插入下标；上界由 PlayerView.boardSlots 决定
+    pub position: u64,
     ///相对接收该消息的座位
     pub side: CombatResultActionsItemSummonSide,
 }
@@ -3310,6 +3308,7 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 ///{
 ///  "type": "object",
 ///  "required": [
+///    "boardSlots",
 ///    "enabledFactions",
 ///    "phase",
 ///    "phaseDeadline",
@@ -3319,6 +3318,11 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 ///    "turn"
 ///  ],
 ///  "properties": {
+///    "boardSlots": {
+///      "description": "本方棋盘随从位上限，v0.1 为 7",
+///      "type": "integer",
+///      "minimum": 1.0
+///    },
 ///    "enabledFactions": {
 ///      "description": "本局启用的 5 个流派",
 ///      "type": "array",
@@ -3476,6 +3480,9 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct PlayerView {
+    ///本方棋盘随从位上限，v0.1 为 7
+    #[serde(rename = "boardSlots")]
+    pub board_slots: ::std::num::NonZeroU64,
     ///本局启用的 5 个流派
     #[serde(rename = "enabledFactions")]
     pub enabled_factions: [::std::string::String; 5usize],

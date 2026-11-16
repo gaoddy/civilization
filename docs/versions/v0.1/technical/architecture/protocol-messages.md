@@ -98,7 +98,7 @@
 | `actions[].target` | CombatMinionState | 否 |  |
 | `actions[].summon` | object | 否 |  |
 | `actions[].summon.side` | enum | 是 | 相对接收该消息的座位 |
-| `actions[].summon.position` | integer | 是 | 在该侧棋盘中的插入下标 |
+| `actions[].summon.position` | integer | 是 | 召唤后该随从在存活随从序列中的插入下标；上界由 PlayerView.boardSlots 决定 |
 | `actions[].summon.minion` | BoardMinion | 是 |  |
 | `damage` | integer | 是 | 本场战斗败者受到的伤害 |
 | `winnerId` | string | null | 是 | 本场胜者；玩家自己的 playerId 表示胜 |
@@ -209,7 +209,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `index` | integer | 是 |  |
+| `index` | integer | 是 | 该随从在当前存活随从序列中的下标；上界由 PlayerView.boardSlots 决定 |
 | `minionId` | string | 是 | 随从实例 id |
 | `cardId` | string | 是 |  |
 | `golden` | boolean | 是 |  |
@@ -326,6 +326,7 @@
 | `phase` | Phase | 是 |  |
 | `turn` | integer | 是 |  |
 | `phaseDeadline` | string | 是 |  |
+| `boardSlots` | integer | 是 | 本方棋盘随从位上限，v0.1 为 7 |
 | `opponentPlayerId` | string | null | 否 | 当前战斗对手；招募阶段或未配对时为 null |
 | `self` | object | 是 |  |
 | `self.playerId` | string | 是 |  |

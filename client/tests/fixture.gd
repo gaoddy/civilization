@@ -3,12 +3,28 @@ extends RefCounted
 ## 冒烟用最小合法 PlayerView；字段与 protocol/schema/v1/view.schema.json 一致。
 
 
+## 冒烟用的假连接：`Net.is_open()` 只读 `get_ready_state()`，其余接口按无动作实现。
+class FakeSocket extends RefCounted:
+    func get_ready_state() -> int:
+        return WebSocketPeer.STATE_OPEN
+
+    func poll() -> void:
+        pass
+
+    func get_available_packet_count() -> int:
+        return 0
+
+    func send_text(_text: String) -> int:
+        return OK
+
+
 static func view() -> Dictionary:
     return {
         "roomId": "r_test",
         "phase": "Recruit",
         "turn": 3,
         "phaseDeadline": "2030-01-01T00:00:00Z",
+        "boardSlots": 7,
         "enabledFactions": ["人类", "机械", "生物", "植物", "学者"],
         "self": {
             "playerId": "p0",
@@ -203,6 +219,32 @@ static func combat_result() -> Dictionary:
         ],
         "damage": 5,
         "winnerId": "p0",
+        "mirror": false,
+    }
+
+
+## 复生夹具：第一条阵亡、第二条复生，用于验证行内「阵亡即消失、复生回原位」。
+static func combat_result_with_reborn() -> Dictionary:
+    return {
+        "ownBoard": [
+            _minion(0, "mi_0", "bruce-lee", 7, 6, []),
+            _minion(1, "mi_1", "airplane", 8, 7, []),
+        ],
+        "opponentBoard": [],
+        "actions": [
+            {
+                "kind": "death",
+                "sourceSide": "own",
+                "target": {"minionId": "mi_0", "attack": 7, "health": 0, "alive": false},
+            },
+            {
+                "kind": "reborn",
+                "sourceSide": "own",
+                "target": {"minionId": "mi_0", "attack": 7, "health": 6, "alive": true},
+            },
+        ],
+        "damage": 0,
+        "winnerId": null,
         "mirror": false,
     }
 

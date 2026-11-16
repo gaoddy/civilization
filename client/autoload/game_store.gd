@@ -27,6 +27,8 @@ var game_seed := ""
 var last_error: Dictionary = {}
 var event_log: Array = []
 var last_combat: Dictionary = {}
+## `last_combat` 所属回合；与当前 `turn` 不一致时不展示，避免旧战报被当成新战斗。
+var last_combat_turn := -1
 var timer_seconds := -1
 
 
@@ -64,6 +66,7 @@ func handle(type: String, payload: Dictionary) -> void:
             view_changed.emit()
         Protocol.MSG_COMBAT_RESULT:
             last_combat = payload
+            last_combat_turn = turn
             view_changed.emit()
         Protocol.MSG_GAME_OVER:
             ranking = payload.get("ranking", [])
@@ -89,6 +92,7 @@ func _apply_view(value) -> void:
     # `CombatResult` 的座位（未配对、已出局、消息丢失）会把旧战斗当新战斗重播。
     if previous_phase == Protocol.PHASE_COMBAT and phase != Protocol.PHASE_COMBAT:
         last_combat = {}
+        last_combat_turn = -1
 
 
 func reset_room() -> void:
@@ -105,7 +109,13 @@ func reset_room() -> void:
     last_error = {}
     event_log = []
     last_combat = {}
+    last_combat_turn = -1
     timer_seconds = -1
+
+
+## 战报是否属于当前回合。
+func combat_is_current() -> bool:
+    return not last_combat.is_empty() and last_combat_turn == turn
 
 
 func reset_session() -> void:

@@ -10,6 +10,7 @@
       "phase": "Recruit",
       "turn": 7,
       "phaseDeadline": "2026-11-15T10:01:30Z",
+      "boardSlots": 7,
       "enabledFactions": [
         "人类",
         "机械",

@@ -88,6 +88,7 @@ const EVENT_PHASE_CHANGED := "PhaseChanged"
 const EVENT_GAME_OVER := "GameOver"
 
 # PlayerView 字段名
+const FIELD_BOARD_SLOTS := "boardSlots"
 const FIELD_ENABLED_FACTIONS := "enabledFactions"
 const FIELD_OPPONENT_PLAYER_ID := "opponentPlayerId"
 const FIELD_PHASE := "phase"

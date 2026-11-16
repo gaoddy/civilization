@@ -233,7 +233,7 @@
                 "required": ["side", "position", "minion"],
                 "properties": {
                   "side": { "type": "string", "enum": ["own", "opponent"], "description": "相对接收该消息的座位" },
-                  "position": { "type": "integer", "minimum": 0, "maximum": 6, "description": "在该侧棋盘中的插入下标" },
+                  "position": { "type": "integer", "minimum": 0, "description": "召唤后该随从在存活随从序列中的插入下标；上界由 PlayerView.boardSlots 决定" },
                   "minion": { "$ref": "view.schema.json#/$defs/BoardMinion" }
                 }
               }

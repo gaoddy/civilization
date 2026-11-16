@@ -1260,6 +1260,9 @@ impl Engine {
             .and_then(|(source_side, position)| (source_side == side).then_some(position));
 
         for offset in 0..count {
+            if !field.has_room(&self.catalog, side) {
+                break;
+            }
             let Some(mut instance) = self.combat_summon_instance(field, effect) else {
                 break;
             };
@@ -1272,6 +1275,9 @@ impl Engine {
                     instance,
                 ),
                 _ => field.append(&self.catalog, side, instance),
+            };
+            let Some(summoned) = summoned else {
+                continue;
             };
             field.summon_count = field.summon_count.saturating_add(1);
             self.fire_ally_summon(field, rng, side, summoned);
@@ -1327,8 +1333,11 @@ impl Engine {
                     let Some(mut copy) = field.minion(*id).cloned() else {
                         continue;
                     };
+                    if !field.has_room(&self.catalog, side) {
+                        break;
+                    }
                     copy.instance_id = field.new_instance_id();
-                    field.append(&self.catalog, side, copy);
+                    let _ = field.append(&self.catalog, side, copy);
                 }
             }
             Zone::Shop => {}
