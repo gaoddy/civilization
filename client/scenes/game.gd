@@ -250,21 +250,25 @@ func _build_recruit_panel() -> Control:
     _sell_hint.visible = false
     shop_head.add_child(_sell_hint)
     var shop_spacer := Control.new()
+    shop_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     shop_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     shop_head.add_child(shop_spacer)
 
     _reroll_button = UI.styled_button("刷新", "default", 28)
     _reroll_button.name = "RerollButton"
+    _reroll_button.mouse_filter = Control.MOUSE_FILTER_PASS
     _reroll_button.pressed.connect(_on_reroll)
     shop_head.add_child(_reroll_button)
 
     _upgrade_button = UI.styled_button("升时代", "default", 28)
     _upgrade_button.name = "UpgradeButton"
+    _upgrade_button.mouse_filter = Control.MOUSE_FILTER_PASS
     _upgrade_button.pressed.connect(_on_upgrade)
     shop_head.add_child(_upgrade_button)
 
     _freeze_button = UI.styled_button("冻结商店", "default", 28)
     _freeze_button.name = "FreezeButton"
+    _freeze_button.mouse_filter = Control.MOUSE_FILTER_PASS
     _freeze_button.pressed.connect(_on_freeze)
     shop_head.add_child(_freeze_button)
     shop_box.add_child(shop_head)
@@ -601,6 +605,9 @@ func _board_slots() -> int:
 func _empty_slot() -> PanelContainer:
     var panel := UI.card_panel("empty")
     panel.name = "EmptySlot"
+    # PanelContainer 默认 STOP，会截断 Godot 的拖放冒泡（STOP 且不接收即中止），
+    # 让棋盘容器收不到落点；空位本身不交互，直接放行。
+    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
     panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), UITheme.metric("minion-card-height"))
     var hint := UI.empty_hint("空位")
     hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -691,6 +698,9 @@ func _refresh_shop(self_state: Dictionary) -> void:
         var card_id := _optional_text(slot.get("cardId"))
         var button := UI.styled_button("", "slot", UITheme.metric("shop-card-height"))
         button.name = "ShopSlot%d" % index
+        # Button 默认 STOP：棋盘卡拖到槽位上时，拖放冒泡会在这里中止，商店面板
+        # 收不到出售落点。PASS 保留点击，同时让落点继续交给父级商店面板。
+        button.mouse_filter = Control.MOUSE_FILTER_PASS
         button.custom_minimum_size = Vector2(UITheme.metric("shop-card-width"), UITheme.metric("shop-card-height"))
         if card_id == "":
             button.text = "空槽"

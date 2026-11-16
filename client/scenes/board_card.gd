@@ -13,6 +13,13 @@ var payload: Dictionary = {}
 var drag_allowed := false
 
 
+func _ready() -> void:
+    # PanelContainer 默认 STOP：拖放冒泡遇到 STOP 且本控件不接收数据就会中止，
+    # 父级棋盘容器再也收不到落点。PASS 既保留本卡的拖拽起手与悬停详情，
+    # 又让落点继续交给父级判定。
+    mouse_filter = Control.MOUSE_FILTER_PASS
+
+
 func _get_drag_data(_at_position: Vector2) -> Variant:
     if not drag_allowed or payload.is_empty():
         return null
