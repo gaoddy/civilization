@@ -19,6 +19,10 @@ func _ready() -> void:
     await _check_game()
     await _check_game_layout()
     await _check_combat_layout()
+    await _check_hand_drag_emits_position()
+    await _check_drag_rejected_for_target_effect_on_blank()
+    await _check_drag_disabled_when_stale_or_expired()
+    await _check_drag_cancelled_after_view_rebuild()
     await _check_recruited_gate()
     await _check_expired_gate()
     await _check_stale_view_gate()
@@ -326,6 +330,158 @@ func _check_combat_layout() -> void:
     GameStore.last_combat = {}
     GameStore.turn = 1
     GameStore.phase = ""
+
+
+## 拖拽出牌：随从牌落在两张卡之间，落点下标取指针左半边的那张卡。
+func _check_hand_drag_emits_position() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [
+        FixtureScript.board_minion("mi_1", "baiyi"),
+        FixtureScript.board_minion("mi_2", "airplane"),
+    ]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    _expect(
+        instance.drag_gate(Protocol.PHASE_RECRUIT, false, false, true, false, true),
+        "招募阶段、视图新鲜、已连接且可打出时手牌应允许拖拽"
+    )
+    var hand_card = instance.find_child("HandCard0", true, false)
+    _expect(hand_card != null, "对局场景缺少 HandCard0")
+    var board_row = instance.find_child("BoardRow", true, false)
+    _expect(board_row != null, "对局场景缺少 BoardRow")
+    if hand_card != null and board_row != null:
+        _expect(str(hand_card.payload.get("cardKind", "")) == "minion", "archimedes 是随从牌，cardKind 应为 minion")
+        _expect(int(hand_card.payload.get("epoch", -1)) == int(instance._view_epoch), "拖拽数据应带当前视图版本")
+        # 直接以「允许拖拽」的姿态验证落点换算：指针在第二张卡左半边。
+        var payload: Dictionary = hand_card.payload.duplicate()
+        var second: Control = null
+        for child in board_row.get_children():
+            if child is Control and child.has_meta("minion_id"):
+                second = child
+        _expect(second != null, "棋盘应有两张随从卡")
+        if second != null:
+            var local: Vector2 = board_row.get_global_transform().affine_inverse() * (second.get_global_rect().position + Vector2(4, 4))
+            _expect(
+                board_row._can_drop_data(local, payload),
+                "随从牌应能落在随从卡上"
+            )
+            var captured: Array = []
+            instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+            board_row._drop_data(local, payload)
+            await get_tree().process_frame
+            _expect(captured.size() == 1, "一次落点只应产生一条意图，实际 %d" % captured.size())
+            if captured.size() == 1:
+                var intent: Dictionary = captured[0]
+                _expect(str(intent.get("kind", "")) == Protocol.INTENT_PLAY_CARD, "落点意图应为 PlayCard")
+                _expect(int(intent.get("handIndex", -1)) == 0, "落点意图应带手牌下标")
+                _expect(int(intent.get("position", -1)) == 0, "插到第二张卡左边应为位置 0")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 需要目标的效果牌只能落在随从卡上；空白落点拒绝。
+func _check_drag_rejected_for_target_effect_on_blank() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi")]
+    view["self"]["hand"] = [FixtureScript.hand("erfenfa", true)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var board_row = instance.find_child("BoardRow", true, false)
+    var payload := {
+        "epoch": 0,
+        "handIndex": 0,
+        "cardId": "erfenfa",
+        "cardKind": "effect",
+        "requiresTarget": true,
+    }
+    if board_row != null:
+        var card: Control = null
+        for child in board_row.get_children():
+            if child is Control and child.has_meta("minion_id"):
+                card = child
+        _expect(card != null, "棋盘应有一张随从卡")
+        if card != null:
+            var on_card: Vector2 = board_row.get_global_transform().affine_inverse() * card.get_global_rect().get_center()
+            _expect(board_row._can_drop_data(on_card, payload), "需要目标的效果牌应能落在随从卡上")
+            var blank := Vector2(board_row.size.x + 200, board_row.size.y + 100)
+            _expect(not board_row._can_drop_data(blank, payload), "需要目标的效果牌不应接受空白落点")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 视图过期、倒计时归零、未连接、目标待选或不可打出时，拖拽不开始。
+func _check_drag_disabled_when_stale_or_expired() -> void:
+    var gate: Callable = Callable(load("res://scenes/game.gd"), "drag_gate")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, true, false, true, false, true), "视图过期时不应允许拖拽")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, true, true, false, true), "倒计时归零时不应允许拖拽")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, false, false, true), "未连接时不应允许拖拽")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, true, true, true), "目标待选期间不应允许拖拽")
+    _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, true, false, false), "不可打出的手牌不应允许拖拽")
+    _expect(not gate.call(Protocol.PHASE_COMBAT, false, false, true, false, true), "非招募阶段不应允许拖拽")
+
+    # 不允许拖拽的手牌，`_get_drag_data` 直接返回 null（拖拽根本不开始）。
+    var card := HandCard.new()
+    card.payload = {"handIndex": 0, "cardKind": "minion"}
+    card.drag_allowed = false
+    _expect(card._get_drag_data(Vector2.ZERO) == null, "不允许拖拽时不应交出拖拽数据")
+    card.free()
+
+
+## 拖拽途中视图重建后，落点数据已过期，不应再发出意图。
+func _check_drag_cancelled_after_view_rebuild() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var hand_card = instance.find_child("HandCard0", true, false)
+    var board_row = instance.find_child("BoardRow", true, false)
+    if hand_card != null and board_row != null:
+        var payload: Dictionary = hand_card.payload.duplicate()
+        GameStore.view_changed.emit()
+        await get_tree().process_frame
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var local: Vector2 = Vector2(4, 4)
+        if board_row._can_drop_data(local, payload):
+            board_row._drop_data(local, payload)
+        await get_tree().process_frame
+        _expect(captured.is_empty(), "视图重建后旧拖拽数据不应产生意图，实际 %d 条" % captured.size())
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
 
 
 func _check_recruited_gate() -> void:

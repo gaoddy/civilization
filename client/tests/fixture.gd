@@ -27,7 +27,7 @@ static func view() -> Dictionary:
                 {"index": 5, "cardId": "fei", "frozen": false},
             ],
             "hand": [
-                {"index": 0, "cardId": "dia", "playable": true, "disabledReason": null},
+                {"index": 0, "cardId": "dia", "playable": true, "requiresTarget": false, "disabledReason": null},
             ],
             "board": [
                 {
@@ -128,8 +128,8 @@ static func game_view() -> Dictionary:
         {"index": 5, "cardId": "bisheng", "frozen": false},
     ]
     view["self"]["hand"] = [
-        {"index": 0, "cardId": "archimedes", "playable": true, "disabledReason": null},
-        {"index": 1, "cardId": "boxer", "playable": false, "disabledReason": "NO_SPACE"},
+        {"index": 0, "cardId": "archimedes", "playable": true, "requiresTarget": false, "disabledReason": null},
+        {"index": 1, "cardId": "boxer", "playable": false, "requiresTarget": false, "disabledReason": "NO_SPACE"},
     ]
     view["self"]["affordances"]["handCards"] = [
         {"index": 0, "playable": true, "disabledReason": null},
@@ -176,6 +176,31 @@ static func combat_result() -> Dictionary:
         "damage": 5,
         "winnerId": "p0",
         "mirror": false,
+    }
+
+
+## 手牌条目夹具：`requires_target` 决定它是否需要选目标。
+static func hand(card_id: String, requires_target: bool) -> Dictionary:
+    return {
+        "index": 0,
+        "cardId": card_id,
+        "playable": true,
+        "requiresTarget": requires_target,
+        "disabledReason": null,
+    }
+
+
+## 棋盘随从夹具：只填落点判定与展示需要的字段。
+static func board_minion(minion_id: String, card_id: String) -> Dictionary:
+    return {
+        "index": 0,
+        "minionId": minion_id,
+        "cardId": card_id,
+        "golden": false,
+        "attack": 3,
+        "health": 4,
+        "keywords": [],
+        "sellable": true,
     }
 
 

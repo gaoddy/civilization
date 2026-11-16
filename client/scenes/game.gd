@@ -4,6 +4,15 @@ extends Control
 ## 布局：顶栏（回合/计时/属性）— 左栏积分榜 — 中区（招募：商店、我方棋盘、手牌；
 ## 战斗：双方英雄与随从、结果横幅）— 右栏（我的英雄、英雄技能、结束招募、战报）— 状态行。
 
+## 每次 `_send_intent` 先发一条，供冒烟与调试断言意图内容。
+signal intent_sent(intent: Dictionary)
+
+## 服务端演示节奏：单条战斗动作的播放时长（与 room-service 的 PACE_MS 一致）。
+const COMBAT_PACE_MS := 320
+
+## 服务端演示节奏：结果横幅停留（与 room-service 的 TAIL_MS 一致）。
+const COMBAT_TAIL_MS := 2000
+
 const PHASE_TEXT := {
     Protocol.PHASE_RECRUIT: "招募",
     Protocol.PHASE_COMBAT: "战斗",
@@ -20,6 +29,10 @@ var _target_required := false
 var _elapsed := 0.0
 var _deadline_expired := false
 var _view_stale := false
+## 每次 `_refresh` 递增；拖拽数据带上它，落点回调据此判断拖拽是否已过期。
+var _view_epoch := 0
+## 队首待选是目标待选：该座位除选目标外不能操作，手牌不可拖。
+var _target_pending := false
 
 # 顶栏。
 var _turn_label: Label
@@ -35,7 +48,7 @@ var _players_rail: VBoxContainer
 
 # 中区 · 招募。
 var _recruit_panel: VBoxContainer
-var _board_row: HFlowContainer
+var _board_row: BoardDrop
 var _board_hint: Label
 var _shop_row: HFlowContainer
 var _hand_row: HFlowContainer
@@ -272,7 +285,12 @@ func _build_recruit_panel() -> Control:
     board_scroll.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     board_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
     board_box.add_child(board_scroll)
-    _board_row = _flow_row("BoardRow")
+    _board_row = BoardDrop.new()
+    _board_row.name = "BoardRow"
+    _board_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _board_row.add_theme_constant_override("h_separation", UITheme.space("space-sm"))
+    _board_row.add_theme_constant_override("v_separation", UITheme.space("space-sm"))
+    _board_row.dropped.connect(_on_board_dropped)
     board_scroll.add_child(_board_row)
 
     var bottom_spacer := Control.new()
@@ -412,6 +430,9 @@ func _refresh() -> void:
     var recruited := bool(self_state.get("recruited", false))
     var phase := str(view.get("phase", GameStore.phase))
     _view_stale = int(view.get("turn", 0)) != GameStore.turn
+    _view_epoch += 1
+    var pending: Array = self_state.get("pendingChoices", [])
+    _target_pending = not pending.is_empty() and str(pending[0].get("kind", "")) == "target"
 
     _refresh_header(view, self_state, phase)
     _refresh_players(view)
@@ -520,7 +541,7 @@ func _seat_row(player: Dictionary) -> PanelContainer:
 func _refresh_recruit(self_state: Dictionary, recruited: bool, phase: String) -> void:
     _refresh_board(self_state, recruited, phase)
     _refresh_shop(self_state)
-    _refresh_hand(self_state)
+    _refresh_hand(self_state, phase)
     _refresh_actions(self_state, recruited, phase)
 
 
@@ -529,6 +550,7 @@ func _refresh_board(self_state: Dictionary, recruited: bool, phase: String) -> v
     var aff: Dictionary = self_state.get("affordances", {})
     var board: Array = self_state.get("board", [])
     var can_rearrange := not _view_stale and not _deadline_expired and phase == Protocol.PHASE_RECRUIT and not recruited
+    _board_row.board_full = board.size() >= 7
     _board_hint.text = "随从 %d/7" % board.size()
     for position in board.size():
         var minion: Dictionary = board[position]
@@ -559,6 +581,8 @@ func _minion_card(
     var minion_index := int(minion.get("index", position))
     var panel := UI.card_panel("raised-tight")
     panel.name = "BoardMinion%d" % minion_index
+    panel.set_meta("minion_id", str(minion.get("minionId", "")))
+    panel.set_meta("minion_index", minion_index)
     panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), 0 if read_only else UITheme.metric("minion-card-height"))
 
     var box := VBoxContainer.new()
@@ -657,7 +681,29 @@ func _refresh_shop(self_state: Dictionary) -> void:
         _shop_row.add_child(button)
 
 
-func _refresh_hand(self_state: Dictionary) -> void:
+## 手牌拖拽门槛：阶段、视图新鲜度、倒计时、连接、目标待选与可打出性全部满足才允许。
+##
+## 抽成静态函数便于冒烟直接验证两侧判定，不必真的连上服务端。
+static func drag_gate(
+    phase: String,
+    stale: bool,
+    expired: bool,
+    connected: bool,
+    target_pending: bool,
+    playable: bool
+) -> bool:
+    return (
+        phase == Protocol.PHASE_RECRUIT
+        and not stale
+        and not expired
+        and connected
+        and not target_pending
+        and playable
+    )
+
+
+## 手牌：只支持拖拽出牌，点击不产生意图。
+func _refresh_hand(self_state: Dictionary, phase: String) -> void:
     UI.clear(_hand_row)
     var hand: Array = self_state.get("hand", [])
     if hand.is_empty():
@@ -666,19 +712,49 @@ func _refresh_hand(self_state: Dictionary) -> void:
     for card in hand:
         var index := int(card.get("index", 0))
         var card_id := str(card.get("cardId", ""))
-        var button := UI.styled_button("", "slot", UITheme.metric("hand-card-height"))
-        button.name = "HandCard%d" % index
-        button.custom_minimum_size = Vector2(UITheme.metric("hand-card-width"), UITheme.metric("hand-card-height"))
-        button.text = "%s\n%s" % [CardDB.display_name(card_id), CardDB.display_text(card_id)]
-        button.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
-        button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-        button.clip_text = true
-        button.tooltip_text = CardDB.display_text(card_id)
-        button.disabled = _view_stale or _deadline_expired or not bool(card.get("playable", false))
+        var playable := bool(card.get("playable", false))
+        var card_kind := "minion" if str(CardDB.card(card_id).get("card_type", "")) == "随从" else "effect"
+        var entry := HandCard.new()
+        entry.name = "HandCard%d" % index
+        entry.custom_minimum_size = Vector2(UITheme.metric("hand-card-width"), UITheme.metric("hand-card-height"))
+        entry.tooltip_text = CardDB.display_text(card_id)
         if card.get("disabledReason") != null:
-            button.tooltip_text = UI.error_text(str(card.get("disabledReason")))
-        button.pressed.connect(_on_play.bind(index))
-        _hand_row.add_child(button)
+            entry.tooltip_text = UI.error_text(str(card.get("disabledReason")))
+
+        var box := VBoxContainer.new()
+        box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
+        box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        entry.add_child(box)
+        var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-body-sm"), false)
+        name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        name_label.max_lines_visible = 2
+        name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+        box.add_child(name_label)
+        var text_label := UI.label(CardDB.display_text(card_id), UITheme.font_size("font-caption"), false)
+        text_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        text_label.max_lines_visible = 4
+        text_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+        text_label.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+        box.add_child(text_label)
+
+        entry.payload = {
+            "epoch": _view_epoch,
+            "handIndex": index,
+            "cardId": card_id,
+            "cardKind": card_kind,
+            "requiresTarget": bool(card.get("requiresTarget", false)),
+        }
+        entry.drag_allowed = drag_gate(
+            phase,
+            _view_stale,
+            _deadline_expired,
+            Net.is_open(),
+            _target_pending,
+            playable
+        )
+        if not entry.drag_allowed:
+            UI.apply_dim(entry)
+        _hand_row.add_child(entry)
 
 
 func _refresh_actions(self_state: Dictionary, recruited: bool, phase: String) -> void:
@@ -1177,6 +1253,7 @@ func _build_target_overlay(self_state: Dictionary) -> void:
 # ── 意图 ──────────────────────────────────────────────────────────────────
 
 func _send_intent(intent: Dictionary) -> String:
+    intent_sent.emit(intent)
     _intent_counter += 1
     var intent_id := Net.send(Protocol.MSG_INTENT, {
         "clientIntentId": "ui-%d-%d" % [Time.get_ticks_usec(), _intent_counter],
@@ -1207,8 +1284,15 @@ func _on_buy(index: int) -> void:
     _send_intent({"kind": Protocol.INTENT_BUY_MINION, "slot": index})
 
 
-func _on_play(hand_index: int) -> void:
-    var intent := {"kind": Protocol.INTENT_PLAY_CARD, "handIndex": hand_index}
+## 棋盘落点回调：出牌的唯一入口。拖拽途中视图已重建时按取消处理。
+func _on_board_dropped(data: Dictionary, position: int, target_minion_id: String) -> void:
+    if int(data.get("epoch", -1)) != _view_epoch:
+        return
+    var intent := {"kind": Protocol.INTENT_PLAY_CARD, "handIndex": int(data.get("handIndex", 0))}
+    if str(data.get("cardKind", "")) == "minion":
+        intent["position"] = position
+    elif target_minion_id != "":
+        intent["targetMinionId"] = target_minion_id
     _remember_target_request(_send_intent(intent), intent)
 
 
