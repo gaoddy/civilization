@@ -25,6 +25,7 @@ fn view(
         "phase": "Recruit",
         "turn": 1,
         "phaseDeadline": "2026-01-01T00:00:00Z",
+        "boardSlots": 7,
         "self": {
             "playerId": "p0",
             "seat": 0,
