@@ -96,6 +96,13 @@ fn choose_pending(state: &GameState, player: &PlayerState, catalog: &Catalog) ->
         }),
         // 进化选项：0 = +2/+2，确定性取首项。
         PendingChoice::Evolve { .. } => Some(Intent::ChooseDiscover { choice: 0 }),
+        // 目标待选：确定性取棋盘最左侧随从。
+        PendingChoice::Target { .. } => player
+            .board
+            .first()
+            .map(|minion| Intent::ChooseTarget {
+                minion: minion.instance_id,
+            }),
     }
 }
 
@@ -133,7 +140,9 @@ pub fn discover_choice(player: &PlayerState, candidates: &[String], catalog: &Ca
 
 fn pending_seat(pending: &PendingChoice) -> Seat {
     match pending {
-        PendingChoice::Discover { seat, .. } | PendingChoice::Evolve { seat, .. } => *seat,
+        PendingChoice::Discover { seat, .. }
+        | PendingChoice::Evolve { seat, .. }
+        | PendingChoice::Target { seat, .. } => *seat,
     }
 }
 

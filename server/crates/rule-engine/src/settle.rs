@@ -16,7 +16,8 @@ use crate::error::EngineError;
 use crate::events::GameEvent;
 use crate::rng::Stream;
 use crate::state::{
-    AuraEffect, GameState, HandCard, InstanceId, MinionInstance, Phase, PlayerState, Seat,
+    AuraEffect, GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase,
+    PlayerState, Seat,
 };
 
 /// 配对在放弃"排除上一场对手"前最多重洗的次数。
@@ -188,6 +189,11 @@ fn finish_recruit(state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> 
             state.phase
         )));
     }
+    // 目标待选引用本回合刚入场的随从，跨回合后棋盘已变：进入战斗前一律作废（战吼落空）。
+    // 发现与进化待选允许玩家下回合再选，保持现状。
+    state
+        .pending
+        .retain(|pending| !matches!(pending, PendingChoice::Target { .. }));
     state.pairings = pair_round(state);
     if state.phase == Phase::Combat {
         return Ok(Vec::new());

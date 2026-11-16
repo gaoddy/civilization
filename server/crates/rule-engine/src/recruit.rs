@@ -32,6 +32,28 @@ pub(crate) fn apply(
         ));
     }
 
+    // 队首是目标待选时，该座位除 `ChooseTarget` 外的招募意图一律拒绝（含 `EndRecruit`）。
+    let head_is_target = pending_index(state, seat).is_some_and(|index| {
+        matches!(state.pending.get(index), Some(PendingChoice::Target { .. }))
+    });
+    if head_is_target {
+        match &intent {
+            Intent::ChooseTarget { .. } => {}
+            Intent::ChooseDiscover { .. } => {
+                return Err(Reject::new(
+                    RejectCode::InvalidChoice,
+                    format!("座位 {seat} 有待选目标，不能选择发现"),
+                ));
+            }
+            _ => {
+                return Err(Reject::new(
+                    RejectCode::InvalidStage,
+                    format!("座位 {seat} 有待选目标，不能执行其它招募意图"),
+                ));
+            }
+        }
+    }
+
     // `EndRecruit` 表示「本玩家结束招募」：已结束座位的重复提交由 [`end_recruit`] 幂等成功，
     // 其余招募意图在已结束座位上一律拒绝（见下方守卫）。
     if intent == Intent::EndRecruit {
@@ -61,6 +83,7 @@ pub(crate) fn apply(
         }
         Intent::EndRecruit => unreachable!("EndRecruit 在分派前处理"),
         Intent::ChooseDiscover { choice } => choose_discover(engine, state, seat, choice),
+        Intent::ChooseTarget { minion } => choose_target(engine, state, seat, minion),
     }
 }
 
@@ -534,13 +557,6 @@ fn play_card(
                 event_target: None,
                 golden: hand_card.golden,
             };
-            engine.check_targets(
-                state,
-                &engine.effects_of(&hand_card.card_id, Trigger::OnPlay),
-                &ctx,
-                false,
-            )?;
-
             let following_instance_id = state
                 .next_instance_id
                 .checked_add(1)
@@ -565,18 +581,41 @@ fn play_card(
             // 玩家选择结算完再触发 OnAllyEvolve；战吼带出的效果牌与响应在本次
             // 意图内同步结算，不跨意图排队。
             engine.register_evolve(state, seat, instance_id);
-            let mut events = engine.fire(
-                state,
-                Trigger::OnPlay,
-                EffectCtx {
+
+            // 战吼需要单一目标时改为先入场、再推入目标待选：合法池按入场后的棋盘
+            // 判定，因此池内包含刚入场的这个随从本身；池为空时战吼直接落空。
+            let effects = engine.effects_of(&hand_card.card_id, Trigger::OnPlay);
+            let needs_target = engine.check_targets(state, &effects, &ctx, false).is_err();
+            let mut events = if needs_target {
+                state.pending.push_back(PendingChoice::Target {
                     seat,
-                    source: Some(instance_id),
-                    target,
-                    event_target: None,
+                    source: instance_id,
+                    card_id: hand_card.card_id.clone(),
                     golden: hand_card.golden,
-                },
-            );
+                });
+                Vec::new()
+            } else {
+                engine.fire(
+                    state,
+                    Trigger::OnPlay,
+                    EffectCtx {
+                        seat,
+                        source: Some(instance_id),
+                        target,
+                        event_target: None,
+                        golden: hand_card.golden,
+                    },
+                )
+            };
             events.extend(engine.check_triple(state, seat));
+            // 三连可能把刚入场的随从合并掉：此时目标待选失去来源，视同战吼落空。
+            state.pending.retain(|pending| {
+                !matches!(pending, PendingChoice::Target { source, .. } if *source == instance_id)
+                    || state.players[usize::from(seat)]
+                        .board
+                        .iter()
+                        .any(|minion| minion.instance_id == instance_id)
+            });
             engine.fire_evolve_after_enter(state, seat, instance_id);
             Ok(Outcome::with(events))
         }
@@ -856,8 +895,62 @@ fn pending_index(state: &GameState, seat: Seat) -> Option<usize> {
         }
         | PendingChoice::Evolve {
             seat: pending_seat, ..
+        }
+        | PendingChoice::Target {
+            seat: pending_seat, ..
         } => *pending_seat == seat,
     })
+}
+
+/// `ChooseTarget`：为队首的目标待选指定本座位棋盘上的一个随从，随后结算该战吼。
+///
+/// 目标待选没有「取消」：合法池非空时玩家必须选定一个。
+fn choose_target(
+    engine: &mut Engine,
+    state: &mut GameState,
+    seat: Seat,
+    minion: InstanceId,
+) -> Result<Outcome, Reject> {
+    let index = pending_index(state, seat).ok_or_else(|| {
+        Reject::new(
+            RejectCode::InvalidChoice,
+            format!("座位 {seat} 没有待选目标"),
+        )
+    })?;
+    let PendingChoice::Target {
+        source,
+        card_id,
+        golden,
+        ..
+    } = state.pending[index].clone()
+    else {
+        return Err(Reject::new(
+            RejectCode::InvalidChoice,
+            format!("座位 {seat} 最靠前的待选不是目标选择"),
+        ));
+    };
+    if !player(state, seat)?
+        .board
+        .iter()
+        .any(|board_minion| board_minion.instance_id == minion)
+    {
+        return Err(Reject::new(
+            RejectCode::NoValidTarget,
+            format!("随从 {minion} 不在本座位棋盘上"),
+        ));
+    }
+
+    state.pending.remove(index);
+    let ctx = EffectCtx {
+        seat,
+        source: Some(source),
+        target: Some(minion),
+        event_target: None,
+        golden,
+    };
+    Ok(Outcome::with(
+        engine.fire_card(state, &card_id, Trigger::OnPlay, ctx),
+    ))
 }
 
 /// `ChooseDiscover` 的只读预检：本座位有待选、下标合法；发现还需要手牌有空位。
@@ -892,6 +985,12 @@ pub(crate) fn check_choose_discover(
             if player(state, seat)?.hand.len() >= hand_slots {
                 return Err(Reject::new(RejectCode::NoSpace, "手牌已满"));
             }
+        }
+        Some(PendingChoice::Target { .. }) => {
+            return Err(Reject::new(
+                RejectCode::InvalidChoice,
+                format!("座位 {seat} 有待选目标，不能选择发现"),
+            ));
         }
         Some(PendingChoice::Evolve { .. }) => {
             crate::effects::EVOLVE_CHOICES
@@ -937,6 +1036,9 @@ fn choose_discover(
                 .resolve_evolve_choice(state, index, choice)
                 .expect("check_choose_discover 已保证进化选项合法");
             return Ok(Outcome::empty());
+        }
+        Some(PendingChoice::Target { .. }) => {
+            unreachable!("check_choose_discover 已拒绝目标待选")
         }
         None => unreachable!("check_choose_discover 已保证待选存在"),
     };

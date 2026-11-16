@@ -6,7 +6,9 @@ use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
-use rule_engine::state::{GameState, HandCard, InstanceId, MinionInstance, Phase, Seat, ShopSlot};
+use rule_engine::state::{
+    GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase, Seat, ShopSlot,
+};
 
 fn setup(seed: u8) -> (Engine, GameState) {
     let (mut engine, mut state) = Engine::new(test_catalog(), [seed; 32]);
@@ -1066,55 +1068,60 @@ fn put_champion(
 }
 
 #[test]
-fn play_battlecry_without_target_rejects_and_keeps_state() {
+fn play_battlecry_without_target_enters_board_then_pends() {
     let (mut engine, mut state) = setup(40);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     state.players[0].hand.push(HandCard {
         card_id: BATTLECRY_TARGET.to_string(),
         golden: false,
     });
-    let before = state_hash(&state);
 
-    let result = engine.apply(
-        &mut state,
-        0,
-        Intent::PlayCard {
-            hand_index: 0,
-            position: None,
-            target: None,
-        },
-    );
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("战吼需要目标不再阻塞出牌");
 
-    assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
-    assert_eq!(
-        before,
-        state_hash(&state),
-        "拒绝后手牌、棋盘、金币与随机流不变"
+    assert!(state.players[0].hand.is_empty(), "牌已离开手牌");
+    assert_eq!(state.players[0].board.len(), 2, "随从先入场");
+    assert!(
+        target_pending(&state, 0).is_some(),
+        "入场后产生目标待选，战吼尚未结算"
     );
 }
 
 #[test]
-fn play_battlecry_with_unknown_target_rejects() {
+fn play_battlecry_with_unknown_target_pends_then_choose_rejects() {
     let (mut engine, mut state) = setup(41);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     state.players[0].hand.push(HandCard {
         card_id: BATTLECRY_TARGET.to_string(),
         golden: false,
     });
-    let before = state_hash(&state);
 
-    let result = engine.apply(
-        &mut state,
-        0,
-        Intent::PlayCard {
-            hand_index: 0,
-            position: None,
-            target: Some(9_999),
-        },
-    );
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: Some(9_999),
+            },
+        )
+        .expect("出牌本身成功，目标由待选重新指定");
+
+    let before = state_hash(&state);
+    let result = engine.apply(&mut state, 0, Intent::ChooseTarget { minion: 9_999 });
 
     assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
-    assert_eq!(before, state_hash(&state));
+    assert_eq!(before, state_hash(&state), "拒绝后状态不变");
 }
 
 #[test]
@@ -1133,10 +1140,13 @@ fn play_battlecry_with_target_applies_effect() {
             Intent::PlayCard {
                 hand_index: 0,
                 position: None,
-                target: Some(9_000),
+                target: None,
             },
         )
-        .expect("带合法目标应打出成功");
+        .expect("打出随从应成功");
+    engine
+        .apply(&mut state, 0, Intent::ChooseTarget { minion: 9_000 })
+        .expect("选定目标应成功");
 
     let target = state.players[0]
         .board
@@ -1391,4 +1401,201 @@ fn play_minion_without_position_appends() {
         .map(|m| m.instance_id)
         .collect();
     assert_eq!(order, vec![1, 2, new_instance]);
+}
+
+// ---- 战吼目标待选：先入场再选目标 ----
+
+/// 战吼「使一个友方随从获得成长」的随从，入场后需指定目标。
+const BATTLECRY_GROWTH_MINION: &str = "fangzhiji";
+
+fn play_growth_minion(engine: &mut Engine, state: &mut GameState) -> InstanceId {
+    state.players[0].hand.push(HandCard {
+        card_id: BATTLECRY_GROWTH_MINION.to_string(),
+        golden: false,
+    });
+    let instance_id = state.next_instance_id;
+    engine
+        .apply(
+            state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("打出带目标战吼的随从应成功");
+    instance_id
+}
+
+fn target_pending(state: &GameState, seat: Seat) -> Option<(InstanceId, String, bool)> {
+    state.pending.iter().find_map(|pending| match pending {
+        PendingChoice::Target {
+            seat: pending_seat,
+            source,
+            card_id,
+            golden,
+        } if *pending_seat == seat => Some((*source, card_id.clone(), *golden)),
+        _ => None,
+    })
+}
+
+#[test]
+fn target_pending_created_after_minion_plays() {
+    let (mut engine, mut state) = setup(52);
+    let instance_id = play_growth_minion(&mut engine, &mut state);
+
+    assert_eq!(state.players[0].board.len(), 1, "随从先入场");
+    assert_eq!(
+        target_pending(&state, 0),
+        Some((instance_id, BATTLECRY_GROWTH_MINION.to_string(), false)),
+        "入场后推入目标待选"
+    );
+    assert_eq!(
+        state.players[0].board[0].stats.attack.growth, 0,
+        "战吼尚未结算"
+    );
+}
+
+#[test]
+fn target_pending_pool_includes_self() {
+    let (mut engine, mut state) = setup(53);
+    let instance_id = play_growth_minion(&mut engine, &mut state);
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget {
+                minion: instance_id,
+            },
+        )
+        .expect("选定刚入场的随从应成功");
+
+    assert!(state.pending.is_empty(), "待选被消费");
+    assert_eq!(
+        state.players[0].board[0].stats.attack.growth, 1,
+        "战吼命中自身"
+    );
+}
+
+#[test]
+fn target_pending_skipped_when_filtered_pool_empty() {
+    let (mut engine, mut state) = setup(54);
+    // 战吼筛「机械」，己方棋盘没有机械，入场后池仍为空。
+    state.players[0].hand.push(HandCard {
+        card_id: "archimedes".to_string(),
+        golden: false,
+    });
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("池为空时按落空处理");
+
+    assert!(target_pending(&state, 0).is_none(), "不产生待选");
+    assert_eq!(state.players[0].board.len(), 1);
+    assert_eq!(
+        state.players[0].board[0].stats.attack.growth, 0,
+        "战吼落空"
+    );
+}
+
+#[test]
+fn target_pending_blocks_recruit_intents() {
+    let (mut engine, mut state) = setup(55);
+    set_shop(&mut state, 0, &[Some(minion_id(1))]);
+    let instance_id = play_growth_minion(&mut engine, &mut state);
+    state.players[0].gold = 10;
+
+    let intents = vec![
+        Intent::BuyMinion { slot: 0 },
+        Intent::RerollShop,
+        Intent::UpgradeEra,
+        Intent::EndRecruit,
+        Intent::SellMinion {
+            minion: instance_id,
+        },
+        Intent::RearrangeBoard { from: 0, to: 0 },
+    ];
+    for intent in intents {
+        let before = state_hash(&state);
+        let label = format!("{intent:?}");
+        let reject = engine
+            .apply(&mut state, 0, intent)
+            .expect_err("待选期间招募意图必须被拒");
+        assert_eq!(reject.code, RejectCode::InvalidStage, "{label}");
+        assert_eq!(before, state_hash(&state), "{label}");
+    }
+
+    let before = state_hash(&state);
+    let reject = engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect_err("待选期间不能继续出牌");
+    assert_eq!(reject.code, RejectCode::InvalidStage);
+    assert_eq!(before, state_hash(&state));
+}
+
+#[test]
+fn target_pending_rejects_choose_discover() {
+    let (mut engine, mut state) = setup(56);
+    play_growth_minion(&mut engine, &mut state);
+
+    let reject = engine
+        .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
+        .expect_err("头部是目标待选时不能选择发现");
+
+    assert_eq!(reject.code, RejectCode::InvalidChoice);
+    assert!(target_pending(&state, 0).is_some(), "待选仍在");
+}
+
+#[test]
+fn choose_target_outside_board_rejects() {
+    let (mut engine, mut state) = setup(57);
+    play_growth_minion(&mut engine, &mut state);
+    let before = state_hash(&state);
+
+    let reject = engine
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget { minion: 9_999 },
+        )
+        .expect_err("目标不在棋盘上必须拒绝");
+
+    assert_eq!(reject.code, RejectCode::NoValidTarget);
+    assert_eq!(before, state_hash(&state), "拒绝后状态不变");
+    assert!(target_pending(&state, 0).is_some(), "待选仍在");
+}
+
+#[test]
+fn target_pending_cleared_on_finish_recruit() {
+    let (mut engine, mut state) = setup(58);
+    play_growth_minion(&mut engine, &mut state);
+    state.pending.push_back(PendingChoice::Discover {
+        seat: 0,
+        candidates: vec![minion_id(1)],
+        source: 0,
+    });
+
+    engine.finish_recruit(&mut state).expect("结束招募应成功");
+
+    assert!(target_pending(&state, 0).is_none(), "目标待选被清空");
+    assert_eq!(state.pending.len(), 1, "发现待选保留");
+    assert_eq!(state.phase, Phase::Combat);
 }

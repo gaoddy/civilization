@@ -113,6 +113,18 @@ pub fn state_hash(state: &GameState) -> u64 {
                 hasher.u64(*source);
                 hasher.u8(*remaining);
             }
+            crate::state::PendingChoice::Target {
+                seat,
+                source,
+                card_id,
+                golden,
+            } => {
+                hasher.u8(2);
+                hasher.u8(*seat);
+                hasher.u64(*source);
+                hasher.str(card_id);
+                hasher.u8(u8::from(*golden));
+            }
         }
     }
 

@@ -225,6 +225,7 @@ fn collect_strings(seat_view: &SeatView) -> Vec<String> {
                 strings.extend(candidates.iter().cloned());
             }
             PendingChoiceView::Evolve { options } => strings.extend(options.iter().cloned()),
+            PendingChoiceView::Target { .. } => {}
         }
     }
     strings
@@ -548,4 +549,59 @@ fn hand_card_requires_target_false_for_minion_card() {
         !seat_view.self_view.hand[0].requires_target,
         "视图口径为 OnPlayEffect，随从牌恒为 false"
     );
+}
+
+#[test]
+fn pending_choice_view_target_carries_source() {
+    let (engine, mut state) = setup();
+    state.pending.push_back(PendingChoice::Target {
+        seat: 0,
+        source: 42,
+        card_id: "fangzhiji".to_string(),
+        golden: false,
+    });
+
+    let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
+    assert_eq!(
+        seat_view.self_view.pending_choices,
+        vec![PendingChoiceView::Target {
+            source_minion_id: 42
+        }]
+    );
+}
+
+#[test]
+fn affordances_blocked_while_target_pending() {
+    let (engine, mut state) = setup();
+    let card = minion_id();
+    set_shop(&mut state, 0, &[Some(card.clone())]);
+    state.players[0].hand.push(HandCard {
+        card_id: card.clone(),
+        golden: false,
+    });
+    state.players[0].board.push(dummy(&engine, 1, &card));
+    state.players[0].gold = 10;
+    state.pending.push_back(PendingChoice::Target {
+        seat: 0,
+        source: 1,
+        card_id: card,
+        golden: false,
+    });
+
+    let affordances = view(&engine, &state, 0)
+        .expect("座位 0 的视图应存在")
+        .self_view
+        .affordances;
+    assert!(affordances.shop_slots.iter().all(|slot| !slot.buyable));
+    assert!(affordances.hand_cards.iter().all(|card| !card.playable));
+    assert!(
+        affordances
+            .board_minions
+            .iter()
+            .all(|minion| !minion.sellable)
+    );
+    assert!(!affordances.can_reroll);
+    assert!(!affordances.can_upgrade_era);
+    assert!(!affordances.can_use_hero_power);
+    assert!(!affordances.can_end_recruit, "目标待选期间不能结束招募");
 }

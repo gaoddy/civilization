@@ -37,6 +37,8 @@ pub enum Intent {
     EndRecruit,
     /// 从待选发现结果中选择一张；本任务只在 `Recruit` 阶段接受。
     ChooseDiscover { choice: u8 },
+    /// 为队首的目标待选指定一个我方棋盘上的随从。
+    ChooseTarget { minion: InstanceId },
 }
 
 /// 意图被拒绝的原因，与核心规则 §3 的返回码一一对应。
