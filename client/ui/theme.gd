@@ -120,9 +120,11 @@ const SCENARIO := {
 	"minion-card-width": 98,
 	"minion-card-height": 122,
 	"shop-card-width": 108,
-	"shop-card-height": 88,
+	"shop-card-height": 120,
 	"hand-card-width": 142,
 	"hand-card-height": 84,
+	"card-info-height": 46,
+	"detail-panel-width": 200,
 }
 
 const TRIBE_COLOR := {
@@ -171,6 +173,11 @@ static func opacity(name: String) -> float:
 static func tribe_color(tribe: String) -> Color:
 	return color(str(TRIBE_COLOR.get(tribe, "snow-500")))
 
+
+## 卡面封面：部落色压暗作底，文字与信息区始终压在它上面。
+static func tribe_cover(tribe: String) -> Color:
+	return tribe_color(tribe).darkened(0.62)
+
 # ── StyleBox 工厂 ─────────────────────────────────────────────────────────
 
 static func panel_style(variant: String) -> StyleBoxFlat:
@@ -209,6 +216,13 @@ static func panel_style(variant: String) -> StyleBoxFlat:
 			box.border_color = color("color-danger")
 		"transparent":
 			box.bg_color = Color(0, 0, 0, 0)
+			box.border_color = Color(0, 0, 0, 0)
+		"cover-info":
+			box.set_corner_radius_all(0)
+			box.corner_radius_bottom_left = radius("radius-md")
+			box.corner_radius_bottom_right = radius("radius-md")
+			box.set_content_margin_all(space("space-sm"))
+			box.bg_color = alpha("color-surface-sunken", 0.92)
 			box.border_color = Color(0, 0, 0, 0)
 		_:
 			pass

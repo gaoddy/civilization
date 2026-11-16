@@ -250,7 +250,7 @@ func _check_game() -> void:
         _expect(instance.find_child(name, true, false) != null, "对局场景缺少 %s" % name)
     var empty_slot = instance.find_child("ShopSlot2", true, false)
     if empty_slot != null:
-        _expect(str(empty_slot.text).begins_with("空槽"), "空商店槽应显示「空槽」，实际：%s" % empty_slot.text)
+        _expect(_node_text(empty_slot).contains("空槽"), "空商店槽应显示「空槽」，实际：%s" % _node_text(empty_slot))
     var detail = instance.find_child("MinionDetailPanel", true, false)
     var detail_layer = instance.find_child("MinionDetailLayer", true, false)
     _expect(detail != null, "对局页应有随从详情面板")
@@ -266,8 +266,41 @@ func _check_game() -> void:
         _expect(not text.contains("-0"), "非负构成项应带 +：%s" % text)
         _expect(card.find_child("Actions", true, false) == null, "棋盘随从卡不应再显示出售/移位按钮")
         _expect(detail.mouse_filter == Control.MOUSE_FILTER_IGNORE, "详情面板不应拦截鼠标")
+        _expect(
+            not detail.get_global_rect().intersects(card.get_global_rect()),
+            "棋盘详情面板应挂在卡片上下方且不覆盖卡片"
+        )
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y + 24))
         _expect(not detail.is_visible_in_tree(), "移出棋盘随从矩形应隐藏详情面板")
+    # 商店卡：原始数值与类型写在卡面，悬停详情挂在卡片左右且不覆盖卡片。
+    var shop_card = instance.find_child("ShopSlot0", true, false)
+    if detail != null and shop_card != null:
+        var shop_text := _node_text(shop_card)
+        _expect(shop_text.contains("费用") == false, "卡面不应挤入详情字段：%s" % shop_text)
+        await _hover(instance, shop_card, shop_card.size / 2)
+        _expect(detail.is_visible_in_tree(), "悬停商店卡应显示详情面板")
+        _expect(
+            not detail.get_global_rect().intersects(shop_card.get_global_rect()),
+            "商店详情面板应挂在卡片左右且不覆盖卡片"
+        )
+        var detail_text := _node_text(detail)
+        _expect(
+            detail_text.contains("费用") and detail_text.contains("原始"),
+            "商店详情应显示费用与原始数值：%s" % detail_text
+        )
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        await _push_click(instance, shop_card.get_global_rect().get_center())
+        _expect(
+            captured.size() == 1 and str(captured[0].get("kind", "")) == Protocol.INTENT_BUY_MINION,
+            "点击商店卡应发出购买意图，实际 %s" % [captured]
+        )
+        _expect(
+            captured.is_empty() == false and int(captured[0].get("slot", -1)) == 0,
+            "购买意图应带槽位下标 0，实际 %s" % [captured]
+        )
+        await _push_motion(instance, Vector2(-40, -40))
+        _expect(not detail.is_visible_in_tree(), "移出商店卡矩形应隐藏详情面板")
     # 时代在所有位置显示具体名称（夹具自我时代 2、对手时代 1）。
     var era_pill = instance.find_child("EraPill", true, false)
     _expect(
@@ -351,6 +384,10 @@ func _check_game_layout() -> void:
         _expect(hand.get_index() > combat.get_index(), "手牌应位于战斗视图之下")
     var board = instance.find_child("BoardRow", true, false)
     _expect(board != null and board.get_child_count() == 7, "棋盘应有 7 个槽位（含空位）")
+    var shop_zero = instance.find_child("ShopSlot0", true, false)
+    var shop_text := _node_text(shop_zero) if shop_zero != null else ""
+    _expect(shop_text.contains("学者"), "商店卡应显示卡牌类型：%s" % shop_text)
+    _expect(shop_text.contains("9"), "商店卡应显示原始生命值：%s" % shop_text)
     _expect(instance.find_child("HeroTile", true, false) != null, "右栏应显示我的英雄卡")
     instance.queue_free()
     GameStore.view = {}
@@ -423,8 +460,11 @@ func _combat_instance(deadline: String) -> Node:
 
 
 func _stats_text(panel: Control) -> String:
-    var stats = panel.find_child("Stats", true, false)
-    return "" if stats == null else str(stats.text)
+    var attack = panel.find_child("CardAttack", true, false)
+    var health = panel.find_child("CardHealth", true, false)
+    if attack == null or health == null:
+        return ""
+    return "%s / %s" % [str(attack.text), str(health.text)]
 
 
 ## 给当前回合装上战报（生产路径由 `CombatResult` 消息写入，这里直接摆状态）。
