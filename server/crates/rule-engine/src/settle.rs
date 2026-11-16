@@ -50,6 +50,8 @@ pub struct SeatCombatReport {
     pub opponent_board: Vec<MinionInstance>,
     /// 本场战斗的行动序列。
     pub actions: Vec<combat::CombatAction>,
+    /// 与 `actions` 同序同长：每条动作执行后受影响随从的状态。
+    pub states: Vec<Vec<combat::MinionSnapshot>>,
     /// 本场战斗造成的伤害；镜像战恒为 0。
     pub damage: i32,
     /// 本场胜者：真实战恒为 `Some`（`tie_break` 必判出胜者）；
@@ -312,6 +314,7 @@ fn resolve_real(
 
     // 报告只从本次调用返回：双方各自视角的阵容互换，行动序列与伤害相同。
     let actions = log.actions;
+    let states = log.states;
     reports.insert(
         a,
         SeatCombatReport {
@@ -321,6 +324,7 @@ fn resolve_real(
             own_board: board_a.clone(),
             opponent_board: board_b.clone(),
             actions: actions.clone(),
+            states: states.clone(),
             damage,
             winner: Some(winner),
         },
@@ -334,6 +338,7 @@ fn resolve_real(
             own_board: board_b,
             opponent_board: board_a,
             actions,
+            states,
             damage,
             winner: Some(winner),
         },
@@ -399,6 +404,7 @@ fn resolve_mirror(
             own_board: board,
             opponent_board: ghost,
             actions: log.actions,
+            states: log.states,
             damage: 0,
             winner: won.then_some(seat),
         },
