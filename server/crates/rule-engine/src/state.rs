@@ -35,6 +35,124 @@ pub struct Modifier {
     pub duration: Duration,
 }
 
+/// 随从单项属性（攻击或生命）的分层数值。
+///
+/// 各层语义：`initial` 为基础值，`growth` 为可移除的成长增量，
+/// `permanent` 为不可移除的永久增量，`turn` 为本回合临时增量，
+/// `aura` 为光环派生增量。`current` 为当前实际值，
+/// 与各层之和（[`StatComponent::layers`]）的差即已受伤害。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct StatComponent {
+    pub initial: i32,
+    pub growth: i32,
+    pub permanent: i32,
+    pub turn: i32,
+    pub aura: i32,
+    pub current: i32,
+}
+
+impl StatComponent {
+    /// 以基础值创建；各层增量为 0，当前值等于基础值。
+    pub fn new(initial: i32) -> Self {
+        Self {
+            initial,
+            growth: 0,
+            permanent: 0,
+            turn: 0,
+            aura: 0,
+            current: initial,
+        }
+    }
+
+    /// 各层增量之和，即未受伤时的应有值。
+    pub fn layers(&self) -> i32 {
+        self.initial
+            .saturating_add(self.growth)
+            .saturating_add(self.permanent)
+            .saturating_add(self.turn)
+            .saturating_add(self.aura)
+    }
+
+    /// 已受伤害；复生等情况下可为负。
+    pub fn damage(&self) -> i32 {
+        self.layers().saturating_sub(self.current)
+    }
+
+    /// 成长增量与当前值同时增加。
+    pub fn add_growth(&mut self, delta: i32) {
+        self.growth = self.growth.saturating_add(delta);
+        self.current = self.current.saturating_add(delta);
+    }
+
+    /// 永久增量与当前值同时增加。
+    pub fn add_permanent(&mut self, delta: i32) {
+        self.permanent = self.permanent.saturating_add(delta);
+        self.current = self.current.saturating_add(delta);
+    }
+
+    /// 本回合临时增量与当前值同时增加。
+    pub fn add_turn(&mut self, delta: i32) {
+        self.turn = self.turn.saturating_add(delta);
+        self.current = self.current.saturating_add(delta);
+    }
+
+    /// 按差值把光环层更新到 `value`，当前值同步变化。
+    pub fn set_aura(&mut self, value: i32) {
+        let delta = value.saturating_sub(self.aura);
+        self.aura = value;
+        self.current = self.current.saturating_add(delta);
+    }
+
+    /// 清除本回合临时增量。
+    pub fn clear_turn(&mut self) {
+        self.add_turn(self.turn.saturating_neg());
+    }
+
+    /// 移除成长增量；永久增量不受影响。
+    pub fn remove_growth(&mut self) {
+        self.add_growth(self.growth.saturating_neg());
+    }
+
+    /// 按差值把基础值更新到 `value`，当前值同步变化。
+    pub fn set_initial(&mut self, value: i32) {
+        let delta = value.saturating_sub(self.initial);
+        self.initial = value;
+        self.current = self.current.saturating_add(delta);
+    }
+
+    /// 只扣减当前值；负数伤害按 0 处理。
+    pub fn apply_damage(&mut self, amount: i32) {
+        self.current = self.current.saturating_sub(amount.max(0));
+    }
+
+    /// 只设置当前值，允许偏离层和（复生）。
+    pub fn revive_to(&mut self, value: i32) {
+        self.current = value;
+    }
+
+    /// 当前值的非负形式，用于展示。
+    pub fn current_non_negative(&self) -> i32 {
+        self.current.max(0)
+    }
+}
+
+/// 随从的攻击与生命分层数值。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct MinionStats {
+    pub attack: StatComponent,
+    pub health: StatComponent,
+}
+
+impl MinionStats {
+    /// 以攻击、生命的基础值创建，两层增量均为 0。
+    pub fn new(attack: i32, health: i32) -> Self {
+        Self {
+            attack: StatComponent::new(attack),
+            health: StatComponent::new(health),
+        }
+    }
+}
+
 /// 某个棋盘实例当前生效的光环派生值。
 ///
 /// 光环只存在于派生缓存中，绝不写入 [`MinionInstance::mods`] 或
