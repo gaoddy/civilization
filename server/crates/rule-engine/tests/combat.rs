@@ -68,7 +68,13 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
 }
 
 /// 给已有卡牌追加一个带效果串的技能，用于构造召唤、复制等战斗内效果。
-fn add_effect_skill(catalog: &mut Catalog, card_id: &str, skill_id: &str, keyword: &str, effects: &str) {
+fn add_effect_skill(
+    catalog: &mut Catalog,
+    card_id: &str,
+    skill_id: &str,
+    keyword: &str,
+    effects: &str,
+) {
     catalog.skills.insert(
         skill_id.to_string(),
         Skill {
@@ -1055,10 +1061,7 @@ fn summon_action_records_position_and_seat() {
         unreachable!("已确认是召唤动作");
     };
     assert_eq!(*seat, 1, "召唤方为防守方座位");
-    assert_eq!(
-        *position, 0,
-        "阵亡随从不计入存活序列，召唤物是唯一存活随从"
-    );
+    assert_eq!(*position, 0, "阵亡随从不计入存活序列，召唤物是唯一存活随从");
     assert_eq!(card_id, "seedling");
     assert_eq!(
         log.states[index][0].instance_id, *summoned,
@@ -1107,10 +1110,7 @@ fn deathrattle_summon_uses_alive_rank_and_stops_at_capacity() {
         })
         .collect();
     assert_eq!(positions.len(), 1, "存活已满后的第二次召唤作废");
-    assert_eq!(
-        positions[0], 6,
-        "位置是存活序列下标，不把阵亡的召唤者计入"
-    );
+    assert_eq!(positions[0], 6, "位置是存活序列下标，不把阵亡的召唤者计入");
     assert_eq!(log.summon_count, 1, "作废的召唤不计入召唤数");
 }
 
