@@ -178,6 +178,17 @@
         "secondsLeft": { "type": "integer", "minimum": 0 }
       }
     },
+    "CombatMinionState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minionId", "attack", "health", "alive"],
+      "properties": {
+        "minionId": { "type": "string", "description": "随从实例 id" },
+        "attack": { "type": "integer", "minimum": 0 },
+        "health": { "type": "integer", "minimum": 0 },
+        "alive": { "type": "boolean" }
+      }
+    },
     "CombatResult": {
       "type": "object",
       "additionalProperties": false,
@@ -205,6 +216,26 @@
                 "type": ["string", "null"],
                 "enum": ["own", "opponent", null],
                 "description": "targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标"
+              },
+              "sourceMinionId": {
+                "type": ["string", "null"],
+                "description": "动作来源随从实例 id；死亡、复生、召唤等无来源动作为 null"
+              },
+              "targetMinionId": {
+                "type": ["string", "null"],
+                "description": "动作目标随从实例 id；死亡、复生、召唤等无目标动作为 null"
+              },
+              "source": { "$ref": "#/$defs/CombatMinionState" },
+              "target": { "$ref": "#/$defs/CombatMinionState" },
+              "summon": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["side", "position", "minion"],
+                "properties": {
+                  "side": { "type": "string", "enum": ["own", "opponent"], "description": "相对接收该消息的座位" },
+                  "position": { "type": "integer", "minimum": 0, "maximum": 6, "description": "在该侧棋盘中的插入下标" },
+                  "minion": { "$ref": "view.schema.json#/$defs/BoardMinion" }
+                }
               }
             }
           }

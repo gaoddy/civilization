@@ -69,11 +69,6 @@
 | --- | --- | --- | --- |
 | `cardId` | string | 是 |  |
 
-### SkipAnimation
-
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-
 ## 下行消息（S→C）
 
 ### AuthResult
@@ -97,6 +92,14 @@
 | `actions[].damage` | integer | null | 否 |  |
 | `actions[].sourceSide` | enum | 否 | sourceIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有来源下标 |
 | `actions[].targetSide` | enum | 否 | targetIndex 所指棋盘，相对接收该消息的座位；null 表示本条动作没有目标下标 |
+| `actions[].sourceMinionId` | string | null | 否 | 动作来源随从实例 id；死亡、复生、召唤等无来源动作为 null |
+| `actions[].targetMinionId` | string | null | 否 | 动作目标随从实例 id；死亡、复生、召唤等无目标动作为 null |
+| `actions[].source` | CombatMinionState | 否 |  |
+| `actions[].target` | CombatMinionState | 否 |  |
+| `actions[].summon` | object | 否 |  |
+| `actions[].summon.side` | enum | 是 | 相对接收该消息的座位 |
+| `actions[].summon.position` | integer | 是 | 在该侧棋盘中的插入下标 |
+| `actions[].summon.minion` | BoardMinion | 是 |  |
 | `damage` | integer | 是 | 本场战斗败者受到的伤害 |
 | `winnerId` | string | null | 是 | 本场胜者；玩家自己的 playerId 表示胜 |
 | `mirror` | boolean | 否 | true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0 |
@@ -199,6 +202,7 @@
 | `index` | integer | 是 |  |
 | `cardId` | string | 是 |  |
 | `playable` | boolean | 是 | 服务端算好的可打出提示 |
+| `requiresTarget` | boolean | 是 | 该牌是否需要玩家指定单一目标 |
 | `disabledReason` | string | null | 是 | 不可操作时的错误码 |
 
 ### BoardMinion
@@ -311,6 +315,8 @@
 | `分支1.candidates` | array<string> | 是 | 三选一的候选 cardId |
 | `分支2.kind` | object | 是 | 固定为 evolve |
 | `分支2.options` | array<string> | 是 | 进化选项 |
+| `分支3.kind` | object | 是 | 固定为 target |
+| `分支3.sourceMinionId` | string | 是 | 触发该待选的随从 |
 
 ### PlayerView
 
@@ -355,6 +361,7 @@
 | `分支4.kind` | object | 是 |  |
 | `分支5.kind` | object | 是 |  |
 | `分支5.handIndex` | integer | 是 | 手牌位置 |
+| `分支5.position` | integer | 否 | 插入站位；缺省追加到最右 |
 | `分支5.targetMinionId` | string | 否 | 战吼或效果需要目标时填 |
 | `分支6.kind` | object | 是 |  |
 | `分支6.fromIndex` | integer | 是 |  |
@@ -367,6 +374,8 @@
 | `分支9.kind` | object | 是 |  |
 | `分支10.kind` | object | 是 |  |
 | `分支10.choice` | integer | 是 | 发现为候选下标，进化为选项下标 |
+| `分支11.kind` | object | 是 |  |
+| `分支11.minionId` | string | 是 | 目标随从实例 id |
 
 ### ErrorCode
 

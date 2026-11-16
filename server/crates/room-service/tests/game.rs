@@ -857,6 +857,48 @@ fn real_report(seat: Seat) -> rule_engine::settle::SeatCombatReport {
             CombatAction::Death { minion: 201 },
             CombatAction::ContagionApplied { target: 102 },
         ],
+        states: vec![
+            vec![
+                rule_engine::combat::MinionSnapshot {
+                    instance_id: 101,
+                    attack: 2,
+                    health: 2,
+                    alive: true,
+                },
+                rule_engine::combat::MinionSnapshot {
+                    instance_id: 201,
+                    attack: 1,
+                    health: 0,
+                    alive: false,
+                },
+            ],
+            vec![
+                rule_engine::combat::MinionSnapshot {
+                    instance_id: 202,
+                    attack: 1,
+                    health: 1,
+                    alive: true,
+                },
+                rule_engine::combat::MinionSnapshot {
+                    instance_id: 102,
+                    attack: 1,
+                    health: 1,
+                    alive: true,
+                },
+            ],
+            vec![rule_engine::combat::MinionSnapshot {
+                instance_id: 201,
+                attack: 1,
+                health: 0,
+                alive: false,
+            }],
+            vec![rule_engine::combat::MinionSnapshot {
+                instance_id: 102,
+                attack: 1,
+                health: 1,
+                alive: true,
+            }],
+        ],
         damage: 3,
         winner: Some(seat),
     }
@@ -965,6 +1007,12 @@ fn mirror_combat_result_is_marked() {
             damage: 1,
             blocked: false,
         }],
+        states: vec![vec![rule_engine::combat::MinionSnapshot {
+            instance_id: 101,
+            attack: 1,
+            health: 1,
+            alive: true,
+        }]],
         damage: 0,
         winner: Some(1),
     };
