@@ -57,6 +57,19 @@ func _push_motion(instance: Node, canvas_point: Vector2) -> void:
     await get_tree().process_frame
 
 
+## 在画布坐标处用真实鼠标按下/松开事件点击。
+func _push_click(instance: Node, canvas_point: Vector2) -> void:
+    await _push_motion(instance, canvas_point)
+    for pressed in [true, false]:
+        var event := InputEventMouseButton.new()
+        event.button_index = MOUSE_BUTTON_LEFT
+        event.pressed = pressed
+        event.position = canvas_point
+        event.global_position = canvas_point
+        instance.get_viewport().push_input(event, true)
+        await get_tree().process_frame
+
+
 ## 战斗只读卡（CombatOwnRow / CombatOpponentRow）同样触发详情。
 func _check_combat_detail(instance: Node) -> void:
     var detail = instance.find_child("MinionDetailPanel", true, false)
@@ -200,8 +213,20 @@ func _check_game() -> void:
             await _push_motion(instance, button.get_global_rect().get_center())
             _expect(detail.is_visible_in_tree(), "指针落在卡片按钮上时详情面板应保持可见")
         _expect(detail.mouse_filter == Control.MOUSE_FILTER_IGNORE, "详情面板不应拦截鼠标")
+        # 详情面板覆盖按钮时只读：真实点击应穿透到下层按钮。
+        if actions != null and actions.get_child_count() > 0:
+            var sell: Button = actions.get_child(0)
+            detail.position = sell.get_global_rect().position
+            var hits := {"count": 0}
+            sell.pressed.connect(func() -> void: hits["count"] += 1)
+            await _push_click(instance, sell.get_global_rect().get_center())
+            _expect(int(hits["count"]) == 1, "详情面板覆盖时点击应触发下层按钮")
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y + 24))
         _expect(not detail.is_visible_in_tree(), "移出棋盘随从矩形应隐藏详情面板")
+    # 重新显示详情，再打开选择浮层，确认浮层会隐藏详情层。
+    if detail != null and card != null:
+        await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
+        _expect(detail.is_visible_in_tree(), "打开浮层前详情面板应可见")
     var power = instance.find_child("HeroPowerButton", true, false)
     if power == null:
         _expect(false, "对局场景缺少 HeroPowerButton")
@@ -210,6 +235,7 @@ func _check_game() -> void:
         await get_tree().process_frame
         var overlay = instance.find_child("ChooserOverlay", true, false)
         _expect(overlay != null and overlay.visible, "英雄技能应打开目标选择弹层")
+        _expect(detail != null and not detail.is_visible_in_tree(), "打开选择浮层时详情面板应隐藏")
         var has_skip := false
         if overlay != null:
             for child in overlay.find_children("*", "Button", true, false):

@@ -2526,13 +2526,13 @@ impl ::std::default::Default for LeaveRoom {
         Self {}
     }
 }
-///单项属性的分层构成；initial + permanent + turn + aura - damage = current
+///单项属性的分层构成；在可达的下发状态下 initial + permanent + turn + aura - damage = current
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
-///  "description": "单项属性的分层构成；initial + permanent + turn + aura - damage = current",
+///  "description": "单项属性的分层构成；在可达的下发状态下 initial + permanent + turn + aura - damage = current",
 ///  "type": "object",
 ///  "required": [
 ///    "aura",

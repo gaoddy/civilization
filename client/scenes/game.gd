@@ -954,6 +954,10 @@ func _canvas_point(viewport_point: Vector2) -> Vector2:
 
 
 func _update_detail_hover(point: Vector2) -> void:
+    # 模态浮层打开时详情层会盖住浮层内容，直接隐藏且不再响应悬停。
+    if _overlay != null and _overlay.visible:
+        _hide_detail()
+        return
     var found: Control = null
     for card in _detail_cards:
         if is_instance_valid(card) and card.is_visible_in_tree() and card.get_global_rect().has_point(point):
@@ -1093,6 +1097,7 @@ func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
 
 func _overlay_frame(title: String, parent: VBoxContainer) -> void:
     _overlay.visible = true
+    _hide_detail()
     var shade := ColorRect.new()
     shade.color = UITheme.alpha("color-bg", 0.72)
     shade.set_anchors_preset(Control.PRESET_FULL_RECT)

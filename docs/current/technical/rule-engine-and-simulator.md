@@ -160,7 +160,7 @@ tests/                       # Python 标准库 unittest
 
 | 字段 | 含义 |
 | --- | --- |
-| `initial` | 初始值：卡面攻防，金色翻倍；只在三连升金时变化 |
+| `initial` | 初始值：卡面攻防，金色翻倍；生产路径下仅在三连升金时变化 |
 | `growth` | 成长来源的永久加成；`RemoveGrowth` 只清这一层 |
 | `permanent` | 其他永久加成（`duration=permanent` 的修正）；传染的永久减血也记在这里 |
 | `turn` | 本回合/本场临时效果（`duration=combat` 的修正）；进入 Settle 时清除 |
@@ -171,15 +171,15 @@ tests/                       # Python 标准库 unittest
 - 变更一律走方法，分量与 `current` 同步：`add_growth` / `add_permanent` / `add_turn` / `set_aura` / `clear_turn` / `remove_growth` / `set_initial`。`apply_damage` 只扣 `current`，`revive_to` 只写 `current`；除这三者外没有直接写 `current` 的公开入口。
 - 初始值在 `MinionInstance::new` 时解析：token 取 token 注册表，普通卡取卡牌攻防，金色 ×2；`is_scholar` 同时确定并存储。
 - 读取口 `attack()` / `health()` 返回 `max(0, current)`；学者 `attack()` 恒为 0，但各层照常累积。战斗内部死亡判定直接用原始 `stats.health.current <= 0`，不经过非负夹紧。
-- 视图 `view::MinionStatsView` / `StatBreakdownView` 把攻防映射为 `initial`、`permanent`（= `growth + permanent`）、`turn`、`aura`、`damage`、`current` 六项，满足 `initial + permanent + turn + aura - damage == current`；学者攻击六层全为 0。`health.current` 在视图中夹到 0，招募期负血量由 `damage` 吸收。`BoardMinion` 协议的 `stats` 与顶层 `attack` / `health` 复用同一口径。
+- 视图 `view::MinionStatsView` / `StatBreakdownView` 把攻防映射为 `initial`、`permanent`（= `growth + permanent`）、`turn`、`aura`、`damage`、`current` 六项；在可达的下发状态下满足 `initial + permanent + turn + aura - damage == current`（复生造成的负 `damage` 只存在于战斗内部，不下发）。学者攻击六层全为 0。`health.current` 在视图中夹到 0，招募期负血量由 `damage` 吸收。`BoardMinion` 协议的 `stats` 与顶层 `attack` / `health` 复用同一口径。
 
 ## 9. 战斗伤害、复生与快照
 
 - `BattleField::apply_damage(id, amount, can_kill)`（`server/crates/rule-engine/src/combat.rs`）是唯一的战斗掉血入口，只扣 `stats.health.current`；`deal_damage` 是同义包装。攻击主伤害与反击伤害都走它。`can_kill = false` 时最多把当前生命降到 1，`can_kill = true` 时允许降到 0 或更低，由死亡判定按 `current <= 0` 处理。
 - 复生直接调用 `MinionStats::revive_to(1)`，把 `current` 置为 1，允许大于层和；这是 `current` 正向偏离层和的唯一入口，不复用 `apply_damage`。
 - `SideBoard` 不再持有独立生命数组，战斗内所有当前生命读写都落在 `stats.health.current`。
-- 战后 `write_back_persistent`（`server/crates/rule-engine/src/settle.rs`）只回写 `contagion` 与 `stats.*.growth`，随后按 `layers()` 重算持久实例的 `current`：幸存随从满血进入下一回合，战斗伤害、回合效果与光环都不回写。
+- 战后 `write_back_persistent`（`server/crates/rule-engine/src/settle.rs`）只回写 `contagion` 与 `stats.*.growth`；持久棋盘上的随从按层和重算当前值（满血进入下一回合），死亡不改变持久棋盘，战斗伤害、回合效果与光环都不回写。
 - 进入结算时 `clear_combat_duration` 调用 `clear_turn` 清除攻防的 `turn` 层，同时保留 `granted` 的时长清理与禁攻规则。
-- `strip_ghost` 只保留 `initial + growth`，丢弃 `permanent`、`turn`、`aura` 与受击差值，并按 `initial + growth` 重算 `current`；授予关键词与战斗内临时标记一并重置。
+- `strip_ghost` 只保留 `initial + growth`，丢弃 `permanent`、`turn`、`aura` 与受击差值，并按 `initial + growth` 重算 `current`；`breed`、`contagion` 保留，`breed_applied` 重置；授予关键词与战斗内临时标记一并重置。
 - 光环只经 `fold_auras` 折叠进克隆：把 `state.auras` 的派生值写入克隆的 `aura` 层并保留「光环失效不致死」的夹紧，持久实例的 `aura` 层始终为 0。
 - `hash.rs` 编码 `stats` 各分量（含 `current`）与 `is_scholar`；编码变化会改变状态哈希，同代码重放仍保持确定。
