@@ -12,7 +12,7 @@ use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::recruit::new_minion;
 use crate::rng::Stream;
-use crate::state::{GameState, InstanceId, MinionInstance, PendingChoice, Seat};
+use crate::state::{GameState, InstanceId, MinionInstance, PendingChoice, Seat, base_stats};
 
 /// 一次发现提供的候选上限。
 const DISCOVER_CANDIDATES: usize = 3;
@@ -240,19 +240,10 @@ impl Engine {
 ///
 /// 成长、永久与回合层保留；`current` 随 `set_initial` 同步调整。
 fn make_golden(catalog: &Catalog, minion: &mut MinionInstance) {
-    let (attack, health): (i32, i32) = match catalog.tokens.get(&minion.card_id) {
-        Some(token) => (token.attack, token.health),
-        None => {
-            let card = catalog.cards.get(&minion.card_id);
-            (
-                card.and_then(|card| card.attack).unwrap_or(0),
-                card.and_then(|card| card.health).unwrap_or(0),
-            )
-        }
-    };
+    let (attack, health) = base_stats(catalog, &minion.card_id, true).unwrap_or((0, 0));
     minion.golden = true;
-    minion.stats.attack.set_initial(attack.saturating_mul(2));
-    minion.stats.health.set_initial(health.saturating_mul(2));
+    minion.stats.attack.set_initial(attack);
+    minion.stats.health.set_initial(health);
     minion.attacks_left = 0;
     minion.cannot_attack = false;
 }

@@ -166,6 +166,25 @@ pub struct AuraEffect {
     pub floor_one: bool,
 }
 
+/// 解析卡牌或 token 的基础攻防；金色按卡面 ×2。
+///
+/// token 优先取注册表，普通卡取卡牌攻防；两者都找不到时返回 `None`。
+/// 「金色 ×2」规则只在这里实现，`MinionInstance::new` 与三连升金共用。
+pub(crate) fn base_stats(catalog: &Catalog, card_id: &str, golden: bool) -> Option<(i32, i32)> {
+    let (attack, health) = match catalog.tokens.get(card_id) {
+        Some(token) => (token.attack, token.health),
+        None => {
+            let card = catalog.cards.get(card_id)?;
+            (card.attack.unwrap_or(0), card.health.unwrap_or(0))
+        }
+    };
+    Some(if golden {
+        (attack.saturating_mul(2), health.saturating_mul(2))
+    } else {
+        (attack, health)
+    })
+}
+
 /// 棋盘上的随从实例。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MinionInstance {
@@ -191,20 +210,7 @@ impl MinionInstance {
     ///
     /// 学者标记取卡牌 `is_scholar` 或学者流派，构造后不再变化。
     pub fn new(catalog: &Catalog, instance_id: InstanceId, card_id: &str, golden: bool) -> Self {
-        let (mut attack, mut health) = match catalog.tokens.get(card_id) {
-            Some(token) => (token.attack, token.health),
-            None => {
-                let card = catalog.cards.get(card_id);
-                (
-                    card.and_then(|card| card.attack).unwrap_or(0),
-                    card.and_then(|card| card.health).unwrap_or(0),
-                )
-            }
-        };
-        if golden {
-            attack = attack.saturating_mul(2);
-            health = health.saturating_mul(2);
-        }
+        let (attack, health) = base_stats(catalog, card_id, golden).unwrap_or((0, 0));
         let is_scholar = catalog
             .cards
             .get(card_id)

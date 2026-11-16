@@ -21,7 +21,7 @@ use rule_engine::intent::RejectCode;
 use rule_engine::state::{MinionInstance, Phase};
 use rule_engine::view::{
     MinionStatsView, PendingChoiceView, PlayerSummaryView, SeatView, SelfView, ShopSlotView,
-    StatBreakdownView, stats_view,
+    StatBreakdownView, stats_breakdown,
 };
 
 /// 座位上的玩家身份：协议里只需要 `playerId` 与展示名。
@@ -101,7 +101,7 @@ pub fn board_minion_from(
         keywords: combat::keywords(catalog, minion).into_iter().collect(),
         minion_id: minion.instance_id.to_string(),
         sellable,
-        stats: Some(stats_to_protocol(&stats_view(minion))),
+        stats: Some(stats_to_protocol(&stats_breakdown(minion))),
     }
 }
 

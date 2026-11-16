@@ -670,6 +670,7 @@ fn write_back_persistent(state: &mut GameState, seat: Seat, final_board: &[Minio
                 stored_stat.add_growth(updated_stat.growth.saturating_sub(stored_stat.growth));
             }
             for stat in [&mut stored.stats.attack, &mut stored.stats.health] {
+                debug_assert_eq!(stat.aura, 0, "持久实例不应携带光环层");
                 stat.revive_to(stat.layers());
             }
         }

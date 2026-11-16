@@ -340,7 +340,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
             golden: minion.golden,
             attack: combat::effective_attack(&engine.catalog, minion),
             health: combat::effective_health(&engine.catalog, minion),
-            stats: stats_view(minion),
+            stats: stats_breakdown(minion),
             keywords: combat::keywords(&engine.catalog, minion)
                 .into_iter()
                 .collect(),
@@ -434,7 +434,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
 /// 学者攻击沿用 `attack()` 的口径：六层全部投影为 0，存储层保留加成。
 ///
 /// 服务层的协议映射复用它，保证规则引擎与服务端视图口径一致。
-pub fn stats_view(minion: &MinionInstance) -> MinionStatsView {
+pub fn stats_breakdown(minion: &MinionInstance) -> MinionStatsView {
     MinionStatsView {
         attack: if minion.is_scholar {
             StatBreakdownView::default()
@@ -448,17 +448,12 @@ pub fn stats_view(minion: &MinionInstance) -> MinionStatsView {
 /// 单项属性的分层构成；`permanent` 合并成长与其他永久增量。
 fn breakdown(stat: &StatComponent, current: i32) -> StatBreakdownView {
     let permanent = stat.growth.saturating_add(stat.permanent);
-    let layers = stat
-        .initial
-        .saturating_add(permanent)
-        .saturating_add(stat.turn)
-        .saturating_add(stat.aura);
     StatBreakdownView {
         initial: stat.initial,
         permanent,
         turn: stat.turn,
         aura: stat.aura,
-        damage: layers.saturating_sub(current),
+        damage: stat.layers().saturating_sub(current),
         current,
     }
 }
