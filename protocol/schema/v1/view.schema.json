@@ -35,7 +35,7 @@
       "additionalProperties": false,
       "required": ["index", "minionId", "cardId", "golden", "attack", "health", "keywords", "sellable"],
       "properties": {
-        "index": { "type": "integer", "minimum": 0, "maximum": 6 },
+        "index": { "type": "integer", "minimum": 0, "description": "该随从在当前存活随从序列中的下标；上界由 PlayerView.boardSlots 决定" },
         "minionId": { "type": "string", "description": "随从实例 id" },
         "cardId": { "type": "string" },
         "golden": { "type": "boolean" },
@@ -195,12 +195,13 @@
     "PlayerView": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["roomId", "phase", "turn", "phaseDeadline", "self", "players", "enabledFactions"],
+      "required": ["roomId", "phase", "turn", "phaseDeadline", "boardSlots", "self", "players", "enabledFactions"],
       "properties": {
         "roomId": { "type": "string" },
         "phase": { "$ref": "view.schema.json#/$defs/Phase" },
         "turn": { "type": "integer", "minimum": 1, "maximum": 20 },
         "phaseDeadline": { "type": "string", "format": "date-time" },
+        "boardSlots": { "type": "integer", "minimum": 1, "description": "本方棋盘随从位上限，v0.1 为 7" },
         "opponentPlayerId": { "type": ["string", "null"], "description": "当前战斗对手；招募阶段或未配对时为 null" },
         "self": {
           "type": "object",
