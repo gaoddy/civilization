@@ -1244,7 +1244,9 @@ func _damage_text(value: int) -> String:
 func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
     UI.clear(_overlay)
     var choices: Array = self_state.get("pendingChoices", [])
-    if _view_stale or _deadline_expired or recruited:
+    var phase := str(GameStore.view.get("phase", GameStore.phase))
+    # 待选只在招募阶段可操作：跨回合保留的发现/进化待选不能盖在战斗演示上。
+    if _view_stale or _deadline_expired or recruited or phase != Protocol.PHASE_RECRUIT:
         _target_intent = {}
         _overlay.visible = false
         return
@@ -1390,6 +1392,8 @@ func _prune_target_requests() -> void:
 func _on_choose_target(minion_id: String) -> void:
     if _deadline_expired or _view_stale:
         return
+    if str(GameStore.view.get("phase", GameStore.phase)) != Protocol.PHASE_RECRUIT:
+        return
     _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "minionId": minion_id})
 
 
@@ -1463,7 +1467,7 @@ func _on_end_recruit() -> void:
 
 
 func _on_choose(choice_index: int) -> void:
-    if _deadline_expired:
+    if _deadline_expired or str(GameStore.view.get("phase", GameStore.phase)) != Protocol.PHASE_RECRUIT:
         return
     _send_intent({"kind": Protocol.INTENT_CHOOSE_DISCOVER, "choice": choice_index})
 

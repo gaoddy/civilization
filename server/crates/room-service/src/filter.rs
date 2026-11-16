@@ -352,14 +352,21 @@ fn combat_action(
             seat,
             position,
         } => {
-            // 召唤物不在战前快照里：按动作里的卡面信息重建展示数据。
+            // 召唤物不在战前快照里：卡面信息来自动作，攻防取该动作的状态快照
+            // （带光环与战斗内加成），缺失时才退回卡面基础值。
             let instance = MinionInstance::new(catalog, *minion, card_id, *golden);
             let side = if *seat == report.seat {
                 CombatResultActionsItemSummonSide::Own
             } else {
                 CombatResultActionsItemSummonSide::Opponent
             };
-            let board_minion = board_minion_from(catalog, usize::from(*position), &instance, false);
+            let mut board_minion =
+                board_minion_from(catalog, usize::from(*position), &instance, false);
+            if let Some(snapshot) = states.first() {
+                board_minion.attack = non_negative(snapshot.attack);
+                board_minion.health = non_negative(snapshot.health);
+                board_minion.stats = None;
+            }
             CombatResultActionsItem {
                 damage: None,
                 kind: "summon".to_string(),
@@ -397,8 +404,8 @@ fn target_side(side: Side) -> CombatResultActionsItemTargetSide {
 
 /// 在该座位视角的两份棋盘里定位实例：先本方、后对手。
 ///
-/// 真实战斗的实例编号全局唯一；镜像战的幽灵快照会复用编号，此时先命中本方即
-/// 可（两份棋盘内容相同）。
+/// 镜像战的幽灵在结算层已重新编号，与己方棋盘不相交，因此这里不会撞号；
+/// 若将来仍出现重号，先命中本方是既有取舍（两份棋盘内容相同）。
 fn locate(report: &SeatCombatReport, minion: InstanceId) -> Option<(usize, Side)> {
     if let Some(index) = report
         .own_board

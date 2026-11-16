@@ -42,6 +42,8 @@ func _resolve(at_position: Vector2, data: Variant) -> Dictionary:
     if hit != null:
         if card_kind == "effect" and requires_target:
             return {"position": 0, "target_minion_id": str(hit.get_meta("minion_id", ""))}
+        if card_kind == "minion" and board_full:
+            return {}
         return {"position": _index_of(hit), "target_minion_id": ""}
 
     if card_kind == "minion":

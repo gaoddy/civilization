@@ -639,6 +639,36 @@ fn combat_summon_maps_side_position_and_minion() {
 }
 
 #[test]
+fn combat_summon_uses_state_snapshot_values() {
+    // 召唤物可能带光环/战斗内加成：展示数值取动作的状态快照，而不是卡面基础值。
+    let catalog = catalog();
+    let report = SeatCombatReport {
+        seat: 0,
+        own_board: vec![minion(101)],
+        opponent_board: vec![minion(201)],
+        actions: vec![CombatAction::Summon {
+            minion: 301,
+            card_id: "baiyi".to_string(),
+            golden: false,
+            seat: 0,
+            position: 1,
+        }],
+        // baiyi 卡面 1/2，这里给出加成后的 5/7。
+        states: vec![vec![snapshot(301, 5, 7, true)]],
+        ..real_report(0)
+    };
+
+    let result = combat_result(&catalog, &report, &seats());
+    let summon = result.actions[0]
+        .summon
+        .as_ref()
+        .expect("召唤动作应带 summon");
+    assert_eq!(summon.minion.attack, 5, "召唤物攻击取状态快照");
+    assert_eq!(summon.minion.health, 7, "召唤物生命取状态快照");
+    assert_eq!(summon.minion.card_id, "baiyi", "卡面信息仍来自动作");
+}
+
+#[test]
 fn combat_death_and_reborn_carry_target_state() {
     let catalog = catalog();
     let result = combat_result(&catalog, &real_report(0), &seats());

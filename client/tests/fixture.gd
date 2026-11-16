@@ -219,9 +219,12 @@ static func hand(card_id: String, requires_target: bool) -> Dictionary:
 
 
 ## 棋盘随从夹具：只填落点判定与展示需要的字段。
-static func board_minion(minion_id: String, card_id: String) -> Dictionary:
+##
+## `index` 必须与随从在 `self.board` 中的下标一致：页面把它写进卡片的
+## `minion_index` 元数据，落点判定据此换算插入下标。
+static func board_minion(minion_id: String, card_id: String, index := 0) -> Dictionary:
     return {
-        "index": 0,
+        "index": index,
         "minionId": minion_id,
         "cardId": card_id,
         "golden": false,

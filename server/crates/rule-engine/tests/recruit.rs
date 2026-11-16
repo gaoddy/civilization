@@ -1577,6 +1577,41 @@ fn choose_target_outside_board_rejects() {
 }
 
 #[test]
+fn choose_target_outside_filtered_pool_rejects() {
+    // 战吼筛「机械」：棋盘上有机械（因此产生待选），但选一个学者必须被拒，
+    // 而不是接受后静默落空（core-rules §4：指定随从不在合法池时返回该码）。
+    let (mut engine, mut state) = setup(59);
+    put_champion(&engine, &mut state, 0, 9_000, "fangzhiji");
+    put_champion(&engine, &mut state, 0, 9_001, "gutenberg");
+    state.players[0].hand.push(HandCard {
+        card_id: BATTLECRY_TRIBE_TARGET.to_string(),
+        golden: false,
+    });
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("机械战吼入场后应产生目标待选");
+    assert!(target_pending(&state, 0).is_some(), "池内有机械时产生待选");
+
+    let before = state_hash(&state);
+    let reject = engine
+        .apply(&mut state, 0, Intent::ChooseTarget { minion: 9_001 })
+        .expect_err("目标不在合法池内必须拒绝");
+
+    assert_eq!(reject.code, RejectCode::NoValidTarget);
+    assert_eq!(before, state_hash(&state), "拒绝后状态不变");
+    assert!(target_pending(&state, 0).is_some(), "待选仍在");
+}
+
+#[test]
 fn target_pending_cleared_on_finish_recruit() {
     let (mut engine, mut state) = setup(58);
     play_growth_minion(&mut engine, &mut state);

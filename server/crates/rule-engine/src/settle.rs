@@ -362,7 +362,7 @@ fn resolve_mirror(
     let catalog = &engine.catalog;
     let current = board_of(state, seat).to_vec();
     let board = fold_auras(catalog, &state.auras, &current);
-    let ghost = mirror_ghost_with_auras(catalog, state, seat);
+    let (ghost, next_instance_id) = renumber_ghost(catalog, state, seat, &board);
 
     // 镜像战斗同样结算效果，但不写回牌池、手牌或持久棋盘。
     let hero = hero_of(state, seat);
@@ -370,7 +370,7 @@ fn resolve_mirror(
         attacker_hero: hero.as_deref(),
         // 幽灵快照没有英雄卡，防御方被动不结算。
         defender_hero: None,
-        next_instance_id: Some(state.next_instance_id),
+        next_instance_id: Some(next_instance_id),
         pool: None,
         attacker_hand: hand_len(state, seat),
         defender_hand: 0,
@@ -473,6 +473,41 @@ pub fn mirror_ghost_with_auras(
     seat: Seat,
 ) -> Vec<MinionInstance> {
     fold_auras(catalog, &state.auras, &mirror_ghost(state, seat))
+}
+
+/// 为镜像战准备幽灵阵容：折叠光环后，把与己方棋盘重号的实例编号换成新号。
+///
+/// 幽灵取自上一场快照，同一随从跨回合保留时编号与当前阵容相同；战斗内的定位
+/// （`BattleField::locate`）按编号先查攻方，重号会让幽灵的伤害打到己方克隆上，
+/// 报告里的动作也无法区分侧别。光环以原编号为键，必须先折叠再改号。
+///
+/// 返回重新编号后的幽灵与「幽灵最大编号 + 1」的分配器起点；调用方仍需在战斗
+/// 结束后把分配器推进到战斗实际使用的位置。
+fn renumber_ghost(
+    catalog: &Catalog,
+    state: &GameState,
+    seat: Seat,
+    own_board: &[MinionInstance],
+) -> (Vec<MinionInstance>, InstanceId) {
+    let mut ghost = mirror_ghost_with_auras(catalog, state, seat);
+    let mut used: BTreeSet<InstanceId> =
+        own_board.iter().map(|minion| minion.instance_id).collect();
+    let mut next = own_board
+        .iter()
+        .chain(ghost.iter())
+        .map(|minion| minion.instance_id)
+        .max()
+        .unwrap_or(0)
+        .saturating_add(1)
+        .max(state.next_instance_id);
+    for minion in &mut ghost {
+        if used.contains(&minion.instance_id) {
+            minion.instance_id = next;
+            next = next.saturating_add(1);
+        }
+        used.insert(minion.instance_id);
+    }
+    (ghost, next)
 }
 
 /// 幽灵快照只保留永久属性：卡面基础值与成长，以及繁衍与传染层。

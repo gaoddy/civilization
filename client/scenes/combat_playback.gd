@@ -81,10 +81,13 @@ func _apply_due() -> void:
 func _apply(action: Dictionary) -> void:
     match str(action.get("kind", "")):
         "attack":
-            _apply_state(action.get("source"))
-            _apply_state(action.get("target"))
-        "death", "reborn", "contagion":
-            _apply_state(action.get("target"))
+            _apply_state(action.get("source"), str(action.get("sourceSide", "")))
+            _apply_state(action.get("target"), str(action.get("targetSide", "")))
+        "death", "reborn":
+            # 这两类动作的定位字段写在 `sourceSide`（受影响的随从），状态在 `target`。
+            _apply_state(action.get("target"), str(action.get("sourceSide", "")))
+        "contagion":
+            _apply_state(action.get("target"), str(action.get("targetSide", "")))
         "summon":
             _apply_summon(action.get("summon"))
         _:
@@ -92,17 +95,31 @@ func _apply(action: Dictionary) -> void:
 
 
 ## 把服务端快照写进对应随从：只写 `attack`/`health`/`alive`，不做任何推算。
-func _apply_state(state: Variant) -> void:
+##
+## 侧别优先取动作携带的 `sourceSide`/`targetSide`（镜像战双方实例编号可能相同，
+## 只按 id 会写错行）；缺失时退回按 id 在双方列表里查找。
+func _apply_state(state: Variant, side: String = "") -> void:
     if not (state is Dictionary):
         return
     var snapshot: Dictionary = state
     var minion_id := str(snapshot.get("minionId", ""))
-    var minion := _find(minion_id)
+    var minion := _find_on(side, minion_id) if side != "" else _find(minion_id)
     if minion.is_empty():
         return
     minion["attack"] = int(snapshot.get("attack", minion.get("attack", 0)))
     minion["health"] = int(snapshot.get("health", minion.get("health", 0)))
     minion["alive"] = bool(snapshot.get("alive", minion.get("alive", true)))
+
+
+## 在指定侧按实例 id 找随从；侧别未知时退回双侧查找。
+func _find_on(side: String, minion_id: String) -> Dictionary:
+    if minion_id == "":
+        return {}
+    var board: Array = own if side == "own" else opponent
+    for minion in board:
+        if str(minion.get("minionId", "")) == minion_id:
+            return minion
+    return {}
 
 
 ## 召唤：按服务端给出的侧别与下标插入完整随从（下标与引擎一致）。

@@ -1,6 +1,9 @@
 mod common;
 
+use std::collections::BTreeSet;
+
 use common::test_catalog;
+use rule_engine::combat::CombatAction;
 use rule_engine::data::{Card, CardType, Catalog, Era, Skill, Tribe};
 use rule_engine::effects::Duration;
 use rule_engine::engine::Engine;
@@ -369,6 +372,63 @@ fn mirror_loss_does_not_damage_or_streak() {
             loser: 0,
             damage: 0,
         })
+    );
+}
+
+#[test]
+fn mirror_report_uses_ghost_ids_disjoint_from_own_board() {
+    // 同一随从跨回合保留时，幽灵快照与当前阵容共用实例编号；报告里的动作只带
+    // 实例编号，重号会让「幽灵攻击」被当成己方随从的动作。
+    let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32]);
+    add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
+    add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
+
+    state.phase = Phase::Combat;
+    state.players[0].board = vec![minion(&engine.catalog, 1, "weak")];
+    state
+        .previous_board
+        .insert(0, vec![minion(&engine.catalog, 1, "strong")]);
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        mirror: true,
+    }];
+
+    let report = engine
+        .resolve_combat(&mut state)
+        .unwrap()
+        .reports
+        .remove(&0)
+        .expect("镜像座位应有一份报告");
+
+    let own: BTreeSet<u64> = report
+        .own_board
+        .iter()
+        .map(|minion| minion.instance_id)
+        .collect();
+    let ghost: BTreeSet<u64> = report
+        .opponent_board
+        .iter()
+        .map(|minion| minion.instance_id)
+        .collect();
+    assert!(
+        own.is_disjoint(&ghost),
+        "己方与幽灵的实例编号不能重叠：己方 {own:?}，幽灵 {ghost:?}"
+    );
+    assert_eq!(report.own_board[0].instance_id, 1, "己方编号保持原值");
+
+    // 幽灵方 10/10 攻击己方 1/1：这条动作的来源必须在幽灵棋盘上。
+    let ghost_attack = report
+        .actions
+        .iter()
+        .find_map(|action| match action {
+            CombatAction::Attack { attacker, .. } if ghost.contains(attacker) => Some(*attacker),
+            _ => None,
+        })
+        .expect("幽灵应至少攻击一次");
+    assert!(
+        !own.contains(&ghost_attack),
+        "幽灵攻击的来源 {ghost_attack} 不应落在己方棋盘"
     );
 }
 

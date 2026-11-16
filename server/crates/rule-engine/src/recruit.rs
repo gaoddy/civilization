@@ -940,7 +940,6 @@ fn choose_target(
         ));
     }
 
-    state.pending.remove(index);
     let ctx = EffectCtx {
         seat,
         source: Some(source),
@@ -948,6 +947,17 @@ fn choose_target(
         event_target: None,
         golden,
     };
+    // 与出牌时的预检同源：目标必须在效果的合法池内（core-rules §4 补充返回码
+    // 「ChooseTarget 指定的随从不在合法池时同样返回该码」）。只校验棋盘会让
+    // 选到池外随从时效果静默落空。
+    engine.check_targets(
+        state,
+        &engine.effects_of(&card_id, Trigger::OnPlay),
+        &ctx,
+        false,
+    )?;
+
+    state.pending.remove(index);
     Ok(Outcome::with(engine.fire_card(
         state,
         &card_id,

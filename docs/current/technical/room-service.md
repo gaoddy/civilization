@@ -119,7 +119,8 @@ protocol/
 - `CombatResult` 的动作类型固定为 `attack|death|reborn|contagion|summon`；侧别相对接收该消息的座位：己方棋盘标 `own`、对手标 `opponent`。`ownBoard`/`opponentBoard` 是接收座位视角的两份战前快照。
 - 每条动作带受影响随从的实例 id 与动作后的状态：`attack` 带 `sourceMinionId`/`targetMinionId` 与 `source`/`target`（各含 `minionId`、`attack`、`health`、`alive`）；`death`/`reborn`/`contagion` 只带 `target`；`summon` 带 `summon{side, position, minion}`，`minion` 是完整的随从对象。客户端按这些下发值逐条落地，不做数值推算。
 - `sourceIndex`/`targetIndex` 是战前快照下标，`sourceSide`/`targetSide` 指明它属于哪一侧（`own`/`opponent`，相对接收座位）；召唤物等不在快照中的实例下标与侧别为 `null`，位置改由 `summon.position` 给出。
-- `mirror` 原样取自战斗报告；镜像战只向该座位发一条 `CombatResult`（报告里只有它自己的一条）。
+- `mirror` 原样取自战斗报告；镜像战只向该座位发一条 `CombatResult`（报告里只有它自己的一条）。镜像战的幽灵在引擎 `resolve_mirror` 里折叠光环后被重新编号，与己方棋盘不相交，因此动作的实例编号在两侧可判。
+- `summon.minion` 的攻击与生命取该动作的状态快照（含光环与战斗内加成），卡面字段（`cardId`/`golden`/`keywords`）来自动作本身；快照缺失时才退回卡面基础值。
 - `View` 更新广播给全部 8 个座位：任何改变房间可见状态的操作都会推送 `StateUpdate`，因为对手的公开摘要（`boardCount`、`recruited`、阶段与回合）人人可见。事件仍按座位过滤：本人收到自己的私有事件，其他座位的 `events` 为空数组。
 
 ## 9. 断线重连
@@ -176,7 +177,7 @@ m1-check:
 | 协议 Rust 生成物 | `make protocol-rs-check` → `cargo run -q -p protocol-gen -- --check` | 无差异 | 0 |
 | 协议生成物 | `make protocol-check` → `validate_protocol.py`、`gen_protocol_gdscript.py --check`、`gen_protocol_docs.py --check` | `协议样例校验通过`，GDScript 与字段表无漂移 | 0 |
 | 卡牌数据 | `make data-check` → `gen_card_data.py --check`、`audit_effects.py` | `生成数据无漂移`、`审计通过` | 0 |
-| 测试 | `make test` → `unittest discover`、`cargo test --workspace` | Python `Ran 70 tests ... OK`；workspace 全部 `test result: ok`，其中 `room-service` 集成测试 89 个（auth 10、e2e 9、filter 13、game 24、reconnect 9、room 22、dev_bots 2），e2e 用例 `eight_bots_finish_a_game` 通过 | 0 |
+| 测试 | `make test` → `unittest discover`、`cargo test --workspace` | Python `Ran 70 tests ... OK`；workspace 全部 `test result: ok`，其中 `room-service` 集成测试 91 个（auth 10、e2e 9、filter 14、game 24、reconnect 9、room 22、dev_bots 2），e2e 用例 `eight_bots_finish_a_game` 通过 | 0 |
 | 静态检查 | `make lint` → `cargo fmt --check`、`cargo clippy --workspace --all-targets -- -D warnings` | 无警告 | 0 |
 | 确定性 | `make m0-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 22 s） | 0 |
 
