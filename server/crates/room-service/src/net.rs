@@ -809,6 +809,7 @@ impl RoomTask {
                 // 宽限期已过、座位已被释放：连接不再属于该房间。
                 self.send_lobby_error(&player_id, "NOT_IN_ROOM", "座位已释放")
                     .await;
+                self.senders.remove(&player_id);
                 return;
             }
             self.broadcast_room_update().await;
@@ -853,6 +854,7 @@ impl RoomTask {
             if result.is_err() {
                 self.send_lobby_error(&player_id, "NOT_IN_ROOM", "座位已释放")
                     .await;
+                self.senders.remove(&player_id);
                 return;
             }
             self.send_room_update_to(&player_id).await;
@@ -1171,13 +1173,6 @@ impl RoomTask {
         };
         let out = sender.out.clone();
         let floor = sender.floor.clone();
-        let mut rooms = self.state.rooms.lock().await;
-        let Some(slot) = rooms
-            .room_mut(&self.room_id)
-            .and_then(|room| room.slot_entry_mut(player_id))
-        else {
-            return;
-        };
         let payload = error_message(code, message, false);
         let Ok(value) = serde_json::to_value(&payload) else {
             return;
@@ -1185,8 +1180,20 @@ impl RoomTask {
         let Value::Object(payload) = value else {
             return;
         };
-        slot.channel.set_next_seq(floor.current());
-        let Ok(envelope) = slot.channel.bind("Error", payload) else {
+
+        // 座位可能已被宽限超时释放，此时没有 `slot.channel` 可用；但仍然必须把错误
+        // 发出去，否则客户端收不到任何回包、会停在一个不能离开的大厅页面上。
+        // 这种情况下用一条以当前下行序号为起点的新通道，保证 `seq` 继续递增。
+        let mut fresh = SeatChannel::new();
+        fresh.set_next_seq(floor.current());
+        let mut rooms = self.state.rooms.lock().await;
+        let channel = rooms
+            .room_mut(&self.room_id)
+            .and_then(|room| room.slot_entry_mut(player_id))
+            .map(|slot| &mut slot.channel)
+            .unwrap_or(&mut fresh);
+        channel.set_next_seq(floor.current());
+        let Ok(envelope) = channel.bind("Error", payload) else {
             return;
         };
         floor.record(envelope.seq.get());
@@ -1286,5 +1293,59 @@ mod tests {
             rooms.leave(&room_id, &host_id).is_ok(),
             "Lobby 阶段房主应能正常离开"
         );
+    }
+
+    /// 座位已被宽限超时释放时，重连仍必须收到 `NOT_IN_ROOM`，不能静默丢弃。
+    ///
+    /// 客户端在这条路径上没有任何超时兜底：收不到回包就会停在选英雄页，
+    /// 而该页没有离开入口。
+    #[tokio::test]
+    async fn released_seat_still_receives_lobby_error() {
+        let clock = FixedClock::new(1_000_000);
+        let state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
+        let mut store = SessionStore::new();
+
+        let (room_id, player_id) = {
+            let mut rooms = state.rooms.lock().await;
+            let host = session(&mut store, &clock, "掉线玩家");
+            let player_id = host.player_id.clone();
+            let created = rooms.create(&host, &state.catalog);
+            let room_id = created.id.clone();
+            // 模拟宽限超时：座位已被注册表释放。
+            rooms.leave(&room_id, &player_id).expect("大厅可以离开");
+            (room_id, player_id)
+        };
+
+        let (out, mut rx) = mpsc::channel::<ServerEnvelope>(8);
+        let mut task = RoomTask {
+            state,
+            room_id,
+            seed: 7,
+            game: None,
+            senders: BTreeMap::new(),
+            game_over: false,
+        };
+        task.senders.insert(
+            player_id.clone(),
+            SeatSender {
+                out,
+                floor: SeqFloor::default(),
+                generation: 1,
+            },
+        );
+
+        task.send_lobby_error(&player_id, "NOT_IN_ROOM", "座位已释放")
+            .await;
+
+        let envelope = tokio::time::timeout(std::time::Duration::from_millis(200), rx.recv())
+            .await
+            .expect("座位已释放时也必须下发错误")
+            .expect("下行通道不应关闭");
+        match envelope.parse().expect("下行载荷应能解析") {
+            protocol::ServerMessage::Error(error) => {
+                assert_eq!(error.code, protocol::ErrorCode::NotInRoom);
+            }
+            other => panic!("期望 Error，实际 {other:?}"),
+        }
     }
 }

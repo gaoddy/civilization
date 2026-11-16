@@ -244,6 +244,16 @@ async fn wait_room_update(client: &mut RawClient) -> RoomUpdate {
     }
 }
 
+/// 取本人那一项里的候选；服务端只给本人填充 `heroCandidates`。
+fn own_candidates(update: &RoomUpdate, player_id: &str) -> Vec<String> {
+    update
+        .players
+        .iter()
+        .find(|item| item.player_id == player_id)
+        .and_then(|item| item.hero_candidates.clone())
+        .unwrap_or_default()
+}
+
 struct GameFixture {
     room_id: String,
     /// `(player_id, token)`，按座位顺序。
@@ -254,7 +264,6 @@ struct GameFixture {
 
 /// 用 8 条原始连接建好房间、选英雄并准备，直到收到 `GameStarted`。
 async fn start_eight_raw_clients(addr: std::net::SocketAddr) -> GameFixture {
-    let heroes = hero_cards();
     let mut clients = Vec::with_capacity(8);
     let mut identities = Vec::with_capacity(8);
 
@@ -264,17 +273,25 @@ async fn start_eight_raw_clients(addr: std::net::SocketAddr) -> GameFixture {
     let room = wait_room_update(&mut host).await;
     let room_id = room.room_id.clone();
     let room_code = room.code.clone();
-    host.send("SelectHeroCard", json!({ "cardId": heroes[0] }))
+    let host_hero = own_candidates(&room, &player_id)
+        .into_iter()
+        .next()
+        .expect("房主应拿到候选");
+    host.send("SelectHeroCard", json!({ "cardId": host_hero }))
         .await;
     host.send("Ready", json!({ "ready": true })).await;
     clients.push(host);
     identities.push((player_id, token));
 
-    for (index, hero) in heroes.iter().enumerate().skip(1) {
+    for index in 1..8 {
         let mut client = RawClient::connect(addr).await;
         let (player_id, token) = authenticate(&mut client, &format!("p{index}")).await;
         client.send("JoinRoom", json!({ "code": room_code })).await;
-        let _ = wait_room_update(&mut client).await;
+        let joined = wait_room_update(&mut client).await;
+        let hero = own_candidates(&joined, &player_id)
+            .into_iter()
+            .next()
+            .expect("入房玩家应拿到候选");
         client
             .send("SelectHeroCard", json!({ "cardId": hero }))
             .await;
@@ -564,7 +581,7 @@ async fn finished_game_room_is_removed_from_registry() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn lobby_disconnect_releases_seat() {
+async fn lobby_disconnect_keeps_seat_within_grace() {
     let addr = start_server().await;
     let mut host = RawClient::connect(addr).await;
     let _ = authenticate(&mut host, "seat-host").await;
@@ -573,26 +590,34 @@ async fn lobby_disconnect_releases_seat() {
     assert_eq!(room.players.len(), 1);
 
     let mut guest = RawClient::connect(addr).await;
-    let _ = authenticate(&mut guest, "seat-guest").await;
+    let (guest_id, guest_token) = authenticate(&mut guest, "seat-guest").await;
     guest.send("JoinRoom", json!({ "code": room.code })).await;
     let joined = wait_room_update(&mut guest).await;
     assert_eq!(joined.players.len(), 2);
+    let guest_candidates = own_candidates(&joined, &guest_id);
+    assert_eq!(guest_candidates.len(), 4, "入房玩家应拿到 4 张候选");
 
-    // 大厅阶段断线应立即释放座位。
+    // 大厅断线保留座位一个宽限期（`RECONNECT_GRACE_MS`），不再立即释放。
     drop(guest);
-    let released = tokio::time::timeout(Duration::from_secs(5), async {
-        loop {
-            host.send("RequestSnapshot", json!({})).await;
-            if let Some((_, ServerMessage::RoomUpdate(update))) = host.recv().await
-                && update.players.len() == 1
-            {
-                return;
-            }
-        }
-    })
-    .await;
-    assert!(released.is_ok(), "大厅断线后座位应被释放");
-    println!("lobby players after disconnect = 1");
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    host.send("RequestSnapshot", json!({})).await;
+    let after = wait_room_update(&mut host).await;
+    assert_eq!(after.players.len(), 2, "宽限期内座位必须保留");
+
+    // 宽限期内用 token 重连：回到同一座位，候选不重抽。
+    let mut back = RawClient::connect(addr).await;
+    let back_id = authenticate_with_token(&mut back, &guest_token).await;
+    assert_eq!(back_id, guest_id, "重连应复用同一 player_id");
+    back.send("Reconnect", json!({ "roomId": room.room_id, "lastSeq": 0 }))
+        .await;
+    let restored = wait_room_update(&mut back).await;
+    assert_eq!(restored.players.len(), 2, "重连应回到同一房间");
+    assert_eq!(
+        own_candidates(&restored, &guest_id),
+        guest_candidates,
+        "宽限期内重连必须取回同一组候选"
+    );
+    println!("lobby seat kept through grace and reconnect");
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

@@ -159,8 +159,8 @@ impl Room {
     /// 按房间种子洗出的英雄序列给一名玩家切出一组候选。
     ///
     /// 洗牌与切段都是确定性的：同一房间、同一批 `is_hero` 卡表、同一进房顺序，
-    /// 得到同一组候选。英雄总数不足时允许最后几人拿到少于
-    /// [`CANDIDATE_COUNT`] 张，而不是回绕复用已分出的卡。
+    /// 得到同一组候选。英雄总数不足时最后几人会拿到空候选；这种情况由
+    /// [`crate::AppState::new`] 在装配阶段直接拒绝启动，不走这条降级路径。
     fn assign_candidates(&mut self, player_id: &str, catalog: &Catalog) {
         if self
             .candidates_of(player_id)

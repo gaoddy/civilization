@@ -46,10 +46,11 @@ impl AppState {
     ///
     /// # Errors
     ///
-    /// 卡表加载失败时返回错误文本。
+    /// 卡表加载失败、或英雄卡不足以给满座每人分配一组候选时返回错误文本。
     pub fn new(clock: Arc<dyn Clock>) -> Result<Self, String> {
         let catalog = Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
             .map_err(|err| format!("加载卡牌目录失败: {err}"))?;
+        ensure_hero_pool(catalog.cards.values().filter(|card| card.is_hero).count())?;
         Ok(Self {
             sessions: Arc::new(Mutex::new(SessionStore::new())),
             rooms: Arc::new(Mutex::new(RoomRegistry::new())),
@@ -63,6 +64,25 @@ impl AppState {
     pub async fn hub_len(&self) -> usize {
         self.hub.lock().await.len()
     }
+}
+
+/// 校验英雄卡够满座每人一组候选。
+///
+/// 每人一段、每段 [`room::CANDIDATE_COUNT`] 张；卡不够时最后几名玩家拿到空候选，
+/// 此后既不能选英雄也不能准备，房间开不了局、该页又没有离开入口。装配阶段直接
+/// 拒绝启动，比运行期卡住更容易发现。
+///
+/// # Errors
+///
+/// 英雄卡数量小于 `SEAT_COUNT * CANDIDATE_COUNT` 时返回错误文本。
+fn ensure_hero_pool(hero_count: usize) -> Result<(), String> {
+    let required = room::SEAT_COUNT * room::CANDIDATE_COUNT;
+    if hero_count < required {
+        return Err(format!(
+            "英雄卡 {hero_count} 张，少于满座所需的 {required} 张"
+        ));
+    }
+    Ok(())
 }
 
 /// 绑定监听地址并构造路由，同时返回共享状态（测试用它观察房间回收）。
@@ -122,3 +142,19 @@ pub use game::{
 };
 pub use room::{PlayerSlot, Room, RoomError, RoomId, RoomRegistry, SEAT_COUNT};
 pub use view::SeatInfo;
+
+#[cfg(test)]
+mod tests {
+    use super::{ensure_hero_pool, room};
+
+    #[test]
+    fn hero_pool_must_cover_every_seat() {
+        let required = room::SEAT_COUNT * room::CANDIDATE_COUNT;
+        assert!(ensure_hero_pool(required).is_ok(), "刚好够分应通过");
+        let error = ensure_hero_pool(required - 1).expect_err("缺一张就必须拒绝启动");
+        assert!(
+            error.contains(&required.to_string()),
+            "错误文本应写出所需张数，实际：{error}"
+        );
+    }
+}
