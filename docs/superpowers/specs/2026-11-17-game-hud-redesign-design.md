@@ -404,7 +404,7 @@ let opponent_seat = state.pairings.iter().find_map(|pairing| {
 
 - `settle.rs::mirror_loss_does_not_damage_or_streak` **反转**为 `ghost_loss_damages_like_real_combat`：断言 `hp` 按公式扣减、`pending_settle` 有该座位、`last_won` 不含该座位。
 - 删除与自战镜像一起作废的用例：`mirror_ghost_keeps_only_permanent_stats`、`mirror_ghost_falls_back_to_current_board`、`mirror_ghost_keeps_growth_breed_and_contagion`、`tests/auras.rs::mirror_ghost_from_previous_board_includes_auras`；新增「幽灵取自某个出局者棋盘」「幽灵保留出局者光环」「同一颗种子下抽取结果可重放」三条用例。
-- 新增：存活为奇数且 `ranking` 为空时，落单座位不产生 `Pairing`、`outcome.reports` 里没有它。
+- 新增：存活为奇数且 `ranking` 为空时，落单座位照样产生 `Pairing`（`ghost: None`），`outcome.reports` 里有它、幽灵棋盘为空、判落单座位获胜。
 - 新增：落单座位打赢幽灵 → `last_won` 含该座位、`last_winner` 是它；随后 `compare_alive` 的名次比较把它算作「上战胜者」。
 - 新增：两名出局者存在时，不同种子抽到不同出局者；同一种子两次运行抽到同一名。
 - 新增：幽灵阵容保留 `permanent` 层（不做 `strip_ghost`）。
