@@ -132,10 +132,16 @@ pub struct PlayerSummaryView {
 /// 等待该座位做出的选择。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PendingChoiceView {
-    Discover { candidates: Vec<String> },
-    Evolve { options: Vec<String> },
+    Discover {
+        candidates: Vec<String>,
+    },
+    Evolve {
+        options: Vec<String>,
+    },
     /// 战吼目标待选：候选恒为本座位当前棋盘上的全部随从，不在视图里下发。
-    Target { source_minion_id: u64 },
+    Target {
+        source_minion_id: u64,
+    },
 }
 
 /// 本座位各操作的可用性；`*_disabled_reason` 在可操作时为 `None`。
@@ -315,8 +321,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
     };
 
     // 已结束招募时重复 `EndRecruit` 幂等成功；出局、非招募阶段或目标待选期间不可操作。
-    let can_end_recruit =
-        activatable && !head_is_target && check_end_recruit(state, seat).is_ok();
+    let can_end_recruit = activatable && !head_is_target && check_end_recruit(state, seat).is_ok();
 
     let shop = player
         .shop

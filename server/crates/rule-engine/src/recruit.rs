@@ -948,9 +948,12 @@ fn choose_target(
         event_target: None,
         golden,
     };
-    Ok(Outcome::with(
-        engine.fire_card(state, &card_id, Trigger::OnPlay, ctx),
-    ))
+    Ok(Outcome::with(engine.fire_card(
+        state,
+        &card_id,
+        Trigger::OnPlay,
+        ctx,
+    )))
 }
 
 /// `ChooseDiscover` 的只读预检：本座位有待选、下标合法；发现还需要手牌有空位。

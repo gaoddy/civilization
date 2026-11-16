@@ -1019,10 +1019,7 @@ fn summon_action_records_position_and_seat() {
         unreachable!("已确认是召唤动作");
     };
     assert_eq!(*seat, 1, "召唤方为防守方座位");
-    assert_eq!(
-        *position, 1,
-        "阵亡随从仍占位，召唤物追加到它右侧"
-    );
+    assert_eq!(*position, 1, "阵亡随从仍占位，召唤物追加到它右侧");
     assert_eq!(card_id, "seedling");
     assert_eq!(
         log.states[index][0].instance_id, *summoned,

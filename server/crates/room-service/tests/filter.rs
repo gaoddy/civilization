@@ -479,11 +479,11 @@ fn event_kinds(events: &[serde_json::Value]) -> Vec<String> {
 }
 
 #[test]
-fn advance_phase_attaches_filtered_public_events() {
-    let (mut task, _clock) = task();
+fn combat_stage_attaches_filtered_public_events() {
+    let (mut task, clock) = task();
 
-    // 全员结束招募：最后一条意图触发 finish_recruit → resolve_combat →
-    // resolve_settle → start_turn，事件应随每个座位的 StateUpdate 下发。
+    // 全员结束招募：最后一条意图触发 finish_recruit → resolve_combat，阶段停在
+    // Combat 演示；阶段事件应随每个座位的 StateUpdate 下发。
     let mut last = Vec::new();
     for seat in 0..8 {
         last = task.handle(RoomCommand::Intent {
@@ -520,13 +520,42 @@ fn advance_phase_attaches_filtered_public_events() {
         seat0_kinds.contains(&"PhaseChanged".to_string()),
         "座位 0 的 StateUpdate.events 应含 PhaseChanged，实际为 {seat0_kinds:?}"
     );
+    assert_eq!(
+        task.player_view(0).expect("视图应可用").phase,
+        protocol::view::Phase::Combat,
+        "演示阶段应停在 Combat"
+    );
+
+    // 演示到点结算：伤害事件随下一回合的视图下发。
+    let demo_ms = last
+        .iter()
+        .filter_map(|update| match &update.kind {
+            UpdateKind::CombatResult(result) => Some(result.actions.len()),
+            _ => None,
+        })
+        .max()
+        .unwrap_or(0);
+    clock.advance((demo_ms as u64) * 320 + 2_000);
+    let settle = task.tick();
+    let mut damage_events = Vec::new();
+    for update in &settle {
+        if !matches!(update.kind, UpdateKind::View { .. }) {
+            continue;
+        }
+        let envelope = task.envelope_for(update).expect("更新应能编码");
+        let payload = serde_json::to_value(&envelope.payload).expect("载荷应可序列化");
+        let events = payload["events"].as_array().cloned().unwrap_or_default();
+        damage_events.extend(events);
+    }
+
+    let kinds = event_kinds(&damage_events);
     assert!(
-        seat0_kinds.contains(&"DamageTaken".to_string()),
-        "战斗结算后应含 DamageTaken，实际为 {seat0_kinds:?}"
+        kinds.contains(&"DamageTaken".to_string()),
+        "战斗结算后应含 DamageTaken，实际为 {kinds:?}"
     );
 
     // 公开伤害事件必须标明被打的玩家，不能留空让客户端当成自己。
-    for event in seat0 {
+    for event in &damage_events {
         if event["kind"] == "DamageTaken" {
             assert!(event["playerId"].is_string(), "DamageTaken 必须带 playerId");
         }
@@ -573,8 +602,14 @@ fn combat_summon_maps_side_position_and_minion() {
     let catalog = catalog();
     let result = combat_result(&catalog, &real_report(0), &seats());
 
-    let summon = result.actions[5].summon.as_ref().expect("召唤动作应带 summon");
-    assert_eq!(summon.side, protocol::CombatResultActionsItemSummonSide::Opponent);
+    let summon = result.actions[5]
+        .summon
+        .as_ref()
+        .expect("召唤动作应带 summon");
+    assert_eq!(
+        summon.side,
+        protocol::CombatResultActionsItemSummonSide::Opponent
+    );
     assert_eq!(summon.position, 2);
     assert_eq!(summon.minion.index, 2, "minion.index 与插入下标一致");
     assert_eq!(summon.minion.minion_id, "301");
@@ -608,12 +643,18 @@ fn combat_death_and_reborn_carry_target_state() {
     let catalog = catalog();
     let result = combat_result(&catalog, &real_report(0), &seats());
 
-    let death = result.actions[2].target.as_ref().expect("死亡动作带 target 状态");
+    let death = result.actions[2]
+        .target
+        .as_ref()
+        .expect("死亡动作带 target 状态");
     assert_eq!(death.minion_id, "201");
     assert!(!death.alive, "死亡后存活为 false");
     assert_eq!(death.health, 0);
 
-    let reborn = result.actions[3].target.as_ref().expect("复生动作带 target 状态");
+    let reborn = result.actions[3]
+        .target
+        .as_ref()
+        .expect("复生动作带 target 状态");
     assert_eq!(reborn.minion_id, "102");
     assert!(reborn.alive);
     assert_eq!(reborn.health, 1, "复生后生命为 1");

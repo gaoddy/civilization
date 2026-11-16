@@ -1045,16 +1045,17 @@ fn copy_still_accepts_hand_and_board_from() {
 #[test]
 fn hash_covers_target_pending() {
     let (_, state) = setup(2);
-    let target = |seat: Seat, source: InstanceId, card_id: &str, golden: bool| {
-        PendingChoice::Target {
+    let target =
+        |seat: Seat, source: InstanceId, card_id: &str, golden: bool| PendingChoice::Target {
             seat,
             source,
             card_id: card_id.to_string(),
             golden,
-        }
-    };
+        };
     let mut with_base = state.clone();
-    with_base.pending.push_back(target(0, 1, "fangzhiji", false));
+    with_base
+        .pending
+        .push_back(target(0, 1, "fangzhiji", false));
     let base_hash = state_hash(&with_base);
 
     let variants: Vec<PendingChoice> = vec![

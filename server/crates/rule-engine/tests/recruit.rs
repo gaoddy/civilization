@@ -1502,10 +1502,7 @@ fn target_pending_skipped_when_filtered_pool_empty() {
 
     assert!(target_pending(&state, 0).is_none(), "不产生待选");
     assert_eq!(state.players[0].board.len(), 1);
-    assert_eq!(
-        state.players[0].board[0].stats.attack.growth, 0,
-        "战吼落空"
-    );
+    assert_eq!(state.players[0].board[0].stats.attack.growth, 0, "战吼落空");
 }
 
 #[test]
@@ -1571,11 +1568,7 @@ fn choose_target_outside_board_rejects() {
     let before = state_hash(&state);
 
     let reject = engine
-        .apply(
-            &mut state,
-            0,
-            Intent::ChooseTarget { minion: 9_999 },
-        )
+        .apply(&mut state, 0, Intent::ChooseTarget { minion: 9_999 })
         .expect_err("目标不在棋盘上必须拒绝");
 
     assert_eq!(reject.code, RejectCode::NoValidTarget);

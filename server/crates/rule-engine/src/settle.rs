@@ -16,8 +16,8 @@ use crate::error::EngineError;
 use crate::events::GameEvent;
 use crate::rng::Stream;
 use crate::state::{
-    AuraEffect, GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase,
-    PlayerState, Seat,
+    AuraEffect, GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase, PlayerState,
+    Seat,
 };
 
 /// 配对在放弃"排除上一场对手"前最多重洗的次数。

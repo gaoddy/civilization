@@ -314,3 +314,36 @@ fn snapshot_includes_pending_choice() {
         "待选类型应为发现"
     );
 }
+
+#[test]
+fn combat_reconnect_resends_combat_result() {
+    let (mut task, _clock) = task();
+
+    // 全员结束招募进入演示阶段。
+    for seat in 0..8 {
+        task.handle(RoomCommand::Intent {
+            player_id: format!("p{seat}"),
+            client_intent_id: format!("end-{seat}"),
+            intent: ProtocolIntent::EndRecruit,
+        });
+    }
+    assert_eq!(
+        task.player_view(0).expect("视图应可用").phase,
+        protocol::view::Phase::Combat,
+        "全员结束后应停在演示阶段"
+    );
+
+    let (cmd, _rx) = reconnect("p0", 0);
+    let updates = task.handle(cmd);
+    assert_eq!(updates.len(), 2, "重连应回快照与本场战报各一条");
+    assert!(
+        matches!(updates[0].kind, UpdateKind::Snapshot),
+        "第一条应为全量快照"
+    );
+    assert!(
+        matches!(updates[1].kind, UpdateKind::CombatResult(_)),
+        "第二条应为该座位本场 CombatResult"
+    );
+    assert_eq!(updates[0].player_id, "p0");
+    assert_eq!(updates[1].player_id, "p0");
+}
