@@ -237,6 +237,17 @@
 | `attack` | MinionStatBreakdown | 是 |  |
 | `health` | MinionStatBreakdown | 是 |  |
 
+### CombatLogEntry
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `turn` | integer | 是 |  |
+| `participantIds` | array<string> | 是 | 参战玩家 id；幽灵战只有对战方一个元素（幽灵不是玩家） |
+| `winnerId` | string | null | 是 | 平局无胜者时为 null |
+| `loserId` | string | null | 是 | 幽灵战失利时为该玩家；幽灵不受伤，所以幽灵输时也为 null |
+| `damage` | integer | 是 |  |
+| `mirror` | boolean | 是 | true 表示对战已出局者的幽灵阵容 |
+
 ### PlayerSummary
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -246,6 +257,7 @@
 | `displayName` | string | 是 |  |
 | `hp` | integer | 是 |  |
 | `era` | integer | 是 |  |
+| `rank` | integer | null | 是 | 当前名次；对局结束前为实时名次，结束后等于 placement |
 | `alive` | boolean | 是 |  |
 | `boardCount` | integer | 是 |  |
 | `heroCardId` | string | null | 是 | 开局选择前为 null |
@@ -327,6 +339,8 @@
 | `turn` | integer | 是 |  |
 | `phaseDeadline` | string | 是 |  |
 | `boardSlots` | integer | 是 | 本方棋盘随从位上限，v0.1 为 7 |
+| `hpCap` | integer | 是 | 生命上限，v0.1 为 40 |
+| `combatLog` | array<CombatLogEntry> | 是 | 本局最近 5 个回合的全部战斗，按回合升序；全对局公开 |
 | `opponentPlayerId` | string | null | 否 | 当前战斗对手；招募阶段或未配对时为 null |
 | `self` | object | 是 |  |
 | `self.playerId` | string | 是 |  |

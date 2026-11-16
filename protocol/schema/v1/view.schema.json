@@ -70,16 +70,36 @@
         "health": { "$ref": "view.schema.json#/$defs/MinionStatBreakdown" }
       }
     },
+    "CombatLogEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["turn", "participantIds", "winnerId", "loserId", "damage", "mirror"],
+      "properties": {
+        "turn": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "participantIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": { "type": "string" },
+          "description": "参战玩家 id；幽灵战只有对战方一个元素（幽灵不是玩家）"
+        },
+        "winnerId": { "type": ["string", "null"], "description": "平局无胜者时为 null" },
+        "loserId": { "type": ["string", "null"], "description": "幽灵战失利时为该玩家；幽灵不受伤，所以幽灵输时也为 null" },
+        "damage": { "type": "integer", "minimum": 0 },
+        "mirror": { "type": "boolean", "description": "true 表示对战已出局者的幽灵阵容" }
+      }
+    },
     "PlayerSummary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["playerId", "seat", "displayName", "hp", "era", "alive", "boardCount", "heroCardId", "recruited", "managed"],
+      "required": ["playerId", "seat", "displayName", "hp", "era", "alive", "boardCount", "heroCardId", "recruited", "managed", "rank"],
       "properties": {
         "playerId": { "type": "string" },
         "seat": { "type": "integer", "minimum": 0, "maximum": 7 },
         "displayName": { "type": "string" },
         "hp": { "type": "integer" },
         "era": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "rank": { "type": ["integer", "null"], "minimum": 1, "maximum": 8, "description": "当前名次；对局结束前为实时名次，结束后等于 placement" },
         "alive": { "type": "boolean" },
         "boardCount": { "type": "integer", "minimum": 0, "maximum": 7 },
         "heroCardId": { "type": ["string", "null"], "description": "开局选择前为 null" },
@@ -195,13 +215,19 @@
     "PlayerView": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["roomId", "phase", "turn", "phaseDeadline", "boardSlots", "self", "players", "enabledFactions"],
+      "required": ["roomId", "phase", "turn", "phaseDeadline", "boardSlots", "self", "players", "enabledFactions", "hpCap", "combatLog"],
       "properties": {
         "roomId": { "type": "string" },
         "phase": { "$ref": "view.schema.json#/$defs/Phase" },
         "turn": { "type": "integer", "minimum": 1, "maximum": 20 },
         "phaseDeadline": { "type": "string", "format": "date-time" },
         "boardSlots": { "type": "integer", "minimum": 1, "description": "本方棋盘随从位上限，v0.1 为 7" },
+        "hpCap": { "type": "integer", "minimum": 1, "description": "生命上限，v0.1 为 40" },
+        "combatLog": {
+          "type": "array",
+          "description": "本局最近 5 个回合的全部战斗，按回合升序；全对局公开",
+          "items": { "$ref": "view.schema.json#/$defs/CombatLogEntry" }
+        },
         "opponentPlayerId": { "type": ["string", "null"], "description": "当前战斗对手；招募阶段或未配对时为 null" },
         "self": {
           "type": "object",

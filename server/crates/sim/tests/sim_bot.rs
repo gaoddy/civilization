@@ -26,6 +26,8 @@ fn view(
         "turn": 1,
         "phaseDeadline": "2026-01-01T00:00:00Z",
         "boardSlots": 7,
+        "hpCap": 40,
+        "combatLog": [],
         "self": {
             "playerId": "p0",
             "seat": 0,

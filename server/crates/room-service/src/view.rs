@@ -71,6 +71,9 @@ pub fn to_protocol(
     Ok(PlayerView {
         board_slots: NonZeroU64::new(u64::try_from(board_slots).unwrap_or(u64::MAX))
             .ok_or(ProtocolError("BAD_PAYLOAD"))?,
+        // 协议字段已就位，下发逻辑随后续任务接入；v0.1 初始生命为 40。
+        combat_log: Vec::new(),
+        hp_cap: NonZeroU64::new(40).ok_or(ProtocolError("BAD_PAYLOAD"))?,
         enabled_factions,
         opponent_player_id: seat_view
             .opponent_seat
@@ -245,6 +248,8 @@ fn summary_to_protocol(
         managed: false,
         placement: summary.placement.map(i64::from),
         player_id: info.player_id.clone(),
+        // 协议字段已就位，下发逻辑随后续任务接入。
+        rank: None,
         recruited: summary.recruited,
         seat: i64::from(summary.seat),
     })
