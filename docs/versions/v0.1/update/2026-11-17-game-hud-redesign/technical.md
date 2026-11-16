@@ -26,12 +26,20 @@
 ### 2.2 幽灵战
 
 - `Pairing { a, b, ghost: Option<Seat> }` 取代 `Pairing.mirror`；落单配对由 `pair_round` 末尾补 `ghost`——从 `state.ranking` 里用 `Stream::Matchmaking` 抽一名，只抽一次，没有出局者时留 `None`（空阵容幽灵）。落单配对永远保留。
-- `resolve_mirror` 改为 `resolve_ghost`：胜负按「幽灵侧清场即攻方胜、攻方清场则幽灵胜、双方清空判攻方胜」判定；幽灵胜时按 `damage_formula(败者时代, 幽灵存活星级和)` 写入 `pending_settle`；攻方胜时写 `last_won` / `last_winner`。
+- `resolve_mirror` 改为 `resolve_ghost`：胜负按「幽灵侧清场即攻方胜、攻方清场则幽灵胜、双方同回合清空判平局」判定；幽灵胜时按 `damage_formula(败者时代, 幽灵存活星级和)` 写入 `pending_settle`；攻方胜时写 `last_won` / `last_winner`；平局两边都不写、不扣血。
 - 幽灵阵容取 `ghost_board(engine, state, pairing.ghost)`：该出局座位的 `player.board`，按它自己的光环来源重算一次后 `fold_auras`，只在模拟克隆上生效；`None` 返回空阵容。为此把 `recompute_auras` 的循环体抽成 `player_auras(engine, state, &PlayerState)`。
 - 删除 `mirror_ghost`、`mirror_ghost_with_auras`、`strip_ghost`、`GameState.previous_board` 及其写入与哈希行。
 - `view.rs` 的 `opponent_seat` 对幽灵战返回幽灵归属座位；自战镜像回退分支一并删除。
 
-### 2.3 战斗日志
+### 2.3 平局
+
+`settle.rs` 新增 `seat_winner(state, log, a, b) -> Option<Seat>`：`log.winner` 有值直接采用；`log.winner` 为 `None` 且双方 `survivors` 都为空（同回合清场）返回 `None` 判平局；其余 `None`（行动数到 200 次）仍走 `tie_break`。
+
+- 平局：`damage = 0`、不写 `pending_settle`、不写 `last_won`、`last_winner` 保持不变；`previous_opponent` 照常记录；两侧报告 `winner` 为 `None`。
+- 事件新增 `GameEvent::CombatDrawn { a, b }`，`filter.rs` 与 `CombatResolved` 一样不下发给客户端。
+- 客户端：`CombatResult.winnerId` 为 `null` 时横幅已显示「平局」；`combatLog` 条目 `winnerId`/`loserId` 均为 `null`、`damage` 为 0。
+
+### 2.4 战斗日志
 
 `GameTask` 增加 `combat_log: Vec<CombatLogEntry>`，`enter_combat` 时从 `outcome.reports` 归一追加（真实战两条报告合成一条），保留最近 5 个回合。**不写入 `GameState`**，不影响 `state_hash`。`player_view` 组装完协议视图后填入。
 
