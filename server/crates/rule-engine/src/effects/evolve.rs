@@ -12,7 +12,7 @@
 use crate::data::Tribe;
 use crate::effects::{Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
-use crate::state::{GameState, InstanceId, MinionInstance, Modifier, PendingChoice, Seat};
+use crate::state::{GameState, InstanceId, MinionInstance, PendingChoice, Seat};
 
 /// 进化的三项选项，下标即 `Intent::ChooseDiscover.choice` 的取值。
 ///
@@ -187,11 +187,10 @@ impl Engine {
 /// 复生在招募侧只登记关键词，复活只在战斗内发生（§1「作用对象：自身」）。
 fn apply_evolve_option(minion: &mut MinionInstance, option: &str) {
     match option {
-        "+2/+2" => minion.mods.push(Modifier {
-            attack: EVOLVE_STATS,
-            health: EVOLVE_STATS,
-            duration: Duration::Permanent,
-        }),
+        "+2/+2" => {
+            minion.stats.attack.add_permanent(EVOLVE_STATS);
+            minion.stats.health.add_permanent(EVOLVE_STATS);
+        }
         CHOICE_DIVINE_SHIELD => {
             minion
                 .granted

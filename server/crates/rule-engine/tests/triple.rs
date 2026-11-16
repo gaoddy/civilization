@@ -3,7 +3,7 @@ mod common;
 use std::collections::BTreeSet;
 
 use common::{heroes, test_catalog};
-use rule_engine::data::{CardType, Tribe};
+use rule_engine::data::{CardType, Catalog, Tribe};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
@@ -49,23 +49,8 @@ fn set_shop(state: &mut GameState, seat: Seat, ids: &[Option<String>]) {
     state.players[usize::from(seat)].shop = shop;
 }
 
-fn dummy(instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: card_id.to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 0,
-        cannot_attack: false,
-    }
+fn dummy(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
+    MinionInstance::new(catalog, instance_id, card_id, false)
 }
 
 fn hand_card(card_id: &str) -> HandCard {
@@ -92,7 +77,7 @@ fn fill_board_distinct(state: &mut GameState, seat: Seat, count: usize, exclude:
     state.players[usize::from(seat)].board = ids
         .iter()
         .enumerate()
-        .map(|(index, card_id)| dummy(500 + index as InstanceId, card_id))
+        .map(|(index, card_id)| dummy(&test_catalog(), 500 + index as InstanceId, card_id))
         .collect();
 }
 
@@ -113,8 +98,9 @@ fn three_same_minions_become_golden() {
     state.players[0].gold = 30;
 
     // 棋盘一张带成长与增殖，手牌一张同名；买入的第二张同样进手牌后立即做三连。
-    let mut base = dummy(900, &card_id);
-    base.growth = 7;
+    let mut base = dummy(&engine.catalog, 900, &card_id);
+    base.stats.attack.add_growth(7);
+    base.stats.health.add_growth(7);
     base.breed = 3;
     base.shield_used = true;
     state.players[0].board.push(base);
@@ -139,7 +125,23 @@ fn three_same_minions_become_golden() {
     assert!(golden.golden);
     assert_eq!(golden.card_id, card_id);
     assert_eq!(golden.instance_id, base_id, "最早副本的实例编号保留");
-    assert_eq!(golden.growth, 7, "保留最早副本的成长");
+    assert_eq!(golden.stats.attack.growth, 7, "保留最早副本的成长");
+    assert_eq!(golden.stats.health.growth, 7);
+    let base_card = test_catalog()
+        .cards
+        .get(&card_id)
+        .cloned()
+        .expect("卡牌应存在");
+    assert_eq!(
+        golden.stats.attack.initial,
+        base_card.attack.unwrap_or(0).saturating_mul(2),
+        "金色基础攻击按卡面 ×2"
+    );
+    assert_eq!(
+        golden.stats.health.initial,
+        base_card.health.unwrap_or(0).saturating_mul(2),
+        "金色基础生命按卡面 ×2"
+    );
     assert_eq!(golden.breed, 3, "保留最早副本的增殖");
     assert!(golden.shield_used, "保留最早副本的护盾状态");
     assert_eq!(golden.attacks_left, 0);
@@ -163,9 +165,9 @@ fn golden_sells_for_three_and_cannot_triple_again() {
     let card_id = minion_id(2);
     state.players[0].gold = 0;
     state.players[0].board = vec![
-        dummy(10, &card_id),
-        dummy(11, &card_id),
-        dummy(12, &card_id),
+        dummy(&engine.catalog, 10, &card_id),
+        dummy(&engine.catalog, 11, &card_id),
+        dummy(&engine.catalog, 12, &card_id),
     ];
 
     let events = engine.check_triple(&mut state, 0);
@@ -179,8 +181,12 @@ fn golden_sells_for_three_and_cannot_triple_again() {
     assert_eq!(state.players[0].board.len(), 1);
     assert!(state.players[0].board[0].golden);
 
-    state.players[0].board.push(dummy(20, &card_id));
-    state.players[0].board.push(dummy(21, &card_id));
+    state.players[0]
+        .board
+        .push(dummy(&engine.catalog, 20, &card_id));
+    state.players[0]
+        .board
+        .push(dummy(&engine.catalog, 21, &card_id));
     let before = state_hash(&state);
     let events = engine.check_triple(&mut state, 0);
     assert!(events.is_empty(), "金色随从不再参与三连");
@@ -198,7 +204,10 @@ fn golden_sells_for_three_and_cannot_triple_again() {
 fn triple_only_looks_at_board_and_hand() {
     let (engine, mut state) = setup(3);
     let card_id = minion_id(2);
-    state.players[0].board = vec![dummy(10, &card_id), dummy(11, &card_id)];
+    state.players[0].board = vec![
+        dummy(&engine.catalog, 10, &card_id),
+        dummy(&engine.catalog, 11, &card_id),
+    ];
     assert!(pool_count(&state, &card_id) > 0, "共享池仍有同名卡");
 
     let events = engine.check_triple(&mut state, 0);
@@ -213,9 +222,9 @@ fn discover_offers_three_candidates_of_next_level() {
     let (engine, mut state) = setup(4);
     let card_id = minion_id(1);
     state.players[0].board = vec![
-        dummy(10, &card_id),
-        dummy(11, &card_id),
-        dummy(12, &card_id),
+        dummy(&engine.catalog, 10, &card_id),
+        dummy(&engine.catalog, 11, &card_id),
+        dummy(&engine.catalog, 12, &card_id),
     ];
 
     let events = engine.check_triple(&mut state, 0);
@@ -261,9 +270,9 @@ fn discover_level_six_stays_at_six() {
     let (engine, mut state) = setup(5);
     let card_id = minion_id(6);
     state.players[0].board = vec![
-        dummy(10, &card_id),
-        dummy(11, &card_id),
-        dummy(12, &card_id),
+        dummy(&engine.catalog, 10, &card_id),
+        dummy(&engine.catalog, 11, &card_id),
+        dummy(&engine.catalog, 12, &card_id),
     ];
 
     let events = engine.check_triple(&mut state, 0);
@@ -300,9 +309,9 @@ fn no_candidates_skips_pending() {
         }
     }
     state.players[0].board = vec![
-        dummy(10, &card_id),
-        dummy(11, &card_id),
-        dummy(12, &card_id),
+        dummy(&engine.catalog, 10, &card_id),
+        dummy(&engine.catalog, 11, &card_id),
+        dummy(&engine.catalog, 12, &card_id),
     ];
 
     let events = engine.check_triple(&mut state, 0);
@@ -541,9 +550,9 @@ fn golden_battlecry_triggers_twice() {
     let (engine, mut state) = setup(14);
     let card_id = minion_id(1);
     state.players[0].board = vec![
-        dummy(10, &card_id),
-        dummy(11, &card_id),
-        dummy(12, &card_id),
+        dummy(&engine.catalog, 10, &card_id),
+        dummy(&engine.catalog, 11, &card_id),
+        dummy(&engine.catalog, 12, &card_id),
     ];
 
     engine.check_triple(&mut state, 0);
@@ -562,7 +571,7 @@ fn hand_effect_cards_never_form_triple() {
         hand_card(&effect_id),
         hand_card(&effect_id),
     ];
-    state.players[0].board = vec![dummy(10, &minion)];
+    state.players[0].board = vec![dummy(&engine.catalog, 10, &minion)];
 
     let events = engine.check_triple(&mut state, 0);
 
@@ -584,9 +593,9 @@ fn one_check_forms_multiple_triples() {
     let (engine, mut state) = setup(16);
     let card_id = minion_id(2);
     state.players[0].board = vec![
-        dummy(10, &card_id),
-        dummy(11, &card_id),
-        dummy(12, &card_id),
+        dummy(&engine.catalog, 10, &card_id),
+        dummy(&engine.catalog, 11, &card_id),
+        dummy(&engine.catalog, 12, &card_id),
     ];
     state.players[0].hand = vec![
         hand_card(&card_id),

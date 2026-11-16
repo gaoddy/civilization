@@ -789,22 +789,10 @@ fn tick_after_game_over_returns_empty() {
 // ---------------------------------------------------------------------------
 
 fn fixture_minion(instance_id: u64) -> rule_engine::state::MinionInstance {
-    rule_engine::state::MinionInstance {
-        instance_id,
-        card_id: "baiyi".to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 1,
-        cannot_attack: false,
-    }
+    let mut minion =
+        rule_engine::state::MinionInstance::new(&catalog(), instance_id, "baiyi", false);
+    minion.attacks_left = 1;
+    minion
 }
 
 /// 双方各两个随从的真实战斗报告；含一条「攻防互换」的反击动作。

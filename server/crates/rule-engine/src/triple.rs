@@ -6,7 +6,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::data::{Card, CardType, Tribe};
+use crate::data::{Card, CardType, Catalog, Tribe};
 use crate::effects::{Effect, EffectCtx};
 use crate::engine::Engine;
 use crate::events::GameEvent;
@@ -76,7 +76,7 @@ impl Engine {
                     .iter_mut()
                     .find(|minion| minion.instance_id == base_id)
                 {
-                    make_golden(minion);
+                    make_golden(&self.catalog, minion);
                 }
                 for copy in &copies[1..] {
                     match copy {
@@ -94,7 +94,9 @@ impl Engine {
                 if player.board.len() < board_slots {
                     let new_id = state.next_instance_id;
                     state.next_instance_id = new_id.saturating_add(1);
-                    player.board.push(new_minion(new_id, card_id, true));
+                    player
+                        .board
+                        .push(new_minion(&self.catalog, new_id, card_id, true));
                     for copy in copies {
                         if let Copy::Hand(index) = copy {
                             hand_removals.push(*index);
@@ -234,9 +236,23 @@ impl Engine {
     }
 }
 
-/// 把实例原地升级为金色：保留全部成长与来源字段，清空本回合行动状态。
-fn make_golden(minion: &mut MinionInstance) {
+/// 把实例原地升级为金色：基础值按卡面翻倍，清空本回合行动状态。
+///
+/// 成长、永久与回合层保留；`current` 随 `set_initial` 同步调整。
+fn make_golden(catalog: &Catalog, minion: &mut MinionInstance) {
+    let (attack, health): (i32, i32) = match catalog.tokens.get(&minion.card_id) {
+        Some(token) => (token.attack, token.health),
+        None => {
+            let card = catalog.cards.get(&minion.card_id);
+            (
+                card.and_then(|card| card.attack).unwrap_or(0),
+                card.and_then(|card| card.health).unwrap_or(0),
+            )
+        }
+    };
     minion.golden = true;
+    minion.stats.attack.set_initial(attack.saturating_mul(2));
+    minion.stats.health.set_initial(health.saturating_mul(2));
     minion.attacks_left = 0;
     minion.cannot_attack = false;
 }

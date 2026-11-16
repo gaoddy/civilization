@@ -9,7 +9,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::data::{Catalog, Tribe};
+use crate::data::Catalog;
 use crate::effects::{Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::recruit::new_minion;
@@ -122,91 +122,41 @@ impl Default for CombatSetup<'_> {
     }
 }
 
-/// 卡面基础攻击力；token 取注册表数值，金色翻倍。
-fn base_attack(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    let base = match catalog.tokens.get(&minion.card_id) {
-        Some(token) => token.attack,
-        None => catalog
-            .cards
-            .get(&minion.card_id)
-            .and_then(|card| card.attack)
-            .unwrap_or(0),
-    };
-    if minion.golden {
-        base.saturating_mul(2)
-    } else {
-        base
-    }
-}
-
-/// 卡面基础生命值；token 取注册表数值，金色翻倍。
-fn base_health(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    let base = match catalog.tokens.get(&minion.card_id) {
-        Some(token) => token.health,
-        None => catalog
-            .cards
-            .get(&minion.card_id)
-            .and_then(|card| card.health)
-            .unwrap_or(0),
-    };
-    if minion.golden {
-        base.saturating_mul(2)
-    } else {
-        base
-    }
-}
-
-fn is_scholar(catalog: &Catalog, minion: &MinionInstance) -> bool {
-    catalog
-        .cards
-        .get(&minion.card_id)
-        .map(|card| card.tribe == Tribe::Scholar)
-        .unwrap_or(false)
-}
-
 /// 当前攻击力；不包含光环。
-pub fn effective_attack(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    effective_attack_with(catalog, minion, &[])
+pub fn effective_attack(_catalog: &Catalog, minion: &MinionInstance) -> i32 {
+    minion.attack()
 }
 
 /// 当前攻击力，含外部传入的光环修正。
 ///
 /// 学者在最后一步被强制为 0，下限为 0。
 pub fn effective_attack_with(
-    catalog: &Catalog,
+    _catalog: &Catalog,
     minion: &MinionInstance,
     auras: &[Modifier],
 ) -> i32 {
-    let mut value = base_attack(catalog, minion).saturating_add(minion.growth);
-    for modifier in &minion.mods {
-        value = value.saturating_add(modifier.attack);
-    }
+    let mut value = minion.attack();
     for aura in auras {
         value = value.saturating_add(aura.attack);
     }
-    if is_scholar(catalog, minion) {
+    if minion.is_scholar {
         value = 0;
     }
     value.max(0)
 }
 
 /// 当前生命值；不包含光环。
-pub fn effective_health(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    effective_health_with(catalog, minion, &[])
+pub fn effective_health(_catalog: &Catalog, minion: &MinionInstance) -> i32 {
+    minion.health()
 }
 
 /// 当前生命值，含外部传入的光环修正；下限为 0。
 pub fn effective_health_with(
-    catalog: &Catalog,
+    _catalog: &Catalog,
     minion: &MinionInstance,
     auras: &[Modifier],
 ) -> i32 {
-    let mut value = base_health(catalog, minion)
-        .saturating_add(minion.growth)
-        .saturating_add(minion.growth_health_only);
-    for modifier in &minion.mods {
-        value = value.saturating_add(modifier.health);
-    }
+    let mut value = minion.health();
     for aura in auras {
         value = value.saturating_add(aura.health);
     }
@@ -249,7 +199,7 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
 fn starting_tokens(catalog: &Catalog, minion: &MinionInstance) -> u8 {
     if minion.cannot_attack {
         0
-    } else if is_scholar(catalog, minion) {
+    } else if minion.is_scholar {
         1
     } else if keywords(catalog, minion).contains(WINDFURY) {
         2
@@ -500,8 +450,19 @@ impl BattleField {
 
     pub(crate) fn modify_stats(&mut self, id: InstanceId, modifier: Modifier) {
         if let Some((side, index)) = self.locate(id) {
-            let health = modifier.health;
-            self.sides[side].minions[index].mods.push(modifier);
+            let minion = &mut self.sides[side].minions[index];
+            let (attack, health) = (modifier.attack, modifier.health);
+            match modifier.duration {
+                Duration::Combat => {
+                    minion.stats.attack.add_turn(attack);
+                    minion.stats.health.add_turn(health);
+                }
+                // `Instant` 在数据中未使用；保持现有「永不清除」语义。
+                Duration::Permanent | Duration::Instant => {
+                    minion.stats.attack.add_permanent(attack);
+                    minion.stats.health.add_permanent(health);
+                }
+            }
             self.sides[side].health[index] = self.sides[side].health[index].saturating_add(health);
         }
     }
@@ -511,9 +472,10 @@ impl BattleField {
         if let Some((side, index)) = self.locate(id) {
             let minion = &mut self.sides[side].minions[index];
             if health_only {
-                minion.growth_health_only = minion.growth_health_only.saturating_add(times);
+                minion.stats.health.add_growth(times);
             } else {
-                minion.growth = minion.growth.saturating_add(times);
+                minion.stats.attack.add_growth(times);
+                minion.stats.health.add_growth(times);
             }
             self.sides[side].health[index] = self.sides[side].health[index].saturating_add(times);
         }
@@ -523,12 +485,11 @@ impl BattleField {
     pub(crate) fn remove_growth(&mut self, id: InstanceId) {
         if let Some((side, index)) = self.locate(id) {
             let minion = &mut self.sides[side].minions[index];
-            let removed = minion
-                .growth
-                .saturating_add(minion.growth_health_only)
-                .max(0);
-            minion.growth = 0;
-            minion.growth_health_only = 0;
+            // 成长对攻防各记一层；生命侧同时包含「成长」与「只加生命」两种来源，
+            // 与旧字段 `growth + growth_health_only` 的口径一致。
+            let removed = minion.stats.health.growth.max(0);
+            minion.stats.attack.remove_growth();
+            minion.stats.health.remove_growth();
             self.sides[side].health[index] = self.sides[side].health[index].saturating_sub(removed);
         }
     }
@@ -640,7 +601,7 @@ impl BattleField {
                         let count = if golden { 2 } else { 1 };
                         for _ in 0..count {
                             let instance =
-                                new_minion(self.new_instance_id(), SEEDLING_TOKEN, false);
+                                new_minion(catalog, self.new_instance_id(), SEEDLING_TOKEN, false);
                             let summoned = self.append(catalog, side, instance);
                             self.summon_count = self.summon_count.saturating_add(1);
                             engine.fire_ally_summon(self, rng, side, summoned);

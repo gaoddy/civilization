@@ -4,7 +4,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::data::{Card, CardType, Era, Tribe};
+use crate::data::{Card, CardType, Catalog, Era, Tribe};
 use crate::effects::{EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::events::GameEvent;
@@ -522,6 +522,7 @@ fn play_card(
                 .expect("check_play_card 已保证座位存在");
             player.hand.remove(index);
             player.board.push(new_minion(
+                &engine.catalog,
                 instance_id,
                 &hand_card.card_id,
                 hand_card.golden,
@@ -1027,23 +1028,13 @@ fn is_eligible(card: &Card, pool: &BTreeMap<String, u16>, tribes: &BTreeSet<Trib
     card.tribe == Tribe::General || tribes.contains(&card.tribe)
 }
 
-pub(crate) fn new_minion(instance_id: InstanceId, card_id: &str, golden: bool) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: card_id.to_string(),
-        golden,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 0,
-        cannot_attack: false,
-    }
+pub(crate) fn new_minion(
+    catalog: &Catalog,
+    instance_id: InstanceId,
+    card_id: &str,
+    golden: bool,
+) -> MinionInstance {
+    MinionInstance::new(catalog, instance_id, card_id, golden)
 }
 
 fn player(state: &GameState, seat: Seat) -> Result<&PlayerState, Reject> {
@@ -1082,7 +1073,6 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::*;
-    use crate::data::Catalog;
     use crate::hash::state_hash;
 
     const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
@@ -1144,22 +1134,7 @@ mod tests {
     }
 
     fn dummy(instance_id: InstanceId, card_id: &str) -> MinionInstance {
-        MinionInstance {
-            instance_id,
-            card_id: card_id.to_string(),
-            golden: false,
-            growth: 0,
-            growth_health_only: 0,
-            breed: 0,
-            breed_applied: 0,
-            contagion: 0,
-            granted: Vec::new(),
-            mods: Vec::new(),
-            shield_used: false,
-            reborn_used: false,
-            attacks_left: 0,
-            cannot_attack: false,
-        }
+        MinionInstance::new(&test_catalog(), instance_id, card_id, false)
     }
 
     fn fill_board(state: &mut GameState, seat: Seat, count: usize) {

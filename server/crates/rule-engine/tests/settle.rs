@@ -8,7 +8,7 @@ use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::rng::RngStreams;
 use rule_engine::settle::{Pairing, damage_formula, mirror_ghost, pair_round, strip_ghost};
-use rule_engine::state::{MinionInstance, Modifier, Phase, Seat};
+use rule_engine::state::{MinionInstance, Phase, Seat};
 
 /// 往目录里插入一张合成随从卡，避免测试依赖真实卡面数值。
 fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, health: i32) {
@@ -77,23 +77,8 @@ fn add_keyword_card(
     );
 }
 
-fn minion(instance_id: u64, card_id: &str) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: card_id.to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 0,
-        cannot_attack: false,
-    }
+fn minion(catalog: &Catalog, instance_id: u64, card_id: &str) -> MinionInstance {
+    MinionInstance::new(catalog, instance_id, card_id, false)
 }
 
 fn covered_seats(pairings: &[Pairing]) -> Vec<Seat> {
@@ -276,8 +261,8 @@ fn combat_resolution_applies_damage_and_history() {
     state.first_seat = 0;
     state.last_winner = None;
     state.players[1].era = Era::Primitive;
-    state.players[0].board = vec![minion(10, "big")];
-    state.players[1].board = vec![minion(20, "small")];
+    state.players[0].board = vec![minion(&engine.catalog, 10, "big")];
+    state.players[1].board = vec![minion(&engine.catalog, 20, "small")];
     state.pairings = vec![Pairing {
         a: 0,
         b: 1,
@@ -320,14 +305,11 @@ fn mirror_ghost_keeps_only_permanent_stats() {
     add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
 
     state.phase = Phase::Combat;
-    state.players[0].board = vec![minion(1, "strong")];
+    state.players[0].board = vec![minion(&engine.catalog, 1, "strong")];
     // 幽灵基础 1/1，却带有巨额临时增益与授予关键词；剥除后应被一击击杀。
-    let mut ghost = minion(2, "weak");
-    ghost.mods = vec![Modifier {
-        attack: 100,
-        health: 100,
-        duration: Duration::Combat,
-    }];
+    let mut ghost = minion(&engine.catalog, 2, "weak");
+    ghost.stats.attack.add_turn(100);
+    ghost.stats.health.add_turn(100);
     ghost.granted = vec![("嘲讽".to_string(), Duration::Combat)];
     state.previous_board.insert(0, vec![ghost]);
     state.pairings = vec![Pairing {
@@ -365,8 +347,10 @@ fn mirror_loss_does_not_damage_or_streak() {
     add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
 
     state.phase = Phase::Combat;
-    state.players[0].board = vec![minion(1, "weak")];
-    state.previous_board.insert(0, vec![minion(2, "strong")]);
+    state.players[0].board = vec![minion(&engine.catalog, 1, "weak")];
+    state
+        .previous_board
+        .insert(0, vec![minion(&engine.catalog, 2, "strong")]);
     state.pairings = vec![Pairing {
         a: 0,
         b: 0,
@@ -531,8 +515,8 @@ fn start_turn_accepts_settle_and_returns_to_recruit() {
 
 #[test]
 fn mirror_ghost_falls_back_to_current_board() {
-    let (_, mut state) = Engine::new(test_catalog(), [13; 32]);
-    state.players[0].board = vec![minion(7, "weak")];
+    let (engine, mut state) = Engine::new(test_catalog(), [13; 32]);
+    state.players[0].board = vec![minion(&engine.catalog, 7, "weak")];
 
     // 上一场快照缺失。
     let ghost = mirror_ghost(&state, 0);
@@ -548,17 +532,16 @@ fn mirror_ghost_falls_back_to_current_board() {
 
 #[test]
 fn mirror_ghost_keeps_growth_breed_and_contagion() {
-    let mut source = minion(1, "weak");
-    source.growth = 2;
-    source.growth_health_only = 3;
+    let catalog = test_catalog();
+    let mut source = minion(&catalog, 1, "weak");
+    source.stats.attack.add_growth(2);
+    source.stats.health.add_growth(2);
+    source.stats.health.add_growth(3);
     source.breed = 4;
     source.breed_applied = 5;
     source.contagion = 6;
-    source.mods = vec![Modifier {
-        attack: 9,
-        health: 9,
-        duration: Duration::Combat,
-    }];
+    source.stats.attack.add_turn(9);
+    source.stats.health.add_turn(9);
     source.granted = vec![("嘲讽".to_string(), Duration::Combat)];
     source.shield_used = true;
     source.reborn_used = true;
@@ -568,12 +551,17 @@ fn mirror_ghost_keeps_growth_breed_and_contagion() {
     let ghost = strip_ghost(&[source]);
     assert_eq!(ghost.len(), 1);
     let ghost = &ghost[0];
-    assert_eq!(ghost.growth, 2);
-    assert_eq!(ghost.growth_health_only, 3);
+    assert_eq!(ghost.stats.attack.growth, 2);
+    assert_eq!(ghost.stats.health.growth, 5);
     assert_eq!(ghost.breed, 4);
     assert_eq!(ghost.contagion, 6);
     assert_eq!(ghost.breed_applied, 0);
-    assert!(ghost.mods.is_empty());
+    assert_eq!((ghost.stats.attack.turn, ghost.stats.health.turn), (0, 0));
+    assert_eq!(
+        (ghost.stats.attack.current, ghost.stats.health.current),
+        (2, 5),
+        "幽灵 current 按 initial + growth 重算"
+    );
     assert!(ghost.granted.is_empty());
     assert!(!ghost.shield_used);
     assert!(!ghost.reborn_used);
@@ -590,7 +578,7 @@ fn four_pairs_emit_events_in_pairing_order_and_record_opponents() {
     state.phase = Phase::Combat;
     for seat in 0..8u64 {
         let card_id = if seat % 2 == 0 { "strong" } else { "weak" };
-        state.players[seat as usize].board = vec![minion(seat + 100, card_id)];
+        state.players[seat as usize].board = vec![minion(&engine.catalog, seat + 100, card_id)];
     }
     let expected = [(0, 1), (2, 3), (4, 5), (6, 7)];
     state.pairings = expected
@@ -642,8 +630,10 @@ fn action_cap_draw_uses_settle_seat_tiebreak() {
     // 100 个 0 攻连击随从共 200 个令牌，把行动数推到上限而双方仍存活。
     state.phase = Phase::Combat;
     state.first_seat = 1;
-    state.players[0].board = vec![minion(500, "wall")];
-    state.players[1].board = (1..=100).map(|index| minion(index, "wind")).collect();
+    state.players[0].board = vec![minion(&engine.catalog, 500, "wall")];
+    state.players[1].board = (1..=100)
+        .map(|index| minion(&engine.catalog, index, "wind"))
+        .collect();
     state.pairings = vec![Pairing {
         a: 1,
         b: 0,
@@ -673,10 +663,10 @@ fn last_won_resets_each_round_and_feeds_turn_20_ranking() {
 
     // 第 1 回合：座位 0 击败座位 1。
     state.phase = Phase::Combat;
-    state.players[0].board = vec![minion(1, "strong")];
-    state.players[1].board = vec![minion(2, "weak")];
+    state.players[0].board = vec![minion(&engine.catalog, 1, "strong")];
+    state.players[1].board = vec![minion(&engine.catalog, 2, "weak")];
     for seat in 2..8u64 {
-        state.players[seat as usize].board = vec![minion(seat + 10, "weak")];
+        state.players[seat as usize].board = vec![minion(&engine.catalog, seat + 10, "weak")];
     }
     state.pairings = [(0, 1), (2, 3), (4, 5), (6, 7)]
         .iter()
@@ -691,14 +681,14 @@ fn last_won_resets_each_round_and_feeds_turn_20_ranking() {
 
     // 第 2 回合：座位 0 输给座位 2，座位 1 获胜；last_won 只反映本回合。
     state.phase = Phase::Combat;
-    state.players[0].board = vec![minion(101, "weak")];
-    state.players[1].board = vec![minion(102, "strong")];
-    state.players[2].board = vec![minion(103, "strong")];
-    state.players[3].board = vec![minion(104, "weak")];
-    state.players[4].board = vec![minion(105, "strong")];
-    state.players[5].board = vec![minion(106, "weak")];
-    state.players[6].board = vec![minion(107, "strong")];
-    state.players[7].board = vec![minion(108, "weak")];
+    state.players[0].board = vec![minion(&engine.catalog, 101, "weak")];
+    state.players[1].board = vec![minion(&engine.catalog, 102, "strong")];
+    state.players[2].board = vec![minion(&engine.catalog, 103, "strong")];
+    state.players[3].board = vec![minion(&engine.catalog, 104, "weak")];
+    state.players[4].board = vec![minion(&engine.catalog, 105, "strong")];
+    state.players[5].board = vec![minion(&engine.catalog, 106, "weak")];
+    state.players[6].board = vec![minion(&engine.catalog, 107, "strong")];
+    state.players[7].board = vec![minion(&engine.catalog, 108, "weak")];
     state.pairings = [(0, 2), (1, 3), (4, 5), (6, 7)]
         .iter()
         .map(|&(a, b)| Pairing {

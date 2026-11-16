@@ -227,7 +227,7 @@ fn hero_power_use(player: &PlayerState, catalog: &Catalog, skill: &Skill) -> Opt
             let target = player
                 .board
                 .iter()
-                .min_by_key(|minion| (minion.growth, minion.instance_id));
+                .min_by_key(|minion| (minion.stats.attack.growth, minion.instance_id));
             if let Some(minion) = target {
                 return Some(Some(minion.instance_id));
             }

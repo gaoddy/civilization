@@ -7,7 +7,7 @@
 use crate::data::Era;
 use crate::effects::Duration;
 use crate::rng::Stream;
-use crate::state::{GameState, MinionInstance, Modifier, Phase, PlayerState};
+use crate::state::{GameState, MinionInstance, Phase, PlayerState, StatComponent};
 
 const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
@@ -189,8 +189,9 @@ fn hash_minion(hasher: &mut Hasher, minion: &MinionInstance) {
     hasher.u64(minion.instance_id);
     hasher.str(&minion.card_id);
     hasher.bool(minion.golden);
-    hasher.i32(minion.growth);
-    hasher.i32(minion.growth_health_only);
+    hasher.bool(minion.is_scholar);
+    hash_stat(hasher, &minion.stats.attack);
+    hash_stat(hasher, &minion.stats.health);
     hasher.i32(minion.breed);
     hasher.i32(minion.breed_applied);
     hasher.i32(minion.contagion);
@@ -201,21 +202,19 @@ fn hash_minion(hasher: &mut Hasher, minion: &MinionInstance) {
         hasher.u8(duration_tag(*duration));
     }
 
-    hasher.len(minion.mods.len());
-    for modifier in &minion.mods {
-        hash_modifier(hasher, modifier);
-    }
-
     hasher.bool(minion.shield_used);
     hasher.bool(minion.reborn_used);
     hasher.u8(minion.attacks_left);
     hasher.bool(minion.cannot_attack);
 }
 
-fn hash_modifier(hasher: &mut Hasher, modifier: &Modifier) {
-    hasher.i32(modifier.attack);
-    hasher.i32(modifier.health);
-    hasher.u8(duration_tag(modifier.duration));
+fn hash_stat(hasher: &mut Hasher, stat: &StatComponent) {
+    hasher.i32(stat.initial);
+    hasher.i32(stat.growth);
+    hasher.i32(stat.permanent);
+    hasher.i32(stat.turn);
+    hasher.i32(stat.aura);
+    hasher.i32(stat.current);
 }
 
 fn phase_tag(phase: Phase) -> u8 {

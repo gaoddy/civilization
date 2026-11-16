@@ -138,8 +138,8 @@ impl Engine {
             Op::RemoveGrowth => {
                 for id in targets {
                     if let Some((_, minion)) = locate_mut(state, id) {
-                        minion.growth = 0;
-                        minion.growth_health_only = 0;
+                        minion.stats.attack.remove_growth();
+                        minion.stats.health.remove_growth();
                     }
                 }
                 Vec::new()
@@ -212,13 +212,6 @@ impl Engine {
                 self.apply_pick(state, pool, *pick, ctx, roll)
             }
         }
-    }
-
-    /// Task 11 的光环重算入口；本任务只丢弃 0/0 的临时修正。
-    pub fn recompute_stats(&mut self, _state: &mut GameState, minion: &mut MinionInstance) {
-        minion
-            .mods
-            .retain(|modifier| modifier.attack != 0 || modifier.health != 0);
     }
 
     /// 在可变状态上解析选择器并推进随机流。
@@ -595,26 +588,29 @@ impl Engine {
                 }
                 _ => base_times,
             };
-            let scholar = self
-                .card_tribe(&minion.card_id)
-                .is_some_and(|tribe| tribe == Tribe::Scholar);
-            if health_only || scholar {
-                minion.growth_health_only = minion.growth_health_only.saturating_add(times);
+            if health_only || minion.is_scholar {
+                minion.stats.health.add_growth(times);
             } else {
-                minion.growth = minion.growth.saturating_add(times);
+                minion.stats.attack.add_growth(times);
+                minion.stats.health.add_growth(times);
             }
         }
     }
 
     fn apply_modify_stats(&self, state: &mut GameState, effect: &Effect, targets: &[InstanceId]) {
-        let modifier = Modifier {
-            attack: effect.params.attack.unwrap_or(0),
-            health: effect.params.health.unwrap_or(0),
-            duration: effect.params.duration,
-        };
+        let attack = effect.params.attack.unwrap_or(0);
+        let health = effect.params.health.unwrap_or(0);
+        let turn_scoped = effect.params.duration == Duration::Combat;
         for id in targets {
             if let Some((_, minion)) = locate_mut(state, *id) {
-                minion.mods.push(modifier.clone());
+                if turn_scoped {
+                    minion.stats.attack.add_turn(attack);
+                    minion.stats.health.add_turn(health);
+                } else {
+                    // `Instant` 在数据中未使用；保持现有「永不清除」语义。
+                    minion.stats.attack.add_permanent(attack);
+                    minion.stats.health.add_permanent(health);
+                }
             }
         }
     }
@@ -666,11 +662,7 @@ impl Engine {
             } else {
                 -amount
             };
-            minion.mods.push(Modifier {
-                attack: 0,
-                health,
-                duration: Duration::Combat,
-            });
+            minion.stats.health.add_turn(health);
             // 事件记录实际损失的生命值；负向修改可能被 `canKill=false` 夹紧。
             events.push(GameEvent::DamageTaken {
                 seat,
@@ -798,7 +790,7 @@ impl Engine {
         state.next_instance_id = id.saturating_add(1);
         let board = &mut state.players[index].board;
         let position = position.unwrap_or(board.len()).min(board.len());
-        board.insert(position, new_minion(id, card_id, false));
+        board.insert(position, new_minion(&self.catalog, id, card_id, false));
         self.fire_ally_summon_recruit(state, seat, id);
         Some(id)
     }
@@ -879,7 +871,9 @@ impl Engine {
                     if player.board.len() < board_slots {
                         let id = state.next_instance_id;
                         state.next_instance_id = id.saturating_add(1);
-                        player.board.push(new_minion(id, &card_id, golden));
+                        player
+                            .board
+                            .push(new_minion(&self.catalog, id, &card_id, golden));
                     }
                 }
                 Zone::Shop => {}
@@ -1154,10 +1148,7 @@ impl Engine {
                         }
                         _ => base_times,
                     };
-                    let scholar = self
-                        .card_tribe(&minion.card_id)
-                        .is_some_and(|tribe| tribe == Tribe::Scholar);
-                    field.add_growth(id, times, health_only || scholar);
+                    field.add_growth(id, times, health_only || minion.is_scholar);
                     if let Some((side, _)) = field.locate(id) {
                         self.fire_combat_board_trigger(
                             field,
@@ -1277,12 +1268,12 @@ impl Engine {
     ) -> Option<MinionInstance> {
         if let Some(token_id) = &effect.params.token {
             let token = self.catalog.tokens.get(token_id)?;
-            return Some(new_minion(0, &token.id, false));
+            return Some(new_minion(&self.catalog, 0, &token.id, false));
         }
         if let Some(card_id) = &effect.params.card {
             self.catalog.cards.get(card_id)?;
             field.record_pool_spend(card_id);
-            return Some(new_minion(0, card_id, false));
+            return Some(new_minion(&self.catalog, 0, card_id, false));
         }
         None
     }

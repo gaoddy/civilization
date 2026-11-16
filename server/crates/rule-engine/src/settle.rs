@@ -16,7 +16,7 @@ use crate::error::EngineError;
 use crate::events::GameEvent;
 use crate::rng::Stream;
 use crate::state::{
-    AuraEffect, GameState, HandCard, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat,
+    AuraEffect, GameState, HandCard, InstanceId, MinionInstance, Phase, PlayerState, Seat,
 };
 
 /// 配对在放弃"排除上一场对手"前最多重洗的次数。
@@ -407,7 +407,7 @@ fn resolve_mirror(
 
 /// 把光环派生值折叠进一份棋盘克隆，供战斗模拟使用。
 ///
-/// 原始随从不受影响：数值以永久 `Modifier` 追加，关键词以永久授予追加（同名只
+/// 原始随从不受影响：数值写入克隆的 `aura` 层，关键词以永久授予追加（同名只
 /// 保留一次）。若目标在折叠前生命 > 0、折叠后 ≤ 0，则收窄负向生命修正，使总
 /// 生命恰好为 1（§3.2「光环失效不致死」）。
 pub fn fold_auras(
@@ -426,13 +426,8 @@ pub fn fold_auras(
         if before > 0 && before.saturating_add(health) <= 0 {
             health = 1 - before;
         }
-        if attack != 0 || health != 0 {
-            minion.mods.push(Modifier {
-                attack,
-                health,
-                duration: Duration::Permanent,
-            });
-        }
+        minion.stats.attack.set_aura(attack);
+        minion.stats.health.set_aura(health);
         for keyword in &aura.keywords {
             if !minion
                 .granted
@@ -468,42 +463,50 @@ pub fn mirror_ghost_with_auras(
     fold_auras(catalog, &state.auras, &mirror_ghost(state, seat))
 }
 
-/// 幽灵快照只保留永久属性：卡面基础值、成长、繁衍与传染层。
+/// 幽灵快照只保留永久属性：卡面基础值与成长，以及繁衍与传染层。
 ///
-/// 临时修正 `mods` 与授予关键词 `granted` 一律丢弃；战斗内的临时标记
-/// （护盾已用、复生已用、剩余攻击次数等）也重置。
+/// `permanent` / `turn` / `aura` 归零，`current` 按 `initial + growth` 重算；
+/// 授予关键词 `granted` 一律丢弃；战斗内的临时标记（护盾已用、复生已用、
+/// 剩余攻击次数等）也重置。
 pub fn strip_ghost(board: &[MinionInstance]) -> Vec<MinionInstance> {
     board
         .iter()
-        .map(|minion| MinionInstance {
-            instance_id: minion.instance_id,
-            card_id: minion.card_id.clone(),
-            golden: minion.golden,
-            growth: minion.growth,
-            growth_health_only: minion.growth_health_only,
-            breed: minion.breed,
-            breed_applied: 0,
-            contagion: minion.contagion,
-            granted: Vec::new(),
-            mods: Vec::new(),
-            shield_used: false,
-            reborn_used: false,
-            attacks_left: 0,
-            cannot_attack: false,
+        .map(|minion| {
+            let mut ghost = MinionInstance {
+                instance_id: minion.instance_id,
+                card_id: minion.card_id.clone(),
+                golden: minion.golden,
+                is_scholar: minion.is_scholar,
+                stats: minion.stats,
+                breed: minion.breed,
+                breed_applied: 0,
+                contagion: minion.contagion,
+                granted: Vec::new(),
+                shield_used: false,
+                reborn_used: false,
+                attacks_left: 0,
+                cannot_attack: false,
+            };
+            for stat in [&mut ghost.stats.attack, &mut ghost.stats.health] {
+                stat.add_permanent(stat.permanent.saturating_neg());
+                stat.clear_turn();
+                stat.set_aura(0);
+                stat.revive_to(stat.initial.saturating_add(stat.growth));
+            }
+            ghost
         })
         .collect()
 }
 
-/// 清除所有棋盘随从的 `combat` 时长效果：临时修正、临时关键词与禁攻标记。
+/// 清除所有棋盘随从的 `combat` 时长效果：本回合数值层、临时关键词与禁攻标记。
 ///
 /// 「禁攻」用 `granted` 中的占位条目记录来源时长；只有不再剩任何「禁攻」授予时
 /// 才清除布尔标记，因此 `permanent` 的禁攻会保留到下一回合。
 fn clear_combat_duration(state: &mut GameState) {
     for player in &mut state.players {
         for minion in &mut player.board {
-            minion
-                .mods
-                .retain(|modifier| modifier.duration != Duration::Combat);
+            minion.stats.attack.clear_turn();
+            minion.stats.health.clear_turn();
             minion
                 .granted
                 .retain(|(_, duration)| *duration != Duration::Combat);
@@ -647,7 +650,9 @@ fn player_mut(state: &mut GameState, seat: Seat) -> Option<&mut PlayerState> {
 
 /// 把战斗结束时的克隆中需要持久化的字段写回存储随从（按 `instance_id` 匹配）。
 ///
-/// 只写传染层数与成长记录；临时修正、授予关键词、护盾/复生等战斗标记保持原样。
+/// 只写传染层数与成长层；回写后按分层重算 `current`（携带持久实例自身的
+/// 永久与回合层，但不携带战斗伤害与光环）。授予关键词、护盾/复生等战斗标记
+/// 保持原样。
 fn write_back_persistent(state: &mut GameState, seat: Seat, final_board: &[MinionInstance]) {
     let Some(player) = player_mut(state, seat) else {
         return;
@@ -658,8 +663,15 @@ fn write_back_persistent(state: &mut GameState, seat: Seat, final_board: &[Minio
             .find(|minion| minion.instance_id == stored.instance_id)
         {
             stored.contagion = updated.contagion;
-            stored.growth = updated.growth;
-            stored.growth_health_only = updated.growth_health_only;
+            for (stored_stat, updated_stat) in [
+                (&mut stored.stats.attack, &updated.stats.attack),
+                (&mut stored.stats.health, &updated.stats.health),
+            ] {
+                stored_stat.add_growth(updated_stat.growth.saturating_sub(stored_stat.growth));
+            }
+            for stat in [&mut stored.stats.attack, &mut stored.stats.health] {
+                stat.revive_to(stat.layers());
+            }
         }
     }
 }

@@ -5,7 +5,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-use crate::data::{Era, Tribe};
+use crate::data::{Catalog, Era, Tribe};
 use crate::effects::Duration;
 use crate::rng::RngStreams;
 
@@ -155,8 +155,8 @@ impl MinionStats {
 
 /// 某个棋盘实例当前生效的光环派生值。
 ///
-/// 光环只存在于派生缓存中，绝不写入 [`MinionInstance::mods`] 或
-/// [`MinionInstance::granted`]；战斗快照折叠时才临时并入克隆。
+/// 光环只存在于派生缓存中，绝不写入 [`MinionInstance`] 的持久实例或
+/// `granted`；战斗快照折叠时才临时并入克隆。
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct AuraEffect {
     pub attack: i32,
@@ -172,17 +172,82 @@ pub struct MinionInstance {
     pub instance_id: InstanceId,
     pub card_id: String,
     pub golden: bool,
-    pub growth: i32,
-    pub growth_health_only: i32,
+    /// 学者：攻击读取口径恒为 0，但分层数值照常累积。
+    pub is_scholar: bool,
+    /// 攻击与生命的分层构成，`current` 为战斗与视图读取的当前量。
+    pub stats: MinionStats,
     pub breed: i32,
     pub breed_applied: i32,
     pub contagion: i32,
     pub granted: Vec<(String, Duration)>,
-    pub mods: Vec<Modifier>,
     pub shield_used: bool,
     pub reborn_used: bool,
     pub attacks_left: u8,
     pub cannot_attack: bool,
+}
+
+impl MinionInstance {
+    /// 按目录解析卡面攻防；token 取注册表数值，普通卡取卡牌攻防，金色 ×2。
+    ///
+    /// 学者标记取卡牌 `is_scholar` 或学者流派，构造后不再变化。
+    pub fn new(catalog: &Catalog, instance_id: InstanceId, card_id: &str, golden: bool) -> Self {
+        let (mut attack, mut health) = match catalog.tokens.get(card_id) {
+            Some(token) => (token.attack, token.health),
+            None => {
+                let card = catalog.cards.get(card_id);
+                (
+                    card.and_then(|card| card.attack).unwrap_or(0),
+                    card.and_then(|card| card.health).unwrap_or(0),
+                )
+            }
+        };
+        if golden {
+            attack = attack.saturating_mul(2);
+            health = health.saturating_mul(2);
+        }
+        let is_scholar = catalog
+            .cards
+            .get(card_id)
+            .map(|card| card.is_scholar || card.tribe == Tribe::Scholar)
+            .unwrap_or(false);
+        Self {
+            instance_id,
+            card_id: card_id.to_string(),
+            golden,
+            is_scholar,
+            stats: MinionStats::new(attack, health),
+            breed: 0,
+            breed_applied: 0,
+            contagion: 0,
+            granted: Vec::new(),
+            shield_used: false,
+            reborn_used: false,
+            attacks_left: 0,
+            cannot_attack: false,
+        }
+    }
+
+    /// 读取攻击力：学者恒 0，其余为 `current` 的非负值。
+    pub fn attack(&self) -> i32 {
+        if self.is_scholar {
+            0
+        } else {
+            self.stats.attack.current_non_negative()
+        }
+    }
+
+    /// 读取生命值，下限 0。
+    pub fn health(&self) -> i32 {
+        self.stats.health.current_non_negative()
+    }
+
+    pub fn stats_view(&self) -> &MinionStats {
+        &self.stats
+    }
+
+    pub fn stats_view_mut(&mut self) -> &mut MinionStats {
+        &mut self.stats
+    }
 }
 
 /// 商店中的一个卡槽。

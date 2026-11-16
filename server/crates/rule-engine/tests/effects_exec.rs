@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 
 use common::test_catalog;
 use rule_engine::combat;
+use rule_engine::data::Catalog;
 use rule_engine::effects::{
     Duration, Effect, EffectCtx, Op, Trigger, effect_coverage, parse_effects,
 };
@@ -23,29 +24,14 @@ fn setup() -> (Engine, GameState) {
     (engine, state)
 }
 
-fn minion(instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance {
-        instance_id,
-        card_id: card_id.to_string(),
-        golden: false,
-        growth: 0,
-        growth_health_only: 0,
-        breed: 0,
-        breed_applied: 0,
-        contagion: 0,
-        granted: Vec::new(),
-        mods: Vec::new(),
-        shield_used: false,
-        reborn_used: false,
-        attacks_left: 0,
-        cannot_attack: false,
-    }
+fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
+    MinionInstance::new(catalog, instance_id, card_id, false)
 }
 
-fn place(state: &mut GameState, seat: Seat, id: InstanceId, card_id: &str) {
+fn place(catalog: &Catalog, state: &mut GameState, seat: Seat, id: InstanceId, card_id: &str) {
     state.players[usize::from(seat)]
         .board
-        .push(minion(id, card_id));
+        .push(minion(catalog, id, card_id));
 }
 
 fn effect(raw: &str) -> Effect {
@@ -73,7 +59,7 @@ fn board_minion(state: &GameState, seat: Seat, index: usize) -> &MinionInstance 
 #[test]
 fn battlecry_growth_adds_permanent_stats() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "pink-ape");
+    place(&engine.catalog, &mut state, 0, 1, "pink-ape");
     let attack_before = combat::effective_attack(&engine.catalog, board_minion(&state, 0, 0));
     let health_before = combat::effective_health(&engine.catalog, board_minion(&state, 0, 0));
 
@@ -88,7 +74,8 @@ fn battlecry_growth_adds_permanent_stats() {
 
     assert!(events.is_empty(), "成长不产生事件");
     let grown = board_minion(&state, 0, 0);
-    assert_eq!(grown.growth, 2, "战吼：获得两次成长");
+    assert_eq!(grown.stats.attack.growth, 2, "战吼：获得两次成长");
+    assert_eq!(grown.stats.health.growth, 2);
     assert_eq!(
         combat::effective_attack(&engine.catalog, grown),
         attack_before + 2
@@ -102,7 +89,7 @@ fn battlecry_growth_adds_permanent_stats() {
 #[test]
 fn scholar_growth_adds_health_only() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "aristotle");
+    place(&engine.catalog, &mut state, 0, 1, "aristotle");
 
     engine.apply_op(
         &mut state,
@@ -112,8 +99,8 @@ fn scholar_growth_adds_health_only() {
     );
 
     let scholar = board_minion(&state, 0, 0);
-    assert_eq!(scholar.growth, 0, "学者成长不加攻击");
-    assert_eq!(scholar.growth_health_only, 1, "学者成长只加生命");
+    assert_eq!(scholar.stats.attack.growth, 0, "学者成长不加攻击");
+    assert_eq!(scholar.stats.health.growth, 1, "学者成长只加生命");
     assert_eq!(combat::effective_attack(&engine.catalog, scholar), 0);
     assert_eq!(combat::effective_health(&engine.catalog, scholar), 10);
 }
@@ -121,7 +108,7 @@ fn scholar_growth_adds_health_only() {
 #[test]
 fn health_only_growth_adds_no_attack() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "yezhu");
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
         &mut state,
@@ -131,8 +118,8 @@ fn health_only_growth_adds_no_attack() {
     );
 
     let grown = board_minion(&state, 0, 0);
-    assert_eq!(grown.growth, 0);
-    assert_eq!(grown.growth_health_only, 2);
+    assert_eq!(grown.stats.attack.growth, 0);
+    assert_eq!(grown.stats.health.growth, 2);
     assert_eq!(combat::effective_attack(&engine.catalog, grown), 2);
     assert_eq!(combat::effective_health(&engine.catalog, grown), 4);
 }
@@ -140,7 +127,7 @@ fn health_only_growth_adds_no_attack() {
 #[test]
 fn modify_stats_permanent_and_combat() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "yezhu");
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
     let source_ctx = EffectCtx {
         source: Some(1),
         ..ctx(0)
@@ -158,23 +145,22 @@ fn modify_stats_permanent_and_combat() {
         &source_ctx,
         None,
     );
-    assert_eq!(board_minion(&state, 0, 0).mods.len(), 2);
+    assert_eq!(board_minion(&state, 0, 0).stats.health.turn, 4);
 
     state.phase = Phase::Settle;
     engine.resolve_settle(&mut state).expect("结算应成功");
 
     let minion = board_minion(&state, 0, 0);
-    assert_eq!(minion.mods.len(), 1, "combat 修正在 Settle 前清除");
-    assert_eq!(minion.mods[0].duration, Duration::Permanent);
-    assert_eq!(minion.mods[0].attack, 1);
-    assert_eq!(minion.mods[0].health, 2);
+    assert_eq!(minion.stats.health.turn, 0, "combat 修正在 Settle 前清除");
+    assert_eq!(minion.stats.attack.permanent, 1);
+    assert_eq!(minion.stats.health.permanent, 2);
 }
 
 #[test]
 fn grant_keyword_respects_duration() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "yezhu");
-    place(&mut state, 0, 2, "yezhu");
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
+    place(&engine.catalog, &mut state, 0, 2, "yezhu");
     state.players[0].board[0].shield_used = true;
     let first = EffectCtx {
         source: Some(1),
@@ -240,9 +226,10 @@ fn grant_keyword_respects_duration() {
 #[test]
 fn remove_growth_reduces_growth_count() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "yezhu");
-    state.players[0].board[0].growth = 5;
-    state.players[0].board[0].growth_health_only = 3;
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
+    state.players[0].board[0].stats.attack.add_growth(5);
+    state.players[0].board[0].stats.health.add_growth(5);
+    state.players[0].board[0].stats.health.add_growth(3);
 
     engine.apply_op(
         &mut state,
@@ -252,14 +239,14 @@ fn remove_growth_reduces_growth_count() {
     );
 
     let minion = board_minion(&state, 0, 0);
-    assert_eq!(minion.growth, 0);
-    assert_eq!(minion.growth_health_only, 0);
+    assert_eq!(minion.stats.attack.growth, 0);
+    assert_eq!(minion.stats.health.growth, 0);
 }
 
 #[test]
 fn cannot_attack_blocks_attacks() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "yezhu");
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
         &mut state,
@@ -288,7 +275,7 @@ fn cannot_attack_blocks_attacks() {
 fn deal_damage_uses_selector_and_amount() {
     let (mut engine, mut state) = setup();
     state.phase = Phase::Combat;
-    place(&mut state, 1, 10, "yezhu");
+    place(&engine.catalog, &mut state, 1, 10, "yezhu");
 
     let events = engine.apply_op(
         &mut state,
@@ -299,9 +286,7 @@ fn deal_damage_uses_selector_and_amount() {
 
     assert_eq!(events, vec![GameEvent::DamageTaken { seat: 1, amount: 2 }]);
     let victim = board_minion(&state, 1, 0);
-    assert_eq!(victim.mods.len(), 1);
-    assert_eq!(victim.mods[0].duration, Duration::Combat);
-    assert_eq!(victim.mods[0].health, -2);
+    assert_eq!(victim.stats.health.turn, -2);
     assert_eq!(combat::effective_health(&engine.catalog, victim), 0);
 }
 
@@ -309,7 +294,7 @@ fn deal_damage_uses_selector_and_amount() {
 fn deal_damage_cannot_kill_floors_health_at_one() {
     let (mut engine, mut state) = setup();
     state.phase = Phase::Combat;
-    place(&mut state, 1, 10, "yanhuashi");
+    place(&engine.catalog, &mut state, 1, 10, "yanhuashi");
 
     let mut damage = effect("OnCombatStart|DealDamage|enemy:all|amount=10");
     damage.params.can_kill = Some(false);
@@ -323,8 +308,8 @@ fn deal_damage_cannot_kill_floors_health_at_one() {
 #[test]
 fn enemy_selectors_are_empty_during_recruit() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 1, 10, "yezhu");
-    place(&mut state, 0, 1, "yezhu");
+    place(&engine.catalog, &mut state, 1, 10, "yezhu");
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     let events = engine.apply_op(
         &mut state,
@@ -334,7 +319,7 @@ fn enemy_selectors_are_empty_during_recruit() {
     );
 
     assert!(events.is_empty(), "招募阶段敌方选择器无目标");
-    assert!(board_minion(&state, 1, 0).mods.is_empty());
+    assert_eq!(board_minion(&state, 1, 0).stats.health.turn, 0);
     let enemy_effect = effect("OnCombatStart|DealDamage|enemy:all|amount=2");
     assert!(
         engine
@@ -346,8 +331,8 @@ fn enemy_selectors_are_empty_during_recruit() {
 #[test]
 fn times_if_changes_times_by_tribe() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "tengman");
-    place(&mut state, 0, 2, "yezhu");
+    place(&engine.catalog, &mut state, 0, 1, "tengman");
+    place(&engine.catalog, &mut state, 0, 2, "yezhu");
     let growth_effect = effect("OnPlay|Growth|friendly:single|times=1,timesIf=植物:2");
 
     let plant_ctx = EffectCtx {
@@ -355,7 +340,11 @@ fn times_if_changes_times_by_tribe() {
         ..ctx(0)
     };
     engine.apply_op(&mut state, &growth_effect, &plant_ctx, None);
-    assert_eq!(board_minion(&state, 0, 0).growth, 2, "植物目标改为两次");
+    assert_eq!(
+        board_minion(&state, 0, 0).stats.attack.growth,
+        2,
+        "植物目标改为两次"
+    );
 
     let beast_ctx = EffectCtx {
         target: Some(2),
@@ -363,7 +352,7 @@ fn times_if_changes_times_by_tribe() {
     };
     engine.apply_op(&mut state, &growth_effect, &beast_ctx, None);
     assert_eq!(
-        board_minion(&state, 0, 1).growth,
+        board_minion(&state, 0, 1).stats.attack.growth,
         1,
         "非植物目标按基础 times=1 结算"
     );
@@ -372,8 +361,8 @@ fn times_if_changes_times_by_tribe() {
 #[test]
 fn condition_gates_effect() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "buluozhanshi");
-    place(&mut state, 0, 2, "bruce-lee");
+    place(&engine.catalog, &mut state, 0, 1, "buluozhanshi");
+    place(&engine.catalog, &mut state, 0, 2, "bruce-lee");
     let gated = effect(
         "OnActivate|Growth|friendly:single:tribe=人类|times=1,timesIf=人类:2,condition=count:friendly:tribe=人类:>=3",
     );
@@ -383,12 +372,16 @@ fn condition_gates_effect() {
     };
 
     engine.apply_op(&mut state, &gated, &target_ctx, None);
-    assert_eq!(board_minion(&state, 0, 0).growth, 0, "条件不满足不执行");
+    assert_eq!(
+        board_minion(&state, 0, 0).stats.attack.growth,
+        0,
+        "条件不满足不执行"
+    );
 
-    place(&mut state, 0, 3, "buluozhanshi");
+    place(&engine.catalog, &mut state, 0, 3, "buluozhanshi");
     engine.apply_op(&mut state, &gated, &target_ctx, None);
     assert_eq!(
-        board_minion(&state, 0, 0).growth,
+        board_minion(&state, 0, 0).stats.attack.growth,
         2,
         "三名人类时 timesIf 生效"
     );
@@ -397,7 +390,7 @@ fn condition_gates_effect() {
 #[test]
 fn golden_triggers_battlecry_twice() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "pink-ape");
+    place(&engine.catalog, &mut state, 0, 1, "pink-ape");
 
     engine.fire(
         &mut state,
@@ -410,7 +403,7 @@ fn golden_triggers_battlecry_twice() {
     );
 
     assert_eq!(
-        board_minion(&state, 0, 0).growth,
+        board_minion(&state, 0, 0).stats.attack.growth,
         4,
         "金色整段效果连续执行两次"
     );
@@ -421,7 +414,7 @@ fn on_activate_respects_cost_and_uses() {
     let (mut engine, mut state) = setup();
     state.players[0].hero = Some("luxun".to_string());
     state.players[0].gold = 5;
-    place(&mut state, 0, 1, "yezhu");
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine
         .apply(
@@ -434,7 +427,7 @@ fn on_activate_respects_cost_and_uses() {
         )
         .expect("首次使用应成功");
     assert_eq!(state.players[0].gold, 4);
-    assert_eq!(board_minion(&state, 0, 0).growth, 1);
+    assert_eq!(board_minion(&state, 0, 0).stats.attack.growth, 1);
 
     engine
         .apply(
@@ -447,7 +440,7 @@ fn on_activate_respects_cost_and_uses() {
         )
         .expect("每回合可用两次");
     assert_eq!(state.players[0].gold, 3);
-    assert_eq!(board_minion(&state, 0, 0).growth, 2);
+    assert_eq!(board_minion(&state, 0, 0).stats.attack.growth, 2);
 
     let before = state_hash(&state);
     let rejected = engine.apply(
@@ -498,15 +491,13 @@ fn buy_enters_hand_then_play_fires_on_play() {
         .expect("打出应成功");
 
     let played = board_minion(&state, 0, 0);
-    assert_eq!(played.mods.len(), 1, "战吼：获得 +1 生命");
-    assert_eq!(played.mods[0].health, 1);
-    assert_eq!(played.mods[0].duration, Duration::Permanent);
+    assert_eq!(played.stats.health.permanent, 1, "战吼：获得 +1 生命");
 }
 
 #[test]
 fn play_effect_card_fires_effect_then_on_use() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "yanhuashi");
+    place(&engine.catalog, &mut state, 0, 1, "yanhuashi");
     state.players[0].hand.push(rule_engine::state::HandCard {
         card_id: "aolinpike-jidian".to_string(),
         golden: false,
@@ -525,17 +516,19 @@ fn play_effect_card_fires_effect_then_on_use() {
 
     let responder = board_minion(&state, 0, 0);
     assert_eq!(
-        responder.growth_health_only, 1,
+        responder.stats.health.growth, 1,
         "效果牌自身：学者获得一次成长（+0/+1）"
     );
-    assert_eq!(responder.mods.len(), 1, "OnUse 响应：目标 +1 生命");
-    assert_eq!(responder.mods[0].health, 1);
+    assert_eq!(
+        responder.stats.health.permanent, 1,
+        "OnUse 响应：目标 +1 生命"
+    );
 }
 
 #[test]
 fn unimplemented_triggers_return_empty() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "pink-ape");
+    place(&engine.catalog, &mut state, 0, 1, "pink-ape");
 
     let events = engine.fire(
         &mut state,
@@ -546,7 +539,7 @@ fn unimplemented_triggers_return_empty() {
         },
     );
     assert!(events.is_empty());
-    assert_eq!(board_minion(&state, 0, 0).growth, 0);
+    assert_eq!(board_minion(&state, 0, 0).stats.attack.growth, 0);
 }
 
 #[test]
@@ -583,36 +576,11 @@ fn coverage_counts_all_effect_segments() {
 }
 
 #[test]
-fn recompute_stats_drops_empty_modifiers() {
-    let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "yezhu");
-    state.players[0].board[0]
-        .mods
-        .push(rule_engine::state::Modifier {
-            attack: 0,
-            health: 0,
-            duration: Duration::Permanent,
-        });
-    state.players[0].board[0]
-        .mods
-        .push(rule_engine::state::Modifier {
-            attack: 2,
-            health: 0,
-            duration: Duration::Permanent,
-        });
-
-    let mut minion = state.players[0].board[0].clone();
-    engine.recompute_stats(&mut state, &mut minion);
-    assert_eq!(minion.mods.len(), 1);
-    assert_eq!(minion.mods[0].attack, 2);
-}
-
-#[test]
 fn selector_picks_cover_leftmost_adjacent_top_attack_and_other() {
     let (engine, mut state) = setup();
-    place(&mut state, 0, 1, "yezhu");
-    place(&mut state, 0, 2, "bruce-lee");
-    place(&mut state, 0, 3, "tengman");
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
+    place(&engine.catalog, &mut state, 0, 2, "bruce-lee");
+    place(&engine.catalog, &mut state, 0, 3, "tengman");
 
     let leftmost = effect("OnPlay|Growth|friendly:leftmost|times=1");
     assert_eq!(
@@ -648,7 +616,7 @@ fn selector_picks_cover_leftmost_adjacent_top_attack_and_other() {
 #[test]
 fn grant_contagion_stacks_layer() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "yezhu");
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
         &mut state,
@@ -667,7 +635,7 @@ fn grant_contagion_stacks_layer() {
 #[test]
 fn golden_minion_played_from_hand_doubles_battlecry() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "yezhu");
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
     state.next_instance_id = 100;
     state.players[0].hand.push(rule_engine::state::HandCard {
         card_id: "xinge".to_string(),
@@ -687,7 +655,7 @@ fn golden_minion_played_from_hand_doubles_battlecry() {
 
     assert!(state.players[0].board[1].golden, "手牌金色标记保留到棋盘");
     assert_eq!(
-        board_minion(&state, 0, 0).growth,
+        board_minion(&state, 0, 0).stats.attack.growth,
         2,
         "金色战吼连续触发两次，+1/+1 变为 +2/+2"
     );
@@ -697,7 +665,7 @@ fn golden_minion_played_from_hand_doubles_battlecry() {
 fn golden_on_use_responder_triggers_twice() {
     fn responder_effect_count(golden: bool) -> usize {
         let (mut engine, mut state) = setup();
-        let mut responder = minion(1, "yanhuashi");
+        let mut responder = minion(&engine.catalog, 1, "yanhuashi");
         responder.golden = golden;
         state.players[0].board.push(responder);
         state.players[0].hand.push(rule_engine::state::HandCard {
@@ -715,7 +683,7 @@ fn golden_on_use_responder_triggers_twice() {
             )
             .expect("打出效果牌应成功");
         assert_eq!(state.players[0].board[0].card_id, "yanhuashi");
-        state.players[0].board[0].mods.len()
+        state.players[0].board[0].stats.health.permanent as usize
     }
 
     assert_eq!(responder_effect_count(false), 1, "普通随从响应一次");
@@ -726,9 +694,9 @@ fn golden_on_use_responder_triggers_twice() {
 fn both_side_merges_in_ascending_seat_order() {
     let (engine, mut state) = setup();
     state.phase = Phase::Combat;
-    place(&mut state, 1, 11, "yezhu");
-    place(&mut state, 3, 31, "yezhu");
-    place(&mut state, 5, 51, "yezhu");
+    place(&engine.catalog, &mut state, 1, 11, "yezhu");
+    place(&engine.catalog, &mut state, 3, 31, "yezhu");
+    place(&engine.catalog, &mut state, 5, 51, "yezhu");
 
     let both = effect("OnCombatStart|DealDamage|both:all|amount=1");
     let seat_five = EffectCtx { seat: 5, ..ctx(5) };
@@ -742,7 +710,7 @@ fn both_side_merges_in_ascending_seat_order() {
 #[test]
 fn cannot_attack_without_duration_clears_at_settle() {
     let (mut engine, mut state) = setup();
-    place(&mut state, 0, 1, "yezhu");
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
         &mut state,
