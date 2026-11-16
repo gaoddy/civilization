@@ -50,6 +50,7 @@ use crate::auth::Session;
 use crate::envelope::SeatChannel;
 use crate::error::error_message;
 use crate::game::{GameTask, RoomCommand, SeatUpdate, UpdateKind};
+use crate::room::seed_for_code;
 
 /// 每个连接下行队列的容量；连接写不动时房间 task 用 `try_send` 丢弃而不是阻塞。
 const OUTBOUND_CAPACITY: usize = 64;
@@ -305,7 +306,7 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                     );
                     continue;
                 }
-                let created = state.rooms.lock().await.create(&authorized);
+                let created = state.rooms.lock().await.create(&authorized, &state.catalog);
                 let seed = seed_for_code(&created.code);
                 let (tx, rx) = mpsc::unbounded_channel();
                 state.hub.lock().await.insert(
@@ -353,7 +354,7 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                 let joined = {
                     let mut rooms = state.rooms.lock().await;
                     rooms
-                        .join(&request.code, &authorized)
+                        .join(&request.code, &authorized, &state.catalog)
                         .map(|joined_room| joined_room.id.clone())
                 };
                 match joined {
@@ -655,15 +656,6 @@ fn route_error(
 }
 
 /// 房间码派生的确定性对局种子（FNV-1a 64 位）。
-pub fn seed_for_code(code: &str) -> u64 {
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
-    for byte in code.as_bytes() {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    hash
-}
-
 fn spawn_room_task(
     state: AppState,
     room_id: String,
@@ -688,7 +680,7 @@ fn spawn_room_task(
                     Some(message) => task.on_message(message).await,
                     None => break,
                 },
-                _ = ticker.tick() => task.on_tick(),
+                _ = ticker.tick() => task.on_tick().await,
             }
             if task.retire_if_done().await {
                 break;
@@ -762,11 +754,25 @@ impl RoomTask {
         }
     }
 
-    fn on_tick(&mut self) {
+    async fn on_tick(&mut self) {
         if let Some(game) = self.game.as_mut() {
             let updates = game.tick();
             self.deliver(updates);
+            return;
         }
+        // 大厅没有对局：只处理断线宽限超时的座位释放。
+        let now = self.state.clock.now_ms();
+        let expired = {
+            let mut rooms = self.state.rooms.lock().await;
+            rooms.tick_disconnects(now)
+        };
+        if expired.is_empty() {
+            return;
+        }
+        for player_id in expired {
+            self.senders.remove(&player_id);
+        }
+        self.broadcast_room_update().await;
     }
 
     async fn attach(
@@ -795,7 +801,17 @@ impl RoomTask {
             };
             self.deliver(updates);
         } else {
-            self.send_room_update_to(&player_id).await;
+            let result = {
+                let mut rooms = self.state.rooms.lock().await;
+                rooms.mark_reconnected(&self.room_id, &player_id)
+            };
+            if result.is_err() {
+                // 宽限期已过、座位已被释放：连接不再属于该房间。
+                self.send_lobby_error(&player_id, "NOT_IN_ROOM", "座位已释放")
+                    .await;
+                return;
+            }
+            self.broadcast_room_update().await;
         }
     }
 
@@ -830,6 +846,15 @@ impl RoomTask {
             };
             self.deliver(updates);
         } else {
+            let result = {
+                let mut rooms = self.state.rooms.lock().await;
+                rooms.mark_reconnected(&self.room_id, &player_id)
+            };
+            if result.is_err() {
+                self.send_lobby_error(&player_id, "NOT_IN_ROOM", "座位已释放")
+                    .await;
+                return;
+            }
             self.send_room_update_to(&player_id).await;
         }
     }
@@ -846,10 +871,11 @@ impl RoomTask {
             }
             return;
         }
-        // 大厅没有对局状态需要保护：断线立即离开并释放座位，避免永久占位。
+        // 大厅断线保留座位与候选一个宽限期，重连能拿回同一组；超时由 tick 释放。
+        let now = self.state.clock.now_ms();
         let result = {
             let mut rooms = self.state.rooms.lock().await;
-            rooms.leave(&self.room_id, &player_id)
+            rooms.mark_disconnected(&self.room_id, &player_id, now)
         };
         if result.is_ok() {
             self.broadcast_room_update().await;
@@ -1074,25 +1100,30 @@ impl RoomTask {
             .collect();
 
         let mut rooms = self.state.rooms.lock().await;
-        let Some(update) = rooms.room_update(&self.room_id) else {
-            return;
-        };
-        let Ok(value) = serde_json::to_value(&update) else {
-            return;
-        };
-        let Value::Object(payload) = value else {
-            return;
-        };
+        // 每个座位单独序列化：`heroCandidates` 只出现在本人那份里。
+        let mut payloads = Vec::new();
+        for (player_id, out, floor) in &targets {
+            let Some(update) = rooms.room_update_for(&self.room_id, player_id) else {
+                continue;
+            };
+            let Ok(value) = serde_json::to_value(&update) else {
+                continue;
+            };
+            let Value::Object(payload) = value else {
+                continue;
+            };
+            payloads.push((player_id.clone(), out.clone(), floor.clone(), payload));
+        }
         let Some(room) = rooms.room_mut(&self.room_id) else {
             return;
         };
         let mut envelopes = Vec::new();
-        for (player_id, out, floor) in targets {
+        for (player_id, out, floor, payload) in payloads {
             let Some(slot) = room.slot_entry_mut(&player_id) else {
                 continue;
             };
             slot.channel.set_next_seq(floor.current());
-            if let Ok(envelope) = slot.channel.bind("RoomUpdate", payload.clone()) {
+            if let Ok(envelope) = slot.channel.bind("RoomUpdate", payload) {
                 floor.record(envelope.seq.get());
                 envelopes.push((out, envelope));
             }
@@ -1110,7 +1141,7 @@ impl RoomTask {
         let out = sender.out.clone();
         let floor = sender.floor.clone();
         let mut rooms = self.state.rooms.lock().await;
-        let Some(update) = rooms.room_update(&self.room_id) else {
+        let Some(update) = rooms.room_update_for(&self.room_id, player_id) else {
             return;
         };
         let Ok(value) = serde_json::to_value(&update) else {
@@ -1211,34 +1242,40 @@ mod tests {
         let mut state = AppState::new(Arc::new(clock.clone())).expect("状态应能构造");
         let mut store = SessionStore::new();
 
-        let (room_id, host_id) = {
+        let (room_id, host_id, last_hero) = {
             let mut rooms = state.rooms.lock().await;
             let host = session(&mut store, &clock, "房主");
             let host_id = host.player_id.clone();
-            let created = rooms.create(&host);
+            let created = rooms.create(&host, &state.catalog);
             let room_id = created.id.clone();
             let code = created.code.clone();
 
             let mut players = vec![host];
             for index in 1..8 {
                 let player = session(&mut store, &clock, &format!("玩家{index}"));
-                rooms.join(&code, &player).expect("加入成功");
+                rooms.join(&code, &player, &state.catalog).expect("加入成功");
                 players.push(player);
             }
-            for (seat, player) in players.iter().enumerate() {
+            let mut last_hero = String::new();
+            for player in &players {
+                let hero = rooms
+                    .candidates_of(&room_id, &player.player_id)
+                    .and_then(|list| list.into_iter().next())
+                    .expect("每人都有候选");
                 rooms
-                    .select_hero(&room_id, &player.player_id, HEROES[seat], &state.catalog)
+                    .select_hero(&room_id, &player.player_id, &hero, &state.catalog)
                     .expect("选英雄成功");
                 rooms
                     .ready(&room_id, &player.player_id, true)
                     .expect("准备成功");
+                last_hero = hero;
             }
             assert!(rooms.start_ready(&room_id).is_some(), "应满足开局条件");
-            (room_id, host_id)
+            (room_id, host_id, last_hero)
         };
 
         // 移除一张已选英雄卡，使 `GameTask::new` 必然失败。
-        state.catalog.cards.remove(HEROES[7]);
+        state.catalog.cards.remove(&last_hero);
 
         let mut task = RoomTask {
             state,

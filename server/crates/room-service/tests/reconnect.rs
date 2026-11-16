@@ -57,7 +57,9 @@ fn players() -> Vec<PlayerSlot> {
             ready: true,
             hero_card_id: Some(HEROES[seat].to_string()),
             channel: SeatChannel::new(),
+            hero_candidates: Vec::new(),
             connected: true,
+            disconnected_at_ms: None,
         })
         .collect()
 }
