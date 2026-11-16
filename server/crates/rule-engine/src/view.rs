@@ -127,6 +127,8 @@ pub struct PlayerSummaryView {
     pub recruited: bool,
     /// 最终名次；未进入排名时为 `None`。
     pub placement: Option<u8>,
+    /// 局内实时名次；对局结束后与 `placement` 一致。
+    pub rank: Option<u8>,
 }
 
 /// 等待该座位做出的选择。
@@ -512,6 +514,7 @@ fn player_summary(state: &GameState, player: &PlayerState) -> PlayerSummaryView 
         hero_card_id: player.hero.clone(),
         recruited: player.recruit_done,
         placement: placement_of(state, player.seat),
+        rank: settle::rank_of(state, player.seat),
     }
 }
 

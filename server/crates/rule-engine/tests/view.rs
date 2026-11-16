@@ -154,6 +154,7 @@ fn view_never_exposes_other_seats_private_state() {
             hero_card_id: _,
             recruited: _,
             placement: _,
+            rank: _,
         } = summary;
     }
 
@@ -398,6 +399,17 @@ fn placement_is_hidden_before_game_over() {
     assert_eq!(placement_of(&state, 1), Some(1));
     assert_eq!(placement_of(&state, 3), Some(2));
     assert_eq!(placement_of(&state, 0), Some(4));
+
+    // `GameOver` 阶段 `rank` 与 `placement` 完全一致。
+    let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
+    for summary in &seat_view.players {
+        assert_eq!(
+            summary.rank,
+            placement_of(&state, summary.seat),
+            "座位 {} 的 rank 应等于 placement",
+            summary.seat
+        );
+    }
 }
 
 #[test]

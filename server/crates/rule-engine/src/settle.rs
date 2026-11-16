@@ -718,6 +718,35 @@ fn compare_alive(state: &GameState, left: Seat, right: Seat) -> Ordering {
         .then_with(|| left.cmp(&right))
 }
 
+/// 局内实时名次：存活者按 [`compare_alive`] 从强到弱排 1..=存活数，
+/// 已出局者接在其后。
+///
+/// `ranking` 的约定是「最近出局在前」（`resolve_settle` 把本回合新出局者
+/// `rev()` 后前插），因此下标 0 的出局者名次紧挨存活者。
+/// `GameOver` 阶段直接与 [`crate::view::placement_of`] 一致；若 `placement`
+/// 缺失（榜单异常），回落到存活者算法，保证结果确定。
+pub fn rank_of(state: &GameState, seat: Seat) -> Option<u8> {
+    if let Some(place) = crate::view::placement_of(state, seat) {
+        return Some(place);
+    }
+    let player = player(state, seat)?;
+    if player.eliminated {
+        // 已出局者占据尾部名次：存活数 + 榜内下标 + 1。
+        let alive = state.players.iter().filter(|p| !p.eliminated).count();
+        let index = state.ranking.iter().position(|s| *s == seat)?;
+        u8::try_from(alive + index + 1).ok()
+    } else {
+        // 存活者：1 + 比它强的存活者数，比较器与第 20 回合收束完全一致。
+        let better = state
+            .players
+            .iter()
+            .filter(|p| !p.eliminated && p.seat != seat)
+            .filter(|p| compare_alive(state, p.seat, seat) == Ordering::Less)
+            .count();
+        u8::try_from(better + 1).ok()
+    }
+}
+
 /// 双方同时清场时按 §5.3 判胜：生命高 → 累计伤害高 → 座位小。
 fn tie_break(state: &GameState, a: Seat, b: Seat) -> Seat {
     match (player(state, a), player(state, b)) {

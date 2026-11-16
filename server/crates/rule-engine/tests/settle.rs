@@ -9,7 +9,7 @@ use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::rng::RngStreams;
-use rule_engine::settle::{Pairing, damage_formula, ghost_board, pair_round};
+use rule_engine::settle::{Pairing, damage_formula, ghost_board, pair_round, rank_of};
 use rule_engine::state::{MinionInstance, Phase, Seat};
 
 /// 往目录里插入一张合成随从卡，避免测试依赖真实卡面数值。
@@ -916,4 +916,43 @@ fn new_settle_fields_participate_in_state_hash() {
     let mut with_won = base.clone();
     with_won.last_won.insert(0);
     assert_ne!(before, state_hash(&with_won));
+}
+
+#[test]
+fn rank_of_hides_eliminated_in_tail() {
+    let (_, mut state) = Engine::new(test_catalog(), [5; 32]);
+    state.players[3].eliminated = true;
+    state.players[3].hp = 0;
+    state.ranking = vec![3];
+
+    assert_eq!(rank_of(&state, 3), Some(8));
+    let alive_ranks: Vec<u8> = (0..8)
+        .filter(|s| *s != 3)
+        .filter_map(|s| rank_of(&state, s))
+        .collect();
+    assert_eq!(alive_ranks.len(), 7);
+    assert!(alive_ranks.iter().all(|r| *r >= 1 && *r <= 7));
+}
+
+#[test]
+fn rank_of_recently_eliminated_ranks_better() {
+    let (_, mut state) = Engine::new(test_catalog(), [5; 32]);
+    for seat in [3, 5] {
+        state.players[seat].eliminated = true;
+        state.players[seat].hp = 0;
+    }
+    // `ranking` 的约定是「最近出局在前」：下标 0 的名次紧挨存活者。
+    state.ranking = vec![5, 3];
+
+    assert_eq!(rank_of(&state, 5), Some(7));
+    assert_eq!(rank_of(&state, 3), Some(8));
+}
+
+#[test]
+fn rank_of_matches_compare_alive_order() {
+    let (_, mut state) = Engine::new(test_catalog(), [6; 32]);
+    state.players[0].damage_dealt = 5;
+    state.players[1].damage_dealt = 0;
+    assert_eq!(rank_of(&state, 0), Some(1), "同生命时累计伤害高者名次靠前");
+    assert_eq!(rank_of(&state, 1), Some(2));
 }
