@@ -281,6 +281,29 @@ func _check_room_hero_picker() -> void:
     var confirm := instance.find_child("ConfirmButton", true, false)
     _expect(confirm != null and confirm.disabled, "未选中时确认按钮应禁用")
 
+    # 布局：内容收进居中卡片，不占满全屏；确认键与候选行同轴。
+    var panel := instance.find_child("DraftPanel", true, false)
+    _expect(panel != null, "缺少 DraftPanel")
+    if panel != null:
+        var page_rect: Rect2 = instance.get_global_rect()
+        var panel_rect: Rect2 = panel.get_global_rect()
+        _expect(panel_rect.size.x < page_rect.size.x,
+            "内容面板不应占满全屏宽，实际：%s" % panel_rect.size)
+        _expect(
+            absf(panel_rect.get_center().x - page_rect.get_center().x) <= 1.0
+            and absf(panel_rect.get_center().y - page_rect.get_center().y) <= 1.0,
+            "内容面板应在页面中居中，面板中心 %s，页面中心 %s" % [
+                panel_rect.get_center(), page_rect.get_center(),
+            ],
+        )
+    if confirm != null and candidates != null:
+        _expect(
+            absf(confirm.get_global_rect().get_center().x - candidates.get_global_rect().get_center().x) <= 1.0,
+            "确认按钮应与候选行同轴居中，按钮中心 %s，候选行中心 %s" % [
+                confirm.get_global_rect().get_center(), candidates.get_global_rect().get_center(),
+            ],
+        )
+
     # 点击第一张候选卡：进入选中态并弹出技能浮层。
     if candidates != null and candidates.get_child_count() > 0:
         var first: Control = candidates.get_child(0)
