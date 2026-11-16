@@ -1,11 +1,20 @@
 extends Control
-## 房间：成员、准备与选英雄；开局完全由服务端决定。
+## 选英雄页：顶部只显示其他玩家的名字与确认状态，底部是本人候选英雄卡。
+##
+## 本页不显示房间码，也没有离开房间入口；点卡选中、点确认一次完成「选英雄 + 准备」。
+## 候选由服务端分配且只发给本人，因此这里从不展示别人的英雄。
 
+const CARD_SIZE := Vector2(160, 200)
+
+var _others: HBoxContainer
+var _candidates: HFlowContainer
+var _confirm: Button
 var _status: Label
-var _players: VBoxContainer
-var _hero_picker: OptionButton
-var _ready_button: Button
-var _code_label: Label
+var _skill_layer: Control
+var _skill_panel: VBoxContainer
+
+var _selected_hero := ""
+var _card_buttons: Dictionary = {}
 
 
 func _ready() -> void:
@@ -19,156 +28,226 @@ func _ready() -> void:
 
 func _build() -> void:
     var background := ColorRect.new()
-    background.color = Color("10141c")
+    background.color = UITheme.color("color-bg")
     background.set_anchors_preset(Control.PRESET_FULL_RECT)
     add_child(background)
 
-    var margin := MarginContainer.new()
+    var root := VBoxContainer.new()
+    root.add_theme_constant_override("separation", UITheme.space("space-md"))
+    var margin := UI.margin(root, UITheme.space("space-lg"))
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-    for side in ["left", "right", "top", "bottom"]:
-        margin.add_theme_constant_override("margin_" + side, 24)
     add_child(margin)
 
-    var root := VBoxContainer.new()
-    root.add_theme_constant_override("separation", 12)
-    margin.add_child(root)
+    _others = HBoxContainer.new()
+    _others.name = "OtherPlayers"
+    _others.add_theme_constant_override("separation", UITheme.space("space-md"))
+    root.add_child(_others)
 
-    var top := HBoxContainer.new()
-    _code_label = UI.label("房间", 24)
-    top.add_child(_code_label)
     var spacer := Control.new()
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    top.add_child(spacer)
-    var leave := UI.button("离开房间")
-    leave.pressed.connect(_on_leave_pressed)
-    top.add_child(leave)
-    root.add_child(top)
-    root.add_child(HSeparator.new())
+    spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    root.add_child(spacer)
 
-    var body := HBoxContainer.new()
-    body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    body.add_theme_constant_override("separation", 24)
-    root.add_child(body)
+    root.add_child(UI.section_title("请选择英雄"))
 
-    var left := VBoxContainer.new()
-    left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    left.add_child(UI.label("成员", 18))
-    _players = VBoxContainer.new()
-    _players.name = "PlayerList"
-    _players.add_theme_constant_override("separation", 6)
-    left.add_child(_players)
-    body.add_child(left)
+    _candidates = HFlowContainer.new()
+    _candidates.name = "HeroCandidates"
+    _candidates.add_theme_constant_override("h_separation", UITheme.space("space-md"))
+    _candidates.add_theme_constant_override("v_separation", UITheme.space("space-md"))
+    root.add_child(_candidates)
 
-    var right := VBoxContainer.new()
-    right.custom_minimum_size = Vector2(320, 0)
-    right.add_theme_constant_override("separation", 10)
-    right.add_child(UI.label("英雄", 18))
-    _hero_picker = OptionButton.new()
-    right.add_child(_hero_picker)
-    _populate_heroes()
-    var pick := UI.button("选为英雄")
-    pick.pressed.connect(_on_pick_hero)
-    right.add_child(pick)
-    _ready_button = UI.button("准备")
-    _ready_button.pressed.connect(_on_ready_pressed)
-    right.add_child(_ready_button)
-    body.add_child(right)
+    _confirm = UI.styled_button("确认", "primary", 36)
+    _confirm.name = "ConfirmButton"
+    _confirm.pressed.connect(_on_confirm_pressed)
+    root.add_child(_confirm)
 
-    _status = UI.label("", 14)
+    _status = UI.label("", UITheme.font_size("font-body-sm"))
+    _status.name = "StatusLabel"
     root.add_child(_status)
 
+    _build_skill_layer()
 
-func _populate_heroes() -> void:
-    var index := 0
-    for hero in CardDB.heroes():
-        var id := str(hero.get("id", ""))
-        var label := "%s · %s" % [CardDB.display_name(id), str(hero.get("tribe", ""))]
-        _hero_picker.add_item(label, index)
-        _hero_picker.set_item_metadata(index, id)
-        index += 1
+
+func _build_skill_layer() -> void:
+    _skill_layer = Control.new()
+    _skill_layer.name = "SkillLayer"
+    _skill_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _skill_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _skill_layer.visible = false
+    add_child(_skill_layer)
+
+    var panel := UI.card_panel("raised")
+    panel.set_anchors_preset(Control.PRESET_CENTER)
+    panel.custom_minimum_size = Vector2(320, 0)
+    _skill_layer.add_child(panel)
+
+    _skill_panel = VBoxContainer.new()
+    _skill_panel.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    panel.add_child(_skill_panel)
 
 
 func _refresh() -> void:
-    if GameStore.room_id == "":
-        _code_label.text = "未加入房间"
-        _status.text = "请返回大厅创建或加入房间。"
-        _ready_button.disabled = true
-        return
-
-    _code_label.text = "房间码：%s" % GameStore.room_code
-    _ready_button.disabled = false
-
-    UI.clear(_players)
-    var my_hero := ""
-    var my_ready := false
-    for player in GameStore.room_players:
-        var player_id := str(player.get("playerId", ""))
-        var hero_id := _optional_text(player.get("heroCardId"))
-        var is_host := bool(player.get("isHost", false))
-        var is_ready := bool(player.get("ready", false))
-        var hero_name := CardDB.display_name(hero_id) if hero_id != "" else "未选英雄"
-        var marks := []
-        if is_host:
-            marks.append("房主")
-        if player_id == GameStore.player_id:
-            marks.append("我")
-        var display := _optional_text(player.get("displayName"))
-        if display == "":
-            display = player_id
-        var suffix := "（%s）" % _join_cn(marks) if not marks.is_empty() else ""
-        var line := "%s%s  %s  %s" % [
-            display,
-            suffix,
-            hero_name,
-            "已准备" if is_ready else "未准备",
-        ]
-        var row := UI.label(line, 16)
-        if is_ready:
-            row.modulate = Color("8fe388")
-        _players.add_child(row)
-        if player_id == GameStore.player_id:
-            my_hero = hero_id
-            my_ready = is_ready
-
-    _ready_button.text = "取消准备" if my_ready else "准备"
-    _sync_hero_picker(my_hero)
-    _status.text = "已加入 %d/8 人；全部选好英雄并准备后由服务端自动开局。" % GameStore.room_players.size()
+    _render_others()
+    _render_candidates()
+    _sync_state()
 
 
-func _sync_hero_picker(hero_id: String) -> void:
-    if hero_id == "":
-        return
-    for index in range(_hero_picker.item_count):
-        if str(_hero_picker.get_item_metadata(index)) == hero_id:
-            _hero_picker.select(index)
-            return
-
-
-func _on_pick_hero() -> void:
-    var index := _hero_picker.selected
-    if index < 0:
-        return
-    var card_id := str(_hero_picker.get_item_metadata(index))
-    Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": card_id})
-    _status.text = "已提交英雄：%s" % CardDB.display_name(card_id)
-
-
-func _on_ready_pressed() -> void:
-    var my_ready := false
+## 顶部：其他玩家的名字与确认状态；不展示任何人的英雄选择。
+func _render_others() -> void:
+    UI.clear(_others)
+    var shown := 0
     for player in GameStore.room_players:
         if str(player.get("playerId", "")) == GameStore.player_id:
-            my_ready = bool(player.get("ready", false))
-    Net.send(Protocol.MSG_READY, {"ready": not my_ready})
+            continue
+        var display := str(player.get("displayName", ""))
+        if display == "":
+            display = str(player.get("playerId", ""))
+        var ready := bool(player.get("ready", false))
+        var text := "%s · %s" % [display, "已确认" if ready else "未确认"]
+        var row := UI.pill_label(text, "success" if ready else "neutral")
+        row.name = "OtherPlayer%d" % shown
+        _others.add_child(row)
+        shown += 1
+    if shown == 0:
+        _others.add_child(UI.empty_hint("等待其他玩家加入"))
 
 
-func _on_leave_pressed() -> void:
-    Net.send(Protocol.MSG_LEAVE_ROOM, {})
-    GameStore.reset_room()
-    UI.navigate(self, "res://scenes/lobby.tscn")
+## 底部：本人候选卡。选中态加描边，已确认后全部禁用。
+func _render_candidates() -> void:
+    UI.clear(_candidates)
+    _card_buttons.clear()
+
+    var candidates := GameStore.my_hero_candidates()
+    if candidates.is_empty():
+        _candidates.add_child(UI.empty_hint("正在分配英雄…"))
+        return
+
+    var locked := _is_confirmed()
+    for hero_id in candidates:
+        var id := str(hero_id)
+        var card := _build_card(id, locked)
+        _candidates.add_child(card)
+        _card_buttons[id] = card
+
+
+## 候选卡：部落色封面铺满、居中首字水印、底部居中名字。
+func _build_card(hero_id: String, locked: bool) -> PanelContainer:
+    var entry := CardDB.card(hero_id)
+    var tribe := str(entry.get("tribe", ""))
+    var card := PanelContainer.new()
+    card.name = "HeroCard_%s" % hero_id
+    card.custom_minimum_size = CARD_SIZE
+    card.mouse_filter = Control.MOUSE_FILTER_STOP
+
+    var box := UITheme.panel_style("raised")
+    if hero_id == _selected_hero:
+        box.border_color = UITheme.color("color-accent")
+        box.set_border_width_all(2)
+    card.add_theme_stylebox_override("panel", box)
+
+    var stack := Control.new()
+    stack.custom_minimum_size = CARD_SIZE
+    stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    card.add_child(stack)
+
+    var cover := ColorRect.new()
+    cover.color = UITheme.tribe_cover(tribe)
+    cover.set_anchors_preset(Control.PRESET_FULL_RECT)
+    cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    stack.add_child(cover)
+
+    var watermark := UI.label(CardDB.display_name(hero_id).substr(0, 1), 72, false)
+    watermark.name = "Watermark"
+    watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
+    watermark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    watermark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    watermark.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
+    watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    stack.add_child(watermark)
+
+    var name_label := UI.label(CardDB.display_name(hero_id), UITheme.font_size("font-title"), false)
+    name_label.name = "Name"
+    name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    name_label.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+    name_label.offset_top = -UITheme.space("space-2xl")
+    name_label.offset_bottom = -UITheme.space("space-md")
+    name_label.add_theme_color_override("font_color", UITheme.color("color-text"))
+    name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    stack.add_child(name_label)
+
+    if locked:
+        card.modulate = Color(1, 1, 1, UITheme.opacity("opacity-dim"))
+    else:
+        card.gui_input.connect(_on_card_input.bind(hero_id))
+    return card
+
+
+func _on_card_input(event: InputEvent, hero_id: String) -> void:
+    if not (event is InputEventMouseButton):
+        return
+    var mouse := event as InputEventMouseButton
+    if not mouse.pressed or mouse.button_index != MOUSE_BUTTON_LEFT:
+        return
+    if _is_confirmed():
+        return
+    if _selected_hero == hero_id:
+        _selected_hero = ""
+    else:
+        _selected_hero = hero_id
+    _render_candidates()
+    _show_skill(hero_id if _selected_hero == hero_id else "")
+    _sync_state()
+
+
+func _show_skill(hero_id: String) -> void:
+    UI.clear(_skill_panel)
+    if hero_id == "":
+        _skill_layer.visible = false
+        return
+    var title := UI.label(CardDB.display_name(hero_id), UITheme.font_size("font-title"), false)
+    _skill_panel.add_child(title)
+    var skill := CardDB.display_text(hero_id)
+    if skill != "":
+        var body := UI.label(skill, UITheme.font_size("font-body"))
+        body.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+        _skill_panel.add_child(body)
+    _skill_layer.visible = true
+
+
+func _is_confirmed() -> bool:
+    return GameStore.my_ready()
+
+
+func _sync_state() -> void:
+    var confirmed := _is_confirmed()
+    if confirmed and _selected_hero == "":
+        _selected_hero = GameStore.my_hero_id()
+
+    var candidates := GameStore.my_hero_candidates()
+    var connected := Net.is_open()
+    _confirm.disabled = _selected_hero == "" or confirmed or not connected
+    _confirm.text = "已确认" if confirmed else "确认"
+
+    if confirmed:
+        _status.text = "已确认英雄：%s" % CardDB.display_name(_selected_hero)
+    elif not connected:
+        _status.text = "未连接服务器"
+    elif candidates.is_empty():
+        _status.text = "正在分配英雄…"
+    else:
+        _status.text = "从你的 %d 张候选里选一张，确认后不可更改。" % candidates.size()
+
+
+func _on_confirm_pressed() -> void:
+    if _selected_hero == "":
+        return
+    Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": _selected_hero})
+    Net.send(Protocol.MSG_READY, {"ready": true})
+    _status.text = "已提交英雄：%s" % CardDB.display_name(_selected_hero)
+    _confirm.disabled = true
 
 
 func _on_room_changed() -> void:
-    if GameStore.phase != Protocol.PHASE_LOBBY and not GameStore.view.is_empty():
+    if GameStore.phase != "" and GameStore.phase != Protocol.PHASE_LOBBY and not GameStore.view.is_empty():
         _goto_game()
     else:
         _refresh()
@@ -188,6 +267,10 @@ func _goto_game() -> void:
     UI.navigate(self, "res://scenes/game.tscn")
 
 
+func _error_route(code: String) -> String:
+    return UI.error_route(code)
+
+
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
     _status.text = UI.error_text(code)
@@ -199,20 +282,3 @@ func _on_error() -> void:
         "login":
             GameStore.reset_session()
             UI.navigate(self, "res://scenes/login.tscn")
-
-
-func _error_route(code: String) -> String:
-    return UI.error_route(code)
-
-
-func _optional_text(value: Variant) -> String:
-    if value == null:
-        return ""
-    return str(value)
-
-
-func _join_cn(values: Array) -> String:
-    var parts := PackedStringArray()
-    for value in values:
-        parts.append(str(value))
-    return "、".join(parts)

@@ -113,6 +113,32 @@ func reset_room() -> void:
     timer_seconds = -1
 
 
+## 本人的英雄候选；服务端未下发时返回空数组。
+func my_hero_candidates() -> Array:
+    for player in room_players:
+        if str(player.get("playerId", "")) == player_id:
+            var list = player.get("heroCandidates")
+            return list if list is Array else []
+    return []
+
+
+## 本人座位是否已确认（准备）。
+func my_ready() -> bool:
+    for player in room_players:
+        if str(player.get("playerId", "")) == player_id:
+            return bool(player.get("ready", false))
+    return false
+
+
+## 本人已选的英雄卡 id；未选返回空串。
+func my_hero_id() -> String:
+    for player in room_players:
+        if str(player.get("playerId", "")) == player_id:
+            var hero = player.get("heroCardId")
+            return "" if hero == null else str(hero)
+    return ""
+
+
 ## 战报是否属于当前回合。
 func combat_is_current() -> bool:
     return not last_combat.is_empty() and last_combat_turn == turn

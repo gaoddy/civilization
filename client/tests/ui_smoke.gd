@@ -16,6 +16,7 @@ func _ready() -> void:
     for path in SCENES:
         await _check_scene(path, true)
     await _check_room_null_hero()
+    await _check_room_hero_picker()
     await _check_game()
     await _check_game_layout()
     await _check_board_capacity_from_view()
@@ -220,20 +221,111 @@ func _check_room_null_hero() -> void:
     var instance := await _check_scene("res://scenes/room.tscn", false)
     if instance == null:
         return
-    var list = instance.find_child("PlayerList", true, false)
-    if list == null:
-        _expect(false, "房间场景缺少 PlayerList")
+    var others = instance.find_child("OtherPlayers", true, false)
+    if others == null:
+        _expect(false, "房间场景缺少 OtherPlayers")
     else:
-        var text := ""
-        for child in list.get_children():
-            if child is Label:
-                text += child.text
-        _expect(text.contains("未选英雄"), "未选英雄的座位应显示「未选英雄」，实际：%s" % text)
-        _expect(not text.contains("<null>"), "房间成员出现 <null>：%s" % text)
+        var text := _node_text(others)
+        _expect(not text.contains("<null>"), "成员行出现 <null>：%s" % text)
     instance.queue_free()
     GameStore.room_id = ""
     GameStore.room_code = ""
     GameStore.room_players = []
+
+
+## 选英雄页：顶部只显示他人名字与确认状态，底部是本人候选卡，确认按钮与技能浮层就位。
+func _check_room_hero_picker() -> void:
+    GameStore.player_id = "p0"
+    GameStore.room_id = "r_test"
+    GameStore.room_code = "ABC123"
+    GameStore.phase = "Lobby"
+    GameStore.room_players = [
+        {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
+         "heroCardId": null, "heroCandidates": ["gauss", "mozi", "luban", "shenkuo"]},
+        {"playerId": "p1", "displayName": "玩家B", "ready": true, "isHost": false,
+         "heroCardId": "darwin", "heroCandidates": null},
+    ]
+    var instance := await _check_scene("res://scenes/room.tscn", false)
+    if instance == null:
+        return
+
+    var others := instance.find_child("OtherPlayers", true, false)
+    _expect(others != null, "缺少 OtherPlayers")
+    var others_text := _node_text(others)
+    _expect(others_text.contains("玩家B"), "顶部应显示其他玩家名字，实际：%s" % others_text)
+    _expect(not others_text.contains("达尔文"), "顶部不得显示他人英雄，实际：%s" % others_text)
+    _expect(others_text.contains("已确认"), "顶部应显示他人确认状态，实际：%s" % others_text)
+
+    var candidates := instance.find_child("HeroCandidates", true, false)
+    _expect(candidates != null, "缺少 HeroCandidates")
+    _expect(candidates != null and candidates.get_child_count() == 4,
+        "本人候选应渲染 4 张卡，实际：%d" % (candidates.get_child_count() if candidates != null else 0))
+
+    var clickable := 0
+    if candidates != null:
+        for card in candidates.get_children():
+            if card is PanelContainer and card.gui_input.get_connections().size() > 0:
+                clickable += 1
+    _expect(clickable == 4, "未确认时 4 张候选卡都应可点，实际：%d" % clickable)
+
+    _expect(instance.find_child("ConfirmButton", true, false) != null, "缺少 ConfirmButton")
+    _expect(instance.find_child("SkillLayer", true, false) != null, "缺少 SkillLayer")
+    var status := instance.find_child("StatusLabel", true, false)
+    _expect(status != null, "缺少 StatusLabel")
+
+    # 房间码与离开房间入口不得出现在本页。
+    var all_text := _node_text(instance)
+    _expect(not all_text.contains("ABC123"), "选英雄页不得显示房间码，实际：%s" % all_text)
+    _expect(instance.find_child("LeaveButton", true, false) == null, "选英雄页不得有离开房间入口")
+
+    var confirm := instance.find_child("ConfirmButton", true, false)
+    _expect(confirm != null and confirm.disabled, "未选中时确认按钮应禁用")
+
+    # 点击第一张候选卡：进入选中态并弹出技能浮层。
+    if candidates != null and candidates.get_child_count() > 0:
+        var first: Control = candidates.get_child(0)
+        first.emit_signal("gui_input", _press_event())
+        await get_tree().process_frame
+        var layer := instance.find_child("SkillLayer", true, false)
+        _expect(layer != null and layer.visible, "选中候选后应显示技能浮层")
+        # 冒烟环境没有真实连接：确认按钮必须保持禁用，并给出未连接提示。
+        _expect(confirm.disabled, "未连接时确认按钮必须禁用")
+        _expect(str(status.text).contains("未连接"), "未连接时状态行应提示，实际：%s" % status.text)
+
+    instance.queue_free()
+
+    # 已确认：候选卡锁定且不再响应点击，确认按钮禁用并标「已确认」。
+    GameStore.room_players = [
+        {"playerId": "p0", "displayName": "玩家A", "ready": true, "isHost": true,
+         "heroCardId": "gauss", "heroCandidates": ["gauss", "mozi", "luban", "shenkuo"]},
+        {"playerId": "p1", "displayName": "玩家B", "ready": false, "isHost": false,
+         "heroCardId": null, "heroCandidates": null},
+    ]
+    var locked_instance := await _check_scene("res://scenes/room.tscn", false)
+    if locked_instance != null:
+        var locked_confirm = locked_instance.find_child("ConfirmButton", true, false)
+        _expect(locked_confirm != null and locked_confirm.disabled, "已确认后确认按钮必须禁用")
+        _expect(locked_confirm != null and str(locked_confirm.text) == "已确认",
+            "已确认后按钮文字应为「已确认」，实际：%s" % (str(locked_confirm.text) if locked_confirm != null else ""))
+        var locked_cards = locked_instance.find_child("HeroCandidates", true, false)
+        if locked_cards != null:
+            var connected_count := 0
+            for card in locked_cards.get_children():
+                if card is PanelContainer and card.gui_input.get_connections().size() > 0:
+                    connected_count += 1
+            _expect(connected_count == 0, "已确认后候选卡不得再响应点击，实际 %d 张仍可点" % connected_count)
+        locked_instance.queue_free()
+
+    GameStore.room_id = ""
+    GameStore.room_code = ""
+    GameStore.room_players = []
+
+
+func _press_event() -> InputEventMouseButton:
+    var event := InputEventMouseButton.new()
+    event.button_index = MOUSE_BUTTON_LEFT
+    event.pressed = true
+    return event
 
 
 func _check_game() -> void:
