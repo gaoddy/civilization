@@ -133,17 +133,27 @@ pub fn recover_after_error(view: &PlayerView) -> Option<Intent> {
 /// 服务端要求「存在合法目标时」必须指定目标；机器人没有交互界面，按棋盘顺序取
 /// 第一个己方随从作为确定性选择。棋盘为空说明该效果本可落空（服务端不会返回
 /// 该错误），返回 `None` 交给兜底逻辑。
+///
+/// 补选的目标仍可能不合法：效果的目标池可按种族等过滤器收窄，首个己方随从未必
+/// 在池内。因此**已经带目标的意图不再重发**——否则每次拒绝都会补同一个目标，
+/// 形成「补选→拒绝→再补选」的无限空转，机器人永远结束不了招募。
 pub fn retry_with_target(view: &PlayerView, rejected: &Intent) -> Option<Intent> {
     if view.phase != Phase::Recruit {
         return None;
     }
     let target = view.self_.board.first()?.minion_id.clone();
     match rejected {
-        Intent::PlayCard { hand_index, .. } => Some(Intent::PlayCard {
+        Intent::PlayCard {
+            hand_index,
+            target_minion_id,
+        } => target_minion_id.is_none().then_some(Intent::PlayCard {
             hand_index: *hand_index,
             target_minion_id: Some(target),
         }),
-        Intent::UseHeroPower { skill_id, .. } => Some(Intent::UseHeroPower {
+        Intent::UseHeroPower {
+            skill_id,
+            target_minion_id,
+        } => target_minion_id.is_none().then_some(Intent::UseHeroPower {
             skill_id: skill_id.clone(),
             target_minion_id: Some(target),
         }),
