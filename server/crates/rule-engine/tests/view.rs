@@ -313,6 +313,47 @@ fn opponent_seat_follows_pairings() {
 }
 
 #[test]
+fn opponent_seat_points_at_ghost_owner() {
+    let (engine, mut state) = setup();
+    // 座位 0 落单并对战幽灵归属座位 3（已出局）；座位 1 与座位 2 真实配对。
+    state.players[3].eliminated = true;
+    state.pairings = vec![
+        rule_engine::state::Pairing {
+            a: 0,
+            b: 0,
+            ghost: Some(3),
+        },
+        rule_engine::state::Pairing {
+            a: 1,
+            b: 2,
+            ghost: None,
+        },
+    ];
+
+    assert_eq!(
+        view(&engine, &state, 0)
+            .expect("座位 0 的视图应存在")
+            .opponent_seat,
+        Some(3),
+        "幽灵战指向幽灵归属座位"
+    );
+    assert_eq!(
+        view(&engine, &state, 3)
+            .expect("座位 3 的视图应存在")
+            .opponent_seat,
+        None,
+        "幽灵归属者本人观战，没有对手座位"
+    );
+    assert_eq!(
+        view(&engine, &state, 1)
+            .expect("座位 1 的视图应存在")
+            .opponent_seat,
+        Some(2),
+        "真实配对时的对手为配对中的另一座位"
+    );
+}
+
+#[test]
 fn board_view_folds_auras_into_stats_and_keywords() {
     let (engine, mut state) = setup();
     let card = positive_attack_minion_id();
