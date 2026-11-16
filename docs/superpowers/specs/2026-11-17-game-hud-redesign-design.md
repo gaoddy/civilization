@@ -3,7 +3,7 @@
 > 状态：待确认
 > 需求归属：v0.1
 > 实施方式：分两步，先数据后端，再客户端表现（用户选定方向 B）
-> 附带产品改动：落单座位由「自战镜像」改为「对战最近出局者的幽灵阵容」，并正常扣血（§5.2、§7.7）
+> 附带产品改动：落单座位由「自战镜像」改为「对战一名随机出局者的幽灵阵容」，并正常扣血（§5.2、§7.7）
 
 ## 1. 意图与原因
 
@@ -24,7 +24,7 @@
 - 战斗视图删掉上下的双方英雄条，只留双方随从与结果横幅。
 - 商店卡左上角显示购买费用、右上角显示时代；冻结状态用蒙层 + 冰晶纹理表达。
 - 名次由服务端计算，客户端不做任何排序推导。
-- 存活人数为奇数时，落单座位对战**最近出局者的幽灵阵容**：输了正常扣血，赢下计入胜者（§5.2）。
+- 存活人数为奇数时，落单座位对战**一名随机出局者的幽灵阵容**，必有对战：输了正常扣血，赢下计入胜者（§5.2）。
 
 ## 3. 非目标
 
@@ -60,7 +60,7 @@
 | 仓库没有任何图片资源 | `client/` 下无位图或字体文件 |
 | 落单座位目前自战「自己上一场阵容」的幽灵，且不掉血 | `settle.rs::resolve_mirror`、`core-rules.md:187`、测试 `mirror_loss_does_not_damage_or_streak` |
 | 已出局玩家的 `board` 不会被清空，也不会再被修改 | `engine.rs:135/165/197/203` 全部意图对 `eliminated` 早退；`clear_combat_duration` 只清 `turn` 层与临时关键词，不动 `permanent` |
-| `ranking` 已是「最近出局者在前」 | `settle.rs::resolve_settle` 把本回合新出局者 `rev()` 后前插，取 `ranking[0]` 即最近出局者 |
+| `ranking` 是全部出局者的全集，按出局新旧排列 | `settle.rs::resolve_settle` 把本回合新出局者 `rev()` 后前插，`ranking` 长度随出局人数增长、出局者不会被移除 |
 | 真实战的胜负与伤害逻辑集中在 `resolve_real` 尾部，可复用 | `settle.rs:300-352`：`tie_break` → `damage_formula` → `pending_settle` → `last_won` |
 | 光环只由 `state.auras` 派生，而入表只收未出局玩家 | `effects/aura.rs:22-50`；持久棋盘本身不带光环层（`set_aura` 只在 `fold_auras` 里调用），所以出局者的幽灵要显式重算一次它的光环来源，否则以零光环参战 |
 
@@ -70,17 +70,18 @@
 
 | 项 | 决定 |
 | --- | --- |
-| 幽灵来源 | **最近出局者的最终阵容**（`ranking[0]`）。幽灵只从出局者里取，**不再自战自己** |
-| 没有出局者 | 该座位本回合不战：不模拟、不发 `CombatResult`、不进 `combatLog`。真实对局到不了这个状态（见下），只有测试能构造 |
+| 幽灵来源 | **从全部出局者里随机选一名**，取其最终阵容。幽灵只从出局者里取，**不再自战自己**；随机走 `Stream::Matchmaking`，每回合只抽一次，保证重放一致 |
+| 没有出局者 | 该座位照样对战：幽灵为空阵容（无随从），配对、模拟、战报与结算都照常。真实对局到不了这个状态（见下），只有测试能构造 |
+| 落单必战 | 奇数人数时落单座位**永远产生配对与战报**，不出现「本回合不战」 |
 | 阵容口径 | 原样使用该玩家 `player.board`：`turn` 层在出局那次结算已被 `clear_combat_duration` 清掉，`permanent`/`growth` 是真实数值 |
 | 输给幽灵 | **正常扣血**，伤害走 `damage_formula`：败者时代取落单座位自己的时代，星级取幽灵存活随从——与 `resolve_real`「败者时代 + 胜方存活随从星级」的口径一致，不照搬炉石「对手酒馆等级 + 存活随从星级」的公式 |
 | 赢下幽灵 | 计入 `last_won` 与 `last_winner`，参与「上战胜者」名次比较；不累加 `damage_dealt`（本场没有打出真实伤害） |
 | 幽灵侧副作用 | 不结算英雄被动（`defender_hero: None`）、不写回牌池与持久棋盘、不产生手牌、不写 `previous_opponent` |
 | 幽灵光环 | 开战时对幽灵棋盘单独重算一次光环，只在本次模拟的克隆上生效，不写回 `state.auras` |
-| 跨回合重复 | 不做「3 回合内不重复」限制：幽灵由最近出局者决定，没人再出局时它就是同一个阵容 |
-| 配对洗牌 | 不消耗 matchmaking 流（落单座位已确定，无随机选择） |
+| 跨回合重复 | 不做「3 回合内不重复」限制：每回合独立随机抽取，可能连续抽到同一名出局者 |
+| 配对洗牌 | 洗牌不消耗额外流：幽灵抽取在洗牌结束后用同一条 `Stream::Matchmaking` 流再抽一次 |
 
-「没有出局者」只存在于测试构造的状态：`resolve_settle` 每回合都把生命 ≤ 0 的人标为出局并写入 `ranking`，所以真实对局里存活人数为奇数时，`ranking` 至少有一个人。
+「没有出局者」只存在于测试构造的状态：`resolve_settle` 每回合都把生命 ≤ 0 的人标为出局并写入 `ranking`；断线玩家不会被移出对局（`game.rs::expire_disconnects` 只改在线状态），所以真实对局里存活人数为奇数时，`ranking` 至少有一个人。
 
 #### 一并删除的旧机制
 
@@ -104,7 +105,12 @@
 - 与同一名对手（含空壳）在 3 个战斗回合内不会重复相遇，除非只剩 2 人。
 - 在招募阶段退出对局的人，其阵容会立刻成为空壳的素材。
 
-本项目的差异与取舍：本项目英雄不参与战斗的被动只有技能，`defender_hero: None` 已经等价于「空壳没有英雄」；不做 3 回合不重复限制（幽灵固定在最近出局者身上，阵容本就冻结，重复对战可接受）；幽灵的血量按现有 `pending_settle` 口径直接扣在存活座位头上。
+本项目的差异与取舍：
+
+- 幽灵来源改为**全部出局者中随机一名**，不沿用炉石 27.2 之后的「最近出局者」。
+- 不做 3 回合不重复限制。
+- 幽灵没有英雄被动，`defender_hero: None` 已经等价于「空壳没有英雄」。
+- 掉血沿用本项目公式（败者时代 + 胜方存活随从星级），不照搬炉石公式。
 
 ## 6. 做法比较
 
@@ -267,28 +273,37 @@ pub struct Pairing {
 - 落单座位仍由 `pair_adjacent` 产生（`Pairing { a: seat, b: seat, ghost: None }`）；`pair_round` 拿到结果后补 `ghost`：
 
 ```rust
-/// 幽灵归属座位：`ranking[0]`（最近出局者）。没有出局者时返回 `None`，
-/// 落单座位该回合不战——这是真实对局不可达的状态（见 §5.2）。
-fn ghost_seat(state: &GameState) -> Option<Seat> {
-    state.ranking.first().copied()
+/// 幽灵归属座位：从全部出局者里随机抽一名，走 `Stream::Matchmaking`。
+/// `ranking` 是「出局顺序」（最近出局在前），作为候选全集；
+/// 没有出局者时返回 `None`，落单座位对战空阵容——真实对局不可达（见 §5.2）。
+fn ghost_seat(state: &mut GameState) -> Option<Seat> {
+    if state.ranking.is_empty() {
+        return None;
+    }
+    let bound = state.ranking.len() as u64;
+    let index = state.rng.below(Stream::Matchmaking, bound) as usize;
+    state.ranking.get(index).copied()
 }
 ```
 
-- 补 `ghost` 的动作发生在 `pair_round` 的两条返回路径上（`settle.rs:117`、`120`），统一在函数末尾处理：
+- 补 `ghost` 的动作发生在 `pair_round` 的两条返回路径上（`settle.rs:117`、`120`），统一在函数末尾处理。抽幽灵**只在存在落单配对时才消耗随机流**，不影响有人数偶数时的洗牌序列：
 
 ```rust
 let mut pairings = last;
-if let Some(ghost) = ghost_seat(state) {
-    for pairing in &mut pairings {
-        if pairing.a == pairing.b {
-            pairing.ghost = Some(ghost);
-        }
-    }
+let ghost = if pairings.iter().any(|pairing| pairing.a == pairing.b) {
+    ghost_seat(state)
 } else {
-    pairings.retain(|pairing| pairing.a != pairing.b);   // 落单者本回合不战
+    None
+};
+for pairing in &mut pairings {
+    if pairing.a == pairing.b {
+        pairing.ghost = ghost;
+    }
 }
 pairings
 ```
+
+- `ghost = None` 的落单配对仍然保留：幽灵是空阵容，落单座位照常对战、照常出战报。
 
 - `repeats_previous_opponent` 把 `pairing.mirror` 换成 `pairing.ghost.is_some()`。
 - `Pairing` 参与 `state.pairings` 与 `EngineError` 的 Debug 输出；`hash.rs:76` 的 `hasher.bool(pairing.mirror)` 换成「有无幽灵 + 幽灵座位」。这会让历史 `state_hash` 与旧对局不兼容，但本版本没有需要重放的存量对局。
@@ -298,8 +313,9 @@ pairings
 ```rust
 /// 幽灵阵容：幽灵归属座位（已出局）的最终棋盘，按它自己的光环来源折叠一次。
 /// 只在本次模拟的克隆上生效，不写回 `state.auras`。
-pub fn ghost_board(engine: &Engine, state: &GameState, ghost: Seat) -> Vec<MinionInstance> {
-    let Some(corpse) = player(state, ghost) else {
+/// `None`（没有出局者）与未知座位都返回空阵容。
+pub fn ghost_board(engine: &Engine, state: &GameState, ghost: Option<Seat>) -> Vec<MinionInstance> {
+    let Some(corpse) = ghost.and_then(|seat| player(state, seat)) else {
         return Vec::new();
     };
     let auras = player_auras(engine, state, corpse);
@@ -314,7 +330,7 @@ pub fn ghost_board(engine: &Engine, state: &GameState, ghost: Seat) -> Vec<Minio
 
 #### 7.7.3 `resolve_ghost` 改为结算真实伤害
 
-`resolve_mirror(engine, state, seat, ...)` 换成 `resolve_ghost(engine, state, pairing, ...)`，从 `pairing` 取 `a`（落单座位）与 `ghost`（幽灵归属座位）。幽灵阵容用 §7.7.2 的 `ghost_board`，攻方棋盘仍是落单座位折叠当前光环后的棋盘。
+`resolve_mirror(engine, state, seat, ...)` 换成 `resolve_ghost(engine, state, pairing, ...)`，从 `pairing` 取 `a`（落单座位）与 `ghost: Option<Seat>`。幽灵阵容用 §7.7.2 的 `ghost_board(engine, state, pairing.ghost)`，攻方棋盘仍是落单座位折叠当前光环后的棋盘。`ghost` 为 `None` 时幽灵是空阵容，其余流程不变。
 
 ```rust
 // 平局判存活座位获胜：幽灵没有血量可扣，把平局判给幽灵会让空场玩家被空场幽灵扣血。
@@ -342,15 +358,18 @@ state.previous_board.insert(seat, current);
 
 - `won` 的判据从「双条件」改为「幽灵侧清场」：幽灵侧清场就一定算打赢（含双方同归于尽）；双方都空场同理判存活座位赢，`damage` 为 0。`combat::simulate` 在双方清场时给 `winner = None`，幽灵战不使用它的 `winner` 字段，因此不会与它冲突。
 - `tie_break` 不用于幽灵战：幽灵座位要么已出局（生命 ≤ 0），要么就是落单座位自己，两种情形下 `tie_break` 都只会判存活座位胜，与上面的判据等价，直接写死更清楚。
-- 报告：`opponent_seat: Some(ghost)`、`mirror: true`、`damage` 为实际伤害、`winner` 为 `Some(seat)`（赢）或 `None`（输）。
-- `GameEvent::CombatResolved`：赢为 `{ winner: seat, loser: ghost, damage: 0 }`，输为 `{ winner: ghost, loser: seat, damage }`。该事件在 `filter.rs:134` 被丢弃，不进入协议事件流。
+- 报告：`opponent_seat: ghost`、`mirror: true`、`damage` 为实际伤害、`winner` 为 `Some(seat)`（赢）或 `None`（输）。
+- `GameEvent::CombatResolved`：赢为 `{ winner: seat, loser: ghost.unwrap_or(seat), damage: 0 }`，输为 `{ winner: ghost.unwrap_or(seat), loser: seat, damage }`。该事件在 `filter.rs:134` 被丢弃，不进入协议事件流。
 - **不写** `previous_opponent`（幽灵不参与下一回合配对）；**不累加** `damage_dealt`（`compare_alive` 的第三键是「累计造成的伤害」，幽灵战没有造成真实伤害，落单座位不应因此获得名次加权）。
 - 幽灵侧 `defender_hero: None`、`pool: None`、`defender_hand: 0`，保持现状。
 - 攻击方仍是落单座位，`first` 固定为它（幽灵没有「上战胜者」资格，不参与先手判定）。
 
-#### 7.7.4 同回合多人出局时的「最近出局者」
+#### 7.7.4 随机抽取的确定性与分布
 
-`resolve_settle` 把本回合新出局者 `rev()` 后前插（`settle.rs:618-621`），且 `alive_before` 按座位升序逐个递减，所以同回合出局者里**座位号最大者拿最好的名次**、也排在 `ranking[0]`。幽灵归属直接取 `ranking[0]`，即「同回合出局者中名次最好的那位」。不做额外定义：这与「最近」在语义上等价（活到最后的那个），且完全确定。
+- 候选全集是 `state.ranking` 的全部元素，即所有出局者（不再只看 `ranking[0]`）。
+- 抽取用 `state.rng.below(Stream::Matchmaking, ranking.len() as u64)`。`Stream::Matchmaking` 原本只被 `pair_round` 的洗牌使用，重放时同一颗种子会得到同一序列，因此确定性成立。
+- 只有存在落单配对时才抽，偶数人数局面的随机流与现在完全一致。
+- 同一个出局者可能连续多个回合被抽中，不做去重。
 
 #### 7.7.5 视图与协议
 
@@ -375,19 +394,19 @@ let opponent_seat = state.pairings.iter().find_map(|pairing| {
 
 | 文件 | 改动 |
 | --- | --- |
-| `docs/versions/v0.1/product/rules/core-rules.md:187` | 落单座位对战**最近出局者的最终阵容**；失败正常扣血、获胜计入胜者；幽灵按空壳结算（无英雄被动、无手牌、不写回） |
+| `docs/versions/v0.1/product/rules/core-rules.md:187` | 落单座位对战**一名随机出局者的最终阵容**，必有对战；失败正常扣血、获胜计入胜者；幽灵按空壳结算（无英雄被动、无手牌、不写回） |
 | `docs/versions/v0.1/product/overview/design-overview.md:113` | 同上口径 |
-| `docs/versions/v0.1/product/overview/game-intro.md:215` | 「镜像幽灵」条目改为「幽灵阵容：最近出局者」 |
-| `docs/current/technical/rule-engine-and-simulator.md:194` | `renumber_ghost` 说明保留，补「幽灵来源改为最近出局者」 |
+| `docs/versions/v0.1/product/overview/game-intro.md:215` | 「镜像幽灵」条目改为「幽灵阵容：随机一名出局者的最终阵容」 |
+| `docs/current/technical/rule-engine-and-simulator.md:194` | `renumber_ghost` 说明保留，补「幽灵来源改为随机出局者，随机走 `Stream::Matchmaking`」 |
 | `docs/current/technical/room-service.md:124` | 镜像战口径改为幽灵战，说明 `opponentPlayerId` 是幽灵归属座位 |
 
 #### 7.7.7 测试
 
 - `settle.rs::mirror_loss_does_not_damage_or_streak` **反转**为 `ghost_loss_damages_like_real_combat`：断言 `hp` 按公式扣减、`pending_settle` 有该座位、`last_won` 不含该座位。
-- 删除与自战镜像一起作废的用例：`mirror_ghost_keeps_only_permanent_stats`、`mirror_ghost_falls_back_to_current_board`、`mirror_ghost_keeps_growth_breed_and_contagion`、`tests/auras.rs::mirror_ghost_from_previous_board_includes_auras`；新增「幽灵取最近出局者棋盘」与「幽灵保留出局者光环」两条用例。
+- 删除与自战镜像一起作废的用例：`mirror_ghost_keeps_only_permanent_stats`、`mirror_ghost_falls_back_to_current_board`、`mirror_ghost_keeps_growth_breed_and_contagion`、`tests/auras.rs::mirror_ghost_from_previous_board_includes_auras`；新增「幽灵取自某个出局者棋盘」「幽灵保留出局者光环」「同一颗种子下抽取结果可重放」三条用例。
 - 新增：存活为奇数且 `ranking` 为空时，落单座位不产生 `Pairing`、`outcome.reports` 里没有它。
 - 新增：落单座位打赢幽灵 → `last_won` 含该座位、`last_winner` 是它；随后 `compare_alive` 的名次比较把它算作「上战胜者」。
-- 新增：两回合连续出局后，幽灵换到新的最近出局者。
+- 新增：两名出局者存在时，不同种子抽到不同出局者；同一种子两次运行抽到同一名。
 - 新增：幽灵阵容保留 `permanent` 层（不做 `strip_ghost`）。
 - 新增：幽灵保留出局者自己的光环（棋盘上有一张光环随从时，幽灵随从的攻击/生命含该光环），且 `state.auras` 未被污染。
 - `combat.rs`、`combat_damage.rs`、`turn_effects.rs`、`view.rs`、`auras.rs` 里构造 `Pairing { mirror: true }` 或调用 `mirror_ghost` / `mirror_ghost_with_auras` 的地方改签名；`turn_effects` 的「镜像战不写回」用例改为 `ghost: Some(其它座位)` 并断言幽灵棋盘未被修改；`auras` 的上一场快照用例删除，换成幽灵光环用例。
@@ -536,7 +555,7 @@ let opponent_seat = state.pairings.iter().find_map(|pairing| {
 - 存活 7 人、1 人已出局时，存活者名次为 1–7，出局者为 8。
 - 名次与第 20 回合收束时的 `compare_alive` 顺序一致（构造同生命、不同 `damage_dealt` 的两人）。
 - `GameOver` 阶段 `rank == placement`。
-- 幽灵战（§7.7.7）：取最近出局者棋盘、输掉按公式扣血、赢下写入 `last_won`、连续出局后幽灵换人、无出局者时落单座位不战。
+- 幽灵战（§7.7.7）：随机出局者棋盘、输掉按公式扣血、赢下写入 `last_won`、同种子可重放、无出局者时对战空阵容。
 
 房间服务新增用例：
 - 一场真实战写入 1 条 `combatLog`，两个座位各收到同一条，`participantIds` 为这两人。
@@ -574,8 +593,10 @@ let opponent_seat = state.pairings.iter().find_map(|pairing| {
 1. **幽灵保留自己的光环**：开战时按出局者的棋盘重算一次它的光环来源，幽灵以死时的真实战力参战。代价是把 `recompute_auras` 的循环体抽成 `player_auras` 供两处复用。
 2. **互清（双方同回合清场）判存活座位获胜、不扣血**：幽灵没有血量可扣，平局只能倾向幽灵一侧，否则空场玩家会被空场幽灵扣血。
 3. **幽灵战胜利不累加 `damage_dealt`**：`compare_alive` 的第三键是「累计造成的伤害」，幽灵战没有打出真实伤害，落单座位不应因此获得名次加权。
-4. **同回合多人出局时，幽灵取 `ranking[0]`**，即名次最好的那位，不另做随机或按座位定义。
+4. **幽灵从全部出局者里随机抽取**，每回合抽一次，可能连续抽到同一人；不做「最近出局者」，也不做 3 回合去重。
 5. **`Pairing.mirror` 换成 `Pairing.ghost: Option<Seat>`**：一个字段表达「对手是不是幽灵、幽灵是谁」，不再依赖「`b == a` 即镜像」的隐式约定。会让历史 `state_hash` 不兼容，本版本没有需要重放的存量对局。
 6. **`combatLog` 不带幽灵归属者的 id**：`participantIds` 只放真实参战玩家，幽灵战就是落单座位一个元素；幽灵归属者不进名单，已出局座位的历史里不会出现「自己死后被人拿去当幽灵」的战报。
 7. **战斗视图左侧仍按「我方 / 对方」两行**：幽灵战的对手行渲染的是出局者的最终阵容，与服务端下发的 `opponentBoard` 一致，不额外加「幽灵」标记（只在右栏顶部身份块与战报条目里标注）。
-8. **彻底移除自战镜像**：幽灵只来自出局者，落单座位不会再对自己。`mirror_ghost`、`mirror_ghost_with_auras`、`strip_ghost`、`GameState.previous_board` 一并删除；存活为奇数却没有任何出局者时，落单座位本回合不战（真实对局不可达，只有测试能构造）。
+8. **彻底移除自战镜像**：幽灵只来自出局者，落单座位不会再对自己。`mirror_ghost`、`mirror_ghost_with_auras`、`strip_ghost`、`GameState.previous_board` 一并删除。
+
+9. **落单座位永远对战**：没有出局者时幽灵是空阵容，配对、战报与结算照常（真实对局不可达，只有测试能构造）。

@@ -25,9 +25,9 @@
 
 ### 2.2 幽灵战
 
-- `Pairing { a, b, ghost: Option<Seat> }` 取代 `Pairing.mirror`；落单配对由 `pair_round` 末尾补 `ghost = ranking[0]`，没有出局者时剔除该落单配对。
+- `Pairing { a, b, ghost: Option<Seat> }` 取代 `Pairing.mirror`；落单配对由 `pair_round` 末尾补 `ghost`——从 `state.ranking` 里用 `Stream::Matchmaking` 抽一名，只抽一次，没有出局者时留 `None`（空阵容幽灵）。落单配对永远保留。
 - `resolve_mirror` 改为 `resolve_ghost`：胜负按「幽灵侧清场即攻方胜、攻方清场则幽灵胜、双方清空判攻方胜」判定；幽灵胜时按 `damage_formula(败者时代, 幽灵存活星级和)` 写入 `pending_settle`；攻方胜时写 `last_won` / `last_winner`。
-- 幽灵阵容取该座位 `player.board`，按它自己的光环来源重算一次后 `fold_auras`，只在模拟克隆上生效。为此把 `recompute_auras` 的循环体抽成 `player_auras(engine, state, &PlayerState)`。
+- 幽灵阵容取 `ghost_board(engine, state, pairing.ghost)`：该出局座位的 `player.board`，按它自己的光环来源重算一次后 `fold_auras`，只在模拟克隆上生效；`None` 返回空阵容。为此把 `recompute_auras` 的循环体抽成 `player_auras(engine, state, &PlayerState)`。
 - 删除 `mirror_ghost`、`mirror_ghost_with_auras`、`strip_ghost`、`GameState.previous_board` 及其写入与哈希行。
 - `view.rs` 的 `opponent_seat` 对幽灵战返回幽灵归属座位；自战镜像回退分支一并删除。
 
