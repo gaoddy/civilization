@@ -190,6 +190,25 @@
     "tribe": "生物"
   },
   {
+    "attack": 5,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "工业",
+    "health": 8,
+    "id": "beethoven",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 4,
+    "match_text": null,
+    "name": "贝多芬",
+    "skills": [
+      "human-growth-twice"
+    ],
+    "subtype": "音乐",
+    "tribe": "人类"
+  },
+  {
     "attack": 2,
     "card_type": "随从",
     "cost": null,
@@ -955,6 +974,25 @@
     "tribe": "学者"
   },
   {
+    "attack": 4,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "现代",
+    "health": 7,
+    "id": "fleming",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 4,
+    "match_text": null,
+    "name": "弗莱明",
+    "skills": [
+      "virus-growth-once"
+    ],
+    "subtype": "微生物学",
+    "tribe": "病毒"
+  },
+  {
     "attack": 8,
     "card_type": "随从",
     "cost": null,
@@ -1010,6 +1048,25 @@
     ],
     "subtype": "作物",
     "tribe": "植物"
+  },
+  {
+    "attack": 0,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "现代",
+    "health": 16,
+    "id": "gauss",
+    "is_hero": true,
+    "is_scholar": true,
+    "level": 5,
+    "match_text": null,
+    "name": "高斯",
+    "skills": [
+      "scholar-growth-twice"
+    ],
+    "subtype": "数学",
+    "tribe": "学者"
   },
   {
     "attack": 0,
@@ -1797,6 +1854,25 @@
     "tribe": "学者"
   },
   {
+    "attack": 0,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "封建",
+    "health": 12,
+    "id": "lamarck",
+    "is_hero": true,
+    "is_scholar": true,
+    "level": 4,
+    "match_text": null,
+    "name": "拉马克",
+    "skills": [
+      "biology-evolve"
+    ],
+    "subtype": "生物学",
+    "tribe": "学者"
+  },
+  {
     "attack": 3,
     "card_type": "随从",
     "cost": null,
@@ -1814,6 +1890,25 @@
     ],
     "subtype": "哺乳",
     "tribe": "生物"
+  },
+  {
+    "attack": 0,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "工业",
+    "health": 16,
+    "id": "lavoisier",
+    "is_hero": true,
+    "is_scholar": true,
+    "level": 5,
+    "match_text": null,
+    "name": "拉瓦锡",
+    "skills": [
+      "aura-other-plus-0-plus-1"
+    ],
+    "subtype": "化学",
+    "tribe": "学者"
   },
   {
     "attack": 0,
@@ -1871,6 +1966,63 @@
     ],
     "subtype": "细菌",
     "tribe": "病毒"
+  },
+  {
+    "attack": 0,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "封建",
+    "health": 12,
+    "id": "linnaeus",
+    "is_hero": true,
+    "is_scholar": true,
+    "level": 4,
+    "match_text": null,
+    "name": "林奈",
+    "skills": [
+      "battlecry-all-biology-growth-once"
+    ],
+    "subtype": "生物学",
+    "tribe": "学者"
+  },
+  {
+    "attack": 5,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "封建",
+    "health": 7,
+    "id": "lisshi",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 4,
+    "match_text": null,
+    "name": "李时珍",
+    "skills": [
+      "battlecry-plant-growth-twice"
+    ],
+    "subtype": "医药学",
+    "tribe": "植物"
+  },
+  {
+    "attack": 4,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "古典",
+    "health": 5,
+    "id": "luban",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 3,
+    "match_text": null,
+    "name": "鲁班",
+    "skills": [
+      "battlecry-friendly-mech-growth-once"
+    ],
+    "subtype": "工匠",
+    "tribe": "机械"
   },
   {
     "attack": 4,
@@ -2128,6 +2280,25 @@
     "card_type": "随从",
     "cost": null,
     "display_cost": 3,
+    "era": "现代",
+    "health": 16,
+    "id": "morgan",
+    "is_hero": true,
+    "is_scholar": true,
+    "level": 5,
+    "match_text": null,
+    "name": "摩尔根",
+    "skills": [
+      "aura-biology-plus-0-plus-1"
+    ],
+    "subtype": "遗传学",
+    "tribe": "学者"
+  },
+  {
+    "attack": 0,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
     "era": "封建",
     "health": 12,
     "id": "moses",
@@ -2141,6 +2312,25 @@
     ],
     "subtype": "哲学",
     "tribe": "学者"
+  },
+  {
+    "attack": 5,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "古典",
+    "health": 8,
+    "id": "mozi",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 4,
+    "match_text": null,
+    "name": "墨子",
+    "skills": [
+      "enemy-random-cannot-attack"
+    ],
+    "subtype": "哲学",
+    "tribe": "人类"
   },
   {
     "attack": 9,
@@ -2619,6 +2809,25 @@
     "tribe": "机械"
   },
   {
+    "attack": 0,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "封建",
+    "health": 12,
+    "id": "quyuan",
+    "is_hero": true,
+    "is_scholar": true,
+    "level": 4,
+    "match_text": null,
+    "name": "屈原",
+    "skills": [
+      "shout"
+    ],
+    "subtype": "文学",
+    "tribe": "学者"
+  },
+  {
     "attack": null,
     "card_type": "效果",
     "cost": 3,
@@ -2738,6 +2947,25 @@
     "card_type": "随从",
     "cost": null,
     "display_cost": 3,
+    "era": "现代",
+    "health": 20,
+    "id": "rutherford",
+    "is_hero": true,
+    "is_scholar": true,
+    "level": 6,
+    "match_text": null,
+    "name": "卢瑟福",
+    "skills": [
+      "combat-random-enemy-damage-3"
+    ],
+    "subtype": "物理",
+    "tribe": "学者"
+  },
+  {
+    "attack": 0,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
     "era": "未来",
     "health": 20,
     "id": "sagan",
@@ -2812,6 +3040,25 @@
     "tribe": "机械"
   },
   {
+    "attack": 5,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "封建",
+    "health": 8,
+    "id": "shakespeare",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 4,
+    "match_text": null,
+    "name": "莎士比亚",
+    "skills": [
+      "battlecry-all-friendly-growth-once"
+    ],
+    "subtype": "文学",
+    "tribe": "人类"
+  },
+  {
     "attack": 0,
     "card_type": "随从",
     "cost": null,
@@ -2828,6 +3075,25 @@
       "battlecry-all-mech-growth-once"
     ],
     "subtype": "数学",
+    "tribe": "学者"
+  },
+  {
+    "attack": 0,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "封建",
+    "health": 16,
+    "id": "shenkuo",
+    "is_hero": true,
+    "is_scholar": true,
+    "level": 5,
+    "match_text": null,
+    "name": "沈括",
+    "skills": [
+      "observation"
+    ],
+    "subtype": "博物学",
     "tribe": "学者"
   },
   {
@@ -3077,6 +3343,25 @@
     "tribe": "人类"
   },
   {
+    "attack": 5,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "封建",
+    "health": 8,
+    "id": "simaqian",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 4,
+    "match_text": null,
+    "name": "司马迁",
+    "skills": [
+      "aura-all-plus-0-plus-1"
+    ],
+    "subtype": "史学",
+    "tribe": "人类"
+  },
+  {
     "attack": 2,
     "card_type": "随从",
     "cost": null,
@@ -3152,6 +3437,25 @@
       "keyword-assemble-2"
     ],
     "subtype": "动力",
+    "tribe": "机械"
+  },
+  {
+    "attack": 7,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "工业",
+    "health": 11,
+    "id": "stephenson",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 5,
+    "match_text": null,
+    "name": "史蒂芬孙",
+    "skills": [
+      "aura-other-mech-plus-1-plus-1"
+    ],
+    "subtype": "工程",
     "tribe": "机械"
   },
   {
@@ -3535,6 +3839,25 @@
       "battlecry-all-mech-growth-once-no-keyword"
     ],
     "subtype": "通讯",
+    "tribe": "机械"
+  },
+  {
+    "attack": 8,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "现代",
+    "health": 9,
+    "id": "wright-brothers",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 5,
+    "match_text": null,
+    "name": "莱特兄弟",
+    "skills": [
+      "combat-optimal-attack"
+    ],
+    "subtype": "航空",
     "tribe": "机械"
   },
   {
@@ -3990,6 +4313,25 @@
     "tribe": "学者"
   },
   {
+    "attack": 5,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "封建",
+    "health": 8,
+    "id": "zhangzhongjing",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 4,
+    "match_text": null,
+    "name": "张仲景",
+    "skills": [
+      "battlecry-all-friendly-plus-0-plus-1"
+    ],
+    "subtype": "医学",
+    "tribe": "人类"
+  },
+  {
     "attack": 6,
     "card_type": "随从",
     "cost": null,
@@ -4044,6 +4386,25 @@
       "trigger-other-friendly-humans-plus-1-attack"
     ],
     "subtype": null,
+    "tribe": "人类"
+  },
+  {
+    "attack": 7,
+    "card_type": "随从",
+    "cost": null,
+    "display_cost": 3,
+    "era": "工业",
+    "health": 10,
+    "id": "zhenghe",
+    "is_hero": true,
+    "is_scholar": false,
+    "level": 5,
+    "match_text": null,
+    "name": "郑和",
+    "skills": [
+      "free-refresh"
+    ],
+    "subtype": "航海",
     "tribe": "人类"
   },
   {

@@ -5,12 +5,12 @@ import gen_card_data
 class GenCardDataTest(unittest.TestCase):
     def test_counts_and_sorted_ids(self):
         data = json.loads(gen_card_data.build(ROOT)["cards.json"])
-        self.assertEqual(len(data), 220)
-        self.assertEqual(sum(c["card_type"] == "随从" for c in data), 184)
+        self.assertEqual(len(data), 239)
+        self.assertEqual(sum(c["card_type"] == "随从" for c in data), 203)
         self.assertEqual([c["id"] for c in data], sorted(c["id"] for c in data))
     def test_skills_and_tokens(self):
         out = gen_card_data.build(ROOT)
-        self.assertEqual(len(json.loads(out["skills.json"])), 118)
+        self.assertEqual(len(json.loads(out["skills.json"])), 131)
         self.assertEqual([t["id"] for t in json.loads(out["tokens.json"])],
                          ["hela-cell-token", "seedling", "synthetic-cell-token"])
     def test_build_is_deterministic(self):

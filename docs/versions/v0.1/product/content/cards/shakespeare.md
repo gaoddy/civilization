@@ -1,0 +1,48 @@
+---
+id: shakespeare
+card_type: 随从
+name: 莎士比亚
+tribe: 人类
+subtype: 文学
+level: 4
+era: 封建
+attack: 5
+health: 8
+skills: [battlecry-all-friendly-growth-once]
+is_scholar: false
+is_hero: true
+---
+
+# 莎士比亚
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | shakespeare |
+| 名称 | 莎士比亚 |
+| 类型 | 随从 |
+| 流派 | 人类 |
+| 子类 | 文学 |
+| 星级 | 4 |
+| 时代 | 封建 |
+| 攻击力 | 5 |
+| 生命值 | 8 |
+| 关键词 | 战吼 |
+| 技能 | battlecry-all-friendly-growth-once |
+| 学者 | 否 |
+| 英雄资格 | 是 |
+
+## 效果
+
+战吼：使你的所有随从获得一次成长
+
+## 设计说明
+
+定位：入场给全队一次成长，铺场阵容的中期爆发点。
+平衡边界：群体一次成长按战吼折算 2 点，5/8 加 2 等于 15，未超上限。
+使用建议：场上随从越多收益越高，空场打出等于纯 5/8。
+
+## 出处
+
+莎士比亚一生创作 37 部戏剧，《哈姆雷特》《麦克白》等作品塑造了现代英语文学。
