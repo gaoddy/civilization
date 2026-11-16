@@ -1211,17 +1211,6 @@ mod tests {
     use crate::auth::SessionStore;
     use crate::clock::FixedClock;
 
-    const HEROES: [&str; 8] = [
-        "adam-smith",
-        "darwin",
-        "davinci",
-        "edison",
-        "einstein",
-        "faraday",
-        "galileo",
-        "knuth",
-    ];
-
     fn session(store: &mut SessionStore, clock: &FixedClock, name: &str) -> Session {
         store
             .authenticate(
@@ -1253,7 +1242,9 @@ mod tests {
             let mut players = vec![host];
             for index in 1..8 {
                 let player = session(&mut store, &clock, &format!("玩家{index}"));
-                rooms.join(&code, &player, &state.catalog).expect("加入成功");
+                rooms
+                    .join(&code, &player, &state.catalog)
+                    .expect("加入成功");
                 players.push(player);
             }
             let mut last_hero = String::new();

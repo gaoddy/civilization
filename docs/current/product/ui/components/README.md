@@ -16,3 +16,4 @@
 - `UI.section_title(text)`：区块标题，`font-body` 字号、`color-text-dim` 颜色，单行不换行。
 - `UI.empty_hint(text)`：居中占位提示，`font-body-sm` 字号、`color-text-muted` 颜色，用于空棋盘、空手牌、无对手。
 - 座位行、对手小卡、随从卡与战斗英雄条是页面私有结构，位于 `client/scenes/game.gd`，不进入共享层。
+- 候选英雄卡、其他玩家状态行与技能浮层是页面私有结构，位于 `client/scenes/room.gd`，不进入共享层。

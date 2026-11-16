@@ -47,6 +47,8 @@ pub struct PlayerSlot {
     pub hero_card_id: Option<String>,
     /// 该座位可选的英雄卡 id；只在发给本人的 `RoomUpdate` 中下发。
     pub hero_candidates: Vec<String>,
+    /// 候选取自洗好序列的第几段；座位释放时随之回收，避免候选池被永久占位。
+    pub candidate_segment: Option<usize>,
     /// 该座位的下行信封序号分配器。
     pub channel: SeatChannel,
     /// 连接是否在线；大厅断线与重连由连接层维护。
@@ -63,6 +65,7 @@ impl PlayerSlot {
             ready: false,
             hero_card_id: None,
             hero_candidates: Vec::new(),
+            candidate_segment: None,
             channel: SeatChannel::new(),
             connected: true,
             disconnected_at_ms: None,
@@ -82,8 +85,6 @@ pub struct Room {
     pub phase: Phase,
     /// 座位 → 玩家；只保存已占用座位，键即座位号（0 起）。
     slots: BTreeMap<Seat, PlayerSlot>,
-    /// 已切出的候选段数；决定下一名玩家从洗好的英雄序列哪一段取候选。
-    used_candidate_segments: usize,
 }
 
 impl Room {
@@ -176,7 +177,17 @@ impl Room {
         heroes.sort();
         shuffle(&mut heroes, seed_for_code(&self.code));
 
-        let start = self.used_candidate_segments * CANDIDATE_COUNT;
+        // 段号取当前座位里最小的未用段：座位释放后段号自动空出，候选池不会被永久占满。
+        let used: Vec<usize> = self
+            .slots
+            .values()
+            .filter_map(|slot| slot.candidate_segment)
+            .collect();
+        let segment = (0..).find(|index| !used.contains(index));
+        let Some(segment) = segment else {
+            return;
+        };
+        let start = segment * CANDIDATE_COUNT;
         if start >= heroes.len() {
             return;
         }
@@ -184,7 +195,7 @@ impl Room {
         let picked = heroes[start..end].to_vec();
         if let Some(slot) = self.slot_mut(player_id) {
             slot.hero_candidates = picked;
-            self.used_candidate_segments += 1;
+            slot.candidate_segment = Some(segment);
         }
     }
 }
@@ -306,7 +317,6 @@ impl RoomRegistry {
             host_id: host.player_id.clone(),
             phase: Phase::Lobby,
             slots,
-            used_candidate_segments: 0,
         };
         room.assign_candidates(&host.player_id, catalog);
         // 注册表持有权威副本；返回值供调用者立即广播大厅视图。

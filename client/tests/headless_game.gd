@@ -80,12 +80,27 @@ func _on_room() -> void:
         if str(player.get("playerId", "")) != GameStore.player_id:
             continue
         if player.get("heroCardId") == null and not _hero_sent:
+            var hero := _pick_hero(player)
+            if hero == "":
+                return
             _hero_sent = true
-            var hero := OS.get_environment("M1B_HERO")
-            Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": hero if hero != "" else "darwin"})
+            Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": hero})
         if not bool(player.get("ready", false)) and not _ready_sent:
             _ready_sent = true
             Net.send(Protocol.MSG_READY, {"ready": true})
+
+
+## 从服务端分配给本人的候选里挑英雄：优先环境变量指定，不在候选里就用第一张。
+func _pick_hero(player: Dictionary) -> String:
+    var raw = player.get("heroCandidates")
+    var candidates: Array = raw if raw is Array else []
+    if candidates.is_empty():
+        return ""
+    var preferred := OS.get_environment("M1B_HERO")
+    for candidate in candidates:
+        if str(candidate) == preferred:
+            return preferred
+    return str(candidates[0])
 
 
 func _on_view() -> void:
