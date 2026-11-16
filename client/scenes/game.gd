@@ -51,6 +51,8 @@ var _recruit_panel: VBoxContainer
 var _board_row: BoardDrop
 var _board_hint: Label
 var _shop_row: HFlowContainer
+var _sell_drop: SellDrop
+var _sell_hint: Label
 var _hand_row: HFlowContainer
 var _reroll_button: Button
 var _upgrade_button: Button
@@ -229,9 +231,12 @@ func _build_recruit_panel() -> Control:
     _recruit_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _recruit_panel.add_theme_constant_override("separation", UITheme.space("space-sm"))
 
-    # 商店：6 个槽位与刷新/升时代/冻结。
-    var shop_panel := UI.card_panel("surface")
+    # 商店：6 个槽位与刷新/升时代/冻结；整块面板同时是棋盘随从的出售落点。
+    var shop_panel := SellDrop.new()
     shop_panel.name = "ShopPanel"
+    _sell_drop = shop_panel
+    shop_panel.sell_dropped.connect(_on_sell_dropped)
+    shop_panel.hover_changed.connect(_on_sell_hover)
     var shop_box := VBoxContainer.new()
     shop_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
     shop_panel.add_child(shop_box)
@@ -239,6 +244,11 @@ func _build_recruit_panel() -> Control:
     var shop_head := HBoxContainer.new()
     shop_head.add_theme_constant_override("separation", UITheme.space("space-sm"))
     shop_head.add_child(UI.section_title("商店"))
+    _sell_hint = UI.label("", UITheme.font_size("font-caption"), false)
+    _sell_hint.name = "SellHint"
+    _sell_hint.add_theme_color_override("font_color", UITheme.color("color-accent"))
+    _sell_hint.visible = false
+    shop_head.add_child(_sell_hint)
     var shop_spacer := Control.new()
     shop_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     shop_head.add_child(shop_spacer)
@@ -470,7 +480,7 @@ func _refresh_header(view: Dictionary, self_state: Dictionary, phase: String) ->
         PHASE_TEXT.get(phase, phase),
     ]
     _hp_pill.text = "♥ %d" % int(self_state.get("hp", 0))
-    _era_pill.text = "时代 %d" % int(self_state.get("era", 1))
+    _era_pill.text = _era_text(int(self_state.get("era", 1)))
     _gold_pill.text = "● %d 金" % int(self_state.get("gold", 0))
 
 
@@ -540,9 +550,9 @@ func _seat_row(player: Dictionary) -> PanelContainer:
         mark.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
         name_row.add_child(mark)
 
-    var meta := UI.label("HP %d · 时代%d · 随从%d" % [
+    var meta := UI.label("HP %d · %s · 随从%d" % [
         int(player.get("hp", 0)),
-        int(player.get("era", 1)),
+        _era_text(int(player.get("era", 1))),
         int(player.get("boardCount", 0)),
     ], UITheme.font_size("font-caption"), false)
     meta.clip_text = true
@@ -554,7 +564,17 @@ func _seat_row(player: Dictionary) -> PanelContainer:
 func _refresh_recruit(self_state: Dictionary, recruited: bool, phase: String) -> void:
     _refresh_board(self_state, recruited, phase)
     _refresh_shop(self_state)
+    _refresh_sell_gate()
     _refresh_actions(self_state, recruited, phase)
+
+
+## 商店出售落点与棋盘拖拽共用一套实时门控；不满足时商店不接收棋盘卡。
+func _refresh_sell_gate() -> void:
+    if _sell_drop == null:
+        return
+    _sell_drop.enabled = _can_play_now()
+    if not _sell_drop.enabled:
+        _sell_hint.visible = false
 
 
 func _refresh_board(self_state: Dictionary, recruited: bool, phase: String) -> void:
@@ -568,7 +588,7 @@ func _refresh_board(self_state: Dictionary, recruited: bool, phase: String) -> v
     for position in board.size():
         var minion: Dictionary = board[position]
         var minion_aff := _find_by_index(aff.get("boardMinions", []), int(minion.get("index", position)))
-        _board_row.add_child(_minion_card(minion, minion_aff, can_rearrange, position, board.size()))
+        _board_row.add_child(_minion_card(minion, minion_aff, can_rearrange, position))
     for _position in range(board.size(), slots):
         _board_row.add_child(_empty_slot())
 
@@ -593,30 +613,34 @@ func _minion_card(
     minion_aff: Dictionary,
     can_rearrange: bool,
     position: int,
-    total: int,
     read_only := false,
 ) -> PanelContainer:
     var minion_index := int(minion.get("index", position))
-    var panel := UI.card_panel("raised-tight")
+    var panel := BoardCard.new()
+    panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-tight"))
     panel.name = "BoardMinion%d" % minion_index
     panel.set_meta("minion_id", str(minion.get("minionId", "")))
     panel.set_meta("minion_index", minion_index)
     panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), 0 if read_only else UITheme.metric("minion-card-height"))
 
     var box := VBoxContainer.new()
+    box.mouse_filter = Control.MOUSE_FILTER_IGNORE
     box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     panel.add_child(box)
 
     var head := HBoxContainer.new()
+    head.mouse_filter = Control.MOUSE_FILTER_IGNORE
     head.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     box.add_child(head)
     var name_label := UI.label(CardDB.display_name(str(minion.get("cardId", ""))), UITheme.font_size("font-body-sm"), false)
+    name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     name_label.max_lines_visible = 1
     name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
     head.add_child(name_label)
     if bool(minion.get("golden", false)):
         var star := UI.label("★", UITheme.font_size("font-caption"), false)
+        star.mouse_filter = Control.MOUSE_FILTER_IGNORE
         star.add_theme_color_override("font_color", UITheme.color("color-accent"))
         head.add_child(star)
 
@@ -625,10 +649,12 @@ func _minion_card(
         int(minion.get("health", 0)),
     ], UITheme.font_size("font-title"), false)
     stats.name = "Stats"
+    stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
     box.add_child(stats)
 
     var keywords := _join_cn(minion.get("keywords", []))
     var keyword_label := UI.label(keywords if keywords != "" else "—", UITheme.font_size("font-caption"), false)
+    keyword_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     keyword_label.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     keyword_label.max_lines_visible = 1
     keyword_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -643,34 +669,18 @@ func _minion_card(
     if read_only:
         return panel
 
-    var actions := HBoxContainer.new()
-    actions.name = "Actions"
-    actions.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    box.add_child(actions)
-    var sell := _compact_button("出售")
-    sell.disabled = _view_stale or _deadline_expired or _target_pending or not bool(minion_aff.get("sellable", false))
-    if minion_aff.get("disabledReason") != null:
-        sell.tooltip_text = UI.error_text(str(minion_aff.get("disabledReason")))
-    sell.pressed.connect(_on_sell.bind(str(minion.get("minionId", ""))))
-    actions.add_child(sell)
-
-    var left := _compact_button("←")
-    left.disabled = not can_rearrange or position <= 0
-    left.pressed.connect(_on_rearrange.bind(minion_index, minion_index - 1))
-    actions.add_child(left)
-
-    var right := _compact_button("→")
-    right.disabled = not can_rearrange or position >= total - 1
-    right.pressed.connect(_on_rearrange.bind(minion_index, minion_index + 1))
-    actions.add_child(right)
+    # 棋盘卡只提供拖拽：拖到棋盘内换位，拖到商店出售；卡内不再放操作按钮。
+    panel.payload = {
+        "epoch": _view_epoch,
+        "minionId": str(minion.get("minionId", "")),
+        "fromIndex": minion_index,
+        "sellable": bool(minion_aff.get("sellable", false)),
+        "golden": bool(minion.get("golden", false)),
+    }
+    panel.drag_allowed = can_rearrange and Net.is_open()
+    if not panel.drag_allowed:
+        UI.apply_dim(panel)
     return panel
-
-
-func _compact_button(text: String) -> Button:
-    var node := UI.styled_button(text, "micro", 20)
-    node.add_theme_font_size_override("font_size", UITheme.font_size("font-caption"))
-    node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    return node
 
 
 func _refresh_shop(self_state: Dictionary) -> void:
@@ -804,9 +814,9 @@ func _refresh_side(self_state: Dictionary) -> void:
     var hero_id := _optional_text(self_state.get("heroCardId"))
     _self_hero_box.add_child(UI.hero_tile(hero_id, UITheme.metric("side-width") - UITheme.space("space-2xl")))
 
-    var stat_line := UI.label("生命 %d · 时代 %d · 金币 %d" % [
+    var stat_line := UI.label("生命 %d · %s · 金币 %d" % [
         int(self_state.get("hp", 0)),
-        int(self_state.get("era", 1)),
+        _era_text(int(self_state.get("era", 1))),
         int(self_state.get("gold", 0)),
     ], UITheme.font_size("font-body-sm"), false)
     stat_line.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
@@ -911,7 +921,7 @@ func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
         var minion_id := str(minion.get("minionId", ""))
         var panel: Control = existing.get(minion_id)
         if panel == null:
-            panel = _minion_card(minion, {}, false, 0, 1, true)
+            panel = _minion_card(minion, {}, false, 0, true)
             panel.set_meta("minion_id", minion_id)
             row.add_child(panel)
         var stats = panel.find_child("Stats", true, false)
@@ -966,9 +976,9 @@ func _fill_combat_strip(container: HBoxContainer, player: Dictionary, fallback: 
     var name_label := UI.label(display if display != "" else fallback, UITheme.font_size("font-title"), false)
     lines.add_child(name_label)
 
-    var meta := UI.label("HP %d · 时代 %d · 随从 %d" % [
+    var meta := UI.label("HP %d · %s · 随从 %d" % [
         int(player.get("hp", 0)),
-        int(player.get("era", 1)),
+        _era_text(int(player.get("era", 1))),
         int(player.get("boardCount", 0)),
     ], UITheme.font_size("font-caption"), false)
     meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
@@ -1426,6 +1436,16 @@ func _on_board_dropped(data: Dictionary, position: int, target_minion_id: String
         return
     if not _can_play_now():
         return
+    if data.has("minionId"):
+        var from_index := int(data.get("fromIndex", 0))
+        if position == from_index:
+            return
+        _send_intent({
+            "kind": Protocol.INTENT_REARRANGE_BOARD,
+            "fromIndex": from_index,
+            "toIndex": position,
+        })
+        return
     var intent := {"kind": Protocol.INTENT_PLAY_CARD, "handIndex": int(data.get("handIndex", 0))}
     if str(data.get("cardKind", "")) == "minion":
         intent["position"] = position
@@ -1465,17 +1485,19 @@ func _can_play_now() -> bool:
     )
 
 
-func _on_sell(minion_id: String) -> void:
-    _send_intent({"kind": Protocol.INTENT_SELL_MINION, "minionId": minion_id})
+func _on_sell_hover(hovering: bool, refund: int) -> void:
+    _sell_hint.text = "松手出售 +%d 金" % refund
+    _sell_hint.visible = hovering
 
 
-func _on_rearrange(from_index: int, to_index: int) -> void:
-    if to_index < 0:
+func _on_sell_dropped(payload: Dictionary) -> void:
+    if int(payload.get("epoch", -1)) != _view_epoch:
+        return
+    if not _can_play_now():
         return
     _send_intent({
-        "kind": Protocol.INTENT_REARRANGE_BOARD,
-        "fromIndex": from_index,
-        "toIndex": to_index,
+        "kind": Protocol.INTENT_SELL_MINION,
+        "minionId": str(payload.get("minionId", "")),
     })
 
 
@@ -1593,6 +1615,11 @@ func _optional_text(value: Variant) -> String:
     if value == null:
         return ""
     return str(value)
+
+
+## 统一时代文案：顶栏、积分榜、属性行与战斗条都显示具体时代名。
+func _era_text(era: int) -> String:
+    return "时代 %s" % CardDB.era_name(era)
 
 
 func _join_cn(values: Array) -> String:
