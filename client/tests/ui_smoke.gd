@@ -23,6 +23,9 @@ func _ready() -> void:
     await _check_drag_rejected_for_target_effect_on_blank()
     await _check_drag_disabled_when_stale_or_expired()
     await _check_drag_cancelled_after_view_rebuild()
+    await _check_combat_playback()
+    await _check_combat_banner_after_tail()
+    await _check_combat_resume_from_deadline()
     await _check_target_pending_overlay()
     await _check_choose_target_sends_intent()
     await _check_recruited_gate()
@@ -285,12 +288,15 @@ func _check_game_layout() -> void:
     var hand = instance.find_child("HandPanel", true, false)
     _expect(shop != null and shop.get_parent() == recruit, "商店应位于招募中区")
     _expect(board_panel != null and board_panel.get_parent() == recruit, "我方棋盘应位于招募中区")
-    _expect(hand != null and hand.get_parent() == recruit, "手牌应位于招募中区")
-    if shop != null and board_panel != null and hand != null:
+    var center = instance.find_child("CenterPanel", true, false)
+    _expect(hand != null and hand.get_parent() == center, "手牌应位于中区（招募与战斗共用）")
+    if shop != null and board_panel != null:
         _expect(
-            shop.get_index() < board_panel.get_index() and board_panel.get_index() < hand.get_index(),
-            "招募中区顺序应为商店、我方棋盘、手牌",
+            shop.get_index() < board_panel.get_index(),
+            "招募中区顺序应为商店、我方棋盘",
         )
+    if hand != null and combat != null:
+        _expect(hand.get_index() > combat.get_index(), "手牌应位于战斗视图之下")
     var board = instance.find_child("BoardRow", true, false)
     _expect(board != null and board.get_child_count() == 7, "棋盘应有 7 个槽位（含空位）")
     _expect(instance.find_child("HeroTile", true, false) != null, "右栏应显示我的英雄卡")
@@ -318,20 +324,134 @@ func _check_combat_layout() -> void:
     var combat = instance.find_child("CombatPanel", true, false)
     _expect(combat != null and combat.visible, "战斗阶段应显示战斗视图")
     _expect(recruit != null and not recruit.visible, "战斗阶段不应显示招募视图")
+    var hand_panel = instance.find_child("HandPanel", true, false)
+    _expect(hand_panel != null and hand_panel.visible, "演示期间手牌仍应可见")
     var banner = instance.find_child("CombatBanner", true, false)
-    _expect(banner != null and str(banner.text).contains("胜利"), "战斗横幅应显示结果")
+    _expect(banner != null and not banner.visible, "动作播完前不应显示结果横幅")
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
     _expect(opponent_row != null and opponent_row.get_child_count() == 2, "对手随从行应为 2 张")
     var own_row = instance.find_child("CombatOwnRow", true, false)
     _expect(own_row != null and own_row.get_child_count() == 3, "我方随从行应为 3 张")
     var end_button = instance.find_child("EndButton", true, false)
     _expect(end_button != null and not end_button.visible, "战斗阶段不应显示结束招募按钮")
+    var power_button = instance.find_child("HeroPowerButton", true, false)
+    _expect(power_button != null and not power_button.visible, "演示期间不应显示英雄技能按钮")
+    _expect(instance.find_child("ShopPanel", true, false) != null, "商店节点仍在招募面板内")
+    var hand_card = instance.find_child("HandCard0", true, false)
+    _expect(hand_card != null and not hand_card.drag_allowed, "演示期间手牌不可拖动")
+    await _check_combat_no_skip_entry(instance)
     await _check_combat_detail(instance)
     instance.queue_free()
     GameStore.view = {}
     GameStore.last_combat = {}
     GameStore.turn = 1
     GameStore.phase = ""
+
+
+## 演示期间没有跳过或加速入口。
+func _check_combat_no_skip_entry(instance: Node) -> void:
+    for child in instance.find_children("*", "Button", true, false):
+        var text := str((child as Button).text)
+        _expect(not text.contains("跳过"), "演示不应提供「跳过」：%s" % text)
+        _expect(not text.contains("加速"), "演示不应提供「加速」：%s" % text)
+
+
+## 构造战斗阶段的场景，返回实例（调用方负责释放）。
+func _combat_instance(deadline: String) -> Node:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Combat"
+    GameStore.turn = 3
+    GameStore.deadline = deadline
+    var view := FixtureScript.game_view()
+    view["phase"] = "Combat"
+    view["opponentPlayerId"] = "p2"
+    GameStore.view = view
+    GameStore.last_combat = FixtureScript.combat_result()
+    return await _check_scene("res://scenes/game.tscn", false)
+
+
+func _stats_text(panel: Control) -> String:
+    var stats = panel.find_child("Stats", true, false)
+    return "" if stats == null else str(stats.text)
+
+
+## 逐动作播放：每 320ms 应用一条动作，数值只取服务端下发值。
+func _check_combat_playback() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    var own_row = instance.find_child("CombatOwnRow", true, false)
+    var opponent_row = instance.find_child("CombatOpponentRow", true, false)
+    if own_row == null or opponent_row == null:
+        _expect(false, "战斗视图缺少随从行")
+        instance.queue_free()
+        return
+    instance._process(0.32)
+    _expect(_stats_text(own_row.get_child(0)) == "7 / 6", "第一条攻击后我方首卡应为 7/6，实际 %s" % _stats_text(own_row.get_child(0)))
+    _expect(_stats_text(opponent_row.get_child(0)) == "6 / 2", "第一条攻击后对手首卡应为 6/2，实际 %s" % _stats_text(opponent_row.get_child(0)))
+    instance._process(0.32)
+    _expect(opponent_row.get_child_count() == 2, "阵亡随从仍占位")
+    _expect(opponent_row.get_child(0).self_modulate.a < 1.0, "阵亡随从应变暗")
+    instance._process(0.32)
+    _expect(own_row.get_child_count() == 4, "召唤后我方行应为 4 张，实际 %d" % own_row.get_child_count())
+    if own_row.get_child_count() == 4:
+        _expect(str(own_row.get_child(1).get_meta("minion_id", "")) == "mi_9", "召唤随从应插到下标 1")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.last_combat = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+## 播完动作并经过 TAIL_MS 后才显示胜负横幅。
+func _check_combat_banner_after_tail() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    var banner = instance.find_child("CombatBanner", true, false)
+    for _step in range(4):
+        instance._process(0.32)
+    _expect(banner != null and not banner.visible, "动作刚播完且未到横幅停留时不应显示横幅")
+    instance._process(2.0)
+    _expect(banner != null and banner.visible, "横幅停留结束后应显示横幅")
+    _expect(banner != null and str(banner.text).contains("胜利"), "横幅应显示胜负：%s" % ("" if banner == null else str(banner.text)))
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.last_combat = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+## 演示中重连：按 phaseDeadline 反推进度，已播动作不重播。
+func _check_combat_resume_from_deadline() -> void:
+    # 总时长 = 3 × 320 + 2000 = 2960ms；`phaseDeadline` 只剩 2 秒时，1 秒
+    # 前就该播完 3 条动作并留在横幅停留里——续播点直接落到 960ms，不从头重播。
+    var deadline := Time.get_datetime_string_from_unix_time(
+        int(Time.get_unix_time_from_system()) + 2, true
+    ) + "Z"
+    var instance := await _combat_instance(deadline)
+    if instance == null:
+        return
+    var own_row = instance.find_child("CombatOwnRow", true, false)
+    var opponent_row = instance.find_child("CombatOpponentRow", true, false)
+    var banner = instance.find_child("CombatBanner", true, false)
+    _expect(
+        own_row != null and own_row.get_child_count() == 4,
+        "续播应按已过时间落地召唤：实际 %d 张" % (0 if own_row == null else own_row.get_child_count())
+    )
+    _expect(opponent_row != null and opponent_row.get_child_count() == 2, "对手阵亡随从仍占位")
+    if opponent_row != null and opponent_row.get_child_count() > 0:
+        _expect(opponent_row.get_child(0).self_modulate.a < 1.0, "续播点前的阵亡动作应立即落地")
+    _expect(banner != null and not banner.visible, "横幅停留未走完时不应显示横幅")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.last_combat = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+    GameStore.deadline = ""
 
 
 ## 拖拽出牌：随从牌落在两张卡之间，落点下标取指针左半边的那张卡。

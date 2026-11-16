@@ -64,6 +64,9 @@ var _combat_opponent_row: HFlowContainer
 var _combat_banner: Label
 var _combat_own_row: HFlowContainer
 var _combat_self_strip: HBoxContainer
+## 演示播放器（纯数据）与当前演示所属回合。
+var _combat := CombatPlayback.new()
+var _combat_turn := -1
 
 # 右栏。
 var _self_hero_box: VBoxContainer
@@ -216,6 +219,7 @@ func _build_center() -> Control:
     center.add_theme_constant_override("separation", UITheme.space("space-md"))
     center.add_child(_build_recruit_panel())
     center.add_child(_build_combat_panel())
+    center.add_child(_build_hand_panel())
     return center
 
 
@@ -297,8 +301,11 @@ func _build_recruit_panel() -> Control:
     bottom_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
     board_box.add_child(bottom_spacer)
     _recruit_panel.add_child(board_panel)
+    return _recruit_panel
 
-    # 手牌：横向滚动。
+
+## 手牌面板：招募与演示共用，演示期间只读。
+func _build_hand_panel() -> Control:
     var hand_panel := UI.card_panel("surface")
     hand_panel.name = "HandPanel"
     var hand_box := VBoxContainer.new()
@@ -312,8 +319,7 @@ func _build_recruit_panel() -> Control:
     hand_box.add_child(hand_scroll)
     _hand_row = _flow_row("HandRow")
     hand_scroll.add_child(_hand_row)
-    _recruit_panel.add_child(hand_panel)
-    return _recruit_panel
+    return hand_panel
 
 
 func _build_combat_panel() -> Control:
@@ -416,6 +422,10 @@ func _process(delta: float) -> void:
     if _elapsed >= 0.25:
         _elapsed = 0.0
         _update_timer()
+    if _combat_playing():
+        _combat.advance(delta * 1000.0)
+        _render_combat_rows()
+        _refresh_combat_banner()
 
 
 func _refresh() -> void:
@@ -442,7 +452,9 @@ func _refresh() -> void:
     if in_combat:
         _refresh_combat(view)
     else:
+        _combat_turn = -1
         _refresh_recruit(self_state, recruited, phase)
+    _refresh_hand(self_state, phase)
 
     _refresh_side(self_state)
     _refresh_log()
@@ -541,7 +553,6 @@ func _seat_row(player: Dictionary) -> PanelContainer:
 func _refresh_recruit(self_state: Dictionary, recruited: bool, phase: String) -> void:
     _refresh_board(self_state, recruited, phase)
     _refresh_shop(self_state)
-    _refresh_hand(self_state, phase)
     _refresh_actions(self_state, recruited, phase)
 
 
@@ -606,6 +617,7 @@ func _minion_card(
         int(minion.get("attack", 0)),
         int(minion.get("health", 0)),
     ], UITheme.font_size("font-title"), false)
+    stats.name = "Stats"
     box.add_child(stats)
 
     var keywords := _join_cn(minion.get("keywords", []))
@@ -814,28 +826,96 @@ func _set_combat_mode(in_combat: bool) -> void:
 func _refresh_combat(view: Dictionary) -> void:
     _fill_combat_strip(_combat_opponent_strip, _opponent_of(view), "对手")
     _fill_combat_strip(_combat_self_strip, _self_player(view), "我")
-    UI.clear(_combat_opponent_row)
-    UI.clear(_combat_own_row)
-
     var combat: Dictionary = GameStore.last_combat
     if combat.is_empty():
-        _combat_banner.text = "等待战斗结果…"
-        _combat_banner.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-        _combat_opponent_row.add_child(UI.empty_hint("—"))
-        _combat_own_row.add_child(UI.empty_hint("—"))
+        _combat_banner.visible = false
+        UI.clear(_combat_opponent_row)
+        UI.clear(_combat_own_row)
+        _combat_opponent_row.add_child(UI.empty_hint("等待战斗动作…"))
         return
+    if _combat_turn != GameStore.turn:
+        _start_combat(combat)
+    _render_combat_rows()
+    _refresh_combat_banner()
 
-    var opponent_board: Array = combat.get("opponentBoard", [])
+
+## 装载本场演示：战前阵容与动作序列，并按 `phaseDeadline` 反推续播进度。
+func _start_combat(combat: Dictionary) -> void:
+    _combat.start(
+        combat.get("actions", []),
+        combat.get("ownBoard", []),
+        combat.get("opponentBoard", [])
+    )
+    var deadline := _unix_from_rfc3339(GameStore.deadline)
+    if GameStore.phase == Protocol.PHASE_COMBAT and deadline > 0.0:
+        var remaining_ms := maxf(deadline - Time.get_unix_time_from_system(), 0.0) * 1000.0
+        _combat.seek(maxf(float(_combat.total_ms()) - remaining_ms, 0.0))
+    _combat_turn = GameStore.turn
+
+
+## 演示进行中：阶段为战斗、播放器属于本回合、有战报且尚未播完。
+func _combat_playing() -> bool:
+    return (
+        GameStore.phase == Protocol.PHASE_COMBAT
+        and _combat_turn == GameStore.turn
+        and not GameStore.last_combat.is_empty()
+        and not _combat.is_finished()
+    )
+
+
+## 按播放器当前状态重画两行：已存在的节点只改数值与明暗，召唤的随从插入新卡。
+func _render_combat_rows() -> void:
+    _reconcile_row(_combat_opponent_row, _combat.opponent)
+    _reconcile_row(_combat_own_row, _combat.own)
+
+
+## 把一行对齐到 `minions`：按下标复用同实例的卡片，多余的同步释放。
+##
+## 复用靠卡片上的 `minion_id` 元数据：不依赖外部映射表，重画多少次都幂等。
+func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
+    var wanted: Array = []
+    for minion in minions:
+        wanted.append(str(minion.get("minionId", "")))
+
+    # 先摘掉不再需要的卡片（服务端撤回的随从；本版本不会出现，保留兜底）。
+    var existing: Dictionary = {}
+    for child in row.get_children():
+        if not (child is Control) or not child.has_meta("minion_id"):
+            continue
+        var minion_id := str(child.get_meta("minion_id"))
+        if wanted.has(minion_id) and not existing.has(minion_id):
+            existing[minion_id] = child
+        else:
+            row.remove_child(child)
+            child.queue_free()
+
+    for position in minions.size():
+        var minion: Dictionary = minions[position]
+        var minion_id := str(minion.get("minionId", ""))
+        var panel: Control = existing.get(minion_id)
+        if panel == null:
+            panel = _minion_card(minion, {}, false, 0, 1, true)
+            panel.set_meta("minion_id", minion_id)
+            row.add_child(panel)
+        var stats = panel.find_child("Stats", true, false)
+        if stats != null:
+            stats.text = "%d / %d" % [int(minion.get("attack", 0)), int(minion.get("health", 0))]
+        var alive := bool(minion.get("alive", true))
+        panel.self_modulate = Color(1, 1, 1, 1) if alive else Color(1, 1, 1, 0.45)
+        row.move_child(panel, position)
+
+
+## 横幅：动作播完并经过 TAIL_MS 后才出现。
+func _refresh_combat_banner() -> void:
+    _combat_banner.visible = _combat.banner_visible()
+    if not _combat_banner.visible:
+        return
+    _set_combat_banner(GameStore.last_combat)
+
+
+func _set_combat_banner(combat: Dictionary) -> void:
     var own_board: Array = combat.get("ownBoard", [])
-    if opponent_board.is_empty():
-        _combat_opponent_row.add_child(UI.empty_hint("对手没有随从"))
-    for minion in opponent_board:
-        _combat_opponent_row.add_child(_minion_card(minion, {}, false, 0, opponent_board.size(), true))
-    if own_board.is_empty():
-        _combat_own_row.add_child(UI.empty_hint("我方没有随从"))
-    for minion in own_board:
-        _combat_own_row.add_child(_minion_card(minion, {}, false, 0, own_board.size(), true))
-
+    var opponent_board: Array = combat.get("opponentBoard", [])
     var winner = combat.get("winnerId")
     var result := "平局"
     var variant := "accent"
@@ -851,8 +931,8 @@ func _refresh_combat(view: Dictionary) -> void:
         result,
         mirror,
         int(combat.get("damage", 0)),
-        own_board.size(),
-        opponent_board.size(),
+        _combat.own.size(),
+        _combat.opponent.size(),
     ]
     _combat_banner.add_theme_color_override("font_color", UITheme.color("color-" + variant) if variant != "accent" else UITheme.color("color-accent"))
 

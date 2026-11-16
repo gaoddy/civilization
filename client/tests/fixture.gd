@@ -160,7 +160,7 @@ static func game_view() -> Dictionary:
     return view
 
 
-## 战斗结果夹具：双方英雄与随从、伤害与胜者，字段与 CombatResult 一致。
+## 战斗结果夹具：双方英雄与随从、动作序列、伤害与胜者，字段与 CombatResult 一致。
 static func combat_result() -> Dictionary:
     return {
         "ownBoard": [
@@ -172,7 +172,35 @@ static func combat_result() -> Dictionary:
             _minion(0, "mo_0", "aristotle", 6, 8, ["嘲讽"]),
             _minion(1, "mo_1", "bisheng", 5, 5, []),
         ],
-        "actions": [],
+        "actions": [
+            {
+                "kind": "attack",
+                "sourceMinionId": "mi_0",
+                "targetMinionId": "mo_0",
+                "damage": 6,
+                "source": {"minionId": "mi_0", "attack": 7, "health": 6, "alive": true},
+                "target": {"minionId": "mo_0", "attack": 6, "health": 2, "alive": true},
+            },
+            {
+                "kind": "death",
+                "target": {"minionId": "mo_0", "attack": 6, "health": 0, "alive": false},
+            },
+            {
+                "kind": "summon",
+                "summon": {
+                    "side": "own",
+                    "position": 1,
+                    "minion": {
+                        "minionId": "mi_9",
+                        "cardId": "seedling",
+                        "golden": false,
+                        "attack": 1,
+                        "health": 1,
+                        "keywords": [],
+                    },
+                },
+            },
+        ],
         "damage": 5,
         "winnerId": "p0",
         "mirror": false,
