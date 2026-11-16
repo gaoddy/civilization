@@ -283,8 +283,13 @@ pub fn intent_to_json(intent: &Intent) -> Value {
         Intent::SellMinion { minion } => json!({ "kind": "sell_minion", "minion": minion }),
         Intent::RerollShop => json!({ "kind": "reroll_shop" }),
         Intent::UpgradeEra => json!({ "kind": "upgrade_era" }),
-        Intent::PlayCard { hand_index, target } => json!({
-            "kind": "play_card", "hand_index": hand_index, "target": target,
+        Intent::PlayCard {
+            hand_index,
+            position,
+            target,
+        } => json!({
+            "kind": "play_card", "hand_index": hand_index,
+            "position": position, "target": target,
         }),
         Intent::RearrangeBoard { from, to } => json!({
             "kind": "rearrange_board", "from": from, "to": to,
@@ -437,6 +442,10 @@ fn intent_from_json(value: &Value) -> Result<Intent, String> {
         "upgrade_era" => Intent::UpgradeEra,
         "play_card" => Intent::PlayCard {
             hand_index: field("hand_index")?,
+            position: value
+                .get("position")
+                .and_then(Value::as_u64)
+                .and_then(|position| u8::try_from(position).ok()),
             target,
         },
         "rearrange_board" => Intent::RearrangeBoard {

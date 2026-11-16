@@ -49,9 +49,11 @@ pub(crate) fn apply(
         Intent::SellMinion { minion } => sell(state, seat, minion),
         Intent::RerollShop => reroll(engine, state, seat),
         Intent::UpgradeEra => upgrade(engine, state, seat),
-        Intent::PlayCard { hand_index, target } => {
-            play_card(engine, state, seat, hand_index, target)
-        }
+        Intent::PlayCard {
+            hand_index,
+            position,
+            target,
+        } => play_card(engine, state, seat, hand_index, position, target),
         Intent::RearrangeBoard { from, to } => rearrange(state, seat, from, to),
         Intent::FreezeShop { slot } => freeze(state, seat, slot),
         Intent::UseHeroPower { skill_id, target } => {
@@ -445,11 +447,37 @@ pub(crate) fn check_play_card(
     Ok(())
 }
 
+/// 落点转插入下标：`None` 取棋盘末尾；`Some(pos)` 必须 `pos <= board.len()`。
+///
+/// 越界返回 `InvalidChoice`。位置校验不放进 [`check_play_card`]：视图的
+/// `playable` 与落点无关（视图预检时没有落点）。
+pub(crate) fn check_play_position(
+    state: &GameState,
+    seat: Seat,
+    position: Option<u8>,
+) -> Result<usize, Reject> {
+    let len = player(state, seat)?.board.len();
+    match position {
+        None => Ok(len),
+        Some(pos) => {
+            let index = usize::from(pos);
+            if index > len {
+                return Err(Reject::new(
+                    RejectCode::InvalidChoice,
+                    format!("落点 {pos} 超出当前随从数 {len}"),
+                ));
+            }
+            Ok(index)
+        }
+    }
+}
+
 fn play_card(
     engine: &mut Engine,
     state: &mut GameState,
     seat: Seat,
     hand_index: u8,
+    position: Option<u8>,
     target: Option<InstanceId>,
 ) -> Result<Outcome, Reject> {
     check_play_card(engine, state, seat, hand_index)?;
@@ -497,6 +525,7 @@ fn play_card(
             Ok(Outcome::with(events))
         }
         CardType::Minion => {
+            let insert_index = check_play_position(state, seat, position)?;
             let instance_id = state.next_instance_id;
             let ctx = EffectCtx {
                 seat,
@@ -521,12 +550,15 @@ fn play_card(
                 .get_mut(usize::from(seat))
                 .expect("check_play_card 已保证座位存在");
             player.hand.remove(index);
-            player.board.push(new_minion(
-                &engine.catalog,
-                instance_id,
-                &hand_card.card_id,
-                hand_card.golden,
-            ));
+            player.board.insert(
+                insert_index,
+                new_minion(
+                    &engine.catalog,
+                    instance_id,
+                    &hand_card.card_id,
+                    hand_card.golden,
+                ),
+            );
             state.next_instance_id = following_instance_id;
 
             // 先登记进化、再结算战吼（关键词机制 §2.2）。登记了进化的来源等到

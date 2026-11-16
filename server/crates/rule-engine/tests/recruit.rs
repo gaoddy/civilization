@@ -385,6 +385,7 @@ fn play_minion_from_hand_moves_to_board() {
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: None,
             },
         )
@@ -413,6 +414,7 @@ fn play_effect_card_leaves_hand_without_events() {
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: None,
             },
         )
@@ -433,6 +435,7 @@ fn play_card_out_of_range_rejects() {
         0,
         Intent::PlayCard {
             hand_index: 3,
+            position: None,
             target: None,
         },
     );
@@ -457,6 +460,7 @@ fn play_minion_with_full_board_rejects() {
         0,
         Intent::PlayCard {
             hand_index: 0,
+            position: None,
             target: None,
         },
     );
@@ -1076,6 +1080,7 @@ fn play_battlecry_without_target_rejects_and_keeps_state() {
         0,
         Intent::PlayCard {
             hand_index: 0,
+            position: None,
             target: None,
         },
     );
@@ -1103,6 +1108,7 @@ fn play_battlecry_with_unknown_target_rejects() {
         0,
         Intent::PlayCard {
             hand_index: 0,
+            position: None,
             target: Some(9_999),
         },
     );
@@ -1126,6 +1132,7 @@ fn play_battlecry_with_target_applies_effect() {
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: Some(9_000),
             },
         )
@@ -1157,6 +1164,7 @@ fn play_battlecry_with_empty_pool_is_allowed() {
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: None,
             },
         )
@@ -1180,6 +1188,7 @@ fn play_effect_card_without_target_rejects_and_keeps_hand() {
         0,
         Intent::PlayCard {
             hand_index: 0,
+            position: None,
             target: None,
         },
     );
@@ -1202,6 +1211,7 @@ fn play_effect_card_with_empty_pool_is_allowed_and_whiffs() {
             0,
             Intent::PlayCard {
                 hand_index: 0,
+                position: None,
                 target: None,
             },
         )
@@ -1250,4 +1260,135 @@ fn hero_power_with_empty_pool_rejects() {
 
     assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
     assert_eq!(before, state_hash(&state), "拒绝后金币与技能次数不变");
+}
+
+#[test]
+fn play_minion_at_len_appends() {
+    let (mut engine, mut state) = setup(48);
+    let card_id = minion_id(1);
+    state.players[0].board = vec![
+        dummy(&engine.catalog, 1, "a"),
+        dummy(&engine.catalog, 2, "b"),
+    ];
+    state.players[0].hand.push(HandCard {
+        card_id: card_id.clone(),
+        golden: false,
+    });
+    let new_instance = state.next_instance_id;
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: Some(2),
+                target: None,
+            },
+        )
+        .expect("落点等于随从数应追加到末尾");
+
+    let order: Vec<InstanceId> = state.players[0]
+        .board
+        .iter()
+        .map(|m| m.instance_id)
+        .collect();
+    assert_eq!(order, vec![1, 2, new_instance]);
+    assert_eq!(state.players[0].board[2].card_id, card_id);
+}
+
+#[test]
+fn play_minion_at_position_inserts() {
+    let (mut engine, mut state) = setup(49);
+    let card_id = minion_id(1);
+    state.players[0].board = vec![
+        dummy(&engine.catalog, 1, "a"),
+        dummy(&engine.catalog, 2, "b"),
+    ];
+    state.players[0].hand.push(HandCard {
+        card_id,
+        golden: false,
+    });
+    let new_instance = state.next_instance_id;
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: Some(1),
+                target: None,
+            },
+        )
+        .expect("落点 1 应插入中间");
+
+    let order: Vec<InstanceId> = state.players[0]
+        .board
+        .iter()
+        .map(|m| m.instance_id)
+        .collect();
+    assert_eq!(order, vec![1, new_instance, 2], "原下标及其右侧依次右移");
+}
+
+#[test]
+fn play_minion_position_beyond_len_rejects() {
+    let (mut engine, mut state) = setup(50);
+    state.players[0].board = vec![
+        dummy(&engine.catalog, 1, "a"),
+        dummy(&engine.catalog, 2, "b"),
+    ];
+    state.players[0].hand.push(HandCard {
+        card_id: minion_id(1),
+        golden: false,
+    });
+    let before = state_hash(&state);
+
+    let result = engine.apply(
+        &mut state,
+        0,
+        Intent::PlayCard {
+            hand_index: 0,
+            position: Some(5),
+            target: None,
+        },
+    );
+
+    let reject = result.unwrap_err();
+    assert_eq!(reject.code, RejectCode::InvalidChoice);
+    assert_eq!(reject.message, "落点 5 超出当前随从数 2");
+    assert_eq!(before, state_hash(&state));
+}
+
+#[test]
+fn play_minion_without_position_appends() {
+    let (mut engine, mut state) = setup(51);
+    state.players[0].board = vec![
+        dummy(&engine.catalog, 1, "a"),
+        dummy(&engine.catalog, 2, "b"),
+    ];
+    state.players[0].hand.push(HandCard {
+        card_id: minion_id(1),
+        golden: false,
+    });
+    let new_instance = state.next_instance_id;
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("缺省落点应追加");
+
+    let order: Vec<InstanceId> = state.players[0]
+        .board
+        .iter()
+        .map(|m| m.instance_id)
+        .collect();
+    assert_eq!(order, vec![1, 2, new_instance]);
 }

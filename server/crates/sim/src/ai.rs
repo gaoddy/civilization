@@ -310,6 +310,7 @@ fn choose_fill_board(state: &GameState, player: &PlayerState, catalog: &Catalog)
     if player.board.len() < catalog.config.board_slots {
         return u8::try_from(index).ok().map(|hand_index| Intent::PlayCard {
             hand_index,
+            position: None,
             target: None,
         });
     }

@@ -17,9 +17,11 @@ pub enum Intent {
     RerollShop,
     /// 升级时代。
     UpgradeEra,
-    /// 打出手牌；`target` 留给 Task 10 的效果执行。
+    /// 打出手牌；`position` 是随从的插入下标（缺省追加到最右），
+    /// `target` 是效果牌的目标随从。
     PlayCard {
         hand_index: u8,
+        position: Option<u8>,
         target: Option<InstanceId>,
     },
     /// 调整棋盘站位。
