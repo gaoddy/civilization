@@ -15,7 +15,8 @@
         "displayName": "Ada",
         "ready": true,
         "isHost": true,
-        "heroCardId": null
+        "heroCardId": null,
+        "heroCandidates": ["adam-smith", "darwin", "gauss", "lavoisier"]
       }
     ]
   }

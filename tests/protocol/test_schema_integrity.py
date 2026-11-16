@@ -41,7 +41,25 @@ class SchemaIntegrityTest(unittest.TestCase):
                 def_name = target[len(prefix):]
                 self.assertIn(def_name, defs, f"{direction}.{name}")
                 referenced.add(def_name)
-        self.assertEqual(referenced, set(defs), "messages.schema.json 存在未被映射的 $def")
+        # 嵌套载荷类型（如 `CombatMinionState`）只被其他 $def 引用，不映射成消息类型。
+        referenced |= _internally_referenced_defs(defs)
+        self.assertEqual(referenced, set(defs),
+                         "messages.schema.json 存在既未映射也未引用的 $def")
+
+
+def _internally_referenced_defs(node) -> set:
+    """收集 `#/$defs/X` 形式的内部引用。"""
+    found = set()
+    if isinstance(node, dict):
+        ref = node.get("$ref")
+        if isinstance(ref, str) and ref.startswith("#/$defs/"):
+            found.add(ref[len("#/$defs/"):])
+        for value in node.values():
+            found |= _internally_referenced_defs(value)
+    elif isinstance(node, list):
+        for value in node:
+            found |= _internally_referenced_defs(value)
+    return found
 
 
 if __name__ == "__main__":

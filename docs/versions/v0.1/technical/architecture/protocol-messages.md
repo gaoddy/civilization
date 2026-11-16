@@ -159,6 +159,7 @@
 | `players[].ready` | boolean | 是 |  |
 | `players[].isHost` | boolean | 是 |  |
 | `players[].heroCardId` | string | null | 是 |  |
+| `players[].heroCandidates` | array | null | 否 | 本座位可选的英雄卡 id；只在发给本人的 RoomUpdate 中下发 |
 
 ### Snapshot
 

@@ -3831,6 +3831,16 @@ impl ::std::default::Default for RequestSnapshot {
 ///          "displayName": {
 ///            "type": "string"
 ///          },
+///          "heroCandidates": {
+///            "description": "本座位可选的英雄卡 id；只在发给本人的 RoomUpdate 中下发",
+///            "type": [
+///              "array",
+///              "null"
+///            ],
+///            "items": {
+///              "type": "string"
+///            }
+///          },
 ///          "heroCardId": {
 ///            "type": [
 ///              "string",
@@ -3893,6 +3903,16 @@ impl ::std::convert::From<&RoomUpdate> for RoomUpdate {
 ///    "displayName": {
 ///      "type": "string"
 ///    },
+///    "heroCandidates": {
+///      "description": "本座位可选的英雄卡 id；只在发给本人的 RoomUpdate 中下发",
+///      "type": [
+///        "array",
+///        "null"
+///      ],
+///      "items": {
+///        "type": "string"
+///      }
+///    },
 ///    "heroCardId": {
 ///      "type": [
 ///        "string",
@@ -3918,6 +3938,13 @@ impl ::std::convert::From<&RoomUpdate> for RoomUpdate {
 pub struct RoomUpdatePlayersItem {
     #[serde(rename = "displayName")]
     pub display_name: ::std::string::String,
+    ///本座位可选的英雄卡 id；只在发给本人的 RoomUpdate 中下发
+    #[serde(
+        rename = "heroCandidates",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub hero_candidates: ::std::option::Option<::std::vec::Vec<::std::string::String>>,
     #[serde(rename = "heroCardId")]
     pub hero_card_id: ::std::option::Option<::std::string::String>,
     #[serde(rename = "isHost")]
