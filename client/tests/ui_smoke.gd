@@ -23,6 +23,8 @@ func _ready() -> void:
     await _check_drag_rejected_for_target_effect_on_blank()
     await _check_drag_disabled_when_stale_or_expired()
     await _check_drag_cancelled_after_view_rebuild()
+    await _check_target_pending_overlay()
+    await _check_choose_target_sends_intent()
     await _check_recruited_gate()
     await _check_expired_gate()
     await _check_stale_view_gate()
@@ -478,6 +480,87 @@ func _check_drag_cancelled_after_view_rebuild() -> void:
             board_row._drop_data(local, payload)
         await get_tree().process_frame
         _expect(captured.is_empty(), "视图重建后旧拖拽数据不应产生意图，实际 %d 条" % captured.size())
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 目标待选的视图夹具：队首是 target 待选，棋盘两个随从。
+func _target_pending_view() -> Dictionary:
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [
+        FixtureScript.board_minion("mi_1", "baiyi"),
+        FixtureScript.board_minion("mi_2", "airplane"),
+    ]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["pendingChoices"] = [
+        {"kind": "target", "sourceMinionId": "mi_1"},
+    ]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    return view
+
+
+## 目标待选：浮层只列候选随从，没有任何退出路径，且所有招募控件被阻塞。
+func _check_target_pending_overlay() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = _target_pending_view()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var overlay = instance.find_child("ChooserOverlay", true, false)
+    _expect(overlay != null and overlay.visible, "目标待选应弹出选择浮层")
+    if overlay != null:
+        var buttons: Array = []
+        for child in overlay.find_children("*", "Button", true, false):
+            buttons.append(child)
+        _expect(buttons.size() == 2, "浮层内应只有 2 个候选随从按钮，实际 %d" % buttons.size())
+        var texts: Array = []
+        for button in buttons:
+            texts.append(str(button.text))
+            _expect(not str(button.text).contains("取消"), "目标待选不应提供取消：%s" % button.text)
+            _expect(not str(button.text).contains("不指定目标"), "目标待选不应提供跳过：%s" % button.text)
+        _expect(texts.size() == 2 and str(texts[0]).begins_with("★ "), "触发待选的随从应被高亮：%s" % str(texts))
+    for name in ["RerollButton", "UpgradeButton", "FreezeButton", "EndButton", "HeroPowerButton"]:
+        var button = instance.find_child(name, true, false)
+        _expect(button != null and button.disabled, "目标待选期间 %s 应禁用" % name)
+    var hand_card = instance.find_child("HandCard0", true, false)
+    _expect(hand_card != null and not hand_card.drag_allowed, "目标待选期间手牌不应允许拖拽")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 选中候选后只发一条 ChooseTarget。
+func _check_choose_target_sends_intent() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = _target_pending_view()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var overlay = instance.find_child("ChooserOverlay", true, false)
+    var captured: Array = []
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    if overlay != null:
+        # 第二个候选是 mi_2（第一个是触发待选的 mi_1）。
+        var candidates: Array = overlay.find_children("*", "Button", true, false)
+        if candidates.size() >= 2:
+            candidates[1].pressed.emit()
+    await get_tree().process_frame
+    _expect(captured.size() == 1, "选中候选只应发出 1 条意图，实际 %d" % captured.size())
+    if captured.size() == 1:
+        var intent: Dictionary = captured[0]
+        _expect(str(intent.get("kind", "")) == Protocol.INTENT_CHOOSE_TARGET, "应发出 ChooseTarget")
+        _expect(str(intent.get("minionId", "")) == "mi_2", "应带上被选随从 id")
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}

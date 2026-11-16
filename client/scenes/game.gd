@@ -549,7 +549,7 @@ func _refresh_board(self_state: Dictionary, recruited: bool, phase: String) -> v
     UI.clear(_board_row)
     var aff: Dictionary = self_state.get("affordances", {})
     var board: Array = self_state.get("board", [])
-    var can_rearrange := not _view_stale and not _deadline_expired and phase == Protocol.PHASE_RECRUIT and not recruited
+    var can_rearrange := not _view_stale and not _deadline_expired and not _target_pending and phase == Protocol.PHASE_RECRUIT and not recruited
     _board_row.board_full = board.size() >= 7
     _board_hint.text = "随从 %d/7" % board.size()
     for position in board.size():
@@ -629,7 +629,7 @@ func _minion_card(
     actions.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     box.add_child(actions)
     var sell := _compact_button("出售")
-    sell.disabled = _view_stale or _deadline_expired or not bool(minion_aff.get("sellable", false))
+    sell.disabled = _view_stale or _deadline_expired or _target_pending or not bool(minion_aff.get("sellable", false))
     if minion_aff.get("disabledReason") != null:
         sell.tooltip_text = UI.error_text(str(minion_aff.get("disabledReason")))
     sell.pressed.connect(_on_sell.bind(str(minion.get("minionId", ""))))
@@ -760,24 +760,24 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
 func _refresh_actions(self_state: Dictionary, recruited: bool, phase: String) -> void:
     var aff: Dictionary = self_state.get("affordances", {})
     _reroll_button.text = "刷新 %d 金" % int(self_state.get("rerollCost", 0))
-    _reroll_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canReroll", false))
+    _reroll_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canReroll", false))
 
     var upgrade_cost = self_state.get("upgradeCost")
     if upgrade_cost != null:
         _upgrade_button.text = "升时代 %d 金" % int(upgrade_cost)
     else:
         _upgrade_button.text = "时代已满"
-    _upgrade_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canUpgradeEra", false))
+    _upgrade_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canUpgradeEra", false))
     _upgrade_button.tooltip_text = "" if aff.get("upgradeDisabledReason") == null else UI.error_text(str(aff.get("upgradeDisabledReason")))
 
     var power: Dictionary = self_state.get("heroPower", {})
     _hero_power_button.text = "英雄技能（剩 %d）" % int(power.get("usesLeft", 0))
-    _hero_power_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canUseHeroPower", false))
+    _hero_power_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canUseHeroPower", false))
     _hero_power_button.tooltip_text = "" if aff.get("heroPowerDisabledReason") == null else UI.error_text(str(aff.get("heroPowerDisabledReason")))
 
-    _freeze_button.disabled = _view_stale or _deadline_expired or phase != Protocol.PHASE_RECRUIT or recruited
+    _freeze_button.disabled = _view_stale or _deadline_expired or _target_pending or phase != Protocol.PHASE_RECRUIT or recruited
     _end_button.text = "已结束招募" if recruited else "结束招募"
-    _end_button.disabled = _view_stale or _deadline_expired or not bool(aff.get("canEndRecruit", false))
+    _end_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canEndRecruit", false))
 
 
 func _refresh_side(self_state: Dictionary) -> void:
@@ -1168,6 +1168,12 @@ func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
         _target_intent = {}
         _overlay.visible = false
         return
+    var head: Dictionary = choices[0] if not choices.is_empty() else {}
+    if str(head.get("kind", "")) == "target":
+        # 服务端目标待选优先：丢弃英雄技能的客户端目标态，改为选随从结算战吼。
+        _target_intent = {}
+        _build_target_pending_overlay(head, self_state)
+        return
     if not _target_intent.is_empty():
         _build_target_overlay(self_state)
     elif not choices.is_empty():
@@ -1228,6 +1234,28 @@ func _build_choice_overlay(choice: Dictionary) -> void:
     _overlay_frame("待选择", box)
 
 
+## 战吼目标待选：只列我方棋盘随从，没有取消与跳过（必须选一个）。
+func _build_target_pending_overlay(choice: Dictionary, self_state: Dictionary) -> void:
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", UITheme.space("space-md"))
+    box.add_child(UI.label("选择我方一个随从结算战吼", UITheme.font_size("font-body")))
+    var source_id := str(choice.get("sourceMinionId", ""))
+    for minion in self_state.get("board", []):
+        var minion_id := str(minion.get("minionId", ""))
+        var prefix := "★ " if minion_id == source_id else ""
+        var button := UI.styled_button("%s%s  %d/%d" % [
+            prefix,
+            CardDB.display_name(str(minion.get("cardId", ""))),
+            int(minion.get("attack", 0)),
+            int(minion.get("health", 0)),
+        ], "slot", 40)
+        if minion_id == source_id:
+            button.add_theme_color_override("font_color", UITheme.color("color-accent"))
+        button.pressed.connect(_on_choose_target.bind(minion_id))
+        box.add_child(button)
+    _overlay_frame("战吼目标", box)
+
+
 func _build_target_overlay(self_state: Dictionary) -> void:
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", UITheme.space("space-md"))
@@ -1277,6 +1305,12 @@ func _prune_target_requests() -> void:
         var entry: Dictionary = _target_requests[intent_id]
         if int(entry.get("turn", 0)) != GameStore.turn:
             _target_requests.erase(intent_id)
+
+
+func _on_choose_target(minion_id: String) -> void:
+    if _deadline_expired or _view_stale:
+        return
+    _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "minionId": minion_id})
 
 
 func _on_buy(index: int) -> void:
