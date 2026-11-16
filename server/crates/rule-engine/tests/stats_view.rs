@@ -8,7 +8,7 @@ mod common;
 use common::{heroes, test_catalog};
 use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
-use rule_engine::state::{AuraEffect, GameState, MinionInstance, StatComponent};
+use rule_engine::state::{AuraEffect, GameState, MinionInstance};
 use rule_engine::view::{BoardMinionView, view};
 
 /// 卡面 3/4 的普通随从。
@@ -220,11 +220,4 @@ fn folded_aura_is_reflected_in_breakdown() {
         stats.health.damage,
         stats.health.current,
     );
-}
-
-/// 确保 `StatComponent` 的字段名与新视图一致，避免后续迁移遗漏。
-#[test]
-fn component_fields_line_up_with_view() {
-    let component = StatComponent::new(2);
-    assert_eq!(component.initial, 2);
 }

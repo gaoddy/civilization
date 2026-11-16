@@ -267,3 +267,36 @@ fn does_not_retry_without_board_or_for_targetless_intent() {
         "不需要目标的意图不重发"
     );
 }
+
+#[test]
+fn does_not_retry_an_intent_that_already_targets() {
+    // 服务端可按过滤器拒绝补选的目标（例如要求的种族与首个随从不符）。
+    // 补选后的意图再被拒时必须放弃，否则会「补选→拒绝→再补选」无限空转。
+    let view = with_board(
+        view(10, json!([]), json!([]), json!([]), json!([]), true),
+        "minion-3",
+    );
+
+    assert!(
+        retry_with_target(
+            &view,
+            &Intent::PlayCard {
+                hand_index: 0,
+                target_minion_id: Some("minion-3".to_string()),
+            }
+        )
+        .is_none(),
+        "已带目标的打牌意图再被拒时不得重发"
+    );
+    assert!(
+        retry_with_target(
+            &view,
+            &Intent::UseHeroPower {
+                skill_id: "light-speed-strike".to_string(),
+                target_minion_id: Some("minion-3".to_string()),
+            }
+        )
+        .is_none(),
+        "已带目标的技能意图再被拒时不得重发"
+    );
+}

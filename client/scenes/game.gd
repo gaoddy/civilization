@@ -975,6 +975,11 @@ func _update_detail_hover(point: Vector2) -> void:
 func _show_detail(minion: Dictionary, anchor: Control) -> void:
     if _detail_panel == null or anchor == null or not is_instance_valid(anchor):
         return
+    # 同一张卡已在展示：只校正位置，避免每次按下/移入都重建整块面板。
+    # `_refresh` 会先 `_hide_detail()`，因此数据更新仍会触发重建。
+    if anchor == _hover_card and _detail_panel.visible:
+        _place_detail(anchor.get_global_rect())
+        return
     if not is_instance_valid(_hover_card) or _hover_card != anchor:
         _hover_card = anchor
     UI.clear(_detail_panel)

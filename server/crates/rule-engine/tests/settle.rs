@@ -532,7 +532,9 @@ fn mirror_ghost_falls_back_to_current_board() {
 
 #[test]
 fn mirror_ghost_keeps_growth_breed_and_contagion() {
-    let catalog = test_catalog();
+    // 用显式定义的卡，避免缺卡回落 0/0 让「initial + growth」恰好成立。
+    let mut catalog = test_catalog();
+    add_minion_card(&mut catalog, "weak", 1, 1, 1);
     let mut source = minion(&catalog, 1, "weak");
     source.stats.attack.add_growth(2);
     source.stats.health.add_growth(2);
@@ -559,7 +561,7 @@ fn mirror_ghost_keeps_growth_breed_and_contagion() {
     assert_eq!((ghost.stats.attack.turn, ghost.stats.health.turn), (0, 0));
     assert_eq!(
         (ghost.stats.attack.current, ghost.stats.health.current),
-        (2, 5),
+        (3, 6),
         "幽灵 current 按 initial + growth 重算"
     );
     assert!(ghost.granted.is_empty());

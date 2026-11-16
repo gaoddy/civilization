@@ -73,6 +73,30 @@ fn apply_damage_can_go_negative() {
 }
 
 #[test]
+fn apply_damage_ignores_negative_amount() {
+    // 负伤害不是治疗：只允许经 `revive_to` 调整当前值。
+    let mut stat = StatComponent::new(5);
+    stat.apply_damage(-3);
+    assert_eq!(stat.current, 5);
+    assert_eq!(stat.layers(), 5);
+    assert_eq!(stat.damage(), 0);
+}
+
+#[test]
+fn set_aura_decrease_lowers_current() {
+    // 光环按差值更新：光环变小（或消失）时当前值同步回落。
+    let mut stat = StatComponent::new(2);
+    stat.set_aura(4);
+    stat.set_aura(1);
+    assert_eq!(stat.aura, 1);
+    assert_eq!(stat.current, 3);
+    assert_eq!(stat.damage(), 0);
+    stat.set_aura(0);
+    assert_eq!(stat.current, 2);
+    assert_eq!(stat.damage(), 0);
+}
+
+#[test]
 fn revive_to_may_exceed_layers() {
     let mut stat = StatComponent::new(4);
     stat.add_turn(-6);
