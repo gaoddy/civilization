@@ -62,6 +62,16 @@ class ClientBoundaryTest(unittest.TestCase):
         self.assertNotIn("pressed.connect", source)
         self.assertIn("_get_drag_data", source)
 
+    def test_headless_driver_consumes_target_pending(self):
+        """无头驱动必须先按队首待选类型分派：目标待选发 ChooseTarget，不能一律当发现。"""
+        source = (CLIENT / "tests" / "headless_game.gd").read_text(encoding="utf-8")
+        self.assertIn('str(choices[0].get("kind", "")) == "target"', source)
+        self.assertIn("Protocol.INTENT_CHOOSE_TARGET", source)
+        act = source.split("func _act(", 1)[1].split("\nfunc ", 1)[0]
+        target_branch = act.index("_choose_target")
+        discover_branch = act.index("Protocol.INTENT_CHOOSE_DISCOVER")
+        self.assertLess(target_branch, discover_branch, "目标待选分支必须先于发现分支")
+
 
 if __name__ == "__main__":
     unittest.main()

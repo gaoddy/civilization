@@ -4,8 +4,8 @@ use std::collections::BTreeSet;
 
 use common::test_catalog;
 use rule_engine::combat::{
-    CombatAction, CombatLog, CombatSetup, effective_attack, effective_attack_with,
-    effective_health, effective_health_with, keywords, simulate, simulate_with,
+    CombatAction, CombatLog, effective_attack, effective_attack_with, effective_health,
+    effective_health_with, keywords, simulate, simulate_with,
 };
 use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
 use rule_engine::effects::Duration;

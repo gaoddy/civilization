@@ -6,7 +6,7 @@
 use crate::events::GameEvent;
 use crate::state::InstanceId;
 
-/// 招募阶段玩家可以提交的九种意图。
+/// 招募阶段玩家可以提交的十一种意图。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Intent {
     /// 购买商店槽位；买到的牌进入手牌，不需要目标。

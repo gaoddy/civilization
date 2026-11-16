@@ -735,21 +735,20 @@ impl GameTask {
         };
         let mut updates = vec![self.snapshot_update(seat)];
 
-        if self.state.phase == Phase::Combat {
-            if let Some(report) = self
+        if self.state.phase == Phase::Combat
+            && let Some(report) = self
                 .combat_reports
                 .as_ref()
                 .and_then(|reports| reports.get(&seat))
-            {
-                updates.push(SeatUpdate {
-                    player_id: player_id.to_string(),
-                    kind: UpdateKind::CombatResult(Box::new(combat_result(
-                        &self.engine.catalog,
-                        report,
-                        &self.seats,
-                    ))),
-                });
-            }
+        {
+            updates.push(SeatUpdate {
+                player_id: player_id.to_string(),
+                kind: UpdateKind::CombatResult(Box::new(combat_result(
+                    &self.engine.catalog,
+                    report,
+                    &self.seats,
+                ))),
+            });
         }
 
         updates
