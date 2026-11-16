@@ -86,6 +86,9 @@ func _build_skill_layer() -> void:
 
 
 func _refresh() -> void:
+    # 重连或晚到的 RoomUpdate：已确认时用服务端记下的英雄恢复选中态，再重绘。
+    if _selected_hero == "" and _is_confirmed():
+        _selected_hero = GameStore.my_hero_id()
     _render_others()
     _render_candidates()
     _sync_state()
@@ -219,9 +222,6 @@ func _is_confirmed() -> bool:
 
 func _sync_state() -> void:
     var confirmed := _is_confirmed()
-    if confirmed and _selected_hero == "":
-        _selected_hero = GameStore.my_hero_id()
-
     var candidates := GameStore.my_hero_candidates()
     var connected := Net.is_open()
     _confirm.disabled = _selected_hero == "" or confirmed or not connected
