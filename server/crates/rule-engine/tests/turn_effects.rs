@@ -726,11 +726,17 @@ fn contagion_persists_across_combat() {
     );
     assert_eq!(state.players[1].board[0].stats.attack.growth, 0);
     assert_eq!(state.players[1].board[0].stats.health.growth, 0);
-    assert_eq!(
-        state.players[1].board[0].stats.attack.turn, 0,
-        "光环折叠产生的临时修正不写回"
-    );
-    assert_eq!(state.players[0].board[0].stats.attack.turn, 0);
+    // 战斗内光环折叠与伤害产生的临时层都不写回持久随从。
+    let defender = board_minion(&state, 1, 0);
+    assert_eq!(defender.stats.attack.turn, 0);
+    assert_eq!(defender.stats.health.turn, 0);
+    assert_eq!(defender.stats.attack.aura, 0);
+    assert_eq!(defender.stats.health.aura, 0);
+    let attacker = board_minion(&state, 0, 0);
+    assert_eq!(attacker.stats.attack.turn, 0);
+    assert_eq!(attacker.stats.health.turn, 0);
+    assert_eq!(attacker.stats.attack.aura, 0);
+    assert_eq!(attacker.stats.health.aura, 0);
 }
 
 #[test]
