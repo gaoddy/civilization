@@ -1009,7 +1009,7 @@ impl RoomTask {
             match rooms.start_heroes(&self.room_id, &host) {
                 Ok(heroes) => rooms
                     .room(&self.room_id)
-                    .map(|room| (heroes, room.players())),
+                    .map(|room| (heroes, room.players(), room.playstyles)),
                 Err(error) => {
                     let code = error.code().to_string();
                     let message = error.to_string();
@@ -1019,13 +1019,14 @@ impl RoomTask {
                 }
             }
         };
-        let Some((heroes, players)) = prepared else {
+        let Some((heroes, players, playstyles)) = prepared else {
             return;
         };
 
         let mut game = match GameTask::new(
             self.state.catalog.clone(),
             self.seed,
+            playstyles,
             heroes,
             players,
             self.state.clock.clone(),

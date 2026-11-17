@@ -1,6 +1,6 @@
 mod common;
 
-use common::test_catalog;
+use common::{test_catalog, test_playstyles};
 use rule_engine::engine::Engine;
 use rule_engine::state::{MinionInstance, MinionStats, Phase, StatComponent};
 
@@ -171,7 +171,7 @@ fn growth_layers_track_attack_and_health() {
 #[test]
 fn contagion_writes_negative_health_permanent() {
     let catalog = test_catalog();
-    let (mut engine, mut state) = Engine::new(catalog, [7; 32]);
+    let (mut engine, mut state) = Engine::new(catalog, [7; 32], test_playstyles());
     state.phase = Phase::Recruit;
     state.turn = 1;
     for player in &mut state.players {

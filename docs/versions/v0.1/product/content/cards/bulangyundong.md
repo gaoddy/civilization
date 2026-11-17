@@ -4,7 +4,8 @@ name: 布朗运动
 card_type: effect
 level: 2
 era: industrial
-tribe: general
+playstyle: neutral
+taxon: phenomenon
 cost: 1
 match_text: 战斗开始时，对敌方最左侧随从造成 2 点伤害
 skills: [combatstart-random-enemy-damage-2]
@@ -21,7 +22,9 @@ skills: [combatstart-random-enemy-damage-2]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 工业 |
-| 流派 | 通用 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | combatstart-random-enemy-damage-2 |
 | 费用 | 1 |
 | 确定性替换 | 战斗开始时，对敌方最左侧随从造成 2 点伤害 |

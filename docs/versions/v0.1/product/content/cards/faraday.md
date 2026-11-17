@@ -2,7 +2,9 @@
 id: faraday
 card_type: minion
 name: 法拉第
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:reptile, play:machine]
 subtype: physics
 level: 5
 era: industrial
@@ -22,7 +24,9 @@ is_hero: true
 | id | faraday |
 | 名称 | 法拉第 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：爬行纲、机械 |
 | 子类 | 物理 |
 | 星级 | 5 |
 | 时代 | 工业 |

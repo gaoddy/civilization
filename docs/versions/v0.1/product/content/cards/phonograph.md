@@ -2,7 +2,9 @@
 id: phonograph
 card_type: minion
 name: 留声机
-tribe: machine
+playstyle: neutral
+taxon: information-computing
+specialty: [play:machine]
 subtype: appliance
 level: 3
 era: modern
@@ -21,7 +23,9 @@ is_scholar: false
 | id | phonograph |
 | 名称 | 留声机 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 信息与计算 |
+| 关联分类 | 关联：机械 |
 | 子类 | 家电 |
 | 星级 | 3 |
 | 时代 | 现代 |

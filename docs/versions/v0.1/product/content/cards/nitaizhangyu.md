@@ -2,7 +2,9 @@
 id: nitaizhangyu
 card_type: minion
 name: 拟态章鱼
-tribe: biology
+playstyle: cephalopod
+taxon: octopodidae
+specialty: [prey:actinopterygii]
 subtype: mollusk
 level: 2
 era: prehistoric
@@ -20,7 +22,9 @@ is_scholar: false
 | id | nitaizhangyu |
 | 名称 | 拟态章鱼 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 头足纲 |
+| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 章鱼科 |
+| 关联分类 | 捕食：鱼纲 |
 | 子类 | 软体 |
 | 星级 | 2 |
 | 时代 | 史前 |

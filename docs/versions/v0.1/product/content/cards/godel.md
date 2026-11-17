@@ -2,7 +2,9 @@
 id: godel
 card_type: minion
 name: 库尔特·哥德尔
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:reptile]
 subtype: mathematics
 level: 6
 era: future
@@ -21,7 +23,9 @@ is_scholar: true
 | id | godel |
 | 名称 | 库尔特·哥德尔 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：爬行纲 |
 | 子类 | 数学 |
 | 星级 | 6 |
 | 时代 | 未来 |

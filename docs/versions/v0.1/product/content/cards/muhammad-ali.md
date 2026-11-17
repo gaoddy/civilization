@@ -2,7 +2,8 @@
 id: muhammad-ali
 card_type: minion
 name: 穆罕默德·阿里
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: athlete
 level: 6
 era: modern
@@ -21,7 +22,9 @@ is_scholar: false
 | id | muhammad-ali |
 | 名称 | 穆罕默德·阿里 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 运动员 |
 | 星级 | 6 |
 | 时代 | 现代 |

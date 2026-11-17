@@ -2,7 +2,9 @@
 id: niuwen
 card_type: minion
 name: 牛瘟
-tribe: virus
+playstyle: virus
+taxon: paramyxoviridae
+specialty: [host:bovidae]
 subtype: virus
 level: 5
 era: modern
@@ -21,7 +23,9 @@ is_scholar: false
 | id | niuwen |
 | 名称 | 牛瘟 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 副黏病毒科 |
+| 关联分类 | 寄生：牛科 |
 | 子类 | 病毒 |
 | 星级 | 5 |
 | 时代 | 现代 |

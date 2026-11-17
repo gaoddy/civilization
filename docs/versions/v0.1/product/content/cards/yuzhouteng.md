@@ -2,7 +2,8 @@
 id: yuzhouteng
 card_type: minion
 name: 宇宙藤
-tribe: plant
+playstyle: plant
+taxon: plantae-incertae-sedis
 subtype: universe
 level: 7
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | yuzhouteng |
 | 名称 | 宇宙藤 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 宇宙 |
 | 星级 | 7 |
 | 时代 | 未来 |

@@ -2,7 +2,8 @@
 id: hela-cell
 card_type: minion
 name: 海拉细胞
-tribe: biology
+playstyle: mammal
+taxon: hominidae
 subtype: cell
 level: 4
 era: modern
@@ -21,7 +22,9 @@ is_scholar: false
 | id | hela-cell |
 | 名称 | 海拉细胞 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 细胞 |
 | 星级 | 4 |
 | 时代 | 现代 |

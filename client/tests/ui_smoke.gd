@@ -575,8 +575,8 @@ func _check_game_layout() -> void:
     var shop_zero = instance.find_child("ShopSlot0", true, false)
     var shop_text := _node_text(shop_zero) if shop_zero != null else ""
     _expect(
-        shop_text.contains(TranslationServer.translate("enum.tribe.scholar")),
-        "商店卡应显示卡牌类型：%s" % shop_text,
+        shop_text.contains(TranslationServer.translate("enum.playstyle.neutral")),
+        "商店卡应显示玩法：%s" % shop_text,
     )
     _expect(shop_text.contains("9"), "商店卡应显示原始生命值：%s" % shop_text)
     _expect(instance.find_child("HeroPortrait", true, false) != null, "右栏应显示我的英雄大图")

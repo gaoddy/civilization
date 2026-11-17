@@ -1,7 +1,7 @@
 ---
 id: trigger-2-humans-self-plus-1-plus-1
-text: 若你控制至少 2 个人类，获得 +1/+1
-effects: ConditionalAura|ModifyStats|self|attack=1,health=1,duration=permanent,condition=count:friendly:tribe=human:>=2
+text: 若你控制至少 2 个人科随从，获得 +1/+1
+effects: ConditionalAura|ModifyStats|self|attack=1,health=1,duration=permanent,condition=count:friendly:taxon=hominidae:>=2
 ---
 
 # trigger-2-humans-self-plus-1-plus-1
@@ -16,4 +16,4 @@ effects: ConditionalAura|ModifyStats|self|attack=1,health=1,duration=permanent,c
 
 ## 效果
 
-若你控制至少 2 个人类，获得 +1/+1
+若你控制至少 2 个人科随从，获得 +1/+1

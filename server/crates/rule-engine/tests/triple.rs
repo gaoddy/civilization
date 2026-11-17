@@ -3,7 +3,7 @@ mod common;
 use std::collections::BTreeSet;
 
 use common::{minion, minion_id, set_shop, test_catalog, turn_started};
-use rule_engine::data::{CardType, Tribe};
+use rule_engine::data::{CardType, card_in_pool};
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
@@ -499,8 +499,8 @@ fn playing_reward_discovers_next_level_minions() {
         assert!(!card.is_hero);
         assert_ne!(card.id, REWARD_CARD_ID);
         assert!(
-            card.tribe == Tribe::General || state.enabled_tribes.contains(&card.tribe),
-            "候选流派需本局启用或为通用"
+            card_in_pool(card, &state.enabled_playstyles),
+            "候选玩法需本局启用或为纯通用"
         );
         assert!(pool_count(&state, candidate) > 0, "候选池需有剩余");
         assert!(seen.insert(candidate.clone()), "候选不得重复");

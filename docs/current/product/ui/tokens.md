@@ -80,17 +80,28 @@
 | `hand-card-overlap` | 32 | 手牌相邻卡的交叠宽度；槽位步进 = `card-width - hand-card-overlap` = 80，十张单行 |
 | `hand-hover-scale` | 1.12 | 手牌悬停放大倍数，以底边中点为轴；小数令牌用 `UITheme.factor` 读取，不要用 `metric` |
 
-## 6. 部落色
+## 6. 玩法色
 
-| 部落 | 令牌 | 取值 |
-| --- | --- | --- |
-| 人类 | `blue-400` | `#62a8e8` |
-| 学者 | `purple-400` | `#b28ce6` |
-| 机械 | `slate-400` | `#93a6bd` |
-| 生物 | `green-400` | `#5fce86` |
-| 病毒 | `rose-400` | `#d9799b` |
-| 植物 | `lime-400` | `#a3cf61` |
-| 通用 | `sand-400` | `#cdb98c` |
-| 未取到部落 | `color-border-strong` | `#33435c` |
+`UITheme.PLAYSTYLE_COLOR` 共 14 个键：13 个玩法与中立，全部是原子色令牌。
 
-部落色只用于头像块的描边与名字首字，不改变布局与结构。
+| 玩法 | 名称 | 令牌 | 取值 |
+| --- | --- | --- | --- |
+| `mammal` | 哺乳纲 | `blue-400` | `#62a8e8` |
+| `bird` | 鸟纲 | `cyan-400` | `#3fd0e0` |
+| `reptile` | 爬行纲 | `green-400` | `#5fce86` |
+| `fish` | 鱼纲 | `teal-400` | `#3fc7ac` |
+| `insect` | 昆虫纲 | `lime-400` | `#a3cf61` |
+| `cephalopod` | 头足纲 | `purple-400` | `#b28ce6` |
+| `cnidarian` | 水螅纲 | `rose-400` | `#d9799b` |
+| `plant` | 植物界 | `olive-400` | `#9aa83c` |
+| `fungus` | 真菌界 | `amber-400` | `#e0b04a` |
+| `bacteria` | 细菌域 | `orange-400` | `#e57c4a` |
+| `protozoa` | 原生生物界 | `magenta-400` | `#d979c4` |
+| `virus` | 病毒 | `red-400` | `#e2666b` |
+| `machine` | 机械 | `slate-400` | `#93a6bd` |
+| `neutral` | 中立 | `sand-400` | `#cdb98c` |
+
+- 新增原子色令牌：`cyan-400`、`teal-400`、`olive-400`、`amber-400`、`orange-400`、`magenta-400`；`blue-400`、`green-400`、`purple-400`、`rose-400`、`red-400`、`slate-400`、`sand-400` 沿用。
+- 14 个键的颜色互不重复（`red-400` 与语义 `color-danger` 同值，但中立色不与任何玩法色重复）。
+- 取值入口：`UITheme.playstyle_color(id)` 返回玩法色；`playstyle_cover(id)` 返回压暗 0.62 的玩法色，作为卡面与房间英雄候选卡的封面底色。未知 id 回退 `snow-500`。
+- 玩法色用于卡面封面、英雄头像块描边与名字首字、英雄小卡描边，不改变布局与结构。

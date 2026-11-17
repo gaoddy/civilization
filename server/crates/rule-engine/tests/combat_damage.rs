@@ -5,9 +5,9 @@
 
 mod common;
 
-use common::{effects_of, minion, test_catalog};
+use common::{effects_of, minion, test_catalog, test_playstyles};
 use rule_engine::combat::{CombatAction, CombatSetup, simulate, simulate_with};
-use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
+use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill};
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
 use rule_engine::settle::Pairing;
@@ -34,7 +34,9 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            tribe: Tribe::Human,
+            playstyle: Playstyle::Mammal,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
             subtype: None,
             level: 1,
             era: None,
@@ -65,7 +67,9 @@ fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, ef
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            tribe: Tribe::Human,
+            playstyle: Playstyle::Mammal,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
             subtype: None,
             level: 1,
             era: None,
@@ -210,7 +214,7 @@ fn cannot_kill_damage_floors_at_one() {
     );
     add_card(&mut catalog, "victim", 0, 4, &[]);
 
-    let (engine, _) = Engine::new(catalog, [23u8; 32]);
+    let (engine, _) = Engine::new(catalog, [23u8; 32], test_playstyles());
 
     let attacker = minion(&engine.catalog, 1, "burner");
     let victim = minion(&engine.catalog, 2, "victim");
@@ -272,7 +276,7 @@ fn combat_write_back_restores_full_health() {
     );
     add_card(&mut catalog, "weakling", 0, 1, &[]);
 
-    let (mut engine, mut state) = Engine::new(catalog, [29u8; 32]);
+    let (mut engine, mut state) = Engine::new(catalog, [29u8; 32], test_playstyles());
     state.phase = Phase::Combat;
     state.turn = 2;
     state.first_seat = 0;
@@ -334,7 +338,7 @@ fn ghost_board_keeps_growth_and_permanent() {
     // `ghost_board` 不做剥离：`turn` 层与战斗光环在玩家出局的那次结算里
     // 已由 `clear_combat_duration` 清掉，能进入死后棋盘的临时层本就为 0。
     // 这里直接构造未经结算的棋盘，用来确认 `ghost_board` 不额外改写任何层。
-    let (engine, mut state) = Engine::new(catalog, [29u8; 32]);
+    let (engine, mut state) = Engine::new(catalog, [29u8; 32], test_playstyles());
     state.players[3].eliminated = true;
     state.players[3].board = vec![original];
 

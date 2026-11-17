@@ -7,13 +7,14 @@ pub mod ai;
 pub mod bot;
 pub mod report;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
-use rule_engine::data::{Catalog, Tribe};
+use rule_engine::data::{Catalog, Playstyle, card_in_pool};
 use rule_engine::engine::Engine;
 use rule_engine::error::EngineError;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
+use rule_engine::playstyles;
 use rule_engine::state::{GameState, Phase, Seat};
 
 /// 引擎 32 字节种子与日志 64 位种子之间的对应，实现已迁至
@@ -92,8 +93,8 @@ pub struct GameStats {
     pub damage_per_loss: Vec<i32>,
     /// 冠军座位（排名第 1）。
     pub winner: Seat,
-    /// 冠军最终阵容的流派。
-    pub winner_tribe: Tribe,
+    /// 冠军最终阵容的玩法（按随从 `playstyle` 统计）。
+    pub winner_playstyle: Playstyle,
 }
 
 impl Default for GameStats {
@@ -105,7 +106,7 @@ impl Default for GameStats {
             survivors_at_end: 0,
             damage_per_loss: Vec::new(),
             winner: 0,
-            winner_tribe: Tribe::General,
+            winner_playstyle: Playstyle::Neutral,
         }
     }
 }
@@ -122,22 +123,27 @@ pub fn derive_seed(seed: u64, game_index: usize) -> u64 {
     seed.wrapping_add(game_index as u64)
 }
 
-/// 目录中按卡牌 id 升序的前 8 张英雄卡，依次分配给座位 0..8。
-pub fn assign_heroes(catalog: &Catalog) -> Result<BTreeMap<Seat, String>, EngineError> {
-    let heroes: BTreeMap<Seat, String> = catalog
+/// 本局可用英雄卡按 id 升序取 8 张，依次分配给座位 0..8。
+///
+/// 只保留通过 [`card_in_pool`] 的英雄卡（按本局 `enabled_playstyles` 过滤；
+/// 目录 `cards` 为 `BTreeMap`，遍历顺序即 id 升序）。不足 8 张时从头循环取，
+/// 保证每个座位都有英雄；没有任何可用英雄时返回错误。
+pub fn assign_heroes(
+    catalog: &Catalog,
+    enabled: &BTreeSet<Playstyle>,
+) -> Result<BTreeMap<Seat, String>, EngineError> {
+    let heroes: Vec<&str> = catalog
         .cards
         .values()
-        .filter(|card| card.is_hero)
-        .take(usize::from(PLAYER_COUNT))
-        .enumerate()
-        .map(|(index, card)| (index as Seat, card.id.clone()))
+        .filter(|card| card.is_hero && card_in_pool(card, enabled))
+        .map(|card| card.id.as_str())
         .collect();
-    if heroes.len() != usize::from(PLAYER_COUNT) {
-        return Err(EngineError(format!(
-            "目录中英雄卡不足 {PLAYER_COUNT} 张，实际 {}",
-            heroes.len()
-        )));
+    if heroes.is_empty() {
+        return Err(EngineError("目录中没有本局玩法可用的英雄卡".to_string()));
     }
+    let heroes = (0..usize::from(PLAYER_COUNT))
+        .map(|seat| (seat as Seat, heroes[seat % heroes.len()].to_string()))
+        .collect();
     Ok(heroes)
 }
 
@@ -148,6 +154,7 @@ pub fn embedded_catalog() -> Result<Catalog, EngineError> {
         include_str!("../../../data/v0.1/skills.json"),
         include_str!("../../../data/v0.1/tokens.json"),
         include_str!("../../../data/v0.1/config.json"),
+        include_str!("../../../data/v0.1/taxonomy.json"),
     )
     .map_err(|err| EngineError(format!("加载卡牌目录失败: {err}")))
 }
@@ -161,9 +168,10 @@ fn check_players(players: usize) -> Result<(), EngineError> {
     Ok(())
 }
 
-/// 以库内目录跑一局；`seed` 为日志与引擎种子。
+/// 以库内目录跑一局；`seed` 为日志与引擎种子，并用同一个 `seed` 抽取本局 5 个玩法。
 pub fn run_game(catalog: Catalog, seed: u64) -> Result<GameLog, EngineError> {
-    let (mut engine, mut state) = Engine::new(catalog, seed_from_u64(seed));
+    let playstyles = playstyles::draw(seed);
+    let (mut engine, mut state) = Engine::new(catalog, seed_from_u64(seed), playstyles);
     play_game(&mut engine, &mut state, seed, usize::from(PLAYER_COUNT))
 }
 
@@ -175,7 +183,7 @@ pub fn play_game(
     players: usize,
 ) -> Result<GameLog, EngineError> {
     check_players(players)?;
-    let heroes = assign_heroes(&engine.catalog)?;
+    let heroes = assign_heroes(&engine.catalog, &state.enabled_playstyles)?;
     engine.start_game(state, &heroes)?;
     drive(engine, state, seed)
 }
@@ -263,16 +271,16 @@ fn alive_count(state: &GameState) -> u8 {
 fn finish_stats(engine: &Engine, state: &GameState, stats: &mut GameStats) {
     let winner = state.ranking.first().copied().unwrap_or(0);
     stats.winner = winner;
-    stats.winner_tribe = state
+    stats.winner_playstyle = state
         .players
         .get(usize::from(winner))
         .map(|player| {
-            ai::dominant_tribe(
+            ai::dominant_playstyle(
                 player.board.iter().map(|minion| minion.card_id.as_str()),
                 &engine.catalog,
             )
         })
-        .unwrap_or(Tribe::General);
+        .unwrap_or(Playstyle::Neutral);
 }
 
 /// 一个招募回合：未出局座位按座位升序，各自反复执行 AI 意图直到 `EndRecruit`。
@@ -373,10 +381,14 @@ fn record_outcome(
 
 /// 重放一条对局日志：逐条复现引擎调用，并要求最终哈希与排名与日志一致。
 ///
+/// 本局玩法由日志种子重新推导（`playstyles::draw(log.seed)`），与批量运行时
+/// 按同一局种子抽取的结果一致，因此重放与原始对局使用同一组玩法。
 /// 返回重放得到的最终状态哈希。
 pub fn replay(log: &GameLog) -> Result<u64, EngineError> {
-    let (mut engine, mut state) = Engine::new(embedded_catalog()?, seed_from_u64(log.seed));
-    let heroes = assign_heroes(&engine.catalog)?;
+    let playstyles = playstyles::draw(log.seed);
+    let (mut engine, mut state) =
+        Engine::new(embedded_catalog()?, seed_from_u64(log.seed), playstyles);
+    let heroes = assign_heroes(&engine.catalog, &state.enabled_playstyles)?;
     engine.start_game(&mut state, &heroes)?;
     for (index, record) in log.steps.iter().enumerate() {
         step_engine(&mut engine, &mut state, record)

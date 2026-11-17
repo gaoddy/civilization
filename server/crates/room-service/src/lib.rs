@@ -19,13 +19,14 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use axum::Router;
-use rule_engine::data::Catalog;
+use rule_engine::data::{Catalog, Playstyle, SpecialtyKind};
 use tokio::sync::Mutex;
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
 const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
+const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
 /// 服务共享状态。
 ///
@@ -46,11 +47,17 @@ impl AppState {
     ///
     /// # Errors
     ///
-    /// 卡表加载失败、或英雄卡不足以给满座每人分配一组候选时返回错误文本。
+    /// 卡表加载失败、或英雄卡为空 / 分类字段不合法时返回错误文本。
     pub fn new(clock: Arc<dyn Clock>) -> Result<Self, String> {
-        let catalog = Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
-            .map_err(|err| format!("加载卡牌目录失败: {err}"))?;
-        ensure_hero_pool(catalog.cards.values().filter(|card| card.is_hero).count())?;
+        let catalog = Catalog::from_json(
+            CARDS_JSON,
+            SKILLS_JSON,
+            TOKENS_JSON,
+            CONFIG_JSON,
+            TAXONOMY_JSON,
+        )
+        .map_err(|err| format!("加载卡牌目录失败: {err}"))?;
+        ensure_hero_pool(&catalog)?;
         Ok(Self {
             sessions: Arc::new(Mutex::new(SessionStore::new())),
             rooms: Arc::new(Mutex::new(RoomRegistry::new())),
@@ -66,21 +73,41 @@ impl AppState {
     }
 }
 
-/// 校验英雄卡够满座每人一组候选。
+/// 校验英雄卡池：至少 1 张英雄，且每张英雄的分类字段合法。
 ///
-/// 每人一段、每段 [`room::CANDIDATE_COUNT`] 张；卡不够时最后几名玩家拿到空候选，
-/// 此后既不能选英雄也不能准备，房间开不了局、该页又没有离开入口。装配阶段直接
-/// 拒绝启动，比运行期卡住更容易发现。
+/// 候选池允许小于满座需求（池不足时跨玩家重复），因此不再要求英雄达到
+/// `SEAT_COUNT * CANDIDATE_COUNT` 张；只要至少有一张可用英雄，房间就能开局。
+/// 分类字段要求 `taxon` 是分类树中的叶子、`specialty` 的 `play:` 取值是合法玩法。
 ///
 /// # Errors
 ///
-/// 英雄卡数量小于 `SEAT_COUNT * CANDIDATE_COUNT` 时返回错误文本。
-fn ensure_hero_pool(hero_count: usize) -> Result<(), String> {
-    let required = room::SEAT_COUNT * room::CANDIDATE_COUNT;
-    if hero_count < required {
-        return Err(format!(
-            "英雄卡 {hero_count} 张，少于满座所需的 {required} 张"
-        ));
+/// 英雄卡为空，或任意英雄的 `taxon` / `play:` 关联不合法时返回错误文本。
+fn ensure_hero_pool(catalog: &Catalog) -> Result<(), String> {
+    let heroes: Vec<&rule_engine::data::Card> =
+        catalog.cards.values().filter(|card| card.is_hero).collect();
+    if heroes.is_empty() {
+        return Err("卡表没有英雄卡".to_string());
+    }
+    for card in heroes {
+        if card.taxon.is_empty()
+            || !catalog.taxonomy.contains(&card.taxon)
+            || !catalog.taxonomy.is_leaf(&card.taxon)
+        {
+            return Err(format!(
+                "英雄卡 {} 的分类字段不合法：taxon {}",
+                card.id, card.taxon
+            ));
+        }
+        for specialty in &card.specialty {
+            if specialty.kind == SpecialtyKind::Play
+                && Playstyle::from_id(&specialty.value).is_none()
+            {
+                return Err(format!(
+                    "英雄卡 {} 的 specialty play:{} 不是合法玩法",
+                    card.id, specialty.value
+                ));
+            }
+        }
     }
     Ok(())
 }
@@ -145,16 +172,48 @@ pub use view::SeatInfo;
 
 #[cfg(test)]
 mod tests {
-    use super::{ensure_hero_pool, room};
+    use super::{
+        CARDS_JSON, CONFIG_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON, ensure_hero_pool,
+    };
+    use rule_engine::data::Catalog;
+
+    fn catalog() -> Catalog {
+        Catalog::from_json(
+            CARDS_JSON,
+            SKILLS_JSON,
+            TOKENS_JSON,
+            CONFIG_JSON,
+            TAXONOMY_JSON,
+        )
+        .expect("卡表应能加载")
+    }
 
     #[test]
-    fn hero_pool_must_cover_every_seat() {
-        let required = room::SEAT_COUNT * room::CANDIDATE_COUNT;
-        assert!(ensure_hero_pool(required).is_ok(), "刚好够分应通过");
-        let error = ensure_hero_pool(required - 1).expect_err("缺一张就必须拒绝启动");
+    fn hero_pool_requires_at_least_one_hero() {
+        let mut catalog = catalog();
+        catalog.cards.retain(|_, card| !card.is_hero);
+        let error = ensure_hero_pool(&catalog).expect_err("没有英雄卡必须拒绝启动");
+        assert!(error.contains("没有英雄卡"), "实际：{error}");
+    }
+
+    #[test]
+    fn hero_pool_rejects_invalid_classification() {
+        let mut catalog = catalog();
+        let hero = catalog
+            .cards
+            .values_mut()
+            .find(|card| card.is_hero)
+            .expect("应有英雄卡");
+        hero.taxon = "not-a-taxon".to_string();
+        let error = ensure_hero_pool(&catalog).expect_err("非法分类必须拒绝启动");
+        assert!(error.contains("分类字段不合法"), "实际：{error}");
+    }
+
+    #[test]
+    fn hero_pool_accepts_loaded_catalog() {
         assert!(
-            error.contains(&required.to_string()),
-            "错误文本应写出所需张数，实际：{error}"
+            ensure_hero_pool(&catalog()).is_ok(),
+            "仓库内嵌卡表应通过英雄校验"
         );
     }
 }

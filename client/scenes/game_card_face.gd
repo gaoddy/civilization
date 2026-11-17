@@ -37,7 +37,7 @@ static func face(
 
     var cover := ColorRect.new()
     cover.name = "Cover"
-    cover.color = UITheme.tribe_cover(str(entry.get("tribe", "")))
+    cover.color = UITheme.playstyle_cover(str(entry.get("playstyle", "")))
     cover.set_anchors_preset(Control.PRESET_FULL_RECT)
     cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
     face_node.add_child(cover)
@@ -256,7 +256,7 @@ static func read_only_minion_card(minion: Dictionary) -> Control:
         card_id,
         stat_text(minion.get("attack")),
         stat_text(minion.get("health")),
-        tribe_text(entry),
+        playstyle_text(entry),
         "★" if bool(minion.get("golden", false)) else "",
     ))
     return panel
@@ -268,24 +268,19 @@ static func initial(card_id: String) -> String:
     return display.substr(0, 1) if display != "" else "?"
 
 
-## 卡面类型行：卡面宽度有限，只放部落；完整类型放在详情面板。
-static func tribe_text(entry: Dictionary) -> String:
-    var tribe := str(entry.get("tribe", ""))
-    if tribe != "":
-        return UI.enum_text("tribe", tribe)
-    var card_type := str(entry.get("card_type", ""))
-    return UI.enum_text("card_type", card_type) if card_type != "" else "—"
+## 卡面类型行：卡面宽度有限，只放玩法；完整类型与分类放在详情面板。
+static func playstyle_text(entry: Dictionary) -> String:
+    var playstyle := str(entry.get("playstyle", ""))
+    var text := UI.enum_text("playstyle", playstyle) if playstyle != "" else ""
+    if text != "" and text != playstyle:
+        return text
+    return TranslationServer.translate("ui.game.detail.undetermined")
 
 
-## 详情类型行：卡牌类别与部落。
+## 详情类型行：只显示卡牌类别，玩法与分类由详情单独成行。
 static func type_text(entry: Dictionary) -> String:
     var card_type := str(entry.get("card_type", ""))
-    var tribe := str(entry.get("tribe", ""))
-    if card_type == "":
-        return UI.enum_text("tribe", tribe) if tribe != "" else "—"
-    if tribe == "" or tribe == card_type:
-        return UI.enum_text("card_type", card_type)
-    return "%s·%s" % [UI.enum_text("card_type", card_type), UI.enum_text("tribe", tribe)]
+    return UI.enum_text("card_type", card_type) if card_type != "" else "—"
 
 
 ## 卡面数值：服务端或卡表缺失时用破折号占位。

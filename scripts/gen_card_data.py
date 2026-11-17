@@ -9,6 +9,7 @@
 import argparse
 import json
 import pathlib
+import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -18,7 +19,7 @@ import audit_effects
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "server" / "data" / "v0.1"
-FILES = ("cards.json", "skills.json", "tokens.json", "config.json")
+FILES = ("cards.json", "skills.json", "tokens.json", "config.json", "taxonomy.json")
 
 # 产品基线常量；来源 docs/versions/v0.1/product/systems/economy-and-numbers.md
 # 与 rules/ 下的核心规则（生命、槽位、回合上限、伤害上下限）。
@@ -73,6 +74,8 @@ TRIGGER_JSON = {
     "OnFirstRefresh": "on_first_refresh",
     "OnCombatStart": "on_combat_start",
     "OnDealDamage": "on_deal_damage",
+    "OnKill": "on_kill",
+    "OnAllyKill": "on_ally_kill",
     "OnDeath": "on_death",
     "OnFriendlyDeath": "on_friendly_death",
     "OnEnemyDeath": "on_enemy_death",
@@ -97,7 +100,12 @@ OP_JSON = {
     "RefreshShop": "refresh_shop",
     "AddShopSlot": "add_shop_slot",
     "GainMinion": "gain_minion",
+    "Decompose": "decompose",
 }
+
+# timesIf 的键与取值域；与 validate_docs.FILTER_KEYS / check_filter_value 一致。
+TIMES_IF_KEYS = validate_docs.FILTER_KEYS
+SPECIALTY_KINDS = validate_docs.SPECIALTY_KINDS
 
 PICK_JSON = {
     "single": "single",
@@ -230,6 +238,21 @@ def check_structured(effect):
     return violations
 
 
+def _json_times_if(value):
+    """把 `<键>:<值>:<次数>` 转为结构化；`scholar:<次数>` 没有值，输出 value 为 null。
+
+    格式与取值域由 validate_docs.times_if_errors 先行校验，这里只做拆分。
+    """
+    parts = value.split(":")
+    if len(parts) == 2 and parts[0] == "scholar":
+        key, filter_value, times = parts[0], None, parts[1]
+    elif len(parts) == 3 and parts[0] in TIMES_IF_KEYS and parts[0] != "scholar":
+        key, filter_value, times = parts
+    else:
+        raise ValueError(f"timesIf 无法解析: {value!r}")
+    return {"key": key, "value": filter_value, "times": int(times)}
+
+
 def _json_params(params):
     """把 DSL 参数字典转成带类型的结构。"""
     result = {}
@@ -255,8 +278,7 @@ def _json_params(params):
             }[key]
             result[name] = value == "true"
         elif key == "timesIf":
-            tribe, times = value.split(":", 1)
-            result["times_if"] = {"tribe": tribe, "times": int(times)}
+            result["times_if"] = _json_times_if(value)
         elif key == "condition":
             result["condition"] = _json_condition(value)
         elif key == "when":
@@ -294,11 +316,31 @@ def structured_effects(value):
     return result
 
 
+def parse_specialty(value):
+    """把 `kind:value` 列表转成 `[{"kind": ..., "value": ...}]`；省略时为 []。
+
+    前缀与取值由 validate_docs 校验；这里只做拆分，未知前缀直接报错。
+    """
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError(f"specialty 必须是列表，实为 {value!r}")
+    items = []
+    for item in value:
+        kind, _, target = item.partition(":")
+        if kind not in SPECIALTY_KINDS or not target:
+            raise ValueError(f"specialty 项无法解析: {item!r}")
+        items.append({"kind": kind, "value": target})
+    return items
+
+
 def card_entry(doc):
     return {
         "id": doc["id"],
         "card_type": doc["card_type"],
-        "tribe": doc["tribe"],
+        "playstyle": doc["playstyle"],
+        "taxon": doc["taxon"],
+        "specialty": parse_specialty(doc.get("specialty")),
         "subtype": doc.get("subtype"),
         "level": doc["level"],
         "era": doc.get("era"),
@@ -334,7 +376,7 @@ def _token_rows(path):
         if not line.startswith("|"):
             continue
         cells = [cell.strip() for cell in line.strip("|").split("|")]
-        if len(cells) != 6:
+        if len(cells) != 8:
             continue
         if set(cells[0]) <= {"-"} or cells[0] == "id":
             continue
@@ -342,7 +384,10 @@ def _token_rows(path):
 
 
 def parse_tokens(path):
-    """从 tokens/README.md 生成规则字段；展示名由 `parse_token_names` 提供。"""
+    """从 tokens/README.md 生成规则字段；展示名由 `parse_token_names` 提供。
+
+    「玩法」「科学分类」两列缺失或为空时回退 `neutral` / `phenomenon`，与引擎口径一致。
+    """
     tokens = []
     for cells in _token_rows(path):
         attack, health, keywords = cells[2], cells[3], cells[4]
@@ -351,6 +396,8 @@ def parse_tokens(path):
             "attack": int(attack),
             "health": int(health),
             "keywords": [] if keywords == "无" else keywords.split("、"),
+            "playstyle": cells[5] or "neutral",
+            "taxon": cells[6] or "phenomenon",
         })
     return sorted(tokens, key=lambda token: token["id"])
 
@@ -363,17 +410,80 @@ def parse_token_names(path):
     }
 
 
+TAXONOMY_FILE = "taxonomy.md"
+# 分类树中文层级 → 生成物 rank；与 validate_docs.TAXONOMY_RANKS 保持一致。
+TAXONOMY_RANKS = {
+    "界": "kingdom",
+    "门": "phylum",
+    "纲": "class",
+    "目": "order",
+    "科": "family",
+    "技术分类": "technique",
+    "现象": "phenomenon",
+}
+
+
+def _section_rows(text, heading):
+    """返回指定小节的表格数据行（单元格列表）。
+
+    heading 不含 `## ` 前缀；`#` 数量不限，匹配同标记数的下一个标题即为小节结尾。
+    """
+    match = re.search(rf"(?m)^(##+) {re.escape(heading)}\s*$", text)
+    if not match:
+        raise ValueError(f"缺少「## {heading}」小节")
+    marks = match.group(1)
+    rest = text[match.end():]
+    next_heading = re.search(rf"(?m)^{marks} ", rest)
+    if next_heading:
+        rest = rest[:next_heading.start()]
+    rows = []
+    for line in rest.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if cells[0] == "id" or set(cells[0]) <= {"-"}:
+            continue
+        rows.append(cells)
+    return rows
+
+
+def parse_taxonomy(path):
+    """解析 taxonomy.md，返回 {"nodes": [...], "playstyles": [...]}。
+
+    rank 由中文层级映射为英文；节点按 id 排序以保证确定性。
+    """
+    text = pathlib.Path(path).read_text(encoding="utf-8")
+    nodes = []
+    for cells in _section_rows(text, "1. 科学分类树"):
+        if len(cells) != 5:
+            raise ValueError(f"{path.name}: 分类树行列数非法 {cells!r}")
+        node_id, _, parent, rank, _ = cells
+        nodes.append({
+            "id": node_id,
+            "parent": parent or None,
+            "rank": TAXONOMY_RANKS[rank],
+        })
+    playstyles = [cells[0] for cells in _section_rows(text, "2. 玩法")]
+    return {
+        "nodes": sorted(nodes, key=lambda node: node["id"]),
+        "playstyles": playstyles,
+    }
+
+
 def build(root):
     """返回文件名到确定性 JSON 文本的映射。"""
     content = pathlib.Path(root) / "docs" / "versions" / "v0.1" / "product" / "content"
     cards = [card_entry(doc) for doc in load_docs(content, "cards")]
     skills = [skill_entry(doc) for doc in load_docs(content, "skills")]
     tokens = parse_tokens(content / "tokens" / "README.md")
+    taxonomy = parse_taxonomy(content / TAXONOMY_FILE)
     return {
         "cards.json": dumps(cards),
         "skills.json": dumps(skills),
         "tokens.json": dumps(tokens),
         "config.json": dumps(CONFIG),
+        "taxonomy.json": dumps(taxonomy),
     }
 
 

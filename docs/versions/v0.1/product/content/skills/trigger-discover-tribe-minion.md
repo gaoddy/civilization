@@ -1,7 +1,7 @@
 ---
 id: trigger-discover-tribe-minion
-text: 发现一张本局流派的随从
-effects: OnPlayEffect|Discover|self|pool=tribe,choose=1
+text: 发现一张本局玩法的随从
+effects: OnPlayEffect|Discover|self|pool=playstyle,choose=1
 match_text: 改为三选一固定池
 ---
 
@@ -17,4 +17,4 @@ match_text: 改为三选一固定池
 
 ## 效果
 
-发现一张本局流派的随从
+发现一张本局玩法的随从

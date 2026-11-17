@@ -2,7 +2,8 @@
 id: shizuniao
 card_type: minion
 name: 始祖鸟
-tribe: biology
+playstyle: bird
+taxon: archaeopterygidae
 subtype: bird
 level: 1
 era: prehistoric
@@ -20,7 +21,9 @@ is_scholar: false
 | id | shizuniao |
 | 名称 | 始祖鸟 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 鸟纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 始祖鸟目 › 始祖鸟科 |
+| 关联分类 | 无 |
 | 子类 | 鸟类 |
 | 星级 | 1 |
 | 时代 | 史前 |

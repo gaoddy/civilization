@@ -4,7 +4,8 @@ name: 质能等价
 card_type: effect
 level: 5
 era: future
-tribe: general
+playstyle: neutral
+taxon: phenomenon
 cost: 3
 match_text: 同左
 skills: [combatstart-leftmost-damage-6]
@@ -21,7 +22,9 @@ skills: [combatstart-leftmost-damage-6]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 流派 | 通用 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | combatstart-leftmost-damage-6 |
 | 费用 | 3 |
 | 确定性替换 | 同左 |

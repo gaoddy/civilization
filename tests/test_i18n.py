@@ -141,9 +141,11 @@ class TextTableTest(unittest.TestCase):
 
     def test_every_enum_value_has_text(self):
         keys = set(_keys((ROOT / "client/text/zh_CN.csv").read_text(encoding="utf-8")))
+        nodes, playstyles = validate_docs.parse_taxonomy()
         for group, values in (
             ("card_type", i18n_terms.CARD_TYPES),
-            ("tribe", i18n_terms.TRIBES),
+            ("playstyle", [pid for pid, _ in playstyles]),
+            ("taxon", list(nodes)),
             ("era", i18n_terms.ERAS),
             ("evolve", i18n_terms.EVOLVE_CHOICES),
             ("stat_layer", i18n_terms.STAT_LAYERS),
@@ -152,7 +154,7 @@ class TextTableTest(unittest.TestCase):
             for value in values:
                 self.assertIn(f"enum.{group}.{value}", keys)
         labels = validate_docs.card_enum_labels(
-            validate_docs.load("cards", ["id", "card_type", "tribe", "era"])
+            validate_docs.load("cards", ["id", "card_type", "playstyle", "taxon", "era"])
         )
         for slug in labels["subtype"]:
             self.assertIn(f"enum.subtype.{slug}", keys)

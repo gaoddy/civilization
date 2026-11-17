@@ -2,7 +2,8 @@
 id: zhenghe
 card_type: minion
 name: 郑和
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: navigation
 level: 5
 era: industrial
@@ -22,7 +23,9 @@ is_hero: true
 | id | zhenghe |
 | 名称 | 郑和 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 航海 |
 | 星级 | 5 |
 | 时代 | 工业 |

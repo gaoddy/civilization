@@ -2,7 +2,9 @@
 id: gutenberg
 card_type: minion
 name: 古腾堡
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:mammal, play:machine]
 subtype: invention
 level: 4
 era: feudal
@@ -21,7 +23,9 @@ is_scholar: true
 | id | gutenberg |
 | 名称 | 古腾堡 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：哺乳纲、机械 |
 | 子类 | 发明 |
 | 星级 | 4 |
 | 时代 | 封建 |

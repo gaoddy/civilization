@@ -15,7 +15,7 @@ use room_service::game::{GameTask, RoomCommand, UpdateKind};
 use room_service::room::PlayerSlot;
 use room_service::view::SeatInfo;
 use rule_engine::combat::{self, CombatAction};
-use rule_engine::data::Catalog;
+use rule_engine::data::{Catalog, Playstyle};
 use rule_engine::events::GameEvent;
 use rule_engine::settle::SeatCombatReport;
 use rule_engine::state::{MinionInstance, Seat};
@@ -24,6 +24,7 @@ const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
 const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
+const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
 /// 8 个座位各用一张不同的英雄卡。
 const HEROES: [&str; 8] = [
@@ -38,7 +39,14 @@ const HEROES: [&str; 8] = [
 ];
 
 fn catalog() -> Catalog {
-    Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON).expect("卡表应能加载")
+    Catalog::from_json(
+        CARDS_JSON,
+        SKILLS_JSON,
+        TOKENS_JSON,
+        CONFIG_JSON,
+        TAXONOMY_JSON,
+    )
+    .expect("卡表应能加载")
 }
 
 fn seats() -> [SeatInfo; 8] {
@@ -360,7 +368,21 @@ fn task() -> (GameTask, FixedClock) {
         .enumerate()
         .map(|(seat, hero)| (seat as Seat, (*hero).to_string()))
         .collect();
-    let task = GameTask::new(catalog(), 7, heroes, players(), clock_arc).expect("开局应当成功");
+    let task = GameTask::new(
+        catalog(),
+        7,
+        [
+            Playstyle::Mammal,
+            Playstyle::Bird,
+            Playstyle::Plant,
+            Playstyle::Virus,
+            Playstyle::Machine,
+        ],
+        heroes,
+        players(),
+        clock_arc,
+    )
+    .expect("开局应当成功");
     (task, clock)
 }
 

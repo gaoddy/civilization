@@ -1,7 +1,7 @@
 ---
 id: trigger-2-humans-self-plus-1-attack
-text: 若你控制至少 2 个人类，获得 +1 攻击力
-effects: ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:tribe=human:>=2
+text: 若你控制至少 2 个人科随从，获得 +1 攻击力
+effects: ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:taxon=hominidae:>=2
 ---
 
 # trigger-2-humans-self-plus-1-attack
@@ -16,4 +16,4 @@ effects: ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=
 
 ## 效果
 
-若你控制至少 2 个人类，获得 +1 攻击力
+若你控制至少 2 个人科随从，获得 +1 攻击力

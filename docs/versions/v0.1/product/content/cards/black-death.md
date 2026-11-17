@@ -2,7 +2,9 @@
 id: black-death
 card_type: minion
 name: 黑死病
-tribe: virus
+playstyle: virus
+taxon: yersiniaceae
+specialty: [host:mammalia]
 subtype: plague
 level: 4
 era: feudal
@@ -21,7 +23,9 @@ is_scholar: false
 | id | black-death |
 | 名称 | 黑死病 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 耶尔森菌科 |
+| 关联分类 | 寄生：哺乳纲 |
 | 子类 | 瘟疫 |
 | 星级 | 4 |
 | 时代 | 封建 |
@@ -34,7 +38,8 @@ is_scholar: false
 
 ## 效果
 
-亡语：使敌方所有人类随从获得 -2 生命
+
+亡语：使敌方所有人科随从获得 -2 生命
 
 ## 出处
 

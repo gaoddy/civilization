@@ -2,7 +2,8 @@
 id: shiyanxiaoshu
 card_type: minion
 name: 实验小鼠
-tribe: biology
+playstyle: mammal
+taxon: muridae
 subtype: mammal
 level: 1
 era: prehistoric
@@ -21,7 +22,9 @@ is_scholar: false
 | id | shiyanxiaoshu |
 | 名称 | 实验小鼠 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 啮齿目 › 鼠科 |
+| 关联分类 | 无 |
 | 子类 | 哺乳 |
 | 星级 | 1 |
 | 时代 | 史前 |

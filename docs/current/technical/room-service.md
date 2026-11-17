@@ -14,12 +14,12 @@ server/
   crates/
     protocol/                   # serde 类型：由 schema 生成，含客户端/服务端消息与视图
     protocol-gen/               # 生成器：schema bundle → protocol/generated/protocol.rs
-    rule-engine/                # 纯库：规则判定与逐座位视图（src/view.rs）
+    rule-engine/                # 纯库：规则判定与逐座位视图（src/view.rs）；玩法抽取（src/playstyles.rs）
     room-service/               # 可执行：WebSocket 接入、房间、对局驱动
       src/lib.rs                # AppState、路由装配、内嵌 v0.1 数据
       src/main.rs               # --listen（默认 127.0.0.1:8080）
       src/net.rs                # /ws 连接 task、写端 task、房间 task（单写者）
-      src/room.rs               # 大厅房间状态机与房间注册表
+      src/room.rs               # 大厅房间状态机、房间玩法抽取与房间注册表
       src/game.rs               # 对局驱动：计时、阶段推进、去重、逐座位视图
       src/filter.rs             # 逐座位事件过滤与 CombatResult 映射
       src/view.rs               # 引擎 SeatView → 协议 PlayerView 的纯函数映射
@@ -50,7 +50,7 @@ protocol/
 
 ## 3. WebSocket 接入与信封
 
-- 路由只有 `GET /ws`（`axum::routing::get`），升级后进入连接 task；`AppState` 内嵌 v0.1 的 `cards.json`、`skills.json`、`tokens.json`、`config.json`。
+- 路由只有 `GET /ws`（`axum::routing::get`），升级后进入连接 task；`AppState` 内嵌 v0.1 的 `cards.json`、`skills.json`、`tokens.json`、`config.json`、`taxonomy.json`。
 - 连接拓扑：每个连接一个读端 task 与一个写端 task；每个房间一个房间 task（单写者，独占 `Room`/`GameTask` 可变状态）。连接层从不直接改房间状态，只投递 `RoomMessage`。
 - 上行统一为 `ClientEnvelope { v, id, type, ts, payload }`。**生成类型不校验 `v`**：连接层显式拒绝 `v != 1`，回 `BAD_PAYLOAD`（`不支持的协议版本`）后关闭连接，避免按 v1 语义执行 v2 载荷。
 - `envelope.parse()` 按 `type` 判别并校验 `payload` 结构；未知 `type` 回 `UNKNOWN_TYPE`，载荷不匹配回 `BAD_PAYLOAD`（`上行载荷与类型不匹配`），两者都继续读下一条，不关闭连接。
@@ -67,14 +67,18 @@ protocol/
 
 - 认证：手机号 + 开发验证码 `123456` 或令牌续登；`playerId`/`token` 为服务端生成的不可预测串，不暴露手机号。会话有效期 24 小时（`SESSION_TTL_MS`），过期在下次访问或 `purge_expired` 时清除，M1 不跑后台清理任务。
 - 建房：创建者坐 0 号座位并成为房主；房间码为 6 位大写字母数字，字母表排除易混字符 `0O1I`，首个房间码 `222222`。对局种子由房间码经 FNV-1a 64 位派生（`seed_for_code`）。
+- 房间玩法：建房时用房间码种子调用 `rule_engine::playstyles::draw(seed_for_code(code))`，抽取 5 个玩法存入 `RoomState.playstyles`；大厅期间保持不变，重开房间与断线重连不重抽。玩法必须早于英雄候选确定，因此抽取时点在房间创建，而不是 `Engine::new`。
 - 入房：坐最小空位；同一玩家重复加入同一房间幂等。非 `Lobby` 阶段成员集合冻结，加入/准备/选英雄/离开都返回 `INVALID_STAGE`。
 - 英雄候选：建房与入房时按房间码派生的种子把全部 `is_hero` 卡 id 升序后做确定性 Fisher–Yates 洗牌，再按进房顺序每 4 张切给一名玩家（`CANDIDATE_COUNT`），因此同房间内各玩家候选互不重复；候选保存在 `PlayerSlot.hero_candidates`，重进与重连都不重抽。
+- 英雄候选过滤：候选只取 `card_in_pool` 通过的英雄卡，按本局 5 个玩法过滤；`playstyle=neutral` 的英雄按 `specialty` 的 `play:` 关联过滤。过滤后一张英雄都没有时回退到全部英雄卡（产品兜底）。
+- 候选池不足：池大小 ≥ `SEAT_COUNT * CANDIDATE_COUNT`（32）时沿用分段、房间内互不重复；不足 32 时按 `(segment * 4 + i) % len` 取 `min(4, len)` 张，允许跨玩家重复；池小于 4 时每人取整个池并至少 1 张。
 - 选英雄校验：卡必须存在、`is_hero`，且在本人候选内（否则 `NOT_CANDIDATE` → `INVALID_CHOICE`）；座位已 `ready` 时再选返回 `INVALID_STAGE`。
 - 候选下发：`RoomUpdate.players[].heroCandidates` 只在发给本人的那份里填充，其余座位为 `null`；广播按座位逐个序列化，不共用 payload。这是展示规则而非机密：选中的 `heroCardId` 仍对全体成员可见，候选分组也能由房间码确定性复算。
-- 候选池校验：`AppState::new` 要求英雄卡数 ≥ `SEAT_COUNT * CANDIDATE_COUNT`（当前 32），不足时拒绝启动；否则最后几名玩家会拿到空候选，房间永远开不了局。
+- 候选池校验：`AppState::new` 要求英雄卡至少 1 张且分类字段合法（`taxon` 是分类树叶子、`play:` 取值是合法玩法），不再要求 32 张；池不足时由跨玩家重复兜底，房间仍能开局。
 - 大厅断线：`Detach` 不再立即释放座位，而是标记离线并记录 `disconnected_at_ms`；房间 task 的 tick 调用 `tick_disconnects`，超过 `RECONNECT_GRACE_MS` 才按原规则释放座位。`Leave` 命令仍立即释放。座位已被释放后再 `Reconnect` 回 `NOT_IN_ROOM`，并摘除该座位的下行登记。
 - 离开：座位立即空出且不重排；房主离开时转给座位号最小的剩余玩家；**大厅最后一人离开即销毁房间**（注册表同时删 `by_code` 与 `rooms`）。
 - 开局：8 个座位全部占用、全部准备且全部选好英雄后，由房主 `try_start` 把阶段推进到 `Recruit`，并在同一房间 task 内构造 `GameTask`。
+- `GameTask::new` 接收房间已抽好的 5 个玩法，开局原样传给 `Engine::new(catalog, seed, playstyles)`；`GameOver.seed` 不变，重开或重连复用同一组玩法。
 - 房间 task 在 `hub` 条目被摘除后退出：`RoomTask::retire_if_done` 在「对局已结束且无连接」或「注册表已无该房间」时摘除 `hub` 条目并结束循环。
 
 ## 6. 对局计时与阶段推进
@@ -130,6 +134,7 @@ protocol/
 - `sourceIndex`/`targetIndex` 是战前快照下标，`sourceSide`/`targetSide` 指明它属于哪一侧（`own`/`opponent`，相对接收座位）；召唤物等不在快照中的实例下标与侧别为 `null`，位置改由 `summon.position` 给出。
 - `summon.position` 由引擎按**存活随从序列**给出：召唤后该随从在存活随从中的下标，已阵亡条目不计数，上界由 `PlayerView.boardSlots` 决定。`summon.minion.index` 与它同值，语义一致（客户端不读该字段，按 `position` 插入）。
 - `PlayerView.boardSlots` 取自 `catalog.config.board_slots`（v0.1 为 7），放在视图顶层：重连只回 `Snapshot`，而视图每次刷新都带它，客户端不需要额外的续传逻辑。
+- `PlayerView.enabledFactions` 字段名保留，取值为本局启用的 5 个玩法 id；`SeatView.enabled_playstyles` 由引擎按 `enabled_playstyles` 生成，`room-service::view::to_protocol` 做 `[String; 5]` 转换，8 个座位取值一致。
 - `mirror` 原样取自战斗报告；幽灵战只向该座位发一条 `CombatResult`（报告里只有它自己的一条）。幽灵来自已出局者随机抽中的最终阵容，在引擎 `resolve_ghost` 里按幽灵自己的光环来源重算；实例编号只在必要时（与己方重号时）于本次战斗克隆内改号，与己方棋盘不相交，因此动作的实例编号在两侧可判。
 - `opponentPlayerId` 在幽灵战指向幽灵归属座位（已出局者）的 `playerId`；幽灵归属者本人观战时不指向自己，已出局观战者、招募阶段或未配对时为 `null`。
 - `combatLog` 来自 `SeatCombatReport`：真实战每个座位各有一份报告，只保留座位号较小的一份；幽灵战本来只有落单座位一条。战报回合号取结算时刻的 `state.turn`，追加后只保留最近 5 个回合（早于 `turn − 4` 的条目丢弃），按回合升序下发；`mirror=true` 表示该场为幽灵战。
@@ -141,13 +146,15 @@ protocol/
 - 对局内断线：座位保留 30 秒（`RECONNECT_GRACE_MS`）。窗口内重连回一条全量 `Snapshot`；超过窗口只把座位标记为离线，不释放座位、不结束对局，也不向其他座位下发通知。
 - `Combat` 阶段重连：快照之后追加补发该座位本场 `CombatResult`（报告保留到 `finish_combat` 为止），客户端据此按 `phaseDeadline` 续播。
 - 重连与 `RequestSnapshot` 共用全量快照路径；M1 **不重放历史**，`last_seq` 不参与判断，一律回全量快照，快照序号必然大于重连前最后一条。
-- 大厅断线：保留座位一个 `RECONNECT_GRACE_MS`（30 秒）宽限，超时由房间 tick 释放并广播 `RoomUpdate`；宽限内 `Reconnect` 回同一座位与同一组候选。
+- 大厅断线：保留座位一个 `RECONNECT_GRACE_MS`（30 秒）宽限，超时由房间 tick 释放并广播 `RoomUpdate`；宽限内 `Reconnect` 回同一座位与同一组候选。房间玩法在创建时已确定，重连不重抽。
 - 连接代次：每次 `Attach`/`Reconnect` 带进程内唯一 `generation`；`Detach`/`Leave` 只在代次与当前登记一致时生效，避免新旧连接并存时旧连接迟到关闭误释放座位。
 - M1 不做托管：`PlayerSummary.managed` 恒为 `false`。
 
 ## 10. 协议生成物
 
 - `protocol/schema/v1/` 是唯一契约来源；`protocol/generated/protocol.rs` 由 `protocol-gen` 用 typify 生成并随源提交，`protocol/generated/protocol.gd` 由 `scripts/gen_protocol_gdscript.py` 生成并随源提交。
+- `view.schema.json` 的 `enabledFactions` 描述为本局启用的 5 个玩法；字段名与长度不变，取值为 `mammal` 等玩法 id。
+- 协议样例 `protocol/samples/v1/s2c/*.json` 的 `enabledFactions` 为玩法 id，`client/tests/fixture.gd` 同步。
 - `make protocol-rs` 重新生成 Rust 类型；`make protocol-rs-check` 比较内存生成结果与磁盘内容，不一致即非零退出。
 - `make protocol` 生成 GDScript 常量与协议字段表；`make protocol-check` 运行样例校验并比对两处生成物漂移。
 
@@ -195,7 +202,7 @@ m1-check:
 | 静态检查 | `make lint` → `cargo fmt --check`、`cargo clippy --workspace --all-targets -- -D warnings` | 无警告 | 0 |
 | 确定性 | `make m0-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 22 s） | 0 |
 
-## 13. 与设计的三处偏差
+## 13. 与设计的偏差
 
 1. 设计 §5.4 写 `view(state, seat, catalog) -> PlayerView`；因 `rule-engine` 不依赖 `protocol`，改为引擎返回自有 `SeatView`，由 `room-service::view::to_protocol` 做机械映射。规则判定仍全部在引擎。
 2. 设计 §5.5 写「AI 决策改为同时接受 `PlayerView`」；为保住 M0 基线（`ai.rs` 的策略直接决定 1000 局基线数值），改为新增 view 驱动的 `sim/src/bot/brain.rs`，`ai.rs` 仍只读引擎状态、不接受 `PlayerView`（本需求只加了 `PendingChoice::Target` 的确定性分支与 `PlayCard.position: None`）。

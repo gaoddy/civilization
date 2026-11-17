@@ -2,7 +2,8 @@
 id: shuishengjue
 card_type: minion
 name: 水生蕨
-tribe: plant
+playstyle: plant
+taxon: salviniaceae
 subtype: aquatic-plant
 level: 2
 era: prehistoric
@@ -21,7 +22,9 @@ is_scholar: false
 | id | shuishengjue |
 | 名称 | 水生蕨 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 蕨类植物门 › 水龙骨纲 › 槐叶苹目 › 槐叶苹科 |
+| 关联分类 | 无 |
 | 子类 | 水生植物 |
 | 星级 | 2 |
 | 时代 | 史前 |

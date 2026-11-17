@@ -2,7 +2,8 @@
 id: bruce-lee
 card_type: minion
 name: 李小龙
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: martial-artist
 level: 4
 era: modern
@@ -21,7 +22,9 @@ is_scholar: false
 | id | bruce-lee |
 | 名称 | 李小龙 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 武术家 |
 | 星级 | 4 |
 | 时代 | 现代 |

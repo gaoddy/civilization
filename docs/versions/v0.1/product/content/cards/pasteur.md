@@ -2,7 +2,8 @@
 id: pasteur
 card_type: minion
 name: 巴斯德
-tribe: virus
+playstyle: virus
+taxon: hominidae
 subtype: microbiology
 level: 5
 era: industrial
@@ -22,7 +23,9 @@ is_hero: true
 | id | pasteur |
 | 名称 | 巴斯德 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 微生物学 |
 | 星级 | 5 |
 | 时代 | 工业 |

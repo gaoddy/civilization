@@ -2,7 +2,8 @@
 id: synthetic-cell
 card_type: minion
 name: 合成细胞
-tribe: biology
+playstyle: bacteria
+taxon: bacteria-incertae-sedis
 subtype: synthesis
 level: 5
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | synthetic-cell |
 | 名称 | 合成细胞 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 细菌域 |
+| 科学分类 | 细菌域 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 合成 |
 | 星级 | 5 |
 | 时代 | 未来 |

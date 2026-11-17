@@ -2,7 +2,9 @@
 id: linnaeus
 card_type: minion
 name: 林奈
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 subtype: biology
 level: 4
 era: feudal
@@ -22,7 +24,9 @@ is_hero: true
 | id | linnaeus |
 | 名称 | 林奈 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
 | 子类 | 生物学 |
 | 星级 | 4 |
 | 时代 | 封建 |
@@ -35,7 +39,8 @@ is_hero: true
 
 ## 效果
 
-战吼：使你的所有生物随从获得一次成长
+
+战吼：使你的所有动物随从获得一次成长
 
 ## 设计说明
 

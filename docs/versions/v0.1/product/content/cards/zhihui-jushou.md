@@ -2,7 +2,8 @@
 id: zhihui-jushou
 card_type: minion
 name: 智慧巨兽
-tribe: biology
+playstyle: mammal
+taxon: mammalia-incertae-sedis
 subtype: behemoth
 level: 7
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | zhihui-jushou |
 | 名称 | 智慧巨兽 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 巨兽 |
 | 星级 | 7 |
 | 时代 | 未来 |

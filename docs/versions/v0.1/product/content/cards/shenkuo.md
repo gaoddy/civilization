@@ -2,7 +2,9 @@
 id: shenkuo
 card_type: minion
 name: 沈括
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:mammal]
 subtype: natural-history
 level: 5
 era: feudal
@@ -22,7 +24,9 @@ is_hero: true
 | id | shenkuo |
 | 名称 | 沈括 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：哺乳纲 |
 | 子类 | 博物学 |
 | 星级 | 5 |
 | 时代 | 封建 |
@@ -41,7 +45,7 @@ is_hero: true
 
 定位：每回合首次刷新额外给一张当前时代随从，等于把刷新变成半个购买。
 平衡边界：额外随从仍需购买，收益取决于金币，被动不带属性。
-使用建议：经济宽裕时先刷新再决策，免费槽位出现同流派时优先拿。
+使用建议：经济宽裕时先刷新再决策，免费槽位出现同玩法时优先拿。
 
 ## 出处
 

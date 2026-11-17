@@ -2,7 +2,9 @@
 id: kuangquanbing
 card_type: minion
 name: 狂犬病
-tribe: virus
+playstyle: virus
+taxon: rhabdoviridae
+specialty: [host:mammalia]
 subtype: virus
 level: 2
 era: primitive
@@ -21,7 +23,9 @@ is_scholar: false
 | id | kuangquanbing |
 | 名称 | 狂犬病 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 弹状病毒科 |
+| 关联分类 | 寄生：哺乳纲 |
 | 子类 | 病毒 |
 | 星级 | 2 |
 | 时代 | 原始 |

@@ -2,7 +2,8 @@
 id: nushou
 card_type: minion
 name: 弩手
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: unit
 level: 2
 era: feudal
@@ -21,7 +22,9 @@ is_scholar: false
 | id | nushou |
 | 名称 | 弩手 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 兵种 |
 | 星级 | 2 |
 | 时代 | 封建 |
@@ -34,7 +37,7 @@ is_scholar: false
 
 ## 效果
 
-战吼：使你的其他人类随从获得 +1 攻击力
+战吼：使你的其他人科随从获得 +1 攻击力
 
 ## 出处
 

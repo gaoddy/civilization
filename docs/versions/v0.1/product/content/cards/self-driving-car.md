@@ -2,7 +2,8 @@
 id: self-driving-car
 card_type: minion
 name: 自动驾驶汽车
-tribe: machine
+playstyle: machine
+taxon: automation
 subtype: vehicle
 level: 4
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | self-driving-car |
 | 名称 | 自动驾驶汽车 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 机械 |
+| 科学分类 | 造物 › 自动机械 |
+| 关联分类 | 无 |
 | 子类 | 载具 |
 | 星级 | 4 |
 | 时代 | 未来 |

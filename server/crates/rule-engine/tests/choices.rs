@@ -9,9 +9,10 @@
 mod common;
 
 use common::{
-    CARDS_JSON, CONFIG_JSON, SKILLS_JSON, TOKENS_JSON, effects_of, test_catalog, turn_started,
+    CARDS_JSON, CONFIG_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON, effects_of, test_catalog,
+    test_playstyles, turn_started,
 };
-use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
+use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill, card_in_pool};
 use rule_engine::effects::{Effect, EffectCtx, parse_effects};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
@@ -46,7 +47,7 @@ fn add_skill(catalog: &mut Catalog, skill: Skill) {
 fn add_minion(
     catalog: &mut Catalog,
     id: &str,
-    tribe: Tribe,
+    playstyle: Playstyle,
     stats: (u8, i32, i32),
     skills: &[&str],
 ) {
@@ -56,14 +57,16 @@ fn add_minion(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            tribe,
+            playstyle,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
             subtype: None,
             level,
             era: None,
             attack: Some(attack),
             health: Some(health),
             skills: skills.iter().map(|skill| skill.to_string()).collect(),
-            is_scholar: tribe == Tribe::Scholar,
+            is_scholar: false,
             is_hero: false,
             cost: None,
         },
@@ -79,7 +82,7 @@ fn first_minion_of_level(catalog: &Catalog, level: u8) -> String {
             card.card_type == CardType::Minion
                 && !card.is_hero
                 && card.level == level
-                && card.tribe != Tribe::Scholar
+                && !card.is_scholar
         })
         .expect("数据中应存在该星级随从")
         .id
@@ -171,7 +174,7 @@ fn pool_count(state: &GameState, card_id: &str) -> u16 {
 }
 
 fn discover_effect() -> Effect {
-    effect("OnActivate|Discover|self|pool=tribe,choose=1")
+    effect("OnActivate|Discover|self|pool=playstyle,choose=1")
 }
 
 // ---------------------------------------------------------------------------
@@ -179,7 +182,7 @@ fn discover_effect() -> Effect {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn discover_pool_tribe_uses_enabled_tribes() {
+fn discover_pool_uses_enabled_playstyles() {
     let (mut engine, mut state) = turn_started(2);
 
     let events = engine.apply_op(&mut state, &discover_effect(), &ctx(0), None);
@@ -205,10 +208,10 @@ fn discover_pool_tribe_uses_enabled_tribes() {
         assert_eq!(card.card_type, CardType::Minion);
         assert!(!card.is_hero);
         assert!(
-            card.tribe == Tribe::General || state.enabled_tribes.contains(&card.tribe),
-            "候选 {card_id} 的流派 {:?} 未在本局启用（{:?}）",
-            card.tribe,
-            state.enabled_tribes
+            card_in_pool(card, &state.enabled_playstyles),
+            "候选 {card_id} 的玩法 {:?} 未在本局启用（{:?}）",
+            card.playstyle,
+            state.enabled_playstyles
         );
         assert!(pool_count(&state, card_id) > 0, "候选必须在共享池中");
     }
@@ -216,7 +219,7 @@ fn discover_pool_tribe_uses_enabled_tribes() {
 
 #[test]
 fn discover_follows_injected_random_stream() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [2; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [2; 32], test_playstyles());
     engine
         .start_game(&mut state, &common::heroes())
         .expect("开局应成功");
@@ -239,7 +242,7 @@ fn discover_follows_injected_random_stream() {
     }
 
     // 同一起点、同一随机流必须得到同一组候选。
-    let (mut engine_again, mut fresh) = Engine::new(test_catalog(), [2; 32]);
+    let (mut engine_again, mut fresh) = Engine::new(test_catalog(), [2; 32], test_playstyles());
     engine_again
         .start_game(&mut fresh, &common::heroes())
         .expect("开局应成功");
@@ -381,7 +384,7 @@ fn discover_fires_from_hero_power() {
         skill(
             "test-discover",
             None,
-            "OnActivate|Discover|self|pool=tribe,choose=1",
+            "OnActivate|Discover|self|pool=playstyle,choose=1",
             Some(0),
         ),
     );
@@ -494,7 +497,7 @@ fn gain_minion_level_current_uses_player_era() {
     add_minion(
         &mut engine.catalog,
         "probe-two-star",
-        Tribe::Machine,
+        Playstyle::Neutral,
         (2, 4, 4),
         &[],
     );
@@ -714,14 +717,14 @@ fn evolve_fixture() -> (Engine, GameState) {
     add_minion(
         &mut engine.catalog,
         "evolver",
-        Tribe::Biology,
+        Playstyle::Bacteria,
         (1, 2, 2),
         &["keyword-evolve"],
     );
     add_minion(
         &mut engine.catalog,
         "watcher",
-        Tribe::Biology,
+        Playstyle::Bacteria,
         (1, 1, 1),
         &["trigger-ally-evolve"],
     );
@@ -821,7 +824,7 @@ fn evolve_golden_chooses_twice() {
     add_minion(
         &mut engine.catalog,
         "golden-evolver",
-        Tribe::Biology,
+        Playstyle::Bacteria,
         (1, 4, 4),
         &["keyword-evolve"],
     );
@@ -878,7 +881,7 @@ fn evolve_golden_watcher_triggers_twice() {
     add_minion(
         &mut engine.catalog,
         "golden-evolver",
-        Tribe::Biology,
+        Playstyle::Bacteria,
         (1, 4, 4),
         &["keyword-evolve"],
     );
@@ -943,14 +946,14 @@ fn evolve_bonus_does_not_trigger_onsummon_twice() {
     add_minion(
         &mut engine.catalog,
         "evolver",
-        Tribe::Biology,
+        Playstyle::Bacteria,
         (1, 2, 2),
         &["keyword-evolve"],
     );
     add_minion(
         &mut engine.catalog,
         "summon-watcher",
-        Tribe::Machine,
+        Playstyle::Machine,
         (1, 1, 1),
         &["trigger-ally-summon"],
     );
@@ -1025,7 +1028,7 @@ fn gain_minion_from_board_fails_at_load() {
         "efficient-algorithm",
         r#"[{"trigger":"on_activate","op":"refresh_shop","selector":{"kind":"self"},"params":{"free":true}},{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"from":"board","level":"current","to":"hand"}}]"#,
     );
-    let error = Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON)
+    let error = Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON, TAXONOMY_JSON)
         .expect_err("from=board 必须在加载期失败");
     let message = error.to_string();
     assert!(
@@ -1042,7 +1045,7 @@ fn gain_minion_from_hand_fails_at_load() {
         r#"[{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"from":"hand","level":"current","to":"hand"}}]"#,
     );
     assert!(
-        Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON).is_err(),
+        Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON, TAXONOMY_JSON).is_err(),
         "from=hand 必须在加载期失败"
     );
 }
@@ -1054,7 +1057,7 @@ fn gain_minion_from_shop_or_omitted_loads() {
         r#"[{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"level":"3","to":"board"}}]"#,
     ] {
         let skills = skills_with_effects_json("efficient-algorithm", effects);
-        Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON)
+        Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON, TAXONOMY_JSON)
             .unwrap_or_else(|error| panic!("{effects} 应能加载：{error}"));
     }
 }

@@ -55,9 +55,9 @@ pub fn to_protocol(
     // 引擎回合从 1 起、时代从 1 起；生成类型要求 `NonZeroU64`。
     let turn = NonZeroU64::new(u64::from(seat_view.turn)).ok_or(ProtocolError("BAD_PAYLOAD"))?;
 
-    // 本局固定启用 5 个流派，长度不符说明引擎状态被破坏。
+    // 本局固定启用 5 个玩法，长度不符说明引擎状态被破坏；协议字段名保持兼容。
     let enabled_factions: [String; 5] = seat_view
-        .enabled_tribes
+        .enabled_playstyles
         .clone()
         .try_into()
         .map_err(|_| ProtocolError("BAD_PAYLOAD"))?;

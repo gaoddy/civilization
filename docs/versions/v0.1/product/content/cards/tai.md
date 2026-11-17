@@ -2,7 +2,8 @@
 id: tai
 card_type: minion
 name: 苔藓
-tribe: plant
+playstyle: plant
+taxon: bryaceae
 subtype: moss
 level: 1
 era: primitive
@@ -21,7 +22,9 @@ is_scholar: false
 | id | tai |
 | 名称 | 苔藓 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 苔藓植物门 › 藓纲 › 真藓目 › 真藓科 |
+| 关联分类 | 无 |
 | 子类 | 苔藓 |
 | 星级 | 1 |
 | 时代 | 原始 |

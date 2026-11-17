@@ -14,11 +14,11 @@
       "hpCap": 40,
       "combatLog": [],
       "enabledFactions": [
-        "human",
+        "bacteria",
+        "cnidarian",
+        "fungus",
         "machine",
-        "biology",
-        "plant",
-        "scholar"
+        "plant"
       ],
       "self": {
         "playerId": "p_03",

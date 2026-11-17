@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use common::{effects_of, minion, reborn_count, setup_with_gold};
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
-use rule_engine::data::{Card, CardType, Skill, Token, Tribe};
+use rule_engine::data::{Card, CardType, Playstyle, Skill, Token};
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
 use rule_engine::state::{InstanceId, MinionInstance, Seat};
@@ -18,7 +18,7 @@ use rule_engine::state::{InstanceId, MinionInstance, Seat};
 fn add_card(
     engine: &mut Engine,
     id: &str,
-    tribe: Tribe,
+    playstyle: Playstyle,
     attack: i32,
     health: i32,
     skills: &[(Option<&str>, &str)],
@@ -43,14 +43,16 @@ fn add_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            tribe,
+            playstyle,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
             subtype: None,
             level: 1,
             era: None,
             attack: Some(attack),
             health: Some(health),
             skills: skill_ids,
-            is_scholar: tribe == Tribe::Scholar,
+            is_scholar: false,
             is_hero: false,
             cost: Some(1),
         },
@@ -65,6 +67,8 @@ fn add_token(engine: &mut Engine, id: &str, attack: i32, health: i32) {
             attack,
             health,
             keywords: Vec::new(),
+            playstyle: None,
+            taxon: None,
         },
     );
 }
@@ -137,7 +141,7 @@ fn deathrattle_runs_before_reborn() {
     add_card(
         &mut engine,
         "ratter",
-        Tribe::Biology,
+        Playstyle::Bacteria,
         1,
         1,
         &[
@@ -148,7 +152,7 @@ fn deathrattle_runs_before_reborn() {
             (Some("reborn"), "[]"),
         ],
     );
-    add_card(&mut engine, "brute", Tribe::Human, 1, 10, &[]);
+    add_card(&mut engine, "brute", Playstyle::Mammal, 1, 10, &[]);
 
     let log = battle(
         &engine,
@@ -172,12 +176,12 @@ fn sow_summons_seedling_on_death() {
     add_card(
         &mut engine,
         "sower",
-        Tribe::Plant,
+        Playstyle::Plant,
         1,
         1,
         &[(Some("sow"), "[]")],
     );
-    add_card(&mut engine, "killer", Tribe::Human, 1, 10, &[]);
+    add_card(&mut engine, "killer", Playstyle::Mammal, 1, 10, &[]);
 
     let log = battle(
         &engine,
@@ -199,7 +203,7 @@ fn summon_card_deducts_pool_and_waits_when_empty() {
     add_card(
         &mut engine,
         "summoner",
-        Tribe::Human,
+        Playstyle::Mammal,
         1,
         1,
         &[(
@@ -207,8 +211,8 @@ fn summon_card_deducts_pool_and_waits_when_empty() {
             "OnDeath|Summon|self|card=termite,count=1",
         )],
     );
-    add_card(&mut engine, "termite", Tribe::Human, 1, 1, &[]);
-    add_card(&mut engine, "stomper", Tribe::Human, 5, 10, &[]);
+    add_card(&mut engine, "termite", Playstyle::Mammal, 1, 1, &[]);
+    add_card(&mut engine, "stomper", Playstyle::Mammal, 5, 10, &[]);
 
     let mut pool = BTreeMap::new();
     pool.insert("termite".to_string(), 1u16);
@@ -251,7 +255,7 @@ fn friendly_death_triggers_only_for_owner() {
     add_card(
         &mut engine,
         "watcher",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         10,
         &[(
@@ -262,7 +266,7 @@ fn friendly_death_triggers_only_for_owner() {
     add_card(
         &mut engine,
         "victim",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         1,
         &[(Some("taunt"), "[]")],
@@ -270,7 +274,7 @@ fn friendly_death_triggers_only_for_owner() {
     add_card(
         &mut engine,
         "enemy-watcher",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         10,
         &[(
@@ -278,7 +282,7 @@ fn friendly_death_triggers_only_for_owner() {
             "OnFriendlyDeath|ModifyStats|self|attack=1,duration=permanent",
         )],
     );
-    add_card(&mut engine, "brute", Tribe::Human, 5, 5, &[]);
+    add_card(&mut engine, "brute", Playstyle::Mammal, 5, 5, &[]);
 
     let log = battle_first(
         &engine,
@@ -307,7 +311,7 @@ fn enemy_death_triggers_for_opponent() {
     add_card(
         &mut engine,
         "avenger",
-        Tribe::Human,
+        Playstyle::Mammal,
         10,
         10,
         &[(
@@ -318,7 +322,7 @@ fn enemy_death_triggers_for_opponent() {
     add_card(
         &mut engine,
         "prey",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         1,
         &[(Some("taunt"), "[]")],
@@ -343,7 +347,7 @@ fn combat_start_order_heroes_then_minions() {
     add_card(
         &mut engine,
         "hero",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         30,
         &[(None, "OnCombatStart|DealDamage|enemy:all|amount=5")],
@@ -351,7 +355,7 @@ fn combat_start_order_heroes_then_minions() {
     add_card(
         &mut engine,
         "minion0",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         5,
         &[(
@@ -362,7 +366,7 @@ fn combat_start_order_heroes_then_minions() {
     add_card(
         &mut engine,
         "defender0",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         1,
         &[(
@@ -399,12 +403,12 @@ fn delayed_battlecry_enemy_target_runs_at_combat_start() {
     add_card(
         &mut engine,
         "delayed",
-        Tribe::Human,
+        Playstyle::Mammal,
         1,
         1,
         &[(Some("battlecry"), "OnPlay|DealDamage|enemy:random|amount=3")],
     );
-    add_card(&mut engine, "target", Tribe::Human, 0, 3, &[]);
+    add_card(&mut engine, "target", Playstyle::Mammal, 0, 3, &[]);
 
     let log = battle(
         &engine,
@@ -427,7 +431,7 @@ fn delayed_battlecry_cancelled_if_source_left() {
     add_card(
         &mut engine,
         "hero",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         30,
         &[(None, "OnCombatStart|DealDamage|enemy:all|amount=5")],
@@ -435,7 +439,7 @@ fn delayed_battlecry_cancelled_if_source_left() {
     add_card(
         &mut engine,
         "delayed",
-        Tribe::Human,
+        Playstyle::Mammal,
         1,
         1,
         &[(
@@ -443,7 +447,7 @@ fn delayed_battlecry_cancelled_if_source_left() {
             "OnPlay|DealDamage|enemy:random|amount=10",
         )],
     );
-    add_card(&mut engine, "tank", Tribe::Human, 0, 10, &[]);
+    add_card(&mut engine, "tank", Playstyle::Mammal, 0, 10, &[]);
 
     let log = battle_with(
         &engine,
@@ -467,7 +471,7 @@ fn copy_minion_to_hand_does_not_deduct_pool() {
     add_card(
         &mut engine,
         "copier",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         10,
         &[(None, "OnCombatStart|Copy|self|to=hand")],
@@ -496,7 +500,7 @@ fn on_ally_summon_fires_after_summon() {
     add_card(
         &mut engine,
         "summoner",
-        Tribe::Human,
+        Playstyle::Mammal,
         1,
         5,
         &[(None, "OnCombatStart|Summon|self|token=spawn,count=1")],
@@ -504,7 +508,7 @@ fn on_ally_summon_fires_after_summon() {
     add_card(
         &mut engine,
         "observer",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         10,
         &[(
@@ -536,7 +540,7 @@ fn trigger_budget_caps_effects() {
     add_card(
         &mut engine,
         "loop-a",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         10,
         &[
@@ -547,7 +551,7 @@ fn trigger_budget_caps_effects() {
     add_card(
         &mut engine,
         "loop-b",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         10,
         &[(None, "OnAllyGrowth|Growth|self|times=1")],
@@ -576,7 +580,7 @@ fn turn_start_contagion_death_fires_deathrattle_and_sow() {
     add_card(
         &mut engine,
         "dying",
-        Tribe::Plant,
+        Playstyle::Plant,
         1,
         1,
         &[
@@ -587,7 +591,7 @@ fn turn_start_contagion_death_fires_deathrattle_and_sow() {
             (Some("sow"), "[]"),
         ],
     );
-    add_card(&mut engine, "friend", Tribe::Plant, 0, 5, &[]);
+    add_card(&mut engine, "friend", Playstyle::Plant, 0, 5, &[]);
 
     state.players[0]
         .board
@@ -635,7 +639,7 @@ fn combat_start_heroes_follow_first_side_order() {
     add_card(
         &mut engine,
         "hero-a",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         30,
         &[(None, "OnCombatStart|DealDamage|both:all|amount=5")],
@@ -643,7 +647,7 @@ fn combat_start_heroes_follow_first_side_order() {
     add_card(
         &mut engine,
         "hero-b",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         30,
         &[(
@@ -651,11 +655,11 @@ fn combat_start_heroes_follow_first_side_order() {
             "OnCombatStart|ModifyStats|both:all|attack=1,duration=permanent",
         )],
     );
-    add_card(&mut engine, "p", Tribe::Human, 0, 5, &[]);
+    add_card(&mut engine, "p", Playstyle::Mammal, 0, 5, &[]);
     add_card(
         &mut engine,
         "n",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         10,
         &[(
@@ -666,7 +670,7 @@ fn combat_start_heroes_follow_first_side_order() {
     add_card(
         &mut engine,
         "d",
-        Tribe::Human,
+        Playstyle::Mammal,
         0,
         20,
         &[(None, "OnCombatStart|DealDamage|enemy:all|amount=10")],

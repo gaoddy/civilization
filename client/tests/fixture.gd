@@ -27,7 +27,7 @@ static func view() -> Dictionary:
         "boardSlots": 7,
         "hpCap": 40,
         "combatLog": [],
-        "enabledFactions": ["human", "machine", "biology", "plant", "scholar"],
+        "enabledFactions": ["bacteria", "cnidarian", "fungus", "machine", "plant"],
         "self": {
             "playerId": "p0",
             "seat": 0,

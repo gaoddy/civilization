@@ -2,7 +2,8 @@
 id: space-rice
 card_type: minion
 name: 太空水稻
-tribe: plant
+playstyle: plant
+taxon: poaceae
 subtype: crop
 level: 5
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | space-rice |
 | 名称 | 太空水稻 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 禾本目 › 禾本科 |
+| 关联分类 | 无 |
 | 子类 | 作物 |
 | 星级 | 5 |
 | 时代 | 未来 |

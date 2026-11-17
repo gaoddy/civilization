@@ -2,7 +2,9 @@
 id: morgan
 card_type: minion
 name: 摩尔根
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:insect, play:mammal, play:bird, play:reptile, play:fish, play:cephalopod, play:cnidarian]
 subtype: genetics
 level: 5
 era: modern
@@ -22,7 +24,9 @@ is_hero: true
 | id | morgan |
 | 名称 | 摩尔根 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：昆虫纲、哺乳纲、鸟纲、爬行纲、鱼纲、头足纲、水螅纲 |
 | 子类 | 遗传学 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -35,7 +39,8 @@ is_hero: true
 
 ## 效果
 
-你的生物随从获得 +0/+1
+
+你的动物随从获得 +0/+1
 
 ## 设计说明
 

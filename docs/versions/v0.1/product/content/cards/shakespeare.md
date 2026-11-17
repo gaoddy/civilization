@@ -2,7 +2,8 @@
 id: shakespeare
 card_type: minion
 name: 莎士比亚
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: literature
 level: 4
 era: feudal
@@ -22,7 +23,9 @@ is_hero: true
 | id | shakespeare |
 | 名称 | 莎士比亚 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 文学 |
 | 星级 | 4 |
 | 时代 | 封建 |

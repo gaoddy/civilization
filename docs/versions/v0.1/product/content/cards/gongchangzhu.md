@@ -2,7 +2,8 @@
 id: gongchangzhu
 card_type: minion
 name: 工厂主
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: capital
 level: 5
 era: industrial
@@ -21,7 +22,9 @@ is_scholar: false
 | id | gongchangzhu |
 | 名称 | 工厂主 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 资本 |
 | 星级 | 5 |
 | 时代 | 工业 |
@@ -34,7 +37,7 @@ is_scholar: false
 
 ## 效果
 
-战吼：使你的其他人类随从获得 +1 攻击力
+战吼：使你的其他人科随从获得 +1 攻击力
 
 ## 出处
 

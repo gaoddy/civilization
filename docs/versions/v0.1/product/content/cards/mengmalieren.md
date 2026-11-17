@@ -2,7 +2,9 @@
 id: mengmalieren
 card_type: minion
 name: 猛犸猎人
-tribe: human
+playstyle: mammal
+taxon: hominidae
+specialty: [prey:proboscidea]
 subtype: primitive
 level: 2
 era: prehistoric
@@ -21,7 +23,9 @@ is_scholar: false
 | id | mengmalieren |
 | 名称 | 猛犸猎人 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 捕食：长鼻目 |
 | 子类 | 原始 |
 | 星级 | 2 |
 | 时代 | 史前 |

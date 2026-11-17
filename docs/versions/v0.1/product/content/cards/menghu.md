@@ -2,7 +2,9 @@
 id: menghu
 card_type: minion
 name: 猛虎
-tribe: biology
+playstyle: mammal
+taxon: felidae
+specialty: [prey:artiodactyla]
 subtype: mammal
 level: 3
 era: primitive
@@ -21,7 +23,9 @@ is_scholar: false
 | id | menghu |
 | 名称 | 猛虎 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 猫科 |
+| 关联分类 | 捕食：偶蹄目 |
 | 子类 | 哺乳 |
 | 星级 | 3 |
 | 时代 | 原始 |

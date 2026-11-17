@@ -4,7 +4,8 @@ name: 奥林匹克祭典
 card_type: effect
 level: 3
 era: classical
-tribe: general
+playstyle: neutral
+taxon: phenomenon
 cost: 2
 match_text: 同左
 skills: [trigger-all-friendly-growth-once]
@@ -21,7 +22,9 @@ skills: [trigger-all-friendly-growth-once]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 流派 | 通用 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | trigger-all-friendly-growth-once |
 | 费用 | 2 |
 | 确定性替换 | 同左 |

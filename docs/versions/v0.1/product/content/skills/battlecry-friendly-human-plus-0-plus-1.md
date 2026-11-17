@@ -1,8 +1,8 @@
 ---
 id: battlecry-friendly-human-plus-0-plus-1
 keyword: battlecry
-text: 战吼：使一个友方人类随从获得 +0/+1
-effects: OnPlay|ModifyStats|friendly:single:tribe=human|health=1,duration=permanent
+text: 战吼：使一个友方人科随从获得 +0/+1
+effects: OnPlay|ModifyStats|friendly:single:taxon=hominidae|health=1,duration=permanent
 ---
 
 # battlecry-friendly-human-plus-0-plus-1
@@ -17,4 +17,4 @@ effects: OnPlay|ModifyStats|friendly:single:tribe=human|health=1,duration=perman
 
 ## 效果
 
-战吼：使一个友方人类随从获得 +0/+1
+战吼：使一个友方人科随从获得 +0/+1

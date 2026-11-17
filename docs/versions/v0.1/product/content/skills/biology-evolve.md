@@ -1,8 +1,8 @@
 ---
 id: biology-evolve
 name: 获得性状
-text: 使一个友方生物随从获得进化
-effects: OnActivate|GrantKeyword|friendly:single:tribe=biology|keyword=evolve,duration=permanent
+text: 使一个友方动物随从获得进化
+effects: OnActivate|GrantKeyword|friendly:single:taxon=animalia|keyword=evolve,duration=permanent
 cost: 2
 uses_per_turn: 1
 match_text: 同左
@@ -22,9 +22,9 @@ match_text: 同左
 
 ## 效果
 
-使一个友方生物随从获得进化
+使一个友方动物随从获得进化
 
 ## 设计说明
 
-定位：让已有生物随从获得进化，由玩家在 +2/+2、护盾、复生中选择。
+定位：让已有动物随从获得进化，由玩家在 +2/+2、护盾、复生中选择。
 口径：进化只作用于自身，已拥有进化的随从再次获得时不再追加。

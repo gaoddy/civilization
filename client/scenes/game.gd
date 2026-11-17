@@ -298,7 +298,7 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
             card_id,
             attack_text,
             health_text,
-            GameCardFace.tribe_text(entry_data),
+            GameCardFace.playstyle_text(entry_data),
             badge_text,
             str(CardDB.display_cost(card_id)),
             UI.enum_text("era", str(entry_data.get("era", ""))),

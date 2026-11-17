@@ -5,7 +5,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-use crate::data::{Catalog, Era, Tribe};
+use crate::data::{Catalog, Era, Playstyle};
 use crate::effects::Duration;
 use crate::rng::RngStreams;
 
@@ -210,13 +210,13 @@ pub struct MinionInstance {
 impl MinionInstance {
     /// 按目录解析卡面攻防；token 取注册表数值，普通卡取卡牌攻防，金色 ×2。
     ///
-    /// 学者标记取卡牌 `is_scholar` 或学者流派，构造后不再变化。
+    /// 学者标记取卡牌 `is_scholar`，构造后不再变化。
     pub fn new(catalog: &Catalog, instance_id: InstanceId, card_id: &str, golden: bool) -> Self {
         let (attack, health) = base_stats(catalog, card_id, golden).unwrap_or((0, 0));
         let is_scholar = catalog
             .cards
             .get(card_id)
-            .map(|card| card.is_scholar || card.tribe == Tribe::Scholar)
+            .map(|card| card.is_scholar)
             .unwrap_or(false);
         Self {
             instance_id,
@@ -391,7 +391,8 @@ pub struct GameState {
     pub pool: BTreeMap<String, u16>,
     pub rng: RngStreams,
     pub first_seat: Seat,
-    pub enabled_tribes: BTreeSet<Tribe>,
+    /// 本局启用的 5 个玩法；不含 `Neutral`。
+    pub enabled_playstyles: BTreeSet<Playstyle>,
     pub previous_opponent: BTreeMap<Seat, Option<Seat>>,
     pub last_winner: Option<Seat>,
     /// 本回合配对结果，由招募结束写入、结算结束清空。

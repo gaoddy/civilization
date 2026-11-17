@@ -3538,7 +3538,7 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 ///      }
 ///    },
 ///    "enabledFactions": {
-///      "description": "本局启用的 5 个流派，取值为英文 id",
+///      "description": "本局启用的 5 个玩法",
 ///      "type": "array",
 ///      "items": {
 ///        "type": "string"
@@ -3705,7 +3705,7 @@ pub struct PlayerView {
     ///本局最近 5 个回合的全部战斗，按回合升序；全对局公开
     #[serde(rename = "combatLog")]
     pub combat_log: ::std::vec::Vec<CombatLogEntry>,
-    ///本局启用的 5 个流派，取值为英文 id
+    ///本局启用的 5 个玩法
     #[serde(rename = "enabledFactions")]
     pub enabled_factions: [::std::string::String; 5usize],
     ///生命上限，v0.1 为 40

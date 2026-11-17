@@ -1,8 +1,8 @@
-use crate::data::{CardType, Tribe};
+use crate::data::CardType;
 
 use super::validate::validate_effect;
 use super::{
-    Compare, Condition, CopyState, Duration, Effect, Filter, KeywordSpec, Op, Params, Pick,
+    Basis, Compare, Condition, CopyState, Duration, Effect, Filter, KeywordSpec, Op, Params, Pick,
     Selector, Side, TimesIf, Trigger, Zone,
 };
 
@@ -15,6 +15,8 @@ const TRIGGERS: &[(&str, Trigger)] = &[
     ("OnFirstRefresh", Trigger::OnFirstRefresh),
     ("OnCombatStart", Trigger::OnCombatStart),
     ("OnDealDamage", Trigger::OnDealDamage),
+    ("OnKill", Trigger::OnKill),
+    ("OnAllyKill", Trigger::OnAllyKill),
     ("OnDeath", Trigger::OnDeath),
     ("OnFriendlyDeath", Trigger::OnFriendlyDeath),
     ("OnEnemyDeath", Trigger::OnEnemyDeath),
@@ -39,6 +41,7 @@ const OPS: &[(&str, Op)] = &[
     ("RefreshShop", Op::RefreshShop),
     ("AddShopSlot", Op::AddShopSlot),
     ("GainMinion", Op::GainMinion),
+    ("Decompose", Op::Decompose),
 ];
 
 /// 把单个技能的 `effects` 字符串解析为类型化 AST。
@@ -244,6 +247,14 @@ fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> R
                 _ => return Err(format!("state 非法 {value:?}（{chunk}）")),
             })
         }
+        "basis" => {
+            params.basis = Some(match value {
+                "original" => Basis::Original,
+                "combat_start" => Basis::CombatStart,
+                "pre_kill" => Basis::PreKill,
+                _ => return Err(format!("basis 非法 {value:?}（{chunk}）")),
+            })
+        }
         other => {
             return Err(format!("参数 {other:?} 不属于原语 {op:?}（{chunk}）"));
         }
@@ -439,34 +450,20 @@ fn parse_params(op: Op, raw: Option<&str>, chunk: &str) -> (Params, Vec<String>)
 
 fn parse_times_if(value: &str, chunk: &str) -> Result<TimesIf, String> {
     let invalid = || format!("timesIf 格式非法 {value:?}（{chunk}）");
-    let Some((tribe, count)) = value.split_once(':') else {
-        return Err(invalid());
+    let parts: Vec<&str> = value.split(':').map(str::trim).collect();
+    let (key, filter_value, count) = match parts.as_slice() {
+        // `scholar:2`：无值键，直接跟次数。
+        [key, count] => (key.to_string(), None, *count),
+        // `playstyle:mammal:2`：键、值、次数。
+        [key, filter_value, count] => (key.to_string(), Some(filter_value.to_string()), *count),
+        _ => return Err(invalid()),
     };
-    let tribe_name = tribe.trim();
-    let count = count.trim();
-    let tribe = TRIBE_VALUES
-        .iter()
-        .find(|(name, _)| *name == tribe_name)
-        .map(|(_, tribe)| *tribe);
-    let Some(tribe) = tribe else {
-        return Err(invalid());
-    };
-    if !is_digits(count) {
+    if key.is_empty() || filter_value.as_deref() == Some("") || !is_digits(count) {
         return Err(invalid());
     }
     Ok(TimesIf {
-        tribe,
+        key,
+        value: filter_value,
         times: count.parse().map_err(|_| invalid())?,
     })
 }
-
-/// DSL 中的部落名到 `Tribe` 的映射，用于只能取部落的 `timesIf` 参数。
-const TRIBE_VALUES: &[(&str, Tribe)] = &[
-    ("human", Tribe::Human),
-    ("machine", Tribe::Machine),
-    ("biology", Tribe::Biology),
-    ("plant", Tribe::Plant),
-    ("virus", Tribe::Virus),
-    ("scholar", Tribe::Scholar),
-    ("general", Tribe::General),
-];

@@ -12,13 +12,14 @@ use room_service::clock::{Clock, FixedClock};
 use room_service::envelope::SeatChannel;
 use room_service::game::{GameTask, RoomCommand, SeatUpdate, UpdateKind};
 use room_service::room::PlayerSlot;
-use rule_engine::data::{CardType, Catalog, Skill};
+use rule_engine::data::{CardType, Catalog, Playstyle, Skill};
 use rule_engine::state::Seat;
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
 const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
+const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
 /// 8 个座位各用一张不同的英雄卡。
 const HEROES: [&str; 8] = [
@@ -36,7 +37,14 @@ const HEROES: [&str; 8] = [
 const SEED: u64 = 7;
 
 fn catalog() -> Catalog {
-    Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON).expect("卡表应能加载")
+    Catalog::from_json(
+        CARDS_JSON,
+        SKILLS_JSON,
+        TOKENS_JSON,
+        CONFIG_JSON,
+        TAXONOMY_JSON,
+    )
+    .expect("卡表应能加载")
 }
 
 fn heroes() -> BTreeMap<Seat, String> {
@@ -64,10 +72,22 @@ fn players() -> Vec<PlayerSlot> {
         .collect()
 }
 
+/// 测试固定玩法：覆盖各级随从，保证商店不至于因池过小而全空。
+fn playstyles() -> [Playstyle; 5] {
+    [
+        Playstyle::Mammal,
+        Playstyle::Bird,
+        Playstyle::Plant,
+        Playstyle::Virus,
+        Playstyle::Machine,
+    ]
+}
+
 fn task_with(catalog: Catalog) -> (GameTask, FixedClock) {
     let clock = FixedClock::new(1_000_000);
     let clock_arc: Arc<dyn room_service::clock::Clock> = Arc::new(clock.clone());
-    let task = GameTask::new(catalog, SEED, heroes(), players(), clock_arc).expect("开局应当成功");
+    let task = GameTask::new(catalog, SEED, playstyles(), heroes(), players(), clock_arc)
+        .expect("开局应当成功");
     (task, clock)
 }
 
@@ -1151,7 +1171,8 @@ fn task_with_seed_and_hp(seed: u64, initial_hp: i32) -> (GameTask, FixedClock) {
     catalog.config.initial_hp = initial_hp;
     let clock = FixedClock::new(1_000_000);
     let clock_arc: Arc<dyn Clock> = Arc::new(clock.clone());
-    let task = GameTask::new(catalog, seed, heroes(), players(), clock_arc).expect("开局应当成功");
+    let task = GameTask::new(catalog, seed, playstyles(), heroes(), players(), clock_arc)
+        .expect("开局应当成功");
     (task, clock)
 }
 

@@ -1,0 +1,699 @@
+{
+  "nodes": [
+    {
+      "id": "accipitridae",
+      "parent": "accipitriformes",
+      "rank": "family"
+    },
+    {
+      "id": "accipitriformes",
+      "parent": "aves",
+      "rank": "order"
+    },
+    {
+      "id": "aconoidasida",
+      "parent": "apicomplexa",
+      "rank": "class"
+    },
+    {
+      "id": "actinobacteria",
+      "parent": "bacteria",
+      "rank": "phylum"
+    },
+    {
+      "id": "actinomycetia",
+      "parent": "actinobacteria",
+      "rank": "class"
+    },
+    {
+      "id": "actinopterygii",
+      "parent": "chordata",
+      "rank": "class"
+    },
+    {
+      "id": "actinopterygii-incertae-sedis",
+      "parent": "actinopterygii",
+      "rank": "family"
+    },
+    {
+      "id": "alphaproteobacteria",
+      "parent": "proteobacteria",
+      "rank": "class"
+    },
+    {
+      "id": "amarillovirales",
+      "parent": "flasuviricetes",
+      "rank": "order"
+    },
+    {
+      "id": "angiospermae",
+      "parent": "plantae",
+      "rank": "phylum"
+    },
+    {
+      "id": "animalia",
+      "parent": null,
+      "rank": "kingdom"
+    },
+    {
+      "id": "anthoathecata",
+      "parent": "hydrozoa",
+      "rank": "order"
+    },
+    {
+      "id": "apicomplexa",
+      "parent": "protozoa",
+      "rank": "phylum"
+    },
+    {
+      "id": "archaeopterygidae",
+      "parent": "archaeopterygiformes",
+      "rank": "family"
+    },
+    {
+      "id": "archaeopterygiformes",
+      "parent": "aves",
+      "rank": "order"
+    },
+    {
+      "id": "arthropoda",
+      "parent": "animalia",
+      "rank": "phylum"
+    },
+    {
+      "id": "articulavirales",
+      "parent": "insthoviricetes",
+      "rank": "order"
+    },
+    {
+      "id": "artiodactyla",
+      "parent": "mammalia",
+      "rank": "order"
+    },
+    {
+      "id": "asteraceae",
+      "parent": "asterales",
+      "rank": "family"
+    },
+    {
+      "id": "asterales",
+      "parent": "magnoliopsida",
+      "rank": "order"
+    },
+    {
+      "id": "automation",
+      "parent": "craft",
+      "rank": "technique"
+    },
+    {
+      "id": "aves",
+      "parent": "chordata",
+      "rank": "class"
+    },
+    {
+      "id": "bacillaceae",
+      "parent": "bacillales",
+      "rank": "family"
+    },
+    {
+      "id": "bacillales",
+      "parent": "bacilli",
+      "rank": "order"
+    },
+    {
+      "id": "bacilli",
+      "parent": "firmicutes",
+      "rank": "class"
+    },
+    {
+      "id": "bacteria",
+      "parent": null,
+      "rank": "kingdom"
+    },
+    {
+      "id": "bacteria-incertae-sedis",
+      "parent": "bacteria",
+      "rank": "family"
+    },
+    {
+      "id": "blattodea",
+      "parent": "insecta",
+      "rank": "order"
+    },
+    {
+      "id": "bovidae",
+      "parent": "artiodactyla",
+      "rank": "family"
+    },
+    {
+      "id": "bryaceae",
+      "parent": "bryales",
+      "rank": "family"
+    },
+    {
+      "id": "bryales",
+      "parent": "bryopsida",
+      "rank": "order"
+    },
+    {
+      "id": "bryophyta",
+      "parent": "plantae",
+      "rank": "phylum"
+    },
+    {
+      "id": "bryopsida",
+      "parent": "bryophyta",
+      "rank": "class"
+    },
+    {
+      "id": "canidae",
+      "parent": "carnivora",
+      "rank": "family"
+    },
+    {
+      "id": "carnivora",
+      "parent": "mammalia",
+      "rank": "order"
+    },
+    {
+      "id": "cephalopoda",
+      "parent": "mollusca",
+      "rank": "class"
+    },
+    {
+      "id": "chitovirales",
+      "parent": "pokkesviricetes",
+      "rank": "order"
+    },
+    {
+      "id": "chordata",
+      "parent": "animalia",
+      "rank": "phylum"
+    },
+    {
+      "id": "cnidaria",
+      "parent": "animalia",
+      "rank": "phylum"
+    },
+    {
+      "id": "columbidae",
+      "parent": "columbiformes",
+      "rank": "family"
+    },
+    {
+      "id": "columbiformes",
+      "parent": "aves",
+      "rank": "order"
+    },
+    {
+      "id": "coronaviridae",
+      "parent": "nidovirales",
+      "rank": "family"
+    },
+    {
+      "id": "craft",
+      "parent": null,
+      "rank": "kingdom"
+    },
+    {
+      "id": "diptera",
+      "parent": "insecta",
+      "rank": "order"
+    },
+    {
+      "id": "drosophilidae",
+      "parent": "diptera",
+      "rank": "family"
+    },
+    {
+      "id": "elephantidae",
+      "parent": "proboscidea",
+      "rank": "family"
+    },
+    {
+      "id": "enterobacterales",
+      "parent": "gammaproteobacteria",
+      "rank": "order"
+    },
+    {
+      "id": "equidae",
+      "parent": "perissodactyla",
+      "rank": "family"
+    },
+    {
+      "id": "fabaceae",
+      "parent": "fabales",
+      "rank": "family"
+    },
+    {
+      "id": "fabales",
+      "parent": "magnoliopsida",
+      "rank": "order"
+    },
+    {
+      "id": "felidae",
+      "parent": "carnivora",
+      "rank": "family"
+    },
+    {
+      "id": "filoviridae",
+      "parent": "mononegavirales",
+      "rank": "family"
+    },
+    {
+      "id": "firmicutes",
+      "parent": "bacteria",
+      "rank": "phylum"
+    },
+    {
+      "id": "flasuviricetes",
+      "parent": "riboviria",
+      "rank": "class"
+    },
+    {
+      "id": "flaviviridae",
+      "parent": "amarillovirales",
+      "rank": "family"
+    },
+    {
+      "id": "fringillidae",
+      "parent": "passeriformes",
+      "rank": "family"
+    },
+    {
+      "id": "fungi",
+      "parent": null,
+      "rank": "kingdom"
+    },
+    {
+      "id": "fungi-incertae-sedis",
+      "parent": "fungi",
+      "rank": "family"
+    },
+    {
+      "id": "gammaproteobacteria",
+      "parent": "proteobacteria",
+      "rank": "class"
+    },
+    {
+      "id": "haemosporida",
+      "parent": "aconoidasida",
+      "rank": "order"
+    },
+    {
+      "id": "hominidae",
+      "parent": "primates",
+      "rank": "family"
+    },
+    {
+      "id": "hydrozoa",
+      "parent": "cnidaria",
+      "rank": "class"
+    },
+    {
+      "id": "information-computing",
+      "parent": "craft",
+      "rank": "technique"
+    },
+    {
+      "id": "insecta",
+      "parent": "arthropoda",
+      "rank": "class"
+    },
+    {
+      "id": "insthoviricetes",
+      "parent": "riboviria",
+      "rank": "class"
+    },
+    {
+      "id": "lactobacillales",
+      "parent": "bacilli",
+      "rank": "order"
+    },
+    {
+      "id": "lamiales",
+      "parent": "magnoliopsida",
+      "rank": "order"
+    },
+    {
+      "id": "life-medical",
+      "parent": "craft",
+      "rank": "technique"
+    },
+    {
+      "id": "liliopsida",
+      "parent": "angiospermae",
+      "rank": "class"
+    },
+    {
+      "id": "magnoliopsida",
+      "parent": "angiospermae",
+      "rank": "class"
+    },
+    {
+      "id": "malpighiales",
+      "parent": "magnoliopsida",
+      "rank": "order"
+    },
+    {
+      "id": "malvaceae",
+      "parent": "malvales",
+      "rank": "family"
+    },
+    {
+      "id": "malvales",
+      "parent": "magnoliopsida",
+      "rank": "order"
+    },
+    {
+      "id": "mammalia",
+      "parent": "chordata",
+      "rank": "class"
+    },
+    {
+      "id": "mammalia-incertae-sedis",
+      "parent": "mammalia",
+      "rank": "family"
+    },
+    {
+      "id": "mollusca",
+      "parent": "animalia",
+      "rank": "phylum"
+    },
+    {
+      "id": "monjiviricetes",
+      "parent": "riboviria",
+      "rank": "class"
+    },
+    {
+      "id": "mononegavirales",
+      "parent": "monjiviricetes",
+      "rank": "order"
+    },
+    {
+      "id": "muridae",
+      "parent": "rodentia",
+      "rank": "family"
+    },
+    {
+      "id": "mycobacteriaceae",
+      "parent": "mycobacteriales",
+      "rank": "family"
+    },
+    {
+      "id": "mycobacteriales",
+      "parent": "actinomycetia",
+      "rank": "order"
+    },
+    {
+      "id": "nidovirales",
+      "parent": "pisoniviricetes",
+      "rank": "order"
+    },
+    {
+      "id": "nucleocytoviricota",
+      "parent": "virus",
+      "rank": "phylum"
+    },
+    {
+      "id": "oceaniidae",
+      "parent": "anthoathecata",
+      "rank": "family"
+    },
+    {
+      "id": "octopoda",
+      "parent": "cephalopoda",
+      "rank": "order"
+    },
+    {
+      "id": "octopodidae",
+      "parent": "octopoda",
+      "rank": "family"
+    },
+    {
+      "id": "oleaceae",
+      "parent": "lamiales",
+      "rank": "family"
+    },
+    {
+      "id": "ortervirales",
+      "parent": "revtraviricetes",
+      "rank": "order"
+    },
+    {
+      "id": "orthomyxoviridae",
+      "parent": "articulavirales",
+      "rank": "family"
+    },
+    {
+      "id": "paramyxoviridae",
+      "parent": "mononegavirales",
+      "rank": "family"
+    },
+    {
+      "id": "passeriformes",
+      "parent": "aves",
+      "rank": "order"
+    },
+    {
+      "id": "perissodactyla",
+      "parent": "mammalia",
+      "rank": "order"
+    },
+    {
+      "id": "phenomenon",
+      "parent": null,
+      "rank": "phenomenon"
+    },
+    {
+      "id": "pisoniviricetes",
+      "parent": "riboviria",
+      "rank": "class"
+    },
+    {
+      "id": "plantae",
+      "parent": null,
+      "rank": "kingdom"
+    },
+    {
+      "id": "plantae-incertae-sedis",
+      "parent": "plantae",
+      "rank": "family"
+    },
+    {
+      "id": "plasmodiidae",
+      "parent": "haemosporida",
+      "rank": "family"
+    },
+    {
+      "id": "poaceae",
+      "parent": "poales",
+      "rank": "family"
+    },
+    {
+      "id": "poales",
+      "parent": "liliopsida",
+      "rank": "order"
+    },
+    {
+      "id": "pokkesviricetes",
+      "parent": "nucleocytoviricota",
+      "rank": "class"
+    },
+    {
+      "id": "polypodiaceae",
+      "parent": "polypodiales",
+      "rank": "family"
+    },
+    {
+      "id": "polypodiales",
+      "parent": "polypodiopsida",
+      "rank": "order"
+    },
+    {
+      "id": "polypodiopsida",
+      "parent": "pteridophyta",
+      "rank": "class"
+    },
+    {
+      "id": "power-energy",
+      "parent": "craft",
+      "rank": "technique"
+    },
+    {
+      "id": "poxviridae",
+      "parent": "chitovirales",
+      "rank": "family"
+    },
+    {
+      "id": "primates",
+      "parent": "mammalia",
+      "rank": "order"
+    },
+    {
+      "id": "proboscidea",
+      "parent": "mammalia",
+      "rank": "order"
+    },
+    {
+      "id": "production-construction",
+      "parent": "craft",
+      "rank": "technique"
+    },
+    {
+      "id": "proteobacteria",
+      "parent": "bacteria",
+      "rank": "phylum"
+    },
+    {
+      "id": "protozoa",
+      "parent": null,
+      "rank": "kingdom"
+    },
+    {
+      "id": "pteridophyta",
+      "parent": "plantae",
+      "rank": "phylum"
+    },
+    {
+      "id": "reptilia",
+      "parent": "chordata",
+      "rank": "class"
+    },
+    {
+      "id": "retroviridae",
+      "parent": "ortervirales",
+      "rank": "family"
+    },
+    {
+      "id": "revtraviricetes",
+      "parent": "riboviria",
+      "rank": "class"
+    },
+    {
+      "id": "rhabdoviridae",
+      "parent": "mononegavirales",
+      "rank": "family"
+    },
+    {
+      "id": "rhizophoraceae",
+      "parent": "malpighiales",
+      "rank": "family"
+    },
+    {
+      "id": "riboviria",
+      "parent": "virus",
+      "rank": "phylum"
+    },
+    {
+      "id": "rickettsiaceae",
+      "parent": "rickettsiales",
+      "rank": "family"
+    },
+    {
+      "id": "rickettsiales",
+      "parent": "alphaproteobacteria",
+      "rank": "order"
+    },
+    {
+      "id": "rodentia",
+      "parent": "mammalia",
+      "rank": "order"
+    },
+    {
+      "id": "rutaceae",
+      "parent": "sapindales",
+      "rank": "family"
+    },
+    {
+      "id": "salviniaceae",
+      "parent": "salviniales",
+      "rank": "family"
+    },
+    {
+      "id": "salviniales",
+      "parent": "polypodiopsida",
+      "rank": "order"
+    },
+    {
+      "id": "sapindales",
+      "parent": "magnoliopsida",
+      "rank": "order"
+    },
+    {
+      "id": "squamata",
+      "parent": "reptilia",
+      "rank": "order"
+    },
+    {
+      "id": "squamata-incertae-sedis",
+      "parent": "squamata",
+      "rank": "family"
+    },
+    {
+      "id": "streptococcaceae",
+      "parent": "lactobacillales",
+      "rank": "family"
+    },
+    {
+      "id": "suidae",
+      "parent": "artiodactyla",
+      "rank": "family"
+    },
+    {
+      "id": "termitidae",
+      "parent": "blattodea",
+      "rank": "family"
+    },
+    {
+      "id": "transport",
+      "parent": "craft",
+      "rank": "technique"
+    },
+    {
+      "id": "varanidae",
+      "parent": "squamata",
+      "rank": "family"
+    },
+    {
+      "id": "vibrionaceae",
+      "parent": "enterobacterales",
+      "rank": "family"
+    },
+    {
+      "id": "virus",
+      "parent": null,
+      "rank": "kingdom"
+    },
+    {
+      "id": "virus-incertae-sedis",
+      "parent": "virus",
+      "rank": "family"
+    },
+    {
+      "id": "weapon-siege",
+      "parent": "craft",
+      "rank": "technique"
+    },
+    {
+      "id": "yersiniaceae",
+      "parent": "enterobacterales",
+      "rank": "family"
+    }
+  ],
+  "playstyles": [
+    "mammal",
+    "bird",
+    "reptile",
+    "fish",
+    "insect",
+    "cephalopod",
+    "cnidarian",
+    "plant",
+    "fungus",
+    "bacteria",
+    "protozoa",
+    "virus",
+    "machine"
+  ]
+}

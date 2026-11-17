@@ -172,10 +172,10 @@ func _render_candidates() -> void:
         _candidates.add_child(card)
 
 
-## 候选卡：部落色封面铺满、居中首字水印、底部居中名字。
+## 候选卡：玩法色封面铺满、居中首字水印、底部居中名字。
 func _build_card(hero_id: String, locked: bool) -> PanelContainer:
     var entry := CardDB.card(hero_id)
-    var tribe := str(entry.get("tribe", ""))
+    var playstyle := str(entry.get("playstyle", ""))
     var card := PanelContainer.new()
     card.name = "HeroCard_%s" % hero_id
     card.custom_minimum_size = CARD_SIZE
@@ -195,7 +195,7 @@ func _build_card(hero_id: String, locked: bool) -> PanelContainer:
     card.add_child(stack)
 
     var cover := ColorRect.new()
-    cover.color = UITheme.tribe_cover(tribe)
+    cover.color = UITheme.playstyle_cover(playstyle)
     cover.set_anchors_preset(Control.PRESET_FULL_RECT)
     cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
     stack.add_child(cover)

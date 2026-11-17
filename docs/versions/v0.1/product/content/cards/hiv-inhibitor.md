@@ -4,7 +4,8 @@ name: 艾滋病毒·抑制剂
 card_type: effect
 level: 5
 era: modern
-tribe: virus
+playstyle: neutral
+taxon: phenomenon
 cost: 3
 match_text: 同左
 skills: [combatstart-remove-all-human-growth]
@@ -21,14 +22,17 @@ skills: [combatstart-remove-all-human-growth]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 流派 | 病毒 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | combatstart-remove-all-human-growth |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
 
 ## 效果
 
-战斗开始时，移除所有人类随从的全部成长
+
+战斗开始时，移除所有人科随从的全部成长
 
 ## 出处
 

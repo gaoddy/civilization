@@ -158,7 +158,7 @@ func _minion_card(
         card_id,
         GameCardFace.stat_text(minion.get("attack")),
         GameCardFace.stat_text(minion.get("health")),
-        GameCardFace.tribe_text(entry),
+        GameCardFace.playstyle_text(entry),
         "★" if bool(minion.get("golden", false)) else "",
     ))
 
@@ -202,7 +202,7 @@ func _refresh_shop(state: GameUiState) -> void:
             card_id,
             GameCardFace.stat_text(entry.get("attack")),
             GameCardFace.stat_text(entry.get("health")),
-            GameCardFace.tribe_text(entry),
+            GameCardFace.playstyle_text(entry),
             "",
             str(CardDB.display_cost(card_id)),
             UI.enum_text("era", str(entry.get("era", ""))),

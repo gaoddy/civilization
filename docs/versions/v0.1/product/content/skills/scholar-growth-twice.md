@@ -2,7 +2,7 @@
 id: scholar-growth-twice
 name: 推演
 text: 使一个友方学者随从获得两次成长
-effects: OnActivate|Growth|friendly:single:tribe=scholar|times=2
+effects: OnActivate|Growth|friendly:single:scholar=true|times=2
 cost: 1
 uses_per_turn: 1
 match_text: 同左

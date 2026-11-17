@@ -7,8 +7,6 @@
 import re
 
 CARD_TYPES = ("minion", "effect")
-TRIBES = ("human", "machine", "biology", "plant", "virus", "scholar", "general")
-MINION_TRIBES = TRIBES[:-1]
 ERAS = ("prehistoric", "primitive", "classical", "feudal", "industrial", "modern", "future")
 KEYWORD_BASES = ("battlecry", "deathrattle", "reborn", "taunt", "divine_shield",
                  "windfury", "contagion", "optimal_attack", "sow", "evolve", "breed", "assemble")
@@ -16,9 +14,11 @@ EVOLVE_CHOICES = ("stats", "divine_shield", "reborn")
 STAT_LAYERS = ("initial", "permanent", "turn", "aura", "damage")
 GENERATED_PREFIXES = (
     "card.", "skill.", "token.",
-    "enum.card_type.", "enum.tribe.", "enum.era.", "enum.keyword.", "enum.subtype.",
+    "enum.card_type.", "enum.playstyle.", "enum.taxon.", "enum.era.", "enum.keyword.", "enum.subtype.",
 )
 MANUAL_PREFIXES = ("ui.", "error.", "enum.evolve.", "enum.stat_layer.")
+# 已废弃的生成前缀：合并时直接丢弃，不再视为未知前缀报错。
+LEGACY_PREFIXES = ("enum.tribe.",)
 
 _TRAILING_VALUE = re.compile(r"\s+(?:N|\d+)$")
 

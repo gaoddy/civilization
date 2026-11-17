@@ -1,9 +1,10 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Deserialize;
 
 use crate::effects::{Effect, validate_effects};
 use crate::error::CatalogError;
+use crate::taxonomy::Taxonomy;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 pub enum CardType {
@@ -13,22 +14,111 @@ pub enum CardType {
     Effect,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
-pub enum Tribe {
-    #[serde(rename = "human")]
-    Human,
-    #[serde(rename = "machine")]
-    Machine,
-    #[serde(rename = "biology")]
-    Biology,
-    #[serde(rename = "plant")]
+/// 玩法：本局启用的 13 种物种/造物路线，外加中立的通用卡。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Playstyle {
+    Mammal,
+    Bird,
+    Reptile,
+    Fish,
+    Insect,
+    Cephalopod,
+    Cnidarian,
     Plant,
-    #[serde(rename = "virus")]
+    Fungus,
+    Bacteria,
+    Protozoa,
     Virus,
-    #[serde(rename = "scholar")]
-    Scholar,
-    #[serde(rename = "general")]
-    General,
+    Machine,
+    Neutral,
+}
+
+impl Playstyle {
+    /// 可被抽取的 13 个玩法，按枚举顺序排列；不含 `Neutral`。
+    pub const ALL: [Playstyle; 13] = [
+        Playstyle::Mammal,
+        Playstyle::Bird,
+        Playstyle::Reptile,
+        Playstyle::Fish,
+        Playstyle::Insect,
+        Playstyle::Cephalopod,
+        Playstyle::Cnidarian,
+        Playstyle::Plant,
+        Playstyle::Fungus,
+        Playstyle::Bacteria,
+        Playstyle::Protozoa,
+        Playstyle::Virus,
+        Playstyle::Machine,
+    ];
+
+    /// 数据文件与协议中的玩法 id；`Neutral` 为 `neutral`。
+    pub fn id(self) -> &'static str {
+        match self {
+            Playstyle::Mammal => "mammal",
+            Playstyle::Bird => "bird",
+            Playstyle::Reptile => "reptile",
+            Playstyle::Fish => "fish",
+            Playstyle::Insect => "insect",
+            Playstyle::Cephalopod => "cephalopod",
+            Playstyle::Cnidarian => "cnidarian",
+            Playstyle::Plant => "plant",
+            Playstyle::Fungus => "fungus",
+            Playstyle::Bacteria => "bacteria",
+            Playstyle::Protozoa => "protozoa",
+            Playstyle::Virus => "virus",
+            Playstyle::Machine => "machine",
+            Playstyle::Neutral => "neutral",
+        }
+    }
+
+    /// 由玩法 id 解析；未知 id（含 `neutral`）返回 `None`。
+    pub fn from_id(id: &str) -> Option<Playstyle> {
+        Playstyle::ALL
+            .iter()
+            .copied()
+            .find(|playstyle| playstyle.id() == id)
+    }
+
+    /// 状态哈希中的序号（0..13）；`Neutral` 为 13。
+    pub fn ordinal(self) -> u8 {
+        match self {
+            Playstyle::Mammal => 0,
+            Playstyle::Bird => 1,
+            Playstyle::Reptile => 2,
+            Playstyle::Fish => 3,
+            Playstyle::Insect => 4,
+            Playstyle::Cephalopod => 5,
+            Playstyle::Cnidarian => 6,
+            Playstyle::Plant => 7,
+            Playstyle::Fungus => 8,
+            Playstyle::Bacteria => 9,
+            Playstyle::Protozoa => 10,
+            Playstyle::Virus => 11,
+            Playstyle::Machine => 12,
+            Playstyle::Neutral => 13,
+        }
+    }
+}
+
+/// 卡牌 `specialty` 条目的类型。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SpecialtyKind {
+    /// `play:<玩法 id>`：学者与中立非学者卡的本局玩法关联。
+    Play,
+    /// `prey:<分类节点 id>`：捕食物种。
+    Prey,
+    /// `host:<分类节点 id>`：寄生物种。
+    Host,
+}
+
+/// 卡牌与玩法/物种的关联条目。
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Specialty {
+    pub kind: SpecialtyKind,
+    pub value: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
@@ -55,7 +145,10 @@ pub enum Era {
 pub struct Card {
     pub id: String,
     pub card_type: CardType,
-    pub tribe: Tribe,
+    pub playstyle: Playstyle,
+    pub taxon: String,
+    #[serde(default)]
+    pub specialty: Vec<Specialty>,
     pub subtype: Option<String>,
     pub level: u8,
     pub era: Option<Era>,
@@ -84,7 +177,26 @@ pub struct Token {
     pub attack: i32,
     pub health: i32,
     pub keywords: Vec<String>,
+    /// 缺省按 `Neutral` 处理。
+    pub playstyle: Option<Playstyle>,
+    /// 缺省按 `phenomenon` 处理。
+    pub taxon: Option<String>,
 }
+
+impl Token {
+    /// 参与筛选的玩法；缺字段按 `Neutral`。
+    pub fn playstyle(&self) -> Playstyle {
+        self.playstyle.unwrap_or(Playstyle::Neutral)
+    }
+
+    /// 参与筛选的分类节点；缺字段按 `phenomenon`。
+    pub fn taxon(&self) -> &str {
+        self.taxon.as_deref().unwrap_or(PHENOMENON)
+    }
+}
+
+/// 效果牌与缺省 Token 的分类节点。
+pub const PHENOMENON: &str = "phenomenon";
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -108,6 +220,32 @@ pub struct Catalog {
     pub skills: BTreeMap<String, Skill>,
     pub tokens: BTreeMap<String, Token>,
     pub config: GameConfig,
+    pub taxonomy: Taxonomy,
+}
+
+/// 卡牌是否在本局卡池内。
+///
+/// - 非 `Neutral` 玩法：玩法被启用才在池中。
+/// - `Neutral`：`specialty` 中没有 `play:` 时视为纯通用，始终在池中；
+///   有 `play:` 时至少一个命中本局玩法才在池中。学者与中立工具卡同一口径。
+pub fn card_in_pool(card: &Card, enabled: &BTreeSet<Playstyle>) -> bool {
+    if card.playstyle != Playstyle::Neutral {
+        return enabled.contains(&card.playstyle);
+    }
+    let associations = card
+        .specialty
+        .iter()
+        .filter(|specialty| specialty.kind == SpecialtyKind::Play);
+    let mut any = false;
+    for specialty in associations {
+        any = true;
+        if Playstyle::from_id(&specialty.value)
+            .is_some_and(|playstyle| enabled.contains(&playstyle))
+        {
+            return true;
+        }
+    }
+    !any
 }
 
 impl Catalog {
@@ -116,6 +254,7 @@ impl Catalog {
         skills: &str,
         tokens: &str,
         config: &str,
+        taxonomy: &str,
     ) -> Result<Catalog, CatalogError> {
         let cards: Vec<Card> =
             serde_json::from_str(cards).map_err(|err| CatalogError::File("cards.json", err))?;
@@ -125,6 +264,8 @@ impl Catalog {
             serde_json::from_str(tokens).map_err(|err| CatalogError::File("tokens.json", err))?;
         let config: GameConfig =
             serde_json::from_str(config).map_err(|err| CatalogError::File("config.json", err))?;
+        let taxonomy: Taxonomy = Taxonomy::from_json(taxonomy)
+            .map_err(|err| CatalogError::File("taxonomy.json", err))?;
 
         let card_map = collect_unique(cards, "cards.json", |card| &card.id)?;
         let skill_map = collect_unique(skills, "skills.json", |skill| &skill.id)?;
@@ -139,6 +280,11 @@ impl Catalog {
                     )));
                 }
             }
+        }
+
+        let taxonomy_errors = validate_taxonomy(&taxonomy, &card_map, &token_map);
+        if !taxonomy_errors.is_empty() {
+            return Err(CatalogError::Rule(taxonomy_errors.join("\n")));
         }
 
         let mut effect_errors = Vec::new();
@@ -161,7 +307,57 @@ impl Catalog {
             skills: skill_map,
             tokens: token_map,
             config,
+            taxonomy,
         })
+    }
+}
+
+/// 加载期校验分类关联：所有 `taxon`、`prey:`、`host:` 节点存在，且 `taxon` 是叶子。
+fn validate_taxonomy(
+    taxonomy: &Taxonomy,
+    cards: &BTreeMap<String, Card>,
+    tokens: &BTreeMap<String, Token>,
+) -> Vec<String> {
+    let mut errors = Vec::new();
+    for card in cards.values() {
+        let owner = format!("cards.json: 卡牌 {}", card.id);
+        check_taxon(taxonomy, &owner, &card.taxon, &mut errors);
+        for specialty in &card.specialty {
+            match specialty.kind {
+                SpecialtyKind::Play => {
+                    if Playstyle::from_id(&specialty.value).is_none() {
+                        errors.push(format!(
+                            "{owner}: specialty play:{} 不是可启用的玩法",
+                            specialty.value
+                        ));
+                    }
+                }
+                SpecialtyKind::Prey | SpecialtyKind::Host => {
+                    if !taxonomy.contains(&specialty.value) {
+                        errors.push(format!(
+                            "{owner}: specialty 节点 {} 不在分类树中",
+                            specialty.value
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    for token in tokens.values() {
+        if let Some(taxon) = &token.taxon {
+            let owner = format!("tokens.json: Token {}", token.id);
+            check_taxon(taxonomy, &owner, taxon, &mut errors);
+        }
+    }
+    errors
+}
+
+/// 校验一个 `taxon` 存在且为叶子。
+fn check_taxon(taxonomy: &Taxonomy, owner: &str, taxon: &str, errors: &mut Vec<String>) {
+    if !taxonomy.contains(taxon) {
+        errors.push(format!("{owner}: taxon {taxon} 不在分类树中"));
+    } else if !taxonomy.is_leaf(taxon) {
+        errors.push(format!("{owner}: taxon {taxon} 不是叶子节点"));
     }
 }
 

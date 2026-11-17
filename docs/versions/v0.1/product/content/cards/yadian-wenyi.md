@@ -2,7 +2,8 @@
 id: yadian-wenyi
 card_type: minion
 name: 雅典瘟疫
-tribe: virus
+playstyle: virus
+taxon: virus-incertae-sedis
 subtype: plague
 level: 3
 era: classical
@@ -21,7 +22,9 @@ is_scholar: false
 | id | yadian-wenyi |
 | 名称 | 雅典瘟疫 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 病毒 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 瘟疫 |
 | 星级 | 3 |
 | 时代 | 古典 |

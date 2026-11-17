@@ -2,7 +2,8 @@
 id: famingjia
 card_type: minion
 name: 发明家
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: invention
 level: 4
 era: industrial
@@ -21,7 +22,9 @@ is_scholar: false
 | id | famingjia |
 | 名称 | 发明家 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 发明 |
 | 星级 | 4 |
 | 时代 | 工业 |

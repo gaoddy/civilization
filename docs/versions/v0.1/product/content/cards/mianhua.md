@@ -2,7 +2,8 @@
 id: mianhua
 card_type: minion
 name: 棉花
-tribe: plant
+playstyle: plant
+taxon: malvaceae
 subtype: crop
 level: 2
 era: industrial
@@ -21,7 +22,9 @@ is_scholar: false
 | id | mianhua |
 | 名称 | 棉花 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 锦葵目 › 锦葵科 |
+| 关联分类 | 无 |
 | 子类 | 作物 |
 | 星级 | 2 |
 | 时代 | 工业 |

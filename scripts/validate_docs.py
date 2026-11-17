@@ -31,33 +31,65 @@ _KEYWORD_NAMES = (
 KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+)$")
 # 技能上的 keyword 是携带者自身登记的常驻关键词，不接受卡牌层的「无」哨兵值。
 SKILL_KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+)$")
-AURA_RE = re.compile(r"^你的(其他)?(人类|机械|生物|植物|病毒|学者)?随从获得 ?(.+)$")
+AURA_RE = re.compile(r"^你的(其他)?(人类|人科|机械|生物|动物|植物|真菌|细菌|原生生物|病毒|学者)?随从获得 ?(.+)$")
 AURA_VALUE_RE = re.compile(
     r"^(?:\+\d+/\+\d+|\+\d+ 攻击力|\+\d+ 生命值|最优攻击|嘲讽|护盾|复生|连击)$"
 )
-TRIBE_KEYWORD = {"assemble": "machine", "sow": "plant", "evolve": "biology"}
-TRIBES = set(i18n_terms.MINION_TRIBES)
-EFFECT_TRIBES = set(i18n_terms.TRIBES)
+TAXONOMY_FILE = ROOT / "taxonomy.md"
+# 分类树层级：中文编辑值 → 生成物 rank。
+TAXONOMY_RANKS = {"界": "kingdom", "门": "phylum", "纲": "class", "目": "order",
+                  "科": "family", "技术分类": "technique", "现象": "phenomenon"}
+# rank 的合法出现位置：根只允许界，现象节点自成一树。
+RANK_PARENT_ALLOWED = {
+    "kingdom": set(),
+    "phylum": {"kingdom"},
+    "class": {"phylum"},
+    "order": {"phylum", "class"},
+    "family": {"kingdom", "phylum", "class", "order", "family"},
+    "technique": {"kingdom"},
+}
+ROOT_RANKS = {"界"}
+PLAYSTYLE_IDS = ("mammal", "bird", "reptile", "fish", "insect", "cephalopod", "cnidarian",
+                 "plant", "fungus", "bacteria", "protozoa", "virus", "machine")
+PLAYSTYLE_VALUES = set(PLAYSTYLE_IDS) | {"neutral"}
+# 非学者中立卡只允许造物六类工具卡；自动机械归机械玩法。
+CRAFT_TOOL_TAXA = {"power-energy", "transport", "weapon-siege",
+                   "production-construction", "information-computing", "life-medical"}
+MACHINE_TAXON = "automation"
+SPECIALTY_KINDS = ("play", "prey", "host")
+# 专属关键词及其允许的玩法。evolve 另要求生物卡且非学者，在关键词校验里单独处理。
+KEYWORD_PLAYSTYLE = {
+    "decompose": {"fungus", "bacteria"},
+    "assemble": {"machine"},
+    "sow": {"plant"},
+}
+BIOLOGICAL_KINGDOMS = {"animalia", "plantae", "fungi", "bacteria", "protozoa", "virus"}
+CRAFT_ID = "craft"
+PHENOMENON_ID = "phenomenon"
 ERAS = list(i18n_terms.ERAS)
 CARD_TYPES = set(i18n_terms.CARD_TYPES)
 KEYWORD_BASES = set(i18n_terms.KEYWORD_BASES)
+# 卡牌/技能关键词允许 decompose；GrantKeyword 参数仍沿用 i18n_terms 的既有集合。
+ALL_KEYWORD_BASES = KEYWORD_BASES | {"decompose"}
 CARD_IDS = {path.stem for path in (ROOT / "cards").glob("*.md") if path.name != "README.md"}
 ACHIEVEMENT_EVENTS = {"时代升级", "关键词组合", "成长触发", "卡牌使用", "三连合成"}
 EFFECT_TRIGGERS = {
     "OnPlay", "OnPlayEffect", "OnUse", "OnActivate", "OnTurnStart",
-    "OnFirstRefresh", "OnCombatStart", "OnDealDamage", "OnDeath",
-    "OnFriendlyDeath", "OnEnemyDeath", "OnAllySummon", "OnAllyGrowth",
+    "OnFirstRefresh", "OnCombatStart", "OnDealDamage", "OnKill", "OnAllyKill",
+    "OnDeath", "OnFriendlyDeath", "OnEnemyDeath", "OnAllySummon", "OnAllyGrowth",
     "OnAllyEvolve", "OnCombatEnd", "Aura", "ConditionalAura",
 }
 EFFECT_OPS = {
     "Growth", "ModifyStats", "GrantKeyword", "RemoveGrowth", "CannotAttack",
     "DealDamage", "Summon", "Copy", "Discover", "RefreshShop", "AddShopSlot",
-    "GainMinion",
+    "GainMinion", "Decompose",
 }
 SELECTOR_SIDES = {"friendly", "enemy", "both", "self", "target"}
 SELECTOR_PICKS = {"single", "all", "random", "leftmost", "leftmost+adjacent", "topAttack"}
-FILTER_KEYS = {"tribe", "subtype", "id", "type", "other"}
+FILTER_KEYS = {"taxon", "playstyle", "play", "prey", "host", "subtype", "id", "type",
+               "scholar", "keyword", "other"}
 DURATIONS = {"permanent", "combat"}
+DECOMPOSE_BASES = {"original", "combat_start", "pre_kill"}
 NUMERIC_KEYS = {"times", "count", "amount", "attack", "health", "value", "extra"}
 AURA_OPS = {"ModifyStats", "GrantKeyword"}
 OP_SPEC = {
@@ -74,14 +106,14 @@ OP_SPEC = {
     "RefreshShop": (set(), {"free", "extra"}, set()),
     "AddShopSlot": ({"era", "count"}, set(), set()),
     "GainMinion": ({"level", "to"}, {"from"}, set()),
+    "Decompose": ({"basis", "duration"}, {"timesIf", "condition", "when"}, set()),
 }
 CONDITION_RE = re.compile(
-    r"^count:(friendly|enemy|both):[a-z]+=[a-z0-9_-]+:(>=|<=|==|>|<)\d+$"
+    r"^count:(friendly|enemy|both):([a-z_]+)=([a-z0-9_-]+):(>=|<=|==|>|<)\d+$"
 )
-TIMES_IF_RE = re.compile(r"^(human|machine|biology|plant|virus|scholar):\d+$")
 EVENT_TRIGGERS = {
     "OnEnemyDeath", "OnFriendlyDeath", "OnAllySummon", "OnAllyGrowth",
-    "OnAllyEvolve", "OnDealDamage", "OnCombatEnd", "OnUse",
+    "OnAllyEvolve", "OnDealDamage", "OnCombatEnd", "OnUse", "OnKill", "OnAllyKill",
 }
 ACHIEVEMENT_FIELDS = ["id", "name", "event", "condition", "count", "reward", "affects_power"]
 RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
@@ -92,15 +124,19 @@ KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
              "contagion": 3, "reborn": 4, "divine_shield": 5}
 EXPECT_ERA = {"prehistoric": 28, "primitive": 26, "classical": 20, "feudal": 40,
               "industrial": 32, "modern": 54, "future": 40}
-EXPECT_TRIBE = {"scholar": 49, "biology": 30, "human": 43, "machine": 37,
-                "plant": 22, "virus": 22}
 EXPECT_LEVEL = {1: 22, 2: 37, 3: 38, 4: 40, 5: 37, 6: 17, 7: 12}
 SKILL_FIELDS = ["id", "text", "effects"]
-MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
+MINION_FIELDS = ["id", "name", "card_type", "playstyle", "taxon", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
-EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "tribe", "cost", "match_text"]
+EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "playstyle", "taxon",
+                 "cost", "match_text"]
 LEGACY_HERO_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
                       "hero_skill_uses_per_turn", "hero_skill_trigger"]
+
+# 分类上下文，main 在 check_taxonomy 之后写入；单测可直接赋值。
+TAXONOMY_NODES = {}
+TAXONOMY_CHILDREN = {}
+PLAYSTYLE_NAMES = {}
 
 errors = []
 
@@ -124,7 +160,7 @@ def parse_front_matter(path):
         raw = raw.strip()
         if raw.startswith("[") and raw.endswith("]"):
             inner = raw[1:-1].strip()
-            data[key.strip()] = [x.strip() for x in inner.split(",") if x.strip()]
+            data[key.strip()] = [x.strip().strip("'\"") for x in inner.split(",") if x.strip()]
         elif raw == '""':
             data[key.strip()] = ""
         elif raw in ("true", "false"):
@@ -134,6 +170,43 @@ def parse_front_matter(path):
         else:
             data[key.strip()] = raw
     return data
+
+
+def check_filter_value(key, val, chunk):
+    """校验单个筛选键的取值；taxonomy 未加载时只做格式校验。"""
+    errors = []
+    if key == "taxon":
+        if not ID_RE.fullmatch(val):
+            errors.append(f"taxon 取值格式非法 {val!r}（{chunk}）")
+        elif TAXONOMY_NODES and val not in TAXONOMY_NODES:
+            errors.append(f"taxon 取值不存在 {val!r}（{chunk}）")
+    elif key == "playstyle":
+        if val not in PLAYSTYLE_VALUES:
+            errors.append(f"playstyle 取值非法 {val!r}（{chunk}）")
+    elif key == "play":
+        if val not in PLAYSTYLE_IDS:
+            errors.append(f"play 取值非法 {val!r}（{chunk}）")
+    elif key in ("prey", "host"):
+        if not ID_RE.fullmatch(val):
+            errors.append(f"{key} 取值格式非法 {val!r}（{chunk}）")
+        elif TAXONOMY_NODES and val not in TAXONOMY_NODES:
+            errors.append(f"{key} 取值不存在 {val!r}（{chunk}）")
+    elif key == "type":
+        if val not in CARD_TYPES:
+            errors.append(f"type 取值非法 {val!r}（{chunk}）")
+    elif key == "id":
+        if val not in CARD_IDS:
+            errors.append(f"id 取值非法 {val!r}（{chunk}）")
+    elif key in ("other", "scholar"):
+        if val not in ("true", "false"):
+            errors.append(f"{key} 取值非法 {val!r}（{chunk}）")
+    elif key == "subtype":
+        if not ID_RE.fullmatch(val):
+            errors.append(f"subtype 取值格式非法 {val!r}（{chunk}）")
+    elif key == "keyword":
+        if val.split()[0] not in ALL_KEYWORD_BASES:
+            errors.append(f"keyword 取值非法 {val!r}（{chunk}）")
+    return errors
 
 
 def check_filters(segments, chunk):
@@ -149,17 +222,22 @@ def check_filters(segments, chunk):
         key, val = key.strip(), val.strip()
         if key not in FILTER_KEYS:
             errors.append(f"未知筛选键 {key!r}（{chunk}）")
-        elif key == "tribe" and val not in TRIBES:
-            errors.append(f"tribe 取值非法 {val!r}（{chunk}）")
-        elif key == "type" and val not in CARD_TYPES:
-            errors.append(f"type 取值非法 {val!r}（{chunk}）")
-        elif key == "id" and val not in CARD_IDS:
-            errors.append(f"id 取值非法 {val!r}（{chunk}）")
-        elif key == "other" and val not in ("true", "false"):
-            errors.append(f"other 取值非法 {val!r}（{chunk}）")
         elif not val:
             errors.append(f"筛选 {key!r} 缺少取值（{chunk}）")
+        else:
+            errors.extend(check_filter_value(key, val, chunk))
     return errors
+
+
+def times_if_errors(value, chunk=""):
+    """timesIf 新格式：<键>:<值>:<次数>；scholar 无值，写 scholar:<次数>。"""
+    parts = str(value).split(":")
+    if len(parts) == 2 and parts[0] == "scholar" and parts[1].isdigit():
+        return []
+    if len(parts) == 3 and parts[0] in FILTER_KEYS and parts[0] != "scholar" \
+            and parts[2].isdigit():
+        return check_filter_value(parts[0], parts[1], chunk)
+    return [f"timesIf 格式非法 {value!r}（{chunk}）"]
 
 
 def check_selector(selector, chunk):
@@ -212,14 +290,24 @@ def check_params(op, params, chunk):
             errors.append(f"参数 {key} 必须为布尔值，实为 {val!r}（{chunk}）")
         elif key == "keyword" and val.split()[0] not in KEYWORD_BASES:
             errors.append(f"keyword 非法 {val!r}（{chunk}）")
-        elif key == "condition" and not CONDITION_RE.fullmatch(val):
-            errors.append(f"condition 格式非法 {val!r}（{chunk}）")
-        elif key == "timesIf" and not TIMES_IF_RE.fullmatch(val):
-            errors.append(f"timesIf 格式非法 {val!r}（{chunk}）")
-        elif key == "when" and (
-            "=" not in val or val.split("=", 1)[0] not in FILTER_KEYS
-        ):
-            errors.append(f"when 格式非法 {val!r}（{chunk}）")
+        elif key == "basis" and val not in DECOMPOSE_BASES:
+            errors.append(f"basis 非法 {val!r}（{chunk}）")
+        elif key == "condition":
+            match = CONDITION_RE.fullmatch(val)
+            if not match:
+                errors.append(f"condition 格式非法 {val!r}（{chunk}）")
+            elif match.group(2) not in FILTER_KEYS:
+                errors.append(f"condition 筛选键非法 {match.group(2)!r}（{chunk}）")
+            else:
+                errors.extend(check_filter_value(match.group(2), match.group(3), chunk))
+        elif key == "timesIf":
+            errors.extend(times_if_errors(val, chunk))
+        elif key == "when":
+            if "=" not in val or val.split("=", 1)[0] not in FILTER_KEYS:
+                errors.append(f"when 格式非法 {val!r}（{chunk}）")
+            else:
+                when_key, when_val = val.split("=", 1)
+                errors.extend(check_filter_value(when_key, when_val, chunk))
     return errors
 
 
@@ -273,6 +361,8 @@ def parse_effects(value):
 def allowed_triggers(text):
     """按技能文本的固定前缀推出允许的触发时机；无法判定时返回 None。"""
     text = text.strip()
+    if text.startswith("分解："):
+        return {"OnKill", "OnFriendlyDeath", "OnAllyKill"}
     if text.startswith("战吼"):
         return {"OnPlay", "OnCombatStart"}
     if text.startswith("亡语"):
@@ -305,6 +395,296 @@ def check_text_trigger(text, effects_raw):
     bad = [e["trigger"] for e in effects if e["trigger"] not in allowed]
     if bad:
         return [f"触发时机 {bad} 与文本 {text!r} 不一致（允许 {sorted(allowed)}）"]
+    return []
+
+
+def _taxonomy_table_rows(text, heading):
+    """返回指定小节的表格数据行；小节以同数量 `#` 的下一个标题为界。"""
+    match = re.search(rf"(?m)^(##+) {re.escape(heading)}\s*$", text)
+    if not match:
+        return None
+    marks = match.group(1)
+    rest = text[match.end():]
+    next_heading = re.search(rf"(?m)^{marks} ", rest)
+    if next_heading:
+        rest = rest[:next_heading.start()]
+    rows = []
+    for line in rest.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if cells[0] == "id" or set(cells[0]) <= {"-"}:
+            continue
+        rows.append(cells)
+    return rows
+
+
+def parse_taxonomy(path=TAXONOMY_FILE):
+    """解析 taxonomy.md，返回 (nodes, playstyles)。
+
+    nodes 为 {id: {parent, rank, name}} 顺序字典；playstyles 为 [(id, 名称), ...]。
+    """
+    text = path.read_text(encoding="utf-8")
+    rows = _taxonomy_table_rows(text, "1. 科学分类树")
+    if rows is None:
+        fail(f"{path.name}: 缺少「## 1. 科学分类树」小节")
+        return None, None
+    nodes = collections.OrderedDict()
+    for cells in rows:
+        if len(cells) != 5:
+            fail(f"{path.name}: 分类树行列数 {len(cells)}，期望 5：{cells}")
+            continue
+        node_id, name, parent, rank, _ = cells
+        nodes[node_id] = {"parent": parent or None, "rank": rank, "name": name}
+    playstyle_rows = _taxonomy_table_rows(text, "2. 玩法")
+    if playstyle_rows is None:
+        fail(f"{path.name}: 缺少「## 2. 玩法」小节")
+        return nodes, None
+    playstyles = []
+    for cells in playstyle_rows:
+        if len(cells) != 4:
+            fail(f"{path.name}: 玩法行列数 {len(cells)}，期望 4：{cells}")
+            continue
+        playstyles.append((cells[0], cells[1]))
+    return nodes, playstyles
+
+
+def _root_of(nodes, node_id):
+    """沿父链上溯到根；父链断或成环时返回 None。"""
+    seen = set()
+    current = node_id
+    while True:
+        node = nodes.get(current)
+        if node is None:
+            return None
+        if node["parent"] is None:
+            return current
+        if current in seen:
+            return None
+        seen.add(current)
+        current = node["parent"]
+
+
+def check_taxonomy():
+    """校验分类树与玩法表；返回 (nodes, children, playstyles)，失败时对应项为 None。"""
+    nodes, playstyles = parse_taxonomy()
+    if nodes is None:
+        return None, None, None
+
+    children = collections.defaultdict(list)
+    for node_id, node in nodes.items():
+        parent = node["parent"]
+        if parent is not None:
+            children[parent].append(node_id)
+
+    for node_id, node in nodes.items():
+        if not ID_RE.fullmatch(node_id):
+            fail(f"分类树节点 {node_id!r}: id 格式非法（需匹配 [a-z][a-z0-9-]*）")
+        if node["rank"] not in TAXONOMY_RANKS:
+            fail(f"分类树节点 {node_id!r}: 层级 {node['rank']!r} 不在 "
+                 f"{sorted(TAXONOMY_RANKS)} 中")
+        parent = node["parent"]
+        if parent is None:
+            continue
+        if parent not in nodes:
+            fail(f"分类树节点 {node_id!r}: 上级 {parent!r} 不存在")
+            continue
+        parent_rank = nodes[parent]["rank"]
+        if node["rank"] == "现象":
+            fail(f"分类树节点 {node_id!r}: 现象节点必须是独立根节点")
+            continue
+        allowed = RANK_PARENT_ALLOWED.get(TAXONOMY_RANKS.get(node["rank"]), set())
+        if TAXONOMY_RANKS.get(parent_rank) not in allowed:
+            fail(f"分类树节点 {node_id!r}: 层级 {node['rank']} 不能挂在上级 "
+                 f"{parent!r}（{parent_rank}）下")
+
+    # 无环与根节点校验。
+    roots = []
+    for node_id in nodes:
+        if nodes[node_id]["parent"] is None:
+            roots.append(node_id)
+            if nodes[node_id]["rank"] not in (ROOT_RANKS | {"现象"}):
+                fail(f"分类树节点 {node_id!r}: 根节点层级必须是界或现象，实为 {nodes[node_id]['rank']}")
+            continue
+        seen = {node_id}
+        current = nodes[node_id]["parent"]
+        while current is not None:
+            if current in seen:
+                fail(f"分类树节点 {node_id!r}: 父链成环（经过 {current!r}）")
+                break
+            if current not in nodes:
+                break
+            seen.add(current)
+            current = nodes[current]["parent"]
+
+    # 叶子层级：生物只到科；造物只到技术分类；现象唯一。
+    for node_id in nodes:
+        if children.get(node_id):
+            continue
+        rank = nodes[node_id]["rank"]
+        if rank == "科":
+            continue
+        if rank == "技术分类":
+            continue
+        if rank == "现象":
+            if node_id != PHENOMENON_ID:
+                fail(f"分类树节点 {node_id!r}: 现象节点 id 必须为 {PHENOMENON_ID!r}")
+            continue
+        root = _root_of(nodes, node_id)
+        if root in BIOLOGICAL_KINGDOMS:
+            fail(f"分类树节点 {node_id!r}: 生物叶子层级必须是科，实为 {rank}")
+        elif root == CRAFT_ID:
+            fail(f"分类树节点 {node_id!r}: 造物叶子层级必须是技术分类，实为 {rank}")
+        else:
+            fail(f"分类树节点 {node_id!r}: 非科非技术分类的叶子节点 {rank}")
+
+    phenomena = [i for i, n in nodes.items() if n["rank"] == "现象"]
+    if phenomena != [PHENOMENON_ID]:
+        fail(f"分类树现象节点必须唯一且为 {PHENOMENON_ID!r}，实为 {phenomena}")
+
+    for kingdom in BIOLOGICAL_KINGDOMS:
+        if kingdom not in nodes:
+            fail(f"分类树缺少生物界根节点 {kingdom!r}")
+        elif nodes[kingdom]["parent"] is not None:
+            fail(f"分类树节点 {kingdom!r}: 生物界必须是根节点")
+    if CRAFT_ID not in nodes or nodes[CRAFT_ID]["parent"] is not None:
+        fail(f"分类树缺少造物根节点 {CRAFT_ID!r} 或其上级非空")
+
+    if playstyles is None:
+        return nodes, children, None, {}
+    ids = [pid for pid, _ in playstyles]
+    names = dict(playstyles)
+    if len(ids) != len(PLAYSTYLE_IDS):
+        fail(f"玩法数量 {len(ids)}，期望 {len(PLAYSTYLE_IDS)}")
+    if tuple(ids) != PLAYSTYLE_IDS:
+        fail(f"玩法 id 与方案不一致：{ids}，期望 {list(PLAYSTYLE_IDS)}")
+    dup = [v for v, n in collections.Counter(ids).items() if n > 1]
+    if dup:
+        fail(f"玩法 id 重复: {dup}")
+    return nodes, children, ids, names
+
+
+# ---- 卡牌分类字段：playstyle / taxon / specialty / 关键词 ----
+
+def card_label(doc):
+    """错误信息定位：优先卡牌 id，其次文件名。"""
+    return str(doc.get("id") or doc.get("_file") or "?")
+
+
+def is_biological(doc):
+    """生物卡：taxon 存在且不在 craft / phenomenon 下。"""
+    root = _root_of(TAXONOMY_NODES, doc.get("taxon"))
+    return root is not None and root not in (CRAFT_ID, PHENOMENON_ID)
+
+
+def specialty_errors(doc):
+    """解析并校验 specialty 列表：每条为 kind:value，kind ∈ play/prey/host，且不带空白。"""
+    value = doc.get("specialty")
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        return [f"specialty 必须是列表，实为 {value!r}"]
+    errors = []
+    for item in value:
+        if ":" not in item:
+            errors.append(f"specialty 项缺少前缀 {item!r}（需 kind:value）")
+            continue
+        kind, target = item.split(":", 1)
+        if kind not in SPECIALTY_KINDS:
+            errors.append(f"specialty 前缀非法 {kind!r}（需 play / prey / host）")
+        elif not ID_RE.fullmatch(target):
+            errors.append(f"specialty 取值格式非法 {item!r}")
+    return errors
+
+
+def classification_errors(doc):
+    """卡牌 playstyle / taxon / specialty 的交叉校验；taxonomy 未加载时只做取值域校验。"""
+    label = card_label(doc)
+    errors = []
+    card_type = doc.get("card_type")
+    kind = "效果牌" if card_type == "effect" else "随从"
+    playstyle = doc.get("playstyle")
+    taxon = doc.get("taxon")
+    is_scholar = doc.get("is_scholar") is True
+    if playstyle is None:
+        errors.append(f"{label}: 缺字段 playstyle")
+    elif playstyle not in PLAYSTYLE_VALUES:
+        errors.append(f"{label}: playstyle 非法 {playstyle!r}（需 13 个玩法之一或 neutral）")
+        playstyle = None
+    if taxon is None:
+        errors.append(f"{label}: 缺字段 taxon")
+        taxon = None
+    elif not ID_RE.fullmatch(str(taxon)):
+        errors.append(f"{label}: taxon 格式非法 {taxon!r}")
+        taxon = None
+    elif TAXONOMY_NODES:
+        if taxon not in TAXONOMY_NODES:
+            errors.append(f"{label}: taxon 节点 {taxon!r} 不在分类树中")
+            taxon = None
+        elif TAXONOMY_CHILDREN.get(taxon):
+            errors.append(f"{label}: taxon {taxon!r} 不是叶子节点")
+    errors.extend(f"{label}: {e}" for e in specialty_errors(doc))
+
+    if kind == "效果牌":
+        if playstyle not in (None, "neutral"):
+            errors.append(f"{label}: 效果牌 playstyle 必须为 neutral，实为 {playstyle!r}")
+        if taxon not in (None, PHENOMENON_ID):
+            errors.append(f"{label}: 效果牌 taxon 必须为 {PHENOMENON_ID}，实为 {taxon!r}")
+        if doc.get("specialty"):
+            errors.append(f"{label}: 效果牌 specialty 必须为空")
+    else:
+        if playstyle == "neutral" and not is_scholar:
+            if taxon is not None and taxon not in CRAFT_TOOL_TAXA:
+                errors.append(f"{label}: 非学者中立卡只允许造物六类工具卡，taxon 实为 {taxon!r}")
+        elif playstyle == "machine" and taxon in CRAFT_TOOL_TAXA:
+            errors.append(f"{label}: 造物卡的机械玩法要求 taxon={MACHINE_TAXON}，实为 {taxon!r}")
+        if is_scholar and playstyle not in (None, "neutral"):
+            errors.append(f"{label}: 学者卡 playstyle 必须为 neutral，实为 {playstyle!r}")
+
+    for item in doc.get("specialty") or []:
+        if ":" not in item:
+            continue
+        prefix, target = item.split(":", 1)
+        if prefix == "play":
+            if card_type == "effect":
+                errors.append(f"{label}: 效果牌不得写 {item!r}")
+            elif not (is_scholar or playstyle == "neutral"):
+                errors.append(f"{label}: play:{target} 只允许学者卡或中立非学者卡"
+                              f"（本卡 playstyle={playstyle}）")
+            if target not in PLAYSTYLE_IDS:
+                errors.append(f"{label}: play:{target} 取值必须是 13 个玩法之一（不含 neutral）")
+        elif prefix in ("prey", "host"):
+            if TAXONOMY_NODES and taxon is not None and not is_biological(doc):
+                errors.append(f"{label}: {item!r} 只允许生物卡（taxon 不在 craft / phenomenon 下）")
+            elif TAXONOMY_NODES and target not in TAXONOMY_NODES:
+                errors.append(f"{label}: {item!r} 的节点不在分类树中")
+    return errors
+
+
+def keyword_errors(doc, keyword):
+    """专属关键词的玩法/形态约束。"""
+    label = card_label(doc)
+    base = str(keyword).split()[0]
+    playstyle = doc.get("playstyle")
+    if base in KEYWORD_PLAYSTYLE:
+        allowed = KEYWORD_PLAYSTYLE[base]
+        if base == "assemble":
+            # 中立工具卡用 play:machine 声明机械关联，允许携带装配。
+            plays = {item.split(":", 1)[1] for item in doc.get("specialty") or []
+                     if item.startswith("play:")}
+            if playstyle in allowed or "machine" in plays:
+                return []
+        if playstyle not in allowed:
+            return [f"{label}: 关键词 {keyword!r} 只允许 playstyle ∈ {sorted(allowed)}，"
+                    f"实为 {playstyle!r}"]
+    if base == "evolve":
+        if not TAXONOMY_NODES:
+            return []
+        if not is_biological(doc):
+            return [f"{label}: 关键词 {keyword!r} 只允许生物卡（taxon 不在 craft / phenomenon 下）"]
+        if doc.get("is_scholar") is True:
+            return [f"{label}: 关键词 {keyword!r} 不允许学者卡"]
     return []
 
 
@@ -407,7 +787,16 @@ def derived_keywords(doc, skill_map):
 # 文档属性表里的中文名。校验时由 front matter 的英文 id 反查；gen_text 复用。
 ENUM_LABELS = {}
 KEYWORD_LABELS = {}
-ENUM_COLUMNS = {"card_type": "类型", "tribe": "流派", "era": "时代", "subtype": "子类"}
+ENUM_COLUMNS = {"card_type": "类型", "playstyle": "玩法", "taxon": "科学分类",
+                "era": "时代", "subtype": "子类"}
+
+
+def _enum_label_value(table, field, value):
+    """取属性表里某枚举的中文名；taxon 列保存完整路径，取末级节点名。"""
+    label = table.get(ENUM_COLUMNS[field])
+    if field == "taxon" and label is not None and TAXONOMY_NODES:
+        return re.split(r"\s*›\s*", label)[-1].strip()
+    return label
 
 
 def card_enum_labels(raw, root=ROOT):
@@ -417,9 +806,9 @@ def card_enum_labels(raw, root=ROOT):
         table = parse_attr_table(root / "cards" / doc["_file"])
         if table is None:
             continue
-        for field, column in ENUM_COLUMNS.items():
+        for field in ENUM_COLUMNS:
             value = doc.get(field)
-            label = table.get(column)
+            label = _enum_label_value(table, field, value)
             if value is None or label is None:
                 continue
             known = labels[field].get(value)
@@ -467,31 +856,104 @@ def enum_label(kind, value):
     return ENUM_LABELS.get(kind, {}).get(value, value)
 
 
+def taxon_path(node_id):
+    """taxon 的中文完整路径「界 › 门 › 纲 › 目 › 科」；未知节点返回 None。"""
+    parts = []
+    seen = set()
+    current = node_id
+    while current is not None:
+        node = TAXONOMY_NODES.get(current)
+        if node is None or current in seen:
+            return None
+        seen.add(current)
+        parts.append(node.get("name") or current)
+        current = node["parent"]
+    return " › ".join(reversed(parts))
+
+
+def playstyle_display(playstyle):
+    """玩法列：13 个玩法取名，neutral 显示「中立」。"""
+    if playstyle == "neutral":
+        return "中立"
+    if PLAYSTYLE_NAMES:
+        return PLAYSTYLE_NAMES.get(playstyle, str(playstyle))
+    return enum_label("playstyle", playstyle)
+
+
+def play_heading(is_scholar):
+    """play: 段标题：学者为「擅长：」，中立非学者为「关联：」。"""
+    return "擅长：{paths}" if is_scholar else "关联：{paths}"
+
+
+def specialty_display(doc):
+    """关联分类列：按 play / prey / host 分段，段内用、分隔；无内容写「无」。"""
+    items = doc.get("specialty") or []
+    groups = collections.OrderedDict()
+    for item in items:
+        if ":" not in item:
+            continue
+        prefix, target = item.split(":", 1)
+        groups.setdefault(prefix, []).append(target)
+    parts = []
+    for prefix, targets in groups.items():
+        names = []
+        for target in targets:
+            if prefix == "play":
+                names.append((PLAYSTYLE_NAMES.get(target) or enum_label("playstyle", target))
+                             if PLAYSTYLE_NAMES else enum_label("playstyle", target))
+            else:
+                names.append((TAXONOMY_NODES.get(target, {}).get("name") or target)
+                             if TAXONOMY_NODES else enum_label("taxon", target))
+        if prefix == "play":
+            title = play_heading(doc.get("is_scholar") is True)
+        elif prefix == "prey":
+            title = "捕食：{paths}"
+        elif prefix == "host":
+            title = "寄生：{paths}"
+        else:
+            continue
+        parts.append(title.format(paths="、".join(names)))
+    return "；".join(parts) if parts else "无"
+
+
 def expected_card_attrs(doc, skill_map):
     skills = card_skills(doc)
     skill_value = "；".join(skills) if skills else "无"
     keyword_list = derived_keywords(doc, skill_map)
     keyword_value = "；".join(keyword_display(k) for k in keyword_list) if keyword_list else "无"
+    playstyle = doc.get("playstyle")
+    playstyle_value = playstyle_display(playstyle) if playstyle is not None else ""
+    taxon_value = taxon_path(doc.get("taxon")) if TAXONOMY_NODES else ""
+    specialty_value = specialty_display(doc) if TAXONOMY_NODES else ""
     if doc["card_type"] == "minion":
         attrs = {
             "id": doc["id"], "名称": doc["name"],
             "类型": enum_label("card_type", doc["card_type"]),
-            "流派": enum_label("tribe", doc["tribe"]),
+            "玩法": playstyle_value,
             "子类": enum_label("subtype", doc.get("subtype")), "星级": str(doc["level"]),
             "时代": enum_label("era", doc["era"]), "攻击力": str(doc["attack"]),
             "生命值": str(doc["health"]), "关键词": keyword_value,
             "技能": skill_value, "学者": "是" if doc["is_scholar"] else "否",
             "英雄资格": "是" if doc.get("is_hero") else "否",
         }
+        if taxon_value:
+            attrs["科学分类"] = taxon_value
+        if specialty_value:
+            attrs["关联分类"] = specialty_value
         return attrs
-    return {
+    attrs = {
         "id": doc["id"], "名称": doc["name"],
         "类型": enum_label("card_type", doc["card_type"]),
         "星级": str(doc["level"]), "时代": enum_label("era", doc.get("era", "")),
-        "流派": enum_label("tribe", doc["tribe"]),
+        "玩法": playstyle_value,
         "技能": skill_value, "费用": str(doc["cost"]),
         "确定性替换": doc["match_text"],
     }
+    if taxon_value:
+        attrs["科学分类"] = taxon_value
+    if specialty_value:
+        attrs["关联分类"] = specialty_value
+    return attrs
 
 
 def expected_skill_attrs(skill):
@@ -656,7 +1118,7 @@ def skill_ref_errors(doc, skill_map):
 
 
 def check_cards(skill_map):
-    raw = load("cards", ["id", "name", "card_type", "level", "tribe"])
+    raw = load("cards", ["id", "name", "card_type", "level", "playstyle", "taxon"])
     for doc in raw:
         if doc["card_type"] not in CARD_TYPES:
             fail(f"{doc['_file']}: card_type 非法 {doc['card_type']!r}")
@@ -668,7 +1130,12 @@ def check_cards(skill_map):
             fail(f"{doc['_file']}: subtype 格式非法 {subtype!r}")
         if "keywords" in doc:
             fail(f"{doc['_file']}: 残留旧字段 keywords，应改用 skills")
+        if "tribe" in doc:
+            fail(f"{doc['_file']}: 残留旧字段 tribe，应改用 playstyle / taxon / specialty")
         for message in skill_ref_errors(doc, skill_map):
+            fail(message)
+        # 分类字段校验：缺字段时 classification_errors 自己报告，这里对所有卡都跑。
+        for message in classification_errors(doc):
             fail(message)
     minions = [c for c in raw if c["card_type"] == "minion"]
     effects = [c for c in raw if c["card_type"] == "effect"]
@@ -685,16 +1152,12 @@ def check_cards(skill_map):
         if missing:
             fail(f"{c['_file']}: 随从缺字段 {missing}")
             continue
-        name = c["name"]
-        if c["tribe"] not in TRIBES:
-            fail(f"{name}: 流派非法 {c['tribe']!r}")
+        name = card_label(c)
         if c["era"] not in ERAS:
             fail(f"{name}: 时代非法 {c['era']!r}")
         if c["level"] not in RANGE:
             fail(f"{name}: 星级非法 {c['level']!r}")
             continue
-        if (c["tribe"] == "scholar") != c["is_scholar"]:
-            fail(f"{name}: 流派与 is_scholar 不一致")
         if c["is_scholar"] and c["attack"] != 0:
             fail(f"{name}: 学者攻击力必须为 0")
         if c["is_scholar"]:
@@ -715,28 +1178,30 @@ def check_cards(skill_map):
         for k in derived_keywords(c, skill_map):
             if not KEYWORD_RE.fullmatch(k):
                 fail(f"{c['name']}: 派生关键词非法 {k!r}")
-            base = k.split()[0]
-            if base in TRIBE_KEYWORD and c["tribe"] != TRIBE_KEYWORD[base]:
-                fail(f"{c['name']}: 专属词 {k!r} 与流派 {c['tribe']} 越界")
+            for message in keyword_errors(c, k):
+                fail(message)
 
     for c in effects:
         missing = [k for k in EFFECT_FIELDS if k not in c]
         if missing:
             fail(f"{c['_file']}: 效果牌缺字段 {missing}")
             continue
-        name = c["name"]
+        name = card_label(c)
         if not card_skills(c):
             fail(f"{c['_file']}: 效果牌缺技能，skills 不能为空")
         if "attack" in c or "health" in c:
             fail(f"{name}: 效果牌不得有 attack/health")
-        if c["tribe"] not in EFFECT_TRIBES:
-            fail(f"{name}: 效果牌流派非法 {c['tribe']!r}")
         if c["era"] not in ERAS:
             fail(f"{name}: 时代非法 {c['era']!r}")
         if c["level"] not in RANGE:
             fail(f"{name}: 星级非法 {c['level']!r}")
         if not 0 <= c["cost"] <= 4:
             fail(f"{name}: 费用越界 {c['cost']}")
+
+    for c in effects:
+        for k in derived_keywords(c, skill_map):
+            for message in keyword_errors(c, k):
+                fail(message)
 
     counts = collections.Counter(c["card_type"] for c in raw)
     if counts != {"minion": 203, "effect": 37}:
@@ -753,12 +1218,17 @@ def check_cards(skill_map):
     actual_era = collections.Counter(c.get("era") for c in raw)
     if dict(actual_era) != EXPECT_ERA:
         fail(f"卡牌时代分布不符: {dict(actual_era)}")
-    for label, expected, field in (("流派", EXPECT_TRIBE, "tribe"),
-                                   ("星级", EXPECT_LEVEL, "level")):
-        actual = collections.Counter(c[field] for c in minions)
-        if dict(actual) != expected:
-            fail(f"随从{label}分布不符: {dict(actual)}")
+    actual_level = collections.Counter(c["level"] for c in minions)
+    if dict(actual_level) != EXPECT_LEVEL:
+        fail(f"随从星级分布不符: {dict(actual_level)}")
     return raw, minions, effects
+
+
+def playstyle_counts(minions):
+    """按玩法统计随从数量（含中立）；缺字段的卡单独计数。"""
+    return dict(sorted(collections.Counter(
+        c.get("playstyle") if c.get("playstyle") is not None else "<缺字段>"
+        for c in minions).items()))
 
 
 def check_hero_cards(cards, minions, effects):
@@ -826,6 +1296,11 @@ def check_enemy_selectors(raw):
 
 
 def main():
+    global TAXONOMY_NODES, TAXONOMY_CHILDREN, PLAYSTYLE_NAMES, ENUM_LABELS
+    taxonomy_nodes, taxonomy_children, playstyles, playstyle_names = check_taxonomy()
+    TAXONOMY_NODES = taxonomy_nodes or {}
+    TAXONOMY_CHILDREN = taxonomy_children or {}
+    PLAYSTYLE_NAMES = playstyle_names or {}
     skills = check_skills()
     skill_map = {s["id"]: s for s in skills}
     raw, minions, effects = check_cards(skill_map)
@@ -844,7 +1319,7 @@ def main():
             print(" -", item)
         return 1
     print("时代", dict(collections.Counter(c["era"] for c in raw)))
-    print("流派", dict(collections.Counter(c["tribe"] for c in minions)))
+    print("玩法", playstyle_counts(minions))
     print("星级", dict(collections.Counter(c["level"] for c in minions)))
     print("关键词", dict(sorted(collections.Counter(
         k.split()[0] for c in minions for k in derived_keywords(c, skill_map)).items())))
@@ -852,6 +1327,8 @@ def main():
         sid for c in raw for sid in card_skills(c)).items())))
     print(f"随从 {len(minions)} 张、效果牌 {len(effects)} 张、技能 {len(skills)} 个、"
           f"英雄卡 {len(hero_cards)} 张，校验通过")
+    if taxonomy_nodes is not None:
+        print(f"分类树节点 {len(taxonomy_nodes)} 个、玩法 {len(playstyles or [])} 个，校验通过")
     print(f"v0.2 成就 {len(achievements)} 个，校验通过")
     return 0
 

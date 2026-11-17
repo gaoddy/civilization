@@ -293,6 +293,7 @@ enum.keyword.battlecry,战吼
 enum.keyword.breed,繁衍
 enum.keyword.contagion,传染
 enum.keyword.deathrattle,亡语
+enum.keyword.decompose,分解
 enum.keyword.divine_shield,护盾
 enum.keyword.evolve,进化
 enum.keyword.growth,成长
@@ -301,6 +302,20 @@ enum.keyword.reborn,复生
 enum.keyword.sow,播种
 enum.keyword.taunt,嘲讽
 enum.keyword.windfury,连击
+enum.playstyle.bacteria,细菌域
+enum.playstyle.bird,鸟纲
+enum.playstyle.cephalopod,头足纲
+enum.playstyle.cnidarian,水螅纲
+enum.playstyle.fish,鱼纲
+enum.playstyle.fungus,真菌界
+enum.playstyle.insect,昆虫纲
+enum.playstyle.machine,机械
+enum.playstyle.mammal,哺乳纲
+enum.playstyle.neutral,中立
+enum.playstyle.plant,植物界
+enum.playstyle.protozoa,原生生物界
+enum.playstyle.reptile,爬行纲
+enum.playstyle.virus,病毒
 enum.stat_layer.aura,光环
 enum.stat_layer.damage,受击
 enum.stat_layer.initial,初始
@@ -392,13 +407,142 @@ enum.subtype.vehicle,载具
 enum.subtype.vine,藤本
 enum.subtype.virus,病毒
 enum.subtype.worker,工人
-enum.tribe.biology,生物
-enum.tribe.general,通用
-enum.tribe.human,人类
-enum.tribe.machine,机械
-enum.tribe.plant,植物
-enum.tribe.scholar,学者
-enum.tribe.virus,病毒
+enum.taxon.accipitridae,鹰科
+enum.taxon.accipitriformes,鹰形目
+enum.taxon.aconoidasida,无腔纲
+enum.taxon.actinobacteria,放线菌门
+enum.taxon.actinomycetia,放线菌纲
+enum.taxon.actinopterygii,鱼纲
+enum.taxon.actinopterygii-incertae-sedis,未定科
+enum.taxon.alphaproteobacteria,α-变形菌纲
+enum.taxon.amarillovirales,黄病毒目
+enum.taxon.angiospermae,被子植物门
+enum.taxon.animalia,动物界
+enum.taxon.anthoathecata,花水螅目
+enum.taxon.apicomplexa,顶复门
+enum.taxon.archaeopterygidae,始祖鸟科
+enum.taxon.archaeopterygiformes,始祖鸟目
+enum.taxon.arthropoda,节肢动物门
+enum.taxon.articulavirales,节段病毒目
+enum.taxon.artiodactyla,偶蹄目
+enum.taxon.asteraceae,菊科
+enum.taxon.asterales,菊目
+enum.taxon.automation,自动机械
+enum.taxon.aves,鸟纲
+enum.taxon.bacillaceae,芽孢杆菌科
+enum.taxon.bacillales,芽孢杆菌目
+enum.taxon.bacilli,芽孢杆菌纲
+enum.taxon.bacteria,细菌域
+enum.taxon.bacteria-incertae-sedis,未定科
+enum.taxon.blattodea,蜚蠊目
+enum.taxon.bovidae,牛科
+enum.taxon.bryaceae,真藓科
+enum.taxon.bryales,真藓目
+enum.taxon.bryophyta,苔藓植物门
+enum.taxon.bryopsida,藓纲
+enum.taxon.canidae,犬科
+enum.taxon.carnivora,食肉目
+enum.taxon.cephalopoda,头足纲
+enum.taxon.chitovirales,痘病毒目
+enum.taxon.chordata,脊索动物门
+enum.taxon.cnidaria,刺胞动物门
+enum.taxon.columbidae,鸠鸽科
+enum.taxon.columbiformes,鸽形目
+enum.taxon.coronaviridae,冠状病毒科
+enum.taxon.craft,造物
+enum.taxon.diptera,双翅目
+enum.taxon.drosophilidae,果蝇科
+enum.taxon.elephantidae,象科
+enum.taxon.enterobacterales,肠杆菌目
+enum.taxon.equidae,马科
+enum.taxon.fabaceae,豆科
+enum.taxon.fabales,豆目
+enum.taxon.felidae,猫科
+enum.taxon.filoviridae,丝状病毒科
+enum.taxon.firmicutes,厚壁菌门
+enum.taxon.flasuviricetes,黄病毒纲
+enum.taxon.flaviviridae,黄病毒科
+enum.taxon.fringillidae,燕雀科
+enum.taxon.fungi,真菌界
+enum.taxon.fungi-incertae-sedis,未定科
+enum.taxon.gammaproteobacteria,γ-变形菌纲
+enum.taxon.haemosporida,血孢子虫目
+enum.taxon.hominidae,人科
+enum.taxon.hydrozoa,水螅纲
+enum.taxon.information-computing,信息与计算
+enum.taxon.insecta,昆虫纲
+enum.taxon.insthoviricetes,流感病毒纲
+enum.taxon.lactobacillales,乳杆菌目
+enum.taxon.lamiales,唇形目
+enum.taxon.life-medical,生活与医疗
+enum.taxon.liliopsida,单子叶植物纲
+enum.taxon.magnoliopsida,双子叶植物纲
+enum.taxon.malpighiales,金虎尾目
+enum.taxon.malvaceae,锦葵科
+enum.taxon.malvales,锦葵目
+enum.taxon.mammalia,哺乳纲
+enum.taxon.mammalia-incertae-sedis,未定科
+enum.taxon.mollusca,软体动物门
+enum.taxon.monjiviricetes,单股负链病毒纲
+enum.taxon.mononegavirales,单股负链病毒目
+enum.taxon.muridae,鼠科
+enum.taxon.mycobacteriaceae,分枝杆菌科
+enum.taxon.mycobacteriales,分枝杆菌目
+enum.taxon.nidovirales,网巢病毒目
+enum.taxon.nucleocytoviricota,核质巨 DNA 病毒门
+enum.taxon.oceaniidae,海螅水母科
+enum.taxon.octopoda,八腕目
+enum.taxon.octopodidae,章鱼科
+enum.taxon.oleaceae,木犀科
+enum.taxon.ortervirales,逆转录病毒目
+enum.taxon.orthomyxoviridae,正黏病毒科
+enum.taxon.paramyxoviridae,副黏病毒科
+enum.taxon.passeriformes,雀形目
+enum.taxon.perissodactyla,奇蹄目
+enum.taxon.phenomenon,现象
+enum.taxon.pisoniviricetes,小核糖病毒纲
+enum.taxon.plantae,植物界
+enum.taxon.plantae-incertae-sedis,未定科
+enum.taxon.plasmodiidae,疟原虫科
+enum.taxon.poaceae,禾本科
+enum.taxon.poales,禾本目
+enum.taxon.pokkesviricetes,痘病毒纲
+enum.taxon.polypodiaceae,水龙骨科
+enum.taxon.polypodiales,水龙骨目
+enum.taxon.polypodiopsida,水龙骨纲
+enum.taxon.power-energy,动力与能源
+enum.taxon.poxviridae,痘病毒科
+enum.taxon.primates,灵长目
+enum.taxon.proboscidea,长鼻目
+enum.taxon.production-construction,生产与建筑
+enum.taxon.proteobacteria,变形菌门
+enum.taxon.protozoa,原生生物界
+enum.taxon.pteridophyta,蕨类植物门
+enum.taxon.reptilia,爬行纲
+enum.taxon.retroviridae,逆转录病毒科
+enum.taxon.revtraviricetes,逆转录病毒纲
+enum.taxon.rhabdoviridae,弹状病毒科
+enum.taxon.rhizophoraceae,红树科
+enum.taxon.riboviria,核糖病毒门
+enum.taxon.rickettsiaceae,立克次体科
+enum.taxon.rickettsiales,立克次体目
+enum.taxon.rodentia,啮齿目
+enum.taxon.rutaceae,芸香科
+enum.taxon.salviniaceae,槐叶苹科
+enum.taxon.salviniales,槐叶苹目
+enum.taxon.sapindales,无患子目
+enum.taxon.squamata,有鳞目
+enum.taxon.squamata-incertae-sedis,未定科
+enum.taxon.streptococcaceae,链球菌科
+enum.taxon.suidae,猪科
+enum.taxon.termitidae,白蚁科
+enum.taxon.transport,交通与运载
+enum.taxon.varanidae,巨蜥科
+enum.taxon.vibrionaceae,弧菌科
+enum.taxon.virus,病毒
+enum.taxon.virus-incertae-sedis,未定科
+enum.taxon.weapon-siege,武器与攻城
+enum.taxon.yersiniaceae,耶尔森菌科
 error.ALREADY_MAX_ERA,时代已满
 error.AUTH_FAILED,登录失败
 error.AUTH_FAILED.invalid_code,短信验证码错误
@@ -432,11 +576,11 @@ skill.alternating-current.name,交流电
 skill.alternating-current.text,使一个友方随从获得最优攻击直到回合结束
 skill.aura-all-plus-0-plus-1.text,你的随从获得 +0/+1
 skill.aura-all-plus-0-plus-2.text,你的随从获得 +0/+2
-skill.aura-biology-plus-0-plus-1.text,你的生物随从获得 +0/+1
-skill.aura-biology-plus-1-plus-1.text,你的生物随从获得 +1/+1
+skill.aura-biology-plus-0-plus-1.text,你的动物随从获得 +0/+1
+skill.aura-biology-plus-1-plus-1.text,你的动物随从获得 +1/+1
 skill.aura-mech-optimal-attack.text,你的机械随从获得最优攻击
 skill.aura-mech-plus-2-plus-2.text,你的机械随从获得 +2/+2
-skill.aura-other-biology-plus-1-attack.text,你的其他生物随从获得 +1 攻击力
+skill.aura-other-biology-plus-1-attack.text,你的其他动物随从获得 +1 攻击力
 skill.aura-other-mech-plus-1-plus-1.text,你的其他机械随从获得 +1/+1
 skill.aura-other-plants-plus-0-plus-1.text,你的其他植物随从获得 +0/+1
 skill.aura-other-plus-0-plus-1.text,你的其他随从获得 +0/+1
@@ -444,7 +588,7 @@ skill.aura-plant-plus-1-plus-1.text,你的植物随从获得 +1/+1
 skill.aura-plant-plus-2-plus-2.text,你的植物随从获得 +2/+2
 skill.aura-scholar-plus-0-plus-2.text,你的学者随从获得 +0/+2
 skill.aura-scholar-plus-0-plus-3.text,你的学者随从获得 +0/+3
-skill.battlecry-all-biology-growth-once.text,战吼：使你的所有生物随从获得一次成长
+skill.battlecry-all-biology-growth-once.text,战吼：使你的所有动物随从获得一次成长
 skill.battlecry-all-friendly-growth-once.text,战吼：使你的所有随从获得一次成长
 skill.battlecry-all-friendly-growth-twice.text,战吼：使你的所有随从获得两次成长
 skill.battlecry-all-friendly-plus-0-plus-1.text,战吼：使你的所有随从获得 +0/+1
@@ -455,7 +599,7 @@ skill.battlecry-friendly-growth-once.text,战吼：使一个友方随从获得�
 skill.battlecry-friendly-growth-plant-twice.text,战吼：使一个友方随从获得一次成长；若其为植物，改为两次
 skill.battlecry-friendly-growth-scholar-twice.text,战吼：使一个友方随从获得一次成长；若其为学者，改为两次
 skill.battlecry-friendly-growth-twice.text,战吼：使一个友方随从获得两次成长
-skill.battlecry-friendly-human-plus-0-plus-1.text,战吼：使一个友方人类随从获得 +0/+1
+skill.battlecry-friendly-human-plus-0-plus-1.text,战吼：使一个友方人科随从获得 +0/+1
 skill.battlecry-friendly-mech-growth-once.text,战吼：使一个友方机械随从获得一次成长
 skill.battlecry-friendly-plant-growth-once.text,战吼：使一个友方植物随从获得一次成长
 skill.battlecry-friendly-plus-0-plus-1.text,战吼：使一个友方随从获得 +0/+1
@@ -463,7 +607,7 @@ skill.battlecry-friendly-plus-0-plus-2.text,战吼：使一个友方随从获得
 skill.battlecry-friendly-plus-1-attack.text,战吼：使一个友方随从获得 +1 攻击力
 skill.battlecry-friendly-plus-1-health.text,战吼：使一个友方随从获得 +1 生命值
 skill.battlecry-friendly-virus-plus-1-attack.text,战吼：使一个友方病毒随从获得 +1 攻击力
-skill.battlecry-other-friendly-humans-plus-1-attack.text,战吼：使你的其他人类随从获得 +1 攻击力
+skill.battlecry-other-friendly-humans-plus-1-attack.text,战吼：使你的其他人科随从获得 +1 攻击力
 skill.battlecry-plant-growth-twice.text,战吼：使一个友方植物随从获得两次成长
 skill.battlecry-random-enemy-damage-1.text,战吼：对随机一个敌方随从造成 1 点伤害
 skill.battlecry-random-enemy-damage-2.text,战吼：对随机一个敌方随从造成 2 点伤害
@@ -472,7 +616,7 @@ skill.battlecry-self-plus-1-health.text,战吼：获得 +1 生命值
 skill.battlecry-summon-3-3-synthetic-cell.text,战吼：召唤一个 3/3 的合成细胞（幼体）
 skill.biology-evolve.match_text,同左
 skill.biology-evolve.name,获得性状
-skill.biology-evolve.text,使一个友方生物随从获得进化
+skill.biology-evolve.text,使一个友方动物随从获得进化
 skill.combat-optimal-attack.match_text,同左
 skill.combat-optimal-attack.name,航线
 skill.combat-optimal-attack.text,使一个友方随从获得最优攻击直到回合结束
@@ -485,7 +629,7 @@ skill.combatstart-all-enemies-damage-5.match_text,同左
 skill.combatstart-all-enemies-damage-5.text,战斗开始时，对敌方所有随从造成 5 点伤害
 skill.combatstart-all-enemies-minus-1-attack.match_text,同左
 skill.combatstart-all-enemies-minus-1-attack.text,战斗开始时，使敌方所有随从获得 -1 攻击力
-skill.combatstart-if-2-biology-self-plus-2-attack.text,战斗开始时，若你控制至少 2 个生物，获得 +2 攻击力
+skill.combatstart-if-2-biology-self-plus-2-attack.text,战斗开始时，若你控制至少 2 个动物，获得 +2 攻击力
 skill.combatstart-leftmost-and-adjacent-damage-2.match_text,同左
 skill.combatstart-leftmost-and-adjacent-damage-2.text,战斗开始时，对敌方最左侧随从及其相邻随从造成 2 点伤害
 skill.combatstart-leftmost-damage-3.match_text,同左
@@ -499,7 +643,7 @@ skill.combatstart-random-enemy-contagion-2.text,战斗开始时，使一个随�
 skill.combatstart-random-enemy-damage-2.match_text,战斗开始时，对敌方最左侧随从造成 2 点伤害
 skill.combatstart-random-enemy-damage-2.text,战斗开始时，随机对一个敌方随从造成 2 点伤害
 skill.combatstart-remove-all-human-growth.match_text,同左
-skill.combatstart-remove-all-human-growth.text,战斗开始时，移除所有人类随从的全部成长
+skill.combatstart-remove-all-human-growth.text,战斗开始时，移除所有人科随从的全部成长
 skill.combatstart-remove-top-attack-enemy-growth.match_text,同左
 skill.combatstart-remove-top-attack-enemy-growth.text,战斗开始时，移除敌方攻击力最高随从的全部成长
 skill.combatstart-top-attack-enemy-cant-attack.match_text,同左
@@ -507,7 +651,7 @@ skill.combatstart-top-attack-enemy-cant-attack.text,战斗开始时，使敌方�
 skill.combatstart-top-attack-enemy-minus-0-minus-2.match_text,同左
 skill.combatstart-top-attack-enemy-minus-0-minus-2.text,战斗开始时，使敌方攻击力最高的随从获得 -0/-2
 skill.deathrattle-all-enemies-contagion-1.text,亡语：使敌方所有随从获得 1 层传染
-skill.deathrattle-all-enemies-humans-minus-2-health.text,亡语：使敌方所有人类随从获得 -2 生命
+skill.deathrattle-all-enemies-humans-minus-2-health.text,亡语：使敌方所有人科随从获得 -2 生命
 skill.deathrattle-all-enemies-minus-1-health.text,亡语：使敌方所有随从获得 -1 生命
 skill.deathrattle-all-friendly-plus-0-plus-1.text,亡语：使你的所有随从获得 +0/+1
 skill.deathrattle-random-enemy-hp-minus-1.text,亡语：使随机一个敌方随从获得 -1 生命值
@@ -517,7 +661,7 @@ skill.deathrattle-summon-2-2-hela-cell-clone.text,亡语：召唤一个 2/2 的�
 skill.deathrattle-summon-termite.text,亡语：召唤一个 1/2 的白蚁
 skill.division-of-labor.match_text,同左
 skill.division-of-labor.name,分工
-skill.division-of-labor.text,使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次
+skill.division-of-labor.text,使一个友方人科随从获得一次成长；若你控制至少 3 个人科随从，改为两次
 skill.efficient-algorithm.match_text,获得的随从固定为当前星级排序第一张
 skill.efficient-algorithm.name,高效算法
 skill.efficient-algorithm.text,刷新商店并获得一张当前星级的随从
@@ -526,7 +670,7 @@ skill.enemy-random-cannot-attack.name,非攻
 skill.enemy-random-cannot-attack.text,使随机一个敌方随从本回合无法攻击
 skill.evolution-discovery.match_text,改为三选一固定池
 skill.evolution-discovery.name,进化
-skill.evolution-discovery.text,发现一张本局启用的流派随从
+skill.evolution-discovery.text,发现一张本局启用的玩法随从
 skill.faraday-cage.match_text,同左
 skill.faraday-cage.name,法拉第笼
 skill.faraday-cage.text,使一个友方随从获得护盾
@@ -538,7 +682,7 @@ skill.heredity.name,遗传
 skill.heredity.text,使一个友方植物随从获得一次成长
 skill.human-growth-twice.match_text,同左
 skill.human-growth-twice.name,技艺
-skill.human-growth-twice.text,使一个友方人类随从获得两次成长
+skill.human-growth-twice.text,使一个友方人科随从获得两次成长
 skill.invention-factory.match_text,同左
 skill.invention-factory.name,发明工厂
 skill.invention-factory.text,使你的其他机械随从各获得一次成长
@@ -573,10 +717,10 @@ skill.scholar-growth-twice.text,使一个友方学者随从获得两次成长
 skill.shout.match_text,同左
 skill.shout.name,呐喊
 skill.shout.text,使一个友方随从获得一次成长
-skill.trigger-2-humans-self-plus-1-attack.text,若你控制至少 2 个人类，获得 +1 攻击力
-skill.trigger-2-humans-self-plus-1-plus-1.text,若你控制至少 2 个人类，获得 +1/+1
-skill.trigger-3-humans-self-plus-1-plus-1.text,若你控制至少 3 个人类，获得 +1/+1
-skill.trigger-3-humans-self-plus-2-attack.text,若你控制至少 3 个人类，获得 +2 攻击力
+skill.trigger-2-humans-self-plus-1-attack.text,若你控制至少 2 个人科随从，获得 +1 攻击力
+skill.trigger-2-humans-self-plus-1-plus-1.text,若你控制至少 2 个人科随从，获得 +1/+1
+skill.trigger-3-humans-self-plus-1-plus-1.text,若你控制至少 3 个人科随从，获得 +1/+1
+skill.trigger-3-humans-self-plus-2-attack.text,若你控制至少 3 个人科随从，获得 +2 攻击力
 skill.trigger-all-friendly-growth-once.match_text,同左
 skill.trigger-all-friendly-growth-once.text,使你的随从各获得一次成长
 skill.trigger-all-friendly-plus-1-plus-1.match_text,同左
@@ -588,9 +732,9 @@ skill.trigger-copy-friendly-minion.text,复制一个友方随从
 skill.trigger-copy-hand-minion.match_text,同左
 skill.trigger-copy-hand-minion.text,复制你手牌中的一张随从牌
 skill.trigger-discover-tribe-minion.match_text,改为三选一固定池
-skill.trigger-discover-tribe-minion.text,发现一张本局流派的随从
+skill.trigger-discover-tribe-minion.text,发现一张本局玩法的随从
 skill.trigger-enemy-death-self-plus-1-plus-1.text,每当一个敌方随从死亡，获得 +1/+1
-skill.trigger-friendly-biology-play-plus-1-attack.text,每当一个友方生物随从进入战场，获得 +1 攻击力
+skill.trigger-friendly-biology-play-plus-1-attack.text,每当一个友方动物随从进入战场，获得 +1 攻击力
 skill.trigger-friendly-death-self-plus-1-attack.text,每当一个友方随从死亡，获得 +1 攻击力
 skill.trigger-friendly-evolve-self-plus-1-plus-1.text,每当一个友方随从进化，获得 +1/+1
 skill.trigger-friendly-growth-extra-plus-0-plus-1.text,每当一个友方随从获得成长，它额外获得 +0/+1
@@ -599,10 +743,10 @@ skill.trigger-friendly-growth-thrice.match_text,同左
 skill.trigger-friendly-growth-thrice.text,使一个友方随从获得三次成长
 skill.trigger-friendly-growth-twice.match_text,同左
 skill.trigger-friendly-growth-twice.text,使一个友方随从获得两次成长
-skill.trigger-friendly-human-death-plus-1-plus-1.text,每当一个友方人类随从死亡，获得 +1/+1
-skill.trigger-friendly-human-play-plus-1-attack.text,每当一个友方人类随从进入战场，获得 +1 攻击力
+skill.trigger-friendly-human-death-plus-1-plus-1.text,每当一个友方人科随从死亡，获得 +1/+1
+skill.trigger-friendly-human-play-plus-1-attack.text,每当一个友方人科随从进入战场，获得 +1 攻击力
 skill.trigger-friendly-human-taunt-until-turn-end.match_text,同左
-skill.trigger-friendly-human-taunt-until-turn-end.text,使一个友方人类随从获得嘲讽直到回合结束
+skill.trigger-friendly-human-taunt-until-turn-end.text,使一个友方人科随从获得嘲讽直到回合结束
 skill.trigger-friendly-plant-breed-2.match_text,同左
 skill.trigger-friendly-plant-breed-2.text,使一个友方植物随从获得繁衍 2
 skill.trigger-friendly-plus-0-plus-4-this-turn.match_text,同左
@@ -620,7 +764,7 @@ skill.trigger-mech-optimal-attack-this-turn.text,你的机械随从获得最优�
 skill.trigger-minion-windfury-this-turn.match_text,同左
 skill.trigger-minion-windfury-this-turn.text,使一个随从本回合获得连击
 skill.trigger-other-friendly-humans-plus-1-attack.match_text,同左
-skill.trigger-other-friendly-humans-plus-1-attack.text,使你的其他人类随从各获得 +1 攻击力
+skill.trigger-other-friendly-humans-plus-1-attack.text,使你的其他人科随从各获得 +1 攻击力
 skill.trigger-play-effect-friendly-plus-0-plus-1.text,每当你使用一张效果牌，使一个友方随从获得 +0/+1
 skill.trigger-turn-start-self-plus-0-plus-1.text,回合开始时获得 +0/+1
 skill.universal-manuscript.match_text,同左
@@ -643,25 +787,33 @@ ui.game.combat.own_title,我方随从
 ui.game.combat.waiting,等待战斗动作…
 ui.game.combat.win,胜利
 ui.game.detail.alive,存活
+ui.game.detail.association,关联玩法
 ui.game.detail.cost,费用
 ui.game.detail.cost_value,%d 金
 ui.game.detail.current,当前
 ui.game.detail.eliminated,淘汰
 ui.game.detail.era,时代
+ui.game.detail.fictional,虚构
+ui.game.detail.food_chain,食物链
 ui.game.detail.hero,英雄
 ui.game.detail.hero_power,英雄技能
+ui.game.detail.host,寄生
 ui.game.detail.hp,生命
 ui.game.detail.initial_stats,原始
 ui.game.detail.minions,随从
 ui.game.detail.not_recruited,未招募
+ui.game.detail.playstyle,玩法
+ui.game.detail.prey,捕食
 ui.game.detail.recruit,招募
 ui.game.detail.recruited,已招募
 ui.game.detail.seller,售货员
 ui.game.detail.shop_hint,招募阶段可用：\n购买、刷新、升时代、冻结。
 ui.game.detail.shop_open,商店营业中
+ui.game.detail.specialty,擅长玩法
 ui.game.detail.status,状态
-ui.game.detail.tribe,部落
+ui.game.detail.taxonomy,科学分类
 ui.game.detail.type,类型
+ui.game.detail.undetermined,未定
 ui.game.era_format,时代 %s
 ui.game.hand.empty,手牌为空
 ui.game.hand.title,手牌

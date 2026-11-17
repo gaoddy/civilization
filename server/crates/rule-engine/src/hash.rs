@@ -38,9 +38,9 @@ pub fn state_hash(state: &GameState) -> u64 {
         }
     }
 
-    hasher.len(state.enabled_tribes.len());
-    for tribe in &state.enabled_tribes {
-        hasher.u8(*tribe as u8);
+    hasher.len(state.enabled_playstyles.len());
+    for playstyle in &state.enabled_playstyles {
+        hasher.u8(playstyle.ordinal());
     }
 
     hasher.len(state.previous_opponent.len());

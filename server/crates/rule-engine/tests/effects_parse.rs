@@ -1,10 +1,10 @@
 mod common;
 
-use common::CONFIG_JSON;
-use rule_engine::data::{CardType, Catalog, Tribe};
+use common::{CONFIG_JSON, TAXONOMY_JSON};
+use rule_engine::data::{CardType, Catalog};
 use rule_engine::effects::{
-    Compare, Duration, Filter, KeywordSpec, Op, Pick, Selector, Side, TimesIf, Trigger, Zone,
-    parse_effects,
+    Basis, Compare, Duration, Filter, KeywordSpec, Op, Pick, Selector, Side, TimesIf, Trigger,
+    Zone, parse_effects,
 };
 use rule_engine::error::CatalogError;
 
@@ -28,7 +28,7 @@ fn parses_a_growth_effect() {
 #[test]
 fn parses_aura_and_keyword_value() {
     let e = parse_effects(
-        "Aura|ModifyStats|friendly:all:tribe=machine|attack=2,health=2,duration=permanent",
+        "Aura|ModifyStats|friendly:all:playstyle=machine|attack=2,health=2,duration=permanent",
     )
     .unwrap();
     assert_eq!(e[0].params.duration, Some(Duration::Permanent));
@@ -40,7 +40,7 @@ fn parses_aura_and_keyword_value() {
             side: Side::Friendly,
             pick: Pick::All,
             filters: vec![Filter {
-                key: "tribe".into(),
+                key: "playstyle".into(),
                 value: "machine".into(),
             }],
         }
@@ -62,12 +62,12 @@ fn parses_selector_shorthands_and_multiple_filters() {
     assert_eq!(target[0].selector, Selector::Target);
 
     let filters =
-        parse_effects("OnPlay|Growth|friendly:all:tribe=plant:other=true:type=minion|times=1")
+        parse_effects("OnPlay|Growth|friendly:all:playstyle=plant:other=true:type=minion|times=1")
             .unwrap();
     match &filters[0].selector {
         Selector::Side { filters, .. } => {
             assert_eq!(filters.len(), 3);
-            assert_eq!(filters[0].key, "tribe");
+            assert_eq!(filters[0].key, "playstyle");
             assert_eq!(filters[0].value, "plant");
             assert_eq!(filters[1].key, "other");
             assert_eq!(filters[1].value, "true");
@@ -81,7 +81,7 @@ fn parses_selector_shorthands_and_multiple_filters() {
 #[test]
 fn parses_structured_params() {
     let e = parse_effects(
-        "ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:tribe=human:>=2",
+        "ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:playstyle=mammal:>=2",
     )
     .unwrap();
     let condition = e[0].params.condition.as_ref().unwrap();
@@ -89,28 +89,30 @@ fn parses_structured_params() {
     assert_eq!(
         condition.filter,
         Filter {
-            key: "tribe".into(),
-            value: "human".into(),
+            key: "playstyle".into(),
+            value: "mammal".into(),
         }
     );
     assert_eq!(condition.compare, Compare::Ge);
     assert_eq!(condition.count, 2);
 
-    let e = parse_effects("OnPlay|Growth|friendly:single|times=1,timesIf=human:2").unwrap();
+    let e =
+        parse_effects("OnPlay|Growth|friendly:single|times=1,timesIf=playstyle:mammal:2").unwrap();
     assert_eq!(
         e[0].params.times_if,
         Some(TimesIf {
-            tribe: Tribe::Human,
+            key: "playstyle".into(),
+            value: Some("mammal".into()),
             times: 2
         })
     );
 
-    let e = parse_effects("OnAllySummon|ModifyStats|self|attack=1,when=tribe=human").unwrap();
+    let e = parse_effects("OnAllySummon|ModifyStats|self|attack=1,when=playstyle=mammal").unwrap();
     assert_eq!(
         e[0].params.when,
         Some(Filter {
-            key: "tribe".into(),
-            value: "human".into(),
+            key: "playstyle".into(),
+            value: "mammal".into(),
         })
     );
 
@@ -119,8 +121,8 @@ fn parses_structured_params() {
     assert_eq!(e[0].params.to, Some(Zone::Hand));
     assert_eq!(e[0].params.card_type, Some(CardType::Minion));
 
-    let e = parse_effects("OnActivate|Discover|self|pool=tribe,choose=1").unwrap();
-    assert_eq!(e[0].params.pool.as_deref(), Some("tribe"));
+    let e = parse_effects("OnActivate|Discover|self|pool=playstyle,choose=1").unwrap();
+    assert_eq!(e[0].params.pool.as_deref(), Some("playstyle"));
     assert_eq!(e[0].params.choose, Some(1));
 
     let e = parse_effects("OnFirstRefresh|AddShopSlot|self|era=current,count=1").unwrap();
@@ -168,7 +170,7 @@ fn unknown_selector_filter_or_param_fails() {
     assert!(parse_effects("OnPlay|Growth|sideways:single|times=1").is_err());
     assert!(parse_effects("OnPlay|Growth|friendly:nope|times=1").is_err());
     assert!(parse_effects("OnPlay|Growth|friendly:all:oops=1|times=1").is_err());
-    assert!(parse_effects("OnPlay|Growth|friendly:all:tribe=精灵|times=1").is_err());
+    assert!(parse_effects("OnPlay|Growth|friendly:all:playstyle=古菌|times=1").is_err());
     assert!(parse_effects("OnPlay|Growth|friendly:all:type=法术|times=1").is_err());
     assert!(parse_effects("OnPlay|Growth|self|times=1,oops=2").is_err());
     assert!(parse_effects("OnPlay|Growth|self|times=two").is_err());
@@ -197,7 +199,7 @@ fn errors_include_the_raw_segment() {
 #[test]
 fn catalog_rejects_unknown_effect_enum_at_load() {
     let bad_skills = r#"[{"id":"broken-skill","effects":[{"trigger":"on_play","op":"explode","selector":{"kind":"self"},"params":{}}]}]"#;
-    let err = Catalog::from_json("[]", bad_skills, "[]", CONFIG_JSON).unwrap_err();
+    let err = Catalog::from_json("[]", bad_skills, "[]", CONFIG_JSON, TAXONOMY_JSON).unwrap_err();
     assert!(
         matches!(err, CatalogError::File("skills.json", _)),
         "实为 {err:?}"
@@ -207,7 +209,7 @@ fn catalog_rejects_unknown_effect_enum_at_load() {
 #[test]
 fn catalog_rejects_semantically_invalid_effect_at_load() {
     let bad_skills = r#"[{"id":"broken-skill","effects":[{"trigger":"aura","op":"deal_damage","selector":{"kind":"side","side":"friendly","pick":"all","filters":[]},"params":{"amount":1}}]}]"#;
-    let err = Catalog::from_json("[]", bad_skills, "[]", CONFIG_JSON).unwrap_err();
+    let err = Catalog::from_json("[]", bad_skills, "[]", CONFIG_JSON, TAXONOMY_JSON).unwrap_err();
     match err {
         CatalogError::Rule(message) => {
             assert!(message.contains("broken-skill"), "{message}");
@@ -230,11 +232,11 @@ fn semantic_rules_live_in_validate_only() {
     // DSL 解析只负责语法；跨字段规则统一由 parse_chunk 末尾的 validate_effect 给出。
     let semantic = [
         "OnActivate|GainMinion|self|from=board,level=current,to=hand",
-        "OnActivate|Discover|self|pool=tribe",
+        "OnActivate|Discover|self|pool=playstyle,choose=2",
         "OnCombatStart|GrantKeyword|enemy:all|keyword=繁殖",
         "OnCombatStart|GrantKeyword|enemy:all|keyword=taunt 1",
         "Aura|DealDamage|enemy:all|amount=1",
-        "OnPlay|Growth|self|times=1,timesIf=general:2",
+        "OnPlay|Growth|self|times=1,timesIf=unknown:2",
     ];
     for raw in semantic {
         let errors = parse_effects(raw).expect_err(raw);
@@ -251,4 +253,40 @@ fn semantic_rules_live_in_validate_only() {
             value: Some(2)
         })
     );
+}
+
+#[test]
+fn parses_kill_triggers_and_decompose_basis() {
+    let e = parse_effects("OnKill|Decompose|self|basis=original,duration=permanent").unwrap();
+    assert_eq!(e[0].trigger, Trigger::OnKill);
+    assert_eq!(e[0].op, Op::Decompose);
+    assert_eq!(e[0].params.basis, Some(Basis::Original));
+    assert_eq!(e[0].params.duration, Some(Duration::Permanent));
+
+    let ally =
+        parse_effects("OnAllyKill|Decompose|self|basis=combat_start,duration=combat").unwrap();
+    assert_eq!(ally[0].trigger, Trigger::OnAllyKill);
+    assert_eq!(ally[0].params.basis, Some(Basis::CombatStart));
+
+    let pre_kill =
+        parse_effects("OnFriendlyDeath|Decompose|self|basis=pre_kill,duration=permanent").unwrap();
+    assert_eq!(pre_kill[0].params.basis, Some(Basis::PreKill));
+}
+
+#[test]
+fn decompose_requires_known_basis_and_duration() {
+    for raw in [
+        "OnKill|Decompose|self|duration=permanent",
+        "OnKill|Decompose|self|basis=original",
+        "OnKill|Decompose|self|basis=unknown,duration=permanent",
+        "OnKill|Decompose|self|basis=original,amount=2,duration=permanent",
+    ] {
+        parse_effects(raw).expect_err(raw);
+    }
+
+    // when 可用于击杀类事件触发。
+    parse_effects(
+        "OnAllyKill|Decompose|self|basis=original,duration=permanent,when=taxon=animalia",
+    )
+    .expect("when 应允许用于 OnAllyKill");
 }

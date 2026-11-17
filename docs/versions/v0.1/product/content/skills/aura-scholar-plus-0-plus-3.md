@@ -1,7 +1,7 @@
 ---
 id: aura-scholar-plus-0-plus-3
 text: 你的学者随从获得 +0/+3
-effects: Aura|ModifyStats|friendly:all:tribe=scholar|health=3,duration=permanent
+effects: Aura|ModifyStats|friendly:all:scholar=true|health=3,duration=permanent
 ---
 
 # aura-scholar-plus-0-plus-3

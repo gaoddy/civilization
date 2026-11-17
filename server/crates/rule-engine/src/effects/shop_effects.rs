@@ -7,7 +7,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::data::{CardType, Catalog, Era, Tribe};
+use crate::data::{CardType, Catalog, Era, Playstyle, card_in_pool};
 use crate::effects::{Effect, EffectCtx, Trigger, Zone};
 use crate::engine::Engine;
 use crate::events::GameEvent;
@@ -75,7 +75,7 @@ impl Engine {
                 break;
             }
             let Some(card_id) =
-                first_eligible(&self.catalog, &state.pool, &state.enabled_tribes, star)
+                first_eligible(&self.catalog, &state.pool, &state.enabled_playstyles, star)
             else {
                 break;
             };
@@ -141,7 +141,7 @@ impl Engine {
 
         // 加载期已保证 `from` 只能是 shop（或省略）。
         let Some((card_id, slot)) =
-            first_shop_slot(&self.catalog, &state.enabled_tribes, star, &player.shop)
+            first_shop_slot(&self.catalog, &state.enabled_playstyles, star, &player.shop)
         else {
             return Vec::new();
         };
@@ -212,14 +212,14 @@ fn level_star(level: &str, era: Era) -> Option<u8> {
 /// 商店中按卡牌目录顺序第一张合格槽位：返回 `(卡牌 id, 槽位下标)`。
 fn first_shop_slot(
     catalog: &Catalog,
-    tribes: &BTreeSet<Tribe>,
+    playstyles: &BTreeSet<Playstyle>,
     star: u8,
     shop: &[Option<ShopSlot>],
 ) -> Option<(String, usize)> {
     catalog
         .cards
         .values()
-        .filter(|card| is_level_minion(catalog, &card.id, star, tribes))
+        .filter(|card| is_level_minion(catalog, &card.id, star, playstyles))
         .find_map(|card| {
             shop.iter()
                 .position(|slot| slot.as_ref().is_some_and(|slot| slot.card_id == card.id))
@@ -227,24 +227,28 @@ fn first_shop_slot(
         })
 }
 
-/// 指定星级的合格随从：随从、非英雄、该星级、流派启用或通用。
+/// 指定星级的合格随从：随从、非英雄、该星级、[`card_in_pool`] 通过。
 ///
-/// 学者是英雄专属流派（没有可购买的学者随从），获得时也排除。
-fn is_level_minion(catalog: &Catalog, card_id: &str, star: u8, tribes: &BTreeSet<Tribe>) -> bool {
+/// 学者的 `playstyle` 为 `neutral`，由 `play:` 决定入池，这里不再额外排除。
+fn is_level_minion(
+    catalog: &Catalog,
+    card_id: &str,
+    star: u8,
+    playstyles: &BTreeSet<Playstyle>,
+) -> bool {
     catalog.cards.get(card_id).is_some_and(|card| {
         card.card_type == CardType::Minion
             && !card.is_hero
             && card.level == star
-            && card.tribe != Tribe::Scholar
-            && (card.tribe == Tribe::General || tribes.contains(&card.tribe))
+            && card_in_pool(card, playstyles)
     })
 }
 
-/// 指定星级的「排序第一张」合格随从：随从、非英雄、池中有货、流派启用或通用。
+/// 指定星级的「排序第一张」合格随从：随从、非英雄、池中有货、[`card_in_pool`] 通过。
 fn first_eligible(
     catalog: &Catalog,
     pool: &BTreeMap<String, u16>,
-    tribes: &BTreeSet<Tribe>,
+    playstyles: &BTreeSet<Playstyle>,
     star: u8,
 ) -> Option<String> {
     catalog
@@ -255,7 +259,7 @@ fn first_eligible(
                 && !card.is_hero
                 && card.level == star
                 && pool.get(&card.id).copied().unwrap_or(0) > 0
-                && (card.tribe == Tribe::General || tribes.contains(&card.tribe))
+                && card_in_pool(card, playstyles)
         })
         .map(|card| card.id.clone())
 }

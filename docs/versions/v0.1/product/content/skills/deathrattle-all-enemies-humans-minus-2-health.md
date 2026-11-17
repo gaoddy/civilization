@@ -1,8 +1,8 @@
 ---
 id: deathrattle-all-enemies-humans-minus-2-health
 keyword: deathrattle
-text: 亡语：使敌方所有人类随从获得 -2 生命
-effects: OnDeath|ModifyStats|enemy:all:tribe=human|health=-2,duration=combat
+text: 亡语：使敌方所有人科随从获得 -2 生命
+effects: OnDeath|ModifyStats|enemy:all:taxon=hominidae|health=-2,duration=combat
 ---
 
 # deathrattle-all-enemies-humans-minus-2-health
@@ -17,4 +17,4 @@ effects: OnDeath|ModifyStats|enemy:all:tribe=human|health=-2,duration=combat
 
 ## 效果
 
-亡语：使敌方所有人类随从获得 -2 生命
+亡语：使敌方所有人科随从获得 -2 生命

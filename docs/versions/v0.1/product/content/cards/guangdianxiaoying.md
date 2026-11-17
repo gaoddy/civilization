@@ -4,7 +4,8 @@ name: 光电效应
 card_type: effect
 level: 3
 era: industrial
-tribe: general
+playstyle: neutral
+taxon: phenomenon
 cost: 1
 match_text: 同左
 skills: [combatstart-leftmost-damage-3]
@@ -21,7 +22,9 @@ skills: [combatstart-leftmost-damage-3]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 流派 | 通用 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | combatstart-leftmost-damage-3 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |

@@ -2,7 +2,8 @@
 id: juzi
 card_type: minion
 name: 橘子
-tribe: plant
+playstyle: plant
+taxon: rutaceae
 subtype: fruit-tree
 level: 1
 era: prehistoric
@@ -21,7 +22,9 @@ is_scholar: false
 | id | juzi |
 | 名称 | 橘子 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 无患子目 › 芸香科 |
+| 关联分类 | 无 |
 | 子类 | 果树 |
 | 星级 | 1 |
 | 时代 | 史前 |

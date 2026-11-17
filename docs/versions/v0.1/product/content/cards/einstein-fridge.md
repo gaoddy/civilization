@@ -2,7 +2,9 @@
 id: einstein-fridge
 card_type: minion
 name: 爱因斯坦冰箱
-tribe: machine
+playstyle: neutral
+taxon: life-medical
+specialty: [play:machine]
 subtype: appliance
 level: 3
 era: modern
@@ -20,7 +22,9 @@ is_scholar: false
 | id | einstein-fridge |
 | 名称 | 爱因斯坦冰箱 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 生活与医疗 |
+| 关联分类 | 关联：机械 |
 | 子类 | 家电 |
 | 星级 | 3 |
 | 时代 | 现代 |

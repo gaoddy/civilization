@@ -1,7 +1,7 @@
 ---
 id: aura-biology-plus-1-plus-1
-text: 你的生物随从获得 +1/+1
-effects: Aura|ModifyStats|friendly:all:tribe=biology|attack=1,health=1,duration=permanent
+text: 你的动物随从获得 +1/+1
+effects: Aura|ModifyStats|friendly:all:taxon=animalia|attack=1,health=1,duration=permanent
 ---
 
 # aura-biology-plus-1-plus-1
@@ -16,4 +16,4 @@ effects: Aura|ModifyStats|friendly:all:tribe=biology|attack=1,health=1,duration=
 
 ## 效果
 
-你的生物随从获得 +1/+1
+你的动物随从获得 +1/+1

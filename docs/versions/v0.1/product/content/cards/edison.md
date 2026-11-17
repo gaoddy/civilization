@@ -2,7 +2,8 @@
 id: edison
 card_type: minion
 name: 爱迪生
-tribe: machine
+playstyle: machine
+taxon: hominidae
 subtype: engineering
 level: 5
 era: industrial
@@ -22,7 +23,9 @@ is_hero: true
 | id | edison |
 | 名称 | 爱迪生 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 机械 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 工程 |
 | 星级 | 5 |
 | 时代 | 工业 |

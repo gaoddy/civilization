@@ -2,7 +2,8 @@
 id: robot-dog
 card_type: minion
 name: 机器狗
-tribe: machine
+playstyle: machine
+taxon: automation
 subtype: robot
 level: 3
 era: modern
@@ -21,7 +22,9 @@ is_scholar: false
 | id | robot-dog |
 | 名称 | 机器狗 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 机械 |
+| 科学分类 | 造物 › 自动机械 |
+| 关联分类 | 无 |
 | 子类 | 机器人 |
 | 星级 | 3 |
 | 时代 | 现代 |

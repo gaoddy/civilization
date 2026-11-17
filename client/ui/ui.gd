@@ -90,13 +90,13 @@ static func styled_button(text: String, variant := "default", min_height := 30) 
     return node
 
 
-## 英雄头像块：没有图片资源，用部落色块 + 名字首字表示。
+## 英雄头像块：没有图片资源，用玩法色块 + 名字首字表示。
 static func avatar(hero_id: String, size := 34) -> PanelContainer:
     var node := PanelContainer.new()
     node.name = "Avatar"
     node.custom_minimum_size = Vector2(size, size)
-    var tribe := str(CardDB.card(hero_id).get("tribe", ""))
-    var tint := UITheme.tribe_color(tribe) if hero_id != "" else UITheme.color("color-border-strong")
+    var playstyle := str(CardDB.card(hero_id).get("playstyle", ""))
+    var tint := UITheme.playstyle_color(playstyle) if hero_id != "" else UITheme.color("color-border-strong")
     var box := StyleBoxFlat.new()
     box.bg_color = tint.darkened(0.55)
     box.border_color = tint
@@ -178,14 +178,14 @@ static func _avatar_initial(hero_id: String) -> String:
     return display.substr(0, 1)
 
 
-## 英雄小卡：头像、名字、部落与时代、技能摘要。hero_id 为空表示未选英雄。
+## 英雄小卡：头像、名字、玩法与时代、技能摘要。hero_id 为空表示未选英雄。
 static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
     var node := PanelContainer.new()
     node.name = "HeroTile"
     node.custom_minimum_size = Vector2(width, 0)
     var box := UITheme.panel_style("raised")
     if hero_id != "":
-        box.border_color = UITheme.tribe_color(str(CardDB.card(hero_id).get("tribe", "")))
+        box.border_color = UITheme.playstyle_color(str(CardDB.card(hero_id).get("playstyle", "")))
     node.add_theme_stylebox_override("panel", box)
 
     var row := HBoxContainer.new()
@@ -208,10 +208,10 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
 
     var entry := CardDB.card(hero_id)
     var meta_parts := PackedStringArray()
-    var tribe := str(entry.get("tribe", ""))
+    var playstyle := str(entry.get("playstyle", ""))
     var era := str(entry.get("era", ""))
-    if tribe != "":
-        meta_parts.append(enum_text("tribe", tribe))
+    if playstyle != "":
+        meta_parts.append(enum_text("playstyle", playstyle))
     if era != "":
         meta_parts.append(enum_text("era", era))
     var meta := label(" · ".join(meta_parts) if not meta_parts.is_empty() else "—", UITheme.font_size("font-caption"), false)

@@ -2,12 +2,12 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::{effects_of, minion, reborn_count, test_catalog};
+use common::{effects_of, minion, reborn_count, test_catalog, test_playstyles};
 use rule_engine::combat::{
     CombatAction, CombatLog, effective_attack, effective_attack_with, effective_health,
     effective_health_with, keywords, simulate, simulate_with,
 };
-use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
+use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill};
 use rule_engine::effects::Duration;
 use rule_engine::engine::Engine;
 use rule_engine::hash::state_hash;
@@ -19,7 +19,8 @@ use rule_engine::state::{AuraEffect, InstanceId, MinionInstance, Modifier, Phase
 fn add_card_with(
     catalog: &mut Catalog,
     id: &str,
-    tribe: Tribe,
+    playstyle: Playstyle,
+    is_scholar: bool,
     attack: i32,
     health: i32,
     keyword_list: &[&str],
@@ -44,14 +45,16 @@ fn add_card_with(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            tribe,
+            playstyle,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
             subtype: None,
             level: 1,
             era: None,
             attack: Some(attack),
             health: Some(health),
             skills: skill_ids,
-            is_scholar: tribe == Tribe::Scholar,
+            is_scholar,
             is_hero: false,
             cost: Some(1),
         },
@@ -59,7 +62,15 @@ fn add_card_with(
 }
 
 fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_list: &[&str]) {
-    add_card_with(catalog, id, Tribe::Human, attack, health, keyword_list);
+    add_card_with(
+        catalog,
+        id,
+        Playstyle::Mammal,
+        false,
+        attack,
+        health,
+        keyword_list,
+    );
 }
 
 /// 给已有卡牌追加一个带效果串的技能，用于构造召唤、复制等战斗内效果。
@@ -96,6 +107,8 @@ fn add_seedling_token(catalog: &mut Catalog) {
             attack: 1,
             health: 1,
             keywords: Vec::new(),
+            playstyle: None,
+            taxon: None,
         },
     );
 }
@@ -507,7 +520,15 @@ fn combat_stops_at_200_actions() {
 #[test]
 fn zero_attack_does_not_counterattack() {
     let mut catalog = test_catalog();
-    add_card_with(&mut catalog, "scholar", Tribe::Scholar, 0, 10, &[]);
+    add_card_with(
+        &mut catalog,
+        "scholar",
+        Playstyle::Neutral,
+        true,
+        0,
+        10,
+        &[],
+    );
     add_card(&mut catalog, "b", 2, 3, &[]);
 
     let log = simulate(
@@ -605,7 +626,15 @@ fn defender_acts_first_when_first_seat_is_defender() {
 #[test]
 fn scholar_granted_windfury_attacks_twice() {
     let mut catalog = test_catalog();
-    add_card_with(&mut catalog, "scholar", Tribe::Scholar, 0, 10, &[]);
+    add_card_with(
+        &mut catalog,
+        "scholar",
+        Playstyle::Neutral,
+        true,
+        0,
+        10,
+        &[],
+    );
     add_card(&mut catalog, "b", 0, 20, &[]);
 
     let mut scholar = minion(&catalog, 1, "scholar");
@@ -665,7 +694,7 @@ fn reborn_attacker_keeps_its_spent_token() {
 fn effective_stats_follow_evaluation_order() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "a", 2, 3, &[]);
-    add_card_with(&mut catalog, "scholar", Tribe::Scholar, 9, 4, &[]);
+    add_card_with(&mut catalog, "scholar", Playstyle::Neutral, true, 9, 4, &[]);
 
     let mut monster = minion(&catalog, 1, "a");
     monster.golden = true;
@@ -731,7 +760,7 @@ fn keywords_merge_card_and_active_grants() {
 
 /// 构造一场真实配对战斗：座位 0、1 存活，其余标淘汰。
 fn real_combat_state() -> (Engine, rule_engine::state::GameState) {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     add_card(&mut engine.catalog, "combat-big", 5, 5, &[]);
     add_card(&mut engine.catalog, "combat-small", 1, 1, &[]);
     state.phase = Phase::Combat;
@@ -818,7 +847,7 @@ fn resolve_combat_returns_one_report_per_participant() {
 
 #[test]
 fn ghost_report_names_ghost_owner() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32], test_playstyles());
     add_card(&mut engine.catalog, "combat-strong", 10, 10, &[]);
     add_card(&mut engine.catalog, "combat-weak", 1, 1, &[]);
     state.phase = Phase::Combat;
@@ -907,21 +936,22 @@ fn combat_state_hash_matches_golden_baseline() {
     // 场景：seed [4; 32]、座位 0 随从 10 带光环、配对 0 vs 1。
     // 随从属性改为分层模型后哈希编码变化，金标准同步更新；英雄卡从 13 张扩到 32 张
     // 后共享池条目随之增加、配对新增幽灵座位，两处改动合并后金标准再次同步；
-    // i18n 改造后关键词标识由中文改为英文 id，哈希编码随之变化，金标准再次同步。
+    // i18n 改造后关键词标识由中文改为英文 id，哈希编码随之变化，金标准再次同步；
+    // 部落改为玩法后，哈希写入 5 个玩法的序号，金标准再次同步。
     // 行为不变，任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
     let (mut engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "c0469bb5ebfabf96",
+        "d839ed480eaf960d",
         "固定场景的 state_hash 金标准"
     );
 }
 
 #[test]
 fn mixed_real_and_ghost_reports_cover_exactly_three_seats() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [5; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [5; 32], test_playstyles());
     add_card(&mut engine.catalog, "combat-a", 5, 5, &[]);
     add_card(&mut engine.catalog, "combat-b", 1, 1, &[]);
     add_card(&mut engine.catalog, "combat-c", 3, 3, &[]);
@@ -1030,10 +1060,12 @@ fn summon_action_records_position_and_seat() {
             attack: 1,
             health: 1,
             keywords: Vec::new(),
+            playstyle: None,
+            taxon: None,
         },
     );
 
-    let (engine, _state) = Engine::new(catalog.clone(), [7; 32]);
+    let (engine, _state) = Engine::new(catalog.clone(), [7; 32], test_playstyles());
     let log = simulate_with(
         &engine,
         &[minion(&catalog, 1, "killer")],
@@ -1085,7 +1117,7 @@ fn deathrattle_summon_uses_alive_rank_and_stops_at_capacity() {
     );
     add_seedling_token(&mut catalog);
 
-    let (engine, _state) = Engine::new(catalog.clone(), [7; 32]);
+    let (engine, _state) = Engine::new(catalog.clone(), [7; 32], test_playstyles());
     let mut defender = vec![minion(&catalog, 100, "summoner")];
     defender.extend((1..7).map(|index| minion(&catalog, 100 + index, "filler")));
     let log = simulate_with(
@@ -1129,7 +1161,7 @@ fn reborn_fizzles_when_summon_filled_the_board() {
     );
     add_seedling_token(&mut catalog);
 
-    let (engine, _state) = Engine::new(catalog.clone(), [7; 32]);
+    let (engine, _state) = Engine::new(catalog.clone(), [7; 32], test_playstyles());
     let mut defender = vec![minion(&catalog, 100, "reborner")];
     defender.extend((1..7).map(|index| minion(&catalog, 100 + index, "filler")));
     let log = simulate_with(
@@ -1173,7 +1205,7 @@ fn combat_copy_to_board_fizzles_when_board_is_full() {
         "OnCombatStart|Copy|friendly:leftmost|to=board",
     );
 
-    let (engine, _state) = Engine::new(catalog.clone(), [7; 32]);
+    let (engine, _state) = Engine::new(catalog.clone(), [7; 32], test_playstyles());
     let mut defender = vec![minion(&catalog, 100, "copier")];
     defender.extend((1..7).map(|index| minion(&catalog, 100 + index, "filler")));
     let log = simulate_with(

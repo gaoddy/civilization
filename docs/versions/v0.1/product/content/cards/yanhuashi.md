@@ -2,7 +2,9 @@
 id: yanhuashi
 card_type: minion
 name: 岩画师
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:mammal]
 subtype: art
 level: 1
 era: primitive
@@ -21,7 +23,9 @@ is_scholar: true
 | id | yanhuashi |
 | 名称 | 岩画师 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：哺乳纲 |
 | 子类 | 艺术 |
 | 星级 | 1 |
 | 时代 | 原始 |

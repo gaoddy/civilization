@@ -15,6 +15,16 @@ var _soft_errors := 0
 var _last_fingerprint := ""
 var _pending_buys: Dictionary = {}
 var _pending_intents: Dictionary = {}
+## 本回合已被服务端以 `NO_VALID_TARGET` 拒绝的出手，键为「回合:手牌下标」。
+## 该牌的目标池可能收窄（按分类、玩法或学者过滤），首个己方随从未必在池内；
+## 继续重发只会空转，本回合跳过它，交给后续的刷新与结束招募兜底。
+var _blocked_hand: Dictionary = {}
+## 本回合 `ChooseTarget` 已被拒绝的随从；待选池非空，轮换到下一个即可。
+var _failed_targets: Dictionary = {}
+## 回合内被拒绝的出手次数；棋盘满时手牌没有别的出路，超过上限直接结束招募，
+## 否则每来一次视图就空转一轮，直到演示超时。
+var _blocked_count := 0
+const BLOCKED_LIMIT := 3
 var _reroll_count := 0
 var _last_turn := 0
 var _code_written := false
@@ -160,22 +170,26 @@ func _debug_view(view: Dictionary, self_state: Dictionary) -> void:
 
 
 func _act(self_state: Dictionary) -> void:
+    # 换回合时先清回合内的拒绝记录，避免被拒的手牌或待选继续占着决策顺序。
+    var turn := int(GameStore.view.get("turn", 0))
+    if turn != _last_turn:
+        _last_turn = turn
+        _pending_buys.clear()
+        _reroll_count = 0
+        _blocked_hand.clear()
+        _failed_targets.clear()
+        _blocked_count = 0
     if bool(self_state.get("recruited", false)):
         return
 
     var choices: Array = self_state.get("pendingChoices", [])
     if not choices.is_empty():
         if str(choices[0].get("kind", "")) == "target":
-            _choose_target(self_state)
+            _choose_target()
             return
         _send_intent({"kind": Protocol.INTENT_CHOOSE_DISCOVER, "choice": 0})
         return
 
-    var turn := int(GameStore.view.get("turn", 0))
-    if turn != _last_turn:
-        _last_turn = turn
-        _pending_buys.clear()
-        _reroll_count = 0
     var aff: Dictionary = self_state.get("affordances", {})
     var best_slot := -1
     var best_cost := -1
@@ -198,8 +212,13 @@ func _act(self_state: Dictionary) -> void:
         _send_intent({"kind": Protocol.INTENT_BUY_MINION, "slot": best_slot})
         return
 
+    # 本回合已被拒的目标出手太多：棋盘满时手牌没有别的出路，直接结束招募。
+    if _blocked_count >= BLOCKED_LIMIT and bool(aff.get("canEndRecruit", false)):
+        _send_intent({"kind": Protocol.INTENT_END_RECRUIT})
+        return
+
     for card in self_state.get("hand", []):
-        if bool(card.get("playable", false)):
+        if bool(card.get("playable", false)) and not _hand_blocked(int(card.get("index", 0))):
             _send_intent({"kind": Protocol.INTENT_PLAY_CARD, "handIndex": int(card.get("index", 0))})
             return
 
@@ -241,11 +260,16 @@ func _send_intent(intent: Dictionary) -> void:
 
 
 ## 服务端要求「存在合法目标时必须指定」，无头驱动按棋盘顺序自动补选第一个己方随从。
+##
+## 补选的目标仍可能不在效果的合法池内（目标池可按分类、玩法或学者收窄）。因此
+## 已经带目标的意图与 `ChooseTarget` 都不再重发，否则会形成「补选 → 拒绝 → 再补选」
+## 的空转；前者由 `_blocked_hand` 记录、后者由 `_failed_targets` 轮换。
 func _retry_with_target(intent: Dictionary) -> bool:
-    var board: Array = GameStore.view.get("self", {}).get("board", [])
-    if board.is_empty():
+    if str(intent.get("kind", "")) != Protocol.INTENT_PLAY_CARD:
         return false
-    var target := str(board[0].get("minionId", ""))
+    if intent.has("targetMinionId"):
+        return false
+    var target := _first_valid_target()
     if target == "":
         return false
     var retried: Dictionary = intent.duplicate(true)
@@ -254,15 +278,47 @@ func _retry_with_target(intent: Dictionary) -> bool:
     return true
 
 
-## 战吼目标待选：同样取棋盘第一个随从，走 `ChooseTarget` 而不是补发原意图。
-func _choose_target(self_state: Dictionary) -> void:
-    var board: Array = self_state.get("board", [])
-    if board.is_empty():
-        push_error("M1B 目标待选时棋盘为空，无法选择目标")
+## 本回合还没被拒绝的第一个己方随从；全被拒绝时返回空串。
+func _first_valid_target() -> String:
+    var board: Array = GameStore.view.get("self", {}).get("board", [])
+    for entry in board:
+        var id := str(entry.get("minionId", ""))
+        if id != "" and not _failed_targets.has(id):
+            return id
+    return ""
+
+
+## 战吼目标待选：同样取本回合第一个未被拒绝的随从，走 `ChooseTarget`。
+func _choose_target() -> void:
+    var target := _first_valid_target()
+    if target == "":
+        push_error("M1B 目标待选时没有可选的己方随从")
         get_tree().quit(4)
         return
-    var target := str(board[0].get("minionId", ""))
     _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "minionId": target})
+
+
+## 本回合内该手牌是否已被判定为目标不合法。
+func _hand_blocked(index: int) -> bool:
+    return _blocked_hand.has("%d:%d" % [int(GameStore.view.get("turn", 0)), index])
+
+
+## 记录一次目标拒绝的来源：出手记到手牌（本回合跳过），目标待选记到随从（下个候选）。
+## 返回是否记录到，用于判定该拒绝是可预期的目标池收窄而非缺陷。
+func _remember_target_rejection(rejected: Dictionary) -> bool:
+    var kind := str(rejected.get("kind", ""))
+    if kind == Protocol.INTENT_PLAY_CARD:
+        if rejected.has("targetMinionId"):
+            var turn := int(GameStore.view.get("turn", 0))
+            var key := "%d:%d" % [turn, int(rejected.get("handIndex", -1))]
+            if not _blocked_hand.has(key):
+                _blocked_hand[key] = true
+                _blocked_count += 1
+            return true
+    elif kind == Protocol.INTENT_CHOOSE_TARGET:
+        _failed_targets[str(rejected.get("minionId", ""))] = true
+        return true
+    return false
 
 
 func _write_room_code(code: String) -> void:
@@ -303,6 +359,8 @@ func _on_error() -> void:
     # 目标缺失是正常交互：补上己方第一个随从重发，计入软错误。
     if code == Protocol.ERROR_NO_VALID_TARGET:
         var rejected_id := str(GameStore.last_error.get("clientIntentId", ""))
+        var rejected: Dictionary = _pending_intents.get(rejected_id, {})
+        var recorded := _remember_target_rejection(rejected)
         # 阶段已离开招募（战斗已开始）时不再补发，避免把补选打进战斗阶段。
         var still_recruiting := GameStore.phase == Protocol.PHASE_RECRUIT
         if (
@@ -312,6 +370,10 @@ func _on_error() -> void:
         ):
             _soft_errors += 1
             push_warning("M1B 补选目标后重发（intent=%s）" % rejected_id)
+            return
+        if recorded:
+            # 目标池收窄导致的选择被拒：本回合跳过该牌或换下一个待选，按预期软错误处理。
+            _soft_errors += 1
             return
     # 被拒绝的购买允许重试，不再视为待确认。
     _pending_buys.clear()

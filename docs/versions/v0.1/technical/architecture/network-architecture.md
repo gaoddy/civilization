@@ -231,7 +231,7 @@ S→C  PhaseChanged{phase:Recruit, turn:8, deadline:<沿用开战时的截止>}
 
 ### 10.4 平衡测试
 
-用 AI 自动对局跑 10 万局，输出各流派胜率、平均回合数、平均伤害；这是 [数值与经济](../../product/systems/economy-and-numbers.md)自检指标的数据来源。
+用 AI 自动对局跑 10 万局，输出各玩法胜率、平均回合数、平均伤害；这是 [数值与经济](../../product/systems/economy-and-numbers.md)自检指标的数据来源。
 
 ## 相关文档
 

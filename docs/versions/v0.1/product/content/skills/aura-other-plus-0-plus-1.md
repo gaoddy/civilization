@@ -20,5 +20,5 @@ effects: Aura|ModifyStats|friendly:all:other=true|health=1,duration=permanent
 
 ## 设计说明
 
-定位：不挑流派的常驻生命光环，只作用于自身以外的随从。
-口径：不带「其他」以外的筛选，学者、人类、机械等一律生效。
+定位：不挑玩法的常驻生命光环，只作用于自身以外的随从。
+口径：不带「其他」以外的筛选，学者、人科、机械等一律生效。

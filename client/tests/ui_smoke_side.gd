@@ -120,8 +120,8 @@ func _check_recruit_identity() -> void:
             var portrait_text := _node_text(portrait)
             _expect(portrait_text.contains("达尔文"), "我方英雄大图应显示名字")
             _expect(
-                not portrait_text.contains(TranslationServer.translate("enum.tribe.scholar")),
-                "英雄部落等信息不应常驻",
+                not portrait_text.contains(TranslationServer.translate("enum.playstyle.neutral")),
+                "英雄玩法等信息不应常驻",
             )
             await _hover(instance, portrait, portrait.size / 2)
             var hero_detail = instance.find_child("MinionDetailPanel", true, false)
@@ -132,8 +132,16 @@ func _check_recruit_identity() -> void:
             if hero_detail != null:
                 var hero_text := _node_text(hero_detail)
                 _expect(
-                    hero_text.contains(TranslationServer.translate("ui.game.detail.tribe")),
-                    "我方英雄详情应显示部落",
+                    hero_text.contains(TranslationServer.translate("ui.game.detail.taxonomy")),
+                    "我方英雄详情应显示科学分类",
+                )
+                _expect(
+                    hero_text.contains(TranslationServer.translate("ui.game.detail.playstyle")),
+                    "我方英雄详情应显示玩法",
+                )
+                _expect(
+                    hero_text.contains(TranslationServer.translate("ui.game.detail.specialty")),
+                    "我方英雄详情应显示擅长玩法",
                 )
                 _expect(
                     hero_text.contains(TranslationServer.translate("ui.game.detail.hero_power")),

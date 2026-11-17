@@ -2,7 +2,9 @@
 id: yelang
 card_type: minion
 name: 野狼
-tribe: biology
+playstyle: mammal
+taxon: canidae
+specialty: [prey:artiodactyla]
 subtype: mammal
 level: 2
 era: prehistoric
@@ -21,7 +23,9 @@ is_scholar: false
 | id | yelang |
 | 名称 | 野狼 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 犬科 |
+| 关联分类 | 捕食：偶蹄目 |
 | 子类 | 哺乳 |
 | 星级 | 2 |
 | 时代 | 史前 |
@@ -34,7 +38,7 @@ is_scholar: false
 
 ## 效果
 
-每当一个友方生物随从进入战场，获得 +1 攻击力
+每当一个友方动物随从进入战场，获得 +1 攻击力
 
 ## 出处
 

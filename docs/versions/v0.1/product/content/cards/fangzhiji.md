@@ -2,7 +2,9 @@
 id: fangzhiji
 card_type: minion
 name: 纺织机
-tribe: machine
+playstyle: neutral
+taxon: production-construction
+specialty: [play:machine]
 subtype: factory
 level: 2
 era: industrial
@@ -21,7 +23,9 @@ is_scholar: false
 | id | fangzhiji |
 | 名称 | 纺织机 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 生产与建筑 |
+| 关联分类 | 关联：机械 |
 | 子类 | 工厂 |
 | 星级 | 2 |
 | 时代 | 工业 |

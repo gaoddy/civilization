@@ -22,6 +22,12 @@ const PRIMITIVE_COLOR := {
 	"green-400": "5fce86",
 	"red-400": "e2666b",
 	"blue-400": "62a8e8",
+	"cyan-400": "3fd0e0",
+	"teal-400": "3fc7ac",
+	"olive-400": "9aa83c",
+	"amber-400": "e0b04a",
+	"orange-400": "e57c4a",
+	"magenta-400": "d979c4",
 	"purple-400": "b28ce6",
 	"slate-400": "93a6bd",
 	"lime-400": "a3cf61",
@@ -135,14 +141,21 @@ const SCENARIO := {
 	"freeze-crystal-gap": 14,
 }
 
-const TRIBE_COLOR := {
-	"human": "blue-400",
-	"scholar": "purple-400",
+const PLAYSTYLE_COLOR := {
+	"mammal": "blue-400",
+	"bird": "cyan-400",
+	"reptile": "green-400",
+	"fish": "teal-400",
+	"insect": "lime-400",
+	"cephalopod": "purple-400",
+	"cnidarian": "rose-400",
+	"plant": "olive-400",
+	"fungus": "amber-400",
+	"bacteria": "orange-400",
+	"protozoa": "magenta-400",
+	"virus": "red-400",
 	"machine": "slate-400",
-	"biology": "green-400",
-	"virus": "rose-400",
-	"plant": "lime-400",
-	"general": "sand-400",
+	"neutral": "sand-400",
 }
 
 # ── 取值入口 ──────────────────────────────────────────────────────────────
@@ -183,13 +196,13 @@ static func opacity(name: String) -> float:
 	return float(SEMANTIC_OPACITY.get(name, 1.0))
 
 
-static func tribe_color(tribe: String) -> Color:
-	return color(str(TRIBE_COLOR.get(tribe, "snow-500")))
+static func playstyle_color(playstyle: String) -> Color:
+	return color(str(PLAYSTYLE_COLOR.get(playstyle, "snow-500")))
 
 
-## 卡面封面：部落色压暗作底，文字与信息区始终压在它上面。
-static func tribe_cover(tribe: String) -> Color:
-	return tribe_color(tribe).darkened(0.62)
+## 卡面封面：玩法色压暗作底，文字与信息区始终压在它上面。
+static func playstyle_cover(playstyle: String) -> Color:
+	return playstyle_color(playstyle).darkened(0.62)
 
 # ── StyleBox 工厂 ─────────────────────────────────────────────────────────
 

@@ -2,7 +2,9 @@
 id: gongchengta
 card_type: minion
 name: 攻城塔
-tribe: machine
+playstyle: neutral
+taxon: weapon-siege
+specialty: [play:machine]
 subtype: siege
 level: 4
 era: feudal
@@ -21,7 +23,9 @@ is_scholar: false
 | id | gongchengta |
 | 名称 | 攻城塔 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 武器与攻城 |
+| 关联分类 | 关联：机械 |
 | 子类 | 攻城 |
 | 星级 | 4 |
 | 时代 | 封建 |

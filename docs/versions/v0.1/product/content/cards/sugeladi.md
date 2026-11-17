@@ -2,7 +2,9 @@
 id: sugeladi
 card_type: minion
 name: 苏格拉底
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:mammal]
 subtype: philosophy
 level: 2
 era: classical
@@ -21,7 +23,9 @@ is_scholar: true
 | id | sugeladi |
 | 名称 | 苏格拉底 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：哺乳纲 |
 | 子类 | 哲学 |
 | 星级 | 2 |
 | 时代 | 古典 |

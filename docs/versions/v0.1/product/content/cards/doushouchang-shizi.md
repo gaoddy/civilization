@@ -2,7 +2,9 @@
 id: doushouchang-shizi
 card_type: minion
 name: 斗兽场狮子
-tribe: biology
+playstyle: mammal
+taxon: felidae
+specialty: [prey:artiodactyla]
 subtype: beast
 level: 2
 era: classical
@@ -21,7 +23,9 @@ is_scholar: false
 | id | doushouchang-shizi |
 | 名称 | 斗兽场狮子 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 猫科 |
+| 关联分类 | 捕食：偶蹄目 |
 | 子类 | 猛兽 |
 | 星级 | 2 |
 | 时代 | 古典 |

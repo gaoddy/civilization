@@ -1,7 +1,7 @@
 ---
 id: trigger-other-friendly-humans-plus-1-attack
-text: 使你的其他人类随从各获得 +1 攻击力
-effects: OnPlayEffect|ModifyStats|friendly:all:tribe=human:other=true|attack=1,duration=permanent
+text: 使你的其他人科随从各获得 +1 攻击力
+effects: OnPlayEffect|ModifyStats|friendly:all:taxon=hominidae:other=true|attack=1,duration=permanent
 match_text: 同左
 ---
 
@@ -17,4 +17,4 @@ match_text: 同左
 
 ## 效果
 
-使你的其他人类随从各获得 +1 攻击力
+使你的其他人科随从各获得 +1 攻击力

@@ -12,8 +12,8 @@ class StructuredEffectsTest(unittest.TestCase):
     def test_growth_with_condition(self):
         self.assertEqual(
             gen_card_data.structured_effects(
-                "OnActivate|Growth|friendly:single:tribe=human|"
-                "times=1,timesIf=human:2,condition=count:friendly:tribe=human:>=3"
+                "OnActivate|Growth|friendly:single:taxon=hominidae|"
+                "times=1,timesIf=taxon:hominidae:2,condition=count:friendly:taxon=hominidae:>=3"
             ),
             [
                 {
@@ -23,14 +23,14 @@ class StructuredEffectsTest(unittest.TestCase):
                         "kind": "side",
                         "side": "friendly",
                         "pick": "single",
-                        "filters": [{"key": "tribe", "value": "human"}],
+                        "filters": [{"key": "taxon", "value": "hominidae"}],
                     },
                     "params": {
                         "times": 1,
-                        "times_if": {"tribe": "human", "times": 2},
+                        "times_if": {"key": "taxon", "value": "hominidae", "times": 2},
                         "condition": {
                             "side": "friendly",
-                            "filter": {"key": "tribe", "value": "human"},
+                            "filter": {"key": "taxon", "value": "hominidae"},
                             "compare": "ge",
                             "count": 3,
                         },
