@@ -73,7 +73,7 @@ client/
 | 登录 | 输入服务器地址、手机号、固定验证码 `123456` 与显示名；认证成功后进入大厅 |
 | 大厅 | 创建房间或凭 6 位房间码加入；收到 `RoomUpdate` 后进入房间 |
 | 房间 | 展示房间码与成员、选择英雄、准备/取消准备、离开房间；开局完全由服务端决定 |
-| 对局 | 酒馆战棋式三栏布局：左栏 8 行座位（头像、名次角标、血量条，点击展开战报），中区招募视图（自上而下为商店、按容量棋盘）与战斗视图（对手随从、结果横幅、我方随从）互斥，手牌行常驻在两者之下，右栏为身份（售货员/对手英雄/幽灵/已淘汰观战）与售货员下方的商店操作、垂直居中的回合与倒计时、自己英雄介绍与贴底的英雄技能；十一种意图对应操作；`pendingChoices` 弹层（发现/进化/战吼目标）；英雄技能目标缺失时按 `NO_VALID_TARGET` 补选目标 |
+| 对局 | 酒馆战棋式三栏布局：左栏 8 行座位（按服务端 `rank` 升序，头像、名次角标、血量条，点击展开战报），中区招募视图（自上而下为商店、按容量棋盘）与战斗视图（对手随从、结果横幅、我方随从）互斥，手牌行常驻在两者之下，右栏为身份（售货员/对手英雄/幽灵/已淘汰观战）与售货员下方的商店操作、垂直居中的回合与倒计时、自己英雄介绍与贴底的英雄技能；十一种意图对应操作；`pendingChoices` 弹层（发现/进化/战吼目标）；英雄技能目标缺失时按 `NO_VALID_TARGET` 补选目标 |
 | 结算 | 按服务端 `ranking` 展示名次与 `seed`；返回大厅时用令牌重新认证 |
 
 - 对局界面整块读取 `GameStore.view`，每次 `view_changed` 重建；按钮可用性只取 `affordances` / `playable` / `can*`，不做本地推导。冻结与棋盘卡拖拽换位没有对应的服务端 affordance，按 `phase`、`self.recruited` 与下标做本地门控，与服务端拒绝条件保持一致。
@@ -92,7 +92,7 @@ client/
 - 棋盘随从卡也使用拖拽：`BoardCard._get_drag_data` 交出 `{epoch, minionId, fromIndex, sellable, golden}`；`BoardDrop` 在 `NOTIFICATION_DRAG_BEGIN` 时隐藏原卡并插入同尺寸透明占位，指针移动时实时移动占位、其余随从让位，松手按「移除后被拖随从剩余序列中的插入下标」发 `RearrangeBoard`，拖拽结束恢复原顺序。商店面板是 `SellDrop`，只接受可出售的棋盘卡：拖入时金色描边并提示「松手出售 +N 金」（`golden ? 3 : 1`），松手发 `SellMinion`；手牌与不可出售随从静默取消。卡内不再生成出售与左右移位按钮。
 - 拖放冒泡依赖控件的鼠标过滤：Godot 在「`_can_drop_data` 为假且 `mouse_filter == STOP`」的控件上中止沿父链的落点查找。棋盘空位（`EmptySlot`）设 `IGNORE`；棋盘随从卡（`BoardCard`）与商店槽位设 `PASS`，保留自身点击/拖拽起手与悬停详情，同时把落点交给父级 `BoardDrop` / `SellDrop`。新增落点控件或改其鼠标过滤时必须保证落点仍能到达父级。
 - 时代文案由 `CardDB.era_name` 把 1–7 映射为英文 id（`prehistoric`…`future`）后按 `enum.era.<id>` 取文本；流派、卡牌类型、进化选项与攻防分层同理走 `UI.enum_text(group, id)`；右栏自己英雄的属性行、右栏对手身份块的元信息与座位详情统一显示「时代 X」。
-- 左栏固定宽 88，座位行只渲染头像（`avatar-rail` = 44）、名次角标（`rank` 为 `null` 时不渲染）与血量条（高 6，按 `hp / hpCap` 比例填充，无数字）；已淘汰行经 `UI.apply_dim` 整体压暗但保留名次且仍可点击。点击展开 `view.combatLog` 中按 `participantIds` 过滤的战报，浮层挂在全屏 `ReportLayer` 上、从座位行右侧覆盖中区与右栏，同一时刻只展开一块，展开座位按 `playerId` 在 `GamePlayersRail.refresh` 整块重建后恢复；无条目显示「无战报」。
+- 左栏固定宽 88，座位行只渲染头像（`avatar-rail` = 44）、名次角标（`rank` 为 `null` 时不渲染）与血量条（高 6，按 `hp / hpCap` 比例填充，无数字）；行顺序按 `players[].rank` 升序（第 1 名在最上，`rank` 为 `null` 垫底、同序按座位号），每次视图重建重排，客户端不推导名次；已淘汰行经 `UI.apply_dim` 整体压暗但保留名次且仍可点击。点击展开 `view.combatLog` 中按 `participantIds` 过滤的战报，浮层挂在全屏 `ReportLayer` 上、从座位行右侧覆盖中区与右栏，同一时刻只展开一块，展开座位按 `playerId` 在 `GamePlayersRail.refresh` 整块重建后恢复；无条目显示「无战报」。
 - 右栏身份判定以阶段优先：招募阶段固定显示售货员大图（名字「售货员」贴底，营业说明只在悬停时由 `GameDetailLayer` 的 `seller` 详情显示），刷新、升时代与冻结三个商店操作横排在大图正下方，随视图 `affordances` 门控；战斗阶段依次为自身已淘汰「已淘汰 · 观战中」、幽灵战（幽灵归属者英雄 +「幽灵」角标、无血量条、整块压暗）、对手英雄、等待配对，商店操作随招募操作一并隐藏。`SideHero` 的我方英雄同样使用 200×150 大图与贴底名字，部落、时代与技能文本只在悬停时由 `hero` 详情显示，生命/时代/金币三格仍常驻贴底。`SideIdentity` 与 `SideHero` 按两者最小高度的较大值等高并平分状态块之外的剩余高度，`SideStatus` 因此垂直居中；`SideStatus` 把回合数与 `TimerLabel` 剩余时间放在同一行，归零显示「等待结算」；招募阶段悬停倒计时翻成 `EndButton`「结束招募」，移出恢复，点击发 `EndRecruit`。
 - 商店卡左上角渲染 `CostBadge`（`display_cost`）、右上角渲染 `EraBadge`（`era`）；冻结由 `FreezeOverlay` 整卡蒙层（`freeze-overlay-alpha` = 0.22，经 `self_modulate` 只压蒙层自身）、间距 14 的 45° 冰晶细线与右下角「冻」字 `FreezeGlyph` 共同表达。
 - 棋盘容量取自 `PlayerView.boardSlots`（缺失时回退 7），满场标记、提示文案与空位数量用同一数值；`BoardDrop` 仍由页面设置 `board_full`，控件本身不感知容量。
