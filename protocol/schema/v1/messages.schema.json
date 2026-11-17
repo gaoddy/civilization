@@ -77,6 +77,12 @@
       "required": [],
       "properties": {}
     },
+    "CombatPlayed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
     "Reconnect": {
       "type": "object",
       "additionalProperties": false,
@@ -197,8 +203,13 @@
     "CombatResult": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["ownBoard", "opponentBoard", "actions", "damage", "winnerId"],
+      "required": ["ownBoard", "opponentBoard", "actions", "damage", "winnerId", "startedAt"],
       "properties": {
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "本场演示开始时刻（服务端时钟，RFC3339）；重连补发时保持同值"
+        },
         "ownBoard": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/BoardMinion" } },
         "opponentBoard": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/BoardMinion" } },
         "actions": {

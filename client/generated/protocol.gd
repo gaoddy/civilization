@@ -6,6 +6,7 @@ const PROTOCOL_VERSION := 1
 # 消息类型
 const MSG_AUTH_REQUEST := "AuthRequest"
 const MSG_AUTH_RESULT := "AuthResult"
+const MSG_COMBAT_PLAYED := "CombatPlayed"
 const MSG_COMBAT_RESULT := "CombatResult"
 const MSG_CREATE_ROOM := "CreateRoom"
 const MSG_ERROR := "Error"

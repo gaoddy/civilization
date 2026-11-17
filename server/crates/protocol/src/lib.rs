@@ -17,8 +17,8 @@ pub use generated::*;
 /// 上行载荷类型，按信封 `type` 判别。
 pub mod client {
     pub use crate::{
-        AuthRequest, CreateRoom, FriendRequest, IntentMessage, JoinRoom, LeaveRoom, Ready,
-        Reconnect, RequestSnapshot, SelectHeroCard,
+        AuthRequest, CombatPlayed, CreateRoom, FriendRequest, IntentMessage, JoinRoom, LeaveRoom,
+        Ready, Reconnect, RequestSnapshot, SelectHeroCard,
     };
 }
 
@@ -69,6 +69,7 @@ pub enum ClientMessage {
     Ready(Ready),
     SelectHeroCard(SelectHeroCard),
     Intent(IntentMessage),
+    CombatPlayed(CombatPlayed),
     RequestSnapshot(RequestSnapshot),
     Reconnect(Reconnect),
     FriendRequest(FriendRequest),
@@ -123,6 +124,7 @@ impl ClientEnvelope {
             "Ready" => parse_payload(payload()).map(ClientMessage::Ready),
             "SelectHeroCard" => parse_payload(payload()).map(ClientMessage::SelectHeroCard),
             "Intent" => parse_payload(payload()).map(ClientMessage::Intent),
+            "CombatPlayed" => parse_payload(payload()).map(ClientMessage::CombatPlayed),
             "RequestSnapshot" => parse_payload(payload()).map(ClientMessage::RequestSnapshot),
             "Reconnect" => parse_payload(payload()).map(ClientMessage::Reconnect),
             "FriendRequest" => parse_payload(payload()).map(ClientMessage::FriendRequest),

@@ -951,6 +951,30 @@ impl ::std::convert::From<&CombatMinionState> for CombatMinionState {
         value.clone()
     }
 }
+///`CombatPlayed`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CombatPlayed {}
+impl ::std::convert::From<&CombatPlayed> for CombatPlayed {
+    fn from(value: &CombatPlayed) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for CombatPlayed {
+    fn default() -> Self {
+        Self {}
+    }
+}
 ///`CombatResult`
 ///
 /// <details><summary>JSON schema</summary>
@@ -963,6 +987,7 @@ impl ::std::convert::From<&CombatMinionState> for CombatMinionState {
 ///    "damage",
 ///    "opponentBoard",
 ///    "ownBoard",
+///    "startedAt",
 ///    "winnerId"
 ///  ],
 ///  "properties": {
@@ -1092,6 +1117,11 @@ impl ::std::convert::From<&CombatMinionState> for CombatMinionState {
 ///        "$ref": "#/$defs/BoardMinion"
 ///      }
 ///    },
+///    "startedAt": {
+///      "description": "本场演示开始时刻（服务端时钟，RFC3339）；重连补发时保持同值",
+///      "type": "string",
+///      "format": "date-time"
+///    },
 ///    "winnerId": {
 ///      "description": "本场胜者；玩家自己的 playerId 表示胜",
 ///      "type": [
@@ -1117,6 +1147,9 @@ pub struct CombatResult {
     pub opponent_board: ::std::vec::Vec<BoardMinion>,
     #[serde(rename = "ownBoard")]
     pub own_board: ::std::vec::Vec<BoardMinion>,
+    ///本场演示开始时刻（服务端时钟，RFC3339）；重连补发时保持同值
+    #[serde(rename = "startedAt")]
+    pub started_at: ::chrono::DateTime<::chrono::offset::Utc>,
     ///本场胜者；玩家自己的 playerId 表示胜
     #[serde(rename = "winnerId")]
     pub winner_id: ::std::option::Option<::std::string::String>,

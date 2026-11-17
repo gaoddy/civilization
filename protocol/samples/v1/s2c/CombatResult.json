@@ -5,6 +5,7 @@
   "ts": "2026-11-15T10:00:00Z",
   "seq": 108,
   "payload": {
+    "startedAt": "2026-11-15T10:00:00Z",
     "ownBoard": [
       {
         "index": 0,
