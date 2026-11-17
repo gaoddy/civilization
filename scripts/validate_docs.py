@@ -467,10 +467,10 @@ def _root_of(nodes, node_id):
 
 
 def check_taxonomy():
-    """校验分类树与玩法表；返回 (nodes, children, playstyles)，失败时对应项为 None。"""
+    """校验分类树与玩法表；返回 (nodes, children, playstyles, names)，失败时对应项为 None。"""
     nodes, playstyles = parse_taxonomy()
     if nodes is None:
-        return None, None, None
+        return None, None, None, {}
 
     children = collections.defaultdict(list)
     for node_id, node in nodes.items():

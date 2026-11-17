@@ -68,6 +68,14 @@ fn rejects_unknown_enum_and_param() {
 }
 
 #[test]
+fn accepts_neutral_playstyle_filter() {
+    // 中立卡是可被筛中的实体玩法取值：从 13 个可启用玩法里取不到，但筛选合法。
+    let raw = r#"[{"trigger":"on_play","op":"growth","selector":{"kind":"side","side":"friendly","pick":"all","filters":[{"key":"playstyle","value":"neutral"}]},"params":{"times":1}}]"#;
+    let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
+    assert!(validate_effects(&effects).is_ok());
+}
+
+#[test]
 fn rejects_aura_with_damage() {
     let raw = r#"[{"trigger":"aura","op":"deal_damage","selector":{"kind":"side","side":"friendly","pick":"all","filters":[]},"params":{"amount":1}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();

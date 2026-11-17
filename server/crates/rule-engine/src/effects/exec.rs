@@ -1283,6 +1283,10 @@ impl Engine {
     ///
     /// 目标已离场、快照缺失或获得量 ≤0 时静默跳过；`duration` 由数据校验保证
     /// 只取 `permanent` / `combat`。
+    ///
+    /// `when` 在战斗路径里只对 `DealDamage` 与单体目标筛选生效（见
+    /// [`Engine::apply_combat_effect`]），因此这里显式按被分解者（`event_target`）
+    /// 应用一次，与文档「`when` 可按事件载荷筛选」一致；没有 `when` 时行为不变。
     fn apply_combat_decompose(
         &self,
         field: &mut BattleField,
@@ -1296,6 +1300,11 @@ impl Engine {
         let Some(victim) = ctx.event_target else {
             return;
         };
+        if let Some(when) = &effect.params.when
+            && !self.combat_filter_matches(field, when, victim, ctx)
+        {
+            return;
+        }
         let Some(amount) = field.decompose_health(&self.catalog, victim, basis) else {
             return;
         };

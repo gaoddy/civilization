@@ -126,6 +126,36 @@ fn on_kill_original_permanent_adds_base_health() {
 }
 
 #[test]
+fn when_filters_the_decomposed_victim() {
+    // `when` 按被分解者（事件载荷）筛选：分类不符时不结算，符合同一次战斗内照常结算。
+    let run = |victim_taxon: &str, victim_id: InstanceId| {
+        let (mut engine, _state) = setup_with_gold(31);
+        add_card_at(
+            &mut engine,
+            "decomposer",
+            5,
+            10,
+            "hominidae",
+            &[(
+                None,
+                "OnKill|Decompose|self|basis=original,duration=permanent,when=taxon=hominidae",
+            )],
+        );
+        add_card_at(&mut engine, "corpse", 0, 4, victim_taxon, &[]);
+        let log = battle(
+            &engine,
+            &[minion(&engine.catalog, 1, "decomposer")],
+            &[minion(&engine.catalog, victim_id, "corpse")],
+            0,
+        );
+        final_minion(&log, 1).stats.health.permanent
+    };
+
+    assert_eq!(run("hominidae", 2), 4, "被分解者符合 when 时正常获得生命值");
+    assert_eq!(run("agaricales", 2), 0, "被分解者不符合 when 时不结算");
+}
+
+#[test]
 fn combat_start_basis_reads_entry_snapshot() {
     let (mut engine, _state) = setup_with_gold(31);
     add_card(

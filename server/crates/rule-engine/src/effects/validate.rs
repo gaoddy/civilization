@@ -340,9 +340,12 @@ fn validate_times_if_filter(times_if: &TimesIf, errors: &mut Vec<String>) {
 }
 
 /// 按筛选键校验取值；只覆盖有固定取值集合的键。
+///
+/// `playstyle` 接受 13 个玩法与 `neutral`：中立卡是可被筛中的实体玩法取值
+/// （`filter_matches` 按 id 比较），只有 `from_id` 把 `neutral` 排除在可启用集合之外。
 fn validate_filter_value(key: &str, value: &str, errors: &mut Vec<String>) {
     match key {
-        "playstyle" if Playstyle::from_id(value).is_none() => {
+        "playstyle" if value != Playstyle::Neutral.id() && Playstyle::from_id(value).is_none() => {
             errors.push(format!("playstyle 取值非法 {value:?}"));
         }
         "type" if !CARD_TYPES.contains(&value) => {
