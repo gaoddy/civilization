@@ -337,7 +337,7 @@ fn state_hash_includes_auras() {
 }
 
 #[test]
-fn ghost_fight_does_not_mutate_stored_state() {
+fn ghost_fight_does_not_leak_auras_into_stored_state() {
     let (mut engine, mut state) = setup();
     place(&engine.catalog, &mut state, 0, 1, "qinghao");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
@@ -359,7 +359,12 @@ fn ghost_fight_does_not_mutate_stored_state() {
         .resolve_combat(&mut state)
         .expect("幽灵战斗应成功结算");
 
-    assert_eq!(state.players[0].board, before, "战斗不得修改持久随从实例");
+    // 落单座位照常写回战斗成长/传染；本夹具的两张卡都不产生成长或传染，
+    // 因此持久棋盘应原样保留，用来确认光环折叠本身没有泄漏。
+    assert_eq!(
+        state.players[0].board, before,
+        "无成长/传染的战斗不应改写落单座位持久棋盘"
+    );
     assert_eq!(
         state.players[3].board, before_ghost,
         "幽灵座位棋盘不得被写回"

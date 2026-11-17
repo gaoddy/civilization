@@ -411,7 +411,8 @@ fn resolve_real(
 ///
 /// 双方同回合清场一律平局；幽灵获胜时落单座位按 [`damage_formula`] 扣血，
 /// 落单座位获胜时计入 `last_won`/`last_winner`。幽灵侧不结算英雄被动，也不
-/// 写回牌池、手牌、持久棋盘或 `previous_opponent`。
+/// 写回牌池、手牌、持久棋盘或 `previous_opponent`；落单座位自己的成长/传染与
+/// 战斗日志副作用（召唤扣池、入手牌复制）照常写回，与真实战一致。
 fn resolve_ghost(
     engine: &Engine,
     state: &mut GameState,
@@ -448,6 +449,10 @@ fn resolve_ghost(
         setup,
     );
     state.next_instance_id = state.next_instance_id.max(log.next_instance_id);
+    // 与真实战一致：落单座位自己的战斗日志副作用与持久成长/传染写回；
+    // 幽灵是已出局者的棋盘副本，任何改动都只留在克隆里。
+    write_back_combat_log(catalog, state, &log);
+    write_back_persistent(state, seat, &log.attacker_final);
 
     // 双方同回合清场一律平局；幽灵侧清场而己方仍有存活才算幽灵获胜。
     let cleared = log.attacker_survivors.is_empty() && log.defender_survivors.is_empty();

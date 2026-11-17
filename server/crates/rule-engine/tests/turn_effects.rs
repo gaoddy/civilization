@@ -740,10 +740,30 @@ fn contagion_persists_across_combat() {
 }
 
 #[test]
-fn ghost_combat_does_not_write_back() {
-    let (mut engine, mut state) = setup(3);
+fn ghost_combat_writes_back_attacker_only() {
+    let mut catalog = catalog_with_synthetics();
+    // 落单座位：开战成长 +2；幽灵带「传染」，会在交手中给落单座位叠加传染。
+    add_card(
+        &mut catalog,
+        "grower",
+        Tribe::Human,
+        (1, 2, 20),
+        (None, "OnCombatStart|Growth|self|times=2"),
+    );
+    add_card(
+        &mut catalog,
+        "ghost-contagious",
+        Tribe::Human,
+        (1, 1, 20),
+        (Some("传染"), "[]"),
+    );
+    let (mut engine, mut state) = Engine::new(catalog, [3u8; 32]);
     state.phase = Phase::Combat;
     state.turn = 2;
+    for player in &mut state.players {
+        player.hp = 30;
+        player.gold = 10;
+    }
     state.first_seat = 0;
     state.last_winner = None;
     state.pairings = vec![Pairing {
@@ -751,18 +771,23 @@ fn ghost_combat_does_not_write_back() {
         b: 0,
         ghost: Some(3),
     }];
-    place(&engine.catalog, &mut state, 0, 1, "target");
+    place(&engine.catalog, &mut state, 0, 1, "grower");
     state.players[3].eliminated = true;
-    place(&engine.catalog, &mut state, 3, 2, "contagious");
-    let own_before = state.players[0].board.clone();
+    place(&engine.catalog, &mut state, 3, 2, "ghost-contagious");
     let ghost_before = state.players[3].board.clone();
 
     engine.resolve_combat(&mut state).expect("幽灵战斗应成功");
 
+    let own = &state.players[0].board[0];
     assert_eq!(
-        state.players[0].board, own_before,
-        "战斗不得修改落单座位持久随从"
+        own.stats.attack.growth, 2,
+        "落单座位的战斗成长应写回持久随从"
     );
+    assert_eq!(
+        own.stats.health.growth, 2,
+        "落单座位的战斗成长应写回持久随从"
+    );
+    assert!(own.contagion > 0, "幽灵施加的传染应写回落单座位的持久随从");
     assert_eq!(
         state.players[3].board, ghost_before,
         "幽灵座位棋盘不得被写回"
