@@ -43,11 +43,13 @@ func _ready() -> void:
             _expect(str(era.text) == "古典", "EraBadge 应显示「古典」，实际：%s" % str(era.text))
         _expect(open_card.find_child("FreezeOverlay", true, false) == null, "未冻结卡不应有冻结蒙层")
         _expect(open_card.find_child("FreezeGlyph", true, false) == null, "未冻结卡不应有「冻」字")
-        if cost != null and era != null:
+        var name_node := open_card.find_child("CardName", true, false)
+        _expect(name_node != null, "商店卡应有 CardName")
+        if cost != null and era != null and name_node is Control:
             var card_rect: Rect2 = (open_card as Control).get_global_rect()
             var cost_rect: Rect2 = (cost as Control).get_global_rect()
             var era_rect: Rect2 = (era as Control).get_global_rect()
-            var name_rect: Rect2 = (open_card.find_child("CardName", true, false) as Control).get_global_rect()
+            var name_rect: Rect2 = (name_node as Control).get_global_rect()
             _expect(cost_rect.position.x < card_rect.get_center().x, "费用角标应在卡片左上")
             _expect(cost_rect.position.y < card_rect.get_center().y, "费用角标应在卡片左上")
             _expect(era_rect.position.x > card_rect.get_center().x, "时代角标应在卡片右上")
@@ -66,8 +68,8 @@ func _ready() -> void:
             _expect((overlay as Control).mouse_filter == Control.MOUSE_FILTER_IGNORE, "冻结蒙层不应拦截鼠标")
         if overlay is ColorRect:
             _expect(
-                is_equal_approx((overlay as CanvasItem).modulate.a, UITheme.opacity("freeze-overlay-alpha")),
-                "冻结蒙层 alpha 应为 freeze-overlay-alpha 令牌值",
+                is_equal_approx((overlay as CanvasItem).self_modulate.a, UITheme.opacity("freeze-overlay-alpha")),
+                "冻结蒙层 self_modulate alpha 应为 freeze-overlay-alpha 令牌值",
             )
         var crystals := frozen_card.find_child("FreezeCrystals", true, false)
         _expect(crystals != null, "冻结卡应有 FreezeCrystals 冰晶纹理")
@@ -86,10 +88,25 @@ func _ready() -> void:
                     ),
                     "相邻冰晶线 y 间距应为 freeze-crystal-gap 令牌值",
                 )
+                if first is ColorRect:
+                    var line := first as ColorRect
+                    _expect(
+                        is_equal_approx(line.color.a, GameCardFace.FREEZE_CRYSTAL_ALPHA),
+                        "冰晶线 alpha 应为 FREEZE_CRYSTAL_ALPHA 常量值",
+                    )
+                    _expect(
+                        is_equal_approx(line.modulate.a, 1.0) and is_equal_approx(line.self_modulate.a, 1.0),
+                        "冰晶线不应被蒙层 modulate 压暗",
+                    )
         var glyph := frozen_card.find_child("FreezeGlyph", true, false)
         _expect(glyph != null, "冻结卡应有 FreezeGlyph")
         if glyph != null:
             _expect(str(glyph.text) == "冻", "FreezeGlyph 文本应为「冻」，实际：%s" % str(glyph.text))
+            _expect(
+                is_equal_approx((glyph as CanvasItem).modulate.a, 1.0)
+                and is_equal_approx((glyph as CanvasItem).self_modulate.a, 1.0),
+                "「冻」字不应被蒙层 modulate 压暗",
+            )
             var frozen_rect: Rect2 = (frozen_card as Control).get_global_rect()
             var glyph_rect: Rect2 = (glyph as Control).get_global_rect()
             _expect(

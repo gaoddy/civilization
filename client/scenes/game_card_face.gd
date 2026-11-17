@@ -166,7 +166,8 @@ static func _add_freeze_overlay(face_node: Control) -> void:
     var overlay := ColorRect.new()
     overlay.name = "FreezeOverlay"
     overlay.color = UITheme.color("color-info")
-    overlay.modulate.a = UITheme.opacity("freeze-overlay-alpha")
+    # self_modulate 只压暗蒙层自身，不向下继承到冰晶与「冻」字。
+    overlay.self_modulate.a = UITheme.opacity("freeze-overlay-alpha")
     overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
     overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
     face_node.add_child(overlay)
