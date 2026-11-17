@@ -9,11 +9,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "division-of-labor"
     ],
+    "specialty": [],
     "subtype": "economics",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -25,11 +27,22 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-all-friendly-growth-twice"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "computer",
-    "tribe": "scholar"
+    "taxon": "automation"
   },
   {
     "attack": 8,
@@ -41,11 +54,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "keyword-optimal-attack"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "flight",
-    "tribe": "machine"
+    "taxon": "transport"
   },
   {
     "attack": 0,
@@ -57,11 +77,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "aura-mech-optimal-attack"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "computer",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -73,11 +100,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "trigger-all-friendly-growth-once"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": null,
@@ -89,11 +118,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-taunt-until-turn-end"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -105,11 +136,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-mech-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "physics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -121,11 +159,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "aura-all-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
     "subtype": "philosophy",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -137,11 +182,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-summon-3-3-synthetic-cell"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "medical",
-    "tribe": "biology"
+    "taxon": "life-medical"
   },
   {
     "attack": 1,
@@ -153,11 +205,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "insect",
     "skills": [
       "keyword-breed-1"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "plantae"
+      }
+    ],
     "subtype": "insect",
-    "tribe": "biology"
+    "taxon": "termitidae"
   },
   {
     "attack": 5,
@@ -169,11 +228,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "human-growth-twice"
     ],
+    "specialty": [],
     "subtype": "music",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -185,11 +246,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "virus",
     "skills": [
       "trigger-enemy-death-self-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": "microorganism",
-    "tribe": "virus"
+    "taxon": "virus-incertae-sedis"
   },
   {
     "attack": 0,
@@ -201,11 +264,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "invention",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 5,
@@ -217,11 +287,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "virus",
     "skills": [
       "deathrattle-all-enemies-humans-minus-2-health"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "mammalia"
+      }
+    ],
     "subtype": "plague",
-    "tribe": "virus"
+    "taxon": "yersiniaceae"
   },
   {
     "attack": null,
@@ -233,11 +310,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-all-enemies-contagion-1"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "virus"
+    "taxon": "phenomenon"
   },
   {
     "attack": 5,
@@ -249,11 +328,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "trigger-3-humans-self-plus-2-attack"
     ],
+    "specialty": [],
     "subtype": "athlete",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -265,11 +346,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "keyword-windfury"
     ],
+    "specialty": [],
     "subtype": "martial-artist",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -281,11 +364,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-random-enemy-damage-2"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 2,
@@ -297,11 +382,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "mammal",
     "skills": [
       "trigger-2-humans-self-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": "primitive",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -313,11 +400,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "invention",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -329,11 +423,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "trigger-friendly-human-play-plus-1-attack"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -345,11 +441,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 1,
@@ -361,11 +459,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
     ],
+    "specialty": [],
     "subtype": "city-state",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -377,11 +477,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "virus",
     "skills": [
       "combatstart-random-enemy-contagion-1"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "hominidae"
+      }
+    ],
     "subtype": "bacteria",
-    "tribe": "virus"
+    "taxon": "vibrionaceae"
   },
   {
     "attack": 0,
@@ -393,12 +500,43 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "aura-biology-plus-1-plus-1",
       "evolution-discovery"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "fish"
+      },
+      {
+        "kind": "play",
+        "value": "insect"
+      },
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      },
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ],
     "subtype": "organism",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -410,11 +548,22 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "universal-manuscript"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "polymath",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -426,11 +575,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-leftmost-damage-3"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "communication",
-    "tribe": "machine"
+    "taxon": "information-computing"
   },
   {
     "attack": 7,
@@ -442,11 +598,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "communication",
-    "tribe": "machine"
+    "taxon": "information-computing"
   },
   {
     "attack": null,
@@ -458,11 +621,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": null,
@@ -474,11 +639,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-growth-thrice"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "biology"
+    "taxon": "phenomenon"
   },
   {
     "attack": 4,
@@ -490,12 +657,19 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "keyword-reborn",
       "keyword-evolve"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "plantae"
+      }
+    ],
     "subtype": "clone",
-    "tribe": "biology"
+    "taxon": "bovidae"
   },
   {
     "attack": 1,
@@ -507,11 +681,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-friendly-plus-1-health"
     ],
+    "specialty": [],
     "subtype": "primitive",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -523,11 +699,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "keyword-taunt"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "artiodactyla"
+      }
+    ],
     "subtype": "beast",
-    "tribe": "biology"
+    "taxon": "felidae"
   },
   {
     "attack": 2,
@@ -539,11 +722,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "reptile",
     "skills": [
       "deathrattle-random-enemy-minus-1-attack"
     ],
+    "specialty": [],
     "subtype": "reptile",
-    "tribe": "biology"
+    "taxon": "squamata-incertae-sedis"
   },
   {
     "attack": 12,
@@ -555,11 +740,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
+    "playstyle": "neutral",
     "skills": [
       "keyword-divine-shield"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "megastructure",
-    "tribe": "machine"
+    "taxon": "power-energy"
   },
   {
     "attack": 8,
@@ -571,12 +763,19 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "virus",
     "skills": [
       "keyword-contagion",
       "combatstart-random-enemy-contagion-2"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "mammalia"
+      }
+    ],
     "subtype": "virus",
-    "tribe": "virus"
+    "taxon": "filoviridae"
   },
   {
     "attack": 9,
@@ -588,11 +787,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "machine",
     "skills": [
       "invention-factory"
     ],
+    "specialty": [],
     "subtype": "engineering",
-    "tribe": "machine"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -604,12 +805,23 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-all-friendly-growth-once",
       "light-speed-strike"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "physics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -621,9 +833,16 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "appliance",
-    "tribe": "machine"
+    "taxon": "life-medical"
   },
   {
     "attack": 9,
@@ -635,12 +854,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "virus",
     "skills": [
       "keyword-contagion",
       "combatstart-all-enemies-contagion-1"
     ],
+    "specialty": [],
     "subtype": "virus",
-    "tribe": "virus"
+    "taxon": "virus-incertae-sedis"
   },
   {
     "attack": null,
@@ -652,11 +873,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-plus-2-attack"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -668,11 +891,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 1,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
     "subtype": "mathematics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 5,
@@ -684,11 +914,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-all-mech-growth-once"
     ],
+    "specialty": [],
     "subtype": "invention",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -700,11 +932,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-human-taunt-until-turn-end"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "human"
+    "taxon": "phenomenon"
   },
   {
     "attack": 2,
@@ -716,11 +950,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "factory",
-    "tribe": "machine"
+    "taxon": "production-construction"
   },
   {
     "attack": 0,
@@ -732,12 +973,23 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "keyword-divine-shield",
       "faraday-cage"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "physics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -749,11 +1001,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-plus-0-plus-4-this-turn"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 3,
@@ -765,11 +1019,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "virus",
     "skills": [
       "keyword-contagion"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "hominidae"
+      }
+    ],
     "subtype": "disease",
-    "tribe": "virus"
+    "taxon": "mycobacteriaceae"
   },
   {
     "attack": 2,
@@ -781,11 +1042,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "virus",
     "skills": [
       "deathrattle-random-enemy-minus-1-health"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "hominidae"
+      }
+    ],
     "subtype": "bacteria",
-    "tribe": "virus"
+    "taxon": "streptococcaceae"
   },
   {
     "attack": 3,
@@ -797,12 +1065,19 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "keyword-assemble-1",
       "trigger-turn-start-self-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "vehicle",
-    "tribe": "machine"
+    "taxon": "power-energy"
   },
   {
     "attack": 0,
@@ -814,11 +1089,22 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 7,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "nuclear-physics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -830,11 +1116,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "virus",
     "skills": [
       "virus-growth-once"
     ],
+    "specialty": [],
     "subtype": "microbiology",
-    "tribe": "virus"
+    "taxon": "hominidae"
   },
   {
     "attack": 8,
@@ -846,11 +1134,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "aura-mech-plus-2-plus-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "power",
-    "tribe": "machine"
+    "taxon": "power-energy"
   },
   {
     "attack": 0,
@@ -862,11 +1157,18 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "observation"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "physics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -878,11 +1180,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow"
     ],
+    "specialty": [],
     "subtype": "crop",
-    "tribe": "plant"
+    "taxon": "oleaceae"
   },
   {
     "attack": 0,
@@ -894,11 +1198,18 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "scholar-growth-twice"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "mathematics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -910,11 +1221,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "aura-all-plus-0-plus-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
     "subtype": "mathematics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 7,
@@ -926,11 +1244,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
+    "specialty": [],
     "subtype": "capital",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -942,11 +1262,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-random-enemy-damage-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "siege",
-    "tribe": "machine"
+    "taxon": "weapon-siege"
   },
   {
     "attack": 6,
@@ -958,11 +1285,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "keyword-assemble-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "siege",
-    "tribe": "machine"
+    "taxon": "weapon-siege"
   },
   {
     "attack": 2,
@@ -974,11 +1308,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-random-enemy-damage-1"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 7,
@@ -990,11 +1326,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
+    "specialty": [],
     "subtype": "worker",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -1006,11 +1344,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-leftmost-damage-3"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": null,
@@ -1022,11 +1362,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-plant-breed-2"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "plant"
+    "taxon": "phenomenon"
   },
   {
     "attack": null,
@@ -1038,11 +1380,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "trigger-all-friendly-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 9,
@@ -1054,12 +1398,19 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "virus",
     "skills": [
       "keyword-contagion",
       "deathrattle-all-enemies-contagion-1"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "mammalia"
+      }
+    ],
     "subtype": "virus",
-    "tribe": "virus"
+    "taxon": "coronaviridae"
   },
   {
     "attack": 1,
@@ -1071,11 +1422,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "insect",
     "skills": [
       "keyword-breed-1"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "plantae"
+      }
+    ],
     "subtype": "insect",
-    "tribe": "biology"
+    "taxon": "drosophilidae"
   },
   {
     "attack": 0,
@@ -1087,11 +1445,22 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "invention",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -1103,12 +1472,23 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 7,
+    "playstyle": "neutral",
     "skills": [
       "keyword-reborn",
       "deathrattle-all-enemies-minus-1-health"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      },
+      {
+        "kind": "play",
+        "value": "fungus"
+      }
+    ],
     "subtype": "quantum",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -1120,11 +1500,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "deathrattle-summon-2-2-hela-cell-clone"
     ],
+    "specialty": [],
     "subtype": "cell",
-    "tribe": "biology"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -1136,11 +1518,22 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-growth-extra-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "plant"
+      }
+    ],
     "subtype": "medicine",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 5,
@@ -1152,11 +1545,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "virus",
     "skills": [
       "keyword-contagion"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "hominidae"
+      }
+    ],
     "subtype": "virus",
-    "tribe": "virus"
+    "taxon": "retroviridae"
   },
   {
     "attack": null,
@@ -1168,11 +1568,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-remove-all-human-growth"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "virus"
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -1184,11 +1586,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "literature",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -1200,12 +1609,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "keyword-breed-2"
     ],
+    "specialty": [],
     "subtype": "tree",
-    "tribe": "plant"
+    "taxon": "rhizophoraceae"
   },
   {
     "attack": 5,
@@ -1217,11 +1628,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "virus",
     "skills": [
       "combatstart-random-enemy-contagion-2"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "mammalia"
+      }
+    ],
     "subtype": "disease",
-    "tribe": "virus"
+    "taxon": "flaviviridae"
   },
   {
     "attack": 5,
@@ -1233,11 +1651,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "keyword-windfury"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -1249,11 +1669,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-random-enemy-damage-2"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -1265,12 +1687,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "keyword-breed-2"
     ],
+    "specialty": [],
     "subtype": "crop",
-    "tribe": "plant"
+    "taxon": "poaceae"
   },
   {
     "attack": 3,
@@ -1282,11 +1706,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "virus",
     "skills": [
       "keyword-contagion"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "aves"
+      }
+    ],
     "subtype": "virus",
-    "tribe": "virus"
+    "taxon": "orthomyxoviridae"
   },
   {
     "attack": null,
@@ -1298,11 +1729,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-top-attack-enemy-minus-0-minus-2"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "virus"
+    "taxon": "phenomenon"
   },
   {
     "attack": 3,
@@ -1314,11 +1747,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "combatstart-if-2-biology-self-plus-2-attack"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "artiodactyla"
+      }
+    ],
     "subtype": "mammal",
-    "tribe": "biology"
+    "taxon": "felidae"
   },
   {
     "attack": null,
@@ -1330,11 +1770,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-plus-2-attack-this-turn"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": null,
@@ -1346,11 +1788,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "trigger-discover-tribe-minion"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "biology"
+    "taxon": "phenomenon"
   },
   {
     "attack": 12,
@@ -1362,11 +1806,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
+    "playstyle": "mammal",
     "skills": [
       "keyword-reborn"
     ],
+    "specialty": [],
     "subtype": "modification",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -1378,11 +1824,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-growth-twice"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "biology"
+    "taxon": "phenomenon"
   },
   {
     "attack": 2,
@@ -1394,12 +1842,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "keyword-breed-2"
     ],
+    "specialty": [],
     "subtype": "fern",
-    "tribe": "plant"
+    "taxon": "polypodiaceae"
   },
   {
     "attack": 3,
@@ -1411,12 +1861,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "keyword-breed-1"
     ],
+    "specialty": [],
     "subtype": "flower",
-    "tribe": "plant"
+    "taxon": "plantae-incertae-sedis"
   },
   {
     "attack": 3,
@@ -1428,11 +1880,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "reptile",
     "skills": [
       "keyword-evolve"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "aves"
+      }
+    ],
     "subtype": "reptile",
-    "tribe": "biology"
+    "taxon": "varanidae"
   },
   {
     "attack": 3,
@@ -1444,11 +1903,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "bird",
     "skills": [
       "trigger-friendly-death-self-plus-1-attack"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "artiodactyla"
+      }
+    ],
     "subtype": "bird",
-    "tribe": "biology"
+    "taxon": "accipitridae"
   },
   {
     "attack": 1,
@@ -1460,11 +1926,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "plant",
     "skills": [
       "keyword-breed-1"
     ],
+    "specialty": [],
     "subtype": "fruit-tree",
-    "tribe": "plant"
+    "taxon": "rutaceae"
   },
   {
     "attack": 4,
@@ -1476,11 +1944,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [],
     "subtype": "primate",
-    "tribe": "biology"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -1492,11 +1962,18 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "efficient-algorithm"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "computer",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 7,
@@ -1508,11 +1985,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [],
     "subtype": "primate",
-    "tribe": "biology"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -1524,11 +2003,22 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "aura-scholar-plus-0-plus-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "philosophy",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -1540,11 +2030,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "virus",
     "skills": [
       "battlecry-friendly-virus-plus-1-attack"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "mammalia"
+      }
+    ],
     "subtype": "virus",
-    "tribe": "virus"
+    "taxon": "rhabdoviridae"
   },
   {
     "attack": null,
@@ -1556,11 +2053,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-remove-top-attack-enemy-growth"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "scholar"
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -1572,11 +2071,42 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "biology-evolve"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "fish"
+      },
+      {
+        "kind": "play",
+        "value": "insect"
+      },
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      },
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ],
     "subtype": "biology",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -1588,11 +2118,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "aura-other-biology-plus-1-attack"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "artiodactyla"
+      }
+    ],
     "subtype": "mammal",
-    "tribe": "biology"
+    "taxon": "canidae"
   },
   {
     "attack": 0,
@@ -1604,11 +2141,18 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "aura-other-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
     "subtype": "chemistry",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -1620,11 +2164,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-scholar-twice"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "chemistry",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -1636,11 +2187,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "philosophy",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -1652,11 +2210,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "virus",
     "skills": [
       "keyword-contagion"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "mammalia"
+      }
+    ],
     "subtype": "bacteria",
-    "tribe": "virus"
+    "taxon": "rickettsiaceae"
   },
   {
     "attack": 0,
@@ -1668,11 +2233,42 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-all-biology-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "fish"
+      },
+      {
+        "kind": "play",
+        "value": "insect"
+      },
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      },
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ],
     "subtype": "biology",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 5,
@@ -1684,11 +2280,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "plant",
     "skills": [
       "battlecry-plant-growth-twice"
     ],
+    "specialty": [],
     "subtype": "pharmacology",
-    "tribe": "plant"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -1700,11 +2298,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "machine",
     "skills": [
       "battlecry-friendly-mech-growth-once"
     ],
+    "specialty": [],
     "subtype": "artisan",
-    "tribe": "machine"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -1716,12 +2316,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [
       "keyword-taunt",
       "trigger-3-humans-self-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -1733,11 +2335,18 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "shout"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "literature",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -1749,12 +2358,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "keyword-breed-1"
     ],
+    "specialty": [],
     "subtype": "crop",
-    "tribe": "plant"
+    "taxon": "poaceae"
   },
   {
     "attack": 3,
@@ -1766,11 +2377,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "keyword-taunt"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -1782,11 +2395,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "virus",
     "skills": [
       "combatstart-random-enemy-contagion-1"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "hominidae"
+      }
+    ],
     "subtype": "parasite",
-    "tribe": "virus"
+    "taxon": "plasmodiidae"
   },
   {
     "attack": 0,
@@ -1798,12 +2418,23 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-twice",
       "radiation"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "physics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -1815,11 +2446,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "bird",
     "skills": [
       "deathrattle-all-enemies-minus-1-health"
     ],
+    "specialty": [],
     "subtype": "animal",
-    "tribe": "biology"
+    "taxon": "fringillidae"
   },
   {
     "attack": 0,
@@ -1831,12 +2464,19 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-plant-growth-once",
       "heredity"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "plant"
+      }
+    ],
     "subtype": "organism",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 5,
@@ -1848,11 +2488,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [
       "keyword-evolve"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "artiodactyla"
+      }
+    ],
     "subtype": "mammal",
-    "tribe": "biology"
+    "taxon": "felidae"
   },
   {
     "attack": 3,
@@ -1864,11 +2511,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-friendly-plus-1-attack"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "proboscidea"
+      }
+    ],
     "subtype": "primitive",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -1880,11 +2534,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "deathrattle-all-friendly-plus-0-plus-1"
     ],
+    "specialty": [],
     "subtype": "mammal",
-    "tribe": "biology"
+    "taxon": "elephantidae"
   },
   {
     "attack": 2,
@@ -1896,11 +2552,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow"
     ],
+    "specialty": [],
     "subtype": "crop",
-    "tribe": "plant"
+    "taxon": "malvaceae"
   },
   {
     "attack": 0,
@@ -1912,11 +2570,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-twice"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "art",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -1928,11 +2593,42 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "aura-biology-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "insect"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "fish"
+      },
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      },
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ],
     "subtype": "genetics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -1944,11 +2640,22 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-all-friendly-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "philosophy",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 5,
@@ -1960,11 +2667,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "enemy-random-cannot-attack"
     ],
+    "specialty": [],
     "subtype": "philosophy",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 9,
@@ -1976,11 +2685,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "mammal",
     "skills": [
       "keyword-windfury"
     ],
+    "specialty": [],
     "subtype": "athlete",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -1992,11 +2703,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "trigger-all-friendly-growth-once"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "scholar"
+    "taxon": "phenomenon"
   },
   {
     "attack": 11,
@@ -2008,11 +2721,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
+    "playstyle": "virus",
     "skills": [
       "keyword-contagion"
     ],
+    "specialty": [],
     "subtype": "nanotech",
-    "tribe": "virus"
+    "taxon": "virus-incertae-sedis"
   },
   {
     "attack": 11,
@@ -2024,11 +2739,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
+    "playstyle": "machine",
     "skills": [
       "keyword-assemble-2"
     ],
+    "specialty": [],
     "subtype": "nanotech",
-    "tribe": "machine"
+    "taxon": "automation"
   },
   {
     "attack": 6,
@@ -2040,12 +2757,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "machine",
     "skills": [
       "keyword-optimal-attack",
       "keyword-assemble-1"
     ],
+    "specialty": [],
     "subtype": "robot",
-    "tribe": "machine"
+    "taxon": "automation"
   },
   {
     "attack": 6,
@@ -2057,11 +2776,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "keyword-optimal-attack"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "power",
-    "tribe": "machine"
+    "taxon": "power-energy"
   },
   {
     "attack": 0,
@@ -2073,11 +2799,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-twice"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "physics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -2089,9 +2822,16 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "cephalopod",
     "skills": [],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "actinopterygii"
+      }
+    ],
     "subtype": "mollusk",
-    "tribe": "biology"
+    "taxon": "octopodidae"
   },
   {
     "attack": 6,
@@ -2103,11 +2843,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "plant",
     "skills": [
       "aura-plant-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": "crop",
-    "tribe": "plant"
+    "taxon": "fabaceae"
   },
   {
     "attack": 6,
@@ -2119,11 +2861,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "virus",
     "skills": [
       "keyword-contagion"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "bovidae"
+      }
+    ],
     "subtype": "virus",
-    "tribe": "virus"
+    "taxon": "paramyxoviridae"
   },
   {
     "attack": 4,
@@ -2135,11 +2884,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-leftmost-damage-3"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "siege",
-    "tribe": "machine"
+    "taxon": "weapon-siege"
   },
   {
     "attack": 2,
@@ -2151,11 +2907,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -2167,11 +2925,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-top-attack-enemy-cant-attack"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "scholar"
+    "taxon": "phenomenon"
   },
   {
     "attack": 7,
@@ -2183,11 +2943,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "virus",
     "skills": [
       "microbiology"
     ],
+    "specialty": [],
     "subtype": "microbiology",
-    "tribe": "virus"
+    "taxon": "hominidae"
   },
   {
     "attack": 7,
@@ -2199,11 +2961,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "machine",
     "skills": [
       "keyword-taunt"
     ],
+    "specialty": [],
     "subtype": "mecha",
-    "tribe": "machine"
+    "taxon": "automation"
   },
   {
     "attack": 4,
@@ -2215,11 +2979,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "keyword-assemble-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "appliance",
-    "tribe": "machine"
+    "taxon": "information-computing"
   },
   {
     "attack": 5,
@@ -2231,11 +3002,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-self-growth-twice"
     ],
+    "specialty": [],
     "subtype": "primate",
-    "tribe": "biology"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -2247,11 +3020,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "aura-all-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
     "subtype": "philosophy",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -2263,11 +3043,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 1,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
     "subtype": "mathematics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -2279,12 +3066,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "aura-plant-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": "medicinal",
-    "tribe": "plant"
+    "taxon": "asteraceae"
   },
   {
     "attack": null,
@@ -2296,11 +3085,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "trigger-friendly-growth-twice"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 3,
@@ -2312,11 +3103,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "keyword-taunt"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -2328,11 +3121,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-leftmost-and-adjacent-damage-2"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 7,
@@ -2344,12 +3139,19 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "keyword-divine-shield",
       "keyword-assemble-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "computer",
-    "tribe": "machine"
+    "taxon": "information-computing"
   },
   {
     "attack": 12,
@@ -2361,11 +3163,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
+    "playstyle": "neutral",
     "skills": [
       "keyword-optimal-attack"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "spaceflight",
-    "tribe": "machine"
+    "taxon": "transport"
   },
   {
     "attack": 0,
@@ -2377,11 +3186,18 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "shout"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "literature",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -2393,11 +3209,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "trigger-mech-optimal-attack-this-turn"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "machine"
+    "taxon": "phenomenon"
   },
   {
     "attack": null,
@@ -2409,11 +3227,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-leftmost-damage-4"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 4,
@@ -2425,11 +3245,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [
       "keyword-windfury"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 8,
@@ -2441,12 +3263,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "mammal",
     "skills": [
       "keyword-reborn",
       "keyword-evolve"
     ],
+    "specialty": [],
     "subtype": "clone",
-    "tribe": "biology"
+    "taxon": "elephantidae"
   },
   {
     "attack": 3,
@@ -2458,11 +3282,22 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-human-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "appliance",
-    "tribe": "machine"
+    "taxon": "life-medical"
   },
   {
     "attack": 4,
@@ -2474,11 +3309,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "machine",
     "skills": [
       "keyword-optimal-attack"
     ],
+    "specialty": [],
     "subtype": "robot",
-    "tribe": "machine"
+    "taxon": "automation"
   },
   {
     "attack": 0,
@@ -2490,11 +3327,22 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "combat-random-enemy-damage-3"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "physics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -2506,11 +3354,22 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "aura-scholar-plus-0-plus-3"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "astronomy",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -2522,11 +3381,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [],
     "subtype": "primitive",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -2538,12 +3399,23 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 7,
+    "playstyle": "neutral",
     "skills": [
       "keyword-divine-shield",
       "combatstart-random-enemy-contagion-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "virus"
+      },
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
     "subtype": "quantum",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 5,
@@ -2555,12 +3427,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "machine",
     "skills": [
       "keyword-optimal-attack",
       "keyword-assemble-1"
     ],
+    "specialty": [],
     "subtype": "vehicle",
-    "tribe": "machine"
+    "taxon": "automation"
   },
   {
     "attack": 5,
@@ -2572,11 +3446,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
+    "specialty": [],
     "subtype": "literature",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -2588,11 +3464,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-all-mech-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "mathematics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -2604,11 +3487,18 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "observation"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "natural-history",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -2620,11 +3510,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "trigger-friendly-growth-self-plus-1-attack"
     ],
+    "specialty": [],
     "subtype": "primitive",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 8,
@@ -2636,12 +3528,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "aura-plant-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": "tree",
-    "tribe": "plant"
+    "taxon": "plantae-incertae-sedis"
   },
   {
     "attack": 1,
@@ -2653,11 +3547,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "virus",
     "skills": [
       "deathrattle-random-enemy-hp-minus-1"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "bacteria"
+      }
+    ],
     "subtype": "microorganism",
-    "tribe": "virus"
+    "taxon": "virus-incertae-sedis"
   },
   {
     "attack": 2,
@@ -2669,11 +3570,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "neutral",
     "skills": [
       "keyword-assemble-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "vehicle",
-    "tribe": "machine"
+    "taxon": "transport"
   },
   {
     "attack": 1,
@@ -2685,11 +3593,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "mammal",
     "skills": [
       "deathrattle-summon-termite"
     ],
+    "specialty": [],
     "subtype": "mammal",
-    "tribe": "biology"
+    "taxon": "muridae"
   },
   {
     "attack": 7,
@@ -2701,12 +3611,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "mammal",
     "skills": [
       "keyword-taunt",
       "trigger-friendly-human-death-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -2718,9 +3630,11 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "bird",
     "skills": [],
+    "specialty": [],
     "subtype": "bird",
-    "tribe": "biology"
+    "taxon": "archaeopterygidae"
   },
   {
     "attack": 4,
@@ -2732,11 +3646,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [
       "trigger-friendly-evolve-self-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": "mammal",
-    "tribe": "biology"
+    "taxon": "mammalia-incertae-sedis"
   },
   {
     "attack": 2,
@@ -2748,11 +3664,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
+    "specialty": [],
     "subtype": "primitive",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -2764,11 +3682,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "keyword-assemble-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "vehicle",
-    "tribe": "machine"
+    "taxon": "power-energy"
   },
   {
     "attack": 2,
@@ -2780,12 +3705,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "keyword-breed-1"
     ],
+    "specialty": [],
     "subtype": "aquatic-plant",
-    "tribe": "plant"
+    "taxon": "salviniaceae"
   },
   {
     "attack": 1,
@@ -2797,11 +3724,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "timekeeping",
-    "tribe": "machine"
+    "taxon": "information-computing"
   },
   {
     "attack": 3,
@@ -2813,9 +3747,11 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 5,
@@ -2827,11 +3763,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "aura-all-plus-0-plus-1"
     ],
+    "specialty": [],
     "subtype": "history",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -2843,11 +3781,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "virus",
     "skills": [
       "deathrattle-all-enemies-minus-1-health"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "hominidae"
+      }
+    ],
     "subtype": "virus",
-    "tribe": "virus"
+    "taxon": "poxviridae"
   },
   {
     "attack": 8,
@@ -2859,12 +3804,19 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "keyword-divine-shield",
       "keyword-assemble-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "architecture",
-    "tribe": "machine"
+    "taxon": "production-construction"
   },
   {
     "attack": 6,
@@ -2876,12 +3828,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "keyword-breed-3"
     ],
+    "specialty": [],
     "subtype": "crop",
-    "tribe": "plant"
+    "taxon": "poaceae"
   },
   {
     "attack": 5,
@@ -2893,11 +3847,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "keyword-assemble-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "power",
-    "tribe": "machine"
+    "taxon": "power-energy"
   },
   {
     "attack": 7,
@@ -2909,11 +3870,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "machine",
     "skills": [
       "aura-other-mech-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": "engineering",
-    "tribe": "machine"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -2925,11 +3888,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "philosophy",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -2941,11 +3911,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "mammal",
     "skills": [
       "trigger-2-humans-self-plus-1-attack"
     ],
+    "specialty": [],
     "subtype": "primitive",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -2957,12 +3929,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "bacteria",
     "skills": [
       "keyword-reborn",
       "keyword-evolve"
     ],
+    "specialty": [],
     "subtype": "synthesis",
-    "tribe": "biology"
+    "taxon": "bacteria-incertae-sedis"
   },
   {
     "attack": 1,
@@ -2974,11 +3948,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow"
     ],
+    "specialty": [],
     "subtype": "moss",
-    "tribe": "plant"
+    "taxon": "bryaceae"
   },
   {
     "attack": 8,
@@ -2990,11 +3966,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "mammal",
     "skills": [
       "keyword-divine-shield"
     ],
+    "specialty": [],
     "subtype": "colonist",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -3006,12 +3984,19 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "virus",
     "skills": [
       "keyword-contagion",
       "combatstart-random-enemy-contagion-1"
     ],
+    "specialty": [
+      {
+        "kind": "host",
+        "value": "mammalia"
+      }
+    ],
     "subtype": "bacteria",
-    "tribe": "virus"
+    "taxon": "bacillaceae"
   },
   {
     "attack": 6,
@@ -3023,11 +4008,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "keyword-assemble-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "telecommunication",
-    "tribe": "machine"
+    "taxon": "information-computing"
   },
   {
     "attack": 1,
@@ -3039,11 +4031,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow"
     ],
+    "specialty": [],
     "subtype": "vine",
-    "tribe": "plant"
+    "taxon": "plantae-incertae-sedis"
   },
   {
     "attack": 0,
@@ -3055,11 +4049,22 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "alternating-current"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "physics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -3071,11 +4076,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-all-enemies-damage-2"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 3,
@@ -3087,11 +4094,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
+    "specialty": [],
     "subtype": "worker",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -3103,11 +4112,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "keyword-assemble-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "siege",
-    "tribe": "machine"
+    "taxon": "weapon-siege"
   },
   {
     "attack": null,
@@ -3119,11 +4135,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "neutral",
     "skills": [
       "trigger-discover-tribe-minion"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 3,
@@ -3135,9 +4153,16 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "artiodactyla"
+      }
+    ],
     "subtype": "primitive",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -3149,12 +4174,19 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "keyword-optimal-attack",
       "keyword-assemble-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "computer",
-    "tribe": "machine"
+    "taxon": "information-computing"
   },
   {
     "attack": 8,
@@ -3166,12 +4198,14 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "keyword-breed-3"
     ],
+    "specialty": [],
     "subtype": "architecture",
-    "tribe": "plant"
+    "taxon": "plantae-incertae-sedis"
   },
   {
     "attack": 0,
@@ -3183,11 +4217,22 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-twice"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "mathematics",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 1,
@@ -3199,11 +4244,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "plant",
     "skills": [
       "keyword-breed-1"
     ],
+    "specialty": [],
     "subtype": "crop",
-    "tribe": "plant"
+    "taxon": "fabaceae"
   },
   {
     "attack": 0,
@@ -3215,11 +4262,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "aura-mech-plus-2-plus-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "engineering",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -3231,11 +4285,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "keyword-taunt"
     ],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 10,
@@ -3247,12 +4303,19 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "keyword-assemble-2",
       "battlecry-all-mech-growth-once-no-keyword"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "telecommunication",
-    "tribe": "machine"
+    "taxon": "information-computing"
   },
   {
     "attack": 8,
@@ -3264,11 +4327,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "machine",
     "skills": [
       "combat-optimal-attack"
     ],
+    "specialty": [],
     "subtype": "aviation",
-    "tribe": "machine"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -3280,11 +4345,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-friendly-growth-plant-twice"
     ],
+    "specialty": [],
     "subtype": "primitive",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 4,
@@ -3296,9 +4363,11 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [],
+    "specialty": [],
     "subtype": "unit",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 2,
@@ -3310,11 +4379,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "plant",
     "skills": [
       "keyword-breed-2"
     ],
+    "specialty": [],
     "subtype": "crop",
-    "tribe": "plant"
+    "taxon": "asteraceae"
   },
   {
     "attack": null,
@@ -3326,11 +4397,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "trigger-minion-windfury-this-turn"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -3342,11 +4415,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 2,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
     "subtype": "history",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 1,
@@ -3358,11 +4438,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "bird",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [],
     "subtype": "communication",
-    "tribe": "biology"
+    "taxon": "columbidae"
   },
   {
     "attack": 12,
@@ -3374,11 +4456,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
+    "playstyle": "mammal",
     "skills": [
       "keyword-taunt"
     ],
+    "specialty": [],
     "subtype": "captain",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -3390,11 +4474,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "keyword-optimal-attack"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "medical",
-    "tribe": "machine"
+    "taxon": "life-medical"
   },
   {
     "attack": 2,
@@ -3406,11 +4497,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
+    "specialty": [],
     "subtype": "primitive",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -3422,11 +4515,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "virus",
     "skills": [
       "combatstart-random-enemy-contagion-1"
     ],
+    "specialty": [],
     "subtype": "plague",
-    "tribe": "virus"
+    "taxon": "virus-incertae-sedis"
   },
   {
     "attack": 0,
@@ -3438,11 +4533,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 1,
+    "playstyle": "neutral",
     "skills": [
       "trigger-play-effect-friendly-plus-0-plus-1"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": "art",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -3454,11 +4556,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
+    "playstyle": "mammal",
     "skills": [
       "trigger-friendly-biology-play-plus-1-attack"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "artiodactyla"
+      }
+    ],
     "subtype": "mammal",
-    "tribe": "biology"
+    "taxon": "canidae"
   },
   {
     "attack": 2,
@@ -3470,11 +4579,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-self-plus-1-health"
     ],
+    "specialty": [
+      {
+        "kind": "prey",
+        "value": "plantae"
+      }
+    ],
     "subtype": "mammal",
-    "tribe": "biology"
+    "taxon": "suidae"
   },
   {
     "attack": null,
@@ -3486,11 +4602,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-all-enemies-minus-1-attack"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": null,
@@ -3502,11 +4620,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "trigger-copy-hand-minion"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "scholar"
+    "taxon": "phenomenon"
   },
   {
     "attack": 10,
@@ -3518,11 +4638,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
+    "playstyle": "cnidarian",
     "skills": [
       "keyword-reborn"
     ],
+    "specialty": [],
     "subtype": "ocean",
-    "tribe": "biology"
+    "taxon": "oceaniidae"
   },
   {
     "attack": null,
@@ -3534,11 +4656,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "trigger-copy-friendly-minion"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "biology"
+    "taxon": "phenomenon"
   },
   {
     "attack": null,
@@ -3550,11 +4674,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-all-enemies-damage-5"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 4,
@@ -3566,11 +4692,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
+    "specialty": [],
     "subtype": "politics",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 0,
@@ -3582,11 +4710,18 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 6,
+    "playstyle": "neutral",
     "skills": [
       "aura-plant-plus-2-plus-2"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "plant"
+      }
+    ],
     "subtype": "organism",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -3598,9 +4733,11 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "machine",
     "skills": [],
+    "specialty": [],
     "subtype": "puppet",
-    "tribe": "machine"
+    "taxon": "automation"
   },
   {
     "attack": 1,
@@ -3612,11 +4749,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow"
     ],
+    "specialty": [],
     "subtype": "fungus",
-    "tribe": "plant"
+    "taxon": "fungi-incertae-sedis"
   },
   {
     "attack": 10,
@@ -3628,11 +4767,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
+    "playstyle": "plant",
     "skills": [
       "keyword-divine-shield"
     ],
+    "specialty": [],
     "subtype": "universe",
-    "tribe": "plant"
+    "taxon": "plantae-incertae-sedis"
   },
   {
     "attack": 0,
@@ -3644,11 +4785,22 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "astronomy",
-    "tribe": "scholar"
+    "taxon": "hominidae"
   },
   {
     "attack": 5,
@@ -3660,11 +4812,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-all-friendly-plus-0-plus-1"
     ],
+    "specialty": [],
     "subtype": "medicine",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -3676,11 +4830,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "mammal",
     "skills": [
       "keyword-evolve"
     ],
+    "specialty": [],
     "subtype": "mammal",
-    "tribe": "biology"
+    "taxon": "equidae"
   },
   {
     "attack": 5,
@@ -3692,11 +4848,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [
       "keyword-taunt"
     ],
+    "specialty": [],
     "subtype": "beast",
-    "tribe": "biology"
+    "taxon": "elephantidae"
   },
   {
     "attack": null,
@@ -3708,11 +4866,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "trigger-other-friendly-humans-plus-1-attack"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "human"
+    "taxon": "phenomenon"
   },
   {
     "attack": 7,
@@ -3724,11 +4884,13 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "mammal",
     "skills": [
       "free-refresh"
     ],
+    "specialty": [],
     "subtype": "navigation",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": null,
@@ -3740,11 +4902,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "trigger-all-friendly-plus-1-plus-1"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 4,
@@ -3756,11 +4920,18 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "neutral",
     "skills": [
       "keyword-taunt"
     ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
     "subtype": "transport",
-    "tribe": "machine"
+    "taxon": "transport"
   },
   {
     "attack": null,
@@ -3772,11 +4943,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "trigger-all-mech-growth-once"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "machine"
+    "taxon": "phenomenon"
   },
   {
     "attack": 12,
@@ -3788,11 +4961,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
+    "playstyle": "mammal",
     "skills": [
       "keyword-windfury"
     ],
+    "specialty": [],
     "subtype": "behemoth",
-    "tribe": "biology"
+    "taxon": "mammalia-incertae-sedis"
   },
   {
     "attack": null,
@@ -3804,11 +4979,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
+    "playstyle": "neutral",
     "skills": [
       "combatstart-leftmost-damage-6"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": null,
@@ -3820,11 +4997,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
+    "playstyle": "neutral",
     "skills": [
       "trigger-all-mech-growth-once"
     ],
+    "specialty": [],
     "subtype": null,
-    "tribe": "general"
+    "taxon": "phenomenon"
   },
   {
     "attack": 3,
@@ -3836,11 +5015,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "mammal",
     "skills": [
       "battlecry-friendly-archers-plus-2-attack"
     ],
+    "specialty": [],
     "subtype": "strategist",
-    "tribe": "human"
+    "taxon": "hominidae"
   },
   {
     "attack": 3,
@@ -3852,11 +5033,13 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
+    "playstyle": "plant",
     "skills": [
       "keyword-sow",
       "aura-other-plants-plus-0-plus-1"
     ],
+    "specialty": [],
     "subtype": "tree",
-    "tribe": "plant"
+    "taxon": "poaceae"
   }
 ]
