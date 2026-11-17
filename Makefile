@@ -1,7 +1,7 @@
 PYTHON ?= python3
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
 
-.PHONY: test lint audit data data-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-check client-smoke m1b-build m1b-e2e dev-bots
+.PHONY: test lint audit data data-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke m1b-build m1b-e2e dev-bots
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -56,6 +56,11 @@ m1-check:
 # 客户端工程导入与静态边界检查。
 client-import:
 	$(GODOT) --headless --path client --import
+
+# 桌面客户端统一从这里启动：先导入刷新全局类缓存。新增或改名 class_name
+# 脚本后直接跑 Godot 会沿用旧缓存，缺类的脚本编译失败，对局页可能只构建一半。
+client-run: client-import
+	$(GODOT) --path client
 
 client-check:
 	$(MAKE) protocol-check
