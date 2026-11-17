@@ -44,7 +44,7 @@ var _conn_label: Label
 var _status: Label
 
 # 左栏积分榜。
-var _players_rail: VBoxContainer
+var _players_panel: GamePlayersRail
 
 # 中区 · 招募。
 var _recruit_panel: VBoxContainer
@@ -71,10 +71,7 @@ var _combat := CombatPlayback.new()
 var _combat_turn := -1
 
 # 右栏。
-var _self_hero_box: VBoxContainer
-var _hero_power_button: Button
-var _end_button: Button
-var _log_text: RichTextLabel
+var _side_panel: GameSidePanel
 
 var _overlay: Control
 
@@ -118,9 +115,13 @@ func _build() -> void:
     body.add_theme_constant_override("separation", UITheme.space("space-lg"))
     root.add_child(body)
 
-    body.add_child(_build_players_rail())
+    _players_panel = GamePlayersRail.new()
+    body.add_child(_players_panel)
     body.add_child(_build_center())
-    body.add_child(_build_side())
+    _side_panel = GameSidePanel.new()
+    _side_panel.hero_power_pressed.connect(_on_hero_power)
+    _side_panel.end_recruit_pressed.connect(_on_end_recruit)
+    body.add_child(_side_panel)
 
     _status = UI.label("", UITheme.font_size("font-body-sm"))
     _status.name = "StatusLabel"
@@ -170,28 +171,6 @@ func _build_header() -> Control:
     _timer_label = UI.pill_label("—", "accent", "font-title")
     _timer_label.name = "TimerLabel"
     row.add_child(_timer_label)
-    return panel
-
-
-func _build_players_rail() -> Control:
-    var panel := UI.card_panel("surface")
-    panel.name = "PlayersPanel"
-    panel.custom_minimum_size = Vector2(UITheme.metric("rail-width"), 0)
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    panel.add_child(box)
-    box.add_child(UI.section_title("积分榜"))
-
-    var scroll := ScrollContainer.new()
-    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    box.add_child(scroll)
-
-    _players_rail = VBoxContainer.new()
-    _players_rail.name = "PlayersRail"
-    _players_rail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _players_rail.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    scroll.add_child(_players_rail)
     return panel
 
 
@@ -361,48 +340,6 @@ func _build_combat_panel() -> Control:
     return _combat_root
 
 
-func _build_side() -> Control:
-    var side := VBoxContainer.new()
-    side.name = "SidePanel"
-    side.custom_minimum_size = Vector2(UITheme.metric("side-width"), 0)
-    side.add_theme_constant_override("separation", UITheme.space("space-sm"))
-
-    var hero_panel := UI.card_panel("surface")
-    hero_panel.name = "SelfHeroPanel"
-    _self_hero_box = VBoxContainer.new()
-    _self_hero_box.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    hero_panel.add_child(_self_hero_box)
-    side.add_child(hero_panel)
-
-    _hero_power_button = UI.styled_button("英雄技能", "default", 40)
-    _hero_power_button.name = "HeroPowerButton"
-    _hero_power_button.pressed.connect(_on_hero_power)
-    side.add_child(_hero_power_button)
-
-    _end_button = UI.styled_button("结束招募", "primary", 46)
-    _end_button.name = "EndButton"
-    _end_button.pressed.connect(_on_end_recruit)
-    side.add_child(_end_button)
-
-    var log_panel := UI.card_panel("surface")
-    log_panel.name = "LogPanel"
-    log_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    var log_box := VBoxContainer.new()
-    log_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    log_panel.add_child(log_box)
-    log_box.add_child(UI.section_title("战报与事件"))
-    _log_text = RichTextLabel.new()
-    _log_text.name = "LogText"
-    _log_text.fit_content = false
-    _log_text.scroll_active = true
-    _log_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _log_text.add_theme_font_size_override("normal_font_size", UITheme.font_size("font-body-sm"))
-    _log_text.add_theme_color_override("default_color", UITheme.color("color-text-dim"))
-    log_box.add_child(_log_text)
-    side.add_child(log_panel)
-    return side
-
-
 func _flow_row(node_name: String) -> HFlowContainer:
     var row := HFlowContainer.new()
     row.name = node_name
@@ -442,7 +379,7 @@ func _refresh() -> void:
     var state := _build_state(view, self_state, phase, recruited)
 
     _refresh_header(view, self_state, phase)
-    _refresh_players(state)
+    _players_panel.refresh(state)
 
     var in_combat := phase == Protocol.PHASE_COMBAT or phase == Protocol.PHASE_SETTLE
     _set_combat_mode(in_combat)
@@ -453,7 +390,7 @@ func _refresh() -> void:
         _refresh_recruit(self_state, recruited, phase)
     _refresh_hand(self_state, phase)
 
-    _refresh_side(self_state)
+    _side_panel.refresh(state)
     _refresh_log()
     _refresh_overlay(self_state, recruited)
     _refresh_connection()
@@ -491,83 +428,6 @@ func _refresh_header(view: Dictionary, self_state: Dictionary, phase: String) ->
     _hp_pill.text = "♥ %d" % int(self_state.get("hp", 0))
     _era_pill.text = GameCardFace.era_text(int(self_state.get("era", 1)))
     _gold_pill.text = "● %d 金" % int(self_state.get("gold", 0))
-
-
-func _refresh_players(state: GameUiState) -> void:
-    UI.clear(_players_rail)
-    var players: Array = _sorted_players(state.view)
-    if players.is_empty():
-        _players_rail.add_child(UI.empty_hint("暂无玩家"))
-        return
-    for player in players:
-        _players_rail.add_child(_seat_row(player))
-
-
-func _sorted_players(view: Dictionary) -> Array:
-    var players: Array = view.get("players", []).duplicate()
-    players.sort_custom(func(a, b): return int(a.get("seat", 0)) < int(b.get("seat", 0)))
-    return players
-
-
-func _seat_row(player: Dictionary) -> PanelContainer:
-    var player_id := str(player.get("playerId", ""))
-    var is_self := player_id == GameStore.player_id
-    var alive := bool(player.get("alive", true))
-    var panel := UI.card_panel("accent-row" if is_self else "row")
-    panel.name = "SeatRow"
-    panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    if not alive:
-        UI.apply_dim(panel)
-
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    panel.add_child(box)
-
-    var row := HBoxContainer.new()
-    row.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    box.add_child(row)
-    row.add_child(UI.avatar(_optional_text(player.get("heroCardId")), UITheme.metric("avatar-md")))
-
-    var info := VBoxContainer.new()
-    info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    info.add_theme_constant_override("separation", 0)
-    row.add_child(info)
-
-    var name_row := HBoxContainer.new()
-    name_row.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    info.add_child(name_row)
-
-    var name_label := UI.label(_optional_text(player.get("displayName")), UITheme.font_size("font-body-sm"), false)
-    name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    name_label.max_lines_visible = 1
-    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    if is_self:
-        name_label.add_theme_color_override("font_color", UITheme.color("color-accent"))
-    name_row.add_child(name_label)
-
-    var marks := PackedStringArray()
-    if is_self:
-        marks.append("我")
-    if player.get("placement") != null:
-        marks.append("第 %d 名" % int(player.get("placement")))
-    if not alive:
-        marks.append("淘汰")
-    elif bool(player.get("recruited", false)):
-        marks.append("已招募")
-    if not marks.is_empty():
-        var mark := UI.label("、".join(marks), UITheme.font_size("font-caption"), false)
-        mark.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-        name_row.add_child(mark)
-
-    var meta := UI.label("HP %d · %s · 随从%d" % [
-        int(player.get("hp", 0)),
-        GameCardFace.era_text(int(player.get("era", 1))),
-        int(player.get("boardCount", 0)),
-    ], UITheme.font_size("font-caption"), false)
-    meta.clip_text = true
-    meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    info.add_child(meta)
-    return panel
 
 
 func _refresh_recruit(self_state: Dictionary, recruited: bool, phase: String) -> void:
@@ -824,45 +684,13 @@ func _refresh_actions(self_state: Dictionary, recruited: bool, phase: String) ->
     _upgrade_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canUpgradeEra", false))
     _upgrade_button.tooltip_text = "" if aff.get("upgradeDisabledReason") == null else UI.error_text(str(aff.get("upgradeDisabledReason")))
 
-    var power: Dictionary = self_state.get("heroPower", {})
-    _hero_power_button.text = "英雄技能（剩 %d）" % int(power.get("usesLeft", 0))
-    _hero_power_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canUseHeroPower", false))
-    _hero_power_button.tooltip_text = "" if aff.get("heroPowerDisabledReason") == null else UI.error_text(str(aff.get("heroPowerDisabledReason")))
-
     _freeze_button.disabled = _view_stale or _deadline_expired or _target_pending or phase != Protocol.PHASE_RECRUIT or recruited
-    _end_button.text = "已结束招募" if recruited else "结束招募"
-    _end_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canEndRecruit", false))
-
-
-func _refresh_side(self_state: Dictionary) -> void:
-    UI.clear(_self_hero_box)
-    var hero_id := _optional_text(self_state.get("heroCardId"))
-    _self_hero_box.add_child(UI.hero_tile(hero_id, UITheme.metric("side-width") - UITheme.space("space-2xl")))
-
-    var stat_line := UI.label("生命 %d · %s · 金币 %d" % [
-        int(self_state.get("hp", 0)),
-        GameCardFace.era_text(int(self_state.get("era", 1))),
-        int(self_state.get("gold", 0)),
-    ], UITheme.font_size("font-body-sm"), false)
-    stat_line.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    _self_hero_box.add_child(stat_line)
-
-    var power: Dictionary = self_state.get("heroPower", {})
-    var skill_id := _optional_text(power.get("skillId"))
-    var skill_text := CardDB.display_text(skill_id) if skill_id != "" else ""
-    if skill_text != "":
-        var skill := UI.label(skill_text, UITheme.font_size("font-caption"))
-        skill.max_lines_visible = 2
-        skill.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-        skill.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-        _self_hero_box.add_child(skill)
 
 
 func _set_combat_mode(in_combat: bool) -> void:
     _recruit_panel.visible = not in_combat
     _combat_root.visible = in_combat
-    _hero_power_button.visible = not in_combat
-    _end_button.visible = not in_combat
+    _side_panel.set_combat_mode(in_combat)
 
 
 func _refresh_combat(view: Dictionary) -> void:
@@ -1038,7 +866,7 @@ func _refresh_log() -> void:
     var start := maxi(0, events.size() - 8)
     for index in range(start, events.size()):
         lines.append(_event_text(events[index]))
-    _log_text.text = _join_lines(lines)
+    _side_panel.log_text.text = _join_lines(lines)
 
 
 func _combat_text() -> String:
