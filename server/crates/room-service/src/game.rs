@@ -577,6 +577,7 @@ impl GameTask {
             } else {
                 let Some(opponent) = opponent else { continue };
                 let mut participants = [report.seat, opponent];
+                // 按座位号升序，再映射为 playerId；不是按 playerId 字符串排序。
                 participants.sort_unstable();
                 participants
                     .into_iter()
@@ -584,12 +585,16 @@ impl GameTask {
                     .collect()
             };
             let (winner_id, loser_id) = match report.winner {
-                // 平局：双方都为 null，伤害为 0。
+                // 平局：双方都为 null，伤害显式写 0，不依赖引擎当前保证。
                 None => (None, None),
                 Some(winner) if winner == report.seat => (
                     Some(self.player_id(winner)),
                     // 幽灵没有玩家 id，玩家赢下幽灵战时 loserId 为 null。
-                    opponent.map(|opponent| self.player_id(opponent)),
+                    if report.mirror {
+                        None
+                    } else {
+                        opponent.map(|opponent| self.player_id(opponent))
+                    },
                 ),
                 Some(winner) => (
                     // 幽灵赢时 `winner` 是幽灵归属座位，同样没有玩家 id。
@@ -601,8 +606,12 @@ impl GameTask {
                     Some(self.player_id(report.seat)),
                 ),
             };
+            let damage = match report.winner {
+                None => 0,
+                Some(_) => u64::try_from(report.damage).unwrap_or(0),
+            };
             self.combat_log.push(CombatLogEntry {
-                damage: u64::try_from(report.damage).unwrap_or(0),
+                damage,
                 loser_id,
                 mirror: report.mirror,
                 participant_ids,

@@ -1263,9 +1263,14 @@ fn combat_log_records_one_entry_per_fight() {
     let mut participants = BTreeSet::new();
     for entry in &view.combat_log {
         assert_eq!(entry.participant_ids.len(), 2, "真实战应有两位参战者");
+        let participant_seats: Vec<u8> = entry
+            .participant_ids
+            .iter()
+            .map(|player_id| player_id[1..].parse().expect("测试玩家 id 形如 pN"))
+            .collect();
         assert!(
-            entry.participant_ids[0] < entry.participant_ids[1],
-            "participantIds 必须按 id 升序"
+            participant_seats[0] < participant_seats[1],
+            "participantIds 必须按座位号升序"
         );
         assert!(
             pairs.insert(entry.participant_ids.clone()),
@@ -1297,46 +1302,69 @@ fn combat_log_records_one_entry_per_fight() {
 #[test]
 fn combat_log_ghost_entry_has_single_participant() {
     // 全部座位各打一个随从后逐回合推进；生命上限压低到 2，让出局与幽灵战
-    // 在少数回合内出现。种子决定配对，固定种子保证可复现。
-    let (_, entry) = (0..=64u64)
-        .find_map(|seed| {
-            let (mut task, clock) = task_with_seed_and_hp(seed, 2);
-            for seat in 0..8 {
-                play_one_minion(&mut task, seat, &format!("ghost-{seed}"));
-            }
-            for _ in 0..12 {
-                advance_turn(&mut task, &clock);
-                let view = task.player_view(0).expect("视图应可用");
-                let found = view
-                    .combat_log
-                    .iter()
-                    .find(|entry| entry.mirror && entry.loser_id.is_some() && entry.damage > 0)
-                    .cloned();
-                if found.is_some() {
-                    return found.map(|entry| (seed, entry));
+    // 在少数回合内出现。种子决定配对，扫描保证可复现。
+    //
+    // 单个种子不保证同时出现「幽灵战失利」与「幽灵战获胜」，因此扫描
+    // 0..=64；扩大该范围说明引擎配对/淘汰节奏已变化，需要重新调整夹具参数。
+    let mut ghost_loss = None;
+    let mut ghost_win = None;
+    for seed in 0..=64u64 {
+        let (mut task, clock) = task_with_seed_and_hp(seed, 2);
+        for seat in 0..8 {
+            play_one_minion(&mut task, seat, &format!("ghost-{seed}"));
+        }
+        for _ in 0..12 {
+            advance_turn(&mut task, &clock);
+            let view = task.player_view(0).expect("视图应可用");
+            for entry in &view.combat_log {
+                if !entry.mirror {
+                    continue;
                 }
-                if view.phase == protocol::view::Phase::GameOver {
-                    break;
+                if ghost_loss.is_none() && entry.loser_id.is_some() && entry.damage > 0 {
+                    ghost_loss = Some(entry.clone());
+                }
+                if ghost_win.is_none() && entry.winner_id.is_some() {
+                    ghost_win = Some(entry.clone());
                 }
             }
-            None
-        })
-        .expect("有限的固定种子内应出现一场幽灵战失利");
+            if ghost_loss.is_some() && ghost_win.is_some() {
+                break;
+            }
+            if view.phase == protocol::view::Phase::GameOver {
+                break;
+            }
+        }
+        if ghost_loss.is_some() && ghost_win.is_some() {
+            break;
+        }
+    }
 
-    assert!(entry.mirror, "幽灵战必须标记 mirror");
+    let loss = ghost_loss.expect("需要调整夹具参数：种子 0..=64 内应出现一场幽灵战失利");
+    assert!(loss.mirror, "幽灵战必须标记 mirror");
+    assert_eq!(loss.participant_ids.len(), 1, "幽灵战只有对战方一个玩家 id");
     assert_eq!(
-        entry.participant_ids.len(),
-        1,
-        "幽灵战只有对战方一个玩家 id"
-    );
-    assert_eq!(
-        entry.loser_id.as_deref(),
-        Some(entry.participant_ids[0].as_str()),
+        loss.loser_id.as_deref(),
+        Some(loss.participant_ids[0].as_str()),
         "幽灵战失利时 loserId 为对战方"
     );
-    assert_eq!(entry.winner_id, None, "幽灵没有玩家 id，获胜时为 null");
-    assert!(entry.damage > 0, "幽灵战失利必须造成伤害");
-    assert!(entry.turn.get() <= 20, "战报回合号不超过对局回合上限");
+    assert_eq!(loss.winner_id, None, "幽灵没有玩家 id，获胜时为 null");
+    assert!(loss.damage > 0, "幽灵战失利必须造成伤害");
+    assert!(loss.turn.get() <= 20, "战报回合号不超过对局回合上限");
+
+    let win = ghost_win.expect("需要调整夹具参数：种子 0..=64 内应出现一场幽灵战获胜");
+    assert!(win.mirror, "幽灵战必须标记 mirror");
+    assert_eq!(win.participant_ids.len(), 1, "幽灵战只有对战方一个玩家 id");
+    assert_eq!(
+        win.winner_id.as_deref(),
+        Some(win.participant_ids[0].as_str()),
+        "幽灵战获胜时 winnerId 为对战方"
+    );
+    assert_eq!(
+        win.loser_id, None,
+        "幽灵不掉血，玩家赢下幽灵战时 loserId 必须为 null"
+    );
+    assert_eq!(win.damage, 0, "幽灵不受伤，玩家获胜不产生伤害");
+    assert!(win.turn.get() <= 20, "战报回合号不超过对局回合上限");
 }
 
 #[test]
