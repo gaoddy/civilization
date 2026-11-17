@@ -12,10 +12,10 @@
 
 use std::collections::BTreeMap;
 
-use crate::combat::{self, BattleField, CombatSetup};
-use crate::data::{CardType, Catalog, Tribe};
+use crate::combat::{self, BattleField, CombatSetup, DamageSource};
+use crate::data::{CardType, Catalog, Playstyle, Specialty, SpecialtyKind};
 use crate::effects::{
-    CopyState, Duration, Effect, Filter, Op, Pick, Selector, Side, Trigger, Zone,
+    CopyState, Duration, Effect, Filter, Op, Pick, Selector, Side, TimesIf, Trigger, Zone,
 };
 use crate::engine::Engine;
 use crate::events::GameEvent;
@@ -174,6 +174,8 @@ impl Engine {
                 Vec::new()
             }
             Op::Discover => self.apply_discover(state, effect, ctx),
+            // 分解只发生在战斗内；招募阶段没有事件目标，落空。
+            Op::Decompose => Vec::new(),
         }
     }
 
@@ -523,23 +525,10 @@ impl Engine {
         let Some((_, minion)) = locate(state, id) else {
             return false;
         };
-        let Some(card) = self.catalog.cards.get(&minion.card_id) else {
+        let Some(facts) = card_facts(&self.catalog, &minion.card_id) else {
             return false;
         };
         match filter.key.as_str() {
-            "tribe" => tribe_name(card.tribe) == filter.value,
-            "subtype" => card.subtype.as_deref() == Some(filter.value.as_str()),
-            "id" => card.id == filter.value,
-            "type" => match filter.value.as_str() {
-                "minion" => card.card_type == CardType::Minion,
-                "effect" => card.card_type == CardType::Effect,
-                _ => false,
-            },
-            "scholar" => match filter.value.as_str() {
-                "true" => card.is_scholar,
-                "false" => !card.is_scholar,
-                _ => false,
-            },
             "keyword" => combat::keywords(&self.catalog, minion).contains(&filter.value),
             "other" => {
                 if filter.value == "true" {
@@ -549,7 +538,7 @@ impl Engine {
                 }
             }
             // 加载期已拒绝未知筛选键；条件里的未知键按「匹配不到任何结果」处理。
-            _ => false,
+            key => facts.matches(&self.catalog, key, &filter.value),
         }
     }
 
@@ -599,8 +588,8 @@ impl Engine {
             let Some((_, minion)) = locate_mut(state, *id) else {
                 continue;
             };
-            let times = match (&effect.params.times_if, self.card_tribe(&minion.card_id)) {
-                (Some(times_if), Some(target_tribe)) if times_if.tribe == target_tribe => {
+            let times = match &effect.params.times_if {
+                Some(times_if) if self.times_if_matches(&minion.card_id, times_if) => {
                     times_if.times
                 }
                 _ => base_times,
@@ -691,8 +680,18 @@ impl Engine {
         events
     }
 
-    fn card_tribe(&self, card_id: &str) -> Option<Tribe> {
-        self.catalog.cards.get(card_id).map(|card| card.tribe)
+    /// `timesIf` 是否命中该卡牌/Token。`scholar` 只看学者标记，其余按筛选键匹配。
+    fn times_if_matches(&self, card_id: &str, times_if: &TimesIf) -> bool {
+        let Some(facts) = card_facts(&self.catalog, card_id) else {
+            return false;
+        };
+        if times_if.key == "scholar" {
+            return facts.is_scholar;
+        }
+        let Some(value) = times_if.value.as_deref() else {
+            return false;
+        };
+        facts.matches(&self.catalog, &times_if.key, value)
     }
 
     // -----------------------------------------------------------------------
@@ -1194,8 +1193,8 @@ impl Engine {
                     let Some(minion) = field.minion(id) else {
                         continue;
                     };
-                    let times = match (&effect.params.times_if, self.card_tribe(&minion.card_id)) {
-                        (Some(times_if), Some(target_tribe)) if times_if.tribe == target_tribe => {
+                    let times = match &effect.params.times_if {
+                        Some(times_if) if self.times_if_matches(&minion.card_id, times_if) => {
                             times_if.times
                         }
                         _ => base_times,
@@ -1262,13 +1261,57 @@ impl Engine {
             Op::DealDamage => {
                 let amount = effect.params.amount.unwrap_or(0);
                 let can_kill = effect.params.can_kill != Some(false);
+                // 效果伤害归因给施放该效果的随从；无来源效果不产生击杀。
                 for id in targets {
-                    field.deal_damage(id, amount, can_kill);
+                    match ctx.source {
+                        Some(source) => {
+                            field.apply_damage(id, amount, can_kill, DamageSource::Minion(source))
+                        }
+                        None => field.deal_damage(id, amount, can_kill),
+                    }
                 }
             }
+            // 分解：取事件目标（被分解随从）的生命值，加到选择器选出的随从上。
+            Op::Decompose => self.apply_combat_decompose(field, effect, &targets, ctx),
             Op::Summon => self.apply_combat_summon(field, rng, effect, ctx),
             Op::Copy => self.apply_combat_copy(field, effect, ctx, &targets),
             _ => {}
+        }
+    }
+
+    /// 分解：按 `basis` 读取 `event_target` 的生命值，加到 `targets` 上。
+    ///
+    /// 目标已离场、快照缺失或获得量 ≤0 时静默跳过；`duration` 由数据校验保证
+    /// 只取 `permanent` / `combat`。
+    fn apply_combat_decompose(
+        &self,
+        field: &mut BattleField,
+        effect: &Effect,
+        targets: &[InstanceId],
+        ctx: &EffectCtx,
+    ) {
+        let (Some(basis), Some(duration)) = (effect.params.basis, effect.params.duration) else {
+            return;
+        };
+        let Some(victim) = ctx.event_target else {
+            return;
+        };
+        let Some(amount) = field.decompose_health(&self.catalog, victim, basis) else {
+            return;
+        };
+        if amount <= 0 {
+            return;
+        }
+        for id in targets {
+            let Some(minion) = field.minion_mut(*id) else {
+                continue;
+            };
+            match duration {
+                Duration::Permanent => minion.stats.health.add_permanent(amount),
+                Duration::Combat => minion.stats.health.add_turn(amount),
+                // 数据校验拒绝 `instant`；执行期保守跳过。
+                Duration::Instant => {}
+            }
         }
     }
 
@@ -1517,23 +1560,10 @@ impl Engine {
         let Some(minion) = field.minion(id) else {
             return false;
         };
-        let Some(card) = self.catalog.cards.get(&minion.card_id) else {
+        let Some(facts) = card_facts(&self.catalog, &minion.card_id) else {
             return false;
         };
         match filter.key.as_str() {
-            "tribe" => tribe_name(card.tribe) == filter.value,
-            "subtype" => card.subtype.as_deref() == Some(filter.value.as_str()),
-            "id" => card.id == filter.value,
-            "type" => match filter.value.as_str() {
-                "minion" => card.card_type == CardType::Minion,
-                "effect" => card.card_type == CardType::Effect,
-                _ => false,
-            },
-            "scholar" => match filter.value.as_str() {
-                "true" => card.is_scholar,
-                "false" => !card.is_scholar,
-                _ => false,
-            },
             "keyword" => combat::keywords(&self.catalog, minion).contains(&filter.value),
             "other" => {
                 if filter.value == "true" {
@@ -1542,7 +1572,7 @@ impl Engine {
                     true
                 }
             }
-            _ => false,
+            key => facts.matches(&self.catalog, key, &filter.value),
         }
     }
 
@@ -1640,16 +1670,78 @@ fn is_enemy_selector(selector: &Selector) -> bool {
     )
 }
 
-fn tribe_name(tribe: Tribe) -> &'static str {
-    match tribe {
-        Tribe::Human => "human",
-        Tribe::Machine => "machine",
-        Tribe::Biology => "biology",
-        Tribe::Plant => "plant",
-        Tribe::Virus => "virus",
-        Tribe::Scholar => "scholar",
-        Tribe::General => "general",
+/// 筛选与 `timesIf` 需要的卡牌/Token 事实。
+///
+/// `catalog.cards` 查不到时回退 `catalog.tokens`；Token 缺玩法/分类时按
+/// `Neutral` / `phenomenon` 处理。两者都找不到时返回 `None`。
+struct CardFacts<'a> {
+    playstyle: Playstyle,
+    taxon: &'a str,
+    specialty: &'a [Specialty],
+    subtype: Option<&'a str>,
+    id: &'a str,
+    card_type: CardType,
+    is_scholar: bool,
+}
+
+impl CardFacts<'_> {
+    /// 按筛选键匹配；`keyword` / `other` 由调用方单独处理。
+    fn matches(&self, catalog: &Catalog, key: &str, value: &str) -> bool {
+        match key {
+            "taxon" => catalog.taxonomy.is_within(self.taxon, value),
+            "playstyle" => self.playstyle.id() == value,
+            "play" => self
+                .specialty
+                .iter()
+                .any(|specialty| specialty.kind == SpecialtyKind::Play && specialty.value == value),
+            "prey" | "host" => {
+                let kind = if key == "prey" {
+                    SpecialtyKind::Prey
+                } else {
+                    SpecialtyKind::Host
+                };
+                self.specialty.iter().any(|specialty| {
+                    specialty.kind == kind && catalog.taxonomy.is_within(&specialty.value, value)
+                })
+            }
+            "subtype" => self.subtype == Some(value),
+            "id" => self.id == value,
+            "type" => match value {
+                "minion" => self.card_type == CardType::Minion,
+                "effect" => self.card_type == CardType::Effect,
+                _ => false,
+            },
+            "scholar" => match value {
+                "true" => self.is_scholar,
+                "false" => !self.is_scholar,
+                _ => false,
+            },
+            _ => false,
+        }
     }
+}
+
+fn card_facts<'a>(catalog: &'a Catalog, card_id: &str) -> Option<CardFacts<'a>> {
+    if let Some(card) = catalog.cards.get(card_id) {
+        return Some(CardFacts {
+            playstyle: card.playstyle,
+            taxon: &card.taxon,
+            specialty: &card.specialty,
+            subtype: card.subtype.as_deref(),
+            id: &card.id,
+            card_type: card.card_type,
+            is_scholar: card.is_scholar,
+        });
+    }
+    catalog.tokens.get(card_id).map(|token| CardFacts {
+        playstyle: token.playstyle(),
+        taxon: token.taxon(),
+        specialty: &[],
+        subtype: None,
+        id: &token.id,
+        card_type: CardType::Minion,
+        is_scholar: false,
+    })
 }
 
 fn duration_rank(duration: Duration) -> u8 {

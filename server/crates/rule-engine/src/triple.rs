@@ -8,7 +8,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::data::{Card, CardType, Catalog, Tribe};
+use crate::data::{Card, CardType, Catalog, Playstyle, card_in_pool};
 use crate::effects::{Effect, EffectCtx};
 use crate::engine::Engine;
 use crate::events::GameEvent;
@@ -108,7 +108,7 @@ impl Engine {
             .cards
             .values()
             .filter(|candidate| {
-                is_discover_candidate(candidate, level, &state.enabled_tribes, &state.pool)
+                is_discover_candidate(candidate, level, &state.enabled_playstyles, &state.pool)
             })
             .map(|candidate| candidate.id.clone())
             .collect();
@@ -123,7 +123,7 @@ impl Engine {
 
     /// 执行招募侧 `Discover{pool, choose}`：抽取候选并登记一条发现待选。
     ///
-    /// - `pool = tribe` 表示「本局启用的流派」；省略或其它取值同样按启用流派处理。
+    /// - `pool` 只认 `playstyle`；省略或其它取值等价，候选始终按本局启用玩法过滤。
     /// - 星级与玩家当前时代相同（本局时代 = 商店等级，见核心规则 §4.1）。
     /// - 没有任何合格候选时不登记待选。
     /// - 抽取时立即推进 [`Stream::Discover`] 并写入候选，重放结果确定；
@@ -247,16 +247,16 @@ fn upgrade_to_golden(catalog: &Catalog, minion: &mut MinionInstance) {
     minion.cannot_attack = false;
 }
 
-/// 发现候选：随从、非英雄、指定星级、流派启用或通用、共享池有剩余。
+/// 发现候选：随从、非英雄、指定星级、[`card_in_pool`] 通过、共享池有剩余。
 fn is_discover_candidate(
     card: &Card,
     level: u8,
-    enabled_tribes: &BTreeSet<Tribe>,
+    enabled_playstyles: &BTreeSet<Playstyle>,
     pool: &std::collections::BTreeMap<String, u16>,
 ) -> bool {
     card.card_type == CardType::Minion
         && !card.is_hero
         && card.level == level
-        && (card.tribe == Tribe::General || enabled_tribes.contains(&card.tribe))
+        && card_in_pool(card, enabled_playstyles)
         && pool.get(&card.id).copied().unwrap_or(0) > 0
 }

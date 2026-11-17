@@ -1,13 +1,23 @@
-use crate::data::Tribe;
+use crate::data::Playstyle;
 
-use super::{Effect, Filter, Op, Params, Selector, Trigger, Zone};
+use super::{Duration, Effect, Filter, Op, Params, Selector, TimesIf, Trigger, Zone};
 
 /// 光环触发允许的原语。
 pub(crate) const AURA_OPS: &[Op] = &[Op::ModifyStats, Op::GrantKeyword];
-/// 选择器筛选允许的键。
-pub(crate) const FILTER_KEYS: &[&str] = &["tribe", "subtype", "id", "type", "other"];
-/// 部落取值。
-pub(crate) const TRIBES: &[&str] = &["human", "machine", "biology", "plant", "virus", "scholar"];
+/// 选择器筛选允许的键；`condition` 与 `when` 复用同一套键。
+pub(crate) const FILTER_KEYS: &[&str] = &[
+    "taxon",
+    "playstyle",
+    "play",
+    "prey",
+    "host",
+    "subtype",
+    "id",
+    "type",
+    "scholar",
+    "keyword",
+    "other",
+];
 /// 卡牌类型取值。
 pub(crate) const CARD_TYPES: &[&str] = &["minion", "effect"];
 /// 关键词基名。
@@ -36,6 +46,8 @@ pub(crate) const WHEN_TRIGGERS: &[Trigger] = &[
     Trigger::OnCombatEnd,
     Trigger::OnUse,
     Trigger::OnDeath,
+    Trigger::OnKill,
+    Trigger::OnAllyKill,
 ];
 /// `Params` 中所有可出现的 DSL 参数名。
 const PARAM_KEYS: &[&str] = &[
@@ -64,6 +76,7 @@ const PARAM_KEYS: &[&str] = &[
     "era",
     "level",
     "state",
+    "basis",
 ];
 
 pub(crate) type OpSpec = (
@@ -109,6 +122,11 @@ pub(crate) fn op_spec(op: Op) -> OpSpec {
         Op::RefreshShop => (&[], &["free", "extra"], &[]),
         Op::AddShopSlot => (&["era", "count"], &[], &[]),
         Op::GainMinion => (&["level", "to"], &["from"], &[]),
+        Op::Decompose => (
+            &["basis", "duration"],
+            &["timesIf", "condition", "when"],
+            &[],
+        ),
     }
 }
 
@@ -141,6 +159,7 @@ impl Params {
             "era" => self.era.is_some(),
             "level" => self.level.is_some(),
             "state" => self.state.is_some(),
+            "basis" => self.basis.is_some(),
             _ => false,
         }
     }
@@ -182,9 +201,7 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
         if times_if.times < 0 {
             errors.push("timesIf 的次数不能为负".to_string());
         }
-        if times_if.tribe == Tribe::General {
-            errors.push("timesIf 的部落不能是通用".to_string());
-        }
+        validate_times_if_filter(times_if, &mut errors);
     }
 
     if let Some(when) = &params.when {
@@ -229,6 +246,15 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
         && from != Zone::Shop
     {
         errors.push(format!("GainMinion 的 from 只接受 shop，实为 {from:?}"));
+    }
+
+    // 分解的生命值增量必须有明确时长：`permanent` 落盘，`combat` 本回合。
+    if effect.op == Op::Decompose
+        && params
+            .duration
+            .is_some_and(|duration| duration == Duration::Instant)
+    {
+        errors.push("Decompose 的 duration 只接受 permanent / combat".to_string());
     }
 
     if let Some(level) = &params.level
@@ -288,19 +314,47 @@ fn validate_filter(filter: &Filter, check_value: bool, errors: &mut Vec<String>)
     if filter.value.is_empty() {
         errors.push(format!("筛选 {:?} 缺少取值", filter.key));
     }
+    if filter.key == "scholar" && !matches!(filter.value.as_str(), "true" | "false") {
+        errors.push(format!("scholar 取值非法 {:?}", filter.value));
+    }
     if check_value {
-        match filter.key.as_str() {
-            "tribe" if !TRIBES.contains(&filter.value.as_str()) => {
-                errors.push(format!("tribe 取值非法 {:?}", filter.value));
-            }
-            "type" if !CARD_TYPES.contains(&filter.value.as_str()) => {
-                errors.push(format!("type 取值非法 {:?}", filter.value));
-            }
-            "other" if !matches!(filter.value.as_str(), "true" | "false") => {
-                errors.push(format!("other 取值非法 {:?}", filter.value));
-            }
-            _ => {}
+        validate_filter_value(&filter.key, &filter.value, errors);
+    }
+}
+
+/// `timesIf` 的键必须在筛选键集合内；除 `scholar` 外必须带值。
+fn validate_times_if_filter(times_if: &TimesIf, errors: &mut Vec<String>) {
+    let key = times_if.key.as_str();
+    if !FILTER_KEYS.contains(&key) {
+        errors.push(format!("timesIf 的筛选键非法 {:?}", times_if.key));
+        return;
+    }
+    match times_if.value.as_deref() {
+        None if key == "scholar" => {}
+        None => errors.push(format!("timesIf 的 {:?} 缺少取值", key)),
+        Some(value) if key == "scholar" => {
+            errors.push(format!("timesIf 的 scholar 不能带取值 {value:?}"));
         }
+        Some(value) => validate_filter_value(key, value, errors),
+    }
+}
+
+/// 按筛选键校验取值；只覆盖有固定取值集合的键。
+fn validate_filter_value(key: &str, value: &str, errors: &mut Vec<String>) {
+    match key {
+        "playstyle" if Playstyle::from_id(value).is_none() => {
+            errors.push(format!("playstyle 取值非法 {value:?}"));
+        }
+        "type" if !CARD_TYPES.contains(&value) => {
+            errors.push(format!("type 取值非法 {value:?}"));
+        }
+        "other" if !matches!(value, "true" | "false") => {
+            errors.push(format!("other 取值非法 {value:?}"));
+        }
+        "scholar" if !matches!(value, "true" | "false") => {
+            errors.push(format!("scholar 取值非法 {value:?}"));
+        }
+        _ => {}
     }
 }
 

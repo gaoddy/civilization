@@ -2,9 +2,9 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::{effects_of, minion, test_catalog};
+use common::{effects_of, minion, test_catalog, test_playstyles};
 use rule_engine::combat;
-use rule_engine::data::{Card, CardType, Catalog, Era, Skill, Tribe};
+use rule_engine::data::{Card, CardType, Catalog, Era, Playstyle, Skill};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
@@ -19,7 +19,9 @@ fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, heal
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            tribe: Tribe::Human,
+            playstyle: Playstyle::Mammal,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
             subtype: None,
             level,
             era: None,
@@ -58,7 +60,9 @@ fn add_keyword_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            tribe: Tribe::Human,
+            playstyle: Playstyle::Mammal,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
             subtype: None,
             level,
             era: None,
@@ -84,7 +88,7 @@ fn covered_seats(pairings: &[Pairing]) -> Vec<Seat> {
 
 #[test]
 fn pairing_avoids_previous_opponent_when_possible() {
-    let (_, mut state) = Engine::new(test_catalog(), [1; 32]);
+    let (_, mut state) = Engine::new(test_catalog(), [1; 32], test_playstyles());
     state.previous_opponent.insert(0, Some(1));
     state.previous_opponent.insert(1, Some(0));
 
@@ -106,7 +110,7 @@ fn pairing_avoids_previous_opponent_when_possible() {
 #[test]
 fn pairing_retries_are_bounded_and_deterministic() {
     // 座位 0 与 1、2、3 都交过手，4 人局无法完全排除上一场对手。
-    let (_, base) = Engine::new(test_catalog(), [2; 32]);
+    let (_, base) = Engine::new(test_catalog(), [2; 32], test_playstyles());
     let mut base = base;
     for seat in 4..8 {
         base.players[seat].eliminated = true;
@@ -130,7 +134,7 @@ fn pairing_retries_are_bounded_and_deterministic() {
 
 #[test]
 fn odd_player_fights_random_eliminated_ghost() {
-    let (_, mut state) = Engine::new(test_catalog(), [3; 32]);
+    let (_, mut state) = Engine::new(test_catalog(), [3; 32], test_playstyles());
     // 座位 7 生命归零但尚未标记出局，同样不参与配对；座位 2、5 已出局。
     state.players[7].hp = 0;
     state.players[2].eliminated = true;
@@ -152,7 +156,7 @@ fn odd_player_fights_random_eliminated_ghost() {
 
 #[test]
 fn odd_player_without_eliminated_still_fights_empty_ghost() {
-    let (_, mut state) = Engine::new(test_catalog(), [3; 32]);
+    let (_, mut state) = Engine::new(test_catalog(), [3; 32], test_playstyles());
     state.players[7].hp = 0;
 
     let pairings = pair_round(&mut state);
@@ -164,7 +168,7 @@ fn odd_player_without_eliminated_still_fights_empty_ghost() {
 
 #[test]
 fn ghost_seat_draw_is_deterministic_per_seed() {
-    let (_, mut base) = Engine::new(test_catalog(), [3; 32]);
+    let (_, mut base) = Engine::new(test_catalog(), [3; 32], test_playstyles());
     base.players[7].hp = 0;
     base.players[2].eliminated = true;
     base.players[5].eliminated = true;
@@ -213,7 +217,7 @@ fn damage_is_capped_and_floored() {
 
 #[test]
 fn finish_recruit_pairs_alive_players_and_enters_combat() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [5; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [5; 32], test_playstyles());
     state.phase = Phase::Recruit;
     state.players[6].hp = 0;
     state.players[7].eliminated = true;
@@ -238,7 +242,7 @@ fn finish_recruit_pairs_alive_players_and_enters_combat() {
 #[test]
 fn finish_recruit_after_timeout_enters_combat() {
     // 超时路径：未全员 EndRecruit，阶段仍为 Recruit，finish_recruit 生成配对并推进。
-    let (mut engine, mut state) = Engine::new(test_catalog(), [6; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [6; 32], test_playstyles());
     state.phase = Phase::Recruit;
 
     let events = engine.finish_recruit(&mut state).unwrap();
@@ -257,7 +261,7 @@ fn finish_recruit_after_timeout_enters_combat() {
 #[test]
 fn finish_recruit_is_idempotent_after_all_ready() {
     // 全员就绪进入 Combat 后连续调用：配对与状态哈希都不变。
-    let (mut engine, mut state) = Engine::new(test_catalog(), [8; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [8; 32], test_playstyles());
     state.phase = Phase::Recruit;
     let _ = engine.finish_recruit(&mut state).unwrap();
     assert_eq!(state.phase, Phase::Combat);
@@ -277,7 +281,7 @@ fn finish_recruit_is_idempotent_after_all_ready() {
 #[test]
 fn finish_recruit_pairs_without_phase_event_after_all_ready() {
     // 全员 EndRecruit 后阶段已进入 Combat：finish_recruit 只生成配对，不重复发阶段事件。
-    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
     state.phase = Phase::Recruit;
     for player in &mut state.players {
         player.recruit_done = true;
@@ -295,7 +299,7 @@ fn finish_recruit_pairs_without_phase_event_after_all_ready() {
 
 #[test]
 fn combat_resolution_applies_damage_and_history() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     add_minion_card(&mut engine.catalog, "big", 3, 10, 10);
     add_minion_card(&mut engine.catalog, "small", 1, 1, 1);
 
@@ -340,7 +344,7 @@ fn combat_resolution_applies_damage_and_history() {
 
 #[test]
 fn ghost_loss_damages_like_real_combat() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     add_minion_card(&mut engine.catalog, "strong", 2, 10, 10);
     add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
 
@@ -372,7 +376,7 @@ fn ghost_loss_damages_like_real_combat() {
 
 #[test]
 fn ghost_win_writes_last_won() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     add_minion_card(&mut engine.catalog, "strong", 2, 10, 10);
     add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
 
@@ -399,7 +403,7 @@ fn ghost_win_writes_last_won() {
 
 #[test]
 fn ghost_board_keeps_permanent_stats() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     add_minion_card(&mut engine.catalog, "plain", 1, 2, 3);
     let mut ghost = minion(&engine.catalog, 7, "plain");
     ghost.stats.attack.add_permanent(3);
@@ -416,7 +420,7 @@ fn ghost_board_keeps_permanent_stats() {
 
 #[test]
 fn ghost_board_folds_own_aura() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     state.players[3].eliminated = true;
     state.players[3].board = vec![
         minion(&engine.catalog, 1, "qinghao"),
@@ -449,7 +453,7 @@ fn ghost_board_folds_own_aura() {
 
 #[test]
 fn ghost_board_of_none_is_empty() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     add_minion_card(&mut engine.catalog, "plain", 1, 2, 3);
     // 棋盘上有随从也不能让「没有幽灵」凭空产出阵容。
     state.players[0].board = vec![minion(&engine.catalog, 1, "plain")];
@@ -462,7 +466,7 @@ fn ghost_board_of_none_is_empty() {
 
 #[test]
 fn ghost_fight_with_empty_ghost_still_resolves() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
 
     state.phase = Phase::Combat;
@@ -485,7 +489,7 @@ fn ghost_fight_with_empty_ghost_still_resolves() {
 #[test]
 fn ghost_report_renumbers_disjoint_ids() {
     // 幽灵与己方实例编号重叠时，报告里的动作只能靠重新编号区分侧别。
-    let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32], test_playstyles());
     add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
     add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
 
@@ -547,7 +551,7 @@ fn ghost_report_renumbers_disjoint_ids() {
 
 #[test]
 fn mutual_wipe_in_real_combat_is_a_draw() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     state.phase = Phase::Combat;
     state.players[0].board = vec![];
     state.players[1].board = vec![];
@@ -578,7 +582,7 @@ fn mutual_wipe_in_real_combat_is_a_draw() {
 
 #[test]
 fn ghost_mutual_wipe_is_a_draw() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     // 落单座位与幽灵都为空阵容 → 双方同回合清场。
     state.phase = Phase::Combat;
     state.players[0].board = vec![];
@@ -605,7 +609,7 @@ fn ghost_mutual_wipe_is_a_draw() {
 
 #[test]
 fn elimination_order_defines_ranking() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
     state.phase = Phase::Settle;
     state.turn = 5;
     for seat in 4..8 {
@@ -647,7 +651,7 @@ fn elimination_order_defines_ranking() {
 
 #[test]
 fn turn_20_forces_ranking() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [8; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [8; 32], test_playstyles());
     state.phase = Phase::Settle;
     state.turn = 20;
     for seat in 6..8 {
@@ -684,7 +688,7 @@ fn turn_20_forces_ranking() {
 
 #[test]
 fn last_survivor_wins_immediately() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
     state.phase = Phase::Settle;
     state.turn = 5;
     for seat in 0..6 {
@@ -709,7 +713,7 @@ fn last_survivor_wins_immediately() {
 
 #[test]
 fn wrong_phase_calls_are_rejected_without_mutation() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [6; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [6; 32], test_playstyles());
     let before = state_hash(&state);
     assert!(engine.finish_recruit(&mut state).is_err());
     assert_eq!(before, state_hash(&state));
@@ -730,7 +734,7 @@ fn wrong_phase_calls_are_rejected_without_mutation() {
 
 #[test]
 fn start_turn_accepts_settle_and_returns_to_recruit() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [10; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [10; 32], test_playstyles());
     state.phase = Phase::Settle;
     state.turn = 3;
 
@@ -746,7 +750,7 @@ fn start_turn_accepts_settle_and_returns_to_recruit() {
 
 #[test]
 fn four_pairs_emit_events_in_pairing_order_and_record_opponents() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [14; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [14; 32], test_playstyles());
     add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
     add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
 
@@ -794,7 +798,7 @@ fn four_pairs_emit_events_in_pairing_order_and_record_opponents() {
 
 #[test]
 fn action_cap_draw_uses_settle_seat_tiebreak() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [12; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [12; 32], test_playstyles());
     add_keyword_card(&mut engine.catalog, "wind", 1, 0, 1, "windfury");
     add_minion_card(&mut engine.catalog, "wall", 1, 0, 100);
 
@@ -828,7 +832,7 @@ fn action_cap_draw_uses_settle_seat_tiebreak() {
 
 #[test]
 fn last_won_resets_each_round_and_feeds_turn_20_ranking() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [15; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [15; 32], test_playstyles());
     add_minion_card(&mut engine.catalog, "strong", 1, 10, 10);
     add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
 
@@ -891,7 +895,7 @@ fn last_won_resets_each_round_and_feeds_turn_20_ranking() {
 
 #[test]
 fn new_settle_fields_participate_in_state_hash() {
-    let (_, base) = Engine::new(test_catalog(), [11; 32]);
+    let (_, base) = Engine::new(test_catalog(), [11; 32], test_playstyles());
     let before = state_hash(&base);
 
     let mut with_pairing = base.clone();
@@ -913,7 +917,7 @@ fn new_settle_fields_participate_in_state_hash() {
 
 #[test]
 fn rank_of_hides_eliminated_in_tail() {
-    let (_, mut state) = Engine::new(test_catalog(), [5; 32]);
+    let (_, mut state) = Engine::new(test_catalog(), [5; 32], test_playstyles());
     state.players[3].eliminated = true;
     state.players[3].hp = 0;
     state.ranking = vec![3];
@@ -933,7 +937,7 @@ fn rank_of_hides_eliminated_in_tail() {
 
 #[test]
 fn rank_of_recently_eliminated_ranks_better() {
-    let (_, mut state) = Engine::new(test_catalog(), [5; 32]);
+    let (_, mut state) = Engine::new(test_catalog(), [5; 32], test_playstyles());
     for seat in [3, 5] {
         state.players[seat].eliminated = true;
         state.players[seat].hp = 0;
@@ -947,14 +951,14 @@ fn rank_of_recently_eliminated_ranks_better() {
 
 #[test]
 fn rank_of_matches_compare_alive_order() {
-    let (_, mut state) = Engine::new(test_catalog(), [6; 32]);
+    let (_, mut state) = Engine::new(test_catalog(), [6; 32], test_playstyles());
     state.players[0].damage_dealt = 5;
     state.players[1].damage_dealt = 0;
     assert_eq!(rank_of(&state, 0), Some(1), "同生命时累计伤害高者名次靠前");
     assert_eq!(rank_of(&state, 1), Some(2));
 
     // 同生命、同伤害，只有 `last_won` 不同：上战胜者靠前。
-    let (_, mut state) = Engine::new(test_catalog(), [6; 32]);
+    let (_, mut state) = Engine::new(test_catalog(), [6; 32], test_playstyles());
     state.last_won.insert(1);
     assert_eq!(
         rank_of(&state, 1),
@@ -964,7 +968,7 @@ fn rank_of_matches_compare_alive_order() {
     assert_eq!(rank_of(&state, 0), Some(2));
 
     // 所有键相同：座位号小者靠前，名次按座位升序连续。
-    let (_, state) = Engine::new(test_catalog(), [6; 32]);
+    let (_, state) = Engine::new(test_catalog(), [6; 32], test_playstyles());
     let ranks: Vec<Option<u8>> = (0..8).map(|seat| rank_of(&state, seat)).collect();
     assert_eq!(
         ranks,

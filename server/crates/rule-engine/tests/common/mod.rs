@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use rule_engine::combat::{CombatAction, CombatLog};
-use rule_engine::data::{CardType, Catalog};
+use rule_engine::data::{CardType, Catalog, Playstyle};
 use rule_engine::effects::{Effect, parse_effects};
 use rule_engine::engine::Engine;
 use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat, ShopSlot};
@@ -12,11 +12,23 @@ pub const CARDS_JSON: &str = include_str!("../../../../data/v0.1/cards.json");
 pub const SKILLS_JSON: &str = include_str!("../../../../data/v0.1/skills.json");
 pub const TOKENS_JSON: &str = include_str!("../../../../data/v0.1/tokens.json");
 pub const CONFIG_JSON: &str = include_str!("../../../../data/v0.1/config.json");
+pub const TAXONOMY_JSON: &str = include_str!("../../../../data/v0.1/taxonomy.json");
 
 /// 加载仓库中已提交的 v0.1 数据，供各集成测试复用。
 pub fn test_catalog() -> Catalog {
-    Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
-        .expect("已提交的 v0.1 数据应能完整加载")
+    Catalog::from_json(
+        CARDS_JSON,
+        SKILLS_JSON,
+        TOKENS_JSON,
+        CONFIG_JSON,
+        TAXONOMY_JSON,
+    )
+    .expect("已提交的 v0.1 数据应能完整加载")
+}
+
+/// 测试用固定玩法：由种子 7 抽出，保证各测试开局一致。
+pub fn test_playstyles() -> [Playstyle; 5] {
+    rule_engine::playstyles::draw(7)
 }
 
 /// 按卡牌 id 顺序取前 8 张英雄卡，映射到座位 0..8，供开局测试复用。
@@ -33,7 +45,7 @@ pub fn heroes() -> BTreeMap<Seat, String> {
 
 /// 进入招募阶段的空局：每个座位 30 点生命。
 pub fn setup(seed: u8) -> (Engine, GameState) {
-    let (engine, mut state) = Engine::new(test_catalog(), [seed; 32]);
+    let (engine, mut state) = Engine::new(test_catalog(), [seed; 32], test_playstyles());
     state.phase = Phase::Recruit;
     state.turn = 1;
     for player in &mut state.players {
@@ -44,7 +56,7 @@ pub fn setup(seed: u8) -> (Engine, GameState) {
 
 /// 进入招募阶段的空局，并给每个座位 10 点金币。
 pub fn setup_with_gold(seed: u8) -> (Engine, GameState) {
-    let (engine, mut state) = Engine::new(test_catalog(), [seed; 32]);
+    let (engine, mut state) = Engine::new(test_catalog(), [seed; 32], test_playstyles());
     state.phase = Phase::Recruit;
     state.turn = 1;
     for player in &mut state.players {
@@ -56,7 +68,7 @@ pub fn setup_with_gold(seed: u8) -> (Engine, GameState) {
 
 /// 用前 8 张英雄卡开局后的状态。
 pub fn started(seed: u8) -> (Engine, GameState) {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [seed; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [seed; 32], test_playstyles());
     engine
         .start_game(&mut state, &heroes())
         .expect("开局应成功");

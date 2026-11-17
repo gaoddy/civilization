@@ -11,7 +11,7 @@
 //! 时，除 `can_end_recruit` 外的布尔值一律为 `false`（重复 `EndRecruit` 幂等成功）。
 
 use crate::combat;
-use crate::data::{Era, Tribe};
+use crate::data::Era;
 use crate::effects::EVOLVE_CHOICES;
 use crate::engine::Engine;
 use crate::intent::RejectCode;
@@ -35,8 +35,8 @@ pub struct SeatView {
     pub self_view: SelfView,
     /// 全部座位的公开摘要，按座位升序。
     pub players: Vec<PlayerSummaryView>,
-    /// 本局启用的流派，按 [`Tribe`] 顺序。
-    pub enabled_tribes: Vec<String>,
+    /// 本局启用的玩法 id，按枚举顺序。
+    pub enabled_playstyles: Vec<String>,
 }
 
 /// 本座位自己的私密数据与可操作项。
@@ -478,10 +478,10 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
             },
         },
         players,
-        enabled_tribes: state
-            .enabled_tribes
+        enabled_playstyles: state
+            .enabled_playstyles
             .iter()
-            .map(|tribe| tribe_name(*tribe).to_string())
+            .map(|playstyle| playstyle.id().to_string())
             .collect(),
     })
 }
@@ -557,17 +557,4 @@ fn player_summary(state: &GameState, player: &PlayerState) -> PlayerSummaryView 
 /// 时代在 `config.era_costs` 中的下标；未来时代为 6，超出费用表。
 fn era_index(era: Era) -> usize {
     (era as usize).saturating_sub(1)
-}
-
-/// 流派 id，与数据文件中的 `tribe` 取值一致。
-fn tribe_name(tribe: Tribe) -> &'static str {
-    match tribe {
-        Tribe::Human => "human",
-        Tribe::Machine => "machine",
-        Tribe::Biology => "biology",
-        Tribe::Plant => "plant",
-        Tribe::Virus => "virus",
-        Tribe::Scholar => "scholar",
-        Tribe::General => "general",
-    }
 }

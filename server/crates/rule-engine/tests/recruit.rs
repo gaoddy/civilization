@@ -1,6 +1,6 @@
 mod common;
 
-use common::{heroes, minion, minion_id, set_shop, test_catalog, turn_started};
+use common::{heroes, minion, minion_id, set_shop, test_catalog, test_playstyles, turn_started};
 use rule_engine::data::{CardType, Era};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
@@ -958,7 +958,7 @@ fn buy_fires_no_battlecry_until_played() {
 
 #[test]
 fn start_game_fills_turn_one_shops() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [36; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [36; 32], test_playstyles());
     let catalog = test_catalog();
 
     let events = engine
@@ -1530,7 +1530,7 @@ fn choose_target_outside_filtered_pool_rejects() {
     // 战吼筛「机械」：棋盘上有机械（因此产生待选），但选一个学者必须被拒，
     // 而不是接受后静默落空（core-rules §4：指定随从不在合法池时返回该码）。
     let (mut engine, mut state) = turn_started(59);
-    put_champion(&engine, &mut state, 0, 9_000, "fangzhiji");
+    put_champion(&engine, &mut state, 0, 9_000, "nanobot");
     put_champion(&engine, &mut state, 0, 9_001, "gutenberg");
     state.players[0]
         .hand

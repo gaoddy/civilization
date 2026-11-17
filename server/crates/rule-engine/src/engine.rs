@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use crate::combat;
-use crate::data::{CardType, Catalog, Era, Tribe};
+use crate::data::{CardType, Catalog, Era, Playstyle};
 use crate::effects::{EffectCtx, Trigger};
 use crate::error::EngineError;
 use crate::events::GameEvent;
@@ -21,13 +21,22 @@ pub struct Engine {
 }
 
 impl Engine {
-    /// 以给定目录与种子创建初始状态：8 名玩家、`Lobby` 阶段、`turn = 0`。
+    /// 以给定目录、种子与本局玩法创建初始状态：8 名玩家、`Lobby` 阶段、`turn = 0`。
     ///
-    /// 共享池与启用流派在这里一次性确定，商店留空等待 Task 6 的刷新流程。
-    pub fn new(catalog: Catalog, seed: [u8; 32]) -> (Engine, GameState) {
+    /// 玩法由调用方（房间服务或模拟器）通过 [`crate::playstyles::draw`] 抽取后传入；
+    /// 共享池在这里一次性确定，商店留空等待首回合的刷新流程。
+    ///
+    /// # Panics
+    ///
+    /// `playstyles` 含 `Neutral` 或存在重复时 panic；调用方保证传入 5 个不同玩法。
+    pub fn new(
+        catalog: Catalog,
+        seed: [u8; 32],
+        playstyles: [Playstyle; 5],
+    ) -> (Engine, GameState) {
         let mut rng = RngStreams::from_seed(seed);
         let first_seat = rng.below(Stream::Matchmaking, u64::from(PLAYER_COUNT)) as Seat;
-        let enabled_tribes = draw_enabled_tribes(&mut rng);
+        let enabled_playstyles = playstyle_set(playstyles);
         let pool = build_pool(&catalog);
         let config = &catalog.config;
 
@@ -61,7 +70,7 @@ impl Engine {
             pool,
             rng,
             first_seat,
-            enabled_tribes,
+            enabled_playstyles,
             previous_opponent,
             last_winner: None,
             pairings: Vec::new(),
@@ -385,25 +394,19 @@ impl Engine {
     }
 }
 
-/// 学者固定启用，其余五个流派（不含通用）按 `Tribe` 顺序排序后无放回抽四个。
-fn draw_enabled_tribes(rng: &mut RngStreams) -> BTreeSet<Tribe> {
-    let candidates = [
-        Tribe::Human,
-        Tribe::Machine,
-        Tribe::Biology,
-        Tribe::Plant,
-        Tribe::Virus,
-    ];
-    let mut remaining = candidates.to_vec();
+/// 把调用方传入的 5 个玩法转为集合；拒绝 `Neutral` 与重复。
+fn playstyle_set(playstyles: [Playstyle; 5]) -> BTreeSet<Playstyle> {
     let mut enabled = BTreeSet::new();
-    enabled.insert(Tribe::Scholar);
-    for _ in 0..4 {
-        let len = remaining.len() as u64;
-        let index = rng.below(Stream::Matchmaking, len) as usize;
-        if let Some(tribe) = remaining.get(index).copied() {
-            remaining.remove(index);
-            enabled.insert(tribe);
-        }
+    for playstyle in playstyles {
+        assert_ne!(
+            playstyle,
+            Playstyle::Neutral,
+            "enabled_playstyles 不能包含 Neutral"
+        );
+        assert!(
+            enabled.insert(playstyle),
+            "enabled_playstyles 不能包含重复玩法"
+        );
     }
     enabled
 }

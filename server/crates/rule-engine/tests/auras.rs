@@ -2,7 +2,7 @@ mod common;
 
 use common::{effects_of, place, setup};
 use rule_engine::combat;
-use rule_engine::data::{Card, CardType, Skill, Tribe};
+use rule_engine::data::{Card, CardType, Playstyle, Skill};
 use rule_engine::engine::Engine;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
@@ -18,7 +18,7 @@ fn board_minion(state: &GameState, seat: Seat, id: InstanceId) -> &MinionInstanc
 }
 
 /// 注入一张自定义光环来源卡（非英雄），用于数据表中不存在的负值与重复关键词场景。
-fn add_aura_source(engine: &mut Engine, card_id: &str, tribe: Tribe, effects: &str) {
+fn add_aura_source(engine: &mut Engine, card_id: &str, playstyle: Playstyle, effects: &str) {
     let skill_id = format!("{card_id}-skill");
     engine.catalog.skills.insert(
         skill_id.clone(),
@@ -35,7 +35,9 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, tribe: Tribe, effects: &s
         Card {
             id: card_id.to_string(),
             card_type: CardType::Minion,
-            tribe,
+            playstyle,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
             subtype: None,
             level: 1,
             era: None,
@@ -55,12 +57,12 @@ fn aura_buffs_all_friendly_machines_except_self_if_other() {
     add_aura_source(
         &mut engine,
         "test-mech-other",
-        Tribe::Machine,
-        "Aura|ModifyStats|friendly:all:tribe=machine:other=true|attack=2,health=2,duration=permanent",
+        Playstyle::Machine,
+        "Aura|ModifyStats|friendly:all:playstyle=machine:other=true|attack=2,health=2,duration=permanent",
     );
     // 来源自身是机械，`other=true` 应排除；另一台机械获得 +2/+2。
     place(&engine.catalog, &mut state, 0, 1, "test-mech-other");
-    place(&engine.catalog, &mut state, 0, 2, "shilunche");
+    place(&engine.catalog, &mut state, 0, 2, "nanobot");
 
     engine.recompute_auras(&mut state);
 
@@ -100,8 +102,8 @@ fn aura_health_floor_is_one() {
     add_aura_source(
         &mut engine,
         "test-minus",
-        Tribe::General,
-        "Aura|ModifyStats|friendly:all:tribe=biology:other=true|health=-5,duration=permanent",
+        Playstyle::Neutral,
+        "Aura|ModifyStats|friendly:all:playstyle=insect:other=true|health=-5,duration=permanent",
     );
     place(&engine.catalog, &mut state, 0, 1, "test-minus");
     place(&engine.catalog, &mut state, 0, 2, "baiyi");
@@ -149,13 +151,13 @@ fn same_keyword_from_two_sources_applies_once() {
     add_aura_source(
         &mut engine,
         "test-taunt-a",
-        Tribe::General,
+        Playstyle::Neutral,
         "Aura|GrantKeyword|friendly:all|keyword=taunt,duration=permanent",
     );
     add_aura_source(
         &mut engine,
         "test-taunt-b",
-        Tribe::General,
+        Playstyle::Neutral,
         "Aura|GrantKeyword|friendly:all|keyword=taunt,duration=permanent",
     );
     place(&engine.catalog, &mut state, 0, 1, "test-taunt-a");
@@ -357,7 +359,7 @@ fn aura_top_attack_picks_highest_attack() {
     add_aura_source(
         &mut engine,
         "test-top-attack",
-        Tribe::General,
+        Playstyle::Neutral,
         "Aura|ModifyStats|friendly:topAttack:other=true|attack=1,duration=permanent",
     );
     place(&engine.catalog, &mut state, 0, 1, "test-top-attack");
@@ -383,7 +385,7 @@ fn aura_single_without_target_has_no_targets() {
     add_aura_source(
         &mut engine,
         "test-single",
-        Tribe::General,
+        Playstyle::Neutral,
         "Aura|ModifyStats|friendly:single|attack=1,duration=permanent",
     );
     place(&engine.catalog, &mut state, 0, 1, "test-single");

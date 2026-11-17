@@ -308,11 +308,11 @@ fn enemy_selectors_are_empty_during_recruit() {
 }
 
 #[test]
-fn times_if_changes_times_by_tribe() {
+fn times_if_changes_times_by_playstyle() {
     let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "tengman");
     place(&engine.catalog, &mut state, 0, 2, "yezhu");
-    let growth_effect = effect("OnPlay|Growth|friendly:single|times=1,timesIf=plant:2");
+    let growth_effect = effect("OnPlay|Growth|friendly:single|times=1,timesIf=playstyle:plant:2");
 
     let plant_ctx = EffectCtx {
         target: Some(1),
@@ -343,7 +343,7 @@ fn condition_gates_effect() {
     place(&engine.catalog, &mut state, 0, 1, "buluozhanshi");
     place(&engine.catalog, &mut state, 0, 2, "bruce-lee");
     let gated = effect(
-        "OnActivate|Growth|friendly:single:tribe=human|times=1,timesIf=human:2,condition=count:friendly:tribe=human:>=3",
+        "OnActivate|Growth|friendly:single:playstyle=mammal|times=1,timesIf=playstyle:mammal:2,condition=count:friendly:playstyle=mammal:>=3",
     );
     let target_ctx = EffectCtx {
         target: Some(1),

@@ -1,6 +1,6 @@
 mod common;
 
-use common::{CONFIG_JSON, test_catalog};
+use common::{CONFIG_JSON, TAXONOMY_JSON, test_catalog};
 use rule_engine::data::Catalog;
 use rule_engine::effects::{Compare, Effect, Op, Pick, Selector, Side, Trigger, validate_effects};
 
@@ -30,13 +30,13 @@ fn every_card_skill_exists() {
 
 #[test]
 fn unknown_field_fails() {
-    let bad = r#"[{"id":"x","card_type":"minion","tribe":"human","level":1,"era":"prehistoric","attack":1,"health":2,"is_scholar":false,"is_hero":false,"oops":1}]"#;
-    assert!(Catalog::from_json(bad, "[]", "[]", CONFIG_JSON).is_err());
+    let bad = r#"[{"id":"x","card_type":"minion","playstyle":"mammal","taxon":"hominidae","level":1,"era":"prehistoric","attack":1,"health":2,"is_scholar":false,"is_hero":false,"oops":1}]"#;
+    assert!(Catalog::from_json(bad, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn deserializes_a_structured_effect() {
-    let raw = r#"[{"trigger":"on_activate","op":"growth","selector":{"kind":"side","side":"friendly","pick":"single","filters":[{"key":"tribe","value":"human"}]},"params":{"times":1,"times_if":{"tribe":"human","times":2},"condition":{"side":"friendly","filter":{"key":"tribe","value":"human"},"compare":"ge","count":3}}}]"#;
+    let raw = r#"[{"trigger":"on_activate","op":"growth","selector":{"kind":"side","side":"friendly","pick":"single","filters":[{"key":"playstyle","value":"mammal"}]},"params":{"times":1,"times_if":{"key":"playstyle","value":"mammal","times":2},"condition":{"side":"friendly","filter":{"key":"playstyle","value":"mammal"},"compare":"ge","count":3}}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(raw).expect("结构化效果应能反序列化");
     assert_eq!(effects.len(), 1);
     assert_eq!(effects[0].trigger, Trigger::OnActivate);
@@ -95,7 +95,7 @@ fn rejects_invalid_summon_and_discover() {
     let effects: Vec<Effect> = serde_json::from_str(summon).unwrap();
     assert!(validate_effects(&effects).is_err());
 
-    let discover = r#"[{"trigger":"on_activate","op":"discover","selector":{"kind":"self"},"params":{"pool":"tribe","choose":2}}]"#;
+    let discover = r#"[{"trigger":"on_activate","op":"discover","selector":{"kind":"self"},"params":{"pool":"playstyle","choose":2}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(discover).unwrap();
     assert!(validate_effects(&effects).is_err());
 }
@@ -117,18 +117,18 @@ fn committed_data_is_structured() {
 #[test]
 fn string_effects_are_rejected_at_load() {
     let bad = r#"[{"id":"x","effects":"OnPlay|Growth|self|times=1"}]"#;
-    assert!(Catalog::from_json("[]", bad, "[]", CONFIG_JSON).is_err());
+    assert!(Catalog::from_json("[]", bad, "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn rejects_unknown_selector_field() {
-    let raw = r#"[{"trigger":"on_activate","op":"growth","selector":{"kind":"side","side":"friendly","pick":"all","filter":[{"key":"tribe","value":"human"}]},"params":{"times":1}}]"#;
+    let raw = r#"[{"trigger":"on_activate","op":"growth","selector":{"kind":"side","side":"friendly","pick":"all","filter":[{"key":"playstyle","value":"mammal"}]},"params":{"times":1}}]"#;
     assert!(serde_json::from_str::<Vec<Effect>>(raw).is_err());
 }
 
 #[test]
 fn rejects_discover_without_choose() {
-    let raw = r#"[{"trigger":"on_activate","op":"discover","selector":{"kind":"self"},"params":{"pool":"tribe"}}]"#;
+    let raw = r#"[{"trigger":"on_activate","op":"discover","selector":{"kind":"self"},"params":{"pool":"playstyle"}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
     assert!(validate_effects(&effects).is_err());
 }

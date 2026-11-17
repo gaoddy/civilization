@@ -5,7 +5,7 @@
 
 mod common;
 
-use common::{heroes, set_shop, test_catalog};
+use common::{heroes, set_shop, test_catalog, test_playstyles};
 use rule_engine::data::CardType;
 use rule_engine::engine::Engine;
 use rule_engine::intent::RejectCode;
@@ -17,7 +17,7 @@ use rule_engine::view::{
 };
 
 fn setup() -> (Engine, GameState) {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32]);
+    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
     engine
         .start_game(&mut state, &heroes())
         .expect("开局应成功");
@@ -181,7 +181,7 @@ fn view_never_exposes_other_seats_private_state() {
 /// 收集 `SeatView` 里所有可见字符串，用于隐私边界断言。
 fn collect_strings(seat_view: &SeatView) -> Vec<String> {
     let mut strings = Vec::new();
-    strings.extend(seat_view.enabled_tribes.iter().cloned());
+    strings.extend(seat_view.enabled_playstyles.iter().cloned());
     for slot in &seat_view.self_view.shop {
         strings.extend(slot.card_id.iter().cloned());
     }
@@ -480,7 +480,7 @@ fn placement_comes_from_ranking() {
 
 #[test]
 fn lobby_phase_disables_all_affordances() {
-    let (engine, state) = Engine::new(test_catalog(), [7; 32]);
+    let (engine, state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
     assert_eq!(state.phase, Phase::Lobby);
 
     let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");

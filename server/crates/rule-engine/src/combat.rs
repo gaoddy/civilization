@@ -10,11 +10,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::data::Catalog;
-use crate::effects::{Duration, EffectCtx, Trigger};
+use crate::effects::{Basis, Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::recruit::new_minion;
 use crate::rng::{RngStreams, Stream};
-use crate::state::{InstanceId, MinionInstance, Modifier, Seat};
+use crate::state::{InstanceId, MinionInstance, Modifier, Seat, base_stats};
 
 /// 每场战斗的行动上限，防止死亡循环。
 const MAX_ACTIONS: u16 = 200;
@@ -84,6 +84,24 @@ pub struct CombatHandCopy {
     pub seat: Seat,
     pub card_id: String,
     pub golden: bool,
+}
+
+/// 伤害来源。`None` 表示无来源伤害（传染、回合开始掉血等），不产生击杀。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DamageSource {
+    Minion(InstanceId),
+    None,
+}
+
+/// 一条击杀记录：只在本段伤害把目标降到 0 或更低、且伤害有来源时产生。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct KillRecord {
+    pub killer: InstanceId,
+    pub victim: InstanceId,
+    /// 击杀者所在阵营。
+    pub killer_side: usize,
+    /// 攻击者与被击杀者在同一次交换中同时死亡；为真时跳过击杀类钩子。
+    pub mutual: bool,
 }
 
 /// 一场战斗的结算结果。
@@ -348,6 +366,12 @@ pub struct BattleField {
     /// 正在结算死亡；嵌套触发产生的死亡留给外层循环处理。
     pub(crate) resolving: bool,
     pub(crate) first_side: usize,
+    /// 进入战斗快照时的当前生命值；召唤时写入新随从。
+    pub(crate) combat_start_health: BTreeMap<InstanceId, i32>,
+    /// 承受致命伤害前的当前生命值；只在伤害足以致死时写入。
+    pub(crate) pre_kill_health: BTreeMap<InstanceId, i32>,
+    /// 待触发的击杀记录；死亡队列处理完后按记录顺序触发钩子。
+    pub(crate) pending_kills: Vec<KillRecord>,
 }
 
 impl BattleField {
@@ -371,12 +395,20 @@ impl BattleField {
             .unwrap_or(1)
             // 兼容调用方未推进分配器的情况：至少避开双方棋盘上已有的编号。
             .max(max_id.saturating_add(1));
+        let sides = [
+            SideBoard::new(catalog, attacker),
+            SideBoard::new(catalog, defender),
+        ];
+        // 战斗开始快照：双方全部随从入场时的当前生命。
+        let mut combat_start_health = BTreeMap::new();
+        for side in &sides {
+            for minion in &side.minions {
+                combat_start_health.insert(minion.instance_id, minion.stats.health.current);
+            }
+        }
         Self {
             seats: [attacker_seat, defender_seat],
-            sides: [
-                SideBoard::new(catalog, attacker),
-                SideBoard::new(catalog, defender),
-            ],
+            sides,
             next_instance_id,
             triggers: 0,
             summon_count: 0,
@@ -389,6 +421,9 @@ impl BattleField {
             hand_slots: setup.hand_slots,
             resolving: false,
             first_side: if first == attacker_seat { 0 } else { 1 },
+            combat_start_health,
+            pre_kill_health: BTreeMap::new(),
+            pending_kills: Vec::new(),
         }
     }
 
@@ -521,9 +556,11 @@ impl BattleField {
         let golden = minion.golden;
         let tokens = starting_tokens(catalog, &minion);
         minion.attacks_left = tokens;
+        let health = minion.stats.health.current;
         self.sides[side].minions.push(minion);
         self.sides[side].alive.push(true);
         self.sides[side].starting_tokens.push(tokens);
+        self.combat_start_health.insert(id, health);
         let index = self.sides[side].minions.len() - 1;
         let position = self.alive_rank(side, index);
         let states = self.snapshots(catalog, &[id]);
@@ -556,6 +593,7 @@ impl BattleField {
         let golden = minion.golden;
         let tokens = starting_tokens(catalog, &minion);
         minion.attacks_left = tokens;
+        let health = minion.stats.health.current;
         let board = &mut self.sides[side];
         let position = position.min(board.minions.len());
         if position <= board.pointer {
@@ -564,6 +602,7 @@ impl BattleField {
         board.minions.insert(position, minion);
         board.alive.insert(position, true);
         board.starting_tokens.insert(position, tokens);
+        self.combat_start_health.insert(id, health);
         let rank = self.alive_rank(side, position);
         let states = self.snapshots(catalog, &[id]);
         self.push_action(
@@ -626,23 +665,68 @@ impl BattleField {
     /// 唯一的战斗掉血入口：只写 `stats.health.current`。
     ///
     /// `can_kill = false` 时最多把当前生命降到 1；`can_kill = true` 时允许降到
-    /// 0 或更低，由死亡判定统一处理。
-    pub(crate) fn apply_damage(&mut self, id: InstanceId, amount: i32, can_kill: bool) {
-        let Some(minion) = self.minion_mut(id) else {
+    /// 0 或更低，由死亡判定统一处理。伤害足以致死时在扣血前写入 `pre_kill_health`；
+    /// `source` 为随从且本段伤害把生命降到 ≤0 时，追加一条击杀记录。
+    pub(crate) fn apply_damage(
+        &mut self,
+        id: InstanceId,
+        amount: i32,
+        can_kill: bool,
+        source: DamageSource,
+    ) {
+        let killer = match source {
+            DamageSource::Minion(killer) => Some(killer),
+            DamageSource::None => None,
+        };
+        // 先取阵营，避免在可变借用随从后再借用棋盘。
+        let killer_side = killer.and_then(|killer| self.locate(killer).map(|(side, _)| side));
+        let Some((side, index)) = self.locate(id) else {
             return;
         };
+        let minion = &mut self.sides[side].minions[index];
         let amount = amount.max(0);
+        let before = minion.stats.health.current;
+        let lethal = can_kill && amount >= before;
+        if lethal && before > 0 {
+            self.pre_kill_health.insert(id, before);
+        }
         let damage = if can_kill {
             amount
         } else {
-            amount.min(minion.stats.health.current.saturating_sub(1).max(0))
+            amount.min(before.saturating_sub(1).max(0))
         };
         minion.stats.health.apply_damage(damage);
+        let dead = self.sides[side].alive[index] && minion.stats.health.current <= 0;
+        if dead && let (Some(killer), Some(killer_side)) = (killer, killer_side) {
+            self.pending_kills.push(KillRecord {
+                killer,
+                victim: id,
+                killer_side,
+                mutual: false,
+            });
+        }
     }
 
-    /// 效果层伤害入口；与 [`BattleField::apply_damage`] 同义。
+    /// 效果层伤害入口；与 [`BattleField::apply_damage`] 同义，无伤害来源。
     pub(crate) fn deal_damage(&mut self, id: InstanceId, amount: i32, can_kill: bool) {
-        self.apply_damage(id, amount, can_kill);
+        self.apply_damage(id, amount, can_kill, DamageSource::None);
+    }
+
+    /// 分解取值：按口径返回 `event_target` 被分解随从的生命值；快照缺失时为 `None`。
+    pub(crate) fn decompose_health(
+        &self,
+        catalog: &Catalog,
+        victim: InstanceId,
+        basis: Basis,
+    ) -> Option<i32> {
+        match basis {
+            Basis::Original => {
+                let minion = self.minion(victim)?;
+                base_stats(catalog, &minion.card_id, minion.golden).map(|(_, health)| health)
+            }
+            Basis::CombatStart => self.combat_start_health.get(&victim).copied(),
+            Basis::PreKill => self.pre_kill_health.get(&victim).copied(),
+        }
     }
 
     pub(crate) fn cannot_attack(&mut self, id: InstanceId) {
@@ -705,7 +789,9 @@ impl BattleField {
                     }
                 }
             }
-            if dead.is_empty() {
+            // 本轮死亡与友方/敌方死亡钩子都处理完，再按记录顺序触发击杀类钩子；
+            // 钩子造成的死亡（连同新产生的击杀记录）回到下一轮统一结算。
+            if dead.is_empty() && (self.pending_kills.is_empty() || engine.is_none()) {
                 break;
             }
 
@@ -794,8 +880,48 @@ impl BattleField {
                     );
                 }
             }
+            // 死亡队列处理完后，按记录顺序触发击杀类钩子；钩子造成的死亡回到循环结算。
+            if let Some(engine) = engine {
+                self.fire_kill_triggers(engine, rng);
+            }
         }
         self.resolving = false;
+    }
+}
+
+impl BattleField {
+    /// 按「记录顺序 → `OnKill` → `OnAllyKill`」触发当前待处理的击杀钩子。
+    ///
+    /// `OnKill`：只对仍存活的击杀者触发，事件目标为被击杀者。
+    /// `OnAllyKill`：对击杀方全部存活随从（含击杀者）触发，事件目标为被击杀者；
+    /// 被击杀者必须是击杀者的敌方。互相击杀与击杀者已离场都不触发。
+    fn fire_kill_triggers(&mut self, engine: &Engine, rng: &mut RngStreams) {
+        let kills = std::mem::take(&mut self.pending_kills);
+        for kill in kills {
+            // 击杀者须仍存活：已离场或带复生但本场尚未复生的击杀者不触发。
+            let killer_alive = self.locate(kill.killer).is_some_and(|(side, index)| {
+                self.sides[side].alive[index]
+                    && self.sides[side].minions[index].stats.health.current > 0
+            });
+            if kill.mutual || !killer_alive {
+                continue;
+            }
+            let Some(victim_side) = self.locate(kill.victim).map(|(side, _)| side) else {
+                continue;
+            };
+
+            engine.fire_combat_single(self, rng, kill.killer, Trigger::OnKill, Some(kill.victim));
+            if victim_side != kill.killer_side {
+                engine.fire_combat_board_trigger(
+                    self,
+                    rng,
+                    Trigger::OnAllyKill,
+                    kill.killer_side,
+                    None,
+                    Some(kill.victim),
+                );
+            }
+        }
     }
 }
 
@@ -884,6 +1010,8 @@ fn resolve_attack(
     // (a) 护盾或掉血。
     let mut damage = 0;
     let mut blocked = false;
+    // 本次交换开始前已记录的击杀数；互相击杀只标记本次交换的攻守两条记录。
+    let pending_before = field.pending_kills.len();
     {
         let target = &field.sides[defending_side].minions[target_index];
         let shielded = keywords(catalog, target).contains(DIVINE_SHIELD) && !target.shield_used;
@@ -892,7 +1020,7 @@ fn resolve_attack(
             blocked = true;
         } else {
             damage = attack;
-            field.apply_damage(target_id, damage, true);
+            field.apply_damage(target_id, damage, true, DamageSource::Minion(attacker_id));
         }
     }
 
@@ -923,7 +1051,7 @@ fn resolve_attack(
             field.sides[attacking_side].minions[attacker_index].shield_used = true;
         } else {
             counter_damage = counter;
-            field.apply_damage(attacker_id, counter, true);
+            field.apply_damage(attacker_id, counter, true, DamageSource::Minion(target_id));
         }
     }
 
@@ -958,6 +1086,25 @@ fn resolve_attack(
                 Trigger::OnDealDamage,
                 Some(attacker_id),
             );
+        }
+    }
+
+    // 同一次交换中攻守双方都被打死：本次交换的攻守击杀都记为互相击杀。
+    // 双方在死亡队列中一起结算，故本次交换的记录都在 `pending_kills` 尾部。
+    let attacker_lethal = field.locate(attacker_id).is_some_and(|(side, index)| {
+        field.sides[side].alive[index] && field.sides[side].minions[index].stats.health.current <= 0
+    });
+    let target_lethal = field.locate(target_id).is_some_and(|(side, index)| {
+        field.sides[side].alive[index] && field.sides[side].minions[index].stats.health.current <= 0
+    });
+    if attacker_lethal && target_lethal {
+        let end = field.pending_kills.len();
+        for kill in &mut field.pending_kills[pending_before.min(end)..] {
+            let attacker_kills_target = kill.killer == attacker_id && kill.victim == target_id;
+            let target_kills_attacker = kill.killer == target_id && kill.victim == attacker_id;
+            if attacker_kills_target || target_kills_attacker {
+                kill.mutual = true;
+            }
         }
     }
 

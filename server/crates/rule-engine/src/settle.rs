@@ -881,10 +881,21 @@ mod tests {
     const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
     const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
     const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
+    const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
     fn test_catalog() -> Catalog {
-        Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
-            .expect("已提交的 v0.1 数据应能完整加载")
+        Catalog::from_json(
+            CARDS_JSON,
+            SKILLS_JSON,
+            TOKENS_JSON,
+            CONFIG_JSON,
+            TAXONOMY_JSON,
+        )
+        .expect("已提交的 v0.1 数据应能完整加载")
+    }
+
+    fn test_playstyles() -> [crate::data::Playstyle; 5] {
+        crate::playstyles::draw(7)
     }
 
     fn empty_log() -> combat::CombatLog {
@@ -907,7 +918,7 @@ mod tests {
 
     #[test]
     fn mutual_wipe_is_a_draw() {
-        let (_, state) = Engine::new(test_catalog(), [7; 32]);
+        let (_, state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
         let mut log = empty_log();
         log.winner = None; // 双方 survivors 都为空
         assert_eq!(seat_winner(&state, &log, 0, 1), None);
@@ -915,7 +926,7 @@ mod tests {
 
     #[test]
     fn action_limit_still_breaks_by_hp() {
-        let (_, mut state) = Engine::new(test_catalog(), [7; 32]);
+        let (_, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
         state.players[0].hp = 30;
         state.players[1].hp = 10;
         let mut log = empty_log();

@@ -1,8 +1,8 @@
 mod common;
 
-use common::{effects_of, place, test_catalog};
+use common::{effects_of, place, test_catalog, test_playstyles};
 use rule_engine::combat;
-use rule_engine::data::{Card, CardType, Catalog, Era, Skill, Tribe};
+use rule_engine::data::{Card, CardType, Catalog, Era, Playstyle, Skill, card_in_pool};
 use rule_engine::effects::{Effect, EffectCtx, parse_effects};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
@@ -15,7 +15,7 @@ use rule_engine::state::{GameState, HandCard, InstanceId, MinionInstance, Phase,
 fn add_card(
     catalog: &mut Catalog,
     id: &str,
-    tribe: Tribe,
+    playstyle: Playstyle,
     stats: (u8, i32, i32),
     skill: (Option<&str>, &str),
 ) {
@@ -37,14 +37,16 @@ fn add_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            tribe,
+            playstyle,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
             subtype: None,
             level,
             era: None,
             attack: Some(attack),
             health: Some(health),
             skills: vec![skill_id],
-            is_scholar: tribe == Tribe::Scholar,
+            is_scholar: false,
             is_hero: false,
             cost: None,
         },
@@ -57,56 +59,56 @@ fn catalog_with_synthetics() -> Catalog {
     add_card(
         &mut catalog,
         "breed2",
-        Tribe::Human,
+        Playstyle::Mammal,
         (1, 1, 2),
         (Some("breed 2"), "[]"),
     );
     add_card(
         &mut catalog,
         "breed1",
-        Tribe::Human,
+        Playstyle::Mammal,
         (1, 1, 2),
         (Some("breed 1"), "[]"),
     );
     add_card(
         &mut catalog,
         "scholar-breed",
-        Tribe::Scholar,
+        Playstyle::Neutral,
         (1, 0, 4),
         (Some("breed 2"), "[]"),
     );
     add_card(
         &mut catalog,
         "sickly",
-        Tribe::Human,
+        Playstyle::Mammal,
         (1, 1, 2),
         (None, "[]"),
     );
     add_card(
         &mut catalog,
         "turn9",
-        Tribe::Human,
+        Playstyle::Mammal,
         (1, 0, 20),
         (None, "OnTurnStart|DealDamage|friendly:leftmost|amount=9"),
     );
     add_card(
         &mut catalog,
         "turn7",
-        Tribe::Human,
+        Playstyle::Mammal,
         (1, 0, 20),
         (None, "OnTurnStart|DealDamage|friendly:leftmost|amount=7"),
     );
     add_card(
         &mut catalog,
         "contagious",
-        Tribe::Human,
+        Playstyle::Mammal,
         (1, 1, 100),
         (Some("contagion"), "[]"),
     );
     add_card(
         &mut catalog,
         "target",
-        Tribe::Human,
+        Playstyle::Mammal,
         (1, 0, 10),
         (None, "[]"),
     );
@@ -114,7 +116,7 @@ fn catalog_with_synthetics() -> Catalog {
 }
 
 fn setup(seed: u8) -> (Engine, GameState) {
-    let (engine, mut state) = Engine::new(catalog_with_synthetics(), [seed; 32]);
+    let (engine, mut state) = Engine::new(catalog_with_synthetics(), [seed; 32], test_playstyles());
     state.phase = Phase::Recruit;
     state.turn = 1;
     for player in &mut state.players {
@@ -158,7 +160,7 @@ fn first_eligible(engine: &Engine, state: &GameState, star: u8) -> Option<String
                 && !card.is_hero
                 && card.level == star
                 && state.pool.get(&card.id).copied().unwrap_or(0) > 0
-                && (card.tribe == Tribe::General || state.enabled_tribes.contains(&card.tribe))
+                && card_in_pool(card, &state.enabled_playstyles)
         })
         .map(|card| card.id.clone())
 }
@@ -574,7 +576,7 @@ fn gain_minion_from_shop_moves_to_hand() {
             card.card_type == CardType::Minion
                 && !card.is_hero
                 && card.level == 2
-                && (card.tribe == Tribe::General || state.enabled_tribes.contains(&card.tribe))
+                && card_in_pool(card, &state.enabled_playstyles)
         })
         .expect("原始时代应有 2 星随从")
         .id
@@ -623,7 +625,7 @@ fn gain_minion_runs_triple_check() {
             card.card_type == CardType::Minion
                 && !card.is_hero
                 && card.level == 2
-                && (card.tribe == Tribe::General || state.enabled_tribes.contains(&card.tribe))
+                && card_in_pool(card, &state.enabled_playstyles)
         })
         .expect("原始时代应有 2 星随从")
         .id
@@ -736,18 +738,18 @@ fn ghost_combat_writes_back_attacker_only() {
     add_card(
         &mut catalog,
         "grower",
-        Tribe::Human,
+        Playstyle::Mammal,
         (1, 2, 20),
         (None, "OnCombatStart|Growth|self|times=2"),
     );
     add_card(
         &mut catalog,
         "ghost-contagious",
-        Tribe::Human,
+        Playstyle::Mammal,
         (1, 1, 20),
         (Some("contagion"), "[]"),
     );
-    let (mut engine, mut state) = Engine::new(catalog, [3u8; 32]);
+    let (mut engine, mut state) = Engine::new(catalog, [3u8; 32], test_playstyles());
     state.phase = Phase::Combat;
     state.turn = 2;
     for player in &mut state.players {

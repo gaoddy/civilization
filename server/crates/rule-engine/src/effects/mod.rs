@@ -18,7 +18,7 @@ pub(crate) use evolve::EVOLVE_CHOICES;
 
 use serde::Deserialize;
 
-use crate::data::{CardType, Tribe};
+use crate::data::CardType;
 
 /// 效果触发时机。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
@@ -32,6 +32,8 @@ pub enum Trigger {
     OnFirstRefresh,
     OnCombatStart,
     OnDealDamage,
+    OnKill,
+    OnAllyKill,
     OnDeath,
     OnFriendlyDeath,
     OnEnemyDeath,
@@ -59,6 +61,7 @@ pub enum Op {
     RefreshShop,
     AddShopSlot,
     GainMinion,
+    Decompose,
 }
 
 /// 选择器的阵营。
@@ -137,6 +140,18 @@ pub enum CopyState {
     Current,
 }
 
+/// `Decompose` 取生命值的口径。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Basis {
+    /// 卡面基础生命值；金色来源 ×2。
+    Original,
+    /// 进入战斗快照时的当前生命值。
+    CombatStart,
+    /// 承受致命伤害前的当前生命值。
+    PreKill,
+}
+
 /// 区域。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -167,11 +182,14 @@ pub struct Condition {
     pub count: i32,
 }
 
-/// `timesIf` 的结构化表示。
+/// `timesIf` 的结构化表示：`<键>:<值>:<次数>`，`scholar` 没有值。
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TimesIf {
-    pub tribe: Tribe,
+    /// 筛选键，取值集合与 [`Filter`] 一致。
+    pub key: String,
+    /// 筛选值；`scholar` 等无值键为 `None`。
+    pub value: Option<String>,
     pub times: i32,
 }
 
@@ -205,6 +223,8 @@ pub struct Params {
     pub level: Option<String>,
     /// `Copy` 的复制口径：缺省按卡面复制原始牌，`current` 为完全复制当前状态。
     pub state: Option<CopyState>,
+    /// `Decompose` 的生命值口径。
+    pub basis: Option<Basis>,
 }
 
 /// 一段结构化效果。

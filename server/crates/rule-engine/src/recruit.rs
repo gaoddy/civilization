@@ -4,7 +4,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::data::{Card, CardType, Catalog, Era, Tribe};
+use crate::data::{Card, CardType, Catalog, Era, Playstyle, card_in_pool};
 use crate::effects::{EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::events::GameEvent;
@@ -1141,7 +1141,7 @@ pub(crate) fn roll_player(
     // 商店恢复为基础槽位数；追加槽位只在本次刷新结果中保留。
     let slot_count = engine.catalog.config.shop_slots;
 
-    let (rng, pool, tribes) = (&mut state.rng, &state.pool, &state.enabled_tribes);
+    let (rng, pool, playstyles) = (&mut state.rng, &state.pool, &state.enabled_playstyles);
     // 冻结槽位沿用原实例编号；其余槽位在确定卡牌后统一分配新编号。
     let mut drawn: Vec<Option<(Option<InstanceId>, String, bool)>> = Vec::with_capacity(slot_count);
     for index in 0..slot_count {
@@ -1159,7 +1159,7 @@ pub(crate) fn roll_player(
         }
         let card_id = weights
             .as_ref()
-            .and_then(|weights| draw_shop_card(engine, rng, pool, tribes, weights));
+            .and_then(|weights| draw_shop_card(engine, rng, pool, playstyles, weights));
         drawn.push(card_id.map(|card_id| (None, card_id, false)));
     }
 
@@ -1191,7 +1191,7 @@ fn draw_shop_card(
     engine: &Engine,
     rng: &mut RngStreams,
     pool: &BTreeMap<String, u16>,
-    tribes: &BTreeSet<Tribe>,
+    playstyles: &BTreeSet<Playstyle>,
     weights: &[u16; 7],
 ) -> Option<String> {
     for _ in 0..EMPTY_STAR_RETRIES {
@@ -1200,7 +1200,7 @@ fn draw_shop_card(
             .catalog
             .cards
             .values()
-            .filter(|card| card.level == star && is_eligible(card, pool, tribes))
+            .filter(|card| card.level == star && is_eligible(card, pool, playstyles))
             .collect();
         if candidates.is_empty() {
             continue;
@@ -1228,15 +1228,19 @@ fn pick_star(rng: &mut RngStreams, weights: &[u16; 7]) -> Option<u8> {
     Some(7)
 }
 
-/// 英雄卡不进商店；随从需要池中有副本；流派需本局启用或为通用。
-fn is_eligible(card: &Card, pool: &BTreeMap<String, u16>, tribes: &BTreeSet<Tribe>) -> bool {
+/// 英雄卡不进商店；随从需要池中有副本；卡池判定统一走 [`card_in_pool`]。
+fn is_eligible(
+    card: &Card,
+    pool: &BTreeMap<String, u16>,
+    playstyles: &BTreeSet<Playstyle>,
+) -> bool {
     if card.is_hero || card.id == crate::triple::REWARD_CARD_ID {
         return false;
     }
     if card.card_type == CardType::Minion && pool.get(&card.id).copied().unwrap_or(0) == 0 {
         return false;
     }
-    card.tribe == Tribe::General || tribes.contains(&card.tribe)
+    card_in_pool(card, playstyles)
 }
 
 pub(crate) fn new_minion(
@@ -1290,10 +1294,21 @@ mod tests {
     const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
     const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
     const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
+    const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
     fn test_catalog() -> Catalog {
-        Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
-            .expect("已提交的 v0.1 数据应能完整加载")
+        Catalog::from_json(
+            CARDS_JSON,
+            SKILLS_JSON,
+            TOKENS_JSON,
+            CONFIG_JSON,
+            TAXONOMY_JSON,
+        )
+        .expect("已提交的 v0.1 数据应能完整加载")
+    }
+
+    fn test_playstyles() -> [Playstyle; 5] {
+        crate::playstyles::draw(1)
     }
 
     fn heroes() -> BTreeMap<Seat, String> {
@@ -1308,7 +1323,7 @@ mod tests {
     }
 
     fn setup(seed: u8) -> (Engine, GameState) {
-        let (mut engine, mut state) = Engine::new(test_catalog(), [seed; 32]);
+        let (mut engine, mut state) = Engine::new(test_catalog(), [seed; 32], test_playstyles());
         engine
             .start_game(&mut state, &heroes())
             .expect("开局应成功");
