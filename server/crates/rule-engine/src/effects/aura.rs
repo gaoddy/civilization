@@ -9,9 +9,7 @@
 use std::collections::BTreeMap;
 
 use crate::combat;
-use crate::effects::{
-    Compare, Effect, EffectCtx, KeywordSpec, Op, Pick, Selector, Side, Trigger, parse_effects,
-};
+use crate::effects::{Compare, Effect, EffectCtx, Op, Pick, Selector, Side, Trigger};
 use crate::engine::Engine;
 use crate::state::{AuraEffect, GameState, InstanceId, PlayerState, Seat};
 
@@ -85,12 +83,15 @@ impl Engine {
                 let Some(skill) = self.catalog.skills.get(skill_id) else {
                     continue;
                 };
-                let Ok(parsed) = parse_effects(&skill.effects) else {
-                    continue;
-                };
-                effects.extend(parsed.into_iter().filter(|effect| {
-                    matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura)
-                }));
+                effects.extend(
+                    skill
+                        .effects
+                        .iter()
+                        .filter(|effect| {
+                            matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura)
+                        })
+                        .cloned(),
+                );
             }
             if !effects.is_empty() {
                 result.push((source, effects));
@@ -249,10 +250,10 @@ fn accumulate(effect: &Effect, target: &mut AuraEffect) {
                 .saturating_add(effect.params.health.unwrap_or(0));
         }
         Op::GrantKeyword => {
-            let Some(KeywordSpec::Keyword(name, _)) = &effect.params.keyword else {
+            let Some(keyword) = &effect.params.keyword else {
                 return;
             };
-            target.keywords.insert(name.clone());
+            target.keywords.insert(keyword.keyword.clone());
         }
         // 解析层已限制光环只能使用上述两个原语；其余按无效果处理。
         _ => return,

@@ -14,9 +14,7 @@ use std::collections::BTreeMap;
 
 use crate::combat::{self, BattleField, CombatSetup};
 use crate::data::{CardType, Catalog, Tribe};
-use crate::effects::{
-    Duration, Effect, Filter, KeywordSpec, Op, Pick, Selector, Side, Trigger, Zone, parse_effects,
-};
+use crate::effects::{Duration, Effect, Filter, Op, Pick, Selector, Side, Trigger, Zone};
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::intent::{Reject, RejectCode};
@@ -273,16 +271,16 @@ impl Engine {
         };
         let mut effects = Vec::new();
         for skill_id in &card.skills {
-            if let Some(skill) = self.catalog.skills.get(skill_id)
-                && let Ok(parsed) = parse_effects(&skill.effects)
-            {
+            if let Some(skill) = self.catalog.skills.get(skill_id) {
                 effects.extend(
-                    parsed
-                        .into_iter()
+                    skill
+                        .effects
+                        .iter()
                         .filter(|effect| effect.trigger == trigger)
                         .filter(|effect| {
                             !(trigger == Trigger::OnPlay && is_enemy_selector(&effect.selector))
-                        }),
+                        })
+                        .cloned(),
                 );
             }
         }
@@ -444,8 +442,7 @@ impl Engine {
             self.catalog
                 .skills
                 .get(skill_id)
-                .and_then(|skill| parse_effects(&skill.effects).ok())
-                .is_some_and(|effects| effects.iter().any(|effect| effect.trigger == trigger))
+                .is_some_and(|skill| skill.effects.iter().any(|effect| effect.trigger == trigger))
         })
     }
 
@@ -599,10 +596,8 @@ impl Engine {
                 continue;
             };
             let times = match (&effect.params.times_if, self.card_tribe(&minion.card_id)) {
-                (Some((tribe, value)), Some(target_tribe))
-                    if tribe_name(target_tribe) == *tribe =>
-                {
-                    *value
+                (Some(times_if), Some(target_tribe)) if times_if.tribe == target_tribe => {
+                    times_if.times
                 }
                 _ => base_times,
             };
@@ -634,16 +629,18 @@ impl Engine {
     }
 
     fn apply_grant_keyword(&self, state: &mut GameState, effect: &Effect, targets: &[InstanceId]) {
-        let Some(KeywordSpec::Keyword(name, layer)) = &effect.params.keyword else {
+        let Some(keyword) = &effect.params.keyword else {
             return;
         };
+        let name = keyword.keyword.as_str();
+        let layer = keyword.value.or(effect.params.value);
         let duration = effect.params.duration;
 
         for id in targets {
             let Some((_, minion)) = locate_mut(state, *id) else {
                 continue;
             };
-            match (name.as_str(), layer) {
+            match (name, &layer) {
                 ("繁衍", Some(count)) => {
                     minion.breed = minion.breed.saturating_add(*count);
                 }
@@ -934,13 +931,13 @@ impl Engine {
             {
                 continue;
             }
-            if let Ok(parsed) = parse_effects(&skill.effects) {
-                effects.extend(
-                    parsed
-                        .into_iter()
-                        .filter(|effect| effect.trigger == trigger),
-                );
-            }
+            effects.extend(
+                skill
+                    .effects
+                    .iter()
+                    .filter(|effect| effect.trigger == trigger)
+                    .cloned(),
+            );
         }
         effects
     }
@@ -1159,10 +1156,8 @@ impl Engine {
                         continue;
                     };
                     let times = match (&effect.params.times_if, self.card_tribe(&minion.card_id)) {
-                        (Some((tribe, value)), Some(target_tribe))
-                            if tribe_name(target_tribe) == *tribe =>
-                        {
-                            *value
+                        (Some(times_if), Some(target_tribe)) if times_if.tribe == target_tribe => {
+                            times_if.times
                         }
                         _ => base_times,
                     };
@@ -1190,15 +1185,17 @@ impl Engine {
                 }
             }
             Op::GrantKeyword => {
-                let Some(KeywordSpec::Keyword(name, layer)) = &effect.params.keyword else {
+                let Some(keyword) = &effect.params.keyword else {
                     return;
                 };
+                let name = keyword.keyword.as_str();
+                let layer = keyword.value.or(effect.params.value);
                 let duration = effect.params.duration;
                 for id in targets {
                     let Some(minion) = field.minion_mut(id) else {
                         continue;
                     };
-                    match (name.as_str(), layer) {
+                    match (name, &layer) {
                         ("繁衍", Some(count)) => {
                             minion.breed = minion.breed.saturating_add(*count);
                         }
@@ -1367,13 +1364,13 @@ impl Engine {
             {
                 continue;
             }
-            if let Ok(parsed) = parse_effects(&skill.effects) {
-                effects.extend(
-                    parsed
-                        .into_iter()
-                        .filter(|effect| effect.trigger == trigger),
-                );
-            }
+            effects.extend(
+                skill
+                    .effects
+                    .iter()
+                    .filter(|effect| effect.trigger == trigger)
+                    .cloned(),
+            );
         }
         effects
     }
@@ -1543,10 +1540,8 @@ impl Engine {
 pub fn effect_coverage(catalog: &Catalog) -> BTreeMap<(Trigger, Op), usize> {
     let mut coverage = BTreeMap::new();
     for skill in catalog.skills.values() {
-        if let Ok(effects) = parse_effects(&skill.effects) {
-            for effect in effects {
-                *coverage.entry((effect.trigger, effect.op)).or_insert(0) += 1;
-            }
+        for effect in &skill.effects {
+            *coverage.entry((effect.trigger, effect.op)).or_insert(0) += 1;
         }
     }
     coverage

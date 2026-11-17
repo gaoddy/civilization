@@ -24,7 +24,7 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
                 name: None,
                 keyword: Some((*keyword).to_string()),
                 text: String::new(),
-                effects: String::new(),
+                effects: effects_of("[]"),
                 cost: None,
                 uses_per_turn: None,
                 match_text: None,
@@ -62,7 +62,7 @@ fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, ef
             name: None,
             keyword: None,
             text: String::new(),
-            effects: effects.to_string(),
+            effects: effects_of(effects),
             cost: None,
             uses_per_turn: None,
             match_text: None,
@@ -363,4 +363,9 @@ fn ghost_board_keeps_growth_and_permanent() {
     assert_eq!(ghost.stats.health.turn, 4);
     assert_eq!(ghost.stats.attack.aura, 3);
     assert_eq!(ghost.stats.health.aura, 6);
+}
+
+/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
+fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
+    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

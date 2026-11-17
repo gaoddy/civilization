@@ -13,6 +13,13 @@ class GenCardDataTest(unittest.TestCase):
         self.assertEqual(len(json.loads(out["skills.json"])), 131)
         self.assertEqual([t["id"] for t in json.loads(out["tokens.json"])],
                          ["hela-cell-token", "seedling", "synthetic-cell-token"])
+    def test_skill_effects_are_structured(self):
+        skills = json.loads(gen_card_data.build(ROOT)["skills.json"])
+        skill = next(s for s in skills if s["id"] == "division-of-labor")
+        self.assertIsInstance(skill["effects"], list)
+        self.assertEqual(skill["effects"][0]["trigger"], "on_activate")
+        self.assertEqual(skill["effects"][0]["selector"]["kind"], "side")
+
     def test_build_is_deterministic(self):
         self.assertEqual(gen_card_data.build(ROOT), gen_card_data.build(ROOT))
     def test_check_mode_detects_drift(self):

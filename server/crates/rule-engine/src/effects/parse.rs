@@ -1,8 +1,9 @@
-use crate::data::CardType;
+use crate::data::{CardType, Tribe};
 
+use super::validate::{CARD_TYPES, FILTER_KEYS, KEYWORD_BASES, TRIBES, op_spec, validate_effect};
 use super::{
     Compare, Condition, Duration, Effect, Filter, KeywordSpec, Op, Params, Pick, Selector, Side,
-    Trigger, Zone,
+    TimesIf, Trigger, Zone,
 };
 
 const TRIGGERS: &[(&str, Trigger)] = &[
@@ -38,25 +39,6 @@ const OPS: &[(&str, Op)] = &[
     ("RefreshShop", Op::RefreshShop),
     ("AddShopSlot", Op::AddShopSlot),
     ("GainMinion", Op::GainMinion),
-];
-
-const AURA_OPS: &[Op] = &[Op::ModifyStats, Op::GrantKeyword];
-const FILTER_KEYS: &[&str] = &["tribe", "subtype", "name", "type", "other"];
-const TRIBES: &[&str] = &["人类", "机械", "生物", "植物", "病毒", "学者"];
-const CARD_TYPES: &[&str] = &["随从", "效果"];
-const KEYWORD_BASES: &[&str] = &[
-    "战吼",
-    "亡语",
-    "复生",
-    "嘲讽",
-    "护盾",
-    "连击",
-    "传染",
-    "最优攻击",
-    "播种",
-    "进化",
-    "繁衍",
-    "装配",
 ];
 
 /// 把单个技能的 `effects` 字符串解析为类型化 AST。
@@ -128,27 +110,27 @@ fn parse_chunk(chunk: &str) -> Result<Effect, Vec<String>> {
         errors.append(&mut param_errors);
     }
 
-    if let (Some(trigger), Some(op)) = (trigger, op)
-        && matches!(trigger, Trigger::Aura | Trigger::ConditionalAura)
-        && !AURA_OPS.contains(&op)
-    {
-        errors.push(format!(
-            "光环触发只能用 {AURA_OPS:?}，实为 {op:?}（{chunk}）"
-        ));
-    }
-
     if !errors.is_empty() {
         return Err(errors);
     }
 
-    match (trigger, op, selector) {
-        (Some(trigger), Some(op), Some(selector)) => Ok(Effect {
-            trigger,
-            op,
-            selector,
-            params,
-        }),
-        _ => Err(vec![format!("效果段无法解析: {chunk}")]),
+    let (Some(trigger), Some(op), Some(selector)) = (trigger, op, selector) else {
+        return Err(vec![format!("效果段无法解析: {chunk}")]);
+    };
+    let effect = Effect {
+        trigger,
+        op,
+        selector,
+        params,
+    };
+    let semantic = validate_effect(&effect);
+    if semantic.is_empty() {
+        Ok(effect)
+    } else {
+        Err(semantic
+            .into_iter()
+            .map(|message| format!("{message}（{chunk}）"))
+            .collect())
     }
 }
 
@@ -221,6 +203,205 @@ fn parse_selector(raw: &str, chunk: &str) -> Result<Selector, Vec<String>> {
         }),
         _ => Err(vec![format!("选择器无法解析 {raw:?}（{chunk}）")]),
     }
+}
+
+fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> Result<(), String> {
+    match key {
+        "times" => params.times = Some(parse_i32(key, value, chunk)?),
+        "count" => params.count = Some(parse_i32(key, value, chunk)?),
+        "amount" => params.amount = Some(parse_i32(key, value, chunk)?),
+        "attack" => params.attack = Some(parse_i32(key, value, chunk)?),
+        "health" => params.health = Some(parse_i32(key, value, chunk)?),
+        "value" => params.value = Some(parse_i32(key, value, chunk)?),
+        "extra" => params.extra = Some(parse_i32(key, value, chunk)?),
+        "duration" => {
+            params.duration = match value {
+                "permanent" => Duration::Permanent,
+                "combat" => Duration::Combat,
+                _ => return Err(format!("duration 非法 {value:?}（{chunk}）")),
+            }
+        }
+        "canKill" => params.can_kill = Some(parse_bool(key, value, chunk)?),
+        "healthOnly" => params.health_only = Some(parse_bool(key, value, chunk)?),
+        "free" => params.free = Some(parse_bool(key, value, chunk)?),
+        "timesIf" => params.times_if = Some(parse_times_if(value, chunk)?),
+        "condition" => params.condition = Some(parse_condition(value, chunk)?),
+        "when" => params.when = Some(parse_filter(value, chunk, false)?),
+        "keyword" => params.keyword = Some(parse_keyword(value, chunk)?),
+        "token" => params.token = Some(non_empty(key, value, chunk)?),
+        "card" => params.card = Some(non_empty(key, value, chunk)?),
+        "to" => params.to = Some(parse_zone(key, value, chunk)?),
+        "from" => {
+            let zone = parse_zone(key, value, chunk)?;
+            // 只有 GainMinion 限定 from 的取值；Copy 仍接受 hand / board / shop。
+            if op == Op::GainMinion && zone != Zone::Shop {
+                return Err(format!(
+                    "GainMinion 的 from 只接受 shop，实为 {value:?}（{chunk}）"
+                ));
+            }
+            params.from = Some(zone);
+        }
+        "type" => params.card_type = Some(parse_card_type(value, chunk)?),
+        "pool" => params.pool = Some(non_empty(key, value, chunk)?),
+        "choose" => {
+            let choose = parse_u8(key, value, chunk)?;
+            if choose != 1 {
+                return Err(format!("choose 必须为 1，实为 {choose}（{chunk}）"));
+            }
+            params.choose = Some(choose);
+        }
+        "era" => params.era = Some(non_empty(key, value, chunk)?),
+        "level" => {
+            if value != "current" && !is_digits(value) {
+                return Err(format!("参数 level 非法 {value:?}（{chunk}）"));
+            }
+            params.level = Some(value.to_string());
+        }
+        other => {
+            return Err(format!("参数 {other:?} 不属于原语 {op:?}（{chunk}）"));
+        }
+    }
+    Ok(())
+}
+
+fn parse_condition(value: &str, chunk: &str) -> Result<Condition, String> {
+    let invalid = || format!("condition 格式非法 {value:?}（{chunk}）");
+    let Some(rest) = value.strip_prefix("count:") else {
+        return Err(invalid());
+    };
+    let segments: Vec<&str> = rest.split(':').collect();
+    if segments.len() != 3 {
+        return Err(invalid());
+    }
+
+    let side = match segments[0] {
+        "friendly" => Side::Friendly,
+        "enemy" => Side::Enemy,
+        "both" => Side::Both,
+        _ => return Err(invalid()),
+    };
+
+    let Some((key, filter_value)) = segments[1].split_once('=') else {
+        return Err(invalid());
+    };
+    let key = key.trim();
+    let filter_value = filter_value.trim();
+    if key.is_empty() || !key.chars().all(|c| c.is_ascii_lowercase()) || filter_value.is_empty() {
+        return Err(invalid());
+    }
+
+    let (compare, digits) = if let Some(digits) = segments[2].strip_prefix(">=") {
+        (Compare::Ge, digits)
+    } else if let Some(digits) = segments[2].strip_prefix("<=") {
+        (Compare::Le, digits)
+    } else if let Some(digits) = segments[2].strip_prefix("==") {
+        (Compare::Eq, digits)
+    } else if let Some(digits) = segments[2].strip_prefix('>') {
+        (Compare::Gt, digits)
+    } else if let Some(digits) = segments[2].strip_prefix('<') {
+        (Compare::Lt, digits)
+    } else {
+        return Err(invalid());
+    };
+    if !is_digits(digits) {
+        return Err(invalid());
+    }
+
+    Ok(Condition {
+        side,
+        filter: Filter {
+            key: key.to_string(),
+            value: filter_value.to_string(),
+        },
+        compare,
+        count: digits.parse().map_err(|_| invalid())?,
+    })
+}
+
+fn parse_keyword(value: &str, chunk: &str) -> Result<KeywordSpec, String> {
+    let mut words = value.split_whitespace();
+    let Some(base) = words.next() else {
+        return Err(format!("keyword 非法 {value:?}（{chunk}）"));
+    };
+    if !KEYWORD_BASES.contains(&base) {
+        return Err(format!("keyword 非法 {value:?}（{chunk}）"));
+    }
+
+    let level = match words.next() {
+        None => None,
+        Some(level) if is_digits(level) && words.next().is_none() => Some(
+            level
+                .parse()
+                .map_err(|_| format!("keyword 非法 {value:?}（{chunk}）"))?,
+        ),
+        Some(_) => return Err(format!("keyword 非法 {value:?}（{chunk}）")),
+    };
+
+    Ok(KeywordSpec {
+        keyword: base.to_string(),
+        value: level,
+    })
+}
+
+fn parse_zone(key: &str, value: &str, chunk: &str) -> Result<Zone, String> {
+    match value {
+        "hand" => Ok(Zone::Hand),
+        "board" => Ok(Zone::Board),
+        "shop" => Ok(Zone::Shop),
+        _ => Err(format!("参数 {key} 非法 {value:?}（{chunk}）")),
+    }
+}
+
+fn parse_card_type(value: &str, chunk: &str) -> Result<CardType, String> {
+    match value {
+        "随从" => Ok(CardType::Minion),
+        "效果" => Ok(CardType::Effect),
+        _ => Err(format!("参数 type 非法 {value:?}（{chunk}）")),
+    }
+}
+
+fn parse_i32(key: &str, value: &str, chunk: &str) -> Result<i32, String> {
+    if !is_integer(value) {
+        return Err(format!("参数 {key} 必须为整数，实为 {value:?}（{chunk}）"));
+    }
+    value
+        .parse()
+        .map_err(|_| format!("参数 {key} 必须为整数，实为 {value:?}（{chunk}）"))
+}
+
+fn parse_u8(key: &str, value: &str, chunk: &str) -> Result<u8, String> {
+    if !is_digits(value) {
+        return Err(format!("参数 {key} 必须为整数，实为 {value:?}（{chunk}）"));
+    }
+    value
+        .parse()
+        .map_err(|_| format!("参数 {key} 必须为整数，实为 {value:?}（{chunk}）"))
+}
+
+fn parse_bool(key: &str, value: &str, chunk: &str) -> Result<bool, String> {
+    match value {
+        "true" => Ok(true),
+        "false" => Ok(false),
+        _ => Err(format!(
+            "参数 {key} 必须为布尔值，实为 {value:?}（{chunk}）"
+        )),
+    }
+}
+
+fn non_empty(key: &str, value: &str, chunk: &str) -> Result<String, String> {
+    if value.is_empty() {
+        return Err(format!("参数 {key} 缺少取值（{chunk}）"));
+    }
+    Ok(value.to_string())
+}
+
+fn is_digits(text: &str) -> bool {
+    !text.is_empty() && text.chars().all(|c| c.is_ascii_digit())
+}
+
+fn is_integer(text: &str) -> bool {
+    let body = text.strip_prefix('-').unwrap_or(text);
+    !body.is_empty() && body.chars().all(|c| c.is_ascii_digit())
 }
 
 fn parse_filter(raw: &str, chunk: &str, check_value: bool) -> Result<Filter, String> {
@@ -309,273 +490,47 @@ fn parse_params(op: Op, raw: Option<&str>, chunk: &str) -> (Params, Vec<String>)
     }
 
     // 繁衍 / 装配 / 传染 的层数可以直接写在 keyword 上，也可以由 value 参数承载；
-    // 后者统一规范化为 `Keyword(name, Some(n))`，供执行器只读 keyword。
-    if let Some(KeywordSpec::Keyword(base, level)) = &mut params.keyword
-        && level.is_none()
-        && matches!(base.as_str(), "繁衍" | "装配" | "传染")
+    // 后者统一规范化为 `KeywordSpec { value: Some(n) }`，供执行器只读 keyword。
+    if let Some(keyword) = &mut params.keyword
+        && keyword.value.is_none()
+        && matches!(keyword.keyword.as_str(), "繁衍" | "装配" | "传染")
         && let Some(value) = params.value
     {
-        *level = Some(value);
+        keyword.value = Some(value);
     }
 
     (params, errors)
 }
 
-type OpSpec = (
-    &'static [&'static str],
-    &'static [&'static str],
-    &'static [&'static [&'static str]],
-);
-
-fn op_spec(op: Op) -> OpSpec {
-    match op {
-        Op::Growth => (
-            &["times"],
-            &["healthOnly", "timesIf", "condition", "when"],
-            &[&["times"]],
-        ),
-        Op::ModifyStats => (
-            &[],
-            &[
-                "attack",
-                "health",
-                "duration",
-                "canKill",
-                "condition",
-                "when",
-            ],
-            &[&["attack", "health"]],
-        ),
-        Op::GrantKeyword => (
-            &["keyword"],
-            &["value", "duration", "condition", "when"],
-            &[],
-        ),
-        Op::RemoveGrowth => (&[], &["condition", "when"], &[]),
-        Op::CannotAttack => (&[], &["duration"], &[]),
-        Op::DealDamage => (&["amount"], &["when", "canKill"], &[]),
-        Op::Summon => (
-            &["count"],
-            &["token", "card", "when"],
-            &[&["token", "card"]],
-        ),
-        Op::Copy => (&["to"], &["from", "type"], &[]),
-        Op::Discover => (&["pool"], &["choose"], &[]),
-        Op::RefreshShop => (&[], &["free", "extra"], &[]),
-        Op::AddShopSlot => (&["era", "count"], &[], &[]),
-        Op::GainMinion => (&["level", "to"], &["from"], &[]),
-    }
-}
-
-fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> Result<(), String> {
-    match key {
-        "times" => params.times = Some(parse_i32(key, value, chunk)?),
-        "count" => params.count = Some(parse_i32(key, value, chunk)?),
-        "amount" => params.amount = Some(parse_i32(key, value, chunk)?),
-        "attack" => params.attack = Some(parse_i32(key, value, chunk)?),
-        "health" => params.health = Some(parse_i32(key, value, chunk)?),
-        "value" => params.value = Some(parse_i32(key, value, chunk)?),
-        "extra" => params.extra = Some(parse_i32(key, value, chunk)?),
-        "duration" => {
-            params.duration = match value {
-                "permanent" => Duration::Permanent,
-                "combat" => Duration::Combat,
-                _ => return Err(format!("duration 非法 {value:?}（{chunk}）")),
-            }
-        }
-        "canKill" => params.can_kill = Some(parse_bool(key, value, chunk)?),
-        "healthOnly" => params.health_only = Some(parse_bool(key, value, chunk)?),
-        "free" => params.free = Some(parse_bool(key, value, chunk)?),
-        "timesIf" => params.times_if = Some(parse_times_if(value, chunk)?),
-        "condition" => params.condition = Some(parse_condition(value, chunk)?),
-        "when" => params.when = Some(parse_filter(value, chunk, false)?),
-        "keyword" => params.keyword = Some(parse_keyword(value, chunk)?),
-        "token" => params.token = Some(non_empty(key, value, chunk)?),
-        "card" => params.card = Some(non_empty(key, value, chunk)?),
-        "to" => params.to = Some(parse_zone(key, value, chunk)?),
-        "from" => {
-            let zone = parse_zone(key, value, chunk)?;
-            // 只有 GainMinion 限定 from 的取值；Copy 仍接受 hand / board / shop。
-            if op == Op::GainMinion && zone != Zone::Shop {
-                return Err(format!(
-                    "GainMinion 的 from 只接受 shop，实为 {value:?}（{chunk}）"
-                ));
-            }
-            params.from = Some(zone);
-        }
-        "type" => params.card_type = Some(parse_card_type(value, chunk)?),
-        "pool" => params.pool = Some(non_empty(key, value, chunk)?),
-        "choose" => {
-            let choose = parse_u8(key, value, chunk)?;
-            if choose != 1 {
-                return Err(format!("choose 必须为 1，实为 {choose}（{chunk}）"));
-            }
-            params.choose = Some(choose);
-        }
-        "era" => params.era = Some(non_empty(key, value, chunk)?),
-        "level" => {
-            if value != "current" && !is_digits(value) {
-                return Err(format!("参数 level 非法 {value:?}（{chunk}）"));
-            }
-            params.level = Some(value.to_string());
-        }
-        other => {
-            return Err(format!("参数 {other:?} 不属于原语 {op:?}（{chunk}）"));
-        }
-    }
-    Ok(())
-}
-
-fn parse_times_if(value: &str, chunk: &str) -> Result<(String, i32), String> {
+fn parse_times_if(value: &str, chunk: &str) -> Result<TimesIf, String> {
+    let invalid = || format!("timesIf 格式非法 {value:?}（{chunk}）");
     let Some((tribe, count)) = value.split_once(':') else {
-        return Err(format!("timesIf 格式非法 {value:?}（{chunk}）"));
+        return Err(invalid());
     };
-    let tribe = tribe.trim();
+    let tribe_name = tribe.trim();
     let count = count.trim();
-    if !TRIBES.contains(&tribe) || !is_digits(count) {
-        return Err(format!("timesIf 格式非法 {value:?}（{chunk}）"));
-    }
-    Ok((
-        tribe.to_string(),
-        count
-            .parse()
-            .map_err(|_| format!("timesIf 格式非法 {value:?}（{chunk}）"))?,
-    ))
-}
-
-fn parse_condition(value: &str, chunk: &str) -> Result<Condition, String> {
-    let invalid = || format!("condition 格式非法 {value:?}（{chunk}）");
-    let Some(rest) = value.strip_prefix("count:") else {
+    let tribe = TRIBE_VALUES
+        .iter()
+        .find(|(name, _)| *name == tribe_name)
+        .map(|(_, tribe)| *tribe);
+    let Some(tribe) = tribe else {
         return Err(invalid());
     };
-    let segments: Vec<&str> = rest.split(':').collect();
-    if segments.len() != 3 {
+    if !is_digits(count) {
         return Err(invalid());
     }
-
-    let side = match segments[0] {
-        "friendly" => Side::Friendly,
-        "enemy" => Side::Enemy,
-        "both" => Side::Both,
-        _ => return Err(invalid()),
-    };
-
-    let Some((key, filter_value)) = segments[1].split_once('=') else {
-        return Err(invalid());
-    };
-    let key = key.trim();
-    let filter_value = filter_value.trim();
-    if key.is_empty() || !key.chars().all(|c| c.is_ascii_lowercase()) || filter_value.is_empty() {
-        return Err(invalid());
-    }
-
-    let (compare, digits) = if let Some(digits) = segments[2].strip_prefix(">=") {
-        (Compare::Ge, digits)
-    } else if let Some(digits) = segments[2].strip_prefix("<=") {
-        (Compare::Le, digits)
-    } else if let Some(digits) = segments[2].strip_prefix("==") {
-        (Compare::Eq, digits)
-    } else if let Some(digits) = segments[2].strip_prefix('>') {
-        (Compare::Gt, digits)
-    } else if let Some(digits) = segments[2].strip_prefix('<') {
-        (Compare::Lt, digits)
-    } else {
-        return Err(invalid());
-    };
-    if !is_digits(digits) {
-        return Err(invalid());
-    }
-
-    Ok(Condition {
-        side,
-        filter: Filter {
-            key: key.to_string(),
-            value: filter_value.to_string(),
-        },
-        compare,
-        count: digits.parse().map_err(|_| invalid())?,
+    Ok(TimesIf {
+        tribe,
+        times: count.parse().map_err(|_| invalid())?,
     })
 }
 
-fn parse_keyword(value: &str, chunk: &str) -> Result<KeywordSpec, String> {
-    let mut words = value.split_whitespace();
-    let Some(base) = words.next() else {
-        return Err(format!("keyword 非法 {value:?}（{chunk}）"));
-    };
-    if !KEYWORD_BASES.contains(&base) {
-        return Err(format!("keyword 非法 {value:?}（{chunk}）"));
-    }
-
-    let level = match words.next() {
-        None => None,
-        Some(level) if is_digits(level) && words.next().is_none() => Some(
-            level
-                .parse()
-                .map_err(|_| format!("keyword 非法 {value:?}（{chunk}）"))?,
-        ),
-        Some(_) => return Err(format!("keyword 非法 {value:?}（{chunk}）")),
-    };
-
-    Ok(KeywordSpec::Keyword(base.to_string(), level))
-}
-
-fn parse_zone(key: &str, value: &str, chunk: &str) -> Result<Zone, String> {
-    match value {
-        "hand" => Ok(Zone::Hand),
-        "board" => Ok(Zone::Board),
-        "shop" => Ok(Zone::Shop),
-        _ => Err(format!("参数 {key} 非法 {value:?}（{chunk}）")),
-    }
-}
-
-fn parse_card_type(value: &str, chunk: &str) -> Result<CardType, String> {
-    match value {
-        "随从" => Ok(CardType::Minion),
-        "效果" => Ok(CardType::Effect),
-        _ => Err(format!("参数 type 非法 {value:?}（{chunk}）")),
-    }
-}
-
-fn parse_i32(key: &str, value: &str, chunk: &str) -> Result<i32, String> {
-    if !is_integer(value) {
-        return Err(format!("参数 {key} 必须为整数，实为 {value:?}（{chunk}）"));
-    }
-    value
-        .parse()
-        .map_err(|_| format!("参数 {key} 必须为整数，实为 {value:?}（{chunk}）"))
-}
-
-fn parse_u8(key: &str, value: &str, chunk: &str) -> Result<u8, String> {
-    if !is_digits(value) {
-        return Err(format!("参数 {key} 必须为整数，实为 {value:?}（{chunk}）"));
-    }
-    value
-        .parse()
-        .map_err(|_| format!("参数 {key} 必须为整数，实为 {value:?}（{chunk}）"))
-}
-
-fn parse_bool(key: &str, value: &str, chunk: &str) -> Result<bool, String> {
-    match value {
-        "true" => Ok(true),
-        "false" => Ok(false),
-        _ => Err(format!(
-            "参数 {key} 必须为布尔值，实为 {value:?}（{chunk}）"
-        )),
-    }
-}
-
-fn non_empty(key: &str, value: &str, chunk: &str) -> Result<String, String> {
-    if value.is_empty() {
-        return Err(format!("参数 {key} 缺少取值（{chunk}）"));
-    }
-    Ok(value.to_string())
-}
-
-fn is_digits(text: &str) -> bool {
-    !text.is_empty() && text.chars().all(|c| c.is_ascii_digit())
-}
-
-fn is_integer(text: &str) -> bool {
-    let body = text.strip_prefix('-').unwrap_or(text);
-    !body.is_empty() && body.chars().all(|c| c.is_ascii_digit())
-}
+/// DSL 中的部落名到 `Tribe` 的映射，用于只能取部落的 `timesIf` 参数。
+const TRIBE_VALUES: &[(&str, Tribe)] = &[
+    ("人类", Tribe::Human),
+    ("机械", Tribe::Machine),
+    ("生物", Tribe::Biology),
+    ("植物", Tribe::Plant),
+    ("病毒", Tribe::Virus),
+    ("学者", Tribe::Scholar),
+];

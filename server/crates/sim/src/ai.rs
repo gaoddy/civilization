@@ -7,9 +7,7 @@ use std::collections::BTreeMap;
 
 use rule_engine::combat::{effective_attack, effective_health};
 use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
-use rule_engine::effects::{
-    Duration, KeywordSpec, Op, Pick, Selector, Side, Trigger, parse_effects,
-};
+use rule_engine::effects::{Duration, Op, Pick, Selector, Side, Trigger};
 use rule_engine::engine::Engine;
 use rule_engine::intent::{Intent, Reject, RejectCode};
 use rule_engine::state::{GameState, MinionInstance, PendingChoice, PlayerState, Seat};
@@ -184,8 +182,7 @@ fn choose_hero_power(player: &PlayerState, catalog: &Catalog) -> Option<Intent> 
 /// `duration=combat` 的授予不会写入 `MinionInstance::granted`，不能作为「何时使用」的
 /// 判据，因此不作为目标来源；没有可识别目标的技能不提议使用。
 fn hero_power_use(player: &PlayerState, catalog: &Catalog, skill: &Skill) -> Option<Option<u64>> {
-    let effects = parse_effects(&skill.effects).ok()?;
-    for effect in &effects {
+    for effect in &skill.effects {
         if effect.trigger != Trigger::OnActivate {
             continue;
         }
@@ -217,8 +214,9 @@ fn hero_power_use(player: &PlayerState, catalog: &Catalog, skill: &Skill) -> Opt
             continue;
         }
         if effect.op == Op::GrantKeyword
-            && let Some(KeywordSpec::Keyword(keyword, _)) = &effect.params.keyword
+            && let Some(keyword) = &effect.params.keyword
         {
+            let keyword = &keyword.keyword;
             let target = player
                 .board
                 .iter()

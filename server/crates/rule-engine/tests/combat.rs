@@ -34,7 +34,7 @@ fn add_card_with(
                 name: None,
                 keyword: Some((*keyword).to_string()),
                 text: String::new(),
-                effects: String::new(),
+                effects: effects_of("[]"),
                 cost: None,
                 uses_per_turn: None,
                 match_text: None,
@@ -82,7 +82,7 @@ fn add_effect_skill(
             name: None,
             keyword: Some(keyword.to_string()),
             text: String::new(),
-            effects: effects.to_string(),
+            effects: effects_of(effects),
             cost: None,
             uses_per_turn: None,
             match_text: None,
@@ -1381,4 +1381,9 @@ fn reborn_minion_does_not_act_again_after_acting() {
         Some(3),
         "本轮已行动过的随从复生后不会立即再次行动"
     );
+}
+
+/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
+fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
+    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

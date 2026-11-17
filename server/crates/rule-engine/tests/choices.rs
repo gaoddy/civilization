@@ -31,7 +31,7 @@ fn skill(id: &str, keyword: Option<&str>, effects: &str, cost: Option<u8>) -> Sk
         name: None,
         keyword: keyword.map(str::to_string),
         text: String::new(),
-        effects: effects.to_string(),
+        effects: effects_of(effects),
         cost,
         uses_per_turn: cost.map(|_| 1),
         match_text: None,
@@ -981,7 +981,7 @@ fn evolve_cards_without_evolve_do_not_register_choice() {
 // ---------------------------------------------------------------------------
 
 /// 用已提交数据构造一个把指定技能 `effects` 替换掉的 skills.json。
-fn skills_with_effects(skill_id: &str, effects: &str) -> String {
+fn skills_with_effects_json(skill_id: &str, effects: &str) -> String {
     let mut skills: serde_json::Value = serde_json::from_str(SKILLS_JSON).expect("技能数据合法");
     let target = skills
         .as_array_mut()
@@ -989,15 +989,15 @@ fn skills_with_effects(skill_id: &str, effects: &str) -> String {
         .iter_mut()
         .find(|skill| skill["id"] == skill_id)
         .expect("技能应存在于已提交数据");
-    target["effects"] = serde_json::Value::String(effects.to_string());
+    target["effects"] = serde_json::from_str(effects).expect("测试效果 JSON 合法");
     skills.to_string()
 }
 
 #[test]
 fn gain_minion_from_board_fails_at_load() {
-    let skills = skills_with_effects(
+    let skills = skills_with_effects_json(
         "efficient-algorithm",
-        "OnActivate|RefreshShop|self|free=true;OnActivate|GainMinion|self|from=board,level=current,to=hand",
+        r#"[{"trigger":"on_activate","op":"refresh_shop","selector":{"kind":"self"},"params":{"free":true}},{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"from":"board","level":"current","to":"hand"}}]"#,
     );
     let error = Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON)
         .expect_err("from=board 必须在加载期失败");
@@ -1011,9 +1011,9 @@ fn gain_minion_from_board_fails_at_load() {
 
 #[test]
 fn gain_minion_from_hand_fails_at_load() {
-    let skills = skills_with_effects(
+    let skills = skills_with_effects_json(
         "efficient-algorithm",
-        "OnActivate|GainMinion|self|from=hand,level=current,to=hand",
+        r#"[{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"from":"hand","level":"current","to":"hand"}}]"#,
     );
     assert!(
         Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON).is_err(),
@@ -1024,10 +1024,10 @@ fn gain_minion_from_hand_fails_at_load() {
 #[test]
 fn gain_minion_from_shop_or_omitted_loads() {
     for effects in [
-        "OnActivate|GainMinion|self|from=shop,level=current,to=hand",
-        "OnActivate|GainMinion|self|level=3,to=board",
+        r#"[{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"from":"shop","level":"current","to":"hand"}}]"#,
+        r#"[{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"level":"3","to":"board"}}]"#,
     ] {
-        let skills = skills_with_effects("efficient-algorithm", effects);
+        let skills = skills_with_effects_json("efficient-algorithm", effects);
         Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON)
             .unwrap_or_else(|error| panic!("{effects} 应能加载：{error}"));
     }
@@ -1073,4 +1073,9 @@ fn hash_covers_target_pending() {
             "待选字段不同应产生不同哈希：{variant:?}"
         );
     }
+}
+
+/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
+fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
+    parse_effects(raw).expect("测试效果应可解析")
 }

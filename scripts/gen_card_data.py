@@ -14,6 +14,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import validate_docs
+import audit_effects
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "server" / "data" / "v0.1"
@@ -63,13 +64,175 @@ def load_docs(content, kind):
     return sorted(docs, key=lambda doc: doc["id"])
 
 
-def raw_effects(value):
-    """effects 字段保留原始 DSL 字符串；front matter 的 `[]` 还原为 "[]"。"""
-    if isinstance(value, list):
-        if value:
-            raise ValueError(f"effects 不能是非空列表: {value!r}")
-        return "[]"
-    return str(value)
+TRIGGER_JSON = {
+    "OnPlay": "on_play",
+    "OnPlayEffect": "on_play_effect",
+    "OnUse": "on_use",
+    "OnActivate": "on_activate",
+    "OnTurnStart": "on_turn_start",
+    "OnFirstRefresh": "on_first_refresh",
+    "OnCombatStart": "on_combat_start",
+    "OnDealDamage": "on_deal_damage",
+    "OnDeath": "on_death",
+    "OnFriendlyDeath": "on_friendly_death",
+    "OnEnemyDeath": "on_enemy_death",
+    "OnAllySummon": "on_ally_summon",
+    "OnAllyGrowth": "on_ally_growth",
+    "OnAllyEvolve": "on_ally_evolve",
+    "OnCombatEnd": "on_combat_end",
+    "Aura": "aura",
+    "ConditionalAura": "conditional_aura",
+}
+
+OP_JSON = {
+    "Growth": "growth",
+    "ModifyStats": "modify_stats",
+    "GrantKeyword": "grant_keyword",
+    "RemoveGrowth": "remove_growth",
+    "CannotAttack": "cannot_attack",
+    "DealDamage": "deal_damage",
+    "Summon": "summon",
+    "Copy": "copy",
+    "Discover": "discover",
+    "RefreshShop": "refresh_shop",
+    "AddShopSlot": "add_shop_slot",
+    "GainMinion": "gain_minion",
+}
+
+PICK_JSON = {
+    "single": "single",
+    "all": "all",
+    "random": "random",
+    "leftmost": "leftmost",
+    "leftmost+adjacent": "leftmost_adjacent",
+    "topAttack": "top_attack",
+}
+
+COMPARE_JSON = (
+    (">=", "ge"),
+    ("<=", "le"),
+    ("==", "eq"),
+    (">", "gt"),
+    ("<", "lt"),
+)
+
+
+def _json_selector(selector):
+    """把选择器 DSL 转成 self / target / side 对象。"""
+    if selector == "self":
+        return {"kind": "self"}
+    if selector == "target":
+        return {"kind": "target"}
+    parts = selector.split(":")
+    filters = []
+    for segment in parts[2:]:
+        if not segment:
+            continue
+        key, value = segment.split("=", 1)
+        filters.append({"key": key, "value": value})
+    return {
+        "kind": "side",
+        "side": parts[0],
+        "pick": PICK_JSON[parts[1]],
+        "filters": filters,
+    }
+
+
+def _json_condition(value):
+    """把 `count:<side>:<key>=<value>:<cmp><n>` 转成结构化条件。"""
+    rest = value[len("count:"):]
+    side, filter_segment, compare_segment = rest.split(":")
+    key, filter_value = filter_segment.split("=", 1)
+    for prefix, name in COMPARE_JSON:
+        if compare_segment.startswith(prefix):
+            return {
+                "side": side,
+                "filter": {"key": key, "value": filter_value},
+                "compare": name,
+                "count": int(compare_segment[len(prefix):]),
+            }
+    raise ValueError(f"condition 无法解析: {value!r}")
+
+
+def _json_keyword(value, params):
+    """把 `keyword=繁衍 2` / `keyword=传染,value=1` 归一化为具名对象。"""
+    words = value.split()
+    base = words[0]
+    layer = int(words[1]) if len(words) > 1 else None
+    if layer is None and "value" in params:
+        layer = int(params["value"])
+    result = {"keyword": base}
+    if layer is not None:
+        result["value"] = layer
+    return result
+
+
+def _json_params(params):
+    """把 DSL 参数字典转成带类型的结构。"""
+    result = {}
+    for key, value in params.items():
+        if key == "type":
+            result["card_type"] = value
+        elif key in (
+            "times",
+            "count",
+            "amount",
+            "attack",
+            "health",
+            "value",
+            "extra",
+            "choose",
+        ):
+            result[key] = int(value)
+        elif key in ("canKill", "healthOnly", "free"):
+            name = {
+                "canKill": "can_kill",
+                "healthOnly": "health_only",
+                "free": "free",
+            }[key]
+            result[name] = value == "true"
+        elif key == "timesIf":
+            tribe, times = value.split(":", 1)
+            result["times_if"] = {"tribe": tribe, "times": int(times)}
+        elif key == "condition":
+            result["condition"] = _json_condition(value)
+        elif key == "when":
+            filter_key, filter_value = value.split("=", 1)
+            result["when"] = {"key": filter_key, "value": filter_value}
+        elif key == "keyword":
+            result["keyword"] = _json_keyword(value, params)
+        else:
+            result[key] = value
+    return result
+
+
+def structured_effects(value):
+    """把技能 effects DSL 编译为结构化数组；非法输入抛 ValueError。"""
+    effects, errors = validate_docs.parse_effects(value)
+    if errors:
+        raise ValueError("; ".join(errors))
+
+    result = []
+    for effect in effects:
+        trigger = effect["trigger"]
+        op = effect["op"]
+        params = effect["params"]
+        violations = list(audit_effects.check_effect(trigger, op, params))
+        if op == "GainMinion" and params.get("from") not in (None, "shop"):
+            violations.append(
+                f"GainMinion 的 from 只接受 shop，实为 {params['from']!r}"
+            )
+        if violations:
+            raise ValueError(f"{trigger}|{op}: " + "; ".join(violations))
+        result.append(
+            {
+                "trigger": TRIGGER_JSON[trigger],
+                "op": OP_JSON[op],
+                "selector": _json_selector(effect["selector"]),
+                "params": _json_params(params),
+            }
+        )
+    return result
 
 
 def card_entry(doc):
@@ -97,7 +260,7 @@ def skill_entry(doc):
         "name": doc.get("name"),
         "keyword": doc.get("keyword"),
         "text": doc["text"],
-        "effects": raw_effects(doc["effects"]),
+        "effects": structured_effects(doc["effects"]),
         "cost": doc.get("cost"),
         "uses_per_turn": doc.get("uses_per_turn"),
         "match_text": doc.get("match_text"),
