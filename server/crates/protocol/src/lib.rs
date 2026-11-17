@@ -33,8 +33,8 @@ pub mod server {
 /// 玩家可见状态视图。
 pub mod view {
     pub use crate::{
-        Affordances, BoardAffordance, BoardMinion, GameEvent, HandAffordance, HandCard,
-        PendingChoice, Phase, PlayerSummary, PlayerView, ShopAffordance, ShopSlot,
+        Affordances, BoardAffordance, BoardMinion, CombatLogEntry, GameEvent, HandAffordance,
+        HandCard, PendingChoice, Phase, PlayerSummary, PlayerView, ShopAffordance, ShopSlot,
     };
 }
 
