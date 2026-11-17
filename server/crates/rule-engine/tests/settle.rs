@@ -926,12 +926,16 @@ fn rank_of_hides_eliminated_in_tail() {
     state.ranking = vec![3];
 
     assert_eq!(rank_of(&state, 3), Some(8));
-    let alive_ranks: Vec<u8> = (0..8)
+    let mut alive_ranks: Vec<u8> = (0..8)
         .filter(|s| *s != 3)
         .filter_map(|s| rank_of(&state, s))
         .collect();
-    assert_eq!(alive_ranks.len(), 7);
-    assert!(alive_ranks.iter().all(|r| *r >= 1 && *r <= 7));
+    alive_ranks.sort_unstable();
+    assert_eq!(
+        alive_ranks,
+        vec![1, 2, 3, 4, 5, 6, 7],
+        "存活者名次应唯一且完备（1..=7）"
+    );
 }
 
 #[test]
@@ -955,4 +959,32 @@ fn rank_of_matches_compare_alive_order() {
     state.players[1].damage_dealt = 0;
     assert_eq!(rank_of(&state, 0), Some(1), "同生命时累计伤害高者名次靠前");
     assert_eq!(rank_of(&state, 1), Some(2));
+
+    // 同生命、同伤害，只有 `last_won` 不同：上战胜者靠前。
+    let (_, mut state) = Engine::new(test_catalog(), [6; 32]);
+    state.last_won.insert(1);
+    assert_eq!(
+        rank_of(&state, 1),
+        Some(1),
+        "同生命同伤害时上战胜者名次靠前"
+    );
+    assert_eq!(rank_of(&state, 0), Some(2));
+
+    // 所有键相同：座位号小者靠前，名次按座位升序连续。
+    let (_, state) = Engine::new(test_catalog(), [6; 32]);
+    let ranks: Vec<Option<u8>> = (0..8).map(|seat| rank_of(&state, seat)).collect();
+    assert_eq!(
+        ranks,
+        vec![
+            Some(1),
+            Some(2),
+            Some(3),
+            Some(4),
+            Some(5),
+            Some(6),
+            Some(7),
+            Some(8)
+        ],
+        "所有比较键相同时按座位号升序"
+    );
 }
