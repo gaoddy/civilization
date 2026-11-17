@@ -122,7 +122,11 @@ func _check_seat_rows() -> void:
         var fixed := _fixed_text(row)
         _expect(not fixed.contains("HP"), "座位行内不应出现 HP 文本：%s" % fixed)
         _expect(not fixed.contains("时代"), "座位行内不应出现时代：%s" % fixed)
-        _expect(not fixed.contains("随从"), "座位行内不应出现随从数：%s" % fixed)
+        _expect(
+            not fixed.contains(TranslationServer.translate("enum.card_type.minion")),
+            "座位行内不应出现随从数：%s" % fixed,
+        )
+        _expect(not fixed.contains("minion"), "座位行内不应回退为类型 id：%s" % fixed)
         for player_name in names:
             _expect(not fixed.contains(player_name), "座位行内不应出现玩家名：%s" % fixed)
     # rank 为 null 时不显示名次角标；其余行仍有角标。

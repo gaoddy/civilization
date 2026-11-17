@@ -632,3 +632,41 @@ token.seedling.name,幼苗
 token.synthetic-cell-token.name,合成细胞（幼体）
 ui.common.no_hero,未选英雄
 ui.game.era_format,时代 %s
+ui.lobby.create_room,创建房间
+ui.lobby.creating,正在创建房间…
+ui.lobby.enter_room_code,请输入房间码
+ui.lobby.join,加入
+ui.lobby.join_section,加入已有房间
+ui.lobby.joining,正在加入 %s …
+ui.lobby.logged_in,已登录：%s  %s
+ui.lobby.not_connected,未连接服务器
+ui.lobby.reconnected,连接已恢复
+ui.lobby.room_code_placeholder,6 位房间码
+ui.lobby.title,大厅
+ui.login.authenticating,正在认证…
+ui.login.code,验证码
+ui.login.connecting,正在连接 %s …
+ui.login.default_display_name,玩家A
+ui.login.disconnected,连接已断开，正在自动重连…
+ui.login.display_name,显示名
+ui.login.phone,手机号
+ui.login.server,服务器
+ui.login.submit,登录
+ui.login.subtitle,开发环境登录，验证码固定 123456
+ui.login.title,文明：七时代演进
+ui.result.back_to_lobby,返回大厅
+ui.result.my_place,你的名次：第 %d 名
+ui.result.my_place_unrecorded,你的名次：未记录
+ui.result.place_row,第 %d 名   %s
+ui.result.seed,对局种子：%s
+ui.result.title,对局结束
+ui.room.assigning_hero,正在分配英雄…
+ui.room.candidate_hint,从你的 %d 张候选里选一张，确认后不可更改。
+ui.room.confirm,确认
+ui.room.confirmed,已确认
+ui.room.confirmed_hero,已确认英雄：%s
+ui.room.not_connected,未连接服务器
+ui.room.select_hero,请选择英雄
+ui.room.submitted_hero,已提交英雄：%s
+ui.room.unconfirmed,未确认
+ui.room.waiting_for_players,等待其他玩家加入
