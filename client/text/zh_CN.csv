@@ -630,3 +630,5 @@ skill.virus-growth-once.text,使一个友方病毒随从获得一次成长
 token.hela-cell-token.name,海拉细胞（复制体）
 token.seedling.name,幼苗
 token.synthetic-cell-token.name,合成细胞（幼体）
+ui.common.no_hero,未选英雄
+ui.game.era_format,时代 %s

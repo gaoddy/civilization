@@ -267,7 +267,10 @@ static func initial(card_id: String) -> String:
 ## 卡面类型行：卡面宽度有限，只放部落；完整类型放在详情面板。
 static func tribe_text(entry: Dictionary) -> String:
     var tribe := str(entry.get("tribe", ""))
-    return tribe if tribe != "" else str(entry.get("card_type", "—"))
+    if tribe != "":
+        return UI.enum_text("tribe", tribe)
+    var card_type := str(entry.get("card_type", ""))
+    return UI.enum_text("card_type", card_type) if card_type != "" else "—"
 
 
 ## 详情类型行：卡牌类别与部落。
@@ -275,10 +278,10 @@ static func type_text(entry: Dictionary) -> String:
     var card_type := str(entry.get("card_type", ""))
     var tribe := str(entry.get("tribe", ""))
     if card_type == "":
-        return tribe if tribe != "" else "—"
+        return UI.enum_text("tribe", tribe) if tribe != "" else "—"
     if tribe == "" or tribe == card_type:
-        return card_type
-    return "%s·%s" % [card_type, tribe]
+        return UI.enum_text("card_type", card_type)
+    return "%s·%s" % [UI.enum_text("card_type", card_type), UI.enum_text("tribe", tribe)]
 
 
 ## 卡面数值：服务端或卡表缺失时用破折号占位。
@@ -309,7 +312,7 @@ static func damage_text(value: int) -> String:
 
 ## 统一时代文案：顶栏、积分榜、属性行与战斗条都显示具体时代名。
 static func era_text(era: int) -> String:
-    return "时代 %s" % CardDB.era_name(era)
+    return TranslationServer.translate("ui.game.era_format") % CardDB.era_name(era)
 
 
 ## 可空字段转文本：缺失统一为空串。
