@@ -914,7 +914,7 @@ fn combat_state_hash_matches_golden_baseline() {
 }
 
 #[test]
-fn mixed_real_and_mirror_reports_cover_exactly_three_seats() {
+fn mixed_real_and_ghost_reports_cover_exactly_three_seats() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [5; 32]);
     add_card(&mut engine.catalog, "combat-a", 5, 5, &[]);
     add_card(&mut engine.catalog, "combat-b", 1, 1, &[]);

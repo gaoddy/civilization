@@ -170,6 +170,18 @@ fn combat_resolved_is_never_sent() {
 }
 
 #[test]
+fn combat_drawn_is_never_sent() {
+    let event = GameEvent::CombatDrawn { a: 1, b: 2 };
+
+    for seat in 0..8 {
+        assert!(
+            for_seat(&event, seat, &seats()).is_none(),
+            "互清平局只供观测，不得出现在 StateUpdate.events"
+        );
+    }
+}
+
+#[test]
 fn public_turn_events_reach_all_seats() {
     let events = [
         GameEvent::TurnStarted { turn: 3 },

@@ -43,6 +43,7 @@ pub fn to_protocol(
     deadline: &str,
     seats: &[SeatInfo; 8],
     board_slots: usize,
+    hp_cap: i32,
 ) -> Result<PlayerView, ProtocolError> {
     let seat_index = usize::from(seat_view.seat);
     let me = seats.get(seat_index).ok_or(ProtocolError("BAD_PAYLOAD"))?;
@@ -71,10 +72,13 @@ pub fn to_protocol(
     Ok(PlayerView {
         board_slots: NonZeroU64::new(u64::try_from(board_slots).unwrap_or(u64::MAX))
             .ok_or(ProtocolError("BAD_PAYLOAD"))?,
-        // 协议字段已就位，下发逻辑随后续任务接入。
+        // 战报由调用方在组装后填入 `GameTask.combat_log`。
         combat_log: Vec::new(),
-        // v0.1 的 `catalog.config.initial_hp` 为 40；Task 6 改为从配置传入，勿在此处按需硬编码其他值。
-        hp_cap: NonZeroU64::new(40).ok_or(ProtocolError("BAD_PAYLOAD"))?,
+        // 生命上限来自 catalog 配置；非正值说明配置被破坏。
+        hp_cap: u64::try_from(hp_cap)
+            .ok()
+            .and_then(NonZeroU64::new)
+            .ok_or(ProtocolError("BAD_PAYLOAD"))?,
         enabled_factions,
         opponent_player_id: seat_view
             .opponent_seat

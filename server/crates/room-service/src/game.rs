@@ -24,7 +24,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use protocol::server::{CombatResult, ErrorMessage, GameOver, GameStarted, Snapshot, StateUpdate};
-use protocol::view::GameEvent as ProtocolGameEvent;
+use protocol::view::{CombatLogEntry, GameEvent as ProtocolGameEvent};
 use protocol::{ErrorCode, GameOverRankingItem, ProtocolError, ServerEnvelope};
 use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
@@ -155,6 +155,11 @@ pub struct GameTask {
     combat_reports: Option<BTreeMap<Seat, SeatCombatReport>>,
     /// 本场战斗的演示时长（毫秒）；参与下回合招募预算抵扣。
     combat_duration_ms: u64,
+    /// 最近 5 个回合的全对局公开战报，按回合升序。
+    ///
+    /// 只存在 `GameTask` 上，不写入 [`GameState`]，因此不影响 `state_hash` 与
+    /// 确定性重放；重连快照从当前视图自然带出。
+    combat_log: Vec<CombatLogEntry>,
     /// 每个座位当前连接的下行发送端；首次建连经 [`GameTask::bind_sender`] 注册，
     /// 重连时被替换。所有权只在这里，连接层通过 [`GameTask::sender`] 借用投递。
     senders: BTreeMap<Seat, mpsc::Sender<ServerEnvelope>>,
@@ -226,6 +231,7 @@ impl GameTask {
             phase_deadline_ms,
             combat_reports: None,
             combat_duration_ms: 0,
+            combat_log: Vec::new(),
             senders: BTreeMap::new(),
             connected: [true; SEAT_COUNT],
             disconnected_at_ms: [None; SEAT_COUNT],
@@ -252,14 +258,17 @@ impl GameTask {
     /// 指定座位当前协议视图；座位不存在或内部数据不合法时返回 `None`。
     pub fn player_view(&self, seat: Seat) -> Option<protocol::view::PlayerView> {
         let seat_view = view(&self.engine, &self.state, seat)?;
-        to_protocol(
+        let mut protocol_view = to_protocol(
             &seat_view,
             &self.room_id,
             &self.deadline_rfc3339(),
             &self.seats,
             self.engine.catalog.config.board_slots,
+            self.engine.catalog.config.initial_hp,
         )
-        .ok()
+        .ok()?;
+        protocol_view.combat_log = self.combat_log.clone();
+        Some(protocol_view)
     }
 
     /// 指定座位当前的全量 `StateUpdate`；快照请求不携带事件。
@@ -543,6 +552,72 @@ impl GameTask {
         }
     }
 
+    /// 把本场逐座位报告归一为战报并追加到最近五回合窗口。
+    ///
+    /// 真实战在 `reports` 里两个座位各一条，只保留座位号较小的一条；
+    /// 幽灵战本来只有落单座位一条。战报回合号取结算时刻的 `state.turn`，
+    /// 追加后丢弃早于 `turn - 4` 的条目。
+    fn record_combat_log(&mut self, reports: &BTreeMap<Seat, SeatCombatReport>) {
+        let Some(turn) = std::num::NonZeroU64::new(u64::from(self.state.turn)) else {
+            return;
+        };
+        for report in reports.values() {
+            let opponent = report.opponent_seat;
+            // 真实战的另一半报告指向更小座位时跳过，保证一场只记一条。
+            if !report.mirror {
+                let Some(opponent) = opponent else {
+                    continue;
+                };
+                if report.seat > opponent {
+                    continue;
+                }
+            }
+            let participant_ids = if report.mirror {
+                vec![self.player_id(report.seat)]
+            } else {
+                let Some(opponent) = opponent else { continue };
+                let mut participants = [report.seat, opponent];
+                participants.sort_unstable();
+                participants
+                    .into_iter()
+                    .map(|seat| self.player_id(seat))
+                    .collect()
+            };
+            let (winner_id, loser_id) = match report.winner {
+                // 平局：双方都为 null，伤害为 0。
+                None => (None, None),
+                Some(winner) if winner == report.seat => (
+                    Some(self.player_id(winner)),
+                    // 幽灵没有玩家 id，玩家赢下幽灵战时 loserId 为 null。
+                    opponent.map(|opponent| self.player_id(opponent)),
+                ),
+                Some(winner) => (
+                    // 幽灵赢时 `winner` 是幽灵归属座位，同样没有玩家 id。
+                    if report.mirror {
+                        None
+                    } else {
+                        Some(self.player_id(winner))
+                    },
+                    Some(self.player_id(report.seat)),
+                ),
+            };
+            self.combat_log.push(CombatLogEntry {
+                damage: u64::try_from(report.damage).unwrap_or(0),
+                loser_id,
+                mirror: report.mirror,
+                participant_ids,
+                turn,
+                winner_id,
+            });
+        }
+        let oldest = u64::from(self.state.turn.saturating_sub(4));
+        self.combat_log.retain(|entry| entry.turn.get() >= oldest);
+    }
+
+    fn player_id(&self, seat: Seat) -> String {
+        self.seats[usize::from(seat)].player_id.clone()
+    }
+
     /// 把逐座位战斗报告转成 `CombatResult` 更新：一份报告对应一条更新。
     ///
     /// 镜像战在 `outcome.reports` 里只有该座位自己的一条，因此只会产生 1 条更新。
@@ -575,6 +650,7 @@ impl GameTask {
         events.extend(self.engine.finish_recruit(&mut self.state)?);
         let outcome = self.engine.resolve_combat(&mut self.state)?;
         events.extend(outcome.events);
+        self.record_combat_log(&outcome.reports);
 
         // `resolve_combat` 是纯计算，按引擎口径把阶段推到 `Settle`。演示期间要停在
         // `Combat`：结算产物（伤害、淘汰）已写入状态，但结算本身推迟到
