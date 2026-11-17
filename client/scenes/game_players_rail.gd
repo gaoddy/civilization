@@ -1,6 +1,6 @@
 class_name GamePlayersRail
 extends PanelContainer
-## 左栏积分榜：每座位一行头像 + 名次角标 + 血条，点击展开该座位的战报。
+## 左栏座位列：每座位一行头像 + 名次角标 + 血条，点击展开该座位的战报。
 ##
 ## 只读 `GameUiState.view`，不持有页面门控与意图；展开的座位按 `playerId`
 ## 记住，刷新整块重建后同一玩家仍然展开。
@@ -178,7 +178,7 @@ func _player_names(view: Dictionary) -> Dictionary:
 
 
 ## 「第 N 回合 · 对手名 · 胜/负 · 伤害 X」；幽灵战对手写「幽灵（名字）」，
-## 伤害为 0 时省略伤害段。
+## `ghostId` 为空时只写「幽灵」、不写空括号；伤害为 0 时省略伤害段。
 func _entry_text(entry: Dictionary, player_id: String, names: Dictionary) -> String:
     var opponent_id := ""
     for pid in entry.get("participantIds", []):

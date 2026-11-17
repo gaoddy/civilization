@@ -93,6 +93,7 @@ func _fixed_text(row: Node) -> String:
             cursor = cursor.get_parent()
         if not in_report:
             text += str(child.text) + "\n"
+    _expect(text.strip_edges() != "", "座位行固定部分应至少有一个文本，避免空串让断言空转")
     return text
 
 
