@@ -92,7 +92,7 @@ pub struct Filter {
 
 /// 效果作用对象。
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Selector {
     /// `{"kind": "self"}`
     #[serde(rename = "self")]

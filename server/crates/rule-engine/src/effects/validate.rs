@@ -102,7 +102,7 @@ pub(crate) fn op_spec(op: Op) -> OpSpec {
             &[&["token", "card"]],
         ),
         Op::Copy => (&["to"], &["from", "type"], &[]),
-        Op::Discover => (&["pool"], &["choose"], &[]),
+        Op::Discover => (&["pool", "choose"], &[], &[]),
         Op::RefreshShop => (&[], &["free", "extra"], &[]),
         Op::AddShopSlot => (&["era", "count"], &[], &[]),
         Op::GainMinion => (&["level", "to"], &["from"], &[]),

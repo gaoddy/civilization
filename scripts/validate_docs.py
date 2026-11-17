@@ -62,7 +62,7 @@ OP_SPEC = {
     "GrantKeyword": ({"keyword"}, {"value", "duration", "condition", "when"}, set()),
     "RemoveGrowth": (set(), {"condition", "when"}, set()),
     "CannotAttack": (set(), {"duration"}, set()),
-    "DealDamage": ({"amount"}, {"source", "when"}, set()),
+    "DealDamage": ({"amount"}, {"when", "canKill"}, set()),
     "Summon": ({"count"}, {"token", "card", "when"}, {("token", "card")}),
     "Copy": ({"to"}, {"from", "type"}, set()),
     "Discover": ({"pool"}, {"choose"}, set()),
@@ -198,6 +198,8 @@ def check_params(op, params, chunk):
             errors.append(f"参数 {key} 非法 {val!r}（{chunk}）")
         elif key == "type" and val not in CARD_TYPES:
             errors.append(f"参数 type 非法 {val!r}（{chunk}）")
+        elif key in ("canKill", "healthOnly", "free") and val not in ("true", "false"):
+            errors.append(f"参数 {key} 必须为布尔值，实为 {val!r}（{chunk}）")
         elif key == "keyword" and val.split()[0] not in KEYWORD_BASES:
             errors.append(f"keyword 非法 {val!r}（{chunk}）")
         elif key == "condition" and not CONDITION_RE.fullmatch(val):

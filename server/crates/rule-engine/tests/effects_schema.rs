@@ -91,3 +91,16 @@ fn string_effects_are_rejected_at_load() {
     let bad = r#"[{"id":"x","text":"x","effects":"OnPlay|Growth|self|times=1"}]"#;
     assert!(Catalog::from_json("[]", bad, "[]", CONFIG_JSON).is_err());
 }
+
+#[test]
+fn rejects_unknown_selector_field() {
+    let raw = r#"[{"trigger":"on_activate","op":"growth","selector":{"kind":"side","side":"friendly","pick":"all","filter":[{"key":"tribe","value":"人类"}]},"params":{"times":1}}]"#;
+    assert!(serde_json::from_str::<Vec<Effect>>(raw).is_err());
+}
+
+#[test]
+fn rejects_discover_without_choose() {
+    let raw = r#"[{"trigger":"on_activate","op":"discover","selector":{"kind":"self"},"params":{"pool":"tribe"}}]"#;
+    let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
+    assert!(validate_effects(&effects).is_err());
+}

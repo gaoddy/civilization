@@ -68,6 +68,52 @@ class StructuredEffectsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             gen_card_data.structured_effects("OnPlay|Explode|self")
 
+    def test_rejects_empty_identifiers(self):
+        for raw in (
+            "OnPlay|Summon|self|count=1,token=",
+            "OnPlay|Summon|self|count=1,card=",
+            "OnActivate|Discover|self|pool=,choose=1",
+            "OnFirstRefresh|AddShopSlot|self|era=,count=1",
+        ):
+            with self.subTest(raw=raw), self.assertRaises(ValueError):
+                gen_card_data.structured_effects(raw)
+
+    def test_rejects_out_of_range_integer(self):
+        with self.assertRaises(ValueError):
+            gen_card_data.structured_effects(
+                "OnPlay|DealDamage|enemy:single|amount=2147483648"
+            )
+
+    def test_rejects_unknown_source_param(self):
+        with self.assertRaises(ValueError):
+            gen_card_data.structured_effects(
+                "OnPlay|DealDamage|enemy:single|amount=1,source=x"
+            )
+
+    def test_rejects_self_or_target_as_side(self):
+        with self.assertRaises(ValueError):
+            gen_card_data.structured_effects("OnPlay|Growth|self:single|times=1")
+
+    def test_accepts_can_kill_on_damage(self):
+        effect = gen_card_data.structured_effects(
+            "OnPlay|DealDamage|enemy:single|amount=1,canKill=true"
+        )[0]
+        self.assertEqual(effect["params"]["can_kill"], True)
+
+    def test_rejects_keyword_layer_mismatch(self):
+        for raw in (
+            "OnCombatStart|GrantKeyword|enemy:all|keyword=嘲讽 1",
+            "OnCombatStart|GrantKeyword|enemy:all|keyword=繁衍,value=-1",
+        ):
+            with self.subTest(raw=raw), self.assertRaises(ValueError):
+                gen_card_data.structured_effects(raw)
+
+    def test_inline_keyword_layer_is_accepted(self):
+        effect = gen_card_data.structured_effects(
+            "OnCombatStart|GrantKeyword|enemy:all|keyword=繁衍 2"
+        )[0]
+        self.assertEqual(effect["params"]["keyword"], {"keyword": "繁衍", "value": 2})
+
     def test_invalid_from_raises(self):
         with self.assertRaises(ValueError):
             gen_card_data.structured_effects(

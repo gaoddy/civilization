@@ -167,6 +167,69 @@ def _json_keyword(value, params):
     return result
 
 
+I32_MIN, I32_MAX = -(2**31), 2**31 - 1
+INTEGER_KEYS = ("times", "count", "amount", "attack", "health", "value", "extra", "choose")
+IDENTIFIER_KEYS = ("token", "card", "pool", "era")
+
+
+def check_structured(effect):
+    """按引擎 validate.rs 的同一组规则校验结构化效果，返回违规消息。
+
+    `structured_effects` 在输出前调用，保证 `make data` 通过的数据能被引擎加载；
+    规则与 Rust `effects/validate.rs` 一一对应，改一处必须同步另一处。
+    """
+    trigger = effect["trigger"]
+    op = effect["op"]
+    selector = effect["selector"]
+    params = effect["params"]
+    violations = []
+
+    if trigger in ("aura", "conditional_aura") and op not in ("modify_stats", "grant_keyword"):
+        violations.append(f"光环触发只能用 modify_stats / grant_keyword，实为 {op}")
+
+    for key in INTEGER_KEYS:
+        value = params.get(key)
+        if isinstance(value, int) and not I32_MIN <= value <= I32_MAX:
+            violations.append(f"参数 {key} 超出 i32 范围：{value}")
+
+    if "times_if" in params:
+        times = params["times_if"]["times"]
+        if op != "growth" or "times" not in params:
+            violations.append("timesIf 只能与 Growth 的 times 同时出现")
+        if not 0 <= times <= I32_MAX:
+            violations.append(f"timesIf 的次数非法：{times}")
+
+    if "condition" in params and not 0 <= params["condition"]["count"] <= I32_MAX:
+        violations.append(f"condition 的 count 非法：{params['condition']['count']}")
+
+    for key in IDENTIFIER_KEYS:
+        if key in params and not params[key]:
+            violations.append(f"参数 {key} 不能为空")
+
+    if "keyword" in params:
+        keyword = params["keyword"]
+        base = keyword["keyword"]
+        layer = keyword.get("value", params.get("value"))
+        if base in audit_effects.VALUE_KEYWORDS:
+            if layer is None:
+                violations.append(f"keyword {base} 必须带层数")
+            elif not 0 <= layer <= I32_MAX:
+                violations.append(f"keyword {base} 的层数不能为负：{layer}")
+        elif layer is not None:
+            violations.append(f"keyword {base} 禁止层数与 value")
+
+    if op == "discover" and params.get("choose") != 1:
+        violations.append(f"Discover 的 choose 必须为 1，实为 {params.get('choose')!r}")
+
+    if op == "gain_minion" and params.get("from") not in (None, "shop"):
+        violations.append(f"GainMinion 的 from 只接受 shop，实为 {params.get('from')!r}")
+
+    if selector["kind"] == "side" and selector["side"] not in ("friendly", "enemy", "both"):
+        violations.append(f"选择器阵营非法 {selector['side']!r}")
+
+    return violations
+
+
 def _json_params(params):
     """把 DSL 参数字典转成带类型的结构。"""
     result = {}
@@ -218,20 +281,16 @@ def structured_effects(value):
         op = effect["op"]
         params = effect["params"]
         violations = list(audit_effects.check_effect(trigger, op, params))
-        if op == "GainMinion" and params.get("from") not in (None, "shop"):
-            violations.append(
-                f"GainMinion 的 from 只接受 shop，实为 {params['from']!r}"
-            )
+        structured = {
+            "trigger": TRIGGER_JSON[trigger],
+            "op": OP_JSON[op],
+            "selector": _json_selector(effect["selector"]),
+            "params": _json_params(params),
+        }
+        violations.extend(check_structured(structured))
         if violations:
             raise ValueError(f"{trigger}|{op}: " + "; ".join(violations))
-        result.append(
-            {
-                "trigger": TRIGGER_JSON[trigger],
-                "op": OP_JSON[op],
-                "selector": _json_selector(effect["selector"]),
-                "params": _json_params(params),
-            }
-        )
+        result.append(structured)
     return result
 
 
