@@ -1,6 +1,6 @@
 class_name GameCombatView
 extends PanelContainer
-## 战斗视图：双方英雄条、随从行与结果横幅。
+## 战斗视图：双方随从行与结果横幅。
 ##
 ## 演示进度由 `CombatPlayback` 纯数据播放器驱动；页面只负责在演示中调用
 ## `advance()`，本视图不发送任何意图。
@@ -9,11 +9,9 @@ extends PanelContainer
 var detail: GameDetailLayer = null
 
 var _body: VBoxContainer
-var _opponent_strip: HBoxContainer
 var _opponent_row: HFlowContainer
 var _banner: Label
 var _own_row: HFlowContainer
-var _self_strip: HBoxContainer
 ## 演示播放器（纯数据）与当前演示所属回合。
 var _combat := CombatPlayback.new()
 var _combat_turn := -1
@@ -31,11 +29,6 @@ func _init() -> void:
     _body.add_theme_constant_override("separation", UITheme.space("space-sm"))
     add_child(_body)
 
-    _opponent_strip = HBoxContainer.new()
-    _opponent_strip.name = "CombatOpponentStrip"
-    _opponent_strip.add_theme_constant_override("separation", UITheme.space("space-md"))
-    _body.add_child(_opponent_strip)
-
     _body.add_child(UI.section_title("对手随从"))
     _opponent_row = _new_flow_row("CombatOpponentRow")
     _body.add_child(_opponent_row)
@@ -50,15 +43,6 @@ func _init() -> void:
     _own_row = _new_flow_row("CombatOwnRow")
     _body.add_child(_own_row)
 
-    var strip_spacer := Control.new()
-    strip_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _body.add_child(strip_spacer)
-
-    _self_strip = HBoxContainer.new()
-    _self_strip.name = "CombatSelfStrip"
-    _self_strip.add_theme_constant_override("separation", UITheme.space("space-md"))
-    _body.add_child(_self_strip)
-
 
 func _new_flow_row(node_name: String) -> HFlowContainer:
     var row := HFlowContainer.new()
@@ -70,8 +54,6 @@ func _new_flow_row(node_name: String) -> HFlowContainer:
 
 
 func refresh(state: GameUiState) -> void:
-    _fill_combat_strip(_opponent_strip, _opponent_of(state.view), "对手")
-    _fill_combat_strip(_self_strip, _self_player(state.view), "我")
     if not GameStore.combat_is_current():
         _banner.visible = false
         UI.clear(_opponent_row)
@@ -206,46 +188,6 @@ func _set_combat_banner(combat: Dictionary) -> void:
         _combat.opponent.size(),
     ]
     _banner.add_theme_color_override("font_color", UITheme.color("color-" + variant) if variant != "accent" else UITheme.color("color-accent"))
-
-
-func _fill_combat_strip(container: HBoxContainer, player: Dictionary, fallback: String) -> void:
-    UI.clear(container)
-    var hero_id := GameCardFace.optional_text(player.get("heroCardId"))
-    container.add_child(UI.avatar(hero_id, UITheme.metric("avatar-lg")))
-
-    var lines := VBoxContainer.new()
-    lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    lines.add_theme_constant_override("separation", 0)
-    container.add_child(lines)
-
-    var display := GameCardFace.optional_text(player.get("displayName"))
-    var name_label := UI.label(display if display != "" else fallback, UITheme.font_size("font-title"), false)
-    lines.add_child(name_label)
-
-    var meta := UI.label("HP %d · %s · 随从 %d" % [
-        int(player.get("hp", 0)),
-        GameCardFace.era_text(int(player.get("era", 1))),
-        int(player.get("boardCount", 0)),
-    ], UITheme.font_size("font-caption"), false)
-    meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    lines.add_child(meta)
-
-
-func _opponent_of(view: Dictionary) -> Dictionary:
-    var opponent_id := GameCardFace.optional_text(view.get("opponentPlayerId"))
-    if opponent_id == "":
-        return {}
-    for player in view.get("players", []):
-        if str(player.get("playerId", "")) == opponent_id:
-            return player
-    return {}
-
-
-func _self_player(view: Dictionary) -> Dictionary:
-    for player in view.get("players", []):
-        if str(player.get("playerId", "")) == GameStore.player_id:
-            return player
-    return view.get("self", {})
 
 
 ## RFC3339 时间转 Unix 秒；供演示续播按 `phaseDeadline` 反推进度。
