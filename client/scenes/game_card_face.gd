@@ -4,7 +4,9 @@ extends RefCounted
 ##
 ## 只构造控件，不持有页面状态；商店、棋盘与战斗只读卡都从这里取卡面。
 
-## 统一卡面：封面铺满整卡，底部信息区依次为居中名称与「攻击 · 类型 · 生命」。
+## 统一卡面：封面铺满整卡，左上费用、右上时代，底部信息区依次为居中名称与
+## 「攻击 · 类型 · 生命」。`cost_text`/`era_text` 为空时不渲染角标；`frozen`
+## 为真时盖整卡蒙层、叠冰晶并保留右下「冻」字。
 ## 所有子节点忽略鼠标，点击与悬停由外层卡片决定。
 static func face(
     card_id: String,
@@ -12,6 +14,9 @@ static func face(
     health_text: String,
     type_text: String,
     badge_text := "",
+    cost_text := "",
+    era_text := "",
+    frozen := false,
 ) -> Control:
     var entry := CardDB.card(card_id)
     var face_node := Control.new()
@@ -36,7 +41,9 @@ static func face(
     watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
     face_node.add_child(watermark)
 
-    if badge_text != "":
+    if cost_text != "" or era_text != "":
+        _add_corner_badges(face_node, cost_text, era_text, badge_text)
+    elif badge_text != "":
         var badge := UI.pill_label(badge_text, "accent", "font-caption")
         badge.name = "CardBadge"
         badge.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -88,7 +95,110 @@ static func face(
     health_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     stats_row.add_child(health_label)
     face_node.add_child(info)
+
+    if frozen:
+        _add_freeze_overlay(face_node)
     return face_node
+
+
+## 左上费用与右上时代的角标行；窄卡上左右贴边、互不重叠。
+static func _add_corner_badges(
+    face_node: Control,
+    cost_text: String,
+    era_text: String,
+    badge_text: String,
+) -> void:
+    var margin := UITheme.space("space-xs")
+    var row := HBoxContainer.new()
+    row.name = "CardCorners"
+    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    row.set_anchors_preset(Control.PRESET_TOP_WIDE)
+    row.offset_left = margin
+    row.offset_right = -margin
+    row.offset_top = margin
+    row.offset_bottom = margin + _badge_height()
+    face_node.add_child(row)
+
+    if cost_text != "":
+        var cost := _corner_badge(cost_text, "accent")
+        cost.name = "CostBadge"
+        row.add_child(cost)
+
+    if badge_text != "":
+        var badge := _corner_badge(badge_text, "accent")
+        badge.name = "CardBadge"
+        row.add_child(badge)
+
+    var spacer := Control.new()
+    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_child(spacer)
+
+    if era_text != "":
+        var era := _corner_badge(era_text, "info")
+        era.name = "EraBadge"
+        row.add_child(era)
+
+
+## 窄卡角标：比胶囊更紧凑，避免两角标在 108 宽的商店卡上相撞。
+static func _corner_badge(text: String, variant: String) -> Label:
+    var badge := UI.pill_label(text, variant, "font-caption")
+    var style := UITheme.pill_style(variant)
+    style.content_margin_left = UITheme.space("space-xs")
+    style.content_margin_right = UITheme.space("space-xs")
+    badge.add_theme_stylebox_override("normal", style)
+    badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    return badge
+
+
+static func _badge_height() -> int:
+    return UITheme.font_size("font-caption") + UITheme.space("space-2xs") * 2 + 2
+
+
+## 冻结表现：整卡半透明蒙层 + 固定角度与间距的冰晶细线 + 右下角「冻」字。
+static func _add_freeze_overlay(face_node: Control) -> void:
+    var overlay := ColorRect.new()
+    overlay.name = "FreezeOverlay"
+    overlay.color = UITheme.alpha("color-info", UITheme.opacity("freeze-overlay-alpha"))
+    overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+    overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    face_node.add_child(overlay)
+
+    var crystals := Control.new()
+    crystals.name = "FreezeCrystals"
+    crystals.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    crystals.clip_contents = true
+    crystals.set_anchors_preset(Control.PRESET_FULL_RECT)
+    overlay.add_child(crystals)
+
+    # 斜向细线：角度与间距由令牌固定，不随卡片尺寸变化。
+    var gap := UITheme.metric("freeze-crystal-gap")
+    var line_color := UITheme.alpha("color-info", 0.55)
+    for index in 10:
+        var line := ColorRect.new()
+        line.color = line_color
+        line.size = Vector2(gap * 2, 1)
+        line.position = Vector2(
+            -gap + (index % 2) * gap / 2.0,
+            -gap + index * gap,
+        )
+        line.rotation = deg_to_rad(45.0)
+        line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        crystals.add_child(line)
+
+    var glyph := UI.label("冻", UITheme.font_size("font-caption"), false)
+    glyph.name = "FreezeGlyph"
+    glyph.add_theme_color_override("font_color", UITheme.color("color-info"))
+    glyph.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+    glyph.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+    glyph.grow_vertical = Control.GROW_DIRECTION_BEGIN
+    var edge := UITheme.space("space-xs")
+    glyph.offset_left = -edge
+    glyph.offset_top = -edge
+    glyph.offset_right = -edge
+    glyph.offset_bottom = -edge
+    glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    overlay.add_child(glyph)
 
 
 ## 战斗演示的只读随从卡：不带拖拽数据，也不可交互。

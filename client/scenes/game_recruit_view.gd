@@ -252,7 +252,10 @@ func _refresh_shop(state: GameUiState) -> void:
             GameCardFace.stat_text(entry.get("attack")),
             GameCardFace.stat_text(entry.get("health")),
             GameCardFace.tribe_text(entry),
-            "冻" if bool(slot.get("frozen", false)) else "",
+            "",
+            str(CardDB.display_cost(card_id)),
+            str(entry.get("era", "")),
+            bool(slot.get("frozen", false)),
         ))
         if detail != null:
             detail.track(panel, {
