@@ -21,6 +21,8 @@
 | `synthetic-cell-token` | 合成细胞（幼体） | 3 | 3 | 无 | 人造子宫 |
 | `hela-cell-token` | 海拉细胞（复制体） | 2 | 2 | 无 | 海拉细胞 |
 
+「关键词」列如有取值，写英文 id（`battlecry`、`taunt`、`breed N` 等，见[关键词与机制](../../rules/keywords-and-mechanics.md) §1）；「名称」列是文本来源，运行时由文本表 `token.<id>.name` 承载（`client/text/zh_CN.csv`）。
+
 ## 相关文档
 
 - [内容索引](../README.md)

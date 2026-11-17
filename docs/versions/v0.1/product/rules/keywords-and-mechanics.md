@@ -26,6 +26,8 @@
 
 **字段口径**：卡牌不再有 `keywords` 字段；关键词由所引用技能的 `keyword` 字段派生，共 12 个常驻词。「成长」是效果原语，只出现在效果文本与 `Growth` 结算中，不登记为技能 `keyword`。
 
+**英文名转数据 id**：数据与协议里一律使用英文 id，由本节「英文名」列按固定规则转写——去掉末尾的层数标记 `N`（含具体数字），转小写，空格转下划线。例如 `Optimal Attack` → `optimal_attack`、`Divine Shield` → `divine_shield`、`Breed N` → `breed`、`Assemble N` → `assemble`。层数不写进 id：技能 `keyword` 写作 `breed 2` 这样「id + 空格 + 层数」，效果 DSL 用 `keyword=breed,value=2` 表达；文本表按 `enum.keyword.<id>` 提供展示名。
+
 **传染的口径**：传染对召唤物同样生效——召唤物也是随从，获得传染层数并照常结算。首版没有击杀类效果，传染造成的死亡不定义击杀归属；后续若引入击杀效果，再按"造成致命伤害的随从"归属。
 
 ### 1.1 流派专属关键词
@@ -232,7 +234,7 @@
 | --- | --- |
 | 区域 | 战场 / 手牌 |
 | 阵营 | 己方 / 敌方 / 双方 / 自身 / 事件目标 |
-| 筛选 | 流派、子类、卡名、类型、是否学者、是否带某关键词、「其他」 |
+| 筛选 | 流派、子类、卡牌 id、类型、是否学者、是否带某关键词、「其他」 |
 | 选取 | 玩家指定 / 随机（走种子）/ 最左侧 / 最左侧及相邻 / 攻击力最高 / 全部 / 随机 N 个 |
 
 ### 9.3 动作原语
@@ -276,7 +278,7 @@
 
 - 阵营：`friendly` / `enemy` / `both`；
 - 选取：`single`（玩家指定）/ `all` / `random` / `leftmost` / `leftmost+adjacent` / `topAttack`；
-- 筛选：`tribe=<流派>`、`subtype=<子类>`、`name=<卡名>`、`type=<随从|效果>`、`other=<true|false>`；多个筛选并列即同时满足。
+- 筛选：`tribe=<human|machine|biology|plant|virus|scholar>`、`subtype=<subtype slug>`、`id=<卡牌 id>`、`type=<minion|effect>`、`other=<true|false>`；多个筛选并列即同时满足。
 
 **参数**：
 
@@ -286,14 +288,14 @@
 | `duration` | `permanent` / `combat` | 见 §3.1；省略按 `instant` |
 | `canKill` | `true` / `false` | 负向修改是否可致死 |
 | `healthOnly` | `true` / `false` | 成长只加生命值 |
-| `timesIf` | `<流派>:<次数>` | 目标属于该流派时改次数 |
-| `condition` | `count:<阵营>:<筛选>:<比较符><数值>` | 控制数量条件，如 `count:friendly:tribe=人类:>=3` |
-| `when` | `<筛选>` | 限定触发事件的对象，如 `when=tribe=生物` |
-| `keyword` | §1 词表基名 | 赋予的关键词；`繁衍` / `装配` 另带 `value` |
+| `timesIf` | `<英文流派 id>:<次数>` | 目标属于该流派时改次数，如 `timesIf=human:2` |
+| `condition` | `count:<阵营>:<筛选>:<比较符><数值>` | 控制数量条件，如 `count:friendly:tribe=human:>=3` |
+| `when` | `<筛选>` | 限定触发事件的对象，如 `when=tribe=biology` |
+| `keyword` | §1 的英文 id（如 `taunt`、`optimal_attack`） | 赋予的关键词；`breed` / `assemble` 另带 `value` 层数 |
 | `token` / `card` | Token 注册表 id / 卡牌 id | 召唤目标；`Summon` 二者取一 |
 | `to` | `hand` / `board` | 复制或获得的目标区域 |
 | `from` | `hand` / `board` / `shop` | 复制或获得的来源 |
-| `type` | `随从` / `效果` | 从手牌复制时限定卡牌类型 |
+| `type` | `minion` / `effect` | 从手牌复制时限定卡牌类型 |
 | `pool` / `choose` | 发现池、可选数量 | `Discover` |
 | `free` | `true` / `false` | 免费刷新 |
 | `era` / `level` | `current` 或具体值 | 商店槽位时代、获得随从的星级 |
@@ -302,8 +304,8 @@
 
 - `OnPlay|Growth|friendly:single|times=2`
 - `OnCombatStart|DealDamage|enemy:leftmost|amount=3`
-- `Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent`
-- `OnActivate|Copy|self|from=hand,type=随从,to=hand`
+- `Aura|ModifyStats|friendly:all:tribe=machine|attack=2,health=2,duration=permanent`
+- `OnActivate|Copy|self|from=hand,type=minion,to=hand`
 
 `effects` 是机器字段，不进入 `## 属性` 表；`## 效果` 仍由技能 `text` 渲染，与 `effects` 语义一致。卡牌不重复记录 `effects`——它们通过 `skills` 引用技能，效果由技能实体统一维护。
 

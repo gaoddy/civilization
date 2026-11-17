@@ -17,7 +17,8 @@
 | 入口 | 内容 |
 | --- | --- |
 | `client/ui/theme.gd`（`UITheme`） | 原子 → 语义 → 组件与场景三层令牌；取值见 [tokens.md](tokens.md) |
-| `client/ui/ui.gd`（`UI`） | 场景共用控件构造、统一导航入口 `UI.navigate`、错误文案与错误去向 |
+| `client/ui/ui.gd`（`UI`） | 场景共用控件构造、统一导航入口 `UI.navigate`、文本取用（`UI.enum_text` / `UI.error_text` / `UI.error_tooltip`） |
+| `client/text/zh_CN.csv` | 唯一的运行时中文文本表：卡牌/技能/Token 名称与效果、枚举展示、错误与页面文案；来源与取用规则见 [client.md](../../technical/client.md)「国际化与文本表」 |
 
 - 页面通过 `UI` 的构件与 `UITheme.metric` 取值，不直接写颜色、字号、间距与圆角。
 - `UITheme` 的原子层与语义层按刻度扩展，不因单个页面新增。

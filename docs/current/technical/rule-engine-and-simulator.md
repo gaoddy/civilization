@@ -42,6 +42,8 @@ server/
       tests/sim_determinism.rs # 同一局重放 100 次
 scripts/
   gen_card_data.py           # 实体文档 → server/data/v0.1/*.json
+  gen_text.py                # 实体文档与人工 key → client/text/zh_CN.csv
+  i18n_terms.py              # 枚举、关键词与文本 id 的命名规则
   audit_effects.py           # effects DSL 审计
   validate_docs.py           # 文档与实体数据校验
   gen_protocol_gdscript.py   # 协议 GDScript 常量（M1 使用）
@@ -71,10 +73,11 @@ tests/                       # Python 标准库 unittest
 ## 3. 卡牌数据生成
 
 - 唯一数据源：`docs/versions/v0.1/product/content/` 下的卡牌与技能实体文档；`scripts/gen_card_data.py` 复用 `validate_docs.py` 的 front matter 解析。
+- 生成数据只含规则与标识，不含展示文本：`cards.json`、`skills.json`、`tokens.json` 没有 `name`、`text`、`match_text` 字段。卡牌 `card_type` / `tribe` / `era` / `subtype`、技能与效果中的 `keyword`、DSL 筛选与枚举（`tribe`、`type`、`keyword`、进化选项等）一律为英文 id（如 `minion`、`human`、`industrial`、`optimal_attack`）。展示文本由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`，按 `card.<id>.name`、`skill.<id>.text`、`token.<id>.name` 等文本 id 取用。
 - 经济与对局配置由生成器从产品数值文档口径抄录到 `config.json`（初始生命、棋盘/手牌/商店槽位、回合上限、伤害上下限、升时代费用、星级牌份数、商店概率、金币曲线）。
 - 输出确定性 JSON（UTF-8、两空格缩进、键排序、末尾换行）；生成物随源提交。
 - 引擎用 `include_str!` 嵌入 `server/data/v0.1/*.json`，加载期由 serde 校验结构化字段与枚举，再由 `validate` 校验跨字段组合；未知字段或非法组合直接失败。源文档 `effects` 仍写 DSL，由生成器编译为结构化数组，生成期用与 `validate` 同规则的 `check_structured` 预检，避免 `make data` 通过而引擎加载失败。
-- `make data-check` 重新生成到临时文件并比对，同时运行 DSL 审计。
+- `make data-check` 重新生成到临时文件并比对（含文本表漂移检测），同时运行 DSL 审计。
 
 ## 4. 命令
 
