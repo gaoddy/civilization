@@ -199,8 +199,14 @@ func _check_game() -> void:
         )
         await _push_motion(instance, Vector2(-40, -40))
         _expect(not detail.is_visible_in_tree(), "移出商店卡矩形应隐藏详情面板")
-    # 时代名展示已随顶栏/右栏改版迁出本场景：顶栏删除由 ui_smoke_side 覆盖，
+    # 时代名展示已随顶栏删除迁到右栏英雄段：顶栏删除由 ui_smoke_side 覆盖，
     # 座位行不再显示时代、悬停详情才显示时代由 ui_smoke_seats 覆盖。
+    var side_hero = instance.find_child("SideHero", true, false)
+    _expect(
+        side_hero != null and _node_text(side_hero).contains("时代 原始"),
+        "右栏英雄段应显示具体时代名（自我时代 2 → 原始），实际：%s"
+            % ("缺失" if side_hero == null else _node_text(side_hero))
+    )
     # 重新显示详情，再打开选择浮层，确认浮层会隐藏详情层。
     if detail != null and card != null:
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
