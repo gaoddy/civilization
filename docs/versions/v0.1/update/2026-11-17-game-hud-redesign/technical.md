@@ -53,7 +53,7 @@
 ## 4. 客户端
 
 - 删除顶栏节点与 `GameStore.event_log`，事件只走状态变化。
-- 左栏改为座位行：`UI.avatar` + 名次角标 + 血量条（按 `hp / hpCap`）；点击展开战报，展开座位按 `playerId` 记住并在 `_refresh_players` 重建后恢复。
+- 左栏改为座位行：`UI.avatar` + 名次角标 + 血量条（按 `hp / hpCap`）；行顺序按 `players[].rank` 升序（`rank` 为 `null` 垫底、同序按座位号），每次视图重建重排；点击展开战报，展开座位按 `playerId` 记住并在 `_refresh_players` 重建后恢复。
 - 右栏重排为三段：身份块（售货员 / 对手英雄 / 幽灵）、回合与倒计时、技能与结束招募与英雄卡。
 - 删除 `CombatOpponentStrip` / `CombatSelfStrip`。
 - 商店卡左上角费用、右上角时代角标；冻结改为蒙层 + 冰晶纹理 + 右下角「冻」字。

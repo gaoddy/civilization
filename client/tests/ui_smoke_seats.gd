@@ -7,6 +7,7 @@ func _ready() -> void:
     await _check_seat_detail()
     await _check_expanded_memory()
     await _check_hp_clamp()
+    await _check_live_rank_order()
     _finish()
 
 
@@ -343,3 +344,99 @@ func _check_hp_clamp() -> void:
         )
     instance.queue_free()
     await get_tree().process_frame
+
+
+## 名次与座位故意不同：行顺序必须按服务端 `rank` 升序，并随视图实时重排。
+func _check_live_rank_order() -> void:
+    var first: Dictionary = FixtureScript.game_view()
+    _set_ranks(first, [5, 1, 3, 2, 7, 4, 8, 6])
+    var instance := await _open(first)
+    if instance == null:
+        return
+    var rail = instance.find_child("PlayersRail", true, false)
+    if rail == null:
+        _expect(false, "对局场景缺少积分榜容器 PlayersRail")
+        instance.queue_free()
+        return
+    _expect_rank_order(rail, ["p1", "p3", "p2", "p5", "p0", "p7", "p4", "p6"])
+
+    # 模拟一次 StateUpdate：名次重排、血量变化，行顺序、角标与血条都要实时更新。
+    var second: Dictionary = FixtureScript.game_view()
+    _set_ranks(second, [5, 2, 3, 4, 7, 6, 1, 8])
+    second["players"][6]["hp"] = 40
+    second["players"][0]["hp"] = 4
+    GameStore.view = second
+    GameStore.view_changed.emit()
+    await get_tree().process_frame
+    await get_tree().process_frame
+    _expect_rank_order(rail, ["p6", "p1", "p2", "p3", "p0", "p5", "p4", "p7"])
+    var top := _row_of(rail, "p6")
+    _expect(
+        top != null and _rank_text(top).contains("1"),
+        "名次上升的座位应排到第一行并显示角标 1",
+    )
+    _expect_hp_fill(rail, "p6", 40, 40)
+    _expect_hp_fill(rail, "p0", 4, 40)
+
+    # `rank` 缺失的座位垫底，且不显示角标。
+    var third: Dictionary = FixtureScript.game_view()
+    _set_ranks(third, [5, 2, 3, 4, null, 6, 1, 8])
+    GameStore.view = third
+    GameStore.view_changed.emit()
+    await get_tree().process_frame
+    await get_tree().process_frame
+    var order: Array = []
+    for row in _rows(rail):
+        order.append(str(row.get_meta("player_id", "")))
+    _expect(
+        order == ["p6", "p1", "p2", "p3", "p0", "p5", "p7", "p4"],
+        "rank 缺失的座位应排在最后，实际 %s" % [order],
+    )
+    var unranked := _row_of(rail, "p4")
+    _expect(
+        unranked != null and unranked.find_child("SeatRankBadge", true, false) == null,
+        "rank 缺失的座位不应显示角标",
+    )
+    instance.queue_free()
+    await get_tree().process_frame
+
+
+func _set_ranks(view: Dictionary, ranks: Array) -> void:
+    for seat in range(view["players"].size()):
+        view["players"][seat]["rank"] = ranks[seat]
+
+
+func _rank_text(row: Node) -> String:
+    var badge = row.find_child("SeatRankBadge", true, false)
+    return _node_text(badge) if badge != null else ""
+
+
+func _expect_rank_order(rail: Node, expected: Array) -> void:
+    var rows := _rows(rail)
+    var actual: Array = []
+    for row in rows:
+        actual.append(str(row.get_meta("player_id", "")))
+    _expect(
+        actual == expected,
+        "积分榜应按名次升序排列，期望 %s，实际 %s" % [expected, actual],
+    )
+    for index in range(rows.size()):
+        _expect(
+            _rank_text(rows[index]).contains(str(index + 1)),
+            "第 %d 行应显示名次 %d，实际 %s" % [index + 1, index + 1, _rank_text(rows[index])],
+        )
+
+
+func _expect_hp_fill(rail: Node, player_id: String, hp: int, cap: int) -> void:
+    var row := _row_of(rail, player_id)
+    var bar = row.find_child("SeatHpBar", true, false) if row != null else null
+    var fill = bar.find_child("HpFill", true, false) if bar != null else null
+    if fill == null:
+        _expect(false, "%s 座位血条缺少 HpFill" % player_id)
+        return
+    var width := float(UITheme.metric("avatar-rail"))
+    var expected := roundf(width * float(hp) / float(cap))
+    _expect(
+        is_equal_approx(fill.size.x, expected),
+        "%s 血条应随视图更新为 %s，实际 %s" % [player_id, expected, fill.size.x],
+    )

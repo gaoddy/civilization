@@ -1,6 +1,7 @@
 class_name GamePlayersRail
 extends PanelContainer
-## 左栏座位列：每座位一行头像 + 名次角标 + 血条，点击展开该座位的战报。
+## 左栏座位列：按服务端名次升序（第 1 名在最上），每座位一行头像 + 名次角标 + 血条，
+## 点击展开该座位的战报。
 ##
 ## 只读 `GameUiState.view`，不持有页面门控与意图；展开的座位按 `playerId`
 ## 记住，刷新整块重建后同一玩家仍然展开。
@@ -65,10 +66,25 @@ func refresh(state: GameUiState) -> void:
     _sync_report()
 
 
+## 按服务端下发的 `rank` 升序排列，第 1 名在最上；名次相同或缺失时按座位号，
+## 无名次的座位排在所有有名次之后。客户端只使用服务端名次排显示顺序，不推导名次。
 func _sorted_players(view: Dictionary) -> Array:
     var players: Array = view.get("players", []).duplicate()
-    players.sort_custom(func(a, b): return int(a.get("seat", 0)) < int(b.get("seat", 0)))
+    players.sort_custom(
+        func(a, b):
+            var rank_a := _rank_value(a)
+            var rank_b := _rank_value(b)
+            if rank_a != rank_b:
+                return rank_a < rank_b
+            return int(a.get("seat", 0)) < int(b.get("seat", 0))
+    )
     return players
+
+
+## 排序用的名次值；`rank` 缺失时用哨兵值垫底。
+static func _rank_value(player: Dictionary) -> int:
+    var rank = player.get("rank")
+    return int(rank) if rank != null else 1 << 20
 
 
 func _has_player(players: Array, player_id: String) -> bool:
