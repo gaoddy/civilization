@@ -1,11 +1,11 @@
 ---
 id: black-death
-card_type: 随从
+card_type: minion
 name: 黑死病
-tribe: 病毒
-subtype: 瘟疫
+tribe: virus
+subtype: plague
 level: 4
-era: 封建
+era: feudal
 attack: 5
 health: 6
 skills: [deathrattle-all-enemies-humans-minus-2-health]

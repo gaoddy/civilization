@@ -1,11 +1,11 @@
 ---
 id: shuizhong
-card_type: 随从
+card_type: minion
 name: 水钟
-tribe: 机械
-subtype: 计时
+tribe: machine
+subtype: timekeeping
 level: 1
-era: 古典
+era: classical
 attack: 1
 health: 3
 skills: [battlecry-friendly-plus-0-plus-1]

@@ -1,11 +1,11 @@
 ---
 id: yadian-wenyi
-card_type: 随从
+card_type: minion
 name: 雅典瘟疫
-tribe: 病毒
-subtype: 瘟疫
+tribe: virus
+subtype: plague
 level: 3
-era: 古典
+era: classical
 attack: 3
 health: 5
 skills: [combatstart-random-enemy-contagion-1]

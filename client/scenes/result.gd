@@ -28,7 +28,7 @@ func _build() -> void:
     box.add_theme_constant_override("separation", 10)
     margin.add_child(box)
 
-    box.add_child(UI.label("对局结束", 28))
+    box.add_child(UI.label(tr("ui.result.title"), 28))
     box.add_child(UI.label(_my_place_text(), 20))
     box.add_child(HSeparator.new())
 
@@ -39,7 +39,7 @@ func _build() -> void:
     entries.sort_custom(func(a, b): return int(a.get("place", 99)) < int(b.get("place", 99)))
     for entry in entries:
         var player_id := str(entry.get("playerId", ""))
-        var row := UI.label("第 %d 名   %s" % [
+        var row := UI.label(tr("ui.result.place_row") % [
             int(entry.get("place", 0)),
             GameStore.player_name(player_id),
         ], 18)
@@ -48,8 +48,8 @@ func _build() -> void:
         ranking.add_child(row)
     box.add_child(ranking)
 
-    box.add_child(UI.label("对局种子：%s" % GameStore.game_seed, 14))
-    var back := UI.button("返回大厅")
+    box.add_child(UI.label(tr("ui.result.seed") % GameStore.game_seed, 14))
+    var back := UI.button(tr("ui.result.back_to_lobby"))
     back.pressed.connect(_on_back_pressed)
     box.add_child(back)
 
@@ -57,8 +57,8 @@ func _build() -> void:
 func _my_place_text() -> String:
     for entry in GameStore.ranking:
         if str(entry.get("playerId", "")) == GameStore.player_id:
-            return "你的名次：第 %d 名" % int(entry.get("place", 0))
-    return "你的名次：未记录"
+            return tr("ui.result.my_place") % int(entry.get("place", 0))
+    return tr("ui.result.my_place_unrecorded")
 
 
 func _on_back_pressed() -> void:

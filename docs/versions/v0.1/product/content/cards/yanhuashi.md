@@ -1,11 +1,11 @@
 ---
 id: yanhuashi
-card_type: 随从
+card_type: minion
 name: 岩画师
-tribe: 学者
-subtype: 艺术
+tribe: scholar
+subtype: art
 level: 1
-era: 原始
+era: primitive
 attack: 0
 health: 5
 skills: [trigger-play-effect-friendly-plus-0-plus-1]

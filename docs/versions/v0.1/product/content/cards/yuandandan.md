@@ -1,10 +1,10 @@
 ---
 id: yuandandan
 name: 原子弹
-card_type: 效果
+card_type: effect
 level: 6
-era: 未来
-tribe: 通用
+era: future
+tribe: general
 cost: 4
 match_text: 同左
 skills: [combatstart-all-enemies-damage-5]

@@ -55,7 +55,7 @@ func refresh(state: GameUiState) -> void:
     if players.is_empty():
         _expanded_player_id = ""
         _hide_report()
-        _rail.add_child(UI.empty_hint("暂无玩家"))
+        _rail.add_child(UI.empty_hint(tr("ui.game.rail.empty")))
         return
     # 记住的 id 在新视图里找不到就清空，否则保持展开。
     if _expanded_player_id != "" and not _has_player(players, _expanded_player_id):
@@ -237,7 +237,7 @@ func _report_block(player: Dictionary, view: Dictionary) -> VBoxContainer:
 
     var entries := _combat_entries(view, player_id)
     if entries.is_empty():
-        report.add_child(_report_line("无战报"))
+        report.add_child(_report_line(tr("ui.game.rail.no_report")))
         return report
     var names := _player_names(view)
     for entry in entries:
@@ -279,24 +279,28 @@ func _entry_text(entry: Dictionary, player_id: String, names: Dictionary) -> Str
     var opponent := str(names.get(opponent_id, opponent_id))
     if bool(entry.get("mirror", false)):
         var ghost_id := "" if entry.get("ghostId") == null else str(entry.get("ghostId"))
-        opponent = "幽灵" if ghost_id == "" else "幽灵（%s）" % str(names.get(ghost_id, ghost_id))
+        opponent = (
+            tr("ui.game.rail.ghost")
+            if ghost_id == ""
+            else tr("ui.game.rail.ghost_named") % str(names.get(ghost_id, ghost_id))
+        )
 
     var winner_id := "" if entry.get("winnerId") == null else str(entry.get("winnerId"))
     var loser_id := "" if entry.get("loserId") == null else str(entry.get("loserId"))
-    var result := "平"
+    var result := tr("ui.game.rail.draw")
     if winner_id == player_id:
-        result = "胜"
+        result = tr("ui.game.rail.win")
     elif loser_id == player_id or winner_id != "":
-        result = "负"
+        result = tr("ui.game.rail.lose")
 
     var parts := PackedStringArray([
-        "第 %d 回合" % int(entry.get("turn", 0)),
+        tr("ui.game.rail.turn") % int(entry.get("turn", 0)),
         opponent,
         result,
     ])
     var damage := int(entry.get("damage", 0))
     if damage != 0:
-        parts.append("伤害 %d" % damage)
+        parts.append(tr("ui.game.rail.damage") % damage)
     return " · ".join(parts)
 
 

@@ -1,11 +1,11 @@
 ---
 id: alan-turing
-card_type: 随从
+card_type: minion
 name: 艾伦·图灵
-tribe: 学者
-subtype: 计算机
+tribe: scholar
+subtype: computer
 level: 6
-era: 现代
+era: modern
 attack: 0
 health: 20
 skills: [aura-mech-optimal-attack]

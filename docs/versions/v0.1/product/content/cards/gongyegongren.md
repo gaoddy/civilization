@@ -1,11 +1,11 @@
 ---
 id: gongyegongren
-card_type: 随从
+card_type: minion
 name: 工业工人
-tribe: 人类
-subtype: 工人
+tribe: human
+subtype: worker
 level: 5
-era: 现代
+era: modern
 attack: 7
 health: 10
 skills: [battlecry-other-friendly-humans-plus-1-attack]

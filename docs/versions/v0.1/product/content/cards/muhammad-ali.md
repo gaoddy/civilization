@@ -1,11 +1,11 @@
 ---
 id: muhammad-ali
-card_type: 随从
+card_type: minion
 name: 穆罕默德·阿里
-tribe: 人类
-subtype: 运动员
+tribe: human
+subtype: athlete
 level: 6
-era: 现代
+era: modern
 attack: 9
 health: 11
 skills: [keyword-windfury]

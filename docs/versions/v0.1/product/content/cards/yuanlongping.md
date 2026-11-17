@@ -1,11 +1,11 @@
 ---
 id: yuanlongping
-card_type: 随从
+card_type: minion
 name: 袁隆平
-tribe: 学者
-subtype: 生物
+tribe: scholar
+subtype: organism
 level: 6
-era: 现代
+era: modern
 attack: 0
 health: 20
 skills: [aura-plant-plus-2-plus-2]

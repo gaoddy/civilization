@@ -31,13 +31,10 @@ fn add_card_with(
             skill_id.clone(),
             Skill {
                 id: skill_id.clone(),
-                name: None,
                 keyword: Some((*keyword).to_string()),
-                text: String::new(),
                 effects: effects_of("[]"),
                 cost: None,
                 uses_per_turn: None,
-                match_text: None,
             },
         );
         skill_ids.push(skill_id);
@@ -47,7 +44,6 @@ fn add_card_with(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            name: id.to_string(),
             tribe,
             subtype: None,
             level: 1,
@@ -58,7 +54,6 @@ fn add_card_with(
             is_scholar: tribe == Tribe::Scholar,
             is_hero: false,
             cost: Some(1),
-            match_text: None,
         },
     );
 }
@@ -79,13 +74,10 @@ fn add_effect_skill(
         skill_id.to_string(),
         Skill {
             id: skill_id.to_string(),
-            name: None,
             keyword: Some(keyword.to_string()),
-            text: String::new(),
             effects: effects_of(effects),
             cost: None,
             uses_per_turn: None,
-            match_text: None,
         },
     );
     catalog
@@ -101,7 +93,6 @@ fn add_seedling_token(catalog: &mut Catalog) {
         "seedling".to_string(),
         rule_engine::data::Token {
             id: "seedling".to_string(),
-            name: "幼苗".to_string(),
             attack: 1,
             health: 1,
             keywords: Vec::new(),
@@ -225,7 +216,7 @@ fn surviving_target_counters_and_kills_attacker() {
 fn taunt_forces_target() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "a", 2, 10, &[]);
-    add_card(&mut catalog, "taunt", 1, 10, &["嘲讽"]);
+    add_card(&mut catalog, "taunt", 1, 10, &["taunt"]);
     add_card(&mut catalog, "plain", 1, 10, &[]);
 
     let log = simulate(
@@ -244,8 +235,8 @@ fn taunt_forces_target() {
 #[test]
 fn divine_shield_blocks_one_hit() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 2, 10, &["连击"]);
-    add_card(&mut catalog, "b", 0, 5, &["护盾"]);
+    add_card(&mut catalog, "a", 2, 10, &["windfury"]);
+    add_card(&mut catalog, "b", 0, 5, &["divine_shield"]);
 
     let log = simulate(
         &catalog,
@@ -268,7 +259,7 @@ fn divine_shield_blocks_one_hit() {
 #[test]
 fn windfury_attacks_twice() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a1", 0, 10, &["连击"]);
+    add_card(&mut catalog, "a1", 0, 10, &["windfury"]);
     add_card(&mut catalog, "a2", 0, 10, &[]);
     add_card(&mut catalog, "b", 0, 20, &[]);
 
@@ -297,8 +288,8 @@ fn windfury_attacks_twice() {
 #[test]
 fn optimal_attack_prefers_killable() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 3, 20, &["最优攻击"]);
-    add_card(&mut catalog, "taunt", 1, 10, &["嘲讽"]);
+    add_card(&mut catalog, "a", 3, 20, &["optimal_attack"]);
+    add_card(&mut catalog, "taunt", 1, 10, &["taunt"]);
     add_card(&mut catalog, "weak", 1, 2, &[]);
     add_card(&mut catalog, "sturdy", 1, 10, &[]);
 
@@ -336,7 +327,7 @@ fn optimal_attack_prefers_killable() {
 #[test]
 fn contagion_applies_after_damage() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 2, 10, &["传染"]);
+    add_card(&mut catalog, "a", 2, 10, &["contagion"]);
     add_card(&mut catalog, "b", 0, 5, &[]);
 
     let log = simulate(
@@ -369,8 +360,8 @@ fn contagion_applies_after_damage() {
 #[test]
 fn contagion_skipped_when_blocked() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 2, 10, &["传染", "连击"]);
-    add_card(&mut catalog, "b", 0, 5, &["护盾"]);
+    add_card(&mut catalog, "a", 2, 10, &["contagion", "windfury"]);
+    add_card(&mut catalog, "b", 0, 5, &["divine_shield"]);
 
     let log = simulate(
         &catalog,
@@ -394,8 +385,8 @@ fn contagion_skipped_when_blocked() {
 #[test]
 fn reborn_returns_once_with_one_health() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 3, 10, &["连击"]);
-    add_card(&mut catalog, "b", 0, 2, &["复生"]);
+    add_card(&mut catalog, "a", 3, 10, &["windfury"]);
+    add_card(&mut catalog, "b", 0, 2, &["reborn"]);
 
     let log = simulate(
         &catalog,
@@ -457,7 +448,7 @@ fn death_queue_orders_attacker_side_then_left_to_right() {
     add_card(&mut catalog, "corpse", 0, 1, &[]);
     add_card(&mut catalog, "fighter", 0, 10, &[]);
     add_card(&mut catalog, "d1", 0, 1, &[]);
-    add_card(&mut catalog, "d2", 0, 1, &["复生"]);
+    add_card(&mut catalog, "d2", 0, 1, &["reborn"]);
 
     let log = simulate(
         &catalog,
@@ -497,7 +488,7 @@ fn death_queue_orders_attacker_side_then_left_to_right() {
 #[test]
 fn combat_stops_at_200_actions() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 0, 1, &["连击"]);
+    add_card(&mut catalog, "a", 0, 1, &["windfury"]);
     add_card(&mut catalog, "b", 0, 100, &[]);
 
     // 攻击方 100 个连击随从 = 200 个令牌，足以把行动数推到上限。
@@ -629,7 +620,9 @@ fn scholar_granted_windfury_attacks_twice() {
     add_card(&mut catalog, "b", 0, 20, &[]);
 
     let mut scholar = minion(&catalog, 1, "scholar");
-    scholar.granted.push(("连击".to_string(), Duration::Combat));
+    scholar
+        .granted
+        .push(("windfury".to_string(), Duration::Combat));
     let log = simulate(
         &catalog,
         &[scholar],
@@ -647,7 +640,7 @@ fn scholar_granted_windfury_attacks_twice() {
 #[test]
 fn reborn_attacker_keeps_its_spent_token() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 2, 2, &["复生"]);
+    add_card(&mut catalog, "a", 2, 2, &["reborn"]);
     add_card(&mut catalog, "b", 3, 3, &[]);
 
     let log = simulate(
@@ -730,17 +723,17 @@ fn effective_stats_follow_evaluation_order() {
 #[test]
 fn keywords_merge_card_and_active_grants() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 1, 1, &["嘲讽"]);
+    add_card(&mut catalog, "a", 1, 1, &["taunt"]);
 
     let mut subject = minion(&catalog, 1, "a");
     subject.granted = vec![
-        ("护盾".to_string(), Duration::Permanent),
-        ("连击".to_string(), Duration::Combat),
-        ("复生".to_string(), Duration::Instant),
+        ("divine_shield".to_string(), Duration::Permanent),
+        ("windfury".to_string(), Duration::Combat),
+        ("reborn".to_string(), Duration::Instant),
         ("未知关键词".to_string(), Duration::Permanent),
     ];
 
-    let expected: BTreeSet<String> = ["护盾", "未知关键词", "嘲讽", "连击"]
+    let expected: BTreeSet<String> = ["divine_shield", "未知关键词", "taunt", "windfury"]
         .into_iter()
         .map(str::to_string)
         .collect();
@@ -765,7 +758,7 @@ fn real_combat_state() -> (Engine, rule_engine::state::GameState) {
         AuraEffect {
             attack: 2,
             health: 1,
-            keywords: ["护盾"].into_iter().map(str::to_string).collect(),
+            keywords: ["divine_shield"].into_iter().map(str::to_string).collect(),
             floor_one: true,
         },
     );
@@ -799,12 +792,12 @@ fn resolve_combat_returns_one_report_per_participant() {
     let folded_a = &report_a.own_board[0];
     assert_eq!(effective_attack(&engine.catalog, folded_a), 7);
     assert_eq!(effective_health(&engine.catalog, folded_a), 6);
-    assert!(keywords(&engine.catalog, folded_a).contains("护盾"));
+    assert!(keywords(&engine.catalog, folded_a).contains("divine_shield"));
     // 座位 1 视角的 opponent_board 看到的是同一份折叠后数值。
     let folded_b_view = &report_b.opponent_board[0];
     assert_eq!(effective_attack(&engine.catalog, folded_b_view), 7);
     assert_eq!(effective_health(&engine.catalog, folded_b_view), 6);
-    assert!(keywords(&engine.catalog, folded_b_view).contains("护盾"));
+    assert!(keywords(&engine.catalog, folded_b_view).contains("divine_shield"));
     // 持久棋盘保持原始数值：折叠只发生在报告副本上。
     assert_eq!(
         effective_attack(&engine.catalog, &state.players[0].board[0]),
@@ -814,7 +807,7 @@ fn resolve_combat_returns_one_report_per_participant() {
         effective_health(&engine.catalog, &state.players[0].board[0]),
         5
     );
-    assert!(!keywords(&engine.catalog, &state.players[0].board[0]).contains("护盾"));
+    assert!(!keywords(&engine.catalog, &state.players[0].board[0]).contains("divine_shield"));
     assert_eq!(state.players[0].board[0].stats.attack.layers(), 5);
     assert_eq!(state.players[0].board[0].stats.health.layers(), 5);
     assert!(state.players[0].board[0].granted.is_empty());
@@ -925,13 +918,14 @@ fn combat_state_hash_matches_golden_baseline() {
     // 场景：seed [4; 32]、座位 0 随从 10 带光环、配对 0 vs 1。
     // 随从属性改为分层模型后哈希编码变化，金标准同步更新；英雄卡从 13 张扩到 32 张
     // 后共享池条目随之增加、配对新增幽灵座位，两处改动合并后金标准再次同步；
+    // i18n 改造后关键词标识由中文改为英文 id，哈希编码随之变化，金标准再次同步。
     // 行为不变，任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
     let (mut engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "44add8c85e2cfe7c",
+        "c0469bb5ebfabf96",
         "固定场景的 state_hash 金标准"
     );
 }
@@ -1039,12 +1033,11 @@ fn attack_states_match_field_after_damage() {
 fn summon_action_records_position_and_seat() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "killer", 10, 10, &[]);
-    add_card(&mut catalog, "sower", 1, 1, &["播种"]);
+    add_card(&mut catalog, "sower", 1, 1, &["sow"]);
     catalog.tokens.insert(
         "seedling".to_string(),
         rule_engine::data::Token {
             id: "seedling".to_string(),
-            name: "幼苗".to_string(),
             attack: 1,
             health: 1,
             keywords: Vec::new(),
@@ -1092,13 +1085,13 @@ fn summon_action_records_position_and_seat() {
 fn deathrattle_summon_uses_alive_rank_and_stops_at_capacity() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "killer", 1000, 1000, &[]);
-    add_card(&mut catalog, "summoner", 1, 1, &["嘲讽"]);
+    add_card(&mut catalog, "summoner", 1, 1, &["taunt"]);
     add_card(&mut catalog, "filler", 0, 10000, &[]);
     add_effect_skill(
         &mut catalog,
         "summoner",
         "summoner-death-summon",
-        "亡语",
+        "deathrattle",
         "OnDeath|Summon|self|token=seedling,count=2",
     );
     add_seedling_token(&mut catalog);
@@ -1136,13 +1129,13 @@ fn deathrattle_summon_uses_alive_rank_and_stops_at_capacity() {
 fn reborn_fizzles_when_summon_filled_the_board() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "killer", 1000, 1000, &[]);
-    add_card(&mut catalog, "reborner", 1, 1, &["复生", "嘲讽"]);
+    add_card(&mut catalog, "reborner", 1, 1, &["reborn", "taunt"]);
     add_card(&mut catalog, "filler", 0, 10000, &[]);
     add_effect_skill(
         &mut catalog,
         "reborner",
         "reborner-death-summon",
-        "亡语",
+        "deathrattle",
         "OnDeath|Summon|self|token=seedling,count=1",
     );
     add_seedling_token(&mut catalog);
@@ -1272,7 +1265,7 @@ fn unequal_side_sizes_advance_independently() {
 #[test]
 fn windfury_retargets_after_kill() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 10, 10, &["连击"]);
+    add_card(&mut catalog, "a", 10, 10, &["windfury"]);
     add_card(&mut catalog, "b1", 0, 1, &[]);
     add_card(&mut catalog, "b2", 0, 1, &[]);
 
@@ -1299,7 +1292,7 @@ fn windfury_retargets_after_kill() {
 #[test]
 fn windfury_stops_when_attacker_dies() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 1, 1, &["连击"]);
+    add_card(&mut catalog, "a", 1, 1, &["windfury"]);
     add_card(&mut catalog, "b", 10, 10, &[]);
 
     let log = simulate(
@@ -1326,7 +1319,7 @@ fn reborn_minion_acts_later_in_the_same_round() {
     add_card(&mut catalog, "weak", 0, 100, &[]);
     add_card(&mut catalog, "killer", 10, 100, &[]);
     add_card(&mut catalog, "front", 0, 100, &[]);
-    add_card(&mut catalog, "reborner", 0, 1, &["复生", "嘲讽"]);
+    add_card(&mut catalog, "reborner", 0, 1, &["reborn", "taunt"]);
 
     let log = simulate(
         &catalog,
@@ -1352,7 +1345,7 @@ fn reborn_minion_does_not_act_again_after_acting() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "front", 0, 100, &[]);
     add_card(&mut catalog, "striker", 10, 100, &[]);
-    add_card(&mut catalog, "reborner", 1, 1, &["复生", "嘲讽"]);
+    add_card(&mut catalog, "reborner", 1, 1, &["reborn", "taunt"]);
     add_card(&mut catalog, "back", 0, 100, &[]);
 
     let log = simulate(

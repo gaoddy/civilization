@@ -1,11 +1,11 @@
 ---
 id: gongchengta
-card_type: 随从
+card_type: minion
 name: 攻城塔
-tribe: 机械
-subtype: 攻城
+tribe: machine
+subtype: siege
 level: 4
-era: 封建
+era: feudal
 attack: 6
 health: 7
 skills: [keyword-assemble-2]

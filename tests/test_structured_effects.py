@@ -12,8 +12,8 @@ class StructuredEffectsTest(unittest.TestCase):
     def test_growth_with_condition(self):
         self.assertEqual(
             gen_card_data.structured_effects(
-                "OnActivate|Growth|friendly:single:tribe=人类|"
-                "times=1,timesIf=人类:2,condition=count:friendly:tribe=人类:>=3"
+                "OnActivate|Growth|friendly:single:tribe=human|"
+                "times=1,timesIf=human:2,condition=count:friendly:tribe=human:>=3"
             ),
             [
                 {
@@ -23,14 +23,14 @@ class StructuredEffectsTest(unittest.TestCase):
                         "kind": "side",
                         "side": "friendly",
                         "pick": "single",
-                        "filters": [{"key": "tribe", "value": "人类"}],
+                        "filters": [{"key": "tribe", "value": "human"}],
                     },
                     "params": {
                         "times": 1,
-                        "times_if": {"tribe": "人类", "times": 2},
+                        "times_if": {"tribe": "human", "times": 2},
                         "condition": {
                             "side": "friendly",
-                            "filter": {"key": "tribe", "value": "人类"},
+                            "filter": {"key": "tribe", "value": "human"},
                             "compare": "ge",
                             "count": 3,
                         },
@@ -58,10 +58,10 @@ class StructuredEffectsTest(unittest.TestCase):
 
     def test_keyword_value_is_normalized(self):
         effect = gen_card_data.structured_effects(
-            "OnPlayEffect|GrantKeyword|friendly:single|keyword=繁衍,value=2"
+            "OnPlayEffect|GrantKeyword|friendly:single|keyword=breed,value=2"
         )[0]
         self.assertEqual(
-            effect["params"]["keyword"], {"keyword": "繁衍", "value": 2}
+            effect["params"]["keyword"], {"keyword": "breed", "value": 2}
         )
 
     def test_invalid_dsl_raises(self):
@@ -102,17 +102,17 @@ class StructuredEffectsTest(unittest.TestCase):
 
     def test_rejects_keyword_layer_mismatch(self):
         for raw in (
-            "OnCombatStart|GrantKeyword|enemy:all|keyword=嘲讽 1",
-            "OnCombatStart|GrantKeyword|enemy:all|keyword=繁衍,value=-1",
+            "OnCombatStart|GrantKeyword|enemy:all|keyword=taunt 1",
+            "OnCombatStart|GrantKeyword|enemy:all|keyword=breed,value=-1",
         ):
             with self.subTest(raw=raw), self.assertRaises(ValueError):
                 gen_card_data.structured_effects(raw)
 
     def test_inline_keyword_layer_is_accepted(self):
         effect = gen_card_data.structured_effects(
-            "OnCombatStart|GrantKeyword|enemy:all|keyword=繁衍 2"
+            "OnCombatStart|GrantKeyword|enemy:all|keyword=breed 2"
         )[0]
-        self.assertEqual(effect["params"]["keyword"], {"keyword": "繁衍", "value": 2})
+        self.assertEqual(effect["params"]["keyword"], {"keyword": "breed", "value": 2})
 
     def test_invalid_from_raises(self):
         with self.assertRaises(ValueError):

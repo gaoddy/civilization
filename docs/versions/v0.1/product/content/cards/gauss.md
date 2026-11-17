@@ -1,11 +1,11 @@
 ---
 id: gauss
-card_type: 随从
+card_type: minion
 name: 高斯
-tribe: 学者
-subtype: 数学
+tribe: scholar
+subtype: mathematics
 level: 5
-era: 现代
+era: modern
 attack: 0
 health: 16
 skills: [scholar-growth-twice]

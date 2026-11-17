@@ -1,10 +1,10 @@
 ---
 id: chengbang-faling
 name: 城邦法令
-card_type: 效果
+card_type: effect
 level: 3
-era: 古典
-tribe: 通用
+era: classical
+tribe: general
 cost: 1
 match_text: 同左
 skills: [trigger-friendly-plus-1-plus-1]

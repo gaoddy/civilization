@@ -1,11 +1,11 @@
 ---
 id: wuyi
-card_type: 随从
+card_type: minion
 name: 巫医
-tribe: 人类
-subtype: 原始
+tribe: human
+subtype: primitive
 level: 2
-era: 原始
+era: primitive
 attack: 3
 health: 5
 skills: [battlecry-friendly-growth-plant-twice]

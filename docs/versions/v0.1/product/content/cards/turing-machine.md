@@ -1,11 +1,11 @@
 ---
 id: turing-machine
-card_type: 随从
+card_type: minion
 name: 图灵机
-tribe: 机械
-subtype: 计算机
+tribe: machine
+subtype: computer
 level: 5
-era: 现代
+era: modern
 attack: 6
 health: 10
 skills: [keyword-optimal-attack, keyword-assemble-2]

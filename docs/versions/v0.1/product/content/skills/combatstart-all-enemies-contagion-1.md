@@ -1,7 +1,7 @@
 ---
 id: combatstart-all-enemies-contagion-1
 text: 战斗开始时，使敌方所有随从获得 1 层传染
-effects: OnCombatStart|GrantKeyword|enemy:all|keyword=传染,value=1,duration=permanent
+effects: OnCombatStart|GrantKeyword|enemy:all|keyword=contagion,value=1,duration=permanent
 match_text: 同左
 ---
 

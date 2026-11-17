@@ -1,11 +1,11 @@
 ---
 id: adam-smith
-card_type: 随从
+card_type: minion
 name: 亚当·斯密
-tribe: 人类
-subtype: 经济学
+tribe: human
+subtype: economics
 level: 4
-era: 工业
+era: industrial
 attack: 6
 health: 8
 skills: [division-of-labor]

@@ -1,11 +1,11 @@
 ---
 id: mengmaxiang
-card_type: 随从
+card_type: minion
 name: 猛犸象
-tribe: 生物
-subtype: 哺乳
+tribe: biology
+subtype: mammal
 level: 2
-era: 史前
+era: prehistoric
 attack: 2
 health: 5
 skills: [deathrattle-all-friendly-plus-0-plus-1]

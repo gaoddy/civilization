@@ -1,8 +1,8 @@
 ---
 id: keyword-assemble-2
-keyword: 装配 2
+keyword: assemble 2
 text: 装配 2：进入战场时，使你的其他机械随从各获得 2 次成长
-effects: OnPlay|Growth|friendly:all:tribe=机械:other=true|times=2
+effects: OnPlay|Growth|friendly:all:tribe=machine:other=true|times=2
 ---
 
 # keyword-assemble-2

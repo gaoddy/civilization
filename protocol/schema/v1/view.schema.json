@@ -41,7 +41,7 @@
         "golden": { "type": "boolean" },
         "attack": { "type": "integer", "minimum": 0 },
         "health": { "type": "integer", "minimum": 0 },
-        "keywords": { "type": "array", "items": { "type": "string" }, "description": "当前生效的关键词" },
+        "keywords": { "type": "array", "items": { "type": "string" }, "description": "当前生效的关键词，取值为英文 id" },
         "sellable": { "type": "boolean" },
         "stats": { "$ref": "view.schema.json#/$defs/MinionStats", "description": "攻防分层构成；旧客户端可忽略" }
       }
@@ -199,7 +199,7 @@
           "required": ["kind", "options"],
           "properties": {
             "kind": { "const": "evolve", "description": "固定为 evolve" },
-            "options": { "type": "array", "items": { "type": "string" }, "description": "进化选项" }
+            "options": { "type": "array", "items": { "type": "string" }, "description": "进化选项，取值为英文 id" }
           }
         },
         {
@@ -267,7 +267,7 @@
           "items": { "type": "string" },
           "minItems": 5,
           "maxItems": 5,
-          "description": "本局启用的 5 个流派"
+          "description": "本局启用的 5 个流派，取值为英文 id"
         }
       }
     }

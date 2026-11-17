@@ -1,11 +1,11 @@
 ---
 id: zhangheng
-card_type: 随从
+card_type: minion
 name: 张衡
-tribe: 学者
-subtype: 天文
+tribe: scholar
+subtype: astronomy
 level: 3
-era: 原始
+era: primitive
 attack: 0
 health: 9
 skills: [battlecry-friendly-growth-once]

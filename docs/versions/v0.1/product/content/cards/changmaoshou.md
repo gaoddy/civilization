@@ -1,11 +1,11 @@
 ---
 id: changmaoshou
-card_type: 随从
+card_type: minion
 name: 长矛手
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 2
-era: 原始
+era: primitive
 attack: 2
 health: 4
 skills: [trigger-friendly-human-play-plus-1-attack]

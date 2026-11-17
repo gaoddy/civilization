@@ -54,14 +54,23 @@ func _check_recruit_identity() -> void:
     var status = instance.find_child("SideStatus", true, false)
     _expect(status != null, "右栏中部应存在回合与倒计时块")
     if status != null:
-        _expect(_node_text(status).contains("第 3 回合"), "右栏中部应显示回合数")
+        _expect(
+            _node_text(status).contains(TranslationServer.translate("ui.game.side_panel.turn") % 3),
+            "右栏中部应显示回合数",
+        )
 
     var identity = instance.find_child("SideIdentity", true, false)
     _expect(identity != null, "右栏顶部应存在身份块")
     if identity != null:
         var identity_text := _node_text(identity)
-        _expect(identity_text.contains("售货员"), "招募阶段右栏顶部应显示售货员名字")
-        _expect(not identity_text.contains("商店营业中"), "营业信息不应常驻显示")
+        _expect(
+            identity_text.contains(TranslationServer.translate("ui.game.side_panel.seller")),
+            "招募阶段右栏顶部应显示售货员名字",
+        )
+        _expect(
+            not identity_text.contains(TranslationServer.translate("ui.game.detail.shop_open")),
+            "营业信息不应常驻显示",
+        )
         var seller: Control = identity.find_child("SellerTile", true, false)
         _expect(seller != null, "招募阶段应显示售货员大图")
         if seller != null:
@@ -74,8 +83,14 @@ func _check_recruit_identity() -> void:
             )
             if detail_panel != null:
                 var detail_text := _node_text(detail_panel)
-                _expect(detail_text.contains("商店营业中"), "售货员详情应显示营业状态")
-                _expect(detail_text.contains("刷新"), "售货员详情应显示可用商店操作")
+                _expect(
+                    detail_text.contains(TranslationServer.translate("ui.game.detail.shop_open")),
+                    "售货员详情应显示营业状态",
+                )
+                _expect(
+                    detail_text.contains(TranslationServer.translate("ui.game.side_panel.reroll")),
+                    "售货员详情应显示可用商店操作",
+                )
 
         # 商店操作按钮在售货员下方，与身份块同栏。
         var reroll: Control = identity.find_child("RerollButton", true, false)
@@ -104,7 +119,10 @@ func _check_recruit_identity() -> void:
             _expect(portrait.size.x >= 150 and portrait.size.y >= 150, "我方英雄大图尺寸应足够")
             var portrait_text := _node_text(portrait)
             _expect(portrait_text.contains("达尔文"), "我方英雄大图应显示名字")
-            _expect(not portrait_text.contains("学者"), "英雄部落等信息不应常驻")
+            _expect(
+                not portrait_text.contains(TranslationServer.translate("enum.tribe.scholar")),
+                "英雄部落等信息不应常驻",
+            )
             await _hover(instance, portrait, portrait.size / 2)
             var hero_detail = instance.find_child("MinionDetailPanel", true, false)
             _expect(
@@ -113,8 +131,14 @@ func _check_recruit_identity() -> void:
             )
             if hero_detail != null:
                 var hero_text := _node_text(hero_detail)
-                _expect(hero_text.contains("部落"), "我方英雄详情应显示部落")
-                _expect(hero_text.contains("英雄技能"), "我方英雄详情应显示技能说明")
+                _expect(
+                    hero_text.contains(TranslationServer.translate("ui.game.detail.tribe")),
+                    "我方英雄详情应显示部落",
+                )
+                _expect(
+                    hero_text.contains(TranslationServer.translate("ui.game.detail.hero_power")),
+                    "我方英雄详情应显示技能说明",
+                )
 
     await _unmount(instance)
 
@@ -139,7 +163,10 @@ func _check_countdown_flip() -> void:
     var center := flip.get_global_rect().get_center()
     await _push_motion(instance, center)
     _expect(not timer.visible and end_button.visible, "悬停倒计时应翻成结束招募")
-    _expect(end_button.text == "结束招募", "翻转后应显示结束招募")
+    _expect(
+        end_button.text == TranslationServer.translate("ui.game.side_panel.end_recruit"),
+        "翻转后应显示结束招募",
+    )
     await _push_click(instance, center)
     _expect(
         captured.size() == 1
@@ -169,8 +196,16 @@ func _check_combat_identity() -> void:
     var status = instance.find_child("SideStatus", true, false)
     _expect(status != null, "战斗阶段右栏中部应存在回合与倒计时块")
     if status != null:
-        _expect(_node_text(status).contains("战斗中"), "战斗阶段状态行显示「战斗中」")
-        _expect(not _node_text(status).contains("剩余"), "战斗阶段不显示招募倒计时")
+        _expect(
+            _node_text(status).contains(TranslationServer.translate("ui.game.side_panel.combat")),
+            "战斗阶段状态行显示战斗中",
+        )
+        _expect(
+            not _node_text(status).contains(
+                TranslationServer.translate("ui.game.side_panel.remaining_seconds").split("%")[0]
+            ),
+            "战斗阶段不显示招募倒计时",
+        )
 
     await _unmount(instance)
 
@@ -191,8 +226,8 @@ func _check_eliminated_identity() -> void:
     _expect(identity != null, "已淘汰观战者应有身份块")
     if identity != null:
         _expect(
-            _node_text(identity).contains("已淘汰 · 观战中"),
-            "已淘汰观战者应显示「已淘汰 · 观战中」",
+            _node_text(identity).contains(TranslationServer.translate("ui.game.side_panel.eliminated")),
+            "已淘汰观战者应显示淘汰观战提示",
         )
 
     await _unmount(instance)
@@ -211,7 +246,10 @@ func _check_ghost_identity() -> void:
     var identity = instance.find_child("SideIdentity", true, false)
     _expect(identity != null, "幽灵战应有身份块")
     if identity != null:
-        _expect(_node_text(identity).contains("幽灵"), "幽灵战身份块应标注「幽灵」")
+        _expect(
+            _node_text(identity).contains(TranslationServer.translate("ui.game.side_panel.ghost")),
+            "幽灵战身份块应标注幽灵",
+        )
         _expect(
             identity.find_child("HpBar", true, false) == null,
             "幽灵战身份块不应显示血量条",

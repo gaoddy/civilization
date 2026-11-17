@@ -1,11 +1,11 @@
 ---
 id: zhugeliang
-card_type: 随从
+card_type: minion
 name: 诸葛亮
-tribe: 人类
-subtype: 军师
+tribe: human
+subtype: strategist
 level: 3
-era: 封建
+era: feudal
 attack: 3
 health: 6
 skills: [battlecry-friendly-archers-plus-2-attack]

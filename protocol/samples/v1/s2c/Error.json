@@ -8,6 +8,7 @@
     "code": "NOT_ENOUGH_GOLD",
     "message": "金币不足",
     "clientIntentId": "ci_1",
-    "retryable": false
+    "retryable": false,
+    "messageId": "error.NOT_ENOUGH_GOLD"
   }
 }

@@ -1,11 +1,11 @@
 ---
 id: zhulin
-card_type: 随从
+card_type: minion
 name: 竹林
-tribe: 植物
-subtype: 树木
+tribe: plant
+subtype: tree
 level: 3
-era: 封建
+era: feudal
 attack: 3
 health: 6
 skills: [keyword-sow, aura-other-plants-plus-0-plus-1]

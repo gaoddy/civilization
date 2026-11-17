@@ -1,6 +1,6 @@
 ---
 id: deathrattle-all-enemies-minus-1-health
-keyword: 亡语
+keyword: deathrattle
 text: 亡语：使敌方所有随从获得 -1 生命
 effects: OnDeath|ModifyStats|enemy:all|health=-1,duration=combat
 ---

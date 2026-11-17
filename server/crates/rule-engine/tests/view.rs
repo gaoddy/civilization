@@ -393,7 +393,7 @@ fn board_view_folds_auras_into_stats_and_keywords() {
         AuraEffect {
             attack: 2,
             health: 1,
-            keywords: ["护盾".to_string(), "光环测试词".to_string()]
+            keywords: ["divine_shield".to_string(), "光环测试词".to_string()]
                 .into_iter()
                 .collect(),
             floor_one: true,
@@ -427,7 +427,7 @@ fn board_view_folds_auras_into_stats_and_keywords() {
         "攻击各层与受击自洽"
     );
     assert!(
-        after.keywords.contains(&"护盾".to_string()),
+        after.keywords.contains(&"divine_shield".to_string()),
         "关键词应包含光环授予的护盾"
     );
     assert!(

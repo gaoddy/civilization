@@ -1,11 +1,11 @@
 ---
 id: gongjianshou
-card_type: 随从
+card_type: minion
 name: 弓箭手
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 1
-era: 史前
+era: prehistoric
 attack: 2
 health: 2
 skills: [battlecry-random-enemy-damage-1]

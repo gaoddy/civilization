@@ -1,11 +1,11 @@
 ---
 id: smallpox
-card_type: 随从
+card_type: minion
 name: 天花
-tribe: 病毒
-subtype: 病毒
+tribe: virus
+subtype: virus
 level: 2
-era: 原始
+era: primitive
 attack: 2
 health: 3
 skills: [deathrattle-all-enemies-minus-1-health]

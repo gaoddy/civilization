@@ -1,11 +1,11 @@
 ---
 id: yongsheng-shuimu
-card_type: 随从
+card_type: minion
 name: 永生水母
-tribe: 生物
-subtype: 海洋
+tribe: biology
+subtype: ocean
 level: 7
-era: 未来
+era: future
 attack: 10
 health: 20
 skills: [keyword-reborn]

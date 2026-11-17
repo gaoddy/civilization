@@ -1,11 +1,11 @@
 ---
 id: zhihui-jushou
-card_type: 随从
+card_type: minion
 name: 智慧巨兽
-tribe: 生物
-subtype: 巨兽
+tribe: biology
+subtype: behemoth
 level: 7
-era: 未来
+era: future
 attack: 12
 health: 18
 skills: [keyword-windfury]

@@ -1,11 +1,11 @@
 ---
 id: qulv-feichuan
-card_type: 随从
+card_type: minion
 name: 曲率飞船
-tribe: 机械
-subtype: 航天
+tribe: machine
+subtype: spaceflight
 level: 7
-era: 未来
+era: future
 attack: 12
 health: 19
 skills: [keyword-optimal-attack]

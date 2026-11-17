@@ -7,7 +7,7 @@
         "params": {
           "duration": "combat",
           "keyword": {
-            "keyword": "最优攻击"
+            "keyword": "optimal_attack"
           }
         },
         "selector": {
@@ -21,9 +21,6 @@
     ],
     "id": "alternating-current",
     "keyword": null,
-    "match_text": "同左",
-    "name": "交流电",
-    "text": "使一个友方随从获得最优攻击直到回合结束",
     "uses_per_turn": 1
   },
   {
@@ -46,9 +43,6 @@
     ],
     "id": "aura-all-plus-0-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的随从获得 +0/+1",
     "uses_per_turn": null
   },
   {
@@ -71,9 +65,6 @@
     ],
     "id": "aura-all-plus-0-plus-2",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的随从获得 +0/+2",
     "uses_per_turn": null
   },
   {
@@ -89,7 +80,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "生物"
+              "value": "biology"
             }
           ],
           "kind": "side",
@@ -101,9 +92,6 @@
     ],
     "id": "aura-biology-plus-0-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的生物随从获得 +0/+1",
     "uses_per_turn": null
   },
   {
@@ -120,7 +108,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "生物"
+              "value": "biology"
             }
           ],
           "kind": "side",
@@ -132,9 +120,6 @@
     ],
     "id": "aura-biology-plus-1-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的生物随从获得 +1/+1",
     "uses_per_turn": null
   },
   {
@@ -145,14 +130,14 @@
         "params": {
           "duration": "permanent",
           "keyword": {
-            "keyword": "最优攻击"
+            "keyword": "optimal_attack"
           }
         },
         "selector": {
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             }
           ],
           "kind": "side",
@@ -164,9 +149,6 @@
     ],
     "id": "aura-mech-optimal-attack",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的机械随从获得最优攻击",
     "uses_per_turn": null
   },
   {
@@ -183,7 +165,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             }
           ],
           "kind": "side",
@@ -195,9 +177,6 @@
     ],
     "id": "aura-mech-plus-2-plus-2",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的机械随从获得 +2/+2",
     "uses_per_turn": null
   },
   {
@@ -213,7 +192,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "生物"
+              "value": "biology"
             },
             {
               "key": "other",
@@ -229,9 +208,6 @@
     ],
     "id": "aura-other-biology-plus-1-attack",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的其他生物随从获得 +1 攻击力",
     "uses_per_turn": null
   },
   {
@@ -248,7 +224,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             },
             {
               "key": "other",
@@ -264,9 +240,6 @@
     ],
     "id": "aura-other-mech-plus-1-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的其他机械随从获得 +1/+1",
     "uses_per_turn": null
   },
   {
@@ -282,7 +255,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "植物"
+              "value": "plant"
             },
             {
               "key": "other",
@@ -298,9 +271,6 @@
     ],
     "id": "aura-other-plants-plus-0-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的其他植物随从获得 +0/+1",
     "uses_per_turn": null
   },
   {
@@ -328,9 +298,6 @@
     ],
     "id": "aura-other-plus-0-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的其他随从获得 +0/+1",
     "uses_per_turn": null
   },
   {
@@ -347,7 +314,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "植物"
+              "value": "plant"
             }
           ],
           "kind": "side",
@@ -359,9 +326,6 @@
     ],
     "id": "aura-plant-plus-1-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的植物随从获得 +1/+1",
     "uses_per_turn": null
   },
   {
@@ -378,7 +342,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "植物"
+              "value": "plant"
             }
           ],
           "kind": "side",
@@ -390,9 +354,6 @@
     ],
     "id": "aura-plant-plus-2-plus-2",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的植物随从获得 +2/+2",
     "uses_per_turn": null
   },
   {
@@ -408,7 +369,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "学者"
+              "value": "scholar"
             }
           ],
           "kind": "side",
@@ -420,9 +381,6 @@
     ],
     "id": "aura-scholar-plus-0-plus-2",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的学者随从获得 +0/+2",
     "uses_per_turn": null
   },
   {
@@ -438,7 +396,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "学者"
+              "value": "scholar"
             }
           ],
           "kind": "side",
@@ -450,9 +408,6 @@
     ],
     "id": "aura-scholar-plus-0-plus-3",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "你的学者随从获得 +0/+3",
     "uses_per_turn": null
   },
   {
@@ -467,7 +422,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "生物"
+              "value": "biology"
             }
           ],
           "kind": "side",
@@ -478,10 +433,7 @@
       }
     ],
     "id": "battlecry-all-biology-growth-once",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使你的所有生物随从获得一次成长",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -502,10 +454,7 @@
       }
     ],
     "id": "battlecry-all-friendly-growth-once",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使你的所有随从获得一次成长",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -526,10 +475,7 @@
       }
     ],
     "id": "battlecry-all-friendly-growth-twice",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使你的所有随从获得两次成长",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -551,10 +497,7 @@
       }
     ],
     "id": "battlecry-all-friendly-plus-0-plus-1",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使你的所有随从获得 +0/+1",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -569,7 +512,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             }
           ],
           "kind": "side",
@@ -580,10 +523,7 @@
       }
     ],
     "id": "battlecry-all-mech-growth-once",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使你的所有机械随从获得一次成长",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -598,7 +538,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             }
           ],
           "kind": "side",
@@ -610,9 +550,6 @@
     ],
     "id": "battlecry-all-mech-growth-once-no-keyword",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使你的所有机械随从获得一次成长",
     "uses_per_turn": null
   },
   {
@@ -627,8 +564,8 @@
         "selector": {
           "filters": [
             {
-              "key": "name",
-              "value": "弓箭手"
+              "key": "id",
+              "value": "gongjianshou"
             }
           ],
           "kind": "side",
@@ -639,10 +576,7 @@
       }
     ],
     "id": "battlecry-friendly-archers-plus-2-attack",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使你的弓箭手获得 +2 攻击力",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -663,10 +597,7 @@
       }
     ],
     "id": "battlecry-friendly-growth-once",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方随从获得一次成长",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -678,7 +609,7 @@
           "times": 1,
           "times_if": {
             "times": 2,
-            "tribe": "植物"
+            "tribe": "plant"
           }
         },
         "selector": {
@@ -691,10 +622,7 @@
       }
     ],
     "id": "battlecry-friendly-growth-plant-twice",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方随从获得一次成长；若其为植物，改为两次",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -706,7 +634,7 @@
           "times": 1,
           "times_if": {
             "times": 2,
-            "tribe": "学者"
+            "tribe": "scholar"
           }
         },
         "selector": {
@@ -719,10 +647,7 @@
       }
     ],
     "id": "battlecry-friendly-growth-scholar-twice",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方随从获得一次成长；若其为学者，改为两次",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -743,10 +668,7 @@
       }
     ],
     "id": "battlecry-friendly-growth-twice",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方随从获得两次成长",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -762,7 +684,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             }
           ],
           "kind": "side",
@@ -773,10 +695,7 @@
       }
     ],
     "id": "battlecry-friendly-human-plus-0-plus-1",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方人类随从获得 +0/+1",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -791,7 +710,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             }
           ],
           "kind": "side",
@@ -802,10 +721,7 @@
       }
     ],
     "id": "battlecry-friendly-mech-growth-once",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方机械随从获得一次成长",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -820,7 +736,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "植物"
+              "value": "plant"
             }
           ],
           "kind": "side",
@@ -831,10 +747,7 @@
       }
     ],
     "id": "battlecry-friendly-plant-growth-once",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方植物随从获得一次成长",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -856,10 +769,7 @@
       }
     ],
     "id": "battlecry-friendly-plus-0-plus-1",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方随从获得 +0/+1",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -881,10 +791,7 @@
       }
     ],
     "id": "battlecry-friendly-plus-0-plus-2",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方随从获得 +0/+2",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -906,10 +813,7 @@
       }
     ],
     "id": "battlecry-friendly-plus-1-attack",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方随从获得 +1 攻击力",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -931,10 +835,7 @@
       }
     ],
     "id": "battlecry-friendly-plus-1-health",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方随从获得 +1 生命值",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -950,7 +851,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "病毒"
+              "value": "virus"
             }
           ],
           "kind": "side",
@@ -961,10 +862,7 @@
       }
     ],
     "id": "battlecry-friendly-virus-plus-1-attack",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方病毒随从获得 +1 攻击力",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -980,7 +878,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             },
             {
               "key": "other",
@@ -995,10 +893,7 @@
       }
     ],
     "id": "battlecry-other-friendly-humans-plus-1-attack",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使你的其他人类随从获得 +1 攻击力",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -1013,7 +908,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "植物"
+              "value": "plant"
             }
           ],
           "kind": "side",
@@ -1024,10 +919,7 @@
       }
     ],
     "id": "battlecry-plant-growth-twice",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：使一个友方植物随从获得两次成长",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -1048,10 +940,7 @@
       }
     ],
     "id": "battlecry-random-enemy-damage-1",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：对随机一个敌方随从造成 1 点伤害",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -1072,10 +961,7 @@
       }
     ],
     "id": "battlecry-random-enemy-damage-2",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：对随机一个敌方随从造成 2 点伤害",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -1093,10 +979,7 @@
       }
     ],
     "id": "battlecry-self-growth-twice",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：获得两次成长",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -1115,10 +998,7 @@
       }
     ],
     "id": "battlecry-self-plus-1-health",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：获得 +1 生命值",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -1137,10 +1017,7 @@
       }
     ],
     "id": "battlecry-summon-3-3-synthetic-cell",
-    "keyword": "战吼",
-    "match_text": null,
-    "name": null,
-    "text": "战吼：召唤一个 3/3 的合成细胞（幼体）",
+    "keyword": "battlecry",
     "uses_per_turn": null
   },
   {
@@ -1151,14 +1028,14 @@
         "params": {
           "duration": "permanent",
           "keyword": {
-            "keyword": "进化"
+            "keyword": "evolve"
           }
         },
         "selector": {
           "filters": [
             {
               "key": "tribe",
-              "value": "生物"
+              "value": "biology"
             }
           ],
           "kind": "side",
@@ -1170,9 +1047,6 @@
     ],
     "id": "biology-evolve",
     "keyword": null,
-    "match_text": "同左",
-    "name": "获得性状",
-    "text": "使一个友方生物随从获得进化",
     "uses_per_turn": 1
   },
   {
@@ -1183,7 +1057,7 @@
         "params": {
           "duration": "combat",
           "keyword": {
-            "keyword": "最优攻击"
+            "keyword": "optimal_attack"
           }
         },
         "selector": {
@@ -1197,9 +1071,6 @@
     ],
     "id": "combat-optimal-attack",
     "keyword": null,
-    "match_text": "同左",
-    "name": "航线",
-    "text": "使一个友方随从获得最优攻击直到回合结束",
     "uses_per_turn": 1
   },
   {
@@ -1221,9 +1092,6 @@
     ],
     "id": "combat-random-enemy-damage-3",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "战斗开始时对随机一个敌方随从造成 3 点伤害",
     "uses_per_turn": null
   },
   {
@@ -1234,7 +1102,7 @@
         "params": {
           "duration": "permanent",
           "keyword": {
-            "keyword": "传染",
+            "keyword": "contagion",
             "value": 1
           },
           "value": 1
@@ -1250,9 +1118,6 @@
     ],
     "id": "combatstart-all-enemies-contagion-1",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，使敌方所有随从获得 1 层传染",
     "uses_per_turn": null
   },
   {
@@ -1274,9 +1139,6 @@
     ],
     "id": "combatstart-all-enemies-damage-2",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，对敌方所有随从造成 2 点伤害",
     "uses_per_turn": null
   },
   {
@@ -1298,9 +1160,6 @@
     ],
     "id": "combatstart-all-enemies-damage-5",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，对敌方所有随从造成 5 点伤害",
     "uses_per_turn": null
   },
   {
@@ -1323,9 +1182,6 @@
     ],
     "id": "combatstart-all-enemies-minus-1-attack",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，使敌方所有随从获得 -1 攻击力",
     "uses_per_turn": null
   },
   {
@@ -1340,7 +1196,7 @@
             "count": 2,
             "filter": {
               "key": "tribe",
-              "value": "生物"
+              "value": "biology"
             },
             "side": "friendly"
           },
@@ -1354,9 +1210,6 @@
     ],
     "id": "combatstart-if-2-biology-self-plus-2-attack",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "战斗开始时，若你控制至少 2 个生物，获得 +2 攻击力",
     "uses_per_turn": null
   },
   {
@@ -1378,9 +1231,6 @@
     ],
     "id": "combatstart-leftmost-and-adjacent-damage-2",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，对敌方最左侧随从及其相邻随从造成 2 点伤害",
     "uses_per_turn": null
   },
   {
@@ -1402,9 +1252,6 @@
     ],
     "id": "combatstart-leftmost-damage-3",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，对敌方最左侧随从造成 3 点伤害",
     "uses_per_turn": null
   },
   {
@@ -1426,9 +1273,6 @@
     ],
     "id": "combatstart-leftmost-damage-4",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，对敌方最左侧随从造成 4 点伤害",
     "uses_per_turn": null
   },
   {
@@ -1450,9 +1294,6 @@
     ],
     "id": "combatstart-leftmost-damage-6",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，对敌方最左侧随从造成 6 点伤害",
     "uses_per_turn": null
   },
   {
@@ -1463,7 +1304,7 @@
         "params": {
           "duration": "permanent",
           "keyword": {
-            "keyword": "传染",
+            "keyword": "contagion",
             "value": 1
           },
           "value": 1
@@ -1479,9 +1320,6 @@
     ],
     "id": "combatstart-random-enemy-contagion-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "战斗开始时，使一个随机敌方随从获得 1 层传染",
     "uses_per_turn": null
   },
   {
@@ -1492,7 +1330,7 @@
         "params": {
           "duration": "permanent",
           "keyword": {
-            "keyword": "传染",
+            "keyword": "contagion",
             "value": 2
           },
           "value": 2
@@ -1508,9 +1346,6 @@
     ],
     "id": "combatstart-random-enemy-contagion-2",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "战斗开始时，使一个随机敌方随从获得 2 层传染",
     "uses_per_turn": null
   },
   {
@@ -1532,9 +1367,6 @@
     ],
     "id": "combatstart-random-enemy-damage-2",
     "keyword": null,
-    "match_text": "战斗开始时，对敌方最左侧随从造成 2 点伤害",
-    "name": null,
-    "text": "战斗开始时，随机对一个敌方随从造成 2 点伤害",
     "uses_per_turn": null
   },
   {
@@ -1547,7 +1379,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             }
           ],
           "kind": "side",
@@ -1559,9 +1391,6 @@
     ],
     "id": "combatstart-remove-all-human-growth",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，移除所有人类随从的全部成长",
     "uses_per_turn": null
   },
   {
@@ -1581,9 +1410,6 @@
     ],
     "id": "combatstart-remove-top-attack-enemy-growth",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，移除敌方攻击力最高随从的全部成长",
     "uses_per_turn": null
   },
   {
@@ -1605,9 +1431,6 @@
     ],
     "id": "combatstart-top-attack-enemy-cant-attack",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，使敌方攻击力最高的随从本回合无法攻击",
     "uses_per_turn": null
   },
   {
@@ -1630,9 +1453,6 @@
     ],
     "id": "combatstart-top-attack-enemy-minus-0-minus-2",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "战斗开始时，使敌方攻击力最高的随从获得 -0/-2",
     "uses_per_turn": null
   },
   {
@@ -1643,7 +1463,7 @@
         "params": {
           "duration": "permanent",
           "keyword": {
-            "keyword": "传染",
+            "keyword": "contagion",
             "value": 1
           },
           "value": 1
@@ -1658,10 +1478,7 @@
       }
     ],
     "id": "deathrattle-all-enemies-contagion-1",
-    "keyword": "亡语",
-    "match_text": null,
-    "name": null,
-    "text": "亡语：使敌方所有随从获得 1 层传染",
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -1677,7 +1494,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             }
           ],
           "kind": "side",
@@ -1688,10 +1505,7 @@
       }
     ],
     "id": "deathrattle-all-enemies-humans-minus-2-health",
-    "keyword": "亡语",
-    "match_text": null,
-    "name": null,
-    "text": "亡语：使敌方所有人类随从获得 -2 生命",
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -1713,10 +1527,7 @@
       }
     ],
     "id": "deathrattle-all-enemies-minus-1-health",
-    "keyword": "亡语",
-    "match_text": null,
-    "name": null,
-    "text": "亡语：使敌方所有随从获得 -1 生命",
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -1739,9 +1550,6 @@
     ],
     "id": "deathrattle-all-friendly-plus-0-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "亡语：使你的所有随从获得 +0/+1",
     "uses_per_turn": null
   },
   {
@@ -1763,10 +1571,7 @@
       }
     ],
     "id": "deathrattle-random-enemy-hp-minus-1",
-    "keyword": "亡语",
-    "match_text": null,
-    "name": null,
-    "text": "亡语：使随机一个敌方随从获得 -1 生命值",
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -1789,9 +1594,6 @@
     ],
     "id": "deathrattle-random-enemy-minus-1-attack",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "亡语：使随机一个敌方随从获得 -1 攻击力",
     "uses_per_turn": null
   },
   {
@@ -1813,10 +1615,7 @@
       }
     ],
     "id": "deathrattle-random-enemy-minus-1-health",
-    "keyword": "亡语",
-    "match_text": null,
-    "name": null,
-    "text": "亡语：使随机一个敌方随从获得 -1 生命",
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -1835,10 +1634,7 @@
       }
     ],
     "id": "deathrattle-summon-2-2-hela-cell-clone",
-    "keyword": "亡语",
-    "match_text": null,
-    "name": null,
-    "text": "亡语：召唤一个 2/2 的海拉细胞（复制体）",
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -1857,10 +1653,7 @@
       }
     ],
     "id": "deathrattle-summon-termite",
-    "keyword": "亡语",
-    "match_text": null,
-    "name": null,
-    "text": "亡语：召唤一个 1/2 的白蚁",
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -1874,21 +1667,21 @@
             "count": 3,
             "filter": {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             },
             "side": "friendly"
           },
           "times": 1,
           "times_if": {
             "times": 2,
-            "tribe": "人类"
+            "tribe": "human"
           }
         },
         "selector": {
           "filters": [
             {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             }
           ],
           "kind": "side",
@@ -1900,9 +1693,6 @@
     ],
     "id": "division-of-labor",
     "keyword": null,
-    "match_text": "同左",
-    "name": "分工",
-    "text": "使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次",
     "uses_per_turn": 1
   },
   {
@@ -1933,9 +1723,6 @@
     ],
     "id": "efficient-algorithm",
     "keyword": null,
-    "match_text": "获得的随从固定为当前星级排序第一张",
-    "name": "高效算法",
-    "text": "刷新商店并获得一张当前星级的随从",
     "uses_per_turn": 1
   },
   {
@@ -1957,9 +1744,6 @@
     ],
     "id": "enemy-random-cannot-attack",
     "keyword": null,
-    "match_text": "同左",
-    "name": "非攻",
-    "text": "使随机一个敌方随从本回合无法攻击",
     "uses_per_turn": 1
   },
   {
@@ -1979,9 +1763,6 @@
     ],
     "id": "evolution-discovery",
     "keyword": null,
-    "match_text": "改为三选一固定池",
-    "name": "进化",
-    "text": "发现一张本局启用的流派随从",
     "uses_per_turn": 1
   },
   {
@@ -1992,7 +1773,7 @@
         "params": {
           "duration": "permanent",
           "keyword": {
-            "keyword": "护盾"
+            "keyword": "divine_shield"
           }
         },
         "selector": {
@@ -2006,9 +1787,6 @@
     ],
     "id": "faraday-cage",
     "keyword": null,
-    "match_text": "同左",
-    "name": "法拉第笼",
-    "text": "使一个友方随从获得护盾",
     "uses_per_turn": 1
   },
   {
@@ -2027,9 +1805,6 @@
     ],
     "id": "free-refresh",
     "keyword": null,
-    "match_text": "同左",
-    "name": "启航",
-    "text": "免费刷新一次商店",
     "uses_per_turn": 1
   },
   {
@@ -2044,7 +1819,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "植物"
+              "value": "plant"
             }
           ],
           "kind": "side",
@@ -2056,9 +1831,6 @@
     ],
     "id": "heredity",
     "keyword": null,
-    "match_text": "同左",
-    "name": "遗传",
-    "text": "使一个友方植物随从获得一次成长",
     "uses_per_turn": 1
   },
   {
@@ -2073,7 +1845,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             }
           ],
           "kind": "side",
@@ -2085,9 +1857,6 @@
     ],
     "id": "human-growth-twice",
     "keyword": null,
-    "match_text": "同左",
-    "name": "技艺",
-    "text": "使一个友方人类随从获得两次成长",
     "uses_per_turn": 1
   },
   {
@@ -2102,7 +1871,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             },
             {
               "key": "other",
@@ -2118,9 +1887,6 @@
     ],
     "id": "invention-factory",
     "keyword": null,
-    "match_text": "同左",
-    "name": "发明工厂",
-    "text": "使你的其他机械随从各获得一次成长",
     "uses_per_turn": 1
   },
   {
@@ -2135,7 +1901,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             },
             {
               "key": "other",
@@ -2150,10 +1916,7 @@
       }
     ],
     "id": "keyword-assemble-1",
-    "keyword": "装配 1",
-    "match_text": null,
-    "name": null,
-    "text": "装配 1：进入战场时，使你的其他机械随从各获得 1 次成长",
+    "keyword": "assemble 1",
     "uses_per_turn": null
   },
   {
@@ -2168,7 +1931,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             },
             {
               "key": "other",
@@ -2183,90 +1946,63 @@
       }
     ],
     "id": "keyword-assemble-2",
-    "keyword": "装配 2",
-    "match_text": null,
-    "name": null,
-    "text": "装配 2：进入战场时，使你的其他机械随从各获得 2 次成长",
+    "keyword": "assemble 2",
     "uses_per_turn": null
   },
   {
     "cost": null,
     "effects": [],
     "id": "keyword-breed-1",
-    "keyword": "繁衍 1",
-    "match_text": null,
-    "name": null,
-    "text": "繁衍 1：回合开始时获得 +1 生命",
+    "keyword": "breed 1",
     "uses_per_turn": null
   },
   {
     "cost": null,
     "effects": [],
     "id": "keyword-breed-2",
-    "keyword": "繁衍 2",
-    "match_text": null,
-    "name": null,
-    "text": "繁衍 2：回合开始时获得 +2 生命",
+    "keyword": "breed 2",
     "uses_per_turn": null
   },
   {
     "cost": null,
     "effects": [],
     "id": "keyword-breed-3",
-    "keyword": "繁衍 3",
-    "match_text": null,
-    "name": null,
-    "text": "繁衍 3：回合开始时获得 +3 生命",
+    "keyword": "breed 3",
     "uses_per_turn": null
   },
   {
     "cost": null,
     "effects": [],
     "id": "keyword-contagion",
-    "keyword": "传染",
-    "match_text": null,
-    "name": null,
-    "text": "传染：造成伤害后，目标每回合 -1 生命",
+    "keyword": "contagion",
     "uses_per_turn": null
   },
   {
     "cost": null,
     "effects": [],
     "id": "keyword-divine-shield",
-    "keyword": "护盾",
-    "match_text": null,
-    "name": null,
-    "text": "护盾：抵消一次伤害",
+    "keyword": "divine_shield",
     "uses_per_turn": null
   },
   {
     "cost": null,
     "effects": [],
     "id": "keyword-evolve",
-    "keyword": "进化",
-    "match_text": null,
-    "name": null,
-    "text": "进化：从 +2/+2、护盾、复生中选择一个",
+    "keyword": "evolve",
     "uses_per_turn": null
   },
   {
     "cost": null,
     "effects": [],
     "id": "keyword-optimal-attack",
-    "keyword": "最优攻击",
-    "match_text": null,
-    "name": null,
-    "text": "最优攻击：无视嘲讽，优先攻击可被击杀的目标",
+    "keyword": "optimal_attack",
     "uses_per_turn": null
   },
   {
     "cost": null,
     "effects": [],
     "id": "keyword-reborn",
-    "keyword": "复生",
-    "match_text": null,
-    "name": null,
-    "text": "复生：以 1 点生命复活一次",
+    "keyword": "reborn",
     "uses_per_turn": null
   },
   {
@@ -2285,30 +2021,21 @@
       }
     ],
     "id": "keyword-sow",
-    "keyword": "播种",
-    "match_text": null,
-    "name": null,
-    "text": "播种：死亡时召唤一个 1/1 的幼苗",
+    "keyword": "sow",
     "uses_per_turn": null
   },
   {
     "cost": null,
     "effects": [],
     "id": "keyword-taunt",
-    "keyword": "嘲讽",
-    "match_text": null,
-    "name": null,
-    "text": "嘲讽",
+    "keyword": "taunt",
     "uses_per_turn": null
   },
   {
     "cost": null,
     "effects": [],
     "id": "keyword-windfury",
-    "keyword": "连击",
-    "match_text": null,
-    "name": null,
-    "text": "连击：每回合可攻击两次",
+    "keyword": "windfury",
     "uses_per_turn": null
   },
   {
@@ -2319,7 +2046,7 @@
         "params": {
           "duration": "combat",
           "keyword": {
-            "keyword": "连击"
+            "keyword": "windfury"
           }
         },
         "selector": {
@@ -2333,9 +2060,6 @@
     ],
     "id": "light-speed-strike",
     "keyword": null,
-    "match_text": "同左",
-    "name": "光速出击",
-    "text": "使一个友方随从本回合获得连击",
     "uses_per_turn": 1
   },
   {
@@ -2346,7 +2070,7 @@
         "params": {
           "duration": "permanent",
           "keyword": {
-            "keyword": "传染",
+            "keyword": "contagion",
             "value": 1
           },
           "value": 1
@@ -2362,9 +2086,6 @@
     ],
     "id": "microbiology",
     "keyword": null,
-    "match_text": "同左",
-    "name": "微生物学",
-    "text": "战斗开始时使敌方最左侧随从获得 1 层传染",
     "uses_per_turn": null
   },
   {
@@ -2384,9 +2105,6 @@
     ],
     "id": "observation",
     "keyword": null,
-    "match_text": "额外出现的随从固定为当前时代当前星级排序第一张",
-    "name": "观测",
-    "text": "每回合首次刷新时额外出现一张当前时代的随机随从",
     "uses_per_turn": null
   },
   {
@@ -2408,9 +2126,6 @@
     ],
     "id": "radiation",
     "keyword": null,
-    "match_text": "战斗开始时，对敌方最左侧随从造成 2 点伤害",
-    "name": "放射",
-    "text": "战斗开始时对随机一个敌方随从造成 2 点伤害",
     "uses_per_turn": null
   },
   {
@@ -2425,7 +2140,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "学者"
+              "value": "scholar"
             }
           ],
           "kind": "side",
@@ -2437,9 +2152,6 @@
     ],
     "id": "scholar-growth-twice",
     "keyword": null,
-    "match_text": "同左",
-    "name": "推演",
-    "text": "使一个友方学者随从获得两次成长",
     "uses_per_turn": 1
   },
   {
@@ -2461,9 +2173,6 @@
     ],
     "id": "shout",
     "keyword": null,
-    "match_text": "同左",
-    "name": "呐喊",
-    "text": "使一个友方随从获得一次成长",
     "uses_per_turn": 2
   },
   {
@@ -2478,7 +2187,7 @@
             "count": 2,
             "filter": {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             },
             "side": "friendly"
           },
@@ -2492,9 +2201,6 @@
     ],
     "id": "trigger-2-humans-self-plus-1-attack",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "若你控制至少 2 个人类，获得 +1 攻击力",
     "uses_per_turn": null
   },
   {
@@ -2509,7 +2215,7 @@
             "count": 2,
             "filter": {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             },
             "side": "friendly"
           },
@@ -2524,9 +2230,6 @@
     ],
     "id": "trigger-2-humans-self-plus-1-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "若你控制至少 2 个人类，获得 +1/+1",
     "uses_per_turn": null
   },
   {
@@ -2541,7 +2244,7 @@
             "count": 3,
             "filter": {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             },
             "side": "friendly"
           },
@@ -2556,9 +2259,6 @@
     ],
     "id": "trigger-3-humans-self-plus-1-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "若你控制至少 3 个人类，获得 +1/+1",
     "uses_per_turn": null
   },
   {
@@ -2573,7 +2273,7 @@
             "count": 3,
             "filter": {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             },
             "side": "friendly"
           },
@@ -2587,9 +2287,6 @@
     ],
     "id": "trigger-3-humans-self-plus-2-attack",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "若你控制至少 3 个人类，获得 +2 攻击力",
     "uses_per_turn": null
   },
   {
@@ -2611,9 +2308,6 @@
     ],
     "id": "trigger-all-friendly-growth-once",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使你的随从各获得一次成长",
     "uses_per_turn": null
   },
   {
@@ -2637,9 +2331,6 @@
     ],
     "id": "trigger-all-friendly-plus-1-plus-1",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使你的所有随从获得 +1/+1",
     "uses_per_turn": null
   },
   {
@@ -2654,7 +2345,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             }
           ],
           "kind": "side",
@@ -2666,9 +2357,6 @@
     ],
     "id": "trigger-all-mech-growth-once",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使你的机械随从各获得一次成长",
     "uses_per_turn": null
   },
   {
@@ -2690,9 +2378,6 @@
     ],
     "id": "trigger-copy-friendly-minion",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "复制一个友方随从",
     "uses_per_turn": null
   },
   {
@@ -2701,7 +2386,7 @@
       {
         "op": "copy",
         "params": {
-          "card_type": "随从",
+          "card_type": "minion",
           "from": "hand",
           "to": "hand"
         },
@@ -2713,9 +2398,6 @@
     ],
     "id": "trigger-copy-hand-minion",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "复制你手牌中的一张随从牌",
     "uses_per_turn": null
   },
   {
@@ -2735,9 +2417,6 @@
     ],
     "id": "trigger-discover-tribe-minion",
     "keyword": null,
-    "match_text": "改为三选一固定池",
-    "name": null,
-    "text": "发现一张本局流派的随从",
     "uses_per_turn": null
   },
   {
@@ -2758,9 +2437,6 @@
     ],
     "id": "trigger-enemy-death-self-plus-1-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "每当一个敌方随从死亡，获得 +1/+1",
     "uses_per_turn": null
   },
   {
@@ -2773,7 +2449,7 @@
           "duration": "permanent",
           "when": {
             "key": "tribe",
-            "value": "生物"
+            "value": "biology"
           }
         },
         "selector": {
@@ -2784,9 +2460,6 @@
     ],
     "id": "trigger-friendly-biology-play-plus-1-attack",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "每当一个友方生物随从进入战场，获得 +1 攻击力",
     "uses_per_turn": null
   },
   {
@@ -2806,9 +2479,6 @@
     ],
     "id": "trigger-friendly-death-self-plus-1-attack",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "每当一个友方随从死亡，获得 +1 攻击力",
     "uses_per_turn": null
   },
   {
@@ -2829,9 +2499,6 @@
     ],
     "id": "trigger-friendly-evolve-self-plus-1-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "每当一个友方随从进化，获得 +1/+1",
     "uses_per_turn": null
   },
   {
@@ -2851,9 +2518,6 @@
     ],
     "id": "trigger-friendly-growth-extra-plus-0-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "每当一个友方随从获得成长，它额外获得 +0/+1",
     "uses_per_turn": null
   },
   {
@@ -2873,9 +2537,6 @@
     ],
     "id": "trigger-friendly-growth-self-plus-1-attack",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "每当一个友方随从获得成长，获得 +1 攻击力",
     "uses_per_turn": null
   },
   {
@@ -2897,9 +2558,6 @@
     ],
     "id": "trigger-friendly-growth-thrice",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使一个友方随从获得三次成长",
     "uses_per_turn": null
   },
   {
@@ -2921,9 +2579,6 @@
     ],
     "id": "trigger-friendly-growth-twice",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使一个友方随从获得两次成长",
     "uses_per_turn": null
   },
   {
@@ -2937,7 +2592,7 @@
           "health": 1,
           "when": {
             "key": "tribe",
-            "value": "人类"
+            "value": "human"
           }
         },
         "selector": {
@@ -2948,9 +2603,6 @@
     ],
     "id": "trigger-friendly-human-death-plus-1-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "每当一个友方人类随从死亡，获得 +1/+1",
     "uses_per_turn": null
   },
   {
@@ -2963,7 +2615,7 @@
           "duration": "permanent",
           "when": {
             "key": "tribe",
-            "value": "人类"
+            "value": "human"
           }
         },
         "selector": {
@@ -2974,9 +2626,6 @@
     ],
     "id": "trigger-friendly-human-play-plus-1-attack",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "每当一个友方人类随从进入战场，获得 +1 攻击力",
     "uses_per_turn": null
   },
   {
@@ -2987,14 +2636,14 @@
         "params": {
           "duration": "combat",
           "keyword": {
-            "keyword": "嘲讽"
+            "keyword": "taunt"
           }
         },
         "selector": {
           "filters": [
             {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             }
           ],
           "kind": "side",
@@ -3006,9 +2655,6 @@
     ],
     "id": "trigger-friendly-human-taunt-until-turn-end",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使一个友方人类随从获得嘲讽直到回合结束",
     "uses_per_turn": null
   },
   {
@@ -3019,7 +2665,7 @@
         "params": {
           "duration": "permanent",
           "keyword": {
-            "keyword": "繁衍",
+            "keyword": "breed",
             "value": 2
           },
           "value": 2
@@ -3028,7 +2674,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "植物"
+              "value": "plant"
             }
           ],
           "kind": "side",
@@ -3040,9 +2686,6 @@
     ],
     "id": "trigger-friendly-plant-breed-2",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使一个友方植物随从获得繁衍 2",
     "uses_per_turn": null
   },
   {
@@ -3065,9 +2708,6 @@
     ],
     "id": "trigger-friendly-plus-0-plus-4-this-turn",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使一个友方随从获得 +0/+4 直到回合结束",
     "uses_per_turn": null
   },
   {
@@ -3091,9 +2731,6 @@
     ],
     "id": "trigger-friendly-plus-1-plus-1",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使一个友方随从获得 +1/+1",
     "uses_per_turn": null
   },
   {
@@ -3116,9 +2753,6 @@
     ],
     "id": "trigger-friendly-plus-2-attack",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使一个友方随从获得 +2 攻击力",
     "uses_per_turn": null
   },
   {
@@ -3141,9 +2775,6 @@
     ],
     "id": "trigger-friendly-plus-2-attack-this-turn",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使一个友方随从获得 +2 攻击力直到回合结束",
     "uses_per_turn": null
   },
   {
@@ -3154,7 +2785,7 @@
         "params": {
           "duration": "combat",
           "keyword": {
-            "keyword": "嘲讽"
+            "keyword": "taunt"
           }
         },
         "selector": {
@@ -3168,9 +2799,6 @@
     ],
     "id": "trigger-friendly-taunt-until-turn-end",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使一个友方随从获得嘲讽直到回合结束",
     "uses_per_turn": null
   },
   {
@@ -3181,14 +2809,14 @@
         "params": {
           "duration": "combat",
           "keyword": {
-            "keyword": "最优攻击"
+            "keyword": "optimal_attack"
           }
         },
         "selector": {
           "filters": [
             {
               "key": "tribe",
-              "value": "机械"
+              "value": "machine"
             }
           ],
           "kind": "side",
@@ -3200,9 +2828,6 @@
     ],
     "id": "trigger-mech-optimal-attack-this-turn",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "你的机械随从获得最优攻击直到回合结束",
     "uses_per_turn": null
   },
   {
@@ -3213,7 +2838,7 @@
         "params": {
           "duration": "combat",
           "keyword": {
-            "keyword": "连击"
+            "keyword": "windfury"
           }
         },
         "selector": {
@@ -3227,9 +2852,6 @@
     ],
     "id": "trigger-minion-windfury-this-turn",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使一个随从本回合获得连击",
     "uses_per_turn": null
   },
   {
@@ -3245,7 +2867,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "人类"
+              "value": "human"
             },
             {
               "key": "other",
@@ -3261,9 +2883,6 @@
     ],
     "id": "trigger-other-friendly-humans-plus-1-attack",
     "keyword": null,
-    "match_text": "同左",
-    "name": null,
-    "text": "使你的其他人类随从各获得 +1 攻击力",
     "uses_per_turn": null
   },
   {
@@ -3286,9 +2905,6 @@
     ],
     "id": "trigger-play-effect-friendly-plus-0-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "每当你使用一张效果牌，使一个友方随从获得 +0/+1",
     "uses_per_turn": null
   },
   {
@@ -3308,9 +2924,6 @@
     ],
     "id": "trigger-turn-start-self-plus-0-plus-1",
     "keyword": null,
-    "match_text": null,
-    "name": null,
-    "text": "回合开始时获得 +0/+1",
     "uses_per_turn": null
   },
   {
@@ -3319,7 +2932,7 @@
       {
         "op": "copy",
         "params": {
-          "card_type": "随从",
+          "card_type": "minion",
           "from": "hand",
           "to": "hand"
         },
@@ -3331,9 +2944,6 @@
     ],
     "id": "universal-manuscript",
     "keyword": null,
-    "match_text": "同左",
-    "name": "万能手稿",
-    "text": "复制一张你手牌中的随从牌",
     "uses_per_turn": 1
   },
   {
@@ -3348,7 +2958,7 @@
           "filters": [
             {
               "key": "tribe",
-              "value": "病毒"
+              "value": "virus"
             }
           ],
           "kind": "side",
@@ -3360,9 +2970,6 @@
     ],
     "id": "virus-growth-once",
     "keyword": null,
-    "match_text": "同左",
-    "name": "培养",
-    "text": "使一个友方病毒随从获得一次成长",
     "uses_per_turn": 1
   }
 ]

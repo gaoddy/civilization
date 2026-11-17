@@ -1,11 +1,11 @@
 ---
 id: euclid
-card_type: 随从
+card_type: minion
 name: 欧几里得
-tribe: 学者
-subtype: 数学
+tribe: scholar
+subtype: mathematics
 level: 1
-era: 原始
+era: primitive
 attack: 0
 health: 5
 skills: [battlecry-friendly-plus-0-plus-1]

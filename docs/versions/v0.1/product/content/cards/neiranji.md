@@ -1,11 +1,11 @@
 ---
 id: neiranji
-card_type: 随从
+card_type: minion
 name: 内燃机
-tribe: 机械
-subtype: 动力
+tribe: machine
+subtype: power
 level: 4
-era: 工业
+era: industrial
 attack: 6
 health: 8
 skills: [keyword-optimal-attack]

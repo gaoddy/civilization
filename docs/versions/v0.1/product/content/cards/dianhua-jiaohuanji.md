@@ -1,11 +1,11 @@
 ---
 id: dianhua-jiaohuanji
-card_type: 随从
+card_type: minion
 name: 电话交换机
-tribe: 机械
-subtype: 通信
+tribe: machine
+subtype: communication
 level: 5
-era: 工业
+era: industrial
 attack: 7
 health: 10
 skills: [battlecry-all-friendly-growth-once]

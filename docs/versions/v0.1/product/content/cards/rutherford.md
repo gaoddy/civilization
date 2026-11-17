@@ -1,11 +1,11 @@
 ---
 id: rutherford
-card_type: 随从
+card_type: minion
 name: 卢瑟福
-tribe: 学者
-subtype: 物理
+tribe: scholar
+subtype: physics
 level: 6
-era: 现代
+era: modern
 attack: 0
 health: 20
 skills: [combat-random-enemy-damage-3]

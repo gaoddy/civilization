@@ -1,10 +1,10 @@
 ---
 id: zhengbingling
 name: 征兵令
-card_type: 效果
+card_type: effect
 level: 3
-era: 工业
-tribe: 人类
+era: industrial
+tribe: human
 cost: 2
 match_text: 同左
 skills: [trigger-other-friendly-humans-plus-1-attack]

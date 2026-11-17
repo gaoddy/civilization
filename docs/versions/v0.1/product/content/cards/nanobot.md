@@ -1,11 +1,11 @@
 ---
 id: nanobot
-card_type: 随从
+card_type: minion
 name: 纳米机器人
-tribe: 机械
-subtype: 机器人
+tribe: machine
+subtype: robot
 level: 5
-era: 未来
+era: future
 attack: 6
 health: 11
 skills: [keyword-optimal-attack, keyword-assemble-1]

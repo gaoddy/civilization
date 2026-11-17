@@ -1,11 +1,11 @@
 ---
 id: nitaizhangyu
-card_type: 随从
+card_type: minion
 name: 拟态章鱼
-tribe: 生物
-subtype: 软体
+tribe: biology
+subtype: mollusk
 level: 2
-era: 史前
+era: prehistoric
 attack: 2
 health: 5
 is_scholar: false

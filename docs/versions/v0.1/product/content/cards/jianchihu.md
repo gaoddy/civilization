@@ -1,11 +1,11 @@
 ---
 id: jianchihu
-card_type: 随从
+card_type: minion
 name: 剑齿虎
-tribe: 生物
-subtype: 哺乳
+tribe: biology
+subtype: mammal
 level: 2
-era: 史前
+era: prehistoric
 attack: 3
 health: 4
 skills: [combatstart-if-2-biology-self-plus-2-attack]

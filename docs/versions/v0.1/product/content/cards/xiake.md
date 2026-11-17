@@ -1,11 +1,11 @@
 ---
 id: xiake
-card_type: 随从
+card_type: minion
 name: 侠客
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 3
-era: 封建
+era: feudal
 attack: 4
 health: 5
 is_scholar: false

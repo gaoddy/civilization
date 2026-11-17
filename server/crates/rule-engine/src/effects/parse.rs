@@ -327,8 +327,8 @@ fn parse_zone(key: &str, value: &str, chunk: &str) -> Result<Zone, String> {
 
 fn parse_card_type(value: &str, chunk: &str) -> Result<CardType, String> {
     match value {
-        "随从" => Ok(CardType::Minion),
-        "效果" => Ok(CardType::Effect),
+        "minion" => Ok(CardType::Minion),
+        "effect" => Ok(CardType::Effect),
         _ => Err(format!("参数 type 非法 {value:?}（{chunk}）")),
     }
 }
@@ -421,7 +421,7 @@ fn parse_params(op: Op, raw: Option<&str>, chunk: &str) -> (Params, Vec<String>)
     // 后者统一规范化为 `KeywordSpec { value: Some(n) }`，供执行器只读 keyword。
     if let Some(keyword) = &mut params.keyword
         && keyword.value.is_none()
-        && matches!(keyword.keyword.as_str(), "繁衍" | "装配" | "传染")
+        && matches!(keyword.keyword.as_str(), "breed" | "assemble" | "contagion")
         && let Some(value) = params.value
     {
         keyword.value = Some(value);
@@ -455,11 +455,11 @@ fn parse_times_if(value: &str, chunk: &str) -> Result<TimesIf, String> {
 
 /// DSL 中的部落名到 `Tribe` 的映射，用于只能取部落的 `timesIf` 参数。
 const TRIBE_VALUES: &[(&str, Tribe)] = &[
-    ("人类", Tribe::Human),
-    ("机械", Tribe::Machine),
-    ("生物", Tribe::Biology),
-    ("植物", Tribe::Plant),
-    ("病毒", Tribe::Virus),
-    ("学者", Tribe::Scholar),
-    ("通用", Tribe::General),
+    ("human", Tribe::Human),
+    ("machine", Tribe::Machine),
+    ("biology", Tribe::Biology),
+    ("plant", Tribe::Plant),
+    ("virus", Tribe::Virus),
+    ("scholar", Tribe::Scholar),
+    ("general", Tribe::General),
 ];

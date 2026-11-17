@@ -45,9 +45,12 @@ fn replay_same_log_100_times_has_same_hash() {
     let _ = std::fs::remove_file(&path);
 }
 
-/// 批次最终哈希必须与改动前的固定基线一致。
+/// 批次最终哈希必须与固定基线一致。
 ///
-/// 基线由结构化 effects 改造前的代码生成；它冻结的是行为，不只是自洽性。
+/// 本基线因 i18n 关键词标识英文化而重定：状态哈希会写入 `granted` 关键词与
+/// `aura.keywords` 中的关键词字符串，标识由中文改为英文 id 后哈希输入随之变化，
+/// 故哈希值变化不代表结算行为变化。基线冻结的仍是行为：任何算术、遍历顺序或
+/// 随机流消耗变化都会使哈希改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

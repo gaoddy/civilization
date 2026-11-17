@@ -1,11 +1,11 @@
 ---
 id: yuanshizhenjun
-card_type: 随从
+card_type: minion
 name: 原始真菌
-tribe: 植物
-subtype: 真菌
+tribe: plant
+subtype: fungus
 level: 1
-era: 史前
+era: prehistoric
 attack: 1
 health: 2
 skills: [keyword-sow]

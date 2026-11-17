@@ -44,13 +44,10 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, tribe: Tribe, effects: &s
         skill_id.clone(),
         Skill {
             id: skill_id.clone(),
-            name: None,
             keyword: None,
-            text: effects.to_string(),
             effects: effects_of(effects),
             cost: None,
             uses_per_turn: None,
-            match_text: None,
         },
     );
     engine.catalog.cards.insert(
@@ -58,7 +55,6 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, tribe: Tribe, effects: &s
         Card {
             id: card_id.to_string(),
             card_type: CardType::Minion,
-            name: card_id.to_string(),
             tribe,
             subtype: None,
             level: 1,
@@ -69,7 +65,6 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, tribe: Tribe, effects: &s
             is_scholar: false,
             is_hero: false,
             cost: Some(1),
-            match_text: None,
         },
     );
 }
@@ -81,7 +76,7 @@ fn aura_buffs_all_friendly_machines_except_self_if_other() {
         &mut engine,
         "test-mech-other",
         Tribe::Machine,
-        "Aura|ModifyStats|friendly:all:tribe=机械:other=true|attack=2,health=2,duration=permanent",
+        "Aura|ModifyStats|friendly:all:tribe=machine:other=true|attack=2,health=2,duration=permanent",
     );
     // 来源自身是机械，`other=true` 应排除；另一台机械获得 +2/+2。
     place(&engine.catalog, &mut state, 0, 1, "test-mech-other");
@@ -126,7 +121,7 @@ fn aura_health_floor_is_one() {
         &mut engine,
         "test-minus",
         Tribe::General,
-        "Aura|ModifyStats|friendly:all:tribe=生物:other=true|health=-5,duration=permanent",
+        "Aura|ModifyStats|friendly:all:tribe=biology:other=true|health=-5,duration=permanent",
     );
     place(&engine.catalog, &mut state, 0, 1, "test-minus");
     place(&engine.catalog, &mut state, 0, 2, "baiyi");
@@ -175,13 +170,13 @@ fn same_keyword_from_two_sources_applies_once() {
         &mut engine,
         "test-taunt-a",
         Tribe::General,
-        "Aura|GrantKeyword|friendly:all|keyword=嘲讽,duration=permanent",
+        "Aura|GrantKeyword|friendly:all|keyword=taunt,duration=permanent",
     );
     add_aura_source(
         &mut engine,
         "test-taunt-b",
         Tribe::General,
-        "Aura|GrantKeyword|friendly:all|keyword=嘲讽,duration=permanent",
+        "Aura|GrantKeyword|friendly:all|keyword=taunt,duration=permanent",
     );
     place(&engine.catalog, &mut state, 0, 1, "test-taunt-a");
     place(&engine.catalog, &mut state, 0, 2, "test-taunt-b");
@@ -191,7 +186,7 @@ fn same_keyword_from_two_sources_applies_once() {
 
     let aura = state.auras.get(&3).expect("目标应获得关键词光环");
     assert_eq!(aura.keywords.len(), 1);
-    assert!(aura.keywords.contains("嘲讽"));
+    assert!(aura.keywords.contains("taunt"));
 }
 
 #[test]

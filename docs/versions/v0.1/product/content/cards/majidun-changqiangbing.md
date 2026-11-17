@@ -1,11 +1,11 @@
 ---
 id: majidun-changqiangbing
-card_type: 随从
+card_type: minion
 name: 马其顿长枪兵
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 2
-era: 古典
+era: classical
 attack: 3
 health: 5
 skills: [keyword-taunt]

@@ -1,10 +1,10 @@
 ---
 id: guanghezuoyong
 name: 光合作用
-card_type: 效果
+card_type: effect
 level: 2
-era: 现代
-tribe: 植物
+era: modern
+tribe: plant
 cost: 1
 match_text: 同左
 skills: [trigger-friendly-plant-breed-2]

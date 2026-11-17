@@ -1,11 +1,11 @@
 ---
 id: shijieshu
-card_type: 随从
+card_type: minion
 name: 世界树
-tribe: 植物
-subtype: 树木
+tribe: plant
+subtype: tree
 level: 6
-era: 未来
+era: future
 attack: 8
 health: 13
 skills: [keyword-sow, aura-plant-plus-1-plus-1]

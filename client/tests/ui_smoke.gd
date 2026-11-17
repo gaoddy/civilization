@@ -103,12 +103,20 @@ func _check_detail_without_stats() -> void:
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
         _expect(detail.is_visible_in_tree(), "缺少 stats 时详情面板仍应显示")
         var text := _node_text(detail)
-        _expect(text.contains("当前") and text.contains("3 / 4"), "缺少 stats 时应显示当前攻防：%s" % text)
+        _expect(
+            text.contains(TranslationServer.translate("ui.game.detail.current")) and text.contains("3 / 4"),
+            "缺少 stats 时应显示当前攻防：%s" % text,
+        )
         _expect(
             text.contains(CardDB.display_text("bruce-lee")),
             "缺少 stats 时仍应显示介绍：%s" % text,
         )
-        for absent in ["初始", "永久", "光环", "受击"]:
+        for absent in [
+            TranslationServer.translate("enum.stat_layer.initial"),
+            TranslationServer.translate("enum.stat_layer.permanent"),
+            TranslationServer.translate("enum.stat_layer.aura"),
+            TranslationServer.translate("enum.stat_layer.damage"),
+        ]:
             _expect(not text.contains(absent), "缺少 stats 时不应出现「%s」：%s" % [absent, text])
     instance.queue_free()
     GameStore.view = {}
@@ -165,7 +173,10 @@ func _check_room_hero_picker() -> void:
     var others_text := _node_text(others)
     _expect(others_text.contains("玩家B"), "顶部应显示其他玩家名字，实际：%s" % others_text)
     _expect(not others_text.contains("达尔文"), "顶部不得显示他人英雄，实际：%s" % others_text)
-    _expect(others_text.contains("已确认"), "顶部应显示他人确认状态，实际：%s" % others_text)
+    _expect(
+        others_text.contains(TranslationServer.translate("ui.room.confirmed")),
+        "顶部应显示他人确认状态，实际：%s" % others_text,
+    )
 
     var candidates := instance.find_child("HeroCandidates", true, false)
     _expect(candidates != null, "缺少 HeroCandidates")
@@ -233,7 +244,10 @@ func _check_room_hero_picker() -> void:
         _expect(layer != null and layer.visible, "选中候选后应显示技能浮层")
         # 冒烟环境没有真实连接：确认按钮必须保持禁用，并给出未连接提示。
         _expect(confirm.disabled, "未连接时确认按钮必须禁用")
-        _expect(str(status.text).contains("未连接"), "未连接时状态行应提示，实际：%s" % status.text)
+        _expect(
+            str(status.text).contains(TranslationServer.translate("ui.room.not_connected")),
+            "未连接时状态行应提示，实际：%s" % status.text,
+        )
 
         # 浮层整体不得拦截鼠标：它盖在候选行与确认按钮之上，一旦拦截就再也改不了选。
         _expect(not _blocks_mouse(layer), "技能浮层及其子节点不得拦截鼠标点击")
@@ -271,7 +285,9 @@ func _check_room_hero_picker() -> void:
             await get_tree().process_frame
             _expect(online_confirm != null and online_confirm.disabled,
                 "断线后确认按钮必须立刻禁用")
-            _expect(online_status != null and str(online_status.text).contains("未连接"),
+            _expect(online_status != null and str(online_status.text).contains(
+                TranslationServer.translate("ui.room.not_connected")
+            ),
                 "断线后状态行应立刻提示未连接，实际：%s" % (str(online_status.text) if online_status != null else ""))
         online.queue_free()
     _fake_disconnect()
@@ -287,7 +303,7 @@ func _check_room_hero_picker() -> void:
     if locked_instance != null:
         var locked_confirm = locked_instance.find_child("ConfirmButton", true, false)
         _expect(locked_confirm != null and locked_confirm.disabled, "已确认后确认按钮必须禁用")
-        _expect(locked_confirm != null and str(locked_confirm.text) == "已确认",
+        _expect(locked_confirm != null and str(locked_confirm.text) == TranslationServer.translate("ui.room.confirmed"),
             "已确认后按钮文字应为「已确认」，实际：%s" % (str(locked_confirm.text) if locked_confirm != null else ""))
         var locked_cards = locked_instance.find_child("HeroCandidates", true, false)
         if locked_cards != null:
@@ -334,7 +350,10 @@ func _check_game() -> void:
         _expect(instance.find_child(name, true, false) != null, "对局场景缺少 %s" % name)
     var empty_slot = instance.find_child("ShopSlot2", true, false)
     if empty_slot != null:
-        _expect(_node_text(empty_slot).contains("空槽"), "空商店槽应显示「空槽」，实际：%s" % _node_text(empty_slot))
+        _expect(
+            _node_text(empty_slot).contains(TranslationServer.translate("ui.game.recruit.empty_shop_slot")),
+            "空商店槽应显示空槽提示，实际：%s" % _node_text(empty_slot),
+        )
     var detail = instance.find_child("MinionDetailPanel", true, false)
     var detail_layer = instance.find_child("MinionDetailLayer", true, false)
     _expect(detail != null, "对局页应有随从详情面板")
@@ -345,7 +364,20 @@ func _check_game() -> void:
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
         _expect(detail.is_visible_in_tree(), "悬停棋盘随从应显示详情面板")
         var text := _node_text(detail)
-        for expected in ["初始", "3 / 4", "永久", "+1 / +2", "回合", "+0 / -2", "光环", "+0 / +1", "受击", "0 / -3", "当前", "4 / 2"]:
+        for expected in [
+            TranslationServer.translate("enum.stat_layer.initial"),
+            "3 / 4",
+            TranslationServer.translate("enum.stat_layer.permanent"),
+            "+1 / +2",
+            TranslationServer.translate("enum.stat_layer.turn"),
+            "+0 / -2",
+            TranslationServer.translate("enum.stat_layer.aura"),
+            "+0 / +1",
+            TranslationServer.translate("enum.stat_layer.damage"),
+            "0 / -3",
+            TranslationServer.translate("ui.game.detail.current"),
+            "4 / 2",
+        ]:
             _expect(text.contains(expected), "详情面板应包含「%s」：%s" % [expected, text])
         _expect(not text.contains("-0"), "非负构成项应带 +：%s" % text)
         _expect(card.find_child("Actions", true, false) == null, "棋盘随从卡不应再显示出售/移位按钮")
@@ -360,7 +392,10 @@ func _check_game() -> void:
     var shop_card = instance.find_child("ShopSlot0", true, false)
     if detail != null and shop_card != null:
         var shop_text := _node_text(shop_card)
-        _expect(shop_text.contains("费用") == false, "卡面不应挤入详情字段：%s" % shop_text)
+        _expect(
+            shop_text.contains(TranslationServer.translate("ui.game.detail.cost")) == false,
+            "卡面不应挤入详情字段：%s" % shop_text,
+        )
         await _hover(instance, shop_card, shop_card.size / 2)
         _expect(detail.is_visible_in_tree(), "悬停商店卡应显示详情面板")
         _expect(
@@ -369,7 +404,8 @@ func _check_game() -> void:
         )
         var detail_text := _node_text(detail)
         _expect(
-            detail_text.contains("费用") and detail_text.contains("原始"),
+            detail_text.contains(TranslationServer.translate("ui.game.detail.cost"))
+            and detail_text.contains(TranslationServer.translate("ui.game.detail.initial_stats")),
             "商店详情应显示费用与原始数值：%s" % detail_text
         )
         var captured: Array = []
@@ -389,7 +425,14 @@ func _check_game() -> void:
     # 座位行不再显示时代、悬停详情才显示时代由 ui_smoke_seats 覆盖。
     var side_hero = instance.find_child("SideHero", true, false)
     var side_hero_text := "缺失" if side_hero == null else _node_text(side_hero)
-    for text in ["生命", "35/40", "时代", "原始", "金币", "6"]:
+    for text in [
+        TranslationServer.translate("ui.game.side_panel.hp"),
+        "35/40",
+        TranslationServer.translate("ui.game.side_panel.era"),
+        TranslationServer.translate("enum.era.primitive"),
+        TranslationServer.translate("ui.game.side_panel.gold"),
+        "6",
+    ]:
         _expect(
             side_hero != null and side_hero_text.contains(text),
             "右栏英雄段应显示「%s」，实际：%s" % [text, side_hero_text],
@@ -410,7 +453,7 @@ func _check_game() -> void:
         var has_skip := false
         if overlay != null:
             for child in overlay.find_children("*", "Button", true, false):
-                if child is Button and str(child.text) == "不指定目标":
+                if child is Button and str(child.text) == TranslationServer.translate("ui.game.target.skip"):
                     has_skip = true
         _expect(has_skip, "英雄技能弹层应提供「不指定目标」")
     instance.queue_free()
@@ -529,7 +572,10 @@ func _check_game_layout() -> void:
         _expect(board.get_global_rect().size.y <= 147.0, "棋盘 7 槽应保持单行")
     var shop_zero = instance.find_child("ShopSlot0", true, false)
     var shop_text := _node_text(shop_zero) if shop_zero != null else ""
-    _expect(shop_text.contains("学者"), "商店卡应显示卡牌类型：%s" % shop_text)
+    _expect(
+        shop_text.contains(TranslationServer.translate("enum.tribe.scholar")),
+        "商店卡应显示卡牌类型：%s" % shop_text,
+    )
     _expect(shop_text.contains("9"), "商店卡应显示原始生命值：%s" % shop_text)
     _expect(instance.find_child("HeroPortrait", true, false) != null, "右栏应显示我的英雄大图")
     instance.queue_free()
@@ -1145,7 +1191,10 @@ func _check_combat_banner_after_tail() -> void:
     _expect(banner != null and not banner.visible, "动作刚播完且未到横幅停留时不应显示横幅")
     instance._process(2.0)
     _expect(banner != null and banner.visible, "横幅停留结束后应显示横幅")
-    _expect(banner != null and str(banner.text).contains("胜利"), "横幅应显示胜负：%s" % ("" if banner == null else str(banner.text)))
+    _expect(
+        banner != null and str(banner.text).contains(TranslationServer.translate("ui.game.combat.win")),
+        "横幅应显示胜负：%s" % ("" if banner == null else str(banner.text)),
+    )
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
@@ -1597,8 +1646,9 @@ func _check_board_sell_drop() -> void:
         _expect(shop._can_drop_data(Vector2.ZERO, payload), "可出售随从应被商店接受")
         var hint = instance.find_child("SellHint", true, false)
         _expect(
-            hint != null and hint.visible and str(hint.text).contains("+1 金"),
-            "悬停商店应提示松手出售与返还金币"
+            hint != null and hint.visible
+            and str(hint.text) == TranslationServer.translate("ui.game.recruit.sell_hint") % 1,
+            "悬停商店应提示松手出售与返还金币",
         )
         var captured: Array = []
         instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
@@ -1614,7 +1664,10 @@ func _check_board_sell_drop() -> void:
         var golden: Dictionary = payload.duplicate()
         golden["golden"] = true
         _expect(shop._can_drop_data(Vector2.ZERO, golden), "金色随从应被商店接受")
-        _expect(hint != null and str(hint.text).contains("+3 金"), "金色随从应提示返还 3 金")
+        _expect(
+            hint != null and str(hint.text) == TranslationServer.translate("ui.game.recruit.sell_hint") % 3,
+            "金色随从应提示返还 3 金",
+        )
         shop._clear_hover()
     instance.queue_free()
     await get_tree().process_frame
@@ -1780,8 +1833,14 @@ func _check_target_pending_overlay() -> void:
         var texts: Array = []
         for button in buttons:
             texts.append(str(button.text))
-            _expect(not str(button.text).contains("取消"), "目标待选不应提供取消：%s" % button.text)
-            _expect(not str(button.text).contains("不指定目标"), "目标待选不应提供跳过：%s" % button.text)
+            _expect(
+                not str(button.text).contains(TranslationServer.translate("ui.game.target.cancel")),
+                "目标待选不应提供取消：%s" % button.text,
+            )
+            _expect(
+                not str(button.text).contains(TranslationServer.translate("ui.game.target.skip")),
+                "目标待选不应提供跳过：%s" % button.text,
+            )
         _expect(texts.size() == 2 and str(texts[0]).begins_with("★ "), "触发待选的随从应被高亮：%s" % str(texts))
     for name in ["RerollButton", "UpgradeButton", "FreezeButton", "EndButton", "HeroPowerButton"]:
         var button = instance.find_child(name, true, false)
@@ -1978,7 +2037,10 @@ func _check_disconnected_send() -> void:
     else:
         reroll.pressed.emit()
         await get_tree().process_frame
-        _expect(str(status.text).contains("未连接"), "未连接时操作应提示未发出，实际：%s" % status.text)
+        _expect(
+            str(status.text).contains(TranslationServer.translate("ui.game.status.intent_not_sent")),
+            "未连接时操作应提示未发出，实际：%s" % status.text,
+        )
     instance.queue_free()
     GameStore.view = {}
     GameStore.turn = 1
@@ -2035,8 +2097,14 @@ func _check_reset_session() -> void:
 
 
 func _check_error_text() -> void:
-    _expect(UI.error_text("NOT_ENOUGH_GOLD") == "金币不足", "NOT_ENOUGH_GOLD 应有中文文案")
-    _expect(UI.error_text("INVALID_STAGE") == "当前阶段不能执行该操作", "INVALID_STAGE 应有中文文案")
+    _expect(
+        UI.error_text("NOT_ENOUGH_GOLD") == TranslationServer.translate("error.NOT_ENOUGH_GOLD"),
+        "NOT_ENOUGH_GOLD 应有中文文案",
+    )
+    _expect(
+        UI.error_text("INVALID_STAGE") == TranslationServer.translate("error.INVALID_STAGE"),
+        "INVALID_STAGE 应有中文文案",
+    )
     _expect(UI.error_text("SOME_UNKNOWN_CODE") == "SOME_UNKNOWN_CODE", "未知错误码应回退为原文")
 
 

@@ -1,6 +1,6 @@
 ---
 id: battlecry-friendly-plus-1-attack
-keyword: 战吼
+keyword: battlecry
 text: 战吼：使一个友方随从获得 +1 攻击力
 effects: OnPlay|ModifyStats|friendly:single|attack=1,duration=permanent
 ---

@@ -1,11 +1,11 @@
 ---
 id: cholera
-card_type: 随从
+card_type: minion
 name: 霍乱
-tribe: 病毒
-subtype: 细菌
+tribe: virus
+subtype: bacteria
 level: 4
-era: 封建
+era: feudal
 attack: 4
 health: 7
 skills: [combatstart-random-enemy-contagion-1]

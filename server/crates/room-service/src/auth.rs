@@ -13,7 +13,7 @@ use protocol::server::{AuthResult, ErrorMessage};
 use uuid::Uuid;
 
 use crate::clock::Clock;
-use crate::error::error_message;
+use crate::error::error_message_with_id;
 
 /// 开发环境固定短信验证码。
 pub const DEV_SMS_CODE: &str = "123456";
@@ -99,7 +99,13 @@ impl SessionStore {
                 phone: _,
             } => {
                 if code != DEV_SMS_CODE {
-                    return Err(error_message("AUTH_FAILED", "短信验证码错误", false));
+                    return Err(error_message_with_id(
+                        "AUTH_FAILED",
+                        "error.AUTH_FAILED.invalid_code",
+                        &[],
+                        "短信验证码错误",
+                        false,
+                    ));
                 }
 
                 self.session_ordinal = self.session_ordinal.saturating_add(1);
@@ -172,7 +178,13 @@ impl SessionStore {
 }
 
 fn token_expired() -> ErrorMessage {
-    error_message("TOKEN_EXPIRED", "令牌无效或已过期", false)
+    error_message_with_id(
+        "TOKEN_EXPIRED",
+        "error.TOKEN_EXPIRED.invalid_token",
+        &[],
+        "令牌无效或已过期",
+        false,
+    )
 }
 
 /// Unix epoch 毫秒转 UTC 时间；超出可表示范围时退化为 epoch 起点。

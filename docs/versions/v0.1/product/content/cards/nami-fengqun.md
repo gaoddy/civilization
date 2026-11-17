@@ -1,11 +1,11 @@
 ---
 id: nami-fengqun
-card_type: 随从
+card_type: minion
 name: 纳米蜂群
-tribe: 机械
-subtype: 纳米
+tribe: machine
+subtype: nanotech
 level: 7
-era: 未来
+era: future
 attack: 11
 health: 18
 skills: [keyword-assemble-2]

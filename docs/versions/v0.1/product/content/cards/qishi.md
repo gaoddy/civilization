@@ -1,11 +1,11 @@
 ---
 id: qishi
-card_type: 随从
+card_type: minion
 name: 骑士
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 2
-era: 封建
+era: feudal
 attack: 3
 health: 5
 skills: [keyword-taunt]

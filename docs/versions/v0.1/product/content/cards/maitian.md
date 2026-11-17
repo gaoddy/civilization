@@ -1,11 +1,11 @@
 ---
 id: maitian
-card_type: 随从
+card_type: minion
 name: 麦田
-tribe: 植物
-subtype: 作物
+tribe: plant
+subtype: crop
 level: 4
-era: 封建
+era: feudal
 attack: 4
 health: 8
 skills: [keyword-sow, keyword-breed-1]

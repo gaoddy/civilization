@@ -1,11 +1,11 @@
 ---
 id: huangrebing
-card_type: 随从
+card_type: minion
 name: 黄热病
-tribe: 病毒
-subtype: 疾病
+tribe: virus
+subtype: disease
 level: 4
-era: 工业
+era: industrial
 attack: 5
 health: 8
 skills: [combatstart-random-enemy-contagion-2]

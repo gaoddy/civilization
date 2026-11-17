@@ -1,11 +1,11 @@
 ---
 id: gongchangzhu
-card_type: 随从
+card_type: minion
 name: 工厂主
-tribe: 人类
-subtype: 资本
+tribe: human
+subtype: capital
 level: 5
-era: 工业
+era: industrial
 attack: 7
 health: 11
 skills: [battlecry-other-friendly-humans-plus-1-attack]

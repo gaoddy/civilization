@@ -535,15 +535,15 @@ fn era_index(era: Era) -> usize {
     (era as usize).saturating_sub(1)
 }
 
-/// 流派的中文名，与数据文件中的 `tribe` 取值一致。
+/// 流派 id，与数据文件中的 `tribe` 取值一致。
 fn tribe_name(tribe: Tribe) -> &'static str {
     match tribe {
-        Tribe::Human => "人类",
-        Tribe::Machine => "机械",
-        Tribe::Biology => "生物",
-        Tribe::Plant => "植物",
-        Tribe::Virus => "病毒",
-        Tribe::Scholar => "学者",
-        Tribe::General => "通用",
+        Tribe::Human => "human",
+        Tribe::Machine => "machine",
+        Tribe::Biology => "biology",
+        Tribe::Plant => "plant",
+        Tribe::Virus => "virus",
+        Tribe::Scholar => "scholar",
+        Tribe::General => "general",
     }
 }

@@ -1,11 +1,11 @@
 ---
 id: hybrid-rice
-card_type: 随从
+card_type: minion
 name: 杂交水稻
-tribe: 植物
-subtype: 作物
+tribe: plant
+subtype: crop
 level: 4
-era: 现代
+era: modern
 attack: 4
 health: 8
 skills: [keyword-sow, keyword-breed-2]

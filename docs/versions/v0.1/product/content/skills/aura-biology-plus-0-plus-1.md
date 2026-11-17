@@ -1,7 +1,7 @@
 ---
 id: aura-biology-plus-0-plus-1
 text: 你的生物随从获得 +0/+1
-effects: Aura|ModifyStats|friendly:all:tribe=生物|health=1,duration=permanent
+effects: Aura|ModifyStats|friendly:all:tribe=biology|health=1,duration=permanent
 ---
 
 # aura-biology-plus-0-plus-1

@@ -1,11 +1,11 @@
 ---
 id: bruce-lee
-card_type: 随从
+card_type: minion
 name: 李小龙
-tribe: 人类
-subtype: 武术家
+tribe: human
+subtype: martial-artist
 level: 4
-era: 现代
+era: modern
 attack: 6
 health: 7
 skills: [keyword-windfury]

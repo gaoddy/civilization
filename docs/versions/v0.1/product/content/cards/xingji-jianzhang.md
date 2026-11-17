@@ -1,11 +1,11 @@
 ---
 id: xingji-jianzhang
-card_type: 随从
+card_type: minion
 name: 星际舰长
-tribe: 人类
-subtype: 舰长
+tribe: human
+subtype: captain
 level: 7
-era: 未来
+era: future
 attack: 12
 health: 19
 skills: [keyword-taunt]

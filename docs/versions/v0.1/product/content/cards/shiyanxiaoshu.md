@@ -1,11 +1,11 @@
 ---
 id: shiyanxiaoshu
-card_type: 随从
+card_type: minion
 name: 实验小鼠
-tribe: 生物
-subtype: 哺乳
+tribe: biology
+subtype: mammal
 level: 1
-era: 史前
+era: prehistoric
 attack: 1
 health: 3
 skills: [deathrattle-summon-termite]

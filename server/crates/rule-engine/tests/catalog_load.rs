@@ -29,6 +29,6 @@ fn every_card_skill_exists() {
 
 #[test]
 fn unknown_field_fails() {
-    let bad = r#"[{"id":"x","card_type":"随从","name":"x","tribe":"人类","level":1,"era":"史前","attack":1,"health":2,"is_scholar":false,"is_hero":false,"oops":1}]"#;
+    let bad = r#"[{"id":"x","card_type":"minion","tribe":"human","level":1,"era":"prehistoric","attack":1,"health":2,"is_scholar":false,"is_hero":false,"oops":1}]"#;
     assert!(Catalog::from_json(bad, "[]", "[]", CONFIG_JSON).is_err());
 }

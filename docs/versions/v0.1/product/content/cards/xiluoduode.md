@@ -1,11 +1,11 @@
 ---
 id: xiluoduode
-card_type: 随从
+card_type: minion
 name: 希罗多德
-tribe: 学者
-subtype: 史学
+tribe: scholar
+subtype: history
 level: 2
-era: 古典
+era: classical
 attack: 0
 health: 6
 skills: [battlecry-friendly-plus-0-plus-2]

@@ -1,6 +1,6 @@
 ---
 id: battlecry-all-friendly-plus-0-plus-1
-keyword: 战吼
+keyword: battlecry
 text: 战吼：使你的所有随从获得 +0/+1
 effects: OnPlay|ModifyStats|friendly:all|health=1,duration=permanent
 ---

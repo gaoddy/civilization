@@ -1,11 +1,11 @@
 ---
 id: dushe
-card_type: 随从
+card_type: minion
 name: 毒蛇
-tribe: 生物
-subtype: 爬行
+tribe: biology
+subtype: reptile
 level: 2
-era: 史前
+era: prehistoric
 attack: 2
 health: 4
 skills: [deathrattle-random-enemy-minus-1-attack]

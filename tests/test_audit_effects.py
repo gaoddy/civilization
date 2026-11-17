@@ -13,10 +13,10 @@ class AuditEffectsTest(unittest.TestCase):
     def test_times_if_without_times_is_reported(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = pathlib.Path(tmp) / "bad.md"
-            p.write_text("---\nid: bad\ntext: 战吼：成长\neffects: OnPlay|Growth|friendly:single|timesIf=人类:2\n---\n")
+            p.write_text("---\nid: bad\ntext: 战吼：成长\neffects: OnPlay|Growth|friendly:single|timesIf=human:2\n---\n")
             self.assertTrue(any("timesIf" in v for v in audit_effects.audit(pathlib.Path(tmp)).violations))
     def test_when_on_play_is_reported(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = pathlib.Path(tmp) / "bad.md"
-            p.write_text("---\nid: bad\ntext: 战吼：成长\neffects: OnPlay|Growth|self|times=1,when=tribe=人类\n---\n")
+            p.write_text("---\nid: bad\ntext: 战吼：成长\neffects: OnPlay|Growth|self|times=1,when=tribe=human\n---\n")
             self.assertTrue(any("when" in v for v in audit_effects.audit(pathlib.Path(tmp)).violations))

@@ -1,7 +1,7 @@
 ---
 id: aura-mech-optimal-attack
 text: 你的机械随从获得最优攻击
-effects: Aura|GrantKeyword|friendly:all:tribe=机械|keyword=最优攻击,duration=permanent
+effects: Aura|GrantKeyword|friendly:all:tribe=machine|keyword=optimal_attack,duration=permanent
 ---
 
 # aura-mech-optimal-attack

@@ -1,11 +1,11 @@
 ---
 id: rice-cooker
-card_type: 随从
+card_type: minion
 name: 电饭煲
-tribe: 机械
-subtype: 家电
+tribe: machine
+subtype: appliance
 level: 3
-era: 现代
+era: modern
 attack: 3
 health: 6
 skills: [battlecry-friendly-human-plus-0-plus-1]

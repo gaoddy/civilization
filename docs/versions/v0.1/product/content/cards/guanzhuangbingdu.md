@@ -1,11 +1,11 @@
 ---
 id: guanzhuangbingdu
-card_type: 随从
+card_type: minion
 name: 冠状病毒
-tribe: 病毒
-subtype: 病毒
+tribe: virus
+subtype: virus
 level: 6
-era: 现代
+era: modern
 attack: 9
 health: 12
 skills: [keyword-contagion, deathrattle-all-enemies-contagion-1]

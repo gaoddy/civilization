@@ -2,7 +2,7 @@
 id: alternating-current
 name: 交流电
 text: 使一个友方随从获得最优攻击直到回合结束
-effects: OnActivate|GrantKeyword|friendly:single|keyword=最优攻击,duration=combat
+effects: OnActivate|GrantKeyword|friendly:single|keyword=optimal_attack,duration=combat
 cost: 2
 uses_per_turn: 1
 match_text: 同左

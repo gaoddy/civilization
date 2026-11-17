@@ -20,11 +20,11 @@ def base_doc(**extra):
     doc = {
         "id": "einstein",
         "name": "爱因斯坦",
-        "card_type": "随从",
-        "tribe": "学者",
-        "subtype": "物理",
+        "card_type": "minion",
+        "tribe": "scholar",
+        "subtype": "physics",
         "level": 5,
-        "era": "现代",
+        "era": "modern",
         "attack": 0,
         "health": 16,
         "is_scholar": True,
@@ -215,7 +215,7 @@ class HeroCardsTest(unittest.TestCase):
     def test_effect_card_with_is_hero_is_rejected(self):
         errors = self.run_check(32, extra_effects=[
             {"_file": "luxun.md", "id": "effect", "name": "effect",
-             "skills": [], "is_hero": True, "card_type": "效果"},
+             "skills": [], "is_hero": True, "card_type": "effect"},
         ])
         self.assertTrue(any("效果牌不得有 is_hero" in e for e in errors), errors)
 

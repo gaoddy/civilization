@@ -1,11 +1,11 @@
 ---
 id: gongchengchui
-card_type: 随从
+card_type: minion
 name: 攻城槌
-tribe: 机械
-subtype: 攻城
+tribe: machine
+subtype: siege
 level: 2
-era: 古典
+era: classical
 attack: 3
 health: 4
 skills: [battlecry-random-enemy-damage-1]

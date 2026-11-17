@@ -1,6 +1,6 @@
 ---
 id: battlecry-self-growth-twice
-keyword: 战吼
+keyword: battlecry
 text: 战吼：获得两次成长
 effects: OnPlay|Growth|self|times=2
 ---

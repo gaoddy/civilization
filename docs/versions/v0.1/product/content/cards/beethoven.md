@@ -1,11 +1,11 @@
 ---
 id: beethoven
-card_type: 随从
+card_type: minion
 name: 贝多芬
-tribe: 人类
-subtype: 音乐
+tribe: human
+subtype: music
 level: 4
-era: 工业
+era: industrial
 attack: 5
 health: 8
 skills: [human-growth-twice]

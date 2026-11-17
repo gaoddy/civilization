@@ -1,11 +1,11 @@
 ---
 id: michelangelo
-card_type: 随从
+card_type: minion
 name: 米开朗基罗
-tribe: 学者
-subtype: 艺术
+tribe: scholar
+subtype: art
 level: 4
-era: 封建
+era: feudal
 attack: 0
 health: 12
 skills: [battlecry-friendly-growth-twice]

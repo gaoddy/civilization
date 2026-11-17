@@ -32,7 +32,7 @@ func _init() -> void:
     _body.add_theme_constant_override("separation", UITheme.space("space-sm"))
     add_child(_body)
 
-    _body.add_child(UI.section_title("对手随从"))
+    _body.add_child(UI.section_title(tr("ui.game.combat.opponent_title")))
     _opponent_row = _new_flow_row("CombatOpponentRow")
     _body.add_child(_opponent_row)
 
@@ -50,7 +50,7 @@ func _init() -> void:
     _banner.set_anchors_preset(Control.PRESET_FULL_RECT)
     _banner_slot.add_child(_banner)
 
-    _body.add_child(UI.section_title("我方随从"))
+    _body.add_child(UI.section_title(tr("ui.game.combat.own_title")))
     _own_row = _new_flow_row("CombatOwnRow")
     _body.add_child(_own_row)
 
@@ -75,7 +75,7 @@ func refresh(_state: GameUiState) -> void:
         _banner.visible = false
         UI.clear(_opponent_row)
         UI.clear(_own_row)
-        _opponent_row.add_child(UI.empty_hint("等待战斗动作…"))
+        _opponent_row.add_child(UI.empty_hint(tr("ui.game.combat.waiting")))
         return
     var combat: Dictionary = GameStore.last_combat
     if _combat_turn != GameStore.turn:
@@ -295,18 +295,18 @@ func _set_combat_banner(combat: Dictionary) -> void:
     var own_board: Array = combat.get("ownBoard", [])
     var opponent_board: Array = combat.get("opponentBoard", [])
     var winner = combat.get("winnerId")
-    var result := "平局"
+    var result := tr("ui.game.combat.draw")
     var variant := "accent"
     if winner != null:
         if str(winner) == GameStore.player_id:
-            result = "胜利"
+            result = tr("ui.game.combat.win")
             variant = "success"
         else:
-            result = "失败"
+            result = tr("ui.game.combat.lose")
             variant = "danger"
     # `mirror` 为真表示本场是对战已出局者的幽灵阵容，不是镜像战。
-    var ghost := "（幽灵）" if bool(combat.get("mirror", false)) else ""
-    _banner.text = "%s%s · 伤害 %d · 我方 %d vs 对手 %d" % [
+    var ghost := tr("ui.game.combat.ghost_suffix") if bool(combat.get("mirror", false)) else ""
+    _banner.text = tr("ui.game.combat.banner") % [
         result,
         ghost,
         int(combat.get("damage", 0)),

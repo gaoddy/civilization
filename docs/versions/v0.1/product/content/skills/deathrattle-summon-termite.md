@@ -1,6 +1,6 @@
 ---
 id: deathrattle-summon-termite
-keyword: 亡语
+keyword: deathrattle
 text: 亡语：召唤一个 1/2 的白蚁
 effects: OnDeath|Summon|self|card=baiyi,count=1
 ---

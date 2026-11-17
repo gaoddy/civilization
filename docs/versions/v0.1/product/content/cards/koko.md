@@ -1,11 +1,11 @@
 ---
 id: koko
-card_type: 随从
+card_type: minion
 name: 大猩猩科科
-tribe: 生物
-subtype: 灵长
+tribe: biology
+subtype: primate
 level: 5
-era: 现代
+era: modern
 attack: 7
 health: 10
 skills: [battlecry-friendly-growth-once]

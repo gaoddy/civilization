@@ -32,16 +32,16 @@ func _build() -> void:
     box.add_theme_constant_override("separation", 10)
     center.add_child(box)
 
-    box.add_child(UI.label("文明：七时代演进", 30))
-    box.add_child(UI.label("开发环境登录，验证码固定 123456", 14))
+    box.add_child(UI.label(tr("ui.login.title"), 30))
+    box.add_child(UI.label(tr("ui.login.subtitle"), 14))
     box.add_child(HSeparator.new())
 
-    _server = _add_field(box, "服务器", Net.DEFAULT_URL)
-    _phone = _add_field(box, "手机号", "13900000000")
-    _code = _add_field(box, "验证码", "123456")
-    _name = _add_field(box, "显示名", "玩家A")
+    _server = _add_field(box, tr("ui.login.server"), Net.DEFAULT_URL)
+    _phone = _add_field(box, tr("ui.login.phone"), "13900000000")
+    _code = _add_field(box, tr("ui.login.code"), "123456")
+    _name = _add_field(box, tr("ui.login.display_name"), tr("ui.login.default_display_name"))
 
-    _login_button = UI.button("登录")
+    _login_button = UI.button(tr("ui.login.submit"))
     _login_button.pressed.connect(_on_login_pressed)
     box.add_child(_login_button)
 
@@ -59,7 +59,7 @@ func _add_field(parent: VBoxContainer, title: String, value: String) -> LineEdit
 
 func _on_login_pressed() -> void:
     _login_button.disabled = true
-    _status.text = "正在连接 %s …" % _server.text
+    _status.text = tr("ui.login.connecting") % _server.text
     if Net.is_open():
         _on_connected()
     else:
@@ -67,7 +67,7 @@ func _on_login_pressed() -> void:
 
 
 func _on_connected() -> void:
-    _status.text = "正在认证…"
+    _status.text = tr("ui.login.authenticating")
     var payload := {
         "phone": _phone.text.strip_edges(),
         "code": _code.text.strip_edges(),
@@ -84,12 +84,12 @@ func _on_auth_changed() -> void:
 
 
 func _on_disconnected() -> void:
-    _status.text = "连接已断开，正在自动重连…"
+    _status.text = tr("ui.login.disconnected")
     _login_button.disabled = false
 
 
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
     _status.text = UI.error_text(code)
-    _status.tooltip_text = str(GameStore.last_error.get("message", ""))
+    _status.tooltip_text = UI.error_tooltip(code)
     _login_button.disabled = false

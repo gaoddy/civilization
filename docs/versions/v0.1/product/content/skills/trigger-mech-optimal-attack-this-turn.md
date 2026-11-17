@@ -1,7 +1,7 @@
 ---
 id: trigger-mech-optimal-attack-this-turn
 text: 你的机械随从获得最优攻击直到回合结束
-effects: OnPlayEffect|GrantKeyword|friendly:all:tribe=机械|keyword=最优攻击,duration=combat
+effects: OnPlayEffect|GrantKeyword|friendly:all:tribe=machine|keyword=optimal_attack,duration=combat
 match_text: 同左
 ---
 

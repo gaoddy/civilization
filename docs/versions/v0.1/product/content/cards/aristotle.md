@@ -1,11 +1,11 @@
 ---
 id: aristotle
-card_type: 随从
+card_type: minion
 name: 亚里士多德
-tribe: 学者
-subtype: 哲学
+tribe: scholar
+subtype: philosophy
 level: 3
-era: 原始
+era: primitive
 attack: 0
 health: 9
 skills: [aura-all-plus-0-plus-1]

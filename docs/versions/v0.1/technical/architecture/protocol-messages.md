@@ -115,6 +115,8 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `code` | ErrorCode | 是 | 错误码 |
+| `messageId` | string | 是 | 面向玩家的文本 id，默认 error.<CODE> |
+| `messageParams` | array<string> | 否 | messageId 的 %s 参数 |
 | `message` | string | 是 | 面向日志的错误说明，不作为 UI 文案 |
 | `clientIntentId` | string | 否 | 被拒绝意图的 clientIntentId |
 | `retryable` | boolean | 是 | 是否可原样重试 |
@@ -222,7 +224,7 @@
 | `golden` | boolean | 是 |  |
 | `attack` | integer | 是 |  |
 | `health` | integer | 是 |  |
-| `keywords` | array<string> | 是 | 当前生效的关键词 |
+| `keywords` | array<string> | 是 | 当前生效的关键词，取值为英文 id |
 | `sellable` | boolean | 是 |  |
 | `stats` | MinionStats | 否 | 攻防分层构成；旧客户端可忽略 |
 
@@ -334,7 +336,7 @@
 | `分支1.kind` | object | 是 | 固定为 discover |
 | `分支1.candidates` | array<string> | 是 | 三选一的候选 cardId |
 | `分支2.kind` | object | 是 | 固定为 evolve |
-| `分支2.options` | array<string> | 是 | 进化选项 |
+| `分支2.options` | array<string> | 是 | 进化选项，取值为英文 id |
 | `分支3.kind` | object | 是 | 固定为 target |
 | `分支3.sourceMinionId` | string | 是 | 触发该待选的随从 |
 
@@ -369,7 +371,7 @@
 | `self.pendingChoices` | array<PendingChoice> | 是 | 本座位待处理的发现或进化选择，按先到先处理排序 |
 | `self.affordances` | Affordances | 是 |  |
 | `players` | array<PlayerSummary> | 是 |  |
-| `enabledFactions` | array<string> | 是 | 本局启用的 5 个流派 |
+| `enabledFactions` | array<string> | 是 | 本局启用的 5 个流派，取值为英文 id |
 
 ### Intent
 
@@ -410,6 +412,8 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `code` | ErrorCode | 是 | 错误码 |
+| `messageId` | string | 是 | 面向玩家的文本 id，默认 error.<CODE> |
+| `messageParams` | array<string> | 否 | messageId 的 %s 参数 |
 | `message` | string | 是 | 面向日志的错误说明，不作为 UI 文案 |
 | `clientIntentId` | string | 否 | 被拒绝意图的 clientIntentId |
 | `retryable` | boolean | 是 | 是否可原样重试 |

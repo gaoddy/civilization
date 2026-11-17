@@ -1,8 +1,8 @@
 ---
 id: battlecry-other-friendly-humans-plus-1-attack
-keyword: 战吼
+keyword: battlecry
 text: 战吼：使你的其他人类随从获得 +1 攻击力
-effects: OnPlay|ModifyStats|friendly:all:tribe=人类:other=true|attack=1,duration=permanent
+effects: OnPlay|ModifyStats|friendly:all:tribe=human:other=true|attack=1,duration=permanent
 ---
 
 # battlecry-other-friendly-humans-plus-1-attack

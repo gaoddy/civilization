@@ -28,7 +28,7 @@ fn parses_a_growth_effect() {
 #[test]
 fn parses_aura_and_keyword_value() {
     let e = parse_effects(
-        "Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent",
+        "Aura|ModifyStats|friendly:all:tribe=machine|attack=2,health=2,duration=permanent",
     )
     .unwrap();
     assert_eq!(e[0].params.duration, Some(Duration::Permanent));
@@ -41,15 +41,15 @@ fn parses_aura_and_keyword_value() {
             pick: Pick::All,
             filters: vec![Filter {
                 key: "tribe".into(),
-                value: "机械".into(),
+                value: "machine".into(),
             }],
         }
     );
 
-    let k = parse_effects("OnPlay|GrantKeyword|friendly:single|keyword=繁衍 2,duration=permanent")
+    let k = parse_effects("OnPlay|GrantKeyword|friendly:single|keyword=breed 2,duration=permanent")
         .unwrap();
     assert!(
-        matches!(k[0].params.keyword, Some(KeywordSpec { keyword: ref s, value: Some(2) }) if s == "繁衍")
+        matches!(k[0].params.keyword, Some(KeywordSpec { keyword: ref s, value: Some(2) }) if s == "breed")
     );
 }
 
@@ -62,17 +62,17 @@ fn parses_selector_shorthands_and_multiple_filters() {
     assert_eq!(target[0].selector, Selector::Target);
 
     let filters =
-        parse_effects("OnPlay|Growth|friendly:all:tribe=植物:other=true:type=随从|times=1")
+        parse_effects("OnPlay|Growth|friendly:all:tribe=plant:other=true:type=minion|times=1")
             .unwrap();
     match &filters[0].selector {
         Selector::Side { filters, .. } => {
             assert_eq!(filters.len(), 3);
             assert_eq!(filters[0].key, "tribe");
-            assert_eq!(filters[0].value, "植物");
+            assert_eq!(filters[0].value, "plant");
             assert_eq!(filters[1].key, "other");
             assert_eq!(filters[1].value, "true");
             assert_eq!(filters[2].key, "type");
-            assert_eq!(filters[2].value, "随从");
+            assert_eq!(filters[2].value, "minion");
         }
         other => panic!("expected side selector, got {other:?}"),
     }
@@ -81,7 +81,7 @@ fn parses_selector_shorthands_and_multiple_filters() {
 #[test]
 fn parses_structured_params() {
     let e = parse_effects(
-        "ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:tribe=人类:>=2",
+        "ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:tribe=human:>=2",
     )
     .unwrap();
     let condition = e[0].params.condition.as_ref().unwrap();
@@ -90,13 +90,13 @@ fn parses_structured_params() {
         condition.filter,
         Filter {
             key: "tribe".into(),
-            value: "人类".into(),
+            value: "human".into(),
         }
     );
     assert_eq!(condition.compare, Compare::Ge);
     assert_eq!(condition.count, 2);
 
-    let e = parse_effects("OnPlay|Growth|friendly:single|times=1,timesIf=人类:2").unwrap();
+    let e = parse_effects("OnPlay|Growth|friendly:single|times=1,timesIf=human:2").unwrap();
     assert_eq!(
         e[0].params.times_if,
         Some(TimesIf {
@@ -105,16 +105,16 @@ fn parses_structured_params() {
         })
     );
 
-    let e = parse_effects("OnAllySummon|ModifyStats|self|attack=1,when=tribe=人类").unwrap();
+    let e = parse_effects("OnAllySummon|ModifyStats|self|attack=1,when=tribe=human").unwrap();
     assert_eq!(
         e[0].params.when,
         Some(Filter {
             key: "tribe".into(),
-            value: "人类".into(),
+            value: "human".into(),
         })
     );
 
-    let e = parse_effects("OnActivate|Copy|self|from=hand,type=随从,to=hand").unwrap();
+    let e = parse_effects("OnActivate|Copy|self|from=hand,type=minion,to=hand").unwrap();
     assert_eq!(e[0].params.from, Some(Zone::Hand));
     assert_eq!(e[0].params.to, Some(Zone::Hand));
     assert_eq!(e[0].params.card_type, Some(CardType::Minion));
@@ -127,18 +127,19 @@ fn parses_structured_params() {
     assert_eq!(e[0].params.era.as_deref(), Some("current"));
     assert_eq!(e[0].params.count, Some(1));
 
-    let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=传染,value=1").unwrap();
+    let e =
+        parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=contagion,value=1").unwrap();
     assert!(matches!(
         e[0].params.keyword,
-        Some(KeywordSpec { keyword: ref name, value: Some(1) }) if name == "传染"
+        Some(KeywordSpec { keyword: ref name, value: Some(1) }) if name == "contagion"
     ));
     assert_eq!(e[0].params.value, Some(1));
 
     let e =
-        parse_effects("OnPlayEffect|GrantKeyword|friendly:single|keyword=繁衍,value=2").unwrap();
+        parse_effects("OnPlayEffect|GrantKeyword|friendly:single|keyword=breed,value=2").unwrap();
     assert!(matches!(
         e[0].params.keyword,
-        Some(KeywordSpec { keyword: ref name, value: Some(2) }) if name == "繁衍"
+        Some(KeywordSpec { keyword: ref name, value: Some(2) }) if name == "breed"
     ));
     assert_eq!(e[0].params.value, Some(2));
 }
@@ -203,7 +204,7 @@ fn every_skill_in_catalog_validates() {
 
 #[test]
 fn catalog_rejects_unknown_effect_enum_at_load() {
-    let bad_skills = r#"[{"id":"broken-skill","text":"战吼：爆炸","effects":[{"trigger":"on_play","op":"explode","selector":{"kind":"self"},"params":{}}]}]"#;
+    let bad_skills = r#"[{"id":"broken-skill","effects":[{"trigger":"on_play","op":"explode","selector":{"kind":"self"},"params":{}}]}]"#;
     let err = Catalog::from_json("[]", bad_skills, "[]", CONFIG_JSON).unwrap_err();
     assert!(
         matches!(err, CatalogError::File("skills.json", _)),
@@ -213,7 +214,7 @@ fn catalog_rejects_unknown_effect_enum_at_load() {
 
 #[test]
 fn catalog_rejects_semantically_invalid_effect_at_load() {
-    let bad_skills = r#"[{"id":"broken-skill","text":"光环：灼烧","effects":[{"trigger":"aura","op":"deal_damage","selector":{"kind":"side","side":"friendly","pick":"all","filters":[]},"params":{"amount":1}}]}]"#;
+    let bad_skills = r#"[{"id":"broken-skill","effects":[{"trigger":"aura","op":"deal_damage","selector":{"kind":"side","side":"friendly","pick":"all","filters":[]},"params":{"amount":1}}]}]"#;
     let err = Catalog::from_json("[]", bad_skills, "[]", CONFIG_JSON).unwrap_err();
     match err {
         CatalogError::Rule(message) => {
@@ -226,10 +227,11 @@ fn catalog_rejects_semantically_invalid_effect_at_load() {
 
 #[test]
 fn parses_contagion_layer_from_value() {
-    let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=传染,value=2").unwrap();
+    let e =
+        parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=contagion,value=2").unwrap();
     assert!(matches!(
         e[0].params.keyword,
-        Some(KeywordSpec { keyword: ref name, value: Some(2) }) if name == "传染"
+        Some(KeywordSpec { keyword: ref name, value: Some(2) }) if name == "contagion"
     ));
 }
 
@@ -248,9 +250,9 @@ fn semantic_rules_live_in_validate_only() {
         "OnActivate|GainMinion|self|from=board,level=current,to=hand",
         "OnActivate|Discover|self|pool=tribe",
         "OnCombatStart|GrantKeyword|enemy:all|keyword=繁殖",
-        "OnCombatStart|GrantKeyword|enemy:all|keyword=嘲讽 1",
+        "OnCombatStart|GrantKeyword|enemy:all|keyword=taunt 1",
         "Aura|DealDamage|enemy:all|amount=1",
-        "OnPlay|Growth|self|times=1,timesIf=通用:2",
+        "OnPlay|Growth|self|times=1,timesIf=general:2",
     ];
     for raw in semantic {
         let errors = parse_effects(raw).expect_err(raw);
@@ -258,12 +260,12 @@ fn semantic_rules_live_in_validate_only() {
     }
 
     // 解析器只保留取值归一化，不再重复判定。
-    let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=繁衍 2")
+    let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=breed 2")
         .expect("内联层数应可解析");
     assert_eq!(
         e[0].params.keyword,
         Some(KeywordSpec {
-            keyword: "繁衍".into(),
+            keyword: "breed".into(),
             value: Some(2)
         })
     );

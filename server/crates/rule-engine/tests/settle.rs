@@ -19,7 +19,6 @@ fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, heal
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            name: id.to_string(),
             tribe: Tribe::Human,
             subtype: None,
             level,
@@ -30,7 +29,6 @@ fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, heal
             is_scholar: false,
             is_hero: false,
             cost: Some(1),
-            match_text: None,
         },
     );
 }
@@ -49,13 +47,10 @@ fn add_keyword_card(
         skill_id.clone(),
         Skill {
             id: skill_id.clone(),
-            name: None,
             keyword: Some(keyword.to_string()),
-            text: String::new(),
             effects: effects_of("[]"),
             cost: None,
             uses_per_turn: None,
-            match_text: None,
         },
     );
     catalog.cards.insert(
@@ -63,7 +58,6 @@ fn add_keyword_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            name: id.to_string(),
             tribe: Tribe::Human,
             subtype: None,
             level,
@@ -74,7 +68,6 @@ fn add_keyword_card(
             is_scholar: false,
             is_hero: false,
             cost: Some(1),
-            match_text: None,
         },
     );
 }
@@ -806,7 +799,7 @@ fn four_pairs_emit_events_in_pairing_order_and_record_opponents() {
 #[test]
 fn action_cap_draw_uses_settle_seat_tiebreak() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [12; 32]);
-    add_keyword_card(&mut engine.catalog, "wind", 1, 0, 1, "连击");
+    add_keyword_card(&mut engine.catalog, "wind", 1, 0, 1, "windfury");
     add_minion_card(&mut engine.catalog, "wall", 1, 0, 100);
 
     // 100 个 0 攻连击随从共 200 个令牌，把行动数推到上限而双方仍存活。

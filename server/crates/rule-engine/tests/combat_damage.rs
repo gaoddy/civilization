@@ -21,13 +21,10 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
             skill_id.clone(),
             Skill {
                 id: skill_id.clone(),
-                name: None,
                 keyword: Some((*keyword).to_string()),
-                text: String::new(),
                 effects: effects_of("[]"),
                 cost: None,
                 uses_per_turn: None,
-                match_text: None,
             },
         );
         skill_ids.push(skill_id);
@@ -37,7 +34,6 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            name: id.to_string(),
             tribe: Tribe::Human,
             subtype: None,
             level: 1,
@@ -48,7 +44,6 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
             is_scholar: false,
             is_hero: false,
             cost: Some(1),
-            match_text: None,
         },
     );
 }
@@ -59,13 +54,10 @@ fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, ef
         skill_id.clone(),
         Skill {
             id: skill_id.clone(),
-            name: None,
             keyword: None,
-            text: String::new(),
             effects: effects_of(effects),
             cost: None,
             uses_per_turn: None,
-            match_text: None,
         },
     );
     catalog.cards.insert(
@@ -73,7 +65,6 @@ fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, ef
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            name: id.to_string(),
             tribe: Tribe::Human,
             subtype: None,
             level: 1,
@@ -84,7 +75,6 @@ fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, ef
             is_scholar: false,
             is_hero: false,
             cost: Some(1),
-            match_text: None,
         },
     );
 }
@@ -188,7 +178,7 @@ fn counter_damage_updates_current() {
 fn shield_blocks_without_touching_health() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "attacker", 3, 3, &[]);
-    add_card(&mut catalog, "shielded", 0, 5, &["护盾"]);
+    add_card(&mut catalog, "shielded", 0, 5, &["divine_shield"]);
 
     let attacker = minion(&catalog, 1, "attacker");
     let mut defender = minion(&catalog, 2, "shielded");
@@ -250,7 +240,7 @@ fn cannot_kill_damage_floors_at_one() {
 #[test]
 fn reborn_revives_current_to_one_beyond_layers() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "reborn_zero", 0, 0, &["复生"]);
+    add_card(&mut catalog, "reborn_zero", 0, 0, &["reborn"]);
 
     let reborn = minion(&catalog, 1, "reborn_zero");
     let log = simulate(&catalog, &[reborn], &[], 0, 1, 0, &mut rng());

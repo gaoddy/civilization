@@ -1,11 +1,11 @@
 ---
 id: morgan
-card_type: 随从
+card_type: minion
 name: 摩尔根
-tribe: 学者
-subtype: 遗传学
+tribe: scholar
+subtype: genetics
 level: 5
-era: 现代
+era: modern
 attack: 0
 health: 16
 skills: [aura-biology-plus-0-plus-1]

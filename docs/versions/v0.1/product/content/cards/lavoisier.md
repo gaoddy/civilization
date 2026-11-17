@@ -1,11 +1,11 @@
 ---
 id: lavoisier
-card_type: 随从
+card_type: minion
 name: 拉瓦锡
-tribe: 学者
-subtype: 化学
+tribe: scholar
+subtype: chemistry
 level: 5
-era: 工业
+era: industrial
 attack: 0
 health: 16
 skills: [aura-other-plus-0-plus-1]

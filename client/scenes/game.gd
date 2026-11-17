@@ -17,7 +17,7 @@ const COMBAT_TAIL_MS := 2000
 var _intent_counter := 0
 var _target_requests: Dictionary = {}
 var _target_intent: Dictionary = {}
-var _target_title := "选择目标"
+var _target_title := "ui.game.target.title"
 var _target_required := false
 var _elapsed := 0.0
 var _deadline_expired := false
@@ -151,7 +151,7 @@ func _build_hand_panel() -> Control:
     var hand_box := VBoxContainer.new()
     hand_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
     hand_panel.add_child(hand_box)
-    hand_box.add_child(UI.section_title("手牌"))
+    hand_box.add_child(UI.section_title(tr("ui.game.hand.title")))
 
     var hand_scroll := ScrollContainer.new()
     hand_scroll.name = "HandScroll"
@@ -192,7 +192,7 @@ func _refresh() -> void:
     _detail.reset()
     var view: Dictionary = GameStore.view
     if view.is_empty():
-        _status.text = "等待对局状态…"
+        _status.text = tr("ui.game.status.waiting_view")
         return
 
     var self_state: Dictionary = view.get("self", {})
@@ -268,7 +268,7 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
     UI.clear(_hand_row)
     var hand: Array = self_state.get("hand", [])
     if hand.is_empty():
-        _hand_row.add_child(UI.empty_hint("手牌为空"))
+        _hand_row.add_child(UI.empty_hint(tr("ui.game.hand.empty")))
         return
     var card_step := UITheme.metric("card-width") - UITheme.metric("hand-card-overlap")
     for card in hand:
@@ -276,7 +276,7 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
         var card_id := str(card.get("cardId", ""))
         var playable := bool(card.get("playable", false))
         var entry_data := CardDB.card(card_id)
-        var card_kind := "minion" if str(entry_data.get("card_type", "")) == "随从" else "effect"
+        var card_kind := "minion" if str(entry_data.get("card_type", "")) == "minion" else "effect"
         var entry := HandCard.new()
         entry.name = "HandCard%d" % index
         entry.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
@@ -292,7 +292,7 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
             GameCardFace.tribe_text(entry_data),
             "",
             str(CardDB.display_cost(card_id)),
-            str(entry_data.get("era", "")),
+            UI.enum_text("era", str(entry_data.get("era", ""))),
         ))
 
         entry.payload = {
@@ -345,7 +345,11 @@ func _refresh_connection() -> void:
     if disconnected:
         # 有连接句柄但未就绪 = 正在重连（dim）；句柄为空 = 断线（danger）。
         var reconnecting := Net.socket != null
-        _status.text = "正在重连…" if reconnecting else "未连接 · 正在重连"
+        _status.text = (
+            tr("ui.game.status.reconnecting")
+            if reconnecting
+            else tr("ui.game.status.disconnected")
+        )
         _status.add_theme_color_override(
             "font_color",
             UITheme.color("color-text-dim") if reconnecting else UITheme.color("color-danger"),
@@ -434,7 +438,7 @@ func _build_choice_overlay(choice: Dictionary) -> void:
     box.add_theme_constant_override("separation", UITheme.space("space-md"))
     var kind := str(choice.get("kind", ""))
     if kind == "discover":
-        box.add_child(UI.label("发现：选择一张卡牌", UITheme.font_size("font-body")))
+        box.add_child(UI.label(tr("ui.game.overlay.discover_hint"), UITheme.font_size("font-body")))
         var index := 0
         for card_id in choice.get("candidates", []):
             var button := UI.styled_button("%s\n%s" % [
@@ -445,21 +449,21 @@ func _build_choice_overlay(choice: Dictionary) -> void:
             box.add_child(button)
             index += 1
     else:
-        box.add_child(UI.label("进化：选择一项", UITheme.font_size("font-body")))
+        box.add_child(UI.label(tr("ui.game.overlay.evolve_hint"), UITheme.font_size("font-body")))
         var index := 0
         for option in choice.get("options", []):
-            var button := UI.styled_button(str(option), "slot", 44)
+            var button := UI.styled_button(UI.enum_text("evolve", str(option)), "slot", 44)
             button.pressed.connect(_on_choose.bind(index))
             box.add_child(button)
             index += 1
-    _overlay_frame("待选择", box)
+    _overlay_frame(tr("ui.game.overlay.title"), box)
 
 
 ## 战吼目标待选：只列我方棋盘随从，没有取消与跳过（必须选一个）。
 func _build_target_pending_overlay(choice: Dictionary, self_state: Dictionary) -> void:
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", UITheme.space("space-md"))
-    box.add_child(UI.label("选择我方一个随从结算战吼", UITheme.font_size("font-body")))
+    box.add_child(UI.label(tr("ui.game.overlay.battlecry_hint"), UITheme.font_size("font-body")))
     var source_id := str(choice.get("sourceMinionId", ""))
     for minion in self_state.get("board", []):
         var minion_id := str(minion.get("minionId", ""))
@@ -474,15 +478,15 @@ func _build_target_pending_overlay(choice: Dictionary, self_state: Dictionary) -
             button.add_theme_color_override("font_color", UITheme.color("color-accent"))
         button.pressed.connect(_on_choose_target.bind(minion_id))
         box.add_child(button)
-    _overlay_frame("战吼目标", box)
+    _overlay_frame(tr("ui.game.overlay.battlecry_title"), box)
 
 
 func _build_target_overlay(self_state: Dictionary) -> void:
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", UITheme.space("space-md"))
-    box.add_child(UI.label(_target_title, UITheme.font_size("font-body")))
+    box.add_child(UI.label(tr(_target_title), UITheme.font_size("font-body")))
     if not _target_required:
-        var skip := UI.styled_button("不指定目标", "default", 36)
+        var skip := UI.styled_button(tr("ui.game.target.skip"), "default", 36)
         skip.pressed.connect(_on_target_skip)
         box.add_child(skip)
     for minion in self_state.get("board", []):
@@ -493,10 +497,10 @@ func _build_target_overlay(self_state: Dictionary) -> void:
         ], "slot", 40)
         button.pressed.connect(_on_target_chosen.bind(str(minion.get("minionId", ""))))
         box.add_child(button)
-    var cancel := UI.styled_button("取消", "default", 36)
+    var cancel := UI.styled_button(tr("ui.game.target.cancel"), "default", 36)
     cancel.pressed.connect(_on_target_cancel)
     box.add_child(cancel)
-    _overlay_frame("选择目标", box)
+    _overlay_frame(tr("ui.game.target.title"), box)
 
 
 # ── 意图 ──────────────────────────────────────────────────────────────────
@@ -509,7 +513,7 @@ func _send_intent(intent: Dictionary) -> String:
         "intent": intent,
     })
     if intent_id == "":
-        _status.text = "未连接，操作未发出"
+        _status.text = tr("ui.game.status.intent_not_sent")
     return intent_id
 
 
@@ -633,7 +637,7 @@ func _on_hero_power() -> void:
         return
     _request_optional_target(
         {"kind": Protocol.INTENT_USE_HERO_POWER, "skillId": skill_id},
-        "英雄技能目标（可跳过）",
+        "ui.game.target.hero_power_title",
     )
 
 
@@ -693,12 +697,12 @@ func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
     var intent_id := str(GameStore.last_error.get("clientIntentId", ""))
     _status.text = UI.error_text(code)
-    _status.tooltip_text = str(GameStore.last_error.get("message", ""))
+    _status.tooltip_text = UI.error_tooltip(code)
     if code == Protocol.ERROR_NO_VALID_TARGET and _target_requests.has(intent_id):
         var entry: Dictionary = _target_requests[intent_id]
         _target_intent = entry.get("intent", {})
         _target_requests.erase(intent_id)
-        _target_title = "该操作需要目标"
+        _target_title = "ui.game.target.required"
         _target_required = true
         _refresh_overlay_now()
         return

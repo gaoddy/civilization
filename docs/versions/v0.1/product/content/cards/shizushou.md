@@ -1,11 +1,11 @@
 ---
 id: shizushou
-card_type: 随从
+card_type: minion
 name: 始祖兽
-tribe: 生物
-subtype: 哺乳
+tribe: biology
+subtype: mammal
 level: 3
-era: 原始
+era: primitive
 attack: 4
 health: 5
 skills: [trigger-friendly-evolve-self-plus-1-plus-1]

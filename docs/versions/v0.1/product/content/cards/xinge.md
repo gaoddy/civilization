@@ -1,11 +1,11 @@
 ---
 id: xinge
-card_type: 随从
+card_type: minion
 name: 信鸽
-tribe: 生物
-subtype: 通信
+tribe: biology
+subtype: communication
 level: 1
-era: 古典
+era: classical
 attack: 1
 health: 2
 skills: [battlecry-friendly-growth-once]

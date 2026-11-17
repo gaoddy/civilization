@@ -2,7 +2,7 @@
 id: virus-growth-once
 name: 培养
 text: 使一个友方病毒随从获得一次成长
-effects: OnActivate|Growth|friendly:single:tribe=病毒|times=1
+effects: OnActivate|Growth|friendly:single:tribe=virus|times=1
 cost: 1
 uses_per_turn: 1
 match_text: 同左

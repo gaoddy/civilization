@@ -1,11 +1,11 @@
 ---
 id: marie-curie
-card_type: 随从
+card_type: minion
 name: 玛丽·居里
-tribe: 学者
-subtype: 物理
+tribe: scholar
+subtype: physics
 level: 5
-era: 现代
+era: modern
 attack: 0
 health: 16
 skills: [battlecry-friendly-growth-twice, radiation]

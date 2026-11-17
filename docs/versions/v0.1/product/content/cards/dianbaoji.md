@@ -1,11 +1,11 @@
 ---
 id: dianbaoji
-card_type: 随从
+card_type: minion
 name: 电报机
-tribe: 机械
-subtype: 通信
+tribe: machine
+subtype: communication
 level: 3
-era: 工业
+era: industrial
 attack: 4
 health: 5
 skills: [combatstart-leftmost-damage-3]

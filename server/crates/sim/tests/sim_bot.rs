@@ -55,7 +55,7 @@ fn view(
             }
         },
         "players": [],
-        "enabledFactions": ["人类", "自然", "机械", "经济", "文化"]
+        "enabledFactions": ["human", "machine", "biology", "plant", "scholar"]
     });
     serde_json::from_value(json).expect("样例视图应当能反序列化为 PlayerView")
 }

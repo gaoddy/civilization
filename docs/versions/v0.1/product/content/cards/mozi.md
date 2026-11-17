@@ -1,11 +1,11 @@
 ---
 id: mozi
-card_type: 随从
+card_type: minion
 name: 墨子
-tribe: 人类
-subtype: 哲学
+tribe: human
+subtype: philosophy
 level: 4
-era: 古典
+era: classical
 attack: 5
 health: 8
 skills: [enemy-random-cannot-attack]

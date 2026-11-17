@@ -72,7 +72,7 @@ func _build() -> void:
     _others.add_theme_constant_override("separation", UITheme.space("space-md"))
     root.add_child(_others)
 
-    var title := UI.section_title("请选择英雄")
+    var title := UI.section_title(tr("ui.room.select_hero"))
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     title.mouse_filter = Control.MOUSE_FILTER_IGNORE
     root.add_child(title)
@@ -85,7 +85,7 @@ func _build() -> void:
     _candidates.add_theme_constant_override("separation", UITheme.space("space-md"))
     root.add_child(_candidates)
 
-    _confirm = UI.styled_button("确认", "primary", 36)
+    _confirm = UI.styled_button(tr("ui.room.confirm"), "primary", 36)
     _confirm.name = "ConfirmButton"
     # 纵向容器默认拉满整行宽；确认键按自身宽度居中，与其他内容同轴。
     _confirm.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -146,13 +146,14 @@ func _render_others() -> void:
         if display == "":
             display = str(player.get("playerId", ""))
         var ready := bool(player.get("ready", false))
-        var text := "%s · %s" % [display, "已确认" if ready else "未确认"]
+        var status := tr("ui.room.confirmed") if ready else tr("ui.room.unconfirmed")
+        var text := "%s · %s" % [display, status]
         var row := UI.pill_label(text, "success" if ready else "neutral")
         row.name = "OtherPlayer%d" % shown
         _others.add_child(row)
         shown += 1
     if shown == 0:
-        _others.add_child(UI.empty_hint("等待其他玩家加入"))
+        _others.add_child(UI.empty_hint(tr("ui.room.waiting_for_players")))
 
 
 ## 底部：本人候选卡。选中态加描边，已确认后全部禁用。
@@ -161,7 +162,7 @@ func _render_candidates() -> void:
 
     var candidates := GameStore.my_hero_candidates()
     if candidates.is_empty():
-        _candidates.add_child(UI.empty_hint("正在分配英雄…"))
+        _candidates.add_child(UI.empty_hint(tr("ui.room.assigning_hero")))
         return
 
     var locked := _is_confirmed()
@@ -281,16 +282,16 @@ func _sync_state() -> void:
     var candidates := GameStore.my_hero_candidates()
     var connected := Net.is_open()
     _confirm.disabled = _selected_hero == "" or confirmed or not connected
-    _confirm.text = "已确认" if confirmed else "确认"
+    _confirm.text = tr("ui.room.confirmed") if confirmed else tr("ui.room.confirm")
 
     if confirmed:
-        _status.text = "已确认英雄：%s" % CardDB.display_name(_selected_hero)
+        _status.text = tr("ui.room.confirmed_hero") % CardDB.display_name(_selected_hero)
     elif not connected:
-        _status.text = "未连接服务器"
+        _status.text = tr("ui.room.not_connected")
     elif candidates.is_empty():
-        _status.text = "正在分配英雄…"
+        _status.text = tr("ui.room.assigning_hero")
     else:
-        _status.text = "从你的 %d 张候选里选一张，确认后不可更改。" % candidates.size()
+        _status.text = tr("ui.room.candidate_hint") % candidates.size()
 
 
 func _on_confirm_pressed() -> void:
@@ -298,7 +299,7 @@ func _on_confirm_pressed() -> void:
         return
     Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": _selected_hero})
     Net.send(Protocol.MSG_READY, {"ready": true})
-    _status.text = "已提交英雄：%s" % CardDB.display_name(_selected_hero)
+    _status.text = tr("ui.room.submitted_hero") % CardDB.display_name(_selected_hero)
     _confirm.disabled = true
 
 
@@ -339,6 +340,6 @@ func _on_error() -> void:
             UI.navigate(self, "res://scenes/login.tscn")
             return
     _status.text = UI.error_text(code)
-    _status.tooltip_text = str(GameStore.last_error.get("message", ""))
+    _status.tooltip_text = UI.error_tooltip(code)
     # 请求被拒时没有新的 RoomUpdate：按当前状态重算按钮，否则会一直停在禁用。
     _sync_state()

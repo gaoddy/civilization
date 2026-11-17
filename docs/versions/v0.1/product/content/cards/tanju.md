@@ -1,11 +1,11 @@
 ---
 id: tanju
-card_type: 随从
+card_type: minion
 name: 炭疽
-tribe: 病毒
-subtype: 细菌
+tribe: virus
+subtype: bacteria
 level: 5
-era: 现代
+era: modern
 attack: 6
 health: 10
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]

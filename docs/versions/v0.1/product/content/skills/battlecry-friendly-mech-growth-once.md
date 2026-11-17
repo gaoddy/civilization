@@ -1,8 +1,8 @@
 ---
 id: battlecry-friendly-mech-growth-once
-keyword: 战吼
+keyword: battlecry
 text: 战吼：使一个友方机械随从获得一次成长
-effects: OnPlay|Growth|friendly:single:tribe=机械|times=1
+effects: OnPlay|Growth|friendly:single:tribe=machine|times=1
 ---
 
 # battlecry-friendly-mech-growth-once

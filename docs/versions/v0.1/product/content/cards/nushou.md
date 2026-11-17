@@ -1,11 +1,11 @@
 ---
 id: nushou
-card_type: 随从
+card_type: minion
 name: 弩手
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 2
-era: 封建
+era: feudal
 attack: 2
 health: 5
 skills: [battlecry-other-friendly-humans-plus-1-attack]

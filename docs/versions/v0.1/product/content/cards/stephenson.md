@@ -1,11 +1,11 @@
 ---
 id: stephenson
-card_type: 随从
+card_type: minion
 name: 史蒂芬孙
-tribe: 机械
-subtype: 工程
+tribe: machine
+subtype: engineering
 level: 5
-era: 工业
+era: industrial
 attack: 7
 health: 11
 skills: [aura-other-mech-plus-1-plus-1]

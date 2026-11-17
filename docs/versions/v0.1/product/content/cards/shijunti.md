@@ -1,11 +1,11 @@
 ---
 id: shijunti
-card_type: 随从
+card_type: minion
 name: 噬菌体
-tribe: 病毒
-subtype: 微生物
+tribe: virus
+subtype: microorganism
 level: 1
-era: 史前
+era: prehistoric
 attack: 1
 health: 2
 skills: [deathrattle-random-enemy-hp-minus-1]

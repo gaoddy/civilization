@@ -1,10 +1,10 @@
 ---
 id: fangzhen
 name: 方阵
-card_type: 效果
+card_type: effect
 level: 2
-era: 古典
-tribe: 人类
+era: classical
+tribe: human
 cost: 1
 match_text: 同左
 skills: [trigger-friendly-human-taunt-until-turn-end]

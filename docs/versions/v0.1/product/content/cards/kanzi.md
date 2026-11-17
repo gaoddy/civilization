@@ -1,11 +1,11 @@
 ---
 id: kanzi
-card_type: 随从
+card_type: minion
 name: 黑猩猩坎兹
-tribe: 生物
-subtype: 灵长
+tribe: biology
+subtype: primate
 level: 3
-era: 现代
+era: modern
 attack: 4
 health: 5
 skills: [battlecry-friendly-growth-once]

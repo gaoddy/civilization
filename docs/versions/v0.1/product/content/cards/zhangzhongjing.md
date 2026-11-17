@@ -1,11 +1,11 @@
 ---
 id: zhangzhongjing
-card_type: 随从
+card_type: minion
 name: 张仲景
-tribe: 人类
-subtype: 医学
+tribe: human
+subtype: medicine
 level: 4
-era: 封建
+era: feudal
 attack: 5
 health: 8
 skills: [battlecry-all-friendly-plus-0-plus-1]

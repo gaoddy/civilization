@@ -106,7 +106,8 @@ protocol/
 
 - 去重键为 `(playerId, clientIntentId)`；表只增不删，随房间销毁。
 - `Applied` 重发只回该座位当前视图的空事件 `StateUpdate`，不重复执行、不重复广播。
-- `Rejected` 重发同一条 `Error`（同一错误码与消息），不重新判定。
+- `Rejected` 重发同一条 `Error`（同一错误码、`messageId` 与 `messageParams`），不重新判定。
+- 下行 `ErrorMessage` 的玩家文案由 `messageId` + `messageParams` 决定：默认 `messageId` 为 `error.<CODE>`，细分场景用 `error.<CODE>.<detail>` 这类 id，参数按 `%s` 填充；客户端按文本表取用与格式化。`message` 只面向日志，不作为 UI 文案。
 - 未知玩家直接回 `NOT_IN_ROOM`，不进入去重表；非招募阶段的意图会写入去重表，重复提交返回同一条 `INVALID_STAGE` 错误。
 - 意图先做只读预检再修改状态：拒绝时 `GameState` 与随机流逐字节不变，客户端可原样重发。
 - 需要单一显式目标的效果（`target` 选择器，或 `friendly:single` 这类 `Side` + `Pick::Single`）在存在合法目标而未指定或目标不合法时返回 `NO_VALID_TARGET`。池为空时按效果来源区分：主动技能返回该错误（卡牌文档规定此时技能不可用），随从战吼与效果牌放行、效果落空。合法池只含意图提交前已存在的随从：战吼只在 `PlayCard` 时结算，买入不入场也不涉及目标。

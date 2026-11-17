@@ -1,11 +1,11 @@
 ---
 id: lamarck
-card_type: 随从
+card_type: minion
 name: 拉马克
-tribe: 学者
-subtype: 生物学
+tribe: scholar
+subtype: biology
 level: 4
-era: 封建
+era: feudal
 attack: 0
 health: 12
 skills: [biology-evolve]

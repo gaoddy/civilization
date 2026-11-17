@@ -1,11 +1,11 @@
 ---
 id: qinghao
-card_type: 随从
+card_type: minion
 name: 青蒿
-tribe: 植物
-subtype: 药用
+tribe: plant
+subtype: medicinal
 level: 4
-era: 现代
+era: modern
 attack: 6
 health: 9
 skills: [keyword-sow, aura-plant-plus-1-plus-1]

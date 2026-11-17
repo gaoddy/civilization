@@ -199,7 +199,7 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
     row.add_child(lines)
 
     var name_label := label(
-        CardDB.display_name(hero_id) if hero_id != "" else "未选英雄",
+        CardDB.display_name(hero_id) if hero_id != "" else TranslationServer.translate("ui.common.no_hero"),
         UITheme.font_size("font-title"),
         false,
     )
@@ -211,9 +211,9 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
     var tribe := str(entry.get("tribe", ""))
     var era := str(entry.get("era", ""))
     if tribe != "":
-        meta_parts.append(tribe)
+        meta_parts.append(enum_text("tribe", tribe))
     if era != "":
-        meta_parts.append(era)
+        meta_parts.append(enum_text("era", era))
     var meta := label(" · ".join(meta_parts) if not meta_parts.is_empty() else "—", UITheme.font_size("font-caption"), false)
     meta.name = "Meta"
     meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
@@ -261,38 +261,41 @@ static func margin(container: Control, value := 12) -> MarginContainer:
     return node
 
 
-const ERROR_TEXT := {
-    "ALREADY_MAX_ERA": "时代已满",
-    "AUTH_FAILED": "登录失败",
-    "AUTH_RATE_LIMITED": "登录过于频繁，请稍后再试",
-    "BAD_PAYLOAD": "请求格式不正确",
-    "CARD_NOT_IN_HAND": "手牌中没有这张牌",
-    "HERO_NOT_SELECTED": "还没有选择英雄",
-    "HERO_POWER_LIMIT": "英雄技能次数已用完",
-    "INTERNAL_ERROR": "服务端内部错误",
-    "INVALID_CHOICE": "选择无效",
-    "INVALID_STAGE": "当前阶段不能执行该操作",
-    "NOT_ENOUGH_GOLD": "金币不足",
-    "NOT_HOST": "只有房主可以操作",
-    "NOT_IN_ROOM": "已不在房间中",
-    "NO_SPACE": "棋盘或手牌已满",
-    "NO_SUCH_MINION": "随从不存在",
-    "NO_VALID_TARGET": "需要选择目标",
-    "RATE_LIMITED": "操作过于频繁，请稍后再试",
-    "ROOM_FULL": "房间已满",
-    "ROOM_NOT_FOUND": "房间不存在",
-    "ROOM_NOT_READY": "房间尚未满足开局条件",
-    "SEQUENCE_STALE": "消息序号过期",
-    "SESSION_REPLACED": "账号已在其他位置登录",
-    "SHOP_SLOT_EMPTY": "商店槽位为空",
-    "TARGET_NOT_ALLOWED": "该操作不能指定目标",
-    "TOKEN_EXPIRED": "登录已过期，请重新登录",
-    "UNKNOWN_TYPE": "未知消息类型",
-}
+## 按枚举组与英文 id 取展示文案；缺键回退为 id。
+static func enum_text(group: String, id: String) -> String:
+    var key := "enum.%s.%s" % [group, id]
+    var text := TranslationServer.translate(key)
+    return id if text == key else text
 
 
+## 错误码对应的展示文案；缺键回退为错误码。
 static func error_text(code: String) -> String:
-    return ERROR_TEXT.get(code, code)
+    var key := "error.%s" % code
+    var text := TranslationServer.translate(key)
+    return code if text == key else text
+
+
+## 按完整文本 id 取错误详情；空 id 或缺键返回空串，params 非空时按 % 格式化。
+static func error_text_by_id(id: String, params: Array = []) -> String:
+    if id == "":
+        return ""
+    var text := TranslationServer.translate(id)
+    if text == id:
+        return ""
+    if not params.is_empty():
+        text = text % params
+    return text
+
+
+## 错误提示的悬停详情：优先用服务端给出的 messageId 与参数，缺失时回退错误码文案。
+static func error_tooltip(code: String) -> String:
+    var raw_params = GameStore.last_error.get("messageParams", [])
+    var params: Array = raw_params if raw_params is Array else []
+    var detail := error_text_by_id(
+        str(GameStore.last_error.get("messageId", "")),
+        params,
+    )
+    return detail if detail != "" else error_text(code)
 
 
 ## 错误码对应的页面去向：login、lobby 或空串（留在当前页面）。

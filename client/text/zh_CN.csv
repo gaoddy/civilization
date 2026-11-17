@@ -1,0 +1,754 @@
+keys,zh_CN
+card.adam-smith.name,亚当·斯密
+card.agi.name,通用人工智能
+card.airplane.name,飞机
+card.alan-turing.name,艾伦·图灵
+card.aolinpike-jidian.match_text,同左
+card.aolinpike-jidian.name,奥林匹克祭典
+card.aq-jingshen.match_text,同左
+card.aq-jingshen.name,阿Q精神
+card.archimedes.name,阿基米德
+card.aristotle.name,亚里士多德
+card.artificial-womb.name,人造子宫
+card.baiyi.name,白蚁
+card.beethoven.name,贝多芬
+card.bingdushizu.name,病毒始祖
+card.bisheng.name,毕昇
+card.black-death-spread.match_text,同左
+card.black-death-spread.name,黑死病·播散
+card.black-death.name,黑死病
+card.boxer.name,拳击手
+card.bruce-lee.name,李小龙
+card.bulangyundong.match_text,战斗开始时，对敌方最左侧随从造成 2 点伤害
+card.bulangyundong.name,布朗运动
+card.buluozhanshi.name,部落战士
+card.cailun.name,蔡伦
+card.changmaoshou.name,长矛手
+card.chengbang-faling.match_text,同左
+card.chengbang-faling.name,城邦法令
+card.chengbang-gongmin.name,城邦公民
+card.cholera.name,霍乱
+card.darwin.name,达尔文
+card.davinci.name,达·芬奇
+card.dianbaoji.name,电报机
+card.dianhua-jiaohuanji.name,电话交换机
+card.dishengxiyu.match_text,同左
+card.dishengxiyu.name,低声细语
+card.dna-shuangluoxuan.match_text,同左
+card.dna-shuangluoxuan.name,DNA双螺旋结构
+card.dolly.name,克隆羊多莉
+card.dongxuehuajia.name,洞穴画家
+card.doushouchang-shizi.name,斗兽场狮子
+card.dushe.name,毒蛇
+card.dyson-sphere.name,戴森球
+card.ebola.name,埃博拉
+card.edison.name,爱迪生
+card.einstein-fridge.name,爱因斯坦冰箱
+card.einstein.name,爱因斯坦
+card.engineered-virus.name,基因工程病毒
+card.erfenfa.match_text,同左
+card.erfenfa.name,二分法
+card.euclid.name,欧几里得
+card.famingjia.name,发明家
+card.fangzhen.match_text,同左
+card.fangzhen.name,方阵
+card.fangzhiji.name,纺织机
+card.faraday-cage.match_text,同左
+card.faraday-cage.name,法拉第笼
+card.faraday.name,法拉第
+card.feijiehe.name,肺结核
+card.feiyan.name,肺炎链球菌
+card.fengche.name,风车
+card.fermi.name,费米
+card.fleming.name,弗莱明
+card.fusion-reactor.name,聚变反应堆
+card.galileo.name,伽利略
+card.ganlanshu.name,橄榄树
+card.gauss.name,高斯
+card.godel.name,库尔特·哥德尔
+card.gongchangzhu.name,工厂主
+card.gongchengchui.name,攻城槌
+card.gongchengta.name,攻城塔
+card.gongjianshou.name,弓箭手
+card.gongyegongren.name,工业工人
+card.guangdianxiaoying.match_text,同左
+card.guangdianxiaoying.name,光电效应
+card.guanghezuoyong.match_text,同左
+card.guanghezuoyong.name,光合作用
+card.guangyixiangduilun.match_text,同左
+card.guangyixiangduilun.name,广义相对论
+card.guanzhuangbingdu.name,冠状病毒
+card.guoying.name,果蝇
+card.gutenberg.name,古腾堡
+card.heisenberg.name,海森堡
+card.hela-cell.name,海拉细胞
+card.hippocrates.name,希波克拉底
+card.hiv-inhibitor.match_text,同左
+card.hiv-inhibitor.name,艾滋病毒·抑制剂
+card.hiv.name,艾滋病毒
+card.homer.name,荷马
+card.hongshulin.name,红树林
+card.huangrebing.name,黄热病
+card.huochongdui.name,火铳队
+card.huoqiangshou.name,火枪手
+card.hybrid-rice.name,杂交水稻
+card.influenza-mutation.match_text,同左
+card.influenza-mutation.name,流感病毒·变异
+card.influenza.name,流感病毒
+card.jianchihu.name,剑齿虎
+card.jiaobiandianliu.match_text,同左
+card.jiaobiandianliu.name,交变电流
+card.jinhualun.match_text,改为三选一固定池
+card.jinhualun.name,进化论
+card.jiyin-gaizaoren.name,基因改造人
+card.jiyintubian.match_text,同左
+card.jiyintubian.name,基因突变
+card.juelei.name,蕨类
+card.juhua.name,巨花
+card.juxi.name,巨蜥
+card.juying.name,巨鹰
+card.juzi.name,橘子
+card.kanzi.name,黑猩猩坎兹
+card.knuth.name,高德纳
+card.koko.name,大猩猩科科
+card.kongzi.name,孔子
+card.kuangquanbing.name,狂犬病
+card.kuangrenriji.match_text,同左
+card.kuangrenriji.name,狂人日记
+card.lamarck.name,拉马克
+card.langqunshouling.name,狼群首领
+card.lavoisier.name,拉瓦锡
+card.lianjinshushi.name,炼金术士
+card.lier.name,李耳
+card.likeciti.name,立克次体
+card.linnaeus.name,林奈
+card.lisshi.name,李时珍
+card.luban.name,鲁班
+card.luomajuntuanbing.name,罗马军团兵
+card.luxun.name,鲁迅
+card.maitian.name,麦田
+card.majidun-changqiangbing.name,马其顿长枪兵
+card.malaria.name,疟疾
+card.marie-curie.name,玛丽·居里
+card.meikuang-jinsique.name,煤矿金丝雀
+card.mendel.name,孟德尔
+card.menghu.name,猛虎
+card.mengmalieren.name,猛犸猎人
+card.mengmaxiang.name,猛犸象
+card.mianhua.name,棉花
+card.michelangelo.name,米开朗基罗
+card.morgan.name,摩尔根
+card.moses.name,摩西
+card.mozi.name,墨子
+card.muhammad-ali.name,穆罕默德·阿里
+card.nahan.match_text,同左
+card.nahan.name,呐喊
+card.nami-bingdu.name,纳米病毒
+card.nami-fengqun.name,纳米蜂群
+card.nanobot.name,纳米机器人
+card.neiranji.name,内燃机
+card.newton.name,牛顿
+card.nitaizhangyu.name,拟态章鱼
+card.nitrogen-crop.name,固氮作物
+card.niuwen.name,牛瘟
+card.nupao.name,弩炮
+card.nushou.name,弩手
+card.panghuang.match_text,同左
+card.panghuang.name,彷徨
+card.pasteur.name,巴斯德
+card.patrol-mech.name,巡逻机甲
+card.phonograph.name,留声机
+card.pink-ape.name,带粉色头套的猩猩
+card.plato.name,柏拉图
+card.pythagoras.name,毕达哥拉斯
+card.qinghao.name,青蒿
+card.qingmeisu-tichun.match_text,同左
+card.qingmeisu-tichun.name,青霉素·提纯
+card.qishi.name,骑士
+card.qiuzhuangshandian.match_text,同左
+card.qiuzhuangshandian.name,球状闪电
+card.quantum-computer.name,量子计算机
+card.qulv-feichuan.name,曲率飞船
+card.quyuan.name,屈原
+card.rengongzhineng.match_text,同左
+card.rengongzhineng.name,人工智能
+card.renzaoshandian.match_text,同左
+card.renzaoshandian.name,人造闪电
+card.renzhe.name,忍者
+card.revived-mammoth.name,复活猛犸
+card.rice-cooker.name,电饭煲
+card.robot-dog.name,机器狗
+card.rutherford.name,卢瑟福
+card.sagan.name,卡尔·萨根
+card.saman.name,萨满
+card.schrodinger.name,薛定谔
+card.self-driving-car.name,自动驾驶汽车
+card.shakespeare.name,莎士比亚
+card.shannon.name,克劳德·香农
+card.shenkuo.name,沈括
+card.shifujiang.name,石斧匠
+card.shijieshu.name,世界树
+card.shijunti.name,噬菌体
+card.shilunche.name,石轮车
+card.shiyanxiaoshu.name,实验小鼠
+card.shizijun.name,十字军
+card.shizuniao.name,始祖鸟
+card.shizushou.name,始祖兽
+card.shoupijiang.name,兽皮匠
+card.shuiche.name,水车
+card.shuishengjue.name,水生蕨
+card.shuizhong.name,水钟
+card.sibadayongshi.name,斯巴达勇士
+card.simaqian.name,司马迁
+card.smallpox.name,天花
+card.space-elevator.name,太空电梯
+card.space-rice.name,太空水稻
+card.steam-engine.name,蒸汽机
+card.stephenson.name,史蒂芬孙
+card.sugeladi.name,苏格拉底
+card.suishimaobing.name,燧石矛兵
+card.synthetic-cell.name,合成细胞
+card.tai.name,苔藓
+card.taikongziminzhe.name,太空殖民者
+card.tanju.name,炭疽
+card.telephone.name,电话机
+card.tengman.name,藤蔓
+card.tesla-coil.match_text,同左
+card.tesla-coil.name,特斯拉线圈
+card.tesla.name,特斯拉
+card.tielu-gongren.name,铁路工人
+card.toushiji.name,投石机
+card.tufu.name,屠夫
+card.turing-machine.name,图灵机
+card.vertical-farm.name,垂直农场
+card.von-neumann.name,冯·诺依曼
+card.wandou.name,豌豆
+card.watt.name,瓦特
+card.weijingzhanshi.name,维京战士
+card.wireless-telegraph.name,无线电报
+card.wright-brothers.name,莱特兄弟
+card.wuyi.name,巫医
+card.xiake.name,侠客
+card.xiangrikui.name,向日葵
+card.xiayixiangduilun.match_text,同左
+card.xiayixiangduilun.name,狭义相对论
+card.xiluoduode.name,希罗多德
+card.xinge.name,信鸽
+card.xingji-jianzhang.name,星际舰长
+card.xray-machine.name,X射线机
+card.xunhuozhe.name,驯火者
+card.yadian-wenyi.name,雅典瘟疫
+card.yanhuashi.name,岩画师
+card.yelang.name,野狼
+card.yezhu.name,野猪
+card.yinlibo.match_text,同左
+card.yinlibo.name,引力波
+card.yinshuashu.match_text,同左
+card.yinshuashu.name,印刷术
+card.yongsheng-shuimu.name,永生水母
+card.yousifenlie.match_text,同左
+card.yousifenlie.name,有丝分裂
+card.yuandandan.match_text,同左
+card.yuandandan.name,原子弹
+card.yuanlaoyuan-yiyuan.name,元老院议员
+card.yuanlongping.name,袁隆平
+card.yuanshijixiekuilei.name,原始机械傀儡
+card.yuanshizhenjun.name,原始真菌
+card.yuzhouteng.name,宇宙藤
+card.zhangheng.name,张衡
+card.zhangzhongjing.name,张仲景
+card.zhanma.name,战马
+card.zhanxiang.name,战象
+card.zhengbingling.match_text,同左
+card.zhengbingling.name,征兵令
+card.zhenghe.name,郑和
+card.zhengqi-geming.match_text,同左
+card.zhengqi-geming.name,蒸汽革命
+card.zhengqi-jiche.name,蒸汽机车
+card.zhengqidongli.match_text,同左
+card.zhengqidongli.name,蒸汽动力
+card.zhihui-jushou.name,智慧巨兽
+card.zhinengdengjia.match_text,同左
+card.zhinengdengjia.name,质能等价
+card.zhuanli-zhidu.match_text,同左
+card.zhuanli-zhidu.name,专利制度
+card.zhugeliang.name,诸葛亮
+card.zhulin.name,竹林
+enum.card_type.effect,效果
+enum.card_type.minion,随从
+enum.era.classical,古典
+enum.era.feudal,封建
+enum.era.future,未来
+enum.era.industrial,工业
+enum.era.modern,现代
+enum.era.prehistoric,史前
+enum.era.primitive,原始
+enum.evolve.divine_shield,护盾
+enum.evolve.reborn,复生
+enum.evolve.stats,+2/+2
+enum.keyword.assemble,装配
+enum.keyword.battlecry,战吼
+enum.keyword.breed,繁衍
+enum.keyword.contagion,传染
+enum.keyword.deathrattle,亡语
+enum.keyword.divine_shield,护盾
+enum.keyword.evolve,进化
+enum.keyword.growth,成长
+enum.keyword.optimal_attack,最优攻击
+enum.keyword.reborn,复生
+enum.keyword.sow,播种
+enum.keyword.taunt,嘲讽
+enum.keyword.windfury,连击
+enum.stat_layer.aura,光环
+enum.stat_layer.damage,受击
+enum.stat_layer.initial,初始
+enum.stat_layer.permanent,永久
+enum.stat_layer.turn,回合
+enum.subtype.animal,动物
+enum.subtype.appliance,家电
+enum.subtype.aquatic-plant,水生植物
+enum.subtype.architecture,建筑
+enum.subtype.art,艺术
+enum.subtype.artisan,工匠
+enum.subtype.astronomy,天文
+enum.subtype.athlete,运动员
+enum.subtype.aviation,航空
+enum.subtype.bacteria,细菌
+enum.subtype.beast,猛兽
+enum.subtype.behemoth,巨兽
+enum.subtype.biology,生物学
+enum.subtype.bird,鸟类
+enum.subtype.capital,资本
+enum.subtype.captain,舰长
+enum.subtype.cell,细胞
+enum.subtype.chemistry,化学
+enum.subtype.city-state,城邦
+enum.subtype.clone,克隆
+enum.subtype.colonist,殖民者
+enum.subtype.communication,通信
+enum.subtype.computer,计算机
+enum.subtype.crop,作物
+enum.subtype.disease,疾病
+enum.subtype.economics,经济学
+enum.subtype.engineering,工程
+enum.subtype.factory,工厂
+enum.subtype.fern,蕨类
+enum.subtype.flight,飞行
+enum.subtype.flower,花卉
+enum.subtype.fruit-tree,果树
+enum.subtype.fungus,真菌
+enum.subtype.genetics,遗传学
+enum.subtype.history,史学
+enum.subtype.insect,昆虫
+enum.subtype.invention,发明
+enum.subtype.literature,文学
+enum.subtype.mammal,哺乳
+enum.subtype.martial-artist,武术家
+enum.subtype.mathematics,数学
+enum.subtype.mecha,机甲
+enum.subtype.medical,医疗
+enum.subtype.medicinal,药用
+enum.subtype.medicine,医学
+enum.subtype.megastructure,巨构
+enum.subtype.microbiology,微生物学
+enum.subtype.microorganism,微生物
+enum.subtype.modification,改造
+enum.subtype.mollusk,软体
+enum.subtype.moss,苔藓
+enum.subtype.music,音乐
+enum.subtype.nanotech,纳米
+enum.subtype.natural-history,博物学
+enum.subtype.navigation,航海
+enum.subtype.nuclear-physics,核物理
+enum.subtype.ocean,海洋
+enum.subtype.organism,生物
+enum.subtype.parasite,寄生虫
+enum.subtype.pharmacology,医药学
+enum.subtype.philosophy,哲学
+enum.subtype.physics,物理
+enum.subtype.plague,瘟疫
+enum.subtype.politics,政治
+enum.subtype.polymath,博学者
+enum.subtype.power,动力
+enum.subtype.primate,灵长
+enum.subtype.primitive,原始
+enum.subtype.puppet,傀儡
+enum.subtype.quantum,量子
+enum.subtype.reptile,爬行
+enum.subtype.robot,机器人
+enum.subtype.siege,攻城
+enum.subtype.spaceflight,航天
+enum.subtype.strategist,军师
+enum.subtype.synthesis,合成
+enum.subtype.telecommunication,通讯
+enum.subtype.timekeeping,计时
+enum.subtype.transport,交通
+enum.subtype.tree,树木
+enum.subtype.unit,兵种
+enum.subtype.universe,宇宙
+enum.subtype.vehicle,载具
+enum.subtype.vine,藤本
+enum.subtype.virus,病毒
+enum.subtype.worker,工人
+enum.tribe.biology,生物
+enum.tribe.general,通用
+enum.tribe.human,人类
+enum.tribe.machine,机械
+enum.tribe.plant,植物
+enum.tribe.scholar,学者
+enum.tribe.virus,病毒
+error.ALREADY_MAX_ERA,时代已满
+error.AUTH_FAILED,登录失败
+error.AUTH_FAILED.invalid_code,短信验证码错误
+error.AUTH_RATE_LIMITED,登录过于频繁，请稍后再试
+error.BAD_PAYLOAD,请求格式不正确
+error.CARD_NOT_IN_HAND,手牌中没有这张牌
+error.HERO_NOT_SELECTED,还没有选择英雄
+error.HERO_POWER_LIMIT,英雄技能次数已用完
+error.INTERNAL_ERROR,服务端内部错误
+error.INVALID_CHOICE,选择无效
+error.INVALID_STAGE,当前阶段不能执行该操作
+error.NOT_ENOUGH_GOLD,金币不足
+error.NOT_HOST,只有房主可以操作
+error.NOT_IN_ROOM,已不在房间中
+error.NO_SPACE,棋盘或手牌已满
+error.NO_SUCH_MINION,随从不存在
+error.NO_VALID_TARGET,需要选择目标
+error.RATE_LIMITED,操作过于频繁，请稍后再试
+error.ROOM_FULL,房间已满
+error.ROOM_NOT_FOUND,房间不存在
+error.ROOM_NOT_READY,房间尚未满足开局条件
+error.SEQUENCE_STALE,消息序号过期
+error.SESSION_REPLACED,账号已在其他位置登录
+error.SHOP_SLOT_EMPTY,商店槽位为空
+error.TARGET_NOT_ALLOWED,该操作不能指定目标
+error.TOKEN_EXPIRED,登录已过期，请重新登录
+error.TOKEN_EXPIRED.invalid_token,令牌无效或已过期
+error.UNKNOWN_TYPE,未知消息类型
+skill.alternating-current.match_text,同左
+skill.alternating-current.name,交流电
+skill.alternating-current.text,使一个友方随从获得最优攻击直到回合结束
+skill.aura-all-plus-0-plus-1.text,你的随从获得 +0/+1
+skill.aura-all-plus-0-plus-2.text,你的随从获得 +0/+2
+skill.aura-biology-plus-0-plus-1.text,你的生物随从获得 +0/+1
+skill.aura-biology-plus-1-plus-1.text,你的生物随从获得 +1/+1
+skill.aura-mech-optimal-attack.text,你的机械随从获得最优攻击
+skill.aura-mech-plus-2-plus-2.text,你的机械随从获得 +2/+2
+skill.aura-other-biology-plus-1-attack.text,你的其他生物随从获得 +1 攻击力
+skill.aura-other-mech-plus-1-plus-1.text,你的其他机械随从获得 +1/+1
+skill.aura-other-plants-plus-0-plus-1.text,你的其他植物随从获得 +0/+1
+skill.aura-other-plus-0-plus-1.text,你的其他随从获得 +0/+1
+skill.aura-plant-plus-1-plus-1.text,你的植物随从获得 +1/+1
+skill.aura-plant-plus-2-plus-2.text,你的植物随从获得 +2/+2
+skill.aura-scholar-plus-0-plus-2.text,你的学者随从获得 +0/+2
+skill.aura-scholar-plus-0-plus-3.text,你的学者随从获得 +0/+3
+skill.battlecry-all-biology-growth-once.text,战吼：使你的所有生物随从获得一次成长
+skill.battlecry-all-friendly-growth-once.text,战吼：使你的所有随从获得一次成长
+skill.battlecry-all-friendly-growth-twice.text,战吼：使你的所有随从获得两次成长
+skill.battlecry-all-friendly-plus-0-plus-1.text,战吼：使你的所有随从获得 +0/+1
+skill.battlecry-all-mech-growth-once-no-keyword.text,战吼：使你的所有机械随从获得一次成长
+skill.battlecry-all-mech-growth-once.text,战吼：使你的所有机械随从获得一次成长
+skill.battlecry-friendly-archers-plus-2-attack.text,战吼：使你的弓箭手获得 +2 攻击力
+skill.battlecry-friendly-growth-once.text,战吼：使一个友方随从获得一次成长
+skill.battlecry-friendly-growth-plant-twice.text,战吼：使一个友方随从获得一次成长；若其为植物，改为两次
+skill.battlecry-friendly-growth-scholar-twice.text,战吼：使一个友方随从获得一次成长；若其为学者，改为两次
+skill.battlecry-friendly-growth-twice.text,战吼：使一个友方随从获得两次成长
+skill.battlecry-friendly-human-plus-0-plus-1.text,战吼：使一个友方人类随从获得 +0/+1
+skill.battlecry-friendly-mech-growth-once.text,战吼：使一个友方机械随从获得一次成长
+skill.battlecry-friendly-plant-growth-once.text,战吼：使一个友方植物随从获得一次成长
+skill.battlecry-friendly-plus-0-plus-1.text,战吼：使一个友方随从获得 +0/+1
+skill.battlecry-friendly-plus-0-plus-2.text,战吼：使一个友方随从获得 +0/+2
+skill.battlecry-friendly-plus-1-attack.text,战吼：使一个友方随从获得 +1 攻击力
+skill.battlecry-friendly-plus-1-health.text,战吼：使一个友方随从获得 +1 生命值
+skill.battlecry-friendly-virus-plus-1-attack.text,战吼：使一个友方病毒随从获得 +1 攻击力
+skill.battlecry-other-friendly-humans-plus-1-attack.text,战吼：使你的其他人类随从获得 +1 攻击力
+skill.battlecry-plant-growth-twice.text,战吼：使一个友方植物随从获得两次成长
+skill.battlecry-random-enemy-damage-1.text,战吼：对随机一个敌方随从造成 1 点伤害
+skill.battlecry-random-enemy-damage-2.text,战吼：对随机一个敌方随从造成 2 点伤害
+skill.battlecry-self-growth-twice.text,战吼：获得两次成长
+skill.battlecry-self-plus-1-health.text,战吼：获得 +1 生命值
+skill.battlecry-summon-3-3-synthetic-cell.text,战吼：召唤一个 3/3 的合成细胞（幼体）
+skill.biology-evolve.match_text,同左
+skill.biology-evolve.name,获得性状
+skill.biology-evolve.text,使一个友方生物随从获得进化
+skill.combat-optimal-attack.match_text,同左
+skill.combat-optimal-attack.name,航线
+skill.combat-optimal-attack.text,使一个友方随从获得最优攻击直到回合结束
+skill.combat-random-enemy-damage-3.text,战斗开始时对随机一个敌方随从造成 3 点伤害
+skill.combatstart-all-enemies-contagion-1.match_text,同左
+skill.combatstart-all-enemies-contagion-1.text,战斗开始时，使敌方所有随从获得 1 层传染
+skill.combatstart-all-enemies-damage-2.match_text,同左
+skill.combatstart-all-enemies-damage-2.text,战斗开始时，对敌方所有随从造成 2 点伤害
+skill.combatstart-all-enemies-damage-5.match_text,同左
+skill.combatstart-all-enemies-damage-5.text,战斗开始时，对敌方所有随从造成 5 点伤害
+skill.combatstart-all-enemies-minus-1-attack.match_text,同左
+skill.combatstart-all-enemies-minus-1-attack.text,战斗开始时，使敌方所有随从获得 -1 攻击力
+skill.combatstart-if-2-biology-self-plus-2-attack.text,战斗开始时，若你控制至少 2 个生物，获得 +2 攻击力
+skill.combatstart-leftmost-and-adjacent-damage-2.match_text,同左
+skill.combatstart-leftmost-and-adjacent-damage-2.text,战斗开始时，对敌方最左侧随从及其相邻随从造成 2 点伤害
+skill.combatstart-leftmost-damage-3.match_text,同左
+skill.combatstart-leftmost-damage-3.text,战斗开始时，对敌方最左侧随从造成 3 点伤害
+skill.combatstart-leftmost-damage-4.match_text,同左
+skill.combatstart-leftmost-damage-4.text,战斗开始时，对敌方最左侧随从造成 4 点伤害
+skill.combatstart-leftmost-damage-6.match_text,同左
+skill.combatstart-leftmost-damage-6.text,战斗开始时，对敌方最左侧随从造成 6 点伤害
+skill.combatstart-random-enemy-contagion-1.text,战斗开始时，使一个随机敌方随从获得 1 层传染
+skill.combatstart-random-enemy-contagion-2.text,战斗开始时，使一个随机敌方随从获得 2 层传染
+skill.combatstart-random-enemy-damage-2.match_text,战斗开始时，对敌方最左侧随从造成 2 点伤害
+skill.combatstart-random-enemy-damage-2.text,战斗开始时，随机对一个敌方随从造成 2 点伤害
+skill.combatstart-remove-all-human-growth.match_text,同左
+skill.combatstart-remove-all-human-growth.text,战斗开始时，移除所有人类随从的全部成长
+skill.combatstart-remove-top-attack-enemy-growth.match_text,同左
+skill.combatstart-remove-top-attack-enemy-growth.text,战斗开始时，移除敌方攻击力最高随从的全部成长
+skill.combatstart-top-attack-enemy-cant-attack.match_text,同左
+skill.combatstart-top-attack-enemy-cant-attack.text,战斗开始时，使敌方攻击力最高的随从本回合无法攻击
+skill.combatstart-top-attack-enemy-minus-0-minus-2.match_text,同左
+skill.combatstart-top-attack-enemy-minus-0-minus-2.text,战斗开始时，使敌方攻击力最高的随从获得 -0/-2
+skill.deathrattle-all-enemies-contagion-1.text,亡语：使敌方所有随从获得 1 层传染
+skill.deathrattle-all-enemies-humans-minus-2-health.text,亡语：使敌方所有人类随从获得 -2 生命
+skill.deathrattle-all-enemies-minus-1-health.text,亡语：使敌方所有随从获得 -1 生命
+skill.deathrattle-all-friendly-plus-0-plus-1.text,亡语：使你的所有随从获得 +0/+1
+skill.deathrattle-random-enemy-hp-minus-1.text,亡语：使随机一个敌方随从获得 -1 生命值
+skill.deathrattle-random-enemy-minus-1-attack.text,亡语：使随机一个敌方随从获得 -1 攻击力
+skill.deathrattle-random-enemy-minus-1-health.text,亡语：使随机一个敌方随从获得 -1 生命
+skill.deathrattle-summon-2-2-hela-cell-clone.text,亡语：召唤一个 2/2 的海拉细胞（复制体）
+skill.deathrattle-summon-termite.text,亡语：召唤一个 1/2 的白蚁
+skill.division-of-labor.match_text,同左
+skill.division-of-labor.name,分工
+skill.division-of-labor.text,使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次
+skill.efficient-algorithm.match_text,获得的随从固定为当前星级排序第一张
+skill.efficient-algorithm.name,高效算法
+skill.efficient-algorithm.text,刷新商店并获得一张当前星级的随从
+skill.enemy-random-cannot-attack.match_text,同左
+skill.enemy-random-cannot-attack.name,非攻
+skill.enemy-random-cannot-attack.text,使随机一个敌方随从本回合无法攻击
+skill.evolution-discovery.match_text,改为三选一固定池
+skill.evolution-discovery.name,进化
+skill.evolution-discovery.text,发现一张本局启用的流派随从
+skill.faraday-cage.match_text,同左
+skill.faraday-cage.name,法拉第笼
+skill.faraday-cage.text,使一个友方随从获得护盾
+skill.free-refresh.match_text,同左
+skill.free-refresh.name,启航
+skill.free-refresh.text,免费刷新一次商店
+skill.heredity.match_text,同左
+skill.heredity.name,遗传
+skill.heredity.text,使一个友方植物随从获得一次成长
+skill.human-growth-twice.match_text,同左
+skill.human-growth-twice.name,技艺
+skill.human-growth-twice.text,使一个友方人类随从获得两次成长
+skill.invention-factory.match_text,同左
+skill.invention-factory.name,发明工厂
+skill.invention-factory.text,使你的其他机械随从各获得一次成长
+skill.keyword-assemble-1.text,装配 1：进入战场时，使你的其他机械随从各获得 1 次成长
+skill.keyword-assemble-2.text,装配 2：进入战场时，使你的其他机械随从各获得 2 次成长
+skill.keyword-breed-1.text,繁衍 1：回合开始时获得 +1 生命
+skill.keyword-breed-2.text,繁衍 2：回合开始时获得 +2 生命
+skill.keyword-breed-3.text,繁衍 3：回合开始时获得 +3 生命
+skill.keyword-contagion.text,传染：造成伤害后，目标每回合 -1 生命
+skill.keyword-divine-shield.text,护盾：抵消一次伤害
+skill.keyword-evolve.text,进化：从 +2/+2、护盾、复生中选择一个
+skill.keyword-optimal-attack.text,最优攻击：无视嘲讽，优先攻击可被击杀的目标
+skill.keyword-reborn.text,复生：以 1 点生命复活一次
+skill.keyword-sow.text,播种：死亡时召唤一个 1/1 的幼苗
+skill.keyword-taunt.text,嘲讽
+skill.keyword-windfury.text,连击：每回合可攻击两次
+skill.light-speed-strike.match_text,同左
+skill.light-speed-strike.name,光速出击
+skill.light-speed-strike.text,使一个友方随从本回合获得连击
+skill.microbiology.match_text,同左
+skill.microbiology.name,微生物学
+skill.microbiology.text,战斗开始时使敌方最左侧随从获得 1 层传染
+skill.observation.match_text,额外出现的随从固定为当前时代当前星级排序第一张
+skill.observation.name,观测
+skill.observation.text,每回合首次刷新时额外出现一张当前时代的随机随从
+skill.radiation.match_text,战斗开始时，对敌方最左侧随从造成 2 点伤害
+skill.radiation.name,放射
+skill.radiation.text,战斗开始时对随机一个敌方随从造成 2 点伤害
+skill.scholar-growth-twice.match_text,同左
+skill.scholar-growth-twice.name,推演
+skill.scholar-growth-twice.text,使一个友方学者随从获得两次成长
+skill.shout.match_text,同左
+skill.shout.name,呐喊
+skill.shout.text,使一个友方随从获得一次成长
+skill.trigger-2-humans-self-plus-1-attack.text,若你控制至少 2 个人类，获得 +1 攻击力
+skill.trigger-2-humans-self-plus-1-plus-1.text,若你控制至少 2 个人类，获得 +1/+1
+skill.trigger-3-humans-self-plus-1-plus-1.text,若你控制至少 3 个人类，获得 +1/+1
+skill.trigger-3-humans-self-plus-2-attack.text,若你控制至少 3 个人类，获得 +2 攻击力
+skill.trigger-all-friendly-growth-once.match_text,同左
+skill.trigger-all-friendly-growth-once.text,使你的随从各获得一次成长
+skill.trigger-all-friendly-plus-1-plus-1.match_text,同左
+skill.trigger-all-friendly-plus-1-plus-1.text,使你的所有随从获得 +1/+1
+skill.trigger-all-mech-growth-once.match_text,同左
+skill.trigger-all-mech-growth-once.text,使你的机械随从各获得一次成长
+skill.trigger-copy-friendly-minion.match_text,同左
+skill.trigger-copy-friendly-minion.text,复制一个友方随从
+skill.trigger-copy-hand-minion.match_text,同左
+skill.trigger-copy-hand-minion.text,复制你手牌中的一张随从牌
+skill.trigger-discover-tribe-minion.match_text,改为三选一固定池
+skill.trigger-discover-tribe-minion.text,发现一张本局流派的随从
+skill.trigger-enemy-death-self-plus-1-plus-1.text,每当一个敌方随从死亡，获得 +1/+1
+skill.trigger-friendly-biology-play-plus-1-attack.text,每当一个友方生物随从进入战场，获得 +1 攻击力
+skill.trigger-friendly-death-self-plus-1-attack.text,每当一个友方随从死亡，获得 +1 攻击力
+skill.trigger-friendly-evolve-self-plus-1-plus-1.text,每当一个友方随从进化，获得 +1/+1
+skill.trigger-friendly-growth-extra-plus-0-plus-1.text,每当一个友方随从获得成长，它额外获得 +0/+1
+skill.trigger-friendly-growth-self-plus-1-attack.text,每当一个友方随从获得成长，获得 +1 攻击力
+skill.trigger-friendly-growth-thrice.match_text,同左
+skill.trigger-friendly-growth-thrice.text,使一个友方随从获得三次成长
+skill.trigger-friendly-growth-twice.match_text,同左
+skill.trigger-friendly-growth-twice.text,使一个友方随从获得两次成长
+skill.trigger-friendly-human-death-plus-1-plus-1.text,每当一个友方人类随从死亡，获得 +1/+1
+skill.trigger-friendly-human-play-plus-1-attack.text,每当一个友方人类随从进入战场，获得 +1 攻击力
+skill.trigger-friendly-human-taunt-until-turn-end.match_text,同左
+skill.trigger-friendly-human-taunt-until-turn-end.text,使一个友方人类随从获得嘲讽直到回合结束
+skill.trigger-friendly-plant-breed-2.match_text,同左
+skill.trigger-friendly-plant-breed-2.text,使一个友方植物随从获得繁衍 2
+skill.trigger-friendly-plus-0-plus-4-this-turn.match_text,同左
+skill.trigger-friendly-plus-0-plus-4-this-turn.text,使一个友方随从获得 +0/+4 直到回合结束
+skill.trigger-friendly-plus-1-plus-1.match_text,同左
+skill.trigger-friendly-plus-1-plus-1.text,使一个友方随从获得 +1/+1
+skill.trigger-friendly-plus-2-attack-this-turn.match_text,同左
+skill.trigger-friendly-plus-2-attack-this-turn.text,使一个友方随从获得 +2 攻击力直到回合结束
+skill.trigger-friendly-plus-2-attack.match_text,同左
+skill.trigger-friendly-plus-2-attack.text,使一个友方随从获得 +2 攻击力
+skill.trigger-friendly-taunt-until-turn-end.match_text,同左
+skill.trigger-friendly-taunt-until-turn-end.text,使一个友方随从获得嘲讽直到回合结束
+skill.trigger-mech-optimal-attack-this-turn.match_text,同左
+skill.trigger-mech-optimal-attack-this-turn.text,你的机械随从获得最优攻击直到回合结束
+skill.trigger-minion-windfury-this-turn.match_text,同左
+skill.trigger-minion-windfury-this-turn.text,使一个随从本回合获得连击
+skill.trigger-other-friendly-humans-plus-1-attack.match_text,同左
+skill.trigger-other-friendly-humans-plus-1-attack.text,使你的其他人类随从各获得 +1 攻击力
+skill.trigger-play-effect-friendly-plus-0-plus-1.text,每当你使用一张效果牌，使一个友方随从获得 +0/+1
+skill.trigger-turn-start-self-plus-0-plus-1.text,回合开始时获得 +0/+1
+skill.universal-manuscript.match_text,同左
+skill.universal-manuscript.name,万能手稿
+skill.universal-manuscript.text,复制一张你手牌中的随从牌
+skill.virus-growth-once.match_text,同左
+skill.virus-growth-once.name,培养
+skill.virus-growth-once.text,使一个友方病毒随从获得一次成长
+token.hela-cell-token.name,海拉细胞（复制体）
+token.seedling.name,幼苗
+token.synthetic-cell-token.name,合成细胞（幼体）
+ui.common.no_hero,未选英雄
+ui.game.card.freeze_glyph,冻
+ui.game.combat.banner,%s%s · 伤害 %d · 我方 %d vs 对手 %d
+ui.game.combat.draw,平局
+ui.game.combat.ghost_suffix,（幽灵）
+ui.game.combat.lose,失败
+ui.game.combat.opponent_title,对手随从
+ui.game.combat.own_title,我方随从
+ui.game.combat.waiting,等待战斗动作…
+ui.game.combat.win,胜利
+ui.game.detail.alive,存活
+ui.game.detail.cost,费用
+ui.game.detail.cost_value,%d 金
+ui.game.detail.current,当前
+ui.game.detail.eliminated,淘汰
+ui.game.detail.era,时代
+ui.game.detail.hero,英雄
+ui.game.detail.hero_power,英雄技能
+ui.game.detail.hp,生命
+ui.game.detail.initial_stats,原始
+ui.game.detail.minions,随从
+ui.game.detail.not_recruited,未招募
+ui.game.detail.recruit,招募
+ui.game.detail.recruited,已招募
+ui.game.detail.seller,售货员
+ui.game.detail.shop_hint,招募阶段可用：\n购买、刷新、升时代、冻结。
+ui.game.detail.shop_open,商店营业中
+ui.game.detail.status,状态
+ui.game.detail.tribe,部落
+ui.game.detail.type,类型
+ui.game.era_format,时代 %s
+ui.game.hand.empty,手牌为空
+ui.game.hand.title,手牌
+ui.game.overlay.battlecry_hint,选择我方一个随从结算战吼
+ui.game.overlay.battlecry_title,战吼目标
+ui.game.overlay.discover_hint,发现：选择一张卡牌
+ui.game.overlay.evolve_hint,进化：选择一项
+ui.game.overlay.title,待选择
+ui.game.rail.damage,伤害 %d
+ui.game.rail.draw,平
+ui.game.rail.empty,暂无玩家
+ui.game.rail.ghost,幽灵
+ui.game.rail.ghost_named,幽灵（%s）
+ui.game.rail.lose,负
+ui.game.rail.no_report,无战报
+ui.game.rail.turn,第 %d 回合
+ui.game.rail.win,胜
+ui.game.recruit.empty_board_slot,空位
+ui.game.recruit.empty_shop_slot,空槽
+ui.game.recruit.sell_hint,松手出售 +%d 金
+ui.game.side_panel.combat,战斗中
+ui.game.side_panel.eliminated,已淘汰 · 观战中
+ui.game.side_panel.end_recruit,结束招募
+ui.game.side_panel.era,时代
+ui.game.side_panel.era_max,时代已满
+ui.game.side_panel.freeze,冻结
+ui.game.side_panel.ghost,幽灵
+ui.game.side_panel.gold,金币
+ui.game.side_panel.hero_power,英雄技能
+ui.game.side_panel.hero_power_uses,英雄技能（剩 %d）
+ui.game.side_panel.hp,生命
+ui.game.side_panel.hp_line,HP %d/%d · %s · 随从 %d
+ui.game.side_panel.rank,第 %d 名
+ui.game.side_panel.recruited,已结束招募
+ui.game.side_panel.remaining_seconds,剩余 %d 秒
+ui.game.side_panel.reroll,刷新
+ui.game.side_panel.reroll_cost,刷新 %d 金
+ui.game.side_panel.seller,售货员
+ui.game.side_panel.seller_glyph,售
+ui.game.side_panel.turn,第 %d 回合
+ui.game.side_panel.unknown_hero,未知英雄
+ui.game.side_panel.upgrade,升时代
+ui.game.side_panel.upgrade_cost,升时代 %d 金
+ui.game.side_panel.waiting_match,等待配对
+ui.game.side_panel.waiting_settle,等待结算
+ui.game.status.disconnected,未连接 · 正在重连
+ui.game.status.intent_not_sent,未连接，操作未发出
+ui.game.status.reconnecting,正在重连…
+ui.game.status.waiting_view,等待对局状态…
+ui.game.target.cancel,取消
+ui.game.target.hero_power_title,英雄技能目标（可跳过）
+ui.game.target.required,该操作需要目标
+ui.game.target.skip,不指定目标
+ui.game.target.title,选择目标
+ui.lobby.create_room,创建房间
+ui.lobby.creating,正在创建房间…
+ui.lobby.enter_room_code,请输入房间码
+ui.lobby.join,加入
+ui.lobby.join_section,加入已有房间
+ui.lobby.joining,正在加入 %s …
+ui.lobby.logged_in,已登录：%s  %s
+ui.lobby.not_connected,未连接服务器
+ui.lobby.reconnected,连接已恢复
+ui.lobby.room_code_placeholder,6 位房间码
+ui.lobby.title,大厅
+ui.login.authenticating,正在认证…
+ui.login.code,验证码
+ui.login.connecting,正在连接 %s …
+ui.login.default_display_name,玩家A
+ui.login.disconnected,连接已断开，正在自动重连…
+ui.login.display_name,显示名
+ui.login.phone,手机号
+ui.login.server,服务器
+ui.login.submit,登录
+ui.login.subtitle,开发环境登录，验证码固定 123456
+ui.login.title,文明：七时代演进
+ui.result.back_to_lobby,返回大厅
+ui.result.my_place,你的名次：第 %d 名
+ui.result.my_place_unrecorded,你的名次：未记录
+ui.result.place_row,第 %d 名   %s
+ui.result.seed,对局种子：%s
+ui.result.title,对局结束
+ui.room.assigning_hero,正在分配英雄…
+ui.room.candidate_hint,从你的 %d 张候选里选一张，确认后不可更改。
+ui.room.confirm,确认
+ui.room.confirmed,已确认
+ui.room.confirmed_hero,已确认英雄：%s
+ui.room.not_connected,未连接服务器
+ui.room.select_hero,请选择英雄
+ui.room.submitted_hero,已提交英雄：%s
+ui.room.unconfirmed,未确认
+ui.room.waiting_for_players,等待其他玩家加入

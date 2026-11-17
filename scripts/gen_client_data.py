@@ -2,7 +2,7 @@
 """从 v0.1 实体文档生成客户端只读展示表。
 
 只读 docs/versions/v0.1/product 下的实体文档，输出确定性 JSON 到
-client/generated/。客户端只用这些表显示卡名、技能文本与费用，不做规则计算。
+client/generated/。只输出展示费用与规则字段，文本由文本表提供；客户端不做规则计算。
 费用只用于展示：随从购买费用固定 3，效果牌取文档 cost。
 """
 
@@ -25,7 +25,7 @@ MINION_DISPLAY_COST = 3
 
 def _display_card(doc):
     card = gen_card_data.card_entry(doc)
-    card["display_cost"] = MINION_DISPLAY_COST if card["card_type"] == "随从" else card["cost"]
+    card["display_cost"] = MINION_DISPLAY_COST if card["card_type"] == "minion" else card["cost"]
     return card
 
 

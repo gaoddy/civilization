@@ -1,6 +1,6 @@
 ---
 id: keyword-taunt
-keyword: 嘲讽
+keyword: taunt
 text: 嘲讽
 effects: []
 ---

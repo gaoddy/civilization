@@ -1,11 +1,11 @@
 ---
 id: nitrogen-crop
-card_type: 随从
+card_type: minion
 name: 固氮作物
-tribe: 植物
-subtype: 作物
+tribe: plant
+subtype: crop
 level: 5
-era: 未来
+era: future
 attack: 6
 health: 11
 skills: [aura-plant-plus-1-plus-1]

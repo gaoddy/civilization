@@ -1,10 +1,10 @@
 ---
 id: yinshuashu
 name: 印刷术
-card_type: 效果
+card_type: effect
 level: 3
-era: 封建
-tribe: 学者
+era: feudal
+tribe: scholar
 cost: 2
 match_text: 同左
 skills: [trigger-copy-hand-minion]

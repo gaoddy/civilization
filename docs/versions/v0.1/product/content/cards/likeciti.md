@@ -1,11 +1,11 @@
 ---
 id: likeciti
-card_type: 随从
+card_type: minion
 name: 立克次体
-tribe: 病毒
-subtype: 细菌
+tribe: virus
+subtype: bacteria
 level: 3
-era: 现代
+era: modern
 attack: 3
 health: 6
 skills: [keyword-contagion]

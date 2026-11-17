@@ -26,13 +26,10 @@ fn add_card(
         skill_id.clone(),
         Skill {
             id: skill_id.clone(),
-            name: None,
             keyword: keyword.map(str::to_string),
-            text: String::new(),
             effects: effects_of(effects),
             cost: None,
             uses_per_turn: None,
-            match_text: None,
         },
     );
     catalog.cards.insert(
@@ -40,7 +37,6 @@ fn add_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            name: id.to_string(),
             tribe,
             subtype: None,
             level,
@@ -51,7 +47,6 @@ fn add_card(
             is_scholar: tribe == Tribe::Scholar,
             is_hero: false,
             cost: None,
-            match_text: None,
         },
     );
 }
@@ -64,21 +59,21 @@ fn catalog_with_synthetics() -> Catalog {
         "breed2",
         Tribe::Human,
         (1, 1, 2),
-        (Some("繁衍 2"), "[]"),
+        (Some("breed 2"), "[]"),
     );
     add_card(
         &mut catalog,
         "breed1",
         Tribe::Human,
         (1, 1, 2),
-        (Some("繁衍 1"), "[]"),
+        (Some("breed 1"), "[]"),
     );
     add_card(
         &mut catalog,
         "scholar-breed",
         Tribe::Scholar,
         (1, 0, 4),
-        (Some("繁衍 2"), "[]"),
+        (Some("breed 2"), "[]"),
     );
     add_card(
         &mut catalog,
@@ -106,7 +101,7 @@ fn catalog_with_synthetics() -> Catalog {
         "contagious",
         Tribe::Human,
         (1, 1, 100),
-        (Some("传染"), "[]"),
+        (Some("contagion"), "[]"),
     );
     add_card(
         &mut catalog,
@@ -755,7 +750,7 @@ fn ghost_combat_writes_back_attacker_only() {
         "ghost-contagious",
         Tribe::Human,
         (1, 1, 20),
-        (Some("传染"), "[]"),
+        (Some("contagion"), "[]"),
     );
     let (mut engine, mut state) = Engine::new(catalog, [3u8; 32]);
     state.phase = Phase::Combat;

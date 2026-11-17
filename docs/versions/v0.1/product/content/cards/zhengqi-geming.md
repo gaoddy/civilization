@@ -1,10 +1,10 @@
 ---
 id: zhengqi-geming
 name: 蒸汽革命
-card_type: 效果
+card_type: effect
 level: 5
-era: 工业
-tribe: 通用
+era: industrial
+tribe: general
 cost: 3
 match_text: 同左
 skills: [trigger-all-friendly-plus-1-plus-1]

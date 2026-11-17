@@ -1,11 +1,11 @@
 ---
 id: menghu
-card_type: 随从
+card_type: minion
 name: 猛虎
-tribe: 生物
-subtype: 哺乳
+tribe: biology
+subtype: mammal
 level: 3
-era: 原始
+era: primitive
 attack: 5
 health: 4
 skills: [keyword-evolve]

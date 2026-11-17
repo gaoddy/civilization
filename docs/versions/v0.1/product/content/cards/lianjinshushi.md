@@ -1,11 +1,11 @@
 ---
 id: lianjinshushi
-card_type: 随从
+card_type: minion
 name: 炼金术士
-tribe: 学者
-subtype: 化学
+tribe: scholar
+subtype: chemistry
 level: 3
-era: 原始
+era: primitive
 attack: 0
 health: 9
 skills: [battlecry-friendly-growth-scholar-twice]

@@ -1,3 +1,5 @@
 # Godot 导入缓存
 .godot/
 *.uid
+text/*.translation
+text/*.csv.import

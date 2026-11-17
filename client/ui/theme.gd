@@ -136,13 +136,13 @@ const SCENARIO := {
 }
 
 const TRIBE_COLOR := {
-	"人类": "blue-400",
-	"学者": "purple-400",
-	"机械": "slate-400",
-	"生物": "green-400",
-	"病毒": "rose-400",
-	"植物": "lime-400",
-	"通用": "sand-400",
+	"human": "blue-400",
+	"scholar": "purple-400",
+	"machine": "slate-400",
+	"biology": "green-400",
+	"virus": "rose-400",
+	"plant": "lime-400",
+	"general": "sand-400",
 }
 
 # ── 取值入口 ──────────────────────────────────────────────────────────────

@@ -1,11 +1,11 @@
 ---
 id: ganlanshu
-card_type: 随从
+card_type: minion
 name: 橄榄树
-tribe: 植物
-subtype: 作物
+tribe: plant
+subtype: crop
 level: 2
-era: 古典
+era: classical
 attack: 2
 health: 4
 skills: [keyword-sow]

@@ -1,11 +1,11 @@
 ---
 id: robot-dog
-card_type: 随从
+card_type: minion
 name: 机器狗
-tribe: 机械
-subtype: 机器人
+tribe: machine
+subtype: robot
 level: 3
-era: 现代
+era: modern
 attack: 4
 health: 5
 skills: [keyword-optimal-attack]

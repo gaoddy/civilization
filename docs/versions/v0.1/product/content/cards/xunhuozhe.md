@@ -1,11 +1,11 @@
 ---
 id: xunhuozhe
-card_type: 随从
+card_type: minion
 name: 驯火者
-tribe: 人类
-subtype: 原始
+tribe: human
+subtype: primitive
 level: 2
-era: 史前
+era: prehistoric
 attack: 2
 health: 4
 skills: [battlecry-other-friendly-humans-plus-1-attack]

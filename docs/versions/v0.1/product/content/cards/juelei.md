@@ -1,11 +1,11 @@
 ---
 id: juelei
-card_type: 随从
+card_type: minion
 name: 蕨类
-tribe: 植物
-subtype: 蕨类
+tribe: plant
+subtype: fern
 level: 2
-era: 史前
+era: prehistoric
 attack: 2
 health: 4
 skills: [keyword-sow, keyword-breed-2]

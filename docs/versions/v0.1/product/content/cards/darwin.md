@@ -1,11 +1,11 @@
 ---
 id: darwin
-card_type: 随从
+card_type: minion
 name: 达尔文
-tribe: 学者
-subtype: 生物
+tribe: scholar
+subtype: organism
 level: 5
-era: 现代
+era: modern
 attack: 0
 health: 16
 skills: [aura-biology-plus-1-plus-1, evolution-discovery]

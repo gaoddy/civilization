@@ -298,7 +298,6 @@ def card_entry(doc):
     return {
         "id": doc["id"],
         "card_type": doc["card_type"],
-        "name": doc["name"],
         "tribe": doc["tribe"],
         "subtype": doc.get("subtype"),
         "level": doc["level"],
@@ -309,32 +308,27 @@ def card_entry(doc):
         "is_scholar": doc.get("is_scholar", False),
         "is_hero": doc.get("is_hero", False),
         "cost": doc.get("cost"),
-        "match_text": doc.get("match_text"),
     }
 
 
 def skill_entry(doc):
     return {
         "id": doc["id"],
-        "name": doc.get("name"),
         "keyword": doc.get("keyword"),
-        "text": doc["text"],
         "effects": structured_effects(doc["effects"]),
         "cost": doc.get("cost"),
         "uses_per_turn": doc.get("uses_per_turn"),
-        "match_text": doc.get("match_text"),
     }
 
 
-def parse_tokens(path):
-    """解析 tokens/README.md 的「## 2. 注册表」表格。"""
+def _token_rows(path):
+    """解析 tokens/README.md 的「## 2. 注册表」表格，逐行产出单元格。"""
     text = path.read_text(encoding="utf-8")
     marker = "## 2. 注册表"
     if marker not in text:
         raise ValueError(f"{path.name}: 缺少「{marker}」小节")
     rest = text.split(marker, 1)[1]
     section = rest.split("\n## ", 1)[0]
-    tokens = []
     for line in section.splitlines():
         line = line.strip()
         if not line.startswith("|"):
@@ -344,15 +338,29 @@ def parse_tokens(path):
             continue
         if set(cells[0]) <= {"-"} or cells[0] == "id":
             continue
-        name, attack, health, keywords = cells[1], cells[2], cells[3], cells[4]
+        yield cells
+
+
+def parse_tokens(path):
+    """从 tokens/README.md 生成规则字段；展示名由 `parse_token_names` 提供。"""
+    tokens = []
+    for cells in _token_rows(path):
+        attack, health, keywords = cells[2], cells[3], cells[4]
         tokens.append({
             "id": cells[0].strip("`"),
-            "name": name,
             "attack": int(attack),
             "health": int(health),
             "keywords": [] if keywords == "无" else keywords.split("、"),
         })
     return sorted(tokens, key=lambda token: token["id"])
+
+
+def parse_token_names(path):
+    """从 tokens/README.md 读取 token id 到展示名的映射，供文本表使用。"""
+    return {
+        cells[0].strip("`"): cells[1]
+        for cells in _token_rows(path)
+    }
 
 
 def build(root):

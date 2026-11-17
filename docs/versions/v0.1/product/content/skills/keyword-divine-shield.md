@@ -1,6 +1,6 @@
 ---
 id: keyword-divine-shield
-keyword: 护盾
+keyword: divine_shield
 text: 护盾：抵消一次伤害
 effects: []
 ---

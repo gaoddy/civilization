@@ -96,7 +96,7 @@ func refresh(state: GameUiState) -> void:
 
 ## 出售悬停提示由页面回调转入：松手返还金额来自拖拽数据。
 func set_sell_hint(hovering: bool, refund: int) -> void:
-    _sell_hint.text = "松手出售 +%d 金" % refund
+    _sell_hint.text = tr("ui.game.recruit.sell_hint") % refund
     _sell_hint.visible = hovering
 
 
@@ -131,7 +131,7 @@ func _empty_slot() -> PanelContainer:
     # 让棋盘容器收不到落点；空位本身不交互，直接放行。
     panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
     panel.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
-    var hint := UI.empty_hint("空位")
+    var hint := UI.empty_hint(tr("ui.game.recruit.empty_board_slot"))
     hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     panel.add_child(hint)
     return panel
@@ -205,7 +205,7 @@ func _refresh_shop(state: GameUiState) -> void:
             GameCardFace.tribe_text(entry),
             "",
             str(CardDB.display_cost(card_id)),
-            str(entry.get("era", "")),
+            UI.enum_text("era", str(entry.get("era", ""))),
             bool(slot.get("frozen", false)),
         ))
         if detail != null:
@@ -224,7 +224,7 @@ func _empty_shop_slot(index: int) -> PanelContainer:
     panel.name = "ShopSlot%d" % index
     panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
     panel.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
-    var hint := UI.empty_hint("空槽")
+    var hint := UI.empty_hint(tr("ui.game.recruit.empty_shop_slot"))
     hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     panel.add_child(hint)
     return panel

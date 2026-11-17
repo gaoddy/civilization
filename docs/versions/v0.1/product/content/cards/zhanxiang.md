@@ -1,11 +1,11 @@
 ---
 id: zhanxiang
-card_type: 随从
+card_type: minion
 name: 战象
-tribe: 生物
-subtype: 猛兽
+tribe: biology
+subtype: beast
 level: 3
-era: 古典
+era: classical
 attack: 5
 health: 7
 skills: [keyword-taunt]

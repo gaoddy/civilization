@@ -1,11 +1,11 @@
 ---
 id: luxun
-card_type: 随从
+card_type: minion
 name: 鲁迅
-tribe: 学者
-subtype: 文学
+tribe: scholar
+subtype: literature
 level: 5
-era: 现代
+era: modern
 attack: 0
 health: 16
 skills: [shout]

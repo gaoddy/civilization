@@ -1,11 +1,11 @@
 ---
 id: telephone
-card_type: 随从
+card_type: minion
 name: 电话机
-tribe: 机械
-subtype: 通讯
+tribe: machine
+subtype: telecommunication
 level: 4
-era: 现代
+era: modern
 attack: 6
 health: 7
 skills: [keyword-assemble-1]

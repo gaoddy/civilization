@@ -1,11 +1,11 @@
 ---
 id: linnaeus
-card_type: 随从
+card_type: minion
 name: 林奈
-tribe: 学者
-subtype: 生物学
+tribe: scholar
+subtype: biology
 level: 4
-era: 封建
+era: feudal
 attack: 0
 health: 12
 skills: [battlecry-all-biology-growth-once]

@@ -1,11 +1,11 @@
 ---
 id: von-neumann
-card_type: 随从
+card_type: minion
 name: 冯·诺依曼
-tribe: 学者
-subtype: 数学
+tribe: scholar
+subtype: mathematics
 level: 5
-era: 未来
+era: future
 attack: 0
 health: 16
 skills: [battlecry-friendly-growth-twice]

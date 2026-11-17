@@ -1,11 +1,11 @@
 ---
 id: artificial-womb
-card_type: 随从
+card_type: minion
 name: 人造子宫
-tribe: 生物
-subtype: 医疗
+tribe: biology
+subtype: medical
 level: 5
-era: 未来
+era: future
 attack: 6
 health: 12
 skills: [battlecry-summon-3-3-synthetic-cell]

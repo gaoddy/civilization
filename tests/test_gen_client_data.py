@@ -26,7 +26,7 @@ class GenClientDataTest(unittest.TestCase):
     def test_display_cost(self):
         cards = json.loads(gen_client_data.build(ROOT)["cards.json"])
         for card in cards:
-            if card["card_type"] == "随从":
+            if card["card_type"] == "minion":
                 self.assertEqual(card["display_cost"], 3, card["id"])
             else:
                 self.assertIsInstance(card["display_cost"], int, card["id"])

@@ -1,11 +1,11 @@
 ---
 id: godel
-card_type: 随从
+card_type: minion
 name: 库尔特·哥德尔
-tribe: 学者
-subtype: 数学
+tribe: scholar
+subtype: mathematics
 level: 6
-era: 未来
+era: future
 attack: 0
 health: 20
 skills: [aura-all-plus-0-plus-2]

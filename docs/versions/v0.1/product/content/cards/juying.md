@@ -1,11 +1,11 @@
 ---
 id: juying
-card_type: 随从
+card_type: minion
 name: 巨鹰
-tribe: 生物
-subtype: 鸟类
+tribe: biology
+subtype: bird
 level: 2
-era: 史前
+era: prehistoric
 attack: 3
 health: 4
 skills: [trigger-friendly-death-self-plus-1-attack]

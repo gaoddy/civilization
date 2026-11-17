@@ -1,11 +1,11 @@
 ---
 id: tufu
-card_type: 随从
+card_type: minion
 name: 屠夫
-tribe: 人类
-subtype: 原始
+tribe: human
+subtype: primitive
 level: 2
-era: 史前
+era: prehistoric
 attack: 3
 health: 4
 is_scholar: false

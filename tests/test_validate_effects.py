@@ -81,7 +81,7 @@ class ParseEffectsTest(unittest.TestCase):
     def test_until_turn_end_suffix_does_not_skip_prefix_check(self):
         errors = vd.check_text_trigger(
             "战吼：使一个友方随从获得嘲讽直到回合结束",
-            "OnDeath|GrantKeyword|friendly:single|keyword=嘲讽,duration=combat",
+            "OnDeath|GrantKeyword|friendly:single|keyword=taunt,duration=combat",
         )
         self.assertTrue(errors)
 
@@ -91,12 +91,12 @@ class ParseEffectsTest(unittest.TestCase):
         self.assertTrue(any("选取" in e for e in errors))
 
     def test_unknown_filter_key_rejected(self):
-        effects, errors = vd.parse_effects("OnPlay|Growth|friendly:all:tirbe=机械|times=1")
+        effects, errors = vd.parse_effects("OnPlay|Growth|friendly:all:tirbe=machine|times=1")
         self.assertEqual(effects, [])
         self.assertTrue(any("筛选" in e for e in errors))
 
     def test_unknown_filter_value_rejected(self):
-        effects, errors = vd.parse_effects("OnPlay|Growth|friendly:all:tribe=龙|times=1")
+        effects, errors = vd.parse_effects("OnPlay|Growth|friendly:all:tribe=dragon|times=1")
         self.assertEqual(effects, [])
         self.assertTrue(any("tribe" in e for e in errors))
 
@@ -116,7 +116,7 @@ class ParseEffectsTest(unittest.TestCase):
         self.assertTrue(any("重复" in e for e in errors))
 
     def test_unknown_keyword_value_rejected(self):
-        effects, errors = vd.parse_effects("OnPlay|GrantKeyword|friendly:all|keyword=不存在,duration=permanent")
+        effects, errors = vd.parse_effects("OnPlay|GrantKeyword|friendly:all|keyword=nonexistent,duration=permanent")
         self.assertEqual(effects, [])
         self.assertTrue(any("keyword" in e for e in errors))
 
@@ -127,13 +127,13 @@ class ParseEffectsTest(unittest.TestCase):
 
     def test_bad_condition_rejected(self):
         effects, errors = vd.parse_effects(
-            "ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:人类:>=2"
+            "ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:human:>=2"
         )
         self.assertEqual(effects, [])
         self.assertTrue(any("condition" in e for e in errors))
 
     def test_copy_accepts_card_type_filter(self):
-        effects, errors = vd.parse_effects("OnPlayEffect|Copy|self|from=hand,type=随从,to=hand")
+        effects, errors = vd.parse_effects("OnPlayEffect|Copy|self|from=hand,type=minion,to=hand")
         self.assertEqual(errors, [])
         self.assertEqual(len(effects), 1)
 

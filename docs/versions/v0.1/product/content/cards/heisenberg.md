@@ -1,11 +1,11 @@
 ---
 id: heisenberg
-card_type: 随从
+card_type: minion
 name: 海森堡
-tribe: 学者
-subtype: 量子
+tribe: scholar
+subtype: quantum
 level: 7
-era: 未来
+era: future
 attack: 0
 health: 26
 skills: [keyword-reborn, deathrattle-all-enemies-minus-1-health]

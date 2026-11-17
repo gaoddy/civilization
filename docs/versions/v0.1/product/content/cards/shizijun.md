@@ -1,11 +1,11 @@
 ---
 id: shizijun
-card_type: 随从
+card_type: minion
 name: 十字军
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 5
-era: 封建
+era: feudal
 attack: 7
 health: 9
 skills: [keyword-taunt, trigger-friendly-human-death-plus-1-plus-1]
