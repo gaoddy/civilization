@@ -375,11 +375,12 @@ func _check_game() -> void:
     # 时代名展示已随顶栏删除迁到右栏英雄段：顶栏删除由 ui_smoke_side 覆盖，
     # 座位行不再显示时代、悬停详情才显示时代由 ui_smoke_seats 覆盖。
     var side_hero = instance.find_child("SideHero", true, false)
-    _expect(
-        side_hero != null and _node_text(side_hero).contains("时代 原始"),
-        "右栏英雄段应显示具体时代名（自我时代 2 → 原始），实际：%s"
-            % ("缺失" if side_hero == null else _node_text(side_hero))
-    )
+    var side_hero_text := "缺失" if side_hero == null else _node_text(side_hero)
+    for text in ["生命", "35/40", "时代", "原始", "金币", "6"]:
+        _expect(
+            side_hero != null and side_hero_text.contains(text),
+            "右栏英雄段应显示「%s」，实际：%s" % [text, side_hero_text],
+        )
     # 重新显示详情，再打开选择浮层，确认浮层会隐藏详情层。
     if detail != null and card != null:
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
@@ -436,6 +437,10 @@ func _check_game_layout() -> void:
     var hand = instance.find_child("HandPanel", true, false)
     _expect(shop != null and shop.get_parent() == recruit, "商店应位于招募中区")
     _expect(board_panel != null and board_panel.get_parent() == recruit, "我方棋盘应位于招募中区")
+    if shop != null:
+        _expect(not _node_text(shop).contains("商店"), "商店面板不再显示标题")
+    if board_panel != null:
+        _expect(not _node_text(board_panel).contains("我方棋盘"), "棋盘面板不再显示标题")
     var center = instance.find_child("CenterPanel", true, false)
     _expect(hand != null and hand.get_parent() == center, "手牌应位于中区（招募与战斗共用）")
     if shop != null and board_panel != null:
@@ -451,7 +456,7 @@ func _check_game_layout() -> void:
     var shop_text := _node_text(shop_zero) if shop_zero != null else ""
     _expect(shop_text.contains("学者"), "商店卡应显示卡牌类型：%s" % shop_text)
     _expect(shop_text.contains("9"), "商店卡应显示原始生命值：%s" % shop_text)
-    _expect(instance.find_child("HeroTile", true, false) != null, "右栏应显示我的英雄卡")
+    _expect(instance.find_child("HeroPortrait", true, false) != null, "右栏应显示我的英雄大图")
     instance.queue_free()
     GameStore.view = {}
     _clear_combat()
@@ -706,7 +711,7 @@ func _check_combat_placeholder_cleared() -> void:
     GameStore.deadline = ""
 
 
-## 棋盘容量取视图：空位数量与提示跟随 `boardSlots`，满场判定用同一数值。
+## 棋盘容量取视图：空位数量跟随 `boardSlots`，满场判定用同一数值。
 func _check_board_capacity_from_view() -> void:
     GameStore.player_id = "p0"
     GameStore.phase = "Recruit"
@@ -727,10 +732,9 @@ func _check_board_capacity_from_view() -> void:
     if instance == null:
         return
     var board_row = instance.find_child("BoardRow", true, false)
-    var hint = instance.find_child("BoardHint", true, false)
     _expect(board_row != null and board_row.get_child_count() == 5,
         "容量为 5 时棋盘应有 5 个槽位，实际 %s" % ("null" if board_row == null else str(board_row.get_child_count())))
-    _expect(hint != null and str(hint.text) == "随从 2/5", "提示应取视图容量：%s" % ("null" if hint == null else hint.text))
+    _expect(instance.find_child("BoardHint", true, false) == null, "棋盘不再显示「随从 x/x」提示")
     _expect(board_row != null and not board_row.board_full, "2/5 不应判定为满场")
 
     # 同一视图改成满场：槽位数量与满场标记都跟着容量走。
@@ -741,7 +745,6 @@ func _check_board_capacity_from_view() -> void:
     GameStore.view = view
     GameStore.view_changed.emit()
     await get_tree().process_frame
-    _expect(hint != null and str(hint.text) == "随从 5/5", "满场提示应取视图容量：%s" % ("null" if hint == null else hint.text))
     _expect(board_row != null and board_row.board_full, "5/5 应判定为满场")
     _expect(board_row != null and board_row.get_child_count() == 5,
         "满场时不应再追加空位，实际 %s" % ("null" if board_row == null else str(board_row.get_child_count())))
@@ -868,6 +871,9 @@ func _check_hand_drag_emits_position() -> void:
     )
     var hand_card = instance.find_child("HandCard0", true, false)
     _expect(hand_card != null, "对局场景缺少 HandCard0")
+    if hand_card != null:
+        _expect(hand_card.find_child("CardFace", true, false) != null, "手牌卡应使用统一卡面")
+        _expect(hand_card.find_child("CardName", true, false) != null, "手牌卡面应显示卡名")
     var board_row = instance.find_child("BoardRow", true, false)
     _expect(board_row != null, "对局场景缺少 BoardRow")
     if hand_card != null and board_row != null:

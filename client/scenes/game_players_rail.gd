@@ -14,7 +14,11 @@ var _last_state: GameUiState
 ## 同页面的详情层，由页面注入；悬停座位行时登记。
 var detail: GameDetailLayer = null
 
+## 战报浮层，由页面注入；展开战报时挂在全屏层上，允许覆盖其他 UI。
+var report_layer: Control = null
+
 var _rail: VBoxContainer
+var _report_panel: PanelContainer
 
 
 func _init() -> void:
@@ -29,12 +33,19 @@ func _init() -> void:
     scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
     scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
     box.add_child(scroll)
+    scroll.get_v_scroll_bar().value_changed.connect(_on_scroll_changed)
 
     _rail = VBoxContainer.new()
     _rail.name = "PlayersRail"
     _rail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _rail.add_theme_constant_override("separation", UITheme.space("space-xs"))
     scroll.add_child(_rail)
+
+    _report_panel = UI.card_panel("raised")
+    _report_panel.name = "SeatReportPanel"
+    _report_panel.custom_minimum_size = Vector2(UITheme.metric("report-width"), 0)
+    _report_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+    _report_panel.visible = false
 
 
 func refresh(state: GameUiState) -> void:
@@ -43,6 +54,7 @@ func refresh(state: GameUiState) -> void:
     var players: Array = _sorted_players(state.view)
     if players.is_empty():
         _expanded_player_id = ""
+        _hide_report()
         _rail.add_child(UI.empty_hint("暂无玩家"))
         return
     # 记住的 id 在新视图里找不到就清空，否则保持展开。
@@ -50,6 +62,7 @@ func refresh(state: GameUiState) -> void:
         _expanded_player_id = ""
     for player in players:
         _rail.add_child(_seat_row(player, state))
+    _sync_report()
 
 
 func _sorted_players(view: Dictionary) -> Array:
@@ -109,9 +122,6 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     hp.name = "SeatHpBar"
     box.add_child(hp)
 
-    if player_id == _expanded_player_id:
-        box.add_child(_report_block(player, state.view))
-
     _track_detail(panel, player, state.hp_cap)
     return panel
 
@@ -133,6 +143,87 @@ func _rebuild() -> void:
     if _last_state == null or not is_inside_tree():
         return
     refresh(_last_state)
+
+
+## 战报不占左栏宽度：展开时放进全屏浮层，右侧可覆盖中区与右栏。
+func _sync_report() -> void:
+    if (
+        report_layer == null
+        or _last_state == null
+        or _expanded_player_id == ""
+    ):
+        _hide_report()
+        return
+    var player := _find_player(_expanded_player_id)
+    if player.is_empty():
+        _hide_report()
+        return
+    if detail != null and is_instance_valid(detail):
+        detail.report_open = true
+        detail.hide_panel()
+    if _report_panel.get_parent() == null:
+        report_layer.add_child(_report_panel)
+    UI.clear(_report_panel)
+    _report_panel.add_child(_report_block(player, _last_state.view))
+    _report_panel.visible = true
+    call_deferred("_position_report")
+
+
+func _hide_report() -> void:
+    if _report_panel == null:
+        return
+    UI.clear(_report_panel)
+    _report_panel.visible = false
+    if detail != null and is_instance_valid(detail):
+        detail.report_open = false
+
+
+func _position_report() -> void:
+    if _report_panel == null or not _report_panel.visible or report_layer == null:
+        return
+    var row := _find_row(_expanded_player_id)
+    if row == null:
+        _hide_report()
+        return
+    var panel_size := _report_panel.get_combined_minimum_size()
+    _report_panel.size = panel_size
+    var layer_rect := report_layer.get_global_rect()
+    var margin := UITheme.space("space-xs")
+    var gap := UITheme.space("space-sm")
+    var row_rect := row.get_global_rect()
+    var position := Vector2(row_rect.end.x + gap, row_rect.position.y)
+    position.x = clampf(
+        position.x,
+        margin,
+        maxf(margin, layer_rect.size.x - panel_size.x - margin)
+    )
+    position.y = clampf(
+        position.y,
+        margin,
+        maxf(margin, layer_rect.size.y - panel_size.y - margin)
+    )
+    _report_panel.position = position - layer_rect.position
+
+
+func _on_scroll_changed(_value: float) -> void:
+    if _report_panel != null and _report_panel.visible:
+        call_deferred("_position_report")
+
+
+func _find_row(player_id: String) -> Control:
+    for child in _rail.get_children():
+        if child is Control and str(child.get_meta("player_id", "")) == player_id:
+            return child
+    return null
+
+
+func _find_player(player_id: String) -> Dictionary:
+    if _last_state == null:
+        return {}
+    for player in _last_state.view.get("players", []):
+        if str(player.get("playerId", "")) == player_id:
+            return player
+    return {}
 
 
 ## 该座位参与过的战报；没有条目时显示「无战报」。
@@ -212,6 +303,11 @@ func _entry_text(entry: Dictionary, player_id: String, names: Dictionary) -> Str
 func _report_line(text: String) -> Label:
     var line := UI.label(text, UITheme.font_size("font-caption"), false)
     line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    line.custom_minimum_size = Vector2(
+        UITheme.metric("report-width") - UITheme.space("space-lg") * 2,
+        0,
+    )
+    line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     line.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
     return line
 

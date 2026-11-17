@@ -1,6 +1,6 @@
 class_name GameDetailLayer
 extends Control
-## 随从详情浮层：覆盖全屏但不拦截输入，层级位于选择浮层之上。
+## 随从详情浮层：覆盖全屏但不拦截输入，层级位于内容与战报之上、选择浮层之下。
 ##
 ## 卡片通过 `track()` 登记，本层用 `_input` 做跨子控件的矩形命中判断；
 ## 模态浮层打开时由页面把 `blocked` 置真，本层直接隐藏且不再响应悬停。
@@ -18,10 +18,14 @@ const DETAIL_SIDES := {
     "shop": ["right", "left"],
     "seat": ["right", "left"],
     "minion": ["bottom", "top"],
+    "seller": ["bottom", "top"],
+    "hero": ["left", "right"],
 }
 
 ## 模态浮层打开时置真：详情层会盖住浮层内容，直接隐藏且不再响应悬停。
 var blocked := false
+## 左栏战报浮层打开时置真：战报优先，悬停详情不再抢占画面。
+var report_open := false
 
 var _panel: PanelContainer
 var _cards: Array = []
@@ -99,7 +103,7 @@ func _canvas_point(viewport_point: Vector2) -> Vector2:
 
 func _update_detail_hover(point: Vector2) -> void:
     # 模态浮层打开时详情层会盖住浮层内容，直接隐藏且不再响应悬停。
-    if blocked:
+    if blocked or report_open:
         hide_panel()
         return
     var found: Control = null
@@ -117,6 +121,8 @@ func _update_detail_hover(point: Vector2) -> void:
 
 
 func _show_detail(data: Dictionary, anchor: Control) -> void:
+    if blocked or report_open:
+        return
     if _panel == null or anchor == null or not is_instance_valid(anchor):
         return
     var kind := str(data.get("detail_kind", "minion"))
@@ -137,6 +143,10 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
         _render_shop_detail(box, data)
     elif kind == "seat":
         _render_seat_detail(box, data.get("player", {}), int(data.get("hpCap", 0)))
+    elif kind == "seller":
+        _render_seller_detail(box)
+    elif kind == "hero":
+        _render_hero_detail(box, data.get("heroId"))
     else:
         _render_minion_detail(box, data.get("minion", {}))
 
@@ -184,6 +194,44 @@ func _render_seat_detail(box: VBoxContainer, player: Dictionary, hp_cap: int) ->
     box.add_child(_detail_row("状态", "存活" if alive else "淘汰"))
     if alive:
         box.add_child(_detail_row("招募", "已招募" if bool(player.get("recruited", false)) else "未招募"))
+
+
+## 售货员详情：营业状态与可执行的商店操作，替代常驻文字。
+func _render_seller_detail(box: VBoxContainer) -> void:
+    box.add_child(_detail_name("售货员"))
+    box.add_child(_detail_row("状态", "商店营业中"))
+    var hint := UI.label(
+        "招募阶段可用：\n购买、刷新、升时代、冻结。",
+        UITheme.font_size("font-body-sm"),
+    )
+    hint.custom_minimum_size = Vector2(_detail_text_width(), 0)
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    hint.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+    box.add_child(hint)
+
+
+## 我方英雄详情：部落、时代与英雄技能，替代常驻技能文本。
+func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
+    var id := "" if hero_id == null else str(hero_id)
+    box.add_child(_detail_name(CardDB.display_name(id)))
+    var entry := CardDB.card(id)
+    var tribe := str(entry.get("tribe", ""))
+    var era := str(entry.get("era", ""))
+    if tribe != "":
+        box.add_child(_detail_row("部落", tribe))
+    if era != "":
+        box.add_child(_detail_row("时代", era))
+    var skill_text := CardDB.display_text(id)
+    if skill_text == "":
+        return
+    var heading := UI.label("英雄技能", UITheme.font_size("font-caption"), false)
+    heading.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    box.add_child(heading)
+    var skill := UI.label(skill_text, UITheme.font_size("font-body-sm"))
+    skill.custom_minimum_size = Vector2(_detail_text_width(), 0)
+    skill.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    skill.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+    box.add_child(skill)
 
 
 ## 棋盘随从详情：名称与攻击/生命的构成分层。

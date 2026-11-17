@@ -47,8 +47,10 @@ var _hand_row: HFlowContainer
 var _side_panel: GameSidePanel
 
 var _overlay: Control
+# 左栏战报浮层：位于详情层之上、选择浮层之下，允许覆盖中区与右栏。
+var _report_layer: Control
 
-# 随从详情：覆盖全屏但不拦截输入，层级位于选择浮层之上。
+# 随从详情：覆盖全屏但不拦截输入，层级位于内容与战报之上、选择浮层之下。
 var _detail: GameDetailLayer
 
 
@@ -92,6 +94,9 @@ func _build() -> void:
     _side_panel = GameSidePanel.new()
     _side_panel.hero_power_pressed.connect(_on_hero_power)
     _side_panel.end_recruit_pressed.connect(_on_end_recruit)
+    _side_panel.reroll_pressed.connect(_on_reroll)
+    _side_panel.upgrade_pressed.connect(_on_upgrade)
+    _side_panel.freeze_pressed.connect(_on_freeze)
     body.add_child(_side_panel)
 
     _status = UI.label("", UITheme.font_size("font-body-sm"))
@@ -99,15 +104,23 @@ func _build() -> void:
     _status.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
     root.add_child(_status)
 
+    _detail = GameDetailLayer.new()
+    add_child(_detail)
+    _players_panel.detail = _detail
+    _side_panel.detail = _detail
+
+    _report_layer = Control.new()
+    _report_layer.name = "ReportLayer"
+    _report_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _report_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(_report_layer)
+    _players_panel.report_layer = _report_layer
+
     _overlay = Control.new()
     _overlay.name = "ChooserOverlay"
     _overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
     _overlay.visible = false
     add_child(_overlay)
-
-    _detail = GameDetailLayer.new()
-    add_child(_detail)
-    _players_panel.detail = _detail
     _recruit_view.detail = _detail
     _combat_view.detail = _detail
 
@@ -120,9 +133,6 @@ func _build_center() -> Control:
     center.add_theme_constant_override("separation", UITheme.space("space-md"))
     _recruit_view = GameRecruitView.new()
     _recruit_view.buy.connect(_on_buy)
-    _recruit_view.reroll_pressed.connect(_on_reroll)
-    _recruit_view.upgrade_pressed.connect(_on_upgrade)
-    _recruit_view.freeze_pressed.connect(_on_freeze)
     _recruit_view.board_dropped.connect(_on_board_dropped)
     _recruit_view.sell_dropped.connect(_on_sell_dropped)
     _recruit_view.sell_hover.connect(_on_sell_hover)
@@ -259,29 +269,25 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
         var index := int(card.get("index", 0))
         var card_id := str(card.get("cardId", ""))
         var playable := bool(card.get("playable", false))
-        var card_kind := "minion" if str(CardDB.card(card_id).get("card_type", "")) == "随从" else "effect"
+        var entry_data := CardDB.card(card_id)
+        var card_kind := "minion" if str(entry_data.get("card_type", "")) == "随从" else "effect"
         var entry := HandCard.new()
         entry.name = "HandCard%d" % index
         entry.custom_minimum_size = Vector2(UITheme.metric("hand-card-width"), UITheme.metric("hand-card-height"))
+        entry.add_theme_stylebox_override("panel", UITheme.panel_style("raised-tight"))
         entry.tooltip_text = CardDB.display_text(card_id)
         if card.get("disabledReason") != null:
             entry.tooltip_text = UI.error_text(str(card.get("disabledReason")))
 
-        var box := VBoxContainer.new()
-        box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-        box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        entry.add_child(box)
-        var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-body-sm"), false)
-        name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        name_label.max_lines_visible = 2
-        name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-        box.add_child(name_label)
-        var text_label := UI.label(CardDB.display_text(card_id), UITheme.font_size("font-caption"), false)
-        text_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        text_label.max_lines_visible = 4
-        text_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-        text_label.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-        box.add_child(text_label)
+        entry.add_child(GameCardFace.face(
+            card_id,
+            GameCardFace.stat_text(entry_data.get("attack")),
+            GameCardFace.stat_text(entry_data.get("health")),
+            GameCardFace.tribe_text(entry_data),
+            "",
+            str(CardDB.display_cost(card_id)),
+            str(entry_data.get("era", "")),
+        ))
 
         entry.payload = {
             "epoch": _view_epoch,

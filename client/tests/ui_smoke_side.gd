@@ -4,6 +4,7 @@ extends "res://tests/smoke_case.gd"
 
 func _ready() -> void:
     await _check_recruit_identity()
+    await _check_countdown_flip()
     await _check_combat_identity()
     await _check_eliminated_identity()
     await _check_ghost_identity()
@@ -58,8 +59,96 @@ func _check_recruit_identity() -> void:
     var identity = instance.find_child("SideIdentity", true, false)
     _expect(identity != null, "右栏顶部应存在身份块")
     if identity != null:
-        _expect(_node_text(identity).contains("商店营业中"), "招募阶段右栏顶部显示售货员")
+        var identity_text := _node_text(identity)
+        _expect(identity_text.contains("售货员"), "招募阶段右栏顶部应显示售货员名字")
+        _expect(not identity_text.contains("商店营业中"), "营业信息不应常驻显示")
+        var seller: Control = identity.find_child("SellerTile", true, false)
+        _expect(seller != null, "招募阶段应显示售货员大图")
+        if seller != null:
+            _expect(seller.size.x >= 150 and seller.size.y >= 150, "售货员应使用大图")
+            await _hover(instance, seller, seller.size / 2)
+            var detail_panel = instance.find_child("MinionDetailPanel", true, false)
+            _expect(
+                detail_panel != null and detail_panel.is_visible_in_tree(),
+                "悬停售货员应显示详情面板",
+            )
+            if detail_panel != null:
+                var detail_text := _node_text(detail_panel)
+                _expect(detail_text.contains("商店营业中"), "售货员详情应显示营业状态")
+                _expect(detail_text.contains("刷新"), "售货员详情应显示可用商店操作")
 
+        # 商店操作按钮在售货员下方，与身份块同栏。
+        var reroll: Control = identity.find_child("RerollButton", true, false)
+        _expect(reroll != null, "商店操作应位于右栏身份块内")
+        if reroll != null and seller != null:
+            _expect(
+                reroll.get_global_rect().position.y >= seller.get_global_rect().end.y,
+                "刷新按钮应位于售货员下方",
+            )
+        var side_hero = instance.find_child("SideHero", true, false)
+        var panel: Control = instance.find_child("SidePanel", true, false)
+        var status_rect: Rect2 = status.get_global_rect() if status != null else Rect2()
+        var hero_rect: Rect2 = side_hero.get_global_rect() if side_hero != null else Rect2()
+        if panel != null and side_hero != null and status != null:
+            _expect(
+                is_equal_approx(identity.get_global_rect().size.y, hero_rect.size.y),
+                "身份块与英雄块应等高：%s / %s" % [identity.get_global_rect().size.y, hero_rect.size.y],
+            )
+            _expect(
+                absf(status_rect.get_center().y - panel.get_global_rect().get_center().y) < 1.0,
+                "回合与倒计时块应位于右栏垂直中心",
+            )
+        var portrait: Control = side_hero.find_child("HeroPortrait", true, false) if side_hero != null else null
+        _expect(portrait != null, "我方英雄应使用大图")
+        if portrait != null:
+            _expect(portrait.size.x >= 150 and portrait.size.y >= 150, "我方英雄大图尺寸应足够")
+            var portrait_text := _node_text(portrait)
+            _expect(portrait_text.contains("达尔文"), "我方英雄大图应显示名字")
+            _expect(not portrait_text.contains("学者"), "英雄部落等信息不应常驻")
+            await _hover(instance, portrait, portrait.size / 2)
+            var hero_detail = instance.find_child("MinionDetailPanel", true, false)
+            _expect(
+                hero_detail != null and hero_detail.is_visible_in_tree(),
+                "悬停我方英雄应显示详情面板",
+            )
+            if hero_detail != null:
+                var hero_text := _node_text(hero_detail)
+                _expect(hero_text.contains("部落"), "我方英雄详情应显示部落")
+                _expect(hero_text.contains("英雄技能"), "我方英雄详情应显示技能说明")
+
+    await _unmount(instance)
+
+
+## 招募倒计时悬停翻成结束招募；移出恢复倒计时，点击发 EndRecruit。
+func _check_countdown_flip() -> void:
+    var view := _base_view(Protocol.PHASE_RECRUIT)
+    var instance := await _mount(view)
+    if instance == null:
+        return
+
+    var flip: Control = instance.find_child("CountdownFlip", true, false)
+    var timer: Label = instance.find_child("TimerLabel", true, false)
+    var end_button: Button = instance.find_child("EndButton", true, false)
+    _expect(flip != null and timer != null and end_button != null, "右栏中部应有倒计时翻转区域")
+    if flip == null or timer == null or end_button == null:
+        await _unmount(instance)
+        return
+
+    var captured: Array = []
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    var center := flip.get_global_rect().get_center()
+    await _push_motion(instance, center)
+    _expect(not timer.visible and end_button.visible, "悬停倒计时应翻成结束招募")
+    _expect(end_button.text == "结束招募", "翻转后应显示结束招募")
+    await _push_click(instance, center)
+    _expect(
+        captured.size() == 1
+            and str(captured[0].get("kind", "")) == Protocol.INTENT_END_RECRUIT,
+        "点击翻转后的倒计时应发出结束招募意图，实际 %s" % [captured],
+    )
+
+    await _push_motion(instance, Vector2(-40, -40))
+    _expect(timer.visible and not end_button.visible, "移出倒计时区域应恢复剩余时间")
     await _unmount(instance)
 
 

@@ -1,15 +1,12 @@
 class_name GameRecruitView
 extends VBoxContainer
-## 招募视图：商店、我方棋盘与刷新/升时代/冻结。
+## 招募视图：商店与我方棋盘。
 ##
 ## 只读 `GameUiState` 并按门控设置控件状态，操作一律以信号交给页面；
-## 本视图不构造意图、不判断协议。
+## 本视图不构造意图、不判断协议。商店操作按钮在右栏，见 `GameSidePanel`。
 ## 商店面板同时是棋盘随从的出售落点。
 
 signal buy(slot: int)
-signal reroll_pressed
-signal upgrade_pressed
-signal freeze_pressed
 signal board_dropped(payload: Dictionary, position: int, target_minion_id: String)
 signal sell_dropped(payload: Dictionary)
 signal sell_hover(hovering: bool, refund: int)
@@ -18,13 +15,9 @@ signal sell_hover(hovering: bool, refund: int)
 var detail: GameDetailLayer = null
 
 var _board_row: BoardDrop
-var _board_hint: Label
 var _shop_row: HFlowContainer
 var _sell_drop: SellDrop
 var _sell_hint: Label
-var _reroll_button: Button
-var _upgrade_button: Button
-var _freeze_button: Button
 
 
 func _init() -> void:
@@ -37,7 +30,8 @@ func _init() -> void:
 
 
 func _build_shop() -> void:
-    # 商店：6 个槽位与刷新/升时代/冻结；整块面板同时是棋盘随从的出售落点。
+    # 商店：6 个槽位；整块面板同时是棋盘随从的出售落点。面板不带标题，
+    # 出售提示以浮层压在右上角，出现时不改变卡片布局。
     var shop_panel := SellDrop.new()
     shop_panel.name = "ShopPanel"
     _sell_drop = shop_panel
@@ -47,71 +41,28 @@ func _build_shop() -> void:
     shop_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
     shop_panel.add_child(shop_box)
 
-    var shop_head := HBoxContainer.new()
-    shop_head.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    shop_head.add_child(UI.section_title("商店"))
+    _shop_row = _new_flow_row("ShopRow")
+    shop_box.add_child(_shop_row)
+
     _sell_hint = UI.label("", UITheme.font_size("font-caption"), false)
     _sell_hint.name = "SellHint"
     _sell_hint.add_theme_color_override("font_color", UITheme.color("color-accent"))
+    _sell_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    _sell_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _sell_hint.visible = false
-    shop_head.add_child(_sell_hint)
-    var shop_spacer := Control.new()
-    shop_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    shop_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    shop_head.add_child(shop_spacer)
-
-    _reroll_button = UI.styled_button("刷新", "default", 28)
-    _reroll_button.name = "RerollButton"
-    _reroll_button.mouse_filter = Control.MOUSE_FILTER_PASS
-    _reroll_button.pressed.connect(func() -> void: reroll_pressed.emit())
-    shop_head.add_child(_reroll_button)
-
-    _upgrade_button = UI.styled_button("升时代", "default", 28)
-    _upgrade_button.name = "UpgradeButton"
-    _upgrade_button.mouse_filter = Control.MOUSE_FILTER_PASS
-    _upgrade_button.pressed.connect(func() -> void: upgrade_pressed.emit())
-    shop_head.add_child(_upgrade_button)
-
-    _freeze_button = UI.styled_button("冻结商店", "default", 28)
-    _freeze_button.name = "FreezeButton"
-    _freeze_button.mouse_filter = Control.MOUSE_FILTER_PASS
-    _freeze_button.pressed.connect(func() -> void: freeze_pressed.emit())
-    shop_head.add_child(_freeze_button)
-    shop_box.add_child(shop_head)
-
-    _shop_row = _new_flow_row("ShopRow")
-    shop_box.add_child(_shop_row)
+    shop_panel.add_child(_sell_hint)
     add_child(shop_panel)
 
 
 func _build_board() -> void:
-    # 我方棋盘。
+    # 我方棋盘：不带标题，数量与容量由服务端视图决定，不在页面上再报一次。
     var board_panel := UI.card_panel("surface")
     board_panel.name = "BoardPanel"
-    board_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    var board_box := VBoxContainer.new()
-    board_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    board_panel.add_child(board_box)
-
-    var board_head := HBoxContainer.new()
-    board_head.add_child(UI.section_title("我方棋盘"))
-    _board_hint = UI.label("", UITheme.font_size("font-caption"), false)
-    _board_hint.name = "BoardHint"
-    _board_hint.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    _board_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _board_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    board_head.add_child(_board_hint)
-    board_box.add_child(board_head)
-
-    var top_spacer := Control.new()
-    top_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    board_box.add_child(top_spacer)
-
     var board_scroll := ScrollContainer.new()
     board_scroll.custom_minimum_size = Vector2(0, UITheme.metric("minion-card-height"))
     board_scroll.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     board_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    board_box.add_child(board_scroll)
+    board_panel.add_child(board_scroll)
     _board_row = BoardDrop.new()
     _board_row.name = "BoardRow"
     _board_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -120,9 +71,10 @@ func _build_board() -> void:
     _board_row.dropped.connect(_on_board_dropped)
     board_scroll.add_child(_board_row)
 
-    var bottom_spacer := Control.new()
-    bottom_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    board_box.add_child(bottom_spacer)
+    # 棋盘面板按内容高度收缩，顶部留白把棋盘推到面板底部，紧贴下方手牌。
+    var top_spacer := Control.new()
+    top_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    add_child(top_spacer)
     add_child(board_panel)
 
 
@@ -139,7 +91,6 @@ func refresh(state: GameUiState) -> void:
     _refresh_board(state)
     _refresh_shop(state)
     _refresh_sell_gate(state)
-    _refresh_actions(state)
 
 
 ## 出售悬停提示由页面回调转入：松手返还金额来自拖拽数据。
@@ -164,7 +115,6 @@ func _refresh_board(state: GameUiState) -> void:
     var slots := state.board_slots
     var can_rearrange := not state.stale and not state.expired and not state.target_pending and state.phase == Protocol.PHASE_RECRUIT and not state.recruited
     _board_row.board_full = board.size() >= slots
-    _board_hint.text = "随从 %d/%d" % [board.size(), slots]
     for position in board.size():
         var minion: Dictionary = board[position]
         var minion_aff := _find_by_index(aff.get("boardMinions", []), int(minion.get("index", position)))
@@ -288,24 +238,6 @@ func _on_shop_card_input(event: InputEvent, panel: Control, index: int) -> void:
         return
     if bool(panel.get_meta("buyable", false)):
         buy.emit(index)
-
-
-func _refresh_actions(state: GameUiState) -> void:
-    var aff: Dictionary = state.self_state.get("affordances", {})
-    var blocked := state.stale or state.expired or state.target_pending
-
-    _reroll_button.text = "刷新 %d 金" % int(state.self_state.get("rerollCost", 0))
-    _reroll_button.disabled = blocked or not bool(aff.get("canReroll", false))
-
-    var upgrade_cost = state.self_state.get("upgradeCost")
-    if upgrade_cost != null:
-        _upgrade_button.text = "升时代 %d 金" % int(upgrade_cost)
-    else:
-        _upgrade_button.text = "时代已满"
-    _upgrade_button.disabled = blocked or not bool(aff.get("canUpgradeEra", false))
-    _upgrade_button.tooltip_text = "" if aff.get("upgradeDisabledReason") == null else UI.error_text(str(aff.get("upgradeDisabledReason")))
-
-    _freeze_button.disabled = blocked or state.phase != Protocol.PHASE_RECRUIT or state.recruited
 
 
 func _find_by_index(items: Array, index: int) -> Dictionary:

@@ -62,17 +62,20 @@
 
 | 令牌 | 取值 | 用途 |
 | --- | --- | --- |
-| `rail-width` | 196 | 左栏座位列宽度 |
+| `rail-width` | 88 | 左栏座位列宽度 |
 | `side-width` | 272 | 右栏宽度 |
+| `report-width` | 236 | 左栏战报浮层宽度 |
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
 | `avatar-rail` | 44 | 左栏座位行头像边长 |
+| `portrait-size` | 200 | 售货员与我方英雄大图宽度 |
+| `portrait-height` | 150 | 售货员与我方英雄大图高度 |
 | `seat-hp-bar-height` | 6 | 座位行血量条高度，与 `avatar-rail` 同宽；右栏对手身份块的血量条复用该高度 |
 | `rank-badge-size` | 18 | 座位行名次角标边长 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
 | `hero-tile-width` | 150 | 英雄小卡宽度（右栏按栏宽覆盖） |
 | `minion-card-width` / `-height` | 98 / 122 | 棋盘随从卡 |
 | `shop-card-width` / `-height` | 108 / 120 | 商店槽 |
-| `hand-card-width` / `-height` | 142 / 84 | 手牌卡 |
+| `hand-card-width` / `-height` | 142 / 120 | 手牌卡 |
 
 ## 6. 部落色
 
