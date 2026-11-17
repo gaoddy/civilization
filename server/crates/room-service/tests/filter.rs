@@ -63,7 +63,7 @@ fn snapshot(instance_id: u64, attack: i32, health: i32, alive: bool) -> combat::
     }
 }
 
-/// 真实战斗报告：双方各两个随从，含被护盾挡下的攻击、死亡、复生、传染与一次召唤。
+/// 真实战斗报告：双方各两个随从，含双方主动攻击、护盾挡伤、死亡、复生、传染与一次召唤。
 fn real_report(seat: Seat) -> SeatCombatReport {
     SeatCombatReport {
         seat,
@@ -241,7 +241,7 @@ fn combat_result_maps_action_indices() {
     );
     assert_eq!(first.damage, Some(2));
 
-    // 反击被护盾挡下：来源是对手棋盘 1 号，目标是己方 1 号，伤害为 0。
+    // 对手主动攻击被护盾挡下：来源是对手棋盘 1 号，目标是己方 1 号，伤害为 0。
     let blocked = &result.actions[1];
     assert_eq!(blocked.kind, "attack");
     assert_eq!(blocked.source_index, Some(1));

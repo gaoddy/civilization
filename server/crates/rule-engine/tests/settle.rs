@@ -501,7 +501,11 @@ fn ghost_report_renumbers_disjoint_ids() {
     add_minion_card(&mut engine.catalog, "weak", 1, 1, 1);
 
     state.phase = Phase::Combat;
-    state.players[0].board = vec![minion(&engine.catalog, 1, "weak")];
+    // 己方禁攻，保证幽灵一定会主动出手；否则己方先手被反击致死后，
+    // 幽灵没有主动攻击动作可断言。
+    let mut own_minion = minion(&engine.catalog, 1, "weak");
+    own_minion.cannot_attack = true;
+    state.players[0].board = vec![own_minion];
     state.players[3].eliminated = true;
     state.players[3].board = vec![minion(&engine.catalog, 1, "strong")];
     state.ranking = vec![3];

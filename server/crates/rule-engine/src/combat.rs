@@ -52,8 +52,8 @@ pub struct MinionSnapshot {
 /// 战斗中的一条动作记录。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CombatAction {
-    /// 一次伤害结算：`resolve_attack` 的主伤害先记录一条；目标存活并造成反击伤害时，
-    /// 反击以「攻防互换」的 `Attack` 再记录一条。
+    /// 一次主动攻击：主伤害记录在本条动作，目标存活并造成反击伤害时，
+    /// 反击结果已并入本条动作的快照，不再单独记录一条 `Attack`。
     Attack {
         attacker: InstanceId,
         target: InstanceId,
@@ -926,7 +926,7 @@ fn resolve_attack(
         }
     }
 
-    // (d) 主伤害事件先于反击事件与死亡处理记录。
+    // (d) 只记录主动攻击：快照在反击结算之后抓取，已含双方最终血量。
     let main_states = field.snapshots(catalog, &[attacker_id, target_id]);
     field.push_action(
         CombatAction::Attack {
@@ -937,18 +937,6 @@ fn resolve_attack(
         },
         main_states,
     );
-    if counter_damage > 0 {
-        let counter_states = field.snapshots(catalog, &[target_id, attacker_id]);
-        field.push_action(
-            CombatAction::Attack {
-                attacker: target_id,
-                target: attacker_id,
-                damage: counter_damage,
-                blocked: false,
-            },
-            counter_states,
-        );
-    }
 
     // (e) 造成伤害后，在本次交换的死亡判定前触发 `OnDealDamage`。
     if let Some(engine) = engine {

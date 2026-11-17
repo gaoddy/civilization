@@ -932,7 +932,7 @@ fn fixture_minion(instance_id: u64) -> rule_engine::state::MinionInstance {
     minion
 }
 
-/// 双方各两个随从的真实战斗报告；含一条「攻防互换」的反击动作。
+/// 双方各两个随从的真实战斗报告；含双方各一次主动攻击。
 fn real_report(seat: Seat) -> rule_engine::settle::SeatCombatReport {
     use rule_engine::combat::CombatAction;
     rule_engine::settle::SeatCombatReport {
@@ -949,7 +949,7 @@ fn real_report(seat: Seat) -> rule_engine::settle::SeatCombatReport {
                 damage: 2,
                 blocked: false,
             },
-            // 反击：对手 1 号攻击己方 1 号。
+            // 对手 1 号主动攻击己方 1 号。
             CombatAction::Attack {
                 attacker: 202,
                 target: 102,
@@ -1056,7 +1056,7 @@ fn combat_action_indices_carry_side() {
         }
     }
     assert!(saw_own_source, "应至少有一条己方来源的动作");
-    assert!(saw_opponent_source, "反击动作的来源必须标为对手棋盘");
+    assert!(saw_opponent_source, "对手主动攻击的来源必须标为对手棋盘");
 
     // 具体侧别与下标：己方 0 号 -> 对手 0 号；对手 1 号 -> 己方 1 号。
     assert_eq!(result.actions[0].source_side, Some(SourceSide::Own));
