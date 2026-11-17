@@ -23,6 +23,10 @@ DEFAULT_SKILLS = ROOT / "docs" / "versions" / "v0.1" / "product" / "content" / "
 VALUE_KEYWORDS = {"breed", "assemble", "contagion"}
 # when 限定事件对象；OnDeath 同为事件类触发（validate_docs.EVENT_TRIGGERS 未含 OnDeath）。
 WHEN_TRIGGERS = validate_docs.EVENT_TRIGGERS | {"OnDeath"}
+# 筛选白名单以 validate_docs 为唯一来源，这里只读不另写一份。
+FILTER_KEYS = validate_docs.FILTER_KEYS
+# 分解的生命值口径；duration 只接受 validate_docs.DURATIONS（permanent / combat）。
+DECOMPOSE_BASES = validate_docs.DECOMPOSE_BASES
 
 
 @dataclasses.dataclass
@@ -75,6 +79,16 @@ def check_effect(trigger, op, params):
         missing = [key for key in ("level", "to") if key not in params]
         if missing:
             violations.append(f"GainMinion 缺少参数 {missing}")
+    if "timesIf" in params:
+        for message in validate_docs.times_if_errors(params["timesIf"]):
+            violations.append(message)
+    if op == "Decompose":
+        if params.get("basis") not in DECOMPOSE_BASES:
+            violations.append(f"Decompose 的 basis 必须为 {sorted(DECOMPOSE_BASES)} 之一，实为 {params.get('basis')!r}")
+        if params.get("duration") not in validate_docs.DURATIONS:
+            violations.append(
+                f"Decompose 的 duration 必须为 {sorted(validate_docs.DURATIONS)} 之一，实为 {params.get('duration')!r}"
+            )
     return violations
 
 

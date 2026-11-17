@@ -91,12 +91,34 @@ def generated_entries(root):
         entries[f"token.{token_id}.name"] = name
 
     raw = validate_docs.load(
-        "cards", ["id", "card_type", "tribe", "era"], root=content)
+        "cards", ["id", "card_type", "playstyle", "taxon", "era"], root=content)
     enum_labels = validate_docs.card_enum_labels(raw, root=content)
     for field, prefix in (("card_type", "enum.card_type."),
-                          ("tribe", "enum.tribe."), ("era", "enum.era.")):
+                          ("era", "enum.era.")):
         for value, label in enum_labels[field].items():
             entries[prefix + value] = label
+    # 玩法与科学分类展示名以 taxonomy.md 为唯一来源；属性表中文名用于冲突校验。
+    taxonomy_nodes, playstyles = validate_docs.parse_taxonomy(content / "taxonomy.md")
+    for playstyle_id, label in playstyles or []:
+        entries[f"enum.playstyle.{playstyle_id}"] = label
+    # 中立不是玩法表的一行，但卡面与详情需要同样的取值入口。
+    entries["enum.playstyle.neutral"] = "中立"
+    for node_id, node in (taxonomy_nodes or {}).items():
+        entries[f"enum.taxon.{node_id}"] = node["name"]
+    for value, label in enum_labels["playstyle"].items():
+        expected = entries.get(f"enum.playstyle.{value}")
+        if expected is not None and expected != label:
+            raise ValueError(
+                f"卡牌属性表 playstyle {value} 的中文名 {label!r} 与 taxonomy.md "
+                f"的 {expected!r} 冲突")
+    for value, label in enum_labels["taxon"].items():
+        # 属性表「科学分类」列是完整路径，取末级节点名参与比对。
+        leaf_label = label.rsplit("›", 1)[-1].strip()
+        expected = entries.get(f"enum.taxon.{value}")
+        if expected is not None and expected != leaf_label:
+            raise ValueError(
+                f"卡牌属性表 taxon {value} 的中文名 {leaf_label!r} 与 taxonomy.md "
+                f"的 {expected!r} 冲突")
     for slug, label in validate_docs.keyword_labels().items():
         entries[f"enum.keyword.{slug}"] = label
     for value, label in enum_labels["subtype"].items():
@@ -109,6 +131,8 @@ def merge(existing, generated):
     merged = {}
     for key, value in existing.items():
         if key.startswith(i18n_terms.GENERATED_PREFIXES):
+            continue
+        if key.startswith(i18n_terms.LEGACY_PREFIXES):
             continue
         if not key.startswith(i18n_terms.MANUAL_PREFIXES):
             raise ValueError(f"未知前缀的文本 key: {key}")

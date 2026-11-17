@@ -15,13 +15,13 @@
 
 ## 2. 注册表
 
-| id | 名称 | 攻击力 | 生命值 | 关键词 | 生成来源 |
-| --- | --- | --- | --- | --- | --- |
-| `seedling` | 幼苗 | 1 | 1 | 无 | 播种（9 张植物随从） |
-| `synthetic-cell-token` | 合成细胞（幼体） | 3 | 3 | 无 | 人造子宫 |
-| `hela-cell-token` | 海拉细胞（复制体） | 2 | 2 | 无 | 海拉细胞 |
+| id | 名称 | 攻击力 | 生命值 | 关键词 | 玩法 | 科学分类 | 生成来源 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `seedling` | 幼苗 | 1 | 1 | 无 | plant | plantae-incertae-sedis | 播种（9 张植物随从） |
+| `synthetic-cell-token` | 合成细胞（幼体） | 3 | 3 | 无 | bacteria | bacteria-incertae-sedis | 人造子宫 |
+| `hela-cell-token` | 海拉细胞（复制体） | 2 | 2 | 无 | mammal | hominidae | 海拉细胞 |
 
-「关键词」列如有取值，写英文 id（`battlecry`、`taunt`、`breed N` 等，见[关键词与机制](../../rules/keywords-and-mechanics.md) §1）；「名称」列是文本来源，运行时由文本表 `token.<id>.name` 承载（`client/text/zh_CN.csv`）。
+「关键词」列如有取值，写英文 id（`battlecry`、`taunt`、`breed N` 等，见[关键词与机制](../../rules/keywords-and-mechanics.md) §1）；「玩法」与「科学分类」列填写玩法 id 与分类树叶子 id（见[分类树与玩法](../taxonomy.md)），留空时按 `neutral` / `phenomenon` 处理；「名称」列是文本来源，运行时由文本表 `token.<id>.name` 承载（`client/text/zh_CN.csv`）。
 
 ## 相关文档
 
