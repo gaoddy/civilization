@@ -53,7 +53,7 @@ func _new_flow_row(node_name: String) -> HFlowContainer:
     return row
 
 
-func refresh(state: GameUiState) -> void:
+func refresh(_state: GameUiState) -> void:
     if not GameStore.combat_is_current():
         _banner.visible = false
         UI.clear(_opponent_row)
