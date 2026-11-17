@@ -161,32 +161,25 @@ fn counter_damage_updates_current() {
 
     let log = simulate(&catalog, &[attacker], &[defender], 0, 1, 0, &mut rng());
 
-    // 读取第一次反击后的现场快照，隔离单次反击伤害。
-    let counter_index = log
+    // 主动攻击动作的快照在反击结算之后抓取，用第一次交换隔离单次反击伤害。
+    let hit_index = log
         .actions
         .iter()
-        .position(|action| {
-            matches!(
-                action,
-                CombatAction::Attack {
-                    attacker: 2,
-                    target: 1,
-                    ..
-                }
-            )
-        })
-        .expect("应有一次反击");
-    let counter = log.states[counter_index]
+        .position(|action| matches!(action, CombatAction::Attack { attacker: 1, .. }))
+        .expect("应有一次主动攻击");
+    let attacker_state = log.states[hit_index]
         .iter()
         .find(|snapshot| snapshot.instance_id == 1)
         .expect("攻击方快照");
-    assert_eq!(counter.health, 3, "攻击方承受 2 点反击");
-    assert!(counter.alive);
+    assert_eq!(attacker_state.health, 3, "攻击方承受 2 点反击");
+    assert!(attacker_state.alive);
     assert_eq!(log.attacker_final[0].stats.health.layers(), 5);
-    assert_eq!(
-        attacks(&log)[..2].to_vec(),
-        vec![(1, 2, 1, false), (2, 1, 2, false)],
-        "主伤害与反击各记录一条"
+    assert_eq!(attacks(&log)[0], (1, 2, 1, false), "主伤害记录为主动攻击");
+    assert!(
+        attacks(&log)
+            .iter()
+            .all(|(attacker, _, _, _)| *attacker == 1),
+        "反击不再占用动作"
     );
 }
 

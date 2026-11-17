@@ -270,6 +270,9 @@ fn state_at(states: &[combat::MinionSnapshot], index: usize) -> Option<CombatMin
 
 /// 战斗动作转协议：`kind` 为 `attack|death|reborn|contagion|summon`。
 ///
+/// 引擎只为主动攻击记录 `attack`；反击伤害已并入该条动作的 `source` / `target`
+/// 快照，客户端不会收到独立的反击动作。
+///
 /// 新字段（`sourceMinionId` / `targetMinionId` / `source` / `target` / `summon`）
 /// 是客户端的渲染依据；旧的下标与侧别字段保留，供兼容渲染与调试。
 fn combat_action(

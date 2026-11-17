@@ -199,8 +199,21 @@ fn surviving_target_counters_and_kills_attacker() {
 
     assert_eq!(
         attacks(&log),
-        vec![(1, 2, 2, false), (2, 1, 3, false)],
-        "主伤害 2 后目标仍存活，反击 3 击杀攻击方"
+        vec![(1, 2, 2, false)],
+        "只记录主动攻击；反击伤害并入该条动作"
+    );
+    let hit_index = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Attack { attacker: 1, .. }))
+        .expect("应有一次主动攻击");
+    let attacker_state = log.states[hit_index]
+        .iter()
+        .find(|snapshot| snapshot.instance_id == 1)
+        .expect("攻击方快照");
+    assert_eq!(
+        attacker_state.health, 0,
+        "反击 3 点击杀攻击方，血量写入主动攻击快照"
     );
     assert_eq!(death_order(&log), vec![1]);
     assert!(log.attacker_survivors.is_empty());
