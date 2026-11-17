@@ -16,6 +16,7 @@ const DETAIL_ROW_TEXT := {
 ## 详情面板的挂载方向：商店卡在左右，棋盘卡在上下。
 const DETAIL_SIDES := {
     "shop": ["right", "left"],
+    "seat": ["right", "left"],
     "minion": ["bottom", "top"],
 }
 
@@ -132,6 +133,8 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
 
     if kind == "shop":
         _render_shop_detail(box, data)
+    elif kind == "seat":
+        _render_seat_detail(box, data.get("player", {}), int(data.get("hpCap", 0)))
     else:
         _render_minion_detail(box, data.get("minion", {}))
 
@@ -166,6 +169,19 @@ func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
         reason.name = "DetailBlocked"
         reason.add_theme_color_override("font_color", UITheme.color("color-danger"))
         box.add_child(reason)
+
+
+## 座位详情：名字、英雄、生命（当前/上限）、时代、随从数与状态。
+func _render_seat_detail(box: VBoxContainer, player: Dictionary, hp_cap: int) -> void:
+    box.add_child(_detail_name(GameCardFace.optional_text(player.get("displayName"))))
+    box.add_child(_detail_row("英雄", CardDB.display_name(GameCardFace.optional_text(player.get("heroCardId")))))
+    box.add_child(_detail_row("生命", "%d/%d" % [int(player.get("hp", 0)), maxi(hp_cap, 0)]))
+    box.add_child(_detail_row("时代", CardDB.era_name(int(player.get("era", 1)))))
+    box.add_child(_detail_row("随从", "%d" % int(player.get("boardCount", 0))))
+    var alive := bool(player.get("alive", true))
+    box.add_child(_detail_row("状态", "存活" if alive else "淘汰"))
+    if alive:
+        box.add_child(_detail_row("招募", "已招募" if bool(player.get("recruited", false)) else "未招募"))
 
 
 ## 棋盘随从详情：名称与攻击/生命的构成分层。
