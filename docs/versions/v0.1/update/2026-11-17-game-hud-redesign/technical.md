@@ -1,6 +1,6 @@
 # 对局页改版与幽灵战：技术方案
 
-> 状态：已确认
+> 状态：已实施
 > 设计依据：[对局页 HUD 改版 设计](../../../superpowers/specs/2026-11-17-game-hud-redesign-design.md)
 > 产品依据：[product.md](product.md)
 

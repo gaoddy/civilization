@@ -645,6 +645,8 @@ def check_cards(skill_map):
             fail(f"{name}: 效果牌不得有 attack/health")
         if c["tribe"] not in EFFECT_TRIBES:
             fail(f"{name}: 效果牌流派非法 {c['tribe']!r}")
+        if c["era"] not in ERAS:
+            fail(f"{name}: 时代非法 {c['era']!r}")
         if c["level"] not in RANGE:
             fail(f"{name}: 星级非法 {c['level']!r}")
         if not 0 <= c["cost"] <= 4:
@@ -755,7 +757,7 @@ def main():
         for item in errors:
             print(" -", item)
         return 1
-    print("时代", dict(collections.Counter(c["era"] for c in minions)))
+    print("时代", dict(collections.Counter(c["era"] for c in raw)))
     print("流派", dict(collections.Counter(c["tribe"] for c in minions)))
     print("星级", dict(collections.Counter(c["level"] for c in minions)))
     print("关键词", dict(sorted(collections.Counter(

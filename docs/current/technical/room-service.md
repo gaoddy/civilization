@@ -121,7 +121,7 @@ protocol/
 - `sourceIndex`/`targetIndex` 是战前快照下标，`sourceSide`/`targetSide` 指明它属于哪一侧（`own`/`opponent`，相对接收座位）；召唤物等不在快照中的实例下标与侧别为 `null`，位置改由 `summon.position` 给出。
 - `summon.position` 由引擎按**存活随从序列**给出：召唤后该随从在存活随从中的下标，已阵亡条目不计数，上界由 `PlayerView.boardSlots` 决定。`summon.minion.index` 与它同值，语义一致（客户端不读该字段，按 `position` 插入）。
 - `PlayerView.boardSlots` 取自 `catalog.config.board_slots`（v0.1 为 7），放在视图顶层：重连只回 `Snapshot`，而视图每次刷新都带它，客户端不需要额外的续传逻辑。
-- `mirror` 原样取自战斗报告；幽灵战只向该座位发一条 `CombatResult`（报告里只有它自己的一条）。幽灵来自已出局者的最终阵容，在引擎 `resolve_ghost` 里按幽灵自己的光环来源重算后被重新编号，与己方棋盘不相交，因此动作的实例编号在两侧可判。
+- `mirror` 原样取自战斗报告；幽灵战只向该座位发一条 `CombatResult`（报告里只有它自己的一条）。幽灵来自已出局者随机抽中的最终阵容，在引擎 `resolve_ghost` 里按幽灵自己的光环来源重算；实例编号只在必要时（与己方重号时）于本次战斗克隆内改号，与己方棋盘不相交，因此动作的实例编号在两侧可判。
 - `opponentPlayerId` 在幽灵战指向幽灵归属座位（已出局者）的 `playerId`；幽灵归属者本人观战时不指向自己，已出局观战者、招募阶段或未配对时为 `null`。
 - `combatLog` 来自 `SeatCombatReport`：真实战每个座位各有一份报告，只保留座位号较小的一份；幽灵战本来只有落单座位一条。战报回合号取结算时刻的 `state.turn`，追加后只保留最近 5 个回合（早于 `turn − 4` 的条目丢弃），按回合升序下发；`mirror=true` 表示该场为幽灵战。
 - `summon.minion` 的攻击与生命取该动作的状态快照（含光环与战斗内加成），卡面字段（`cardId`/`golden`/`keywords`）来自动作本身；快照缺失时才退回卡面基础值。

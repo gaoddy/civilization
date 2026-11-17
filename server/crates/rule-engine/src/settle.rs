@@ -747,7 +747,7 @@ pub fn rank_of(state: &GameState, seat: Seat) -> Option<u8> {
     }
 }
 
-/// 双方同时清场时按 §5.3 判胜：生命高 → 累计伤害高 → 座位小。
+/// 行动数到达上限（不是同回合清场）时按 §5.3 判胜：生命高 → 累计伤害高 → 座位小。
 fn tie_break(state: &GameState, a: Seat, b: Seat) -> Seat {
     match (player(state, a), player(state, b)) {
         (Some(left), Some(right)) => {
