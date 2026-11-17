@@ -377,7 +377,7 @@
 | `self.pendingChoices` | array<PendingChoice> | 是 | 本座位待处理的发现或进化选择，按先到先处理排序 |
 | `self.affordances` | Affordances | 是 |  |
 | `players` | array<PlayerSummary> | 是 |  |
-| `enabledFactions` | array<string> | 是 | 本局启用的 5 个流派，取值为英文 id |
+| `enabledFactions` | array<string> | 是 | 本局启用的 5 个玩法 |
 
 ### Intent
 
