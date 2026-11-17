@@ -50,7 +50,7 @@ client/
   generated/
     protocol.gd              # schema 生成的 GDScript 常量
     cards.json               # 产品文档生成的卡牌展示表
-    skills.json              # 技能展示表
+    skills.json              # 技能展示表（effects 为结构化数组，仅展示不解析）
     tokens.json              # Token 展示表
 ```
 
