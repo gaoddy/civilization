@@ -4,6 +4,12 @@ extends RefCounted
 ##
 ## 只构造控件，不持有页面状态；商店、棋盘与战斗只读卡都从这里取卡面。
 
+## 角标行在胶囊高度之外留的余量，避免文字贴边被裁切。
+const CORNER_BADGE_EXTRA_HEIGHT := 2
+## 冰晶细线的不透明度与条数；角度固定 45°，间距取主题令牌。
+const FREEZE_CRYSTAL_ALPHA := 0.55
+const FREEZE_CRYSTAL_LINES := 10
+
 ## 统一卡面：封面铺满整卡，左上费用、右上时代，底部信息区依次为居中名称与
 ## 「攻击 · 类型 · 生命」。`cost_text`/`era_text` 为空时不渲染角标；`frozen`
 ## 为真时盖整卡蒙层、叠冰晶并保留右下「冻」字。
@@ -152,14 +158,15 @@ static func _corner_badge(text: String, variant: String) -> Label:
 
 
 static func _badge_height() -> int:
-    return UITheme.font_size("font-caption") + UITheme.space("space-2xs") * 2 + 2
+    return UITheme.font_size("font-caption") + UITheme.space("space-2xs") * 2 + CORNER_BADGE_EXTRA_HEIGHT
 
 
 ## 冻结表现：整卡半透明蒙层 + 固定角度与间距的冰晶细线 + 右下角「冻」字。
 static func _add_freeze_overlay(face_node: Control) -> void:
     var overlay := ColorRect.new()
     overlay.name = "FreezeOverlay"
-    overlay.color = UITheme.alpha("color-info", UITheme.opacity("freeze-overlay-alpha"))
+    overlay.color = UITheme.color("color-info")
+    overlay.modulate.a = UITheme.opacity("freeze-overlay-alpha")
     overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
     overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
     face_node.add_child(overlay)
@@ -173,8 +180,8 @@ static func _add_freeze_overlay(face_node: Control) -> void:
 
     # 斜向细线：角度与间距由令牌固定，不随卡片尺寸变化。
     var gap := UITheme.metric("freeze-crystal-gap")
-    var line_color := UITheme.alpha("color-info", 0.55)
-    for index in 10:
+    var line_color := UITheme.alpha("color-info", FREEZE_CRYSTAL_ALPHA)
+    for index in FREEZE_CRYSTAL_LINES:
         var line := ColorRect.new()
         line.color = line_color
         line.size = Vector2(gap * 2, 1)

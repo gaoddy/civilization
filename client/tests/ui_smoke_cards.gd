@@ -7,11 +7,13 @@ func _ready() -> void:
     view["self"]["shop"] = [
         {"index": 0, "cardId": "aolinpike-jidian", "frozen": false},
         {"index": 1, "cardId": "agi", "frozen": true},
+        {"index": 2, "cardId": "adam-smith", "frozen": false},
     ]
     view["self"]["board"] = []
     view["self"]["affordances"]["shopSlots"] = [
         {"index": 0, "buyable": true, "disabledReason": null},
         {"index": 1, "buyable": false, "disabledReason": "NOT_ENOUGH_GOLD"},
+        {"index": 2, "buyable": true, "disabledReason": null},
     ]
 
     var recruit := GameRecruitView.new()
@@ -45,10 +47,14 @@ func _ready() -> void:
             var card_rect: Rect2 = (open_card as Control).get_global_rect()
             var cost_rect: Rect2 = (cost as Control).get_global_rect()
             var era_rect: Rect2 = (era as Control).get_global_rect()
+            var name_rect: Rect2 = (open_card.find_child("CardName", true, false) as Control).get_global_rect()
             _expect(cost_rect.position.x < card_rect.get_center().x, "费用角标应在卡片左上")
             _expect(cost_rect.position.y < card_rect.get_center().y, "费用角标应在卡片左上")
             _expect(era_rect.position.x > card_rect.get_center().x, "时代角标应在卡片右上")
             _expect(era_rect.position.y < card_rect.get_center().y, "时代角标应在卡片右上")
+            _expect(not cost_rect.intersects(era_rect), "费用与时代角标不应相交")
+            _expect(not cost_rect.intersects(name_rect), "费用角标不应与卡名相交")
+            _expect(not era_rect.intersects(name_rect), "时代角标不应与卡名相交")
 
     # 冻结卡：整卡蒙层 + 冰晶 + 右下「冻」字，且不再使用「冻」角标。
     var frozen_card := recruit.find_child("ShopSlot1", true, false)
@@ -58,15 +64,54 @@ func _ready() -> void:
         _expect(overlay != null, "冻结卡应有 FreezeOverlay 蒙层")
         if overlay is Control:
             _expect((overlay as Control).mouse_filter == Control.MOUSE_FILTER_IGNORE, "冻结蒙层不应拦截鼠标")
+        if overlay is ColorRect:
+            _expect(
+                is_equal_approx((overlay as CanvasItem).modulate.a, UITheme.opacity("freeze-overlay-alpha")),
+                "冻结蒙层 alpha 应为 freeze-overlay-alpha 令牌值",
+            )
+        var crystals := frozen_card.find_child("FreezeCrystals", true, false)
+        _expect(crystals != null, "冻结卡应有 FreezeCrystals 冰晶纹理")
+        if crystals is Control:
+            _expect(
+                crystals.get_child_count() == GameCardFace.FREEZE_CRYSTAL_LINES,
+                "冰晶线条数应与常量一致，实际：%d" % crystals.get_child_count(),
+            )
+            if crystals.get_child_count() >= 2:
+                var first := crystals.get_child(0) as Control
+                var second := crystals.get_child(1) as Control
+                _expect(
+                    is_equal_approx(
+                        second.position.y - first.position.y,
+                        float(UITheme.metric("freeze-crystal-gap")),
+                    ),
+                    "相邻冰晶线 y 间距应为 freeze-crystal-gap 令牌值",
+                )
         var glyph := frozen_card.find_child("FreezeGlyph", true, false)
         _expect(glyph != null, "冻结卡应有 FreezeGlyph")
         if glyph != null:
             _expect(str(glyph.text) == "冻", "FreezeGlyph 文本应为「冻」，实际：%s" % str(glyph.text))
+            var frozen_rect: Rect2 = (frozen_card as Control).get_global_rect()
+            var glyph_rect: Rect2 = (glyph as Control).get_global_rect()
+            _expect(
+                glyph_rect.get_center().x > frozen_rect.get_center().x
+                and glyph_rect.get_center().y > frozen_rect.get_center().y,
+                "「冻」字应位于卡片右下象限",
+            )
+            _expect(frozen_rect.encloses(glyph_rect), "「冻」字应落在卡片内")
         var old_badge := false
         for badge in frozen_card.find_children("CardBadge", "Label", true, false):
             if str(badge.text) == "冻":
                 old_badge = true
         _expect(not old_badge, "冻结卡不应再用 text 为「冻」的 CardBadge")
+
+    # 随从卡费用固定为 3：商店里已渲染的随从卡也要显示费用角标。
+    var minion_card := recruit.find_child("ShopSlot2", true, false)
+    _expect(minion_card != null, "商店应存在 ShopSlot2")
+    if minion_card != null:
+        var minion_cost := minion_card.find_child("CostBadge", true, false)
+        _expect(minion_cost != null, "随从卡应有 CostBadge")
+        if minion_cost != null:
+            _expect(str(minion_cost.text) == "3", "随从卡费用角标应为 3，实际：%s" % str(minion_cost.text))
 
     recruit.queue_free()
     _finish()
