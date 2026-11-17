@@ -115,7 +115,8 @@
 | --- | --- | --- |
 | C→S | `Intent` | 玩家意图，`payload` 为 [核心规则](../../product/rules/core-rules.md)的意图名与参数 |
 | S→C | `StateUpdate` | 该玩家可见的完整状态视图 + 本次结算产生的动画事件 |
-| S→C | `CombatResult` | 战斗最终结果：双方阵容快照、行动序列、伤害、胜负 |
+| S→C | `CombatResult` | 战斗最终结果：双方阵容快照、完整行动序列、开战时刻 `startedAt`、伤害、胜负 |
+| C→S | `CombatPlayed` | 演示播完回报；全部参战座位回报后服务端结算 |
 | S→C | `Snapshot` | 全量可见视图，用于开局与重连 |
 | C→S | `Reconnect` | 重连请求，携带 `lastSeq` |
 | S→C | `PhaseChanged` | 阶段切换与截止时间 |
@@ -130,10 +131,11 @@
 C→S  Intent{BuyMinion, slot:2}
 S→C  StateUpdate{seq:101, view:{gold:1, board:[...], shop:[...]}, events:[...]}
 C→S  Intent{EndRecruit}
-S→C  PhaseChanged{phase:Combat, deadline:+15000}
-S→C  CombatResult{seq:102, actions:[...], damage:9, winner:p_03}
-S→C  StateUpdate{seq:103, view:{hp:31, board:[...]}, events:[...]}
-S→C  PhaseChanged{phase:Recruit, turn:8, deadline:+90000}
+S→C  PhaseChanged{phase:Combat, deadline:<开战 + 下一回合招募时长>}
+S→C  CombatResult{seq:102, startedAt:t0, actions:[...], damage:9, winner:p_03}
+C→S  CombatPlayed            （每个参战座位播完后各发一次）
+S→C  StateUpdate{seq:103, view:{hp:31, board:[...]}, events:[...], combatLog:[...]}
+S→C  PhaseChanged{phase:Recruit, turn:8, deadline:<沿用开战时的截止>}
 ```
 
 ### 5.4 意图的幂等性
