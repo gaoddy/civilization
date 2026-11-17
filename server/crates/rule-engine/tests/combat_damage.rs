@@ -126,16 +126,25 @@ fn attack_damage_updates_current_only() {
 
     let log = simulate(&catalog, &[attacker], &[defender], 0, 1, 0, &mut rng());
 
-    let hit = &log.defender_final[0].stats.health;
-    assert_eq!(hit.current, 2, "生命从 5 降到 2");
-    assert_eq!(hit.layers(), 5, "伤害不改层和");
+    // 多轮行动下读取第一次攻击后的现场快照，隔离单次主伤害。
+    let hit_index = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Attack { attacker: 1, .. }))
+        .expect("应有一次攻击");
+    let hit = log.states[hit_index]
+        .iter()
+        .find(|snapshot| snapshot.instance_id == 2)
+        .expect("目标快照");
+    assert_eq!(hit.health, 2, "生命从 5 降到 2");
+    assert!(hit.alive);
     assert_eq!(
-        hit.damage(),
-        3,
-        "damage() 等于累计已受伤害（本例仅一次命中）"
+        log.defender_final[0].stats.health.layers(),
+        5,
+        "伤害不改层和"
     );
-    assert_eq!(hit.growth, 0);
-    assert_eq!(attacks(&log), vec![(1, 2, 3, false)], "记录一次主伤害");
+    assert_eq!(log.defender_final[0].stats.health.growth, 0);
+    assert_eq!(attacks(&log)[0], (1, 2, 3, false), "记录一次主伤害");
 }
 
 /// 2) 反击伤害同样写入受击方的 `stats.health.current`。
@@ -152,12 +161,30 @@ fn counter_damage_updates_current() {
 
     let log = simulate(&catalog, &[attacker], &[defender], 0, 1, 0, &mut rng());
 
-    let counter = &log.attacker_final[0].stats.health;
-    assert_eq!(counter.current, 3, "攻击方承受 2 点反击");
-    assert_eq!(counter.layers(), 5);
-    assert_eq!(counter.damage(), 2, "反击伤害写入 damage()");
+    // 读取第一次反击后的现场快照，隔离单次反击伤害。
+    let counter_index = log
+        .actions
+        .iter()
+        .position(|action| {
+            matches!(
+                action,
+                CombatAction::Attack {
+                    attacker: 2,
+                    target: 1,
+                    ..
+                }
+            )
+        })
+        .expect("应有一次反击");
+    let counter = log.states[counter_index]
+        .iter()
+        .find(|snapshot| snapshot.instance_id == 1)
+        .expect("攻击方快照");
+    assert_eq!(counter.health, 3, "攻击方承受 2 点反击");
+    assert!(counter.alive);
+    assert_eq!(log.attacker_final[0].stats.health.layers(), 5);
     assert_eq!(
-        attacks(&log),
+        attacks(&log)[..2].to_vec(),
         vec![(1, 2, 1, false), (2, 1, 2, false)],
         "主伤害与反击各记录一条"
     );
@@ -176,11 +203,19 @@ fn shield_blocks_without_touching_health() {
 
     let log = simulate(&catalog, &[attacker], &[defender], 0, 1, 0, &mut rng());
 
-    let target = &log.defender_final[0];
-    assert!(target.shield_used, "护盾被消耗");
-    assert_eq!(target.stats.health.current, 5, "护盾分支不扣生命");
-    assert_eq!(target.stats.health.damage(), 0);
-    assert_eq!(attacks(&log), vec![(1, 2, 0, true)], "记录为被挡下");
+    // 读取第一次攻击后的现场快照：护盾挡下主伤害。
+    let hit_index = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Attack { attacker: 1, .. }))
+        .expect("应有一次攻击");
+    let target_state = log.states[hit_index]
+        .iter()
+        .find(|snapshot| snapshot.instance_id == 2)
+        .expect("目标快照");
+    assert!(log.defender_final[0].shield_used, "护盾被消耗");
+    assert_eq!(target_state.health, 5, "护盾分支不扣生命");
+    assert_eq!(attacks(&log)[0], (1, 2, 0, true), "记录为被挡下");
 }
 
 /// 4) `canKill = false` 的效果伤害最低只把生命降到 1。

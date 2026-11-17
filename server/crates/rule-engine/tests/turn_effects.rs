@@ -721,8 +721,8 @@ fn contagion_persists_across_combat() {
     engine.resolve_combat(&mut state).expect("战斗结算应成功");
 
     assert_eq!(
-        state.players[1].board[0].contagion, 1,
-        "战斗内叠加的传染层数写回持久随从"
+        state.players[1].board[0].contagion, 5,
+        "多轮行动中每次主动攻击都叠一层传染，层数写回持久随从"
     );
     assert_eq!(state.players[1].board[0].stats.attack.growth, 0);
     assert_eq!(state.players[1].board[0].stats.health.growth, 0);

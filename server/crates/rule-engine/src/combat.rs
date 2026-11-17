@@ -216,14 +216,12 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
     result
 }
 
-/// 战斗开始时该随从拥有的行动令牌数。
+/// 每轮该随从拥有的行动次数。
 ///
-/// 「连击」对学者不生效（学者攻击力为 0），学者固定只有 1 个令牌。
+/// 「连击」对学者同样生效，学者每轮也行动两次（攻击力仍为 0）。
 fn starting_tokens(catalog: &Catalog, minion: &MinionInstance) -> u8 {
     if minion.cannot_attack {
         0
-    } else if minion.is_scholar {
-        1
     } else if keywords(catalog, minion).contains(WINDFURY) {
         2
     } else {
@@ -292,8 +290,33 @@ impl SideBoard {
             .collect()
     }
 
-    /// 返回当前应出手的随从下标；跳过已死亡、生命 ≤0 或无令牌者。
+    /// 该侧进入新一轮：指针回到最左，存活随从恢复本轮行动次数。
+    fn reset_round(&mut self) {
+        self.pointer = 0;
+        for index in 0..self.minions.len() {
+            if self.alive[index] {
+                self.minions[index].attacks_left = self.starting_tokens[index];
+            }
+        }
+    }
+
+    /// 返回当前应出手的随从下标；跳过已死亡、生命 ≤0 或本轮已行动者。
+    ///
+    /// 本轮扫描到末尾后立即进入新一轮再找一次；全部不能攻击时返回 `None`。
     fn find_attacker(&mut self) -> Option<usize> {
+        if self.pointer >= self.minions.len() {
+            self.reset_round();
+        }
+        if let Some(index) = self.scan_attacker() {
+            return Some(index);
+        }
+        // 本轮已走完：该侧下一次轮到从最左开始。
+        self.reset_round();
+        self.scan_attacker()
+    }
+
+    /// 从当前指针向右扫描第一个可出手的随从；指针停在返回值或末尾。
+    fn scan_attacker(&mut self) -> Option<usize> {
         while self.pointer < self.minions.len() {
             if self.alive[self.pointer]
                 && self.minions[self.pointer].stats.health.current > 0
@@ -742,7 +765,8 @@ impl BattleField {
                     // 直接置当前生命为 1，允许与层和无关联（复生不走伤害入口）。
                     board.minions[index].stats.health.revive_to(1);
                     board.alive[index] = true;
-                    board.minions[index].attacks_left = board.starting_tokens[index];
+                    // 保留本轮的剩余行动次数：本轮已行动过的随从复生后不会在同一轮
+                    // 再次出手，未行动过的随从由指针位置决定本轮是否轮到。
                     let states = self.snapshots(catalog, &[id]);
                     self.push_action(CombatAction::Reborn { minion: id }, states);
                 }
@@ -1068,15 +1092,30 @@ fn simulate_inner(
             }
         };
 
-        resolve_attack(
-            engine,
-            catalog,
-            &mut field,
-            acting_side,
-            attacker_index,
-            rng,
-        );
-        action_count += 1;
+        // 同一拍内连续结算本拍的攻击次数（普通 1 次、连击 2 次），
+        // 两次攻击之间不切换到对方。
+        let attacker_id = field.sides[acting_side].minions[attacker_index].instance_id;
+        let attacks = field.sides[acting_side].minions[attacker_index].attacks_left;
+        for _ in 0..attacks {
+            if action_count >= MAX_ACTIONS {
+                break;
+            }
+            // 召唤或复生可能移动实例下标，攻击前按实例编号重新定位。
+            let Some((side, index)) = field.locate(attacker_id) else {
+                break;
+            };
+            if side != acting_side
+                || !field.is_alive(attacker_id)
+                || field.sides[side].minions[index].attacks_left == 0
+            {
+                break;
+            }
+            if field.sides[0].alive_count() == 0 || field.sides[1].alive_count() == 0 {
+                break;
+            }
+            resolve_attack(engine, catalog, &mut field, side, index, rng);
+            action_count += 1;
+        }
         attacker_turn = acting_side == 1;
     }
 
