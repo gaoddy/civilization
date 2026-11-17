@@ -76,6 +76,7 @@ func _check_combat_identity() -> void:
         var text := _node_text(identity)
         _expect(text.contains("机器人C"), "战斗阶段应显示对手英雄名")
         _expect(text.contains("HP"), "战斗阶段应显示对手 HP 行")
+        _expect(identity.find_child("HpBar", true, false) != null, "对手身份应显示血量条")
     var status = instance.find_child("SideStatus", true, false)
     _expect(status != null, "战斗阶段右栏中部应存在回合与倒计时块")
     if status != null:
@@ -87,7 +88,12 @@ func _check_combat_identity() -> void:
 func _check_eliminated_identity() -> void:
     var view := _base_view(Protocol.PHASE_COMBAT)
     view["players"][0]["alive"] = false
-    var instance := await _mount(view)
+    # 同时具备对手与幽灵标记：淘汰判定必须优先于对手/幽灵分支。
+    view["opponentPlayerId"] = "p2"
+    view["players"][2]["alive"] = false
+    var combat := FixtureScript.combat_result()
+    combat["mirror"] = true
+    var instance := await _mount(view, combat)
     if instance == null:
         return
 
@@ -117,7 +123,7 @@ func _check_ghost_identity() -> void:
     if identity != null:
         _expect(_node_text(identity).contains("幽灵"), "幽灵战身份块应标注「幽灵」")
         _expect(
-            identity.find_child("SideHpBar", true, false) == null,
+            identity.find_child("HpBar", true, false) == null,
             "幽灵战身份块不应显示血量条",
         )
 

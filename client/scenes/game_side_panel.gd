@@ -16,7 +16,6 @@ var _end_button: Button
 
 ## 当前阶段截止时间；空串表示没有可展示的倒计时。
 var _deadline := ""
-var _time_left := -1
 
 
 func _init() -> void:
@@ -37,7 +36,7 @@ func _init() -> void:
     status_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
     status_panel.add_child(status_box)
     _turn_label = UI.label("", UITheme.font_size("font-title-lg"), false)
-    _turn_label.name = "TurnLabel"
+    _turn_label.name = "SideTurnLabel"
     status_box.add_child(_turn_label)
     _timer_label = UI.pill_label("—", "accent", "font-title")
     _timer_label.name = "TimerLabel"
@@ -73,8 +72,10 @@ func _process(_delta: float) -> void:
 
 
 func refresh(state: GameUiState) -> void:
+    # `MSG_PHASE_CHANGED` 先更新 `GameStore.deadline`，此时 `view.phaseDeadline`
+    # 仍是上一阶段的旧值；因此以 `GameStore.deadline` 为准，视图字段仅作回退。
     var view_deadline := str(state.view.get("phaseDeadline", ""))
-    _deadline = view_deadline if view_deadline != "" else GameStore.deadline
+    _deadline = GameStore.deadline if GameStore.deadline != "" else view_deadline
     _refresh_identity(state)
     _refresh_status(state)
     _refresh_hero(state)
@@ -87,26 +88,27 @@ func set_combat_mode(in_combat: bool) -> void:
     _end_button.visible = not in_combat
 
 
-## 当前阶段剩余秒数；没有截止时间时返回 -1。
+## 当前阶段剩余秒数：已成功解析的截止时间返回非负秒数（归零后保持 0），
+## 空串或不可解析时才返回 -1，页面据此区分「没有截止时间」与「已过期」。
 func seconds_left() -> int:
-    return _seconds_left()
-
-
-func _seconds_left() -> int:
     if _deadline == "":
         return -1
     var deadline := GameCombatView.unix_from_rfc3339(_deadline)
     if deadline <= 0.0:
         return -1
-    return int(ceil(deadline - Time.get_unix_time_from_system()))
+    return maxi(int(ceil(deadline - Time.get_unix_time_from_system())), 0)
+
+
+func has_deadline() -> bool:
+    return _deadline != "" and GameCombatView.unix_from_rfc3339(_deadline) > 0.0
 
 
 func _update_countdown() -> void:
-    _time_left = _seconds_left()
+    var left := seconds_left()
     var text := "—"
-    if _time_left > 0:
-        text = "剩余 %d 秒" % _time_left
-    elif _time_left == 0:
+    if left > 0:
+        text = "剩余 %d 秒" % left
+    elif left == 0:
         text = "等待结算"
     if _timer_label.text != text:
         _timer_label.text = text
@@ -116,6 +118,8 @@ func _refresh_status(state: GameUiState) -> void:
     _turn_label.text = "第 %d 回合" % int(state.view.get("turn", GameStore.turn))
 
 
+## 身份判定以阶段优先：招募阶段一律显示售货员（即使自己已淘汰），
+## 战斗阶段才按「自身已淘汰 → 幽灵 → 对手 → 等待配对」（product.md 验收 4）。
 func _refresh_identity(state: GameUiState) -> void:
     UI.clear(_identity_box)
     if state.phase == Protocol.PHASE_RECRUIT:
@@ -228,13 +232,13 @@ func _opponent_block(player: Dictionary, hp_cap: int, ghost: bool) -> Control:
     info.add_child(meta)
 
     if not ghost:
-        var bar := ProgressBar.new()
-        bar.name = "SideHpBar"
-        bar.show_percentage = false
-        bar.max_value = maxi(hp_cap, 1)
-        bar.value = clampf(float(player.get("hp", 0)), 0.0, bar.max_value)
-        bar.custom_minimum_size = Vector2(0, UITheme.metric("seat-hp-bar-height"))
-        block.add_child(bar)
+        block.add_child(
+            UI.hp_bar(
+                int(player.get("hp", 0)),
+                hp_cap,
+                UITheme.metric("side-width") - UITheme.space("space-2xl"),
+            )
+        )
     else:
         UI.apply_dim(block)
     return block

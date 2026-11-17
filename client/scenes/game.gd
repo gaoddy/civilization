@@ -29,6 +29,8 @@ var _target_pending := false
 
 # 状态行：错误与断线提示共用。
 var _status: Label
+## 状态行当前承载的是连接提示：恢复连接时据此清空，避免误清错误文案。
+var _connection_notice := false
 
 # 左栏积分榜。
 var _players_panel: GamePlayersRail
@@ -306,20 +308,30 @@ func _refresh_connection() -> void:
         return
     var disconnected := not Net.is_open() and not GameStore.view.is_empty()
     if disconnected:
-        _status.text = "未连接 · 正在重连"
-    elif _status.text == "未连接 · 正在重连":
+        # 有连接句柄但未就绪 = 正在重连（dim）；句柄为空 = 断线（danger）。
+        var reconnecting := Net.socket != null
+        _status.text = "正在重连…" if reconnecting else "未连接 · 正在重连"
+        _status.add_theme_color_override(
+            "font_color",
+            UITheme.color("color-text-dim") if reconnecting else UITheme.color("color-danger"),
+        )
+        _connection_notice = true
+        return
+    if _connection_notice:
         _status.text = ""
+        _status.remove_theme_color_override("font_color")
+        _connection_notice = false
 
 
-## 倒计时由右栏维护；页面只读取剩余秒数，负责在归零时重算操作门控。
+## 倒计时由右栏维护；页面按「是否存在截止时间」决定清零，避免把已过期
+## （秒数为 0）误判成没有截止时间。
 func _update_timer() -> void:
     if _side_panel == null:
         return
-    var left := _side_panel.seconds_left()
-    if left < 0:
+    if not _side_panel.has_deadline():
         _set_deadline_expired(false)
         return
-    _set_deadline_expired(left <= 0)
+    _set_deadline_expired(_side_panel.seconds_left() <= 0)
 
 
 func _set_deadline_expired(value: bool) -> void:
