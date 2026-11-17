@@ -1258,6 +1258,10 @@ fn combat_log_records_one_entry_per_fight() {
         view.combat_log.iter().all(|entry| !entry.mirror),
         "真实战不应标记 mirror"
     );
+    assert!(
+        view.combat_log.iter().all(|entry| entry.ghost_id.is_none()),
+        "真实战不携带幽灵归属者"
+    );
 
     let mut pairs = BTreeSet::new();
     let mut participants = BTreeSet::new();
@@ -1294,6 +1298,7 @@ fn combat_log_records_one_entry_per_fight() {
             assert_eq!(matched.mirror, entry.mirror);
             assert_eq!(matched.winner_id, entry.winner_id);
             assert_eq!(matched.loser_id, entry.loser_id);
+            assert_eq!(matched.ghost_id, entry.ghost_id);
         }
     }
     assert_eq!(participants.len(), 8, "4 场战斗应覆盖全部 8 名玩家");
@@ -1348,6 +1353,12 @@ fn combat_log_ghost_entry_has_single_participant() {
         "幽灵战失利时 loserId 为对战方"
     );
     assert_eq!(loss.winner_id, None, "幽灵没有玩家 id，获胜时为 null");
+    assert!(loss.ghost_id.is_some(), "幽灵战失利应携带幽灵归属者");
+    assert_ne!(
+        loss.ghost_id.as_deref(),
+        Some(loss.participant_ids[0].as_str()),
+        "幽灵归属者不能是对战方自己"
+    );
     assert!(loss.damage > 0, "幽灵战失利必须造成伤害");
     assert!(loss.turn.get() <= 20, "战报回合号不超过对局回合上限");
 
@@ -1364,6 +1375,12 @@ fn combat_log_ghost_entry_has_single_participant() {
         "幽灵不掉血，玩家赢下幽灵战时 loserId 必须为 null"
     );
     assert_eq!(win.damage, 0, "幽灵不受伤，玩家获胜不产生伤害");
+    assert!(win.ghost_id.is_some(), "幽灵战获胜应携带幽灵归属者");
+    assert_ne!(
+        win.ghost_id.as_deref(),
+        Some(win.participant_ids[0].as_str()),
+        "幽灵归属者不能是对战方自己"
+    );
     assert!(win.turn.get() <= 20, "战报回合号不超过对局回合上限");
 }
 

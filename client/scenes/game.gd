@@ -104,6 +104,7 @@ func _build() -> void:
 
     _detail = GameDetailLayer.new()
     add_child(_detail)
+    _players_panel.detail = _detail
     _recruit_view.detail = _detail
     _combat_view.detail = _detail
 

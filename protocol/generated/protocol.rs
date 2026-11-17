@@ -821,6 +821,7 @@ impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeType {
 ///  "type": "object",
 ///  "required": [
 ///    "damage",
+///    "ghostId",
 ///    "loserId",
 ///    "mirror",
 ///    "participantIds",
@@ -831,6 +832,13 @@ impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeType {
 ///    "damage": {
 ///      "type": "integer",
 ///      "minimum": 0.0
+///    },
+///    "ghostId": {
+///      "description": "幽灵战为幽灵归属者的玩家 id；真实战为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
 ///    },
 ///    "loserId": {
 ///      "description": "幽灵战失利时为该玩家；幽灵不受伤，所以幽灵输时也为 null",
@@ -873,6 +881,9 @@ impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeType {
 #[serde(deny_unknown_fields)]
 pub struct CombatLogEntry {
     pub damage: u64,
+    ///幽灵战为幽灵归属者的玩家 id；真实战为 null
+    #[serde(rename = "ghostId")]
+    pub ghost_id: ::std::option::Option<::std::string::String>,
     ///幽灵战失利时为该玩家；幽灵不受伤，所以幽灵输时也为 null
     #[serde(rename = "loserId")]
     pub loser_id: ::std::option::Option<::std::string::String>,

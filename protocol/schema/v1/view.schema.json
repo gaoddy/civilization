@@ -73,7 +73,7 @@
     "CombatLogEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["turn", "participantIds", "winnerId", "loserId", "damage", "mirror"],
+      "required": ["turn", "participantIds", "ghostId", "winnerId", "loserId", "damage", "mirror"],
       "properties": {
         "turn": { "type": "integer", "minimum": 1, "maximum": 20 },
         "participantIds": {
@@ -83,6 +83,7 @@
           "items": { "type": "string" },
           "description": "参战玩家 id；幽灵战只有对战方一个元素（幽灵不是玩家）"
         },
+        "ghostId": { "type": ["string", "null"], "description": "幽灵战为幽灵归属者的玩家 id；真实战为 null" },
         "winnerId": { "type": ["string", "null"], "description": "平局无胜者时为 null" },
         "loserId": { "type": ["string", "null"], "description": "幽灵战失利时为该玩家；幽灵不受伤，所以幽灵输时也为 null" },
         "damage": { "type": "integer", "minimum": 0 },

@@ -11,8 +11,8 @@ var _expanded_player_id := ""
 ## 上一次刷新传入的快照：点击展开/收起时按它原地重建。
 var _last_state: GameUiState
 
-## 同页面的详情层，悬停座位行时登记。
-var _detail: GameDetailLayer
+## 同页面的详情层，由页面注入；悬停座位行时登记。
+var detail: GameDetailLayer = null
 
 var _rail: VBoxContainer
 
@@ -24,7 +24,6 @@ func _init() -> void:
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", UITheme.space("space-sm"))
     add_child(box)
-    box.add_child(UI.section_title("积分榜"))
 
     var scroll := ScrollContainer.new()
     scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -40,7 +39,6 @@ func _init() -> void:
 
 func refresh(state: GameUiState) -> void:
     _last_state = state
-    _detail = _resolve_detail()
     UI.clear(_rail)
     var players: Array = _sorted_players(state.view)
     if players.is_empty():
@@ -99,12 +97,13 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     avatar_box.add_child(avatar)
     _ignore_mouse(avatar)
 
-    var badge := UI.rank_badge(int(player.get("rank", 0)))
-    badge.name = "SeatRankBadge"
-    badge.position = Vector2(-3, -3)
-    badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    avatar_box.add_child(badge)
-    _ignore_mouse(badge)
+    if player.get("rank") != null:
+        var badge := UI.rank_badge(int(player.get("rank")))
+        badge.name = "SeatRankBadge"
+        badge.position = Vector2(-3, -3)
+        badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        avatar_box.add_child(badge)
+        _ignore_mouse(badge)
 
     var hp := UI.hp_bar(int(player.get("hp", 0)), state.hp_cap, avatar_size)
     hp.name = "SeatHpBar"
@@ -188,7 +187,8 @@ func _entry_text(entry: Dictionary, player_id: String, names: Dictionary) -> Str
             break
     var opponent := str(names.get(opponent_id, opponent_id))
     if bool(entry.get("mirror", false)):
-        opponent = "幽灵（%s）" % opponent
+        var ghost_id := "" if entry.get("ghostId") == null else str(entry.get("ghostId"))
+        opponent = "幽灵" if ghost_id == "" else "幽灵（%s）" % str(names.get(ghost_id, ghost_id))
 
     var winner_id := "" if entry.get("winnerId") == null else str(entry.get("winnerId"))
     var loser_id := "" if entry.get("loserId") == null else str(entry.get("loserId"))
@@ -225,26 +225,10 @@ func _ignore_mouse(node: Node) -> void:
 
 
 func _track_detail(row: PanelContainer, player: Dictionary, hp_cap: int) -> void:
-    if _detail == null or not is_instance_valid(_detail):
+    if detail == null or not is_instance_valid(detail):
         return
-    _detail.track(row, {
+    detail.track(row, {
         "detail_kind": "seat",
         "player": player,
         "hpCap": hp_cap,
     })
-
-
-## 详情层挂在页面根节点；本视图只拿到状态快照，因此按类型在树上查找一次。
-func _resolve_detail() -> GameDetailLayer:
-    if _detail != null and is_instance_valid(_detail):
-        return _detail
-    var tree := get_tree()
-    if tree == null:
-        return null
-    var found := tree.root.find_children("*", "GameDetailLayer", true, false)
-    if found.is_empty():
-        found = tree.root.find_children("MinionDetailLayer", "", true, false)
-    if found.is_empty():
-        return null
-    _detail = found[0]
-    return _detail

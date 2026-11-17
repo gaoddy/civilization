@@ -10,13 +10,15 @@ func _ready() -> void:
     _finish()
 
 
-## 战报夹具：p0 第 2 回合战胜 p2；p2 第 2 回合负于 p0，第 3 回合幽灵战负于 p5。
+## 战报夹具：p0 第 2 回合战胜 p2；p2 第 3 回合幽灵战负于 p5 的幽灵；
+## p3 第 4 回合的幽灵战缺少归属者（ghostId 为 null）。
 func _view_with_log() -> Dictionary:
     var view: Dictionary = FixtureScript.game_view()
     view["combatLog"] = [
         {
             "turn": 2,
             "participantIds": ["p0", "p2"],
+            "ghostId": null,
             "winnerId": "p0",
             "loserId": "p2",
             "damage": 7,
@@ -24,8 +26,18 @@ func _view_with_log() -> Dictionary:
         },
         {
             "turn": 3,
-            "participantIds": ["p2", "p5"],
-            "winnerId": "p5",
+            "participantIds": ["p2"],
+            "ghostId": "p5",
+            "winnerId": null,
+            "loserId": "p2",
+            "damage": 5,
+            "mirror": true,
+        },
+        {
+            "turn": 4,
+            "participantIds": ["p3"],
+            "ghostId": null,
+            "winnerId": "p3",
             "loserId": null,
             "damage": 0,
             "mirror": true,
@@ -68,22 +80,62 @@ func _reports(instance: Node) -> Array:
     return instance.find_children("SeatReport", "", true, false)
 
 
+## 行内固定部分的文本：排除 SeatReport 子树（战报里本来就有对手名）。
+func _fixed_text(row: Node) -> String:
+    var text := ""
+    for child in row.find_children("*", "Label", true, false):
+        var cursor: Node = child
+        var in_report := false
+        while cursor != null and cursor != row:
+            if cursor.name == "SeatReport":
+                in_report = true
+                break
+            cursor = cursor.get_parent()
+        if not in_report:
+            text += str(child.text) + "\n"
+    return text
+
+
 func _check_seat_rows() -> void:
-    var instance := await _open(_view_with_log())
+    var view := _view_with_log()
+    view["players"][1]["rank"] = null
+    var instance := await _open(view)
     if instance == null:
         return
+    var panel = instance.find_child("PlayersPanel", true, false)
     var rail = instance.find_child("PlayersRail", true, false)
     if rail == null:
         _expect(false, "对局场景缺少积分榜容器 PlayersRail")
         instance.queue_free()
         return
+    _expect(
+        panel != null and not _node_text(panel).contains("积分榜"),
+        "左栏不再显示「积分榜」小标题",
+    )
     var rows := _rows(rail)
     _expect(rows.size() == 8, "积分榜应有 8 个座位行，实际 %d" % rows.size())
+    var names := ["玩家A", "机器人B", "机器人C", "机器人D", "机器人E", "机器人F", "机器人G", "机器人H"]
     for row in rows:
         _expect(row.find_child("Avatar", true, false) != null, "座位行缺少头像")
-        _expect(row.find_child("SeatRankBadge", true, false) != null, "座位行缺少名次角标")
         _expect(row.find_child("SeatHpBar", true, false) != null, "座位行缺少血条")
-        _expect(not _node_text(row).contains("HP"), "座位行内不应出现 HP 文本：%s" % _node_text(row))
+        var fixed := _fixed_text(row)
+        _expect(not fixed.contains("HP"), "座位行内不应出现 HP 文本：%s" % fixed)
+        _expect(not fixed.contains("时代"), "座位行内不应出现时代：%s" % fixed)
+        _expect(not fixed.contains("随从"), "座位行内不应出现随从数：%s" % fixed)
+        for player_name in names:
+            _expect(not fixed.contains(player_name), "座位行内不应出现玩家名：%s" % fixed)
+    # rank 为 null 时不显示名次角标；其余行仍有角标。
+    var unranked := _row_of(rail, "p1")
+    _expect(
+        unranked != null and unranked.find_child("SeatRankBadge", true, false) == null,
+        "rank 为 null 的座位不应显示名次角标",
+    )
+    for player_id in ["p0", "p2", "p7"]:
+        var ranked := _row_of(rail, player_id)
+        _expect(
+            ranked != null and ranked.find_child("SeatRankBadge", true, false) != null,
+            "%s 有 rank 时应显示名次角标" % player_id,
+        )
     # 已淘汰仍然显示名次数字，整行压暗。
     var dead := _row_of(rail, "p7")
     var dead_badge = dead.find_child("SeatRankBadge", true, false) if dead != null else null
@@ -163,7 +215,12 @@ func _check_expanded_memory() -> void:
     if reports.size() == 1:
         var text := _node_text(reports[0])
         _expect(text.contains("幽灵（机器人F）"), "幽灵战对手名应写幽灵归属者：%s" % text)
-        _expect(not text.contains("伤害 0"), "伤害为 0 时应省略伤害段：%s" % text)
+        _expect(text.contains("伤害 5"), "幽灵战失利应显示伤害：%s" % text)
+    var expanded_row := _row_of(rail, "p2")
+    if expanded_row != null:
+        var fixed := _fixed_text(expanded_row)
+        _expect(not fixed.contains("机器人"), "展开行的固定部分不应含玩家名：%s" % fixed)
+        _expect(not fixed.contains("第 "), "展开行的固定部分不应含战报文本：%s" % fixed)
     # 连续两次视图重建后仍按 playerId 恢复展开。
     for i in range(2):
         view["players"][2]["hp"] = 30 - i
@@ -177,6 +234,10 @@ func _check_expanded_memory() -> void:
             _expect(str(kept[0].get_meta("player_id", "")) == "p2", "重建后应恢复同一座位的战报")
     # 展开另一行时旧的先收起，同屏只有一块。
     row = _row_of(rail, "p4")
+    if row == null:
+        _expect(false, "缺少 p4 座位行")
+        instance.queue_free()
+        return
     await _push_click(instance, row.get_global_rect().get_center())
     await get_tree().process_frame
     var switched := _reports(instance)
@@ -184,6 +245,20 @@ func _check_expanded_memory() -> void:
     if switched.size() == 1:
         _expect(str(switched[0].get_meta("player_id", "")) == "p4", "新展开的战报应属于新座位")
         _expect(_node_text(switched[0]).contains("无战报"), "没有参与战报的座位应显示无战报")
+    # ghostId 为 null 的幽灵战只写「幽灵」，不出现空括号。
+    row = _row_of(rail, "p3")
+    if row == null:
+        _expect(false, "缺少 p3 座位行")
+        instance.queue_free()
+        return
+    await _push_click(instance, row.get_global_rect().get_center())
+    await get_tree().process_frame
+    var ghostless := _reports(instance)
+    _expect(ghostless.size() == 1, "点击 p3 应展开战报")
+    if ghostless.size() == 1:
+        var ghost_text := _node_text(ghostless[0])
+        _expect(ghost_text.contains("幽灵"), "幽灵战应显示幽灵：%s" % ghost_text)
+        _expect(not ghost_text.contains("幽灵（）"), "ghostId 为 null 时不应出现空括号：%s" % ghost_text)
     instance.queue_free()
     await get_tree().process_frame
 

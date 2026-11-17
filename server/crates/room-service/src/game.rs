@@ -612,6 +612,11 @@ impl GameTask {
             };
             self.combat_log.push(CombatLogEntry {
                 damage,
+                ghost_id: if report.mirror {
+                    opponent.map(|seat| self.player_id(seat))
+                } else {
+                    None
+                },
                 loser_id,
                 mirror: report.mirror,
                 participant_ids,

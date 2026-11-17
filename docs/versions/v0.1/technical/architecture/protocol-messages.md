@@ -243,6 +243,7 @@
 | --- | --- | --- | --- |
 | `turn` | integer | 是 |  |
 | `participantIds` | array<string> | 是 | 参战玩家 id；幽灵战只有对战方一个元素（幽灵不是玩家） |
+| `ghostId` | string | null | 是 | 幽灵战为幽灵归属者的玩家 id；真实战为 null |
 | `winnerId` | string | null | 是 | 平局无胜者时为 null |
 | `loserId` | string | null | 是 | 幽灵战失利时为该玩家；幽灵不受伤，所以幽灵输时也为 null |
 | `damage` | integer | 是 |  |

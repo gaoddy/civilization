@@ -47,6 +47,8 @@ func _init() -> void:
 ## 卡内控件全部 IGNORE 鼠标，祖先悬停通知会被子控件截断，
 ## 因此真正的矩形命中判断放在 `_input`，这里只保留就近的进入/离开兜底。
 func track(card: Control, data: Dictionary) -> void:
+    # 重建时旧行已 queue_free；登记新行前裁掉已释放的条目，避免无限累积。
+    _cards = _cards.filter(func(entry): return is_instance_valid(entry))
     card.set_meta("detail_data", data)
     _cards.append(card)
     card.mouse_entered.connect(_show_detail.bind(data, card))
