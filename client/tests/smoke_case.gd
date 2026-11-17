@@ -1,3 +1,4 @@
+class_name SmokeCase
 extends Node
 ## 冒烟用例公共基座：场景装载、真实输入事件注入、战斗状态摆位与结果输出。
 ##

@@ -5,8 +5,8 @@ extends PanelContainer
 ## 演示进度由 `CombatPlayback` 纯数据播放器驱动；页面只负责在演示中调用
 ## `advance()`，本视图不发送任何意图。
 
-## 卡片详情登记入口，由页面注入同一个详情层。
-var detail: GameDetailLayer
+## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
+var detail: GameDetailLayer = null
 
 var _body: VBoxContainer
 var _opponent_strip: HBoxContainer
@@ -164,7 +164,8 @@ func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
         if panel == null:
             panel = GameCardFace.read_only_minion_card(minion)
             panel.set_meta("minion_id", minion_id)
-            detail.track(panel, {"detail_kind": "minion", "minion": minion})
+            if detail != null:
+                detail.track(panel, {"detail_kind": "minion", "minion": minion})
             row.add_child(panel)
         var attack_label = panel.find_child("CardAttack", true, false)
         if attack_label != null:

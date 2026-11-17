@@ -14,8 +14,8 @@ signal board_dropped(payload: Dictionary, position: int, target_minion_id: Strin
 signal sell_dropped(payload: Dictionary)
 signal sell_hover(hovering: bool, refund: int)
 
-## 卡片详情登记入口，由页面注入同一个详情层。
-var detail: GameDetailLayer
+## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
+var detail: GameDetailLayer = null
 
 var _board_row: BoardDrop
 var _board_hint: Label
@@ -211,7 +211,8 @@ func _minion_card(
         "★" if bool(minion.get("golden", false)) else "",
     ))
 
-    detail.track(panel, {"detail_kind": "minion", "minion": minion})
+    if detail != null:
+        detail.track(panel, {"detail_kind": "minion", "minion": minion})
 
     # 棋盘卡只提供拖拽：拖到棋盘内换位，拖到商店出售；卡内不再放操作按钮。
     panel.payload = {
@@ -253,11 +254,12 @@ func _refresh_shop(state: GameUiState) -> void:
             GameCardFace.tribe_text(entry),
             "冻" if bool(slot.get("frozen", false)) else "",
         ))
-        detail.track(panel, {
-            "detail_kind": "shop",
-            "cardId": card_id,
-            "disabledReason": slot_aff.get("disabledReason"),
-        })
+        if detail != null:
+            detail.track(panel, {
+                "detail_kind": "shop",
+                "cardId": card_id,
+                "disabledReason": slot_aff.get("disabledReason"),
+            })
         if not buyable:
             UI.apply_dim(panel)
         _shop_row.add_child(panel)

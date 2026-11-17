@@ -449,26 +449,24 @@ func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
     if _view_stale or _deadline_expired or recruited or phase != Protocol.PHASE_RECRUIT:
         _target_intent = {}
         _overlay.visible = false
-        _detail.blocked = false
-        return
-    var head: Dictionary = choices[0] if not choices.is_empty() else {}
-    if str(head.get("kind", "")) == "target":
-        # 服务端目标待选优先：丢弃英雄技能的客户端目标态，改为选随从结算战吼。
-        _target_intent = {}
-        _build_target_pending_overlay(head, self_state)
-        return
-    if not _target_intent.is_empty():
-        _build_target_overlay(self_state)
-    elif not choices.is_empty():
-        _build_choice_overlay(choices[0])
     else:
-        _overlay.visible = false
-        _detail.blocked = false
+        var head: Dictionary = choices[0] if not choices.is_empty() else {}
+        if str(head.get("kind", "")) == "target":
+            # 服务端目标待选优先：丢弃英雄技能的客户端目标态，改为选随从结算战吼。
+            _target_intent = {}
+            _build_target_pending_overlay(head, self_state)
+        elif not _target_intent.is_empty():
+            _build_target_overlay(self_state)
+        elif not choices.is_empty():
+            _build_choice_overlay(choices[0])
+        else:
+            _overlay.visible = false
+    # 浮层可见性只在本函数收口；打开浮层时同步遮住详情层。
+    _detail.blocked = _overlay.visible
 
 
 func _overlay_frame(title: String, parent: VBoxContainer) -> void:
     _overlay.visible = true
-    _detail.blocked = true
     _detail.hide_panel()
     var shade := ColorRect.new()
     shade.color = UITheme.alpha("color-bg", 0.72)
