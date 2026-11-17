@@ -14,11 +14,11 @@
       "hpCap": 40,
       "combatLog": [],
       "enabledFactions": [
-        "人类",
-        "机械",
-        "生物",
-        "植物",
-        "学者"
+        "human",
+        "machine",
+        "biology",
+        "plant",
+        "scholar"
       ],
       "self": {
         "playerId": "p_03",
@@ -81,7 +81,7 @@
             "attack": 3,
             "health": 4,
             "keywords": [
-              "战吼"
+              "battlecry"
             ],
             "sellable": true
           }
@@ -101,9 +101,9 @@
           {
             "kind": "evolve",
             "options": [
-              "attack",
-              "health",
-              "keyword"
+              "stats",
+              "divine_shield",
+              "reborn"
             ]
           },
           {

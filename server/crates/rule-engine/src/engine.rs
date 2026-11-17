@@ -264,7 +264,7 @@ impl Engine {
             else {
                 continue;
             };
-            let Some(rest) = keyword.strip_prefix("繁衍") else {
+            let Some(rest) = keyword.strip_prefix("breed") else {
                 continue;
             };
             let rest = rest.trim();
@@ -315,7 +315,7 @@ impl Engine {
                 golden: minion.golden,
             };
             self.fire_death_recruit(state, &minion.card_id, &ctx);
-            if self.card_has_keyword(&minion.card_id, "播种") {
+            if self.card_has_keyword(&minion.card_id, "sow") {
                 let count = if minion.golden { 2 } else { 1 };
                 for _ in 0..count {
                     let _ = self.summon_recruit(state, seat, combat::SEEDLING_TOKEN, None, false);

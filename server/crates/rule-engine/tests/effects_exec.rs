@@ -173,19 +173,19 @@ fn grant_keyword_respects_duration() {
 
     engine.apply_op(
         &mut state,
-        &effect("OnPlay|GrantKeyword|self|keyword=护盾,duration=permanent"),
+        &effect("OnPlay|GrantKeyword|self|keyword=divine_shield,duration=permanent"),
         &first,
         None,
     );
     engine.apply_op(
         &mut state,
-        &effect("OnPlay|GrantKeyword|self|keyword=连击,duration=combat"),
+        &effect("OnPlay|GrantKeyword|self|keyword=windfury,duration=combat"),
         &second,
         None,
     );
     engine.apply_op(
         &mut state,
-        &effect("OnPlay|GrantKeyword|self|keyword=繁衍,value=2,duration=permanent"),
+        &effect("OnPlay|GrantKeyword|self|keyword=breed,value=2,duration=permanent"),
         &first,
         None,
     );
@@ -194,31 +194,31 @@ fn grant_keyword_respects_duration() {
     assert!(
         shielded
             .granted
-            .contains(&("护盾".into(), Duration::Permanent))
+            .contains(&("divine_shield".into(), Duration::Permanent))
     );
     assert!(!shielded.shield_used, "授予护盾会重置已用标记");
     assert_eq!(shielded.breed, 2, "繁衍层数写入 breed，不进入 granted");
-    assert!(!shielded.granted.iter().any(|(name, _)| name == "繁衍"));
+    assert!(!shielded.granted.iter().any(|(name, _)| name == "breed"));
 
     let windfury = board_minion(&state, 0, 1);
     assert!(
         windfury
             .granted
-            .contains(&("连击".into(), Duration::Combat))
+            .contains(&("windfury".into(), Duration::Combat))
     );
-    assert!(combat::keywords(&engine.catalog, windfury).contains("连击"));
+    assert!(combat::keywords(&engine.catalog, windfury).contains("windfury"));
 
     state.phase = Phase::Settle;
     engine.resolve_settle(&mut state).expect("结算应成功");
     assert!(
-        !combat::keywords(&engine.catalog, board_minion(&state, 0, 1)).contains("连击"),
+        !combat::keywords(&engine.catalog, board_minion(&state, 0, 1)).contains("windfury"),
         "combat 关键词在 Settle 前清除"
     );
     assert!(
         board_minion(&state, 0, 0)
             .granted
             .iter()
-            .any(|(name, duration)| name == "护盾" && *duration == Duration::Permanent),
+            .any(|(name, duration)| name == "divine_shield" && *duration == Duration::Permanent),
         "permanent 关键词保留"
     );
 }
@@ -261,7 +261,7 @@ fn cannot_attack_blocks_attacks() {
         minion
             .granted
             .iter()
-            .any(|(name, duration)| name == "禁攻" && *duration == Duration::Combat)
+            .any(|(name, duration)| name == "cannot_attack" && *duration == Duration::Combat)
     );
 
     state.phase = Phase::Settle;
@@ -333,7 +333,7 @@ fn times_if_changes_times_by_tribe() {
     let (mut engine, mut state) = setup();
     place(&engine.catalog, &mut state, 0, 1, "tengman");
     place(&engine.catalog, &mut state, 0, 2, "yezhu");
-    let growth_effect = effect("OnPlay|Growth|friendly:single|times=1,timesIf=植物:2");
+    let growth_effect = effect("OnPlay|Growth|friendly:single|times=1,timesIf=plant:2");
 
     let plant_ctx = EffectCtx {
         target: Some(1),
@@ -364,7 +364,7 @@ fn condition_gates_effect() {
     place(&engine.catalog, &mut state, 0, 1, "buluozhanshi");
     place(&engine.catalog, &mut state, 0, 2, "bruce-lee");
     let gated = effect(
-        "OnActivate|Growth|friendly:single:tribe=人类|times=1,timesIf=人类:2,condition=count:friendly:tribe=人类:>=3",
+        "OnActivate|Growth|friendly:single:tribe=human|times=1,timesIf=human:2,condition=count:friendly:tribe=human:>=3",
     );
     let target_ctx = EffectCtx {
         target: Some(1),
@@ -622,7 +622,7 @@ fn grant_contagion_stacks_layer() {
 
     engine.apply_op(
         &mut state,
-        &effect("OnCombatStart|GrantKeyword|friendly:all|keyword=传染,value=2"),
+        &effect("OnCombatStart|GrantKeyword|friendly:all|keyword=contagion,value=2"),
         &ctx(0),
         None,
     );
@@ -729,7 +729,7 @@ fn cannot_attack_without_duration_clears_at_settle() {
         minion
             .granted
             .iter()
-            .any(|(name, duration)| name == "禁攻" && *duration == Duration::Combat),
+            .any(|(name, duration)| name == "cannot_attack" && *duration == Duration::Combat),
         "省略 duration 时按 combat 记录"
     );
 

@@ -18,14 +18,14 @@ use crate::state::{GameState, InstanceId, MinionInstance, PendingChoice, Seat};
 ///
 /// 与关键词机制 §1「进化：从 +2/+2、护盾、复生中选择一个」逐项对应。
 /// 视图层下发 [`crate::view::PendingChoiceView::Evolve`] 时直接使用这份列表。
-pub const EVOLVE_CHOICES: [&str; 3] = ["+2/+2", "护盾", "复生"];
+pub const EVOLVE_CHOICES: [&str; 3] = ["stats", "divine_shield", "reborn"];
 
-/// `+2/+2` 选项的数值。
+/// `stats` 选项的数值。
 const EVOLVE_STATS: i32 = 2;
 /// 选项：护盾。
-const CHOICE_DIVINE_SHIELD: &str = "护盾";
+const CHOICE_DIVINE_SHIELD: &str = "divine_shield";
 /// 选项：复生。
-const CHOICE_REBORN: &str = "复生";
+const CHOICE_REBORN: &str = "reborn";
 
 impl Engine {
     /// 招募侧随从进入战场后登记进化待选。
@@ -50,7 +50,7 @@ impl Engine {
             return;
         };
         let (card_id, golden) = (minion.card_id.clone(), minion.golden);
-        if !self.card_has_keyword(&card_id, "进化") {
+        if !self.card_has_keyword(&card_id, "evolve") {
             return;
         }
         // 进化是生物专有词；学者不能进化（数据层已禁止，这里再兜底一次）。
@@ -182,12 +182,12 @@ impl Engine {
     }
 }
 
-/// 结算一项进化选项：`+2/+2` 为永久属性修改，护盾/复生为永久授予关键词。
+/// 结算一项进化选项：`stats` 为永久属性修改，护盾/复生为永久授予关键词。
 ///
 /// 复生在招募侧只登记关键词，复活只在战斗内发生（§1「作用对象：自身」）。
 fn apply_evolve_option(minion: &mut MinionInstance, option: &str) {
     match option {
-        "+2/+2" => {
+        "stats" => {
             minion.stats.attack.add_permanent(EVOLVE_STATS);
             minion.stats.health.add_permanent(EVOLVE_STATS);
         }

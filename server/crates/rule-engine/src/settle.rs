@@ -613,7 +613,11 @@ fn clear_combat_duration(state: &mut GameState) {
             minion
                 .granted
                 .retain(|(_, duration)| *duration != Duration::Combat);
-            if !minion.granted.iter().any(|(keyword, _)| keyword == "禁攻") {
+            if !minion
+                .granted
+                .iter()
+                .any(|(keyword, _)| keyword == "cannot_attack")
+            {
                 minion.cannot_attack = false;
             }
         }

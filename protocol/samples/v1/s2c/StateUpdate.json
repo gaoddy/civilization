@@ -33,11 +33,11 @@
         }
       ],
       "enabledFactions": [
-        "人类",
-        "机械",
-        "生物",
-        "植物",
-        "学者"
+        "human",
+        "machine",
+        "biology",
+        "plant",
+        "scholar"
       ],
       "self": {
         "playerId": "p_03",
@@ -118,7 +118,7 @@
               }
             },
             "keywords": [
-              "战吼"
+              "battlecry"
             ],
             "sellable": true
           }

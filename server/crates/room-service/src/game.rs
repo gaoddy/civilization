@@ -1009,6 +1009,8 @@ impl GameTask {
             kind: UpdateKind::Error(ErrorMessage {
                 client_intent_id: client_intent_id.map(str::to_string),
                 code,
+                message_id: format!("error.{code}"),
+                message_params: Vec::new(),
                 message: message.into(),
                 retryable: false,
             }),

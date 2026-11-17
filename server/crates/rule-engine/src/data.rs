@@ -7,46 +7,46 @@ use crate::error::CatalogError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 pub enum CardType {
-    #[serde(rename = "随从")]
+    #[serde(rename = "minion")]
     Minion,
-    #[serde(rename = "效果")]
+    #[serde(rename = "effect")]
     Effect,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
 pub enum Tribe {
-    #[serde(rename = "人类")]
+    #[serde(rename = "human")]
     Human,
-    #[serde(rename = "机械")]
+    #[serde(rename = "machine")]
     Machine,
-    #[serde(rename = "生物")]
+    #[serde(rename = "biology")]
     Biology,
-    #[serde(rename = "植物")]
+    #[serde(rename = "plant")]
     Plant,
-    #[serde(rename = "病毒")]
+    #[serde(rename = "virus")]
     Virus,
-    #[serde(rename = "学者")]
+    #[serde(rename = "scholar")]
     Scholar,
-    #[serde(rename = "通用")]
+    #[serde(rename = "general")]
     General,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
 #[repr(u8)]
 pub enum Era {
-    #[serde(rename = "史前")]
+    #[serde(rename = "prehistoric")]
     Prehistoric = 1,
-    #[serde(rename = "原始")]
+    #[serde(rename = "primitive")]
     Primitive = 2,
-    #[serde(rename = "古典")]
+    #[serde(rename = "classical")]
     Classical = 3,
-    #[serde(rename = "封建")]
+    #[serde(rename = "feudal")]
     Feudal = 4,
-    #[serde(rename = "工业")]
+    #[serde(rename = "industrial")]
     Industrial = 5,
-    #[serde(rename = "现代")]
+    #[serde(rename = "modern")]
     Modern = 6,
-    #[serde(rename = "未来")]
+    #[serde(rename = "future")]
     Future = 7,
 }
 
@@ -55,7 +55,6 @@ pub enum Era {
 pub struct Card {
     pub id: String,
     pub card_type: CardType,
-    pub name: String,
     pub tribe: Tribe,
     pub subtype: Option<String>,
     pub level: u8,
@@ -66,27 +65,22 @@ pub struct Card {
     pub is_scholar: bool,
     pub is_hero: bool,
     pub cost: Option<u8>,
-    pub match_text: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Skill {
     pub id: String,
-    pub name: Option<String>,
     pub keyword: Option<String>,
-    pub text: String,
     pub effects: Vec<Effect>,
     pub cost: Option<u8>,
     pub uses_per_turn: Option<u8>,
-    pub match_text: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Token {
     pub id: String,
-    pub name: String,
     pub attack: i32,
     pub health: i32,
     pub keywords: Vec<String>,

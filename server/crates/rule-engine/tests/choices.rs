@@ -28,13 +28,10 @@ use rule_engine::state::{
 fn skill(id: &str, keyword: Option<&str>, effects: &str, cost: Option<u8>) -> Skill {
     Skill {
         id: id.to_string(),
-        name: None,
         keyword: keyword.map(str::to_string),
-        text: String::new(),
         effects: effects_of(effects),
         cost,
         uses_per_turn: cost.map(|_| 1),
-        match_text: None,
     }
 }
 
@@ -57,7 +54,6 @@ fn add_minion(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            name: id.to_string(),
             tribe,
             subtype: None,
             level,
@@ -68,7 +64,6 @@ fn add_minion(
             is_scholar: tribe == Tribe::Scholar,
             is_hero: false,
             cost: None,
-            match_text: None,
         },
     );
     catalog.config.pool_counts[usize::from(level) - 1] = 16;
@@ -638,7 +633,7 @@ fn copy_hand_minion_to_hand_respects_hand_limit() {
 
     engine.apply_op(
         &mut state,
-        &effect("OnActivate|Copy|self|from=hand,type=随从,to=hand"),
+        &effect("OnActivate|Copy|self|from=hand,type=minion,to=hand"),
         &ctx(0),
         None,
     );
@@ -656,7 +651,7 @@ fn copy_hand_minion_to_hand_with_room_adds_copy() {
 
     engine.apply_op(
         &mut state,
-        &effect("OnActivate|Copy|self|from=hand,type=随从,to=hand"),
+        &effect("OnActivate|Copy|self|from=hand,type=minion,to=hand"),
         &ctx(0),
         None,
     );
@@ -678,7 +673,7 @@ fn evolve_fixture() -> (Engine, GameState) {
     let (mut engine, mut state) = setup(2);
     add_skill(
         &mut engine.catalog,
-        skill("keyword-evolve", Some("进化"), "[]", None),
+        skill("keyword-evolve", Some("evolve"), "[]", None),
     );
     add_skill(
         &mut engine.catalog,
@@ -788,7 +783,7 @@ fn evolve_choice_divine_shield_grants_keyword() {
         .find(|minion| minion.instance_id == evolver)
         .expect("进化随从仍在场");
     assert!(
-        rule_engine::combat::keywords(&engine.catalog, minion).contains("护盾"),
+        rule_engine::combat::keywords(&engine.catalog, minion).contains("divine_shield"),
         "进化选护盾应获得护盾关键词"
     );
 }
@@ -903,7 +898,7 @@ fn evolve_bonus_does_not_trigger_onsummon_twice() {
     let (mut engine, mut state) = setup(2);
     add_skill(
         &mut engine.catalog,
-        skill("keyword-evolve", Some("进化"), "[]", None),
+        skill("keyword-evolve", Some("evolve"), "[]", None),
     );
     add_skill(
         &mut engine.catalog,

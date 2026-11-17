@@ -84,8 +84,9 @@ def generated_entries(root):
         match_text = doc.get("match_text")
         if match_text:
             entries[f"skill.{doc['id']}.match_text"] = match_text
-    for token in gen_card_data.parse_tokens(content / "tokens" / "README.md"):
-        entries[f"token.{token['id']}.name"] = token["name"]
+    token_names = gen_card_data.parse_token_names(content / "tokens" / "README.md")
+    for token_id, name in token_names.items():
+        entries[f"token.{token_id}.name"] = name
 
     raw = validate_docs.load(
         "cards", ["id", "card_type", "tribe", "era"], root=content)

@@ -5,25 +5,25 @@ use super::{Effect, Filter, Op, Params, Selector, Trigger, Zone};
 /// 光环触发允许的原语。
 pub(crate) const AURA_OPS: &[Op] = &[Op::ModifyStats, Op::GrantKeyword];
 /// 选择器筛选允许的键。
-pub(crate) const FILTER_KEYS: &[&str] = &["tribe", "subtype", "name", "type", "other"];
+pub(crate) const FILTER_KEYS: &[&str] = &["tribe", "subtype", "id", "type", "other"];
 /// 部落取值。
-pub(crate) const TRIBES: &[&str] = &["人类", "机械", "生物", "植物", "病毒", "学者"];
+pub(crate) const TRIBES: &[&str] = &["human", "machine", "biology", "plant", "virus", "scholar"];
 /// 卡牌类型取值。
-pub(crate) const CARD_TYPES: &[&str] = &["随从", "效果"];
+pub(crate) const CARD_TYPES: &[&str] = &["minion", "effect"];
 /// 关键词基名。
 pub(crate) const KEYWORD_BASES: &[&str] = &[
-    "战吼",
-    "亡语",
-    "复生",
-    "嘲讽",
-    "护盾",
-    "连击",
-    "传染",
-    "最优攻击",
-    "播种",
-    "进化",
-    "繁衍",
-    "装配",
+    "battlecry",
+    "deathrattle",
+    "reborn",
+    "taunt",
+    "divine_shield",
+    "windfury",
+    "contagion",
+    "optimal_attack",
+    "sow",
+    "evolve",
+    "breed",
+    "assemble",
 ];
 /// `when` 允许的事件类触发，与 `scripts/audit_effects.py` 的 `WHEN_TRIGGERS` 一致。
 pub(crate) const WHEN_TRIGGERS: &[Trigger] = &[
@@ -252,7 +252,7 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
             errors.push(format!("keyword 非法 {:?}", keyword.keyword));
         }
         let layer = keyword.value.or(params.value);
-        if matches!(keyword.keyword.as_str(), "繁衍" | "装配" | "传染") {
+        if matches!(keyword.keyword.as_str(), "breed" | "assemble" | "contagion") {
             if layer.is_none() {
                 errors.push(format!("keyword {:?} 必须带层数", keyword.keyword));
             } else if layer.is_some_and(|value| value < 0) {

@@ -22,19 +22,19 @@ const MAX_ACTIONS: u16 = 200;
 pub(crate) const MAX_TRIGGERS: u16 = 200;
 
 /// 关键词：连击。
-const WINDFURY: &str = "连击";
+const WINDFURY: &str = "windfury";
 /// 关键词：嘲讽。
-const TAUNT: &str = "嘲讽";
+const TAUNT: &str = "taunt";
 /// 关键词：护盾。
-const DIVINE_SHIELD: &str = "护盾";
+const DIVINE_SHIELD: &str = "divine_shield";
 /// 关键词：复生。
-const REBORN: &str = "复生";
+const REBORN: &str = "reborn";
 /// 关键词：传染。
-const CONTAGION: &str = "传染";
+const CONTAGION: &str = "contagion";
 /// 关键词：最优攻击。
-const OPTIMAL_ATTACK: &str = "最优攻击";
+const OPTIMAL_ATTACK: &str = "optimal_attack";
 /// 关键词：播种。
-const SOW: &str = "播种";
+const SOW: &str = "sow";
 /// 播种召唤的 token。
 pub(crate) const SEEDLING_TOKEN: &str = "seedling";
 

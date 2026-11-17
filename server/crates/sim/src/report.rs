@@ -221,16 +221,16 @@ pub fn format_hash(hash: u64) -> String {
     format!("{hash:016x}")
 }
 
-/// 流派中文名，与 `data/v0.1` 中的写法一致。
+/// 流派 id，与 `data/v0.1` 中的写法一致。
 pub fn tribe_name(tribe: Tribe) -> &'static str {
     match tribe {
-        Tribe::Human => "人类",
-        Tribe::Machine => "机械",
-        Tribe::Biology => "生物",
-        Tribe::Plant => "植物",
-        Tribe::Virus => "病毒",
-        Tribe::Scholar => "学者",
-        Tribe::General => "通用",
+        Tribe::Human => "human",
+        Tribe::Machine => "machine",
+        Tribe::Biology => "biology",
+        Tribe::Plant => "plant",
+        Tribe::Virus => "virus",
+        Tribe::Scholar => "scholar",
+        Tribe::General => "general",
     }
 }
 
@@ -538,13 +538,13 @@ fn stats_from_json(value: &Value) -> Result<GameStats, String> {
 
 fn tribe_from_name(name: &str) -> Option<Tribe> {
     Some(match name {
-        "人类" => Tribe::Human,
-        "机械" => Tribe::Machine,
-        "生物" => Tribe::Biology,
-        "植物" => Tribe::Plant,
-        "病毒" => Tribe::Virus,
-        "学者" => Tribe::Scholar,
-        "通用" => Tribe::General,
+        "human" => Tribe::Human,
+        "machine" => Tribe::Machine,
+        "biology" => Tribe::Biology,
+        "plant" => Tribe::Plant,
+        "virus" => Tribe::Virus,
+        "scholar" => Tribe::Scholar,
+        "general" => Tribe::General,
         _ => return None,
     })
 }

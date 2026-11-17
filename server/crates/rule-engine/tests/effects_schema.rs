@@ -6,7 +6,7 @@ use rule_engine::effects::{Compare, Effect, Op, Pick, Selector, Side, Trigger, v
 
 #[test]
 fn deserializes_a_structured_effect() {
-    let raw = r#"[{"trigger":"on_activate","op":"growth","selector":{"kind":"side","side":"friendly","pick":"single","filters":[{"key":"tribe","value":"人类"}]},"params":{"times":1,"times_if":{"tribe":"人类","times":2},"condition":{"side":"friendly","filter":{"key":"tribe","value":"人类"},"compare":"ge","count":3}}}]"#;
+    let raw = r#"[{"trigger":"on_activate","op":"growth","selector":{"kind":"side","side":"friendly","pick":"single","filters":[{"key":"tribe","value":"human"}]},"params":{"times":1,"times_if":{"tribe":"human","times":2},"condition":{"side":"friendly","filter":{"key":"tribe","value":"human"},"compare":"ge","count":3}}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(raw).expect("结构化效果应能反序列化");
     assert_eq!(effects.len(), 1);
     assert_eq!(effects[0].trigger, Trigger::OnActivate);
@@ -86,13 +86,13 @@ fn committed_data_is_structured() {
 
 #[test]
 fn string_effects_are_rejected_at_load() {
-    let bad = r#"[{"id":"x","text":"x","effects":"OnPlay|Growth|self|times=1"}]"#;
+    let bad = r#"[{"id":"x","effects":"OnPlay|Growth|self|times=1"}]"#;
     assert!(Catalog::from_json("[]", bad, "[]", CONFIG_JSON).is_err());
 }
 
 #[test]
 fn rejects_unknown_selector_field() {
-    let raw = r#"[{"trigger":"on_activate","op":"growth","selector":{"kind":"side","side":"friendly","pick":"all","filter":[{"key":"tribe","value":"人类"}]},"params":{"times":1}}]"#;
+    let raw = r#"[{"trigger":"on_activate","op":"growth","selector":{"kind":"side","side":"friendly","pick":"all","filter":[{"key":"tribe","value":"human"}]},"params":{"times":1}}]"#;
     assert!(serde_json::from_str::<Vec<Effect>>(raw).is_err());
 }
 

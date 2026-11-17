@@ -83,13 +83,10 @@ fn catalog_with_discover_on_play() -> Catalog {
         "test-discover-on-play".to_string(),
         Skill {
             id: "test-discover-on-play".to_string(),
-            name: None,
             keyword: None,
-            text: "发现一张随从".to_string(),
             effects: effects_of("OnPlay|Discover|self|pool=tribe,choose=1"),
             cost: None,
             uses_per_turn: None,
-            match_text: None,
         },
     );
     let token_ids: BTreeSet<String> = catalog.tokens.keys().cloned().collect();

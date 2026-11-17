@@ -10,8 +10,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "亚当·斯密",
     "skills": [
       "division-of-labor"
     ],
@@ -29,8 +27,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 6,
-    "match_text": null,
-    "name": "通用人工智能",
     "skills": [
       "battlecry-all-friendly-growth-twice"
     ],
@@ -48,8 +44,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "飞机",
     "skills": [
       "keyword-optimal-attack"
     ],
@@ -67,8 +61,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 6,
-    "match_text": null,
-    "name": "艾伦·图灵",
     "skills": [
       "aura-mech-optimal-attack"
     ],
@@ -86,8 +78,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "奥林匹克祭典",
     "skills": [
       "trigger-all-friendly-growth-once"
     ],
@@ -105,8 +95,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": "同左",
-    "name": "阿Q精神",
     "skills": [
       "trigger-friendly-taunt-until-turn-end"
     ],
@@ -124,8 +112,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
-    "match_text": null,
-    "name": "阿基米德",
     "skills": [
       "battlecry-friendly-mech-growth-once"
     ],
@@ -143,8 +129,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
-    "match_text": null,
-    "name": "亚里士多德",
     "skills": [
       "aura-all-plus-0-plus-1"
     ],
@@ -162,8 +146,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "人造子宫",
     "skills": [
       "battlecry-summon-3-3-synthetic-cell"
     ],
@@ -181,8 +163,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "白蚁",
     "skills": [
       "keyword-breed-1"
     ],
@@ -200,8 +180,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "贝多芬",
     "skills": [
       "human-growth-twice"
     ],
@@ -219,8 +197,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "病毒始祖",
     "skills": [
       "trigger-enemy-death-self-plus-1-plus-1"
     ],
@@ -238,8 +214,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
-    "match_text": null,
-    "name": "毕昇",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -257,8 +231,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "黑死病",
     "skills": [
       "deathrattle-all-enemies-humans-minus-2-health"
     ],
@@ -276,8 +248,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": "同左",
-    "name": "黑死病·播散",
     "skills": [
       "combatstart-all-enemies-contagion-1"
     ],
@@ -295,8 +265,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "拳击手",
     "skills": [
       "trigger-3-humans-self-plus-2-attack"
     ],
@@ -314,8 +282,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "李小龙",
     "skills": [
       "keyword-windfury"
     ],
@@ -333,8 +299,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": "战斗开始时，对敌方最左侧随从造成 2 点伤害",
-    "name": "布朗运动",
     "skills": [
       "combatstart-random-enemy-damage-2"
     ],
@@ -352,8 +316,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "部落战士",
     "skills": [
       "trigger-2-humans-self-plus-1-plus-1"
     ],
@@ -371,8 +333,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 2,
-    "match_text": null,
-    "name": "蔡伦",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -390,8 +350,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "长矛手",
     "skills": [
       "trigger-friendly-human-play-plus-1-attack"
     ],
@@ -409,8 +367,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "城邦法令",
     "skills": [
       "trigger-friendly-plus-1-plus-1"
     ],
@@ -428,8 +384,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "城邦公民",
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
     ],
@@ -447,8 +401,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "霍乱",
     "skills": [
       "combatstart-random-enemy-contagion-1"
     ],
@@ -466,8 +418,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "达尔文",
     "skills": [
       "aura-biology-plus-1-plus-1",
       "evolution-discovery"
@@ -486,8 +436,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "达·芬奇",
     "skills": [
       "universal-manuscript"
     ],
@@ -505,8 +453,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "电报机",
     "skills": [
       "combatstart-leftmost-damage-3"
     ],
@@ -524,8 +470,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "电话交换机",
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
@@ -543,8 +487,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": "同左",
-    "name": "低声细语",
     "skills": [
       "trigger-friendly-plus-1-plus-1"
     ],
@@ -562,8 +504,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": "同左",
-    "name": "DNA双螺旋结构",
     "skills": [
       "trigger-friendly-growth-thrice"
     ],
@@ -581,8 +521,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "克隆羊多莉",
     "skills": [
       "keyword-reborn",
       "keyword-evolve"
@@ -601,8 +539,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "洞穴画家",
     "skills": [
       "battlecry-friendly-plus-1-health"
     ],
@@ -620,8 +556,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "斗兽场狮子",
     "skills": [
       "keyword-taunt"
     ],
@@ -639,8 +573,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "毒蛇",
     "skills": [
       "deathrattle-random-enemy-minus-1-attack"
     ],
@@ -658,8 +590,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
-    "match_text": null,
-    "name": "戴森球",
     "skills": [
       "keyword-divine-shield"
     ],
@@ -677,8 +607,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "埃博拉",
     "skills": [
       "keyword-contagion",
       "combatstart-random-enemy-contagion-2"
@@ -697,8 +625,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "爱迪生",
     "skills": [
       "invention-factory"
     ],
@@ -716,8 +642,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "爱因斯坦",
     "skills": [
       "battlecry-all-friendly-growth-once",
       "light-speed-strike"
@@ -736,8 +660,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "爱因斯坦冰箱",
     "skills": [],
     "subtype": "appliance",
     "tribe": "machine"
@@ -753,8 +675,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": null,
-    "name": "基因工程病毒",
     "skills": [
       "keyword-contagion",
       "combatstart-all-enemies-contagion-1"
@@ -773,8 +693,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": "同左",
-    "name": "二分法",
     "skills": [
       "trigger-friendly-plus-2-attack"
     ],
@@ -792,8 +710,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 1,
-    "match_text": null,
-    "name": "欧几里得",
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
     ],
@@ -811,8 +727,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "发明家",
     "skills": [
       "battlecry-all-mech-growth-once"
     ],
@@ -830,8 +744,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": "同左",
-    "name": "方阵",
     "skills": [
       "trigger-friendly-human-taunt-until-turn-end"
     ],
@@ -849,8 +761,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "纺织机",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -868,8 +778,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "法拉第",
     "skills": [
       "keyword-divine-shield",
       "faraday-cage"
@@ -888,8 +796,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "法拉第笼",
     "skills": [
       "trigger-friendly-plus-0-plus-4-this-turn"
     ],
@@ -907,8 +813,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "肺结核",
     "skills": [
       "keyword-contagion"
     ],
@@ -926,8 +830,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "肺炎链球菌",
     "skills": [
       "deathrattle-random-enemy-minus-1-health"
     ],
@@ -945,8 +847,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "风车",
     "skills": [
       "keyword-assemble-1",
       "trigger-turn-start-self-plus-0-plus-1"
@@ -965,8 +865,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 7,
-    "match_text": null,
-    "name": "费米",
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
@@ -984,8 +882,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "弗莱明",
     "skills": [
       "virus-growth-once"
     ],
@@ -1003,8 +899,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": null,
-    "name": "聚变反应堆",
     "skills": [
       "aura-mech-plus-2-plus-2"
     ],
@@ -1022,8 +916,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 4,
-    "match_text": null,
-    "name": "伽利略",
     "skills": [
       "observation"
     ],
@@ -1041,8 +933,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "橄榄树",
     "skills": [
       "keyword-sow"
     ],
@@ -1060,8 +950,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "高斯",
     "skills": [
       "scholar-growth-twice"
     ],
@@ -1079,8 +967,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 6,
-    "match_text": null,
-    "name": "库尔特·哥德尔",
     "skills": [
       "aura-all-plus-0-plus-2"
     ],
@@ -1098,8 +984,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "工厂主",
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
@@ -1117,8 +1001,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "攻城槌",
     "skills": [
       "battlecry-random-enemy-damage-1"
     ],
@@ -1136,8 +1018,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "攻城塔",
     "skills": [
       "keyword-assemble-2"
     ],
@@ -1155,8 +1035,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "弓箭手",
     "skills": [
       "battlecry-random-enemy-damage-1"
     ],
@@ -1174,8 +1052,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "工业工人",
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
@@ -1193,8 +1069,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "光电效应",
     "skills": [
       "combatstart-leftmost-damage-3"
     ],
@@ -1212,8 +1086,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": "同左",
-    "name": "光合作用",
     "skills": [
       "trigger-friendly-plant-breed-2"
     ],
@@ -1231,8 +1103,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": "同左",
-    "name": "广义相对论",
     "skills": [
       "trigger-all-friendly-plus-1-plus-1"
     ],
@@ -1250,8 +1120,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": null,
-    "name": "冠状病毒",
     "skills": [
       "keyword-contagion",
       "deathrattle-all-enemies-contagion-1"
@@ -1270,8 +1138,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "果蝇",
     "skills": [
       "keyword-breed-1"
     ],
@@ -1289,8 +1155,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 4,
-    "match_text": null,
-    "name": "古腾堡",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -1308,8 +1172,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 7,
-    "match_text": null,
-    "name": "海森堡",
     "skills": [
       "keyword-reborn",
       "deathrattle-all-enemies-minus-1-health"
@@ -1328,8 +1190,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "海拉细胞",
     "skills": [
       "deathrattle-summon-2-2-hela-cell-clone"
     ],
@@ -1347,8 +1207,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
-    "match_text": null,
-    "name": "希波克拉底",
     "skills": [
       "trigger-friendly-growth-extra-plus-0-plus-1"
     ],
@@ -1366,8 +1224,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "艾滋病毒",
     "skills": [
       "keyword-contagion"
     ],
@@ -1385,8 +1241,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": "同左",
-    "name": "艾滋病毒·抑制剂",
     "skills": [
       "combatstart-remove-all-human-growth"
     ],
@@ -1404,8 +1258,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
-    "match_text": null,
-    "name": "荷马",
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
@@ -1423,8 +1275,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "红树林",
     "skills": [
       "keyword-sow",
       "keyword-breed-2"
@@ -1443,8 +1293,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "黄热病",
     "skills": [
       "combatstart-random-enemy-contagion-2"
     ],
@@ -1462,8 +1310,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "火铳队",
     "skills": [
       "keyword-windfury"
     ],
@@ -1481,8 +1327,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "火枪手",
     "skills": [
       "battlecry-random-enemy-damage-2"
     ],
@@ -1500,8 +1344,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "杂交水稻",
     "skills": [
       "keyword-sow",
       "keyword-breed-2"
@@ -1520,8 +1362,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "流感病毒",
     "skills": [
       "keyword-contagion"
     ],
@@ -1539,8 +1379,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": "同左",
-    "name": "流感病毒·变异",
     "skills": [
       "combatstart-top-attack-enemy-minus-0-minus-2"
     ],
@@ -1558,8 +1396,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "剑齿虎",
     "skills": [
       "combatstart-if-2-biology-self-plus-2-attack"
     ],
@@ -1577,8 +1413,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "交变电流",
     "skills": [
       "trigger-friendly-plus-2-attack-this-turn"
     ],
@@ -1596,8 +1430,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": "改为三选一固定池",
-    "name": "进化论",
     "skills": [
       "trigger-discover-tribe-minion"
     ],
@@ -1615,8 +1447,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
-    "match_text": null,
-    "name": "基因改造人",
     "skills": [
       "keyword-reborn"
     ],
@@ -1634,8 +1464,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "基因突变",
     "skills": [
       "trigger-friendly-growth-twice"
     ],
@@ -1653,8 +1481,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "蕨类",
     "skills": [
       "keyword-sow",
       "keyword-breed-2"
@@ -1673,8 +1499,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "巨花",
     "skills": [
       "keyword-sow",
       "keyword-breed-1"
@@ -1693,8 +1517,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "巨蜥",
     "skills": [
       "keyword-evolve"
     ],
@@ -1712,8 +1534,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "巨鹰",
     "skills": [
       "trigger-friendly-death-self-plus-1-attack"
     ],
@@ -1731,8 +1551,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "橘子",
     "skills": [
       "keyword-breed-1"
     ],
@@ -1750,8 +1568,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "黑猩猩坎兹",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -1769,8 +1585,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 6,
-    "match_text": null,
-    "name": "高德纳",
     "skills": [
       "efficient-algorithm"
     ],
@@ -1788,8 +1602,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "大猩猩科科",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -1807,8 +1619,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
-    "match_text": null,
-    "name": "孔子",
     "skills": [
       "aura-scholar-plus-0-plus-2"
     ],
@@ -1826,8 +1636,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "狂犬病",
     "skills": [
       "battlecry-friendly-virus-plus-1-attack"
     ],
@@ -1845,8 +1653,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": "同左",
-    "name": "狂人日记",
     "skills": [
       "combatstart-remove-top-attack-enemy-growth"
     ],
@@ -1864,8 +1670,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 4,
-    "match_text": null,
-    "name": "拉马克",
     "skills": [
       "biology-evolve"
     ],
@@ -1883,8 +1687,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "狼群首领",
     "skills": [
       "aura-other-biology-plus-1-attack"
     ],
@@ -1902,8 +1704,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "拉瓦锡",
     "skills": [
       "aura-other-plus-0-plus-1"
     ],
@@ -1921,8 +1721,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
-    "match_text": null,
-    "name": "炼金术士",
     "skills": [
       "battlecry-friendly-growth-scholar-twice"
     ],
@@ -1940,8 +1738,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
-    "match_text": null,
-    "name": "李耳",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -1959,8 +1755,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "立克次体",
     "skills": [
       "keyword-contagion"
     ],
@@ -1978,8 +1772,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 4,
-    "match_text": null,
-    "name": "林奈",
     "skills": [
       "battlecry-all-biology-growth-once"
     ],
@@ -1997,8 +1789,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "李时珍",
     "skills": [
       "battlecry-plant-growth-twice"
     ],
@@ -2016,8 +1806,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "鲁班",
     "skills": [
       "battlecry-friendly-mech-growth-once"
     ],
@@ -2035,8 +1823,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "罗马军团兵",
     "skills": [
       "keyword-taunt",
       "trigger-3-humans-self-plus-1-plus-1"
@@ -2055,8 +1841,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "鲁迅",
     "skills": [
       "shout"
     ],
@@ -2074,8 +1858,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "麦田",
     "skills": [
       "keyword-sow",
       "keyword-breed-1"
@@ -2094,8 +1876,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "马其顿长枪兵",
     "skills": [
       "keyword-taunt"
     ],
@@ -2113,8 +1893,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "疟疾",
     "skills": [
       "combatstart-random-enemy-contagion-1"
     ],
@@ -2132,8 +1910,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "玛丽·居里",
     "skills": [
       "battlecry-friendly-growth-twice",
       "radiation"
@@ -2152,8 +1928,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "煤矿金丝雀",
     "skills": [
       "deathrattle-all-enemies-minus-1-health"
     ],
@@ -2171,8 +1945,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 4,
-    "match_text": null,
-    "name": "孟德尔",
     "skills": [
       "battlecry-friendly-plant-growth-once",
       "heredity"
@@ -2191,8 +1963,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "猛虎",
     "skills": [
       "keyword-evolve"
     ],
@@ -2210,8 +1980,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "猛犸猎人",
     "skills": [
       "battlecry-friendly-plus-1-attack"
     ],
@@ -2229,8 +1997,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "猛犸象",
     "skills": [
       "deathrattle-all-friendly-plus-0-plus-1"
     ],
@@ -2248,8 +2014,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "棉花",
     "skills": [
       "keyword-sow"
     ],
@@ -2267,8 +2031,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 4,
-    "match_text": null,
-    "name": "米开朗基罗",
     "skills": [
       "battlecry-friendly-growth-twice"
     ],
@@ -2286,8 +2048,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "摩尔根",
     "skills": [
       "aura-biology-plus-0-plus-1"
     ],
@@ -2305,8 +2065,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 4,
-    "match_text": null,
-    "name": "摩西",
     "skills": [
       "battlecry-all-friendly-plus-0-plus-1"
     ],
@@ -2324,8 +2082,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "墨子",
     "skills": [
       "enemy-random-cannot-attack"
     ],
@@ -2343,8 +2099,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": null,
-    "name": "穆罕默德·阿里",
     "skills": [
       "keyword-windfury"
     ],
@@ -2362,8 +2116,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": "同左",
-    "name": "呐喊",
     "skills": [
       "trigger-all-friendly-growth-once"
     ],
@@ -2381,8 +2133,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
-    "match_text": null,
-    "name": "纳米病毒",
     "skills": [
       "keyword-contagion"
     ],
@@ -2400,8 +2150,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
-    "match_text": null,
-    "name": "纳米蜂群",
     "skills": [
       "keyword-assemble-2"
     ],
@@ -2419,8 +2167,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "纳米机器人",
     "skills": [
       "keyword-optimal-attack",
       "keyword-assemble-1"
@@ -2439,8 +2185,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "内燃机",
     "skills": [
       "keyword-optimal-attack"
     ],
@@ -2458,8 +2202,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "牛顿",
     "skills": [
       "battlecry-friendly-growth-twice"
     ],
@@ -2477,8 +2219,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "拟态章鱼",
     "skills": [],
     "subtype": "mollusk",
     "tribe": "biology"
@@ -2494,8 +2234,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "固氮作物",
     "skills": [
       "aura-plant-plus-1-plus-1"
     ],
@@ -2513,8 +2251,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "牛瘟",
     "skills": [
       "keyword-contagion"
     ],
@@ -2532,8 +2268,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "弩炮",
     "skills": [
       "combatstart-leftmost-damage-3"
     ],
@@ -2551,8 +2285,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "弩手",
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
@@ -2570,8 +2302,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": "同左",
-    "name": "彷徨",
     "skills": [
       "combatstart-top-attack-enemy-cant-attack"
     ],
@@ -2589,8 +2319,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "巴斯德",
     "skills": [
       "microbiology"
     ],
@@ -2608,8 +2336,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "巡逻机甲",
     "skills": [
       "keyword-taunt"
     ],
@@ -2627,8 +2353,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "留声机",
     "skills": [
       "keyword-assemble-1"
     ],
@@ -2646,8 +2370,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "带粉色头套的猩猩",
     "skills": [
       "battlecry-self-growth-twice"
     ],
@@ -2665,8 +2387,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 4,
-    "match_text": null,
-    "name": "柏拉图",
     "skills": [
       "aura-all-plus-0-plus-1"
     ],
@@ -2684,8 +2404,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 1,
-    "match_text": null,
-    "name": "毕达哥拉斯",
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
@@ -2703,8 +2421,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "青蒿",
     "skills": [
       "keyword-sow",
       "aura-plant-plus-1-plus-1"
@@ -2723,8 +2439,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "青霉素·提纯",
     "skills": [
       "trigger-friendly-growth-twice"
     ],
@@ -2742,8 +2456,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "骑士",
     "skills": [
       "keyword-taunt"
     ],
@@ -2761,8 +2473,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": "同左",
-    "name": "球状闪电",
     "skills": [
       "combatstart-leftmost-and-adjacent-damage-2"
     ],
@@ -2780,8 +2490,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "量子计算机",
     "skills": [
       "keyword-divine-shield",
       "keyword-assemble-2"
@@ -2800,8 +2508,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
-    "match_text": null,
-    "name": "曲率飞船",
     "skills": [
       "keyword-optimal-attack"
     ],
@@ -2819,8 +2525,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 4,
-    "match_text": null,
-    "name": "屈原",
     "skills": [
       "shout"
     ],
@@ -2838,8 +2542,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": "同左",
-    "name": "人工智能",
     "skills": [
       "trigger-mech-optimal-attack-this-turn"
     ],
@@ -2857,8 +2559,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "人造闪电",
     "skills": [
       "combatstart-leftmost-damage-4"
     ],
@@ -2876,8 +2576,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "忍者",
     "skills": [
       "keyword-windfury"
     ],
@@ -2895,8 +2593,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": null,
-    "name": "复活猛犸",
     "skills": [
       "keyword-reborn",
       "keyword-evolve"
@@ -2915,8 +2611,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "电饭煲",
     "skills": [
       "battlecry-friendly-human-plus-0-plus-1"
     ],
@@ -2934,8 +2628,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "机器狗",
     "skills": [
       "keyword-optimal-attack"
     ],
@@ -2953,8 +2645,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 6,
-    "match_text": null,
-    "name": "卢瑟福",
     "skills": [
       "combat-random-enemy-damage-3"
     ],
@@ -2972,8 +2662,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 6,
-    "match_text": null,
-    "name": "卡尔·萨根",
     "skills": [
       "aura-scholar-plus-0-plus-3"
     ],
@@ -2991,8 +2679,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "萨满",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -3010,8 +2696,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 7,
-    "match_text": null,
-    "name": "薛定谔",
     "skills": [
       "keyword-divine-shield",
       "combatstart-random-enemy-contagion-2"
@@ -3030,8 +2714,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "自动驾驶汽车",
     "skills": [
       "keyword-optimal-attack",
       "keyword-assemble-1"
@@ -3050,8 +2732,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "莎士比亚",
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
@@ -3069,8 +2749,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "克劳德·香农",
     "skills": [
       "battlecry-all-mech-growth-once"
     ],
@@ -3088,8 +2766,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "沈括",
     "skills": [
       "observation"
     ],
@@ -3107,8 +2783,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "石斧匠",
     "skills": [
       "trigger-friendly-growth-self-plus-1-attack"
     ],
@@ -3126,8 +2800,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": null,
-    "name": "世界树",
     "skills": [
       "keyword-sow",
       "aura-plant-plus-1-plus-1"
@@ -3146,8 +2818,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "噬菌体",
     "skills": [
       "deathrattle-random-enemy-hp-minus-1"
     ],
@@ -3165,8 +2835,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "石轮车",
     "skills": [
       "keyword-assemble-1"
     ],
@@ -3184,8 +2852,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "实验小鼠",
     "skills": [
       "deathrattle-summon-termite"
     ],
@@ -3203,8 +2869,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "十字军",
     "skills": [
       "keyword-taunt",
       "trigger-friendly-human-death-plus-1-plus-1"
@@ -3223,8 +2887,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "始祖鸟",
     "skills": [],
     "subtype": "bird",
     "tribe": "biology"
@@ -3240,8 +2902,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "始祖兽",
     "skills": [
       "trigger-friendly-evolve-self-plus-1-plus-1"
     ],
@@ -3259,8 +2919,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "兽皮匠",
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
@@ -3278,8 +2936,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "水车",
     "skills": [
       "keyword-assemble-1"
     ],
@@ -3297,8 +2953,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "水生蕨",
     "skills": [
       "keyword-sow",
       "keyword-breed-1"
@@ -3317,8 +2971,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "水钟",
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
     ],
@@ -3336,8 +2988,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "斯巴达勇士",
     "skills": [],
     "subtype": "unit",
     "tribe": "human"
@@ -3353,8 +3003,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "司马迁",
     "skills": [
       "aura-all-plus-0-plus-1"
     ],
@@ -3372,8 +3020,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "天花",
     "skills": [
       "deathrattle-all-enemies-minus-1-health"
     ],
@@ -3391,8 +3037,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": null,
-    "name": "太空电梯",
     "skills": [
       "keyword-divine-shield",
       "keyword-assemble-1"
@@ -3411,8 +3055,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "太空水稻",
     "skills": [
       "keyword-sow",
       "keyword-breed-3"
@@ -3431,8 +3073,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "蒸汽机",
     "skills": [
       "keyword-assemble-2"
     ],
@@ -3450,8 +3090,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "史蒂芬孙",
     "skills": [
       "aura-other-mech-plus-1-plus-1"
     ],
@@ -3469,8 +3107,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 2,
-    "match_text": null,
-    "name": "苏格拉底",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -3488,8 +3124,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "燧石矛兵",
     "skills": [
       "trigger-2-humans-self-plus-1-attack"
     ],
@@ -3507,8 +3141,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "合成细胞",
     "skills": [
       "keyword-reborn",
       "keyword-evolve"
@@ -3527,8 +3159,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "苔藓",
     "skills": [
       "keyword-sow"
     ],
@@ -3546,8 +3176,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": null,
-    "name": "太空殖民者",
     "skills": [
       "keyword-divine-shield"
     ],
@@ -3565,8 +3193,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "炭疽",
     "skills": [
       "keyword-contagion",
       "combatstart-random-enemy-contagion-1"
@@ -3585,8 +3211,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "电话机",
     "skills": [
       "keyword-assemble-1"
     ],
@@ -3604,8 +3228,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "藤蔓",
     "skills": [
       "keyword-sow"
     ],
@@ -3623,8 +3245,6 @@
     "is_hero": true,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "特斯拉",
     "skills": [
       "alternating-current"
     ],
@@ -3642,8 +3262,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": "同左",
-    "name": "特斯拉线圈",
     "skills": [
       "combatstart-all-enemies-damage-2"
     ],
@@ -3661,8 +3279,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "铁路工人",
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
@@ -3680,8 +3296,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "投石机",
     "skills": [
       "keyword-assemble-2"
     ],
@@ -3699,8 +3313,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "屠夫",
     "skills": [],
     "subtype": "primitive",
     "tribe": "human"
@@ -3716,8 +3328,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "图灵机",
     "skills": [
       "keyword-optimal-attack",
       "keyword-assemble-2"
@@ -3736,8 +3346,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": null,
-    "name": "垂直农场",
     "skills": [
       "keyword-sow",
       "keyword-breed-3"
@@ -3756,8 +3364,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 5,
-    "match_text": null,
-    "name": "冯·诺依曼",
     "skills": [
       "battlecry-friendly-growth-twice"
     ],
@@ -3775,8 +3381,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "豌豆",
     "skills": [
       "keyword-breed-1"
     ],
@@ -3794,8 +3398,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 4,
-    "match_text": null,
-    "name": "瓦特",
     "skills": [
       "aura-mech-plus-2-plus-2"
     ],
@@ -3813,8 +3415,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "维京战士",
     "skills": [
       "keyword-taunt"
     ],
@@ -3832,8 +3432,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": null,
-    "name": "无线电报",
     "skills": [
       "keyword-assemble-2",
       "battlecry-all-mech-growth-once-no-keyword"
@@ -3852,8 +3450,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "莱特兄弟",
     "skills": [
       "combat-optimal-attack"
     ],
@@ -3871,8 +3467,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "巫医",
     "skills": [
       "battlecry-friendly-growth-plant-twice"
     ],
@@ -3890,8 +3484,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "侠客",
     "skills": [],
     "subtype": "unit",
     "tribe": "human"
@@ -3907,8 +3499,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "向日葵",
     "skills": [
       "keyword-breed-2"
     ],
@@ -3926,8 +3516,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": "同左",
-    "name": "狭义相对论",
     "skills": [
       "trigger-minion-windfury-this-turn"
     ],
@@ -3945,8 +3533,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 2,
-    "match_text": null,
-    "name": "希罗多德",
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
@@ -3964,8 +3550,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "信鸽",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -3983,8 +3567,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
-    "match_text": null,
-    "name": "星际舰长",
     "skills": [
       "keyword-taunt"
     ],
@@ -4002,8 +3584,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "X射线机",
     "skills": [
       "keyword-optimal-attack"
     ],
@@ -4021,8 +3601,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "驯火者",
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
@@ -4040,8 +3618,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "雅典瘟疫",
     "skills": [
       "combatstart-random-enemy-contagion-1"
     ],
@@ -4059,8 +3635,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 1,
-    "match_text": null,
-    "name": "岩画师",
     "skills": [
       "trigger-play-effect-friendly-plus-0-plus-1"
     ],
@@ -4078,8 +3652,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 2,
-    "match_text": null,
-    "name": "野狼",
     "skills": [
       "trigger-friendly-biology-play-plus-1-attack"
     ],
@@ -4097,8 +3669,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "野猪",
     "skills": [
       "battlecry-self-plus-1-health"
     ],
@@ -4116,8 +3686,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": "同左",
-    "name": "引力波",
     "skills": [
       "combatstart-all-enemies-minus-1-attack"
     ],
@@ -4135,8 +3703,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "印刷术",
     "skills": [
       "trigger-copy-hand-minion"
     ],
@@ -4154,8 +3720,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
-    "match_text": null,
-    "name": "永生水母",
     "skills": [
       "keyword-reborn"
     ],
@@ -4173,8 +3737,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "有丝分裂",
     "skills": [
       "trigger-copy-friendly-minion"
     ],
@@ -4192,8 +3754,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
-    "match_text": "同左",
-    "name": "原子弹",
     "skills": [
       "combatstart-all-enemies-damage-5"
     ],
@@ -4211,8 +3771,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "元老院议员",
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
@@ -4230,8 +3788,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 6,
-    "match_text": null,
-    "name": "袁隆平",
     "skills": [
       "aura-plant-plus-2-plus-2"
     ],
@@ -4249,8 +3805,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "原始机械傀儡",
     "skills": [],
     "subtype": "puppet",
     "tribe": "machine"
@@ -4266,8 +3820,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 1,
-    "match_text": null,
-    "name": "原始真菌",
     "skills": [
       "keyword-sow"
     ],
@@ -4285,8 +3837,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
-    "match_text": null,
-    "name": "宇宙藤",
     "skills": [
       "keyword-divine-shield"
     ],
@@ -4304,8 +3854,6 @@
     "is_hero": false,
     "is_scholar": true,
     "level": 3,
-    "match_text": null,
-    "name": "张衡",
     "skills": [
       "battlecry-friendly-growth-once"
     ],
@@ -4323,8 +3871,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "张仲景",
     "skills": [
       "battlecry-all-friendly-plus-0-plus-1"
     ],
@@ -4342,8 +3888,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": null,
-    "name": "战马",
     "skills": [
       "keyword-evolve"
     ],
@@ -4361,8 +3905,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "战象",
     "skills": [
       "keyword-taunt"
     ],
@@ -4380,8 +3922,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": "同左",
-    "name": "征兵令",
     "skills": [
       "trigger-other-friendly-humans-plus-1-attack"
     ],
@@ -4399,8 +3939,6 @@
     "is_hero": true,
     "is_scholar": false,
     "level": 5,
-    "match_text": null,
-    "name": "郑和",
     "skills": [
       "free-refresh"
     ],
@@ -4418,8 +3956,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": "同左",
-    "name": "蒸汽革命",
     "skills": [
       "trigger-all-friendly-plus-1-plus-1"
     ],
@@ -4437,8 +3973,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "蒸汽机车",
     "skills": [
       "keyword-taunt"
     ],
@@ -4456,8 +3990,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": "同左",
-    "name": "蒸汽动力",
     "skills": [
       "trigger-all-mech-growth-once"
     ],
@@ -4475,8 +4007,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
-    "match_text": null,
-    "name": "智慧巨兽",
     "skills": [
       "keyword-windfury"
     ],
@@ -4494,8 +4024,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
-    "match_text": "同左",
-    "name": "质能等价",
     "skills": [
       "combatstart-leftmost-damage-6"
     ],
@@ -4513,8 +4041,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
-    "match_text": "同左",
-    "name": "专利制度",
     "skills": [
       "trigger-all-mech-growth-once"
     ],
@@ -4532,8 +4058,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "诸葛亮",
     "skills": [
       "battlecry-friendly-archers-plus-2-attack"
     ],
@@ -4551,8 +4075,6 @@
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
-    "match_text": null,
-    "name": "竹林",
     "skills": [
       "keyword-sow",
       "aura-other-plants-plus-0-plus-1"

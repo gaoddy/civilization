@@ -41,13 +41,10 @@ fn add_card(
             skill_id.clone(),
             Skill {
                 id: skill_id.clone(),
-                name: None,
                 keyword: keyword.map(str::to_string),
-                text: String::new(),
                 effects: effects_of(effects),
                 cost: None,
                 uses_per_turn: None,
-                match_text: None,
             },
         );
         skill_ids.push(skill_id);
@@ -57,7 +54,6 @@ fn add_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            name: id.to_string(),
             tribe,
             subtype: None,
             level: 1,
@@ -68,7 +64,6 @@ fn add_card(
             is_scholar: tribe == Tribe::Scholar,
             is_hero: false,
             cost: Some(1),
-            match_text: None,
         },
     );
 }
@@ -78,7 +73,6 @@ fn add_token(engine: &mut Engine, id: &str, attack: i32, health: i32) {
         id.to_string(),
         Token {
             id: id.to_string(),
-            name: id.to_string(),
             attack,
             health,
             keywords: Vec::new(),
@@ -169,8 +163,11 @@ fn deathrattle_runs_before_reborn() {
         1,
         1,
         &[
-            (Some("亡语"), "OnDeath|Summon|self|token=spawn,count=1"),
-            (Some("复生"), "[]"),
+            (
+                Some("deathrattle"),
+                "OnDeath|Summon|self|token=spawn,count=1",
+            ),
+            (Some("reborn"), "[]"),
         ],
     );
     add_card(&mut engine, "brute", Tribe::Human, 1, 10, &[]);
@@ -200,7 +197,7 @@ fn sow_summons_seedling_on_death() {
         Tribe::Plant,
         1,
         1,
-        &[(Some("播种"), "[]")],
+        &[(Some("sow"), "[]")],
     );
     add_card(&mut engine, "killer", Tribe::Human, 1, 10, &[]);
 
@@ -227,7 +224,10 @@ fn summon_card_deducts_pool_and_waits_when_empty() {
         Tribe::Human,
         1,
         1,
-        &[(Some("亡语"), "OnDeath|Summon|self|card=termite,count=1")],
+        &[(
+            Some("deathrattle"),
+            "OnDeath|Summon|self|card=termite,count=1",
+        )],
     );
     add_card(&mut engine, "termite", Tribe::Human, 1, 1, &[]);
     add_card(&mut engine, "stomper", Tribe::Human, 5, 10, &[]);
@@ -287,7 +287,7 @@ fn friendly_death_triggers_only_for_owner() {
         Tribe::Human,
         0,
         1,
-        &[(Some("嘲讽"), "[]")],
+        &[(Some("taunt"), "[]")],
     );
     add_card(
         &mut engine,
@@ -343,7 +343,7 @@ fn enemy_death_triggers_for_opponent() {
         Tribe::Human,
         0,
         1,
-        &[(Some("嘲讽"), "[]")],
+        &[(Some("taunt"), "[]")],
     );
 
     let log = battle(
@@ -424,7 +424,7 @@ fn delayed_battlecry_enemy_target_runs_at_combat_start() {
         Tribe::Human,
         1,
         1,
-        &[(Some("战吼"), "OnPlay|DealDamage|enemy:random|amount=3")],
+        &[(Some("battlecry"), "OnPlay|DealDamage|enemy:random|amount=3")],
     );
     add_card(&mut engine, "target", Tribe::Human, 0, 3, &[]);
 
@@ -460,7 +460,10 @@ fn delayed_battlecry_cancelled_if_source_left() {
         Tribe::Human,
         1,
         1,
-        &[(Some("战吼"), "OnPlay|DealDamage|enemy:random|amount=10")],
+        &[(
+            Some("battlecry"),
+            "OnPlay|DealDamage|enemy:random|amount=10",
+        )],
     );
     add_card(&mut engine, "tank", Tribe::Human, 0, 10, &[]);
 
@@ -600,10 +603,10 @@ fn turn_start_contagion_death_fires_deathrattle_and_sow() {
         1,
         &[
             (
-                Some("亡语"),
+                Some("deathrattle"),
                 "OnDeath|ModifyStats|friendly:all|attack=1,duration=permanent",
             ),
-            (Some("播种"), "[]"),
+            (Some("sow"), "[]"),
         ],
     );
     add_card(&mut engine, "friend", Tribe::Plant, 0, 5, &[]);

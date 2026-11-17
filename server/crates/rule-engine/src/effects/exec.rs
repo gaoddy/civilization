@@ -25,9 +25,9 @@ use crate::state::{
 };
 
 /// 禁止攻击时写入 `granted` 的占位关键词，用于记录该标记的时长来源。
-const CANNOT_ATTACK_KEYWORD: &str = "禁攻";
+const CANNOT_ATTACK_KEYWORD: &str = "cannot_attack";
 /// 播种关键词；死亡结算时在亡语之后单独召唤幼苗。
-const SOW_KEYWORD: &str = "播种";
+const SOW_KEYWORD: &str = "sow";
 
 /// 执行一段效果时需要的上下文。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -525,10 +525,10 @@ impl Engine {
         match filter.key.as_str() {
             "tribe" => tribe_name(card.tribe) == filter.value,
             "subtype" => card.subtype.as_deref() == Some(filter.value.as_str()),
-            "name" => card.name == filter.value,
+            "id" => card.id == filter.value,
             "type" => match filter.value.as_str() {
-                "minion" | "随从" => card.card_type == CardType::Minion,
-                "effect" | "效果" => card.card_type == CardType::Effect,
+                "minion" => card.card_type == CardType::Minion,
+                "effect" => card.card_type == CardType::Effect,
                 _ => false,
             },
             "scholar" => match filter.value.as_str() {
@@ -641,13 +641,13 @@ impl Engine {
                 continue;
             };
             match (name, &layer) {
-                ("繁衍", Some(count)) => {
+                ("breed", Some(count)) => {
                     minion.breed = minion.breed.saturating_add(*count);
                 }
-                ("传染", Some(count)) => {
+                ("contagion", Some(count)) => {
                     minion.contagion = minion.contagion.saturating_add(*count);
                 }
-                ("护盾", _) => {
+                ("divine_shield", _) => {
                     record_grant(minion, name, duration, false);
                     minion.shield_used = false;
                 }
@@ -1196,13 +1196,13 @@ impl Engine {
                         continue;
                     };
                     match (name, &layer) {
-                        ("繁衍", Some(count)) => {
+                        ("breed", Some(count)) => {
                             minion.breed = minion.breed.saturating_add(*count);
                         }
-                        ("传染", Some(count)) => {
+                        ("contagion", Some(count)) => {
                             minion.contagion = minion.contagion.saturating_add(*count);
                         }
-                        ("护盾", _) => {
+                        ("divine_shield", _) => {
                             record_grant(minion, name, duration, false);
                             minion.shield_used = false;
                         }
@@ -1483,10 +1483,10 @@ impl Engine {
         match filter.key.as_str() {
             "tribe" => tribe_name(card.tribe) == filter.value,
             "subtype" => card.subtype.as_deref() == Some(filter.value.as_str()),
-            "name" => card.name == filter.value,
+            "id" => card.id == filter.value,
             "type" => match filter.value.as_str() {
-                "minion" | "随从" => card.card_type == CardType::Minion,
-                "effect" | "效果" => card.card_type == CardType::Effect,
+                "minion" => card.card_type == CardType::Minion,
+                "effect" => card.card_type == CardType::Effect,
                 _ => false,
             },
             "scholar" => match filter.value.as_str() {
@@ -1602,13 +1602,13 @@ fn is_enemy_selector(selector: &Selector) -> bool {
 
 fn tribe_name(tribe: Tribe) -> &'static str {
     match tribe {
-        Tribe::Human => "人类",
-        Tribe::Machine => "机械",
-        Tribe::Biology => "生物",
-        Tribe::Plant => "植物",
-        Tribe::Virus => "病毒",
-        Tribe::Scholar => "学者",
-        Tribe::General => "通用",
+        Tribe::Human => "human",
+        Tribe::Machine => "machine",
+        Tribe::Biology => "biology",
+        Tribe::Plant => "plant",
+        Tribe::Virus => "virus",
+        Tribe::Scholar => "scholar",
+        Tribe::General => "general",
     }
 }
 

@@ -38,9 +38,11 @@
     "ErrorMessage": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["code", "message", "retryable"],
+      "required": ["code", "messageId", "message", "retryable"],
       "properties": {
         "code": { "$ref": "errors.schema.json#/$defs/ErrorCode", "description": "错误码" },
+        "messageId": { "type": "string", "description": "面向玩家的文本 id，默认 error.<CODE>" },
+        "messageParams": { "type": "array", "items": { "type": "string" }, "description": "messageId 的 %s 参数" },
         "message": { "type": "string", "description": "面向日志的错误说明，不作为 UI 文案" },
         "clientIntentId": { "type": "string", "description": "被拒绝意图的 clientIntentId" },
         "retryable": { "type": "boolean", "description": "是否可原样重试" }

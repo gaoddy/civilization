@@ -507,7 +507,7 @@ impl ::std::convert::From<&BoardAffordance> for BoardAffordance {
 ///      "minimum": 0.0
 ///    },
 ///    "keywords": {
-///      "description": "当前生效的关键词",
+///      "description": "当前生效的关键词，取值为英文 id",
 ///      "type": "array",
 ///      "items": {
 ///        "type": "string"
@@ -539,7 +539,7 @@ pub struct BoardMinion {
     pub health: u64,
     ///该随从在当前存活随从序列中的下标；上界由 PlayerView.boardSlots 决定
     pub index: u64,
-    ///当前生效的关键词
+    ///当前生效的关键词，取值为英文 id
     pub keywords: ::std::vec::Vec<::std::string::String>,
     ///随从实例 id
     #[serde(rename = "minionId")]
@@ -1898,6 +1898,7 @@ impl ::std::convert::TryFrom<::std::string::String> for ErrorCode {
 ///  "required": [
 ///    "code",
 ///    "message",
+///    "messageId",
 ///    "retryable"
 ///  ],
 ///  "properties": {
@@ -1912,6 +1913,17 @@ impl ::std::convert::TryFrom<::std::string::String> for ErrorCode {
 ///    "message": {
 ///      "description": "面向日志的错误说明，不作为 UI 文案",
 ///      "type": "string"
+///    },
+///    "messageId": {
+///      "description": "面向玩家的文本 id，默认 error.<CODE>",
+///      "type": "string"
+///    },
+///    "messageParams": {
+///      "description": "messageId 的 %s 参数",
+///      "type": "array",
+///      "items": {
+///        "type": "string"
+///      }
 ///    },
 ///    "retryable": {
 ///      "description": "是否可原样重试",
@@ -1936,6 +1948,16 @@ pub struct ErrorMessage {
     pub code: ErrorCode,
     ///面向日志的错误说明，不作为 UI 文案
     pub message: ::std::string::String,
+    ///面向玩家的文本 id，默认 error.<CODE>
+    #[serde(rename = "messageId")]
+    pub message_id: ::std::string::String,
+    ///messageId 的 %s 参数
+    #[serde(
+        rename = "messageParams",
+        default,
+        skip_serializing_if = "::std::vec::Vec::is_empty"
+    )]
+    pub message_params: ::std::vec::Vec<::std::string::String>,
     ///是否可原样重试
     pub retryable: bool,
 }
@@ -3130,7 +3152,7 @@ impl ::std::convert::From<&MinionStats> for MinionStats {
 ///          "const": "evolve"
 ///        },
 ///        "options": {
-///          "description": "进化选项",
+///          "description": "进化选项，取值为英文 id",
 ///          "type": "array",
 ///          "items": {
 ///            "type": "string"
@@ -3171,7 +3193,7 @@ pub enum PendingChoice {
     },
     #[serde(rename = "evolve")]
     Evolve {
-        ///进化选项
+        ///进化选项，取值为英文 id
         options: ::std::vec::Vec<::std::string::String>,
     },
     #[serde(rename = "target")]
@@ -3468,7 +3490,7 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 ///      }
 ///    },
 ///    "enabledFactions": {
-///      "description": "本局启用的 5 个流派",
+///      "description": "本局启用的 5 个流派，取值为英文 id",
 ///      "type": "array",
 ///      "items": {
 ///        "type": "string"
@@ -3635,7 +3657,7 @@ pub struct PlayerView {
     ///本局最近 5 个回合的全部战斗，按回合升序；全对局公开
     #[serde(rename = "combatLog")]
     pub combat_log: ::std::vec::Vec<CombatLogEntry>,
-    ///本局启用的 5 个流派
+    ///本局启用的 5 个流派，取值为英文 id
     #[serde(rename = "enabledFactions")]
     pub enabled_factions: [::std::string::String; 5usize],
     ///生命上限，v0.1 为 40
