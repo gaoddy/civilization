@@ -274,7 +274,11 @@ fn windfury_attacks_twice() {
         .map(|event| event.0)
         .filter(|id| *id != 3)
         .collect();
-    assert_eq!(attacker_ids, vec![1, 1, 2], "连击随从攻击两次后指针才右移");
+    assert_eq!(
+        attacker_ids.iter().copied().take(3).collect::<Vec<_>>(),
+        vec![1, 1, 2],
+        "连击随从连续攻击两次后指针才右移"
+    );
 }
 
 #[test]
@@ -346,7 +350,7 @@ fn contagion_applies_after_damage() {
             blocked: false,
         }
     );
-    assert_eq!(contagion_count(&log), 1);
+    assert_eq!(contagion_count(&log), 2, "每次造成实际伤害都叠一层传染");
 }
 
 #[test]
@@ -365,9 +369,13 @@ fn contagion_skipped_when_blocked() {
         &mut rng(),
     );
 
-    assert_eq!(contagion_count(&log), 1, "只有造成实际伤害的第二击叠传染");
+    assert_eq!(contagion_count(&log), 2, "只有造成实际伤害的攻击叠传染");
     assert_eq!(attacks(&log)[0], (1, 2, 0, true));
-    assert_eq!(attacks(&log)[2], (1, 2, 2, false));
+    assert_eq!(
+        attacks(&log)[1],
+        (1, 2, 2, false),
+        "连击的第二次攻击造成实际伤害"
+    );
 }
 
 #[test]
@@ -524,11 +532,14 @@ fn zero_attack_does_not_counterattack() {
         (1, 2, 0, false),
         "0 攻仍会出手，但造成 0 伤害"
     );
-    assert_eq!(
-        log.attacker_survivors,
-        vec![1],
-        "学者仍会承受反击但不会反击"
+    assert!(
+        attacks(&log)
+            .iter()
+            .filter(|event| event.0 == 1)
+            .all(|event| event.2 == 0),
+        "学者主动攻击与反击都造成 0 伤害"
     );
+    assert_eq!(log.winner, Some(1), "学者被反击致死");
 
     let mut catalog = test_catalog();
     add_card(&mut catalog, "a", 3, 10, &[]);
@@ -599,7 +610,7 @@ fn defender_acts_first_when_first_seat_is_defender() {
 }
 
 #[test]
-fn scholar_granted_windfury_still_attacks_once() {
+fn scholar_granted_windfury_attacks_twice() {
     let mut catalog = test_catalog();
     add_card_with(&mut catalog, "scholar", Tribe::Scholar, 0, 10, &[]);
     add_card(&mut catalog, "b", 0, 20, &[]);
@@ -616,11 +627,8 @@ fn scholar_granted_windfury_still_attacks_once() {
         &mut rng(),
     );
 
-    let scholar_attacks = attacks(&log)
-        .into_iter()
-        .filter(|event| event.0 == 1)
-        .count();
-    assert_eq!(scholar_attacks, 1, "连击对学者不生效，只有 1 个令牌");
+    let ids: Vec<InstanceId> = attacks(&log).iter().map(|event| event.0).take(3).collect();
+    assert_eq!(ids, vec![1, 1, 2], "学者被授予连击时同样连续攻击两次");
 }
 
 #[test]
@@ -1191,4 +1199,173 @@ fn combat_copy_to_board_fizzles_when_board_is_full() {
         "满场时复制到棋盘作废，不产生召唤动作"
     );
     assert_eq!(log.summon_count, 0);
+}
+
+#[test]
+fn rounds_reset_when_a_side_finishes() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a1", 0, 100, &[]);
+    add_card(&mut catalog, "a2", 0, 100, &[]);
+    add_card(&mut catalog, "b", 0, 100, &[]);
+
+    let log = simulate(
+        &catalog,
+        &[minion(&catalog, 1, "a1"), minion(&catalog, 2, "a2")],
+        &[minion(&catalog, 3, "b")],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
+
+    let ids: Vec<InstanceId> = attacks(&log).iter().map(|event| event.0).take(6).collect();
+    assert_eq!(
+        ids,
+        vec![1, 3, 2, 3, 1, 3],
+        "先手侧走完后回到最左，后手侧只有一名随从时每拍都出手"
+    );
+}
+
+#[test]
+fn unequal_side_sizes_advance_independently() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a", 0, 100, &[]);
+    add_card(&mut catalog, "b1", 0, 100, &[]);
+    add_card(&mut catalog, "b2", 0, 100, &[]);
+    add_card(&mut catalog, "b3", 0, 100, &[]);
+
+    let log = simulate(
+        &catalog,
+        &[minion(&catalog, 1, "a")],
+        &[
+            minion(&catalog, 2, "b1"),
+            minion(&catalog, 3, "b2"),
+            minion(&catalog, 4, "b3"),
+        ],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
+
+    let ids: Vec<InstanceId> = attacks(&log).iter().map(|event| event.0).take(8).collect();
+    assert_eq!(
+        ids,
+        vec![1, 2, 1, 3, 1, 4, 1, 2],
+        "两侧轮次各自独立：先手每拍出手，后手按从左到右循环"
+    );
+}
+
+#[test]
+fn windfury_retargets_after_kill() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a", 10, 10, &["连击"]);
+    add_card(&mut catalog, "b1", 0, 1, &[]);
+    add_card(&mut catalog, "b2", 0, 1, &[]);
+
+    let log = simulate(
+        &catalog,
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b1"), minion(&catalog, 3, "b2")],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
+
+    let hits: Vec<InstanceId> = attacks(&log)
+        .into_iter()
+        .filter(|event| event.0 == 1)
+        .map(|event| event.1)
+        .take(2)
+        .collect();
+    assert_eq!(hits.len(), 2, "连击第二次攻击不因目标阵亡而取消");
+    assert_ne!(hits[0], hits[1], "第一次击杀后第二次重新选择目标");
+}
+
+#[test]
+fn windfury_stops_when_attacker_dies() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a", 1, 1, &["连击"]);
+    add_card(&mut catalog, "b", 10, 10, &[]);
+
+    let log = simulate(
+        &catalog,
+        &[minion(&catalog, 1, "a")],
+        &[minion(&catalog, 2, "b")],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
+
+    let hits = attacks(&log)
+        .into_iter()
+        .filter(|event| event.0 == 1)
+        .count();
+    assert_eq!(hits, 1, "第一次攻击后攻击者阵亡，连击第二次不进行");
+    assert_eq!(log.winner, Some(1));
+}
+
+#[test]
+fn reborn_minion_acts_later_in_the_same_round() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "weak", 0, 100, &[]);
+    add_card(&mut catalog, "killer", 10, 100, &[]);
+    add_card(&mut catalog, "front", 0, 100, &[]);
+    add_card(&mut catalog, "reborner", 0, 1, &["复生", "嘲讽"]);
+
+    let log = simulate(
+        &catalog,
+        &[minion(&catalog, 1, "weak"), minion(&catalog, 2, "killer")],
+        &[
+            minion(&catalog, 3, "front"),
+            minion(&catalog, 4, "reborner"),
+        ],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
+
+    assert!(
+        attacks(&log).iter().any(|event| event.0 == 4),
+        "本轮未行动过的复生随从在指针走到它时仍会出手"
+    );
+}
+
+#[test]
+fn reborn_minion_does_not_act_again_after_acting() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "front", 0, 100, &[]);
+    add_card(&mut catalog, "striker", 10, 100, &[]);
+    add_card(&mut catalog, "reborner", 1, 1, &["复生", "嘲讽"]);
+    add_card(&mut catalog, "back", 0, 100, &[]);
+
+    let log = simulate(
+        &catalog,
+        &[minion(&catalog, 1, "front"), minion(&catalog, 2, "striker")],
+        &[minion(&catalog, 3, "reborner"), minion(&catalog, 4, "back")],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
+
+    let reborn_index = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Reborn { minion } if *minion == 3))
+        .expect("复生随从应复活");
+    let next_attacker = log.actions[reborn_index..]
+        .iter()
+        .find_map(|action| match action {
+            CombatAction::Attack { attacker, .. } => Some(*attacker),
+            _ => None,
+        });
+    assert_ne!(
+        next_attacker,
+        Some(3),
+        "本轮已行动过的随从复生后不会立即再次行动"
+    );
 }

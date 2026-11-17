@@ -38,6 +38,7 @@
 | 招募结束与遗留待选的先后 | 实现 | M0 允许仍有发现待选时提交 `EndRecruit`；M1 协议层再定是否拒绝该顺序 | [核心规则](product/rules/core-rules.md) §6 |
 | M0 重放未比对事件序列 | 实现 | `make m0-determinism` 与 `sim replay` 只比对终局哈希与排名，未比对事件序列；规格的「确定性」要求事件序列一致，M1 前补事件序列摘要比对 | [规则引擎与模拟器](technical/rule-engine-and-simulator.md) |
 | `survivors_at_turn_20` 采样时点 | 实现 | 实现中在 `drive` 循环内、第 20 回合 `resolve_settle` 返回后（检查 `state.turn == 20`）采样，即第 20 回合结算后的存活人数；文档原写「招募开始前」，与实现及 `games_reaching_turn_20` = `games_ended_on_turn_20` 的观测一致，但语义需确认（是否改为第 20 回合招募开始前或回合开始前采样） | [规则引擎与模拟器](technical/rule-engine-and-simulator.md) |
+| 战斗演示可能超过阶段兜底 | 实现 | 新行动轮次规则下战斗可跑满 200 次行动；低攻高血、每拍都有反击的极端战斗约 400–1000 条动作，客户端演示（动作数 × 320ms + 2s）可能超过下一回合招募截止（75–120 秒），被兜底提前结算截断。产品规则要求演示不跳过；是否在进入战斗时按动作数延长阶段截止（`max(招募截止, 现在 + 动作数×320ms + 2s)`）待定 | [战斗行动轮次循环](update/2026-11-17-combat-round-loop/product.md) |
 
 ## 文档结构
 
