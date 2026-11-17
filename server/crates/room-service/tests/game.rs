@@ -105,34 +105,31 @@ fn catalog_with_discover_on_play() -> Catalog {
     catalog
 }
 
-/// 服务端演示节奏：单条动作播放时长。
-const PACE_MS: u64 = 320;
-/// 服务端演示节奏：结果横幅停留。
-const TAIL_MS: u64 = 2_000;
+/// 首回合招募时长：60 秒。
+const RECRUIT_TURN1_MS: u64 = 60_000;
+/// 第二回合招募时长：60 + 15 = 75 秒。
+const RECRUIT_SECONDS_FOR_TURN_2: u64 = 75_000;
 
-/// 一批更新对应的演示时长：动作数最大者 × [`PACE_MS`] + [`TAIL_MS`]。
-fn combat_demo_ms(updates: &[SeatUpdate]) -> u64 {
-    let max_actions = updates
-        .iter()
-        .filter_map(|update| match &update.kind {
-            UpdateKind::CombatResult(result) => Some(result.actions.len()),
-            _ => None,
-        })
-        .max()
-        .unwrap_or(0);
-    (max_actions as u64) * PACE_MS + TAIL_MS
+/// 全部座位回报「演示完成」；非参战座位的回报被服务端忽略。
+fn play_combat(task: &mut GameTask) -> Vec<SeatUpdate> {
+    let mut updates = Vec::new();
+    for seat in 0..8 {
+        updates = task.handle(RoomCommand::CombatPlayed {
+            player_id: format!("p{seat}"),
+        });
+    }
+    updates
 }
 
-/// 从当前招募回合空过到下一回合招募：先到点进入战斗演示，再等演示结束结算。
+/// 从当前招募回合空过到下一回合招募：先到点进入战斗演示，再让全部座位回报。
 ///
-/// 招募截止按回合预算 150 秒扣演示时长得出，取预算上限即可覆盖首回合的固定 90 秒。
+/// 招募截止最长 120 秒，推进 150 秒足以覆盖任意回合的招募时长。
 fn advance_turn(task: &mut GameTask, clock: &FixedClock) {
     clock.advance(150_000);
     let updates = task.tick();
     assert!(!updates.is_empty(), "到点应进入战斗演示");
-    clock.advance(combat_demo_ms(&updates));
-    let updates = task.tick();
-    assert!(!updates.is_empty(), "演示结束应推进到下一回合");
+    let updates = play_combat(task);
+    assert!(!updates.is_empty(), "演示播完应推进到下一回合");
 }
 
 fn command(player: &str, client_intent_id: &str, intent: ProtocolIntent) -> RoomCommand {
@@ -301,19 +298,12 @@ fn all_end_recruit_stays_in_combat_until_deadline() {
     let (mut task, clock) = task();
 
     let mut combat_seats = BTreeSet::new();
-    let mut demo_ms = 0;
     for seat in 0..8 {
         let updates = task.handle(end_recruit(&format!("p{seat}"), &format!("end-{seat}")));
         assert!(
             error_codes(&updates).is_empty(),
             "座位 {seat} 结束招募应成功"
         );
-        if updates
-            .iter()
-            .any(|update| matches!(update.kind, UpdateKind::CombatResult(_)))
-        {
-            demo_ms = combat_demo_ms(&updates);
-        }
         for update in updates {
             if matches!(update.kind, UpdateKind::CombatResult(_)) {
                 combat_seats.insert(update.player_id);
@@ -326,54 +316,46 @@ fn all_end_recruit_stays_in_combat_until_deadline() {
     assert_eq!(
         view.phase,
         protocol::view::Phase::Combat,
-        "全员结束后应停在战斗演示阶段"
+        "全员结束后应停在战斗阶段等待演出回报"
     );
-    assert_eq!(view.turn.get(), 1, "演示期间回合不变");
+    assert_eq!(view.turn.get(), 1, "演出期间回合不变");
 
-    clock.advance(demo_ms - 1);
-    assert!(task.tick().is_empty(), "演示未到点不应推进");
+    // 演出未回报时服务端不推进：推进只剩截止兜底，尚未到点。
+    clock.advance(RECRUIT_SECONDS_FOR_TURN_2 - 1);
+    assert!(task.tick().is_empty(), "截止未到不应推进");
     assert_eq!(
         task.player_view(0).expect("视图应可用").phase,
         protocol::view::Phase::Combat,
-        "演示未到点仍停在战斗阶段"
+        "截止未到仍停在战斗阶段"
     );
 
+    // 兜底：全部座位都没回报时，到点强制结算。
     clock.advance(1);
-    assert!(!task.tick().is_empty(), "演示到点应推进");
+    assert!(!task.tick().is_empty(), "兜底截止到点应结算");
     let view = task.player_view(0).expect("视图应可用");
     assert_eq!(
         view.phase,
         protocol::view::Phase::Recruit,
-        "战斗与结算后进入下一回合招募"
+        "结算后进入下一回合招募"
     );
     assert_eq!(view.turn.get(), 2);
 }
 
 #[test]
-fn next_recruit_deadline_discounts_combat_duration() {
+fn next_recruit_deadline_anchors_at_combat_start() {
     let (mut task, clock) = task();
 
-    let mut demo_ms = 0;
     for seat in 0..8 {
-        let updates = task.handle(end_recruit(&format!("p{seat}"), &format!("end-{seat}")));
-        if updates
-            .iter()
-            .any(|update| matches!(update.kind, UpdateKind::CombatResult(_)))
-        {
-            demo_ms = combat_demo_ms(&updates);
-        }
+        task.handle(end_recruit(&format!("p{seat}"), &format!("end-{seat}")));
     }
-    assert!(demo_ms >= TAIL_MS, "演示时长至少包含横幅停留");
 
-    clock.advance(demo_ms);
-    assert!(!task.tick().is_empty(), "演示到点应推进");
-
+    // 战斗此刻开始，下一回合招募时钟同时起跑：75 秒（60 + 15）。
     let deadline = task.player_view(0).expect("视图应可用").phase_deadline;
     let expected = chrono::DateTime::<chrono::Utc>::from_timestamp_millis(
-        i64::try_from(clock.now_ms() + (150_000 - demo_ms)).expect("时刻应可表示"),
+        i64::try_from(clock.now_ms() + RECRUIT_SECONDS_FOR_TURN_2).expect("时刻应可表示"),
     )
     .expect("时刻应合法");
-    assert_eq!(deadline, expected, "下回合招募截止应为 now + (150000 − T)");
+    assert_eq!(deadline, expected, "战斗开始时即按下一回合招募时长设定截止");
 }
 
 #[test]
@@ -384,10 +366,9 @@ fn game_over_after_combat_skips_new_recruit() {
     for _ in 0..30 {
         clock.advance(150_000);
         let updates = task.tick();
-        assert!(!updates.is_empty(), "每回合到点都应进入演示");
-        clock.advance(combat_demo_ms(&updates));
-        let updates = task.tick();
-        assert!(!updates.is_empty(), "演示到点都应推进");
+        assert!(!updates.is_empty(), "每回合到点都应进入战斗");
+        let updates = play_combat(&mut task);
+        assert!(!updates.is_empty(), "演出播完都应结算");
         game_over =
             task.player_view(0).expect("视图应可用").phase == protocol::view::Phase::GameOver;
         if game_over {
@@ -402,33 +383,40 @@ fn game_over_after_combat_skips_new_recruit() {
 }
 
 #[test]
-fn recruit_timer_fires_at_ninety_seconds() {
+fn recruit_timer_fires_at_sixty_seconds() {
     let (mut task, clock) = task();
 
-    // 首回合招募时长是固定的 90 秒（之后按回合预算扣演示时长）。
-    clock.advance(90_000);
+    // 首回合招募时长 60 秒，之后每回合 +15 秒、上限 120 秒。
+    clock.advance(RECRUIT_TURN1_MS - 1);
+    assert!(task.tick().is_empty(), "未到 60 秒不应进入战斗");
+
+    clock.advance(1);
     let updates = task.tick();
-    assert!(!updates.is_empty(), "到点应进入战斗演示");
+    assert!(!updates.is_empty(), "到点应进入战斗");
     assert!(
         updates
             .iter()
             .any(|update| matches!(update.kind, UpdateKind::CombatResult(_))),
-        "进入演示应下发 CombatResult"
+        "进入战斗应下发 CombatResult"
     );
     assert_eq!(
         task.player_view(0).expect("视图应可用").phase,
         protocol::view::Phase::Combat,
-        "到点先进入战斗演示"
+        "到点先进入战斗"
     );
 
-    // 同一毫秒重复 tick 幂等：演示未到点不推进。
+    // 同一毫秒重复 tick 幂等：战斗期间不按 tick 推进，只等回报或截止兜底。
     assert!(task.tick().is_empty(), "重复 tick 不得再次推进");
 
-    clock.advance(combat_demo_ms(&updates));
-    task.tick();
+    play_combat(&mut task);
     let view = task.player_view(0).expect("视图应可用");
     assert_eq!(view.phase, protocol::view::Phase::Recruit);
     assert_eq!(view.turn.get(), 2);
+    let expected_turn2 = chrono::DateTime::<chrono::Utc>::from_timestamp_millis(
+        i64::try_from(clock.now_ms() + RECRUIT_SECONDS_FOR_TURN_2).expect("时刻应可表示"),
+    )
+    .expect("时刻应合法");
+    assert_eq!(view.phase_deadline, expected_turn2, "第二回合招募 75 秒");
 }
 
 #[test]
@@ -457,8 +445,7 @@ fn unspent_pending_choice_does_not_block_timeout() {
     clock.advance(150_000);
     let updates = task.tick();
     assert!(!updates.is_empty(), "待选未消费不应阻塞超时推进");
-    clock.advance(combat_demo_ms(&updates));
-    task.tick();
+    play_combat(&mut task);
     assert_eq!(task.player_view(0).expect("视图应可用").turn.get(), 2);
 }
 
@@ -535,7 +522,7 @@ fn seq_increases_per_seat_independently() {
 fn tick_before_deadline_returns_empty() {
     let (mut task, clock) = task();
 
-    clock.advance(89_999);
+    clock.advance(RECRUIT_TURN1_MS - 1);
     assert!(task.tick().is_empty(), "未到点不应推进");
 
     let view = task.player_view(0).expect("视图应可用");
@@ -860,10 +847,9 @@ fn reach_game_over(task: &mut GameTask, clock: &FixedClock) -> Vec<SeatUpdate> {
     for _ in 0..30 {
         clock.advance(150_000);
         let updates = task.tick();
-        assert!(!updates.is_empty(), "每个回合到点都应进入演示");
-        clock.advance(combat_demo_ms(&updates));
-        let updates = task.tick();
-        assert!(!updates.is_empty(), "演示到点都应推进");
+        assert!(!updates.is_empty(), "每个回合到点都应进入战斗");
+        let updates = play_combat(task);
+        assert!(!updates.is_empty(), "演出播完都应结算");
         if task.player_view(0).expect("视图应可用").phase == protocol::view::Phase::GameOver {
             return updates;
         }

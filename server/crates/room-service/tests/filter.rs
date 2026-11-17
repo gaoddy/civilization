@@ -214,7 +214,12 @@ fn public_turn_events_reach_all_seats() {
 #[test]
 fn combat_result_maps_action_indices() {
     let report = real_report(2);
-    let result = combat_result(&catalog(), &report, &seats());
+    let result = combat_result(
+        &catalog(),
+        &report,
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
 
     assert_eq!(result.own_board.len(), 2);
     assert_eq!(result.opponent_board.len(), 2);
@@ -254,7 +259,12 @@ fn combat_result_maps_action_indices() {
 
 #[test]
 fn combat_result_actions_use_fixed_kinds() {
-    let result = combat_result(&catalog(), &real_report(2), &seats());
+    let result = combat_result(
+        &catalog(),
+        &real_report(2),
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
     let allowed = ["attack", "death", "reborn", "contagion", "summon"];
 
     for action in &result.actions {
@@ -296,7 +306,12 @@ fn mirror_combat_result_marked_mirror() {
         winner: Some(1),
     };
 
-    let result = combat_result(&catalog, &won, &seats());
+    let result = combat_result(
+        &catalog,
+        &won,
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
     assert_eq!(result.mirror, Some(true), "镜像战必须标记 mirror");
     assert_eq!(result.damage, 0, "镜像战不造成伤害");
     assert_eq!(result.winner_id.as_deref(), Some("p1"));
@@ -306,7 +321,12 @@ fn mirror_combat_result_marked_mirror() {
         winner: None,
         ..won
     };
-    let result = combat_result(&catalog, &lost, &seats());
+    let result = combat_result(
+        &catalog,
+        &lost,
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
     assert_eq!(result.mirror, Some(true));
     assert_eq!(result.damage, 0);
     assert_eq!(result.winner_id, None, "未获胜的镜像战 winnerId 为 null");
@@ -495,7 +515,7 @@ fn event_kinds(events: &[serde_json::Value]) -> Vec<String> {
 
 #[test]
 fn combat_stage_attaches_filtered_public_events() {
-    let (mut task, clock) = task();
+    let (mut task, _clock) = task();
 
     // 互清判平局后，空棋盘对战不再产生伤害：先让座位 0 上场一个随从，
     // 保证本回合至少有一场真实战分出胜负。
@@ -572,17 +592,13 @@ fn combat_stage_attaches_filtered_public_events() {
         "演示阶段应停在 Combat"
     );
 
-    // 演示到点结算：伤害事件随下一回合的视图下发。
-    let demo_ms = last
-        .iter()
-        .filter_map(|update| match &update.kind {
-            UpdateKind::CombatResult(result) => Some(result.actions.len()),
-            _ => None,
-        })
-        .max()
-        .unwrap_or(0);
-    clock.advance((demo_ms as u64) * 320 + 2_000);
-    let settle = task.tick();
+    // 演示播完：全部参战座位回报后立即结算，伤害事件随下一回合的视图下发。
+    let mut settle = Vec::new();
+    for seat in 0..8 {
+        settle = task.handle(RoomCommand::CombatPlayed {
+            player_id: format!("p{seat}"),
+        });
+    }
     let mut damage_events = Vec::new();
     for update in &settle {
         if !matches!(update.kind, UpdateKind::View { .. }) {
@@ -619,7 +635,12 @@ fn combat_stage_attaches_filtered_public_events() {
 #[test]
 fn combat_attack_carries_minion_ids_and_states() {
     let catalog = catalog();
-    let result = combat_result(&catalog, &real_report(0), &seats());
+    let result = combat_result(
+        &catalog,
+        &real_report(0),
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
 
     let attack = &result.actions[0];
     assert_eq!(attack.kind, "attack");
@@ -646,7 +667,12 @@ fn combat_attack_carries_minion_ids_and_states() {
 #[test]
 fn combat_summon_maps_side_position_and_minion() {
     let catalog = catalog();
-    let result = combat_result(&catalog, &real_report(0), &seats());
+    let result = combat_result(
+        &catalog,
+        &real_report(0),
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
 
     let summon = result.actions[5]
         .summon
@@ -676,7 +702,12 @@ fn combat_summon_maps_side_position_and_minion() {
         states: vec![vec![snapshot(301, 1, 1, true)]],
         ..real_report(0)
     };
-    let own = combat_result(&catalog, &own_report, &seats());
+    let own = combat_result(
+        &catalog,
+        &own_report,
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
     assert_eq!(
         own.actions[0].summon.as_ref().map(|summon| summon.side),
         Some(protocol::CombatResultActionsItemSummonSide::Own),
@@ -704,7 +735,12 @@ fn combat_summon_uses_state_snapshot_values() {
         ..real_report(0)
     };
 
-    let result = combat_result(&catalog, &report, &seats());
+    let result = combat_result(
+        &catalog,
+        &report,
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
     let summon = result.actions[0]
         .summon
         .as_ref()
@@ -722,7 +758,12 @@ fn combat_summon_uses_state_snapshot_values() {
 #[test]
 fn combat_death_and_reborn_carry_target_state() {
     let catalog = catalog();
-    let result = combat_result(&catalog, &real_report(0), &seats());
+    let result = combat_result(
+        &catalog,
+        &real_report(0),
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
 
     let death = result.actions[2]
         .target
