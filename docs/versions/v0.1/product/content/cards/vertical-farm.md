@@ -1,11 +1,11 @@
 ---
 id: vertical-farm
-card_type: 随从
+card_type: minion
 name: 垂直农场
-tribe: 植物
-subtype: 建筑
+tribe: plant
+subtype: architecture
 level: 6
-era: 未来
+era: future
 attack: 8
 health: 12
 skills: [keyword-sow, keyword-breed-3]

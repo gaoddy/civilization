@@ -1,11 +1,11 @@
 ---
 id: shuiche
-card_type: 随从
+card_type: minion
 name: 水车
-tribe: 机械
-subtype: 载具
+tribe: machine
+subtype: vehicle
 level: 2
-era: 封建
+era: feudal
 attack: 2
 health: 5
 skills: [keyword-assemble-1]

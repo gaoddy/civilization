@@ -19,32 +19,32 @@
 | [aura-plant-plus-2-plus-2](aura-plant-plus-2-plus-2.md) | 无 | 你的植物随从获得 +2/+2 | 1 |
 | [aura-scholar-plus-0-plus-2](aura-scholar-plus-0-plus-2.md) | 无 | 你的学者随从获得 +0/+2 | 1 |
 | [aura-scholar-plus-0-plus-3](aura-scholar-plus-0-plus-3.md) | 无 | 你的学者随从获得 +0/+3 | 1 |
-| [battlecry-all-biology-growth-once](battlecry-all-biology-growth-once.md) | 战吼 | 战吼：使你的所有生物随从获得一次成长 | 1 |
-| [battlecry-all-friendly-growth-once](battlecry-all-friendly-growth-once.md) | 战吼 | 战吼：使你的所有随从获得一次成长 | 5 |
-| [battlecry-all-friendly-growth-twice](battlecry-all-friendly-growth-twice.md) | 战吼 | 战吼：使你的所有随从获得两次成长 | 1 |
-| [battlecry-all-friendly-plus-0-plus-1](battlecry-all-friendly-plus-0-plus-1.md) | 战吼 | 战吼：使你的所有随从获得 +0/+1 | 2 |
-| [battlecry-all-mech-growth-once](battlecry-all-mech-growth-once.md) | 战吼 | 战吼：使你的所有机械随从获得一次成长 | 2 |
+| [battlecry-all-biology-growth-once](battlecry-all-biology-growth-once.md) | battlecry | 战吼：使你的所有生物随从获得一次成长 | 1 |
+| [battlecry-all-friendly-growth-once](battlecry-all-friendly-growth-once.md) | battlecry | 战吼：使你的所有随从获得一次成长 | 5 |
+| [battlecry-all-friendly-growth-twice](battlecry-all-friendly-growth-twice.md) | battlecry | 战吼：使你的所有随从获得两次成长 | 1 |
+| [battlecry-all-friendly-plus-0-plus-1](battlecry-all-friendly-plus-0-plus-1.md) | battlecry | 战吼：使你的所有随从获得 +0/+1 | 2 |
+| [battlecry-all-mech-growth-once](battlecry-all-mech-growth-once.md) | battlecry | 战吼：使你的所有机械随从获得一次成长 | 2 |
 | [battlecry-all-mech-growth-once-no-keyword](battlecry-all-mech-growth-once-no-keyword.md) | 无 | 战吼：使你的所有机械随从获得一次成长 | 1 |
-| [battlecry-friendly-archers-plus-2-attack](battlecry-friendly-archers-plus-2-attack.md) | 战吼 | 战吼：使你的弓箭手获得 +2 攻击力 | 1 |
-| [battlecry-friendly-growth-once](battlecry-friendly-growth-once.md) | 战吼 | 战吼：使一个友方随从获得一次成长 | 11 |
-| [battlecry-friendly-growth-plant-twice](battlecry-friendly-growth-plant-twice.md) | 战吼 | 战吼：使一个友方随从获得一次成长；若其为植物，改为两次 | 1 |
-| [battlecry-friendly-growth-scholar-twice](battlecry-friendly-growth-scholar-twice.md) | 战吼 | 战吼：使一个友方随从获得一次成长；若其为学者，改为两次 | 1 |
-| [battlecry-friendly-growth-twice](battlecry-friendly-growth-twice.md) | 战吼 | 战吼：使一个友方随从获得两次成长 | 4 |
-| [battlecry-friendly-human-plus-0-plus-1](battlecry-friendly-human-plus-0-plus-1.md) | 战吼 | 战吼：使一个友方人类随从获得 +0/+1 | 1 |
-| [battlecry-friendly-mech-growth-once](battlecry-friendly-mech-growth-once.md) | 战吼 | 战吼：使一个友方机械随从获得一次成长 | 2 |
-| [battlecry-friendly-plant-growth-once](battlecry-friendly-plant-growth-once.md) | 战吼 | 战吼：使一个友方植物随从获得一次成长 | 1 |
-| [battlecry-friendly-plus-0-plus-1](battlecry-friendly-plus-0-plus-1.md) | 战吼 | 战吼：使一个友方随从获得 +0/+1 | 3 |
-| [battlecry-friendly-plus-0-plus-2](battlecry-friendly-plus-0-plus-2.md) | 战吼 | 战吼：使一个友方随从获得 +0/+2 | 4 |
-| [battlecry-friendly-plus-1-attack](battlecry-friendly-plus-1-attack.md) | 战吼 | 战吼：使一个友方随从获得 +1 攻击力 | 1 |
-| [battlecry-friendly-plus-1-health](battlecry-friendly-plus-1-health.md) | 战吼 | 战吼：使一个友方随从获得 +1 生命值 | 1 |
-| [battlecry-friendly-virus-plus-1-attack](battlecry-friendly-virus-plus-1-attack.md) | 战吼 | 战吼：使一个友方病毒随从获得 +1 攻击力 | 1 |
-| [battlecry-other-friendly-humans-plus-1-attack](battlecry-other-friendly-humans-plus-1-attack.md) | 战吼 | 战吼：使你的其他人类随从获得 +1 攻击力 | 5 |
-| [battlecry-plant-growth-twice](battlecry-plant-growth-twice.md) | 战吼 | 战吼：使一个友方植物随从获得两次成长 | 1 |
-| [battlecry-random-enemy-damage-1](battlecry-random-enemy-damage-1.md) | 战吼 | 战吼：对随机一个敌方随从造成 1 点伤害 | 2 |
-| [battlecry-random-enemy-damage-2](battlecry-random-enemy-damage-2.md) | 战吼 | 战吼：对随机一个敌方随从造成 2 点伤害 | 1 |
-| [battlecry-self-growth-twice](battlecry-self-growth-twice.md) | 战吼 | 战吼：获得两次成长 | 1 |
-| [battlecry-self-plus-1-health](battlecry-self-plus-1-health.md) | 战吼 | 战吼：获得 +1 生命值 | 1 |
-| [battlecry-summon-3-3-synthetic-cell](battlecry-summon-3-3-synthetic-cell.md) | 战吼 | 战吼：召唤一个 3/3 的合成细胞（幼体） | 1 |
+| [battlecry-friendly-archers-plus-2-attack](battlecry-friendly-archers-plus-2-attack.md) | battlecry | 战吼：使你的弓箭手获得 +2 攻击力 | 1 |
+| [battlecry-friendly-growth-once](battlecry-friendly-growth-once.md) | battlecry | 战吼：使一个友方随从获得一次成长 | 11 |
+| [battlecry-friendly-growth-plant-twice](battlecry-friendly-growth-plant-twice.md) | battlecry | 战吼：使一个友方随从获得一次成长；若其为植物，改为两次 | 1 |
+| [battlecry-friendly-growth-scholar-twice](battlecry-friendly-growth-scholar-twice.md) | battlecry | 战吼：使一个友方随从获得一次成长；若其为学者，改为两次 | 1 |
+| [battlecry-friendly-growth-twice](battlecry-friendly-growth-twice.md) | battlecry | 战吼：使一个友方随从获得两次成长 | 4 |
+| [battlecry-friendly-human-plus-0-plus-1](battlecry-friendly-human-plus-0-plus-1.md) | battlecry | 战吼：使一个友方人类随从获得 +0/+1 | 1 |
+| [battlecry-friendly-mech-growth-once](battlecry-friendly-mech-growth-once.md) | battlecry | 战吼：使一个友方机械随从获得一次成长 | 2 |
+| [battlecry-friendly-plant-growth-once](battlecry-friendly-plant-growth-once.md) | battlecry | 战吼：使一个友方植物随从获得一次成长 | 1 |
+| [battlecry-friendly-plus-0-plus-1](battlecry-friendly-plus-0-plus-1.md) | battlecry | 战吼：使一个友方随从获得 +0/+1 | 3 |
+| [battlecry-friendly-plus-0-plus-2](battlecry-friendly-plus-0-plus-2.md) | battlecry | 战吼：使一个友方随从获得 +0/+2 | 4 |
+| [battlecry-friendly-plus-1-attack](battlecry-friendly-plus-1-attack.md) | battlecry | 战吼：使一个友方随从获得 +1 攻击力 | 1 |
+| [battlecry-friendly-plus-1-health](battlecry-friendly-plus-1-health.md) | battlecry | 战吼：使一个友方随从获得 +1 生命值 | 1 |
+| [battlecry-friendly-virus-plus-1-attack](battlecry-friendly-virus-plus-1-attack.md) | battlecry | 战吼：使一个友方病毒随从获得 +1 攻击力 | 1 |
+| [battlecry-other-friendly-humans-plus-1-attack](battlecry-other-friendly-humans-plus-1-attack.md) | battlecry | 战吼：使你的其他人类随从获得 +1 攻击力 | 5 |
+| [battlecry-plant-growth-twice](battlecry-plant-growth-twice.md) | battlecry | 战吼：使一个友方植物随从获得两次成长 | 1 |
+| [battlecry-random-enemy-damage-1](battlecry-random-enemy-damage-1.md) | battlecry | 战吼：对随机一个敌方随从造成 1 点伤害 | 2 |
+| [battlecry-random-enemy-damage-2](battlecry-random-enemy-damage-2.md) | battlecry | 战吼：对随机一个敌方随从造成 2 点伤害 | 1 |
+| [battlecry-self-growth-twice](battlecry-self-growth-twice.md) | battlecry | 战吼：获得两次成长 | 1 |
+| [battlecry-self-plus-1-health](battlecry-self-plus-1-health.md) | battlecry | 战吼：获得 +1 生命值 | 1 |
+| [battlecry-summon-3-3-synthetic-cell](battlecry-summon-3-3-synthetic-cell.md) | battlecry | 战吼：召唤一个 3/3 的合成细胞（幼体） | 1 |
 | [获得性状](biology-evolve.md) | 无 | 使一个友方生物随从获得进化 | 1 |
 | [航线](combat-optimal-attack.md) | 无 | 使一个友方随从获得最优攻击直到回合结束 | 1 |
 | [combat-random-enemy-damage-3](combat-random-enemy-damage-3.md) | 无 | 战斗开始时对随机一个敌方随从造成 3 点伤害 | 1 |
@@ -64,15 +64,15 @@
 | [combatstart-remove-top-attack-enemy-growth](combatstart-remove-top-attack-enemy-growth.md) | 无 | 战斗开始时，移除敌方攻击力最高随从的全部成长 | 1 |
 | [combatstart-top-attack-enemy-cant-attack](combatstart-top-attack-enemy-cant-attack.md) | 无 | 战斗开始时，使敌方攻击力最高的随从本回合无法攻击 | 1 |
 | [combatstart-top-attack-enemy-minus-0-minus-2](combatstart-top-attack-enemy-minus-0-minus-2.md) | 无 | 战斗开始时，使敌方攻击力最高的随从获得 -0/-2 | 1 |
-| [deathrattle-all-enemies-contagion-1](deathrattle-all-enemies-contagion-1.md) | 亡语 | 亡语：使敌方所有随从获得 1 层传染 | 1 |
-| [deathrattle-all-enemies-humans-minus-2-health](deathrattle-all-enemies-humans-minus-2-health.md) | 亡语 | 亡语：使敌方所有人类随从获得 -2 生命 | 1 |
-| [deathrattle-all-enemies-minus-1-health](deathrattle-all-enemies-minus-1-health.md) | 亡语 | 亡语：使敌方所有随从获得 -1 生命 | 3 |
+| [deathrattle-all-enemies-contagion-1](deathrattle-all-enemies-contagion-1.md) | deathrattle | 亡语：使敌方所有随从获得 1 层传染 | 1 |
+| [deathrattle-all-enemies-humans-minus-2-health](deathrattle-all-enemies-humans-minus-2-health.md) | deathrattle | 亡语：使敌方所有人类随从获得 -2 生命 | 1 |
+| [deathrattle-all-enemies-minus-1-health](deathrattle-all-enemies-minus-1-health.md) | deathrattle | 亡语：使敌方所有随从获得 -1 生命 | 3 |
 | [deathrattle-all-friendly-plus-0-plus-1](deathrattle-all-friendly-plus-0-plus-1.md) | 无 | 亡语：使你的所有随从获得 +0/+1 | 1 |
-| [deathrattle-random-enemy-hp-minus-1](deathrattle-random-enemy-hp-minus-1.md) | 亡语 | 亡语：使随机一个敌方随从获得 -1 生命值 | 1 |
+| [deathrattle-random-enemy-hp-minus-1](deathrattle-random-enemy-hp-minus-1.md) | deathrattle | 亡语：使随机一个敌方随从获得 -1 生命值 | 1 |
 | [deathrattle-random-enemy-minus-1-attack](deathrattle-random-enemy-minus-1-attack.md) | 无 | 亡语：使随机一个敌方随从获得 -1 攻击力 | 1 |
-| [deathrattle-random-enemy-minus-1-health](deathrattle-random-enemy-minus-1-health.md) | 亡语 | 亡语：使随机一个敌方随从获得 -1 生命 | 1 |
-| [deathrattle-summon-2-2-hela-cell-clone](deathrattle-summon-2-2-hela-cell-clone.md) | 亡语 | 亡语：召唤一个 2/2 的海拉细胞（复制体） | 1 |
-| [deathrattle-summon-termite](deathrattle-summon-termite.md) | 亡语 | 亡语：召唤一个 1/2 的白蚁 | 1 |
+| [deathrattle-random-enemy-minus-1-health](deathrattle-random-enemy-minus-1-health.md) | deathrattle | 亡语：使随机一个敌方随从获得 -1 生命 | 1 |
+| [deathrattle-summon-2-2-hela-cell-clone](deathrattle-summon-2-2-hela-cell-clone.md) | deathrattle | 亡语：召唤一个 2/2 的海拉细胞（复制体） | 1 |
+| [deathrattle-summon-termite](deathrattle-summon-termite.md) | deathrattle | 亡语：召唤一个 1/2 的白蚁 | 1 |
 | [分工](division-of-labor.md) | 无 | 使一个友方人类随从获得一次成长；若你控制至少 3 个人类，改为两次 | 1 |
 | [高效算法](efficient-algorithm.md) | 无 | 刷新商店并获得一张当前星级的随从 | 1 |
 | [非攻](enemy-random-cannot-attack.md) | 无 | 使随机一个敌方随从本回合无法攻击 | 1 |
@@ -82,19 +82,19 @@
 | [遗传](heredity.md) | 无 | 使一个友方植物随从获得一次成长 | 1 |
 | [技艺](human-growth-twice.md) | 无 | 使一个友方人类随从获得两次成长 | 1 |
 | [发明工厂](invention-factory.md) | 无 | 使你的其他机械随从各获得一次成长 | 1 |
-| [keyword-assemble-1](keyword-assemble-1.md) | 装配 1 | 装配 1：进入战场时，使你的其他机械随从各获得 1 次成长 | 8 |
-| [keyword-assemble-2](keyword-assemble-2.md) | 装配 2 | 装配 2：进入战场时，使你的其他机械随从各获得 2 次成长 | 7 |
-| [keyword-breed-1](keyword-breed-1.md) | 繁衍 1 | 繁衍 1：回合开始时获得 +1 生命 | 7 |
-| [keyword-breed-2](keyword-breed-2.md) | 繁衍 2 | 繁衍 2：回合开始时获得 +2 生命 | 4 |
-| [keyword-breed-3](keyword-breed-3.md) | 繁衍 3 | 繁衍 3：回合开始时获得 +3 生命 | 2 |
-| [keyword-contagion](keyword-contagion.md) | 传染 | 传染：造成伤害后，目标每回合 -1 生命 | 10 |
-| [keyword-divine-shield](keyword-divine-shield.md) | 护盾 | 护盾：抵消一次伤害 | 7 |
-| [keyword-evolve](keyword-evolve.md) | 进化 | 进化：从 +2/+2、护盾、复生中选择一个 | 6 |
-| [keyword-optimal-attack](keyword-optimal-attack.md) | 最优攻击 | 最优攻击：无视嘲讽，优先攻击可被击杀的目标 | 8 |
-| [keyword-reborn](keyword-reborn.md) | 复生 | 复生：以 1 点生命复活一次 | 6 |
-| [keyword-sow](keyword-sow.md) | 播种 | 播种：死亡时召唤一个 1/1 的幼苗 | 16 |
-| [keyword-taunt](keyword-taunt.md) | 嘲讽 | 嘲讽 | 10 |
-| [keyword-windfury](keyword-windfury.md) | 连击 | 连击：每回合可攻击两次 | 5 |
+| [keyword-assemble-1](keyword-assemble-1.md) | assemble 1 | 装配 1：进入战场时，使你的其他机械随从各获得 1 次成长 | 8 |
+| [keyword-assemble-2](keyword-assemble-2.md) | assemble 2 | 装配 2：进入战场时，使你的其他机械随从各获得 2 次成长 | 7 |
+| [keyword-breed-1](keyword-breed-1.md) | breed 1 | 繁衍 1：回合开始时获得 +1 生命 | 7 |
+| [keyword-breed-2](keyword-breed-2.md) | breed 2 | 繁衍 2：回合开始时获得 +2 生命 | 4 |
+| [keyword-breed-3](keyword-breed-3.md) | breed 3 | 繁衍 3：回合开始时获得 +3 生命 | 2 |
+| [keyword-contagion](keyword-contagion.md) | contagion | 传染：造成伤害后，目标每回合 -1 生命 | 10 |
+| [keyword-divine-shield](keyword-divine-shield.md) | divine_shield | 护盾：抵消一次伤害 | 7 |
+| [keyword-evolve](keyword-evolve.md) | evolve | 进化：从 +2/+2、护盾、复生中选择一个 | 6 |
+| [keyword-optimal-attack](keyword-optimal-attack.md) | optimal_attack | 最优攻击：无视嘲讽，优先攻击可被击杀的目标 | 8 |
+| [keyword-reborn](keyword-reborn.md) | reborn | 复生：以 1 点生命复活一次 | 6 |
+| [keyword-sow](keyword-sow.md) | sow | 播种：死亡时召唤一个 1/1 的幼苗 | 16 |
+| [keyword-taunt](keyword-taunt.md) | taunt | 嘲讽 | 10 |
+| [keyword-windfury](keyword-windfury.md) | windfury | 连击：每回合可攻击两次 | 5 |
 | [光速出击](light-speed-strike.md) | 无 | 使一个友方随从本回合获得连击 | 1 |
 | [微生物学](microbiology.md) | 无 | 战斗开始时使敌方最左侧随从获得 1 层传染 | 1 |
 | [观测](observation.md) | 无 | 每回合首次刷新时额外出现一张当前时代的随机随从 | 2 |

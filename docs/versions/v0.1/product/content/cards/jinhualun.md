@@ -1,10 +1,10 @@
 ---
 id: jinhualun
 name: 进化论
-card_type: 效果
+card_type: effect
 level: 4
-era: 现代
-tribe: 生物
+era: modern
+tribe: biology
 cost: 2
 match_text: 改为三选一固定池
 skills: [trigger-discover-tribe-minion]

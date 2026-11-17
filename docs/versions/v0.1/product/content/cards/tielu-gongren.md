@@ -1,11 +1,11 @@
 ---
 id: tielu-gongren
-card_type: 随从
+card_type: minion
 name: 铁路工人
-tribe: 人类
-subtype: 工人
+tribe: human
+subtype: worker
 level: 3
-era: 工业
+era: industrial
 attack: 3
 health: 5
 skills: [battlecry-friendly-plus-0-plus-2]

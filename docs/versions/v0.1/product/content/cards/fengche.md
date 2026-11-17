@@ -1,11 +1,11 @@
 ---
 id: fengche
-card_type: 随从
+card_type: minion
 name: 风车
-tribe: 机械
-subtype: 载具
+tribe: machine
+subtype: vehicle
 level: 3
-era: 封建
+era: feudal
 attack: 3
 health: 6
 skills: [keyword-assemble-1, trigger-turn-start-self-plus-0-plus-1]

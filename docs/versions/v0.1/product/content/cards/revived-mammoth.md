@@ -1,11 +1,11 @@
 ---
 id: revived-mammoth
-card_type: 随从
+card_type: minion
 name: 复活猛犸
-tribe: 生物
-subtype: 克隆
+tribe: biology
+subtype: clone
 level: 6
-era: 未来
+era: future
 attack: 8
 health: 12
 skills: [keyword-reborn, keyword-evolve]

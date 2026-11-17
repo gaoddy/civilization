@@ -1,11 +1,11 @@
 ---
 id: quantum-computer
-card_type: 随从
+card_type: minion
 name: 量子计算机
-tribe: 机械
-subtype: 计算机
+tribe: machine
+subtype: computer
 level: 5
-era: 未来
+era: future
 attack: 7
 health: 9
 skills: [keyword-divine-shield, keyword-assemble-2]

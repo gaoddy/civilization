@@ -1,11 +1,11 @@
 ---
 id: fleming
-card_type: 随从
+card_type: minion
 name: 弗莱明
-tribe: 病毒
-subtype: 微生物学
+tribe: virus
+subtype: microbiology
 level: 4
-era: 现代
+era: modern
 attack: 4
 health: 7
 skills: [virus-growth-once]

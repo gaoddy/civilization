@@ -1,11 +1,11 @@
 ---
 id: hongshulin
-card_type: 随从
+card_type: minion
 name: 红树林
-tribe: 植物
-subtype: 树木
+tribe: plant
+subtype: tree
 level: 5
-era: 现代
+era: modern
 attack: 6
 health: 11
 skills: [keyword-sow, keyword-breed-2]

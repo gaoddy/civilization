@@ -1,11 +1,11 @@
 ---
 id: yuanshijixiekuilei
-card_type: 随从
+card_type: minion
 name: 原始机械傀儡
-tribe: 机械
-subtype: 傀儡
+tribe: machine
+subtype: puppet
 level: 3
-era: 原始
+era: primitive
 attack: 3
 health: 6
 is_scholar: false

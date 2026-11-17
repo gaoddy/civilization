@@ -1,11 +1,11 @@
 ---
 id: juhua
-card_type: 随从
+card_type: minion
 name: 巨花
-tribe: 植物
-subtype: 花卉
+tribe: plant
+subtype: flower
 level: 3
-era: 原始
+era: primitive
 attack: 3
 health: 5
 skills: [keyword-sow, keyword-breed-1]

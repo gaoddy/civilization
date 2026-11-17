@@ -15,6 +15,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import gen_card_data
 import i18n_terms
+import validate_docs
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CSV_PATH = ROOT / "client" / "text" / "zh_CN.csv"
@@ -68,7 +69,7 @@ def load_existing(path):
 
 
 def generated_entries(root):
-    """从实体文档派生内容 key；枚举 key 由后续任务补充。"""
+    """从实体文档派生内容 key 与枚举 key。"""
     content = pathlib.Path(root) / CONTENT
     entries = {}
     for doc in gen_card_data.load_docs(content, "cards"):
@@ -85,6 +86,18 @@ def generated_entries(root):
             entries[f"skill.{doc['id']}.match_text"] = match_text
     for token in gen_card_data.parse_tokens(content / "tokens" / "README.md"):
         entries[f"token.{token['id']}.name"] = token["name"]
+
+    raw = validate_docs.load(
+        "cards", ["id", "card_type", "tribe", "era"], root=content)
+    enum_labels = validate_docs.card_enum_labels(raw)
+    for field, prefix in (("card_type", "enum.card_type."),
+                          ("tribe", "enum.tribe."), ("era", "enum.era.")):
+        for value, label in enum_labels[field].items():
+            entries[prefix + value] = label
+    for slug, label in validate_docs.keyword_labels().items():
+        entries[f"enum.keyword.{slug}"] = label
+    for value, label in enum_labels["subtype"].items():
+        entries[f"enum.subtype.{value}"] = label
     return entries
 
 

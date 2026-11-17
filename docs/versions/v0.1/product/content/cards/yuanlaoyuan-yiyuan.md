@@ -1,11 +1,11 @@
 ---
 id: yuanlaoyuan-yiyuan
-card_type: 随从
+card_type: minion
 name: 元老院议员
-tribe: 人类
-subtype: 政治
+tribe: human
+subtype: politics
 level: 3
-era: 古典
+era: classical
 attack: 4
 health: 6
 skills: [battlecry-other-friendly-humans-plus-1-attack]

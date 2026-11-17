@@ -1,11 +1,11 @@
 ---
 id: wright-brothers
-card_type: 随从
+card_type: minion
 name: 莱特兄弟
-tribe: 机械
-subtype: 航空
+tribe: machine
+subtype: aviation
 level: 5
-era: 现代
+era: modern
 attack: 8
 health: 9
 skills: [combat-optimal-attack]

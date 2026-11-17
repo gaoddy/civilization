@@ -1,11 +1,11 @@
 ---
 id: davinci
-card_type: 随从
+card_type: minion
 name: 达·芬奇
-tribe: 学者
-subtype: 博学者
+tribe: scholar
+subtype: polymath
 level: 5
-era: 封建
+era: feudal
 attack: 0
 health: 16
 skills: [universal-manuscript]

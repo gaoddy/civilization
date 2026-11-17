@@ -1,11 +1,11 @@
 ---
 id: huochongdui
-card_type: 随从
+card_type: minion
 name: 火铳队
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 4
-era: 封建
+era: feudal
 attack: 5
 health: 8
 skills: [keyword-windfury]

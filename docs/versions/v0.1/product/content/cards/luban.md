@@ -1,11 +1,11 @@
 ---
 id: luban
-card_type: 随从
+card_type: minion
 name: 鲁班
-tribe: 机械
-subtype: 工匠
+tribe: machine
+subtype: artisan
 level: 3
-era: 古典
+era: classical
 attack: 4
 health: 5
 skills: [battlecry-friendly-mech-growth-once]

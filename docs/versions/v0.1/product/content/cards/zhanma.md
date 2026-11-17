@@ -1,11 +1,11 @@
 ---
 id: zhanma
-card_type: 随从
+card_type: minion
 name: 战马
-tribe: 生物
-subtype: 哺乳
+tribe: biology
+subtype: mammal
 level: 4
-era: 封建
+era: feudal
 attack: 6
 health: 7
 skills: [keyword-evolve]

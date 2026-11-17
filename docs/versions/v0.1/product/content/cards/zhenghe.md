@@ -1,11 +1,11 @@
 ---
 id: zhenghe
-card_type: 随从
+card_type: minion
 name: 郑和
-tribe: 人类
-subtype: 航海
+tribe: human
+subtype: navigation
 level: 5
-era: 工业
+era: industrial
 attack: 7
 health: 10
 skills: [free-refresh]

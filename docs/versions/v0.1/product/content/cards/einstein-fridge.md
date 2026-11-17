@@ -1,11 +1,11 @@
 ---
 id: einstein-fridge
-card_type: 随从
+card_type: minion
 name: 爱因斯坦冰箱
-tribe: 机械
-subtype: 家电
+tribe: machine
+subtype: appliance
 level: 3
-era: 现代
+era: modern
 attack: 3
 health: 6
 is_scholar: false

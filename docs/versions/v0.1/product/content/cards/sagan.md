@@ -1,11 +1,11 @@
 ---
 id: sagan
-card_type: 随从
+card_type: minion
 name: 卡尔·萨根
-tribe: 学者
-subtype: 天文
+tribe: scholar
+subtype: astronomy
 level: 6
-era: 未来
+era: future
 attack: 0
 health: 20
 skills: [aura-scholar-plus-0-plus-3]

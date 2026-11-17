@@ -1,8 +1,8 @@
 ---
 id: battlecry-all-biology-growth-once
-keyword: 战吼
+keyword: battlecry
 text: 战吼：使你的所有生物随从获得一次成长
-effects: OnPlay|Growth|friendly:all:tribe=生物|times=1
+effects: OnPlay|Growth|friendly:all:tribe=biology|times=1
 ---
 
 # battlecry-all-biology-growth-once

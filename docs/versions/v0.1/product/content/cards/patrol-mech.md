@@ -1,11 +1,11 @@
 ---
 id: patrol-mech
-card_type: 随从
+card_type: minion
 name: 巡逻机甲
-tribe: 机械
-subtype: 机甲
+tribe: machine
+subtype: mecha
 level: 5
-era: 现代
+era: modern
 attack: 7
 health: 11
 skills: [keyword-taunt]

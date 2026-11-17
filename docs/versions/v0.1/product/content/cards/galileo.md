@@ -1,11 +1,11 @@
 ---
 id: galileo
-card_type: 随从
+card_type: minion
 name: 伽利略
-tribe: 学者
-subtype: 物理
+tribe: scholar
+subtype: physics
 level: 4
-era: 封建
+era: feudal
 attack: 0
 health: 12
 skills: [observation]

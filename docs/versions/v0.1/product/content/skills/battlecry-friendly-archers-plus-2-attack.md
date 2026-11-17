@@ -1,8 +1,8 @@
 ---
 id: battlecry-friendly-archers-plus-2-attack
-keyword: 战吼
+keyword: battlecry
 text: 战吼：使你的弓箭手获得 +2 攻击力
-effects: OnPlay|ModifyStats|friendly:all:name=弓箭手|attack=2,duration=permanent
+effects: OnPlay|ModifyStats|friendly:all:id=gongjianshou|attack=2,duration=permanent
 ---
 
 # battlecry-friendly-archers-plus-2-attack

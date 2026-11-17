@@ -1,11 +1,11 @@
 ---
 id: nami-bingdu
-card_type: 随从
+card_type: minion
 name: 纳米病毒
-tribe: 病毒
-subtype: 纳米
+tribe: virus
+subtype: nanotech
 level: 7
-era: 未来
+era: future
 attack: 11
 health: 19
 skills: [keyword-contagion]

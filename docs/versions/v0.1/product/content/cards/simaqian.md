@@ -1,11 +1,11 @@
 ---
 id: simaqian
-card_type: 随从
+card_type: minion
 name: 司马迁
-tribe: 人类
-subtype: 史学
+tribe: human
+subtype: history
 level: 4
-era: 封建
+era: feudal
 attack: 5
 health: 8
 skills: [aura-all-plus-0-plus-1]

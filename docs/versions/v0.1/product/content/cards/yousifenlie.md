@@ -1,10 +1,10 @@
 ---
 id: yousifenlie
 name: 有丝分裂
-card_type: 效果
+card_type: effect
 level: 3
-era: 工业
-tribe: 生物
+era: industrial
+tribe: biology
 cost: 2
 match_text: 同左
 skills: [trigger-copy-friendly-minion]

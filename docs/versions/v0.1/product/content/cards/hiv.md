@@ -1,11 +1,11 @@
 ---
 id: hiv
-card_type: 随从
+card_type: minion
 name: 艾滋病毒
-tribe: 病毒
-subtype: 病毒
+tribe: virus
+subtype: virus
 level: 4
-era: 现代
+era: modern
 attack: 5
 health: 6
 skills: [keyword-contagion]

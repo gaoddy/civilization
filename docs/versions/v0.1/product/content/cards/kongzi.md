@@ -1,11 +1,11 @@
 ---
 id: kongzi
-card_type: 随从
+card_type: minion
 name: 孔子
-tribe: 学者
-subtype: 哲学
+tribe: scholar
+subtype: philosophy
 level: 3
-era: 封建
+era: feudal
 attack: 0
 health: 9
 skills: [aura-scholar-plus-0-plus-2]

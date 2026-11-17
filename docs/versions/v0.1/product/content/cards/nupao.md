@@ -1,11 +1,11 @@
 ---
 id: nupao
-card_type: 随从
+card_type: minion
 name: 弩炮
-tribe: 机械
-subtype: 攻城
+tribe: machine
+subtype: siege
 level: 3
-era: 古典
+era: classical
 attack: 4
 health: 5
 skills: [combatstart-leftmost-damage-3]

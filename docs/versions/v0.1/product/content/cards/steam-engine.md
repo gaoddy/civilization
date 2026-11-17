@@ -1,11 +1,11 @@
 ---
 id: steam-engine
-card_type: 随从
+card_type: minion
 name: 蒸汽机
-tribe: 机械
-subtype: 动力
+tribe: machine
+subtype: power
 level: 4
-era: 现代
+era: modern
 attack: 5
 health: 8
 skills: [keyword-assemble-2]

@@ -1,11 +1,11 @@
 ---
 id: pasteur
-card_type: 随从
+card_type: minion
 name: 巴斯德
-tribe: 病毒
-subtype: 微生物学
+tribe: virus
+subtype: microbiology
 level: 5
-era: 工业
+era: industrial
 attack: 7
 health: 10
 skills: [microbiology]

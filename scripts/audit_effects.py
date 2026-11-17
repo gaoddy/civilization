@@ -19,8 +19,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_SKILLS = ROOT / "docs" / "versions" / "v0.1" / "product" / "content" / "skills"
 
 # 带层数/数值的关键词：赋予时必须带 value，其余关键词禁止 value。
-# 繁衍 / 装配 的层数写在 keyword 上（如「繁衍 2」），传染的层数写在 value 上。
-VALUE_KEYWORDS = {"繁衍", "装配", "传染"}
+# breed / assemble 的层数写在 keyword 上（如「breed 2」），contagion 的层数写在 value 上。
+VALUE_KEYWORDS = {"breed", "assemble", "contagion"}
 # when 限定事件对象；OnDeath 同为事件类触发（validate_docs.EVENT_TRIGGERS 未含 OnDeath）。
 WHEN_TRIGGERS = validate_docs.EVENT_TRIGGERS | {"OnDeath"}
 

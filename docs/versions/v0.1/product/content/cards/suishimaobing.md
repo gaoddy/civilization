@@ -1,11 +1,11 @@
 ---
 id: suishimaobing
-card_type: 随从
+card_type: minion
 name: 燧石矛兵
-tribe: 人类
-subtype: 原始
+tribe: human
+subtype: primitive
 level: 1
-era: 史前
+era: prehistoric
 attack: 2
 health: 2
 skills: [trigger-2-humans-self-plus-1-attack]

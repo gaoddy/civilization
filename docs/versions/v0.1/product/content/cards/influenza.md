@@ -1,11 +1,11 @@
 ---
 id: influenza
-card_type: 随从
+card_type: minion
 name: 流感病毒
-tribe: 病毒
-subtype: 病毒
+tribe: virus
+subtype: virus
 level: 3
-era: 现代
+era: modern
 attack: 3
 health: 5
 skills: [keyword-contagion]

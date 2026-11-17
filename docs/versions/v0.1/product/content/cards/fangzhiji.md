@@ -1,11 +1,11 @@
 ---
 id: fangzhiji
-card_type: 随从
+card_type: minion
 name: 纺织机
-tribe: 机械
-subtype: 工厂
+tribe: machine
+subtype: factory
 level: 2
-era: 工业
+era: industrial
 attack: 2
 health: 4
 skills: [battlecry-friendly-growth-once]

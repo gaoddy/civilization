@@ -1,11 +1,11 @@
 ---
 id: langqunshouling
-card_type: 随从
+card_type: minion
 name: 狼群首领
-tribe: 生物
-subtype: 哺乳
+tribe: biology
+subtype: mammal
 level: 2
-era: 原始
+era: primitive
 attack: 3
 health: 3
 skills: [aura-other-biology-plus-1-attack]

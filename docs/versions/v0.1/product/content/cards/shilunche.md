@@ -1,11 +1,11 @@
 ---
 id: shilunche
-card_type: 随从
+card_type: minion
 name: 石轮车
-tribe: 机械
-subtype: 载具
+tribe: machine
+subtype: vehicle
 level: 1
-era: 原始
+era: primitive
 attack: 2
 health: 3
 skills: [keyword-assemble-1]

@@ -1,11 +1,11 @@
 ---
 id: zhengqi-jiche
-card_type: 随从
+card_type: minion
 name: 蒸汽机车
-tribe: 机械
-subtype: 交通
+tribe: machine
+subtype: transport
 level: 3
-era: 工业
+era: industrial
 attack: 4
 health: 6
 skills: [keyword-taunt]

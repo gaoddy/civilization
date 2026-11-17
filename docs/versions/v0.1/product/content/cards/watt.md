@@ -1,11 +1,11 @@
 ---
 id: watt
-card_type: 随从
+card_type: minion
 name: 瓦特
-tribe: 学者
-subtype: 工程
+tribe: scholar
+subtype: engineering
 level: 4
-era: 工业
+era: industrial
 attack: 0
 health: 12
 skills: [aura-mech-plus-2-plus-2]

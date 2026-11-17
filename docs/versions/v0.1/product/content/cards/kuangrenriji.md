@@ -1,10 +1,10 @@
 ---
 id: kuangrenriji
 name: 狂人日记
-card_type: 效果
+card_type: effect
 level: 2
-era: 现代
-tribe: 学者
+era: modern
+tribe: scholar
 cost: 1
 match_text: 同左
 skills: [combatstart-remove-top-attack-enemy-growth]

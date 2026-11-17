@@ -1,11 +1,11 @@
 ---
 id: airplane
-card_type: 随从
+card_type: minion
 name: 飞机
-tribe: 机械
-subtype: 飞行
+tribe: machine
+subtype: flight
 level: 5
-era: 现代
+era: modern
 attack: 8
 health: 9
 skills: [keyword-optimal-attack]

@@ -1,10 +1,10 @@
 ---
 id: guangyixiangduilun
 name: 广义相对论
-card_type: 效果
+card_type: effect
 level: 5
-era: 未来
-tribe: 通用
+era: future
+tribe: general
 cost: 3
 match_text: 同左
 skills: [trigger-all-friendly-plus-1-plus-1]

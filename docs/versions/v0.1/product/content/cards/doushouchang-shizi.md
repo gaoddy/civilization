@@ -1,11 +1,11 @@
 ---
 id: doushouchang-shizi
-card_type: 随从
+card_type: minion
 name: 斗兽场狮子
-tribe: 生物
-subtype: 猛兽
+tribe: biology
+subtype: beast
 level: 2
-era: 古典
+era: classical
 attack: 3
 health: 4
 skills: [keyword-taunt]

@@ -1,11 +1,11 @@
 ---
 id: wandou
-card_type: 随从
+card_type: minion
 name: 豌豆
-tribe: 植物
-subtype: 作物
+tribe: plant
+subtype: crop
 level: 1
-era: 史前
+era: prehistoric
 attack: 1
 health: 2
 skills: [keyword-breed-1]

@@ -1,11 +1,11 @@
 ---
 id: ebola
-card_type: 随从
+card_type: minion
 name: 埃博拉
-tribe: 病毒
-subtype: 病毒
+tribe: virus
+subtype: virus
 level: 5
-era: 现代
+era: modern
 attack: 8
 health: 8
 skills: [keyword-contagion, combatstart-random-enemy-contagion-2]

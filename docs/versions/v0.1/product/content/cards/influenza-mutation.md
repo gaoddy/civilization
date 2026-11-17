@@ -1,10 +1,10 @@
 ---
 id: influenza-mutation
 name: 流感病毒·变异
-card_type: 效果
+card_type: effect
 level: 2
-era: 现代
-tribe: 病毒
+era: modern
+tribe: virus
 cost: 1
 match_text: 同左
 skills: [combatstart-top-attack-enemy-minus-0-minus-2]

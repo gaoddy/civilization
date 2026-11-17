@@ -1,11 +1,11 @@
 ---
 id: malaria
-card_type: 随从
+card_type: minion
 name: 疟疾
-tribe: 病毒
-subtype: 寄生虫
+tribe: virus
+subtype: parasite
 level: 3
-era: 原始
+era: primitive
 attack: 4
 health: 4
 skills: [combatstart-random-enemy-contagion-1]

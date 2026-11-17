@@ -1,11 +1,11 @@
 ---
 id: shizuniao
-card_type: 随从
+card_type: minion
 name: 始祖鸟
-tribe: 生物
-subtype: 鸟类
+tribe: biology
+subtype: bird
 level: 1
-era: 史前
+era: prehistoric
 attack: 2
 health: 2
 is_scholar: false

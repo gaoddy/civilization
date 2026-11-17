@@ -1,11 +1,11 @@
 ---
 id: dyson-sphere
-card_type: 随从
+card_type: minion
 name: 戴森球
-tribe: 机械
-subtype: 巨构
+tribe: machine
+subtype: megastructure
 level: 7
-era: 未来
+era: future
 attack: 12
 health: 18
 skills: [keyword-divine-shield]

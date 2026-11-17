@@ -1,11 +1,11 @@
 ---
 id: sugeladi
-card_type: 随从
+card_type: minion
 name: 苏格拉底
-tribe: 学者
-subtype: 哲学
+tribe: scholar
+subtype: philosophy
 level: 2
-era: 古典
+era: classical
 attack: 0
 health: 6
 skills: [battlecry-friendly-growth-once]

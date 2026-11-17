@@ -1,11 +1,11 @@
 ---
 id: self-driving-car
-card_type: 随从
+card_type: minion
 name: 自动驾驶汽车
-tribe: 机械
-subtype: 载具
+tribe: machine
+subtype: vehicle
 level: 4
-era: 未来
+era: future
 attack: 5
 health: 7
 skills: [keyword-optimal-attack, keyword-assemble-1]

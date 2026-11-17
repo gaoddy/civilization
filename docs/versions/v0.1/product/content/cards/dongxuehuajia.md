@@ -1,11 +1,11 @@
 ---
 id: dongxuehuajia
-card_type: 随从
+card_type: minion
 name: 洞穴画家
-tribe: 人类
-subtype: 原始
+tribe: human
+subtype: primitive
 level: 1
-era: 史前
+era: prehistoric
 attack: 1
 health: 3
 skills: [battlecry-friendly-plus-1-health]

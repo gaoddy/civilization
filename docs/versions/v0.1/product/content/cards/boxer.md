@@ -1,11 +1,11 @@
 ---
 id: boxer
-card_type: 随从
+card_type: minion
 name: 拳击手
-tribe: 人类
-subtype: 运动员
+tribe: human
+subtype: athlete
 level: 4
-era: 现代
+era: modern
 attack: 5
 health: 7
 skills: [trigger-3-humans-self-plus-2-attack]

@@ -1,11 +1,11 @@
 ---
 id: mianhua
-card_type: 随从
+card_type: minion
 name: 棉花
-tribe: 植物
-subtype: 作物
+tribe: plant
+subtype: crop
 level: 2
-era: 工业
+era: industrial
 attack: 2
 health: 4
 skills: [keyword-sow]

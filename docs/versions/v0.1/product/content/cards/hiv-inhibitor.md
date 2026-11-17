@@ -1,10 +1,10 @@
 ---
 id: hiv-inhibitor
 name: 艾滋病毒·抑制剂
-card_type: 效果
+card_type: effect
 level: 5
-era: 现代
-tribe: 病毒
+era: modern
+tribe: virus
 cost: 3
 match_text: 同左
 skills: [combatstart-remove-all-human-growth]

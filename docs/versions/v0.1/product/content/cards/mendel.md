@@ -1,11 +1,11 @@
 ---
 id: mendel
-card_type: 随从
+card_type: minion
 name: 孟德尔
-tribe: 学者
-subtype: 生物
+tribe: scholar
+subtype: organism
 level: 4
-era: 现代
+era: modern
 attack: 0
 health: 12
 skills: [battlecry-friendly-plant-growth-once, heredity]

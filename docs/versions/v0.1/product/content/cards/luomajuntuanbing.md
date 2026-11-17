@@ -1,11 +1,11 @@
 ---
 id: luomajuntuanbing
-card_type: 随从
+card_type: minion
 name: 罗马军团兵
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 3
-era: 封建
+era: feudal
 attack: 4
 health: 6
 skills: [keyword-taunt, trigger-3-humans-self-plus-1-plus-1]

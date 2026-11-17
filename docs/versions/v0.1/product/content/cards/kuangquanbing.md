@@ -1,11 +1,11 @@
 ---
 id: kuangquanbing
-card_type: 随从
+card_type: minion
 name: 狂犬病
-tribe: 病毒
-subtype: 病毒
+tribe: virus
+subtype: virus
 level: 2
-era: 原始
+era: primitive
 attack: 3
 health: 3
 skills: [battlecry-friendly-virus-plus-1-attack]

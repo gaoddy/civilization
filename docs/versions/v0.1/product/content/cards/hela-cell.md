@@ -1,11 +1,11 @@
 ---
 id: hela-cell
-card_type: 随从
+card_type: minion
 name: 海拉细胞
-tribe: 生物
-subtype: 细胞
+tribe: biology
+subtype: cell
 level: 4
-era: 现代
+era: modern
 attack: 4
 health: 9
 skills: [deathrattle-summon-2-2-hela-cell-clone]

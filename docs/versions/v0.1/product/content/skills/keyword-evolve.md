@@ -1,6 +1,6 @@
 ---
 id: keyword-evolve
-keyword: 进化
+keyword: evolve
 text: 进化：从 +2/+2、护盾、复生中选择一个
 effects: []
 ---

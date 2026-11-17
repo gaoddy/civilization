@@ -1,11 +1,11 @@
 ---
 id: huoqiangshou
-card_type: 随从
+card_type: minion
 name: 火枪手
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 3
-era: 封建
+era: feudal
 attack: 4
 health: 5
 skills: [battlecry-random-enemy-damage-2]

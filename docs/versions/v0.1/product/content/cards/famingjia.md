@@ -1,11 +1,11 @@
 ---
 id: famingjia
-card_type: 随从
+card_type: minion
 name: 发明家
-tribe: 人类
-subtype: 发明
+tribe: human
+subtype: invention
 level: 4
-era: 工业
+era: industrial
 attack: 5
 health: 8
 skills: [battlecry-all-mech-growth-once]

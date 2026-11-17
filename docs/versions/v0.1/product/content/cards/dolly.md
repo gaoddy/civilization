@@ -1,11 +1,11 @@
 ---
 id: dolly
-card_type: 随从
+card_type: minion
 name: 克隆羊多莉
-tribe: 生物
-subtype: 克隆
+tribe: biology
+subtype: clone
 level: 4
-era: 未来
+era: future
 attack: 4
 health: 7
 skills: [keyword-reborn, keyword-evolve]

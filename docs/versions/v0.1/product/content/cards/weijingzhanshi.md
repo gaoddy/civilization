@@ -1,11 +1,11 @@
 ---
 id: weijingzhanshi
-card_type: 随从
+card_type: minion
 name: 维京战士
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 4
-era: 封建
+era: feudal
 attack: 6
 health: 9
 skills: [keyword-taunt]

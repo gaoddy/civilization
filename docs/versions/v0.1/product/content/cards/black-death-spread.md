@@ -1,10 +1,10 @@
 ---
 id: black-death-spread
 name: 黑死病·播散
-card_type: 效果
+card_type: effect
 level: 5
-era: 封建
-tribe: 病毒
+era: feudal
+tribe: virus
 cost: 3
 match_text: 同左
 skills: [combatstart-all-enemies-contagion-1]

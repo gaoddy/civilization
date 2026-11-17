@@ -1,11 +1,11 @@
 ---
 id: hippocrates
-card_type: 随从
+card_type: minion
 name: 希波克拉底
-tribe: 学者
-subtype: 医学
+tribe: scholar
+subtype: medicine
 level: 3
-era: 原始
+era: primitive
 attack: 0
 health: 9
 skills: [trigger-friendly-growth-extra-plus-0-plus-1]

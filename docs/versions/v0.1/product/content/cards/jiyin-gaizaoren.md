@@ -1,11 +1,11 @@
 ---
 id: jiyin-gaizaoren
-card_type: 随从
+card_type: minion
 name: 基因改造人
-tribe: 人类
-subtype: 改造
+tribe: human
+subtype: modification
 level: 7
-era: 未来
+era: future
 attack: 12
 health: 18
 skills: [keyword-reborn]

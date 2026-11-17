@@ -1,11 +1,11 @@
 ---
 id: bingdushizu
-card_type: 随从
+card_type: minion
 name: 病毒始祖
-tribe: 病毒
-subtype: 微生物
+tribe: virus
+subtype: microorganism
 level: 2
-era: 史前
+era: prehistoric
 attack: 2
 health: 3
 skills: [trigger-enemy-death-self-plus-1-plus-1]

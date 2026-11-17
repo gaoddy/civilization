@@ -1,11 +1,11 @@
 ---
 id: synthetic-cell
-card_type: 随从
+card_type: minion
 name: 合成细胞
-tribe: 生物
-subtype: 合成
+tribe: biology
+subtype: synthesis
 level: 5
-era: 未来
+era: future
 attack: 6
 health: 10
 skills: [keyword-reborn, keyword-evolve]

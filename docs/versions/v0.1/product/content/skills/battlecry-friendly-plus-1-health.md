@@ -1,6 +1,6 @@
 ---
 id: battlecry-friendly-plus-1-health
-keyword: 战吼
+keyword: battlecry
 text: 战吼：使一个友方随从获得 +1 生命值
 effects: OnPlay|ModifyStats|friendly:single|health=1,duration=permanent
 ---

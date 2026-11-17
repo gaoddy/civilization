@@ -1,11 +1,11 @@
 ---
 id: wireless-telegraph
-card_type: 随从
+card_type: minion
 name: 无线电报
-tribe: 机械
-subtype: 通讯
+tribe: machine
+subtype: telecommunication
 level: 6
-era: 现代
+era: modern
 attack: 10
 health: 12
 skills: [keyword-assemble-2, battlecry-all-mech-growth-once-no-keyword]

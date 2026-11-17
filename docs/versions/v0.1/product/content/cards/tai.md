@@ -1,11 +1,11 @@
 ---
 id: tai
-card_type: 随从
+card_type: minion
 name: 苔藓
-tribe: 植物
-subtype: 苔藓
+tribe: plant
+subtype: moss
 level: 1
-era: 原始
+era: primitive
 attack: 1
 health: 3
 skills: [keyword-sow]

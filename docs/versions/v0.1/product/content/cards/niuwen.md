@@ -1,11 +1,11 @@
 ---
 id: niuwen
-card_type: 随从
+card_type: minion
 name: 牛瘟
-tribe: 病毒
-subtype: 病毒
+tribe: virus
+subtype: virus
 level: 5
-era: 现代
+era: modern
 attack: 6
 health: 11
 skills: [keyword-contagion]

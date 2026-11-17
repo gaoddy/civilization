@@ -1,10 +1,10 @@
 ---
 id: jiaobiandianliu
 name: 交变电流
-card_type: 效果
+card_type: effect
 level: 3
-era: 工业
-tribe: 通用
+era: industrial
+tribe: general
 cost: 2
 match_text: 同左
 skills: [trigger-friendly-plus-2-attack-this-turn]

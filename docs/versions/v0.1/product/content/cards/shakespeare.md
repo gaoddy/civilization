@@ -1,11 +1,11 @@
 ---
 id: shakespeare
-card_type: 随从
+card_type: minion
 name: 莎士比亚
-tribe: 人类
-subtype: 文学
+tribe: human
+subtype: literature
 level: 4
-era: 封建
+era: feudal
 attack: 5
 health: 8
 skills: [battlecry-all-friendly-growth-once]

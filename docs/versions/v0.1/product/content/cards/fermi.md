@@ -1,11 +1,11 @@
 ---
 id: fermi
-card_type: 随从
+card_type: minion
 name: 费米
-tribe: 学者
-subtype: 核物理
+tribe: scholar
+subtype: nuclear-physics
 level: 7
-era: 未来
+era: future
 attack: 0
 health: 26
 skills: [battlecry-all-friendly-growth-once]

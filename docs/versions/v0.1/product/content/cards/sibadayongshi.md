@@ -1,11 +1,11 @@
 ---
 id: sibadayongshi
-card_type: 随从
+card_type: minion
 name: 斯巴达勇士
-tribe: 人类
-subtype: 兵种
+tribe: human
+subtype: unit
 level: 2
-era: 史前
+era: prehistoric
 attack: 3
 health: 5
 is_scholar: false

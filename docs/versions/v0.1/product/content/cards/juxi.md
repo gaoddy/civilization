@@ -1,11 +1,11 @@
 ---
 id: juxi
-card_type: 随从
+card_type: minion
 name: 巨蜥
-tribe: 生物
-subtype: 爬行
+tribe: biology
+subtype: reptile
 level: 2
-era: 原始
+era: primitive
 attack: 3
 health: 4
 skills: [keyword-evolve]

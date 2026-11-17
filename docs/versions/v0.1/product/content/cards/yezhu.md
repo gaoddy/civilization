@@ -1,11 +1,11 @@
 ---
 id: yezhu
-card_type: 随从
+card_type: minion
 name: 野猪
-tribe: 生物
-subtype: 哺乳
+tribe: biology
+subtype: mammal
 level: 1
-era: 原始
+era: primitive
 attack: 2
 health: 2
 skills: [battlecry-self-plus-1-health]

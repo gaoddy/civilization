@@ -1,11 +1,11 @@
 ---
 id: edison
-card_type: 随从
+card_type: minion
 name: 爱迪生
-tribe: 机械
-subtype: 工程
+tribe: machine
+subtype: engineering
 level: 5
-era: 工业
+era: industrial
 attack: 9
 health: 11
 skills: [invention-factory]

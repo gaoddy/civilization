@@ -1,6 +1,6 @@
 ---
 id: keyword-breed-2
-keyword: 繁衍 2
+keyword: breed 2
 text: 繁衍 2：回合开始时获得 +2 生命
 effects: []
 ---

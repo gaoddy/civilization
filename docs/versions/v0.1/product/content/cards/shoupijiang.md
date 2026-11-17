@@ -1,11 +1,11 @@
 ---
 id: shoupijiang
-card_type: 随从
+card_type: minion
 name: 兽皮匠
-tribe: 人类
-subtype: 原始
+tribe: human
+subtype: primitive
 level: 2
-era: 原始
+era: primitive
 attack: 2
 health: 4
 skills: [battlecry-friendly-plus-0-plus-2]

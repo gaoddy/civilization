@@ -25,7 +25,7 @@ MINION_DISPLAY_COST = 3
 
 def _display_card(doc):
     card = gen_card_data.card_entry(doc)
-    card["display_cost"] = MINION_DISPLAY_COST if card["card_type"] == "随从" else card["cost"]
+    card["display_cost"] = MINION_DISPLAY_COST if card["card_type"] == "minion" else card["cost"]
     return card
 
 

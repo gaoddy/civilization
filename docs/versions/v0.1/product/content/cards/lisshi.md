@@ -1,11 +1,11 @@
 ---
 id: lisshi
-card_type: 随从
+card_type: minion
 name: 李时珍
-tribe: 植物
-subtype: 医药学
+tribe: plant
+subtype: pharmacology
 level: 4
-era: 封建
+era: feudal
 attack: 5
 health: 7
 skills: [battlecry-plant-growth-twice]

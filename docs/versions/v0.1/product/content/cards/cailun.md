@@ -1,11 +1,11 @@
 ---
 id: cailun
-card_type: 随从
+card_type: minion
 name: 蔡伦
-tribe: 学者
-subtype: 发明
+tribe: scholar
+subtype: invention
 level: 2
-era: 封建
+era: feudal
 attack: 0
 health: 7
 skills: [battlecry-friendly-growth-once]

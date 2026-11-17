@@ -1,11 +1,11 @@
 ---
 id: engineered-virus
-card_type: 随从
+card_type: minion
 name: 基因工程病毒
-tribe: 病毒
-subtype: 病毒
+tribe: virus
+subtype: virus
 level: 6
-era: 未来
+era: future
 attack: 9
 health: 11
 skills: [keyword-contagion, combatstart-all-enemies-contagion-1]

@@ -1,11 +1,11 @@
 ---
 id: lier
-card_type: 随从
+card_type: minion
 name: 李耳
-tribe: 学者
-subtype: 哲学
+tribe: scholar
+subtype: philosophy
 level: 3
-era: 封建
+era: feudal
 attack: 0
 health: 9
 skills: [battlecry-friendly-growth-once]

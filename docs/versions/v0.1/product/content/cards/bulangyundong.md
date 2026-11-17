@@ -1,10 +1,10 @@
 ---
 id: bulangyundong
 name: 布朗运动
-card_type: 效果
+card_type: effect
 level: 2
-era: 工业
-tribe: 通用
+era: industrial
+tribe: general
 cost: 1
 match_text: 战斗开始时，对敌方最左侧随从造成 2 点伤害
 skills: [combatstart-random-enemy-damage-2]

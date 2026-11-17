@@ -1,11 +1,11 @@
 ---
 id: moses
-card_type: 随从
+card_type: minion
 name: 摩西
-tribe: 学者
-subtype: 哲学
+tribe: scholar
+subtype: philosophy
 level: 4
-era: 封建
+era: feudal
 attack: 0
 health: 12
 skills: [battlecry-all-friendly-plus-0-plus-1]

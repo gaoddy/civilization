@@ -1,11 +1,11 @@
 ---
 id: yuzhouteng
-card_type: 随从
+card_type: minion
 name: 宇宙藤
-tribe: 植物
-subtype: 宇宙
+tribe: plant
+subtype: universe
 level: 7
-era: 未来
+era: future
 attack: 10
 health: 19
 skills: [keyword-divine-shield]

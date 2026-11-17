@@ -1,11 +1,11 @@
 ---
 id: space-elevator
-card_type: 随从
+card_type: minion
 name: 太空电梯
-tribe: 机械
-subtype: 建筑
+tribe: machine
+subtype: architecture
 level: 6
-era: 未来
+era: future
 attack: 8
 health: 14
 skills: [keyword-divine-shield, keyword-assemble-1]

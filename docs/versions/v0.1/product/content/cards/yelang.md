@@ -1,11 +1,11 @@
 ---
 id: yelang
-card_type: 随从
+card_type: minion
 name: 野狼
-tribe: 生物
-subtype: 哺乳
+tribe: biology
+subtype: mammal
 level: 2
-era: 史前
+era: prehistoric
 attack: 3
 health: 3
 skills: [trigger-friendly-biology-play-plus-1-attack]

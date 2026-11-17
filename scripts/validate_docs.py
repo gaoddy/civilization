@@ -15,26 +15,33 @@ import pathlib
 import re
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+import i18n_terms
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v0.1" / "product" / "content"
 V02_ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v0.2" / "product" / "content"
+RULES_FILE = ROOT.parent / "rules" / "keywords-and-mechanics.md"
 
 ID_RE = re.compile(r"[a-z][a-z0-9-]*")
-KEYWORD_RE = re.compile(
-    r"^(无|战吼|亡语|复生|嘲讽|护盾|连击|传染|最优攻击|繁衍 \d+|装配 \d+|播种|进化)$"
+_KEYWORD_NAMES = (
+    "battlecry|deathrattle|reborn|taunt|divine_shield|windfury|contagion|"
+    "optimal_attack|sow|evolve"
 )
+KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+)$")
 # 技能上的 keyword 是携带者自身登记的常驻关键词，不接受卡牌层的「无」哨兵值。
-SKILL_KEYWORD_RE = re.compile(
-    r"^(战吼|亡语|复生|嘲讽|护盾|连击|传染|最优攻击|繁衍 \d+|装配 \d+|播种|进化)$"
-)
+SKILL_KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+)$")
 AURA_RE = re.compile(r"^你的(其他)?(人类|机械|生物|植物|病毒|学者)?随从获得 ?(.+)$")
 AURA_VALUE_RE = re.compile(
     r"^(?:\+\d+/\+\d+|\+\d+ 攻击力|\+\d+ 生命值|最优攻击|嘲讽|护盾|复生|连击)$"
 )
-TRIBE_KEYWORD = {"装配": "机械", "播种": "植物", "进化": "生物"}
-TRIBES = {"人类", "机械", "生物", "植物", "病毒", "学者"}
-EFFECT_TRIBES = TRIBES | {"通用"}
-ERAS = ["史前", "原始", "古典", "封建", "工业", "现代", "未来"]
-CARD_TYPES = {"随从", "效果"}
+TRIBE_KEYWORD = {"assemble": "machine", "sow": "plant", "evolve": "biology"}
+TRIBES = set(i18n_terms.MINION_TRIBES)
+EFFECT_TRIBES = set(i18n_terms.TRIBES)
+ERAS = list(i18n_terms.ERAS)
+CARD_TYPES = set(i18n_terms.CARD_TYPES)
+KEYWORD_BASES = set(i18n_terms.KEYWORD_BASES)
+CARD_IDS = {path.stem for path in (ROOT / "cards").glob("*.md") if path.name != "README.md"}
 ACHIEVEMENT_EVENTS = {"时代升级", "关键词组合", "成长触发", "卡牌使用", "三连合成"}
 EFFECT_TRIGGERS = {
     "OnPlay", "OnPlayEffect", "OnUse", "OnActivate", "OnTurnStart",
@@ -49,10 +56,8 @@ EFFECT_OPS = {
 }
 SELECTOR_SIDES = {"friendly", "enemy", "both", "self", "target"}
 SELECTOR_PICKS = {"single", "all", "random", "leftmost", "leftmost+adjacent", "topAttack"}
-FILTER_KEYS = {"tribe", "subtype", "name", "type", "other"}
+FILTER_KEYS = {"tribe", "subtype", "id", "type", "other"}
 DURATIONS = {"permanent", "combat"}
-KEYWORD_BASES = {"战吼", "亡语", "复生", "嘲讽", "护盾", "连击", "传染",
-                 "最优攻击", "播种", "进化", "繁衍", "装配"}
 NUMERIC_KEYS = {"times", "count", "amount", "attack", "health", "value", "extra"}
 AURA_OPS = {"ModifyStats", "GrantKeyword"}
 OP_SPEC = {
@@ -71,9 +76,9 @@ OP_SPEC = {
     "GainMinion": ({"level", "to"}, {"from"}, set()),
 }
 CONDITION_RE = re.compile(
-    r"^count:(friendly|enemy|both):[a-z]+=[^:]+:(>=|<=|==|>|<)\d+$"
+    r"^count:(friendly|enemy|both):[a-z]+=[a-z0-9_-]+:(>=|<=|==|>|<)\d+$"
 )
-TIMES_IF_RE = re.compile(r"^(人类|机械|生物|植物|病毒|学者):\d+$")
+TIMES_IF_RE = re.compile(r"^(human|machine|biology|plant|virus|scholar):\d+$")
 EVENT_TRIGGERS = {
     "OnEnemyDeath", "OnFriendlyDeath", "OnAllySummon", "OnAllyGrowth",
     "OnAllyEvolve", "OnDealDamage", "OnCombatEnd", "OnUse",
@@ -83,9 +88,12 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
-KW_UNLOCK = {"繁衍": 1, "嘲讽": 2, "连击": 3, "最优攻击": 3, "传染": 3, "复生": 4, "护盾": 5}
-EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 20, "封建": 40, "工业": 32, "现代": 54, "未来": 40}
-EXPECT_TRIBE = {"学者": 49, "生物": 30, "人类": 43, "机械": 37, "植物": 22, "病毒": 22}
+KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
+             "contagion": 3, "reborn": 4, "divine_shield": 5}
+EXPECT_ERA = {"prehistoric": 27, "primitive": 26, "classical": 20, "feudal": 40,
+              "industrial": 32, "modern": 54, "future": 40}
+EXPECT_TRIBE = {"scholar": 49, "biology": 30, "human": 43, "machine": 37,
+                "plant": 22, "virus": 22}
 EXPECT_LEVEL = {1: 22, 2: 37, 3: 38, 4: 40, 5: 37, 6: 17, 7: 12}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
@@ -145,6 +153,8 @@ def check_filters(segments, chunk):
             errors.append(f"tribe 取值非法 {val!r}（{chunk}）")
         elif key == "type" and val not in CARD_TYPES:
             errors.append(f"type 取值非法 {val!r}（{chunk}）")
+        elif key == "id" and val not in CARD_IDS:
+            errors.append(f"id 取值非法 {val!r}（{chunk}）")
         elif key == "other" and val not in ("true", "false"):
             errors.append(f"other 取值非法 {val!r}（{chunk}）")
         elif not val:
@@ -394,24 +404,91 @@ def derived_keywords(doc, skill_map):
     return keywords
 
 
+# 文档属性表里的中文名。校验时由 front matter 的英文 id 反查；gen_text 复用。
+ENUM_LABELS = {}
+KEYWORD_LABELS = {}
+ENUM_COLUMNS = {"card_type": "类型", "tribe": "流派", "era": "时代", "subtype": "子类"}
+
+
+def card_enum_labels(raw):
+    """从卡牌属性表收集枚举 id → 中文名；同一 id 映射冲突时报错。"""
+    labels = {field: {} for field in ENUM_COLUMNS}
+    for doc in raw:
+        table = parse_attr_table(ROOT / "cards" / doc["_file"])
+        if table is None:
+            continue
+        for field, column in ENUM_COLUMNS.items():
+            value = doc.get(field)
+            label = table.get(column)
+            if value is None or label is None:
+                continue
+            known = labels[field].get(value)
+            if known is not None and known != label:
+                raise ValueError(
+                    f"{doc['_file']}: {field} {value} 对应多个中文名 {known!r} / {label!r}")
+            labels[field][value] = label
+    return labels
+
+
+def keyword_labels():
+    """解析关键词判定表「关键词 / 英文名」两列，返回 slug → 中文名。"""
+    text = RULES_FILE.read_text(encoding="utf-8")
+    marker = "## 1. 关键词判定表"
+    if marker not in text:
+        raise ValueError(f"{RULES_FILE.name}: 缺少「{marker}」")
+    section = text.split(marker, 1)[1].split("\n## ", 1)[0]
+    labels = {}
+    for line in section.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) < 2 or cells[0] == "关键词" or set(cells[0]) <= {"-"}:
+            continue
+        slug = i18n_terms.keyword_slug(cells[1])
+        label = re.sub(r"\s*N$", "", cells[0])
+        known = labels.get(slug)
+        if known is not None and known != label:
+            raise ValueError(f"关键词 {slug} 对应多个中文名 {known!r} / {label!r}")
+        labels[slug] = label
+    return labels
+
+
+def keyword_display(value):
+    """把关键词 id（如 `breed 2`）翻成属性表里的中文名，层数原样保留。"""
+    if not value:
+        return value
+    words = str(value).split()
+    label = KEYWORD_LABELS.get(words[0], words[0])
+    return " ".join([label] + words[1:])
+
+
+def enum_label(kind, value):
+    return ENUM_LABELS.get(kind, {}).get(value, value)
+
+
 def expected_card_attrs(doc, skill_map):
     skills = card_skills(doc)
     skill_value = "；".join(skills) if skills else "无"
     keyword_list = derived_keywords(doc, skill_map)
-    keyword_value = "；".join(keyword_list) if keyword_list else "无"
-    if doc["card_type"] == "随从":
+    keyword_value = "；".join(keyword_display(k) for k in keyword_list) if keyword_list else "无"
+    if doc["card_type"] == "minion":
         attrs = {
-            "id": doc["id"], "名称": doc["name"], "类型": doc["card_type"],
-            "流派": doc["tribe"], "子类": doc["subtype"], "星级": str(doc["level"]),
-            "时代": doc["era"], "攻击力": str(doc["attack"]),
+            "id": doc["id"], "名称": doc["name"],
+            "类型": enum_label("card_type", doc["card_type"]),
+            "流派": enum_label("tribe", doc["tribe"]),
+            "子类": enum_label("subtype", doc.get("subtype")), "星级": str(doc["level"]),
+            "时代": enum_label("era", doc["era"]), "攻击力": str(doc["attack"]),
             "生命值": str(doc["health"]), "关键词": keyword_value,
             "技能": skill_value, "学者": "是" if doc["is_scholar"] else "否",
             "英雄资格": "是" if doc.get("is_hero") else "否",
         }
         return attrs
     return {
-        "id": doc["id"], "名称": doc["name"], "类型": doc["card_type"],
-        "星级": str(doc["level"]), "时代": doc.get("era", ""), "流派": doc["tribe"],
+        "id": doc["id"], "名称": doc["name"],
+        "类型": enum_label("card_type", doc["card_type"]),
+        "星级": str(doc["level"]), "时代": enum_label("era", doc.get("era", "")),
+        "流派": enum_label("tribe", doc["tribe"]),
         "技能": skill_value, "费用": str(doc["cost"]),
         "确定性替换": doc["match_text"],
     }
@@ -420,7 +497,7 @@ def expected_card_attrs(doc, skill_map):
 def expected_skill_attrs(skill):
     attrs = {
         "id": skill["id"],
-        "关键词": skill.get("keyword") or "无",
+        "关键词": keyword_display(skill.get("keyword")) if skill.get("keyword") else "无",
         "确定性替换": skill.get("match_text") or "不适用",
     }
     if "cost" in skill:
@@ -451,6 +528,8 @@ def skill_field_errors(skill):
 
 
 def check_skills():
+    global KEYWORD_LABELS
+    KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
     if len(skills) != 131:
         fail(f"技能数量 {len(skills)}，期望 131")
@@ -498,6 +577,8 @@ def check_skill_context(skill_map, effects):
 
 
 def check_attr_tables(raw, skill_map):
+    global ENUM_LABELS
+    ENUM_LABELS = card_enum_labels(raw)
     for doc in raw:
         path = ROOT / "cards" / doc["_file"]
         table = parse_attr_table(path)
@@ -539,19 +620,19 @@ def keyword_cost(card, skill_map):
         for marker in ("summon", "copy", "discover")
     )
     for k in derived_keywords(card, skill_map):
-        if k == "嘲讽":
+        if k == "taunt":
             total += .5
-        elif k == "护盾":
+        elif k == "divine_shield":
             total += 2
-        elif k in ("连击", "复生", "进化"):
+        elif k in ("windfury", "reborn", "evolve"):
             total += 3
-        elif k in ("传染", "最优攻击", "播种"):
+        elif k in ("contagion", "optimal_attack", "sow"):
             total += 2
-        elif k.startswith("繁衍"):
+        elif k.startswith("breed"):
             total += 2
-        elif k.startswith("装配"):
+        elif k.startswith("assemble"):
             total += 2 + 2 * (int(k.split()[1]) - 1)
-        elif k in ("战吼", "亡语"):
+        elif k in ("battlecry", "deathrattle"):
             total += 4 if summon_like else 2
     return total
 
@@ -586,8 +667,8 @@ def check_cards(skill_map):
             fail(f"{doc['_file']}: 残留旧字段 keywords，应改用 skills")
         for message in skill_ref_errors(doc, skill_map):
             fail(message)
-    minions = [c for c in raw if c["card_type"] == "随从"]
-    effects = [c for c in raw if c["card_type"] == "效果"]
+    minions = [c for c in raw if c["card_type"] == "minion"]
+    effects = [c for c in raw if c["card_type"] == "effect"]
 
     skillless = [c for c in minions if not card_skills(c)]
     if len(skillless) != 7:
@@ -609,7 +690,7 @@ def check_cards(skill_map):
         if c["level"] not in RANGE:
             fail(f"{name}: 星级非法 {c['level']!r}")
             continue
-        if (c["tribe"] == "学者") != c["is_scholar"]:
+        if (c["tribe"] == "scholar") != c["is_scholar"]:
             fail(f"{name}: 流派与 is_scholar 不一致")
         if c["is_scholar"] and c["attack"] != 0:
             fail(f"{name}: 学者攻击力必须为 0")
@@ -655,7 +736,7 @@ def check_cards(skill_map):
             fail(f"{name}: 费用越界 {c['cost']}")
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"随从": 203, "效果": 36}:
+    if counts != {"minion": 203, "effect": 36}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]

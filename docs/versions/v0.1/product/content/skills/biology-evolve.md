@@ -2,7 +2,7 @@
 id: biology-evolve
 name: 获得性状
 text: 使一个友方生物随从获得进化
-effects: OnActivate|GrantKeyword|friendly:single:tribe=生物|keyword=进化,duration=permanent
+effects: OnActivate|GrantKeyword|friendly:single:tribe=biology|keyword=evolve,duration=permanent
 cost: 2
 uses_per_turn: 1
 match_text: 同左

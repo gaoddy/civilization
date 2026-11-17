@@ -1,11 +1,11 @@
 ---
 id: shifujiang
-card_type: 随从
+card_type: minion
 name: 石斧匠
-tribe: 人类
-subtype: 原始
+tribe: human
+subtype: primitive
 level: 2
-era: 史前
+era: prehistoric
 attack: 3
 health: 3
 skills: [trigger-friendly-growth-self-plus-1-attack]

@@ -1,11 +1,11 @@
 ---
 id: toushiji
-card_type: 随从
+card_type: minion
 name: 投石机
-tribe: 机械
-subtype: 攻城
+tribe: machine
+subtype: siege
 level: 3
-era: 封建
+era: feudal
 attack: 4
 health: 4
 skills: [keyword-assemble-2]

@@ -1,11 +1,11 @@
 ---
 id: phonograph
-card_type: 随从
+card_type: minion
 name: 留声机
-tribe: 机械
-subtype: 家电
+tribe: machine
+subtype: appliance
 level: 3
-era: 现代
+era: modern
 attack: 4
 health: 6
 skills: [keyword-assemble-1]

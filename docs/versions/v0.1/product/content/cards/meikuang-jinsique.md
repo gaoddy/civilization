@@ -1,11 +1,11 @@
 ---
 id: meikuang-jinsique
-card_type: 随从
+card_type: minion
 name: 煤矿金丝雀
-tribe: 生物
-subtype: 动物
+tribe: biology
+subtype: animal
 level: 2
-era: 工业
+era: industrial
 attack: 2
 health: 3
 skills: [deathrattle-all-enemies-minus-1-health]

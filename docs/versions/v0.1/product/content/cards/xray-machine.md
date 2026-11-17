@@ -1,11 +1,11 @@
 ---
 id: xray-machine
-card_type: 随从
+card_type: minion
 name: X射线机
-tribe: 机械
-subtype: 医疗
+tribe: machine
+subtype: medical
 level: 4
-era: 现代
+era: modern
 attack: 6
 health: 6
 skills: [keyword-optimal-attack]

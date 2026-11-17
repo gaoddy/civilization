@@ -1,8 +1,8 @@
 ---
 id: battlecry-plant-growth-twice
-keyword: 战吼
+keyword: battlecry
 text: 战吼：使一个友方植物随从获得两次成长
-effects: OnPlay|Growth|friendly:single:tribe=植物|times=2
+effects: OnPlay|Growth|friendly:single:tribe=plant|times=2
 ---
 
 # battlecry-plant-growth-twice

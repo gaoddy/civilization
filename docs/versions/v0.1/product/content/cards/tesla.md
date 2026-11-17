@@ -1,11 +1,11 @@
 ---
 id: tesla
-card_type: 随从
+card_type: minion
 name: 特斯拉
-tribe: 学者
-subtype: 物理
+tribe: scholar
+subtype: physics
 level: 5
-era: 工业
+era: industrial
 attack: 0
 health: 16
 skills: [alternating-current]

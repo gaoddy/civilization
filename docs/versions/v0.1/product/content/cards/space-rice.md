@@ -1,11 +1,11 @@
 ---
 id: space-rice
-card_type: 随从
+card_type: minion
 name: 太空水稻
-tribe: 植物
-subtype: 作物
+tribe: plant
+subtype: crop
 level: 5
-era: 未来
+era: future
 attack: 6
 health: 12
 skills: [keyword-sow, keyword-breed-3]

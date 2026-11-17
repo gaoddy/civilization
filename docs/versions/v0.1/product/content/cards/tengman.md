@@ -1,11 +1,11 @@
 ---
 id: tengman
-card_type: 随从
+card_type: minion
 name: 藤蔓
-tribe: 植物
-subtype: 藤本
+tribe: plant
+subtype: vine
 level: 1
-era: 原始
+era: primitive
 attack: 1
 health: 2
 skills: [keyword-sow]

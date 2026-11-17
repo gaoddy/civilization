@@ -1,11 +1,11 @@
 ---
 id: saman
-card_type: 随从
+card_type: minion
 name: 萨满
-tribe: 人类
-subtype: 原始
+tribe: human
+subtype: primitive
 level: 2
-era: 原始
+era: primitive
 attack: 2
 health: 3
 skills: [battlecry-friendly-growth-once]

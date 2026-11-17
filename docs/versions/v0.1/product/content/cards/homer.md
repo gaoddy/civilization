@@ -1,11 +1,11 @@
 ---
 id: homer
-card_type: 随从
+card_type: minion
 name: 荷马
-tribe: 学者
-subtype: 文学
+tribe: scholar
+subtype: literature
 level: 3
-era: 古典
+era: classical
 attack: 0
 health: 9
 skills: [battlecry-all-friendly-growth-once]

@@ -1,11 +1,11 @@
 ---
 id: shuishengjue
-card_type: 随从
+card_type: minion
 name: 水生蕨
-tribe: 植物
-subtype: 水生植物
+tribe: plant
+subtype: aquatic-plant
 level: 2
-era: 史前
+era: prehistoric
 attack: 2
 health: 4
 skills: [keyword-sow, keyword-breed-1]

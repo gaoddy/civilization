@@ -1,11 +1,11 @@
 ---
 id: shannon
-card_type: 随从
+card_type: minion
 name: 克劳德·香农
-tribe: 学者
-subtype: 数学
+tribe: scholar
+subtype: mathematics
 level: 5
-era: 未来
+era: future
 attack: 0
 health: 16
 skills: [battlecry-all-mech-growth-once]

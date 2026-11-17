@@ -1,11 +1,11 @@
 ---
 id: juzi
-card_type: 随从
+card_type: minion
 name: 橘子
-tribe: 植物
-subtype: 果树
+tribe: plant
+subtype: fruit-tree
 level: 1
-era: 史前
+era: prehistoric
 attack: 1
 health: 3
 skills: [keyword-breed-1]

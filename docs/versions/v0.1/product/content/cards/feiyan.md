@@ -1,11 +1,11 @@
 ---
 id: feiyan
-card_type: 随从
+card_type: minion
 name: 肺炎链球菌
-tribe: 病毒
-subtype: 细菌
+tribe: virus
+subtype: bacteria
 level: 2
-era: 史前
+era: prehistoric
 attack: 2
 health: 4
 skills: [deathrattle-random-enemy-minus-1-health]

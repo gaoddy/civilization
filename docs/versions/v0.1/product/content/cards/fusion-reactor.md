@@ -1,11 +1,11 @@
 ---
 id: fusion-reactor
-card_type: 随从
+card_type: minion
 name: 聚变反应堆
-tribe: 机械
-subtype: 动力
+tribe: machine
+subtype: power
 level: 6
-era: 未来
+era: future
 attack: 8
 health: 16
 skills: [aura-mech-plus-2-plus-2]

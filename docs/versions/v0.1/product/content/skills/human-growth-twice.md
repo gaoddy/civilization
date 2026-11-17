@@ -2,7 +2,7 @@
 id: human-growth-twice
 name: 技艺
 text: 使一个友方人类随从获得两次成长
-effects: OnActivate|Growth|friendly:single:tribe=人类|times=2
+effects: OnActivate|Growth|friendly:single:tribe=human|times=2
 cost: 2
 uses_per_turn: 1
 match_text: 同左

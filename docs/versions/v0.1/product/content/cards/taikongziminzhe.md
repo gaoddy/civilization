@@ -1,11 +1,11 @@
 ---
 id: taikongziminzhe
-card_type: 随从
+card_type: minion
 name: 太空殖民者
-tribe: 人类
-subtype: 殖民者
+tribe: human
+subtype: colonist
 level: 6
-era: 未来
+era: future
 attack: 8
 health: 13
 skills: [keyword-divine-shield]

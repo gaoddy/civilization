@@ -1,9 +1,9 @@
 [
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 8,
     "id": "adam-smith",
     "is_hero": true,
@@ -14,14 +14,14 @@
     "skills": [
       "division-of-labor"
     ],
-    "subtype": "经济学",
-    "tribe": "人类"
+    "subtype": "economics",
+    "tribe": "human"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 20,
     "id": "agi",
     "is_hero": false,
@@ -32,14 +32,14 @@
     "skills": [
       "battlecry-all-friendly-growth-twice"
     ],
-    "subtype": "计算机",
-    "tribe": "学者"
+    "subtype": "computer",
+    "tribe": "scholar"
   },
   {
     "attack": 8,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 9,
     "id": "airplane",
     "is_hero": false,
@@ -50,14 +50,14 @@
     "skills": [
       "keyword-optimal-attack"
     ],
-    "subtype": "飞行",
-    "tribe": "机械"
+    "subtype": "flight",
+    "tribe": "machine"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 20,
     "id": "alan-turing",
     "is_hero": false,
@@ -68,14 +68,14 @@
     "skills": [
       "aura-mech-optimal-attack"
     ],
-    "subtype": "计算机",
-    "tribe": "学者"
+    "subtype": "computer",
+    "tribe": "scholar"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "古典",
+    "era": "classical",
     "health": null,
     "id": "aolinpike-jidian",
     "is_hero": false,
@@ -87,13 +87,13 @@
       "trigger-all-friendly-growth-once"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 0,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "aq-jingshen",
     "is_hero": false,
@@ -105,13 +105,13 @@
       "trigger-friendly-taunt-until-turn-end"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 9,
     "id": "archimedes",
     "is_hero": false,
@@ -122,14 +122,14 @@
     "skills": [
       "battlecry-friendly-mech-growth-once"
     ],
-    "subtype": "物理",
-    "tribe": "学者"
+    "subtype": "physics",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 9,
     "id": "aristotle",
     "is_hero": false,
@@ -140,14 +140,14 @@
     "skills": [
       "aura-all-plus-0-plus-1"
     ],
-    "subtype": "哲学",
-    "tribe": "学者"
+    "subtype": "philosophy",
+    "tribe": "scholar"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 12,
     "id": "artificial-womb",
     "is_hero": false,
@@ -158,14 +158,14 @@
     "skills": [
       "battlecry-summon-3-3-synthetic-cell"
     ],
-    "subtype": "医疗",
-    "tribe": "生物"
+    "subtype": "medical",
+    "tribe": "biology"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 2,
     "id": "baiyi",
     "is_hero": false,
@@ -176,14 +176,14 @@
     "skills": [
       "keyword-breed-1"
     ],
-    "subtype": "昆虫",
-    "tribe": "生物"
+    "subtype": "insect",
+    "tribe": "biology"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 8,
     "id": "beethoven",
     "is_hero": true,
@@ -194,14 +194,14 @@
     "skills": [
       "human-growth-twice"
     ],
-    "subtype": "音乐",
-    "tribe": "人类"
+    "subtype": "music",
+    "tribe": "human"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 3,
     "id": "bingdushizu",
     "is_hero": false,
@@ -212,14 +212,14 @@
     "skills": [
       "trigger-enemy-death-self-plus-1-plus-1"
     ],
-    "subtype": "微生物",
-    "tribe": "病毒"
+    "subtype": "microorganism",
+    "tribe": "virus"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 9,
     "id": "bisheng",
     "is_hero": false,
@@ -230,14 +230,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "发明",
-    "tribe": "学者"
+    "subtype": "invention",
+    "tribe": "scholar"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 6,
     "id": "black-death",
     "is_hero": false,
@@ -248,14 +248,14 @@
     "skills": [
       "deathrattle-all-enemies-humans-minus-2-health"
     ],
-    "subtype": "瘟疫",
-    "tribe": "病毒"
+    "subtype": "plague",
+    "tribe": "virus"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 3,
-    "era": "封建",
+    "era": "feudal",
     "health": null,
     "id": "black-death-spread",
     "is_hero": false,
@@ -267,13 +267,13 @@
       "combatstart-all-enemies-contagion-1"
     ],
     "subtype": null,
-    "tribe": "病毒"
+    "tribe": "virus"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 7,
     "id": "boxer",
     "is_hero": false,
@@ -284,14 +284,14 @@
     "skills": [
       "trigger-3-humans-self-plus-2-attack"
     ],
-    "subtype": "运动员",
-    "tribe": "人类"
+    "subtype": "athlete",
+    "tribe": "human"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 7,
     "id": "bruce-lee",
     "is_hero": false,
@@ -302,14 +302,14 @@
     "skills": [
       "keyword-windfury"
     ],
-    "subtype": "武术家",
-    "tribe": "人类"
+    "subtype": "martial-artist",
+    "tribe": "human"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 1,
-    "era": "工业",
+    "era": "industrial",
     "health": null,
     "id": "bulangyundong",
     "is_hero": false,
@@ -321,13 +321,13 @@
       "combatstart-random-enemy-damage-2"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 2,
     "id": "buluozhanshi",
     "is_hero": false,
@@ -338,14 +338,14 @@
     "skills": [
       "trigger-2-humans-self-plus-1-plus-1"
     ],
-    "subtype": "原始",
-    "tribe": "人类"
+    "subtype": "primitive",
+    "tribe": "human"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 7,
     "id": "cailun",
     "is_hero": false,
@@ -356,14 +356,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "发明",
-    "tribe": "学者"
+    "subtype": "invention",
+    "tribe": "scholar"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 4,
     "id": "changmaoshou",
     "is_hero": false,
@@ -374,14 +374,14 @@
     "skills": [
       "trigger-friendly-human-play-plus-1-attack"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 1,
-    "era": "古典",
+    "era": "classical",
     "health": null,
     "id": "chengbang-faling",
     "is_hero": false,
@@ -393,13 +393,13 @@
       "trigger-friendly-plus-1-plus-1"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 3,
     "id": "chengbang-gongmin",
     "is_hero": false,
@@ -410,14 +410,14 @@
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
     ],
-    "subtype": "城邦",
-    "tribe": "人类"
+    "subtype": "city-state",
+    "tribe": "human"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 7,
     "id": "cholera",
     "is_hero": false,
@@ -428,14 +428,14 @@
     "skills": [
       "combatstart-random-enemy-contagion-1"
     ],
-    "subtype": "细菌",
-    "tribe": "病毒"
+    "subtype": "bacteria",
+    "tribe": "virus"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 16,
     "id": "darwin",
     "is_hero": true,
@@ -447,14 +447,14 @@
       "aura-biology-plus-1-plus-1",
       "evolution-discovery"
     ],
-    "subtype": "生物",
-    "tribe": "学者"
+    "subtype": "organism",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 16,
     "id": "davinci",
     "is_hero": true,
@@ -465,14 +465,14 @@
     "skills": [
       "universal-manuscript"
     ],
-    "subtype": "博学者",
-    "tribe": "学者"
+    "subtype": "polymath",
+    "tribe": "scholar"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 5,
     "id": "dianbaoji",
     "is_hero": false,
@@ -483,14 +483,14 @@
     "skills": [
       "combatstart-leftmost-damage-3"
     ],
-    "subtype": "通信",
-    "tribe": "机械"
+    "subtype": "communication",
+    "tribe": "machine"
   },
   {
     "attack": 7,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 10,
     "id": "dianhua-jiaohuanji",
     "is_hero": false,
@@ -501,14 +501,14 @@
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
-    "subtype": "通信",
-    "tribe": "机械"
+    "subtype": "communication",
+    "tribe": "machine"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 1,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "dishengxiyu",
     "is_hero": false,
@@ -520,13 +520,13 @@
       "trigger-friendly-plus-1-plus-1"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "未来",
+    "era": "future",
     "health": null,
     "id": "dna-shuangluoxuan",
     "is_hero": false,
@@ -538,13 +538,13 @@
       "trigger-friendly-growth-thrice"
     ],
     "subtype": null,
-    "tribe": "生物"
+    "tribe": "biology"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 7,
     "id": "dolly",
     "is_hero": false,
@@ -556,14 +556,14 @@
       "keyword-reborn",
       "keyword-evolve"
     ],
-    "subtype": "克隆",
-    "tribe": "生物"
+    "subtype": "clone",
+    "tribe": "biology"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 3,
     "id": "dongxuehuajia",
     "is_hero": false,
@@ -574,14 +574,14 @@
     "skills": [
       "battlecry-friendly-plus-1-health"
     ],
-    "subtype": "原始",
-    "tribe": "人类"
+    "subtype": "primitive",
+    "tribe": "human"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 4,
     "id": "doushouchang-shizi",
     "is_hero": false,
@@ -592,14 +592,14 @@
     "skills": [
       "keyword-taunt"
     ],
-    "subtype": "猛兽",
-    "tribe": "生物"
+    "subtype": "beast",
+    "tribe": "biology"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 4,
     "id": "dushe",
     "is_hero": false,
@@ -610,14 +610,14 @@
     "skills": [
       "deathrattle-random-enemy-minus-1-attack"
     ],
-    "subtype": "爬行",
-    "tribe": "生物"
+    "subtype": "reptile",
+    "tribe": "biology"
   },
   {
     "attack": 12,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 18,
     "id": "dyson-sphere",
     "is_hero": false,
@@ -628,14 +628,14 @@
     "skills": [
       "keyword-divine-shield"
     ],
-    "subtype": "巨构",
-    "tribe": "机械"
+    "subtype": "megastructure",
+    "tribe": "machine"
   },
   {
     "attack": 8,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 8,
     "id": "ebola",
     "is_hero": false,
@@ -647,14 +647,14 @@
       "keyword-contagion",
       "combatstart-random-enemy-contagion-2"
     ],
-    "subtype": "病毒",
-    "tribe": "病毒"
+    "subtype": "virus",
+    "tribe": "virus"
   },
   {
     "attack": 9,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 11,
     "id": "edison",
     "is_hero": true,
@@ -665,14 +665,14 @@
     "skills": [
       "invention-factory"
     ],
-    "subtype": "工程",
-    "tribe": "机械"
+    "subtype": "engineering",
+    "tribe": "machine"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 16,
     "id": "einstein",
     "is_hero": true,
@@ -684,14 +684,14 @@
       "battlecry-all-friendly-growth-once",
       "light-speed-strike"
     ],
-    "subtype": "物理",
-    "tribe": "学者"
+    "subtype": "physics",
+    "tribe": "scholar"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 6,
     "id": "einstein-fridge",
     "is_hero": false,
@@ -700,14 +700,14 @@
     "match_text": null,
     "name": "爱因斯坦冰箱",
     "skills": [],
-    "subtype": "家电",
-    "tribe": "机械"
+    "subtype": "appliance",
+    "tribe": "machine"
   },
   {
     "attack": 9,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 11,
     "id": "engineered-virus",
     "is_hero": false,
@@ -719,14 +719,14 @@
       "keyword-contagion",
       "combatstart-all-enemies-contagion-1"
     ],
-    "subtype": "病毒",
-    "tribe": "病毒"
+    "subtype": "virus",
+    "tribe": "virus"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 0,
-    "era": "古典",
+    "era": "classical",
     "health": null,
     "id": "erfenfa",
     "is_hero": false,
@@ -738,13 +738,13 @@
       "trigger-friendly-plus-2-attack"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 5,
     "id": "euclid",
     "is_hero": false,
@@ -755,14 +755,14 @@
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
     ],
-    "subtype": "数学",
-    "tribe": "学者"
+    "subtype": "mathematics",
+    "tribe": "scholar"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 8,
     "id": "famingjia",
     "is_hero": false,
@@ -773,14 +773,14 @@
     "skills": [
       "battlecry-all-mech-growth-once"
     ],
-    "subtype": "发明",
-    "tribe": "人类"
+    "subtype": "invention",
+    "tribe": "human"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 1,
-    "era": "古典",
+    "era": "classical",
     "health": null,
     "id": "fangzhen",
     "is_hero": false,
@@ -792,13 +792,13 @@
       "trigger-friendly-human-taunt-until-turn-end"
     ],
     "subtype": null,
-    "tribe": "人类"
+    "tribe": "human"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 4,
     "id": "fangzhiji",
     "is_hero": false,
@@ -809,14 +809,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "工厂",
-    "tribe": "机械"
+    "subtype": "factory",
+    "tribe": "machine"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 16,
     "id": "faraday",
     "is_hero": true,
@@ -828,14 +828,14 @@
       "keyword-divine-shield",
       "faraday-cage"
     ],
-    "subtype": "物理",
-    "tribe": "学者"
+    "subtype": "physics",
+    "tribe": "scholar"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "工业",
+    "era": "industrial",
     "health": null,
     "id": "faraday-cage",
     "is_hero": false,
@@ -847,13 +847,13 @@
       "trigger-friendly-plus-0-plus-4-this-turn"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 5,
     "id": "feijiehe",
     "is_hero": false,
@@ -864,14 +864,14 @@
     "skills": [
       "keyword-contagion"
     ],
-    "subtype": "疾病",
-    "tribe": "病毒"
+    "subtype": "disease",
+    "tribe": "virus"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 4,
     "id": "feiyan",
     "is_hero": false,
@@ -882,14 +882,14 @@
     "skills": [
       "deathrattle-random-enemy-minus-1-health"
     ],
-    "subtype": "细菌",
-    "tribe": "病毒"
+    "subtype": "bacteria",
+    "tribe": "virus"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 6,
     "id": "fengche",
     "is_hero": false,
@@ -901,14 +901,14 @@
       "keyword-assemble-1",
       "trigger-turn-start-self-plus-0-plus-1"
     ],
-    "subtype": "载具",
-    "tribe": "机械"
+    "subtype": "vehicle",
+    "tribe": "machine"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 26,
     "id": "fermi",
     "is_hero": false,
@@ -919,14 +919,14 @@
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
-    "subtype": "核物理",
-    "tribe": "学者"
+    "subtype": "nuclear-physics",
+    "tribe": "scholar"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 7,
     "id": "fleming",
     "is_hero": true,
@@ -937,14 +937,14 @@
     "skills": [
       "virus-growth-once"
     ],
-    "subtype": "微生物学",
-    "tribe": "病毒"
+    "subtype": "microbiology",
+    "tribe": "virus"
   },
   {
     "attack": 8,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 16,
     "id": "fusion-reactor",
     "is_hero": false,
@@ -955,14 +955,14 @@
     "skills": [
       "aura-mech-plus-2-plus-2"
     ],
-    "subtype": "动力",
-    "tribe": "机械"
+    "subtype": "power",
+    "tribe": "machine"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 12,
     "id": "galileo",
     "is_hero": true,
@@ -973,14 +973,14 @@
     "skills": [
       "observation"
     ],
-    "subtype": "物理",
-    "tribe": "学者"
+    "subtype": "physics",
+    "tribe": "scholar"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 4,
     "id": "ganlanshu",
     "is_hero": false,
@@ -991,14 +991,14 @@
     "skills": [
       "keyword-sow"
     ],
-    "subtype": "作物",
-    "tribe": "植物"
+    "subtype": "crop",
+    "tribe": "plant"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 16,
     "id": "gauss",
     "is_hero": true,
@@ -1009,14 +1009,14 @@
     "skills": [
       "scholar-growth-twice"
     ],
-    "subtype": "数学",
-    "tribe": "学者"
+    "subtype": "mathematics",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 20,
     "id": "godel",
     "is_hero": false,
@@ -1027,14 +1027,14 @@
     "skills": [
       "aura-all-plus-0-plus-2"
     ],
-    "subtype": "数学",
-    "tribe": "学者"
+    "subtype": "mathematics",
+    "tribe": "scholar"
   },
   {
     "attack": 7,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 11,
     "id": "gongchangzhu",
     "is_hero": false,
@@ -1045,14 +1045,14 @@
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
-    "subtype": "资本",
-    "tribe": "人类"
+    "subtype": "capital",
+    "tribe": "human"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 4,
     "id": "gongchengchui",
     "is_hero": false,
@@ -1063,14 +1063,14 @@
     "skills": [
       "battlecry-random-enemy-damage-1"
     ],
-    "subtype": "攻城",
-    "tribe": "机械"
+    "subtype": "siege",
+    "tribe": "machine"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 7,
     "id": "gongchengta",
     "is_hero": false,
@@ -1081,14 +1081,14 @@
     "skills": [
       "keyword-assemble-2"
     ],
-    "subtype": "攻城",
-    "tribe": "机械"
+    "subtype": "siege",
+    "tribe": "machine"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 2,
     "id": "gongjianshou",
     "is_hero": false,
@@ -1099,14 +1099,14 @@
     "skills": [
       "battlecry-random-enemy-damage-1"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": 7,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 10,
     "id": "gongyegongren",
     "is_hero": false,
@@ -1117,14 +1117,14 @@
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
-    "subtype": "工人",
-    "tribe": "人类"
+    "subtype": "worker",
+    "tribe": "human"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 1,
-    "era": "工业",
+    "era": "industrial",
     "health": null,
     "id": "guangdianxiaoying",
     "is_hero": false,
@@ -1136,13 +1136,13 @@
       "combatstart-leftmost-damage-3"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 1,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "guanghezuoyong",
     "is_hero": false,
@@ -1154,13 +1154,13 @@
       "trigger-friendly-plant-breed-2"
     ],
     "subtype": null,
-    "tribe": "植物"
+    "tribe": "plant"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 3,
-    "era": "未来",
+    "era": "future",
     "health": null,
     "id": "guangyixiangduilun",
     "is_hero": false,
@@ -1172,13 +1172,13 @@
       "trigger-all-friendly-plus-1-plus-1"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 9,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 12,
     "id": "guanzhuangbingdu",
     "is_hero": false,
@@ -1190,14 +1190,14 @@
       "keyword-contagion",
       "deathrattle-all-enemies-contagion-1"
     ],
-    "subtype": "病毒",
-    "tribe": "病毒"
+    "subtype": "virus",
+    "tribe": "virus"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 2,
     "id": "guoying",
     "is_hero": false,
@@ -1208,14 +1208,14 @@
     "skills": [
       "keyword-breed-1"
     ],
-    "subtype": "昆虫",
-    "tribe": "生物"
+    "subtype": "insect",
+    "tribe": "biology"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 12,
     "id": "gutenberg",
     "is_hero": false,
@@ -1226,14 +1226,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "发明",
-    "tribe": "学者"
+    "subtype": "invention",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 26,
     "id": "heisenberg",
     "is_hero": false,
@@ -1245,14 +1245,14 @@
       "keyword-reborn",
       "deathrattle-all-enemies-minus-1-health"
     ],
-    "subtype": "量子",
-    "tribe": "学者"
+    "subtype": "quantum",
+    "tribe": "scholar"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 9,
     "id": "hela-cell",
     "is_hero": false,
@@ -1263,14 +1263,14 @@
     "skills": [
       "deathrattle-summon-2-2-hela-cell-clone"
     ],
-    "subtype": "细胞",
-    "tribe": "生物"
+    "subtype": "cell",
+    "tribe": "biology"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 9,
     "id": "hippocrates",
     "is_hero": false,
@@ -1281,14 +1281,14 @@
     "skills": [
       "trigger-friendly-growth-extra-plus-0-plus-1"
     ],
-    "subtype": "医学",
-    "tribe": "学者"
+    "subtype": "medicine",
+    "tribe": "scholar"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 6,
     "id": "hiv",
     "is_hero": false,
@@ -1299,14 +1299,14 @@
     "skills": [
       "keyword-contagion"
     ],
-    "subtype": "病毒",
-    "tribe": "病毒"
+    "subtype": "virus",
+    "tribe": "virus"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 3,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "hiv-inhibitor",
     "is_hero": false,
@@ -1318,13 +1318,13 @@
       "combatstart-remove-all-human-growth"
     ],
     "subtype": null,
-    "tribe": "病毒"
+    "tribe": "virus"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 9,
     "id": "homer",
     "is_hero": false,
@@ -1335,14 +1335,14 @@
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
-    "subtype": "文学",
-    "tribe": "学者"
+    "subtype": "literature",
+    "tribe": "scholar"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 11,
     "id": "hongshulin",
     "is_hero": false,
@@ -1354,14 +1354,14 @@
       "keyword-sow",
       "keyword-breed-2"
     ],
-    "subtype": "树木",
-    "tribe": "植物"
+    "subtype": "tree",
+    "tribe": "plant"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 8,
     "id": "huangrebing",
     "is_hero": false,
@@ -1372,14 +1372,14 @@
     "skills": [
       "combatstart-random-enemy-contagion-2"
     ],
-    "subtype": "疾病",
-    "tribe": "病毒"
+    "subtype": "disease",
+    "tribe": "virus"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 8,
     "id": "huochongdui",
     "is_hero": false,
@@ -1390,14 +1390,14 @@
     "skills": [
       "keyword-windfury"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 5,
     "id": "huoqiangshou",
     "is_hero": false,
@@ -1408,14 +1408,14 @@
     "skills": [
       "battlecry-random-enemy-damage-2"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 8,
     "id": "hybrid-rice",
     "is_hero": false,
@@ -1427,14 +1427,14 @@
       "keyword-sow",
       "keyword-breed-2"
     ],
-    "subtype": "作物",
-    "tribe": "植物"
+    "subtype": "crop",
+    "tribe": "plant"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 5,
     "id": "influenza",
     "is_hero": false,
@@ -1445,14 +1445,14 @@
     "skills": [
       "keyword-contagion"
     ],
-    "subtype": "病毒",
-    "tribe": "病毒"
+    "subtype": "virus",
+    "tribe": "virus"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 1,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "influenza-mutation",
     "is_hero": false,
@@ -1464,13 +1464,13 @@
       "combatstart-top-attack-enemy-minus-0-minus-2"
     ],
     "subtype": null,
-    "tribe": "病毒"
+    "tribe": "virus"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 4,
     "id": "jianchihu",
     "is_hero": false,
@@ -1481,14 +1481,14 @@
     "skills": [
       "combatstart-if-2-biology-self-plus-2-attack"
     ],
-    "subtype": "哺乳",
-    "tribe": "生物"
+    "subtype": "mammal",
+    "tribe": "biology"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "工业",
+    "era": "industrial",
     "health": null,
     "id": "jiaobiandianliu",
     "is_hero": false,
@@ -1500,13 +1500,13 @@
       "trigger-friendly-plus-2-attack-this-turn"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "jinhualun",
     "is_hero": false,
@@ -1518,13 +1518,13 @@
       "trigger-discover-tribe-minion"
     ],
     "subtype": null,
-    "tribe": "生物"
+    "tribe": "biology"
   },
   {
     "attack": 12,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 18,
     "id": "jiyin-gaizaoren",
     "is_hero": false,
@@ -1535,14 +1535,14 @@
     "skills": [
       "keyword-reborn"
     ],
-    "subtype": "改造",
-    "tribe": "人类"
+    "subtype": "modification",
+    "tribe": "human"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "未来",
+    "era": "future",
     "health": null,
     "id": "jiyintubian",
     "is_hero": false,
@@ -1554,13 +1554,13 @@
       "trigger-friendly-growth-twice"
     ],
     "subtype": null,
-    "tribe": "生物"
+    "tribe": "biology"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 4,
     "id": "juelei",
     "is_hero": false,
@@ -1572,14 +1572,14 @@
       "keyword-sow",
       "keyword-breed-2"
     ],
-    "subtype": "蕨类",
-    "tribe": "植物"
+    "subtype": "fern",
+    "tribe": "plant"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 5,
     "id": "juhua",
     "is_hero": false,
@@ -1591,14 +1591,14 @@
       "keyword-sow",
       "keyword-breed-1"
     ],
-    "subtype": "花卉",
-    "tribe": "植物"
+    "subtype": "flower",
+    "tribe": "plant"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 4,
     "id": "juxi",
     "is_hero": false,
@@ -1609,14 +1609,14 @@
     "skills": [
       "keyword-evolve"
     ],
-    "subtype": "爬行",
-    "tribe": "生物"
+    "subtype": "reptile",
+    "tribe": "biology"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 4,
     "id": "juying",
     "is_hero": false,
@@ -1627,14 +1627,14 @@
     "skills": [
       "trigger-friendly-death-self-plus-1-attack"
     ],
-    "subtype": "鸟类",
-    "tribe": "生物"
+    "subtype": "bird",
+    "tribe": "biology"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 3,
     "id": "juzi",
     "is_hero": false,
@@ -1645,14 +1645,14 @@
     "skills": [
       "keyword-breed-1"
     ],
-    "subtype": "果树",
-    "tribe": "植物"
+    "subtype": "fruit-tree",
+    "tribe": "plant"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 5,
     "id": "kanzi",
     "is_hero": false,
@@ -1663,14 +1663,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "灵长",
-    "tribe": "生物"
+    "subtype": "primate",
+    "tribe": "biology"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 20,
     "id": "knuth",
     "is_hero": true,
@@ -1681,14 +1681,14 @@
     "skills": [
       "efficient-algorithm"
     ],
-    "subtype": "计算机",
-    "tribe": "学者"
+    "subtype": "computer",
+    "tribe": "scholar"
   },
   {
     "attack": 7,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 10,
     "id": "koko",
     "is_hero": false,
@@ -1699,14 +1699,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "灵长",
-    "tribe": "生物"
+    "subtype": "primate",
+    "tribe": "biology"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 9,
     "id": "kongzi",
     "is_hero": false,
@@ -1717,14 +1717,14 @@
     "skills": [
       "aura-scholar-plus-0-plus-2"
     ],
-    "subtype": "哲学",
-    "tribe": "学者"
+    "subtype": "philosophy",
+    "tribe": "scholar"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 3,
     "id": "kuangquanbing",
     "is_hero": false,
@@ -1735,14 +1735,14 @@
     "skills": [
       "battlecry-friendly-virus-plus-1-attack"
     ],
-    "subtype": "病毒",
-    "tribe": "病毒"
+    "subtype": "virus",
+    "tribe": "virus"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 1,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "kuangrenriji",
     "is_hero": false,
@@ -1754,13 +1754,13 @@
       "combatstart-remove-top-attack-enemy-growth"
     ],
     "subtype": null,
-    "tribe": "学者"
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 12,
     "id": "lamarck",
     "is_hero": true,
@@ -1771,14 +1771,14 @@
     "skills": [
       "biology-evolve"
     ],
-    "subtype": "生物学",
-    "tribe": "学者"
+    "subtype": "biology",
+    "tribe": "scholar"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 3,
     "id": "langqunshouling",
     "is_hero": false,
@@ -1789,14 +1789,14 @@
     "skills": [
       "aura-other-biology-plus-1-attack"
     ],
-    "subtype": "哺乳",
-    "tribe": "生物"
+    "subtype": "mammal",
+    "tribe": "biology"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 16,
     "id": "lavoisier",
     "is_hero": true,
@@ -1807,14 +1807,14 @@
     "skills": [
       "aura-other-plus-0-plus-1"
     ],
-    "subtype": "化学",
-    "tribe": "学者"
+    "subtype": "chemistry",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 9,
     "id": "lianjinshushi",
     "is_hero": false,
@@ -1825,14 +1825,14 @@
     "skills": [
       "battlecry-friendly-growth-scholar-twice"
     ],
-    "subtype": "化学",
-    "tribe": "学者"
+    "subtype": "chemistry",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 9,
     "id": "lier",
     "is_hero": false,
@@ -1843,14 +1843,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "哲学",
-    "tribe": "学者"
+    "subtype": "philosophy",
+    "tribe": "scholar"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 6,
     "id": "likeciti",
     "is_hero": false,
@@ -1861,14 +1861,14 @@
     "skills": [
       "keyword-contagion"
     ],
-    "subtype": "细菌",
-    "tribe": "病毒"
+    "subtype": "bacteria",
+    "tribe": "virus"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 12,
     "id": "linnaeus",
     "is_hero": true,
@@ -1879,14 +1879,14 @@
     "skills": [
       "battlecry-all-biology-growth-once"
     ],
-    "subtype": "生物学",
-    "tribe": "学者"
+    "subtype": "biology",
+    "tribe": "scholar"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 7,
     "id": "lisshi",
     "is_hero": true,
@@ -1897,14 +1897,14 @@
     "skills": [
       "battlecry-plant-growth-twice"
     ],
-    "subtype": "医药学",
-    "tribe": "植物"
+    "subtype": "pharmacology",
+    "tribe": "plant"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 5,
     "id": "luban",
     "is_hero": true,
@@ -1915,14 +1915,14 @@
     "skills": [
       "battlecry-friendly-mech-growth-once"
     ],
-    "subtype": "工匠",
-    "tribe": "机械"
+    "subtype": "artisan",
+    "tribe": "machine"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 6,
     "id": "luomajuntuanbing",
     "is_hero": false,
@@ -1934,14 +1934,14 @@
       "keyword-taunt",
       "trigger-3-humans-self-plus-1-plus-1"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 16,
     "id": "luxun",
     "is_hero": true,
@@ -1952,14 +1952,14 @@
     "skills": [
       "shout"
     ],
-    "subtype": "文学",
-    "tribe": "学者"
+    "subtype": "literature",
+    "tribe": "scholar"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 8,
     "id": "maitian",
     "is_hero": false,
@@ -1971,14 +1971,14 @@
       "keyword-sow",
       "keyword-breed-1"
     ],
-    "subtype": "作物",
-    "tribe": "植物"
+    "subtype": "crop",
+    "tribe": "plant"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 5,
     "id": "majidun-changqiangbing",
     "is_hero": false,
@@ -1989,14 +1989,14 @@
     "skills": [
       "keyword-taunt"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 4,
     "id": "malaria",
     "is_hero": false,
@@ -2007,14 +2007,14 @@
     "skills": [
       "combatstart-random-enemy-contagion-1"
     ],
-    "subtype": "寄生虫",
-    "tribe": "病毒"
+    "subtype": "parasite",
+    "tribe": "virus"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 16,
     "id": "marie-curie",
     "is_hero": true,
@@ -2026,14 +2026,14 @@
       "battlecry-friendly-growth-twice",
       "radiation"
     ],
-    "subtype": "物理",
-    "tribe": "学者"
+    "subtype": "physics",
+    "tribe": "scholar"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 3,
     "id": "meikuang-jinsique",
     "is_hero": false,
@@ -2044,14 +2044,14 @@
     "skills": [
       "deathrattle-all-enemies-minus-1-health"
     ],
-    "subtype": "动物",
-    "tribe": "生物"
+    "subtype": "animal",
+    "tribe": "biology"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 12,
     "id": "mendel",
     "is_hero": true,
@@ -2063,14 +2063,14 @@
       "battlecry-friendly-plant-growth-once",
       "heredity"
     ],
-    "subtype": "生物",
-    "tribe": "学者"
+    "subtype": "organism",
+    "tribe": "scholar"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 4,
     "id": "menghu",
     "is_hero": false,
@@ -2081,14 +2081,14 @@
     "skills": [
       "keyword-evolve"
     ],
-    "subtype": "哺乳",
-    "tribe": "生物"
+    "subtype": "mammal",
+    "tribe": "biology"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 4,
     "id": "mengmalieren",
     "is_hero": false,
@@ -2099,14 +2099,14 @@
     "skills": [
       "battlecry-friendly-plus-1-attack"
     ],
-    "subtype": "原始",
-    "tribe": "人类"
+    "subtype": "primitive",
+    "tribe": "human"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 5,
     "id": "mengmaxiang",
     "is_hero": false,
@@ -2117,14 +2117,14 @@
     "skills": [
       "deathrattle-all-friendly-plus-0-plus-1"
     ],
-    "subtype": "哺乳",
-    "tribe": "生物"
+    "subtype": "mammal",
+    "tribe": "biology"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 4,
     "id": "mianhua",
     "is_hero": false,
@@ -2135,14 +2135,14 @@
     "skills": [
       "keyword-sow"
     ],
-    "subtype": "作物",
-    "tribe": "植物"
+    "subtype": "crop",
+    "tribe": "plant"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 12,
     "id": "michelangelo",
     "is_hero": false,
@@ -2153,14 +2153,14 @@
     "skills": [
       "battlecry-friendly-growth-twice"
     ],
-    "subtype": "艺术",
-    "tribe": "学者"
+    "subtype": "art",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 16,
     "id": "morgan",
     "is_hero": true,
@@ -2171,14 +2171,14 @@
     "skills": [
       "aura-biology-plus-0-plus-1"
     ],
-    "subtype": "遗传学",
-    "tribe": "学者"
+    "subtype": "genetics",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 12,
     "id": "moses",
     "is_hero": false,
@@ -2189,14 +2189,14 @@
     "skills": [
       "battlecry-all-friendly-plus-0-plus-1"
     ],
-    "subtype": "哲学",
-    "tribe": "学者"
+    "subtype": "philosophy",
+    "tribe": "scholar"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 8,
     "id": "mozi",
     "is_hero": true,
@@ -2207,14 +2207,14 @@
     "skills": [
       "enemy-random-cannot-attack"
     ],
-    "subtype": "哲学",
-    "tribe": "人类"
+    "subtype": "philosophy",
+    "tribe": "human"
   },
   {
     "attack": 9,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 11,
     "id": "muhammad-ali",
     "is_hero": false,
@@ -2225,14 +2225,14 @@
     "skills": [
       "keyword-windfury"
     ],
-    "subtype": "运动员",
-    "tribe": "人类"
+    "subtype": "athlete",
+    "tribe": "human"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 1,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "nahan",
     "is_hero": false,
@@ -2244,13 +2244,13 @@
       "trigger-all-friendly-growth-once"
     ],
     "subtype": null,
-    "tribe": "学者"
+    "tribe": "scholar"
   },
   {
     "attack": 11,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 19,
     "id": "nami-bingdu",
     "is_hero": false,
@@ -2261,14 +2261,14 @@
     "skills": [
       "keyword-contagion"
     ],
-    "subtype": "纳米",
-    "tribe": "病毒"
+    "subtype": "nanotech",
+    "tribe": "virus"
   },
   {
     "attack": 11,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 18,
     "id": "nami-fengqun",
     "is_hero": false,
@@ -2279,14 +2279,14 @@
     "skills": [
       "keyword-assemble-2"
     ],
-    "subtype": "纳米",
-    "tribe": "机械"
+    "subtype": "nanotech",
+    "tribe": "machine"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 11,
     "id": "nanobot",
     "is_hero": false,
@@ -2298,14 +2298,14 @@
       "keyword-optimal-attack",
       "keyword-assemble-1"
     ],
-    "subtype": "机器人",
-    "tribe": "机械"
+    "subtype": "robot",
+    "tribe": "machine"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 8,
     "id": "neiranji",
     "is_hero": false,
@@ -2316,14 +2316,14 @@
     "skills": [
       "keyword-optimal-attack"
     ],
-    "subtype": "动力",
-    "tribe": "机械"
+    "subtype": "power",
+    "tribe": "machine"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 16,
     "id": "newton",
     "is_hero": false,
@@ -2334,14 +2334,14 @@
     "skills": [
       "battlecry-friendly-growth-twice"
     ],
-    "subtype": "物理",
-    "tribe": "学者"
+    "subtype": "physics",
+    "tribe": "scholar"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 5,
     "id": "nitaizhangyu",
     "is_hero": false,
@@ -2350,14 +2350,14 @@
     "match_text": null,
     "name": "拟态章鱼",
     "skills": [],
-    "subtype": "软体",
-    "tribe": "生物"
+    "subtype": "mollusk",
+    "tribe": "biology"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 11,
     "id": "nitrogen-crop",
     "is_hero": false,
@@ -2368,14 +2368,14 @@
     "skills": [
       "aura-plant-plus-1-plus-1"
     ],
-    "subtype": "作物",
-    "tribe": "植物"
+    "subtype": "crop",
+    "tribe": "plant"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 11,
     "id": "niuwen",
     "is_hero": false,
@@ -2386,14 +2386,14 @@
     "skills": [
       "keyword-contagion"
     ],
-    "subtype": "病毒",
-    "tribe": "病毒"
+    "subtype": "virus",
+    "tribe": "virus"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 5,
     "id": "nupao",
     "is_hero": false,
@@ -2404,14 +2404,14 @@
     "skills": [
       "combatstart-leftmost-damage-3"
     ],
-    "subtype": "攻城",
-    "tribe": "机械"
+    "subtype": "siege",
+    "tribe": "machine"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 5,
     "id": "nushou",
     "is_hero": false,
@@ -2422,14 +2422,14 @@
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 1,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "panghuang",
     "is_hero": false,
@@ -2441,13 +2441,13 @@
       "combatstart-top-attack-enemy-cant-attack"
     ],
     "subtype": null,
-    "tribe": "学者"
+    "tribe": "scholar"
   },
   {
     "attack": 7,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 10,
     "id": "pasteur",
     "is_hero": true,
@@ -2458,14 +2458,14 @@
     "skills": [
       "microbiology"
     ],
-    "subtype": "微生物学",
-    "tribe": "病毒"
+    "subtype": "microbiology",
+    "tribe": "virus"
   },
   {
     "attack": 7,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 11,
     "id": "patrol-mech",
     "is_hero": false,
@@ -2476,14 +2476,14 @@
     "skills": [
       "keyword-taunt"
     ],
-    "subtype": "机甲",
-    "tribe": "机械"
+    "subtype": "mecha",
+    "tribe": "machine"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 6,
     "id": "phonograph",
     "is_hero": false,
@@ -2494,14 +2494,14 @@
     "skills": [
       "keyword-assemble-1"
     ],
-    "subtype": "家电",
-    "tribe": "机械"
+    "subtype": "appliance",
+    "tribe": "machine"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 7,
     "id": "pink-ape",
     "is_hero": false,
@@ -2512,14 +2512,14 @@
     "skills": [
       "battlecry-self-growth-twice"
     ],
-    "subtype": "灵长",
-    "tribe": "生物"
+    "subtype": "primate",
+    "tribe": "biology"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 12,
     "id": "plato",
     "is_hero": false,
@@ -2530,14 +2530,14 @@
     "skills": [
       "aura-all-plus-0-plus-1"
     ],
-    "subtype": "哲学",
-    "tribe": "学者"
+    "subtype": "philosophy",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 5,
     "id": "pythagoras",
     "is_hero": false,
@@ -2548,14 +2548,14 @@
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
-    "subtype": "数学",
-    "tribe": "学者"
+    "subtype": "mathematics",
+    "tribe": "scholar"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 9,
     "id": "qinghao",
     "is_hero": false,
@@ -2567,14 +2567,14 @@
       "keyword-sow",
       "aura-plant-plus-1-plus-1"
     ],
-    "subtype": "药用",
-    "tribe": "植物"
+    "subtype": "medicinal",
+    "tribe": "plant"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "qingmeisu-tichun",
     "is_hero": false,
@@ -2586,13 +2586,13 @@
       "trigger-friendly-growth-twice"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 5,
     "id": "qishi",
     "is_hero": false,
@@ -2603,14 +2603,14 @@
     "skills": [
       "keyword-taunt"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "工业",
+    "era": "industrial",
     "health": null,
     "id": "qiuzhuangshandian",
     "is_hero": false,
@@ -2622,13 +2622,13 @@
       "combatstart-leftmost-and-adjacent-damage-2"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 7,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 9,
     "id": "quantum-computer",
     "is_hero": false,
@@ -2640,14 +2640,14 @@
       "keyword-divine-shield",
       "keyword-assemble-2"
     ],
-    "subtype": "计算机",
-    "tribe": "机械"
+    "subtype": "computer",
+    "tribe": "machine"
   },
   {
     "attack": 12,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 19,
     "id": "qulv-feichuan",
     "is_hero": false,
@@ -2658,14 +2658,14 @@
     "skills": [
       "keyword-optimal-attack"
     ],
-    "subtype": "航天",
-    "tribe": "机械"
+    "subtype": "spaceflight",
+    "tribe": "machine"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 12,
     "id": "quyuan",
     "is_hero": true,
@@ -2676,14 +2676,14 @@
     "skills": [
       "shout"
     ],
-    "subtype": "文学",
-    "tribe": "学者"
+    "subtype": "literature",
+    "tribe": "scholar"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 3,
-    "era": "未来",
+    "era": "future",
     "health": null,
     "id": "rengongzhineng",
     "is_hero": false,
@@ -2695,13 +2695,13 @@
       "trigger-mech-optimal-attack-this-turn"
     ],
     "subtype": null,
-    "tribe": "机械"
+    "tribe": "machine"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "现代",
+    "era": "modern",
     "health": null,
     "id": "renzaoshandian",
     "is_hero": false,
@@ -2713,13 +2713,13 @@
       "combatstart-leftmost-damage-4"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 4,
     "id": "renzhe",
     "is_hero": false,
@@ -2730,14 +2730,14 @@
     "skills": [
       "keyword-windfury"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": 8,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 12,
     "id": "revived-mammoth",
     "is_hero": false,
@@ -2749,14 +2749,14 @@
       "keyword-reborn",
       "keyword-evolve"
     ],
-    "subtype": "克隆",
-    "tribe": "生物"
+    "subtype": "clone",
+    "tribe": "biology"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 6,
     "id": "rice-cooker",
     "is_hero": false,
@@ -2767,14 +2767,14 @@
     "skills": [
       "battlecry-friendly-human-plus-0-plus-1"
     ],
-    "subtype": "家电",
-    "tribe": "机械"
+    "subtype": "appliance",
+    "tribe": "machine"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 5,
     "id": "robot-dog",
     "is_hero": false,
@@ -2785,14 +2785,14 @@
     "skills": [
       "keyword-optimal-attack"
     ],
-    "subtype": "机器人",
-    "tribe": "机械"
+    "subtype": "robot",
+    "tribe": "machine"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 20,
     "id": "rutherford",
     "is_hero": true,
@@ -2803,14 +2803,14 @@
     "skills": [
       "combat-random-enemy-damage-3"
     ],
-    "subtype": "物理",
-    "tribe": "学者"
+    "subtype": "physics",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 20,
     "id": "sagan",
     "is_hero": false,
@@ -2821,14 +2821,14 @@
     "skills": [
       "aura-scholar-plus-0-plus-3"
     ],
-    "subtype": "天文",
-    "tribe": "学者"
+    "subtype": "astronomy",
+    "tribe": "scholar"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 3,
     "id": "saman",
     "is_hero": false,
@@ -2839,14 +2839,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "原始",
-    "tribe": "人类"
+    "subtype": "primitive",
+    "tribe": "human"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 26,
     "id": "schrodinger",
     "is_hero": false,
@@ -2858,14 +2858,14 @@
       "keyword-divine-shield",
       "combatstart-random-enemy-contagion-2"
     ],
-    "subtype": "量子",
-    "tribe": "学者"
+    "subtype": "quantum",
+    "tribe": "scholar"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 7,
     "id": "self-driving-car",
     "is_hero": false,
@@ -2877,14 +2877,14 @@
       "keyword-optimal-attack",
       "keyword-assemble-1"
     ],
-    "subtype": "载具",
-    "tribe": "机械"
+    "subtype": "vehicle",
+    "tribe": "machine"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 8,
     "id": "shakespeare",
     "is_hero": true,
@@ -2895,14 +2895,14 @@
     "skills": [
       "battlecry-all-friendly-growth-once"
     ],
-    "subtype": "文学",
-    "tribe": "人类"
+    "subtype": "literature",
+    "tribe": "human"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 16,
     "id": "shannon",
     "is_hero": false,
@@ -2913,14 +2913,14 @@
     "skills": [
       "battlecry-all-mech-growth-once"
     ],
-    "subtype": "数学",
-    "tribe": "学者"
+    "subtype": "mathematics",
+    "tribe": "scholar"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 16,
     "id": "shenkuo",
     "is_hero": true,
@@ -2931,14 +2931,14 @@
     "skills": [
       "observation"
     ],
-    "subtype": "博物学",
-    "tribe": "学者"
+    "subtype": "natural-history",
+    "tribe": "scholar"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 3,
     "id": "shifujiang",
     "is_hero": false,
@@ -2949,14 +2949,14 @@
     "skills": [
       "trigger-friendly-growth-self-plus-1-attack"
     ],
-    "subtype": "原始",
-    "tribe": "人类"
+    "subtype": "primitive",
+    "tribe": "human"
   },
   {
     "attack": 8,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 13,
     "id": "shijieshu",
     "is_hero": false,
@@ -2968,14 +2968,14 @@
       "keyword-sow",
       "aura-plant-plus-1-plus-1"
     ],
-    "subtype": "树木",
-    "tribe": "植物"
+    "subtype": "tree",
+    "tribe": "plant"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 2,
     "id": "shijunti",
     "is_hero": false,
@@ -2986,14 +2986,14 @@
     "skills": [
       "deathrattle-random-enemy-hp-minus-1"
     ],
-    "subtype": "微生物",
-    "tribe": "病毒"
+    "subtype": "microorganism",
+    "tribe": "virus"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 3,
     "id": "shilunche",
     "is_hero": false,
@@ -3004,14 +3004,14 @@
     "skills": [
       "keyword-assemble-1"
     ],
-    "subtype": "载具",
-    "tribe": "机械"
+    "subtype": "vehicle",
+    "tribe": "machine"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 3,
     "id": "shiyanxiaoshu",
     "is_hero": false,
@@ -3022,14 +3022,14 @@
     "skills": [
       "deathrattle-summon-termite"
     ],
-    "subtype": "哺乳",
-    "tribe": "生物"
+    "subtype": "mammal",
+    "tribe": "biology"
   },
   {
     "attack": 7,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 9,
     "id": "shizijun",
     "is_hero": false,
@@ -3041,14 +3041,14 @@
       "keyword-taunt",
       "trigger-friendly-human-death-plus-1-plus-1"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 2,
     "id": "shizuniao",
     "is_hero": false,
@@ -3057,14 +3057,14 @@
     "match_text": null,
     "name": "始祖鸟",
     "skills": [],
-    "subtype": "鸟类",
-    "tribe": "生物"
+    "subtype": "bird",
+    "tribe": "biology"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 5,
     "id": "shizushou",
     "is_hero": false,
@@ -3075,14 +3075,14 @@
     "skills": [
       "trigger-friendly-evolve-self-plus-1-plus-1"
     ],
-    "subtype": "哺乳",
-    "tribe": "生物"
+    "subtype": "mammal",
+    "tribe": "biology"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 4,
     "id": "shoupijiang",
     "is_hero": false,
@@ -3093,14 +3093,14 @@
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
-    "subtype": "原始",
-    "tribe": "人类"
+    "subtype": "primitive",
+    "tribe": "human"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 5,
     "id": "shuiche",
     "is_hero": false,
@@ -3111,14 +3111,14 @@
     "skills": [
       "keyword-assemble-1"
     ],
-    "subtype": "载具",
-    "tribe": "机械"
+    "subtype": "vehicle",
+    "tribe": "machine"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 4,
     "id": "shuishengjue",
     "is_hero": false,
@@ -3130,14 +3130,14 @@
       "keyword-sow",
       "keyword-breed-1"
     ],
-    "subtype": "水生植物",
-    "tribe": "植物"
+    "subtype": "aquatic-plant",
+    "tribe": "plant"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 3,
     "id": "shuizhong",
     "is_hero": false,
@@ -3148,14 +3148,14 @@
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
     ],
-    "subtype": "计时",
-    "tribe": "机械"
+    "subtype": "timekeeping",
+    "tribe": "machine"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 5,
     "id": "sibadayongshi",
     "is_hero": false,
@@ -3164,14 +3164,14 @@
     "match_text": null,
     "name": "斯巴达勇士",
     "skills": [],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 8,
     "id": "simaqian",
     "is_hero": true,
@@ -3182,14 +3182,14 @@
     "skills": [
       "aura-all-plus-0-plus-1"
     ],
-    "subtype": "史学",
-    "tribe": "人类"
+    "subtype": "history",
+    "tribe": "human"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 3,
     "id": "smallpox",
     "is_hero": false,
@@ -3200,14 +3200,14 @@
     "skills": [
       "deathrattle-all-enemies-minus-1-health"
     ],
-    "subtype": "病毒",
-    "tribe": "病毒"
+    "subtype": "virus",
+    "tribe": "virus"
   },
   {
     "attack": 8,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 14,
     "id": "space-elevator",
     "is_hero": false,
@@ -3219,14 +3219,14 @@
       "keyword-divine-shield",
       "keyword-assemble-1"
     ],
-    "subtype": "建筑",
-    "tribe": "机械"
+    "subtype": "architecture",
+    "tribe": "machine"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 12,
     "id": "space-rice",
     "is_hero": false,
@@ -3238,14 +3238,14 @@
       "keyword-sow",
       "keyword-breed-3"
     ],
-    "subtype": "作物",
-    "tribe": "植物"
+    "subtype": "crop",
+    "tribe": "plant"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 8,
     "id": "steam-engine",
     "is_hero": false,
@@ -3256,14 +3256,14 @@
     "skills": [
       "keyword-assemble-2"
     ],
-    "subtype": "动力",
-    "tribe": "机械"
+    "subtype": "power",
+    "tribe": "machine"
   },
   {
     "attack": 7,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 11,
     "id": "stephenson",
     "is_hero": true,
@@ -3274,14 +3274,14 @@
     "skills": [
       "aura-other-mech-plus-1-plus-1"
     ],
-    "subtype": "工程",
-    "tribe": "机械"
+    "subtype": "engineering",
+    "tribe": "machine"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 6,
     "id": "sugeladi",
     "is_hero": false,
@@ -3292,14 +3292,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "哲学",
-    "tribe": "学者"
+    "subtype": "philosophy",
+    "tribe": "scholar"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 2,
     "id": "suishimaobing",
     "is_hero": false,
@@ -3310,14 +3310,14 @@
     "skills": [
       "trigger-2-humans-self-plus-1-attack"
     ],
-    "subtype": "原始",
-    "tribe": "人类"
+    "subtype": "primitive",
+    "tribe": "human"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 10,
     "id": "synthetic-cell",
     "is_hero": false,
@@ -3329,14 +3329,14 @@
       "keyword-reborn",
       "keyword-evolve"
     ],
-    "subtype": "合成",
-    "tribe": "生物"
+    "subtype": "synthesis",
+    "tribe": "biology"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 3,
     "id": "tai",
     "is_hero": false,
@@ -3347,14 +3347,14 @@
     "skills": [
       "keyword-sow"
     ],
-    "subtype": "苔藓",
-    "tribe": "植物"
+    "subtype": "moss",
+    "tribe": "plant"
   },
   {
     "attack": 8,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 13,
     "id": "taikongziminzhe",
     "is_hero": false,
@@ -3365,14 +3365,14 @@
     "skills": [
       "keyword-divine-shield"
     ],
-    "subtype": "殖民者",
-    "tribe": "人类"
+    "subtype": "colonist",
+    "tribe": "human"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 10,
     "id": "tanju",
     "is_hero": false,
@@ -3384,14 +3384,14 @@
       "keyword-contagion",
       "combatstart-random-enemy-contagion-1"
     ],
-    "subtype": "细菌",
-    "tribe": "病毒"
+    "subtype": "bacteria",
+    "tribe": "virus"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 7,
     "id": "telephone",
     "is_hero": false,
@@ -3402,14 +3402,14 @@
     "skills": [
       "keyword-assemble-1"
     ],
-    "subtype": "通讯",
-    "tribe": "机械"
+    "subtype": "telecommunication",
+    "tribe": "machine"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 2,
     "id": "tengman",
     "is_hero": false,
@@ -3420,14 +3420,14 @@
     "skills": [
       "keyword-sow"
     ],
-    "subtype": "藤本",
-    "tribe": "植物"
+    "subtype": "vine",
+    "tribe": "plant"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 16,
     "id": "tesla",
     "is_hero": true,
@@ -3438,14 +3438,14 @@
     "skills": [
       "alternating-current"
     ],
-    "subtype": "物理",
-    "tribe": "学者"
+    "subtype": "physics",
+    "tribe": "scholar"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 3,
-    "era": "工业",
+    "era": "industrial",
     "health": null,
     "id": "tesla-coil",
     "is_hero": false,
@@ -3457,13 +3457,13 @@
       "combatstart-all-enemies-damage-2"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 5,
     "id": "tielu-gongren",
     "is_hero": false,
@@ -3474,14 +3474,14 @@
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
-    "subtype": "工人",
-    "tribe": "人类"
+    "subtype": "worker",
+    "tribe": "human"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 4,
     "id": "toushiji",
     "is_hero": false,
@@ -3492,14 +3492,14 @@
     "skills": [
       "keyword-assemble-2"
     ],
-    "subtype": "攻城",
-    "tribe": "机械"
+    "subtype": "siege",
+    "tribe": "machine"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 4,
     "id": "tufu",
     "is_hero": false,
@@ -3508,14 +3508,14 @@
     "match_text": null,
     "name": "屠夫",
     "skills": [],
-    "subtype": "原始",
-    "tribe": "人类"
+    "subtype": "primitive",
+    "tribe": "human"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 10,
     "id": "turing-machine",
     "is_hero": false,
@@ -3527,14 +3527,14 @@
       "keyword-optimal-attack",
       "keyword-assemble-2"
     ],
-    "subtype": "计算机",
-    "tribe": "机械"
+    "subtype": "computer",
+    "tribe": "machine"
   },
   {
     "attack": 8,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 12,
     "id": "vertical-farm",
     "is_hero": false,
@@ -3546,14 +3546,14 @@
       "keyword-sow",
       "keyword-breed-3"
     ],
-    "subtype": "建筑",
-    "tribe": "植物"
+    "subtype": "architecture",
+    "tribe": "plant"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 16,
     "id": "von-neumann",
     "is_hero": false,
@@ -3564,14 +3564,14 @@
     "skills": [
       "battlecry-friendly-growth-twice"
     ],
-    "subtype": "数学",
-    "tribe": "学者"
+    "subtype": "mathematics",
+    "tribe": "scholar"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 2,
     "id": "wandou",
     "is_hero": false,
@@ -3582,14 +3582,14 @@
     "skills": [
       "keyword-breed-1"
     ],
-    "subtype": "作物",
-    "tribe": "植物"
+    "subtype": "crop",
+    "tribe": "plant"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 12,
     "id": "watt",
     "is_hero": false,
@@ -3600,14 +3600,14 @@
     "skills": [
       "aura-mech-plus-2-plus-2"
     ],
-    "subtype": "工程",
-    "tribe": "学者"
+    "subtype": "engineering",
+    "tribe": "scholar"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 9,
     "id": "weijingzhanshi",
     "is_hero": false,
@@ -3618,14 +3618,14 @@
     "skills": [
       "keyword-taunt"
     ],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": 10,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 12,
     "id": "wireless-telegraph",
     "is_hero": false,
@@ -3637,14 +3637,14 @@
       "keyword-assemble-2",
       "battlecry-all-mech-growth-once-no-keyword"
     ],
-    "subtype": "通讯",
-    "tribe": "机械"
+    "subtype": "telecommunication",
+    "tribe": "machine"
   },
   {
     "attack": 8,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 9,
     "id": "wright-brothers",
     "is_hero": true,
@@ -3655,14 +3655,14 @@
     "skills": [
       "combat-optimal-attack"
     ],
-    "subtype": "航空",
-    "tribe": "机械"
+    "subtype": "aviation",
+    "tribe": "machine"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 5,
     "id": "wuyi",
     "is_hero": false,
@@ -3673,14 +3673,14 @@
     "skills": [
       "battlecry-friendly-growth-plant-twice"
     ],
-    "subtype": "原始",
-    "tribe": "人类"
+    "subtype": "primitive",
+    "tribe": "human"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 5,
     "id": "xiake",
     "is_hero": false,
@@ -3689,14 +3689,14 @@
     "match_text": null,
     "name": "侠客",
     "skills": [],
-    "subtype": "兵种",
-    "tribe": "人类"
+    "subtype": "unit",
+    "tribe": "human"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 4,
     "id": "xiangrikui",
     "is_hero": false,
@@ -3707,14 +3707,14 @@
     "skills": [
       "keyword-breed-2"
     ],
-    "subtype": "作物",
-    "tribe": "植物"
+    "subtype": "crop",
+    "tribe": "plant"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "未来",
+    "era": "future",
     "health": null,
     "id": "xiayixiangduilun",
     "is_hero": false,
@@ -3726,13 +3726,13 @@
       "trigger-minion-windfury-this-turn"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 6,
     "id": "xiluoduode",
     "is_hero": false,
@@ -3743,14 +3743,14 @@
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
     ],
-    "subtype": "史学",
-    "tribe": "学者"
+    "subtype": "history",
+    "tribe": "scholar"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 2,
     "id": "xinge",
     "is_hero": false,
@@ -3761,14 +3761,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "通信",
-    "tribe": "生物"
+    "subtype": "communication",
+    "tribe": "biology"
   },
   {
     "attack": 12,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 19,
     "id": "xingji-jianzhang",
     "is_hero": false,
@@ -3779,14 +3779,14 @@
     "skills": [
       "keyword-taunt"
     ],
-    "subtype": "舰长",
-    "tribe": "人类"
+    "subtype": "captain",
+    "tribe": "human"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 6,
     "id": "xray-machine",
     "is_hero": false,
@@ -3797,14 +3797,14 @@
     "skills": [
       "keyword-optimal-attack"
     ],
-    "subtype": "医疗",
-    "tribe": "机械"
+    "subtype": "medical",
+    "tribe": "machine"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 4,
     "id": "xunhuozhe",
     "is_hero": false,
@@ -3815,14 +3815,14 @@
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
-    "subtype": "原始",
-    "tribe": "人类"
+    "subtype": "primitive",
+    "tribe": "human"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 5,
     "id": "yadian-wenyi",
     "is_hero": false,
@@ -3833,14 +3833,14 @@
     "skills": [
       "combatstart-random-enemy-contagion-1"
     ],
-    "subtype": "瘟疫",
-    "tribe": "病毒"
+    "subtype": "plague",
+    "tribe": "virus"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 5,
     "id": "yanhuashi",
     "is_hero": false,
@@ -3851,14 +3851,14 @@
     "skills": [
       "trigger-play-effect-friendly-plus-0-plus-1"
     ],
-    "subtype": "艺术",
-    "tribe": "学者"
+    "subtype": "art",
+    "tribe": "scholar"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 3,
     "id": "yelang",
     "is_hero": false,
@@ -3869,14 +3869,14 @@
     "skills": [
       "trigger-friendly-biology-play-plus-1-attack"
     ],
-    "subtype": "哺乳",
-    "tribe": "生物"
+    "subtype": "mammal",
+    "tribe": "biology"
   },
   {
     "attack": 2,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 2,
     "id": "yezhu",
     "is_hero": false,
@@ -3887,14 +3887,14 @@
     "skills": [
       "battlecry-self-plus-1-health"
     ],
-    "subtype": "哺乳",
-    "tribe": "生物"
+    "subtype": "mammal",
+    "tribe": "biology"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "未来",
+    "era": "future",
     "health": null,
     "id": "yinlibo",
     "is_hero": false,
@@ -3906,13 +3906,13 @@
       "combatstart-all-enemies-minus-1-attack"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "封建",
+    "era": "feudal",
     "health": null,
     "id": "yinshuashu",
     "is_hero": false,
@@ -3924,13 +3924,13 @@
       "trigger-copy-hand-minion"
     ],
     "subtype": null,
-    "tribe": "学者"
+    "tribe": "scholar"
   },
   {
     "attack": 10,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 20,
     "id": "yongsheng-shuimu",
     "is_hero": false,
@@ -3941,14 +3941,14 @@
     "skills": [
       "keyword-reborn"
     ],
-    "subtype": "海洋",
-    "tribe": "生物"
+    "subtype": "ocean",
+    "tribe": "biology"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "工业",
+    "era": "industrial",
     "health": null,
     "id": "yousifenlie",
     "is_hero": false,
@@ -3960,13 +3960,13 @@
       "trigger-copy-friendly-minion"
     ],
     "subtype": null,
-    "tribe": "生物"
+    "tribe": "biology"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 4,
-    "era": "未来",
+    "era": "future",
     "health": null,
     "id": "yuandandan",
     "is_hero": false,
@@ -3978,13 +3978,13 @@
       "combatstart-all-enemies-damage-5"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 6,
     "id": "yuanlaoyuan-yiyuan",
     "is_hero": false,
@@ -3995,14 +3995,14 @@
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
     ],
-    "subtype": "政治",
-    "tribe": "人类"
+    "subtype": "politics",
+    "tribe": "human"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "现代",
+    "era": "modern",
     "health": 20,
     "id": "yuanlongping",
     "is_hero": false,
@@ -4013,14 +4013,14 @@
     "skills": [
       "aura-plant-plus-2-plus-2"
     ],
-    "subtype": "生物",
-    "tribe": "学者"
+    "subtype": "organism",
+    "tribe": "scholar"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 6,
     "id": "yuanshijixiekuilei",
     "is_hero": false,
@@ -4029,14 +4029,14 @@
     "match_text": null,
     "name": "原始机械傀儡",
     "skills": [],
-    "subtype": "傀儡",
-    "tribe": "机械"
+    "subtype": "puppet",
+    "tribe": "machine"
   },
   {
     "attack": 1,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "史前",
+    "era": "prehistoric",
     "health": 2,
     "id": "yuanshizhenjun",
     "is_hero": false,
@@ -4047,14 +4047,14 @@
     "skills": [
       "keyword-sow"
     ],
-    "subtype": "真菌",
-    "tribe": "植物"
+    "subtype": "fungus",
+    "tribe": "plant"
   },
   {
     "attack": 10,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 19,
     "id": "yuzhouteng",
     "is_hero": false,
@@ -4065,14 +4065,14 @@
     "skills": [
       "keyword-divine-shield"
     ],
-    "subtype": "宇宙",
-    "tribe": "植物"
+    "subtype": "universe",
+    "tribe": "plant"
   },
   {
     "attack": 0,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "原始",
+    "era": "primitive",
     "health": 9,
     "id": "zhangheng",
     "is_hero": false,
@@ -4083,14 +4083,14 @@
     "skills": [
       "battlecry-friendly-growth-once"
     ],
-    "subtype": "天文",
-    "tribe": "学者"
+    "subtype": "astronomy",
+    "tribe": "scholar"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 8,
     "id": "zhangzhongjing",
     "is_hero": true,
@@ -4101,14 +4101,14 @@
     "skills": [
       "battlecry-all-friendly-plus-0-plus-1"
     ],
-    "subtype": "医学",
-    "tribe": "人类"
+    "subtype": "medicine",
+    "tribe": "human"
   },
   {
     "attack": 6,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 7,
     "id": "zhanma",
     "is_hero": false,
@@ -4119,14 +4119,14 @@
     "skills": [
       "keyword-evolve"
     ],
-    "subtype": "哺乳",
-    "tribe": "生物"
+    "subtype": "mammal",
+    "tribe": "biology"
   },
   {
     "attack": 5,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "古典",
+    "era": "classical",
     "health": 7,
     "id": "zhanxiang",
     "is_hero": false,
@@ -4137,14 +4137,14 @@
     "skills": [
       "keyword-taunt"
     ],
-    "subtype": "猛兽",
-    "tribe": "生物"
+    "subtype": "beast",
+    "tribe": "biology"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "工业",
+    "era": "industrial",
     "health": null,
     "id": "zhengbingling",
     "is_hero": false,
@@ -4156,13 +4156,13 @@
       "trigger-other-friendly-humans-plus-1-attack"
     ],
     "subtype": null,
-    "tribe": "人类"
+    "tribe": "human"
   },
   {
     "attack": 7,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 10,
     "id": "zhenghe",
     "is_hero": true,
@@ -4173,14 +4173,14 @@
     "skills": [
       "free-refresh"
     ],
-    "subtype": "航海",
-    "tribe": "人类"
+    "subtype": "navigation",
+    "tribe": "human"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 3,
-    "era": "工业",
+    "era": "industrial",
     "health": null,
     "id": "zhengqi-geming",
     "is_hero": false,
@@ -4192,13 +4192,13 @@
       "trigger-all-friendly-plus-1-plus-1"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 4,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "工业",
+    "era": "industrial",
     "health": 6,
     "id": "zhengqi-jiche",
     "is_hero": false,
@@ -4209,14 +4209,14 @@
     "skills": [
       "keyword-taunt"
     ],
-    "subtype": "交通",
-    "tribe": "机械"
+    "subtype": "transport",
+    "tribe": "machine"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "工业",
+    "era": "industrial",
     "health": null,
     "id": "zhengqidongli",
     "is_hero": false,
@@ -4228,13 +4228,13 @@
       "trigger-all-mech-growth-once"
     ],
     "subtype": null,
-    "tribe": "机械"
+    "tribe": "machine"
   },
   {
     "attack": 12,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "未来",
+    "era": "future",
     "health": 18,
     "id": "zhihui-jushou",
     "is_hero": false,
@@ -4245,14 +4245,14 @@
     "skills": [
       "keyword-windfury"
     ],
-    "subtype": "巨兽",
-    "tribe": "生物"
+    "subtype": "behemoth",
+    "tribe": "biology"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 3,
-    "era": "未来",
+    "era": "future",
     "health": null,
     "id": "zhinengdengjia",
     "is_hero": false,
@@ -4264,13 +4264,13 @@
       "combatstart-leftmost-damage-6"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": null,
-    "card_type": "效果",
+    "card_type": "effect",
     "cost": 2,
-    "era": "封建",
+    "era": "feudal",
     "health": null,
     "id": "zhuanli-zhidu",
     "is_hero": false,
@@ -4282,13 +4282,13 @@
       "trigger-all-mech-growth-once"
     ],
     "subtype": null,
-    "tribe": "通用"
+    "tribe": "general"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 6,
     "id": "zhugeliang",
     "is_hero": false,
@@ -4299,14 +4299,14 @@
     "skills": [
       "battlecry-friendly-archers-plus-2-attack"
     ],
-    "subtype": "军师",
-    "tribe": "人类"
+    "subtype": "strategist",
+    "tribe": "human"
   },
   {
     "attack": 3,
-    "card_type": "随从",
+    "card_type": "minion",
     "cost": null,
-    "era": "封建",
+    "era": "feudal",
     "health": 6,
     "id": "zhulin",
     "is_hero": false,
@@ -4318,7 +4318,7 @@
       "keyword-sow",
       "aura-other-plants-plus-0-plus-1"
     ],
-    "subtype": "树木",
-    "tribe": "植物"
+    "subtype": "tree",
+    "tribe": "plant"
   }
 ]
