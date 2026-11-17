@@ -120,13 +120,12 @@ const SCENARIO := {
 	"hero-tile-width": 150,
 	"portrait-size": 200,
 	"portrait-height": 150,
-	"minion-card-width": 98,
-	"minion-card-height": 122,
-	"shop-card-width": 108,
-	"shop-card-height": 120,
-	"hand-card-width": 142,
-	"hand-card-height": 120,
-	"card-info-height": 46,
+	"card-width": 112,
+	"card-height": 146,
+	"card-info-height": 90,
+	"card-info-compact-height": 56,
+	"hand-card-overlap": 32,
+	"hand-hover-scale": 1.12,
 	"detail-panel-width": 200,
 	"report-width": 236,
 	"avatar-rail": 44,
@@ -172,6 +171,11 @@ static func radius(name: String) -> int:
 
 static func metric(name: String) -> int:
 	return int(SCENARIO.get(name, 0))
+
+
+## 小数场景令牌（如缩放倍数）；整数令牌请用 [`UITheme.metric`]。
+static func factor(name: String, fallback: float = 1.0) -> float:
+	return float(SCENARIO.get(name, fallback))
 
 
 static func opacity(name: String) -> float:

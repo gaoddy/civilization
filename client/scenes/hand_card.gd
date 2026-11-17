@@ -12,10 +12,15 @@ var payload: Dictionary = {}
 ## 由页面按阶段、视图新鲜度、连接、待选与 `playable` 汇总；`false` 时拖拽不开始。
 var drag_allowed := false
 
+## 拖拽真正开始时同步发出，供手牌槽在复制预览之前复位悬停缩放。
+signal drag_started
+
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
     if not drag_allowed or payload.is_empty():
         return null
+    # 预览会复制当前的 scale/pivot，必须先复位悬停再复制。
+    drag_started.emit()
     var preview := duplicate() as Control
     preview.modulate = Color(1, 1, 1, 0.7)
     preview.custom_minimum_size = custom_minimum_size

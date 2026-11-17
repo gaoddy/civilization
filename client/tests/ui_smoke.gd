@@ -15,6 +15,10 @@ func _ready() -> void:
     await _check_room_hero_picker()
     await _check_game()
     await _check_game_layout()
+    await _check_hand_overlap_layout()
+    await _check_hand_hover()
+    await _check_hand_hover_overlap_strip()
+    await _check_hand_hover_in_combat()
     await _check_board_capacity_from_view()
     await _check_combat_layout()
     await _check_hand_drag_emits_position()
@@ -69,6 +73,11 @@ func _check_combat_detail(instance: Node) -> void:
         await _hover(instance, card, card.size / 2)
         _expect(detail.is_visible_in_tree(), "战斗卡 %s 悬停应显示详情面板" % card.name)
         _expect(detail.mouse_filter == Control.MOUSE_FILTER_IGNORE, "详情面板不应拦截鼠标")
+        var expected_skill := CardDB.display_text("bruce-lee" if row == own_row else "aristotle")
+        _expect(
+            _node_text(detail).contains(expected_skill),
+            "战斗卡 %s 的详情应显示介绍" % card.name,
+        )
     await _push_motion(instance, Vector2(-40, -40))
     _expect(not detail.is_visible_in_tree(), "移出战斗卡矩形应隐藏详情面板")
 
@@ -79,7 +88,7 @@ func _check_detail_without_stats() -> void:
     GameStore.phase = "Recruit"
     GameStore.turn = 3
     GameStore.deadline = "2030-01-01T00:00:00Z"
-    var view: Dictionary = FixtureScript.view()
+    var view: Dictionary = FixtureScript.game_view()
     view["self"]["board"][0].erase("stats")
     GameStore.view = view
     var instance := await _check_scene("res://scenes/game.tscn", false)
@@ -95,7 +104,11 @@ func _check_detail_without_stats() -> void:
         _expect(detail.is_visible_in_tree(), "缺少 stats 时详情面板仍应显示")
         var text := _node_text(detail)
         _expect(text.contains("当前") and text.contains("3 / 4"), "缺少 stats 时应显示当前攻防：%s" % text)
-        for absent in ["初始", "永久", "回合", "光环", "受击"]:
+        _expect(
+            text.contains(CardDB.display_text("bruce-lee")),
+            "缺少 stats 时仍应显示介绍：%s" % text,
+        )
+        for absent in ["初始", "永久", "光环", "受击"]:
             _expect(not text.contains(absent), "缺少 stats 时不应出现「%s」：%s" % [absent, text])
     instance.queue_free()
     GameStore.view = {}
@@ -452,6 +465,68 @@ func _check_game_layout() -> void:
         _expect(hand.get_index() > combat.get_index(), "手牌应位于战斗视图之下")
     var board = instance.find_child("BoardRow", true, false)
     _expect(board != null and board.get_child_count() == 7, "棋盘应有 7 个槽位（含空位）")
+    var expected_card := Vector2(112, 146)
+    for node_name in ["ShopSlot0", "ShopSlot2", "BoardMinion0", "HandCard0", "EmptySlot"]:
+        var card_node: Control = instance.find_child(node_name, true, false)
+        _expect(card_node != null, "布局中缺少 %s" % node_name)
+        if card_node != null:
+            _expect(
+                card_node.custom_minimum_size == expected_card,
+                "%s 应为 112×146，实际 %s" % [node_name, card_node.custom_minimum_size]
+            )
+    var board_scroll = instance.find_child("BoardScroll", true, false)
+    _expect(
+        board_scroll != null and is_equal_approx(board_scroll.custom_minimum_size.y, 146.0),
+        "棋盘滚动高度应为 card-height"
+    )
+    var card_intro_cases := [
+        {"node": "ShopSlot0", "card_id": "aristotle"},
+        {"node": "BoardMinion0", "card_id": "bruce-lee"},
+        {"node": "HandCard0", "card_id": "archimedes"},
+    ]
+    for intro_case in card_intro_cases:
+        var intro_card: Control = instance.find_child(str(intro_case["node"]), true, false)
+        _expect(intro_card != null, "布局中缺少 %s" % str(intro_case["node"]))
+        if intro_card == null:
+            continue
+        var intro_desc: Label = intro_card.find_child("CardDesc", true, false)
+        var intro_name: Label = intro_card.find_child("CardName", true, false)
+        _expect(
+            intro_desc != null and intro_desc.is_visible_in_tree(),
+            "%s 应显示卡面介绍" % str(intro_case["node"]),
+        )
+        _expect(
+            intro_desc != null and str(intro_desc.text) == CardDB.display_text(str(intro_case["card_id"])),
+            "%s 的介绍应为卡表技能" % str(intro_case["node"]),
+        )
+        if intro_desc != null and intro_name != null:
+            _expect(
+                intro_desc.get_global_rect().end.y <= intro_name.get_global_rect().position.y + 1.0,
+                "%s 的介绍应在名称上方" % str(intro_case["node"]),
+            )
+    var layout_detail = instance.find_child("MinionDetailPanel", true, false)
+    var board_minion = instance.find_child("BoardMinion0", true, false)
+    if layout_detail != null and board_minion != null:
+        await _hover(instance, board_minion, board_minion.size / 2)
+        _expect(
+            _node_text(layout_detail).contains(CardDB.display_text("bruce-lee")),
+            "棋盘随从详情应显示介绍",
+        )
+        await _push_motion(instance, Vector2(-40, -40))
+    var hand_scroll = instance.find_child("HandScroll", true, false)
+    _expect(
+        hand_scroll != null and is_equal_approx(hand_scroll.custom_minimum_size.y, 154.0),
+        "手牌滚动高度应为 card-height + space-md"
+    )
+    var hand_card_zero = instance.find_child("HandCard0", true, false)
+    var hand_slot_one = instance.find_child("HandSlot1", true, false)
+    _expect(
+        hand_card_zero != null and hand_slot_one != null
+        and hand_card_zero.get_global_rect().get_center().x < hand_slot_one.get_global_rect().position.x,
+        "首张手牌中心应落在可见区内，真实拖拽起点不被下一槽遮挡",
+    )
+    if board != null:
+        _expect(board.get_global_rect().size.y <= 147.0, "棋盘 7 槽应保持单行")
     var shop_zero = instance.find_child("ShopSlot0", true, false)
     var shop_text := _node_text(shop_zero) if shop_zero != null else ""
     _expect(shop_text.contains("学者"), "商店卡应显示卡牌类型：%s" % shop_text)
@@ -461,6 +536,277 @@ func _check_game_layout() -> void:
     GameStore.view = {}
     _clear_combat()
     GameStore.turn = 1
+
+
+## 手牌重叠：1–10 张按步进 80 单行，相邻卡重叠 32，悬停放大不被滚动行裁切。
+func _check_hand_overlap_layout() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    var hand: Array = []
+    var affordances: Array = []
+    for index in range(10):
+        hand.append({
+            "index": index,
+            "cardId": "dia",
+            "playable": false,
+            "requiresTarget": false,
+            "disabledReason": "NO_SPACE",
+        })
+        affordances.append({"index": index, "playable": false, "disabledReason": "NO_SPACE"})
+    view["self"]["hand"] = hand
+    view["self"]["affordances"]["handCards"] = affordances
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var hand_row = instance.find_child("HandRow", true, false)
+    var hand_scroll = instance.find_child("HandScroll", true, false)
+    _expect(hand_row != null, "对局页应存在手牌行")
+    _expect(
+        hand_row != null and hand_row.get_theme_constant("h_separation") == 0,
+        "手牌行不应在槽之间再留间距",
+    )
+    if hand_row != null:
+        _expect(hand_row.get_child_count() == 10, "十张手牌应渲染十个槽，实际 %d" % hand_row.get_child_count())
+        var slots: Array = []
+        for index in range(10):
+            var slot: Control = hand_row.get_child(index) as Control if index < hand_row.get_child_count() else null
+            _expect(slot != null and str(slot.name) == "HandSlot%d" % index, "第 %d 个槽应为 HandSlot%d" % [index, index])
+            if slot == null:
+                continue
+            slots.append(slot)
+            _expect(
+                slot.custom_minimum_size == Vector2(80, 146),
+                "HandSlot%d 应为 80×146 步进，实际 %s" % [index, slot.custom_minimum_size],
+            )
+        for index in slots.size():
+            var slot: Control = slots[index]
+            var card: Control = slot.get_child(0) as Control if slot.get_child_count() > 0 else null
+            _expect(card != null and str(card.name) == "HandCard%d" % index, "槽 %d 应承载 HandCard%d" % [index, index])
+            if card == null:
+                continue
+            _expect(card.size == Vector2(112, 146), "HandCard%d 应为 112×146，实际 %s" % [index, card.size])
+            _expect(card.position == Vector2.ZERO, "HandCard%d 应贴槽左上角" % index)
+            if index > 0:
+                var previous: Control = slots[index - 1]
+                _expect(
+                    is_equal_approx(slot.get_global_rect().position.x - previous.get_global_rect().position.x, 80.0),
+                    "相邻槽应步进 80",
+                )
+                _expect(
+                    is_equal_approx(slot.get_global_rect().position.y, previous.get_global_rect().position.y),
+                    "手牌槽应保持同一行",
+                )
+        if slots.size() >= 2:
+            var first_card: Control = slots[0].get_child(0) as Control
+            var second_card: Control = slots[1].get_child(0) as Control
+            _expect(
+                first_card.get_global_rect().end.x > second_card.get_global_rect().position.x,
+                "相邻手牌应重叠",
+            )
+            _expect(
+                is_equal_approx(
+                    first_card.get_global_rect().end.x - second_card.get_global_rect().position.x,
+                    32.0,
+                ),
+                "相邻手牌应正好交叠 32",
+            )
+        _expect(hand_row.get_global_rect().size.y < 292.0, "十张手牌应保持单行")
+        if slots.size() == 10 and hand_scroll != null:
+            var last_card: Control = slots[9].get_child(0) as Control
+            _expect(
+                last_card.get_global_rect().end.x <= hand_scroll.get_global_rect().end.x + 0.5,
+                "末张手牌不应超出滚动行右边界",
+            )
+    _expect(
+        hand_scroll != null and is_equal_approx(hand_scroll.custom_minimum_size.y, 154.0),
+        "手牌滚动高度应保持 card-height + space-md",
+    )
+    _expect(hand_scroll != null and not hand_scroll.clip_contents, "手牌滚动行不应裁切悬停放大的卡片")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 手牌悬停：置顶并以底边中点为轴放大 1.12，越出滚动行仍可命中；移出复位。
+func _check_hand_hover() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = FixtureScript.game_view()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var card: Control = instance.find_child("HandCard0", true, false)
+    _expect(card is HandCard, "布局中缺少 HandCard0")
+    if card is HandCard:
+        var slot: Control = card.get_parent() as Control
+        var row = instance.find_child("HandRow", true, false)
+        var top_left: Vector2 = card.get_global_rect().position
+        var payload_before: Dictionary = (card as HandCard).payload.duplicate()
+        var order_before: Array = []
+        if row != null:
+            for child in row.get_children():
+                order_before.append(str(child.name))
+        await _push_motion(instance, Vector2(-40, -40))
+        await _hover(instance, card, card.size / 2)
+        _expect(
+            card.scale.is_equal_approx(Vector2(1.12, 1.12)),
+            "悬停手牌应以 1.12 放大，实际 %s" % card.scale,
+        )
+        _expect(
+            card.pivot_offset.is_equal_approx(Vector2(card.size.x / 2, card.size.y)),
+            "悬停手牌应以底边中点为轴，实际 %s" % card.pivot_offset,
+        )
+        _expect(slot != null and slot.z_index == 1, "悬停手牌应置顶")
+        # 指针移到原卡上缘之外、放大卡之内：滚动行关闭裁剪后仍应命中并保持悬停。
+        await _push_motion(instance, top_left + Vector2(card.size.x / 2, -10))
+        _expect(
+            card.scale.is_equal_approx(Vector2(1.12, 1.12)),
+            "放大越出滚动行后仍应保持悬停",
+        )
+        _expect((card as HandCard).payload == payload_before, "悬停不应改变拖拽数据")
+        var order_after: Array = []
+        if row != null:
+            for child in row.get_children():
+                order_after.append(str(child.name))
+        _expect(order_after == order_before, "悬停不应改变手牌顺序")
+        await _push_motion(instance, Vector2(-40, -40))
+        _expect(card.scale.is_equal_approx(Vector2.ONE), "移出手牌后应恢复原尺寸")
+        _expect(card.pivot_offset.is_equal_approx(Vector2.ZERO), "移出后应清空缩放轴")
+        _expect(slot != null and slot.z_index == 0, "移出后应恢复层级")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 十张 dia 手牌的对局实例；`playable` 决定手牌是否允许拖拽。
+func _ten_card_instance(playable: bool) -> Node:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    var hand: Array = []
+    var affordances: Array = []
+    for index in range(10):
+        hand.append({
+            "index": index,
+            "cardId": "dia",
+            "playable": playable,
+            "requiresTarget": false,
+            "disabledReason": null if playable else "NO_SPACE",
+        })
+        affordances.append({
+            "index": index,
+            "playable": playable,
+            "disabledReason": null if playable else "NO_SPACE",
+        })
+    view["self"]["hand"] = hand
+    view["self"]["affordances"]["handCards"] = affordances
+    GameStore.view = view
+    return await _check_scene("res://scenes/game.tscn", false)
+
+
+## 悬停卡右侧交叠带仍归这张卡：Godot 按树序逆序拾取，z_index 不参与命中。
+func _check_hand_hover_overlap_strip() -> void:
+    var instance := await _ten_card_instance(false)
+    if instance != null:
+        var card0: Control = instance.find_child("HandCard0", true, false)
+        var card1: Control = instance.find_child("HandCard1", true, false)
+        _expect(
+            card0 is HandCard and not (card0 as HandCard).drag_allowed,
+            "禁用手牌在招募阶段应不可拖动",
+        )
+        if card0 is HandCard and card1 != null:
+            var slot: Control = card0.get_parent() as Control
+            var top_left: Vector2 = card0.get_global_rect().position
+            var strip := top_left + Vector2(card0.size.x - 16.0, card0.size.y / 2.0)
+            await _push_motion(instance, Vector2(-40, -40))
+            await _hover(instance, card0, card0.size / 2)
+            _expect(card0.scale.is_equal_approx(Vector2(1.12, 1.12)), "禁用手牌也应悬停放大")
+            await _push_motion(instance, strip)
+            _expect(
+                card0.scale.is_equal_approx(Vector2(1.12, 1.12)),
+                "指针进入本卡右侧交叠带后应保持放大",
+            )
+            _expect(card1.scale.is_equal_approx(Vector2.ONE), "交叠带不应把悬停让给下一张卡")
+            _expect(slot != null and slot.z_index == 1, "交叠带内应保持置顶")
+            var hovered := instance.get_viewport().gui_get_hovered_control()
+            _expect(
+                hovered == card0,
+                "交叠带应命中的是本卡，实际 %s" % ("<null>" if hovered == null else str(hovered.name)),
+            )
+            await _push_motion(instance, Vector2(-40, -40))
+        instance.queue_free()
+        await get_tree().process_frame
+
+    _fake_connect()
+    var playing := await _ten_card_instance(true)
+    if playing != null:
+        var card0: Control = playing.find_child("HandCard0", true, false)
+        _expect(
+            card0 is HandCard and (card0 as HandCard).drag_allowed,
+            "可出牌手牌应允许拖拽",
+        )
+        if card0 is HandCard and (card0 as HandCard).drag_allowed:
+            var top_left: Vector2 = card0.get_global_rect().position
+            var strip := top_left + Vector2(card0.size.x - 16.0, card0.size.y / 2.0)
+            var viewport = playing.get_viewport()
+            await _push_motion(playing, Vector2(-40, -40))
+            await _hover(playing, card0, card0.size / 2)
+            await _push_motion(playing, strip)
+            await _push_button(playing, strip, true)
+            await _push_motion_held(playing, strip + Vector2(24, 0), Vector2(24, 0))
+            _expect(viewport.gui_is_dragging(), "交叠带按下并越过阈值应开始拖拽")
+            if viewport.gui_is_dragging():
+                var data: Variant = viewport.gui_get_drag_data()
+                _expect(
+                    data is Dictionary and int(data.get("handIndex", -1)) == 0,
+                    "交叠带拖拽应拾起本卡",
+                )
+                viewport.gui_cancel_drag()
+        playing.queue_free()
+        await get_tree().process_frame
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 战斗阶段手牌只读，但悬停仍应完整展示卡片，且不改变拖拽数据。
+func _check_hand_hover_in_combat() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    var card: Control = instance.find_child("HandCard0", true, false)
+    _expect(
+        card is HandCard and not (card as HandCard).drag_allowed,
+        "战斗阶段手牌应不可拖动",
+    )
+    if card is HandCard:
+        var slot: Control = card.get_parent() as Control
+        var hand_index := int((card as HandCard).payload.get("handIndex", -1))
+        await _push_motion(instance, Vector2(-40, -40))
+        await _hover(instance, card, card.size / 2)
+        _expect(card.scale.is_equal_approx(Vector2(1.12, 1.12)), "战斗阶段手牌仍应悬停放大")
+        _expect(slot != null and slot.z_index == 1, "战斗阶段悬停手牌仍应置顶")
+        _expect(
+            int((card as HandCard).payload.get("handIndex", -1)) == hand_index,
+            "战斗阶段悬停不应改变手牌下标",
+        )
+        await _push_motion(instance, Vector2(-40, -40))
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    _clear_combat()
+    GameStore.turn = 1
+    GameStore.phase = ""
 
 
 func _check_combat_layout() -> void:
@@ -489,6 +835,12 @@ func _check_combat_layout() -> void:
     _expect(opponent_row != null and opponent_row.get_child_count() == 2, "对手随从行应为 2 张")
     var own_row = instance.find_child("CombatOwnRow", true, false)
     _expect(own_row != null and own_row.get_child_count() == 3, "我方随从行应为 3 张")
+    for row in [opponent_row, own_row]:
+        if row != null and row.get_child_count() > 0:
+            _expect(
+                (row.get_child(0) as Control).custom_minimum_size == Vector2(112, 146),
+                "战斗只读卡应为 112×146",
+            )
     var end_button = instance.find_child("EndButton", true, false)
     _expect(end_button != null and not end_button.visible, "战斗阶段不应显示结束招募按钮")
     var power_button = instance.find_child("HeroPowerButton", true, false)
@@ -1022,12 +1374,23 @@ func _check_hand_drag_drops_on_empty_slot() -> void:
         instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
         var start: Vector2 = hand_card.get_global_rect().get_center()
         var target: Vector2 = empty_slot.get_global_rect().get_center()
+        var slot: Control = hand_card.get_parent() as Control
+        var payload_before: Dictionary = hand_card.payload.duplicate()
+        await _push_motion(instance, Vector2(-40, -40))
         await _push_motion(instance, start)
+        _expect(
+            hand_card.scale.is_equal_approx(Vector2(1.12, 1.12)),
+            "按住前手牌应已悬停放大",
+        )
         await _push_button(instance, start, true)
         await _push_motion_held(instance, start + Vector2(24, 0), Vector2(24, 0))
         await _push_motion_held(instance, target, target - start - Vector2(24, 0))
         var viewport = instance.get_viewport()
         _expect(viewport.gui_is_dragging(), "超过拖拽阈值后应进入拖拽状态")
+        _expect(hand_card.scale.is_equal_approx(Vector2.ONE), "拖拽开始后手牌应复位尺寸")
+        _expect(hand_card.pivot_offset.is_equal_approx(Vector2.ZERO), "拖拽开始后应清空缩放轴")
+        _expect(slot != null and slot.z_index == 0, "拖拽开始后应恢复层级")
+        _expect(hand_card.payload == payload_before, "拖拽开始不应改变拖拽数据")
         await _push_button(instance, target, false)
         await get_tree().process_frame
         _expect(captured.size() == 1, "手牌落在空位应产生一条出牌意图，实际 %d" % captured.size())
@@ -1168,6 +1531,11 @@ func _check_board_drag_reorders() -> void:
         await get_tree().process_frame
         _expect(board_row._drag_id == "mi_2", "拖拽开始通知应触发棋盘预览")
         _expect(not card.visible, "拖起后原卡应隐藏，不留占位框")
+        var drag_spacer = board_row.find_child("BoardDragSpacer", true, false)
+        _expect(
+            drag_spacer != null and (drag_spacer as Control).custom_minimum_size == Vector2(112, 146),
+            "拖拽占位应与卡片同为 112×146",
+        )
         # 占位下标要跳过隐藏原卡：gap 2（末尾）落在第 3 个非占位子节点之前。
         _expect(board_row._gap_child_index(2) == 3, "末尾插入下标应换算到隐藏卡位之后")
         var last = instance.find_child("BoardMinion2", true, false)

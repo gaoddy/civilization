@@ -73,9 +73,11 @@
 | `rank-badge-size` | 18 | 座位行名次角标边长 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
 | `hero-tile-width` | 150 | 英雄小卡宽度（右栏按栏宽覆盖） |
-| `minion-card-width` / `-height` | 98 / 122 | 棋盘随从卡 |
-| `shop-card-width` / `-height` | 108 / 120 | 商店槽 |
-| `hand-card-width` / `-height` | 142 / 120 | 手牌卡 |
+| `card-width` / `-height` | 112 / 146 | 商店、棋盘、手牌与战斗只读卡（含空位与拖拽占位） |
+| `card-info-height` | 90 | 有介绍时的卡面信息区高度，容纳两行介绍、名称与数值 |
+| `card-info-compact-height` | 56 | 无介绍时的卡面信息区高度，只容纳名称与数值 |
+| `hand-card-overlap` | 32 | 手牌相邻卡的交叠宽度；槽位步进 = `card-width - hand-card-overlap` = 80，十张单行 |
+| `hand-hover-scale` | 1.12 | 手牌悬停放大倍数，以底边中点为轴；小数令牌用 `UITheme.factor` 读取，不要用 `metric` |
 
 ## 6. 部落色
 
