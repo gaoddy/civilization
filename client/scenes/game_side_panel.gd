@@ -286,7 +286,7 @@ func _seller_block() -> Control:
         "SellerTile",
         tr("ui.game.side_panel.seller"),
         tr("ui.game.side_panel.seller_glyph"),
-        UITheme.tribe_color("general"),
+        UITheme.playstyle_color("neutral"),
     )
     if detail != null and is_instance_valid(detail):
         detail.track(tile, {"detail_kind": "seller"})
@@ -433,9 +433,9 @@ func _refresh_hero(state: GameUiState) -> void:
     var hero_id := GameCardFace.optional_text(self_state.get("heroCardId"))
     var display_name := CardDB.display_name(hero_id) if hero_id != "" else tr("ui.common.no_hero")
     var entry := CardDB.card(hero_id)
-    var tribe := str(entry.get("tribe", ""))
+    var playstyle := str(entry.get("playstyle", ""))
     var tint := (
-        UITheme.tribe_color(tribe)
+        UITheme.playstyle_color(playstyle)
         if hero_id != ""
         else UITheme.color("color-border-strong")
     )

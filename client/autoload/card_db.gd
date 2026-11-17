@@ -3,6 +3,8 @@ extends Node
 
 var cards: Dictionary = {}
 var tokens: Dictionary = {}
+## 科学分类树：节点 id → {id, parent, rank}。
+var taxonomy: Dictionary = {}
 
 ## 时代序号到文本 id，与服务端 `Era` 枚举一致（1–7）。
 const ERA_IDS := {
@@ -19,6 +21,7 @@ const ERA_IDS := {
 func _ready() -> void:
     _load_table("res://generated/cards.json", cards)
     _load_table("res://generated/tokens.json", tokens)
+    _load_taxonomy("res://generated/taxonomy.json")
     for id in tokens:
         cards[id] = tokens[id]
 
@@ -35,6 +38,21 @@ func _load_table(path: String, target: Dictionary) -> void:
     for entry in parsed:
         if entry is Dictionary:
             target[str(entry.get("id", ""))] = entry
+
+
+## 分类树为单对象 `{nodes, playstyles}`；按节点 id 建索引，展示名仍走文本表。
+func _load_taxonomy(path: String) -> void:
+    var file := FileAccess.open(path, FileAccess.READ)
+    if file == null:
+        push_error("无法读取分类树 %s" % path)
+        return
+    var parsed = JSON.parse_string(file.get_as_text())
+    if not (parsed is Dictionary):
+        push_error("分类树格式错误 %s" % path)
+        return
+    for node in parsed.get("nodes", []):
+        if node is Dictionary:
+            taxonomy[str(node.get("id", ""))] = node
 
 
 func card(id: String) -> Dictionary:
@@ -72,6 +90,37 @@ func era_name(era: int) -> String:
     var key := "enum.era.%s" % id
     var text := tr(key)
     return id if text == key else text
+
+
+## 玩法展示名；空 id 返回空串，缺键回退为 id。
+func playstyle_name(id: String) -> String:
+    if id == "":
+        return ""
+    var key := "enum.playstyle.%s" % id
+    var text := tr(key)
+    return id if text == key else text
+
+
+## 科学分类节点展示名；空 id 返回空串，缺键回退为 id。
+func taxon_name(id: String) -> String:
+    if id == "":
+        return ""
+    var key := "enum.taxon.%s" % id
+    var text := tr(key)
+    return id if text == key else text
+
+
+## 从叶子沿 parent 上溯到根，返回「界 → 科」顺序的展示名数组。
+## 最多 7 层；未知节点或空 id 返回空数组。
+func taxon_path(id: String) -> Array:
+    var names: Array = []
+    var current := id
+    while current != "" and taxonomy.has(current) and names.size() < 7:
+        names.append(taxon_name(current))
+        var parent = taxonomy[current].get("parent")
+        current = "" if parent == null else str(parent)
+    names.reverse()
+    return names
 
 
 func heroes() -> Array:

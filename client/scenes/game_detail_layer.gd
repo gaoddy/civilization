@@ -6,6 +6,9 @@ extends Control
 ## 模态浮层打开时由页面把 `blocked` 置真，本层直接隐藏且不再响应悬停。
 
 const DETAIL_ROWS := ["initial", "permanent", "turn", "aura", "damage"]
+## 科学分类完整路径与多值字段的连接符。
+const TAXON_PATH_SEPARATOR := " › "
+const LIST_SEPARATOR := " / "
 ## 详情面板的挂载方向：商店卡在左右，棋盘卡在上下。
 const DETAIL_SIDES := {
     "shop": ["right", "left"],
@@ -148,12 +151,16 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
     _place_detail(anchor.get_global_rect(), kind)
 
 
-## 商店卡详情：类型、费用、原始数值、时代、技能文本与不可购买原因。
+## 商店卡详情：类型、科学分类、玩法、关联、食物链、费用、原始数值、时代、
+## 技能文本与不可购买原因。
 func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
     var card_id := str(data.get("cardId", ""))
     var entry := CardDB.card(card_id)
     box.add_child(_detail_name(CardDB.display_name(card_id)))
     box.add_child(_detail_row(tr("ui.game.detail.type"), GameCardFace.type_text(entry)))
+    _append_classification(box, entry)
+    _append_association(box, entry)
+    _append_food_chain(box, entry)
     box.add_child(_detail_row(tr("ui.game.detail.cost"), tr("ui.game.detail.cost_value") % CardDB.display_cost(card_id)))
     box.add_child(_detail_row(tr("ui.game.detail.initial_stats"), "%s / %s" % [
         GameCardFace.stat_text(entry.get("attack")),
@@ -205,15 +212,14 @@ func _render_seller_detail(box: VBoxContainer) -> void:
     box.add_child(hint)
 
 
-## 我方英雄详情：部落、时代与英雄技能，替代常驻技能文本。
+## 我方英雄详情：科学分类、玩法、擅长玩法、时代与英雄技能，替代常驻技能文本。
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
     var id := "" if hero_id == null else str(hero_id)
     box.add_child(_detail_name(CardDB.display_name(id)))
     var entry := CardDB.card(id)
-    var tribe := str(entry.get("tribe", ""))
+    _append_classification(box, entry)
+    _append_specialty(box, entry)
     var era := str(entry.get("era", ""))
-    if tribe != "":
-        box.add_child(_detail_row(tr("ui.game.detail.tribe"), UI.enum_text("tribe", tribe)))
     if era != "":
         box.add_child(_detail_row(tr("ui.game.detail.era"), UI.enum_text("era", era)))
     var skill_text := CardDB.display_text(id)
@@ -225,10 +231,14 @@ func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
     box.add_child(_detail_text_block(skill_text))
 
 
-## 棋盘随从详情：名称、介绍与攻击/生命的构成分层。
+## 棋盘随从详情：名称、科学分类、玩法、关联、食物链与攻击/生命的构成分层。
 func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
     var card_id := str(minion.get("cardId", ""))
     box.add_child(_detail_name(CardDB.display_name(card_id)))
+    var entry := CardDB.card(card_id)
+    _append_classification(box, entry)
+    _append_association(box, entry)
+    _append_food_chain(box, entry)
     var skill_text := CardDB.display_text(card_id)
     if skill_text != "":
         box.add_child(_detail_text_block(skill_text))
@@ -263,6 +273,85 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
         int(attack.get("current", 0)),
         int(health.get("current", 0)),
     ]))
+
+
+## 科学分类与玩法：分类路径缺失显示「未定」，卡表无该实体时整组跳过。
+func _append_classification(box: VBoxContainer, entry: Dictionary) -> void:
+    if entry.is_empty():
+        return
+    var path: Array = CardDB.taxon_path(str(entry.get("taxon", "")))
+    var path_text := TAXON_PATH_SEPARATOR.join(PackedStringArray(path)) if not path.is_empty() else tr("ui.game.detail.undetermined")
+    box.add_child(_detail_row(tr("ui.game.detail.taxonomy"), path_text))
+    var playstyle := CardDB.playstyle_name(str(entry.get("playstyle", "")))
+    if playstyle == "":
+        playstyle = tr("ui.game.detail.undetermined")
+    box.add_child(_detail_row(tr("ui.game.detail.playstyle"), playstyle))
+
+
+## 关联玩法：仅中立非学者卡展示 `play:`，非中立或学者整行省略。
+func _append_association(box: VBoxContainer, entry: Dictionary) -> void:
+    if entry.is_empty():
+        return
+    if str(entry.get("playstyle", "")) != "neutral" or bool(entry.get("is_scholar", false)):
+        return
+    var names := _specialty_names(entry, "play")
+    if names.is_empty():
+        return
+    box.add_child(_detail_row(
+        tr("ui.game.detail.association"),
+        LIST_SEPARATOR.join(PackedStringArray(names)),
+    ))
+
+
+## 英雄擅长玩法：取 `play:` 关联，空列表不显示该行。
+func _append_specialty(box: VBoxContainer, entry: Dictionary) -> void:
+    var names := _specialty_names(entry, "play")
+    if names.is_empty():
+        return
+    box.add_child(_detail_row(
+        tr("ui.game.detail.specialty"),
+        LIST_SEPARATOR.join(PackedStringArray(names)),
+    ))
+
+
+## 食物链：捕食与寄生分别聚合，二者都为空时不显示该行。
+func _append_food_chain(box: VBoxContainer, entry: Dictionary) -> void:
+    if entry.is_empty():
+        return
+    var prey := _specialty_names(entry, "prey", true)
+    var host := _specialty_names(entry, "host", true)
+    if prey.is_empty() and host.is_empty():
+        return
+    var parts := PackedStringArray()
+    if not prey.is_empty():
+        parts.append("%s %s" % [
+            tr("ui.game.detail.prey"),
+            LIST_SEPARATOR.join(PackedStringArray(prey)),
+        ])
+    if not host.is_empty():
+        parts.append("%s %s" % [
+            tr("ui.game.detail.host"),
+            LIST_SEPARATOR.join(PackedStringArray(host)),
+        ])
+    box.add_child(_detail_row(tr("ui.game.detail.food_chain"), " · ".join(parts)))
+
+
+## 按关联类型取展示名；`taxon` 为真时走科学分类文本，否则走玩法文本。
+func _specialty_names(entry: Dictionary, kind: String, taxon := false) -> Array:
+    var names: Array = []
+    var specialties = entry.get("specialty", [])
+    if not (specialties is Array):
+        return names
+    for item in specialties:
+        if not (item is Dictionary):
+            continue
+        if str(item.get("kind", "")) != kind:
+            continue
+        var value := str(item.get("value", ""))
+        var name := CardDB.taxon_name(value) if taxon else CardDB.playstyle_name(value)
+        if name != "":
+            names.append(name)
+    return names
 
 
 func _detail_name(text: String) -> Label:
