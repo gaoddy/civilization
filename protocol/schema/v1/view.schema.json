@@ -273,7 +273,7 @@
           "items": { "type": "string" },
           "minItems": 5,
           "maxItems": 5,
-          "description": "本局启用的 5 个流派，取值为英文 id"
+          "description": "本局启用的 5 个玩法"
         }
       }
     }

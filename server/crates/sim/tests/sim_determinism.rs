@@ -2,7 +2,11 @@
 
 mod common;
 
-use common::{log_hash, run};
+use std::collections::BTreeSet;
+
+use common::{catalog, log_hash, run};
+use rule_engine::data::Playstyle;
+use rule_engine::engine::Engine;
 use serde_json::Value;
 
 #[test]
@@ -29,12 +33,65 @@ fn replay_same_log_100_times_has_same_hash() {
     let _ = std::fs::remove_file(&path);
 }
 
+#[test]
+fn same_seed_uses_same_five_playstyles() {
+    for seed in [0u64, 1, 7, 42, u64::MAX] {
+        let first = rule_engine::playstyles::draw(seed);
+        let second = rule_engine::playstyles::draw(seed);
+        assert_eq!(first, second, "种子 {seed} 的 5 个玩法应固定");
+        assert_eq!(first.len(), 5);
+        let set: BTreeSet<Playstyle> = first.into_iter().collect();
+        assert_eq!(set.len(), 5, "5 个玩法互不重复");
+        assert!(!set.contains(&Playstyle::Neutral));
+
+        let (_, state) = Engine::new(catalog(), sim::seed_from_u64(seed), first);
+        assert_eq!(state.enabled_playstyles, set);
+    }
+
+    // 批量第 i 局种子为 `derive_seed(seed, i)`；重放按日志种子重新推导，
+    // 两条路径必须得到同一组玩法。
+    let batch = sim::run_games(2, 1, 8).expect("批量模拟应能完成");
+    for (index, log) in batch.games.iter().enumerate() {
+        let game_seed = sim::derive_seed(1, index);
+        assert_eq!(log.seed, game_seed);
+        let expected: BTreeSet<Playstyle> = rule_engine::playstyles::draw(game_seed)
+            .into_iter()
+            .collect();
+        let (_, batch_state) = Engine::new(
+            catalog(),
+            sim::seed_from_u64(game_seed),
+            rule_engine::playstyles::draw(game_seed),
+        );
+        let (_, replay_state) = Engine::new(
+            catalog(),
+            sim::seed_from_u64(log.seed),
+            rule_engine::playstyles::draw(log.seed),
+        );
+        assert_eq!(batch_state.enabled_playstyles, expected);
+        assert_eq!(replay_state.enabled_playstyles, expected);
+    }
+}
+
+#[test]
+fn replay_keeps_kill_attribution_and_decompose_consistent() {
+    // 种子 7 的玩法含真菌与细菌，卡池会带出分解随从；击杀归属与分解结果都写入
+    // 状态哈希，重放两次必须与原局逐位一致。
+    let drawing = rule_engine::playstyles::draw(7);
+    assert!(drawing.contains(&Playstyle::Fungus), "种子 7 应启用真菌");
+    assert!(drawing.contains(&Playstyle::Bacteria), "种子 7 应启用细菌");
+
+    let log = sim::run_game(catalog(), 7).expect("单局应能完成");
+    let first = sim::replay(&log).expect("重放应成功");
+    let second = sim::replay(&log).expect("再次重放应成功");
+    assert_eq!(first, log.final_hash, "重放哈希应与原局一致");
+    assert_eq!(second, first, "重放本身应确定");
+}
+
 /// 批次最终哈希必须与固定基线一致。
 ///
-/// 本基线因 i18n 关键词标识英文化而重定：状态哈希会写入 `granted` 关键词与
-/// `aura.keywords` 中的关键词字符串，标识由中文改为英文 id 后哈希输入随之变化，
-/// 故哈希值变化不代表结算行为变化。基线冻结的仍是行为：任何算术、遍历顺序或
-/// 随机流消耗变化都会使哈希改变。
+/// 本基线因卡片分类与玩法体系落地而重定：开局玩法进入 `GameState` 并参与状态哈希，
+/// 英雄分配与商店池也按玩法过滤，故哈希值变化不代表结算行为变化。基线冻结的仍是行为：
+/// 任何算术、遍历顺序或随机流消耗变化都会使哈希改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

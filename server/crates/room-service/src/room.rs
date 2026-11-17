@@ -8,12 +8,12 @@
 //! - 房间码由注册表的单调计数器派生，6 位大写字母数字，排除易混字符 `0O1I`。
 //! - 本模块不读系统时间，也不持有随机源。
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use protocol::RoomUpdatePlayersItem;
 use protocol::server::RoomUpdate;
-use rule_engine::data::Catalog;
+use rule_engine::data::{Catalog, Playstyle, card_in_pool};
 use rule_engine::state::{Phase, Seat};
 
 use crate::auth::Session;
@@ -83,6 +83,8 @@ pub struct Room {
     pub code: String,
     pub host_id: String,
     pub phase: Phase,
+    /// 本局启用的 5 个玩法；创建房间时由房间码种子抽取，之后大厅与对局期间不变。
+    pub playstyles: [Playstyle; 5],
     /// 座位 → 玩家；只保存已占用座位，键即座位号（0 起）。
     slots: BTreeMap<Seat, PlayerSlot>,
 }
@@ -158,9 +160,13 @@ impl Room {
 
     /// 按房间种子洗出的英雄序列给一名玩家切出一组候选。
     ///
-    /// 洗牌与切段都是确定性的：同一房间、同一批 `is_hero` 卡表、同一进房顺序，
-    /// 得到同一组候选。英雄总数不足时最后几人会拿到空候选；这种情况由
-    /// [`crate::AppState::new`] 在装配阶段直接拒绝启动，不走这条降级路径。
+    /// 候选只取 [`card_in_pool`] 通过的英雄；池为空时回退到全部英雄卡。
+    /// 池大小 ≥ 满座总需求时沿用分段、房间内互不重复；池不足时按
+    /// `(segment * 4 + i) % len` 取 `min(4, len)` 张，允许跨玩家重复，
+    /// 且池小于 4 时每人取整个池并至少 1 张。
+    ///
+    /// 洗牌与切段都是确定性的：同一房间、同一批英雄卡表、同一进房顺序，
+    /// 得到同一组候选。
     fn assign_candidates(&mut self, player_id: &str, catalog: &Catalog) {
         if self
             .candidates_of(player_id)
@@ -168,14 +174,27 @@ impl Room {
         {
             return;
         }
+        let enabled: BTreeSet<Playstyle> = self.playstyles.iter().copied().collect();
         let mut heroes: Vec<String> = catalog
             .cards
             .values()
-            .filter(|card| card.is_hero)
+            .filter(|card| card.is_hero && card_in_pool(card, &enabled))
             .map(|card| card.id.clone())
             .collect();
+        // 产品兜底：本局玩法过滤后一张英雄都没有时，回退到全部英雄卡。
+        if heroes.is_empty() {
+            heroes = catalog
+                .cards
+                .values()
+                .filter(|card| card.is_hero)
+                .map(|card| card.id.clone())
+                .collect();
+        }
         heroes.sort();
         shuffle(&mut heroes, seed_for_code(&self.code));
+        if heroes.is_empty() {
+            return;
+        }
 
         // 段号取当前座位里最小的未用段：座位释放后段号自动空出，候选池不会被永久占满。
         let used: Vec<usize> = self
@@ -187,11 +206,21 @@ impl Room {
             .find(|index| !used.contains(index))
             .unwrap_or(used.len());
         let start = segment * CANDIDATE_COUNT;
-        if start >= heroes.len() {
-            return;
-        }
-        let end = (start + CANDIDATE_COUNT).min(heroes.len());
-        let picked = heroes[start..end].to_vec();
+
+        let picked = if heroes.len() >= SEAT_COUNT * CANDIDATE_COUNT {
+            // 池足够满座分段互不重复。
+            if start >= heroes.len() {
+                return;
+            }
+            let end = (start + CANDIDATE_COUNT).min(heroes.len());
+            heroes[start..end].to_vec()
+        } else {
+            // 池不足：允许跨玩家重复；每人最多 4 张，池小于 4 时取整个池。
+            let take = CANDIDATE_COUNT.min(heroes.len());
+            (0..take)
+                .map(|offset| heroes[(start + offset) % heroes.len()].clone())
+                .collect()
+        };
         if let Some(slot) = self.slot_mut(player_id) {
             slot.hero_candidates = picked;
             slot.candidate_segment = Some(segment);
@@ -315,6 +344,8 @@ impl RoomRegistry {
             code: code.clone(),
             host_id: host.player_id.clone(),
             phase: Phase::Lobby,
+            // 玩法在房间创建时确定：必须先于英雄候选分配，之后大厅与对局期间保持不变。
+            playstyles: rule_engine::playstyles::draw(seed_for_code(&code)),
             slots,
         };
         room.assign_candidates(&host.player_id, catalog);

@@ -68,9 +68,9 @@ fn report_contains_required_fields() {
     for field in [
         "games",
         "seed",
-        "wins_by_tribe",
+        "wins_by_playstyle",
         "avg_turns",
-        "win_rate_permille_by_tribe",
+        "win_rate_permille_by_playstyle",
         "era_upgrade_turns_by_seat",
         "avg_era_upgrade_turn_by_seat",
         "avg_era_upgrade_turn",
@@ -92,13 +92,13 @@ fn report_contains_required_fields() {
         Some(8)
     );
     assert_eq!(
-        value["win_rate_permille_by_tribe"]
+        value["win_rate_permille_by_playstyle"]
             .as_object()
             .map(|m| m.len()),
-        Some(7),
-        "7 个流派都应出现夺冠率"
+        Some(14),
+        "13 个玩法与中立都应出现夺冠率"
     );
-    let rates = value["win_rate_permille_by_tribe"]
+    let rates = value["win_rate_permille_by_playstyle"]
         .as_object()
         .expect("夺冠率为对象");
     let permille_sum: u64 = rates
@@ -109,24 +109,24 @@ fn report_contains_required_fields() {
     // 按注释口径断言上界；下界由「夺冠局数之和 = 局数」间接保证，并核对每个流派与计数一致。
     assert!(
         permille_sum <= games * 1_000,
-        "各流派夺冠率千分比之和不应超过局数 * 1000（实际 {permille_sum}，局数 {games}）"
+        "各玩法夺冠率千分比之和不应超过局数 * 1000（实际 {permille_sum}，局数 {games}）"
     );
-    let wins_total: u64 = value["wins_by_tribe"]
+    let wins_total: u64 = value["wins_by_playstyle"]
         .as_object()
-        .expect("wins_by_tribe 为对象")
+        .expect("wins_by_playstyle 为对象")
         .values()
         .map(|count| count.as_u64().expect("计数为整数"))
         .sum();
-    assert_eq!(wins_total, games, "各流派夺冠局数之和应等于局数");
-    let wins = value["wins_by_tribe"]
+    assert_eq!(wins_total, games, "各玩法夺冠局数之和应等于局数");
+    let wins = value["wins_by_playstyle"]
         .as_object()
-        .expect("wins_by_tribe 为对象");
-    for (tribe, count) in wins {
+        .expect("wins_by_playstyle 为对象");
+    for (playstyle, count) in wins {
         let expected = count.as_u64().expect("计数为整数") * 1_000 / games;
         assert_eq!(
-            rates[tribe].as_u64(),
+            rates[playstyle].as_u64(),
             Some(expected),
-            "流派 {tribe} 夺冠率应为 夺冠局数 * 1000 / 局数（向下取整）"
+            "玩法 {playstyle} 夺冠率应为 夺冠局数 * 1000 / 局数（向下取整）"
         );
     }
 }
@@ -149,7 +149,8 @@ fn ai_never_loops_and_matches_state_hash() {
     // AI 决定论与状态哈希：同种子两局完全一致，且每个回合都能以 EndRecruit 结束。
     let mut hashes = Vec::new();
     for _ in 0..3 {
-        let (mut engine, mut state) = Engine::new(catalog(), [3; 32]);
+        let (mut engine, mut state) =
+            Engine::new(catalog(), [3; 32], rule_engine::playstyles::draw(3));
         let log = sim::play_game(&mut engine, &mut state, 3, 8).expect("单局应能完成");
         hashes.push(state_hash(&state));
         assert_eq!(log.final_hash, state_hash(&state));
@@ -161,7 +162,8 @@ fn ai_never_loops_and_matches_state_hash() {
 
 #[test]
 fn ai_choose_is_deterministic_for_seat() {
-    let (mut engine, mut state) = Engine::new(catalog(), [11; 32]);
+    let (mut engine, mut state) =
+        Engine::new(catalog(), [11; 32], rule_engine::playstyles::draw(11));
     let heroes: std::collections::BTreeMap<Seat, String> = engine
         .catalog
         .cards
@@ -177,6 +179,40 @@ fn ai_choose_is_deterministic_for_seat() {
     assert_eq!(a, b);
     assert!(a.is_some());
     let _: &GameState = &state;
+}
+
+#[test]
+fn assign_heroes_filters_by_enabled_playstyles_and_cycles() {
+    use rule_engine::data::{Playstyle, card_in_pool};
+    use std::collections::BTreeSet;
+
+    let catalog = catalog();
+    // 植物玩法只有少量英雄：过滤后不足 8 张，按 id 升序循环取。
+    let plant: BTreeSet<Playstyle> = [Playstyle::Plant].into_iter().collect();
+    let heroes = sim::assign_heroes(&catalog, &plant).expect("植物玩法应有可用英雄");
+    assert_eq!(heroes.len(), 8);
+    let ids: Vec<&str> = heroes.values().map(String::as_str).collect();
+    let mut sorted = ids.clone();
+    sorted.sort_unstable();
+    assert!(
+        sorted.windows(2).any(|pair| pair[0] == pair[1]),
+        "可用英雄不足 8 张时应循环取"
+    );
+    for id in &ids {
+        let card = catalog.cards.get(*id).expect("英雄卡应存在");
+        assert!(card.is_hero, "{id} 不是英雄卡");
+        assert!(card_in_pool(card, &plant), "{id} 不属于植物玩法卡池");
+    }
+
+    // 哺乳玩法英雄充足：按 id 升序取前 8 张，不重复。
+    let mammal: BTreeSet<Playstyle> = [Playstyle::Mammal].into_iter().collect();
+    let heroes = sim::assign_heroes(&catalog, &mammal).expect("哺乳玩法应有可用英雄");
+    let ids: Vec<&str> = heroes.values().map(String::as_str).collect();
+    let mut sorted = ids.clone();
+    sorted.sort_unstable();
+    assert_eq!(ids, sorted, "英雄应按 id 升序分配");
+    let distinct: BTreeSet<&str> = ids.iter().copied().collect();
+    assert_eq!(distinct.len(), 8, "英雄池足够时每个座位不同");
 }
 
 fn sample_game_json(seed: u64) -> Value {
@@ -200,21 +236,22 @@ fn game_from_json_rejects_missing_final_hash() {
 fn game_from_json_rejects_missing_or_unknown_winner_fields() {
     let base = sample_game_json(4);
 
-    let mut no_tribe = base.clone();
-    no_tribe["stats"]
+    let mut no_playstyle = base.clone();
+    no_playstyle["stats"]
         .as_object_mut()
         .unwrap()
-        .remove("winner_tribe");
-    let error = report::game_from_json(&no_tribe).expect_err("缺 winner_tribe 应报错");
+        .remove("winner_playstyle");
+    let error = report::game_from_json(&no_playstyle).expect_err("缺 winner_playstyle 应报错");
     assert!(
-        error.contains("winner_tribe"),
-        "错误应指出 winner_tribe：{error}"
+        error.contains("winner_playstyle"),
+        "错误应指出 winner_playstyle：{error}"
     );
 
-    let mut unknown_tribe = base.clone();
-    unknown_tribe["stats"]["winner_tribe"] = Value::from("龙");
-    let error = report::game_from_json(&unknown_tribe).expect_err("未知 winner_tribe 应报错");
-    assert!(error.contains("龙"), "错误应带上未知流派名：{error}");
+    let mut unknown_playstyle = base.clone();
+    unknown_playstyle["stats"]["winner_playstyle"] = Value::from("龙");
+    let error =
+        report::game_from_json(&unknown_playstyle).expect_err("未知 winner_playstyle 应报错");
+    assert!(error.contains("龙"), "错误应带上未知玩法名：{error}");
 
     let mut no_seat = base.clone();
     no_seat["stats"]

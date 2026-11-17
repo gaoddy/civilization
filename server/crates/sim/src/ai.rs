@@ -6,7 +6,7 @@
 use std::collections::BTreeMap;
 
 use rule_engine::combat::{effective_attack, effective_health};
-use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
+use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill};
 use rule_engine::effects::{Duration, Op, Pick, Selector, Side, Trigger};
 use rule_engine::engine::Engine;
 use rule_engine::intent::{Intent, Reject, RejectCode};
@@ -171,7 +171,7 @@ fn choose_hero_power(player: &PlayerState, catalog: &Catalog) -> Option<Intent> 
 ///
 /// 按声明顺序检查技能的 `OnActivate` 效果，取第一个可识别的目标来源：
 ///
-/// - `Discover` 且选择器为 `self`（如 `pool=tribe`）：目标只表示流派偏好，取棋盘上最强的
+/// - `Discover` 且选择器为 `self`（如 `pool=playstyle`）：目标只表示玩法偏好，取棋盘上最强的
 ///   随从；棋盘为空时为 `None`。
 /// - 选择器为 `target`：取棋盘上最强的随从。
 /// - 友方单体（`friendly:single`，无筛选）、永久生效的关键词授予：取棋盘上（实例编号
@@ -408,39 +408,38 @@ pub fn planning_reject(code: RejectCode) -> bool {
     )
 }
 
-/// 流派判定：统计阵容随从的阵营，取数量最多的流派；并列时学者优先，再按流派声明顺序
-/// （`Tribe` 的 `Ord`：人类 → 机械 → 生物 → 植物 → 病毒 → 学者 → 通用）取靠前者。
-/// 通用随从与未知卡牌不参与统计；没有可统计随从时返回 `通用`。
-pub fn dominant_tribe<'a>(board: impl IntoIterator<Item = &'a str>, catalog: &Catalog) -> Tribe {
-    let mut counts: BTreeMap<Tribe, usize> = BTreeMap::new();
+/// 玩法判定：统计阵容随从的 `playstyle`，取数量最多的玩法；并列时按玩法声明顺序
+/// （`Playstyle` 的 `Ord`）取靠前者。中立随从与未知卡牌不参与统计；没有可统计随从时
+/// 返回 `Neutral`。
+pub fn dominant_playstyle<'a>(
+    board: impl IntoIterator<Item = &'a str>,
+    catalog: &Catalog,
+) -> Playstyle {
+    let mut counts: BTreeMap<Playstyle, usize> = BTreeMap::new();
     for card_id in board {
         let Some(card) = catalog.cards.get(card_id) else {
             continue;
         };
-        if card.tribe == Tribe::General {
+        if card.playstyle == Playstyle::Neutral {
             continue;
         }
-        *counts.entry(card.tribe).or_insert(0) += 1;
+        *counts.entry(card.playstyle).or_insert(0) += 1;
     }
-    let mut best: Option<(Tribe, usize)> = None;
-    for (&tribe, &count) in &counts {
+    let mut best: Option<(Playstyle, usize)> = None;
+    for (&playstyle, &count) in &counts {
         let better = match best {
             None => true,
-            Some((current_tribe, current_count)) => {
+            Some((current_playstyle, current_count)) => {
                 if count != current_count {
                     count > current_count
                 } else {
-                    match (tribe == Tribe::Scholar, current_tribe == Tribe::Scholar) {
-                        (true, false) => true,
-                        (false, true) => false,
-                        _ => tribe < current_tribe,
-                    }
+                    playstyle < current_playstyle
                 }
             }
         };
         if better {
-            best = Some((tribe, count));
+            best = Some((playstyle, count));
         }
     }
-    best.map_or(Tribe::General, |(tribe, _)| tribe)
+    best.map_or(Playstyle::Neutral, |(playstyle, _)| playstyle)
 }

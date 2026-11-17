@@ -26,7 +26,7 @@ use std::sync::Arc;
 use protocol::server::{CombatResult, ErrorMessage, GameOver, GameStarted, Snapshot, StateUpdate};
 use protocol::view::{CombatLogEntry, GameEvent as ProtocolGameEvent};
 use protocol::{ErrorCode, GameOverRankingItem, ProtocolError, ServerEnvelope};
-use rule_engine::data::Catalog;
+use rule_engine::data::{Catalog, Playstyle};
 use rule_engine::engine::Engine;
 use rule_engine::error::EngineError;
 use rule_engine::events::GameEvent as EngineEvent;
@@ -195,10 +195,11 @@ pub struct GameTask {
 }
 
 impl GameTask {
-    /// 以已确定的英雄表开局并构造驱动。
+    /// 以已确定的英雄表与玩法开局并构造驱动。
     ///
     /// `players` 必须是按座位号升序排列的 8 个座位（`Room::players` 的约定）；
-    /// 元素下标即座位号。`seed` 同时用于引擎随机流与 `GameOver.seed`。
+    /// 元素下标即座位号。`seed` 同时用于引擎随机流与 `GameOver.seed`；
+    /// `playstyles` 由房间创建时抽取并长期持有，重开与重连复用同一组。
     ///
     /// # Errors
     ///
@@ -206,6 +207,7 @@ impl GameTask {
     pub fn new(
         catalog: Catalog,
         seed: u64,
+        playstyles: [Playstyle; 5],
         heroes: BTreeMap<Seat, String>,
         players: Vec<PlayerSlot>,
         clock: Arc<dyn Clock>,
@@ -217,7 +219,7 @@ impl GameTask {
             )));
         }
 
-        let (mut engine, mut state) = Engine::new(catalog, seed_from_u64(seed));
+        let (mut engine, mut state) = Engine::new(catalog, seed_from_u64(seed), playstyles);
         engine.start_game(&mut state, &heroes)?;
 
         // 下标即座位号：`Room::players` 按 `BTreeMap<Seat, _>` 升序遍历，
@@ -1126,7 +1128,7 @@ mod tests {
     use std::collections::BTreeMap;
     use std::sync::Arc;
 
-    use rule_engine::data::Catalog;
+    use rule_engine::data::{Catalog, Playstyle};
     use rule_engine::state::{MinionInstance, Pairing, Phase, Seat};
 
     use super::recruit_seconds;
@@ -1139,6 +1141,7 @@ mod tests {
     const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
     const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
     const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
+    const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
     /// 8 个座位各用一张不同的英雄卡。
     const HEROES: [&str; 8] = [
@@ -1156,9 +1159,26 @@ mod tests {
         task_at(FixedClock::new(1_000_000))
     }
 
+    /// 测试固定玩法：覆盖各级随从，保证商店不至于因池过小而全空。
+    fn playstyles() -> [Playstyle; 5] {
+        [
+            Playstyle::Mammal,
+            Playstyle::Bird,
+            Playstyle::Plant,
+            Playstyle::Virus,
+            Playstyle::Machine,
+        ]
+    }
+
     fn task_at(clock: FixedClock) -> GameTask {
-        let catalog = Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
-            .expect("卡表应能加载");
+        let catalog = Catalog::from_json(
+            CARDS_JSON,
+            SKILLS_JSON,
+            TOKENS_JSON,
+            CONFIG_JSON,
+            TAXONOMY_JSON,
+        )
+        .expect("卡表应能加载");
         let heroes: BTreeMap<Seat, String> = HEROES
             .iter()
             .enumerate()
@@ -1177,7 +1197,8 @@ mod tests {
                 disconnected_at_ms: None,
             })
             .collect();
-        GameTask::new(catalog, 7, heroes, players, Arc::new(clock)).expect("开局应当成功")
+        GameTask::new(catalog, 7, playstyles(), heroes, players, Arc::new(clock))
+            .expect("开局应当成功")
     }
 
     /// 构造 0 号与 1 号座位对战、其余座位已淘汰的局面；调用后阶段为 `Combat`，
@@ -1318,6 +1339,27 @@ mod tests {
 
         task.mark_combat_played("p1");
         assert_eq!(task.state.phase, Phase::Recruit);
+    }
+
+    /// 8 个座位看到同一组本局玩法，且与引擎状态一致。
+    #[test]
+    fn enabled_factions_are_shared_by_every_seat() {
+        let task = task();
+        let expected: Vec<String> = task
+            .state
+            .enabled_playstyles
+            .iter()
+            .map(|playstyle| playstyle.id().to_string())
+            .collect();
+        assert_eq!(expected.len(), 5, "本局玩法固定 5 个");
+        for seat in 0..8u8 {
+            let view = task.player_view(seat).expect("视图应可用");
+            assert_eq!(
+                view.enabled_factions.as_slice(),
+                expected.as_slice(),
+                "座位 {seat} 的 enabledFactions 应与本局玩法一致"
+            );
+        }
     }
 
     /// 未回报时到点兜底结算，保证房间继续推进。

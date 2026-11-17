@@ -5,7 +5,7 @@
 
 use std::collections::BTreeMap;
 
-use rule_engine::data::Tribe;
+use rule_engine::data::Playstyle;
 use rule_engine::intent::Intent;
 use rule_engine::state::Seat;
 use serde::Serialize;
@@ -20,11 +20,11 @@ pub struct Report {
     pub games: u64,
     /// 批量起始种子（第 i 局种子为 `seed + i`）。
     pub seed: u64,
-    /// 各流派冠军数，按流派中文名升序；未夺冠的流派不出现。
-    pub wins_by_tribe: BTreeMap<String, u64>,
-    /// 各流派夺冠率（整数千分比）= 该流派 `wins_by_tribe` × 1000 / `games`，向下取整；
-    /// 全部流派（含 0）均出现，键与 `wins_by_tribe` 的流派名一致。
-    pub win_rate_permille_by_tribe: BTreeMap<String, u64>,
+    /// 各玩法冠军数，按玩法 id 升序；未夺冠的玩法不出现。
+    pub wins_by_playstyle: BTreeMap<String, u64>,
+    /// 各玩法夺冠率（整数千分比）= 该玩法 `wins_by_playstyle` × 1000 / `games`，向下取整；
+    /// 全部玩法（含 0）均出现，键与 `wins_by_playstyle` 的玩法 id 一致。
+    pub win_rate_permille_by_playstyle: BTreeMap<String, u64>,
     /// 平均对局回合数 = 各局结束回合之和 / 局数，向下取整；单位为「回合」（第 1 回合起算，
     /// 结束回合即对局结束时的 `turn`）。
     pub avg_turns: u64,
@@ -61,7 +61,7 @@ pub struct Report {
 /// 由批量结果构造报告。
 pub fn build(batch: &BatchJson) -> Report {
     let games = batch.games.len() as u64;
-    let mut wins_by_tribe: BTreeMap<String, u64> = BTreeMap::new();
+    let mut wins_by_playstyle: BTreeMap<String, u64> = BTreeMap::new();
     let mut turns_sum = 0u64;
     let mut era_by_seat = [0u64; 8];
     let mut era_sum = 0u64;
@@ -76,8 +76,8 @@ pub fn build(batch: &BatchJson) -> Report {
     let mut final_hashes = Vec::with_capacity(batch.games.len());
 
     for game in &batch.games {
-        *wins_by_tribe
-            .entry(tribe_name(game.stats.winner_tribe).to_string())
+        *wins_by_playstyle
+            .entry(playstyle_name(game.stats.winner_playstyle).to_string())
             .or_insert(0) += 1;
         turns_sum += u64::from(game.turns);
         if game.turns == 20 {
@@ -103,21 +103,18 @@ pub fn build(batch: &BatchJson) -> Report {
         final_hashes.push(format_hash(game.final_hash));
     }
 
-    let all_tribes = [
-        Tribe::Human,
-        Tribe::Machine,
-        Tribe::Biology,
-        Tribe::Plant,
-        Tribe::Virus,
-        Tribe::Scholar,
-        Tribe::General,
-    ];
-    let win_rate_permille_by_tribe = all_tribes
+    let all_playstyles = Playstyle::ALL
         .iter()
-        .map(|tribe| {
-            let wins = wins_by_tribe.get(tribe_name(*tribe)).copied().unwrap_or(0);
+        .copied()
+        .chain(std::iter::once(Playstyle::Neutral));
+    let win_rate_permille_by_playstyle = all_playstyles
+        .map(|playstyle| {
+            let wins = wins_by_playstyle
+                .get(playstyle_name(playstyle))
+                .copied()
+                .unwrap_or(0);
             (
-                tribe_name(*tribe).to_string(),
+                playstyle_name(playstyle).to_string(),
                 divide(wins.saturating_mul(1000), games),
             )
         })
@@ -126,8 +123,8 @@ pub fn build(batch: &BatchJson) -> Report {
     Report {
         games,
         seed: batch.seed,
-        wins_by_tribe,
-        win_rate_permille_by_tribe,
+        wins_by_playstyle,
+        win_rate_permille_by_playstyle,
         avg_turns: divide(turns_sum, games),
         era_upgrade_turns_by_seat: era_by_seat,
         avg_era_upgrade_turn_by_seat: era_by_seat.map(|sum| divide(sum, games)),
@@ -221,17 +218,9 @@ pub fn format_hash(hash: u64) -> String {
     format!("{hash:016x}")
 }
 
-/// 流派 id，与 `data/v0.1` 中的写法一致。
-pub fn tribe_name(tribe: Tribe) -> &'static str {
-    match tribe {
-        Tribe::Human => "human",
-        Tribe::Machine => "machine",
-        Tribe::Biology => "biology",
-        Tribe::Plant => "plant",
-        Tribe::Virus => "virus",
-        Tribe::Scholar => "scholar",
-        Tribe::General => "general",
-    }
+/// 玩法 id，与 `data/v0.1` 中的写法一致。
+pub fn playstyle_name(playstyle: Playstyle) -> &'static str {
+    playstyle.id()
 }
 
 /// 单局日志的 JSON 形式：`seed`、`intents`、`final_hash`、`ranking`，并附带
@@ -321,7 +310,7 @@ fn stats_to_json(stats: &GameStats, turns: u8) -> Value {
         "survivors_at_end": stats.survivors_at_end,
         "damage_per_loss": stats.damage_per_loss,
         "winner_seat": stats.winner,
-        "winner_tribe": tribe_name(stats.winner_tribe),
+        "winner_playstyle": playstyle_name(stats.winner_playstyle),
         "turns": turns,
     })
 }
@@ -334,7 +323,7 @@ pub fn batch_to_json(batch: &BatchJson) -> Value {
 }
 
 /// 解析单局 JSON（日志文件中的一局）。`seed`、`intents`、`final_hash` 与 `stats` 中的
-/// `winner_tribe` / `winner_seat` 缺失或非法时返回错误，不做静默回落。
+/// `winner_playstyle` / `winner_seat` 缺失或非法时返回错误，不做静默回落。
 pub fn game_from_json(value: &Value) -> Result<GameLog, String> {
     let seed = value
         .get("seed")
@@ -519,12 +508,13 @@ fn stats_from_json(value: &Value) -> Result<GameStats, String> {
         .and_then(Value::as_u64)
         .and_then(|seat| u8::try_from(seat).ok())
         .ok_or("stats 缺少 winner_seat")?;
-    let winner_tribe_name = value
-        .get("winner_tribe")
+    let winner_playstyle_name = value
+        .get("winner_playstyle")
         .and_then(Value::as_str)
-        .ok_or("stats 缺少 winner_tribe")?;
-    let winner_tribe = tribe_from_name(winner_tribe_name)
-        .ok_or_else(|| format!("stats 的 winner_tribe「{winner_tribe_name}」不是已知流派"))?;
+        .ok_or("stats 缺少 winner_playstyle")?;
+    let winner_playstyle = playstyle_from_name(winner_playstyle_name).ok_or_else(|| {
+        format!("stats 的 winner_playstyle「{winner_playstyle_name}」不是已知玩法")
+    })?;
     Ok(GameStats {
         era_upgrade_turns,
         triples,
@@ -532,21 +522,16 @@ fn stats_from_json(value: &Value) -> Result<GameStats, String> {
         survivors_at_end,
         damage_per_loss,
         winner,
-        winner_tribe,
+        winner_playstyle,
     })
 }
 
-fn tribe_from_name(name: &str) -> Option<Tribe> {
-    Some(match name {
-        "human" => Tribe::Human,
-        "machine" => Tribe::Machine,
-        "biology" => Tribe::Biology,
-        "plant" => Tribe::Plant,
-        "virus" => Tribe::Virus,
-        "scholar" => Tribe::Scholar,
-        "general" => Tribe::General,
-        _ => return None,
-    })
+fn playstyle_from_name(name: &str) -> Option<Playstyle> {
+    if name == Playstyle::Neutral.id() {
+        Some(Playstyle::Neutral)
+    } else {
+        Playstyle::from_id(name)
+    }
 }
 
 /// 解析日志：批量文件（顶层含 `games`）返回其中全部对局；单局文件返回一个元素。
@@ -581,10 +566,10 @@ pub fn report_to_json(report: &Report) -> Value {
     let mut object = Map::new();
     object.insert("games".into(), json!(report.games));
     object.insert("seed".into(), json!(report.seed));
-    object.insert("wins_by_tribe".into(), json!(report.wins_by_tribe));
+    object.insert("wins_by_playstyle".into(), json!(report.wins_by_playstyle));
     object.insert(
-        "win_rate_permille_by_tribe".into(),
-        json!(report.win_rate_permille_by_tribe),
+        "win_rate_permille_by_playstyle".into(),
+        json!(report.win_rate_permille_by_playstyle),
     );
     object.insert("avg_turns".into(), json!(report.avg_turns));
     object.insert(

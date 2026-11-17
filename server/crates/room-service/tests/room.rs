@@ -3,22 +3,32 @@
 //! 覆盖建房、加入/离开、英雄选择、准备与开局前置判定，以及 `RoomUpdate` 视图。
 //! 房间码与座位分配均为确定性行为，测试直接断言具体取值。
 
+use std::collections::BTreeSet;
+
 use protocol::ErrorCode;
 use protocol::client::AuthRequest;
 use room_service::auth::{Session, SessionStore};
 use room_service::clock::FixedClock;
 use room_service::room::{RoomError, RoomRegistry, SEAT_COUNT};
-use rule_engine::data::Catalog;
+use rule_engine::data::{Card, Catalog, Playstyle, Specialty, SpecialtyKind, card_in_pool};
 use rule_engine::state::Phase;
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
 const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
+const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
 /// 真实卡表；英雄卡用 `adam-smith`，非英雄卡用 `agi`。
 fn catalog() -> Catalog {
-    Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON).expect("卡表应能加载")
+    Catalog::from_json(
+        CARDS_JSON,
+        SKILLS_JSON,
+        TOKENS_JSON,
+        CONFIG_JSON,
+        TAXONOMY_JSON,
+    )
+    .expect("卡表应能加载")
 }
 
 /// 用固定短信码登录出一个会话。
@@ -46,10 +56,14 @@ fn first_candidate(registry: &RoomRegistry, room_id: &str, player_id: &str) -> S
 
 /// 建一个 8 人满座的大厅房间，返回注册表、房间 id、房间码与按座位号排列的会话。
 fn lobby_room() -> (RoomRegistry, String, String, Vec<Session>) {
+    lobby_room_with(catalog())
+}
+
+/// 用指定卡表建满座大厅；候选池相关用例借此控制英雄卡数量与玩法。
+fn lobby_room_with(catalog: Catalog) -> (RoomRegistry, String, String, Vec<Session>) {
     let clock = FixedClock::new(1_000_000);
     let mut store = SessionStore::new();
     let mut registry = RoomRegistry::with_seed(0);
-    let catalog = catalog();
 
     let host = session(&mut store, &clock, "房主");
     let room = registry.create(&host, &catalog);
@@ -63,6 +77,25 @@ fn lobby_room() -> (RoomRegistry, String, String, Vec<Session>) {
         players.push(player);
     }
     (registry, room_id, code, players)
+}
+
+/// 只保留指定英雄、并清空玩法关联；中立且无 `play:` 的英雄始终在候选池内。
+fn catalog_with_generic_heroes(hero_ids: &[&str]) -> Catalog {
+    let mut catalog = catalog();
+    let keep_all = hero_ids.is_empty();
+    catalog
+        .cards
+        .retain(|_, card| !card.is_hero || keep_all || hero_ids.contains(&card.id.as_str()));
+    for card in catalog.cards.values_mut().filter(|card| card.is_hero) {
+        make_generic_hero(card);
+    }
+    catalog
+}
+
+/// 把英雄改成「中立且无玩法关联」，`card_in_pool` 恒为真。
+fn make_generic_hero(card: &mut Card) {
+    card.playstyle = Playstyle::Neutral;
+    card.specialty.clear();
 }
 
 /// 在满座大厅里让所有人选好不同英雄并准备，但仍停留在 `Lobby`。
@@ -729,19 +762,126 @@ fn start_ready_is_false_after_game_started() {
 }
 
 #[test]
-fn each_seat_gets_four_distinct_candidates() {
-    let (registry, room_id, _code, players) = ready_room();
-    let mut seen = std::collections::BTreeSet::new();
+fn candidates_are_limited_to_enabled_playstyles() {
+    let (registry, room_id, _code, players) = lobby_room();
+    let room = registry.room(&room_id).expect("房间存在");
+    let enabled: BTreeSet<Playstyle> = room.playstyles.iter().copied().collect();
+    assert_eq!(enabled.len(), 5, "本局应启用 5 个不同玩法");
+
+    let catalog = catalog();
+    for player in &players {
+        for id in registry
+            .candidates_of(&room_id, &player.player_id)
+            .expect("每个座位都应有候选")
+        {
+            let card = catalog.cards.get(&id).expect("候选必须是卡表中的英雄");
+            assert!(card.is_hero, "候选 {id} 必须是英雄卡");
+            assert!(
+                card_in_pool(card, &enabled),
+                "候选 {id}（playstyle={:?}）不在本局启用的玩法内",
+                card.playstyle
+            );
+        }
+    }
+}
+
+#[test]
+fn each_seat_gets_four_distinct_candidates_when_pool_is_large() {
+    // 32 张英雄全部中立且无 play:，候选池恰好 32 张，走满座分段。
+    let (registry, room_id, _code, players) = lobby_room_with(catalog_with_generic_heroes(&[]));
+    let mut seen = BTreeSet::new();
     for player in &players {
         let candidates = registry
             .candidates_of(&room_id, &player.player_id)
             .expect("每个座位都应有候选");
         assert_eq!(candidates.len(), 4, "{}", player.player_id);
         for id in candidates {
-            assert!(seen.insert(id), "候选不得重复");
+            assert!(seen.insert(id), "池足够大时候选不得重复");
         }
     }
     assert_eq!(seen.len(), SEAT_COUNT * 4, "8 人 × 4 张应互不重复");
+}
+
+#[test]
+fn narrow_pool_allows_duplicates_across_seats() {
+    // 池只有 4 张（< 32）：每人仍是 4 张，但允许跨玩家重复。
+    let heroes = ["adam-smith", "beethoven", "darwin", "davinci"];
+    let (registry, room_id, _code, players) = lobby_room_with(catalog_with_generic_heroes(&heroes));
+    let expected: BTreeSet<String> = heroes.iter().map(|id| (*id).to_string()).collect();
+
+    let mut seen = BTreeSet::new();
+    let mut duplicated = false;
+    for player in &players {
+        let candidates = registry
+            .candidates_of(&room_id, &player.player_id)
+            .expect("每个座位都应有候选");
+        assert_eq!(candidates.len(), 4, "每人仍取 4 张");
+        assert_eq!(
+            candidates.iter().cloned().collect::<BTreeSet<_>>(),
+            expected,
+            "池恰好 4 张时每人取整个池"
+        );
+        for id in candidates {
+            if !seen.insert(id) {
+                duplicated = true;
+            }
+        }
+    }
+    assert!(duplicated, "池不足满座需求时应允许跨玩家重复");
+}
+
+#[test]
+fn pool_smaller_than_candidate_count_takes_whole_pool() {
+    // 池只有 2 张（< 4）：每人取整个池，至少 1 张。
+    let heroes = ["mendel", "lisshi"];
+    let (registry, room_id, _code, players) = lobby_room_with(catalog_with_generic_heroes(&heroes));
+    let expected: BTreeSet<String> = heroes.iter().map(|id| (*id).to_string()).collect();
+
+    for player in &players {
+        let candidates = registry
+            .candidates_of(&room_id, &player.player_id)
+            .expect("每个座位都至少拿到 1 张候选");
+        assert_eq!(candidates.len(), heroes.len(), "池小于人数上限时取整个池");
+        assert!(!candidates.is_empty(), "候选至少 1 张");
+        assert_eq!(
+            candidates.into_iter().collect::<BTreeSet<_>>(),
+            expected,
+            "候选应覆盖整个小池"
+        );
+    }
+}
+
+#[test]
+fn empty_filtered_pool_falls_back_to_all_heroes() {
+    // 所有英雄都带 `play:neutral`：`card_in_pool` 不命中，过滤后池为空。
+    let mut catalog = catalog();
+    for card in catalog.cards.values_mut().filter(|card| card.is_hero) {
+        card.playstyle = Playstyle::Neutral;
+        card.specialty = vec![Specialty {
+            kind: SpecialtyKind::Play,
+            value: "neutral".to_string(),
+        }];
+    }
+    let all_heroes: BTreeSet<String> = catalog
+        .cards
+        .values()
+        .filter(|card| card.is_hero)
+        .map(|card| card.id.clone())
+        .collect();
+
+    let (registry, room_id, _code, players) = lobby_room_with(catalog);
+    let mut seen = BTreeSet::new();
+    for player in &players {
+        let candidates = registry
+            .candidates_of(&room_id, &player.player_id)
+            .expect("回退后每人都应有候选");
+        assert_eq!(candidates.len(), 4, "回退到全部英雄后每人仍取 4 张");
+        for id in candidates {
+            assert!(all_heroes.contains(&id), "回退候选必须来自全部英雄卡");
+            assert!(seen.insert(id), "回退到 32 张时应互不重复");
+        }
+    }
+    assert_eq!(seen, all_heroes, "回退应覆盖全部英雄卡");
 }
 
 #[test]
@@ -876,6 +1016,7 @@ fn reconnect_within_grace_restores_same_candidates() {
     let (mut registry, room_id, _code, players) = lobby_room();
     let player = players[1].player_id.clone();
     let before = registry.candidates_of(&room_id, &player).expect("有候选");
+    let before_playstyles = registry.room(&room_id).expect("房间存在").playstyles;
 
     registry
         .mark_disconnected(&room_id, &player, 1_000_000)
@@ -897,6 +1038,10 @@ fn reconnect_within_grace_restores_same_candidates() {
         registry.candidates_of(&room_id, &player),
         Some(before),
         "重连必须取回同一组候选"
+    );
+    assert_eq!(
+        room.playstyles, before_playstyles,
+        "重连不得重新抽取本局玩法"
     );
 }
 
