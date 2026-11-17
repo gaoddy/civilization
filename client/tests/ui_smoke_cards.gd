@@ -175,6 +175,9 @@ func _ready() -> void:
                 "%s 的介绍超长应省略" % card_id,
             )
             _expect(desc.get_visible_line_count() <= 2, "%s 的介绍不应超过两行" % card_id)
+            if card_id in ["adam-smith", "baiyi"]:
+                _expect(desc.get_visible_line_count() == 2, "%s 的长介绍应显示两行" % card_id)
+        _expect(stats != null, "%s 应有 CardStats" % card_id)
         if desc != null and name_label != null and info != null and stats != null:
             var desc_rect: Rect2 = desc.get_global_rect()
             var name_rect: Rect2 = name_label.get_global_rect()

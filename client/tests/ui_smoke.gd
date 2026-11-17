@@ -462,7 +462,7 @@ func _check_game_layout() -> void:
     var board = instance.find_child("BoardRow", true, false)
     _expect(board != null and board.get_child_count() == 7, "棋盘应有 7 个槽位（含空位）")
     var expected_card := Vector2(112, 146)
-    for node_name in ["ShopSlot0", "BoardMinion0", "HandCard0", "EmptySlot"]:
+    for node_name in ["ShopSlot0", "ShopSlot2", "BoardMinion0", "HandCard0", "EmptySlot"]:
         var card_node: Control = instance.find_child(node_name, true, false)
         _expect(card_node != null, "布局中缺少 %s" % node_name)
         if card_node != null:
@@ -553,6 +553,12 @@ func _check_combat_layout() -> void:
     _expect(opponent_row != null and opponent_row.get_child_count() == 2, "对手随从行应为 2 张")
     var own_row = instance.find_child("CombatOwnRow", true, false)
     _expect(own_row != null and own_row.get_child_count() == 3, "我方随从行应为 3 张")
+    for row in [opponent_row, own_row]:
+        if row != null and row.get_child_count() > 0:
+            _expect(
+                (row.get_child(0) as Control).custom_minimum_size == Vector2(112, 146),
+                "战斗只读卡应为 112×146",
+            )
     var end_button = instance.find_child("EndButton", true, false)
     _expect(end_button != null and not end_button.visible, "战斗阶段不应显示结束招募按钮")
     var power_button = instance.find_child("HeroPowerButton", true, false)
@@ -1232,6 +1238,11 @@ func _check_board_drag_reorders() -> void:
         await get_tree().process_frame
         _expect(board_row._drag_id == "mi_2", "拖拽开始通知应触发棋盘预览")
         _expect(not card.visible, "拖起后原卡应隐藏，不留占位框")
+        var drag_spacer = board_row.find_child("BoardDragSpacer", true, false)
+        _expect(
+            drag_spacer != null and (drag_spacer as Control).custom_minimum_size == Vector2(112, 146),
+            "拖拽占位应与卡片同为 112×146",
+        )
         # 占位下标要跳过隐藏原卡：gap 2（末尾）落在第 3 个非占位子节点之前。
         _expect(board_row._gap_child_index(2) == 3, "末尾插入下标应换算到隐藏卡位之后")
         var last = instance.find_child("BoardMinion2", true, false)
