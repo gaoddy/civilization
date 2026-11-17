@@ -2,7 +2,8 @@
 id: shijieshu
 card_type: minion
 name: 世界树
-tribe: plant
+playstyle: plant
+taxon: plantae-incertae-sedis
 subtype: tree
 level: 6
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | shijieshu |
 | 名称 | 世界树 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 树木 |
 | 星级 | 6 |
 | 时代 | 未来 |

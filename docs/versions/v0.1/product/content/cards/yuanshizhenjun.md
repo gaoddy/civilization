@@ -2,7 +2,8 @@
 id: yuanshizhenjun
 card_type: minion
 name: 原始真菌
-tribe: plant
+playstyle: plant
+taxon: fungi-incertae-sedis
 subtype: fungus
 level: 1
 era: prehistoric
@@ -21,7 +22,9 @@ is_scholar: false
 | id | yuanshizhenjun |
 | 名称 | 原始真菌 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 真菌界 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 真菌 |
 | 星级 | 1 |
 | 时代 | 史前 |

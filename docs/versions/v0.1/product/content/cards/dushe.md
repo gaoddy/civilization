@@ -2,7 +2,8 @@
 id: dushe
 card_type: minion
 name: 毒蛇
-tribe: biology
+playstyle: reptile
+taxon: squamata-incertae-sedis
 subtype: reptile
 level: 2
 era: prehistoric
@@ -21,7 +22,9 @@ is_scholar: false
 | id | dushe |
 | 名称 | 毒蛇 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 爬行纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 爬行 |
 | 星级 | 2 |
 | 时代 | 史前 |

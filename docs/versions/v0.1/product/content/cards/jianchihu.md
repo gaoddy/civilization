@@ -2,7 +2,9 @@
 id: jianchihu
 card_type: minion
 name: 剑齿虎
-tribe: biology
+playstyle: mammal
+taxon: felidae
+specialty: [prey:artiodactyla]
 subtype: mammal
 level: 2
 era: prehistoric
@@ -21,7 +23,9 @@ is_scholar: false
 | id | jianchihu |
 | 名称 | 剑齿虎 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 猫科 |
+| 关联分类 | 捕食：偶蹄目 |
 | 子类 | 哺乳 |
 | 星级 | 2 |
 | 时代 | 史前 |
@@ -34,7 +38,7 @@ is_scholar: false
 
 ## 效果
 
-战斗开始时，若你控制至少 2 个生物，获得 +2 攻击力
+战斗开始时，若你控制至少 2 个动物，获得 +2 攻击力
 
 ## 出处
 

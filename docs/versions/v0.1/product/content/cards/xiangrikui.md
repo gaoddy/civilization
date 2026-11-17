@@ -2,7 +2,8 @@
 id: xiangrikui
 card_type: minion
 name: 向日葵
-tribe: plant
+playstyle: plant
+taxon: asteraceae
 subtype: crop
 level: 2
 era: prehistoric
@@ -21,7 +22,9 @@ is_scholar: false
 | id | xiangrikui |
 | 名称 | 向日葵 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 菊目 › 菊科 |
+| 关联分类 | 无 |
 | 子类 | 作物 |
 | 星级 | 2 |
 | 时代 | 史前 |

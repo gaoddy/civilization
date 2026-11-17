@@ -1,7 +1,7 @@
 ---
 id: trigger-friendly-biology-play-plus-1-attack
-text: 每当一个友方生物随从进入战场，获得 +1 攻击力
-effects: OnAllySummon|ModifyStats|self|attack=1,duration=permanent,when=tribe=biology
+text: 每当一个友方动物随从进入战场，获得 +1 攻击力
+effects: OnAllySummon|ModifyStats|self|attack=1,duration=permanent,when=taxon=animalia
 ---
 
 # trigger-friendly-biology-play-plus-1-attack
@@ -16,4 +16,4 @@ effects: OnAllySummon|ModifyStats|self|attack=1,duration=permanent,when=tribe=bi
 
 ## 效果
 
-每当一个友方生物随从进入战场，获得 +1 攻击力
+每当一个友方动物随从进入战场，获得 +1 攻击力

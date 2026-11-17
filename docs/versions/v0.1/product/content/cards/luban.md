@@ -2,7 +2,8 @@
 id: luban
 card_type: minion
 name: 鲁班
-tribe: machine
+playstyle: machine
+taxon: hominidae
 subtype: artisan
 level: 3
 era: classical
@@ -22,7 +23,9 @@ is_hero: true
 | id | luban |
 | 名称 | 鲁班 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 机械 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 工匠 |
 | 星级 | 3 |
 | 时代 | 古典 |

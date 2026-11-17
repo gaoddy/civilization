@@ -2,7 +2,9 @@
 id: zhengqi-jiche
 card_type: minion
 name: 蒸汽机车
-tribe: machine
+playstyle: neutral
+taxon: transport
+specialty: [play:machine]
 subtype: transport
 level: 3
 era: industrial
@@ -21,7 +23,9 @@ is_scholar: false
 | id | zhengqi-jiche |
 | 名称 | 蒸汽机车 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 交通与运载 |
+| 关联分类 | 关联：机械 |
 | 子类 | 交通 |
 | 星级 | 3 |
 | 时代 | 工业 |

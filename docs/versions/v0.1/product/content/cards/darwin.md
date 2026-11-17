@@ -2,7 +2,9 @@
 id: darwin
 card_type: minion
 name: 达尔文
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 subtype: organism
 level: 5
 era: modern
@@ -22,7 +24,9 @@ is_hero: true
 | id | darwin |
 | 名称 | 达尔文 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
 | 子类 | 生物 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -35,12 +39,13 @@ is_hero: true
 
 ## 效果
 
-你的生物随从获得 +1/+1；发现一张本局启用的流派随从
+
+你的动物随从获得 +1/+1；发现一张本局启用的玩法随从
 
 ## 设计说明
 
 - 定位：发现，提升阵容的稳定性。
-- 平衡边界：发现池只含本局启用的 5 个流派；不限制星级，但按当前商店等级加权。
+- 平衡边界：发现池只含本局启用的 5 个玩法；不限制星级，但按当前商店等级加权。
 
 ## 出处
 

@@ -4,7 +4,8 @@ name: 原子弹
 card_type: effect
 level: 6
 era: future
-tribe: general
+playstyle: neutral
+taxon: phenomenon
 cost: 4
 match_text: 同左
 skills: [combatstart-all-enemies-damage-5]
@@ -21,7 +22,9 @@ skills: [combatstart-all-enemies-damage-5]
 | 类型 | 效果 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 流派 | 通用 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | combatstart-all-enemies-damage-5 |
 | 费用 | 4 |
 | 确定性替换 | 同左 |

@@ -2,7 +2,8 @@
 id: meikuang-jinsique
 card_type: minion
 name: 煤矿金丝雀
-tribe: biology
+playstyle: bird
+taxon: fringillidae
 subtype: animal
 level: 2
 era: industrial
@@ -21,7 +22,9 @@ is_scholar: false
 | id | meikuang-jinsique |
 | 名称 | 煤矿金丝雀 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 鸟纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 雀形目 › 燕雀科 |
+| 关联分类 | 无 |
 | 子类 | 动物 |
 | 星级 | 2 |
 | 时代 | 工业 |

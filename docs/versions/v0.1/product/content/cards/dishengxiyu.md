@@ -4,7 +4,8 @@ name: 低声细语
 card_type: effect
 level: 1
 era: modern
-tribe: general
+playstyle: neutral
+taxon: phenomenon
 cost: 1
 match_text: 同左
 skills: [trigger-friendly-plus-1-plus-1]
@@ -21,7 +22,9 @@ skills: [trigger-friendly-plus-1-plus-1]
 | 类型 | 效果 |
 | 星级 | 1 |
 | 时代 | 现代 |
-| 流派 | 通用 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | trigger-friendly-plus-1-plus-1 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |

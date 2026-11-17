@@ -2,7 +2,9 @@
 id: rice-cooker
 card_type: minion
 name: 电饭煲
-tribe: machine
+playstyle: neutral
+taxon: life-medical
+specialty: [play:machine, play:mammal]
 subtype: appliance
 level: 3
 era: modern
@@ -21,7 +23,9 @@ is_scholar: false
 | id | rice-cooker |
 | 名称 | 电饭煲 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 生活与医疗 |
+| 关联分类 | 关联：机械、哺乳纲 |
 | 子类 | 家电 |
 | 星级 | 3 |
 | 时代 | 现代 |
@@ -34,7 +38,7 @@ is_scholar: false
 
 ## 效果
 
-战吼：使一个友方人类随从获得 +0/+1
+战吼：使一个友方人科随从获得 +0/+1
 
 ## 出处
 

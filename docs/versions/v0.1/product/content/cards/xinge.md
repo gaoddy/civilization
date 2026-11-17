@@ -2,7 +2,8 @@
 id: xinge
 card_type: minion
 name: 信鸽
-tribe: biology
+playstyle: bird
+taxon: columbidae
 subtype: communication
 level: 1
 era: classical
@@ -21,7 +22,9 @@ is_scholar: false
 | id | xinge |
 | 名称 | 信鸽 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 鸟纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鸽形目 › 鸠鸽科 |
+| 关联分类 | 无 |
 | 子类 | 通信 |
 | 星级 | 1 |
 | 时代 | 古典 |

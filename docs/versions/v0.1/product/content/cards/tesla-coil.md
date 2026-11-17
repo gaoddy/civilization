@@ -4,7 +4,8 @@ name: 特斯拉线圈
 card_type: effect
 level: 4
 era: industrial
-tribe: general
+playstyle: neutral
+taxon: phenomenon
 cost: 3
 match_text: 同左
 skills: [combatstart-all-enemies-damage-2]
@@ -21,7 +22,9 @@ skills: [combatstart-all-enemies-damage-2]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 流派 | 通用 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | combatstart-all-enemies-damage-2 |
 | 费用 | 3 |
 | 确定性替换 | 同左 |

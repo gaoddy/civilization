@@ -4,7 +4,8 @@ name: 青霉素·提纯
 card_type: effect
 level: 3
 era: modern
-tribe: general
+playstyle: neutral
+taxon: phenomenon
 cost: 2
 match_text: 同左
 skills: [trigger-friendly-growth-twice]
@@ -21,7 +22,9 @@ skills: [trigger-friendly-growth-twice]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 流派 | 通用 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | trigger-friendly-growth-twice |
 | 费用 | 2 |
 | 确定性替换 | 同左 |

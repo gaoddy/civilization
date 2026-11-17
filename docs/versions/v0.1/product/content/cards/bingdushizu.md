@@ -2,7 +2,8 @@
 id: bingdushizu
 card_type: minion
 name: 病毒始祖
-tribe: virus
+playstyle: virus
+taxon: virus-incertae-sedis
 subtype: microorganism
 level: 2
 era: prehistoric
@@ -21,7 +22,9 @@ is_scholar: false
 | id | bingdushizu |
 | 名称 | 病毒始祖 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 病毒 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 微生物 |
 | 星级 | 2 |
 | 时代 | 史前 |

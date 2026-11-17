@@ -4,7 +4,8 @@ name: 人工智能
 card_type: effect
 level: 5
 era: future
-tribe: machine
+playstyle: neutral
+taxon: phenomenon
 cost: 3
 match_text: 同左
 skills: [trigger-mech-optimal-attack-this-turn]
@@ -21,7 +22,9 @@ skills: [trigger-mech-optimal-attack-this-turn]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | trigger-mech-optimal-attack-this-turn |
 | 费用 | 3 |
 | 确定性替换 | 同左 |

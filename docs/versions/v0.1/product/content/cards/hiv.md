@@ -2,7 +2,9 @@
 id: hiv
 card_type: minion
 name: 艾滋病毒
-tribe: virus
+playstyle: virus
+taxon: retroviridae
+specialty: [host:hominidae]
 subtype: virus
 level: 4
 era: modern
@@ -21,7 +23,9 @@ is_scholar: false
 | id | hiv |
 | 名称 | 艾滋病毒 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 病毒 › 核糖病毒门 › 逆转录病毒纲 › 逆转录病毒目 › 逆转录病毒科 |
+| 关联分类 | 寄生：人科 |
 | 子类 | 病毒 |
 | 星级 | 4 |
 | 时代 | 现代 |

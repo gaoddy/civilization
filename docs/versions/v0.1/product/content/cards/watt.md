@@ -2,7 +2,9 @@
 id: watt
 card_type: minion
 name: 瓦特
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:machine]
 subtype: engineering
 level: 4
 era: industrial
@@ -21,7 +23,9 @@ is_scholar: true
 | id | watt |
 | 名称 | 瓦特 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：机械 |
 | 子类 | 工程 |
 | 星级 | 4 |
 | 时代 | 工业 |

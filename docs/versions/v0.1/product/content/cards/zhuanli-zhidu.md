@@ -4,7 +4,8 @@ name: 专利制度
 card_type: effect
 level: 4
 era: feudal
-tribe: general
+playstyle: neutral
+taxon: phenomenon
 cost: 2
 match_text: 同左
 skills: [trigger-all-mech-growth-once]
@@ -21,7 +22,9 @@ skills: [trigger-all-mech-growth-once]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 流派 | 通用 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | trigger-all-mech-growth-once |
 | 费用 | 2 |
 | 确定性替换 | 同左 |

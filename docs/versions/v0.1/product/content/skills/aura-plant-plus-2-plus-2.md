@@ -1,7 +1,7 @@
 ---
 id: aura-plant-plus-2-plus-2
 text: 你的植物随从获得 +2/+2
-effects: Aura|ModifyStats|friendly:all:tribe=plant|attack=2,health=2,duration=permanent
+effects: Aura|ModifyStats|friendly:all:playstyle=plant|attack=2,health=2,duration=permanent
 ---
 
 # aura-plant-plus-2-plus-2

@@ -2,7 +2,8 @@
 id: buluozhanshi
 card_type: minion
 name: 部落战士
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: primitive
 level: 1
 era: primitive
@@ -21,7 +22,9 @@ is_scholar: false
 | id | buluozhanshi |
 | 名称 | 部落战士 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 原始 |
 | 星级 | 1 |
 | 时代 | 原始 |
@@ -34,7 +37,8 @@ is_scholar: false
 
 ## 效果
 
-若你控制至少 2 个人类，获得 +1/+1
+
+若你控制至少 2 个人科随从，获得 +1/+1
 
 ## 出处
 

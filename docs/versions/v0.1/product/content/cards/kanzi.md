@@ -2,7 +2,8 @@
 id: kanzi
 card_type: minion
 name: 黑猩猩坎兹
-tribe: biology
+playstyle: mammal
+taxon: hominidae
 subtype: primate
 level: 3
 era: modern
@@ -21,7 +22,9 @@ is_scholar: false
 | id | kanzi |
 | 名称 | 黑猩猩坎兹 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 灵长 |
 | 星级 | 3 |
 | 时代 | 现代 |

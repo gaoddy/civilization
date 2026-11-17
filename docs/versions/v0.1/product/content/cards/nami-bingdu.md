@@ -2,7 +2,8 @@
 id: nami-bingdu
 card_type: minion
 name: 纳米病毒
-tribe: virus
+playstyle: virus
+taxon: virus-incertae-sedis
 subtype: nanotech
 level: 7
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | nami-bingdu |
 | 名称 | 纳米病毒 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 病毒 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 纳米 |
 | 星级 | 7 |
 | 时代 | 未来 |

@@ -4,7 +4,8 @@ name: 进化论
 card_type: effect
 level: 4
 era: modern
-tribe: biology
+playstyle: neutral
+taxon: phenomenon
 cost: 2
 match_text: 改为三选一固定池
 skills: [trigger-discover-tribe-minion]
@@ -21,14 +22,17 @@ skills: [trigger-discover-tribe-minion]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 流派 | 生物 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | trigger-discover-tribe-minion |
 | 费用 | 2 |
 | 确定性替换 | 改为三选一固定池 |
 
 ## 效果
 
-发现一张本局流派的随从
+
+发现一张本局玩法的随从
 
 ## 出处
 

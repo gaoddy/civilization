@@ -2,7 +2,8 @@
 id: qishi
 card_type: minion
 name: 骑士
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: unit
 level: 2
 era: feudal
@@ -21,7 +22,9 @@ is_scholar: false
 | id | qishi |
 | 名称 | 骑士 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 兵种 |
 | 星级 | 2 |
 | 时代 | 封建 |

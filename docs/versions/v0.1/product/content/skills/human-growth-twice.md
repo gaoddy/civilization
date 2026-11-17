@@ -1,8 +1,8 @@
 ---
 id: human-growth-twice
 name: 技艺
-text: 使一个友方人类随从获得两次成长
-effects: OnActivate|Growth|friendly:single:tribe=human|times=2
+text: 使一个友方人科随从获得两次成长
+effects: OnActivate|Growth|friendly:single:taxon=hominidae|times=2
 cost: 2
 uses_per_turn: 1
 match_text: 同左
@@ -22,9 +22,9 @@ match_text: 同左
 
 ## 效果
 
-使一个友方人类随从获得两次成长
+使一个友方人科随从获得两次成长
 
 ## 设计说明
 
-定位：人类专属的翻倍成长，单次两点属性。
-作用对象：己方一个人族随从；场上没有人类时不可用。
+定位：人科专属的翻倍成长，单次两点属性。
+作用对象：己方一个人科随从；场上没有人科时不可用。

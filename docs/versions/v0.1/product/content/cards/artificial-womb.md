@@ -2,7 +2,9 @@
 id: artificial-womb
 card_type: minion
 name: 人造子宫
-tribe: biology
+playstyle: neutral
+taxon: life-medical
+specialty: [play:mammal]
 subtype: medical
 level: 5
 era: future
@@ -21,7 +23,9 @@ is_scholar: false
 | id | artificial-womb |
 | 名称 | 人造子宫 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 生活与医疗 |
+| 关联分类 | 关联：哺乳纲 |
 | 子类 | 医疗 |
 | 星级 | 5 |
 | 时代 | 未来 |

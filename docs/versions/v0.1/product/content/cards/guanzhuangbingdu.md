@@ -2,7 +2,9 @@
 id: guanzhuangbingdu
 card_type: minion
 name: 冠状病毒
-tribe: virus
+playstyle: virus
+taxon: coronaviridae
+specialty: [host:mammalia]
 subtype: virus
 level: 6
 era: modern
@@ -21,7 +23,9 @@ is_scholar: false
 | id | guanzhuangbingdu |
 | 名称 | 冠状病毒 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 病毒 › 核糖病毒门 › 小核糖病毒纲 › 网巢病毒目 › 冠状病毒科 |
+| 关联分类 | 寄生：哺乳纲 |
 | 子类 | 病毒 |
 | 星级 | 6 |
 | 时代 | 现代 |

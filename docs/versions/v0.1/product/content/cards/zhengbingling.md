@@ -4,7 +4,8 @@ name: 征兵令
 card_type: effect
 level: 3
 era: industrial
-tribe: human
+playstyle: neutral
+taxon: phenomenon
 cost: 2
 match_text: 同左
 skills: [trigger-other-friendly-humans-plus-1-attack]
@@ -21,14 +22,17 @@ skills: [trigger-other-friendly-humans-plus-1-attack]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 流派 | 人类 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | trigger-other-friendly-humans-plus-1-attack |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
 
 ## 效果
 
-使你的其他人类随从各获得 +1 攻击力
+
+使你的其他人科随从各获得 +1 攻击力
 
 ## 出处
 

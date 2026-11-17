@@ -2,7 +2,8 @@
 id: revived-mammoth
 card_type: minion
 name: 复活猛犸
-tribe: biology
+playstyle: mammal
+taxon: elephantidae
 subtype: clone
 level: 6
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | revived-mammoth |
 | 名称 | 复活猛犸 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 长鼻目 › 象科 |
+| 关联分类 | 无 |
 | 子类 | 克隆 |
 | 星级 | 6 |
 | 时代 | 未来 |

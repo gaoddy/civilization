@@ -2,7 +2,9 @@
 id: baiyi
 card_type: minion
 name: 白蚁
-tribe: biology
+playstyle: insect
+taxon: termitidae
+specialty: [prey:plantae]
 subtype: insect
 level: 1
 era: prehistoric
@@ -21,7 +23,9 @@ is_scholar: false
 | id | baiyi |
 | 名称 | 白蚁 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 昆虫纲 |
+| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 蜚蠊目 › 白蚁科 |
+| 关联分类 | 捕食：植物界 |
 | 子类 | 昆虫 |
 | 星级 | 1 |
 | 时代 | 史前 |

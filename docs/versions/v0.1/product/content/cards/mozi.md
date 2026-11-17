@@ -2,7 +2,8 @@
 id: mozi
 card_type: minion
 name: 墨子
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: philosophy
 level: 4
 era: classical
@@ -22,7 +23,9 @@ is_hero: true
 | id | mozi |
 | 名称 | 墨子 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 哲学 |
 | 星级 | 4 |
 | 时代 | 古典 |

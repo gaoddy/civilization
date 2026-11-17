@@ -4,7 +4,8 @@ name: 狂人日记
 card_type: effect
 level: 2
 era: modern
-tribe: scholar
+playstyle: neutral
+taxon: phenomenon
 cost: 1
 match_text: 同左
 skills: [combatstart-remove-top-attack-enemy-growth]
@@ -21,7 +22,9 @@ skills: [combatstart-remove-top-attack-enemy-growth]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 现代 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | combatstart-remove-top-attack-enemy-growth |
 | 费用 | 1 |
 | 确定性替换 | 同左 |

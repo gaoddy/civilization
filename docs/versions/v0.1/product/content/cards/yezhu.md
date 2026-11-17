@@ -2,7 +2,9 @@
 id: yezhu
 card_type: minion
 name: 野猪
-tribe: biology
+playstyle: mammal
+taxon: suidae
+specialty: [prey:plantae]
 subtype: mammal
 level: 1
 era: primitive
@@ -21,7 +23,9 @@ is_scholar: false
 | id | yezhu |
 | 名称 | 野猪 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 偶蹄目 › 猪科 |
+| 关联分类 | 捕食：植物界 |
 | 子类 | 哺乳 |
 | 星级 | 1 |
 | 时代 | 原始 |

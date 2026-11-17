@@ -2,7 +2,8 @@
 id: nami-fengqun
 card_type: minion
 name: 纳米蜂群
-tribe: machine
+playstyle: machine
+taxon: automation
 subtype: nanotech
 level: 7
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | nami-fengqun |
 | 名称 | 纳米蜂群 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 机械 |
+| 科学分类 | 造物 › 自动机械 |
+| 关联分类 | 无 |
 | 子类 | 纳米 |
 | 星级 | 7 |
 | 时代 | 未来 |

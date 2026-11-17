@@ -2,7 +2,9 @@
 id: neiranji
 card_type: minion
 name: 内燃机
-tribe: machine
+playstyle: neutral
+taxon: power-energy
+specialty: [play:machine]
 subtype: power
 level: 4
 era: industrial
@@ -21,7 +23,9 @@ is_scholar: false
 | id | neiranji |
 | 名称 | 内燃机 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 动力与能源 |
+| 关联分类 | 关联：机械 |
 | 子类 | 动力 |
 | 星级 | 4 |
 | 时代 | 工业 |

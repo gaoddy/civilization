@@ -2,7 +2,8 @@
 id: qinghao
 card_type: minion
 name: 青蒿
-tribe: plant
+playstyle: plant
+taxon: asteraceae
 subtype: medicinal
 level: 4
 era: modern
@@ -21,7 +22,9 @@ is_scholar: false
 | id | qinghao |
 | 名称 | 青蒿 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 菊目 › 菊科 |
+| 关联分类 | 无 |
 | 子类 | 药用 |
 | 星级 | 4 |
 | 时代 | 现代 |

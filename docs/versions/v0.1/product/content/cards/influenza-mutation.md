@@ -4,7 +4,8 @@ name: 流感病毒·变异
 card_type: effect
 level: 2
 era: modern
-tribe: virus
+playstyle: neutral
+taxon: phenomenon
 cost: 1
 match_text: 同左
 skills: [combatstart-top-attack-enemy-minus-0-minus-2]
@@ -21,7 +22,9 @@ skills: [combatstart-top-attack-enemy-minus-0-minus-2]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 现代 |
-| 流派 | 病毒 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | combatstart-top-attack-enemy-minus-0-minus-2 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |

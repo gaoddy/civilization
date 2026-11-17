@@ -2,7 +2,8 @@
 id: zhanxiang
 card_type: minion
 name: 战象
-tribe: biology
+playstyle: mammal
+taxon: elephantidae
 subtype: beast
 level: 3
 era: classical
@@ -21,7 +22,9 @@ is_scholar: false
 | id | zhanxiang |
 | 名称 | 战象 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 长鼻目 › 象科 |
+| 关联分类 | 无 |
 | 子类 | 猛兽 |
 | 星级 | 3 |
 | 时代 | 古典 |

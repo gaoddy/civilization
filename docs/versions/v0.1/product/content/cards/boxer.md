@@ -2,7 +2,8 @@
 id: boxer
 card_type: minion
 name: 拳击手
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: athlete
 level: 4
 era: modern
@@ -21,7 +22,9 @@ is_scholar: false
 | id | boxer |
 | 名称 | 拳击手 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 运动员 |
 | 星级 | 4 |
 | 时代 | 现代 |
@@ -34,7 +37,8 @@ is_scholar: false
 
 ## 效果
 
-若你控制至少 3 个人类，获得 +2 攻击力
+
+若你控制至少 3 个人科随从，获得 +2 攻击力
 
 ## 出处
 

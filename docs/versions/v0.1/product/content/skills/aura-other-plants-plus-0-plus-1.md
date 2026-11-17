@@ -1,7 +1,7 @@
 ---
 id: aura-other-plants-plus-0-plus-1
 text: 你的其他植物随从获得 +0/+1
-effects: Aura|ModifyStats|friendly:all:tribe=plant:other=true|health=1,duration=permanent
+effects: Aura|ModifyStats|friendly:all:playstyle=plant:other=true|health=1,duration=permanent
 ---
 
 # aura-other-plants-plus-0-plus-1

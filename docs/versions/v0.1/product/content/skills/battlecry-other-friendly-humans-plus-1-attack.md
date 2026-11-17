@@ -1,8 +1,8 @@
 ---
 id: battlecry-other-friendly-humans-plus-1-attack
 keyword: battlecry
-text: 战吼：使你的其他人类随从获得 +1 攻击力
-effects: OnPlay|ModifyStats|friendly:all:tribe=human:other=true|attack=1,duration=permanent
+text: 战吼：使你的其他人科随从获得 +1 攻击力
+effects: OnPlay|ModifyStats|friendly:all:taxon=hominidae:other=true|attack=1,duration=permanent
 ---
 
 # battlecry-other-friendly-humans-plus-1-attack
@@ -17,4 +17,4 @@ effects: OnPlay|ModifyStats|friendly:all:tribe=human:other=true|attack=1,duratio
 
 ## 效果
 
-战吼：使你的其他人类随从获得 +1 攻击力
+战吼：使你的其他人科随从获得 +1 攻击力

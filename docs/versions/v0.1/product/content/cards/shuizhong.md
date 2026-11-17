@@ -2,7 +2,9 @@
 id: shuizhong
 card_type: minion
 name: 水钟
-tribe: machine
+playstyle: neutral
+taxon: information-computing
+specialty: [play:machine]
 subtype: timekeeping
 level: 1
 era: classical
@@ -21,7 +23,9 @@ is_scholar: false
 | id | shuizhong |
 | 名称 | 水钟 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 信息与计算 |
+| 关联分类 | 关联：机械 |
 | 子类 | 计时 |
 | 星级 | 1 |
 | 时代 | 古典 |

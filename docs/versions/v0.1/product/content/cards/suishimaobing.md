@@ -2,7 +2,8 @@
 id: suishimaobing
 card_type: minion
 name: 燧石矛兵
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: primitive
 level: 1
 era: prehistoric
@@ -21,7 +22,9 @@ is_scholar: false
 | id | suishimaobing |
 | 名称 | 燧石矛兵 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 原始 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -34,7 +37,8 @@ is_scholar: false
 
 ## 效果
 
-若你控制至少 2 个人类，获得 +1 攻击力
+
+若你控制至少 2 个人科随从，获得 +1 攻击力
 
 ## 出处
 

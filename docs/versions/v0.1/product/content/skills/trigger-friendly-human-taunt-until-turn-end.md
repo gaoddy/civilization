@@ -1,7 +1,7 @@
 ---
 id: trigger-friendly-human-taunt-until-turn-end
-text: 使一个友方人类随从获得嘲讽直到回合结束
-effects: OnPlayEffect|GrantKeyword|friendly:single:tribe=human|keyword=taunt,duration=combat
+text: 使一个友方人科随从获得嘲讽直到回合结束
+effects: OnPlayEffect|GrantKeyword|friendly:single:taxon=hominidae|keyword=taunt,duration=combat
 match_text: 同左
 ---
 
@@ -17,4 +17,4 @@ match_text: 同左
 
 ## 效果
 
-使一个友方人类随从获得嘲讽直到回合结束
+使一个友方人科随从获得嘲讽直到回合结束

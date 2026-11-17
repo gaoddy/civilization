@@ -2,7 +2,9 @@
 id: cholera
 card_type: minion
 name: 霍乱
-tribe: virus
+playstyle: virus
+taxon: vibrionaceae
+specialty: [host:hominidae]
 subtype: bacteria
 level: 4
 era: feudal
@@ -21,7 +23,9 @@ is_scholar: false
 | id | cholera |
 | 名称 | 霍乱 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 弧菌科 |
+| 关联分类 | 寄生：人科 |
 | 子类 | 细菌 |
 | 星级 | 4 |
 | 时代 | 封建 |

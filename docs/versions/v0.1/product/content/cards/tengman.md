@@ -2,7 +2,8 @@
 id: tengman
 card_type: minion
 name: 藤蔓
-tribe: plant
+playstyle: plant
+taxon: plantae-incertae-sedis
 subtype: vine
 level: 1
 era: primitive
@@ -21,7 +22,9 @@ is_scholar: false
 | id | tengman |
 | 名称 | 藤蔓 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 藤本 |
 | 星级 | 1 |
 | 时代 | 原始 |

@@ -2,7 +2,9 @@
 id: gauss
 card_type: minion
 name: 高斯
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:mammal]
 subtype: mathematics
 level: 5
 era: modern
@@ -22,7 +24,9 @@ is_hero: true
 | id | gauss |
 | 名称 | 高斯 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：哺乳纲 |
 | 子类 | 数学 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -39,7 +43,7 @@ is_hero: true
 
 ## 设计说明
 
-定位：学者流的主动成长来源，稳定把一次成长翻倍给同流派随从。
+定位：学者流的主动成长来源，稳定把一次成长翻倍给同玩法随从。
 平衡边界：两次成长等于 2 点属性，与 1 金 1 次的通用成长技能相比只多一次、但限定学者。
 使用建议：第 4 回合起配合已上场的学者随从，把有限的成长次数集中到一个身材上。
 

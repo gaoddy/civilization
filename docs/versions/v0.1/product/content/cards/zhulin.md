@@ -2,7 +2,8 @@
 id: zhulin
 card_type: minion
 name: 竹林
-tribe: plant
+playstyle: plant
+taxon: poaceae
 subtype: tree
 level: 3
 era: feudal
@@ -21,7 +22,9 @@ is_scholar: false
 | id | zhulin |
 | 名称 | 竹林 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 禾本目 › 禾本科 |
+| 关联分类 | 无 |
 | 子类 | 树木 |
 | 星级 | 3 |
 | 时代 | 封建 |

@@ -2,7 +2,9 @@
 id: agi
 card_type: minion
 name: 通用人工智能
-tribe: scholar
+playstyle: neutral
+taxon: automation
+specialty: [play:machine, play:mammal]
 subtype: computer
 level: 6
 era: future
@@ -21,7 +23,9 @@ is_scholar: true
 | id | agi |
 | 名称 | 通用人工智能 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 自动机械 |
+| 关联分类 | 擅长：机械、哺乳纲 |
 | 子类 | 计算机 |
 | 星级 | 6 |
 | 时代 | 未来 |

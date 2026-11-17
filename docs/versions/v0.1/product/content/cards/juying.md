@@ -2,7 +2,9 @@
 id: juying
 card_type: minion
 name: 巨鹰
-tribe: biology
+playstyle: bird
+taxon: accipitridae
+specialty: [prey:artiodactyla]
 subtype: bird
 level: 2
 era: prehistoric
@@ -21,7 +23,9 @@ is_scholar: false
 | id | juying |
 | 名称 | 巨鹰 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 鸟纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹰形目 › 鹰科 |
+| 关联分类 | 捕食：偶蹄目 |
 | 子类 | 鸟类 |
 | 星级 | 2 |
 | 时代 | 史前 |

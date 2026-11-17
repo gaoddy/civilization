@@ -2,7 +2,9 @@
 id: airplane
 card_type: minion
 name: 飞机
-tribe: machine
+playstyle: neutral
+taxon: transport
+specialty: [play:machine]
 subtype: flight
 level: 5
 era: modern
@@ -21,7 +23,9 @@ is_scholar: false
 | id | airplane |
 | 名称 | 飞机 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 交通与运载 |
+| 关联分类 | 关联：机械 |
 | 子类 | 飞行 |
 | 星级 | 5 |
 | 时代 | 现代 |

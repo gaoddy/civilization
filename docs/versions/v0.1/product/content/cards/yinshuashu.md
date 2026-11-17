@@ -4,7 +4,8 @@ name: 印刷术
 card_type: effect
 level: 3
 era: feudal
-tribe: scholar
+playstyle: neutral
+taxon: phenomenon
 cost: 2
 match_text: 同左
 skills: [trigger-copy-hand-minion]
@@ -21,7 +22,9 @@ skills: [trigger-copy-hand-minion]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | trigger-copy-hand-minion |
 | 费用 | 2 |
 | 确定性替换 | 同左 |

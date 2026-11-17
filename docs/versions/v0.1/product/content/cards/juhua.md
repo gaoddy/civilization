@@ -2,7 +2,8 @@
 id: juhua
 card_type: minion
 name: 巨花
-tribe: plant
+playstyle: plant
+taxon: plantae-incertae-sedis
 subtype: flower
 level: 3
 era: primitive
@@ -21,7 +22,9 @@ is_scholar: false
 | id | juhua |
 | 名称 | 巨花 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 花卉 |
 | 星级 | 3 |
 | 时代 | 原始 |

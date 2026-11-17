@@ -2,7 +2,8 @@
 id: shizijun
 card_type: minion
 name: 十字军
-tribe: human
+playstyle: mammal
+taxon: hominidae
 subtype: unit
 level: 5
 era: feudal
@@ -21,7 +22,9 @@ is_scholar: false
 | id | shizijun |
 | 名称 | 十字军 |
 | 类型 | 随从 |
-| 流派 | 人类 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 兵种 |
 | 星级 | 5 |
 | 时代 | 封建 |
@@ -34,7 +37,7 @@ is_scholar: false
 
 ## 效果
 
-嘲讽；每当一个友方人类随从死亡，获得 +1/+1
+嘲讽；每当一个友方人科随从死亡，获得 +1/+1
 
 ## 出处
 

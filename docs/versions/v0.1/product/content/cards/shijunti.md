@@ -2,7 +2,9 @@
 id: shijunti
 card_type: minion
 name: 噬菌体
-tribe: virus
+playstyle: virus
+taxon: virus-incertae-sedis
+specialty: [host:bacteria]
 subtype: microorganism
 level: 1
 era: prehistoric
@@ -21,7 +23,9 @@ is_scholar: false
 | id | shijunti |
 | 名称 | 噬菌体 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 病毒 › 未定科 |
+| 关联分类 | 寄生：细菌域 |
 | 子类 | 微生物 |
 | 星级 | 1 |
 | 时代 | 史前 |

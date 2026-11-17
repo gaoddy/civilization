@@ -4,7 +4,8 @@ name: DNA双螺旋结构
 card_type: effect
 level: 4
 era: future
-tribe: biology
+playstyle: neutral
+taxon: phenomenon
 cost: 2
 match_text: 同左
 skills: [trigger-friendly-growth-thrice]
@@ -21,7 +22,9 @@ skills: [trigger-friendly-growth-thrice]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 未来 |
-| 流派 | 生物 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | trigger-friendly-growth-thrice |
 | 费用 | 2 |
 | 确定性替换 | 同左 |

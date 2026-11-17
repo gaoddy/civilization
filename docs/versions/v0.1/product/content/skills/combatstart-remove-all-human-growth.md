@@ -1,7 +1,7 @@
 ---
 id: combatstart-remove-all-human-growth
-text: 战斗开始时，移除所有人类随从的全部成长
-effects: OnCombatStart|RemoveGrowth|both:all:tribe=human
+text: 战斗开始时，移除所有人科随从的全部成长
+effects: OnCombatStart|RemoveGrowth|both:all:taxon=hominidae
 match_text: 同左
 ---
 
@@ -17,4 +17,4 @@ match_text: 同左
 
 ## 效果
 
-战斗开始时，移除所有人类随从的全部成长
+战斗开始时，移除所有人科随从的全部成长

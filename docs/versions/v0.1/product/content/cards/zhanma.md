@@ -2,7 +2,8 @@
 id: zhanma
 card_type: minion
 name: 战马
-tribe: biology
+playstyle: mammal
+taxon: equidae
 subtype: mammal
 level: 4
 era: feudal
@@ -21,7 +22,9 @@ is_scholar: false
 | id | zhanma |
 | 名称 | 战马 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 奇蹄目 › 马科 |
+| 关联分类 | 无 |
 | 子类 | 哺乳 |
 | 星级 | 4 |
 | 时代 | 封建 |

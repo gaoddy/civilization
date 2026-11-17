@@ -2,7 +2,9 @@
 id: davinci
 card_type: minion
 name: 达·芬奇
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:cephalopod, play:mammal]
 subtype: polymath
 level: 5
 era: feudal
@@ -22,7 +24,9 @@ is_hero: true
 | id | davinci |
 | 名称 | 达·芬奇 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：头足纲、哺乳纲 |
 | 子类 | 博学者 |
 | 星级 | 5 |
 | 时代 | 封建 |

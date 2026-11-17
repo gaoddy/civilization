@@ -4,7 +4,8 @@ name: 狭义相对论
 card_type: effect
 level: 4
 era: future
-tribe: general
+playstyle: neutral
+taxon: phenomenon
 cost: 2
 match_text: 同左
 skills: [trigger-minion-windfury-this-turn]
@@ -21,7 +22,9 @@ skills: [trigger-minion-windfury-this-turn]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 未来 |
-| 流派 | 通用 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
 | 技能 | trigger-minion-windfury-this-turn |
 | 费用 | 2 |
 | 确定性替换 | 同左 |

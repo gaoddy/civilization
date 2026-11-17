@@ -2,7 +2,9 @@
 id: langqunshouling
 card_type: minion
 name: 狼群首领
-tribe: biology
+playstyle: mammal
+taxon: canidae
+specialty: [prey:artiodactyla]
 subtype: mammal
 level: 2
 era: primitive
@@ -21,7 +23,9 @@ is_scholar: false
 | id | langqunshouling |
 | 名称 | 狼群首领 |
 | 类型 | 随从 |
-| 流派 | 生物 |
+| 玩法 | 哺乳纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 犬科 |
+| 关联分类 | 捕食：偶蹄目 |
 | 子类 | 哺乳 |
 | 星级 | 2 |
 | 时代 | 原始 |
@@ -34,7 +38,7 @@ is_scholar: false
 
 ## 效果
 
-你的其他生物随从获得 +1 攻击力
+你的其他动物随从获得 +1 攻击力
 
 ## 出处
 

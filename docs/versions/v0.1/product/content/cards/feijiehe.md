@@ -2,7 +2,9 @@
 id: feijiehe
 card_type: minion
 name: 肺结核
-tribe: virus
+playstyle: virus
+taxon: mycobacteriaceae
+specialty: [host:hominidae]
 subtype: disease
 level: 3
 era: industrial
@@ -21,7 +23,9 @@ is_scholar: false
 | id | feijiehe |
 | 名称 | 肺结核 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 细菌域 › 放线菌门 › 放线菌纲 › 分枝杆菌目 › 分枝杆菌科 |
+| 关联分类 | 寄生：人科 |
 | 子类 | 疾病 |
 | 星级 | 3 |
 | 时代 | 工业 |

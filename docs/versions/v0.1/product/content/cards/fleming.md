@@ -2,7 +2,8 @@
 id: fleming
 card_type: minion
 name: 弗莱明
-tribe: virus
+playstyle: virus
+taxon: hominidae
 subtype: microbiology
 level: 4
 era: modern
@@ -22,7 +23,9 @@ is_hero: true
 | id | fleming |
 | 名称 | 弗莱明 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 无 |
 | 子类 | 微生物学 |
 | 星级 | 4 |
 | 时代 | 现代 |

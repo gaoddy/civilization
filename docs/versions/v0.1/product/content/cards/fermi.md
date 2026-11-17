@@ -2,7 +2,9 @@
 id: fermi
 card_type: minion
 name: 费米
-tribe: scholar
+playstyle: neutral
+taxon: hominidae
+specialty: [play:mammal, play:machine]
 subtype: nuclear-physics
 level: 7
 era: future
@@ -21,7 +23,9 @@ is_scholar: true
 | id | fermi |
 | 名称 | 费米 |
 | 类型 | 随从 |
-| 流派 | 学者 |
+| 玩法 | 中立 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 擅长：哺乳纲、机械 |
 | 子类 | 核物理 |
 | 星级 | 7 |
 | 时代 | 未来 |

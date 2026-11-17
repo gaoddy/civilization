@@ -2,7 +2,9 @@
 id: space-elevator
 card_type: minion
 name: 太空电梯
-tribe: machine
+playstyle: neutral
+taxon: production-construction
+specialty: [play:machine]
 subtype: architecture
 level: 6
 era: future
@@ -21,7 +23,9 @@ is_scholar: false
 | id | space-elevator |
 | 名称 | 太空电梯 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 中立 |
+| 科学分类 | 造物 › 生产与建筑 |
+| 关联分类 | 关联：机械 |
 | 子类 | 建筑 |
 | 星级 | 6 |
 | 时代 | 未来 |

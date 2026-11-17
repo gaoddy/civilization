@@ -2,7 +2,8 @@
 id: vertical-farm
 card_type: minion
 name: 垂直农场
-tribe: plant
+playstyle: plant
+taxon: plantae-incertae-sedis
 subtype: architecture
 level: 6
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | vertical-farm |
 | 名称 | 垂直农场 |
 | 类型 | 随从 |
-| 流派 | 植物 |
+| 玩法 | 植物界 |
+| 科学分类 | 植物界 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 建筑 |
 | 星级 | 6 |
 | 时代 | 未来 |

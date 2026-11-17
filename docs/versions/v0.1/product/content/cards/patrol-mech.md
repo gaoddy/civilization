@@ -2,7 +2,8 @@
 id: patrol-mech
 card_type: minion
 name: 巡逻机甲
-tribe: machine
+playstyle: machine
+taxon: automation
 subtype: mecha
 level: 5
 era: modern
@@ -21,7 +22,9 @@ is_scholar: false
 | id | patrol-mech |
 | 名称 | 巡逻机甲 |
 | 类型 | 随从 |
-| 流派 | 机械 |
+| 玩法 | 机械 |
+| 科学分类 | 造物 › 自动机械 |
+| 关联分类 | 无 |
 | 子类 | 机甲 |
 | 星级 | 5 |
 | 时代 | 现代 |

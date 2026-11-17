@@ -2,7 +2,8 @@
 id: engineered-virus
 card_type: minion
 name: 基因工程病毒
-tribe: virus
+playstyle: virus
+taxon: virus-incertae-sedis
 subtype: virus
 level: 6
 era: future
@@ -21,7 +22,9 @@ is_scholar: false
 | id | engineered-virus |
 | 名称 | 基因工程病毒 |
 | 类型 | 随从 |
-| 流派 | 病毒 |
+| 玩法 | 病毒 |
+| 科学分类 | 病毒 › 未定科 |
+| 关联分类 | 无 |
 | 子类 | 病毒 |
 | 星级 | 6 |
 | 时代 | 未来 |
