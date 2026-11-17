@@ -6,13 +6,6 @@ extends Control
 ## 模态浮层打开时由页面把 `blocked` 置真，本层直接隐藏且不再响应悬停。
 
 const DETAIL_ROWS := ["initial", "permanent", "turn", "aura", "damage"]
-const DETAIL_ROW_TEXT := {
-    "initial": "初始",
-    "permanent": "永久",
-    "turn": "回合",
-    "aura": "光环",
-    "damage": "受击",
-}
 ## 详情面板的挂载方向：商店卡在左右，棋盘卡在上下。
 const DETAIL_SIDES := {
     "shop": ["right", "left"],
@@ -160,15 +153,15 @@ func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
     var card_id := str(data.get("cardId", ""))
     var entry := CardDB.card(card_id)
     box.add_child(_detail_name(CardDB.display_name(card_id)))
-    box.add_child(_detail_row("类型", GameCardFace.type_text(entry)))
-    box.add_child(_detail_row("费用", "%d 金" % CardDB.display_cost(card_id)))
-    box.add_child(_detail_row("原始", "%s / %s" % [
+    box.add_child(_detail_row(tr("ui.game.detail.type"), GameCardFace.type_text(entry)))
+    box.add_child(_detail_row(tr("ui.game.detail.cost"), tr("ui.game.detail.cost_value") % CardDB.display_cost(card_id)))
+    box.add_child(_detail_row(tr("ui.game.detail.initial_stats"), "%s / %s" % [
         GameCardFace.stat_text(entry.get("attack")),
         GameCardFace.stat_text(entry.get("health")),
     ]))
     var era := str(entry.get("era", ""))
     if era != "":
-        box.add_child(_detail_row("时代", era))
+        box.add_child(_detail_row(tr("ui.game.detail.era"), UI.enum_text("era", era)))
     var skill_text := CardDB.display_text(card_id)
     if skill_text != "":
         box.add_child(_detail_text_block(skill_text))
@@ -182,22 +175,28 @@ func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
 ## 座位详情：名字、英雄、生命（当前/上限）、时代、随从数与状态。
 func _render_seat_detail(box: VBoxContainer, player: Dictionary, hp_cap: int) -> void:
     box.add_child(_detail_name(GameCardFace.optional_text(player.get("displayName"))))
-    box.add_child(_detail_row("英雄", CardDB.display_name(GameCardFace.optional_text(player.get("heroCardId")))))
-    box.add_child(_detail_row("生命", "%d/%d" % [int(player.get("hp", 0)), maxi(hp_cap, 0)]))
-    box.add_child(_detail_row("时代", CardDB.era_name(int(player.get("era", 1)))))
-    box.add_child(_detail_row("随从", "%d" % int(player.get("boardCount", 0))))
+    box.add_child(_detail_row(tr("ui.game.detail.hero"), CardDB.display_name(GameCardFace.optional_text(player.get("heroCardId")))))
+    box.add_child(_detail_row(tr("ui.game.detail.hp"), "%d/%d" % [int(player.get("hp", 0)), maxi(hp_cap, 0)]))
+    box.add_child(_detail_row(tr("ui.game.detail.era"), CardDB.era_name(int(player.get("era", 1)))))
+    box.add_child(_detail_row(tr("ui.game.detail.minions"), "%d" % int(player.get("boardCount", 0))))
     var alive := bool(player.get("alive", true))
-    box.add_child(_detail_row("状态", "存活" if alive else "淘汰"))
+    box.add_child(_detail_row(
+        tr("ui.game.detail.status"),
+        tr("ui.game.detail.alive") if alive else tr("ui.game.detail.eliminated"),
+    ))
     if alive:
-        box.add_child(_detail_row("招募", "已招募" if bool(player.get("recruited", false)) else "未招募"))
+        box.add_child(_detail_row(
+            tr("ui.game.detail.recruit"),
+            tr("ui.game.detail.recruited") if bool(player.get("recruited", false)) else tr("ui.game.detail.not_recruited"),
+        ))
 
 
 ## 售货员详情：营业状态与可执行的商店操作，替代常驻文字。
 func _render_seller_detail(box: VBoxContainer) -> void:
-    box.add_child(_detail_name("售货员"))
-    box.add_child(_detail_row("状态", "商店营业中"))
+    box.add_child(_detail_name(tr("ui.game.detail.seller")))
+    box.add_child(_detail_row(tr("ui.game.detail.status"), tr("ui.game.detail.shop_open")))
     var hint := UI.label(
-        "招募阶段可用：\n购买、刷新、升时代、冻结。",
+        tr("ui.game.detail.shop_hint"),
         UITheme.font_size("font-body-sm"),
     )
     hint.custom_minimum_size = Vector2(_detail_text_width(), 0)
@@ -214,13 +213,13 @@ func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
     var tribe := str(entry.get("tribe", ""))
     var era := str(entry.get("era", ""))
     if tribe != "":
-        box.add_child(_detail_row("部落", tribe))
+        box.add_child(_detail_row(tr("ui.game.detail.tribe"), UI.enum_text("tribe", tribe)))
     if era != "":
-        box.add_child(_detail_row("时代", era))
+        box.add_child(_detail_row(tr("ui.game.detail.era"), UI.enum_text("era", era)))
     var skill_text := CardDB.display_text(id)
     if skill_text == "":
         return
-    var heading := UI.label("英雄技能", UITheme.font_size("font-caption"), false)
+    var heading := UI.label(tr("ui.game.detail.hero_power"), UITheme.font_size("font-caption"), false)
     heading.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     box.add_child(heading)
     box.add_child(_detail_text_block(skill_text))
@@ -235,7 +234,7 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
         box.add_child(_detail_text_block(skill_text))
     var stats: Dictionary = minion.get("stats", {})
     if typeof(stats) != TYPE_DICTIONARY or stats.is_empty():
-        box.add_child(_detail_row("当前", "%d / %d" % [
+        box.add_child(_detail_row(tr("ui.game.detail.current"), "%d / %d" % [
             int(minion.get("attack", 0)),
             int(minion.get("health", 0)),
         ]))
@@ -247,7 +246,7 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
         var h := int(health.get(layer, 0))
         if layer == "damage" and a == 0 and h == 0:
             continue
-        var label := str(DETAIL_ROW_TEXT[layer])
+        var label := UI.enum_text("stat_layer", layer)
         if layer == "initial":
             box.add_child(_detail_row(label, "%d / %d" % [a, h]))
         elif layer == "damage":
@@ -260,7 +259,7 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
                 GameCardFace.signed(a),
                 GameCardFace.signed(h),
             ]))
-    box.add_child(_detail_row("当前", "%d / %d" % [
+    box.add_child(_detail_row(tr("ui.game.detail.current"), "%d / %d" % [
         int(attack.get("current", 0)),
         int(health.get("current", 0)),
     ]))

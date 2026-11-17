@@ -92,7 +92,7 @@ func _init() -> void:
     hero_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
     hero_box.add_child(hero_spacer)
 
-    _hero_power_button = UI.styled_button("英雄技能", "default", 40)
+    _hero_power_button = UI.styled_button(tr("ui.game.side_panel.hero_power"), "default", 40)
     _hero_power_button.name = "HeroPowerButton"
     _hero_power_button.pressed.connect(func() -> void: hero_power_pressed.emit())
     hero_box.add_child(_hero_power_button)
@@ -108,11 +108,11 @@ func _build_shop_actions() -> HBoxContainer:
     _shop_actions = HBoxContainer.new()
     _shop_actions.name = "ShopActions"
     _shop_actions.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    _reroll_button = _shop_action_button("RerollButton", "刷新")
+    _reroll_button = _shop_action_button("RerollButton", tr("ui.game.side_panel.reroll"))
     _reroll_button.pressed.connect(func() -> void: reroll_pressed.emit())
-    _upgrade_button = _shop_action_button("UpgradeButton", "升时代")
+    _upgrade_button = _shop_action_button("UpgradeButton", tr("ui.game.side_panel.upgrade"))
     _upgrade_button.pressed.connect(func() -> void: upgrade_pressed.emit())
-    _freeze_button = _shop_action_button("FreezeButton", "冻结")
+    _freeze_button = _shop_action_button("FreezeButton", tr("ui.game.side_panel.freeze"))
     _freeze_button.pressed.connect(func() -> void: freeze_pressed.emit())
     return _shop_actions
 
@@ -144,7 +144,7 @@ func _build_countdown_flip() -> Control:
     _timer_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _countdown_flip.add_child(_timer_label)
 
-    _end_button = UI.styled_button("结束招募", "primary", 40)
+    _end_button = UI.styled_button(tr("ui.game.side_panel.end_recruit"), "primary", 40)
     _end_button.name = "EndButton"
     _end_button.set_anchors_preset(Control.PRESET_FULL_RECT)
     _end_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -208,13 +208,13 @@ func has_deadline() -> bool:
 func _update_countdown() -> void:
     var text := "—"
     if _phase == Protocol.PHASE_COMBAT:
-        text = "战斗中"
+        text = tr("ui.game.side_panel.combat")
     else:
         var left := seconds_left()
         if left > 0:
-            text = "剩余 %d 秒" % left
+            text = tr("ui.game.side_panel.remaining_seconds") % left
         elif left == 0:
-            text = "等待结算"
+            text = tr("ui.game.side_panel.waiting_settle")
     if _timer_label.text != text:
         _timer_label.text = text
     _apply_countdown_flip()
@@ -249,7 +249,7 @@ func _on_countdown_input(event: InputEvent) -> void:
 
 
 func _refresh_status(state: GameUiState) -> void:
-    _turn_label.text = "第 %d 回合" % int(state.view.get("turn", GameStore.turn))
+    _turn_label.text = tr("ui.game.side_panel.turn") % int(state.view.get("turn", GameStore.turn))
 
 
 ## 身份判定以阶段优先：招募阶段一律显示售货员（即使自己已淘汰），
@@ -262,7 +262,9 @@ func _refresh_identity(state: GameUiState) -> void:
 
     var self_player := _player(state.view, GameStore.player_id)
     if not self_player.is_empty() and not bool(self_player.get("alive", true)):
-        _identity_content.add_child(UI.label("已淘汰 · 观战中", UITheme.font_size("font-body"), false))
+        _identity_content.add_child(
+            UI.label(tr("ui.game.side_panel.eliminated"), UITheme.font_size("font-body"), false)
+        )
         return
 
     var opponent_id := GameCardFace.optional_text(state.view.get("opponentPlayerId"))
@@ -273,12 +275,19 @@ func _refresh_identity(state: GameUiState) -> void:
     if opponent_id != "":
         _identity_content.add_child(_opponent_block(_player(state.view, opponent_id), state.hp_cap, false))
         return
-    _identity_content.add_child(UI.label("等待配对", UITheme.font_size("font-body"), false))
+    _identity_content.add_child(
+        UI.label(tr("ui.game.side_panel.waiting_match"), UITheme.font_size("font-body"), false)
+    )
 
 
 ## 招募阶段的售货员：大图 + 底部居中名字，营业信息放在悬停提示里。
 func _seller_block() -> Control:
-    var tile := _portrait_tile("SellerTile", "售货员", "售", UITheme.tribe_color("通用"))
+    var tile := _portrait_tile(
+        "SellerTile",
+        tr("ui.game.side_panel.seller"),
+        tr("ui.game.side_panel.seller_glyph"),
+        UITheme.tribe_color("general"),
+    )
     if detail != null and is_instance_valid(detail):
         detail.track(tile, {"detail_kind": "seller"})
     return tile
@@ -366,25 +375,27 @@ func _opponent_block(player: Dictionary, hp_cap: int, ghost: bool) -> Control:
     name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
     name_row.add_child(name_label)
     if ghost:
-        var ghost_badge := UI.pill_label("幽灵", "info", "font-caption")
+        var ghost_badge := UI.pill_label(tr("ui.game.side_panel.ghost"), "info", "font-caption")
         ghost_badge.name = "GhostBadge"
         name_row.add_child(ghost_badge)
     var rank = player.get("rank")
     if rank != null:
-        var rank_badge := UI.pill_label("第 %d 名" % int(rank), "accent", "font-caption")
+        var rank_badge := UI.pill_label(
+            tr("ui.game.side_panel.rank") % int(rank), "accent", "font-caption"
+        )
         rank_badge.name = "RankBadge"
         name_row.add_child(rank_badge)
 
     var hero_id := GameCardFace.optional_text(player.get("heroCardId"))
     var hero_label := UI.label(
-        CardDB.display_name(hero_id) if hero_id != "" else "未知英雄",
+        CardDB.display_name(hero_id) if hero_id != "" else tr("ui.game.side_panel.unknown_hero"),
         UITheme.font_size("font-body-sm"),
         false,
     )
     hero_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
     info.add_child(hero_label)
 
-    var meta := UI.label("HP %d/%d · %s · 随从 %d" % [
+    var meta := UI.label(tr("ui.game.side_panel.hp_line") % [
         int(player.get("hp", 0)),
         maxi(hp_cap, 1),
         GameCardFace.era_text(int(player.get("era", 1))),
@@ -420,7 +431,7 @@ func _refresh_hero(state: GameUiState) -> void:
     UI.clear(_hero_detail)
     var self_state := state.self_state
     var hero_id := GameCardFace.optional_text(self_state.get("heroCardId"))
-    var display_name := CardDB.display_name(hero_id) if hero_id != "" else "未选英雄"
+    var display_name := CardDB.display_name(hero_id) if hero_id != "" else tr("ui.common.no_hero")
     var entry := CardDB.card(hero_id)
     var tribe := str(entry.get("tribe", ""))
     var tint := (
@@ -437,20 +448,20 @@ func _refresh_hero(state: GameUiState) -> void:
     UI.clear(_stats_row)
     _stats_row.add_child(
         _stat_tile(
-            "生命",
+            tr("ui.game.side_panel.hp"),
             "%d/%d" % [int(self_state.get("hp", 0)), maxi(state.hp_cap, 1)],
             "color-success",
         )
     )
     _stats_row.add_child(
         _stat_tile(
-            "时代",
+            tr("ui.game.side_panel.era"),
             CardDB.era_name(int(self_state.get("era", 1))),
             "color-info",
         )
     )
     _stats_row.add_child(
-        _stat_tile("金币", str(int(self_state.get("gold", 0))), "color-accent")
+        _stat_tile(tr("ui.game.side_panel.gold"), str(int(self_state.get("gold", 0))), "color-accent")
     )
 
 
@@ -478,23 +489,25 @@ func _refresh_actions(state: GameUiState) -> void:
     var aff: Dictionary = state.self_state.get("affordances", {})
     var blocked := state.stale or state.expired or state.target_pending
 
-    _reroll_button.text = "刷新 %d 金" % int(state.self_state.get("rerollCost", 0))
+    _reroll_button.text = tr("ui.game.side_panel.reroll_cost") % int(state.self_state.get("rerollCost", 0))
     _reroll_button.disabled = blocked or not bool(aff.get("canReroll", false))
 
     var upgrade_cost = state.self_state.get("upgradeCost")
     if upgrade_cost != null:
-        _upgrade_button.text = "升时代 %d 金" % int(upgrade_cost)
+        _upgrade_button.text = tr("ui.game.side_panel.upgrade_cost") % int(upgrade_cost)
     else:
-        _upgrade_button.text = "时代已满"
+        _upgrade_button.text = tr("ui.game.side_panel.era_max")
     _upgrade_button.disabled = blocked or not bool(aff.get("canUpgradeEra", false))
     _upgrade_button.tooltip_text = "" if aff.get("upgradeDisabledReason") == null else UI.error_text(str(aff.get("upgradeDisabledReason")))
 
     _freeze_button.disabled = blocked or state.phase != Protocol.PHASE_RECRUIT or state.recruited
 
     var power: Dictionary = state.self_state.get("heroPower", {})
-    _hero_power_button.text = "英雄技能（剩 %d）" % int(power.get("usesLeft", 0))
+    _hero_power_button.text = tr("ui.game.side_panel.hero_power_uses") % int(power.get("usesLeft", 0))
     _hero_power_button.disabled = blocked or not bool(aff.get("canUseHeroPower", false))
     _hero_power_button.tooltip_text = "" if aff.get("heroPowerDisabledReason") == null else UI.error_text(str(aff.get("heroPowerDisabledReason")))
 
-    _end_button.text = "已结束招募" if state.recruited else "结束招募"
+    _end_button.text = (
+        tr("ui.game.side_panel.recruited") if state.recruited else tr("ui.game.side_panel.end_recruit")
+    )
     _end_button.disabled = blocked or not bool(aff.get("canEndRecruit", false))

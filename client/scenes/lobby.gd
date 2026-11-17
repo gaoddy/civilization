@@ -82,13 +82,7 @@ func _on_auth_changed() -> void:
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
     _status.text = UI.error_text(code)
-    var raw_params = GameStore.last_error.get("messageParams", [])
-    var params: Array = raw_params if raw_params is Array else []
-    var detail := UI.error_text_by_id(
-        str(GameStore.last_error.get("messageId", "")),
-        params,
-    )
-    _status.tooltip_text = detail if detail != "" else UI.error_text(code)
+    _status.tooltip_text = UI.error_tooltip(code)
     if UI.error_route(code) == "login":
         GameStore.reset_session()
         UI.navigate(self, "res://scenes/login.tscn")

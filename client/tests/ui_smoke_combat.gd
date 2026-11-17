@@ -56,10 +56,18 @@ func _check_banner_variants() -> void:
     var draw := FixtureScript.combat_result()
     draw["winnerId"] = null
     draw["damage"] = 0
-    await _expect_banner(draw, ["平局", "伤害 0"], "平局")
+    await _expect_banner(
+        draw,
+        [TranslationServer.translate("ui.game.combat.draw"), "伤害 0"],
+        "平局",
+    )
     var ghost := FixtureScript.combat_result()
     ghost["mirror"] = true
-    await _expect_banner(ghost, ["（幽灵）"], "幽灵战")
+    await _expect_banner(
+        ghost,
+        [TranslationServer.translate("ui.game.combat.ghost_suffix")],
+        "幽灵战",
+    )
 
 
 ## 摆一份战报并推进到演示结束，断言横幅文案包含给定片段。
@@ -163,7 +171,10 @@ func _check_combat_hides_countdown() -> void:
     var timer: Label = instance.find_child("TimerLabel", true, false)
     _expect(timer != null, "右栏应有倒计时标签")
     if timer != null:
-        _expect(timer.text == "战斗中", "战斗阶段状态行应显示「战斗中」，实际「%s」" % timer.text)
+        _expect(
+            timer.text == TranslationServer.translate("ui.game.side_panel.combat"),
+            "战斗阶段状态行应显示战斗中，实际「%s」" % timer.text,
+        )
         _expect(not timer.text.contains("剩余"), "战斗阶段不应显示招募倒计时")
     instance.queue_free()
     await get_tree().process_frame

@@ -51,8 +51,14 @@ func _ready() -> void:
         var era := open_card.find_child("EraBadge", true, false)
         _expect(era != null, "商店卡右上角应有 EraBadge")
         if era != null:
-            _expect(str(era.text) == str(CardDB.card("aolinpike-jidian").get("era", "")), "EraBadge 文本应为卡表时代")
-            _expect(str(era.text) == "古典", "EraBadge 应显示「古典」，实际：%s" % str(era.text))
+            _expect(
+                str(era.text) == UI.enum_text("era", str(CardDB.card("aolinpike-jidian").get("era", ""))),
+                "EraBadge 文本应为卡表时代的展示名",
+            )
+            _expect(
+                str(era.text) == TranslationServer.translate("enum.era.classical"),
+                "EraBadge 应显示时代文案，实际：%s" % str(era.text),
+            )
         _expect(open_card.find_child("FreezeOverlay", true, false) == null, "未冻结卡不应有冻结蒙层")
         _expect(open_card.find_child("FreezeGlyph", true, false) == null, "未冻结卡不应有「冻」字")
         var name_node := open_card.find_child("CardName", true, false)
@@ -113,7 +119,10 @@ func _ready() -> void:
         var glyph := frozen_card.find_child("FreezeGlyph", true, false)
         _expect(glyph != null, "冻结卡应有 FreezeGlyph")
         if glyph != null:
-            _expect(str(glyph.text) == "冻", "FreezeGlyph 文本应为「冻」，实际：%s" % str(glyph.text))
+            _expect(
+                str(glyph.text) == TranslationServer.translate("ui.game.card.freeze_glyph"),
+                "FreezeGlyph 文本应为冻结字形，实际：%s" % str(glyph.text),
+            )
             _expect(
                 is_equal_approx((glyph as CanvasItem).modulate.a, 1.0)
                 and is_equal_approx((glyph as CanvasItem).self_modulate.a, 1.0),
@@ -128,8 +137,9 @@ func _ready() -> void:
             )
             _expect(frozen_rect.encloses(glyph_rect), "「冻」字应落在卡片内")
         var old_badge := false
+        var freeze_glyph := TranslationServer.translate("ui.game.card.freeze_glyph")
         for badge in frozen_card.find_children("CardBadge", "Label", true, false):
-            if str(badge.text) == "冻":
+            if str(badge.text) == freeze_glyph:
                 old_badge = true
         _expect(not old_badge, "冻结卡不应再用 text 为「冻」的 CardBadge")
 

@@ -221,7 +221,11 @@ static func _add_freeze_overlay(face_node: Control) -> void:
         line.mouse_filter = Control.MOUSE_FILTER_IGNORE
         crystals.add_child(line)
 
-    var glyph := UI.label("冻", UITheme.font_size("font-caption"), false)
+    var glyph := UI.label(
+        TranslationServer.translate("ui.game.card.freeze_glyph"),
+        UITheme.font_size("font-caption"),
+        false,
+    )
     glyph.name = "FreezeGlyph"
     glyph.add_theme_color_override("font_color", UITheme.color("color-info"))
     glyph.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)

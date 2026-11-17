@@ -287,6 +287,17 @@ static func error_text_by_id(id: String, params: Array = []) -> String:
     return text
 
 
+## 错误提示的悬停详情：优先用服务端给出的 messageId 与参数，缺失时回退错误码文案。
+static func error_tooltip(code: String) -> String:
+    var raw_params = GameStore.last_error.get("messageParams", [])
+    var params: Array = raw_params if raw_params is Array else []
+    var detail := error_text_by_id(
+        str(GameStore.last_error.get("messageId", "")),
+        params,
+    )
+    return detail if detail != "" else error_text(code)
+
+
 ## 错误码对应的页面去向：login、lobby 或空串（留在当前页面）。
 static func error_route(code: String) -> String:
     if code in ["AUTH_FAILED", "TOKEN_EXPIRED", "SESSION_REPLACED"]:

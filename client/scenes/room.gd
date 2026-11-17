@@ -340,12 +340,6 @@ func _on_error() -> void:
             UI.navigate(self, "res://scenes/login.tscn")
             return
     _status.text = UI.error_text(code)
-    var raw_params = GameStore.last_error.get("messageParams", [])
-    var params: Array = raw_params if raw_params is Array else []
-    var detail := UI.error_text_by_id(
-        str(GameStore.last_error.get("messageId", "")),
-        params,
-    )
-    _status.tooltip_text = detail if detail != "" else UI.error_text(code)
+    _status.tooltip_text = UI.error_tooltip(code)
     # 请求被拒时没有新的 RoomUpdate：按当前状态重算按钮，否则会一直停在禁用。
     _sync_state()
