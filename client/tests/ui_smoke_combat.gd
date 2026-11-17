@@ -30,6 +30,7 @@ func _ready() -> void:
     await _check_combat_hides_countdown()
     await _check_attack_collision_flight()
     await _check_death_fades_after_strike()
+    await _check_fixed_slots()
     _finish()
 
 
@@ -260,6 +261,83 @@ func _check_death_fades_after_strike() -> void:
     _reset_store()
 
 
+## 固定占位：一方随从全灭后该行高度与位置不变，横幅出现前后两行不动。
+func _check_fixed_slots() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_COMBAT
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view := FixtureScript.game_view()
+    view["phase"] = Protocol.PHASE_COMBAT
+    view["opponentPlayerId"] = "p2"
+    GameStore.view = view
+    _set_combat(FixtureScript.combat_result_wipe())
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _reset_store()
+        return
+    var opponent_row: Control = instance.find_child("CombatOpponentRow", true, false)
+    var own_row: Control = instance.find_child("CombatOwnRow", true, false)
+    var banner_slot: Control = instance.find_child("CombatBannerSlot", true, false)
+    var banner: Label = instance.find_child("CombatBanner", true, false)
+    _expect(opponent_row != null and own_row != null, "战斗视图应有两行随从")
+    _expect(banner_slot != null, "结果横幅应有固定占位槽")
+    if opponent_row == null or own_row == null or banner_slot == null:
+        _expect(banner != null, "结果横幅应存在")
+        instance.queue_free()
+        await get_tree().process_frame
+        _reset_store()
+        return
+    var opponent_y := opponent_row.global_position.y
+    var own_y := own_row.global_position.y
+    var row_height := opponent_row.size.y
+    var slot_height := banner_slot.size.y
+    _expect(
+        is_equal_approx(row_height, UITheme.metric("card-height")),
+        "随从行应有固定行高 %d，实际 %.1f" % [UITheme.metric("card-height"), row_height],
+    )
+
+    # 320ms 的阵亡动作让对手行清空；行高与两行位置都必须保持不变。
+    instance._process(0.4)
+    await get_tree().process_frame
+    _expect(opponent_row.get_child_count() == 0, "对手随从全灭后行内应为空")
+    _expect(_placeholder_count(opponent_row) == 0, "空行不应显示提示文案")
+    _expect(
+        is_equal_approx(opponent_row.size.y, row_height),
+        "空行应与有随从时等高，实际 %.1f" % opponent_row.size.y,
+    )
+    _expect(
+        is_equal_approx(opponent_row.global_position.y, opponent_y),
+        "对手行不应因清空而移动",
+    )
+    _expect(
+        is_equal_approx(own_row.global_position.y, own_y),
+        "我方行不应因对手清空而移动",
+    )
+
+    # 推进到横幅出现：横幅只填充预留区域，两行不动。
+    for _step in 8:
+        instance._process(0.4)
+    await get_tree().process_frame
+    _expect(banner != null and banner.visible, "演示播完后横幅应出现")
+    _expect(
+        is_equal_approx(banner_slot.size.y, slot_height),
+        "横幅出现不应改变占位槽高度，实际 %.1f" % banner_slot.size.y,
+    )
+    _expect(
+        is_equal_approx(opponent_row.global_position.y, opponent_y),
+        "横幅出现后对手行位置不变",
+    )
+    _expect(
+        is_equal_approx(own_row.global_position.y, own_y),
+        "横幅出现后我方行位置不变",
+    )
+
+    instance.queue_free()
+    await get_tree().process_frame
+    _reset_store()
+
+
 ## 阵容行内按实例 id 找随从卡。
 func _combat_card(instance: Node, minion_id: String) -> Control:
     for row_name in ["CombatOwnRow", "CombatOpponentRow"]:
@@ -347,7 +425,7 @@ func _expect_combat_row_order(instance: Node) -> void:
         match str(body.get_child(position).name):
             "CombatOpponentRow":
                 opponent_index = position
-            "CombatBanner":
+            "CombatBannerSlot":
                 banner_index = position
             "CombatOwnRow":
                 own_index = position

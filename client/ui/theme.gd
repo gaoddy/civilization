@@ -122,6 +122,7 @@ const SCENARIO := {
 	"portrait-height": 150,
 	"card-width": 112,
 	"card-height": 146,
+	"combat-banner-height": 30,
 	"card-info-height": 90,
 	"card-info-compact-height": 56,
 	"hand-card-overlap": 32,

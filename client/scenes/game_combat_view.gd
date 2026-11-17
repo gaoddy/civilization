@@ -10,6 +10,7 @@ var detail: GameDetailLayer = null
 
 var _body: VBoxContainer
 var _opponent_row: HFlowContainer
+var _banner_slot: Control
 var _banner: Label
 var _own_row: HFlowContainer
 ## 演示播放器（纯数据）与当前演示所属回合。
@@ -35,11 +36,19 @@ func _init() -> void:
     _opponent_row = _new_flow_row("CombatOpponentRow")
     _body.add_child(_opponent_row)
 
+    # 横幅槽：高度常驻，横幅出现时只填充文案，不推动上下两行。
+    _banner_slot = Control.new()
+    _banner_slot.name = "CombatBannerSlot"
+    _banner_slot.custom_minimum_size = Vector2(0, UITheme.metric("combat-banner-height"))
+    _banner_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _body.add_child(_banner_slot)
+
     _banner = UI.label("", UITheme.font_size("font-display"), false)
     _banner.name = "CombatBanner"
     _banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _banner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _body.add_child(_banner)
+    _banner.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    _banner.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _banner_slot.add_child(_banner)
 
     _body.add_child(UI.section_title("我方随从"))
     _own_row = _new_flow_row("CombatOwnRow")
@@ -53,6 +62,8 @@ func _init() -> void:
 func _new_flow_row(node_name: String) -> HFlowContainer:
     var row := HFlowContainer.new()
     row.name = node_name
+    # 行高常驻：一方随从全灭时该行不塌陷，两行在演示全程保持位置。
+    row.custom_minimum_size = Vector2(0, UITheme.metric("card-height"))
     row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     row.add_theme_constant_override("h_separation", UITheme.space("space-sm"))
     row.add_theme_constant_override("v_separation", UITheme.space("space-sm"))
