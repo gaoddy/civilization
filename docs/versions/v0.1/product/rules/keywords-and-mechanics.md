@@ -278,7 +278,7 @@
 
 - 阵营：`friendly` / `enemy` / `both`；
 - 选取：`single`（玩家指定）/ `all` / `random` / `leftmost` / `leftmost+adjacent` / `topAttack`；
-- 筛选：`tribe=<human|machine|biology|plant|virus|scholar>`、`subtype=<subtype slug>`、`id=<卡牌 id>`、`type=<minion|effect>`、`other=<true|false>`；多个筛选并列即同时满足。
+- 筛选：`tribe=<human|machine|biology|plant|virus|scholar>`、`subtype=<subtype slug>`、`id=<卡牌 id>`、`type=<minion|effect>`、`other=<true|false>`；多个筛选并列即同时满足。`general` 只用于效果牌的 `tribe` 字段，不是随从流派筛选值，筛选通常不写 `general`。
 
 **参数**：
 

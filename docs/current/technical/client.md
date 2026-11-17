@@ -64,7 +64,7 @@ client/
 - `GameStore`：保存 `playerId`、`token`、`roomId`、`roomCode`、房间成员、`PlayerView`、`lastSeq`、排名与种子。`handle(type, payload)` 只做字段搬运，发出 `auth_changed`、`room_changed`、`view_changed`、`game_started`、`game_over`、`error_received` 信号；`reset_room()` 清空房间，`reset_session()` 再清空身份与令牌。
 - `Net`：持有一个 `WebSocketPeer`，`_process` 中轮询；连接建立后先认证，断线每 3 秒自动重连。重连时以令牌发 `AuthRequest`，若仍在房间再发 `Reconnect{roomId, lastSeq}`，由服务端回全量 `Snapshot`。
 - 下行信封只校验 `v == 1` 与 `type`，`payload` 原样交给 `GameStore`；未知类型忽略。上行信封为 `{v, id, type, ts, payload}`，`id` 由时间戳与计数器生成。
-- `CardDB`：启动时读取 `client/generated/{cards,skills,tokens}.json` 的规则与展示费用字段；卡名、技能文本与时代名不放在生成数据里，而是按文本 id 从 `client/text/zh_CN.csv` 取（`display_name`、`display_text`、`era_name` 分别对应 `card.<id>.name` / `token.<id>.name`、`skill.<id>.text`、`enum.era.<id>`）。不参与任何规则判定。
+- `CardDB`：启动时读取 `client/generated/{cards,skills,tokens}.json` 的规则与展示费用字段；卡名、技能文本与时代名不放在生成数据里，而是按文本 id 从 `client/text/zh_CN.csv` 取：`display_name` 取 `card.<id>.name`（Token 取 `token.<id>.name`），`display_text` 取 `skill.<id>.text`，`era_name` 取 `enum.era.<id>`。不参与任何规则判定。
 
 ## 3. 五个场景
 
@@ -113,7 +113,7 @@ client/
 - 返回大厅不使用 `LeaveRoom`（非大厅阶段会被拒绝），而是清除房间状态后重新连接并以令牌认证。
 - 对局页的三栏结构、页面状态与数据来源见[对局页](../product/ui/pages/game.md)；颜色、字号、间距与圆角来自 `UITheme`，页面不写死视觉值。左栏宽 88，右栏身份块与英雄块取相同高度、平分中部状态块之外的剩余高度，商店操作与英雄技能因此分列售货员大图与英雄大图下方，生命/时代/金币三格贴底且逐项高对比展示；中区商店与棋盘不带标题，棋盘面板按内容高度收缩。招募阶段与战斗阶段共用同一页面，战斗与结算阶段隐藏招募视图、商店操作、英雄技能与结束招募，节点保留以便阶段恢复。
 - 详情层（`client/scenes/game_detail_layer.gd` 的 `GameDetailLayer`，面板节点名 `MinionDetailPanel`）统一承载商店、座位与随从三类详情：商店卡、座位行与招募/战斗随从卡在悬停进入、鼠标左键按下或触摸按下时显示；指针移出锚点矩形后隐藏，松开鼠标左键或触摸时按指针所在目标矩形更新（由 `_input` 按全局矩形做命中判断，避免子控件截断悬停通知）。随从详情先显示名称与 `CardDB.display_text` 介绍，再取协议 `BoardMinion.stats` 按初始、永久、回合、光环、受击、当前六行展示，有符号项带 `+`，受击的攻防都为 0 时省略该行；`stats` 缺失时仍显示名称与介绍，并退化为只显示顶层 `attack` / `health` 的当前攻防；座位与商店字段见[对局页](../product/ui/pages/game.md)。面板只读、忽略鼠标输入，位置以锚点矩形为准并按视口边界夹紧；每次 `_refresh` 重建前先隐藏，同一目标重复触发显示时只校正位置、不重建内容。
-- 冒烟测试按 `client/tests/ui_smoke*.tscn` 拆为六个场景，`make client-smoke` 用 glob 逐个运行并要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`。主冒烟覆盖五场景实例化、手牌重叠布局（十张 80 步进单行、相邻交叠、末卡不越界、滚动行不裁剪）、手牌悬停（置顶、底边中点放大 1.12、越出滚动行仍命中、右侧交叠带仍归本卡且拖拽拾起本卡、移出复位、战斗阶段可查看）与拖拽开始复位、真实鼠标事件拖拽（按下、越过阈值、移到落点、松手）落盘与商店出售、拖拽落点意图（首卡 0、次卡 1、末尾空白为随从数）、棋盘卡换位（真实 `force_drag` 通知、原卡隐藏、落点发 `fromIndex/toIndex`）、商店出售落点（可卖与不可卖、手牌拒绝、普通/金色返还提示）、棋盘满时不接收、需要目标的效果牌落点规则、四个不可拖动条件、落点门控（换回合/开战/结束招募/断线时不发意图）、目标待选浮层与控件阻塞、战斗逐动作播放（阵亡卡离场、复生回原位、召唤按存活下标插入）、横幅停留、按截止时间续播、无跳过入口、战斗阶段不弹待选弹层、回合号不匹配时不显示旧战报、离开战斗后清空战报，以及离树导航守卫。`ui_smoke_side` 断言右栏三段的身份判定（含阶段优先、幽灵角标、已淘汰观战）、商店操作位于售货员下方、身份块与英雄块等高且状态块垂直居中、倒计时悬停翻成结束招募与归零文案；`ui_smoke_seats` 断言 8 行座位、头像尺寸、名次角标缺失与压暗、血量条比例、战报展开与刷新保持、无战报文案与座位详情；`ui_smoke_combat` 断言战斗视图只有对手行/横幅/我方行三段且无英雄条；平局横幅尚无冒烟断言。`ui_smoke_cards` 断言商店卡费用与时代角标、冻结蒙层/冰晶/「冻」字、卡面介绍的两行省略、无介绍时的紧凑信息区与名称/数值基线，以及卡牌统一 112×146；`ui_smoke_text` 断言文本表取用、枚举展示与错误文案的回退（缺键时错误码原样返回）。
+- 冒烟测试按 `client/tests/ui_smoke*.tscn` 拆为六个场景，`make client-smoke` 用 glob 逐个运行并要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`。主冒烟覆盖五场景实例化、手牌重叠布局（十张 80 步进单行、相邻交叠、末卡不越界、滚动行不裁剪）、手牌悬停（置顶、底边中点放大 1.12、越出滚动行仍命中、右侧交叠带仍归本卡且拖拽拾起本卡、移出复位、战斗阶段可查看）与拖拽开始复位、真实鼠标事件拖拽（按下、越过阈值、移到落点、松手）落盘与商店出售、拖拽落点意图（首卡 0、次卡 1、末尾空白为随从数）、棋盘卡换位（真实 `force_drag` 通知、原卡隐藏、落点发 `fromIndex/toIndex`）、商店出售落点（可卖与不可卖、手牌拒绝、普通/金色返还提示）、棋盘满时不接收、需要目标的效果牌落点规则、四个不可拖动条件、落点门控（换回合/开战/结束招募/断线时不发意图）、目标待选浮层与控件阻塞、战斗逐动作播放（阵亡卡离场、复生回原位、召唤按存活下标插入）、横幅停留、按截止时间续播、无跳过入口、战斗阶段不弹待选弹层、回合号不匹配时不显示旧战报、离开战斗后清空战报，以及离树导航守卫。`ui_smoke_side` 断言右栏三段的身份判定（含阶段优先、幽灵角标、已淘汰观战）、商店操作位于售货员下方、身份块与英雄块等高且状态块垂直居中、倒计时悬停翻成结束招募与归零文案；`ui_smoke_seats` 断言 8 行座位、头像尺寸、名次角标缺失与压暗、血量条比例、战报展开与刷新保持、无战报文案与座位详情；`ui_smoke_combat` 断言战斗视图只有对手行/横幅/我方行三段且无英雄条；平局横幅尚无冒烟断言。`ui_smoke_cards` 断言商店卡费用与时代角标、冻结蒙层/冰晶/「冻」字、卡面介绍的两行省略、无介绍时的紧凑信息区与名称/数值基线，以及卡牌统一 112×146；`ui_smoke_text` 断言 `CardDB.display_name`（含 Token）、`display_text`、`era_name` 与 `UI.enum_text` 的取用，`UI.error_text` 的错误码文案，`UI.error_text_by_id` 的 `messageId` 细分文案，以及缺键时 `UI.error_text_by_id` 返回空串。
 
 ## 4. 生成物与命令
 
@@ -165,10 +165,10 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 ## 6. 国际化与文本表
 
 - **唯一运行时中文文件**：`client/text/zh_CN.csv`（表头 `keys,zh_CN`）。客户端 `.gd` 代码不写中文 UI 文案；协议和生成数据只传 id，展示文本全部按 id 从文本表取。
-- **配置**：`client/project.godot` 的 `[internationalization]` 设置 `locale/fallback="zh_CN"` 与 `locale/translations=PackedStringArray("res://text/zh_CN.zh_CN.translation")`。Godot 在导入时把 CSV 编译为 `zh_CN.zh_CN.translation`（两者均被 `.gitignore` 忽略，CSV 本身随源提交）。
+- **配置**：`client/project.godot` 的 `[internationalization]` 设置 `locale/fallback="zh_CN"` 与 `locale/translations=PackedStringArray("res://text/zh_CN.zh_CN.translation")`。Godot 在导入时把 CSV 编译为 `zh_CN.zh_CN.translation`；`.translation` 与 `.csv.import` 被 `.gitignore` 忽略，CSV 本身随源提交。
 - **取文本接口**：
-  - 静态 key 用 `tr(key)`，带参数时用 `tr(key) % params`；
-  - 动态 key 用 `TranslationServer.translate(key)`，集中在 `UI.enum_text(group, id)`、`UI.error_text(code)`、`UI.error_text_by_id(id, params)` 与 `UI.error_tooltip(code)`；
+  - 实例方法与 autoload 内取静态 key 用 `tr(key)`，带参数时用 `tr(key) % params`；
+  - 静态函数（如 `GameCardFace.era_text`、`UI.enum_text`）不能用 `tr()`：`tr()` 是 Node 的实例方法，静态函数与需要运行时拼接 key 的场景一律用 `TranslationServer.translate(key)`，集中在 `UI.enum_text(group, id)`、`UI.error_text(code)`、`UI.error_text_by_id(id, params)` 与 `UI.error_tooltip(code)`；
   - 缺 key 时 Godot 原样返回 key，因此封装函数按「返回 key 即缺键」回退：枚举回退为 id，错误码回退为 code，错误详情回退为空串。
 - **key 命名**：
   - 内容文本：`card.<id>.name`、`card.<id>.match_text`、`skill.<id>.name`、`skill.<id>.text`、`skill.<id>.match_text`、`token.<id>.name`；
@@ -177,7 +177,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - **所有权**：`card.*`、`skill.*`、`token.*` 与 `enum.card_type|tribe|era|keyword|subtype.*` 是生成 key，由 `scripts/gen_text.py` 从实体文档整体重算；`ui.*`、`error.*`、`enum.evolve.*`、`enum.stat_layer.*` 是人工 key，原样保留；出现未知前缀直接报错。`make data` 会写入 CSV，`make data-check` 检测漂移。
 - **前置条件**：修改 CSV 或任何实体文本后必须运行 `make client-import`（或任何以它为前提的目标，如 `client-run`、`client-smoke`、`m1b-e2e`），让 Godot 重新导入并生成 `.translation`；只在编辑器外改 CSV 而不导入，运行时仍读旧翻译。`make client-check` 已包含 `client-import`。
 - **服务端错误**：`ErrorMessage.messageId` 默认 `error.<CODE>`，`messageParams` 按 `%s` 填充；客户端状态栏先按 `code` 取 `error.<CODE>`，悬停详情优先用 `messageId`/`messageParams`，`message` 仅面向日志。
-- **新增语言**：在 CSV 增加一列（如 `en`）并把对应翻译写入，再在 `[internationalization]` 的 `locale/translations` 注册生成的 `.translation`；实体文档与协议不需要改动。
+- **新增语言**：当前生成器与 Godot 配置只支持 `zh_CN`，不能直接加列。新增语言需要：扩展 `scripts/gen_text.py` 的列处理（`load_existing` 读入多列、`build()` 写出多列，生成前缀在每个语言列都产出）；新增 `client/text/<locale>.csv`；用 `make client-import` 导入后把对应 `.translation` 加入 `[internationalization]` 的 `locale/translations`。业务代码（`CardDB`、`UI.*`、`tr()` 调用）与实体文档、协议均无需改动。
 
 ## 7. 与设计的偏差
 

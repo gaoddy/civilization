@@ -33,7 +33,7 @@
 | `uses_per_turn` | 条件必填 | 整数 1–2 | **仅主动技能**；每回合可使用次数；与 `cost` 必须成对出现 |
 | `match_text` | 条件必填 | 自由 | 确定性替换文本（v0.1 不消费）；被效果牌引用或属于主动技能的技能必填，无随机写「同左」；运行时由文本表 `skill.<id>.match_text` 承载 |
 
-**运行时文本来源**：front matter 的 `name`、`text` 与 `match_text` 是文本的编辑来源，构建期由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`（key 分别为 `skill.<id>.name`、`skill.<id>.text`、`skill.<id>.match_text`），客户端按 id 取文本；服务端生成数据不含这些展示字段。新增语言只需增加一份文本文件，不改技能实体结构。
+**运行时文本来源**：front matter 的 `name`、`text` 与 `match_text` 是文本的编辑来源，构建期由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`（key 分别为 `skill.<id>.name`、`skill.<id>.text`、`skill.<id>.match_text`），客户端按 id 取文本；服务端生成数据不含这些展示字段。新增语言需要扩展文本生成工具并补充各语言文本、注册对应翻译，业务代码与技能实体结构不改动。
 
 **主动与触发的判定**：同时具备 `cost` 与 `uses_per_turn` 的技能是**主动技能**，由玩家支付费用后触发，`effects` 以 `OnActivate` 开头；两者都不具备的是**触发式或常驻技能**，按文本前缀在对应时机自动结算。不允许只出现其中一个字段。
 
