@@ -27,7 +27,7 @@ static func view() -> Dictionary:
         "boardSlots": 7,
         "hpCap": 40,
         "combatLog": [],
-        "enabledFactions": ["人类", "机械", "生物", "植物", "学者"],
+        "enabledFactions": ["human", "machine", "biology", "plant", "scholar"],
         "self": {
             "playerId": "p0",
             "seat": 0,
@@ -55,7 +55,7 @@ static func view() -> Dictionary:
                     "golden": false,
                     "attack": 3,
                     "health": 4,
-                    "keywords": ["战吼"],
+                    "keywords": ["battlecry"],
                     "sellable": true,
                     "stats": {
                         "attack": {"initial": 3, "permanent": 1, "turn": 0, "aura": 0, "damage": 0, "current": 4},
@@ -128,9 +128,9 @@ static func game_view() -> Dictionary:
     var view := view()
 
     view["self"]["board"] = [
-        _minion(0, "mi_0", "bruce-lee", 3, 4, ["战吼"]),
-        _minion(1, "mi_1", "airplane", 4, 5, ["圣盾"]),
-        _minion(2, "mi_2", "baiyi", 5, 3, ["剧毒"]),
+        _minion(0, "mi_0", "bruce-lee", 3, 4, ["battlecry"]),
+        _minion(1, "mi_1", "airplane", 4, 5, ["divine_shield"]),
+        _minion(2, "mi_2", "baiyi", 5, 3, ["contagion"]),
         _minion(3, "mi_3", "black-death", 2, 7, []),
     ]
     view["self"]["affordances"]["boardMinions"] = [
@@ -185,12 +185,12 @@ static func game_view() -> Dictionary:
 static func combat_result() -> Dictionary:
     return {
         "ownBoard": [
-            _minion(0, "mi_0", "bruce-lee", 7, 6, ["战吼"]),
-            _minion(1, "mi_1", "airplane", 8, 7, ["圣盾"]),
-            _minion(2, "mi_2", "baiyi", 9, 5, ["剧毒"]),
+            _minion(0, "mi_0", "bruce-lee", 7, 6, ["battlecry"]),
+            _minion(1, "mi_1", "airplane", 8, 7, ["divine_shield"]),
+            _minion(2, "mi_2", "baiyi", 9, 5, ["contagion"]),
         ],
         "opponentBoard": [
-            _minion(0, "mo_0", "aristotle", 6, 8, ["嘲讽"]),
+            _minion(0, "mo_0", "aristotle", 6, 8, ["taunt"]),
             _minion(1, "mo_1", "bisheng", 5, 5, []),
         ],
         "actions": [

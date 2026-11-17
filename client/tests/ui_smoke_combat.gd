@@ -187,8 +187,11 @@ func _check_combat_hides_countdown() -> void:
     var recruit := await _check_scene("res://scenes/game.tscn", false)
     if recruit != null:
         var recruit_timer: Label = recruit.find_child("TimerLabel", true, false)
+        var remaining_prefix := TranslationServer.translate(
+            "ui.game.side_panel.remaining_seconds"
+        ).split("%")[0]
         _expect(
-            recruit_timer != null and recruit_timer.text.contains("剩余"),
+            recruit_timer != null and recruit_timer.text.contains(remaining_prefix),
             "招募阶段应恢复剩余秒数，实际「%s」" % ("" if recruit_timer == null else recruit_timer.text),
         )
         recruit.queue_free()

@@ -429,7 +429,7 @@ func _check_game() -> void:
         TranslationServer.translate("ui.game.side_panel.hp"),
         "35/40",
         TranslationServer.translate("ui.game.side_panel.era"),
-        "原始",
+        TranslationServer.translate("enum.era.primitive"),
         TranslationServer.translate("ui.game.side_panel.gold"),
         "6",
     ]:

@@ -41,8 +41,8 @@ func disconnect_from_server() -> void:
         disconnected.emit()
 
 
+## 关闭当前连接并用已有令牌重新认证，用于对局结束后回到大厅。
 func relogin() -> void:
-    """关闭当前连接并用已有令牌重新认证，用于对局结束后回到大厅。"""
     _want_connection = true
     _pending_reconnect = false
     if socket != null:
