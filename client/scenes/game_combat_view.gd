@@ -179,10 +179,11 @@ func _set_combat_banner(combat: Dictionary) -> void:
         else:
             result = "失败"
             variant = "danger"
-    var mirror := "（镜像）" if bool(combat.get("mirror", false)) else ""
+    # `mirror` 为真表示本场是对战已出局者的幽灵阵容，不是镜像战。
+    var ghost := "（幽灵）" if bool(combat.get("mirror", false)) else ""
     _banner.text = "%s%s · 伤害 %d · 我方 %d vs 对手 %d" % [
         result,
-        mirror,
+        ghost,
         int(combat.get("damage", 0)),
         _combat.own.size(),
         _combat.opponent.size(),
