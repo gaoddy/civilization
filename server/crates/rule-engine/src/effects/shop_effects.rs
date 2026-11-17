@@ -82,8 +82,11 @@ impl Engine {
             if let Some(pool) = state.pool.get_mut(&card_id) {
                 *pool = pool.saturating_sub(1);
             }
+            let instance_id = state.next_instance_id;
+            state.next_instance_id = instance_id.saturating_add(1);
             if let Some(player) = state.players.get_mut(usize::from(ctx.seat)) {
                 player.shop.push(Some(ShopSlot {
+                    instance_id,
                     card_id,
                     frozen: false,
                 }));
@@ -147,15 +150,23 @@ impl Engine {
             *count = count.saturating_sub(1);
         }
         let instance_id = state.next_instance_id;
+        let card_instance_id = state.players[usize::from(ctx.seat)]
+            .shop
+            .get(slot)
+            .and_then(Option::as_ref)
+            .map(|slot| slot.instance_id)
+            .unwrap_or(instance_id);
         let player = &mut state.players[usize::from(ctx.seat)];
         if let Some(shop_slot) = player.shop.get_mut(slot) {
             *shop_slot = None;
         }
         match to {
-            Zone::Hand => player.hand.push(HandCard {
-                card_id,
-                golden: false,
-            }),
+            Zone::Hand => player.hand.push(HandCard::Minion(new_minion(
+                &self.catalog,
+                card_instance_id,
+                &card_id,
+                false,
+            ))),
             Zone::Board => {
                 state.next_instance_id = instance_id.saturating_add(1);
                 // 新随从进入战场：先登记进化，再结算它自己的战吼与友方入场触发。
@@ -175,6 +186,7 @@ impl Engine {
                         target: None,
                         event_target: None,
                         golden: false,
+                        discover_level: None,
                     },
                 );
                 self.fire_ally_summon_recruit(state, ctx.seat, instance_id);

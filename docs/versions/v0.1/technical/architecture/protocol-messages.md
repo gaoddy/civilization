@@ -201,6 +201,7 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `index` | integer | 是 |  |
+| `instanceId` | string | null | 是 | 卡牌实例编号；空槽位为 null |
 | `cardId` | string | null | 是 | 空槽位为 null |
 | `frozen` | boolean | 是 |  |
 
@@ -209,7 +210,12 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `index` | integer | 是 |  |
+| `instanceId` | string | 是 | 卡牌实例编号；买入、上手与三连合成沿用同一编号 |
 | `cardId` | string | 是 |  |
+| `golden` | boolean | 是 | 随从牌为金色三连结果；效果牌恒为 false |
+| `attack` | integer | null | 是 | 随从牌的当前攻击力（已含成长等全部层数，学者为 0）；效果牌为 null |
+| `health` | integer | null | 是 | 随从牌的当前生命值；效果牌为 null |
+| `rewardLevel` | integer | null | 是 | 「三连奖励」锁定的发现星级；其它牌为 null |
 | `playable` | boolean | 是 | 服务端算好的可打出提示 |
 | `requiresTarget` | boolean | 是 | 该牌是否需要玩家指定单一目标 |
 | `disabledReason` | string | null | 是 | 不可操作时的错误码 |

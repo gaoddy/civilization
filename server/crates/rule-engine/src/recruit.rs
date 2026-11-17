@@ -155,14 +155,14 @@ fn buy(
 ) -> Result<Outcome, Reject> {
     check_buy(engine, state, seat, slot)?;
 
-    let card_id = player(state, seat)
+    let shop_slot = player(state, seat)
         .expect("check_buy 已保证座位存在")
         .shop
         .get(usize::from(slot))
         .and_then(Option::as_ref)
-        .expect("check_buy 已保证槽位非空")
-        .card_id
-        .clone();
+        .expect("check_buy 已保证槽位非空");
+    let card_id = shop_slot.card_id.clone();
+    let instance_id = shop_slot.instance_id;
     let card = engine
         .catalog
         .cards
@@ -192,10 +192,15 @@ fn buy(
     {
         *count = count.saturating_sub(1);
     }
-    player.hand.push(HandCard {
-        card_id: card_id.clone(),
-        golden: false,
-    });
+    match card_type {
+        CardType::Minion => player.hand.push(HandCard::Minion(new_minion(
+            &engine.catalog,
+            instance_id,
+            &card_id,
+            false,
+        ))),
+        CardType::Effect => player.hand.push(HandCard::effect(instance_id, &card_id)),
+    }
 
     let mut events = vec![GameEvent::MinionBought {
         seat,
@@ -346,6 +351,7 @@ pub(crate) fn fire_first_refresh(
                 target: None,
                 event_target: None,
                 golden: false,
+                discover_level: None,
             },
         ));
     }
@@ -360,6 +366,7 @@ pub(crate) fn fire_first_refresh(
                 target: None,
                 event_target: None,
                 golden,
+                discover_level: None,
             },
         ));
     }
@@ -449,12 +456,12 @@ pub(crate) fn check_play_card(
     let card_type = engine
         .catalog
         .cards
-        .get(&hand_card.card_id)
+        .get(hand_card.card_id())
         .map(|card| card.card_type)
         .ok_or_else(|| {
             Reject::new(
                 RejectCode::CardNotInHand,
-                format!("手牌卡牌 {} 不在目录中", hand_card.card_id),
+                format!("手牌卡牌 {} 不在目录中", hand_card.card_id()),
             )
         })?;
 
@@ -515,7 +522,7 @@ fn play_card(
     let card_type = engine
         .catalog
         .cards
-        .get(&hand_card.card_id)
+        .get(hand_card.card_id())
         .expect("check_play_card 已保证卡牌在目录中")
         .card_type;
 
@@ -527,10 +534,11 @@ fn play_card(
                 target,
                 event_target: None,
                 golden: false,
+                discover_level: hand_card.reward_level(),
             };
             engine.check_targets(
                 state,
-                &engine.effects_of(&hand_card.card_id, Trigger::OnPlayEffect),
+                &engine.effects_of(hand_card.card_id(), Trigger::OnPlayEffect),
                 &ctx,
                 false,
             )?;
@@ -543,39 +551,54 @@ fn play_card(
             player.hand.remove(index);
 
             let mut events =
-                engine.fire_card(state, &hand_card.card_id, Trigger::OnPlayEffect, ctx);
-            events.extend(engine.fire(state, Trigger::OnUse, ctx));
+                engine.fire_card(state, hand_card.card_id(), Trigger::OnPlayEffect, ctx);
+            events.extend(engine.fire(
+                state,
+                Trigger::OnUse,
+                EffectCtx {
+                    discover_level: None,
+                    ..ctx
+                },
+            ));
             Ok(Outcome::with(events))
         }
         CardType::Minion => {
             let insert_index = check_play_position(state, seat, position)?;
-            let instance_id = state.next_instance_id;
+            // 目录判定为随从牌、手牌却是效果牌（测试夹具可能如此）：按卡面补一张随从牌。
+            let mut minion = match hand_card.clone() {
+                HandCard::Minion(minion) => minion,
+                other => new_minion(
+                    &engine.catalog,
+                    other.instance_id(),
+                    other.card_id(),
+                    other.golden(),
+                ),
+            };
+            // 手牌实例原样入场：编号与成长、繁衍、护盾等状态都不重建。
+            minion.attacks_left = 0;
+            minion.cannot_attack = false;
+            let instance_id = minion.instance_id;
+            let golden = minion.golden;
+            let source_star = engine
+                .catalog
+                .cards
+                .get(minion.card_id.as_str())
+                .and_then(|card| card.level.checked_add(1))
+                .map(|level| level.min(6));
             let ctx = EffectCtx {
                 seat,
                 source: Some(instance_id),
                 target,
                 event_target: None,
-                golden: hand_card.golden,
+                golden: minion.golden,
+                discover_level: None,
             };
-            let following_instance_id = state
-                .next_instance_id
-                .checked_add(1)
-                .expect("check_play_card 已保证实例编号未耗尽");
             let player = state
                 .players
                 .get_mut(usize::from(seat))
                 .expect("check_play_card 已保证座位存在");
             player.hand.remove(index);
-            player.board.insert(
-                insert_index,
-                new_minion(
-                    &engine.catalog,
-                    instance_id,
-                    &hand_card.card_id,
-                    hand_card.golden,
-                ),
-            );
-            state.next_instance_id = following_instance_id;
+            player.board.insert(insert_index, minion);
 
             // 先登记进化、再结算战吼（关键词机制 §2.2）。登记了进化的来源等到
             // 玩家选择结算完再触发 OnAllyEvolve；战吼带出的效果牌与响应在本次
@@ -584,14 +607,14 @@ fn play_card(
 
             // 战吼需要单一目标时改为先入场、再推入目标待选：合法池按入场后的棋盘
             // 判定，因此池内包含刚入场的这个随从本身；池为空时战吼直接落空。
-            let effects = engine.effects_of(&hand_card.card_id, Trigger::OnPlay);
+            let effects = engine.effects_of(hand_card.card_id(), Trigger::OnPlay);
             let needs_target = engine.check_targets(state, &effects, &ctx, false).is_err();
             let mut events = if needs_target {
                 state.pending.push_back(PendingChoice::Target {
                     seat,
                     source: instance_id,
-                    card_id: hand_card.card_id.clone(),
-                    golden: hand_card.golden,
+                    card_id: hand_card.card_id().to_string(),
+                    golden: hand_card.golden(),
                 });
                 Vec::new()
             } else {
@@ -603,10 +626,24 @@ fn play_card(
                         source: Some(instance_id),
                         target,
                         event_target: None,
-                        golden: hand_card.golden,
+                        golden: hand_card.golden(),
+                        discover_level: None,
                     },
                 )
             };
+            // 金色随从从手牌打出并成功入场：发放一张「三连奖励」效果牌。
+            // 星级在合成来源卡的基础上 +1、封顶 6 星，与玩家时代无关。
+            if golden && let Some(level) = source_star {
+                let reward_id = state.next_instance_id;
+                state.next_instance_id = reward_id.saturating_add(1);
+                if let Some(player) = state.players.get_mut(usize::from(seat)) {
+                    player.hand.push(HandCard::Effect {
+                        instance_id: reward_id,
+                        card_id: crate::triple::REWARD_CARD_ID.to_string(),
+                        reward_level: Some(level),
+                    });
+                }
+            }
             events.extend(engine.check_triple(state, seat));
             // 三连可能把刚入场的随从合并掉：此时目标待选失去来源，视同战吼落空。
             state.pending.retain(|pending| {
@@ -789,6 +826,7 @@ fn use_hero_power(
         target,
         event_target: None,
         golden: false,
+        discover_level: None,
     };
     // 主动技能的效果来自英雄卡：预检口径与 `fire(OnActivate)` 一致。
     engine.check_targets(
@@ -828,6 +866,7 @@ fn use_hero_power(
             target,
             event_target: None,
             golden: false,
+            discover_level: None,
         },
     );
     Ok(Outcome::with(events))
@@ -946,6 +985,7 @@ fn choose_target(
         target: Some(minion),
         event_target: None,
         golden,
+        discover_level: None,
     };
     // 与出牌时的预检同源：目标必须在效果的合法池内（core-rules §4 补充返回码
     // 「ChooseTarget 指定的随从不在合法池时同样返回该码」）。只校验棋盘会让
@@ -1060,14 +1100,18 @@ fn choose_discover(
     if let Some(count) = state.pool.get_mut(&card_id) {
         *count = count.saturating_sub(1);
     }
+    let instance_id = state.next_instance_id;
+    state.next_instance_id = instance_id.saturating_add(1);
     let player = state
         .players
         .get_mut(usize::from(seat))
         .expect("check_choose_discover 已保证座位存在");
-    player.hand.push(HandCard {
-        card_id: card_id.clone(),
-        golden: false,
-    });
+    player.hand.push(HandCard::Minion(new_minion(
+        &engine.catalog,
+        instance_id,
+        &card_id,
+        false,
+    )));
 
     let mut events = vec![GameEvent::CardDiscovered { seat, card_id }];
     events.extend(engine.check_triple(state, seat));
@@ -1098,24 +1142,44 @@ pub(crate) fn roll_player(
     let slot_count = engine.catalog.config.shop_slots;
 
     let (rng, pool, tribes) = (&mut state.rng, &state.pool, &state.enabled_tribes);
-    let mut new_shop = Vec::with_capacity(slot_count);
+    // 冻结槽位沿用原实例编号；其余槽位在确定卡牌后统一分配新编号。
+    let mut drawn: Vec<Option<(Option<InstanceId>, String, bool)>> = Vec::with_capacity(slot_count);
     for index in 0..slot_count {
         let slot = old_shop.get(index);
         if preserve_frozen
             && let Some(Some(existing)) = slot
             && existing.frozen
         {
-            new_shop.push(Some(existing.clone()));
+            drawn.push(Some((
+                Some(existing.instance_id),
+                existing.card_id.clone(),
+                true,
+            )));
             continue;
         }
         let card_id = weights
             .as_ref()
             .and_then(|weights| draw_shop_card(engine, rng, pool, tribes, weights));
-        new_shop.push(card_id.map(|card_id| ShopSlot {
-            card_id,
-            frozen: false,
-        }));
+        drawn.push(card_id.map(|card_id| (None, card_id, false)));
     }
+
+    let new_shop = drawn
+        .into_iter()
+        .map(|slot| {
+            slot.map(|(instance_id, card_id, frozen)| {
+                let instance_id = instance_id.unwrap_or_else(|| {
+                    let id = state.next_instance_id;
+                    state.next_instance_id = id.saturating_add(1);
+                    id
+                });
+                ShopSlot {
+                    instance_id,
+                    card_id,
+                    frozen,
+                }
+            })
+        })
+        .collect();
 
     if let Some(player) = state.players.get_mut(usize::from(seat)) {
         player.shop = new_shop;
@@ -1166,7 +1230,7 @@ fn pick_star(rng: &mut RngStreams, weights: &[u16; 7]) -> Option<u8> {
 
 /// 英雄卡不进商店；随从需要池中有副本；流派需本局启用或为通用。
 fn is_eligible(card: &Card, pool: &BTreeMap<String, u16>, tribes: &BTreeSet<Tribe>) -> bool {
-    if card.is_hero {
+    if card.is_hero || card.id == crate::triple::REWARD_CARD_ID {
         return false;
     }
     if card.card_type == CardType::Minion && pool.get(&card.id).copied().unwrap_or(0) == 0 {
@@ -1268,9 +1332,14 @@ mod tests {
             .iter()
             .cloned()
             .map(|card_id| {
-                card_id.map(|card_id| ShopSlot {
-                    card_id,
-                    frozen: false,
+                card_id.map(|card_id| {
+                    let instance_id = state.next_instance_id;
+                    state.next_instance_id = instance_id.saturating_add(1);
+                    ShopSlot {
+                        instance_id,
+                        card_id,
+                        frozen: false,
+                    }
                 })
             })
             .collect();
@@ -1305,10 +1374,7 @@ mod tests {
         let card_id = minion_id(1);
         let player = &mut state.players[usize::from(seat)];
         player.hand = (0..count)
-            .map(|_| HandCard {
-                card_id: card_id.clone(),
-                golden: false,
-            })
+            .map(|index| HandCard::Minion(dummy(2_000 + index as InstanceId, &card_id)))
             .collect();
     }
 
@@ -1492,10 +1558,10 @@ mod tests {
                 setup: Box::new(|| {
                     let (engine, mut state) = setup(110);
                     fill_board(&mut state, 0, 7);
-                    state.players[0].hand.push(HandCard {
-                        card_id: minion_id(1),
-                        golden: false,
-                    });
+                    let card_id = minion_id(1);
+                    state.players[0]
+                        .hand
+                        .push(HandCard::Minion(dummy(3_000, &card_id)));
                     (engine, state)
                 }),
                 intent: Intent::PlayCard {

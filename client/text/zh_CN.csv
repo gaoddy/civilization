@@ -218,6 +218,8 @@ card.tesla-coil.name,特斯拉线圈
 card.tesla.name,特斯拉
 card.tielu-gongren.name,铁路工人
 card.toushiji.name,投石机
+card.triple-reward.match_text,同左
+card.triple-reward.name,三连奖励
 card.tufu.name,屠夫
 card.turing-machine.name,图灵机
 card.vertical-farm.name,垂直农场
@@ -680,6 +682,7 @@ ui.game.rail.win,胜
 ui.game.recruit.empty_board_slot,空位
 ui.game.recruit.empty_shop_slot,空槽
 ui.game.recruit.sell_hint,松手出售 +%d 金
+ui.game.reward_card.text,发现一张 %d 星随从
 ui.game.side_panel.combat,战斗中
 ui.game.side_panel.eliminated,已淘汰 · 观战中
 ui.game.side_panel.end_recruit,结束招募

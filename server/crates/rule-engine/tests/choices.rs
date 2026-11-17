@@ -97,9 +97,14 @@ fn set_shop(state: &mut GameState, seat: usize, slots: Vec<Option<&str>>) {
     state.players[seat].shop = slots
         .into_iter()
         .map(|card_id| {
-            card_id.map(|card_id| ShopSlot {
-                card_id: card_id.to_string(),
-                frozen: false,
+            card_id.map(|card_id| {
+                let instance_id = state.next_instance_id;
+                state.next_instance_id = instance_id.saturating_add(1);
+                ShopSlot {
+                    instance_id,
+                    card_id: card_id.to_string(),
+                    frozen: false,
+                }
             })
         })
         .collect();
@@ -110,10 +115,14 @@ fn dummy(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionIns
 }
 
 fn hand_card(card_id: &str) -> HandCard {
-    HandCard {
-        card_id: card_id.to_string(),
-        golden: false,
-    }
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(20_000);
+    HandCard::Minion(MinionInstance::new(
+        &test_catalog(),
+        NEXT.fetch_add(1, Ordering::Relaxed),
+        card_id,
+        false,
+    ))
 }
 
 fn effect(raw: &str) -> Effect {
@@ -131,6 +140,7 @@ fn ctx(seat: u8) -> EffectCtx {
         target: None,
         event_target: None,
         golden: false,
+        discover_level: None,
     }
 }
 
@@ -259,8 +269,8 @@ fn discover_choose_one_returns_one_card() {
         .expect("选择应成功");
 
     assert_eq!(state.players[0].hand.len(), 1, "选择后手牌 +1");
-    assert_eq!(state.players[0].hand[0].card_id, chosen);
-    assert!(!state.players[0].hand[0].golden);
+    assert_eq!(state.players[0].hand[0].card_id(), chosen);
+    assert!(!state.players[0].hand[0].golden());
     assert_eq!(pending_count(&state), 0, "选择后待选 -1");
     assert_eq!(
         pool_count(&state, &chosen),
@@ -296,7 +306,7 @@ fn discover_consumes_pending_fifo() {
         state.players[0]
             .hand
             .iter()
-            .map(|card| card.card_id.as_str())
+            .map(|card| card.card_id())
             .collect::<Vec<_>>(),
         vec![first.as_str(), second.as_str()],
         "按 FIFO 消费；池被扣后第二组候选不受影响"
@@ -421,12 +431,12 @@ fn discover_fires_from_hero_power() {
 }
 
 #[test]
-fn triple_discover_pending_is_consumed_by_choose() {
+fn triple_reward_is_played_and_consumed_by_choose() {
     let (mut engine, mut state) = setup(2);
     let card_id = first_minion_of_level(&engine.catalog, 1);
     state.players[0].hand = (0..2).map(|_| hand_card(&card_id)).collect();
 
-    // 手牌已有两张，从商店买下第三张即形成三连，发现待选由同一意图登记。
+    // 手牌已有两张，从商店买下第三张即形成三连：金色入手牌，不再登记发现待选。
     set_shop(
         &mut state,
         0,
@@ -441,11 +451,40 @@ fn triple_discover_pending_is_consumed_by_choose() {
             .iter()
             .any(|event| matches!(event, GameEvent::TripleFormed { .. }))
     );
-    assert_eq!(pending_count(&state), 1, "三连应登记发现待选");
+    assert_eq!(pending_count(&state), 0, "三连不再立即登记发现待选");
+
+    // 打出金色：发放奖励牌。
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("打出金色应成功");
+    assert_eq!(pending_count(&state), 0, "奖励牌入手时还没有待选");
+    assert_eq!(state.players[0].hand.len(), 1);
+
+    // 打出奖励牌：此时才登记发现待选。
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("打出奖励牌应成功");
+    assert_eq!(pending_count(&state), 1, "奖励牌登记发现待选");
 
     engine
         .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
-        .expect("三连的发现应可选择");
+        .expect("发现应可选择");
     assert_eq!(pending_count(&state), 0);
 }
 
@@ -492,7 +531,7 @@ fn gain_minion_level_current_uses_player_era() {
     let card = engine
         .catalog
         .cards
-        .get(&gained.card_id)
+        .get(gained.card_id())
         .expect("获得卡应在目录中");
     assert_eq!(
         card.id, "probe-two-star",
@@ -520,16 +559,11 @@ fn gain_minion_from_shop_removes_shop_slot() {
 
     let shop = &state.players[0].shop;
     assert_eq!(shop[0], None, "获得商店槽位里的随从会清空该槽位");
-    assert_eq!(
-        shop[2],
-        Some(ShopSlot {
-            card_id: card_id.clone(),
-            frozen: false
-        }),
-        "其余槽位不受影响"
-    );
+    let untouched = shop[2].as_ref().expect("其余槽位不受影响");
+    assert_eq!(untouched.card_id, card_id);
+    assert!(!untouched.frozen);
     assert_eq!(state.players[0].hand.len(), 1);
-    assert_eq!(state.players[0].hand[0].card_id, card_id);
+    assert_eq!(state.players[0].hand[0].card_id(), card_id);
     assert_eq!(pool_count(&state, &card_id), pool_before - 1, "池只扣一次");
 }
 
@@ -657,7 +691,7 @@ fn copy_hand_minion_to_hand_with_room_adds_copy() {
     );
 
     assert_eq!(state.players[0].hand.len(), 2);
-    assert_eq!(state.players[0].hand[1].card_id, card_id);
+    assert_eq!(state.players[0].hand[1].card_id(), card_id);
     assert_eq!(
         pool_count(&state, &card_id),
         pool_before,
@@ -798,10 +832,12 @@ fn evolve_golden_chooses_twice() {
         (1, 4, 4),
         &["keyword-evolve"],
     );
-    state.players[0].hand = vec![HandCard {
-        card_id: "golden-evolver".to_string(),
-        golden: true,
-    }];
+    state.players[0].hand = vec![HandCard::Minion(MinionInstance::new(
+        &engine.catalog,
+        9_000,
+        "golden-evolver",
+        true,
+    ))];
     let evolver = play_evolver(&mut engine, &mut state, "golden-evolver");
 
     assert_eq!(evolve_remaining(&state, 0), Some(2), "金色进化连续选两次");
@@ -853,10 +889,12 @@ fn evolve_golden_watcher_triggers_twice() {
         (1, 4, 4),
         &["keyword-evolve"],
     );
-    state.players[0].hand = vec![HandCard {
-        card_id: "golden-evolver".to_string(),
-        golden: true,
-    }];
+    state.players[0].hand = vec![HandCard::Minion(MinionInstance::new(
+        &engine.catalog,
+        9_000,
+        "golden-evolver",
+        true,
+    ))];
     state.players[0].board[0].golden = true;
     play_evolver(&mut engine, &mut state, "golden-evolver");
     assert_eq!(watcher(&state).stats.attack.permanent, 0);

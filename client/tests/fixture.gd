@@ -277,10 +277,22 @@ static func combat_result_with_reborn() -> Dictionary:
 
 
 ## 手牌条目夹具：`requires_target` 决定它是否需要选目标。
-static func hand(card_id: String, requires_target: bool) -> Dictionary:
+static func hand(
+    card_id: String,
+    requires_target: bool,
+    golden := false,
+    attack: Variant = null,
+    health: Variant = null,
+    reward_level: Variant = null
+) -> Dictionary:
     return {
         "index": 0,
+        "instanceId": "2001",
         "cardId": card_id,
+        "golden": golden,
+        "attack": attack,
+        "health": health,
+        "rewardLevel": reward_level,
         "playable": true,
         "requiresTarget": requires_target,
         "disabledReason": null,

@@ -44,9 +44,14 @@ fn set_shop(state: &mut GameState, seat: Seat, ids: &[Option<String>]) {
         .iter()
         .cloned()
         .map(|card_id| {
-            card_id.map(|card_id| ShopSlot {
-                card_id,
-                frozen: false,
+            card_id.map(|card_id| {
+                let instance_id = state.next_instance_id;
+                state.next_instance_id = instance_id.saturating_add(1);
+                ShopSlot {
+                    instance_id,
+                    card_id,
+                    frozen: false,
+                }
             })
         })
         .collect();
@@ -81,10 +86,7 @@ fn fill_hand(state: &mut GameState, seat: Seat, count: usize) {
     let card_id = minion_id(1);
     let player = &mut state.players[usize::from(seat)];
     player.hand = (0..count)
-        .map(|_| HandCard {
-            card_id: card_id.clone(),
-            golden: false,
-        })
+        .map(|_| HandCard::effect(9_000, &card_id.clone()))
         .collect();
 }
 
@@ -124,8 +126,8 @@ fn buy_deducts_gold_and_pool_and_goes_to_hand() {
         "买入不分配实例编号"
     );
     assert_eq!(state.players[0].hand.len(), 1);
-    assert_eq!(state.players[0].hand[0].card_id, card_id);
-    assert!(!state.players[0].hand[0].golden);
+    assert_eq!(state.players[0].hand[0].card_id(), card_id);
+    assert!(!state.players[0].hand[0].golden());
 }
 
 #[test]
@@ -148,8 +150,8 @@ fn buy_effect_card_goes_to_hand_and_costs_card_cost() {
     );
     assert_eq!(state.players[0].gold, 3 - cost);
     assert_eq!(state.players[0].hand.len(), 1);
-    assert_eq!(state.players[0].hand[0].card_id, card_id);
-    assert!(!state.players[0].hand[0].golden);
+    assert_eq!(state.players[0].hand[0].card_id(), card_id);
+    assert!(!state.players[0].hand[0].golden());
     assert!(state.players[0].board.is_empty());
 }
 
@@ -209,7 +211,7 @@ fn buy_enters_hand_even_when_board_has_room() {
 
     assert!(state.players[0].board.is_empty());
     assert_eq!(state.players[0].hand.len(), 1);
-    assert_eq!(state.players[0].hand[0].card_id, card_id);
+    assert_eq!(state.players[0].hand[0].card_id(), card_id);
 }
 
 #[test]
@@ -375,10 +377,9 @@ fn upgrade_at_future_rejects() {
 fn play_minion_from_hand_moves_to_board() {
     let (mut engine, mut state) = setup(15);
     let card_id = minion_id(1);
-    state.players[0].hand.push(HandCard {
-        card_id: card_id.clone(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(dummy(&engine.catalog, 9_000, &card_id)));
     let before_pool = pool_count(&state, &card_id);
 
     let outcome = engine
@@ -405,10 +406,9 @@ fn play_minion_from_hand_moves_to_board() {
 fn play_effect_card_leaves_hand_without_events() {
     let (mut engine, mut state) = setup(16);
     let (card_id, _) = effect_card();
-    state.players[0].hand.push(HandCard {
-        card_id,
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, &card_id));
 
     let outcome = engine
         .apply(
@@ -451,10 +451,9 @@ fn play_minion_with_full_board_rejects() {
     let (mut engine, mut state) = setup(18);
     fill_board(&mut state, 0, 7);
     let card_id = minion_id(1);
-    state.players[0].hand.push(HandCard {
-        card_id,
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(dummy(&engine.catalog, 9_000, &card_id)));
     let before = state_hash(&state);
 
     let result = engine.apply(
@@ -980,8 +979,8 @@ fn choose_discover_valid_choice_consumes_and_adds_to_hand() {
         }]
     );
     assert_eq!(state.players[0].hand.len(), 1);
-    assert_eq!(state.players[0].hand[0].card_id, chosen);
-    assert!(!state.players[0].hand[0].golden);
+    assert_eq!(state.players[0].hand[0].card_id(), chosen);
+    assert!(!state.players[0].hand[0].golden());
     assert!(state.pending.is_empty(), "消费后待选被移除");
     assert_eq!(pool_count(&state, &chosen), before_pool - 1);
 }
@@ -1071,10 +1070,9 @@ fn put_champion(
 fn play_battlecry_without_target_enters_board_then_pends() {
     let (mut engine, mut state) = setup(40);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
-    state.players[0].hand.push(HandCard {
-        card_id: BATTLECRY_TARGET.to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, BATTLECRY_TARGET));
 
     engine
         .apply(
@@ -1100,10 +1098,9 @@ fn play_battlecry_without_target_enters_board_then_pends() {
 fn play_battlecry_with_unknown_target_pends_then_choose_rejects() {
     let (mut engine, mut state) = setup(41);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
-    state.players[0].hand.push(HandCard {
-        card_id: BATTLECRY_TARGET.to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, BATTLECRY_TARGET));
 
     engine
         .apply(
@@ -1128,10 +1125,9 @@ fn play_battlecry_with_unknown_target_pends_then_choose_rejects() {
 fn play_battlecry_with_target_applies_effect() {
     let (mut engine, mut state) = setup(42);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
-    state.players[0].hand.push(HandCard {
-        card_id: BATTLECRY_TARGET.to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, BATTLECRY_TARGET));
 
     engine
         .apply(
@@ -1163,10 +1159,9 @@ fn play_battlecry_with_empty_pool_is_allowed() {
     let (mut engine, mut state) = setup(43);
     // 目标筛「机械」，己方只有学者与即将入场的学者，池为空。
     put_champion(&engine, &mut state, 0, 9_000, "gutenberg");
-    state.players[0].hand.push(HandCard {
-        card_id: BATTLECRY_TRIBE_TARGET.to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, BATTLECRY_TRIBE_TARGET));
 
     engine
         .apply(
@@ -1187,10 +1182,9 @@ fn play_battlecry_with_empty_pool_is_allowed() {
 fn play_effect_card_without_target_rejects_and_keeps_hand() {
     let (mut engine, mut state) = setup(44);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
-    state.players[0].hand.push(HandCard {
-        card_id: EFFECT_CARD_TARGET.to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, EFFECT_CARD_TARGET));
     let before = state_hash(&state);
 
     let result = engine.apply(
@@ -1210,10 +1204,9 @@ fn play_effect_card_without_target_rejects_and_keeps_hand() {
 #[test]
 fn play_effect_card_with_empty_pool_is_allowed_and_whiffs() {
     let (mut engine, mut state) = setup(45);
-    state.players[0].hand.push(HandCard {
-        card_id: EFFECT_CARD_TARGET.to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, EFFECT_CARD_TARGET));
 
     engine
         .apply(
@@ -1280,11 +1273,12 @@ fn play_minion_at_len_appends() {
         dummy(&engine.catalog, 1, "a"),
         dummy(&engine.catalog, 2, "b"),
     ];
-    state.players[0].hand.push(HandCard {
-        card_id: card_id.clone(),
-        golden: false,
-    });
-    let new_instance = state.next_instance_id;
+    let new_instance = 9_000;
+    state.players[0].hand.push(HandCard::Minion(dummy(
+        &engine.catalog,
+        new_instance,
+        &card_id,
+    )));
 
     engine
         .apply(
@@ -1315,11 +1309,12 @@ fn play_minion_at_position_inserts() {
         dummy(&engine.catalog, 1, "a"),
         dummy(&engine.catalog, 2, "b"),
     ];
-    state.players[0].hand.push(HandCard {
-        card_id,
-        golden: false,
-    });
-    let new_instance = state.next_instance_id;
+    let new_instance = 9_000;
+    state.players[0].hand.push(HandCard::Minion(dummy(
+        &engine.catalog,
+        new_instance,
+        &card_id,
+    )));
 
     engine
         .apply(
@@ -1348,10 +1343,9 @@ fn play_minion_position_beyond_len_rejects() {
         dummy(&engine.catalog, 1, "a"),
         dummy(&engine.catalog, 2, "b"),
     ];
-    state.players[0].hand.push(HandCard {
-        card_id: minion_id(1),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, &minion_id(1)));
     let before = state_hash(&state);
 
     let result = engine.apply(
@@ -1377,11 +1371,12 @@ fn play_minion_without_position_appends() {
         dummy(&engine.catalog, 1, "a"),
         dummy(&engine.catalog, 2, "b"),
     ];
-    state.players[0].hand.push(HandCard {
-        card_id: minion_id(1),
-        golden: false,
-    });
-    let new_instance = state.next_instance_id;
+    let new_instance = 9_000;
+    state.players[0].hand.push(HandCard::Minion(dummy(
+        &engine.catalog,
+        new_instance,
+        &minion_id(1),
+    )));
 
     engine
         .apply(
@@ -1409,11 +1404,12 @@ fn play_minion_without_position_appends() {
 const BATTLECRY_GROWTH_MINION: &str = "fangzhiji";
 
 fn play_growth_minion(engine: &mut Engine, state: &mut GameState) -> InstanceId {
-    state.players[0].hand.push(HandCard {
-        card_id: BATTLECRY_GROWTH_MINION.to_string(),
-        golden: false,
-    });
-    let instance_id = state.next_instance_id;
+    let instance_id = 9_000;
+    state.players[0].hand.push(HandCard::Minion(dummy(
+        &engine.catalog,
+        instance_id,
+        BATTLECRY_GROWTH_MINION,
+    )));
     engine
         .apply(
             state,
@@ -1483,10 +1479,11 @@ fn target_pending_pool_includes_self() {
 fn target_pending_skipped_when_filtered_pool_empty() {
     let (mut engine, mut state) = setup(54);
     // 战吼筛「机械」，己方棋盘没有机械，入场后池仍为空。
-    state.players[0].hand.push(HandCard {
-        card_id: "archimedes".to_string(),
-        golden: false,
-    });
+    state.players[0].hand.push(HandCard::Minion(dummy(
+        &engine.catalog,
+        9_000,
+        "archimedes",
+    )));
 
     engine
         .apply(
@@ -1583,10 +1580,9 @@ fn choose_target_outside_filtered_pool_rejects() {
     let (mut engine, mut state) = setup(59);
     put_champion(&engine, &mut state, 0, 9_000, "fangzhiji");
     put_champion(&engine, &mut state, 0, 9_001, "gutenberg");
-    state.players[0].hand.push(HandCard {
-        card_id: BATTLECRY_TRIBE_TARGET.to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, BATTLECRY_TRIBE_TARGET));
 
     engine
         .apply(

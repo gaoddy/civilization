@@ -69,7 +69,7 @@ OP_SPEC = {
     "CannotAttack": (set(), {"duration"}, set()),
     "DealDamage": ({"amount"}, {"when", "canKill"}, set()),
     "Summon": ({"count"}, {"token", "card", "when"}, {("token", "card")}),
-    "Copy": ({"to"}, {"from", "type"}, set()),
+    "Copy": ({"to"}, {"from", "type", "state"}, set()),
     "Discover": ({"pool"}, {"choose"}, set()),
     "RefreshShop": (set(), {"free", "extra"}, set()),
     "AddShopSlot": ({"era", "count"}, set(), set()),
@@ -90,7 +90,7 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
              "contagion": 3, "reborn": 4, "divine_shield": 5}
-EXPECT_ERA = {"prehistoric": 27, "primitive": 26, "classical": 20, "feudal": 40,
+EXPECT_ERA = {"prehistoric": 28, "primitive": 26, "classical": 20, "feudal": 40,
               "industrial": 32, "modern": 54, "future": 40}
 EXPECT_TRIBE = {"scholar": 49, "biology": 30, "human": 43, "machine": 37,
                 "plant": 22, "virus": 22}
@@ -739,7 +739,7 @@ def check_cards(skill_map):
             fail(f"{name}: 费用越界 {c['cost']}")
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"minion": 203, "effect": 36}:
+    if counts != {"minion": 203, "effect": 37}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]

@@ -2,8 +2,8 @@ use crate::data::{CardType, Tribe};
 
 use super::validate::validate_effect;
 use super::{
-    Compare, Condition, Duration, Effect, Filter, KeywordSpec, Op, Params, Pick, Selector, Side,
-    TimesIf, Trigger, Zone,
+    Compare, Condition, CopyState, Duration, Effect, Filter, KeywordSpec, Op, Params, Pick,
+    Selector, Side, TimesIf, Trigger, Zone,
 };
 
 const TRIGGERS: &[(&str, Trigger)] = &[
@@ -237,6 +237,13 @@ fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> R
         "choose" => params.choose = Some(parse_u8(key, value, chunk)?),
         "era" => params.era = Some(non_empty(key, value, chunk)?),
         "level" => params.level = Some(non_empty(key, value, chunk)?),
+        "state" => {
+            params.state = Some(match value {
+                "base" => CopyState::Base,
+                "current" => CopyState::Current,
+                _ => return Err(format!("state 非法 {value:?}（{chunk}）")),
+            })
+        }
         other => {
             return Err(format!("参数 {other:?} 不属于原语 {op:?}（{chunk}）"));
         }

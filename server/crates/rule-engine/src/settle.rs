@@ -14,6 +14,7 @@ use crate::effects::Duration;
 use crate::engine::Engine;
 use crate::error::EngineError;
 use crate::events::GameEvent;
+use crate::recruit::new_minion;
 use crate::rng::Stream;
 use crate::state::{
     AuraEffect, GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase, PlayerState,
@@ -828,10 +829,15 @@ fn write_back_combat_log(catalog: &Catalog, state: &mut GameState, log: &combat:
             continue;
         };
         if player.hand.len() < catalog.config.hand_slots {
-            player.hand.push(HandCard {
-                card_id: copy.card_id.clone(),
-                golden: copy.golden,
-            });
+            let instance_id = state.next_instance_id;
+            state.next_instance_id = instance_id.saturating_add(1);
+            let player = player_mut(state, copy.seat).expect("座位存在已确认");
+            player.hand.push(HandCard::Minion(new_minion(
+                catalog,
+                instance_id,
+                &copy.card_id,
+                copy.golden,
+            )));
         }
     }
     state.next_instance_id = state.next_instance_id.max(log.next_instance_id);

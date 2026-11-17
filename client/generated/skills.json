@@ -2365,6 +2365,7 @@
       {
         "op": "copy",
         "params": {
+          "state": "current",
           "to": "hand"
         },
         "selector": {

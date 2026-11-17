@@ -175,6 +175,7 @@ impl Engine {
                 target: None,
                 event_target: Some(evolved),
                 golden,
+                discover_level: None,
             };
             // 观察者效果只修改观察者自身，不产生对外事件。
             let _ = self.run_card_effects(state, &card_id, Trigger::OnAllyEvolve, &ctx);

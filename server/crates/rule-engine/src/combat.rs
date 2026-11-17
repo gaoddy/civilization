@@ -733,6 +733,7 @@ impl BattleField {
                         target: None,
                         event_target: None,
                         golden,
+                        discover_level: None,
                     };
                     engine.fire_combat_death(self, rng, &card_id, ctx);
                     if keywords(catalog, &self.sides[side].minions[index]).contains(SOW)

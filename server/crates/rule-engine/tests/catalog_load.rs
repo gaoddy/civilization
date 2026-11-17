@@ -6,7 +6,7 @@ use rule_engine::data::Catalog;
 #[test]
 fn loads_all_committed_data() {
     let catalog = test_catalog();
-    assert_eq!(catalog.cards.len(), 239);
+    assert_eq!(catalog.cards.len(), 240);
     assert_eq!(catalog.skills.len(), 131);
     assert_eq!(catalog.tokens.len(), 3);
     assert_eq!(catalog.cards.values().filter(|c| c.is_hero).count(), 32);

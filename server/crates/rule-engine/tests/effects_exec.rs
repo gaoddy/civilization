@@ -12,7 +12,7 @@ use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
-use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat, ShopSlot};
+use rule_engine::state::{GameState, HandCard, InstanceId, MinionInstance, Phase, Seat, ShopSlot};
 
 fn setup() -> (Engine, GameState) {
     let (engine, mut state) = Engine::new(test_catalog(), [11u8; 32]);
@@ -49,6 +49,7 @@ fn ctx(seat: Seat) -> EffectCtx {
         target: None,
         event_target: None,
         golden: false,
+        discover_level: None,
     }
 }
 
@@ -460,6 +461,7 @@ fn buy_enters_hand_then_play_fires_on_play() {
     let (mut engine, mut state) = setup();
     state.players[0].gold = 10;
     state.players[0].shop = vec![Some(ShopSlot {
+        instance_id: 4_242,
         card_id: "yezhu".to_string(),
         frozen: false,
     })];
@@ -499,10 +501,9 @@ fn buy_enters_hand_then_play_fires_on_play() {
 fn play_effect_card_fires_effect_then_on_use() {
     let (mut engine, mut state) = setup();
     place(&engine.catalog, &mut state, 0, 1, "yanhuashi");
-    state.players[0].hand.push(rule_engine::state::HandCard {
-        card_id: "aolinpike-jidian".to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, "aolinpike-jidian"));
 
     engine
         .apply(
@@ -639,10 +640,14 @@ fn golden_minion_played_from_hand_doubles_battlecry() {
     let (mut engine, mut state) = setup();
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
     state.next_instance_id = 100;
-    state.players[0].hand.push(rule_engine::state::HandCard {
-        card_id: "xinge".to_string(),
-        golden: true,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(MinionInstance::new(
+            &engine.catalog,
+            9_000,
+            "xinge",
+            true,
+        )));
 
     engine
         .apply(
@@ -671,10 +676,9 @@ fn golden_on_use_responder_triggers_twice() {
         let mut responder = minion(&engine.catalog, 1, "yanhuashi");
         responder.golden = golden;
         state.players[0].board.push(responder);
-        state.players[0].hand.push(rule_engine::state::HandCard {
-            card_id: "aolinpike-jidian".to_string(),
-            golden: false,
-        });
+        state.players[0]
+            .hand
+            .push(HandCard::effect(9_000, "aolinpike-jidian"));
         engine
             .apply(
                 &mut state,

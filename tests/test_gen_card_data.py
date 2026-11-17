@@ -5,7 +5,7 @@ import gen_card_data
 class GenCardDataTest(unittest.TestCase):
     def test_counts_and_sorted_ids(self):
         data = json.loads(gen_card_data.build(ROOT)["cards.json"])
-        self.assertEqual(len(data), 239)
+        self.assertEqual(len(data), 240)
         self.assertEqual(sum(c["card_type"] == "minion" for c in data), 203)
         self.assertEqual([c["id"] for c in data], sorted(c["id"] for c in data))
     def test_skills_and_tokens(self):

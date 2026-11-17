@@ -15,7 +15,10 @@
       "combatLog": [
         {
           "turn": 5,
-          "participantIds": ["p_00", "p_03"],
+          "participantIds": [
+            "p_00",
+            "p_03"
+          ],
           "ghostId": null,
           "winnerId": "p_00",
           "loserId": "p_03",
@@ -24,7 +27,9 @@
         },
         {
           "turn": 6,
-          "participantIds": ["p_03"],
+          "participantIds": [
+            "p_03"
+          ],
           "ghostId": "p_00",
           "winnerId": "p_03",
           "loserId": null,
@@ -54,38 +59,49 @@
           {
             "index": 0,
             "cardId": "huo",
-            "frozen": false
+            "frozen": false,
+            "instanceId": "1000"
           },
           {
             "index": 1,
             "cardId": "lun",
-            "frozen": false
+            "frozen": false,
+            "instanceId": "1001"
           },
           {
             "index": 2,
             "cardId": null,
-            "frozen": false
+            "frozen": false,
+            "instanceId": null
           },
           {
             "index": 3,
             "cardId": "che",
-            "frozen": true
+            "frozen": true,
+            "instanceId": "1003"
           },
           {
             "index": 4,
             "cardId": null,
-            "frozen": false
+            "frozen": false,
+            "instanceId": null
           },
           {
             "index": 5,
             "cardId": "fei",
-            "frozen": false
+            "frozen": false,
+            "instanceId": "1005"
           }
         ],
         "hand": [
           {
             "index": 0,
             "cardId": "dia",
+            "instanceId": "2000",
+            "golden": false,
+            "attack": null,
+            "health": null,
+            "rewardLevel": null,
             "playable": true,
             "disabledReason": null,
             "requiresTarget": false

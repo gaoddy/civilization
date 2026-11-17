@@ -32,6 +32,10 @@ pub enum GameEvent {
     TripleFormed {
         seat: Seat,
         card_id: String,
+        /// 合成出的金色随从实例编号。
+        golden_instance_id: InstanceId,
+        /// 被合成的三张副本实例编号（升序）。
+        sources: Vec<InstanceId>,
     },
     CardDiscovered {
         seat: Seat,

@@ -16,6 +16,8 @@ func _ready() -> void:
     await _check_game()
     await _check_game_layout()
     await _check_hand_overlap_layout()
+    await _check_hand_shows_server_stats()
+    await _check_hand_reward_card_badge()
     await _check_hand_hover()
     await _check_hand_hover_overlap_strip()
     await _check_hand_hover_in_combat()
@@ -672,6 +674,82 @@ func _check_hand_overlap_layout() -> void:
         "手牌滚动高度应保持 card-height + space-md",
     )
     _expect(hand_scroll != null and not hand_scroll.clip_contents, "手牌滚动行不应裁切悬停放大的卡片")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 手牌随从牌显示服务端给出的真实身材与金色标识，效果牌显示破折号。
+func _check_hand_shows_server_stats() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    var minion: Dictionary = FixtureScript.hand("archimedes", false, true, 7, 12)
+    minion["index"] = 0
+    var effect: Dictionary = FixtureScript.hand("aolinpike-jidian", false)
+    effect["index"] = 1
+    view["self"]["hand"] = [minion, effect]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+        {"index": 1, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var golden_card = instance.find_child("HandCard0", true, false)
+    _expect(golden_card != null, "应渲染金色手牌")
+    if golden_card != null:
+        var face = golden_card.find_child("CardFace", true, false)
+        var attack_label = face.find_child("CardAttack", true, false) if face != null else null
+        var health_label = face.find_child("CardHealth", true, false) if face != null else null
+        _expect(attack_label != null and attack_label.text == "7", "手牌金色应显示继承后的攻击力 7")
+        _expect(health_label != null and health_label.text == "12", "手牌金色应显示继承后的生命值 12")
+        var badge = face.find_child("CardBadge", true, false) if face != null else null
+        _expect(badge != null and badge.text == "★", "手牌金色应带金色标识")
+        _expect(bool(golden_card.payload.get("golden", false)), "手牌拖拽数据应带金色标记")
+        _expect(str(golden_card.payload.get("instanceId", "")) == "2001", "手牌拖拽数据应带实例编号")
+    var effect_card = instance.find_child("HandCard1", true, false)
+    _expect(effect_card != null, "应渲染效果牌")
+    if effect_card != null:
+        var effect_face = effect_card.find_child("CardFace", true, false)
+        var effect_attack = effect_face.find_child("CardAttack", true, false) if effect_face != null else null
+        _expect(effect_attack != null and effect_attack.text == "—", "效果牌不显示身材")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 三连奖励牌：角标显示锁定星级，悬停文案写明发现星级。
+func _check_hand_reward_card_badge() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["hand"] = [FixtureScript.hand("triple-reward", false, false, null, null, 4)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var card = instance.find_child("HandCard0", true, false)
+    _expect(card != null, "应渲染奖励牌")
+    if card != null:
+        var face = card.find_child("CardFace", true, false)
+        var badge = face.find_child("CardBadge", true, false) if face != null else null
+        _expect(badge != null and badge.text == "4", "奖励牌角标应显示锁定星级 4")
+        _expect(
+            str(card.tooltip_text) == tr("ui.game.reward_card.text") % 4,
+            "奖励牌悬停文案应写明发现 4 星随从",
+        )
+        _expect(not bool(card.payload.get("golden", true)), "奖励牌不是金色牌")
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}

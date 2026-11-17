@@ -78,6 +78,7 @@ pub fn for_seat(event: &GameEvent, seat: Seat, seats: &[SeatInfo; 8]) -> Option<
         GameEvent::TripleFormed {
             seat: owner,
             card_id,
+            ..
         } => {
             if !private(*owner, seat) {
                 return None;
