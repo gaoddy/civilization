@@ -100,7 +100,7 @@
 | `actions[].summon.side` | enum | 是 | 相对接收该消息的座位 |
 | `actions[].summon.position` | integer | 是 | 召唤后该随从在存活随从序列中的插入下标；上界由 PlayerView.boardSlots 决定 |
 | `actions[].summon.minion` | BoardMinion | 是 |  |
-| `damage` | integer | 是 | 本场战斗实际造成的伤害（含幽灵战）；平局为 0 |
+| `damage` | integer | 是 | 本场战斗结算给败者的伤害（含幽灵战）；平局与幽灵战落单座位获胜时为 0 |
 | `winnerId` | string | null | 是 | 本场胜者；玩家自己的 playerId 表示胜 |
 | `mirror` | boolean | 否 | true 表示本场为幽灵战，对手是已出局者的幽灵阵容 |
 

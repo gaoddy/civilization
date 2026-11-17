@@ -1061,12 +1061,12 @@ impl ::std::convert::From<&CombatMinionState> for CombatMinionState {
 ///      }
 ///    },
 ///    "damage": {
-///      "description": "本场战斗败者受到的伤害",
+///      "description": "本场战斗结算给败者的伤害（含幽灵战）；平局与幽灵战落单座位获胜时为 0",
 ///      "type": "integer",
 ///      "minimum": 0.0
 ///    },
 ///    "mirror": {
-///      "description": "true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0",
+///      "description": "true 表示本场为幽灵战，对手是已出局者的幽灵阵容",
 ///      "type": "boolean"
 ///    },
 ///    "opponentBoard": {
@@ -1097,9 +1097,9 @@ impl ::std::convert::From<&CombatMinionState> for CombatMinionState {
 #[serde(deny_unknown_fields)]
 pub struct CombatResult {
     pub actions: ::std::vec::Vec<CombatResultActionsItem>,
-    ///本场战斗败者受到的伤害
+    ///本场战斗结算给败者的伤害（含幽灵战）；平局与幽灵战落单座位获胜时为 0
     pub damage: u64,
-    ///true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0
+    ///true 表示本场为幽灵战，对手是已出局者的幽灵阵容
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub mirror: ::std::option::Option<bool>,
     #[serde(rename = "opponentBoard")]

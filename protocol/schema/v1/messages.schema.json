@@ -240,11 +240,11 @@
             }
           }
         },
-        "damage": { "type": "integer", "minimum": 0, "description": "本场战斗败者受到的伤害" },
+        "damage": { "type": "integer", "minimum": 0, "description": "本场战斗结算给败者的伤害（含幽灵战）；平局与幽灵战落单座位获胜时为 0" },
         "winnerId": { "type": ["string", "null"], "description": "本场胜者；玩家自己的 playerId 表示胜" },
         "mirror": {
           "type": "boolean",
-          "description": "true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0"
+          "description": "true 表示本场为幽灵战，对手是已出局者的幽灵阵容"
         }
       }
     },
