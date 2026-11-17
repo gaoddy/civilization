@@ -171,11 +171,7 @@ func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
         box.add_child(_detail_row("时代", era))
     var skill_text := CardDB.display_text(card_id)
     if skill_text != "":
-        var skill := UI.label(skill_text, UITheme.font_size("font-body-sm"))
-        skill.name = "DetailText"
-        skill.custom_minimum_size = Vector2(_detail_text_width(), 0)
-        skill.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-        box.add_child(skill)
+        box.add_child(_detail_text_block(skill_text))
     if data.get("disabledReason") != null:
         var reason := UI.label(UI.error_text(str(data.get("disabledReason"))), UITheme.font_size("font-body-sm"))
         reason.name = "DetailBlocked"
@@ -227,16 +223,16 @@ func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
     var heading := UI.label("英雄技能", UITheme.font_size("font-caption"), false)
     heading.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     box.add_child(heading)
-    var skill := UI.label(skill_text, UITheme.font_size("font-body-sm"))
-    skill.custom_minimum_size = Vector2(_detail_text_width(), 0)
-    skill.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    skill.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    box.add_child(skill)
+    box.add_child(_detail_text_block(skill_text))
 
 
-## 棋盘随从详情：名称与攻击/生命的构成分层。
+## 棋盘随从详情：名称、介绍与攻击/生命的构成分层。
 func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
-    box.add_child(_detail_name(CardDB.display_name(str(minion.get("cardId", "")))))
+    var card_id := str(minion.get("cardId", ""))
+    box.add_child(_detail_name(CardDB.display_name(card_id)))
+    var skill_text := CardDB.display_text(card_id)
+    if skill_text != "":
+        box.add_child(_detail_text_block(skill_text))
     var stats: Dictionary = minion.get("stats", {})
     if typeof(stats) != TYPE_DICTIONARY or stats.is_empty():
         box.add_child(_detail_row("当前", "%d / %d" % [
@@ -282,6 +278,16 @@ func _detail_name(text: String) -> Label:
 ## 面板宽度扣除卡片内边距后的文本宽度，供技能文本换行。
 func _detail_text_width() -> int:
     return UITheme.metric("detail-panel-width") - UITheme.space("space-lg") * 2
+
+
+## 详情里的介绍/技能文本块：按面板宽度换行，颜色弱于正文。
+func _detail_text_block(text: String) -> Label:
+    var label := UI.label(text, UITheme.font_size("font-body-sm"))
+    label.name = "DetailText"
+    label.custom_minimum_size = Vector2(_detail_text_width(), 0)
+    label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+    return label
 
 
 ## 详情定位：商店卡先右后左，棋盘卡先下后上；夹紧视口且不覆盖当前卡片。

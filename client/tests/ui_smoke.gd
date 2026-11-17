@@ -69,6 +69,11 @@ func _check_combat_detail(instance: Node) -> void:
         await _hover(instance, card, card.size / 2)
         _expect(detail.is_visible_in_tree(), "战斗卡 %s 悬停应显示详情面板" % card.name)
         _expect(detail.mouse_filter == Control.MOUSE_FILTER_IGNORE, "详情面板不应拦截鼠标")
+        var expected_skill := CardDB.display_text("bruce-lee" if row == own_row else "aristotle")
+        _expect(
+            _node_text(detail).contains(expected_skill),
+            "战斗卡 %s 的详情应显示介绍" % card.name,
+        )
     await _push_motion(instance, Vector2(-40, -40))
     _expect(not detail.is_visible_in_tree(), "移出战斗卡矩形应隐藏详情面板")
 
@@ -79,7 +84,7 @@ func _check_detail_without_stats() -> void:
     GameStore.phase = "Recruit"
     GameStore.turn = 3
     GameStore.deadline = "2030-01-01T00:00:00Z"
-    var view: Dictionary = FixtureScript.view()
+    var view: Dictionary = FixtureScript.game_view()
     view["self"]["board"][0].erase("stats")
     GameStore.view = view
     var instance := await _check_scene("res://scenes/game.tscn", false)
@@ -95,7 +100,11 @@ func _check_detail_without_stats() -> void:
         _expect(detail.is_visible_in_tree(), "缺少 stats 时详情面板仍应显示")
         var text := _node_text(detail)
         _expect(text.contains("当前") and text.contains("3 / 4"), "缺少 stats 时应显示当前攻防：%s" % text)
-        for absent in ["初始", "永久", "回合", "光环", "受击"]:
+        _expect(
+            text.contains(CardDB.display_text("bruce-lee")),
+            "缺少 stats 时仍应显示介绍：%s" % text,
+        )
+        for absent in ["初始", "永久", "光环", "受击"]:
             _expect(not text.contains(absent), "缺少 stats 时不应出现「%s」：%s" % [absent, text])
     instance.queue_free()
     GameStore.view = {}
@@ -491,6 +500,15 @@ func _check_game_layout() -> void:
                 intro_desc.get_global_rect().end.y <= intro_name.get_global_rect().position.y + 1.0,
                 "%s 的介绍应在名称上方" % str(intro_case["node"]),
             )
+    var layout_detail = instance.find_child("MinionDetailPanel", true, false)
+    var board_minion = instance.find_child("BoardMinion0", true, false)
+    if layout_detail != null and board_minion != null:
+        await _hover(instance, board_minion, board_minion.size / 2)
+        _expect(
+            _node_text(layout_detail).contains(CardDB.display_text("bruce-lee")),
+            "棋盘随从详情应显示介绍",
+        )
+        await _push_motion(instance, Vector2(-40, -40))
     var hand_scroll = instance.find_child("HandScroll", true, false)
     _expect(
         hand_scroll != null and is_equal_approx(hand_scroll.custom_minimum_size.y, 154.0),
