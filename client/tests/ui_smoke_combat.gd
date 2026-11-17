@@ -1,11 +1,35 @@
 extends "res://tests/smoke_case.gd"
-## 战斗视图冒烟：中区只剩对手随从、结果横幅、我方随从，不再有双方英雄条。
+## 战斗视图冒烟：中区只剩对手随从、结果横幅、我方随从，不再有双方英雄条；
+## 演示播完只回报一次 `CombatPlayed`，战斗阶段不显示招募倒计时。
 ##
 ## 断言在演示播放中与播放结束两种状态下都要成立。
+
+## 记录发送内容的假连接：只实现战斗回报用例关心的接口。
+class RecordingSocket extends RefCounted:
+    var sent: Array = []
+
+    func get_ready_state() -> int:
+        return WebSocketPeer.STATE_OPEN
+
+    func poll() -> void:
+        pass
+
+    func get_available_packet_count() -> int:
+        return 0
+
+    func send_text(text: String) -> int:
+        sent.append(text)
+        return OK
+
 
 func _ready() -> void:
     await _check_combat_center_only()
     await _check_banner_variants()
+    await _check_combat_played_once()
+    await _check_started_at_seek()
+    await _check_combat_hides_countdown()
+    await _check_attack_collision_flight()
+    await _check_death_fades_after_strike()
     _finish()
 
 
@@ -70,6 +94,215 @@ func _expect_banner(combat: Dictionary, expected: Array, stage: String) -> void:
     GameStore.turn = 1
     GameStore.phase = ""
     GameStore.deadline = ""
+
+
+## 战斗回报：演示播完后发送一次 `CombatPlayed`，同一回合继续推进不重复发送。
+func _check_combat_played_once() -> void:
+    var socket := RecordingSocket.new()
+    Net.socket = socket
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        _fake_disconnect()
+        return
+    for _step in 10:
+        instance._process(0.4)
+    var sent := _sent_count(socket, Protocol.MSG_COMBAT_PLAYED)
+    _expect(sent == 1, "演示完成后应发送一次 CombatPlayed，实际 %d 次" % sent)
+    for _step in 5:
+        instance._process(0.4)
+    sent = _sent_count(socket, Protocol.MSG_COMBAT_PLAYED)
+    _expect(sent == 1, "同一回合继续推进不应重复发送 CombatPlayed，实际 %d 次" % sent)
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    _clear_combat()
+    GameStore.turn = 1
+    GameStore.phase = ""
+    GameStore.deadline = ""
+    _fake_disconnect()
+
+
+## `startedAt` 已过去较久：首帧就按服务端开战时刻对齐到结束态，不从头重播。
+func _check_started_at_seek() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_COMBAT
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view := FixtureScript.game_view()
+    view["phase"] = Protocol.PHASE_COMBAT
+    view["opponentPlayerId"] = "p2"
+    GameStore.view = view
+    var combat := FixtureScript.combat_result()
+    combat["startedAt"] = Time.get_datetime_string_from_unix_time(
+        int(Time.get_unix_time_from_system()) - 10
+    ) + "Z"
+    _set_combat(combat)
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _clear_combat()
+        return
+    var banner = instance.find_child("CombatBanner", true, false)
+    _expect(
+        banner != null and banner.visible,
+        "startedAt 已过去较久时首帧应直接进入结束态",
+    )
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    _clear_combat()
+    GameStore.turn = 1
+    GameStore.phase = ""
+    GameStore.deadline = ""
+
+
+## 战斗阶段状态行显示「战斗中」且不出现招募倒计时；回到招募恢复倒计时。
+func _check_combat_hides_countdown() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    var timer: Label = instance.find_child("TimerLabel", true, false)
+    _expect(timer != null, "右栏应有倒计时标签")
+    if timer != null:
+        _expect(timer.text == "战斗中", "战斗阶段状态行应显示「战斗中」，实际「%s」" % timer.text)
+        _expect(not timer.text.contains("剩余"), "战斗阶段不应显示招募倒计时")
+    instance.queue_free()
+    await get_tree().process_frame
+
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    var view := FixtureScript.game_view()
+    view["phase"] = Protocol.PHASE_RECRUIT
+    GameStore.view = view
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var recruit := await _check_scene("res://scenes/game.tscn", false)
+    if recruit != null:
+        var recruit_timer: Label = recruit.find_child("TimerLabel", true, false)
+        _expect(
+            recruit_timer != null and recruit_timer.text.contains("剩余"),
+            "招募阶段应恢复剩余秒数，实际「%s」" % ("" if recruit_timer == null else recruit_timer.text),
+        )
+        recruit.queue_free()
+        await get_tree().process_frame
+    GameStore.view = {}
+    _clear_combat()
+    GameStore.turn = 1
+    GameStore.phase = ""
+    GameStore.deadline = ""
+
+
+## 攻方卡主动飞向目标再飞回：飞行中出现覆盖层克隆卡与原位隐藏，回位后原卡恢复。
+func _check_attack_collision_flight() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    var source := _combat_card(instance, "mi_0")
+    var target := _combat_card(instance, "mo_0")
+    _expect(source != null, "攻方卡应在场")
+    _expect(target != null, "目标卡应在场")
+    if source == null or target == null:
+        instance.queue_free()
+        await get_tree().process_frame
+        _reset_store()
+        return
+    var fx := instance.find_child("CombatFxLayer", true, false)
+    _expect(fx != null, "战斗视图应有演出覆盖层")
+    if fx != null:
+        _expect(
+            fx.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+            "演出覆盖层不应拦截鼠标",
+        )
+    # 第一条攻击在 320ms 到期：推进到动作应用，克隆卡应已在飞行起点。
+    instance._process(0.32)
+    var clone := _fx_child(fx, "CombatFxAttack")
+    _expect(clone != null, "攻击动作应产生飞行中的克隆卡")
+    var source_hidden := source.modulate.a < 0.5
+    _expect(
+        source_hidden,
+        "攻方原卡起飞后应隐藏，实际透明度 %.2f" % source.modulate.a,
+    )
+    _expect(
+        _combat_card(instance, "mo_0") != null,
+        "攻击动作不得让目标提前消失",
+    )
+
+    # 回程；回位后克隆释放、原卡恢复。
+    instance._process(0.1)
+    _expect(_fx_child(fx, "CombatFxAttack") != null, "回程中克隆卡应仍在")
+    instance._process(0.2)
+    _expect(_fx_child(fx, "CombatFxAttack") == null, "回位后克隆卡应释放")
+    var returned := _combat_card(instance, "mi_0")
+    _expect(
+        returned != null and returned.modulate.a > 0.5,
+        "攻方回位后原卡应重新显示",
+    )
+    instance.queue_free()
+    await get_tree().process_frame
+    _reset_store()
+
+
+## 阵亡卡在攻方回位后消失：淡出时覆盖层仍有克隆，行内原卡已不可见。
+func _check_death_fades_after_strike() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    # 320ms 攻击、640ms 阵亡；推进到 0.66s 时阵亡动作刚应用。
+    instance._process(0.5)
+    instance._process(0.16)
+    _expect(
+        _combat_card(instance, "mo_0") == null,
+        "阵亡后目标卡应移出阵容行",
+    )
+    var fx := instance.find_child("CombatFxLayer", true, false)
+    _expect(_fx_child(fx, "CombatFxFade") != null, "阵亡后原位应留一张淡出中的克隆卡")
+    instance._process(0.2)
+    _expect(_fx_child(fx, "CombatFxFade") == null, "淡出结束后克隆卡应释放")
+    instance.queue_free()
+    await get_tree().process_frame
+    _reset_store()
+
+
+## 阵容行内按实例 id 找随从卡。
+func _combat_card(instance: Node, minion_id: String) -> Control:
+    for row_name in ["CombatOwnRow", "CombatOpponentRow"]:
+        var row = instance.find_child(row_name, true, false)
+        if row == null:
+            continue
+        for child in row.get_children():
+            if (
+                child is Control
+                and not child.is_queued_for_deletion()
+                and str(child.get_meta("minion_id", "")) == minion_id
+            ):
+                return child
+    return null
+
+
+## 覆盖层上指定名称且尚未排队释放的节点。
+func _fx_child(fx: Node, node_name: String) -> Control:
+    if fx == null:
+        return null
+    for child in fx.get_children():
+        if str(child.name) == node_name and not child.is_queued_for_deletion():
+            return child
+    return null
+
+
+## 清空战斗摆位，回到初始状态。
+func _reset_store() -> void:
+    GameStore.view = {}
+    _clear_combat()
+    GameStore.turn = 1
+    GameStore.phase = ""
+    GameStore.deadline = ""
+
+
+## 已发送的信封中某种消息的数量。
+func _sent_count(socket: RecordingSocket, type: String) -> int:
+    var count := 0
+    for text in socket.sent:
+        var envelope = JSON.parse_string(str(text))
+        if envelope is Dictionary and str(envelope.get("type", "")) == type:
+            count += 1
+    return count
 
 
 ## 中区节点：
