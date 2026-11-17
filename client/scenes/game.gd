@@ -157,8 +157,12 @@ func _build_hand_panel() -> Control:
     hand_scroll.name = "HandScroll"
     hand_scroll.custom_minimum_size = Vector2(0, UITheme.metric("card-height") + UITheme.space("space-md"))
     hand_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    # 悬停时卡片以底边为轴放大、越出滚动行，需要继续绘制与命中，故关闭裁剪。
+    hand_scroll.clip_contents = false
     hand_box.add_child(hand_scroll)
     _hand_row = _flow_row("HandRow")
+    # 手牌走重叠布局：槽位按步进排列，行内不再额外留间距。
+    _hand_row.add_theme_constant_override("h_separation", 0)
     hand_scroll.add_child(_hand_row)
     return hand_panel
 
@@ -266,6 +270,7 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
     if hand.is_empty():
         _hand_row.add_child(UI.empty_hint("手牌为空"))
         return
+    var card_step := UITheme.metric("card-width") - UITheme.metric("hand-card-overlap")
     for card in hand:
         var index := int(card.get("index", 0))
         var card_id := str(card.get("cardId", ""))
@@ -307,7 +312,10 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
         )
         if not entry.drag_allowed:
             UI.apply_dim(entry)
-        _hand_row.add_child(entry)
+        var slot := HandSlot.new()
+        slot.name = "HandSlot%d" % index
+        slot.setup(entry, float(card_step))
+        _hand_row.add_child(slot)
 
 
 func _set_combat_mode(in_combat: bool) -> void:

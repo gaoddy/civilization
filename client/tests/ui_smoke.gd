@@ -15,6 +15,7 @@ func _ready() -> void:
     await _check_room_hero_picker()
     await _check_game()
     await _check_game_layout()
+    await _check_hand_overlap_layout()
     await _check_board_capacity_from_view()
     await _check_combat_layout()
     await _check_hand_drag_emits_position()
@@ -514,6 +515,13 @@ func _check_game_layout() -> void:
         hand_scroll != null and is_equal_approx(hand_scroll.custom_minimum_size.y, 154.0),
         "手牌滚动高度应为 card-height + space-md"
     )
+    var hand_card_zero = instance.find_child("HandCard0", true, false)
+    var hand_slot_one = instance.find_child("HandSlot1", true, false)
+    _expect(
+        hand_card_zero != null and hand_slot_one != null
+        and hand_card_zero.get_global_rect().get_center().x < hand_slot_one.get_global_rect().position.x,
+        "首张手牌中心应落在可见区内，真实拖拽起点不被下一槽遮挡",
+    )
     if board != null:
         _expect(board.get_global_rect().size.y <= 147.0, "棋盘 7 槽应保持单行")
     var shop_zero = instance.find_child("ShopSlot0", true, false)
@@ -524,6 +532,93 @@ func _check_game_layout() -> void:
     instance.queue_free()
     GameStore.view = {}
     _clear_combat()
+    GameStore.turn = 1
+
+
+## 手牌重叠：1–10 张按步进 80 单行，相邻卡重叠 32，悬停放大不被滚动行裁切。
+func _check_hand_overlap_layout() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    var hand: Array = []
+    var affordances: Array = []
+    for index in range(10):
+        hand.append({
+            "index": index,
+            "cardId": "dia",
+            "playable": false,
+            "requiresTarget": false,
+            "disabledReason": "NO_SPACE",
+        })
+        affordances.append({"index": index, "playable": false, "disabledReason": "NO_SPACE"})
+    view["self"]["hand"] = hand
+    view["self"]["affordances"]["handCards"] = affordances
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var hand_row = instance.find_child("HandRow", true, false)
+    var hand_scroll = instance.find_child("HandScroll", true, false)
+    _expect(hand_row != null, "对局页应存在手牌行")
+    _expect(
+        hand_row != null and hand_row.get_theme_constant("h_separation") == 0,
+        "手牌行不应在槽之间再留间距",
+    )
+    if hand_row != null:
+        _expect(hand_row.get_child_count() == 10, "十张手牌应渲染十个槽，实际 %d" % hand_row.get_child_count())
+        var slots: Array = []
+        for index in range(10):
+            var slot: Control = hand_row.get_child(index) as Control if index < hand_row.get_child_count() else null
+            _expect(slot != null and str(slot.name) == "HandSlot%d" % index, "第 %d 个槽应为 HandSlot%d" % [index, index])
+            if slot == null:
+                continue
+            slots.append(slot)
+            _expect(
+                slot.custom_minimum_size == Vector2(80, 146),
+                "HandSlot%d 应为 80×146 步进，实际 %s" % [index, slot.custom_minimum_size],
+            )
+        for index in slots.size():
+            var slot: Control = slots[index]
+            var card: Control = slot.get_child(0) as Control if slot.get_child_count() > 0 else null
+            _expect(card != null and str(card.name) == "HandCard%d" % index, "槽 %d 应承载 HandCard%d" % [index, index])
+            if card == null:
+                continue
+            _expect(card.size == Vector2(112, 146), "HandCard%d 应为 112×146，实际 %s" % [index, card.size])
+            _expect(card.position == Vector2.ZERO, "HandCard%d 应贴槽左上角" % index)
+            if index > 0:
+                var previous: Control = slots[index - 1]
+                _expect(
+                    is_equal_approx(slot.get_global_rect().position.x - previous.get_global_rect().position.x, 80.0),
+                    "相邻槽应步进 80",
+                )
+                _expect(
+                    is_equal_approx(slot.get_global_rect().position.y, previous.get_global_rect().position.y),
+                    "手牌槽应保持同一行",
+                )
+        if slots.size() >= 2:
+            var first_card: Control = slots[0].get_child(0) as Control
+            var second_card: Control = slots[1].get_child(0) as Control
+            _expect(
+                first_card.get_global_rect().end.x > second_card.get_global_rect().position.x,
+                "相邻手牌应重叠",
+            )
+        _expect(hand_row.get_global_rect().size.y < 292.0, "十张手牌应保持单行")
+        if slots.size() == 10 and hand_scroll != null:
+            var last_card: Control = slots[9].get_child(0) as Control
+            _expect(
+                last_card.get_global_rect().end.x <= hand_scroll.get_global_rect().end.x + 0.5,
+                "末张手牌不应超出滚动行右边界",
+            )
+    _expect(
+        hand_scroll != null and is_equal_approx(hand_scroll.custom_minimum_size.y, 154.0),
+        "手牌滚动高度应保持 card-height + space-md",
+    )
+    _expect(hand_scroll != null and not hand_scroll.clip_contents, "手牌滚动行不应裁切悬停放大的卡片")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
     GameStore.turn = 1
 
 

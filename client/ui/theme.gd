@@ -124,6 +124,7 @@ const SCENARIO := {
 	"card-height": 146,
 	"card-info-height": 90,
 	"card-info-compact-height": 56,
+	"hand-card-overlap": 32,
 	"detail-panel-width": 200,
 	"report-width": 236,
 	"avatar-rail": 44,
