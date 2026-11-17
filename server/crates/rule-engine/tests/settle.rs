@@ -2,7 +2,7 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::test_catalog;
+use common::{effects_of, minion, test_catalog};
 use rule_engine::combat;
 use rule_engine::data::{Card, CardType, Catalog, Era, Skill, Tribe};
 use rule_engine::engine::Engine;
@@ -10,7 +10,7 @@ use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::rng::RngStreams;
 use rule_engine::settle::{Pairing, damage_formula, ghost_board, pair_round, rank_of};
-use rule_engine::state::{MinionInstance, Phase, Seat};
+use rule_engine::state::{Phase, Seat};
 
 /// 往目录里插入一张合成随从卡，避免测试依赖真实卡面数值。
 fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, health: i32) {
@@ -70,10 +70,6 @@ fn add_keyword_card(
             cost: Some(1),
         },
     );
-}
-
-fn minion(catalog: &Catalog, instance_id: u64, card_id: &str) -> MinionInstance {
-    MinionInstance::new(catalog, instance_id, card_id, false)
 }
 
 fn covered_seats(pairings: &[Pairing]) -> Vec<Seat> {
@@ -984,9 +980,4 @@ fn rank_of_matches_compare_alive_order() {
         ],
         "所有比较键相同时按座位号升序"
     );
-}
-
-/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
-fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
-    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

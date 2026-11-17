@@ -5,13 +5,13 @@
 
 mod common;
 
-use common::test_catalog;
+use common::{effects_of, minion, test_catalog};
 use rule_engine::combat::{CombatAction, CombatSetup, simulate, simulate_with};
 use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
 use rule_engine::settle::Pairing;
-use rule_engine::state::{InstanceId, MinionInstance, Phase};
+use rule_engine::state::{InstanceId, Phase};
 
 fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_list: &[&str]) {
     let mut skill_ids = Vec::new();
@@ -77,10 +77,6 @@ fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, ef
             cost: Some(1),
         },
     );
-}
-
-fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance::new(catalog, instance_id, card_id, false)
 }
 
 fn rng() -> RngStreams {
@@ -353,9 +349,4 @@ fn ghost_board_keeps_growth_and_permanent() {
     assert_eq!(ghost.stats.health.turn, 4);
     assert_eq!(ghost.stats.attack.aura, 3);
     assert_eq!(ghost.stats.health.aura, 6);
-}
-
-/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
-fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
-    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

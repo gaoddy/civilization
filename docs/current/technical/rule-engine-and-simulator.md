@@ -30,7 +30,7 @@ server/
       src/rng.rs             # xoshiro256++ 与五个标签流；seed_from_u64（M1a 由 sim 迁入）
       src/hash.rs            # FNV-1a 规范编码与状态哈希
       src/view.rs            # 逐座位视图 SeatView（M1a 新增，供 room-service 映射协议视图）
-      tests/                 # 17 个集成测试文件
+      tests/                 # 16 个集成测试文件（共享 helper 在 tests/common/）
     sim/                     # 可执行：CLI 模拟器 + 确定性 AI
       src/lib.rs             # run_games / play_game / replay；重导出 rule_engine::rng::seed_from_u64
       src/ai.rs              # M0 确定性 AI 策略（按视图消费目标待选）
@@ -114,7 +114,7 @@ tests/                       # Python 标准库 unittest
 
 | M0 标准 | 命令 | 证据 |
 | --- | --- | --- |
-| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog_load::loads_all_committed_data` 断言 240 卡 / 131 技能 / 3 Token / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`effects_schema::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
+| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 240 卡 / 131 技能 / 3 Token / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
 | 数据一致 | `make data-check` | 重新生成后输出 `生成数据无漂移`，退出码 0 |
 | 规则覆盖 | `make test` | `server/crates/rule-engine/tests/` 与 `server/crates/sim/tests/` 的用例全部 `test result: ok`（用例清单见第 7 节）；商店池耗尽留空槽由 `recruit::reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects` 锁定 |
 | 确定性 | `make m0-determinism` | `replay_same_log_100_times_has_same_hash` 通过：100 次重放每次退出码 0，`final_hash` 全部等于原局 |
@@ -158,11 +158,11 @@ tests/                       # Python 标准库 unittest
 | 核心规则 §5 战斗与伤害公式 | `rule-engine/tests/combat.rs` |
 | 核心规则 §6 三连与发现 | `rule-engine/tests/triple.rs`、`choices.rs` |
 | 关键词机制 §1–§3 | `rule-engine/tests/turn_effects.rs`、`death_effects.rs`、`effects_exec.rs`、`auras.rs`、`combat.rs` |
-| 关键词机制 §9、§10 | `rule-engine/tests/effects_parse.rs`、`effects_schema.rs`、`effects_exec.rs` |
+| 关键词机制 §9、§10 | `rule-engine/tests/effects_parse.rs`、`catalog.rs`、`effects_exec.rs` |
 | 时代与数值 | `rule-engine/tests/recruit.rs`、`settle.rs`、`turn_effects.rs` |
 | 确定性 | `rule-engine/tests/determinism.rs`、`sim/tests/sim_determinism.rs` |
-| 卡池加载 | `rule-engine/tests/catalog_load.rs` |
-| 随从攻防分层 | `rule-engine/tests/stats.rs`、`stats_model.rs`、`stats_view.rs`、`combat_damage.rs` |
+| 卡池加载 | `rule-engine/tests/catalog.rs` |
+| 随从攻防分层 | `rule-engine/tests/stats.rs`、`stats_view.rs`、`combat_damage.rs` |
 
 ## 8. 随从属性分层
 

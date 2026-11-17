@@ -2,66 +2,17 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::{heroes, test_catalog};
-use rule_engine::data::{CardType, Catalog, Tribe};
-use rule_engine::engine::Engine;
+use common::{minion, minion_id, set_shop, test_catalog, turn_started};
+use rule_engine::data::{CardType, Tribe};
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
-use rule_engine::state::{
-    GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Seat, ShopSlot,
-};
+use rule_engine::state::{GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Seat};
 
 use rule_engine::triple::REWARD_CARD_ID;
 
-fn setup(seed: u8) -> (Engine, GameState) {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [seed; 32]);
-    engine
-        .start_game(&mut state, &heroes())
-        .expect("开局应成功");
-    engine.start_turn(&mut state).expect("开始回合应成功");
-    (engine, state)
-}
-
-fn minion_id(level: u8) -> String {
-    test_catalog()
-        .cards
-        .values()
-        .find(|card| card.card_type == CardType::Minion && !card.is_hero && card.level == level)
-        .expect("数据中应存在该星级随从")
-        .id
-        .clone()
-}
-
-fn set_shop(state: &mut GameState, seat: Seat, ids: &[Option<String>]) {
-    let len = state.players[usize::from(seat)].shop.len().max(ids.len());
-    let mut shop: Vec<Option<ShopSlot>> = ids
-        .iter()
-        .cloned()
-        .map(|card_id| {
-            card_id.map(|card_id| {
-                let instance_id = state.next_instance_id;
-                state.next_instance_id = instance_id.saturating_add(1);
-                ShopSlot {
-                    instance_id,
-                    card_id,
-                    frozen: false,
-                }
-            })
-        })
-        .collect();
-    while shop.len() < len {
-        shop.push(None);
-    }
-    state.players[usize::from(seat)].shop = shop;
-}
-
-fn dummy(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance::new(catalog, instance_id, card_id, false)
-}
-
 fn hand_card(instance_id: InstanceId, card_id: &str) -> HandCard {
-    HandCard::Minion(dummy(&test_catalog(), instance_id, card_id))
+    HandCard::Minion(minion(&test_catalog(), instance_id, card_id))
 }
 
 fn pool_count(state: &GameState, card_id: &str) -> u16 {
@@ -97,12 +48,12 @@ fn hand_minions(state: &GameState, seat: Seat) -> Vec<&MinionInstance> {
 
 #[test]
 fn three_same_minions_become_golden_in_hand() {
-    let (mut engine, mut state) = setup(1);
+    let (mut engine, mut state) = turn_started(1);
     let card_id = minion_id(1);
     state.players[0].gold = 30;
 
     // 棋盘一张带成长、繁衍与护盾，手牌一张同名；买入的第三张进手牌后立即做三连。
-    let mut base = dummy(&engine.catalog, 10, &card_id);
+    let mut base = minion(&engine.catalog, 10, &card_id);
     base.stats.attack.add_growth(7);
     base.stats.health.add_growth(7);
     base.breed = 3;
@@ -160,17 +111,17 @@ fn three_same_minions_become_golden_in_hand() {
 
 #[test]
 fn base_is_the_earliest_instance_by_id() {
-    let (engine, mut state) = setup(2);
+    let (engine, mut state) = turn_started(2);
     let card_id = minion_id(2);
-    let mut early_board = dummy(&engine.catalog, 40, &card_id);
+    let mut early_board = minion(&engine.catalog, 40, &card_id);
     early_board.breed = 5;
     early_board.stats.attack.add_growth(3);
     // 手牌副本编号更小：三张都在时手牌副本才是基底，棋盘副本一并离场。
-    state.players[0].board = vec![early_board, dummy(&engine.catalog, 50, "baiyi")];
+    state.players[0].board = vec![early_board, minion(&engine.catalog, 50, "baiyi")];
     state.players[0].hand = vec![
         hand_card(20, &card_id),
         HandCard::Minion({
-            let mut late = dummy(&engine.catalog, 30, &card_id);
+            let mut late = minion(&engine.catalog, 30, &card_id);
             late.contagion = 1;
             late
         }),
@@ -197,13 +148,13 @@ fn base_is_the_earliest_instance_by_id() {
 
 #[test]
 fn golden_sells_for_three_and_cannot_triple_again() {
-    let (mut engine, mut state) = setup(3);
+    let (mut engine, mut state) = turn_started(3);
     let card_id = minion_id(2);
     state.players[0].gold = 0;
     state.players[0].board = vec![
-        dummy(&engine.catalog, 10, &card_id),
-        dummy(&engine.catalog, 11, &card_id),
-        dummy(&engine.catalog, 12, &card_id),
+        minion(&engine.catalog, 10, &card_id),
+        minion(&engine.catalog, 11, &card_id),
+        minion(&engine.catalog, 12, &card_id),
     ];
 
     let events = engine.check_triple(&mut state, 0);
@@ -229,10 +180,10 @@ fn golden_sells_for_three_and_cannot_triple_again() {
     assert!(state.players[0].board[0].golden);
     state.players[0]
         .board
-        .push(dummy(&engine.catalog, 20, &card_id));
+        .push(minion(&engine.catalog, 20, &card_id));
     state.players[0]
         .board
-        .push(dummy(&engine.catalog, 21, &card_id));
+        .push(minion(&engine.catalog, 21, &card_id));
     let before = state_hash(&state);
     let events = engine.check_triple(&mut state, 0);
     assert!(events.is_empty(), "金色随从不再参与三连");
@@ -248,11 +199,11 @@ fn golden_sells_for_three_and_cannot_triple_again() {
 
 #[test]
 fn triple_only_looks_at_board_and_hand() {
-    let (engine, mut state) = setup(4);
+    let (engine, mut state) = turn_started(4);
     let card_id = minion_id(2);
     state.players[0].board = vec![
-        dummy(&engine.catalog, 10, &card_id),
-        dummy(&engine.catalog, 11, &card_id),
+        minion(&engine.catalog, 10, &card_id),
+        minion(&engine.catalog, 11, &card_id),
     ];
     assert!(pool_count(&state, &card_id) > 0, "共享池仍有同名卡");
 
@@ -265,7 +216,7 @@ fn triple_only_looks_at_board_and_hand() {
 
 #[test]
 fn discovered_third_copy_forms_triple_in_hand() {
-    let (mut engine, mut state) = setup(5);
+    let (mut engine, mut state) = turn_started(5);
     let card_id = minion_id(1);
     state.players[0].hand = vec![hand_card(40, &card_id), hand_card(41, &card_id)];
     state.pending.push_back(PendingChoice::Discover {
@@ -301,7 +252,7 @@ fn discovered_third_copy_forms_triple_in_hand() {
 
 #[test]
 fn hand_triple_stays_in_hand() {
-    let (engine, mut state) = setup(6);
+    let (engine, mut state) = turn_started(6);
     let card_id = minion_id(2);
     state.players[0].hand = vec![
         hand_card(100, &card_id),
@@ -332,7 +283,7 @@ fn hand_triple_stays_in_hand() {
 
 #[test]
 fn all_board_triple_with_full_hand_keeps_golden_on_board() {
-    let (engine, mut state) = setup(7);
+    let (engine, mut state) = turn_started(7);
     let catalog = test_catalog();
     let hand_slots = catalog.config.hand_slots;
     let card_id = minion_id(2);
@@ -350,10 +301,10 @@ fn all_board_triple_with_full_hand_keeps_golden_on_board() {
         .map(|(index, filler_id)| hand_card(2_000 + index as InstanceId, filler_id))
         .collect();
     state.players[0].board = vec![
-        dummy(&catalog, 100, "baiyi"),
-        dummy(&catalog, 300, &card_id),
-        dummy(&catalog, 301, &card_id),
-        dummy(&catalog, 302, &card_id),
+        minion(&catalog, 100, "baiyi"),
+        minion(&catalog, 300, &card_id),
+        minion(&catalog, 301, &card_id),
+        minion(&catalog, 302, &card_id),
     ];
 
     let events = engine.check_triple(&mut state, 0);
@@ -387,7 +338,7 @@ fn all_board_triple_with_full_hand_keeps_golden_on_board() {
 
 #[test]
 fn hand_triple_with_full_hand_still_goes_to_hand() {
-    let (engine, mut state) = setup(20);
+    let (engine, mut state) = turn_started(20);
     let catalog = test_catalog();
     let hand_slots = catalog.config.hand_slots;
     let card_id = minion_id(2);
@@ -407,8 +358,8 @@ fn hand_triple_with_full_hand_still_goes_to_hand() {
     assert_eq!(state.players[0].hand.len(), hand_slots, "手牌满");
     state.players[0]
         .board
-        .push(dummy(&catalog, 2_102, &card_id));
-    state.players[0].board.push(dummy(&catalog, 100, "baiyi"));
+        .push(minion(&catalog, 2_102, &card_id));
+    state.players[0].board.push(minion(&catalog, 100, "baiyi"));
 
     let events = engine.check_triple(&mut state, 0);
 
@@ -432,12 +383,12 @@ fn hand_triple_with_full_hand_still_goes_to_hand() {
 
 #[test]
 fn reward_is_granted_only_when_golden_is_played() {
-    let (mut engine, mut state) = setup(8);
+    let (mut engine, mut state) = turn_started(8);
     let card_id = minion_id(1);
     state.players[0].board = vec![
-        dummy(&engine.catalog, 10, &card_id),
-        dummy(&engine.catalog, 11, &card_id),
-        dummy(&engine.catalog, 12, &card_id),
+        minion(&engine.catalog, 10, &card_id),
+        minion(&engine.catalog, 11, &card_id),
+        minion(&engine.catalog, 12, &card_id),
     ];
     engine.check_triple(&mut state, 0);
     let golden = hand_minions(&state, 0)[0].clone();
@@ -476,12 +427,12 @@ fn reward_is_granted_only_when_golden_is_played() {
 
 #[test]
 fn reward_level_caps_at_six() {
-    let (mut engine, mut state) = setup(9);
+    let (mut engine, mut state) = turn_started(9);
     let card_id = minion_id(7);
     state.players[0].board = vec![
-        dummy(&engine.catalog, 10, &card_id),
-        dummy(&engine.catalog, 11, &card_id),
-        dummy(&engine.catalog, 12, &card_id),
+        minion(&engine.catalog, 10, &card_id),
+        minion(&engine.catalog, 11, &card_id),
+        minion(&engine.catalog, 12, &card_id),
     ];
     engine.check_triple(&mut state, 0);
     engine
@@ -506,7 +457,7 @@ fn reward_level_caps_at_six() {
 
 #[test]
 fn playing_reward_discovers_next_level_minions() {
-    let (mut engine, mut state) = setup(10);
+    let (mut engine, mut state) = turn_started(10);
     let card_id = minion_id(2);
     let reward_id = state.next_instance_id;
     state.next_instance_id += 1;
@@ -559,7 +510,7 @@ fn playing_reward_discovers_next_level_minions() {
 
 #[test]
 fn reward_card_without_candidates_is_consumed() {
-    let (mut engine, mut state) = setup(11);
+    let (mut engine, mut state) = turn_started(11);
     for card in test_catalog().cards.values() {
         if card.card_type == CardType::Minion && !card.is_hero && card.level == 6 {
             state.pool.insert(card.id.clone(), 0);
@@ -590,7 +541,7 @@ fn reward_card_without_candidates_is_consumed() {
 
 #[test]
 fn reward_card_never_appears_in_shop_or_discover() {
-    let (mut engine, mut state) = setup(12);
+    let (mut engine, mut state) = turn_started(12);
     let catalog = test_catalog();
     let reward = catalog
         .cards
@@ -640,22 +591,22 @@ fn reward_card_never_appears_in_shop_or_discover() {
 
 #[test]
 fn hand_effect_cards_never_form_triple() {
-    let (engine, mut state) = setup(13);
+    let (engine, mut state) = turn_started(13);
     let effect_id = effect_card_id();
-    let minion = minion_id(2);
+    let card_id = minion_id(2);
     state.players[0].hand = vec![
         HandCard::effect(10, &effect_id),
         HandCard::effect(11, &effect_id),
         HandCard::effect(12, &effect_id),
     ];
-    state.players[0].board = vec![dummy(&engine.catalog, 13, &minion)];
+    state.players[0].board = vec![minion(&engine.catalog, 13, &card_id)];
 
     let events = engine.check_triple(&mut state, 0);
 
     assert!(events.is_empty(), "效果牌不参与三连");
     assert!(state.pending.is_empty(), "效果牌不产生发现待选");
     assert_eq!(state.players[0].board.len(), 1, "棋盘不增加随从");
-    assert_eq!(state.players[0].board[0].card_id, minion);
+    assert_eq!(state.players[0].board[0].card_id, card_id);
     assert_eq!(state.players[0].hand.len(), 3, "三张效果牌都保留");
     assert!(
         state.players[0]
@@ -667,12 +618,12 @@ fn hand_effect_cards_never_form_triple() {
 
 #[test]
 fn one_check_forms_multiple_triples() {
-    let (engine, mut state) = setup(14);
+    let (engine, mut state) = turn_started(14);
     let card_id = minion_id(2);
     state.players[0].board = vec![
-        dummy(&engine.catalog, 10, &card_id),
-        dummy(&engine.catalog, 11, &card_id),
-        dummy(&engine.catalog, 12, &card_id),
+        minion(&engine.catalog, 10, &card_id),
+        minion(&engine.catalog, 11, &card_id),
+        minion(&engine.catalog, 12, &card_id),
     ];
     state.players[0].hand = vec![
         hand_card(13, &card_id),
@@ -705,7 +656,7 @@ fn one_check_forms_multiple_triples() {
 
 #[test]
 fn choose_discover_out_of_range_rejects() {
-    let (mut engine, mut state) = setup(15);
+    let (mut engine, mut state) = turn_started(15);
     state.pending.push_back(PendingChoice::Discover {
         seat: 0,
         candidates: vec!["a".to_string(), "b".to_string()],
@@ -721,7 +672,7 @@ fn choose_discover_out_of_range_rejects() {
 
 #[test]
 fn choose_discover_consumes_pending_and_adds_to_hand() {
-    let (mut engine, mut state) = setup(16);
+    let (mut engine, mut state) = turn_started(16);
     let chosen = minion_id(2);
     let other = minion_id(3);
     let before_pool = pool_count(&state, &chosen);
@@ -755,7 +706,7 @@ fn choose_discover_consumes_pending_and_adds_to_hand() {
 
 #[test]
 fn choose_discover_with_full_hand_rejects_without_mutating() {
-    let (mut engine, mut state) = setup(17);
+    let (mut engine, mut state) = turn_started(17);
     let chosen = minion_id(2);
     state.players[0].hand = (0..engine.catalog.config.hand_slots)
         .map(|index| hand_card(2_000 + index as InstanceId, &minion_id(1)))
@@ -776,7 +727,7 @@ fn choose_discover_with_full_hand_rejects_without_mutating() {
 
 #[test]
 fn multiple_pending_choices_consume_frontmost_for_seat() {
-    let (mut engine, mut state) = setup(18);
+    let (mut engine, mut state) = turn_started(18);
     let first = minion_id(2);
     let second = minion_id(3);
     let third = minion_id(4);
@@ -819,15 +770,15 @@ fn multiple_pending_choices_consume_frontmost_for_seat() {
 
 #[test]
 fn golden_played_from_hand_keeps_instance_and_state() {
-    let (mut engine, mut state) = setup(19);
+    let (mut engine, mut state) = turn_started(19);
     let card_id = minion_id(2);
-    let mut base = dummy(&engine.catalog, 10, &card_id);
+    let mut base = minion(&engine.catalog, 10, &card_id);
     base.stats.health.add_growth(4);
     base.contagion = 1;
     state.players[0].board = vec![
         base,
-        dummy(&engine.catalog, 11, &card_id),
-        dummy(&engine.catalog, 12, &card_id),
+        minion(&engine.catalog, 11, &card_id),
+        minion(&engine.catalog, 12, &card_id),
     ];
 
     engine.check_triple(&mut state, 0);

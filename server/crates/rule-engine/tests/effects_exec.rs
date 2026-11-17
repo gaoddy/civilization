@@ -2,37 +2,15 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::test_catalog;
+use common::{minion, place, setup, test_catalog};
 use rule_engine::combat;
-use rule_engine::data::Catalog;
 use rule_engine::effects::{
     Duration, Effect, EffectCtx, Op, Trigger, effect_coverage, parse_effects,
 };
-use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
-use rule_engine::state::{GameState, HandCard, InstanceId, MinionInstance, Phase, Seat, ShopSlot};
-
-fn setup() -> (Engine, GameState) {
-    let (engine, mut state) = Engine::new(test_catalog(), [11u8; 32]);
-    state.phase = Phase::Recruit;
-    state.turn = 1;
-    for player in &mut state.players {
-        player.hp = 30;
-    }
-    (engine, state)
-}
-
-fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance::new(catalog, instance_id, card_id, false)
-}
-
-fn place(catalog: &Catalog, state: &mut GameState, seat: Seat, id: InstanceId, card_id: &str) {
-    state.players[usize::from(seat)]
-        .board
-        .push(minion(catalog, id, card_id));
-}
+use rule_engine::state::{GameState, HandCard, MinionInstance, Phase, Seat, ShopSlot};
 
 fn effect(raw: &str) -> Effect {
     parse_effects(raw)
@@ -59,7 +37,7 @@ fn board_minion(state: &GameState, seat: Seat, index: usize) -> &MinionInstance 
 
 #[test]
 fn battlecry_growth_adds_permanent_stats() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "pink-ape");
     let attack_before = combat::effective_attack(&engine.catalog, board_minion(&state, 0, 0));
     let health_before = combat::effective_health(&engine.catalog, board_minion(&state, 0, 0));
@@ -89,7 +67,7 @@ fn battlecry_growth_adds_permanent_stats() {
 
 #[test]
 fn scholar_growth_adds_health_only() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "aristotle");
 
     engine.apply_op(
@@ -108,7 +86,7 @@ fn scholar_growth_adds_health_only() {
 
 #[test]
 fn health_only_growth_adds_no_attack() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
@@ -127,7 +105,7 @@ fn health_only_growth_adds_no_attack() {
 
 #[test]
 fn modify_stats_permanent_and_combat() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
     let source_ctx = EffectCtx {
         source: Some(1),
@@ -159,7 +137,7 @@ fn modify_stats_permanent_and_combat() {
 
 #[test]
 fn grant_keyword_respects_duration() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
     place(&engine.catalog, &mut state, 0, 2, "yezhu");
     state.players[0].board[0].shield_used = true;
@@ -226,7 +204,7 @@ fn grant_keyword_respects_duration() {
 
 #[test]
 fn remove_growth_reduces_growth_count() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
     state.players[0].board[0].stats.attack.add_growth(5);
     state.players[0].board[0].stats.health.add_growth(5);
@@ -246,7 +224,7 @@ fn remove_growth_reduces_growth_count() {
 
 #[test]
 fn cannot_attack_blocks_attacks() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
@@ -274,7 +252,7 @@ fn cannot_attack_blocks_attacks() {
 
 #[test]
 fn deal_damage_uses_selector_and_amount() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     state.phase = Phase::Combat;
     place(&engine.catalog, &mut state, 1, 10, "yezhu");
 
@@ -293,7 +271,7 @@ fn deal_damage_uses_selector_and_amount() {
 
 #[test]
 fn deal_damage_cannot_kill_floors_health_at_one() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     state.phase = Phase::Combat;
     place(&engine.catalog, &mut state, 1, 10, "yanhuashi");
 
@@ -308,7 +286,7 @@ fn deal_damage_cannot_kill_floors_health_at_one() {
 
 #[test]
 fn enemy_selectors_are_empty_during_recruit() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 1, 10, "yezhu");
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
@@ -331,7 +309,7 @@ fn enemy_selectors_are_empty_during_recruit() {
 
 #[test]
 fn times_if_changes_times_by_tribe() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "tengman");
     place(&engine.catalog, &mut state, 0, 2, "yezhu");
     let growth_effect = effect("OnPlay|Growth|friendly:single|times=1,timesIf=plant:2");
@@ -361,7 +339,7 @@ fn times_if_changes_times_by_tribe() {
 
 #[test]
 fn condition_gates_effect() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "buluozhanshi");
     place(&engine.catalog, &mut state, 0, 2, "bruce-lee");
     let gated = effect(
@@ -390,7 +368,7 @@ fn condition_gates_effect() {
 
 #[test]
 fn golden_triggers_battlecry_twice() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "pink-ape");
 
     engine.fire(
@@ -412,7 +390,7 @@ fn golden_triggers_battlecry_twice() {
 
 #[test]
 fn on_activate_respects_cost_and_uses() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     state.players[0].hero = Some("luxun".to_string());
     state.players[0].gold = 5;
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
@@ -458,7 +436,7 @@ fn on_activate_respects_cost_and_uses() {
 
 #[test]
 fn buy_enters_hand_then_play_fires_on_play() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     state.players[0].gold = 10;
     state.players[0].shop = vec![Some(ShopSlot {
         instance_id: 4_242,
@@ -499,7 +477,7 @@ fn buy_enters_hand_then_play_fires_on_play() {
 
 #[test]
 fn play_effect_card_fires_effect_then_on_use() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yanhuashi");
     state.players[0]
         .hand
@@ -530,7 +508,7 @@ fn play_effect_card_fires_effect_then_on_use() {
 
 #[test]
 fn unimplemented_triggers_return_empty() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "pink-ape");
 
     let events = engine.fire(
@@ -580,7 +558,7 @@ fn coverage_counts_all_effect_segments() {
 
 #[test]
 fn selector_picks_cover_leftmost_adjacent_top_attack_and_other() {
-    let (engine, mut state) = setup();
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
     place(&engine.catalog, &mut state, 0, 2, "bruce-lee");
     place(&engine.catalog, &mut state, 0, 3, "tengman");
@@ -618,7 +596,7 @@ fn selector_picks_cover_leftmost_adjacent_top_attack_and_other() {
 
 #[test]
 fn grant_contagion_stacks_layer() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
@@ -637,7 +615,7 @@ fn grant_contagion_stacks_layer() {
 
 #[test]
 fn golden_minion_played_from_hand_doubles_battlecry() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
     state.next_instance_id = 100;
     state.players[0]
@@ -672,7 +650,7 @@ fn golden_minion_played_from_hand_doubles_battlecry() {
 #[test]
 fn golden_on_use_responder_triggers_twice() {
     fn responder_effect_count(golden: bool) -> usize {
-        let (mut engine, mut state) = setup();
+        let (mut engine, mut state) = setup(11);
         let mut responder = minion(&engine.catalog, 1, "yanhuashi");
         responder.golden = golden;
         state.players[0].board.push(responder);
@@ -700,7 +678,7 @@ fn golden_on_use_responder_triggers_twice() {
 
 #[test]
 fn both_side_merges_in_ascending_seat_order() {
-    let (engine, mut state) = setup();
+    let (engine, mut state) = setup(11);
     state.phase = Phase::Combat;
     place(&engine.catalog, &mut state, 1, 11, "yezhu");
     place(&engine.catalog, &mut state, 3, 31, "yezhu");
@@ -717,7 +695,7 @@ fn both_side_merges_in_ascending_seat_order() {
 
 #[test]
 fn cannot_attack_without_duration_clears_at_settle() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(

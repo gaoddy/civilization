@@ -1,6 +1,6 @@
 mod common;
 
-use common::test_catalog;
+use common::{effects_of, place, test_catalog};
 use rule_engine::combat;
 use rule_engine::data::{Card, CardType, Catalog, Era, Skill, Tribe};
 use rule_engine::effects::{Effect, EffectCtx, parse_effects};
@@ -122,16 +122,6 @@ fn setup(seed: u8) -> (Engine, GameState) {
         player.gold = 10;
     }
     (engine, state)
-}
-
-fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance::new(catalog, instance_id, card_id, false)
-}
-
-fn place(catalog: &Catalog, state: &mut GameState, seat: Seat, id: InstanceId, card_id: &str) {
-    state.players[usize::from(seat)]
-        .board
-        .push(minion(catalog, id, card_id));
 }
 
 fn effect(raw: &str) -> Effect {
@@ -811,9 +801,4 @@ fn turn_start_keeps_b_tree_ordering() {
         })
         .collect();
     assert_eq!(seats, vec![0, 1], "座位升序结算");
-}
-
-/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
-fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
-    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

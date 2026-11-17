@@ -2,7 +2,7 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::test_catalog;
+use common::{effects_of, minion, reborn_count, test_catalog};
 use rule_engine::combat::{
     CombatAction, CombatLog, effective_attack, effective_attack_with, effective_health,
     effective_health_with, keywords, simulate, simulate_with,
@@ -100,10 +100,6 @@ fn add_seedling_token(catalog: &mut Catalog) {
     );
 }
 
-fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance::new(catalog, instance_id, card_id, false)
-}
-
 fn rng() -> RngStreams {
     RngStreams::from_seed([7; 32])
 }
@@ -131,13 +127,6 @@ fn death_order(log: &CombatLog) -> Vec<InstanceId> {
             _ => None,
         })
         .collect()
-}
-
-fn reborn_count(log: &CombatLog) -> usize {
-    log.actions
-        .iter()
-        .filter(|action| matches!(action, CombatAction::Reborn { .. }))
-        .count()
 }
 
 fn contagion_count(log: &CombatLog) -> usize {
@@ -1374,9 +1363,4 @@ fn reborn_minion_does_not_act_again_after_acting() {
         Some(3),
         "本轮已行动过的随从复生后不会立即再次行动"
     );
-}
-
-/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
-fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
-    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

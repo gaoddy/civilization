@@ -5,7 +5,7 @@
 
 mod common;
 
-use common::{heroes, test_catalog};
+use common::started;
 use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
 use rule_engine::state::{AuraEffect, GameState, MinionInstance};
@@ -15,14 +15,6 @@ use rule_engine::view::{BoardMinionView, view};
 const FOUR: &str = "jianchihu";
 /// 卡面 0/5 的学者随从。
 const SCHOLAR: &str = "euclid";
-
-fn setup() -> (Engine, GameState) {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32]);
-    engine
-        .start_game(&mut state, &heroes())
-        .expect("开局应成功");
-    (engine, state)
-}
 
 /// 断言四项构成与 `damage`、`current` 自洽。
 fn assert_consistent(layers: &[i32], damage: i32, current: i32) {
@@ -50,7 +42,7 @@ fn catalog(engine: &Engine) -> &Catalog {
 
 #[test]
 fn layers_and_current_agree_without_damage() {
-    let (engine, mut state) = setup();
+    let (engine, mut state) = started(7);
     let mut minion = MinionInstance::new(catalog(&engine), 1, FOUR, false);
     minion.stats.attack.add_growth(1);
     minion.stats.attack.add_permanent(2);
@@ -101,7 +93,7 @@ fn layers_and_current_agree_without_damage() {
 
 #[test]
 fn scholar_attack_is_projected_to_zero() {
-    let (engine, mut state) = setup();
+    let (engine, mut state) = started(7);
     let mut scholar = MinionInstance::new(catalog(&engine), 1, SCHOLAR, false);
     assert!(scholar.is_scholar);
     scholar.stats.attack.add_permanent(4);
@@ -129,7 +121,7 @@ fn scholar_attack_is_projected_to_zero() {
 
 #[test]
 fn damage_is_absorbed_into_breakdown() {
-    let (engine, mut state) = setup();
+    let (engine, mut state) = started(7);
     let mut minion = MinionInstance::new(catalog(&engine), 1, FOUR, false);
     minion.stats.health.add_permanent(1);
     minion.stats.health.apply_damage(3);
@@ -153,7 +145,7 @@ fn damage_is_absorbed_into_breakdown() {
 
 #[test]
 fn negative_current_is_clamped_and_absorbed_by_damage() {
-    let (engine, mut state) = setup();
+    let (engine, mut state) = started(7);
     let mut minion = MinionInstance::new(catalog(&engine), 1, FOUR, false);
     minion.stats.health.apply_damage(7);
     assert_eq!(minion.stats.health.current, -3);
@@ -180,7 +172,7 @@ fn negative_current_is_clamped_and_absorbed_by_damage() {
 
 #[test]
 fn folded_aura_is_reflected_in_breakdown() {
-    let (engine, mut state) = setup();
+    let (engine, mut state) = started(7);
     state.players[0]
         .board
         .push(MinionInstance::new(catalog(&engine), 1, FOUR, false));

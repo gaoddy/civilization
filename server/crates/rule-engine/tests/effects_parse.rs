@@ -1,10 +1,10 @@
 mod common;
 
-use common::{CONFIG_JSON, test_catalog};
+use common::CONFIG_JSON;
 use rule_engine::data::{CardType, Catalog, Tribe};
 use rule_engine::effects::{
     Compare, Duration, Filter, KeywordSpec, Op, Pick, Selector, Side, TimesIf, Trigger, Zone,
-    parse_effects, validate_effects,
+    parse_effects,
 };
 use rule_engine::error::CatalogError;
 
@@ -195,14 +195,6 @@ fn errors_include_the_raw_segment() {
 }
 
 #[test]
-fn every_skill_in_catalog_validates() {
-    let catalog = test_catalog();
-    for skill in catalog.skills.values() {
-        assert!(validate_effects(&skill.effects).is_ok(), "{}", skill.id);
-    }
-}
-
-#[test]
 fn catalog_rejects_unknown_effect_enum_at_load() {
     let bad_skills = r#"[{"id":"broken-skill","effects":[{"trigger":"on_play","op":"explode","selector":{"kind":"self"},"params":{}}]}]"#;
     let err = Catalog::from_json("[]", bad_skills, "[]", CONFIG_JSON).unwrap_err();
@@ -223,16 +215,6 @@ fn catalog_rejects_semantically_invalid_effect_at_load() {
         }
         other => panic!("expected rule error, got {other:?}"),
     }
-}
-
-#[test]
-fn parses_contagion_layer_from_value() {
-    let e =
-        parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=contagion,value=2").unwrap();
-    assert!(matches!(
-        e[0].params.keyword,
-        Some(KeywordSpec { keyword: ref name, value: Some(2) }) if name == "contagion"
-    ));
 }
 
 #[test]

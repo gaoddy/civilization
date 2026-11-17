@@ -1,33 +1,13 @@
 mod common;
 
-use common::test_catalog;
+use common::{effects_of, place, setup};
 use rule_engine::combat;
-use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
+use rule_engine::data::{Card, CardType, Skill, Tribe};
 use rule_engine::engine::Engine;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
 use rule_engine::settle::{Pairing, fold_auras};
 use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat};
-
-fn setup() -> (Engine, GameState) {
-    let (engine, mut state) = Engine::new(test_catalog(), [23u8; 32]);
-    state.phase = Phase::Recruit;
-    state.turn = 1;
-    for player in &mut state.players {
-        player.hp = 30;
-    }
-    (engine, state)
-}
-
-fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance::new(catalog, instance_id, card_id, false)
-}
-
-fn place(catalog: &Catalog, state: &mut GameState, seat: Seat, id: InstanceId, card_id: &str) {
-    state.players[usize::from(seat)]
-        .board
-        .push(minion(catalog, id, card_id));
-}
 
 fn board_minion(state: &GameState, seat: Seat, id: InstanceId) -> &MinionInstance {
     state.players[usize::from(seat)]
@@ -71,7 +51,7 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, tribe: Tribe, effects: &s
 
 #[test]
 fn aura_buffs_all_friendly_machines_except_self_if_other() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     add_aura_source(
         &mut engine,
         "test-mech-other",
@@ -95,7 +75,7 @@ fn aura_buffs_all_friendly_machines_except_self_if_other() {
 
 #[test]
 fn aura_recomputes_when_source_leaves() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     // 青蒿：你的植物随从获得 +1/+1（含自身）。
     place(&engine.catalog, &mut state, 0, 1, "qinghao");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
@@ -116,7 +96,7 @@ fn aura_recomputes_when_source_leaves() {
 
 #[test]
 fn aura_health_floor_is_one() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     add_aura_source(
         &mut engine,
         "test-minus",
@@ -165,7 +145,7 @@ fn aura_health_floor_is_one() {
 
 #[test]
 fn same_keyword_from_two_sources_applies_once() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     add_aura_source(
         &mut engine,
         "test-taunt-a",
@@ -191,7 +171,7 @@ fn same_keyword_from_two_sources_applies_once() {
 
 #[test]
 fn conditional_aura_requires_condition() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     // 燧石矛兵：友方人类 >= 2 时自身获得 +1 攻击力。
     place(&engine.catalog, &mut state, 0, 1, "suishimaobing");
 
@@ -209,7 +189,7 @@ fn conditional_aura_requires_condition() {
 
 #[test]
 fn aura_does_not_stack_self() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     // 亚里士多德：你的随从获得 +0/+1（含自身），只应生效一次。
     place(&engine.catalog, &mut state, 0, 1, "aristotle");
 
@@ -221,7 +201,7 @@ fn aura_does_not_stack_self() {
 
 #[test]
 fn aura_never_crosses_seats() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     place(&engine.catalog, &mut state, 0, 1, "qinghao");
     place(&engine.catalog, &mut state, 1, 2, "juzi");
 
@@ -240,7 +220,7 @@ fn aura_never_crosses_seats() {
 
 #[test]
 fn aura_folds_into_combat_snapshot_only() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     // 达尔文（英雄）：你的生物随从获得 +1/+1。
     state.players[0].hero = Some("darwin".to_string());
     place(&engine.catalog, &mut state, 0, 1, "baiyi");
@@ -286,7 +266,7 @@ fn aura_folds_into_combat_snapshot_only() {
 
 #[test]
 fn recompute_is_idempotent() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     place(&engine.catalog, &mut state, 0, 1, "qinghao");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
 
@@ -299,7 +279,7 @@ fn recompute_is_idempotent() {
 
 #[test]
 fn apply_recomputes_auras() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     state.players[0].hero = Some("darwin".to_string());
     place(&engine.catalog, &mut state, 0, 1, "baiyi");
 
@@ -316,7 +296,7 @@ fn apply_recomputes_auras() {
 
 #[test]
 fn state_hash_includes_auras() {
-    let (_engine, state) = setup();
+    let (_engine, state) = setup(23);
     let mut with_aura = state.clone();
     with_aura.auras.insert(
         1,
@@ -333,7 +313,7 @@ fn state_hash_includes_auras() {
 
 #[test]
 fn ghost_fight_does_not_leak_auras_into_stored_state() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     place(&engine.catalog, &mut state, 0, 1, "qinghao");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
     place(&engine.catalog, &mut state, 3, 3, "juzi");
@@ -373,7 +353,7 @@ fn ghost_fight_does_not_leak_auras_into_stored_state() {
 
 #[test]
 fn aura_top_attack_picks_highest_attack() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     add_aura_source(
         &mut engine,
         "test-top-attack",
@@ -399,7 +379,7 @@ fn aura_top_attack_picks_highest_attack() {
 
 #[test]
 fn aura_single_without_target_has_no_targets() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup(23);
     add_aura_source(
         &mut engine,
         "test-single",
@@ -415,9 +395,4 @@ fn aura_single_without_target_has_no_targets() {
         state.auras.is_empty(),
         "没有显式目标的光环 single 不应产生任何加成"
     );
-}
-
-/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
-fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
-    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

@@ -7,23 +7,12 @@ mod common;
 
 use std::collections::BTreeMap;
 
-use common::test_catalog;
+use common::{effects_of, minion, reborn_count, setup_with_gold};
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
-use rule_engine::data::{Card, CardType, Catalog, Skill, Token, Tribe};
+use rule_engine::data::{Card, CardType, Skill, Token, Tribe};
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
-use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat};
-
-fn setup() -> (Engine, GameState) {
-    let (engine, mut state) = Engine::new(test_catalog(), [31u8; 32]);
-    state.phase = Phase::Recruit;
-    state.turn = 1;
-    for player in &mut state.players {
-        player.hp = 30;
-        player.gold = 10;
-    }
-    (engine, state)
-}
+use rule_engine::state::{InstanceId, MinionInstance, Seat};
 
 /// 插入一张合成随从卡，携带若干 `(keyword, effects)` 技能。
 fn add_card(
@@ -80,10 +69,6 @@ fn add_token(engine: &mut Engine, id: &str, attack: i32, health: i32) {
     );
 }
 
-fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
-    MinionInstance::new(catalog, instance_id, card_id, false)
-}
-
 fn rng() -> RngStreams {
     RngStreams::from_seed([13u8; 32])
 }
@@ -129,13 +114,6 @@ fn deaths(log: &CombatLog) -> Vec<InstanceId> {
         .collect()
 }
 
-fn reborn_count(log: &CombatLog) -> usize {
-    log.actions
-        .iter()
-        .filter(|action| matches!(action, CombatAction::Reborn { .. }))
-        .count()
-}
-
 fn mods_attack(minion: &MinionInstance) -> i32 {
     minion.stats.attack.permanent
 }
@@ -154,7 +132,7 @@ fn final_minion(log: &CombatLog, id: InstanceId) -> &MinionInstance {
 
 #[test]
 fn deathrattle_runs_before_reborn() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_token(&mut engine, "spawn", 2, 2);
     add_card(
         &mut engine,
@@ -189,7 +167,7 @@ fn deathrattle_runs_before_reborn() {
 
 #[test]
 fn sow_summons_seedling_on_death() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_token(&mut engine, "seedling", 1, 1);
     add_card(
         &mut engine,
@@ -217,7 +195,7 @@ fn sow_summons_seedling_on_death() {
 
 #[test]
 fn summon_card_deducts_pool_and_waits_when_empty() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_card(
         &mut engine,
         "summoner",
@@ -269,7 +247,7 @@ fn summon_card_deducts_pool_and_waits_when_empty() {
 
 #[test]
 fn friendly_death_triggers_only_for_owner() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_card(
         &mut engine,
         "watcher",
@@ -325,7 +303,7 @@ fn friendly_death_triggers_only_for_owner() {
 
 #[test]
 fn enemy_death_triggers_for_opponent() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_card(
         &mut engine,
         "avenger",
@@ -361,7 +339,7 @@ fn enemy_death_triggers_for_opponent() {
 
 #[test]
 fn combat_start_order_heroes_then_minions() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_card(
         &mut engine,
         "hero",
@@ -417,7 +395,7 @@ fn combat_start_order_heroes_then_minions() {
 
 #[test]
 fn delayed_battlecry_enemy_target_runs_at_combat_start() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_card(
         &mut engine,
         "delayed",
@@ -445,7 +423,7 @@ fn delayed_battlecry_enemy_target_runs_at_combat_start() {
 
 #[test]
 fn delayed_battlecry_cancelled_if_source_left() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_card(
         &mut engine,
         "hero",
@@ -485,7 +463,7 @@ fn delayed_battlecry_cancelled_if_source_left() {
 
 #[test]
 fn copy_minion_to_hand_does_not_deduct_pool() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_card(
         &mut engine,
         "copier",
@@ -513,7 +491,7 @@ fn copy_minion_to_hand_does_not_deduct_pool() {
 
 #[test]
 fn on_ally_summon_fires_after_summon() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_token(&mut engine, "spawn", 1, 1);
     add_card(
         &mut engine,
@@ -554,7 +532,7 @@ fn on_ally_summon_fires_after_summon() {
 
 #[test]
 fn trigger_budget_caps_effects() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_card(
         &mut engine,
         "loop-a",
@@ -593,7 +571,7 @@ fn trigger_budget_caps_effects() {
 
 #[test]
 fn turn_start_contagion_death_fires_deathrattle_and_sow() {
-    let (mut engine, mut state) = setup();
+    let (mut engine, mut state) = setup_with_gold(31);
     add_token(&mut engine, "seedling", 1, 1);
     add_card(
         &mut engine,
@@ -653,7 +631,7 @@ fn turn_start_contagion_death_fires_deathrattle_and_sow() {
 ///   所以 N 只留下后手英雄施加的 +1 攻击。
 #[test]
 fn combat_start_heroes_follow_first_side_order() {
-    let (mut engine, _state) = setup();
+    let (mut engine, _state) = setup_with_gold(31);
     add_card(
         &mut engine,
         "hero-a",
@@ -728,9 +706,4 @@ fn combat_start_heroes_follow_first_side_order() {
         1,
         "后手方英雄的增益仍应结算到存活随从上"
     );
-}
-
-/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
-fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
-    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

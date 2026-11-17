@@ -8,7 +8,9 @@
 
 mod common;
 
-use common::{CARDS_JSON, CONFIG_JSON, SKILLS_JSON, TOKENS_JSON, test_catalog};
+use common::{
+    CARDS_JSON, CONFIG_JSON, SKILLS_JSON, TOKENS_JSON, effects_of, test_catalog, turn_started,
+};
 use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
 use rule_engine::effects::{Effect, EffectCtx, parse_effects};
 use rule_engine::engine::Engine;
@@ -67,15 +69,6 @@ fn add_minion(
         },
     );
     catalog.config.pool_counts[usize::from(level) - 1] = 16;
-}
-
-/// 开局并进入第 2 回合招募阶段（金币 3）。
-fn setup(seed: u8) -> (Engine, GameState) {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [seed; 32]);
-    let heroes = common::heroes();
-    engine.start_game(&mut state, &heroes).expect("开局应成功");
-    engine.start_turn(&mut state).expect("开始回合应成功");
-    (engine, state)
 }
 
 fn first_minion_of_level(catalog: &Catalog, level: u8) -> String {
@@ -187,7 +180,7 @@ fn discover_effect() -> Effect {
 
 #[test]
 fn discover_pool_tribe_uses_enabled_tribes() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
 
     let events = engine.apply_op(&mut state, &discover_effect(), &ctx(0), None);
 
@@ -257,7 +250,7 @@ fn discover_follows_injected_random_stream() {
 
 #[test]
 fn discover_choose_one_returns_one_card() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let board = state.players[0].board.len();
     engine.apply_op(&mut state, &discover_effect(), &ctx(0), None);
     let candidates = discover_candidates_at(&state, 0).expect("第 0 条待选应为发现");
@@ -289,7 +282,7 @@ fn discover_choose_one_returns_one_card() {
 
 #[test]
 fn discover_consumes_pending_fifo() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     engine.apply_op(&mut state, &discover_effect(), &ctx(0), None);
     engine.apply_op(&mut state, &discover_effect(), &ctx(0), None);
     let first = discover_candidates_at(&state, 0).expect("第 0 条待选应为发现")[0].clone();
@@ -316,7 +309,7 @@ fn discover_consumes_pending_fifo() {
 
 #[test]
 fn choose_without_pending_rejects_invalid_stage() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let before = state_hash(&state);
 
     let reject = engine
@@ -329,7 +322,7 @@ fn choose_without_pending_rejects_invalid_stage() {
 
 #[test]
 fn choose_out_of_range_rejects_invalid_choice() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     engine.apply_op(&mut state, &discover_effect(), &ctx(0), None);
     let index = discover_candidates_at(&state, 0)
         .expect("第 0 条待选应为发现")
@@ -352,7 +345,7 @@ fn choose_out_of_range_rejects_invalid_choice() {
 
 #[test]
 fn choose_with_full_hand_rejects_no_space() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let hand_slots = engine.catalog.config.hand_slots;
     state.players[0].hand = (0..hand_slots).map(|_| hand_card("sickly")).collect();
     engine.apply_op(&mut state, &discover_effect(), &ctx(0), None);
@@ -368,7 +361,7 @@ fn choose_with_full_hand_rejects_no_space() {
 
 #[test]
 fn choose_in_combat_rejects_invalid_stage() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     engine.apply_op(&mut state, &discover_effect(), &ctx(0), None);
     state.phase = Phase::Combat;
 
@@ -382,7 +375,7 @@ fn choose_in_combat_rejects_invalid_stage() {
 
 #[test]
 fn discover_fires_from_hero_power() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     add_skill(
         &mut engine.catalog,
         skill(
@@ -432,7 +425,7 @@ fn discover_fires_from_hero_power() {
 
 #[test]
 fn triple_reward_is_played_and_consumed_by_choose() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let card_id = first_minion_of_level(&engine.catalog, 1);
     state.players[0].hand = (0..2).map(|_| hand_card(&card_id)).collect();
 
@@ -494,7 +487,7 @@ fn triple_reward_is_played_and_consumed_by_choose() {
 
 #[test]
 fn gain_minion_level_current_uses_player_era() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     // 1 星与 2 星同时在货，玩家处于原始：若误用「回合对应的时代」会取 1 星。
     // 史前的商店等级同样是 1 星，因此必须把玩家放到原始才能区分两种口径。
     let one_star = first_minion_of_level(&engine.catalog, 1);
@@ -541,7 +534,7 @@ fn gain_minion_level_current_uses_player_era() {
 
 #[test]
 fn gain_minion_from_shop_removes_shop_slot() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let card_id = first_minion_of_level(&engine.catalog, 1);
     set_shop(
         &mut state,
@@ -569,7 +562,7 @@ fn gain_minion_from_shop_removes_shop_slot() {
 
 #[test]
 fn gain_minion_from_empty_shop_is_a_no_op() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     set_shop(&mut state, 0, vec![None; 6]);
     state.players[0].shop.clear();
     let before = state_hash(&state);
@@ -586,7 +579,7 @@ fn gain_minion_from_empty_shop_is_a_no_op() {
 
 #[test]
 fn gain_minion_to_board_places_new_minion() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let card_id = first_minion_of_level(&engine.catalog, 1);
     set_shop(
         &mut state,
@@ -610,7 +603,7 @@ fn gain_minion_to_board_places_new_minion() {
 
 #[test]
 fn gain_minion_to_board_with_full_board_is_a_no_op() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let board_slots = engine.catalog.config.board_slots;
     state.players[0].board = (1..=board_slots as InstanceId)
         .map(|id| dummy(&engine.catalog, id, "sickly"))
@@ -630,7 +623,7 @@ fn gain_minion_to_board_with_full_board_is_a_no_op() {
 
 #[test]
 fn gain_minion_to_board_runs_triple_check() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let card_id = first_minion_of_level(&engine.catalog, 1);
     state.players[0].board = vec![
         dummy(&engine.catalog, 1, &card_id),
@@ -660,7 +653,7 @@ fn gain_minion_to_board_runs_triple_check() {
 
 #[test]
 fn copy_hand_minion_to_hand_respects_hand_limit() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let hand_slots = engine.catalog.config.hand_slots;
     state.players[0].hand = (0..hand_slots).map(|_| hand_card("sickly")).collect();
     let before = state_hash(&state);
@@ -678,7 +671,7 @@ fn copy_hand_minion_to_hand_respects_hand_limit() {
 
 #[test]
 fn copy_hand_minion_to_hand_with_room_adds_copy() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let card_id = first_minion_of_level(&engine.catalog, 2);
     state.players[0].hand = vec![hand_card(&card_id)];
     let pool_before = pool_count(&state, &card_id);
@@ -704,7 +697,7 @@ fn copy_hand_minion_to_hand_with_room_adds_copy() {
 // ---------------------------------------------------------------------------
 
 fn evolve_fixture() -> (Engine, GameState) {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     add_skill(
         &mut engine.catalog,
         skill("keyword-evolve", Some("evolve"), "[]", None),
@@ -933,7 +926,7 @@ fn evolve_skipped_before_choice_does_not_trigger_ally_evolve() {
 
 #[test]
 fn evolve_bonus_does_not_trigger_onsummon_twice() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     add_skill(
         &mut engine.catalog,
         skill("keyword-evolve", Some("evolve"), "[]", None),
@@ -990,7 +983,7 @@ fn evolve_bonus_does_not_trigger_onsummon_twice() {
 
 #[test]
 fn evolve_cards_without_evolve_do_not_register_choice() {
-    let (mut engine, mut state) = setup(2);
+    let (mut engine, mut state) = turn_started(2);
     let card_id = first_minion_of_level(&engine.catalog, 1);
     state.players[0].hand = vec![hand_card(&card_id)];
 
@@ -1077,7 +1070,7 @@ fn copy_still_accepts_hand_and_board_from() {
 
 #[test]
 fn hash_covers_target_pending() {
-    let (_, state) = setup(2);
+    let (_, state) = turn_started(2);
     let target =
         |seat: Seat, source: InstanceId, card_id: &str, golden: bool| PendingChoice::Target {
             seat,
@@ -1106,9 +1099,4 @@ fn hash_covers_target_pending() {
             "待选字段不同应产生不同哈希：{variant:?}"
         );
     }
-}
-
-/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
-fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
-    parse_effects(raw).expect("测试效果应可解析")
 }

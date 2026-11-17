@@ -1,50 +1,14 @@
 //! CLI 模拟器集成测试：单局、重放、批量与报告。
 
-use std::path::PathBuf;
-use std::process::Command;
+mod common;
 
+use common::{catalog, log_hash, run, temp_path};
 use rule_engine::engine::Engine;
 use rule_engine::hash::state_hash;
 use rule_engine::state::{GameState, Seat};
 use serde_json::Value;
 use sim::ai;
 use sim::report;
-
-const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
-const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
-const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
-const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
-
-fn catalog() -> rule_engine::data::Catalog {
-    rule_engine::data::Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
-        .expect("已提交的 v0.1 数据应能完整加载")
-}
-
-fn run(args: &[&str]) -> (i32, String, String) {
-    let output = Command::new(env!("CARGO_BIN_EXE_sim"))
-        .args(args)
-        .output()
-        .expect("应能启动 sim 二进制");
-    (
-        output.status.code().unwrap_or(-1),
-        String::from_utf8_lossy(&output.stdout).into_owned(),
-        String::from_utf8_lossy(&output.stderr).into_owned(),
-    )
-}
-
-fn temp_path(name: &str) -> PathBuf {
-    let mut path = std::env::temp_dir();
-    path.push(format!("sim-test-{}-{name}", std::process::id()));
-    path
-}
-
-/// 日志中的 `final_hash`：16 位小写十六进制字符串，解析回数值便于比较。
-fn log_hash(json: &Value) -> u64 {
-    let text = json["final_hash"]
-        .as_str()
-        .unwrap_or_else(|| panic!("应含十六进制 final_hash：{json}"));
-    u64::from_str_radix(text, 16).expect("final_hash 应为十六进制")
-}
 
 fn assert_ranking(ranking: &[Value], label: &str) {
     let mut seats: Vec<u64> = ranking
@@ -80,26 +44,6 @@ fn single_game_produces_ranking_and_hash() {
     let ranking = json["ranking"].as_array().expect("应含 ranking");
     assert_ranking(ranking, "single");
     assert!(json["turns"].is_u64(), "应含回合数");
-}
-
-#[test]
-fn replay_same_log_twice_has_same_hash() {
-    let (code, stdout, stderr) = run(&["play", "--seed", "42"]);
-    assert_eq!(code, 0, "stderr: {stderr}");
-    let json: Value = serde_json::from_str(&stdout).expect("stdout 应是对局 JSON");
-    let hash = log_hash(&json);
-    let log_path = temp_path("replay.json");
-    std::fs::write(&log_path, &stdout).expect("应能写日志");
-
-    let first = run(&["replay", "--log", log_path.to_str().unwrap()]);
-    let second = run(&["replay", "--log", log_path.to_str().unwrap()]);
-    assert_eq!(first.0, 0, "stderr: {}", first.2);
-    assert_eq!(second.0, 0, "stderr: {}", second.2);
-    let a: Value = serde_json::from_str(&first.1).expect("重放输出应为 JSON");
-    let b: Value = serde_json::from_str(&second.1).expect("重放输出应为 JSON");
-    assert_eq!(a["final_hash"].as_u64(), Some(hash));
-    assert_eq!(b["final_hash"].as_u64(), Some(hash));
-    let _ = std::fs::remove_file(&log_path);
 }
 
 #[test]
