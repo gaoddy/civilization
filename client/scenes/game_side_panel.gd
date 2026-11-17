@@ -17,6 +17,9 @@ var _end_button: Button
 ## 当前阶段截止时间；空串表示没有可展示的倒计时。
 var _deadline := ""
 
+## 最近一次刷新所属阶段；战斗阶段状态行改为「战斗中」。
+var _phase := ""
+
 
 func _init() -> void:
     name = "SidePanel"
@@ -74,6 +77,7 @@ func _process(_delta: float) -> void:
 func refresh(state: GameUiState) -> void:
     # `MSG_PHASE_CHANGED` 先更新 `GameStore.deadline`，此时 `view.phaseDeadline`
     # 仍是上一阶段的旧值；因此以 `GameStore.deadline` 为准，视图字段仅作回退。
+    _phase = state.phase
     var view_deadline := str(state.view.get("phaseDeadline", ""))
     _deadline = GameStore.deadline if GameStore.deadline != "" else view_deadline
     _refresh_identity(state)
@@ -104,12 +108,15 @@ func has_deadline() -> bool:
 
 
 func _update_countdown() -> void:
-    var left := seconds_left()
     var text := "—"
-    if left > 0:
-        text = "剩余 %d 秒" % left
-    elif left == 0:
-        text = "等待结算"
+    if _phase == Protocol.PHASE_COMBAT:
+        text = "战斗中"
+    else:
+        var left := seconds_left()
+        if left > 0:
+            text = "剩余 %d 秒" % left
+        elif left == 0:
+            text = "等待结算"
     if _timer_label.text != text:
         _timer_label.text = text
 

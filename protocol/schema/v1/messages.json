@@ -9,6 +9,7 @@
       "Ready": "messages.schema.json#/$defs/Ready",
       "SelectHeroCard": "messages.schema.json#/$defs/SelectHeroCard",
       "Intent": "messages.schema.json#/$defs/IntentMessage",
+      "CombatPlayed": "messages.schema.json#/$defs/CombatPlayed",
       "RequestSnapshot": "messages.schema.json#/$defs/RequestSnapshot",
       "Reconnect": "messages.schema.json#/$defs/Reconnect",
       "FriendRequest": "messages.schema.json#/$defs/FriendRequest"

@@ -15,6 +15,8 @@ var _own_row: HFlowContainer
 ## 演示播放器（纯数据）与当前演示所属回合。
 var _combat := CombatPlayback.new()
 var _combat_turn := -1
+## 覆盖层演出：克隆卡碰撞往返、闪光、飘字与淡出。
+var _fx: CombatFx
 
 
 func _init() -> void:
@@ -43,6 +45,10 @@ func _init() -> void:
     _own_row = _new_flow_row("CombatOwnRow")
     _body.add_child(_own_row)
 
+    # 覆盖层最后加入，盖在阵容行与横幅之上；不参与布局。
+    _fx = CombatFx.new()
+    add_child(_fx)
+
 
 func _new_flow_row(node_name: String) -> HFlowContainer:
     var row := HFlowContainer.new()
@@ -70,6 +76,7 @@ func refresh(_state: GameUiState) -> void:
 ## 进入非战斗阶段时丢弃本场演示归属，下一场战斗从头播放。
 func reset() -> void:
     _combat_turn = -1
+    _fx.clear()
 
 
 ## 演示进行中：阶段为战斗、播放器属于本回合、有本回合战报且尚未播完。
@@ -83,24 +90,131 @@ func playing() -> bool:
 
 
 ## 推进演示；由页面在 `playing()` 为真时按帧调用。
+##
+## 先推进已有演出，再应用本帧到期动作并为其开启新演出：新克隆不会在同一帧
+## 里被整段推进，飞行从原位开始。
 func advance(delta: float) -> void:
-    _combat.advance(delta * 1000.0)
+    _fx.advance(delta)
+    var events := _combat.advance(delta * 1000.0)
+    _play_events(events)
     _render_combat_rows()
+    _animate_new_cards(events)
     _refresh_combat_banner()
 
 
-## 装载本场演示：战前阵容与动作序列，并按 `phaseDeadline` 反推续播进度。
+## 当前回合的演示已播完（含横幅停留）。
+func finished() -> bool:
+    return (
+        _combat_turn == GameStore.turn
+        and GameStore.combat_is_current()
+        and _combat.is_finished()
+    )
+
+
+## 装载本场演示：战前阵容与动作序列，并按服务端 `startedAt` 对齐续播进度。
 func _start_combat(combat: Dictionary) -> void:
+    _fx.clear()
+    var started_at := UI.unix_from_rfc3339(str(combat.get("startedAt", "")))
     _combat.start(
         combat.get("actions", []),
         combat.get("ownBoard", []),
-        combat.get("opponentBoard", [])
+        combat.get("opponentBoard", []),
+        started_at
     )
-    var deadline := UI.unix_from_rfc3339(GameStore.deadline)
-    if GameStore.phase == Protocol.PHASE_COMBAT and deadline > 0.0:
-        var remaining_ms := maxf(deadline - Time.get_unix_time_from_system(), 0.0) * 1000.0
-        _combat.seek(maxf(float(_combat.total_ms()) - remaining_ms, 0.0))
+    var elapsed_ms := 0.0
+    if started_at > 0.0:
+        elapsed_ms = maxf(Time.get_unix_time_from_system() - started_at, 0.0) * 1000.0
+    # 续播只对齐数据，不补演已经过去的动作。
+    _combat.seek(elapsed_ms)
     _combat_turn = GameStore.turn
+
+
+## 按动作类型开启演出；数值已在播放器中按服务端快照落地。
+##
+## `attack` 只移动与反馈，不改存活；阵亡只由 `death` 触发，因此目标不会在
+## 攻方到达前消失。
+func _play_events(events: Array) -> void:
+    for action in events:
+        var data: Dictionary = action
+        match str(data.get("kind", "")):
+            "attack":
+                var source := _card_for(
+                    str(data.get("sourceSide", "")),
+                    _minion_id(data.get("sourceMinionId"), data.get("source"))
+                )
+                var target := _card_for(
+                    str(data.get("targetSide", "")),
+                    _minion_id(data.get("targetMinionId"), data.get("target"))
+                )
+                if source != null and target != null:
+                    _fx.play_attack(source, target, int(data.get("damage", 0)))
+            "death":
+                # 阵亡动作的定位字段写在 `sourceSide`（受影响随从所在侧）。
+                var card := _card_for(
+                    str(data.get("sourceSide", "")),
+                    _minion_id(null, data.get("target"))
+                )
+                if card != null:
+                    _fx.fade_out(card)
+            "contagion":
+                var infected := _card_for(
+                    str(data.get("targetSide", "")),
+                    _minion_id(null, data.get("target"))
+                )
+                if infected != null:
+                    _fx.flash(infected)
+
+
+## 复生 / 召唤的卡片在本帧渲染后出现，再补缩放淡入。
+func _animate_new_cards(events: Array) -> void:
+    for action in events:
+        var data: Dictionary = action
+        var side := ""
+        var minion_id := ""
+        match str(data.get("kind", "")):
+            "reborn":
+                side = str(data.get("sourceSide", ""))
+                minion_id = _minion_id(null, data.get("target"))
+            "summon":
+                var summon: Variant = data.get("summon")
+                if summon is Dictionary:
+                    side = str((summon as Dictionary).get("side", ""))
+                    var minion: Variant = (summon as Dictionary).get("minion")
+                    if minion is Dictionary:
+                        minion_id = _minion_id(null, minion)
+            _:
+                continue
+        var card := _card_for(side, minion_id)
+        if card != null:
+            _fx.appear(card)
+
+
+## 动作里携带的随从实例 id：优先显式字段，其次看快照里的 `minionId`。
+func _minion_id(explicit: Variant, snapshot: Variant) -> String:
+    if explicit != null:
+        return str(explicit)
+    if snapshot is Dictionary:
+        return str((snapshot as Dictionary).get("minionId", ""))
+    return ""
+
+
+## 在指定侧的行内按实例 id 找卡片；`side` 为空时两侧都找。
+func _card_for(side: String, minion_id: String) -> Control:
+    if minion_id == "":
+        return null
+    var rows: Array = []
+    match side:
+        "own":
+            rows = [_own_row]
+        "opponent":
+            rows = [_opponent_row]
+        _:
+            rows = [_own_row, _opponent_row]
+    for row in rows:
+        for child in (row as HFlowContainer).get_children():
+            if child is Control and str(child.get_meta("minion_id", "")) == minion_id:
+                return child
+    return null
 
 
 ## 按播放器当前状态重画两行：已存在的节点只改数值与明暗，召唤的随从插入新卡。

@@ -35,6 +35,7 @@ fn client_variant(message: &ClientMessage) -> &'static str {
         ClientMessage::Ready(_) => "Ready",
         ClientMessage::SelectHeroCard(_) => "SelectHeroCard",
         ClientMessage::Intent(_) => "Intent",
+        ClientMessage::CombatPlayed(_) => "CombatPlayed",
         ClientMessage::RequestSnapshot(_) => "RequestSnapshot",
         ClientMessage::Reconnect(_) => "Reconnect",
         ClientMessage::FriendRequest(_) => "FriendRequest",

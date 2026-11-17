@@ -81,22 +81,25 @@ protocol/
 
 | 常量 | 值 | 含义 |
 | --- | --- | --- |
-| `RECRUIT_SECONDS` | 90 | 开局与首回合的固定招募时长（秒） |
-| `PACE_MS` | 320 | 单条战斗动作的演示时长（毫秒） |
-| `TAIL_MS` | 2000 | 演示播完后的结果横幅停留（毫秒） |
-| `ROUND_BUDGET_MS` | 150000 | 一个回合的总预算：招募 + 演示（毫秒） |
+| `INITIAL_RECRUIT_SECONDS` | 60 | 首回合招募时长（秒） |
+| `RECRUIT_STEP_SECONDS` | 15 | 每回合递增的招募秒数 |
+| `RECRUIT_CAP_SECONDS` | 120 | 招募时长上限（秒） |
 | `TIMER_WARNING_SECONDS` | 10 | 剩余秒数警告阈值（M1a 只暴露常量与 `seconds_left`） |
 | `RECONNECT_GRACE_MS` | 30000 | 对局内断线保留窗口（毫秒） |
 | `SEAT_COUNT` | 8 | 固定座位数 |
 
 - 计时只走注入的 `Clock`，不读系统时间；房间 task 每 100 ms（`TICK_INTERVAL`）调用一次 `GameTask::tick`。
+- 招募时长按回合增长：`recruit_seconds(turn) = min(60 + (turn − 1) × 15, 120)`；服务端不估算演示时长，服务端不再有 `PACE_MS` / `TAIL_MS` / 回合预算常量，演示节奏只在客户端。
 - 达到招募截止时刻时由服务端自动推进，不需要客户端 `EndRecruit`；全员结束招募也走同一条路径。
-- 阶段推进分两步，`Combat` 是真实存在的时间段：
-  - `enter_combat`：`finish_recruit → resolve_combat` → 存本场逐座位报告与演示时长 `T` → 阶段停在 `Combat`，`deadline = now + T`，逐座位下发 `CombatResult`。
-  - `finish_combat`：由 `tick` 在 `Combat` 到点时调用 → `resolve_settle` →（非 `GameOver`）`start_turn`，下一回合招募截止为 `now + (150000 − T)`。
-- 演示时长 `T = max(各座位 actions 数量) × PACE_MS + TAIL_MS`，不设上限；`recruit_budget_ms` 把差额夹到 0，演示超预算时下一回合招募截止即 `now`。
+- 阶段推进分两步，`Combat` 的退出由客户端回报驱动：
+  - `enter_combat`：`finish_recruit → resolve_combat` → 存本场逐座位报告、记录开战时刻 `combat_started_at_ms`、标记参战座位 → 阶段停在 `Combat`，`deadline = now + recruit_seconds(turn + 1)`，逐座位下发带 `startedAt` 的 `CombatResult`。
+  - `CombatPlayed`（`RoomCommand::CombatPlayed { player_id }`）：参战座位记为已回报；非参战座位与重复回报忽略。全部参战座位回报后立即调用 `finish_combat`。
+  - `finish_combat`：`resolve_settle` → 追加战报 `combatLog` →（非 `GameOver`）`start_turn`；不改写 `deadline`，下一回合招募时钟沿用开战时设定的截止。
+- 兜底：`tick` 在 `Combat` 到点（`deadline`）时仍调用 `finish_combat`，覆盖从未回报的座位；因此无论演示是否播完，下一回合都会按开战 + `recruit_seconds(turn + 1)` 起跑。
+- 断线计为已回报：`Combat` 阶段断线时把该座位标记为参战座位已回报，若因此全员回报则当场结算。
+- 战报在结算时才写入 `combatLog`：演示期间观众与参战者都看不到本场条目。
 - 推到 `GameOver` 时逐座位下发 `GameOver`（排名从 1 起、种子为 16 位十六进制），不开始新的招募。
-- 推进幂等：进入演示后阶段离开 `Recruit`，演示期间再次 `tick` 返回空；演示到点后阶段离开 `Combat`。
+- 推进幂等：进入演示后阶段离开 `Recruit`，演示期间再次 `tick` 返回空；全部参战座位回报或兜底到点后阶段离开 `Combat`。
 - 引擎 `resolve_combat` 会把阶段推到 `Settle`：`enter_combat` 随后把阶段拨回 `Combat` 并丢弃 `Settle` 阶段的 `PhaseChanged`，`finish_combat` 结算前再拨回 `Settle`，客户端在整场演示期间只看到 `Combat`。
 
 ## 7. 意图去重

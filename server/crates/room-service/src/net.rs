@@ -574,6 +574,9 @@ fn map_room_message(
             client_intent_id: request.client_intent_id.to_string(),
             intent: request.intent,
         })),
+        ClientMessage::CombatPlayed(_) => Ok(RoomMessage::Command(RoomCommand::CombatPlayed {
+            player_id,
+        })),
         ClientMessage::RequestSnapshot(_) => {
             Ok(RoomMessage::Command(RoomCommand::RequestSnapshot {
                 player_id,
@@ -976,6 +979,10 @@ impl RoomTask {
                 self.senders.remove(&player_id);
             }
             RoomCommand::Intent { player_id, .. } => {
+                self.send_lobby_error(&player_id, "INVALID_STAGE", "对局尚未开始")
+                    .await;
+            }
+            RoomCommand::CombatPlayed { player_id } => {
                 self.send_lobby_error(&player_id, "INVALID_STAGE", "对局尚未开始")
                     .await;
             }

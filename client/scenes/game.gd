@@ -27,6 +27,9 @@ var _view_epoch := 0
 ## 队首待选是目标待选：该座位除选目标外不能操作，手牌不可拖。
 var _target_pending := false
 
+## 已回报「演示播完」的回合；同一回合只回报一次。
+var _combat_ack_turn := -1
+
 # 状态行：错误与断线提示共用。
 var _status: Label
 ## 状态行当前承载的是连接提示：恢复连接时据此清空，避免误清错误文案。
@@ -167,6 +170,7 @@ func _process(delta: float) -> void:
         _update_timer()
     if _combat_view.playing():
         _combat_view.advance(delta)
+    _report_combat_played()
 
 
 func _refresh() -> void:
@@ -193,6 +197,7 @@ func _refresh() -> void:
         _combat_view.refresh(state)
     else:
         _combat_view.reset()
+        _combat_ack_turn = -1
         _recruit_view.refresh(state)
     _refresh_hand(self_state, phase)
 
@@ -302,6 +307,20 @@ func _set_combat_mode(in_combat: bool) -> void:
     _recruit_view.visible = not in_combat
     _combat_view.visible = in_combat
     _side_panel.set_combat_mode(in_combat)
+
+
+## 演示播完后向服务端回报一次；断线时不发送也不重试（服务端把断线视为已回报）。
+func _report_combat_played() -> void:
+    if GameStore.phase != Protocol.PHASE_COMBAT:
+        return
+    if not GameStore.combat_is_current() or not _combat_view.finished():
+        return
+    if _combat_ack_turn == GameStore.turn:
+        return
+    _combat_ack_turn = GameStore.turn
+    if not Net.is_open():
+        return
+    Net.send(Protocol.MSG_COMBAT_PLAYED, {})
 
 
 func _refresh_connection() -> void:

@@ -16,6 +16,11 @@
 | `分支2.token` | string | 是 | 上次登录返回的令牌 |
 | `分支2.displayName` | string | 否 | 缺省由服务端生成「玩家N」 |
 
+### CombatPlayed
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+
 ### CreateRoom
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -83,6 +88,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
+| `startedAt` | string | 是 | 本场演示开始时刻（服务端时钟，RFC3339）；重连补发时保持同值 |
 | `ownBoard` | array<BoardMinion> | 是 |  |
 | `opponentBoard` | array<BoardMinion> | 是 |  |
 | `actions` | array<object> | 是 |  |

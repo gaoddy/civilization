@@ -217,6 +217,10 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                     .await?;
                 }
             }
+            ServerMessage::CombatResult(_) => {
+                // 机器人不做演示动画：收到即回报，避免阻塞同一局的真人客户端。
+                send(&mut ws, "CombatPlayed", json!({}), &mut seq).await?;
+            }
             _ => {}
         }
     }

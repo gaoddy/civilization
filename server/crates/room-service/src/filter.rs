@@ -148,6 +148,7 @@ pub fn combat_result(
     catalog: &Catalog,
     report: &SeatCombatReport,
     seats: &[SeatInfo; 8],
+    started_at: chrono::DateTime<chrono::Utc>,
 ) -> CombatResult {
     let own_board = report
         .own_board
@@ -178,6 +179,7 @@ pub fn combat_result(
         mirror: Some(report.mirror),
         opponent_board,
         own_board,
+        started_at,
         winner_id: report
             .winner
             .and_then(|seat| seats.get(usize::from(seat)))

@@ -80,7 +80,8 @@ func _check_combat_identity() -> void:
     var status = instance.find_child("SideStatus", true, false)
     _expect(status != null, "战斗阶段右栏中部应存在回合与倒计时块")
     if status != null:
-        _expect(_node_text(status).contains("剩余"), "战斗阶段应显示剩余时间")
+        _expect(_node_text(status).contains("战斗中"), "战斗阶段状态行显示「战斗中」")
+        _expect(not _node_text(status).contains("剩余"), "战斗阶段不显示招募倒计时")
 
     await _unmount(instance)
 

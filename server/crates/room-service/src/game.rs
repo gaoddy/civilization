@@ -44,17 +44,24 @@ use crate::filter::{combat_result, for_seat};
 use crate::room::{PlayerSlot, SEAT_COUNT};
 use crate::view::{SeatInfo, to_protocol};
 
-/// 每个招募回合的时长（秒）。开局与首回合的固定招募时长也用它。
-pub const RECRUIT_SECONDS: u64 = 90;
+/// 首回合招募时长（秒）。
+const INITIAL_RECRUIT_SECONDS: u64 = 60;
 
-/// 单条战斗动作的演示时长。
-const PACE_MS: u64 = 320;
+/// 每个后续回合增加的招募时长（秒）。
+const RECRUIT_STEP_SECONDS: u64 = 15;
 
-/// 结果横幅停留。
-const TAIL_MS: u64 = 2_000;
+/// 招募时长上限（秒）。
+const RECRUIT_CAP_SECONDS: u64 = 120;
 
-/// 一个回合的总预算（招募 + 演示）。
-const ROUND_BUDGET_MS: u64 = 150_000;
+/// 第 `turn` 回合的招募时长：60 秒起，每回合 +15 秒，封顶 120 秒。
+///
+/// 招募计时从开战时刻起算，因此战斗演示与结算耗时直接消耗下一回合的招募
+/// 时间；战斗越短，剩余招募时间越多。
+fn recruit_seconds(turn: u8) -> u64 {
+    INITIAL_RECRUIT_SECONDS
+        .saturating_add(u64::from(turn.saturating_sub(1)).saturating_mul(RECRUIT_STEP_SECONDS))
+        .min(RECRUIT_CAP_SECONDS)
+}
 
 /// 剩余多少秒时下发计时警告（由连接层使用，M1a 只暴露常量与 [`GameTask::seconds_left`]）。
 pub const TIMER_WARNING_SECONDS: u64 = 10;
@@ -75,6 +82,8 @@ pub enum RoomCommand {
         client_intent_id: String,
         intent: protocol::intents::Intent,
     },
+    /// 该座位已把本场战斗演示播完，可以结算；重复发送幂等。
+    CombatPlayed { player_id: String },
     /// 请求当前全量视图；与重连共用同一条快照路径。
     RequestSnapshot { player_id: String },
     /// 断线重连；本次连接的下行发送端替换为 `out`，并回一条全量快照。
@@ -149,7 +158,10 @@ pub struct GameTask {
     dedup: BTreeMap<(String, String), Deduped>,
     seed: u64,
     room_id: String,
-    /// 当前招募阶段的截止时刻（Unix epoch 毫秒）。
+    /// 当前阶段的截止时刻（Unix epoch 毫秒）。
+    ///
+    /// `Recruit` 时是本回合招募截止；`Combat` 时是下一回合招募截止，同时也是
+    /// 演示回报的兜底时刻：到点仍未全部回报时强制结算。
     phase_deadline_ms: u64,
     /// 本场战斗的逐座位报告；`Combat` 阶段保留供重连补发，结算时取走。
     combat_reports: Option<BTreeMap<Seat, SeatCombatReport>>,
@@ -159,8 +171,13 @@ pub struct GameTask {
     /// 而设计 §7.2 要求演示期间名次保持战前值；快照只在 `Combat` 阶段覆盖
     /// `PlayerSummary.rank`，[`GameTask::finish_combat`] 结算时清空、恢复实时计算。
     combat_ranks: Option<[Option<u8>; SEAT_COUNT]>,
-    /// 本场战斗的演示时长（毫秒）；参与下回合招募预算抵扣。
-    combat_duration_ms: u64,
+    /// 本场战斗的开始时刻（Unix epoch 毫秒）；随 `CombatResult.startedAt` 下发，
+    /// 客户端据此换算已播放时长。
+    combat_started_at_ms: Option<u64>,
+    /// 参战座位是否已回报「演示完成」；非参战座位恒为 `false`。
+    combat_acks: [bool; SEAT_COUNT],
+    /// 参与等待回报的座位（收到本场 `CombatResult` 的座位）。
+    combat_participants: [bool; SEAT_COUNT],
     /// 最近 5 个回合的全对局公开战报，按回合升序。
     ///
     /// 只存在 `GameTask` 上，不写入 [`GameState`]，因此不影响 `state_hash` 与
@@ -222,7 +239,7 @@ impl GameTask {
 
         let phase_deadline_ms = clock
             .now_ms()
-            .saturating_add(RECRUIT_SECONDS.saturating_mul(1000));
+            .saturating_add(recruit_seconds(state.turn).saturating_mul(1000));
 
         Ok(Self {
             engine,
@@ -237,7 +254,9 @@ impl GameTask {
             phase_deadline_ms,
             combat_reports: None,
             combat_ranks: None,
-            combat_duration_ms: 0,
+            combat_started_at_ms: None,
+            combat_acks: [false; SEAT_COUNT],
+            combat_participants: [false; SEAT_COUNT],
             combat_log: Vec::new(),
             senders: BTreeMap::new(),
             connected: [true; SEAT_COUNT],
@@ -443,6 +462,7 @@ impl GameTask {
                 out,
             } => self.reconnect(&player_id, last_seq, out),
             RoomCommand::Disconnect { player_id } => self.mark_disconnect(&player_id),
+            RoomCommand::CombatPlayed { player_id } => self.mark_combat_played(&player_id),
             RoomCommand::Intent {
                 player_id,
                 client_intent_id,
@@ -461,9 +481,9 @@ impl GameTask {
 
     /// 计时检查：未到点返回空；到点推进当前阶段。
     ///
-    /// 招募到点进入战斗演示（[`GameTask::enter_combat`]），演示到点结算并进入下一
-    /// 回合（[`GameTask::finish_combat`]）。推进后阶段离开本阶段，同一毫秒再次调用
-    /// 返回空。
+    /// 招募到点进入战斗演示（[`GameTask::enter_combat`]）。战斗演示在全部参战
+    /// 座位回报后由 [`GameTask::mark_combat_played`] 立即结算；本方法只在到点仍
+    /// 有座位未回报时兜底结算（[`GameTask::finish_combat`]），保证房间继续推进。
     ///
     /// 顺序为「先推进阶段，再处理断线宽限」：阶段推进是时间语义的一部分，必须与
     /// 连接状态无关地按时发生；断线标记只影响可观测的在线状态，安排在推进之后，
@@ -479,6 +499,28 @@ impl GameTask {
         }
         self.expire_disconnects();
         updates
+    }
+
+    /// 记录一个参战座位已播完本场演示；全部参战座位回报后立即结算。
+    ///
+    /// 非 `Combat` 阶段、非参战座位或重复回报都只回当前视图，不产生错误。
+    fn mark_combat_played(&mut self, player_id: &str) -> Vec<SeatUpdate> {
+        let Some(seat) = self.seat_of.get(player_id).copied() else {
+            return Vec::new();
+        };
+        if self.state.phase != Phase::Combat || !self.combat_participants[usize::from(seat)] {
+            return vec![self.view_update(seat)];
+        }
+        self.combat_acks[usize::from(seat)] = true;
+        if self.all_combat_played() {
+            return self.finish_combat().unwrap_or_default();
+        }
+        vec![self.view_update(seat)]
+    }
+
+    /// 本场全部参战座位是否都已回报。
+    fn all_combat_played(&self) -> bool {
+        (0..SEAT_COUNT).all(|seat| !self.combat_participants[seat] || self.combat_acks[seat])
     }
 
     /// 意图处理：先查去重表，再映射到引擎意图并执行。
@@ -656,6 +698,7 @@ impl GameTask {
     ///
     /// 幽灵战在 `outcome.reports` 里只有该座位自己的一条，因此只会产生 1 条更新。
     pub fn combat_updates(&self, reports: &BTreeMap<Seat, SeatCombatReport>) -> Vec<SeatUpdate> {
+        let started_at = self.combat_started_at();
         reports
             .iter()
             .map(|(&seat, report)| SeatUpdate {
@@ -664,16 +707,26 @@ impl GameTask {
                     &self.engine.catalog,
                     report,
                     &self.seats,
+                    started_at,
                 ))),
             })
             .collect()
     }
 
+    /// 本场演示开始时刻；尚未进入战斗时退回当前时钟，避免编码失败。
+    fn combat_started_at(&self) -> chrono::DateTime<chrono::Utc> {
+        let ms = self
+            .combat_started_at_ms
+            .unwrap_or_else(|| self.clock.now_ms());
+        chrono::DateTime::from_timestamp_millis(i64::try_from(ms).unwrap_or(i64::MAX))
+            .unwrap_or_else(chrono::Utc::now)
+    }
+
     /// 招募 → 战斗演示：配对、模拟战斗、逐座位下发 `CombatResult`。
     ///
-    /// `finish_recruit → resolve_combat → 存本场报告与演示时长 → 设演示截止`。
-    /// 阶段停在 `Combat`，之后由 [`GameTask::finish_combat`] 在截止时刻结算，
-    /// 这样 `Combat` 成为真实存在的时间段，客户端可见战斗视图。
+    /// `finish_recruit → resolve_combat → 存本场报告与开战时刻 → 设下一回合招募截止`。
+    /// 阶段停在 `Combat`，等待全部参战座位回报「演示完成」；到点仍未全部回报时
+    /// 由 [`GameTask::finish_combat`] 兜底结算。
     ///
     /// `events` 是进入本方法前已产生的事件（例如最后一条 `EndRecruit` 的
     /// `PhaseChanged`）；本方法产生的事件合并后按座位过滤随视图下发。
@@ -689,7 +742,6 @@ impl GameTask {
         }));
         let outcome = self.engine.resolve_combat(&mut self.state)?;
         events.extend(outcome.events);
-        self.record_combat_log(&outcome.reports);
 
         // `resolve_combat` 是纯计算，按引擎口径把阶段推到 `Settle`。演示期间要停在
         // `Combat`：结算产物（伤害、淘汰）已写入状态，但结算本身推迟到
@@ -706,12 +758,21 @@ impl GameTask {
             )
         });
 
-        let mut updates = Vec::with_capacity(SEAT_COUNT * 2 + outcome.reports.len());
-        updates.extend(self.combat_updates(&outcome.reports));
-
-        self.combat_duration_ms = combat_duration_ms(&outcome.reports);
+        let now = self.clock.now_ms();
+        self.combat_started_at_ms = Some(now);
+        // 下一回合招募计时从开战时刻起算；本截止同时是演示回报的兜底时刻。
+        self.phase_deadline_ms = now.saturating_add(
+            recruit_seconds(self.state.turn.saturating_add(1)).saturating_mul(1000),
+        );
+        self.combat_acks = [false; SEAT_COUNT];
+        self.combat_participants = [false; SEAT_COUNT];
+        for &seat in outcome.reports.keys() {
+            self.combat_participants[usize::from(seat)] = true;
+        }
         self.combat_reports = Some(outcome.reports);
-        self.phase_deadline_ms = self.clock.now_ms().saturating_add(self.combat_duration_ms);
+
+        let mut updates = Vec::with_capacity(SEAT_COUNT * 2);
+        updates.extend(self.combat_updates(self.combat_reports.as_ref().expect("刚写入")));
 
         let all_seats: Vec<Seat> = (0..SEAT_COUNT as Seat).collect();
         updates.extend(self.view_updates(&events, &all_seats));
@@ -720,26 +781,28 @@ impl GameTask {
 
     /// 战斗演示 → 结算 →（非 `GameOver`）下一回合招募。
     ///
-    /// 结算后若未结束，下一回合招募截止为 `now + (150_000 − 演示时长)`：演示占用的
-    /// 时间从回合预算里扣除，不设下限（演示超预算时截止即 `now`）。
+    /// 全部参战座位回报后立即调用，或在下一回合招募截止时兜底调用。结算后不重算
+    /// 截止时间：进入战斗时设定的下一回合招募截止继续生效，战斗越短剩余招募时间
+    /// 越多。
     fn finish_combat(&mut self) -> Result<Vec<SeatUpdate>, EngineError> {
-        // 报告只服务本场演示期间的重连补发，结算时取走。
-        self.combat_reports = None;
+        let reports = self.combat_reports.take();
         // 战斗已在 `enter_combat` 里算完，阶段被演示临时留在 `Combat`；结算前拨回
         // 引擎期望的 `Settle`。
         self.state.phase = Phase::Settle;
         let mut events = self.engine.resolve_settle(&mut self.state)?;
+        // 战报在结算时才公开，避免演示期间提前看到本场结果。
+        if let Some(reports) = &reports {
+            self.record_combat_log(reports);
+        }
         // 演示结束：名次恢复实时计算（若已进入 `GameOver`，`rank_of` 与
         // `placement` 一致）。
         self.combat_ranks = None;
         if self.state.phase != Phase::GameOver {
             events.extend(self.engine.start_turn(&mut self.state)?);
-            self.phase_deadline_ms = self
-                .clock
-                .now_ms()
-                .saturating_add(recruit_budget_ms(self.combat_duration_ms));
         }
-        self.combat_duration_ms = 0;
+        self.combat_started_at_ms = None;
+        self.combat_acks = [false; SEAT_COUNT];
+        self.combat_participants = [false; SEAT_COUNT];
 
         let all_seats: Vec<Seat> = (0..SEAT_COUNT as Seat).collect();
         let mut updates = self.view_updates(&events, &all_seats);
@@ -866,6 +929,7 @@ impl GameTask {
                     &self.engine.catalog,
                     report,
                     &self.seats,
+                    self.combat_started_at(),
                 ))),
             });
         }
@@ -876,7 +940,7 @@ impl GameTask {
     /// 记录断线时刻；座位与对局状态保持不变。
     ///
     /// 重复断线只保留第一次时刻，避免连接层抖动无限延长宽限期。未知玩家的断开不是
-    /// 错误，直接忽略。
+    /// 错误，直接忽略。战斗演示期间断线的参战座位视为已回报，避免阻塞整局结算。
     fn mark_disconnect(&mut self, player_id: &str) -> Vec<SeatUpdate> {
         let Some(seat) = self.seat_of.get(player_id).copied() else {
             return Vec::new();
@@ -884,6 +948,12 @@ impl GameTask {
         let index = usize::from(seat);
         if self.disconnected_at_ms[index].is_none() {
             self.disconnected_at_ms[index] = Some(self.clock.now_ms());
+        }
+        if self.state.phase == Phase::Combat && self.combat_participants[index] {
+            self.combat_acks[index] = true;
+            if self.all_combat_played() {
+                return self.finish_combat().unwrap_or_default();
+            }
         }
         Vec::new()
     }
@@ -953,24 +1023,6 @@ impl GameTask {
         .map(|time| time.to_rfc3339())
         .unwrap_or_default()
     }
-}
-
-/// 演示时长：本场所有座位动作数的最大者 × [`PACE_MS`]，再加结果横幅 [`TAIL_MS`]。
-///
-/// 取最大值保证 8 个座位同时结束演示；不设上限，超长演示由下回合招募抵扣。
-fn combat_duration_ms(reports: &BTreeMap<Seat, SeatCombatReport>) -> u64 {
-    let max_actions = reports
-        .values()
-        .map(|report| report.actions.len())
-        .max()
-        .unwrap_or(0);
-    let actions = u64::try_from(max_actions).unwrap_or(u64::MAX);
-    actions.saturating_mul(PACE_MS).saturating_add(TAIL_MS)
-}
-
-/// 抵扣后的招募预算：回合总预算减去演示时长，下限为 0。
-fn recruit_budget_ms(combat_ms: u64) -> u64 {
-    ROUND_BUDGET_MS.saturating_sub(combat_ms)
 }
 
 /// 把意图里的字符串目标解析为实例 id；解析失败返回 `NO_SUCH_MINION`。
@@ -1075,7 +1127,7 @@ mod tests {
     use rule_engine::data::Catalog;
     use rule_engine::state::{MinionInstance, Pairing, Phase, Seat};
 
-    use super::{PACE_MS, ROUND_BUDGET_MS, TAIL_MS, combat_duration_ms, recruit_budget_ms};
+    use super::recruit_seconds;
     use crate::clock::FixedClock;
     use crate::envelope::SeatChannel;
     use crate::game::GameTask;
@@ -1099,6 +1151,10 @@ mod tests {
     ];
 
     fn task() -> GameTask {
+        task_at(FixedClock::new(1_000_000))
+    }
+
+    fn task_at(clock: FixedClock) -> GameTask {
         let catalog = Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
             .expect("卡表应能加载");
         let heroes: BTreeMap<Seat, String> = HEROES
@@ -1119,14 +1175,37 @@ mod tests {
                 disconnected_at_ms: None,
             })
             .collect();
-        GameTask::new(
-            catalog,
-            7,
-            heroes,
-            players,
-            Arc::new(FixedClock::new(1_000_000)),
-        )
-        .expect("开局应当成功")
+        GameTask::new(catalog, 7, heroes, players, Arc::new(clock)).expect("开局应当成功")
+    }
+
+    /// 构造 0 号与 1 号座位对战、其余座位已淘汰的局面；调用后阶段为 `Combat`，
+    /// 可直接进入 [`GameTask::enter_combat`]。
+    fn prepare_two_seat_combat(task: &mut GameTask) {
+        for player in &mut task.state.players {
+            player.hp = 30;
+            player.damage_dealt = 0;
+            player.eliminated = false;
+            player.board.clear();
+        }
+        for seat in 2..8 {
+            task.state.players[seat].eliminated = true;
+            task.state.players[seat].hp = 0;
+        }
+        task.state.ranking = vec![2, 3, 4, 5, 6, 7];
+        task.state.turn = 2;
+        task.state.phase = Phase::Combat;
+        task.state.first_seat = 0;
+        task.state.last_winner = None;
+        task.state.last_won = Default::default();
+        task.state.pending_settle.clear();
+        task.state.pairings = vec![Pairing {
+            a: 0,
+            b: 1,
+            ghost: None,
+        }];
+        let catalog = &task.engine.catalog;
+        task.state.players[0].board = vec![MinionInstance::new(catalog, 1, "bruce-lee", false)];
+        task.state.players[1].board = vec![MinionInstance::new(catalog, 2, "baiyi", false)];
     }
 
     fn rank_of(view: &protocol::view::PlayerView, seat: i64) -> Option<u64> {
@@ -1194,17 +1273,79 @@ mod tests {
     }
 
     #[test]
-    fn combat_duration_over_budget_sets_deadline_at_now() {
-        // 演示时长超过回合预算时，招募预算夹到 0（截止即 now）。
-        assert_eq!(recruit_budget_ms(200_000), 0);
-        assert_eq!(recruit_budget_ms(30_000), 120_000);
-        assert_eq!(ROUND_BUDGET_MS, 150_000);
+    fn recruit_seconds_follows_battlegrounds_curve() {
+        assert_eq!(recruit_seconds(1), 60);
+        assert_eq!(recruit_seconds(2), 75);
+        assert_eq!(recruit_seconds(3), 90);
+        assert_eq!(recruit_seconds(4), 105);
+        assert_eq!(recruit_seconds(5), 120);
+        assert_eq!(recruit_seconds(6), 120);
     }
 
+    /// 进入战斗后不会按估算时长自动结算；全部参战座位回报后才结算。
     #[test]
-    fn combat_duration_counts_max_actions_plus_tail() {
-        // 空报告只有横幅停留；不同座位取动作数最大者。
-        assert_eq!(combat_duration_ms(&BTreeMap::new()), TAIL_MS);
-        assert_eq!(PACE_MS, 320);
+    fn combat_waits_for_all_participants_before_settling() {
+        let mut task = task();
+        prepare_two_seat_combat(&mut task);
+        task.enter_combat(Vec::new()).expect("进入战斗应成功");
+
+        assert_eq!(task.state.phase, Phase::Combat);
+        assert!(task.combat_participants[0] && task.combat_participants[1]);
+        assert!(!task.combat_participants[2], "已淘汰座位不参与等待");
+        // 下一回合是第 3 回合：招募计时从开战时刻起算，时长 90 秒。
+        assert_eq!(task.phase_deadline_ms, 1_000_000 + 90_000);
+
+        task.mark_combat_played("p0");
+        assert_eq!(task.state.phase, Phase::Combat, "还有参战座位未回报");
+
+        task.mark_combat_played("p1");
+        assert_eq!(task.state.phase, Phase::Recruit);
+        assert_eq!(task.state.turn, 3);
+        assert_eq!(task.phase_deadline_ms, 1_090_000, "结算不重算招募截止");
+    }
+
+    /// 断线的参战座位视为已回报，不阻塞其余座位结算。
+    #[test]
+    fn combat_disconnect_counts_as_played() {
+        let mut task = task();
+        prepare_two_seat_combat(&mut task);
+        task.enter_combat(Vec::new()).expect("进入战斗应成功");
+
+        task.mark_disconnect("p0");
+        assert_eq!(task.state.phase, Phase::Combat);
+
+        task.mark_combat_played("p1");
+        assert_eq!(task.state.phase, Phase::Recruit);
+    }
+
+    /// 未回报时到点兜底结算，保证房间继续推进。
+    #[test]
+    fn combat_settles_at_deadline_when_acks_missing() {
+        let clock = FixedClock::new(1_000_000);
+        let mut task = task_at(clock.clone());
+        prepare_two_seat_combat(&mut task);
+        task.enter_combat(Vec::new()).expect("进入战斗应成功");
+
+        clock.advance(90_000);
+        task.tick();
+
+        assert_eq!(task.state.phase, Phase::Recruit);
+        assert_eq!(task.state.turn, 3);
+    }
+
+    /// 战报在结算时才公开，演示期间不出现本场结果。
+    #[test]
+    fn combat_log_is_published_after_settle() {
+        let mut task = task();
+        task.combat_log.clear();
+        prepare_two_seat_combat(&mut task);
+        task.enter_combat(Vec::new()).expect("进入战斗应成功");
+        assert!(task.combat_log.is_empty(), "演示期间不公开本场战报");
+
+        task.mark_combat_played("p0");
+        assert!(task.combat_log.is_empty());
+
+        task.mark_combat_played("p1");
+        assert_eq!(task.combat_log.len(), 1, "结算后公开本场战报");
     }
 }

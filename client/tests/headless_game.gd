@@ -18,6 +18,8 @@ var _pending_intents: Dictionary = {}
 var _reroll_count := 0
 var _last_turn := 0
 var _code_written := false
+## 已回报演示完成的回合；无头驱动不播动画，进入战斗即视为播完。
+var _combat_ack_turn := -1
 
 ## 未确认意图的保留上限，只需覆盖「发出一条后收到下一条错误」的流水线深度。
 const PENDING_LIMIT := 8
@@ -90,6 +92,18 @@ func _on_room() -> void:
             Net.send(Protocol.MSG_READY, {"ready": true})
 
 
+## 无头客户端不渲染动画：进入战斗即回报演示完成，让服务端按播完结算。
+##
+## 同一回合只回报一次；断线重连后服务端仍按 `CombatPlayed` 幂等处理。
+func _ack_combat() -> void:
+    if GameStore.phase != Protocol.PHASE_COMBAT or not GameStore.combat_is_current():
+        return
+    if _combat_ack_turn == GameStore.turn:
+        return
+    _combat_ack_turn = GameStore.turn
+    Net.send(Protocol.MSG_COMBAT_PLAYED, {})
+
+
 ## 从服务端分配给本人的候选里挑英雄：优先环境变量指定，不在候选里就用第一张。
 func _pick_hero(player: Dictionary) -> String:
     var raw = player.get("heroCandidates")
@@ -104,6 +118,7 @@ func _pick_hero(player: Dictionary) -> String:
 
 
 func _on_view() -> void:
+    _ack_combat()
     if _finished or GameStore.phase != Protocol.PHASE_RECRUIT:
         return
     var view: Dictionary = GameStore.view
@@ -288,7 +303,13 @@ func _on_error() -> void:
     # 目标缺失是正常交互：补上己方第一个随从重发，计入软错误。
     if code == Protocol.ERROR_NO_VALID_TARGET:
         var rejected_id := str(GameStore.last_error.get("clientIntentId", ""))
-        if _pending_intents.has(rejected_id) and _retry_with_target(_pending_intents[rejected_id]):
+        # 阶段已离开招募（战斗已开始）时不再补发，避免把补选打进战斗阶段。
+        var still_recruiting := GameStore.phase == Protocol.PHASE_RECRUIT
+        if (
+            still_recruiting
+            and _pending_intents.has(rejected_id)
+            and _retry_with_target(_pending_intents[rejected_id])
+        ):
             _soft_errors += 1
             push_warning("M1B 补选目标后重发（intent=%s）" % rejected_id)
             return

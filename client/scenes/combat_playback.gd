@@ -3,8 +3,8 @@ extends RefCounted
 ## 服务端战斗动作序列的落地器：只把下发值写进双方随从列表，不做数值推算。
 ##
 ## 动作 `i` 在 `(i + 1) * PACE_MS` 时应用；全部动作播完并经过 `TAIL_MS` 后
-## `banner_visible()` 为真。重连时用 `seek()` 直接跳到服务端 `phaseDeadline`
-## 反推出的进度，已播动作不会重播。
+## `banner_visible()` 为真。重连时用 `seek()` 直接跳到按服务端 `startedAt`
+## 算出的已播时长，已播动作不会重播。
 ##
 ## 列表保留已阵亡随从（引擎同样保留），页面据此按存活序列渲染；服务端下发的
 ## `summon.position` 是存活序列下标，插入时用 [`alive_insert_index`] 换算。
@@ -24,16 +24,27 @@ var opponent: Array = []
 ## 本场动作序列。
 var actions: Array = []
 
+## 本场演示开始时刻（服务端时钟，Unix 秒）；缺失或不可解析时为 0。
+var started_at_unix := 0.0
+
 var _elapsed_ms := 0.0
 var _applied := 0
 var _banner := false
 
 
-## 装载一场战斗：动作序列与双方战前阵容（深拷贝，外部改动不影响本对象）。
-func start(actions_in: Array, own_board: Array, opponent_board: Array) -> void:
+## 装载一场战斗：动作序列、双方战前阵容与开战时刻（深拷贝，外部改动不影响本对象）。
+##
+## `started_at_unix` 只记录服务端开战时刻，续播进度由调用方按当前时间差 `seek()`。
+func start(
+    actions_in: Array,
+    own_board: Array,
+    opponent_board: Array,
+    started_at_unix_in := 0.0
+) -> void:
     actions = actions_in.duplicate(true)
     own = own_board.duplicate(true)
     opponent = opponent_board.duplicate(true)
+    started_at_unix = started_at_unix_in
     _elapsed_ms = 0.0
     _applied = 0
     _banner = false
@@ -44,14 +55,16 @@ func total_ms() -> int:
     return actions.size() * PACE_MS + TAIL_MS
 
 
-## 推进 `delta_ms` 并按节奏应用到期动作。
-func advance(delta_ms: float) -> void:
+## 推进 `delta_ms` 并按节奏应用到期动作；返回本次真正应用的动作（供视图演出）。
+func advance(delta_ms: float) -> Array:
+    var applied: Array = []
     if is_finished():
-        return
+        return applied
     _elapsed_ms += delta_ms
-    _apply_due()
+    _apply_due(applied)
     if _elapsed_ms >= float(total_ms()):
         _banner = true
+    return applied
 
 
 ## 重连续播：把进度直接放到 `elapsed_ms`，只应用已到期的动作。
@@ -73,9 +86,11 @@ func is_finished() -> bool:
     return _banner
 
 
-func _apply_due() -> void:
+func _apply_due(applied: Array = []) -> void:
     while _applied < actions.size() and float((_applied + 1) * PACE_MS) <= _elapsed_ms:
-        _apply(actions[_applied])
+        var action: Dictionary = actions[_applied]
+        _apply(action)
+        applied.append(action)
         _applied += 1
 
 

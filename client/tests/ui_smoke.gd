@@ -31,7 +31,7 @@ func _ready() -> void:
     await _check_drop_gate()
     await _check_combat_playback()
     await _check_combat_banner_after_tail()
-    await _check_combat_resume_from_deadline()
+    await _check_combat_resume_from_started_at()
     await _check_combat_playback_uses_sides()
     await _check_combat_reborn_reappears()
     await _check_summon_inserts_at_alive_rank()
@@ -799,15 +799,26 @@ func _check_combat_banner_after_tail() -> void:
     GameStore.phase = ""
 
 
-## 演示中重连：按 phaseDeadline 反推进度，已播动作不重播。
-func _check_combat_resume_from_deadline() -> void:
-    # 总时长 = 3 × 320 + 2000 = 2960ms；`phaseDeadline` 只剩 2 秒时，1 秒
-    # 前就该播完 3 条动作并留在横幅停留里——续播点直接落到 960ms，不从头重播。
-    var deadline := Time.get_datetime_string_from_unix_time(
-        int(Time.get_unix_time_from_system()) + 2, true
+## 演示中重连：按 `startedAt` 反推进度，已播动作不重播。
+func _check_combat_resume_from_started_at() -> void:
+    # 总时长 = 3 × 320 + 2000 = 2960ms；开战已过约 1 秒时，3 条动作都应落地
+    # 并留在横幅停留里——续播点直接落到 960ms 之后，不从头重播。
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_COMBAT
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view := FixtureScript.game_view()
+    view["phase"] = Protocol.PHASE_COMBAT
+    view["opponentPlayerId"] = "p2"
+    GameStore.view = view
+    var combat := FixtureScript.combat_result()
+    combat["startedAt"] = Time.get_datetime_string_from_unix_time(
+        int(Time.get_unix_time_from_system()) - 1
     ) + "Z"
-    var instance := await _combat_instance(deadline)
+    _set_combat(combat)
+    var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
+        _clear_combat()
         return
     var own_row = instance.find_child("CombatOwnRow", true, false)
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
