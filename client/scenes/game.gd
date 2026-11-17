@@ -1,8 +1,8 @@
 extends Control
 ## 对局：按酒馆战棋结构呈现服务端 PlayerView 与 affordances，操作只发协议意图。
 ##
-## 布局：顶栏（回合/计时/属性）— 左栏积分榜 — 中区（招募：商店、我方棋盘、手牌；
-## 战斗：双方英雄与随从、结果横幅）— 右栏（我的英雄、英雄技能、结束招募、战报）— 状态行。
+## 布局：左栏积分榜 — 中区（招募：商店、我方棋盘、手牌；战斗：双方英雄与随从、
+## 结果横幅）— 右栏（场景身份、回合与倒计时、我的英雄与操作）— 状态行（含断线提示）。
 
 ## 每次 `_send_intent` 先发一条，供冒烟与调试断言意图内容。
 signal intent_sent(intent: Dictionary)
@@ -12,13 +12,6 @@ const COMBAT_PACE_MS := 320
 
 ## 服务端演示节奏：结果横幅停留（与 room-service 的 TAIL_MS 一致）。
 const COMBAT_TAIL_MS := 2000
-
-const PHASE_TEXT := {
-    Protocol.PHASE_RECRUIT: "招募",
-    Protocol.PHASE_COMBAT: "战斗",
-    Protocol.PHASE_SETTLE: "结算",
-    Protocol.PHASE_GAME_OVER: "结束",
-}
 
 # 页面级状态与门槛。
 var _intent_counter := 0
@@ -34,13 +27,7 @@ var _view_epoch := 0
 ## 队首待选是目标待选：该座位除选目标外不能操作，手牌不可拖。
 var _target_pending := false
 
-# 顶栏。
-var _turn_label: Label
-var _timer_label: Label
-var _hp_pill: Label
-var _era_pill: Label
-var _gold_pill: Label
-var _conn_label: Label
+# 状态行：错误与断线提示共用。
 var _status: Label
 
 # 左栏积分榜。
@@ -89,8 +76,6 @@ func _build() -> void:
     root.add_theme_constant_override("separation", UITheme.space("space-md"))
     margin.add_child(root)
 
-    root.add_child(_build_header())
-
     var body := HBoxContainer.new()
     body.size_flags_vertical = Control.SIZE_EXPAND_FILL
     body.add_theme_constant_override("separation", UITheme.space("space-lg"))
@@ -119,42 +104,6 @@ func _build() -> void:
     add_child(_detail)
     _recruit_view.detail = _detail
     _combat_view.detail = _detail
-
-
-func _build_header() -> Control:
-    var panel := UI.card_panel("surface")
-    panel.name = "Header"
-    panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    var row := HBoxContainer.new()
-    row.add_theme_constant_override("separation", UITheme.space("space-md"))
-    panel.add_child(row)
-
-    _turn_label = UI.label("", UITheme.font_size("font-title-lg"), false)
-    _turn_label.name = "TurnLabel"
-    row.add_child(_turn_label)
-
-    _conn_label = UI.label("", UITheme.font_size("font-body-sm"), false)
-    _conn_label.name = "ConnectionLabel"
-    _conn_label.add_theme_color_override("font_color", UITheme.color("color-danger"))
-    row.add_child(_conn_label)
-
-    var spacer := Control.new()
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_child(spacer)
-
-    _hp_pill = UI.pill_label("", "danger", "font-title")
-    _hp_pill.name = "HpPill"
-    row.add_child(_hp_pill)
-    _era_pill = UI.pill_label("", "info", "font-title")
-    _era_pill.name = "EraPill"
-    row.add_child(_era_pill)
-    _gold_pill = UI.pill_label("", "accent", "font-title")
-    _gold_pill.name = "GoldPill"
-    row.add_child(_gold_pill)
-    _timer_label = UI.pill_label("—", "accent", "font-title")
-    _timer_label.name = "TimerLabel"
-    row.add_child(_timer_label)
-    return panel
 
 
 func _build_center() -> Control:
@@ -233,7 +182,6 @@ func _refresh() -> void:
     _target_pending = not pending.is_empty() and str(pending[0].get("kind", "")) == "target"
     var state := _build_state(view, self_state, phase, recruited)
 
-    _refresh_header(view, self_state, phase)
     _players_panel.refresh(state)
 
     var in_combat := phase == Protocol.PHASE_COMBAT or phase == Protocol.PHASE_SETTLE
@@ -246,7 +194,6 @@ func _refresh() -> void:
     _refresh_hand(self_state, phase)
 
     _side_panel.refresh(state)
-    _refresh_log()
     _refresh_overlay(self_state, recruited)
     _refresh_connection()
     _prune_target_requests()
@@ -273,16 +220,6 @@ func _build_state(
     state.board_slots = maxi(int(view.get("boardSlots", 7)), 1)
     state.hp_cap = maxi(int(view.get("hpCap", 40)), 1)
     return state
-
-
-func _refresh_header(view: Dictionary, self_state: Dictionary, phase: String) -> void:
-    _turn_label.text = "第 %d 回合 · %s" % [
-        int(view.get("turn", 1)),
-        PHASE_TEXT.get(phase, phase),
-    ]
-    _hp_pill.text = "♥ %d" % int(self_state.get("hp", 0))
-    _era_pill.text = GameCardFace.era_text(int(self_state.get("era", 1)))
-    _gold_pill.text = "● %d 金" % int(self_state.get("gold", 0))
 
 
 static func drag_gate(
@@ -364,66 +301,24 @@ func _set_combat_mode(in_combat: bool) -> void:
     _side_panel.set_combat_mode(in_combat)
 
 
-func _refresh_log() -> void:
-    var lines: Array = []
-    if GameStore.combat_is_current():
-        lines.append(_combat_text())
-    var events: Array = GameStore.event_log
-    var start := maxi(0, events.size() - 8)
-    for index in range(start, events.size()):
-        lines.append(_event_text(events[index]))
-    _side_panel.log_text.text = _join_lines(lines)
-
-
-func _combat_text() -> String:
-    var combat: Dictionary = GameStore.last_combat
-    var winner = combat.get("winnerId")
-    var result := "平局"
-    if winner != null:
-        result = "胜利" if str(winner) == GameStore.player_id else "失败"
-    var mirror: String = "（镜像）" if bool(combat.get("mirror", false)) else ""
-    return "[战斗] %s%s  伤害 %d  我方 %d vs 对手 %d\n" % [
-        result,
-        mirror,
-        int(combat.get("damage", 0)),
-        combat.get("ownBoard", []).size(),
-        combat.get("opponentBoard", []).size(),
-    ]
-
-
-func _event_text(event: Dictionary) -> String:
-    var kind := str(event.get("kind", ""))
-    var parts := ["[%s]" % kind]
-    if event.get("cardId") != null:
-        parts.append(CardDB.display_name(str(event.get("cardId"))))
-    if event.get("amount") != null:
-        parts.append(str(int(event.get("amount"))))
-    if event.get("place") != null:
-        parts.append("第 %d 名" % int(event.get("place")))
-    if event.get("playerId") != null:
-        parts.append(GameStore.player_name(str(event.get("playerId"))))
-    return " ".join(PackedStringArray(parts))
-
-
 func _refresh_connection() -> void:
+    if _status == null:
+        return
     var disconnected := not Net.is_open() and not GameStore.view.is_empty()
-    _conn_label.text = "未连接 · 正在重连" if disconnected else ""
+    if disconnected:
+        _status.text = "未连接 · 正在重连"
+    elif _status.text == "未连接 · 正在重连":
+        _status.text = ""
 
 
+## 倒计时由右栏维护；页面只读取剩余秒数，负责在归零时重算操作门控。
 func _update_timer() -> void:
-    if _timer_label == null:
+    if _side_panel == null:
         return
-    if GameStore.deadline == "":
-        _timer_label.text = "—"
+    var left := _side_panel.seconds_left()
+    if left < 0:
         _set_deadline_expired(false)
         return
-    var deadline := _unix_from_rfc3339(GameStore.deadline)
-    if deadline <= 0.0:
-        _timer_label.text = "—"
-        _set_deadline_expired(false)
-        return
-    var left := int(ceil(deadline - Time.get_unix_time_from_system()))
-    _timer_label.text = "剩余 %d 秒" % maxi(left, 0)
     _set_deadline_expired(left <= 0)
 
 
@@ -432,11 +327,6 @@ func _set_deadline_expired(value: bool) -> void:
         return
     _deadline_expired = value
     _refresh()
-
-
-## RFC3339 时间转 Unix 秒；实现随战斗续播归属视图，这里保留一层转发。
-func _unix_from_rfc3339(value: String) -> float:
-    return GameCombatView.unix_from_rfc3339(value)
 
 
 # ── 弹层 ──────────────────────────────────────────────────────────────────
@@ -775,12 +665,3 @@ func _on_error() -> void:
 
 func _on_game_over() -> void:
     UI.navigate(self, "res://scenes/result.tscn")
-
-
-# ── 工具 ──────────────────────────────────────────────────────────────────
-
-func _join_lines(values: Array) -> String:
-    var parts := PackedStringArray()
-    for value in values:
-        parts.append(str(value))
-    return "\n".join(parts)
