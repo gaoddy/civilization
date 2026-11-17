@@ -65,9 +65,12 @@ client-check:
 
 client-smoke:
 	@mkdir -p output
-	$(GODOT) --headless --path client res://tests/ui_smoke.tscn 2>&1 | tee output/client-smoke.log
-	@grep -q "UI_SMOKE_OK" output/client-smoke.log
-	@! grep -q "SCRIPT ERROR" output/client-smoke.log
+	@for scene in client/tests/ui_smoke*.tscn; do \
+	  name=$$(basename $$scene .tscn); \
+	  $(GODOT) --headless --path client res://tests/$$name.tscn 2>&1 | tee output/$$name.log; \
+	  grep -q "UI_SMOKE_OK" output/$$name.log || exit 1; \
+	  ! grep -q "SCRIPT ERROR" output/$$name.log || exit 1; \
+	done
 
 # 1 个 Godot 客户端 + 7 个机器人的无头端到端。
 m1b-build:
