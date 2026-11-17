@@ -143,7 +143,7 @@ pub fn for_seat(event: &GameEvent, seat: Seat, seats: &[SeatInfo; 8]) -> Option<
 ///
 /// `own_board` 是接收座位自己的棋盘，因此己方下标标 `own`、对手下标标
 /// `opponent`；召唤物等不在战前快照里的实例找不到下标时，下标与侧别都写
-/// `null`。`mirror` 原样取自报告；镜像战由调用方只发给该座位。
+/// `null`。`mirror` 原样取自报告；幽灵战由调用方只发给该座位。
 pub fn combat_result(
     catalog: &Catalog,
     report: &SeatCombatReport,
@@ -406,7 +406,7 @@ fn target_side(side: Side) -> CombatResultActionsItemTargetSide {
 
 /// 在该座位视角的两份棋盘里定位实例：先本方、后对手。
 ///
-/// 镜像战的幽灵在结算层已重新编号，与己方棋盘不相交，因此这里不会撞号；
+/// 幽灵战的幽灵在结算层已重新编号，与己方棋盘不相交，因此这里不会撞号；
 /// 若将来仍出现重号，先命中本方是既有取舍（两份棋盘内容相同）。
 fn locate(report: &SeatCombatReport, minion: InstanceId) -> Option<(usize, Side)> {
     if let Some(index) = report

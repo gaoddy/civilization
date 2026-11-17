@@ -302,3 +302,14 @@ static func error_route(code: String) -> String:
     if code in ["NOT_IN_ROOM", "ROOM_NOT_FOUND"]:
         return "lobby"
     return ""
+
+
+## RFC3339 时间转 Unix 秒；共享给需要按 `phaseDeadline` 反推进度的视图。
+static func unix_from_rfc3339(value: String) -> float:
+    var text := value
+    if text.ends_with("Z"):
+        text = text.substr(0, text.length() - 1)
+    var dot := text.find(".")
+    if dot >= 0:
+        text = text.substr(0, dot)
+    return Time.get_unix_time_from_datetime_string(text)

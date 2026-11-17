@@ -313,6 +313,25 @@ fn opponent_seat_follows_pairings() {
 }
 
 #[test]
+fn opponent_seat_none_for_solo_without_ghost() {
+    let (engine, mut state) = setup();
+    // 落单但没有出局者可当幽灵：设计表格规定 `opponentPlayerId = null`。
+    state.pairings = vec![rule_engine::state::Pairing {
+        a: 0,
+        b: 0,
+        ghost: None,
+    }];
+
+    assert_eq!(
+        view(&engine, &state, 0)
+            .expect("座位 0 的视图应存在")
+            .opponent_seat,
+        None,
+        "空幽灵的落单配对没有对手座位"
+    );
+}
+
+#[test]
 fn opponent_seat_points_at_ghost_owner() {
     let (engine, mut state) = setup();
     // 座位 0 落单并对战幽灵归属座位 3（已出局）；座位 1 与座位 2 真实配对。

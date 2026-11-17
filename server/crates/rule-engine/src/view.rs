@@ -398,8 +398,13 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         if pairing.a != seat && pairing.b != seat {
             return None;
         }
-        // 幽灵归属者本人观战：不指向自己。
+        // 幽灵归属者本人观战：不指向自己（仅防御异常构造；正常配对不会把
+        // 幽灵归属者放进 `a`/`b`）。
         if pairing.ghost == Some(seat) {
+            return None;
+        }
+        // 落单且没有可对战的幽灵：设计表格规定 `opponentPlayerId` 为 `null`。
+        if pairing.ghost.is_none() && pairing.a == pairing.b {
             return None;
         }
         if let Some(ghost) = pairing.ghost {

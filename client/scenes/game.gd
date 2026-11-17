@@ -1,7 +1,7 @@
 extends Control
 ## 对局：按酒馆战棋结构呈现服务端 PlayerView 与 affordances，操作只发协议意图。
 ##
-## 布局：左栏积分榜 — 中区（招募：商店、我方棋盘、手牌；战斗：双方英雄与随从、
+## 布局：左栏积分榜 — 中区（招募：商店、我方棋盘、手牌；战斗：双方随从、
 ## 结果横幅）— 右栏（场景身份、回合与倒计时、我的英雄与操作）— 状态行（含断线提示）。
 
 ## 每次 `_send_intent` 先发一条，供冒烟与调试断言意图内容。
@@ -320,7 +320,8 @@ func _refresh_connection() -> void:
         return
     if _connection_notice:
         _status.text = ""
-        _status.remove_theme_color_override("font_color")
+        # 恢复到初始化时的基线颜色；只删除覆盖会丢掉 dim 基线。
+        _status.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
         _connection_notice = false
 
 

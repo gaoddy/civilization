@@ -96,7 +96,7 @@ func _start_combat(combat: Dictionary) -> void:
         combat.get("ownBoard", []),
         combat.get("opponentBoard", [])
     )
-    var deadline := unix_from_rfc3339(GameStore.deadline)
+    var deadline := UI.unix_from_rfc3339(GameStore.deadline)
     if GameStore.phase == Protocol.PHASE_COMBAT and deadline > 0.0:
         var remaining_ms := maxf(deadline - Time.get_unix_time_from_system(), 0.0) * 1000.0
         _combat.seek(maxf(float(_combat.total_ms()) - remaining_ms, 0.0))
@@ -190,13 +190,3 @@ func _set_combat_banner(combat: Dictionary) -> void:
     ]
     _banner.add_theme_color_override("font_color", UITheme.color("color-" + variant) if variant != "accent" else UITheme.color("color-accent"))
 
-
-## RFC3339 时间转 Unix 秒；供演示续播按 `phaseDeadline` 反推进度。
-static func unix_from_rfc3339(value: String) -> float:
-    var text := value
-    if text.ends_with("Z"):
-        text = text.substr(0, text.length() - 1)
-    var dot := text.find(".")
-    if dot >= 0:
-        text = text.substr(0, dot)
-    return Time.get_unix_time_from_datetime_string(text)
