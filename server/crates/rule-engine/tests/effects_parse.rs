@@ -22,7 +22,7 @@ fn parses_a_growth_effect() {
         }
     ));
     assert_eq!(e[0].params.times, Some(2));
-    assert_eq!(e[0].params.duration, Duration::Instant);
+    assert_eq!(e[0].params.duration, None);
 }
 
 #[test]
@@ -31,7 +31,7 @@ fn parses_aura_and_keyword_value() {
         "Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent",
     )
     .unwrap();
-    assert_eq!(e[0].params.duration, Duration::Permanent);
+    assert_eq!(e[0].params.duration, Some(Duration::Permanent));
     assert_eq!(e[0].params.attack, Some(2));
     assert_eq!(e[0].params.health, Some(2));
     assert_eq!(
@@ -239,4 +239,32 @@ fn parses_deal_damage_can_kill() {
     assert_eq!(e[0].op, Op::DealDamage);
     assert_eq!(e[0].params.amount, Some(3));
     assert_eq!(e[0].params.can_kill, Some(false));
+}
+
+#[test]
+fn semantic_rules_live_in_validate_only() {
+    // DSL 解析只负责语法；跨字段规则统一由 parse_chunk 末尾的 validate_effect 给出。
+    let semantic = [
+        "OnActivate|GainMinion|self|from=board,level=current,to=hand",
+        "OnActivate|Discover|self|pool=tribe",
+        "OnCombatStart|GrantKeyword|enemy:all|keyword=繁殖",
+        "OnCombatStart|GrantKeyword|enemy:all|keyword=嘲讽 1",
+        "Aura|DealDamage|enemy:all|amount=1",
+        "OnPlay|Growth|self|times=1,timesIf=通用:2",
+    ];
+    for raw in semantic {
+        let errors = parse_effects(raw).expect_err(raw);
+        assert_eq!(errors.len(), 1, "{raw} 应只报一次：{errors:?}");
+    }
+
+    // 解析器只保留取值归一化，不再重复判定。
+    let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=繁衍 2")
+        .expect("内联层数应可解析");
+    assert_eq!(
+        e[0].params.keyword,
+        Some(KeywordSpec {
+            keyword: "繁衍".into(),
+            value: Some(2)
+        })
+    );
 }

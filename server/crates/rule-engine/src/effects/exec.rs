@@ -146,8 +146,8 @@ impl Engine {
                 // 卡面「本场无法攻击」是唯一写法；省略 duration 时按 `Combat` 处理，
                 // 否则 `Instant` 标记将永远没有清除时点。
                 let duration = match effect.params.duration {
-                    Duration::Instant => Duration::Combat,
-                    other => other,
+                    Some(Duration::Instant) | None => Duration::Combat,
+                    Some(other) => other,
                 };
                 for id in targets {
                     if let Some((_, minion)) = locate_mut(state, id) {
@@ -613,7 +613,7 @@ impl Engine {
     fn apply_modify_stats(&self, state: &mut GameState, effect: &Effect, targets: &[InstanceId]) {
         let attack = effect.params.attack.unwrap_or(0);
         let health = effect.params.health.unwrap_or(0);
-        let turn_scoped = effect.params.duration == Duration::Combat;
+        let turn_scoped = effect.params.duration == Some(Duration::Combat);
         for id in targets {
             if let Some((_, minion)) = locate_mut(state, *id) {
                 if turn_scoped {
@@ -634,7 +634,7 @@ impl Engine {
         };
         let name = keyword.keyword.as_str();
         let layer = keyword.value.or(effect.params.value);
-        let duration = effect.params.duration;
+        let duration = effect.params.duration.unwrap_or(Duration::Instant);
 
         for id in targets {
             let Some((_, minion)) = locate_mut(state, *id) else {
@@ -1178,7 +1178,7 @@ impl Engine {
                 let modifier = Modifier {
                     attack: effect.params.attack.unwrap_or(0),
                     health: effect.params.health.unwrap_or(0),
-                    duration: effect.params.duration,
+                    duration: effect.params.duration.unwrap_or(Duration::Instant),
                 };
                 for id in targets {
                     field.modify_stats(id, modifier.clone());
@@ -1190,7 +1190,7 @@ impl Engine {
                 };
                 let name = keyword.keyword.as_str();
                 let layer = keyword.value.or(effect.params.value);
-                let duration = effect.params.duration;
+                let duration = effect.params.duration.unwrap_or(Duration::Instant);
                 for id in targets {
                     let Some(minion) = field.minion_mut(id) else {
                         continue;

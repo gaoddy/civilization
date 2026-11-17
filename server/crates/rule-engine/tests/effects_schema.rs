@@ -2,9 +2,7 @@ mod common;
 
 use common::{CONFIG_JSON, test_catalog};
 use rule_engine::data::Catalog;
-use rule_engine::effects::{
-    Compare, Duration, Effect, Op, Pick, Selector, Side, Trigger, validate_effects,
-};
+use rule_engine::effects::{Compare, Effect, Op, Pick, Selector, Side, Trigger, validate_effects};
 
 #[test]
 fn deserializes_a_structured_effect() {
@@ -54,11 +52,11 @@ fn rejects_gain_minion_from_board() {
 }
 
 #[test]
-fn defaults_duration_to_instant() {
+fn omits_duration_by_default() {
     let raw =
         r#"[{"trigger":"on_play","op":"growth","selector":{"kind":"self"},"params":{"times":1}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
-    assert_eq!(effects[0].params.duration, Duration::Instant);
+    assert_eq!(effects[0].params.duration, None);
 }
 
 #[test]
@@ -101,6 +99,13 @@ fn rejects_unknown_selector_field() {
 #[test]
 fn rejects_discover_without_choose() {
     let raw = r#"[{"trigger":"on_activate","op":"discover","selector":{"kind":"self"},"params":{"pool":"tribe"}}]"#;
+    let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
+    assert!(validate_effects(&effects).is_err());
+}
+
+#[test]
+fn rejects_explicit_duration_on_growth() {
+    let raw = r#"[{"trigger":"on_play","op":"growth","selector":{"kind":"self"},"params":{"times":1,"duration":"instant"}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
     assert!(validate_effects(&effects).is_err());
 }

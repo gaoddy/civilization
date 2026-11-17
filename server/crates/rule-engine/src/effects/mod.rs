@@ -176,7 +176,7 @@ pub struct Params {
     pub health: Option<i32>,
     pub value: Option<i32>,
     pub extra: Option<i32>,
-    pub duration: Duration,
+    pub duration: Option<Duration>,
     pub can_kill: Option<bool>,
     pub health_only: Option<bool>,
     pub times_if: Option<TimesIf>,

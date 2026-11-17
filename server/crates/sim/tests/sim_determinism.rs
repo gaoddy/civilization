@@ -44,3 +44,35 @@ fn replay_same_log_100_times_has_same_hash() {
 
     let _ = std::fs::remove_file(&path);
 }
+
+/// 批次最终哈希必须与改动前的固定基线一致。
+///
+/// 基线由结构化 effects 改造前的代码生成；它冻结的是行为，不只是自洽性。
+#[test]
+fn batch_final_hashes_match_golden_baseline() {
+    let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
+        .expect("基线文件应为 JSON");
+    let mut path = std::env::temp_dir();
+    path.push(format!("sim-test-{}-batch20.json", std::process::id()));
+    let (code, _stdout, stderr) = run(&[
+        "batch",
+        "--games",
+        "20",
+        "--seed",
+        "1",
+        "--out",
+        path.to_str().unwrap(),
+    ]);
+    assert_eq!(code, 0, "stderr: {stderr}");
+    let actual: Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("应能读取批次输出"))
+            .expect("批次输出应为 JSON");
+    let _ = std::fs::remove_file(&path);
+
+    let expected = golden["hashes"].as_array().expect("基线应含 hashes");
+    let games = actual["games"].as_array().expect("输出应含 games");
+    assert_eq!(games.len(), expected.len(), "局数不一致");
+    for (index, (game, hash)) in games.iter().zip(expected).enumerate() {
+        assert_eq!(game["final_hash"], *hash, "第 {index} 局最终哈希不一致");
+    }
+}

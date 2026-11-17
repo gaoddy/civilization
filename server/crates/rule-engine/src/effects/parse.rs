@@ -1,6 +1,6 @@
 use crate::data::{CardType, Tribe};
 
-use super::validate::{CARD_TYPES, FILTER_KEYS, KEYWORD_BASES, TRIBES, op_spec, validate_effect};
+use super::validate::validate_effect;
 use super::{
     Compare, Condition, Duration, Effect, Filter, KeywordSpec, Op, Params, Pick, Selector, Side,
     TimesIf, Trigger, Zone,
@@ -185,7 +185,7 @@ fn parse_selector(raw: &str, chunk: &str) -> Result<Selector, Vec<String>> {
         if segment.is_empty() {
             continue;
         }
-        match parse_filter(segment, chunk, true) {
+        match parse_filter(segment, chunk) {
             Ok(filter) => filters.push(filter),
             Err(message) => errors.push(message),
         }
@@ -215,48 +215,28 @@ fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> R
         "value" => params.value = Some(parse_i32(key, value, chunk)?),
         "extra" => params.extra = Some(parse_i32(key, value, chunk)?),
         "duration" => {
-            params.duration = match value {
+            params.duration = Some(match value {
                 "permanent" => Duration::Permanent,
                 "combat" => Duration::Combat,
                 _ => return Err(format!("duration 非法 {value:?}（{chunk}）")),
-            }
+            })
         }
         "canKill" => params.can_kill = Some(parse_bool(key, value, chunk)?),
         "healthOnly" => params.health_only = Some(parse_bool(key, value, chunk)?),
         "free" => params.free = Some(parse_bool(key, value, chunk)?),
         "timesIf" => params.times_if = Some(parse_times_if(value, chunk)?),
         "condition" => params.condition = Some(parse_condition(value, chunk)?),
-        "when" => params.when = Some(parse_filter(value, chunk, false)?),
+        "when" => params.when = Some(parse_filter(value, chunk)?),
         "keyword" => params.keyword = Some(parse_keyword(value, chunk)?),
         "token" => params.token = Some(non_empty(key, value, chunk)?),
         "card" => params.card = Some(non_empty(key, value, chunk)?),
         "to" => params.to = Some(parse_zone(key, value, chunk)?),
-        "from" => {
-            let zone = parse_zone(key, value, chunk)?;
-            // 只有 GainMinion 限定 from 的取值；Copy 仍接受 hand / board / shop。
-            if op == Op::GainMinion && zone != Zone::Shop {
-                return Err(format!(
-                    "GainMinion 的 from 只接受 shop，实为 {value:?}（{chunk}）"
-                ));
-            }
-            params.from = Some(zone);
-        }
+        "from" => params.from = Some(parse_zone(key, value, chunk)?),
         "type" => params.card_type = Some(parse_card_type(value, chunk)?),
         "pool" => params.pool = Some(non_empty(key, value, chunk)?),
-        "choose" => {
-            let choose = parse_u8(key, value, chunk)?;
-            if choose != 1 {
-                return Err(format!("choose 必须为 1，实为 {choose}（{chunk}）"));
-            }
-            params.choose = Some(choose);
-        }
+        "choose" => params.choose = Some(parse_u8(key, value, chunk)?),
         "era" => params.era = Some(non_empty(key, value, chunk)?),
-        "level" => {
-            if value != "current" && !is_digits(value) {
-                return Err(format!("参数 level 非法 {value:?}（{chunk}）"));
-            }
-            params.level = Some(value.to_string());
-        }
+        "level" => params.level = Some(non_empty(key, value, chunk)?),
         other => {
             return Err(format!("参数 {other:?} 不属于原语 {op:?}（{chunk}）"));
         }
@@ -284,11 +264,8 @@ fn parse_condition(value: &str, chunk: &str) -> Result<Condition, String> {
     let Some((key, filter_value)) = segments[1].split_once('=') else {
         return Err(invalid());
     };
-    let key = key.trim();
-    let filter_value = filter_value.trim();
-    if key.is_empty() || !key.chars().all(|c| c.is_ascii_lowercase()) || filter_value.is_empty() {
-        return Err(invalid());
-    }
+    let key = key.trim().to_string();
+    let filter_value = filter_value.trim().to_string();
 
     let (compare, digits) = if let Some(digits) = segments[2].strip_prefix(">=") {
         (Compare::Ge, digits)
@@ -310,8 +287,8 @@ fn parse_condition(value: &str, chunk: &str) -> Result<Condition, String> {
     Ok(Condition {
         side,
         filter: Filter {
-            key: key.to_string(),
-            value: filter_value.to_string(),
+            key,
+            value: filter_value,
         },
         compare,
         count: digits.parse().map_err(|_| invalid())?,
@@ -323,10 +300,6 @@ fn parse_keyword(value: &str, chunk: &str) -> Result<KeywordSpec, String> {
     let Some(base) = words.next() else {
         return Err(format!("keyword 非法 {value:?}（{chunk}）"));
     };
-    if !KEYWORD_BASES.contains(&base) {
-        return Err(format!("keyword 非法 {value:?}（{chunk}）"));
-    }
-
     let level = match words.next() {
         None => None,
         Some(level) if is_digits(level) && words.next().is_none() => Some(
@@ -404,37 +377,13 @@ fn is_integer(text: &str) -> bool {
     !body.is_empty() && body.chars().all(|c| c.is_ascii_digit())
 }
 
-fn parse_filter(raw: &str, chunk: &str, check_value: bool) -> Result<Filter, String> {
+fn parse_filter(raw: &str, chunk: &str) -> Result<Filter, String> {
     let Some((key, value)) = raw.split_once('=') else {
         return Err(format!("筛选缺少 =: {raw:?}（{chunk}）"));
     };
-    let key = key.trim();
-    let value = value.trim();
-
-    if !FILTER_KEYS.contains(&key) {
-        return Err(format!("未知筛选键 {key:?}（{chunk}）"));
-    }
-    if value.is_empty() {
-        return Err(format!("筛选 {key:?} 缺少取值（{chunk}）"));
-    }
-    if check_value {
-        match key {
-            "tribe" if !TRIBES.contains(&value) => {
-                return Err(format!("tribe 取值非法 {value:?}（{chunk}）"));
-            }
-            "type" if !CARD_TYPES.contains(&value) => {
-                return Err(format!("type 取值非法 {value:?}（{chunk}）"));
-            }
-            "other" if !matches!(value, "true" | "false") => {
-                return Err(format!("other 取值非法 {value:?}（{chunk}）"));
-            }
-            _ => {}
-        }
-    }
-
     Ok(Filter {
-        key: key.to_string(),
-        value: value.to_string(),
+        key: key.trim().to_string(),
+        value: value.trim().to_string(),
     })
 }
 
@@ -462,30 +411,9 @@ fn parse_params(op: Op, raw: Option<&str>, chunk: &str) -> (Params, Vec<String>)
         }
     }
 
-    let (required, optional, one_of) = op_spec(op);
-
     for (key, value) in &pairs {
-        if !required.contains(&key.as_str()) && !optional.contains(&key.as_str()) {
-            errors.push(format!("参数 {key:?} 不属于原语 {op:?}（{chunk}）"));
-            continue;
-        }
         if let Err(message) = assign(&mut params, op, key, value, chunk) {
             errors.push(message);
-        }
-    }
-
-    for key in required {
-        if !pairs.iter().any(|(existing, _)| existing == key) {
-            errors.push(format!("原语 {op:?} 缺少必填参数 {key:?}（{chunk}）"));
-        }
-    }
-
-    for group in one_of {
-        let satisfied = group
-            .iter()
-            .any(|key| pairs.iter().any(|(existing, _)| existing == key));
-        if !satisfied {
-            errors.push(format!("原语 {op:?} 缺少 {group:?} 之一（{chunk}）"));
         }
     }
 
@@ -533,4 +461,5 @@ const TRIBE_VALUES: &[(&str, Tribe)] = &[
     ("植物", Tribe::Plant),
     ("病毒", Tribe::Virus),
     ("学者", Tribe::Scholar),
+    ("通用", Tribe::General),
 ];

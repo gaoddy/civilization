@@ -27,7 +27,7 @@
 | A2. 源文档也结构化 | 改 131 个技能文档，并扩展自研 front-matter 解析器 | 未采用：改动面与风险最大 |
 | A3. 源文档也结构化 + PyYAML | 同上，引入第三方依赖 | 未采用：项目当前无第三方 Python 依赖 |
 
-因此：**DSL 是作者格式，结构化 JSON 是编译产物。** `docs/versions/v0.1/product/content/skills/*.md` 不变，`validate_docs.py` 的 DSL 校验不变。
+因此：**DSL 是作者格式，结构化 JSON 是编译产物。** `docs/versions/v0.1/product/content/skills/*.md` 不变；`validate_docs.py` 的 DSL 校验保留，但参数与语义规则随引擎对齐（`DealDamage.canKill`、移除未实现的 `source`）。
 
 ## 3. 数据模型
 
@@ -212,11 +212,12 @@ pub struct KeywordSpec { pub keyword: String, pub value: Option<i32> }
 
 脚本与生成物：
 
-- `scripts/validate_docs.py`
+- `scripts/validate_docs.py`（OP_SPEC 与布尔取值对齐）
+- `scripts/audit_effects.py`（关键词内联层数规则）
 - `scripts/gen_card_data.py`
 - `server/data/v0.1/skills.json`
 - `client/generated/skills.json`
-- `tests/test_gen_card_data.py`、`tests/test_validate_effects.py`
+- `tests/test_gen_card_data.py`、`tests/test_structured_effects.py`
 
 文档：
 
@@ -227,7 +228,6 @@ pub struct KeywordSpec { pub keyword: String, pub value: Option<i32> }
 不改：
 
 - `docs/versions/v0.1/product/content/skills/*.md`
-- `scripts/audit_effects.py`
 - `protocol/`、`room-service` 业务逻辑、客户端 `.gd`
 
 ## 8. 测试与验收
@@ -236,7 +236,7 @@ pub struct KeywordSpec { pub keyword: String, pub value: Option<i32> }
 
 - Rust：结构化 JSON 反序列化成功；未知枚举/未知字段/类型错误被拒；语义规则错误被拒；真实 `skills.json` 全部通过。
 - Python：`structured_effects` 对单段、多段、空效果、各类参数与错误输入的输出；生成结果中 `effects` 为列表且字段类型正确。
-- 行为不变：现有引擎、招募、战斗、光环、发现/复制/进化测试全部保持通过。
+- 行为不变：现有引擎、招募、战斗、光环、发现/复制/进化测试全部保持通过；`sim_determinism::batch_final_hashes_match_golden_baseline` 以改造前 20 局最终哈希为固定基线。
 
 验证命令：
 

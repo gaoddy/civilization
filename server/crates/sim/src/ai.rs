@@ -209,7 +209,7 @@ fn hero_power_use(player: &PlayerState, catalog: &Catalog, skill: &Skill) -> Opt
         if *side != Side::Friendly
             || *pick != Pick::Single
             || !filters.is_empty()
-            || effect.params.duration != Duration::Permanent
+            || effect.params.duration != Some(Duration::Permanent)
         {
             continue;
         }

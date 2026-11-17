@@ -1,4 +1,6 @@
-use super::{Duration, Effect, Filter, Op, Params, Selector, Trigger, Zone};
+use crate::data::Tribe;
+
+use super::{Effect, Filter, Op, Params, Selector, Trigger, Zone};
 
 /// 光环触发允许的原语。
 pub(crate) const AURA_OPS: &[Op] = &[Op::ModifyStats, Op::GrantKeyword];
@@ -120,7 +122,7 @@ impl Params {
             "health" => self.health.is_some(),
             "value" => self.value.is_some(),
             "extra" => self.extra.is_some(),
-            "duration" => self.duration != Duration::Instant,
+            "duration" => self.duration.is_some(),
             "canKill" => self.can_kill.is_some(),
             "healthOnly" => self.health_only.is_some(),
             "timesIf" => self.times_if.is_some(),
@@ -177,6 +179,9 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
         }
         if times_if.times < 0 {
             errors.push("timesIf 的次数不能为负".to_string());
+        }
+        if times_if.tribe == Tribe::General {
+            errors.push("timesIf 的部落不能是通用".to_string());
         }
     }
 
