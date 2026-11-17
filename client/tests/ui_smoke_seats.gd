@@ -121,7 +121,12 @@ func _check_seat_rows() -> void:
         _expect(row.find_child("SeatHpBar", true, false) != null, "座位行缺少血条")
         var fixed := _fixed_text(row)
         _expect(not fixed.contains("HP"), "座位行内不应出现 HP 文本：%s" % fixed)
-        _expect(not fixed.contains("时代"), "座位行内不应出现时代：%s" % fixed)
+        _expect(
+            not fixed.contains(
+                TranslationServer.translate("ui.game.era_format").split("%")[0].strip_edges()
+            ),
+            "座位行内不应出现时代：%s" % fixed,
+        )
         _expect(
             not fixed.contains(TranslationServer.translate("enum.card_type.minion")),
             "座位行内不应出现随从数：%s" % fixed,
@@ -167,10 +172,19 @@ func _check_report_toggle() -> void:
     if reports.size() == 1:
         _expect(str(reports[0].get_meta("player_id", "")) == "p0", "展开的战报应属于被点击的座位")
         var text := _node_text(reports[0])
-        _expect(text.contains("第 2 回合"), "战报应显示回合：%s" % text)
+        _expect(
+            text.contains(TranslationServer.translate("ui.game.rail.turn") % 2),
+            "战报应显示回合：%s" % text,
+        )
         _expect(text.contains("机器人C"), "战报应显示对手名：%s" % text)
-        _expect(text.contains("胜"), "战报应显示胜负：%s" % text)
-        _expect(text.contains("伤害 7"), "战报应显示伤害：%s" % text)
+        _expect(
+            text.contains(TranslationServer.translate("ui.game.rail.win")),
+            "战报应显示胜负：%s" % text,
+        )
+        _expect(
+            text.contains(TranslationServer.translate("ui.game.rail.damage") % 7),
+            "战报应显示伤害：%s" % text,
+        )
     # 再点同一行收起。
     row = _row_of(rail, "p0")
     await _push_click(instance, row.get_global_rect().get_center())
@@ -196,8 +210,14 @@ func _check_seat_detail() -> void:
     var text := _node_text(panel) if panel != null else ""
     _expect(text.contains("玩家A"), "座位详情应显示名字：%s" % text)
     _expect(text.contains("35/40"), "座位详情应显示生命当前/上限：%s" % text)
-    _expect(text.contains("史前"), "座位详情应显示时代名：%s" % text)
-    _expect(text.contains("存活"), "座位详情应显示存活状态：%s" % text)
+    _expect(
+        text.contains(TranslationServer.translate("enum.era.prehistoric")),
+        "座位详情应显示时代名：%s" % text,
+    )
+    _expect(
+        text.contains(TranslationServer.translate("ui.game.detail.alive")),
+        "座位详情应显示存活状态：%s" % text,
+    )
     instance.queue_free()
     await get_tree().process_frame
 
@@ -219,13 +239,26 @@ func _check_expanded_memory() -> void:
     _expect(reports.size() == 1, "点击 p2 应展开战报")
     if reports.size() == 1:
         var text := _node_text(reports[0])
-        _expect(text.contains("幽灵（机器人F）"), "幽灵战对手名应写幽灵归属者：%s" % text)
-        _expect(text.contains("伤害 5"), "幽灵战失利应显示伤害：%s" % text)
+        _expect(
+            text.contains(
+                TranslationServer.translate("ui.game.rail.ghost_named") % "机器人F"
+            ),
+            "幽灵战对手名应写幽灵归属者：%s" % text,
+        )
+        _expect(
+            text.contains(TranslationServer.translate("ui.game.rail.damage") % 5),
+            "幽灵战失利应显示伤害：%s" % text,
+        )
     var expanded_row := _row_of(rail, "p2")
     if expanded_row != null:
         var fixed := _fixed_text(expanded_row)
         _expect(not fixed.contains("机器人"), "展开行的固定部分不应含玩家名：%s" % fixed)
-        _expect(not fixed.contains("第 "), "展开行的固定部分不应含战报文本：%s" % fixed)
+        _expect(
+            not fixed.contains(
+                TranslationServer.translate("ui.game.rail.turn").split("%")[0]
+            ),
+            "展开行的固定部分不应含战报文本：%s" % fixed,
+        )
     # 连续两次视图重建后仍按 playerId 恢复展开。
     for i in range(2):
         view["players"][2]["hp"] = 30 - i
@@ -249,7 +282,12 @@ func _check_expanded_memory() -> void:
     _expect(switched.size() == 1, "展开另一座位时同屏应只有一块战报")
     if switched.size() == 1:
         _expect(str(switched[0].get_meta("player_id", "")) == "p4", "新展开的战报应属于新座位")
-        _expect(_node_text(switched[0]).contains("无战报"), "没有参与战报的座位应显示无战报")
+        _expect(
+            _node_text(switched[0]).contains(
+                TranslationServer.translate("ui.game.rail.no_report")
+            ),
+            "没有参与战报的座位应显示无战报",
+        )
     # ghostId 为 null 的幽灵战只写「幽灵」，不出现空括号。
     row = _row_of(rail, "p3")
     if row == null:
@@ -262,8 +300,16 @@ func _check_expanded_memory() -> void:
     _expect(ghostless.size() == 1, "点击 p3 应展开战报")
     if ghostless.size() == 1:
         var ghost_text := _node_text(ghostless[0])
-        _expect(ghost_text.contains("幽灵"), "幽灵战应显示幽灵：%s" % ghost_text)
-        _expect(not ghost_text.contains("幽灵（）"), "ghostId 为 null 时不应出现空括号：%s" % ghost_text)
+        _expect(
+            ghost_text.contains(TranslationServer.translate("ui.game.rail.ghost")),
+            "幽灵战应显示幽灵：%s" % ghost_text,
+        )
+        _expect(
+            not ghost_text.contains(
+                TranslationServer.translate("ui.game.rail.ghost_named") % ""
+            ),
+            "ghostId 为 null 时不应出现空括号：%s" % ghost_text,
+        )
     instance.queue_free()
     await get_tree().process_frame
 

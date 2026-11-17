@@ -2,7 +2,6 @@ extends Node
 ## 只读卡牌展示表：卡名、技能文本与展示费用，不参与任何规则判定。
 
 var cards: Dictionary = {}
-var skills: Dictionary = {}
 var tokens: Dictionary = {}
 
 ## 时代序号到文本 id，与服务端 `Era` 枚举一致（1–7）。
@@ -19,7 +18,6 @@ const ERA_IDS := {
 
 func _ready() -> void:
     _load_table("res://generated/cards.json", cards)
-    _load_table("res://generated/skills.json", skills)
     _load_table("res://generated/tokens.json", tokens)
     for id in tokens:
         cards[id] = tokens[id]

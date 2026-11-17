@@ -58,7 +58,10 @@ func _check_banner_variants() -> void:
     draw["damage"] = 0
     await _expect_banner(
         draw,
-        [TranslationServer.translate("ui.game.combat.draw"), "伤害 0"],
+        [
+            TranslationServer.translate("ui.game.combat.draw"),
+            TranslationServer.translate("ui.game.rail.damage") % 0,
+        ],
         "平局",
     )
     var ghost := FixtureScript.combat_result()
@@ -175,7 +178,12 @@ func _check_combat_hides_countdown() -> void:
             timer.text == TranslationServer.translate("ui.game.side_panel.combat"),
             "战斗阶段状态行应显示战斗中，实际「%s」" % timer.text,
         )
-        _expect(not timer.text.contains("剩余"), "战斗阶段不应显示招募倒计时")
+        _expect(
+            not timer.text.contains(
+                TranslationServer.translate("ui.game.side_panel.remaining_seconds").split("%")[0]
+            ),
+            "战斗阶段不应显示招募倒计时",
+        )
     instance.queue_free()
     await get_tree().process_frame
 

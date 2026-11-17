@@ -410,11 +410,11 @@ KEYWORD_LABELS = {}
 ENUM_COLUMNS = {"card_type": "类型", "tribe": "流派", "era": "时代", "subtype": "子类"}
 
 
-def card_enum_labels(raw):
+def card_enum_labels(raw, root=ROOT):
     """从卡牌属性表收集枚举 id → 中文名；同一 id 映射冲突时报错。"""
     labels = {field: {} for field in ENUM_COLUMNS}
     for doc in raw:
-        table = parse_attr_table(ROOT / "cards" / doc["_file"])
+        table = parse_attr_table(root / "cards" / doc["_file"])
         if table is None:
             continue
         for field, column in ENUM_COLUMNS.items():
@@ -663,6 +663,9 @@ def check_cards(skill_map):
         raw_skills = doc.get("skills")
         if raw_skills is not None and not isinstance(raw_skills, list):
             fail(f"{doc['_file']}: skills 必须是列表，实为 {raw_skills!r}")
+        subtype = doc.get("subtype")
+        if subtype is not None and not ID_RE.fullmatch(str(subtype)):
+            fail(f"{doc['_file']}: subtype 格式非法 {subtype!r}")
         if "keywords" in doc:
             fail(f"{doc['_file']}: 残留旧字段 keywords，应改用 skills")
         for message in skill_ref_errors(doc, skill_map):

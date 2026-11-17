@@ -64,6 +64,8 @@ def load_existing(path):
                 continue
             if len(row) != 2:
                 raise ValueError(f"{path}: 行字段数不是 2：{row!r}")
+            if row[0] in entries:
+                raise ValueError(f"{path}: 重复的文本 key {row[0]!r}")
             entries[row[0]] = _unescape(row[1])
     return entries
 
@@ -90,7 +92,7 @@ def generated_entries(root):
 
     raw = validate_docs.load(
         "cards", ["id", "card_type", "tribe", "era"], root=content)
-    enum_labels = validate_docs.card_enum_labels(raw)
+    enum_labels = validate_docs.card_enum_labels(raw, root=content)
     for field, prefix in (("card_type", "enum.card_type."),
                           ("tribe", "enum.tribe."), ("era", "enum.era.")):
         for value, label in enum_labels[field].items():
@@ -111,6 +113,9 @@ def merge(existing, generated):
         if not key.startswith(i18n_terms.MANUAL_PREFIXES):
             raise ValueError(f"未知前缀的文本 key: {key}")
         merged[key] = value
+    for key in generated:
+        if not key.startswith(i18n_terms.GENERATED_PREFIXES):
+            raise ValueError(f"生成 key 前缀非法: {key}")
     merged.update(generated)
     return merged
 

@@ -107,19 +107,36 @@ class TextTableTest(unittest.TestCase):
                     missing.append(f"{path.name}: {match.group(1)}")
         self.assertEqual(missing, [])
 
+    def test_csv_keys_are_ascii_ids(self):
+        """文本表的 key 必须是不含 CJK 的 ASCII 标识，避免误把文案写进 key 列。"""
+        keys = _keys((ROOT / "client/text/zh_CN.csv").read_text(encoding="utf-8"))
+        offenders = [k for k in keys if _CJK.search(k) or not re.fullmatch(r"[A-Za-z0-9._-]+", k)]
+        self.assertEqual(offenders, [])
+
     def test_tr_keys_exist(self):
         keys = set(_keys((ROOT / "client/text/zh_CN.csv").read_text(encoding="utf-8")))
         missing = []
+        scanned_files = 0
+        scanned_keys = 0
         for path in sorted((ROOT / "client").rglob("*.gd")):
             rel = path.relative_to(ROOT / "client").as_posix()
             if rel.startswith(("generated/", "tests/")):
                 continue
-            text = path.read_text(encoding="utf-8")
-            for key in re.findall(r'(?:tr|TranslationServer\.translate)\(\s*"([^"]+)"', text):
-                if "%" in key:
-                    continue
-                if key not in keys:
-                    missing.append(f"{rel}: {key}")
+            scanned_files += 1
+            for line in path.read_text(encoding="utf-8").splitlines():
+                found = re.findall(
+                    r'\b(?:tr|TranslationServer\.translate)\(\s*"([^"]+)"',
+                    _strip_comment(line),
+                )
+                scanned_keys += len(found)
+                for key in found:
+                    if "%" in key:
+                        continue
+                    if key not in keys:
+                        missing.append(f"{rel}: {key}")
+        # 防止格式变化（例如改用单引号或换行）后正则静默匹配不到而假通过。
+        self.assertGreater(scanned_files, 0)
+        self.assertGreater(scanned_keys, 0)
         self.assertEqual(missing, [])
 
     def test_every_enum_value_has_text(self):

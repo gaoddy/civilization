@@ -168,7 +168,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - **配置**：`client/project.godot` 的 `[internationalization]` 设置 `locale/fallback="zh_CN"` 与 `locale/translations=PackedStringArray("res://text/zh_CN.zh_CN.translation")`。Godot 在导入时把 CSV 编译为 `zh_CN.zh_CN.translation`；`.translation` 与 `.csv.import` 被 `.gitignore` 忽略，CSV 本身随源提交。
 - **取文本接口**：
   - 实例方法与 autoload 内取静态 key 用 `tr(key)`，带参数时用 `tr(key) % params`；
-  - 静态函数（如 `GameCardFace.era_text`、`UI.enum_text`）不能用 `tr()`：`tr()` 是 Node 的实例方法，静态函数与需要运行时拼接 key 的场景一律用 `TranslationServer.translate(key)`，集中在 `UI.enum_text(group, id)`、`UI.error_text(code)`、`UI.error_text_by_id(id, params)` 与 `UI.error_tooltip(code)`；
+  - 静态函数（如 `GameCardFace.era_text`、`UI.enum_text`）不能用 `tr()`（`tr()` 是 Node 的实例方法），必须用 `TranslationServer.translate(key)`；实例方法与 autoload 内用 `tr(key)`，需要运行时拼接 key 时同样可以调用 `tr(key)`，带参数时用格式化结果；
   - 缺 key 时 Godot 原样返回 key，因此封装函数按「返回 key 即缺键」回退：枚举回退为 id，错误码回退为 code，错误详情回退为空串。
 - **key 命名**：
   - 内容文本：`card.<id>.name`、`card.<id>.match_text`、`skill.<id>.name`、`skill.<id>.text`、`skill.<id>.match_text`、`token.<id>.name`；
@@ -177,7 +177,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - **所有权**：`card.*`、`skill.*`、`token.*` 与 `enum.card_type|tribe|era|keyword|subtype.*` 是生成 key，由 `scripts/gen_text.py` 从实体文档整体重算；`ui.*`、`error.*`、`enum.evolve.*`、`enum.stat_layer.*` 是人工 key，原样保留；出现未知前缀直接报错。`make data` 会写入 CSV，`make data-check` 检测漂移。
 - **前置条件**：修改 CSV 或任何实体文本后必须运行 `make client-import`（或任何以它为前提的目标，如 `client-run`、`client-smoke`、`m1b-e2e`），让 Godot 重新导入并生成 `.translation`；只在编辑器外改 CSV 而不导入，运行时仍读旧翻译。`make client-check` 已包含 `client-import`。
 - **服务端错误**：`ErrorMessage.messageId` 默认 `error.<CODE>`，`messageParams` 按 `%s` 填充；客户端状态栏先按 `code` 取 `error.<CODE>`，悬停详情优先用 `messageId`/`messageParams`，`message` 仅面向日志。
-- **新增语言**：当前生成器与 Godot 配置只支持 `zh_CN`，不能直接加列。新增语言需要：扩展 `scripts/gen_text.py` 的列处理（`load_existing` 读入多列、`build()` 写出多列，生成前缀在每个语言列都产出）；新增 `client/text/<locale>.csv`；用 `make client-import` 导入后把对应 `.translation` 加入 `[internationalization]` 的 `locale/translations`。业务代码（`CardDB`、`UI.*`、`tr()` 调用）与实体文档、协议均无需改动。
+- **新增语言**：一个语言一个文件。新增语言需要：新增 `client/text/<locale>.csv`，并扩展 `scripts/gen_text.py` 以支持按语言文件读写与产出（每个语言文件独立生成内容 key 与枚举 key）；用 `make client-import` 导入后把对应 `.translation` 加入 `[internationalization]` 的 `locale/translations`。业务代码（`CardDB`、`UI.*`、`tr()` 调用）与实体文档、协议均无需改动。
 
 ## 7. 与设计的偏差
 

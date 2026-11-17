@@ -200,7 +200,12 @@ func _check_combat_identity() -> void:
             _node_text(status).contains(TranslationServer.translate("ui.game.side_panel.combat")),
             "战斗阶段状态行显示战斗中",
         )
-        _expect(not _node_text(status).contains("剩余"), "战斗阶段不显示招募倒计时")
+        _expect(
+            not _node_text(status).contains(
+                TranslationServer.translate("ui.game.side_panel.remaining_seconds").split("%")[0]
+            ),
+            "战斗阶段不显示招募倒计时",
+        )
 
     await _unmount(instance)
 
