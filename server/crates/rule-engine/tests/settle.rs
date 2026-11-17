@@ -52,7 +52,7 @@ fn add_keyword_card(
             name: None,
             keyword: Some(keyword.to_string()),
             text: String::new(),
-            effects: String::new(),
+            effects: effects_of("[]"),
             cost: None,
             uses_per_turn: None,
             match_text: None,
@@ -991,4 +991,9 @@ fn rank_of_matches_compare_alive_order() {
         ],
         "所有比较键相同时按座位号升序"
     );
+}
+
+/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
+fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
+    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

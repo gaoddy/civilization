@@ -38,6 +38,12 @@ class GenClientDataTest(unittest.TestCase):
         for token in tokens:
             self.assertEqual(token["display_cost"], 3)
 
+    def test_skill_effects_are_structured(self):
+        skills = json.loads(gen_client_data.build(ROOT)["skills.json"])
+        skill = next(s for s in skills if s["id"] == "division-of-labor")
+        self.assertIsInstance(skill["effects"], list)
+        self.assertEqual(skill["effects"][0]["trigger"], "on_activate")
+
     def test_build_is_deterministic(self):
         self.assertEqual(gen_client_data.build(ROOT), gen_client_data.build(ROOT))
 

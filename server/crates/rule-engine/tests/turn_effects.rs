@@ -29,7 +29,7 @@ fn add_card(
             name: None,
             keyword: keyword.map(str::to_string),
             text: String::new(),
-            effects: effects.to_string(),
+            effects: effects_of(effects),
             cost: None,
             uses_per_turn: None,
             match_text: None,
@@ -811,4 +811,9 @@ fn turn_start_keeps_b_tree_ordering() {
         })
         .collect();
     assert_eq!(seats, vec![0, 1], "座位升序结算");
+}
+
+/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
+fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
+    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

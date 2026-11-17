@@ -44,7 +44,7 @@ fn add_card(
                 name: None,
                 keyword: keyword.map(str::to_string),
                 text: String::new(),
-                effects: (*effects).to_string(),
+                effects: effects_of(effects),
                 cost: None,
                 uses_per_turn: None,
                 match_text: None,
@@ -725,4 +725,9 @@ fn combat_start_heroes_follow_first_side_order() {
         1,
         "后手方英雄的增益仍应结算到存活随从上"
     );
+}
+
+/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
+fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
+    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

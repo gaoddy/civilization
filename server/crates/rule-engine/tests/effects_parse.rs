@@ -1,9 +1,10 @@
 mod common;
 
 use common::{CONFIG_JSON, test_catalog};
-use rule_engine::data::{CardType, Catalog};
+use rule_engine::data::{CardType, Catalog, Tribe};
 use rule_engine::effects::{
-    Compare, Duration, Filter, KeywordSpec, Op, Pick, Selector, Side, Trigger, Zone, parse_effects,
+    Compare, Duration, Filter, KeywordSpec, Op, Pick, Selector, Side, TimesIf, Trigger, Zone,
+    parse_effects, validate_effects,
 };
 use rule_engine::error::CatalogError;
 
@@ -21,7 +22,7 @@ fn parses_a_growth_effect() {
         }
     ));
     assert_eq!(e[0].params.times, Some(2));
-    assert_eq!(e[0].params.duration, Duration::Instant);
+    assert_eq!(e[0].params.duration, None);
 }
 
 #[test]
@@ -30,7 +31,7 @@ fn parses_aura_and_keyword_value() {
         "Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent",
     )
     .unwrap();
-    assert_eq!(e[0].params.duration, Duration::Permanent);
+    assert_eq!(e[0].params.duration, Some(Duration::Permanent));
     assert_eq!(e[0].params.attack, Some(2));
     assert_eq!(e[0].params.health, Some(2));
     assert_eq!(
@@ -48,7 +49,7 @@ fn parses_aura_and_keyword_value() {
     let k = parse_effects("OnPlay|GrantKeyword|friendly:single|keyword=繁衍 2,duration=permanent")
         .unwrap();
     assert!(
-        matches!(k[0].params.keyword, Some(KeywordSpec::Keyword(ref s, Some(2))) if s == "繁衍")
+        matches!(k[0].params.keyword, Some(KeywordSpec { keyword: ref s, value: Some(2) }) if s == "繁衍")
     );
 }
 
@@ -96,7 +97,13 @@ fn parses_structured_params() {
     assert_eq!(condition.count, 2);
 
     let e = parse_effects("OnPlay|Growth|friendly:single|times=1,timesIf=人类:2").unwrap();
-    assert_eq!(e[0].params.times_if, Some(("人类".into(), 2)));
+    assert_eq!(
+        e[0].params.times_if,
+        Some(TimesIf {
+            tribe: Tribe::Human,
+            times: 2
+        })
+    );
 
     let e = parse_effects("OnAllySummon|ModifyStats|self|attack=1,when=tribe=人类").unwrap();
     assert_eq!(
@@ -123,7 +130,7 @@ fn parses_structured_params() {
     let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=传染,value=1").unwrap();
     assert!(matches!(
         e[0].params.keyword,
-        Some(KeywordSpec::Keyword(ref name, Some(1))) if name == "传染"
+        Some(KeywordSpec { keyword: ref name, value: Some(1) }) if name == "传染"
     ));
     assert_eq!(e[0].params.value, Some(1));
 
@@ -131,7 +138,7 @@ fn parses_structured_params() {
         parse_effects("OnPlayEffect|GrantKeyword|friendly:single|keyword=繁衍,value=2").unwrap();
     assert!(matches!(
         e[0].params.keyword,
-        Some(KeywordSpec::Keyword(ref name, Some(2))) if name == "繁衍"
+        Some(KeywordSpec { keyword: ref name, value: Some(2) }) if name == "繁衍"
     ));
     assert_eq!(e[0].params.value, Some(2));
 }
@@ -187,22 +194,31 @@ fn errors_include_the_raw_segment() {
 }
 
 #[test]
-fn every_skill_in_catalog_parses() {
+fn every_skill_in_catalog_validates() {
     let catalog = test_catalog();
     for skill in catalog.skills.values() {
-        assert!(parse_effects(&skill.effects).is_ok(), "{}", skill.id);
+        assert!(validate_effects(&skill.effects).is_ok(), "{}", skill.id);
     }
 }
 
 #[test]
-fn catalog_rejects_unknown_effect_at_load() {
-    let bad_skills =
-        r#"[{"id":"broken-skill","text":"战吼：爆炸","effects":"OnPlay|Explode|self"}]"#;
+fn catalog_rejects_unknown_effect_enum_at_load() {
+    let bad_skills = r#"[{"id":"broken-skill","text":"战吼：爆炸","effects":[{"trigger":"on_play","op":"explode","selector":{"kind":"self"},"params":{}}]}]"#;
+    let err = Catalog::from_json("[]", bad_skills, "[]", CONFIG_JSON).unwrap_err();
+    assert!(
+        matches!(err, CatalogError::File("skills.json", _)),
+        "实为 {err:?}"
+    );
+}
+
+#[test]
+fn catalog_rejects_semantically_invalid_effect_at_load() {
+    let bad_skills = r#"[{"id":"broken-skill","text":"光环：灼烧","effects":[{"trigger":"aura","op":"deal_damage","selector":{"kind":"side","side":"friendly","pick":"all","filters":[]},"params":{"amount":1}}]}]"#;
     let err = Catalog::from_json("[]", bad_skills, "[]", CONFIG_JSON).unwrap_err();
     match err {
         CatalogError::Rule(message) => {
             assert!(message.contains("broken-skill"), "{message}");
-            assert!(message.contains("Explode"), "{message}");
+            assert!(message.contains("光环"), "{message}");
         }
         other => panic!("expected rule error, got {other:?}"),
     }
@@ -213,7 +229,7 @@ fn parses_contagion_layer_from_value() {
     let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=传染,value=2").unwrap();
     assert!(matches!(
         e[0].params.keyword,
-        Some(KeywordSpec::Keyword(ref name, Some(2))) if name == "传染"
+        Some(KeywordSpec { keyword: ref name, value: Some(2) }) if name == "传染"
     ));
 }
 
@@ -223,4 +239,32 @@ fn parses_deal_damage_can_kill() {
     assert_eq!(e[0].op, Op::DealDamage);
     assert_eq!(e[0].params.amount, Some(3));
     assert_eq!(e[0].params.can_kill, Some(false));
+}
+
+#[test]
+fn semantic_rules_live_in_validate_only() {
+    // DSL 解析只负责语法；跨字段规则统一由 parse_chunk 末尾的 validate_effect 给出。
+    let semantic = [
+        "OnActivate|GainMinion|self|from=board,level=current,to=hand",
+        "OnActivate|Discover|self|pool=tribe",
+        "OnCombatStart|GrantKeyword|enemy:all|keyword=繁殖",
+        "OnCombatStart|GrantKeyword|enemy:all|keyword=嘲讽 1",
+        "Aura|DealDamage|enemy:all|amount=1",
+        "OnPlay|Growth|self|times=1,timesIf=通用:2",
+    ];
+    for raw in semantic {
+        let errors = parse_effects(raw).expect_err(raw);
+        assert_eq!(errors.len(), 1, "{raw} 应只报一次：{errors:?}");
+    }
+
+    // 解析器只保留取值归一化，不再重复判定。
+    let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=繁衍 2")
+        .expect("内联层数应可解析");
+    assert_eq!(
+        e[0].params.keyword,
+        Some(KeywordSpec {
+            keyword: "繁衍".into(),
+            value: Some(2)
+        })
+    );
 }

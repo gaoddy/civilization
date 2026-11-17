@@ -56,9 +56,10 @@ def check_effect(trigger, op, params):
     if op == "GrantKeyword":
         words = params.get("keyword", "").split()
         base = words[0] if words else ""
+        has_layer = len(words) > 1 or "value" in params
         if base in VALUE_KEYWORDS:
-            if "value" not in params:
-                violations.append(f"GrantKeyword 赋予 {base} 必须带 value")
+            if not has_layer:
+                violations.append(f"GrantKeyword 赋予 {base} 必须带层数或 value")
         elif "value" in params:
             violations.append(f"GrantKeyword 的 {base or '空'} 关键词禁止 value")
     if op == "Summon":

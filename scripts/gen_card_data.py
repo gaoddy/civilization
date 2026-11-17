@@ -14,6 +14,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import validate_docs
+import audit_effects
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "server" / "data" / "v0.1"
@@ -63,13 +64,234 @@ def load_docs(content, kind):
     return sorted(docs, key=lambda doc: doc["id"])
 
 
-def raw_effects(value):
-    """effects 字段保留原始 DSL 字符串；front matter 的 `[]` 还原为 "[]"。"""
-    if isinstance(value, list):
-        if value:
-            raise ValueError(f"effects 不能是非空列表: {value!r}")
-        return "[]"
-    return str(value)
+TRIGGER_JSON = {
+    "OnPlay": "on_play",
+    "OnPlayEffect": "on_play_effect",
+    "OnUse": "on_use",
+    "OnActivate": "on_activate",
+    "OnTurnStart": "on_turn_start",
+    "OnFirstRefresh": "on_first_refresh",
+    "OnCombatStart": "on_combat_start",
+    "OnDealDamage": "on_deal_damage",
+    "OnDeath": "on_death",
+    "OnFriendlyDeath": "on_friendly_death",
+    "OnEnemyDeath": "on_enemy_death",
+    "OnAllySummon": "on_ally_summon",
+    "OnAllyGrowth": "on_ally_growth",
+    "OnAllyEvolve": "on_ally_evolve",
+    "OnCombatEnd": "on_combat_end",
+    "Aura": "aura",
+    "ConditionalAura": "conditional_aura",
+}
+
+OP_JSON = {
+    "Growth": "growth",
+    "ModifyStats": "modify_stats",
+    "GrantKeyword": "grant_keyword",
+    "RemoveGrowth": "remove_growth",
+    "CannotAttack": "cannot_attack",
+    "DealDamage": "deal_damage",
+    "Summon": "summon",
+    "Copy": "copy",
+    "Discover": "discover",
+    "RefreshShop": "refresh_shop",
+    "AddShopSlot": "add_shop_slot",
+    "GainMinion": "gain_minion",
+}
+
+PICK_JSON = {
+    "single": "single",
+    "all": "all",
+    "random": "random",
+    "leftmost": "leftmost",
+    "leftmost+adjacent": "leftmost_adjacent",
+    "topAttack": "top_attack",
+}
+
+COMPARE_JSON = (
+    (">=", "ge"),
+    ("<=", "le"),
+    ("==", "eq"),
+    (">", "gt"),
+    ("<", "lt"),
+)
+
+
+def _json_selector(selector):
+    """把选择器 DSL 转成 self / target / side 对象。"""
+    if selector == "self":
+        return {"kind": "self"}
+    if selector == "target":
+        return {"kind": "target"}
+    parts = selector.split(":")
+    filters = []
+    for segment in parts[2:]:
+        if not segment:
+            continue
+        key, value = segment.split("=", 1)
+        filters.append({"key": key, "value": value})
+    return {
+        "kind": "side",
+        "side": parts[0],
+        "pick": PICK_JSON[parts[1]],
+        "filters": filters,
+    }
+
+
+def _json_condition(value):
+    """把 `count:<side>:<key>=<value>:<cmp><n>` 转成结构化条件。"""
+    rest = value[len("count:"):]
+    side, filter_segment, compare_segment = rest.split(":")
+    key, filter_value = filter_segment.split("=", 1)
+    for prefix, name in COMPARE_JSON:
+        if compare_segment.startswith(prefix):
+            return {
+                "side": side,
+                "filter": {"key": key, "value": filter_value},
+                "compare": name,
+                "count": int(compare_segment[len(prefix):]),
+            }
+    raise ValueError(f"condition 无法解析: {value!r}")
+
+
+def _json_keyword(value, params):
+    """把 `keyword=繁衍 2` / `keyword=传染,value=1` 归一化为具名对象。"""
+    words = value.split()
+    base = words[0]
+    layer = int(words[1]) if len(words) > 1 else None
+    if layer is None and "value" in params:
+        layer = int(params["value"])
+    result = {"keyword": base}
+    if layer is not None:
+        result["value"] = layer
+    return result
+
+
+I32_MIN, I32_MAX = -(2**31), 2**31 - 1
+INTEGER_KEYS = ("times", "count", "amount", "attack", "health", "value", "extra", "choose")
+IDENTIFIER_KEYS = ("token", "card", "pool", "era")
+
+
+def check_structured(effect):
+    """按引擎 validate.rs 的同一组规则校验结构化效果，返回违规消息。
+
+    `structured_effects` 在输出前调用，保证 `make data` 通过的数据能被引擎加载；
+    规则与 Rust `effects/validate.rs` 一一对应，改一处必须同步另一处。
+    """
+    trigger = effect["trigger"]
+    op = effect["op"]
+    selector = effect["selector"]
+    params = effect["params"]
+    violations = []
+
+    if trigger in ("aura", "conditional_aura") and op not in ("modify_stats", "grant_keyword"):
+        violations.append(f"光环触发只能用 modify_stats / grant_keyword，实为 {op}")
+
+    for key in INTEGER_KEYS:
+        value = params.get(key)
+        if isinstance(value, int) and not I32_MIN <= value <= I32_MAX:
+            violations.append(f"参数 {key} 超出 i32 范围：{value}")
+
+    if "times_if" in params:
+        times = params["times_if"]["times"]
+        if op != "growth" or "times" not in params:
+            violations.append("timesIf 只能与 Growth 的 times 同时出现")
+        if not 0 <= times <= I32_MAX:
+            violations.append(f"timesIf 的次数非法：{times}")
+
+    if "condition" in params and not 0 <= params["condition"]["count"] <= I32_MAX:
+        violations.append(f"condition 的 count 非法：{params['condition']['count']}")
+
+    for key in IDENTIFIER_KEYS:
+        if key in params and not params[key]:
+            violations.append(f"参数 {key} 不能为空")
+
+    if "keyword" in params:
+        keyword = params["keyword"]
+        base = keyword["keyword"]
+        layer = keyword.get("value", params.get("value"))
+        if base in audit_effects.VALUE_KEYWORDS:
+            if layer is None:
+                violations.append(f"keyword {base} 必须带层数")
+            elif not 0 <= layer <= I32_MAX:
+                violations.append(f"keyword {base} 的层数不能为负：{layer}")
+        elif layer is not None:
+            violations.append(f"keyword {base} 禁止层数与 value")
+
+    if op == "discover" and params.get("choose") != 1:
+        violations.append(f"Discover 的 choose 必须为 1，实为 {params.get('choose')!r}")
+
+    if op == "gain_minion" and params.get("from") not in (None, "shop"):
+        violations.append(f"GainMinion 的 from 只接受 shop，实为 {params.get('from')!r}")
+
+    if selector["kind"] == "side" and selector["side"] not in ("friendly", "enemy", "both"):
+        violations.append(f"选择器阵营非法 {selector['side']!r}")
+
+    return violations
+
+
+def _json_params(params):
+    """把 DSL 参数字典转成带类型的结构。"""
+    result = {}
+    for key, value in params.items():
+        if key == "type":
+            result["card_type"] = value
+        elif key in (
+            "times",
+            "count",
+            "amount",
+            "attack",
+            "health",
+            "value",
+            "extra",
+            "choose",
+        ):
+            result[key] = int(value)
+        elif key in ("canKill", "healthOnly", "free"):
+            name = {
+                "canKill": "can_kill",
+                "healthOnly": "health_only",
+                "free": "free",
+            }[key]
+            result[name] = value == "true"
+        elif key == "timesIf":
+            tribe, times = value.split(":", 1)
+            result["times_if"] = {"tribe": tribe, "times": int(times)}
+        elif key == "condition":
+            result["condition"] = _json_condition(value)
+        elif key == "when":
+            filter_key, filter_value = value.split("=", 1)
+            result["when"] = {"key": filter_key, "value": filter_value}
+        elif key == "keyword":
+            result["keyword"] = _json_keyword(value, params)
+        else:
+            result[key] = value
+    return result
+
+
+def structured_effects(value):
+    """把技能 effects DSL 编译为结构化数组；非法输入抛 ValueError。"""
+    effects, errors = validate_docs.parse_effects(value)
+    if errors:
+        raise ValueError("; ".join(errors))
+
+    result = []
+    for effect in effects:
+        trigger = effect["trigger"]
+        op = effect["op"]
+        params = effect["params"]
+        violations = list(audit_effects.check_effect(trigger, op, params))
+        structured = {
+            "trigger": TRIGGER_JSON[trigger],
+            "op": OP_JSON[op],
+            "selector": _json_selector(effect["selector"]),
+            "params": _json_params(params),
+        }
+        violations.extend(check_structured(structured))
+        if violations:
+            raise ValueError(f"{trigger}|{op}: " + "; ".join(violations))
+        result.append(structured)
+    return result
 
 
 def card_entry(doc):
@@ -97,7 +319,7 @@ def skill_entry(doc):
         "name": doc.get("name"),
         "keyword": doc.get("keyword"),
         "text": doc["text"],
-        "effects": raw_effects(doc["effects"]),
+        "effects": structured_effects(doc["effects"]),
         "cost": doc.get("cost"),
         "uses_per_turn": doc.get("uses_per_turn"),
         "match_text": doc.get("match_text"),

@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use serde::Deserialize;
 
-use crate::effects::parse_effects;
+use crate::effects::{Effect, validate_effects};
 use crate::error::CatalogError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -76,7 +76,7 @@ pub struct Skill {
     pub name: Option<String>,
     pub keyword: Option<String>,
     pub text: String,
-    pub effects: String,
+    pub effects: Vec<Effect>,
     pub cost: Option<u8>,
     pub uses_per_turn: Option<u8>,
     pub match_text: Option<String>,
@@ -149,7 +149,7 @@ impl Catalog {
 
         let mut effect_errors = Vec::new();
         for skill in skill_map.values() {
-            if let Err(errors) = parse_effects(&skill.effects) {
+            if let Err(errors) = validate_effects(&skill.effects) {
                 for error in errors {
                     effect_errors.push(format!(
                         "skills.json: 技能 {} 的 effects 非法: {error}",

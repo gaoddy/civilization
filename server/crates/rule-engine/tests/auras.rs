@@ -47,7 +47,7 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, tribe: Tribe, effects: &s
             name: None,
             keyword: None,
             text: effects.to_string(),
-            effects: effects.to_string(),
+            effects: effects_of(effects),
             cost: None,
             uses_per_turn: None,
             match_text: None,
@@ -420,4 +420,9 @@ fn aura_single_without_target_has_no_targets() {
         state.auras.is_empty(),
         "没有显式目标的光环 single 不应产生任何加成"
     );
+}
+
+/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
+fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
+    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

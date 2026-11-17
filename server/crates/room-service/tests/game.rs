@@ -86,7 +86,7 @@ fn catalog_with_discover_on_play() -> Catalog {
             name: None,
             keyword: None,
             text: "发现一张随从".to_string(),
-            effects: "OnPlay|Discover|self|pool=tribe,choose=1".to_string(),
+            effects: effects_of("OnPlay|Discover|self|pool=tribe,choose=1"),
             cost: None,
             uses_per_turn: None,
             match_text: None,
@@ -1440,4 +1440,9 @@ fn player_view_carries_hp_cap() {
     let (task, _clock) = task_with_seed_and_hp(SEED, 37);
     let view = task.player_view(0).expect("视图应可用");
     assert_eq!(view.hp_cap.get(), 37, "hpCap 必须取自 config.initial_hp");
+}
+
+/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
+fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
+    rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
 }

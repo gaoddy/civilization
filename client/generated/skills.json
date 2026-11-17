@@ -1,7 +1,24 @@
 [
   {
     "cost": 2,
-    "effects": "OnActivate|GrantKeyword|friendly:single|keyword=最优攻击,duration=combat",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "最优攻击"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "alternating-current",
     "keyword": null,
     "match_text": "同左",
@@ -11,7 +28,22 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-all-plus-0-plus-1",
     "keyword": null,
     "match_text": null,
@@ -21,7 +53,22 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all|health=2,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-all-plus-0-plus-2",
     "keyword": null,
     "match_text": null,
@@ -31,7 +78,27 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:tribe=生物|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "生物"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-biology-plus-0-plus-1",
     "keyword": null,
     "match_text": null,
@@ -41,7 +108,28 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:tribe=生物|attack=1,health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "生物"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-biology-plus-1-plus-1",
     "keyword": null,
     "match_text": null,
@@ -51,7 +139,29 @@
   },
   {
     "cost": null,
-    "effects": "Aura|GrantKeyword|friendly:all:tribe=机械|keyword=最优攻击,duration=permanent",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "最优攻击"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-mech-optimal-attack",
     "keyword": null,
     "match_text": null,
@@ -61,7 +171,28 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:tribe=机械|attack=2,health=2,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 2,
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-mech-plus-2-plus-2",
     "keyword": null,
     "match_text": null,
@@ -71,7 +202,31 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:tribe=生物:other=true|attack=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent"
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "生物"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-other-biology-plus-1-attack",
     "keyword": null,
     "match_text": null,
@@ -81,7 +236,32 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:tribe=机械:other=true|attack=1,health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-other-mech-plus-1-plus-1",
     "keyword": null,
     "match_text": null,
@@ -91,7 +271,31 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:tribe=植物:other=true|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "植物"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-other-plants-plus-0-plus-1",
     "keyword": null,
     "match_text": null,
@@ -101,7 +305,27 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:other=true|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-other-plus-0-plus-1",
     "keyword": null,
     "match_text": null,
@@ -111,7 +335,28 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:tribe=植物|attack=1,health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "植物"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-plant-plus-1-plus-1",
     "keyword": null,
     "match_text": null,
@@ -121,7 +366,28 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:tribe=植物|attack=2,health=2,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 2,
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "植物"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-plant-plus-2-plus-2",
     "keyword": null,
     "match_text": null,
@@ -131,7 +397,27 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:tribe=学者|health=2,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "学者"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-scholar-plus-0-plus-2",
     "keyword": null,
     "match_text": null,
@@ -141,7 +427,27 @@
   },
   {
     "cost": null,
-    "effects": "Aura|ModifyStats|friendly:all:tribe=学者|health=3,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 3
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "学者"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
     "id": "aura-scholar-plus-0-plus-3",
     "keyword": null,
     "match_text": null,
@@ -151,7 +457,26 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:all:tribe=生物|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "生物"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-all-biology-growth-once",
     "keyword": "战吼",
     "match_text": null,
@@ -161,7 +486,21 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:all|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-all-friendly-growth-once",
     "keyword": "战吼",
     "match_text": null,
@@ -171,7 +510,21 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:all|times=2",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-all-friendly-growth-twice",
     "keyword": "战吼",
     "match_text": null,
@@ -181,7 +534,22 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|ModifyStats|friendly:all|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-all-friendly-plus-0-plus-1",
     "keyword": "战吼",
     "match_text": null,
@@ -191,7 +559,26 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:all:tribe=机械|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-all-mech-growth-once",
     "keyword": "战吼",
     "match_text": null,
@@ -201,7 +588,26 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:all:tribe=机械|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-all-mech-growth-once-no-keyword",
     "keyword": null,
     "match_text": null,
@@ -211,7 +617,27 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|ModifyStats|friendly:all:name=弓箭手|attack=2,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 2,
+          "duration": "permanent"
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "name",
+              "value": "弓箭手"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-archers-plus-2-attack",
     "keyword": "战吼",
     "match_text": null,
@@ -221,7 +647,21 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:single|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-growth-once",
     "keyword": "战吼",
     "match_text": null,
@@ -231,7 +671,25 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:single|times=1,timesIf=植物:2",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1,
+          "times_if": {
+            "times": 2,
+            "tribe": "植物"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-growth-plant-twice",
     "keyword": "战吼",
     "match_text": null,
@@ -241,7 +699,25 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:single|times=1,timesIf=学者:2",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1,
+          "times_if": {
+            "times": 2,
+            "tribe": "学者"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-growth-scholar-twice",
     "keyword": "战吼",
     "match_text": null,
@@ -251,7 +727,21 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:single|times=2",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-growth-twice",
     "keyword": "战吼",
     "match_text": null,
@@ -261,7 +751,27 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|ModifyStats|friendly:single:tribe=人类|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "人类"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-human-plus-0-plus-1",
     "keyword": "战吼",
     "match_text": null,
@@ -271,7 +781,26 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:single:tribe=机械|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-mech-growth-once",
     "keyword": "战吼",
     "match_text": null,
@@ -281,7 +810,26 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:single:tribe=植物|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "植物"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-plant-growth-once",
     "keyword": "战吼",
     "match_text": null,
@@ -291,7 +839,22 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|ModifyStats|friendly:single|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-plus-0-plus-1",
     "keyword": "战吼",
     "match_text": null,
@@ -301,7 +864,22 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|ModifyStats|friendly:single|health=2,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-plus-0-plus-2",
     "keyword": "战吼",
     "match_text": null,
@@ -311,7 +889,22 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|ModifyStats|friendly:single|attack=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-plus-1-attack",
     "keyword": "战吼",
     "match_text": null,
@@ -321,7 +914,22 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|ModifyStats|friendly:single|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-plus-1-health",
     "keyword": "战吼",
     "match_text": null,
@@ -331,7 +939,27 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|ModifyStats|friendly:single:tribe=病毒|attack=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent"
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "病毒"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-friendly-virus-plus-1-attack",
     "keyword": "战吼",
     "match_text": null,
@@ -341,7 +969,31 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|ModifyStats|friendly:all:tribe=人类:other=true|attack=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent"
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "人类"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-other-friendly-humans-plus-1-attack",
     "keyword": "战吼",
     "match_text": null,
@@ -351,7 +1003,26 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:single:tribe=植物|times=2",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "植物"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-plant-growth-twice",
     "keyword": "战吼",
     "match_text": null,
@@ -361,7 +1032,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:random|amount=1",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "battlecry-random-enemy-damage-1",
     "keyword": "战吼",
     "match_text": null,
@@ -371,7 +1056,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:random|amount=2",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "battlecry-random-enemy-damage-2",
     "keyword": "战吼",
     "match_text": null,
@@ -381,7 +1080,18 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|self|times=2",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-self-growth-twice",
     "keyword": "战吼",
     "match_text": null,
@@ -391,7 +1101,19 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|ModifyStats|self|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-self-plus-1-health",
     "keyword": "战吼",
     "match_text": null,
@@ -401,7 +1123,19 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Summon|self|token=synthetic-cell-token,count=1",
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
+          "token": "synthetic-cell-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "battlecry-summon-3-3-synthetic-cell",
     "keyword": "战吼",
     "match_text": null,
@@ -411,7 +1145,29 @@
   },
   {
     "cost": 2,
-    "effects": "OnActivate|GrantKeyword|friendly:single:tribe=生物|keyword=进化,duration=permanent",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "进化"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "生物"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "biology-evolve",
     "keyword": null,
     "match_text": "同左",
@@ -421,7 +1177,24 @@
   },
   {
     "cost": 1,
-    "effects": "OnActivate|GrantKeyword|friendly:single|keyword=最优攻击,duration=combat",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "最优攻击"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "combat-optimal-attack",
     "keyword": null,
     "match_text": "同左",
@@ -431,7 +1204,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:random|amount=3",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 3
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combat-random-enemy-damage-3",
     "keyword": null,
     "match_text": null,
@@ -441,7 +1228,26 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|GrantKeyword|enemy:all|keyword=传染,value=1,duration=permanent",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "传染",
+            "value": 1
+          },
+          "value": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-all-enemies-contagion-1",
     "keyword": null,
     "match_text": "同左",
@@ -451,7 +1257,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:all|amount=2",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-all-enemies-damage-2",
     "keyword": null,
     "match_text": "同左",
@@ -461,7 +1281,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:all|amount=5",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 5
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-all-enemies-damage-5",
     "keyword": null,
     "match_text": "同左",
@@ -471,7 +1305,22 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|ModifyStats|enemy:all|attack=-1,duration=combat",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": -1,
+          "duration": "combat"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-all-enemies-minus-1-attack",
     "keyword": null,
     "match_text": "同左",
@@ -481,7 +1330,28 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|ModifyStats|self|attack=2,duration=permanent,condition=count:friendly:tribe=生物:>=2",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 2,
+          "condition": {
+            "compare": "ge",
+            "count": 2,
+            "filter": {
+              "key": "tribe",
+              "value": "生物"
+            },
+            "side": "friendly"
+          },
+          "duration": "permanent"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-if-2-biology-self-plus-2-attack",
     "keyword": null,
     "match_text": null,
@@ -491,7 +1361,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:leftmost+adjacent|amount=2",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "leftmost_adjacent",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-leftmost-and-adjacent-damage-2",
     "keyword": null,
     "match_text": "同左",
@@ -501,7 +1385,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:leftmost|amount=3",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 3
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "leftmost",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-leftmost-damage-3",
     "keyword": null,
     "match_text": "同左",
@@ -511,7 +1409,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:leftmost|amount=4",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 4
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "leftmost",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-leftmost-damage-4",
     "keyword": null,
     "match_text": "同左",
@@ -521,7 +1433,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:leftmost|amount=6",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 6
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "leftmost",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-leftmost-damage-6",
     "keyword": null,
     "match_text": "同左",
@@ -531,7 +1457,26 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|GrantKeyword|enemy:random|keyword=传染,value=1,duration=permanent",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "传染",
+            "value": 1
+          },
+          "value": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-random-enemy-contagion-1",
     "keyword": null,
     "match_text": null,
@@ -541,7 +1486,26 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|GrantKeyword|enemy:random|keyword=传染,value=2,duration=permanent",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "传染",
+            "value": 2
+          },
+          "value": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-random-enemy-contagion-2",
     "keyword": null,
     "match_text": null,
@@ -551,7 +1515,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:random|amount=2",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-random-enemy-damage-2",
     "keyword": null,
     "match_text": "战斗开始时，对敌方最左侧随从造成 2 点伤害",
@@ -561,7 +1539,24 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|RemoveGrowth|both:all:tribe=人类",
+    "effects": [
+      {
+        "op": "remove_growth",
+        "params": {},
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "人类"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "both"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-remove-all-human-growth",
     "keyword": null,
     "match_text": "同左",
@@ -571,7 +1566,19 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|RemoveGrowth|enemy:topAttack",
+    "effects": [
+      {
+        "op": "remove_growth",
+        "params": {},
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "top_attack",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-remove-top-attack-enemy-growth",
     "keyword": null,
     "match_text": "同左",
@@ -581,7 +1588,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|CannotAttack|enemy:topAttack|duration=combat",
+    "effects": [
+      {
+        "op": "cannot_attack",
+        "params": {
+          "duration": "combat"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "top_attack",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-top-attack-enemy-cant-attack",
     "keyword": null,
     "match_text": "同左",
@@ -591,7 +1612,22 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|ModifyStats|enemy:topAttack|health=-2,duration=combat",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "combat",
+          "health": -2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "top_attack",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "combatstart-top-attack-enemy-minus-0-minus-2",
     "keyword": null,
     "match_text": "同左",
@@ -601,7 +1637,26 @@
   },
   {
     "cost": null,
-    "effects": "OnDeath|GrantKeyword|enemy:all|keyword=传染,value=1,duration=permanent",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "传染",
+            "value": 1
+          },
+          "value": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_death"
+      }
+    ],
     "id": "deathrattle-all-enemies-contagion-1",
     "keyword": "亡语",
     "match_text": null,
@@ -611,7 +1666,27 @@
   },
   {
     "cost": null,
-    "effects": "OnDeath|ModifyStats|enemy:all:tribe=人类|health=-2,duration=combat",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "combat",
+          "health": -2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "人类"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_death"
+      }
+    ],
     "id": "deathrattle-all-enemies-humans-minus-2-health",
     "keyword": "亡语",
     "match_text": null,
@@ -621,7 +1696,22 @@
   },
   {
     "cost": null,
-    "effects": "OnDeath|ModifyStats|enemy:all|health=-1,duration=combat",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "combat",
+          "health": -1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_death"
+      }
+    ],
     "id": "deathrattle-all-enemies-minus-1-health",
     "keyword": "亡语",
     "match_text": null,
@@ -631,7 +1721,22 @@
   },
   {
     "cost": null,
-    "effects": "OnDeath|ModifyStats|friendly:all|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_death"
+      }
+    ],
     "id": "deathrattle-all-friendly-plus-0-plus-1",
     "keyword": null,
     "match_text": null,
@@ -641,7 +1746,22 @@
   },
   {
     "cost": null,
-    "effects": "OnDeath|ModifyStats|enemy:random|health=-1,duration=combat",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "combat",
+          "health": -1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_death"
+      }
+    ],
     "id": "deathrattle-random-enemy-hp-minus-1",
     "keyword": "亡语",
     "match_text": null,
@@ -651,7 +1771,22 @@
   },
   {
     "cost": null,
-    "effects": "OnDeath|ModifyStats|enemy:random|attack=-1,duration=combat",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": -1,
+          "duration": "combat"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_death"
+      }
+    ],
     "id": "deathrattle-random-enemy-minus-1-attack",
     "keyword": null,
     "match_text": null,
@@ -661,7 +1796,22 @@
   },
   {
     "cost": null,
-    "effects": "OnDeath|ModifyStats|enemy:random|health=-1,duration=combat",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "combat",
+          "health": -1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_death"
+      }
+    ],
     "id": "deathrattle-random-enemy-minus-1-health",
     "keyword": "亡语",
     "match_text": null,
@@ -671,7 +1821,19 @@
   },
   {
     "cost": null,
-    "effects": "OnDeath|Summon|self|token=hela-cell-token,count=1",
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
+          "token": "hela-cell-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
     "id": "deathrattle-summon-2-2-hela-cell-clone",
     "keyword": "亡语",
     "match_text": null,
@@ -681,7 +1843,19 @@
   },
   {
     "cost": null,
-    "effects": "OnDeath|Summon|self|card=baiyi,count=1",
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "card": "baiyi",
+          "count": 1
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
     "id": "deathrattle-summon-termite",
     "keyword": "亡语",
     "match_text": null,
@@ -691,7 +1865,39 @@
   },
   {
     "cost": 1,
-    "effects": "OnActivate|Growth|friendly:single:tribe=人类|times=1,timesIf=人类:2,condition=count:friendly:tribe=人类:>=3",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "condition": {
+            "compare": "ge",
+            "count": 3,
+            "filter": {
+              "key": "tribe",
+              "value": "人类"
+            },
+            "side": "friendly"
+          },
+          "times": 1,
+          "times_if": {
+            "times": 2,
+            "tribe": "人类"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "人类"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "division-of-labor",
     "keyword": null,
     "match_text": "同左",
@@ -701,7 +1907,30 @@
   },
   {
     "cost": 2,
-    "effects": "OnActivate|RefreshShop|self|free=true;OnActivate|GainMinion|self|from=shop,level=current,to=hand",
+    "effects": [
+      {
+        "op": "refresh_shop",
+        "params": {
+          "free": true
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_activate"
+      },
+      {
+        "op": "gain_minion",
+        "params": {
+          "from": "shop",
+          "level": "current",
+          "to": "hand"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "efficient-algorithm",
     "keyword": null,
     "match_text": "获得的随从固定为当前星级排序第一张",
@@ -711,7 +1940,21 @@
   },
   {
     "cost": 2,
-    "effects": "OnActivate|CannotAttack|enemy:random|duration=combat",
+    "effects": [
+      {
+        "op": "cannot_attack",
+        "params": {
+          "duration": "combat"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "enemy-random-cannot-attack",
     "keyword": null,
     "match_text": "同左",
@@ -721,7 +1964,19 @@
   },
   {
     "cost": 2,
-    "effects": "OnActivate|Discover|self|pool=tribe,choose=1",
+    "effects": [
+      {
+        "op": "discover",
+        "params": {
+          "choose": 1,
+          "pool": "tribe"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "evolution-discovery",
     "keyword": null,
     "match_text": "改为三选一固定池",
@@ -731,7 +1986,24 @@
   },
   {
     "cost": 2,
-    "effects": "OnActivate|GrantKeyword|friendly:single|keyword=护盾,duration=permanent",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "护盾"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "faraday-cage",
     "keyword": null,
     "match_text": "同左",
@@ -741,7 +2013,18 @@
   },
   {
     "cost": 1,
-    "effects": "OnActivate|RefreshShop|self|free=true",
+    "effects": [
+      {
+        "op": "refresh_shop",
+        "params": {
+          "free": true
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "free-refresh",
     "keyword": null,
     "match_text": "同左",
@@ -751,7 +2034,26 @@
   },
   {
     "cost": 1,
-    "effects": "OnActivate|Growth|friendly:single:tribe=植物|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "植物"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "heredity",
     "keyword": null,
     "match_text": "同左",
@@ -761,7 +2063,26 @@
   },
   {
     "cost": 2,
-    "effects": "OnActivate|Growth|friendly:single:tribe=人类|times=2",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "人类"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "human-growth-twice",
     "keyword": null,
     "match_text": "同左",
@@ -771,7 +2092,30 @@
   },
   {
     "cost": 2,
-    "effects": "OnActivate|Growth|friendly:all:tribe=机械:other=true|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "invention-factory",
     "keyword": null,
     "match_text": "同左",
@@ -781,7 +2125,30 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:all:tribe=机械:other=true|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "keyword-assemble-1",
     "keyword": "装配 1",
     "match_text": null,
@@ -791,7 +2158,30 @@
   },
   {
     "cost": null,
-    "effects": "OnPlay|Growth|friendly:all:tribe=机械:other=true|times=2",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
     "id": "keyword-assemble-2",
     "keyword": "装配 2",
     "match_text": null,
@@ -801,7 +2191,7 @@
   },
   {
     "cost": null,
-    "effects": "[]",
+    "effects": [],
     "id": "keyword-breed-1",
     "keyword": "繁衍 1",
     "match_text": null,
@@ -811,7 +2201,7 @@
   },
   {
     "cost": null,
-    "effects": "[]",
+    "effects": [],
     "id": "keyword-breed-2",
     "keyword": "繁衍 2",
     "match_text": null,
@@ -821,7 +2211,7 @@
   },
   {
     "cost": null,
-    "effects": "[]",
+    "effects": [],
     "id": "keyword-breed-3",
     "keyword": "繁衍 3",
     "match_text": null,
@@ -831,7 +2221,7 @@
   },
   {
     "cost": null,
-    "effects": "[]",
+    "effects": [],
     "id": "keyword-contagion",
     "keyword": "传染",
     "match_text": null,
@@ -841,7 +2231,7 @@
   },
   {
     "cost": null,
-    "effects": "[]",
+    "effects": [],
     "id": "keyword-divine-shield",
     "keyword": "护盾",
     "match_text": null,
@@ -851,7 +2241,7 @@
   },
   {
     "cost": null,
-    "effects": "[]",
+    "effects": [],
     "id": "keyword-evolve",
     "keyword": "进化",
     "match_text": null,
@@ -861,7 +2251,7 @@
   },
   {
     "cost": null,
-    "effects": "[]",
+    "effects": [],
     "id": "keyword-optimal-attack",
     "keyword": "最优攻击",
     "match_text": null,
@@ -871,7 +2261,7 @@
   },
   {
     "cost": null,
-    "effects": "[]",
+    "effects": [],
     "id": "keyword-reborn",
     "keyword": "复生",
     "match_text": null,
@@ -881,7 +2271,19 @@
   },
   {
     "cost": null,
-    "effects": "OnDeath|Summon|self|token=seedling,count=1",
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
+          "token": "seedling"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
     "id": "keyword-sow",
     "keyword": "播种",
     "match_text": null,
@@ -891,7 +2293,7 @@
   },
   {
     "cost": null,
-    "effects": "[]",
+    "effects": [],
     "id": "keyword-taunt",
     "keyword": "嘲讽",
     "match_text": null,
@@ -901,7 +2303,7 @@
   },
   {
     "cost": null,
-    "effects": "[]",
+    "effects": [],
     "id": "keyword-windfury",
     "keyword": "连击",
     "match_text": null,
@@ -911,7 +2313,24 @@
   },
   {
     "cost": 1,
-    "effects": "OnActivate|GrantKeyword|friendly:single|keyword=连击,duration=combat",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "连击"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "light-speed-strike",
     "keyword": null,
     "match_text": "同左",
@@ -921,7 +2340,26 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|GrantKeyword|enemy:leftmost|keyword=传染,value=1,duration=permanent",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "传染",
+            "value": 1
+          },
+          "value": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "leftmost",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "microbiology",
     "keyword": null,
     "match_text": "同左",
@@ -931,7 +2369,19 @@
   },
   {
     "cost": null,
-    "effects": "OnFirstRefresh|AddShopSlot|self|era=current,count=1",
+    "effects": [
+      {
+        "op": "add_shop_slot",
+        "params": {
+          "count": 1,
+          "era": "current"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_first_refresh"
+      }
+    ],
     "id": "observation",
     "keyword": null,
     "match_text": "额外出现的随从固定为当前时代当前星级排序第一张",
@@ -941,7 +2391,21 @@
   },
   {
     "cost": null,
-    "effects": "OnCombatStart|DealDamage|enemy:random|amount=2",
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
     "id": "radiation",
     "keyword": null,
     "match_text": "战斗开始时，对敌方最左侧随从造成 2 点伤害",
@@ -951,7 +2415,26 @@
   },
   {
     "cost": 1,
-    "effects": "OnActivate|Growth|friendly:single:tribe=学者|times=2",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "学者"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "scholar-growth-twice",
     "keyword": null,
     "match_text": "同左",
@@ -961,7 +2444,21 @@
   },
   {
     "cost": 1,
-    "effects": "OnActivate|Growth|friendly:single|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "shout",
     "keyword": null,
     "match_text": "同左",
@@ -971,7 +2468,28 @@
   },
   {
     "cost": null,
-    "effects": "ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:tribe=人类:>=2",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "condition": {
+            "compare": "ge",
+            "count": 2,
+            "filter": {
+              "key": "tribe",
+              "value": "人类"
+            },
+            "side": "friendly"
+          },
+          "duration": "permanent"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "conditional_aura"
+      }
+    ],
     "id": "trigger-2-humans-self-plus-1-attack",
     "keyword": null,
     "match_text": null,
@@ -981,7 +2499,29 @@
   },
   {
     "cost": null,
-    "effects": "ConditionalAura|ModifyStats|self|attack=1,health=1,duration=permanent,condition=count:friendly:tribe=人类:>=2",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "condition": {
+            "compare": "ge",
+            "count": 2,
+            "filter": {
+              "key": "tribe",
+              "value": "人类"
+            },
+            "side": "friendly"
+          },
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "conditional_aura"
+      }
+    ],
     "id": "trigger-2-humans-self-plus-1-plus-1",
     "keyword": null,
     "match_text": null,
@@ -991,7 +2531,29 @@
   },
   {
     "cost": null,
-    "effects": "ConditionalAura|ModifyStats|self|attack=1,health=1,duration=permanent,condition=count:friendly:tribe=人类:>=3",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "condition": {
+            "compare": "ge",
+            "count": 3,
+            "filter": {
+              "key": "tribe",
+              "value": "人类"
+            },
+            "side": "friendly"
+          },
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "conditional_aura"
+      }
+    ],
     "id": "trigger-3-humans-self-plus-1-plus-1",
     "keyword": null,
     "match_text": null,
@@ -1001,7 +2563,28 @@
   },
   {
     "cost": null,
-    "effects": "ConditionalAura|ModifyStats|self|attack=2,duration=permanent,condition=count:friendly:tribe=人类:>=3",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 2,
+          "condition": {
+            "compare": "ge",
+            "count": 3,
+            "filter": {
+              "key": "tribe",
+              "value": "人类"
+            },
+            "side": "friendly"
+          },
+          "duration": "permanent"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "conditional_aura"
+      }
+    ],
     "id": "trigger-3-humans-self-plus-2-attack",
     "keyword": null,
     "match_text": null,
@@ -1011,7 +2594,21 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|Growth|friendly:all|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-all-friendly-growth-once",
     "keyword": null,
     "match_text": "同左",
@@ -1021,7 +2618,23 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|ModifyStats|friendly:all|attack=1,health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-all-friendly-plus-1-plus-1",
     "keyword": null,
     "match_text": "同左",
@@ -1031,7 +2644,26 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|Growth|friendly:all:tribe=机械|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-all-mech-growth-once",
     "keyword": null,
     "match_text": "同左",
@@ -1041,7 +2673,21 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|Copy|friendly:single|to=hand",
+    "effects": [
+      {
+        "op": "copy",
+        "params": {
+          "to": "hand"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-copy-friendly-minion",
     "keyword": null,
     "match_text": "同左",
@@ -1051,7 +2697,20 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|Copy|self|from=hand,type=随从,to=hand",
+    "effects": [
+      {
+        "op": "copy",
+        "params": {
+          "card_type": "随从",
+          "from": "hand",
+          "to": "hand"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-copy-hand-minion",
     "keyword": null,
     "match_text": "同左",
@@ -1061,7 +2720,19 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|Discover|self|pool=tribe,choose=1",
+    "effects": [
+      {
+        "op": "discover",
+        "params": {
+          "choose": 1,
+          "pool": "tribe"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-discover-tribe-minion",
     "keyword": null,
     "match_text": "改为三选一固定池",
@@ -1071,7 +2742,20 @@
   },
   {
     "cost": null,
-    "effects": "OnEnemyDeath|ModifyStats|self|attack=1,health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_enemy_death"
+      }
+    ],
     "id": "trigger-enemy-death-self-plus-1-plus-1",
     "keyword": null,
     "match_text": null,
@@ -1081,7 +2765,23 @@
   },
   {
     "cost": null,
-    "effects": "OnAllySummon|ModifyStats|self|attack=1,duration=permanent,when=tribe=生物",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "when": {
+            "key": "tribe",
+            "value": "生物"
+          }
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_ally_summon"
+      }
+    ],
     "id": "trigger-friendly-biology-play-plus-1-attack",
     "keyword": null,
     "match_text": null,
@@ -1091,7 +2791,19 @@
   },
   {
     "cost": null,
-    "effects": "OnFriendlyDeath|ModifyStats|self|attack=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_friendly_death"
+      }
+    ],
     "id": "trigger-friendly-death-self-plus-1-attack",
     "keyword": null,
     "match_text": null,
@@ -1101,7 +2813,20 @@
   },
   {
     "cost": null,
-    "effects": "OnAllyEvolve|ModifyStats|self|attack=1,health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_ally_evolve"
+      }
+    ],
     "id": "trigger-friendly-evolve-self-plus-1-plus-1",
     "keyword": null,
     "match_text": null,
@@ -1111,7 +2836,19 @@
   },
   {
     "cost": null,
-    "effects": "OnAllyGrowth|ModifyStats|target|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "kind": "target"
+        },
+        "trigger": "on_ally_growth"
+      }
+    ],
     "id": "trigger-friendly-growth-extra-plus-0-plus-1",
     "keyword": null,
     "match_text": null,
@@ -1121,7 +2858,19 @@
   },
   {
     "cost": null,
-    "effects": "OnAllyGrowth|ModifyStats|self|attack=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_ally_growth"
+      }
+    ],
     "id": "trigger-friendly-growth-self-plus-1-attack",
     "keyword": null,
     "match_text": null,
@@ -1131,7 +2880,21 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|Growth|friendly:single|times=3",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 3
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-friendly-growth-thrice",
     "keyword": null,
     "match_text": "同左",
@@ -1141,7 +2904,21 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|Growth|friendly:single|times=2",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-friendly-growth-twice",
     "keyword": null,
     "match_text": "同左",
@@ -1151,7 +2928,24 @@
   },
   {
     "cost": null,
-    "effects": "OnFriendlyDeath|ModifyStats|self|attack=1,health=1,duration=permanent,when=tribe=人类",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1,
+          "when": {
+            "key": "tribe",
+            "value": "人类"
+          }
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_friendly_death"
+      }
+    ],
     "id": "trigger-friendly-human-death-plus-1-plus-1",
     "keyword": null,
     "match_text": null,
@@ -1161,7 +2955,23 @@
   },
   {
     "cost": null,
-    "effects": "OnAllySummon|ModifyStats|self|attack=1,duration=permanent,when=tribe=人类",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "when": {
+            "key": "tribe",
+            "value": "人类"
+          }
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_ally_summon"
+      }
+    ],
     "id": "trigger-friendly-human-play-plus-1-attack",
     "keyword": null,
     "match_text": null,
@@ -1171,7 +2981,29 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|GrantKeyword|friendly:single:tribe=人类|keyword=嘲讽,duration=combat",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "嘲讽"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "人类"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-friendly-human-taunt-until-turn-end",
     "keyword": null,
     "match_text": "同左",
@@ -1181,7 +3013,31 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|GrantKeyword|friendly:single:tribe=植物|keyword=繁衍,value=2,duration=permanent",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "繁衍",
+            "value": 2
+          },
+          "value": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "植物"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-friendly-plant-breed-2",
     "keyword": null,
     "match_text": "同左",
@@ -1191,7 +3047,22 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|ModifyStats|friendly:single|health=4,duration=combat",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "combat",
+          "health": 4
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-friendly-plus-0-plus-4-this-turn",
     "keyword": null,
     "match_text": "同左",
@@ -1201,7 +3072,23 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|ModifyStats|friendly:single|attack=1,health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-friendly-plus-1-plus-1",
     "keyword": null,
     "match_text": "同左",
@@ -1211,7 +3098,22 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|ModifyStats|friendly:single|attack=2,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 2,
+          "duration": "permanent"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-friendly-plus-2-attack",
     "keyword": null,
     "match_text": "同左",
@@ -1221,7 +3123,22 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|ModifyStats|friendly:single|attack=2,duration=combat",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 2,
+          "duration": "combat"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-friendly-plus-2-attack-this-turn",
     "keyword": null,
     "match_text": "同左",
@@ -1231,7 +3148,24 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|GrantKeyword|friendly:single|keyword=嘲讽,duration=combat",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "嘲讽"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-friendly-taunt-until-turn-end",
     "keyword": null,
     "match_text": "同左",
@@ -1241,7 +3175,29 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|GrantKeyword|friendly:all:tribe=机械|keyword=最优攻击,duration=combat",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "最优攻击"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "机械"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-mech-optimal-attack-this-turn",
     "keyword": null,
     "match_text": "同左",
@@ -1251,7 +3207,24 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|GrantKeyword|friendly:single|keyword=连击,duration=combat",
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "连击"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-minion-windfury-this-turn",
     "keyword": null,
     "match_text": "同左",
@@ -1261,7 +3234,31 @@
   },
   {
     "cost": null,
-    "effects": "OnPlayEffect|ModifyStats|friendly:all:tribe=人类:other=true|attack=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent"
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "人类"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
     "id": "trigger-other-friendly-humans-plus-1-attack",
     "keyword": null,
     "match_text": "同左",
@@ -1271,7 +3268,22 @@
   },
   {
     "cost": null,
-    "effects": "OnUse|ModifyStats|friendly:single|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_use"
+      }
+    ],
     "id": "trigger-play-effect-friendly-plus-0-plus-1",
     "keyword": null,
     "match_text": null,
@@ -1281,7 +3293,19 @@
   },
   {
     "cost": null,
-    "effects": "OnTurnStart|ModifyStats|self|health=1,duration=permanent",
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_turn_start"
+      }
+    ],
     "id": "trigger-turn-start-self-plus-0-plus-1",
     "keyword": null,
     "match_text": null,
@@ -1291,7 +3315,20 @@
   },
   {
     "cost": 2,
-    "effects": "OnActivate|Copy|self|from=hand,type=随从,to=hand",
+    "effects": [
+      {
+        "op": "copy",
+        "params": {
+          "card_type": "随从",
+          "from": "hand",
+          "to": "hand"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "universal-manuscript",
     "keyword": null,
     "match_text": "同左",
@@ -1301,7 +3338,26 @@
   },
   {
     "cost": 1,
-    "effects": "OnActivate|Growth|friendly:single:tribe=病毒|times=1",
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "tribe",
+              "value": "病毒"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
     "id": "virus-growth-once",
     "keyword": null,
     "match_text": "同左",
