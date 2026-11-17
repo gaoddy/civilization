@@ -17,6 +17,7 @@ func _ready() -> void:
     await _check_game_layout()
     await _check_hand_overlap_layout()
     await _check_hand_hover()
+    await _check_hand_hover_overlap_strip()
     await _check_hand_hover_in_combat()
     await _check_board_capacity_from_view()
     await _check_combat_layout()
@@ -606,6 +607,13 @@ func _check_hand_overlap_layout() -> void:
                 first_card.get_global_rect().end.x > second_card.get_global_rect().position.x,
                 "相邻手牌应重叠",
             )
+            _expect(
+                is_equal_approx(
+                    first_card.get_global_rect().end.x - second_card.get_global_rect().position.x,
+                    32.0,
+                ),
+                "相邻手牌应正好交叠 32",
+            )
         _expect(hand_row.get_global_rect().size.y < 292.0, "十张手牌应保持单行")
         if slots.size() == 10 and hand_scroll != null:
             var last_card: Control = slots[9].get_child(0) as Control
@@ -674,6 +682,99 @@ func _check_hand_hover() -> void:
         _expect(slot != null and slot.z_index == 0, "移出后应恢复层级")
     instance.queue_free()
     await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 十张 dia 手牌的对局实例；`playable` 决定手牌是否允许拖拽。
+func _ten_card_instance(playable: bool) -> Node:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    var hand: Array = []
+    var affordances: Array = []
+    for index in range(10):
+        hand.append({
+            "index": index,
+            "cardId": "dia",
+            "playable": playable,
+            "requiresTarget": false,
+            "disabledReason": null if playable else "NO_SPACE",
+        })
+        affordances.append({
+            "index": index,
+            "playable": playable,
+            "disabledReason": null if playable else "NO_SPACE",
+        })
+    view["self"]["hand"] = hand
+    view["self"]["affordances"]["handCards"] = affordances
+    GameStore.view = view
+    return await _check_scene("res://scenes/game.tscn", false)
+
+
+## 悬停卡右侧交叠带仍归这张卡：Godot 按树序逆序拾取，z_index 不参与命中。
+func _check_hand_hover_overlap_strip() -> void:
+    var instance := await _ten_card_instance(false)
+    if instance != null:
+        var card0: Control = instance.find_child("HandCard0", true, false)
+        var card1: Control = instance.find_child("HandCard1", true, false)
+        _expect(
+            card0 is HandCard and not (card0 as HandCard).drag_allowed,
+            "禁用手牌在招募阶段应不可拖动",
+        )
+        if card0 is HandCard and card1 != null:
+            var slot: Control = card0.get_parent() as Control
+            var top_left: Vector2 = card0.get_global_rect().position
+            var strip := top_left + Vector2(card0.size.x - 16.0, card0.size.y / 2.0)
+            await _push_motion(instance, Vector2(-40, -40))
+            await _hover(instance, card0, card0.size / 2)
+            _expect(card0.scale.is_equal_approx(Vector2(1.12, 1.12)), "禁用手牌也应悬停放大")
+            await _push_motion(instance, strip)
+            _expect(
+                card0.scale.is_equal_approx(Vector2(1.12, 1.12)),
+                "指针进入本卡右侧交叠带后应保持放大",
+            )
+            _expect(card1.scale.is_equal_approx(Vector2.ONE), "交叠带不应把悬停让给下一张卡")
+            _expect(slot != null and slot.z_index == 1, "交叠带内应保持置顶")
+            var hovered := instance.get_viewport().gui_get_hovered_control()
+            _expect(
+                hovered == card0,
+                "交叠带应命中的是本卡，实际 %s" % ("<null>" if hovered == null else str(hovered.name)),
+            )
+            await _push_motion(instance, Vector2(-40, -40))
+        instance.queue_free()
+        await get_tree().process_frame
+
+    _fake_connect()
+    var playing := await _ten_card_instance(true)
+    if playing != null:
+        var card0: Control = playing.find_child("HandCard0", true, false)
+        _expect(
+            card0 is HandCard and (card0 as HandCard).drag_allowed,
+            "可出牌手牌应允许拖拽",
+        )
+        if card0 is HandCard and (card0 as HandCard).drag_allowed:
+            var top_left: Vector2 = card0.get_global_rect().position
+            var strip := top_left + Vector2(card0.size.x - 16.0, card0.size.y / 2.0)
+            var viewport = playing.get_viewport()
+            await _push_motion(playing, Vector2(-40, -40))
+            await _hover(playing, card0, card0.size / 2)
+            await _push_motion(playing, strip)
+            await _push_button(playing, strip, true)
+            await _push_motion_held(playing, strip + Vector2(24, 0), Vector2(24, 0))
+            _expect(viewport.gui_is_dragging(), "交叠带按下并越过阈值应开始拖拽")
+            if viewport.gui_is_dragging():
+                var data: Variant = viewport.gui_get_drag_data()
+                _expect(
+                    data is Dictionary and int(data.get("handIndex", -1)) == 0,
+                    "交叠带拖拽应拾起本卡",
+                )
+                viewport.gui_cancel_drag()
+        playing.queue_free()
+        await get_tree().process_frame
+    _fake_disconnect()
     GameStore.view = {}
     GameStore.turn = 1
 

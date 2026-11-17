@@ -23,12 +23,16 @@ func setup(hand_card: HandCard, step_width: float) -> void:
 
 
 ## 悬停以底边中点为轴放大：放大后的矩形包含原矩形，指针不会在卡片下缘反复进出。
+##
+## Godot 的 GUI 拾取按树序逆序进行、不比较 `z_index`，右侧交叠带本来会落到下一张卡；
+## 悬停期间让右侧槽位让出鼠标，置顶卡才能在放大后的整个矩形内保持悬停与拖拽。
 func _on_card_mouse_entered() -> void:
     if not is_instance_valid(card):
         return
     z_index = 1
     card.pivot_offset = Vector2(card.size.x * 0.5, card.size.y)
     card.scale = Vector2.ONE * UITheme.factor("hand-hover-scale")
+    _set_later_cards_pointer(false)
 
 
 func _on_card_mouse_exited() -> void:
@@ -41,3 +45,16 @@ func _clear_hover() -> void:
         card.scale = Vector2.ONE
         card.pivot_offset = Vector2.ZERO
     z_index = 0
+    _set_later_cards_pointer(true)
+
+
+## 只处理右侧槽位：左侧槽位在树序中晚于本槽被拾取，且不会被本卡盖住。
+func _set_later_cards_pointer(enabled: bool) -> void:
+    var parent := get_parent()
+    if parent == null:
+        return
+    var filter := Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
+    for index in range(get_index() + 1, parent.get_child_count()):
+        var sibling := parent.get_child(index) as HandSlot
+        if sibling != null and is_instance_valid(sibling.card):
+            sibling.card.mouse_filter = filter
