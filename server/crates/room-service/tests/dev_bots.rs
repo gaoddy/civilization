@@ -1,9 +1,10 @@
 //! `sim::bot::dev` 的端到端测试：7 个机器人 + 1 个「开发者」座位打完整局。
 
-use std::sync::Arc;
+mod common;
+
 use std::time::{Duration, Instant};
 
-use room_service::clock::{Clock, SystemClock};
+use common::start_server;
 use sim::bot::client::{BotConfig, run as run_bot};
 use sim::bot::dev::{DevConfig, run as run_dev};
 use tokio::sync::oneshot;
@@ -17,37 +18,6 @@ fn any_hero() -> String {
         .find(|card| card.is_hero)
         .map(|card| card.id.clone())
         .expect("卡表应有英雄卡")
-}
-
-async fn wait_for_server(addr: std::net::SocketAddr) {
-    let url = format!("ws://{addr}/ws");
-    let deadline = Instant::now() + Duration::from_secs(2);
-    let mut delay = Duration::from_millis(10);
-    loop {
-        match tokio_tungstenite::connect_async(&url).await {
-            Ok((ws, _)) => {
-                drop(ws);
-                return;
-            }
-            Err(error) => {
-                assert!(Instant::now() < deadline, "2 秒内无法连接 {url}: {error}");
-                tokio::time::sleep(delay).await;
-                delay = (delay * 2).min(Duration::from_millis(50));
-            }
-        }
-    }
-}
-
-async fn start_server() -> std::net::SocketAddr {
-    let clock: Arc<dyn Clock> = Arc::new(SystemClock);
-    let (addr, router) = room_service::bind("127.0.0.1:0", clock)
-        .await
-        .expect("绑定端口应当成功");
-    tokio::spawn(async move {
-        let _ = room_service::serve(addr, router).await;
-    });
-    wait_for_server(addr).await;
-    addr
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]

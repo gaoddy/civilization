@@ -2,19 +2,20 @@
 //!
 //! 这是 M1a 唯一允许使用真实 [`SystemClock`] 的测试。
 
-use std::sync::Arc;
-use std::time::{Duration, Instant};
+mod common;
 
+use std::sync::Arc;
+use std::time::Duration;
+
+use common::{ClientWs, connect_with_retry, start_server, wait_for_server};
 use futures_util::{SinkExt, StreamExt};
 use protocol::server::RoomUpdate;
 use protocol::{ErrorCode, ServerEnvelope, ServerMessage};
 use room_service::clock::{Clock, SystemClock};
 use serde_json::{Value, json};
 use sim::bot::client::{BotConfig, run};
-use tokio::net::TcpStream;
 use tokio::sync::oneshot;
 use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
 /// 取仓库内嵌卡表里卡牌 id 升序的前 8 张英雄。
 fn hero_cards() -> Vec<String> {
@@ -26,44 +27,6 @@ fn hero_cards() -> Vec<String> {
         .take(8)
         .map(|card| card.id.clone())
         .collect()
-}
-
-/// 建立 WS 连接；服务端 `bind` 探测端口后立刻释放，`serve` 再重新绑定，两者之间
-/// 存在短暂空窗。默认并行跑多个用例时先到者可能撞上 `ConnectionRefused`，因此
-/// 测试侧统一在这里重试，不改变生产签名。
-async fn connect_with_retry(url: &str) -> ClientWs {
-    let deadline = Instant::now() + Duration::from_secs(2);
-    let mut delay = Duration::from_millis(10);
-    loop {
-        match tokio_tungstenite::connect_async(url).await {
-            Ok((ws, _response)) => return ws,
-            Err(error) => {
-                if Instant::now() >= deadline {
-                    panic!("2 秒内无法连接 {url}: {error}");
-                }
-                tokio::time::sleep(delay).await;
-                delay = (delay * 2).min(Duration::from_millis(50));
-            }
-        }
-    }
-}
-
-/// 等 `serve` 真正绑定端口：用一次成功握手作为就绪信号，随后丢弃探针连接。
-async fn wait_for_server(addr: std::net::SocketAddr) {
-    let url = format!("ws://{addr}/ws");
-    drop(connect_with_retry(&url).await);
-}
-
-async fn start_server() -> std::net::SocketAddr {
-    let clock: Arc<dyn Clock> = Arc::new(SystemClock);
-    let (addr, router) = room_service::bind("127.0.0.1:0", clock)
-        .await
-        .expect("绑定端口应当成功");
-    tokio::spawn(async move {
-        let _ = room_service::serve(addr, router).await;
-    });
-    wait_for_server(addr).await;
-    addr
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
@@ -150,8 +113,6 @@ async fn eight_bots_finish_a_game() {
 // ---------------------------------------------------------------------------
 // 原始 WS 客户端：用于重连、序号与房间生命周期测试。
 // ---------------------------------------------------------------------------
-
-type ClientWs = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
 struct RawClient {
     ws: ClientWs,

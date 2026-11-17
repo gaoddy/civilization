@@ -3,6 +3,9 @@
 //! 用固定 JSON 样例构造协议 `PlayerView`，只经 [`sim::bot::brain::next_intent`]
 //! 做决策，不启网络、不跑引擎。
 
+mod common;
+
+use common::catalog;
 use protocol::intents::Intent;
 use protocol::view::{Phase, PlayerView};
 use serde_json::{Value, json};
@@ -58,10 +61,6 @@ fn view(
         "enabledFactions": ["human", "machine", "biology", "plant", "scholar"]
     });
     serde_json::from_value(json).expect("样例视图应当能反序列化为 PlayerView")
-}
-
-fn catalog() -> rule_engine::data::Catalog {
-    sim::embedded_catalog().expect("内嵌卡表应能加载")
 }
 
 /// 给视图补上手牌与棋盘，用于需要目标的效果牌决策。

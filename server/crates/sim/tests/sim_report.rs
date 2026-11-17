@@ -1,18 +1,11 @@
 //! 结束存活人数采样：用真实引擎状态走完全局，断言 `stats.survivors_at_end`
 //! 等于 `GameOver` 时刻的真实存活人数。
 
+mod common;
+
+use common::catalog;
 use rule_engine::engine::Engine;
 use rule_engine::state::{GameState, Phase};
-
-const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
-const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
-const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
-const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
-
-fn catalog() -> rule_engine::data::Catalog {
-    rule_engine::data::Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
-        .expect("已提交的 v0.1 数据应能完整加载")
-}
 
 fn alive(state: &GameState) -> u8 {
     state
