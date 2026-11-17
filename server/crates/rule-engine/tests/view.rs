@@ -5,12 +5,12 @@
 
 mod common;
 
-use common::{heroes, test_catalog};
+use common::{heroes, set_shop, test_catalog};
 use rule_engine::data::CardType;
 use rule_engine::engine::Engine;
 use rule_engine::intent::RejectCode;
 use rule_engine::state::{
-    AuraEffect, GameState, HandCard, MinionInstance, PendingChoice, Phase, Seat, ShopSlot,
+    AuraEffect, GameState, HandCard, MinionInstance, PendingChoice, Phase, Seat,
 };
 use rule_engine::view::{
     Affordances, PendingChoiceView, PlayerSummaryView, SeatView, SelfView, placement_of, view,
@@ -54,29 +54,6 @@ fn positive_attack_minion_id() -> String {
 /// 构造一个最小可用的棋盘随从实例。
 fn dummy(engine: &Engine, instance_id: u64, card_id: &str) -> MinionInstance {
     MinionInstance::new(&engine.catalog, instance_id, card_id, false)
-}
-
-fn set_shop(state: &mut GameState, seat: Seat, ids: &[Option<String>]) {
-    let len = state.players[usize::from(seat)].shop.len().max(ids.len());
-    let mut shop: Vec<Option<ShopSlot>> = ids
-        .iter()
-        .cloned()
-        .map(|card_id| {
-            card_id.map(|card_id| {
-                let instance_id = state.next_instance_id;
-                state.next_instance_id = instance_id.saturating_add(1);
-                ShopSlot {
-                    instance_id,
-                    card_id,
-                    frozen: false,
-                }
-            })
-        })
-        .collect();
-    while shop.len() < len {
-        shop.push(None);
-    }
-    state.players[usize::from(seat)].shop = shop;
 }
 
 /// 断言所有操作布尔值均为 `false`（`can_end_recruit` 也包含在内）。

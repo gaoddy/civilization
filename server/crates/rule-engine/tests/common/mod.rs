@@ -2,8 +2,11 @@
 
 use std::collections::BTreeMap;
 
-use rule_engine::data::Catalog;
-use rule_engine::state::Seat;
+use rule_engine::combat::{CombatAction, CombatLog};
+use rule_engine::data::{CardType, Catalog};
+use rule_engine::effects::{Effect, parse_effects};
+use rule_engine::engine::Engine;
+use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat, ShopSlot};
 
 pub const CARDS_JSON: &str = include_str!("../../../../data/v0.1/cards.json");
 pub const SKILLS_JSON: &str = include_str!("../../../../data/v0.1/skills.json");
@@ -26,4 +29,103 @@ pub fn heroes() -> BTreeMap<Seat, String> {
         .enumerate()
         .map(|(index, card)| (index as Seat, card.id.clone()))
         .collect()
+}
+
+/// 进入招募阶段的空局：每个座位 30 点生命。
+pub fn setup(seed: u8) -> (Engine, GameState) {
+    let (engine, mut state) = Engine::new(test_catalog(), [seed; 32]);
+    state.phase = Phase::Recruit;
+    state.turn = 1;
+    for player in &mut state.players {
+        player.hp = 30;
+    }
+    (engine, state)
+}
+
+/// 进入招募阶段的空局，并给每个座位 10 点金币。
+pub fn setup_with_gold(seed: u8) -> (Engine, GameState) {
+    let (engine, mut state) = Engine::new(test_catalog(), [seed; 32]);
+    state.phase = Phase::Recruit;
+    state.turn = 1;
+    for player in &mut state.players {
+        player.hp = 30;
+        player.gold = 10;
+    }
+    (engine, state)
+}
+
+/// 用前 8 张英雄卡开局后的状态。
+pub fn started(seed: u8) -> (Engine, GameState) {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [seed; 32]);
+    engine
+        .start_game(&mut state, &heroes())
+        .expect("开局应成功");
+    (engine, state)
+}
+
+/// 开局并进入第一回合招募。
+pub fn turn_started(seed: u8) -> (Engine, GameState) {
+    let (mut engine, mut state) = started(seed);
+    engine.start_turn(&mut state).expect("开始回合应成功");
+    (engine, state)
+}
+
+/// 按卡牌 id 构造一个非金色随从实例。
+pub fn minion(catalog: &Catalog, instance_id: InstanceId, card_id: &str) -> MinionInstance {
+    MinionInstance::new(catalog, instance_id, card_id, false)
+}
+
+/// 把随从放到指定座位的棋盘末尾。
+pub fn place(catalog: &Catalog, state: &mut GameState, seat: Seat, id: InstanceId, card_id: &str) {
+    state.players[usize::from(seat)]
+        .board
+        .push(minion(catalog, id, card_id));
+}
+
+/// 用给定卡牌 id 覆盖某座位的商店槽位；`None` 保留空槽。
+pub fn set_shop(state: &mut GameState, seat: Seat, ids: &[Option<String>]) {
+    let len = state.players[usize::from(seat)].shop.len().max(ids.len());
+    let mut shop: Vec<Option<ShopSlot>> = ids
+        .iter()
+        .cloned()
+        .map(|card_id| {
+            card_id.map(|card_id| {
+                let instance_id = state.next_instance_id;
+                state.next_instance_id = instance_id.saturating_add(1);
+                ShopSlot {
+                    instance_id,
+                    card_id,
+                    frozen: false,
+                }
+            })
+        })
+        .collect();
+    while shop.len() < len {
+        shop.push(None);
+    }
+    state.players[usize::from(seat)].shop = shop;
+}
+
+/// 取某星级的第一张非英雄随从卡 id。
+pub fn minion_id(level: u8) -> String {
+    test_catalog()
+        .cards
+        .values()
+        .find(|card| card.card_type == CardType::Minion && !card.is_hero && card.level == level)
+        .expect("数据中应存在该星级随从")
+        .id
+        .clone()
+}
+
+/// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
+pub fn effects_of(raw: &str) -> Vec<Effect> {
+    parse_effects(raw).expect("测试效果应可解析")
+}
+
+/// 战斗日志中的复生次数。
+pub fn reborn_count(log: &CombatLog) -> usize {
+    log.actions
+        .iter()
+        .filter(|action| matches!(action, CombatAction::Reborn { .. }))
+        .count()
 }
