@@ -149,6 +149,7 @@ fn ctx(seat: Seat) -> EffectCtx {
         target: None,
         event_target: None,
         golden: false,
+        discover_level: None,
     }
 }
 
@@ -590,6 +591,7 @@ fn gain_minion_from_shop_moves_to_hand() {
         .clone();
     state.players[0].shop = vec![
         Some(ShopSlot {
+            instance_id: 4_242,
             card_id: expected.clone(),
             frozen: true,
         });
@@ -607,7 +609,7 @@ fn gain_minion_from_shop_moves_to_hand() {
     assert!(events.is_empty(), "获得随从不是打出，不触发 OnPlay");
     let player = &state.players[0];
     assert_eq!(player.hand.len(), 1);
-    assert_eq!(player.hand[0].card_id, expected);
+    assert_eq!(player.hand[0].card_id(), expected);
     assert_eq!(
         state.pool.get(&expected).copied().unwrap_or(0),
         pool_before - 1,
@@ -637,13 +639,18 @@ fn gain_minion_runs_triple_check() {
         .id
         .clone();
     state.players[0].hand = (0..2)
-        .map(|_| HandCard {
-            card_id: expected.clone(),
-            golden: false,
+        .map(|index| {
+            HandCard::Minion(MinionInstance::new(
+                &test_catalog(),
+                9_000 + index as InstanceId,
+                &expected,
+                false,
+            ))
         })
         .collect();
     state.players[0].shop = vec![
         Some(ShopSlot {
+            instance_id: 4_242,
             card_id: expected.clone(),
             frozen: false,
         });
@@ -660,15 +667,16 @@ fn gain_minion_runs_triple_check() {
     assert!(
         events.iter().any(|event| matches!(
             event,
-            GameEvent::TripleFormed { seat: 0, card_id } if card_id == &expected
+            GameEvent::TripleFormed { seat: 0, card_id, .. } if card_id == &expected
         )),
         "获得第三张同名随从应触发三连"
     );
     let golden = state.players[0]
-        .board
+        .hand
         .iter()
+        .filter_map(HandCard::minion)
         .find(|minion| minion.card_id == expected && minion.golden);
-    assert!(golden.is_some(), "三连应合成金色随从");
+    assert!(golden.is_some(), "三连应合成金色随从并进入手牌");
 }
 
 #[test]
@@ -677,10 +685,7 @@ fn gain_minion_with_full_hand_is_a_no_op() {
     state.players[0].era = Era::Primitive;
     let hand_slots = engine.catalog.config.hand_slots;
     state.players[0].hand = (0..hand_slots)
-        .map(|_| HandCard {
-            card_id: "sickly".to_string(),
-            golden: false,
-        })
+        .map(|_| HandCard::Minion(MinionInstance::new(&test_catalog(), 9_000, "sickly", false)))
         .collect();
 
     let before = state_hash(&state);

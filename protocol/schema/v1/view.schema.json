@@ -11,9 +11,10 @@
     "ShopSlot": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "cardId", "frozen"],
+      "required": ["index", "instanceId", "cardId", "frozen"],
       "properties": {
         "index": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "instanceId": { "type": ["string", "null"], "description": "卡牌实例编号；空槽位为 null" },
         "cardId": { "type": ["string", "null"], "description": "空槽位为 null" },
         "frozen": { "type": "boolean" }
       }
@@ -21,10 +22,15 @@
     "HandCard": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "cardId", "playable", "requiresTarget", "disabledReason"],
+      "required": ["index", "instanceId", "cardId", "golden", "attack", "health", "rewardLevel", "playable", "requiresTarget", "disabledReason"],
       "properties": {
         "index": { "type": "integer", "minimum": 0, "maximum": 9 },
+        "instanceId": { "type": "string", "description": "卡牌实例编号；买入、上手与三连合成沿用同一编号" },
         "cardId": { "type": "string" },
+        "golden": { "type": "boolean", "description": "随从牌为金色三连结果；效果牌恒为 false" },
+        "attack": { "type": ["integer", "null"], "description": "随从牌的当前攻击力（已含成长等全部层数，学者为 0）；效果牌为 null" },
+        "health": { "type": ["integer", "null"], "description": "随从牌的当前生命值；效果牌为 null" },
+        "rewardLevel": { "type": ["integer", "null"], "minimum": 1, "maximum": 6, "description": "「三连奖励」锁定的发现星级；其它牌为 null" },
         "playable": { "type": "boolean", "description": "服务端算好的可打出提示" },
         "requiresTarget": { "type": "boolean", "description": "该牌是否需要玩家指定单一目标" },
         "disabledReason": { "type": ["string", "null"], "description": "不可操作时的错误码" }

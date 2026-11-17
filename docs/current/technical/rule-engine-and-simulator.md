@@ -61,9 +61,11 @@ tests/                       # Python 标准库 unittest
 - 协议十一种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`、`ChooseTarget`。`ChooseDiscover` 与 `ChooseTarget` 都用于消费引擎产生的 `PendingChoice`（发现/进化、目标）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。
 - `PlayCard { hand_index, position, target }`：`position` 只对随从牌生效，是入场后的插入下标，`None` 表示追加到最右；超出当前随从数返回 `INVALID_CHOICE`。效果牌不带落点：目标缺失或不在合法池内时整条意图返回 `NO_VALID_TARGET`，合法池为空时效果落空、意图仍生效。随从牌入场后判定战吼：未带 `target` 且合法池非空时推入 `PendingChoice::Target`，由 `ChooseTarget { minion }` 指定目标；合法池为空（含被过滤器收窄为空）时战吼直接落空、不产生待选。
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
-- `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼、不分配实例编号；`PlayCard` 与 `UseHeroPower` 带 `target: Option<InstanceId>`，M0 由 AI 自动选择目标。
+- 实例编号 `InstanceId` 由 `state.next_instance_id` 单调分配：商店每次刷新的每个槽位（含效果牌槽）各有一个，冻结保留原编号；买入、入手牌、打出到棋盘都沿用该编号。三连合成时新建一个金色编号，并在 `sources` 记录三张原始副本的编号（不参与状态哈希）。复制品按复制方式分配新编号。
+- `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼；手牌保留随从实例（含成长等状态），不再退回卡面基础值。`PlayCard` 与 `UseHeroPower` 带 `target: Option<InstanceId>`，M0 由 AI 自动选择目标。
+- 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录来源星级 +1（封顶 6），打出该牌才登记发现待选。效果牌不进商店、不进任何候选、不扣共享牌池。
 - `PendingChoice::Target { seat, source, card_id, golden }`：目标待选期间该座位除 `ChooseTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。目标待选在 `finish_recruit` 进入战斗前作废（战吼落空）；发现与进化待选允许留到下回合。`ChooseTarget` 要求队首是目标待选、目标是我方棋盘上的随从，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果。
-- `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。
+- `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。视图同时下发 `instanceId`、`golden`，以及随从牌的 `attack` / `health`（当前值，含成长等全部层数，学者为 0）；效果牌这两项为 `null`，`golden` 恒为 `false`，奖励牌另带 `rewardLevel`（锁定的发现星级）。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。
 - `settle::finish_recruit` 幂等：`Recruit` 阶段（超时路径）生成配对并切 `Combat`；`Combat` 阶段只补齐一次配对，不重复发事件、不重复配对。
 - 阶段推进由驱动方按固定顺序调用 `finish_recruit` / `resolve_combat` / `resolve_settle` / `start_turn`，引擎不自行推进时间。
@@ -112,7 +114,7 @@ tests/                       # Python 标准库 unittest
 
 | M0 标准 | 命令 | 证据 |
 | --- | --- | --- |
-| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog_load::loads_all_committed_data` 断言 220 卡 / 118 技能 / 3 Token / 13 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`effects_schema::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
+| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog_load::loads_all_committed_data` 断言 240 卡 / 131 技能 / 3 Token / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`effects_schema::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
 | 数据一致 | `make data-check` | 重新生成后输出 `生成数据无漂移`，退出码 0 |
 | 规则覆盖 | `make test` | `server/crates/rule-engine/tests/` 与 `server/crates/sim/tests/` 的用例全部 `test result: ok`（用例清单见第 7 节）；商店池耗尽留空槽由 `recruit::reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects` 锁定 |
 | 确定性 | `make m0-determinism` | `replay_same_log_100_times_has_same_hash` 通过：100 次重放每次退出码 0，`final_hash` 全部等于原局 |

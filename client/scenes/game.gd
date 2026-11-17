@@ -285,21 +285,34 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
         if card.get("disabledReason") != null:
             entry.tooltip_text = UI.error_text(str(card.get("disabledReason")))
 
+        # 随从牌显示服务端给出的真实身材（含成长等全部层数），效果牌不显示身材。
+        var attack_text := GameCardFace.stat_text(card.get("attack"))
+        var health_text := GameCardFace.stat_text(card.get("health"))
+        var golden := bool(card.get("golden", false))
+        var reward_level: Variant = card.get("rewardLevel")
+        var badge_text := "★" if golden else ""
+        if not golden and reward_level != null:
+            # 奖励牌在角标行显示锁定的发现星级。
+            badge_text = str(int(reward_level))
         entry.add_child(GameCardFace.face(
             card_id,
-            GameCardFace.stat_text(entry_data.get("attack")),
-            GameCardFace.stat_text(entry_data.get("health")),
+            attack_text,
+            health_text,
             GameCardFace.tribe_text(entry_data),
-            "",
+            badge_text,
             str(CardDB.display_cost(card_id)),
             UI.enum_text("era", str(entry_data.get("era", ""))),
         ))
+        if reward_level != null:
+            entry.tooltip_text = tr("ui.game.reward_card.text") % int(reward_level)
 
         entry.payload = {
             "epoch": _view_epoch,
             "handIndex": index,
+            "instanceId": str(card.get("instanceId", "")),
             "cardId": card_id,
             "cardKind": card_kind,
+            "golden": golden,
             "requiresTarget": bool(card.get("requiresTarget", false)),
         }
         entry.drag_allowed = drag_gate(

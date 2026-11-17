@@ -235,6 +235,7 @@ fn aura_ctx(seat: Seat, source: Option<InstanceId>) -> EffectCtx {
         target: None,
         event_target: None,
         golden: false,
+        discover_level: None,
     }
 }
 

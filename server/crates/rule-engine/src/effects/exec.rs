@@ -14,7 +14,9 @@ use std::collections::BTreeMap;
 
 use crate::combat::{self, BattleField, CombatSetup};
 use crate::data::{CardType, Catalog, Tribe};
-use crate::effects::{Duration, Effect, Filter, Op, Pick, Selector, Side, Trigger, Zone};
+use crate::effects::{
+    CopyState, Duration, Effect, Filter, Op, Pick, Selector, Side, Trigger, Zone,
+};
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::intent::{Reject, RejectCode};
@@ -42,6 +44,8 @@ pub struct EffectCtx {
     pub event_target: Option<InstanceId>,
     /// 来源是否为金色（整段效果连续执行两次）。
     pub golden: bool,
+    /// 本次发现锁定的星级（「三连奖励」）；`None` 时发现按玩家时代取星级。
+    pub discover_level: Option<u8>,
 }
 
 impl Engine {
@@ -776,6 +780,7 @@ impl Engine {
                     target: None,
                     event_target: Some(*target),
                     golden: *golden,
+                    discover_level: None,
                 };
                 let _ = self.run_card_effects(state, card_id, Trigger::OnAllyGrowth, &ctx);
             }
@@ -836,12 +841,17 @@ impl Engine {
                 target: None,
                 event_target: Some(summoned),
                 golden,
+                discover_level: None,
             };
             let _ = self.run_card_effects(state, &card_id, Trigger::OnAllySummon, &ctx);
         }
     }
 
     /// 执行 `Copy`：复制随从进手牌或战场，不扣牌池。
+    ///
+    /// `state` 决定复制口径：`base` 只按卡面构造（不继承任何状态），
+    /// `current` 为完全复制，继承成长、繁衍、传染、护盾、已授予关键词与金色标记。
+    /// 金色随从复制的仍是金色，卡面基础值同样 ×2。
     fn apply_recruit_copy(
         &mut self,
         state: &mut GameState,
@@ -855,45 +865,70 @@ impl Engine {
         let hand_slots = self.catalog.config.hand_slots;
         let board_slots = self.catalog.config.board_slots;
         let to = effect.params.to.unwrap_or(Zone::Hand);
+        let full = effect.params.state.unwrap_or(CopyState::Base) == CopyState::Current;
 
-        let mut copies: Vec<(String, bool)> = Vec::new();
+        let mut copies: Vec<MinionInstance> = Vec::new();
         if effect.params.from == Some(Zone::Hand) {
-            if let Some(card) = player.hand.iter().find(|card| {
-                self.catalog
-                    .cards
-                    .get(&card.card_id)
-                    .is_some_and(|card| card.card_type == CardType::Minion)
-            }) {
-                copies.push((card.card_id.clone(), card.golden));
+            if let Some(minion) = player.hand.iter().find_map(HandCard::minion) {
+                copies.push(self.copy_of_catalog(minion, full));
             }
         } else {
             for id in targets {
                 if let Some(minion) = player.board.iter().find(|m| m.instance_id == *id) {
-                    copies.push((minion.card_id.clone(), minion.golden));
+                    copies.push(self.copy_of_catalog(minion, full));
                 }
             }
         }
 
-        for (card_id, golden) in copies {
+        for mut copy in copies {
             let player = &mut state.players[usize::from(ctx.seat)];
             match to {
                 Zone::Hand => {
                     if player.hand.len() < hand_slots {
-                        player.hand.push(HandCard { card_id, golden });
+                        let id = state.next_instance_id;
+                        state.next_instance_id = id.saturating_add(1);
+                        copy.instance_id = id;
+                        copy.sources.clear();
+                        player.hand.push(HandCard::Minion(copy));
                     }
                 }
                 Zone::Board => {
                     if player.board.len() < board_slots {
                         let id = state.next_instance_id;
                         state.next_instance_id = id.saturating_add(1);
-                        player
-                            .board
-                            .push(new_minion(&self.catalog, id, &card_id, golden));
+                        copy.instance_id = id;
+                        copy.sources.clear();
+                        player.board.push(copy);
                     }
                 }
                 Zone::Shop => {}
             }
         }
+    }
+
+    /// 按复制口径生成新实例：`full` 时整体克隆来源，否则按卡面重建。
+    ///
+    /// 两种口径都给副本分配新的实例编号并清空来源记录；战场临时属性层
+    /// （`turn`、`aura`）不随副本离开战场。
+    fn copy_of_catalog(&self, source: &MinionInstance, full: bool) -> MinionInstance {
+        let mut copy = if full {
+            source.clone()
+        } else {
+            new_minion(
+                &self.catalog,
+                source.instance_id,
+                &source.card_id,
+                source.golden,
+            )
+        };
+        copy.stats.attack.clear_turn();
+        copy.stats.health.clear_turn();
+        copy.stats.attack.set_aura(0);
+        copy.stats.health.set_aura(0);
+        copy.attacks_left = 0;
+        copy.cannot_attack = false;
+        copy.sources.clear();
+        copy
     }
 
     /// 回合开始传染致死：结算亡语（不含播种技能本身）。
@@ -969,6 +1004,7 @@ impl Engine {
                     target: None,
                     event_target: None,
                     golden: false,
+                    discover_level: None,
                 };
                 self.fire_combat_effects(field, rng, &effects, ctx);
             }
@@ -1010,6 +1046,7 @@ impl Engine {
             target: None,
             event_target,
             golden: minion.golden,
+            discover_level: None,
         };
         self.fire_combat_effects(field, rng, &effects, ctx);
     }
@@ -1038,6 +1075,7 @@ impl Engine {
             target: None,
             event_target: None,
             golden: minion.golden,
+            discover_level: None,
         };
         self.fire_combat_effects(field, rng, &effects, ctx);
     }
@@ -1099,6 +1137,7 @@ impl Engine {
                 target: None,
                 event_target,
                 golden: minion.golden,
+                discover_level: None,
             };
             self.fire_combat_effects(field, rng, &effects, ctx);
         }
@@ -1334,6 +1373,7 @@ impl Engine {
                         break;
                     }
                     copy.instance_id = field.new_instance_id();
+                    copy.sources.clear();
                     let _ = field.append(&self.catalog, side, copy);
                 }
             }

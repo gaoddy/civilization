@@ -63,6 +63,7 @@ const PARAM_KEYS: &[&str] = &[
     "free",
     "era",
     "level",
+    "state",
 ];
 
 pub(crate) type OpSpec = (
@@ -103,7 +104,7 @@ pub(crate) fn op_spec(op: Op) -> OpSpec {
             &["token", "card", "when"],
             &[&["token", "card"]],
         ),
-        Op::Copy => (&["to"], &["from", "type"], &[]),
+        Op::Copy => (&["to"], &["from", "type", "state"], &[]),
         Op::Discover => (&["pool", "choose"], &[], &[]),
         Op::RefreshShop => (&[], &["free", "extra"], &[]),
         Op::AddShopSlot => (&["era", "count"], &[], &[]),
@@ -139,6 +140,7 @@ impl Params {
             "free" => self.free.is_some(),
             "era" => self.era.is_some(),
             "level" => self.level.is_some(),
+            "state" => self.state.is_some(),
             _ => false,
         }
     }

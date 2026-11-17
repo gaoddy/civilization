@@ -175,7 +175,12 @@ fn targets_first_board_minion_when_hand_requires_target() {
         view,
         json!([{
             "index": 0,
+            "instanceId": "2001",
             "cardId": "yuandandan",
+            "golden": false,
+            "attack": null,
+            "health": null,
+            "rewardLevel": null,
             "disabledReason": null,
             "playable": true,
             "requiresTarget": true
@@ -216,7 +221,12 @@ fn omits_target_when_hand_requires_target_but_board_is_empty() {
         view,
         json!([{
             "index": 0,
+            "instanceId": "2001",
             "cardId": "yuandandan",
+            "golden": false,
+            "attack": null,
+            "health": null,
+            "rewardLevel": null,
             "disabledReason": null,
             "playable": true,
             "requiresTarget": true

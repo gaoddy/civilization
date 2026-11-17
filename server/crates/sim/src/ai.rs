@@ -108,7 +108,7 @@ pub fn discover_choice(player: &PlayerState, candidates: &[String], catalog: &Ca
         player
             .hand
             .iter()
-            .filter(|card| card.card_id == card_id)
+            .filter(|card| card.card_id() == card_id)
             .count()
             + player
                 .board
@@ -304,10 +304,22 @@ fn choose_buy(state: &GameState, player: &PlayerState, catalog: &Catalog) -> Opt
 /// 棋盘有空位时把手牌里的随从打上棋盘；手牌已满导致买不了牌时，
 /// 卖出本回合最弱的随从腾出棋盘空位，让手牌能继续打出。
 fn choose_fill_board(state: &GameState, player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
+    // 三连奖励牌先于普通随从打出：它是零费发现，保证奖励路径被覆盖。
+    if let Some(index) = player
+        .hand
+        .iter()
+        .position(|card| card.reward_level().is_some())
+    {
+        return u8::try_from(index).ok().map(|hand_index| Intent::PlayCard {
+            hand_index,
+            position: None,
+            target: None,
+        });
+    }
     let minion_in_hand = player.hand.iter().enumerate().find(|(_, card)| {
         catalog
             .cards
-            .get(&card.card_id)
+            .get(card.card_id())
             .is_some_and(|card| card.card_type == CardType::Minion)
     });
     let (index, _) = minion_in_hand?;

@@ -65,6 +65,8 @@ pub struct SelfView {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ShopSlotView {
     pub index: u8,
+    /// 卡牌实例编号；空槽为 `None`。
+    pub instance_id: Option<u64>,
     pub card_id: Option<String>,
     pub frozen: bool,
 }
@@ -73,7 +75,17 @@ pub struct ShopSlotView {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HandCardView {
     pub index: u8,
+    /// 卡牌实例编号；买入、上手、三连合成都沿用同一编号。
+    pub instance_id: u64,
     pub card_id: String,
+    /// 随从牌为金色三连结果；效果牌恒为 `false`。
+    pub golden: bool,
+    /// 随从牌的真实攻击力（已含成长等全部层数）；效果牌为 `None`。
+    pub attack: Option<i32>,
+    /// 随从牌的真实生命值；效果牌为 `None`。
+    pub health: Option<i32>,
+    /// 「三连奖励」牌锁定的发现星级；其它牌为 `None`。
+    pub reward_level: Option<u8>,
     /// 该牌是否需要玩家指定单一目标（效果牌口径，随从牌恒为 `false`）。
     pub requires_target: bool,
 }
@@ -331,6 +343,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .enumerate()
         .map(|(index, shop_slot)| ShopSlotView {
             index: u8::try_from(index).unwrap_or(u8::MAX),
+            instance_id: shop_slot.as_ref().map(|slot| slot.instance_id),
             card_id: shop_slot.as_ref().map(|slot| slot.card_id.clone()),
             frozen: shop_slot.as_ref().is_some_and(|slot| slot.frozen),
         })
@@ -340,11 +353,22 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .hand
         .iter()
         .enumerate()
-        .map(|(index, hand_card)| HandCardView {
-            index: u8::try_from(index).unwrap_or(u8::MAX),
-            requires_target: engine
-                .requires_target(&hand_card.card_id, crate::effects::Trigger::OnPlayEffect),
-            card_id: hand_card.card_id.clone(),
+        .map(|(index, hand_card)| {
+            let minion = hand_card.minion();
+            HandCardView {
+                index: u8::try_from(index).unwrap_or(u8::MAX),
+                instance_id: hand_card.instance_id(),
+                card_id: hand_card.card_id().to_string(),
+                golden: hand_card.golden(),
+                attack: minion.map(|minion| minion.attack()),
+                health: minion.map(|minion| minion.health()),
+                reward_level: hand_card.reward_level(),
+                requires_target: minion.is_none()
+                    && engine.requires_target(
+                        hand_card.card_id(),
+                        crate::effects::Trigger::OnPlayEffect,
+                    ),
+            }
         })
         .collect();
 

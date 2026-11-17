@@ -3303,6 +3303,23 @@
     "tribe": "machine"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 0,
+    "display_cost": 0,
+    "era": "prehistoric",
+    "health": null,
+    "id": "triple-reward",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [
+      "trigger-discover-tribe-minion"
+    ],
+    "subtype": null,
+    "tribe": "general"
+  },
+  {
     "attack": 3,
     "card_type": "minion",
     "cost": null,

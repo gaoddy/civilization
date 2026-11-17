@@ -62,9 +62,14 @@ fn set_shop(state: &mut GameState, seat: Seat, ids: &[Option<String>]) {
         .iter()
         .cloned()
         .map(|card_id| {
-            card_id.map(|card_id| ShopSlot {
-                card_id,
-                frozen: false,
+            card_id.map(|card_id| {
+                let instance_id = state.next_instance_id;
+                state.next_instance_id = instance_id.saturating_add(1);
+                ShopSlot {
+                    instance_id,
+                    card_id,
+                    frozen: false,
+                }
             })
         })
         .collect();
@@ -132,10 +137,9 @@ fn view_never_exposes_other_seats_private_state() {
         1,
         &[Some(private_card.clone()), Some(private_card.clone())],
     );
-    state.players[1].hand.push(HandCard {
-        card_id: private_hand.clone(),
-        golden: false,
-    });
+    state.players[1]
+        .hand
+        .push(HandCard::effect(9_000, &private_hand.clone()));
 
     let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
 
@@ -528,10 +532,14 @@ fn recruited_seat_cannot_act_but_can_end_recruit() {
     let (engine, mut state) = setup();
     let card = minion_id();
     set_shop(&mut state, 0, &[Some(card.clone())]);
-    state.players[0].hand.push(HandCard {
-        card_id: card.clone(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(MinionInstance::new(
+            &engine.catalog,
+            9_000,
+            &card,
+            false,
+        )));
     state.players[0].board.push(dummy(&engine, 1, &card));
     state.players[0].gold = 10;
     state.players[0].recruit_done = true;
@@ -559,10 +567,14 @@ fn eliminated_seat_disables_all_affordances() {
     let (engine, mut state) = setup();
     let card = minion_id();
     set_shop(&mut state, 0, &[Some(card.clone())]);
-    state.players[0].hand.push(HandCard {
-        card_id: card.clone(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(MinionInstance::new(
+            &engine.catalog,
+            9_000,
+            &card,
+            false,
+        )));
     state.players[0].board.push(dummy(&engine, 1, &card));
     state.players[0].gold = 10;
     state.players[0].eliminated = true;
@@ -581,10 +593,9 @@ fn unknown_seat_has_no_view() {
 #[test]
 fn hand_card_requires_target_for_target_effect_card() {
     let (engine, mut state) = setup();
-    state.players[0].hand.push(HandCard {
-        card_id: "chengbang-faling".to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, "chengbang-faling"));
 
     let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
     assert!(
@@ -596,10 +607,9 @@ fn hand_card_requires_target_for_target_effect_card() {
 #[test]
 fn hand_card_requires_target_false_for_plain_effect_card() {
     let (engine, mut state) = setup();
-    state.players[0].hand.push(HandCard {
-        card_id: "aolinpike-jidian".to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_000, "aolinpike-jidian"));
 
     let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
     assert!(
@@ -611,10 +621,14 @@ fn hand_card_requires_target_false_for_plain_effect_card() {
 #[test]
 fn hand_card_requires_target_false_for_minion_card() {
     let (engine, mut state) = setup();
-    state.players[0].hand.push(HandCard {
-        card_id: "archimedes".to_string(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(MinionInstance::new(
+            &engine.catalog,
+            9_000,
+            "archimedes",
+            false,
+        )));
 
     let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
     assert!(
@@ -647,10 +661,14 @@ fn affordances_blocked_while_target_pending() {
     let (engine, mut state) = setup();
     let card = minion_id();
     set_shop(&mut state, 0, &[Some(card.clone())]);
-    state.players[0].hand.push(HandCard {
-        card_id: card.clone(),
-        golden: false,
-    });
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(MinionInstance::new(
+            &engine.catalog,
+            9_000,
+            &card,
+            false,
+        )));
     state.players[0].board.push(dummy(&engine, 1, &card));
     state.players[0].gold = 10;
     state.pending.push_back(PendingChoice::Target {

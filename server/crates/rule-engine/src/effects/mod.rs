@@ -127,6 +127,16 @@ pub struct KeywordSpec {
     pub value: Option<i32>,
 }
 
+/// `Copy` 的复制口径。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CopyState {
+    /// 按卡面基础值生成一张新牌，不继承来源状态。
+    Base,
+    /// 完整继承来源实例的当前状态。
+    Current,
+}
+
 /// 区域。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -193,6 +203,8 @@ pub struct Params {
     pub free: Option<bool>,
     pub era: Option<String>,
     pub level: Option<String>,
+    /// `Copy` 的复制口径：缺省按卡面复制原始牌，`current` 为完全复制当前状态。
+    pub state: Option<CopyState>,
 }
 
 /// 一段结构化效果。

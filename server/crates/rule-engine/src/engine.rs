@@ -313,6 +313,7 @@ impl Engine {
                 target: None,
                 event_target: None,
                 golden: minion.golden,
+                discover_level: None,
             };
             self.fire_death_recruit(state, &minion.card_id, &ctx);
             if self.card_has_keyword(&minion.card_id, "sow") {
@@ -362,6 +363,7 @@ impl Engine {
                     target: None,
                     event_target: None,
                     golden,
+                    discover_level: None,
                 },
             ));
         }

@@ -2501,13 +2501,25 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 ///{
 ///  "type": "object",
 ///  "required": [
+///    "attack",
 ///    "cardId",
 ///    "disabledReason",
+///    "golden",
+///    "health",
 ///    "index",
+///    "instanceId",
 ///    "playable",
-///    "requiresTarget"
+///    "requiresTarget",
+///    "rewardLevel"
 ///  ],
 ///  "properties": {
+///    "attack": {
+///      "description": "随从牌的当前攻击力（已含成长等全部层数，学者为 0）；效果牌为 null",
+///      "type": [
+///        "integer",
+///        "null"
+///      ]
+///    },
 ///    "cardId": {
 ///      "type": "string"
 ///    },
@@ -2518,10 +2530,25 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 ///        "null"
 ///      ]
 ///    },
+///    "golden": {
+///      "description": "随从牌为金色三连结果；效果牌恒为 false",
+///      "type": "boolean"
+///    },
+///    "health": {
+///      "description": "随从牌的当前生命值；效果牌为 null",
+///      "type": [
+///        "integer",
+///        "null"
+///      ]
+///    },
 ///    "index": {
 ///      "type": "integer",
 ///      "maximum": 9.0,
 ///      "minimum": 0.0
+///    },
+///    "instanceId": {
+///      "description": "卡牌实例编号；买入、上手与三连合成沿用同一编号",
+///      "type": "string"
 ///    },
 ///    "playable": {
 ///      "description": "服务端算好的可打出提示",
@@ -2530,6 +2557,15 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 ///    "requiresTarget": {
 ///      "description": "该牌是否需要玩家指定单一目标",
 ///      "type": "boolean"
+///    },
+///    "rewardLevel": {
+///      "description": "「三连奖励」锁定的发现星级；其它牌为 null",
+///      "type": [
+///        "integer",
+///        "null"
+///      ],
+///      "maximum": 6.0,
+///      "minimum": 1.0
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -2539,17 +2575,29 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct HandCard {
+    ///随从牌的当前攻击力（已含成长等全部层数，学者为 0）；效果牌为 null
+    pub attack: ::std::option::Option<i64>,
     #[serde(rename = "cardId")]
     pub card_id: ::std::string::String,
     ///不可操作时的错误码
     #[serde(rename = "disabledReason")]
     pub disabled_reason: ::std::option::Option<::std::string::String>,
+    ///随从牌为金色三连结果；效果牌恒为 false
+    pub golden: bool,
+    ///随从牌的当前生命值；效果牌为 null
+    pub health: ::std::option::Option<i64>,
     pub index: i64,
+    ///卡牌实例编号；买入、上手与三连合成沿用同一编号
+    #[serde(rename = "instanceId")]
+    pub instance_id: ::std::string::String,
     ///服务端算好的可打出提示
     pub playable: bool,
     ///该牌是否需要玩家指定单一目标
     #[serde(rename = "requiresTarget")]
     pub requires_target: bool,
+    ///「三连奖励」锁定的发现星级；其它牌为 null
+    #[serde(rename = "rewardLevel")]
+    pub reward_level: ::std::option::Option<::std::num::NonZeroU64>,
 }
 impl ::std::convert::From<&HandCard> for HandCard {
     fn from(value: &HandCard) -> Self {
@@ -4486,7 +4534,8 @@ impl ::std::convert::From<&ShopAffordance> for ShopAffordance {
 ///  "required": [
 ///    "cardId",
 ///    "frozen",
-///    "index"
+///    "index",
+///    "instanceId"
 ///  ],
 ///  "properties": {
 ///    "cardId": {
@@ -4503,6 +4552,13 @@ impl ::std::convert::From<&ShopAffordance> for ShopAffordance {
 ///      "type": "integer",
 ///      "maximum": 5.0,
 ///      "minimum": 0.0
+///    },
+///    "instanceId": {
+///      "description": "卡牌实例编号；空槽位为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -4517,6 +4573,9 @@ pub struct ShopSlot {
     pub card_id: ::std::option::Option<::std::string::String>,
     pub frozen: bool,
     pub index: i64,
+    ///卡牌实例编号；空槽位为 null
+    #[serde(rename = "instanceId")]
+    pub instance_id: ::std::option::Option<::std::string::String>,
 }
 impl ::std::convert::From<&ShopSlot> for ShopSlot {
     fn from(value: &ShopSlot) -> Self {

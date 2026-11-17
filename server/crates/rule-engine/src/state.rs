@@ -203,6 +203,8 @@ pub struct MinionInstance {
     pub reborn_used: bool,
     pub attacks_left: u8,
     pub cannot_attack: bool,
+    /// 三连合成时被合并的三张实例编号（升序）；非三连合成恒为空。
+    pub sources: Vec<InstanceId>,
 }
 
 impl MinionInstance {
@@ -230,6 +232,7 @@ impl MinionInstance {
             reborn_used: false,
             attacks_left: 0,
             cannot_attack: false,
+            sources: Vec::new(),
         }
     }
 
@@ -259,15 +262,76 @@ impl MinionInstance {
 /// 商店中的一个卡槽。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ShopSlot {
+    /// 这次出现的卡牌实例编号；买入后由手牌沿用。
+    pub instance_id: InstanceId,
     pub card_id: String,
     pub frozen: bool,
 }
 
 /// 手牌中的一张卡。
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct HandCard {
-    pub card_id: String,
-    pub golden: bool,
+pub enum HandCard {
+    /// 随从牌：编号、卡牌、金色标记与全部状态都在随从实例上。
+    Minion(MinionInstance),
+    /// 效果牌：只有身份与「三连奖励」锁定的发现星级。
+    Effect {
+        instance_id: InstanceId,
+        card_id: String,
+        reward_level: Option<u8>,
+    },
+}
+
+impl HandCard {
+    /// 按卡牌目录构造一张无状态的效果牌。
+    pub fn effect(instance_id: InstanceId, card_id: &str) -> Self {
+        Self::Effect {
+            instance_id,
+            card_id: card_id.to_string(),
+            reward_level: None,
+        }
+    }
+
+    pub fn card_id(&self) -> &str {
+        match self {
+            Self::Minion(minion) => &minion.card_id,
+            Self::Effect { card_id, .. } => card_id,
+        }
+    }
+
+    pub fn instance_id(&self) -> InstanceId {
+        match self {
+            Self::Minion(minion) => minion.instance_id,
+            Self::Effect { instance_id, .. } => *instance_id,
+        }
+    }
+
+    pub fn golden(&self) -> bool {
+        match self {
+            Self::Minion(minion) => minion.golden,
+            Self::Effect { .. } => false,
+        }
+    }
+
+    pub fn reward_level(&self) -> Option<u8> {
+        match self {
+            Self::Minion(_) => None,
+            Self::Effect { reward_level, .. } => *reward_level,
+        }
+    }
+
+    pub fn minion(&self) -> Option<&MinionInstance> {
+        match self {
+            Self::Minion(minion) => Some(minion),
+            Self::Effect { .. } => None,
+        }
+    }
+
+    pub fn minion_mut(&mut self) -> Option<&mut MinionInstance> {
+        match self {
+            Self::Minion(minion) => Some(minion),
+            Self::Effect { .. } => None,
+        }
+    }
 }
 
 /// 单个玩家的状态。

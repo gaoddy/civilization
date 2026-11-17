@@ -160,6 +160,7 @@ fn hash_player(hasher: &mut Hasher, player: &PlayerState) {
         match slot {
             Some(slot) => {
                 hasher.u8(1);
+                hasher.u64(slot.instance_id);
                 hasher.str(&slot.card_id);
                 hasher.bool(slot.frozen);
             }
@@ -171,8 +172,28 @@ fn hash_player(hasher: &mut Hasher, player: &PlayerState) {
 
     hasher.len(player.hand.len());
     for card in &player.hand {
-        hasher.str(&card.card_id);
-        hasher.bool(card.golden);
+        match card {
+            crate::state::HandCard::Minion(minion) => {
+                hasher.u8(0);
+                hash_minion(hasher, minion);
+            }
+            crate::state::HandCard::Effect {
+                instance_id,
+                card_id,
+                reward_level,
+            } => {
+                hasher.u8(1);
+                hasher.u64(*instance_id);
+                hasher.str(card_id);
+                match reward_level {
+                    Some(level) => {
+                        hasher.u8(1);
+                        hasher.u8(*level);
+                    }
+                    None => hasher.u8(0),
+                }
+            }
+        }
     }
 
     hasher.opt_str(player.hero.as_deref());

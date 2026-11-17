@@ -5,8 +5,6 @@
 //! `NonZeroU64`、`[String; 5]` 与 `chrono::DateTime` 约束都在这里一次性适配，
 //! 调用方（`game.rs`）只需提供已校验的引擎视图与座位表。
 
-use std::num::NonZeroU64;
-
 use chrono::{DateTime, Utc};
 use protocol::view::{
     Affordances, BoardAffordance, BoardMinion, HandAffordance, HandCard, PendingChoice,
@@ -18,6 +16,8 @@ use protocol::{
 use rule_engine::combat;
 use rule_engine::data::Catalog;
 use rule_engine::intent::RejectCode;
+use std::num::NonZeroU64;
+
 use rule_engine::state::{MinionInstance, Phase};
 use rule_engine::view::{
     MinionStatsView, PendingChoiceView, PlayerSummaryView, SeatView, SelfView, ShopSlotView,
@@ -135,7 +135,14 @@ fn self_to_protocol(
                 .iter()
                 .find(|candidate| candidate.index == card.index);
             HandCard {
+                instance_id: card.instance_id.to_string(),
                 card_id: card.card_id.clone(),
+                golden: card.golden,
+                attack: card.attack.map(i64::from),
+                health: card.health.map(i64::from),
+                reward_level: card
+                    .reward_level
+                    .and_then(|level| NonZeroU64::new(u64::from(level))),
                 requires_target: card.requires_target,
                 disabled_reason: affordance
                     .and_then(|candidate| candidate.disabled_reason)
@@ -264,6 +271,7 @@ fn summary_to_protocol(
 
 fn shop_slot_to_protocol(slot: &ShopSlotView) -> ShopSlot {
     ShopSlot {
+        instance_id: slot.instance_id.map(|id| id.to_string()),
         card_id: slot.card_id.clone(),
         frozen: slot.frozen,
         index: i64::from(slot.index),
