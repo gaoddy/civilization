@@ -16,11 +16,13 @@ audit:
 data:
 	$(PYTHON) scripts/gen_card_data.py
 	$(PYTHON) scripts/gen_client_data.py
+	$(PYTHON) scripts/gen_text.py
 
 data-check:
 	$(PYTHON) scripts/gen_card_data.py --check
 	$(PYTHON) scripts/gen_client_data.py --check
 	$(PYTHON) scripts/audit_effects.py
+	$(PYTHON) scripts/gen_text.py --check
 
 protocol:
 	$(PYTHON) scripts/gen_protocol_gdscript.py
@@ -66,9 +68,10 @@ client-check:
 	$(MAKE) protocol-check
 	$(MAKE) data-check
 	$(PYTHON) -m unittest tests.test_client_boundary -v
+	$(PYTHON) -m unittest tests.test_i18n -v
 	$(MAKE) client-import
 
-client-smoke:
+client-smoke: client-import
 	@mkdir -p output
 	@for scene in client/tests/ui_smoke*.tscn; do \
 	  name=$$(basename $$scene .tscn); \
@@ -81,13 +84,13 @@ client-smoke:
 m1b-build:
 	cd server && cargo build -q -p room-service -p sim
 
-m1b-e2e: m1b-build
+m1b-e2e: client-import m1b-build
 	GODOT="$(GODOT)" bash scripts/m1b_e2e.sh
 
 # 本地联调：起服务端与 7 个机器人，打印房间码后等开发者在大厅加入。
 DEV_PORT ?= 8080
 
-dev-bots: m1b-build
+dev-bots: client-import m1b-build
 	DEV_PORT=$(DEV_PORT) bash scripts/dev_bots.sh
 
 m0-determinism:
