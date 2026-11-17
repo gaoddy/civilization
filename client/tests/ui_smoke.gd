@@ -199,22 +199,8 @@ func _check_game() -> void:
         )
         await _push_motion(instance, Vector2(-40, -40))
         _expect(not detail.is_visible_in_tree(), "移出商店卡矩形应隐藏详情面板")
-    # 时代在所有位置显示具体名称（夹具自我时代 2、对手时代 1）。
-    var era_pill = instance.find_child("EraPill", true, false)
-    _expect(
-        era_pill != null and str(era_pill.text) == "时代 原始",
-        "顶栏应显示具体时代名，实际：%s" % (era_pill.text if era_pill != null else "缺失")
-    )
-    var self_hero = instance.find_child("SelfHeroPanel", true, false)
-    _expect(
-        self_hero != null and _node_text(self_hero).contains("时代 原始"),
-        "右侧属性行应显示具体时代名"
-    )
-    var players_rail = instance.find_child("PlayersRail", true, false)
-    if players_rail != null:
-        var rail_text := _node_text(players_rail)
-        _expect(rail_text.contains("时代 原始"), "积分榜本人行应显示时代名：%s" % rail_text)
-        _expect(rail_text.contains("时代 史前"), "积分榜对手行应显示时代名：%s" % rail_text)
+    # 时代名展示已随顶栏/右栏改版迁出本场景：顶栏删除由 ui_smoke_side 覆盖，
+    # 座位行不再显示时代、悬停详情才显示时代由 ui_smoke_seats 覆盖。
     # 重新显示详情，再打开选择浮层，确认浮层会隐藏详情层。
     if detail != null and card != null:
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
@@ -486,11 +472,9 @@ func _check_stale_combat_not_shown() -> void:
         return
     var own_row = instance.find_child("CombatOwnRow", true, false)
     var banner = instance.find_child("CombatBanner", true, false)
-    var log_text = instance.find_child("LogText", true, false)
     _expect(own_row != null and own_row.get_child_count() == 0, "上一回合战报不应渲染随从行")
     _expect(banner != null and not banner.visible, "上一回合战报不应显示横幅")
-    _expect(log_text != null and not str(log_text.text).contains("[战斗]"), "战报行不应显示上一回合战斗：%s"
-        % ("" if log_text == null else str(log_text.text)))
+    # 事件流已删除（ui_smoke_side 断言 LogText 不存在），旧战报不再有日志行可查。
     instance.queue_free()
     await get_tree().process_frame
 
