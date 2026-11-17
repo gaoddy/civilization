@@ -190,7 +190,6 @@ tests/                       # Python 标准库 unittest
 - `CombatLog` 除动作序列外记录与动作同序同长的 `states`：每条动作执行后受影响随从的快照 `MinionSnapshot { instance_id, attack, health, alive }`——`attack` 一条带攻方与受方两个快照，`death`/`reborn`/`contagion`/`summon` 各带一个。召唤动作 `CombatAction::Summon { minion, card_id, golden, seat, position }` 记录插入位置，`position` 是该随从在存活随从序列中的下标（阵亡条目不计数，上界由 `board_slots` 决定），召唤物不在战前快照中，位置只从该字段读取；它的那条快照带召唤瞬间的实际攻防（含光环折叠与战斗内加成），房间服务用它填展示数值。
 - 战后 `write_back_persistent`（`server/crates/rule-engine/src/settle.rs`）只回写 `contagion` 与 `stats.*.growth`；持久棋盘上的随从按层和重算当前值（满血进入下一回合），死亡不改变持久棋盘，战斗伤害、回合效果与光环都不回写。
 - 进入结算时 `clear_combat_duration` 调用 `clear_turn` 清除攻防的 `turn` 层，同时保留 `granted` 的时长清理与禁攻规则。
-- `strip_ghost` 只保留 `initial + growth`，丢弃 `permanent`、`turn`、`aura` 与受击差值，并按 `initial + growth` 重算 `current`；`breed`、`contagion` 保留，`breed_applied` 重置；授予关键词与战斗内临时标记一并重置。
-- 镜像战（`settle.rs::resolve_mirror`）在折叠光环后用 `renumber_ghost` 给幽灵重新编号：快照沿用原 `instance_id`，同一随从跨回合保留时与当前阵容重号，战斗内的按 id 定位会让幽灵的伤害落到己方克隆上。改号只发生在本次模拟的克隆里，`previous_board` 与分配器不受影响。
+- 幽灵战（`settle.rs::resolve_ghost`）的幽灵来自 `state.ranking`（全部出局者，最近出局在前）：每回合用 `Stream::Matchmaking` 随机抽一名，可能连续抽到同一人；没有出局者时幽灵为空阵容，落单座位仍产生配对与战报。幽灵取其最终棋盘（死亡时的真实数值，保留成长与永久增益），并按幽灵自己的光环来源（`player_auras`）折叠一次；不结算英雄被动、不产生手牌、不写回牌池与持久棋盘。若幽灵与己方棋盘实例编号重号，`renumber_ghost` 只在本次模拟的克隆上改号。双方同回合清场判平局；幽灵获胜时落单座位按伤害公式扣血，落单座位获胜时计入 `last_won`/`last_winner`。
 - 光环只经 `fold_auras` 折叠进克隆：把 `state.auras` 的派生值写入克隆的 `aura` 层并保留「光环失效不致死」的夹紧，持久实例的 `aura` 层始终为 0。
 - `hash.rs` 编码 `stats` 各分量（含 `current`）与 `is_scholar`；编码变化会改变状态哈希，同代码重放仍保持确定。

@@ -3,6 +3,7 @@ id: fangzhen
 name: 方阵
 card_type: 效果
 level: 2
+era: 古典
 tribe: 人类
 cost: 1
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-friendly-human-taunt-until-turn-end]
 | 名称 | 方阵 |
 | 类型 | 效果 |
 | 星级 | 2 |
+| 时代 | 古典 |
 | 流派 | 人类 |
 | 技能 | trigger-friendly-human-taunt-until-turn-end |
 | 费用 | 1 |

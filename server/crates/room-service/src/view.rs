@@ -43,6 +43,7 @@ pub fn to_protocol(
     deadline: &str,
     seats: &[SeatInfo; 8],
     board_slots: usize,
+    hp_cap: i32,
 ) -> Result<PlayerView, ProtocolError> {
     let seat_index = usize::from(seat_view.seat);
     let me = seats.get(seat_index).ok_or(ProtocolError("BAD_PAYLOAD"))?;
@@ -70,6 +71,13 @@ pub fn to_protocol(
 
     Ok(PlayerView {
         board_slots: NonZeroU64::new(u64::try_from(board_slots).unwrap_or(u64::MAX))
+            .ok_or(ProtocolError("BAD_PAYLOAD"))?,
+        // 战报由调用方在组装后填入 `GameTask.combat_log`。
+        combat_log: Vec::new(),
+        // 生命上限来自 catalog 配置；非正值说明配置被破坏。
+        hp_cap: u64::try_from(hp_cap)
+            .ok()
+            .and_then(NonZeroU64::new)
             .ok_or(ProtocolError("BAD_PAYLOAD"))?,
         enabled_factions,
         opponent_player_id: seat_view
@@ -245,6 +253,10 @@ fn summary_to_protocol(
         managed: false,
         placement: summary.placement.map(i64::from),
         player_id: info.player_id.clone(),
+        // `rank_of` 恒 ≥ 1，`NonZeroU64` 映射不会丢值。
+        rank: summary
+            .rank
+            .and_then(|rank| NonZeroU64::new(u64::from(rank))),
         recruited: summary.recruited,
         seat: i64::from(summary.seat),
     })

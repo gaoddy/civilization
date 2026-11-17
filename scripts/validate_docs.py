@@ -84,13 +84,13 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"繁衍": 1, "嘲讽": 2, "连击": 3, "最优攻击": 3, "传染": 3, "复生": 4, "护盾": 5}
-EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 16, "封建": 37, "工业": 22, "现代": 43, "未来": 32}
+EXPECT_ERA = {"史前": 27, "原始": 26, "古典": 20, "封建": 40, "工业": 32, "现代": 54, "未来": 40}
 EXPECT_TRIBE = {"学者": 49, "生物": 30, "人类": 43, "机械": 37, "植物": 22, "病毒": 22}
 EXPECT_LEVEL = {1: 22, 2: 37, 3: 38, 4: 40, 5: 37, 6: 17, 7: 12}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "tribe", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
-EFFECT_FIELDS = ["id", "name", "card_type", "level", "tribe", "cost", "match_text"]
+EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "tribe", "cost", "match_text"]
 LEGACY_HERO_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
                       "hero_skill_uses_per_turn", "hero_skill_trigger"]
 
@@ -409,7 +409,7 @@ def expected_card_attrs(doc, skill_map):
         return attrs
     return {
         "id": doc["id"], "名称": doc["name"], "类型": doc["card_type"],
-        "星级": str(doc["level"]), "流派": doc["tribe"],
+        "星级": str(doc["level"]), "时代": doc.get("era", ""), "流派": doc["tribe"],
         "技能": skill_value, "费用": str(doc["cost"]),
         "确定性替换": doc["match_text"],
     }
@@ -645,6 +645,8 @@ def check_cards(skill_map):
             fail(f"{name}: 效果牌不得有 attack/health")
         if c["tribe"] not in EFFECT_TRIBES:
             fail(f"{name}: 效果牌流派非法 {c['tribe']!r}")
+        if c["era"] not in ERAS:
+            fail(f"{name}: 时代非法 {c['era']!r}")
         if c["level"] not in RANGE:
             fail(f"{name}: 星级非法 {c['level']!r}")
         if not 0 <= c["cost"] <= 4:
@@ -662,8 +664,10 @@ def check_cards(skill_map):
         if dup:
             fail(f"{label}名称重复: {dup}")
 
-    for label, expected, field in (("时代", EXPECT_ERA, "era"),
-                                   ("流派", EXPECT_TRIBE, "tribe"),
+    actual_era = collections.Counter(c.get("era") for c in raw)
+    if dict(actual_era) != EXPECT_ERA:
+        fail(f"卡牌时代分布不符: {dict(actual_era)}")
+    for label, expected, field in (("流派", EXPECT_TRIBE, "tribe"),
                                    ("星级", EXPECT_LEVEL, "level")):
         actual = collections.Counter(c[field] for c in minions)
         if dict(actual) != expected:
@@ -753,7 +757,7 @@ def main():
         for item in errors:
             print(" -", item)
         return 1
-    print("时代", dict(collections.Counter(c["era"] for c in minions)))
+    print("时代", dict(collections.Counter(c["era"] for c in raw)))
     print("流派", dict(collections.Counter(c["tribe"] for c in minions)))
     print("星级", dict(collections.Counter(c["level"] for c in minions)))
     print("关键词", dict(sorted(collections.Counter(

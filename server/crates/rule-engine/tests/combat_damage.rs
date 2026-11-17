@@ -10,7 +10,7 @@ use rule_engine::combat::{CombatAction, CombatSetup, simulate, simulate_with};
 use rule_engine::data::{Card, CardType, Catalog, Skill, Tribe};
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
-use rule_engine::settle::{Pairing, strip_ghost};
+use rule_engine::settle::Pairing;
 use rule_engine::state::{InstanceId, MinionInstance, Phase};
 
 fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_list: &[&str]) {
@@ -266,7 +266,7 @@ fn combat_write_back_restores_full_health() {
     state.pairings = vec![Pairing {
         a: 0,
         b: 1,
-        mirror: false,
+        ghost: None,
     }];
     state.players[0].hp = 30;
     state.players[1].hp = 30;
@@ -302,9 +302,9 @@ fn combat_write_back_restores_full_health() {
     assert_eq!(attack.aura, 0);
 }
 
-/// 7) 幽灵快照只保留 `initial` 与 `growth`，`current` 等于两者之和。
+/// 7) 幽灵阵容原样保留出局者棋盘的成长/永久层；战斗临时层的清理由上游负责。
 #[test]
-fn strip_ghost_keeps_only_initial_and_growth() {
+fn ghost_board_keeps_growth_and_permanent() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "plain", 3, 4, &[]);
     let mut original = minion(&catalog, 1, "plain");
@@ -316,16 +316,23 @@ fn strip_ghost_keeps_only_initial_and_growth() {
     original.stats.health.add_permanent(-2);
     original.stats.health.add_turn(4);
     original.stats.health.set_aura(6);
-    original.stats.health.apply_damage(9);
 
-    let ghost = &strip_ghost(std::slice::from_ref(&original))[0];
+    // `ghost_board` 不做剥离：`turn` 层与战斗光环在玩家出局的那次结算里
+    // 已由 `clear_combat_duration` 清掉，能进入死后棋盘的临时层本就为 0。
+    // 这里直接构造未经结算的棋盘，用来确认 `ghost_board` 不额外改写任何层。
+    let (engine, mut state) = Engine::new(catalog, [29u8; 32]);
+    state.players[3].eliminated = true;
+    state.players[3].board = vec![original];
 
-    for stat in [&ghost.stats.attack, &ghost.stats.health] {
-        assert_eq!(stat.permanent, 0);
-        assert_eq!(stat.turn, 0);
-        assert_eq!(stat.aura, 0);
-        assert_eq!(stat.current, stat.initial.saturating_add(stat.growth));
-    }
-    assert_eq!(ghost.stats.attack.current, 5);
-    assert_eq!(ghost.stats.health.current, 5);
+    let ghost = &rule_engine::settle::ghost_board(&engine, &state, Some(3))[0];
+
+    assert_eq!(ghost.stats.attack.permanent, 5);
+    assert_eq!(ghost.stats.health.permanent, -2);
+    assert_eq!(ghost.stats.attack.growth, 2);
+    assert_eq!(ghost.stats.health.growth, 1);
+    // 没有光环来源时 `fold_auras` 不覆盖 aura 层，临时层与战斗光环保持输入值。
+    assert_eq!(ghost.stats.attack.turn, 7);
+    assert_eq!(ghost.stats.health.turn, 4);
+    assert_eq!(ghost.stats.attack.aura, 3);
+    assert_eq!(ghost.stats.health.aura, 6);
 }

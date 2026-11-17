@@ -11,6 +11,27 @@
       "turn": 7,
       "phaseDeadline": "2026-11-15T10:01:30Z",
       "boardSlots": 7,
+      "hpCap": 40,
+      "combatLog": [
+        {
+          "turn": 5,
+          "participantIds": ["p_00", "p_03"],
+          "ghostId": null,
+          "winnerId": "p_00",
+          "loserId": "p_03",
+          "damage": 6,
+          "mirror": false
+        },
+        {
+          "turn": 6,
+          "participantIds": ["p_03"],
+          "ghostId": "p_00",
+          "winnerId": "p_03",
+          "loserId": null,
+          "damage": 0,
+          "mirror": true
+        }
+      ],
       "enabledFactions": [
         "人类",
         "机械",
@@ -167,6 +188,7 @@
           "displayName": "Ada",
           "hp": 40,
           "era": 1,
+          "rank": 1,
           "alive": true,
           "boardCount": 0,
           "heroCardId": null,
@@ -180,6 +202,7 @@
           "displayName": "Bob",
           "hp": 31,
           "era": 3,
+          "rank": 2,
           "alive": true,
           "boardCount": 1,
           "heroCardId": "darwin",

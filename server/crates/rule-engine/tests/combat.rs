@@ -496,7 +496,8 @@ fn combat_stops_at_200_actions() {
 
     assert_eq!(log.action_count, 200, "行动数达到 200 必须停止");
     assert_eq!(attacks(&log).len(), 200);
-    // 行动数到上限而双方仍有存活者：§8.3 视为平局，交给结算层按 §5.3 判定。
+    // 行动数到上限而双方仍有存活者：交锋层不判胜，交给结算层按
+    // 生命 → 累计伤害 → 座位判胜。
     assert_eq!(log.winner, None);
     assert_eq!(log.attacker_survivors.len(), 100);
     assert_eq!(log.defender_survivors, vec![500]);
@@ -750,7 +751,7 @@ fn real_combat_state() -> (Engine, rule_engine::state::GameState) {
     state.pairings = vec![Pairing {
         a: 0,
         b: 1,
-        mirror: false,
+        ghost: None,
     }];
     (engine, state)
 }
@@ -813,7 +814,7 @@ fn resolve_combat_returns_one_report_per_participant() {
 }
 
 #[test]
-fn mirror_report_has_no_opponent_seat() {
+fn ghost_report_names_ghost_owner() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32]);
     add_card(&mut engine.catalog, "combat-strong", 10, 10, &[]);
     add_card(&mut engine.catalog, "combat-weak", 1, 1, &[]);
@@ -822,21 +823,19 @@ fn mirror_report_has_no_opponent_seat() {
         state.players[seat].eliminated = true;
     }
     state.players[0].board = vec![minion(&engine.catalog, 1, "combat-strong")];
-    state
-        .previous_board
-        .insert(0, vec![minion(&engine.catalog, 2, "combat-weak")]);
+    state.players[3].board = vec![minion(&engine.catalog, 2, "combat-weak")];
     state.pairings = vec![Pairing {
         a: 0,
         b: 0,
-        mirror: true,
+        ghost: Some(3),
     }];
 
     let outcome = engine.resolve_combat(&mut state).unwrap();
 
-    assert_eq!(outcome.reports.len(), 1, "镜像战只有一条报告");
+    assert_eq!(outcome.reports.len(), 1, "幽灵战只有一条报告");
     let report = outcome.reports.get(&0).expect("座位 0 的报告");
     assert!(report.mirror);
-    assert_eq!(report.opponent_seat, None);
+    assert_eq!(report.opponent_seat, Some(3), "报告指向幽灵归属座位");
     assert_eq!(report.damage, 0);
     assert_eq!(report.own_board[0].instance_id, 1);
     assert_eq!(report.opponent_board[0].instance_id, 2, "对手阵容是幽灵");
@@ -886,9 +885,6 @@ fn combat_reports_do_not_mutate_state_fields() {
         state.next_instance_id, expected_next_id,
         "实例编号只允许由战斗模拟推进"
     );
-    // 上一场快照必须是原始（未折叠）阵容。
-    assert_eq!(state.previous_board.get(&0), Some(&before.players[0].board));
-    assert_eq!(state.previous_board.get(&1), Some(&before.players[1].board));
     // 对手互指只由战斗结算写入，报告不得额外增删键值。
     let mut expected_opponents = before.previous_opponent.clone();
     expected_opponents.insert(0, Some(1));
@@ -907,20 +903,20 @@ fn combat_reports_do_not_mutate_state_fields() {
 fn combat_state_hash_matches_golden_baseline() {
     // 场景：seed [4; 32]、座位 0 随从 10 带光环、配对 0 vs 1。
     // 随从属性改为分层模型后哈希编码变化，金标准同步更新；英雄卡从 13 张扩到 32 张
-    // 后共享池条目随之增加，金标准再次同步；行为不变，任何 GameState 字段或随机流
-    // 消耗顺序变化仍会使该值改变。
+    // 后共享池条目随之增加、配对新增幽灵座位，两处改动合并后金标准再次同步；
+    // 行为不变，任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
     let (mut engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "ede932827c108494",
+        "44add8c85e2cfe7c",
         "固定场景的 state_hash 金标准"
     );
 }
 
 #[test]
-fn mixed_real_and_mirror_reports_cover_exactly_three_seats() {
+fn mixed_real_and_ghost_reports_cover_exactly_three_seats() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [5; 32]);
     add_card(&mut engine.catalog, "combat-a", 5, 5, &[]);
     add_card(&mut engine.catalog, "combat-b", 1, 1, &[]);
@@ -936,12 +932,12 @@ fn mixed_real_and_mirror_reports_cover_exactly_three_seats() {
         Pairing {
             a: 0,
             b: 1,
-            mirror: false,
+            ghost: None,
         },
         Pairing {
             a: 2,
             b: 2,
-            mirror: true,
+            ghost: Some(3),
         },
     ];
 
@@ -954,7 +950,7 @@ fn mixed_real_and_mirror_reports_cover_exactly_three_seats() {
     assert!(outcome.reports.get(&2).unwrap().mirror);
     assert_eq!(outcome.reports.get(&0).unwrap().opponent_seat, Some(1));
     assert_eq!(outcome.reports.get(&1).unwrap().opponent_seat, Some(0));
-    assert_eq!(outcome.reports.get(&2).unwrap().opponent_seat, None);
+    assert_eq!(outcome.reports.get(&2).unwrap().opponent_seat, Some(3));
 }
 
 // ---- 动作后状态快照与召唤 ----

@@ -3,6 +3,7 @@ id: guanghezuoyong
 name: 光合作用
 card_type: 效果
 level: 2
+era: 现代
 tribe: 植物
 cost: 1
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-friendly-plant-breed-2]
 | 名称 | 光合作用 |
 | 类型 | 效果 |
 | 星级 | 2 |
+| 时代 | 现代 |
 | 流派 | 植物 |
 | 技能 | trigger-friendly-plant-breed-2 |
 | 费用 | 1 |

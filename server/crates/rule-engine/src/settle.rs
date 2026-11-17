@@ -25,12 +25,24 @@ const PAIRING_ATTEMPTS: u8 = 100;
 
 /// 一对配对。
 ///
-/// `mirror == true` 时 `b == a`，表示 `a` 对战自己上一场阵容的镜像幽灵。
+/// `ghost.is_some()` 时 `b == a`，表示 `a` 对战该出局座位的幽灵阵容；
+/// 真实战 `ghost == None`。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Pairing {
     pub a: Seat,
     pub b: Seat,
-    pub mirror: bool,
+    /// 幽灵战的幽灵归属座位（已出局者）；真实战为 `None`。
+    pub ghost: Option<Seat>,
+}
+
+impl Pairing {
+    /// 是否幽灵战：落单配对（`a == b`）或已标注幽灵归属座位。
+    ///
+    /// `pair_round` 的重试阶段幽灵尚未抽取，此时仅由 `a == b` 成立；
+    /// 结算与视图统一用本判据，避免两处各写一套。
+    pub fn is_ghost(&self) -> bool {
+        self.a == self.b || self.ghost.is_some()
+    }
 }
 
 /// 单座位视角的一场战斗报告。
@@ -41,21 +53,20 @@ pub struct Pairing {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SeatCombatReport {
     pub seat: Seat,
-    /// 非镜像战为对手座位；镜像战为 `None`。
+    /// 真实战为对手座位；幽灵战为幽灵归属座位。
     pub opponent_seat: Option<Seat>,
     pub mirror: bool,
     /// 本方战前阵容（已折叠光环）。
     pub own_board: Vec<MinionInstance>,
-    /// 非镜像战为对手战前阵容；镜像战为幽灵阵容。
+    /// 真实战为对手战前阵容；幽灵战为幽灵阵容。
     pub opponent_board: Vec<MinionInstance>,
     /// 本场战斗的行动序列。
     pub actions: Vec<combat::CombatAction>,
     /// 与 `actions` 同序同长：每条动作执行后受影响随从的状态。
     pub states: Vec<Vec<combat::MinionSnapshot>>,
-    /// 本场战斗造成的伤害；镜像战恒为 0。
+    /// 本场战斗造成的伤害；平局为 0。
     pub damage: i32,
-    /// 本场胜者：真实战恒为 `Some`（`tie_break` 必判出胜者）；
-    /// 镜像战获胜为 `Some(seat)`，未获胜为 `None`。
+    /// 本场胜者；平局为 `None`。
     pub winner: Option<Seat>,
 }
 
@@ -93,9 +104,10 @@ impl Engine {
 /// 为存活玩家生成配对。
 ///
 /// 存活玩家按座位升序排列后用 Fisher–Yates 洗牌，相邻两项成对；
-/// 奇数人数时洗牌结果最后一名获得镜像配对。整轮最多重洗
-/// [`PAIRING_ATTEMPTS`] 次以避开上一场对手，全部失败时采用最后一次洗牌。
-/// 本函数只读取 `state.rng` 与 `state.previous_opponent`。
+/// 奇数人数时洗牌结果最后一名获得落单配对，并在整轮洗牌结束后从全部出局者
+/// 中随机抽一名作为其幽灵。整轮最多重洗 [`PAIRING_ATTEMPTS`] 次以避开上一场
+/// 对手，全部失败时采用最后一次洗牌。
+/// 本函数只读取 `state.rng`、`state.previous_opponent` 与 `state.ranking`。
 pub fn pair_round(state: &mut GameState) -> Vec<Pairing> {
     let mut alive: Vec<Seat> = state
         .players
@@ -109,15 +121,40 @@ pub fn pair_round(state: &mut GameState) -> Vec<Pairing> {
         return Vec::new();
     }
 
-    let mut last = Vec::new();
+    let mut pairings = Vec::new();
     for _ in 0..PAIRING_ATTEMPTS {
         fisher_yates(&mut alive, state);
-        last = pair_adjacent(&alive);
-        if !repeats_previous_opponent(&last, &state.previous_opponent) {
-            return last;
+        pairings = pair_adjacent(&alive);
+        if !repeats_previous_opponent(&pairings, &state.previous_opponent) {
+            break;
         }
     }
-    last
+
+    // 只有存在落单配对时才抽一次幽灵；偶数人数局面的随机流保持不变。
+    let ghost = if pairings.iter().any(Pairing::is_ghost) {
+        ghost_seat(state)
+    } else {
+        None
+    };
+    for pairing in &mut pairings {
+        if pairing.is_ghost() {
+            pairing.ghost = ghost;
+        }
+    }
+    pairings
+}
+
+/// 从全部出局者里随机抽一名作为幽灵归属座位。
+///
+/// `ranking` 是出局顺序（最近出局在前），作为候选全集；空集合返回 `None`，
+/// 落单座位对战空阵容。抽取走 [`Stream::Matchmaking`]。
+fn ghost_seat(state: &mut GameState) -> Option<Seat> {
+    if state.ranking.is_empty() {
+        return None;
+    }
+    let bound = state.ranking.len() as u64;
+    let index = state.rng.below(Stream::Matchmaking, bound) as usize;
+    state.ranking.get(index).copied()
 }
 
 /// 受到伤害 = 败者时代 + ceil(胜方存活随从星级和 / 2)，并夹在配置的上下限内。
@@ -144,7 +181,7 @@ fn pair_adjacent(alive: &[Seat]) -> Vec<Pairing> {
         pairings.push(Pairing {
             a: alive[index],
             b: alive[index + 1],
-            mirror: false,
+            ghost: None,
         });
         index += 2;
     }
@@ -152,7 +189,7 @@ fn pair_adjacent(alive: &[Seat]) -> Vec<Pairing> {
         pairings.push(Pairing {
             a: seat,
             b: seat,
-            mirror: true,
+            ghost: None,
         });
     }
     pairings
@@ -163,7 +200,9 @@ fn repeats_previous_opponent(
     previous: &BTreeMap<Seat, Option<Seat>>,
 ) -> bool {
     pairings.iter().any(|pairing| {
-        if pairing.mirror {
+        // 重试循环内 ghost 尚未填充，`is_ghost()` 此时等价于 `a == b`；
+        // 落单配对不参与「上一场对手」比较。
+        if pairing.is_ghost() {
             return false;
         }
         previous_opponent(previous, pairing.a) == Some(pairing.b)
@@ -222,8 +261,8 @@ fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<CombatOutcom
     let mut events = Vec::new();
     let mut reports = BTreeMap::new();
     for pairing in pairings {
-        if pairing.mirror {
-            resolve_mirror(engine, state, pairing.a, &mut events, &mut reports);
+        if pairing.is_ghost() {
+            resolve_ghost(engine, state, pairing, &mut events, &mut reports);
         } else {
             resolve_real(engine, state, pairing, &mut events, &mut reports);
         }
@@ -237,6 +276,18 @@ fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<CombatOutcom
     Ok(CombatOutcome { events, reports })
 }
 
+/// 本场真实战的胜者：`None` 表示平局。
+///
+/// 双方同回合清场（两侧 survivors 都为空）一律平局；行动数到上限而双方仍有
+/// 存活者时仍按 §5.3 的生命 → 累计伤害 → 座位判胜。
+fn seat_winner(state: &GameState, log: &combat::CombatLog, a: Seat, b: Seat) -> Option<Seat> {
+    match log.winner {
+        Some(winner) => Some(winner),
+        None if log.attacker_survivors.is_empty() && log.defender_survivors.is_empty() => None,
+        None => Some(tie_break(state, a, b)),
+    }
+}
+
 fn resolve_real(
     engine: &Engine,
     state: &mut GameState,
@@ -246,11 +297,9 @@ fn resolve_real(
 ) {
     let catalog = &engine.catalog;
     let (a, b) = (pairing.a, pairing.b);
-    // 快照必须在战斗改变棋盘之前截取；光环只折叠进战斗克隆，持久快照保持原样。
-    let raw_a = board_of(state, a).to_vec();
-    let raw_b = board_of(state, b).to_vec();
-    let board_a = fold_auras(catalog, &state.auras, &raw_a);
-    let board_b = fold_auras(catalog, &state.auras, &raw_b);
+    // 快照必须在战斗改变棋盘之前截取；光环只折叠进战斗克隆。
+    let board_a = fold_auras(catalog, &state.auras, board_of(state, a));
+    let board_b = fold_auras(catalog, &state.auras, board_of(state, b));
 
     let first = match state.last_winner {
         Some(winner) if winner == a || winner == b => winner,
@@ -281,36 +330,37 @@ fn resolve_real(
     // 战斗内写入的传染层数（以及成长记录）需要回到持久棋盘；其余字段保持不变。
     write_back_persistent(state, a, &log.attacker_final);
     write_back_persistent(state, b, &log.defender_final);
-    let winner = match log.winner {
-        Some(winner) => winner,
-        None => tie_break(state, a, b),
+    let winner = seat_winner(state, &log, a, b);
+    let damage = match winner {
+        Some(winner) => {
+            let loser = if winner == a { b } else { a };
+            let survivors: BTreeSet<InstanceId> = if winner == a {
+                log.attacker_survivors.iter().copied().collect()
+            } else {
+                log.defender_survivors.iter().copied().collect()
+            };
+            let winner_board = if winner == a { &board_a } else { &board_b };
+            let stars = winner_board
+                .iter()
+                .filter(|minion| survivors.contains(&minion.instance_id))
+                .map(|minion| card_level(catalog, &minion.card_id))
+                .fold(0u32, u32::saturating_add);
+
+            let damage = damage_formula(&catalog.config, player_era(state, loser), stars);
+            state.pending_settle.insert(loser, damage);
+            if let Some(player) = player_mut(state, winner) {
+                player.damage_dealt = player.damage_dealt.saturating_add(damage);
+            }
+            state.last_winner = Some(winner);
+            state.last_won.insert(winner);
+            damage
+        }
+        // 互清平局：双方都不扣血、不计胜者，先手保持不变。
+        None => 0,
     };
-    let loser = if winner == a { b } else { a };
 
-    let survivors: BTreeSet<InstanceId> = if winner == a {
-        log.attacker_survivors.iter().copied().collect()
-    } else {
-        log.defender_survivors.iter().copied().collect()
-    };
-    let winner_board = if winner == a { &board_a } else { &board_b };
-    let stars = winner_board
-        .iter()
-        .filter(|minion| survivors.contains(&minion.instance_id))
-        .map(|minion| card_level(catalog, &minion.card_id))
-        .fold(0u32, u32::saturating_add);
-
-    let damage = damage_formula(&catalog.config, player_era(state, loser), stars);
-    state.pending_settle.insert(loser, damage);
-    if let Some(player) = player_mut(state, winner) {
-        player.damage_dealt = player.damage_dealt.saturating_add(damage);
-    }
-
-    state.last_winner = Some(winner);
-    state.last_won.insert(winner);
     state.previous_opponent.insert(a, Some(b));
     state.previous_opponent.insert(b, Some(a));
-    state.previous_board.insert(a, raw_a);
-    state.previous_board.insert(b, raw_b);
 
     // 报告只从本次调用返回：双方各自视角的阵容互换，行动序列与伤害相同。
     let actions = log.actions;
@@ -326,7 +376,7 @@ fn resolve_real(
             actions: actions.clone(),
             states: states.clone(),
             damage,
-            winner: Some(winner),
+            winner,
         },
     );
     reports.insert(
@@ -340,35 +390,47 @@ fn resolve_real(
             actions,
             states,
             damage,
-            winner: Some(winner),
+            winner,
         },
     );
 
-    events.push(GameEvent::CombatResolved {
-        winner,
-        loser,
-        damage,
-    });
+    match winner {
+        Some(winner) => {
+            let loser = if winner == a { b } else { a };
+            events.push(GameEvent::CombatResolved {
+                winner,
+                loser,
+                damage,
+            });
+        }
+        None => events.push(GameEvent::CombatDrawn { a, b }),
+    }
 }
 
-/// 镜像幽灵：不造成、也不承受真实伤害；胜者记入 `last_won`，败者什么都不发生。
-fn resolve_mirror(
+/// 幽灵战：落单座位对战一名出局者的最终阵容，按真实伤害结算。
+///
+/// 双方同回合清场一律平局；幽灵获胜时落单座位按 [`damage_formula`] 扣血，
+/// 落单座位获胜时计入 `last_won`/`last_winner`。幽灵侧不结算英雄被动，也不
+/// 写回牌池、手牌、持久棋盘或 `previous_opponent`；落单座位自己的成长/传染与
+/// 战斗日志副作用（召唤扣池、入手牌复制）照常写回，与真实战一致。
+fn resolve_ghost(
     engine: &Engine,
     state: &mut GameState,
-    seat: Seat,
+    pairing: Pairing,
     events: &mut Vec<GameEvent>,
     reports: &mut BTreeMap<Seat, SeatCombatReport>,
 ) {
     let catalog = &engine.catalog;
-    let current = board_of(state, seat).to_vec();
-    let board = fold_auras(catalog, &state.auras, &current);
-    let (ghost, next_instance_id) = renumber_ghost(catalog, state, seat, &board);
+    let seat = pairing.a;
+    let ghost_seat = pairing.ghost;
+    let own_board = fold_auras(catalog, &state.auras, board_of(state, seat));
+    let ghost = ghost_board(engine, state, ghost_seat);
+    let (ghost, next_instance_id) = renumber_ghost(state, &own_board, ghost_seat, ghost);
 
-    // 镜像战斗同样结算效果，但不写回牌池、手牌或持久棋盘。
     let hero = hero_of(state, seat);
     let setup = combat::CombatSetup {
         attacker_hero: hero.as_deref(),
-        // 幽灵快照没有英雄卡，防御方被动不结算。
+        // 幽灵没有英雄卡，防御方被动不结算。
         defender_hero: None,
         next_instance_id: Some(next_instance_id),
         pool: None,
@@ -378,7 +440,7 @@ fn resolve_mirror(
     };
     let log = combat::simulate_with(
         engine,
-        &board,
+        &own_board,
         &ghost,
         seat,
         seat,
@@ -387,34 +449,68 @@ fn resolve_mirror(
         setup,
     );
     state.next_instance_id = state.next_instance_id.max(log.next_instance_id);
-    let won = log.defender_survivors.is_empty() && !log.attacker_survivors.is_empty();
-    if won {
+    // 与真实战一致：落单座位自己的战斗日志副作用与持久成长/传染写回；
+    // 幽灵是已出局者的棋盘副本，任何改动都只留在克隆里。
+    write_back_combat_log(catalog, state, &log);
+    write_back_persistent(state, seat, &log.attacker_final);
+
+    // 双方同回合清场一律平局；幽灵侧清场而己方仍有存活才算幽灵获胜。
+    let cleared = log.attacker_survivors.is_empty() && log.defender_survivors.is_empty();
+    let ghost_won = ghost_seat.is_some() && !cleared && log.attacker_survivors.is_empty();
+    // 星级和取「幽灵战前棋盘 × 幽灵存活」，口径同真实战的「胜方战前棋盘 × 存活」。
+    let stars = ghost
+        .iter()
+        .filter(|minion| log.defender_survivors.contains(&minion.instance_id))
+        .map(|minion| card_level(catalog, &minion.card_id))
+        .fold(0u32, u32::saturating_add);
+    let damage = if ghost_won {
+        let damage = damage_formula(&catalog.config, player_era(state, seat), stars);
+        state.pending_settle.insert(seat, damage);
+        damage
+    } else {
+        0
+    };
+    if !ghost_won && !cleared {
         state.last_won.insert(seat);
         state.last_winner = Some(seat);
     }
-    state.previous_board.insert(seat, current);
 
-    // 镜像战没有对手座位，胜利才记录胜者；幽灵不产生真实伤害。
+    let winner = if ghost_won {
+        ghost_seat
+    } else if cleared {
+        None
+    } else {
+        Some(seat)
+    };
+
     reports.insert(
         seat,
         SeatCombatReport {
             seat,
-            opponent_seat: None,
+            opponent_seat: ghost_seat,
             mirror: true,
-            own_board: board,
+            own_board,
             opponent_board: ghost,
             actions: log.actions,
             states: log.states,
-            damage: 0,
-            winner: won.then_some(seat),
+            damage,
+            winner,
         },
     );
 
-    events.push(GameEvent::CombatResolved {
-        winner: seat,
-        loser: seat,
-        damage: 0,
-    });
+    match winner {
+        None => events.push(GameEvent::CombatDrawn { a: seat, b: seat }),
+        Some(winner) if winner == seat => events.push(GameEvent::CombatResolved {
+            winner: seat,
+            loser: ghost_seat.unwrap_or(seat),
+            damage: 0,
+        }),
+        Some(winner) => events.push(GameEvent::CombatResolved {
+            winner,
+            loser: seat,
+            damage,
+        }),
+    }
 }
 
 /// 把光环派生值折叠进一份棋盘克隆，供战斗模拟使用。
@@ -453,96 +549,56 @@ pub fn fold_auras(
     folded
 }
 
-/// 某个座位的镜像幽灵阵容：优先取上一场快照，缺失或为空时退回当前阵容。
+/// 幽灵阵容：幽灵归属座位（已出局）的最终棋盘，按它自己的光环来源折叠一次。
 ///
-/// 返回值已经过 [`strip_ghost`] 处理。
-pub fn mirror_ghost(state: &GameState, seat: Seat) -> Vec<MinionInstance> {
-    match state.previous_board.get(&seat) {
-        Some(previous) if !previous.is_empty() => strip_ghost(previous),
-        _ => strip_ghost(board_of(state, seat)),
-    }
+/// 只在本次模拟的克隆上生效，不写回 `state.auras`。`None` 与未知座位都返回
+/// 空阵容。不做属性剥离：`turn` 层在出局那次结算已被清除，`permanent`/`growth`
+/// 是死时的真实数值。
+pub fn ghost_board(engine: &Engine, state: &GameState, ghost: Option<Seat>) -> Vec<MinionInstance> {
+    let Some(corpse) = ghost.and_then(|seat| player(state, seat)) else {
+        return Vec::new();
+    };
+    let auras = engine.player_auras(state, corpse);
+    fold_auras(&engine.catalog, &auras, &corpse.board)
 }
 
-/// 折叠当前光环后的镜像幽灵阵容。
+/// 为幽灵战准备阵容：把所有与己方棋盘重号的实例编号换成新号。
 ///
-/// `previous_board` 快照保留原始实例编号，`state.auras` 以同一 `InstanceId`
-/// 为键，因此上一场快照与当前阵容两条分支都能直接查到对应光环。
-pub fn mirror_ghost_with_auras(
-    catalog: &Catalog,
-    state: &GameState,
-    seat: Seat,
-) -> Vec<MinionInstance> {
-    fold_auras(catalog, &state.auras, &mirror_ghost(state, seat))
-}
-
-/// 为镜像战准备幽灵阵容：折叠光环后，把与己方棋盘重号的实例编号换成新号。
-///
-/// 幽灵取自上一场快照，同一随从跨回合保留时编号与当前阵容相同；战斗内的定位
-/// （`BattleField::locate`）按编号先查攻方，重号会让幽灵的伤害打到己方克隆上，
-/// 报告里的动作也无法区分侧别。光环以原编号为键，必须先折叠再改号。
+/// 幽灵通常来自其它座位，实例编号全局唯一，本函数不会触发改号；保留它是为了
+/// 防止将来复制同座位阵容时，战斗内的定位（`BattleField::locate` 按编号先查
+/// 攻方）把幽灵的伤害打到己方克隆上。`ghost` 是幽灵归属座位，同时约束
+/// 「没有归属座位就没有幽灵阵容」。
 ///
 /// 返回重新编号后的幽灵与「幽灵最大编号 + 1」的分配器起点；调用方仍需在战斗
 /// 结束后把分配器推进到战斗实际使用的位置。
 fn renumber_ghost(
-    catalog: &Catalog,
     state: &GameState,
-    seat: Seat,
     own_board: &[MinionInstance],
+    ghost: Option<Seat>,
+    mut ghost_board: Vec<MinionInstance>,
 ) -> (Vec<MinionInstance>, InstanceId) {
-    let mut ghost = mirror_ghost_with_auras(catalog, state, seat);
+    debug_assert!(
+        ghost.is_some() || ghost_board.is_empty(),
+        "没有幽灵归属座位时幽灵阵容必须为空"
+    );
     let mut used: BTreeSet<InstanceId> =
         own_board.iter().map(|minion| minion.instance_id).collect();
     let mut next = own_board
         .iter()
-        .chain(ghost.iter())
+        .chain(ghost_board.iter())
         .map(|minion| minion.instance_id)
         .max()
         .unwrap_or(0)
         .saturating_add(1)
         .max(state.next_instance_id);
-    for minion in &mut ghost {
+    for minion in &mut ghost_board {
         if used.contains(&minion.instance_id) {
             minion.instance_id = next;
             next = next.saturating_add(1);
         }
         used.insert(minion.instance_id);
     }
-    (ghost, next)
-}
-
-/// 幽灵快照只保留永久属性：卡面基础值与成长，以及繁衍与传染层。
-///
-/// `permanent` / `turn` / `aura` 归零，`current` 按 `initial + growth` 重算；
-/// 授予关键词 `granted` 一律丢弃；战斗内的临时标记（护盾已用、复生已用、
-/// 剩余攻击次数等）也重置。
-pub fn strip_ghost(board: &[MinionInstance]) -> Vec<MinionInstance> {
-    board
-        .iter()
-        .map(|minion| {
-            let mut ghost = MinionInstance {
-                instance_id: minion.instance_id,
-                card_id: minion.card_id.clone(),
-                golden: minion.golden,
-                is_scholar: minion.is_scholar,
-                stats: minion.stats,
-                breed: minion.breed,
-                breed_applied: 0,
-                contagion: minion.contagion,
-                granted: Vec::new(),
-                shield_used: false,
-                reborn_used: false,
-                attacks_left: 0,
-                cannot_attack: false,
-            };
-            for stat in [&mut ghost.stats.attack, &mut ghost.stats.health] {
-                stat.add_permanent(stat.permanent.saturating_neg());
-                stat.clear_turn();
-                stat.set_aura(0);
-                stat.revive_to(stat.initial.saturating_add(stat.growth));
-            }
-            ghost
-        })
-        .collect()
+    (ghost_board, next)
 }
 
 /// 清除所有棋盘随从的 `combat` 时长效果：本回合数值层、临时关键词与禁攻标记。
@@ -667,7 +723,36 @@ fn compare_alive(state: &GameState, left: Seat, right: Seat) -> Ordering {
         .then_with(|| left.cmp(&right))
 }
 
-/// 双方同时清场时按 §5.3 判胜：生命高 → 累计伤害高 → 座位小。
+/// 局内实时名次：存活者按 [`compare_alive`] 从强到弱排 1..=存活数，
+/// 已出局者接在其后。
+///
+/// `ranking` 的约定是「最近出局在前」（`resolve_settle` 把本回合新出局者
+/// `rev()` 后前插），因此下标 0 的出局者名次紧挨存活者。
+/// `GameOver` 阶段直接与 [`crate::view::placement_of`] 一致；若 `placement`
+/// 缺失（榜单异常），回落到存活者算法，保证结果确定。
+pub fn rank_of(state: &GameState, seat: Seat) -> Option<u8> {
+    if let Some(place) = crate::view::placement_of(state, seat) {
+        return Some(place);
+    }
+    let player = player(state, seat)?;
+    if player.eliminated {
+        // 已出局者占据尾部名次：存活数 + 榜内下标 + 1。
+        let alive = state.players.iter().filter(|p| !p.eliminated).count();
+        let index = state.ranking.iter().position(|s| *s == seat)?;
+        u8::try_from(alive + index + 1).ok()
+    } else {
+        // 存活者：1 + 比它强的存活者数，比较器与第 20 回合收束完全一致。
+        let better = state
+            .players
+            .iter()
+            .filter(|p| !p.eliminated && p.seat != seat)
+            .filter(|p| compare_alive(state, p.seat, seat) == Ordering::Less)
+            .count();
+        u8::try_from(better + 1).ok()
+    }
+}
+
+/// 行动数到达上限（不是同回合清场）时按 §5.3 判胜：生命高 → 累计伤害高 → 座位小。
 fn tie_break(state: &GameState, a: Seat, b: Seat) -> Seat {
     match (player(state, a), player(state, b)) {
         (Some(left), Some(right)) => {
@@ -776,4 +861,57 @@ fn card_level(catalog: &Catalog, card_id: &str) -> u32 {
         .get(card_id)
         .map(|card| u32::from(card.level))
         .unwrap_or(0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
+    const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
+    const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
+    const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
+
+    fn test_catalog() -> Catalog {
+        Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
+            .expect("已提交的 v0.1 数据应能完整加载")
+    }
+
+    fn empty_log() -> combat::CombatLog {
+        combat::CombatLog {
+            actions: Vec::new(),
+            states: Vec::new(),
+            attacker_survivors: Vec::new(),
+            defender_survivors: Vec::new(),
+            winner: None,
+            action_count: 0,
+            trigger_count: 0,
+            summon_count: 0,
+            pool_spent: BTreeMap::new(),
+            hand_copies: Vec::new(),
+            next_instance_id: 1,
+            attacker_final: Vec::new(),
+            defender_final: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn mutual_wipe_is_a_draw() {
+        let (_, state) = Engine::new(test_catalog(), [7; 32]);
+        let mut log = empty_log();
+        log.winner = None; // 双方 survivors 都为空
+        assert_eq!(seat_winner(&state, &log, 0, 1), None);
+    }
+
+    #[test]
+    fn action_limit_still_breaks_by_hp() {
+        let (_, mut state) = Engine::new(test_catalog(), [7; 32]);
+        state.players[0].hp = 30;
+        state.players[1].hp = 10;
+        let mut log = empty_log();
+        log.winner = None;
+        log.attacker_survivors = vec![1]; // 双方都还有存活者：行动上限，不是清场
+        log.defender_survivors = vec![2];
+        assert_eq!(seat_winner(&state, &log, 0, 1), Some(0));
+    }
 }

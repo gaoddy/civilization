@@ -3,6 +3,7 @@ id: bulangyundong
 name: 布朗运动
 card_type: 效果
 level: 2
+era: 工业
 tribe: 通用
 cost: 1
 match_text: 战斗开始时，对敌方最左侧随从造成 2 点伤害
@@ -19,6 +20,7 @@ skills: [combatstart-random-enemy-damage-2]
 | 名称 | 布朗运动 |
 | 类型 | 效果 |
 | 星级 | 2 |
+| 时代 | 工业 |
 | 流派 | 通用 |
 | 技能 | combatstart-random-enemy-damage-2 |
 | 费用 | 1 |

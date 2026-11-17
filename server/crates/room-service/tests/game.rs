@@ -1157,3 +1157,301 @@ fn real_combat_result_is_not_marked() {
     };
     assert_eq!(result.mirror, Some(false));
 }
+
+// ---------------------------------------------------------------------------
+// 最近五回合战报与实时名次
+// ---------------------------------------------------------------------------
+
+/// 用指定种子与生命上限开局；战报用例需要可复现的淘汰节奏。
+fn task_with_seed_and_hp(seed: u64, initial_hp: i32) -> (GameTask, FixedClock) {
+    let mut catalog = catalog();
+    catalog.config.initial_hp = initial_hp;
+    let clock = FixedClock::new(1_000_000);
+    let clock_arc: Arc<dyn Clock> = Arc::new(clock.clone());
+    let task = GameTask::new(catalog, seed, heroes(), players(), clock_arc).expect("开局应当成功");
+    (task, clock)
+}
+
+/// 消费该座位的目标待选（若有）；返回是否消费过。
+fn resolve_target_pending_for(task: &mut GameTask, seat: Seat, tag: &str) -> bool {
+    let player = format!("p{seat}");
+    let view = task.player_view(seat).expect("视图应可用");
+    let is_target = matches!(
+        view.self_.pending_choices.first(),
+        Some(protocol::view::PendingChoice::Target { .. })
+    );
+    if !is_target {
+        return false;
+    }
+    let minion_id = view
+        .self_
+        .board
+        .first()
+        .expect("目标待选存在时棋盘非空")
+        .minion_id
+        .clone();
+    let updates = task.handle(command(
+        &player,
+        &format!("{tag}-choose-target-{seat}"),
+        ProtocolIntent::ChooseTarget { minion_id },
+    ));
+    assert!(
+        error_codes(&updates).is_empty(),
+        "座位 {seat} 选定战吼目标应成功：{:?}",
+        error_codes(&updates)
+    );
+    true
+}
+
+/// 让指定座位买入并打出一个 1 级随从，保证幽灵战有可用的幽灵阵容。
+fn play_one_minion(task: &mut GameTask, seat: Seat, tag: &str) {
+    let player = format!("p{seat}");
+    let catalog = catalog();
+    let view = task.player_view(seat).expect("视图应可用");
+    let slot = view
+        .self_
+        .shop
+        .iter()
+        .find(|slot| {
+            slot.card_id.as_ref().is_some_and(|card_id| {
+                catalog.cards.get(card_id).is_some_and(|card| {
+                    card.card_type == CardType::Minion
+                        && u64::from(card.cost.unwrap_or(0)) <= view.self_.gold
+                })
+            })
+        })
+        .map(|slot| slot.index)
+        .unwrap_or_else(|| panic!("座位 {seat} 的商店应至少有一个可买的随从"));
+    let updates = task.handle(command(&player, &format!("{tag}-buy-{seat}"), buy(slot)));
+    assert!(
+        error_codes(&updates).is_empty(),
+        "座位 {seat} 购买随从应成功：{:?}",
+        error_codes(&updates)
+    );
+    let updates = task.handle(command(
+        &player,
+        &format!("{tag}-play-{seat}"),
+        ProtocolIntent::PlayCard {
+            hand_index: 0,
+            position: None,
+            target_minion_id: None,
+        },
+    ));
+    assert!(
+        error_codes(&updates).is_empty(),
+        "座位 {seat} 打出随从应成功：{:?}",
+        error_codes(&updates)
+    );
+    while resolve_target_pending_for(task, seat, tag) {}
+}
+
+#[test]
+fn combat_log_records_one_entry_per_fight() {
+    let (mut task, clock) = task();
+    advance_turn(&mut task, &clock);
+
+    let view = task.player_view(0).expect("视图应可用");
+    assert_eq!(view.turn.get(), 2, "推进一回合后应进入第 2 回合");
+    assert_eq!(view.combat_log.len(), 4, "8 人应产生 4 场真实战");
+    assert!(
+        view.combat_log.iter().all(|entry| entry.turn.get() == 1),
+        "首回合战报的 turn 应为 1"
+    );
+    assert!(
+        view.combat_log.iter().all(|entry| !entry.mirror),
+        "真实战不应标记 mirror"
+    );
+    assert!(
+        view.combat_log.iter().all(|entry| entry.ghost_id.is_none()),
+        "真实战不携带幽灵归属者"
+    );
+
+    let mut pairs = BTreeSet::new();
+    let mut participants = BTreeSet::new();
+    for entry in &view.combat_log {
+        assert_eq!(entry.participant_ids.len(), 2, "真实战应有两位参战者");
+        let participant_seats: Vec<u8> = entry
+            .participant_ids
+            .iter()
+            .map(|player_id| player_id[1..].parse().expect("测试玩家 id 形如 pN"))
+            .collect();
+        assert!(
+            participant_seats[0] < participant_seats[1],
+            "participantIds 必须按座位号升序"
+        );
+        assert!(
+            pairs.insert(entry.participant_ids.clone()),
+            "同一场战斗只能记一条"
+        );
+        participants.extend(entry.participant_ids.iter().cloned());
+
+        // 两位参战者收到的战报必须是同一条。
+        for player_id in &entry.participant_ids {
+            let seat: Seat = player_id[1..].parse().expect("测试玩家 id 形如 pN");
+            let seat_view = task.player_view(seat).expect("视图应可用");
+            let matched = seat_view
+                .combat_log
+                .iter()
+                .find(|candidate| {
+                    candidate.turn == entry.turn
+                        && candidate.participant_ids == entry.participant_ids
+                })
+                .expect("参战座位应收到同一条战报");
+            assert_eq!(matched.damage, entry.damage);
+            assert_eq!(matched.mirror, entry.mirror);
+            assert_eq!(matched.winner_id, entry.winner_id);
+            assert_eq!(matched.loser_id, entry.loser_id);
+            assert_eq!(matched.ghost_id, entry.ghost_id);
+        }
+    }
+    assert_eq!(participants.len(), 8, "4 场战斗应覆盖全部 8 名玩家");
+}
+
+#[test]
+fn combat_log_ghost_entry_has_single_participant() {
+    // 全部座位各打一个随从后逐回合推进；生命上限压低到 2，让出局与幽灵战
+    // 在少数回合内出现。种子决定配对，扫描保证可复现。
+    //
+    // 单个种子不保证同时出现「幽灵战失利」与「幽灵战获胜」，因此扫描
+    // 0..=64；扩大该范围说明引擎配对/淘汰节奏已变化，需要重新调整夹具参数。
+    let mut ghost_loss = None;
+    let mut ghost_win = None;
+    for seed in 0..=64u64 {
+        let (mut task, clock) = task_with_seed_and_hp(seed, 2);
+        for seat in 0..8 {
+            play_one_minion(&mut task, seat, &format!("ghost-{seed}"));
+        }
+        for _ in 0..12 {
+            advance_turn(&mut task, &clock);
+            let view = task.player_view(0).expect("视图应可用");
+            for entry in &view.combat_log {
+                if !entry.mirror {
+                    continue;
+                }
+                if ghost_loss.is_none() && entry.loser_id.is_some() && entry.damage > 0 {
+                    ghost_loss = Some(entry.clone());
+                }
+                if ghost_win.is_none() && entry.winner_id.is_some() {
+                    ghost_win = Some(entry.clone());
+                }
+            }
+            if ghost_loss.is_some() && ghost_win.is_some() {
+                break;
+            }
+            if view.phase == protocol::view::Phase::GameOver {
+                break;
+            }
+        }
+        if ghost_loss.is_some() && ghost_win.is_some() {
+            break;
+        }
+    }
+
+    let loss = ghost_loss.expect("需要调整夹具参数：种子 0..=64 内应出现一场幽灵战失利");
+    assert!(loss.mirror, "幽灵战必须标记 mirror");
+    assert_eq!(loss.participant_ids.len(), 1, "幽灵战只有对战方一个玩家 id");
+    assert_eq!(
+        loss.loser_id.as_deref(),
+        Some(loss.participant_ids[0].as_str()),
+        "幽灵战失利时 loserId 为对战方"
+    );
+    assert_eq!(loss.winner_id, None, "幽灵没有玩家 id，获胜时为 null");
+    assert!(loss.ghost_id.is_some(), "幽灵战失利应携带幽灵归属者");
+    assert_ne!(
+        loss.ghost_id.as_deref(),
+        Some(loss.participant_ids[0].as_str()),
+        "幽灵归属者不能是对战方自己"
+    );
+    assert!(loss.damage > 0, "幽灵战失利必须造成伤害");
+    assert!(loss.turn.get() <= 20, "战报回合号不超过对局回合上限");
+
+    let win = ghost_win.expect("需要调整夹具参数：种子 0..=64 内应出现一场幽灵战获胜");
+    assert!(win.mirror, "幽灵战必须标记 mirror");
+    assert_eq!(win.participant_ids.len(), 1, "幽灵战只有对战方一个玩家 id");
+    assert_eq!(
+        win.winner_id.as_deref(),
+        Some(win.participant_ids[0].as_str()),
+        "幽灵战获胜时 winnerId 为对战方"
+    );
+    assert_eq!(
+        win.loser_id, None,
+        "幽灵不掉血，玩家赢下幽灵战时 loserId 必须为 null"
+    );
+    assert_eq!(win.damage, 0, "幽灵不受伤，玩家获胜不产生伤害");
+    assert!(win.ghost_id.is_some(), "幽灵战获胜应携带幽灵归属者");
+    assert_ne!(
+        win.ghost_id.as_deref(),
+        Some(win.participant_ids[0].as_str()),
+        "幽灵归属者不能是对战方自己"
+    );
+    assert!(win.turn.get() <= 20, "战报回合号不超过对局回合上限");
+}
+
+#[test]
+fn combat_log_keeps_only_last_five_turns() {
+    let (mut task, clock) = task();
+    for _ in 0..6 {
+        advance_turn(&mut task, &clock);
+    }
+
+    let view = task.player_view(0).expect("视图应可用");
+    assert_eq!(view.turn.get(), 7, "推进 6 回合后应进入第 7 回合");
+    let turns: BTreeSet<u64> = view
+        .combat_log
+        .iter()
+        .map(|entry| entry.turn.get())
+        .collect();
+    assert_eq!(
+        turns,
+        (2..=6).collect::<BTreeSet<_>>(),
+        "只保留最近 5 个回合（第 1 回合应被丢弃）"
+    );
+    assert_eq!(view.combat_log.len(), 20, "每回合 4 场、共 5 个回合");
+}
+
+#[test]
+fn snapshot_carries_combat_log_and_rank() {
+    let (mut task, clock) = task();
+    advance_turn(&mut task, &clock);
+
+    let updates = task.handle(RoomCommand::RequestSnapshot {
+        player_id: "p0".to_string(),
+    });
+    assert_eq!(updates.len(), 1, "快照请求应回一条更新");
+    assert!(
+        matches!(updates[0].kind, UpdateKind::Snapshot),
+        "快照请求应走 Snapshot 路径"
+    );
+    let envelope = task.envelope_for(&updates[0]).expect("快照应能编码成信封");
+
+    let view = envelope
+        .payload
+        .get("view")
+        .expect("Snapshot 载荷应包含 view");
+    let combat_log = view
+        .get("combatLog")
+        .and_then(serde_json::Value::as_array)
+        .expect("快照应携带 combatLog 数组");
+    assert_eq!(combat_log.len(), 4, "快照应带出已记录的 4 场战报");
+
+    let players = view
+        .get("players")
+        .and_then(serde_json::Value::as_array)
+        .expect("快照应携带 players 数组");
+    assert_eq!(players.len(), 8);
+    for player in players {
+        let rank = player
+            .get("rank")
+            .and_then(serde_json::Value::as_u64)
+            .expect("存活玩家的 rank 应为非空正整数");
+        assert!((1..=8).contains(&rank), "rank 应在 1..=8 之间");
+    }
+}
+
+#[test]
+fn player_view_carries_hp_cap() {
+    // 用非默认上限，确保下发值来自配置而不是写死的 40。
+    let (task, _clock) = task_with_seed_and_hp(SEED, 37);
+    let view = task.player_view(0).expect("视图应可用");
+    assert_eq!(view.hp_cap.get(), 37, "hpCap 必须取自 config.initial_hp");
+}

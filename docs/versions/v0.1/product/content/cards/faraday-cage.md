@@ -3,6 +3,7 @@ id: faraday-cage
 name: 法拉第笼
 card_type: 效果
 level: 3
+era: 工业
 tribe: 通用
 cost: 2
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-friendly-plus-0-plus-4-this-turn]
 | 名称 | 法拉第笼 |
 | 类型 | 效果 |
 | 星级 | 3 |
+| 时代 | 工业 |
 | 流派 | 通用 |
 | 技能 | trigger-friendly-plus-0-plus-4-this-turn |
 | 费用 | 2 |

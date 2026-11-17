@@ -50,6 +50,11 @@ pub enum GameEvent {
         loser: Seat,
         damage: i32,
     },
+    /// 双方同回合清场：平局，只供观测，不对应协议事件。
+    CombatDrawn {
+        a: Seat,
+        b: Seat,
+    },
     GameOver {
         ranking: Vec<Seat>,
     },

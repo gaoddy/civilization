@@ -3,6 +3,7 @@ id: panghuang
 name: 彷徨
 card_type: 效果
 level: 2
+era: 现代
 tribe: 学者
 cost: 1
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [combatstart-top-attack-enemy-cant-attack]
 | 名称 | 彷徨 |
 | 类型 | 效果 |
 | 星级 | 2 |
+| 时代 | 现代 |
 | 流派 | 学者 |
 | 技能 | combatstart-top-attack-enemy-cant-attack |
 | 费用 | 1 |

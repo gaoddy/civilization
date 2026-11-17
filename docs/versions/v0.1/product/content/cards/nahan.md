@@ -3,6 +3,7 @@ id: nahan
 name: 呐喊
 card_type: 效果
 level: 2
+era: 现代
 tribe: 学者
 cost: 1
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-all-friendly-growth-once]
 | 名称 | 呐喊 |
 | 类型 | 效果 |
 | 星级 | 2 |
+| 时代 | 现代 |
 | 流派 | 学者 |
 | 技能 | trigger-all-friendly-growth-once |
 | 费用 | 1 |

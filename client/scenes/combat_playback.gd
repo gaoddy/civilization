@@ -97,7 +97,7 @@ func _apply(action: Dictionary) -> void:
 
 ## 把服务端快照写进对应随从：只写 `attack`/`health`/`alive`，不做任何推算。
 ##
-## 侧别优先取动作携带的 `sourceSide`/`targetSide`（镜像战双方实例编号可能相同，
+## 侧别优先取动作携带的 `sourceSide`/`targetSide`（幽灵战双方实例编号可能相同，
 ## 只按 id 会写错行）；缺失时退回按 id 在双方列表里查找。
 func _apply_state(state: Variant, side: String = "") -> void:
     if not (state is Dictionary):

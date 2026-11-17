@@ -154,6 +154,7 @@ fn view_never_exposes_other_seats_private_state() {
             hero_card_id: _,
             recruited: _,
             placement: _,
+            rank: _,
         } = summary;
     }
 
@@ -270,7 +271,7 @@ fn opponent_seat_follows_pairings() {
     state.pairings = vec![rule_engine::state::Pairing {
         a: 0,
         b: 3,
-        mirror: false,
+        ghost: None,
     }];
 
     assert_eq!(
@@ -291,7 +292,7 @@ fn opponent_seat_follows_pairings() {
     state.pairings = vec![rule_engine::state::Pairing {
         a: 0,
         b: 0,
-        mirror: true,
+        ghost: Some(0),
     }];
     assert_eq!(
         view(&engine, &state, 0)
@@ -308,6 +309,66 @@ fn opponent_seat_follows_pairings() {
             .opponent_seat,
         None,
         "尚未配对时为 None"
+    );
+}
+
+#[test]
+fn opponent_seat_none_for_solo_without_ghost() {
+    let (engine, mut state) = setup();
+    // 落单但没有出局者可当幽灵：设计表格规定 `opponentPlayerId = null`。
+    state.pairings = vec![rule_engine::state::Pairing {
+        a: 0,
+        b: 0,
+        ghost: None,
+    }];
+
+    assert_eq!(
+        view(&engine, &state, 0)
+            .expect("座位 0 的视图应存在")
+            .opponent_seat,
+        None,
+        "空幽灵的落单配对没有对手座位"
+    );
+}
+
+#[test]
+fn opponent_seat_points_at_ghost_owner() {
+    let (engine, mut state) = setup();
+    // 座位 0 落单并对战幽灵归属座位 3（已出局）；座位 1 与座位 2 真实配对。
+    state.players[3].eliminated = true;
+    state.pairings = vec![
+        rule_engine::state::Pairing {
+            a: 0,
+            b: 0,
+            ghost: Some(3),
+        },
+        rule_engine::state::Pairing {
+            a: 1,
+            b: 2,
+            ghost: None,
+        },
+    ];
+
+    assert_eq!(
+        view(&engine, &state, 0)
+            .expect("座位 0 的视图应存在")
+            .opponent_seat,
+        Some(3),
+        "幽灵战指向幽灵归属座位"
+    );
+    assert_eq!(
+        view(&engine, &state, 3)
+            .expect("座位 3 的视图应存在")
+            .opponent_seat,
+        None,
+        "幽灵归属者本人观战，没有对手座位"
+    );
+    assert_eq!(
+        view(&engine, &state, 1)
+            .expect("座位 1 的视图应存在")
+            .opponent_seat,
+        Some(2),
+        "真实配对时的对手为配对中的另一座位"
     );
 }
 
@@ -398,6 +459,17 @@ fn placement_is_hidden_before_game_over() {
     assert_eq!(placement_of(&state, 1), Some(1));
     assert_eq!(placement_of(&state, 3), Some(2));
     assert_eq!(placement_of(&state, 0), Some(4));
+
+    // `GameOver` 阶段 `rank` 与 `placement` 完全一致。
+    let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
+    for summary in &seat_view.players {
+        assert_eq!(
+            summary.rank,
+            placement_of(&state, summary.seat),
+            "座位 {} 的 rank 应等于 placement",
+            summary.seat
+        );
+    }
 }
 
 #[test]

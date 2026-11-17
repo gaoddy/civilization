@@ -100,9 +100,9 @@
 | `actions[].summon.side` | enum | 是 | 相对接收该消息的座位 |
 | `actions[].summon.position` | integer | 是 | 召唤后该随从在存活随从序列中的插入下标；上界由 PlayerView.boardSlots 决定 |
 | `actions[].summon.minion` | BoardMinion | 是 |  |
-| `damage` | integer | 是 | 本场战斗败者受到的伤害 |
+| `damage` | integer | 是 | 本场战斗结算给败者的伤害（含幽灵战）；平局与幽灵战落单座位获胜时为 0 |
 | `winnerId` | string | null | 是 | 本场胜者；玩家自己的 playerId 表示胜 |
-| `mirror` | boolean | 否 | true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0 |
+| `mirror` | boolean | 否 | true 表示本场为幽灵战，对手是已出局者的幽灵阵容 |
 
 ### Error
 
@@ -238,6 +238,18 @@
 | `attack` | MinionStatBreakdown | 是 |  |
 | `health` | MinionStatBreakdown | 是 |  |
 
+### CombatLogEntry
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `turn` | integer | 是 |  |
+| `participantIds` | array<string> | 是 | 参战玩家 id；幽灵战只有对战方一个元素（幽灵不是玩家） |
+| `ghostId` | string | null | 是 | 幽灵战为幽灵归属者的玩家 id；真实战为 null |
+| `winnerId` | string | null | 是 | 平局无胜者时为 null |
+| `loserId` | string | null | 是 | 幽灵战失利时为该玩家；幽灵不受伤，所以幽灵输时也为 null |
+| `damage` | integer | 是 |  |
+| `mirror` | boolean | 是 | true 表示对战已出局者的幽灵阵容 |
+
 ### PlayerSummary
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -247,6 +259,7 @@
 | `displayName` | string | 是 |  |
 | `hp` | integer | 是 |  |
 | `era` | integer | 是 |  |
+| `rank` | integer | null | 是 | 当前名次；对局结束前为实时名次，结束后等于 placement |
 | `alive` | boolean | 是 |  |
 | `boardCount` | integer | 是 |  |
 | `heroCardId` | string | null | 是 | 开局选择前为 null |
@@ -328,6 +341,8 @@
 | `turn` | integer | 是 |  |
 | `phaseDeadline` | string | 是 |  |
 | `boardSlots` | integer | 是 | 本方棋盘随从位上限，v0.1 为 7 |
+| `hpCap` | integer | 是 | 生命上限，v0.1 为 40 |
+| `combatLog` | array<CombatLogEntry> | 是 | 本局最近 5 个回合的全部战斗，按回合升序；全对局公开 |
 | `opponentPlayerId` | string | null | 否 | 当前战斗对手；招募阶段或未配对时为 null |
 | `self` | object | 是 |  |
 | `self.playerId` | string | 是 |  |

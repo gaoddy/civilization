@@ -3,6 +3,7 @@ id: renzaoshandian
 name: 人造闪电
 card_type: 效果
 level: 3
+era: 现代
 tribe: 通用
 cost: 2
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [combatstart-leftmost-damage-4]
 | 名称 | 人造闪电 |
 | 类型 | 效果 |
 | 星级 | 3 |
+| 时代 | 现代 |
 | 流派 | 通用 |
 | 技能 | combatstart-leftmost-damage-4 |
 | 费用 | 2 |

@@ -1,8 +1,8 @@
 extends Control
 ## 对局：按酒馆战棋结构呈现服务端 PlayerView 与 affordances，操作只发协议意图。
 ##
-## 布局：顶栏（回合/计时/属性）— 左栏积分榜 — 中区（招募：商店、我方棋盘、手牌；
-## 战斗：双方英雄与随从、结果横幅）— 右栏（我的英雄、英雄技能、结束招募、战报）— 状态行。
+## 布局：左栏积分榜 — 中区（招募：商店、我方棋盘、手牌；战斗：双方随从、
+## 结果横幅）— 右栏（场景身份、回合与倒计时、我的英雄与操作）— 状态行（含断线提示）。
 
 ## 每次 `_send_intent` 先发一条，供冒烟与调试断言意图内容。
 signal intent_sent(intent: Dictionary)
@@ -12,13 +12,6 @@ const COMBAT_PACE_MS := 320
 
 ## 服务端演示节奏：结果横幅停留（与 room-service 的 TAIL_MS 一致）。
 const COMBAT_TAIL_MS := 2000
-
-const PHASE_TEXT := {
-    Protocol.PHASE_RECRUIT: "招募",
-    Protocol.PHASE_COMBAT: "战斗",
-    Protocol.PHASE_SETTLE: "结算",
-    Protocol.PHASE_GAME_OVER: "结束",
-}
 
 # 页面级状态与门槛。
 var _intent_counter := 0
@@ -34,55 +27,26 @@ var _view_epoch := 0
 ## 队首待选是目标待选：该座位除选目标外不能操作，手牌不可拖。
 var _target_pending := false
 
-# 顶栏。
-var _turn_label: Label
-var _timer_label: Label
-var _hp_pill: Label
-var _era_pill: Label
-var _gold_pill: Label
-var _conn_label: Label
+# 状态行：错误与断线提示共用。
 var _status: Label
+## 状态行当前承载的是连接提示：恢复连接时据此清空，避免误清错误文案。
+var _connection_notice := false
 
 # 左栏积分榜。
-var _players_rail: VBoxContainer
+var _players_panel: GamePlayersRail
 
-# 中区 · 招募。
-var _recruit_panel: VBoxContainer
-var _board_row: BoardDrop
-var _board_hint: Label
-var _shop_row: HFlowContainer
-var _sell_drop: SellDrop
-var _sell_hint: Label
+# 中区 · 招募与战斗。
+var _recruit_view: GameRecruitView
+var _combat_view: GameCombatView
 var _hand_row: HFlowContainer
-var _reroll_button: Button
-var _upgrade_button: Button
-var _freeze_button: Button
-
-# 中区 · 战斗。
-var _combat_root: Control
-var _combat_body: VBoxContainer
-var _combat_opponent_strip: HBoxContainer
-var _combat_opponent_row: HFlowContainer
-var _combat_banner: Label
-var _combat_own_row: HFlowContainer
-var _combat_self_strip: HBoxContainer
-## 演示播放器（纯数据）与当前演示所属回合。
-var _combat := CombatPlayback.new()
-var _combat_turn := -1
 
 # 右栏。
-var _self_hero_box: VBoxContainer
-var _hero_power_button: Button
-var _end_button: Button
-var _log_text: RichTextLabel
+var _side_panel: GameSidePanel
 
 var _overlay: Control
 
 # 随从详情：覆盖全屏但不拦截输入，层级位于选择浮层之上。
-var _detail_layer: Control
-var _detail_panel: PanelContainer
-var _detail_cards: Array = []
-var _hover_card: Control = null
+var _detail: GameDetailLayer
 
 
 func _ready() -> void:
@@ -114,16 +78,18 @@ func _build() -> void:
     root.add_theme_constant_override("separation", UITheme.space("space-md"))
     margin.add_child(root)
 
-    root.add_child(_build_header())
-
     var body := HBoxContainer.new()
     body.size_flags_vertical = Control.SIZE_EXPAND_FILL
     body.add_theme_constant_override("separation", UITheme.space("space-lg"))
     root.add_child(body)
 
-    body.add_child(_build_players_rail())
+    _players_panel = GamePlayersRail.new()
+    body.add_child(_players_panel)
     body.add_child(_build_center())
-    body.add_child(_build_side())
+    _side_panel = GameSidePanel.new()
+    _side_panel.hero_power_pressed.connect(_on_hero_power)
+    _side_panel.end_recruit_pressed.connect(_on_end_recruit)
+    body.add_child(_side_panel)
 
     _status = UI.label("", UITheme.font_size("font-body-sm"))
     _status.name = "StatusLabel"
@@ -136,81 +102,11 @@ func _build() -> void:
     _overlay.visible = false
     add_child(_overlay)
 
-    _build_detail_layer()
-
-
-func _build_detail_layer() -> void:
-    _detail_layer = Control.new()
-    _detail_layer.name = "MinionDetailLayer"
-    _detail_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _detail_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _detail_layer.visible = false
-    add_child(_detail_layer)
-
-    _detail_panel = UI.card_panel("raised")
-    _detail_panel.name = "MinionDetailPanel"
-    _detail_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _detail_panel.custom_minimum_size = Vector2(UITheme.metric("detail-panel-width"), 0)
-    _detail_panel.visible = false
-    _detail_layer.add_child(_detail_panel)
-
-
-func _build_header() -> Control:
-    var panel := UI.card_panel("surface")
-    panel.name = "Header"
-    panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    var row := HBoxContainer.new()
-    row.add_theme_constant_override("separation", UITheme.space("space-md"))
-    panel.add_child(row)
-
-    _turn_label = UI.label("", UITheme.font_size("font-title-lg"), false)
-    _turn_label.name = "TurnLabel"
-    row.add_child(_turn_label)
-
-    _conn_label = UI.label("", UITheme.font_size("font-body-sm"), false)
-    _conn_label.name = "ConnectionLabel"
-    _conn_label.add_theme_color_override("font_color", UITheme.color("color-danger"))
-    row.add_child(_conn_label)
-
-    var spacer := Control.new()
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_child(spacer)
-
-    _hp_pill = UI.pill_label("", "danger", "font-title")
-    _hp_pill.name = "HpPill"
-    row.add_child(_hp_pill)
-    _era_pill = UI.pill_label("", "info", "font-title")
-    _era_pill.name = "EraPill"
-    row.add_child(_era_pill)
-    _gold_pill = UI.pill_label("", "accent", "font-title")
-    _gold_pill.name = "GoldPill"
-    row.add_child(_gold_pill)
-    _timer_label = UI.pill_label("—", "accent", "font-title")
-    _timer_label.name = "TimerLabel"
-    row.add_child(_timer_label)
-    return panel
-
-
-func _build_players_rail() -> Control:
-    var panel := UI.card_panel("surface")
-    panel.name = "PlayersPanel"
-    panel.custom_minimum_size = Vector2(UITheme.metric("rail-width"), 0)
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    panel.add_child(box)
-    box.add_child(UI.section_title("积分榜"))
-
-    var scroll := ScrollContainer.new()
-    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    box.add_child(scroll)
-
-    _players_rail = VBoxContainer.new()
-    _players_rail.name = "PlayersRail"
-    _players_rail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _players_rail.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    scroll.add_child(_players_rail)
-    return panel
+    _detail = GameDetailLayer.new()
+    add_child(_detail)
+    _players_panel.detail = _detail
+    _recruit_view.detail = _detail
+    _combat_view.detail = _detail
 
 
 func _build_center() -> Control:
@@ -219,107 +115,23 @@ func _build_center() -> Control:
     center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     center.size_flags_vertical = Control.SIZE_EXPAND_FILL
     center.add_theme_constant_override("separation", UITheme.space("space-md"))
-    center.add_child(_build_recruit_panel())
-    center.add_child(_build_combat_panel())
+    _recruit_view = GameRecruitView.new()
+    _recruit_view.buy.connect(_on_buy)
+    _recruit_view.reroll_pressed.connect(_on_reroll)
+    _recruit_view.upgrade_pressed.connect(_on_upgrade)
+    _recruit_view.freeze_pressed.connect(_on_freeze)
+    _recruit_view.board_dropped.connect(_on_board_dropped)
+    _recruit_view.sell_dropped.connect(_on_sell_dropped)
+    _recruit_view.sell_hover.connect(_on_sell_hover)
+    center.add_child(_recruit_view)
+
+    _combat_view = GameCombatView.new()
+    center.add_child(_combat_view)
+
     center.add_child(_build_hand_panel())
     return center
 
 
-func _build_recruit_panel() -> Control:
-    _recruit_panel = VBoxContainer.new()
-    _recruit_panel.name = "RecruitPanel"
-    _recruit_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _recruit_panel.add_theme_constant_override("separation", UITheme.space("space-sm"))
-
-    # 商店：6 个槽位与刷新/升时代/冻结；整块面板同时是棋盘随从的出售落点。
-    var shop_panel := SellDrop.new()
-    shop_panel.name = "ShopPanel"
-    _sell_drop = shop_panel
-    shop_panel.sell_dropped.connect(_on_sell_dropped)
-    shop_panel.hover_changed.connect(_on_sell_hover)
-    var shop_box := VBoxContainer.new()
-    shop_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    shop_panel.add_child(shop_box)
-
-    var shop_head := HBoxContainer.new()
-    shop_head.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    shop_head.add_child(UI.section_title("商店"))
-    _sell_hint = UI.label("", UITheme.font_size("font-caption"), false)
-    _sell_hint.name = "SellHint"
-    _sell_hint.add_theme_color_override("font_color", UITheme.color("color-accent"))
-    _sell_hint.visible = false
-    shop_head.add_child(_sell_hint)
-    var shop_spacer := Control.new()
-    shop_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    shop_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    shop_head.add_child(shop_spacer)
-
-    _reroll_button = UI.styled_button("刷新", "default", 28)
-    _reroll_button.name = "RerollButton"
-    _reroll_button.mouse_filter = Control.MOUSE_FILTER_PASS
-    _reroll_button.pressed.connect(_on_reroll)
-    shop_head.add_child(_reroll_button)
-
-    _upgrade_button = UI.styled_button("升时代", "default", 28)
-    _upgrade_button.name = "UpgradeButton"
-    _upgrade_button.mouse_filter = Control.MOUSE_FILTER_PASS
-    _upgrade_button.pressed.connect(_on_upgrade)
-    shop_head.add_child(_upgrade_button)
-
-    _freeze_button = UI.styled_button("冻结商店", "default", 28)
-    _freeze_button.name = "FreezeButton"
-    _freeze_button.mouse_filter = Control.MOUSE_FILTER_PASS
-    _freeze_button.pressed.connect(_on_freeze)
-    shop_head.add_child(_freeze_button)
-    shop_box.add_child(shop_head)
-
-    _shop_row = _flow_row("ShopRow")
-    shop_box.add_child(_shop_row)
-    _recruit_panel.add_child(shop_panel)
-
-    # 我方棋盘。
-    var board_panel := UI.card_panel("surface")
-    board_panel.name = "BoardPanel"
-    board_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    var board_box := VBoxContainer.new()
-    board_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    board_panel.add_child(board_box)
-
-    var board_head := HBoxContainer.new()
-    board_head.add_child(UI.section_title("我方棋盘"))
-    _board_hint = UI.label("", UITheme.font_size("font-caption"), false)
-    _board_hint.name = "BoardHint"
-    _board_hint.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    _board_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _board_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    board_head.add_child(_board_hint)
-    board_box.add_child(board_head)
-
-    var top_spacer := Control.new()
-    top_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    board_box.add_child(top_spacer)
-
-    var board_scroll := ScrollContainer.new()
-    board_scroll.custom_minimum_size = Vector2(0, UITheme.metric("minion-card-height"))
-    board_scroll.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-    board_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    board_box.add_child(board_scroll)
-    _board_row = BoardDrop.new()
-    _board_row.name = "BoardRow"
-    _board_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _board_row.add_theme_constant_override("h_separation", UITheme.space("space-sm"))
-    _board_row.add_theme_constant_override("v_separation", UITheme.space("space-sm"))
-    _board_row.dropped.connect(_on_board_dropped)
-    board_scroll.add_child(_board_row)
-
-    var bottom_spacer := Control.new()
-    bottom_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    board_box.add_child(bottom_spacer)
-    _recruit_panel.add_child(board_panel)
-    return _recruit_panel
-
-
-## 手牌面板：招募与演示共用，演示期间只读。
 func _build_hand_panel() -> Control:
     var hand_panel := UI.card_panel("surface")
     hand_panel.name = "HandPanel"
@@ -335,90 +147,6 @@ func _build_hand_panel() -> Control:
     _hand_row = _flow_row("HandRow")
     hand_scroll.add_child(_hand_row)
     return hand_panel
-
-
-func _build_combat_panel() -> Control:
-    _combat_root = UI.card_panel("surface")
-    _combat_root.name = "CombatPanel"
-    _combat_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _combat_root.visible = false
-
-    _combat_body = VBoxContainer.new()
-    _combat_body.name = "CombatBody"
-    _combat_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _combat_body.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    _combat_root.add_child(_combat_body)
-
-    _combat_opponent_strip = HBoxContainer.new()
-    _combat_opponent_strip.name = "CombatOpponentStrip"
-    _combat_opponent_strip.add_theme_constant_override("separation", UITheme.space("space-md"))
-    _combat_body.add_child(_combat_opponent_strip)
-
-    _combat_body.add_child(UI.section_title("对手随从"))
-    _combat_opponent_row = _flow_row("CombatOpponentRow")
-    _combat_body.add_child(_combat_opponent_row)
-
-    _combat_banner = UI.label("", UITheme.font_size("font-display"), false)
-    _combat_banner.name = "CombatBanner"
-    _combat_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _combat_banner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _combat_body.add_child(_combat_banner)
-
-    _combat_body.add_child(UI.section_title("我方随从"))
-    _combat_own_row = _flow_row("CombatOwnRow")
-    _combat_body.add_child(_combat_own_row)
-
-    var strip_spacer := Control.new()
-    strip_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _combat_body.add_child(strip_spacer)
-
-    _combat_self_strip = HBoxContainer.new()
-    _combat_self_strip.name = "CombatSelfStrip"
-    _combat_self_strip.add_theme_constant_override("separation", UITheme.space("space-md"))
-    _combat_body.add_child(_combat_self_strip)
-    return _combat_root
-
-
-func _build_side() -> Control:
-    var side := VBoxContainer.new()
-    side.name = "SidePanel"
-    side.custom_minimum_size = Vector2(UITheme.metric("side-width"), 0)
-    side.add_theme_constant_override("separation", UITheme.space("space-sm"))
-
-    var hero_panel := UI.card_panel("surface")
-    hero_panel.name = "SelfHeroPanel"
-    _self_hero_box = VBoxContainer.new()
-    _self_hero_box.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    hero_panel.add_child(_self_hero_box)
-    side.add_child(hero_panel)
-
-    _hero_power_button = UI.styled_button("英雄技能", "default", 40)
-    _hero_power_button.name = "HeroPowerButton"
-    _hero_power_button.pressed.connect(_on_hero_power)
-    side.add_child(_hero_power_button)
-
-    _end_button = UI.styled_button("结束招募", "primary", 46)
-    _end_button.name = "EndButton"
-    _end_button.pressed.connect(_on_end_recruit)
-    side.add_child(_end_button)
-
-    var log_panel := UI.card_panel("surface")
-    log_panel.name = "LogPanel"
-    log_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    var log_box := VBoxContainer.new()
-    log_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    log_panel.add_child(log_box)
-    log_box.add_child(UI.section_title("战报与事件"))
-    _log_text = RichTextLabel.new()
-    _log_text.name = "LogText"
-    _log_text.fit_content = false
-    _log_text.scroll_active = true
-    _log_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _log_text.add_theme_font_size_override("normal_font_size", UITheme.font_size("font-body-sm"))
-    _log_text.add_theme_color_override("default_color", UITheme.color("color-text-dim"))
-    log_box.add_child(_log_text)
-    side.add_child(log_panel)
-    return side
 
 
 func _flow_row(node_name: String) -> HFlowContainer:
@@ -437,15 +165,12 @@ func _process(delta: float) -> void:
     if _elapsed >= 0.25:
         _elapsed = 0.0
         _update_timer()
-    if _combat_playing():
-        _combat.advance(delta * 1000.0)
-        _render_combat_rows()
-        _refresh_combat_banner()
+    if _combat_view.playing():
+        _combat_view.advance(delta)
 
 
 func _refresh() -> void:
-    _hide_detail()
-    _detail_cards.clear()
+    _detail.reset()
     var view: Dictionary = GameStore.view
     if view.is_empty():
         _status.text = "等待对局状态…"
@@ -458,384 +183,48 @@ func _refresh() -> void:
     _view_epoch += 1
     var pending: Array = self_state.get("pendingChoices", [])
     _target_pending = not pending.is_empty() and str(pending[0].get("kind", "")) == "target"
+    var state := _build_state(view, self_state, phase, recruited)
 
-    _refresh_header(view, self_state, phase)
-    _refresh_players(view)
+    _players_panel.refresh(state)
 
     var in_combat := phase == Protocol.PHASE_COMBAT or phase == Protocol.PHASE_SETTLE
     _set_combat_mode(in_combat)
     if in_combat:
-        _refresh_combat(view)
+        _combat_view.refresh(state)
     else:
-        _combat_turn = -1
-        _refresh_recruit(self_state, recruited, phase)
+        _combat_view.reset()
+        _recruit_view.refresh(state)
     _refresh_hand(self_state, phase)
 
-    _refresh_side(self_state)
-    _refresh_log()
+    _side_panel.refresh(state)
     _refresh_overlay(self_state, recruited)
     _refresh_connection()
     _prune_target_requests()
 
 
-func _refresh_header(view: Dictionary, self_state: Dictionary, phase: String) -> void:
-    _turn_label.text = "第 %d 回合 · %s" % [
-        int(view.get("turn", 1)),
-        PHASE_TEXT.get(phase, phase),
-    ]
-    _hp_pill.text = "♥ %d" % int(self_state.get("hp", 0))
-    _era_pill.text = _era_text(int(self_state.get("era", 1)))
-    _gold_pill.text = "● %d 金" % int(self_state.get("gold", 0))
+## 组装本次刷新传给各视图的快照；视图只读，不回写页面状态。
+func _build_state(
+    view: Dictionary,
+    self_state: Dictionary,
+    phase: String,
+    recruited: bool,
+) -> GameUiState:
+    var state := GameUiState.new()
+    state.view = view
+    state.self_state = self_state
+    state.phase = phase
+    state.recruited = recruited
+    state.stale = _view_stale
+    state.expired = _deadline_expired
+    state.target_pending = _target_pending
+    state.connected = Net.is_open()
+    state.epoch = _view_epoch
+    state.can_play = _can_play_now()
+    state.board_slots = maxi(int(view.get("boardSlots", 7)), 1)
+    state.hp_cap = maxi(int(view.get("hpCap", 40)), 1)
+    return state
 
 
-func _refresh_players(view: Dictionary) -> void:
-    UI.clear(_players_rail)
-    var players: Array = _sorted_players(view)
-    if players.is_empty():
-        _players_rail.add_child(UI.empty_hint("暂无玩家"))
-        return
-    for player in players:
-        _players_rail.add_child(_seat_row(player))
-
-
-func _sorted_players(view: Dictionary) -> Array:
-    var players: Array = view.get("players", []).duplicate()
-    players.sort_custom(func(a, b): return int(a.get("seat", 0)) < int(b.get("seat", 0)))
-    return players
-
-
-func _seat_row(player: Dictionary) -> PanelContainer:
-    var player_id := str(player.get("playerId", ""))
-    var is_self := player_id == GameStore.player_id
-    var alive := bool(player.get("alive", true))
-    var panel := UI.card_panel("accent-row" if is_self else "row")
-    panel.name = "SeatRow"
-    panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    if not alive:
-        UI.apply_dim(panel)
-
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    panel.add_child(box)
-
-    var row := HBoxContainer.new()
-    row.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    box.add_child(row)
-    row.add_child(UI.avatar(_optional_text(player.get("heroCardId")), UITheme.metric("avatar-md")))
-
-    var info := VBoxContainer.new()
-    info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    info.add_theme_constant_override("separation", 0)
-    row.add_child(info)
-
-    var name_row := HBoxContainer.new()
-    name_row.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    info.add_child(name_row)
-
-    var name_label := UI.label(_optional_text(player.get("displayName")), UITheme.font_size("font-body-sm"), false)
-    name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    name_label.max_lines_visible = 1
-    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    if is_self:
-        name_label.add_theme_color_override("font_color", UITheme.color("color-accent"))
-    name_row.add_child(name_label)
-
-    var marks := PackedStringArray()
-    if is_self:
-        marks.append("我")
-    if player.get("placement") != null:
-        marks.append("第 %d 名" % int(player.get("placement")))
-    if not alive:
-        marks.append("淘汰")
-    elif bool(player.get("recruited", false)):
-        marks.append("已招募")
-    if not marks.is_empty():
-        var mark := UI.label("、".join(marks), UITheme.font_size("font-caption"), false)
-        mark.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-        name_row.add_child(mark)
-
-    var meta := UI.label("HP %d · %s · 随从%d" % [
-        int(player.get("hp", 0)),
-        _era_text(int(player.get("era", 1))),
-        int(player.get("boardCount", 0)),
-    ], UITheme.font_size("font-caption"), false)
-    meta.clip_text = true
-    meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    info.add_child(meta)
-    return panel
-
-
-func _refresh_recruit(self_state: Dictionary, recruited: bool, phase: String) -> void:
-    _refresh_board(self_state, recruited, phase)
-    _refresh_shop(self_state)
-    _refresh_sell_gate()
-    _refresh_actions(self_state, recruited, phase)
-
-
-## 商店出售落点与棋盘拖拽共用一套实时门控；不满足时商店不接收棋盘卡。
-func _refresh_sell_gate() -> void:
-    if _sell_drop == null:
-        return
-    _sell_drop.enabled = _can_play_now()
-    if not _sell_drop.enabled:
-        _sell_hint.visible = false
-
-
-func _refresh_board(self_state: Dictionary, recruited: bool, phase: String) -> void:
-    UI.clear(_board_row)
-    var aff: Dictionary = self_state.get("affordances", {})
-    var board: Array = self_state.get("board", [])
-    var slots := _board_slots()
-    var can_rearrange := not _view_stale and not _deadline_expired and not _target_pending and phase == Protocol.PHASE_RECRUIT and not recruited
-    _board_row.board_full = board.size() >= slots
-    _board_hint.text = "随从 %d/%d" % [board.size(), slots]
-    for position in board.size():
-        var minion: Dictionary = board[position]
-        var minion_aff := _find_by_index(aff.get("boardMinions", []), int(minion.get("index", position)))
-        _board_row.add_child(_minion_card(minion, minion_aff, can_rearrange, position))
-    for _position in range(board.size(), slots):
-        _board_row.add_child(_empty_slot())
-
-
-## 棋盘容量：以服务端下发的视图为准，字段缺失（旧服务端）时回退 7。
-func _board_slots() -> int:
-    return maxi(int(GameStore.view.get("boardSlots", 7)), 1)
-
-
-func _empty_slot() -> PanelContainer:
-    var panel := UI.card_panel("empty")
-    panel.name = "EmptySlot"
-    # PanelContainer 默认 STOP，会截断 Godot 的拖放冒泡（STOP 且不接收即中止），
-    # 让棋盘容器收不到落点；空位本身不交互，直接放行。
-    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), UITheme.metric("minion-card-height"))
-    var hint := UI.empty_hint("空位")
-    hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    panel.add_child(hint)
-    return panel
-
-
-func _minion_card(
-    minion: Dictionary,
-    minion_aff: Dictionary,
-    can_rearrange: bool,
-    position: int,
-    read_only := false,
-) -> PanelContainer:
-    var minion_index := int(minion.get("index", position))
-    var panel := BoardCard.new()
-    panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-tight"))
-    panel.name = "BoardMinion%d" % minion_index
-    panel.set_meta("minion_id", str(minion.get("minionId", "")))
-    panel.set_meta("minion_index", minion_index)
-    panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), UITheme.metric("minion-card-height"))
-
-    var card_id := str(minion.get("cardId", ""))
-    var entry := CardDB.card(card_id)
-    panel.add_child(_card_face(
-        card_id,
-        _stat_text(minion.get("attack")),
-        _stat_text(minion.get("health")),
-        _tribe_text(entry),
-        "★" if bool(minion.get("golden", false)) else "",
-    ))
-
-    _attach_detail(panel, {"detail_kind": "minion", "minion": minion})
-    if read_only:
-        return panel
-
-    # 棋盘卡只提供拖拽：拖到棋盘内换位，拖到商店出售；卡内不再放操作按钮。
-    panel.payload = {
-        "epoch": _view_epoch,
-        "minionId": str(minion.get("minionId", "")),
-        "fromIndex": minion_index,
-        "sellable": bool(minion_aff.get("sellable", false)),
-        "golden": bool(minion.get("golden", false)),
-    }
-    panel.drag_allowed = can_rearrange and Net.is_open()
-    if not panel.drag_allowed:
-        UI.apply_dim(panel)
-    return panel
-
-
-## 统一卡面：封面铺满整卡，底部信息区依次为居中名称与「攻击 · 类型 · 生命」。
-## 所有子节点忽略鼠标，点击与悬停由外层卡片决定。
-func _card_face(
-    card_id: String,
-    attack_text: String,
-    health_text: String,
-    type_text: String,
-    badge_text := "",
-) -> Control:
-    var entry := CardDB.card(card_id)
-    var face := Control.new()
-    face.name = "CardFace"
-    face.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    face.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    face.size_flags_vertical = Control.SIZE_EXPAND_FILL
-
-    var cover := ColorRect.new()
-    cover.name = "Cover"
-    cover.color = UITheme.tribe_cover(str(entry.get("tribe", "")))
-    cover.set_anchors_preset(Control.PRESET_FULL_RECT)
-    cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    face.add_child(cover)
-
-    var watermark := UI.label(_card_initial(card_id), UITheme.font_size("font-hero"), false)
-    watermark.name = "CoverMark"
-    watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
-    watermark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    watermark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    watermark.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
-    watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    face.add_child(watermark)
-
-    if badge_text != "":
-        var badge := UI.pill_label(badge_text, "accent", "font-caption")
-        badge.name = "CardBadge"
-        badge.set_anchors_preset(Control.PRESET_TOP_LEFT)
-        badge.position = Vector2(UITheme.space("space-xs"), UITheme.space("space-xs"))
-        badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        face.add_child(badge)
-
-    var info := UI.card_panel("cover-info")
-    info.name = "CardInfo"
-    info.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    info.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-    info.offset_top = -UITheme.metric("card-info-height")
-    info.offset_bottom = 0
-    var info_box := VBoxContainer.new()
-    info_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    info_box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    info.add_child(info_box)
-
-    var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-body-sm"), false)
-    name_label.name = "CardName"
-    name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    name_label.max_lines_visible = 1
-    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    info_box.add_child(name_label)
-
-    var stats_row := HBoxContainer.new()
-    stats_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stats_row.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    info_box.add_child(stats_row)
-
-    var attack_label := UI.label(attack_text, UITheme.font_size("font-title"), false)
-    attack_label.name = "CardAttack"
-    attack_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stats_row.add_child(attack_label)
-
-    var type_label := UI.label(type_text, UITheme.font_size("font-caption"), false)
-    type_label.name = "CardType"
-    type_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    type_label.max_lines_visible = 1
-    type_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    type_label.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    type_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stats_row.add_child(type_label)
-
-    var health_label := UI.label(health_text, UITheme.font_size("font-title"), false)
-    health_label.name = "CardHealth"
-    health_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stats_row.add_child(health_label)
-    face.add_child(info)
-    return face
-
-
-## 卡面封面的首字水印；空 id 回退问号。
-func _card_initial(card_id: String) -> String:
-    var display := CardDB.display_name(card_id)
-    return display.substr(0, 1) if display != "" else "?"
-
-
-## 卡面类型行：卡面宽度有限，只放部落；完整类型放在详情面板。
-func _tribe_text(entry: Dictionary) -> String:
-    var tribe := str(entry.get("tribe", ""))
-    return tribe if tribe != "" else str(entry.get("card_type", "—"))
-
-
-## 详情类型行：卡牌类别与部落。
-func _type_text(entry: Dictionary) -> String:
-    var card_type := str(entry.get("card_type", ""))
-    var tribe := str(entry.get("tribe", ""))
-    if card_type == "":
-        return tribe if tribe != "" else "—"
-    if tribe == "" or tribe == card_type:
-        return card_type
-    return "%s·%s" % [card_type, tribe]
-
-
-## 卡面数值：服务端或卡表缺失时用破折号占位。
-func _stat_text(value: Variant) -> String:
-    if value == null:
-        return "—"
-    return str(int(value))
-
-
-func _refresh_shop(self_state: Dictionary) -> void:
-    UI.clear(_shop_row)
-    var aff: Dictionary = self_state.get("affordances", {})
-    for slot in self_state.get("shop", []):
-        var index := int(slot.get("index", 0))
-        var card_id := _optional_text(slot.get("cardId"))
-        if card_id == "":
-            _shop_row.add_child(_empty_shop_slot(index))
-            continue
-        var slot_aff := _find_by_index(aff.get("shopSlots", []), index)
-        var buyable := not _view_stale and not _deadline_expired and bool(slot_aff.get("buyable", false))
-        var entry := CardDB.card(card_id)
-        var panel := UI.card_panel("raised-tight")
-        panel.name = "ShopSlot%d" % index
-        # PASS：整卡接收点击购买，同时让棋盘卡的出售落点继续冒泡到商店面板。
-        panel.mouse_filter = Control.MOUSE_FILTER_PASS
-        panel.custom_minimum_size = Vector2(UITheme.metric("shop-card-width"), UITheme.metric("shop-card-height"))
-        panel.set_meta("buyable", buyable)
-        panel.gui_input.connect(_on_shop_card_input.bind(panel, index))
-        panel.add_child(_card_face(
-            card_id,
-            _stat_text(entry.get("attack")),
-            _stat_text(entry.get("health")),
-            _tribe_text(entry),
-            "冻" if bool(slot.get("frozen", false)) else "",
-        ))
-        _attach_detail(panel, {
-            "detail_kind": "shop",
-            "cardId": card_id,
-            "disabledReason": slot_aff.get("disabledReason"),
-        })
-        if not buyable:
-            UI.apply_dim(panel)
-        _shop_row.add_child(panel)
-
-
-func _empty_shop_slot(index: int) -> PanelContainer:
-    var panel := UI.card_panel("empty")
-    panel.name = "ShopSlot%d" % index
-    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    panel.custom_minimum_size = Vector2(UITheme.metric("shop-card-width"), UITheme.metric("shop-card-height"))
-    var hint := UI.empty_hint("空槽")
-    hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    panel.add_child(hint)
-    return panel
-
-
-## 商店卡点击购买；不可购买时静默忽略，原因在详情面板里给出。
-func _on_shop_card_input(event: InputEvent, panel: Control, index: int) -> void:
-    if not (event is InputEventMouseButton):
-        return
-    var mouse := event as InputEventMouseButton
-    if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
-        return
-    if bool(panel.get_meta("buyable", false)):
-        _on_buy(index)
-
-
-## 手牌拖拽门槛：阶段、视图新鲜度、倒计时、连接、目标待选与可打出性全部满足才允许。
-##
-## 抽成静态函数便于冒烟直接验证两侧判定，不必真的连上服务端。
 static func drag_gate(
     phase: String,
     stale: bool,
@@ -909,286 +298,42 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
         _hand_row.add_child(entry)
 
 
-func _refresh_actions(self_state: Dictionary, recruited: bool, phase: String) -> void:
-    var aff: Dictionary = self_state.get("affordances", {})
-    _reroll_button.text = "刷新 %d 金" % int(self_state.get("rerollCost", 0))
-    _reroll_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canReroll", false))
-
-    var upgrade_cost = self_state.get("upgradeCost")
-    if upgrade_cost != null:
-        _upgrade_button.text = "升时代 %d 金" % int(upgrade_cost)
-    else:
-        _upgrade_button.text = "时代已满"
-    _upgrade_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canUpgradeEra", false))
-    _upgrade_button.tooltip_text = "" if aff.get("upgradeDisabledReason") == null else UI.error_text(str(aff.get("upgradeDisabledReason")))
-
-    var power: Dictionary = self_state.get("heroPower", {})
-    _hero_power_button.text = "英雄技能（剩 %d）" % int(power.get("usesLeft", 0))
-    _hero_power_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canUseHeroPower", false))
-    _hero_power_button.tooltip_text = "" if aff.get("heroPowerDisabledReason") == null else UI.error_text(str(aff.get("heroPowerDisabledReason")))
-
-    _freeze_button.disabled = _view_stale or _deadline_expired or _target_pending or phase != Protocol.PHASE_RECRUIT or recruited
-    _end_button.text = "已结束招募" if recruited else "结束招募"
-    _end_button.disabled = _view_stale or _deadline_expired or _target_pending or not bool(aff.get("canEndRecruit", false))
-
-
-func _refresh_side(self_state: Dictionary) -> void:
-    UI.clear(_self_hero_box)
-    var hero_id := _optional_text(self_state.get("heroCardId"))
-    _self_hero_box.add_child(UI.hero_tile(hero_id, UITheme.metric("side-width") - UITheme.space("space-2xl")))
-
-    var stat_line := UI.label("生命 %d · %s · 金币 %d" % [
-        int(self_state.get("hp", 0)),
-        _era_text(int(self_state.get("era", 1))),
-        int(self_state.get("gold", 0)),
-    ], UITheme.font_size("font-body-sm"), false)
-    stat_line.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    _self_hero_box.add_child(stat_line)
-
-    var power: Dictionary = self_state.get("heroPower", {})
-    var skill_id := _optional_text(power.get("skillId"))
-    var skill_text := CardDB.display_text(skill_id) if skill_id != "" else ""
-    if skill_text != "":
-        var skill := UI.label(skill_text, UITheme.font_size("font-caption"))
-        skill.max_lines_visible = 2
-        skill.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-        skill.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-        _self_hero_box.add_child(skill)
-
-
 func _set_combat_mode(in_combat: bool) -> void:
-    _recruit_panel.visible = not in_combat
-    _combat_root.visible = in_combat
-    _hero_power_button.visible = not in_combat
-    _end_button.visible = not in_combat
-
-
-func _refresh_combat(view: Dictionary) -> void:
-    _fill_combat_strip(_combat_opponent_strip, _opponent_of(view), "对手")
-    _fill_combat_strip(_combat_self_strip, _self_player(view), "我")
-    if not GameStore.combat_is_current():
-        _combat_banner.visible = false
-        UI.clear(_combat_opponent_row)
-        UI.clear(_combat_own_row)
-        _combat_opponent_row.add_child(UI.empty_hint("等待战斗动作…"))
-        return
-    var combat: Dictionary = GameStore.last_combat
-    if _combat_turn != GameStore.turn:
-        _start_combat(combat)
-    _render_combat_rows()
-    _refresh_combat_banner()
-
-
-## 装载本场演示：战前阵容与动作序列，并按 `phaseDeadline` 反推续播进度。
-func _start_combat(combat: Dictionary) -> void:
-    _combat.start(
-        combat.get("actions", []),
-        combat.get("ownBoard", []),
-        combat.get("opponentBoard", [])
-    )
-    var deadline := _unix_from_rfc3339(GameStore.deadline)
-    if GameStore.phase == Protocol.PHASE_COMBAT and deadline > 0.0:
-        var remaining_ms := maxf(deadline - Time.get_unix_time_from_system(), 0.0) * 1000.0
-        _combat.seek(maxf(float(_combat.total_ms()) - remaining_ms, 0.0))
-    _combat_turn = GameStore.turn
-
-
-## 演示进行中：阶段为战斗、播放器属于本回合、有本回合战报且尚未播完。
-func _combat_playing() -> bool:
-    return (
-        GameStore.phase == Protocol.PHASE_COMBAT
-        and _combat_turn == GameStore.turn
-        and GameStore.combat_is_current()
-        and not _combat.is_finished()
-    )
-
-
-## 按播放器当前状态重画两行：已存在的节点只改数值与明暗，召唤的随从插入新卡。
-func _render_combat_rows() -> void:
-    _reconcile_row(_combat_opponent_row, _combat.opponent)
-    _reconcile_row(_combat_own_row, _combat.own)
-
-
-## 把一行对齐到 `minions` 里的存活条目：按下标复用同实例的卡片，多余的同步释放。
-##
-## 播放器保留阵亡条目作为顺序锚点（与引擎一致），但行内只渲染存活随从：
-## 阵亡卡立刻消失，复生后重新按存活序列的位置出现。
-## 复用靠卡片上的 `minion_id` 元数据：不依赖外部映射表，重画多少次都幂等。
-func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
-    var alive: Array = []
-    for minion in minions:
-        if bool(minion.get("alive", true)):
-            alive.append(minion)
-
-    var wanted: Array = []
-    for minion in alive:
-        wanted.append(str(minion.get("minionId", "")))
-
-    # 先摘掉不再需要的卡片（阵亡或被服务端撤回的随从），以及非卡片的占位提示：
-    # 战报未到时 `_refresh_combat` 会在行内放一条等待提示，战报到达后必须随之清掉。
-    var existing: Dictionary = {}
-    for child in row.get_children():
-        if not (child is Control) or not child.has_meta("minion_id"):
-            row.remove_child(child)
-            child.queue_free()
-            continue
-        var minion_id := str(child.get_meta("minion_id"))
-        if wanted.has(minion_id) and not existing.has(minion_id):
-            existing[minion_id] = child
-        else:
-            row.remove_child(child)
-            child.queue_free()
-
-    for position in alive.size():
-        var minion: Dictionary = alive[position]
-        var minion_id := str(minion.get("minionId", ""))
-        var panel: Control = existing.get(minion_id)
-        if panel == null:
-            panel = _minion_card(minion, {}, false, 0, true)
-            panel.set_meta("minion_id", minion_id)
-            row.add_child(panel)
-        var attack_label = panel.find_child("CardAttack", true, false)
-        if attack_label != null:
-            attack_label.text = str(int(minion.get("attack", 0)))
-        var health_label = panel.find_child("CardHealth", true, false)
-        if health_label != null:
-            health_label.text = str(int(minion.get("health", 0)))
-        row.move_child(panel, position)
-
-
-## 横幅：动作播完并经过 TAIL_MS 后才出现。
-func _refresh_combat_banner() -> void:
-    _combat_banner.visible = _combat.banner_visible()
-    if not _combat_banner.visible:
-        return
-    _set_combat_banner(GameStore.last_combat)
-
-
-func _set_combat_banner(combat: Dictionary) -> void:
-    var own_board: Array = combat.get("ownBoard", [])
-    var opponent_board: Array = combat.get("opponentBoard", [])
-    var winner = combat.get("winnerId")
-    var result := "平局"
-    var variant := "accent"
-    if winner != null:
-        if str(winner) == GameStore.player_id:
-            result = "胜利"
-            variant = "success"
-        else:
-            result = "失败"
-            variant = "danger"
-    var mirror := "（镜像）" if bool(combat.get("mirror", false)) else ""
-    _combat_banner.text = "%s%s · 伤害 %d · 我方 %d vs 对手 %d" % [
-        result,
-        mirror,
-        int(combat.get("damage", 0)),
-        _combat.own.size(),
-        _combat.opponent.size(),
-    ]
-    _combat_banner.add_theme_color_override("font_color", UITheme.color("color-" + variant) if variant != "accent" else UITheme.color("color-accent"))
-
-
-func _fill_combat_strip(container: HBoxContainer, player: Dictionary, fallback: String) -> void:
-    UI.clear(container)
-    var hero_id := _optional_text(player.get("heroCardId"))
-    container.add_child(UI.avatar(hero_id, UITheme.metric("avatar-lg")))
-
-    var lines := VBoxContainer.new()
-    lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    lines.add_theme_constant_override("separation", 0)
-    container.add_child(lines)
-
-    var display := _optional_text(player.get("displayName"))
-    var name_label := UI.label(display if display != "" else fallback, UITheme.font_size("font-title"), false)
-    lines.add_child(name_label)
-
-    var meta := UI.label("HP %d · %s · 随从 %d" % [
-        int(player.get("hp", 0)),
-        _era_text(int(player.get("era", 1))),
-        int(player.get("boardCount", 0)),
-    ], UITheme.font_size("font-caption"), false)
-    meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    lines.add_child(meta)
-
-
-func _opponent_of(view: Dictionary) -> Dictionary:
-    var opponent_id := _optional_text(view.get("opponentPlayerId"))
-    if opponent_id == "":
-        return {}
-    for player in view.get("players", []):
-        if str(player.get("playerId", "")) == opponent_id:
-            return player
-    return {}
-
-
-func _self_player(view: Dictionary) -> Dictionary:
-    for player in view.get("players", []):
-        if str(player.get("playerId", "")) == GameStore.player_id:
-            return player
-    return view.get("self", {})
-
-
-func _refresh_log() -> void:
-    var lines: Array = []
-    if GameStore.combat_is_current():
-        lines.append(_combat_text())
-    var events: Array = GameStore.event_log
-    var start := maxi(0, events.size() - 8)
-    for index in range(start, events.size()):
-        lines.append(_event_text(events[index]))
-    _log_text.text = _join_lines(lines)
-
-
-func _combat_text() -> String:
-    var combat: Dictionary = GameStore.last_combat
-    var winner = combat.get("winnerId")
-    var result := "平局"
-    if winner != null:
-        result = "胜利" if str(winner) == GameStore.player_id else "失败"
-    var mirror: String = "（镜像）" if bool(combat.get("mirror", false)) else ""
-    return "[战斗] %s%s  伤害 %d  我方 %d vs 对手 %d\n" % [
-        result,
-        mirror,
-        int(combat.get("damage", 0)),
-        combat.get("ownBoard", []).size(),
-        combat.get("opponentBoard", []).size(),
-    ]
-
-
-func _event_text(event: Dictionary) -> String:
-    var kind := str(event.get("kind", ""))
-    var parts := ["[%s]" % kind]
-    if event.get("cardId") != null:
-        parts.append(CardDB.display_name(str(event.get("cardId"))))
-    if event.get("amount") != null:
-        parts.append(str(int(event.get("amount"))))
-    if event.get("place") != null:
-        parts.append("第 %d 名" % int(event.get("place")))
-    if event.get("playerId") != null:
-        parts.append(GameStore.player_name(str(event.get("playerId"))))
-    return " ".join(PackedStringArray(parts))
+    _recruit_view.visible = not in_combat
+    _combat_view.visible = in_combat
+    _side_panel.set_combat_mode(in_combat)
 
 
 func _refresh_connection() -> void:
+    if _status == null:
+        return
     var disconnected := not Net.is_open() and not GameStore.view.is_empty()
-    _conn_label.text = "未连接 · 正在重连" if disconnected else ""
+    if disconnected:
+        # 有连接句柄但未就绪 = 正在重连（dim）；句柄为空 = 断线（danger）。
+        var reconnecting := Net.socket != null
+        _status.text = "正在重连…" if reconnecting else "未连接 · 正在重连"
+        _status.add_theme_color_override(
+            "font_color",
+            UITheme.color("color-text-dim") if reconnecting else UITheme.color("color-danger"),
+        )
+        _connection_notice = true
+        return
+    if _connection_notice:
+        _status.text = ""
+        # 恢复到初始化时的基线颜色；只删除覆盖会丢掉 dim 基线。
+        _status.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+        _connection_notice = false
 
 
+## 倒计时由右栏维护；页面按「是否存在截止时间」决定清零，避免把已过期
+## （秒数为 0）误判成没有截止时间。
 func _update_timer() -> void:
-    if _timer_label == null:
+    if _side_panel == null:
         return
-    if GameStore.deadline == "":
-        _timer_label.text = "—"
+    if not _side_panel.has_deadline():
         _set_deadline_expired(false)
         return
-    var deadline := _unix_from_rfc3339(GameStore.deadline)
-    if deadline <= 0.0:
-        _timer_label.text = "—"
-        _set_deadline_expired(false)
-        return
-    var left := int(ceil(deadline - Time.get_unix_time_from_system()))
-    _timer_label.text = "剩余 %d 秒" % maxi(left, 0)
-    _set_deadline_expired(left <= 0)
+    _set_deadline_expired(_side_panel.seconds_left() <= 0)
 
 
 func _set_deadline_expired(value: bool) -> void:
@@ -1196,268 +341,6 @@ func _set_deadline_expired(value: bool) -> void:
         return
     _deadline_expired = value
     _refresh()
-
-
-func _unix_from_rfc3339(value: String) -> float:
-    var text := value
-    if text.ends_with("Z"):
-        text = text.substr(0, text.length() - 1)
-    var dot := text.find(".")
-    if dot >= 0:
-        text = text.substr(0, dot)
-    return Time.get_unix_time_from_datetime_string(text)
-
-
-# ── 随从详情 ──────────────────────────────────────────────────────────────
-
-const DETAIL_ROWS := ["initial", "permanent", "turn", "aura", "damage"]
-const DETAIL_ROW_TEXT := {
-    "initial": "初始",
-    "permanent": "永久",
-    "turn": "回合",
-    "aura": "光环",
-    "damage": "受击",
-}
-## 详情面板的挂载方向：商店卡在左右，棋盘卡在上下。
-const DETAIL_SIDES := {
-    "shop": ["right", "left"],
-    "minion": ["bottom", "top"],
-}
-
-
-## 卡片统一挂详情：悬停进入/离开、鼠标左键按下/松开、触摸按下/松开。
-## `data.kind` 决定详情内容（shop / minion）与面板挂载方向。
-## 卡内控件全部 IGNORE 鼠标，祖先悬停通知会被子控件截断，
-## 因此真正的矩形命中判断放在 _input，这里只保留就近的进入/离开兜底。
-func _attach_detail(card: Control, data: Dictionary) -> void:
-    card.set_meta("detail_data", data)
-    _detail_cards.append(card)
-    card.mouse_entered.connect(_show_detail.bind(data, card))
-    card.gui_input.connect(_on_card_gui_input.bind(data, card))
-
-
-func _on_card_gui_input(event: InputEvent, data: Dictionary, card: Control) -> void:
-    if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-        if event.pressed:
-            _show_detail(data, card)
-        else:
-            _update_detail_hover(card.get_global_rect().position + event.position)
-    elif event is InputEventScreenTouch:
-        if event.pressed:
-            _show_detail(data, card)
-        else:
-            _update_detail_hover(card.get_global_rect().position + event.position)
-
-
-## 跨子控件的真实命中判断：指针落在卡片矩形内即显示，移出才隐藏。
-func _input(event: InputEvent) -> void:
-    if _detail_layer == null:
-        return
-    if event is InputEventMouseMotion:
-        _update_detail_hover(_canvas_point(event.position))
-    elif event is InputEventScreenTouch:
-        _update_detail_hover(_canvas_point(event.position))
-    elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-        _update_detail_hover(_canvas_point(event.position))
-
-
-## 视口坐标转为画布坐标，与 get_global_rect() 同一坐标系。
-func _canvas_point(viewport_point: Vector2) -> Vector2:
-    return get_viewport().get_canvas_transform().affine_inverse() * viewport_point
-
-
-func _update_detail_hover(point: Vector2) -> void:
-    # 模态浮层打开时详情层会盖住浮层内容，直接隐藏且不再响应悬停。
-    if _overlay != null and _overlay.visible:
-        _hide_detail()
-        return
-    var found: Control = null
-    for card in _detail_cards:
-        if is_instance_valid(card) and card.is_visible_in_tree() and card.get_global_rect().has_point(point):
-            found = card
-            break
-    if found == null:
-        if _hover_card != null:
-            _hide_detail()
-        return
-    if found == _hover_card and _detail_panel != null and _detail_panel.visible:
-        return
-    _show_detail(found.get_meta("detail_data", {}), found)
-
-
-func _show_detail(data: Dictionary, anchor: Control) -> void:
-    if _detail_panel == null or anchor == null or not is_instance_valid(anchor):
-        return
-    var kind := str(data.get("detail_kind", "minion"))
-    # 同一张卡已在展示：只校正位置，避免每次按下/移入都重建整块面板。
-    # `_refresh` 会先 `_hide_detail()`，因此数据更新仍会触发重建。
-    if anchor == _hover_card and _detail_panel.visible:
-        _place_detail(anchor.get_global_rect(), kind)
-        return
-    if not is_instance_valid(_hover_card) or _hover_card != anchor:
-        _hover_card = anchor
-    UI.clear(_detail_panel)
-    var box := VBoxContainer.new()
-    box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    _detail_panel.add_child(box)
-
-    if kind == "shop":
-        _render_shop_detail(box, data)
-    else:
-        _render_minion_detail(box, data.get("minion", {}))
-
-    _detail_layer.visible = true
-    _detail_panel.visible = true
-    _place_detail(anchor.get_global_rect(), kind)
-
-
-## 商店卡详情：类型、费用、原始数值、时代、技能文本与不可购买原因。
-func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
-    var card_id := str(data.get("cardId", ""))
-    var entry := CardDB.card(card_id)
-    box.add_child(_detail_name(CardDB.display_name(card_id)))
-    box.add_child(_detail_row("类型", _type_text(entry)))
-    box.add_child(_detail_row("费用", "%d 金" % CardDB.display_cost(card_id)))
-    box.add_child(_detail_row("原始", "%s / %s" % [
-        _stat_text(entry.get("attack")),
-        _stat_text(entry.get("health")),
-    ]))
-    var era := str(entry.get("era", ""))
-    if era != "":
-        box.add_child(_detail_row("时代", era))
-    var skill_text := CardDB.display_text(card_id)
-    if skill_text != "":
-        var skill := UI.label(skill_text, UITheme.font_size("font-body-sm"))
-        skill.name = "DetailText"
-        skill.custom_minimum_size = Vector2(_detail_text_width(), 0)
-        skill.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-        box.add_child(skill)
-    if data.get("disabledReason") != null:
-        var reason := UI.label(UI.error_text(str(data.get("disabledReason"))), UITheme.font_size("font-body-sm"))
-        reason.name = "DetailBlocked"
-        reason.add_theme_color_override("font_color", UITheme.color("color-danger"))
-        box.add_child(reason)
-
-
-## 棋盘随从详情：名称与攻击/生命的构成分层。
-func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
-    box.add_child(_detail_name(CardDB.display_name(str(minion.get("cardId", "")))))
-    var stats: Dictionary = minion.get("stats", {})
-    if typeof(stats) != TYPE_DICTIONARY or stats.is_empty():
-        box.add_child(_detail_row("当前", "%d / %d" % [
-            int(minion.get("attack", 0)),
-            int(minion.get("health", 0)),
-        ]))
-        return
-    var attack: Dictionary = _stat_layers(stats.get("attack"))
-    var health: Dictionary = _stat_layers(stats.get("health"))
-    for layer in DETAIL_ROWS:
-        var a := int(attack.get(layer, 0))
-        var h := int(health.get(layer, 0))
-        if layer == "damage" and a == 0 and h == 0:
-            continue
-        var label := str(DETAIL_ROW_TEXT[layer])
-        if layer == "initial":
-            box.add_child(_detail_row(label, "%d / %d" % [a, h]))
-        elif layer == "damage":
-            box.add_child(_detail_row(label, "%s / %s" % [_damage_text(a), _damage_text(h)]))
-        else:
-            box.add_child(_detail_row(label, "%s / %s" % [_signed(a), _signed(h)]))
-    box.add_child(_detail_row("当前", "%d / %d" % [
-        int(attack.get("current", 0)),
-        int(health.get("current", 0)),
-    ]))
-
-
-func _detail_name(text: String) -> Label:
-    var name_label := UI.label(text, UITheme.font_size("font-title"), false)
-    name_label.name = "DetailName"
-    name_label.max_lines_visible = 1
-    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    return name_label
-
-
-## 面板宽度扣除卡片内边距后的文本宽度，供技能文本换行。
-func _detail_text_width() -> int:
-    return UITheme.metric("detail-panel-width") - UITheme.space("space-lg") * 2
-
-
-## 详情定位：商店卡先右后左，棋盘卡先下后上；夹紧视口且不覆盖当前卡片。
-func _place_detail(card_rect: Rect2, kind: String) -> void:
-    var viewport := get_viewport_rect().size
-    var panel_size := _detail_panel.get_combined_minimum_size()
-    var margin := UITheme.space("space-xs")
-    var gap := UITheme.space("space-sm")
-    var fallback := Vector2.ZERO
-    var has_fallback := false
-    for side in DETAIL_SIDES.get(kind, DETAIL_SIDES["minion"]):
-        var pos := Vector2.ZERO
-        match side:
-            "right":
-                pos = Vector2(card_rect.end.x + gap, card_rect.position.y)
-            "left":
-                pos = Vector2(card_rect.position.x - panel_size.x - gap, card_rect.position.y)
-            "bottom":
-                pos = Vector2(card_rect.position.x, card_rect.end.y + gap)
-            _:
-                pos = Vector2(card_rect.position.x, card_rect.position.y - panel_size.y - gap)
-        pos.x = clampf(pos.x, margin, maxf(margin, viewport.x - panel_size.x - margin))
-        pos.y = clampf(pos.y, margin, maxf(margin, viewport.y - panel_size.y - margin))
-        if not has_fallback:
-            fallback = pos
-            has_fallback = true
-        if not Rect2(pos, panel_size).intersects(card_rect):
-            _detail_panel.position = pos
-            return
-    _detail_panel.position = fallback
-
-
-func _hide_detail() -> void:
-    if _detail_panel != null:
-        _detail_panel.visible = false
-    if _detail_layer != null:
-        _detail_layer.visible = false
-    _hover_card = null
-
-
-func _stat_layers(value: Variant) -> Dictionary:
-    if typeof(value) == TYPE_DICTIONARY:
-        return value
-    return {}
-
-
-func _detail_row(prefix: String, value: String) -> HBoxContainer:
-    var row := HBoxContainer.new()
-    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    row.add_theme_constant_override("separation", UITheme.space("space-md"))
-    var key := UI.label(prefix, UITheme.font_size("font-body-sm"), false)
-    key.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    key.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    row.add_child(key)
-    var spacer := Control.new()
-    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_child(spacer)
-    var text := UI.label(value, UITheme.font_size("font-body-sm"), false)
-    text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    row.add_child(text)
-    return row
-
-
-func _signed(value: int) -> String:
-    return "+%d" % value if value >= 0 else str(value)
-
-
-## 受击行以「损失量」呈现：层和高于当前量为负数，复生超过层和为正数。
-func _damage_text(value: int) -> String:
-    if value > 0:
-        return "-%d" % value
-    if value < 0:
-        return "+%d" % -value
-    return "0"
 
 
 # ── 弹层 ──────────────────────────────────────────────────────────────────
@@ -1470,24 +353,25 @@ func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
     if _view_stale or _deadline_expired or recruited or phase != Protocol.PHASE_RECRUIT:
         _target_intent = {}
         _overlay.visible = false
-        return
-    var head: Dictionary = choices[0] if not choices.is_empty() else {}
-    if str(head.get("kind", "")) == "target":
-        # 服务端目标待选优先：丢弃英雄技能的客户端目标态，改为选随从结算战吼。
-        _target_intent = {}
-        _build_target_pending_overlay(head, self_state)
-        return
-    if not _target_intent.is_empty():
-        _build_target_overlay(self_state)
-    elif not choices.is_empty():
-        _build_choice_overlay(choices[0])
     else:
-        _overlay.visible = false
+        var head: Dictionary = choices[0] if not choices.is_empty() else {}
+        if str(head.get("kind", "")) == "target":
+            # 服务端目标待选优先：丢弃英雄技能的客户端目标态，改为选随从结算战吼。
+            _target_intent = {}
+            _build_target_pending_overlay(head, self_state)
+        elif not _target_intent.is_empty():
+            _build_target_overlay(self_state)
+        elif not choices.is_empty():
+            _build_choice_overlay(choices[0])
+        else:
+            _overlay.visible = false
+    # 浮层可见性只在本函数收口；打开浮层时同步遮住详情层。
+    _detail.blocked = _overlay.visible
 
 
 func _overlay_frame(title: String, parent: VBoxContainer) -> void:
     _overlay.visible = true
-    _hide_detail()
+    _detail.hide_panel()
     var shade := ColorRect.new()
     shade.color = UITheme.alpha("color-bg", 0.72)
     shade.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1682,8 +566,7 @@ func _can_play_now() -> bool:
 
 
 func _on_sell_hover(hovering: bool, refund: int) -> void:
-    _sell_hint.text = "松手出售 +%d 金" % refund
-    _sell_hint.visible = hovering
+    _recruit_view.set_sell_hint(hovering, refund)
 
 
 func _on_sell_dropped(payload: Dictionary) -> void:
@@ -1796,30 +679,3 @@ func _on_error() -> void:
 
 func _on_game_over() -> void:
     UI.navigate(self, "res://scenes/result.tscn")
-
-
-# ── 工具 ──────────────────────────────────────────────────────────────────
-
-func _find_by_index(items: Array, index: int) -> Dictionary:
-    for item in items:
-        if int(item.get("index", -1)) == index:
-            return item
-    return {}
-
-
-func _optional_text(value: Variant) -> String:
-    if value == null:
-        return ""
-    return str(value)
-
-
-## 统一时代文案：顶栏、积分榜、属性行与战斗条都显示具体时代名。
-func _era_text(era: int) -> String:
-    return "时代 %s" % CardDB.era_name(era)
-
-
-func _join_lines(values: Array) -> String:
-    var parts := PackedStringArray()
-    for value in values:
-        parts.append(str(value))
-    return "\n".join(parts)

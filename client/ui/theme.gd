@@ -106,6 +106,7 @@ const SEMANTIC_RADIUS := {
 
 const SEMANTIC_OPACITY := {
 	"opacity-dim": 0.45,
+	"freeze-overlay-alpha": 0.22,
 }
 
 # ── 组件与场景层 ──────────────────────────────────────────────────────────
@@ -125,6 +126,10 @@ const SCENARIO := {
 	"hand-card-height": 84,
 	"card-info-height": 46,
 	"detail-panel-width": 200,
+	"avatar-rail": 44,
+	"seat-hp-bar-height": 6,
+	"rank-badge-size": 18,
+	"freeze-crystal-gap": 14,
 }
 
 const TRIBE_COLOR := {

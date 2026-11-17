@@ -25,7 +25,6 @@ var last_seq := 0
 var ranking: Array = []
 var game_seed := ""
 var last_error: Dictionary = {}
-var event_log: Array = []
 var last_combat: Dictionary = {}
 ## `last_combat` 所属回合；与当前 `turn` 不一致时不展示，避免旧战报被当成新战斗。
 var last_combat_turn := -1
@@ -50,11 +49,6 @@ func handle(type: String, payload: Dictionary) -> void:
             view_changed.emit()
         Protocol.MSG_STATE_UPDATE, Protocol.MSG_SNAPSHOT:
             _apply_view(payload.get("view", {}))
-            for event in payload.get("events", []):
-                if event is Dictionary:
-                    event_log.append(event)
-            while event_log.size() > 30:
-                event_log.pop_front()
             view_changed.emit()
         Protocol.MSG_PHASE_CHANGED:
             phase = str(payload.get("phase", phase))
@@ -107,7 +101,6 @@ func reset_room() -> void:
     ranking = []
     game_seed = ""
     last_error = {}
-    event_log = []
     last_combat = {}
     last_combat_turn = -1
     timer_seconds = -1

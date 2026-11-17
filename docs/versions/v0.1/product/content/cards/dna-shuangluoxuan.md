@@ -3,6 +3,7 @@ id: dna-shuangluoxuan
 name: DNA双螺旋结构
 card_type: 效果
 level: 4
+era: 未来
 tribe: 生物
 cost: 2
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-friendly-growth-thrice]
 | 名称 | DNA双螺旋结构 |
 | 类型 | 效果 |
 | 星级 | 4 |
+| 时代 | 未来 |
 | 流派 | 生物 |
 | 技能 | trigger-friendly-growth-thrice |
 | 费用 | 2 |

@@ -112,6 +112,63 @@ static func avatar(hero_id: String, size := 34) -> PanelContainer:
     return node
 
 
+## 名次角标：头像左上角的金色小方块，已淘汰也继续显示数字。
+static func rank_badge(rank: int) -> PanelContainer:
+    var size := UITheme.metric("rank-badge-size")
+    var node := PanelContainer.new()
+    node.name = "RankBadge"
+    node.custom_minimum_size = Vector2(size, size)
+    node.size = Vector2(size, size)
+    node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+    var box := StyleBoxFlat.new()
+    box.bg_color = UITheme.color("color-accent-strong")
+    box.border_color = UITheme.color("color-accent")
+    box.set_border_width_all(1)
+    box.set_corner_radius_all(UITheme.radius("radius-sm"))
+    node.add_theme_stylebox_override("panel", box)
+
+    var text := label(str(rank) if rank > 0 else "—", UITheme.font_size("font-caption"), false)
+    text.name = "RankText"
+    text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    text.add_theme_color_override("font_color", UITheme.color("color-bg"))
+    node.add_child(text)
+    return node
+
+
+## 血量条：固定宽度、不显示数字；`value` 超出 [0, cap] 时填充夹到两端。
+static func hp_bar(value: int, cap: int, width: int) -> Control:
+    var height := UITheme.metric("seat-hp-bar-height")
+    var node := Control.new()
+    node.name = "HpBar"
+    node.custom_minimum_size = Vector2(width, height)
+    node.size = Vector2(width, height)
+    node.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+    node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+    var track := ColorRect.new()
+    track.name = "HpTrack"
+    track.color = UITheme.color("color-surface-sunken")
+    track.position = Vector2.ZERO
+    track.size = Vector2(width, height)
+    track.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    node.add_child(track)
+
+    var safe_cap := maxi(cap, 1)
+    var clamped := clampi(value, 0, safe_cap)
+    var fill_width := clampi(int(round(float(width) * float(clamped) / float(safe_cap))), 0, width)
+    var fill := ColorRect.new()
+    fill.name = "HpFill"
+    fill.color = UITheme.color("color-success")
+    fill.position = Vector2.ZERO
+    fill.size = Vector2(fill_width, height)
+    fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    node.add_child(fill)
+    return node
+
+
 static func _avatar_initial(hero_id: String) -> String:
     if hero_id == "":
         return "?"
@@ -245,3 +302,14 @@ static func error_route(code: String) -> String:
     if code in ["NOT_IN_ROOM", "ROOM_NOT_FOUND"]:
         return "lobby"
     return ""
+
+
+## RFC3339 时间转 Unix 秒；共享给需要按 `phaseDeadline` 反推进度的视图。
+static func unix_from_rfc3339(value: String) -> float:
+    var text := value
+    if text.ends_with("Z"):
+        text = text.substr(0, text.length() - 1)
+    var dot := text.find(".")
+    if dot >= 0:
+        text = text.substr(0, dot)
+    return Time.get_unix_time_from_datetime_string(text)

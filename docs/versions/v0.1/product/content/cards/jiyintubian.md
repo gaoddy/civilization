@@ -3,6 +3,7 @@ id: jiyintubian
 name: 基因突变
 card_type: 效果
 level: 3
+era: 未来
 tribe: 生物
 cost: 2
 match_text: 同左
@@ -19,6 +20,7 @@ skills: [trigger-friendly-growth-twice]
 | 名称 | 基因突变 |
 | 类型 | 效果 |
 | 星级 | 3 |
+| 时代 | 未来 |
 | 流派 | 生物 |
 | 技能 | trigger-friendly-growth-twice |
 | 费用 | 2 |

@@ -30,7 +30,7 @@ pub struct SeatView {
     pub phase: Phase,
     pub turn: u8,
     pub seat: Seat,
-    /// 镜像配对或尚未配对时为 `None`。
+    /// 幽灵战为幽灵归属座位；查询者本人就是幽灵归属者或尚未配对时为 `None`。
     pub opponent_seat: Option<Seat>,
     pub self_view: SelfView,
     /// 全部座位的公开摘要，按座位升序。
@@ -127,6 +127,8 @@ pub struct PlayerSummaryView {
     pub recruited: bool,
     /// 最终名次；未进入排名时为 `None`。
     pub placement: Option<u8>,
+    /// 局内实时名次；对局结束后与 `placement` 一致。
+    pub rank: Option<u8>,
 }
 
 /// 等待该座位做出的选择。
@@ -393,8 +395,20 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .collect();
 
     let opponent_seat = state.pairings.iter().find_map(|pairing| {
-        if pairing.mirror || (pairing.a != seat && pairing.b != seat) {
+        if pairing.a != seat && pairing.b != seat {
             return None;
+        }
+        // 幽灵归属者本人观战：不指向自己（仅防御异常构造；正常配对不会把
+        // 幽灵归属者放进 `a`/`b`）。
+        if pairing.ghost == Some(seat) {
+            return None;
+        }
+        // 落单且没有可对战的幽灵：设计表格规定 `opponentPlayerId` 为 `null`。
+        if pairing.ghost.is_none() && pairing.a == pairing.b {
+            return None;
+        }
+        if let Some(ghost) = pairing.ghost {
+            return Some(ghost);
         }
         Some(if pairing.a == seat {
             pairing.b
@@ -512,6 +526,7 @@ fn player_summary(state: &GameState, player: &PlayerState) -> PlayerSummaryView 
         hero_card_id: player.hero.clone(),
         recruited: player.recruit_done,
         placement: placement_of(state, player.seat),
+        rank: settle::rank_of(state, player.seat),
     }
 }
 

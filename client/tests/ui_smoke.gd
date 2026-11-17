@@ -1,15 +1,11 @@
-extends Node
+extends "res://tests/smoke_case.gd"
 ## 无头冒烟：实例化各场景，确认脚本、控件与关键展示无错误。
-
-const FixtureScript = preload("res://tests/fixture.gd")
 
 const SCENES := [
     "res://scenes/login.tscn",
     "res://scenes/lobby.tscn",
     "res://scenes/room.tscn",
 ]
-
-var _failures := 0
 
 
 func _ready() -> void:
@@ -54,79 +50,7 @@ func _ready() -> void:
     await _check_reset_session()
     await _check_error_text()
     await _check_result()
-    if _failures == 0:
-        print("UI_SMOKE_OK")
-        get_tree().quit(0)
-    else:
-        get_tree().quit(1)
-
-
-func _expect(condition: bool, message: String) -> void:
-    if not condition:
-        push_error(message)
-        _failures += 1
-
-
-## 在卡片局部坐标处用真实鼠标移动事件模拟悬停。
-func _hover(instance: Node, card: Control, local: Vector2) -> void:
-    await _push_motion(instance, card.get_global_rect().position + local)
-
-
-func _push_motion(instance: Node, canvas_point: Vector2) -> void:
-    # 传入画布坐标并令 in_local_coords = true：Godot 在 _input 之前按画布变换
-    # 换算位置（1280x720 视口被缩放到无头窗口），页面再按同一变换反算，
-    # 与 get_global_rect() 同一坐标系。
-    var event := InputEventMouseMotion.new()
-    event.position = canvas_point
-    event.global_position = canvas_point
-    instance.get_viewport().push_input(event, true)
-    await get_tree().process_frame
-
-
-## 按住左键的鼠标移动；`relative` 用于累计拖拽阈值。
-func _push_motion_held(instance: Node, canvas_point: Vector2, relative: Vector2) -> void:
-    var event := InputEventMouseMotion.new()
-    event.position = canvas_point
-    event.global_position = canvas_point
-    event.relative = relative
-    event.button_mask = MOUSE_BUTTON_MASK_LEFT
-    instance.get_viewport().push_input(event, true)
-    await get_tree().process_frame
-
-
-## 真实鼠标拖拽：按下起手、越过阈值、移动到落点、松手。
-func _real_drag(instance: Node, start: Vector2, target: Vector2) -> void:
-    await _push_motion(instance, start)
-    await _push_button(instance, start, true)
-    await _push_motion_held(instance, start + Vector2(24, 0), Vector2(24, 0))
-    await _push_motion_held(instance, target, target - start - Vector2(24, 0))
-    await _push_button(instance, target, false)
-    await get_tree().process_frame
-
-
-## 画布坐标处的鼠标按下/松开事件。
-func _push_button(instance: Node, canvas_point: Vector2, pressed: bool) -> void:
-    var event := InputEventMouseButton.new()
-    event.button_index = MOUSE_BUTTON_LEFT
-    event.pressed = pressed
-    event.position = canvas_point
-    event.global_position = canvas_point
-    event.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
-    instance.get_viewport().push_input(event, true)
-    await get_tree().process_frame
-
-
-## 在画布坐标处用真实鼠标按下/松开事件点击。
-func _push_click(instance: Node, canvas_point: Vector2) -> void:
-    await _push_motion(instance, canvas_point)
-    for pressed in [true, false]:
-        var event := InputEventMouseButton.new()
-        event.button_index = MOUSE_BUTTON_LEFT
-        event.pressed = pressed
-        event.position = canvas_point
-        event.global_position = canvas_point
-        instance.get_viewport().push_input(event, true)
-        await get_tree().process_frame
+    _finish()
 
 
 ## 战斗只读卡（CombatOwnRow / CombatOpponentRow）同样触发详情。
@@ -178,32 +102,6 @@ func _check_detail_without_stats() -> void:
     GameStore.deadline = ""
     GameStore.turn = 1
     GameStore.phase = ""
-
-
-func _node_text(node: Node) -> String:
-    var text := ""
-    for child in node.find_children("*", "Label", true, false):
-        text += str(child.text) + "\n"
-    return text
-
-
-func _check_scene(path: String, free_after: bool) -> Node:
-    var packed = load(path)
-    if packed == null:
-        push_error("无法加载场景 %s" % path)
-        _failures += 1
-        return null
-    var instance = packed.instantiate()
-    if instance == null:
-        push_error("无法实例化场景 %s" % path)
-        _failures += 1
-        return null
-    add_child(instance)
-    await get_tree().process_frame
-    await get_tree().process_frame
-    if free_after:
-        instance.queue_free()
-    return instance
 
 
 func _check_room_null_hero() -> void:
@@ -474,22 +372,14 @@ func _check_game() -> void:
         )
         await _push_motion(instance, Vector2(-40, -40))
         _expect(not detail.is_visible_in_tree(), "移出商店卡矩形应隐藏详情面板")
-    # 时代在所有位置显示具体名称（夹具自我时代 2、对手时代 1）。
-    var era_pill = instance.find_child("EraPill", true, false)
+    # 时代名展示已随顶栏删除迁到右栏英雄段：顶栏删除由 ui_smoke_side 覆盖，
+    # 座位行不再显示时代、悬停详情才显示时代由 ui_smoke_seats 覆盖。
+    var side_hero = instance.find_child("SideHero", true, false)
     _expect(
-        era_pill != null and str(era_pill.text) == "时代 原始",
-        "顶栏应显示具体时代名，实际：%s" % (era_pill.text if era_pill != null else "缺失")
+        side_hero != null and _node_text(side_hero).contains("时代 原始"),
+        "右栏英雄段应显示具体时代名（自我时代 2 → 原始），实际：%s"
+            % ("缺失" if side_hero == null else _node_text(side_hero))
     )
-    var self_hero = instance.find_child("SelfHeroPanel", true, false)
-    _expect(
-        self_hero != null and _node_text(self_hero).contains("时代 原始"),
-        "右侧属性行应显示具体时代名"
-    )
-    var players_rail = instance.find_child("PlayersRail", true, false)
-    if players_rail != null:
-        var rail_text := _node_text(players_rail)
-        _expect(rail_text.contains("时代 原始"), "积分榜本人行应显示时代名：%s" % rail_text)
-        _expect(rail_text.contains("时代 史前"), "积分榜对手行应显示时代名：%s" % rail_text)
     # 重新显示详情，再打开选择浮层，确认浮层会隐藏详情层。
     if detail != null and card != null:
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
@@ -616,48 +506,6 @@ func _check_combat_no_skip_entry(instance: Node) -> void:
         var text := str((child as Button).text)
         _expect(not text.contains("跳过"), "演示不应提供「跳过」：%s" % text)
         _expect(not text.contains("加速"), "演示不应提供「加速」：%s" % text)
-
-
-## 构造战斗阶段的场景，返回实例（调用方负责释放）。
-func _combat_instance(deadline: String) -> Node:
-    GameStore.player_id = "p0"
-    GameStore.phase = "Combat"
-    GameStore.turn = 3
-    GameStore.deadline = deadline
-    var view := FixtureScript.game_view()
-    view["phase"] = "Combat"
-    view["opponentPlayerId"] = "p2"
-    GameStore.view = view
-    _set_combat(FixtureScript.combat_result())
-    return await _check_scene("res://scenes/game.tscn", false)
-
-
-func _stats_text(panel: Control) -> String:
-    var attack = panel.find_child("CardAttack", true, false)
-    var health = panel.find_child("CardHealth", true, false)
-    if attack == null or health == null:
-        return ""
-    return "%s / %s" % [str(attack.text), str(health.text)]
-
-
-## 给当前回合装上战报（生产路径由 `CombatResult` 消息写入，这里直接摆状态）。
-func _set_combat(combat: Dictionary) -> void:
-    GameStore.last_combat = combat
-    GameStore.last_combat_turn = GameStore.turn
-
-
-func _clear_combat() -> void:
-    GameStore.last_combat = {}
-    GameStore.last_combat_turn = -1
-
-
-## 装作已连接：`Net.is_open()` 只看 `socket` 的就绪状态。
-func _fake_connect() -> void:
-    Net.socket = FixtureScript.FakeSocket.new()
-
-
-func _fake_disconnect() -> void:
-    Net.socket = null
 
 
 ## 落点门控：拖拽期间阶段改变、结束招募、视图过期、倒计时归零、断线或进入
@@ -803,11 +651,9 @@ func _check_stale_combat_not_shown() -> void:
         return
     var own_row = instance.find_child("CombatOwnRow", true, false)
     var banner = instance.find_child("CombatBanner", true, false)
-    var log_text = instance.find_child("LogText", true, false)
     _expect(own_row != null and own_row.get_child_count() == 0, "上一回合战报不应渲染随从行")
     _expect(banner != null and not banner.visible, "上一回合战报不应显示横幅")
-    _expect(log_text != null and not str(log_text.text).contains("[战斗]"), "战报行不应显示上一回合战斗：%s"
-        % ("" if log_text == null else str(log_text.text)))
+    # 事件流已删除（ui_smoke_side 断言 LogText 不存在），旧战报不再有日志行可查。
     instance.queue_free()
     await get_tree().process_frame
 
@@ -858,17 +704,6 @@ func _check_combat_placeholder_cleared() -> void:
     GameStore.turn = 1
     GameStore.phase = ""
     GameStore.deadline = ""
-
-
-## 行内的等待提示：是控件但没有 `minion_id` 元数据（随从卡一定带该元数据）。
-func _placeholder_count(row: Node) -> int:
-    if row == null:
-        return 0
-    var count := 0
-    for child in row.get_children():
-        if child is Control and not child.has_meta("minion_id"):
-            count += 1
-    return count
 
 
 ## 棋盘容量取视图：空位数量与提示跟随 `boardSlots`，满场判定用同一数值。
@@ -1538,23 +1373,6 @@ func _check_drag_cancelled_after_view_rebuild() -> void:
     await get_tree().process_frame
     GameStore.view = {}
     GameStore.turn = 1
-
-
-## 目标待选的视图夹具：队首是 target 待选，棋盘两个随从。
-func _target_pending_view() -> Dictionary:
-    var view: Dictionary = FixtureScript.view()
-    view["self"]["board"] = [
-        FixtureScript.board_minion("mi_1", "baiyi", 0),
-        FixtureScript.board_minion("mi_2", "airplane", 1),
-    ]
-    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
-    view["self"]["pendingChoices"] = [
-        {"kind": "target", "sourceMinionId": "mi_1"},
-    ]
-    view["self"]["affordances"]["handCards"] = [
-        {"index": 0, "playable": true, "disabledReason": null},
-    ]
-    return view
 
 
 ## 目标待选：浮层只列候选随从，没有任何退出路径，且所有招募控件被阻塞。

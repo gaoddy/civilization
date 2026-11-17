@@ -24,7 +24,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use protocol::server::{CombatResult, ErrorMessage, GameOver, GameStarted, Snapshot, StateUpdate};
-use protocol::view::GameEvent as ProtocolGameEvent;
+use protocol::view::{CombatLogEntry, GameEvent as ProtocolGameEvent};
 use protocol::{ErrorCode, GameOverRankingItem, ProtocolError, ServerEnvelope};
 use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
@@ -153,8 +153,19 @@ pub struct GameTask {
     phase_deadline_ms: u64,
     /// 本场战斗的逐座位报告；`Combat` 阶段保留供重连补发，结算时取走。
     combat_reports: Option<BTreeMap<Seat, SeatCombatReport>>,
+    /// 进入战斗演示前的名次快照（按下标即座位）。
+    ///
+    /// `resolve_combat` 会立刻改写 `damage_dealt`、`last_won` 与 `last_winner`，
+    /// 而设计 §7.2 要求演示期间名次保持战前值；快照只在 `Combat` 阶段覆盖
+    /// `PlayerSummary.rank`，[`GameTask::finish_combat`] 结算时清空、恢复实时计算。
+    combat_ranks: Option<[Option<u8>; SEAT_COUNT]>,
     /// 本场战斗的演示时长（毫秒）；参与下回合招募预算抵扣。
     combat_duration_ms: u64,
+    /// 最近 5 个回合的全对局公开战报，按回合升序。
+    ///
+    /// 只存在 `GameTask` 上，不写入 [`GameState`]，因此不影响 `state_hash` 与
+    /// 确定性重放；重连快照从当前视图自然带出。
+    combat_log: Vec<CombatLogEntry>,
     /// 每个座位当前连接的下行发送端；首次建连经 [`GameTask::bind_sender`] 注册，
     /// 重连时被替换。所有权只在这里，连接层通过 [`GameTask::sender`] 借用投递。
     senders: BTreeMap<Seat, mpsc::Sender<ServerEnvelope>>,
@@ -225,7 +236,9 @@ impl GameTask {
             room_id: String::new(),
             phase_deadline_ms,
             combat_reports: None,
+            combat_ranks: None,
             combat_duration_ms: 0,
+            combat_log: Vec::new(),
             senders: BTreeMap::new(),
             connected: [true; SEAT_COUNT],
             disconnected_at_ms: [None; SEAT_COUNT],
@@ -252,14 +265,30 @@ impl GameTask {
     /// 指定座位当前协议视图；座位不存在或内部数据不合法时返回 `None`。
     pub fn player_view(&self, seat: Seat) -> Option<protocol::view::PlayerView> {
         let seat_view = view(&self.engine, &self.state, seat)?;
-        to_protocol(
+        let mut protocol_view = to_protocol(
             &seat_view,
             &self.room_id,
             &self.deadline_rfc3339(),
             &self.seats,
             self.engine.catalog.config.board_slots,
+            self.engine.catalog.config.initial_hp,
         )
-        .ok()
+        .ok()?;
+        // 演示期间名次保持战前值：`resolve_combat` 已写入本轮伤害与胜者，
+        // 实时 `rank_of` 会提前跳动，这里用进入战斗前的快照覆盖。
+        if self.state.phase == Phase::Combat
+            && let Some(ranks) = &self.combat_ranks
+        {
+            for player in &mut protocol_view.players {
+                if let Ok(index) = usize::try_from(player.seat)
+                    && let Some(rank) = ranks.get(index).copied()
+                {
+                    player.rank = rank.and_then(|rank| std::num::NonZeroU64::new(u64::from(rank)));
+                }
+            }
+        }
+        protocol_view.combat_log = self.combat_log.clone();
+        Some(protocol_view)
     }
 
     /// 指定座位当前的全量 `StateUpdate`；快照请求不携带事件。
@@ -543,9 +572,89 @@ impl GameTask {
         }
     }
 
+    /// 把本场逐座位报告归一为战报并追加到最近五回合窗口。
+    ///
+    /// 真实战在 `reports` 里两个座位各一条，只保留座位号较小的一条；
+    /// 幽灵战本来只有落单座位一条。战报回合号取结算时刻的 `state.turn`，
+    /// 追加后丢弃早于 `turn - 4` 的条目。
+    fn record_combat_log(&mut self, reports: &BTreeMap<Seat, SeatCombatReport>) {
+        let Some(turn) = std::num::NonZeroU64::new(u64::from(self.state.turn)) else {
+            return;
+        };
+        for report in reports.values() {
+            let opponent = report.opponent_seat;
+            // 真实战的另一半报告指向更小座位时跳过，保证一场只记一条。
+            if !report.mirror {
+                let Some(opponent) = opponent else {
+                    continue;
+                };
+                if report.seat > opponent {
+                    continue;
+                }
+            }
+            let participant_ids = if report.mirror {
+                vec![self.player_id(report.seat)]
+            } else {
+                let Some(opponent) = opponent else { continue };
+                let mut participants = [report.seat, opponent];
+                // 按座位号升序，再映射为 playerId；不是按 playerId 字符串排序。
+                participants.sort_unstable();
+                participants
+                    .into_iter()
+                    .map(|seat| self.player_id(seat))
+                    .collect()
+            };
+            let (winner_id, loser_id) = match report.winner {
+                // 平局：双方都为 null，伤害显式写 0，不依赖引擎当前保证。
+                None => (None, None),
+                Some(winner) if winner == report.seat => (
+                    Some(self.player_id(winner)),
+                    // 幽灵没有玩家 id，玩家赢下幽灵战时 loserId 为 null。
+                    if report.mirror {
+                        None
+                    } else {
+                        opponent.map(|opponent| self.player_id(opponent))
+                    },
+                ),
+                Some(winner) => (
+                    // 幽灵赢时 `winner` 是幽灵归属座位，同样没有玩家 id。
+                    if report.mirror {
+                        None
+                    } else {
+                        Some(self.player_id(winner))
+                    },
+                    Some(self.player_id(report.seat)),
+                ),
+            };
+            let damage = match report.winner {
+                None => 0,
+                Some(_) => u64::try_from(report.damage).unwrap_or(0),
+            };
+            self.combat_log.push(CombatLogEntry {
+                damage,
+                ghost_id: if report.mirror {
+                    opponent.map(|seat| self.player_id(seat))
+                } else {
+                    None
+                },
+                loser_id,
+                mirror: report.mirror,
+                participant_ids,
+                turn,
+                winner_id,
+            });
+        }
+        let oldest = u64::from(self.state.turn.saturating_sub(4));
+        self.combat_log.retain(|entry| entry.turn.get() >= oldest);
+    }
+
+    fn player_id(&self, seat: Seat) -> String {
+        self.seats[usize::from(seat)].player_id.clone()
+    }
+
     /// 把逐座位战斗报告转成 `CombatResult` 更新：一份报告对应一条更新。
     ///
-    /// 镜像战在 `outcome.reports` 里只有该座位自己的一条，因此只会产生 1 条更新。
+    /// 幽灵战在 `outcome.reports` 里只有该座位自己的一条，因此只会产生 1 条更新。
     pub fn combat_updates(&self, reports: &BTreeMap<Seat, SeatCombatReport>) -> Vec<SeatUpdate> {
         reports
             .iter()
@@ -573,8 +682,14 @@ impl GameTask {
         mut events: Vec<EngineEvent>,
     ) -> Result<Vec<SeatUpdate>, EngineError> {
         events.extend(self.engine.finish_recruit(&mut self.state)?);
+        // 演示期间左栏名次必须停在战前值：`resolve_combat` 会立即改写伤害与
+        // 胜者，因此在这之前按下标（即座位）取一次快照。
+        self.combat_ranks = Some(std::array::from_fn(|seat| {
+            rule_engine::settle::rank_of(&self.state, seat as Seat)
+        }));
         let outcome = self.engine.resolve_combat(&mut self.state)?;
         events.extend(outcome.events);
+        self.record_combat_log(&outcome.reports);
 
         // `resolve_combat` 是纯计算，按引擎口径把阶段推到 `Settle`。演示期间要停在
         // `Combat`：结算产物（伤害、淘汰）已写入状态，但结算本身推迟到
@@ -614,6 +729,9 @@ impl GameTask {
         // 引擎期望的 `Settle`。
         self.state.phase = Phase::Settle;
         let mut events = self.engine.resolve_settle(&mut self.state)?;
+        // 演示结束：名次恢复实时计算（若已进入 `GameOver`，`rank_of` 与
+        // `placement` 一致）。
+        self.combat_ranks = None;
         if self.state.phase != Phase::GameOver {
             events.extend(self.engine.start_turn(&mut self.state)?);
             self.phase_deadline_ms = self
@@ -952,8 +1070,128 @@ fn payload_map<T: serde::Serialize>(payload: &T) -> Result<Map<String, Value>, P
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+    use std::sync::Arc;
+
+    use rule_engine::data::Catalog;
+    use rule_engine::state::{MinionInstance, Pairing, Phase, Seat};
 
     use super::{PACE_MS, ROUND_BUDGET_MS, TAIL_MS, combat_duration_ms, recruit_budget_ms};
+    use crate::clock::FixedClock;
+    use crate::envelope::SeatChannel;
+    use crate::game::GameTask;
+    use crate::room::PlayerSlot;
+
+    const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
+    const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
+    const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
+    const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
+
+    /// 8 个座位各用一张不同的英雄卡。
+    const HEROES: [&str; 8] = [
+        "adam-smith",
+        "darwin",
+        "davinci",
+        "edison",
+        "einstein",
+        "faraday",
+        "galileo",
+        "knuth",
+    ];
+
+    fn task() -> GameTask {
+        let catalog = Catalog::from_json(CARDS_JSON, SKILLS_JSON, TOKENS_JSON, CONFIG_JSON)
+            .expect("卡表应能加载");
+        let heroes: BTreeMap<Seat, String> = HEROES
+            .iter()
+            .enumerate()
+            .map(|(seat, hero)| (seat as Seat, (*hero).to_string()))
+            .collect();
+        let players = (0..8)
+            .map(|seat| PlayerSlot {
+                player_id: format!("p{seat}"),
+                display_name: format!("玩家{seat}"),
+                ready: true,
+                hero_card_id: Some(HEROES[seat].to_string()),
+                hero_candidates: vec![HEROES[seat].to_string()],
+                candidate_segment: None,
+                channel: SeatChannel::new(),
+                connected: true,
+                disconnected_at_ms: None,
+            })
+            .collect();
+        GameTask::new(
+            catalog,
+            7,
+            heroes,
+            players,
+            Arc::new(FixedClock::new(1_000_000)),
+        )
+        .expect("开局应当成功")
+    }
+
+    fn rank_of(view: &protocol::view::PlayerView, seat: i64) -> Option<u64> {
+        view.players
+            .iter()
+            .find(|player| player.seat == seat)
+            .and_then(|player| player.rank)
+            .map(std::num::NonZeroU64::get)
+    }
+
+    /// 演示期间名次取进入战斗前的快照；结算后恢复实时名次。
+    ///
+    /// 构造：座位 0、1 生命与累计伤害相同，座位 1 是上一场赢家（战前名次 1），
+    /// 座位 0 本轮获胜后 `last_won` 改写，实时名次会反超。
+    #[test]
+    fn combat_view_keeps_pre_combat_ranks_until_settle() {
+        let mut task = task();
+        for player in &mut task.state.players {
+            player.hp = 30;
+            player.damage_dealt = 0;
+            player.eliminated = false;
+            player.board.clear();
+        }
+        for seat in 2..8 {
+            task.state.players[seat].eliminated = true;
+            task.state.players[seat].hp = 0;
+        }
+        task.state.ranking = vec![2, 3, 4, 5, 6, 7];
+        task.state.turn = 2;
+        task.state.phase = Phase::Combat;
+        task.state.first_seat = 0;
+        task.state.last_winner = None;
+        task.state.last_won = [1].into();
+        task.state.pending_settle.clear();
+        task.state.pairings = vec![Pairing {
+            a: 0,
+            b: 1,
+            ghost: None,
+        }];
+        let catalog = &task.engine.catalog;
+        task.state.players[0].board = vec![MinionInstance::new(catalog, 1, "bruce-lee", false)];
+        task.state.players[1].board = vec![MinionInstance::new(catalog, 2, "baiyi", false)];
+
+        // 战前：座位 1 是上战胜者，名次为 1；座位 0 为 2。
+        assert_eq!(
+            rank_of(&task.player_view(0).expect("视图应可用"), 0),
+            Some(2)
+        );
+        assert_eq!(
+            rank_of(&task.player_view(0).expect("视图应可用"), 1),
+            Some(1)
+        );
+
+        task.enter_combat(Vec::new()).expect("进入战斗应成功");
+        assert_eq!(task.state.phase, Phase::Combat, "演示期间停在 Combat");
+        assert_eq!(task.state.last_won, [0].into(), "本轮座位 0 获胜");
+        let view = task.player_view(0).expect("视图应可用");
+        assert_eq!(rank_of(&view, 0), Some(2), "演示期间名次保持战前值");
+        assert_eq!(rank_of(&view, 1), Some(1), "演示期间名次保持战前值");
+
+        task.finish_combat().expect("结算应成功");
+        let view = task.player_view(0).expect("视图应可用");
+        assert_eq!(rank_of(&view, 0), Some(1), "结算后座位 0 反超");
+        assert_eq!(rank_of(&view, 1), Some(2), "结算后座位 1 落到第二");
+    }
 
     #[test]
     fn combat_duration_over_budget_sets_deadline_at_now() {

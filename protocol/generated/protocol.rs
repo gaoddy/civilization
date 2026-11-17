@@ -812,6 +812,96 @@ impl<'de> ::serde::Deserialize<'de> for ClientEnvelopeType {
             })
     }
 }
+///`CombatLogEntry`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "damage",
+///    "ghostId",
+///    "loserId",
+///    "mirror",
+///    "participantIds",
+///    "turn",
+///    "winnerId"
+///  ],
+///  "properties": {
+///    "damage": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "ghostId": {
+///      "description": "幽灵战为幽灵归属者的玩家 id；真实战为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "loserId": {
+///      "description": "幽灵战失利时为该玩家；幽灵不受伤，所以幽灵输时也为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "mirror": {
+///      "description": "true 表示对战已出局者的幽灵阵容",
+///      "type": "boolean"
+///    },
+///    "participantIds": {
+///      "description": "参战玩家 id；幽灵战只有对战方一个元素（幽灵不是玩家）",
+///      "type": "array",
+///      "items": {
+///        "type": "string"
+///      },
+///      "maxItems": 2,
+///      "minItems": 1
+///    },
+///    "turn": {
+///      "type": "integer",
+///      "maximum": 20.0,
+///      "minimum": 1.0
+///    },
+///    "winnerId": {
+///      "description": "平局无胜者时为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CombatLogEntry {
+    pub damage: u64,
+    ///幽灵战为幽灵归属者的玩家 id；真实战为 null
+    #[serde(rename = "ghostId")]
+    pub ghost_id: ::std::option::Option<::std::string::String>,
+    ///幽灵战失利时为该玩家；幽灵不受伤，所以幽灵输时也为 null
+    #[serde(rename = "loserId")]
+    pub loser_id: ::std::option::Option<::std::string::String>,
+    ///true 表示对战已出局者的幽灵阵容
+    pub mirror: bool,
+    ///参战玩家 id；幽灵战只有对战方一个元素（幽灵不是玩家）
+    #[serde(rename = "participantIds")]
+    pub participant_ids: ::std::vec::Vec<::std::string::String>,
+    pub turn: ::std::num::NonZeroU64,
+    ///平局无胜者时为 null
+    #[serde(rename = "winnerId")]
+    pub winner_id: ::std::option::Option<::std::string::String>,
+}
+impl ::std::convert::From<&CombatLogEntry> for CombatLogEntry {
+    fn from(value: &CombatLogEntry) -> Self {
+        value.clone()
+    }
+}
 ///`CombatMinionState`
 ///
 /// <details><summary>JSON schema</summary>
@@ -982,12 +1072,12 @@ impl ::std::convert::From<&CombatMinionState> for CombatMinionState {
 ///      }
 ///    },
 ///    "damage": {
-///      "description": "本场战斗败者受到的伤害",
+///      "description": "本场战斗结算给败者的伤害（含幽灵战）；平局与幽灵战落单座位获胜时为 0",
 ///      "type": "integer",
 ///      "minimum": 0.0
 ///    },
 ///    "mirror": {
-///      "description": "true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0",
+///      "description": "true 表示本场为幽灵战，对手是已出局者的幽灵阵容",
 ///      "type": "boolean"
 ///    },
 ///    "opponentBoard": {
@@ -1018,9 +1108,9 @@ impl ::std::convert::From<&CombatMinionState> for CombatMinionState {
 #[serde(deny_unknown_fields)]
 pub struct CombatResult {
     pub actions: ::std::vec::Vec<CombatResultActionsItem>,
-    ///本场战斗败者受到的伤害
+    ///本场战斗结算给败者的伤害（含幽灵战）；平局与幽灵战落单座位获胜时为 0
     pub damage: u64,
-    ///true 表示本场为镜像幽灵战（对手是自身阵容的镜像），此时 winnerId 为本人或 null、damage 为 0
+    ///true 表示本场为幽灵战，对手是已出局者的幽灵阵容
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub mirror: ::std::option::Option<bool>,
     #[serde(rename = "opponentBoard")]
@@ -3213,6 +3303,7 @@ impl ::std::convert::From<&PhaseChanged> for PhaseChanged {
 ///    "hp",
 ///    "managed",
 ///    "playerId",
+///    "rank",
 ///    "recruited",
 ///    "seat"
 ///  ],
@@ -3257,6 +3348,15 @@ impl ::std::convert::From<&PhaseChanged> for PhaseChanged {
 ///    "playerId": {
 ///      "type": "string"
 ///    },
+///    "rank": {
+///      "description": "当前名次；对局结束前为实时名次，结束后等于 placement",
+///      "type": [
+///        "integer",
+///        "null"
+///      ],
+///      "maximum": 8.0,
+///      "minimum": 1.0
+///    },
 ///    "recruited": {
 ///      "description": "本回合是否已结束招募",
 ///      "type": "boolean"
@@ -3291,6 +3391,8 @@ pub struct PlayerSummary {
     pub placement: ::std::option::Option<i64>,
     #[serde(rename = "playerId")]
     pub player_id: ::std::string::String,
+    ///当前名次；对局结束前为实时名次，结束后等于 placement
+    pub rank: ::std::option::Option<::std::num::NonZeroU64>,
     ///本回合是否已结束招募
     pub recruited: bool,
     pub seat: i64,
@@ -3309,7 +3411,9 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 ///  "type": "object",
 ///  "required": [
 ///    "boardSlots",
+///    "combatLog",
 ///    "enabledFactions",
+///    "hpCap",
 ///    "phase",
 ///    "phaseDeadline",
 ///    "players",
@@ -3323,6 +3427,13 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 ///      "type": "integer",
 ///      "minimum": 1.0
 ///    },
+///    "combatLog": {
+///      "description": "本局最近 5 个回合的全部战斗，按回合升序；全对局公开",
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/CombatLogEntry"
+///      }
+///    },
 ///    "enabledFactions": {
 ///      "description": "本局启用的 5 个流派",
 ///      "type": "array",
@@ -3331,6 +3442,11 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 ///      },
 ///      "maxItems": 5,
 ///      "minItems": 5
+///    },
+///    "hpCap": {
+///      "description": "生命上限，v0.1 为 40",
+///      "type": "integer",
+///      "minimum": 1.0
 ///    },
 ///    "opponentPlayerId": {
 ///      "description": "当前战斗对手；招募阶段或未配对时为 null",
@@ -3483,9 +3599,15 @@ pub struct PlayerView {
     ///本方棋盘随从位上限，v0.1 为 7
     #[serde(rename = "boardSlots")]
     pub board_slots: ::std::num::NonZeroU64,
+    ///本局最近 5 个回合的全部战斗，按回合升序；全对局公开
+    #[serde(rename = "combatLog")]
+    pub combat_log: ::std::vec::Vec<CombatLogEntry>,
     ///本局启用的 5 个流派
     #[serde(rename = "enabledFactions")]
     pub enabled_factions: [::std::string::String; 5usize],
+    ///生命上限，v0.1 为 40
+    #[serde(rename = "hpCap")]
+    pub hp_cap: ::std::num::NonZeroU64,
     ///当前战斗对手；招募阶段或未配对时为 null
     #[serde(
         rename = "opponentPlayerId",

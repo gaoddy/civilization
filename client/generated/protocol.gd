@@ -89,7 +89,9 @@ const EVENT_GAME_OVER := "GameOver"
 
 # PlayerView 字段名
 const FIELD_BOARD_SLOTS := "boardSlots"
+const FIELD_COMBAT_LOG := "combatLog"
 const FIELD_ENABLED_FACTIONS := "enabledFactions"
+const FIELD_HP_CAP := "hpCap"
 const FIELD_OPPONENT_PLAYER_ID := "opponentPlayerId"
 const FIELD_PHASE := "phase"
 const FIELD_PHASE_DEADLINE := "phaseDeadline"

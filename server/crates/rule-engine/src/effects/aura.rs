@@ -35,19 +35,33 @@ impl Engine {
             let Some(player) = state.players.iter().find(|player| player.seat == seat) else {
                 continue;
             };
-            for (source, effects) in self.aura_sources(player) {
-                for effect in effects {
-                    if !self.aura_active(state, player, &effect, source) {
-                        continue;
-                    }
-                    for target in aura_targets(self, state, &effect, player, source) {
-                        accumulate(&effect, computed.entry(target).or_default());
-                    }
-                }
-            }
+            computed.extend(self.player_auras(state, player));
         }
 
         state.auras = computed;
+    }
+
+    /// 某名玩家棋盘与其英雄卡产生的全部光环派生值。
+    ///
+    /// 不读取也不写入 `state.auras`，因此对已出局玩家的最终阵容同样可用
+    /// （幽灵战按出局者自己的光环来源折叠一次）。实例编号全局唯一，直接合并。
+    pub fn player_auras(
+        &self,
+        state: &GameState,
+        player: &PlayerState,
+    ) -> BTreeMap<InstanceId, AuraEffect> {
+        let mut computed = BTreeMap::new();
+        for (source, effects) in self.aura_sources(player) {
+            for effect in effects {
+                if !self.aura_active(state, player, &effect, source) {
+                    continue;
+                }
+                for target in aura_targets(self, state, &effect, player, source) {
+                    accumulate(&effect, computed.entry(target).or_default());
+                }
+            }
+        }
+        computed
     }
 
     /// 收集某玩家所有光环来源：棋盘点顺序的随从，然后是英雄卡。
