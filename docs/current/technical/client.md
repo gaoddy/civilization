@@ -24,7 +24,14 @@ client/
     login.tscn/.gd           # 登录
     lobby.tscn/.gd           # 大厅
     room.tscn/.gd            # 房间
-    game.tscn/.gd            # 对局
+    game.tscn/.gd            # 对局页面装配入口：三栏骨架、门控与意图
+    game_ui_state.gd         # 一次刷新的页面快照：视图数据与门控结果
+    game_card_face.gd        # 卡面：费用/时代角标、冻结蒙层与随从详情分层取值
+    game_detail_layer.gd     # 详情层：商店、座位与随从三类详情及定位
+    game_players_rail.gd     # 左栏座位列：头像、名次、血条与战报展开
+    game_side_panel.gd       # 右栏：身份、回合与倒计时、英雄与操作
+    game_recruit_view.gd     # 招募视图：商店、我方棋盘与刷新/升时代/冻结
+    game_combat_view.gd      # 战斗视图：对手随从行、结果横幅与我方随从行
     hand_card.gd             # 手牌卡：拖拽数据与预览（class_name HandCard）
     board_drop.gd            # 我方棋盘落点：命中判定与插入下标（class_name BoardDrop）
     combat_playback.gd       # 战斗动作落地器：节奏与状态应用（class_name CombatPlayback）
@@ -79,7 +86,7 @@ client/
 - 棋盘随从卡也使用拖拽：`BoardCard._get_drag_data` 交出 `{epoch, minionId, fromIndex, sellable, golden}`；`BoardDrop` 在 `NOTIFICATION_DRAG_BEGIN` 时隐藏原卡并插入同尺寸透明占位，指针移动时实时移动占位、其余随从让位，松手按「移除后被拖随从剩余序列中的插入下标」发 `RearrangeBoard`，拖拽结束恢复原顺序。商店面板是 `SellDrop`，只接受可出售的棋盘卡：拖入时金色描边并提示「松手出售 +N 金」（`golden ? 3 : 1`），松手发 `SellMinion`；手牌与不可出售随从静默取消。卡内不再生成出售与左右移位按钮。
 - 拖放冒泡依赖控件的鼠标过滤：Godot 在「`_can_drop_data` 为假且 `mouse_filter == STOP`」的控件上中止沿父链的落点查找。棋盘空位（`EmptySlot`）设 `IGNORE`；棋盘随从卡（`BoardCard`）与商店槽位按钮、商店标题按钮设 `PASS`，保留自身点击/拖拽起手与悬停详情，同时把落点交给父级 `BoardDrop` / `SellDrop`；商店占位 `shop_spacer` 设 `IGNORE`。新增落点控件或改其鼠标过滤时必须保证落点仍能到达父级。
 - 时代文案由 `CardDB.era_name` 把 1–7 映射为「史前、原始、古典、封建、工业、现代、未来」；右栏自己英雄的属性行、右栏对手身份块的元信息与座位详情统一显示「时代 X」。
-- 左栏座位行只渲染头像（`avatar-rail` = 44）、名次角标（`rank` 为 `null` 时不渲染）与血量条（高 6，按 `hp / hpCap` 比例填充，无数字）；已淘汰行经 `UI.apply_dim` 整体压暗但保留名次且仍可点击。点击在行下展开 `view.combatLog` 中按 `participantIds` 过滤的战报，同一时刻只展开一块，展开座位按 `playerId` 在 `_refresh_players` 重建后恢复；无条目显示「无战报」。
+- 左栏座位行只渲染头像（`avatar-rail` = 44）、名次角标（`rank` 为 `null` 时不渲染）与血量条（高 6，按 `hp / hpCap` 比例填充，无数字）；已淘汰行经 `UI.apply_dim` 整体压暗但保留名次且仍可点击。点击在行下展开 `view.combatLog` 中按 `participantIds` 过滤的战报，同一时刻只展开一块，展开座位按 `playerId` 在 `GamePlayersRail.refresh` 整块重建后恢复；无条目显示「无战报」。
 - 右栏身份判定以阶段优先：招募阶段固定显示售货员「商店营业中」；战斗阶段依次为自身已淘汰「已淘汰 · 观战中」、幽灵战（幽灵归属者英雄 +「幽灵」角标、无血量条、整块压暗）、对手英雄、等待配对。`SideStatus` 显示回合数与 `TimerLabel` 剩余时间，归零显示「等待结算」。
 - 商店卡左上角渲染 `CostBadge`（`display_cost`）、右上角渲染 `EraBadge`（`era`）；冻结由 `FreezeOverlay` 整卡蒙层（`freeze-overlay-alpha` = 0.22，经 `self_modulate` 只压蒙层自身）、间距 14 的 45° 冰晶细线与右下角「冻」字 `FreezeGlyph` 共同表达。
 - 棋盘容量取自 `PlayerView.boardSlots`（缺失时回退 7），满场标记、提示文案与空位数量用同一数值；`BoardDrop` 仍由页面设置 `board_full`，控件本身不感知容量。
@@ -92,8 +99,8 @@ client/
 - 演示中的重连按 `phaseDeadline` 反推进度（`elapsed = total − (deadline − now)`）直接 `seek`，已播动作不重播；演示期间没有任何跳过或加速入口。
 - 返回大厅不使用 `LeaveRoom`（非大厅阶段会被拒绝），而是清除房间状态后重新连接并以令牌认证。
 - 对局页的三栏结构、页面状态与数据来源见[对局页](../product/ui/pages/game.md)；颜色、字号、间距与圆角来自 `UITheme`，页面不写死视觉值。招募阶段与战斗阶段共用同一页面，战斗与结算阶段隐藏招募视图、英雄技能与结束招募，节点保留以便阶段恢复。
-- 棋盘随从详情面板（`game.gd` 的 `MinionDetailPanel`）：招募棋盘与战斗双方的随从卡统一挂详情，悬停进入、鼠标左键按下或触摸按下时显示；指针移出卡片矩形后隐藏，松开鼠标左键或触摸时按指针所在卡片矩形更新（由 `_input` 按卡片全局矩形做命中判断，避免卡内子控件截断悬停通知）。数据取自协议 `BoardMinion.stats`，按初始、永久、回合、光环、受击、当前六行展示，有符号项带 `+`，受击的攻防都为 0 时省略该行；`stats` 缺失时退化为只显示顶层 `attack` / `health` 的当前攻防。面板只读、忽略鼠标输入，位置以卡片矩形为锚点并按视口边界夹紧；每次 `_refresh` 重建前先隐藏，同一张卡重复触发显示时只校正位置、不重建内容。
-- 冒烟测试按 `client/tests/ui_smoke*.tscn` 拆为五个场景，`make client-smoke` 用 glob 逐个运行并要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`。主冒烟覆盖五场景实例化、真实鼠标事件拖拽（按下、越过阈值、移到落点、松手）落盘与商店出售、拖拽落点意图（首卡 0、次卡 1、末尾空白为随从数）、棋盘卡换位（真实 `force_drag` 通知、原卡隐藏、落点发 `fromIndex/toIndex`）、商店出售落点（可卖与不可卖、手牌拒绝、普通/金色返还提示）、棋盘满时不接收、需要目标的效果牌落点规则、四个不可拖动条件、落点门控（换回合/开战/结束招募/断线时不发意图）、目标待选浮层与控件阻塞、战斗逐动作播放（阵亡卡离场、复生回原位、召唤按存活下标插入）、横幅停留、按截止时间续播、无跳过入口、战斗阶段不弹待选弹层、回合号不匹配时不显示旧战报、离开战斗后清空战报，以及离树导航守卫。`ui_smoke_side` 断言右栏三段的身份判定（含阶段优先、幽灵角标、已淘汰观战）与倒计时归零文案；`ui_smoke_seats` 断言 8 行座位、头像尺寸、名次角标缺失与压暗、血量条比例、战报展开与刷新保持、无战报文案与座位详情；`ui_smoke_combat` 断言战斗视图只有对手行/横幅/我方行三段且无英雄条、平局横幅；`ui_smoke_cards` 断言商店卡费用与时代角标、冻结蒙层/冰晶/「冻」字。
+- 详情层（`client/scenes/game_detail_layer.gd` 的 `GameDetailLayer`，面板节点名 `MinionDetailPanel`）统一承载商店、座位与随从三类详情：商店卡、座位行与招募/战斗随从卡在悬停进入、鼠标左键按下或触摸按下时显示；指针移出锚点矩形后隐藏，松开鼠标左键或触摸时按指针所在目标矩形更新（由 `_input` 按全局矩形做命中判断，避免子控件截断悬停通知）。随从数据取自协议 `BoardMinion.stats`，按初始、永久、回合、光环、受击、当前六行展示，有符号项带 `+`，受击的攻防都为 0 时省略该行；`stats` 缺失时退化为只显示顶层 `attack` / `health` 的当前攻防；座位与商店字段见[对局页](../product/ui/pages/game.md)。面板只读、忽略鼠标输入，位置以锚点矩形为准并按视口边界夹紧；每次 `_refresh` 重建前先隐藏，同一目标重复触发显示时只校正位置、不重建内容。
+- 冒烟测试按 `client/tests/ui_smoke*.tscn` 拆为五个场景，`make client-smoke` 用 glob 逐个运行并要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`。主冒烟覆盖五场景实例化、真实鼠标事件拖拽（按下、越过阈值、移到落点、松手）落盘与商店出售、拖拽落点意图（首卡 0、次卡 1、末尾空白为随从数）、棋盘卡换位（真实 `force_drag` 通知、原卡隐藏、落点发 `fromIndex/toIndex`）、商店出售落点（可卖与不可卖、手牌拒绝、普通/金色返还提示）、棋盘满时不接收、需要目标的效果牌落点规则、四个不可拖动条件、落点门控（换回合/开战/结束招募/断线时不发意图）、目标待选浮层与控件阻塞、战斗逐动作播放（阵亡卡离场、复生回原位、召唤按存活下标插入）、横幅停留、按截止时间续播、无跳过入口、战斗阶段不弹待选弹层、回合号不匹配时不显示旧战报、离开战斗后清空战报，以及离树导航守卫。`ui_smoke_side` 断言右栏三段的身份判定（含阶段优先、幽灵角标、已淘汰观战）与倒计时归零文案；`ui_smoke_seats` 断言 8 行座位、头像尺寸、名次角标缺失与压暗、血量条比例、战报展开与刷新保持、无战报文案与座位详情；`ui_smoke_combat` 断言战斗视图只有对手行/横幅/我方行三段且无英雄条；平局横幅尚无冒烟断言。`ui_smoke_cards` 断言商店卡费用与时代角标、冻结蒙层/冰晶/「冻」字。
 
 ## 4. 生成物与命令
 

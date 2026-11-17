@@ -36,7 +36,7 @@
 | 令牌 | 字号 | 用途 |
 | --- | --- | --- |
 | `font-caption` | 11 | 元信息、关键词、标记 |
-| `font-body-sm` | 12 | 座位名、手牌、状态行 |
+| `font-body-sm` | 12 | 右栏身份与属性行、手牌、状态行 |
 | `font-body` | 14 | 区块标题、按钮 |
 | `font-title` | 16 | 随从攻防、英雄名 |
 | `font-title-lg` | 18 | 右栏回合数 |
@@ -66,7 +66,7 @@
 | `side-width` | 272 | 右栏宽度 |
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
 | `avatar-rail` | 44 | 左栏座位行头像边长 |
-| `seat-hp-bar-height` | 6 | 座位行血量条高度，与 `avatar-rail` 同宽 |
+| `seat-hp-bar-height` | 6 | 座位行血量条高度，与 `avatar-rail` 同宽；右栏对手身份块的血量条复用该高度 |
 | `rank-badge-size` | 18 | 座位行名次角标边长 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
 | `hero-tile-width` | 150 | 英雄小卡宽度（右栏按栏宽覆盖） |
