@@ -228,6 +228,28 @@ static func combat_result() -> Dictionary:
     }
 
 
+## 一方清空夹具：对手只有 1 个随从并在首条动作阵亡，用于验证空行固定占位。
+static func combat_result_wipe() -> Dictionary:
+    return {
+        "ownBoard": [
+            _minion(0, "mi_0", "bruce-lee", 7, 6, []),
+        ],
+        "opponentBoard": [
+            _minion(0, "mo_0", "aristotle", 6, 8, []),
+        ],
+        "actions": [
+            {
+                "kind": "death",
+                "sourceSide": "opponent",
+                "target": {"minionId": "mo_0", "attack": 6, "health": 0, "alive": false},
+            },
+        ],
+        "damage": 5,
+        "winnerId": "p0",
+        "mirror": false,
+    }
+
+
 ## 复生夹具：第一条阵亡、第二条复生，用于验证行内「阵亡即消失、复生回原位」。
 static func combat_result_with_reborn() -> Dictionary:
     return {
