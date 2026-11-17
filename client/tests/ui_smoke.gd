@@ -466,6 +466,31 @@ func _check_game_layout() -> void:
         board_scroll != null and is_equal_approx(board_scroll.custom_minimum_size.y, 146.0),
         "棋盘滚动高度应为 card-height"
     )
+    var card_intro_cases := [
+        {"node": "ShopSlot0", "card_id": "aristotle"},
+        {"node": "BoardMinion0", "card_id": "bruce-lee"},
+        {"node": "HandCard0", "card_id": "archimedes"},
+    ]
+    for intro_case in card_intro_cases:
+        var intro_card: Control = instance.find_child(str(intro_case["node"]), true, false)
+        _expect(intro_card != null, "布局中缺少 %s" % str(intro_case["node"]))
+        if intro_card == null:
+            continue
+        var intro_desc: Label = intro_card.find_child("CardDesc", true, false)
+        var intro_name: Label = intro_card.find_child("CardName", true, false)
+        _expect(
+            intro_desc != null and intro_desc.is_visible_in_tree(),
+            "%s 应显示卡面介绍" % str(intro_case["node"]),
+        )
+        _expect(
+            intro_desc != null and str(intro_desc.text) == CardDB.display_text(str(intro_case["card_id"])),
+            "%s 的介绍应为卡表技能" % str(intro_case["node"]),
+        )
+        if intro_desc != null and intro_name != null:
+            _expect(
+                intro_desc.get_global_rect().end.y <= intro_name.get_global_rect().position.y + 1.0,
+                "%s 的介绍应在名称上方" % str(intro_case["node"]),
+            )
     var hand_scroll = instance.find_child("HandScroll", true, false)
     _expect(
         hand_scroll != null and is_equal_approx(hand_scroll.custom_minimum_size.y, 154.0),

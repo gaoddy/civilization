@@ -10,9 +10,9 @@ const CORNER_BADGE_EXTRA_HEIGHT := 2
 const FREEZE_CRYSTAL_ALPHA := 0.55
 const FREEZE_CRYSTAL_LINES := 10
 
-## 统一卡面：封面铺满整卡，左上费用、右上时代，底部信息区依次为居中名称与
-## 「攻击 · 类型 · 生命」。`cost_text`/`era_text` 为空时不渲染角标；`frozen`
-## 为真时盖整卡蒙层、叠冰晶并保留右下「冻」字。
+## 统一卡面：封面铺满整卡，左上费用、右上时代，底部信息区依次为介绍（最多
+## 两行）、居中名称与「攻击 · 类型 · 生命」。`cost_text`/`era_text` 为空时
+## 不渲染角标；`frozen` 为真时盖整卡蒙层、叠冰晶并保留右下「冻」字。
 ## 所有子节点忽略鼠标，点击与悬停由外层卡片决定。
 static func face(
     card_id: String,
@@ -25,6 +25,10 @@ static func face(
     frozen := false,
 ) -> Control:
     var entry := CardDB.card(card_id)
+    var desc_text := CardDB.display_text(card_id)
+    var info_height := UITheme.metric(
+        "card-info-height" if desc_text != "" else "card-info-compact-height"
+    )
     var face_node := Control.new()
     face_node.name = "CardFace"
     face_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -41,6 +45,7 @@ static func face(
     var watermark := UI.label(initial(card_id), UITheme.font_size("font-hero"), false)
     watermark.name = "CoverMark"
     watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
+    watermark.offset_bottom = -info_height
     watermark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     watermark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     watermark.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
@@ -61,12 +66,33 @@ static func face(
     info.name = "CardInfo"
     info.mouse_filter = Control.MOUSE_FILTER_IGNORE
     info.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-    info.offset_top = -UITheme.metric("card-info-height")
+    info.offset_top = -info_height
     info.offset_bottom = 0
     var info_box := VBoxContainer.new()
+    info_box.name = "CardInfoBox"
     info_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
     info_box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
+    info_box.alignment = BoxContainer.ALIGNMENT_END
     info.add_child(info_box)
+
+    if desc_text != "":
+        # 固定高度的承载框隔离 Label 最小尺寸，保证信息区不被长介绍顶高；
+        # 介绍最多两行，超长省略。
+        var desc_box := Control.new()
+        desc_box.name = "CardDescBox"
+        desc_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        desc_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        var desc_label := UI.label(desc_text, UITheme.font_size("font-caption"))
+        desc_label.name = "CardDesc"
+        desc_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+        desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        desc_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        desc_label.max_lines_visible = 2
+        desc_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+        desc_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+        desc_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        desc_box.add_child(desc_label)
+        info_box.add_child(desc_box)
 
     var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-body-sm"), false)
     name_label.name = "CardName"
@@ -77,6 +103,7 @@ static func face(
     info_box.add_child(name_label)
 
     var stats_row := HBoxContainer.new()
+    stats_row.name = "CardStats"
     stats_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
     stats_row.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     info_box.add_child(stats_row)
@@ -146,7 +173,7 @@ static func _add_corner_badges(
         row.add_child(era)
 
 
-## 窄卡角标：比胶囊更紧凑，避免两角标在 108 宽的商店卡上相撞。
+## 窄卡角标：比胶囊更紧凑，避免两角标在 112 宽的商店卡上相撞。
 static func _corner_badge(text: String, variant: String) -> Label:
     var badge := UI.pill_label(text, variant, "font-caption")
     var style := UITheme.pill_style(variant)
