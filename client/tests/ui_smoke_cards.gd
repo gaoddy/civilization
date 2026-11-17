@@ -31,6 +31,10 @@ func _ready() -> void:
     var open_card := recruit.find_child("ShopSlot0", true, false)
     _expect(open_card != null, "商店应存在 ShopSlot0")
     if open_card != null:
+        _expect(
+            (open_card as Control).custom_minimum_size == Vector2(112, 146),
+            "商店卡应为 112×146，实际 %s" % (open_card as Control).custom_minimum_size
+        )
         var cost := open_card.find_child("CostBadge", true, false)
         _expect(cost != null, "商店卡左上角应有 CostBadge")
         if cost != null:

@@ -154,7 +154,8 @@ func _build_hand_panel() -> Control:
     hand_box.add_child(UI.section_title("手牌"))
 
     var hand_scroll := ScrollContainer.new()
-    hand_scroll.custom_minimum_size = Vector2(0, UITheme.metric("hand-card-height") + UITheme.space("space-md"))
+    hand_scroll.name = "HandScroll"
+    hand_scroll.custom_minimum_size = Vector2(0, UITheme.metric("card-height") + UITheme.space("space-md"))
     hand_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
     hand_box.add_child(hand_scroll)
     _hand_row = _flow_row("HandRow")
@@ -273,7 +274,7 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
         var card_kind := "minion" if str(entry_data.get("card_type", "")) == "随从" else "effect"
         var entry := HandCard.new()
         entry.name = "HandCard%d" % index
-        entry.custom_minimum_size = Vector2(UITheme.metric("hand-card-width"), UITheme.metric("hand-card-height"))
+        entry.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
         entry.add_theme_stylebox_override("panel", UITheme.panel_style("raised-tight"))
         entry.tooltip_text = CardDB.display_text(card_id)
         if card.get("disabledReason") != null:

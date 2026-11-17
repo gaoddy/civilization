@@ -217,7 +217,7 @@ static func read_only_minion_card(minion: Dictionary) -> Control:
     panel.name = "Board" + ("Minion%d" % minion_index)
     panel.set_meta("minion_id", str(minion.get("minionId", "")))
     panel.set_meta("minion_index", minion_index)
-    panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), UITheme.metric("minion-card-height"))
+    panel.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
 
     var card_id := str(minion.get("cardId", ""))
     var entry := CardDB.card(card_id)

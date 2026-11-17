@@ -63,8 +63,8 @@ func begin_drag(payload: Dictionary) -> void:
     _spacer.name = "BoardDragSpacer"
     _spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _spacer.custom_minimum_size = Vector2(
-        UITheme.metric("minion-card-width"),
-        UITheme.metric("minion-card-height")
+        UITheme.metric("card-width"),
+        UITheme.metric("card-height")
     )
     add_child(_spacer)
     move_child(_spacer, card.get_index())

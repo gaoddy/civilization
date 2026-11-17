@@ -452,6 +452,27 @@ func _check_game_layout() -> void:
         _expect(hand.get_index() > combat.get_index(), "手牌应位于战斗视图之下")
     var board = instance.find_child("BoardRow", true, false)
     _expect(board != null and board.get_child_count() == 7, "棋盘应有 7 个槽位（含空位）")
+    var expected_card := Vector2(112, 146)
+    for node_name in ["ShopSlot0", "BoardMinion0", "HandCard0", "EmptySlot"]:
+        var card_node: Control = instance.find_child(node_name, true, false)
+        _expect(card_node != null, "布局中缺少 %s" % node_name)
+        if card_node != null:
+            _expect(
+                card_node.custom_minimum_size == expected_card,
+                "%s 应为 112×146，实际 %s" % [node_name, card_node.custom_minimum_size]
+            )
+    var board_scroll = instance.find_child("BoardScroll", true, false)
+    _expect(
+        board_scroll != null and is_equal_approx(board_scroll.custom_minimum_size.y, 146.0),
+        "棋盘滚动高度应为 card-height"
+    )
+    var hand_scroll = instance.find_child("HandScroll", true, false)
+    _expect(
+        hand_scroll != null and is_equal_approx(hand_scroll.custom_minimum_size.y, 154.0),
+        "手牌滚动高度应为 card-height + space-md"
+    )
+    if board != null:
+        _expect(board.get_global_rect().size.y <= 147.0, "棋盘 7 槽应保持单行")
     var shop_zero = instance.find_child("ShopSlot0", true, false)
     var shop_text := _node_text(shop_zero) if shop_zero != null else ""
     _expect(shop_text.contains("学者"), "商店卡应显示卡牌类型：%s" % shop_text)

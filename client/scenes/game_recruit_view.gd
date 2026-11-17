@@ -59,7 +59,8 @@ func _build_board() -> void:
     var board_panel := UI.card_panel("surface")
     board_panel.name = "BoardPanel"
     var board_scroll := ScrollContainer.new()
-    board_scroll.custom_minimum_size = Vector2(0, UITheme.metric("minion-card-height"))
+    board_scroll.name = "BoardScroll"
+    board_scroll.custom_minimum_size = Vector2(0, UITheme.metric("card-height"))
     board_scroll.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     board_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
     board_panel.add_child(board_scroll)
@@ -129,7 +130,7 @@ func _empty_slot() -> PanelContainer:
     # PanelContainer 默认 STOP，会截断 Godot 的拖放冒泡（STOP 且不接收即中止），
     # 让棋盘容器收不到落点；空位本身不交互，直接放行。
     panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), UITheme.metric("minion-card-height"))
+    panel.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
     var hint := UI.empty_hint("空位")
     hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     panel.add_child(hint)
@@ -149,7 +150,7 @@ func _minion_card(
     panel.name = "Board" + ("Minion%d" % minion_index)
     panel.set_meta("minion_id", str(minion.get("minionId", "")))
     panel.set_meta("minion_index", minion_index)
-    panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), UITheme.metric("minion-card-height"))
+    panel.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
 
     var card_id := str(minion.get("cardId", ""))
     var entry := CardDB.card(card_id)
@@ -194,7 +195,7 @@ func _refresh_shop(state: GameUiState) -> void:
         panel.name = "ShopSlot%d" % index
         # PASS：整卡接收点击购买，同时让棋盘卡的出售落点继续冒泡到商店面板。
         panel.mouse_filter = Control.MOUSE_FILTER_PASS
-        panel.custom_minimum_size = Vector2(UITheme.metric("shop-card-width"), UITheme.metric("shop-card-height"))
+        panel.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
         panel.set_meta("buyable", buyable)
         panel.gui_input.connect(_on_shop_card_input.bind(panel, index))
         panel.add_child(GameCardFace.face(
@@ -222,7 +223,7 @@ func _empty_shop_slot(index: int) -> PanelContainer:
     var panel := UI.card_panel("empty")
     panel.name = "ShopSlot%d" % index
     panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    panel.custom_minimum_size = Vector2(UITheme.metric("shop-card-width"), UITheme.metric("shop-card-height"))
+    panel.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
     var hint := UI.empty_hint("空槽")
     hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     panel.add_child(hint)
