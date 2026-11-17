@@ -17,3 +17,27 @@ func setup(hand_card: HandCard, step_width: float) -> void:
     card.position = Vector2.ZERO
     card.size = card.custom_minimum_size
     add_child(card)
+    card.mouse_entered.connect(_on_card_mouse_entered)
+    card.mouse_exited.connect(_on_card_mouse_exited)
+    card.drag_started.connect(_clear_hover)
+
+
+## 悬停以底边中点为轴放大：放大后的矩形包含原矩形，指针不会在卡片下缘反复进出。
+func _on_card_mouse_entered() -> void:
+    if not is_instance_valid(card):
+        return
+    z_index = 1
+    card.pivot_offset = Vector2(card.size.x * 0.5, card.size.y)
+    card.scale = Vector2.ONE * UITheme.factor("hand-hover-scale")
+
+
+func _on_card_mouse_exited() -> void:
+    _clear_hover()
+
+
+## 移出或拖拽开始时复位缩放与层级；拖拽预览在信号之后复制，保持原始尺寸。
+func _clear_hover() -> void:
+    if is_instance_valid(card):
+        card.scale = Vector2.ONE
+        card.pivot_offset = Vector2.ZERO
+    z_index = 0

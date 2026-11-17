@@ -16,6 +16,8 @@ func _ready() -> void:
     await _check_game()
     await _check_game_layout()
     await _check_hand_overlap_layout()
+    await _check_hand_hover()
+    await _check_hand_hover_in_combat()
     await _check_board_capacity_from_view()
     await _check_combat_layout()
     await _check_hand_drag_emits_position()
@@ -622,6 +624,90 @@ func _check_hand_overlap_layout() -> void:
     GameStore.turn = 1
 
 
+## 手牌悬停：置顶并以底边中点为轴放大 1.12，越出滚动行仍可命中；移出复位。
+func _check_hand_hover() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = FixtureScript.game_view()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var card: Control = instance.find_child("HandCard0", true, false)
+    _expect(card is HandCard, "布局中缺少 HandCard0")
+    if card is HandCard:
+        var slot: Control = card.get_parent() as Control
+        var row = instance.find_child("HandRow", true, false)
+        var top_left: Vector2 = card.get_global_rect().position
+        var payload_before: Dictionary = (card as HandCard).payload.duplicate()
+        var order_before: Array = []
+        if row != null:
+            for child in row.get_children():
+                order_before.append(str(child.name))
+        await _push_motion(instance, Vector2(-40, -40))
+        await _hover(instance, card, card.size / 2)
+        _expect(
+            card.scale.is_equal_approx(Vector2(1.12, 1.12)),
+            "悬停手牌应以 1.12 放大，实际 %s" % card.scale,
+        )
+        _expect(
+            card.pivot_offset.is_equal_approx(Vector2(card.size.x / 2, card.size.y)),
+            "悬停手牌应以底边中点为轴，实际 %s" % card.pivot_offset,
+        )
+        _expect(slot != null and slot.z_index == 1, "悬停手牌应置顶")
+        # 指针移到原卡上缘之外、放大卡之内：滚动行关闭裁剪后仍应命中并保持悬停。
+        await _push_motion(instance, top_left + Vector2(card.size.x / 2, -10))
+        _expect(
+            card.scale.is_equal_approx(Vector2(1.12, 1.12)),
+            "放大越出滚动行后仍应保持悬停",
+        )
+        _expect((card as HandCard).payload == payload_before, "悬停不应改变拖拽数据")
+        var order_after: Array = []
+        if row != null:
+            for child in row.get_children():
+                order_after.append(str(child.name))
+        _expect(order_after == order_before, "悬停不应改变手牌顺序")
+        await _push_motion(instance, Vector2(-40, -40))
+        _expect(card.scale.is_equal_approx(Vector2.ONE), "移出手牌后应恢复原尺寸")
+        _expect(card.pivot_offset.is_equal_approx(Vector2.ZERO), "移出后应清空缩放轴")
+        _expect(slot != null and slot.z_index == 0, "移出后应恢复层级")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 战斗阶段手牌只读，但悬停仍应完整展示卡片，且不改变拖拽数据。
+func _check_hand_hover_in_combat() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    var card: Control = instance.find_child("HandCard0", true, false)
+    _expect(
+        card is HandCard and not (card as HandCard).drag_allowed,
+        "战斗阶段手牌应不可拖动",
+    )
+    if card is HandCard:
+        var slot: Control = card.get_parent() as Control
+        var hand_index := int((card as HandCard).payload.get("handIndex", -1))
+        await _push_motion(instance, Vector2(-40, -40))
+        await _hover(instance, card, card.size / 2)
+        _expect(card.scale.is_equal_approx(Vector2(1.12, 1.12)), "战斗阶段手牌仍应悬停放大")
+        _expect(slot != null and slot.z_index == 1, "战斗阶段悬停手牌仍应置顶")
+        _expect(
+            int((card as HandCard).payload.get("handIndex", -1)) == hand_index,
+            "战斗阶段悬停不应改变手牌下标",
+        )
+        await _push_motion(instance, Vector2(-40, -40))
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    _clear_combat()
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
 func _check_combat_layout() -> void:
     # 战斗阶段：战斗视图替换招募视图，双方随从行与结果横幅取自 CombatResult。
     GameStore.player_id = "p0"
@@ -1187,12 +1273,23 @@ func _check_hand_drag_drops_on_empty_slot() -> void:
         instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
         var start: Vector2 = hand_card.get_global_rect().get_center()
         var target: Vector2 = empty_slot.get_global_rect().get_center()
+        var slot: Control = hand_card.get_parent() as Control
+        var payload_before: Dictionary = hand_card.payload.duplicate()
+        await _push_motion(instance, Vector2(-40, -40))
         await _push_motion(instance, start)
+        _expect(
+            hand_card.scale.is_equal_approx(Vector2(1.12, 1.12)),
+            "按住前手牌应已悬停放大",
+        )
         await _push_button(instance, start, true)
         await _push_motion_held(instance, start + Vector2(24, 0), Vector2(24, 0))
         await _push_motion_held(instance, target, target - start - Vector2(24, 0))
         var viewport = instance.get_viewport()
         _expect(viewport.gui_is_dragging(), "超过拖拽阈值后应进入拖拽状态")
+        _expect(hand_card.scale.is_equal_approx(Vector2.ONE), "拖拽开始后手牌应复位尺寸")
+        _expect(hand_card.pivot_offset.is_equal_approx(Vector2.ZERO), "拖拽开始后应清空缩放轴")
+        _expect(slot != null and slot.z_index == 0, "拖拽开始后应恢复层级")
+        _expect(hand_card.payload == payload_before, "拖拽开始不应改变拖拽数据")
         await _push_button(instance, target, false)
         await get_tree().process_frame
         _expect(captured.size() == 1, "手牌落在空位应产生一条出牌意图，实际 %d" % captured.size())
