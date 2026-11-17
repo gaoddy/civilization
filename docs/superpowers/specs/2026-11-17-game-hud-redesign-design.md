@@ -76,7 +76,7 @@
 | 阵容口径 | 原样使用该玩家 `player.board`：`turn` 层在出局那次结算已被 `clear_combat_duration` 清掉，`permanent`/`growth` 是真实数值 |
 | 输给幽灵 | **正常扣血**，伤害走 `damage_formula`：败者时代取落单座位自己的时代，星级取幽灵存活随从——与 `resolve_real`「败者时代 + 胜方存活随从星级」的口径一致，不照搬炉石「对手酒馆等级 + 存活随从星级」的公式 |
 | 赢下幽灵 | 计入 `last_won` 与 `last_winner`，参与「上战胜者」名次比较；不累加 `damage_dealt`（本场没有打出真实伤害） |
-| 幽灵侧副作用 | 不结算英雄被动（`defender_hero: None`）、不写回牌池与持久棋盘、不产生手牌、不写 `previous_opponent` |
+| 幽灵侧副作用 | 幽灵侧不结算英雄被动（`defender_hero: None`）、不写回牌池与持久棋盘、不产生手牌、不写 `previous_opponent`；落单座位自己的成长/传染与战斗日志副作用（召唤扣池、入手牌复制）照常写回，与真实战一致 |
 | 幽灵光环 | 开战时对幽灵棋盘单独重算一次光环，只在本次模拟的克隆上生效，不写回 `state.auras` |
 | 双方同回合清场 | **平局**：双方都不扣血、都不计入胜者（`last_won` 两边都不写），战报 `winner` 为 `null`、`damage` 为 0。真实战与幽灵战同一口径，不再按生命/累计伤害/座位分出胜者 |
 | 跨回合重复 | 不做「3 回合内不重复」限制：每回合独立随机抽取，可能连续抽到同一名出局者 |
@@ -174,7 +174,7 @@ pub fn rank_of(state: &GameState, seat: Seat) -> Option<u8> {
 
 `resolve_combat` 只把伤害写进 `state.pending_settle` 与 `damage_dealt`，真正扣血在 `resolve_settle`（`settle.rs:584`）；`enter_combat` 期间阶段停在 `Combat`，结算推迟到 `finish_combat`（`game.rs:571-600`）。
 
-因此战斗演示播放时，左栏的名次与存活状态保持战前值，演示结束、进入下一回合招募后一并刷新。这是有意为之：演示期间如果血量与名次提前跳到最终值，会与正在播放的动作序列矛盾。`rank_of` 不读 `pending_settle`，也不需要在演示期间特殊处理。
+因此战斗演示播放时，左栏的名次与存活状态保持战前值，演示结束、进入下一回合招募后一并刷新。这是有意为之：演示期间如果血量与名次提前跳到最终值，会与正在播放的动作序列矛盾。实现上由 room-service 在调用 `resolve_combat` 之前按下标（即座位）对 `rank_of` 取一次快照，`Combat` 阶段用它覆盖 `PlayerSummary.rank`；`finish_combat` 结算后清空快照，恢复实时计算。
 
 #### 战斗阶段的对手身份
 
@@ -233,7 +233,7 @@ pub fn rank_of(state: &GameState, seat: Seat) -> Option<u8> {
 - 存放位置：`GameTask` 新增 `combat_log: Vec<CombatLogEntry>`，每次 `enter_combat` 从 `outcome.reports` 去重后追加。**不写入 `GameState`**，因此不影响 `state_hash` 与确定性重放。
 - 去重：一份真实战在 `reports` 里有两个座位各一条，按 `(turn, winner, loser)` 归一，每场只记一条；幽灵战本来就只有一条。
 - 截断：只保留最近 5 个回合的条目，超出时按 `turn` 丢弃最旧的。`turn_limit` 为 20，每回合存活 8 人时产生 4 场战斗，5 回合最多 20 条。
-- 下发：`player_view` 在 `to_protocol` 之后填 `view.combat_log = self.combat_log.clone()`。重连走 `Snapshot`，历史自然带出。
+- 下发：`player_view` 在 `to_protocol` 之后填 `view.combat_log = self.combat_log.clone()`。重连走 `Snapshot`，历史自然带出。战斗演示期间本场结果已写入 `combatLog`，战报可以提前展开——结果公开，属于既定行为。
 
 ### 7.4 效果牌补 `era`
 
@@ -409,7 +409,7 @@ let opponent_seat = state.pairings.iter().find_map(|pairing| {
 - 新增：两名出局者存在时，不同种子抽到不同出局者；同一种子两次运行抽到同一名。
 - 新增：幽灵阵容保留 `permanent` 层（不做 `strip_ghost`）。
 - 新增：幽灵保留出局者自己的光环（棋盘上有一张光环随从时，幽灵随从的攻击/生命含该光环），且 `state.auras` 未被污染。
-- `combat.rs`、`combat_damage.rs`、`turn_effects.rs`、`view.rs`、`auras.rs` 里构造 `Pairing { mirror: true }` 或调用 `mirror_ghost` / `mirror_ghost_with_auras` 的地方改签名；`turn_effects` 的「镜像战不写回」用例改为 `ghost: Some(其它座位)` 并断言幽灵棋盘未被修改；`auras` 的上一场快照用例删除，换成幽灵光环用例。
+- `combat.rs`、`combat_damage.rs`、`turn_effects.rs`、`view.rs`、`auras.rs` 里构造 `Pairing { mirror: true }` 或调用 `mirror_ghost` / `mirror_ghost_with_auras` 的地方改签名；`turn_effects` 的「镜像战不写回」用例改为 `ghost: Some(其它座位)`，断言落单座位写回成长/传染、幽灵棋盘未被修改；`auras` 的上一场快照用例删除，换成幽灵光环用例。
 - `room-service` 的 `mirror_combat_result_marked_mirror` 用例改为断言 `winnerId` 与 `damage`；`tests/filter.rs:268-302` 里「镜像战 `damage == 0`」「未获胜 `winnerId == null`」两条断言按新口径改写。
 
 ## 8. 客户端（第二步）
@@ -563,6 +563,7 @@ let opponent_seat = state.pairings.iter().find_map(|pairing| {
 房间服务新增用例：
 - 一场真实战写入 1 条 `combatLog`，两个座位各收到同一条，`participantIds` 为这两人。
 - 幽灵战写入一条：`mirror` 为真，`participantIds` 只有一个元素；获胜时 `winnerId` 为该座位、`loserId` 为空、`damage` 为 0，失利时 `winnerId` 为空、`loserId` 为该座位、`damage` 大于 0。**归属靠 `participantIds`，不靠 `winnerId`/`loserId`。**
+- `CombatResult` 只发给该场参战者本人；观战者（含幽灵归属者）在战斗阶段不收到它，只能从战报读取结果与幽灵归属者名字（阵容演示只发给参战者）。
 - 超过 5 个回合后，最旧回合的条目被丢弃。
 - 重连的 `Snapshot` 携带完整历史。
 
@@ -599,7 +600,7 @@ let opponent_seat = state.pairings.iter().find_map(|pairing| {
 4. **幽灵战胜利不累加 `damage_dealt`**：`compare_alive` 的第三键是「累计造成的伤害」，幽灵战没有打出真实伤害，落单座位不应因此获得名次加权。
 5. **幽灵从全部出局者里随机抽取**，每回合抽一次，可能连续抽到同一人；不做「最近出局者」，也不做 3 回合去重。
 6. **`Pairing.mirror` 换成 `Pairing.ghost: Option<Seat>`**：一个字段表达「对手是不是幽灵、幽灵是谁」，不再依赖「`b == a` 即镜像」的隐式约定。会让历史 `state_hash` 不兼容，本版本没有需要重放的存量对局。
-7. **`combatLog` 不带幽灵归属者的 id**：`participantIds` 只放真实参战玩家，幽灵战就是落单座位一个元素；幽灵归属者不进名单，已出局座位的历史里不会出现「自己死后被人拿去当幽灵」的战报。
-8. **战斗视图左侧仍按「我方 / 对方」两行**：幽灵战的对手行渲染的是出局者的最终阵容，与服务端下发的 `opponentBoard` 一致，不额外加「幽灵」标记（只在右栏顶部身份块与战报条目里标注）。
+7. **`combatLog` 的 `participantIds` 与 `ghostId`**：`participantIds` 只含真实参战玩家；幽灵归属者另以可空 `ghostId` 公开，用于战报显示「幽灵（名字）」。幽灵归属者不进 `participantIds`，因此已出局座位的历史里不会出现「自己死后被人拿去当幽灵」的战报。
+8. **战斗视图左侧仍按「我方 / 对方」两行**：幽灵战的对手行渲染的是出局者的最终阵容，与服务端下发的 `opponentBoard` 一致；结果横幅在幽灵战时追加「（幽灵）」后缀，与右栏顶部身份块、战报条目的标注一致。
 9. **彻底移除自战镜像**：幽灵只来自出局者，落单座位不会再对自己。`mirror_ghost`、`mirror_ghost_with_auras`、`strip_ghost`、`GameState.previous_board` 一并删除。
 10. **落单座位永远对战**：没有出局者时幽灵是空阵容，配对、战报与结算照常（真实对局不可达，只有测试能构造）。
