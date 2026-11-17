@@ -114,14 +114,16 @@ protocol/
 | `MinionBought`、`MinionSold`、`ShopRolled`、`EraUpgraded`、`TripleFormed`、`CardDiscovered` | 只发操作者本人 | 隐藏信息 |
 | `DamageTaken`、`PlayerEliminated` | 全房间可见 | 公开信息，`playerId`/`seat` 指向涉及座位 |
 | `TurnStarted`、`PhaseChanged`、`GameOver` | 全房间可见 | 不指向单个玩家，`playerId` 为 `null` |
-| `CombatResolved` | 不下发 | 战斗结果改走逐座位 `CombatResult`，避免重复 |
+| `CombatResolved`、`CombatDrawn` | 不下发 | 战斗结果改走逐座位 `CombatResult`，避免重复；`CombatDrawn` 只用于观测 |
 
 - `CombatResult` 的动作类型固定为 `attack|death|reborn|contagion|summon`；侧别相对接收该消息的座位：己方棋盘标 `own`、对手标 `opponent`。`ownBoard`/`opponentBoard` 是接收座位视角的两份战前快照。
 - 每条动作带受影响随从的实例 id 与动作后的状态：`attack` 带 `sourceMinionId`/`targetMinionId` 与 `source`/`target`（各含 `minionId`、`attack`、`health`、`alive`）；`death`/`reborn`/`contagion` 只带 `target`；`summon` 带 `summon{side, position, minion}`，`minion` 是完整的随从对象。客户端按这些下发值逐条落地，不做数值推算。
 - `sourceIndex`/`targetIndex` 是战前快照下标，`sourceSide`/`targetSide` 指明它属于哪一侧（`own`/`opponent`，相对接收座位）；召唤物等不在快照中的实例下标与侧别为 `null`，位置改由 `summon.position` 给出。
 - `summon.position` 由引擎按**存活随从序列**给出：召唤后该随从在存活随从中的下标，已阵亡条目不计数，上界由 `PlayerView.boardSlots` 决定。`summon.minion.index` 与它同值，语义一致（客户端不读该字段，按 `position` 插入）。
 - `PlayerView.boardSlots` 取自 `catalog.config.board_slots`（v0.1 为 7），放在视图顶层：重连只回 `Snapshot`，而视图每次刷新都带它，客户端不需要额外的续传逻辑。
-- `mirror` 原样取自战斗报告；镜像战只向该座位发一条 `CombatResult`（报告里只有它自己的一条）。镜像战的幽灵在引擎 `resolve_mirror` 里折叠光环后被重新编号，与己方棋盘不相交，因此动作的实例编号在两侧可判。
+- `mirror` 原样取自战斗报告；幽灵战只向该座位发一条 `CombatResult`（报告里只有它自己的一条）。幽灵来自已出局者的最终阵容，在引擎 `resolve_ghost` 里按幽灵自己的光环来源重算后被重新编号，与己方棋盘不相交，因此动作的实例编号在两侧可判。
+- `opponentPlayerId` 在幽灵战指向幽灵归属座位（已出局者）的 `playerId`；幽灵归属者本人观战时不指向自己，已出局观战者、招募阶段或未配对时为 `null`。
+- `combatLog` 来自 `SeatCombatReport`：真实战每个座位各有一份报告，只保留座位号较小的一份；幽灵战本来只有落单座位一条。战报回合号取结算时刻的 `state.turn`，追加后只保留最近 5 个回合（早于 `turn − 4` 的条目丢弃），按回合升序下发；`mirror=true` 表示该场为幽灵战。
 - `summon.minion` 的攻击与生命取该动作的状态快照（含光环与战斗内加成），卡面字段（`cardId`/`golden`/`keywords`）来自动作本身；快照缺失时才退回卡面基础值。
 - `View` 更新广播给全部 8 个座位：任何改变房间可见状态的操作都会推送 `StateUpdate`，因为对手的公开摘要（`boardCount`、`recruited`、阶段与回合）人人可见。事件仍按座位过滤：本人收到自己的私有事件，其他座位的 `events` 为空数组。
 
