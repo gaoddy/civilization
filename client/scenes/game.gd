@@ -458,9 +458,10 @@ func _refresh() -> void:
     _view_epoch += 1
     var pending: Array = self_state.get("pendingChoices", [])
     _target_pending = not pending.is_empty() and str(pending[0].get("kind", "")) == "target"
+    var state := _build_state(view, self_state, phase, recruited)
 
     _refresh_header(view, self_state, phase)
-    _refresh_players(view)
+    _refresh_players(state)
 
     var in_combat := phase == Protocol.PHASE_COMBAT or phase == Protocol.PHASE_SETTLE
     _set_combat_mode(in_combat)
@@ -478,19 +479,42 @@ func _refresh() -> void:
     _prune_target_requests()
 
 
+## 组装本次刷新传给各视图的快照；视图只读，不回写页面状态。
+func _build_state(
+    view: Dictionary,
+    self_state: Dictionary,
+    phase: String,
+    recruited: bool,
+) -> GameUiState:
+    var state := GameUiState.new()
+    state.view = view
+    state.self_state = self_state
+    state.phase = phase
+    state.recruited = recruited
+    state.stale = _view_stale
+    state.expired = _deadline_expired
+    state.target_pending = _target_pending
+    state.connected = Net.is_open()
+    state.epoch = _view_epoch
+    state.can_play = _can_play_now()
+    state.board_slots = maxi(int(view.get("boardSlots", 7)), 1)
+    state.hp_cap = maxi(int(view.get("hpCap", 40)), 1)
+    return state
+
+
 func _refresh_header(view: Dictionary, self_state: Dictionary, phase: String) -> void:
     _turn_label.text = "第 %d 回合 · %s" % [
         int(view.get("turn", 1)),
         PHASE_TEXT.get(phase, phase),
     ]
     _hp_pill.text = "♥ %d" % int(self_state.get("hp", 0))
-    _era_pill.text = _era_text(int(self_state.get("era", 1)))
+    _era_pill.text = GameCardFace.era_text(int(self_state.get("era", 1)))
     _gold_pill.text = "● %d 金" % int(self_state.get("gold", 0))
 
 
-func _refresh_players(view: Dictionary) -> void:
+func _refresh_players(state: GameUiState) -> void:
     UI.clear(_players_rail)
-    var players: Array = _sorted_players(view)
+    var players: Array = _sorted_players(state.view)
     if players.is_empty():
         _players_rail.add_child(UI.empty_hint("暂无玩家"))
         return
@@ -556,7 +580,7 @@ func _seat_row(player: Dictionary) -> PanelContainer:
 
     var meta := UI.label("HP %d · %s · 随从%d" % [
         int(player.get("hp", 0)),
-        _era_text(int(player.get("era", 1))),
+        GameCardFace.era_text(int(player.get("era", 1))),
         int(player.get("boardCount", 0)),
     ], UITheme.font_size("font-caption"), false)
     meta.clip_text = true
@@ -623,9 +647,14 @@ func _minion_card(
     read_only := false,
 ) -> PanelContainer:
     var minion_index := int(minion.get("index", position))
+    if read_only:
+        var read_only_panel := GameCardFace.read_only_minion_card(minion)
+        _attach_detail(read_only_panel, {"detail_kind": "minion", "minion": minion})
+        return read_only_panel
+
     var panel := BoardCard.new()
     panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-tight"))
-    panel.name = "BoardMinion%d" % minion_index
+    panel.name = "Board" + ("Minion%d" % minion_index)
     panel.set_meta("minion_id", str(minion.get("minionId", "")))
     panel.set_meta("minion_index", minion_index)
     panel.custom_minimum_size = Vector2(UITheme.metric("minion-card-width"), UITheme.metric("minion-card-height"))
@@ -634,15 +663,13 @@ func _minion_card(
     var entry := CardDB.card(card_id)
     panel.add_child(_card_face(
         card_id,
-        _stat_text(minion.get("attack")),
-        _stat_text(minion.get("health")),
-        _tribe_text(entry),
+        GameCardFace.stat_text(minion.get("attack")),
+        GameCardFace.stat_text(minion.get("health")),
+        GameCardFace.tribe_text(entry),
         "★" if bool(minion.get("golden", false)) else "",
     ))
 
     _attach_detail(panel, {"detail_kind": "minion", "minion": minion})
-    if read_only:
-        return panel
 
     # 棋盘卡只提供拖拽：拖到棋盘内换位，拖到商店出售；卡内不再放操作按钮。
     panel.payload = {
@@ -658,8 +685,7 @@ func _minion_card(
     return panel
 
 
-## 统一卡面：封面铺满整卡，底部信息区依次为居中名称与「攻击 · 类型 · 生命」。
-## 所有子节点忽略鼠标，点击与悬停由外层卡片决定。
+## 统一卡面：交给共享构造器，卡面节点名与层级保持不变。
 func _card_face(
     card_id: String,
     attack_text: String,
@@ -667,112 +693,7 @@ func _card_face(
     type_text: String,
     badge_text := "",
 ) -> Control:
-    var entry := CardDB.card(card_id)
-    var face := Control.new()
-    face.name = "CardFace"
-    face.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    face.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    face.size_flags_vertical = Control.SIZE_EXPAND_FILL
-
-    var cover := ColorRect.new()
-    cover.name = "Cover"
-    cover.color = UITheme.tribe_cover(str(entry.get("tribe", "")))
-    cover.set_anchors_preset(Control.PRESET_FULL_RECT)
-    cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    face.add_child(cover)
-
-    var watermark := UI.label(_card_initial(card_id), UITheme.font_size("font-hero"), false)
-    watermark.name = "CoverMark"
-    watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
-    watermark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    watermark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    watermark.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
-    watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    face.add_child(watermark)
-
-    if badge_text != "":
-        var badge := UI.pill_label(badge_text, "accent", "font-caption")
-        badge.name = "CardBadge"
-        badge.set_anchors_preset(Control.PRESET_TOP_LEFT)
-        badge.position = Vector2(UITheme.space("space-xs"), UITheme.space("space-xs"))
-        badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        face.add_child(badge)
-
-    var info := UI.card_panel("cover-info")
-    info.name = "CardInfo"
-    info.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    info.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-    info.offset_top = -UITheme.metric("card-info-height")
-    info.offset_bottom = 0
-    var info_box := VBoxContainer.new()
-    info_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    info_box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    info.add_child(info_box)
-
-    var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-body-sm"), false)
-    name_label.name = "CardName"
-    name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    name_label.max_lines_visible = 1
-    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    info_box.add_child(name_label)
-
-    var stats_row := HBoxContainer.new()
-    stats_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stats_row.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-    info_box.add_child(stats_row)
-
-    var attack_label := UI.label(attack_text, UITheme.font_size("font-title"), false)
-    attack_label.name = "CardAttack"
-    attack_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stats_row.add_child(attack_label)
-
-    var type_label := UI.label(type_text, UITheme.font_size("font-caption"), false)
-    type_label.name = "CardType"
-    type_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    type_label.max_lines_visible = 1
-    type_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    type_label.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    type_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stats_row.add_child(type_label)
-
-    var health_label := UI.label(health_text, UITheme.font_size("font-title"), false)
-    health_label.name = "CardHealth"
-    health_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stats_row.add_child(health_label)
-    face.add_child(info)
-    return face
-
-
-## 卡面封面的首字水印；空 id 回退问号。
-func _card_initial(card_id: String) -> String:
-    var display := CardDB.display_name(card_id)
-    return display.substr(0, 1) if display != "" else "?"
-
-
-## 卡面类型行：卡面宽度有限，只放部落；完整类型放在详情面板。
-func _tribe_text(entry: Dictionary) -> String:
-    var tribe := str(entry.get("tribe", ""))
-    return tribe if tribe != "" else str(entry.get("card_type", "—"))
-
-
-## 详情类型行：卡牌类别与部落。
-func _type_text(entry: Dictionary) -> String:
-    var card_type := str(entry.get("card_type", ""))
-    var tribe := str(entry.get("tribe", ""))
-    if card_type == "":
-        return tribe if tribe != "" else "—"
-    if tribe == "" or tribe == card_type:
-        return card_type
-    return "%s·%s" % [card_type, tribe]
-
-
-## 卡面数值：服务端或卡表缺失时用破折号占位。
-func _stat_text(value: Variant) -> String:
-    if value == null:
-        return "—"
-    return str(int(value))
+    return GameCardFace.face(card_id, attack_text, health_text, type_text, badge_text)
 
 
 func _refresh_shop(self_state: Dictionary) -> void:
@@ -796,9 +717,9 @@ func _refresh_shop(self_state: Dictionary) -> void:
         panel.gui_input.connect(_on_shop_card_input.bind(panel, index))
         panel.add_child(_card_face(
             card_id,
-            _stat_text(entry.get("attack")),
-            _stat_text(entry.get("health")),
-            _tribe_text(entry),
+            GameCardFace.stat_text(entry.get("attack")),
+            GameCardFace.stat_text(entry.get("health")),
+            GameCardFace.tribe_text(entry),
             "冻" if bool(slot.get("frozen", false)) else "",
         ))
         _attach_detail(panel, {
@@ -939,7 +860,7 @@ func _refresh_side(self_state: Dictionary) -> void:
 
     var stat_line := UI.label("生命 %d · %s · 金币 %d" % [
         int(self_state.get("hp", 0)),
-        _era_text(int(self_state.get("era", 1))),
+        GameCardFace.era_text(int(self_state.get("era", 1))),
         int(self_state.get("gold", 0)),
     ], UITheme.font_size("font-body-sm"), false)
     stat_line.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
@@ -1104,7 +1025,7 @@ func _fill_combat_strip(container: HBoxContainer, player: Dictionary, fallback: 
 
     var meta := UI.label("HP %d · %s · 随从 %d" % [
         int(player.get("hp", 0)),
-        _era_text(int(player.get("era", 1))),
+        GameCardFace.era_text(int(player.get("era", 1))),
         int(player.get("boardCount", 0)),
     ], UITheme.font_size("font-caption"), false)
     meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
@@ -1317,11 +1238,11 @@ func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
     var card_id := str(data.get("cardId", ""))
     var entry := CardDB.card(card_id)
     box.add_child(_detail_name(CardDB.display_name(card_id)))
-    box.add_child(_detail_row("类型", _type_text(entry)))
+    box.add_child(_detail_row("类型", GameCardFace.type_text(entry)))
     box.add_child(_detail_row("费用", "%d 金" % CardDB.display_cost(card_id)))
     box.add_child(_detail_row("原始", "%s / %s" % [
-        _stat_text(entry.get("attack")),
-        _stat_text(entry.get("health")),
+        GameCardFace.stat_text(entry.get("attack")),
+        GameCardFace.stat_text(entry.get("health")),
     ]))
     var era := str(entry.get("era", ""))
     if era != "":
@@ -1350,8 +1271,8 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
             int(minion.get("health", 0)),
         ]))
         return
-    var attack: Dictionary = _stat_layers(stats.get("attack"))
-    var health: Dictionary = _stat_layers(stats.get("health"))
+    var attack: Dictionary = GameCardFace.stat_layers(stats.get("attack"))
+    var health: Dictionary = GameCardFace.stat_layers(stats.get("health"))
     for layer in DETAIL_ROWS:
         var a := int(attack.get(layer, 0))
         var h := int(health.get(layer, 0))
@@ -1361,9 +1282,9 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
         if layer == "initial":
             box.add_child(_detail_row(label, "%d / %d" % [a, h]))
         elif layer == "damage":
-            box.add_child(_detail_row(label, "%s / %s" % [_damage_text(a), _damage_text(h)]))
+            box.add_child(_detail_row(label, "%s / %s" % [GameCardFace.damage_text(a), GameCardFace.damage_text(h)]))
         else:
-            box.add_child(_detail_row(label, "%s / %s" % [_signed(a), _signed(h)]))
+            box.add_child(_detail_row(label, "%s / %s" % [GameCardFace.signed(a), GameCardFace.signed(h)]))
     box.add_child(_detail_row("当前", "%d / %d" % [
         int(attack.get("current", 0)),
         int(health.get("current", 0)),
@@ -1422,12 +1343,6 @@ func _hide_detail() -> void:
     _hover_card = null
 
 
-func _stat_layers(value: Variant) -> Dictionary:
-    if typeof(value) == TYPE_DICTIONARY:
-        return value
-    return {}
-
-
 func _detail_row(prefix: String, value: String) -> HBoxContainer:
     var row := HBoxContainer.new()
     row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1445,19 +1360,6 @@ func _detail_row(prefix: String, value: String) -> HBoxContainer:
     text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     row.add_child(text)
     return row
-
-
-func _signed(value: int) -> String:
-    return "+%d" % value if value >= 0 else str(value)
-
-
-## 受击行以「损失量」呈现：层和高于当前量为负数，复生超过层和为正数。
-func _damage_text(value: int) -> String:
-    if value > 0:
-        return "-%d" % value
-    if value < 0:
-        return "+%d" % -value
-    return "0"
 
 
 # ── 弹层 ──────────────────────────────────────────────────────────────────
@@ -1811,11 +1713,6 @@ func _optional_text(value: Variant) -> String:
     if value == null:
         return ""
     return str(value)
-
-
-## 统一时代文案：顶栏、积分榜、属性行与战斗条都显示具体时代名。
-func _era_text(era: int) -> String:
-    return "时代 %s" % CardDB.era_name(era)
 
 
 func _join_lines(values: Array) -> String:
