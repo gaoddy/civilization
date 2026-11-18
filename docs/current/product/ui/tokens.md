@@ -79,6 +79,10 @@
 | `card-info-compact-height` | 56 | 无介绍时的卡面信息区高度，只容纳名称与数值 |
 | `hand-card-overlap` | 32 | 手牌相邻卡的交叠宽度；槽位步进 = `card-width - hand-card-overlap` = 80，十张单行 |
 | `hand-hover-scale` | 1.12 | 手牌悬停放大倍数，以底边中点为轴；小数令牌用 `UITheme.factor` 读取，不要用 `metric` |
+| `gallery-toc-width` | 168 | 图鉴分类目录宽度 |
+| `gallery-detail-width` | 280 | 图鉴常驻详情宽度 |
+| `gallery-page-size` | 40 | 图鉴每页卡面张数（5 列 × 8 行） |
+| `gallery-grid-columns` | 5 | 图鉴卡面网格列数 |
 
 ## 6. 玩法色
 

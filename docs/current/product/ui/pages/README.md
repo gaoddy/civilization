@@ -6,5 +6,6 @@
 | --- | --- | --- |
 | 选英雄（房间） | `client/scenes/room.tscn` | [room.md](room.md) |
 | 对局 | `client/scenes/game.tscn` | [game.md](game.md) |
+| 卡牌图鉴 | `client/scenes/gallery.tscn` | [gallery.md](gallery.md) |
 
 登录、大厅与结算页尚未单独成文。
