@@ -484,7 +484,7 @@
     "playstyle": "insect",
     "skills": [
       "keyword-taunt",
-      "battlecry-other-insect-growth-once"
+      "keyword-breed-1"
     ],
     "specialty": [],
     "subtype": "insect",
@@ -781,7 +781,7 @@
     "playstyle": "insect",
     "skills": [
       "deathrattle-friendly-insect-growth-twice",
-      "battlecry-other-insect-growth-once"
+      "keyword-breed-1"
     ],
     "specialty": [],
     "subtype": "insect",
@@ -1467,7 +1467,7 @@
     "playstyle": "mammal",
     "skills": [
       "keyword-reborn",
-      "keyword-evolve"
+      "shout"
     ],
     "specialty": [
       {
@@ -4154,7 +4154,7 @@
     "playstyle": "mammal",
     "skills": [
       "keyword-taunt",
-      "trigger-3-humans-self-plus-1-plus-1"
+      "shout"
     ],
     "specialty": [],
     "subtype": "unit",
@@ -4954,7 +4954,7 @@
     "playstyle": "plant",
     "skills": [
       "aura-plant-plus-1-plus-1",
-      "heredity"
+      "keyword-breed-3"
     ],
     "specialty": [],
     "subtype": "crop",
@@ -5081,7 +5081,7 @@
     "playstyle": "plant",
     "skills": [
       "keyword-sow",
-      "battlecry-friendly-plant-kingdom-growth-once"
+      "keyword-breed-1"
     ],
     "specialty": [],
     "subtype": "flower",
@@ -5446,7 +5446,7 @@
     "playstyle": "fish",
     "skills": [
       "keyword-taunt",
-      "deathrattle-random-enemy-damage-2"
+      "aura-school-fish-1"
     ],
     "specialty": [],
     "subtype": "fish",
@@ -5571,7 +5571,7 @@
     "playstyle": "plant",
     "skills": [
       "keyword-sow",
-      "aura-plant-plus-1-plus-1"
+      "keyword-taunt"
     ],
     "specialty": [],
     "subtype": "medicinal",
@@ -5862,7 +5862,7 @@
     "playstyle": "mammal",
     "skills": [
       "keyword-reborn",
-      "keyword-evolve"
+      "aura-school-mammal"
     ],
     "specialty": [],
     "subtype": "clone",
@@ -6925,7 +6925,7 @@
     "playstyle": "bacteria",
     "skills": [
       "keyword-reborn",
-      "keyword-evolve"
+      "keyword-contagion"
     ],
     "specialty": [],
     "subtype": "synthesis",
@@ -7052,7 +7052,7 @@
     "playstyle": "insect",
     "skills": [
       "deathrattle-summon-3-termites",
-      "battlecry-other-insect-growth-once"
+      "keyword-breed-3"
     ],
     "specialty": [],
     "subtype": "insect",
@@ -8720,7 +8720,7 @@
     "playstyle": "plant",
     "skills": [
       "keyword-sow",
-      "aura-other-plants-plus-0-plus-1"
+      "keyword-taunt"
     ],
     "specialty": [],
     "subtype": "tree",

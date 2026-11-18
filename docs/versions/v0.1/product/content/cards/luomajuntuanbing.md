@@ -9,7 +9,7 @@ level: 3
 era: feudal
 attack: 3
 health: 7
-skills: [keyword-taunt, trigger-3-humans-self-plus-1-plus-1]
+skills: [keyword-taunt, shout]
 is_scholar: false
 ---
 
@@ -31,13 +31,13 @@ is_scholar: false
 | 攻击力 | 3 |
 | 生命值 | 7 |
 | 关键词 | 嘲讽 |
-| 技能 | keyword-taunt；trigger-3-humans-self-plus-1-plus-1 |
+| 技能 | keyword-taunt；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-嘲讽；若你控制至少 3 个人科随从，获得 +1/+1
+嘲讽；使一个友方随从获得一次成长
 
 ## 出处
 

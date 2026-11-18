@@ -9,7 +9,7 @@ level: 4
 era: classical
 attack: 7
 health: 6
-skills: [deathrattle-friendly-insect-growth-twice, battlecry-other-insect-growth-once]
+skills: [deathrattle-friendly-insect-growth-twice, keyword-breed-1]
 is_scholar: false
 ---
 
@@ -30,14 +30,14 @@ is_scholar: false
 | 时代 | 古典 |
 | 攻击力 | 7 |
 | 生命值 | 6 |
-| 关键词 | 亡语；战吼 |
-| 技能 | deathrattle-friendly-insect-growth-twice；battlecry-other-insect-growth-once |
+| 关键词 | 亡语；繁衍 1 |
+| 技能 | deathrattle-friendly-insect-growth-twice；keyword-breed-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-亡语：使一个友方昆虫纲随从获得两次成长；战吼：使你的其他昆虫纲随从获得一次成长
+亡语：使一个友方昆虫纲随从获得两次成长；繁衍 1：回合开始时获得 +1 生命
 
 ## 设计说明
 

@@ -9,7 +9,7 @@ level: 5
 era: future
 attack: 6
 health: 10
-skills: [keyword-reborn, keyword-evolve]
+skills: [keyword-reborn, keyword-contagion]
 is_scholar: false
 ---
 
@@ -30,14 +30,14 @@ is_scholar: false
 | 时代 | 未来 |
 | 攻击力 | 6 |
 | 生命值 | 10 |
-| 关键词 | 复生；进化 |
-| 技能 | keyword-reborn；keyword-evolve |
+| 关键词 | 复生；传染 |
+| 技能 | keyword-reborn；keyword-contagion |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-复生：以 1 点生命复活一次；进化：从 +2/+2、护盾、复生中选择一个
+复生：以 1 点生命复活一次；传染：造成伤害后，目标每回合 -1 生命
 
 ## 出处
 

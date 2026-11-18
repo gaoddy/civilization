@@ -9,7 +9,7 @@ level: 3
 era: feudal
 attack: 4
 health: 5
-skills: [keyword-sow, aura-other-plants-plus-0-plus-1]
+skills: [keyword-sow, keyword-taunt]
 is_scholar: false
 ---
 
@@ -30,14 +30,14 @@ is_scholar: false
 | 时代 | 封建 |
 | 攻击力 | 4 |
 | 生命值 | 5 |
-| 关键词 | 播种 |
-| 技能 | keyword-sow；aura-other-plants-plus-0-plus-1 |
+| 关键词 | 播种；嘲讽 |
+| 技能 | keyword-sow；keyword-taunt |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-播种：死亡时召唤一个 1/1 的幼苗；你的其他植物随从获得 +0/+1
+播种：死亡时召唤一个 1/1 的幼苗；嘲讽
 
 ## 出处
 

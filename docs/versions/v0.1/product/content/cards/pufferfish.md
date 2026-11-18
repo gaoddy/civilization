@@ -9,7 +9,7 @@ level: 3
 era: feudal
 attack: 5
 health: 4
-skills: [keyword-taunt, deathrattle-random-enemy-damage-2]
+skills: [keyword-taunt, aura-school-fish-1]
 is_scholar: false
 ---
 
@@ -30,20 +30,20 @@ is_scholar: false
 | 时代 | 封建 |
 | 攻击力 | 5 |
 | 生命值 | 4 |
-| 关键词 | 嘲讽；亡语 |
-| 技能 | keyword-taunt；deathrattle-random-enemy-damage-2 |
+| 关键词 | 嘲讽 |
+| 技能 | keyword-taunt；aura-school-fish-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-嘲讽；亡语：对随机一个敌方随从造成 2 点伤害
+嘲讽；群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
 
 ## 设计说明
 
-定位：鱼纲的防守型随从，嘲讽吸收攻击并以亡语反伤。
+定位：鱼纲的防守型随从，嘲讽吸收攻击并以群聚强化鱼群。
 平衡边界：3/7 高生命配嘲讽与随机 2 点亡语伤害，攻击力偏低。
-使用建议：放在鱼群前排保护成长核心，死亡后仍能补一次伤害。
+使用建议：放在鱼群前排保护核心，在场时持续为其他鱼纲随从提供群聚加成。
 
 ## 出处
 
