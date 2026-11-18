@@ -149,10 +149,10 @@
 | [keyword-breed-3](keyword-breed-3.md) | breed 3 | 繁衍 3：回合开始时获得 +3 生命 | 4 |
 | [keyword-contagion](keyword-contagion.md) | contagion | 传染：造成伤害后，目标每回合 -1 生命 | 16 |
 | [keyword-divine-shield](keyword-divine-shield.md) | divine_shield | 护盾：抵消一次伤害 | 7 |
-| [keyword-evolve](keyword-evolve.md) | evolve | 进化：从 +2/+2、护盾、复生中选择一个 | 3 |
+| [keyword-evolve](keyword-evolve.md) | evolve | 进化：从 +2/+2、护盾、复生中选择一个 | 6 |
 | [keyword-ignore-taunt](keyword-ignore-taunt.md) | ignore_taunt | 无视嘲讽：攻击时无视敌方嘲讽 | 12 |
 | [keyword-poison](keyword-poison.md) | poison | 剧毒：造成伤害后，若目标仍存活则将其消灭 | 8 |
-| [keyword-reborn](keyword-reborn.md) | reborn | 复生：以 1 点生命复活一次 | 7 |
+| [keyword-reborn](keyword-reborn.md) | reborn | 复生：以 1 点生命复活一次 | 4 |
 | [keyword-sow](keyword-sow.md) | sow | 播种：死亡时召唤一个 1/1 的幼苗 | 16 |
 | [keyword-stealth](keyword-stealth.md) | stealth | 潜行：无法被单体攻击与单体效果选中，造成伤害后打破 | 4 |
 | [keyword-taunt](keyword-taunt.md) | taunt | 嘲讽 | 22 |

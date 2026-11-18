@@ -3389,7 +3389,7 @@
     "level": 7,
     "playstyle": "mammal",
     "skills": [
-      "keyword-reborn",
+      "keyword-evolve",
       "shout"
     ],
     "specialty": [],
@@ -5861,7 +5861,7 @@
     "level": 6,
     "playstyle": "mammal",
     "skills": [
-      "keyword-reborn",
+      "keyword-evolve",
       "aura-school-mammal"
     ],
     "specialty": [],
@@ -6924,7 +6924,7 @@
     "level": 5,
     "playstyle": "bacteria",
     "skills": [
-      "keyword-reborn",
+      "keyword-evolve",
       "keyword-contagion"
     ],
     "specialty": [],
