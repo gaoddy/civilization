@@ -153,8 +153,8 @@ CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
              "contagion": 3, "reborn": 4, "divine_shield": 5,
              "poison": 3, "armor": 2, "stealth": 3}
-EXPECT_ERA = {"prehistoric": 52, "primitive": 47, "classical": 35, "feudal": 51,
-              "industrial": 38, "modern": 82, "future": 41}
+EXPECT_ERA = {"prehistoric": 63, "primitive": 60, "classical": 45, "feudal": 57,
+              "industrial": 41, "modern": 96, "future": 47}
 EXPECT_LEVEL = {1: 35, 2: 52, 3: 59, 4: 60, 5: 55, 6: 28, 7: 20}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "playstyle", "taxon", "subtype", "level", "era",
@@ -1103,8 +1103,8 @@ def check_skills():
     global KEYWORD_LABELS
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 197:
-        fail(f"技能数量 {len(skills)}，期望 197")
+    if len(skills) != 247:
+        fail(f"技能数量 {len(skills)}，期望 247")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
@@ -1322,7 +1322,7 @@ def check_cards(skill_map):
                 fail(message)
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"minion": 309, "effect": 37}:
+    if counts != {"minion": 309, "effect": 100}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]

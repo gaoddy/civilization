@@ -390,6 +390,29 @@
     "taxon": "termitidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "primitive",
+    "health": null,
+    "id": "baozi-kuosan",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-summon-2-spores-2-2"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "fungus"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 2,
     "card_type": "minion",
     "cost": null,
@@ -443,6 +466,52 @@
     "specialty": [],
     "subtype": "insect",
     "taxon": "scarabaeidae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "industrial",
+    "health": null,
+    "id": "beiyong-lingjian",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-machine-single-reborn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "modern",
+    "health": null,
+    "id": "bianyi",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "combatstart-all-enemies-contagion-2"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "virus"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 3,
@@ -585,6 +654,29 @@
     "taxon": "hominidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "bozhongji",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-plant-sow"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "plant"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 7,
     "card_type": "minion",
     "cost": null,
@@ -720,6 +812,29 @@
   {
     "attack": null,
     "card_type": "effect",
+    "cost": 2,
+    "era": "future",
+    "health": null,
+    "id": "chaopin",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-machine-all-plus-1-plus-1"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
     "cost": 1,
     "era": "classical",
     "health": null,
@@ -776,6 +891,75 @@
     ],
     "subtype": "bacteria",
     "taxon": "vibrionaceae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "primitive",
+    "health": null,
+    "id": "chongqun-baofa",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-summon-2-worker-bees"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "insect"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "classical",
+    "health": null,
+    "id": "chushou-chanrao",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-cephalopod-single-poison"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "cixibao",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-cnidarian-single-poison-this-turn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 3,
@@ -947,6 +1131,24 @@
     "taxon": "corvidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "primitive",
+    "health": null,
+    "id": "cuidu",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-poison-this-turn"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 2,
     "card_type": "minion",
     "cost": null,
@@ -963,6 +1165,29 @@
     "specialty": [],
     "subtype": "mollusk",
     "taxon": "sepiidae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "modern",
+    "health": null,
+    "id": "daliuxing",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "neutral",
+    "skills": [
+      "combatstart-all-enemies-damage-3"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "virus"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -1283,6 +1508,29 @@
     "taxon": "squamata-incertae-sedis"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "primitive",
+    "health": null,
+    "id": "duya",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-reptile-single-poison-this-turn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 12,
     "card_type": "minion",
     "cost": null,
@@ -1593,6 +1841,29 @@
     "taxon": "production-construction"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 4,
+    "era": "modern",
+    "health": null,
+    "id": "fanmao",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-plant-all-growth-twice"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "plant"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -1710,6 +1981,29 @@
     "taxon": "power-energy"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "classical",
+    "health": null,
+    "id": "fengqun-zhanshu",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-insect-all-plus-1-plus-1"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "insect"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -1811,6 +2105,47 @@
     "taxon": "rotaliidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "primitive",
+    "health": null,
+    "id": "fushen-biaodui",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "combatstart-lowest-attack-enemy-damage-3"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "bird"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "classical",
+    "health": null,
+    "id": "fusheng",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-reborn"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 11,
     "card_type": "minion",
     "cost": null,
@@ -1832,6 +2167,47 @@
     ],
     "subtype": "power",
     "taxon": "power-energy"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "modern",
+    "health": null,
+    "id": "fuzhi",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-copy-friendly-minion"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "industrial",
+    "health": null,
+    "id": "fuzhi-baofa",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "neutral",
+    "skills": [
+      "combatstart-all-enemies-damage-2"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "fungus"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -2516,6 +2892,24 @@
     "taxon": "rhizophoraceae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "feudal",
+    "health": null,
+    "id": "houjia",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-armor-2-this-turn"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 4,
     "card_type": "minion",
     "cost": null,
@@ -2575,6 +2969,24 @@
     "specialty": [],
     "subtype": "unit",
     "taxon": "hominidae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "future",
+    "health": null,
+    "id": "hushun",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-divine-shield"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 4,
@@ -2680,6 +3092,24 @@
   {
     "attack": null,
     "card_type": "effect",
+    "cost": 0,
+    "era": "feudal",
+    "health": null,
+    "id": "jianshou",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-plus-0-plus-1-this-turn"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
     "cost": 2,
     "era": "industrial",
     "health": null,
@@ -2690,6 +3120,60 @@
     "playstyle": "neutral",
     "skills": [
       "trigger-friendly-plus-2-attack-this-turn"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "feudal",
+    "health": null,
+    "id": "jijie",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-summon-1-neutral-token-2-2"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "modern",
+    "health": null,
+    "id": "jili",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-all-friendly-plus-1-plus-1"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "modern",
+    "health": null,
+    "id": "jinghua",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "neutral",
+    "skills": [
+      "combatstart-remove-top-attack-enemy-growth"
     ],
     "specialty": [],
     "subtype": null,
@@ -2710,6 +3194,29 @@
       "trigger-discover-tribe-minion"
     ],
     "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "primitive",
+    "health": null,
+    "id": "jiti-shoulie",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-mammal-all-growth-once"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
     "subtype": null,
     "taxon": "phenomenon"
   },
@@ -2788,6 +3295,29 @@
     "taxon": "plantae-incertae-sedis"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "junsi-wangluo",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-fungus-single-plus-0-plus-3"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "fungus"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 2,
     "card_type": "minion",
     "cost": null,
@@ -2850,6 +3380,70 @@
     "specialty": [],
     "subtype": "fruit-tree",
     "taxon": "rutaceae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "primitive",
+    "health": null,
+    "id": "kaihua",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-plant-all-breed-2"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "plant"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "modern",
+    "health": null,
+    "id": "kangshengsu",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-bacteria-single-armor-2-this-turn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "bacteria"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "classical",
+    "health": null,
+    "id": "kantan",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-discover-tribe-minion"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 4,
@@ -3111,6 +3705,24 @@
     "taxon": "hominidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 0,
+    "era": "modern",
+    "health": null,
+    "id": "leguan",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-plus-1-plus-1-this-turn"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -3178,6 +3790,47 @@
     ],
     "subtype": "bacteria",
     "taxon": "rickettsiaceae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 0,
+    "era": "classical",
+    "health": null,
+    "id": "linggan",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-growth-once"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "classical",
+    "health": null,
+    "id": "linjia-bilei",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-reptile-all-plus-0-plus-3"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -3651,6 +4304,24 @@
     "taxon": "octopodidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "primitive",
+    "health": null,
+    "id": "modao",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-plus-2-attack"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 1,
     "card_type": "minion",
     "cost": null,
@@ -3741,6 +4412,29 @@
     ],
     "subtype": "philosophy",
     "taxon": "hominidae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "mozhi",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "combatstart-random-enemy-minus-2-attack"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 5,
@@ -3974,6 +4668,29 @@
     ],
     "subtype": "physics",
     "taxon": "hominidae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "primitive",
+    "health": null,
+    "id": "nitai",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-stealth-this-turn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 2,
@@ -4268,6 +4985,29 @@
     "taxon": "phasianidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "industrial",
+    "health": null,
+    "id": "peiyangmin",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "combatstart-all-enemies-contagion-1"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "bacteria"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 7,
     "card_type": "minion",
     "cost": null,
@@ -4522,6 +5262,47 @@
     "taxon": "pythonidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "modern",
+    "health": null,
+    "id": "qianfuqi",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-virus-single-plus-1-plus-2"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "virus"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "modern",
+    "health": null,
+    "id": "qianghua",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-plus-2-plus-2"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 4,
     "card_type": "minion",
     "cost": null,
@@ -4659,6 +5440,29 @@
     ],
     "subtype": "spaceflight",
     "taxon": "transport"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "classical",
+    "health": null,
+    "id": "qunniao-fengbao",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "neutral",
+    "skills": [
+      "combatstart-all-enemies-damage-3"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "bird"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -5070,6 +5874,29 @@
     "taxon": "hominidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 4,
+    "era": "modern",
+    "health": null,
+    "id": "shanhujiao",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-cnidarian-all-plus-0-plus-4"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -5091,6 +5918,47 @@
     ],
     "subtype": "mathematics",
     "taxon": "hominidae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "primitive",
+    "health": null,
+    "id": "shengzhang",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-growth-twice"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 4,
+    "era": "modern",
+    "health": null,
+    "id": "shenhai-huixiang",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-fish-all-reborn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "fish"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -5306,6 +6174,47 @@
     "specialty": [],
     "subtype": "primitive",
     "taxon": "hominidae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "feudal",
+    "health": null,
+    "id": "shouqun-chongfeng",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-mammal-all-plus-2-attack"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "future",
+    "health": null,
+    "id": "shuaxin",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-refresh-shop-free"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 2,
@@ -5869,6 +6778,24 @@
     "taxon": "phenomenon"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 0,
+    "era": "feudal",
+    "health": null,
+    "id": "tiaoxin",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-taunt-until-turn-end"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 4,
     "card_type": "minion",
     "cost": null,
@@ -6005,6 +6932,29 @@
     "taxon": "hominidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "tuike",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-insect-single-reborn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "insect"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 5,
     "card_type": "minion",
     "cost": null,
@@ -6021,6 +6971,29 @@
     "specialty": [],
     "subtype": "fish",
     "taxon": "scombridae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "primitive",
+    "health": null,
+    "id": "tunshi",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-protozoa-single-growth-twice"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "protozoa"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 8,
@@ -6227,6 +7200,24 @@
     "taxon": "hominidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 0,
+    "era": "classical",
+    "health": null,
+    "id": "weiguang",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-plus-0-plus-2"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 4,
     "card_type": "minion",
     "cost": null,
@@ -6243,6 +7234,70 @@
     "specialty": [],
     "subtype": "unit",
     "taxon": "hominidae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "weizu",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-protozoa-single-taunt-this-turn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "protozoa"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 4,
+    "era": "future",
+    "health": null,
+    "id": "wenming-feiyue",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-all-friendly-growth-twice"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "feudal",
+    "health": null,
+    "id": "wenyi-baofa",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "neutral",
+    "skills": [
+      "combatstart-all-enemies-contagion-2"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "bacteria"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 12,
@@ -6378,6 +7433,29 @@
     "taxon": "phenomenon"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "modern",
+    "health": null,
+    "id": "xibao-fenlie",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-summon-2-amoeba-larva-3-3"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "protozoa"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -6479,6 +7557,24 @@
     "taxon": "hominidae"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "xunjie",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-minion-windfury-this-turn"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 4,
     "card_type": "minion",
     "cost": null,
@@ -6495,6 +7591,29 @@
     "specialty": [],
     "subtype": "plague",
     "taxon": "virus-incertae-sedis"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "yangliu",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-fish-single-plus-0-plus-2"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "fish"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -6605,6 +7724,29 @@
   {
     "attack": null,
     "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "yinghua-jiake",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-reptile-single-armor-2-this-turn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
     "cost": 2,
     "era": "future",
     "health": null,
@@ -6615,6 +7757,24 @@
     "playstyle": "neutral",
     "skills": [
       "combatstart-all-enemies-minus-1-attack"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "classical",
+    "health": null,
+    "id": "yinni",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-friendly-single-stealth-this-turn"
     ],
     "specialty": [],
     "subtype": null,
@@ -6771,6 +7931,52 @@
     "taxon": "fungi-incertae-sedis"
   },
   {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "primitive",
+    "health": null,
+    "id": "yuqun-jijie",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-fish-all-growth-once"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "fish"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "yuyi-bihu",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-bird-single-windfury-this-turn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "bird"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
     "attack": 10,
     "card_type": "minion",
     "cost": null,
@@ -6787,6 +7993,29 @@
     "specialty": [],
     "subtype": "universe",
     "taxon": "plantae-incertae-sedis"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "primitive",
+    "health": null,
+    "id": "zaisheng",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-cnidarian-single-reborn"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": 0,
@@ -6868,6 +8097,24 @@
     "specialty": [],
     "subtype": "beast",
     "taxon": "elephantidae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 2,
+    "era": "classical",
+    "health": null,
+    "id": "zhaohuan",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-summon-2-neutral-token-2-2"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
   },
   {
     "attack": null,
@@ -7003,6 +8250,24 @@
   {
     "attack": null,
     "card_type": "effect",
+    "cost": 4,
+    "era": "future",
+    "health": null,
+    "id": "zhongju",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "neutral",
+    "skills": [
+      "combatstart-all-enemies-damage-4"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
     "cost": 2,
     "era": "feudal",
     "health": null,
@@ -7054,5 +8319,69 @@
     "specialty": [],
     "subtype": "tree",
     "taxon": "poaceae"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "modern",
+    "health": null,
+    "id": "ziyang",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-all-friendly-plus-0-plus-1"
+    ],
+    "specialty": [],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 3,
+    "era": "future",
+    "health": null,
+    "id": "zongzhuang-xian",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-machine-all-growth-once"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
+  },
+  {
+    "attack": null,
+    "card_type": "effect",
+    "cost": 1,
+    "era": "prehistoric",
+    "health": null,
+    "id": "zuqun-qianxi",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "neutral",
+    "skills": [
+      "trigger-mammal-all-plus-1-plus-1"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
+    "subtype": null,
+    "taxon": "phenomenon"
   }
 ]

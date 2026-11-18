@@ -1,0 +1,38 @@
+---
+id: jili
+name: 激励
+card_type: effect
+level: 6
+era: modern
+playstyle: neutral
+taxon: phenomenon
+cost: 3
+match_text: 同左
+skills: [trigger-all-friendly-plus-1-plus-1]
+---
+
+# 激励
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | jili |
+| 名称 | 激励 |
+| 类型 | 效果 |
+| 星级 | 6 |
+| 时代 | 现代 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
+| 技能 | trigger-all-friendly-plus-1-plus-1 |
+| 费用 | 3 |
+| 确定性替换 | 同左 |
+
+## 效果
+
+使你的所有随从获得 +1/+1
+
+## 出处
+
+激励提高群体的行动意愿。

@@ -1,0 +1,38 @@
+---
+id: houjia
+name: 厚甲
+card_type: effect
+level: 4
+era: feudal
+playstyle: neutral
+taxon: phenomenon
+cost: 1
+match_text: 同左
+skills: [trigger-friendly-single-armor-2-this-turn]
+---
+
+# 厚甲
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | houjia |
+| 名称 | 厚甲 |
+| 类型 | 效果 |
+| 星级 | 4 |
+| 时代 | 封建 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 无 |
+| 技能 | trigger-friendly-single-armor-2-this-turn |
+| 费用 | 1 |
+| 确定性替换 | 同左 |
+
+## 效果
+
+使一个友方随从获得减伤 2 直到回合结束
+
+## 出处
+
+厚重甲胄以重量换取防护。

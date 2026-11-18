@@ -38,6 +38,8 @@
 | `cordyceps-token` | 虫草 | 3 | 3 | 无 | fungus | ophiocordycipitaceae | 冬虫夏草的分裂 |
 | `ammonite-token` | 菊石幼体 | 5 | 5 | 无 | cephalopod | ammonitidae | 菊石的分裂 |
 | `volvox-cell-token` | 团藻细胞 | 1 | 1 | 无 | protozoa | volvocaceae | 团藻的分裂 |
+| `neutral-token-2-2` | 基础细胞 | 2 | 2 | 无 | neutral | phenomenon | 通用效果牌「集结」「召唤」 |
+| `amoeba-larva-3-3-token` | 变形虫幼体 | 3 | 3 | 无 | protozoa | amoebidae | 原生定向牌「细胞分裂」 |
 
 「关键词」列如有取值，写英文 id（`battlecry`、`taunt`、`breed N` 等，见[关键词与机制](../../rules/keywords-and-mechanics.md) §1）；「玩法」与「科学分类」列填写玩法 id 与分类树叶子 id（见[分类树与玩法](../taxonomy.md)），留空时按 `neutral` / `phenomenon` 处理；「名称」列是文本来源，运行时由文本表 `token.<id>.name` 承载（`client/text/zh_CN.csv`）。
 

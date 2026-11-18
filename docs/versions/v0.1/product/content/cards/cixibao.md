@@ -1,0 +1,39 @@
+---
+id: cixibao
+name: 刺细胞
+card_type: effect
+level: 1
+era: prehistoric
+playstyle: neutral
+taxon: phenomenon
+cost: 1
+specialty: [play:cnidarian]
+match_text: 同左
+skills: [trigger-cnidarian-single-poison-this-turn]
+---
+
+# 刺细胞
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | cixibao |
+| 名称 | 刺细胞 |
+| 类型 | 效果 |
+| 星级 | 1 |
+| 时代 | 史前 |
+| 玩法 | 中立 |
+| 科学分类 | 现象 |
+| 关联分类 | 关联：水螅纲 |
+| 技能 | trigger-cnidarian-single-poison-this-turn |
+| 费用 | 1 |
+| 确定性替换 | 同左 |
+
+## 效果
+
+使一个友方水螅纲随从获得剧毒直到回合结束
+
+## 出处
+
+刺细胞是刺胞动物特有的捕食与防御细胞，触之即发射刺丝。

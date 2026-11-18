@@ -1604,6 +1604,32 @@
     "cost": null,
     "effects": [
       {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "contagion",
+            "value": 2
+          },
+          "value": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "combatstart-all-enemies-contagion-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "deal_damage",
         "params": {
           "amount": 2
@@ -1618,6 +1644,48 @@
       }
     ],
     "id": "combatstart-all-enemies-damage-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 3
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "combatstart-all-enemies-damage-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 4
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "combatstart-all-enemies-damage-4",
     "keyword": null,
     "uses_per_turn": null
   },
@@ -1780,6 +1848,27 @@
     "cost": null,
     "effects": [
       {
+        "op": "deal_damage",
+        "params": {
+          "amount": 3
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "lowest_attack",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "combatstart-lowest-attack-enemy-damage-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "grant_keyword",
         "params": {
           "duration": "permanent",
@@ -1846,6 +1935,28 @@
       }
     ],
     "id": "combatstart-random-enemy-damage-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": -2,
+          "duration": "combat"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "combatstart-random-enemy-minus-2-attack",
     "keyword": null,
     "uses_per_turn": null
   },
@@ -3744,6 +3855,49 @@
     "cost": null,
     "effects": [
       {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-all-friendly-growth-twice",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-all-friendly-plus-0-plus-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "modify_stats",
         "params": {
           "attack": 1,
@@ -3786,6 +3940,180 @@
       }
     ],
     "id": "trigger-all-mech-growth-once",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "armor",
+            "value": 2
+          },
+          "value": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "bacteria"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-bacteria-single-armor-2-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "windfury"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "bird"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-bird-single-windfury-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "poison"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "cephalopod"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-cephalopod-single-poison",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 4
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "cnidarian"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-cnidarian-all-plus-0-plus-4",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "poison"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "cnidarian"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-cnidarian-single-poison-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "reborn"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "cnidarian"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-cnidarian-single-reborn",
     "keyword": null,
     "uses_per_turn": null
   },
@@ -3867,6 +4195,88 @@
       }
     ],
     "id": "trigger-enemy-death-self-plus-1-plus-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "fish"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-fish-all-growth-once",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "reborn"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "fish"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-fish-all-reborn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "fish"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-fish-single-plus-0-plus-2",
     "keyword": null,
     "uses_per_turn": null
   },
@@ -4123,6 +4533,35 @@
     "cost": null,
     "effects": [
       {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "sow"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "plant"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-plant-sow",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "modify_stats",
         "params": {
           "duration": "combat",
@@ -4216,6 +4655,239 @@
         "params": {
           "duration": "combat",
           "keyword": {
+            "keyword": "armor",
+            "value": 2
+          },
+          "value": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-single-armor-2-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "divine_shield"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-single-divine-shield",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-single-growth-once",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "combat",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-single-plus-0-plus-1-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-single-plus-0-plus-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "combat",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-single-plus-1-plus-1-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 2,
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-single-plus-2-plus-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "poison"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-single-poison-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "reborn"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-single-reborn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "stealth"
+          }
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-friendly-single-stealth-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
             "keyword": "taunt"
           }
         },
@@ -4229,6 +4901,254 @@
       }
     ],
     "id": "trigger-friendly-taunt-until-turn-end",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 3
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "fungus"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-fungus-single-plus-0-plus-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "insect"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-insect-all-plus-1-plus-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "reborn"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "insect"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-insect-single-reborn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "machine"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-machine-all-growth-once",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "machine"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-machine-all-plus-1-plus-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "reborn"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "machine"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-machine-single-reborn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "mammal"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-mammal-all-growth-once",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "mammal"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-mammal-all-plus-1-plus-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 2,
+          "duration": "permanent"
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "mammal"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-mammal-all-plus-2-attack",
     "keyword": null,
     "uses_per_turn": null
   },
@@ -4320,6 +5240,63 @@
     "cost": null,
     "effects": [
       {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "permanent",
+          "keyword": {
+            "keyword": "breed",
+            "value": 2
+          },
+          "value": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "plant"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-plant-all-breed-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "plant"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-plant-all-growth-twice",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "modify_stats",
         "params": {
           "duration": "permanent",
@@ -4342,6 +5319,261 @@
     "cost": null,
     "effects": [
       {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "protozoa"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-protozoa-single-growth-twice",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "taunt"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "protozoa"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-protozoa-single-taunt-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "refresh_shop",
+        "params": {
+          "free": true
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-refresh-shop-free",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 3
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "reptile"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-reptile-all-plus-0-plus-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "armor",
+            "value": 2
+          },
+          "value": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "reptile"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-reptile-single-armor-2-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_keyword",
+        "params": {
+          "duration": "combat",
+          "keyword": {
+            "keyword": "poison"
+          }
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "reptile"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-reptile-single-poison-this-turn",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
+          "token": "neutral-token-2-2"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-summon-1-neutral-token-2-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 2,
+          "token": "amoeba-larva-3-3-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-summon-2-amoeba-larva-3-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 2,
+          "token": "neutral-token-2-2"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-summon-2-neutral-token-2-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 2,
+          "token": "spore-token-2"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-summon-2-spores-2-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 2,
+          "token": "worker-bee-token-2"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-summon-2-worker-bees",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "modify_stats",
         "params": {
           "duration": "permanent",
@@ -4354,6 +5586,34 @@
       }
     ],
     "id": "trigger-turn-start-self-plus-0-plus-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "virus"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "trigger-virus-single-plus-1-plus-2",
     "keyword": null,
     "uses_per_turn": null
   },

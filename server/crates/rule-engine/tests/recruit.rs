@@ -8,8 +8,15 @@ use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
 use rule_engine::state::{GameState, HandCard, InstanceId, PendingChoice, Phase, Seat};
 
-fn effect_card() -> (String, u8) {
-    test_catalog()
+/// 移除全部效果牌：效果牌不耗共享池，会让「池清空后无候选」的测试出现候选。
+fn remove_effect_cards(engine: &mut Engine) {
+    engine
+        .catalog
+        .cards
+        .retain(|_, card| card.card_type != CardType::Effect);
+}
+
+fn effect_card() -> (String, u8) {    test_catalog()
         .cards
         .values()
         .find(|card| card.card_type == CardType::Effect)
@@ -767,7 +774,9 @@ fn recruit_done_is_hashed_and_reset_each_turn() {
 #[test]
 fn reroll_with_empty_star_retries_then_leaves_slot_empty() {
     let (mut engine, mut state) = turn_started(29);
-    // 史前时代只给 7 星权重，而 7 星只有随从；池清空后候选必为空。
+    // 史前时代只给 7 星权重，而 7 星随从的池清空后候选必为空。
+    // 效果牌不耗池，先全部移除。
+    remove_effect_cards(&mut engine);
     engine.catalog.config.shop_weights[0] = [0, 0, 0, 0, 0, 0, 100];
     for count in state.pool.values_mut() {
         *count = 0;
@@ -786,13 +795,10 @@ fn reroll_with_empty_star_retries_then_leaves_slot_empty() {
 #[test]
 fn reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects() {
     let (mut engine, mut state) = turn_started(29);
-    // 全池耗尽：清空共享池后，1 星权重的候选只剩不耗池的效果牌。
-    // 把 1 星效果牌 aq-jingshen、dishengxiyu、erfenfa（不耗池）从本次目录中移除，
+    // 全池耗尽：清空共享池后，1 星权重只剩不耗池的效果牌；先移除全部效果牌，
     // 抽卡候选于是全部为空。
+    remove_effect_cards(&mut engine);
     engine.catalog.config.shop_weights[0] = [100, 0, 0, 0, 0, 0, 0];
-    engine.catalog.cards.remove("aq-jingshen");
-    engine.catalog.cards.remove("erfenfa");
-    engine.catalog.cards.remove("dishengxiyu");
     for count in state.pool.values_mut() {
         *count = 0;
     }
