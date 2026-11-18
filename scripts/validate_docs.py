@@ -26,7 +26,7 @@ RULES_FILE = ROOT.parent / "rules" / "keywords-and-mechanics.md"
 ID_RE = re.compile(r"[a-z][a-z0-9-]*")
 _KEYWORD_NAMES = (
     "battlecry|deathrattle|reborn|taunt|divine_shield|windfury|contagion|"
-    "optimal_attack|sow|evolve|poison|stealth|decompose"
+    "ignore_taunt|optimal_attack|sow|evolve|poison|stealth|decompose"
 )
 KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+|armor \d+)$")
 # 技能上的 keyword 是携带者自身登记的常驻关键词，不接受卡牌层的「无」哨兵值。
@@ -910,6 +910,8 @@ def keyword_labels():
         if known is not None and known != label:
             raise ValueError(f"关键词 {slug} 对应多个中文名 {known!r} / {label!r}")
         labels[slug] = label
+    # 判定表已删除的遗留词仍要参与生成与展示，直到卡池迁移完成。
+    labels.update(i18n_terms.LEGACY_KEYWORD_LABELS)
     return labels
 
 
@@ -1158,7 +1160,7 @@ def keyword_cost(card, skill_map):
             total += 2
         elif k in ("windfury", "reborn", "evolve"):
             total += 3
-        elif k in ("contagion", "optimal_attack", "sow"):
+        elif k in ("contagion", "ignore_taunt", "optimal_attack", "sow"):
             total += 2
         elif k in ("poison", "stealth"):
             total += 3

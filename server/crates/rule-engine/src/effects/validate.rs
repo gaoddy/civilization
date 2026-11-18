@@ -29,6 +29,8 @@ pub(crate) const KEYWORD_BASES: &[&str] = &[
     "divine_shield",
     "windfury",
     "contagion",
+    "ignore_taunt",
+    // 卡池迁移前的遗留 id；引擎已不再读取，卡池迁移后删除。
     "optimal_attack",
     "sow",
     "evolve",
