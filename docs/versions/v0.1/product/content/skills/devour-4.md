@@ -1,6 +1,6 @@
 ---
 id: devour-4
-text: 吞噬：战斗开始时，消灭一个攻击力不高于 4 的敌方随从，永久获得其攻击力与生命值
+text: 吞噬：战斗开始时，消灭一个攻击力不高于 4 的敌方随从，在本场战斗内永久获得其攻击力与生命值
 effects: OnCombatStart|Devour|enemy:single|value=4,duration=permanent
 ---
 
@@ -16,4 +16,4 @@ effects: OnCombatStart|Devour|enemy:single|value=4,duration=permanent
 
 ## 效果
 
-吞噬：战斗开始时，消灭一个攻击力不高于 4 的敌方随从，永久获得其攻击力与生命值
+吞噬：战斗开始时，消灭一个攻击力不高于 4 的敌方随从，在本场战斗内永久获得其攻击力与生命值

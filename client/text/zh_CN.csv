@@ -1003,10 +1003,10 @@ skill.decompose-friendly-death-original.text,分解：友方随从死亡后，�
 skill.decompose-kill-original.text,分解：本随从击杀随从后，获得其原始生命值
 skill.detonate-1.text,引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 1 点伤害
 skill.detonate-2.text,引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 2 点伤害
-skill.devour-1.text,吞噬：战斗开始时，消灭一个攻击力不高于 1 的敌方随从，永久获得其攻击力与生命值
-skill.devour-2.text,吞噬：战斗开始时，消灭一个攻击力不高于 2 的敌方随从，永久获得其攻击力与生命值
-skill.devour-3.text,吞噬：战斗开始时，消灭一个攻击力不高于 3 的敌方随从，永久获得其攻击力与生命值
-skill.devour-4.text,吞噬：战斗开始时，消灭一个攻击力不高于 4 的敌方随从，永久获得其攻击力与生命值
+skill.devour-1.text,吞噬：战斗开始时，消灭一个攻击力不高于 1 的敌方随从，在本场战斗内永久获得其攻击力与生命值
+skill.devour-2.text,吞噬：战斗开始时，消灭一个攻击力不高于 2 的敌方随从，在本场战斗内永久获得其攻击力与生命值
+skill.devour-3.text,吞噬：战斗开始时，消灭一个攻击力不高于 3 的敌方随从，在本场战斗内永久获得其攻击力与生命值
+skill.devour-4.text,吞噬：战斗开始时，消灭一个攻击力不高于 4 的敌方随从，在本场战斗内永久获得其攻击力与生命值
 skill.dive-1.text,俯冲：战斗开始时，对攻击力最低的敌方随从造成等同于自身攻击力的伤害
 skill.division-of-labor.match_text,同左
 skill.division-of-labor.name,分工

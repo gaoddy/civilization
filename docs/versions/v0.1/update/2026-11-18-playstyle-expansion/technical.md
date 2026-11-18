@@ -89,16 +89,17 @@ Op::Latent => (&["amount", "count"], &["threshold", "when"], &[]),
 pub stealth_broken: bool,
 /// 复苏是否已使用；与 reborn_used 独立。
 pub revive_used: bool,
+/// 潜伏爆发是否已用过；每局最多一次。
+pub latent_used: bool,
 ```
 
-`MinionInstance::new` 初始化为 `false`；`hash.rs` 把两个字段写入状态哈希；复制、三连、复生、回手克隆时原样保留。
+`MinionInstance::new` 把三个字段初始化为 `false`；`hash.rs` 把三个字段写入状态哈希；复制、三连、复生、回手克隆时原样保留（`latent_used` 随实例保留，重打出或回手后不重置）。
 
 ### 2.4 战斗日志
 
 `CombatAction` 增加：
 
 ```rust
-Dived { source: InstanceId, target: InstanceId, damage: i32 },
 Poisoned { target: InstanceId },
 Detonated { target: InstanceId, layers: i32, damage: i32 },
 Converted { target: InstanceId, token: String },
@@ -109,15 +110,19 @@ Mimicked { source: InstanceId, target: InstanceId },
 Devoured { source: InstanceId, target: InstanceId },
 ```
 
+俯冲不新增独立动作：伤害与击杀复用通用伤害动作（`Damage` / `Death`），日志中只通过来源随从区分。
+
 `CombatLog` 增加：
 
 ```rust
 pub hand_minions: Vec<CombatHandMinion>,
 ```
 
+`CombatHandMinion` 记录手牌牌面归属的战斗方：
+
 ```rust
 pub struct CombatHandMinion {
-    pub seat: Seat,
+    pub side: Seat,
     pub minion: MinionInstance,
 }
 ```
@@ -171,7 +176,7 @@ pub struct CombatHandMinion {
 
 - 数据：`OnCombatStart | DealDamage | enemy:lowestAttack | amount=<攻击力>`；`amount` 用卡牌攻击力写死，不使用动态值。
 - 引擎：`Pick::LowestAttack` 在 `apply_pick` / `pick_targets` 中取攻击力最低者，并列取棋盘最左侧；参与筛选。
-- 口径：伤害来源为携带者，可触发剧毒与击杀；护盾可抵消。
+- 口径：伤害来源为携带者，可触发剧毒与击杀；护盾可抵消；`amount` 按卡面基础攻击力写死，攻击被增益后俯冲伤害不变。
 - 测试：最低攻击选择、并列取最左、护盾抵消、击杀触发亡语。
 
 ### 3.7 分裂
@@ -185,7 +190,7 @@ pub struct CombatHandMinion {
 - 数据：`OnPlay | Mimic | enemy:single | duration=combat`，或 `OnCombatStart | Mimic | enemy:single | duration=combat`。
 - 引擎：`exec.rs::apply_op` 增加 `Op::Mimic`：
   1. 取 `effect.target`（由待选或选择器确定）；目标不存在或已离场时落空；敌方与友方目标都允许，由卡牌选择器决定阵营。
-  2. 读取目标当前 `attack()` / `health()`（不含光环）与 `keywords`。
+  2. 读取目标当前 `attack()` / `health()`（不含光环）与 `keywords`。战斗克隆的当前值与 `granted` 已含光环折叠结果，因此要减去 `stats.attack.aura` / `stats.health.aura`，并剔除仅由光环授予的关键词（光环关键词以 `Duration::Aura` 打标，`combat::keywords_without_aura` 负责过滤）。
   3. 给来源写入 `ModifyStats` 等价的临时/永久增量；关键词写入 `granted`，时长取 `params.duration`；`statsOnly=true` 时跳过关键词（卡面只写攻防值的卡使用，如乌贼、吸血鬼乌贼、大王酸浆鱿）。
   4. 不复制 `growth`、`breed`、`contagion`、`shield_used`、`reborn_used`、`revive_used`、`stealth_broken`。
   5. 记录 `CombatAction::Mimicked`（战斗内）。
@@ -200,7 +205,7 @@ pub struct CombatHandMinion {
   2. `stats.health.revive_to(max(1, stats.health.current + Y))`（或按卡面基础值 + Y，取实现口径）；
   3. `revive_used = true`、`reborn_used = true`，避免同一次死亡再触发复生；
   4. 记录 `CombatAction::Revived`。
-- 口径：与复生互斥；金色只复活一次；复活后保留成长与已授予关键词。
+- 口径：复苏与复生互斥，触发复苏后本次死亡不再触发复生（置 `reborn_used`），复苏本身每局只生效一次（`revive_used`）；金色只复活一次；复活后保留成长与已授予关键词。
 - 测试：以声明值复活、只复活一次、与复生互斥、复活后再次死亡不再触发。
 
 ### 3.10 回手
@@ -232,9 +237,9 @@ pub struct CombatHandMinion {
 - 引擎：`exec.rs::apply_op` 增加 `Op::Devour`：
   1. 目标不存在、不在敌方或攻击力大于 `value` 时落空。
   2. 对目标施加致死伤害（护盾不能阻止）。
-  3. 来源永久获得目标卡面基础攻击力与生命值（`add_permanent`）。
+  3. 来源在本场战斗内永久获得目标卡面基础攻击力与生命值（`add_permanent`，战斗结束不写回）。
   4. 记录 `CombatAction::Devoured`（战斗内）。
-- 口径：招募阶段的敌方战吼按既有延迟机制在战斗开始时结算；获得值不含目标成长与光环。
+- 口径：招募阶段的敌方战吼按既有延迟机制在战斗开始时结算；获得值不含目标成长与光环；获得只在当前战斗内生效。
 - 测试：攻击力上限、超限落空、护盾不能阻止、永久获得属性。
 
 ### 3.13 转化
@@ -254,9 +259,9 @@ pub struct CombatHandMinion {
 - 引擎：`exec.rs::apply_op` 增加 `Op::Latent`：
   1. 读取来源 `contagion` 层数。
   2. 每层使来源永久获得 `amount` 点攻击力（`add_permanent`）。
-  3. 若层数达到 `value`：移除全部层数，对敌方全体造成 `count` 点伤害，记录 `CombatAction::Detonated`（或独立动作）。
-- 口径：爆发每场最多一次（用 `latent_used` 标记）；金色不额外触发；爆发伤害来源为携带者。
-- 测试：按层加攻、阈值爆发、爆发后层数清零、只触发一次。
+  3. 若层数达到 `threshold` 且 `count > 0`：移除全部层数、置 `latent_used`，对敌方全体随从按招募阶段通用伤害规则结算（先消耗圣盾、再扣减伤、伤害写入永久层），击杀的随从立即离场并触发亡语；`count = 0` 时不清层也不置标记。
+- 口径：爆发每局最多一次（用 `latent_used` 标记）；金色按通用规则触发两遍，加攻双倍，爆发仍只一次；伤害来源为携带者。
+- 测试：按层加攻、阈值爆发、爆发后层数清零、只触发一次、击杀离场并触发亡语、减伤、圣盾、`count = 0`。
 
 ### 3.15 零件回收
 
