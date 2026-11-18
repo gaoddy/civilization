@@ -100,6 +100,10 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 /// 2026-11-18 玩法扩充收尾后第四次重定：`MinionInstance` 新增延迟战吼结算
 /// 标记 `delayed_battlecry_used` 并计入 `state_hash`，修复同一实例每场战斗
 /// 重复结算延迟战吼的缺陷；仅哈希构成变化，模拟流程不变。
+///
+/// 2026-11-19 移除最优攻击并新增无视嘲讽后，本批次 20 局哈希未变化，说明
+/// 该批对局未受选目标改动影响。选目标行为变化由 rule-engine 的战斗用例覆盖，
+/// 金标准保留原值。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

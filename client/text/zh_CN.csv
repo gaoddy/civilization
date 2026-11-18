@@ -404,6 +404,7 @@ enum.keyword.decompose,分解
 enum.keyword.divine_shield,护盾
 enum.keyword.evolve,进化
 enum.keyword.growth,成长
+enum.keyword.ignore_taunt,无视嘲讽
 enum.keyword.optimal_attack,最优攻击
 enum.keyword.poison,剧毒
 enum.keyword.reborn,复生
