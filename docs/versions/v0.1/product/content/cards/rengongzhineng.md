@@ -31,7 +31,7 @@ skills: [trigger-mech-optimal-attack-this-turn]
 
 ## 效果
 
-你的机械随从获得最优攻击直到回合结束
+你的机械随从获得无视嘲讽直到回合结束
 
 ## 出处
 

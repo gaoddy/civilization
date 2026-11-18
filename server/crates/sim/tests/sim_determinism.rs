@@ -129,6 +129,11 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 /// 2026-11-18 第十三次重定：AI 打出定向效果牌时遍历全部己方随从（原只试最左），
 /// 带玩法筛选的效果牌不再长期卡在手牌，动作与随机流消耗改变。本次只改决策候选，
 /// 不涉及卡牌数值。
+///
+/// 2026-11-19 合并 develop 的「无视嘲讽」替换（原 16 张最优攻击卡改用
+/// `keyword-ignore-taunt`）：本批次 20 局哈希与第十三次基线逐位一致，说明这
+/// 20 局未抽取到受影响的卡；选目标行为变化由 rule-engine 的战斗用例覆盖，
+/// 基线保持原值。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

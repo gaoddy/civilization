@@ -1215,13 +1215,13 @@ fn mimic_in_combat_excludes_aura_stats_and_keywords() {
     add_card(&mut engine, "combat-aura-target", 2, 3, &["taunt"]);
 
     // 战斗克隆已折叠光环：目标卡面 2/3，光环 +3/+3 后当前值 5/6；
-    // 光环还授予「最优攻击」。拟态只应复制不含光环的 2/3 与卡面关键词。
+    // 光环还授予「无视嘲讽」。拟态只应复制不含光环的 2/3 与卡面关键词。
     let mut target = minion(&engine.catalog, 2, "combat-aura-target");
     target.stats.attack.set_aura(3);
     target.stats.health.set_aura(3);
     target
         .granted
-        .push(("optimal_attack".to_string(), Duration::Aura));
+        .push(("ignore_taunt".to_string(), Duration::Aura));
 
     let log = battle(
         &engine,
@@ -1245,7 +1245,7 @@ fn mimic_in_combat_excludes_aura_stats_and_keywords() {
         "卡面关键词照常复制"
     );
     assert!(
-        !combat::keywords(&engine.catalog, source).contains("optimal_attack"),
+        !combat::keywords(&engine.catalog, source).contains("ignore_taunt"),
         "光环授予的关键词不复制"
     );
 }

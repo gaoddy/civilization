@@ -7,7 +7,7 @@
         "params": {
           "duration": "combat",
           "keyword": {
-            "keyword": "optimal_attack"
+            "keyword": "ignore_taunt"
           }
         },
         "selector": {
@@ -157,7 +157,7 @@
         "params": {
           "duration": "permanent",
           "keyword": {
-            "keyword": "optimal_attack"
+            "keyword": "ignore_taunt"
           }
         },
         "selector": {
@@ -1537,7 +1537,7 @@
         "params": {
           "duration": "combat",
           "keyword": {
-            "keyword": "optimal_attack"
+            "keyword": "ignore_taunt"
           }
         },
         "selector": {
@@ -3342,8 +3342,8 @@
   {
     "cost": null,
     "effects": [],
-    "id": "keyword-optimal-attack",
-    "keyword": "optimal_attack",
+    "id": "keyword-ignore-taunt",
+    "keyword": "ignore_taunt",
     "uses_per_turn": null
   },
   {
@@ -5160,7 +5160,7 @@
         "params": {
           "duration": "combat",
           "keyword": {
-            "keyword": "optimal_attack"
+            "keyword": "ignore_taunt"
           }
         },
         "selector": {

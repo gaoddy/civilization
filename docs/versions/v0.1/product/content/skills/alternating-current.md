@@ -1,8 +1,8 @@
 ---
 id: alternating-current
 name: 交流电
-text: 使一个友方随从获得最优攻击直到回合结束
-effects: OnActivate|GrantKeyword|friendly:single|keyword=optimal_attack,duration=combat
+text: 使一个友方随从获得无视嘲讽直到回合结束
+effects: OnActivate|GrantKeyword|friendly:single|keyword=ignore_taunt,duration=combat
 cost: 2
 uses_per_turn: 1
 match_text: 同左
@@ -22,4 +22,4 @@ match_text: 同左
 
 ## 效果
 
-使一个友方随从获得最优攻击直到回合结束
+使一个友方随从获得无视嘲讽直到回合结束

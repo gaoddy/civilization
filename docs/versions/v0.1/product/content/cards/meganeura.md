@@ -9,7 +9,7 @@ level: 7
 era: classical
 attack: 14
 health: 14
-skills: [keyword-windfury, keyword-optimal-attack]
+skills: [keyword-windfury, keyword-ignore-taunt]
 is_scholar: false
 ---
 
@@ -30,18 +30,18 @@ is_scholar: false
 | 时代 | 古典 |
 | 攻击力 | 14 |
 | 生命值 | 14 |
-| 关键词 | 连击；最优攻击 |
-| 技能 | keyword-windfury；keyword-optimal-attack |
+| 关键词 | 连击；无视嘲讽 |
+| 技能 | keyword-windfury；keyword-ignore-taunt |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-连击：每回合可攻击两次；最优攻击：无视嘲讽，优先攻击可被击杀的目标
+连击：每回合可攻击两次；无视嘲讽：攻击时无视敌方嘲讽
 
 ## 设计说明
 
-定位：7 星终局单位，连击与最优攻击叠加。
+定位：7 星终局单位，连击与无视嘲讽叠加。
 平衡边界：11/17 处于该星级中位，双关键词按折算计入。
 使用建议：终局收尾，优先点杀敌方核心。
 

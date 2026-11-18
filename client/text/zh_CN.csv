@@ -530,7 +530,7 @@ enum.keyword.decompose,分解
 enum.keyword.divine_shield,护盾
 enum.keyword.evolve,进化
 enum.keyword.growth,成长
-enum.keyword.optimal_attack,最优攻击
+enum.keyword.ignore_taunt,无视嘲讽
 enum.keyword.poison,剧毒
 enum.keyword.reborn,复生
 enum.keyword.sow,播种
@@ -995,13 +995,13 @@ error.TOKEN_EXPIRED.invalid_token,令牌无效或已过期
 error.UNKNOWN_TYPE,未知消息类型
 skill.alternating-current.match_text,同左
 skill.alternating-current.name,交流电
-skill.alternating-current.text,使一个友方随从获得最优攻击直到回合结束
+skill.alternating-current.text,使一个友方随从获得无视嘲讽直到回合结束
 skill.aura-adjacent-mammal.text,相邻的友方哺乳纲随从获得 +2/+2
 skill.aura-all-plus-0-plus-1.text,你的随从获得 +0/+1
 skill.aura-all-plus-0-plus-2.text,你的随从获得 +0/+2
 skill.aura-biology-plus-0-plus-1.text,你的动物随从获得 +0/+1
 skill.aura-biology-plus-1-plus-1.text,你的动物随从获得 +1/+1
-skill.aura-mech-optimal-attack.text,你的机械随从获得最优攻击
+skill.aura-mech-optimal-attack.text,你的机械随从获得无视嘲讽
 skill.aura-mech-plus-2-plus-2.text,你的机械随从获得 +2/+2
 skill.aura-other-biology-plus-1-attack.text,你的其他动物随从获得 +1 攻击力
 skill.aura-other-fish-plus-0-plus-1.text,你的其他鱼纲随从获得 +0/+1
@@ -1058,7 +1058,7 @@ skill.biology-evolve.name,获得性状
 skill.biology-evolve.text,使一个友方动物随从获得进化
 skill.combat-optimal-attack.match_text,同左
 skill.combat-optimal-attack.name,航线
-skill.combat-optimal-attack.text,使一个友方随从获得最优攻击直到回合结束
+skill.combat-optimal-attack.text,使一个友方随从获得无视嘲讽直到回合结束
 skill.combat-random-enemy-damage-3.text,战斗开始时对随机一个敌方随从造成 3 点伤害
 skill.combatstart-all-enemies-contagion-1.match_text,同左
 skill.combatstart-all-enemies-contagion-1.text,战斗开始时，使敌方所有随从获得 1 层传染
@@ -1181,7 +1181,7 @@ skill.keyword-breed-3.text,繁衍 3：回合开始时获得 +3 生命
 skill.keyword-contagion.text,传染：造成伤害后，目标每回合 -1 生命
 skill.keyword-divine-shield.text,护盾：抵消一次伤害
 skill.keyword-evolve.text,进化：从 +2/+2、护盾、复生中选择一个
-skill.keyword-optimal-attack.text,最优攻击：无视嘲讽，优先攻击可被击杀的目标
+skill.keyword-ignore-taunt.text,无视嘲讽：攻击时无视敌方嘲讽
 skill.keyword-poison.text,剧毒：造成伤害后，若目标仍存活则将其消灭
 skill.keyword-reborn.text,复生：以 1 点生命复活一次
 skill.keyword-sow.text,播种：死亡时召唤一个 1/1 的幼苗
@@ -1320,7 +1320,7 @@ skill.trigger-mammal-all-plus-1-plus-1.text,使你的哺乳纲随从获得 +1/+1
 skill.trigger-mammal-all-plus-2-attack.match_text,同左
 skill.trigger-mammal-all-plus-2-attack.text,使你的哺乳纲随从获得 +2 攻击力
 skill.trigger-mech-optimal-attack-this-turn.match_text,同左
-skill.trigger-mech-optimal-attack-this-turn.text,你的机械随从获得最优攻击直到回合结束
+skill.trigger-mech-optimal-attack-this-turn.text,你的机械随从获得无视嘲讽直到回合结束
 skill.trigger-minion-windfury-this-turn.match_text,同左
 skill.trigger-minion-windfury-this-turn.text,使一个随从本回合获得连击
 skill.trigger-other-friendly-humans-plus-1-attack.match_text,同左

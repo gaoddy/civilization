@@ -10,7 +10,7 @@ level: 5
 era: modern
 attack: 8
 health: 8
-skills: [keyword-optimal-attack, keyword-assemble-2]
+skills: [keyword-ignore-taunt, keyword-assemble-2]
 is_scholar: false
 ---
 
@@ -31,14 +31,14 @@ is_scholar: false
 | 时代 | 现代 |
 | 攻击力 | 8 |
 | 生命值 | 8 |
-| 关键词 | 最优攻击；装配 2 |
-| 技能 | keyword-optimal-attack；keyword-assemble-2 |
+| 关键词 | 无视嘲讽；装配 2 |
+| 技能 | keyword-ignore-taunt；keyword-assemble-2 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-最优攻击：无视嘲讽，优先攻击可被击杀的目标；装配 2：进入战场时，使你的其他机械随从各获得 2 次成长
+无视嘲讽：攻击时无视敌方嘲讽；装配 2：进入战场时，使你的其他机械随从各获得 2 次成长
 
 ## 出处
 

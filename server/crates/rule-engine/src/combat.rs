@@ -31,8 +31,8 @@ const DIVINE_SHIELD: &str = "divine_shield";
 const REBORN: &str = "reborn";
 /// 关键词：传染。
 const CONTAGION: &str = "contagion";
-/// 关键词：最优攻击。
-const OPTIMAL_ATTACK: &str = "optimal_attack";
+/// 关键词：无视嘲讽。
+const IGNORE_TAUNT: &str = "ignore_taunt";
 /// 关键词：播种。
 const SOW: &str = "sow";
 /// 关键词：剧毒。
@@ -1150,7 +1150,7 @@ impl BattleField {
     }
 }
 
-/// 选择目标：最优攻击 → 嘲讽 → 全体。
+/// 选择目标：无视嘲讽 → 嘲讽 → 全体。
 ///
 /// 仍有潜行的防守方随从不在候选池内；若所有存活防守方都在潜行，退回完整
 /// 候选池并固定选择最左侧，保证自动战斗必然推进。
@@ -1177,26 +1177,9 @@ fn pick_target(
     }
 
     let attacker_keywords = keywords(catalog, attacker);
-    let mut pool: Option<Vec<usize>> = None;
-
-    if attacker_keywords.contains(OPTIMAL_ATTACK) {
-        let attack = effective_attack(catalog, attacker);
-        let killable: Vec<usize> = candidates
-            .iter()
-            .copied()
-            .filter(|index| {
-                let target = &defender.minions[*index];
-                let shielded =
-                    keywords(catalog, target).contains(DIVINE_SHIELD) && !target.shield_used;
-                !shielded && attack >= defender.minions[*index].stats.health.current
-            })
-            .collect();
-        if !killable.is_empty() {
-            pool = Some(killable);
-        }
-    }
-
-    let pool = pool.unwrap_or_else(|| {
+    let pool = if attacker_keywords.contains(IGNORE_TAUNT) {
+        candidates
+    } else {
         let taunts: Vec<usize> = candidates
             .iter()
             .copied()
@@ -1207,7 +1190,7 @@ fn pick_target(
         } else {
             taunts
         }
-    });
+    };
 
     let offset = rng.below(Stream::Combat, pool.len() as u64) as usize;
     pool.get(offset).copied()

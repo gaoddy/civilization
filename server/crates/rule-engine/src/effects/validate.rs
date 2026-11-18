@@ -29,7 +29,7 @@ pub(crate) const KEYWORD_BASES: &[&str] = &[
     "divine_shield",
     "windfury",
     "contagion",
-    "optimal_attack",
+    "ignore_taunt",
     "sow",
     "evolve",
     "breed",

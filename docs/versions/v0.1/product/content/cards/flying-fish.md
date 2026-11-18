@@ -9,7 +9,7 @@ level: 3
 era: classical
 attack: 5
 health: 4
-skills: [keyword-optimal-attack, aura-school-fish-1]
+skills: [keyword-ignore-taunt, aura-school-fish-1]
 is_scholar: false
 ---
 
@@ -30,18 +30,18 @@ is_scholar: false
 | 时代 | 古典 |
 | 攻击力 | 5 |
 | 生命值 | 4 |
-| 关键词 | 最优攻击 |
-| 技能 | keyword-optimal-attack；aura-school-fish-1 |
+| 关键词 | 无视嘲讽 |
+| 技能 | keyword-ignore-taunt；aura-school-fish-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-最优攻击：无视嘲讽，优先攻击可被击杀的目标；群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
+无视嘲讽：攻击时无视敌方嘲讽；群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
 
 ## 设计说明
 
-定位：鱼纲的早期最优攻击单位，负责突破嘲讽找残血目标。
+定位：鱼纲的早期无视嘲讽单位，负责越过嘲讽攻击敌方后排。
 平衡边界：3 星 3/4，攻击力取该星级下限附近，靠关键词换取攻防。
 使用建议：用于收掉敌方低血关键随从，避免与高攻单位正面交换。
 

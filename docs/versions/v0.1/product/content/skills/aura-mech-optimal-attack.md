@@ -1,7 +1,7 @@
 ---
 id: aura-mech-optimal-attack
-text: 你的机械随从获得最优攻击
-effects: Aura|GrantKeyword|friendly:all:playstyle=machine|keyword=optimal_attack,duration=permanent
+text: 你的机械随从获得无视嘲讽
+effects: Aura|GrantKeyword|friendly:all:playstyle=machine|keyword=ignore_taunt,duration=permanent
 ---
 
 # aura-mech-optimal-attack
@@ -16,4 +16,4 @@ effects: Aura|GrantKeyword|friendly:all:playstyle=machine|keyword=optimal_attack
 
 ## 效果
 
-你的机械随从获得最优攻击
+你的机械随从获得无视嘲讽

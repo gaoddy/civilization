@@ -1,7 +1,7 @@
 ---
 id: trigger-mech-optimal-attack-this-turn
-text: 你的机械随从获得最优攻击直到回合结束
-effects: OnPlayEffect|GrantKeyword|friendly:all:playstyle=machine|keyword=optimal_attack,duration=combat
+text: 你的机械随从获得无视嘲讽直到回合结束
+effects: OnPlayEffect|GrantKeyword|friendly:all:playstyle=machine|keyword=ignore_taunt,duration=combat
 match_text: 同左
 ---
 
@@ -17,4 +17,4 @@ match_text: 同左
 
 ## 效果
 
-你的机械随从获得最优攻击直到回合结束
+你的机械随从获得无视嘲讽直到回合结束

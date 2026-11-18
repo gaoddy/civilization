@@ -26,14 +26,14 @@ RULES_FILE = ROOT.parent / "rules" / "keywords-and-mechanics.md"
 ID_RE = re.compile(r"[a-z][a-z0-9-]*")
 _KEYWORD_NAMES = (
     "battlecry|deathrattle|reborn|taunt|divine_shield|windfury|contagion|"
-    "optimal_attack|sow|evolve|poison|stealth|decompose"
+    "ignore_taunt|sow|evolve|poison|stealth|decompose"
 )
 KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+|armor \d+)$")
 # 技能上的 keyword 是携带者自身登记的常驻关键词，不接受卡牌层的「无」哨兵值。
 SKILL_KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+|armor \d+)$")
 AURA_RE = re.compile(r"^你的(其他)?(人类|人科|机械|生物|动物|植物|真菌|细菌|原生生物|病毒|学者|鱼纲|鸟纲|爬行纲|昆虫纲|头足纲|水螅纲|真菌界|原生生物界)?随从获得 ?(.+)$")
 AURA_VALUE_RE = re.compile(
-    r"^(?:\+\d+/\+\d+|\+\d+ 攻击力|\+\d+ 生命值|最优攻击|嘲讽|护盾|复生|连击)$"
+    r"^(?:\+\d+/\+\d+|\+\d+ 攻击力|\+\d+ 生命值|无视嘲讽|嘲讽|护盾|复生|连击)$"
 )
 TAXONOMY_FILE = ROOT / "taxonomy.md"
 # 分类树层级：中文编辑值 → 生成物 rank。
@@ -150,7 +150,7 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
-KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
+KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "ignore_taunt": 3,
              "contagion": 3, "reborn": 4, "divine_shield": 5,
              "poison": 3, "armor": 2, "stealth": 3}
 EXPECT_ERA = {"prehistoric": 63, "primitive": 60, "classical": 45, "feudal": 57,
@@ -1203,7 +1203,7 @@ def keyword_cost(card, skill_map):
             total += 2
         elif k in ("windfury", "reborn", "evolve"):
             total += 3
-        elif k in ("contagion", "optimal_attack", "sow"):
+        elif k in ("contagion", "ignore_taunt", "sow"):
             total += 2
         elif k in ("poison", "stealth"):
             total += 3

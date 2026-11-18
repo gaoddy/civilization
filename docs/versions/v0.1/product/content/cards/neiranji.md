@@ -10,7 +10,7 @@ level: 4
 era: industrial
 attack: 7
 health: 6
-skills: [keyword-optimal-attack, shout]
+skills: [keyword-ignore-taunt, shout]
 is_scholar: false
 ---
 
@@ -31,14 +31,14 @@ is_scholar: false
 | 时代 | 工业 |
 | 攻击力 | 7 |
 | 生命值 | 6 |
-| 关键词 | 最优攻击 |
-| 技能 | keyword-optimal-attack；shout |
+| 关键词 | 无视嘲讽 |
+| 技能 | keyword-ignore-taunt；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-最优攻击：无视嘲讽，优先攻击可被击杀的目标；使一个友方随从获得一次成长
+无视嘲讽：攻击时无视敌方嘲讽；使一个友方随从获得一次成长
 
 ## 出处
 

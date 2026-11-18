@@ -9,7 +9,7 @@ level: 3
 era: modern
 attack: 5
 health: 4
-skills: [keyword-optimal-attack]
+skills: [keyword-ignore-taunt]
 is_scholar: false
 ---
 
@@ -30,14 +30,14 @@ is_scholar: false
 | 时代 | 现代 |
 | 攻击力 | 5 |
 | 生命值 | 4 |
-| 关键词 | 最优攻击 |
-| 技能 | keyword-optimal-attack |
+| 关键词 | 无视嘲讽 |
+| 技能 | keyword-ignore-taunt |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-最优攻击：无视嘲讽，优先攻击可被击杀的目标
+无视嘲讽：攻击时无视敌方嘲讽
 
 ## 出处
 

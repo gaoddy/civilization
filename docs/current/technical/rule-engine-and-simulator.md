@@ -175,7 +175,7 @@ impl Taxonomy {
 
 - 唯一数据源：`docs/versions/v0.1/product/content/` 下的卡牌、技能实体文档与 `taxonomy.md`；`scripts/gen_card_data.py` 复用 `validate_docs.py` 的 front matter 与分类树解析。
 - 分类树与玩法清单由 `taxonomy.md` §1 / §2 解析为 `taxonomy.json`（`{nodes, playstyles}`）；客户端生成物 `client/generated/taxonomy.json` 同源。展示名不进 JSON，由文本表 `enum.taxon.<id>` 与 `enum.playstyle.<id>` 提供。
-- 生成数据只含规则与标识，不含展示文本：`cards.json`、`skills.json`、`tokens.json` 没有 `name`、`text`、`match_text` 字段。卡牌 `card_type` / `playstyle` / `taxon` / `specialty` / `era` / `subtype`、技能与效果中的 `keyword`、DSL 筛选与枚举（`playstyle`、`taxon`、`play`、`prey`、`host`、`type`、`keyword`、进化选项等）一律为英文 id（如 `minion`、`mammal`、`felidae`、`industrial`、`optimal_attack`）。展示文本由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`，按 `card.<id>.name`、`skill.<id>.text`、`token.<id>.name` 等文本 id 取用。
+- 生成数据只含规则与标识，不含展示文本：`cards.json`、`skills.json`、`tokens.json` 没有 `name`、`text`、`match_text` 字段。卡牌 `card_type` / `playstyle` / `taxon` / `specialty` / `era` / `subtype`、技能与效果中的 `keyword`、DSL 筛选与枚举（`playstyle`、`taxon`、`play`、`prey`、`host`、`type`、`keyword`、进化选项等）一律为英文 id（如 `minion`、`mammal`、`felidae`、`industrial`、`ignore_taunt`）。展示文本由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`，按 `card.<id>.name`、`skill.<id>.text`、`token.<id>.name` 等文本 id 取用。
 - 经济与对局配置由生成器从产品数值文档口径抄录到 `config.json`（初始生命、棋盘/手牌/商店槽位、回合上限、伤害上下限、升时代费用、星级牌份数、商店概率、金币曲线）。
 - 输出确定性 JSON（UTF-8、两空格缩进、键排序、末尾换行）；生成物随源提交。
 - 引擎用 `include_str!` 嵌入 `server/data/v0.1/*.json`，加载期由 serde 校验结构化字段与枚举，再由 `validate` 校验跨字段组合；未知字段或非法组合直接失败。源文档 `effects` 仍写 DSL，由生成器编译为结构化数组，生成期用与 `validate` 同规则的 `check_structured` 预检，避免 `make data` 通过而引擎加载失败。
@@ -303,6 +303,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 ## 10. 战斗伤害、复生与快照
 
 - 行动轮次：`SideBoard` 每侧一个指针，双方逐拍交替出手，同一侧按站位从左到右、跳过阵亡与不能攻击的随从。指针越过该侧末尾后，该侧下一次轮到回到最左，并恢复全部存活随从的本轮行动次数（普通 1 次、连击 2 次），循环至一方全灭或 200 次行动上限；两侧轮次各自独立。连击在同一拍连续结算两次，两次独立选目标，第一次击杀目标后第二次重新选目标；攻击者第一次攻击后阵亡则第二次不进行；学者被授予连击时同样连击两次，攻击力仍为 0。复生保留本轮剩余行动次数，召唤与复生按插入位置决定本轮是否轮到。
+- 选目标：先排除仍在潜行的随从，全部潜行时固定选择最左侧存活随从；攻击者带 `ignore_taunt` 时在全部可选中随从中随机，否则有可选中嘲讽时只在嘲讽中随机，否则在全部可选中随从中随机。
 - `BattleField::apply_damage(id, amount, can_kill)`（`server/crates/rule-engine/src/combat.rs`）是唯一的战斗掉血入口，只扣 `stats.health.current`；`deal_damage` 是同义包装。攻击主伤害与反击伤害都走它。`can_kill = false` 时最多把当前生命降到 1，`can_kill = true` 时允许降到 0 或更低，由死亡判定按 `current <= 0` 处理。
 - 战斗棋盘与招募棋盘同容量：`BattleField::has_room`（`alive_count(side) < catalog.config.board_slots`，v0.1 为 7）是所有进场路径的唯一闸门——召唤效果（含左邻插入与追加）、`Copy` 到棋盘、死亡结算的播种召唤、复生，容量不足时一律作废：不扣牌池、不生成实例编号、不触发 `OnAllySummon`、不增加 `summon_count`。阵亡随从留在向量里但不计数。
 - 同一时点的进场顺序固定为**死亡 → 召唤 → 复生**：死亡先把 `alive` 置 false，存活数立即减一；亡语与播种召唤占用空出的位置；复生最后检查容量，被召唤占满时保持阵亡（`reborn_used` 照常置 true，本场不再尝试）。
