@@ -17,3 +17,5 @@ effects: OnCombatStart|Detonate|enemy:single|amount=2
 ## 效果
 
 引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 2 点伤害
+
+本技能只设置每层伤害，不设置阈值；`threshold` 为引擎预留能力，卡池暂无使用者。

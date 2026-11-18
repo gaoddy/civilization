@@ -230,6 +230,7 @@ pub struct CombatHandMinion {
   4. 若 `layers >= threshold`，直接施加致死伤害。
   5. 记录 `CombatAction::Detonated`。
 - 口径：护盾可抵消伤害但不能阻止阈值消灭；引爆移除的层数不再产生每回合掉血。
+- 预留：`threshold` 为引擎预留参数，卡池暂无使用者（`detonate-1` / `detonate-2` 只设 `amount`）；阈值消灭与「护盾抵挡伤害但阈值仍消灭」的引擎测试保留，后续卡牌可直接启用。
 - 测试：层数伤害、阈值消灭、护盾抵挡伤害但阈值仍消灭、0 层落空。
 
 ### 3.12 吞噬
