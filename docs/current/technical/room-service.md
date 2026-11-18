@@ -171,8 +171,8 @@ sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
 - `--hero` 只是偏好：机器人收到本人 `RoomUpdate` 后从 `heroCandidates` 里选，指定的英雄不在候选内时退到候选中第一张；下发的候选为空时报错退出。
 - 协议顺序固定：`AuthRequest` →（`CreateRoom` | `JoinRoom`）→ `SelectHeroCard` → `Ready` → 等 `GameStarted` → 循环按 brain 决策发送 `IntentMessage`，直到 `GameOver`。
 - 每个意图使用确定性递增的 `clientIntentId`（`{name}-{counter}`）；客户端只对「自身视角有新变化」的视图做一次决策，避免重播视图导致重复意图。
-- 收到 `NO_VALID_TARGET` 时按 `clientIntentId` 找回被拒意图，补上棋盘第一个己方随从重发；没有随从时退回 `EndRecruit` 兜底。
-- `bot/brain.rs` **只读** `PlayerView`（含服务端算好的 `affordances`）与静态卡表，不链接引擎判定、不读时钟与环境变量、不使用浮点；优先级固定为：消费 `pendingChoices`（发现/进化发 `ChooseDiscover`，目标待选发 `ChooseTarget` 取棋盘最左随从）→ 打最小下标可打手牌 → 买最贵可买槽位 → 升时代 → 刷新 → `EndRecruit`。出牌时若手牌视图 `requiresTarget` 为真且棋盘非空，直接预填己方第一个随从为目标，避免必然被拒的一轮往返；棋盘为空时不填（效果可落空）。
+- 收到 `NO_VALID_TARGET` 时按 `clientIntentId` 找回被拒意图并立即按同一视图重决策：定向出手沿棋盘静默换下一个己方随从重发，遍历完仍无合法目标时把这张牌记入本回合阻塞集合并输出一行说明；`ChooseTarget` 把被拒候选记入阻塞集合并换下一个，全部候选都被拒时放弃该待选。整盘没有合法目标、本回合已放弃 3 张且可结束招募时直接 `EndRecruit`。目标池被玩法、分类等筛选收窄，这类拒绝是预期反馈，不按错误处理。
+- `bot/brain.rs` **只读** `PlayerView`（含服务端算好的 `affordances`）与静态卡表，不链接引擎判定、不读时钟与环境变量、不使用浮点；优先级固定为：消费 `pendingChoices`（发现/进化发 `ChooseDiscover`，目标待选取棋盘上第一个未被拒绝的随从）→ 被拒出手达 3 张且可结束时 `EndRecruit` → 打最小下标且未被拒绝的可打手牌 → 买最贵可买槽位 → 升时代 → 刷新 → `EndRecruit`。出牌时若手牌视图 `requiresTarget` 为真且棋盘非空，直接预填己方第一个随从为目标；猜错只产生一次拒绝，随后沿棋盘换下一个随从重试，整盘都不合法时才记入阻塞集合本回合跳过该牌。棋盘为空时不填（效果可落空）。
 - `sim/src/ai.rs` 只新增 `PendingChoice::Target` 的确定性分支与 `PlayCard.position: None`（追加到最右），其余策略未改动，M0 基线数值不变；view 驱动的新逻辑在 `bot/brain.rs`。
 
 ## 12. 命令与验收证据
