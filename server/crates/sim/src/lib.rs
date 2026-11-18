@@ -314,6 +314,10 @@ fn run_turn(
             match engine.apply(state, seat, intent.clone()) {
                 Ok(outcome) => {
                     blocked.clear();
+                    // 成功执行说明本回合仍有进展；预算只用于识别「连续被拒、状态不变」
+                    // 的死循环，跨成功动作累计会把正常回合（例如手牌里长期躺着一张
+                    // 无合法目标的效果牌、每次成功动作后又重试一次）误判为死循环。
+                    replans = 0;
                     record_outcome(&outcome.events, seat, turn, stats);
                     steps.push(StepRecord {
                         seat,
@@ -455,5 +459,11 @@ mod tests {
     #[test]
     fn embedded_catalog_loads() {
         assert!(embedded_catalog().is_ok());
+    }
+
+    #[test]
+    fn unplayable_targeted_effect_does_not_abort_game() {
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        run_game(catalog, 659).expect("手牌里的定向效果牌找不到合法目标时不应中断整局");
     }
 }
