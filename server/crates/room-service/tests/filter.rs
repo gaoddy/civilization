@@ -295,6 +295,82 @@ fn combat_result_actions_use_fixed_kinds() {
 }
 
 #[test]
+fn combat_result_maps_detonate_and_convert() {
+    let mut report = real_report(2);
+    report.actions.push(CombatAction::Detonated {
+        target: 201,
+        layers: 3,
+        damage: 6,
+    });
+    report.states.push(vec![snapshot(201, 1, 0, false)]);
+    report.actions.push(CombatAction::Converted {
+        target: 202,
+        token: "germ".to_string(),
+    });
+    report.states.push(vec![snapshot(202, 1, 0, false)]);
+
+    let result = combat_result(
+        &catalog(),
+        &report,
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
+
+    let detonated = result
+        .actions
+        .iter()
+        .find(|action| action.kind == "detonate")
+        .expect("引爆动作应映射为 detonate");
+    assert_eq!(detonated.damage, Some(6));
+    assert_eq!(detonated.target_index, Some(0));
+    assert_eq!(
+        detonated.target_side,
+        Some(protocol::CombatResultActionsItemTargetSide::Opponent)
+    );
+
+    let converted = result
+        .actions
+        .iter()
+        .find(|action| action.kind == "convert")
+        .expect("转化动作应映射为 convert");
+    assert_eq!(converted.target_index, Some(1));
+    assert_eq!(
+        converted.target_side,
+        Some(protocol::CombatResultActionsItemTargetSide::Opponent)
+    );
+}
+
+#[test]
+fn combat_result_maps_salvage() {
+    let mut report = real_report(2);
+    report.actions.push(CombatAction::Salvaged {
+        seat: 2,
+        card_id: "nanobot".to_string(),
+    });
+    report.states.push(Vec::new());
+
+    let result = combat_result(
+        &catalog(),
+        &report,
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
+
+    let salvaged = result
+        .actions
+        .iter()
+        .find(|action| action.kind == "salvage")
+        .expect("零件回收动作应映射为 salvage");
+    assert_eq!(
+        salvaged.source_side,
+        Some(protocol::CombatResultActionsItemSourceSide::Own),
+        "动作归属来源座位"
+    );
+    assert!(salvaged.damage.is_none());
+    assert!(salvaged.target.is_none());
+}
+
+#[test]
 fn mirror_combat_result_marked_mirror() {
     let catalog = catalog();
     let won = SeatCombatReport {

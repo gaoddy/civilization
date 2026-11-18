@@ -3,35 +3,62 @@ card.adam-smith.name,亚当·斯密
 card.agi.name,通用人工智能
 card.airplane.name,飞机
 card.alan-turing.name,艾伦·图灵
+card.albatross.name,信天翁
+card.ammonite.name,菊石
+card.amoeba.name,变形虫
+card.ant.name,蚂蚁
 card.aolinpike-jidian.match_text,同左
 card.aolinpike-jidian.name,奥林匹克祭典
 card.aq-jingshen.match_text,同左
 card.aq-jingshen.name,阿Q精神
 card.archimedes.name,阿基米德
+card.argentavis.name,阿根廷巨鹰
+card.argonaut.name,船蛸
 card.aristotle.name,亚里士多德
 card.artificial-womb.name,人造子宫
+card.aspergillus.name,曲霉
+card.bacillus-anthracis.name,炭疽芽孢杆菌
+card.bacteriophage.name,噬菌体（肌尾）
 card.baiyi.name,白蚁
+card.bee.name,蜜蜂
 card.beethoven.name,贝多芬
+card.beetle.name,甲虫
 card.bingdushizu.name,病毒始祖
 card.bisheng.name,毕昇
 card.black-death-spread.match_text,同左
 card.black-death-spread.name,黑死病·播散
 card.black-death.name,黑死病
+card.blue-ringed-octopus.name,蓝环章鱼
+card.box-jellyfish.name,箱水母
 card.boxer.name,拳击手
 card.bruce-lee.name,李小龙
 card.bulangyundong.match_text,战斗开始时，对敌方最左侧随从造成 2 点伤害
 card.bulangyundong.name,布朗运动
 card.buluozhanshi.name,部落战士
+card.butterfly.name,蝴蝶
 card.cailun.name,蔡伦
+card.carp.name,鲤鱼
 card.changmaoshou.name,长矛手
 card.chengbang-faling.match_text,同左
 card.chengbang-faling.name,城邦法令
 card.chengbang-gongmin.name,城邦公民
 card.cholera.name,霍乱
+card.clostridium-tetani.name,破伤风梭菌
+card.clownfish.name,小丑鱼
+card.cobra.name,眼镜蛇
+card.coelacanth.name,腔棘鱼
+card.colossal-squid.name,大王酸浆鱿
+card.coral-polyp.name,珊瑚虫
+card.cordyceps.name,冬虫夏草
+card.crocodile.name,鳄鱼
+card.crow.name,乌鸦
+card.cuttlefish.name,乌贼
 card.darwin.name,达尔文
 card.davinci.name,达·芬奇
+card.dengue-virus.name,登革病毒
 card.dianbaoji.name,电报机
 card.dianhua-jiaohuanji.name,电话交换机
+card.difference-engine.name,差分机
 card.dishengxiyu.match_text,同左
 card.dishengxiyu.name,低声细语
 card.dna-shuangluoxuan.match_text,同左
@@ -39,16 +66,22 @@ card.dna-shuangluoxuan.name,DNA双螺旋结构
 card.dolly.name,克隆羊多莉
 card.dongxuehuajia.name,洞穴画家
 card.doushouchang-shizi.name,斗兽场狮子
+card.dragonfly.name,蜻蜓
+card.dunkleosteus.name,邓氏鱼
 card.dushe.name,毒蛇
 card.dyson-sphere.name,戴森球
+card.e-coli.name,大肠杆菌
 card.ebola.name,埃博拉
 card.edison.name,爱迪生
+card.eel.name,鳗鲡
 card.einstein-fridge.name,爱因斯坦冰箱
 card.einstein.name,爱因斯坦
 card.engineered-virus.name,基因工程病毒
 card.erfenfa.match_text,同左
 card.erfenfa.name,二分法
+card.ergot.name,麦角
 card.euclid.name,欧几里得
+card.euglena.name,眼虫
 card.famingjia.name,发明家
 card.fangzhen.match_text,同左
 card.fangzhen.name,方阵
@@ -61,16 +94,28 @@ card.feiyan.name,肺炎链球菌
 card.fengche.name,风车
 card.fermi.name,费米
 card.fleming.name,弗莱明
+card.fly-agaric.name,毒蝇伞
+card.flying-fish.name,飞鱼
+card.foraminifera.name,有孔虫
 card.fusion-reactor.name,聚变反应堆
 card.galileo.name,伽利略
 card.ganlanshu.name,橄榄树
 card.gauss.name,高斯
+card.gear.name,齿轮
+card.gecko.name,壁虎
+card.giant-amoeba.name,大变形虫
+card.giant-jellyfish.name,巨型水母
+card.giant-squid.name,大王乌贼
+card.giardia.name,贾第虫
+card.ginkgo.name,银杏
 card.godel.name,库尔特·哥德尔
+card.golden-eagle.name,金雕
 card.gongchangzhu.name,工厂主
 card.gongchengchui.name,攻城槌
 card.gongchengta.name,攻城塔
 card.gongjianshou.name,弓箭手
 card.gongyegongren.name,工业工人
+card.great-white-shark.name,大白鲨
 card.guangdianxiaoying.match_text,同左
 card.guangdianxiaoying.name,光电效应
 card.guanghezuoyong.match_text,同左
@@ -80,6 +125,7 @@ card.guangyixiangduilun.name,广义相对论
 card.guanzhuangbingdu.name,冠状病毒
 card.guoying.name,果蝇
 card.gutenberg.name,古腾堡
+card.haikouichthys.name,海口鱼
 card.heisenberg.name,海森堡
 card.hela-cell.name,海拉细胞
 card.hippocrates.name,希波克拉底
@@ -87,11 +133,13 @@ card.hiv-inhibitor.match_text,同左
 card.hiv-inhibitor.name,艾滋病毒·抑制剂
 card.hiv.name,艾滋病毒
 card.homer.name,荷马
+card.honey-fungus.name,蜜环菌
 card.hongshulin.name,红树林
 card.huangrebing.name,黄热病
 card.huochongdui.name,火铳队
 card.huoqiangshou.name,火枪手
 card.hybrid-rice.name,杂交水稻
+card.hydra.name,水螅
 card.influenza-mutation.match_text,同左
 card.influenza-mutation.name,流感病毒·变异
 card.influenza.name,流感病毒
@@ -111,10 +159,12 @@ card.juzi.name,橘子
 card.kanzi.name,黑猩猩坎兹
 card.knuth.name,高德纳
 card.koko.name,大猩猩科科
+card.komodo-dragon.name,科莫多巨蜥
 card.kongzi.name,孔子
 card.kuangquanbing.name,狂犬病
 card.kuangrenriji.match_text,同左
 card.kuangrenriji.name,狂人日记
+card.lactobacillus.name,乳酸菌
 card.lamarck.name,拉马克
 card.langqunshouling.name,狼群首领
 card.lavoisier.name,拉瓦锡
@@ -123,13 +173,18 @@ card.lier.name,李耳
 card.likeciti.name,立克次体
 card.linnaeus.name,林奈
 card.lisshi.name,李时珍
+card.lizard.name,蜥蜴
+card.locust.name,蝗虫
 card.luban.name,鲁班
 card.luomajuntuanbing.name,罗马军团兵
 card.luxun.name,鲁迅
 card.maitian.name,麦田
 card.majidun-changqiangbing.name,马其顿长枪兵
 card.malaria.name,疟疾
+card.mammoth.name,真猛犸
+card.mantis.name,螳螂
 card.marie-curie.name,玛丽·居里
+card.meganeura.name,巨脉蜻蜓
 card.meikuang-jinsique.name,煤矿金丝雀
 card.mendel.name,孟德尔
 card.menghu.name,猛虎
@@ -137,30 +192,52 @@ card.mengmalieren.name,猛犸猎人
 card.mengmaxiang.name,猛犸象
 card.mianhua.name,棉花
 card.michelangelo.name,米开朗基罗
+card.mimic-octopus.name,拟态章鱼（大型）
+card.moon-jellyfish.name,海月水母
 card.morgan.name,摩尔根
 card.moses.name,摩西
 card.mozi.name,墨子
 card.muhammad-ali.name,穆罕默德·阿里
+card.mushroom.name,蘑菇
+card.mycobacterium-tuberculosis.name,结核分枝杆菌
 card.nahan.match_text,同左
 card.nahan.name,呐喊
 card.nami-bingdu.name,纳米病毒
 card.nami-fengqun.name,纳米蜂群
 card.nanobot.name,纳米机器人
+card.nautilus.name,鹦鹉螺
+card.neanderthal.name,尼安德特人
 card.neiranji.name,内燃机
 card.newton.name,牛顿
 card.nitaizhangyu.name,拟态章鱼
 card.nitrogen-crop.name,固氮作物
 card.niuwen.name,牛瘟
+card.norovirus.name,诺如病毒
 card.nupao.name,弩炮
 card.nushou.name,弩手
+card.octopus-larva.name,章鱼幼体
+card.orchid.name,兰花
+card.ostrich.name,鸵鸟
 card.panghuang.match_text,同左
 card.panghuang.name,彷徨
+card.paramecium.name,草履虫
+card.parrot.name,鹦鹉
 card.pasteur.name,巴斯德
 card.patrol-mech.name,巡逻机甲
+card.peafowl.name,孔雀
+card.penguin.name,企鹅
+card.penicillium.name,青霉
 card.phonograph.name,留声机
 card.pink-ape.name,带粉色头套的猩猩
+card.plasmodium.name,疟原虫
 card.plato.name,柏拉图
+card.portuguese-man-of-war.name,僧帽水母
+card.prototaxites.name,原杉菌
+card.puffball.name,马勃
+card.pufferfish.name,河豚
+card.pulley.name,滑轮
 card.pythagoras.name,毕达哥拉斯
+card.python.name,蟒蛇
 card.qinghao.name,青蒿
 card.qingmeisu-tichun.match_text,同左
 card.qingmeisu-tichun.name,青霉素·提纯
@@ -168,8 +245,11 @@ card.qishi.name,骑士
 card.qiuzhuangshandian.match_text,同左
 card.qiuzhuangshandian.name,球状闪电
 card.quantum-computer.name,量子计算机
+card.queen-bee.name,蜜蜂皇后
 card.qulv-feichuan.name,曲率飞船
 card.quyuan.name,屈原
+card.radiolarian.name,放射虫
+card.red-coral.name,红珊瑚
 card.rengongzhineng.match_text,同左
 card.rengongzhineng.name,人工智能
 card.renzaoshandian.match_text,同左
@@ -180,13 +260,19 @@ card.rice-cooker.name,电饭煲
 card.robot-dog.name,机器狗
 card.rutherford.name,卢瑟福
 card.sagan.name,卡尔·萨根
+card.salmon.name,鲑鱼
+card.saltwater-crocodile.name,湾鳄
 card.saman.name,萨满
+card.sarcosuchus.name,帝鳄
 card.schrodinger.name,薛定谔
+card.sea-anemone.name,海葵
+card.sea-turtle.name,海龟
 card.self-driving-car.name,自动驾驶汽车
 card.shakespeare.name,莎士比亚
 card.shannon.name,克劳德·香农
 card.shenkuo.name,沈括
 card.shifujiang.name,石斧匠
+card.shiitake.name,香菇
 card.shijieshu.name,世界树
 card.shijunti.name,噬菌体
 card.shilunche.name,石轮车
@@ -201,32 +287,50 @@ card.shuizhong.name,水钟
 card.sibadayongshi.name,斯巴达勇士
 card.simaqian.name,司马迁
 card.smallpox.name,天花
+card.soft-coral.name,软珊瑚
 card.space-elevator.name,太空电梯
 card.space-rice.name,太空水稻
+card.squid.name,枪乌贼
+card.staghorn-coral.name,鹿角珊瑚
+card.staphylococcus.name,葡萄球菌
 card.steam-engine.name,蒸汽机
+card.stentor.name,喇叭虫
 card.stephenson.name,史蒂芬孙
+card.streptococcus.name,链球菌
 card.sugeladi.name,苏格拉底
 card.suishimaobing.name,燧石矛兵
+card.superbug.name,超级细菌
 card.synthetic-cell.name,合成细胞
 card.tai.name,苔藓
 card.taikongziminzhe.name,太空殖民者
 card.tanju.name,炭疽
 card.telephone.name,电话机
 card.tengman.name,藤蔓
+card.termite-king.name,白蚁王
 card.tesla-coil.match_text,同左
 card.tesla-coil.name,特斯拉线圈
 card.tesla.name,特斯拉
 card.tielu-gongren.name,铁路工人
+card.tortoise.name,陆龟
 card.toushiji.name,投石机
 card.triple-reward.match_text,同左
 card.triple-reward.name,三连奖励
+card.truffle.name,松露
+card.trypanosome.name,锥虫
 card.tufu.name,屠夫
+card.tuna.name,金枪鱼
 card.turing-machine.name,图灵机
+card.turritopsis.name,灯塔水母
+card.vampire-squid.name,吸血鬼乌贼
 card.vertical-farm.name,垂直农场
+card.vibrio-cholerae.name,霍乱弧菌
+card.volvox.name,团藻
 card.von-neumann.name,冯·诺依曼
+card.vorticella.name,钟虫
 card.wandou.name,豌豆
 card.watt.name,瓦特
 card.weijingzhanshi.name,维京战士
+card.whale-shark.name,鲸鲨
 card.wireless-telegraph.name,无线电报
 card.wright-brothers.name,莱特兄弟
 card.wuyi.name,巫医
@@ -241,7 +345,9 @@ card.xray-machine.name,X射线机
 card.xunhuozhe.name,驯火者
 card.yadian-wenyi.name,雅典瘟疫
 card.yanhuashi.name,岩画师
+card.yeast.name,酵母
 card.yelang.name,野狼
+card.yersinia-pestis.name,鼠疫耶尔森菌
 card.yezhu.name,野猪
 card.yinlibo.match_text,同左
 card.yinlibo.name,引力波
@@ -288,6 +394,7 @@ enum.era.primitive,原始
 enum.evolve.divine_shield,护盾
 enum.evolve.reborn,复生
 enum.evolve.stats,+2/+2
+enum.keyword.armor,减伤
 enum.keyword.assemble,装配
 enum.keyword.battlecry,战吼
 enum.keyword.breed,繁衍
@@ -298,8 +405,10 @@ enum.keyword.divine_shield,护盾
 enum.keyword.evolve,进化
 enum.keyword.growth,成长
 enum.keyword.optimal_attack,最优攻击
+enum.keyword.poison,剧毒
 enum.keyword.reborn,复生
 enum.keyword.sow,播种
+enum.keyword.stealth,潜行
 enum.keyword.taunt,嘲讽
 enum.keyword.windfury,连击
 enum.playstyle.bacteria,细菌域
@@ -350,6 +459,7 @@ enum.subtype.economics,经济学
 enum.subtype.engineering,工程
 enum.subtype.factory,工厂
 enum.subtype.fern,蕨类
+enum.subtype.fish,鱼类
 enum.subtype.flight,飞行
 enum.subtype.flower,花卉
 enum.subtype.fruit-tree,果树
@@ -389,6 +499,7 @@ enum.subtype.polymath,博学者
 enum.subtype.power,动力
 enum.subtype.primate,灵长
 enum.subtype.primitive,原始
+enum.subtype.protozoa,原生生物
 enum.subtype.puppet,傀儡
 enum.subtype.quantum,量子
 enum.subtype.reptile,爬行
@@ -410,21 +521,46 @@ enum.subtype.worker,工人
 enum.taxon.accipitridae,鹰科
 enum.taxon.accipitriformes,鹰形目
 enum.taxon.aconoidasida,无腔纲
+enum.taxon.acrididae,蝗科
+enum.taxon.acroporidae,鹿角珊瑚科
+enum.taxon.actiniaria,海葵目
+enum.taxon.actiniidae,海葵科
 enum.taxon.actinobacteria,放线菌门
 enum.taxon.actinomycetia,放线菌纲
 enum.taxon.actinopterygii,鱼纲
 enum.taxon.actinopterygii-incertae-sedis,未定科
+enum.taxon.agaricaceae,蘑菇科
+enum.taxon.agaricales,伞菌目
+enum.taxon.agaricomycetes,伞菌纲
+enum.taxon.agnatha,无颌纲
+enum.taxon.alcyonacea,软珊瑚目
+enum.taxon.alcyoniidae,软珊瑚科
 enum.taxon.alphaproteobacteria,α-变形菌纲
+enum.taxon.amanitaceae,鹅膏科
 enum.taxon.amarillovirales,黄病毒目
+enum.taxon.ammonitida,菊石目
+enum.taxon.ammonitidae,菊石科
+enum.taxon.amoebidae,变形虫科
+enum.taxon.amoebozoa,变形虫门
 enum.taxon.angiospermae,被子植物门
+enum.taxon.anguillidae,鳗鲡科
+enum.taxon.anguilliformes,鳗鲡目
 enum.taxon.animalia,动物界
 enum.taxon.anthoathecata,花水螅目
+enum.taxon.anthozoa,珊瑚纲
 enum.taxon.apicomplexa,顶复门
+enum.taxon.apidae,蜜蜂科
 enum.taxon.archaeopterygidae,始祖鸟科
 enum.taxon.archaeopterygiformes,始祖鸟目
+enum.taxon.architeuthidae,大王乌贼科
+enum.taxon.argonautidae,船蛸科
+enum.taxon.arthrodira,节甲鱼目
 enum.taxon.arthropoda,节肢动物门
 enum.taxon.articulavirales,节段病毒目
 enum.taxon.artiodactyla,偶蹄目
+enum.taxon.ascomycota,子囊菌门
+enum.taxon.asparagales,天门冬目
+enum.taxon.aspergillaceae,曲霉科
 enum.taxon.asteraceae,菊科
 enum.taxon.asterales,菊目
 enum.taxon.automation,自动机械
@@ -434,27 +570,69 @@ enum.taxon.bacillales,芽孢杆菌目
 enum.taxon.bacilli,芽孢杆菌纲
 enum.taxon.bacteria,细菌域
 enum.taxon.bacteria-incertae-sedis,未定科
+enum.taxon.basidiomycota,担子菌门
+enum.taxon.beloniformes,颌针鱼目
 enum.taxon.blattodea,蜚蠊目
 enum.taxon.bovidae,牛科
 enum.taxon.bryaceae,真藓科
 enum.taxon.bryales,真藓目
 enum.taxon.bryophyta,苔藓植物门
 enum.taxon.bryopsida,藓纲
+enum.taxon.caliciviridae,杯状病毒科
 enum.taxon.canidae,犬科
 enum.taxon.carnivora,食肉目
+enum.taxon.cathartiformes,美洲鹫目
+enum.taxon.caudovirales,有尾噬菌体目
+enum.taxon.caudoviricetes,有尾噬菌体纲
 enum.taxon.cephalopoda,头足纲
+enum.taxon.cheloniidae,海龟科
+enum.taxon.chirodropida,多手立方水母目
+enum.taxon.chirodropidae,多手立方水母科
 enum.taxon.chitovirales,痘病毒目
+enum.taxon.chlorophyceae,绿藻纲
+enum.taxon.chlorophyta,绿藻门
+enum.taxon.chondrichthyes,软骨鱼纲
 enum.taxon.chordata,脊索动物门
+enum.taxon.ciliophora,纤毛门
+enum.taxon.clavicipitaceae,麦角科
+enum.taxon.clostridia,梭菌纲
+enum.taxon.clostridiaceae,梭菌科
+enum.taxon.clostridiales,梭菌目
 enum.taxon.cnidaria,刺胞动物门
+enum.taxon.coelacanthidae,腔棘鱼科
+enum.taxon.coelacanthiformes,腔棘鱼目
+enum.taxon.coleoptera,鞘翅目
 enum.taxon.columbidae,鸠鸽科
 enum.taxon.columbiformes,鸽形目
+enum.taxon.coralliidae,红珊瑚科
 enum.taxon.coronaviridae,冠状病毒科
+enum.taxon.corvidae,鸦科
 enum.taxon.craft,造物
+enum.taxon.cranchiidae,小头鱿科
+enum.taxon.crocodilia,鳄目
+enum.taxon.crocodylidae,鳄科
+enum.taxon.crocodylomorpha,鳄形类
+enum.taxon.cubozoa,立方水母纲
+enum.taxon.cyprinidae,鲤科
+enum.taxon.cypriniformes,鲤形目
+enum.taxon.diomedeidae,信天翁科
+enum.taxon.diplomonadida,双滴虫目
 enum.taxon.diptera,双翅目
 enum.taxon.drosophilidae,果蝇科
+enum.taxon.dunkleosteidae,邓氏鱼科
+enum.taxon.elapidae,眼镜蛇科
 enum.taxon.elephantidae,象科
 enum.taxon.enterobacterales,肠杆菌目
+enum.taxon.enterobacteriaceae,肠杆菌科
 enum.taxon.equidae,马科
+enum.taxon.euamoebida,真变形虫目
+enum.taxon.euglenaceae,眼虫科
+enum.taxon.euglenida,眼虫目
+enum.taxon.euglenoidea,眼虫纲
+enum.taxon.euglenozoa,眼虫门
+enum.taxon.eurotiales,散囊菌目
+enum.taxon.eurotiomycetes,散囊菌纲
+enum.taxon.exocoetidae,飞鱼科
 enum.taxon.fabaceae,豆科
 enum.taxon.fabales,豆目
 enum.taxon.felidae,猫科
@@ -462,85 +640,203 @@ enum.taxon.filoviridae,丝状病毒科
 enum.taxon.firmicutes,厚壁菌门
 enum.taxon.flasuviricetes,黄病毒纲
 enum.taxon.flaviviridae,黄病毒科
+enum.taxon.foraminifera,有孔虫门
+enum.taxon.formicidae,蚁科
+enum.taxon.fornicata,叉鞭毛纲
 enum.taxon.fringillidae,燕雀科
 enum.taxon.fungi,真菌界
 enum.taxon.fungi-incertae-sedis,未定科
+enum.taxon.galliformes,鸡形目
 enum.taxon.gammaproteobacteria,γ-变形菌纲
+enum.taxon.gekkonidae,壁虎科
+enum.taxon.ginkgoaceae,银杏科
+enum.taxon.ginkgoales,银杏目
+enum.taxon.ginkgophyta,银杏门
+enum.taxon.ginkgopsida,银杏纲
+enum.taxon.globothalamea,球房虫纲
 enum.taxon.haemosporida,血孢子虫目
+enum.taxon.haikouichthyidae,海口鱼科
+enum.taxon.heterotrichea,异毛纲
+enum.taxon.heterotrichida,异毛目
+enum.taxon.hexamitidae,六鞭毛虫科
 enum.taxon.hominidae,人科
+enum.taxon.hydridae,水螅科
 enum.taxon.hydrozoa,水螅纲
+enum.taxon.hymenoptera,膜翅目
+enum.taxon.hypocreales,肉座菌目
 enum.taxon.information-computing,信息与计算
 enum.taxon.insecta,昆虫纲
 enum.taxon.insthoviricetes,流感病毒纲
+enum.taxon.kinetoplastea,动质体纲
+enum.taxon.lacertidae,蜥蜴科
+enum.taxon.lactobacillaceae,乳杆菌科
 enum.taxon.lactobacillales,乳杆菌目
 enum.taxon.lamiales,唇形目
+enum.taxon.lamnidae,鼠鲨科
+enum.taxon.lamniformes,鼠鲨目
+enum.taxon.lepidoptera,鳞翅目
+enum.taxon.libellulidae,蜻科
 enum.taxon.life-medical,生活与医疗
 enum.taxon.liliopsida,单子叶植物纲
+enum.taxon.loliginidae,枪乌贼科
+enum.taxon.lophiidae,鮟鱇科
+enum.taxon.lophiiformes,鮟鱇目
 enum.taxon.magnoliopsida,双子叶植物纲
 enum.taxon.malpighiales,金虎尾目
 enum.taxon.malvaceae,锦葵科
 enum.taxon.malvales,锦葵目
 enum.taxon.mammalia,哺乳纲
 enum.taxon.mammalia-incertae-sedis,未定科
+enum.taxon.mantidae,螳螂科
+enum.taxon.mantodea,螳螂目
+enum.taxon.meganeuridae,巨脉蜓科
+enum.taxon.meganisoptera,巨蜻蜓目
+enum.taxon.metamonada,后滴虫门
 enum.taxon.mollusca,软体动物门
 enum.taxon.monjiviricetes,单股负链病毒纲
 enum.taxon.mononegavirales,单股负链病毒目
+enum.taxon.mucoraceae,毛霉科
+enum.taxon.mucorales,毛霉目
+enum.taxon.mucoromycetes,毛霉纲
+enum.taxon.mucoromycota,毛霉门
 enum.taxon.muridae,鼠科
 enum.taxon.mycobacteriaceae,分枝杆菌科
 enum.taxon.mycobacteriales,分枝杆菌目
+enum.taxon.myllokunmingiida,昆明鱼目
+enum.taxon.myopsida,闭眼目
+enum.taxon.myoviridae,肌尾噬菌体科
+enum.taxon.nautilida,鹦鹉螺目
+enum.taxon.nautilidae,鹦鹉螺科
 enum.taxon.nidovirales,网巢病毒目
 enum.taxon.nucleocytoviricota,核质巨 DNA 病毒门
 enum.taxon.oceaniidae,海螅水母科
 enum.taxon.octopoda,八腕目
 enum.taxon.octopodidae,章鱼科
+enum.taxon.odonata,蜻蜓目
+enum.taxon.oegopsida,开眼目
 enum.taxon.oleaceae,木犀科
+enum.taxon.oligohymenophorea,寡膜纲
+enum.taxon.omphalotaceae,光茸菌科
+enum.taxon.ophiocordycipitaceae,线虫草科
+enum.taxon.orchidaceae,兰科
+enum.taxon.orectolobiformes,须鲨目
 enum.taxon.ortervirales,逆转录病毒目
 enum.taxon.orthomyxoviridae,正黏病毒科
+enum.taxon.orthoptera,直翅目
+enum.taxon.papilionidae,凤蝶科
+enum.taxon.parameciidae,草履虫科
 enum.taxon.paramyxoviridae,副黏病毒科
 enum.taxon.passeriformes,雀形目
+enum.taxon.peniculida,草履虫目
+enum.taxon.perciformes,鲈形目
 enum.taxon.perissodactyla,奇蹄目
+enum.taxon.pezizales,盘菌目
+enum.taxon.pezizomycetes,盘菌纲
+enum.taxon.phasianidae,雉科
 enum.taxon.phenomenon,现象
+enum.taxon.pholidosauridae,似鳄科
+enum.taxon.physalacriaceae,膨瑚菌科
+enum.taxon.physaliidae,僧帽水母科
+enum.taxon.picornavirales,小RNA病毒目
 enum.taxon.pisoniviricetes,小核糖病毒纲
+enum.taxon.placodermi,盾皮鱼纲
 enum.taxon.plantae,植物界
 enum.taxon.plantae-incertae-sedis,未定科
 enum.taxon.plasmodiidae,疟原虫科
 enum.taxon.poaceae,禾本科
 enum.taxon.poales,禾本目
 enum.taxon.pokkesviricetes,痘病毒纲
+enum.taxon.polycystinea,多囊纲
 enum.taxon.polypodiaceae,水龙骨科
 enum.taxon.polypodiales,水龙骨目
 enum.taxon.polypodiopsida,水龙骨纲
+enum.taxon.pomacentridae,雀鲷科
+enum.taxon.poritidae,滨珊瑚科
 enum.taxon.power-energy,动力与能源
 enum.taxon.poxviridae,痘病毒科
 enum.taxon.primates,灵长目
 enum.taxon.proboscidea,长鼻目
+enum.taxon.procellariiformes,鹱形目
 enum.taxon.production-construction,生产与建筑
 enum.taxon.proteobacteria,变形菌门
+enum.taxon.prototaxales,原杉菌目
+enum.taxon.prototaxitaceae,原杉菌科
 enum.taxon.protozoa,原生生物界
+enum.taxon.psittacidae,鹦鹉科
+enum.taxon.psittaciformes,鹦形目
 enum.taxon.pteridophyta,蕨类植物门
+enum.taxon.pythonidae,蟒科
+enum.taxon.radiolaria,放射虫门
 enum.taxon.reptilia,爬行纲
 enum.taxon.retroviridae,逆转录病毒科
 enum.taxon.revtraviricetes,逆转录病毒纲
 enum.taxon.rhabdoviridae,弹状病毒科
+enum.taxon.rhincodontidae,鲸鲨科
 enum.taxon.rhizophoraceae,红树科
+enum.taxon.rhizostomatidae,根口水母科
+enum.taxon.rhizostomeae,根口水母目
 enum.taxon.riboviria,核糖病毒门
 enum.taxon.rickettsiaceae,立克次体科
 enum.taxon.rickettsiales,立克次体目
 enum.taxon.rodentia,啮齿目
+enum.taxon.rotaliida,轮虫目
+enum.taxon.rotaliidae,轮虫科
 enum.taxon.rutaceae,芸香科
+enum.taxon.saccharomycetaceae,酵母科
+enum.taxon.saccharomycetales,酵母目
+enum.taxon.saccharomycetes,酵母纲
+enum.taxon.salmonidae,鲑科
+enum.taxon.salmoniformes,鲑形目
 enum.taxon.salviniaceae,槐叶苹科
 enum.taxon.salviniales,槐叶苹目
 enum.taxon.sapindales,无患子目
+enum.taxon.sarcopterygii,肉鳍鱼纲
+enum.taxon.scarabaeidae,金龟科
+enum.taxon.scleractinia,石珊瑚目
+enum.taxon.scombridae,鲭科
+enum.taxon.scyphozoa,钵水母纲
+enum.taxon.semaeostomeae,旗口水母目
+enum.taxon.sepiida,乌贼目
+enum.taxon.sepiidae,乌贼科
+enum.taxon.sessilida,固着目
+enum.taxon.siphonophorae,管水母目
+enum.taxon.sordariomycetes,粪壳菌纲
+enum.taxon.spheniscidae,企鹅科
+enum.taxon.sphenisciformes,企鹅目
+enum.taxon.spongodiscidae,海绵盘虫科
+enum.taxon.spumellarida,泡沫虫目
 enum.taxon.squamata,有鳞目
 enum.taxon.squamata-incertae-sedis,未定科
+enum.taxon.staphylococcaceae,葡萄球菌科
+enum.taxon.stentoridae,喇叭虫科
 enum.taxon.streptococcaceae,链球菌科
+enum.taxon.struthionidae,鸵鸟科
+enum.taxon.struthioniformes,鸵鸟目
 enum.taxon.suidae,猪科
+enum.taxon.syngnathidae,海龙科
+enum.taxon.syngnathiformes,海龙目
+enum.taxon.teratornithidae,畸鸟科
 enum.taxon.termitidae,白蚁科
+enum.taxon.testudines,龟鳖目
+enum.taxon.testudinidae,陆龟科
+enum.taxon.tetraodontidae,鲀科
+enum.taxon.tetraodontiformes,鲀形目
 enum.taxon.transport,交通与运载
+enum.taxon.trypanosomatida,锥虫目
+enum.taxon.trypanosomatidae,锥虫科
+enum.taxon.tuberaceae,块菌科
+enum.taxon.tubulinea,管状根足纲
+enum.taxon.ulmaridae,海月水母科
+enum.taxon.uroviricota,有尾噬菌体门
+enum.taxon.vampyromorphida,幽灵蛸目
+enum.taxon.vampyroteuthidae,幽灵蛸科
 enum.taxon.varanidae,巨蜥科
 enum.taxon.vibrionaceae,弧菌科
 enum.taxon.virus,病毒
 enum.taxon.virus-incertae-sedis,未定科
+enum.taxon.volvocaceae,团藻科
+enum.taxon.volvocales,团藻目
+enum.taxon.vorticellidae,钟虫科
 enum.taxon.weapon-siege,武器与攻城
 enum.taxon.yersiniaceae,耶尔森菌科
 error.ALREADY_MAX_ERA,时代已满
@@ -574,6 +870,7 @@ error.UNKNOWN_TYPE,未知消息类型
 skill.alternating-current.match_text,同左
 skill.alternating-current.name,交流电
 skill.alternating-current.text,使一个友方随从获得最优攻击直到回合结束
+skill.aura-adjacent-mammal.text,相邻的友方哺乳纲随从获得 +2/+2
 skill.aura-all-plus-0-plus-1.text,你的随从获得 +0/+1
 skill.aura-all-plus-0-plus-2.text,你的随从获得 +0/+2
 skill.aura-biology-plus-0-plus-1.text,你的动物随从获得 +0/+1
@@ -581,20 +878,31 @@ skill.aura-biology-plus-1-plus-1.text,你的动物随从获得 +1/+1
 skill.aura-mech-optimal-attack.text,你的机械随从获得最优攻击
 skill.aura-mech-plus-2-plus-2.text,你的机械随从获得 +2/+2
 skill.aura-other-biology-plus-1-attack.text,你的其他动物随从获得 +1 攻击力
+skill.aura-other-fish-plus-0-plus-1.text,你的其他鱼纲随从获得 +0/+1
+skill.aura-other-insect-plus-0-plus-1.text,你的其他昆虫纲随从获得 +0/+1
 skill.aura-other-mech-plus-1-plus-1.text,你的其他机械随从获得 +1/+1
 skill.aura-other-plants-plus-0-plus-1.text,你的其他植物随从获得 +0/+1
 skill.aura-other-plus-0-plus-1.text,你的其他随从获得 +0/+1
+skill.aura-other-protozoa-plus-1-attack.text,你的其他原生生物界随从获得 +1 攻击力
 skill.aura-plant-plus-1-plus-1.text,你的植物随从获得 +1/+1
 skill.aura-plant-plus-2-plus-2.text,你的植物随从获得 +2/+2
 skill.aura-scholar-plus-0-plus-2.text,你的学者随从获得 +0/+2
 skill.aura-scholar-plus-0-plus-3.text,你的学者随从获得 +0/+3
+skill.aura-school-fish-1.text,群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
+skill.aura-school-fish-2.text,群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力
+skill.aura-school-mammal.text,群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力
 skill.battlecry-all-biology-growth-once.text,战吼：使你的所有动物随从获得一次成长
 skill.battlecry-all-friendly-growth-once.text,战吼：使你的所有随从获得一次成长
 skill.battlecry-all-friendly-growth-twice.text,战吼：使你的所有随从获得两次成长
 skill.battlecry-all-friendly-plus-0-plus-1.text,战吼：使你的所有随从获得 +0/+1
 skill.battlecry-all-mech-growth-once-no-keyword.text,战吼：使你的所有机械随从获得一次成长
 skill.battlecry-all-mech-growth-once.text,战吼：使你的所有机械随从获得一次成长
+skill.battlecry-copy-hand-minion.text,战吼：复制一张你手牌中的随从牌
 skill.battlecry-friendly-archers-plus-2-attack.text,战吼：使你的弓箭手获得 +2 攻击力
+skill.battlecry-friendly-bacteria-plus-0-plus-1.text,战吼：使一个友方细菌域随从获得 +0/+1
+skill.battlecry-friendly-bird-growth-once.text,战吼：使一个友方鸟纲随从获得一次成长
+skill.battlecry-friendly-fish-growth-once.text,战吼：使一个友方鱼纲随从获得一次成长
+skill.battlecry-friendly-fungus-growth-once.text,战吼：使一个友方真菌界随从获得一次成长
 skill.battlecry-friendly-growth-once.text,战吼：使一个友方随从获得一次成长
 skill.battlecry-friendly-growth-plant-twice.text,战吼：使一个友方随从获得一次成长；若其为植物，改为两次
 skill.battlecry-friendly-growth-scholar-twice.text,战吼：使一个友方随从获得一次成长；若其为学者，改为两次
@@ -602,17 +910,22 @@ skill.battlecry-friendly-growth-twice.text,战吼：使一个友方随从获得�
 skill.battlecry-friendly-human-plus-0-plus-1.text,战吼：使一个友方人科随从获得 +0/+1
 skill.battlecry-friendly-mech-growth-once.text,战吼：使一个友方机械随从获得一次成长
 skill.battlecry-friendly-plant-growth-once.text,战吼：使一个友方植物随从获得一次成长
+skill.battlecry-friendly-plant-kingdom-growth-once.text,战吼：使一个友方植物界随从获得一次成长
 skill.battlecry-friendly-plus-0-plus-1.text,战吼：使一个友方随从获得 +0/+1
 skill.battlecry-friendly-plus-0-plus-2.text,战吼：使一个友方随从获得 +0/+2
 skill.battlecry-friendly-plus-1-attack.text,战吼：使一个友方随从获得 +1 攻击力
 skill.battlecry-friendly-plus-1-health.text,战吼：使一个友方随从获得 +1 生命值
+skill.battlecry-friendly-protozoa-growth-once.text,战吼：使一个友方原生生物界随从获得一次成长
 skill.battlecry-friendly-virus-plus-1-attack.text,战吼：使一个友方病毒随从获得 +1 攻击力
+skill.battlecry-other-bird-plus-1-plus-1.text,战吼：使你的其他鸟纲随从获得 +1/+1
 skill.battlecry-other-friendly-humans-plus-1-attack.text,战吼：使你的其他人科随从获得 +1 攻击力
+skill.battlecry-other-insect-growth-once.text,战吼：使你的其他昆虫纲随从获得一次成长
 skill.battlecry-plant-growth-twice.text,战吼：使一个友方植物随从获得两次成长
 skill.battlecry-random-enemy-damage-1.text,战吼：对随机一个敌方随从造成 1 点伤害
 skill.battlecry-random-enemy-damage-2.text,战吼：对随机一个敌方随从造成 2 点伤害
 skill.battlecry-self-growth-twice.text,战吼：获得两次成长
 skill.battlecry-self-plus-1-health.text,战吼：获得 +1 生命值
+skill.battlecry-summon-2-worker-bees.text,战吼：召唤两个 2/2 的工蜂
 skill.battlecry-summon-3-3-synthetic-cell.text,战吼：召唤一个 3/3 的合成细胞（幼体）
 skill.biology-evolve.match_text,同左
 skill.biology-evolve.name,获得性状
@@ -650,15 +963,51 @@ skill.combatstart-top-attack-enemy-cant-attack.match_text,同左
 skill.combatstart-top-attack-enemy-cant-attack.text,战斗开始时，使敌方攻击力最高的随从本回合无法攻击
 skill.combatstart-top-attack-enemy-minus-0-minus-2.match_text,同左
 skill.combatstart-top-attack-enemy-minus-0-minus-2.text,战斗开始时，使敌方攻击力最高的随从获得 -0/-2
+skill.convert-3.text,转化：战斗开始时，若一个敌方随从有 3 层传染，消灭它并召唤一个 2/2 的细菌
+skill.convert-4.text,转化：战斗开始时，若一个敌方随从有 4 层传染，消灭它并召唤一个 4/4 的细菌
 skill.deathrattle-all-enemies-contagion-1.text,亡语：使敌方所有随从获得 1 层传染
+skill.deathrattle-all-enemies-damage-2.text,亡语：对敌方所有随从造成 2 点伤害
 skill.deathrattle-all-enemies-humans-minus-2-health.text,亡语：使敌方所有人科随从获得 -2 生命
 skill.deathrattle-all-enemies-minus-1-health.text,亡语：使敌方所有随从获得 -1 生命
 skill.deathrattle-all-friendly-plus-0-plus-1.text,亡语：使你的所有随从获得 +0/+1
+skill.deathrattle-friendly-bacteria-growth-once.text,亡语：使一个友方细菌域随从获得一次成长
+skill.deathrattle-friendly-cnidarian-growth-once.text,亡语：使一个友方水螅纲随从获得一次成长
+skill.deathrattle-friendly-insect-growth-twice.text,亡语：使一个友方昆虫纲随从获得两次成长
+skill.deathrattle-friendly-protozoa-growth-once.text,亡语：使一个友方原生生物界随从获得一次成长
+skill.deathrattle-random-enemy-damage-2.text,亡语：对随机一个敌方随从造成 2 点伤害
 skill.deathrattle-random-enemy-hp-minus-1.text,亡语：使随机一个敌方随从获得 -1 生命值
 skill.deathrattle-random-enemy-minus-1-attack.text,亡语：使随机一个敌方随从获得 -1 攻击力
 skill.deathrattle-random-enemy-minus-1-health.text,亡语：使随机一个敌方随从获得 -1 生命
+skill.deathrattle-summon-1-worker-bee.text,分裂：死亡时召唤一个 1/1 的工蜂
 skill.deathrattle-summon-2-2-hela-cell-clone.text,亡语：召唤一个 2/2 的海拉细胞（复制体）
+skill.deathrattle-summon-2-ammonites.text,分裂：死亡时召唤两个 5/5 的菊石幼体
+skill.deathrattle-summon-2-amoeba-larvae-2-2.text,分裂：死亡时召唤两个 2/2 的变形虫幼体
+skill.deathrattle-summon-2-coral-polyps.text,分裂：死亡时召唤两个 1/1 的珊瑚虫
+skill.deathrattle-summon-2-seabirds.text,分裂：死亡时召唤两个 3/3 的海鸟
+skill.deathrattle-summon-2-spores-2-2.text,分裂：死亡时召唤两个 2/2 的孢子
+skill.deathrattle-summon-3-spores-3-3.text,分裂：死亡时召唤三个 3/3 的孢子
+skill.deathrattle-summon-3-termites.text,分裂：死亡时召唤三个 2/2 的白蚁
+skill.deathrattle-summon-4-volvox-cells.text,分裂：死亡时召唤四个 1/1 的团藻细胞
+skill.deathrattle-summon-amoeba-larva-1.text,分裂：死亡时召唤一个 1/1 的变形虫幼体
+skill.deathrattle-summon-coral-polyp.text,分裂：死亡时召唤一个 1/1 的珊瑚虫
+skill.deathrattle-summon-cordyceps.text,分裂：死亡时召唤一个 3/3 的虫草
+skill.deathrattle-summon-fish-fry-2.text,分裂：死亡时召唤两个 1/1 的鱼苗
+skill.deathrattle-summon-fish-fry-3.text,分裂：死亡时召唤三个 1/1 的鱼苗
+skill.deathrattle-summon-octopus-larva-1.text,分裂：死亡时召唤一个 1/1 的章鱼幼体
+skill.deathrattle-summon-schizont.text,分裂：死亡时召唤一个 3/3 的裂殖体
+skill.deathrattle-summon-spore-token-1.text,分裂：死亡时召唤一个 1/1 的孢子
+skill.deathrattle-summon-spore-token-2.text,分裂：死亡时召唤一个 2/2 的孢子
 skill.deathrattle-summon-termite.text,亡语：召唤一个 1/2 的白蚁
+skill.decompose-ally-kill-pre-kill.text,分解：友方随从击杀敌方随从后，获得其被击杀前的生命值
+skill.decompose-friendly-death-original.text,分解：友方随从死亡后，获得其原始生命值
+skill.decompose-kill-original.text,分解：本随从击杀随从后，获得其原始生命值
+skill.detonate-1.text,引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 1 点伤害
+skill.detonate-2.text,引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 2 点伤害
+skill.devour-1.text,吞噬：战斗开始时，消灭一个攻击力不高于 1 的敌方随从，在本场战斗内永久获得其攻击力与生命值
+skill.devour-2.text,吞噬：战斗开始时，消灭一个攻击力不高于 2 的敌方随从，在本场战斗内永久获得其攻击力与生命值
+skill.devour-3.text,吞噬：战斗开始时，消灭一个攻击力不高于 3 的敌方随从，在本场战斗内永久获得其攻击力与生命值
+skill.devour-4.text,吞噬：战斗开始时，消灭一个攻击力不高于 4 的敌方随从，在本场战斗内永久获得其攻击力与生命值
+skill.dive-1.text,俯冲：战斗开始时，对攻击力最低的敌方随从造成等同于自身攻击力的伤害
 skill.division-of-labor.match_text,同左
 skill.division-of-labor.name,分工
 skill.division-of-labor.text,使一个友方人科随从获得一次成长；若你控制至少 3 个人科随从，改为两次
@@ -686,6 +1035,8 @@ skill.human-growth-twice.text,使一个友方人科随从获得两次成长
 skill.invention-factory.match_text,同左
 skill.invention-factory.name,发明工厂
 skill.invention-factory.text,使你的其他机械随从各获得一次成长
+skill.keyword-armor-1.text,减伤 1：受到伤害时，减免 1 点伤害
+skill.keyword-armor-2.text,减伤 2：受到伤害时，减免 2 点伤害
 skill.keyword-assemble-1.text,装配 1：进入战场时，使你的其他机械随从各获得 1 次成长
 skill.keyword-assemble-2.text,装配 2：进入战场时，使你的其他机械随从各获得 2 次成长
 skill.keyword-breed-1.text,繁衍 1：回合开始时获得 +1 生命
@@ -695,22 +1046,33 @@ skill.keyword-contagion.text,传染：造成伤害后，目标每回合 -1 生�
 skill.keyword-divine-shield.text,护盾：抵消一次伤害
 skill.keyword-evolve.text,进化：从 +2/+2、护盾、复生中选择一个
 skill.keyword-optimal-attack.text,最优攻击：无视嘲讽，优先攻击可被击杀的目标
+skill.keyword-poison.text,剧毒：造成伤害后，若目标仍存活则将其消灭
 skill.keyword-reborn.text,复生：以 1 点生命复活一次
 skill.keyword-sow.text,播种：死亡时召唤一个 1/1 的幼苗
+skill.keyword-stealth.text,潜行：无法被单体攻击与单体效果选中，造成伤害后打破
 skill.keyword-taunt.text,嘲讽
 skill.keyword-windfury.text,连击：每回合可攻击两次
+skill.latent-3.text,潜伏：回合开始时，每有 1 层传染获得 +1 攻击力；达到 3 层时对敌方所有随从造成 3 点伤害
 skill.light-speed-strike.match_text,同左
 skill.light-speed-strike.name,光速出击
 skill.light-speed-strike.text,使一个友方随从本回合获得连击
 skill.microbiology.match_text,同左
 skill.microbiology.name,微生物学
 skill.microbiology.text,战斗开始时使敌方最左侧随从获得 1 层传染
+skill.mimic-1.text,战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束
+skill.mimic-2.text,拟态：战斗开始时，复制一个敌方随从的当前攻击力与生命值直到本回合结束
+skill.mimic-3.text,拟态：战斗开始时，复制一个敌方随从的当前攻击力、生命值与关键词直到本回合结束
 skill.observation.match_text,额外出现的随从固定为当前时代当前星级排序第一张
 skill.observation.name,观测
 skill.observation.text,每回合首次刷新时额外出现一张当前时代的随机随从
 skill.radiation.match_text,战斗开始时，对敌方最左侧随从造成 2 点伤害
 skill.radiation.name,放射
 skill.radiation.text,战斗开始时对随机一个敌方随从造成 2 点伤害
+skill.recall-1.text,回手：死亡时返回手牌并保留成长
+skill.revive-1.text,复苏：以 +1/+1 复活一次
+skill.revive-2.text,复苏：以 +2/+2 复活一次
+skill.revive-3.text,复苏：以 +3/+3 复活一次
+skill.salvage-machine.text,零件回收：死亡时获得一张随机机械随从牌
 skill.scholar-growth-twice.match_text,同左
 skill.scholar-growth-twice.name,推演
 skill.scholar-growth-twice.text,使一个友方学者随从获得两次成长
@@ -773,9 +1135,27 @@ skill.universal-manuscript.text,复制一张你手牌中的随从牌
 skill.virus-growth-once.match_text,同左
 skill.virus-growth-once.name,培养
 skill.virus-growth-once.text,使一个友方病毒随从获得一次成长
+token.ammonite-token.name,菊石幼体
+token.amoeba-larva-token-1.name,变形虫幼体
+token.amoeba-larva-token-2.name,变形虫幼体
+token.bacteria-token-2.name,细菌
+token.bacteria-token-4.name,细菌
+token.coral-polyp-token.name,珊瑚虫
+token.cordyceps-token.name,虫草
+token.fish-fry-token.name,鱼苗
 token.hela-cell-token.name,海拉细胞（复制体）
+token.octopus-larva-token.name,章鱼幼体
+token.schizont-token.name,裂殖体
+token.seabird-token.name,海鸟
 token.seedling.name,幼苗
+token.spore-token-1.name,孢子
+token.spore-token-2.name,孢子
+token.spore-token-3.name,孢子
 token.synthetic-cell-token.name,合成细胞（幼体）
+token.termite-token.name,白蚁
+token.volvox-cell-token.name,团藻细胞
+token.worker-bee-token-1.name,工蜂
+token.worker-bee-token-2.name,工蜂
 ui.common.no_hero,未选英雄
 ui.game.card.freeze_glyph,冻
 ui.game.combat.banner,%s%s · 伤害 %d · 我方 %d vs 对手 %d

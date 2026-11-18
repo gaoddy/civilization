@@ -308,6 +308,9 @@ fn resolve_real(
     };
     let attacker_hero = hero_of(state, a);
     let defender_hero = hero_of(state, b);
+    // 战斗内的取牌效果（零件回收）需要本局启用玩法；克隆一份避免与 `state.rng`
+    // 的可变借用冲突。
+    let playstyles = state.enabled_playstyles.clone();
     let setup = combat::CombatSetup {
         attacker_hero: attacker_hero.as_deref(),
         defender_hero: defender_hero.as_deref(),
@@ -316,6 +319,7 @@ fn resolve_real(
         attacker_hand: hand_len(state, a),
         defender_hand: hand_len(state, b),
         hand_slots: catalog.config.hand_slots,
+        playstyles: Some(&playstyles),
     };
     let log = combat::simulate_with(
         engine,
@@ -429,6 +433,7 @@ fn resolve_ghost(
     let (ghost, next_instance_id) = renumber_ghost(state, &own_board, ghost_seat, ghost);
 
     let hero = hero_of(state, seat);
+    let playstyles = state.enabled_playstyles.clone();
     let setup = combat::CombatSetup {
         attacker_hero: hero.as_deref(),
         // 幽灵没有英雄卡，防御方被动不结算。
@@ -438,8 +443,9 @@ fn resolve_ghost(
         attacker_hand: hand_len(state, seat),
         defender_hand: 0,
         hand_slots: catalog.config.hand_slots,
+        playstyles: Some(&playstyles),
     };
-    let log = combat::simulate_with(
+    let mut log = combat::simulate_with(
         engine,
         &own_board,
         &ghost,
@@ -451,7 +457,10 @@ fn resolve_ghost(
     );
     state.next_instance_id = state.next_instance_id.max(log.next_instance_id);
     // 与真实战一致：落单座位自己的战斗日志副作用与持久成长/传染写回；
-    // 幽灵是已出局者的棋盘副本，任何改动都只留在克隆里。
+    // 幽灵是已出局者的棋盘副本，任何改动都只留在克隆里。两侧共用同一座位，
+    // 因此按阵营丢弃幽灵侧（side 1）的回手与复制副作用，避免写进落单玩家手牌。
+    log.hand_copies.retain(|copy| copy.side == 0);
+    log.hand_minions.retain(|recalled| recalled.side == 0);
     write_back_combat_log(catalog, state, &log);
     write_back_persistent(state, seat, &log.attacker_final);
 
@@ -543,7 +552,7 @@ pub fn fold_auras(
                 .iter()
                 .any(|(existing, _)| existing == keyword)
             {
-                minion.granted.push((keyword.clone(), Duration::Permanent));
+                minion.granted.push((keyword.clone(), Duration::Aura));
             }
         }
     }
@@ -840,6 +849,21 @@ fn write_back_combat_log(catalog: &Catalog, state: &mut GameState, log: &combat:
             )));
         }
     }
+    for recalled in &log.hand_minions {
+        let Some(player) = player_mut(state, recalled.seat) else {
+            continue;
+        };
+        if player.hand.len() < catalog.config.hand_slots {
+            // 回手保留战斗内实例的全部状态；编号重新分配，避免与仍在棋盘上的
+            // 原实例（战斗不改变持久棋盘）重合。
+            let instance_id = state.next_instance_id;
+            state.next_instance_id = instance_id.saturating_add(1);
+            let mut minion = recalled.minion.clone();
+            minion.instance_id = instance_id;
+            let player = player_mut(state, recalled.seat).expect("座位存在已确认");
+            player.hand.push(HandCard::Minion(minion));
+        }
+    }
     state.next_instance_id = state.next_instance_id.max(log.next_instance_id);
 }
 
@@ -910,10 +934,79 @@ mod tests {
             summon_count: 0,
             pool_spent: BTreeMap::new(),
             hand_copies: Vec::new(),
+            hand_minions: Vec::new(),
             next_instance_id: 1,
             attacker_final: Vec::new(),
             defender_final: Vec::new(),
         }
+    }
+
+    #[test]
+    fn recalled_minion_is_written_to_hand_with_state() {
+        let catalog = test_catalog();
+        let (_, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
+        let card_id = catalog
+            .cards
+            .keys()
+            .next()
+            .expect("目录至少包含一张卡")
+            .clone();
+        let mut recalled = MinionInstance::new(&catalog, 42, &card_id, false);
+        recalled.stats.attack.add_growth(2);
+        recalled.stats.health.add_growth(2);
+        recalled
+            .stats
+            .health
+            .revive_to(recalled.stats.health.layers());
+
+        let mut log = empty_log();
+        log.hand_minions.push(combat::CombatHandMinion {
+            seat: 0,
+            side: 0,
+            minion: recalled,
+        });
+        let next_id = state.next_instance_id;
+        write_back_combat_log(&catalog, &mut state, &log);
+
+        let hand = &state.players[0].hand;
+        assert_eq!(hand.len(), 1, "回手写入持久手牌");
+        let minion = hand[0].minion().expect("回手的是随从牌");
+        assert_eq!(minion.instance_id, next_id, "回手分配新的实例编号");
+        assert_eq!(minion.stats.attack.growth, 2, "保留成长");
+        assert_eq!(minion.stats.health.growth, 2, "保留成长");
+    }
+
+    #[test]
+    fn recalled_minion_is_dropped_when_persistent_hand_is_full() {
+        let catalog = test_catalog();
+        let (_, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
+        let card_id = catalog
+            .cards
+            .keys()
+            .next()
+            .expect("目录至少包含一张卡")
+            .clone();
+        while state.players[0].hand.len() < catalog.config.hand_slots {
+            let instance_id = state.next_instance_id;
+            state.next_instance_id = instance_id.saturating_add(1);
+            state.players[0]
+                .hand
+                .push(HandCard::effect(instance_id, &card_id));
+        }
+        let hands_before = state.players[0].hand.clone();
+
+        let mut log = empty_log();
+        log.hand_minions.push(combat::CombatHandMinion {
+            seat: 0,
+            side: 0,
+            minion: MinionInstance::new(&catalog, 42, &card_id, false),
+        });
+        write_back_combat_log(&catalog, &mut state, &log);
+
+        assert_eq!(
+            state.players[0].hand, hands_before,
+            "结算层手牌已满时丢弃回手"
+        );
     }
 
     #[test]

@@ -38,26 +38,130 @@
 | fringillidae | 燕雀科 | passeriformes | 科 | |
 | archaeopterygiformes | 始祖鸟目 | aves | 目 | |
 | archaeopterygidae | 始祖鸟科 | archaeopterygiformes | 科 | |
+| struthioniformes | 鸵鸟目 | aves | 目 | |
+| struthionidae | 鸵鸟科 | struthioniformes | 科 | 鸵鸟 |
+| sphenisciformes | 企鹅目 | aves | 目 | |
+| spheniscidae | 企鹅科 | sphenisciformes | 科 | 企鹅 |
+| psittaciformes | 鹦形目 | aves | 目 | |
+| psittacidae | 鹦鹉科 | psittaciformes | 科 | 鹦鹉 |
+| galliformes | 鸡形目 | aves | 目 | |
+| phasianidae | 雉科 | galliformes | 科 | 孔雀 |
+| procellariiformes | 鹱形目 | aves | 目 | |
+| diomedeidae | 信天翁科 | procellariiformes | 科 | 信天翁、海鸟 Token |
+| cathartiformes | 美洲鹫目 | aves | 目 | |
+| teratornithidae | 畸鸟科 | cathartiformes | 科 | 阿根廷巨鹰 |
+| corvidae | 鸦科 | passeriformes | 科 | 乌鸦 |
 | reptilia | 爬行纲 | chordata | 纲 | 玩法 reptile |
 | squamata | 有鳞目 | reptilia | 目 | |
 | varanidae | 巨蜥科 | squamata | 科 | |
 | squamata-incertae-sedis | 未定科 | squamata | 科 | 未定科 |
+| gekkonidae | 壁虎科 | squamata | 科 | 壁虎 |
+| lacertidae | 蜥蜴科 | squamata | 科 | 蜥蜴 |
+| elapidae | 眼镜蛇科 | squamata | 科 | 眼镜蛇 |
+| pythonidae | 蟒科 | squamata | 科 | 蟒蛇 |
+| testudines | 龟鳖目 | reptilia | 目 | |
+| testudinidae | 陆龟科 | testudines | 科 | 陆龟 |
+| cheloniidae | 海龟科 | testudines | 科 | 海龟 |
+| crocodilia | 鳄目 | reptilia | 目 | |
+| crocodylidae | 鳄科 | crocodilia | 科 | 鳄鱼、湾鳄 |
+| crocodylomorpha | 鳄形类 | reptilia | 目 | 按目处理，含化石类群 |
+| pholidosauridae | 似鳄科 | crocodylomorpha | 科 | 帝鳄 |
 | actinopterygii | 鱼纲 | chordata | 纲 | 玩法 fish |
-| actinopterygii-incertae-sedis | 未定科 | actinopterygii | 科 | 预留；现有卡牌无鱼纲物种 |
+| actinopterygii-incertae-sedis | 未定科 | actinopterygii | 科 | 鱼纲未定科节点；鱼苗 Token 与部分鱼纲卡牌使用 |
+| chondrichthyes | 软骨鱼纲 | chordata | 纲 | |
+| lamniformes | 鼠鲨目 | chondrichthyes | 目 | |
+| lamnidae | 鼠鲨科 | lamniformes | 科 | 大白鲨 |
+| orectolobiformes | 须鲨目 | chondrichthyes | 目 | |
+| rhincodontidae | 鲸鲨科 | orectolobiformes | 科 | 鲸鲨 |
+| sarcopterygii | 肉鳍鱼纲 | chordata | 纲 | |
+| coelacanthiformes | 腔棘鱼目 | sarcopterygii | 目 | |
+| coelacanthidae | 腔棘鱼科 | coelacanthiformes | 科 | 腔棘鱼 |
+| placodermi | 盾皮鱼纲 | chordata | 纲 | |
+| arthrodira | 节甲鱼目 | placodermi | 目 | |
+| dunkleosteidae | 邓氏鱼科 | arthrodira | 科 | 邓氏鱼 |
+| agnatha | 无颌纲 | chordata | 纲 | 并系群，按纲处理 |
+| myllokunmingiida | 昆明鱼目 | agnatha | 目 | |
+| haikouichthyidae | 海口鱼科 | myllokunmingiida | 科 | 海口鱼 |
+| cypriniformes | 鲤形目 | actinopterygii | 目 | |
+| cyprinidae | 鲤科 | cypriniformes | 科 | 鲤鱼 |
+| salmoniformes | 鲑形目 | actinopterygii | 目 | |
+| salmonidae | 鲑科 | salmoniformes | 科 | 鲑鱼 |
+| perciformes | 鲈形目 | actinopterygii | 目 | |
+| scombridae | 鲭科 | perciformes | 科 | 金枪鱼 |
+| pomacentridae | 雀鲷科 | perciformes | 科 | 小丑鱼 |
+| tetraodontiformes | 鲀形目 | actinopterygii | 目 | |
+| tetraodontidae | 鲀科 | tetraodontiformes | 科 | 河豚 |
+| syngnathiformes | 海龙目 | actinopterygii | 目 | 预留 |
+| syngnathidae | 海龙科 | syngnathiformes | 科 | 预留 |
+| beloniformes | 颌针鱼目 | actinopterygii | 目 | |
+| exocoetidae | 飞鱼科 | beloniformes | 科 | 飞鱼 |
+| anguilliformes | 鳗鲡目 | actinopterygii | 目 | |
+| anguillidae | 鳗鲡科 | anguilliformes | 科 | 鳗鲡 |
+| lophiiformes | 鮟鱇目 | actinopterygii | 目 | 预留 |
+| lophiidae | 鮟鱇科 | lophiiformes | 科 | 预留 |
 | arthropoda | 节肢动物门 | animalia | 门 | |
 | insecta | 昆虫纲 | arthropoda | 纲 | 玩法 insect |
 | blattodea | 蜚蠊目 | insecta | 目 | |
 | termitidae | 白蚁科 | blattodea | 科 | |
 | diptera | 双翅目 | insecta | 目 | |
 | drosophilidae | 果蝇科 | diptera | 科 | |
+| hymenoptera | 膜翅目 | insecta | 目 | |
+| formicidae | 蚁科 | hymenoptera | 科 | 蚂蚁 |
+| apidae | 蜜蜂科 | hymenoptera | 科 | 蜜蜂、蜜蜂皇后、工蜂 Token |
+| orthoptera | 直翅目 | insecta | 目 | |
+| acrididae | 蝗科 | orthoptera | 科 | 蝗虫 |
+| mantodea | 螳螂目 | insecta | 目 | |
+| mantidae | 螳螂科 | mantodea | 科 | 螳螂 |
+| lepidoptera | 鳞翅目 | insecta | 目 | |
+| papilionidae | 凤蝶科 | lepidoptera | 科 | 蝴蝶 |
+| coleoptera | 鞘翅目 | insecta | 目 | |
+| scarabaeidae | 金龟科 | coleoptera | 科 | 甲虫 |
+| odonata | 蜻蜓目 | insecta | 目 | |
+| libellulidae | 蜻科 | odonata | 科 | 蜻蜓 |
+| meganisoptera | 巨蜻蜓目 | insecta | 目 | 按目处理，已灭绝 |
+| meganeuridae | 巨脉蜓科 | meganisoptera | 科 | 巨脉蜻蜓 |
 | mollusca | 软体动物门 | animalia | 门 | |
 | cephalopoda | 头足纲 | mollusca | 纲 | 玩法 cephalopod |
 | octopoda | 八腕目 | cephalopoda | 目 | |
 | octopodidae | 章鱼科 | octopoda | 科 | |
+| nautilida | 鹦鹉螺目 | cephalopoda | 目 | |
+| nautilidae | 鹦鹉螺科 | nautilida | 科 | 鹦鹉螺 |
+| sepiida | 乌贼目 | cephalopoda | 目 | |
+| sepiidae | 乌贼科 | sepiida | 科 | 乌贼 |
+| myopsida | 闭眼目 | cephalopoda | 目 | |
+| loliginidae | 枪乌贼科 | myopsida | 科 | 枪乌贼 |
+| argonautidae | 船蛸科 | octopoda | 科 | 船蛸 |
+| oegopsida | 开眼目 | cephalopoda | 目 | |
+| architeuthidae | 大王乌贼科 | oegopsida | 科 | 大王乌贼 |
+| cranchiidae | 小头鱿科 | oegopsida | 科 | 大王酸浆鱿 |
+| vampyromorphida | 幽灵蛸目 | cephalopoda | 目 | |
+| vampyroteuthidae | 幽灵蛸科 | vampyromorphida | 科 | 吸血鬼乌贼 |
+| ammonitida | 菊石目 | cephalopoda | 目 | |
+| ammonitidae | 菊石科 | ammonitida | 科 | 菊石、菊石幼体 Token |
 | cnidaria | 刺胞动物门 | animalia | 门 | |
 | hydrozoa | 水螅纲 | cnidaria | 纲 | 玩法 cnidarian |
 | anthoathecata | 花水螅目 | hydrozoa | 目 | |
 | oceaniidae | 海螅水母科 | anthoathecata | 科 | |
+| hydridae | 水螅科 | anthoathecata | 科 | 水螅 |
+| siphonophorae | 管水母目 | hydrozoa | 目 | |
+| physaliidae | 僧帽水母科 | siphonophorae | 科 | 僧帽水母 |
+| anthozoa | 珊瑚纲 | cnidaria | 纲 | |
+| scleractinia | 石珊瑚目 | anthozoa | 目 | |
+| poritidae | 滨珊瑚科 | scleractinia | 科 | 珊瑚虫、珊瑚虫 Token |
+| acroporidae | 鹿角珊瑚科 | scleractinia | 科 | 鹿角珊瑚 |
+| alcyonacea | 软珊瑚目 | anthozoa | 目 | |
+| alcyoniidae | 软珊瑚科 | alcyonacea | 科 | 软珊瑚 |
+| coralliidae | 红珊瑚科 | alcyonacea | 科 | 红珊瑚 |
+| actiniaria | 海葵目 | anthozoa | 目 | |
+| actiniidae | 海葵科 | actiniaria | 科 | 海葵 |
+| scyphozoa | 钵水母纲 | cnidaria | 纲 | |
+| semaeostomeae | 旗口水母目 | scyphozoa | 目 | |
+| ulmaridae | 海月水母科 | semaeostomeae | 科 | 海月水母 |
+| rhizostomeae | 根口水母目 | scyphozoa | 目 | |
+| rhizostomatidae | 根口水母科 | rhizostomeae | 科 | 巨型水母 |
+| cubozoa | 立方水母纲 | cnidaria | 纲 | |
+| chirodropida | 多手立方水母目 | cubozoa | 目 | |
+| chirodropidae | 多手立方水母科 | chirodropida | 科 | 箱水母 |
 | plantae | 植物界 | | 界 | 玩法 plant |
 | bryophyta | 苔藓植物门 | plantae | 门 | |
 | bryopsida | 藓纲 | bryophyta | 纲 | |
@@ -86,9 +190,42 @@
 | oleaceae | 木犀科 | lamiales | 科 | |
 | malpighiales | 金虎尾目 | magnoliopsida | 目 | |
 | rhizophoraceae | 红树科 | malpighiales | 科 | |
+| asparagales | 天门冬目 | liliopsida | 目 | |
+| orchidaceae | 兰科 | asparagales | 科 | 兰花 |
+| ginkgophyta | 银杏门 | plantae | 门 | |
+| ginkgopsida | 银杏纲 | ginkgophyta | 纲 | |
+| ginkgoales | 银杏目 | ginkgopsida | 目 | |
+| ginkgoaceae | 银杏科 | ginkgoales | 科 | 银杏 |
 | plantae-incertae-sedis | 未定科 | plantae | 科 | 虚构 / 未定科 |
 | fungi | 真菌界 | | 界 | 玩法 fungus |
 | fungi-incertae-sedis | 未定科 | fungi | 科 | 虚构 / 未定科 |
+| ascomycota | 子囊菌门 | fungi | 门 | |
+| saccharomycetes | 酵母纲 | ascomycota | 纲 | |
+| saccharomycetales | 酵母目 | saccharomycetes | 目 | |
+| saccharomycetaceae | 酵母科 | saccharomycetales | 科 | 酵母 |
+| eurotiomycetes | 散囊菌纲 | ascomycota | 纲 | |
+| eurotiales | 散囊菌目 | eurotiomycetes | 目 | |
+| aspergillaceae | 曲霉科 | eurotiales | 科 | 青霉、曲霉 |
+| pezizomycetes | 盘菌纲 | ascomycota | 纲 | |
+| pezizales | 盘菌目 | pezizomycetes | 目 | |
+| tuberaceae | 块菌科 | pezizales | 科 | 松露 |
+| sordariomycetes | 粪壳菌纲 | ascomycota | 纲 | |
+| hypocreales | 肉座菌目 | sordariomycetes | 目 | |
+| ophiocordycipitaceae | 线虫草科 | hypocreales | 科 | 冬虫夏草 |
+| clavicipitaceae | 麦角科 | hypocreales | 科 | 麦角 |
+| basidiomycota | 担子菌门 | fungi | 门 | |
+| agaricomycetes | 伞菌纲 | basidiomycota | 纲 | |
+| agaricales | 伞菌目 | agaricomycetes | 目 | |
+| agaricaceae | 蘑菇科 | agaricales | 科 | 蘑菇、马勃 |
+| amanitaceae | 鹅膏科 | agaricales | 科 | 毒蝇伞 |
+| omphalotaceae | 光茸菌科 | agaricales | 科 | 香菇 |
+| physalacriaceae | 膨瑚菌科 | agaricales | 科 | 蜜环菌 |
+| prototaxales | 原杉菌目 | agaricomycetes | 目 | 分类存疑 |
+| prototaxitaceae | 原杉菌科 | prototaxales | 科 | 原杉菌 |
+| mucoromycota | 毛霉门 | fungi | 门 | 预留 |
+| mucoromycetes | 毛霉纲 | mucoromycota | 纲 | 预留 |
+| mucorales | 毛霉目 | mucoromycetes | 目 | 预留 |
+| mucoraceae | 毛霉科 | mucorales | 科 | 预留 |
 | bacteria | 细菌域 | | 界 | 玩法 bacteria |
 | proteobacteria | 变形菌门 | bacteria | 门 | |
 | gammaproteobacteria | γ-变形菌纲 | proteobacteria | 纲 | |
@@ -109,11 +246,57 @@
 | mycobacteriales | 分枝杆菌目 | actinomycetia | 目 | |
 | mycobacteriaceae | 分枝杆菌科 | mycobacteriales | 科 | |
 | bacteria-incertae-sedis | 未定科 | bacteria | 科 | 未定科 |
+| enterobacteriaceae | 肠杆菌科 | enterobacterales | 科 | 大肠杆菌、超级细菌、细菌 Token |
+| lactobacillaceae | 乳杆菌科 | lactobacillales | 科 | 乳酸菌 |
+| staphylococcaceae | 葡萄球菌科 | bacillales | 科 | 葡萄球菌 |
+| clostridia | 梭菌纲 | firmicutes | 纲 | |
+| clostridiales | 梭菌目 | clostridia | 目 | |
+| clostridiaceae | 梭菌科 | clostridiales | 科 | 破伤风梭菌 |
+| uroviricota | 有尾噬菌体门 | virus | 门 | 噬菌体按病毒归类 |
+| caudoviricetes | 有尾噬菌体纲 | uroviricota | 纲 | |
+| caudovirales | 有尾噬菌体目 | caudoviricetes | 目 | |
+| myoviridae | 肌尾噬菌体科 | caudovirales | 科 | 噬菌体 |
 | protozoa | 原生生物界 | | 界 | 玩法 protozoa |
 | apicomplexa | 顶复门 | protozoa | 门 | |
 | aconoidasida | 无腔纲 | apicomplexa | 纲 | |
 | haemosporida | 血孢子虫目 | aconoidasida | 目 | |
 | plasmodiidae | 疟原虫科 | haemosporida | 科 | |
+| ciliophora | 纤毛门 | protozoa | 门 | |
+| oligohymenophorea | 寡膜纲 | ciliophora | 纲 | |
+| peniculida | 草履虫目 | oligohymenophorea | 目 | |
+| parameciidae | 草履虫科 | peniculida | 科 | 草履虫 |
+| sessilida | 固着目 | oligohymenophorea | 目 | |
+| vorticellidae | 钟虫科 | sessilida | 科 | 钟虫 |
+| heterotrichea | 异毛纲 | ciliophora | 纲 | |
+| heterotrichida | 异毛目 | heterotrichea | 目 | |
+| stentoridae | 喇叭虫科 | heterotrichida | 科 | 喇叭虫 |
+| amoebozoa | 变形虫门 | protozoa | 门 | |
+| tubulinea | 管状根足纲 | amoebozoa | 纲 | |
+| euamoebida | 真变形虫目 | tubulinea | 目 | |
+| amoebidae | 变形虫科 | euamoebida | 科 | 变形虫、大变形虫、变形虫幼体 Token |
+| euglenozoa | 眼虫门 | protozoa | 门 | |
+| euglenoidea | 眼虫纲 | euglenozoa | 纲 | |
+| euglenida | 眼虫目 | euglenoidea | 目 | |
+| euglenaceae | 眼虫科 | euglenida | 科 | 眼虫 |
+| kinetoplastea | 动质体纲 | euglenozoa | 纲 | |
+| trypanosomatida | 锥虫目 | kinetoplastea | 目 | |
+| trypanosomatidae | 锥虫科 | trypanosomatida | 科 | 锥虫 |
+| metamonada | 后滴虫门 | protozoa | 门 | |
+| fornicata | 叉鞭毛纲 | metamonada | 纲 | |
+| diplomonadida | 双滴虫目 | fornicata | 目 | |
+| hexamitidae | 六鞭毛虫科 | diplomonadida | 科 | 贾第虫 |
+| foraminifera | 有孔虫门 | protozoa | 门 | |
+| globothalamea | 球房虫纲 | foraminifera | 纲 | |
+| rotaliida | 轮虫目 | globothalamea | 目 | |
+| rotaliidae | 轮虫科 | rotaliida | 科 | 有孔虫 |
+| radiolaria | 放射虫门 | protozoa | 门 | |
+| polycystinea | 多囊纲 | radiolaria | 纲 | |
+| spumellarida | 泡沫虫目 | polycystinea | 目 | |
+| spongodiscidae | 海绵盘虫科 | spumellarida | 科 | 放射虫 |
+| chlorophyta | 绿藻门 | protozoa | 门 | 按原生生物处理 |
+| chlorophyceae | 绿藻纲 | chlorophyta | 纲 | |
+| volvocales | 团藻目 | chlorophyceae | 目 | |
+| volvocaceae | 团藻科 | volvocales | 科 | 团藻、团藻细胞 Token |
 | virus | 病毒 | | 界 | 玩法 virus |
 | riboviria | 核糖病毒门 | virus | 门 | |
 | pisoniviricetes | 小核糖病毒纲 | riboviria | 纲 | |
@@ -133,6 +316,8 @@
 | flasuviricetes | 黄病毒纲 | riboviria | 纲 | |
 | amarillovirales | 黄病毒目 | flasuviricetes | 目 | |
 | flaviviridae | 黄病毒科 | amarillovirales | 科 | |
+| picornavirales | 小RNA病毒目 | pisoniviricetes | 目 | |
+| caliciviridae | 杯状病毒科 | picornavirales | 科 | 诺如病毒 |
 | nucleocytoviricota | 核质巨 DNA 病毒门 | virus | 门 | |
 | pokkesviricetes | 痘病毒纲 | nucleocytoviricota | 纲 | |
 | chitovirales | 痘病毒目 | pokkesviricetes | 目 | |

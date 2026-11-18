@@ -1,6 +1,6 @@
 use crate::data::Playstyle;
 
-use super::{Duration, Effect, Filter, Op, Params, Selector, TimesIf, Trigger, Zone};
+use super::{Duration, Effect, Filter, Op, Params, Pick, Selector, TimesIf, Trigger, Zone};
 
 /// 光环触发允许的原语。
 pub(crate) const AURA_OPS: &[Op] = &[Op::ModifyStats, Op::GrantKeyword];
@@ -34,6 +34,9 @@ pub(crate) const KEYWORD_BASES: &[&str] = &[
     "evolve",
     "breed",
     "assemble",
+    "poison",
+    "armor",
+    "stealth",
 ];
 /// `when` 允许的事件类触发，与 `scripts/audit_effects.py` 的 `WHEN_TRIGGERS` 一致。
 pub(crate) const WHEN_TRIGGERS: &[Trigger] = &[
@@ -56,11 +59,16 @@ const PARAM_KEYS: &[&str] = &[
     "amount",
     "attack",
     "health",
+    "perAttack",
+    "perHealth",
+    "maxCount",
+    "threshold",
     "value",
     "extra",
     "duration",
     "canKill",
     "healthOnly",
+    "statsOnly",
     "timesIf",
     "condition",
     "when",
@@ -97,6 +105,9 @@ pub(crate) fn op_spec(op: Op) -> OpSpec {
             &[
                 "attack",
                 "health",
+                "perAttack",
+                "perHealth",
+                "maxCount",
                 "duration",
                 "canKill",
                 "condition",
@@ -127,6 +138,18 @@ pub(crate) fn op_spec(op: Op) -> OpSpec {
             &["timesIf", "condition", "when"],
             &[],
         ),
+        Op::Mimic => (&["duration"], &["statsOnly"], &[]),
+        Op::Devour => (&["value"], &["duration", "when"], &[]),
+        Op::Detonate => (&["amount"], &["threshold", "when"], &[]),
+        Op::Convert => (
+            &["threshold"],
+            &["token", "card", "count", "when"],
+            &[&["token", "card"]],
+        ),
+        Op::Revive => (&["attack", "health"], &[], &[]),
+        Op::Recall => (&["to"], &[], &[]),
+        Op::Salvage => (&["pool", "count"], &[], &[]),
+        Op::Latent => (&["amount", "count"], &["threshold", "when"], &[]),
     }
 }
 
@@ -139,11 +162,16 @@ impl Params {
             "amount" => self.amount.is_some(),
             "attack" => self.attack.is_some(),
             "health" => self.health.is_some(),
+            "perAttack" => self.per_attack.is_some(),
+            "perHealth" => self.per_health.is_some(),
+            "maxCount" => self.max_count.is_some(),
+            "threshold" => self.threshold.is_some(),
             "value" => self.value.is_some(),
             "extra" => self.extra.is_some(),
             "duration" => self.duration.is_some(),
             "canKill" => self.can_kill.is_some(),
             "healthOnly" => self.health_only.is_some(),
+            "statsOnly" => self.stats_only.is_some(),
             "timesIf" => self.times_if.is_some(),
             "condition" => self.condition.is_some(),
             "when" => self.when.is_some(),
@@ -170,10 +198,30 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
     let mut errors = Vec::new();
     let params = &effect.params;
 
-    if matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura)
-        && !AURA_OPS.contains(&effect.op)
-    {
+    let is_aura = matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura);
+
+    if is_aura && !AURA_OPS.contains(&effect.op) {
         errors.push(format!("光环触发只能用 {AURA_OPS:?}，实为 {:?}", effect.op));
+    }
+
+    // 群聚参数只属于光环的 ModifyStats；非光环同名原语不得携带。
+    if (params.per_attack.is_some() || params.per_health.is_some() || params.max_count.is_some())
+        && !(is_aura && effect.op == Op::ModifyStats)
+    {
+        errors.push("perAttack/perHealth/maxCount 只能用于光环的 ModifyStats".to_string());
+    }
+
+    // 相邻选取只服务光环；其他触发器（战斗、招募）没有稳定的来源棋盘位置。
+    if !is_aura
+        && matches!(
+            effect.selector,
+            Selector::Side {
+                pick: Pick::Adjacent,
+                ..
+            }
+        )
+    {
+        errors.push("Adjacent 只能用于光环".to_string());
     }
 
     let (required, allowed, one_of) = op_spec(effect.op);
@@ -257,6 +305,20 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
         errors.push("Decompose 的 duration 只接受 permanent / combat".to_string());
     }
 
+    // 拟态同样需要可回滚的时长：`instant` 会让关键词在记录时被丢弃。
+    if effect.op == Op::Mimic
+        && params
+            .duration
+            .is_some_and(|duration| duration == Duration::Instant)
+    {
+        errors.push("Mimic 的 duration 只接受 permanent / combat".to_string());
+    }
+
+    // 吞噬的攻击力上限不能为负。
+    if effect.op == Op::Devour && params.value.is_some_and(|value| value < 0) {
+        errors.push("Devour 的 value 不能为负".to_string());
+    }
+
     if let Some(level) = &params.level
         && level != "current"
         && !is_digits(level)
@@ -280,7 +342,10 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
             errors.push(format!("keyword 非法 {:?}", keyword.keyword));
         }
         let layer = keyword.value.or(params.value);
-        if matches!(keyword.keyword.as_str(), "breed" | "assemble" | "contagion") {
+        if matches!(
+            keyword.keyword.as_str(),
+            "breed" | "assemble" | "contagion" | "armor"
+        ) {
             if layer.is_none() {
                 errors.push(format!("keyword {:?} 必须带层数", keyword.keyword));
             } else if layer.is_some_and(|value| value < 0) {

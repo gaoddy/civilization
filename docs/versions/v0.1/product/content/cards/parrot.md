@@ -1,0 +1,50 @@
+---
+id: parrot
+card_type: minion
+name: 鹦鹉
+playstyle: bird
+taxon: psittacidae
+subtype: bird
+level: 4
+era: feudal
+attack: 4
+health: 9
+skills: [battlecry-copy-hand-minion]
+is_scholar: false
+---
+
+# 鹦鹉
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | parrot |
+| 名称 | 鹦鹉 |
+| 类型 | 随从 |
+| 玩法 | 鸟纲 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹦形目 › 鹦鹉科 |
+| 关联分类 | 无 |
+| 子类 | 鸟类 |
+| 星级 | 4 |
+| 时代 | 封建 |
+| 攻击力 | 4 |
+| 生命值 | 9 |
+| 关键词 | 战吼 |
+| 技能 | battlecry-copy-hand-minion |
+| 学者 | 否 |
+| 英雄资格 | 否 |
+
+## 效果
+
+战吼：复制一张你手牌中的随从牌
+
+## 设计说明
+
+定位：手牌复制单位，提高关键随从的上手率。
+平衡边界：4 星 4/9，攻击力偏低、生命偏高。
+使用建议：手牌已有高价值随从时再入场，复制结果与当前手牌同步。
+
+## 出处
+
+非洲灰鹦鹉能模仿数百个词，并具备一定认知能力。

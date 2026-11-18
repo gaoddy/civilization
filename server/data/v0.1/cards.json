@@ -91,6 +91,78 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 9,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 13,
+    "id": "albatross",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "bird",
+    "skills": [
+      "deathrattle-summon-2-seabirds"
+    ],
+    "specialty": [],
+    "subtype": "bird",
+    "taxon": "diomedeidae"
+  },
+  {
+    "attack": 10,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 17,
+    "id": "ammonite",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "cephalopod",
+    "skills": [
+      "deathrattle-summon-2-ammonites"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "ammonitidae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "amoeba",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "protozoa",
+    "skills": [
+      "deathrattle-summon-amoeba-larva-1"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "amoebidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 3,
+    "id": "ant",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "insect",
+    "skills": [
+      "aura-other-insect-plus-0-plus-1"
+    ],
+    "specialty": [],
+    "subtype": "insect",
+    "taxon": "formicidae"
+  },
+  {
     "attack": null,
     "card_type": "effect",
     "cost": 2,
@@ -150,6 +222,42 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 12,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 18,
+    "id": "argentavis",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "bird",
+    "skills": [
+      "keyword-windfury"
+    ],
+    "specialty": [],
+    "subtype": "bird",
+    "taxon": "teratornithidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 9,
+    "id": "argonaut",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "cephalopod",
+    "skills": [
+      "keyword-stealth"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "argonautidae"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -196,6 +304,60 @@
     "taxon": "life-medical"
   },
   {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "industrial",
+    "health": 5,
+    "id": "aspergillus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "fungus",
+    "skills": [
+      "deathrattle-all-enemies-minus-1-health"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "aspergillaceae"
+  },
+  {
+    "attack": 6,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 11,
+    "id": "bacillus-anthracis",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "bacteria",
+    "skills": [
+      "detonate-2"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "bacillaceae"
+  },
+  {
+    "attack": 9,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 13,
+    "id": "bacteriophage",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "bacteria",
+    "skills": [
+      "convert-3"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "myoviridae"
+  },
+  {
     "attack": 1,
     "card_type": "minion",
     "cost": null,
@@ -219,6 +381,24 @@
     "taxon": "termitidae"
   },
   {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 4,
+    "id": "bee",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "insect",
+    "skills": [
+      "deathrattle-summon-1-worker-bee"
+    ],
+    "specialty": [],
+    "subtype": "insect",
+    "taxon": "apidae"
+  },
+  {
     "attack": 5,
     "card_type": "minion",
     "cost": null,
@@ -235,6 +415,24 @@
     "specialty": [],
     "subtype": "music",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 8,
+    "id": "beetle",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "insect",
+    "skills": [
+      "keyword-taunt"
+    ],
+    "specialty": [],
+    "subtype": "insect",
+    "taxon": "scarabaeidae"
   },
   {
     "attack": 2,
@@ -319,6 +517,42 @@
     "taxon": "phenomenon"
   },
   {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 6,
+    "id": "blue-ringed-octopus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "cephalopod",
+    "skills": [
+      "keyword-poison"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "octopodidae"
+  },
+  {
+    "attack": 6,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 12,
+    "id": "box-jellyfish",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "cnidarian",
+    "skills": [
+      "keyword-poison"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "chirodropidae"
+  },
+  {
     "attack": 5,
     "card_type": "minion",
     "cost": null,
@@ -391,6 +625,24 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 8,
+    "id": "butterfly",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "insect",
+    "skills": [
+      "deathrattle-friendly-insect-growth-twice"
+    ],
+    "specialty": [],
+    "subtype": "insect",
+    "taxon": "papilionidae"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -412,6 +664,24 @@
     ],
     "subtype": "invention",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 3,
+    "id": "carp",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "fish",
+    "skills": [
+      "aura-other-fish-plus-0-plus-1"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "cyprinidae"
   },
   {
     "attack": 2,
@@ -489,6 +759,187 @@
     ],
     "subtype": "bacteria",
     "taxon": "vibrionaceae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "industrial",
+    "health": 5,
+    "id": "clostridium-tetani",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "bacteria",
+    "skills": [
+      "keyword-contagion"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "clostridiaceae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 3,
+    "id": "clownfish",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "fish",
+    "skills": [
+      "battlecry-friendly-fish-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "pomacentridae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 6,
+    "id": "cobra",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "reptile",
+    "skills": [
+      "keyword-poison"
+    ],
+    "specialty": [],
+    "subtype": "reptile",
+    "taxon": "elapidae"
+  },
+  {
+    "attack": 6,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 12,
+    "id": "coelacanth",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "fish",
+    "skills": [
+      "keyword-reborn"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "coelacanthidae"
+  },
+  {
+    "attack": 8,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 11,
+    "id": "colossal-squid",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "cephalopod",
+    "skills": [
+      "keyword-stealth",
+      "mimic-2"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "cranchiidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 4,
+    "id": "coral-polyp",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "cnidarian",
+    "skills": [
+      "deathrattle-summon-coral-polyp"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "poritidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 9,
+    "id": "cordyceps",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "fungus",
+    "skills": [
+      "deathrattle-summon-cordyceps"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "ophiocordycipitaceae"
+  },
+  {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 8,
+    "id": "crocodile",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "reptile",
+    "skills": [
+      "keyword-poison"
+    ],
+    "specialty": [],
+    "subtype": "reptile",
+    "taxon": "crocodylidae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 6,
+    "id": "crow",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "bird",
+    "skills": [
+      "battlecry-friendly-bird-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "bird",
+    "taxon": "corvidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 4,
+    "id": "cuttlefish",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "cephalopod",
+    "skills": [
+      "mimic-1"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "sepiidae"
   },
   {
     "attack": 0,
@@ -569,6 +1020,25 @@
     "attack": 4,
     "card_type": "minion",
     "cost": null,
+    "era": "modern",
+    "health": 8,
+    "id": "dengue-virus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "virus",
+    "skills": [
+      "keyword-contagion",
+      "latent-3"
+    ],
+    "specialty": [],
+    "subtype": "virus",
+    "taxon": "flaviviridae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
     "era": "industrial",
     "health": 5,
     "id": "dianbaoji",
@@ -610,6 +1080,25 @@
     ],
     "subtype": "communication",
     "taxon": "information-computing"
+  },
+  {
+    "attack": 8,
+    "card_type": "minion",
+    "cost": null,
+    "era": "industrial",
+    "health": 11,
+    "id": "difference-engine",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "machine",
+    "skills": [
+      "keyword-assemble-2",
+      "salvage-machine"
+    ],
+    "specialty": [],
+    "subtype": "robot",
+    "taxon": "automation"
   },
   {
     "attack": null,
@@ -713,6 +1202,42 @@
     "taxon": "felidae"
   },
   {
+    "attack": 7,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 10,
+    "id": "dragonfly",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "insect",
+    "skills": [
+      "keyword-windfury"
+    ],
+    "specialty": [],
+    "subtype": "insect",
+    "taxon": "libellulidae"
+  },
+  {
+    "attack": 10,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 17,
+    "id": "dunkleosteus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "fish",
+    "skills": [
+      "deathrattle-summon-fish-fry-3"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "dunkleosteidae"
+  },
+  {
     "attack": 2,
     "card_type": "minion",
     "cost": null,
@@ -752,6 +1277,24 @@
     ],
     "subtype": "megastructure",
     "taxon": "power-energy"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 3,
+    "id": "e-coli",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "bacteria",
+    "skills": [
+      "deathrattle-friendly-bacteria-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "enterobacteriaceae"
   },
   {
     "attack": 8,
@@ -794,6 +1337,24 @@
     "specialty": [],
     "subtype": "engineering",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 9,
+    "id": "eel",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "fish",
+    "skills": [
+      "aura-school-fish-1"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "anguillidae"
   },
   {
     "attack": 0,
@@ -882,6 +1443,24 @@
     "taxon": "phenomenon"
   },
   {
+    "attack": 7,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 10,
+    "id": "ergot",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "fungus",
+    "skills": [
+      "decompose-ally-kill-pre-kill"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "clavicipitaceae"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -903,6 +1482,24 @@
     ],
     "subtype": "mathematics",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 5,
+    "id": "euglena",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "protozoa",
+    "skills": [
+      "aura-other-protozoa-plus-1-attack"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "euglenaceae"
   },
   {
     "attack": 5,
@@ -1125,6 +1722,60 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 3,
+    "id": "fly-agaric",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "fungus",
+    "skills": [
+      "decompose-kill-original"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "amanitaceae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 4,
+    "id": "flying-fish",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "fish",
+    "skills": [
+      "keyword-optimal-attack"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "exocoetidae"
+  },
+  {
+    "attack": 6,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 12,
+    "id": "foraminifera",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "protozoa",
+    "skills": [
+      "devour-4"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "rotaliidae"
+  },
+  {
     "attack": 8,
     "card_type": "minion",
     "cost": null,
@@ -1212,6 +1863,135 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "gear",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "machine",
+    "skills": [
+      "keyword-assemble-1"
+    ],
+    "specialty": [],
+    "subtype": "robot",
+    "taxon": "automation"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 3,
+    "id": "gecko",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "reptile",
+    "skills": [
+      "keyword-taunt"
+    ],
+    "specialty": [],
+    "subtype": "reptile",
+    "taxon": "gekkonidae"
+  },
+  {
+    "attack": 8,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 12,
+    "id": "giant-amoeba",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "protozoa",
+    "skills": [
+      "devour-4",
+      "deathrattle-summon-2-amoeba-larvae-2-2"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "amoebidae"
+  },
+  {
+    "attack": 8,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 12,
+    "id": "giant-jellyfish",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "cnidarian",
+    "skills": [
+      "revive-3"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "rhizostomatidae"
+  },
+  {
+    "attack": 7,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 10,
+    "id": "giant-squid",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "cephalopod",
+    "skills": [
+      "keyword-stealth",
+      "devour-3"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "architeuthidae"
+  },
+  {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 7,
+    "id": "giardia",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "protozoa",
+    "skills": [
+      "devour-3"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "hexamitidae"
+  },
+  {
+    "attack": 7,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 11,
+    "id": "ginkgo",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "plant",
+    "skills": [
+      "keyword-sow",
+      "keyword-breed-1"
+    ],
+    "specialty": [],
+    "subtype": "tree",
+    "taxon": "ginkgoaceae"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -1233,6 +2013,24 @@
     ],
     "subtype": "mathematics",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 8,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 10,
+    "id": "golden-eagle",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "bird",
+    "skills": [
+      "dive-1"
+    ],
+    "specialty": [],
+    "subtype": "bird",
+    "taxon": "accipitridae"
   },
   {
     "attack": 7,
@@ -1333,6 +2131,24 @@
     "specialty": [],
     "subtype": "worker",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 8,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 10,
+    "id": "great-white-shark",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "fish",
+    "skills": [
+      "keyword-optimal-attack"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "lamnidae"
   },
   {
     "attack": null,
@@ -1461,6 +2277,24 @@
     ],
     "subtype": "invention",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "haikouichthys",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "fish",
+    "skills": [
+      "battlecry-friendly-fish-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "haikouichthyidae"
   },
   {
     "attack": 0,
@@ -1600,6 +2434,25 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 8,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 12,
+    "id": "honey-fungus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "fungus",
+    "skills": [
+      "decompose-kill-original",
+      "deathrattle-summon-2-spores-2-2"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "physalacriaceae"
+  },
+  {
     "attack": 6,
     "card_type": "minion",
     "cost": null,
@@ -1695,6 +2548,24 @@
     "specialty": [],
     "subtype": "crop",
     "taxon": "poaceae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "hydra",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "cnidarian",
+    "skills": [
+      "revive-1"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "hydridae"
   },
   {
     "attack": 3,
@@ -1994,6 +2865,24 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 8,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 10,
+    "id": "komodo-dragon",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "reptile",
+    "skills": [
+      "keyword-poison"
+    ],
+    "specialty": [],
+    "subtype": "reptile",
+    "taxon": "varanidae"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -2060,6 +2949,24 @@
     "specialty": [],
     "subtype": null,
     "taxon": "phenomenon"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "lactobacillus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "bacteria",
+    "skills": [
+      "battlecry-friendly-bacteria-plus-0-plus-1"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "lactobacillaceae"
   },
   {
     "attack": 0,
@@ -2289,6 +3196,42 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "lizard",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "reptile",
+    "skills": [
+      "deathrattle-random-enemy-minus-1-attack"
+    ],
+    "specialty": [],
+    "subtype": "reptile",
+    "taxon": "lacertidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 5,
+    "id": "locust",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "insect",
+    "skills": [
+      "battlecry-other-insect-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "insect",
+    "taxon": "acrididae"
+  },
+  {
     "attack": 4,
     "card_type": "minion",
     "cost": null,
@@ -2409,6 +3352,42 @@
     "taxon": "plasmodiidae"
   },
   {
+    "attack": 9,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 13,
+    "id": "mammoth",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "mammal",
+    "skills": [
+      "aura-school-mammal"
+    ],
+    "specialty": [],
+    "subtype": "beast",
+    "taxon": "elephantidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 6,
+    "id": "mantis",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "insect",
+    "skills": [
+      "keyword-optimal-attack"
+    ],
+    "specialty": [],
+    "subtype": "insect",
+    "taxon": "mantidae"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -2435,6 +3414,25 @@
     ],
     "subtype": "physics",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 11,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 17,
+    "id": "meganeura",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "insect",
+    "skills": [
+      "keyword-windfury",
+      "keyword-optimal-attack"
+    ],
+    "specialty": [],
+    "subtype": "insect",
+    "taxon": "meganeuridae"
   },
   {
     "attack": 2,
@@ -2584,6 +3582,42 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 8,
+    "id": "mimic-octopus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "cephalopod",
+    "skills": [
+      "mimic-3"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "octopodidae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "moon-jellyfish",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "cnidarian",
+    "skills": [
+      "deathrattle-friendly-cnidarian-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "ulmaridae"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -2694,6 +3728,43 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 4,
+    "id": "mushroom",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "fungus",
+    "skills": [
+      "deathrattle-summon-spore-token-2"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "agaricaceae"
+  },
+  {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "industrial",
+    "health": 7,
+    "id": "mycobacterium-tuberculosis",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "bacteria",
+    "skills": [
+      "keyword-contagion",
+      "keyword-armor-1"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "mycobacteriaceae"
+  },
+  {
     "attack": null,
     "card_type": "effect",
     "cost": 1,
@@ -2765,6 +3836,42 @@
     "specialty": [],
     "subtype": "robot",
     "taxon": "automation"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 3,
+    "id": "nautilus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "cephalopod",
+    "skills": [
+      "keyword-taunt"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "nautilidae"
+  },
+  {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 8,
+    "id": "neanderthal",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "mammal",
+    "skills": [
+      "aura-adjacent-mammal"
+    ],
+    "specialty": [],
+    "subtype": "primate",
+    "taxon": "hominidae"
   },
   {
     "attack": 6,
@@ -2878,6 +3985,24 @@
     "attack": 4,
     "card_type": "minion",
     "cost": null,
+    "era": "modern",
+    "health": 5,
+    "id": "norovirus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "virus",
+    "skills": [
+      "detonate-2"
+    ],
+    "specialty": [],
+    "subtype": "virus",
+    "taxon": "caliciviridae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
     "era": "classical",
     "health": 5,
     "id": "nupao",
@@ -2916,6 +4041,61 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "octopus-larva",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "cephalopod",
+    "skills": [
+      "deathrattle-summon-octopus-larva-1"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "octopodidae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 6,
+    "id": "orchid",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "plant",
+    "skills": [
+      "keyword-sow",
+      "battlecry-friendly-plant-kingdom-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "flower",
+    "taxon": "orchidaceae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 5,
+    "id": "ostrich",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "bird",
+    "skills": [
+      "keyword-windfury"
+    ],
+    "specialty": [],
+    "subtype": "bird",
+    "taxon": "struthionidae"
+  },
+  {
     "attack": null,
     "card_type": "effect",
     "cost": 1,
@@ -2932,6 +4112,42 @@
     "specialty": [],
     "subtype": null,
     "taxon": "phenomenon"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "paramecium",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "protozoa",
+    "skills": [
+      "battlecry-friendly-protozoa-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "parameciidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 9,
+    "id": "parrot",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "bird",
+    "skills": [
+      "battlecry-copy-hand-minion"
+    ],
+    "specialty": [],
+    "subtype": "bird",
+    "taxon": "psittacidae"
   },
   {
     "attack": 7,
@@ -2968,6 +4184,60 @@
     "specialty": [],
     "subtype": "mecha",
     "taxon": "automation"
+  },
+  {
+    "attack": 6,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 12,
+    "id": "peafowl",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "bird",
+    "skills": [
+      "battlecry-other-bird-plus-1-plus-1"
+    ],
+    "specialty": [],
+    "subtype": "bird",
+    "taxon": "phasianidae"
+  },
+  {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 8,
+    "id": "penguin",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "bird",
+    "skills": [
+      "keyword-taunt"
+    ],
+    "specialty": [],
+    "subtype": "bird",
+    "taxon": "spheniscidae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 3,
+    "id": "penicillium",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "fungus",
+    "skills": [
+      "battlecry-friendly-fungus-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "aspergillaceae"
   },
   {
     "attack": 4,
@@ -3011,6 +4281,24 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 8,
+    "id": "plasmodium",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "protozoa",
+    "skills": [
+      "deathrattle-summon-schizont"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "plasmodiidae"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -3034,6 +4322,97 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 5,
+    "id": "portuguese-man-of-war",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "cnidarian",
+    "skills": [
+      "keyword-poison"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "physaliidae"
+  },
+  {
+    "attack": 10,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 17,
+    "id": "prototaxites",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "fungus",
+    "skills": [
+      "deathrattle-summon-3-spores-3-3"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "prototaxitaceae"
+  },
+  {
+    "attack": 6,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 11,
+    "id": "puffball",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "fungus",
+    "skills": [
+      "deathrattle-all-enemies-damage-2"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "agaricaceae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 7,
+    "id": "pufferfish",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "fish",
+    "skills": [
+      "keyword-taunt",
+      "deathrattle-random-enemy-damage-2"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "tetraodontidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 4,
+    "id": "pulley",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "machine",
+    "skills": [
+      "keyword-assemble-1"
+    ],
+    "specialty": [],
+    "subtype": "robot",
+    "taxon": "automation"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -3055,6 +4434,24 @@
     ],
     "subtype": "mathematics",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 9,
+    "id": "python",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "reptile",
+    "skills": [
+      "keyword-armor-2"
+    ],
+    "specialty": [],
+    "subtype": "reptile",
+    "taxon": "pythonidae"
   },
   {
     "attack": 6,
@@ -3154,6 +4551,24 @@
     "taxon": "information-computing"
   },
   {
+    "attack": 6,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 11,
+    "id": "queen-bee",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "insect",
+    "skills": [
+      "battlecry-summon-2-worker-bees"
+    ],
+    "specialty": [],
+    "subtype": "insect",
+    "taxon": "apidae"
+  },
+  {
     "attack": 12,
     "card_type": "minion",
     "cost": null,
@@ -3198,6 +4613,42 @@
     ],
     "subtype": "literature",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 7,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 11,
+    "id": "radiolarian",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "protozoa",
+    "skills": [
+      "deathrattle-all-enemies-damage-2"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "spongodiscidae"
+  },
+  {
+    "attack": 7,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 11,
+    "id": "red-coral",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "cnidarian",
+    "skills": [
+      "revive-2"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "coralliidae"
   },
   {
     "attack": null,
@@ -3372,6 +4823,43 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "industrial",
+    "health": 8,
+    "id": "salmon",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "fish",
+    "skills": [
+      "deathrattle-summon-fish-fry-2"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "salmonidae"
+  },
+  {
+    "attack": 8,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 13,
+    "id": "saltwater-crocodile",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "reptile",
+    "skills": [
+      "keyword-poison",
+      "keyword-armor-1"
+    ],
+    "specialty": [],
+    "subtype": "reptile",
+    "taxon": "crocodylidae"
+  },
+  {
     "attack": 2,
     "card_type": "minion",
     "cost": null,
@@ -3388,6 +4876,25 @@
     "specialty": [],
     "subtype": "primitive",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 10,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 16,
+    "id": "sarcosuchus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "reptile",
+    "skills": [
+      "keyword-poison",
+      "keyword-armor-2"
+    ],
+    "specialty": [],
+    "subtype": "reptile",
+    "taxon": "pholidosauridae"
   },
   {
     "attack": 0,
@@ -3416,6 +4923,43 @@
     ],
     "subtype": "quantum",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 3,
+    "id": "sea-anemone",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "cnidarian",
+    "skills": [
+      "keyword-taunt",
+      "keyword-armor-1"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "actiniidae"
+  },
+  {
+    "attack": 6,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 12,
+    "id": "sea-turtle",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "reptile",
+    "skills": [
+      "keyword-armor-2"
+    ],
+    "specialty": [],
+    "subtype": "reptile",
+    "taxon": "cheloniidae"
   },
   {
     "attack": 5,
@@ -3517,6 +5061,24 @@
     "specialty": [],
     "subtype": "primitive",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 6,
+    "id": "shiitake",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "fungus",
+    "skills": [
+      "decompose-kill-original"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "omphalotaceae"
   },
   {
     "attack": 8,
@@ -3795,6 +5357,24 @@
     "taxon": "poxviridae"
   },
   {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 8,
+    "id": "soft-coral",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "cnidarian",
+    "skills": [
+      "revive-1"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "alcyoniidae"
+  },
+  {
     "attack": 8,
     "card_type": "minion",
     "cost": null,
@@ -3838,6 +5418,60 @@
     "taxon": "poaceae"
   },
   {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 5,
+    "id": "squid",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "cephalopod",
+    "skills": [
+      "keyword-stealth"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "loliginidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 9,
+    "id": "staghorn-coral",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "cnidarian",
+    "skills": [
+      "deathrattle-summon-2-coral-polyps"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "acroporidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 4,
+    "id": "staphylococcus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "bacteria",
+    "skills": [
+      "combatstart-random-enemy-contagion-1"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "staphylococcaceae"
+  },
+  {
     "attack": 5,
     "card_type": "minion",
     "cost": null,
@@ -3861,6 +5495,24 @@
     "taxon": "power-energy"
   },
   {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 4,
+    "id": "stentor",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "protozoa",
+    "skills": [
+      "devour-1"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "stentoridae"
+  },
+  {
     "attack": 7,
     "card_type": "minion",
     "cost": null,
@@ -3877,6 +5529,24 @@
     "specialty": [],
     "subtype": "engineering",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "streptococcus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "bacteria",
+    "skills": [
+      "combatstart-random-enemy-contagion-1"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "streptococcaceae"
   },
   {
     "attack": 0,
@@ -3918,6 +5588,25 @@
     "specialty": [],
     "subtype": "primitive",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 10,
+    "card_type": "minion",
+    "cost": null,
+    "era": "future",
+    "health": 16,
+    "id": "superbug",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "bacteria",
+    "skills": [
+      "detonate-2",
+      "convert-4"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "enterobacteriaceae"
   },
   {
     "attack": 6,
@@ -4040,6 +5729,24 @@
     "taxon": "plantae-incertae-sedis"
   },
   {
+    "attack": 9,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 13,
+    "id": "termite-king",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "insect",
+    "skills": [
+      "deathrattle-summon-3-termites"
+    ],
+    "specialty": [],
+    "subtype": "insect",
+    "taxon": "termitidae"
+  },
+  {
     "attack": 0,
     "card_type": "minion",
     "cost": null,
@@ -4106,6 +5813,24 @@
     "attack": 4,
     "card_type": "minion",
     "cost": null,
+    "era": "primitive",
+    "health": 7,
+    "id": "tortoise",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "reptile",
+    "skills": [
+      "keyword-armor-1"
+    ],
+    "specialty": [],
+    "subtype": "reptile",
+    "taxon": "testudinidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
     "era": "feudal",
     "health": 4,
     "id": "toushiji",
@@ -4144,6 +5869,42 @@
     "taxon": "phenomenon"
   },
   {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 8,
+    "id": "truffle",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "fungus",
+    "skills": [
+      "decompose-friendly-death-original"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "tuberaceae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 7,
+    "id": "trypanosome",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "protozoa",
+    "skills": [
+      "devour-2"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "trypanosomatidae"
+  },
+  {
     "attack": 3,
     "card_type": "minion",
     "cost": null,
@@ -4163,6 +5924,24 @@
     ],
     "subtype": "primitive",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 5,
+    "id": "tuna",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "fish",
+    "skills": [
+      "keyword-windfury"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "scombridae"
   },
   {
     "attack": 6,
@@ -4189,6 +5968,42 @@
     "taxon": "information-computing"
   },
   {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 6,
+    "id": "turritopsis",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "cnidarian",
+    "skills": [
+      "recall-1"
+    ],
+    "specialty": [],
+    "subtype": "ocean",
+    "taxon": "oceaniidae"
+  },
+  {
+    "attack": 6,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 12,
+    "id": "vampire-squid",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "cephalopod",
+    "skills": [
+      "mimic-2"
+    ],
+    "specialty": [],
+    "subtype": "mollusk",
+    "taxon": "vampyroteuthidae"
+  },
+  {
     "attack": 8,
     "card_type": "minion",
     "cost": null,
@@ -4206,6 +6021,42 @@
     "specialty": [],
     "subtype": "architecture",
     "taxon": "plantae-incertae-sedis"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "industrial",
+    "health": 6,
+    "id": "vibrio-cholerae",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "bacteria",
+    "skills": [
+      "detonate-2"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "vibrionaceae"
+  },
+  {
+    "attack": 11,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 18,
+    "id": "volvox",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 7,
+    "playstyle": "protozoa",
+    "skills": [
+      "deathrattle-summon-4-volvox-cells"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "volvocaceae"
   },
   {
     "attack": 0,
@@ -4233,6 +6084,24 @@
     ],
     "subtype": "mathematics",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "cost": null,
+    "era": "primitive",
+    "health": 3,
+    "id": "vorticella",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 2,
+    "playstyle": "protozoa",
+    "skills": [
+      "deathrattle-friendly-protozoa-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "protozoa",
+    "taxon": "vorticellidae"
   },
   {
     "attack": 1,
@@ -4292,6 +6161,24 @@
     "specialty": [],
     "subtype": "unit",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 8,
+    "card_type": "minion",
+    "cost": null,
+    "era": "modern",
+    "health": 12,
+    "id": "whale-shark",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "fish",
+    "skills": [
+      "aura-school-fish-2"
+    ],
+    "specialty": [],
+    "subtype": "fish",
+    "taxon": "rhincodontidae"
   },
   {
     "attack": 10,
@@ -4547,6 +6434,24 @@
     "taxon": "hominidae"
   },
   {
+    "attack": 1,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "yeast",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 1,
+    "playstyle": "fungus",
+    "skills": [
+      "deathrattle-summon-spore-token-1"
+    ],
+    "specialty": [],
+    "subtype": "fungus",
+    "taxon": "saccharomycetaceae"
+  },
+  {
     "attack": 3,
     "card_type": "minion",
     "cost": null,
@@ -4568,6 +6473,25 @@
     ],
     "subtype": "mammal",
     "taxon": "canidae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
+    "era": "feudal",
+    "health": 8,
+    "id": "yersinia-pestis",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "bacteria",
+    "skills": [
+      "keyword-contagion",
+      "detonate-1"
+    ],
+    "specialty": [],
+    "subtype": "bacteria",
+    "taxon": "yersiniaceae"
   },
   {
     "attack": 2,

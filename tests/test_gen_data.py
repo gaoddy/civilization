@@ -18,15 +18,21 @@ import gen_client_data  # noqa: E402
 class GenCardDataTest(unittest.TestCase):
     def test_counts_and_sorted_ids(self):
         data = json.loads(gen_card_data.build(ROOT)["cards.json"])
-        self.assertEqual(len(data), 240)
-        self.assertEqual(sum(c["card_type"] == "minion" for c in data), 203)
+        self.assertEqual(len(data), 346)
+        self.assertEqual(sum(c["card_type"] == "minion" for c in data), 309)
         self.assertEqual([c["id"] for c in data], sorted(c["id"] for c in data))
 
     def test_skills_and_tokens(self):
         out = gen_card_data.build(ROOT)
-        self.assertEqual(len(json.loads(out["skills.json"])), 131)
-        self.assertEqual([t["id"] for t in json.loads(out["tokens.json"])],
-                         ["hela-cell-token", "seedling", "synthetic-cell-token"])
+        skills_dir = ROOT / "docs/versions/v0.1/product/content/skills"
+        expected = sum(1 for path in skills_dir.glob("*.md") if path.name != "README.md")
+        self.assertEqual(len(json.loads(out["skills.json"])), expected)
+        tokens = json.loads(out["tokens.json"])
+        ids = [t["id"] for t in tokens]
+        self.assertEqual(ids, sorted(ids))
+        self.assertGreaterEqual(len(ids), 3)
+        self.assertLessEqual(
+            {"hela-cell-token", "seedling", "synthetic-cell-token"}, set(ids))
 
     def test_skill_effects_are_structured(self):
         skills = json.loads(gen_card_data.build(ROOT)["skills.json"])
@@ -57,8 +63,8 @@ class GenClientDataTest(unittest.TestCase):
         data = gen_client_data.build(ROOT)
         cards = json.loads(data["cards.json"])
         skills = json.loads(data["skills.json"])
-        self.assertEqual(len(cards), 240)
-        self.assertEqual(len(skills), 131)
+        self.assertEqual(len(cards), 346)
+        self.assertEqual(len(skills), 197)
         self.assertEqual(sum(card["is_hero"] for card in cards), 32)
         self.assertEqual([card["id"] for card in cards], sorted(card["id"] for card in cards))
 
@@ -72,8 +78,11 @@ class GenClientDataTest(unittest.TestCase):
 
     def test_tokens_have_display_cost(self):
         tokens = json.loads(gen_client_data.build(ROOT)["tokens.json"])
-        self.assertEqual([token["id"] for token in tokens],
-                         ["hela-cell-token", "seedling", "synthetic-cell-token"])
+        ids = [token["id"] for token in tokens]
+        self.assertEqual(ids, sorted(ids))
+        self.assertGreaterEqual(len(ids), 3)
+        self.assertLessEqual(
+            {"hela-cell-token", "seedling", "synthetic-cell-token"}, set(ids))
         for token in tokens:
             self.assertEqual(token["display_cost"], 3)
 

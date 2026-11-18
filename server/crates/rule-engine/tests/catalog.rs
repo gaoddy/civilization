@@ -7,9 +7,9 @@ use rule_engine::effects::{Compare, Effect, Op, Pick, Selector, Side, Trigger, v
 #[test]
 fn loads_all_committed_data() {
     let catalog = test_catalog();
-    assert_eq!(catalog.cards.len(), 240);
-    assert_eq!(catalog.skills.len(), 131);
-    assert_eq!(catalog.tokens.len(), 3);
+    assert_eq!(catalog.cards.len(), 346);
+    assert_eq!(catalog.skills.len(), 197);
+    assert_eq!(catalog.tokens.len(), 21);
     assert_eq!(catalog.cards.values().filter(|c| c.is_hero).count(), 32);
 }
 

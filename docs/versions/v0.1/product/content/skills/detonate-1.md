@@ -1,0 +1,19 @@
+---
+id: detonate-1
+text: 引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 1 点伤害
+effects: OnCombatStart|Detonate|enemy:single|amount=1
+---
+
+# detonate-1
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | detonate-1 |
+| 关键词 | 无 |
+| 确定性替换 | 不适用 |
+
+## 效果
+
+引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 1 点伤害

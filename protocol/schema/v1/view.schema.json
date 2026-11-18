@@ -39,7 +39,7 @@
     "BoardMinion": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "minionId", "cardId", "golden", "attack", "health", "keywords", "sellable"],
+      "required": ["index", "minionId", "cardId", "golden", "attack", "health", "keywords", "stealth", "sellable"],
       "properties": {
         "index": { "type": "integer", "minimum": 0, "description": "该随从在当前存活随从序列中的下标；上界由 PlayerView.boardSlots 决定" },
         "minionId": { "type": "string", "description": "随从实例 id" },
@@ -48,6 +48,7 @@
         "attack": { "type": "integer", "minimum": 0 },
         "health": { "type": "integer", "minimum": 0 },
         "keywords": { "type": "array", "items": { "type": "string" }, "description": "当前生效的关键词，取值为英文 id" },
+        "stealth": { "type": "boolean", "description": "当前是否仍处于潜行：携带 stealth 关键词且尚未被打破" },
         "sellable": { "type": "boolean" },
         "stats": { "$ref": "view.schema.json#/$defs/MinionStats", "description": "攻防分层构成；旧客户端可忽略" }
       }

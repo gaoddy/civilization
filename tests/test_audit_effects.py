@@ -2,14 +2,25 @@ import pathlib, sys, tempfile, unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import audit_effects
+import validate_docs
 SKILLS = ROOT / "docs/versions/v0.1/product/content/skills"
+
+def expected_counts():
+    """按技能文档实际内容统计技能数与效果段数，避免写死数字。"""
+    paths = [path for path in SKILLS.glob("*.md") if path.name != "README.md"]
+    segments = 0
+    for path in paths:
+        effects, _ = validate_docs.parse_effects(validate_docs.parse_front_matter(path)["effects"])
+        segments += len(effects)
+    return len(paths), segments
 
 class AuditEffectsTest(unittest.TestCase):
     def test_all_committed_skills_are_clean(self):
         report = audit_effects.audit(SKILLS)
+        count, segments = expected_counts()
         self.assertEqual(report.violations, [])
-        self.assertEqual(report.skill_count, 131)
-        self.assertEqual(sum(report.matrix.values()), 122)  # 131 个技能中 109 个有 effects，共 122 段效果
+        self.assertEqual(report.skill_count, count)
+        self.assertEqual(sum(report.matrix.values()), segments)
     def test_times_if_without_times_is_reported(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = pathlib.Path(tmp) / "bad.md"

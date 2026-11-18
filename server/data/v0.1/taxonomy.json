@@ -16,6 +16,26 @@
       "rank": "class"
     },
     {
+      "id": "acrididae",
+      "parent": "orthoptera",
+      "rank": "family"
+    },
+    {
+      "id": "acroporidae",
+      "parent": "scleractinia",
+      "rank": "family"
+    },
+    {
+      "id": "actiniaria",
+      "parent": "anthozoa",
+      "rank": "order"
+    },
+    {
+      "id": "actiniidae",
+      "parent": "actiniaria",
+      "rank": "family"
+    },
+    {
       "id": "actinobacteria",
       "parent": "bacteria",
       "rank": "phylum"
@@ -36,9 +56,44 @@
       "rank": "family"
     },
     {
+      "id": "agaricaceae",
+      "parent": "agaricales",
+      "rank": "family"
+    },
+    {
+      "id": "agaricales",
+      "parent": "agaricomycetes",
+      "rank": "order"
+    },
+    {
+      "id": "agaricomycetes",
+      "parent": "basidiomycota",
+      "rank": "class"
+    },
+    {
+      "id": "agnatha",
+      "parent": "chordata",
+      "rank": "class"
+    },
+    {
+      "id": "alcyonacea",
+      "parent": "anthozoa",
+      "rank": "order"
+    },
+    {
+      "id": "alcyoniidae",
+      "parent": "alcyonacea",
+      "rank": "family"
+    },
+    {
       "id": "alphaproteobacteria",
       "parent": "proteobacteria",
       "rank": "class"
+    },
+    {
+      "id": "amanitaceae",
+      "parent": "agaricales",
+      "rank": "family"
     },
     {
       "id": "amarillovirales",
@@ -46,9 +101,39 @@
       "rank": "order"
     },
     {
+      "id": "ammonitida",
+      "parent": "cephalopoda",
+      "rank": "order"
+    },
+    {
+      "id": "ammonitidae",
+      "parent": "ammonitida",
+      "rank": "family"
+    },
+    {
+      "id": "amoebidae",
+      "parent": "euamoebida",
+      "rank": "family"
+    },
+    {
+      "id": "amoebozoa",
+      "parent": "protozoa",
+      "rank": "phylum"
+    },
+    {
       "id": "angiospermae",
       "parent": "plantae",
       "rank": "phylum"
+    },
+    {
+      "id": "anguillidae",
+      "parent": "anguilliformes",
+      "rank": "family"
+    },
+    {
+      "id": "anguilliformes",
+      "parent": "actinopterygii",
+      "rank": "order"
     },
     {
       "id": "animalia",
@@ -61,9 +146,19 @@
       "rank": "order"
     },
     {
+      "id": "anthozoa",
+      "parent": "cnidaria",
+      "rank": "class"
+    },
+    {
       "id": "apicomplexa",
       "parent": "protozoa",
       "rank": "phylum"
+    },
+    {
+      "id": "apidae",
+      "parent": "hymenoptera",
+      "rank": "family"
     },
     {
       "id": "archaeopterygidae",
@@ -73,6 +168,21 @@
     {
       "id": "archaeopterygiformes",
       "parent": "aves",
+      "rank": "order"
+    },
+    {
+      "id": "architeuthidae",
+      "parent": "oegopsida",
+      "rank": "family"
+    },
+    {
+      "id": "argonautidae",
+      "parent": "octopoda",
+      "rank": "family"
+    },
+    {
+      "id": "arthrodira",
+      "parent": "placodermi",
       "rank": "order"
     },
     {
@@ -89,6 +199,21 @@
       "id": "artiodactyla",
       "parent": "mammalia",
       "rank": "order"
+    },
+    {
+      "id": "ascomycota",
+      "parent": "fungi",
+      "rank": "phylum"
+    },
+    {
+      "id": "asparagales",
+      "parent": "liliopsida",
+      "rank": "order"
+    },
+    {
+      "id": "aspergillaceae",
+      "parent": "eurotiales",
+      "rank": "family"
     },
     {
       "id": "asteraceae",
@@ -136,6 +261,16 @@
       "rank": "family"
     },
     {
+      "id": "basidiomycota",
+      "parent": "fungi",
+      "rank": "phylum"
+    },
+    {
+      "id": "beloniformes",
+      "parent": "actinopterygii",
+      "rank": "order"
+    },
+    {
       "id": "blattodea",
       "parent": "insecta",
       "rank": "order"
@@ -166,6 +301,11 @@
       "rank": "class"
     },
     {
+      "id": "caliciviridae",
+      "parent": "picornavirales",
+      "rank": "family"
+    },
+    {
       "id": "canidae",
       "parent": "carnivora",
       "rank": "family"
@@ -176,9 +316,39 @@
       "rank": "order"
     },
     {
+      "id": "cathartiformes",
+      "parent": "aves",
+      "rank": "order"
+    },
+    {
+      "id": "caudovirales",
+      "parent": "caudoviricetes",
+      "rank": "order"
+    },
+    {
+      "id": "caudoviricetes",
+      "parent": "uroviricota",
+      "rank": "class"
+    },
+    {
       "id": "cephalopoda",
       "parent": "mollusca",
       "rank": "class"
+    },
+    {
+      "id": "cheloniidae",
+      "parent": "testudines",
+      "rank": "family"
+    },
+    {
+      "id": "chirodropida",
+      "parent": "cubozoa",
+      "rank": "order"
+    },
+    {
+      "id": "chirodropidae",
+      "parent": "chirodropida",
+      "rank": "family"
     },
     {
       "id": "chitovirales",
@@ -186,14 +356,69 @@
       "rank": "order"
     },
     {
+      "id": "chlorophyceae",
+      "parent": "chlorophyta",
+      "rank": "class"
+    },
+    {
+      "id": "chlorophyta",
+      "parent": "protozoa",
+      "rank": "phylum"
+    },
+    {
+      "id": "chondrichthyes",
+      "parent": "chordata",
+      "rank": "class"
+    },
+    {
       "id": "chordata",
       "parent": "animalia",
       "rank": "phylum"
     },
     {
+      "id": "ciliophora",
+      "parent": "protozoa",
+      "rank": "phylum"
+    },
+    {
+      "id": "clavicipitaceae",
+      "parent": "hypocreales",
+      "rank": "family"
+    },
+    {
+      "id": "clostridia",
+      "parent": "firmicutes",
+      "rank": "class"
+    },
+    {
+      "id": "clostridiaceae",
+      "parent": "clostridiales",
+      "rank": "family"
+    },
+    {
+      "id": "clostridiales",
+      "parent": "clostridia",
+      "rank": "order"
+    },
+    {
       "id": "cnidaria",
       "parent": "animalia",
       "rank": "phylum"
+    },
+    {
+      "id": "coelacanthidae",
+      "parent": "coelacanthiformes",
+      "rank": "family"
+    },
+    {
+      "id": "coelacanthiformes",
+      "parent": "sarcopterygii",
+      "rank": "order"
+    },
+    {
+      "id": "coleoptera",
+      "parent": "insecta",
+      "rank": "order"
     },
     {
       "id": "columbidae",
@@ -206,14 +431,69 @@
       "rank": "order"
     },
     {
+      "id": "coralliidae",
+      "parent": "alcyonacea",
+      "rank": "family"
+    },
+    {
       "id": "coronaviridae",
       "parent": "nidovirales",
+      "rank": "family"
+    },
+    {
+      "id": "corvidae",
+      "parent": "passeriformes",
       "rank": "family"
     },
     {
       "id": "craft",
       "parent": null,
       "rank": "kingdom"
+    },
+    {
+      "id": "cranchiidae",
+      "parent": "oegopsida",
+      "rank": "family"
+    },
+    {
+      "id": "crocodilia",
+      "parent": "reptilia",
+      "rank": "order"
+    },
+    {
+      "id": "crocodylidae",
+      "parent": "crocodilia",
+      "rank": "family"
+    },
+    {
+      "id": "crocodylomorpha",
+      "parent": "reptilia",
+      "rank": "order"
+    },
+    {
+      "id": "cubozoa",
+      "parent": "cnidaria",
+      "rank": "class"
+    },
+    {
+      "id": "cyprinidae",
+      "parent": "cypriniformes",
+      "rank": "family"
+    },
+    {
+      "id": "cypriniformes",
+      "parent": "actinopterygii",
+      "rank": "order"
+    },
+    {
+      "id": "diomedeidae",
+      "parent": "procellariiformes",
+      "rank": "family"
+    },
+    {
+      "id": "diplomonadida",
+      "parent": "fornicata",
+      "rank": "order"
     },
     {
       "id": "diptera",
@@ -223,6 +503,16 @@
     {
       "id": "drosophilidae",
       "parent": "diptera",
+      "rank": "family"
+    },
+    {
+      "id": "dunkleosteidae",
+      "parent": "arthrodira",
+      "rank": "family"
+    },
+    {
+      "id": "elapidae",
+      "parent": "squamata",
       "rank": "family"
     },
     {
@@ -236,8 +526,53 @@
       "rank": "order"
     },
     {
+      "id": "enterobacteriaceae",
+      "parent": "enterobacterales",
+      "rank": "family"
+    },
+    {
       "id": "equidae",
       "parent": "perissodactyla",
+      "rank": "family"
+    },
+    {
+      "id": "euamoebida",
+      "parent": "tubulinea",
+      "rank": "order"
+    },
+    {
+      "id": "euglenaceae",
+      "parent": "euglenida",
+      "rank": "family"
+    },
+    {
+      "id": "euglenida",
+      "parent": "euglenoidea",
+      "rank": "order"
+    },
+    {
+      "id": "euglenoidea",
+      "parent": "euglenozoa",
+      "rank": "class"
+    },
+    {
+      "id": "euglenozoa",
+      "parent": "protozoa",
+      "rank": "phylum"
+    },
+    {
+      "id": "eurotiales",
+      "parent": "eurotiomycetes",
+      "rank": "order"
+    },
+    {
+      "id": "eurotiomycetes",
+      "parent": "ascomycota",
+      "rank": "class"
+    },
+    {
+      "id": "exocoetidae",
+      "parent": "beloniformes",
       "rank": "family"
     },
     {
@@ -276,6 +611,21 @@
       "rank": "family"
     },
     {
+      "id": "foraminifera",
+      "parent": "protozoa",
+      "rank": "phylum"
+    },
+    {
+      "id": "formicidae",
+      "parent": "hymenoptera",
+      "rank": "family"
+    },
+    {
+      "id": "fornicata",
+      "parent": "metamonada",
+      "rank": "class"
+    },
+    {
       "id": "fringillidae",
       "parent": "passeriformes",
       "rank": "family"
@@ -291,8 +641,43 @@
       "rank": "family"
     },
     {
+      "id": "galliformes",
+      "parent": "aves",
+      "rank": "order"
+    },
+    {
       "id": "gammaproteobacteria",
       "parent": "proteobacteria",
+      "rank": "class"
+    },
+    {
+      "id": "gekkonidae",
+      "parent": "squamata",
+      "rank": "family"
+    },
+    {
+      "id": "ginkgoaceae",
+      "parent": "ginkgoales",
+      "rank": "family"
+    },
+    {
+      "id": "ginkgoales",
+      "parent": "ginkgopsida",
+      "rank": "order"
+    },
+    {
+      "id": "ginkgophyta",
+      "parent": "plantae",
+      "rank": "phylum"
+    },
+    {
+      "id": "ginkgopsida",
+      "parent": "ginkgophyta",
+      "rank": "class"
+    },
+    {
+      "id": "globothalamea",
+      "parent": "foraminifera",
       "rank": "class"
     },
     {
@@ -301,14 +686,49 @@
       "rank": "order"
     },
     {
+      "id": "haikouichthyidae",
+      "parent": "myllokunmingiida",
+      "rank": "family"
+    },
+    {
+      "id": "heterotrichea",
+      "parent": "ciliophora",
+      "rank": "class"
+    },
+    {
+      "id": "heterotrichida",
+      "parent": "heterotrichea",
+      "rank": "order"
+    },
+    {
+      "id": "hexamitidae",
+      "parent": "diplomonadida",
+      "rank": "family"
+    },
+    {
       "id": "hominidae",
       "parent": "primates",
+      "rank": "family"
+    },
+    {
+      "id": "hydridae",
+      "parent": "anthoathecata",
       "rank": "family"
     },
     {
       "id": "hydrozoa",
       "parent": "cnidaria",
       "rank": "class"
+    },
+    {
+      "id": "hymenoptera",
+      "parent": "insecta",
+      "rank": "order"
+    },
+    {
+      "id": "hypocreales",
+      "parent": "sordariomycetes",
+      "rank": "order"
     },
     {
       "id": "information-computing",
@@ -326,6 +746,21 @@
       "rank": "class"
     },
     {
+      "id": "kinetoplastea",
+      "parent": "euglenozoa",
+      "rank": "class"
+    },
+    {
+      "id": "lacertidae",
+      "parent": "squamata",
+      "rank": "family"
+    },
+    {
+      "id": "lactobacillaceae",
+      "parent": "lactobacillales",
+      "rank": "family"
+    },
+    {
       "id": "lactobacillales",
       "parent": "bacilli",
       "rank": "order"
@@ -336,6 +771,26 @@
       "rank": "order"
     },
     {
+      "id": "lamnidae",
+      "parent": "lamniformes",
+      "rank": "family"
+    },
+    {
+      "id": "lamniformes",
+      "parent": "chondrichthyes",
+      "rank": "order"
+    },
+    {
+      "id": "lepidoptera",
+      "parent": "insecta",
+      "rank": "order"
+    },
+    {
+      "id": "libellulidae",
+      "parent": "odonata",
+      "rank": "family"
+    },
+    {
       "id": "life-medical",
       "parent": "craft",
       "rank": "technique"
@@ -344,6 +799,21 @@
       "id": "liliopsida",
       "parent": "angiospermae",
       "rank": "class"
+    },
+    {
+      "id": "loliginidae",
+      "parent": "myopsida",
+      "rank": "family"
+    },
+    {
+      "id": "lophiidae",
+      "parent": "lophiiformes",
+      "rank": "family"
+    },
+    {
+      "id": "lophiiformes",
+      "parent": "actinopterygii",
+      "rank": "order"
     },
     {
       "id": "magnoliopsida",
@@ -376,6 +846,31 @@
       "rank": "family"
     },
     {
+      "id": "mantidae",
+      "parent": "mantodea",
+      "rank": "family"
+    },
+    {
+      "id": "mantodea",
+      "parent": "insecta",
+      "rank": "order"
+    },
+    {
+      "id": "meganeuridae",
+      "parent": "meganisoptera",
+      "rank": "family"
+    },
+    {
+      "id": "meganisoptera",
+      "parent": "insecta",
+      "rank": "order"
+    },
+    {
+      "id": "metamonada",
+      "parent": "protozoa",
+      "rank": "phylum"
+    },
+    {
       "id": "mollusca",
       "parent": "animalia",
       "rank": "phylum"
@@ -391,6 +886,26 @@
       "rank": "order"
     },
     {
+      "id": "mucoraceae",
+      "parent": "mucorales",
+      "rank": "family"
+    },
+    {
+      "id": "mucorales",
+      "parent": "mucoromycetes",
+      "rank": "order"
+    },
+    {
+      "id": "mucoromycetes",
+      "parent": "mucoromycota",
+      "rank": "class"
+    },
+    {
+      "id": "mucoromycota",
+      "parent": "fungi",
+      "rank": "phylum"
+    },
+    {
       "id": "muridae",
       "parent": "rodentia",
       "rank": "family"
@@ -404,6 +919,31 @@
       "id": "mycobacteriales",
       "parent": "actinomycetia",
       "rank": "order"
+    },
+    {
+      "id": "myllokunmingiida",
+      "parent": "agnatha",
+      "rank": "order"
+    },
+    {
+      "id": "myopsida",
+      "parent": "cephalopoda",
+      "rank": "order"
+    },
+    {
+      "id": "myoviridae",
+      "parent": "caudovirales",
+      "rank": "family"
+    },
+    {
+      "id": "nautilida",
+      "parent": "cephalopoda",
+      "rank": "order"
+    },
+    {
+      "id": "nautilidae",
+      "parent": "nautilida",
+      "rank": "family"
     },
     {
       "id": "nidovirales",
@@ -431,9 +971,44 @@
       "rank": "family"
     },
     {
+      "id": "odonata",
+      "parent": "insecta",
+      "rank": "order"
+    },
+    {
+      "id": "oegopsida",
+      "parent": "cephalopoda",
+      "rank": "order"
+    },
+    {
       "id": "oleaceae",
       "parent": "lamiales",
       "rank": "family"
+    },
+    {
+      "id": "oligohymenophorea",
+      "parent": "ciliophora",
+      "rank": "class"
+    },
+    {
+      "id": "omphalotaceae",
+      "parent": "agaricales",
+      "rank": "family"
+    },
+    {
+      "id": "ophiocordycipitaceae",
+      "parent": "hypocreales",
+      "rank": "family"
+    },
+    {
+      "id": "orchidaceae",
+      "parent": "asparagales",
+      "rank": "family"
+    },
+    {
+      "id": "orectolobiformes",
+      "parent": "chondrichthyes",
+      "rank": "order"
     },
     {
       "id": "ortervirales",
@@ -443,6 +1018,21 @@
     {
       "id": "orthomyxoviridae",
       "parent": "articulavirales",
+      "rank": "family"
+    },
+    {
+      "id": "orthoptera",
+      "parent": "insecta",
+      "rank": "order"
+    },
+    {
+      "id": "papilionidae",
+      "parent": "lepidoptera",
+      "rank": "family"
+    },
+    {
+      "id": "parameciidae",
+      "parent": "peniculida",
       "rank": "family"
     },
     {
@@ -456,9 +1046,34 @@
       "rank": "order"
     },
     {
+      "id": "peniculida",
+      "parent": "oligohymenophorea",
+      "rank": "order"
+    },
+    {
+      "id": "perciformes",
+      "parent": "actinopterygii",
+      "rank": "order"
+    },
+    {
       "id": "perissodactyla",
       "parent": "mammalia",
       "rank": "order"
+    },
+    {
+      "id": "pezizales",
+      "parent": "pezizomycetes",
+      "rank": "order"
+    },
+    {
+      "id": "pezizomycetes",
+      "parent": "ascomycota",
+      "rank": "class"
+    },
+    {
+      "id": "phasianidae",
+      "parent": "galliformes",
+      "rank": "family"
     },
     {
       "id": "phenomenon",
@@ -466,8 +1081,33 @@
       "rank": "phenomenon"
     },
     {
+      "id": "pholidosauridae",
+      "parent": "crocodylomorpha",
+      "rank": "family"
+    },
+    {
+      "id": "physalacriaceae",
+      "parent": "agaricales",
+      "rank": "family"
+    },
+    {
+      "id": "physaliidae",
+      "parent": "siphonophorae",
+      "rank": "family"
+    },
+    {
+      "id": "picornavirales",
+      "parent": "pisoniviricetes",
+      "rank": "order"
+    },
+    {
       "id": "pisoniviricetes",
       "parent": "riboviria",
+      "rank": "class"
+    },
+    {
+      "id": "placodermi",
+      "parent": "chordata",
       "rank": "class"
     },
     {
@@ -501,6 +1141,11 @@
       "rank": "class"
     },
     {
+      "id": "polycystinea",
+      "parent": "radiolaria",
+      "rank": "class"
+    },
+    {
       "id": "polypodiaceae",
       "parent": "polypodiales",
       "rank": "family"
@@ -514,6 +1159,16 @@
       "id": "polypodiopsida",
       "parent": "pteridophyta",
       "rank": "class"
+    },
+    {
+      "id": "pomacentridae",
+      "parent": "perciformes",
+      "rank": "family"
+    },
+    {
+      "id": "poritidae",
+      "parent": "scleractinia",
+      "rank": "family"
     },
     {
       "id": "power-energy",
@@ -536,6 +1191,11 @@
       "rank": "order"
     },
     {
+      "id": "procellariiformes",
+      "parent": "aves",
+      "rank": "order"
+    },
+    {
       "id": "production-construction",
       "parent": "craft",
       "rank": "technique"
@@ -546,13 +1206,43 @@
       "rank": "phylum"
     },
     {
+      "id": "prototaxales",
+      "parent": "agaricomycetes",
+      "rank": "order"
+    },
+    {
+      "id": "prototaxitaceae",
+      "parent": "prototaxales",
+      "rank": "family"
+    },
+    {
       "id": "protozoa",
       "parent": null,
       "rank": "kingdom"
     },
     {
+      "id": "psittacidae",
+      "parent": "psittaciformes",
+      "rank": "family"
+    },
+    {
+      "id": "psittaciformes",
+      "parent": "aves",
+      "rank": "order"
+    },
+    {
       "id": "pteridophyta",
       "parent": "plantae",
+      "rank": "phylum"
+    },
+    {
+      "id": "pythonidae",
+      "parent": "squamata",
+      "rank": "family"
+    },
+    {
+      "id": "radiolaria",
+      "parent": "protozoa",
       "rank": "phylum"
     },
     {
@@ -576,9 +1266,24 @@
       "rank": "family"
     },
     {
+      "id": "rhincodontidae",
+      "parent": "orectolobiformes",
+      "rank": "family"
+    },
+    {
       "id": "rhizophoraceae",
       "parent": "malpighiales",
       "rank": "family"
+    },
+    {
+      "id": "rhizostomatidae",
+      "parent": "rhizostomeae",
+      "rank": "family"
+    },
+    {
+      "id": "rhizostomeae",
+      "parent": "scyphozoa",
+      "rank": "order"
     },
     {
       "id": "riboviria",
@@ -601,9 +1306,44 @@
       "rank": "order"
     },
     {
+      "id": "rotaliida",
+      "parent": "globothalamea",
+      "rank": "order"
+    },
+    {
+      "id": "rotaliidae",
+      "parent": "rotaliida",
+      "rank": "family"
+    },
+    {
       "id": "rutaceae",
       "parent": "sapindales",
       "rank": "family"
+    },
+    {
+      "id": "saccharomycetaceae",
+      "parent": "saccharomycetales",
+      "rank": "family"
+    },
+    {
+      "id": "saccharomycetales",
+      "parent": "saccharomycetes",
+      "rank": "order"
+    },
+    {
+      "id": "saccharomycetes",
+      "parent": "ascomycota",
+      "rank": "class"
+    },
+    {
+      "id": "salmonidae",
+      "parent": "salmoniformes",
+      "rank": "family"
+    },
+    {
+      "id": "salmoniformes",
+      "parent": "actinopterygii",
+      "rank": "order"
     },
     {
       "id": "salviniaceae",
@@ -621,6 +1361,81 @@
       "rank": "order"
     },
     {
+      "id": "sarcopterygii",
+      "parent": "chordata",
+      "rank": "class"
+    },
+    {
+      "id": "scarabaeidae",
+      "parent": "coleoptera",
+      "rank": "family"
+    },
+    {
+      "id": "scleractinia",
+      "parent": "anthozoa",
+      "rank": "order"
+    },
+    {
+      "id": "scombridae",
+      "parent": "perciformes",
+      "rank": "family"
+    },
+    {
+      "id": "scyphozoa",
+      "parent": "cnidaria",
+      "rank": "class"
+    },
+    {
+      "id": "semaeostomeae",
+      "parent": "scyphozoa",
+      "rank": "order"
+    },
+    {
+      "id": "sepiida",
+      "parent": "cephalopoda",
+      "rank": "order"
+    },
+    {
+      "id": "sepiidae",
+      "parent": "sepiida",
+      "rank": "family"
+    },
+    {
+      "id": "sessilida",
+      "parent": "oligohymenophorea",
+      "rank": "order"
+    },
+    {
+      "id": "siphonophorae",
+      "parent": "hydrozoa",
+      "rank": "order"
+    },
+    {
+      "id": "sordariomycetes",
+      "parent": "ascomycota",
+      "rank": "class"
+    },
+    {
+      "id": "spheniscidae",
+      "parent": "sphenisciformes",
+      "rank": "family"
+    },
+    {
+      "id": "sphenisciformes",
+      "parent": "aves",
+      "rank": "order"
+    },
+    {
+      "id": "spongodiscidae",
+      "parent": "spumellarida",
+      "rank": "family"
+    },
+    {
+      "id": "spumellarida",
+      "parent": "polycystinea",
+      "rank": "order"
+    },
+    {
       "id": "squamata",
       "parent": "reptilia",
       "rank": "order"
@@ -631,13 +1446,48 @@
       "rank": "family"
     },
     {
+      "id": "staphylococcaceae",
+      "parent": "bacillales",
+      "rank": "family"
+    },
+    {
+      "id": "stentoridae",
+      "parent": "heterotrichida",
+      "rank": "family"
+    },
+    {
       "id": "streptococcaceae",
       "parent": "lactobacillales",
       "rank": "family"
     },
     {
+      "id": "struthionidae",
+      "parent": "struthioniformes",
+      "rank": "family"
+    },
+    {
+      "id": "struthioniformes",
+      "parent": "aves",
+      "rank": "order"
+    },
+    {
       "id": "suidae",
       "parent": "artiodactyla",
+      "rank": "family"
+    },
+    {
+      "id": "syngnathidae",
+      "parent": "syngnathiformes",
+      "rank": "family"
+    },
+    {
+      "id": "syngnathiformes",
+      "parent": "actinopterygii",
+      "rank": "order"
+    },
+    {
+      "id": "teratornithidae",
+      "parent": "cathartiformes",
       "rank": "family"
     },
     {
@@ -646,9 +1496,69 @@
       "rank": "family"
     },
     {
+      "id": "testudines",
+      "parent": "reptilia",
+      "rank": "order"
+    },
+    {
+      "id": "testudinidae",
+      "parent": "testudines",
+      "rank": "family"
+    },
+    {
+      "id": "tetraodontidae",
+      "parent": "tetraodontiformes",
+      "rank": "family"
+    },
+    {
+      "id": "tetraodontiformes",
+      "parent": "actinopterygii",
+      "rank": "order"
+    },
+    {
       "id": "transport",
       "parent": "craft",
       "rank": "technique"
+    },
+    {
+      "id": "trypanosomatida",
+      "parent": "kinetoplastea",
+      "rank": "order"
+    },
+    {
+      "id": "trypanosomatidae",
+      "parent": "trypanosomatida",
+      "rank": "family"
+    },
+    {
+      "id": "tuberaceae",
+      "parent": "pezizales",
+      "rank": "family"
+    },
+    {
+      "id": "tubulinea",
+      "parent": "amoebozoa",
+      "rank": "class"
+    },
+    {
+      "id": "ulmaridae",
+      "parent": "semaeostomeae",
+      "rank": "family"
+    },
+    {
+      "id": "uroviricota",
+      "parent": "virus",
+      "rank": "phylum"
+    },
+    {
+      "id": "vampyromorphida",
+      "parent": "cephalopoda",
+      "rank": "order"
+    },
+    {
+      "id": "vampyroteuthidae",
+      "parent": "vampyromorphida",
+      "rank": "family"
     },
     {
       "id": "varanidae",
@@ -668,6 +1578,21 @@
     {
       "id": "virus-incertae-sedis",
       "parent": "virus",
+      "rank": "family"
+    },
+    {
+      "id": "volvocaceae",
+      "parent": "volvocales",
+      "rank": "family"
+    },
+    {
+      "id": "volvocales",
+      "parent": "chlorophyceae",
+      "rank": "order"
+    },
+    {
+      "id": "vorticellidae",
+      "parent": "sessilida",
       "rank": "family"
     },
     {

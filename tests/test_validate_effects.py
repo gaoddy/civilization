@@ -6,6 +6,7 @@
 
 import pathlib
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
@@ -136,6 +137,55 @@ class ParseEffectsTest(unittest.TestCase):
         effects, errors = vd.parse_effects("OnPlayEffect|Copy|self|from=hand,type=minion,to=hand")
         self.assertEqual(errors, [])
         self.assertEqual(len(effects), 1)
+
+
+class PlaystyleMechanicsTest(unittest.TestCase):
+    """新关键词、原语与原语玩法归属的校验；只依赖合成 YAML。"""
+
+    def _yaml(self, body):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "doc.md"
+            path.write_text("---\n" + body + "\n---\n", encoding="utf-8")
+            return vd.parse_front_matter(path)
+
+    def test_armor_and_detonate_skill_accepted(self):
+        skill = self._yaml(
+            "id: test-skill\n"
+            "text: 战斗开始时：引爆\n"
+            "keyword: armor 2\n"
+            "effects: OnCombatStart|Detonate|enemy:single|amount=2,threshold=3"
+        )
+        self.assertEqual(skill["keyword"], "armor 2")
+        effects, errors = vd.parse_effects(skill["effects"])
+        self.assertEqual(errors, [])
+        self.assertEqual(effects[0]["op"], "Detonate")
+        granted, errors = vd.parse_effects("OnDeath|GrantKeyword|self|keyword=armor 2")
+        self.assertEqual(errors, [])
+        self.assertEqual(granted[0]["params"]["keyword"], "armor 2")
+
+    def test_poison_rejected_for_mammal(self):
+        bad = self._yaml("id: bad-poison\nplaystyle: mammal\nskills: [test-skill]")
+        self.assertTrue(vd.keyword_errors(bad, "poison"))
+        good = self._yaml("id: ok-poison\nplaystyle: reptile\nskills: [test-skill]")
+        self.assertEqual(vd.keyword_errors(good, "poison"), [])
+
+    def test_mimic_rejected_outside_cephalopod(self):
+        skill_map = {
+            "test-mimic": self._yaml(
+                "id: test-mimic\neffects: OnPlay|Mimic|enemy:single|duration=combat"
+            )
+        }
+        bad = self._yaml("id: bad-mimic\nplaystyle: mammal\nskills: [test-mimic]")
+        self.assertTrue(vd.mechanism_errors(bad, skill_map))
+        good = self._yaml("id: ok-mimic\nplaystyle: cephalopod\nskills: [test-mimic]")
+        self.assertEqual(vd.mechanism_errors(good, skill_map), [])
+
+    def test_adjacent_selector_requires_friendly_side(self):
+        effects, errors = vd.parse_effects("Aura|ModifyStats|enemy:adjacent|attack=1")
+        self.assertEqual(effects, [])
+        self.assertTrue(any("friendly" in e for e in errors))
+        effects, errors = vd.parse_effects("Aura|ModifyStats|friendly:adjacent|attack=1")
+        self.assertEqual(errors, [])
 
 
 if __name__ == "__main__":

@@ -10,9 +10,11 @@ use std::collections::BTreeMap;
 use common::{effects_of, minion, reborn_count, setup_with_gold};
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
 use rule_engine::data::{Card, CardType, Playstyle, Skill, Token};
+use rule_engine::effects::Duration;
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
-use rule_engine::state::{InstanceId, MinionInstance, Seat};
+use rule_engine::settle::Pairing;
+use rule_engine::state::{InstanceId, MinionInstance, Phase, Seat};
 
 /// 插入一张合成随从卡，携带若干 `(keyword, effects)` 技能。
 fn add_card(
@@ -335,6 +337,391 @@ fn enemy_death_triggers_for_opponent() {
     );
 
     assert_eq!(mods_attack(final_minion(&log, 1)), 2);
+}
+
+// ---------------------------------------------------------------------------
+// 复苏与回手
+// ---------------------------------------------------------------------------
+
+fn action_count(log: &CombatLog, predicate: impl Fn(&CombatAction) -> bool) -> usize {
+    log.actions
+        .iter()
+        .filter(|action| predicate(action))
+        .count()
+}
+
+#[test]
+fn revive_restores_with_bonus_and_only_once() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "reviver",
+        Playstyle::Mammal,
+        3,
+        2,
+        &[(None, "OnDeath|Revive|self|attack=2,health=2")],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 10, 100, &[]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "reviver")],
+        &[minion(&engine.catalog, 2, "brute")],
+    );
+
+    let revived = action_count(
+        &log,
+        |action| matches!(action, CombatAction::Revived { minion } if *minion == 1),
+    );
+    assert_eq!(revived, 1, "复苏只结算一次");
+    assert_eq!(
+        deaths(&log).iter().filter(|id| **id == 1).count(),
+        2,
+        "随从死亡两次：第一次复苏，第二次不再复苏"
+    );
+
+    let final_minion = final_minion(&log, 1);
+    assert_eq!(final_minion.stats.attack.layers(), 5, "3/2 以 +2/+2 复苏");
+    assert_eq!(final_minion.stats.health.layers(), 4, "3/2 以 +2/+2 复苏");
+    assert!(final_minion.revive_used, "复苏标记已使用");
+    assert!(final_minion.reborn_used, "复苏后不再触发复生");
+}
+
+#[test]
+fn recall_returns_minion_to_hand_with_growth() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "recallee",
+        Playstyle::Mammal,
+        1,
+        1,
+        &[
+            (None, "OnCombatStart|Growth|self|times=2"),
+            (None, "OnDeath|Recall|self|to=hand"),
+        ],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 10, 100, &[]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "recallee")],
+        &[minion(&engine.catalog, 2, "brute")],
+    );
+
+    assert_eq!(log.hand_minions.len(), 1, "死亡后回手一张");
+    let hand = &log.hand_minions[0];
+    assert_eq!(hand.seat, 0);
+    assert_eq!(hand.minion.card_id, "recallee");
+    assert_eq!(hand.minion.stats.attack.growth, 2, "保留成长");
+    assert_eq!(hand.minion.stats.health.growth, 2, "保留成长");
+    assert_eq!(
+        hand.minion.stats.attack.layers(),
+        3,
+        "入场按当前成长后的数值"
+    );
+    assert_eq!(
+        hand.minion.stats.health.layers(),
+        3,
+        "入场按当前成长后的数值"
+    );
+    assert_eq!(hand.minion.stats.health.current, 3, "回手清除战斗伤害");
+    assert_eq!(
+        action_count(&log, |action| matches!(
+            action,
+            CombatAction::Recalled { minion } if *minion == 1
+        )),
+        1
+    );
+}
+
+#[test]
+fn recall_is_dropped_when_hand_is_full() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "recallee",
+        Playstyle::Mammal,
+        1,
+        1,
+        &[(None, "OnDeath|Recall|self|to=hand")],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 10, 100, &[]);
+
+    let log = battle_with(
+        &engine,
+        &[minion(&engine.catalog, 1, "recallee")],
+        &[minion(&engine.catalog, 2, "brute")],
+        CombatSetup {
+            attacker_hand: 3,
+            hand_slots: 3,
+            ..CombatSetup::default()
+        },
+    );
+
+    assert!(log.hand_minions.is_empty(), "手牌已满时不记录回手");
+    assert_eq!(
+        action_count(&log, |action| matches!(
+            action,
+            CombatAction::Recalled { .. }
+        )),
+        0
+    );
+}
+
+#[test]
+fn golden_revive_resurrects_only_once() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "reviver",
+        Playstyle::Mammal,
+        3,
+        2,
+        &[(None, "OnDeath|Revive|self|attack=2,health=2")],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 10, 100, &[]);
+    // 金色 3/2 → 卡面 6/4；复苏 +2/+2 仍只结算一次。
+    let golden = MinionInstance::new(&engine.catalog, 1, "reviver", true);
+
+    let log = battle(&engine, &[golden], &[minion(&engine.catalog, 2, "brute")]);
+
+    assert_eq!(
+        action_count(&log, |action| matches!(
+            action,
+            CombatAction::Revived { minion } if *minion == 1
+        )),
+        1,
+        "金色复苏只复活一次"
+    );
+    let final_minion = final_minion(&log, 1);
+    assert_eq!(final_minion.stats.attack.layers(), 8, "6/4 以 +2/+2 复苏");
+    assert_eq!(final_minion.stats.health.layers(), 6, "6/4 以 +2/+2 复苏");
+}
+
+#[test]
+fn reborn_and_revive_are_mutually_exclusive_on_one_death() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "both",
+        Playstyle::Mammal,
+        0,
+        1,
+        &[
+            (None, "OnCombatStart|DealDamage|self|amount=1"),
+            (Some("reborn"), "[]"),
+            (None, "OnDeath|Revive|self|attack=1,health=1"),
+        ],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 0, 100, &[]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "both")],
+        &[minion(&engine.catalog, 2, "brute")],
+    );
+
+    assert_eq!(deaths(&log).iter().filter(|id| **id == 1).count(), 1);
+    assert_eq!(reborn_count(&log), 1, "复生生效");
+    assert_eq!(
+        action_count(&log, |action| matches!(
+            action,
+            CombatAction::Revived { .. }
+        )),
+        0,
+        "同一次死亡不会既复生又复苏"
+    );
+    assert!(final_minion(&log, 1).health() > 0, "复生后仍存活");
+}
+
+#[test]
+fn recall_preserves_granted_keywords_golden_and_contagion() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "recallee",
+        Playstyle::Mammal,
+        1,
+        1,
+        &[
+            (
+                None,
+                "OnCombatStart|GrantKeyword|self|keyword=taunt,duration=permanent",
+            ),
+            (None, "OnDeath|Recall|self|to=hand"),
+        ],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 10, 100, &[]);
+
+    let mut golden = MinionInstance::new(&engine.catalog, 1, "recallee", true);
+    golden.contagion = 3;
+
+    let log = battle(&engine, &[golden], &[minion(&engine.catalog, 2, "brute")]);
+
+    assert_eq!(log.hand_minions.len(), 1);
+    let hand = &log.hand_minions[0].minion;
+    assert!(hand.golden, "保留金色");
+    assert_eq!(hand.contagion, 3, "保留传染层数");
+    assert!(
+        hand.granted
+            .iter()
+            .any(|(keyword, duration)| keyword == "taunt" && *duration == Duration::Permanent),
+        "保留已授予关键词"
+    );
+}
+
+#[test]
+fn recall_with_other_destination_is_not_returned_to_hand() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "recallee",
+        Playstyle::Mammal,
+        1,
+        1,
+        &[(None, "OnDeath|Recall|self|to=board")],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 10, 100, &[]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "recallee")],
+        &[minion(&engine.catalog, 2, "brute")],
+    );
+
+    assert!(log.hand_minions.is_empty(), "to 非 hand 时不回手");
+    assert_eq!(
+        action_count(&log, |action| matches!(
+            action,
+            CombatAction::Recalled { .. }
+        )),
+        0
+    );
+}
+
+#[test]
+fn ghost_recall_is_not_written_into_solo_players_hand() {
+    let (mut engine, mut state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "ghost-recallee",
+        Playstyle::Mammal,
+        1,
+        1,
+        &[(None, "OnDeath|Recall|self|to=hand")],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 10, 100, &[]);
+
+    state.phase = Phase::Combat;
+    state.turn = 2;
+    state.first_seat = 0;
+    state.last_winner = None;
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        ghost: Some(3),
+    }];
+    state.players[0]
+        .board
+        .push(minion(&engine.catalog, 1, "brute"));
+    state.players[3].eliminated = true;
+    state.players[3]
+        .board
+        .push(minion(&engine.catalog, 2, "ghost-recallee"));
+
+    engine.resolve_combat(&mut state).expect("幽灵战应成功");
+
+    assert!(
+        state.players[0].hand.is_empty(),
+        "幽灵侧回手不得写进落单玩家手牌"
+    );
+    assert!(state.players[3].hand.is_empty(), "幽灵座位也不写回手牌");
+}
+
+#[test]
+fn ghost_copy_to_hand_is_not_written_into_solo_players_hand() {
+    let (mut engine, mut state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "ghost-copier",
+        Playstyle::Mammal,
+        0,
+        100,
+        &[(None, "OnCombatStart|Copy|self|to=hand")],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 10, 100, &[]);
+
+    state.phase = Phase::Combat;
+    state.turn = 2;
+    state.first_seat = 0;
+    state.last_winner = None;
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        ghost: Some(3),
+    }];
+    state.players[0]
+        .board
+        .push(minion(&engine.catalog, 1, "brute"));
+    state.players[3].eliminated = true;
+    state.players[3]
+        .board
+        .push(minion(&engine.catalog, 2, "ghost-copier"));
+
+    engine.resolve_combat(&mut state).expect("幽灵战应成功");
+
+    assert!(
+        state.players[0].hand.is_empty(),
+        "幽灵侧复制不得写进落单玩家手牌"
+    );
+    assert!(state.players[3].hand.is_empty(), "幽灵座位也不写回复制牌");
+}
+
+#[test]
+fn revive_does_not_replay_deathrattle_within_one_death_event() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "reviver",
+        Playstyle::Mammal,
+        0,
+        1,
+        &[
+            (None, "OnCombatStart|DealDamage|self|amount=1"),
+            (
+                Some("deathrattle"),
+                "OnDeath|ModifyStats|friendly:all|attack=1,duration=permanent",
+            ),
+            (None, "OnDeath|Revive|self|attack=1,health=1"),
+        ],
+    );
+    add_card(&mut engine, "friend", Playstyle::Mammal, 0, 10, &[]);
+    add_card(&mut engine, "brute", Playstyle::Mammal, 0, 100, &[]);
+
+    let log = battle(
+        &engine,
+        &[
+            minion(&engine.catalog, 1, "reviver"),
+            minion(&engine.catalog, 2, "friend"),
+        ],
+        &[minion(&engine.catalog, 3, "brute")],
+    );
+
+    assert_eq!(deaths(&log).iter().filter(|id| **id == 1).count(), 1);
+    assert_eq!(
+        action_count(&log, |action| matches!(
+            action,
+            CombatAction::Revived { minion } if *minion == 1
+        )),
+        1,
+        "复苏只结算一次"
+    );
+    assert_eq!(
+        mods_attack(final_minion(&log, 2)),
+        1,
+        "同一次死亡事件内亡语只触发一次"
+    );
 }
 
 // ---------------------------------------------------------------------------

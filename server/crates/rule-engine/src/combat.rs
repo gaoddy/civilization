@@ -9,7 +9,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::data::Catalog;
+use crate::data::{Catalog, Playstyle};
 use crate::effects::{Basis, Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::recruit::new_minion;
@@ -35,6 +35,12 @@ const CONTAGION: &str = "contagion";
 const OPTIMAL_ATTACK: &str = "optimal_attack";
 /// 关键词：播种。
 const SOW: &str = "sow";
+/// 关键词：剧毒。
+pub(crate) const POISON: &str = "poison";
+/// 关键词：减伤；实际存储为「armor N」。
+pub(crate) const ARMOR: &str = "armor";
+/// 关键词：潜行。
+pub(crate) const STEALTH: &str = "stealth";
 /// 播种召唤的 token。
 pub(crate) const SEEDLING_TOKEN: &str = "seedling";
 
@@ -66,6 +72,33 @@ pub enum CombatAction {
     Reborn { minion: InstanceId },
     /// 目标被叠加一层传染。
     ContagionApplied { target: InstanceId },
+    /// 目标被剧毒致死。
+    Poisoned { target: InstanceId },
+    /// 来源复制了目标的当前攻防与关键词。
+    Mimicked {
+        source: InstanceId,
+        target: InstanceId,
+    },
+    /// 来源吞噬了目标并永久获得其卡面基础属性。
+    Devoured {
+        source: InstanceId,
+        target: InstanceId,
+    },
+    /// 引爆：`layers` 为被移除的传染层数，`damage` 为按层伤害实际造成的伤害
+    /// （护盾或减伤后；阈值致死不计入）。
+    Detonated {
+        target: InstanceId,
+        layers: i32,
+        damage: i32,
+    },
+    /// 转化：目标达到传染阈值后被消灭，来源方召唤 `token`。
+    Converted { target: InstanceId, token: String },
+    /// 随从按复苏声明值复活。
+    Revived { minion: InstanceId },
+    /// 随从死亡后回手（已写入 `CombatLog::hand_minions`）。
+    Recalled { minion: InstanceId },
+    /// 零件回收：死亡时从本局启用的机械随从中随机获得一张牌。
+    Salvaged { seat: Seat, card_id: String },
     /// 战斗中召唤：`seat` 为召唤方座位，`position` 为插入后该随从在
     /// **存活随从序列**中的下标；`card_id` / `golden` 供房间服务补全展示数据
     /// （召唤物不在战前快照里）。
@@ -82,8 +115,24 @@ pub enum CombatAction {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CombatHandCopy {
     pub seat: Seat,
+    /// 产生该副作用的阵营（0 = 攻击方，1 = 防守方）。
+    ///
+    /// 幽灵战两侧使用同一座位，结算层据此丢弃幽灵侧的副作用。
+    pub side: usize,
     pub card_id: String,
     pub golden: bool,
+}
+
+/// 战斗中死亡回手的随从；由结算层在战斗结束后原样写入持久手牌。
+///
+/// 与 [`CombatHandCopy`] 分开存放：这里保留完整的实例状态（成长、繁衍、
+/// 传染、授予关键词等），复制牌则只记录卡面身份。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CombatHandMinion {
+    pub seat: Seat,
+    /// 产生该回手的阵营（0 = 攻击方，1 = 防守方），用于过滤幽灵侧副作用。
+    pub side: usize,
+    pub minion: MinionInstance,
 }
 
 /// 伤害来源。`None` 表示无来源伤害（传染、回合开始掉血等），不产生击杀。
@@ -122,6 +171,8 @@ pub struct CombatLog {
     pub pool_spent: BTreeMap<String, u16>,
     /// 战斗中复制进手牌的卡牌，战斗结束后由结算层写回。
     pub hand_copies: Vec<CombatHandCopy>,
+    /// 战斗中死亡回手的随从，战斗结束后由结算层写入持久手牌。
+    pub hand_minions: Vec<CombatHandMinion>,
     /// 战斗使用的下一个实例编号；调用方可据此推进 `GameState::next_instance_id`。
     pub next_instance_id: InstanceId,
     /// 战斗结束时的攻击方随从克隆；供结算层回写持久字段（传染、成长）。
@@ -147,6 +198,10 @@ pub struct CombatSetup<'a> {
     pub defender_hand: usize,
     /// 手牌上限。
     pub hand_slots: usize,
+    /// 本局启用的玩法；`None` 表示未提供，随机池不按玩法筛选。
+    ///
+    /// 仅用于战斗内需要从卡池取牌的效果（零件回收）。
+    pub playstyles: Option<&'a BTreeSet<Playstyle>>,
 }
 
 impl Default for CombatSetup<'_> {
@@ -159,6 +214,7 @@ impl Default for CombatSetup<'_> {
             attacker_hand: 0,
             defender_hand: 0,
             hand_slots: usize::MAX,
+            playstyles: None,
         }
     }
 }
@@ -209,6 +265,17 @@ pub fn effective_health_with(
 /// 由所引用技能的 `keyword` 字段与 token 注册表派生，并并入尚未失效的授予关键词；
 /// `Instant` 授予在战斗前就已结算完毕，视为不存在。未知关键词原样保留。
 pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
+    let mut result = base_keywords(catalog, minion);
+    for (keyword, duration) in &minion.granted {
+        if *duration != Duration::Instant {
+            result.insert(keyword.clone());
+        }
+    }
+    result
+}
+
+/// 卡面与 Token 自带的关键词，不含战斗内授予与光环派生。
+fn base_keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
     let mut result = BTreeSet::new();
     if let Some(token) = catalog.tokens.get(&minion.card_id) {
         for keyword in &token.keywords {
@@ -226,12 +293,52 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
             }
         }
     }
+    result
+}
+
+/// 排除光环派生关键词后的关键词集合，供「不复制光环」的效果（拟态）使用。
+///
+/// 卡面本身就有的关键词即使同时被光环授予也保留。
+pub fn keywords_without_aura(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
+    let base = base_keywords(catalog, minion);
+    let mut result = keywords(catalog, minion);
     for (keyword, duration) in &minion.granted {
-        if *duration != Duration::Instant {
-            result.insert(keyword.clone());
+        if *duration == Duration::Aura && !base.contains(keyword) {
+            result.remove(keyword);
         }
     }
     result
+}
+
+/// 是否携带剧毒关键词。
+pub fn has_poison(catalog: &Catalog, minion: &MinionInstance) -> bool {
+    keywords(catalog, minion).contains(POISON)
+}
+
+/// 当前是否仍处于潜行：携带 `stealth` 关键词且本次战斗尚未将其打破。
+pub fn has_stealth(catalog: &Catalog, minion: &MinionInstance) -> bool {
+    !minion.stealth_broken && keywords(catalog, minion).contains(STEALTH)
+}
+
+/// 当前生效的减伤层数之和；多个「armor N」叠加。
+///
+/// 层数保存在关键词字符串 `armor N` 中（与 `breed N` 同形）；没有数字时按 1。
+pub fn armor_value(catalog: &Catalog, minion: &MinionInstance) -> i32 {
+    keywords(catalog, minion)
+        .iter()
+        .filter_map(|keyword| {
+            let rest = keyword.strip_prefix(ARMOR)?;
+            if !rest.is_empty() && !rest.starts_with(char::is_whitespace) {
+                return None;
+            }
+            let value = rest.trim();
+            Some(if value.is_empty() {
+                1
+            } else {
+                value.parse().unwrap_or(0)
+            })
+        })
+        .fold(0i32, i32::saturating_add)
 }
 
 /// 每轮该随从拥有的行动次数。
@@ -359,10 +466,13 @@ pub struct BattleField {
     pub(crate) actions: Vec<CombatAction>,
     pub(crate) states: Vec<Vec<MinionSnapshot>>,
     pub(crate) hand_copies: Vec<CombatHandCopy>,
+    pub(crate) hand_minions: Vec<CombatHandMinion>,
     pub(crate) pool: BTreeMap<String, u16>,
     pub(crate) pool_spent: BTreeMap<String, u16>,
     pub(crate) hand_len: [usize; 2],
     pub(crate) hand_slots: usize,
+    /// 本局启用玩法；仅零件回收等取牌效果使用。
+    pub(crate) playstyles: Option<BTreeSet<Playstyle>>,
     /// 正在结算死亡；嵌套触发产生的死亡留给外层循环处理。
     pub(crate) resolving: bool,
     pub(crate) first_side: usize,
@@ -415,10 +525,12 @@ impl BattleField {
             actions: Vec::new(),
             states: Vec::new(),
             hand_copies: Vec::new(),
+            hand_minions: Vec::new(),
             pool: setup.pool.cloned().unwrap_or_default(),
             pool_spent: BTreeMap::new(),
             hand_len: [setup.attacker_hand, setup.defender_hand],
             hand_slots: setup.hand_slots,
+            playstyles: setup.playstyles.cloned(),
             resolving: false,
             first_side: if first == attacker_seat { 0 } else { 1 },
             combat_start_health,
@@ -485,7 +597,7 @@ impl BattleField {
     }
 
     /// 收集若干随从的现场状态，跳过已不在场上的编号。
-    fn snapshots(&self, catalog: &Catalog, ids: &[InstanceId]) -> Vec<MinionSnapshot> {
+    pub(crate) fn snapshots(&self, catalog: &Catalog, ids: &[InstanceId]) -> Vec<MinionSnapshot> {
         ids.iter()
             .filter_map(|id| self.snapshot_of(catalog, *id))
             .collect()
@@ -630,7 +742,7 @@ impl BattleField {
                 minion.stats.health.add_turn(modifier.health);
             }
             // `Instant` 在数据中未使用；保持现有「永不清除」语义。
-            Duration::Permanent | Duration::Instant => {
+            Duration::Permanent | Duration::Instant | Duration::Aura => {
                 minion.stats.attack.add_permanent(modifier.attack);
                 minion.stats.health.add_permanent(modifier.health);
             }
@@ -664,27 +776,39 @@ impl BattleField {
 
     /// 唯一的战斗掉血入口：只写 `stats.health.current`。
     ///
-    /// `can_kill = false` 时最多把当前生命降到 1；`can_kill = true` 时允许降到
+    /// 写入前先减去目标当前 `armor N` 之和，再按 `can_kill` 夹取；
+    /// `can_kill = false` 时最多把当前生命降到 1。`can_kill = true` 时允许降到
     /// 0 或更低，由死亡判定统一处理。伤害足以致死时在扣血前写入 `pre_kill_health`；
     /// `source` 为随从且本段伤害把生命降到 ≤0 时，追加一条击杀记录。
+    ///
+    /// 返回实际写入的伤害值（已扣减伤，且可能是 0）。
     pub(crate) fn apply_damage(
         &mut self,
+        catalog: &Catalog,
         id: InstanceId,
         amount: i32,
         can_kill: bool,
         source: DamageSource,
-    ) {
+    ) -> i32 {
         let killer = match source {
             DamageSource::Minion(killer) => Some(killer),
             DamageSource::None => None,
         };
         // 先取阵营，避免在可变借用随从后再借用棋盘。
         let killer_side = killer.and_then(|killer| self.locate(killer).map(|(side, _)| side));
+        let stealth_source = killer
+            .and_then(|killer| self.minion(killer))
+            .is_some_and(|minion| has_stealth(catalog, minion));
+        let armor = self
+            .locate(id)
+            .map(|(side, index)| armor_value(catalog, &self.sides[side].minions[index]))
+            .unwrap_or(0);
         let Some((side, index)) = self.locate(id) else {
-            return;
+            return 0;
         };
         let minion = &mut self.sides[side].minions[index];
-        let amount = amount.max(0);
+        // 减伤在写入前结算；`can_kill` 的夹取在减伤之后执行。
+        let amount = amount.max(0).saturating_sub(armor).max(0);
         let before = minion.stats.health.current;
         let lethal = can_kill && amount >= before;
         if lethal && before > 0 {
@@ -697,6 +821,14 @@ impl BattleField {
         };
         minion.stats.health.apply_damage(damage);
         let dead = self.sides[side].alive[index] && minion.stats.health.current <= 0;
+        // 造成实际伤害的潜行随从打破自身潜行；攻击、反击、俯冲与效果伤害都走这里。
+        if damage > 0
+            && stealth_source
+            && let Some(killer) = killer
+            && let Some(source) = self.minion_mut(killer)
+        {
+            source.stealth_broken = true;
+        }
         if dead && let (Some(killer), Some(killer_side)) = (killer, killer_side) {
             self.pending_kills.push(KillRecord {
                 killer,
@@ -705,11 +837,18 @@ impl BattleField {
                 mutual: false,
             });
         }
+        damage
     }
 
     /// 效果层伤害入口；与 [`BattleField::apply_damage`] 同义，无伤害来源。
-    pub(crate) fn deal_damage(&mut self, id: InstanceId, amount: i32, can_kill: bool) {
-        self.apply_damage(id, amount, can_kill, DamageSource::None);
+    pub(crate) fn deal_damage(
+        &mut self,
+        catalog: &Catalog,
+        id: InstanceId,
+        amount: i32,
+        can_kill: bool,
+    ) -> i32 {
+        self.apply_damage(catalog, id, amount, can_kill, DamageSource::None)
     }
 
     /// 分解取值：按口径返回 `event_target` 被分解随从的生命值；快照缺失时为 `None`。
@@ -737,16 +876,18 @@ impl BattleField {
     }
 
     /// 记录一次复制进手牌；手牌已满时返回 `false`。
-    pub(crate) fn record_hand_copy(&mut self, seat: Seat, card_id: &str, golden: bool) -> bool {
-        let Some(side) = self.side_of(seat) else {
-            return false;
-        };
+    ///
+    /// `side` 由调用方按来源随从的真实阵营传入。不能用 `side_of(seat)` 反推：
+    /// 幽灵战两侧共用同一座位，反推会恒得到攻击方。
+    pub(crate) fn record_hand_copy(&mut self, side: usize, card_id: &str, golden: bool) -> bool {
+        let seat = self.seats[side];
         if self.hand_len[side] >= self.hand_slots {
             return false;
         }
         self.hand_len[side] = self.hand_len[side].saturating_add(1);
         self.hand_copies.push(CombatHandCopy {
             seat,
+            side,
             card_id: card_id.to_string(),
             golden,
         });
@@ -857,6 +998,72 @@ impl BattleField {
                     let states = self.snapshots(catalog, &[id]);
                     self.push_action(CombatAction::Reborn { minion: id }, states);
                 }
+
+                // 复苏与回手：在亡语、播种、复生之后结算，保证同一次死亡事件
+                // 只触发一次亡语、只复生或复苏一次。复生已把随从救回时不进入本块。
+                if let Some(engine) = engine
+                    && let Some((side_now, index_now)) = self.locate(id)
+                    && side_now == side
+                {
+                    let still_dead = !self.sides[side].alive[index_now]
+                        && self.sides[side].minions[index_now].stats.health.current <= 0;
+                    if still_dead {
+                        // 复苏：未使用过时按声明值增加永久攻防并复活，同时置
+                        // `reborn_used`，避免同一次死亡再触发复生。
+                        if !self.sides[side].minions[index_now].revive_used
+                            && let Some((bonus_attack, bonus_health)) =
+                                engine.death_revive(&card_id)
+                        {
+                            let minion = &mut self.sides[side].minions[index_now];
+                            minion.stats.attack.add_permanent(bonus_attack);
+                            minion.stats.health.add_permanent(bonus_health);
+                            // 以分层和在场的成长、永久增量恢复生命，清除战斗伤害。
+                            let restored = minion.stats.health.layers().max(1);
+                            minion.stats.health.revive_to(restored);
+                            minion.revive_used = true;
+                            minion.reborn_used = true;
+                            self.sides[side].alive[index_now] = true;
+                            let states = self.snapshots(catalog, &[id]);
+                            self.push_action(CombatAction::Revived { minion: id }, states);
+                        }
+
+                        // 回手：仍处于死亡态且携带 `Recall` 时克隆进手牌。
+                        if !self.sides[side].alive[index_now]
+                            && engine.death_recall(&card_id)
+                            && self.hand_len[side] < self.hand_slots
+                            && let Some(mut hand_minion) = self.minion(id).cloned()
+                        {
+                            // 清掉只在战场有效的临时层与一次性战斗标记；
+                            // 成长、繁衍、传染、授予关键词、金色原样保留。
+                            hand_minion.stats.attack.clear_turn();
+                            hand_minion.stats.health.clear_turn();
+                            hand_minion.stats.attack.set_aura(0);
+                            hand_minion.stats.health.set_aura(0);
+                            hand_minion
+                                .stats
+                                .attack
+                                .revive_to(hand_minion.stats.attack.layers());
+                            hand_minion
+                                .stats
+                                .health
+                                .revive_to(hand_minion.stats.health.layers());
+                            hand_minion.attacks_left = 0;
+                            hand_minion.cannot_attack = false;
+                            hand_minion.shield_used = false;
+                            hand_minion.reborn_used = false;
+                            hand_minion.revive_used = false;
+                            hand_minion.stealth_broken = false;
+                            self.hand_len[side] = self.hand_len[side].saturating_add(1);
+                            self.hand_minions.push(CombatHandMinion {
+                                seat: self.seats[side],
+                                side,
+                                minion: hand_minion,
+                            });
+                            let states = self.snapshots(catalog, &[id]);
+                            self.push_action(CombatAction::Recalled { minion: id }, states);
+                        }
+                    }
+                }
                 dead_ids.push((side, id));
             }
 
@@ -926,17 +1133,29 @@ impl BattleField {
 }
 
 /// 选择目标：最优攻击 → 嘲讽 → 全体。
+///
+/// 仍有潜行的防守方随从不在候选池内；若所有存活防守方都在潜行，退回完整
+/// 候选池并固定选择最左侧，保证自动战斗必然推进。
 fn pick_target(
     catalog: &Catalog,
     attacker: &MinionInstance,
     defender: &SideBoard,
     rng: &mut RngStreams,
 ) -> Option<usize> {
-    let candidates: Vec<usize> = (0..defender.minions.len())
+    let all_candidates: Vec<usize> = (0..defender.minions.len())
         .filter(|index| defender.alive[*index])
         .collect();
-    if candidates.is_empty() {
+    if all_candidates.is_empty() {
         return None;
+    }
+    let candidates: Vec<usize> = all_candidates
+        .iter()
+        .copied()
+        .filter(|index| !has_stealth(catalog, &defender.minions[*index]))
+        .collect();
+    if candidates.is_empty() {
+        // 全部潜行：攻击最左侧，避免自动战斗卡死。
+        return all_candidates.first().copied();
     }
 
     let attacker_keywords = keywords(catalog, attacker);
@@ -974,6 +1193,13 @@ fn pick_target(
 
     let offset = rng.below(Stream::Combat, pool.len() as u64) as usize;
     pool.get(offset).copied()
+}
+
+/// 随从仍在场且当前生命 > 0；剧毒只对这样的目标生效。
+fn still_standing(field: &BattleField, id: InstanceId) -> bool {
+    field.locate(id).is_some_and(|(side, index)| {
+        field.sides[side].alive[index] && field.sides[side].minions[index].stats.health.current > 0
+    })
 }
 
 /// 结算一次攻击，并处理双方死亡。
@@ -1019,8 +1245,13 @@ fn resolve_attack(
             field.sides[defending_side].minions[target_index].shield_used = true;
             blocked = true;
         } else {
-            damage = attack;
-            field.apply_damage(target_id, damage, true, DamageSource::Minion(attacker_id));
+            damage = field.apply_damage(
+                catalog,
+                target_id,
+                attack,
+                true,
+                DamageSource::Minion(attacker_id),
+            );
         }
     }
 
@@ -1032,6 +1263,20 @@ fn resolve_attack(
         field.push_action(CombatAction::ContagionApplied { target: target_id }, states);
     }
 
+    // (b2) 剧毒：主伤害 > 0 且目标仍存活时补一次致死伤害。
+    // 护盾抵消时主伤害为 0，不会进入这里。
+    if attacker_keywords.contains(POISON) && damage > 0 && still_standing(field, target_id) {
+        field.apply_damage(
+            catalog,
+            target_id,
+            i32::MAX,
+            true,
+            DamageSource::Minion(attacker_id),
+        );
+        let states = field.snapshots(catalog, &[target_id]);
+        field.push_action(CombatAction::Poisoned { target: target_id }, states);
+    }
+
     // (c) 反击：无论目标是否被主伤害击杀，都按目标当前攻击力结算。
     let counter = effective_attack(catalog, &field.sides[defending_side].minions[target_index]);
     let mut counter_damage = 0;
@@ -1041,9 +1286,40 @@ fn resolve_attack(
         if shielded {
             field.sides[attacking_side].minions[attacker_index].shield_used = true;
         } else {
-            counter_damage = counter;
-            field.apply_damage(attacker_id, counter, true, DamageSource::Minion(target_id));
+            counter_damage = field.apply_damage(
+                catalog,
+                attacker_id,
+                counter,
+                true,
+                DamageSource::Minion(target_id),
+            );
         }
+    }
+
+    // (c2) 剧毒：反击伤害 > 0 且攻击者仍存活时补一次致死伤害。
+    let target_poisonous = has_poison(catalog, &field.sides[defending_side].minions[target_index]);
+    if target_poisonous && counter_damage > 0 && still_standing(field, attacker_id) {
+        field.apply_damage(
+            catalog,
+            attacker_id,
+            i32::MAX,
+            true,
+            DamageSource::Minion(target_id),
+        );
+        let states = field.snapshots(catalog, &[attacker_id]);
+        field.push_action(
+            CombatAction::Poisoned {
+                target: attacker_id,
+            },
+            states,
+        );
+    }
+
+    // (c3) 潜行随从的主动攻击本身即打破潜行，即使伤害被护盾抵消或攻击力为 0。
+    if attacker_keywords.contains(STEALTH)
+        && let Some(minion) = field.minion_mut(attacker_id)
+    {
+        minion.stealth_broken = true;
     }
 
     // (d) 只记录主动攻击：快照在反击结算之后抓取，已含双方最终血量。
@@ -1282,6 +1558,7 @@ fn simulate_inner(
         summon_count: field.summon_count,
         pool_spent: std::mem::take(&mut field.pool_spent),
         hand_copies: std::mem::take(&mut field.hand_copies),
+        hand_minions: std::mem::take(&mut field.hand_minions),
         next_instance_id: field.next_instance_id,
         attacker_final: field.sides[0].minions.clone(),
         defender_final: field.sides[1].minions.clone(),

@@ -269,7 +269,7 @@ fn state_at(states: &[combat::MinionSnapshot], index: usize) -> Option<CombatMin
     states.get(index).map(minion_state)
 }
 
-/// 战斗动作转协议：`kind` 为 `attack|death|reborn|contagion|summon`。
+/// 战斗动作转协议：`kind` 为 `attack|death|reborn|revive|recall|contagion|poison|summon|salvage`。
 ///
 /// 引擎只为主动攻击记录 `attack`；反击伤害已并入该条动作的 `source` / `target`
 /// 快照，客户端不会收到独立的反击动作。
@@ -353,6 +353,137 @@ fn combat_action(
                 target_side: slot.map(|(_, side)| target_side(side)),
             }
         }
+        CombatAction::Poisoned { target } => {
+            let slot = locate(report, *target);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "poison".to_string(),
+                source: None,
+                source_index: None,
+                source_minion_id: None,
+                source_side: None,
+                summon: None,
+                target: state_at(states, 0),
+                target_index: slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: slot.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Mimicked { source, target } => {
+            let source_slot = locate(report, *source);
+            let target_slot = locate(report, *target);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "mimic".to_string(),
+                source: state_at(states, 0),
+                source_index: source_slot.map(|(index, _)| index as i64),
+                source_minion_id: Some(source.to_string()),
+                source_side: source_slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 1),
+                target_index: target_slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: target_slot.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Devoured { source, target } => {
+            let source_slot = locate(report, *source);
+            let target_slot = locate(report, *target);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "devour".to_string(),
+                source: state_at(states, 0),
+                source_index: source_slot.map(|(index, _)| index as i64),
+                source_minion_id: Some(source.to_string()),
+                source_side: source_slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 1),
+                target_index: target_slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: target_slot.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Detonated { target, damage, .. } => {
+            let slot = locate(report, *target);
+            CombatResultActionsItem {
+                damage: Some(i64::from(*damage)),
+                kind: "detonate".to_string(),
+                source: None,
+                source_index: None,
+                source_minion_id: None,
+                source_side: None,
+                summon: None,
+                target: state_at(states, 0),
+                target_index: slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: slot.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Converted { target, .. } => {
+            let slot = locate(report, *target);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "convert".to_string(),
+                source: None,
+                source_index: None,
+                source_minion_id: None,
+                source_side: None,
+                summon: None,
+                target: state_at(states, 0),
+                target_index: slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: slot.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Revived { minion } => {
+            let slot = locate(report, *minion);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "revive".to_string(),
+                source: None,
+                source_index: slot.map(|(index, _)| index as i64),
+                source_minion_id: None,
+                source_side: slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 0),
+                target_index: None,
+                target_minion_id: Some(minion.to_string()),
+                target_side: None,
+            }
+        }
+        CombatAction::Recalled { minion } => {
+            let slot = locate(report, *minion);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "recall".to_string(),
+                source: None,
+                source_index: slot.map(|(index, _)| index as i64),
+                source_minion_id: None,
+                source_side: slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 0),
+                target_index: None,
+                target_minion_id: Some(minion.to_string()),
+                target_side: None,
+            }
+        }
+        CombatAction::Salvaged { seat, .. } => CombatResultActionsItem {
+            damage: None,
+            kind: "salvage".to_string(),
+            source: None,
+            source_index: None,
+            source_minion_id: None,
+            source_side: Some(if *seat == report.seat {
+                CombatResultActionsItemSourceSide::Own
+            } else {
+                CombatResultActionsItemSourceSide::Opponent
+            }),
+            summon: None,
+            target: None,
+            target_index: None,
+            target_minion_id: None,
+            target_side: None,
+        },
         CombatAction::Summon {
             minion,
             card_id,

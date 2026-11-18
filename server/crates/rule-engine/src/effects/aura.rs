@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 use crate::combat;
 use crate::effects::{Compare, Effect, EffectCtx, Op, Pick, Selector, Side, Trigger};
 use crate::engine::Engine;
-use crate::state::{AuraEffect, GameState, InstanceId, PlayerState, Seat};
+use crate::state::{AuraEffect, GameState, InstanceId, MinionInstance, PlayerState, Seat};
 
 impl Engine {
     /// 全量重算所有未出局玩家的光环派生值。
@@ -54,8 +54,10 @@ impl Engine {
                 if !self.aura_active(state, player, &effect, source) {
                     continue;
                 }
+                // 群聚的计数与目标无关，每段效果只算一次。
+                let scale = scaling_count(self, state, player, &effect, source);
                 for target in aura_targets(self, state, &effect, player, source) {
-                    accumulate(&effect, computed.entry(target).or_default());
+                    accumulate(&effect, computed.entry(target).or_default(), scale);
                 }
             }
         }
@@ -184,9 +186,47 @@ fn aura_targets(
                 })
                 .map(|minion| minion.instance_id)
                 .collect();
-            pick_targets(engine, state, pool, *pick)
+            let source_index = source.and_then(|id| {
+                player
+                    .board
+                    .iter()
+                    .position(|minion| minion.instance_id == id)
+            });
+            pick_targets(engine, state, &player.board, pool, *pick, source_index)
         }
     }
+}
+
+/// 群聚的计数：来源玩家棋盘上满足本段筛选、且不是来源自身的随从数量。
+///
+/// 没有 `perAttack` / `perHealth` 时为 0；英雄卡不是棋盘随从，天然不计数。
+/// `maxCount` 缺省 6，负数按 0 处理。
+fn scaling_count(
+    engine: &Engine,
+    state: &GameState,
+    player: &PlayerState,
+    effect: &Effect,
+    source: Option<InstanceId>,
+) -> i32 {
+    if effect.params.per_attack.is_none() && effect.params.per_health.is_none() {
+        return 0;
+    }
+    let Selector::Side { filters, .. } = &effect.selector else {
+        return 0;
+    };
+    let ctx = aura_ctx(player.seat, source);
+    let count = player
+        .board
+        .iter()
+        .filter(|minion| {
+            Some(minion.instance_id) != source
+                && filters
+                    .iter()
+                    .all(|filter| engine.filter_matches(state, filter, minion.instance_id, &ctx))
+        })
+        .count();
+    let max_count = effect.params.max_count.unwrap_or(6).max(0) as usize;
+    count.min(max_count) as i32
 }
 
 /// 选取语义与 `exec::apply_pick` 对齐。
@@ -196,8 +236,10 @@ fn aura_targets(
 fn pick_targets(
     engine: &Engine,
     state: &GameState,
+    board: &[MinionInstance],
     pool: Vec<InstanceId>,
     pick: Pick,
+    source_index: Option<usize>,
 ) -> Vec<InstanceId> {
     match pick {
         Pick::All => pool,
@@ -211,6 +253,41 @@ fn pick_targets(
                     continue;
                 };
                 if best.is_none_or(|(_, current)| attack > current) {
+                    best = Some((id, attack));
+                }
+            }
+            best.map(|(id, _)| vec![id]).unwrap_or_default()
+        }
+        // 相邻只作用于来源左右两侧的存活随从；英雄卡没有来源实例，返回空。
+        // 邻居仍需满足选择器筛选（`pool` 已过滤），携带者自身不在候选内。
+        Pick::Adjacent => {
+            let Some(index) = source_index else {
+                return Vec::new();
+            };
+            let mut targets = Vec::with_capacity(2);
+            for position in [index.checked_sub(1), index.checked_add(1)]
+                .into_iter()
+                .flatten()
+            {
+                let Some(neighbor) = board.get(position) else {
+                    continue;
+                };
+                if combat::effective_health(&engine.catalog, neighbor) > 0
+                    && pool.contains(&neighbor.instance_id)
+                {
+                    targets.push(neighbor.instance_id);
+                }
+            }
+            targets
+        }
+        // 最低攻击与 `apply_pick` 同口径：攻击力最低，并列取棋盘最左侧。
+        Pick::LowestAttack => {
+            let mut best: Option<(InstanceId, i32)> = None;
+            for id in pool {
+                let Some(attack) = board_attack(engine, state, id) else {
+                    continue;
+                };
+                if best.is_none_or(|(_, current)| attack < current) {
                     best = Some((id, attack));
                 }
             }
@@ -240,21 +317,37 @@ fn aura_ctx(seat: Seat, source: Option<InstanceId>) -> EffectCtx {
 }
 
 /// 把一段光环效果累加到目标派生值上；关键词幂等，数值相加。
-fn accumulate(effect: &Effect, target: &mut AuraEffect) {
+///
+/// `scale` 是群聚计数：基础 `attack`/`health` 之外，每个被计入的「其他同玩法
+/// 友方随从」再加一次 `perAttack`/`perHealth`。金色不额外翻倍。
+fn accumulate(effect: &Effect, target: &mut AuraEffect, scale: i32) {
     match effect.op {
         Op::ModifyStats => {
             target.attack = target
                 .attack
-                .saturating_add(effect.params.attack.unwrap_or(0));
+                .saturating_add(effect.params.attack.unwrap_or(0))
+                .saturating_add(effect.params.per_attack.unwrap_or(0).saturating_mul(scale));
             target.health = target
                 .health
-                .saturating_add(effect.params.health.unwrap_or(0));
+                .saturating_add(effect.params.health.unwrap_or(0))
+                .saturating_add(effect.params.per_health.unwrap_or(0).saturating_mul(scale));
         }
         Op::GrantKeyword => {
             let Some(keyword) = &effect.params.keyword else {
                 return;
             };
-            target.keywords.insert(keyword.keyword.clone());
+            // 与 `exec.rs` 的 GrantKeyword 分支一致：`armor N` 的层数写进
+            // 关键词字符串，否则战斗折叠后会退化为无层数的 `armor`。
+            let name = keyword.keyword.as_str();
+            let layer = keyword.value.or(effect.params.value);
+            match (name, layer) {
+                (combat::ARMOR, Some(count)) => {
+                    target.keywords.insert(format!("{} {count}", combat::ARMOR));
+                }
+                _ => {
+                    target.keywords.insert(name.to_string());
+                }
+            }
         }
         // 解析层已限制光环只能使用上述两个原语；其余按无效果处理。
         _ => return,

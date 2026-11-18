@@ -26,12 +26,12 @@ RULES_FILE = ROOT.parent / "rules" / "keywords-and-mechanics.md"
 ID_RE = re.compile(r"[a-z][a-z0-9-]*")
 _KEYWORD_NAMES = (
     "battlecry|deathrattle|reborn|taunt|divine_shield|windfury|contagion|"
-    "optimal_attack|sow|evolve"
+    "optimal_attack|sow|evolve|poison|stealth|decompose"
 )
-KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+)$")
+KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+|armor \d+)$")
 # 技能上的 keyword 是携带者自身登记的常驻关键词，不接受卡牌层的「无」哨兵值。
-SKILL_KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+)$")
-AURA_RE = re.compile(r"^你的(其他)?(人类|人科|机械|生物|动物|植物|真菌|细菌|原生生物|病毒|学者)?随从获得 ?(.+)$")
+SKILL_KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+|armor \d+)$")
+AURA_RE = re.compile(r"^你的(其他)?(人类|人科|机械|生物|动物|植物|真菌|细菌|原生生物|病毒|学者|鱼纲|鸟纲|爬行纲|昆虫纲|头足纲|水螅纲|真菌界|原生生物界)?随从获得 ?(.+)$")
 AURA_VALUE_RE = re.compile(
     r"^(?:\+\d+/\+\d+|\+\d+ 攻击力|\+\d+ 生命值|最优攻击|嘲讽|护盾|复生|连击)$"
 )
@@ -62,7 +62,23 @@ KEYWORD_PLAYSTYLE = {
     "decompose": {"fungus", "bacteria"},
     "assemble": {"machine"},
     "sow": {"plant"},
+    "poison": {"reptile", "cephalopod", "cnidarian"},
+    "armor": {"reptile", "bacteria", "cnidarian"},
+    "stealth": {"cephalopod"},
 }
+# 新机制原语的玩法归属；原语只能出现在对应玩法的卡牌技能里。
+MECHANISM_PLAYSTYLE = {
+    "Mimic": {"cephalopod"},
+    "Devour": {"protozoa", "cephalopod"},
+    "Detonate": {"bacteria", "virus"},
+    "Convert": {"bacteria"},
+    "Revive": {"cnidarian"},
+    "Recall": {"cnidarian"},
+    "Salvage": {"machine"},
+    "Latent": {"virus"},
+}
+# 选择器选取的玩法归属。
+PICK_PLAYSTYLE = {"lowestAttack": {"bird"}}
 BIOLOGICAL_KINGDOMS = {"animalia", "plantae", "fungi", "bacteria", "protozoa", "virus"}
 CRAFT_ID = "craft"
 PHENOMENON_ID = "phenomenon"
@@ -82,19 +98,23 @@ EFFECT_TRIGGERS = {
 EFFECT_OPS = {
     "Growth", "ModifyStats", "GrantKeyword", "RemoveGrowth", "CannotAttack",
     "DealDamage", "Summon", "Copy", "Discover", "RefreshShop", "AddShopSlot",
-    "GainMinion", "Decompose",
+    "GainMinion", "Decompose", "Mimic", "Devour", "Detonate", "Convert", "Revive",
+    "Recall", "Salvage", "Latent",
 }
 SELECTOR_SIDES = {"friendly", "enemy", "both", "self", "target"}
-SELECTOR_PICKS = {"single", "all", "random", "leftmost", "leftmost+adjacent", "topAttack"}
+SELECTOR_PICKS = {"single", "all", "random", "leftmost", "leftmost+adjacent", "topAttack",
+                  "lowestAttack", "adjacent"}
 FILTER_KEYS = {"taxon", "playstyle", "play", "prey", "host", "subtype", "id", "type",
                "scholar", "keyword", "other"}
 DURATIONS = {"permanent", "combat"}
 DECOMPOSE_BASES = {"original", "combat_start", "pre_kill"}
-NUMERIC_KEYS = {"times", "count", "amount", "attack", "health", "value", "extra"}
+NUMERIC_KEYS = {"times", "count", "amount", "attack", "health", "value", "extra",
+                "perAttack", "perHealth", "maxCount", "threshold"}
 AURA_OPS = {"ModifyStats", "GrantKeyword"}
 OP_SPEC = {
     "Growth": ({"times"}, {"healthOnly", "timesIf", "condition", "when"}, {("times",)}),
-    "ModifyStats": (set(), {"attack", "health", "duration", "canKill", "condition", "when"},
+    "ModifyStats": (set(), {"attack", "health", "duration", "canKill", "condition", "when",
+                            "perAttack", "perHealth", "maxCount"},
                     {("attack", "health")}),
     "GrantKeyword": ({"keyword"}, {"value", "duration", "condition", "when"}, set()),
     "RemoveGrowth": (set(), {"condition", "when"}, set()),
@@ -107,7 +127,17 @@ OP_SPEC = {
     "AddShopSlot": ({"era", "count"}, set(), set()),
     "GainMinion": ({"level", "to"}, {"from"}, set()),
     "Decompose": ({"basis", "duration"}, {"timesIf", "condition", "when"}, set()),
+    "Mimic": ({"duration"}, {"statsOnly"}, set()),
+    "Devour": ({"value"}, {"duration", "when"}, set()),
+    "Detonate": ({"amount"}, {"threshold", "when"}, set()),
+    "Convert": ({"threshold"}, {"token", "card", "count", "when"}, {("token", "card")}),
+    "Revive": ({"attack", "health"}, set(), set()),
+    "Recall": ({"to"}, set(), set()),
+    "Salvage": ({"pool", "count"}, set(), set()),
+    "Latent": ({"amount", "count"}, {"threshold", "when"}, set()),
 }
+# 群聚参数只允许出现在光环的 ModifyStats 上。
+CROWD_PARAMS = {"perAttack", "perHealth", "maxCount"}
 CONDITION_RE = re.compile(
     r"^count:(friendly|enemy|both):([a-z_]+)=([a-z0-9_-]+):(>=|<=|==|>|<)\d+$"
 )
@@ -121,10 +151,11 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
-             "contagion": 3, "reborn": 4, "divine_shield": 5}
-EXPECT_ERA = {"prehistoric": 28, "primitive": 26, "classical": 20, "feudal": 40,
-              "industrial": 32, "modern": 54, "future": 40}
-EXPECT_LEVEL = {1: 22, 2: 37, 3: 38, 4: 40, 5: 37, 6: 17, 7: 12}
+             "contagion": 3, "reborn": 4, "divine_shield": 5,
+             "poison": 3, "armor": 2, "stealth": 3}
+EXPECT_ERA = {"prehistoric": 52, "primitive": 47, "classical": 35, "feudal": 51,
+              "industrial": 38, "modern": 82, "future": 41}
+EXPECT_LEVEL = {1: 35, 2: 52, 3: 59, 4: 60, 5: 55, 6: 28, 7: 20}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "playstyle", "taxon", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
@@ -351,6 +382,15 @@ def parse_effects(value):
             errors.append(f"未知原语 {op!r}（{chunk}）")
         errors.extend(check_selector(selector, chunk))
         errors.extend(check_params(op, params, chunk))
+        if selector not in ("self", "target"):
+            parts = selector.split(":")
+            if len(parts) > 1 and parts[1] == "adjacent" \
+                    and trigger not in ("Aura", "ConditionalAura"):
+                errors.append(f"相邻选择器只能用于光环，实为 {trigger}（{chunk}）")
+            if len(parts) > 1 and parts[1] == "adjacent" and parts[0] != "friendly":
+                errors.append(f"相邻选择器必须以 friendly: 开头，实为 {selector!r}（{chunk}）")
+        if CROWD_PARAMS & set(params) and trigger not in ("Aura", "ConditionalAura"):
+            errors.append(f"群聚参数 {sorted(CROWD_PARAMS & set(params))} 只能用于光环（{chunk}）")
         if trigger in ("Aura", "ConditionalAura") and op not in AURA_OPS:
             errors.append(f"光环触发只能用 {sorted(AURA_OPS)}，实为 {op}（{chunk}）")
         effects.append({"trigger": trigger, "op": op,
@@ -688,6 +728,36 @@ def keyword_errors(doc, keyword):
     return []
 
 
+def mechanism_errors(doc, skill_map):
+    """新机制原语与选择器的玩法归属；技能解析错误由 check_skills 报告。"""
+    label = card_label(doc)
+    playstyle = doc.get("playstyle")
+    errors = []
+    for sid in card_skills(doc):
+        skill = skill_map.get(sid)
+        if skill is None:
+            continue
+        effects, parse_errors = parse_effects(skill.get("effects"))
+        if parse_errors:
+            continue
+        for effect in effects:
+            op = effect["op"]
+            allowed = MECHANISM_PLAYSTYLE.get(op)
+            if allowed is not None and playstyle not in allowed:
+                errors.append(f"{label}: 原语 {op} 只允许 playstyle ∈ {sorted(allowed)}，"
+                              f"实为 {playstyle!r}")
+            selector = effect["selector"]
+            if selector in ("self", "target"):
+                continue
+            parts = selector.split(":")
+            pick = parts[1] if len(parts) > 1 else ""
+            allowed = PICK_PLAYSTYLE.get(pick)
+            if allowed is not None and playstyle not in allowed:
+                errors.append(f"{label}: 选择器 {pick} 只允许 playstyle ∈ {sorted(allowed)}，"
+                              f"实为 {playstyle!r}")
+    return errors
+
+
 def load(kind, required, root=ROOT):
     docs = []
     for path in sorted((root / kind).glob("*.md")):
@@ -993,8 +1063,8 @@ def check_skills():
     global KEYWORD_LABELS
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 131:
-        fail(f"技能数量 {len(skills)}，期望 131")
+    if len(skills) != 197:
+        fail(f"技能数量 {len(skills)}，期望 197")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
@@ -1090,6 +1160,10 @@ def keyword_cost(card, skill_map):
             total += 3
         elif k in ("contagion", "optimal_attack", "sow"):
             total += 2
+        elif k in ("poison", "stealth"):
+            total += 3
+        elif k.startswith("armor"):
+            total += 2 + 2 * (int(k.split()[1]) - 1)
         elif k.startswith("breed"):
             total += 2
         elif k.startswith("assemble"):
@@ -1133,6 +1207,8 @@ def check_cards(skill_map):
         if "tribe" in doc:
             fail(f"{doc['_file']}: 残留旧字段 tribe，应改用 playstyle / taxon / specialty")
         for message in skill_ref_errors(doc, skill_map):
+            fail(message)
+        for message in mechanism_errors(doc, skill_map):
             fail(message)
         # 分类字段校验：缺字段时 classification_errors 自己报告，这里对所有卡都跑。
         for message in classification_errors(doc):
@@ -1204,7 +1280,7 @@ def check_cards(skill_map):
                 fail(message)
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"minion": 203, "effect": 37}:
+    if counts != {"minion": 309, "effect": 37}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]

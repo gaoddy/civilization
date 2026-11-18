@@ -2,15 +2,88 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::{minion, place, setup, test_catalog};
-use rule_engine::combat;
+use common::{effects_of, minion, place, setup, test_catalog};
+use rule_engine::combat::{self, CombatAction, CombatLog, CombatSetup, simulate_with};
+use rule_engine::data::{Card, CardType, Playstyle, Skill};
 use rule_engine::effects::{
     Duration, Effect, EffectCtx, Op, Trigger, effect_coverage, parse_effects,
 };
+use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
+use rule_engine::rng::RngStreams;
 use rule_engine::state::{GameState, HandCard, MinionInstance, Phase, Seat, ShopSlot};
+
+/// 往测试目录里插入一张合成随从，避免依赖真实卡面数值。
+fn add_card(engine: &mut Engine, id: &str, attack: i32, health: i32, keywords: &[&str]) {
+    let mut skill_ids = Vec::new();
+    for (index, keyword) in keywords.iter().enumerate() {
+        let skill_id = format!("{id}-skill-{index}");
+        engine.catalog.skills.insert(
+            skill_id.clone(),
+            Skill {
+                id: skill_id.clone(),
+                keyword: Some((*keyword).to_string()),
+                effects: Vec::new(),
+                cost: None,
+                uses_per_turn: None,
+            },
+        );
+        skill_ids.push(skill_id);
+    }
+    engine.catalog.cards.insert(
+        id.to_string(),
+        Card {
+            id: id.to_string(),
+            card_type: CardType::Minion,
+            playstyle: Playstyle::Mammal,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
+            subtype: None,
+            level: 1,
+            era: None,
+            attack: Some(attack),
+            health: Some(health),
+            skills: skill_ids,
+            is_scholar: false,
+            is_hero: false,
+            cost: Some(1),
+        },
+    );
+}
+
+/// 给合成随从追加一组战斗效果技能。
+fn add_effect_card(
+    engine: &mut Engine,
+    id: &str,
+    attack: i32,
+    health: i32,
+    keywords: &[&str],
+    effects: &[&str],
+) {
+    add_card(engine, id, attack, health, keywords);
+    for (index, raw) in effects.iter().enumerate() {
+        let skill_id = format!("{id}-effect-{index}");
+        engine.catalog.skills.insert(
+            skill_id.clone(),
+            Skill {
+                id: skill_id.clone(),
+                keyword: None,
+                effects: effects_of(raw),
+                cost: None,
+                uses_per_turn: None,
+            },
+        );
+        engine
+            .catalog
+            .cards
+            .get_mut(id)
+            .expect("刚插入的合成卡应存在")
+            .skills
+            .push(skill_id);
+    }
+}
 
 fn effect(raw: &str) -> Effect {
     parse_effects(raw)
@@ -529,9 +602,10 @@ fn coverage_counts_all_effect_segments() {
     let coverage = effect_coverage(&catalog);
 
     let total: usize = coverage.values().sum();
-    assert_eq!(total, 122, "已提交数据的全部效果段都应被统计");
-    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&15));
-    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::ModifyStats)), Some(&10));
+    // 玩法扩充后卡池达到 346 张，效果段总数与打出时的成长/改属性段数同步上升。
+    assert_eq!(total, 184, "已提交数据的全部效果段都应被统计");
+    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&21));
+    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::ModifyStats)), Some(&12));
     assert_eq!(coverage.get(&(Trigger::OnUse, Op::ModifyStats)), Some(&1));
 
     let executable: BTreeSet<Op> = [
@@ -547,6 +621,15 @@ fn coverage_counts_all_effect_segments() {
         Op::RefreshShop,
         Op::AddShopSlot,
         Op::GainMinion,
+        Op::Decompose,
+        Op::Mimic,
+        Op::Devour,
+        Op::Detonate,
+        Op::Convert,
+        Op::Revive,
+        Op::Recall,
+        Op::Salvage,
+        Op::Latent,
     ]
     .into_iter()
     .collect();
@@ -610,6 +693,30 @@ fn grant_contagion_stacks_layer() {
         board_minion(&state, 0, 0).contagion,
         2,
         "传染层数写入 contagion，不进入 granted"
+    );
+}
+
+#[test]
+fn grant_armor_keeps_layer_in_keyword_string() {
+    let (mut engine, mut state) = setup(11);
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
+
+    engine.apply_op(
+        &mut state,
+        &effect("OnCombatStart|GrantKeyword|friendly:all|keyword=armor 2,duration=combat"),
+        &ctx(0),
+        None,
+    );
+
+    let minion = board_minion(&state, 0, 0);
+    assert!(
+        minion.granted.iter().any(|(name, _)| name == "armor 2"),
+        "armor 层数应写入关键词字符串，而不是裸 armor"
+    );
+    assert_eq!(
+        combat::armor_value(&engine.catalog, minion),
+        2,
+        "战斗侧读取到授予的 2 点减伤"
     );
 }
 
@@ -720,4 +827,390 @@ fn cannot_attack_without_duration_clears_at_settle() {
     let minion = board_minion(&state, 0, 0);
     assert!(!minion.cannot_attack, "无 duration 的禁攻在 Settle 前解除");
     assert!(minion.granted.is_empty());
+}
+
+#[test]
+fn mimic_copies_current_stats_and_keywords_not_growth() {
+    let (mut engine, mut state) = setup(11);
+    add_card(&mut engine, "mimic-source", 0, 0, &[]);
+    add_card(&mut engine, "mimic-target", 0, 0, &["taunt"]);
+    place(&engine.catalog, &mut state, 0, 1, "mimic-source");
+    place(&engine.catalog, &mut state, 1, 10, "mimic-target");
+    // 目标当前 5/5：卡面 0/0 加成长层；拟态只读当前值，不复制成长层。
+    state.players[1].board[0].stats.attack.add_growth(5);
+    state.players[1].board[0].stats.health.add_growth(5);
+    state.phase = Phase::Combat;
+
+    let mimic = effect("OnCombatStart|Mimic|enemy:single|duration=combat");
+    let mimic_ctx = EffectCtx {
+        source: Some(1),
+        target: Some(10),
+        ..ctx(0)
+    };
+    let events = engine.apply_op(&mut state, &mimic, &mimic_ctx, None);
+
+    assert!(events.is_empty(), "拟态不产生事件");
+    let source = board_minion(&state, 0, 0);
+    assert_eq!(combat::effective_attack(&engine.catalog, source), 5);
+    assert_eq!(combat::effective_health(&engine.catalog, source), 5);
+    assert_eq!(source.stats.attack.growth, 0, "不复制目标成长层");
+    assert_eq!(source.stats.health.growth, 0, "不复制目标成长层");
+    assert!(
+        source
+            .granted
+            .contains(&("taunt".to_string(), Duration::Combat)),
+        "关键词按 duration 写入 granted"
+    );
+    assert!(
+        combat::keywords(&engine.catalog, source).contains("taunt"),
+        "拟态后获得嘲讽"
+    );
+
+    // 金色连续触发两次：第二次以同一目标为准，不应叠加数值。
+    engine.apply_op(&mut state, &mimic, &mimic_ctx, None);
+    let source = board_minion(&state, 0, 0);
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, source),
+        5,
+        "第二次触发仍为目标当前值"
+    );
+    assert_eq!(
+        combat::effective_health(&engine.catalog, source),
+        5,
+        "第二次触发仍为目标当前值"
+    );
+
+    let target = board_minion(&state, 1, 0);
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, target),
+        5,
+        "目标本身不被修改"
+    );
+
+    state.phase = Phase::Settle;
+    engine.resolve_settle(&mut state).expect("结算应成功");
+    let source = board_minion(&state, 0, 0);
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, source),
+        0,
+        "combat 拟态在本回合结束后回滚"
+    );
+    assert!(
+        !combat::keywords(&engine.catalog, source).contains("taunt"),
+        "combat 关键词在结算后移除"
+    );
+}
+
+#[test]
+fn devour_only_accepts_target_at_or_below_limit() {
+    let (mut engine, mut state) = setup(11);
+    add_card(&mut engine, "devour-source", 0, 0, &[]);
+    add_card(&mut engine, "devour-small", 3, 5, &[]);
+    add_card(&mut engine, "devour-big", 4, 5, &[]);
+    place(&engine.catalog, &mut state, 0, 1, "devour-source");
+    place(&engine.catalog, &mut state, 1, 10, "devour-small");
+    place(&engine.catalog, &mut state, 1, 11, "devour-big");
+    state.phase = Phase::Combat;
+
+    let devour = effect("OnCombatStart|Devour|enemy:single|value=3");
+    let small_ctx = EffectCtx {
+        source: Some(1),
+        target: Some(10),
+        ..ctx(0)
+    };
+    engine.apply_op(&mut state, &devour, &small_ctx, None);
+
+    assert_eq!(
+        board_minion(&state, 1, 0).stats.health.current,
+        0,
+        "攻击力 3 的目标被致死"
+    );
+    let source = board_minion(&state, 0, 0);
+    assert_eq!(source.stats.attack.permanent, 3, "永久获得目标卡面攻击力");
+    assert_eq!(source.stats.health.permanent, 5, "永久获得目标卡面生命值");
+
+    let big_ctx = EffectCtx {
+        source: Some(1),
+        target: Some(11),
+        ..ctx(0)
+    };
+    engine.apply_op(&mut state, &devour, &big_ctx, None);
+
+    let big = board_minion(&state, 1, 1);
+    assert_eq!(
+        big.stats.health.current, 5,
+        "攻击力 4 超过 value=3，目标不受影响"
+    );
+    let source = board_minion(&state, 0, 0);
+    assert_eq!(source.stats.attack.permanent, 3, "超限时不获得属性");
+    assert_eq!(source.stats.health.permanent, 5, "超限时不获得属性");
+}
+
+#[test]
+fn devour_and_mimic_are_silent_when_target_is_missing() {
+    let (mut engine, mut state) = setup(11);
+    add_card(&mut engine, "quiet-source", 0, 0, &[]);
+    add_card(&mut engine, "quiet-friend", 5, 5, &["taunt"]);
+    place(&engine.catalog, &mut state, 0, 1, "quiet-source");
+    place(&engine.catalog, &mut state, 0, 2, "quiet-friend");
+    state.phase = Phase::Combat;
+
+    let effects = [
+        // 目标实例不存在时拟态落空。
+        effect("OnCombatStart|Mimic|target|duration=combat"),
+        effect("OnCombatStart|Devour|enemy:single|value=3"),
+        // 吞噬仍只接受敌方目标；指向友方的显式目标落空。
+        effect("OnCombatStart|Devour|target|value=3"),
+    ];
+    for effect in effects {
+        let target = if effect.op == Op::Mimic {
+            Some(99)
+        } else {
+            Some(2)
+        };
+        let events = engine.apply_op(
+            &mut state,
+            &effect,
+            &EffectCtx {
+                source: Some(1),
+                target,
+                ..ctx(0)
+            },
+            None,
+        );
+        assert!(events.is_empty(), "落空不产生事件");
+    }
+
+    let source = board_minion(&state, 0, 0);
+    assert_eq!(combat::effective_attack(&engine.catalog, source), 0);
+    assert_eq!(combat::effective_health(&engine.catalog, source), 0);
+    assert!(source.granted.is_empty(), "友方目标不复制关键词");
+    assert_eq!(source.stats.attack.permanent, 0, "友方目标不触发永久获得");
+    let friend = board_minion(&state, 0, 1);
+    assert_eq!(friend.stats.health.current, 5, "友方目标不被消灭");
+}
+
+#[test]
+fn mimic_allows_friendly_target_and_stats_only_skips_keywords() {
+    let (mut engine, mut state) = setup(11);
+    add_card(&mut engine, "mimic-friendly-source", 0, 0, &[]);
+    add_card(&mut engine, "mimic-friendly-target", 5, 5, &["taunt"]);
+    place(&engine.catalog, &mut state, 0, 1, "mimic-friendly-source");
+    place(&engine.catalog, &mut state, 0, 2, "mimic-friendly-target");
+    state.phase = Phase::Combat;
+
+    let mimic = effect("OnCombatStart|Mimic|friendly:single|duration=combat,statsOnly=true");
+    let mimic_ctx = EffectCtx {
+        source: Some(1),
+        target: Some(2),
+        ..ctx(0)
+    };
+    let events = engine.apply_op(&mut state, &mimic, &mimic_ctx, None);
+
+    assert!(events.is_empty(), "拟态不产生事件");
+    let source = board_minion(&state, 0, 0);
+    assert_eq!(combat::effective_attack(&engine.catalog, source), 5);
+    assert_eq!(combat::effective_health(&engine.catalog, source), 5);
+    assert!(
+        source.granted.is_empty(),
+        "statsOnly 只复制攻防，不复制关键词"
+    );
+
+    // 金色第二次触发仍以目标当前值为准，不叠加。
+    engine.apply_op(&mut state, &mimic, &mimic_ctx, None);
+    let source = board_minion(&state, 0, 0);
+    assert_eq!(combat::effective_attack(&engine.catalog, source), 5);
+    assert_eq!(combat::effective_health(&engine.catalog, source), 5);
+    assert!(source.granted.is_empty());
+}
+
+#[test]
+fn mimic_stats_only_in_combat_skips_keywords() {
+    let (mut engine, _state) = setup(11);
+    add_effect_card(
+        &mut engine,
+        "combat-mimic-stats",
+        1,
+        1,
+        &[],
+        &["OnCombatStart|Mimic|enemy:single|duration=combat,statsOnly=true"],
+    );
+    add_card(&mut engine, "combat-mimic-target", 3, 4, &["taunt"]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "combat-mimic-stats")],
+        &[minion(&engine.catalog, 2, "combat-mimic-target")],
+    );
+
+    assert!(
+        log.actions.iter().any(|action| matches!(
+            action,
+            CombatAction::Mimicked {
+                source: 1,
+                target: 2
+            }
+        )),
+        "战斗内拟态仍记录动作"
+    );
+    let source = final_minion(&log, 1);
+    assert_eq!(source.stats.attack.turn, 2, "复制攻击力增量");
+    assert_eq!(source.stats.health.turn, 3, "复制生命值增量");
+    assert!(
+        !source.granted.iter().any(|(name, _)| name == "taunt"),
+        "statsOnly 不复制关键词"
+    );
+}
+
+fn battle(engine: &Engine, attacker: &[MinionInstance], defender: &[MinionInstance]) -> CombatLog {
+    simulate_with(
+        engine,
+        attacker,
+        defender,
+        0,
+        1,
+        0,
+        &mut RngStreams::from_seed([23u8; 32]),
+        CombatSetup::default(),
+    )
+}
+
+fn final_minion(log: &CombatLog, id: rule_engine::state::InstanceId) -> &MinionInstance {
+    log.attacker_final
+        .iter()
+        .chain(log.defender_final.iter())
+        .find(|minion| minion.instance_id == id)
+        .expect("战斗结束后随从仍在快照中")
+}
+
+#[test]
+fn mimic_in_combat_records_action_and_copies_keywords() {
+    let (mut engine, _state) = setup(11);
+    add_effect_card(
+        &mut engine,
+        "combat-mimic",
+        1,
+        1,
+        &[],
+        &["OnCombatStart|Mimic|enemy:single|duration=combat"],
+    );
+    add_card(&mut engine, "combat-victim", 2, 3, &["taunt"]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "combat-mimic")],
+        &[minion(&engine.catalog, 2, "combat-victim")],
+    );
+
+    assert!(
+        log.actions.iter().any(|action| matches!(
+            action,
+            CombatAction::Mimicked {
+                source: 1,
+                target: 2
+            }
+        )),
+        "战斗内拟态记录 CombatAction::Mimicked"
+    );
+    let source = final_minion(&log, 1);
+    assert_eq!(source.stats.attack.turn, 1, "写入的是达到目标值的增量");
+    assert_eq!(source.stats.health.turn, 2, "写入的是达到目标值的增量");
+    assert!(
+        source
+            .granted
+            .contains(&("taunt".to_string(), Duration::Combat)),
+        "战斗内同样复制关键词"
+    );
+}
+
+#[test]
+fn devour_in_combat_ignores_shield_and_records_action() {
+    let (mut engine, _state) = setup(11);
+    add_effect_card(
+        &mut engine,
+        "combat-devour",
+        1,
+        1,
+        &[],
+        &["OnCombatStart|Devour|enemy:single|value=3"],
+    );
+    add_card(&mut engine, "combat-prey", 3, 10, &["divine_shield"]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "combat-devour")],
+        &[minion(&engine.catalog, 2, "combat-prey")],
+    );
+
+    assert!(
+        log.actions.iter().any(|action| matches!(
+            action,
+            CombatAction::Devoured {
+                source: 1,
+                target: 2
+            }
+        )),
+        "战斗内吞噬记录 CombatAction::Devoured"
+    );
+    assert!(
+        log.actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Death { minion: 2 })),
+        "护盾不能阻止吞噬"
+    );
+    let source = final_minion(&log, 1);
+    assert_eq!(source.stats.attack.permanent, 3);
+    assert_eq!(source.stats.health.permanent, 10);
+    let prey = final_minion(&log, 2);
+    assert!(!prey.shield_used, "吞噬不消耗护盾，也不被护盾抵消");
+    assert_eq!(prey.stats.health.current, 0);
+}
+
+#[test]
+fn mimic_in_combat_excludes_aura_stats_and_keywords() {
+    let (mut engine, _state) = setup(11);
+    add_effect_card(
+        &mut engine,
+        "combat-mimic-plain",
+        1,
+        1,
+        &[],
+        &["OnCombatStart|Mimic|enemy:single|duration=combat"],
+    );
+    add_card(&mut engine, "combat-aura-target", 2, 3, &["taunt"]);
+
+    // 战斗克隆已折叠光环：目标卡面 2/3，光环 +3/+3 后当前值 5/6；
+    // 光环还授予「最优攻击」。拟态只应复制不含光环的 2/3 与卡面关键词。
+    let mut target = minion(&engine.catalog, 2, "combat-aura-target");
+    target.stats.attack.set_aura(3);
+    target.stats.health.set_aura(3);
+    target
+        .granted
+        .push(("optimal_attack".to_string(), Duration::Aura));
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "combat-mimic-plain")],
+        &[target],
+    );
+
+    let source = final_minion(&log, 1);
+    assert_eq!(
+        source.stats.attack.turn, 1,
+        "复制 2 点攻击力而非光环后的 5 点"
+    );
+    assert_eq!(
+        source.stats.health.turn, 2,
+        "复制 3 点生命值而非光环后的 6 点"
+    );
+    assert!(
+        source
+            .granted
+            .contains(&("taunt".to_string(), Duration::Combat)),
+        "卡面关键词照常复制"
+    );
+    assert!(
+        !combat::keywords(&engine.catalog, source).contains("optimal_attack"),
+        "光环授予的关键词不复制"
+    );
 }

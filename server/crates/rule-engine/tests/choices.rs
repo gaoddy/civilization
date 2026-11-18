@@ -74,7 +74,11 @@ fn add_minion(
     catalog.config.pool_counts[usize::from(level) - 1] = 16;
 }
 
-fn first_minion_of_level(catalog: &Catalog, level: u8) -> String {
+fn first_minion_of_level(
+    catalog: &Catalog,
+    level: u8,
+    enabled: &std::collections::BTreeSet<Playstyle>,
+) -> String {
     catalog
         .cards
         .values()
@@ -83,6 +87,7 @@ fn first_minion_of_level(catalog: &Catalog, level: u8) -> String {
                 && !card.is_hero
                 && card.level == level
                 && !card.is_scholar
+                && card_in_pool(card, enabled)
         })
         .expect("数据中应存在该星级随从")
         .id
@@ -429,7 +434,7 @@ fn discover_fires_from_hero_power() {
 #[test]
 fn triple_reward_is_played_and_consumed_by_choose() {
     let (mut engine, mut state) = turn_started(2);
-    let card_id = first_minion_of_level(&engine.catalog, 1);
+    let card_id = first_minion_of_level(&engine.catalog, 1, &state.enabled_playstyles);
     state.players[0].hand = (0..2).map(|_| hand_card(&card_id)).collect();
 
     // 手牌已有两张，从商店买下第三张即形成三连：金色入手牌，不再登记发现待选。
@@ -493,7 +498,7 @@ fn gain_minion_level_current_uses_player_era() {
     let (mut engine, mut state) = turn_started(2);
     // 1 星与 2 星同时在货，玩家处于原始：若误用「回合对应的时代」会取 1 星。
     // 史前的商店等级同样是 1 星，因此必须把玩家放到原始才能区分两种口径。
-    let one_star = first_minion_of_level(&engine.catalog, 1);
+    let one_star = first_minion_of_level(&engine.catalog, 1, &state.enabled_playstyles);
     add_minion(
         &mut engine.catalog,
         "probe-two-star",
@@ -538,7 +543,7 @@ fn gain_minion_level_current_uses_player_era() {
 #[test]
 fn gain_minion_from_shop_removes_shop_slot() {
     let (mut engine, mut state) = turn_started(2);
-    let card_id = first_minion_of_level(&engine.catalog, 1);
+    let card_id = first_minion_of_level(&engine.catalog, 1, &state.enabled_playstyles);
     set_shop(
         &mut state,
         0,
@@ -583,7 +588,7 @@ fn gain_minion_from_empty_shop_is_a_no_op() {
 #[test]
 fn gain_minion_to_board_places_new_minion() {
     let (mut engine, mut state) = turn_started(2);
-    let card_id = first_minion_of_level(&engine.catalog, 1);
+    let card_id = first_minion_of_level(&engine.catalog, 1, &state.enabled_playstyles);
     set_shop(
         &mut state,
         0,
@@ -627,7 +632,7 @@ fn gain_minion_to_board_with_full_board_is_a_no_op() {
 #[test]
 fn gain_minion_to_board_runs_triple_check() {
     let (mut engine, mut state) = turn_started(2);
-    let card_id = first_minion_of_level(&engine.catalog, 1);
+    let card_id = first_minion_of_level(&engine.catalog, 1, &state.enabled_playstyles);
     state.players[0].board = vec![
         dummy(&engine.catalog, 1, &card_id),
         dummy(&engine.catalog, 2, &card_id),
@@ -675,7 +680,7 @@ fn copy_hand_minion_to_hand_respects_hand_limit() {
 #[test]
 fn copy_hand_minion_to_hand_with_room_adds_copy() {
     let (mut engine, mut state) = turn_started(2);
-    let card_id = first_minion_of_level(&engine.catalog, 2);
+    let card_id = first_minion_of_level(&engine.catalog, 2, &state.enabled_playstyles);
     state.players[0].hand = vec![hand_card(&card_id)];
     let pool_before = pool_count(&state, &card_id);
 
@@ -987,7 +992,7 @@ fn evolve_bonus_does_not_trigger_onsummon_twice() {
 #[test]
 fn evolve_cards_without_evolve_do_not_register_choice() {
     let (mut engine, mut state) = turn_started(2);
-    let card_id = first_minion_of_level(&engine.catalog, 1);
+    let card_id = first_minion_of_level(&engine.catalog, 1, &state.enabled_playstyles);
     state.players[0].hand = vec![hand_card(&card_id)];
 
     engine

@@ -91,7 +91,11 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 ///
 /// 本基线因卡片分类与玩法体系落地而重定，之后又因「目标被主伤害击杀后仍反击」
 /// 的规则调整再次重定：反击进入更多交换，战斗结果与随机流消耗随之变化。
-/// 基线冻结的仍是行为：任何算术、遍历顺序或随机流消耗变化都会使哈希改变。
+/// 2026-11-18 玩法扩充（13 个流派共 106 张新卡、共享池随之变化）后第三次重定：
+/// `state_hash` 含共享池，卡池变化必然改变每局哈希；同时修复了目标待选在合法池
+/// 不含最左侧随从时无法消费的 AI 缺陷（`ai::choose_pending` 沿棋盘后移），
+/// 机器人行为随之变化。基线冻结的仍是行为：任何算术、遍历顺序或随机流消耗
+/// 变化都会使哈希改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

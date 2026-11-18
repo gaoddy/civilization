@@ -1,0 +1,50 @@
+---
+id: pulley
+card_type: minion
+name: 滑轮
+playstyle: machine
+taxon: automation
+subtype: robot
+level: 2
+era: primitive
+attack: 2
+health: 4
+skills: [keyword-assemble-1]
+is_scholar: false
+---
+
+# 滑轮
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | pulley |
+| 名称 | 滑轮 |
+| 类型 | 随从 |
+| 玩法 | 机械 |
+| 科学分类 | 造物 › 自动机械 |
+| 关联分类 | 无 |
+| 子类 | 机器人 |
+| 星级 | 2 |
+| 时代 | 原始 |
+| 攻击力 | 2 |
+| 生命值 | 4 |
+| 关键词 | 装配 1 |
+| 技能 | keyword-assemble-1 |
+| 学者 | 否 |
+| 英雄资格 | 否 |
+
+## 效果
+
+装配 1：进入战场时，使你的其他机械随从各获得 1 次成长
+
+## 设计说明
+
+定位：2 星装配，衔接低费机械铺场。
+平衡边界：2 星 2/4，身材处于该星级中位。
+使用建议：与齿轮形成连续装配，快速拉起机械身材。
+
+## 出处
+
+滑轮组可改变力的方向，并以较小力举起重物。

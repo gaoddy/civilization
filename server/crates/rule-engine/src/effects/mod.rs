@@ -62,6 +62,14 @@ pub enum Op {
     AddShopSlot,
     GainMinion,
     Decompose,
+    Mimic,
+    Devour,
+    Detonate,
+    Convert,
+    Revive,
+    Recall,
+    Salvage,
+    Latent,
 }
 
 /// 选择器的阵营。
@@ -83,6 +91,10 @@ pub enum Pick {
     Leftmost,
     LeftmostAdjacent,
     TopAttack,
+    /// 攻击力最低者；仅用于 `DealDamage` 的敌方选择器。
+    LowestAttack,
+    /// 携带者左右的存活随从；仅用于光环。
+    Adjacent,
 }
 
 /// 选择器筛选条件，写作 `key=value`。
@@ -119,6 +131,9 @@ pub enum Duration {
     Instant,
     Permanent,
     Combat,
+    /// 光环折叠写入的派生关键词；DSL 无法指定，只用于区分来源，
+    /// 使拟态等「不复制光环」的效果能够剔除它们。
+    Aura,
 }
 
 /// 关键词及其层数；`繁衍` / `装配` / `传染` 可携带 `Some(N)`。
@@ -202,11 +217,21 @@ pub struct Params {
     pub amount: Option<i32>,
     pub attack: Option<i32>,
     pub health: Option<i32>,
+    /// 群聚：每个其他同玩法随从额外攻击力。
+    pub per_attack: Option<i32>,
+    /// 群聚：每个其他同玩法随从额外生命值。
+    pub per_health: Option<i32>,
+    /// 群聚：最多计算的随从数。
+    pub max_count: Option<i32>,
+    /// 引爆 / 转化 / 潜伏的层数阈值。
+    pub threshold: Option<i32>,
     pub value: Option<i32>,
     pub extra: Option<i32>,
     pub duration: Option<Duration>,
     pub can_kill: Option<bool>,
     pub health_only: Option<bool>,
+    /// 拟态只复制攻防，不复制关键词。
+    pub stats_only: Option<bool>,
     pub times_if: Option<TimesIf>,
     pub condition: Option<Condition>,
     pub when: Option<Filter>,
