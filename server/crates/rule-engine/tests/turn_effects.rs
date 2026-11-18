@@ -171,6 +171,14 @@ fn catalog_with_synthetics() -> Catalog {
         (1, 1, 1),
         (None, "OnDeath|Salvage|self|pool=playstyle,count=1"),
     );
+    // 非机械载体：仅用于验证随机池跟随载体玩法，而不是写死机械。
+    add_card(
+        &mut catalog,
+        "mammal-salvager",
+        Playstyle::Mammal,
+        (1, 1, 1),
+        (None, "OnDeath|Salvage|self|pool=playstyle,count=1"),
+    );
     add_card(
         &mut catalog,
         "killer",
@@ -1107,6 +1115,49 @@ fn salvage_adds_only_machine_minions_to_hand() {
             "记录 Salvaged 动作"
         );
     }
+}
+
+#[test]
+fn salvage_pool_follows_carrier_playstyle() {
+    let (engine, _) = setup(3);
+    let attacker = vec![MinionInstance::new(
+        &engine.catalog,
+        1,
+        "mammal-salvager",
+        false,
+    )];
+    let defender = vec![MinionInstance::new(&engine.catalog, 2, "killer", false)];
+    let mut rng = RngStreams::from_seed([3; 32]);
+    let mut playstyles = machine_playstyles();
+    playstyles.insert(Playstyle::Mammal);
+    let log = combat::simulate_with(
+        &engine,
+        &attacker,
+        &defender,
+        0,
+        1,
+        0,
+        &mut rng,
+        CombatSetup {
+            attacker_hand: 0,
+            defender_hand: 0,
+            hand_slots: 10,
+            playstyles: Some(&playstyles),
+            ..CombatSetup::default()
+        },
+    );
+
+    assert_eq!(log.hand_copies.len(), 1, "死亡后应获得 1 张牌");
+    let card = engine
+        .catalog
+        .cards
+        .get(&log.hand_copies[0].card_id)
+        .expect("获得的牌应在目录中");
+    assert_eq!(
+        card.playstyle,
+        Playstyle::Mammal,
+        "随机池应跟随载体随从的玩法，而不是写死机械"
+    );
 }
 
 #[test]

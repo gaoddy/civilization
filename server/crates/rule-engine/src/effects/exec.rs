@@ -1913,12 +1913,14 @@ impl Engine {
         }
     }
 
-    /// 零件回收：死亡时从本局启用的机械随从中随机获得 `count` 张牌。
+    /// 零件回收：死亡时从来源随从所属玩法中随机获得 `count` 张牌。
     ///
-    /// 随机池按卡牌 id 升序遍历，随机只推进 [`Stream::Combat`]；同一段效果内
-    /// 不重复取同一张（`count` 大于池大小时按实际数量）。牌写入
-    /// [`BattleField::record_hand_copy`]，手牌已满、池为空或来源离场时静默跳过，
-    /// 且不记录动作。获得的是卡面基础牌，不继承来源状态。
+    /// 随机池按载体（`ctx.source`）的玩法筛选，而不是固定机械：技能被复制或
+    /// 授予到其他流派随从时，池随载体变化。随机池按卡牌 id 升序遍历，随机
+    /// 只推进 [`Stream::Combat`]；同一段效果内不重复取同一张（`count` 大于池
+    /// 大小时按实际数量）。牌写入 [`BattleField::record_hand_copy`]，手牌已满、
+    /// 池为空或来源离场时静默跳过，且不记录动作。获得的是卡面基础牌，不继承
+    /// 来源状态。
     fn apply_combat_salvage(
         &self,
         field: &mut BattleField,
@@ -1932,12 +1934,30 @@ impl Engine {
         let Some((source_side, _)) = field.locate(source_id) else {
             return;
         };
+        let Some(carrier_card_id) = field
+            .minion(source_id)
+            .map(|minion| minion.card_id.clone())
+        else {
+            return;
+        };
         let count = effect.params.count.unwrap_or(1).max(0);
         if count == 0 {
             return;
         }
 
-        // `pool=playstyle`：本局启用的机械随从，排除 Token、英雄专属与奖励牌。
+        // `pool=playstyle`：载体所在玩法的随从牌，排除 Token、英雄专属与奖励牌。
+        let carrier_playstyle = self
+            .catalog
+            .cards
+            .get(&carrier_card_id)
+            .map(|card| card.playstyle)
+            .or_else(|| {
+                self.catalog
+                    .tokens
+                    .get(&carrier_card_id)
+                    .map(|token| token.playstyle())
+            })
+            .unwrap_or(Playstyle::Neutral);
         let mut candidates: Vec<String> = self
             .catalog
             .cards
@@ -1946,7 +1966,7 @@ impl Engine {
             .filter(|card| !card.is_hero)
             .filter(|card| card.id != REWARD_CARD_ID)
             .filter(|card| !self.catalog.tokens.contains_key(&card.id))
-            .filter(|card| card.playstyle == Playstyle::Machine)
+            .filter(|card| card.playstyle == carrier_playstyle)
             .filter(|card| {
                 field
                     .playstyles

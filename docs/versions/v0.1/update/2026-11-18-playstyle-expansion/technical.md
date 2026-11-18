@@ -268,12 +268,12 @@ pub struct CombatHandMinion {
 
 - 数据：`OnDeath | Salvage | self | pool=playstyle,count=1`。
 - 引擎：`exec.rs::apply_op` 增加 `Op::Salvage`：
-  1. 从卡池中筛选本局启用玩法、非 Token、非英雄专属、非奖励牌的随从牌。
+  1. 按载体（`ctx.source`，查找卡牌后回退 Token）的玩法筛选卡池，再与本局启用玩法取交集；排除 Token、英雄专属与奖励牌。
   2. 按 `Stream::Combat` 随机取 `count` 张，去重（不足时按实际数量）。
   3. 写入 `CombatLog.hand_copies`；手牌已满时不获得。
   4. 记录 `CombatAction::Salvaged`。
 - 口径：获得卡面基础牌，不继承来源状态；金色触发两次时获得两张。
-- 测试：随机池只含机械、手牌已满不获得、金色获得两张、随机结果确定。
+- 测试：随机池跟随载体玩法（机械载体只含机械、非机械载体取自身玩法）、手牌已满不获得、金色获得两张、随机结果确定。
 
 ## 4. 数据生成与校验
 
