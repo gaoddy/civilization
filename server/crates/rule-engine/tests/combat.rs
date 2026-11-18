@@ -299,14 +299,35 @@ fn windfury_attacks_twice() {
 }
 
 #[test]
-fn optimal_attack_prefers_killable() {
+fn ignore_taunt_can_target_non_taunt() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 3, 20, &["optimal_attack"]);
+    add_card(&mut catalog, "a", 3, 20, &["ignore_taunt"]);
     add_card(&mut catalog, "taunt", 1, 10, &["taunt"]);
     add_card(&mut catalog, "weak", 1, 2, &[]);
-    add_card(&mut catalog, "sturdy", 1, 10, &[]);
 
-    let prefers_kill = simulate(
+    let saw_non_taunt = (0..32u8).any(|seed| {
+        let log = simulate(
+            &catalog,
+            &[minion(&catalog, 1, "a")],
+            &[minion(&catalog, 2, "taunt"), minion(&catalog, 3, "weak")],
+            0,
+            1,
+            0,
+            &mut RngStreams::from_seed([seed; 32]),
+        );
+        attacks(&log).first().is_some_and(|event| event.1 == 3)
+    });
+    assert!(saw_non_taunt, "带无视嘲讽时应能选中非嘲讽目标");
+}
+
+#[test]
+fn legacy_optimal_attack_is_inert() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a", 5, 20, &["optimal_attack"]);
+    add_card(&mut catalog, "taunt", 1, 10, &["taunt"]);
+    add_card(&mut catalog, "weak", 1, 2, &[]);
+
+    let log = simulate(
         &catalog,
         &[minion(&catalog, 1, "a")],
         &[minion(&catalog, 2, "taunt"), minion(&catalog, 3, "weak")],
@@ -315,25 +336,11 @@ fn optimal_attack_prefers_killable() {
         0,
         &mut rng(),
     );
-    assert_eq!(
-        attacks(&prefers_kill)[0],
-        (1, 3, 3, false),
-        "最优攻击应无视嘲讽优先击杀可击杀目标"
-    );
 
-    let falls_back = simulate(
-        &catalog,
-        &[minion(&catalog, 1, "a")],
-        &[minion(&catalog, 2, "taunt"), minion(&catalog, 4, "sturdy")],
-        0,
-        1,
-        0,
-        &mut rng(),
-    );
     assert_eq!(
-        attacks(&falls_back)[0],
-        (1, 2, 3, false),
-        "无可击杀目标时回退到嘲讽规则"
+        attacks(&log)[0],
+        (1, 2, 5, false),
+        "遗留最优攻击不再绕过嘲讽，也不再优先击杀残血"
     );
 }
 
