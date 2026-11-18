@@ -980,7 +980,7 @@ skill.deathrattle-random-enemy-minus-1-attack.text,亡语：使随机一个敌�
 skill.deathrattle-random-enemy-minus-1-health.text,亡语：使随机一个敌方随从获得 -1 生命
 skill.deathrattle-summon-1-worker-bee.text,分裂：死亡时召唤一个 1/1 的工蜂
 skill.deathrattle-summon-2-2-hela-cell-clone.text,亡语：召唤一个 2/2 的海拉细胞（复制体）
-skill.deathrattle-summon-2-ammonites.text,分裂：死亡时召唤两个 5/5 的菊石
+skill.deathrattle-summon-2-ammonites.text,分裂：死亡时召唤两个 5/5 的菊石幼体
 skill.deathrattle-summon-2-amoeba-larvae-2-2.text,分裂：死亡时召唤两个 2/2 的变形虫幼体
 skill.deathrattle-summon-2-coral-polyps.text,分裂：死亡时召唤两个 1/1 的珊瑚虫
 skill.deathrattle-summon-2-seabirds.text,分裂：死亡时召唤两个 3/3 的海鸟
@@ -1059,7 +1059,7 @@ skill.light-speed-strike.text,使一个友方随从本回合获得连击
 skill.microbiology.match_text,同左
 skill.microbiology.name,微生物学
 skill.microbiology.text,战斗开始时使敌方最左侧随从获得 1 层传染
-skill.mimic-1.text,战吼：复制一个友方随从的当前攻击力与生命值
+skill.mimic-1.text,战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束
 skill.mimic-2.text,拟态：战斗开始时，复制一个敌方随从的当前攻击力与生命值直到本回合结束
 skill.mimic-3.text,拟态：战斗开始时，复制一个敌方随从的当前攻击力、生命值与关键词直到本回合结束
 skill.observation.match_text,额外出现的随从固定为当前时代当前星级排序第一张
