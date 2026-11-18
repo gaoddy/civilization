@@ -317,10 +317,14 @@ fn aura_folds_into_combat_snapshot_only() {
 #[test]
 fn recompute_is_idempotent() {
     let (mut engine, mut state) = setup(23);
-    place(&engine.catalog, &mut state, 0, 1, "qinghao");
+    place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
 
     engine.recompute_auras(&mut state);
+    assert!(
+        !state.auras.is_empty(),
+        "夹具必须产生非空光环，否则幂等断言是空对空"
+    );
     let first = state.auras.clone();
     engine.recompute_auras(&mut state);
 
@@ -364,11 +368,15 @@ fn state_hash_includes_auras() {
 #[test]
 fn ghost_fight_does_not_leak_auras_into_stored_state() {
     let (mut engine, mut state) = setup(23);
-    place(&engine.catalog, &mut state, 0, 1, "qinghao");
+    place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
     place(&engine.catalog, &mut state, 3, 3, "juzi");
     state.players[3].eliminated = true;
     engine.recompute_auras(&mut state);
+    assert!(
+        !state.auras.is_empty(),
+        "夹具必须产生非空光环，否则泄漏断言是空对空"
+    );
 
     let before = state.players[0].board.clone();
     let before_ghost = state.players[3].board.clone();
