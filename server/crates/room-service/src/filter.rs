@@ -269,7 +269,7 @@ fn state_at(states: &[combat::MinionSnapshot], index: usize) -> Option<CombatMin
     states.get(index).map(minion_state)
 }
 
-/// 战斗动作转协议：`kind` 为 `attack|death|reborn|contagion|poison|summon`。
+/// 战斗动作转协议：`kind` 为 `attack|death|reborn|revive|recall|contagion|poison|summon`。
 ///
 /// 引擎只为主动攻击记录 `attack`；反击伤害已并入该条动作的 `source` / `target`
 /// 快照，客户端不会收到独立的反击动作。
@@ -401,6 +401,38 @@ fn combat_action(
                 target_index: target_slot.map(|(index, _)| index as i64),
                 target_minion_id: Some(target.to_string()),
                 target_side: target_slot.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Revived { minion } => {
+            let slot = locate(report, *minion);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "revive".to_string(),
+                source: None,
+                source_index: slot.map(|(index, _)| index as i64),
+                source_minion_id: None,
+                source_side: slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 0),
+                target_index: None,
+                target_minion_id: Some(minion.to_string()),
+                target_side: None,
+            }
+        }
+        CombatAction::Recalled { minion } => {
+            let slot = locate(report, *minion);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "recall".to_string(),
+                source: None,
+                source_index: slot.map(|(index, _)| index as i64),
+                source_minion_id: None,
+                source_side: slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 0),
+                target_index: None,
+                target_minion_id: Some(minion.to_string()),
+                target_side: None,
             }
         }
         CombatAction::Summon {

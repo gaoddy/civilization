@@ -84,6 +84,10 @@ pub enum CombatAction {
         source: InstanceId,
         target: InstanceId,
     },
+    /// 随从按复苏声明值复活。
+    Revived { minion: InstanceId },
+    /// 随从死亡后回手（已写入 `CombatLog::hand_minions`）。
+    Recalled { minion: InstanceId },
     /// 战斗中召唤：`seat` 为召唤方座位，`position` 为插入后该随从在
     /// **存活随从序列**中的下标；`card_id` / `golden` 供房间服务补全展示数据
     /// （召唤物不在战前快照里）。
@@ -102,6 +106,16 @@ pub struct CombatHandCopy {
     pub seat: Seat,
     pub card_id: String,
     pub golden: bool,
+}
+
+/// 战斗中死亡回手的随从；由结算层在战斗结束后原样写入持久手牌。
+///
+/// 与 [`CombatHandCopy`] 分开存放：这里保留完整的实例状态（成长、繁衍、
+/// 传染、授予关键词等），复制牌则只记录卡面身份。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CombatHandMinion {
+    pub seat: Seat,
+    pub minion: MinionInstance,
 }
 
 /// 伤害来源。`None` 表示无来源伤害（传染、回合开始掉血等），不产生击杀。
@@ -140,6 +154,8 @@ pub struct CombatLog {
     pub pool_spent: BTreeMap<String, u16>,
     /// 战斗中复制进手牌的卡牌，战斗结束后由结算层写回。
     pub hand_copies: Vec<CombatHandCopy>,
+    /// 战斗中死亡回手的随从，战斗结束后由结算层写入持久手牌。
+    pub hand_minions: Vec<CombatHandMinion>,
     /// 战斗使用的下一个实例编号；调用方可据此推进 `GameState::next_instance_id`。
     pub next_instance_id: InstanceId,
     /// 战斗结束时的攻击方随从克隆；供结算层回写持久字段（传染、成长）。
@@ -408,6 +424,7 @@ pub struct BattleField {
     pub(crate) actions: Vec<CombatAction>,
     pub(crate) states: Vec<Vec<MinionSnapshot>>,
     pub(crate) hand_copies: Vec<CombatHandCopy>,
+    pub(crate) hand_minions: Vec<CombatHandMinion>,
     pub(crate) pool: BTreeMap<String, u16>,
     pub(crate) pool_spent: BTreeMap<String, u16>,
     pub(crate) hand_len: [usize; 2],
@@ -464,6 +481,7 @@ impl BattleField {
             actions: Vec::new(),
             states: Vec::new(),
             hand_copies: Vec::new(),
+            hand_minions: Vec::new(),
             pool: setup.pool.cloned().unwrap_or_default(),
             pool_spent: BTreeMap::new(),
             hand_len: [setup.attacker_hand, setup.defender_hand],
@@ -932,6 +950,71 @@ impl BattleField {
                     // 再次出手，未行动过的随从由指针位置决定本轮是否轮到。
                     let states = self.snapshots(catalog, &[id]);
                     self.push_action(CombatAction::Reborn { minion: id }, states);
+                }
+
+                // 复苏与回手：在亡语、播种、复生之后结算，保证同一次死亡事件
+                // 只触发一次亡语、只复生或复苏一次。复生已把随从救回时不进入本块。
+                if let Some(engine) = engine
+                    && let Some((side_now, index_now)) = self.locate(id)
+                    && side_now == side
+                {
+                    let still_dead = !self.sides[side].alive[index_now]
+                        && self.sides[side].minions[index_now].stats.health.current <= 0;
+                    if still_dead {
+                        // 复苏：未使用过时按声明值增加永久攻防并复活，同时置
+                        // `reborn_used`，避免同一次死亡再触发复生。
+                        if !self.sides[side].minions[index_now].revive_used
+                            && let Some((bonus_attack, bonus_health)) =
+                                engine.death_revive(&card_id)
+                        {
+                            let minion = &mut self.sides[side].minions[index_now];
+                            minion.stats.attack.add_permanent(bonus_attack);
+                            minion.stats.health.add_permanent(bonus_health);
+                            // 以分层和在场的成长、永久增量恢复生命，清除战斗伤害。
+                            let restored = minion.stats.health.layers().max(1);
+                            minion.stats.health.revive_to(restored);
+                            minion.revive_used = true;
+                            minion.reborn_used = true;
+                            self.sides[side].alive[index_now] = true;
+                            let states = self.snapshots(catalog, &[id]);
+                            self.push_action(CombatAction::Revived { minion: id }, states);
+                        }
+
+                        // 回手：仍处于死亡态且携带 `Recall` 时克隆进手牌。
+                        if !self.sides[side].alive[index_now]
+                            && engine.death_recall(&card_id)
+                            && self.hand_len[side] < self.hand_slots
+                            && let Some(mut hand_minion) = self.minion(id).cloned()
+                        {
+                            // 清掉只在战场有效的临时层与一次性战斗标记；
+                            // 成长、繁衍、传染、授予关键词、金色原样保留。
+                            hand_minion.stats.attack.clear_turn();
+                            hand_minion.stats.health.clear_turn();
+                            hand_minion.stats.attack.set_aura(0);
+                            hand_minion.stats.health.set_aura(0);
+                            hand_minion
+                                .stats
+                                .attack
+                                .revive_to(hand_minion.stats.attack.layers());
+                            hand_minion
+                                .stats
+                                .health
+                                .revive_to(hand_minion.stats.health.layers());
+                            hand_minion.attacks_left = 0;
+                            hand_minion.cannot_attack = false;
+                            hand_minion.shield_used = false;
+                            hand_minion.reborn_used = false;
+                            hand_minion.revive_used = false;
+                            hand_minion.stealth_broken = false;
+                            self.hand_len[side] = self.hand_len[side].saturating_add(1);
+                            self.hand_minions.push(CombatHandMinion {
+                                seat: self.seats[side],
+                                minion: hand_minion,
+                            });
+                            let states = self.snapshots(catalog, &[id]);
+                            self.push_action(CombatAction::Recalled { minion: id }, states);
+                        }
+                    }
                 }
                 dead_ids.push((side, id));
             }
@@ -1427,6 +1510,7 @@ fn simulate_inner(
         summon_count: field.summon_count,
         pool_spent: std::mem::take(&mut field.pool_spent),
         hand_copies: std::mem::take(&mut field.hand_copies),
+        hand_minions: std::mem::take(&mut field.hand_minions),
         next_instance_id: field.next_instance_id,
         attacker_final: field.sides[0].minions.clone(),
         defender_final: field.sides[1].minions.clone(),

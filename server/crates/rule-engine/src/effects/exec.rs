@@ -1245,6 +1245,29 @@ impl Engine {
         self.fire_combat_effects(field, rng, &effects, ctx);
     }
 
+    /// 读取 `OnDeath | Revive` 的声明加成；没有该效果时返回 `None`。
+    ///
+    /// 复活本身由死亡结算执行；这里只负责提供卡面参数，避免把 `Revive`
+    /// 当成普通效果重复执行（金色也只复活一次）。
+    pub(crate) fn death_revive(&self, card_id: &str) -> Option<(i32, i32)> {
+        self.combat_effects(card_id, Trigger::OnDeath)
+            .into_iter()
+            .find_map(|effect| match effect.op {
+                Op::Revive => Some((
+                    effect.params.attack.unwrap_or(0),
+                    effect.params.health.unwrap_or(0),
+                )),
+                _ => None,
+            })
+    }
+
+    /// 是否携带 `OnDeath | Recall`。
+    pub(crate) fn death_recall(&self, card_id: &str) -> bool {
+        self.combat_effects(card_id, Trigger::OnDeath)
+            .into_iter()
+            .any(|effect| effect.op == Op::Recall)
+    }
+
     /// 召唤后触发召唤者棋盘的 `OnAllySummon`。
     pub(crate) fn fire_ally_summon(
         &self,

@@ -840,6 +840,21 @@ fn write_back_combat_log(catalog: &Catalog, state: &mut GameState, log: &combat:
             )));
         }
     }
+    for recalled in &log.hand_minions {
+        let Some(player) = player_mut(state, recalled.seat) else {
+            continue;
+        };
+        if player.hand.len() < catalog.config.hand_slots {
+            // 回手保留战斗内实例的全部状态；编号重新分配，避免与仍在棋盘上的
+            // 原实例（战斗不改变持久棋盘）重合。
+            let instance_id = state.next_instance_id;
+            state.next_instance_id = instance_id.saturating_add(1);
+            let mut minion = recalled.minion.clone();
+            minion.instance_id = instance_id;
+            let player = player_mut(state, recalled.seat).expect("座位存在已确认");
+            player.hand.push(HandCard::Minion(minion));
+        }
+    }
     state.next_instance_id = state.next_instance_id.max(log.next_instance_id);
 }
 
@@ -910,10 +925,45 @@ mod tests {
             summon_count: 0,
             pool_spent: BTreeMap::new(),
             hand_copies: Vec::new(),
+            hand_minions: Vec::new(),
             next_instance_id: 1,
             attacker_final: Vec::new(),
             defender_final: Vec::new(),
         }
+    }
+
+    #[test]
+    fn recalled_minion_is_written_to_hand_with_state() {
+        let catalog = test_catalog();
+        let (_, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
+        let card_id = catalog
+            .cards
+            .keys()
+            .next()
+            .expect("目录至少包含一张卡")
+            .clone();
+        let mut recalled = MinionInstance::new(&catalog, 42, &card_id, false);
+        recalled.stats.attack.add_growth(2);
+        recalled.stats.health.add_growth(2);
+        recalled
+            .stats
+            .health
+            .revive_to(recalled.stats.health.layers());
+
+        let mut log = empty_log();
+        log.hand_minions.push(combat::CombatHandMinion {
+            seat: 0,
+            minion: recalled,
+        });
+        let next_id = state.next_instance_id;
+        write_back_combat_log(&catalog, &mut state, &log);
+
+        let hand = &state.players[0].hand;
+        assert_eq!(hand.len(), 1, "回手写入持久手牌");
+        let minion = hand[0].minion().expect("回手的是随从牌");
+        assert_eq!(minion.instance_id, next_id, "回手分配新的实例编号");
+        assert_eq!(minion.stats.attack.growth, 2, "保留成长");
+        assert_eq!(minion.stats.health.growth, 2, "保留成长");
     }
 
     #[test]
