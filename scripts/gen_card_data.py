@@ -322,7 +322,8 @@ def structured_effects(value):
         trigger = effect["trigger"]
         op = effect["op"]
         params = effect["params"]
-        violations = list(audit_effects.check_effect(trigger, op, params))
+        violations = list(audit_effects.check_effect(
+            trigger, op, params, effect["selector"]))
         structured = {
             "trigger": TRIGGER_JSON[trigger],
             "op": OP_JSON[op],

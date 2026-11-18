@@ -293,8 +293,12 @@ pub struct CombatHandMinion {
 
 ### 4.3 `scripts/audit_effects.py`
 
-- `OP_WHITELIST` / `TRIGGER_WHITELIST` 增加新原语与选择器。
-- 统计输出增加新关键词与新机制的覆盖。
+`audit_effects.py` 没有独立的 `OP_WHITELIST` / `TRIGGER_WHITELIST`：它直接复用 `validate_docs.parse_effects`，以 `validate_docs` 的 `EFFECT_TRIGGERS` / `EFFECT_OPS` / `SELECTOR_PICKS` 为唯一白名单，新原语与选择器随 `validate_docs.py` 自动生效。审计层只在解析之后补充跨字段检查：
+
+- `GrantKeyword` 的层数规则（`VALUE_KEYWORDS`，已含 `armor`）。
+- 既有检查：`timesIf`、`when`、`Summon`、`Discover`、`GainMinion`、`Decompose`。
+- 新机制原语的目标侧约定：`Mimic` / `Devour` / `Detonate` / `Convert` 使用敌方选择器，`Revive` / `Recall` / `Salvage` / `Latent` 使用 `self`；`Recall` 的 `to` 必须为 `hand`。
+- 统计输出按「触发 × 动作」自动汇总新原语；关键词覆盖由 `validate_docs` 的关键词统计输出承担。
 
 ### 4.4 测试期望
 

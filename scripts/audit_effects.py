@@ -27,6 +27,9 @@ WHEN_TRIGGERS = validate_docs.EVENT_TRIGGERS | {"OnDeath"}
 FILTER_KEYS = validate_docs.FILTER_KEYS
 # 分解的生命值口径；duration 只接受 validate_docs.DURATIONS（permanent / combat）。
 DECOMPOSE_BASES = validate_docs.DECOMPOSE_BASES
+# 新机制原语的目标侧约定（技术方案 §3）；选择器白名单仍以 validate_docs 为准。
+ENEMY_TARGET_OPS = {"Mimic", "Devour", "Detonate", "Convert"}
+SELF_TARGET_OPS = {"Revive", "Recall", "Salvage", "Latent"}
 
 
 @dataclasses.dataclass
@@ -50,9 +53,15 @@ class Report:
         )
 
 
-def check_effect(trigger, op, params):
+def check_effect(trigger, op, params, selector=""):
     """返回单段效果的审计违规消息（不含技能 id 前缀）。"""
     violations = []
+    if op in ENEMY_TARGET_OPS and not selector.startswith("enemy:"):
+        violations.append(f"{op} 必须以 enemy 选择器指定目标，实为 {selector!r}")
+    if op in SELF_TARGET_OPS and selector != "self":
+        violations.append(f"{op} 只能以 self 为目标，实为 {selector!r}")
+    if op == "Recall" and params.get("to") != "hand":
+        violations.append(f"Recall 的 to 必须为 hand，实为 {params.get('to')!r}")
     if "timesIf" in params and (op != "Growth" or "times" not in params):
         violations.append("timesIf 只能与 Growth 的 times 同时出现")
     if "when" in params and trigger not in WHEN_TRIGGERS:
@@ -117,7 +126,7 @@ def audit(skills_dir):
         for effect in effects:
             trigger, op = effect["trigger"], effect["op"]
             matrix[(trigger, op)] += 1
-            for message in check_effect(trigger, op, effect["params"]):
+            for message in check_effect(trigger, op, effect["params"], effect["selector"]):
                 violations.append(f"{skill_id}: {message}")
     return Report(
         skill_count=len(docs),
