@@ -68,7 +68,7 @@ Latent,
 `op_spec` 增加：
 
 ```rust
-Op::Mimic => (&["duration"], &[], &[]),
+Op::Mimic => (&["duration"], &["statsOnly"], &[]),
 Op::Devour => (&["value"], &["duration", "when"], &[]),
 Op::Detonate => (&["amount"], &["threshold", "when"], &[]),
 Op::Convert => (&["threshold"], &["token", "card", "count", "when"], &[&["token", "card"]]),
@@ -184,9 +184,9 @@ pub struct CombatHandMinion {
 
 - 数据：`OnPlay | Mimic | enemy:single | duration=combat`，或 `OnCombatStart | Mimic | enemy:single | duration=combat`。
 - 引擎：`exec.rs::apply_op` 增加 `Op::Mimic`：
-  1. 取 `effect.target`（由待选或选择器确定）；目标不存在或不在敌方时落空。
+  1. 取 `effect.target`（由待选或选择器确定）；目标不存在或已离场时落空；敌方与友方目标都允许，由卡牌选择器决定阵营。
   2. 读取目标当前 `attack()` / `health()`（不含光环）与 `keywords`。
-  3. 给来源写入 `ModifyStats` 等价的临时/永久增量；关键词写入 `granted`，时长取 `params.duration`。
+  3. 给来源写入 `ModifyStats` 等价的临时/永久增量；关键词写入 `granted`，时长取 `params.duration`；`statsOnly=true` 时跳过关键词（卡面只写攻防值的卡使用，如乌贼、吸血鬼乌贼、大王酸浆鱿）。
   4. 不复制 `growth`、`breed`、`contagion`、`shield_used`、`reborn_used`、`revive_used`、`stealth_broken`。
   5. 记录 `CombatAction::Mimicked`（战斗内）。
 - 口径：金色触发两次时以第二次为准；目标不存在时不阻塞出牌。
@@ -284,11 +284,11 @@ pub struct CombatHandMinion {
 - `KEYWORD_RE` / `SKILL_KEYWORD_RE` 支持 `armor \d+`。
 - `KW_UNLOCK` 增加 `poison: 1`、`armor: 1`、`stealth: 1`（新机制不按时代解锁，最小星级为 1）。
 - `KEYWORD_PLAYSTYLE` 增加：
-  - `poison: {"reptile", "cephalopod"}`
+  - `poison: {"reptile", "cephalopod", "cnidarian"}`
   - `armor: {"reptile", "bacteria", "cnidarian"}`
   - `stealth: {"cephalopod"}`
 - `keyword_cost` 增加三种关键词的折算。
-- 新增原语专属校验：`Mimic` 仅头足纲、`Devour` 仅原生生物界、`Detonate` 仅细菌域/病毒、`Convert` 仅细菌域、`Revive`/`Recall` 仅水螅纲、`Salvage` 仅机械、`Pick::LowestAttack` 仅鸟纲。
+- 新增原语专属校验：`Mimic` 仅头足纲、`Devour` 仅原生生物界、头足纲（大王乌贼）、`Detonate` 仅细菌域/病毒、`Convert` 仅细菌域、`Revive`/`Recall` 仅水螅纲、`Salvage` 仅机械、`Pick::LowestAttack` 仅鸟纲。
 - `EXPECT_ERA`、`EXPECT_LEVEL` 与期望输出改为新总数。
 
 ### 4.3 `scripts/audit_effects.py`
@@ -297,7 +297,7 @@ pub struct CombatHandMinion {
 
 - `GrantKeyword` 的层数规则（`VALUE_KEYWORDS`，已含 `armor`）。
 - 既有检查：`timesIf`、`when`、`Summon`、`Discover`、`GainMinion`、`Decompose`。
-- 新机制原语的目标侧约定：`Mimic` / `Devour` / `Detonate` / `Convert` 使用敌方选择器，`Revive` / `Recall` / `Salvage` / `Latent` 使用 `self`；`Recall` 的 `to` 必须为 `hand`。
+- 新机制原语的目标侧约定：`Mimic` 允许敌方或友方选择器，`Devour` / `Detonate` / `Convert` 使用敌方选择器，`Revive` / `Recall` / `Salvage` / `Latent` 使用 `self`；`Recall` 的 `to` 必须为 `hand`。
 - 统计输出按「触发 × 动作」自动汇总新原语；关键词覆盖由 `validate_docs` 的关键词统计输出承担。
 
 ### 4.4 测试期望
