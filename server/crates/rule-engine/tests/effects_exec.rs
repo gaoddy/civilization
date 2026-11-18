@@ -721,6 +721,39 @@ fn grant_armor_keeps_layer_in_keyword_string() {
 }
 
 #[test]
+fn grant_armor_stacks_repeated_same_layer() {
+    let (mut engine, mut state) = setup(11);
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
+
+    for keyword in ["armor 1", "armor 1", "armor 2"] {
+        engine.apply_op(
+            &mut state,
+            &effect(&format!(
+                "OnCombatStart|GrantKeyword|friendly:all|keyword={keyword},duration=combat"
+            )),
+            &ctx(0),
+            None,
+        );
+    }
+
+    let minion = board_minion(&state, 0, 0);
+    assert_eq!(
+        combat::armor_value(&engine.catalog, minion),
+        4,
+        "同层与不同层的授予减伤都应累加"
+    );
+    assert_eq!(
+        minion
+            .granted
+            .iter()
+            .filter(|(name, _)| name.starts_with("armor"))
+            .count(),
+        1,
+        "多次授予应合并为一条 armor 关键词"
+    );
+}
+
+#[test]
 fn golden_minion_played_from_hand_doubles_battlecry() {
     let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");

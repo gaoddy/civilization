@@ -668,14 +668,31 @@ impl Engine {
                     minion.contagion = minion.contagion.saturating_add(*count);
                 }
                 // 减伤层数保存在关键词字符串 `armor N` 中，供 `combat::armor_value` 解析；
-                // 只记录裸 `armor` 会丢失 N。其余带层关键词暂无战斗侧读取方。
+                // 只记录裸 `armor` 会丢失 N。同层与不同层的授予都累加到同一条
+                // `armor N` 上，`armor_value` 再与卡面自带层相加。
                 (combat::ARMOR, Some(count)) => {
-                    record_grant(
-                        minion,
-                        &format!("{} {count}", combat::ARMOR),
-                        duration,
-                        false,
-                    );
+                    if duration == Duration::Instant {
+                        // 与 `record_grant` 的旧口径一致：即时授予不进入 `granted`。
+                        continue;
+                    }
+                    match minion
+                        .granted
+                        .iter_mut()
+                        .find(|(name, _)| combat::armor_layer(name).is_some())
+                    {
+                        Some(existing) => {
+                            let merged = combat::armor_layer(&existing.0)
+                                .unwrap_or(0)
+                                .saturating_add(*count);
+                            existing.0 = format!("{} {merged}", combat::ARMOR);
+                            if duration_rank(duration) > duration_rank(existing.1) {
+                                existing.1 = duration;
+                            }
+                        }
+                        None => minion
+                            .granted
+                            .push((format!("{} {count}", combat::ARMOR), duration)),
+                    }
                 }
                 ("divine_shield", _) => {
                     record_grant(minion, name, duration, false);
@@ -1934,9 +1951,7 @@ impl Engine {
         let Some((source_side, _)) = field.locate(source_id) else {
             return;
         };
-        let Some(carrier_card_id) = field
-            .minion(source_id)
-            .map(|minion| minion.card_id.clone())
+        let Some(carrier_card_id) = field.minion(source_id).map(|minion| minion.card_id.clone())
         else {
             return;
         };

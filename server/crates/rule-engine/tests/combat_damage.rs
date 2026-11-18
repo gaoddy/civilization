@@ -6,8 +6,9 @@
 mod common;
 
 use common::{effects_of, minion, test_catalog, test_playstyles};
-use rule_engine::combat::{CombatAction, CombatSetup, simulate, simulate_with};
+use rule_engine::combat::{self, CombatAction, CombatSetup, simulate, simulate_with};
 use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill};
+use rule_engine::effects::Duration;
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
 use rule_engine::settle::Pairing;
@@ -431,6 +432,29 @@ fn poison_kills_surviving_target_but_not_shielded() {
 }
 
 /// 9) 减伤：伤害先减 `armor N`；传染的回合开始掉血不走伤害入口，不受减伤影响。
+#[test]
+fn armor_stacks_same_layer_from_base_and_granted() {
+    let mut catalog = test_catalog();
+    // 同一张卡的两个技能都给 `armor 1`：同层重复也必须累加。
+    add_card(&mut catalog, "double-armor", 0, 10, &["armor 1", "armor 1"]);
+    let base = minion(&catalog, 2, "double-armor");
+    assert_eq!(
+        combat::armor_value(&catalog, &base),
+        2,
+        "卡面重复的 armor 应累加"
+    );
+
+    let mut granted = base.clone();
+    granted
+        .granted
+        .push(("armor 1".to_string(), Duration::Permanent));
+    assert_eq!(
+        combat::armor_value(&catalog, &granted),
+        3,
+        "授予层与卡面层应相加"
+    );
+}
+
 #[test]
 fn armor_reduces_damage_and_does_not_block_contagion_tick() {
     let mut catalog = test_catalog();

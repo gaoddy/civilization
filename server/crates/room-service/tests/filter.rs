@@ -366,7 +366,11 @@ fn combat_result_maps_salvage() {
         Some(protocol::CombatResultActionsItemSourceSide::Own),
         "动作归属来源座位"
     );
-    assert_eq!(salvaged.card_id.as_deref(), Some("nanobot"), "回放需携带获得的牌 id");
+    assert_eq!(
+        salvaged.card_id.as_deref(),
+        Some("nanobot"),
+        "回放需携带获得的牌 id"
+    );
     assert!(salvaged.damage.is_none());
     assert!(salvaged.target.is_none());
 }
