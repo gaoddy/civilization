@@ -18,13 +18,13 @@ import gen_client_data  # noqa: E402
 class GenCardDataTest(unittest.TestCase):
     def test_counts_and_sorted_ids(self):
         data = json.loads(gen_card_data.build(ROOT)["cards.json"])
-        self.assertEqual(len(data), 309)
-        self.assertEqual(sum(c["card_type"] == "minion" for c in data), 272)
+        self.assertEqual(len(data), 340)
+        self.assertEqual(sum(c["card_type"] == "minion" for c in data), 303)
         self.assertEqual([c["id"] for c in data], sorted(c["id"] for c in data))
 
     def test_skills_and_tokens(self):
         out = gen_card_data.build(ROOT)
-        self.assertEqual(len(json.loads(out["skills.json"])), 180)
+        self.assertEqual(len(json.loads(out["skills.json"])), 192)
         tokens = json.loads(out["tokens.json"])
         ids = [t["id"] for t in tokens]
         self.assertEqual(ids, sorted(ids))
@@ -61,8 +61,8 @@ class GenClientDataTest(unittest.TestCase):
         data = gen_client_data.build(ROOT)
         cards = json.loads(data["cards.json"])
         skills = json.loads(data["skills.json"])
-        self.assertEqual(len(cards), 309)
-        self.assertEqual(len(skills), 180)
+        self.assertEqual(len(cards), 340)
+        self.assertEqual(len(skills), 192)
         self.assertEqual(sum(card["is_hero"] for card in cards), 32)
         self.assertEqual([card["id"] for card in cards], sorted(card["id"] for card in cards))
 

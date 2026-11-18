@@ -247,6 +247,37 @@
       {
         "op": "modify_stats",
         "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "insect"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-other-insect-plus-0-plus-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
           "attack": 1,
           "duration": "permanent",
           "health": 1
@@ -685,6 +716,26 @@
     "cost": null,
     "effects": [
       {
+        "op": "copy",
+        "params": {
+          "card_type": "minion",
+          "from": "hand",
+          "to": "hand"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-copy-hand-minion",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "modify_stats",
         "params": {
           "attack": 2,
@@ -732,6 +783,32 @@
       }
     ],
     "id": "battlecry-friendly-bacteria-plus-0-plus-1",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "bird"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-friendly-bird-growth-once",
     "keyword": "battlecry",
     "uses_per_turn": null
   },
@@ -1108,6 +1185,38 @@
         "op": "modify_stats",
         "params": {
           "attack": 1,
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "bird"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-other-bird-plus-1-plus-1",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
           "duration": "permanent"
         },
         "selector": {
@@ -1129,6 +1238,36 @@
       }
     ],
     "id": "battlecry-other-friendly-humans-plus-1-attack",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "insect"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-other-insect-growth-once",
     "keyword": "battlecry",
     "uses_per_turn": null
   },
@@ -1234,6 +1373,25 @@
       }
     ],
     "id": "battlecry-self-plus-1-health",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 2,
+          "token": "worker-bee-token-2"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-summon-2-worker-bees",
     "keyword": "battlecry",
     "uses_per_turn": null
   },
@@ -1913,6 +2071,32 @@
       {
         "op": "growth",
         "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "insect"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-friendly-insect-growth-twice",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
           "times": 1
         },
         "selector": {
@@ -2027,6 +2211,25 @@
         "op": "summon",
         "params": {
           "count": 1,
+          "token": "worker-bee-token-1"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-1-worker-bee",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
           "token": "hela-cell-token"
         },
         "selector": {
@@ -2103,6 +2306,25 @@
         "op": "summon",
         "params": {
           "count": 2,
+          "token": "seabird-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-2-seabirds",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 2,
           "token": "spore-token-2"
         },
         "selector": {
@@ -2131,6 +2353,25 @@
       }
     ],
     "id": "deathrattle-summon-3-spores-3-3",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 3,
+          "token": "termite-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-3-termites",
     "keyword": "deathrattle",
     "uses_per_turn": null
   },
@@ -2773,6 +3014,13 @@
   },
   {
     "cost": null,
+    "effects": [],
+    "id": "keyword-armor-2",
+    "keyword": "armor 2",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
     "effects": [
       {
         "op": "growth",
@@ -3161,6 +3409,25 @@
       }
     ],
     "id": "revive-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "salvage",
+        "params": {
+          "count": 1,
+          "pool": "playstyle"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "salvage-machine",
     "keyword": null,
     "uses_per_turn": null
   },

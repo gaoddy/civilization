@@ -31,7 +31,7 @@ _KEYWORD_NAMES = (
 KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+|armor \d+)$")
 # 技能上的 keyword 是携带者自身登记的常驻关键词，不接受卡牌层的「无」哨兵值。
 SKILL_KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+|armor \d+)$")
-AURA_RE = re.compile(r"^你的(其他)?(人类|人科|机械|生物|动物|植物|真菌|细菌|原生生物|病毒|学者|鱼纲|真菌界|原生生物界)?随从获得 ?(.+)$")
+AURA_RE = re.compile(r"^你的(其他)?(人类|人科|机械|生物|动物|植物|真菌|细菌|原生生物|病毒|学者|鱼纲|鸟纲|爬行纲|昆虫纲|头足纲|水螅纲|真菌界|原生生物界)?随从获得 ?(.+)$")
 AURA_VALUE_RE = re.compile(
     r"^(?:\+\d+/\+\d+|\+\d+ 攻击力|\+\d+ 生命值|最优攻击|嘲讽|护盾|复生|连击)$"
 )
@@ -156,9 +156,9 @@ KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
 # TODO(Task 15): 新关键词的卡牌数据落地后删除该常量，并把三个关键词改为硬校验。
 # 在此之前，关键词未出现时不要求其已出现，出现后仍校验最小星级。
 KW_UNLOCK_PENDING = {"poison", "armor", "stealth"}
-EXPECT_ERA = {"prehistoric": 45, "primitive": 38, "classical": 28, "feudal": 48,
-              "industrial": 37, "modern": 72, "future": 41}
-EXPECT_LEVEL = {1: 33, 2: 48, 3: 51, 4: 52, 5: 48, 6: 23, 7: 17}
+EXPECT_ERA = {"prehistoric": 49, "primitive": 47, "classical": 34, "feudal": 51,
+              "industrial": 38, "modern": 80, "future": 41}
+EXPECT_LEVEL = {1: 35, 2: 52, 3: 57, 4: 58, 5: 54, 6: 27, 7: 20}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "playstyle", "taxon", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
@@ -1066,8 +1066,8 @@ def check_skills():
     global KEYWORD_LABELS
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 180:
-        fail(f"技能数量 {len(skills)}，期望 180")
+    if len(skills) != 192:
+        fail(f"技能数量 {len(skills)}，期望 192")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
@@ -1285,7 +1285,7 @@ def check_cards(skill_map):
                 fail(message)
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"minion": 272, "effect": 37}:
+    if counts != {"minion": 303, "effect": 37}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]
