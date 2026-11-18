@@ -1,6 +1,6 @@
 use crate::data::Playstyle;
 
-use super::{Duration, Effect, Filter, Op, Params, Selector, TimesIf, Trigger, Zone};
+use super::{Duration, Effect, Filter, Op, Params, Pick, Selector, TimesIf, Trigger, Zone};
 
 /// 光环触发允许的原语。
 pub(crate) const AURA_OPS: &[Op] = &[Op::ModifyStats, Op::GrantKeyword];
@@ -196,10 +196,30 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
     let mut errors = Vec::new();
     let params = &effect.params;
 
-    if matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura)
-        && !AURA_OPS.contains(&effect.op)
-    {
+    let is_aura = matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura);
+
+    if is_aura && !AURA_OPS.contains(&effect.op) {
         errors.push(format!("光环触发只能用 {AURA_OPS:?}，实为 {:?}", effect.op));
+    }
+
+    // 群聚参数只属于光环的 ModifyStats；非光环同名原语不得携带。
+    if (params.per_attack.is_some() || params.per_health.is_some() || params.max_count.is_some())
+        && !(is_aura && effect.op == Op::ModifyStats)
+    {
+        errors.push("perAttack/perHealth/maxCount 只能用于光环的 ModifyStats".to_string());
+    }
+
+    // 相邻选取只服务光环；其他触发器（战斗、招募）没有稳定的来源棋盘位置。
+    if !is_aura
+        && matches!(
+            effect.selector,
+            Selector::Side {
+                pick: Pick::Adjacent,
+                ..
+            }
+        )
+    {
+        errors.push("Adjacent 只能用于光环".to_string());
     }
 
     let (required, allowed, one_of) = op_spec(effect.op);

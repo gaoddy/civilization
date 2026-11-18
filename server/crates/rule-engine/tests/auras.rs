@@ -3,6 +3,7 @@ mod common;
 use common::{effects_of, place, setup};
 use rule_engine::combat;
 use rule_engine::data::{Card, CardType, Playstyle, Skill};
+use rule_engine::effects::parse_effects;
 use rule_engine::engine::Engine;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
@@ -44,6 +45,29 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, playstyle: Playstyle, eff
             attack: Some(0),
             health: Some(5),
             skills: vec![skill_id],
+            is_scholar: false,
+            is_hero: false,
+            cost: Some(1),
+        },
+    );
+}
+
+/// 注入一张无技能的普通卡，用于构造玩法计数与相邻测试的陪衬随从。
+fn add_plain_card(engine: &mut Engine, card_id: &str, playstyle: Playstyle) {
+    engine.catalog.cards.insert(
+        card_id.to_string(),
+        Card {
+            id: card_id.to_string(),
+            card_type: CardType::Minion,
+            playstyle,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
+            subtype: None,
+            level: 1,
+            era: None,
+            attack: Some(1),
+            health: Some(1),
+            skills: Vec::new(),
             is_scholar: false,
             is_hero: false,
             cost: Some(1),
@@ -396,5 +420,142 @@ fn aura_single_without_target_has_no_targets() {
     assert!(
         state.auras.is_empty(),
         "没有显式目标的光环 single 不应产生任何加成"
+    );
+}
+
+#[test]
+fn school_aura_scales_with_other_same_playstyle_count() {
+    let (mut engine, mut state) = setup(23);
+    add_aura_source(
+        &mut engine,
+        "test-fish-leader",
+        Playstyle::Fish,
+        "Aura|ModifyStats|friendly:all:playstyle=fish|attack=1,health=1,perAttack=1,duration=permanent",
+    );
+    add_plain_card(&mut engine, "test-fish-a", Playstyle::Fish);
+    add_plain_card(&mut engine, "test-fish-b", Playstyle::Fish);
+    place(&engine.catalog, &mut state, 0, 1, "test-fish-leader");
+    place(&engine.catalog, &mut state, 0, 2, "test-fish-a");
+    place(&engine.catalog, &mut state, 0, 3, "test-fish-b");
+
+    engine.recompute_auras(&mut state);
+
+    // 两个其他鱼纲 → 基础 1 + 每只 1×2 = 3 攻击。来源若被目标集合包含，
+    // 也只按「其他随从」计数（自身不计），因此同样是 3 而不是 4。
+    let source = state.auras.get(&1).expect("来源自身应获得基础加成");
+    assert_eq!((source.attack, source.health), (3, 1));
+    for id in [2, 3] {
+        let aura = state.auras.get(&id).expect("其他鱼纲应获得群聚加成");
+        assert_eq!(
+            (aura.attack, aura.health),
+            (3, 1),
+            "两个其他鱼纲 → 基础 1 + 2 点额外攻击，生命只有基础 1"
+        );
+    }
+}
+
+#[test]
+fn school_aura_count_is_capped_by_max_count() {
+    let (mut engine, mut state) = setup(23);
+    add_aura_source(
+        &mut engine,
+        "test-fish-leader",
+        Playstyle::Fish,
+        "Aura|ModifyStats|friendly:all:playstyle=fish|attack=1,perAttack=2,maxCount=1,duration=permanent",
+    );
+    add_plain_card(&mut engine, "test-fish-a", Playstyle::Fish);
+    add_plain_card(&mut engine, "test-fish-b", Playstyle::Fish);
+    place(&engine.catalog, &mut state, 0, 1, "test-fish-leader");
+    place(&engine.catalog, &mut state, 0, 2, "test-fish-a");
+    place(&engine.catalog, &mut state, 0, 3, "test-fish-b");
+
+    engine.recompute_auras(&mut state);
+
+    assert_eq!(
+        state.auras.get(&2).map(|aura| aura.attack),
+        Some(3),
+        "maxCount=1 时只按一个其他随从计算"
+    );
+    assert_eq!(
+        state.auras.get(&3).map(|aura| aura.attack),
+        Some(3),
+        "计数上限对所有目标一致"
+    );
+}
+
+#[test]
+fn adjacency_aura_only_buffs_left_and_right_neighbors() {
+    let (mut engine, mut state) = setup(23);
+    add_aura_source(
+        &mut engine,
+        "test-adjacent",
+        Playstyle::Mammal,
+        "Aura|ModifyStats|friendly:adjacent|attack=2,health=2,duration=permanent",
+    );
+    add_plain_card(&mut engine, "test-mammal-a", Playstyle::Mammal);
+    add_plain_card(&mut engine, "test-mammal-b", Playstyle::Mammal);
+    place(&engine.catalog, &mut state, 0, 1, "test-mammal-a");
+    place(&engine.catalog, &mut state, 0, 2, "test-adjacent");
+    place(&engine.catalog, &mut state, 0, 3, "test-mammal-b");
+
+    engine.recompute_auras(&mut state);
+
+    assert!(!state.auras.contains_key(&2), "携带者自身不获得相邻光环");
+    for id in [1, 3] {
+        let aura = state.auras.get(&id).expect("左右邻居应获得相邻光环");
+        assert_eq!((aura.attack, aura.health), (2, 2));
+    }
+}
+
+#[test]
+fn aura_grant_keyword_keeps_armor_layer() {
+    let (mut engine, mut state) = setup(23);
+    add_aura_source(
+        &mut engine,
+        "test-armor-aura",
+        Playstyle::Neutral,
+        "Aura|GrantKeyword|friendly:all:other=true|keyword=armor 3,duration=permanent",
+    );
+    place(&engine.catalog, &mut state, 0, 1, "test-armor-aura");
+    place(&engine.catalog, &mut state, 0, 2, "baiyi");
+
+    engine.recompute_auras(&mut state);
+
+    let aura = state.auras.get(&2).expect("目标应获得减伤光环");
+    assert!(
+        aura.keywords.contains("armor 3"),
+        "光环授予关键词应保留层数，实为 {:?}",
+        aura.keywords
+    );
+
+    let folded = fold_auras(
+        &engine.catalog,
+        &state.auras,
+        &state.players[0].board.clone(),
+    );
+    let folded_target = folded
+        .iter()
+        .find(|minion| minion.instance_id == 2)
+        .expect("折叠后的棋盘应保留目标");
+    assert_eq!(
+        combat::armor_value(&engine.catalog, folded_target),
+        3,
+        "折叠后应提供 3 点减伤，而不是退化为 1 点"
+    );
+}
+
+#[test]
+fn non_aura_effects_reject_clustering_params_and_adjacent() {
+    assert!(
+        parse_effects("OnPlay|ModifyStats|self|attack=1,perAttack=1").is_err(),
+        "perAttack 只能用于光环的 ModifyStats"
+    );
+    assert!(
+        parse_effects("OnPlay|ModifyStats|self|maxCount=2").is_err(),
+        "maxCount 只能用于光环的 ModifyStats"
+    );
+    assert!(
+        parse_effects("OnCombatStart|DealDamage|friendly:adjacent|amount=1").is_err(),
+        "adjacent 只能用于光环"
     );
 }
