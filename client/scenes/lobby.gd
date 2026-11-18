@@ -40,6 +40,11 @@ func _build() -> void:
     create.pressed.connect(_on_create_pressed)
     box.add_child(create)
 
+    var gallery := UI.button(tr("ui.gallery.entry"))
+    gallery.name = "GalleryButton"
+    gallery.pressed.connect(_on_gallery_pressed)
+    box.add_child(gallery)
+
     box.add_child(UI.label(tr("ui.lobby.join_section"), 16))
     var join_row := HBoxContainer.new()
     join_row.add_theme_constant_override("separation", 8)
@@ -59,6 +64,10 @@ func _build() -> void:
 func _on_create_pressed() -> void:
     _status.text = tr("ui.lobby.creating")
     Net.send(Protocol.MSG_CREATE_ROOM, {})
+
+
+func _on_gallery_pressed() -> void:
+    UI.navigate(self, "res://scenes/gallery.tscn")
 
 
 func _on_join_pressed() -> void:

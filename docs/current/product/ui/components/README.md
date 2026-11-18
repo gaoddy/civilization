@@ -12,6 +12,14 @@
 | 卡片容器 | `UI.card_panel` | [card-panel.md](card-panel.md) |
 | 区块标题 | `UI.section_title` | 本文件 |
 | 空态提示 | `UI.empty_hint` | 本文件 |
+| 卡牌图鉴 | `CardGallery`（`client/scenes/card_gallery.gd`） | [card-gallery.md](card-gallery.md) |
+| 图鉴章节栏 | `GalleryChapterBar` | [gallery-chapter-bar.md](gallery-chapter-bar.md) |
+| 图鉴分类目录 | `GalleryToc` | [gallery-toc.md](gallery-toc.md) |
+| 图鉴卡面网格 | `GalleryGrid` | [gallery-grid.md](gallery-grid.md) |
+| 图鉴卡面单元 | `GalleryCardTile` | [gallery-card-tile.md](gallery-card-tile.md) |
+| 图鉴常驻详情 | `GalleryDetail` | [gallery-detail.md](gallery-detail.md) |
+
+- `UI` 之外的图鉴组件按 `class_name` 直接实例化，位于 `client/scenes/`，供大厅图鉴页与对局覆盖层共用；它们的卡牌数据仍来自 `CardDB`。
 
 - `UI.section_title(text)`：区块标题，`font-body` 字号、`color-text-dim` 颜色，单行不换行。
 - `UI.empty_hint(text)`：居中占位提示，`font-body-sm` 字号、`color-text-muted` 颜色，用于空棋盘、空手牌、无对手。

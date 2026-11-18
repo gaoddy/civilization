@@ -31,11 +31,12 @@
       │  │  └─ 手牌行（重叠单行，悬停抬升放大；招募与战斗常驻）
       │  └─ 右栏（272）
       │     ├─ 身份块：售货员大图（名字贴底）与下方商店操作横排 / 对手英雄（幽灵战或已淘汰观战）
-      │     ├─ 状态块：回合数与剩余时间同一行，位于右栏垂直中心
+      │     ├─ 状态块：回合数、剩余时间与「图鉴」入口同一行，位于右栏垂直中心
       │     └─ 英雄块：我方英雄大图在上，英雄技能在下，生命/时代/金币三格贴底
       └─ 状态行
 选择浮层（全屏，默认隐藏）：待选/目标弹层
 详情层（全屏，忽略鼠标输入）：卡牌与座位详情面板（默认隐藏）
+图鉴覆盖层（全屏，默认隐藏）：本局卡池的卡牌图鉴，首次点开时创建并复用
 ```
 
 - 页面没有顶栏；生命、时代与金币只在右栏 `SideHero` 的自己英雄介绍里各出现一次。
@@ -60,7 +61,7 @@
 - 手牌悬停不显示详情面板，不新增第二块浮层；放大后的卡片可暂时盖住手牌标题「手牌」。
 - 手牌拖拽取消或视图刷新后不保留悬停放大：指针不动时需要移出再移入一次才会重新放大。
 - 招募视图自上而下固定为商店、我方棋盘；棋盘面板按内容高度收缩并贴到招募视图底部，下方留白全部落在商店与棋盘之间，使棋盘直接位于手牌上边。
-- 左栏、右栏与状态行在两个阶段都常驻。
+- 左栏、右栏与状态行在两个阶段都常驻；右栏状态行的「图鉴」入口也常驻，打开后以全屏覆盖层显示本局卡池，不切换场景，也不暂停对局状态。
 
 ## 3. 状态清单
 
@@ -85,6 +86,7 @@
 | 视图过期 | `view.turn` 与 `GameStore.turn` 不一致 | 全部操作禁用 | 收到新回合视图 |
 | 倒计时归零 | `phaseDeadline` 已过 | 右栏倒计时显示「等待结算」，全部招募操作禁用 | 服务端推进阶段 |
 | 已结束招募 | `self.recruited` 为真 | 只读；倒计时悬停显示「已结束招募」，冻结禁用 | 服务端推进阶段 |
+| 图鉴覆盖层打开 | 点击右栏「图鉴」 | 全屏图鉴盖住页面，只显示本局卡池；对局数据照常刷新，拖拽、待选与演示状态保留 | 点「返回对局」或 `Esc` 收起；对局选择浮层可见时随刷新自动收起 |
 | 达到上限 | 商店 6 槽、棋盘按 `boardSlots` 计 | 槽位固定，空位以「空位」占位 | 服务端判定手牌与棋盘上限，拒绝原因进 tooltip |
 
 - 同一时刻只呈现一种主状态；错误文本不覆盖正在显示的待选弹层，弹层由独立的视图门槛控制。
@@ -106,8 +108,10 @@
 | 手牌是否需要目标 | `self.hand[].requiresTarget`；队首待选类型取 `self.pendingChoices[].kind` |
 | 随从详情构成 | 棋盘随从的 `stats`（`attack` / `health` 各含 `initial`、`permanent`、`turn`、`aura`、`damage`、`current`）；缺失时退化为顶层 `attack` / `health` |
 | 卡面与商店详情 | `CardDB` 卡表：`card_type`、`playstyle`、`taxon`、`specialty`、`attack`、`health`、`era`、`display_cost`、`skills`；分类路径走 `CardDB.taxon_path`，玩法/分类名走 `CardDB.playstyle_name` / `CardDB.taxon_name` |
+| 图鉴卡池 | `CardPool.card_ids(view.enabledFactions)`：与服务端 `card_in_pool` 同规则复算本局卡池，排除 Token |
 
 - 页面不做本地规则推导：不计算伤害、不推断可用性、不推导名次；左栏只按服务端 `rank` 排显示顺序。战斗演示按 `actions` 逐条应用服务端下发的数值，不做任何加减。
+- 图鉴覆盖层不参与对局操作：本局卡池用 `CardPool` 按 `enabledFactions` 复算，只用于列出可出现的卡牌，出牌与商店合法性仍以服务端视图为准。
 - `CombatResult` 只发给该场参战者本人：观战者（含幽灵归属者）在战斗阶段不收到它，只能从战报里看到这场对战的结果与幽灵归属者名字；阵容演示只发给参战者。
 - 战斗演示期间还没有本场 `combatLog`：战报在结算时才下发，演示中展开座位只看到既往回合条目。
 - 座位战报文案为「第 N 回合 · 对手名 · 胜/负/平 · 伤害 X」；平局无胜者时输出「平」；幽灵战的对手写「幽灵（名字）」，`ghostId` 为空时只写「幽灵」；`damage` 为 0 时省略伤害段；没有条目时显示「无战报」。
@@ -163,9 +167,11 @@
 - 碰撞演出在覆盖层 `CombatFxLayer` 上完成：攻方单程 130ms，命中时目标闪光 120ms 并飘出「-伤害」520ms；阵亡卡原位淡出 160ms，复生与召唤卡缩放缓入 160ms。覆盖层不参与布局、不拦截鼠标。
 - 每次 `view_changed` 重建左栏与中区，节点上限为 8 个座位、按 `boardSlots` 的棋盘点位、6 个商店槽、10 张手牌；不使用图片与字体资源。
 - 座位展开块按当前展开的 `playerId` 重建；同一时刻最多展开一行，战报条目随服务端最近 5 回合上限增长。
+- 图鉴覆盖层首次打开时创建并一直复用，关闭只切可见性；网格每页最多 40 个卡面节点，不随对局视图刷新重建。
 
 ## 8. 关联
 
 - 令牌：[tokens.md](../tokens.md)
 - 通用交互：[interactions.md](../interactions.md)
-- 组件：[hero-tile.md](../components/hero-tile.md)、[avatar.md](../components/avatar.md)、[pill.md](../components/pill.md)、[button.md](../components/button.md)、[card-panel.md](../components/card-panel.md)
+- 组件：[hero-tile.md](../components/hero-tile.md)、[avatar.md](../components/avatar.md)、[pill.md](../components/pill.md)、[button.md](../components/button.md)、[card-panel.md](../components/card-panel.md)、[card-gallery.md](../components/card-gallery.md)
+- 图鉴页（目录与详情口径）：[gallery.md](gallery.md)

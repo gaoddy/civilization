@@ -1385,6 +1385,27 @@ token.volvox-cell-token.name,团藻细胞
 token.worker-bee-token-1.name,工蜂
 token.worker-bee-token-2.name,工蜂
 ui.common.no_hero,未选英雄
+ui.gallery.all_cards,全部卡牌
+ui.gallery.back_lobby,返回大厅
+ui.gallery.back_match,返回对局
+ui.gallery.chapter_all,全部
+ui.gallery.count,%d 张
+ui.gallery.detail_empty,选择一张卡牌查看详情
+ui.gallery.effect,效果
+ui.gallery.empty,没有符合条件的卡牌
+ui.gallery.entry,卡牌图鉴
+ui.gallery.entry_match,图鉴
+ui.gallery.match_pool,本局卡池
+ui.gallery.next,下一页
+ui.gallery.page,第 %d/%d 页
+ui.gallery.prev,上一页
+ui.gallery.skills,技能
+ui.gallery.stats,%s / %s
+ui.gallery.title,卡牌图鉴
+ui.gallery.title_match,本局卡牌图鉴
+ui.gallery.toc_all,全部
+ui.gallery.toc_title,分类目录
+ui.gallery.type_token,Token
 ui.game.card.freeze_glyph,冻
 ui.game.card.stealth_glyph,潜
 ui.game.combat.banner,%s%s · 伤害 %d · 我方 %d vs 对手 %d
