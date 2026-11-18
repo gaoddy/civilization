@@ -150,7 +150,7 @@ fn contagion_count(log: &CombatLog) -> usize {
 }
 
 #[test]
-fn attack_kills_target_without_counterattack() {
+fn dying_target_still_counterattacks() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "a", 3, 3, &[]);
     add_card(&mut catalog, "b", 2, 3, &[]);
@@ -165,13 +165,24 @@ fn attack_kills_target_without_counterattack() {
         &mut rng(),
     );
 
-    // A 打 B 3 点（B 死于 0 血）；死亡目标不再反击。
-    assert_eq!(attacks(&log), vec![(1, 2, 3, false)], "只记录主伤害事件");
+    // A 打 B 3 点（B 死于 0 血）；目标仍反击 2 点。
+    assert_eq!(attacks(&log), vec![(1, 2, 3, false)], "只记录主动攻击");
     assert_eq!(death_order(&log), vec![2]);
-    assert_eq!(log.attacker_survivors, vec![1], "攻击方未受反击伤害");
+    assert_eq!(log.attacker_survivors, vec![1]);
     assert!(log.defender_survivors.is_empty());
     assert_eq!(log.winner, Some(0));
     assert_eq!(log.action_count, 1);
+
+    let hit = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Attack { attacker: 1, .. }))
+        .expect("应有一次主动攻击");
+    let attacker = log.states[hit]
+        .iter()
+        .find(|snapshot| snapshot.instance_id == 1)
+        .expect("攻击方快照");
+    assert_eq!(attacker.health, 1, "攻击方承受 2 点反击");
 }
 
 #[test]
@@ -415,7 +426,7 @@ fn reborn_returns_once_with_one_health() {
 }
 
 #[test]
-fn dying_target_does_not_counterattack() {
+fn mutual_death_when_counter_is_lethal() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "a", 3, 2, &[]);
     add_card(&mut catalog, "b", 2, 3, &[]);
@@ -430,11 +441,11 @@ fn dying_target_does_not_counterattack() {
         &mut rng(),
     );
 
-    // 攻击力 3 直接击杀 3 血目标；目标已死亡，不能反击攻击力 2 的 A。
-    assert_eq!(death_order(&log), vec![2], "只有目标死亡");
-    assert_eq!(log.attacker_survivors, vec![1], "A 未受反击伤害");
+    // A 的主伤害击杀 B；B 仍反击 2 点，击杀 2 血的 A。
+    assert_eq!(death_order(&log), vec![1, 2], "攻守双方同时死亡");
+    assert!(log.attacker_survivors.is_empty());
     assert!(log.defender_survivors.is_empty());
-    assert_eq!(log.winner, Some(0));
+    assert_eq!(log.winner, None);
     assert_eq!(log.action_count, 1);
 }
 
@@ -573,6 +584,39 @@ fn zero_attack_does_not_counterattack() {
         .find(|event| event.0 == 2)
         .expect("防御方应轮到出手");
     assert_eq!(defender_main, (2, 1, 0, false), "0 攻防守方不反击");
+}
+
+#[test]
+fn zero_attack_does_not_consume_shield() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "shielded", 10, 10, &["divine_shield"]);
+    add_card_with(
+        &mut catalog,
+        "scholar",
+        Playstyle::Neutral,
+        true,
+        0,
+        1,
+        &["taunt"],
+    );
+    add_card(&mut catalog, "brute", 5, 5, &[]);
+
+    let log = simulate(
+        &catalog,
+        &[minion(&catalog, 1, "shielded")],
+        &[minion(&catalog, 2, "scholar"), minion(&catalog, 3, "brute")],
+        0,
+        1,
+        0,
+        &mut rng(),
+    );
+
+    // 学者的 0 攻击反击不消耗护盾；随后 5 攻的 brute 仍被护盾挡下。
+    assert!(death_order(&log).contains(&2), "嘲讽学者被击杀");
+    assert_eq!(
+        log.attacker_final[0].stats.health.current, 10,
+        "brute 的攻击应被未被消耗的护盾挡下"
+    );
 }
 
 #[test]

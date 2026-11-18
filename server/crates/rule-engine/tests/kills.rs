@@ -322,7 +322,89 @@ fn ally_kill_triggers_for_all_living_allies_including_killer() {
 #[test]
 fn mutual_death_triggers_no_kill_hooks() {
     let (mut engine, _state) = setup_with_gold(31);
-    // 攻击者击杀目标后死于自身的 OnDealDamage 效果：同一次交换双方都死亡。
+    // 攻击者主伤害击杀目标，目标反击击杀攻击者：同一次交换双方都死亡。
+    add_card(
+        &mut engine,
+        "champion",
+        5,
+        5,
+        &[(None, "OnKill|ModifyStats|self|attack=1,duration=permanent")],
+    );
+    add_card(
+        &mut engine,
+        "witness",
+        0,
+        10,
+        &[(
+            None,
+            "OnAllyKill|ModifyStats|self|attack=1,duration=permanent",
+        )],
+    );
+    add_card(&mut engine, "rival", 5, 5, &[]);
+
+    let log = battle(
+        &engine,
+        &[
+            minion(&engine.catalog, 1, "champion"),
+            minion(&engine.catalog, 2, "witness"),
+        ],
+        &[minion(&engine.catalog, 3, "rival")],
+        0,
+    );
+
+    assert!(deaths(&log).contains(&1), "攻击者被反击击杀");
+    assert!(deaths(&log).contains(&3), "目标被主伤害击杀");
+    assert_eq!(
+        final_minion(&log, 1).stats.attack.permanent,
+        0,
+        "互杀时击杀者不触发 OnKill"
+    );
+    assert_eq!(
+        final_minion(&log, 2).stats.attack.permanent,
+        0,
+        "互杀时友方存活随从不触发 OnAllyKill"
+    );
+}
+
+#[test]
+fn mutual_death_with_reborn_does_not_retrigger_hooks() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "reborn-champion",
+        5,
+        5,
+        &[
+            (Some("reborn"), "[]"),
+            (None, "OnKill|ModifyStats|self|attack=1,duration=permanent"),
+        ],
+    );
+    add_card(&mut engine, "rival", 5, 5, &[]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "reborn-champion")],
+        &[minion(&engine.catalog, 2, "rival")],
+        0,
+    );
+
+    assert!(
+        log.actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Reborn { minion: 1 })),
+        "攻击者应复生"
+    );
+    assert_eq!(
+        final_minion(&log, 1).stats.attack.permanent,
+        0,
+        "互杀后复生不补发 OnKill"
+    );
+}
+
+#[test]
+fn self_kill_after_kill_triggers_no_hooks() {
+    let (mut engine, _state) = setup_with_gold(31);
+    // 攻击者击杀目标后死于自身的 OnDealDamage：不属于互杀，但击杀者已死。
     add_card(
         &mut engine,
         "suicide",
@@ -358,9 +440,76 @@ fn mutual_death_triggers_no_kill_hooks() {
     assert!(deaths(&log).contains(&1), "攻击者自身死亡");
     assert!(deaths(&log).contains(&3), "被击杀者死亡");
     assert_eq!(
+        final_minion(&log, 1).stats.attack.permanent,
+        0,
+        "击杀者已死，不触发 OnKill"
+    );
+    assert_eq!(
         final_minion(&log, 2).stats.attack.permanent,
         0,
-        "互相击杀的友方存活随从不应响应 OnAllyKill"
+        "击杀者已死，友方不触发 OnAllyKill"
+    );
+}
+
+#[test]
+fn lethal_target_does_not_trigger_own_deal_damage() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "bomb",
+        3,
+        1,
+        &[(None, "OnDealDamage|DealDamage|enemy:random|amount=9")],
+    );
+    add_card(&mut engine, "striker", 5, 10, &[]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "striker")],
+        &[minion(&engine.catalog, 2, "bomb")],
+        0,
+    );
+
+    assert!(deaths(&log).contains(&2), "目标被主伤害击杀");
+    assert!(
+        !deaths(&log).contains(&1),
+        "攻击者不应死于目标的 OnDealDamage"
+    );
+    assert_eq!(
+        final_minion(&log, 1).stats.health.current,
+        7,
+        "攻击者只承受 3 点反击，未触发目标的 OnDealDamage"
+    );
+}
+
+#[test]
+fn surviving_target_triggers_own_deal_damage() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "bomb",
+        3,
+        5,
+        &[(None, "OnDealDamage|DealDamage|enemy:random|amount=9")],
+    );
+    add_card(&mut engine, "striker", 2, 10, &[]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "striker")],
+        &[minion(&engine.catalog, 2, "bomb")],
+        0,
+    );
+
+    assert!(
+        deaths(&log).contains(&1),
+        "目标的 OnDealDamage 应击杀攻击者"
+    );
+    assert!(!deaths(&log).contains(&2), "目标承受 2 点主伤害后仍存活");
+    assert_eq!(
+        final_minion(&log, 2).stats.health.current,
+        3,
+        "目标剩余 3 点生命"
     );
 }
 

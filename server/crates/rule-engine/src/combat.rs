@@ -100,7 +100,7 @@ pub struct KillRecord {
     pub victim: InstanceId,
     /// 击杀者所在阵营。
     pub killer_side: usize,
-    /// 攻击者与被击杀者在同一次交换中同时死亡；为真时跳过击杀类钩子。
+    /// 攻击者的主伤害击杀目标、目标的这次反击击杀攻击者；为真时跳过击杀类钩子。
     pub mutual: bool,
 }
 
@@ -1032,17 +1032,8 @@ fn resolve_attack(
         field.push_action(CombatAction::ContagionApplied { target: target_id }, states);
     }
 
-    // (c) 反击：目标在主伤害后仍存活（当前生命 > 0）才反击。
-    let counter = if field.sides[defending_side].minions[target_index]
-        .stats
-        .health
-        .current
-        > 0
-    {
-        effective_attack(catalog, &field.sides[defending_side].minions[target_index])
-    } else {
-        0
-    };
+    // (c) 反击：无论目标是否被主伤害击杀，都按目标当前攻击力结算。
+    let counter = effective_attack(catalog, &field.sides[defending_side].minions[target_index]);
     let mut counter_damage = 0;
     if counter > 0 {
         let attacker = &field.sides[attacking_side].minions[attacker_index];
@@ -1067,30 +1058,8 @@ fn resolve_attack(
         main_states,
     );
 
-    // (e) 造成伤害后，在本次交换的死亡判定前触发 `OnDealDamage`。
-    if let Some(engine) = engine {
-        if damage > 0 {
-            engine.fire_combat_single(
-                field,
-                rng,
-                attacker_id,
-                Trigger::OnDealDamage,
-                Some(target_id),
-            );
-        }
-        if counter_damage > 0 {
-            engine.fire_combat_single(
-                field,
-                rng,
-                target_id,
-                Trigger::OnDealDamage,
-                Some(attacker_id),
-            );
-        }
-    }
-
-    // 同一次交换中攻守双方都被打死：本次交换的攻守击杀都记为互相击杀。
-    // 双方在死亡队列中一起结算，故本次交换的记录都在 `pending_kills` 尾部。
+    // (e) 同一次交换中攻守双方都被打死：本次交换的主伤害与反击击杀都记为互相击杀。
+    // 必须在 `OnDealDamage` 之前判定：其效果会就地结算死亡并触发击杀钩子。
     let attacker_lethal = field.locate(attacker_id).is_some_and(|(side, index)| {
         field.sides[side].alive[index] && field.sides[side].minions[index].stats.health.current <= 0
     });
@@ -1105,6 +1074,29 @@ fn resolve_attack(
             if attacker_kills_target || target_kills_attacker {
                 kill.mutual = true;
             }
+        }
+    }
+
+    // (f) 造成伤害后，在本次交换的死亡判定前触发 `OnDealDamage`。
+    // 被主伤害击杀的目标不再触发自己的 `OnDealDamage`。
+    if let Some(engine) = engine {
+        if damage > 0 {
+            engine.fire_combat_single(
+                field,
+                rng,
+                attacker_id,
+                Trigger::OnDealDamage,
+                Some(target_id),
+            );
+        }
+        if counter_damage > 0 && !target_lethal {
+            engine.fire_combat_single(
+                field,
+                rng,
+                target_id,
+                Trigger::OnDealDamage,
+                Some(attacker_id),
+            );
         }
     }
 

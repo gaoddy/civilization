@@ -324,7 +324,7 @@ pub struct KillRecord {
     pub killer: InstanceId,
     pub victim: InstanceId,
     pub killer_side: usize,
-    /// 攻击者与被击杀者在同一次交换中同时死亡；为真时跳过击杀类钩子。
+    /// 攻击者的主伤害击杀目标、目标的这次反击击杀攻击者；为真时跳过击杀类钩子。
     pub mutual: bool,
 }
 ```
@@ -332,12 +332,13 @@ pub struct KillRecord {
 - `BattleField::apply_damage(id, amount, can_kill, source)` 是唯一掉血入口；`deal_damage(id, amount, can_kill)` 是同义包装，固定 `DamageSource::None`。
 - 只有 `source = Minion(killer)`、目标本次仍存活且伤害把生命降到 ≤0 时，向 `pending_kills` 追加一条 `KillRecord`；同一段伤害最多记录一次。
 - 攻击主伤害归因攻击者，反击伤害归因反击者；效果伤害（`DealDamage`）归因施放该效果的随从；传染、回合开始掉血没有来源，不产生击杀。
-- 同一次交换中攻击者与被击杀者都降到 ≤0 时，本次交换产生的两条记录（攻击者击杀目标、目标反击击杀攻击者）都标 `mutual = true`。
-- `OnDealDamage` 在本次交换的死亡判定前触发；`OnKill` / `OnAllyKill` 在死亡队列处理完后触发。
+- 同一次交换中攻击者的主伤害击杀目标、目标的这次反击击杀攻击者时，本次交换产生的两条记录（攻击者击杀目标、目标反击击杀攻击者）都标 `mutual = true`。互杀判定在反击结算后、`OnDealDamage` 之前完成；`OnDealDamage` 等效果造成的死亡不参与该判定。
+- 每次主动攻击都按目标当前攻击力结算反击，目标被主伤害击杀不影响反击伤害；`counter > 0` 才检查并消耗攻击者护盾，目标攻击力为 0 时不造成伤害、不消耗护盾。
+- `OnDealDamage` 在本次交换的死亡判定前触发：攻击者在主伤害 >0 时触发；目标在反击伤害 >0 且未被主伤害击杀时触发。`OnKill` / `OnAllyKill` 在死亡队列处理完后触发。
 - 死亡队列处理完后，按记录顺序触发：
   1. `OnKill`：只对仍存活的击杀者触发，事件目标为被击杀者；
   2. `OnAllyKill`：被击杀者属于击杀者敌方时，对击杀方全部存活随从（含击杀者）触发，事件目标为被击杀者。
-- `mutual = true`、击杀者已离场或生命 ≤0 的记录两条钩子都不触发；击杀友方随从只触发 `OnKill`，不触发 `OnAllyKill`。
+- `mutual = true`、击杀者已离场或生命 ≤0 的记录两条钩子都不触发；互杀后击杀者因复生回到场上也不补发。击杀友方随从只触发 `OnKill`，不触发 `OnAllyKill`。
 - `Trigger` 枚举与 `TRIGGER_JSON` 已登记 `OnKill` / `OnAllyKill`，技能侧只声明触发名。
 
 ### 10.2 分解（Decompose）
