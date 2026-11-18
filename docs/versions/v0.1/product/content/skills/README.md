@@ -1,6 +1,6 @@
 # 技能索引
 
-本文索引 v0.1 的 193 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.1。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
+本文索引 v0.1 的 197 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.1。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
 
 | 技能 | 关键词 | 文本 | 引用数 |
 | --- | --- | --- | --- |
@@ -24,6 +24,7 @@
 | [aura-scholar-plus-0-plus-3](aura-scholar-plus-0-plus-3.md) | 无 | 你的学者随从获得 +0/+3 | 1 |
 | [aura-school-fish-1](aura-school-fish-1.md) | 无 | 群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1 | 1 |
 | [aura-school-fish-2](aura-school-fish-2.md) | 无 | 群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力 | 1 |
+| [aura-school-mammal](aura-school-mammal.md) | 无 | 群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力 | 1 |
 | [battlecry-all-biology-growth-once](battlecry-all-biology-growth-once.md) | battlecry | 战吼：使你的所有动物随从获得一次成长 | 1 |
 | [battlecry-all-friendly-growth-once](battlecry-all-friendly-growth-once.md) | battlecry | 战吼：使你的所有随从获得一次成长 | 5 |
 | [battlecry-all-friendly-growth-twice](battlecry-all-friendly-growth-twice.md) | battlecry | 战吼：使你的所有随从获得两次成长 | 1 |
@@ -40,9 +41,11 @@
 | [battlecry-friendly-growth-plant-twice](battlecry-friendly-growth-plant-twice.md) | battlecry | 战吼：使一个友方随从获得一次成长；若其为植物，改为两次 | 1 |
 | [battlecry-friendly-growth-scholar-twice](battlecry-friendly-growth-scholar-twice.md) | battlecry | 战吼：使一个友方随从获得一次成长；若其为学者，改为两次 | 1 |
 | [battlecry-friendly-growth-twice](battlecry-friendly-growth-twice.md) | battlecry | 战吼：使一个友方随从获得两次成长 | 4 |
+| [battlecry-friendly-human-growth-twice](battlecry-friendly-human-growth-twice.md) | 战吼 | 战吼：使一个友方人科随从获得两次成长 | 1 |
 | [battlecry-friendly-human-plus-0-plus-1](battlecry-friendly-human-plus-0-plus-1.md) | battlecry | 战吼：使一个友方人科随从获得 +0/+1 | 1 |
 | [battlecry-friendly-mech-growth-once](battlecry-friendly-mech-growth-once.md) | battlecry | 战吼：使一个友方机械随从获得一次成长 | 2 |
 | [battlecry-friendly-plant-growth-once](battlecry-friendly-plant-growth-once.md) | battlecry | 战吼：使一个友方植物随从获得一次成长 | 1 |
+| [battlecry-friendly-plant-kingdom-growth-once](battlecry-friendly-plant-kingdom-growth-once.md) | 战吼 | 战吼：使一个友方植物界随从获得一次成长 | 1 |
 | [battlecry-friendly-plus-0-plus-1](battlecry-friendly-plus-0-plus-1.md) | battlecry | 战吼：使一个友方随从获得 +0/+1 | 3 |
 | [battlecry-friendly-plus-0-plus-2](battlecry-friendly-plus-0-plus-2.md) | battlecry | 战吼：使一个友方随从获得 +0/+2 | 4 |
 | [battlecry-friendly-plus-1-attack](battlecry-friendly-plus-1-attack.md) | battlecry | 战吼：使一个友方随从获得 +1 攻击力 | 1 |
@@ -117,7 +120,7 @@
 | [decompose-friendly-death-original](decompose-friendly-death-original.md) | decompose | 分解：友方随从死亡后，获得其原始生命值 | 1 |
 | [decompose-kill-original](decompose-kill-original.md) | decompose | 分解：本随从击杀随从后，获得其原始生命值 | 3 |
 | [detonate-1](detonate-1.md) | 无 | 引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 1 点伤害 | 1 |
-| [detonate-2](detonate-2.md) | 无 | 引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 2 点伤害 | 3 |
+| [detonate-2](detonate-2.md) | 无 | 引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 2 点伤害 | 4 |
 | [devour-1](devour-1.md) | 无 | 吞噬：战斗开始时，消灭一个攻击力不高于 1 的敌方随从，永久获得其攻击力与生命值 | 1 |
 | [devour-2](devour-2.md) | 无 | 吞噬：战斗开始时，消灭一个攻击力不高于 2 的敌方随从，永久获得其攻击力与生命值 | 1 |
 | [devour-3](devour-3.md) | 无 | 吞噬：战斗开始时，消灭一个攻击力不高于 3 的敌方随从，永久获得其攻击力与生命值 | 2 |
@@ -136,19 +139,20 @@
 | [keyword-armor-2](keyword-armor-2.md) | armor 2 | 减伤 2：受到伤害时，减免 2 点伤害 | 3 |
 | [keyword-assemble-1](keyword-assemble-1.md) | assemble 1 | 装配 1：进入战场时，使你的其他机械随从各获得 1 次成长 | 10 |
 | [keyword-assemble-2](keyword-assemble-2.md) | assemble 2 | 装配 2：进入战场时，使你的其他机械随从各获得 2 次成长 | 8 |
-| [keyword-breed-1](keyword-breed-1.md) | breed 1 | 繁衍 1：回合开始时获得 +1 生命 | 7 |
+| [keyword-breed-1](keyword-breed-1.md) | breed 1 | 繁衍 1：回合开始时获得 +1 生命 | 8 |
 | [keyword-breed-2](keyword-breed-2.md) | breed 2 | 繁衍 2：回合开始时获得 +2 生命 | 4 |
 | [keyword-breed-3](keyword-breed-3.md) | breed 3 | 繁衍 3：回合开始时获得 +3 生命 | 2 |
-| [keyword-contagion](keyword-contagion.md) | contagion | 传染：造成伤害后，目标每回合 -1 生命 | 13 |
+| [keyword-contagion](keyword-contagion.md) | contagion | 传染：造成伤害后，目标每回合 -1 生命 | 14 |
 | [keyword-divine-shield](keyword-divine-shield.md) | divine_shield | 护盾：抵消一次伤害 | 7 |
 | [keyword-evolve](keyword-evolve.md) | evolve | 进化：从 +2/+2、护盾、复生中选择一个 | 6 |
 | [keyword-optimal-attack](keyword-optimal-attack.md) | optimal_attack | 最优攻击：无视嘲讽，优先攻击可被击杀的目标 | 12 |
 | [keyword-poison](keyword-poison.md) | poison | 剧毒：造成伤害后，若目标仍存活则将其消灭 | 8 |
 | [keyword-reborn](keyword-reborn.md) | reborn | 复生：以 1 点生命复活一次 | 7 |
-| [keyword-sow](keyword-sow.md) | sow | 播种：死亡时召唤一个 1/1 的幼苗 | 16 |
+| [keyword-sow](keyword-sow.md) | sow | 播种：死亡时召唤一个 1/1 的幼苗 | 18 |
 | [keyword-stealth](keyword-stealth.md) | stealth | 潜行：无法被单体攻击与单体效果选中，造成伤害后打破 | 4 |
 | [keyword-taunt](keyword-taunt.md) | taunt | 嘲讽 | 16 |
 | [keyword-windfury](keyword-windfury.md) | windfury | 连击：每回合可攻击两次 | 10 |
+| [latent-3](latent-3.md) | 无 | 潜伏：回合开始时，每有 1 层传染获得 +1 攻击力；达到 3 层时对敌方所有随从造成 3 点伤害 | 1 |
 | [light-speed-strike](light-speed-strike.md) | 无 | 使一个友方随从本回合获得连击 | 1 |
 | [microbiology](microbiology.md) | 无 | 战斗开始时使敌方最左侧随从获得 1 层传染 | 1 |
 | [mimic-1](mimic-1.md) | 无 | 战吼：复制一个友方随从的当前攻击力与生命值 | 1 |
