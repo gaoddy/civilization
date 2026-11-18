@@ -66,7 +66,7 @@ tests/                       # Python 标准库 unittest
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
 - 实例编号 `InstanceId` 由 `state.next_instance_id` 单调分配：商店每次刷新的每个槽位（含效果牌槽）各有一个，冻结保留原编号；买入、入手牌、打出到棋盘都沿用该编号。三连合成时新建一个金色编号，并在 `sources` 记录三张原始副本的编号（不参与状态哈希）。复制品按复制方式分配新编号。
 - `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼；手牌保留随从实例（含成长等状态），不再退回卡面基础值。`PlayCard` 与 `UseHeroPower` 带 `target: Option<InstanceId>`，M0 由 AI 自动选择目标。
-- 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录来源星级 +1（封顶 6），打出该牌才登记发现待选。效果牌不进商店、不进任何候选、不扣共享牌池。
+- 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录来源星级 +1（封顶 6），打出该牌才登记发现待选。奖励效果牌不进商店、不进任何候选、不扣共享牌池；普通效果牌按商店概率进入商店槽位，但同样不扣共享牌池。
 - `PendingChoice::Target { seat, source, card_id, golden }`：目标待选期间该座位除 `ChooseTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。目标待选在 `finish_recruit` 进入战斗前作废（战吼落空）；发现与进化待选允许留到下回合。`ChooseTarget` 要求队首是目标待选、目标是我方棋盘上的随从，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果。
 - `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。视图同时下发 `instanceId`、`golden`，以及随从牌的 `attack` / `health`（当前值，含成长等全部层数，学者为 0）；效果牌这两项为 `null`，`golden` 恒为 `false`，奖励牌另带 `rewardLevel`（锁定的发现星级）。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。
@@ -159,7 +159,7 @@ impl Taxonomy {
 `data.rs::card_in_pool(card, enabled)` 是统一入口：
 
 - 非 `Neutral` 玩法：玩法被启用才在池中。
-- `Neutral`：`specialty` 中没有 `play:` 时视为纯通用，始终在池中；有 `play:` 时至少一个命中本局玩法才在池中。学者与中立工具卡同一口径。
+- `Neutral`：`specialty` 中没有 `play:` 时视为纯通用，始终在池中；有 `play:` 时至少一个命中本局玩法才在池中。学者、中立工具卡与效果牌同一口径——定向效果牌只在本局启用其 `play:` 关联玩法时进商店。
 - 商店、发现候选、随机召唤、商店类效果（刷新、加槽、获得随从）与英雄候选过滤都走该入口。
 - 复制已有实例、显式 `Summon {card}`、复活是技能明确指定的结果，不走卡池判定。
 - 英雄卡不进商店；英雄候选由房间服务按同一入口过滤（见[房间服务与联网](room-service.md)）。
@@ -206,6 +206,12 @@ impl Taxonomy {
 
 `sim bot` 的意图表同步扩到十一种：`pendingChoices` 头部为 `target` 时发 `ChooseTarget { minion }`，取己方棋盘最左侧随从；`PlayCard` 一律带 `position: None`（追加到最右），并读手牌视图 `requiresTarget`：为真且棋盘非空时预填己方第一个随从为目标，棋盘为空时不填（效果可落空）。`sim/src/ai.rs`（M0 基线）同样按该规则消费目标待选。
 
+M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
+
+- **购买**：`best_affordable` 跳过「定向效果牌且其 `play:` 关联与当前阵容主导玩法不一致」的槽位。主导玩法取棋盘随从中非 `neutral` 的 `playstyle` 众数，同票取枚举序靠前者；没有主导玩法时所有效果牌都可买，通用效果牌始终可买。
+- **打出**：`choose_play_effect` 先尝试不带目标地打出效果牌（合法池为空时效果落空、意图仍生效）；该意图被引擎以 `NO_VALID_TARGET` 拒绝后，同一回合改为带最左侧友方随从重试。
+- **重规划预算**：`sim/src/lib.rs` 的驱动循环按座位、按回合统计连续被拒意图数，上限 `MAX_REPLANS_PER_SEAT_TURN = 64`；任一次成功执行都会清空 `blocked` 并把计数归零，预算只用于识别「状态不变的连续被拒」死循环，不跨成功动作累计。
+
 ## 6. 验证方式
 
 验证矩阵：`make data-check && python3 scripts/validate_docs.py && make m0-check && make m0-batch && make m0-report`（其中 `make m0-check` = `make data-check && make test && make lint && make m0-determinism`）。
@@ -214,7 +220,7 @@ impl Taxonomy {
 
 | M0 标准 | 命令 | 证据 |
 | --- | --- | --- |
-| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 240 卡 / 131 技能 / 3 Token / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
+| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 409 卡 / 247 技能 / 23 Token / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
 | 数据一致 | `make data-check` | 重新生成后输出 `生成数据无漂移`，退出码 0 |
 | 规则覆盖 | `make test` | `server/crates/rule-engine/tests/` 与 `server/crates/sim/tests/` 的用例全部 `test result: ok`（用例清单见第 8 节）；商店池耗尽留空槽由 `recruit::reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects` 锁定 |
 | 确定性 | `make m0-determinism` | `replay_same_log_100_times_has_same_hash` 通过：100 次重放每次退出码 0，`final_hash` 全部等于原局；重放由日志种子重新推导同一组 5 个玩法 |

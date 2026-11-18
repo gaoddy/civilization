@@ -11,7 +11,7 @@ use rule_engine::engine::Engine;
 use rule_engine::state::{AuraEffect, GameState, MinionInstance};
 use rule_engine::view::{BoardMinionView, view};
 
-/// 卡面 3/4 的普通随从。
+/// 卡面 3/3 的普通随从。
 const FOUR: &str = "jianchihu";
 /// 卡面 0/5 的学者随从。
 const SCHOLAR: &str = "euclid";
@@ -72,13 +72,13 @@ fn layers_and_current_agree_without_damage() {
         stats.attack.current,
     );
 
-    // 生命：4 基础 + 1 成长 + 2 永久 - 1 回合。
-    assert_eq!(stats.health.initial, 4);
+    // 生命：3 基础 + 1 成长 + 2 永久 - 1 回合。
+    assert_eq!(stats.health.initial, 3);
     assert_eq!(stats.health.permanent, 3);
     assert_eq!(stats.health.turn, -1);
     assert_eq!(stats.health.aura, 0);
     assert_eq!(stats.health.damage, 0);
-    assert_eq!(stats.health.current, 6);
+    assert_eq!(stats.health.current, 5);
     assert_consistent(
         &[
             stats.health.initial,
@@ -130,7 +130,7 @@ fn damage_is_absorbed_into_breakdown() {
     let stats = first_board_minion(&engine, &state).stats;
 
     assert_eq!(stats.health.damage, 3);
-    assert_eq!(stats.health.current, 2);
+    assert_eq!(stats.health.current, 1);
     assert_consistent(
         &[
             stats.health.initial,
@@ -148,15 +148,15 @@ fn negative_current_is_clamped_and_absorbed_by_damage() {
     let (engine, mut state) = started(7);
     let mut minion = MinionInstance::new(catalog(&engine), 1, FOUR, false);
     minion.stats.health.apply_damage(7);
-    assert_eq!(minion.stats.health.current, -3);
+    assert_eq!(minion.stats.health.current, -4);
     state.players[0].board.push(minion);
 
     let stats = first_board_minion(&engine, &state).stats;
 
     assert_eq!(stats.health.current, 0, "协议下限把负当前量夹到 0");
     assert_eq!(
-        stats.health.damage, 4,
-        "层和（4）到夹紧后当前量（0）的差额计入受击"
+        stats.health.damage, 3,
+        "层和（3）到夹紧后当前量（0）的差额计入受击"
     );
     assert_consistent(
         &[
@@ -191,7 +191,7 @@ fn folded_aura_is_reflected_in_breakdown() {
     assert_eq!(stats.attack.aura, 2);
     assert_eq!(stats.attack.current, 5);
     assert_eq!(stats.health.aura, 1);
-    assert_eq!(stats.health.current, 5);
+    assert_eq!(stats.health.current, 4);
     assert_consistent(
         &[
             stats.attack.initial,

@@ -7,7 +7,7 @@ func _ready() -> void:
     view["self"]["shop"] = [
         {"index": 0, "cardId": "aolinpike-jidian", "frozen": false},
         {"index": 1, "cardId": "agi", "frozen": true},
-        {"index": 2, "cardId": "tufu", "frozen": false},
+        {"index": 2, "cardId": "einstein-fridge", "frozen": false},
         {"index": 3, "cardId": "qishi", "frozen": false},
         {"index": 4, "cardId": "adam-smith", "frozen": false},
         {"index": 5, "cardId": "baiyi", "frozen": false},
@@ -230,7 +230,7 @@ func _ready() -> void:
                 "%s 的信息区应包住名称与数值" % card_id,
             )
 
-    # 无介绍的随从（tufu）退回两行信息区，名称与数值仍与其他卡对齐。
+    # 无介绍的随从（einstein-fridge，全池唯一无技能卡）退回两行信息区，名称与数值仍与其他卡对齐。
     var plain_card: Control = recruit.find_child("ShopSlot2", true, false)
     _expect(plain_card != null, "商店应存在 ShopSlot2")
     if plain_card != null:
