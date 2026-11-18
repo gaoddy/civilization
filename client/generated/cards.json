@@ -59,7 +59,7 @@
     "level": 5,
     "playstyle": "neutral",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-ignore-taunt"
     ],
     "specialty": [
       {
@@ -1838,7 +1838,7 @@
     "level": 3,
     "playstyle": "fish",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-ignore-taunt"
     ],
     "specialty": [],
     "subtype": "fish",
@@ -2251,7 +2251,7 @@
     "level": 5,
     "playstyle": "fish",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-ignore-taunt"
     ],
     "specialty": [],
     "subtype": "fish",
@@ -3546,7 +3546,7 @@
     "level": 3,
     "playstyle": "insect",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-ignore-taunt"
     ],
     "specialty": [],
     "subtype": "insect",
@@ -3595,7 +3595,7 @@
     "playstyle": "insect",
     "skills": [
       "keyword-windfury",
-      "keyword-optimal-attack"
+      "keyword-ignore-taunt"
     ],
     "specialty": [],
     "subtype": "insect",
@@ -4016,7 +4016,7 @@
     "level": 5,
     "playstyle": "machine",
     "skills": [
-      "keyword-optimal-attack",
+      "keyword-ignore-taunt",
       "keyword-assemble-1"
     ],
     "specialty": [],
@@ -4074,7 +4074,7 @@
     "level": 4,
     "playstyle": "neutral",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-ignore-taunt"
     ],
     "specialty": [
       {
@@ -4805,7 +4805,7 @@
     "level": 7,
     "playstyle": "neutral",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-ignore-taunt"
     ],
     "specialty": [
       {
@@ -4996,7 +4996,7 @@
     "level": 3,
     "playstyle": "machine",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-ignore-taunt"
     ],
     "specialty": [],
     "subtype": "robot",
@@ -5217,7 +5217,7 @@
     "level": 4,
     "playstyle": "machine",
     "skills": [
-      "keyword-optimal-attack",
+      "keyword-ignore-taunt",
       "keyword-assemble-1"
     ],
     "specialty": [],
@@ -6249,7 +6249,7 @@
     "level": 5,
     "playstyle": "neutral",
     "skills": [
-      "keyword-optimal-attack",
+      "keyword-ignore-taunt",
       "keyword-assemble-2"
     ],
     "specialty": [
@@ -6678,7 +6678,7 @@
     "level": 4,
     "playstyle": "neutral",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-ignore-taunt"
     ],
     "specialty": [
       {

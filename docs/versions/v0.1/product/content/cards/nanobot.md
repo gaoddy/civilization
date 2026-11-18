@@ -9,7 +9,7 @@ level: 5
 era: future
 attack: 6
 health: 11
-skills: [keyword-optimal-attack, keyword-assemble-1]
+skills: [keyword-ignore-taunt, keyword-assemble-1]
 is_scholar: false
 ---
 
@@ -30,14 +30,14 @@ is_scholar: false
 | 时代 | 未来 |
 | 攻击力 | 6 |
 | 生命值 | 11 |
-| 关键词 | 最优攻击；装配 1 |
-| 技能 | keyword-optimal-attack；keyword-assemble-1 |
+| 关键词 | 无视嘲讽；装配 1 |
+| 技能 | keyword-ignore-taunt；keyword-assemble-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-最优攻击：无视嘲讽，优先攻击可被击杀的目标；装配 1：进入战场时，使你的其他机械随从各获得 1 次成长
+无视嘲讽：攻击时无视敌方嘲讽；装配 1：进入战场时，使你的其他机械随从各获得 1 次成长
 
 ## 出处
 

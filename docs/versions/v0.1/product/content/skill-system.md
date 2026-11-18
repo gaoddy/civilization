@@ -157,7 +157,7 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 | `keyword-sow` 播种 | 18 |
 | `keyword-taunt` 嘲讽 | 16 |
 | `keyword-contagion` 传染 | 14 |
-| `keyword-optimal-attack` 最优攻击 | 12 |
+| `keyword-ignore-taunt` 无视嘲讽 | 12 |
 
 引用数由校验脚本统计，不写入技能实体文档；另有多项并列 10 次引用（`keyword-windfury`、`keyword-assemble-1`），表中从略。
 

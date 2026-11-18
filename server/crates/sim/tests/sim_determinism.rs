@@ -103,7 +103,7 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 ///
 /// 2026-11-19 移除最优攻击并新增无视嘲讽后，本批次 20 局哈希未变化，说明
 /// 该批对局未受选目标改动影响。选目标行为变化由 rule-engine 的战斗用例覆盖，
-/// 金标准保留原值。
+/// 金标准保留原值。同日的卡池迁移（16 张卡改用 `ignore_taunt`）后本批次仍一致。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

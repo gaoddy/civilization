@@ -9,7 +9,7 @@ level: 3
 era: classical
 attack: 4
 health: 6
-skills: [keyword-optimal-attack]
+skills: [keyword-ignore-taunt]
 is_scholar: false
 ---
 
@@ -30,18 +30,18 @@ is_scholar: false
 | 时代 | 古典 |
 | 攻击力 | 4 |
 | 生命值 | 6 |
-| 关键词 | 最优攻击 |
-| 技能 | keyword-optimal-attack |
+| 关键词 | 无视嘲讽 |
+| 技能 | keyword-ignore-taunt |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-最优攻击：无视嘲讽，优先攻击可被击杀的目标
+无视嘲讽：攻击时无视敌方嘲讽
 
 ## 设计说明
 
-定位：3 星最优攻击，越过嘲讽点杀残血。
+定位：3 星无视嘲讽，越过嘲讽攻击敌方后排。
 平衡边界：3 星 4/6，攻击力取该星级中位。
 使用建议：清理敌方关键随从，不与高生命单位空换。
 
