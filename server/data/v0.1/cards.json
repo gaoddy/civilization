@@ -1020,6 +1020,25 @@
     "attack": 4,
     "card_type": "minion",
     "cost": null,
+    "era": "modern",
+    "health": 8,
+    "id": "dengue-virus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "virus",
+    "skills": [
+      "keyword-contagion",
+      "latent-3"
+    ],
+    "specialty": [],
+    "subtype": "virus",
+    "taxon": "flaviviridae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
     "era": "industrial",
     "health": 5,
     "id": "dianbaoji",
@@ -1952,6 +1971,25 @@
     "specialty": [],
     "subtype": "protozoa",
     "taxon": "hexamitidae"
+  },
+  {
+    "attack": 7,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 11,
+    "id": "ginkgo",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 5,
+    "playstyle": "plant",
+    "skills": [
+      "keyword-sow",
+      "keyword-breed-1"
+    ],
+    "specialty": [],
+    "subtype": "tree",
+    "taxon": "ginkgoaceae"
   },
   {
     "attack": 0,
@@ -3314,6 +3352,24 @@
     "taxon": "plasmodiidae"
   },
   {
+    "attack": 9,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 13,
+    "id": "mammoth",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 6,
+    "playstyle": "mammal",
+    "skills": [
+      "aura-school-mammal"
+    ],
+    "specialty": [],
+    "subtype": "beast",
+    "taxon": "elephantidae"
+  },
+  {
     "attack": 4,
     "card_type": "minion",
     "cost": null,
@@ -3800,6 +3856,24 @@
     "taxon": "nautilidae"
   },
   {
+    "attack": 5,
+    "card_type": "minion",
+    "cost": null,
+    "era": "prehistoric",
+    "health": 8,
+    "id": "neanderthal",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 4,
+    "playstyle": "mammal",
+    "skills": [
+      "battlecry-friendly-human-growth-twice"
+    ],
+    "specialty": [],
+    "subtype": "primate",
+    "taxon": "hominidae"
+  },
+  {
     "attack": 6,
     "card_type": "minion",
     "cost": null,
@@ -3911,6 +3985,24 @@
     "attack": 4,
     "card_type": "minion",
     "cost": null,
+    "era": "modern",
+    "health": 5,
+    "id": "norovirus",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "virus",
+    "skills": [
+      "detonate-2"
+    ],
+    "specialty": [],
+    "subtype": "virus",
+    "taxon": "caliciviridae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "cost": null,
     "era": "classical",
     "health": 5,
     "id": "nupao",
@@ -3965,6 +4057,25 @@
     "specialty": [],
     "subtype": "mollusk",
     "taxon": "octopodidae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "cost": null,
+    "era": "classical",
+    "health": 6,
+    "id": "orchid",
+    "is_hero": false,
+    "is_scholar": false,
+    "level": 3,
+    "playstyle": "plant",
+    "skills": [
+      "keyword-sow",
+      "battlecry-friendly-plant-kingdom-growth-once"
+    ],
+    "specialty": [],
+    "subtype": "flower",
+    "taxon": "orchidaceae"
   },
   {
     "attack": 4,

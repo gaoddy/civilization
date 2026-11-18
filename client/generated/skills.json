@@ -574,6 +574,40 @@
     "cost": null,
     "effects": [
       {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1,
+          "max_count": 6,
+          "per_attack": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "mammal"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-school-mammal",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "growth",
         "params": {
           "times": 1
@@ -962,6 +996,32 @@
     "cost": null,
     "effects": [
       {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "taxon",
+              "value": "hominidae"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-friendly-human-growth-twice",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "modify_stats",
         "params": {
           "duration": "permanent",
@@ -1034,6 +1094,32 @@
       }
     ],
     "id": "battlecry-friendly-plant-growth-once",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "plant"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-friendly-plant-kingdom-growth-once",
     "keyword": "battlecry",
     "uses_per_turn": null
   },
@@ -3201,6 +3287,26 @@
     "effects": [],
     "id": "keyword-windfury",
     "keyword": "windfury",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "latent",
+        "params": {
+          "amount": 1,
+          "count": 3,
+          "threshold": 3
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_turn_start"
+      }
+    ],
+    "id": "latent-3",
+    "keyword": null,
     "uses_per_turn": null
   },
   {

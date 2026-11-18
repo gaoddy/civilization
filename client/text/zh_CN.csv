@@ -55,6 +55,7 @@ card.crow.name,乌鸦
 card.cuttlefish.name,乌贼
 card.darwin.name,达尔文
 card.davinci.name,达·芬奇
+card.dengue-virus.name,登革病毒
 card.dianbaoji.name,电报机
 card.dianhua-jiaohuanji.name,电话交换机
 card.difference-engine.name,差分机
@@ -106,6 +107,7 @@ card.giant-amoeba.name,大变形虫
 card.giant-jellyfish.name,巨型水母
 card.giant-squid.name,大王乌贼
 card.giardia.name,贾第虫
+card.ginkgo.name,银杏
 card.godel.name,库尔特·哥德尔
 card.golden-eagle.name,金雕
 card.gongchangzhu.name,工厂主
@@ -179,6 +181,7 @@ card.luxun.name,鲁迅
 card.maitian.name,麦田
 card.majidun-changqiangbing.name,马其顿长枪兵
 card.malaria.name,疟疾
+card.mammoth.name,真猛犸
 card.mantis.name,螳螂
 card.marie-curie.name,玛丽·居里
 card.meganeura.name,巨脉蜻蜓
@@ -203,14 +206,17 @@ card.nami-bingdu.name,纳米病毒
 card.nami-fengqun.name,纳米蜂群
 card.nanobot.name,纳米机器人
 card.nautilus.name,鹦鹉螺
+card.neanderthal.name,尼安德特人
 card.neiranji.name,内燃机
 card.newton.name,牛顿
 card.nitaizhangyu.name,拟态章鱼
 card.nitrogen-crop.name,固氮作物
 card.niuwen.name,牛瘟
+card.norovirus.name,诺如病毒
 card.nupao.name,弩炮
 card.nushou.name,弩手
 card.octopus-larva.name,章鱼幼体
+card.orchid.name,兰花
 card.ostrich.name,鸵鸟
 card.panghuang.match_text,同左
 card.panghuang.name,彷徨
@@ -883,6 +889,7 @@ skill.aura-scholar-plus-0-plus-2.text,你的学者随从获得 +0/+2
 skill.aura-scholar-plus-0-plus-3.text,你的学者随从获得 +0/+3
 skill.aura-school-fish-1.text,群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
 skill.aura-school-fish-2.text,群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力
+skill.aura-school-mammal.text,群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力
 skill.battlecry-all-biology-growth-once.text,战吼：使你的所有动物随从获得一次成长
 skill.battlecry-all-friendly-growth-once.text,战吼：使你的所有随从获得一次成长
 skill.battlecry-all-friendly-growth-twice.text,战吼：使你的所有随从获得两次成长
@@ -899,9 +906,11 @@ skill.battlecry-friendly-growth-once.text,战吼：使一个友方随从获得�
 skill.battlecry-friendly-growth-plant-twice.text,战吼：使一个友方随从获得一次成长；若其为植物，改为两次
 skill.battlecry-friendly-growth-scholar-twice.text,战吼：使一个友方随从获得一次成长；若其为学者，改为两次
 skill.battlecry-friendly-growth-twice.text,战吼：使一个友方随从获得两次成长
+skill.battlecry-friendly-human-growth-twice.text,战吼：使一个友方人科随从获得两次成长
 skill.battlecry-friendly-human-plus-0-plus-1.text,战吼：使一个友方人科随从获得 +0/+1
 skill.battlecry-friendly-mech-growth-once.text,战吼：使一个友方机械随从获得一次成长
 skill.battlecry-friendly-plant-growth-once.text,战吼：使一个友方植物随从获得一次成长
+skill.battlecry-friendly-plant-kingdom-growth-once.text,战吼：使一个友方植物界随从获得一次成长
 skill.battlecry-friendly-plus-0-plus-1.text,战吼：使一个友方随从获得 +0/+1
 skill.battlecry-friendly-plus-0-plus-2.text,战吼：使一个友方随从获得 +0/+2
 skill.battlecry-friendly-plus-1-attack.text,战吼：使一个友方随从获得 +1 攻击力
@@ -1043,6 +1052,7 @@ skill.keyword-sow.text,播种：死亡时召唤一个 1/1 的幼苗
 skill.keyword-stealth.text,潜行：无法被单体攻击与单体效果选中，造成伤害后打破
 skill.keyword-taunt.text,嘲讽
 skill.keyword-windfury.text,连击：每回合可攻击两次
+skill.latent-3.text,潜伏：回合开始时，每有 1 层传染获得 +1 攻击力；达到 3 层时对敌方所有随从造成 3 点伤害
 skill.light-speed-strike.match_text,同左
 skill.light-speed-strike.name,光速出击
 skill.light-speed-strike.text,使一个友方随从本回合获得连击
