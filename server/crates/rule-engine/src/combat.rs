@@ -265,6 +265,17 @@ pub fn effective_health_with(
 /// 由所引用技能的 `keyword` 字段与 token 注册表派生，并并入尚未失效的授予关键词；
 /// `Instant` 授予在战斗前就已结算完毕，视为不存在。未知关键词原样保留。
 pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
+    let mut result = base_keywords(catalog, minion);
+    for (keyword, duration) in &minion.granted {
+        if *duration != Duration::Instant {
+            result.insert(keyword.clone());
+        }
+    }
+    result
+}
+
+/// 卡面与 Token 自带的关键词，不含战斗内授予与光环派生。
+fn base_keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
     let mut result = BTreeSet::new();
     if let Some(token) = catalog.tokens.get(&minion.card_id) {
         for keyword in &token.keywords {
@@ -282,9 +293,18 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
             }
         }
     }
+    result
+}
+
+/// 排除光环派生关键词后的关键词集合，供「不复制光环」的效果（拟态）使用。
+///
+/// 卡面本身就有的关键词即使同时被光环授予也保留。
+pub fn keywords_without_aura(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
+    let base = base_keywords(catalog, minion);
+    let mut result = keywords(catalog, minion);
     for (keyword, duration) in &minion.granted {
-        if *duration != Duration::Instant {
-            result.insert(keyword.clone());
+        if *duration == Duration::Aura && !base.contains(keyword) {
+            result.remove(keyword);
         }
     }
     result
@@ -722,7 +742,7 @@ impl BattleField {
                 minion.stats.health.add_turn(modifier.health);
             }
             // `Instant` 在数据中未使用；保持现有「永不清除」语义。
-            Duration::Permanent | Duration::Instant => {
+            Duration::Permanent | Duration::Instant | Duration::Aura => {
                 minion.stats.attack.add_permanent(modifier.attack);
                 minion.stats.health.add_permanent(modifier.health);
             }

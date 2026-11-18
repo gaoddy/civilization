@@ -131,6 +131,9 @@ pub enum Duration {
     Instant,
     Permanent,
     Combat,
+    /// 光环折叠写入的派生关键词；DSL 无法指定，只用于区分来源，
+    /// 使拟态等「不复制光环」的效果能够剔除它们。
+    Aura,
 }
 
 /// 关键词及其层数；`繁衍` / `装配` / `传染` 可携带 `Some(N)`。

@@ -127,6 +127,45 @@ fn catalog_with_synthetics() -> Catalog {
     );
     add_card(
         &mut catalog,
+        "latent0",
+        Playstyle::Virus,
+        (1, 0, 10),
+        (
+            Some("contagion"),
+            "OnTurnStart|Latent|self|amount=1,threshold=3,count=0",
+        ),
+    );
+    // 被爆发击杀的目标：亡语给友方全体 +1 攻击，用于证明死亡结算被触发。
+    add_card(
+        &mut catalog,
+        "frail",
+        Playstyle::Mammal,
+        (1, 0, 2),
+        (None, "OnDeath|ModifyStats|friendly:all|attack=1,health=0"),
+    );
+    add_card(
+        &mut catalog,
+        "witness",
+        Playstyle::Mammal,
+        (1, 0, 10),
+        (None, "[]"),
+    );
+    add_card(
+        &mut catalog,
+        "armored",
+        Playstyle::Mammal,
+        (1, 0, 10),
+        (Some("armor 2"), "[]"),
+    );
+    add_card(
+        &mut catalog,
+        "shielded",
+        Playstyle::Mammal,
+        (1, 0, 10),
+        (Some("divine_shield"), "[]"),
+    );
+    add_card(
+        &mut catalog,
         "scavenger",
         Playstyle::Machine,
         (1, 1, 1),
@@ -875,7 +914,7 @@ fn latent_adds_attack_per_contagion_layer_and_bursts_at_threshold() {
         "爆发对敌方全体造成 3 点伤害"
     );
 
-    // 再次达到阈值：攻击照常按层增长，但爆发每场只触发一次。
+    // 再次达到阈值：攻击照常按层增长，但爆发每局只触发一次。
     state.players[0].board[0].contagion = 3;
     engine.start_turn(&mut state).expect("开始回合应成功");
     let latent = &state.players[0].board[0];
@@ -888,7 +927,82 @@ fn latent_adds_attack_per_contagion_layer_and_bursts_at_threshold() {
     assert_eq!(
         combat::effective_health(&engine.catalog, &state.players[1].board[0]),
         7,
-        "爆发每场只触发一次"
+        "爆发每局只触发一次"
+    );
+}
+
+#[test]
+fn latent_burst_removes_killed_minion_and_fires_deathrattle() {
+    // 潜伏在座位 1，受害者座位 0：座位 0 的传染结算已结束，无法替爆发「清理」
+    // 尸体，因此这条用例能区分爆发自身是否结算了离场与亡语。
+    let (mut engine, mut state) = setup(1);
+    place(&engine.catalog, &mut state, 1, 1, "latent");
+    place(&engine.catalog, &mut state, 0, 2, "frail");
+    place(&engine.catalog, &mut state, 0, 3, "witness");
+    state.players[1].board[0].contagion = 3;
+
+    engine.start_turn(&mut state).expect("开始回合应成功");
+
+    let board = &state.players[0].board;
+    assert_eq!(board.len(), 1, "2 血目标被击杀后立即离场");
+    assert_eq!(board[0].instance_id, 3);
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, &board[0]),
+        1,
+        "击杀触发亡语（友方全体 +1 攻击）"
+    );
+}
+
+#[test]
+fn latent_burst_respects_armor() {
+    let (mut engine, mut state) = setup(1);
+    place(&engine.catalog, &mut state, 0, 1, "latent");
+    place(&engine.catalog, &mut state, 1, 2, "armored");
+    state.players[0].board[0].contagion = 3;
+
+    engine.start_turn(&mut state).expect("开始回合应成功");
+
+    assert_eq!(
+        combat::effective_health(&engine.catalog, &state.players[1].board[0]),
+        9,
+        "减伤 2 使 3 点爆发只造成 1 点伤害"
+    );
+}
+
+#[test]
+fn latent_burst_consumes_divine_shield() {
+    let (mut engine, mut state) = setup(1);
+    place(&engine.catalog, &mut state, 0, 1, "latent");
+    place(&engine.catalog, &mut state, 1, 2, "shielded");
+    state.players[0].board[0].contagion = 3;
+
+    engine.start_turn(&mut state).expect("开始回合应成功");
+
+    let target = &state.players[1].board[0];
+    assert_eq!(
+        combat::effective_health(&engine.catalog, target),
+        10,
+        "护盾抵消爆发的全部伤害"
+    );
+    assert!(target.shield_used, "护盾被消耗一次");
+}
+
+#[test]
+fn latent_burst_with_zero_count_keeps_layers_and_marker() {
+    let (mut engine, mut state) = setup(1);
+    place(&engine.catalog, &mut state, 0, 1, "latent0");
+    place(&engine.catalog, &mut state, 1, 2, "target");
+    state.players[0].board[0].contagion = 3;
+
+    engine.start_turn(&mut state).expect("开始回合应成功");
+
+    let latent = &state.players[0].board[0];
+    assert_eq!(latent.contagion, 3, "count=0 不清除层数");
+    assert!(!latent.latent_used, "count=0 不消耗爆发次数");
+    assert_eq!(
+        combat::effective_health(&engine.catalog, &state.players[1].board[0]),
+        10,
+        "count=0 不造成伤害"
     );
 }
 

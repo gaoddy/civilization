@@ -272,6 +272,7 @@ fn duration_tag(duration: Duration) -> u8 {
         Duration::Instant => 0,
         Duration::Permanent => 1,
         Duration::Combat => 2,
+        Duration::Aura => 3,
     }
 }
 

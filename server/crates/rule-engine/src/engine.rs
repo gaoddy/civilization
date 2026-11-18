@@ -292,15 +292,26 @@ impl Engine {
     /// 传染致死的随从在移除后结算亡语，再按「播种」召唤幼苗；复生只作用于战斗，
     /// 不在回合开始生效。
     fn apply_contagion(&mut self, state: &mut GameState, seat: Seat) {
+        let Some(player) = state.players.get_mut(usize::from(seat)) else {
+            return;
+        };
+        for minion in &mut player.board {
+            if minion.contagion > 0 {
+                minion.stats.health.add_permanent(-minion.contagion);
+            }
+        }
+        self.resolve_recruit_deaths(state, seat);
+    }
+
+    /// 招募阶段移除生命值 ≤ 0 的随从，并结算亡语与播种。
+    ///
+    /// 传染与潜伏爆发共用：两者都在招募回合内造成伤害，击杀必须立即离场，
+    /// 否则下一次 `Settle` 清掉临时层后会把死掉的随从复活。
+    pub(crate) fn resolve_recruit_deaths(&mut self, state: &mut GameState, seat: Seat) {
         let dead = {
             let Some(player) = state.players.get_mut(usize::from(seat)) else {
                 return;
             };
-            for minion in &mut player.board {
-                if minion.contagion > 0 {
-                    minion.stats.health.add_permanent(-minion.contagion);
-                }
-            }
             let board = std::mem::take(&mut player.board);
             let mut kept = Vec::with_capacity(board.len());
             let mut dead = Vec::new();

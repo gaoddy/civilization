@@ -738,7 +738,7 @@ impl Engine {
                     source.stats.attack.add_turn(attack);
                     source.stats.health.add_turn(health);
                 }
-                Duration::Permanent | Duration::Instant => {
+                Duration::Permanent | Duration::Instant | Duration::Aura => {
                     source.stats.attack.add_permanent(attack);
                     source.stats.health.add_permanent(health);
                 }
@@ -815,11 +815,11 @@ impl Engine {
     ///
     /// `OnTurnStart` 在 `Recruit` 阶段执行，此时没有配对；「敌方」按除来源外
     /// 所有存活玩家的棋盘结算（`side_ids` 在本阶段敌方池为空，不要用它推导
-    /// 范围）。招募阶段没有战斗伤害来源，爆发按回合开始伤害结算。爆发每场
-    /// 最多一次（`latent_used`）；金色按通用规则触发两遍，但第一遍爆发会清零
-    /// 层数，第二遍因此只加 0 点攻击且不会再次爆发。
+    /// 范围）。爆发伤害按招募阶段的通用伤害规则处理护盾与减伤，击杀的随从
+    /// 立即离场并结算亡语。爆发每局最多一次（`latent_used`）；金色按通用规则
+    /// 触发两遍，但第一遍爆发会清零层数，第二遍因此只加 0 点攻击且不会再次爆发。
     fn apply_latent(
-        &self,
+        &mut self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -845,7 +845,11 @@ impl Engine {
             .attack
             .add_permanent(layers.saturating_mul(amount));
 
-        let burst = !source.latent_used
+        // `count = 0` 时没有爆发可结算：不清层、不置标记，避免白白消耗
+        // 「每局一次」的爆发机会。
+        let count = effect.params.count.unwrap_or(0).max(0);
+        let burst = count > 0
+            && !source.latent_used
             && effect
                 .params
                 .threshold
@@ -856,24 +860,58 @@ impl Engine {
         source.contagion = 0;
         source.latent_used = true;
 
-        let count = effect.params.count.unwrap_or(0).max(0);
-        if count == 0 {
-            return Vec::new();
-        }
         let mut events = Vec::new();
+        let mut hit_seats: Vec<Seat> = Vec::new();
         for target in &mut state.players {
             if target.seat == ctx.seat || target.eliminated || target.hp <= 0 {
                 continue;
             }
+            let mut hit = false;
             for minion in &mut target.board {
-                minion.stats.health.add_turn(-count);
-                events.push(GameEvent::DamageTaken {
-                    seat: target.seat,
-                    amount: count,
-                });
+                if combat::effective_health(&self.catalog, minion) <= 0 {
+                    continue;
+                }
+                let dealt = self.deal_recruit_damage(minion, count);
+                if dealt > 0 {
+                    events.push(GameEvent::DamageTaken {
+                        seat: target.seat,
+                        amount: dealt,
+                    });
+                    hit = true;
+                }
+            }
+            if hit {
+                hit_seats.push(target.seat);
             }
         }
+        for seat in hit_seats {
+            self.resolve_recruit_deaths(state, seat);
+        }
         events
+    }
+
+    /// 招募阶段对单个随从造成伤害：先消耗圣盾，再扣减伤，剩余伤害写入永久层。
+    ///
+    /// 返回实际造成的伤害；圣盾抵消或减伤归零时为 0。生命值 ≤ 0 的随从由
+    /// [`Engine::resolve_recruit_deaths`] 统一移除，这里不重复判定。
+    fn deal_recruit_damage(&self, minion: &mut MinionInstance, amount: i32) -> i32 {
+        let amount = amount.max(0);
+        if amount == 0 {
+            return 0;
+        }
+        if combat::keywords(&self.catalog, minion).contains("divine_shield") && !minion.shield_used
+        {
+            minion.shield_used = true;
+            return 0;
+        }
+        let dealt = amount
+            .saturating_sub(combat::armor_value(&self.catalog, minion))
+            .max(0);
+        if dealt == 0 {
+            return 0;
+        }
+        minion.stats.health.add_permanent(-dealt);
+        dealt
     }
 
     fn apply_deal_damage(
@@ -1589,7 +1627,7 @@ impl Engine {
                 Duration::Permanent => minion.stats.health.add_permanent(amount),
                 Duration::Combat => minion.stats.health.add_turn(amount),
                 // 数据校验拒绝 `instant`；执行期保守跳过。
-                Duration::Instant => {}
+                Duration::Instant | Duration::Aura => {}
             }
         }
     }
@@ -1597,8 +1635,9 @@ impl Engine {
     /// 战斗内拟态：读取目标当前攻防与关键词，写入来源并记录动作。
     ///
     /// 目标已离场时跳过；敌方与友方目标都允许。攻防按 `duration` 写入，
-    /// 非 `statsOnly` 时关键词写入 `granted`。目标当前值不含光环，也不复制
-    /// 成长、繁衍、传染与一次性状态。
+    /// 非 `statsOnly` 时关键词写入 `granted`。战斗克隆的当前值已含光环，这里
+    /// 先扣掉目标自身的光环层，并剔除光环授予的关键词；成长、繁衍、传染与
+    /// 一次性状态同样不复制。
     fn apply_combat_mimic(
         &self,
         field: &mut BattleField,
@@ -1621,12 +1660,15 @@ impl Engine {
             let Some(target) = field.minion(*target_id) else {
                 continue;
             };
-            let target_attack = combat::effective_attack(&self.catalog, target);
-            let target_health = combat::effective_health(&self.catalog, target);
+            // 战斗克隆已折叠光环；拟态按技术方案 §3.8 只复制不含光环的值。
+            let target_attack = combat::effective_attack(&self.catalog, target)
+                .saturating_sub(target.stats.attack.aura);
+            let target_health = combat::effective_health(&self.catalog, target)
+                .saturating_sub(target.stats.health.aura);
             let keywords: Vec<String> = if stats_only {
                 Vec::new()
             } else {
-                combat::keywords(&self.catalog, target)
+                combat::keywords_without_aura(&self.catalog, target)
                     .into_iter()
                     .collect()
             };
@@ -2423,7 +2465,8 @@ fn card_facts<'a>(catalog: &'a Catalog, card_id: &str) -> Option<CardFacts<'a>> 
 
 fn duration_rank(duration: Duration) -> u8 {
     match duration {
-        Duration::Instant => 0,
+        // `Aura` 不由效果写入；与 `Instant` 同为最低优先级。
+        Duration::Instant | Duration::Aura => 0,
         Duration::Combat => 1,
         Duration::Permanent => 2,
     }

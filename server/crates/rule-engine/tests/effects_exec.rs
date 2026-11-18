@@ -1165,3 +1165,52 @@ fn devour_in_combat_ignores_shield_and_records_action() {
     assert!(!prey.shield_used, "吞噬不消耗护盾，也不被护盾抵消");
     assert_eq!(prey.stats.health.current, 0);
 }
+
+#[test]
+fn mimic_in_combat_excludes_aura_stats_and_keywords() {
+    let (mut engine, _state) = setup(11);
+    add_effect_card(
+        &mut engine,
+        "combat-mimic-plain",
+        1,
+        1,
+        &[],
+        &["OnCombatStart|Mimic|enemy:single|duration=combat"],
+    );
+    add_card(&mut engine, "combat-aura-target", 2, 3, &["taunt"]);
+
+    // 战斗克隆已折叠光环：目标卡面 2/3，光环 +3/+3 后当前值 5/6；
+    // 光环还授予「最优攻击」。拟态只应复制不含光环的 2/3 与卡面关键词。
+    let mut target = minion(&engine.catalog, 2, "combat-aura-target");
+    target.stats.attack.set_aura(3);
+    target.stats.health.set_aura(3);
+    target
+        .granted
+        .push(("optimal_attack".to_string(), Duration::Aura));
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "combat-mimic-plain")],
+        &[target],
+    );
+
+    let source = final_minion(&log, 1);
+    assert_eq!(
+        source.stats.attack.turn, 1,
+        "复制 2 点攻击力而非光环后的 5 点"
+    );
+    assert_eq!(
+        source.stats.health.turn, 2,
+        "复制 3 点生命值而非光环后的 6 点"
+    );
+    assert!(
+        source
+            .granted
+            .contains(&("taunt".to_string(), Duration::Combat)),
+        "卡面关键词照常复制"
+    );
+    assert!(
+        !combat::keywords(&engine.catalog, source).contains("optimal_attack"),
+        "光环授予的关键词不复制"
+    );
+}

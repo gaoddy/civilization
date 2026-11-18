@@ -552,7 +552,7 @@ pub fn fold_auras(
                 .iter()
                 .any(|(existing, _)| existing == keyword)
             {
-                minion.granted.push((keyword.clone(), Duration::Permanent));
+                minion.granted.push((keyword.clone(), Duration::Aura));
             }
         }
     }
