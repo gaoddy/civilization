@@ -1,7 +1,7 @@
 PYTHON ?= python3
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
 
-.PHONY: test lint audit data data-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke m1b-build m1b-e2e dev-bots
+.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke m1b-build m1b-e2e dev-bots
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -23,6 +23,9 @@ data-check:
 	$(PYTHON) scripts/gen_client_data.py --check
 	$(PYTHON) scripts/audit_effects.py
 	$(PYTHON) scripts/gen_text.py --check
+
+balance-check:
+	$(PYTHON) scripts/balance_report.py --check
 
 protocol:
 	$(PYTHON) scripts/gen_protocol_gdscript.py
