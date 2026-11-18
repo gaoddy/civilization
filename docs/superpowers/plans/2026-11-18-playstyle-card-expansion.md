@@ -46,7 +46,7 @@
 - Test: `server/crates/rule-engine/tests/effects_parse.rs`
 
 **Interfaces:**
-- Produces: `Op::{Mimic,Devour,Detonate,Convert,Revive,Recall,Salvage}`、`Pick::LowestAttack`、`Params::{per_attack,per_health,max_count,threshold}`、`MinionInstance::{stealth_broken,revive_used}`。
+- Produces: `Op::{Mimic,Devour,Detonate,Convert,Revive,Recall,Salvage,Latent}`、`Pick::{LowestAttack,Adjacent}`、`Params::{per_attack,per_health,max_count,threshold}`、`MinionInstance::{stealth_broken,revive_used}`。
 - Produces: 关键词 `poison`、`armor N`、`stealth` 可被 DSL 解析与校验。
 
 - [ ] **Step 1: 写失败测试**
@@ -59,10 +59,9 @@ fn parses_new_ops_and_params() {
     let effects = effects_of("Aura|ModifyStats|friendly:all:playstyle=fish|attack=1,health=1,perAttack=1,perHealth=0,maxCount=6");
     assert_eq!(effects[0].params.per_attack, Some(1));
     assert_eq!(effects[0].params.max_count, Some(6));
-    let effects = effects_of("OnCombatStart|Detonate|enemy:single|amount=2,value=3");
+    let effects = effects_of("OnCombatStart|Detonate|enemy:single|amount=2,threshold=3");
     assert_eq!(effects[0].op, Op::Detonate);
-    assert_eq!(effects[0].params.threshold, None);
-    assert_eq!(effects[0].params.value, Some(3));
+    assert_eq!(effects[0].params.threshold, Some(3));
 }
 ```
 
@@ -75,7 +74,7 @@ Expected: FAIL，`Op::Detonate` 与 `per_attack` 不存在。
 
 在 `effects/mod.rs` 增加 §2.2 的 `Op`、`Pick`、`Params` 字段；在 `effects/validate.rs` 增加 `op_spec`、`PARAM_KEYS`、`KEYWORD_BASES`；在 `state.rs` 增加 `stealth_broken`、`revive_used` 并在 `MinionInstance::new` 初始化为 `false`；在 `hash.rs` 写入这两个布尔值。
 
-在 `scripts/i18n_terms.py` 的 `KEYWORD_BASES` 增加 `poison`、`armor`、`stealth`；在 `scripts/validate_docs.py` 增加 `armor \d+` 正则与 `KEYWORD_PLAYSTYLE` 条目；在 `scripts/gen_card_data.py` 的 `OP_JSON`、`PICK_JSON` 增加映射；在 `scripts/audit_effects.py` 的白名单增加新原语。
+在 `scripts/i18n_terms.py` 的 `KEYWORD_BASES` 增加 `poison`、`armor`、`stealth`；在 `scripts/validate_docs.py` 的 `KEYWORD_RE` / `SKILL_KEYWORD_RE` 增加 `armor \d+`（玩法归属与折算值归 Task 10，本任务不加 `KEYWORD_PLAYSTYLE`）；在 `scripts/gen_card_data.py` 的 `OP_JSON`、`PICK_JSON` 增加映射；在 `scripts/audit_effects.py` 的白名单增加新原语。
 
 - [ ] **Step 4: 运行测试确认通过**
 
@@ -107,7 +106,7 @@ git commit -m "feat(rule-engine): 扩展玩法机制的 AST 与 DSL 地基"
 #[test]
 fn poison_kills_surviving_target_but_not_shielded() {
     // 3/3 剧毒攻击 0/10 白板：目标受 3 点后仍存活，应被剧毒杀死。
-    // 0/10 带护盾的攻击者攻击剧毒目标：护盾抵消，不触发剧毒。
+    // 带护盾的目标被剧毒随从攻击：护盾抵消伤害，不触发剧毒。
 }
 
 #[test]
@@ -232,7 +231,7 @@ Expected: FAIL。
 
 - [ ] **Step 3: 实现光环扩展**
 
-在 `aura.rs` 计算来源玩家的匹配随从数量（排除来源自身，`max_count` 封顶），把 `per_attack`/`per_health` 乘入 `AuraEffect`；为 `Pick::Adjacent` 在 `pick_targets` 增加来源下标参数，取左右相邻的存活随从。在 `validate.rs` 限制 `perAttack`/`perHealth`/`maxCount` 只用于光环 `ModifyStats`，`Adjacent` 只用于光环。
+在 `aura.rs` 计算来源玩家的匹配随从数量（排除来源自身，`max_count` 封顶），把 `per_attack`/`per_health` 乘入 `AuraEffect`；为 `Pick::Adjacent` 在 `pick_targets` 增加来源下标参数（`source_index: Option<usize>`），取左右相邻的存活随从，并同步更新 Task 3 引入的 `LowestAttack` 分支及其它调用点。在 `validate.rs` 限制 `perAttack`/`perHealth`/`maxCount` 只用于光环 `ModifyStats`，`Adjacent` 只用于光环。
 
 - [ ] **Step 4: 运行测试确认通过**
 
@@ -368,7 +367,7 @@ git commit -m "feat(rule-engine): 复苏与回手机制"
 - Test: `server/crates/rule-engine/tests/kills.rs`
 
 **Interfaces:**
-- Consumes: `Op::Detonate`、`Op::Convert`、`Params::{amount,value,token,count}`。
+- Consumes: `Op::Detonate`、`Op::Convert`、`Params::{amount,threshold,token,count}`。
 - Produces: 传染层消耗、阈值消灭、召唤归属。
 
 - [ ] **Step 1: 写失败测试**
@@ -404,7 +403,7 @@ Expected: FAIL。
 
 - [ ] **Step 3: 实现引爆与转化**
 
-在 `exec.rs` 增加两个分支：`Detonate` 读取并清零 `contagion`，按层数造成伤害，达到 `value` 阈值直接致死；`Convert` 在层数达到 `value` 时致死目标并调用召唤路径生成 Token。护盾只影响伤害，不影响阈值消灭。记录 `CombatAction::Detonated` / `Converted`。
+在 `exec.rs` 增加两个分支：`Detonate` 读取并清零 `contagion`，按层数造成伤害，达到 `threshold` 阈值直接致死；`Convert` 在层数达到 `threshold` 时致死目标并调用召唤路径生成 Token。护盾只影响伤害，不影响阈值消灭。记录 `CombatAction::Detonated` / `Converted`。
 
 - [ ] **Step 4: 运行测试确认通过**
 
@@ -427,7 +426,7 @@ git commit -m "feat(rule-engine): 引爆与转化机制"
 - Test: `server/crates/rule-engine/tests/turn_effects.rs`
 
 **Interfaces:**
-- Consumes: `Op::Latent`、`Op::Salvage`、`Params::{amount,value,count,pool}`。
+- Consumes: `Op::Latent`、`Op::Salvage`、`Params::{amount,threshold,count,pool}`。
 - Produces: `latent_used` 标记；`Salvage` 随机机械牌写入 `hand_copies`。
 
 - [ ] **Step 1: 写失败测试**
@@ -453,7 +452,7 @@ Expected: FAIL。
 
 - [ ] **Step 3: 实现潜伏与零件回收**
 
-`Latent`：按 `contagion` 层数给来源 `add_permanent` 攻击力；层数达到 `value` 时清零层数、对敌方全体造成 `count` 点伤害，并置 `latent_used`。`Salvage`：从目录筛选机械随从（排除 Token/英雄/奖励牌），用 `Stream::Combat` 随机取 `count` 张，写入 `hand_copies`；手牌满时不写。记录对应 `CombatAction`。
+`Latent`：按 `contagion` 层数给来源 `add_permanent` 攻击力；层数达到 `threshold` 时清零层数、对敌方全体造成 `count` 点伤害，并置 `latent_used`。`Salvage`：从目录筛选机械随从（排除 Token/英雄/奖励牌），用 `Stream::Combat` 随机取 `count` 张，写入 `hand_copies`；手牌满时不写。记录对应 `CombatAction`。
 
 - [ ] **Step 4: 运行测试确认通过**
 

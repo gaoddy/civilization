@@ -51,9 +51,10 @@ Convert,
 Revive,
 Recall,
 Salvage,
+Latent,
 ```
 
-`Pick` 增加 `LowestAttack`，仅用于 `DealDamage` 的敌方选择器。
+`Pick` 增加 `LowestAttack`（仅用于 `DealDamage` 的敌方选择器）与 `Adjacent`（仅用于光环，DSL 写作 `adjacent`）；既有 `LeftmostAdjacent` 保持不变。
 
 `Params` 增加：
 
@@ -69,11 +70,12 @@ Salvage,
 ```rust
 Op::Mimic => (&["duration"], &[], &[]),
 Op::Devour => (&["value"], &["duration", "when"], &[]),
-Op::Detonate => (&["amount"], &["value", "when"], &[]),
-Op::Convert => (&["value"], &["token", "card", "count", "when"], &[&["token", "card"]]),
+Op::Detonate => (&["amount"], &["threshold", "when"], &[]),
+Op::Convert => (&["threshold"], &["token", "card", "count", "when"], &[&["token", "card"]]),
 Op::Revive => (&["attack", "health"], &[], &[]),
 Op::Recall => (&["to"], &[], &[]),
 Op::Salvage => (&["pool", "count"], &[], &[]),
+Op::Latent => (&["amount", "count"], &["threshold", "when"], &[]),
 ```
 
 `PARAM_KEYS` 增加 `perAttack`、`perHealth`、`maxCount`、`threshold`。
@@ -214,7 +216,7 @@ pub struct CombatHandMinion {
 
 ### 3.11 引爆
 
-- 数据：`OnCombatStart | Detonate | enemy:single | amount=<每层伤害>,value=<阈值>`。
+- 数据：`OnCombatStart | Detonate | enemy:single | amount=<每层伤害>,threshold=<阈值>`。
 - 引擎：`exec.rs::apply_op` 增加 `Op::Detonate`：
   1. 读取目标 `contagion` 层数；为 0 时落空。
   2. 移除全部层数。
@@ -237,9 +239,9 @@ pub struct CombatHandMinion {
 
 ### 3.13 转化
 
-- 数据：`OnCombatStart | Convert | enemy:single | value=<层数阈值>,token=<token>,count=1`。
+- 数据：`OnCombatStart | Convert | enemy:single | threshold=<层数阈值>,token=<token>,count=1`。
 - 引擎：`exec.rs::apply_op` 增加 `Op::Convert`：
-  1. 目标 `contagion < value` 时落空。
+  1. 目标 `contagion < threshold` 时落空。
   2. 对目标施加致死伤害。
   3. 在来源方棋盘召唤 Token（沿用 `summon` 路径，受战场槽位限制）。
   4. 记录 `CombatAction::Converted`。
@@ -248,7 +250,7 @@ pub struct CombatHandMinion {
 
 ### 3.14 潜伏
 
-- 数据：`OnTurnStart | Latent | self | amount=<每层攻击力>,value=<阈值>,count=<爆发伤害>`。
+- 数据：`OnTurnStart | Latent | self | amount=<每层攻击力>,threshold=<阈值>,count=<爆发伤害>`。
 - 引擎：`exec.rs::apply_op` 增加 `Op::Latent`：
   1. 读取来源 `contagion` 层数。
   2. 每层使来源永久获得 `amount` 点攻击力（`add_permanent`）。
