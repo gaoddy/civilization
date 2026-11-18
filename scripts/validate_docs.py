@@ -153,9 +153,6 @@ CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
              "contagion": 3, "reborn": 4, "divine_shield": 5,
              "poison": 3, "armor": 2, "stealth": 3}
-# TODO(Task 15): 新关键词的卡牌数据落地后删除该常量，并把三个关键词改为硬校验。
-# 在此之前，关键词未出现时不要求其已出现，出现后仍校验最小星级。
-KW_UNLOCK_PENDING = {"poison", "armor", "stealth"}
 EXPECT_ERA = {"prehistoric": 52, "primitive": 47, "classical": 35, "feudal": 51,
               "industrial": 38, "modern": 82, "future": 41}
 EXPECT_LEVEL = {1: 35, 2: 52, 3: 59, 4: 60, 5: 55, 6: 28, 7: 20}
@@ -1184,8 +1181,6 @@ def check_keyword_unlock(minions, skill_map):
             if base in KW_UNLOCK:
                 actual[base] = min(actual.get(base, 99), c["level"])
     for keyword, era_level in KW_UNLOCK.items():
-        if keyword in KW_UNLOCK_PENDING and keyword not in actual:
-            continue
         if actual.get(keyword) != era_level:
             fail(f"关键词 {keyword} 的最小星级为 {actual.get(keyword)}，期望 {era_level}")
 

@@ -24,7 +24,9 @@ class GenCardDataTest(unittest.TestCase):
 
     def test_skills_and_tokens(self):
         out = gen_card_data.build(ROOT)
-        self.assertEqual(len(json.loads(out["skills.json"])), 197)
+        skills_dir = ROOT / "docs/versions/v0.1/product/content/skills"
+        expected = sum(1 for path in skills_dir.glob("*.md") if path.name != "README.md")
+        self.assertEqual(len(json.loads(out["skills.json"])), expected)
         tokens = json.loads(out["tokens.json"])
         ids = [t["id"] for t in tokens]
         self.assertEqual(ids, sorted(ids))
