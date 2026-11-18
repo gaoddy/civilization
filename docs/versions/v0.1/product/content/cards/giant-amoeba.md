@@ -8,7 +8,7 @@ subtype: protozoa
 level: 6
 era: modern
 attack: 8
-health: 12
+health: 13
 skills: [devour-4, deathrattle-summon-2-amoeba-larvae-2-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 6 |
 | 时代 | 现代 |
 | 攻击力 | 8 |
-| 生命值 | 12 |
+| 生命值 | 13 |
 | 关键词 | 亡语 |
 | 技能 | devour-4；deathrattle-summon-2-amoeba-larvae-2-2 |
 | 学者 | 否 |

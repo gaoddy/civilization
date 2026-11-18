@@ -7,7 +7,7 @@ taxon: vampyroteuthidae
 subtype: mollusk
 level: 5
 era: modern
-attack: 8
+attack: 9
 health: 12
 skills: [mimic-2, mimic-1]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
+| 攻击力 | 9 |
 | 生命值 | 12 |
 | 关键词 | 无 |
 | 技能 | mimic-2；mimic-1 |

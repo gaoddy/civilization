@@ -8,7 +8,7 @@ subtype: protozoa
 level: 5
 era: prehistoric
 attack: 7
-health: 9
+health: 10
 skills: [devour-4, aura-other-protozoa-plus-1-attack]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 史前 |
 | 攻击力 | 7 |
-| 生命值 | 9 |
+| 生命值 | 10 |
 | 关键词 | 无 |
 | 技能 | devour-4；aura-other-protozoa-plus-1-attack |
 | 学者 | 否 |

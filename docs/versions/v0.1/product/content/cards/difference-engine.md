@@ -8,7 +8,7 @@ subtype: robot
 level: 6
 era: industrial
 attack: 8
-health: 12
+health: 13
 skills: [keyword-assemble-2, salvage-machine]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 6 |
 | 时代 | 工业 |
 | 攻击力 | 8 |
-| 生命值 | 12 |
+| 生命值 | 13 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；salvage-machine |
 | 学者 | 否 |

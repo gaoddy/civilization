@@ -8,7 +8,7 @@ subtype: primitive
 level: 2
 era: primitive
 attack: 3
-health: 4
+health: 3
 skills: [battlecry-friendly-plus-0-plus-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 3 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-2 |
 | 学者 | 否 |

@@ -8,7 +8,7 @@ subtype: protozoa
 level: 3
 era: classical
 attack: 3
-health: 5
+health: 6
 skills: [aura-other-protozoa-plus-1-attack, deathrattle-summon-amoeba-larva-1]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 古典 |
 | 攻击力 | 3 |
-| 生命值 | 5 |
+| 生命值 | 6 |
 | 关键词 | 亡语 |
 | 技能 | aura-other-protozoa-plus-1-attack；deathrattle-summon-amoeba-larva-1 |
 | 学者 | 否 |

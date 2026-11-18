@@ -8,7 +8,7 @@ subtype: protozoa
 level: 2
 era: primitive
 attack: 2
-health: 3
+health: 4
 skills: [deathrattle-friendly-protozoa-growth-once]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 3 |
+| 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-protozoa-growth-once |
 | 学者 | 否 |

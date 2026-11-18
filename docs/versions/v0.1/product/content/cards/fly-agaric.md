@@ -8,7 +8,7 @@ subtype: fungus
 level: 2
 era: classical
 attack: 3
-health: 4
+health: 5
 skills: [decompose-kill-original]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 古典 |
 | 攻击力 | 3 |
-| 生命值 | 4 |
+| 生命值 | 5 |
 | 关键词 | 分解 |
 | 技能 | decompose-kill-original |
 | 学者 | 否 |

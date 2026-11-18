@@ -8,7 +8,7 @@ subtype: primate
 level: 4
 era: prehistoric
 attack: 6
-health: 9
+health: 8
 skills: [aura-adjacent-mammal, shout]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 史前 |
 | 攻击力 | 6 |
-| 生命值 | 9 |
+| 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | aura-adjacent-mammal；shout |
 | 学者 | 否 |

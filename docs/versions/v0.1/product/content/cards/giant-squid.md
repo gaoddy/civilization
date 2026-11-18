@@ -8,7 +8,7 @@ subtype: mollusk
 level: 5
 era: modern
 attack: 7
-health: 9
+health: 10
 skills: [keyword-stealth, devour-3]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 7 |
-| 生命值 | 9 |
+| 生命值 | 10 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；devour-3 |
 | 学者 | 否 |

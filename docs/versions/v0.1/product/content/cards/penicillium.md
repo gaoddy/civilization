@@ -8,7 +8,7 @@ subtype: fungus
 level: 1
 era: primitive
 attack: 2
-health: 3
+health: 4
 skills: [battlecry-friendly-fungus-growth-once]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 1 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 3 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-fungus-growth-once |
 | 学者 | 否 |

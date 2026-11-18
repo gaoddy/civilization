@@ -8,7 +8,7 @@ subtype: colonist
 level: 6
 era: future
 attack: 8
-health: 12
+health: 11
 skills: [keyword-divine-shield, shout]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 6 |
 | 时代 | 未来 |
 | 攻击力 | 8 |
-| 生命值 | 12 |
+| 生命值 | 11 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；shout |
 | 学者 | 否 |

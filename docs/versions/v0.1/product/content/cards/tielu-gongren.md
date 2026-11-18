@@ -8,7 +8,7 @@ subtype: worker
 level: 3
 era: industrial
 attack: 4
-health: 5
+health: 4
 skills: [battlecry-friendly-plus-0-plus-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 工业 |
 | 攻击力 | 4 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-2 |
 | 学者 | 否 |

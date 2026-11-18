@@ -9,7 +9,7 @@ subtype: virus
 level: 4
 era: modern
 attack: 6
-health: 8
+health: 9
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 8 |
+| 生命值 | 9 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |

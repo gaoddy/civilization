@@ -8,7 +8,7 @@ subtype: flower
 level: 3
 era: classical
 attack: 3
-health: 5
+health: 4
 skills: [keyword-sow, battlecry-friendly-plant-kingdom-growth-once]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 古典 |
 | 攻击力 | 3 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 播种；战吼 |
 | 技能 | keyword-sow；battlecry-friendly-plant-kingdom-growth-once |
 | 学者 | 否 |

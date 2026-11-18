@@ -8,7 +8,7 @@ subtype: protozoa
 level: 4
 era: primitive
 attack: 4
-health: 6
+health: 7
 skills: [deathrattle-summon-schizont]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 原始 |
 | 攻击力 | 4 |
-| 生命值 | 6 |
+| 生命值 | 7 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-schizont |
 | 学者 | 否 |

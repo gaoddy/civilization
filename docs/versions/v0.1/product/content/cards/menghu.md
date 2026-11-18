@@ -9,7 +9,7 @@ subtype: mammal
 level: 3
 era: primitive
 attack: 4
-health: 6
+health: 5
 skills: [keyword-evolve, shout]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 原始 |
 | 攻击力 | 4 |
-| 生命值 | 6 |
+| 生命值 | 5 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve；shout |
 | 学者 | 否 |

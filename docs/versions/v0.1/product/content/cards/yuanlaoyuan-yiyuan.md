@@ -8,7 +8,7 @@ subtype: politics
 level: 3
 era: classical
 attack: 4
-health: 5
+health: 4
 skills: [battlecry-other-friendly-humans-plus-1-attack]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 古典 |
 | 攻击力 | 4 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack |
 | 学者 | 否 |

@@ -122,6 +122,9 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 ///
 /// 2026-11-18 第十一次重定：AI 定向效果牌购买过滤，机器人不再购买与自身
 /// 主导玩法不匹配的定向效果牌，购买决策与随机流消耗随之改变。
+///
+/// 2026-11-18 第十二次重定：卡牌参数重排最终调参（1–3 星为主、4–6 星少量），
+/// 参战数值变化；随后冻结数值，本基线同时作为最终基线。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

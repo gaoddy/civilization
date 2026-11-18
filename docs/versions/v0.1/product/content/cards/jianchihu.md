@@ -9,7 +9,7 @@ subtype: mammal
 level: 2
 era: prehistoric
 attack: 3
-health: 4
+health: 3
 skills: [combatstart-if-2-biology-self-plus-2-attack]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 史前 |
 | 攻击力 | 3 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | combatstart-if-2-biology-self-plus-2-attack |
 | 学者 | 否 |

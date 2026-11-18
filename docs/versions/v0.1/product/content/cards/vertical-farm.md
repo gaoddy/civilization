@@ -8,7 +8,7 @@ subtype: architecture
 level: 6
 era: future
 attack: 8
-health: 12
+health: 11
 skills: [keyword-sow, keyword-breed-3]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 6 |
 | 时代 | 未来 |
 | 攻击力 | 8 |
-| 生命值 | 12 |
+| 生命值 | 11 |
 | 关键词 | 播种；繁衍 3 |
 | 技能 | keyword-sow；keyword-breed-3 |
 | 学者 | 否 |

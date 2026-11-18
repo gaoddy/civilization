@@ -9,7 +9,7 @@ subtype: mammal
 level: 2
 era: prehistoric
 attack: 3
-health: 4
+health: 3
 skills: [trigger-friendly-biology-play-plus-1-attack]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 史前 |
 | 攻击力 | 3 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | trigger-friendly-biology-play-plus-1-attack |
 | 学者 | 否 |

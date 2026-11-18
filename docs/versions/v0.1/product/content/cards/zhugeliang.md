@@ -8,7 +8,7 @@ subtype: strategist
 level: 3
 era: feudal
 attack: 4
-health: 5
+health: 4
 skills: [battlecry-friendly-archers-plus-2-attack]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-archers-plus-2-attack |
 | 学者 | 否 |

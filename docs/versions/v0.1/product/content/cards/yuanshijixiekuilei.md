@@ -8,7 +8,7 @@ subtype: puppet
 level: 3
 era: primitive
 attack: 4
-health: 6
+health: 7
 skills: [keyword-assemble-1]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 原始 |
 | 攻击力 | 4 |
-| 生命值 | 6 |
+| 生命值 | 7 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 学者 | 否 |

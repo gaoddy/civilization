@@ -8,7 +8,7 @@ subtype: mollusk
 level: 6
 era: modern
 attack: 8
-health: 12
+health: 13
 skills: [keyword-stealth, mimic-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 6 |
 | 时代 | 现代 |
 | 攻击力 | 8 |
-| 生命值 | 12 |
+| 生命值 | 13 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；mimic-2 |
 | 学者 | 否 |

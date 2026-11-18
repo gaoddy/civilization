@@ -8,7 +8,7 @@ subtype: invention
 level: 4
 era: industrial
 attack: 6
-health: 9
+health: 8
 skills: [battlecry-all-mech-growth-once, shout]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 工业 |
 | 攻击力 | 6 |
-| 生命值 | 9 |
+| 生命值 | 8 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-mech-growth-once；shout |
 | 学者 | 否 |

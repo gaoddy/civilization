@@ -9,7 +9,7 @@ subtype: bacteria
 level: 2
 era: prehistoric
 attack: 3
-health: 4
+health: 5
 skills: [deathrattle-random-enemy-minus-1-health]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 史前 |
 | 攻击力 | 3 |
-| 生命值 | 4 |
+| 生命值 | 5 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-random-enemy-minus-1-health |
 | 学者 | 否 |

@@ -8,7 +8,7 @@ subtype: mollusk
 level: 4
 era: classical
 attack: 4
-health: 6
+health: 7
 skills: [keyword-stealth, mimic-1]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 古典 |
 | 攻击力 | 4 |
-| 生命值 | 6 |
+| 生命值 | 7 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；mimic-1 |
 | 学者 | 否 |

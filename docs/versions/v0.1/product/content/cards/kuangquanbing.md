@@ -9,7 +9,7 @@ subtype: virus
 level: 2
 era: primitive
 attack: 3
-health: 4
+health: 5
 skills: [battlecry-friendly-virus-plus-1-attack]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 3 |
-| 生命值 | 4 |
+| 生命值 | 5 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-virus-plus-1-attack |
 | 学者 | 否 |

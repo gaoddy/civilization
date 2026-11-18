@@ -8,7 +8,7 @@ subtype: fungus
 level: 4
 era: feudal
 attack: 4
-health: 6
+health: 7
 skills: [deathrattle-summon-cordyceps, decompose-kill-original]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 6 |
+| 生命值 | 7 |
 | 关键词 | 亡语；分解 |
 | 技能 | deathrattle-summon-cordyceps；decompose-kill-original |
 | 学者 | 否 |
