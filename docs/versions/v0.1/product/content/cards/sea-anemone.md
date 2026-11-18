@@ -1,0 +1,50 @@
+---
+id: sea-anemone
+card_type: minion
+name: 海葵
+playstyle: cnidarian
+taxon: actiniidae
+subtype: ocean
+level: 2
+era: primitive
+attack: 2
+health: 3
+skills: [keyword-taunt, keyword-armor-1]
+is_scholar: false
+---
+
+# 海葵
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | sea-anemone |
+| 名称 | 海葵 |
+| 类型 | 随从 |
+| 玩法 | 水螅纲 |
+| 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 海葵目 › 海葵科 |
+| 关联分类 | 无 |
+| 子类 | 海洋 |
+| 星级 | 2 |
+| 时代 | 原始 |
+| 攻击力 | 2 |
+| 生命值 | 3 |
+| 关键词 | 嘲讽；减伤 1 |
+| 技能 | keyword-taunt；keyword-armor-1 |
+| 学者 | 否 |
+| 英雄资格 | 否 |
+
+## 效果
+
+嘲讽；减伤 1：受到伤害时，减免 1 点伤害
+
+## 设计说明
+
+定位：水螅纲的早期防守单位，嘲讽与减伤叠加提高生存。
+平衡边界：2 星 2/3，用嘲讽与减伤 1 换取属性。
+使用建议：放在前排吸收连击与低攻攻击，减伤对多次小伤害尤其有效。
+
+## 出处
+
+海葵以基盘附着在礁石上，触手内的刺细胞可麻痹经过的小型动物。
