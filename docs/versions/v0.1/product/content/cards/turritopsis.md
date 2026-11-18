@@ -8,7 +8,7 @@ subtype: ocean
 level: 3
 era: modern
 attack: 3
-health: 6
+health: 5
 skills: [recall-1]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 现代 |
 | 攻击力 | 3 |
-| 生命值 | 6 |
+| 生命值 | 5 |
 | 关键词 | 无 |
 | 技能 | recall-1 |
 | 学者 | 否 |

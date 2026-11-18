@@ -8,7 +8,7 @@ subtype: ocean
 level: 4
 era: classical
 attack: 5
-health: 8
+health: 9
 skills: [revive-1]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 古典 |
 | 攻击力 | 5 |
-| 生命值 | 8 |
+| 生命值 | 9 |
 | 关键词 | 无 |
 | 技能 | revive-1 |
 | 学者 | 否 |

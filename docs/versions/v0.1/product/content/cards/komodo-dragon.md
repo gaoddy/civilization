@@ -7,8 +7,8 @@ taxon: varanidae
 subtype: reptile
 level: 5
 era: modern
-attack: 8
-health: 10
+attack: 7
+health: 12
 skills: [keyword-poison]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 爬行 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
-| 生命值 | 10 |
+| 攻击力 | 7 |
+| 生命值 | 12 |
 | 关键词 | 剧毒 |
 | 技能 | keyword-poison |
 | 学者 | 否 |

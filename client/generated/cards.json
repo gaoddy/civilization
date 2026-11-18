@@ -95,12 +95,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 9,
+    "attack": 11,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 13,
+    "health": 11,
     "id": "albatross",
     "is_hero": false,
     "is_scholar": false,
@@ -114,7 +114,7 @@
     "taxon": "diomedeidae"
   },
   {
-    "attack": 10,
+    "attack": 11,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -152,12 +152,12 @@
     "taxon": "amoebidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "ant",
     "is_hero": false,
     "is_scholar": false,
@@ -233,12 +233,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 12,
+    "attack": 15,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 18,
+    "health": 15,
     "id": "argentavis",
     "is_hero": false,
     "is_scholar": false,
@@ -252,12 +252,12 @@
     "taxon": "teratornithidae"
   },
   {
-    "attack": 4,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 9,
+    "health": 8,
     "id": "argonaut",
     "is_hero": false,
     "is_scholar": false,
@@ -376,12 +376,12 @@
     "taxon": "myoviridae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "baiyi",
     "is_hero": false,
     "is_scholar": false,
@@ -400,12 +400,12 @@
     "taxon": "termitidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "bee",
     "is_hero": false,
     "is_scholar": false,
@@ -438,12 +438,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 5,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 8,
+    "health": 7,
     "id": "beetle",
     "is_hero": false,
     "is_scholar": false,
@@ -543,7 +543,7 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -562,7 +562,7 @@
     "taxon": "octopodidae"
   },
   {
-    "attack": 6,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -657,12 +657,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 8,
+    "health": 7,
     "id": "butterfly",
     "is_hero": false,
     "is_scholar": false,
@@ -700,12 +700,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 3,
+    "health": 2,
     "id": "carp",
     "is_hero": false,
     "is_scholar": false,
@@ -819,12 +819,12 @@
     "taxon": "clostridiaceae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 3,
+    "health": 4,
     "id": "clownfish",
     "is_hero": false,
     "is_scholar": false,
@@ -843,7 +843,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 6,
+    "health": 7,
     "id": "cobra",
     "is_hero": false,
     "is_scholar": false,
@@ -857,12 +857,12 @@
     "taxon": "elapidae"
   },
   {
-    "attack": 6,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 12,
+    "health": 10,
     "id": "coelacanth",
     "is_hero": false,
     "is_scholar": false,
@@ -876,12 +876,12 @@
     "taxon": "coelacanthidae"
   },
   {
-    "attack": 8,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 11,
+    "health": 14,
     "id": "colossal-squid",
     "is_hero": false,
     "is_scholar": false,
@@ -901,7 +901,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 4,
+    "health": 3,
     "id": "coral-polyp",
     "is_hero": false,
     "is_scholar": false,
@@ -939,7 +939,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 8,
+    "health": 9,
     "id": "crocodile",
     "is_hero": false,
     "is_scholar": false,
@@ -953,12 +953,12 @@
     "taxon": "crocodylidae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 6,
+    "health": 4,
     "id": "crow",
     "is_hero": false,
     "is_scholar": false,
@@ -972,7 +972,7 @@
     "taxon": "corvidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -1262,12 +1262,12 @@
     "taxon": "felidae"
   },
   {
-    "attack": 7,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 10,
+    "health": 8,
     "id": "dragonfly",
     "is_hero": false,
     "is_scholar": false,
@@ -1281,12 +1281,12 @@
     "taxon": "libellulidae"
   },
   {
-    "attack": 10,
+    "attack": 12,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 17,
+    "health": 16,
     "id": "dunkleosteus",
     "is_hero": false,
     "is_scholar": false,
@@ -1305,7 +1305,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 4,
+    "health": 3,
     "id": "dushe",
     "is_hero": false,
     "is_scholar": false,
@@ -1406,12 +1406,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 9,
+    "health": 8,
     "id": "eel",
     "is_hero": false,
     "is_scholar": false,
@@ -1826,12 +1826,12 @@
     "taxon": "amanitaceae"
   },
   {
-    "attack": 3,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 4,
+    "health": 5,
     "id": "flying-fish",
     "is_hero": false,
     "is_scholar": false,
@@ -2018,7 +2018,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 12,
+    "health": 15,
     "id": "giant-jellyfish",
     "is_hero": false,
     "is_scholar": false,
@@ -2032,12 +2032,12 @@
     "taxon": "rhizostomatidae"
   },
   {
-    "attack": 7,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 10,
+    "health": 11,
     "id": "giant-squid",
     "is_hero": false,
     "is_scholar": false,
@@ -2115,7 +2115,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 8,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -2239,7 +2239,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 8,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -2340,12 +2340,12 @@
     "taxon": "coronaviridae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "guoying",
     "is_hero": false,
     "is_scholar": false,
@@ -2392,7 +2392,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -2877,12 +2877,12 @@
     "taxon": "plantae-incertae-sedis"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "juxi",
     "is_hero": false,
     "is_scholar": false,
@@ -2901,12 +2901,12 @@
     "taxon": "varanidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 4,
+    "health": 3,
     "id": "juying",
     "is_hero": false,
     "is_scholar": false,
@@ -3006,12 +3006,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 8,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 10,
+    "health": 12,
     "id": "komodo-dragon",
     "is_hero": false,
     "is_scholar": false,
@@ -3350,12 +3350,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 2,
+    "attack": 1,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "lizard",
     "is_hero": false,
     "is_scholar": false,
@@ -3369,7 +3369,7 @@
     "taxon": "lacertidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -3533,12 +3533,12 @@
     "taxon": "elephantidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 6,
+    "health": 5,
     "id": "mantis",
     "is_hero": false,
     "is_scholar": false,
@@ -3581,12 +3581,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 11,
+    "attack": 14,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 17,
+    "health": 14,
     "id": "meganeura",
     "is_hero": false,
     "is_scholar": false,
@@ -3755,7 +3755,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -3779,7 +3779,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "moon-jellyfish",
     "is_hero": false,
     "is_scholar": false,
@@ -4023,12 +4023,12 @@
     "taxon": "automation"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "nautilus",
     "is_hero": false,
     "is_scholar": false,
@@ -4109,12 +4109,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 5,
+    "health": 4,
     "id": "nitaizhangyu",
     "is_hero": false,
     "is_scholar": false,
@@ -4238,12 +4238,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "prehistoric",
-    "health": 3,
+    "health": 2,
     "id": "octopus-larva",
     "is_hero": false,
     "is_scholar": false,
@@ -4282,7 +4282,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 5,
+    "health": 4,
     "id": "ostrich",
     "is_hero": false,
     "is_scholar": false,
@@ -4334,12 +4334,12 @@
     "taxon": "parameciidae"
   },
   {
-    "attack": 4,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 9,
+    "health": 6,
     "id": "parrot",
     "is_hero": false,
     "is_scholar": false,
@@ -4391,12 +4391,12 @@
     "taxon": "automation"
   },
   {
-    "attack": 6,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 12,
+    "health": 10,
     "id": "peafowl",
     "is_hero": false,
     "is_scholar": false,
@@ -4410,12 +4410,12 @@
     "taxon": "phasianidae"
   },
   {
-    "attack": 5,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 8,
+    "health": 7,
     "id": "penguin",
     "is_hero": false,
     "is_scholar": false,
@@ -4534,7 +4534,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -4591,12 +4591,12 @@
     "taxon": "agaricaceae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 7,
+    "health": 6,
     "id": "pufferfish",
     "is_hero": false,
     "is_scholar": false,
@@ -4775,12 +4775,12 @@
     "taxon": "information-computing"
   },
   {
-    "attack": 6,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 11,
+    "health": 9,
     "id": "queen-bee",
     "is_hero": false,
     "is_scholar": false,
@@ -4866,7 +4866,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "feudal",
-    "health": 11,
+    "health": 12,
     "id": "red-coral",
     "is_hero": false,
     "is_scholar": false,
@@ -5060,12 +5060,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "industrial",
-    "health": 8,
+    "health": 7,
     "id": "salmon",
     "is_hero": false,
     "is_scholar": false,
@@ -5628,7 +5628,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 8,
+    "health": 9,
     "id": "soft-coral",
     "is_hero": false,
     "is_scholar": false,
@@ -5692,7 +5692,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 5,
+    "health": 6,
     "id": "squid",
     "is_hero": false,
     "is_scholar": false,
@@ -6014,12 +6014,12 @@
     "taxon": "plantae-incertae-sedis"
   },
   {
-    "attack": 9,
+    "attack": 10,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 13,
+    "health": 11,
     "id": "termite-king",
     "is_hero": false,
     "is_scholar": false,
@@ -6099,7 +6099,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -6223,7 +6223,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
@@ -6272,7 +6272,7 @@
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 6,
+    "health": 5,
     "id": "turritopsis",
     "is_hero": false,
     "is_scholar": false,
@@ -6286,12 +6286,12 @@
     "taxon": "oceaniidae"
   },
   {
-    "attack": 6,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 12,
+    "health": 11,
     "id": "vampire-squid",
     "is_hero": false,
     "is_scholar": false,
@@ -6472,12 +6472,12 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 8,
+    "attack": 10,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,
     "era": "modern",
-    "health": 12,
+    "health": 13,
     "id": "whale-shark",
     "is_hero": false,
     "is_scholar": false,
@@ -6635,7 +6635,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "display_cost": 3,

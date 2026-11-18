@@ -7,8 +7,8 @@ taxon: scarabaeidae
 subtype: insect
 level: 4
 era: primitive
-attack: 5
-health: 8
+attack: 7
+health: 7
 skills: [keyword-taunt]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 昆虫 |
 | 星级 | 4 |
 | 时代 | 原始 |
-| 攻击力 | 5 |
-| 生命值 | 8 |
+| 攻击力 | 7 |
+| 生命值 | 7 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |

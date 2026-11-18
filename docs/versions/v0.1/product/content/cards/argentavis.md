@@ -7,8 +7,8 @@ taxon: teratornithidae
 subtype: bird
 level: 7
 era: classical
-attack: 12
-health: 18
+attack: 15
+health: 15
 skills: [keyword-windfury]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鸟类 |
 | 星级 | 7 |
 | 时代 | 古典 |
-| 攻击力 | 12 |
-| 生命值 | 18 |
+| 攻击力 | 15 |
+| 生命值 | 15 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
 | 学者 | 否 |

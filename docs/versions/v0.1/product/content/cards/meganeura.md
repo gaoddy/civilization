@@ -7,8 +7,8 @@ taxon: meganeuridae
 subtype: insect
 level: 7
 era: classical
-attack: 11
-health: 17
+attack: 14
+health: 14
 skills: [keyword-windfury, keyword-optimal-attack]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 昆虫 |
 | 星级 | 7 |
 | 时代 | 古典 |
-| 攻击力 | 11 |
-| 生命值 | 17 |
+| 攻击力 | 14 |
+| 生命值 | 14 |
 | 关键词 | 连击；最优攻击 |
 | 技能 | keyword-windfury；keyword-optimal-attack |
 | 学者 | 否 |

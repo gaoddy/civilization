@@ -8,7 +8,7 @@ subtype: ocean
 level: 6
 era: modern
 attack: 8
-health: 12
+health: 15
 skills: [revive-3]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 6 |
 | 时代 | 现代 |
 | 攻击力 | 8 |
-| 生命值 | 12 |
+| 生命值 | 15 |
 | 关键词 | 无 |
 | 技能 | revive-3 |
 | 学者 | 否 |

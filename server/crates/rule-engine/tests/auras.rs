@@ -75,6 +75,29 @@ fn add_plain_card(engine: &mut Engine, card_id: &str, playstyle: Playstyle) {
     );
 }
 
+/// 注入一张指定生命值的昆虫随从，避免光环测试依赖真实卡表的数值。
+fn add_insect_card(engine: &mut Engine, card_id: &str, health: i32) {
+    engine.catalog.cards.insert(
+        card_id.to_string(),
+        Card {
+            id: card_id.to_string(),
+            card_type: CardType::Minion,
+            playstyle: Playstyle::Insect,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
+            subtype: None,
+            level: 1,
+            era: None,
+            attack: Some(1),
+            health: Some(health),
+            skills: Vec::new(),
+            is_scholar: false,
+            is_hero: false,
+            cost: Some(1),
+        },
+    );
+}
+
 #[test]
 fn aura_buffs_all_friendly_machines_except_self_if_other() {
     let (mut engine, mut state) = setup(23);
@@ -130,7 +153,8 @@ fn aura_health_floor_is_one() {
         "Aura|ModifyStats|friendly:all:playstyle=insect:other=true|health=-5,duration=permanent",
     );
     place(&engine.catalog, &mut state, 0, 1, "test-minus");
-    place(&engine.catalog, &mut state, 0, 2, "baiyi");
+    add_insect_card(&mut engine, "test-insect", 2);
+    place(&engine.catalog, &mut state, 0, 2, "test-insect");
     assert_eq!(
         combat::effective_health(&engine.catalog, board_minion(&state, 0, 2)),
         2
@@ -145,12 +169,12 @@ fn aura_health_floor_is_one() {
         &state.auras,
         &state.players[0].board.clone(),
     );
-    let folded_baiyi = folded
+    let folded_insect = folded
         .iter()
         .find(|minion| minion.instance_id == 2)
         .expect("折叠后的棋盘应保留目标");
     assert_eq!(
-        combat::effective_health(&engine.catalog, folded_baiyi),
+        combat::effective_health(&engine.catalog, folded_insect),
         1,
         "光环导致的负生命应被夹到 1，而不是致死"
     );

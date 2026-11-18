@@ -7,8 +7,8 @@ taxon: libellulidae
 subtype: insect
 level: 5
 era: classical
-attack: 7
-health: 10
+attack: 9
+health: 8
 skills: [keyword-windfury]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 昆虫 |
 | 星级 | 5 |
 | 时代 | 古典 |
-| 攻击力 | 7 |
-| 生命值 | 10 |
+| 攻击力 | 9 |
+| 生命值 | 8 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
 | 学者 | 否 |

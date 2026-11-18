@@ -7,8 +7,8 @@ taxon: papilionidae
 subtype: insect
 level: 4
 era: classical
-attack: 4
-health: 8
+attack: 7
+health: 7
 skills: [deathrattle-friendly-insect-growth-twice]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 昆虫 |
 | 星级 | 4 |
 | 时代 | 古典 |
-| 攻击力 | 4 |
-| 生命值 | 8 |
+| 攻击力 | 7 |
+| 生命值 | 7 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-insect-growth-twice |
 | 学者 | 否 |

@@ -7,8 +7,8 @@ taxon: termitidae
 subtype: insect
 level: 6
 era: modern
-attack: 9
-health: 13
+attack: 10
+health: 11
 skills: [deathrattle-summon-3-termites]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 昆虫 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 9 |
-| 生命值 | 13 |
+| 攻击力 | 10 |
+| 生命值 | 11 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-3-termites |
 | 学者 | 否 |

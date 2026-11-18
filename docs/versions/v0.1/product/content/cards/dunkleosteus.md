@@ -7,8 +7,8 @@ taxon: dunkleosteidae
 subtype: fish
 level: 7
 era: prehistoric
-attack: 10
-health: 17
+attack: 12
+health: 16
 skills: [deathrattle-summon-fish-fry-3]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 7 |
 | 时代 | 史前 |
-| 攻击力 | 10 |
-| 生命值 | 17 |
+| 攻击力 | 12 |
+| 生命值 | 16 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-fish-fry-3 |
 | 学者 | 否 |

@@ -8,7 +8,7 @@ subtype: reptile
 level: 3
 era: primitive
 attack: 3
-health: 6
+health: 7
 skills: [keyword-poison]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 原始 |
 | 攻击力 | 3 |
-| 生命值 | 6 |
+| 生命值 | 7 |
 | 关键词 | 剧毒 |
 | 技能 | keyword-poison |
 | 学者 | 否 |

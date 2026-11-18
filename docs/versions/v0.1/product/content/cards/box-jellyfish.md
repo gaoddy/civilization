@@ -7,7 +7,7 @@ taxon: chirodropidae
 subtype: ocean
 level: 5
 era: modern
-attack: 6
+attack: 7
 health: 12
 skills: [keyword-poison]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 海洋 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
+| 攻击力 | 7 |
 | 生命值 | 12 |
 | 关键词 | 剧毒 |
 | 技能 | keyword-poison |

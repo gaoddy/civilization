@@ -7,7 +7,7 @@ taxon: accipitridae
 subtype: bird
 level: 5
 era: feudal
-attack: 8
+attack: 9
 health: 10
 skills: [dive-1]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 鸟类 |
 | 星级 | 5 |
 | 时代 | 封建 |
-| 攻击力 | 8 |
+| 攻击力 | 9 |
 | 生命值 | 10 |
 | 关键词 | 无 |
 | 技能 | dive-1 |

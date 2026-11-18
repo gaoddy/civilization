@@ -8,7 +8,7 @@ subtype: ocean
 level: 2
 era: prehistoric
 attack: 2
-health: 4
+health: 3
 skills: [deathrattle-summon-coral-polyp]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-coral-polyp |
 | 学者 | 否 |

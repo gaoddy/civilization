@@ -7,7 +7,7 @@ taxon: octopodidae
 subtype: mollusk
 level: 3
 era: modern
-attack: 3
+attack: 4
 health: 6
 skills: [keyword-poison]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 3 |
+| 攻击力 | 4 |
 | 生命值 | 6 |
 | 关键词 | 剧毒 |
 | 技能 | keyword-poison |

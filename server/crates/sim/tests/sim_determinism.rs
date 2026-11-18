@@ -109,6 +109,9 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 ///
 /// 2026-11-18 第七次重定：卡牌参数重排批次 A（哺乳纲与中立非学者随从按玩法
 /// 定位重排身材），参战数值变化，对局哈希随之改变。
+///
+/// 2026-11-18 第八次重定：卡牌参数重排批次 B（鸟、爬行、鱼、昆虫、头足、水螅
+/// 六个玩法重排身材）。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

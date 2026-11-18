@@ -7,8 +7,8 @@ taxon: tetraodontidae
 subtype: fish
 level: 3
 era: feudal
-attack: 3
-health: 7
+attack: 4
+health: 6
 skills: [keyword-taunt, deathrattle-random-enemy-damage-2]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 3 |
-| 生命值 | 7 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
 | 关键词 | 嘲讽；亡语 |
 | 技能 | keyword-taunt；deathrattle-random-enemy-damage-2 |
 | 学者 | 否 |

@@ -7,8 +7,8 @@ taxon: corvidae
 subtype: bird
 level: 3
 era: feudal
-attack: 3
-health: 6
+attack: 4
+health: 4
 skills: [battlecry-friendly-bird-growth-once]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鸟类 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 3 |
-| 生命值 | 6 |
+| 攻击力 | 4 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-bird-growth-once |
 | 学者 | 否 |

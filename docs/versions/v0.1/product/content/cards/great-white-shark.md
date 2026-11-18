@@ -7,7 +7,7 @@ taxon: lamnidae
 subtype: fish
 level: 5
 era: modern
-attack: 8
+attack: 9
 health: 10
 skills: [keyword-optimal-attack]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
+| 攻击力 | 9 |
 | 生命值 | 10 |
 | 关键词 | 最优攻击 |
 | 技能 | keyword-optimal-attack |

@@ -7,8 +7,8 @@ taxon: nautilidae
 subtype: mollusk
 level: 2
 era: primitive
-attack: 2
-health: 3
+attack: 3
+health: 4
 skills: [keyword-taunt]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 2 |
-| 生命值 | 3 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |

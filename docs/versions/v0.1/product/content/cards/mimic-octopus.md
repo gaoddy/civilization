@@ -7,7 +7,7 @@ taxon: octopodidae
 subtype: mollusk
 level: 4
 era: modern
-attack: 5
+attack: 6
 health: 8
 skills: [mimic-3]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 5 |
+| 攻击力 | 6 |
 | 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | mimic-3 |

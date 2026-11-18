@@ -7,7 +7,7 @@ taxon: scombridae
 subtype: fish
 level: 3
 era: modern
-attack: 4
+attack: 5
 health: 5
 skills: [keyword-windfury]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
+| 攻击力 | 5 |
 | 生命值 | 5 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |

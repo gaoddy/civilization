@@ -7,8 +7,8 @@ taxon: phasianidae
 subtype: bird
 level: 5
 era: classical
-attack: 6
-health: 12
+attack: 9
+health: 10
 skills: [battlecry-other-bird-plus-1-plus-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鸟类 |
 | 星级 | 5 |
 | 时代 | 古典 |
-| 攻击力 | 6 |
-| 生命值 | 12 |
+| 攻击力 | 9 |
+| 生命值 | 10 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-bird-plus-1-plus-1 |
 | 学者 | 否 |

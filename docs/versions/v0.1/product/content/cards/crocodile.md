@@ -8,7 +8,7 @@ subtype: reptile
 level: 4
 era: prehistoric
 attack: 5
-health: 8
+health: 9
 skills: [keyword-poison]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 史前 |
 | 攻击力 | 5 |
-| 生命值 | 8 |
+| 生命值 | 9 |
 | 关键词 | 剧毒 |
 | 技能 | keyword-poison |
 | 学者 | 否 |

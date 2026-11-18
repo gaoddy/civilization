@@ -8,7 +8,7 @@ subtype: ocean
 level: 5
 era: feudal
 attack: 7
-health: 11
+health: 12
 skills: [revive-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 封建 |
 | 攻击力 | 7 |
-| 生命值 | 11 |
+| 生命值 | 12 |
 | 关键词 | 无 |
 | 技能 | revive-2 |
 | 学者 | 否 |

@@ -7,7 +7,7 @@ taxon: haikouichthyidae
 subtype: fish
 level: 1
 era: prehistoric
-attack: 1
+attack: 2
 health: 2
 skills: [battlecry-friendly-fish-growth-once]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 攻击力 | 1 |
+| 攻击力 | 2 |
 | 生命值 | 2 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-fish-growth-once |

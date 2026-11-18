@@ -7,8 +7,8 @@ taxon: psittacidae
 subtype: bird
 level: 4
 era: feudal
-attack: 4
-health: 9
+attack: 7
+health: 6
 skills: [battlecry-copy-hand-minion]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鸟类 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 4 |
-| 生命值 | 9 |
+| 攻击力 | 7 |
+| 生命值 | 6 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-copy-hand-minion |
 | 学者 | 否 |

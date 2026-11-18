@@ -7,7 +7,7 @@ taxon: physaliidae
 subtype: ocean
 level: 3
 era: primitive
-attack: 4
+attack: 3
 health: 5
 skills: [keyword-poison]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 海洋 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 攻击力 | 4 |
+| 攻击力 | 3 |
 | 生命值 | 5 |
 | 关键词 | 剧毒 |
 | 技能 | keyword-poison |

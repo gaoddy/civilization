@@ -7,8 +7,8 @@ taxon: salmonidae
 subtype: fish
 level: 4
 era: industrial
-attack: 5
-health: 8
+attack: 6
+health: 7
 skills: [deathrattle-summon-fish-fry-2]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 攻击力 | 5 |
-| 生命值 | 8 |
+| 攻击力 | 6 |
+| 生命值 | 7 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-fish-fry-2 |
 | 学者 | 否 |

@@ -7,7 +7,7 @@ taxon: acrididae
 subtype: insect
 level: 3
 era: primitive
-attack: 4
+attack: 5
 health: 5
 skills: [battlecry-other-insect-growth-once]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 昆虫 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 攻击力 | 4 |
+| 攻击力 | 5 |
 | 生命值 | 5 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-insect-growth-once |

@@ -7,8 +7,8 @@ taxon: spheniscidae
 subtype: bird
 level: 4
 era: modern
-attack: 5
-health: 8
+attack: 7
+health: 7
 skills: [keyword-taunt]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鸟类 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 5 |
-| 生命值 | 8 |
+| 攻击力 | 7 |
+| 生命值 | 7 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |

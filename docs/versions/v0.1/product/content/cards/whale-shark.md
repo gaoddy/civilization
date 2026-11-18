@@ -7,8 +7,8 @@ taxon: rhincodontidae
 subtype: fish
 level: 6
 era: modern
-attack: 8
-health: 12
+attack: 10
+health: 13
 skills: [aura-school-fish-2]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
-| 生命值 | 12 |
+| 攻击力 | 10 |
+| 生命值 | 13 |
 | 关键词 | 无 |
 | 技能 | aura-school-fish-2 |
 | 学者 | 否 |

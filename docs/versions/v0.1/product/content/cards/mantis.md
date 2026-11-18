@@ -7,8 +7,8 @@ taxon: mantidae
 subtype: insect
 level: 3
 era: classical
-attack: 4
-health: 6
+attack: 5
+health: 5
 skills: [keyword-optimal-attack]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 昆虫 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 5 |
+| 生命值 | 5 |
 | 关键词 | 最优攻击 |
 | 技能 | keyword-optimal-attack |
 | 学者 | 否 |

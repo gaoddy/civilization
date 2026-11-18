@@ -7,7 +7,7 @@ taxon: testudinidae
 subtype: reptile
 level: 3
 era: primitive
-attack: 4
+attack: 3
 health: 7
 skills: [keyword-armor-1]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 爬行 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 攻击力 | 4 |
+| 攻击力 | 3 |
 | 生命值 | 7 |
 | 关键词 | 减伤 1 |
 | 技能 | keyword-armor-1 |

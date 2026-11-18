@@ -7,8 +7,8 @@ taxon: cyprinidae
 subtype: fish
 level: 1
 era: primitive
-attack: 1
-health: 3
+attack: 2
+health: 2
 skills: [aura-other-fish-plus-0-plus-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 1 |
 | 时代 | 原始 |
-| 攻击力 | 1 |
-| 生命值 | 3 |
+| 攻击力 | 2 |
+| 生命值 | 2 |
 | 关键词 | 无 |
 | 技能 | aura-other-fish-plus-0-plus-1 |
 | 学者 | 否 |

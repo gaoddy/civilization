@@ -8,8 +8,8 @@ specialty: [prey:aves]
 subtype: reptile
 level: 2
 era: primitive
-attack: 3
-health: 4
+attack: 2
+health: 3
 skills: [keyword-evolve]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 爬行 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 3 |
-| 生命值 | 4 |
+| 攻击力 | 2 |
+| 生命值 | 3 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve |
 | 学者 | 否 |

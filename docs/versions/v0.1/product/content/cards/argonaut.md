@@ -7,8 +7,8 @@ taxon: argonautidae
 subtype: mollusk
 level: 4
 era: classical
-attack: 4
-health: 9
+attack: 6
+health: 8
 skills: [keyword-stealth]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 4 |
 | 时代 | 古典 |
-| 攻击力 | 4 |
-| 生命值 | 9 |
+| 攻击力 | 6 |
+| 生命值 | 8 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth |
 | 学者 | 否 |

@@ -7,7 +7,7 @@ taxon: ammonitidae
 subtype: mollusk
 level: 7
 era: prehistoric
-attack: 10
+attack: 11
 health: 17
 skills: [deathrattle-summon-2-ammonites]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 7 |
 | 时代 | 史前 |
-| 攻击力 | 10 |
+| 攻击力 | 11 |
 | 生命值 | 17 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-2-ammonites |

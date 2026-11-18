@@ -7,8 +7,8 @@ taxon: formicidae
 subtype: insect
 level: 2
 era: primitive
-attack: 2
-health: 3
+attack: 3
+health: 4
 skills: [aura-other-insect-plus-0-plus-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 昆虫 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 2 |
-| 生命值 | 3 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | aura-other-insect-plus-0-plus-1 |
 | 学者 | 否 |

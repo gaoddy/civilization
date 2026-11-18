@@ -7,8 +7,8 @@ taxon: anguillidae
 subtype: fish
 level: 4
 era: feudal
-attack: 4
-health: 9
+attack: 6
+health: 8
 skills: [aura-school-fish-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 4 |
-| 生命值 | 9 |
+| 攻击力 | 6 |
+| 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | aura-school-fish-1 |
 | 学者 | 否 |
