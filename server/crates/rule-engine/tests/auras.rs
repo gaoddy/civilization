@@ -125,8 +125,8 @@ fn aura_buffs_all_friendly_machines_except_self_if_other() {
 #[test]
 fn aura_recomputes_when_source_leaves() {
     let (mut engine, mut state) = setup(23);
-    // 青蒿：你的植物随从获得 +1/+1（含自身）。
-    place(&engine.catalog, &mut state, 0, 1, "qinghao");
+    // 固氮作物：你的植物随从获得 +1/+1（含自身）。
+    place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
 
     engine.recompute_auras(&mut state);
@@ -252,7 +252,7 @@ fn aura_does_not_stack_self() {
 #[test]
 fn aura_never_crosses_seats() {
     let (mut engine, mut state) = setup(23);
-    place(&engine.catalog, &mut state, 0, 1, "qinghao");
+    place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 1, 2, "juzi");
 
     engine.recompute_auras(&mut state);
