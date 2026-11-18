@@ -1,0 +1,95 @@
+# 卡牌图鉴页
+
+> 状态：已实现
+> 场景：`client/scenes/gallery.tscn`
+> 脚本：`client/scenes/gallery.gd`；主体组件 `client/scenes/card_gallery.gd`（`CardGallery`）
+> 验证：`make client-smoke`（`client/tests/ui_smoke_gallery.tscn`）
+
+## 1. 目的、入口与返回
+
+- 目的：只读浏览卡牌与 Token 的完整信息，按时代与科学分类筛选；不读取房间、对局或手牌状态。
+- 入口：
+  - 大厅「卡牌图鉴」按钮，导航到 `scenes/gallery.tscn`，目录为全部卡牌（当前生成表 409 张卡 + 23 个 Token，共 432 项）。
+  - 对局右栏状态行的「图鉴」按钮，以全屏覆盖层 `GalleryOverlay` 叠在对局页上，不切换场景，目录只含本局卡池（按 `view.enabledFactions` 复算，排除 Token；默认夹具为 198 张）。
+- 返回：大厅页点「返回大厅」或按 `Esc` 回大厅；对局覆盖层点「返回对局」或按 `Esc` 只收起覆盖层，对局状态与拖拽、待选、战斗演示全部保留。
+
+## 2. 结构层级
+
+```text
+背景（color-bg，铺满）
+└─ 外边距（space-2xl）
+   └─ 纵向根容器
+      ├─ 头部（横向）
+      │  ├─ 标题（font-display）：卡牌图鉴 / 本局卡牌图鉴
+      │  ├─ 副标题胶囊（accent）：全部卡牌 / 本局卡池
+      │  ├─ 计数（font-body-sm，color-text-dim）：N 张
+      │  └─ 返回按钮：返回大厅 / 返回对局
+      ├─ 章节栏（HFlowContainer）：「全部 N」+ 7 个时代按钮，单选
+      └─ 主体（横向，space-lg）
+         ├─ 分类目录（168）：标题「分类目录」+「全部」+ 8 个界级分类，单选
+         ├─ 卡面网格（自适应）
+         │  ├─ 滚动区：5 列网格，每页 40 张
+         │  ├─ 空态：「没有符合条件的卡牌」
+         │  └─ 分页条：上一页 / 第 N/M 页 / 下一页
+         └─ 常驻详情（280）：选中卡的大卡面与属性行
+```
+
+- 详情常驻，不弹层、不翻页：选中卡变化时只重建右栏内容，网格保持当前页。
+- 网格只构建当前页的卡面节点，翻页与筛选都会回到第 1 页并清空滚动位置。
+- 卡面复用对局页的 `GameCardFace.face`（112×146），封面、费用与时代角标的取数与对局一致。
+
+## 3. 状态清单
+
+| 状态 | 触发 | 表现 | 出口 |
+| --- | --- | --- | --- |
+| 初始选中 | 进入页面且目录非空 | 选中筛选后的第一张卡，详情立即有内容 | 点击其它卡 |
+| 已选卡被筛掉 | 改时代或分类后当前选中卡不在结果里 | 自动改为结果中的第一张 | — |
+| 空目录 | 页面传入的卡牌集合为空，或筛选结果为空 | 网格区显示「没有符合条件的卡牌」，详情显示「选择一张卡牌查看详情」，分页条隐藏 | 放宽筛选或返回 |
+| 零计数筛选项 | 某项在当前另一维筛选下计数为 0 | 该项禁用（置灰、不可点），当前选中的项不禁用 | 改回其它筛选 |
+| 分页首页 / 末页 | 第 1 页 / 最后一页 | 上一页或下一页按钮禁用 | 翻页 |
+| 大厅模式 | 大厅入口 | 标题「卡牌图鉴」、副标题「全部卡牌」、返回「返回大厅」、目录 432 项 | 返回大厅 |
+| 对局覆盖层 | 对局右栏「图鉴」 | 标题「本局卡牌图鉴」、副标题「本局卡池」、返回「返回对局」、目录仅本局卡池 | 返回对局或 `Esc` |
+| 加载中 | 不需要：`CardDB` 在启动时已加载 | — | — |
+
+- 章节计数按当前分类筛选换算，目录计数按当前时代筛选换算；因此任一筛选下的计数都等于点下去实际能看到的张数。
+- 对局覆盖层打开期间，对局视图照常刷新但不重建图鉴；对局的选择浮层可见时，图鉴随下一次刷新自动收起，避免两层叠加。
+
+## 4. 数据来源
+
+| 数据 | 来源 |
+| --- | --- |
+| 卡牌与 Token 展示表 | `CardDB.cards`（启动时合并 `generated/cards.json` 与 `tokens.json`） |
+| 卡名 | `CardDB.display_name`：`card.<id>.name` / `token.<id>.name` |
+| 类型 | `card_type` 经 `UI.enum_text("card_type")`；Token 显示「Token」；英雄追加「· 英雄」 |
+| 科学分类 | `CardDB.taxon_path(taxon)` 的完整路径，以「 · 」连接；缺失显示「未定」 |
+| 分类目录 | `CardDB.taxonomy` 中 `parent` 为空（`null`）的根节点；卡牌按 `taxon` 沿 `parent` 上溯到根归入对应界 |
+| 玩法与关联玩法 | `playstyle` 取 `CardDB.playstyle_name`；关联玩法取 `specialty` 中 `kind = "play"` 的值 |
+| 时代 | `era` 经 `UI.enum_text("era")`；未识别的时代排在最后，且不算入任何时代章节 |
+| 费用与原始数值 | `display_cost`、`attack`、`health`；数值缺失显示「—」 |
+| 技能 | `skills[]` 经 `CardDB.skill_name` 取 `skill.<id>.name`，缺键返回空串并跳过（不显示内部 id） |
+| 效果文本 | `CardDB.display_text`：`skills[]` 的 `skill.<id>.text` 按顺序换行拼接，缺键跳过 |
+| 本局卡池 | `CardPool.card_ids(view.enabledFactions)`：与服务端 `card_in_pool` 同规则，非中立卡看玩法是否启用，中立卡有关联玩法时至少一个启用才入池，无关联始终入池；Token 不入池 |
+
+- 图鉴只做展示，不参与规则判定；费用、攻防均取卡表原始值，不代表对局中的当前数值。
+- 排序：先按时代序号（1–7，未知排最后），再按本地化名称升序；同一筛选下顺序稳定。
+
+## 5. 详情
+
+- 顺序固定：大卡面 → 名称 → 类型 → 科学分类 → 玩法 → 关联玩法（有才显示）→ 时代（有才显示）→ 费用 → 原始（攻击 / 生命，任一非空才显示）→ 技能（有可读技能名才显示）→ 效果（有文本才显示）。
+- 关联玩法只聚合 `specialty` 的 `kind = "play"` 项并去重，用「、」连接；食物链与「擅长玩法」不在图鉴详情中出现。
+- 费用显示为「N 金」；原始数值显示为「攻击 / 生命」，效果牌没有数值时显示「— / —」。
+- 详情区可纵向滚动；内容超出 280 宽时由文本换行，不做水平滚动。
+
+## 6. 适配与性能
+
+- 逻辑尺寸固定 1280×720，窗口按 `canvas_items` 缩放；图鉴没有竖屏与超宽布局。
+- 目录固定 168、详情固定 280，只有网格列宽自适应；网格 5 列，每页 40 张，翻页时整页重建，最多同时存在 40 个卡面节点。
+- 章节栏与目录使用 `HFlowContainer` / 纵向列表加 `ButtonGroup`；零计数项禁用而非隐藏，保证筛选维度完整可见。
+- 对局覆盖层首次打开时创建，之后只切可见性并复用节点；每次打开都会重置筛选与选中。
+
+## 7. 关联
+
+- 令牌：[tokens.md](../tokens.md)
+- 通用交互：[interactions.md](../interactions.md)
+- 组件：[card-gallery.md](../components/card-gallery.md)、[gallery-chapter-bar.md](../components/gallery-chapter-bar.md)、[gallery-toc.md](../components/gallery-toc.md)、[gallery-grid.md](../components/gallery-grid.md)、[gallery-card-tile.md](../components/gallery-card-tile.md)、[gallery-detail.md](../components/gallery-detail.md)
+- 对局页：[game.md](game.md)

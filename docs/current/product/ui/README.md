@@ -31,6 +31,7 @@
 | 大厅 | `scenes/lobby.tscn` | 未单独成文 |
 | 房间（开局前） | `scenes/room.tscn` | 未单独成文 |
 | 对局 | `scenes/game.tscn` | [pages/game.md](pages/game.md) |
+| 卡牌图鉴 | `scenes/gallery.tscn` | [pages/gallery.md](pages/gallery.md) |
 | 结算 | `scenes/result.tscn` | 未单独成文 |
 
 ## 4. 组件
@@ -42,6 +43,12 @@
 | 数值胶囊 | `UI.pill_label` | [components/pill.md](components/pill.md) |
 | 按钮变体 | `UI.styled_button` | [components/button.md](components/button.md) |
 | 卡片容器 | `UI.card_panel` | [components/card-panel.md](components/card-panel.md) |
+| 卡牌图鉴 | `CardGallery`（`client/scenes/card_gallery.gd`） | [components/card-gallery.md](components/card-gallery.md) |
+| 图鉴章节栏 | `GalleryChapterBar` | [components/gallery-chapter-bar.md](components/gallery-chapter-bar.md) |
+| 图鉴分类目录 | `GalleryToc` | [components/gallery-toc.md](components/gallery-toc.md) |
+| 图鉴卡面网格 | `GalleryGrid` | [components/gallery-grid.md](components/gallery-grid.md) |
+| 图鉴卡面单元 | `GalleryCardTile` | [components/gallery-card-tile.md](components/gallery-card-tile.md) |
+| 图鉴常驻详情 | `GalleryDetail` | [components/gallery-detail.md](components/gallery-detail.md) |
 
 ## 5. 交互约定
 

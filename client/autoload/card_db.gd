@@ -82,6 +82,15 @@ func display_cost(id: String) -> int:
     return int(card(id).get("display_cost", 0))
 
 
+## 技能展示名：取 `skill.<id>.name`，缺键返回空串，避免内部 id 泄露到界面。
+func skill_name(id: String) -> String:
+    if id == "":
+        return ""
+    var key := "skill.%s.name" % id
+    var text := tr(key)
+    return "" if text == key else text
+
+
 ## 时代展示名；未知序号回退为数字文本，缺键回退为文本 id。
 func era_name(era: int) -> String:
     var id: String = ERA_IDS.get(era, "")

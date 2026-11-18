@@ -9,7 +9,7 @@ level: 5
 era: future
 attack: 6
 health: 12
-skills: [aura-plant-plus-1-plus-1, heredity]
+skills: [aura-plant-plus-1-plus-1, keyword-breed-3]
 is_scholar: false
 ---
 
@@ -30,14 +30,14 @@ is_scholar: false
 | 时代 | 未来 |
 | 攻击力 | 6 |
 | 生命值 | 12 |
-| 关键词 | 无 |
-| 技能 | aura-plant-plus-1-plus-1；heredity |
+| 关键词 | 繁衍 3 |
+| 技能 | aura-plant-plus-1-plus-1；keyword-breed-3 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-你的植物随从获得 +1/+1；使一个友方植物随从获得一次成长
+你的植物随从获得 +1/+1；繁衍 3：回合开始时获得 +3 生命
 
 ## 出处
 

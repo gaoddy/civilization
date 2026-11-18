@@ -9,7 +9,7 @@ level: 4
 era: modern
 attack: 4
 health: 9
-skills: [keyword-sow, aura-plant-plus-1-plus-1]
+skills: [keyword-sow, keyword-taunt]
 is_scholar: false
 ---
 
@@ -30,14 +30,14 @@ is_scholar: false
 | 时代 | 现代 |
 | 攻击力 | 4 |
 | 生命值 | 9 |
-| 关键词 | 播种 |
-| 技能 | keyword-sow；aura-plant-plus-1-plus-1 |
+| 关键词 | 播种；嘲讽 |
+| 技能 | keyword-sow；keyword-taunt |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-播种：死亡时召唤一个 1/1 的幼苗；你的植物随从获得 +1/+1
+播种：死亡时召唤一个 1/1 的幼苗；嘲讽
 
 ## 出处
 
