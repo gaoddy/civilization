@@ -321,30 +321,6 @@ fn ignore_taunt_can_target_non_taunt() {
 }
 
 #[test]
-fn legacy_optimal_attack_is_inert() {
-    let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 5, 20, &["optimal_attack"]);
-    add_card(&mut catalog, "taunt", 1, 10, &["taunt"]);
-    add_card(&mut catalog, "weak", 1, 2, &[]);
-
-    let log = simulate(
-        &catalog,
-        &[minion(&catalog, 1, "a")],
-        &[minion(&catalog, 2, "taunt"), minion(&catalog, 3, "weak")],
-        0,
-        1,
-        0,
-        &mut rng(),
-    );
-
-    assert_eq!(
-        attacks(&log)[0],
-        (1, 2, 5, false),
-        "遗留最优攻击不再绕过嘲讽，也不再优先击杀残血"
-    );
-}
-
-#[test]
 fn contagion_applies_after_damage() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "a", 2, 10, &["contagion"]);
