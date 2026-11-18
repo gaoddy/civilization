@@ -1261,11 +1261,13 @@ impl Engine {
             })
     }
 
-    /// 是否携带 `OnDeath | Recall`。
+    /// 是否携带 `OnDeath | Recall | to=hand`。
+    ///
+    /// 只有显式回到手牌的 Recall 才由死亡结算处理；`to` 为其他区域时落空。
     pub(crate) fn death_recall(&self, card_id: &str) -> bool {
         self.combat_effects(card_id, Trigger::OnDeath)
             .into_iter()
-            .any(|effect| effect.op == Op::Recall)
+            .any(|effect| effect.op == Op::Recall && effect.params.to == Some(Zone::Hand))
     }
 
     /// 召唤后触发召唤者棋盘的 `OnAllySummon`。

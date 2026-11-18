@@ -104,6 +104,10 @@ pub enum CombatAction {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CombatHandCopy {
     pub seat: Seat,
+    /// 产生该副作用的阵营（0 = 攻击方，1 = 防守方）。
+    ///
+    /// 幽灵战两侧使用同一座位，结算层据此丢弃幽灵侧的副作用。
+    pub side: usize,
     pub card_id: String,
     pub golden: bool,
 }
@@ -115,6 +119,8 @@ pub struct CombatHandCopy {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CombatHandMinion {
     pub seat: Seat,
+    /// 产生该回手的阵营（0 = 攻击方，1 = 防守方），用于过滤幽灵侧副作用。
+    pub side: usize,
     pub minion: MinionInstance,
 }
 
@@ -841,6 +847,7 @@ impl BattleField {
         self.hand_len[side] = self.hand_len[side].saturating_add(1);
         self.hand_copies.push(CombatHandCopy {
             seat,
+            side,
             card_id: card_id.to_string(),
             golden,
         });
@@ -1009,6 +1016,7 @@ impl BattleField {
                             self.hand_len[side] = self.hand_len[side].saturating_add(1);
                             self.hand_minions.push(CombatHandMinion {
                                 seat: self.seats[side],
+                                side,
                                 minion: hand_minion,
                             });
                             let states = self.snapshots(catalog, &[id]);

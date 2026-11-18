@@ -439,7 +439,7 @@ fn resolve_ghost(
         defender_hand: 0,
         hand_slots: catalog.config.hand_slots,
     };
-    let log = combat::simulate_with(
+    let mut log = combat::simulate_with(
         engine,
         &own_board,
         &ghost,
@@ -451,7 +451,10 @@ fn resolve_ghost(
     );
     state.next_instance_id = state.next_instance_id.max(log.next_instance_id);
     // 与真实战一致：落单座位自己的战斗日志副作用与持久成长/传染写回；
-    // 幽灵是已出局者的棋盘副本，任何改动都只留在克隆里。
+    // 幽灵是已出局者的棋盘副本，任何改动都只留在克隆里。两侧共用同一座位，
+    // 因此按阵营丢弃幽灵侧（side 1）的回手与复制副作用，避免写进落单玩家手牌。
+    log.hand_copies.retain(|copy| copy.side == 0);
+    log.hand_minions.retain(|recalled| recalled.side == 0);
     write_back_combat_log(catalog, state, &log);
     write_back_persistent(state, seat, &log.attacker_final);
 
@@ -953,6 +956,7 @@ mod tests {
         let mut log = empty_log();
         log.hand_minions.push(combat::CombatHandMinion {
             seat: 0,
+            side: 0,
             minion: recalled,
         });
         let next_id = state.next_instance_id;
@@ -964,6 +968,39 @@ mod tests {
         assert_eq!(minion.instance_id, next_id, "回手分配新的实例编号");
         assert_eq!(minion.stats.attack.growth, 2, "保留成长");
         assert_eq!(minion.stats.health.growth, 2, "保留成长");
+    }
+
+    #[test]
+    fn recalled_minion_is_dropped_when_persistent_hand_is_full() {
+        let catalog = test_catalog();
+        let (_, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
+        let card_id = catalog
+            .cards
+            .keys()
+            .next()
+            .expect("目录至少包含一张卡")
+            .clone();
+        while state.players[0].hand.len() < catalog.config.hand_slots {
+            let instance_id = state.next_instance_id;
+            state.next_instance_id = instance_id.saturating_add(1);
+            state.players[0]
+                .hand
+                .push(HandCard::effect(instance_id, &card_id));
+        }
+        let hands_before = state.players[0].hand.clone();
+
+        let mut log = empty_log();
+        log.hand_minions.push(combat::CombatHandMinion {
+            seat: 0,
+            side: 0,
+            minion: MinionInstance::new(&catalog, 42, &card_id, false),
+        });
+        write_back_combat_log(&catalog, &mut state, &log);
+
+        assert_eq!(
+            state.players[0].hand, hands_before,
+            "结算层手牌已满时丢弃回手"
+        );
     }
 
     #[test]
