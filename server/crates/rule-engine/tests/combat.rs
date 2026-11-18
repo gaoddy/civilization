@@ -987,13 +987,15 @@ fn combat_state_hash_matches_golden_baseline() {
     // 鱼纲、真菌界与原生生物界卡牌加入共享池后池条目变化，金标准再次同步。
     // 玩法扩充新增 106 张卡牌（池条目 346 张）后共享池再次变化，金标准同步；
     // 该场景只用自造卡 `combat-big` / `combat-small`，战斗行为本身未变。
+    // 新增 delayed_battlecry_used 字段（延迟战吼每实例只结算一次）后哈希编码
+    // 再增加一个布尔值，金标准同步。
     // 行为不变，任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
     let (mut engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "7987136f1153c8cd",
+        "bc8763b09076f509",
         "固定场景的 state_hash 金标准"
     );
 }

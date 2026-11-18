@@ -830,6 +830,9 @@ fn write_back_persistent(state: &mut GameState, seat: Seat, final_board: &[Minio
             .find(|minion| minion.instance_id == stored.instance_id)
         {
             stored.contagion = updated.contagion;
+            // 延迟战吼只在首次进入战斗时结算一次，标记必须回到持久棋盘，
+            // 否则每场战斗都会重放同一条战吼。
+            stored.delayed_battlecry_used |= updated.delayed_battlecry_used;
             for (stored_stat, updated_stat) in [
                 (&mut stored.stats.attack, &updated.stats.attack),
                 (&mut stored.stats.health, &updated.stats.health),

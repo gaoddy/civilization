@@ -1053,6 +1053,8 @@ impl BattleField {
                             hand_minion.reborn_used = false;
                             hand_minion.revive_used = false;
                             hand_minion.stealth_broken = false;
+                            // 回手后重新打出是一次新的入场，延迟战吼应可再次结算。
+                            hand_minion.delayed_battlecry_used = false;
                             self.hand_len[side] = self.hand_len[side].saturating_add(1);
                             self.hand_minions.push(CombatHandMinion {
                                 seat: self.seats[side],

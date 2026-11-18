@@ -96,6 +96,10 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 /// 不含最左侧随从时无法消费的 AI 缺陷（`ai::choose_pending` 沿棋盘后移），
 /// 机器人行为随之变化。基线冻结的仍是行为：任何算术、遍历顺序或随机流消耗
 /// 变化都会使哈希改变。
+///
+/// 2026-11-18 玩法扩充收尾后第四次重定：`MinionInstance` 新增延迟战吼结算
+/// 标记 `delayed_battlecry_used` 并计入 `state_hash`，修复同一实例每场战斗
+/// 重复结算延迟战吼的缺陷；仅哈希构成变化，模拟流程不变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

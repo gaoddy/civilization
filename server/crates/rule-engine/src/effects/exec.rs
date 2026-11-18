@@ -1192,6 +1192,8 @@ impl Engine {
         copy.attacks_left = 0;
         copy.cannot_attack = false;
         copy.sources.clear();
+        // 副本是新的入场，延迟战吼不继承来源的结算标记。
+        copy.delayed_battlecry_used = false;
         copy
     }
 
@@ -1316,6 +1318,9 @@ impl Engine {
     }
 
     /// 延迟战吼：招募阶段因目标在敌方而未结算的 `OnPlay` 效果。
+    ///
+    /// 每个实例只结算一次：首次尝试后即置 `delayed_battlecry_used`，后续战斗
+    /// 开始时不再重放。置位发生在执行前，避免效果内的再入触发重复结算。
     pub(crate) fn fire_delayed_battlecry(
         &self,
         field: &mut BattleField,
@@ -1325,6 +1330,9 @@ impl Engine {
         let Some(minion) = field.minion(id).cloned() else {
             return;
         };
+        if minion.delayed_battlecry_used {
+            return;
+        }
         let Some((side, _)) = field.locate(id) else {
             return;
         };
@@ -1333,6 +1341,12 @@ impl Engine {
             .into_iter()
             .filter(|effect| is_enemy_selector(&effect.selector))
             .collect();
+        if effects.is_empty() {
+            return;
+        }
+        if let Some(source) = field.minion_mut(id) {
+            source.delayed_battlecry_used = true;
+        }
         let ctx = EffectCtx {
             seat: field.seat(side),
             source: Some(id),
