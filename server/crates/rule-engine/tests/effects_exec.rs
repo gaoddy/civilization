@@ -614,6 +614,30 @@ fn grant_contagion_stacks_layer() {
 }
 
 #[test]
+fn grant_armor_keeps_layer_in_keyword_string() {
+    let (mut engine, mut state) = setup(11);
+    place(&engine.catalog, &mut state, 0, 1, "yezhu");
+
+    engine.apply_op(
+        &mut state,
+        &effect("OnCombatStart|GrantKeyword|friendly:all|keyword=armor 2,duration=combat"),
+        &ctx(0),
+        None,
+    );
+
+    let minion = board_minion(&state, 0, 0);
+    assert!(
+        minion.granted.iter().any(|(name, _)| name == "armor 2"),
+        "armor 层数应写入关键词字符串，而不是裸 armor"
+    );
+    assert_eq!(
+        combat::armor_value(&engine.catalog, minion),
+        2,
+        "战斗侧读取到授予的 2 点减伤"
+    );
+}
+
+#[test]
 fn golden_minion_played_from_hand_doubles_battlecry() {
     let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");

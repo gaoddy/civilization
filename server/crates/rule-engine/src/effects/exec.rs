@@ -664,6 +664,16 @@ impl Engine {
                 ("contagion", Some(count)) => {
                     minion.contagion = minion.contagion.saturating_add(*count);
                 }
+                // 减伤层数保存在关键词字符串 `armor N` 中，供 `combat::armor_value` 解析；
+                // 只记录裸 `armor` 会丢失 N。其余带层关键词暂无战斗侧读取方。
+                (combat::ARMOR, Some(count)) => {
+                    record_grant(
+                        minion,
+                        &format!("{} {count}", combat::ARMOR),
+                        duration,
+                        false,
+                    );
+                }
                 ("divine_shield", _) => {
                     record_grant(minion, name, duration, false);
                     minion.shield_used = false;
@@ -1263,6 +1273,15 @@ impl Engine {
                         }
                         ("contagion", Some(count)) => {
                             minion.contagion = minion.contagion.saturating_add(*count);
+                        }
+                        // 与招募期一致：`armor N` 的层数写进关键词字符串。
+                        (combat::ARMOR, Some(count)) => {
+                            record_grant(
+                                minion,
+                                &format!("{} {count}", combat::ARMOR),
+                                duration,
+                                false,
+                            );
                         }
                         ("divine_shield", _) => {
                             record_grant(minion, name, duration, false);

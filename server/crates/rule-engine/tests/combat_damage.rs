@@ -83,6 +83,63 @@ fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, ef
     );
 }
 
+/// 同时带关键词与效果技能的测试卡。
+fn add_effect_card_with_keywords(
+    catalog: &mut Catalog,
+    id: &str,
+    attack: i32,
+    health: i32,
+    keyword_list: &[&str],
+    effects: &str,
+) {
+    let mut skill_ids = Vec::new();
+    for (index, keyword) in keyword_list.iter().enumerate() {
+        let skill_id = format!("{id}-skill-{index}");
+        catalog.skills.insert(
+            skill_id.clone(),
+            Skill {
+                id: skill_id.clone(),
+                keyword: Some((*keyword).to_string()),
+                effects: effects_of("[]"),
+                cost: None,
+                uses_per_turn: None,
+            },
+        );
+        skill_ids.push(skill_id);
+    }
+    let effect_skill_id = format!("{id}-effect");
+    catalog.skills.insert(
+        effect_skill_id.clone(),
+        Skill {
+            id: effect_skill_id.clone(),
+            keyword: None,
+            effects: effects_of(effects),
+            cost: None,
+            uses_per_turn: None,
+        },
+    );
+    skill_ids.push(effect_skill_id);
+    catalog.cards.insert(
+        id.to_string(),
+        Card {
+            id: id.to_string(),
+            card_type: CardType::Minion,
+            playstyle: Playstyle::Mammal,
+            taxon: "hominidae".to_string(),
+            specialty: Vec::new(),
+            subtype: None,
+            level: 1,
+            era: None,
+            attack: Some(attack),
+            health: Some(health),
+            skills: skill_ids,
+            is_scholar: false,
+            is_hero: false,
+            cost: Some(1),
+        },
+    );
+}
+
 fn rng() -> RngStreams {
     RngStreams::from_seed([19u8; 32])
 }
@@ -411,6 +468,150 @@ fn armor_reduces_damage_and_does_not_block_contagion_tick() {
     assert_eq!(
         state.players[0].board[0].stats.health.current, 8,
         "传染 2 层掉 2 点生命，不受减伤影响"
+    );
+}
+
+/// 10) 反击剧毒：防守方带 poison 时，反击伤害后仍存活的攻击者被毒死，并进入死亡流程。
+#[test]
+fn counter_poison_kills_attacker_and_runs_death_effects() {
+    let mut catalog = test_catalog();
+    add_effect_card(
+        &mut catalog,
+        "martyr",
+        2,
+        10,
+        "OnDeath|DealDamage|enemy:all|amount=2",
+    );
+    add_card(&mut catalog, "venom", 1, 10, &["poison"]);
+
+    let (engine, _) = Engine::new(catalog, [29u8; 32], test_playstyles());
+    let attacker = minion(&engine.catalog, 1, "martyr");
+    let mut defender = minion(&engine.catalog, 2, "venom");
+    defender.cannot_attack = true;
+
+    let log = simulate_with(
+        &engine,
+        &[attacker],
+        &[defender],
+        0,
+        1,
+        0,
+        &mut rng(),
+        CombatSetup::default(),
+    );
+
+    assert!(log.attacker_survivors.is_empty(), "反击毒杀应让攻击者离场");
+    assert!(
+        log.actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Poisoned { target: 1 })),
+        "应记录一次针对攻击者的 Poisoned"
+    );
+    assert!(
+        log.actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Death { minion: 1 })),
+        "毒杀后进入死亡流程"
+    );
+    assert_eq!(
+        log.defender_final[0].stats.health.current, 6,
+        "攻击者亡语对敌方造成 2 点伤害（10 → 8 → 6）"
+    );
+}
+
+/// 11) 双方都带剧毒：主伤害毒死目标，反击毒死攻击者，双方同时离场。
+#[test]
+fn mutual_poison_kills_both() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "a", 1, 10, &["poison"]);
+    add_card(&mut catalog, "b", 1, 10, &["poison"]);
+
+    let attacker = minion(&catalog, 1, "a");
+    let mut defender = minion(&catalog, 2, "b");
+    defender.cannot_attack = true;
+
+    let log = simulate(&catalog, &[attacker], &[defender], 0, 1, 0, &mut rng());
+
+    assert!(log.attacker_survivors.is_empty(), "攻击者被反击毒死");
+    assert!(log.defender_survivors.is_empty(), "防守方被主伤害毒死");
+    let poisoned: Vec<InstanceId> = log
+        .actions
+        .iter()
+        .filter_map(|action| match action {
+            CombatAction::Poisoned { target } => Some(*target),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(poisoned, vec![2, 1], "主伤害与反击各触发一次剧毒");
+}
+
+/// 12) 减伤后的伤害仍然可以致死。
+#[test]
+fn armor_reduced_damage_can_still_kill() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "attacker", 5, 5, &[]);
+    add_card(&mut catalog, "armored", 0, 2, &["armor 3"]);
+
+    let attacker = minion(&catalog, 1, "attacker");
+    let mut armored = minion(&catalog, 2, "armored");
+    armored.cannot_attack = true;
+
+    let log = simulate(&catalog, &[attacker], &[armored], 0, 1, 0, &mut rng());
+
+    assert!(
+        log.defender_survivors.is_empty(),
+        "5 点伤害经减伤 3 后仍有 2 点，足以击杀 2 点生命"
+    );
+    assert_eq!(
+        attacks(&log)[0],
+        (1, 2, 2, false),
+        "攻击动作记录减伤后的实际伤害"
+    );
+}
+
+/// 13) 减伤把伤害降到 0：不触发剧毒，也不触发 `OnDealDamage`。
+#[test]
+fn armor_zero_gates_poison_and_on_deal_damage() {
+    let mut catalog = test_catalog();
+    add_effect_card_with_keywords(
+        &mut catalog,
+        "stinger",
+        1,
+        5,
+        &["poison"],
+        "OnDealDamage|Growth|self|times=1",
+    );
+    add_card(&mut catalog, "bulwark", 0, 5, &["armor 2"]);
+
+    let (engine, _) = Engine::new(catalog, [29u8; 32], test_playstyles());
+    let attacker = minion(&engine.catalog, 1, "stinger");
+    let mut defender = minion(&engine.catalog, 2, "bulwark");
+    defender.cannot_attack = true;
+
+    let log = simulate_with(
+        &engine,
+        &[attacker],
+        &[defender],
+        0,
+        1,
+        0,
+        &mut rng(),
+        CombatSetup::default(),
+    );
+
+    assert!(
+        !log.actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Poisoned { .. })),
+        "实际伤害为 0 时不触发剧毒"
+    );
+    assert_eq!(
+        log.attacker_final[0].stats.attack.growth, 0,
+        "实际伤害为 0 时不触发 OnDealDamage"
+    );
+    assert_eq!(
+        log.defender_final[0].stats.health.current, 5,
+        "目标生命不变"
     );
 }
 
