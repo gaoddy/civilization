@@ -1726,12 +1726,16 @@ impl Engine {
         match to {
             Zone::Hand => {
                 for id in targets {
+                    // 阵营取来源随从的真实 side，不能用座位反推：幽灵战两侧同座。
+                    let Some((side, _)) = field.locate(*id) else {
+                        continue;
+                    };
                     let Some(minion) = field.minion(*id) else {
                         continue;
                     };
                     let card_id = minion.card_id.clone();
                     let golden = minion.golden;
-                    field.record_hand_copy(ctx.seat, &card_id, golden);
+                    field.record_hand_copy(side, &card_id, golden);
                 }
             }
             Zone::Board => {

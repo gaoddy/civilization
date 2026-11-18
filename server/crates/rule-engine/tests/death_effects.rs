@@ -640,6 +640,45 @@ fn ghost_recall_is_not_written_into_solo_players_hand() {
 }
 
 #[test]
+fn ghost_copy_to_hand_is_not_written_into_solo_players_hand() {
+    let (mut engine, mut state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "ghost-copier",
+        Playstyle::Mammal,
+        0,
+        100,
+        &[(None, "OnCombatStart|Copy|self|to=hand")],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 10, 100, &[]);
+
+    state.phase = Phase::Combat;
+    state.turn = 2;
+    state.first_seat = 0;
+    state.last_winner = None;
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        ghost: Some(3),
+    }];
+    state.players[0]
+        .board
+        .push(minion(&engine.catalog, 1, "brute"));
+    state.players[3].eliminated = true;
+    state.players[3]
+        .board
+        .push(minion(&engine.catalog, 2, "ghost-copier"));
+
+    engine.resolve_combat(&mut state).expect("幽灵战应成功");
+
+    assert!(
+        state.players[0].hand.is_empty(),
+        "幽灵侧复制不得写进落单玩家手牌"
+    );
+    assert!(state.players[3].hand.is_empty(), "幽灵座位也不写回复制牌");
+}
+
+#[test]
 fn revive_does_not_replay_deathrattle_within_one_death_event() {
     let (mut engine, _state) = setup_with_gold(31);
     add_card(

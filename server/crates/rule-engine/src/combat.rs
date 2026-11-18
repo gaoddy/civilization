@@ -837,10 +837,11 @@ impl BattleField {
     }
 
     /// 记录一次复制进手牌；手牌已满时返回 `false`。
-    pub(crate) fn record_hand_copy(&mut self, seat: Seat, card_id: &str, golden: bool) -> bool {
-        let Some(side) = self.side_of(seat) else {
-            return false;
-        };
+    ///
+    /// `side` 由调用方按来源随从的真实阵营传入。不能用 `side_of(seat)` 反推：
+    /// 幽灵战两侧共用同一座位，反推会恒得到攻击方。
+    pub(crate) fn record_hand_copy(&mut self, side: usize, card_id: &str, golden: bool) -> bool {
+        let seat = self.seats[side];
         if self.hand_len[side] >= self.hand_slots {
             return false;
         }
