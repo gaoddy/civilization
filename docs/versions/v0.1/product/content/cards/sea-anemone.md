@@ -9,7 +9,7 @@ level: 2
 era: primitive
 attack: 2
 health: 3
-skills: [keyword-taunt, keyword-armor-1]
+skills: [keyword-armor-1]
 is_scholar: false
 ---
 
@@ -30,19 +30,19 @@ is_scholar: false
 | 时代 | 原始 |
 | 攻击力 | 2 |
 | 生命值 | 3 |
-| 关键词 | 嘲讽；减伤 1 |
-| 技能 | keyword-taunt；keyword-armor-1 |
+| 关键词 | 减伤 1 |
+| 技能 | keyword-armor-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-嘲讽；减伤 1：受到伤害时，减免 1 点伤害
+减伤 1：受到伤害时，减免 1 点伤害
 
 ## 设计说明
 
-定位：水螅纲的早期防守单位，嘲讽与减伤叠加提高生存。
-平衡边界：2 星 2/3，用嘲讽与减伤 1 换取属性。
+定位：水螅纲的早期防守单位，减伤提高生存。
+平衡边界：2 星 2/3，用减伤 1 换取属性。
 使用建议：放在前排吸收连击与低攻攻击，减伤对多次小伤害尤其有效。
 
 ## 出处

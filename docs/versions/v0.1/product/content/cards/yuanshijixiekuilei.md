@@ -9,6 +9,7 @@ level: 3
 era: primitive
 attack: 3
 health: 6
+skills: [keyword-assemble-1]
 is_scholar: false
 ---
 
@@ -29,14 +30,14 @@ is_scholar: false
 | 时代 | 原始 |
 | 攻击力 | 3 |
 | 生命值 | 6 |
-| 关键词 | 无 |
-| 技能 | 无 |
+| 关键词 | 装配 1 |
+| 技能 | keyword-assemble-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-无
+装配 1：进入战场时，使你的其他机械随从各获得 1 次成长
 
 ## 出处
 

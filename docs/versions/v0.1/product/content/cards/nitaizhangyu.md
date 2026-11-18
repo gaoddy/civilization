@@ -10,6 +10,7 @@ level: 2
 era: prehistoric
 attack: 2
 health: 5
+skills: [mimic-1]
 is_scholar: false
 ---
 
@@ -31,13 +32,13 @@ is_scholar: false
 | 攻击力 | 2 |
 | 生命值 | 5 |
 | 关键词 | 无 |
-| 技能 | 无 |
+| 技能 | mimic-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-无
+战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束
 
 ## 出处
 

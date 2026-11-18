@@ -9,6 +9,7 @@ level: 3
 era: feudal
 attack: 4
 health: 5
+skills: [keyword-windfury]
 is_scholar: false
 ---
 
@@ -29,14 +30,14 @@ is_scholar: false
 | 时代 | 封建 |
 | 攻击力 | 4 |
 | 生命值 | 5 |
-| 关键词 | 无 |
-| 技能 | 无 |
+| 关键词 | 连击 |
+| 技能 | keyword-windfury |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-无
+连击：每回合可攻击两次
 
 ## 出处
 

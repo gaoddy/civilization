@@ -9,6 +9,7 @@ level: 1
 era: prehistoric
 attack: 2
 health: 2
+skills: [dive-1]
 is_scholar: false
 ---
 
@@ -30,13 +31,13 @@ is_scholar: false
 | 攻击力 | 2 |
 | 生命值 | 2 |
 | 关键词 | 无 |
-| 技能 | 无 |
+| 技能 | dive-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-无
+俯冲：战斗开始时，对攻击力最低的敌方随从造成等同于自身攻击力的伤害
 
 ## 出处
 

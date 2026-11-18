@@ -9,6 +9,7 @@ level: 2
 era: prehistoric
 attack: 3
 health: 5
+skills: [keyword-taunt]
 is_scholar: false
 ---
 
@@ -29,14 +30,14 @@ is_scholar: false
 | 时代 | 史前 |
 | 攻击力 | 3 |
 | 生命值 | 5 |
-| 关键词 | 无 |
-| 技能 | 无 |
+| 关键词 | 嘲讽 |
+| 技能 | keyword-taunt |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-无
+嘲讽
 
 ## 出处
 

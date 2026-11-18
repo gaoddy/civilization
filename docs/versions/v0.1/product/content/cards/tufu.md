@@ -10,6 +10,7 @@ level: 2
 era: prehistoric
 attack: 3
 health: 4
+skills: [battlecry-friendly-plus-0-plus-1]
 is_scholar: false
 ---
 
@@ -30,14 +31,14 @@ is_scholar: false
 | 时代 | 史前 |
 | 攻击力 | 3 |
 | 生命值 | 4 |
-| 关键词 | 无 |
-| 技能 | 无 |
+| 关键词 | 战吼 |
+| 技能 | battlecry-friendly-plus-0-plus-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-无
+战吼：使一个友方随从获得 +0/+1
 
 ## 出处
 

@@ -618,6 +618,16 @@ def is_biological(doc):
     return root is not None and root not in (CRAFT_ID, PHENOMENON_ID)
 
 
+def effective_playstyle(doc):
+    """校验归属时使用的玩法：效果牌取 play: 关联，其余卡取自身 playstyle。"""
+    if doc.get("card_type") == "effect":
+        plays = [item.split(":", 1)[1] for item in doc.get("specialty") or []
+                 if item.startswith("play:")]
+        if len(plays) == 1:
+            return plays[0]
+    return doc.get("playstyle")
+
+
 def specialty_errors(doc):
     """解析并校验 specialty 列表：每条为 kind:value，kind ∈ play/prey/host，且不带空白。"""
     value = doc.get("specialty")
@@ -672,7 +682,13 @@ def classification_errors(doc):
         if taxon not in (None, PHENOMENON_ID):
             errors.append(f"{label}: 效果牌 taxon 必须为 {PHENOMENON_ID}，实为 {taxon!r}")
         if doc.get("specialty"):
-            errors.append(f"{label}: 效果牌 specialty 必须为空")
+            specialty = doc["specialty"]
+            plays = [item for item in specialty if item.startswith("play:")]
+            others = [item for item in specialty if not item.startswith("play:")]
+            if others:
+                errors.append(f"{label}: 效果牌 specialty 只允许 1 条 play: 关联，实为 {specialty!r}")
+            elif len(plays) > 1:
+                errors.append(f"{label}: 效果牌 specialty 只允许 1 条 play: 关联，实为 {len(plays)} 条")
     else:
         if playstyle == "neutral" and not is_scholar:
             if taxon is not None and taxon not in CRAFT_TOOL_TAXA:
@@ -687,9 +703,7 @@ def classification_errors(doc):
             continue
         prefix, target = item.split(":", 1)
         if prefix == "play":
-            if card_type == "effect":
-                errors.append(f"{label}: 效果牌不得写 {item!r}")
-            elif not (is_scholar or playstyle == "neutral"):
+            if card_type != "effect" and not (is_scholar or playstyle == "neutral"):
                 errors.append(f"{label}: play:{target} 只允许学者卡或中立非学者卡"
                               f"（本卡 playstyle={playstyle}）")
             if target not in PLAYSTYLE_IDS:
@@ -706,7 +720,7 @@ def keyword_errors(doc, keyword):
     """专属关键词的玩法/形态约束。"""
     label = card_label(doc)
     base = str(keyword).split()[0]
-    playstyle = doc.get("playstyle")
+    playstyle = effective_playstyle(doc)
     if base in KEYWORD_PLAYSTYLE:
         allowed = KEYWORD_PLAYSTYLE[base]
         if base == "assemble":
@@ -731,7 +745,7 @@ def keyword_errors(doc, keyword):
 def mechanism_errors(doc, skill_map):
     """新机制原语与选择器的玩法归属；技能解析错误由 check_skills 报告。"""
     label = card_label(doc)
-    playstyle = doc.get("playstyle")
+    playstyle = effective_playstyle(doc)
     errors = []
     for sid in card_skills(doc):
         skill = skill_map.get(sid)
@@ -755,6 +769,32 @@ def mechanism_errors(doc, skill_map):
             if allowed is not None and playstyle not in allowed:
                 errors.append(f"{label}: 选择器 {pick} 只允许 playstyle ∈ {sorted(allowed)}，"
                               f"实为 {playstyle!r}")
+    return errors
+
+
+def skill_count_errors(doc, skill_map):
+    """随从技能数量上限与无技能工具卡约束。"""
+    label = card_label(doc)
+    skills = card_skills(doc)
+    if not skills:
+        if (doc.get("playstyle") == "neutral"
+                and doc.get("is_scholar") is not True
+                and doc.get("taxon") in CRAFT_TOOL_TAXA):
+            return []
+        return [f"{label}: 无技能随从只允许中立非学者工具卡"]
+    level = doc.get("level")
+    errors = []
+    if level in (1, 2) and len(skills) > 1:
+        errors.append(f"{label}: {level} 星最多 1 个技能，实为 {len(skills)} 个")
+    elif level in (3, 4) and len(skills) > 2:
+        errors.append(f"{label}: {level} 星最多 2 个技能，实为 {len(skills)} 个")
+    elif level in (5, 6, 7):
+        if len(skills) > 3:
+            errors.append(f"{label}: {level} 星最多 3 个技能，实为 {len(skills)} 个")
+        keywords = [sid for sid in skills
+                    if (skill_map.get(sid) or {}).get("keyword")]
+        if len(keywords) > 2:
+            errors.append(f"{label}: {level} 星最多 2 个登记关键词，实为 {len(keywords)} 个")
     return errors
 
 
@@ -1217,8 +1257,8 @@ def check_cards(skill_map):
     effects = [c for c in raw if c["card_type"] == "effect"]
 
     skillless = [c for c in minions if not card_skills(c)]
-    if len(skillless) != 7:
-        fail(f"无技能随从 {len(skillless)} 张，期望 7 张（skills 缺失或为空）")
+    if len(skillless) != 1:
+        fail(f"无技能随从 {len(skillless)} 张，期望 1 张（仅中立工具卡）")
     for c in skillless:
         if body_text(ROOT / "cards" / c["_file"]) != "无":
             fail(f"{c['_file']}: 无技能随从的「## 效果」必须为「无」")
@@ -1234,6 +1274,8 @@ def check_cards(skill_map):
         if c["level"] not in RANGE:
             fail(f"{name}: 星级非法 {c['level']!r}")
             continue
+        for message in skill_count_errors(c, skill_map):
+            fail(message)
         if c["is_scholar"] and c["attack"] != 0:
             fail(f"{name}: 学者攻击力必须为 0")
         if c["is_scholar"]:

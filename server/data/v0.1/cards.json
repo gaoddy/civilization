@@ -2715,7 +2715,6 @@
     "level": 2,
     "playstyle": "plant",
     "skills": [
-      "keyword-sow",
       "keyword-breed-2"
     ],
     "specialty": [],
@@ -3930,7 +3929,9 @@
     "is_scholar": false,
     "level": 2,
     "playstyle": "cephalopod",
-    "skills": [],
+    "skills": [
+      "mimic-1"
+    ],
     "specialty": [
       {
         "kind": "prey",
@@ -4936,7 +4937,6 @@
     "level": 2,
     "playstyle": "cnidarian",
     "skills": [
-      "keyword-taunt",
       "keyword-armor-1"
     ],
     "specialty": [],
@@ -5193,7 +5193,9 @@
     "is_scholar": false,
     "level": 1,
     "playstyle": "bird",
-    "skills": [],
+    "skills": [
+      "dive-1"
+    ],
     "specialty": [],
     "subtype": "bird",
     "taxon": "archaeopterygidae"
@@ -5269,7 +5271,6 @@
     "level": 2,
     "playstyle": "plant",
     "skills": [
-      "keyword-sow",
       "keyword-breed-1"
     ],
     "specialty": [],
@@ -5310,7 +5311,9 @@
     "is_scholar": false,
     "level": 2,
     "playstyle": "mammal",
-    "skills": [],
+    "skills": [
+      "keyword-taunt"
+    ],
     "specialty": [],
     "subtype": "unit",
     "taxon": "hominidae"
@@ -5915,7 +5918,9 @@
     "is_scholar": false,
     "level": 2,
     "playstyle": "mammal",
-    "skills": [],
+    "skills": [
+      "battlecry-friendly-plus-0-plus-1"
+    ],
     "specialty": [
       {
         "kind": "prey",
@@ -6251,7 +6256,9 @@
     "is_scholar": false,
     "level": 3,
     "playstyle": "mammal",
-    "skills": [],
+    "skills": [
+      "keyword-windfury"
+    ],
     "specialty": [],
     "subtype": "unit",
     "taxon": "hominidae"
@@ -6658,7 +6665,9 @@
     "is_scholar": false,
     "level": 3,
     "playstyle": "machine",
-    "skills": [],
+    "skills": [
+      "keyword-assemble-1"
+    ],
     "specialty": [],
     "subtype": "puppet",
     "taxon": "automation"
