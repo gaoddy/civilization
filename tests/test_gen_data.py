@@ -24,7 +24,7 @@ class GenCardDataTest(unittest.TestCase):
 
     def test_skills_and_tokens(self):
         out = gen_card_data.build(ROOT)
-        self.assertEqual(len(json.loads(out["skills.json"])), 192)
+        self.assertEqual(len(json.loads(out["skills.json"])), 193)
         tokens = json.loads(out["tokens.json"])
         ids = [t["id"] for t in tokens]
         self.assertEqual(ids, sorted(ids))
@@ -62,7 +62,7 @@ class GenClientDataTest(unittest.TestCase):
         cards = json.loads(data["cards.json"])
         skills = json.loads(data["skills.json"])
         self.assertEqual(len(cards), 340)
-        self.assertEqual(len(skills), 192)
+        self.assertEqual(len(skills), 193)
         self.assertEqual(sum(card["is_hero"] for card in cards), 32)
         self.assertEqual([card["id"] for card in cards], sorted(card["id"] for card in cards))
 

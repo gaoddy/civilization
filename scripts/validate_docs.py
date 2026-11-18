@@ -1066,8 +1066,8 @@ def check_skills():
     global KEYWORD_LABELS
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 192:
-        fail(f"技能数量 {len(skills)}，期望 192")
+    if len(skills) != 193:
+        fail(f"技能数量 {len(skills)}，期望 193")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")

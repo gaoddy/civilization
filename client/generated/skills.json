@@ -2772,6 +2772,27 @@
     "uses_per_turn": null
   },
   {
+    "cost": null,
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 8
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "lowest_attack",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "dive-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
     "cost": 1,
     "effects": [
       {

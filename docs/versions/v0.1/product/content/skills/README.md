@@ -1,6 +1,6 @@
 # 技能索引
 
-本文索引 v0.1 的 192 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.1。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
+本文索引 v0.1 的 193 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.1。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
 
 | 技能 | 关键词 | 文本 | 引用数 |
 | --- | --- | --- | --- |
@@ -122,6 +122,7 @@
 | [devour-2](devour-2.md) | 无 | 吞噬：战斗开始时，消灭一个攻击力不高于 2 的敌方随从，永久获得其攻击力与生命值 | 1 |
 | [devour-3](devour-3.md) | 无 | 吞噬：战斗开始时，消灭一个攻击力不高于 3 的敌方随从，永久获得其攻击力与生命值 | 2 |
 | [devour-4](devour-4.md) | 无 | 吞噬：战斗开始时，消灭一个攻击力不高于 4 的敌方随从，永久获得其攻击力与生命值 | 2 |
+| [dive-1](dive-1.md) | 无 | 俯冲：战斗开始时，对攻击力最低的敌方随从造成等同于自身攻击力的伤害 | 1 |
 | [division-of-labor](division-of-labor.md) | 无 | 使一个友方人科随从获得一次成长；若你控制至少 3 个人科随从，改为两次 | 1 |
 | [efficient-algorithm](efficient-algorithm.md) | 无 | 刷新商店并获得一张当前星级的随从 | 1 |
 | [enemy-random-cannot-attack](enemy-random-cannot-attack.md) | 无 | 使随机一个敌方随从本回合无法攻击 | 1 |
@@ -141,7 +142,7 @@
 | [keyword-contagion](keyword-contagion.md) | contagion | 传染：造成伤害后，目标每回合 -1 生命 | 13 |
 | [keyword-divine-shield](keyword-divine-shield.md) | divine_shield | 护盾：抵消一次伤害 | 7 |
 | [keyword-evolve](keyword-evolve.md) | evolve | 进化：从 +2/+2、护盾、复生中选择一个 | 6 |
-| [keyword-optimal-attack](keyword-optimal-attack.md) | optimal_attack | 最优攻击：无视嘲讽，优先攻击可被击杀的目标 | 13 |
+| [keyword-optimal-attack](keyword-optimal-attack.md) | optimal_attack | 最优攻击：无视嘲讽，优先攻击可被击杀的目标 | 12 |
 | [keyword-poison](keyword-poison.md) | poison | 剧毒：造成伤害后，若目标仍存活则将其消灭 | 8 |
 | [keyword-reborn](keyword-reborn.md) | reborn | 复生：以 1 点生命复活一次 | 7 |
 | [keyword-sow](keyword-sow.md) | sow | 播种：死亡时召唤一个 1/1 的幼苗 | 16 |
