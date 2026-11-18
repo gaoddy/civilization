@@ -220,6 +220,10 @@
             "required": ["kind"],
             "properties": {
               "kind": { "type": "string", "description": "动作类型，具体取值由规则引擎实现确定" },
+              "cardId": {
+                "type": ["string", "null"],
+                "description": "动作直接涉及的卡牌 id（如零件回收获得的牌）；没有卡牌载荷的动作省略"
+              },
               "sourceIndex": { "type": ["integer", "null"] },
               "targetIndex": { "type": ["integer", "null"] },
               "damage": { "type": ["integer", "null"] },

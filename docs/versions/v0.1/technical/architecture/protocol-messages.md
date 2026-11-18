@@ -93,6 +93,7 @@
 | `opponentBoard` | array<BoardMinion> | 是 |  |
 | `actions` | array<object> | 是 |  |
 | `actions[].kind` | string | 是 | 动作类型，具体取值由规则引擎实现确定 |
+| `actions[].cardId` | string | null | 否 | 动作直接涉及的卡牌 id（如零件回收获得的牌）；没有卡牌载荷的动作省略 |
 | `actions[].sourceIndex` | integer | null | 否 |  |
 | `actions[].targetIndex` | integer | null | 否 |  |
 | `actions[].damage` | integer | null | 否 |  |

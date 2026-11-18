@@ -293,6 +293,7 @@ fn combat_action(
             let target_slot = locate(report, *target);
             CombatResultActionsItem {
                 damage: Some(if *blocked { 0 } else { i64::from(*damage) }),
+                card_id: None,
                 kind: "attack".to_string(),
                 source: state_at(states, 0),
                 source_index: attacker_slot.map(|(index, _)| index as i64),
@@ -309,6 +310,7 @@ fn combat_action(
             let slot = locate(report, *minion);
             CombatResultActionsItem {
                 damage: None,
+                card_id: None,
                 kind: "death".to_string(),
                 source: None,
                 source_index: slot.map(|(index, _)| index as i64),
@@ -325,6 +327,7 @@ fn combat_action(
             let slot = locate(report, *minion);
             CombatResultActionsItem {
                 damage: None,
+                card_id: None,
                 kind: "reborn".to_string(),
                 source: None,
                 source_index: slot.map(|(index, _)| index as i64),
@@ -341,6 +344,7 @@ fn combat_action(
             let slot = locate(report, *target);
             CombatResultActionsItem {
                 damage: None,
+                card_id: None,
                 kind: "contagion".to_string(),
                 source: None,
                 source_index: None,
@@ -357,6 +361,7 @@ fn combat_action(
             let slot = locate(report, *target);
             CombatResultActionsItem {
                 damage: None,
+                card_id: None,
                 kind: "poison".to_string(),
                 source: None,
                 source_index: None,
@@ -374,6 +379,7 @@ fn combat_action(
             let target_slot = locate(report, *target);
             CombatResultActionsItem {
                 damage: None,
+                card_id: None,
                 kind: "mimic".to_string(),
                 source: state_at(states, 0),
                 source_index: source_slot.map(|(index, _)| index as i64),
@@ -391,6 +397,7 @@ fn combat_action(
             let target_slot = locate(report, *target);
             CombatResultActionsItem {
                 damage: None,
+                card_id: None,
                 kind: "devour".to_string(),
                 source: state_at(states, 0),
                 source_index: source_slot.map(|(index, _)| index as i64),
@@ -407,6 +414,7 @@ fn combat_action(
             let slot = locate(report, *target);
             CombatResultActionsItem {
                 damage: Some(i64::from(*damage)),
+                card_id: None,
                 kind: "detonate".to_string(),
                 source: None,
                 source_index: None,
@@ -423,6 +431,7 @@ fn combat_action(
             let slot = locate(report, *target);
             CombatResultActionsItem {
                 damage: None,
+                card_id: None,
                 kind: "convert".to_string(),
                 source: None,
                 source_index: None,
@@ -439,6 +448,7 @@ fn combat_action(
             let slot = locate(report, *minion);
             CombatResultActionsItem {
                 damage: None,
+                card_id: None,
                 kind: "revive".to_string(),
                 source: None,
                 source_index: slot.map(|(index, _)| index as i64),
@@ -455,6 +465,7 @@ fn combat_action(
             let slot = locate(report, *minion);
             CombatResultActionsItem {
                 damage: None,
+                card_id: None,
                 kind: "recall".to_string(),
                 source: None,
                 source_index: slot.map(|(index, _)| index as i64),
@@ -467,8 +478,9 @@ fn combat_action(
                 target_side: None,
             }
         }
-        CombatAction::Salvaged { seat, .. } => CombatResultActionsItem {
+        CombatAction::Salvaged { seat, card_id } => CombatResultActionsItem {
             damage: None,
+            card_id: Some(card_id.clone()),
             kind: "salvage".to_string(),
             source: None,
             source_index: None,
@@ -508,6 +520,7 @@ fn combat_action(
             }
             CombatResultActionsItem {
                 damage: None,
+                card_id: None,
                 kind: "summon".to_string(),
                 source: None,
                 source_index: None,
