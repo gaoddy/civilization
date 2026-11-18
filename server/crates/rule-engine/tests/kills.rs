@@ -610,6 +610,21 @@ fn infected(mut minion: MinionInstance, layers: i32) -> MinionInstance {
     minion
 }
 
+/// 注册一个 2/2 细菌 Token，供转化召唤测试使用。
+fn add_germ_token(engine: &mut Engine) {
+    engine.catalog.tokens.insert(
+        "germ".to_string(),
+        Token {
+            id: "germ".to_string(),
+            attack: 2,
+            health: 2,
+            keywords: Vec::new(),
+            playstyle: Some(Playstyle::Bacteria),
+            taxon: None,
+        },
+    );
+}
+
 #[test]
 fn detonate_consumes_layers_and_deals_per_layer_damage() {
     let (mut engine, _state) = setup_with_gold(31);
@@ -729,17 +744,7 @@ fn detonate_with_zero_layers_is_silent() {
 #[test]
 fn convert_requires_threshold_and_summons_token_for_source() {
     let (mut engine, _state) = setup_with_gold(31);
-    engine.catalog.tokens.insert(
-        "germ".to_string(),
-        Token {
-            id: "germ".to_string(),
-            attack: 2,
-            health: 2,
-            keywords: Vec::new(),
-            playstyle: Some(Playstyle::Bacteria),
-            taxon: None,
-        },
-    );
+    add_germ_token(&mut engine);
     add_card(
         &mut engine,
         "converter",
@@ -792,6 +797,141 @@ fn convert_requires_threshold_and_summons_token_for_source() {
         .expect("来源方棋盘应召唤 Token");
     assert_eq!(token.stats.attack.current, 2);
     assert_eq!(token.stats.health.current, 2, "召唤的是 2/2 细菌 Token");
+    assert_eq!(
+        final_minion(&reached, 2).contagion,
+        3,
+        "转化是门槛，不消耗层数"
+    );
+}
+
+#[test]
+fn convert_destroys_through_shield_and_armor() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_germ_token(&mut engine);
+    add_card(
+        &mut engine,
+        "converter",
+        0,
+        10,
+        &[(
+            None,
+            "OnCombatStart|Convert|enemy:single|threshold=1,token=germ,count=1",
+        )],
+    );
+    add_card(
+        &mut engine,
+        "tank",
+        0,
+        10,
+        &[(Some("divine_shield"), "[]"), (Some("armor 4"), "[]")],
+    );
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "converter")],
+        &[infected(minion(&engine.catalog, 2, "tank"), 1)],
+        0,
+    );
+
+    assert!(deaths(&log).contains(&2), "护盾与减伤不能阻止转化");
+    let tank = final_minion(&log, 2);
+    assert_eq!(tank.stats.health.current, 0);
+    assert!(!tank.shield_used, "转化不消耗护盾");
+}
+
+#[test]
+fn convert_target_that_leaves_after_selection_is_silent() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_germ_token(&mut engine);
+    add_card(
+        &mut engine,
+        "converter",
+        0,
+        10,
+        &[
+            (
+                None,
+                "OnCombatStart|Convert|enemy:all|threshold=1,token=germ,count=1",
+            ),
+            // 第一次转化召唤后，来源随从吞噬剩余敌人，使第二个已选目标在
+            // 轮到它结算前离场。
+            (None, "OnAllySummon|Devour|enemy:all|value=99"),
+        ],
+    );
+    add_card(&mut engine, "prey-a", 0, 10, &[]);
+    add_card(&mut engine, "prey-b", 0, 10, &[]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "converter")],
+        &[
+            infected(minion(&engine.catalog, 2, "prey-a"), 1),
+            infected(minion(&engine.catalog, 3, "prey-b"), 1),
+        ],
+        0,
+    );
+
+    let converted: Vec<InstanceId> = log
+        .actions
+        .iter()
+        .filter_map(|action| match action {
+            CombatAction::Converted { target, .. } => Some(*target),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(converted, vec![2], "第二个目标已离场，转化静默落空");
+    assert_eq!(final_minion(&log, 3).contagion, 1, "未结算的目标不消耗层数");
+    assert_eq!(
+        log.attacker_final
+            .iter()
+            .filter(|minion| minion.card_id == "germ")
+            .count(),
+        1,
+        "已离场的目标不再召唤 Token"
+    );
+}
+
+#[test]
+fn convert_summons_token_on_real_source_side_in_ghost_battle() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_germ_token(&mut engine);
+    add_card(
+        &mut engine,
+        "ghost-converter",
+        0,
+        10,
+        &[(
+            None,
+            "OnCombatStart|Convert|both:all|threshold=1,token=germ,count=1",
+        )],
+    );
+    add_card(&mut engine, "prey", 0, 10, &[]);
+
+    // 幽灵战两侧共用同一座位，side 1 的转化仍应把 Token 召回到 side 1。
+    // `both:all` 让幽灵侧能选中真实玩家（side 0）的单位；自身会被阵营检查跳过。
+    let log = simulate_with(
+        &engine,
+        &[infected(minion(&engine.catalog, 1, "prey"), 1)],
+        &[minion(&engine.catalog, 2, "ghost-converter")],
+        0,
+        0,
+        0,
+        &mut RngStreams::from_seed([17u8; 32]),
+        CombatSetup::default(),
+    );
+
+    assert!(
+        log.defender_final
+            .iter()
+            .any(|minion| minion.card_id == "germ"),
+        "Token 应召唤在来源方（side 1）棋盘"
+    );
+    assert!(
+        !log.attacker_final
+            .iter()
+            .any(|minion| minion.card_id == "germ"),
+        "幽灵侧转化不得把 Token 召唤到真实玩家棋盘"
+    );
 }
 
 #[test]

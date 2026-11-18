@@ -1731,8 +1731,8 @@ impl Engine {
 
     /// 战斗内转化：目标层数达到阈值时致死，并在来源方棋盘召唤 Token。
     ///
-    /// 致死不经过护盾判定，层数作为门槛保留、不消耗。先结算死亡腾出槽位，
-    /// 再走既有召唤路径，因此召唤仍受战场槽位限制。
+    /// 致死不经过护盾判定，层数作为门槛保留、不消耗。召唤走既有路径并使用
+    /// 来源随从的真实 side；目标死亡留到外层 effect 结算，不提前触发死亡钩子。
     fn apply_combat_convert(
         &self,
         field: &mut BattleField,
@@ -1774,8 +1774,9 @@ impl Engine {
                 },
                 states,
             );
-            field.resolve_deaths(Some(self), &self.catalog, rng);
-            self.apply_combat_summon(field, rng, effect, ctx);
+            // 目标死亡交由外层 effect 结算；召唤使用来源随从的真实 side，
+            // 幽灵战两侧同座时不会退回 side 0。
+            self.apply_combat_summon_on_side(field, rng, effect, ctx, source_side);
         }
     }
 
@@ -1816,6 +1817,18 @@ impl Engine {
         let Some(side) = field.side_of(ctx.seat) else {
             return;
         };
+        self.apply_combat_summon_on_side(field, rng, effect, ctx, side);
+    }
+
+    /// 在指定阵营召唤；`side` 必须是来源随从的真实 side，供幽灵战同座场景使用。
+    fn apply_combat_summon_on_side(
+        &self,
+        field: &mut BattleField,
+        rng: &mut RngStreams,
+        effect: &Effect,
+        ctx: &EffectCtx,
+        side: usize,
+    ) {
         let count = effect.params.count.unwrap_or(1).max(0);
         let adjacent = matches!(
             effect.selector,
