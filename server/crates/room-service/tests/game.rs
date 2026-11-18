@@ -1317,10 +1317,10 @@ fn combat_log_ghost_entry_has_single_participant() {
     // 在少数回合内出现。种子决定配对，扫描保证可复现。
     //
     // 单个种子不保证同时出现「幽灵战失利」与「幽灵战获胜」，因此扫描
-    // 0..=64；扩大该范围说明引擎配对/淘汰节奏已变化，需要重新调整夹具参数。
+    // 0..=256；反击规则调整后战斗结果变化，扩大范围以重新覆盖两种幽灵战结果。
     let mut ghost_loss = None;
     let mut ghost_win = None;
-    for seed in 0..=64u64 {
+    for seed in 0..=256u64 {
         let (mut task, clock) = task_with_seed_and_hp(seed, 2);
         for seat in 0..8 {
             play_one_minion(&mut task, seat, &format!("ghost-{seed}"));
@@ -1351,7 +1351,7 @@ fn combat_log_ghost_entry_has_single_participant() {
         }
     }
 
-    let loss = ghost_loss.expect("需要调整夹具参数：种子 0..=64 内应出现一场幽灵战失利");
+    let loss = ghost_loss.expect("需要调整夹具参数：种子 0..=256 内应出现一场幽灵战失利");
     assert!(loss.mirror, "幽灵战必须标记 mirror");
     assert_eq!(loss.participant_ids.len(), 1, "幽灵战只有对战方一个玩家 id");
     assert_eq!(
@@ -1369,7 +1369,7 @@ fn combat_log_ghost_entry_has_single_participant() {
     assert!(loss.damage > 0, "幽灵战失利必须造成伤害");
     assert!(loss.turn.get() <= 20, "战报回合号不超过对局回合上限");
 
-    let win = ghost_win.expect("需要调整夹具参数：种子 0..=64 内应出现一场幽灵战获胜");
+    let win = ghost_win.expect("需要调整夹具参数：种子 0..=256 内应出现一场幽灵战获胜");
     assert!(win.mirror, "幽灵战必须标记 mirror");
     assert_eq!(win.participant_ids.len(), 1, "幽灵战只有对战方一个玩家 id");
     assert_eq!(

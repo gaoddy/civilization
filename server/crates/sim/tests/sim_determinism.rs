@@ -89,9 +89,9 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 
 /// 批次最终哈希必须与固定基线一致。
 ///
-/// 本基线因卡片分类与玩法体系落地而重定：开局玩法进入 `GameState` 并参与状态哈希，
-/// 英雄分配与商店池也按玩法过滤，故哈希值变化不代表结算行为变化。基线冻结的仍是行为：
-/// 任何算术、遍历顺序或随机流消耗变化都会使哈希改变。
+/// 本基线因卡片分类与玩法体系落地而重定，之后又因「目标被主伤害击杀后仍反击」
+/// 的规则调整再次重定：反击进入更多交换，战斗结果与随机流消耗随之变化。
+/// 基线冻结的仍是行为：任何算术、遍历顺序或随机流消耗变化都会使哈希改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
