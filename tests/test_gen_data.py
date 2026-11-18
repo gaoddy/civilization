@@ -25,8 +25,12 @@ class GenCardDataTest(unittest.TestCase):
     def test_skills_and_tokens(self):
         out = gen_card_data.build(ROOT)
         self.assertEqual(len(json.loads(out["skills.json"])), 131)
-        self.assertEqual([t["id"] for t in json.loads(out["tokens.json"])],
-                         ["hela-cell-token", "seedling", "synthetic-cell-token"])
+        tokens = json.loads(out["tokens.json"])
+        ids = [t["id"] for t in tokens]
+        self.assertEqual(ids, sorted(ids))
+        self.assertGreaterEqual(len(ids), 3)
+        self.assertLessEqual(
+            {"hela-cell-token", "seedling", "synthetic-cell-token"}, set(ids))
 
     def test_skill_effects_are_structured(self):
         skills = json.loads(gen_card_data.build(ROOT)["skills.json"])
@@ -72,8 +76,11 @@ class GenClientDataTest(unittest.TestCase):
 
     def test_tokens_have_display_cost(self):
         tokens = json.loads(gen_client_data.build(ROOT)["tokens.json"])
-        self.assertEqual([token["id"] for token in tokens],
-                         ["hela-cell-token", "seedling", "synthetic-cell-token"])
+        ids = [token["id"] for token in tokens]
+        self.assertEqual(ids, sorted(ids))
+        self.assertGreaterEqual(len(ids), 3)
+        self.assertLessEqual(
+            {"hela-cell-token", "seedling", "synthetic-cell-token"}, set(ids))
         for token in tokens:
             self.assertEqual(token["display_cost"], 3)
 

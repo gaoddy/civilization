@@ -153,7 +153,8 @@ CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
              "contagion": 3, "reborn": 4, "divine_shield": 5,
              "poison": 1, "armor": 1, "stealth": 1}
-# 新关键词的卡牌数据分批加入；未出现前不要求其已出现，出现后仍校验最小星级。
+# TODO(Task 15): 新关键词的卡牌数据落地后删除该常量，并把三个关键词改为硬校验。
+# 在此之前，关键词未出现时不要求其已出现，出现后仍校验最小星级。
 KW_UNLOCK_PENDING = {"poison", "armor", "stealth"}
 EXPECT_ERA = {"prehistoric": 28, "primitive": 26, "classical": 20, "feudal": 40,
               "industrial": 32, "modern": 54, "future": 40}
@@ -389,6 +390,8 @@ def parse_effects(value):
             if len(parts) > 1 and parts[1] == "adjacent" \
                     and trigger not in ("Aura", "ConditionalAura"):
                 errors.append(f"相邻选择器只能用于光环，实为 {trigger}（{chunk}）")
+            if len(parts) > 1 and parts[1] == "adjacent" and parts[0] != "friendly":
+                errors.append(f"相邻选择器必须以 friendly: 开头，实为 {selector!r}（{chunk}）")
         if CROWD_PARAMS & set(params) and trigger not in ("Aura", "ConditionalAura"):
             errors.append(f"群聚参数 {sorted(CROWD_PARAMS & set(params))} 只能用于光环（{chunk}）")
         if trigger in ("Aura", "ConditionalAura") and op not in AURA_OPS:

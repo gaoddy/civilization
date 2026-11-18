@@ -180,6 +180,13 @@ class PlaystyleMechanicsTest(unittest.TestCase):
         good = self._yaml("id: ok-mimic\nplaystyle: cephalopod\nskills: [test-mimic]")
         self.assertEqual(vd.mechanism_errors(good, skill_map), [])
 
+    def test_adjacent_selector_requires_friendly_side(self):
+        effects, errors = vd.parse_effects("Aura|ModifyStats|enemy:adjacent|attack=1")
+        self.assertEqual(effects, [])
+        self.assertTrue(any("friendly" in e for e in errors))
+        effects, errors = vd.parse_effects("Aura|ModifyStats|friendly:adjacent|attack=1")
+        self.assertEqual(errors, [])
+
 
 if __name__ == "__main__":
     unittest.main()
