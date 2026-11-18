@@ -302,10 +302,20 @@ fn neutral_generic_card_always_available() {
 #[test]
 fn targeted_effect_follows_enabled_playstyle_through_shop_roll() {
     // 真实卡表：yangliu 是鱼纲定向 1 星效果牌，dishengxiyu 是通用 1 星效果牌。
-    let no_fish = [Playstyle::Mammal, Playstyle::Bird, Playstyle::Plant,
-                   Playstyle::Insect, Playstyle::Virus];
-    let with_fish = [Playstyle::Mammal, Playstyle::Fish, Playstyle::Plant,
-                     Playstyle::Insect, Playstyle::Virus];
+    let no_fish = [
+        Playstyle::Mammal,
+        Playstyle::Bird,
+        Playstyle::Plant,
+        Playstyle::Insect,
+        Playstyle::Virus,
+    ];
+    let with_fish = [
+        Playstyle::Mammal,
+        Playstyle::Fish,
+        Playstyle::Plant,
+        Playstyle::Insect,
+        Playstyle::Virus,
+    ];
 
     let (mut engine, mut state) = setup_with(test_catalog(), no_fish);
     only_first_star(&mut engine);
