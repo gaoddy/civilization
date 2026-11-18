@@ -5,6 +5,7 @@
 | 技能 | 关键词 | 文本 | 引用数 |
 | --- | --- | --- | --- |
 | [alternating-current](alternating-current.md) | 无 | 使一个友方随从获得最优攻击直到回合结束 | 1 |
+| [aura-adjacent-mammal](aura-adjacent-mammal.md) | 无 | 相邻的友方哺乳纲随从获得 +2/+2 | 1 |
 | [aura-all-plus-0-plus-1](aura-all-plus-0-plus-1.md) | 无 | 你的随从获得 +0/+1 | 3 |
 | [aura-all-plus-0-plus-2](aura-all-plus-0-plus-2.md) | 无 | 你的随从获得 +0/+2 | 1 |
 | [aura-biology-plus-0-plus-1](aura-biology-plus-0-plus-1.md) | 无 | 你的动物随从获得 +0/+1 | 1 |
@@ -41,7 +42,6 @@
 | [battlecry-friendly-growth-plant-twice](battlecry-friendly-growth-plant-twice.md) | battlecry | 战吼：使一个友方随从获得一次成长；若其为植物，改为两次 | 1 |
 | [battlecry-friendly-growth-scholar-twice](battlecry-friendly-growth-scholar-twice.md) | battlecry | 战吼：使一个友方随从获得一次成长；若其为学者，改为两次 | 1 |
 | [battlecry-friendly-growth-twice](battlecry-friendly-growth-twice.md) | battlecry | 战吼：使一个友方随从获得两次成长 | 4 |
-| [battlecry-friendly-human-growth-twice](battlecry-friendly-human-growth-twice.md) | 战吼 | 战吼：使一个友方人科随从获得两次成长 | 1 |
 | [battlecry-friendly-human-plus-0-plus-1](battlecry-friendly-human-plus-0-plus-1.md) | battlecry | 战吼：使一个友方人科随从获得 +0/+1 | 1 |
 | [battlecry-friendly-mech-growth-once](battlecry-friendly-mech-growth-once.md) | battlecry | 战吼：使一个友方机械随从获得一次成长 | 2 |
 | [battlecry-friendly-plant-growth-once](battlecry-friendly-plant-growth-once.md) | battlecry | 战吼：使一个友方植物随从获得一次成长 | 1 |

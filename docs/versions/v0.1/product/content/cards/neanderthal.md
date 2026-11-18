@@ -9,7 +9,7 @@ level: 4
 era: prehistoric
 attack: 5
 health: 8
-skills: [battlecry-friendly-human-growth-twice]
+skills: [aura-adjacent-mammal]
 is_scholar: false
 ---
 
@@ -30,20 +30,20 @@ is_scholar: false
 | 时代 | 史前 |
 | 攻击力 | 5 |
 | 生命值 | 8 |
-| 关键词 | 战吼 |
-| 技能 | battlecry-friendly-human-growth-twice |
+| 关键词 | 无 |
+| 技能 | aura-adjacent-mammal |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-战吼：使一个友方人科随从获得两次成长
+相邻的友方哺乳纲随从获得 +2/+2
 
 ## 设计说明
 
-定位：哺乳纲的人科成长单位，为人类体系提供中期成长。
-平衡边界：4 星 5/8，两次成长折算后落在 4 星上限内。
-使用建议：先铺人科随从再打出，把人科前排的成长滚起来。
+定位：哺乳纲的相邻光环单位，放大站位两侧的同玩法随从。
+平衡边界：4 星 5/8，相邻光环折算 2 点后正好落在 4 星上限内。
+使用建议：把尼安德特人夹在两个哺乳纲随从之间，让两侧同时吃到 +2/+2。
 
 ## 出处
 

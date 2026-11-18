@@ -124,14 +124,14 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 
 | 维度 | 数量 |
 | --- | --- |
-| 技能总数 | 131 |
-| 经 `skills` 引用的技能 | 131 |
+| 技能总数 | 197 |
+| 经 `skills` 引用的技能 | 197 |
 | 引用技能的效果牌 | 37（每张 1 个技能） |
-| 引用技能的随从牌 | 196 |
+| 引用技能的随从牌 | 302 |
 | 不带技能的随从牌 | 7 |
-| 卡牌技能引用 | 267 段效果单元 |
+| 卡牌技能引用 | 389 段效果单元 |
 
-131 个技能全部经卡牌 `skills` 引用，无孤立技能。卡牌技能共 267 段引用（随从 230 段 + 效果牌 37 段），其中 2 处「若其为<筛选对象>」条件变体已并回前一段（见 §2「技能边界」）。
+197 个技能全部经卡牌 `skills` 引用，无孤立技能。卡牌技能共 389 段引用（随从 352 段 + 效果牌 37 段），其中 2 处「若其为<筛选对象>」条件变体已并回前一段（见 §2「技能边界」）。
 
 ### 5.1 筛选键使用分布
 
@@ -140,12 +140,12 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 | 筛选键 | 取值示例 | 使用技能数 |
 | --- | --- | --- |
 | `taxon` | `taxon=animalia`、`taxon=canidae` | 21 |
-| `playstyle` | `playstyle=machine`、`playstyle=plant`、`playstyle=virus` | 20 |
+| `playstyle` | `playstyle=machine`、`playstyle=plant`、`playstyle=virus` | 39 |
 | `scholar` | `scholar=true` | 3 |
-| `keyword` | `keyword=breed`、`keyword=taunt` | 16 |
-| `type` | `type=minion` | 2 |
+| `keyword` | `keyword=breed`、`keyword=taunt`、`keyword=poison` | 16 |
+| `type` | `type=minion` | 3 |
 | `id` | `id=gongjianshou` | 1 |
-| `other` | `other=true` | 1 |
+| `other` | `other=true` | 17 |
 | `play` / `prey` / `host` / `subtype` | — | 0 |
 
 `timesIf` 共 3 处，分别为 `timesIf=taxon:hominidae:2`、`timesIf=playstyle:plant:2` 与 `timesIf=scholar:2`；`condition` 共 6 处，其中 5 处按 `taxon` 统计阵营内数量、1 处按 `taxon=animalia` 统计；`when` 共 3 处，其中 1 处按 `taxon=animalia` 限定触发对象、2 处按 `taxon` 限定。数值以脚本统计为准，改技能后同步更新。
@@ -154,12 +154,12 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 
 | 技能 | 引用数 |
 | --- | --- |
-| `keyword-sow` 播种 | 16 |
-| `battlecry-friendly-growth-once` 战吼：使一个友方随从获得一次成长 | 11 |
-| `keyword-taunt` 嘲讽 | 10 |
-| `keyword-contagion` 传染 | 10 |
+| `keyword-sow` 播种 | 18 |
+| `keyword-taunt` 嘲讽 | 16 |
+| `keyword-contagion` 传染 | 14 |
+| `keyword-optimal-attack` 最优攻击 | 12 |
 
-引用数由校验脚本统计，不写入技能实体文档。10 次引用处为并列，表中保留全部并列项。
+引用数由校验脚本统计，不写入技能实体文档；另有多项并列 10 次引用（`keyword-windfury`、`keyword-assemble-1`），表中从略。
 
 ## 6. 校验
 
@@ -171,7 +171,7 @@ python3 scripts/validate_docs.py
 
 技能相关校验覆盖：
 
-1. 技能文档 131 份，`id` 等于文件名且在技能命名空间内唯一；
+1. 技能文档 197 份，`id` 等于文件名且在技能命名空间内唯一；
 2. 技能属性表与 front matter 一致；
 3. 被效果牌引用的技能必须有 `match_text`；主动技能必须有 `name` 与 `match_text`，`cost` 与 `uses_per_turn` 成对出现且取值在 0–2 / 1–2 内；填写了 `name` 的技能必须有 `match_text`；
 4. 每张效果牌至少引用 1 个技能；7 张无效果随从的 `skills` 为空且 `## 效果` 为「无」；
@@ -183,7 +183,7 @@ python3 scripts/validate_docs.py
 10. 卡牌分类字段按[卡牌规范与数据](card-system.md) §1.1 校验：`playstyle`、`taxon`、`specialty` 的取值与交叉约束；学者固定 `neutral`，非学者 `neutral` 仅造物六类工具卡，效果牌 `neutral` + `phenomenon`；
 11. 专属关键词按玩法与分类校验：`decompose` 仅真菌界/细菌域、`assemble` 仅机械玩法或 `play:machine` 中立工具卡、`sow` 仅植物界、`evolve` 仅非学者生物卡。
 
-期望：输出包含 `随从 203 张、效果牌 37 张、技能 131 个、英雄卡 32 张，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
+期望：输出包含 `随从 309 张、效果牌 37 张、技能 197 个、英雄卡 32 张，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
 
 `effects` 的解析与校验函数有独立单元测试，改动校验逻辑后运行：
 

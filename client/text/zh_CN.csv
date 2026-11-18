@@ -870,6 +870,7 @@ error.UNKNOWN_TYPE,未知消息类型
 skill.alternating-current.match_text,同左
 skill.alternating-current.name,交流电
 skill.alternating-current.text,使一个友方随从获得最优攻击直到回合结束
+skill.aura-adjacent-mammal.text,相邻的友方哺乳纲随从获得 +2/+2
 skill.aura-all-plus-0-plus-1.text,你的随从获得 +0/+1
 skill.aura-all-plus-0-plus-2.text,你的随从获得 +0/+2
 skill.aura-biology-plus-0-plus-1.text,你的动物随从获得 +0/+1
@@ -906,7 +907,6 @@ skill.battlecry-friendly-growth-once.text,战吼：使一个友方随从获得�
 skill.battlecry-friendly-growth-plant-twice.text,战吼：使一个友方随从获得一次成长；若其为植物，改为两次
 skill.battlecry-friendly-growth-scholar-twice.text,战吼：使一个友方随从获得一次成长；若其为学者，改为两次
 skill.battlecry-friendly-growth-twice.text,战吼：使一个友方随从获得两次成长
-skill.battlecry-friendly-human-growth-twice.text,战吼：使一个友方人科随从获得两次成长
 skill.battlecry-friendly-human-plus-0-plus-1.text,战吼：使一个友方人科随从获得 +0/+1
 skill.battlecry-friendly-mech-growth-once.text,战吼：使一个友方机械随从获得一次成长
 skill.battlecry-friendly-plant-growth-once.text,战吼：使一个友方植物随从获得一次成长

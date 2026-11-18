@@ -1,7 +1,7 @@
 ---
 id: aura-school-mammal
 text: 群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力
-effects: Aura|ModifyStats|friendly:all:playstyle=mammal:other=true|attack=1,health=1,perAttack=1,maxCount=6,duration=permanent
+effects: Aura|ModifyStats|friendly:all:playstyle=mammal:other=true|attack=1,health=1,perAttack=1,maxCount=6
 ---
 
 # aura-school-mammal

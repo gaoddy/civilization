@@ -29,6 +29,33 @@
       {
         "op": "modify_stats",
         "params": {
+          "attack": 2,
+          "health": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "mammal"
+            }
+          ],
+          "kind": "side",
+          "pick": "adjacent",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-adjacent-mammal",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
           "duration": "permanent",
           "health": 1
         },
@@ -577,7 +604,6 @@
         "op": "modify_stats",
         "params": {
           "attack": 1,
-          "duration": "permanent",
           "health": 1,
           "max_count": 6,
           "per_attack": 1
@@ -989,32 +1015,6 @@
       }
     ],
     "id": "battlecry-friendly-growth-twice",
-    "keyword": "battlecry",
-    "uses_per_turn": null
-  },
-  {
-    "cost": null,
-    "effects": [
-      {
-        "op": "growth",
-        "params": {
-          "times": 2
-        },
-        "selector": {
-          "filters": [
-            {
-              "key": "taxon",
-              "value": "hominidae"
-            }
-          ],
-          "kind": "side",
-          "pick": "single",
-          "side": "friendly"
-        },
-        "trigger": "on_play"
-      }
-    ],
-    "id": "battlecry-friendly-human-growth-twice",
     "keyword": "battlecry",
     "uses_per_turn": null
   },
