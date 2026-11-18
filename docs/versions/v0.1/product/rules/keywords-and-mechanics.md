@@ -30,8 +30,6 @@
 
 **字段口径**：卡牌不再有 `keywords` 字段；关键词由所引用技能的 `keyword` 字段派生，共 16 个常驻词。「成长」是效果原语，只出现在效果文本与 `Growth` 结算中，不登记为技能 `keyword`。
 
-**过渡口径**：卡池迁移完成前，16 张旧卡仍携带遗留 id `optimal_attack`；该 id 已从本表删除，引擎不再赋予它任何选目标效果，卡池迁移完成后一并移除。迁移进度见 [移除最优攻击并新增无视嘲讽](../../update/2026-11-18-ignore-taunt/product.md)。
-
 **英文名转数据 id**：数据与协议里一律使用英文 id，由本节「英文名」列按固定规则转写——去掉末尾的层数标记 `N`（含具体数字），转小写，空格转下划线。例如 `Ignore Taunt` → `ignore_taunt`、`Divine Shield` → `divine_shield`、`Breed N` → `breed`、`Assemble N` → `assemble`。层数不写进 id：技能 `keyword` 写作 `breed 2` 这样「id + 空格 + 层数」，效果 DSL 用 `keyword=breed,value=2` 表达；文本表按 `enum.keyword.<id>` 提供展示名。
 
 **传染的口径**：传染对召唤物同样生效——召唤物也是随从，获得传染层数并照常结算。只有随从造成的伤害才有击杀归属：攻击、反击与直接伤害类效果由施放者归属，传染造成的每回合掉血属无来源伤害，不产生击杀。

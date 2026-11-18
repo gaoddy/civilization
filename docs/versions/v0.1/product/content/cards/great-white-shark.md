@@ -9,7 +9,7 @@ level: 5
 era: modern
 attack: 8
 health: 10
-skills: [keyword-optimal-attack]
+skills: [keyword-ignore-taunt]
 is_scholar: false
 ---
 
@@ -30,20 +30,20 @@ is_scholar: false
 | 时代 | 现代 |
 | 攻击力 | 8 |
 | 生命值 | 10 |
-| 关键词 | 最优攻击 |
-| 技能 | keyword-optimal-attack |
+| 关键词 | 无视嘲讽 |
+| 技能 | keyword-ignore-taunt |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-最优攻击：无视嘲讽，优先攻击可被击杀的目标
+无视嘲讽：攻击时无视敌方嘲讽
 
 ## 设计说明
 
-定位：鱼纲高攻最优攻击单位，负责清理敌方残血随从。
+定位：鱼纲高攻无视嘲讽单位，负责越过嘲讽攻击敌方后排。
 平衡边界：5 星 8/10，攻击力接近上限，生命略低。
-使用建议：在群聚加成后进场，利用最优攻击连续收头。
+使用建议：在群聚加成后进场，利用无视嘲讽越过嘲讽攻击敌方后排。
 
 ## 出处
 

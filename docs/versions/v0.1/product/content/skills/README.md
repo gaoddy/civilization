@@ -4,13 +4,13 @@
 
 | 技能 | 关键词 | 文本 | 引用数 |
 | --- | --- | --- | --- |
-| [alternating-current](alternating-current.md) | 无 | 使一个友方随从获得最优攻击直到回合结束 | 1 |
+| [alternating-current](alternating-current.md) | 无 | 使一个友方随从获得无视嘲讽直到回合结束 | 1 |
 | [aura-adjacent-mammal](aura-adjacent-mammal.md) | 无 | 相邻的友方哺乳纲随从获得 +2/+2 | 1 |
 | [aura-all-plus-0-plus-1](aura-all-plus-0-plus-1.md) | 无 | 你的随从获得 +0/+1 | 3 |
 | [aura-all-plus-0-plus-2](aura-all-plus-0-plus-2.md) | 无 | 你的随从获得 +0/+2 | 1 |
 | [aura-biology-plus-0-plus-1](aura-biology-plus-0-plus-1.md) | 无 | 你的动物随从获得 +0/+1 | 1 |
 | [aura-biology-plus-1-plus-1](aura-biology-plus-1-plus-1.md) | 无 | 你的动物随从获得 +1/+1 | 1 |
-| [aura-mech-optimal-attack](aura-mech-optimal-attack.md) | 无 | 你的机械随从获得最优攻击 | 1 |
+| [aura-mech-optimal-attack](aura-mech-optimal-attack.md) | 无 | 你的机械随从获得无视嘲讽 | 1 |
 | [aura-mech-plus-2-plus-2](aura-mech-plus-2-plus-2.md) | 无 | 你的机械随从获得 +2/+2 | 2 |
 | [aura-other-biology-plus-1-attack](aura-other-biology-plus-1-attack.md) | 无 | 你的其他动物随从获得 +1 攻击力 | 1 |
 | [aura-other-fish-plus-0-plus-1](aura-other-fish-plus-0-plus-1.md) | 无 | 你的其他鱼纲随从获得 +0/+1 | 1 |
@@ -63,7 +63,7 @@
 | [battlecry-summon-2-worker-bees](battlecry-summon-2-worker-bees.md) | battlecry | 战吼：召唤两个 2/2 的工蜂 | 1 |
 | [battlecry-summon-3-3-synthetic-cell](battlecry-summon-3-3-synthetic-cell.md) | battlecry | 战吼：召唤一个 3/3 的合成细胞（幼体） | 1 |
 | [biology-evolve](biology-evolve.md) | 无 | 使一个友方动物随从获得进化 | 1 |
-| [combat-optimal-attack](combat-optimal-attack.md) | 无 | 使一个友方随从获得最优攻击直到回合结束 | 1 |
+| [combat-optimal-attack](combat-optimal-attack.md) | 无 | 使一个友方随从获得无视嘲讽直到回合结束 | 1 |
 | [combat-random-enemy-damage-3](combat-random-enemy-damage-3.md) | 无 | 战斗开始时对随机一个敌方随从造成 3 点伤害 | 1 |
 | [combatstart-all-enemies-contagion-1](combatstart-all-enemies-contagion-1.md) | 无 | 战斗开始时，使敌方所有随从获得 1 层传染 | 2 |
 | [combatstart-all-enemies-damage-2](combatstart-all-enemies-damage-2.md) | 无 | 战斗开始时，对敌方所有随从造成 2 点伤害 | 1 |
@@ -145,7 +145,7 @@
 | [keyword-contagion](keyword-contagion.md) | contagion | 传染：造成伤害后，目标每回合 -1 生命 | 14 |
 | [keyword-divine-shield](keyword-divine-shield.md) | divine_shield | 护盾：抵消一次伤害 | 7 |
 | [keyword-evolve](keyword-evolve.md) | evolve | 进化：从 +2/+2、护盾、复生中选择一个 | 6 |
-| [keyword-optimal-attack](keyword-optimal-attack.md) | optimal_attack | 最优攻击：无视嘲讽，优先攻击可被击杀的目标 | 12 |
+| [keyword-ignore-taunt](keyword-ignore-taunt.md) | ignore_taunt | 无视嘲讽：攻击时无视敌方嘲讽 | 12 |
 | [keyword-poison](keyword-poison.md) | poison | 剧毒：造成伤害后，若目标仍存活则将其消灭 | 8 |
 | [keyword-reborn](keyword-reborn.md) | reborn | 复生：以 1 点生命复活一次 | 7 |
 | [keyword-sow](keyword-sow.md) | sow | 播种：死亡时召唤一个 1/1 的幼苗 | 18 |
@@ -194,7 +194,7 @@
 | [trigger-friendly-plus-2-attack](trigger-friendly-plus-2-attack.md) | 无 | 使一个友方随从获得 +2 攻击力 | 1 |
 | [trigger-friendly-plus-2-attack-this-turn](trigger-friendly-plus-2-attack-this-turn.md) | 无 | 使一个友方随从获得 +2 攻击力直到回合结束 | 1 |
 | [trigger-friendly-taunt-until-turn-end](trigger-friendly-taunt-until-turn-end.md) | 无 | 使一个友方随从获得嘲讽直到回合结束 | 1 |
-| [trigger-mech-optimal-attack-this-turn](trigger-mech-optimal-attack-this-turn.md) | 无 | 你的机械随从获得最优攻击直到回合结束 | 1 |
+| [trigger-mech-optimal-attack-this-turn](trigger-mech-optimal-attack-this-turn.md) | 无 | 你的机械随从获得无视嘲讽直到回合结束 | 1 |
 | [trigger-minion-windfury-this-turn](trigger-minion-windfury-this-turn.md) | 无 | 使一个随从本回合获得连击 | 1 |
 | [trigger-other-friendly-humans-plus-1-attack](trigger-other-friendly-humans-plus-1-attack.md) | 无 | 使你的其他人科随从各获得 +1 攻击力 | 1 |
 | [trigger-play-effect-friendly-plus-0-plus-1](trigger-play-effect-friendly-plus-0-plus-1.md) | 无 | 每当你使用一张效果牌，使一个友方随从获得 +0/+1 | 1 |

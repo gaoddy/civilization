@@ -9,10 +9,8 @@ import re
 CARD_TYPES = ("minion", "effect")
 ERAS = ("prehistoric", "primitive", "classical", "feudal", "industrial", "modern", "future")
 KEYWORD_BASES = ("battlecry", "deathrattle", "reborn", "taunt", "divine_shield",
-                 "windfury", "contagion", "ignore_taunt", "optimal_attack", "sow", "evolve",
+                 "windfury", "contagion", "ignore_taunt", "sow", "evolve",
                  "breed", "assemble", "poison", "armor", "stealth")
-# 卡池迁移前的遗留关键词展示名；判定表已移除，生成文本仍需保留旧卡显示。
-LEGACY_KEYWORD_LABELS = {"optimal_attack": "最优攻击"}
 EVOLVE_CHOICES = ("stats", "divine_shield", "reborn")
 STAT_LAYERS = ("initial", "permanent", "turn", "aura", "damage")
 GENERATED_PREFIXES = (
