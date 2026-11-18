@@ -1,0 +1,50 @@
+---
+id: aspergillus
+card_type: minion
+name: 曲霉
+playstyle: fungus
+taxon: aspergillaceae
+subtype: fungus
+level: 3
+era: industrial
+attack: 4
+health: 5
+skills: [deathrattle-all-enemies-minus-1-health]
+is_scholar: false
+---
+
+# 曲霉
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | aspergillus |
+| 名称 | 曲霉 |
+| 类型 | 随从 |
+| 玩法 | 真菌界 |
+| 科学分类 | 真菌界 › 子囊菌门 › 散囊菌纲 › 散囊菌目 › 曲霉科 |
+| 关联分类 | 无 |
+| 子类 | 真菌 |
+| 星级 | 3 |
+| 时代 | 工业 |
+| 攻击力 | 4 |
+| 生命值 | 5 |
+| 关键词 | 亡语 |
+| 技能 | deathrattle-all-enemies-minus-1-health |
+| 学者 | 否 |
+| 英雄资格 | 否 |
+
+## 效果
+
+亡语：使敌方所有随从获得 -1 生命
+
+## 设计说明
+
+定位：真菌界群体削弱单位，亡语压低敌方全体生命。
+平衡边界：4/5 身材配群体 -1 生命，攻击力偏高但无站场关键词。
+使用建议：在敌方铺场后交换，让后续伤害更容易完成击杀。
+
+## 出处
+
+曲霉属广泛分布于谷物与土壤，部分菌株用于酿造与发酵。

@@ -216,6 +216,37 @@
       {
         "op": "modify_stats",
         "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "fish"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-other-fish-plus-0-plus-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
           "attack": 1,
           "duration": "permanent",
           "health": 1
@@ -297,6 +328,37 @@
       }
     ],
     "id": "aura-other-plus-0-plus-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent"
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "protozoa"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-other-protozoa-plus-1-attack",
     "keyword": null,
     "uses_per_turn": null
   },
@@ -407,6 +469,73 @@
       }
     ],
     "id": "aura-scholar-plus-0-plus-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "max_count": 6,
+          "per_health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "fish"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-school-fish-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "attack": 1,
+          "duration": "permanent",
+          "health": 1,
+          "max_count": 6,
+          "per_attack": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "fish"
+            },
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-school-fish-2",
     "keyword": null,
     "uses_per_turn": null
   },
@@ -576,6 +705,58 @@
       }
     ],
     "id": "battlecry-friendly-archers-plus-2-attack",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "fish"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-friendly-fish-growth-once",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "fungus"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-friendly-fungus-growth-once",
     "keyword": "battlecry",
     "uses_per_turn": null
   },
@@ -837,6 +1018,32 @@
       }
     ],
     "id": "battlecry-friendly-plus-1-health",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "protozoa"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-friendly-protozoa-growth-once",
     "keyword": "battlecry",
     "uses_per_turn": null
   },
@@ -1487,6 +1694,27 @@
     "cost": null,
     "effects": [
       {
+        "op": "deal_damage",
+        "params": {
+          "amount": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "enemy"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-all-enemies-damage-2",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "modify_stats",
         "params": {
           "duration": "combat",
@@ -1552,6 +1780,53 @@
     ],
     "id": "deathrattle-all-friendly-plus-0-plus-1",
     "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "protozoa"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-friendly-protozoa-growth-once",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "deal_damage",
+        "params": {
+          "amount": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "random",
+          "side": "enemy"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-random-enemy-damage-2",
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -1645,6 +1920,215 @@
       {
         "op": "summon",
         "params": {
+          "count": 2,
+          "token": "amoeba-larva-token-2"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-2-amoeba-larvae-2-2",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 2,
+          "token": "spore-token-2"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-2-spores-2-2",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 3,
+          "token": "spore-token-3"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-3-spores-3-3",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 4,
+          "token": "volvox-cell-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-4-volvox-cells",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
+          "token": "amoeba-larva-token-1"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-amoeba-larva-1",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
+          "token": "cordyceps-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-cordyceps",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 2,
+          "token": "fish-fry-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-fish-fry-2",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 3,
+          "token": "fish-fry-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-fish-fry-3",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
+          "token": "schizont-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-schizont",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
+          "token": "spore-token-1"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-spore-token-1",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
+          "token": "spore-token-2"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-spore-token-2",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
           "card": "baiyi",
           "count": 1
         },
@@ -1656,6 +2140,151 @@
     ],
     "id": "deathrattle-summon-termite",
     "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "decompose",
+        "params": {
+          "basis": "pre_kill",
+          "duration": "permanent"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_ally_kill"
+      }
+    ],
+    "id": "decompose-ally-kill-pre-kill",
+    "keyword": "decompose",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "decompose",
+        "params": {
+          "basis": "original",
+          "duration": "permanent"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_friendly_death"
+      }
+    ],
+    "id": "decompose-friendly-death-original",
+    "keyword": "decompose",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "decompose",
+        "params": {
+          "basis": "original",
+          "duration": "permanent"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_kill"
+      }
+    ],
+    "id": "decompose-kill-original",
+    "keyword": "decompose",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "devour",
+        "params": {
+          "duration": "permanent",
+          "value": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "devour-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "devour",
+        "params": {
+          "duration": "permanent",
+          "value": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "devour-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "devour",
+        "params": {
+          "duration": "permanent",
+          "value": 3
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "devour-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "devour",
+        "params": {
+          "duration": "permanent",
+          "value": 4
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "devour-4",
+    "keyword": null,
     "uses_per_turn": null
   },
   {
