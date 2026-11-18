@@ -84,6 +84,15 @@ pub enum CombatAction {
         source: InstanceId,
         target: InstanceId,
     },
+    /// 引爆：`layers` 为被移除的传染层数，`damage` 为按层伤害实际造成的伤害
+    /// （护盾或减伤后；阈值致死不计入）。
+    Detonated {
+        target: InstanceId,
+        layers: i32,
+        damage: i32,
+    },
+    /// 转化：目标达到传染阈值后被消灭，来源方召唤 `token`。
+    Converted { target: InstanceId, token: String },
     /// 随从按复苏声明值复活。
     Revived { minion: InstanceId },
     /// 随从死亡后回手（已写入 `CombatLog::hand_minions`）。

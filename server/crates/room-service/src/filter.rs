@@ -403,6 +403,38 @@ fn combat_action(
                 target_side: target_slot.map(|(_, side)| target_side(side)),
             }
         }
+        CombatAction::Detonated { target, damage, .. } => {
+            let slot = locate(report, *target);
+            CombatResultActionsItem {
+                damage: Some(i64::from(*damage)),
+                kind: "detonate".to_string(),
+                source: None,
+                source_index: None,
+                source_minion_id: None,
+                source_side: None,
+                summon: None,
+                target: state_at(states, 0),
+                target_index: slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: slot.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Converted { target, .. } => {
+            let slot = locate(report, *target);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "convert".to_string(),
+                source: None,
+                source_index: None,
+                source_minion_id: None,
+                source_side: None,
+                summon: None,
+                target: state_at(states, 0),
+                target_index: slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: slot.map(|(_, side)| target_side(side)),
+            }
+        }
         CombatAction::Revived { minion } => {
             let slot = locate(report, *minion);
             CombatResultActionsItem {

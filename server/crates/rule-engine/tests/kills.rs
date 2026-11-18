@@ -7,7 +7,7 @@ mod common;
 
 use common::{effects_of, minion, setup_with_gold};
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
-use rule_engine::data::{Card, CardType, Playstyle, Skill};
+use rule_engine::data::{Card, CardType, Playstyle, Skill, Token};
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
 use rule_engine::state::{InstanceId, MinionInstance, Seat};
@@ -602,4 +602,254 @@ fn kill_hook_chain_processes_new_kill_records() {
         2,
         "两条击杀记录都触发 OnAllyKill"
     );
+}
+
+/// 给随从设置初始传染层数。
+fn infected(mut minion: MinionInstance, layers: i32) -> MinionInstance {
+    minion.contagion = layers;
+    minion
+}
+
+#[test]
+fn detonate_consumes_layers_and_deals_per_layer_damage() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "bomber",
+        0,
+        10,
+        &[(
+            None,
+            "OnCombatStart|Detonate|enemy:single|amount=2,threshold=99",
+        )],
+    );
+    add_card(&mut engine, "carrier", 0, 20, &[]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "bomber")],
+        &[infected(minion(&engine.catalog, 2, "carrier"), 3)],
+        0,
+    );
+
+    assert!(
+        log.actions.iter().any(|action| matches!(
+            action,
+            CombatAction::Detonated {
+                target: 2,
+                layers: 3,
+                damage: 6,
+            }
+        )),
+        "3 层 × 每层 2 点应记录 6 点引爆伤害"
+    );
+    assert_eq!(
+        final_minion(&log, 2).stats.health.current,
+        14,
+        "目标承受 6 点伤害后剩余 14 点生命"
+    );
+    assert_eq!(final_minion(&log, 2).contagion, 0, "引爆移除全部层数");
+    assert!(!deaths(&log).contains(&2), "未达阈值时目标存活");
+}
+
+#[test]
+fn detonate_threshold_destroys_even_through_shield() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "bomber",
+        0,
+        10,
+        &[(
+            None,
+            "OnCombatStart|Detonate|enemy:single|amount=1,threshold=3",
+        )],
+    );
+    add_card(
+        &mut engine,
+        "carrier",
+        0,
+        20,
+        &[(Some("divine_shield"), "[]")],
+    );
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "bomber")],
+        &[infected(minion(&engine.catalog, 2, "carrier"), 3)],
+        0,
+    );
+
+    let carrier = final_minion(&log, 2);
+    assert!(carrier.shield_used, "护盾抵消按层伤害并被消耗");
+    assert_eq!(
+        log.actions.iter().find_map(|action| match action {
+            CombatAction::Detonated { damage, .. } => Some(*damage),
+            _ => None,
+        }),
+        Some(0),
+        "护盾抵消后记录的伤害为 0"
+    );
+    assert!(deaths(&log).contains(&2), "达到阈值时护盾不能阻止消灭");
+    assert_eq!(carrier.stats.health.current, 0);
+}
+
+#[test]
+fn detonate_with_zero_layers_is_silent() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "bomber",
+        0,
+        10,
+        &[(
+            None,
+            "OnCombatStart|Detonate|enemy:single|amount=2,threshold=1",
+        )],
+    );
+    add_card(&mut engine, "carrier", 0, 20, &[]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "bomber")],
+        &[minion(&engine.catalog, 2, "carrier")],
+        0,
+    );
+
+    assert!(
+        !log.actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Detonated { .. })),
+        "0 层引爆静默落空"
+    );
+    assert_eq!(final_minion(&log, 2).stats.health.current, 20);
+    assert!(!deaths(&log).contains(&2));
+}
+
+#[test]
+fn convert_requires_threshold_and_summons_token_for_source() {
+    let (mut engine, _state) = setup_with_gold(31);
+    engine.catalog.tokens.insert(
+        "germ".to_string(),
+        Token {
+            id: "germ".to_string(),
+            attack: 2,
+            health: 2,
+            keywords: Vec::new(),
+            playstyle: Some(Playstyle::Bacteria),
+            taxon: None,
+        },
+    );
+    add_card(
+        &mut engine,
+        "converter",
+        0,
+        10,
+        &[(
+            None,
+            "OnCombatStart|Convert|enemy:single|threshold=3,token=germ,count=1",
+        )],
+    );
+    add_card(&mut engine, "carrier", 0, 20, &[]);
+
+    let below = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "converter")],
+        &[infected(minion(&engine.catalog, 2, "carrier"), 2)],
+        0,
+    );
+    assert!(
+        !below
+            .actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Converted { .. })),
+        "2 层未达阈值，不转化"
+    );
+    assert_eq!(below.attacker_final.len(), 1, "未达阈值不召唤 Token");
+    assert_eq!(final_minion(&below, 2).contagion, 2, "未转化不消耗层数");
+
+    let reached = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "converter")],
+        &[infected(minion(&engine.catalog, 2, "carrier"), 3)],
+        0,
+    );
+    assert!(
+        reached.actions.iter().any(|action| matches!(
+            action,
+            CombatAction::Converted {
+                target: 2,
+                token,
+            } if token == "germ"
+        )),
+        "达到阈值时记录转化"
+    );
+    assert!(deaths(&reached).contains(&2), "转化致死");
+    let token = reached
+        .attacker_final
+        .iter()
+        .find(|minion| minion.card_id == "germ")
+        .expect("来源方棋盘应召唤 Token");
+    assert_eq!(token.stats.attack.current, 2);
+    assert_eq!(token.stats.health.current, 2, "召唤的是 2/2 细菌 Token");
+}
+
+#[test]
+fn detonate_and_convert_are_silent_when_target_is_missing() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "bomber",
+        0,
+        10,
+        &[(
+            None,
+            "OnCombatStart|Detonate|enemy:single|amount=2,threshold=1",
+        )],
+    );
+    add_card(
+        &mut engine,
+        "converter",
+        0,
+        10,
+        &[(
+            None,
+            "OnCombatStart|Convert|enemy:single|threshold=3,token=germ,count=1",
+        )],
+    );
+    add_card(&mut engine, "sneaky", 0, 20, &[(Some("stealth"), "[]")]);
+
+    // 潜行目标不能被敌方指向性效果选中，等同目标缺失。
+    let detonated = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "bomber")],
+        &[infected(minion(&engine.catalog, 2, "sneaky"), 3)],
+        0,
+    );
+    assert!(
+        !detonated
+            .actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Detonated { .. })),
+        "目标缺失时引爆落空"
+    );
+    assert_eq!(final_minion(&detonated, 2).contagion, 3, "不消耗层数");
+    assert!(!deaths(&detonated).contains(&2));
+
+    let converted = battle(
+        &engine,
+        &[minion(&engine.catalog, 3, "converter")],
+        &[infected(minion(&engine.catalog, 4, "sneaky"), 3)],
+        0,
+    );
+    assert!(
+        !converted
+            .actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Converted { .. })),
+        "目标缺失时转化落空"
+    );
+    assert_eq!(converted.attacker_final.len(), 1, "不召唤 Token");
+    assert_eq!(final_minion(&converted, 4).contagion, 3, "不消耗层数");
+    assert!(!deaths(&converted).contains(&4));
 }

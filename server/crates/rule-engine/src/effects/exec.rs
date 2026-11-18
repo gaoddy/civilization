@@ -1467,6 +1467,8 @@ impl Engine {
             Op::Decompose => self.apply_combat_decompose(field, effect, &targets, ctx),
             Op::Mimic => self.apply_combat_mimic(field, effect, &targets, ctx),
             Op::Devour => self.apply_combat_devour(field, effect, &targets, ctx),
+            Op::Detonate => self.apply_combat_detonate(field, effect, &targets, ctx),
+            Op::Convert => self.apply_combat_convert(field, rng, effect, &targets, ctx),
             Op::Summon => self.apply_combat_summon(field, rng, effect, ctx),
             Op::Copy => self.apply_combat_copy(field, effect, ctx, &targets),
             _ => {}
@@ -1641,6 +1643,165 @@ impl Engine {
                     target: *target_id,
                 },
                 states,
+            );
+        }
+    }
+
+    /// 战斗内引爆：移除目标全部传染层数，按层造成伤害，达到阈值时直接致死。
+    ///
+    /// 每层伤害走 [`BattleField::apply_damage`]（受减伤影响），护盾可抵消这一
+    /// 段伤害；阈值致死绕过护盾与减伤。已移除的层数不会再参与回合掉血。
+    fn apply_combat_detonate(
+        &self,
+        field: &mut BattleField,
+        effect: &Effect,
+        targets: &[InstanceId],
+        ctx: &EffectCtx,
+    ) {
+        let Some(source_id) = ctx.source else {
+            return;
+        };
+        let Some((source_side, _)) = field.locate(source_id) else {
+            return;
+        };
+        let amount = effect.params.amount.unwrap_or(0).max(0);
+        for target_id in targets {
+            let Some((target_side, _)) = field.locate(*target_id) else {
+                continue;
+            };
+            if target_side == source_side || !field.is_alive(*target_id) {
+                continue;
+            }
+            let Some(target) = field.minion(*target_id) else {
+                continue;
+            };
+            let layers = target.contagion;
+            if layers <= 0 {
+                continue;
+            }
+            let shielded = combat::keywords(&self.catalog, target).contains("divine_shield")
+                && !target.shield_used;
+            if let Some(target) = field.minion_mut(*target_id) {
+                target.contagion = 0;
+            }
+
+            let raw = layers.saturating_mul(amount);
+            let damage = if raw <= 0 {
+                0
+            } else if shielded {
+                // 护盾抵消整段按层伤害并置为已用；不记录为实际伤害。
+                if let Some(target) = field.minion_mut(*target_id) {
+                    target.shield_used = true;
+                }
+                0
+            } else {
+                field.apply_damage(
+                    &self.catalog,
+                    *target_id,
+                    raw,
+                    true,
+                    DamageSource::Minion(source_id),
+                )
+            };
+
+            let reached = effect
+                .params
+                .threshold
+                .is_some_and(|threshold| layers >= threshold);
+            // 按层伤害已经致死时不再补一次致死伤害，避免重复击杀记录。
+            if reached
+                && field
+                    .minion(*target_id)
+                    .is_some_and(|target| target.stats.health.current > 0)
+            {
+                self.apply_lethal_damage(field, *target_id, source_id);
+            }
+
+            let states = field.snapshots(&self.catalog, &[*target_id]);
+            field.push_action(
+                CombatAction::Detonated {
+                    target: *target_id,
+                    layers,
+                    damage,
+                },
+                states,
+            );
+        }
+    }
+
+    /// 战斗内转化：目标层数达到阈值时致死，并在来源方棋盘召唤 Token。
+    ///
+    /// 致死不经过护盾判定，层数作为门槛保留、不消耗。先结算死亡腾出槽位，
+    /// 再走既有召唤路径，因此召唤仍受战场槽位限制。
+    fn apply_combat_convert(
+        &self,
+        field: &mut BattleField,
+        rng: &mut RngStreams,
+        effect: &Effect,
+        targets: &[InstanceId],
+        ctx: &EffectCtx,
+    ) {
+        let Some(source_id) = ctx.source else {
+            return;
+        };
+        let Some((source_side, _)) = field.locate(source_id) else {
+            return;
+        };
+        let Some(threshold) = effect.params.threshold else {
+            return;
+        };
+        for target_id in targets {
+            let Some((target_side, _)) = field.locate(*target_id) else {
+                continue;
+            };
+            if target_side == source_side || !field.is_alive(*target_id) {
+                continue;
+            }
+            let Some(target) = field.minion(*target_id) else {
+                continue;
+            };
+            if target.stats.health.current <= 0 || target.contagion < threshold {
+                continue;
+            }
+
+            self.apply_lethal_damage(field, *target_id, source_id);
+            let token = effect.params.token.clone().unwrap_or_default();
+            let states = field.snapshots(&self.catalog, &[*target_id]);
+            field.push_action(
+                CombatAction::Converted {
+                    target: *target_id,
+                    token,
+                },
+                states,
+            );
+            field.resolve_deaths(Some(self), &self.catalog, rng);
+            self.apply_combat_summon(field, rng, effect, ctx);
+        }
+    }
+
+    /// 对目标施加必死伤害：伤害量为当前生命加目标减伤，护盾与减伤均不参与判定。
+    fn apply_lethal_damage(
+        &self,
+        field: &mut BattleField,
+        target_id: InstanceId,
+        source_id: InstanceId,
+    ) {
+        let Some(target) = field.minion(target_id) else {
+            return;
+        };
+        let amount = target
+            .stats
+            .health
+            .current
+            .max(0)
+            .saturating_add(combat::armor_value(&self.catalog, target));
+        if amount > 0 {
+            field.apply_damage(
+                &self.catalog,
+                target_id,
+                amount,
+                true,
+                DamageSource::Minion(source_id),
             );
         }
     }
