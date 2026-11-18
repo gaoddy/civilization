@@ -348,7 +348,6 @@ fn choose_play_effect(
     catalog: &Catalog,
     blocked: &[Intent],
 ) -> Option<Intent> {
-    let leftmost = player.board.first().map(|minion| minion.instance_id);
     for (index, hand) in player.hand.iter().enumerate() {
         let Some(card) = catalog.cards.get(hand.card_id()) else {
             continue;
@@ -365,11 +364,14 @@ fn choose_play_effect(
         if !blocked.contains(&plain) {
             return Some(plain);
         }
-        if let Some(target) = leftmost {
+        // 定向效果牌的目标池可能带玩法/分类筛选；只试最左会让棋盘第一个随从
+        // 不合法时这张牌永远打不出。按棋盘顺序逐个尝试，被拒的候选由 `blocked`
+        // 跳过，遍历完仍无候选则留给后续购买/结束招募。
+        for minion in &player.board {
             let targeted = Intent::PlayCard {
                 hand_index,
                 position: None,
-                target: Some(target),
+                target: Some(minion.instance_id),
             };
             if !blocked.contains(&targeted) {
                 return Some(targeted);
@@ -607,6 +609,40 @@ mod tests {
                 hand_index: 0,
                 position: None,
                 target: Some(1)
+            })
+        );
+    }
+
+    #[test]
+    fn effect_play_tries_every_friendly_target() {
+        // 带玩法筛选的定向效果牌（洋流只作用于友方鱼纲）在棋盘第一个随从不合法时
+        // 必须继续尝试后面的随从；只试最左会让这张牌永远打不出、长期占用一手牌。
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        let (_, mut state) =
+            Engine::new(catalog.clone(), [7; 32], rule_engine::playstyles::draw(7));
+        state.phase = Phase::Recruit;
+        state.turn = 1;
+        state.players[0].board = vec![
+            MinionInstance::new(&catalog, 1, "saman", false),
+            MinionInstance::new(&catalog, 2, "clownfish", false),
+        ];
+        state.players[0].hand = vec![rule_engine::state::HandCard::effect(20, "yangliu")];
+        let plain = Intent::PlayCard {
+            hand_index: 0,
+            position: None,
+            target: None,
+        };
+        let leftmost = Intent::PlayCard {
+            hand_index: 0,
+            position: None,
+            target: Some(1),
+        };
+        assert_eq!(
+            choose_play_effect(&state.players[0], &catalog, &[plain, leftmost]),
+            Some(Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: Some(2)
             })
         );
     }

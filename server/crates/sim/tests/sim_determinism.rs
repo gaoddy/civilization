@@ -125,6 +125,10 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 ///
 /// 2026-11-18 第十二次重定：卡牌参数重排最终调参（1–3 星为主、4–6 星少量），
 /// 参战数值变化；随后冻结数值，本基线同时作为最终基线。
+///
+/// 2026-11-18 第十三次重定：AI 打出定向效果牌时遍历全部己方随从（原只试最左），
+/// 带玩法筛选的效果牌不再长期卡在手牌，动作与随机流消耗改变。本次只改决策候选，
+/// 不涉及卡牌数值。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
