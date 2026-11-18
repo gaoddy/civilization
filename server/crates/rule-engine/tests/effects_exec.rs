@@ -602,9 +602,10 @@ fn coverage_counts_all_effect_segments() {
     let coverage = effect_coverage(&catalog);
 
     let total: usize = coverage.values().sum();
-    assert_eq!(total, 150, "已提交数据的全部效果段都应被统计");
-    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&18));
-    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::ModifyStats)), Some(&10));
+    // 玩法扩充后卡池达到 346 张，效果段总数与打出时的成长/改属性段数同步上升。
+    assert_eq!(total, 184, "已提交数据的全部效果段都应被统计");
+    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&21));
+    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::ModifyStats)), Some(&12));
     assert_eq!(coverage.get(&(Trigger::OnUse, Op::ModifyStats)), Some(&1));
 
     let executable: BTreeSet<Op> = [
@@ -621,7 +622,14 @@ fn coverage_counts_all_effect_segments() {
         Op::AddShopSlot,
         Op::GainMinion,
         Op::Decompose,
+        Op::Mimic,
         Op::Devour,
+        Op::Detonate,
+        Op::Convert,
+        Op::Revive,
+        Op::Recall,
+        Op::Salvage,
+        Op::Latent,
     ]
     .into_iter()
     .collect();
@@ -955,7 +963,11 @@ fn devour_and_mimic_are_silent_when_target_is_missing() {
         effect("OnCombatStart|Devour|target|value=3"),
     ];
     for effect in effects {
-        let target = if effect.op == Op::Mimic { Some(99) } else { Some(2) };
+        let target = if effect.op == Op::Mimic {
+            Some(99)
+        } else {
+            Some(2)
+        };
         let events = engine.apply_op(
             &mut state,
             &effect,
@@ -1045,10 +1057,7 @@ fn mimic_stats_only_in_combat_skips_keywords() {
     assert_eq!(source.stats.attack.turn, 2, "复制攻击力增量");
     assert_eq!(source.stats.health.turn, 3, "复制生命值增量");
     assert!(
-        !source
-            .granted
-            .iter()
-            .any(|(name, _)| name == "taunt"),
+        !source.granted.iter().any(|(name, _)| name == "taunt"),
         "statsOnly 不复制关键词"
     );
 }
