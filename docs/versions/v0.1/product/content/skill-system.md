@@ -2,7 +2,7 @@
 
 > 依赖：[卡牌规范与数据](card-system.md)（含「英雄卡」小节）、[关键词与机制](../rules/keywords-and-mechanics.md)
 > 状态：方案未实施
-> 数据：`docs/versions/v0.1/product/content/skills/`（131 份，文件名 = id）
+> 数据：`docs/versions/v0.1/product/content/skills/`（197 份，文件名 = id）
 
 本文描述技能实体的定义、字段规范、引用与渲染规则、共享规则、数据总览与校验方式；不描述具体实现与后续版本技能。归属版本产品基线的内容。
 
@@ -26,7 +26,7 @@
 | --- | --- | --- | --- |
 | `id` | 是 | `^[a-z][a-z0-9-]*$` | 技能命名空间内唯一；必须等于文件名 |
 | `name` | 条件必填 | 自由 | 显示名；被效果牌引用或属于主动技能的技能必填，普通随从技能可省略；运行时由文本表 `skill.<id>.name` 承载 |
-| `keyword` | 否 | 13 个常驻关键词的英文 id（含层数：`breed N`、`assemble N`） | 该技能使携带者登记的关键词；赋予他人关键词的效果不填。取值见[关键词与机制](../rules/keywords-and-mechanics.md) §1 |
+| `keyword` | 否 | 16 个常驻关键词的英文 id（含层数：`breed N`、`assemble N`、`armor N`） | 该技能使携带者登记的关键词；赋予他人关键词的效果不填。取值见[关键词与机制](../rules/keywords-and-mechanics.md) §1 |
 | `text` | 是 | 自由 | 技能的规范效果文本，也是卡面显示的唯一真值；运行时由文本表 `skill.<id>.text` 承载 |
 | `effects` | 是 | 单行 DSL，或 `[]` | 结构化效果，语法见[关键词与机制](../rules/keywords-and-mechanics.md) §9.4；只有关键词行为时写 `[]` |
 | `cost` | 条件必填 | 整数 0–2 | **仅主动技能**；每次使用的金币费用；与 `uses_per_turn` 必须成对出现 |

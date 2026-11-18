@@ -1,6 +1,6 @@
 ---
 id: mimic-1
-text: 战吼：复制一个友方随从的当前攻击力与生命值
+text: 战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束
 effects: OnPlay|Mimic|friendly:single|duration=combat,statsOnly=true
 ---
 
@@ -16,4 +16,4 @@ effects: OnPlay|Mimic|friendly:single|duration=combat,statsOnly=true
 
 ## 效果
 
-战吼：复制一个友方随从的当前攻击力与生命值
+战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束

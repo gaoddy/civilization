@@ -98,7 +98,7 @@
 | [deathrattle-random-enemy-minus-1-health](deathrattle-random-enemy-minus-1-health.md) | deathrattle | 亡语：使随机一个敌方随从获得 -1 生命 | 1 |
 | [deathrattle-summon-1-worker-bee](deathrattle-summon-1-worker-bee.md) | deathrattle | 分裂：死亡时召唤一个 1/1 的工蜂 | 1 |
 | [deathrattle-summon-2-2-hela-cell-clone](deathrattle-summon-2-2-hela-cell-clone.md) | deathrattle | 亡语：召唤一个 2/2 的海拉细胞（复制体） | 1 |
-| [deathrattle-summon-2-ammonites](deathrattle-summon-2-ammonites.md) | deathrattle | 分裂：死亡时召唤两个 5/5 的菊石 | 1 |
+| [deathrattle-summon-2-ammonites](deathrattle-summon-2-ammonites.md) | deathrattle | 分裂：死亡时召唤两个 5/5 的菊石幼体 | 1 |
 | [deathrattle-summon-2-amoeba-larvae-2-2](deathrattle-summon-2-amoeba-larvae-2-2.md) | deathrattle | 分裂：死亡时召唤两个 2/2 的变形虫幼体 | 1 |
 | [deathrattle-summon-2-coral-polyps](deathrattle-summon-2-coral-polyps.md) | deathrattle | 分裂：死亡时召唤两个 1/1 的珊瑚虫 | 1 |
 | [deathrattle-summon-2-seabirds](deathrattle-summon-2-seabirds.md) | deathrattle | 分裂：死亡时召唤两个 3/3 的海鸟 | 1 |
@@ -155,7 +155,7 @@
 | [latent-3](latent-3.md) | 无 | 潜伏：回合开始时，每有 1 层传染获得 +1 攻击力；达到 3 层时对敌方所有随从造成 3 点伤害 | 1 |
 | [light-speed-strike](light-speed-strike.md) | 无 | 使一个友方随从本回合获得连击 | 1 |
 | [microbiology](microbiology.md) | 无 | 战斗开始时使敌方最左侧随从获得 1 层传染 | 1 |
-| [mimic-1](mimic-1.md) | 无 | 战吼：复制一个友方随从的当前攻击力与生命值 | 1 |
+| [mimic-1](mimic-1.md) | 无 | 战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束 | 1 |
 | [mimic-2](mimic-2.md) | 无 | 拟态：战斗开始时，复制一个敌方随从的当前攻击力与生命值直到本回合结束 | 2 |
 | [mimic-3](mimic-3.md) | 无 | 拟态：战斗开始时，复制一个敌方随从的当前攻击力、生命值与关键词直到本回合结束 | 1 |
 | [observation](observation.md) | 无 | 每回合首次刷新时额外出现一张当前时代的随机随从 | 2 |

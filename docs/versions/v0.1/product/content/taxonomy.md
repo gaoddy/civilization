@@ -67,7 +67,7 @@
 | crocodylomorpha | 鳄形类 | reptilia | 目 | 按目处理，含化石类群 |
 | pholidosauridae | 似鳄科 | crocodylomorpha | 科 | 帝鳄 |
 | actinopterygii | 鱼纲 | chordata | 纲 | 玩法 fish |
-| actinopterygii-incertae-sedis | 未定科 | actinopterygii | 科 | 预留；现有卡牌无鱼纲物种 |
+| actinopterygii-incertae-sedis | 未定科 | actinopterygii | 科 | 鱼纲未定科节点；鱼苗 Token 与部分鱼纲卡牌使用 |
 | chondrichthyes | 软骨鱼纲 | chordata | 纲 | |
 | lamniformes | 鼠鲨目 | chondrichthyes | 目 | |
 | lamnidae | 鼠鲨科 | lamniformes | 科 | 大白鲨 |

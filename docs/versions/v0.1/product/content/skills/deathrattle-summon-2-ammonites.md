@@ -1,7 +1,7 @@
 ---
 id: deathrattle-summon-2-ammonites
 keyword: deathrattle
-text: 分裂：死亡时召唤两个 5/5 的菊石
+text: 分裂：死亡时召唤两个 5/5 的菊石幼体
 effects: OnDeath|Summon|self|token=ammonite-token,count=2
 ---
 
@@ -17,4 +17,4 @@ effects: OnDeath|Summon|self|token=ammonite-token,count=2
 
 ## 效果
 
-分裂：死亡时召唤两个 5/5 的菊石
+分裂：死亡时召唤两个 5/5 的菊石幼体
