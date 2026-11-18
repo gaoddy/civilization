@@ -374,6 +374,13 @@ func _on_error() -> void:
         if recorded:
             # 目标池收窄导致的选择被拒：本回合跳过该牌或换下一个待选，按预期软错误处理。
             _soft_errors += 1
+            if (
+                str(rejected.get("kind", "")) == Protocol.INTENT_CHOOSE_TARGET
+                and still_recruiting
+                and _first_valid_target() != ""
+            ):
+                # 拒绝不会带来新视图；不立即换下一个随从重发，整局会停在招募阶段。
+                _choose_target()
             return
     # 被拒绝的购买允许重试，不再视为待确认。
     _pending_buys.clear()

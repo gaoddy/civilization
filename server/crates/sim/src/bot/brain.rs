@@ -59,9 +59,12 @@ pub fn next_intent(view: &PlayerView, catalog: &Catalog, seed: u64) -> Option<In
     None
 }
 
-/// 待选队列的第一条。发现按 `seed` 取候选下标，进化固定取 0（与 M0 AI 一致），
-/// 目标待选优先取战吼来源随从（战吼的合法池按入场后的棋盘判定、包含来源自身），
-/// 来源已不在棋盘时退回棋盘最左侧随从。
+/// 待选队列的第一条。发现按 `seed` 取候选下标，进化固定取 0（与 M0 AI 一致）。
+///
+/// 目标待选取棋盘第一个随从：战吼的合法池可能带筛选（如「一个友方鱼纲随从」），
+/// 来源随从在棋盘末尾时未必在池内；若优先选来源，服务端拒绝后沿棋盘后移会越界，
+/// 机器人没有合法补选，整局卡在招募阶段。从第一个开始则 `retry_with_target` 的
+/// 单调后移能覆盖整个棋盘。
 fn pending_intent(me: &PlayerViewSelf, seed: u64) -> Option<Intent> {
     match me.pending_choices.first()? {
         PendingChoice::Discover { candidates } => {
@@ -75,13 +78,8 @@ fn pending_intent(me: &PlayerViewSelf, seed: u64) -> Option<Intent> {
             })
         }
         PendingChoice::Evolve { .. } => Some(Intent::ChooseDiscover { choice: 0 }),
-        PendingChoice::Target { source_minion_id } => {
-            let source = source_minion_id.to_string();
-            let target = me
-                .board
-                .iter()
-                .find(|minion| minion.minion_id == source)
-                .or_else(|| me.board.first())?;
+        PendingChoice::Target { .. } => {
+            let target = me.board.first()?;
             Some(Intent::ChooseTarget {
                 minion_id: target.minion_id.clone(),
             })

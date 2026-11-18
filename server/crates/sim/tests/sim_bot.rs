@@ -105,6 +105,30 @@ fn consumes_pending_choice_first() {
 }
 
 #[test]
+fn pending_target_starts_from_first_board_minion_not_source() {
+    // 战吼的合法池可能带筛选（例如「一个友方鱼纲随从」），来源随从在棋盘末尾时
+    // 未必在池内。优先选来源会让服务端拒绝后沿棋盘后移直接越界，机器人再无合法
+    // 补选，整局卡在招募阶段；目标待选必须从棋盘第一个随从开始，才能覆盖全盘。
+    let pending = json!([{ "kind": "target", "sourceMinionId": "minion-9" }]);
+    let board = json!([
+        board_minion("minion-1", 0),
+        board_minion("minion-2", 1),
+        board_minion("minion-9", 2),
+    ]);
+    let view = with_hand_and_board(
+        view(10, json!([]), json!([]), json!([]), pending, false),
+        json!([]),
+        board,
+    );
+
+    let intent = next_intent(&view, &catalog(), 0).expect("有待选时应给出意图");
+    match intent {
+        Intent::ChooseTarget { minion_id } => assert_eq!(minion_id, "minion-1"),
+        other => panic!("期望 ChooseTarget，实际 {other:?}"),
+    }
+}
+
+#[test]
 fn buys_most_expensive_buyable_slot() {
     // adam-smith 是随从（买价固定 3），aolimpike-jidian 是 2 费效果牌，
     // yuandandan 是 4 费效果牌：应选最贵的 yuandandan（下标 1）。
