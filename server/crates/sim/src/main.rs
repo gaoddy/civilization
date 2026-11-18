@@ -186,7 +186,7 @@ fn run_dev(args: &[String]) -> Result<(), String> {
         url,
         intent_seed,
         room_code_sink: Some(code_tx),
-        run_timeout: std::time::Duration::from_secs(900),
+        run_timeout: None,
     }));
 
     let code = match runtime.block_on(code_rx) {
