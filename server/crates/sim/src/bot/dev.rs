@@ -30,8 +30,9 @@ pub struct DevConfig {
     pub intent_seed: u64,
     /// 取到房间码后的回调；CLI 用它先打印房间码再等整局结束。
     pub room_code_sink: Option<oneshot::Sender<String>>,
-    /// 取到房间码后等待开局与整局结束的总超时。
-    pub run_timeout: Duration,
+    /// 取到房间码后等待开局与整局结束的总超时；`None` 表示不设总时限，
+    /// 但仍保留「任一机器人失败立即取消其余」的行为。
+    pub run_timeout: Option<Duration>,
 }
 
 /// 一局结束后的汇总；以建房机器人的视角为准，8 个座位应当看到同一份排名。
@@ -69,7 +70,7 @@ fn take_heroes(cards: &BTreeMap<String, Card>, needed: usize) -> Result<Vec<Stri
 ///
 /// # Errors
 ///
-/// 卡表英雄卡不足、取房间码超时、机器人失败，或整局未能在 `run_timeout` 内结束。
+/// 卡表英雄卡不足、取房间码超时、机器人失败，或设置 `run_timeout` 时整局未在期限内结束。
 pub async fn run(config: DevConfig) -> Result<DevOutcome, String> {
     let DevConfig {
         url,
@@ -149,15 +150,18 @@ pub async fn run(config: DevConfig) -> Result<DevOutcome, String> {
 
 /// 并发等待所有机器人，任一失败立即取消其余机器人并返回错误。
 ///
+/// `run_timeout` 为 `Some` 时等待受该总时限约束；为 `None` 时不设截止时间，
+/// 一直等到每个机器人都返回。无论是否设总时限，任一机器人失败都会立即取消其余任务。
+///
 /// 不能用 `join_all`：它要等所有 handle 结束才返回，一个机器人提前失败时
-/// 其余的仍在等开发者入房，真实原因会被 `run_timeout` 超时掩盖。
+/// 其余的仍在等开发者入房，失败原因会被拖到总超时才暴露。
 ///
 /// 返回值按机器人序号排列。失败时错误消息写明是哪个 bot。
 async fn wait_all(
     handles: &mut Vec<JoinHandle<Result<BotOutcome, String>>>,
-    run_timeout: Duration,
+    run_timeout: Option<Duration>,
 ) -> Result<Vec<BotOutcome>, String> {
-    let deadline = tokio::time::Instant::now() + run_timeout;
+    let deadline = run_timeout.map(|timeout| (tokio::time::Instant::now() + timeout, timeout));
     let mut outcomes: Vec<Option<BotOutcome>> = vec![None; handles.len()];
 
     // `&mut JoinHandle` 本身是 `Future`，因此可以在不改所有权的情况下并发等待，
@@ -168,14 +172,19 @@ async fn wait_all(
     }
 
     let failure = loop {
-        let next = match tokio::time::timeout_at(deadline, pending.next()).await {
-            Ok(next) => next,
-            Err(_) => {
-                break Some(format!(
-                    "未完成开局：开发者未进房并准备，或对局未结束（{} 秒）",
-                    run_timeout.as_secs()
-                ));
+        let next = match deadline {
+            Some((deadline, timeout)) => {
+                match tokio::time::timeout_at(deadline, pending.next()).await {
+                    Ok(next) => next,
+                    Err(_) => {
+                        break Some(format!(
+                            "未完成开局：开发者未进房并准备，或对局未结束（{} 秒）",
+                            timeout.as_secs()
+                        ));
+                    }
+                }
             }
+            None => pending.next().await,
         };
         let (index, joined) = match next {
             Some(item) => item,
@@ -234,7 +243,7 @@ mod tests {
             }),
         ];
         let started = Instant::now();
-        let error = wait_all(&mut handles, Duration::from_secs(30))
+        let error = wait_all(&mut handles, Some(Duration::from_secs(30)))
             .await
             .expect_err("bot0 失败时应收敛为错误");
         assert!(
@@ -259,10 +268,35 @@ mod tests {
                 })
             }));
         }
-        let outcomes = wait_all(&mut handles, Duration::from_secs(30))
+        let outcomes = wait_all(&mut handles, Some(Duration::from_secs(30)))
             .await
             .expect("全部成功时应返回结果");
         let turns: Vec<u8> = outcomes.iter().map(|outcome| outcome.turns).collect();
         assert_eq!(turns, vec![1, 2, 3], "结果应按机器人序号排列");
+    }
+
+    #[tokio::test]
+    async fn wait_all_without_timeout_waits_for_every_bot() {
+        let mut handles = Vec::new();
+        for turns in 1..=3_u8 {
+            handles.push(tokio::spawn(async move {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+                Ok(BotOutcome {
+                    turns,
+                    ranking: Vec::new(),
+                })
+            }));
+        }
+        let started = Instant::now();
+        let outcomes = wait_all(&mut handles, None)
+            .await
+            .expect("未设总时限时也应等全部机器人返回");
+        let turns: Vec<u8> = outcomes.iter().map(|outcome| outcome.turns).collect();
+        assert_eq!(turns, vec![1, 2, 3], "结果应按机器人序号排列");
+        assert!(
+            started.elapsed() >= Duration::from_millis(20),
+            "应等待机器人真正返回，实际耗时 {:?}",
+            started.elapsed()
+        );
     }
 }

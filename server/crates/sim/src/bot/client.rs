@@ -118,6 +118,7 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                     &started.view,
                     &mut memory,
                     &mut seq,
+                    false,
                 )
                 .await?;
             }
@@ -130,6 +131,7 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                     &snapshot.view,
                     &mut memory,
                     &mut seq,
+                    false,
                 )
                 .await?;
             }
@@ -142,6 +144,7 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                     &update.view,
                     &mut memory,
                     &mut seq,
+                    false,
                 )
                 .await?;
             }
@@ -159,40 +162,80 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                 return Ok(BotOutcome { ranking, turns });
             }
             ServerMessage::Error(error) => {
+                // 目标不合法是预期反馈：视图只给 `requiresTarget`、不给目标池，
+                // 预填的随从可能不在池内。出手沿棋盘静默换下一个，整盘都不合法时
+                // 才放弃这张牌；`ChooseTarget` 逐个轮换候选。
+                if error.code == ErrorCode::NoValidTarget
+                    && let Some(rejected) = error
+                        .client_intent_id
+                        .as_deref()
+                        .and_then(|id| memory.rejected(id).cloned())
+                {
+                    let turn = memory.view.as_ref().map_or(0, turn_of);
+                    memory.reset_blocked_for_turn(turn);
+                    match &rejected {
+                        Intent::PlayCard { hand_index, .. } => {
+                            let retried = memory
+                                .view
+                                .as_ref()
+                                .and_then(|view| brain::retry_with_target(view, &rejected));
+                            match retried {
+                                Some(intent) => {
+                                    send_intent(
+                                        &mut ws,
+                                        &config.name,
+                                        &mut memory,
+                                        &mut seq,
+                                        intent,
+                                    )
+                                    .await?;
+                                }
+                                None => {
+                                    memory.blocked.block_hand(*hand_index);
+                                    log_target_skip(&config.name, &rejected);
+                                    if let Some(view) = memory.view.clone() {
+                                        decide(
+                                            &mut ws,
+                                            &config,
+                                            &catalog,
+                                            &view,
+                                            &mut memory,
+                                            &mut seq,
+                                            true,
+                                        )
+                                        .await?;
+                                    }
+                                }
+                            }
+                        }
+                        Intent::ChooseTarget { minion_id } => {
+                            memory.blocked.block_minion(minion_id.clone());
+                            let exhausted = memory.view.as_ref().is_some_and(|view| {
+                                !memory.blocked.has_unblocked_minion(&view.self_)
+                            });
+                            if exhausted {
+                                log_target_skip(&config.name, &rejected);
+                            } else if let Some(view) = memory.view.clone() {
+                                decide(
+                                    &mut ws,
+                                    &config,
+                                    &catalog,
+                                    &view,
+                                    &mut memory,
+                                    &mut seq,
+                                    true,
+                                )
+                                .await?;
+                            }
+                        }
+                        _ => {}
+                    }
+                    continue;
+                }
                 eprintln!(
                     "bot {} 收到错误 {}: {}",
                     config.name, error.code, error.message
                 );
-                // 目标缺失：按被拒意图补上己方第一个随从重发。服务端只在存在
-                // 合法目标时返回该错误，因此棋盘非空即可补选。
-                let retried = if error.code == ErrorCode::NoValidTarget {
-                    error
-                        .client_intent_id
-                        .as_deref()
-                        .and_then(|id| memory.rejected(id).cloned())
-                        .and_then(|intent| {
-                            memory
-                                .view
-                                .as_ref()
-                                .and_then(|view| brain::retry_with_target(view, &intent))
-                        })
-                } else {
-                    None
-                };
-                if let Some(intent) = retried {
-                    let intent_value = serde_json::to_value(&intent)
-                        .map_err(|err| format!("序列化意图失败: {err}"))?;
-                    let client_intent_id = memory.next_intent_id(&config.name);
-                    memory.remember(client_intent_id.clone(), intent);
-                    send(
-                        &mut ws,
-                        "Intent",
-                        json!({ "clientIntentId": client_intent_id, "intent": intent_value }),
-                        &mut seq,
-                    )
-                    .await?;
-                    continue;
-                }
                 // 被拒绝的意图不会带来新视图，机器人不会自己重试；补发兜底意图，
                 // 避免整局停在招募阶段等超时。每个回合最多补发一次。
                 let recovery = memory.view.as_ref().and_then(|view| {
@@ -204,17 +247,7 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                 });
                 if let Some((turn, intent)) = recovery {
                     memory.recovery_turn = Some(turn);
-                    let intent_value = serde_json::to_value(&intent)
-                        .map_err(|err| format!("序列化意图失败: {err}"))?;
-                    let client_intent_id = memory.next_intent_id(&config.name);
-                    memory.remember(client_intent_id.clone(), intent);
-                    send(
-                        &mut ws,
-                        "Intent",
-                        json!({ "clientIntentId": client_intent_id, "intent": intent_value }),
-                        &mut seq,
-                    )
-                    .await?;
+                    send_intent(&mut ws, &config.name, &mut memory, &mut seq, intent).await?;
                 }
             }
             ServerMessage::CombatResult(_) => {
@@ -295,8 +328,12 @@ struct BotMemory {
     intents: u64,
     /// 最近一次补发兜底意图的回合。
     recovery_turn: Option<u8>,
-    /// 尚未确认的意图，按 `clientIntentId` 找回被拒的意图用于补选目标。
+    /// 尚未确认的意图，按 `clientIntentId` 找回被拒的意图。
     pending: Vec<(String, Intent)>,
+    /// 本回合已确认不合法的目标选择；换回合时清空。
+    blocked: brain::BlockedTargets,
+    /// `blocked` 对应的回合。
+    blocked_turn: Option<u8>,
 }
 
 /// 未确认意图的保留上限；只需覆盖「发出一条后收到下一条错误」的流水线深度。
@@ -310,6 +347,16 @@ impl BotMemory {
             intents: 0,
             recovery_turn: None,
             pending: Vec::new(),
+            blocked: brain::BlockedTargets::default(),
+            blocked_turn: None,
+        }
+    }
+
+    /// 换回合时清空目标拒绝记录；同回合的多次决策保留。
+    fn reset_blocked_for_turn(&mut self, turn: u8) {
+        if self.blocked_turn != Some(turn) {
+            self.blocked_turn = Some(turn);
+            self.blocked = brain::BlockedTargets::default();
         }
     }
 
@@ -319,7 +366,7 @@ impl BotMemory {
         id
     }
 
-    /// 记下一条已发出的意图，供被拒后补选目标。
+    /// 记下一条已发出的意图，供被拒后识别被拒的是哪一条。
     fn remember(&mut self, client_intent_id: String, intent: Intent) {
         if self.pending.len() >= PENDING_LIMIT {
             self.pending.remove(0);
@@ -338,6 +385,9 @@ impl BotMemory {
 }
 
 /// 对一份视图做一次决策；视图与上次已决策的完全一致时跳过。
+///
+/// `force` 用于目标拒绝之后：拒绝不改变视图，但本回合的拒绝集合变了，必须立即
+/// 换一张牌或换一个待选目标，否则机器人会停在原地等回合计时。
 async fn decide(
     ws: &mut Ws,
     config: &BotConfig,
@@ -345,22 +395,36 @@ async fn decide(
     view: &PlayerView,
     memory: &mut BotMemory,
     seq: &mut u64,
+    force: bool,
 ) -> Result<(), String> {
     let self_json = serde_json::to_string(&view.self_).unwrap_or_default();
     let fingerprint = format!("{:?}|{}|{self_json}", view.phase, view.turn);
-    if fingerprint == memory.fingerprint {
+    if !force && fingerprint == memory.fingerprint {
         return Ok(());
     }
     memory.fingerprint = fingerprint;
     memory.view = Some(view.clone());
+    memory.reset_blocked_for_turn(turn_of(view));
 
-    let Some(intent) = brain::next_intent(view, catalog, config.intent_seed) else {
+    let Some(intent) = brain::next_intent(view, catalog, config.intent_seed, &memory.blocked)
+    else {
         return Ok(());
     };
-    let client_intent_id = memory.next_intent_id(&config.name);
+    send_intent(ws, &config.name, memory, seq, intent).await
+}
+
+/// 发送一条意图并登记 `clientIntentId`，供被拒后找回原始参数。
+async fn send_intent(
+    ws: &mut Ws,
+    name: &str,
+    memory: &mut BotMemory,
+    seq: &mut u64,
+    intent: Intent,
+) -> Result<(), String> {
     let intent_value =
         serde_json::to_value(&intent).map_err(|err| format!("序列化意图失败: {err}"))?;
-    memory.remember(client_intent_id.clone(), intent.clone());
+    let client_intent_id = memory.next_intent_id(name);
+    memory.remember(client_intent_id.clone(), intent);
     send(
         ws,
         "Intent",
@@ -372,6 +436,22 @@ async fn decide(
 
 fn turn_of(view: &PlayerView) -> u8 {
     u8::try_from(view.turn.get()).unwrap_or(u8::MAX)
+}
+
+/// 目标被拒且已无候选可换时的提示。
+///
+/// `NO_VALID_TARGET` 是合法拒绝（目标池被玩法、分类等筛选收窄）；能换候选时
+/// 机器人静默重试，只有整盘随从都不合法、本轮确实放弃时才输出一行。
+fn log_target_skip(name: &str, rejected: &Intent) {
+    match rejected {
+        Intent::PlayCard { hand_index, .. } => {
+            eprintln!("bot {name} 棋盘上没有合法目标，本回合跳过手牌 {hand_index}");
+        }
+        Intent::ChooseTarget { minion_id } => {
+            eprintln!("bot {name} 目标待选的候选都已拒绝，放弃随从 {minion_id}");
+        }
+        _ => eprintln!("bot {name} 目标不合法，本回合跳过该操作"),
+    }
 }
 
 async fn send(ws: &mut Ws, kind: &str, payload: Value, seq: &mut u64) -> Result<(), String> {

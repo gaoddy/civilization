@@ -200,11 +200,11 @@ impl Taxonomy {
 
 模拟器直接调用：`sim play --seed N`、`sim batch --games N --seed N --out PATH`、`sim replay --log PATH`、`sim report --log PATH`、`sim check --log PATH [--expect-games N]`、`sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID [--room CODE] [--create] [--intent-seed N]`、`sim dev --connect ws://HOST:PORT/ws [--intent-seed N]`；参数错误、模拟失败或日志校验不通过以非零码退出。`sim bot` 的细节见[房间服务与联网](room-service.md)第 11 节。
 
-`sim dev` 起 7 个机器人：第 0 个建房并把房间码打印为 `ROOM_CODE=<code>`，其余 6 个在取到码后并发加入，给开发者留出恰好一个座位。英雄卡按 id 升序取自内嵌卡表，第 `index` 个机器人的意图种子为 `intent_seed + index`。取房间码超时 10 秒，取到码后等待开局与整局结束的总超时 900 秒；超时或任一机器人失败时取消其余机器人并以非零码退出。
+`sim dev` 起 7 个机器人：第 0 个建房并把房间码打印为 `ROOM_CODE=<code>`，其余 6 个在取到码后并发加入，给开发者留出恰好一个座位。英雄卡按 id 升序取自内嵌卡表，第 `index` 个机器人的意图种子为 `intent_seed + index`。取房间码超时 10 秒；取到码后等待开局与整局结束，不设总时限——本地联调时真人每回合可长达 120 秒，固定总时限会中断对局。任一机器人失败时取消其余机器人并以非零码退出。
 
-`sim bot` 只在视图变化时决策；服务端拒绝意图不会带来新视图，因此收到 `Error` 后每回合最多补发一次 `EndRecruit`（`brain::recover_after_error`），避免整局停在招募阶段等超时。该兜底由 `make m1b-e2e` 的稳定运行暴露并覆盖。
+`sim bot` 只在视图变化时决策；服务端拒绝意图不会带来新视图，因此收到非目标类 `Error` 后每回合最多补发一次 `EndRecruit`（`brain::recover_after_error`），避免整局停在招募阶段等超时。`NO_VALID_TARGET` 走另一条路径：记入本回合阻塞集合后按同一视图立即重决策。
 
-`sim bot` 的意图表同步扩到十一种：`pendingChoices` 头部为 `target` 时发 `ChooseTarget { minion }`，取己方棋盘最左侧随从；`PlayCard` 一律带 `position: None`（追加到最右），并读手牌视图 `requiresTarget`：为真且棋盘非空时预填己方第一个随从为目标，棋盘为空时不填（效果可落空）。`sim/src/ai.rs`（M0 基线）同样按该规则消费目标待选。
+`sim bot` 的意图表同步扩到十一种：`pendingChoices` 头部为 `target` 时发 `ChooseTarget { minion }`，取棋盘上第一个未被拒绝的己方随从；`PlayCard` 一律带 `position: None`（追加到最右），并读手牌视图 `requiresTarget`：为真且棋盘非空时预填己方第一个随从为目标，棋盘为空时不填（效果可落空）。`sim/src/ai.rs`（M0 基线）同样按该规则消费目标待选。
 
 M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 

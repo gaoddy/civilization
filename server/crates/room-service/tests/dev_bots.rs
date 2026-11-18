@@ -30,7 +30,7 @@ async fn dev_run_finishes_a_game_once_the_developer_joins() {
         url: url.clone(),
         intent_seed: 11,
         room_code_sink: Some(code_tx),
-        run_timeout: Duration::from_secs(600),
+        run_timeout: Some(Duration::from_secs(600)),
     }));
 
     let room_code = tokio::time::timeout(Duration::from_secs(10), code_rx)
@@ -77,7 +77,7 @@ async fn dev_run_gives_up_when_nobody_joins() {
         url: format!("ws://{addr}/ws"),
         intent_seed: 1,
         room_code_sink: None,
-        run_timeout: Duration::from_secs(1),
+        run_timeout: Some(Duration::from_secs(1)),
     })
     .await
     .expect_err("无人进房时应超时报错");
