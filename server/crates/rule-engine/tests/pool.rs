@@ -300,6 +300,54 @@ fn neutral_generic_card_always_available() {
 }
 
 #[test]
+fn targeted_effect_follows_enabled_playstyle_through_shop_roll() {
+    // 真实卡表：yangliu 是鱼纲定向 1 星效果牌，dishengxiyu 是通用 1 星效果牌。
+    let no_fish = [
+        Playstyle::Mammal,
+        Playstyle::Bird,
+        Playstyle::Plant,
+        Playstyle::Insect,
+        Playstyle::Virus,
+    ];
+    let with_fish = [
+        Playstyle::Mammal,
+        Playstyle::Fish,
+        Playstyle::Plant,
+        Playstyle::Insect,
+        Playstyle::Virus,
+    ];
+
+    let (mut engine, mut state) = setup_with(test_catalog(), no_fish);
+    only_first_star(&mut engine);
+    state.pool.clear(); // 效果牌不占共享池；清空后随从无份数，候选只剩效果牌。
+    let mut saw_generic = false;
+    for _ in 0..30 {
+        engine.roll_shop(&mut state, 0);
+        for slot in &state.players[0].shop {
+            let slot = slot.as_ref().expect("1 星效果牌非空");
+            assert_ne!(slot.card_id, "yangliu", "未启用鱼纲时定向牌不得进商店");
+            saw_generic |= slot.card_id == "dishengxiyu";
+        }
+    }
+    assert!(saw_generic, "通用效果牌始终可抽");
+
+    let (mut engine, mut state) = setup_with(test_catalog(), with_fish);
+    only_first_star(&mut engine);
+    state.pool.clear();
+    let (mut saw_targeted, mut saw_generic) = (false, false);
+    for _ in 0..30 {
+        engine.roll_shop(&mut state, 0);
+        for slot in &state.players[0].shop {
+            let slot = slot.as_ref().expect("1 星效果牌非空");
+            saw_targeted |= slot.card_id == "yangliu";
+            saw_generic |= slot.card_id == "dishengxiyu";
+        }
+    }
+    assert!(saw_targeted, "启用鱼纲后定向牌可进商店");
+    assert!(saw_generic, "通用效果牌始终可抽");
+}
+
+#[test]
 fn scholar_discover_uses_play_association() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "on-mammal", Playstyle::Mammal, vec![]);

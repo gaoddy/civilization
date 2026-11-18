@@ -19,6 +19,34 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DEFAULT_CARDS = ROOT / "server/data/v0.1/cards.json"
+DEFAULT_SKILLS = ROOT / "server/data/v0.1/skills.json"
+
+# 产品 §5.2「玩法机制词汇」；键为 cards.json 的 playstyle 值。
+MECHANISM_VOCAB = {
+    "mammal": {"成长", "嘲讽", "连击", "群聚"},
+    "bird": {"俯冲", "连击", "最优攻击", "战吼成长"},
+    "insect": {"繁衍", "连击", "最优攻击", "召唤工蜂"},
+    "fish": {"群聚", "复生", "分裂", "最优攻击"},
+    "reptile": {"减伤", "剧毒", "嘲讽"},
+    "cnidarian": {"复苏", "剧毒", "减伤", "分裂"},
+    "plant": {"繁衍", "播种", "分裂", "嘲讽"},
+    "fungus": {"分裂", "分解", "亡语 AOE"},
+    "protozoa": {"吞噬", "分裂", "攻击光环"},
+    "cephalopod": {"潜行", "拟态", "剧毒", "吞噬"},
+    "bacteria": {"传染", "引爆", "转化", "减伤"},
+    "virus": {"传染", "潜伏", "亡语 AOE"},
+    "machine": {"装配", "零件回收", "最优攻击", "战吼成长"},
+}
+KEYWORD_TERMS = {
+    "taunt": "嘲讽", "windfury": "连击", "poison": "剧毒", "reborn": "复生",
+    "sow": "播种", "decompose": "分解", "stealth": "潜行", "contagion": "传染",
+    "ignore_taunt": "最优攻击",
+}
+KEYWORD_PREFIX_TERMS = {"breed": "繁衍", "assemble": "装配", "armor": "减伤"}
+OP_TERMS = {
+    "revive": "复苏", "devour": "吞噬", "mimic": "拟态", "decompose": "分解",
+    "detonate": "引爆", "convert": "转化", "latent": "潜伏", "salvage": "零件回收",
+}
 
 TARGETS = {
     "mammal": (0.42, 0.46), "bird": (0.50, 0.55), "insect": (0.48, 0.54),
@@ -154,12 +182,108 @@ def _band_errors(stats, playstyles):
     return errors
 
 
-def violations(cards, playstyles=None):
+def skill_terms(skill):
+    """从技能的结构化字段识别命中的玩法机制词汇。"""
+    terms = set()
+    keyword = (skill.get("keyword") or "").strip()
+    base = keyword.split()[0] if keyword else ""
+    if base in KEYWORD_TERMS:
+        terms.add(KEYWORD_TERMS[base])
+    if base in KEYWORD_PREFIX_TERMS:
+        terms.add(KEYWORD_PREFIX_TERMS[base])
+    for effect in skill.get("effects") or []:
+        op = effect.get("op")
+        trigger = effect.get("trigger") or ""
+        params = effect.get("params") or {}
+        selector = effect.get("selector") or {}
+        if op == "growth":
+            terms.add("成长")
+            if trigger == "on_play":
+                terms.add("战吼成长")
+        if op in OP_TERMS:
+            terms.add(OP_TERMS[op])
+        if op == "modify_stats" and (params.get("per_attack") or params.get("per_health")):
+            terms.add("群聚")
+        if (op in ("modify_stats", "aura")
+                and trigger in ("aura", "conditional_aura")
+                and _num(params.get("attack")) > 0
+                and selector.get("kind") == "side"
+                and selector.get("side") == "friendly"
+                and selector.get("pick") == "all"):
+            terms.add("攻击光环")
+        if op == "summon":
+            token = str(params.get("token") or "")
+            if trigger == "on_death" and base != "sow":
+                terms.add("分裂")
+            elif trigger != "on_death" and "worker-bee" in token:
+                terms.add("召唤工蜂")
+        if op == "deal_damage" and trigger == "on_death" and selector.get("pick") == "all":
+            terms.add("亡语 AOE")
+        if (op == "deal_damage" and trigger == "on_combat_start"
+                and selector.get("pick") == "lowest_attack"):
+            terms.add("俯冲")
+        if op == "grant_keyword":
+            granted = (params.get("keyword") or {}).get("keyword")
+            if granted == "ignore_taunt":
+                terms.add("最优攻击")
+            if granted == "contagion":
+                terms.add("传染")
+    return terms
+
+
+def effect_cost_errors(cards):
+    """4 费效果牌只能落在 6–7 星。"""
+    errors = []
+    for card in cards:
+        if card.get("card_type") != "effect" or card.get("cost") != 4:
+            continue
+        level = card.get("level")
+        if level not in (6, 7):
+            errors.append(
+                f"效果牌 {card.get('id')} 为 4 费，星级应为 6–7，实际 {level}"
+            )
+    return errors
+
+
+def vocabulary_errors(cards, skills):
+    """多技能随从的第二/后续技能必须落在本玩法机制词汇内。"""
+    errors = []
+    for card in cards:
+        if card.get("card_type") != "minion" or card.get("is_scholar") or card.get("is_hero"):
+            continue
+        vocab = MECHANISM_VOCAB.get(card.get("playstyle"))
+        if vocab is None:
+            continue
+        ids = [sid for sid in card.get("skills") or [] if sid in skills]
+        if len(ids) < 2:
+            continue
+        terms = [skill_terms(skills[sid]) for sid in ids]
+        cid = card.get("id")
+        level = card.get("level")
+        if level in (3, 4):
+            if not (terms[1] & vocab):
+                errors.append(
+                    f"卡 {cid}（{level} 星）第二个技能 {ids[1]} 不属于 3–4 星玩法词汇"
+                )
+            continue
+        matched = sum(1 for entry in terms if entry & vocab)
+        if matched == 0:
+            errors.append(f"卡 {cid}（{level} 星）缺少本玩法签名机制")
+        elif len(terms) - matched > 1:
+            errors.append(f"卡 {cid}（{level} 星）表外技能超过 1 个")
+    return errors
+
+
+def violations(cards, playstyles=None, skills=None):
     stats = playstyle_stats(cards)
     checked = list(playstyles) if playstyles else list(TARGETS)
     errors = _band_errors(stats, checked)
     if playstyles:
         return errors
+
+    errors.extend(effect_cost_errors(cards))
+    if skills:
+        errors.extend(vocabulary_errors(cards, skills))
 
     counted = [
         stats[playstyle]["attack_share"]
@@ -204,7 +328,7 @@ def violations(cards, playstyles=None):
     return errors
 
 
-def report(cards):
+def report(cards, skills=None):
     stats = playstyle_stats(cards)
     counted = [entry["attack_share"] for entry in stats.values() if entry["count"]]
     return {
@@ -212,7 +336,7 @@ def report(cards):
         "spread": (max(counted) - min(counted)) if len(counted) >= 2 else 0.0,
         "skill_density": skill_density(cards),
         "effects": effect_stats(cards),
-        "violations": violations(cards),
+        "violations": violations(cards, skills=skills),
     }
 
 
@@ -248,10 +372,13 @@ def main(argv=None):
     parser.add_argument("--playstyle", action="append", default=None,
                         help="只检查指定玩法（可重复），跳过攻血比差与效果牌检查")
     parser.add_argument("--cards", default=str(DEFAULT_CARDS), help="卡牌 JSON 路径")
+    parser.add_argument("--skills", default=str(DEFAULT_SKILLS), help="技能 JSON 路径")
     args = parser.parse_args(argv)
 
     with open(args.cards, encoding="utf-8") as handle:
         cards = json.load(handle)
+    with open(args.skills, encoding="utf-8") as handle:
+        skills = {skill["id"]: skill for skill in json.load(handle)}
 
     if args.playstyle:
         unknown = [style for style in args.playstyle if style not in TARGETS]
@@ -261,7 +388,7 @@ def main(argv=None):
         errors = _band_errors(data["playstyles"], args.playstyle)
         data["violations"] = errors
     else:
-        data = report(cards)
+        data = report(cards, skills)
         errors = data["violations"]
 
     if args.json:

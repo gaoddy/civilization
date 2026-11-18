@@ -16,16 +16,16 @@
 | [aura-other-fish-plus-0-plus-1](aura-other-fish-plus-0-plus-1.md) | 无 | 你的其他鱼纲随从获得 +0/+1 | 1 |
 | [aura-other-insect-plus-0-plus-1](aura-other-insect-plus-0-plus-1.md) | 无 | 你的其他昆虫纲随从获得 +0/+1 | 1 |
 | [aura-other-mech-plus-1-plus-1](aura-other-mech-plus-1-plus-1.md) | 无 | 你的其他机械随从获得 +1/+1 | 1 |
-| [aura-other-plants-plus-0-plus-1](aura-other-plants-plus-0-plus-1.md) | 无 | 你的其他植物随从获得 +0/+1 | 1 |
+| [aura-other-plants-plus-0-plus-1](aura-other-plants-plus-0-plus-1.md) | 无 | 你的其他植物随从获得 +0/+1 | 0 |
 | [aura-other-plus-0-plus-1](aura-other-plus-0-plus-1.md) | 无 | 你的其他随从获得 +0/+1 | 1 |
 | [aura-other-protozoa-plus-1-attack](aura-other-protozoa-plus-1-attack.md) | 无 | 你的其他原生生物界随从获得 +1 攻击力 | 5 |
-| [aura-plant-plus-1-plus-1](aura-plant-plus-1-plus-1.md) | 无 | 你的植物随从获得 +1/+1 | 3 |
+| [aura-plant-plus-1-plus-1](aura-plant-plus-1-plus-1.md) | 无 | 你的植物随从获得 +1/+1 | 2 |
 | [aura-plant-plus-2-plus-2](aura-plant-plus-2-plus-2.md) | 无 | 你的植物随从获得 +2/+2 | 1 |
 | [aura-scholar-plus-0-plus-2](aura-scholar-plus-0-plus-2.md) | 无 | 你的学者随从获得 +0/+2 | 1 |
 | [aura-scholar-plus-0-plus-3](aura-scholar-plus-0-plus-3.md) | 无 | 你的学者随从获得 +0/+3 | 1 |
-| [aura-school-fish-1](aura-school-fish-1.md) | 无 | 群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1 | 5 |
+| [aura-school-fish-1](aura-school-fish-1.md) | 无 | 群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1 | 6 |
 | [aura-school-fish-2](aura-school-fish-2.md) | 无 | 群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力 | 1 |
-| [aura-school-mammal](aura-school-mammal.md) | 无 | 群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力 | 1 |
+| [aura-school-mammal](aura-school-mammal.md) | 无 | 群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力 | 2 |
 | [battlecry-all-biology-growth-once](battlecry-all-biology-growth-once.md) | battlecry | 战吼：使你的所有动物随从获得一次成长 | 1 |
 | [battlecry-all-friendly-growth-once](battlecry-all-friendly-growth-once.md) | battlecry | 战吼：使你的所有随从获得一次成长 | 5 |
 | [battlecry-all-friendly-growth-twice](battlecry-all-friendly-growth-twice.md) | battlecry | 战吼：使你的所有随从获得两次成长 | 1 |
@@ -45,7 +45,7 @@
 | [battlecry-friendly-human-plus-0-plus-1](battlecry-friendly-human-plus-0-plus-1.md) | battlecry | 战吼：使一个友方人科随从获得 +0/+1 | 1 |
 | [battlecry-friendly-mech-growth-once](battlecry-friendly-mech-growth-once.md) | battlecry | 战吼：使一个友方机械随从获得一次成长 | 3 |
 | [battlecry-friendly-plant-growth-once](battlecry-friendly-plant-growth-once.md) | battlecry | 战吼：使一个友方植物随从获得一次成长 | 1 |
-| [battlecry-friendly-plant-kingdom-growth-once](battlecry-friendly-plant-kingdom-growth-once.md) | battlecry | 战吼：使一个友方植物界随从获得一次成长 | 1 |
+| [battlecry-friendly-plant-kingdom-growth-once](battlecry-friendly-plant-kingdom-growth-once.md) | battlecry | 战吼：使一个友方植物界随从获得一次成长 | 0 |
 | [battlecry-friendly-plus-0-plus-1](battlecry-friendly-plus-0-plus-1.md) | battlecry | 战吼：使一个友方随从获得 +0/+1 | 4 |
 | [battlecry-friendly-plus-0-plus-2](battlecry-friendly-plus-0-plus-2.md) | battlecry | 战吼：使一个友方随从获得 +0/+2 | 4 |
 | [battlecry-friendly-plus-1-attack](battlecry-friendly-plus-1-attack.md) | battlecry | 战吼：使一个友方随从获得 +1 攻击力 | 1 |
@@ -54,7 +54,7 @@
 | [battlecry-friendly-virus-plus-1-attack](battlecry-friendly-virus-plus-1-attack.md) | battlecry | 战吼：使一个友方病毒随从获得 +1 攻击力 | 1 |
 | [battlecry-other-bird-plus-1-plus-1](battlecry-other-bird-plus-1-plus-1.md) | battlecry | 战吼：使你的其他鸟纲随从获得 +1/+1 | 1 |
 | [battlecry-other-friendly-humans-plus-1-attack](battlecry-other-friendly-humans-plus-1-attack.md) | battlecry | 战吼：使你的其他人科随从获得 +1 攻击力 | 5 |
-| [battlecry-other-insect-growth-once](battlecry-other-insect-growth-once.md) | battlecry | 战吼：使你的其他昆虫纲随从获得一次成长 | 5 |
+| [battlecry-other-insect-growth-once](battlecry-other-insect-growth-once.md) | battlecry | 战吼：使你的其他昆虫纲随从获得一次成长 | 2 |
 | [battlecry-plant-growth-twice](battlecry-plant-growth-twice.md) | battlecry | 战吼：使一个友方植物随从获得两次成长 | 1 |
 | [battlecry-random-enemy-damage-1](battlecry-random-enemy-damage-1.md) | battlecry | 战吼：对随机一个敌方随从造成 1 点伤害 | 2 |
 | [battlecry-random-enemy-damage-2](battlecry-random-enemy-damage-2.md) | battlecry | 战吼：对随机一个敌方随从造成 2 点伤害 | 1 |
@@ -97,7 +97,7 @@
 | [deathrattle-friendly-cnidarian-growth-once](deathrattle-friendly-cnidarian-growth-once.md) | deathrattle | 亡语：使一个友方水螅纲随从获得一次成长 | 1 |
 | [deathrattle-friendly-insect-growth-twice](deathrattle-friendly-insect-growth-twice.md) | deathrattle | 亡语：使一个友方昆虫纲随从获得两次成长 | 1 |
 | [deathrattle-friendly-protozoa-growth-once](deathrattle-friendly-protozoa-growth-once.md) | deathrattle | 亡语：使一个友方原生生物界随从获得一次成长 | 1 |
-| [deathrattle-random-enemy-damage-2](deathrattle-random-enemy-damage-2.md) | deathrattle | 亡语：对随机一个敌方随从造成 2 点伤害 | 1 |
+| [deathrattle-random-enemy-damage-2](deathrattle-random-enemy-damage-2.md) | deathrattle | 亡语：对随机一个敌方随从造成 2 点伤害 | 0 |
 | [deathrattle-random-enemy-hp-minus-1](deathrattle-random-enemy-hp-minus-1.md) | deathrattle | 亡语：使随机一个敌方随从获得 -1 生命值 | 1 |
 | [deathrattle-random-enemy-minus-1-attack](deathrattle-random-enemy-minus-1-attack.md) | 无 | 亡语：使随机一个敌方随从获得 -1 攻击力 | 2 |
 | [deathrattle-random-enemy-minus-1-health](deathrattle-random-enemy-minus-1-health.md) | deathrattle | 亡语：使随机一个敌方随从获得 -1 生命 | 1 |
@@ -137,25 +137,25 @@
 | [evolution-discovery](evolution-discovery.md) | 无 | 发现一张本局启用的玩法随从 | 1 |
 | [faraday-cage](faraday-cage.md) | 无 | 使一个友方随从获得护盾 | 1 |
 | [free-refresh](free-refresh.md) | 无 | 免费刷新一次商店 | 1 |
-| [heredity](heredity.md) | 无 | 使一个友方植物随从获得一次成长 | 2 |
+| [heredity](heredity.md) | 无 | 使一个友方植物随从获得一次成长 | 1 |
 | [human-growth-twice](human-growth-twice.md) | 无 | 使一个友方人科随从获得两次成长 | 1 |
 | [invention-factory](invention-factory.md) | 无 | 使你的其他机械随从各获得一次成长 | 2 |
 | [keyword-armor-1](keyword-armor-1.md) | armor 1 | 减伤 1：受到伤害时，减免 1 点伤害 | 10 |
 | [keyword-armor-2](keyword-armor-2.md) | armor 2 | 减伤 2：受到伤害时，减免 2 点伤害 | 3 |
 | [keyword-assemble-1](keyword-assemble-1.md) | assemble 1 | 装配 1：进入战场时，使你的其他机械随从各获得 1 次成长 | 11 |
 | [keyword-assemble-2](keyword-assemble-2.md) | assemble 2 | 装配 2：进入战场时，使你的其他机械随从各获得 2 次成长 | 8 |
-| [keyword-breed-1](keyword-breed-1.md) | breed 1 | 繁衍 1：回合开始时获得 +1 生命 | 8 |
+| [keyword-breed-1](keyword-breed-1.md) | breed 1 | 繁衍 1：回合开始时获得 +1 生命 | 11 |
 | [keyword-breed-2](keyword-breed-2.md) | breed 2 | 繁衍 2：回合开始时获得 +2 生命 | 4 |
-| [keyword-breed-3](keyword-breed-3.md) | breed 3 | 繁衍 3：回合开始时获得 +3 生命 | 2 |
-| [keyword-contagion](keyword-contagion.md) | contagion | 传染：造成伤害后，目标每回合 -1 生命 | 15 |
+| [keyword-breed-3](keyword-breed-3.md) | breed 3 | 繁衍 3：回合开始时获得 +3 生命 | 4 |
+| [keyword-contagion](keyword-contagion.md) | contagion | 传染：造成伤害后，目标每回合 -1 生命 | 16 |
 | [keyword-divine-shield](keyword-divine-shield.md) | divine_shield | 护盾：抵消一次伤害 | 7 |
-| [keyword-evolve](keyword-evolve.md) | evolve | 进化：从 +2/+2、护盾、复生中选择一个 | 6 |
+| [keyword-evolve](keyword-evolve.md) | evolve | 进化：从 +2/+2、护盾、复生中选择一个 | 3 |
 | [keyword-ignore-taunt](keyword-ignore-taunt.md) | ignore_taunt | 无视嘲讽：攻击时无视敌方嘲讽 | 12 |
 | [keyword-poison](keyword-poison.md) | poison | 剧毒：造成伤害后，若目标仍存活则将其消灭 | 8 |
 | [keyword-reborn](keyword-reborn.md) | reborn | 复生：以 1 点生命复活一次 | 7 |
 | [keyword-sow](keyword-sow.md) | sow | 播种：死亡时召唤一个 1/1 的幼苗 | 16 |
 | [keyword-stealth](keyword-stealth.md) | stealth | 潜行：无法被单体攻击与单体效果选中，造成伤害后打破 | 4 |
-| [keyword-taunt](keyword-taunt.md) | taunt | 嘲讽 | 20 |
+| [keyword-taunt](keyword-taunt.md) | taunt | 嘲讽 | 22 |
 | [keyword-windfury](keyword-windfury.md) | windfury | 连击：每回合可攻击两次 | 11 |
 | [latent-3](latent-3.md) | 无 | 潜伏：回合开始时，每有 1 层传染获得 +1 攻击力；达到 3 层时对敌方所有随从造成 3 点伤害 | 1 |
 | [light-speed-strike](light-speed-strike.md) | 无 | 使一个友方随从本回合获得连击 | 1 |
@@ -171,10 +171,10 @@
 | [revive-3](revive-3.md) | 无 | 复苏：以 +3/+3 复活一次 | 1 |
 | [salvage-machine](salvage-machine.md) | 无 | 零件回收：死亡时获得一张随机机械随从牌 | 1 |
 | [scholar-growth-twice](scholar-growth-twice.md) | 无 | 使一个友方学者随从获得两次成长 | 1 |
-| [shout](shout.md) | 无 | 使一个友方随从获得一次成长 | 28 |
+| [shout](shout.md) | 无 | 使一个友方随从获得一次成长 | 30 |
 | [trigger-2-humans-self-plus-1-attack](trigger-2-humans-self-plus-1-attack.md) | 无 | 若你控制至少 2 个人科随从，获得 +1 攻击力 | 1 |
 | [trigger-2-humans-self-plus-1-plus-1](trigger-2-humans-self-plus-1-plus-1.md) | 无 | 若你控制至少 2 个人科随从，获得 +1/+1 | 1 |
-| [trigger-3-humans-self-plus-1-plus-1](trigger-3-humans-self-plus-1-plus-1.md) | 无 | 若你控制至少 3 个人科随从，获得 +1/+1 | 1 |
+| [trigger-3-humans-self-plus-1-plus-1](trigger-3-humans-self-plus-1-plus-1.md) | 无 | 若你控制至少 3 个人科随从，获得 +1/+1 | 0 |
 | [trigger-3-humans-self-plus-2-attack](trigger-3-humans-self-plus-2-attack.md) | 无 | 若你控制至少 3 个人科随从，获得 +2 攻击力 | 1 |
 | [trigger-all-friendly-growth-once](trigger-all-friendly-growth-once.md) | 无 | 使你的随从各获得一次成长 | 2 |
 | [trigger-all-friendly-growth-twice](trigger-all-friendly-growth-twice.md) | 无 | 使你的随从获得两次成长 | 1 |

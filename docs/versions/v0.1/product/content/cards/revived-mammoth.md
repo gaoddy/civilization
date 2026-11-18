@@ -9,7 +9,7 @@ level: 6
 era: future
 attack: 10
 health: 10
-skills: [keyword-reborn, keyword-evolve]
+skills: [keyword-reborn, aura-school-mammal]
 is_scholar: false
 ---
 
@@ -30,14 +30,14 @@ is_scholar: false
 | 时代 | 未来 |
 | 攻击力 | 10 |
 | 生命值 | 10 |
-| 关键词 | 复生；进化 |
-| 技能 | keyword-reborn；keyword-evolve |
+| 关键词 | 复生 |
+| 技能 | keyword-reborn；aura-school-mammal |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-复生：以 1 点生命复活一次；进化：从 +2/+2、护盾、复生中选择一个
+复生：以 1 点生命复活一次；群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力
 
 ## 出处
 

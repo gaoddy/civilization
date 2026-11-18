@@ -9,7 +9,7 @@ level: 6
 era: modern
 attack: 8
 health: 10
-skills: [deathrattle-summon-3-termites, battlecry-other-insect-growth-once]
+skills: [deathrattle-summon-3-termites, keyword-breed-3]
 is_scholar: false
 ---
 
@@ -30,20 +30,20 @@ is_scholar: false
 | 时代 | 现代 |
 | 攻击力 | 8 |
 | 生命值 | 10 |
-| 关键词 | 亡语；战吼 |
-| 技能 | deathrattle-summon-3-termites；battlecry-other-insect-growth-once |
+| 关键词 | 亡语；繁衍 3 |
+| 技能 | deathrattle-summon-3-termites；keyword-breed-3 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-分裂：死亡时召唤三个 2/2 的白蚁；战吼：使你的其他昆虫纲随从获得一次成长
+分裂：死亡时召唤三个 2/2 的白蚁；繁衍 3：回合开始时获得 +3 生命
 
 ## 设计说明
 
-定位：6 星分裂单位，死亡后留下三个白蚁。
-平衡边界：分裂按召唤类折算，9/13 身材中位。
-使用建议：作为终局场面延续，配合群体成长。
+定位：6 星分裂与繁衍单位，死亡后留下三个白蚁。
+平衡边界：6 星 8/10；攻击力取该星级下限，生命值取该星级下限；关键词折算 6 点，合计 24，低于 26 上限 2 点。
+使用建议：作为终局场面延续，配合繁衍持续堆高生命。
 
 ## 出处
 

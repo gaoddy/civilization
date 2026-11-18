@@ -9,7 +9,7 @@ level: 4
 era: primitive
 attack: 7
 health: 6
-skills: [keyword-taunt, battlecry-other-insect-growth-once]
+skills: [keyword-taunt, keyword-breed-1]
 is_scholar: false
 ---
 
@@ -30,19 +30,19 @@ is_scholar: false
 | 时代 | 原始 |
 | 攻击力 | 7 |
 | 生命值 | 6 |
-| 关键词 | 嘲讽；战吼 |
-| 技能 | keyword-taunt；battlecry-other-insect-growth-once |
+| 关键词 | 嘲讽；繁衍 1 |
+| 技能 | keyword-taunt；keyword-breed-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-嘲讽；战吼：使你的其他昆虫纲随从获得一次成长
+嘲讽；繁衍 1：回合开始时获得 +1 生命
 
 ## 设计说明
 
 定位：4 星嘲讽，保护后排昆虫随从。
-平衡边界：4 星 5/8，身材处于该星级中位。
+平衡边界：4 星 7/6；攻击力取该星级上限，生命值取该星级下限；关键词折算 2.5 点，合计 15.5，低于 17 上限 1.5 点。
 使用建议：挡住敌方高攻单位，为分裂与成长争取时间。
 
 ## 出处

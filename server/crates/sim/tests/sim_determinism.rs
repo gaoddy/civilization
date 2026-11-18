@@ -134,6 +134,10 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 /// `keyword-ignore-taunt`）：本批次 20 局哈希与第十三次基线逐位一致，说明这
 /// 20 局未抽取到受影响的卡；选目标行为变化由 rule-engine 的战斗用例覆盖，
 /// 基线保持原值。
+///
+/// 2026-11-19 修正 12 张多技能卡的表外第二技能（技能组合与部分卡的光环/繁衍
+/// 变化）：本批次 20 局哈希同样逐位一致，说明这些卡未进入本批对局；技能效果
+/// 变化由 rule-engine 用例覆盖，基线保持原值。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
