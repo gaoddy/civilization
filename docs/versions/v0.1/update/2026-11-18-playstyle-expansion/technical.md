@@ -282,7 +282,7 @@ pub struct CombatHandMinion {
 
 - `KEYWORD_BASES` / `ALL_KEYWORD_BASES` 增加 `poison`、`armor`、`stealth`。
 - `KEYWORD_RE` / `SKILL_KEYWORD_RE` 支持 `armor \d+`。
-- `KW_UNLOCK` 增加 `poison: 1`、`armor: 1`、`stealth: 1`（新机制不按时代解锁，最小星级为 1）。
+- `KW_UNLOCK` 增加 `poison`、`armor`、`stealth`：新机制不按时代解锁，最小星级按实际卡池登记（当前 poison 3、armor 2、stealth 3），`check_keyword_unlock` 校验实际最小星级与登记值精确相等。
 - `KEYWORD_PLAYSTYLE` 增加：
   - `poison: {"reptile", "cephalopod", "cnidarian"}`
   - `armor: {"reptile", "bacteria", "cnidarian"}`
