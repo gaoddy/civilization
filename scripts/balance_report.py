@@ -254,9 +254,12 @@ def main(argv=None):
         cards = json.load(handle)
 
     if args.playstyle:
-        stats = playstyle_stats(cards)
-        errors = _band_errors(stats, args.playstyle)
-        data = {"playstyles": stats, "violations": errors}
+        unknown = [style for style in args.playstyle if style not in TARGETS]
+        if unknown:
+            parser.error(f"未知玩法 {unknown}")
+        data = report(cards)
+        errors = _band_errors(data["playstyles"], args.playstyle)
+        data["violations"] = errors
     else:
         data = report(cards)
         errors = data["violations"]
