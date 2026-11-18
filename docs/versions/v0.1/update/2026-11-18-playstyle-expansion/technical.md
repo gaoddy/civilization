@@ -25,7 +25,7 @@
 
 | 关键词 | 数据 id | 携带层数 | 玩法归属 |
 | --- | --- | --- | --- |
-| 剧毒 | `poison` | 否 | `reptile`、`cephalopod` |
+| 剧毒 | `poison` | 否 | `reptile`、`cephalopod`、`cnidarian` |
 | 减伤 | `armor N` | 是 | `reptile`、`bacteria`、`cnidarian` |
 | 潜行 | `stealth` | 否 | `cephalopod` |
 
@@ -118,10 +118,11 @@ Devoured { source: InstanceId, target: InstanceId },
 pub hand_minions: Vec<CombatHandMinion>,
 ```
 
-`CombatHandMinion` 记录手牌牌面归属的战斗方：
+`CombatHandMinion` 记录手牌牌面归属的战斗方（`seat` 用于写入持久手牌，`side` 用于过滤幽灵战）：
 
 ```rust
 pub struct CombatHandMinion {
+    pub seat: Seat,
     pub side: Seat,
     pub minion: MinionInstance,
 }

@@ -717,7 +717,7 @@ impl Engine {
                 let keywords = if stats_only {
                     Vec::new()
                 } else {
-                    combat::keywords(&self.catalog, target)
+                    combat::keywords_without_aura(&self.catalog, target)
                         .into_iter()
                         .collect::<Vec<_>>()
                 };
