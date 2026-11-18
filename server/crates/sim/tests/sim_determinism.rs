@@ -100,6 +100,9 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 /// 2026-11-18 玩法扩充收尾后第四次重定：`MinionInstance` 新增延迟战吼结算
 /// 标记 `delayed_battlecry_used` 并计入 `state_hash`，修复同一实例每场战斗
 /// 重复结算延迟战吼的缺陷；仅哈希构成变化，模拟流程不变。
+///
+/// 2026-11-18 卡牌参数重排第一步后第五次重定：三张 2 星双技能卡合并技能、
+/// 六张无技能随从补技能，参战卡牌效果变化，涉及这些卡的批次哈希随之改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
