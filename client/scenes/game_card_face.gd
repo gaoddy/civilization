@@ -12,7 +12,8 @@ const FREEZE_CRYSTAL_LINES := 10
 
 ## 统一卡面：封面铺满整卡，左上费用、右上时代，底部信息区依次为介绍（最多
 ## 两行）、居中名称与「攻击 · 类型 · 生命」。`cost_text`/`era_text` 为空时
-## 不渲染角标；`frozen` 为真时盖整卡蒙层、叠冰晶并保留右下「冻」字。
+## 不渲染角标；`stealth` 为真时在角标行右侧追加潜行状态标识；`frozen` 为真时
+## 盖整卡蒙层、叠冰晶并保留右下「冻」字。
 ## 所有子节点忽略鼠标，点击与悬停由外层卡片决定。
 static func face(
     card_id: String,
@@ -23,6 +24,7 @@ static func face(
     cost_text := "",
     era_text := "",
     frozen := false,
+    stealth := false,
 ) -> Control:
     var entry := CardDB.card(card_id)
     var desc_text := CardDB.display_text(card_id)
@@ -52,15 +54,8 @@ static func face(
     watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
     face_node.add_child(watermark)
 
-    if cost_text != "" or era_text != "":
-        _add_corner_badges(face_node, cost_text, era_text, badge_text)
-    elif badge_text != "":
-        var badge := UI.pill_label(badge_text, "accent", "font-caption")
-        badge.name = "CardBadge"
-        badge.set_anchors_preset(Control.PRESET_TOP_LEFT)
-        badge.position = Vector2(UITheme.space("space-xs"), UITheme.space("space-xs"))
-        badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        face_node.add_child(badge)
+    if cost_text != "" or era_text != "" or badge_text != "" or stealth:
+        _add_corner_badges(face_node, cost_text, era_text, badge_text, stealth)
 
     var info := UI.card_panel("cover-info")
     info.name = "CardInfo"
@@ -134,12 +129,14 @@ static func face(
     return face_node
 
 
-## 左上费用与右上时代的角标行；窄卡上左右贴边、互不重叠。
+## 左上费用、金色/奖励角标与右上时代的角标行；窄卡上左右贴边、互不重叠。
+## 潜行状态标识放在右侧时代角标之前，与金色角标分列两端。
 static func _add_corner_badges(
     face_node: Control,
     cost_text: String,
     era_text: String,
     badge_text: String,
+    stealth := false,
 ) -> void:
     var margin := UITheme.space("space-xs")
     var row := HBoxContainer.new()
@@ -166,6 +163,13 @@ static func _add_corner_badges(
     spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     row.add_child(spacer)
+
+    if stealth:
+        var stealth_badge := _corner_badge(
+            TranslationServer.translate("ui.game.card.stealth_glyph"), "info"
+        )
+        stealth_badge.name = "StealthBadge"
+        row.add_child(stealth_badge)
 
     if era_text != "":
         var era := _corner_badge(era_text, "info")
@@ -258,6 +262,10 @@ static func read_only_minion_card(minion: Dictionary) -> Control:
         stat_text(minion.get("health")),
         playstyle_text(entry),
         "★" if bool(minion.get("golden", false)) else "",
+        "",
+        "",
+        false,
+        bool(minion.get("stealth", false)),
     ))
     return panel
 

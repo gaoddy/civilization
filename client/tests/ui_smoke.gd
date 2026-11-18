@@ -22,6 +22,7 @@ func _ready() -> void:
     await _check_hand_hover_overlap_strip()
     await _check_hand_hover_in_combat()
     await _check_board_capacity_from_view()
+    await _check_board_stealth_badge()
     await _check_combat_layout()
     await _check_hand_drag_emits_position()
     await _check_hand_drag_cursor_rule()
@@ -1112,6 +1113,40 @@ func _check_summon_inserts_at_alive_rank() -> void:
     # 存活序列此时是 mi_1、mi_2；rank 1 应插在 mi_2 之前，即向量下标 2
     # （mi_0 的阵亡条目仍占向量下标 0）。
     _expect(ids == ["mi_0", "mi_1", "mi_9", "mi_2"], "召唤应按存活下标插入，实际顺序 %s" % [ids])
+
+
+## 潜行随从在棋盘卡上显示状态标识；未潜行的随从没有该标识。
+func _check_board_stealth_badge() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    var stealth_minion: Dictionary = FixtureScript.board_minion("mi_1", "baiyi", 0)
+    stealth_minion["stealth"] = true
+    view["self"]["board"] = [
+        stealth_minion,
+        FixtureScript.board_minion("mi_2", "airplane", 1),
+    ]
+    view["self"]["hand"] = []
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var stealth_card = instance.find_child("BoardMinion0", true, false)
+    var plain_card = instance.find_child("BoardMinion1", true, false)
+    var badge = stealth_card.find_child("StealthBadge", true, false) if stealth_card != null else null
+    _expect(badge != null, "潜行随从应显示潜行标识")
+    if badge != null:
+        _expect(badge.text == "潜", "潜行标识文案应为「潜」，实为 %s" % badge.text)
+    _expect(
+        plain_card != null and plain_card.find_child("StealthBadge", true, false) == null,
+        "未潜行随从不应显示潜行标识"
+    )
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
 
 
 ## 回合号不匹配时（`CombatResult` 属于上一回合），不展示旧战报也不播演示。

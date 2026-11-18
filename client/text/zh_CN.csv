@@ -1158,6 +1158,7 @@ token.worker-bee-token-1.name,工蜂
 token.worker-bee-token-2.name,工蜂
 ui.common.no_hero,未选英雄
 ui.game.card.freeze_glyph,冻
+ui.game.card.stealth_glyph,潜
 ui.game.combat.banner,%s%s · 伤害 %d · 我方 %d vs 对手 %d
 ui.game.combat.draw,平局
 ui.game.combat.ghost_suffix,（幽灵）
