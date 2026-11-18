@@ -9,7 +9,7 @@ use common::catalog;
 use protocol::intents::Intent;
 use protocol::view::{Phase, PlayerView};
 use serde_json::{Value, json};
-use sim::bot::brain::{next_intent, recover_after_error, retry_with_target};
+use sim::bot::brain::{BlockedTargets, next_intent, recover_after_error, retry_with_target};
 
 /// 构造一份最小但完整的 `PlayerView`。
 ///
@@ -97,7 +97,8 @@ fn consumes_pending_choice_first() {
         true,
     );
 
-    let intent = next_intent(&view, &catalog(), 0).expect("有待选时应当给出意图");
+    let intent = next_intent(&view, &catalog(), 0, &BlockedTargets::default())
+        .expect("有待选时应当给出意图");
     match intent {
         Intent::ChooseDiscover { choice } => assert_eq!(choice, 0),
         other => panic!("期望 ChooseDiscover，实际 {other:?}"),
@@ -107,8 +108,8 @@ fn consumes_pending_choice_first() {
 #[test]
 fn pending_target_starts_from_first_board_minion_not_source() {
     // 战吼的合法池可能带筛选（例如「一个友方鱼纲随从」），来源随从在棋盘末尾时
-    // 未必在池内。优先选来源会让服务端拒绝后沿棋盘后移直接越界，机器人再无合法
-    // 补选，整局卡在招募阶段；目标待选必须从棋盘第一个随从开始，才能覆盖全盘。
+    // 未必在池内。目标待选从棋盘第一个随从开始，被拒的候选记入阻塞集合后由
+    // 下一次决策依次换下一个，能覆盖整个棋盘。
     let pending = json!([{ "kind": "target", "sourceMinionId": "minion-9" }]);
     let board = json!([
         board_minion("minion-1", 0),
@@ -121,7 +122,8 @@ fn pending_target_starts_from_first_board_minion_not_source() {
         board,
     );
 
-    let intent = next_intent(&view, &catalog(), 0).expect("有待选时应给出意图");
+    let intent =
+        next_intent(&view, &catalog(), 0, &BlockedTargets::default()).expect("有待选时应给出意图");
     match intent {
         Intent::ChooseTarget { minion_id } => assert_eq!(minion_id, "minion-1"),
         other => panic!("期望 ChooseTarget，实际 {other:?}"),
@@ -149,7 +151,8 @@ fn buys_most_expensive_buyable_slot() {
         true,
     );
 
-    let intent = next_intent(&view, &catalog(), 0).expect("有可买槽位时应当给出意图");
+    let intent = next_intent(&view, &catalog(), 0, &BlockedTargets::default())
+        .expect("有可买槽位时应当给出意图");
     match intent {
         Intent::BuyMinion { slot } => assert_eq!(slot, 1),
         other => panic!("期望 BuyMinion，实际 {other:?}"),
@@ -168,7 +171,8 @@ fn plays_hand_before_buying() {
         true,
     );
 
-    let intent = next_intent(&view, &catalog(), 0).expect("有可打手牌时应当给出意图");
+    let intent = next_intent(&view, &catalog(), 0, &BlockedTargets::default())
+        .expect("有可打手牌时应当给出意图");
     match intent {
         Intent::PlayCard {
             hand_index,
@@ -212,7 +216,8 @@ fn targets_first_board_minion_when_hand_requires_target() {
         json!([board_minion("mi_1", 0)]),
     );
 
-    let intent = next_intent(&view, &catalog(), 0).expect("有可打手牌时应当给出意图");
+    let intent = next_intent(&view, &catalog(), 0, &BlockedTargets::default())
+        .expect("有可打手牌时应当给出意图");
     match intent {
         Intent::PlayCard {
             hand_index,
@@ -258,7 +263,8 @@ fn omits_target_when_hand_requires_target_but_board_is_empty() {
         json!([]),
     );
 
-    let intent = next_intent(&view, &catalog(), 0).expect("有可打手牌时应当给出意图");
+    let intent = next_intent(&view, &catalog(), 0, &BlockedTargets::default())
+        .expect("有可打手牌时应当给出意图");
     match intent {
         Intent::PlayCard {
             target_minion_id, ..
@@ -271,7 +277,8 @@ fn omits_target_when_hand_requires_target_but_board_is_empty() {
 fn ends_recruit_when_nothing_else_is_possible() {
     let view = view(0, json!([]), json!([]), json!([]), json!([]), true);
 
-    let intent = next_intent(&view, &catalog(), 0).expect("无可做时应当结束招募");
+    let intent = next_intent(&view, &catalog(), 0, &BlockedTargets::default())
+        .expect("无可做时应当结束招募");
     assert!(matches!(intent, Intent::EndRecruit), "实际 {intent:?}");
 }
 
@@ -295,29 +302,113 @@ fn does_not_recover_outside_recruit() {
     assert!(recover_after_error(&recruited).is_none());
 }
 
-/// 给视图补一个己方随从，用于目标补选。
-fn with_board(mut view: PlayerView, minion_id: &str) -> PlayerView {
-    view.self_.board.push(protocol::view::BoardMinion {
-        attack: 1,
-        card_id: "adam-smith".to_string(),
-        golden: false,
-        health: 1,
-        index: 0,
-        keywords: Vec::new(),
-        minion_id: minion_id.to_string(),
-        sellable: true,
-        stats: None,
-        stealth: false,
-    });
-    view
+#[test]
+fn skips_hand_blocked_earlier_in_the_turn() {
+    // 整盘都没有合法目标、本回合放弃该牌后，直接换下一张。
+    let view = view(
+        10,
+        json!([]),
+        json!([]),
+        json!([
+            { "index": 0, "playable": true, "disabledReason": null },
+            { "index": 1, "playable": true, "disabledReason": null }
+        ]),
+        json!([]),
+        true,
+    );
+    let mut blocked = BlockedTargets::default();
+    blocked.block_hand(0);
+
+    let intent = next_intent(&view, &catalog(), 0, &blocked).expect("还有另一张可打手牌");
+    match intent {
+        Intent::PlayCard { hand_index, .. } => assert_eq!(hand_index, 1, "应跳过已放弃的手牌"),
+        other => panic!("期望 PlayCard，实际 {other:?}"),
+    }
 }
 
 #[test]
-fn retries_rejected_intent_with_friendly_target() {
-    // 服务端返回 NO_VALID_TARGET 后，机器人应给被拒意图补上己方随从并重发。
-    let view = with_board(
+fn ends_recruit_after_blocked_limit() {
+    // 连续放弃多张后不再试错：达到上限时直接结束招募，避免空转。
+    let view = view(
+        0,
+        json!([]),
+        json!([]),
+        json!([{ "index": 0, "playable": true, "disabledReason": null }]),
+        json!([]),
+        true,
+    );
+    let mut blocked = BlockedTargets::default();
+    for hand_index in 0..3 {
+        blocked.block_hand(hand_index);
+    }
+
+    let intent = next_intent(&view, &catalog(), 0, &blocked).expect("达到上限时应结束招募");
+    assert!(matches!(intent, Intent::EndRecruit), "实际 {intent:?}");
+}
+
+#[test]
+fn rotates_pending_target_past_rejected_minion() {
+    // ChooseTarget 被拒只跳过该候选，下一次决策换下一个己方随从。
+    let pending = json!([{ "kind": "target", "sourceMinionId": "minion-2" }]);
+    let board = json!([board_minion("minion-1", 0), board_minion("minion-2", 1)]);
+    let view = with_hand_and_board(
+        view(10, json!([]), json!([]), json!([]), pending, false),
+        json!([]),
+        board,
+    );
+    let mut blocked = BlockedTargets::default();
+    blocked.block_minion("minion-1".to_string());
+
+    let intent = next_intent(&view, &catalog(), 0, &blocked).expect("还有下一个候选");
+    match intent {
+        Intent::ChooseTarget { minion_id } => assert_eq!(minion_id, "minion-2"),
+        other => panic!("期望 ChooseTarget，实际 {other:?}"),
+    }
+}
+
+#[test]
+fn stops_when_every_board_minion_is_blocked() {
+    // 全部候选都被拒绝时不再发意图，交给回合计时推进，避免无限空转。
+    let pending = json!([{ "kind": "target", "sourceMinionId": "minion-2" }]);
+    let board = json!([board_minion("minion-1", 0), board_minion("minion-2", 1)]);
+    let view = with_hand_and_board(
+        view(0, json!([]), json!([]), json!([]), pending, false),
+        json!([]),
+        board,
+    );
+    let mut blocked = BlockedTargets::default();
+    blocked.block_minion("minion-1".to_string());
+    blocked.block_minion("minion-2".to_string());
+
+    assert!(
+        !blocked.has_unblocked_minion(&view.self_),
+        "全部候选被拒后应报告没有可用目标"
+    );
+    assert!(
+        next_intent(&view, &catalog(), 0, &blocked).is_none(),
+        "没有合法候选时不应再发意图"
+    );
+}
+
+#[test]
+fn blocked_hand_counts_distinct_cards() {
+    let mut blocked = BlockedTargets::default();
+    assert_eq!(blocked.hand_count(), 0);
+
+    blocked.block_hand(4);
+    blocked.block_hand(4);
+    assert_eq!(blocked.hand_count(), 1, "同一张牌重复放弃只记一次");
+    assert!(blocked.blocks_hand(4));
+}
+
+#[test]
+fn retries_rejected_play_with_next_board_minion() {
+    // 预填的随从不在目标池内时，沿棋盘换下一个继续尝试，而不是直接放弃这张牌。
+    let board = json!([board_minion("minion-1", 0), board_minion("minion-2", 1)]);
+    let view = with_hand_and_board(
         view(10, json!([]), json!([]), json!([]), json!([]), true),
-        "minion-7",
+        json!([]),
+        board,
     );
 
     let retried = retry_with_target(
@@ -325,10 +416,10 @@ fn retries_rejected_intent_with_friendly_target() {
         &Intent::PlayCard {
             hand_index: 2,
             position: None,
-            target_minion_id: None,
+            target_minion_id: Some("minion-1".to_string()),
         },
     )
-    .expect("有己方随从时应能补选");
+    .expect("棋盘上还有下一个随从");
 
     match retried {
         Intent::PlayCard {
@@ -336,87 +427,50 @@ fn retries_rejected_intent_with_friendly_target() {
             position,
             target_minion_id,
         } => {
-            assert_eq!(hand_index, 2, "重发保留原手牌下标");
-            assert_eq!(position, None, "补选目标不改落点");
-            assert_eq!(target_minion_id.as_deref(), Some("minion-7"));
+            assert_eq!(hand_index, 2, "重试保留原手牌下标");
+            assert_eq!(position, None, "换目标不改落点");
+            assert_eq!(target_minion_id.as_deref(), Some("minion-2"));
         }
         other => panic!("期望 PlayCard，实际 {other:?}"),
     }
 }
 
 #[test]
-fn retries_play_and_hero_power_with_target() {
-    let view = with_board(
+fn retries_from_first_minion_when_target_left_board() {
+    // 被拒的目标已不在棋盘上（例如被三连合并）时从头开始，避免越界。
+    let board = json!([board_minion("minion-1", 0)]);
+    let view = with_hand_and_board(
         view(10, json!([]), json!([]), json!([]), json!([]), true),
-        "minion-3",
+        json!([]),
+        board,
     );
 
-    let played = retry_with_target(
+    let retried = retry_with_target(
         &view,
         &Intent::PlayCard {
-            hand_index: 1,
+            hand_index: 0,
             position: None,
-            target_minion_id: None,
+            target_minion_id: Some("minion-gone".to_string()),
         },
     )
-    .expect("手牌也可补选目标");
+    .expect("应从第一个随从重新尝试");
     assert!(matches!(
-        played,
+        retried,
         Intent::PlayCard {
-            hand_index: 1,
-            position: None,
             target_minion_id: Some(ref id),
             ..
-        } if id == "minion-3"
-    ));
-
-    let powered = retry_with_target(
-        &view,
-        &Intent::UseHeroPower {
-            skill_id: "light-speed-strike".to_string(),
-            target_minion_id: None,
-        },
-    )
-    .expect("技能也可补选目标");
-    assert!(matches!(
-        powered,
-        Intent::UseHeroPower {
-            ref skill_id,
-            target_minion_id: Some(ref id),
-        } if skill_id == "light-speed-strike" && id == "minion-3"
+        } if id == "minion-1"
     ));
 }
 
 #[test]
-fn does_not_retry_without_board_or_for_targetless_intent() {
-    let empty = view(10, json!([]), json!([]), json!([]), json!([]), true);
-    assert!(
-        retry_with_target(
-            &empty,
-            &Intent::PlayCard {
-                hand_index: 0,
-                position: None,
-                target_minion_id: None,
-            }
-        )
-        .is_none(),
-        "没有己方随从时无法补选"
-    );
-
-    let view = with_board(empty, "minion-1");
-    assert!(
-        retry_with_target(&view, &Intent::RerollShop).is_none(),
-        "不需要目标的意图不重发"
-    );
-}
-
-#[test]
-fn does_not_retry_an_intent_that_already_targets() {
-    // 服务端可按过滤器拒绝补选的目标（例如要求的种族与首个随从不符）。
-    // 补选后的意图再被拒时必须放弃，否则会「补选→拒绝→再补选」无限空转。
-    let view = with_board(
+fn stops_retrying_after_last_board_minion() {
+    // 棋盘遍历完仍无合法目标时返回 None，由调用方本回合放弃这张牌。
+    let board = json!([board_minion("minion-1", 0), board_minion("minion-2", 1)]);
+    let view = with_hand_and_board(
         view(10, json!([]), json!([]), json!([]), json!([]), true),
-        "minion-3",
+        json!([]),
+        board,
     );
 
     assert!(
@@ -425,21 +479,31 @@ fn does_not_retry_an_intent_that_already_targets() {
             &Intent::PlayCard {
                 hand_index: 0,
                 position: None,
-                target_minion_id: Some("minion-3".to_string()),
+                target_minion_id: Some("minion-2".to_string()),
             }
         )
         .is_none(),
-        "已带目标的打牌意图再被拒时不得重发"
+        "最后一个候选也失败后不再重试"
     );
+}
+
+#[test]
+fn retry_ignores_non_play_intents() {
+    let board = json!([board_minion("minion-1", 0)]);
+    let view = with_hand_and_board(
+        view(10, json!([]), json!([]), json!([]), json!([]), true),
+        json!([]),
+        board,
+    );
+
     assert!(
         retry_with_target(
             &view,
-            &Intent::UseHeroPower {
-                skill_id: "light-speed-strike".to_string(),
-                target_minion_id: Some("minion-3".to_string()),
+            &Intent::ChooseTarget {
+                minion_id: "minion-1".to_string(),
             }
         )
         .is_none(),
-        "已带目标的技能意图再被拒时不得重发"
+        "目标待选走候选轮换，不沿棋盘重发"
     );
 }
