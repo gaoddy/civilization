@@ -40,6 +40,7 @@ func _ready() -> void:
     await _check_combat_banner_after_tail()
     await _check_combat_resume_from_started_at()
     await _check_combat_playback_uses_sides()
+    await _check_combat_playback_new_actions()
     await _check_combat_reborn_reappears()
     await _check_summon_inserts_at_alive_rank()
     await _check_stale_combat_not_shown()
@@ -2072,6 +2073,99 @@ func _check_combat_playback_uses_sides() -> void:
         int(playback.opponent[0].get("attack", 0)) == 3 and int(playback.opponent[0].get("health", 0)) == 4,
         "对手随从应写入 target 状态：实际 %s" % [playback.opponent[0]]
     )
+
+
+## 玩法扩充的新动作（拟态/吞噬/引爆/剧毒/复苏/回手）必须把服务端快照写进
+## 回放；零件回收只影响手牌，回放不报错即可。
+func _check_combat_playback_new_actions() -> void:
+    var playback := CombatPlayback.new()
+    playback.start(
+        [
+            {
+                "kind": "mimic",
+                "sourceSide": "own",
+                "targetSide": "opponent",
+                "source": {"minionId": "mi_0", "attack": 7, "health": 7, "alive": true},
+                "target": {"minionId": "mo_0", "attack": 1, "health": 1, "alive": true},
+            },
+            {
+                "kind": "devour",
+                "sourceSide": "own",
+                "targetSide": "opponent",
+                "source": {"minionId": "mi_1", "attack": 3, "health": 4, "alive": true},
+                "target": {"minionId": "mo_1", "attack": 1, "health": 0, "alive": false},
+            },
+            {
+                "kind": "detonate",
+                "targetSide": "opponent",
+                "damage": 2,
+                "target": {"minionId": "mo_2", "attack": 1, "health": 0, "alive": false},
+            },
+            {
+                "kind": "poison",
+                "targetSide": "opponent",
+                "target": {"minionId": "mo_0", "attack": 1, "health": 0, "alive": false},
+            },
+            {
+                "kind": "revive",
+                "sourceSide": "own",
+                "target": {"minionId": "mi_2", "attack": 1, "health": 3, "alive": true},
+            },
+            {
+                "kind": "recall",
+                "sourceSide": "own",
+                "target": {"minionId": "mi_2", "attack": 1, "health": 0, "alive": false},
+            },
+            {
+                "kind": "salvage",
+                "sourceSide": "own",
+                "cardId": "nanobot",
+            },
+        ],
+        [
+            {"minionId": "mi_0", "cardId": "baiyi", "attack": 1, "health": 1, "alive": true},
+            {"minionId": "mi_1", "cardId": "baiyi", "attack": 1, "health": 1, "alive": true},
+            {"minionId": "mi_2", "cardId": "baiyi", "attack": 1, "health": 0, "alive": false},
+        ],
+        [
+            {"minionId": "mo_0", "cardId": "baiyi", "attack": 1, "health": 1, "alive": true},
+            {"minionId": "mo_1", "cardId": "baiyi", "attack": 1, "health": 1, "alive": true},
+            {"minionId": "mo_2", "cardId": "baiyi", "attack": 1, "health": 1, "alive": true},
+        ]
+    )
+
+    playback.advance(320.0)
+    _expect(
+        int(playback.own[0].get("attack", 0)) == 7 and int(playback.own[0].get("health", 0)) == 7,
+        "拟态应写入来源快照：实际 %s" % [playback.own[0]]
+    )
+    _expect(
+        int(playback.opponent[0].get("health", 0)) == 1,
+        "拟态不应改动目标快照：实际 %s" % [playback.opponent[0]]
+    )
+
+    playback.advance(320.0)
+    _expect(
+        int(playback.own[1].get("attack", 0)) == 3 and int(playback.own[1].get("health", 0)) == 4,
+        "吞噬应写入来源快照：实际 %s" % [playback.own[1]]
+    )
+    _expect(not bool(playback.opponent[1].get("alive", true)), "被吞噬的目标应阵亡")
+
+    playback.advance(320.0)
+    _expect(not bool(playback.opponent[2].get("alive", true)), "引爆目标应阵亡")
+
+    playback.advance(320.0)
+    _expect(not bool(playback.opponent[0].get("alive", true)), "剧毒目标应阵亡")
+
+    playback.advance(320.0)
+    _expect(bool(playback.own[2].get("alive", false)), "复苏后随从应重新存活")
+    _expect(int(playback.own[2].get("health", 0)) == 3, "复苏后生命取服务端快照")
+
+    playback.advance(320.0)
+    _expect(not bool(playback.own[2].get("alive", true)), "回手后随从应离开棋盘")
+
+    playback.advance(320.0)
+    _expect(bool(playback.own[0].get("alive", false)), "零件回收不应改动任何随从快照")
 
 
 func _check_recruited_gate() -> void:
