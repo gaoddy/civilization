@@ -10,11 +10,8 @@ level: 3
 era: modern
 attack: 4
 health: 5
-is_scholar: skills: []
 is_scholar: false
-is_scholar: false
-is_scholar: false
-is_scholar: false
+skills: []
 ---
 
 # 爱因斯坦冰箱

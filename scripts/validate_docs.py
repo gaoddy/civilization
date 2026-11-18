@@ -188,6 +188,11 @@ def parse_front_matter(path):
         if ":" not in line:
             raise ValueError(f"{path.name}: 无法解析行 {line!r}")
         key, raw = line.split(":", 1)
+        key = key.strip()
+        if key in data:
+            # dict 会静默覆盖重复键，掩盖「值写进了上一个键」这类损坏（例如
+            # `is_scholar: skills: []`），必须当作解析错误。
+            raise ValueError(f"{path.name}: front matter 键重复 {key!r}")
         raw = raw.strip()
         if raw.startswith("[") and raw.endswith("]"):
             inner = raw[1:-1].strip()
