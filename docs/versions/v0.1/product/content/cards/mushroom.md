@@ -8,7 +8,7 @@ subtype: fungus
 level: 2
 era: primitive
 attack: 2
-health: 4
+health: 3
 skills: [deathrattle-summon-spore-token-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-spore-token-2 |
 | 学者 | 否 |

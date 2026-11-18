@@ -8,7 +8,7 @@ subtype: bacteria
 level: 1
 era: modern
 attack: 1
-health: 3
+health: 4
 skills: [deathrattle-friendly-bacteria-growth-once]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 1 |
 | 时代 | 现代 |
 | 攻击力 | 1 |
-| 生命值 | 3 |
+| 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-bacteria-growth-once |
 | 学者 | 否 |

@@ -7,9 +7,9 @@ taxon: automation
 subtype: mecha
 level: 5
 era: modern
-attack: 7
-health: 11
-skills: [keyword-taunt]
+attack: 6
+health: 12
+skills: [keyword-taunt, battlecry-friendly-mech-growth-once]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 机甲 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 7 |
-| 生命值 | 11 |
-| 关键词 | 嘲讽 |
-| 技能 | keyword-taunt |
+| 攻击力 | 6 |
+| 生命值 | 12 |
+| 关键词 | 嘲讽；战吼 |
+| 技能 | keyword-taunt；battlecry-friendly-mech-growth-once |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-嘲讽
+嘲讽；战吼：使一个友方机械随从获得一次成长
 
 ## 出处
 

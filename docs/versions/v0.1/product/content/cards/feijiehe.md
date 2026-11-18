@@ -8,9 +8,9 @@ specialty: [host:hominidae]
 subtype: disease
 level: 3
 era: industrial
-attack: 3
+attack: 4
 health: 5
-skills: [keyword-contagion]
+skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 is_scholar: false
 ---
 
@@ -29,16 +29,16 @@ is_scholar: false
 | 子类 | 疾病 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 攻击力 | 3 |
+| 攻击力 | 4 |
 | 生命值 | 5 |
 | 关键词 | 传染 |
-| 技能 | keyword-contagion |
+| 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-传染：造成伤害后，目标每回合 -1 生命
+传染：造成伤害后，目标每回合 -1 生命；战斗开始时，使一个随机敌方随从获得 1 层传染
 
 ## 出处
 

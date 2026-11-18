@@ -112,6 +112,10 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 ///
 /// 2026-11-18 第八次重定：卡牌参数重排批次 B（鸟、爬行、鱼、昆虫、头足、水螅
 /// 六个玩法重排身材）。
+///
+/// 2026-11-18 第九次重定：批次 A/B/C 统一按玩法目标攻血比重新分配角色形状
+/// （坦克取攻击下限/生命上限、输出取攻击上限/生命下限），13 个玩法平均攻血比
+/// 从 0.43–0.47 拉开到 0.316–0.520，参战数值全面变化。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

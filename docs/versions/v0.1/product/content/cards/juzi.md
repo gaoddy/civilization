@@ -8,7 +8,7 @@ subtype: fruit-tree
 level: 1
 era: prehistoric
 attack: 1
-health: 3
+health: 4
 skills: [keyword-breed-1]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 1 |
-| 生命值 | 3 |
+| 生命值 | 4 |
 | 关键词 | 繁衍 1 |
 | 技能 | keyword-breed-1 |
 | 学者 | 否 |

@@ -8,8 +8,8 @@ subtype: protozoa
 level: 5
 era: prehistoric
 attack: 7
-health: 11
-skills: [deathrattle-all-enemies-damage-2]
+health: 9
+skills: [deathrattle-all-enemies-damage-2, aura-other-protozoa-plus-1-attack]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 史前 |
 | 攻击力 | 7 |
-| 生命值 | 11 |
+| 生命值 | 9 |
 | 关键词 | 亡语 |
-| 技能 | deathrattle-all-enemies-damage-2 |
+| 技能 | deathrattle-all-enemies-damage-2；aura-other-protozoa-plus-1-attack |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-亡语：对敌方所有随从造成 2 点伤害
+亡语：对敌方所有随从造成 2 点伤害；你的其他原生生物界随从获得 +1 攻击力
 
 ## 设计说明
 

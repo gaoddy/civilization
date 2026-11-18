@@ -9,7 +9,7 @@ subtype: bacteria
 level: 5
 era: modern
 attack: 6
-health: 10
+health: 12
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 10 |
+| 生命值 | 12 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |

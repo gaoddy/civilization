@@ -8,7 +8,7 @@ subtype: fungus
 level: 3
 era: feudal
 attack: 3
-health: 6
+health: 7
 skills: [decompose-kill-original]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 封建 |
 | 攻击力 | 3 |
-| 生命值 | 6 |
+| 生命值 | 7 |
 | 关键词 | 分解 |
 | 技能 | decompose-kill-original |
 | 学者 | 否 |

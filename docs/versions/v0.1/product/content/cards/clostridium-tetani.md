@@ -7,9 +7,9 @@ taxon: clostridiaceae
 subtype: bacteria
 level: 3
 era: industrial
-attack: 4
-health: 5
-skills: [keyword-contagion]
+attack: 3
+health: 7
+skills: [keyword-contagion, microbiology]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 细菌 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 攻击力 | 4 |
-| 生命值 | 5 |
+| 攻击力 | 3 |
+| 生命值 | 7 |
 | 关键词 | 传染 |
-| 技能 | keyword-contagion |
+| 技能 | keyword-contagion；microbiology |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-传染：造成伤害后，目标每回合 -1 生命
+传染：造成伤害后，目标每回合 -1 生命；战斗开始时使敌方最左侧随从获得 1 层传染
 
 ## 设计说明
 

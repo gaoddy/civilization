@@ -8,8 +8,8 @@ specialty: [host:bacteria]
 subtype: microorganism
 level: 1
 era: prehistoric
-attack: 1
-health: 2
+attack: 2
+health: 3
 skills: [deathrattle-random-enemy-hp-minus-1]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 微生物 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 攻击力 | 1 |
-| 生命值 | 2 |
+| 攻击力 | 2 |
+| 生命值 | 3 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-random-enemy-hp-minus-1 |
 | 学者 | 否 |

@@ -8,7 +8,7 @@ subtype: crop
 level: 2
 era: prehistoric
 attack: 2
-health: 4
+health: 5
 skills: [keyword-breed-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 4 |
+| 生命值 | 5 |
 | 关键词 | 繁衍 2 |
 | 技能 | keyword-breed-2 |
 | 学者 | 否 |

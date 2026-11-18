@@ -8,7 +8,7 @@ subtype: moss
 level: 1
 era: primitive
 attack: 1
-health: 3
+health: 4
 skills: [keyword-sow]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 1 |
 | 时代 | 原始 |
 | 攻击力 | 1 |
-| 生命值 | 3 |
+| 生命值 | 4 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
 | 学者 | 否 |

@@ -8,9 +8,9 @@ specialty: [play:machine]
 subtype: megastructure
 level: 7
 era: future
-attack: 13
-health: 17
-skills: [keyword-divine-shield]
+attack: 12
+health: 18
+skills: [keyword-divine-shield, shout]
 is_scholar: false
 ---
 
@@ -29,16 +29,16 @@ is_scholar: false
 | 子类 | 巨构 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 13 |
-| 生命值 | 17 |
+| 攻击力 | 12 |
+| 生命值 | 18 |
 | 关键词 | 护盾 |
-| 技能 | keyword-divine-shield |
+| 技能 | keyword-divine-shield；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-护盾：抵消一次伤害
+护盾：抵消一次伤害；使一个友方随从获得一次成长
 
 ## 出处
 

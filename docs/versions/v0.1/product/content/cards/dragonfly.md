@@ -9,7 +9,7 @@ level: 5
 era: classical
 attack: 9
 health: 8
-skills: [keyword-windfury]
+skills: [keyword-windfury, battlecry-other-insect-growth-once]
 is_scholar: false
 ---
 
@@ -30,14 +30,14 @@ is_scholar: false
 | 时代 | 古典 |
 | 攻击力 | 9 |
 | 生命值 | 8 |
-| 关键词 | 连击 |
-| 技能 | keyword-windfury |
+| 关键词 | 连击；战吼 |
+| 技能 | keyword-windfury；battlecry-other-insect-growth-once |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-连击：每回合可攻击两次
+连击：每回合可攻击两次；战吼：使你的其他昆虫纲随从获得一次成长
 
 ## 设计说明
 

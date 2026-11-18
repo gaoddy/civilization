@@ -10,7 +10,7 @@ level: 3
 era: industrial
 attack: 4
 health: 6
-skills: [combatstart-leftmost-damage-3]
+skills: [combatstart-leftmost-damage-3, shout]
 is_scholar: false
 ---
 
@@ -32,13 +32,13 @@ is_scholar: false
 | 攻击力 | 4 |
 | 生命值 | 6 |
 | 关键词 | 无 |
-| 技能 | combatstart-leftmost-damage-3 |
+| 技能 | combatstart-leftmost-damage-3；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-战斗开始时，对敌方最左侧随从造成 3 点伤害
+战斗开始时，对敌方最左侧随从造成 3 点伤害；使一个友方随从获得一次成长
 
 ## 出处
 

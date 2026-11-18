@@ -9,7 +9,7 @@ subtype: reptile
 level: 2
 era: primitive
 attack: 2
-health: 3
+health: 5
 skills: [keyword-evolve]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 3 |
+| 生命值 | 5 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve |
 | 学者 | 否 |

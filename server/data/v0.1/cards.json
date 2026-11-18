@@ -45,18 +45,19 @@
     "taxon": "automation"
   },
   {
-    "attack": 8,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 8,
     "id": "airplane",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "neutral",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-optimal-attack",
+      "shout"
     ],
     "specialty": [
       {
@@ -91,36 +92,38 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 11,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 10,
     "id": "albatross",
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
     "playstyle": "bird",
     "skills": [
-      "deathrattle-summon-2-seabirds"
+      "deathrattle-summon-2-seabirds",
+      "battlecry-friendly-bird-growth-once"
     ],
     "specialty": [],
     "subtype": "bird",
     "taxon": "diomedeidae"
   },
   {
-    "attack": 11,
+    "attack": 10,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 17,
+    "health": 15,
     "id": "ammonite",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "cephalopod",
     "skills": [
-      "deathrattle-summon-2-ammonites"
+      "deathrattle-summon-2-ammonites",
+      "mimic-1"
     ],
     "specialty": [],
     "subtype": "mollusk",
@@ -131,7 +134,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 2,
     "id": "amoeba",
     "is_hero": false,
     "is_scholar": false,
@@ -149,7 +152,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "ant",
     "is_hero": false,
     "is_scholar": false,
@@ -222,36 +225,38 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 15,
+    "attack": 14,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 15,
+    "health": 14,
     "id": "argentavis",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "bird",
     "skills": [
-      "keyword-windfury"
+      "keyword-windfury",
+      "battlecry-friendly-bird-growth-once"
     ],
     "specialty": [],
     "subtype": "bird",
     "taxon": "teratornithidae"
   },
   {
-    "attack": 6,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 8,
+    "health": 6,
     "id": "argonaut",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "cephalopod",
     "skills": [
-      "keyword-stealth"
+      "keyword-stealth",
+      "mimic-1"
     ],
     "specialty": [],
     "subtype": "mollusk",
@@ -281,18 +286,19 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 8,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 10,
+    "health": 9,
     "id": "artificial-womb",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "neutral",
     "skills": [
-      "battlecry-summon-3-3-synthetic-cell"
+      "battlecry-summon-3-3-synthetic-cell",
+      "shout"
     ],
     "specialty": [
       {
@@ -304,18 +310,19 @@
     "taxon": "life-medical"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 5,
+    "health": 7,
     "id": "aspergillus",
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
     "playstyle": "fungus",
     "skills": [
-      "deathrattle-all-enemies-minus-1-health"
+      "deathrattle-all-enemies-minus-1-health",
+      "decompose-kill-original"
     ],
     "specialty": [],
     "subtype": "fungus",
@@ -326,32 +333,34 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 11,
+    "health": 12,
     "id": "bacillus-anthracis",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "bacteria",
     "skills": [
-      "detonate-2"
+      "detonate-2",
+      "microbiology"
     ],
     "specialty": [],
     "subtype": "bacteria",
     "taxon": "bacillaceae"
   },
   {
-    "attack": 9,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 13,
+    "health": 16,
     "id": "bacteriophage",
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
     "playstyle": "bacteria",
     "skills": [
-      "convert-3"
+      "convert-3",
+      "microbiology"
     ],
     "specialty": [],
     "subtype": "bacteria",
@@ -362,7 +371,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 2,
     "id": "baiyi",
     "is_hero": false,
     "is_scholar": false,
@@ -381,7 +390,7 @@
     "taxon": "termitidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
@@ -421,25 +430,26 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 7,
+    "health": 6,
     "id": "beetle",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "insect",
     "skills": [
-      "keyword-taunt"
+      "keyword-taunt",
+      "battlecry-other-insect-growth-once"
     ],
     "specialty": [],
     "subtype": "insect",
     "taxon": "scarabaeidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 4,
     "id": "bingdushizu",
     "is_hero": false,
     "is_scholar": false,
@@ -476,18 +486,19 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 6,
+    "health": 9,
     "id": "black-death",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "virus",
     "skills": [
-      "deathrattle-all-enemies-humans-minus-2-health"
+      "deathrattle-all-enemies-humans-minus-2-health",
+      "combatstart-random-enemy-contagion-1"
     ],
     "specialty": [
       {
@@ -517,36 +528,38 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 6,
+    "health": 4,
     "id": "blue-ringed-octopus",
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
     "playstyle": "cephalopod",
     "skills": [
-      "keyword-poison"
+      "keyword-poison",
+      "mimic-1"
     ],
     "specialty": [],
     "subtype": "mollusk",
     "taxon": "octopodidae"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 12,
+    "health": 11,
     "id": "box-jellyfish",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "cnidarian",
     "skills": [
-      "keyword-poison"
+      "keyword-poison",
+      "keyword-armor-1"
     ],
     "specialty": [],
     "subtype": "ocean",
@@ -557,32 +570,34 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 8,
+    "health": 9,
     "id": "boxer",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "mammal",
     "skills": [
-      "trigger-3-humans-self-plus-2-attack"
+      "trigger-3-humans-self-plus-2-attack",
+      "shout"
     ],
     "specialty": [],
     "subtype": "athlete",
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 8,
+    "health": 6,
     "id": "bruce-lee",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "mammal",
     "skills": [
-      "keyword-windfury"
+      "keyword-windfury",
+      "shout"
     ],
     "specialty": [],
     "subtype": "martial-artist",
@@ -611,7 +626,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 2,
+    "health": 3,
     "id": "buluozhanshi",
     "is_hero": false,
     "is_scholar": false,
@@ -629,14 +644,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 7,
+    "health": 6,
     "id": "butterfly",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "insect",
     "skills": [
-      "deathrattle-friendly-insect-growth-twice"
+      "deathrattle-friendly-insect-growth-twice",
+      "battlecry-other-insect-growth-once"
     ],
     "specialty": [],
     "subtype": "insect",
@@ -724,7 +740,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 2,
+    "health": 3,
     "id": "chengbang-gongmin",
     "is_hero": false,
     "is_scholar": false,
@@ -742,14 +758,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 7,
+    "health": 9,
     "id": "cholera",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "virus",
     "skills": [
-      "combatstart-random-enemy-contagion-1"
+      "combatstart-random-enemy-contagion-1",
+      "keyword-contagion"
     ],
     "specialty": [
       {
@@ -761,18 +778,19 @@
     "taxon": "vibrionaceae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 5,
+    "health": 7,
     "id": "clostridium-tetani",
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
     "playstyle": "bacteria",
     "skills": [
-      "keyword-contagion"
+      "keyword-contagion",
+      "microbiology"
     ],
     "specialty": [],
     "subtype": "bacteria",
@@ -783,7 +801,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 4,
+    "health": 3,
     "id": "clownfish",
     "is_hero": false,
     "is_scholar": false,
@@ -801,14 +819,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 7,
+    "health": 6,
     "id": "cobra",
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
     "playstyle": "reptile",
     "skills": [
-      "keyword-poison"
+      "keyword-poison",
+      "keyword-taunt"
     ],
     "specialty": [],
     "subtype": "reptile",
@@ -819,25 +838,26 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 10,
+    "health": 8,
     "id": "coelacanth",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "fish",
     "skills": [
-      "keyword-reborn"
+      "keyword-reborn",
+      "aura-school-fish-1"
     ],
     "specialty": [],
     "subtype": "fish",
     "taxon": "coelacanthidae"
   },
   {
-    "attack": 9,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 14,
+    "health": 12,
     "id": "colossal-squid",
     "is_hero": false,
     "is_scholar": false,
@@ -856,7 +876,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 4,
     "id": "coral-polyp",
     "is_hero": false,
     "is_scholar": false,
@@ -874,21 +894,22 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 9,
+    "health": 6,
     "id": "cordyceps",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "fungus",
     "skills": [
-      "deathrattle-summon-cordyceps"
+      "deathrattle-summon-cordyceps",
+      "decompose-kill-original"
     ],
     "specialty": [],
     "subtype": "fungus",
     "taxon": "ophiocordycipitaceae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
@@ -899,14 +920,15 @@
     "level": 4,
     "playstyle": "reptile",
     "skills": [
-      "keyword-poison"
+      "keyword-poison",
+      "keyword-taunt"
     ],
     "specialty": [],
     "subtype": "reptile",
     "taxon": "crocodylidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
@@ -917,18 +939,19 @@
     "level": 3,
     "playstyle": "bird",
     "skills": [
-      "battlecry-friendly-bird-growth-once"
+      "battlecry-friendly-bird-growth-once",
+      "dive-1"
     ],
     "specialty": [],
     "subtype": "bird",
     "taxon": "corvidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "cuttlefish",
     "is_hero": false,
     "is_scholar": false,
@@ -1021,7 +1044,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 8,
+    "health": 9,
     "id": "dengue-virus",
     "is_hero": false,
     "is_scholar": false,
@@ -1047,7 +1070,8 @@
     "level": 3,
     "playstyle": "neutral",
     "skills": [
-      "combatstart-leftmost-damage-3"
+      "combatstart-leftmost-damage-3",
+      "shout"
     ],
     "specialty": [
       {
@@ -1063,14 +1087,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 11,
+    "health": 12,
     "id": "dianhua-jiaohuanji",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "neutral",
     "skills": [
-      "battlecry-all-friendly-growth-once"
+      "battlecry-all-friendly-growth-once",
+      "shout"
     ],
     "specialty": [
       {
@@ -1086,7 +1111,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 11,
+    "health": 12,
     "id": "difference-engine",
     "is_hero": false,
     "is_scholar": false,
@@ -1165,7 +1190,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "dongxuehuajia",
     "is_hero": false,
     "is_scholar": false,
@@ -1179,11 +1204,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 4,
+    "health": 5,
     "id": "doushouchang-shizi",
     "is_hero": false,
     "is_scholar": false,
@@ -1213,25 +1238,27 @@
     "level": 5,
     "playstyle": "insect",
     "skills": [
-      "keyword-windfury"
+      "keyword-windfury",
+      "battlecry-other-insect-growth-once"
     ],
     "specialty": [],
     "subtype": "insect",
     "taxon": "libellulidae"
   },
   {
-    "attack": 12,
+    "attack": 15,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 16,
+    "health": 14,
     "id": "dunkleosteus",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "fish",
     "skills": [
-      "deathrattle-summon-fish-fry-3"
+      "deathrattle-summon-fish-fry-3",
+      "aura-school-fish-1"
     ],
     "specialty": [],
     "subtype": "fish",
@@ -1242,7 +1269,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 5,
     "id": "dushe",
     "is_hero": false,
     "is_scholar": false,
@@ -1256,18 +1283,19 @@
     "taxon": "squamata-incertae-sedis"
   },
   {
-    "attack": 13,
+    "attack": 12,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 17,
+    "health": 18,
     "id": "dyson-sphere",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "neutral",
     "skills": [
-      "keyword-divine-shield"
+      "keyword-divine-shield",
+      "shout"
     ],
     "specialty": [
       {
@@ -1283,7 +1311,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 3,
+    "health": 4,
     "id": "e-coli",
     "is_hero": false,
     "is_scholar": false,
@@ -1297,11 +1325,11 @@
     "taxon": "enterobacteriaceae"
   },
   {
-    "attack": 8,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 8,
+    "health": 12,
     "id": "ebola",
     "is_hero": false,
     "is_scholar": false,
@@ -1339,18 +1367,19 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 8,
+    "health": 6,
     "id": "eel",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "fish",
     "skills": [
-      "aura-school-fish-1"
+      "aura-school-fish-1",
+      "deathrattle-summon-fish-fry-2"
     ],
     "specialty": [],
     "subtype": "fish",
@@ -1389,7 +1418,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 6,
+    "health": 5,
     "id": "einstein-fridge",
     "is_hero": false,
     "is_scholar": false,
@@ -1406,11 +1435,11 @@
     "taxon": "life-medical"
   },
   {
-    "attack": 9,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 11,
+    "health": 16,
     "id": "engineered-virus",
     "is_hero": false,
     "is_scholar": false,
@@ -1443,18 +1472,19 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 10,
+    "health": 12,
     "id": "ergot",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "fungus",
     "skills": [
-      "decompose-ally-kill-pre-kill"
+      "decompose-ally-kill-pre-kill",
+      "deathrattle-summon-2-spores-2-2"
     ],
     "specialty": [],
     "subtype": "fungus",
@@ -1484,7 +1514,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
@@ -1495,7 +1525,8 @@
     "level": 3,
     "playstyle": "protozoa",
     "skills": [
-      "aura-other-protozoa-plus-1-attack"
+      "aura-other-protozoa-plus-1-attack",
+      "deathrattle-summon-amoeba-larva-1"
     ],
     "specialty": [],
     "subtype": "protozoa",
@@ -1506,14 +1537,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 8,
+    "health": 9,
     "id": "famingjia",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "mammal",
     "skills": [
-      "battlecry-all-mech-growth-once"
+      "battlecry-all-mech-growth-once",
+      "shout"
     ],
     "specialty": [],
     "subtype": "invention",
@@ -1538,11 +1570,11 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 4,
+    "health": 3,
     "id": "fangzhiji",
     "is_hero": false,
     "is_scholar": false,
@@ -1607,7 +1639,7 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
@@ -1618,7 +1650,8 @@
     "level": 3,
     "playstyle": "virus",
     "skills": [
-      "keyword-contagion"
+      "keyword-contagion",
+      "combatstart-random-enemy-contagion-1"
     ],
     "specialty": [
       {
@@ -1630,7 +1663,7 @@
     "taxon": "mycobacteriaceae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
@@ -1722,11 +1755,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 3,
+    "health": 4,
     "id": "fly-agaric",
     "is_hero": false,
     "is_scholar": false,
@@ -1744,43 +1777,45 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 5,
+    "health": 4,
     "id": "flying-fish",
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
     "playstyle": "fish",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-optimal-attack",
+      "aura-school-fish-1"
     ],
     "specialty": [],
     "subtype": "fish",
     "taxon": "exocoetidae"
   },
   {
-    "attack": 6,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 12,
+    "health": 9,
     "id": "foraminifera",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "protozoa",
     "skills": [
-      "devour-4"
+      "devour-4",
+      "aura-other-protozoa-plus-1-attack"
     ],
     "specialty": [],
     "subtype": "protozoa",
     "taxon": "rotaliidae"
   },
   {
-    "attack": 10,
+    "attack": 11,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 13,
+    "health": 14,
     "id": "fusion-reactor",
     "is_hero": false,
     "is_scholar": false,
@@ -1826,7 +1861,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 4,
+    "health": 3,
     "id": "ganlanshu",
     "is_hero": false,
     "is_scholar": false,
@@ -1863,7 +1898,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
@@ -1885,7 +1920,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 3,
+    "health": 5,
     "id": "gecko",
     "is_hero": false,
     "is_scholar": false,
@@ -1922,25 +1957,26 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 15,
+    "health": 16,
     "id": "giant-jellyfish",
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
     "playstyle": "cnidarian",
     "skills": [
-      "revive-3"
+      "revive-3",
+      "keyword-armor-1"
     ],
     "specialty": [],
     "subtype": "ocean",
     "taxon": "rhizostomatidae"
   },
   {
-    "attack": 8,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 9,
     "id": "giant-squid",
     "is_hero": false,
     "is_scholar": false,
@@ -1955,29 +1991,30 @@
     "taxon": "architeuthidae"
   },
   {
-    "attack": 5,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 7,
+    "health": 9,
     "id": "giardia",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "protozoa",
     "skills": [
-      "devour-3"
+      "devour-3",
+      "aura-other-protozoa-plus-1-attack"
     ],
     "specialty": [],
     "subtype": "protozoa",
     "taxon": "hexamitidae"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 11,
+    "health": 12,
     "id": "ginkgo",
     "is_hero": false,
     "is_scholar": false,
@@ -2019,14 +2056,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 10,
+    "health": 8,
     "id": "golden-eagle",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "bird",
     "skills": [
-      "dive-1"
+      "dive-1",
+      "battlecry-friendly-bird-growth-once"
     ],
     "specialty": [],
     "subtype": "bird",
@@ -2037,14 +2075,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 11,
+    "health": 12,
     "id": "gongchangzhu",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "mammal",
     "skills": [
-      "battlecry-other-friendly-humans-plus-1-attack"
+      "battlecry-other-friendly-humans-plus-1-attack",
+      "shout"
     ],
     "specialty": [],
     "subtype": "capital",
@@ -2074,18 +2113,19 @@
     "taxon": "weapon-siege"
   },
   {
-    "attack": 6,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 7,
+    "health": 6,
     "id": "gongchengta",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "neutral",
     "skills": [
-      "keyword-assemble-2"
+      "keyword-assemble-2",
+      "shout"
     ],
     "specialty": [
       {
@@ -2101,7 +2141,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "gongjianshou",
     "is_hero": false,
     "is_scholar": false,
@@ -2119,14 +2159,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 12,
     "id": "gongyegongren",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "mammal",
     "skills": [
-      "battlecry-other-friendly-humans-plus-1-attack"
+      "battlecry-other-friendly-humans-plus-1-attack",
+      "shout"
     ],
     "specialty": [],
     "subtype": "worker",
@@ -2137,14 +2178,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 10,
+    "health": 8,
     "id": "great-white-shark",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "fish",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-optimal-attack",
+      "aura-school-fish-1"
     ],
     "specialty": [],
     "subtype": "fish",
@@ -2205,7 +2247,7 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 9,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
@@ -2233,7 +2275,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 2,
     "id": "guoying",
     "is_hero": false,
     "is_scholar": false,
@@ -2283,7 +2325,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "haikouichthys",
     "is_hero": false,
     "is_scholar": false,
@@ -2325,18 +2367,19 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 7,
+    "health": 6,
     "id": "hela-cell",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "mammal",
     "skills": [
-      "deathrattle-summon-2-2-hela-cell-clone"
+      "deathrattle-summon-2-2-hela-cell-clone",
+      "shout"
     ],
     "specialty": [],
     "subtype": "cell",
@@ -2370,18 +2413,19 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 6,
+    "health": 8,
     "id": "hiv",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "virus",
     "skills": [
-      "keyword-contagion"
+      "keyword-contagion",
+      "combatstart-random-enemy-contagion-1"
     ],
     "specialty": [
       {
@@ -2438,7 +2482,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 12,
+    "health": 14,
     "id": "honey-fungus",
     "is_hero": false,
     "is_scholar": false,
@@ -2457,7 +2501,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 12,
     "id": "hongshulin",
     "is_hero": false,
     "is_scholar": false,
@@ -2472,11 +2516,11 @@
     "taxon": "rhizophoraceae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 8,
+    "health": 9,
     "id": "huangrebing",
     "is_hero": false,
     "is_scholar": false,
@@ -2495,18 +2539,19 @@
     "taxon": "flaviviridae"
   },
   {
-    "attack": 6,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 8,
+    "health": 6,
     "id": "huochongdui",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "mammal",
     "skills": [
-      "keyword-windfury"
+      "keyword-windfury",
+      "shout"
     ],
     "specialty": [],
     "subtype": "unit",
@@ -2524,7 +2569,8 @@
     "level": 3,
     "playstyle": "mammal",
     "skills": [
-      "battlecry-random-enemy-damage-2"
+      "battlecry-random-enemy-damage-2",
+      "shout"
     ],
     "specialty": [],
     "subtype": "unit",
@@ -2535,7 +2581,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 8,
+    "health": 9,
     "id": "hybrid-rice",
     "is_hero": false,
     "is_scholar": false,
@@ -2554,7 +2600,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 4,
     "id": "hydra",
     "is_hero": false,
     "is_scholar": false,
@@ -2568,7 +2614,7 @@
     "taxon": "hydridae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
@@ -2668,18 +2714,19 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 12,
+    "attack": 15,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 16,
+    "health": 14,
     "id": "jiyin-gaizaoren",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "mammal",
     "skills": [
-      "keyword-reborn"
+      "keyword-reborn",
+      "shout"
     ],
     "specialty": [],
     "subtype": "modification",
@@ -2708,7 +2755,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 4,
+    "health": 5,
     "id": "juelei",
     "is_hero": false,
     "is_scholar": false,
@@ -2745,7 +2792,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 3,
+    "health": 5,
     "id": "juxi",
     "is_hero": false,
     "is_scholar": false,
@@ -2764,7 +2811,7 @@
     "taxon": "varanidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
@@ -2791,7 +2838,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 4,
     "id": "juzi",
     "is_hero": false,
     "is_scholar": false,
@@ -2816,7 +2863,8 @@
     "level": 3,
     "playstyle": "mammal",
     "skills": [
-      "battlecry-friendly-growth-once"
+      "battlecry-friendly-growth-once",
+      "shout"
     ],
     "specialty": [],
     "subtype": "primate",
@@ -2850,21 +2898,22 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 12,
     "id": "koko",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "mammal",
     "skills": [
-      "battlecry-friendly-growth-once"
+      "battlecry-friendly-growth-once",
+      "shout"
     ],
     "specialty": [],
     "subtype": "primate",
     "taxon": "hominidae"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
@@ -2875,7 +2924,8 @@
     "level": 5,
     "playstyle": "reptile",
     "skills": [
-      "keyword-poison"
+      "keyword-poison",
+      "keyword-taunt"
     ],
     "specialty": [],
     "subtype": "reptile",
@@ -2913,7 +2963,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "kuangquanbing",
     "is_hero": false,
     "is_scholar": false,
@@ -2954,7 +3004,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 2,
+    "health": 4,
     "id": "lactobacillus",
     "is_hero": false,
     "is_scholar": false,
@@ -3107,11 +3157,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 6,
+    "health": 5,
     "id": "likeciti",
     "is_hero": false,
     "is_scholar": false,
@@ -3199,7 +3249,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 4,
     "id": "lizard",
     "is_hero": false,
     "is_scholar": false,
@@ -3217,7 +3267,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 5,
+    "health": 4,
     "id": "locust",
     "is_hero": false,
     "is_scholar": false,
@@ -3249,11 +3299,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 6,
+    "health": 7,
     "id": "luomajuntuanbing",
     "is_hero": false,
     "is_scholar": false,
@@ -3295,7 +3345,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 8,
+    "health": 9,
     "id": "maitian",
     "is_hero": false,
     "is_scholar": false,
@@ -3310,11 +3360,11 @@
     "taxon": "poaceae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 4,
+    "health": 5,
     "id": "majidun-changqiangbing",
     "is_hero": false,
     "is_scholar": false,
@@ -3332,7 +3382,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 4,
+    "health": 5,
     "id": "malaria",
     "is_hero": false,
     "is_scholar": false,
@@ -3351,18 +3401,19 @@
     "taxon": "plasmodiidae"
   },
   {
-    "attack": 9,
+    "attack": 12,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 12,
+    "health": 10,
     "id": "mammoth",
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
     "playstyle": "mammal",
     "skills": [
-      "aura-school-mammal"
+      "aura-school-mammal",
+      "shout"
     ],
     "specialty": [],
     "subtype": "beast",
@@ -3373,7 +3424,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 5,
+    "health": 4,
     "id": "mantis",
     "is_hero": false,
     "is_scholar": false,
@@ -3434,7 +3485,7 @@
     "taxon": "meganeuridae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
@@ -3487,7 +3538,8 @@
     "level": 3,
     "playstyle": "mammal",
     "skills": [
-      "keyword-evolve"
+      "keyword-evolve",
+      "shout"
     ],
     "specialty": [
       {
@@ -3544,7 +3596,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 4,
+    "health": 3,
     "id": "mianhua",
     "is_hero": false,
     "is_scholar": false,
@@ -3585,7 +3637,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 8,
+    "health": 9,
     "id": "mimic-octopus",
     "is_hero": false,
     "is_scholar": false,
@@ -3603,7 +3655,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 4,
     "id": "moon-jellyfish",
     "is_hero": false,
     "is_scholar": false,
@@ -3709,18 +3761,19 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 10,
+    "attack": 12,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 10,
     "id": "muhammad-ali",
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
     "playstyle": "mammal",
     "skills": [
-      "keyword-windfury"
+      "keyword-windfury",
+      "shout"
     ],
     "specialty": [],
     "subtype": "athlete",
@@ -3731,7 +3784,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "mushroom",
     "is_hero": false,
     "is_scholar": false,
@@ -3745,11 +3798,11 @@
     "taxon": "agaricaceae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 7,
+    "health": 9,
     "id": "mycobacterium-tuberculosis",
     "is_hero": false,
     "is_scholar": false,
@@ -3782,47 +3835,49 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 11,
+    "attack": 10,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 19,
+    "health": 20,
     "id": "nami-bingdu",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "virus",
     "skills": [
-      "keyword-contagion"
+      "keyword-contagion",
+      "combatstart-random-enemy-contagion-1"
     ],
     "specialty": [],
     "subtype": "nanotech",
     "taxon": "virus-incertae-sedis"
   },
   {
-    "attack": 11,
+    "attack": 10,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 18,
+    "health": 15,
     "id": "nami-fengqun",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "machine",
     "skills": [
-      "keyword-assemble-2"
+      "keyword-assemble-2",
+      "invention-factory"
     ],
     "specialty": [],
     "subtype": "nanotech",
     "taxon": "automation"
   },
   {
-    "attack": 6,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 11,
+    "health": 8,
     "id": "nanobot",
     "is_hero": false,
     "is_scholar": false,
@@ -3841,7 +3896,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "nautilus",
     "is_hero": false,
     "is_scholar": false,
@@ -3859,32 +3914,34 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 8,
+    "health": 9,
     "id": "neanderthal",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "mammal",
     "skills": [
-      "aura-adjacent-mammal"
+      "aura-adjacent-mammal",
+      "shout"
     ],
     "specialty": [],
     "subtype": "primate",
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 8,
+    "health": 6,
     "id": "neiranji",
     "is_hero": false,
     "is_scholar": false,
     "level": 4,
     "playstyle": "neutral",
     "skills": [
-      "keyword-optimal-attack"
+      "keyword-optimal-attack",
+      "shout"
     ],
     "specialty": [
       {
@@ -3919,11 +3976,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 4,
+    "health": 3,
     "id": "nitaizhangyu",
     "is_hero": false,
     "is_scholar": false,
@@ -3946,14 +4003,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 11,
+    "health": 12,
     "id": "nitrogen-crop",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "plant",
     "skills": [
-      "aura-plant-plus-1-plus-1"
+      "aura-plant-plus-1-plus-1",
+      "heredity"
     ],
     "specialty": [],
     "subtype": "crop",
@@ -3964,14 +4022,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 12,
     "id": "niuwen",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "virus",
     "skills": [
-      "keyword-contagion"
+      "keyword-contagion",
+      "combatstart-random-enemy-contagion-1"
     ],
     "specialty": [
       {
@@ -4012,7 +4071,8 @@
     "level": 3,
     "playstyle": "neutral",
     "skills": [
-      "combatstart-leftmost-damage-3"
+      "combatstart-leftmost-damage-3",
+      "shout"
     ],
     "specialty": [
       {
@@ -4042,7 +4102,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 2,
+    "attack": 1,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
@@ -4064,7 +4124,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 6,
+    "health": 5,
     "id": "orchid",
     "is_hero": false,
     "is_scholar": false,
@@ -4090,7 +4150,8 @@
     "level": 3,
     "playstyle": "bird",
     "skills": [
-      "keyword-windfury"
+      "keyword-windfury",
+      "battlecry-friendly-bird-growth-once"
     ],
     "specialty": [],
     "subtype": "bird",
@@ -4115,7 +4176,7 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
@@ -4169,18 +4230,19 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 12,
     "id": "patrol-mech",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "machine",
     "skills": [
-      "keyword-taunt"
+      "keyword-taunt",
+      "battlecry-friendly-mech-growth-once"
     ],
     "specialty": [],
     "subtype": "mecha",
@@ -4191,14 +4253,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 10,
+    "health": 8,
     "id": "peafowl",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "bird",
     "skills": [
-      "battlecry-other-bird-plus-1-plus-1"
+      "battlecry-other-bird-plus-1-plus-1",
+      "dive-1"
     ],
     "specialty": [],
     "subtype": "bird",
@@ -4209,7 +4272,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 7,
+    "health": 6,
     "id": "penguin",
     "is_hero": false,
     "is_scholar": false,
@@ -4223,7 +4286,7 @@
     "taxon": "spheniscidae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
@@ -4252,7 +4315,8 @@
     "level": 3,
     "playstyle": "neutral",
     "skills": [
-      "keyword-assemble-1"
+      "keyword-assemble-1",
+      "shout"
     ],
     "specialty": [
       {
@@ -4268,7 +4332,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 8,
+    "health": 9,
     "id": "pink-ape",
     "is_hero": false,
     "is_scholar": false,
@@ -4286,7 +4350,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 8,
+    "health": 6,
     "id": "plasmodium",
     "is_hero": false,
     "is_scholar": false,
@@ -4334,7 +4398,8 @@
     "level": 3,
     "playstyle": "cnidarian",
     "skills": [
-      "keyword-poison"
+      "keyword-poison",
+      "keyword-armor-1"
     ],
     "specialty": [],
     "subtype": "ocean",
@@ -4345,14 +4410,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 17,
+    "health": 15,
     "id": "prototaxites",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "fungus",
     "skills": [
-      "deathrattle-summon-3-spores-3-3"
+      "deathrattle-summon-3-spores-3-3",
+      "decompose-kill-original"
     ],
     "specialty": [],
     "subtype": "fungus",
@@ -4363,25 +4429,26 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 11,
+    "health": 12,
     "id": "puffball",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "fungus",
     "skills": [
-      "deathrattle-all-enemies-damage-2"
+      "deathrattle-all-enemies-damage-2",
+      "decompose-kill-original"
     ],
     "specialty": [],
     "subtype": "fungus",
     "taxon": "agaricaceae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 6,
+    "health": 4,
     "id": "pufferfish",
     "is_hero": false,
     "is_scholar": false,
@@ -4396,11 +4463,11 @@
     "taxon": "tetraodontidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "pulley",
     "is_hero": false,
     "is_scholar": false,
@@ -4455,7 +4522,7 @@
     "taxon": "pythonidae"
   },
   {
-    "attack": 6,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
@@ -4492,11 +4559,11 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 4,
+    "health": 5,
     "id": "qishi",
     "is_hero": false,
     "is_scholar": false,
@@ -4528,7 +4595,7 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "future",
@@ -4552,29 +4619,30 @@
     "taxon": "information-computing"
   },
   {
-    "attack": 8,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 9,
+    "health": 8,
     "id": "queen-bee",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "insect",
     "skills": [
-      "battlecry-summon-2-worker-bees"
+      "battlecry-summon-2-worker-bees",
+      "deathrattle-summon-1-worker-bee"
     ],
     "specialty": [],
     "subtype": "insect",
     "taxon": "apidae"
   },
   {
-    "attack": 13,
+    "attack": 15,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 17,
+    "health": 14,
     "id": "qulv-feichuan",
     "is_hero": false,
     "is_scholar": false,
@@ -4620,21 +4688,22 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 11,
+    "health": 9,
     "id": "radiolarian",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "protozoa",
     "skills": [
-      "deathrattle-all-enemies-damage-2"
+      "deathrattle-all-enemies-damage-2",
+      "aura-other-protozoa-plus-1-attack"
     ],
     "specialty": [],
     "subtype": "protozoa",
     "taxon": "spongodiscidae"
   },
   {
-    "attack": 7,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
@@ -4645,7 +4714,8 @@
     "level": 5,
     "playstyle": "cnidarian",
     "skills": [
-      "revive-2"
+      "revive-2",
+      "keyword-armor-1"
     ],
     "specialty": [],
     "subtype": "ocean",
@@ -4692,7 +4762,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 5,
+    "health": 4,
     "id": "renzhe",
     "is_hero": false,
     "is_scholar": false,
@@ -4706,11 +4776,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 9,
+    "attack": 10,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 11,
+    "health": 10,
     "id": "revived-mammoth",
     "is_hero": false,
     "is_scholar": false,
@@ -4729,7 +4799,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 6,
+    "health": 5,
     "id": "rice-cooker",
     "is_hero": false,
     "is_scholar": false,
@@ -4752,11 +4822,11 @@
     "taxon": "life-medical"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 5,
+    "health": 4,
     "id": "robot-dog",
     "is_hero": false,
     "is_scholar": false,
@@ -4824,11 +4894,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 7,
+    "health": 6,
     "id": "salmon",
     "is_hero": false,
     "is_scholar": false,
@@ -4861,11 +4931,11 @@
     "taxon": "crocodylidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "saman",
     "is_hero": false,
     "is_scholar": false,
@@ -4930,7 +5000,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 3,
+    "health": 5,
     "id": "sea-anemone",
     "is_hero": false,
     "is_scholar": false,
@@ -4948,25 +5018,26 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 12,
+    "health": 11,
     "id": "sea-turtle",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "reptile",
     "skills": [
-      "keyword-armor-2"
+      "keyword-armor-2",
+      "keyword-taunt"
     ],
     "specialty": [],
     "subtype": "reptile",
     "taxon": "cheloniidae"
   },
   {
-    "attack": 5,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 7,
+    "health": 6,
     "id": "self-driving-car",
     "is_hero": false,
     "is_scholar": false,
@@ -5045,11 +5116,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 4,
+    "health": 3,
     "id": "shifujiang",
     "is_hero": false,
     "is_scholar": false,
@@ -5067,7 +5138,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 6,
+    "health": 7,
     "id": "shiitake",
     "is_hero": false,
     "is_scholar": false,
@@ -5085,7 +5156,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 13,
+    "health": 16,
     "id": "shijieshu",
     "is_hero": false,
     "is_scholar": false,
@@ -5100,11 +5171,11 @@
     "taxon": "plantae-incertae-sedis"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "shijunti",
     "is_hero": false,
     "is_scholar": false,
@@ -5127,7 +5198,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 2,
+    "health": 3,
     "id": "shilunche",
     "is_hero": false,
     "is_scholar": false,
@@ -5146,7 +5217,7 @@
     "taxon": "transport"
   },
   {
-    "attack": 2,
+    "attack": 1,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
@@ -5164,11 +5235,11 @@
     "taxon": "muridae"
   },
   {
-    "attack": 8,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 11,
+    "health": 8,
     "id": "shizijun",
     "is_hero": false,
     "is_scholar": false,
@@ -5205,7 +5276,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 6,
+    "health": 5,
     "id": "shizushou",
     "is_hero": false,
     "is_scholar": false,
@@ -5237,11 +5308,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 4,
+    "health": 3,
     "id": "shuiche",
     "is_hero": false,
     "is_scholar": false,
@@ -5264,7 +5335,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 4,
+    "health": 5,
     "id": "shuishengjue",
     "is_hero": false,
     "is_scholar": false,
@@ -5282,7 +5353,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 2,
+    "health": 3,
     "id": "shuizhong",
     "is_hero": false,
     "is_scholar": false,
@@ -5301,11 +5372,11 @@
     "taxon": "information-computing"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 4,
+    "health": 5,
     "id": "sibadayongshi",
     "is_hero": false,
     "is_scholar": false,
@@ -5337,11 +5408,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "smallpox",
     "is_hero": false,
     "is_scholar": false,
@@ -5360,7 +5431,7 @@
     "taxon": "poxviridae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
@@ -5371,18 +5442,19 @@
     "level": 4,
     "playstyle": "cnidarian",
     "skills": [
-      "revive-1"
+      "revive-1",
+      "keyword-armor-1"
     ],
     "specialty": [],
     "subtype": "ocean",
     "taxon": "alcyoniidae"
   },
   {
-    "attack": 10,
+    "attack": 12,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 12,
+    "health": 10,
     "id": "space-elevator",
     "is_hero": false,
     "is_scholar": false,
@@ -5425,7 +5497,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 6,
+    "health": 5,
     "id": "squid",
     "is_hero": false,
     "is_scholar": false,
@@ -5461,7 +5533,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 4,
+    "health": 5,
     "id": "staphylococcus",
     "is_hero": false,
     "is_scholar": false,
@@ -5475,11 +5547,11 @@
     "taxon": "staphylococcaceae"
   },
   {
-    "attack": 6,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 7,
+    "health": 6,
     "id": "steam-engine",
     "is_hero": false,
     "is_scholar": false,
@@ -5502,7 +5574,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "stentor",
     "is_hero": false,
     "is_scholar": false,
@@ -5538,7 +5610,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 5,
     "id": "streptococcus",
     "is_hero": false,
     "is_scholar": false,
@@ -5579,7 +5651,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "suishimaobing",
     "is_hero": false,
     "is_scholar": false,
@@ -5597,7 +5669,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 16,
+    "health": 20,
     "id": "superbug",
     "is_hero": false,
     "is_scholar": false,
@@ -5635,7 +5707,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "tai",
     "is_hero": false,
     "is_scholar": false,
@@ -5649,7 +5721,7 @@
     "taxon": "bryaceae"
   },
   {
-    "attack": 9,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "future",
@@ -5660,7 +5732,8 @@
     "level": 6,
     "playstyle": "mammal",
     "skills": [
-      "keyword-divine-shield"
+      "keyword-divine-shield",
+      "shout"
     ],
     "specialty": [],
     "subtype": "colonist",
@@ -5671,7 +5744,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 10,
+    "health": 12,
     "id": "tanju",
     "is_hero": false,
     "is_scholar": false,
@@ -5695,7 +5768,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 8,
+    "health": 9,
     "id": "telephone",
     "is_hero": false,
     "is_scholar": false,
@@ -5718,7 +5791,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 2,
+    "health": 4,
     "id": "tengman",
     "is_hero": false,
     "is_scholar": false,
@@ -5732,18 +5805,19 @@
     "taxon": "plantae-incertae-sedis"
   },
   {
-    "attack": 10,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 10,
     "id": "termite-king",
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
     "playstyle": "insect",
     "skills": [
-      "deathrattle-summon-3-termites"
+      "deathrattle-summon-3-termites",
+      "battlecry-other-insect-growth-once"
     ],
     "specialty": [],
     "subtype": "insect",
@@ -5799,7 +5873,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 6,
+    "health": 5,
     "id": "tielu-gongren",
     "is_hero": false,
     "is_scholar": false,
@@ -5831,7 +5905,7 @@
     "taxon": "testudinidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
@@ -5872,11 +5946,11 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 5,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 8,
+    "health": 9,
     "id": "truffle",
     "is_hero": false,
     "is_scholar": false,
@@ -5890,11 +5964,11 @@
     "taxon": "tuberaceae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 7,
+    "health": 5,
     "id": "trypanosome",
     "is_hero": false,
     "is_scholar": false,
@@ -5935,7 +6009,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 5,
+    "health": 4,
     "id": "tuna",
     "is_hero": false,
     "is_scholar": false,
@@ -5949,11 +6023,11 @@
     "taxon": "scombridae"
   },
   {
-    "attack": 7,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 9,
+    "health": 8,
     "id": "turing-machine",
     "is_hero": false,
     "is_scholar": false,
@@ -5973,11 +6047,11 @@
     "taxon": "information-computing"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 5,
+    "health": 6,
     "id": "turritopsis",
     "is_hero": false,
     "is_scholar": false,
@@ -5995,14 +6069,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 11,
+    "health": 12,
     "id": "vampire-squid",
     "is_hero": false,
     "is_scholar": false,
     "level": 5,
     "playstyle": "cephalopod",
     "skills": [
-      "mimic-2"
+      "mimic-2",
+      "mimic-1"
     ],
     "specialty": [],
     "subtype": "mollusk",
@@ -6032,32 +6107,34 @@
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 6,
+    "health": 7,
     "id": "vibrio-cholerae",
     "is_hero": false,
     "is_scholar": false,
     "level": 3,
     "playstyle": "bacteria",
     "skills": [
-      "detonate-2"
+      "detonate-2",
+      "microbiology"
     ],
     "specialty": [],
     "subtype": "bacteria",
     "taxon": "vibrionaceae"
   },
   {
-    "attack": 11,
+    "attack": 15,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 18,
+    "health": 14,
     "id": "volvox",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "protozoa",
     "skills": [
-      "deathrattle-summon-4-volvox-cells"
+      "deathrattle-summon-4-volvox-cells",
+      "aura-other-protozoa-plus-1-attack"
     ],
     "specialty": [],
     "subtype": "protozoa",
@@ -6113,7 +6190,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 2,
+    "health": 4,
     "id": "wandou",
     "is_hero": false,
     "is_scholar": false,
@@ -6150,11 +6227,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 8,
+    "health": 9,
     "id": "weijingzhanshi",
     "is_hero": false,
     "is_scholar": false,
@@ -6168,25 +6245,26 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 10,
+    "attack": 12,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 13,
+    "health": 10,
     "id": "whale-shark",
     "is_hero": false,
     "is_scholar": false,
     "level": 6,
     "playstyle": "fish",
     "skills": [
-      "aura-school-fish-2"
+      "aura-school-fish-2",
+      "deathrattle-summon-fish-fry-2"
     ],
     "specialty": [],
     "subtype": "fish",
     "taxon": "rhincodontidae"
   },
   {
-    "attack": 10,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
@@ -6228,11 +6306,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 4,
+    "health": 3,
     "id": "wuyi",
     "is_hero": false,
     "is_scholar": false,
@@ -6250,7 +6328,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 5,
+    "health": 4,
     "id": "xiake",
     "is_hero": false,
     "is_scholar": false,
@@ -6268,7 +6346,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 4,
+    "health": 5,
     "id": "xiangrikui",
     "is_hero": false,
     "is_scholar": false,
@@ -6341,29 +6419,30 @@
     "taxon": "columbidae"
   },
   {
-    "attack": 12,
+    "attack": 15,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 16,
+    "health": 14,
     "id": "xingji-jianzhang",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "mammal",
     "skills": [
-      "keyword-taunt"
+      "keyword-taunt",
+      "shout"
     ],
     "specialty": [],
     "subtype": "captain",
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 8,
+    "health": 6,
     "id": "xray-machine",
     "is_hero": false,
     "is_scholar": false,
@@ -6400,7 +6479,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
@@ -6486,7 +6565,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 8,
+    "health": 9,
     "id": "yersinia-pestis",
     "is_hero": false,
     "is_scholar": false,
@@ -6505,7 +6584,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 2,
+    "health": 3,
     "id": "yezhu",
     "is_hero": false,
     "is_scholar": false,
@@ -6564,14 +6643,15 @@
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 20,
+    "health": 18,
     "id": "yongsheng-shuimu",
     "is_hero": false,
     "is_scholar": false,
     "level": 7,
     "playstyle": "cnidarian",
     "skills": [
-      "keyword-reborn"
+      "keyword-reborn",
+      "keyword-armor-1"
     ],
     "specialty": [],
     "subtype": "ocean",
@@ -6618,7 +6698,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 6,
+    "health": 5,
     "id": "yuanlaoyuan-yiyuan",
     "is_hero": false,
     "is_scholar": false,
@@ -6655,7 +6735,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
@@ -6673,11 +6753,11 @@
     "taxon": "automation"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 2,
+    "health": 3,
     "id": "yuanshizhenjun",
     "is_hero": false,
     "is_scholar": false,
@@ -6695,7 +6775,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 19,
+    "health": 20,
     "id": "yuzhouteng",
     "is_hero": false,
     "is_scholar": false,
@@ -6772,11 +6852,11 @@
     "taxon": "equidae"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 6,
+    "health": 7,
     "id": "zhanxiang",
     "is_hero": false,
     "is_scholar": false,
@@ -6844,11 +6924,11 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 4,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 6,
+    "health": 7,
     "id": "zhengqi-jiche",
     "is_hero": false,
     "is_scholar": false,
@@ -6885,11 +6965,11 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 13,
+    "attack": 15,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 15,
+    "health": 14,
     "id": "zhihui-jushou",
     "is_hero": false,
     "is_scholar": false,
@@ -6943,7 +7023,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 6,
+    "health": 5,
     "id": "zhugeliang",
     "is_hero": false,
     "is_scholar": false,
@@ -6957,7 +7037,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",

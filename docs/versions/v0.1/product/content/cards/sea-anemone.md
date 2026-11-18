@@ -8,7 +8,7 @@ subtype: ocean
 level: 2
 era: primitive
 attack: 2
-health: 3
+health: 5
 skills: [keyword-armor-1]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 3 |
+| 生命值 | 5 |
 | 关键词 | 减伤 1 |
 | 技能 | keyword-armor-1 |
 | 学者 | 否 |

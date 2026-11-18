@@ -8,8 +8,8 @@ specialty: [play:machine]
 subtype: transport
 level: 3
 era: industrial
-attack: 4
-health: 6
+attack: 3
+health: 7
 skills: [keyword-taunt]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 交通 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 3 |
+| 生命值 | 7 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |

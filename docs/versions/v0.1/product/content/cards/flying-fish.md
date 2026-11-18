@@ -8,8 +8,8 @@ subtype: fish
 level: 3
 era: classical
 attack: 5
-health: 5
-skills: [keyword-optimal-attack]
+health: 4
+skills: [keyword-optimal-attack, aura-school-fish-1]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 古典 |
 | 攻击力 | 5 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 最优攻击 |
-| 技能 | keyword-optimal-attack |
+| 技能 | keyword-optimal-attack；aura-school-fish-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-最优攻击：无视嘲讽，优先攻击可被击杀的目标
+最优攻击：无视嘲讽，优先攻击可被击杀的目标；群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
 
 ## 设计说明
 

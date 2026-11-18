@@ -8,9 +8,9 @@ specialty: [play:machine]
 subtype: flight
 level: 5
 era: modern
-attack: 8
-health: 11
-skills: [keyword-optimal-attack]
+attack: 9
+health: 8
+skills: [keyword-optimal-attack, shout]
 is_scholar: false
 ---
 
@@ -29,16 +29,16 @@ is_scholar: false
 | 子类 | 飞行 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
-| 生命值 | 11 |
+| 攻击力 | 9 |
+| 生命值 | 8 |
 | 关键词 | 最优攻击 |
-| 技能 | keyword-optimal-attack |
+| 技能 | keyword-optimal-attack；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-最优攻击：无视嘲讽，优先攻击可被击杀的目标
+最优攻击：无视嘲讽，优先攻击可被击杀的目标；使一个友方随从获得一次成长
 
 ## 出处
 

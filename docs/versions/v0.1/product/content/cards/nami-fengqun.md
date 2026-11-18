@@ -7,9 +7,9 @@ taxon: automation
 subtype: nanotech
 level: 7
 era: future
-attack: 11
-health: 18
-skills: [keyword-assemble-2]
+attack: 10
+health: 15
+skills: [keyword-assemble-2, invention-factory]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 纳米 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 11 |
-| 生命值 | 18 |
+| 攻击力 | 10 |
+| 生命值 | 15 |
 | 关键词 | 装配 2 |
-| 技能 | keyword-assemble-2 |
+| 技能 | keyword-assemble-2；invention-factory |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-装配 2：进入战场时，使你的其他机械随从各获得 2 次成长
+装配 2：进入战场时，使你的其他机械随从各获得 2 次成长；使你的其他机械随从各获得一次成长
 
 ## 出处
 

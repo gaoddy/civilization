@@ -8,7 +8,7 @@ subtype: crop
 level: 2
 era: industrial
 attack: 2
-health: 4
+health: 3
 skills: [keyword-sow]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 工业 |
 | 攻击力 | 2 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
 | 学者 | 否 |

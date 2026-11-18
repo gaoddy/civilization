@@ -8,8 +8,8 @@ subtype: fungus
 level: 7
 era: prehistoric
 attack: 10
-health: 17
-skills: [deathrattle-summon-3-spores-3-3]
+health: 15
+skills: [deathrattle-summon-3-spores-3-3, decompose-kill-original]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 7 |
 | 时代 | 史前 |
 | 攻击力 | 10 |
-| 生命值 | 17 |
-| 关键词 | 亡语 |
-| 技能 | deathrattle-summon-3-spores-3-3 |
+| 生命值 | 15 |
+| 关键词 | 亡语；分解 |
+| 技能 | deathrattle-summon-3-spores-3-3；decompose-kill-original |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-分裂：死亡时召唤三个 3/3 的孢子
+分裂：死亡时召唤三个 3/3 的孢子；分解：本随从击杀随从后，获得其原始生命值
 
 ## 设计说明
 

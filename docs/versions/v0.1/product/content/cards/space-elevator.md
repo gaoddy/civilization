@@ -8,8 +8,8 @@ specialty: [play:machine]
 subtype: architecture
 level: 6
 era: future
-attack: 10
-health: 12
+attack: 12
+health: 10
 skills: [keyword-divine-shield, keyword-assemble-1]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 建筑 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 攻击力 | 10 |
-| 生命值 | 12 |
+| 攻击力 | 12 |
+| 生命值 | 10 |
 | 关键词 | 护盾；装配 1 |
 | 技能 | keyword-divine-shield；keyword-assemble-1 |
 | 学者 | 否 |

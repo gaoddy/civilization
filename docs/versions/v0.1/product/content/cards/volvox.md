@@ -7,9 +7,9 @@ taxon: volvocaceae
 subtype: protozoa
 level: 7
 era: prehistoric
-attack: 11
-health: 18
-skills: [deathrattle-summon-4-volvox-cells]
+attack: 15
+health: 14
+skills: [deathrattle-summon-4-volvox-cells, aura-other-protozoa-plus-1-attack]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 原生生物 |
 | 星级 | 7 |
 | 时代 | 史前 |
-| 攻击力 | 11 |
-| 生命值 | 18 |
+| 攻击力 | 15 |
+| 生命值 | 14 |
 | 关键词 | 亡语 |
-| 技能 | deathrattle-summon-4-volvox-cells |
+| 技能 | deathrattle-summon-4-volvox-cells；aura-other-protozoa-plus-1-attack |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-分裂：死亡时召唤四个 1/1 的团藻细胞
+分裂：死亡时召唤四个 1/1 的团藻细胞；你的其他原生生物界随从获得 +1 攻击力
 
 ## 设计说明
 

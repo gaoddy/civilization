@@ -7,8 +7,8 @@ taxon: virus-incertae-sedis
 subtype: virus
 level: 6
 era: future
-attack: 9
-health: 11
+attack: 8
+health: 16
 skills: [keyword-contagion, combatstart-all-enemies-contagion-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 病毒 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 攻击力 | 9 |
-| 生命值 | 11 |
+| 攻击力 | 8 |
+| 生命值 | 16 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-all-enemies-contagion-1 |
 | 学者 | 否 |

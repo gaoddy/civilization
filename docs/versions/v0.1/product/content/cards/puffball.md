@@ -8,8 +8,8 @@ subtype: fungus
 level: 5
 era: primitive
 attack: 6
-health: 11
-skills: [deathrattle-all-enemies-damage-2]
+health: 12
+skills: [deathrattle-all-enemies-damage-2, decompose-kill-original]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 原始 |
 | 攻击力 | 6 |
-| 生命值 | 11 |
-| 关键词 | 亡语 |
-| 技能 | deathrattle-all-enemies-damage-2 |
+| 生命值 | 12 |
+| 关键词 | 亡语；分解 |
+| 技能 | deathrattle-all-enemies-damage-2；decompose-kill-original |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-亡语：对敌方所有随从造成 2 点伤害
+亡语：对敌方所有随从造成 2 点伤害；分解：本随从击杀随从后，获得其原始生命值
 
 ## 设计说明
 

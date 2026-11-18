@@ -7,8 +7,8 @@ taxon: amanitaceae
 subtype: fungus
 level: 2
 era: classical
-attack: 2
-health: 3
+attack: 3
+health: 4
 skills: [decompose-kill-original]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 真菌 |
 | 星级 | 2 |
 | 时代 | 古典 |
-| 攻击力 | 2 |
-| 生命值 | 3 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 分解 |
 | 技能 | decompose-kill-original |
 | 学者 | 否 |

@@ -8,7 +8,7 @@ subtype: reptile
 level: 1
 era: prehistoric
 attack: 1
-health: 3
+health: 4
 skills: [deathrattle-random-enemy-minus-1-attack]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 1 |
-| 生命值 | 3 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | deathrattle-random-enemy-minus-1-attack |
 | 学者 | 否 |

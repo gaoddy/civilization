@@ -8,9 +8,9 @@ specialty: [play:machine]
 subtype: siege
 level: 4
 era: feudal
-attack: 6
-health: 7
-skills: [keyword-assemble-2]
+attack: 4
+health: 6
+skills: [keyword-assemble-2, shout]
 is_scholar: false
 ---
 
@@ -29,16 +29,16 @@ is_scholar: false
 | 子类 | 攻城 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 6 |
-| 生命值 | 7 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
 | 关键词 | 装配 2 |
-| 技能 | keyword-assemble-2 |
+| 技能 | keyword-assemble-2；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-装配 2：进入战场时，使你的其他机械随从各获得 2 次成长
+装配 2：进入战场时，使你的其他机械随从各获得 2 次成长；使一个友方随从获得一次成长
 
 ## 出处
 

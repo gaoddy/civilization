@@ -7,9 +7,9 @@ taxon: diomedeidae
 subtype: bird
 level: 6
 era: modern
-attack: 11
-health: 11
-skills: [deathrattle-summon-2-seabirds]
+attack: 8
+health: 10
+skills: [deathrattle-summon-2-seabirds, battlecry-friendly-bird-growth-once]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 鸟类 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 11 |
-| 生命值 | 11 |
-| 关键词 | 亡语 |
-| 技能 | deathrattle-summon-2-seabirds |
+| 攻击力 | 8 |
+| 生命值 | 10 |
+| 关键词 | 亡语；战吼 |
+| 技能 | deathrattle-summon-2-seabirds；battlecry-friendly-bird-growth-once |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-分裂：死亡时召唤两个 3/3 的海鸟
+分裂：死亡时召唤两个 3/3 的海鸟；战吼：使一个友方鸟纲随从获得一次成长
 
 ## 设计说明
 

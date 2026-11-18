@@ -8,8 +8,8 @@ specialty: [play:machine]
 subtype: spaceflight
 level: 7
 era: future
-attack: 13
-health: 17
+attack: 15
+health: 14
 skills: [keyword-optimal-attack]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 航天 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 13 |
-| 生命值 | 17 |
+| 攻击力 | 15 |
+| 生命值 | 14 |
 | 关键词 | 最优攻击 |
 | 技能 | keyword-optimal-attack |
 | 学者 | 否 |

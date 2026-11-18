@@ -8,7 +8,7 @@ specialty: [play:machine]
 subtype: telecommunication
 level: 6
 era: modern
-attack: 10
+attack: 8
 health: 12
 skills: [keyword-assemble-2, battlecry-all-mech-growth-once-no-keyword]
 is_scholar: false
@@ -29,7 +29,7 @@ is_scholar: false
 | 子类 | 通讯 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 10 |
+| 攻击力 | 8 |
 | 生命值 | 12 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；battlecry-all-mech-growth-once-no-keyword |

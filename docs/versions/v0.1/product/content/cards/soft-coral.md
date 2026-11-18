@@ -7,9 +7,9 @@ taxon: alcyoniidae
 subtype: ocean
 level: 4
 era: classical
-attack: 5
+attack: 4
 health: 9
-skills: [revive-1]
+skills: [revive-1, keyword-armor-1]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 海洋 |
 | 星级 | 4 |
 | 时代 | 古典 |
-| 攻击力 | 5 |
+| 攻击力 | 4 |
 | 生命值 | 9 |
-| 关键词 | 无 |
-| 技能 | revive-1 |
+| 关键词 | 减伤 1 |
+| 技能 | revive-1；keyword-armor-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-复苏：以 +1/+1 复活一次
+复苏：以 +1/+1 复活一次；减伤 1：受到伤害时，减免 1 点伤害
 
 ## 设计说明
 

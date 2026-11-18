@@ -9,8 +9,8 @@ subtype: bacteria
 level: 4
 era: feudal
 attack: 4
-health: 7
-skills: [combatstart-random-enemy-contagion-1]
+health: 9
+skills: [combatstart-random-enemy-contagion-1, keyword-contagion]
 is_scholar: false
 ---
 
@@ -30,15 +30,15 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 7 |
-| 关键词 | 无 |
-| 技能 | combatstart-random-enemy-contagion-1 |
+| 生命值 | 9 |
+| 关键词 | 传染 |
+| 技能 | combatstart-random-enemy-contagion-1；keyword-contagion |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-战斗开始时，使一个随机敌方随从获得 1 层传染
+战斗开始时，使一个随机敌方随从获得 1 层传染；传染：造成伤害后，目标每回合 -1 生命
 
 ## 出处
 

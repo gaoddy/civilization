@@ -8,8 +8,8 @@ specialty: [host:mammalia]
 subtype: bacteria
 level: 3
 era: modern
-attack: 3
-health: 6
+attack: 4
+health: 5
 skills: [keyword-contagion]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 细菌 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 3 |
-| 生命值 | 6 |
+| 攻击力 | 4 |
+| 生命值 | 5 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion |
 | 学者 | 否 |

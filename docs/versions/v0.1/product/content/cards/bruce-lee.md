@@ -7,9 +7,9 @@ taxon: hominidae
 subtype: martial-artist
 level: 4
 era: modern
-attack: 6
-health: 8
-skills: [keyword-windfury]
+attack: 7
+health: 6
+skills: [keyword-windfury, shout]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 武术家 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
-| 生命值 | 8 |
+| 攻击力 | 7 |
+| 生命值 | 6 |
 | 关键词 | 连击 |
-| 技能 | keyword-windfury |
+| 技能 | keyword-windfury；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-连击：每回合可攻击两次
+连击：每回合可攻击两次；使一个友方随从获得一次成长
 
 ## 出处
 

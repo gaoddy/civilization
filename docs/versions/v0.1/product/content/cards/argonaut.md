@@ -7,9 +7,9 @@ taxon: argonautidae
 subtype: mollusk
 level: 4
 era: classical
-attack: 6
-health: 8
-skills: [keyword-stealth]
+attack: 4
+health: 6
+skills: [keyword-stealth, mimic-1]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 4 |
 | 时代 | 古典 |
-| 攻击力 | 6 |
-| 生命值 | 8 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
 | 关键词 | 潜行 |
-| 技能 | keyword-stealth |
+| 技能 | keyword-stealth；mimic-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-潜行：无法被单体攻击与单体效果选中，造成伤害后打破
+潜行：无法被单体攻击与单体效果选中，造成伤害后打破；战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束
 
 ## 设计说明
 

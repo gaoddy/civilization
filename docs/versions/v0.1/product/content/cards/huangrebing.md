@@ -8,8 +8,8 @@ specialty: [host:mammalia]
 subtype: disease
 level: 4
 era: industrial
-attack: 5
-health: 8
+attack: 4
+health: 9
 skills: [combatstart-random-enemy-contagion-2]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 疾病 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 攻击力 | 5 |
-| 生命值 | 8 |
+| 攻击力 | 4 |
+| 生命值 | 9 |
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-2 |
 | 学者 | 否 |

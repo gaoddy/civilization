@@ -7,9 +7,9 @@ taxon: hominidae
 subtype: modification
 level: 7
 era: future
-attack: 12
-health: 16
-skills: [keyword-reborn]
+attack: 15
+health: 14
+skills: [keyword-reborn, shout]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 改造 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 12 |
-| 生命值 | 16 |
+| 攻击力 | 15 |
+| 生命值 | 14 |
 | 关键词 | 复生 |
-| 技能 | keyword-reborn |
+| 技能 | keyword-reborn；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-复生：以 1 点生命复活一次
+复生：以 1 点生命复活一次；使一个友方随从获得一次成长
 
 ## 出处
 

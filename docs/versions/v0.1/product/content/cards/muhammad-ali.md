@@ -7,9 +7,9 @@ taxon: hominidae
 subtype: athlete
 level: 6
 era: modern
-attack: 10
-health: 11
-skills: [keyword-windfury]
+attack: 12
+health: 10
+skills: [keyword-windfury, shout]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 运动员 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 10 |
-| 生命值 | 11 |
+| 攻击力 | 12 |
+| 生命值 | 10 |
 | 关键词 | 连击 |
-| 技能 | keyword-windfury |
+| 技能 | keyword-windfury；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-连击：每回合可攻击两次
+连击：每回合可攻击两次；使一个友方随从获得一次成长
 
 ## 出处
 

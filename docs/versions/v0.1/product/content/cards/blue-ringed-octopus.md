@@ -7,9 +7,9 @@ taxon: octopodidae
 subtype: mollusk
 level: 3
 era: modern
-attack: 4
-health: 6
-skills: [keyword-poison]
+attack: 5
+health: 4
+skills: [keyword-poison, mimic-1]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 5 |
+| 生命值 | 4 |
 | 关键词 | 剧毒 |
-| 技能 | keyword-poison |
+| 技能 | keyword-poison；mimic-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-剧毒：造成伤害后，若目标仍存活则将其消灭
+剧毒：造成伤害后，若目标仍存活则将其消灭；战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束
 
 ## 设计说明
 

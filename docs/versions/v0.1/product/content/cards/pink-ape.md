@@ -8,7 +8,7 @@ subtype: primate
 level: 4
 era: modern
 attack: 6
-health: 8
+health: 9
 skills: [battlecry-self-growth-twice]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 8 |
+| 生命值 | 9 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-self-growth-twice |
 | 学者 | 否 |

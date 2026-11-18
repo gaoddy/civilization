@@ -7,9 +7,9 @@ taxon: corvidae
 subtype: bird
 level: 3
 era: feudal
-attack: 4
+attack: 5
 health: 4
-skills: [battlecry-friendly-bird-growth-once]
+skills: [battlecry-friendly-bird-growth-once, dive-1]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 鸟类 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 4 |
+| 攻击力 | 5 |
 | 生命值 | 4 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-friendly-bird-growth-once |
+| 技能 | battlecry-friendly-bird-growth-once；dive-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-战吼：使一个友方鸟纲随从获得一次成长
+战吼：使一个友方鸟纲随从获得一次成长；俯冲：战斗开始时，对攻击力最低的敌方随从造成等同于自身攻击力的伤害
 
 ## 设计说明
 

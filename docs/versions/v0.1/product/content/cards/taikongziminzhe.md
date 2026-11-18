@@ -7,9 +7,9 @@ taxon: hominidae
 subtype: colonist
 level: 6
 era: future
-attack: 9
+attack: 8
 health: 12
-skills: [keyword-divine-shield]
+skills: [keyword-divine-shield, shout]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 殖民者 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 攻击力 | 9 |
+| 攻击力 | 8 |
 | 生命值 | 12 |
 | 关键词 | 护盾 |
-| 技能 | keyword-divine-shield |
+| 技能 | keyword-divine-shield；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-护盾：抵消一次伤害
+护盾：抵消一次伤害；使一个友方随从获得一次成长
 
 ## 出处
 

@@ -7,9 +7,9 @@ taxon: hominidae
 subtype: captain
 level: 7
 era: future
-attack: 12
-health: 16
-skills: [keyword-taunt]
+attack: 15
+health: 14
+skills: [keyword-taunt, shout]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 舰长 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 12 |
-| 生命值 | 16 |
+| 攻击力 | 15 |
+| 生命值 | 14 |
 | 关键词 | 嘲讽 |
-| 技能 | keyword-taunt |
+| 技能 | keyword-taunt；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-嘲讽
+嘲讽；使一个友方随从获得一次成长
 
 ## 出处
 

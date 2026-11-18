@@ -7,9 +7,9 @@ taxon: rhincodontidae
 subtype: fish
 level: 6
 era: modern
-attack: 10
-health: 13
-skills: [aura-school-fish-2]
+attack: 12
+health: 10
+skills: [aura-school-fish-2, deathrattle-summon-fish-fry-2]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 10 |
-| 生命值 | 13 |
-| 关键词 | 无 |
-| 技能 | aura-school-fish-2 |
+| 攻击力 | 12 |
+| 生命值 | 10 |
+| 关键词 | 亡语 |
+| 技能 | aura-school-fish-2；deathrattle-summon-fish-fry-2 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力
+群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力；分裂：死亡时召唤两个 1/1 的鱼苗
 
 ## 设计说明
 

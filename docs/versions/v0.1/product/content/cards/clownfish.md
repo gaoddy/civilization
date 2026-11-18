@@ -8,7 +8,7 @@ subtype: fish
 level: 2
 era: classical
 attack: 3
-health: 4
+health: 3
 skills: [battlecry-friendly-fish-growth-once]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 古典 |
 | 攻击力 | 3 |
-| 生命值 | 4 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-fish-growth-once |
 | 学者 | 否 |

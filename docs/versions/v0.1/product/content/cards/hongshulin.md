@@ -8,7 +8,7 @@ subtype: tree
 level: 5
 era: modern
 attack: 6
-health: 11
+health: 12
 skills: [keyword-sow, keyword-breed-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 11 |
+| 生命值 | 12 |
 | 关键词 | 播种；繁衍 2 |
 | 技能 | keyword-sow；keyword-breed-2 |
 | 学者 | 否 |

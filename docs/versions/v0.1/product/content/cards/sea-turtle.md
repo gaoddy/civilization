@@ -8,8 +8,8 @@ subtype: reptile
 level: 5
 era: modern
 attack: 6
-health: 12
-skills: [keyword-armor-2]
+health: 11
+skills: [keyword-armor-2, keyword-taunt]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 12 |
-| 关键词 | 减伤 2 |
-| 技能 | keyword-armor-2 |
+| 生命值 | 11 |
+| 关键词 | 减伤 2；嘲讽 |
+| 技能 | keyword-armor-2；keyword-taunt |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-减伤 2：受到伤害时，减免 2 点伤害
+减伤 2：受到伤害时，减免 2 点伤害；嘲讽
 
 ## 设计说明
 

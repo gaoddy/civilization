@@ -7,8 +7,8 @@ taxon: ginkgoaceae
 subtype: tree
 level: 5
 era: prehistoric
-attack: 7
-health: 11
+attack: 6
+health: 12
 skills: [keyword-sow, keyword-breed-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 树木 |
 | 星级 | 5 |
 | 时代 | 史前 |
-| 攻击力 | 7 |
-| 生命值 | 11 |
+| 攻击力 | 6 |
+| 生命值 | 12 |
 | 关键词 | 播种；繁衍 1 |
 | 技能 | keyword-sow；keyword-breed-1 |
 | 学者 | 否 |

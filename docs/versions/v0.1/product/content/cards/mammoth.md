@@ -7,9 +7,9 @@ taxon: elephantidae
 subtype: beast
 level: 6
 era: prehistoric
-attack: 9
-health: 12
-skills: [aura-school-mammal]
+attack: 12
+health: 10
+skills: [aura-school-mammal, shout]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 猛兽 |
 | 星级 | 6 |
 | 时代 | 史前 |
-| 攻击力 | 9 |
-| 生命值 | 12 |
+| 攻击力 | 12 |
+| 生命值 | 10 |
 | 关键词 | 无 |
-| 技能 | aura-school-mammal |
+| 技能 | aura-school-mammal；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力
+群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力；使一个友方随从获得一次成长
 
 ## 设计说明
 

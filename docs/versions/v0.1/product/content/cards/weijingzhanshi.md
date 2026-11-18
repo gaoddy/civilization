@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: unit
 level: 4
 era: feudal
-attack: 6
-health: 8
+attack: 4
+health: 9
 skills: [keyword-taunt]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 兵种 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 6 |
-| 生命值 | 8 |
+| 攻击力 | 4 |
+| 生命值 | 9 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |

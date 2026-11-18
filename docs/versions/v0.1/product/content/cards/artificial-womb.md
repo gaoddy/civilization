@@ -8,9 +8,9 @@ specialty: [play:mammal]
 subtype: medical
 level: 5
 era: future
-attack: 8
-health: 10
-skills: [battlecry-summon-3-3-synthetic-cell]
+attack: 6
+health: 9
+skills: [battlecry-summon-3-3-synthetic-cell, shout]
 is_scholar: false
 ---
 
@@ -29,16 +29,16 @@ is_scholar: false
 | 子类 | 医疗 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 攻击力 | 8 |
-| 生命值 | 10 |
+| 攻击力 | 6 |
+| 生命值 | 9 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-summon-3-3-synthetic-cell |
+| 技能 | battlecry-summon-3-3-synthetic-cell；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-战吼：召唤一个 3/3 的合成细胞（幼体）
+战吼：召唤一个 3/3 的合成细胞（幼体）；使一个友方随从获得一次成长
 
 ## 出处
 

@@ -7,8 +7,8 @@ taxon: architeuthidae
 subtype: mollusk
 level: 5
 era: modern
-attack: 8
-health: 11
+attack: 7
+health: 9
 skills: [keyword-stealth, devour-3]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
-| 生命值 | 11 |
+| 攻击力 | 7 |
+| 生命值 | 9 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；devour-3 |
 | 学者 | 否 |

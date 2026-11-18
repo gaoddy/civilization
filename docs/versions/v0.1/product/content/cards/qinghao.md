@@ -7,7 +7,7 @@ taxon: asteraceae
 subtype: medicinal
 level: 4
 era: modern
-attack: 6
+attack: 4
 health: 9
 skills: [keyword-sow, aura-plant-plus-1-plus-1]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 药用 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
+| 攻击力 | 4 |
 | 生命值 | 9 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow；aura-plant-plus-1-plus-1 |

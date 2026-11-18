@@ -8,7 +8,7 @@ subtype: fungus
 level: 6
 era: modern
 attack: 8
-health: 12
+health: 14
 skills: [decompose-kill-original, deathrattle-summon-2-spores-2-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 6 |
 | 时代 | 现代 |
 | 攻击力 | 8 |
-| 生命值 | 12 |
+| 生命值 | 14 |
 | 关键词 | 分解；亡语 |
 | 技能 | decompose-kill-original；deathrattle-summon-2-spores-2-2 |
 | 学者 | 否 |

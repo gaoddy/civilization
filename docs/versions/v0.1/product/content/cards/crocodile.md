@@ -7,9 +7,9 @@ taxon: crocodylidae
 subtype: reptile
 level: 4
 era: prehistoric
-attack: 5
+attack: 4
 health: 9
-skills: [keyword-poison]
+skills: [keyword-poison, keyword-taunt]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 爬行 |
 | 星级 | 4 |
 | 时代 | 史前 |
-| 攻击力 | 5 |
+| 攻击力 | 4 |
 | 生命值 | 9 |
-| 关键词 | 剧毒 |
-| 技能 | keyword-poison |
+| 关键词 | 剧毒；嘲讽 |
+| 技能 | keyword-poison；keyword-taunt |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-剧毒：造成伤害后，若目标仍存活则将其消灭
+剧毒：造成伤害后，若目标仍存活则将其消灭；嘲讽
 
 ## 设计说明
 

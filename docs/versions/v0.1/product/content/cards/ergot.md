@@ -7,9 +7,9 @@ taxon: clavicipitaceae
 subtype: fungus
 level: 5
 era: feudal
-attack: 7
-health: 10
-skills: [decompose-ally-kill-pre-kill]
+attack: 6
+health: 12
+skills: [decompose-ally-kill-pre-kill, deathrattle-summon-2-spores-2-2]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 真菌 |
 | 星级 | 5 |
 | 时代 | 封建 |
-| 攻击力 | 7 |
-| 生命值 | 10 |
-| 关键词 | 分解 |
-| 技能 | decompose-ally-kill-pre-kill |
+| 攻击力 | 6 |
+| 生命值 | 12 |
+| 关键词 | 分解；亡语 |
+| 技能 | decompose-ally-kill-pre-kill；deathrattle-summon-2-spores-2-2 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-分解：友方随从击杀敌方随从后，获得其被击杀前的生命值
+分解：友方随从击杀敌方随从后，获得其被击杀前的生命值；分裂：死亡时召唤两个 2/2 的孢子
 
 ## 设计说明
 

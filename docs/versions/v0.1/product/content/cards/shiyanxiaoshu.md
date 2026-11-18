@@ -7,7 +7,7 @@ taxon: muridae
 subtype: mammal
 level: 1
 era: prehistoric
-attack: 2
+attack: 1
 health: 2
 skills: [deathrattle-summon-termite]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 哺乳 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 攻击力 | 2 |
+| 攻击力 | 1 |
 | 生命值 | 2 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-termite |

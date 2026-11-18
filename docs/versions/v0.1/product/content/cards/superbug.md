@@ -8,7 +8,7 @@ subtype: bacteria
 level: 7
 era: future
 attack: 10
-health: 16
+health: 20
 skills: [detonate-2, convert-4]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 7 |
 | 时代 | 未来 |
 | 攻击力 | 10 |
-| 生命值 | 16 |
+| 生命值 | 20 |
 | 关键词 | 无 |
 | 技能 | detonate-2；convert-4 |
 | 学者 | 否 |

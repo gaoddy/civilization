@@ -7,9 +7,9 @@ taxon: teratornithidae
 subtype: bird
 level: 7
 era: classical
-attack: 15
-health: 15
-skills: [keyword-windfury]
+attack: 14
+health: 14
+skills: [keyword-windfury, battlecry-friendly-bird-growth-once]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 鸟类 |
 | 星级 | 7 |
 | 时代 | 古典 |
-| 攻击力 | 15 |
-| 生命值 | 15 |
-| 关键词 | 连击 |
-| 技能 | keyword-windfury |
+| 攻击力 | 14 |
+| 生命值 | 14 |
+| 关键词 | 连击；战吼 |
+| 技能 | keyword-windfury；battlecry-friendly-bird-growth-once |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-连击：每回合可攻击两次
+连击：每回合可攻击两次；战吼：使一个友方鸟纲随从获得一次成长
 
 ## 设计说明
 

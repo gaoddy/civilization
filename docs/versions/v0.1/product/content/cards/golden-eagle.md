@@ -8,8 +8,8 @@ subtype: bird
 level: 5
 era: feudal
 attack: 9
-health: 10
-skills: [dive-1]
+health: 8
+skills: [dive-1, battlecry-friendly-bird-growth-once]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 封建 |
 | 攻击力 | 9 |
-| 生命值 | 10 |
-| 关键词 | 无 |
-| 技能 | dive-1 |
+| 生命值 | 8 |
+| 关键词 | 战吼 |
+| 技能 | dive-1；battlecry-friendly-bird-growth-once |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-俯冲：战斗开始时，对攻击力最低的敌方随从造成等同于自身攻击力的伤害
+俯冲：战斗开始时，对攻击力最低的敌方随从造成等同于自身攻击力的伤害；战吼：使一个友方鸟纲随从获得一次成长
 
 ## 设计说明
 

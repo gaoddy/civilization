@@ -8,7 +8,7 @@ subtype: bacteria
 level: 1
 era: prehistoric
 attack: 1
-health: 2
+health: 4
 skills: [battlecry-friendly-bacteria-plus-0-plus-1]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 1 |
-| 生命值 | 2 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-bacteria-plus-0-plus-1 |
 | 学者 | 否 |

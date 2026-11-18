@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: unit
 level: 2
 era: classical
-attack: 3
-health: 4
+attack: 2
+health: 5
 skills: [keyword-taunt]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 兵种 |
 | 星级 | 2 |
 | 时代 | 古典 |
-| 攻击力 | 3 |
-| 生命值 | 4 |
+| 攻击力 | 2 |
+| 生命值 | 5 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |

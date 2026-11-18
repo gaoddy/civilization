@@ -7,8 +7,8 @@ taxon: automation
 subtype: robot
 level: 5
 era: future
-attack: 6
-health: 11
+attack: 9
+health: 8
 skills: [keyword-optimal-attack, keyword-assemble-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 机器人 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 攻击力 | 6 |
-| 生命值 | 11 |
+| 攻击力 | 9 |
+| 生命值 | 8 |
 | 关键词 | 最优攻击；装配 1 |
 | 技能 | keyword-optimal-attack；keyword-assemble-1 |
 | 学者 | 否 |

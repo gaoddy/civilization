@@ -8,7 +8,7 @@ specialty: [host:mammalia]
 subtype: virus
 level: 6
 era: modern
-attack: 9
+attack: 8
 health: 12
 skills: [keyword-contagion, deathrattle-all-enemies-contagion-1]
 is_scholar: false
@@ -29,7 +29,7 @@ is_scholar: false
 | 子类 | 病毒 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 9 |
+| 攻击力 | 8 |
 | 生命值 | 12 |
 | 关键词 | 传染；亡语 |
 | 技能 | keyword-contagion；deathrattle-all-enemies-contagion-1 |

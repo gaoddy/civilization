@@ -160,7 +160,8 @@ fn scholar_growth_adds_health_only() {
 #[test]
 fn health_only_growth_adds_no_attack() {
     let (mut engine, mut state) = setup(11);
-    place(&engine.catalog, &mut state, 0, 1, "yezhu");
+    add_card(&mut engine, "test-growth", 2, 2, &[]);
+    place(&engine.catalog, &mut state, 0, 1, "test-growth");
 
     engine.apply_op(
         &mut state,
@@ -327,7 +328,8 @@ fn cannot_attack_blocks_attacks() {
 fn deal_damage_uses_selector_and_amount() {
     let (mut engine, mut state) = setup(11);
     state.phase = Phase::Combat;
-    place(&engine.catalog, &mut state, 1, 10, "yezhu");
+    add_card(&mut engine, "test-damage", 2, 2, &[]);
+    place(&engine.catalog, &mut state, 1, 10, "test-damage");
 
     let events = engine.apply_op(
         &mut state,

@@ -7,8 +7,8 @@ taxon: oceaniidae
 subtype: ocean
 level: 3
 era: modern
-attack: 3
-health: 5
+attack: 4
+health: 6
 skills: [recall-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 海洋 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 3 |
-| 生命值 | 5 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | recall-1 |
 | 学者 | 否 |

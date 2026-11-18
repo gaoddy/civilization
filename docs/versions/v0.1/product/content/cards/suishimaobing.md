@@ -8,7 +8,7 @@ subtype: primitive
 level: 1
 era: prehistoric
 attack: 2
-health: 2
+health: 3
 skills: [trigger-2-humans-self-plus-1-attack]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 2 |
+| 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | trigger-2-humans-self-plus-1-attack |
 | 学者 | 否 |

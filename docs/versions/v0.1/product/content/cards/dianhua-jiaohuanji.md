@@ -9,8 +9,8 @@ subtype: communication
 level: 5
 era: industrial
 attack: 8
-health: 11
-skills: [battlecry-all-friendly-growth-once]
+health: 12
+skills: [battlecry-all-friendly-growth-once, shout]
 is_scholar: false
 ---
 
@@ -30,15 +30,15 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 工业 |
 | 攻击力 | 8 |
-| 生命值 | 11 |
+| 生命值 | 12 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-all-friendly-growth-once |
+| 技能 | battlecry-all-friendly-growth-once；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-战吼：使你的所有随从获得一次成长
+战吼：使你的所有随从获得一次成长；使一个友方随从获得一次成长
 
 ## 出处
 

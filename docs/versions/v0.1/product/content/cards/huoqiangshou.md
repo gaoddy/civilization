@@ -9,7 +9,7 @@ level: 3
 era: feudal
 attack: 4
 health: 6
-skills: [battlecry-random-enemy-damage-2]
+skills: [battlecry-random-enemy-damage-2, shout]
 is_scholar: false
 ---
 
@@ -31,13 +31,13 @@ is_scholar: false
 | 攻击力 | 4 |
 | 生命值 | 6 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-random-enemy-damage-2 |
+| 技能 | battlecry-random-enemy-damage-2；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-战吼：对随机一个敌方随从造成 2 点伤害
+战吼：对随机一个敌方随从造成 2 点伤害；使一个友方随从获得一次成长
 
 ## 出处
 

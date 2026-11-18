@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: unit
 level: 3
 era: feudal
-attack: 4
-health: 6
+attack: 3
+health: 7
 skills: [keyword-taunt, trigger-3-humans-self-plus-1-plus-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 兵种 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 4 |
-| 生命值 | 6 |
+| 攻击力 | 3 |
+| 生命值 | 7 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；trigger-3-humans-self-plus-1-plus-1 |
 | 学者 | 否 |

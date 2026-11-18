@@ -9,8 +9,11 @@ subtype: appliance
 level: 3
 era: modern
 attack: 4
-health: 6
+health: 5
 is_scholar: skills: []
+is_scholar: false
+is_scholar: false
+is_scholar: false
 is_scholar: false
 ---
 
@@ -30,7 +33,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 现代 |
 | 攻击力 | 4 |
-| 生命值 | 6 |
+| 生命值 | 5 |
 | 关键词 | 无 |
 | 技能 | 无 |
 | 学者 | 否 |

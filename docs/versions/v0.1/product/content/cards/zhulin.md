@@ -7,7 +7,7 @@ taxon: poaceae
 subtype: tree
 level: 3
 era: feudal
-attack: 3
+attack: 4
 health: 6
 skills: [keyword-sow, aura-other-plants-plus-0-plus-1]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 树木 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 3 |
+| 攻击力 | 4 |
 | 生命值 | 6 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow；aura-other-plants-plus-0-plus-1 |

@@ -8,7 +8,7 @@ specialty: [host:aves]
 subtype: virus
 level: 3
 era: modern
-attack: 3
+attack: 4
 health: 5
 skills: [keyword-contagion]
 is_scholar: false
@@ -29,7 +29,7 @@ is_scholar: false
 | 子类 | 病毒 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 3 |
+| 攻击力 | 4 |
 | 生命值 | 5 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion |

@@ -7,9 +7,9 @@ taxon: chirodropidae
 subtype: ocean
 level: 5
 era: modern
-attack: 7
-health: 12
-skills: [keyword-poison]
+attack: 6
+health: 11
+skills: [keyword-poison, keyword-armor-1]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 海洋 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 7 |
-| 生命值 | 12 |
-| 关键词 | 剧毒 |
-| 技能 | keyword-poison |
+| 攻击力 | 6 |
+| 生命值 | 11 |
+| 关键词 | 剧毒；减伤 1 |
+| 技能 | keyword-poison；keyword-armor-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-剧毒：造成伤害后，若目标仍存活则将其消灭
+剧毒：造成伤害后，若目标仍存活则将其消灭；减伤 1：受到伤害时，减免 1 点伤害
 
 ## 设计说明
 

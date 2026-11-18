@@ -9,7 +9,7 @@ subtype: mammal
 level: 1
 era: primitive
 attack: 2
-health: 2
+health: 3
 skills: [battlecry-self-plus-1-health]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 1 |
 | 时代 | 原始 |
 | 攻击力 | 2 |
-| 生命值 | 2 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-self-plus-1-health |
 | 学者 | 否 |

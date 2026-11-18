@@ -35,6 +35,28 @@ fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, heal
     );
 }
 
+/// 插入一张带 +1/+1 友方光环的合成随从卡。
+fn add_aura_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, health: i32) {
+    let skill_id = format!("{id}-aura");
+    catalog.skills.insert(
+        skill_id.clone(),
+        Skill {
+            id: skill_id.clone(),
+            keyword: None,
+            effects: effects_of("Aura|ModifyStats|friendly:all|attack=1,health=1,duration=permanent"),
+            cost: None,
+            uses_per_turn: None,
+        },
+    );
+    add_minion_card(catalog, id, level, attack, health);
+    catalog
+        .cards
+        .get_mut(id)
+        .expect("合成卡应已插入")
+        .skills
+        .push(skill_id);
+}
+
 /// 插入一张带单个关键词的合成随从卡。
 fn add_keyword_card(
     catalog: &mut Catalog,
@@ -422,9 +444,11 @@ fn ghost_board_keeps_permanent_stats() {
 fn ghost_board_folds_own_aura() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     state.players[3].eliminated = true;
+    add_aura_card(&mut engine.catalog, "test-aura", 4, 4, 9);
+    add_minion_card(&mut engine.catalog, "test-beneficiary", 1, 1, 3);
     state.players[3].board = vec![
-        minion(&engine.catalog, 1, "qinghao"),
-        minion(&engine.catalog, 2, "juzi"),
+        minion(&engine.catalog, 1, "test-aura"),
+        minion(&engine.catalog, 2, "test-beneficiary"),
     ];
     engine.recompute_auras(&mut state);
     assert!(

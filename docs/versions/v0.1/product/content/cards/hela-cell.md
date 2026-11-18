@@ -7,9 +7,9 @@ taxon: hominidae
 subtype: cell
 level: 4
 era: modern
-attack: 6
-health: 7
-skills: [deathrattle-summon-2-2-hela-cell-clone]
+attack: 4
+health: 6
+skills: [deathrattle-summon-2-2-hela-cell-clone, shout]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 细胞 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
-| 生命值 | 7 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
 | 关键词 | 亡语 |
-| 技能 | deathrattle-summon-2-2-hela-cell-clone |
+| 技能 | deathrattle-summon-2-2-hela-cell-clone；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-亡语：召唤一个 2/2 的海拉细胞（复制体）
+亡语：召唤一个 2/2 的海拉细胞（复制体）；使一个友方随从获得一次成长
 
 ## 出处
 

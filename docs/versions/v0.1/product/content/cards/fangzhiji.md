@@ -8,8 +8,8 @@ specialty: [play:machine]
 subtype: factory
 level: 2
 era: industrial
-attack: 3
-health: 4
+attack: 2
+health: 3
 skills: [battlecry-friendly-growth-once]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 工厂 |
 | 星级 | 2 |
 | 时代 | 工业 |
-| 攻击力 | 3 |
-| 生命值 | 4 |
+| 攻击力 | 2 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once |
 | 学者 | 否 |

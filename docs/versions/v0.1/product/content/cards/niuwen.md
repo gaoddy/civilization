@@ -9,8 +9,8 @@ subtype: virus
 level: 5
 era: modern
 attack: 6
-health: 11
-skills: [keyword-contagion]
+health: 12
+skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 is_scholar: false
 ---
 
@@ -30,15 +30,15 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 11 |
+| 生命值 | 12 |
 | 关键词 | 传染 |
-| 技能 | keyword-contagion |
+| 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-传染：造成伤害后，目标每回合 -1 生命
+传染：造成伤害后，目标每回合 -1 生命；战斗开始时，使一个随机敌方随从获得 1 层传染
 
 ## 出处
 

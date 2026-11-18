@@ -8,7 +8,7 @@ subtype: insect
 level: 3
 era: primitive
 attack: 5
-health: 5
+health: 4
 skills: [battlecry-other-insect-growth-once]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 原始 |
 | 攻击力 | 5 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-insect-growth-once |
 | 学者 | 否 |

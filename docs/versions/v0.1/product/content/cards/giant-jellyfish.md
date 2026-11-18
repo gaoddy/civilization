@@ -8,8 +8,8 @@ subtype: ocean
 level: 6
 era: modern
 attack: 8
-health: 15
-skills: [revive-3]
+health: 16
+skills: [revive-3, keyword-armor-1]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 6 |
 | 时代 | 现代 |
 | 攻击力 | 8 |
-| 生命值 | 15 |
-| 关键词 | 无 |
-| 技能 | revive-3 |
+| 生命值 | 16 |
+| 关键词 | 减伤 1 |
+| 技能 | revive-3；keyword-armor-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-复苏：以 +3/+3 复活一次
+复苏：以 +3/+3 复活一次；减伤 1：受到伤害时，减免 1 点伤害
 
 ## 设计说明
 

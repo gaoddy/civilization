@@ -10,7 +10,7 @@ level: 3
 era: modern
 attack: 4
 health: 6
-skills: [keyword-assemble-1]
+skills: [keyword-assemble-1, shout]
 is_scholar: false
 ---
 
@@ -32,13 +32,13 @@ is_scholar: false
 | 攻击力 | 4 |
 | 生命值 | 6 |
 | 关键词 | 装配 1 |
-| 技能 | keyword-assemble-1 |
+| 技能 | keyword-assemble-1；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-装配 1：进入战场时，使你的其他机械随从各获得 1 次成长
+装配 1：进入战场时，使你的其他机械随从各获得 1 次成长；使一个友方随从获得一次成长
 
 ## 出处
 

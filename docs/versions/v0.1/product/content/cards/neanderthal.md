@@ -8,8 +8,8 @@ subtype: primate
 level: 4
 era: prehistoric
 attack: 6
-health: 8
-skills: [aura-adjacent-mammal]
+health: 9
+skills: [aura-adjacent-mammal, shout]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 史前 |
 | 攻击力 | 6 |
-| 生命值 | 8 |
+| 生命值 | 9 |
 | 关键词 | 无 |
-| 技能 | aura-adjacent-mammal |
+| 技能 | aura-adjacent-mammal；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-相邻的友方哺乳纲随从获得 +2/+2
+相邻的友方哺乳纲随从获得 +2/+2；使一个友方随从获得一次成长
 
 ## 设计说明
 

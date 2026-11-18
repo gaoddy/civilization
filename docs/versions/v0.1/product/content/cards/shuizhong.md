@@ -9,7 +9,7 @@ subtype: timekeeping
 level: 1
 era: classical
 attack: 2
-health: 2
+health: 3
 skills: [battlecry-friendly-plus-0-plus-1]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 1 |
 | 时代 | 古典 |
 | 攻击力 | 2 |
-| 生命值 | 2 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-1 |
 | 学者 | 否 |

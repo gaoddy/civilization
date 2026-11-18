@@ -7,9 +7,9 @@ taxon: coralliidae
 subtype: ocean
 level: 5
 era: feudal
-attack: 7
+attack: 6
 health: 12
-skills: [revive-2]
+skills: [revive-2, keyword-armor-1]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 海洋 |
 | 星级 | 5 |
 | 时代 | 封建 |
-| 攻击力 | 7 |
+| 攻击力 | 6 |
 | 生命值 | 12 |
-| 关键词 | 无 |
-| 技能 | revive-2 |
+| 关键词 | 减伤 1 |
+| 技能 | revive-2；keyword-armor-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-复苏：以 +2/+2 复活一次
+复苏：以 +2/+2 复活一次；减伤 1：受到伤害时，减免 1 点伤害
 
 ## 设计说明
 

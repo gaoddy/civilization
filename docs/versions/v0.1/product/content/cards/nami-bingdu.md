@@ -7,9 +7,9 @@ taxon: virus-incertae-sedis
 subtype: nanotech
 level: 7
 era: future
-attack: 11
-health: 19
-skills: [keyword-contagion]
+attack: 10
+health: 20
+skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 纳米 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 11 |
-| 生命值 | 19 |
+| 攻击力 | 10 |
+| 生命值 | 20 |
 | 关键词 | 传染 |
-| 技能 | keyword-contagion |
+| 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-传染：造成伤害后，目标每回合 -1 生命
+传染：造成伤害后，目标每回合 -1 生命；战斗开始时，使一个随机敌方随从获得 1 层传染
 
 ## 出处
 

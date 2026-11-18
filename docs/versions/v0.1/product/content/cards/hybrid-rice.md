@@ -8,7 +8,7 @@ subtype: crop
 level: 4
 era: modern
 attack: 4
-health: 8
+health: 9
 skills: [keyword-sow, keyword-breed-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 现代 |
 | 攻击力 | 4 |
-| 生命值 | 8 |
+| 生命值 | 9 |
 | 关键词 | 播种；繁衍 2 |
 | 技能 | keyword-sow；keyword-breed-2 |
 | 学者 | 否 |

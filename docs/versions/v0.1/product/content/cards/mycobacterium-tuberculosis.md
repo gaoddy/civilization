@@ -7,8 +7,8 @@ taxon: mycobacteriaceae
 subtype: bacteria
 level: 4
 era: industrial
-attack: 5
-health: 7
+attack: 4
+health: 9
 skills: [keyword-contagion, keyword-armor-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 细菌 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 攻击力 | 5 |
-| 生命值 | 7 |
+| 攻击力 | 4 |
+| 生命值 | 9 |
 | 关键词 | 传染；减伤 1 |
 | 技能 | keyword-contagion；keyword-armor-1 |
 | 学者 | 否 |

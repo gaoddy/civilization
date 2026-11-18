@@ -10,7 +10,7 @@ level: 3
 era: primitive
 attack: 4
 health: 6
-skills: [keyword-evolve]
+skills: [keyword-evolve, shout]
 is_scholar: false
 ---
 
@@ -32,13 +32,13 @@ is_scholar: false
 | 攻击力 | 4 |
 | 生命值 | 6 |
 | 关键词 | 进化 |
-| 技能 | keyword-evolve |
+| 技能 | keyword-evolve；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-进化：从 +2/+2、护盾、复生中选择一个
+进化：从 +2/+2、护盾、复生中选择一个；使一个友方随从获得一次成长
 
 ## 出处
 

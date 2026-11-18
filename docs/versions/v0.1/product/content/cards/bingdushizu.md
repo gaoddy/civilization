@@ -7,8 +7,8 @@ taxon: virus-incertae-sedis
 subtype: microorganism
 level: 2
 era: prehistoric
-attack: 2
-health: 3
+attack: 3
+health: 4
 skills: [trigger-enemy-death-self-plus-1-plus-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 微生物 |
 | 星级 | 2 |
 | 时代 | 史前 |
-| 攻击力 | 2 |
-| 生命值 | 3 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | trigger-enemy-death-self-plus-1-plus-1 |
 | 学者 | 否 |

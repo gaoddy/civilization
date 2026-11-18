@@ -7,8 +7,8 @@ taxon: automation
 subtype: robot
 level: 3
 era: modern
-attack: 4
-health: 5
+attack: 5
+health: 4
 skills: [keyword-optimal-attack]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 机器人 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
-| 生命值 | 5 |
+| 攻击力 | 5 |
+| 生命值 | 4 |
 | 关键词 | 最优攻击 |
 | 技能 | keyword-optimal-attack |
 | 学者 | 否 |

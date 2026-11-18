@@ -8,9 +8,9 @@ specialty: [host:mammalia]
 subtype: plague
 level: 4
 era: feudal
-attack: 5
-health: 6
-skills: [deathrattle-all-enemies-humans-minus-2-health]
+attack: 4
+health: 9
+skills: [deathrattle-all-enemies-humans-minus-2-health, combatstart-random-enemy-contagion-1]
 is_scholar: false
 ---
 
@@ -29,17 +29,16 @@ is_scholar: false
 | 子类 | 瘟疫 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 攻击力 | 5 |
-| 生命值 | 6 |
+| 攻击力 | 4 |
+| 生命值 | 9 |
 | 关键词 | 亡语 |
-| 技能 | deathrattle-all-enemies-humans-minus-2-health |
+| 技能 | deathrattle-all-enemies-humans-minus-2-health；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-
-亡语：使敌方所有人科随从获得 -2 生命
+亡语：使敌方所有人科随从获得 -2 生命；战斗开始时，使一个随机敌方随从获得 1 层传染
 
 ## 出处
 

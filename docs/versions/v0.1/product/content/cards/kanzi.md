@@ -9,7 +9,7 @@ level: 3
 era: modern
 attack: 4
 health: 6
-skills: [battlecry-friendly-growth-once]
+skills: [battlecry-friendly-growth-once, shout]
 is_scholar: false
 ---
 
@@ -31,13 +31,13 @@ is_scholar: false
 | 攻击力 | 4 |
 | 生命值 | 6 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-friendly-growth-once |
+| 技能 | battlecry-friendly-growth-once；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-战吼：使一个友方随从获得一次成长
+战吼：使一个友方随从获得一次成长；使一个友方随从获得一次成长
 
 ## 出处
 

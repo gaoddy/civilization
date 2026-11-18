@@ -7,8 +7,8 @@ taxon: mammalia-incertae-sedis
 subtype: behemoth
 level: 7
 era: future
-attack: 13
-health: 15
+attack: 15
+health: 14
 skills: [keyword-windfury]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 巨兽 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 13 |
-| 生命值 | 15 |
+| 攻击力 | 15 |
+| 生命值 | 14 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
 | 学者 | 否 |

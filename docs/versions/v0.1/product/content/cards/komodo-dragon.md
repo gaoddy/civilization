@@ -7,9 +7,9 @@ taxon: varanidae
 subtype: reptile
 level: 5
 era: modern
-attack: 7
+attack: 6
 health: 12
-skills: [keyword-poison]
+skills: [keyword-poison, keyword-taunt]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 爬行 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 7 |
+| 攻击力 | 6 |
 | 生命值 | 12 |
-| 关键词 | 剧毒 |
-| 技能 | keyword-poison |
+| 关键词 | 剧毒；嘲讽 |
+| 技能 | keyword-poison；keyword-taunt |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-剧毒：造成伤害后，若目标仍存活则将其消灭
+剧毒：造成伤害后，若目标仍存活则将其消灭；嘲讽
 
 ## 设计说明
 

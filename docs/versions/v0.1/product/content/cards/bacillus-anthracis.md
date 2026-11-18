@@ -8,8 +8,8 @@ subtype: bacteria
 level: 5
 era: primitive
 attack: 6
-health: 11
-skills: [detonate-2]
+health: 12
+skills: [detonate-2, microbiology]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 原始 |
 | 攻击力 | 6 |
-| 生命值 | 11 |
+| 生命值 | 12 |
 | 关键词 | 无 |
-| 技能 | detonate-2 |
+| 技能 | detonate-2；microbiology |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 2 点伤害
+引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 2 点伤害；战斗开始时使敌方最左侧随从获得 1 层传染
 
 ## 设计说明
 

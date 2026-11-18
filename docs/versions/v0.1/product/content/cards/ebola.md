@@ -8,8 +8,8 @@ specialty: [host:mammalia]
 subtype: virus
 level: 5
 era: modern
-attack: 8
-health: 8
+attack: 6
+health: 12
 skills: [keyword-contagion, combatstart-random-enemy-contagion-2]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 病毒 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
-| 生命值 | 8 |
+| 攻击力 | 6 |
+| 生命值 | 12 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-2 |
 | 学者 | 否 |

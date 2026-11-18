@@ -8,8 +8,8 @@ subtype: fish
 level: 5
 era: modern
 attack: 9
-health: 10
-skills: [keyword-reborn]
+health: 8
+skills: [keyword-reborn, aura-school-fish-1]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 9 |
-| 生命值 | 10 |
+| 生命值 | 8 |
 | 关键词 | 复生 |
-| 技能 | keyword-reborn |
+| 技能 | keyword-reborn；aura-school-fish-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-复生：以 1 点生命复活一次
+复生：以 1 点生命复活一次；群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
 
 ## 设计说明
 

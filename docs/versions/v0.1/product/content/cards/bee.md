@@ -7,7 +7,7 @@ taxon: apidae
 subtype: insect
 level: 2
 era: primitive
-attack: 3
+attack: 2
 health: 3
 skills: [deathrattle-summon-1-worker-bee]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 昆虫 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 3 |
+| 攻击力 | 2 |
 | 生命值 | 3 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-1-worker-bee |

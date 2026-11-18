@@ -8,7 +8,7 @@ subtype: bird
 level: 4
 era: modern
 attack: 7
-health: 7
+health: 6
 skills: [keyword-taunt]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 现代 |
 | 攻击力 | 7 |
-| 生命值 | 7 |
+| 生命值 | 6 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |

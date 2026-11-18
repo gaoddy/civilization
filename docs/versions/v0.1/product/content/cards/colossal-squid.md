@@ -7,8 +7,8 @@ taxon: cranchiidae
 subtype: mollusk
 level: 6
 era: modern
-attack: 9
-health: 14
+attack: 8
+health: 12
 skills: [keyword-stealth, mimic-2]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 9 |
-| 生命值 | 14 |
+| 攻击力 | 8 |
+| 生命值 | 12 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；mimic-2 |
 | 学者 | 否 |

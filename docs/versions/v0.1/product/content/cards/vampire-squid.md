@@ -8,8 +8,8 @@ subtype: mollusk
 level: 5
 era: modern
 attack: 8
-health: 11
-skills: [mimic-2]
+health: 12
+skills: [mimic-2, mimic-1]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 8 |
-| 生命值 | 11 |
+| 生命值 | 12 |
 | 关键词 | 无 |
-| 技能 | mimic-2 |
+| 技能 | mimic-2；mimic-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-拟态：战斗开始时，复制一个敌方随从的当前攻击力与生命值直到本回合结束
+拟态：战斗开始时，复制一个敌方随从的当前攻击力与生命值直到本回合结束；战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束
 
 ## 设计说明
 

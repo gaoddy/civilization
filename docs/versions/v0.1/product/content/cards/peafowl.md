@@ -8,8 +8,8 @@ subtype: bird
 level: 5
 era: classical
 attack: 9
-health: 10
-skills: [battlecry-other-bird-plus-1-plus-1]
+health: 8
+skills: [battlecry-other-bird-plus-1-plus-1, dive-1]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 古典 |
 | 攻击力 | 9 |
-| 生命值 | 10 |
+| 生命值 | 8 |
 | 关键词 | 战吼 |
-| 技能 | battlecry-other-bird-plus-1-plus-1 |
+| 技能 | battlecry-other-bird-plus-1-plus-1；dive-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-战吼：使你的其他鸟纲随从获得 +1/+1
+战吼：使你的其他鸟纲随从获得 +1/+1；俯冲：战斗开始时，对攻击力最低的敌方随从造成等同于自身攻击力的伤害
 
 ## 设计说明
 

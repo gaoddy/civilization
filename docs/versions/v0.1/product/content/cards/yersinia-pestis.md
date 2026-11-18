@@ -8,7 +8,7 @@ subtype: bacteria
 level: 4
 era: feudal
 attack: 4
-health: 8
+health: 9
 skills: [keyword-contagion, detonate-1]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 8 |
+| 生命值 | 9 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；detonate-1 |
 | 学者 | 否 |

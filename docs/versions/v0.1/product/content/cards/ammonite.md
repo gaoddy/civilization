@@ -7,9 +7,9 @@ taxon: ammonitidae
 subtype: mollusk
 level: 7
 era: prehistoric
-attack: 11
-health: 17
-skills: [deathrattle-summon-2-ammonites]
+attack: 10
+health: 15
+skills: [deathrattle-summon-2-ammonites, mimic-1]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 软体 |
 | 星级 | 7 |
 | 时代 | 史前 |
-| 攻击力 | 11 |
-| 生命值 | 17 |
+| 攻击力 | 10 |
+| 生命值 | 15 |
 | 关键词 | 亡语 |
-| 技能 | deathrattle-summon-2-ammonites |
+| 技能 | deathrattle-summon-2-ammonites；mimic-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-分裂：死亡时召唤两个 5/5 的菊石幼体
+分裂：死亡时召唤两个 5/5 的菊石幼体；战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束
 
 ## 设计说明
 

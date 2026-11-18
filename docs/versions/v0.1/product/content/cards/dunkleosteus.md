@@ -7,9 +7,9 @@ taxon: dunkleosteidae
 subtype: fish
 level: 7
 era: prehistoric
-attack: 12
-health: 16
-skills: [deathrattle-summon-fish-fry-3]
+attack: 15
+health: 14
+skills: [deathrattle-summon-fish-fry-3, aura-school-fish-1]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 鱼类 |
 | 星级 | 7 |
 | 时代 | 史前 |
-| 攻击力 | 12 |
-| 生命值 | 16 |
+| 攻击力 | 15 |
+| 生命值 | 14 |
 | 关键词 | 亡语 |
-| 技能 | deathrattle-summon-fish-fry-3 |
+| 技能 | deathrattle-summon-fish-fry-3；aura-school-fish-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-分裂：死亡时召唤三个 1/1 的鱼苗
+分裂：死亡时召唤三个 1/1 的鱼苗；群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
 
 ## 设计说明
 

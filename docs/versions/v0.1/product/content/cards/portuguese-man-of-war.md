@@ -9,7 +9,7 @@ level: 3
 era: primitive
 attack: 3
 health: 5
-skills: [keyword-poison]
+skills: [keyword-poison, keyword-armor-1]
 is_scholar: false
 ---
 
@@ -30,14 +30,14 @@ is_scholar: false
 | 时代 | 原始 |
 | 攻击力 | 3 |
 | 生命值 | 5 |
-| 关键词 | 剧毒 |
-| 技能 | keyword-poison |
+| 关键词 | 剧毒；减伤 1 |
+| 技能 | keyword-poison；keyword-armor-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-剧毒：造成伤害后，若目标仍存活则将其消灭
+剧毒：造成伤害后，若目标仍存活则将其消灭；减伤 1：受到伤害时，减免 1 点伤害
 
 ## 设计说明
 

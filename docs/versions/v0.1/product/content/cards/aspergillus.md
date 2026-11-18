@@ -7,9 +7,9 @@ taxon: aspergillaceae
 subtype: fungus
 level: 3
 era: industrial
-attack: 4
-health: 5
-skills: [deathrattle-all-enemies-minus-1-health]
+attack: 3
+health: 7
+skills: [deathrattle-all-enemies-minus-1-health, decompose-kill-original]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 真菌 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 攻击力 | 4 |
-| 生命值 | 5 |
-| 关键词 | 亡语 |
-| 技能 | deathrattle-all-enemies-minus-1-health |
+| 攻击力 | 3 |
+| 生命值 | 7 |
+| 关键词 | 亡语；分解 |
+| 技能 | deathrattle-all-enemies-minus-1-health；decompose-kill-original |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-亡语：使敌方所有随从获得 -1 生命
+亡语：使敌方所有随从获得 -1 生命；分解：本随从击杀随从后，获得其原始生命值
 
 ## 设计说明
 

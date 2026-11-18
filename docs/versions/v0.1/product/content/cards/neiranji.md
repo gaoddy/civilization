@@ -8,9 +8,9 @@ specialty: [play:machine]
 subtype: power
 level: 4
 era: industrial
-attack: 6
-health: 8
-skills: [keyword-optimal-attack]
+attack: 7
+health: 6
+skills: [keyword-optimal-attack, shout]
 is_scholar: false
 ---
 
@@ -29,16 +29,16 @@ is_scholar: false
 | 子类 | 动力 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 攻击力 | 6 |
-| 生命值 | 8 |
+| 攻击力 | 7 |
+| 生命值 | 6 |
 | 关键词 | 最优攻击 |
-| 技能 | keyword-optimal-attack |
+| 技能 | keyword-optimal-attack；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-最优攻击：无视嘲讽，优先攻击可被击杀的目标
+最优攻击：无视嘲讽，优先攻击可被击杀的目标；使一个友方随从获得一次成长
 
 ## 出处
 

@@ -8,7 +8,7 @@ subtype: unit
 level: 1
 era: prehistoric
 attack: 2
-health: 2
+health: 3
 skills: [battlecry-random-enemy-damage-1]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 1 |
 | 时代 | 史前 |
 | 攻击力 | 2 |
-| 生命值 | 2 |
+| 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-random-enemy-damage-1 |
 | 学者 | 否 |

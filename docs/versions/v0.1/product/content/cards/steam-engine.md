@@ -8,8 +8,8 @@ specialty: [play:machine]
 subtype: power
 level: 4
 era: modern
-attack: 6
-health: 7
+attack: 4
+health: 6
 skills: [keyword-assemble-2]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 动力 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
-| 生命值 | 7 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2 |
 | 学者 | 否 |

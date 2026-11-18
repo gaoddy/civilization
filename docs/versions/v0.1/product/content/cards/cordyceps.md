@@ -8,8 +8,8 @@ subtype: fungus
 level: 4
 era: feudal
 attack: 4
-health: 9
-skills: [deathrattle-summon-cordyceps]
+health: 6
+skills: [deathrattle-summon-cordyceps, decompose-kill-original]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 9 |
-| 关键词 | 亡语 |
-| 技能 | deathrattle-summon-cordyceps |
+| 生命值 | 6 |
+| 关键词 | 亡语；分解 |
+| 技能 | deathrattle-summon-cordyceps；decompose-kill-original |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-分裂：死亡时召唤一个 3/3 的虫草
+分裂：死亡时召唤一个 3/3 的虫草；分解：本随从击杀随从后，获得其原始生命值
 
 ## 设计说明
 

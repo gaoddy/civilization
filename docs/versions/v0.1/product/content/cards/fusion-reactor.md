@@ -8,8 +8,8 @@ specialty: [play:machine]
 subtype: power
 level: 6
 era: future
-attack: 10
-health: 13
+attack: 11
+health: 14
 skills: [aura-mech-plus-2-plus-2]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 动力 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 攻击力 | 10 |
-| 生命值 | 13 |
+| 攻击力 | 11 |
+| 生命值 | 14 |
 | 关键词 | 无 |
 | 技能 | aura-mech-plus-2-plus-2 |
 | 学者 | 否 |

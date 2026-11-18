@@ -8,9 +8,9 @@ specialty: [host:hominidae]
 subtype: virus
 level: 4
 era: modern
-attack: 5
-health: 6
-skills: [keyword-contagion]
+attack: 6
+health: 8
+skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
 is_scholar: false
 ---
 
@@ -29,16 +29,16 @@ is_scholar: false
 | 子类 | 病毒 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 5 |
-| 生命值 | 6 |
+| 攻击力 | 6 |
+| 生命值 | 8 |
 | 关键词 | 传染 |
-| 技能 | keyword-contagion |
+| 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-传染：造成伤害后，目标每回合 -1 生命
+传染：造成伤害后，目标每回合 -1 生命；战斗开始时，使一个随机敌方随从获得 1 层传染
 
 ## 出处
 

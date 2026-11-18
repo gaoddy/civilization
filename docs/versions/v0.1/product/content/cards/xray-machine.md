@@ -8,8 +8,8 @@ specialty: [play:machine]
 subtype: medical
 level: 4
 era: modern
-attack: 6
-health: 8
+attack: 7
+health: 6
 skills: [keyword-optimal-attack]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 医疗 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 6 |
-| 生命值 | 8 |
+| 攻击力 | 7 |
+| 生命值 | 6 |
 | 关键词 | 最优攻击 |
 | 技能 | keyword-optimal-attack |
 | 学者 | 否 |

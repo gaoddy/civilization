@@ -8,8 +8,8 @@ subtype: athlete
 level: 4
 era: modern
 attack: 6
-health: 8
-skills: [trigger-3-humans-self-plus-2-attack]
+health: 9
+skills: [trigger-3-humans-self-plus-2-attack, shout]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 8 |
+| 生命值 | 9 |
 | 关键词 | 无 |
-| 技能 | trigger-3-humans-self-plus-2-attack |
+| 技能 | trigger-3-humans-self-plus-2-attack；shout |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-若你控制至少 3 个人科随从，获得 +2 攻击力
+若你控制至少 3 个人科随从，获得 +2 攻击力；使一个友方随从获得一次成长
 
 ## 出处
 

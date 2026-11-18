@@ -7,9 +7,9 @@ taxon: apidae
 subtype: insect
 level: 5
 era: modern
-attack: 8
-health: 9
-skills: [battlecry-summon-2-worker-bees]
+attack: 6
+health: 8
+skills: [battlecry-summon-2-worker-bees, deathrattle-summon-1-worker-bee]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 昆虫 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 8 |
-| 生命值 | 9 |
-| 关键词 | 战吼 |
-| 技能 | battlecry-summon-2-worker-bees |
+| 攻击力 | 6 |
+| 生命值 | 8 |
+| 关键词 | 战吼；亡语 |
+| 技能 | battlecry-summon-2-worker-bees；deathrattle-summon-1-worker-bee |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-战吼：召唤两个 2/2 的工蜂
+战吼：召唤两个 2/2 的工蜂；分裂：死亡时召唤一个 1/1 的工蜂
 
 ## 设计说明
 

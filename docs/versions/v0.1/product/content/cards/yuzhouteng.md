@@ -8,7 +8,7 @@ subtype: universe
 level: 7
 era: future
 attack: 10
-health: 19
+health: 20
 skills: [keyword-divine-shield]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 7 |
 | 时代 | 未来 |
 | 攻击力 | 10 |
-| 生命值 | 19 |
+| 生命值 | 20 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield |
 | 学者 | 否 |

@@ -8,7 +8,7 @@ subtype: unit
 level: 3
 era: feudal
 attack: 5
-health: 5
+health: 4
 skills: [keyword-windfury]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 封建 |
 | 攻击力 | 5 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
 | 学者 | 否 |

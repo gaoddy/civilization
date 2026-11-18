@@ -7,9 +7,9 @@ taxon: myoviridae
 subtype: bacteria
 level: 6
 era: modern
-attack: 9
-health: 13
-skills: [convert-3]
+attack: 8
+health: 16
+skills: [convert-3, microbiology]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 细菌 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 9 |
-| 生命值 | 13 |
+| 攻击力 | 8 |
+| 生命值 | 16 |
 | 关键词 | 无 |
-| 技能 | convert-3 |
+| 技能 | convert-3；microbiology |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-转化：战斗开始时，若一个敌方随从有 3 层传染，消灭它并召唤一个 2/2 的细菌
+转化：战斗开始时，若一个敌方随从有 3 层传染，消灭它并召唤一个 2/2 的细菌；战斗开始时使敌方最左侧随从获得 1 层传染
 
 ## 设计说明
 

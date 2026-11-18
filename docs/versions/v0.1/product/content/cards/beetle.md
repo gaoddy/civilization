@@ -8,8 +8,8 @@ subtype: insect
 level: 4
 era: primitive
 attack: 7
-health: 7
-skills: [keyword-taunt]
+health: 6
+skills: [keyword-taunt, battlecry-other-insect-growth-once]
 is_scholar: false
 ---
 
@@ -29,15 +29,15 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 原始 |
 | 攻击力 | 7 |
-| 生命值 | 7 |
-| 关键词 | 嘲讽 |
-| 技能 | keyword-taunt |
+| 生命值 | 6 |
+| 关键词 | 嘲讽；战吼 |
+| 技能 | keyword-taunt；battlecry-other-insect-growth-once |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-嘲讽
+嘲讽；战吼：使你的其他昆虫纲随从获得一次成长
 
 ## 设计说明
 

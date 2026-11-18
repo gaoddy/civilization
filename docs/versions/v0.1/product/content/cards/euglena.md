@@ -7,9 +7,9 @@ taxon: euglenaceae
 subtype: protozoa
 level: 3
 era: classical
-attack: 4
+attack: 3
 health: 5
-skills: [aura-other-protozoa-plus-1-attack]
+skills: [aura-other-protozoa-plus-1-attack, deathrattle-summon-amoeba-larva-1]
 is_scholar: false
 ---
 
@@ -28,16 +28,16 @@ is_scholar: false
 | 子类 | 原生生物 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 攻击力 | 4 |
+| 攻击力 | 3 |
 | 生命值 | 5 |
-| 关键词 | 无 |
-| 技能 | aura-other-protozoa-plus-1-attack |
+| 关键词 | 亡语 |
+| 技能 | aura-other-protozoa-plus-1-attack；deathrattle-summon-amoeba-larva-1 |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
 
-你的其他原生生物界随从获得 +1 攻击力
+你的其他原生生物界随从获得 +1 攻击力；分裂：死亡时召唤一个 1/1 的变形虫幼体
 
 ## 设计说明
 

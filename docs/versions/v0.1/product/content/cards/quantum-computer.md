@@ -8,7 +8,7 @@ specialty: [play:machine]
 subtype: computer
 level: 5
 era: future
-attack: 7
+attack: 6
 health: 9
 skills: [keyword-divine-shield, keyword-assemble-2]
 is_scholar: false
@@ -29,7 +29,7 @@ is_scholar: false
 | 子类 | 计算机 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 攻击力 | 7 |
+| 攻击力 | 6 |
 | 生命值 | 9 |
 | 关键词 | 护盾；装配 2 |
 | 技能 | keyword-divine-shield；keyword-assemble-2 |

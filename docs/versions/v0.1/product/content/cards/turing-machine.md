@@ -8,8 +8,8 @@ specialty: [play:machine]
 subtype: computer
 level: 5
 era: modern
-attack: 7
-health: 9
+attack: 8
+health: 8
 skills: [keyword-optimal-attack, keyword-assemble-2]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 计算机 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 7 |
-| 生命值 | 9 |
+| 攻击力 | 8 |
+| 生命值 | 8 |
 | 关键词 | 最优攻击；装配 2 |
 | 技能 | keyword-optimal-attack；keyword-assemble-2 |
 | 学者 | 否 |
