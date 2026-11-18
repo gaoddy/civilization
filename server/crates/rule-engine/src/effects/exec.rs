@@ -316,12 +316,8 @@ impl Engine {
 
         let passes = if ctx.golden { 2 } else { 1 };
         let mut events = Vec::new();
-        for pass in 0..passes {
+        for _ in 0..passes {
             for effect in &effects {
-                // 潜伏口径：金色不额外触发，第二次整段效果跳过。
-                if pass > 0 && effect.op == Op::Latent {
-                    continue;
-                }
                 events.extend(self.apply_op(state, effect, ctx, None));
             }
         }
@@ -809,10 +805,11 @@ impl Engine {
 
     /// 潜伏：按传染层数永久增加攻击力，达到阈值时爆发一次。
     ///
-    /// 爆发每场最多一次（`latent_used`），金色随从同样只触发一次（见
-    /// [`Engine::run_card_effects`]）。招募阶段没有战斗伤害来源，爆发按回合
-    /// 开始伤害结算；敌方口径与 `side_ids` 一致：除来源外所有未淘汰、生命 > 0
-    /// 的玩家棋盘。
+    /// `OnTurnStart` 在 `Recruit` 阶段执行，此时没有配对；「敌方」按除来源外
+    /// 所有存活玩家的棋盘结算（`side_ids` 在本阶段敌方池为空，不要用它推导
+    /// 范围）。招募阶段没有战斗伤害来源，爆发按回合开始伤害结算。爆发每场
+    /// 最多一次（`latent_used`）；金色按通用规则触发两遍，但第一遍爆发会清零
+    /// 层数，第二遍因此只加 0 点攻击且不会再次爆发。
     fn apply_latent(
         &self,
         state: &mut GameState,

@@ -893,9 +893,12 @@ fn latent_adds_attack_per_contagion_layer_and_bursts_at_threshold() {
 }
 
 #[test]
-fn golden_latent_does_not_trigger_twice() {
+fn golden_latent_doubles_attack_but_bursts_once() {
+    // 金色按通用规则触发两遍：未达阈值时每层攻击力获得双倍；达到阈值时
+    // 第一遍爆发并清零层数、置 latent_used，第二遍层数为 0，因此只爆发一次。
     let (mut engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "latent");
+    place(&engine.catalog, &mut state, 1, 2, "target");
     state.players[0].board[0].golden = true;
     state.players[0].board[0].contagion = 2;
 
@@ -904,8 +907,25 @@ fn golden_latent_does_not_trigger_twice() {
     let latent = &state.players[0].board[0];
     assert_eq!(
         combat::effective_attack(&engine.catalog, latent),
-        2,
-        "金色潜伏不额外触发，仍只按层加一次攻击"
+        4,
+        "金色触发两遍，2 层获得 2 × 2 = 4 攻击力"
+    );
+    assert!(!latent.latent_used);
+
+    state.players[0].board[0].contagion = 3;
+    engine.start_turn(&mut state).expect("开始回合应成功");
+    let latent = &state.players[0].board[0];
+    assert_eq!(latent.contagion, 0, "第一遍爆发后清零层数");
+    assert!(latent.latent_used, "第一遍爆发后置 latent_used");
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, latent),
+        7,
+        "爆发遍按 3 层 +3，第二遍层数已清零只加 0"
+    );
+    assert_eq!(
+        combat::effective_health(&engine.catalog, &state.players[1].board[0]),
+        7,
+        "爆发只结算一次，敌方全体只受到 3 点伤害"
     );
 }
 
