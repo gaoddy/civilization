@@ -1288,11 +1288,15 @@ impl Engine {
                 // 效果伤害归因给施放该效果的随从；无来源效果不产生击杀。
                 for id in targets {
                     match ctx.source {
-                        Some(source) => {
-                            field.apply_damage(id, amount, can_kill, DamageSource::Minion(source))
-                        }
-                        None => field.deal_damage(id, amount, can_kill),
-                    }
+                        Some(source) => field.apply_damage(
+                            &self.catalog,
+                            id,
+                            amount,
+                            can_kill,
+                            DamageSource::Minion(source),
+                        ),
+                        None => field.deal_damage(&self.catalog, id, amount, can_kill),
+                    };
                 }
             }
             // 分解：取事件目标（被分解随从）的生命值，加到选择器选出的随从上。

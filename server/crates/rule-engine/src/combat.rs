@@ -35,6 +35,10 @@ const CONTAGION: &str = "contagion";
 const OPTIMAL_ATTACK: &str = "optimal_attack";
 /// 关键词：播种。
 const SOW: &str = "sow";
+/// 关键词：剧毒。
+pub(crate) const POISON: &str = "poison";
+/// 关键词：减伤；实际存储为「armor N」。
+pub(crate) const ARMOR: &str = "armor";
 /// 播种召唤的 token。
 pub(crate) const SEEDLING_TOKEN: &str = "seedling";
 
@@ -66,6 +70,8 @@ pub enum CombatAction {
     Reborn { minion: InstanceId },
     /// 目标被叠加一层传染。
     ContagionApplied { target: InstanceId },
+    /// 目标被剧毒致死。
+    Poisoned { target: InstanceId },
     /// 战斗中召唤：`seat` 为召唤方座位，`position` 为插入后该随从在
     /// **存活随从序列**中的下标；`card_id` / `golden` 供房间服务补全展示数据
     /// （召唤物不在战前快照里）。
@@ -232,6 +238,32 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
         }
     }
     result
+}
+
+/// 是否携带剧毒关键词。
+pub fn has_poison(catalog: &Catalog, minion: &MinionInstance) -> bool {
+    keywords(catalog, minion).contains(POISON)
+}
+
+/// 当前生效的减伤层数之和；多个「armor N」叠加。
+///
+/// 层数保存在关键词字符串 `armor N` 中（与 `breed N` 同形）；没有数字时按 1。
+pub fn armor_value(catalog: &Catalog, minion: &MinionInstance) -> i32 {
+    keywords(catalog, minion)
+        .iter()
+        .filter_map(|keyword| {
+            let rest = keyword.strip_prefix(ARMOR)?;
+            if !rest.is_empty() && !rest.starts_with(char::is_whitespace) {
+                return None;
+            }
+            let value = rest.trim();
+            Some(if value.is_empty() {
+                1
+            } else {
+                value.parse().unwrap_or(0)
+            })
+        })
+        .fold(0i32, i32::saturating_add)
 }
 
 /// 每轮该随从拥有的行动次数。
@@ -664,27 +696,36 @@ impl BattleField {
 
     /// 唯一的战斗掉血入口：只写 `stats.health.current`。
     ///
-    /// `can_kill = false` 时最多把当前生命降到 1；`can_kill = true` 时允许降到
+    /// 写入前先减去目标当前 `armor N` 之和，再按 `can_kill` 夹取；
+    /// `can_kill = false` 时最多把当前生命降到 1。`can_kill = true` 时允许降到
     /// 0 或更低，由死亡判定统一处理。伤害足以致死时在扣血前写入 `pre_kill_health`；
     /// `source` 为随从且本段伤害把生命降到 ≤0 时，追加一条击杀记录。
+    ///
+    /// 返回实际写入的伤害值（已扣减伤，且可能是 0）。
     pub(crate) fn apply_damage(
         &mut self,
+        catalog: &Catalog,
         id: InstanceId,
         amount: i32,
         can_kill: bool,
         source: DamageSource,
-    ) {
+    ) -> i32 {
         let killer = match source {
             DamageSource::Minion(killer) => Some(killer),
             DamageSource::None => None,
         };
         // 先取阵营，避免在可变借用随从后再借用棋盘。
         let killer_side = killer.and_then(|killer| self.locate(killer).map(|(side, _)| side));
+        let armor = self
+            .locate(id)
+            .map(|(side, index)| armor_value(catalog, &self.sides[side].minions[index]))
+            .unwrap_or(0);
         let Some((side, index)) = self.locate(id) else {
-            return;
+            return 0;
         };
         let minion = &mut self.sides[side].minions[index];
-        let amount = amount.max(0);
+        // 减伤在写入前结算；`can_kill` 的夹取在减伤之后执行。
+        let amount = amount.max(0).saturating_sub(armor).max(0);
         let before = minion.stats.health.current;
         let lethal = can_kill && amount >= before;
         if lethal && before > 0 {
@@ -705,11 +746,18 @@ impl BattleField {
                 mutual: false,
             });
         }
+        damage
     }
 
     /// 效果层伤害入口；与 [`BattleField::apply_damage`] 同义，无伤害来源。
-    pub(crate) fn deal_damage(&mut self, id: InstanceId, amount: i32, can_kill: bool) {
-        self.apply_damage(id, amount, can_kill, DamageSource::None);
+    pub(crate) fn deal_damage(
+        &mut self,
+        catalog: &Catalog,
+        id: InstanceId,
+        amount: i32,
+        can_kill: bool,
+    ) -> i32 {
+        self.apply_damage(catalog, id, amount, can_kill, DamageSource::None)
     }
 
     /// 分解取值：按口径返回 `event_target` 被分解随从的生命值；快照缺失时为 `None`。
@@ -976,6 +1024,13 @@ fn pick_target(
     pool.get(offset).copied()
 }
 
+/// 随从仍在场且当前生命 > 0；剧毒只对这样的目标生效。
+fn still_standing(field: &BattleField, id: InstanceId) -> bool {
+    field.locate(id).is_some_and(|(side, index)| {
+        field.sides[side].alive[index] && field.sides[side].minions[index].stats.health.current > 0
+    })
+}
+
 /// 结算一次攻击，并处理双方死亡。
 fn resolve_attack(
     engine: Option<&Engine>,
@@ -1019,8 +1074,13 @@ fn resolve_attack(
             field.sides[defending_side].minions[target_index].shield_used = true;
             blocked = true;
         } else {
-            damage = attack;
-            field.apply_damage(target_id, damage, true, DamageSource::Minion(attacker_id));
+            damage = field.apply_damage(
+                catalog,
+                target_id,
+                attack,
+                true,
+                DamageSource::Minion(attacker_id),
+            );
         }
     }
 
@@ -1032,6 +1092,20 @@ fn resolve_attack(
         field.push_action(CombatAction::ContagionApplied { target: target_id }, states);
     }
 
+    // (b2) 剧毒：主伤害 > 0 且目标仍存活时补一次致死伤害。
+    // 护盾抵消时主伤害为 0，不会进入这里。
+    if attacker_keywords.contains(POISON) && damage > 0 && still_standing(field, target_id) {
+        field.apply_damage(
+            catalog,
+            target_id,
+            i32::MAX,
+            true,
+            DamageSource::Minion(attacker_id),
+        );
+        let states = field.snapshots(catalog, &[target_id]);
+        field.push_action(CombatAction::Poisoned { target: target_id }, states);
+    }
+
     // (c) 反击：无论目标是否被主伤害击杀，都按目标当前攻击力结算。
     let counter = effective_attack(catalog, &field.sides[defending_side].minions[target_index]);
     let mut counter_damage = 0;
@@ -1041,9 +1115,33 @@ fn resolve_attack(
         if shielded {
             field.sides[attacking_side].minions[attacker_index].shield_used = true;
         } else {
-            counter_damage = counter;
-            field.apply_damage(attacker_id, counter, true, DamageSource::Minion(target_id));
+            counter_damage = field.apply_damage(
+                catalog,
+                attacker_id,
+                counter,
+                true,
+                DamageSource::Minion(target_id),
+            );
         }
+    }
+
+    // (c2) 剧毒：反击伤害 > 0 且攻击者仍存活时补一次致死伤害。
+    let target_poisonous = has_poison(catalog, &field.sides[defending_side].minions[target_index]);
+    if target_poisonous && counter_damage > 0 && still_standing(field, attacker_id) {
+        field.apply_damage(
+            catalog,
+            attacker_id,
+            i32::MAX,
+            true,
+            DamageSource::Minion(target_id),
+        );
+        let states = field.snapshots(catalog, &[attacker_id]);
+        field.push_action(
+            CombatAction::Poisoned {
+                target: attacker_id,
+            },
+            states,
+        );
     }
 
     // (d) 只记录主动攻击：快照在反击结算之后抓取，已含双方最终血量。

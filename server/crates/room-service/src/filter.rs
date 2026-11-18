@@ -269,7 +269,7 @@ fn state_at(states: &[combat::MinionSnapshot], index: usize) -> Option<CombatMin
     states.get(index).map(minion_state)
 }
 
-/// 战斗动作转协议：`kind` 为 `attack|death|reborn|contagion|summon`。
+/// 战斗动作转协议：`kind` 为 `attack|death|reborn|contagion|poison|summon`。
 ///
 /// 引擎只为主动攻击记录 `attack`；反击伤害已并入该条动作的 `source` / `target`
 /// 快照，客户端不会收到独立的反击动作。
@@ -342,6 +342,22 @@ fn combat_action(
             CombatResultActionsItem {
                 damage: None,
                 kind: "contagion".to_string(),
+                source: None,
+                source_index: None,
+                source_minion_id: None,
+                source_side: None,
+                summon: None,
+                target: state_at(states, 0),
+                target_index: slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: slot.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Poisoned { target } => {
+            let slot = locate(report, *target);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "poison".to_string(),
                 source: None,
                 source_index: None,
                 source_minion_id: None,

@@ -320,6 +320,100 @@ fn combat_write_back_restores_full_health() {
     assert_eq!(attack.aura, 0);
 }
 
+/// 8) 剧毒：主伤害后仍存活的目标被致死伤害击杀；护盾抵消伤害时不触发。
+#[test]
+fn poison_kills_surviving_target_but_not_shielded() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "poisoner", 3, 3, &["poison"]);
+    add_card(&mut catalog, "tank", 0, 10, &[]);
+    add_card(&mut catalog, "shielded", 0, 10, &["divine_shield"]);
+
+    // 3 点主伤害后目标仍存活（10 → 7），剧毒补上致死伤害。
+    let poisoner = minion(&catalog, 1, "poisoner");
+    let mut tank = minion(&catalog, 2, "tank");
+    tank.cannot_attack = true;
+    let log = simulate(&catalog, &[poisoner], &[tank], 0, 1, 0, &mut rng());
+    assert!(
+        log.defender_survivors.is_empty(),
+        "被剧毒攻击后仍存活的目标应被毒死"
+    );
+    assert!(
+        log.actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Poisoned { target: 2 })),
+        "应记录一条 Poisoned 动作"
+    );
+
+    // 护盾先抵消主伤害，实际伤害为 0，不触发剧毒。
+    let poisoner = minion(&catalog, 1, "poisoner");
+    let mut shielded = minion(&catalog, 2, "shielded");
+    shielded.cannot_attack = true;
+    let log = simulate(&catalog, &[poisoner], &[shielded], 0, 1, 0, &mut rng());
+    let first_attack = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Attack { attacker: 1, .. }))
+        .expect("应有一次攻击");
+    assert!(
+        matches!(
+            log.actions[first_attack],
+            CombatAction::Attack {
+                damage: 0,
+                blocked: true,
+                ..
+            }
+        ),
+        "护盾应抵消主伤害"
+    );
+    assert!(
+        !log.actions[..=first_attack]
+            .iter()
+            .any(|action| matches!(action, CombatAction::Poisoned { .. })),
+        "护盾抵消的伤害为 0，不触发剧毒"
+    );
+}
+
+/// 9) 减伤：伤害先减 `armor N`；传染的回合开始掉血不走伤害入口，不受减伤影响。
+#[test]
+fn armor_reduces_damage_and_does_not_block_contagion_tick() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "attacker", 2, 5, &[]);
+    add_card(&mut catalog, "armored", 0, 10, &["armor 1"]);
+
+    let attacker = minion(&catalog, 1, "attacker");
+    let mut armored = minion(&catalog, 2, "armored");
+    armored.cannot_attack = true;
+    let log = simulate(&catalog, &[attacker], &[armored], 0, 1, 0, &mut rng());
+    let hit = log
+        .actions
+        .iter()
+        .position(|action| matches!(action, CombatAction::Attack { attacker: 1, .. }))
+        .expect("应有一次攻击");
+    let state = log.states[hit]
+        .iter()
+        .find(|snapshot| snapshot.instance_id == 2)
+        .expect("目标快照");
+    assert_eq!(state.health, 9, "2 点伤害经减伤 1 后只掉 1");
+
+    // 回合开始的传染掉血直接扣当前生命，不经过 `apply_damage` 的减伤。
+    add_card(&mut catalog, "sick", 0, 10, &["armor 1"]);
+    let (mut engine, mut state) = Engine::new(catalog, [19u8; 32], test_playstyles());
+    state.phase = Phase::Recruit;
+    state.turn = 1;
+    state.players[0].hp = 30;
+    state.players[0]
+        .board
+        .push(minion(&engine.catalog, 2, "sick"));
+    state.players[0].board[0].contagion = 2;
+
+    engine.start_turn(&mut state).expect("开始回合应成功");
+
+    assert_eq!(
+        state.players[0].board[0].stats.health.current, 8,
+        "传染 2 层掉 2 点生命，不受减伤影响"
+    );
+}
+
 /// 7) 幽灵阵容原样保留出局者棋盘的成长/永久层；战斗临时层的清理由上游负责。
 #[test]
 fn ghost_board_keeps_growth_and_permanent() {
