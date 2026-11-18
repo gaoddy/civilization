@@ -101,6 +101,14 @@ OP_JSON = {
     "AddShopSlot": "add_shop_slot",
     "GainMinion": "gain_minion",
     "Decompose": "decompose",
+    "Mimic": "mimic",
+    "Devour": "devour",
+    "Detonate": "detonate",
+    "Convert": "convert",
+    "Revive": "revive",
+    "Recall": "recall",
+    "Salvage": "salvage",
+    "Latent": "latent",
 }
 
 # timesIf 的键与取值域；与 validate_docs.FILTER_KEYS / check_filter_value 一致。
@@ -114,6 +122,8 @@ PICK_JSON = {
     "leftmost": "leftmost",
     "leftmost+adjacent": "leftmost_adjacent",
     "topAttack": "top_attack",
+    "lowestAttack": "lowest_attack",
+    "adjacent": "adjacent",
 }
 
 COMPARE_JSON = (
@@ -176,7 +186,8 @@ def _json_keyword(value, params):
 
 
 I32_MIN, I32_MAX = -(2**31), 2**31 - 1
-INTEGER_KEYS = ("times", "count", "amount", "attack", "health", "value", "extra", "choose")
+INTEGER_KEYS = ("times", "count", "amount", "attack", "health", "value", "extra", "choose",
+                "per_attack", "per_health", "max_count", "threshold")
 IDENTIFIER_KEYS = ("token", "card", "pool", "era")
 
 
@@ -268,8 +279,17 @@ def _json_params(params):
             "value",
             "extra",
             "choose",
+            "perAttack",
+            "perHealth",
+            "maxCount",
+            "threshold",
         ):
-            result[key] = int(value)
+            name = {
+                "perAttack": "per_attack",
+                "perHealth": "per_health",
+                "maxCount": "max_count",
+            }.get(key, key)
+            result[name] = int(value)
         elif key in ("canKill", "healthOnly", "free"):
             name = {
                 "canKill": "can_kill",

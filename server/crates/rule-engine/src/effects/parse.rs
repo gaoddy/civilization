@@ -42,6 +42,14 @@ const OPS: &[(&str, Op)] = &[
     ("AddShopSlot", Op::AddShopSlot),
     ("GainMinion", Op::GainMinion),
     ("Decompose", Op::Decompose),
+    ("Mimic", Op::Mimic),
+    ("Devour", Op::Devour),
+    ("Detonate", Op::Detonate),
+    ("Convert", Op::Convert),
+    ("Revive", Op::Revive),
+    ("Recall", Op::Recall),
+    ("Salvage", Op::Salvage),
+    ("Latent", Op::Latent),
 ];
 
 /// 把单个技能的 `effects` 字符串解析为类型化 AST。
@@ -172,6 +180,8 @@ fn parse_selector(raw: &str, chunk: &str) -> Result<Selector, Vec<String>> {
         Some("leftmost") => Some(Pick::Leftmost),
         Some("leftmost+adjacent") => Some(Pick::LeftmostAdjacent),
         Some("topAttack") => Some(Pick::TopAttack),
+        Some("lowestAttack") => Some(Pick::LowestAttack),
+        Some("adjacent") => Some(Pick::Adjacent),
         Some(other) if !other.is_empty() => {
             errors.push(format!("选择器选取非法 {other:?}（{chunk}）"));
             None
@@ -215,6 +225,10 @@ fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> R
         "amount" => params.amount = Some(parse_i32(key, value, chunk)?),
         "attack" => params.attack = Some(parse_i32(key, value, chunk)?),
         "health" => params.health = Some(parse_i32(key, value, chunk)?),
+        "perAttack" => params.per_attack = Some(parse_i32(key, value, chunk)?),
+        "perHealth" => params.per_health = Some(parse_i32(key, value, chunk)?),
+        "maxCount" => params.max_count = Some(parse_i32(key, value, chunk)?),
+        "threshold" => params.threshold = Some(parse_i32(key, value, chunk)?),
         "value" => params.value = Some(parse_i32(key, value, chunk)?),
         "extra" => params.extra = Some(parse_i32(key, value, chunk)?),
         "duration" => {

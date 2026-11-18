@@ -9,7 +9,8 @@ import re
 CARD_TYPES = ("minion", "effect")
 ERAS = ("prehistoric", "primitive", "classical", "feudal", "industrial", "modern", "future")
 KEYWORD_BASES = ("battlecry", "deathrattle", "reborn", "taunt", "divine_shield",
-                 "windfury", "contagion", "optimal_attack", "sow", "evolve", "breed", "assemble")
+                 "windfury", "contagion", "optimal_attack", "sow", "evolve", "breed", "assemble",
+                 "poison", "armor", "stealth")
 EVOLVE_CHOICES = ("stats", "divine_shield", "reborn")
 STAT_LAYERS = ("initial", "permanent", "turn", "aura", "damage")
 GENERATED_PREFIXES = (

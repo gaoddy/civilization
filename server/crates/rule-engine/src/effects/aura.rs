@@ -216,6 +216,10 @@ fn pick_targets(
             }
             best.map(|(id, _)| vec![id]).unwrap_or_default()
         }
+        // 相邻需要来源实例的棋盘下标，由相邻机制任务在光环求值中接入。
+        Pick::Adjacent => Vec::new(),
+        // 最低攻击只用于 DealDamage，光环不会走到这里。
+        Pick::LowestAttack => Vec::new(),
     }
 }
 

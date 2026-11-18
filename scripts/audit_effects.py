@@ -20,7 +20,7 @@ DEFAULT_SKILLS = ROOT / "docs" / "versions" / "v0.1" / "product" / "content" / "
 
 # 带层数/数值的关键词：赋予时必须带 value，其余关键词禁止 value。
 # breed / assemble 的层数写在 keyword 上（如「breed 2」），contagion 的层数写在 value 上。
-VALUE_KEYWORDS = {"breed", "assemble", "contagion"}
+VALUE_KEYWORDS = {"breed", "assemble", "contagion", "armor"}
 # when 限定事件对象；OnDeath 同为事件类触发（validate_docs.EVENT_TRIGGERS 未含 OnDeath）。
 WHEN_TRIGGERS = validate_docs.EVENT_TRIGGERS | {"OnDeath"}
 # 筛选白名单以 validate_docs 为唯一来源，这里只读不另写一份。

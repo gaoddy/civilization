@@ -34,6 +34,9 @@ pub(crate) const KEYWORD_BASES: &[&str] = &[
     "evolve",
     "breed",
     "assemble",
+    "poison",
+    "armor",
+    "stealth",
 ];
 /// `when` 允许的事件类触发，与 `scripts/audit_effects.py` 的 `WHEN_TRIGGERS` 一致。
 pub(crate) const WHEN_TRIGGERS: &[Trigger] = &[
@@ -56,6 +59,10 @@ const PARAM_KEYS: &[&str] = &[
     "amount",
     "attack",
     "health",
+    "perAttack",
+    "perHealth",
+    "maxCount",
+    "threshold",
     "value",
     "extra",
     "duration",
@@ -97,6 +104,9 @@ pub(crate) fn op_spec(op: Op) -> OpSpec {
             &[
                 "attack",
                 "health",
+                "perAttack",
+                "perHealth",
+                "maxCount",
                 "duration",
                 "canKill",
                 "condition",
@@ -127,6 +137,18 @@ pub(crate) fn op_spec(op: Op) -> OpSpec {
             &["timesIf", "condition", "when"],
             &[],
         ),
+        Op::Mimic => (&["duration"], &[], &[]),
+        Op::Devour => (&["value"], &["duration", "when"], &[]),
+        Op::Detonate => (&["amount"], &["threshold", "when"], &[]),
+        Op::Convert => (
+            &["threshold"],
+            &["token", "card", "count", "when"],
+            &[&["token", "card"]],
+        ),
+        Op::Revive => (&["attack", "health"], &[], &[]),
+        Op::Recall => (&["to"], &[], &[]),
+        Op::Salvage => (&["pool", "count"], &[], &[]),
+        Op::Latent => (&["amount", "count"], &["threshold", "when"], &[]),
     }
 }
 
@@ -139,6 +161,10 @@ impl Params {
             "amount" => self.amount.is_some(),
             "attack" => self.attack.is_some(),
             "health" => self.health.is_some(),
+            "perAttack" => self.per_attack.is_some(),
+            "perHealth" => self.per_health.is_some(),
+            "maxCount" => self.max_count.is_some(),
+            "threshold" => self.threshold.is_some(),
             "value" => self.value.is_some(),
             "extra" => self.extra.is_some(),
             "duration" => self.duration.is_some(),
@@ -280,7 +306,10 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
             errors.push(format!("keyword 非法 {:?}", keyword.keyword));
         }
         let layer = keyword.value.or(params.value);
-        if matches!(keyword.keyword.as_str(), "breed" | "assemble" | "contagion") {
+        if matches!(
+            keyword.keyword.as_str(),
+            "breed" | "assemble" | "contagion" | "armor"
+        ) {
             if layer.is_none() {
                 errors.push(format!("keyword {:?} 必须带层数", keyword.keyword));
             } else if layer.is_some_and(|value| value < 0) {

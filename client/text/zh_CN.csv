@@ -289,6 +289,7 @@ enum.evolve.divine_shield,护盾
 enum.evolve.reborn,复生
 enum.evolve.stats,+2/+2
 enum.keyword.assemble,装配
+enum.keyword.armor,减伤
 enum.keyword.battlecry,战吼
 enum.keyword.breed,繁衍
 enum.keyword.contagion,传染
@@ -298,8 +299,10 @@ enum.keyword.divine_shield,护盾
 enum.keyword.evolve,进化
 enum.keyword.growth,成长
 enum.keyword.optimal_attack,最优攻击
+enum.keyword.poison,剧毒
 enum.keyword.reborn,复生
 enum.keyword.sow,播种
+enum.keyword.stealth,潜行
 enum.keyword.taunt,嘲讽
 enum.keyword.windfury,连击
 enum.playstyle.bacteria,细菌域

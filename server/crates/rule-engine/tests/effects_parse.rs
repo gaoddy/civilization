@@ -1,12 +1,130 @@
 mod common;
 
-use common::{CONFIG_JSON, TAXONOMY_JSON};
+use common::{CONFIG_JSON, TAXONOMY_JSON, effects_of};
 use rule_engine::data::{CardType, Catalog};
 use rule_engine::effects::{
     Basis, Compare, Duration, Filter, KeywordSpec, Op, Pick, Selector, Side, TimesIf, Trigger,
     Zone, parse_effects,
 };
 use rule_engine::error::CatalogError;
+
+#[test]
+fn parses_new_ops_and_params() {
+    let effects = effects_of(
+        "Aura|ModifyStats|friendly:all:playstyle=fish|attack=1,health=1,perAttack=1,perHealth=0,maxCount=6",
+    );
+    assert_eq!(effects[0].params.per_attack, Some(1));
+    assert_eq!(effects[0].params.max_count, Some(6));
+    let effects = effects_of("OnCombatStart|Detonate|enemy:single|amount=2,threshold=3");
+    assert_eq!(effects[0].op, Op::Detonate);
+    assert_eq!(effects[0].params.threshold, Some(3));
+}
+
+#[test]
+fn parses_all_new_ops() {
+    for (raw, op) in [
+        (
+            "OnCombatStart|Mimic|friendly:single|duration=combat",
+            Op::Mimic,
+        ),
+        ("OnCombatStart|Devour|enemy:single|value=2", Op::Devour),
+        (
+            "OnCombatStart|Convert|enemy:single|threshold=2,card=fish",
+            Op::Convert,
+        ),
+        (
+            "OnCombatStart|Revive|friendly:single|attack=1,health=1",
+            Op::Revive,
+        ),
+        ("OnCombatStart|Recall|friendly:single|to=hand", Op::Recall),
+        (
+            "OnActivate|Salvage|self|pool=playstyle,count=1",
+            Op::Salvage,
+        ),
+        (
+            "OnCombatStart|Latent|enemy:single|amount=2,count=1,threshold=3",
+            Op::Latent,
+        ),
+    ] {
+        let effects = effects_of(raw);
+        assert_eq!(effects[0].op, op, "{raw}");
+    }
+}
+
+#[test]
+fn parses_new_picks() {
+    let effects = effects_of("Aura|ModifyStats|friendly:adjacent|attack=1");
+    assert!(matches!(
+        effects[0].selector,
+        Selector::Side {
+            pick: Pick::Adjacent,
+            ..
+        }
+    ));
+
+    let effects = effects_of("OnCombatStart|DealDamage|enemy:lowestAttack|amount=1");
+    assert!(matches!(
+        effects[0].selector,
+        Selector::Side {
+            pick: Pick::LowestAttack,
+            ..
+        }
+    ));
+
+    // 既有的 leftmost+adjacent 保持原义。
+    let effects = effects_of("OnCombatStart|DealDamage|enemy:leftmost+adjacent|amount=1");
+    assert!(matches!(
+        effects[0].selector,
+        Selector::Side {
+            pick: Pick::LeftmostAdjacent,
+            ..
+        }
+    ));
+}
+
+#[test]
+fn parses_new_keywords() {
+    let effects = effects_of("OnCombatStart|GrantKeyword|friendly:single|keyword=poison");
+    assert_eq!(
+        effects[0].params.keyword,
+        Some(KeywordSpec {
+            keyword: "poison".into(),
+            value: None,
+        })
+    );
+
+    let effects = effects_of("OnCombatStart|GrantKeyword|friendly:single|keyword=armor 2");
+    assert_eq!(
+        effects[0].params.keyword,
+        Some(KeywordSpec {
+            keyword: "armor".into(),
+            value: Some(2),
+        })
+    );
+
+    let effects = effects_of("OnCombatStart|GrantKeyword|friendly:single|keyword=stealth");
+    assert_eq!(
+        effects[0].params.keyword,
+        Some(KeywordSpec {
+            keyword: "stealth".into(),
+            value: None,
+        })
+    );
+
+    // armor 必须带层数，poison / stealth 禁止层数。
+    assert!(parse_effects("OnCombatStart|GrantKeyword|friendly:single|keyword=armor").is_err());
+    assert!(
+        parse_effects(&format!(
+            "OnCombatStart|GrantKeyword|friendly:single|keyword={} 2",
+            "poison"
+        ))
+        .is_err()
+    );
+    assert!(
+        parse_effects("OnCombatStart|GrantKeyword|friendly:single|keyword=stealth,value=1")
+            .is_err()
+    );
+}
 
 #[test]
 fn parses_a_growth_effect() {

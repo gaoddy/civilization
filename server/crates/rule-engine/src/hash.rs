@@ -237,6 +237,8 @@ fn hash_minion(hasher: &mut Hasher, minion: &MinionInstance) {
 
     hasher.bool(minion.shield_used);
     hasher.bool(minion.reborn_used);
+    hasher.bool(minion.stealth_broken);
+    hasher.bool(minion.revive_used);
     hasher.u8(minion.attacks_left);
     hasher.bool(minion.cannot_attack);
 }

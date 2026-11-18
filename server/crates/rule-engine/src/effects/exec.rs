@@ -176,6 +176,15 @@ impl Engine {
             Op::Discover => self.apply_discover(state, effect, ctx),
             // 分解只发生在战斗内；招募阶段没有事件目标，落空。
             Op::Decompose => Vec::new(),
+            // 新玩法的原语在招募阶段尚无数据使用；结算由各玩法机制任务接入。
+            Op::Mimic
+            | Op::Devour
+            | Op::Detonate
+            | Op::Convert
+            | Op::Revive
+            | Op::Recall
+            | Op::Salvage
+            | Op::Latent => Vec::new(),
         }
     }
 
@@ -577,6 +586,21 @@ impl Engine {
                 }
                 best.map(|(id, _)| vec![id]).unwrap_or_default()
             }
+            Pick::LowestAttack => {
+                let mut best: Option<(InstanceId, i32)> = None;
+                for id in pool {
+                    let Some((_, minion)) = locate(state, id) else {
+                        continue;
+                    };
+                    let attack = combat::effective_attack(&self.catalog, minion);
+                    if best.is_none_or(|(_, current)| attack < current) {
+                        best = Some((id, attack));
+                    }
+                }
+                best.map(|(id, _)| vec![id]).unwrap_or_default()
+            }
+            // 相邻只服务光环，招募路径不会用到；机制任务接入光环实现。
+            Pick::Adjacent => Vec::new(),
         }
     }
 
@@ -1556,6 +1580,21 @@ impl Engine {
                 }
                 best.map(|(id, _)| vec![id]).unwrap_or_default()
             }
+            Pick::LowestAttack => {
+                let mut best: Option<(InstanceId, i32)> = None;
+                for id in pool {
+                    let Some(minion) = field.minion(id) else {
+                        continue;
+                    };
+                    let attack = combat::effective_attack(&self.catalog, minion);
+                    if best.is_none_or(|(_, current)| attack < current) {
+                        best = Some((id, attack));
+                    }
+                }
+                best.map(|(id, _)| vec![id]).unwrap_or_default()
+            }
+            // 相邻只服务光环；战斗路径的选择器不使用该选取方式。
+            Pick::Adjacent => Vec::new(),
         }
     }
 
