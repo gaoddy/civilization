@@ -2,7 +2,7 @@
 id: universal-manuscript
 name: 万能手稿
 text: 复制一张你手牌中的随从牌
-effects: OnActivate|Copy|self|from=hand,type=minion,to=hand
+effects: OnActivate|Copy|target:hand:type=minion|from=hand,type=minion,to=hand
 cost: 2
 uses_per_turn: 1
 match_text: 同左
@@ -22,4 +22,6 @@ match_text: 同左
 
 ## 效果
 
-复制一张你手牌中的随从牌
+选择一张你手牌中的随从牌并复制
+
+候选为使用时本人手牌中的随从牌；候选为空时技能不可使用。

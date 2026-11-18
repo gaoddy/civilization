@@ -2,7 +2,7 @@
 id: battlecry-copy-hand-minion
 keyword: battlecry
 text: 战吼：复制一张你手牌中的随从牌
-effects: OnPlay|Copy|self|from=hand,type=minion,to=hand
+effects: OnPlay|Copy|target:hand:type=minion|from=hand,type=minion,to=hand
 ---
 
 # battlecry-copy-hand-minion
@@ -17,4 +17,6 @@ effects: OnPlay|Copy|self|from=hand,type=minion,to=hand
 
 ## 效果
 
-战吼：复制一张你手牌中的随从牌
+战吼：选择一张你手牌中的随从牌并复制
+
+候选为入场时本人手牌中的随从牌；候选为空时战吼落空。

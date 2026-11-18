@@ -46,13 +46,15 @@ class ClientBoundaryTest(unittest.TestCase):
         """出牌只有拖拽一条路径：手牌没有点击回调，PlayCard 只在落点回调里构造。"""
         source = (CLIENT / "scenes" / "game.gd").read_text(encoding="utf-8")
         self.assertNotIn("_on_play", source)
+        # 棋盘落点、手牌落点共用 `_send_play_card`；三者之外不得构造 PlayCard。
+        allowed = {"_on_board_dropped", "_on_hand_target_dropped", "_send_play_card"}
         owner = None
         offenders = []
         for number, line in enumerate(source.splitlines(), 1):
             match = re.match(r"^func (\w+)\(", line)
             if match:
                 owner = match.group(1)
-            if "INTENT_PLAY_CARD" in line and owner != "_on_board_dropped":
+            if "INTENT_PLAY_CARD" in line and owner not in allowed:
                 offenders.append(f"{number}: {line.strip()}（位于 {owner}）")
         self.assertEqual(offenders, [], "\n".join(offenders))
 

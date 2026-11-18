@@ -165,7 +165,13 @@ func _target_pending_view() -> Dictionary:
         FixtureScript.board_minion("mi_2", "airplane", 1),
     ]
     view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
-    var choice := {"sourceMinionId": "mi_1"}
+    var choice := {
+        "sourceMinionId": "mi_1",
+        "candidates": [
+            {"zone": "board", "id": "mi_1"},
+            {"zone": "board", "id": "mi_2"},
+        ],
+    }
     choice["kind"] = "target"
     view["self"]["pendingChoices"] = [choice]
     view["self"]["affordances"]["handCards"] = [

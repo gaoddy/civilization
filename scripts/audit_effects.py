@@ -63,6 +63,10 @@ def check_effect(trigger, op, params, selector=""):
         violations.append(f"{op} 必须以 enemy 或 friendly 选择器指定目标，实为 {selector!r}")
     if op in SELF_TARGET_OPS and selector != "self":
         violations.append(f"{op} 只能以 self 为目标，实为 {selector!r}")
+    if op == "Copy" and params.get("from") == "hand" \
+            and not selector.startswith("target:hand"):
+        violations.append(
+            f"Copy 从手牌复制必须用 target:hand 选择器指定目标，实为 {selector!r}")
     if op == "Recall" and params.get("to") != "hand":
         violations.append(f"Recall 的 to 必须为 hand，实为 {params.get('to')!r}")
     if "timesIf" in params and (op != "Growth" or "times" not in params):

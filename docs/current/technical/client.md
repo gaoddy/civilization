@@ -80,7 +80,7 @@ client/
 | 登录 | 输入服务器地址、手机号、固定验证码 `123456` 与显示名；认证成功后进入大厅 |
 | 大厅 | 创建房间或凭 6 位房间码加入；收到 `RoomUpdate` 后进入房间 |
 | 房间 | 展示房间码与成员、选择英雄、准备/取消准备、离开房间；开局完全由服务端决定 |
-| 对局 | 酒馆战棋式三栏布局：左栏 8 行座位（按服务端 `rank` 升序，头像、名次角标、血量条，点击展开战报），中区招募视图（自上而下为商店、按容量棋盘）与战斗视图（对手随从、结果横幅、我方随从）互斥，手牌行常驻在两者之下，右栏为身份（售货员/对手英雄/幽灵/已淘汰观战）与售货员下方的商店操作、垂直居中的回合与倒计时、自己英雄介绍与贴底的英雄技能；十一种意图对应操作；`pendingChoices` 弹层（发现/进化/战吼目标）；英雄技能目标缺失时按 `NO_VALID_TARGET` 补选目标 |
+| 对局 | 酒馆战棋式三栏布局：左栏 8 行座位（按服务端 `rank` 升序，头像、名次角标、血量条，点击展开战报），中区招募视图（自上而下为商店、按容量棋盘）与战斗视图（对手随从、结果横幅、我方随从）互斥，手牌行常驻在两者之下，右栏为身份（售货员/对手英雄/幽灵/已淘汰观战）与售货员下方的商店操作、垂直居中的回合与倒计时、自己英雄介绍与贴底的英雄技能；十一种意图对应操作；`pendingChoices` 弹层（发现/进化/战吼目标，候选由视图下发）；英雄技能按 `requiresTarget` / `targetCandidates` 直接释放或弹出候选浮层 |
 | 结算 | 按服务端 `ranking` 展示名次与 `seed`；返回大厅时用令牌重新认证 |
 
 - 对局界面整块读取 `GameStore.view`，每次 `view_changed` 重建；按钮可用性只取 `affordances` / `playable` / `can*`，不做本地推导。冻结与棋盘卡拖拽换位没有对应的服务端 affordance，按 `phase`、`self.recruited` 与下标做本地门控，与服务端拒绝条件保持一致。
@@ -89,14 +89,15 @@ client/
 - 已结束招募（`self.recruited`）后只展示界面，不再发起意图，也不弹待选弹层。
 - 状态栏文案按错误码取 `UI.error_text` 的文本表条目（`error.<CODE>`）；悬停详情优先用服务端下发的 `messageId` 与 `messageParams`（`UI.error_tooltip` → `UI.error_text_by_id`），缺失时回退错误码文案。协议 `message` 只面向日志，不作为 UI 文案。
 - `UI.error_route` 决定错误后的去向：认证类错误回登录并清空会话，`NOT_IN_ROOM` / `ROOM_NOT_FOUND` 回大厅并清空房间；其余错误留在当前页面。
-- 未连接时点击操作不会静默丢弃：状态栏提示「未连接，操作未发出」，发送失败不登记目标重试。目标重试表按回合清理并设上限。
+- 未连接时点击操作不会静默丢弃：状态栏提示「未连接，操作未发出」。客户端不维护目标重试表：目标只能取自视图候选，被拒后只提示错误并等待新视图。
 - 页面切换统一走 `UI.navigate(page, path)`：`change_scene_to_file` 会立即把当前场景摘下，而页面仍连着 `GameStore` 等 autoload 信号；摘下后的回调再取 `get_tree()` 会得到 `null`。`UI.navigate` 以「页面仍在树上」为唯一判定，离树页面的导航直接丢弃并返回 `false`，场景脚本不再直接调用 `get_tree().change_scene_to_file`。
 - 房间场景同时监听 `view_changed`：重连或晚到的视图显示对局已开始时直接进入对局；房间不存在或已不在房间时回大厅。
 - 商店使用 `HFlowContainer` 自动换行，左侧内容放入 `ScrollContainer`，1280×720 下不会因商店变长而溢出；手牌行同样使用 `HFlowContainer`，但槽位按 `card-width - hand-card-overlap` = 80 步进排列、行内 `h_separation` 为 0，1–10 张保持单行，卡片自身 112×146 向右溢出并与下一槽重叠。
-- 手牌卡使用与商店/棋盘一致的 `GameCardFace` 卡面（介绍、费用、时代角标与底部名称、攻击/类型/生命信息区），只能拖拽出牌（`HandCard._get_drag_data`），点击不产生意图；落点由 `BoardDrop` 判定：随从牌按指针位置换算插入下标、棋盘已满时任何落点都不接收，需要目标的效果牌落在随从卡上即取该卡为目标，其它落点静默取消。拖拽数据带 `epoch`（`_view_epoch`），视图重建后松手按取消处理。
+- 手牌卡使用与商店/棋盘一致的 `GameCardFace` 卡面（介绍、费用、时代角标与底部名称、攻击/类型/生命信息区），只能拖拽出牌（`HandCard._get_drag_data`），点击不产生意图；落点由 `BoardDrop` 判定：随从牌按指针位置换算插入下标、棋盘已满时任何落点都不接收，需要目标的效果牌只有落在服务端下发的候选（`targetCandidates`，区域为棋盘或手牌）上才提交，落点候选即目标；其它落点静默取消。拖拽数据带 `epoch`（`_view_epoch`）与 `targets`（候选的 `{zone, id}` 列表），视图重建后松手按取消处理。
 - 手牌的随从数值读服务端视图 `attack` / `health`（当前值，含成长等全部层数），不读 `CardDB` 卡面值；金色随从带「★」，奖励牌在角标行显示锁定的发现星级，并用「发现一张 N 星随从」作为原生 tooltip。拖拽 payload 带 `instanceId` 与 `golden` 供落点与预览判断，不参与意图。
 - 手牌悬停由 `HandSlot` 承担：进入时槽位 `z_index = 1`，卡片以底边中点为轴放大 `hand-hover-scale`（1.12）；放大后的矩形包含原矩形，不会在卡片下缘反复触发 `mouse_exited`。悬停不读取 `drag_allowed`，禁用与战斗阶段同样生效；不改顺序、`handIndex` 或 payload。`HandCard` 在拖拽真正开始时发出 `drag_started`，槽位同步复位缩放与层级后才复制拖拽预览，保证预览为原始尺寸。`HandScroll` 关闭 `clip_contents`，让放大后的卡顶越过 154 高的滚动行继续绘制与命中；悬停卡会盖住「手牌」标题，属已接受的视觉取舍。Godot 的 GUI 拾取按树序逆序、不比较 `z_index`，因此悬停期间 `HandSlot` 把右侧槽位卡片的 `mouse_filter` 临时设为 `IGNORE`、复位时恢复 `STOP`：否则放大卡被揭示出来的右侧交叠带仍会命中并拖起下一张卡。左侧槽位不用处理，它在树序中本来就晚于本槽被拾取。拖拽取消或视图刷新后不自动恢复悬停，指针需移出再移入。
-- 手牌拖拽期间 `BoardDrop` 逐帧按指针位置复查落点（`hand_drop_accepted`）：空位仍可放置；棋盘外、棋盘已满或需要目标却悬停在空白处判为无效，指针切换为禁止光标（`CURSOR_FORBIDDEN`），松手不产生意图，卡牌留在手牌。
+- 手牌拖拽期间 `BoardDrop` 逐帧按指针位置复查落点（`hand_drop_accepted`）：空位仍可放置；棋盘外、棋盘已满或需要目标却不在候选上判为无效，指针切换为禁止光标（`CURSOR_FORBIDDEN`），松手不产生意图，卡牌留在手牌。指针离开棋盘矩形时不设置禁止光标，交还给手牌卡的 `_can_drop_data`。
+- 需要目标的效果牌也可以落在手牌候选上：`HandCard` 实现 `_can_drop_data` / `_drop_data`，只接受「需要目标的效果牌」且本卡实例编号出现在拖拽数据的 `targets` 中（区域 `hand`），拖到自己身上拒绝；接受时发出 `target_dropped(payload, target)`。
 - 棋盘随从卡也使用拖拽：`BoardCard._get_drag_data` 交出 `{epoch, minionId, fromIndex, sellable, golden}`；`BoardDrop` 在 `NOTIFICATION_DRAG_BEGIN` 时隐藏原卡并插入同尺寸透明占位，指针移动时实时移动占位、其余随从让位，松手按「移除后被拖随从剩余序列中的插入下标」发 `RearrangeBoard`，拖拽结束恢复原顺序。商店面板是 `SellDrop`，只接受可出售的棋盘卡：拖入时金色描边并提示「松手出售 +N 金」（`golden ? 3 : 1`），松手发 `SellMinion`；手牌与不可出售随从静默取消。卡内不再生成出售与左右移位按钮。
 - 拖放冒泡依赖控件的鼠标过滤：Godot 在「`_can_drop_data` 为假且 `mouse_filter == STOP`」的控件上中止沿父链的落点查找。棋盘空位（`EmptySlot`）设 `IGNORE`；棋盘随从卡（`BoardCard`）与商店槽位设 `PASS`，保留自身点击/拖拽起手与悬停详情，同时把落点交给父级 `BoardDrop` / `SellDrop`。新增落点控件或改其鼠标过滤时必须保证落点仍能到达父级。
 - 时代文案由 `CardDB.era_name` 把 1–7 映射为英文 id（`prehistoric`…`future`）后按 `enum.era.<id>` 取文本；玩法、卡牌类型、进化选项与攻防分层同理走 `UI.enum_text(group, id)`；右栏自己英雄的属性行、右栏对手身份块的元信息与座位详情统一显示「时代 X」。
@@ -106,7 +107,8 @@ client/
 - 棋盘容量取自 `PlayerView.boardSlots`（缺失时回退 7），满场标记、提示文案与空位数量用同一数值；`BoardDrop` 仍由页面设置 `board_full`，控件本身不感知容量。
 - 落点回调在 `epoch` 校验之外还要重新过一遍与拖拽起始同源的门控（`drop_gate`）：阶段为招募、未结束招募、视图未过期、倒计时未归零、`Net` 已连接、队首待选不是 `target`。拖拽途中换回合、开战或断线时松手不会发出意图。
 - 手牌可拖动的前提是阶段为招募、视图未过期、倒计时未归零、`Net` 已连接、队首待选不是 `target`、且该卡 `playable`；任一不满足时 `_get_drag_data` 返回 `null`，拖拽根本不开始。
-- 队首待选为 `target` 时弹出战吼目标浮层：只列我方棋盘随从、高亮触发者，没有取消与跳过；期间购买/刷新/升时代/冻结/结束招募/英雄技能/出售/换位/拖拽全部禁用，选中后发 `ChooseTarget`。
+- 队首待选为 `target` 时弹出战吼目标浮层：按区域分组列出 `pendingChoices[0].candidates`（可含手牌随从），高亮触发者，没有取消与跳过；期间购买/刷新/升时代/冻结/结束招募/英雄技能/出售/换位/拖拽全部禁用，选中后发 `ChooseTarget { target }`。
+- 英雄技能浮层只服务主动技能：`heroPower.requiresTarget` 为假时点击直接发 `UseHeroPower`；为真且候选非空时弹出候选浮层，取消不发意图、不扣金币与次数；为真且候选为空时不弹浮层，按钮禁用原因为 `NO_VALID_TARGET`。
 - 战斗演示由 `CombatPlayback` 驱动（`PACE_MS = 320`、`TAIL_MS = 2000`，节奏只在客户端，服务端不估算演示时长）：第 i 条动作在 `(i + 1) × 320ms` 应用，数值只取 `source`/`target`/`summon` 的服务端下发值，客户端不做加减；动作序列只含主动攻击，反击伤害已并入该条动作下发的快照。写入哪一行按动作的 `sourceSide`/`targetSide`（缺失时退回按 `minionId` 双侧查找）。幽灵战改为随机出局者的最终阵容，实例编号只在克隆内与己方重号时按需改写，因此两侧编号仍可判。动作播完并经过 `TAIL_MS` 后才显示胜负横幅。
 - 战斗行只渲染 `alive` 为真的随从：阵亡卡立即离场；播放器仍保留阵亡条目作为顺序锚点，复生把 `alive` 置回真后卡片在原相对位置重现。召唤按 `summon.position`（存活序列下标）插入，换算用 `CombatPlayback.alive_insert_index`，不会把阵亡锚点当计数。
 - 战斗视图的占位在演示全程固定：两行 `custom_minimum_size.y` 取 `card-height`，一方全灭后空行不塌陷；`CombatBannerSlot` 以 `combat-banner-height`（30）常驻占位，`CombatBanner` 锚点铺满槽位并垂直居中，横幅显示与隐藏都不改变三段高度。
@@ -166,9 +168,9 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 - 客户端创建房间后把 6 位房间码发给 7 个机器人；8 人全部从各自候选中选好英雄并准备后服务端自动开局。
 - 机器人参数与协议顺序见[房间服务与联网](room-service.md) §11。
-- 无头验收用 `make m1b-e2e`：客户端自动建房并写入房间码，脚本再拉起 7 个机器人，结束后输出 `M1B_GAME_OVER place=<n> seed=<seed> ranking=<n> intents=<n> errors=<n> soft=<n>`；脚本校验名次、8 人排名、种子、意图数，并要求错误全部落在预期白名单（`NO_SPACE`、`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`，以及补选目标或目标池收窄导致的 `NO_VALID_TARGET`），其余错误为 0，服务端与机器人日志无 panic。
+- 无头验收用 `make m1b-e2e`：客户端自动建房并写入房间码，脚本再拉起 7 个机器人，结束后输出 `M1B_GAME_OVER place=<n> seed=<seed> ranking=<n> intents=<n> errors=<n> soft=<n>`；脚本校验名次、8 人排名、种子、意图数，并要求错误全部落在预期白名单（`NO_SPACE`、`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`，以及目标候选与视图偏差导致的 `NO_VALID_TARGET`），其余错误为 0，服务端与机器人日志无 panic。
 - 无头驱动不等上一条意图确认就按新视图继续决策，服务端按最新状态拒绝属预期；因此 `errors` 与 `soft` 必须相等。驱动另外对同一回合的同一商店槽位只提交一次购买（刷新后允许再次购买），避免重复购买同一槽位。
-- 驱动按 `clientIntentId` 找回被拒意图，收到 `NO_VALID_TARGET` 时补上棋盘第一个己方随从重发；队首待选为 `target` 时改发 `ChooseTarget`（同样取未被拒的随从），不再一律当发现处理；`sim bot` 的处理方式相同（见[房间服务与联网](room-service.md) §11）。效果的目标池可按分类、玩法或学者收窄，首个己方随从未必在池内：已带目标的出手被拒后不再重发，本回合跳过该手牌（连续被拒 3 张且棋盘已满时直接结束招募）；`ChooseTarget` 被拒则换下一个随从。否则会形成「补选 → 拒绝 → 再补选」的空转，直到演示超时。
+- 驱动按 `clientIntentId` 找回被拒意图，收到 `NO_VALID_TARGET` 时沿服务端下发的候选（`targetCandidates` 或待选 `candidates`，键为 `zone:id`）换下一个重发；队首待选为 `target` 时发 `ChooseTarget { target }`，不再一律当发现处理；`sim bot` 的处理方式相同（见[房间服务与联网](room-service.md) §11）。候选遍历完仍无合法目标时，本回合跳过该手牌（连续被拒 3 张且可结束时直接结束招募）；`ChooseTarget` 被拒则换下一个候选。否则会形成「重试 → 拒绝 → 再重试」的空转，直到演示超时。
 - 默认端口 `18080` 被其他进程占用时，脚本会因监听失败退出；用 `M1B_PORT=<端口> make m1b-e2e` 覆盖，脚本与客户端读取同一个变量。
 
 ## 6. 国际化与文本表
@@ -192,8 +194,8 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 1. 设计 §5.6 只要求“1 个客户端 + 7 个机器人人工验收”；实现额外提供 `client/tests/headless_game.*` 与 `make m1b-e2e`，用真实客户端栈（Net + GameStore）自动打完一局，作为协议与视图消费的回归证据。该驱动不点击 UI，五场景可读性仍由 `make client-smoke` 与手动运行保证。
 2. 卡牌展示表新增 `display_cost`：随从固定 3、效果牌取文档 `cost`，仅用于显示；规则判定仍全部在服务端。
-3. `PlayCard` 的目标由拖拽落点直接给出（随从牌带 `position`，需要目标的效果牌带 `targetMinionId`），不再先发无目标再补选；英雄技能仍先在己方有随从时弹目标列表，只按 `NO_VALID_TARGET` 补选。`BuyMinion` 只携带槽位，买入一律入手牌，不登记补选目标。
-4. 英雄技能在己方有随从时先弹出可选目标列表，含「不指定目标」；己方无随从时直接无目标发送。
+3. `PlayCard` 的目标由拖拽落点直接给出（随从牌带 `position`，需要目标的效果牌带 `target: {zone, id}`，取自视图候选），不再先发无目标再补选；英雄技能按 `heroPower.requiresTarget` 与候选决定直接释放还是弹浮层。`BuyMinion` 只携带槽位，买入一律入手牌，不登记补选目标。
+4. 英雄技能需要目标且候选非空时先弹出候选浮层，可取消；不需要目标时直接发送，候选为空时按钮禁用、不发送。
 
 ## 相关文档
 

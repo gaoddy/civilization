@@ -7,6 +7,7 @@ mod common;
 
 use common::{heroes, set_shop, test_catalog, test_playstyles};
 use rule_engine::data::CardType;
+use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::engine::Engine;
 use rule_engine::intent::RejectCode;
 use rule_engine::state::{
@@ -155,6 +156,8 @@ fn view_never_exposes_other_seats_private_state() {
         recruited: _,
         pending_choices: _,
         affordances: _,
+        hero_power_requires_target: _,
+        hero_power_target_candidates: _,
     } = &seat_view.self_view;
     assert_eq!(*gold, 7, "自身视图只读取本座位金币");
     assert!(
@@ -628,8 +631,129 @@ fn pending_choice_view_target_carries_source() {
     assert_eq!(
         seat_view.self_view.pending_choices,
         vec![PendingChoiceView::Target {
-            source_minion_id: 42
+            source_minion_id: 42,
+            candidates: vec![],
         }]
+    );
+}
+
+#[test]
+fn pending_choice_view_target_carries_candidates() {
+    let (engine, mut state) = setup();
+    state.players[0].hand = vec![HandCard::Minion(MinionInstance::new(
+        &engine.catalog,
+        7,
+        "amoeba",
+        false,
+    ))];
+    state.pending.push_back(PendingChoice::Target {
+        seat: 0,
+        source: 42,
+        card_id: "parrot".to_string(),
+        golden: false,
+    });
+
+    let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
+    assert_eq!(
+        seat_view.self_view.pending_choices,
+        vec![PendingChoiceView::Target {
+            source_minion_id: 42,
+            candidates: vec![TargetRef {
+                zone: Zone::Hand,
+                id: 7
+            }],
+        }],
+        "待选随目标区域下发可选手牌随从"
+    );
+}
+
+#[test]
+fn hand_card_carries_target_candidates() {
+    let (engine, mut state) = setup();
+    state.players[0].gold = 10;
+    state.players[0].hand = vec![
+        HandCard::effect(20, "yinshuashu"),
+        HandCard::Minion(MinionInstance::new(&engine.catalog, 7, "amoeba", false)),
+    ];
+
+    let self_view = &view(&engine, &state, 0)
+        .expect("座位 0 的视图应存在")
+        .self_view;
+    let hand = &self_view.hand;
+    assert!(hand[0].requires_target);
+    assert_eq!(
+        hand[0].target_candidates,
+        vec![TargetRef {
+            zone: Zone::Hand,
+            id: 7
+        }]
+    );
+    assert!(
+        self_view.affordances.hand_cards[0].playable,
+        "有候选且金币足够时可以打出"
+    );
+    assert!(!hand[1].requires_target);
+    assert!(hand[1].target_candidates.is_empty(), "随从牌不带目标候选");
+}
+
+#[test]
+fn hand_card_without_candidates_reports_no_valid_target() {
+    let (engine, mut state) = setup();
+    state.players[0].gold = 10;
+    state.players[0].hand = vec![HandCard::effect(20, "yinshuashu")];
+
+    let self_view = &view(&engine, &state, 0)
+        .expect("座位 0 的视图应存在")
+        .self_view;
+    assert!(!self_view.affordances.hand_cards[0].playable);
+    assert_eq!(
+        self_view.affordances.hand_cards[0].disabled_reason,
+        Some(RejectCode::NoValidTarget)
+    );
+}
+
+#[test]
+fn hero_power_target_candidates_follow_selector_zone() {
+    let (engine, mut state) = setup();
+    state.players[0].hero = Some("davinci".to_string());
+    state.players[0].gold = 10;
+    state.players[0].hand = vec![HandCard::Minion(MinionInstance::new(
+        &engine.catalog,
+        7,
+        "amoeba",
+        false,
+    ))];
+
+    let self_view = &view(&engine, &state, 0)
+        .expect("座位 0 的视图应存在")
+        .self_view;
+    assert!(self_view.hero_power_requires_target);
+    assert_eq!(
+        self_view.hero_power_target_candidates,
+        vec![TargetRef {
+            zone: Zone::Hand,
+            id: 7
+        }]
+    );
+}
+
+#[test]
+fn hero_power_without_candidates_reports_no_valid_target() {
+    let (engine, mut state) = setup();
+    state.players[0].hero = Some("davinci".to_string());
+    state.players[0].gold = 10;
+    // 手牌为空：达·芬奇的技能只能复制手牌随从，没有候选。
+    state.players[0].hand.clear();
+
+    let self_view = &view(&engine, &state, 0)
+        .expect("座位 0 的视图应存在")
+        .self_view;
+    assert!(self_view.hero_power_requires_target);
+    assert!(self_view.hero_power_target_candidates.is_empty());
+    assert!(!self_view.affordances.can_use_hero_power);
+    assert_eq!(
+        self_view.affordances.hero_power_disabled_reason,
+        Some(RejectCode::NoValidTarget)
     );
 }
 

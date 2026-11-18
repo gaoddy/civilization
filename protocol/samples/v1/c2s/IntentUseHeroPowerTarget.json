@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "id": "c-17",
+  "type": "Intent",
+  "ts": "2026-11-15T10:00:17Z",
+  "roomId": "r-1",
+  "playerId": "p-3",
+  "payload": {
+    "clientIntentId": "ci-17",
+    "intent": {
+      "kind": "UseHeroPower",
+      "skillId": "universal-manuscript",
+      "target": { "zone": "hand", "id": "41" }
+    }
+  }
+}

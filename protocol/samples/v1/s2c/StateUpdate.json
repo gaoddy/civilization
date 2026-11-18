@@ -53,7 +53,9 @@
         "heroCardId": "darwin",
         "heroPower": {
           "skillId": "darwin-skill",
-          "usesLeft": 1
+          "usesLeft": 1,
+          "requiresTarget": false,
+          "targetCandidates": []
         },
         "shop": [
           {
@@ -104,7 +106,8 @@
             "rewardLevel": null,
             "playable": true,
             "disabledReason": null,
-            "requiresTarget": false
+            "requiresTarget": false,
+            "targetCandidates": []
           }
         ],
         "board": [

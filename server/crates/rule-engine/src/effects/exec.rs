@@ -15,7 +15,8 @@ use std::collections::BTreeMap;
 use crate::combat::{self, BattleField, CombatAction, CombatSetup, DamageSource};
 use crate::data::{CardType, Catalog, Playstyle, Specialty, SpecialtyKind, card_in_pool};
 use crate::effects::{
-    CopyState, Duration, Effect, Filter, Op, Pick, Selector, Side, TimesIf, Trigger, Zone,
+    CopyState, Duration, Effect, Filter, Op, Pick, Selector, Side, TargetRef, TimesIf, Trigger,
+    Zone,
 };
 use crate::engine::Engine;
 use crate::events::GameEvent;
@@ -98,7 +99,7 @@ impl Engine {
     ) -> Vec<GameEvent> {
         let mut effective = *ctx;
         if let Some(id) = chosen
-            && (matches!(effect.selector, Selector::Target)
+            && (matches!(effect.selector, Selector::Target { .. })
                 || matches!(
                     effect.selector,
                     Selector::Side {
@@ -119,7 +120,7 @@ impl Engine {
         let mut targets = self.resolve_selector_mut(state, &effect.selector, &effective);
 
         if let Some(when) = &effect.params.when
-            && (effect.op == Op::DealDamage || matches!(effect.selector, Selector::Target))
+            && (effect.op == Op::DealDamage || matches!(effect.selector, Selector::Target { .. }))
         {
             targets.retain(|id| self.filter_matches(state, when, *id, &effective));
         }
@@ -208,7 +209,7 @@ impl Engine {
                 .filter(|id| board_contains(state, ctx.seat, *id))
                 .map(|id| vec![id])
                 .unwrap_or_default(),
-            Selector::Target => ctx
+            Selector::Target { .. } => ctx
                 .target
                 .or(ctx.event_target)
                 .map(|id| vec![id])
@@ -238,7 +239,9 @@ impl Engine {
         ctx: &EffectCtx,
     ) -> Vec<InstanceId> {
         match selector {
-            Selector::SelfCard | Selector::Target => self.resolve_selector(state, selector, ctx),
+            Selector::SelfCard | Selector::Target { .. } => {
+                self.resolve_selector(state, selector, ctx)
+            }
             Selector::Side {
                 side,
                 pick,
@@ -369,7 +372,7 @@ impl Engine {
         self.effects_of(card_id, trigger).iter().any(|effect| {
             matches!(
                 effect.selector,
-                Selector::Target
+                Selector::Target { .. }
                     | Selector::Side {
                         pick: Pick::Single,
                         ..
@@ -392,9 +395,16 @@ impl Engine {
                 continue;
             }
             match &effect.selector {
-                Selector::Target => {
+                Selector::Target { zone, filters } => {
+                    let pool = self.target_pool(state, ctx, *zone, filters);
+                    if pool.is_empty() {
+                        if reject_on_empty_pool {
+                            return Err(reject_no_valid_target());
+                        }
+                        continue;
+                    }
                     let chosen = ctx.target.or(ctx.event_target);
-                    if chosen.is_none_or(|id| locate(state, id).is_none()) {
+                    if !chosen.is_some_and(|id| pool.contains(&id)) {
                         return Err(reject_no_valid_target());
                     }
                 }
@@ -450,6 +460,99 @@ impl Engine {
             )?;
         }
         Ok(())
+    }
+
+    /// 当前状态下该组效果的合法目标候选，按「我方棋盘 → 手牌 → 商店」排列。
+    ///
+    /// 先用「未指定目标」探一次 [`Engine::check_targets`]：返回 `Ok` 说明当前状态
+    /// 不需要目标，候选为空。否则逐个尝试本人在三个区域中的实例编号，同时满足
+    /// 效果预检（以及 `include_on_use` 时的响应预检）的才保留。
+    ///
+    /// 与拒绝校验共用同一套 `check_targets`，避免视图与结算漂移；只读，不推进随机流。
+    pub fn target_candidates(
+        &self,
+        state: &GameState,
+        effects: &[Effect],
+        ctx: &EffectCtx,
+        include_on_use: bool,
+    ) -> Vec<TargetRef> {
+        let probe = EffectCtx {
+            target: None,
+            ..*ctx
+        };
+        if self.check_targets(state, effects, &probe, false).is_ok() {
+            return Vec::new();
+        }
+
+        let mut candidates = Vec::new();
+        for target in own_target_refs(state, ctx.seat) {
+            let chosen = EffectCtx {
+                target: Some(target.id),
+                ..*ctx
+            };
+            if self.check_targets(state, effects, &chosen, false).is_err() {
+                continue;
+            }
+            if include_on_use && self.check_on_use_targets(state, &chosen).is_err() {
+                continue;
+            }
+            candidates.push(target);
+        }
+        candidates
+    }
+
+    /// 区域对应当前座位可见的实例池。
+    fn target_pool(
+        &self,
+        state: &GameState,
+        ctx: &EffectCtx,
+        zone: Zone,
+        filters: &[Filter],
+    ) -> Vec<InstanceId> {
+        let Some(player) = state.players.get(usize::from(ctx.seat)) else {
+            return Vec::new();
+        };
+        match zone {
+            // 战斗内的事件目标可能指向任意座位；招募期的提交边界另行限制为本人。
+            Zone::Board => state
+                .players
+                .iter()
+                .flat_map(|player| player.board.iter())
+                .filter(|minion| {
+                    filters
+                        .iter()
+                        .all(|filter| self.filter_matches(state, filter, minion.instance_id, ctx))
+                })
+                .map(|minion| minion.instance_id)
+                .collect(),
+            Zone::Hand => player
+                .hand
+                .iter()
+                .filter(|card| {
+                    filters.iter().all(|filter| {
+                        self.filter_matches_card(
+                            filter,
+                            card.card_id(),
+                            card.instance_id(),
+                            card.minion(),
+                            ctx,
+                        )
+                    })
+                })
+                .map(|card| card.instance_id())
+                .collect(),
+            Zone::Shop => player
+                .shop
+                .iter()
+                .flatten()
+                .filter(|slot| {
+                    filters.iter().all(|filter| {
+                        self.filter_matches_card(filter, &slot.card_id, slot.instance_id, None, ctx)
+                    })
+                })
+                .map(|slot| slot.instance_id)
+                .collect(),
+        }
     }
 
     pub(crate) fn card_has_trigger(&self, card_id: &str, trigger: Trigger) -> bool {
@@ -537,11 +640,28 @@ impl Engine {
         let Some((_, minion)) = locate(state, id) else {
             return false;
         };
-        let Some(facts) = card_facts(&self.catalog, &minion.card_id) else {
+        self.filter_matches_card(filter, &minion.card_id, id, Some(minion), ctx)
+    }
+
+    /// 按卡牌事实判定筛选；`minion` 为手牌随从实例，商店槽恒为 `None`。
+    ///
+    /// 关键词筛选需要随从实例：棋盘与手牌随从按当前关键词判定，商店槽与效果牌
+    /// 没有实例关键词，恒不匹配。
+    fn filter_matches_card(
+        &self,
+        filter: &Filter,
+        card_id: &str,
+        id: InstanceId,
+        minion: Option<&MinionInstance>,
+        ctx: &EffectCtx,
+    ) -> bool {
+        let Some(facts) = card_facts(&self.catalog, card_id) else {
             return false;
         };
         match filter.key.as_str() {
-            "keyword" => combat::keywords(&self.catalog, minion).contains(&filter.value),
+            "keyword" => minion.is_some_and(|minion| {
+                combat::keywords(&self.catalog, minion).contains(&filter.value)
+            }),
             "other" => {
                 if filter.value == "true" {
                     ctx.source != Some(id)
@@ -1149,9 +1269,21 @@ impl Engine {
         let full = effect.params.state.unwrap_or(CopyState::Base) == CopyState::Current;
 
         let mut copies: Vec<MinionInstance> = Vec::new();
-        if effect.params.from == Some(Zone::Hand) {
-            if let Some(minion) = player.hand.iter().find_map(HandCard::minion) {
-                copies.push(self.copy_of_catalog(minion, full));
+        if matches!(
+            effect.selector,
+            Selector::Target {
+                zone: Zone::Hand,
+                ..
+            }
+        ) {
+            // 手牌目标：只复制 `targets` 指向的本人手牌随从；目标缺失或已离手则落空。
+            for id in targets {
+                if let Some(minion) = player.hand.iter().find_map(|card| match card {
+                    HandCard::Minion(minion) if minion.instance_id == *id => Some(minion),
+                    _ => None,
+                }) {
+                    copies.push(self.copy_of_catalog(minion, full));
+                }
             }
         } else {
             for id in targets {
@@ -1501,7 +1633,7 @@ impl Engine {
 
         let mut targets = self.combat_targets(field, &effect.selector, ctx, rng);
         if let Some(when) = &effect.params.when
-            && (effect.op == Op::DealDamage || matches!(effect.selector, Selector::Target))
+            && (effect.op == Op::DealDamage || matches!(effect.selector, Selector::Target { .. }))
         {
             targets.retain(|id| self.combat_filter_matches(field, when, *id, ctx));
         }
@@ -2212,7 +2344,7 @@ impl Engine {
                 .filter(|id| field.minion(*id).is_some())
                 .map(|id| vec![id])
                 .unwrap_or_default(),
-            Selector::Target => ctx
+            Selector::Target { .. } => ctx
                 .target
                 .or(ctx.event_target)
                 .filter(|id| field.is_alive(*id))
@@ -2417,6 +2549,52 @@ fn board_contains(state: &GameState, seat: Seat, id: InstanceId) -> bool {
         .players
         .get(usize::from(seat))
         .is_some_and(|player| player.board.iter().any(|minion| minion.instance_id == id))
+}
+
+/// 目标是否落在该座位本人的指定区域内。
+///
+/// 意图提交的第一道边界：棋盘只认本人棋盘、手牌只认本人手牌、商店只认本人商店槽
+/// （`Target` 的棋盘池在引擎内仍取全部座位，以保留战斗内的 `event_target` 语义）。
+pub(crate) fn target_in_own_zone(state: &GameState, seat: Seat, target: TargetRef) -> bool {
+    let Some(player) = state.players.get(usize::from(seat)) else {
+        return false;
+    };
+    match target.zone {
+        Zone::Board => player
+            .board
+            .iter()
+            .any(|minion| minion.instance_id == target.id),
+        Zone::Hand => player
+            .hand
+            .iter()
+            .any(|card| card.instance_id() == target.id),
+        Zone::Shop => player
+            .shop
+            .iter()
+            .flatten()
+            .any(|slot| slot.instance_id == target.id),
+    }
+}
+
+/// 本座位三个区域的实例编号，按「棋盘 → 手牌 → 商店」排列。
+fn own_target_refs(state: &GameState, seat: Seat) -> Vec<TargetRef> {
+    let Some(player) = state.players.get(usize::from(seat)) else {
+        return Vec::new();
+    };
+    let mut refs = Vec::new();
+    refs.extend(player.board.iter().map(|minion| TargetRef {
+        zone: Zone::Board,
+        id: minion.instance_id,
+    }));
+    refs.extend(player.hand.iter().map(|card| TargetRef {
+        zone: Zone::Hand,
+        id: card.instance_id(),
+    }));
+    refs.extend(player.shop.iter().flatten().map(|slot| TargetRef {
+        zone: Zone::Shop,
+        id: slot.instance_id,
+    }));
+    refs
 }
 
 fn board_card_id(state: &GameState, seat: Seat, id: InstanceId) -> Option<String> {

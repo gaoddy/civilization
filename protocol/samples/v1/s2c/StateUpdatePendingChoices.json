@@ -29,7 +29,9 @@
         "heroCardId": "darwin",
         "heroPower": {
           "skillId": "darwin-skill",
-          "usesLeft": 1
+          "usesLeft": 1,
+          "requiresTarget": false,
+          "targetCandidates": []
         },
         "shop": [
           {
@@ -80,7 +82,8 @@
             "rewardLevel": null,
             "playable": true,
             "disabledReason": null,
-            "requiresTarget": false
+            "requiresTarget": false,
+            "targetCandidates": []
           }
         ],
         "board": [
@@ -120,7 +123,17 @@
           },
           {
             "kind": "target",
-            "sourceMinionId": "mi_1"
+            "sourceMinionId": "mi_1",
+            "candidates": [
+              {
+                "zone": "board",
+                "id": "mi_1"
+              },
+              {
+                "zone": "hand",
+                "id": "2000"
+              }
+            ]
           }
         ],
         "affordances": {

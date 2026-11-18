@@ -27,6 +27,7 @@ use protocol::server::{CombatResult, ErrorMessage, GameOver, GameStarted, Snapsh
 use protocol::view::{CombatLogEntry, GameEvent as ProtocolGameEvent};
 use protocol::{ErrorCode, GameOverRankingItem, ProtocolError, ServerEnvelope};
 use rule_engine::data::{Catalog, Playstyle};
+use rule_engine::effects::{TargetRef as EngineTargetRef, Zone as EngineZone};
 use rule_engine::engine::Engine;
 use rule_engine::error::EngineError;
 use rule_engine::events::GameEvent as EngineEvent;
@@ -1029,14 +1030,25 @@ impl GameTask {
     }
 }
 
-/// 把意图里的字符串目标解析为实例 id；解析失败返回 `NO_SUCH_MINION`。
-fn parse_target(target: Option<String>) -> Result<Option<InstanceId>, ErrorCode> {
-    target
-        .map(|id| {
-            id.parse::<InstanceId>()
-                .map_err(|_| ErrorCode::NoSuchMinion)
-        })
-        .transpose()
+/// 把协议目标解析为引擎目标（区域 + 实例 id）；id 解析失败返回 `NO_SUCH_MINION`。
+fn parse_target(target: Option<protocol::TargetRef>) -> Result<Option<EngineTargetRef>, ErrorCode> {
+    target.map(map_target).transpose()
+}
+
+/// 把协议目标映射为引擎目标；区域字符串由生成类型保证合法。
+fn map_target(target: protocol::TargetRef) -> Result<EngineTargetRef, ErrorCode> {
+    let zone = match target.zone {
+        protocol::TargetZone::Hand => EngineZone::Hand,
+        protocol::TargetZone::Shop => EngineZone::Shop,
+        protocol::TargetZone::Board => EngineZone::Board,
+    };
+    Ok(EngineTargetRef {
+        zone,
+        id: target
+            .id
+            .parse::<InstanceId>()
+            .map_err(|_| ErrorCode::NoSuchMinion)?,
+    })
 }
 
 /// 把协议意图映射为引擎意图。
@@ -1059,16 +1071,14 @@ fn map_intent(intent: protocol::intents::Intent) -> Result<EngineIntent, ErrorCo
         Protocol::PlayCard {
             hand_index,
             position,
-            target_minion_id,
+            target,
         } => Ok(EngineIntent::PlayCard {
             hand_index: to_u8(hand_index)?,
             position: position.map(to_u8).transpose()?,
-            target: parse_target(target_minion_id)?,
+            target: parse_target(target)?,
         }),
-        Protocol::ChooseTarget { minion_id } => Ok(EngineIntent::ChooseTarget {
-            minion: minion_id
-                .parse::<InstanceId>()
-                .map_err(|_| ErrorCode::NoSuchMinion)?,
+        Protocol::ChooseTarget { target } => Ok(EngineIntent::ChooseTarget {
+            target: map_target(target)?,
         }),
         Protocol::RearrangeBoard {
             from_index,
@@ -1080,12 +1090,9 @@ fn map_intent(intent: protocol::intents::Intent) -> Result<EngineIntent, ErrorCo
         Protocol::FreezeShop { slot } => Ok(EngineIntent::FreezeShop {
             slot: slot.map(to_u8).transpose()?,
         }),
-        Protocol::UseHeroPower {
+        Protocol::UseHeroPower { skill_id, target } => Ok(EngineIntent::UseHeroPower {
             skill_id,
-            target_minion_id,
-        } => Ok(EngineIntent::UseHeroPower {
-            skill_id,
-            target: parse_target(target_minion_id)?,
+            target: parse_target(target)?,
         }),
         Protocol::EndRecruit => Ok(EngineIntent::EndRecruit),
         Protocol::ChooseDiscover { choice } => Ok(EngineIntent::ChooseDiscover {
@@ -1391,5 +1398,45 @@ mod tests {
 
         task.mark_combat_played("p1");
         assert_eq!(task.combat_log.len(), 1, "结算后公开本场战报");
+    }
+
+    /// 协议目标三个区域逐一映射到引擎区域。
+    #[test]
+    fn map_target_maps_every_zone() {
+        use protocol::{TargetRef as ProtocolTargetRef, TargetZone};
+        use rule_engine::effects::{TargetRef as EngineTargetRef, Zone as EngineZone};
+
+        for (zone, engine_zone) in [
+            (TargetZone::Hand, EngineZone::Hand),
+            (TargetZone::Shop, EngineZone::Shop),
+            (TargetZone::Board, EngineZone::Board),
+        ] {
+            let mapped = super::map_target(ProtocolTargetRef {
+                zone,
+                id: "42".to_string(),
+            })
+            .expect("合法编号应能映射");
+            assert_eq!(
+                mapped,
+                EngineTargetRef {
+                    zone: engine_zone,
+                    id: 42
+                },
+                "{zone:?} 应映射到对应引擎区域"
+            );
+        }
+    }
+
+    /// 实例编号不是数字时按「目标不存在」拒绝。
+    #[test]
+    fn map_target_rejects_non_numeric_id() {
+        use protocol::{TargetRef as ProtocolTargetRef, TargetZone};
+
+        let error = super::map_target(ProtocolTargetRef {
+            zone: TargetZone::Board,
+            id: "minion-1".to_string(),
+        })
+        .expect_err("非数字编号应被拒绝");
+        assert_eq!(error, protocol::ErrorCode::NoSuchMinion);
     }
 }

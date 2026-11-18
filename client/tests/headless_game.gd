@@ -19,7 +19,7 @@ var _pending_intents: Dictionary = {}
 ## 该牌的目标池可能收窄（按分类、玩法或学者过滤），首个己方随从未必在池内；
 ## 继续重发只会空转，本回合跳过它，交给后续的刷新与结束招募兜底。
 var _blocked_hand: Dictionary = {}
-## 本回合 `ChooseTarget` 已被拒绝的随从；待选池非空，轮换到下一个即可。
+## 本回合已被拒绝的目标，键为 `zone:id`；候选池非空，轮换到下一个即可。
 var _failed_targets: Dictionary = {}
 ## 回合内被拒绝的出手次数；棋盘满时手牌没有别的出路，超过上限直接结束招募，
 ## 否则每来一次视图就空转一轮，直到演示超时。
@@ -218,9 +218,18 @@ func _act(self_state: Dictionary) -> void:
         return
 
     for card in self_state.get("hand", []):
-        if bool(card.get("playable", false)) and not _hand_blocked(int(card.get("index", 0))):
-            _send_intent({"kind": Protocol.INTENT_PLAY_CARD, "handIndex": int(card.get("index", 0))})
-            return
+        var hand_index := int(card.get("index", 0))
+        if not bool(card.get("playable", false)) or _hand_blocked(hand_index):
+            continue
+        var intent := {"kind": Protocol.INTENT_PLAY_CARD, "handIndex": hand_index}
+        if bool(card.get("requiresTarget", false)):
+            # 只从服务端下发的候选里选；候选为空时该牌本来就不可打出。
+            var target := _next_candidate(Array(card.get("targetCandidates", [])), {})
+            if target.is_empty():
+                continue
+            intent["target"] = target
+        _send_intent(intent)
+        return
 
     if bool(aff.get("canUpgradeEra", false)):
         _send_intent({"kind": Protocol.INTENT_UPGRADE_ERA})
@@ -259,43 +268,75 @@ func _send_intent(intent: Dictionary) -> void:
     })
 
 
-## 服务端要求「存在合法目标时必须指定」，无头驱动按棋盘顺序自动补选第一个己方随从。
+## 目标被拒后沿该牌下发的候选换下一个；候选遍历完返回 `false`。
 ##
-## 补选的目标仍可能不在效果的合法池内（目标池可按分类、玩法或学者收窄）。因此
-## 已经带目标的意图与 `ChooseTarget` 都不再重发，否则会形成「补选 → 拒绝 → 再补选」
-## 的空转；前者由 `_blocked_hand` 记录、后者由 `_failed_targets` 轮换。
+## 不带目标的出手不再补选：服务端要求目标时必须直接带视图候选提交。
 func _retry_with_target(intent: Dictionary) -> bool:
     if str(intent.get("kind", "")) != Protocol.INTENT_PLAY_CARD:
         return false
-    if intent.has("targetMinionId"):
+    if not intent.has("target"):
         return false
-    var target := _first_valid_target()
-    if target == "":
+    var hand_index := int(intent.get("handIndex", -1))
+    var card := _hand_card(hand_index)
+    if card.is_empty():
+        return false
+    var target := _next_candidate(Array(card.get("targetCandidates", [])), intent["target"])
+    if target.is_empty():
         return false
     var retried: Dictionary = intent.duplicate(true)
-    retried["targetMinionId"] = target
+    retried["target"] = target
     _send_intent(retried)
     return true
 
 
-## 本回合还没被拒绝的第一个己方随从；全被拒绝时返回空串。
-func _first_valid_target() -> String:
-    var board: Array = GameStore.view.get("self", {}).get("board", [])
-    for entry in board:
-        var id := str(entry.get("minionId", ""))
-        if id != "" and not _failed_targets.has(id):
-            return id
-    return ""
+## 候选列表里第一个未被拒绝的目标；`after` 非空时从它之后继续。没有时返回空字典。
+func _next_candidate(candidates: Array, after: Dictionary) -> Dictionary:
+    var skip := not after.is_empty()
+    for candidate in candidates:
+        if not (candidate is Dictionary):
+            continue
+        var key := _target_key(candidate)
+        if _failed_targets.has(key):
+            continue
+        if skip:
+            if key == _target_key(after):
+                skip = false
+            continue
+        return candidate.duplicate()
+    return {}
 
 
-## 战吼目标待选：同样取本回合第一个未被拒绝的随从，走 `ChooseTarget`。
+## 目标的稳定键：区域 + 实例编号。
+func _target_key(target: Dictionary) -> String:
+    return "%s:%s" % [str(target.get("zone", "")), str(target.get("id", ""))]
+
+
+## 按手牌下标取视图条目；缺失时返回空字典。
+func _hand_card(hand_index: int) -> Dictionary:
+    for card in GameStore.view.get("self", {}).get("hand", []):
+        if int(card.get("index", -1)) == hand_index:
+            return card
+    return {}
+
+
+## 战吼目标待选：只取服务端下发的候选，跳过本回合已被拒绝的目标。
 func _choose_target() -> void:
-    var target := _first_valid_target()
-    if target == "":
-        push_error("M1B 目标待选时没有可选的己方随从")
+    var choices: Array = GameStore.view.get("self", {}).get("pendingChoices", [])
+    var candidates: Array = choices[0].get("candidates", []) if not choices.is_empty() else []
+    var target := _next_candidate(candidates, {})
+    if target.is_empty():
+        push_error("M1B 目标待选时没有可用候选")
         get_tree().quit(4)
         return
-    _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "minionId": target})
+    _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "target": target})
+
+
+## 队首目标待选是否还有未被拒绝的候选。
+func _has_pending_candidate() -> bool:
+    var choices: Array = GameStore.view.get("self", {}).get("pendingChoices", [])
+    if choices.is_empty() or str(choices[0].get("kind", "")) != "target":
+        return false
+    return not _next_candidate(Array(choices[0].get("candidates", [])), {}).is_empty()
 
 
 ## 本回合内该手牌是否已被判定为目标不合法。
@@ -308,7 +349,7 @@ func _hand_blocked(index: int) -> bool:
 func _remember_target_rejection(rejected: Dictionary) -> bool:
     var kind := str(rejected.get("kind", ""))
     if kind == Protocol.INTENT_PLAY_CARD:
-        if rejected.has("targetMinionId"):
+        if rejected.has("target"):
             var turn := int(GameStore.view.get("turn", 0))
             var key := "%d:%d" % [turn, int(rejected.get("handIndex", -1))]
             if not _blocked_hand.has(key):
@@ -316,8 +357,10 @@ func _remember_target_rejection(rejected: Dictionary) -> bool:
                 _blocked_count += 1
             return true
     elif kind == Protocol.INTENT_CHOOSE_TARGET:
-        _failed_targets[str(rejected.get("minionId", ""))] = true
-        return true
+        var target: Dictionary = rejected.get("target", {})
+        if not target.is_empty():
+            _failed_targets[_target_key(target)] = true
+            return true
     return false
 
 
@@ -377,7 +420,7 @@ func _on_error() -> void:
             if (
                 str(rejected.get("kind", "")) == Protocol.INTENT_CHOOSE_TARGET
                 and still_recruiting
-                and _first_valid_target() != ""
+                and _has_pending_candidate()
             ):
                 # 拒绝不会带来新视图；不立即换下一个随从重发，整局会停在招募阶段。
                 _choose_target()

@@ -102,6 +102,7 @@ EFFECT_OPS = {
     "Recall", "Salvage", "Latent",
 }
 SELECTOR_SIDES = {"friendly", "enemy", "both", "self", "target"}
+SELECTOR_TARGET_ZONES = {"hand", "shop", "board"}
 SELECTOR_PICKS = {"single", "all", "random", "leftmost", "leftmost+adjacent", "topAttack",
                   "lowestAttack", "adjacent"}
 FILTER_KEYS = {"taxon", "playstyle", "play", "prey", "host", "subtype", "id", "type",
@@ -277,9 +278,16 @@ def times_if_errors(value, chunk=""):
 
 
 def check_selector(selector, chunk):
-    """选择器写作 self / target / <阵营>:<选取>[:<筛选>...]。"""
+    """选择器写作 self / target[:<区域>[:<筛选>...]] / <阵营>:<选取>[:<筛选>...]。"""
     if selector in ("self", "target"):
         return []
+    if selector.startswith("target:"):
+        segments = selector.split(":")
+        errors = []
+        if len(segments) < 2 or segments[1] not in SELECTOR_TARGET_ZONES:
+            errors.append(f"目标区域非法 {selector!r}（{chunk}）")
+        errors.extend(check_filters(segments[2:], chunk))
+        return errors
     segments = selector.split(":")
     errors = []
     if segments[0] not in SELECTOR_SIDES:
@@ -387,7 +395,7 @@ def parse_effects(value):
             errors.append(f"未知原语 {op!r}（{chunk}）")
         errors.extend(check_selector(selector, chunk))
         errors.extend(check_params(op, params, chunk))
-        if selector not in ("self", "target"):
+        if selector not in ("self", "target") and not selector.startswith("target:"):
             parts = selector.split(":")
             if len(parts) > 1 and parts[1] == "adjacent" \
                     and trigger not in ("Aura", "ConditionalAura"):
@@ -766,7 +774,7 @@ def mechanism_errors(doc, skill_map):
                 errors.append(f"{label}: 原语 {op} 只允许 playstyle ∈ {sorted(allowed)}，"
                               f"实为 {playstyle!r}")
             selector = effect["selector"]
-            if selector in ("self", "target"):
+            if selector in ("self", "target") or selector.startswith("target:"):
                 continue
             parts = selector.split(":")
             pick = parts[1] if len(parts) > 1 else ""

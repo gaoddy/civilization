@@ -262,7 +262,7 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
         validate_filter(when, false, &mut errors);
     }
 
-    if let Selector::Side { filters, .. } = &effect.selector {
+    if let Selector::Side { filters, .. } | Selector::Target { filters, .. } = &effect.selector {
         for filter in filters {
             validate_filter(filter, true, &mut errors);
         }
@@ -294,6 +294,20 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
         && from != Zone::Shop
     {
         errors.push(format!("GainMinion 的 from 只接受 shop，实为 {from:?}"));
+    }
+
+    // 从手牌复制的目标必须由玩家指定：禁止再出现「静默取手牌第一张」的数据。
+    if effect.op == Op::Copy
+        && params.from == Some(Zone::Hand)
+        && !matches!(
+            effect.selector,
+            Selector::Target {
+                zone: Zone::Hand,
+                ..
+            }
+        )
+    {
+        errors.push("Copy 从手牌复制必须使用 target:hand 选择器".to_string());
     }
 
     // 分解的生命值增量必须有明确时长：`permanent` 落盘，`combat` 本回合。

@@ -12,7 +12,7 @@
 
 use crate::combat;
 use crate::data::Era;
-use crate::effects::EVOLVE_CHOICES;
+use crate::effects::{EVOLVE_CHOICES, EffectCtx, TargetRef, Trigger};
 use crate::engine::Engine;
 use crate::intent::RejectCode;
 use crate::recruit::{
@@ -49,6 +49,10 @@ pub struct SelfView {
     /// 英雄的第一个主动技能（`skill.cost.is_some()`），没有则为 `None`。
     pub hero_power_skill_id: Option<String>,
     pub hero_power_uses_left: u8,
+    /// 主动技能是否需要玩家指定单一目标。
+    pub hero_power_requires_target: bool,
+    /// 主动技能的合法目标候选；不需要目标时为空。
+    pub hero_power_target_candidates: Vec<TargetRef>,
     pub shop: Vec<ShopSlotView>,
     pub hand: Vec<HandCardView>,
     pub board: Vec<BoardMinionView>,
@@ -88,6 +92,8 @@ pub struct HandCardView {
     pub reward_level: Option<u8>,
     /// 该牌是否需要玩家指定单一目标（效果牌口径，随从牌恒为 `false`）。
     pub requires_target: bool,
+    /// 该效果牌的合法目标候选；随从牌恒为空。
+    pub target_candidates: Vec<TargetRef>,
 }
 
 /// 单项属性（攻击或生命）的分层构成视图。
@@ -154,9 +160,10 @@ pub enum PendingChoiceView {
     Evolve {
         options: Vec<String>,
     },
-    /// 战吼目标待选：候选恒为本座位当前棋盘上的全部随从，不在视图里下发。
+    /// 战吼目标待选：合法的目标候选按「我方棋盘 → 手牌 → 商店」排列。
     Target {
         source_minion_id: u64,
+        candidates: Vec<TargetRef>,
     },
 }
 
@@ -243,31 +250,6 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         })
         .collect();
 
-    let hand_cards = (0..player.hand.len())
-        .map(|index| {
-            let index = u8::try_from(index).unwrap_or(u8::MAX);
-            match gate {
-                Some(code) => HandAffordanceView {
-                    index,
-                    playable: false,
-                    disabled_reason: Some(code),
-                },
-                None => match check_play_card(engine, state, seat, index) {
-                    Ok(()) => HandAffordanceView {
-                        index,
-                        playable: true,
-                        disabled_reason: None,
-                    },
-                    Err(reject) => HandAffordanceView {
-                        index,
-                        playable: false,
-                        disabled_reason: Some(reject.code),
-                    },
-                },
-            }
-        })
-        .collect();
-
     let board_minions = player
         .board
         .iter()
@@ -325,10 +307,37 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         })
         .unwrap_or(0);
 
+    let hero_power_requires_target = player
+        .hero
+        .as_deref()
+        .is_some_and(|hero_id| engine.requires_target(hero_id, Trigger::OnActivate));
+    let hero_power_target_candidates = if hero_power_requires_target {
+        let ctx = EffectCtx {
+            seat,
+            source: None,
+            target: None,
+            event_target: None,
+            golden: false,
+            discover_level: None,
+        };
+        let effects = player
+            .hero
+            .as_deref()
+            .map(|hero_id| engine.effects_of(hero_id, Trigger::OnActivate))
+            .unwrap_or_default();
+        engine.target_candidates(state, &effects, &ctx, false)
+    } else {
+        Vec::new()
+    };
+
     let (can_use_hero_power, hero_power_disabled_reason) = match gate {
         Some(code) => (false, Some(code)),
         None => match hero_power_skill_id.as_deref() {
             None => (false, Some(RejectCode::HeroPowerLimit)),
+            // 需要目标而候选为空：技能没有合法落点，按不可使用处理。
+            Some(_) if hero_power_requires_target && hero_power_target_candidates.is_empty() => {
+                (false, Some(RejectCode::NoValidTarget))
+            }
             Some(skill_id) => match check_hero_power(engine, state, seat, skill_id) {
                 Ok(()) => (true, None),
                 Err(reject) => (false, Some(reject.code)),
@@ -357,6 +366,28 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .enumerate()
         .map(|(index, hand_card)| {
             let minion = hand_card.minion();
+            let requires_target = minion.is_none()
+                && engine
+                    .requires_target(hand_card.card_id(), crate::effects::Trigger::OnPlayEffect);
+            // 效果牌的合法目标与出牌预检同源：候选为空时该牌不可打出。
+            let target_candidates = if requires_target {
+                let ctx = EffectCtx {
+                    seat,
+                    source: None,
+                    target: None,
+                    event_target: None,
+                    golden: false,
+                    discover_level: hand_card.reward_level(),
+                };
+                engine.target_candidates(
+                    state,
+                    &engine.effects_of(hand_card.card_id(), Trigger::OnPlayEffect),
+                    &ctx,
+                    true,
+                )
+            } else {
+                Vec::new()
+            };
             HandCardView {
                 index: u8::try_from(index).unwrap_or(u8::MAX),
                 instance_id: hand_card.instance_id(),
@@ -365,11 +396,44 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                 attack: minion.map(|minion| minion.attack()),
                 health: minion.map(|minion| minion.health()),
                 reward_level: hand_card.reward_level(),
-                requires_target: minion.is_none()
-                    && engine.requires_target(
-                        hand_card.card_id(),
-                        crate::effects::Trigger::OnPlayEffect,
-                    ),
+                requires_target,
+                target_candidates,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let hand_cards = hand
+        .iter()
+        .map(|hand_card| {
+            let index = hand_card.index;
+            match gate {
+                Some(code) => HandAffordanceView {
+                    index,
+                    playable: false,
+                    disabled_reason: Some(code),
+                },
+                None => match check_play_card(engine, state, seat, index) {
+                    // 需要目标而候选为空：效果无法落点，按不可打出处理。
+                    Ok(())
+                        if hand_card.requires_target && hand_card.target_candidates.is_empty() =>
+                    {
+                        HandAffordanceView {
+                            index,
+                            playable: false,
+                            disabled_reason: Some(RejectCode::NoValidTarget),
+                        }
+                    }
+                    Ok(()) => HandAffordanceView {
+                        index,
+                        playable: true,
+                        disabled_reason: None,
+                    },
+                    Err(reject) => HandAffordanceView {
+                        index,
+                        playable: false,
+                        disabled_reason: Some(reject.code),
+                    },
+                },
             }
         })
         .collect();
@@ -408,9 +472,30 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                     .map(|option| (*option).to_string())
                     .collect(),
             },
-            PendingChoice::Target { source, .. } => PendingChoiceView::Target {
-                source_minion_id: *source,
-            },
+            PendingChoice::Target {
+                seat: pending_seat,
+                source,
+                card_id,
+                golden,
+            } => {
+                let ctx = EffectCtx {
+                    seat: *pending_seat,
+                    source: Some(*source),
+                    target: None,
+                    event_target: None,
+                    golden: *golden,
+                    discover_level: None,
+                };
+                PendingChoiceView::Target {
+                    source_minion_id: *source,
+                    candidates: engine.target_candidates(
+                        state,
+                        &engine.effects_of(card_id, Trigger::OnPlay),
+                        &ctx,
+                        false,
+                    ),
+                }
+            }
         })
         .into_iter()
         .collect();
@@ -456,6 +541,8 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
             hero_card_id: player.hero.clone(),
             hero_power_skill_id,
             hero_power_uses_left,
+            hero_power_requires_target,
+            hero_power_target_candidates,
             shop,
             hand,
             board,

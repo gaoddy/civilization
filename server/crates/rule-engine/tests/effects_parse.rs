@@ -190,7 +190,14 @@ fn parses_selector_shorthands_and_multiple_filters() {
     assert_eq!(self_card[0].selector, Selector::SelfCard);
 
     let target = parse_effects("OnAllyGrowth|ModifyStats|target|health=1").unwrap();
-    assert_eq!(target[0].selector, Selector::Target);
+    assert_eq!(
+        target[0].selector,
+        Selector::Target {
+            zone: Zone::Board,
+            filters: vec![]
+        },
+        "裸 target 默认指向我方棋盘"
+    );
 
     let filters =
         parse_effects("OnPlay|Growth|friendly:all:playstyle=plant:other=true:type=minion|times=1")
@@ -247,7 +254,8 @@ fn parses_structured_params() {
         })
     );
 
-    let e = parse_effects("OnActivate|Copy|self|from=hand,type=minion,to=hand").unwrap();
+    let e = parse_effects("OnActivate|Copy|target:hand:type=minion|from=hand,type=minion,to=hand")
+        .unwrap();
     assert_eq!(e[0].params.from, Some(Zone::Hand));
     assert_eq!(e[0].params.to, Some(Zone::Hand));
     assert_eq!(e[0].params.card_type, Some(CardType::Minion));

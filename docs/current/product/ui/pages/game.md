@@ -71,7 +71,7 @@
 | 空商店槽 | 槽位 `cardId` 为 `null` | 槽位显示「空槽」且不响应点击 | 刷新商店 |
 | 空手牌 | `self.hand` 为空 | 手牌区「手牌为空」 | 购买或发现获得 |
 | 手牌悬停 | 指针进入手牌卡 | 该卡置顶并以底边中点为轴放大 1.12，整张卡可见；邻卡与手牌顺序不动；禁用与战斗阶段同样生效 | 指针移出或开始拖拽后复位 |
-| 目标待选 | `self.pendingChoices` 头部 `kind` 为 `target` | 浮层只列我方棋盘随从并高亮触发者，没有取消与跳过；购买/刷新/升时代/冻结/结束招募/英雄技能/出售/换位/拖拽全部禁用 | 选中一个随从后发出 `ChooseTarget` |
+| 目标待选 | `self.pendingChoices` 头部 `kind` 为 `target` | 浮层只列服务端下发的候选（按区域分组，可含手牌）并高亮触发者，没有取消与跳过；购买/刷新/升时代/冻结/结束招募/英雄技能/出售/换位/拖拽全部禁用 | 选中一个候选后发出 `ChooseTarget { target }` |
 | 战斗动作未到 | 战斗阶段 `last_combat` 为空 | 对手行「等待战斗动作…」，横幅隐藏 | 收到 `CombatResult` 后自动恢复 |
 | 战斗演示中 | 战斗阶段已有 `CombatResult` 且动作未播完 | 双方随从按动作逐步更新，横幅隐藏；两行与横幅占位固定，一方随从全灭时该行只留空白；攻击方卡克隆后飞向目标、命中闪光与伤害飘字、再飞回原位，阵亡卡回位后才消失；右栏状态行显示「战斗中」、不显示招募倒计时；商店、刷新、升时代、冻结、英雄技能、结束招募不可见，手牌只读 | 动作播完并经过横幅停留 |
 | 演示播完 | 动作播完且超过 `TAIL_MS` | 横幅在预留区域内显示胜负或「平局」、伤害与双方随从数，上下两行位置不变；页面发送一次 `CombatPlayed` | 全部参战座位回报后服务端推进到下一回合招募（兜底截止同样推进） |
@@ -103,7 +103,7 @@
 | 座位战报 | `view.combatLog`：按 `participantIds` 过滤出该玩家参与的全部条目 |
 | 战斗双方与结果 | `CombatResult`：`ownBoard`、`opponentBoard`、`actions`、`damage`、`winnerId`、`mirror`；当前对手为 `view.opponentPlayerId` |
 | 战斗动作 | `CombatResult.actions` 的 `kind`（`attack`/`death`/`reborn`/`contagion`/`summon`）、`sourceMinionId`/`targetMinionId`、动作后的 `source`/`target` 随从状态（`minionId`/`attack`/`health`/`alive`）与 `summon`（`side`/`position`/`minion`） |
-| 手牌是否需要目标 | `self.hand[].requiresTarget`；队首待选类型取 `self.pendingChoices[].kind` |
+| 手牌目标与候选 | `self.hand[].requiresTarget` 与 `self.hand[].targetCandidates`；队首待选类型与候选取 `self.pendingChoices[]` 的 `kind` / `candidates`；英雄技能取 `self.heroPower.requiresTarget` / `targetCandidates` |
 | 随从详情构成 | 棋盘随从的 `stats`（`attack` / `health` 各含 `initial`、`permanent`、`turn`、`aura`、`damage`、`current`）；缺失时退化为顶层 `attack` / `health` |
 | 卡面与商店详情 | `CardDB` 卡表：`card_type`、`playstyle`、`taxon`、`specialty`、`attack`、`health`、`era`、`display_cost`、`skills`；分类路径走 `CardDB.taxon_path`，玩法/分类名走 `CardDB.playstyle_name` / `CardDB.taxon_name` |
 

@@ -2,11 +2,20 @@ mod common;
 
 use common::{heroes, minion, minion_id, set_shop, test_catalog, test_playstyles, turn_started};
 use rule_engine::data::{CardType, Era};
+use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
 use rule_engine::state::{GameState, HandCard, InstanceId, PendingChoice, Phase, Seat};
+
+/// 棋盘目标：测试里的意图目标统一指向本人棋盘。
+fn board_target(id: InstanceId) -> TargetRef {
+    TargetRef {
+        zone: Zone::Board,
+        id,
+    }
+}
 
 /// 移除全部效果牌：效果牌不耗共享池，会让「池清空后无候选」的测试出现候选。
 fn remove_effect_cards(engine: &mut Engine) {
@@ -1054,12 +1063,40 @@ fn play_battlecry_without_target_enters_board_then_pends() {
 }
 
 #[test]
-fn play_battlecry_with_unknown_target_pends_then_choose_rejects() {
+fn play_battlecry_with_unknown_target_rejects() {
+    // 客户端只能从服务端下发的候选里选目标；提交不存在的实例编号视为非法目标。
     let (mut engine, mut state) = turn_started(41);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     state.players[0]
         .hand
         .push(HandCard::effect(9_000, BATTLECRY_TARGET));
+
+    let before = state_hash(&state);
+    let result = engine.apply(
+        &mut state,
+        0,
+        Intent::PlayCard {
+            hand_index: 0,
+            position: None,
+            target: Some(board_target(9_999)),
+        },
+    );
+
+    assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
+    assert_eq!(before, state_hash(&state), "拒绝后状态不变");
+}
+
+#[test]
+fn play_effect_card_with_hand_target_copies_it() {
+    // 效果牌从手牌复制：目标必须是本人手牌里的随从实例。
+    let (mut engine, mut state) = turn_started(46);
+    let catalog = engine.catalog.clone();
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_001, "yinshuashu"));
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(minion(&catalog, 9_002, "amoeba")));
 
     engine
         .apply(
@@ -1068,16 +1105,84 @@ fn play_battlecry_with_unknown_target_pends_then_choose_rejects() {
             Intent::PlayCard {
                 hand_index: 0,
                 position: None,
-                target: Some(9_999),
+                target: Some(TargetRef {
+                    zone: Zone::Hand,
+                    id: 9_002,
+                }),
             },
         )
-        .expect("出牌本身成功，目标由待选重新指定");
+        .expect("手牌目标合法");
+
+    let hand = &state.players[0].hand;
+    assert_eq!(hand.len(), 2, "效果牌离手，复制品入手牌");
+    assert_eq!(hand[1].card_id(), "amoeba", "复制的是所选随从");
+    assert_ne!(hand[1].instance_id(), 9_002, "复制品使用新实例编号");
+}
+
+#[test]
+fn play_card_rejects_target_from_wrong_zone() {
+    // 目标区域与实例所在区域不一致时视为非法目标，不进入效果结算。
+    let (mut engine, mut state) = turn_started(47);
+    put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
+    let catalog = engine.catalog.clone();
+    state.players[0]
+        .hand
+        .push(HandCard::effect(9_001, "yinshuashu"));
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(minion(&catalog, 9_002, "amoeba")));
 
     let before = state_hash(&state);
-    let result = engine.apply(&mut state, 0, Intent::ChooseTarget { minion: 9_999 });
+    let result = engine.apply(
+        &mut state,
+        0,
+        Intent::PlayCard {
+            hand_index: 0,
+            position: None,
+            target: Some(TargetRef {
+                zone: Zone::Hand,
+                // 9_000 在棋盘上，不在手牌里。
+                id: 9_000,
+            }),
+        },
+    );
 
     assert_eq!(result.unwrap_err().code, RejectCode::NoValidTarget);
     assert_eq!(before, state_hash(&state), "拒绝后状态不变");
+}
+
+#[test]
+fn choose_target_accepts_hand_target_and_copies_selected() {
+    // 战吼待选同样支持手牌区域；复制的是待选提交的那一张，而不是手牌第一张。
+    let (mut engine, mut state) = turn_started(48);
+    let catalog = engine.catalog.clone();
+    state.players[0].hand = vec![
+        HandCard::Minion(minion(&catalog, 5, "amoeba")),
+        HandCard::Minion(minion(&catalog, 6, "e-coli")),
+    ];
+    state.pending.push_back(PendingChoice::Target {
+        seat: 0,
+        source: 9_000,
+        card_id: "parrot".to_string(),
+        golden: false,
+    });
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget {
+                target: TargetRef {
+                    zone: Zone::Hand,
+                    id: 6,
+                },
+            },
+        )
+        .expect("手牌目标应被接受");
+
+    let hand = &state.players[0].hand;
+    assert_eq!(hand.len(), 3, "复制一张手牌随从");
+    assert_eq!(hand[2].card_id(), "e-coli", "复制所选目标而非手牌第一张");
 }
 
 #[test]
@@ -1100,7 +1205,13 @@ fn play_battlecry_with_target_applies_effect() {
         )
         .expect("打出随从应成功");
     engine
-        .apply(&mut state, 0, Intent::ChooseTarget { minion: 9_000 })
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget {
+                target: board_target(9_000),
+            },
+        )
         .expect("选定目标应成功");
 
     let target = state.players[0]
@@ -1422,7 +1533,7 @@ fn target_pending_pool_includes_self() {
             &mut state,
             0,
             Intent::ChooseTarget {
-                minion: instance_id,
+                target: board_target(instance_id),
             },
         )
         .expect("选定刚入场的随从应成功");
@@ -1524,7 +1635,13 @@ fn choose_target_outside_board_rejects() {
     let before = state_hash(&state);
 
     let reject = engine
-        .apply(&mut state, 0, Intent::ChooseTarget { minion: 9_999 })
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget {
+                target: board_target(9_999),
+            },
+        )
         .expect_err("目标不在棋盘上必须拒绝");
 
     assert_eq!(reject.code, RejectCode::NoValidTarget);
@@ -1558,7 +1675,13 @@ fn choose_target_outside_filtered_pool_rejects() {
 
     let before = state_hash(&state);
     let reject = engine
-        .apply(&mut state, 0, Intent::ChooseTarget { minion: 9_001 })
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget {
+                target: board_target(9_001),
+            },
+        )
         .expect_err("目标不在合法池内必须拒绝");
 
     assert_eq!(reject.code, RejectCode::NoValidTarget);

@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::data::{Card, CardType, Catalog, Era, Playstyle, card_in_pool};
-use crate::effects::{EffectCtx, Trigger};
+use crate::effects::{EffectCtx, TargetRef, Trigger, target_in_own_zone};
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::intent::{Intent, Outcome, Reject, RejectCode};
@@ -83,7 +83,7 @@ pub(crate) fn apply(
         }
         Intent::EndRecruit => unreachable!("EndRecruit 在分派前处理"),
         Intent::ChooseDiscover { choice } => choose_discover(engine, state, seat, choice),
-        Intent::ChooseTarget { minion } => choose_target(engine, state, seat, minion),
+        Intent::ChooseTarget { target } => choose_target(engine, state, seat, target),
     }
 }
 
@@ -502,15 +502,32 @@ pub(crate) fn check_play_position(
     }
 }
 
+/// 意图提交的目标区域校验：目标必须落在该座位本人的对应区域内。
+fn check_target_zone(
+    state: &GameState,
+    seat: Seat,
+    target: Option<TargetRef>,
+) -> Result<(), Reject> {
+    match target {
+        Some(target) if !target_in_own_zone(state, seat, target) => Err(Reject::new(
+            RejectCode::NoValidTarget,
+            format!("目标 {:?}:{} 不在本座位的该区域内", target.zone, target.id),
+        )),
+        _ => Ok(()),
+    }
+}
+
 fn play_card(
     engine: &mut Engine,
     state: &mut GameState,
     seat: Seat,
     hand_index: u8,
     position: Option<u8>,
-    target: Option<InstanceId>,
+    target: Option<TargetRef>,
 ) -> Result<Outcome, Reject> {
     check_play_card(engine, state, seat, hand_index)?;
+    check_target_zone(state, seat, target)?;
+    let target = target.map(|target| target.id);
 
     let index = usize::from(hand_index);
     let hand_card = player(state, seat)
@@ -606,10 +623,14 @@ fn play_card(
             engine.register_evolve(state, seat, instance_id);
 
             // 战吼需要单一目标时改为先入场、再推入目标待选：合法池按入场后的棋盘
-            // 判定，因此池内包含刚入场的这个随从本身；池为空时战吼直接落空。
+            // 判定，因此池内包含刚入场的这个随从本身；候选为空时战吼直接落空。
             let effects = engine.effects_of(hand_card.card_id(), Trigger::OnPlay);
             let needs_target = engine.check_targets(state, &effects, &ctx, false).is_err();
-            let mut events = if needs_target {
+            let has_candidates = needs_target
+                && !engine
+                    .target_candidates(state, &effects, &ctx, false)
+                    .is_empty();
+            let mut events = if has_candidates {
                 state.pending.push_back(PendingChoice::Target {
                     seat,
                     source: instance_id,
@@ -811,9 +832,11 @@ fn use_hero_power(
     state: &mut GameState,
     seat: Seat,
     skill_id: &str,
-    target: Option<InstanceId>,
+    target: Option<TargetRef>,
 ) -> Result<Outcome, Reject> {
     check_hero_power(engine, state, seat, skill_id)?;
+    check_target_zone(state, seat, target)?;
+    let target = target.map(|target| target.id);
 
     let hero_id = player(state, seat)
         .expect("check_hero_power 已保证座位存在")
@@ -941,14 +964,14 @@ fn pending_index(state: &GameState, seat: Seat) -> Option<usize> {
     })
 }
 
-/// `ChooseTarget`：为队首的目标待选指定本座位棋盘上的一个随从，随后结算该战吼。
+/// `ChooseTarget`：为队首的目标待选指定一个本人区域内的目标，随后结算该战吼。
 ///
-/// 目标待选没有「取消」：合法池非空时玩家必须选定一个。
+/// 目标待选没有「取消」：候选非空时玩家必须选定一个。
 fn choose_target(
     engine: &mut Engine,
     state: &mut GameState,
     seat: Seat,
-    minion: InstanceId,
+    target: TargetRef,
 ) -> Result<Outcome, Reject> {
     let index = pending_index(state, seat).ok_or_else(|| {
         Reject::new(
@@ -968,21 +991,12 @@ fn choose_target(
             format!("座位 {seat} 最靠前的待选不是目标选择"),
         ));
     };
-    if !player(state, seat)?
-        .board
-        .iter()
-        .any(|board_minion| board_minion.instance_id == minion)
-    {
-        return Err(Reject::new(
-            RejectCode::NoValidTarget,
-            format!("随从 {minion} 不在本座位棋盘上"),
-        ));
-    }
+    check_target_zone(state, seat, Some(target))?;
 
     let ctx = EffectCtx {
         seat,
         source: Some(source),
-        target: Some(minion),
+        target: Some(target.id),
         event_target: None,
         golden,
         discover_level: None,

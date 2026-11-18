@@ -783,7 +783,14 @@
           "to": "hand"
         },
         "selector": {
-          "kind": "self"
+          "filters": [
+            {
+              "key": "type",
+              "value": "minion"
+            }
+          ],
+          "kind": "target",
+          "zone": "hand"
         },
         "trigger": "on_play"
       }
@@ -4150,7 +4157,14 @@
           "to": "hand"
         },
         "selector": {
-          "kind": "self"
+          "filters": [
+            {
+              "key": "type",
+              "value": "minion"
+            }
+          ],
+          "kind": "target",
+          "zone": "hand"
         },
         "trigger": "on_play_effect"
       }
@@ -5628,7 +5642,14 @@
           "to": "hand"
         },
         "selector": {
-          "kind": "self"
+          "filters": [
+            {
+              "key": "type",
+              "value": "minion"
+            }
+          ],
+          "kind": "target",
+          "zone": "hand"
         },
         "trigger": "on_activate"
       }

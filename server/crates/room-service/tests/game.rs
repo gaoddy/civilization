@@ -205,24 +205,19 @@ fn error_codes(updates: &[SeatUpdate]) -> Vec<ErrorCode> {
 /// 待选期间该座位不能执行其它招募意图，测试须先结算它。
 fn resolve_target_pending(task: &mut GameTask, tag: &str) -> bool {
     let view = task.player_view(0).expect("视图应可用");
-    let is_target = matches!(
-        view.self_.pending_choices.first(),
-        Some(protocol::view::PendingChoice::Target { .. })
-    );
-    if !is_target {
+    let target = match view.self_.pending_choices.first() {
+        Some(protocol::view::PendingChoice::Target { candidates, .. }) => {
+            candidates.first().cloned()
+        }
+        _ => None,
+    };
+    let Some(target) = target else {
         return false;
-    }
-    let minion_id = view
-        .self_
-        .board
-        .first()
-        .expect("目标待选存在时棋盘非空")
-        .minion_id
-        .clone();
+    };
     let updates = task.handle(command(
         "p0",
         &format!("{tag}-choose-target"),
-        ProtocolIntent::ChooseTarget { minion_id },
+        ProtocolIntent::ChooseTarget { target },
     ));
     assert!(
         error_codes(&updates).is_empty(),
@@ -448,7 +443,7 @@ fn unspent_pending_choice_does_not_block_timeout() {
         ProtocolIntent::PlayCard {
             hand_index: 0,
             position: None,
-            target_minion_id: None,
+            target: None,
         },
     ));
     assert!(error_codes(&played).is_empty(), "打出应成功");
@@ -585,7 +580,7 @@ fn sell_minion_succeeds_and_refunds_gold() {
         ProtocolIntent::PlayCard {
             hand_index: 0,
             position: None,
-            target_minion_id: None,
+            target: None,
         },
     ));
     resolve_target_pending(&mut task, "sell-play");
@@ -646,7 +641,7 @@ fn play_card_succeeds() {
         ProtocolIntent::PlayCard {
             hand_index: 0,
             position: None,
-            target_minion_id: None,
+            target: None,
         },
     ));
     assert!(error_codes(&first_play).is_empty(), "打出手牌应成功");
@@ -674,7 +669,10 @@ fn play_card_succeeds() {
         .self_
         .board
         .first()
-        .map(|minion| minion.minion_id.clone());
+        .map(|minion| protocol::TargetRef {
+            zone: protocol::TargetZone::Board,
+            id: minion.minion_id.clone(),
+        });
 
     let played = task.handle(command(
         "p0",
@@ -682,7 +680,7 @@ fn play_card_succeeds() {
         ProtocolIntent::PlayCard {
             hand_index: 0,
             position: None,
-            target_minion_id: target,
+            target,
         },
     ));
     assert!(error_codes(&played).is_empty(), "打出手牌应成功");
@@ -720,7 +718,7 @@ fn play_hand_minions(task: &mut GameTask, tag: &str) {
             ProtocolIntent::PlayCard {
                 hand_index,
                 position: None,
-                target_minion_id: None,
+                target: None,
             },
         ));
         assert!(
@@ -810,7 +808,7 @@ fn choose_discover_consumes_pending_choice() {
         ProtocolIntent::PlayCard {
             hand_index: 0,
             position: None,
-            target_minion_id: None,
+            target: None,
         },
     ));
     resolve_target_pending(&mut task, "discover-play");
@@ -1187,17 +1185,19 @@ fn resolve_target_pending_for(task: &mut GameTask, seat: Seat, tag: &str) -> boo
     if !is_target {
         return false;
     }
-    let minion_id = view
-        .self_
-        .board
-        .first()
-        .expect("目标待选存在时棋盘非空")
-        .minion_id
-        .clone();
+    let target = match view.self_.pending_choices.first() {
+        Some(protocol::view::PendingChoice::Target { candidates, .. }) => {
+            candidates.first().cloned()
+        }
+        _ => None,
+    };
+    let Some(target) = target else {
+        return false;
+    };
     let updates = task.handle(command(
         &player,
         &format!("{tag}-choose-target-{seat}"),
-        ProtocolIntent::ChooseTarget { minion_id },
+        ProtocolIntent::ChooseTarget { target },
     ));
     assert!(
         error_codes(&updates).is_empty(),
@@ -1238,7 +1238,7 @@ fn play_one_minion(task: &mut GameTask, seat: Seat, tag: &str) {
         ProtocolIntent::PlayCard {
             hand_index: 0,
             position: None,
-            target_minion_id: None,
+            target: None,
         },
     ));
     assert!(

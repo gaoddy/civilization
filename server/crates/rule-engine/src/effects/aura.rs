@@ -166,7 +166,7 @@ fn aura_targets(
             .filter(|id| player.board.iter().any(|minion| minion.instance_id == *id))
             .map(|id| vec![id])
             .unwrap_or_default(),
-        Selector::Target => Vec::new(),
+        Selector::Target { .. } => Vec::new(),
         Selector::Side {
             side,
             pick,

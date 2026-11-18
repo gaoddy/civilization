@@ -6,7 +6,7 @@ use common::{effects_of, minion, place, setup, test_catalog};
 use rule_engine::combat::{self, CombatAction, CombatLog, CombatSetup, simulate_with};
 use rule_engine::data::{Card, CardType, Playstyle, Skill};
 use rule_engine::effects::{
-    Duration, Effect, EffectCtx, Op, Trigger, effect_coverage, parse_effects,
+    Duration, Effect, EffectCtx, Op, TargetRef, Trigger, Zone, effect_coverage, parse_effects,
 };
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
@@ -14,6 +14,14 @@ use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
 use rule_engine::rng::RngStreams;
 use rule_engine::state::{GameState, HandCard, MinionInstance, Phase, Seat, ShopSlot};
+
+/// 棋盘目标：测试里的意图目标统一指向本人棋盘。
+fn board_target(id: u64) -> TargetRef {
+    TargetRef {
+        zone: Zone::Board,
+        id,
+    }
+}
 
 /// 往测试目录里插入一张合成随从，避免依赖真实卡面数值。
 fn add_card(engine: &mut Engine, id: &str, attack: i32, health: i32, keywords: &[&str]) {
@@ -476,7 +484,7 @@ fn on_activate_respects_cost_and_uses() {
             0,
             Intent::UseHeroPower {
                 skill_id: "shout".to_string(),
-                target: Some(1),
+                target: Some(board_target(1)),
             },
         )
         .expect("首次使用应成功");
@@ -489,7 +497,7 @@ fn on_activate_respects_cost_and_uses() {
             0,
             Intent::UseHeroPower {
                 skill_id: "shout".to_string(),
-                target: Some(1),
+                target: Some(board_target(1)),
             },
         )
         .expect("每回合可用两次");
@@ -502,7 +510,7 @@ fn on_activate_respects_cost_and_uses() {
         0,
         Intent::UseHeroPower {
             skill_id: "shout".to_string(),
-            target: Some(1),
+            target: Some(board_target(1)),
         },
     );
     assert_eq!(rejected.unwrap_err().code, RejectCode::HeroPowerLimit);
@@ -565,7 +573,7 @@ fn play_effect_card_fires_effect_then_on_use() {
             Intent::PlayCard {
                 hand_index: 0,
                 position: None,
-                target: Some(1),
+                target: Some(board_target(1)),
             },
         )
         .expect("打出效果牌应成功");
@@ -776,7 +784,7 @@ fn golden_minion_played_from_hand_doubles_battlecry() {
             Intent::PlayCard {
                 hand_index: 0,
                 position: None,
-                target: Some(1),
+                target: Some(board_target(1)),
             },
         )
         .expect("打出金色随从应成功");
@@ -806,7 +814,7 @@ fn golden_on_use_responder_triggers_twice() {
                 Intent::PlayCard {
                     hand_index: 0,
                     position: None,
-                    target: Some(1),
+                    target: Some(board_target(1)),
                 },
             )
             .expect("打出效果牌应成功");

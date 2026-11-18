@@ -7,7 +7,7 @@ extends VBoxContainer
 ## 商店面板同时是棋盘随从的出售落点。
 
 signal buy(slot: int)
-signal board_dropped(payload: Dictionary, position: int, target_minion_id: String)
+signal board_dropped(payload: Dictionary, position: int, target: Dictionary)
 signal sell_dropped(payload: Dictionary)
 signal sell_hover(hovering: bool, refund: int)
 
@@ -260,5 +260,5 @@ func _on_sell_hover(hovering: bool, refund: int) -> void:
     sell_hover.emit(hovering, refund)
 
 
-func _on_board_dropped(payload: Dictionary, position: int, target_minion_id: String) -> void:
-    board_dropped.emit(payload, position, target_minion_id)
+func _on_board_dropped(payload: Dictionary, position: int, target: Dictionary) -> void:
+    board_dropped.emit(payload, position, target)

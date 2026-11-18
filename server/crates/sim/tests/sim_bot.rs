@@ -8,6 +8,7 @@ mod common;
 use common::catalog;
 use protocol::intents::Intent;
 use protocol::view::{Phase, PlayerView};
+use protocol::{TargetRef, TargetZone};
 use serde_json::{Value, json};
 use sim::bot::brain::{BlockedTargets, next_intent, recover_after_error, retry_with_target};
 
@@ -38,7 +39,12 @@ fn view(
             "era": 1,
             "gold": gold,
             "heroCardId": "adam-smith",
-            "heroPower": { "skillId": null, "usesLeft": 0 },
+            "heroPower": {
+                "skillId": null,
+                "usesLeft": 0,
+                "requiresTarget": false,
+                "targetCandidates": []
+            },
             "shop": shop,
             "hand": [],
             "board": [],
@@ -68,6 +74,36 @@ fn with_hand_and_board(mut view: PlayerView, hand_cards: Value, board: Value) ->
     view.self_.hand = serde_json::from_value(hand_cards).expect("手牌样例应当能反序列化");
     view.self_.board = serde_json::from_value(board).expect("棋盘样例应当能反序列化");
     view
+}
+
+/// 棋盘目标。
+fn board_target(id: &str) -> TargetRef {
+    TargetRef {
+        zone: TargetZone::Board,
+        id: id.to_string(),
+    }
+}
+
+/// 需要目标的手牌样例；`candidates` 为服务端下发的合法目标。
+fn hand_effect(index: i64, instance_id: &str, candidates: Value) -> Value {
+    json!({
+        "attack": null,
+        "cardId": "yuandandan",
+        "disabledReason": null,
+        "golden": false,
+        "health": null,
+        "index": index,
+        "instanceId": instance_id,
+        "playable": true,
+        "requiresTarget": true,
+        "rewardLevel": null,
+        "targetCandidates": candidates
+    })
+}
+
+/// 目标候选的 JSON 片段。
+fn target_json(zone: &str, id: &str) -> Value {
+    json!({ "zone": zone, "id": id })
 }
 
 /// 棋盘随从样例；`index` 与 `minionId` 由调用方给出。
@@ -110,7 +146,15 @@ fn pending_target_starts_from_first_board_minion_not_source() {
     // 战吼的合法池可能带筛选（例如「一个友方鱼纲随从」），来源随从在棋盘末尾时
     // 未必在池内。目标待选从棋盘第一个随从开始，被拒的候选记入阻塞集合后由
     // 下一次决策依次换下一个，能覆盖整个棋盘。
-    let pending = json!([{ "kind": "target", "sourceMinionId": "minion-9" }]);
+    let pending = json!([{
+        "kind": "target",
+        "sourceMinionId": "minion-9",
+        "candidates": [
+            target_json("board", "minion-1"),
+            target_json("board", "minion-2"),
+            target_json("board", "minion-9"),
+        ],
+    }]);
     let board = json!([
         board_minion("minion-1", 0),
         board_minion("minion-2", 1),
@@ -125,7 +169,10 @@ fn pending_target_starts_from_first_board_minion_not_source() {
     let intent =
         next_intent(&view, &catalog(), 0, &BlockedTargets::default()).expect("有待选时应给出意图");
     match intent {
-        Intent::ChooseTarget { minion_id } => assert_eq!(minion_id, "minion-1"),
+        Intent::ChooseTarget { target } => {
+            assert_eq!(target.id, "minion-1");
+            assert_eq!(target.zone, TargetZone::Board);
+        }
         other => panic!("期望 ChooseTarget，实际 {other:?}"),
     }
 }
@@ -177,11 +224,11 @@ fn plays_hand_before_buying() {
         Intent::PlayCard {
             hand_index,
             position,
-            target_minion_id,
+            target,
         } => {
             assert_eq!(hand_index, 0);
             assert_eq!(position, None, "机器人不指定落点，一律追加");
-            assert_eq!(target_minion_id, None, "视图未声明需要目标时不填目标");
+            assert!(target.is_none(), "视图未声明需要目标时不填目标");
         }
         other => panic!("期望 PlayCard，实际 {other:?}"),
     }
@@ -211,7 +258,8 @@ fn targets_first_board_minion_when_hand_requires_target() {
             "rewardLevel": null,
             "disabledReason": null,
             "playable": true,
-            "requiresTarget": true
+            "requiresTarget": true,
+            "targetCandidates": [target_json("board", "mi_1")]
         }]),
         json!([board_minion("mi_1", 0)]),
     );
@@ -220,15 +268,13 @@ fn targets_first_board_minion_when_hand_requires_target() {
         .expect("有可打手牌时应当给出意图");
     match intent {
         Intent::PlayCard {
-            hand_index,
-            target_minion_id,
-            ..
+            hand_index, target, ..
         } => {
             assert_eq!(hand_index, 0);
             assert_eq!(
-                target_minion_id.as_deref(),
+                target.as_ref().map(|target| target.id.as_str()),
                 Some("mi_1"),
-                "需要目标的牌应预填己方第一个随从"
+                "需要目标的牌应预填服务端下发的第一个候选"
             );
         }
         other => panic!("期望 PlayCard，实际 {other:?}"),
@@ -258,7 +304,8 @@ fn omits_target_when_hand_requires_target_but_board_is_empty() {
             "rewardLevel": null,
             "disabledReason": null,
             "playable": true,
-            "requiresTarget": true
+            "requiresTarget": true,
+            "targetCandidates": []
         }]),
         json!([]),
     );
@@ -266,9 +313,9 @@ fn omits_target_when_hand_requires_target_but_board_is_empty() {
     let intent = next_intent(&view, &catalog(), 0, &BlockedTargets::default())
         .expect("有可打手牌时应当给出意图");
     match intent {
-        Intent::PlayCard {
-            target_minion_id, ..
-        } => assert_eq!(target_minion_id, None, "棋盘为空时不填目标"),
+        Intent::PlayCard { target, .. } => {
+            assert!(target.is_none(), "候选为空时不填目标")
+        }
         other => panic!("期望 PlayCard，实际 {other:?}"),
     }
 }
@@ -349,7 +396,14 @@ fn ends_recruit_after_blocked_limit() {
 #[test]
 fn rotates_pending_target_past_rejected_minion() {
     // ChooseTarget 被拒只跳过该候选，下一次决策换下一个己方随从。
-    let pending = json!([{ "kind": "target", "sourceMinionId": "minion-2" }]);
+    let pending = json!([{
+        "kind": "target",
+        "sourceMinionId": "minion-2",
+        "candidates": [
+            target_json("board", "minion-1"),
+            target_json("board", "minion-2"),
+        ],
+    }]);
     let board = json!([board_minion("minion-1", 0), board_minion("minion-2", 1)]);
     let view = with_hand_and_board(
         view(10, json!([]), json!([]), json!([]), pending, false),
@@ -357,11 +411,11 @@ fn rotates_pending_target_past_rejected_minion() {
         board,
     );
     let mut blocked = BlockedTargets::default();
-    blocked.block_minion("minion-1".to_string());
+    blocked.block_target(&board_target("minion-1"));
 
     let intent = next_intent(&view, &catalog(), 0, &blocked).expect("还有下一个候选");
     match intent {
-        Intent::ChooseTarget { minion_id } => assert_eq!(minion_id, "minion-2"),
+        Intent::ChooseTarget { target } => assert_eq!(target.id, "minion-2"),
         other => panic!("期望 ChooseTarget，实际 {other:?}"),
     }
 }
@@ -369,7 +423,14 @@ fn rotates_pending_target_past_rejected_minion() {
 #[test]
 fn stops_when_every_board_minion_is_blocked() {
     // 全部候选都被拒绝时不再发意图，交给回合计时推进，避免无限空转。
-    let pending = json!([{ "kind": "target", "sourceMinionId": "minion-2" }]);
+    let pending = json!([{
+        "kind": "target",
+        "sourceMinionId": "minion-2",
+        "candidates": [
+            target_json("board", "minion-1"),
+            target_json("board", "minion-2"),
+        ],
+    }]);
     let board = json!([board_minion("minion-1", 0), board_minion("minion-2", 1)]);
     let view = with_hand_and_board(
         view(0, json!([]), json!([]), json!([]), pending, false),
@@ -377,11 +438,11 @@ fn stops_when_every_board_minion_is_blocked() {
         board,
     );
     let mut blocked = BlockedTargets::default();
-    blocked.block_minion("minion-1".to_string());
-    blocked.block_minion("minion-2".to_string());
+    blocked.block_target(&board_target("minion-1"));
+    blocked.block_target(&board_target("minion-2"));
 
     assert!(
-        !blocked.has_unblocked_minion(&view.self_),
+        !blocked.has_unblocked_target(&[board_target("minion-1"), board_target("minion-2")]),
         "全部候选被拒后应报告没有可用目标"
     );
     assert!(
@@ -405,9 +466,17 @@ fn blocked_hand_counts_distinct_cards() {
 fn retries_rejected_play_with_next_board_minion() {
     // 预填的随从不在目标池内时，沿棋盘换下一个继续尝试，而不是直接放弃这张牌。
     let board = json!([board_minion("minion-1", 0), board_minion("minion-2", 1)]);
+    let hand = json!([hand_effect(
+        2,
+        "2003",
+        json!([
+            target_json("board", "minion-1"),
+            target_json("board", "minion-2")
+        ])
+    )]);
     let view = with_hand_and_board(
         view(10, json!([]), json!([]), json!([]), json!([]), true),
-        json!([]),
+        hand,
         board,
     );
 
@@ -416,7 +485,7 @@ fn retries_rejected_play_with_next_board_minion() {
         &Intent::PlayCard {
             hand_index: 2,
             position: None,
-            target_minion_id: Some("minion-1".to_string()),
+            target: Some(board_target("minion-1")),
         },
     )
     .expect("棋盘上还有下一个随从");
@@ -425,11 +494,14 @@ fn retries_rejected_play_with_next_board_minion() {
         Intent::PlayCard {
             hand_index,
             position,
-            target_minion_id,
+            target,
         } => {
             assert_eq!(hand_index, 2, "重试保留原手牌下标");
             assert_eq!(position, None, "换目标不改落点");
-            assert_eq!(target_minion_id.as_deref(), Some("minion-2"));
+            assert_eq!(
+                target.as_ref().map(|target| target.id.as_str()),
+                Some("minion-2")
+            );
         }
         other => panic!("期望 PlayCard，实际 {other:?}"),
     }
@@ -439,9 +511,14 @@ fn retries_rejected_play_with_next_board_minion() {
 fn retries_from_first_minion_when_target_left_board() {
     // 被拒的目标已不在棋盘上（例如被三连合并）时从头开始，避免越界。
     let board = json!([board_minion("minion-1", 0)]);
+    let hand = json!([hand_effect(
+        0,
+        "2001",
+        json!([target_json("board", "minion-1")])
+    )]);
     let view = with_hand_and_board(
         view(10, json!([]), json!([]), json!([]), json!([]), true),
-        json!([]),
+        hand,
         board,
     );
 
@@ -450,16 +527,16 @@ fn retries_from_first_minion_when_target_left_board() {
         &Intent::PlayCard {
             hand_index: 0,
             position: None,
-            target_minion_id: Some("minion-gone".to_string()),
+            target: Some(board_target("minion-gone")),
         },
     )
     .expect("应从第一个随从重新尝试");
     assert!(matches!(
         retried,
         Intent::PlayCard {
-            target_minion_id: Some(ref id),
+            target: Some(ref target),
             ..
-        } if id == "minion-1"
+        } if target.id == "minion-1"
     ));
 }
 
@@ -467,9 +544,17 @@ fn retries_from_first_minion_when_target_left_board() {
 fn stops_retrying_after_last_board_minion() {
     // 棋盘遍历完仍无合法目标时返回 None，由调用方本回合放弃这张牌。
     let board = json!([board_minion("minion-1", 0), board_minion("minion-2", 1)]);
+    let hand = json!([hand_effect(
+        0,
+        "2001",
+        json!([
+            target_json("board", "minion-1"),
+            target_json("board", "minion-2")
+        ])
+    )]);
     let view = with_hand_and_board(
         view(10, json!([]), json!([]), json!([]), json!([]), true),
-        json!([]),
+        hand,
         board,
     );
 
@@ -479,7 +564,7 @@ fn stops_retrying_after_last_board_minion() {
             &Intent::PlayCard {
                 hand_index: 0,
                 position: None,
-                target_minion_id: Some("minion-2".to_string()),
+                target: Some(board_target("minion-2")),
             }
         )
         .is_none(),
@@ -500,7 +585,7 @@ fn retry_ignores_non_play_intents() {
         retry_with_target(
             &view,
             &Intent::ChooseTarget {
-                minion_id: "minion-1".to_string(),
+                target: board_target("minion-1"),
             }
         )
         .is_none(),

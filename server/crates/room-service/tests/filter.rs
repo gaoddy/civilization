@@ -575,7 +575,7 @@ fn private_intent_broadcasts_updated_public_summary_to_all_seats() {
         intent: ProtocolIntent::PlayCard {
             hand_index: 0,
             position: None,
-            target_minion_id: None,
+            target: None,
         },
     });
 
@@ -634,7 +634,7 @@ fn combat_stage_attaches_filtered_public_events() {
         intent: ProtocolIntent::PlayCard {
             hand_index: 0,
             position: None,
-            target_minion_id: None,
+            target: None,
         },
     });
     // 战吼需要目标的随从会留下目标待选，未结算时该座位无法结束招募。
@@ -643,11 +643,16 @@ fn combat_stage_attaches_filtered_public_events() {
         view.self_.pending_choices.first(),
         Some(protocol::view::PendingChoice::Target { .. })
     ) {
-        let minion_id = view.self_.board[0].minion_id.clone();
+        let target = match view.self_.pending_choices.first() {
+            Some(protocol::view::PendingChoice::Target { candidates, .. }) => {
+                candidates.first().cloned().expect("目标待选应有候选")
+            }
+            _ => unreachable!("上面的条件已保证是目标待选"),
+        };
         task.handle(RoomCommand::Intent {
             player_id: "p0".to_string(),
             client_intent_id: "target-for-combat".to_string(),
-            intent: ProtocolIntent::ChooseTarget { minion_id },
+            intent: ProtocolIntent::ChooseTarget { target },
         });
     }
 

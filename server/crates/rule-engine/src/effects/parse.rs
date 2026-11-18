@@ -157,7 +157,13 @@ fn parse_selector(raw: &str, chunk: &str) -> Result<Selector, Vec<String>> {
         return Ok(Selector::SelfCard);
     }
     if raw == "target" {
-        return Ok(Selector::Target);
+        return Ok(Selector::Target {
+            zone: Zone::Board,
+            filters: Vec::new(),
+        });
+    }
+    if let Some(rest) = raw.strip_prefix("target:") {
+        return parse_target_selector(rest, chunk);
     }
 
     let mut errors = Vec::new();
@@ -216,6 +222,38 @@ fn parse_selector(raw: &str, chunk: &str) -> Result<Selector, Vec<String>> {
         }),
         _ => Err(vec![format!("选择器无法解析 {raw:?}（{chunk}）")]),
     }
+}
+
+fn parse_target_selector(rest: &str, chunk: &str) -> Result<Selector, Vec<String>> {
+    let mut errors = Vec::new();
+    let segments: Vec<&str> = rest.split(':').collect();
+    let zone = match segments[0].trim() {
+        "hand" => Some(Zone::Hand),
+        "shop" => Some(Zone::Shop),
+        "board" => Some(Zone::Board),
+        other => {
+            errors.push(format!("目标区域非法 {other:?}（{chunk}）"));
+            None
+        }
+    };
+    let mut filters = Vec::new();
+    for segment in segments.iter().skip(1) {
+        let segment = segment.trim();
+        if segment.is_empty() {
+            continue;
+        }
+        match parse_filter(segment, chunk) {
+            Ok(filter) => filters.push(filter),
+            Err(message) => errors.push(message),
+        }
+    }
+    if !errors.is_empty() {
+        return Err(errors);
+    }
+    Ok(Selector::Target {
+        zone: zone.expect("errors 为空时区域必然合法"),
+        filters,
+    })
 }
 
 fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> Result<(), String> {

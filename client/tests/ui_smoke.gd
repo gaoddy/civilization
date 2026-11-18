@@ -449,17 +449,28 @@ func _check_game() -> void:
     if power == null:
         _expect(false, "对局场景缺少 HeroPowerButton")
     else:
+        # 需要目标的英雄技能：按下后打开候选浮层，候选来自服务端下发。
+        GameStore.view["self"]["heroPower"] = {
+            "skillId": "universal-manuscript",
+            "usesLeft": 1,
+            "requiresTarget": true,
+            "targetCandidates": [{"zone": "board", "id": "mi_1"}],
+        }
         power.pressed.emit()
         await get_tree().process_frame
         var overlay = instance.find_child("ChooserOverlay", true, false)
         _expect(overlay != null and overlay.visible, "英雄技能应打开目标选择弹层")
         _expect(detail != null and not detail.is_visible_in_tree(), "打开选择浮层时详情面板应隐藏")
+        var has_candidate := false
         var has_skip := false
         if overlay != null:
             for child in overlay.find_children("*", "Button", true, false):
                 if child is Button and str(child.text) == TranslationServer.translate("ui.game.target.skip"):
                     has_skip = true
-        _expect(has_skip, "英雄技能弹层应提供「不指定目标」")
+                elif child is Button and not str(child.text) == TranslationServer.translate("ui.game.target.cancel"):
+                    has_candidate = true
+        _expect(has_candidate, "英雄技能弹层应列出候选目标")
+        _expect(not has_skip, "英雄技能弹层不应提供「不指定目标」")
     instance.queue_free()
     await get_tree().process_frame
     await _check_detail_without_stats()
@@ -1842,7 +1853,9 @@ func _check_drag_rejected_for_target_effect_on_blank() -> void:
     GameStore.deadline = "2030-01-01T00:00:00Z"
     var view: Dictionary = FixtureScript.view()
     view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi")]
-    view["self"]["hand"] = [FixtureScript.hand("erfenfa", true)]
+    view["self"]["hand"] = [
+        FixtureScript.hand("erfenfa", true, false, null, null, null, [{"zone": "board", "id": "mi_1"}]),
+    ]
     view["self"]["affordances"]["handCards"] = [
         {"index": 0, "playable": true, "disabledReason": null},
     ]
@@ -1857,6 +1870,7 @@ func _check_drag_rejected_for_target_effect_on_blank() -> void:
         "cardId": "erfenfa",
         "cardKind": "effect",
         "requiresTarget": true,
+        "targets": [{"zone": "board", "id": "mi_1"}],
     }
     if board_row != null:
         var card: Control = null
@@ -1990,7 +2004,9 @@ func _check_choose_target_sends_intent() -> void:
     if captured.size() == 1:
         var intent: Dictionary = captured[0]
         _expect(str(intent.get("kind", "")) == Protocol.INTENT_CHOOSE_TARGET, "应发出 ChooseTarget")
-        _expect(str(intent.get("minionId", "")) == "mi_2", "应带上被选随从 id")
+        var target: Dictionary = intent.get("target", {})
+        _expect(str(target.get("zone", "")) == "board", "应带上目标区域")
+        _expect(str(target.get("id", "")) == "mi_2", "应带上被选随从 id")
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
@@ -2017,7 +2033,7 @@ func _check_overlay_hidden_in_combat() -> void:
     var captured: Array = []
     instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
     instance._on_choose(0)
-    instance._on_choose_target("mi_1")
+    instance._on_choose_target({"zone": "board", "id": "mi_1"})
     await get_tree().process_frame
     _expect(captured.is_empty(), "战斗阶段不应发出待选意图，实际 %d 条" % captured.size())
     instance.queue_free()

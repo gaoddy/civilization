@@ -162,9 +162,9 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                 return Ok(BotOutcome { ranking, turns });
             }
             ServerMessage::Error(error) => {
-                // 目标不合法是预期反馈：视图只给 `requiresTarget`、不给目标池，
-                // 预填的随从可能不在池内。出手沿棋盘静默换下一个，整盘都不合法时
-                // 才放弃这张牌；`ChooseTarget` 逐个轮换候选。
+                // 目标不合法是预期反馈之外的偏差：候选由服务端下发，正常情况下不会被拒。
+                // 出手沿该牌的候选池换下一个，候选遍历完才放弃这张牌；`ChooseTarget`
+                // 同样按 `zone:id` 轮换候选。
                 if error.code == ErrorCode::NoValidTarget
                     && let Some(rejected) = error
                         .client_intent_id
@@ -208,10 +208,10 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
                                 }
                             }
                         }
-                        Intent::ChooseTarget { minion_id } => {
-                            memory.blocked.block_minion(minion_id.clone());
+                        Intent::ChooseTarget { target } => {
+                            memory.blocked.block_target(target);
                             let exhausted = memory.view.as_ref().is_some_and(|view| {
-                                !memory.blocked.has_unblocked_minion(&view.self_)
+                                brain::pending_targets_exhausted(view, &memory.blocked)
                             });
                             if exhausted {
                                 log_target_skip(&config.name, &rejected);
@@ -440,15 +440,15 @@ fn turn_of(view: &PlayerView) -> u8 {
 
 /// 目标被拒且已无候选可换时的提示。
 ///
-/// `NO_VALID_TARGET` 是合法拒绝（目标池被玩法、分类等筛选收窄）；能换候选时
-/// 机器人静默重试，只有整盘随从都不合法、本轮确实放弃时才输出一行。
+/// `NO_VALID_TARGET` 是合法拒绝（目标池被玩法、分类等筛选收窄，或视图与结算有偏差）；
+/// 能换候选时机器人静默重试，只有候选确实耗尽、本轮放弃时才输出一行。
 fn log_target_skip(name: &str, rejected: &Intent) {
     match rejected {
         Intent::PlayCard { hand_index, .. } => {
-            eprintln!("bot {name} 棋盘上没有合法目标，本回合跳过手牌 {hand_index}");
+            eprintln!("bot {name} 候选目标都已拒绝，本回合跳过手牌 {hand_index}");
         }
-        Intent::ChooseTarget { minion_id } => {
-            eprintln!("bot {name} 目标待选的候选都已拒绝，放弃随从 {minion_id}");
+        Intent::ChooseTarget { target } => {
+            eprintln!("bot {name} 目标待选的候选都已拒绝，放弃目标 {target:?}");
         }
         _ => eprintln!("bot {name} 目标不合法，本回合跳过该操作"),
     }

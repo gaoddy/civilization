@@ -44,17 +44,17 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 | `SellMinion` | 处于 `Recruit`；目标存在 | +1 金币（金色 +3） | 从场上/手牌移除；归还牌池 | `NO_SUCH_MINION` |
 | `RerollShop` | 处于 `Recruit` | 首次免费，其后 −1 金币 | 重抽 6 个槽位 | `NOT_ENOUGH_GOLD` |
 | `UpgradeEra` | 处于 `Recruit`；时代 < 7；金币 ≥ 当前升级费用 | −当前升级费用 | 时代 +1；刷新商店为新时代概率 | `NOT_ENOUGH_GOLD` / `ALREADY_MAX_ERA` |
-| `PlayCard` | 处于 `Recruit`；卡在手中；随从需棋盘有空位 | 无（费用在获得该牌时已支付） | 从手牌打出到指定站位（缺省追加到最右）；效果牌即时结算；随从入场，需要目标的战吼转为待选目标；金色随从入场时获得一张「三连奖励」 | `CARD_NOT_IN_HAND` / `NO_SPACE` / `INVALID_CHOICE` |
+| `PlayCard` | 处于 `Recruit`；卡在手中；随从需棋盘有空位 | 无（费用在获得该牌时已支付） | 从手牌打出到指定站位（缺省追加到最右）；效果牌即时结算；随从入场，需要目标的战吼在候选非空时转为待选目标；金色随从入场时获得一张「三连奖励」 | `CARD_NOT_IN_HAND` / `NO_SPACE` / `INVALID_CHOICE` / `NO_VALID_TARGET` |
 | `RearrangeBoard` | 处于 `Recruit` | 无 | 把随从移动到指定站位，原位及其右侧依次移位 | `NO_SUCH_MINION` |
 | `FreezeShop` | 处于 `Recruit` | 无 | 冻结当前槽位到下回合开始 | — |
-| `UseHeroPower` | 处于 `Recruit`；费用足够；本回合次数未用尽 | −技能的 `cost` | 使用所选英雄卡上的一个主动技能，次数受该技能 `uses_per_turn` 限制 | `NOT_ENOUGH_GOLD` / `HERO_POWER_LIMIT` |
+| `UseHeroPower` | 处于 `Recruit`；费用足够；本回合次数未用尽 | −技能的 `cost` | 使用所选英雄卡上的一个主动技能，次数受该技能 `uses_per_turn` 限制 | `NOT_ENOUGH_GOLD` / `HERO_POWER_LIMIT` / `NO_VALID_TARGET` |
 | `EndRecruit` | 处于 `Recruit` | 无 | 本玩家结束招募 | — |
 | `ChooseDiscover` | 存在本座位的发现或进化待选 | 无 | 消费最靠前的待选 | `INVALID_CHOICE` |
-| `ChooseTarget` | 存在本座位的目标待选 | 无 | 以指定随从结算该待选的战吼 | `NO_VALID_TARGET` |
+| `ChooseTarget` | 存在本座位的目标待选 | 无 | 以指定目标结算该待选的战吼 | `NO_VALID_TARGET` |
 
 **通用规则**：同一回合内，`BuyMinion` / `RerollShop` / `UpgradeEra` / `PlayCard` / `UseHeroPower` 共用同一个金币池，顺序不限；金币不跨回合累积，多余部分清零。
 
-**补充返回码**：`NO_VALID_TARGET`（效果需要指定单一目标、存在合法目标但未指定或指定不合法；没有合法目标时主动技能不可用并返回该错误，随从战吼与效果牌则效果落空、意图仍可提交；`ChooseTarget` 指定的随从不在合法池时同样返回该码；见 [卡牌规范与数据](../content/card-system.md) §2.1「英雄卡」）；`TARGET_NOT_ALLOWED`（招募阶段试图指定敌方目标）；`INVALID_CHOICE`（`ChooseDiscover` 的候选索引不合法）。
+**补充返回码**：`NO_VALID_TARGET`（效果需要指定单一目标、存在合法候选但未指定、指定了不在候选内的目标，或目标区域与实例实际所在区域不一致；没有合法候选时主动技能不可用并返回该错误，随从战吼与效果牌则效果落空、意图仍可提交；`ChooseTarget` 指定的目标不在候选内时同样返回该码；见 [卡牌规范与数据](../content/card-system.md) §2.1「英雄卡」）；`TARGET_NOT_ALLOWED`（招募阶段试图指定敌方目标）；`INVALID_CHOICE`（`ChooseDiscover` 的候选索引不合法）。
 
 ## 4. 招募阶段细则
 
@@ -86,8 +86,11 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 - 招募阶段的战吼若声明了敌方目标（如「战吼：对随机一个敌方随从造成 1 点伤害」），不在招募期结算，而是延迟到战斗开始（见 [关键词与机制](keywords-and-mechanics.md) §2.7）；该随从在战斗开始前离场则效果取消。
 - 亡语等战斗内触发的敌方效果，在触发时按同一套选择器立即选目标。
 - 需要指定单一目标的效果（`target` 选择器，以及「使一个友方随从…」这类写成 `friendly:single` 的战吼、英雄技能与效果牌）在存在合法目标时必须指定；未指定或目标不在合法池内返回 `NO_VALID_TARGET`。合法池为空时，主动技能不可用并返回该错误；随从战吼与效果牌落空，意图仍可提交。
+- **合法目标由服务端计算并随视图下发**，客户端只从候选中选择，不自行从棋盘、手牌或商店推导。每条候选带区域与实例编号，区域取「手牌」「商店」「我方棋盘」；只发给本人。
+- 候选顺序固定为「我方棋盘 → 手牌 → 商店」，各区域内按原有下标顺序。候选随视图更新；提交前失效的目标由服务端拒绝并返回 `NO_VALID_TARGET`，客户端不自动改选。
 - 合法池只含打出或入场前已存在的随从；效果牌在释放瞬间按当时的棋盘判定，随从战吼则在随从**入场后**判定，因此池内包含该随从自身。
-- 需要指定单一目标的随从战吼不阻塞出牌：随从先入场，随即转入目标待选，玩家提交 `ChooseTarget` 后才结算；待选期间该座位不能提交其它招募意图。
+- 需要指定单一目标的随从战吼不阻塞出牌：随从先入场，候选非空时随即转入目标待选，玩家提交 `ChooseTarget` 后才结算；候选为空则战吼落空，不产生待选。待选期间该座位不能提交其它招募意图。
+- 效果牌以拖拽落点决定目标：只有落在服务端给出的候选上松手才提交出牌，落点在候选之外一律退回手牌、不发意图；候选为空时该牌不可打出。
 - 客户端提交敌方目标即返回 `TARGET_NOT_ALLOWED`。
 
 ## 5. 战斗结算算法

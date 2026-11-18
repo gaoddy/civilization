@@ -13,7 +13,7 @@ use common::{
     test_playstyles, turn_started,
 };
 use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill, card_in_pool};
-use rule_engine::effects::{Effect, EffectCtx, parse_effects};
+use rule_engine::effects::{Effect, EffectCtx, TargetRef, Zone, parse_effects};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
@@ -664,12 +664,15 @@ fn copy_hand_minion_to_hand_respects_hand_limit() {
     let (mut engine, mut state) = turn_started(2);
     let hand_slots = engine.catalog.config.hand_slots;
     state.players[0].hand = (0..hand_slots).map(|_| hand_card("sickly")).collect();
+    let target = state.players[0].hand[0].instance_id();
     let before = state_hash(&state);
+    let mut ctx = ctx(0);
+    ctx.target = Some(target);
 
     engine.apply_op(
         &mut state,
-        &effect("OnActivate|Copy|self|from=hand,type=minion,to=hand"),
-        &ctx(0),
+        &effect("OnActivate|Copy|target:hand:type=minion|from=hand,type=minion,to=hand"),
+        &ctx,
         None,
     );
 
@@ -682,12 +685,15 @@ fn copy_hand_minion_to_hand_with_room_adds_copy() {
     let (mut engine, mut state) = turn_started(2);
     let card_id = first_minion_of_level(&engine.catalog, 2, &state.enabled_playstyles);
     state.players[0].hand = vec![hand_card(&card_id)];
+    let target = state.players[0].hand[0].instance_id();
     let pool_before = pool_count(&state, &card_id);
+    let mut ctx = ctx(0);
+    ctx.target = Some(target);
 
     engine.apply_op(
         &mut state,
-        &effect("OnActivate|Copy|self|from=hand,type=minion,to=hand"),
-        &ctx(0),
+        &effect("OnActivate|Copy|target:hand:type=minion|from=hand,type=minion,to=hand"),
+        &ctx,
         None,
     );
 
@@ -697,6 +703,62 @@ fn copy_hand_minion_to_hand_with_room_adds_copy() {
         pool_count(&state, &card_id),
         pool_before,
         "复制不扣牌池（核心规则 §6.8）"
+    );
+}
+
+#[test]
+fn target_candidates_list_only_the_selector_zone() {
+    let (engine, mut state) = turn_started(2);
+    state.players[0].board = vec![dummy(&engine.catalog, 1, "amoeba")];
+    state.players[0].hand = vec![hand_card("e-coli")];
+    set_shop(&mut state, 0, vec![Some("sickly")]);
+    let hand_id = state.players[0].hand[0].instance_id();
+    let shop_id = state.players[0].shop[0]
+        .as_ref()
+        .expect("商店槽应有卡")
+        .instance_id;
+
+    let hand_copy = effect("OnActivate|Copy|target:hand:type=minion|from=hand,to=hand");
+    assert_eq!(
+        engine.target_candidates(&state, &[hand_copy], &ctx(0), false),
+        vec![TargetRef {
+            zone: Zone::Hand,
+            id: hand_id
+        }],
+        "手牌选择器只下发手牌候选"
+    );
+
+    let shop_stats = effect("OnActivate|ModifyStats|target:shop|attack=1");
+    assert_eq!(
+        engine.target_candidates(&state, &[shop_stats], &ctx(0), false),
+        vec![TargetRef {
+            zone: Zone::Shop,
+            id: shop_id
+        }],
+        "商店选择器只下发商店候选"
+    );
+
+    let board_stats = effect("OnActivate|ModifyStats|target|attack=1");
+    assert_eq!(
+        engine.target_candidates(&state, &[board_stats], &ctx(0), false),
+        vec![TargetRef {
+            zone: Zone::Board,
+            id: 1
+        }],
+        "裸 target 只下发我方棋盘候选"
+    );
+}
+
+#[test]
+fn target_candidates_empty_when_selector_zone_is_empty() {
+    let (engine, mut state) = turn_started(2);
+    state.players[0].hand = vec![HandCard::effect(9_001, "yinshuashu")];
+    let hand_copy = effect("OnActivate|Copy|target:hand:type=minion|from=hand,to=hand");
+    assert!(
+        engine
+            .target_candidates(&state, &[hand_copy], &ctx(0), false)
+            .is_empty(),
+        "手牌没有随从时没有候选"
     );
 }
 
@@ -1068,11 +1130,18 @@ fn gain_minion_from_shop_or_omitted_loads() {
 }
 
 #[test]
-fn copy_still_accepts_hand_and_board_from() {
-    // 值域校验只约束 GainMinion；Copy 的 from=hand 仍合法。
-    for from in ["hand", "board"] {
-        let raw = format!("OnActivate|Copy|self|from={from},to=hand");
-        parse_effects(&raw).unwrap_or_else(|errors| panic!("{raw} 应能解析：{errors:?}"));
+fn copy_from_hand_requires_target_selector() {
+    // 从手牌复制必须由玩家选目标：裸 `self` 选择器在解析期被拒绝。
+    let raw = "OnActivate|Copy|self|from=hand,to=hand";
+    assert!(
+        parse_effects(raw).is_err(),
+        "from=hand 必须使用 target:hand 选择器"
+    );
+    for raw in [
+        "OnActivate|Copy|target:hand:type=minion|from=hand,to=hand",
+        "OnActivate|Copy|self|from=board,to=hand",
+    ] {
+        parse_effects(raw).unwrap_or_else(|errors| panic!("{raw} 应能解析：{errors:?}"));
     }
 }
 

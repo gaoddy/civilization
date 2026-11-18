@@ -6,7 +6,8 @@ extends PanelContainer
 ## 倒计时、连接、待选与 `playable`），本控件只负责在被允许时交出拖拽数据。
 ## 拖拽数据同时带上页面视图版本 `epoch`：落点方按它判断这次拖拽是否已过期。
 
-## {epoch, handIndex, cardId, cardKind: "minion"|"effect", requiresTarget}
+## {epoch, handIndex, instanceId, cardId, cardKind: "minion"|"effect", requiresTarget, targets}
+## `targets` 为服务端下发的合法目标 `{zone, id}`，只有需要目标的效果牌非空。
 var payload: Dictionary = {}
 
 ## 由页面按阶段、视图新鲜度、连接、待选与 `playable` 汇总；`false` 时拖拽不开始。
@@ -14,6 +15,9 @@ var drag_allowed := false
 
 ## 拖拽真正开始时同步发出，供手牌槽在复制预览之前复位悬停缩放。
 signal drag_started
+
+## 需要目标的牌拖到本卡（本人手牌候选）上松手时发出。
+signal target_dropped(data: Dictionary, target: Dictionary)
 
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
@@ -26,3 +30,36 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
     preview.custom_minimum_size = custom_minimum_size
     set_drag_preview(preview)
     return payload.duplicate()
+
+
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+    return not _accepted_target(data).is_empty()
+
+
+func _drop_data(_at_position: Vector2, data: Variant) -> void:
+    var target := _accepted_target(data)
+    if target.is_empty():
+        return
+    target_dropped.emit(data as Dictionary, target)
+
+
+## 本卡作为手牌目标候选时返回拖拽数据里的该候选；否则返回空字典。
+##
+## 只接受「需要目标的效果牌」；拖到自己身上（实例编号相同）一律拒绝。
+func _accepted_target(data: Variant) -> Dictionary:
+    if not (data is Dictionary):
+        return {}
+    var dragged: Dictionary = data
+    if not dragged.has("handIndex") or str(dragged.get("cardKind", "")) != "effect":
+        return {}
+    if not bool(dragged.get("requiresTarget", false)):
+        return {}
+    var own_id := str(payload.get("instanceId", ""))
+    if own_id == "" or own_id == str(dragged.get("instanceId", "")):
+        return {}
+    for candidate in dragged.get("targets", []):
+        if not (candidate is Dictionary):
+            continue
+        if str(candidate.get("zone", "")) == "hand" and str(candidate.get("id", "")) == own_id:
+            return candidate
+    return {}

@@ -3,6 +3,7 @@
 //! 意图只描述玩家想做什么，不含座位；座位由 [`crate::engine::Engine::apply`]
 //! 显式指定。
 
+use crate::effects::TargetRef;
 use crate::events::GameEvent;
 use crate::state::InstanceId;
 
@@ -18,27 +19,27 @@ pub enum Intent {
     /// 升级时代。
     UpgradeEra,
     /// 打出手牌；`position` 是随从的插入下标（缺省追加到最右），
-    /// `target` 是效果牌的目标随从。
+    /// `target` 是效果牌的目标（区域 + 实例编号）。
     PlayCard {
         hand_index: u8,
         position: Option<u8>,
-        target: Option<InstanceId>,
+        target: Option<TargetRef>,
     },
     /// 调整棋盘站位。
     RearrangeBoard { from: u8, to: u8 },
     /// 冻结槽位；`None` 表示全部槽位。
     FreezeShop { slot: Option<u8> },
-    /// 使用英雄主动技能；`target` 留给 Task 10 的效果执行。
+    /// 使用英雄主动技能；`target` 是技能效果的目标（区域 + 实例编号）。
     UseHeroPower {
         skill_id: String,
-        target: Option<InstanceId>,
+        target: Option<TargetRef>,
     },
     /// 结束招募，进入战斗阶段。
     EndRecruit,
     /// 从待选发现结果中选择一张；本任务只在 `Recruit` 阶段接受。
     ChooseDiscover { choice: u8 },
-    /// 为队首的目标待选指定一个我方棋盘上的随从。
-    ChooseTarget { minion: InstanceId },
+    /// 为队首的目标待选指定一个本人区域内的目标。
+    ChooseTarget { target: TargetRef },
 }
 
 /// 意图被拒绝的原因，与核心规则 §3 的返回码一一对应。

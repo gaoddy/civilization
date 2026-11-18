@@ -15,10 +15,12 @@ pub use parse::parse_effects;
 pub use validate::validate_effects;
 // 招募意图预检需要校验进化选项下标，但不触发结算。
 pub(crate) use evolve::EVOLVE_CHOICES;
+pub(crate) use exec::target_in_own_zone;
 
 use serde::Deserialize;
 
 use crate::data::CardType;
+use crate::state::InstanceId;
 
 /// 效果触发时机。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
@@ -112,8 +114,14 @@ pub enum Selector {
     /// `{"kind": "self"}`
     #[serde(rename = "self")]
     SelfCard,
-    /// `{"kind": "target"}`
-    Target,
+    /// `{"kind": "target"}` 或 `{"kind": "target", "zone": ..., "filters": [...]}`
+    Target {
+        /// 目标所在区域；省略时为棋盘，保持旧数据的语义。
+        #[serde(default)]
+        zone: Zone,
+        #[serde(default)]
+        filters: Vec<Filter>,
+    },
     /// `{"kind": "side", "side": ..., "pick": ..., "filters": [...]}`
     Side {
         side: Side,
@@ -168,12 +176,23 @@ pub enum Basis {
 }
 
 /// 区域。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Zone {
     Hand,
+    #[default]
     Board,
     Shop,
+}
+
+/// 目标引用：区域 + 实例编号。
+///
+/// 手牌、商店与棋盘的实例编号由同一个 `next_instance_id` 分配，全局唯一；
+/// 区域用于判定该编号属于哪个区域，以及意图提交时的本人区域校验。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TargetRef {
+    pub zone: Zone,
+    pub id: InstanceId,
 }
 
 /// 数量条件的比较方式。

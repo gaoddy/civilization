@@ -35,7 +35,7 @@ static func view() -> Dictionary:
             "era": 2,
             "gold": 6,
             "heroCardId": "darwin",
-            "heroPower": {"skillId": "evolution-discovery", "usesLeft": 1},
+            "heroPower": {"skillId": "evolution-discovery", "usesLeft": 1, "requiresTarget": false, "targetCandidates": []},
             "shop": [
                 {"index": 0, "cardId": "huo", "frozen": false},
                 {"index": 1, "cardId": "lun", "frozen": false},
@@ -283,7 +283,8 @@ static func hand(
     golden := false,
     attack: Variant = null,
     health: Variant = null,
-    reward_level: Variant = null
+    reward_level: Variant = null,
+    targets: Array = []
 ) -> Dictionary:
     return {
         "index": 0,
@@ -295,6 +296,7 @@ static func hand(
         "rewardLevel": reward_level,
         "playable": true,
         "requiresTarget": requires_target,
+        "targetCandidates": targets.duplicate(),
         "disabledReason": null,
     }
 

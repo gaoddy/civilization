@@ -192,6 +192,18 @@
 
 ## 共享类型
 
+### TargetZone
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+
+### TargetRef
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `zone` | TargetZone | 是 |  |
+| `id` | string | 是 | 目标实例编号；三个区域共用同一编号空间 |
+
 ### Phase
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -219,6 +231,7 @@
 | `rewardLevel` | integer | null | 是 | 「三连奖励」锁定的发现星级；其它牌为 null |
 | `playable` | boolean | 是 | 服务端算好的可打出提示 |
 | `requiresTarget` | boolean | 是 | 该牌是否需要玩家指定单一目标 |
+| `targetCandidates` | array<TargetRef> | 是 | 该牌的合法目标；随从牌为空数组 |
 | `disabledReason` | string | null | 是 | 不可操作时的错误码 |
 
 ### BoardMinion
@@ -347,6 +360,7 @@
 | `分支2.options` | array<string> | 是 | 进化选项，取值为英文 id |
 | `分支3.kind` | object | 是 | 固定为 target |
 | `分支3.sourceMinionId` | string | 是 | 触发该待选的随从 |
+| `分支3.candidates` | array<TargetRef> | 是 | 战吼待选的合法目标 |
 
 ### PlayerView
 
@@ -370,6 +384,8 @@
 | `self.heroPower` | object | 是 |  |
 | `self.heroPower.skillId` | string | null | 是 |  |
 | `self.heroPower.usesLeft` | integer | 是 |  |
+| `self.heroPower.requiresTarget` | boolean | 是 | 该主动技能是否需要玩家指定单一目标 |
+| `self.heroPower.targetCandidates` | array<TargetRef> | 是 | 该主动技能的合法目标 |
 | `self.shop` | array<ShopSlot> | 是 |  |
 | `self.hand` | array<HandCard> | 是 |  |
 | `self.board` | array<BoardMinion> | 是 |  |
@@ -395,7 +411,7 @@
 | `分支5.kind` | object | 是 |  |
 | `分支5.handIndex` | integer | 是 | 手牌位置 |
 | `分支5.position` | integer | 否 | 插入站位；缺省追加到最右 |
-| `分支5.targetMinionId` | string | 否 | 战吼或效果需要目标时填 |
+| `分支5.target` | TargetRef | 否 | 效果牌或战吼需要目标时填 |
 | `分支6.kind` | object | 是 |  |
 | `分支6.fromIndex` | integer | 是 |  |
 | `分支6.toIndex` | integer | 是 |  |
@@ -403,12 +419,12 @@
 | `分支7.slot` | integer | null | 否 | null 表示全部槽位 |
 | `分支8.kind` | object | 是 |  |
 | `分支8.skillId` | string | 是 |  |
-| `分支8.targetMinionId` | string | 否 | 需要目标的技能才填 |
+| `分支8.target` | TargetRef | 否 | 需要目标的技能才填 |
 | `分支9.kind` | object | 是 |  |
 | `分支10.kind` | object | 是 |  |
 | `分支10.choice` | integer | 是 | 发现为候选下标，进化为选项下标 |
 | `分支11.kind` | object | 是 |  |
-| `分支11.minionId` | string | 是 | 目标随从实例 id |
+| `分支11.target` | TargetRef | 是 | 目标 |
 
 ### ErrorCode
 

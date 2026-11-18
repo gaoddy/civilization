@@ -6,6 +6,7 @@
 use std::collections::BTreeMap;
 
 use rule_engine::data::Playstyle;
+use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::intent::Intent;
 use rule_engine::state::Seat;
 use serde::Serialize;
@@ -278,22 +279,37 @@ pub fn intent_to_json(intent: &Intent) -> Value {
             target,
         } => json!({
             "kind": "play_card", "hand_index": hand_index,
-            "position": position, "target": target,
+            "position": position, "target": target_to_json(*target),
         }),
         Intent::RearrangeBoard { from, to } => json!({
             "kind": "rearrange_board", "from": from, "to": to,
         }),
         Intent::FreezeShop { slot } => json!({ "kind": "freeze_shop", "slot": slot }),
         Intent::UseHeroPower { skill_id, target } => json!({
-            "kind": "use_hero_power", "skill_id": skill_id, "target": target,
+            "kind": "use_hero_power", "skill_id": skill_id, "target": target_to_json(*target),
         }),
         Intent::EndRecruit => json!({ "kind": "end_recruit" }),
         Intent::ChooseDiscover { choice } => json!({
             "kind": "choose_discover", "choice": choice,
         }),
-        Intent::ChooseTarget { minion } => json!({
-            "kind": "choose_target", "minion": minion,
+        Intent::ChooseTarget { target } => json!({
+            "kind": "choose_target", "target": target_to_json(Some(*target)),
         }),
+    }
+}
+
+/// 目标的 JSON 形式：`{zone, id}`；未指定时为 `null`。
+fn target_to_json(target: Option<TargetRef>) -> Value {
+    match target {
+        Some(target) => json!({
+            "zone": match target.zone {
+                Zone::Hand => "hand",
+                Zone::Shop => "shop",
+                Zone::Board => "board",
+            },
+            "id": target.id,
+        }),
+        None => Value::Null,
     }
 }
 
@@ -404,15 +420,33 @@ fn parse_hash(text: &str) -> Result<u64, String> {
     u64::from_str_radix(text, 16).map_err(|err| format!("final_hash 不是十六进制: {err}"))
 }
 
+/// 解析 `{zone, id}` 形式的目标；缺失或 `null` 返回 `None`。
+fn target_from_json(value: &Value) -> Result<Option<TargetRef>, String> {
+    let Some(target) = value.get("target") else {
+        return Ok(None);
+    };
+    if target.is_null() {
+        return Ok(None);
+    }
+    let zone = match target.get("zone").and_then(Value::as_str) {
+        Some("hand") => Zone::Hand,
+        Some("shop") => Zone::Shop,
+        Some("board") => Zone::Board,
+        other => return Err(format!("目标区域非法 {other:?}")),
+    };
+    let id = target
+        .get("id")
+        .and_then(Value::as_u64)
+        .ok_or("目标缺少 id")?;
+    Ok(Some(TargetRef { zone, id }))
+}
+
 fn intent_from_json(value: &Value) -> Result<Intent, String> {
     let kind = value
         .get("kind")
         .and_then(Value::as_str)
         .ok_or("意图缺少 kind")?;
-    let target = value
-        .get("target")
-        .and_then(Value::as_u64)
-        .filter(|target| *target > 0);
+    let target = target_from_json(value)?;
     let field = |name: &str| {
         value
             .get(name)
@@ -463,10 +497,7 @@ fn intent_from_json(value: &Value) -> Result<Intent, String> {
             choice: field("choice")?,
         },
         "choose_target" => Intent::ChooseTarget {
-            minion: value
-                .get("minion")
-                .and_then(Value::as_u64)
-                .ok_or("缺少 minion")?,
+            target: target.ok_or("缺少 target")?,
         },
         other => return Err(format!("未知意图 kind {other}")),
     })

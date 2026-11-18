@@ -11,8 +11,8 @@ extends HFlowContainer
 ## 不会挤压卡片；指针落在随从卡上时，该卡既是插入参照（随从牌插入到它左边），
 ## 也是效果牌的目标随从。
 
-## 有效落点才发；`position` 为插入下标（随从牌用），`target_minion_id` 为目标随从（效果牌用）。
-signal dropped(data: Dictionary, position: int, target_minion_id: String)
+## 有效落点才发；`position` 为插入下标（随从牌用），`target` 为目标 `{zone, id}`（效果牌用）。
+signal dropped(data: Dictionary, position: int, target: Dictionary)
 
 ## 棋盘满时由页面标记，手牌随从牌一律不接受。
 var board_full := false
@@ -125,7 +125,9 @@ func hand_drop_accepted(global_point: Vector2, payload: Dictionary) -> bool:
     return not _resolve(local, payload).is_empty()
 
 
-## 拖拽过程中按指针所在位置切换光标：只有无效落点显示禁止。
+## 拖拽过程中按指针所在位置切换光标：只有棋盘内的无效落点显示禁止。
+##
+## 指针离开棋盘后交还给手牌卡的 `_can_drop_data`，不能把整屏都标成禁止。
 func _update_hand_cursor() -> void:
     var viewport := get_viewport()
     if viewport == null or not viewport.gui_is_dragging():
@@ -135,7 +137,11 @@ func _update_hand_cursor() -> void:
     if not (payload is Dictionary) or not payload.has("handIndex"):
         _stop_hand_watch()
         return
-    var accepted := hand_drop_accepted(get_global_mouse_position(), payload)
+    var point := get_global_mouse_position()
+    if not get_global_rect().has_point(point):
+        Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+        return
+    var accepted := hand_drop_accepted(point, payload)
     Input.set_default_cursor_shape(Input.CURSOR_ARROW if accepted else Input.CURSOR_FORBIDDEN)
 
 
@@ -160,12 +166,12 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
     dropped.emit(
         data as Dictionary,
         int(resolved.get("position", 0)),
-        str(resolved.get("target_minion_id", ""))
+        Dictionary(resolved.get("target", {}))
     )
     end_drag()
 
 
-## 判定落点：返回空字典表示拒绝，否则带 `position` 与 `target_minion_id`。
+## 判定落点：返回空字典表示拒绝，否则带 `position` 与 `target`。
 func _resolve(at_position: Vector2, data: Variant) -> Dictionary:
     if not (data is Dictionary):
         return {}
@@ -174,7 +180,7 @@ func _resolve(at_position: Vector2, data: Variant) -> Dictionary:
         # 棋盘卡只想换位：被拖随从必须与当前预览一致。
         if _drag_id == "" or str(payload.get("minionId", "")) != _drag_id:
             return {}
-        return {"position": _gap_index(_to_global(at_position)), "target_minion_id": ""}
+        return {"position": _gap_index(_to_global(at_position)), "target": {}}
 
     if not payload.has("handIndex"):
         return {}
@@ -184,17 +190,33 @@ func _resolve(at_position: Vector2, data: Variant) -> Dictionary:
     var hit := _minion_card_at(at_position)
     if hit != null:
         if card_kind == "effect" and requires_target:
-            return {"position": 0, "target_minion_id": str(hit.get_meta("minion_id", ""))}
+            # 只有落点随从在服务端下发的候选里才接受，否则退回手牌。
+            var target := _target_for(payload, "board", str(hit.get_meta("minion_id", "")))
+            if target.is_empty():
+                return {}
+            return {"position": 0, "target": target}
         if card_kind == "minion" and board_full:
             return {}
-        return {"position": _index_of(hit), "target_minion_id": ""}
+        return {"position": _index_of(hit), "target": {}}
 
     if card_kind == "minion":
         if board_full:
             return {}
-        return {"position": _insert_index(at_position), "target_minion_id": ""}
+        return {"position": _insert_index(at_position), "target": {}}
     if card_kind == "effect" and not requires_target:
-        return {"position": 0, "target_minion_id": ""}
+        return {"position": 0, "target": {}}
+    return {}
+
+
+## 拖拽数据的目标候选里是否包含指定区域与实例编号；命中时返回该候选。
+func _target_for(payload: Dictionary, zone: String, id: String) -> Dictionary:
+    if id == "":
+        return {}
+    for candidate in payload.get("targets", []):
+        if not (candidate is Dictionary):
+            continue
+        if str(candidate.get("zone", "")) == zone and str(candidate.get("id", "")) == id:
+            return candidate
     return {}
 
 

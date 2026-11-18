@@ -2538,7 +2538,8 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 ///    "instanceId",
 ///    "playable",
 ///    "requiresTarget",
-///    "rewardLevel"
+///    "rewardLevel",
+///    "targetCandidates"
 ///  ],
 ///  "properties": {
 ///    "attack": {
@@ -2594,6 +2595,13 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 ///      ],
 ///      "maximum": 6.0,
 ///      "minimum": 1.0
+///    },
+///    "targetCandidates": {
+///      "description": "该牌的合法目标；随从牌为空数组",
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/TargetRef"
+///      }
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -2626,6 +2634,9 @@ pub struct HandCard {
     ///「三连奖励」锁定的发现星级；其它牌为 null
     #[serde(rename = "rewardLevel")]
     pub reward_level: ::std::option::Option<::std::num::NonZeroU64>,
+    ///该牌的合法目标；随从牌为空数组
+    #[serde(rename = "targetCandidates")]
+    pub target_candidates: ::std::vec::Vec<TargetRef>,
 }
 impl ::std::convert::From<&HandCard> for HandCard {
     fn from(value: &HandCard) -> Self {
@@ -2721,9 +2732,9 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///          "maximum": 6.0,
 ///          "minimum": 0.0
 ///        },
-///        "targetMinionId": {
-///          "description": "战吼或效果需要目标时填",
-///          "type": "string"
+///        "target": {
+///          "description": "效果牌或战吼需要目标时填",
+///          "$ref": "#/$defs/TargetRef"
 ///        }
 ///      },
 ///      "additionalProperties": false
@@ -2786,9 +2797,9 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///        "skillId": {
 ///          "type": "string"
 ///        },
-///        "targetMinionId": {
+///        "target": {
 ///          "description": "需要目标的技能才填",
-///          "type": "string"
+///          "$ref": "#/$defs/TargetRef"
 ///        }
 ///      },
 ///      "additionalProperties": false
@@ -2828,15 +2839,15 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///      "type": "object",
 ///      "required": [
 ///        "kind",
-///        "minionId"
+///        "target"
 ///      ],
 ///      "properties": {
 ///        "kind": {
 ///          "const": "ChooseTarget"
 ///        },
-///        "minionId": {
-///          "description": "目标随从实例 id",
-///          "type": "string"
+///        "target": {
+///          "description": "目标",
+///          "$ref": "#/$defs/TargetRef"
 ///        }
 ///      },
 ///      "additionalProperties": false
@@ -2866,13 +2877,9 @@ pub enum Intent {
         ///插入站位；缺省追加到最右
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         position: ::std::option::Option<i64>,
-        ///战吼或效果需要目标时填
-        #[serde(
-            rename = "targetMinionId",
-            default,
-            skip_serializing_if = "::std::option::Option::is_none"
-        )]
-        target_minion_id: ::std::option::Option<::std::string::String>,
+        ///效果牌或战吼需要目标时填
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        target: ::std::option::Option<TargetRef>,
     },
     RearrangeBoard {
         #[serde(rename = "fromIndex")]
@@ -2889,12 +2896,8 @@ pub enum Intent {
         #[serde(rename = "skillId")]
         skill_id: ::std::string::String,
         ///需要目标的技能才填
-        #[serde(
-            rename = "targetMinionId",
-            default,
-            skip_serializing_if = "::std::option::Option::is_none"
-        )]
-        target_minion_id: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        target: ::std::option::Option<TargetRef>,
     },
     EndRecruit,
     ChooseDiscover {
@@ -2902,9 +2905,8 @@ pub enum Intent {
         choice: i64,
     },
     ChooseTarget {
-        ///目标随从实例 id
-        #[serde(rename = "minionId")]
-        minion_id: ::std::string::String,
+        ///目标
+        target: TargetRef,
     },
 }
 impl ::std::convert::From<&Self> for Intent {
@@ -3240,10 +3242,18 @@ impl ::std::convert::From<&MinionStats> for MinionStats {
 ///    {
 ///      "type": "object",
 ///      "required": [
+///        "candidates",
 ///        "kind",
 ///        "sourceMinionId"
 ///      ],
 ///      "properties": {
+///        "candidates": {
+///          "description": "战吼待选的合法目标",
+///          "type": "array",
+///          "items": {
+///            "$ref": "#/$defs/TargetRef"
+///          }
+///        },
 ///        "kind": {
 ///          "description": "固定为 target",
 ///          "const": "target"
@@ -3274,6 +3284,8 @@ pub enum PendingChoice {
     },
     #[serde(rename = "target")]
     Target {
+        ///战吼待选的合法目标
+        candidates: ::std::vec::Vec<TargetRef>,
         ///触发该待选的随从
         #[serde(rename = "sourceMinionId")]
         source_minion_id: ::std::string::String,
@@ -3655,15 +3667,28 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 ///        "heroPower": {
 ///          "type": "object",
 ///          "required": [
+///            "requiresTarget",
 ///            "skillId",
+///            "targetCandidates",
 ///            "usesLeft"
 ///          ],
 ///          "properties": {
+///            "requiresTarget": {
+///              "description": "该主动技能是否需要玩家指定单一目标",
+///              "type": "boolean"
+///            },
 ///            "skillId": {
 ///              "type": [
 ///                "string",
 ///                "null"
 ///              ]
+///            },
+///            "targetCandidates": {
+///              "description": "该主动技能的合法目标",
+///              "type": "array",
+///              "items": {
+///                "$ref": "#/$defs/TargetRef"
+///              }
 ///            },
 ///            "usesLeft": {
 ///              "type": "integer",
@@ -3819,15 +3844,28 @@ impl ::std::convert::From<&PlayerView> for PlayerView {
 ///    "heroPower": {
 ///      "type": "object",
 ///      "required": [
+///        "requiresTarget",
 ///        "skillId",
+///        "targetCandidates",
 ///        "usesLeft"
 ///      ],
 ///      "properties": {
+///        "requiresTarget": {
+///          "description": "该主动技能是否需要玩家指定单一目标",
+///          "type": "boolean"
+///        },
 ///        "skillId": {
 ///          "type": [
 ///            "string",
 ///            "null"
 ///          ]
+///        },
+///        "targetCandidates": {
+///          "description": "该主动技能的合法目标",
+///          "type": "array",
+///          "items": {
+///            "$ref": "#/$defs/TargetRef"
+///          }
 ///        },
 ///        "usesLeft": {
 ///          "type": "integer",
@@ -3920,15 +3958,28 @@ impl ::std::convert::From<&PlayerViewSelf> for PlayerViewSelf {
 ///{
 ///  "type": "object",
 ///  "required": [
+///    "requiresTarget",
 ///    "skillId",
+///    "targetCandidates",
 ///    "usesLeft"
 ///  ],
 ///  "properties": {
+///    "requiresTarget": {
+///      "description": "该主动技能是否需要玩家指定单一目标",
+///      "type": "boolean"
+///    },
 ///    "skillId": {
 ///      "type": [
 ///        "string",
 ///        "null"
 ///      ]
+///    },
+///    "targetCandidates": {
+///      "description": "该主动技能的合法目标",
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/TargetRef"
+///      }
 ///    },
 ///    "usesLeft": {
 ///      "type": "integer",
@@ -3942,8 +3993,14 @@ impl ::std::convert::From<&PlayerViewSelf> for PlayerViewSelf {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct PlayerViewSelfHeroPower {
+    ///该主动技能是否需要玩家指定单一目标
+    #[serde(rename = "requiresTarget")]
+    pub requires_target: bool,
     #[serde(rename = "skillId")]
     pub skill_id: ::std::option::Option<::std::string::String>,
+    ///该主动技能的合法目标
+    #[serde(rename = "targetCandidates")]
+    pub target_candidates: ::std::vec::Vec<TargetRef>,
     #[serde(rename = "usesLeft")]
     pub uses_left: u64,
 }
@@ -4682,6 +4739,129 @@ pub struct StateUpdate {
 impl ::std::convert::From<&StateUpdate> for StateUpdate {
     fn from(value: &StateUpdate) -> Self {
         value.clone()
+    }
+}
+///`TargetRef`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "id",
+///    "zone"
+///  ],
+///  "properties": {
+///    "id": {
+///      "description": "目标实例编号；三个区域共用同一编号空间",
+///      "type": "string"
+///    },
+///    "zone": {
+///      "$ref": "#/$defs/TargetZone"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct TargetRef {
+    ///目标实例编号；三个区域共用同一编号空间
+    pub id: ::std::string::String,
+    pub zone: TargetZone,
+}
+impl ::std::convert::From<&TargetRef> for TargetRef {
+    fn from(value: &TargetRef) -> Self {
+        value.clone()
+    }
+}
+///目标所在区域：本人手牌、本人商店、我方棋盘
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "目标所在区域：本人手牌、本人商店、我方棋盘",
+///  "type": "string",
+///  "enum": [
+///    "hand",
+///    "shop",
+///    "board"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum TargetZone {
+    #[serde(rename = "hand")]
+    Hand,
+    #[serde(rename = "shop")]
+    Shop,
+    #[serde(rename = "board")]
+    Board,
+}
+impl ::std::convert::From<&Self> for TargetZone {
+    fn from(value: &TargetZone) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for TargetZone {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Hand => f.write_str("hand"),
+            Self::Shop => f.write_str("shop"),
+            Self::Board => f.write_str("board"),
+        }
+    }
+}
+impl ::std::str::FromStr for TargetZone {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "hand" => Ok(Self::Hand),
+            "shop" => Ok(Self::Shop),
+            "board" => Ok(Self::Board),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for TargetZone {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for TargetZone {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for TargetZone {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
     }
 }
 ///`TimerWarning`

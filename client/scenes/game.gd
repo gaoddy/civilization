@@ -15,10 +15,10 @@ const COMBAT_TAIL_MS := 2000
 
 # 页面级状态与门槛。
 var _intent_counter := 0
-var _target_requests: Dictionary = {}
+## 主动技能的目标浮层：待发意图与服务端下发的候选目标。
 var _target_intent: Dictionary = {}
+var _target_candidates: Array = []
 var _target_title := "ui.game.target.title"
-var _target_required := false
 var _elapsed := 0.0
 var _deadline_expired := false
 var _view_stale := false
@@ -219,7 +219,6 @@ func _refresh() -> void:
     _side_panel.refresh(state)
     _refresh_overlay(self_state, recruited)
     _refresh_connection()
-    _prune_target_requests()
 
 
 ## 组装本次刷新传给各视图的快照；视图只读，不回写页面状态。
@@ -314,6 +313,8 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
             "cardKind": card_kind,
             "golden": golden,
             "requiresTarget": bool(card.get("requiresTarget", false)),
+            # 服务端下发的合法目标；效果牌拖到候选上松手才提交。
+            "targets": Array(card.get("targetCandidates", [])),
         }
         entry.drag_allowed = drag_gate(
             phase,
@@ -328,6 +329,8 @@ func _refresh_hand(self_state: Dictionary, phase: String) -> void:
         var slot := HandSlot.new()
         slot.name = "HandSlot%d" % index
         slot.setup(entry, float(card_step))
+        if bool(card.get("requiresTarget", false)):
+            entry.target_dropped.connect(_on_hand_target_dropped)
         _hand_row.add_child(slot)
 
 
@@ -403,12 +406,14 @@ func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
     # 待选只在招募阶段可操作：跨回合保留的发现/进化待选不能盖在战斗演示上。
     if _view_stale or _deadline_expired or recruited or phase != Protocol.PHASE_RECRUIT:
         _target_intent = {}
+        _target_candidates = []
         _overlay.visible = false
     else:
         var head: Dictionary = choices[0] if not choices.is_empty() else {}
         if str(head.get("kind", "")) == "target":
-            # 服务端目标待选优先：丢弃英雄技能的客户端目标态，改为选随从结算战吼。
+            # 服务端目标待选优先：丢弃英雄技能的客户端目标态，改为选目标结算战吼。
             _target_intent = {}
+            _target_candidates = []
             _build_target_pending_overlay(head, self_state)
         elif not _target_intent.is_empty():
             _build_target_overlay(self_state)
@@ -472,48 +477,97 @@ func _build_choice_overlay(choice: Dictionary) -> void:
     _overlay_frame(tr("ui.game.overlay.title"), box)
 
 
-## 战吼目标待选：只列我方棋盘随从，没有取消与跳过（必须选一个）。
+## 战吼目标待选：按服务端下发的候选渲染，按区域分组；没有取消与跳过（必须选一个）。
 func _build_target_pending_overlay(choice: Dictionary, self_state: Dictionary) -> void:
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", UITheme.space("space-md"))
     box.add_child(UI.label(tr("ui.game.overlay.battlecry_hint"), UITheme.font_size("font-body")))
     var source_id := str(choice.get("sourceMinionId", ""))
-    for minion in self_state.get("board", []):
-        var minion_id := str(minion.get("minionId", ""))
-        var prefix := "★ " if minion_id == source_id else ""
-        var button := UI.styled_button("%s%s  %d/%d" % [
-            prefix,
-            CardDB.display_name(str(minion.get("cardId", ""))),
-            int(minion.get("attack", 0)),
-            int(minion.get("health", 0)),
-        ], "slot", 40)
-        if minion_id == source_id:
-            button.add_theme_color_override("font_color", UITheme.color("color-accent"))
-        button.pressed.connect(_on_choose_target.bind(minion_id))
-        box.add_child(button)
+    _add_candidates(box, Array(choice.get("candidates", [])), self_state, _on_choose_target, source_id)
     _overlay_frame(tr("ui.game.overlay.battlecry_title"), box)
 
 
+## 主动技能的目标浮层：候选由服务端下发；取消不发意图。
 func _build_target_overlay(self_state: Dictionary) -> void:
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", UITheme.space("space-md"))
     box.add_child(UI.label(tr(_target_title), UITheme.font_size("font-body")))
-    if not _target_required:
-        var skip := UI.styled_button(tr("ui.game.target.skip"), "default", 36)
-        skip.pressed.connect(_on_target_skip)
-        box.add_child(skip)
-    for minion in self_state.get("board", []):
-        var button := UI.styled_button("%s  %d/%d" % [
-            CardDB.display_name(str(minion.get("cardId", ""))),
-            int(minion.get("attack", 0)),
-            int(minion.get("health", 0)),
-        ], "slot", 40)
-        button.pressed.connect(_on_target_chosen.bind(str(minion.get("minionId", ""))))
-        box.add_child(button)
+    _add_candidates(box, _target_candidates, self_state, _on_target_chosen, "")
     var cancel := UI.styled_button(tr("ui.game.target.cancel"), "default", 36)
     cancel.pressed.connect(_on_target_cancel)
     box.add_child(cancel)
     _overlay_frame(tr("ui.game.target.title"), box)
+
+
+## 按区域分组渲染候选；`accent_id` 为需要高亮的来源随从（战吼来源）。
+func _add_candidates(
+    box: VBoxContainer,
+    candidates: Array,
+    self_state: Dictionary,
+    on_pick: Callable,
+    accent_id: String,
+) -> void:
+    var current_zone := ""
+    for candidate in candidates:
+        if not (candidate is Dictionary):
+            continue
+        var zone := str(candidate.get("zone", ""))
+        if zone != current_zone:
+            current_zone = zone
+            box.add_child(
+                UI.label(tr("ui.game.target.zone.%s" % zone), UITheme.font_size("font-body"))
+            )
+        var target_id := str(candidate.get("id", ""))
+        var highlighted := accent_id != "" and target_id == accent_id
+        var prefix := "★ " if highlighted else ""
+        var button := UI.styled_button(
+            "%s%s" % [prefix, _target_text(candidate, self_state)], "slot", 40
+        )
+        if highlighted:
+            button.add_theme_color_override("font_color", UITheme.color("color-accent"))
+        button.pressed.connect(on_pick.bind(candidate))
+        box.add_child(button)
+
+
+## 候选目标的展示文本：棋盘/手牌随从显示攻防，效果牌与商店显示费用。
+func _target_text(candidate: Dictionary, self_state: Dictionary) -> String:
+    var zone := str(candidate.get("zone", ""))
+    var target_id := str(candidate.get("id", ""))
+    if zone == "board":
+        for minion in self_state.get("board", []):
+            if str(minion.get("minionId", "")) == target_id:
+                return "%s  %d/%d" % [
+                    CardDB.display_name(str(minion.get("cardId", ""))),
+                    int(minion.get("attack", 0)),
+                    int(minion.get("health", 0)),
+                ]
+    elif zone == "hand":
+        for card in self_state.get("hand", []):
+            if str(card.get("instanceId", "")) == target_id:
+                return _hand_target_text(card)
+    elif zone == "shop":
+        for slot in self_state.get("shop", []):
+            if str(slot.get("instanceId", "")) == target_id:
+                return _cost_target_text(str(slot.get("cardId", "")))
+    return target_id
+
+
+func _hand_target_text(card: Dictionary) -> String:
+    var card_id := str(card.get("cardId", ""))
+    if card.get("attack") != null:
+        return "%s  %d/%d" % [
+            CardDB.display_name(card_id),
+            int(card.get("attack", 0)),
+            int(card.get("health", 0)),
+        ]
+    return _cost_target_text(card_id)
+
+
+func _cost_target_text(card_id: String) -> String:
+    return "%s  %s" % [
+        CardDB.display_name(card_id),
+        tr("ui.game.detail.cost_value") % CardDB.display_cost(card_id),
+    ]
 
 
 # ── 意图 ──────────────────────────────────────────────────────────────────
@@ -530,39 +584,24 @@ func _send_intent(intent: Dictionary) -> String:
     return intent_id
 
 
-func _remember_target_request(intent_id: String, intent: Dictionary) -> void:
-    if intent_id == "":
-        return
-    if _target_requests.size() >= 32:
-        _target_requests.clear()
-    _target_requests[intent_id] = {"intent": intent, "turn": GameStore.turn}
-
-
-func _prune_target_requests() -> void:
-    for intent_id in _target_requests.keys():
-        var entry: Dictionary = _target_requests[intent_id]
-        if int(entry.get("turn", 0)) != GameStore.turn:
-            _target_requests.erase(intent_id)
-
-
-func _on_choose_target(minion_id: String) -> void:
+func _on_choose_target(target: Dictionary) -> void:
     if _deadline_expired or _view_stale:
         return
     if str(GameStore.view.get("phase", GameStore.phase)) != Protocol.PHASE_RECRUIT:
         return
-    _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "minionId": minion_id})
+    _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "target": target})
 
 
 func _on_buy(index: int) -> void:
-    # 买入只入手牌，不涉及目标，因此不登记补选目标。
+    # 买入只入手牌，不涉及目标。
     _send_intent({"kind": Protocol.INTENT_BUY_MINION, "slot": index})
 
 
-## 棋盘落点回调：出牌的唯一入口。拖拽途中视图已重建时按取消处理。
+## 棋盘落点回调：随从牌入场与定点效果牌的唯一入口。拖拽途中视图已重建时按取消处理。
 ##
 ## 拖拽期间状态可能已经变化（视图重建、换回合、开战、断线、进入目标待选），
 ## 落点必须重新过一遍与拖拽起始同一组门控，任一不满足都不构造意图。
-func _on_board_dropped(data: Dictionary, position: int, target_minion_id: String) -> void:
+func _on_board_dropped(data: Dictionary, position: int, target: Dictionary) -> void:
     if int(data.get("epoch", -1)) != _view_epoch:
         return
     if not _can_play_now():
@@ -577,12 +616,30 @@ func _on_board_dropped(data: Dictionary, position: int, target_minion_id: String
             "toIndex": position,
         })
         return
+    _send_play_card(data, position, target)
+
+
+## 手牌落点回调：定点效果牌拖到另一张手牌候选上松手时提交。
+func _on_hand_target_dropped(data: Dictionary, target: Dictionary) -> void:
+    if int(data.get("epoch", -1)) != _view_epoch:
+        return
+    if not _can_play_now():
+        return
+    _send_play_card(data, 0, target)
+
+
+## 拼出 `PlayCard`：随从牌带插入下标；需要目标的效果牌带 `target`，缺目标时不下发。
+func _send_play_card(data: Dictionary, position: int, target: Dictionary) -> void:
+    var card_kind := str(data.get("cardKind", ""))
+    var requires_target := bool(data.get("requiresTarget", false))
     var intent := {"kind": Protocol.INTENT_PLAY_CARD, "handIndex": int(data.get("handIndex", 0))}
-    if str(data.get("cardKind", "")) == "minion":
+    if card_kind == "minion":
         intent["position"] = position
-    elif target_minion_id != "":
-        intent["targetMinionId"] = target_minion_id
-    _remember_target_request(_send_intent(intent), intent)
+    elif requires_target:
+        if target.is_empty():
+            return
+        intent["target"] = target
+    _send_intent(intent)
 
 
 ## 落点门控的实时复查：与 `drag_gate` 同源，但用手牌之外的状态（是否已结束招募）。
@@ -648,20 +705,17 @@ func _on_hero_power() -> void:
     var skill_id := str(power.get("skillId", ""))
     if skill_id == "":
         return
-    _request_optional_target(
-        {"kind": Protocol.INTENT_USE_HERO_POWER, "skillId": skill_id},
-        "ui.game.target.hero_power_title",
-    )
-
-
-func _request_optional_target(intent: Dictionary, title: String) -> void:
-    var self_state: Dictionary = GameStore.view.get("self", {})
-    if Array(self_state.get("board", [])).is_empty():
+    var intent := {"kind": Protocol.INTENT_USE_HERO_POWER, "skillId": skill_id}
+    if not bool(power.get("requiresTarget", false)):
         _send_intent(intent)
         return
+    var candidates := Array(power.get("targetCandidates", []))
+    if candidates.is_empty():
+        # 需要目标却没有候选：技能不可用，不发意图。
+        return
     _target_intent = intent
-    _target_title = title
-    _target_required = false
+    _target_candidates = candidates
+    _target_title = "ui.game.target.hero_power_title"
     _refresh_overlay_now()
 
 
@@ -675,27 +729,20 @@ func _on_choose(choice_index: int) -> void:
     _send_intent({"kind": Protocol.INTENT_CHOOSE_DISCOVER, "choice": choice_index})
 
 
-func _on_target_chosen(minion_id: String) -> void:
+func _on_target_chosen(target: Dictionary) -> void:
     if _target_intent.is_empty():
         return
     var intent := _target_intent.duplicate()
-    intent["targetMinionId"] = minion_id
+    intent["target"] = target
     _target_intent = {}
-    _send_intent(intent)
-    _refresh_overlay_now()
-
-
-func _on_target_skip() -> void:
-    if _target_intent.is_empty():
-        return
-    var intent := _target_intent
-    _target_intent = {}
+    _target_candidates = []
     _send_intent(intent)
     _refresh_overlay_now()
 
 
 func _on_target_cancel() -> void:
     _target_intent = {}
+    _target_candidates = []
     _refresh_overlay_now()
 
 
@@ -708,17 +755,8 @@ func _refresh_overlay_now() -> void:
 
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
-    var intent_id := str(GameStore.last_error.get("clientIntentId", ""))
     _status.text = UI.error_text(code)
     _status.tooltip_text = UI.error_tooltip(code)
-    if code == Protocol.ERROR_NO_VALID_TARGET and _target_requests.has(intent_id):
-        var entry: Dictionary = _target_requests[intent_id]
-        _target_intent = entry.get("intent", {})
-        _target_requests.erase(intent_id)
-        _target_title = "ui.game.target.required"
-        _target_required = true
-        _refresh_overlay_now()
-        return
     match UI.error_route(code):
         "lobby":
             GameStore.reset_room()

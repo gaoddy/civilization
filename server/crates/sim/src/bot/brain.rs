@@ -12,14 +12,15 @@
 //! 6. 刷新商店；
 //! 7. `EndRecruit`。
 //!
-//! 视图只告诉机器人「这张牌需要目标」，不给合法目标池（池子会按玩法、分类等收窄）。
-//! 因此 `targetMinionId` 只在手牌声明 `requiresTarget` 时预填己方第一个随从；被
-//! `NO_VALID_TARGET` 拒绝后沿棋盘静默换下一个随从，整盘都不合法时才由
-//! [`BlockedTargets`] 把这张牌本回合屏蔽。`ChooseTarget` 同样按候选轮换。
+//! 视图只告诉机器人哪些目标是合法的：`pendingChoices` 与手牌的 `targetCandidates`
+//! 都由服务端下发。机器人按候选顺序取第一个未被拒绝的目标；`NO_VALID_TARGET` 拒绝
+//! 后把该目标记入 [`BlockedTargets`]（键为 `zone:id`）并换下一个候选。整张牌都不
+//! 合法时才由 [`BlockedTargets`] 把这张牌本回合屏蔽。
 
 use std::collections::BTreeSet;
 
 use protocol::PlayerViewSelf;
+use protocol::TargetRef;
 use protocol::intents::Intent;
 use protocol::view::{PendingChoice, Phase, PlayerView};
 use rule_engine::data::{CardType, Catalog};
@@ -35,15 +36,14 @@ pub const BLOCKED_LIMIT: usize = 3;
 
 /// 本回合内已确认不合法的目标选择。
 ///
-/// 机器人看不到效果的目标池，只能靠服务端拒绝学习。定向出手会先沿棋盘换下一个
-/// 己方随从静默重试；整盘都没有合法目标时才把这张牌本回合屏蔽。`ChooseTarget`
-/// 则逐个轮换候选，全部失败时才放弃。
+/// 服务端下发候选池，正常情况下不会拒绝；被拒说明视图与结算口径有偏差，按
+/// `zone:id` 记住并换下一个候选，避免同一候选反复空转。
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct BlockedTargets {
     /// 本回合放弃的出手，元素为手牌下标。
     hand: BTreeSet<i64>,
-    /// 本回合已被拒绝的 `ChooseTarget` 候选。
-    minions: BTreeSet<String>,
+    /// 本回合已被拒绝的目标，键为 `zone:id`。
+    targets: BTreeSet<String>,
 }
 
 impl BlockedTargets {
@@ -62,22 +62,44 @@ impl BlockedTargets {
         self.hand.insert(hand_index);
     }
 
-    /// 本回合放弃这个 `ChooseTarget` 候选。
-    pub fn block_minion(&mut self, minion_id: String) {
-        self.minions.insert(minion_id);
+    /// 本回合放弃这个目标。
+    pub fn block_target(&mut self, target: &TargetRef) {
+        self.targets.insert(target_key(target));
     }
 
-    /// 棋盘上是否还有未被拒绝的候选目标。
-    pub fn has_unblocked_minion(&self, me: &PlayerViewSelf) -> bool {
-        self.next_minion(me).is_some()
+    /// 该目标本回合是否已被拒绝。
+    pub fn target_blocked(&self, target: &TargetRef) -> bool {
+        self.targets.contains(&target_key(target))
     }
 
-    /// 未被拒绝的下一个候选目标；棋盘为空或全部被拒时返回 `None`。
-    fn next_minion<'a>(&self, me: &'a PlayerViewSelf) -> Option<&'a str> {
-        me.board
+    /// 候选里是否还有未被拒绝的目标。
+    pub fn has_unblocked_target(&self, candidates: &[TargetRef]) -> bool {
+        self.next_target(candidates).is_some()
+    }
+
+    /// 第一个未被拒绝的候选目标。
+    fn next_target<'a>(&self, candidates: &'a [TargetRef]) -> Option<&'a TargetRef> {
+        candidates
             .iter()
-            .find(|minion| !self.minions.contains(&minion.minion_id))
-            .map(|minion| minion.minion_id.as_str())
+            .find(|target| !self.target_blocked(target))
+    }
+}
+
+/// 目标的稳定键：区域 + 实例编号。
+fn target_key(target: &TargetRef) -> String {
+    let zone = match target.zone {
+        protocol::TargetZone::Hand => "hand",
+        protocol::TargetZone::Shop => "shop",
+        protocol::TargetZone::Board => "board",
+    };
+    format!("{zone}:{}", target.id)
+}
+
+/// 队首目标待选的候选是否已全部被拒绝。
+pub fn pending_targets_exhausted(view: &PlayerView, blocked: &BlockedTargets) -> bool {
+    match view.self_.pending_choices.first() {
+        Some(PendingChoice::Target { candidates, .. }) => !blocked.has_unblocked_target(candidates),
+        _ => true,
     }
 }
 
@@ -110,7 +132,7 @@ pub fn next_intent(
         return Some(Intent::PlayCard {
             hand_index,
             position: None,
-            target_minion_id: prefill_target(me, hand_index),
+            target: prefill_target(me, hand_index, blocked),
         });
     }
     if let Some((slot, _cost)) = best_shop_slot(me, catalog) {
@@ -130,9 +152,8 @@ pub fn next_intent(
 
 /// 待选队列的第一条。发现按 `seed` 取候选下标，进化固定取 0（与 M0 AI 一致）。
 ///
-/// 目标待选取棋盘上第一个未被拒绝的随从：战吼的合法池可能带筛选（如「一个友方
-/// 鱼纲随从」），来源随从在棋盘末尾时未必在池内。被拒的候选记入 `blocked`，
-/// 下一次决策换下一个；全部候选都被拒绝时本轮不再发意图，交给回合计时推进。
+/// 目标待选取服务端下发的候选里第一个未被拒绝的目标；全部候选都被拒绝时本轮
+/// 不再发意图，交给回合计时推进。
 fn pending_intent(me: &PlayerViewSelf, seed: u64, blocked: &BlockedTargets) -> Option<Intent> {
     match me.pending_choices.first()? {
         PendingChoice::Discover { candidates } => {
@@ -146,8 +167,8 @@ fn pending_intent(me: &PlayerViewSelf, seed: u64, blocked: &BlockedTargets) -> O
             })
         }
         PendingChoice::Evolve { .. } => Some(Intent::ChooseDiscover { choice: 0 }),
-        PendingChoice::Target { .. } => Some(Intent::ChooseTarget {
-            minion_id: blocked.next_minion(me)?.to_string(),
+        PendingChoice::Target { candidates, .. } => Some(Intent::ChooseTarget {
+            target: blocked.next_target(candidates)?.clone(),
         }),
     }
 }
@@ -193,21 +214,20 @@ fn first_playable_hand(me: &PlayerViewSelf, blocked: &BlockedTargets) -> Option<
         .min()
 }
 
-/// 出牌时预填的目标：视图声明该牌需要目标时取己方第一个随从。
+/// 出牌时预填的目标：视图声明该牌需要目标时取第一个未被拒绝的候选。
 ///
-/// 不预填的话，服务端在存在合法目标时一定会拒绝（`NO_VALID_TARGET`）；预填猜中
-/// 即可省掉一轮往返。猜错只产生一次拒绝，由 [`BlockedTargets`] 记住并跳过。
-/// 棋盘为空说明该效果可落空，返回 `None`。
-fn prefill_target(me: &PlayerViewSelf, hand_index: i64) -> Option<String> {
-    let requires_target = me
-        .hand
-        .iter()
-        .find(|card| card.index == hand_index)
-        .is_some_and(|card| card.requires_target);
-    if !requires_target {
+/// 候选由服务端下发，正常情况下一次命中；被拒时由 [`retry_with_target`] 换下一个。
+/// 不需要目标的牌返回 `None`。
+fn prefill_target(
+    me: &PlayerViewSelf,
+    hand_index: i64,
+    blocked: &BlockedTargets,
+) -> Option<TargetRef> {
+    let card = me.hand.iter().find(|card| card.index == hand_index)?;
+    if !card.requires_target {
         return None;
     }
-    Some(me.board.first()?.minion_id.clone())
+    blocked.next_target(&card.target_candidates).cloned()
 }
 
 /// 收到服务端错误后的兜底意图。
@@ -225,32 +245,39 @@ pub fn recover_after_error(view: &PlayerView) -> Option<Intent> {
     Some(Intent::EndRecruit)
 }
 
-/// 被 `NO_VALID_TARGET` 拒绝的出手改用棋盘上的下一个己方随从。
+/// 被 `NO_VALID_TARGET` 拒绝的出手改用该牌候选池里的下一个目标。
 ///
-/// 目标池可能被玩法、分类等筛选收窄，预填的第一个随从未必在池内；被拒后沿棋盘
-/// 后移一位继续尝试，直到找到合法目标。`target` 已不在棋盘上时从第一个重新开始。
-/// 返回 `None` 表示棋盘已遍历完，调用方应把该牌本回合屏蔽。
+/// 候选由服务端下发；被拒只说明视图与结算有偏差。`target` 不在候选里时从第一个
+/// 重新开始。返回 `None` 表示候选已遍历完，调用方应把该牌本回合屏蔽。
 pub fn retry_with_target(view: &PlayerView, rejected: &Intent) -> Option<Intent> {
     if view.phase != Phase::Recruit {
         return None;
     }
     let Intent::PlayCard {
-        hand_index,
-        target_minion_id,
-        ..
+        hand_index, target, ..
     } = rejected
     else {
         return None;
     };
-    let board = &view.self_.board;
-    let start = target_minion_id
-        .as_deref()
-        .and_then(|id| board.iter().position(|minion| minion.minion_id == id))
+    let card = view
+        .self_
+        .hand
+        .iter()
+        .find(|card| card.index == *hand_index)?;
+    let candidates = &card.target_candidates;
+    let start = target
+        .as_ref()
+        .and_then(|target| {
+            let key = target_key(target);
+            candidates
+                .iter()
+                .position(|candidate| target_key(candidate) == key)
+        })
         .map_or(0, |index| index + 1);
-    let target = board.get(start)?.minion_id.clone();
+    let target = candidates.get(start)?.clone();
     Some(Intent::PlayCard {
         hand_index: *hand_index,
         position: None,
-        target_minion_id: Some(target),
+        target: Some(target),
     })
 }

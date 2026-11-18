@@ -148,6 +148,12 @@ def _json_selector(selector):
             continue
         key, value = segment.split("=", 1)
         filters.append({"key": key, "value": value})
+    if parts[0] == "target":
+        return {
+            "kind": "target",
+            "zone": parts[1],
+            "filters": filters,
+        }
     return {
         "kind": "side",
         "side": parts[0],
@@ -245,6 +251,9 @@ def check_structured(effect):
 
     if selector["kind"] == "side" and selector["side"] not in ("friendly", "enemy", "both"):
         violations.append(f"选择器阵营非法 {selector['side']!r}")
+    if selector["kind"] == "target" and "zone" in selector:
+        if selector["zone"] not in ("hand", "shop", "board"):
+            violations.append(f"目标区域非法 {selector['zone']!r}")
 
     return violations
 

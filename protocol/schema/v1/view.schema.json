@@ -3,6 +3,20 @@
   "$id": "https://civilization.local/protocol/v1/view.schema.json",
   "title": "玩家可见状态视图 v1",
   "$defs": {
+    "TargetZone": {
+      "type": "string",
+      "enum": ["hand", "shop", "board"],
+      "description": "目标所在区域：本人手牌、本人商店、我方棋盘"
+    },
+    "TargetRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["zone", "id"],
+      "properties": {
+        "zone": { "$ref": "view.schema.json#/$defs/TargetZone" },
+        "id": { "type": "string", "description": "目标实例编号；三个区域共用同一编号空间" }
+      }
+    },
     "Phase": {
       "type": "string",
       "enum": ["Lobby", "Recruit", "Combat", "Settle", "GameOver"],
@@ -22,7 +36,7 @@
     "HandCard": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "instanceId", "cardId", "golden", "attack", "health", "rewardLevel", "playable", "requiresTarget", "disabledReason"],
+      "required": ["index", "instanceId", "cardId", "golden", "attack", "health", "rewardLevel", "playable", "requiresTarget", "targetCandidates", "disabledReason"],
       "properties": {
         "index": { "type": "integer", "minimum": 0, "maximum": 9 },
         "instanceId": { "type": "string", "description": "卡牌实例编号；买入、上手与三连合成沿用同一编号" },
@@ -33,6 +47,7 @@
         "rewardLevel": { "type": ["integer", "null"], "minimum": 1, "maximum": 6, "description": "「三连奖励」锁定的发现星级；其它牌为 null" },
         "playable": { "type": "boolean", "description": "服务端算好的可打出提示" },
         "requiresTarget": { "type": "boolean", "description": "该牌是否需要玩家指定单一目标" },
+        "targetCandidates": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/TargetRef" }, "description": "该牌的合法目标；随从牌为空数组" },
         "disabledReason": { "type": ["string", "null"], "description": "不可操作时的错误码" }
       }
     },
@@ -212,10 +227,11 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "sourceMinionId"],
+          "required": ["kind", "sourceMinionId", "candidates"],
           "properties": {
             "kind": { "const": "target", "description": "固定为 target" },
-            "sourceMinionId": { "type": "string", "description": "触发该待选的随从" }
+            "sourceMinionId": { "type": "string", "description": "触发该待选的随从" },
+            "candidates": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/TargetRef" }, "description": "战吼待选的合法目标" }
           }
         }
       ]
@@ -252,10 +268,12 @@
             "heroPower": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["skillId", "usesLeft"],
+              "required": ["skillId", "usesLeft", "requiresTarget", "targetCandidates"],
               "properties": {
                 "skillId": { "type": ["string", "null"] },
-                "usesLeft": { "type": "integer", "minimum": 0 }
+                "usesLeft": { "type": "integer", "minimum": 0 },
+                "requiresTarget": { "type": "boolean", "description": "该主动技能是否需要玩家指定单一目标" },
+                "targetCandidates": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/TargetRef" }, "description": "该主动技能的合法目标" }
               }
             },
             "shop": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/ShopSlot" } },

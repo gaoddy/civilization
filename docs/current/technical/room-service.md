@@ -115,7 +115,9 @@ protocol/
 - 未知玩家直接回 `NOT_IN_ROOM`，不进入去重表；非招募阶段的意图会写入去重表，重复提交返回同一条 `INVALID_STAGE` 错误。
 - 意图先做只读预检再修改状态：拒绝时 `GameState` 与随机流逐字节不变，客户端可原样重发。
 - 需要单一显式目标的效果（`target` 选择器，或 `friendly:single` 这类 `Side` + `Pick::Single`）在存在合法目标而未指定或目标不合法时返回 `NO_VALID_TARGET`。池为空时按效果来源区分：主动技能返回该错误（卡牌文档规定此时技能不可用），随从战吼与效果牌放行、效果落空。合法池只含意图提交前已存在的随从：战吼只在 `PlayCard` 时结算，买入不入场也不涉及目标。
-- 目标预检不放进 `check_*`：这些函数同时用于生成视图 `affordances`，而视图层永远没有目标，加入目标判断会把需要补选的操作误标为不可用。
+- 目标以 `TargetRef { zone, id }` 提交，`zone` 取 `hand` / `shop` / `board`。提交时先校验 `id` 是否存在于本人在该区域的实体中（三个区域共用实例编号空间，同一编号只可能属于一个区域）；区域不符返回 `NO_VALID_TARGET`，再进入效果的合法池校验。
+- 协议层不做候选校验：客户端本应只提交视图下发的候选，但服务端仍以自身池为准重复校验，视图与结算同源（见 §7）。
+- 目标预检与候选生成共用同一套 `check_targets`：视图的 `targetCandidates` 由引擎 `target_candidates` 逐个候选重跑预检得到，不另写筛选逻辑，避免视图与结算漂移。视图侧「需要目标但没有候选」时把操作标为 `NO_VALID_TARGET` 不可用，而不是把候选塞进 `check_*`。
 - 预检覆盖打出效果牌（`OnPlayEffect` 与全体 `OnUse` 响应）、打出手牌随从的战吼与英雄主动技能；买入只校验金币、手牌空位与牌池余量。
 
 ## 8. 逐座位过滤与战斗回放
@@ -171,9 +173,9 @@ sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
 - `--hero` 只是偏好：机器人收到本人 `RoomUpdate` 后从 `heroCandidates` 里选，指定的英雄不在候选内时退到候选中第一张；下发的候选为空时报错退出。
 - 协议顺序固定：`AuthRequest` →（`CreateRoom` | `JoinRoom`）→ `SelectHeroCard` → `Ready` → 等 `GameStarted` → 循环按 brain 决策发送 `IntentMessage`，直到 `GameOver`。
 - 每个意图使用确定性递增的 `clientIntentId`（`{name}-{counter}`）；客户端只对「自身视角有新变化」的视图做一次决策，避免重播视图导致重复意图。
-- 收到 `NO_VALID_TARGET` 时按 `clientIntentId` 找回被拒意图并立即按同一视图重决策：定向出手沿棋盘静默换下一个己方随从重发，遍历完仍无合法目标时把这张牌记入本回合阻塞集合并输出一行说明；`ChooseTarget` 把被拒候选记入阻塞集合并换下一个，全部候选都被拒时放弃该待选。整盘没有合法目标、本回合已放弃 3 张且可结束招募时直接 `EndRecruit`。目标池被玩法、分类等筛选收窄，这类拒绝是预期反馈，不按错误处理。
-- `bot/brain.rs` **只读** `PlayerView`（含服务端算好的 `affordances`）与静态卡表，不链接引擎判定、不读时钟与环境变量、不使用浮点；优先级固定为：消费 `pendingChoices`（发现/进化发 `ChooseDiscover`，目标待选取棋盘上第一个未被拒绝的随从）→ 被拒出手达 3 张且可结束时 `EndRecruit` → 打最小下标且未被拒绝的可打手牌 → 买最贵可买槽位 → 升时代 → 刷新 → `EndRecruit`。出牌时若手牌视图 `requiresTarget` 为真且棋盘非空，直接预填己方第一个随从为目标；猜错只产生一次拒绝，随后沿棋盘换下一个随从重试，整盘都不合法时才记入阻塞集合本回合跳过该牌。棋盘为空时不填（效果可落空）。
-- `sim/src/ai.rs` 只新增 `PendingChoice::Target` 的确定性分支与 `PlayCard.position: None`（追加到最右），其余策略未改动，M0 基线数值不变；view 驱动的新逻辑在 `bot/brain.rs`。
+- 收到 `NO_VALID_TARGET` 时按 `clientIntentId` 找回被拒意图并立即按同一视图重决策：定向出手沿服务端下发的候选（键为 `zone:id`）静默换下一个重发，遍历完仍无合法目标时把这张牌记入本回合阻塞集合并输出一行说明；`ChooseTarget` 把被拒候选记入阻塞集合并换下一个，全部候选都被拒时放弃该待选。整盘没有合法目标、本回合已放弃 3 张且可结束招募时直接 `EndRecruit`。候选本身来自服务端，正常情况下不会拒绝；出现拒绝按视图与结算偏差处理，不按错误上报。
+- `bot/brain.rs` **只读** `PlayerView`（含服务端算好的 `affordances`）与静态卡表，不链接引擎判定、不读时钟与环境变量、不使用浮点；优先级固定为：消费 `pendingChoices`（发现/进化发 `ChooseDiscover`，目标待选取 `candidates` 中第一个未被拒绝的 `TargetRef`）→ 被拒出手达 3 张且可结束时 `EndRecruit` → 打最小下标且未被拒绝的可打手牌 → 买最贵可买槽位 → 升时代 → 刷新 → `EndRecruit`。出牌时若手牌视图 `requiresTarget` 为真，从该牌的 `targetCandidates` 预填第一个未被拒绝的目标；被拒后沿候选列表换下一个，候选遍历完才记入阻塞集合本回合跳过该牌。候选为空时不填（效果落空）。
+- `sim/src/ai.rs` 的 `PendingChoice::Target` 分支与定向效果牌/英雄技能按 `Selector::Target { zone }` 依次尝试本人棋盘、手牌与商店的实例编号；视图驱动的新逻辑在 `bot/brain.rs`。复制手牌类效果的行为变化使 M0 金标准重新冻结（见[规则引擎与模拟器](rule-engine-and-simulator.md) §9）。
 
 ## 12. 命令与验收证据
 

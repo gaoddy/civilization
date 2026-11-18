@@ -307,7 +307,7 @@ fn snapshot_includes_pending_choice() {
         client_intent_id: "hero-power-1".to_string(),
         intent: ProtocolIntent::UseHeroPower {
             skill_id: "evolution-discovery".to_string(),
-            target_minion_id: None,
+            target: None,
         },
     });
     assert!(

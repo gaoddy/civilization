@@ -12,9 +12,11 @@ use protocol::view::{
 };
 use protocol::{
     MinionStatBreakdown, MinionStats, PlayerViewSelf, PlayerViewSelfHeroPower, ProtocolError,
+    TargetRef, TargetZone,
 };
 use rule_engine::combat;
 use rule_engine::data::Catalog;
+use rule_engine::effects::TargetRef as EngineTargetRef;
 use rule_engine::intent::RejectCode;
 use std::num::NonZeroU64;
 
@@ -145,6 +147,11 @@ fn self_to_protocol(
                     .reward_level
                     .and_then(|level| NonZeroU64::new(u64::from(level))),
                 requires_target: card.requires_target,
+                target_candidates: card
+                    .target_candidates
+                    .iter()
+                    .map(target_to_protocol)
+                    .collect(),
                 disabled_reason: affordance
                     .and_then(|candidate| candidate.disabled_reason)
                     .map(reject_reason),
@@ -228,6 +235,12 @@ fn self_to_protocol(
         hero_power: PlayerViewSelfHeroPower {
             skill_id: view.hero_power_skill_id.clone(),
             uses_left: u64::from(view.hero_power_uses_left),
+            requires_target: view.hero_power_requires_target,
+            target_candidates: view
+                .hero_power_target_candidates
+                .iter()
+                .map(target_to_protocol)
+                .collect(),
         },
         hp: i64::from(view.hp),
         pending_choices: view
@@ -288,9 +301,25 @@ fn pending_to_protocol(pending: &PendingChoiceView) -> PendingChoice {
         PendingChoiceView::Evolve { options } => PendingChoice::Evolve {
             options: options.clone(),
         },
-        PendingChoiceView::Target { source_minion_id } => PendingChoice::Target {
+        PendingChoiceView::Target {
+            source_minion_id,
+            candidates,
+        } => PendingChoice::Target {
             source_minion_id: source_minion_id.to_string(),
+            candidates: candidates.iter().map(target_to_protocol).collect(),
         },
+    }
+}
+
+/// 引擎目标（区域 + 实例编号）转协议；编号统一为字符串。
+fn target_to_protocol(target: &EngineTargetRef) -> TargetRef {
+    TargetRef {
+        zone: match target.zone {
+            rule_engine::effects::Zone::Hand => TargetZone::Hand,
+            rule_engine::effects::Zone::Shop => TargetZone::Shop,
+            rule_engine::effects::Zone::Board => TargetZone::Board,
+        },
+        id: target.id.to_string(),
     }
 }
 

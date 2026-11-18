@@ -134,6 +134,10 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 /// `keyword-ignore-taunt`）：本批次 20 局哈希与第十三次基线逐位一致，说明这
 /// 20 局未抽取到受影响的卡；选目标行为变化由 rule-engine 的战斗用例覆盖，
 /// 基线保持原值。
+///
+/// 2026-11-19 第十四次重定：协议层下发目标候选池。三张「复制手牌随从」卡
+/// （达·芬奇 / 鹦鹉 / 印刷术）改为玩家选目标，引擎与机器人按 `zone:id` 候选
+/// 决策，涉及这些卡的批次哈希随之改变；前两局未抽取到即保持不变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

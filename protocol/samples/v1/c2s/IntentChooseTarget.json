@@ -9,7 +9,7 @@
     "clientIntentId": "ci-15",
     "intent": {
       "kind": "ChooseTarget",
-      "minionId": "21"
+      "target": { "zone": "board", "id": "21" }
     }
   }
 }
