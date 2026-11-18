@@ -160,6 +160,10 @@ func _minion_card(
         GameCardFace.stat_text(minion.get("health")),
         GameCardFace.playstyle_text(entry),
         "★" if bool(minion.get("golden", false)) else "",
+        "",
+        "",
+        false,
+        bool(minion.get("stealth", false)),
     ))
 
     if detail != null:

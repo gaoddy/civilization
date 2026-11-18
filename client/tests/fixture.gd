@@ -312,6 +312,7 @@ static func board_minion(minion_id: String, card_id: String, index := 0) -> Dict
         "attack": 3,
         "health": 4,
         "keywords": [],
+        "stealth": false,
         "sellable": true,
     }
 

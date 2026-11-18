@@ -276,11 +276,16 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
 
 /// 卡面与 Token 自带的关键词，不含战斗内授予与光环派生。
 fn base_keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
-    let mut result = BTreeSet::new();
+    base_keyword_occurrences(catalog, minion)
+        .into_iter()
+        .collect()
+}
+
+/// 卡面与 Token 自带关键词的逐次出现列表，保留重复（供同层减伤累加）。
+fn base_keyword_occurrences(catalog: &Catalog, minion: &MinionInstance) -> Vec<String> {
+    let mut result = Vec::new();
     if let Some(token) = catalog.tokens.get(&minion.card_id) {
-        for keyword in &token.keywords {
-            result.insert(keyword.clone());
-        }
+        result.extend(token.keywords.iter().cloned());
     }
     if let Some(card) = catalog.cards.get(&minion.card_id) {
         for skill_id in &card.skills {
@@ -289,7 +294,7 @@ fn base_keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String>
                 .get(skill_id)
                 .and_then(|skill| skill.keyword.as_ref())
             {
-                result.insert(keyword.clone());
+                result.push(keyword.clone());
             }
         }
     }
@@ -320,25 +325,36 @@ pub fn has_stealth(catalog: &Catalog, minion: &MinionInstance) -> bool {
     !minion.stealth_broken && keywords(catalog, minion).contains(STEALTH)
 }
 
-/// 当前生效的减伤层数之和；多个「armor N」叠加。
+/// 当前生效的减伤层数之和；多个「armor N」叠加，同层重复也累加。
 ///
 /// 层数保存在关键词字符串 `armor N` 中（与 `breed N` 同形）；没有数字时按 1。
+/// 卡面自带与授予分别逐条统计，因此卡面重复的 `armor 1`、多次授予、光环派生
+/// 与卡面层的组合都会相加；`Instant` 授予与关键词集合口径一致，视为不存在。
 pub fn armor_value(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    keywords(catalog, minion)
+    let base = base_keyword_occurrences(catalog, minion)
         .iter()
-        .filter_map(|keyword| {
-            let rest = keyword.strip_prefix(ARMOR)?;
-            if !rest.is_empty() && !rest.starts_with(char::is_whitespace) {
-                return None;
-            }
-            let value = rest.trim();
-            Some(if value.is_empty() {
-                1
-            } else {
-                value.parse().unwrap_or(0)
-            })
-        })
-        .fold(0i32, i32::saturating_add)
+        .filter_map(|keyword| armor_layer(keyword))
+        .fold(0i32, i32::saturating_add);
+    minion
+        .granted
+        .iter()
+        .filter(|(_, duration)| *duration != Duration::Instant)
+        .filter_map(|(keyword, _)| armor_layer(keyword))
+        .fold(base, i32::saturating_add)
+}
+
+/// 解析 `armor N` 关键词的层数；不是减伤关键词时返回 `None`。
+pub(crate) fn armor_layer(keyword: &str) -> Option<i32> {
+    let rest = keyword.strip_prefix(ARMOR)?;
+    if !rest.is_empty() && !rest.starts_with(char::is_whitespace) {
+        return None;
+    }
+    let value = rest.trim();
+    Some(if value.is_empty() {
+        1
+    } else {
+        value.parse().unwrap_or(0)
+    })
 }
 
 /// 每轮该随从拥有的行动次数。
@@ -1053,6 +1069,8 @@ impl BattleField {
                             hand_minion.reborn_used = false;
                             hand_minion.revive_used = false;
                             hand_minion.stealth_broken = false;
+                            // 回手后重新打出是一次新的入场，延迟战吼应可再次结算。
+                            hand_minion.delayed_battlecry_used = false;
                             self.hand_len[side] = self.hand_len[side].saturating_add(1);
                             self.hand_minions.push(CombatHandMinion {
                                 seat: self.seats[side],

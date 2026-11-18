@@ -99,14 +99,18 @@ func _apply(action: Dictionary) -> void:
         "attack":
             _apply_state(action.get("source"), str(action.get("sourceSide", "")))
             _apply_state(action.get("target"), str(action.get("targetSide", "")))
-        "death", "reborn":
-            # 这两类动作的定位字段写在 `sourceSide`（受影响的随从），状态在 `target`。
+        "death", "reborn", "revive", "recall":
+            # 这几类动作的定位字段写在 `sourceSide`（受影响的随从），状态在 `target`。
             _apply_state(action.get("target"), str(action.get("sourceSide", "")))
-        "contagion":
+        "contagion", "poison", "detonate", "convert":
+            _apply_state(action.get("target"), str(action.get("targetSide", "")))
+        "mimic", "devour":
+            _apply_state(action.get("source"), str(action.get("sourceSide", "")))
             _apply_state(action.get("target"), str(action.get("targetSide", "")))
         "summon":
             _apply_summon(action.get("summon"))
         _:
+            # 零件回收只把牌写进手牌，随从行没有变化。
             pass
 
 

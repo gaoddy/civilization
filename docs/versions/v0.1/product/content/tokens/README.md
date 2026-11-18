@@ -30,7 +30,7 @@
 | `coral-polyp-token` | 珊瑚虫 | 1 | 1 | 无 | cnidarian | poritidae | 珊瑚虫、鹿角珊瑚的分裂 |
 | `worker-bee-token-1` | 工蜂 | 1 | 1 | 无 | insect | apidae | 蜜蜂的分裂 |
 | `worker-bee-token-2` | 工蜂 | 2 | 2 | 无 | insect | apidae | 蜜蜂皇后的战吼 |
-| `termite-token` | 白蚁 | 2 | 2 | 无 | insect | termitidae | 白蚁王的分裂（2/2 衍生物，区别于 1/2 白蚁卡） |
+| `termite-token` | 白蚁（2/2） | 2 | 2 | 无 | insect | termitidae | 白蚁王的分裂（2/2 衍生物，区别于 1/2 白蚁卡） |
 | `seabird-token` | 海鸟 | 3 | 3 | 无 | bird | diomedeidae | 信天翁的分裂 |
 | `octopus-larva-token` | 章鱼幼体 | 1 | 1 | 无 | cephalopod | octopodidae | 章鱼幼体的分裂 |
 | `bacteria-token-2` | 细菌 | 2 | 2 | 无 | bacteria | enterobacteriaceae | 噬菌体的转化 |

@@ -668,14 +668,31 @@ impl Engine {
                     minion.contagion = minion.contagion.saturating_add(*count);
                 }
                 // 减伤层数保存在关键词字符串 `armor N` 中，供 `combat::armor_value` 解析；
-                // 只记录裸 `armor` 会丢失 N。其余带层关键词暂无战斗侧读取方。
+                // 只记录裸 `armor` 会丢失 N。同层与不同层的授予都累加到同一条
+                // `armor N` 上，`armor_value` 再与卡面自带层相加。
                 (combat::ARMOR, Some(count)) => {
-                    record_grant(
-                        minion,
-                        &format!("{} {count}", combat::ARMOR),
-                        duration,
-                        false,
-                    );
+                    if duration == Duration::Instant {
+                        // 与 `record_grant` 的旧口径一致：即时授予不进入 `granted`。
+                        continue;
+                    }
+                    match minion
+                        .granted
+                        .iter_mut()
+                        .find(|(name, _)| combat::armor_layer(name).is_some())
+                    {
+                        Some(existing) => {
+                            let merged = combat::armor_layer(&existing.0)
+                                .unwrap_or(0)
+                                .saturating_add(*count);
+                            existing.0 = format!("{} {merged}", combat::ARMOR);
+                            if duration_rank(duration) > duration_rank(existing.1) {
+                                existing.1 = duration;
+                            }
+                        }
+                        None => minion
+                            .granted
+                            .push((format!("{} {count}", combat::ARMOR), duration)),
+                    }
                 }
                 ("divine_shield", _) => {
                     record_grant(minion, name, duration, false);
@@ -1192,6 +1209,8 @@ impl Engine {
         copy.attacks_left = 0;
         copy.cannot_attack = false;
         copy.sources.clear();
+        // 副本是新的入场，延迟战吼不继承来源的结算标记。
+        copy.delayed_battlecry_used = false;
         copy
     }
 
@@ -1316,6 +1335,9 @@ impl Engine {
     }
 
     /// 延迟战吼：招募阶段因目标在敌方而未结算的 `OnPlay` 效果。
+    ///
+    /// 每个实例只结算一次：首次尝试后即置 `delayed_battlecry_used`，后续战斗
+    /// 开始时不再重放。置位发生在执行前，避免效果内的再入触发重复结算。
     pub(crate) fn fire_delayed_battlecry(
         &self,
         field: &mut BattleField,
@@ -1325,6 +1347,9 @@ impl Engine {
         let Some(minion) = field.minion(id).cloned() else {
             return;
         };
+        if minion.delayed_battlecry_used {
+            return;
+        }
         let Some((side, _)) = field.locate(id) else {
             return;
         };
@@ -1333,6 +1358,12 @@ impl Engine {
             .into_iter()
             .filter(|effect| is_enemy_selector(&effect.selector))
             .collect();
+        if effects.is_empty() {
+            return;
+        }
+        if let Some(source) = field.minion_mut(id) {
+            source.delayed_battlecry_used = true;
+        }
         let ctx = EffectCtx {
             seat: field.seat(side),
             source: Some(id),
@@ -1899,12 +1930,14 @@ impl Engine {
         }
     }
 
-    /// 零件回收：死亡时从本局启用的机械随从中随机获得 `count` 张牌。
+    /// 零件回收：死亡时从来源随从所属玩法中随机获得 `count` 张牌。
     ///
-    /// 随机池按卡牌 id 升序遍历，随机只推进 [`Stream::Combat`]；同一段效果内
-    /// 不重复取同一张（`count` 大于池大小时按实际数量）。牌写入
-    /// [`BattleField::record_hand_copy`]，手牌已满、池为空或来源离场时静默跳过，
-    /// 且不记录动作。获得的是卡面基础牌，不继承来源状态。
+    /// 随机池按载体（`ctx.source`）的玩法筛选，而不是固定机械：技能被复制或
+    /// 授予到其他流派随从时，池随载体变化。随机池按卡牌 id 升序遍历，随机
+    /// 只推进 [`Stream::Combat`]；同一段效果内不重复取同一张（`count` 大于池
+    /// 大小时按实际数量）。牌写入 [`BattleField::record_hand_copy`]，手牌已满、
+    /// 池为空或来源离场时静默跳过，且不记录动作。获得的是卡面基础牌，不继承
+    /// 来源状态。
     fn apply_combat_salvage(
         &self,
         field: &mut BattleField,
@@ -1918,12 +1951,28 @@ impl Engine {
         let Some((source_side, _)) = field.locate(source_id) else {
             return;
         };
+        let Some(carrier_card_id) = field.minion(source_id).map(|minion| minion.card_id.clone())
+        else {
+            return;
+        };
         let count = effect.params.count.unwrap_or(1).max(0);
         if count == 0 {
             return;
         }
 
-        // `pool=playstyle`：本局启用的机械随从，排除 Token、英雄专属与奖励牌。
+        // `pool=playstyle`：载体所在玩法的随从牌，排除 Token、英雄专属与奖励牌。
+        let carrier_playstyle = self
+            .catalog
+            .cards
+            .get(&carrier_card_id)
+            .map(|card| card.playstyle)
+            .or_else(|| {
+                self.catalog
+                    .tokens
+                    .get(&carrier_card_id)
+                    .map(|token| token.playstyle())
+            })
+            .unwrap_or(Playstyle::Neutral);
         let mut candidates: Vec<String> = self
             .catalog
             .cards
@@ -1932,7 +1981,7 @@ impl Engine {
             .filter(|card| !card.is_hero)
             .filter(|card| card.id != REWARD_CARD_ID)
             .filter(|card| !self.catalog.tokens.contains_key(&card.id))
-            .filter(|card| card.playstyle == Playstyle::Machine)
+            .filter(|card| card.playstyle == carrier_playstyle)
             .filter(|card| {
                 field
                     .playstyles

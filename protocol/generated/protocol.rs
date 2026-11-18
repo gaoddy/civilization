@@ -1006,6 +1006,13 @@ impl ::std::default::Default for CombatPlayed {
 ///          "kind"
 ///        ],
 ///        "properties": {
+///          "cardId": {
+///            "description": "动作直接涉及的卡牌 id（如零件回收获得的牌）；没有卡牌载荷的动作省略",
+///            "type": [
+///              "string",
+///              "null"
+///            ]
+///          },
 ///          "damage": {
 ///            "type": [
 ///              "integer",
@@ -1177,6 +1184,13 @@ impl ::std::convert::From<&CombatResult> for CombatResult {
 ///    "kind"
 ///  ],
 ///  "properties": {
+///    "cardId": {
+///      "description": "动作直接涉及的卡牌 id（如零件回收获得的牌）；没有卡牌载荷的动作省略",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
 ///    "damage": {
 ///      "type": [
 ///        "integer",
@@ -1278,6 +1292,13 @@ impl ::std::convert::From<&CombatResult> for CombatResult {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct CombatResultActionsItem {
+    ///动作直接涉及的卡牌 id（如零件回收获得的牌）；没有卡牌载荷的动作省略
+    #[serde(
+        rename = "cardId",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub card_id: ::std::option::Option<::std::string::String>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub damage: ::std::option::Option<i64>,
     ///动作类型，具体取值由规则引擎实现确定

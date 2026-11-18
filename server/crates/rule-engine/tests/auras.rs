@@ -545,6 +545,48 @@ fn aura_grant_keyword_keeps_armor_layer() {
 }
 
 #[test]
+fn aura_armor_stacks_across_sources() {
+    let (mut engine, mut state) = setup(23);
+    for card_id in ["armor-aura-a", "armor-aura-b"] {
+        add_aura_source(
+            &mut engine,
+            card_id,
+            Playstyle::Neutral,
+            "Aura|GrantKeyword|friendly:all:other=true|keyword=armor 1,duration=permanent",
+        );
+    }
+    place(&engine.catalog, &mut state, 0, 1, "armor-aura-a");
+    place(&engine.catalog, &mut state, 0, 2, "armor-aura-b");
+    place(&engine.catalog, &mut state, 0, 3, "baiyi");
+
+    engine.recompute_auras(&mut state);
+
+    let aura = state.auras.get(&3).expect("目标应同时获得两个减伤光环");
+    assert_eq!(
+        aura.keywords
+            .iter()
+            .filter(|k| k.starts_with("armor"))
+            .count(),
+        1,
+        "同层减伤应合并为一条关键词"
+    );
+    let folded = fold_auras(
+        &engine.catalog,
+        &state.auras,
+        &state.players[0].board.clone(),
+    );
+    let folded_target = folded
+        .iter()
+        .find(|minion| minion.instance_id == 3)
+        .expect("折叠后的棋盘应保留目标");
+    assert_eq!(
+        combat::armor_value(&engine.catalog, folded_target),
+        2,
+        "两个光环来源的同层减伤应累加"
+    );
+}
+
+#[test]
 fn non_aura_effects_reject_clustering_params_and_adjacent() {
     assert!(
         parse_effects("OnPlay|ModifyStats|self|attack=1,perAttack=1").is_err(),

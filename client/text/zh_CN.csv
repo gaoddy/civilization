@@ -1152,12 +1152,13 @@ token.spore-token-1.name,孢子
 token.spore-token-2.name,孢子
 token.spore-token-3.name,孢子
 token.synthetic-cell-token.name,合成细胞（幼体）
-token.termite-token.name,白蚁
+token.termite-token.name,白蚁（2/2）
 token.volvox-cell-token.name,团藻细胞
 token.worker-bee-token-1.name,工蜂
 token.worker-bee-token-2.name,工蜂
 ui.common.no_hero,未选英雄
 ui.game.card.freeze_glyph,冻
+ui.game.card.stealth_glyph,潜
 ui.game.combat.banner,%s%s · 伤害 %d · 我方 %d vs 对手 %d
 ui.game.combat.draw,平局
 ui.game.combat.ghost_suffix,（幽灵）

@@ -640,6 +640,52 @@ fn ghost_recall_is_not_written_into_solo_players_hand() {
 }
 
 #[test]
+fn ghost_recall_is_not_reported_as_combat_action() {
+    let (mut engine, mut state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "ghost-recallee",
+        Playstyle::Mammal,
+        1,
+        1,
+        &[(None, "OnDeath|Recall|self|to=hand")],
+    );
+    add_card(&mut engine, "brute", Playstyle::Mammal, 10, 100, &[]);
+
+    state.phase = Phase::Combat;
+    state.turn = 2;
+    state.first_seat = 0;
+    state.last_winner = None;
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        ghost: Some(3),
+    }];
+    state.players[0]
+        .board
+        .push(minion(&engine.catalog, 1, "brute"));
+    state.players[3].eliminated = true;
+    state.players[3]
+        .board
+        .push(minion(&engine.catalog, 2, "ghost-recallee"));
+
+    let outcome = engine.resolve_combat(&mut state).expect("幽灵战应成功");
+    let report = outcome.reports.get(&0).expect("幽灵战应有报告");
+    let recalled: Vec<InstanceId> = report
+        .actions
+        .iter()
+        .filter_map(|action| match action {
+            CombatAction::Recalled { minion } => Some(*minion),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        recalled.is_empty(),
+        "幽灵侧回手没有对应手牌写入，不应出现在回放动作中：{recalled:?}"
+    );
+}
+
+#[test]
 fn ghost_copy_to_hand_is_not_written_into_solo_players_hand() {
     let (mut engine, mut state) = setup_with_gold(31);
     add_card(

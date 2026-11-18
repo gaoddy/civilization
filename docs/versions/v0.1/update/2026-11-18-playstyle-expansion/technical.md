@@ -161,8 +161,8 @@ pub struct CombatHandMinion {
 ### 3.4 减伤
 
 - 引擎：`combat.rs::apply_damage` 在写入伤害前计算目标当前 `armor N` 之和，`amount = (amount - armor).max(0)`；`can_kill=false` 的夹取在减伤之后执行。
-- 口径：护盾由调用方先处理；减伤不作用于传染的每回合掉血（该路径走 `deal_damage`，需要显式跳过减伤，或在传染结算处直接扣血）；多个 `armor N` 叠加。
-- 测试：护盾先抵消、减伤后仍可致死、减伤把伤害降到 0、传染掉血不受减伤。
+- 口径：护盾由调用方先处理；减伤不作用于传染的每回合掉血（该路径走 `deal_damage`，需要显式跳过减伤，或在传染结算处直接扣血）；多个 `armor N` 叠加，同层重复同样累加：`armor_value` 分别统计卡面关键词的逐次出现与 `granted` 中的每条记录；授予与光环派生都把层数合并进同一条 `armor N`。
+- 测试：护盾先抵消、减伤后仍可致死、减伤把伤害降到 0、传染掉血不受减伤、卡面与授予同层相加、重复授予与多光环来源累加。
 
 ### 3.5 潜行
 
@@ -230,6 +230,7 @@ pub struct CombatHandMinion {
   4. 若 `layers >= threshold`，直接施加致死伤害。
   5. 记录 `CombatAction::Detonated`。
 - 口径：护盾可抵消伤害但不能阻止阈值消灭；引爆移除的层数不再产生每回合掉血。
+- 预留：`threshold` 为引擎预留参数，卡池暂无使用者（`detonate-1` / `detonate-2` 只设 `amount`）；阈值消灭与「护盾抵挡伤害但阈值仍消灭」的引擎测试保留，后续卡牌可直接启用。
 - 测试：层数伤害、阈值消灭、护盾抵挡伤害但阈值仍消灭、0 层落空。
 
 ### 3.12 吞噬
@@ -268,12 +269,12 @@ pub struct CombatHandMinion {
 
 - 数据：`OnDeath | Salvage | self | pool=playstyle,count=1`。
 - 引擎：`exec.rs::apply_op` 增加 `Op::Salvage`：
-  1. 从卡池中筛选本局启用玩法、非 Token、非英雄专属、非奖励牌的随从牌。
+  1. 按载体（`ctx.source`，查找卡牌后回退 Token）的玩法筛选卡池，再与本局启用玩法取交集；排除 Token、英雄专属与奖励牌。
   2. 按 `Stream::Combat` 随机取 `count` 张，去重（不足时按实际数量）。
   3. 写入 `CombatLog.hand_copies`；手牌已满时不获得。
   4. 记录 `CombatAction::Salvaged`。
 - 口径：获得卡面基础牌，不继承来源状态；金色触发两次时获得两张。
-- 测试：随机池只含机械、手牌已满不获得、金色获得两张、随机结果确定。
+- 测试：随机池跟随载体玩法（机械载体只含机械、非机械载体取自身玩法）、手牌已满不获得、金色获得两张、随机结果确定。
 
 ## 4. 数据生成与校验
 

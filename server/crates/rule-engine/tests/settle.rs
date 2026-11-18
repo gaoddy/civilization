@@ -550,6 +550,77 @@ fn ghost_report_renumbers_disjoint_ids() {
 }
 
 #[test]
+fn delayed_battlecry_runs_once_across_combats() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [5; 32], test_playstyles());
+    add_minion_card(&mut engine.catalog, "delayed", 1, 0, 5);
+    add_minion_card(&mut engine.catalog, "tank", 1, 0, 3);
+    // 敌方选择器的 OnPlay：招募阶段不结算，延迟到战斗开始。
+    let skill_id = "delayed-battlecry".to_string();
+    engine.catalog.skills.insert(
+        skill_id.clone(),
+        Skill {
+            id: skill_id.clone(),
+            keyword: Some("battlecry".to_string()),
+            effects: effects_of("OnPlay|DealDamage|enemy:all|amount=3"),
+            cost: None,
+            uses_per_turn: None,
+        },
+    );
+    engine
+        .catalog
+        .cards
+        .get_mut("delayed")
+        .expect("合成卡应存在")
+        .skills
+        .push(skill_id);
+
+    state.phase = Phase::Combat;
+    state.turn = 2;
+    state.first_seat = 0;
+    state.last_winner = None;
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 1,
+        ghost: None,
+    }];
+    let mut own = minion(&engine.catalog, 1, "delayed");
+    own.cannot_attack = true;
+    state.players[0].board = vec![own];
+    let mut enemy = minion(&engine.catalog, 2, "tank");
+    enemy.cannot_attack = true;
+    state.players[1].board = vec![enemy];
+
+    let killed = |outcome: &rule_engine::settle::CombatOutcome| {
+        outcome.reports[&0]
+            .actions
+            .iter()
+            .any(|action| matches!(action, combat::CombatAction::Death { minion: 2 }))
+    };
+
+    let first = engine.resolve_combat(&mut state).expect("首战应成功");
+    assert!(
+        state.players[0].board[0].delayed_battlecry_used,
+        "首战应把延迟战吼标记写回持久棋盘"
+    );
+    assert!(killed(&first), "首战延迟战吼应击杀目标");
+
+    // 同一实例进入第二场战斗：已经结算过的延迟战吼不得重放。
+    state.phase = Phase::Combat;
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 1,
+        ghost: None,
+    }];
+    let second = engine.resolve_combat(&mut state).expect("再战应成功");
+    assert!(!killed(&second), "延迟战吼不得在后续战斗重放");
+    assert_eq!(
+        second.reports[&0].actions.len(),
+        0,
+        "双方均不可攻击时第二场不应产生任何动作"
+    );
+}
+
+#[test]
 fn mutual_wipe_in_real_combat_is_a_draw() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     state.phase = Phase::Combat;

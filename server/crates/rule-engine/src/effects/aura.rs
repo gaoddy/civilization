@@ -342,7 +342,24 @@ fn accumulate(effect: &Effect, target: &mut AuraEffect, scale: i32) {
             let layer = keyword.value.or(effect.params.value);
             match (name, layer) {
                 (combat::ARMOR, Some(count)) => {
-                    target.keywords.insert(format!("{} {count}", combat::ARMOR));
+                    // 多个光环来源的减伤累加到同一条 `armor N`：关键词集合按
+                    // 字符串去重，直接插入会让同层来源互相覆盖。
+                    let existing = target.keywords.iter().find_map(|keyword| {
+                        combat::armor_layer(keyword).map(|v| (keyword.clone(), v))
+                    });
+                    match existing {
+                        Some((old, value)) => {
+                            target.keywords.remove(&old);
+                            target.keywords.insert(format!(
+                                "{} {}",
+                                combat::ARMOR,
+                                value.saturating_add(count)
+                            ));
+                        }
+                        None => {
+                            target.keywords.insert(format!("{} {count}", combat::ARMOR));
+                        }
+                    }
                 }
                 _ => {
                     target.keywords.insert(name.to_string());
