@@ -10,6 +10,7 @@ signal end_recruit_pressed
 signal reroll_pressed
 signal upgrade_pressed
 signal freeze_pressed
+signal gallery_pressed
 
 ## 悬停详情层，由对局页注入；售货员大图悬停时登记。
 var detail: GameDetailLayer = null
@@ -72,6 +73,10 @@ func _init() -> void:
     _turn_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     status_box.add_child(_turn_label)
     status_box.add_child(_build_countdown_flip())
+    var gallery_button := UI.styled_button(tr("ui.gallery.entry_match"), "ghost", 28)
+    gallery_button.name = "GalleryButton"
+    gallery_button.pressed.connect(func() -> void: gallery_pressed.emit())
+    status_box.add_child(gallery_button)
     add_child(status_panel)
 
     var hero_panel := UI.card_panel("surface")

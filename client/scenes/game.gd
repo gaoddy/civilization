@@ -53,6 +53,9 @@ var _report_layer: Control
 # 随从详情：覆盖全屏但不拦截输入，层级位于内容与战报之上、选择浮层之下。
 var _detail: GameDetailLayer
 
+# 本局卡牌图鉴覆盖层：打开时盖住对局但不切换场景，关闭后对局状态原样保留。
+var _gallery: CardGallery
+
 
 func _ready() -> void:
     _build()
@@ -97,6 +100,7 @@ func _build() -> void:
     _side_panel.reroll_pressed.connect(_on_reroll)
     _side_panel.upgrade_pressed.connect(_on_upgrade)
     _side_panel.freeze_pressed.connect(_on_freeze)
+    _side_panel.gallery_pressed.connect(_open_gallery)
     body.add_child(_side_panel)
 
     _status = UI.label("", UITheme.font_size("font-body-sm"))
@@ -396,6 +400,31 @@ func _set_deadline_expired(value: bool) -> void:
 
 # ── 弹层 ──────────────────────────────────────────────────────────────────
 
+## 打开本局卡牌图鉴：只列服务端 `enabledFactions` 对应的卡池，不含 Token。
+## 不切场景，关闭后保留拖拽、待选与战斗演示的全部状态。
+func _open_gallery() -> void:
+    if _overlay.visible:
+        return
+    if _gallery == null:
+        _gallery = CardGallery.new()
+        _gallery.name = "GalleryOverlay"
+        _gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
+        _gallery.closed.connect(_close_gallery)
+        add_child(_gallery)
+    _gallery.set_catalog(
+        CardPool.card_ids(GameStore.view.get("enabledFactions", [])),
+        tr("ui.gallery.title_match"),
+        tr("ui.gallery.back_match"),
+        tr("ui.gallery.match_pool"),
+    )
+    _gallery.visible = true
+
+
+func _close_gallery() -> void:
+    if _gallery != null:
+        _gallery.visible = false
+
+
 func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
     UI.clear(_overlay)
     var choices: Array = self_state.get("pendingChoices", [])
@@ -416,8 +445,10 @@ func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
             _build_choice_overlay(choices[0])
         else:
             _overlay.visible = false
-    # 浮层可见性只在本函数收口；打开浮层时同步遮住详情层。
+    # 浮层可见性只在本函数收口；打开浮层时同步遮住详情层与图鉴。
     _detail.blocked = _overlay.visible
+    if _overlay.visible:
+        _close_gallery()
 
 
 func _overlay_frame(title: String, parent: VBoxContainer) -> void:
