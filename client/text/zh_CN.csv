@@ -288,8 +288,8 @@ enum.era.primitive,原始
 enum.evolve.divine_shield,护盾
 enum.evolve.reborn,复生
 enum.evolve.stats,+2/+2
-enum.keyword.assemble,装配
 enum.keyword.armor,减伤
+enum.keyword.assemble,装配
 enum.keyword.battlecry,战吼
 enum.keyword.breed,繁衍
 enum.keyword.contagion,传染
