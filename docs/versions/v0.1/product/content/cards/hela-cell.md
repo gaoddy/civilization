@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: cell
 level: 4
 era: modern
-attack: 4
-health: 9
+attack: 6
+health: 7
 skills: [deathrattle-summon-2-2-hela-cell-clone]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 细胞 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 4 |
-| 生命值 | 9 |
+| 攻击力 | 6 |
+| 生命值 | 7 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-2-2-hela-cell-clone |
 | 学者 | 否 |

@@ -8,8 +8,8 @@ specialty: [play:machine]
 subtype: megastructure
 level: 7
 era: future
-attack: 12
-health: 18
+attack: 13
+health: 17
 skills: [keyword-divine-shield]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 巨构 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 攻击力 | 12 |
-| 生命值 | 18 |
+| 攻击力 | 13 |
+| 生命值 | 17 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield |
 | 学者 | 否 |

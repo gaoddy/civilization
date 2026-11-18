@@ -9,7 +9,7 @@ subtype: telecommunication
 level: 4
 era: modern
 attack: 6
-health: 7
+health: 8
 skills: [keyword-assemble-1]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 现代 |
 | 攻击力 | 6 |
-| 生命值 | 7 |
+| 生命值 | 8 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 学者 | 否 |

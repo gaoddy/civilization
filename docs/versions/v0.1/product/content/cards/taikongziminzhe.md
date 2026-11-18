@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: colonist
 level: 6
 era: future
-attack: 8
-health: 13
+attack: 9
+health: 12
 skills: [keyword-divine-shield]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 殖民者 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 攻击力 | 8 |
-| 生命值 | 13 |
+| 攻击力 | 9 |
+| 生命值 | 12 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield |
 | 学者 | 否 |

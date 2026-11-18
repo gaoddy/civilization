@@ -8,7 +8,7 @@ subtype: unit
 level: 3
 era: feudal
 attack: 4
-health: 5
+health: 6
 skills: [battlecry-random-enemy-damage-2]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 5 |
+| 生命值 | 6 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-random-enemy-damage-2 |
 | 学者 | 否 |

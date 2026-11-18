@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: unit
 level: 2
 era: primitive
-attack: 2
+attack: 3
 health: 4
 skills: [trigger-friendly-human-play-plus-1-attack]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 兵种 |
 | 星级 | 2 |
 | 时代 | 原始 |
-| 攻击力 | 2 |
+| 攻击力 | 3 |
 | 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | trigger-friendly-human-play-plus-1-attack |

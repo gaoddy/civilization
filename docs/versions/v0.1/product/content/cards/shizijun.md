@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: unit
 level: 5
 era: feudal
-attack: 7
-health: 9
+attack: 8
+health: 11
 skills: [keyword-taunt, trigger-friendly-human-death-plus-1-plus-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 兵种 |
 | 星级 | 5 |
 | 时代 | 封建 |
-| 攻击力 | 7 |
-| 生命值 | 9 |
+| 攻击力 | 8 |
+| 生命值 | 11 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；trigger-friendly-human-death-plus-1-plus-1 |
 | 学者 | 否 |

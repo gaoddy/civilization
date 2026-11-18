@@ -8,7 +8,7 @@ subtype: unit
 level: 2
 era: classical
 attack: 3
-health: 5
+health: 4
 skills: [keyword-taunt]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 古典 |
 | 攻击力 | 3 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |

@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: primate
 level: 4
 era: prehistoric
-attack: 5
+attack: 6
 health: 8
 skills: [aura-adjacent-mammal]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 灵长 |
 | 星级 | 4 |
 | 时代 | 史前 |
-| 攻击力 | 5 |
+| 攻击力 | 6 |
 | 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | aura-adjacent-mammal |

@@ -49,7 +49,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 9,
+    "health": 11,
     "id": "airplane",
     "is_hero": false,
     "is_scholar": false,
@@ -281,11 +281,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 6,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 12,
+    "health": 10,
     "id": "artificial-womb",
     "is_hero": false,
     "is_scholar": false,
@@ -553,11 +553,11 @@
     "taxon": "chirodropidae"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 7,
+    "health": 8,
     "id": "boxer",
     "is_hero": false,
     "is_scholar": false,
@@ -575,7 +575,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 7,
+    "health": 8,
     "id": "bruce-lee",
     "is_hero": false,
     "is_scholar": false,
@@ -684,7 +684,7 @@
     "taxon": "cyprinidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
@@ -720,11 +720,11 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 3,
+    "health": 2,
     "id": "chengbang-gongmin",
     "is_hero": false,
     "is_scholar": false,
@@ -1040,7 +1040,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 5,
+    "health": 6,
     "id": "dianbaoji",
     "is_hero": false,
     "is_scholar": false,
@@ -1059,11 +1059,11 @@
     "taxon": "information-computing"
   },
   {
-    "attack": 7,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 10,
+    "health": 11,
     "id": "dianhua-jiaohuanji",
     "is_hero": false,
     "is_scholar": false,
@@ -1137,11 +1137,11 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 7,
+    "health": 6,
     "id": "dolly",
     "is_hero": false,
     "is_scholar": false,
@@ -1161,11 +1161,11 @@
     "taxon": "bovidae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 2,
     "id": "dongxuehuajia",
     "is_hero": false,
     "is_scholar": false,
@@ -1256,11 +1256,11 @@
     "taxon": "squamata-incertae-sedis"
   },
   {
-    "attack": 12,
+    "attack": 13,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 18,
+    "health": 17,
     "id": "dyson-sphere",
     "is_hero": false,
     "is_scholar": false,
@@ -1385,7 +1385,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
@@ -1502,7 +1502,7 @@
     "taxon": "euglenaceae"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
@@ -1538,7 +1538,7 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
@@ -1653,7 +1653,7 @@
     "taxon": "streptococcaceae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
@@ -1776,11 +1776,11 @@
     "taxon": "rotaliidae"
   },
   {
-    "attack": 8,
+    "attack": 10,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 16,
+    "health": 13,
     "id": "fusion-reactor",
     "is_hero": false,
     "is_scholar": false,
@@ -2033,7 +2033,7 @@
     "taxon": "accipitridae"
   },
   {
-    "attack": 7,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
@@ -2115,11 +2115,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 7,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 10,
+    "health": 11,
     "id": "gongyegongren",
     "is_hero": false,
     "is_scholar": false,
@@ -2325,11 +2325,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 9,
+    "health": 7,
     "id": "hela-cell",
     "is_hero": false,
     "is_scholar": false,
@@ -2495,7 +2495,7 @@
     "taxon": "flaviviridae"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
@@ -2517,7 +2517,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 5,
+    "health": 6,
     "id": "huoqiangshou",
     "is_hero": false,
     "is_scholar": false,
@@ -2672,7 +2672,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 18,
+    "health": 16,
     "id": "jiyin-gaizaoren",
     "is_hero": false,
     "is_scholar": false,
@@ -2809,7 +2809,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 5,
+    "health": 6,
     "id": "kanzi",
     "is_hero": false,
     "is_scholar": false,
@@ -2846,11 +2846,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 7,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 10,
+    "health": 11,
     "id": "koko",
     "is_hero": false,
     "is_scholar": false,
@@ -3019,7 +3019,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "langqunshouling",
     "is_hero": false,
     "is_scholar": false,
@@ -3314,7 +3314,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 5,
+    "health": 4,
     "id": "majidun-changqiangbing",
     "is_hero": false,
     "is_scholar": false,
@@ -3355,7 +3355,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 13,
+    "health": 12,
     "id": "mammoth",
     "is_hero": false,
     "is_scholar": false,
@@ -3476,11 +3476,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 4,
+    "health": 6,
     "id": "menghu",
     "is_hero": false,
     "is_scholar": false,
@@ -3522,11 +3522,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 5,
+    "health": 4,
     "id": "mengmaxiang",
     "is_hero": false,
     "is_scholar": false,
@@ -3709,7 +3709,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 9,
+    "attack": 10,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
@@ -3855,7 +3855,7 @@
     "taxon": "nautilidae"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
@@ -4005,7 +4005,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 5,
+    "health": 6,
     "id": "nupao",
     "is_hero": false,
     "is_scholar": false,
@@ -4024,11 +4024,11 @@
     "taxon": "weapon-siege"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 5,
+    "health": 4,
     "id": "nushou",
     "is_hero": false,
     "is_scholar": false,
@@ -4264,11 +4264,11 @@
     "taxon": "information-computing"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 7,
+    "health": 8,
     "id": "pink-ape",
     "is_hero": false,
     "is_scholar": false,
@@ -4496,7 +4496,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 5,
+    "health": 4,
     "id": "qishi",
     "is_hero": false,
     "is_scholar": false,
@@ -4570,11 +4570,11 @@
     "taxon": "apidae"
   },
   {
-    "attack": 12,
+    "attack": 13,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 19,
+    "health": 17,
     "id": "qulv-feichuan",
     "is_hero": false,
     "is_scholar": false,
@@ -4688,11 +4688,11 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 4,
+    "health": 5,
     "id": "renzhe",
     "is_hero": false,
     "is_scholar": false,
@@ -4706,11 +4706,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 8,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 12,
+    "health": 11,
     "id": "revived-mammoth",
     "is_hero": false,
     "is_scholar": false,
@@ -4725,7 +4725,7 @@
     "taxon": "elephantidae"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
@@ -4861,11 +4861,11 @@
     "taxon": "crocodylidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 3,
+    "health": 4,
     "id": "saman",
     "is_hero": false,
     "is_scholar": false,
@@ -5049,7 +5049,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 4,
     "id": "shifujiang",
     "is_hero": false,
     "is_scholar": false,
@@ -5127,7 +5127,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 3,
+    "health": 2,
     "id": "shilunche",
     "is_hero": false,
     "is_scholar": false,
@@ -5146,11 +5146,11 @@
     "taxon": "transport"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 2,
     "id": "shiyanxiaoshu",
     "is_hero": false,
     "is_scholar": false,
@@ -5164,11 +5164,11 @@
     "taxon": "muridae"
   },
   {
-    "attack": 7,
+    "attack": 8,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 9,
+    "health": 11,
     "id": "shizijun",
     "is_hero": false,
     "is_scholar": false,
@@ -5205,7 +5205,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 5,
+    "health": 6,
     "id": "shizushou",
     "is_hero": false,
     "is_scholar": false,
@@ -5219,7 +5219,7 @@
     "taxon": "mammalia-incertae-sedis"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
@@ -5237,11 +5237,11 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 5,
+    "health": 4,
     "id": "shuiche",
     "is_hero": false,
     "is_scholar": false,
@@ -5278,11 +5278,11 @@
     "taxon": "salviniaceae"
   },
   {
-    "attack": 1,
+    "attack": 2,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 3,
+    "health": 2,
     "id": "shuizhong",
     "is_hero": false,
     "is_scholar": false,
@@ -5305,7 +5305,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 5,
+    "health": 4,
     "id": "sibadayongshi",
     "is_hero": false,
     "is_scholar": false,
@@ -5378,11 +5378,11 @@
     "taxon": "alcyoniidae"
   },
   {
-    "attack": 8,
+    "attack": 10,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 14,
+    "health": 12,
     "id": "space-elevator",
     "is_hero": false,
     "is_scholar": false,
@@ -5475,11 +5475,11 @@
     "taxon": "staphylococcaceae"
   },
   {
-    "attack": 5,
+    "attack": 6,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 8,
+    "health": 7,
     "id": "steam-engine",
     "is_hero": false,
     "is_scholar": false,
@@ -5649,11 +5649,11 @@
     "taxon": "bryaceae"
   },
   {
-    "attack": 8,
+    "attack": 9,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 13,
+    "health": 12,
     "id": "taikongziminzhe",
     "is_hero": false,
     "is_scholar": false,
@@ -5695,7 +5695,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 7,
+    "health": 8,
     "id": "telephone",
     "is_hero": false,
     "is_scholar": false,
@@ -5795,11 +5795,11 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "industrial",
-    "health": 5,
+    "health": 6,
     "id": "tielu-gongren",
     "is_hero": false,
     "is_scholar": false,
@@ -5835,7 +5835,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 4,
+    "health": 5,
     "id": "toushiji",
     "is_hero": false,
     "is_scholar": false,
@@ -5949,11 +5949,11 @@
     "taxon": "scombridae"
   },
   {
-    "attack": 6,
+    "attack": 7,
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 10,
+    "health": 9,
     "id": "turing-machine",
     "is_hero": false,
     "is_scholar": false,
@@ -6154,7 +6154,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 9,
+    "health": 8,
     "id": "weijingzhanshi",
     "is_hero": false,
     "is_scholar": false,
@@ -6232,7 +6232,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "primitive",
-    "health": 5,
+    "health": 4,
     "id": "wuyi",
     "is_hero": false,
     "is_scholar": false,
@@ -6246,7 +6246,7 @@
     "taxon": "hominidae"
   },
   {
-    "attack": 4,
+    "attack": 5,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
@@ -6345,7 +6345,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 19,
+    "health": 16,
     "id": "xingji-jianzhang",
     "is_hero": false,
     "is_scholar": false,
@@ -6363,7 +6363,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "modern",
-    "health": 6,
+    "health": 8,
     "id": "xray-machine",
     "is_hero": false,
     "is_scholar": false,
@@ -6382,7 +6382,7 @@
     "taxon": "life-medical"
   },
   {
-    "attack": 2,
+    "attack": 3,
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
@@ -6463,7 +6463,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "prehistoric",
-    "health": 3,
+    "health": 4,
     "id": "yelang",
     "is_hero": false,
     "is_scholar": false,
@@ -6758,7 +6758,7 @@
     "card_type": "minion",
     "cost": null,
     "era": "feudal",
-    "health": 7,
+    "health": 8,
     "id": "zhanma",
     "is_hero": false,
     "is_scholar": false,
@@ -6772,11 +6772,11 @@
     "taxon": "equidae"
   },
   {
-    "attack": 5,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "classical",
-    "health": 7,
+    "health": 6,
     "id": "zhanxiang",
     "is_hero": false,
     "is_scholar": false,
@@ -6885,11 +6885,11 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 12,
+    "attack": 13,
     "card_type": "minion",
     "cost": null,
     "era": "future",
-    "health": 18,
+    "health": 15,
     "id": "zhihui-jushou",
     "is_hero": false,
     "is_scholar": false,
@@ -6939,7 +6939,7 @@
     "taxon": "phenomenon"
   },
   {
-    "attack": 3,
+    "attack": 4,
     "card_type": "minion",
     "cost": null,
     "era": "feudal",

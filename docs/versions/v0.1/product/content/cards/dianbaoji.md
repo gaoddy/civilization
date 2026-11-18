@@ -9,7 +9,7 @@ subtype: communication
 level: 3
 era: industrial
 attack: 4
-health: 5
+health: 6
 skills: [combatstart-leftmost-damage-3]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 工业 |
 | 攻击力 | 4 |
-| 生命值 | 5 |
+| 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | combatstart-leftmost-damage-3 |
 | 学者 | 否 |

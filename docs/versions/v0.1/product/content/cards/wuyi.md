@@ -8,7 +8,7 @@ subtype: primitive
 level: 2
 era: primitive
 attack: 3
-health: 5
+health: 4
 skills: [battlecry-friendly-growth-plant-twice]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 2 |
 | 时代 | 原始 |
 | 攻击力 | 3 |
-| 生命值 | 5 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-plant-twice |
 | 学者 | 否 |

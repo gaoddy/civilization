@@ -7,8 +7,8 @@ taxon: elephantidae
 subtype: mammal
 level: 2
 era: prehistoric
-attack: 2
-health: 5
+attack: 3
+health: 4
 skills: [deathrattle-all-friendly-plus-0-plus-1]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 哺乳 |
 | 星级 | 2 |
 | 时代 | 史前 |
-| 攻击力 | 2 |
-| 生命值 | 5 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | deathrattle-all-friendly-plus-0-plus-1 |
 | 学者 | 否 |

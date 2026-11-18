@@ -8,8 +8,8 @@ specialty: [play:machine]
 subtype: communication
 level: 5
 era: industrial
-attack: 7
-health: 10
+attack: 8
+health: 11
 skills: [battlecry-all-friendly-growth-once]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 通信 |
 | 星级 | 5 |
 | 时代 | 工业 |
-| 攻击力 | 7 |
-| 生命值 | 10 |
+| 攻击力 | 8 |
+| 生命值 | 11 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-growth-once |
 | 学者 | 否 |

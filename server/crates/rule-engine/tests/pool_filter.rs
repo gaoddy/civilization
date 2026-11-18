@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use rule_engine::data::{card_in_pool, Card, CardType, Playstyle, Specialty, SpecialtyKind};
+use rule_engine::data::{Card, CardType, Playstyle, Specialty, SpecialtyKind, card_in_pool};
 
 fn card(playstyle: Playstyle, specialty: Vec<(&str, &str)>) -> Card {
     Card {
@@ -11,7 +11,11 @@ fn card(playstyle: Playstyle, specialty: Vec<(&str, &str)>) -> Card {
         specialty: specialty
             .into_iter()
             .map(|(kind, value)| Specialty {
-                kind: match kind { "play" => SpecialtyKind::Play, "prey" => SpecialtyKind::Prey, _ => SpecialtyKind::Host },
+                kind: match kind {
+                    "play" => SpecialtyKind::Play,
+                    "prey" => SpecialtyKind::Prey,
+                    _ => SpecialtyKind::Host,
+                },
                 value: value.into(),
             })
             .collect(),

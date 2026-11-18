@@ -8,7 +8,7 @@ subtype: captain
 level: 7
 era: future
 attack: 12
-health: 19
+health: 16
 skills: [keyword-taunt]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 7 |
 | 时代 | 未来 |
 | 攻击力 | 12 |
-| 生命值 | 19 |
+| 生命值 | 16 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
 | 学者 | 否 |

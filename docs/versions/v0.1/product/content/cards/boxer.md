@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: athlete
 level: 4
 era: modern
-attack: 5
-health: 7
+attack: 6
+health: 8
 skills: [trigger-3-humans-self-plus-2-attack]
 is_scholar: false
 ---
@@ -28,15 +28,14 @@ is_scholar: false
 | 子类 | 运动员 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 攻击力 | 5 |
-| 生命值 | 7 |
+| 攻击力 | 6 |
+| 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | trigger-3-humans-self-plus-2-attack |
 | 学者 | 否 |
 | 英雄资格 | 否 |
 
 ## 效果
-
 
 若你控制至少 3 个人科随从，获得 +2 攻击力
 

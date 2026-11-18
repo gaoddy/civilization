@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: primitive
 level: 2
 era: prehistoric
-attack: 2
+attack: 3
 health: 4
 skills: [battlecry-other-friendly-humans-plus-1-attack]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 原始 |
 | 星级 | 2 |
 | 时代 | 史前 |
-| 攻击力 | 2 |
+| 攻击力 | 3 |
 | 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack |

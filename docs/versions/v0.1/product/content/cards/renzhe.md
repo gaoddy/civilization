@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: unit
 level: 3
 era: feudal
-attack: 4
-health: 4
+attack: 5
+health: 5
 skills: [keyword-windfury]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 兵种 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 攻击力 | 4 |
-| 生命值 | 4 |
+| 攻击力 | 5 |
+| 生命值 | 5 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
 | 学者 | 否 |

@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: worker
 level: 3
 era: industrial
-attack: 3
-health: 5
+attack: 4
+health: 6
 skills: [battlecry-friendly-plus-0-plus-2]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 工人 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 攻击力 | 3 |
-| 生命值 | 5 |
+| 攻击力 | 4 |
+| 生命值 | 6 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-2 |
 | 学者 | 否 |

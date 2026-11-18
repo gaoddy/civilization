@@ -7,7 +7,7 @@ taxon: hominidae
 subtype: athlete
 level: 6
 era: modern
-attack: 9
+attack: 10
 health: 11
 skills: [keyword-windfury]
 is_scholar: false
@@ -28,7 +28,7 @@ is_scholar: false
 | 子类 | 运动员 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 攻击力 | 9 |
+| 攻击力 | 10 |
 | 生命值 | 11 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |

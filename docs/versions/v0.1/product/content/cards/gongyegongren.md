@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: worker
 level: 5
 era: modern
-attack: 7
-health: 10
+attack: 8
+health: 11
 skills: [battlecry-other-friendly-humans-plus-1-attack]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 工人 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 攻击力 | 7 |
-| 生命值 | 10 |
+| 攻击力 | 8 |
+| 生命值 | 11 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack |
 | 学者 | 否 |

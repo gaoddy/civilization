@@ -8,7 +8,7 @@ subtype: modification
 level: 7
 era: future
 attack: 12
-health: 18
+health: 16
 skills: [keyword-reborn]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 7 |
 | 时代 | 未来 |
 | 攻击力 | 12 |
-| 生命值 | 18 |
+| 生命值 | 16 |
 | 关键词 | 复生 |
 | 技能 | keyword-reborn |
 | 学者 | 否 |

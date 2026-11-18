@@ -106,6 +106,9 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 ///
 /// 2026-11-18 第六次重定：模拟器 AI 增加「打出效果牌」步骤（先无目标、被拒后
 /// 改试己方最左随从），修复效果牌买入手牌后永不打出、挤占手牌空位的问题。
+///
+/// 2026-11-18 第七次重定：卡牌参数重排批次 A（哺乳纲与中立非学者随从按玩法
+/// 定位重排身材），参战数值变化，对局哈希随之改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

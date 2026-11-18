@@ -7,8 +7,8 @@ taxon: elephantidae
 subtype: clone
 level: 6
 era: future
-attack: 8
-health: 12
+attack: 9
+health: 11
 skills: [keyword-reborn, keyword-evolve]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 克隆 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 攻击力 | 8 |
-| 生命值 | 12 |
+| 攻击力 | 9 |
+| 生命值 | 11 |
 | 关键词 | 复生；进化 |
 | 技能 | keyword-reborn；keyword-evolve |
 | 学者 | 否 |

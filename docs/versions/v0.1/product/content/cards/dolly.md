@@ -8,8 +8,8 @@ specialty: [prey:plantae]
 subtype: clone
 level: 4
 era: future
-attack: 4
-health: 7
+attack: 5
+health: 6
 skills: [keyword-reborn, keyword-evolve]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 克隆 |
 | 星级 | 4 |
 | 时代 | 未来 |
-| 攻击力 | 4 |
-| 生命值 | 7 |
+| 攻击力 | 5 |
+| 生命值 | 6 |
 | 关键词 | 复生；进化 |
 | 技能 | keyword-reborn；keyword-evolve |
 | 学者 | 否 |

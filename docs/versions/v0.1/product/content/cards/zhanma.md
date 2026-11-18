@@ -8,7 +8,7 @@ subtype: mammal
 level: 4
 era: feudal
 attack: 6
-health: 7
+health: 8
 skills: [keyword-evolve]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 4 |
 | 时代 | 封建 |
 | 攻击力 | 6 |
-| 生命值 | 7 |
+| 生命值 | 8 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve |
 | 学者 | 否 |

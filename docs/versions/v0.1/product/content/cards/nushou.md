@@ -7,8 +7,8 @@ taxon: hominidae
 subtype: unit
 level: 2
 era: feudal
-attack: 2
-health: 5
+attack: 3
+health: 4
 skills: [battlecry-other-friendly-humans-plus-1-attack]
 is_scholar: false
 ---
@@ -28,8 +28,8 @@ is_scholar: false
 | 子类 | 兵种 |
 | 星级 | 2 |
 | 时代 | 封建 |
-| 攻击力 | 2 |
-| 生命值 | 5 |
+| 攻击力 | 3 |
+| 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack |
 | 学者 | 否 |

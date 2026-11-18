@@ -9,7 +9,7 @@ subtype: siege
 level: 3
 era: feudal
 attack: 4
-health: 4
+health: 5
 skills: [keyword-assemble-2]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 3 |
 | 时代 | 封建 |
 | 攻击力 | 4 |
-| 生命值 | 4 |
+| 生命值 | 5 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2 |
 | 学者 | 否 |

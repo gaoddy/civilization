@@ -9,7 +9,7 @@ subtype: flight
 level: 5
 era: modern
 attack: 8
-health: 9
+health: 11
 skills: [keyword-optimal-attack]
 is_scholar: false
 ---
@@ -30,7 +30,7 @@ is_scholar: false
 | 星级 | 5 |
 | 时代 | 现代 |
 | 攻击力 | 8 |
-| 生命值 | 9 |
+| 生命值 | 11 |
 | 关键词 | 最优攻击 |
 | 技能 | keyword-optimal-attack |
 | 学者 | 否 |

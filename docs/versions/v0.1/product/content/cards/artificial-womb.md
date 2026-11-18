@@ -8,8 +8,8 @@ specialty: [play:mammal]
 subtype: medical
 level: 5
 era: future
-attack: 6
-health: 12
+attack: 8
+health: 10
 skills: [battlecry-summon-3-3-synthetic-cell]
 is_scholar: false
 ---
@@ -29,8 +29,8 @@ is_scholar: false
 | 子类 | 医疗 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 攻击力 | 6 |
-| 生命值 | 12 |
+| 攻击力 | 8 |
+| 生命值 | 10 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-summon-3-3-synthetic-cell |
 | 学者 | 否 |

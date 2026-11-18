@@ -8,7 +8,7 @@ subtype: beast
 level: 6
 era: prehistoric
 attack: 9
-health: 13
+health: 12
 skills: [aura-school-mammal]
 is_scholar: false
 ---
@@ -29,7 +29,7 @@ is_scholar: false
 | 星级 | 6 |
 | 时代 | 史前 |
 | 攻击力 | 9 |
-| 生命值 | 13 |
+| 生命值 | 12 |
 | 关键词 | 无 |
 | 技能 | aura-school-mammal |
 | 学者 | 否 |
