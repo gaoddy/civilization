@@ -13,7 +13,7 @@
 use std::collections::BTreeMap;
 
 use crate::combat::{self, BattleField, CombatAction, CombatSetup, DamageSource};
-use crate::data::{CardType, Catalog, Playstyle, Specialty, SpecialtyKind};
+use crate::data::{CardType, Catalog, Playstyle, Specialty, SpecialtyKind, card_in_pool};
 use crate::effects::{
     CopyState, Duration, Effect, Filter, Op, Pick, Selector, Side, TimesIf, Trigger, Zone,
 };
@@ -25,6 +25,7 @@ use crate::rng::{RngStreams, Stream};
 use crate::state::{
     GameState, HandCard, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat, base_stats,
 };
+use crate::triple::REWARD_CARD_ID;
 
 /// 禁止攻击时写入 `granted` 的占位关键词，用于记录该标记的时长来源。
 const CANNOT_ATTACK_KEYWORD: &str = "cannot_attack";
@@ -185,9 +186,8 @@ impl Engine {
                 Vec::new()
             }
             // 新玩法的原语在招募阶段尚无数据使用；结算由各玩法机制任务接入。
-            Op::Detonate | Op::Convert | Op::Revive | Op::Recall | Op::Salvage | Op::Latent => {
-                Vec::new()
-            }
+            Op::Detonate | Op::Convert | Op::Revive | Op::Recall | Op::Salvage => Vec::new(),
+            Op::Latent => self.apply_latent(state, effect, ctx),
         }
     }
 
@@ -316,8 +316,12 @@ impl Engine {
 
         let passes = if ctx.golden { 2 } else { 1 };
         let mut events = Vec::new();
-        for _ in 0..passes {
+        for pass in 0..passes {
             for effect in &effects {
+                // 潜伏口径：金色不额外触发，第二次整段效果跳过。
+                if pass > 0 && effect.op == Op::Latent {
+                    continue;
+                }
                 events.extend(self.apply_op(state, effect, ctx, None));
             }
         }
@@ -801,6 +805,70 @@ impl Engine {
                     .get(usize::from(target_seat))
                     .is_some_and(|player| !player.eliminated && player.hp > 0)
         })
+    }
+
+    /// 潜伏：按传染层数永久增加攻击力，达到阈值时爆发一次。
+    ///
+    /// 爆发每场最多一次（`latent_used`），金色随从同样只触发一次（见
+    /// [`Engine::run_card_effects`]）。招募阶段没有战斗伤害来源，爆发按回合
+    /// 开始伤害结算；敌方口径与 `side_ids` 一致：除来源外所有未淘汰、生命 > 0
+    /// 的玩家棋盘。
+    fn apply_latent(
+        &self,
+        state: &mut GameState,
+        effect: &Effect,
+        ctx: &EffectCtx,
+    ) -> Vec<GameEvent> {
+        let Some(source_id) = ctx.source else {
+            return Vec::new();
+        };
+        let Some(player) = state.players.get_mut(usize::from(ctx.seat)) else {
+            return Vec::new();
+        };
+        let Some(source) = player
+            .board
+            .iter_mut()
+            .find(|minion| minion.instance_id == source_id)
+        else {
+            return Vec::new();
+        };
+
+        let layers = source.contagion.max(0);
+        let amount = effect.params.amount.unwrap_or(0).max(0);
+        source
+            .stats
+            .attack
+            .add_permanent(layers.saturating_mul(amount));
+
+        let burst = !source.latent_used
+            && effect
+                .params
+                .threshold
+                .is_some_and(|threshold| layers >= threshold);
+        if !burst {
+            return Vec::new();
+        }
+        source.contagion = 0;
+        source.latent_used = true;
+
+        let count = effect.params.count.unwrap_or(0).max(0);
+        if count == 0 {
+            return Vec::new();
+        }
+        let mut events = Vec::new();
+        for target in &mut state.players {
+            if target.seat == ctx.seat || target.eliminated || target.hp <= 0 {
+                continue;
+            }
+            for minion in &mut target.board {
+                minion.stats.health.add_turn(-count);
+                events.push(GameEvent::DamageTaken {
+                    seat: target.seat,
+                    amount: count,
+                });
+            }
+        }
+        events
     }
 
     fn apply_deal_damage(
@@ -1469,6 +1537,7 @@ impl Engine {
             Op::Devour => self.apply_combat_devour(field, effect, &targets, ctx),
             Op::Detonate => self.apply_combat_detonate(field, effect, &targets, ctx),
             Op::Convert => self.apply_combat_convert(field, rng, effect, &targets, ctx),
+            Op::Salvage => self.apply_combat_salvage(field, rng, effect, ctx),
             Op::Summon => self.apply_combat_summon(field, rng, effect, ctx),
             Op::Copy => self.apply_combat_copy(field, effect, ctx, &targets),
             _ => {}
@@ -1777,6 +1846,69 @@ impl Engine {
             // 目标死亡交由外层 effect 结算；召唤使用来源随从的真实 side，
             // 幽灵战两侧同座时不会退回 side 0。
             self.apply_combat_summon_on_side(field, rng, effect, ctx, source_side);
+        }
+    }
+
+    /// 零件回收：死亡时从本局启用的机械随从中随机获得 `count` 张牌。
+    ///
+    /// 随机池按卡牌 id 升序遍历，随机只推进 [`Stream::Combat`]；同一段效果内
+    /// 不重复取同一张（`count` 大于池大小时按实际数量）。牌写入
+    /// [`BattleField::record_hand_copy`]，手牌已满、池为空或来源离场时静默跳过，
+    /// 且不记录动作。获得的是卡面基础牌，不继承来源状态。
+    fn apply_combat_salvage(
+        &self,
+        field: &mut BattleField,
+        rng: &mut RngStreams,
+        effect: &Effect,
+        ctx: &EffectCtx,
+    ) {
+        let Some(source_id) = ctx.source else {
+            return;
+        };
+        let Some((source_side, _)) = field.locate(source_id) else {
+            return;
+        };
+        let count = effect.params.count.unwrap_or(1).max(0);
+        if count == 0 {
+            return;
+        }
+
+        // `pool=playstyle`：本局启用的机械随从，排除 Token、英雄专属与奖励牌。
+        let mut candidates: Vec<String> = self
+            .catalog
+            .cards
+            .values()
+            .filter(|card| card.card_type == CardType::Minion)
+            .filter(|card| !card.is_hero)
+            .filter(|card| card.id != REWARD_CARD_ID)
+            .filter(|card| !self.catalog.tokens.contains_key(&card.id))
+            .filter(|card| card.playstyle == Playstyle::Machine)
+            .filter(|card| {
+                field
+                    .playstyles
+                    .as_ref()
+                    .is_none_or(|enabled| card_in_pool(card, enabled))
+            })
+            .map(|card| card.id.clone())
+            .collect();
+
+        for _ in 0..count {
+            if candidates.is_empty() || field.hand_len[source_side] >= field.hand_slots {
+                break;
+            }
+            let roll = rng.below(Stream::Combat, candidates.len() as u64) as usize;
+            let card_id = candidates.remove(roll);
+            if !field.record_hand_copy(source_side, &card_id, false) {
+                break;
+            }
+            let states = field.snapshots(&self.catalog, &[source_id]);
+            field.push_action(
+                CombatAction::Salvaged {
+                    seat: field.seat(source_side),
+                    card_id,
+                },
+                states,
+            );
         }
     }
 

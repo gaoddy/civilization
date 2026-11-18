@@ -1,13 +1,16 @@
 mod common;
 
+use std::collections::BTreeSet;
+
 use common::{effects_of, place, test_catalog, test_playstyles};
-use rule_engine::combat;
+use rule_engine::combat::{self, CombatAction, CombatLog, CombatSetup};
 use rule_engine::data::{Card, CardType, Catalog, Era, Playstyle, Skill, card_in_pool};
 use rule_engine::effects::{Effect, EffectCtx, parse_effects};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
+use rule_engine::rng::RngStreams;
 use rule_engine::settle::Pairing;
 use rule_engine::state::{GameState, HandCard, InstanceId, MinionInstance, Phase, Seat, ShopSlot};
 
@@ -110,6 +113,30 @@ fn catalog_with_synthetics() -> Catalog {
         "target",
         Playstyle::Mammal,
         (1, 0, 10),
+        (None, "[]"),
+    );
+    add_card(
+        &mut catalog,
+        "latent",
+        Playstyle::Virus,
+        (1, 0, 10),
+        (
+            Some("contagion"),
+            "OnTurnStart|Latent|self|amount=1,threshold=3,count=3",
+        ),
+    );
+    add_card(
+        &mut catalog,
+        "scavenger",
+        Playstyle::Machine,
+        (1, 1, 1),
+        (None, "OnDeath|Salvage|self|pool=playstyle,count=1"),
+    );
+    add_card(
+        &mut catalog,
+        "killer",
+        Playstyle::Machine,
+        (1, 10, 10),
         (None, "[]"),
     );
     catalog
@@ -803,4 +830,189 @@ fn turn_start_keeps_b_tree_ordering() {
         })
         .collect();
     assert_eq!(seats, vec![0, 1], "座位升序结算");
+}
+
+// ---------------------------------------------------------------------------
+// 潜伏 / 零件回收
+// ---------------------------------------------------------------------------
+
+#[test]
+fn latent_adds_attack_per_contagion_layer_and_bursts_at_threshold() {
+    let (mut engine, mut state) = setup(1);
+    place(&engine.catalog, &mut state, 0, 1, "latent");
+    place(&engine.catalog, &mut state, 1, 2, "target");
+    state.players[0].board[0].contagion = 2;
+
+    engine.start_turn(&mut state).expect("开始回合应成功");
+    let latent = &state.players[0].board[0];
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, latent),
+        2,
+        "2 层获得 +2 攻击"
+    );
+    assert_eq!(latent.contagion, 2, "未达阈值时层数保留");
+    assert!(!latent.latent_used, "未爆发时不置标记");
+    assert_eq!(
+        combat::effective_health(&engine.catalog, &state.players[1].board[0]),
+        10,
+        "未达阈值不对敌方造成伤害"
+    );
+
+    // 手动补到 3 层：下一次回合开始应爆发。
+    state.players[0].board[0].contagion = 3;
+    engine.start_turn(&mut state).expect("开始回合应成功");
+    let latent = &state.players[0].board[0];
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, latent),
+        5,
+        "3 层再获得 +3 攻击（累计 5）"
+    );
+    assert_eq!(latent.contagion, 0, "爆发后移除全部层数");
+    assert!(latent.latent_used, "爆发后置 latent_used");
+    assert_eq!(
+        combat::effective_health(&engine.catalog, &state.players[1].board[0]),
+        7,
+        "爆发对敌方全体造成 3 点伤害"
+    );
+
+    // 再次达到阈值：攻击照常按层增长，但爆发每场只触发一次。
+    state.players[0].board[0].contagion = 3;
+    engine.start_turn(&mut state).expect("开始回合应成功");
+    let latent = &state.players[0].board[0];
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, latent),
+        8,
+        "爆发用尽后仍按层获得攻击力"
+    );
+    assert_eq!(latent.contagion, 3, "未爆发时不清除层数");
+    assert_eq!(
+        combat::effective_health(&engine.catalog, &state.players[1].board[0]),
+        7,
+        "爆发每场只触发一次"
+    );
+}
+
+#[test]
+fn golden_latent_does_not_trigger_twice() {
+    let (mut engine, mut state) = setup(1);
+    place(&engine.catalog, &mut state, 0, 1, "latent");
+    state.players[0].board[0].golden = true;
+    state.players[0].board[0].contagion = 2;
+
+    engine.start_turn(&mut state).expect("开始回合应成功");
+
+    let latent = &state.players[0].board[0];
+    assert_eq!(
+        combat::effective_attack(&engine.catalog, latent),
+        2,
+        "金色潜伏不额外触发，仍只按层加一次攻击"
+    );
+}
+
+/// 本局启用玩法（含机械），供零件回收的随机池筛选使用。
+fn machine_playstyles() -> BTreeSet<Playstyle> {
+    let mut enabled: BTreeSet<Playstyle> = test_playstyles().into_iter().collect();
+    enabled.insert(Playstyle::Machine);
+    enabled
+}
+
+/// 用一名必然阵亡的随从触发 `OnDeath | Salvage`，返回目录与战斗日志。
+fn run_salvage(seed: u8, hand: usize, hand_slots: usize, golden: bool) -> (Engine, CombatLog) {
+    let (engine, _) = setup(seed);
+    let attacker = vec![MinionInstance::new(&engine.catalog, 1, "scavenger", golden)];
+    let defender = vec![MinionInstance::new(&engine.catalog, 2, "killer", false)];
+    let mut rng = RngStreams::from_seed([seed; 32]);
+    let playstyles = machine_playstyles();
+    let log = combat::simulate_with(
+        &engine,
+        &attacker,
+        &defender,
+        0,
+        1,
+        0,
+        &mut rng,
+        CombatSetup {
+            attacker_hand: hand,
+            defender_hand: 0,
+            hand_slots,
+            playstyles: Some(&playstyles),
+            ..CombatSetup::default()
+        },
+    );
+    (engine, log)
+}
+
+#[test]
+fn salvage_adds_only_machine_minions_to_hand() {
+    for seed in 0..8 {
+        let (engine, log) = run_salvage(seed, 0, 10, false);
+        assert_eq!(log.hand_copies.len(), 1, "死亡后应获得 1 张牌");
+        let copy = &log.hand_copies[0];
+        assert_eq!(copy.seat, 0, "牌进入来源座位的手牌");
+        assert_eq!(copy.side, 0, "记录来源阵营");
+        let card = engine
+            .catalog
+            .cards
+            .get(&copy.card_id)
+            .expect("获得的牌应在目录中");
+        assert_eq!(card.playstyle, Playstyle::Machine, "随机池只含机械");
+        assert!(!card.is_hero, "排除英雄专属牌");
+        assert!(
+            !engine.catalog.tokens.contains_key(&copy.card_id),
+            "排除 Token"
+        );
+        assert_eq!(
+            card.card_type,
+            CardType::Minion,
+            "奖励牌（效果牌）不会进入随机池"
+        );
+        assert!(
+            log.actions
+                .iter()
+                .any(|action| matches!(action, CombatAction::Salvaged { seat: 0, .. })),
+            "记录 Salvaged 动作"
+        );
+    }
+}
+
+#[test]
+fn salvage_with_full_hand_adds_nothing() {
+    let (_, log) = run_salvage(3, 1, 1, false);
+
+    assert!(log.hand_copies.is_empty(), "手牌已满时不获得");
+    assert!(
+        !log.actions
+            .iter()
+            .any(|action| matches!(action, CombatAction::Salvaged { .. })),
+        "手牌已满时不记录 Salvaged"
+    );
+}
+
+#[test]
+fn golden_salvage_adds_two_cards() {
+    let (_, log) = run_salvage(3, 0, 10, true);
+
+    assert_eq!(log.hand_copies.len(), 2, "金色触发两次，获得两张牌");
+    assert!(
+        log.actions
+            .iter()
+            .filter(|action| matches!(action, CombatAction::Salvaged { .. }))
+            .count()
+            == 2,
+        "每次获得各记录一条 Salvaged"
+    );
+}
+
+#[test]
+fn salvage_is_deterministic_for_same_seed() {
+    let (_, first) = run_salvage(9, 0, 10, false);
+    let (_, second) = run_salvage(9, 0, 10, false);
+
+    let ids = |log: &CombatLog| -> Vec<String> {
+        log.hand_copies
+            .iter()
+            .map(|copy| copy.card_id.clone())
+            .collect()
+    };
+    assert_eq!(ids(&first), ids(&second), "同一随机种子结果一致");
 }

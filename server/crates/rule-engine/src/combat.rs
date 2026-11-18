@@ -9,7 +9,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::data::Catalog;
+use crate::data::{Catalog, Playstyle};
 use crate::effects::{Basis, Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::recruit::new_minion;
@@ -97,6 +97,8 @@ pub enum CombatAction {
     Revived { minion: InstanceId },
     /// 随从死亡后回手（已写入 `CombatLog::hand_minions`）。
     Recalled { minion: InstanceId },
+    /// 零件回收：死亡时从本局启用的机械随从中随机获得一张牌。
+    Salvaged { seat: Seat, card_id: String },
     /// 战斗中召唤：`seat` 为召唤方座位，`position` 为插入后该随从在
     /// **存活随从序列**中的下标；`card_id` / `golden` 供房间服务补全展示数据
     /// （召唤物不在战前快照里）。
@@ -196,6 +198,10 @@ pub struct CombatSetup<'a> {
     pub defender_hand: usize,
     /// 手牌上限。
     pub hand_slots: usize,
+    /// 本局启用的玩法；`None` 表示未提供，随机池不按玩法筛选。
+    ///
+    /// 仅用于战斗内需要从卡池取牌的效果（零件回收）。
+    pub playstyles: Option<&'a BTreeSet<Playstyle>>,
 }
 
 impl Default for CombatSetup<'_> {
@@ -208,6 +214,7 @@ impl Default for CombatSetup<'_> {
             attacker_hand: 0,
             defender_hand: 0,
             hand_slots: usize::MAX,
+            playstyles: None,
         }
     }
 }
@@ -444,6 +451,8 @@ pub struct BattleField {
     pub(crate) pool_spent: BTreeMap<String, u16>,
     pub(crate) hand_len: [usize; 2],
     pub(crate) hand_slots: usize,
+    /// 本局启用玩法；仅零件回收等取牌效果使用。
+    pub(crate) playstyles: Option<BTreeSet<Playstyle>>,
     /// 正在结算死亡；嵌套触发产生的死亡留给外层循环处理。
     pub(crate) resolving: bool,
     pub(crate) first_side: usize,
@@ -501,6 +510,7 @@ impl BattleField {
             pool_spent: BTreeMap::new(),
             hand_len: [setup.attacker_hand, setup.defender_hand],
             hand_slots: setup.hand_slots,
+            playstyles: setup.playstyles.cloned(),
             resolving: false,
             first_side: if first == attacker_seat { 0 } else { 1 },
             combat_start_health,

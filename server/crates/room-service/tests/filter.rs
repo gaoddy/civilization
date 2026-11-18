@@ -341,6 +341,36 @@ fn combat_result_maps_detonate_and_convert() {
 }
 
 #[test]
+fn combat_result_maps_salvage() {
+    let mut report = real_report(2);
+    report.actions.push(CombatAction::Salvaged {
+        seat: 2,
+        card_id: "nanobot".to_string(),
+    });
+    report.states.push(Vec::new());
+
+    let result = combat_result(
+        &catalog(),
+        &report,
+        &seats(),
+        chrono::DateTime::<chrono::Utc>::UNIX_EPOCH,
+    );
+
+    let salvaged = result
+        .actions
+        .iter()
+        .find(|action| action.kind == "salvage")
+        .expect("零件回收动作应映射为 salvage");
+    assert_eq!(
+        salvaged.source_side,
+        Some(protocol::CombatResultActionsItemSourceSide::Own),
+        "动作归属来源座位"
+    );
+    assert!(salvaged.damage.is_none());
+    assert!(salvaged.target.is_none());
+}
+
+#[test]
 fn mirror_combat_result_marked_mirror() {
     let catalog = catalog();
     let won = SeatCombatReport {

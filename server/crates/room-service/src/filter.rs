@@ -269,7 +269,7 @@ fn state_at(states: &[combat::MinionSnapshot], index: usize) -> Option<CombatMin
     states.get(index).map(minion_state)
 }
 
-/// 战斗动作转协议：`kind` 为 `attack|death|reborn|revive|recall|contagion|poison|summon`。
+/// 战斗动作转协议：`kind` 为 `attack|death|reborn|revive|recall|contagion|poison|summon|salvage`。
 ///
 /// 引擎只为主动攻击记录 `attack`；反击伤害已并入该条动作的 `source` / `target`
 /// 快照，客户端不会收到独立的反击动作。
@@ -467,6 +467,23 @@ fn combat_action(
                 target_side: None,
             }
         }
+        CombatAction::Salvaged { seat, .. } => CombatResultActionsItem {
+            damage: None,
+            kind: "salvage".to_string(),
+            source: None,
+            source_index: None,
+            source_minion_id: None,
+            source_side: Some(if *seat == report.seat {
+                CombatResultActionsItemSourceSide::Own
+            } else {
+                CombatResultActionsItemSourceSide::Opponent
+            }),
+            summon: None,
+            target: None,
+            target_index: None,
+            target_minion_id: None,
+            target_side: None,
+        },
         CombatAction::Summon {
             minion,
             card_id,

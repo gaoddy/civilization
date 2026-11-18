@@ -205,6 +205,8 @@ pub struct MinionInstance {
     pub stealth_broken: bool,
     /// 复苏是否已使用；与 `reborn_used` 独立。
     pub revive_used: bool,
+    /// 潜伏爆发是否已使用；爆发每场最多一次。
+    pub latent_used: bool,
     pub attacks_left: u8,
     pub cannot_attack: bool,
     /// 三连合成时被合并的三张实例编号（升序）；非三连合成恒为空。
@@ -236,6 +238,7 @@ impl MinionInstance {
             reborn_used: false,
             stealth_broken: false,
             revive_used: false,
+            latent_used: false,
             attacks_left: 0,
             cannot_attack: false,
             sources: Vec::new(),

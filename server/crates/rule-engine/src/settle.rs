@@ -308,6 +308,9 @@ fn resolve_real(
     };
     let attacker_hero = hero_of(state, a);
     let defender_hero = hero_of(state, b);
+    // 战斗内的取牌效果（零件回收）需要本局启用玩法；克隆一份避免与 `state.rng`
+    // 的可变借用冲突。
+    let playstyles = state.enabled_playstyles.clone();
     let setup = combat::CombatSetup {
         attacker_hero: attacker_hero.as_deref(),
         defender_hero: defender_hero.as_deref(),
@@ -316,6 +319,7 @@ fn resolve_real(
         attacker_hand: hand_len(state, a),
         defender_hand: hand_len(state, b),
         hand_slots: catalog.config.hand_slots,
+        playstyles: Some(&playstyles),
     };
     let log = combat::simulate_with(
         engine,
@@ -429,6 +433,7 @@ fn resolve_ghost(
     let (ghost, next_instance_id) = renumber_ghost(state, &own_board, ghost_seat, ghost);
 
     let hero = hero_of(state, seat);
+    let playstyles = state.enabled_playstyles.clone();
     let setup = combat::CombatSetup {
         attacker_hero: hero.as_deref(),
         // 幽灵没有英雄卡，防御方被动不结算。
@@ -438,6 +443,7 @@ fn resolve_ghost(
         attacker_hand: hand_len(state, seat),
         defender_hand: 0,
         hand_slots: catalog.config.hand_slots,
+        playstyles: Some(&playstyles),
     };
     let mut log = combat::simulate_with(
         engine,

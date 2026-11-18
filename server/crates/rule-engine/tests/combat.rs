@@ -983,13 +983,14 @@ fn combat_state_hash_matches_golden_baseline() {
     // i18n 改造后关键词标识由中文改为英文 id，哈希编码随之变化，金标准再次同步；
     // 部落改为玩法后，哈希写入 5 个玩法的序号，金标准再次同步。
     // 随从新增潜行与复苏状态位后，哈希编码增加两个布尔值，金标准再次同步。
+    // 新增 latent_used 字段（潜伏爆发每场一次）后哈希编码再增加一个布尔值，金标准同步。
     // 行为不变，任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
     let (mut engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "412e48fec6983a5d",
+        "5565b1438dd1f3e9",
         "固定场景的 state_hash 金标准"
     );
 }
