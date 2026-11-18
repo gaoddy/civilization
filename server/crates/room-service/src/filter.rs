@@ -369,6 +369,40 @@ fn combat_action(
                 target_side: slot.map(|(_, side)| target_side(side)),
             }
         }
+        CombatAction::Mimicked { source, target } => {
+            let source_slot = locate(report, *source);
+            let target_slot = locate(report, *target);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "mimic".to_string(),
+                source: state_at(states, 0),
+                source_index: source_slot.map(|(index, _)| index as i64),
+                source_minion_id: Some(source.to_string()),
+                source_side: source_slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 1),
+                target_index: target_slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: target_slot.map(|(_, side)| target_side(side)),
+            }
+        }
+        CombatAction::Devoured { source, target } => {
+            let source_slot = locate(report, *source);
+            let target_slot = locate(report, *target);
+            CombatResultActionsItem {
+                damage: None,
+                kind: "devour".to_string(),
+                source: state_at(states, 0),
+                source_index: source_slot.map(|(index, _)| index as i64),
+                source_minion_id: Some(source.to_string()),
+                source_side: source_slot.map(|(_, side)| source_side(side)),
+                summon: None,
+                target: state_at(states, 1),
+                target_index: target_slot.map(|(index, _)| index as i64),
+                target_minion_id: Some(target.to_string()),
+                target_side: target_slot.map(|(_, side)| target_side(side)),
+            }
+        }
         CombatAction::Summon {
             minion,
             card_id,

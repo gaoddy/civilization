@@ -74,6 +74,16 @@ pub enum CombatAction {
     ContagionApplied { target: InstanceId },
     /// 目标被剧毒致死。
     Poisoned { target: InstanceId },
+    /// 来源复制了目标的当前攻防与关键词。
+    Mimicked {
+        source: InstanceId,
+        target: InstanceId,
+    },
+    /// 来源吞噬了目标并永久获得其卡面基础属性。
+    Devoured {
+        source: InstanceId,
+        target: InstanceId,
+    },
     /// 战斗中召唤：`seat` 为召唤方座位，`position` 为插入后该随从在
     /// **存活随从序列**中的下标；`card_id` / `golden` 供房间服务补全展示数据
     /// （召唤物不在战前快照里）。
@@ -524,7 +534,7 @@ impl BattleField {
     }
 
     /// 收集若干随从的现场状态，跳过已不在场上的编号。
-    fn snapshots(&self, catalog: &Catalog, ids: &[InstanceId]) -> Vec<MinionSnapshot> {
+    pub(crate) fn snapshots(&self, catalog: &Catalog, ids: &[InstanceId]) -> Vec<MinionSnapshot> {
         ids.iter()
             .filter_map(|id| self.snapshot_of(catalog, *id))
             .collect()

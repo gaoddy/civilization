@@ -303,6 +303,20 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
         errors.push("Decompose 的 duration 只接受 permanent / combat".to_string());
     }
 
+    // 拟态同样需要可回滚的时长：`instant` 会让关键词在记录时被丢弃。
+    if effect.op == Op::Mimic
+        && params
+            .duration
+            .is_some_and(|duration| duration == Duration::Instant)
+    {
+        errors.push("Mimic 的 duration 只接受 permanent / combat".to_string());
+    }
+
+    // 吞噬的攻击力上限不能为负。
+    if effect.op == Op::Devour && params.value.is_some_and(|value| value < 0) {
+        errors.push("Devour 的 value 不能为负".to_string());
+    }
+
     if let Some(level) = &params.level
         && level != "current"
         && !is_digits(level)

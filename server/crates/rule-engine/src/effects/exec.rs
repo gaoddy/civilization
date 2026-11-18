@@ -12,7 +12,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::combat::{self, BattleField, CombatSetup, DamageSource};
+use crate::combat::{self, BattleField, CombatAction, CombatSetup, DamageSource};
 use crate::data::{CardType, Catalog, Playstyle, Specialty, SpecialtyKind};
 use crate::effects::{
     CopyState, Duration, Effect, Filter, Op, Pick, Selector, Side, TimesIf, Trigger, Zone,
@@ -23,7 +23,7 @@ use crate::intent::{Reject, RejectCode};
 use crate::recruit::new_minion;
 use crate::rng::{RngStreams, Stream};
 use crate::state::{
-    GameState, HandCard, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat,
+    GameState, HandCard, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat, base_stats,
 };
 
 /// 禁止攻击时写入 `granted` 的占位关键词，用于记录该标记的时长来源。
@@ -176,15 +176,18 @@ impl Engine {
             Op::Discover => self.apply_discover(state, effect, ctx),
             // 分解只发生在战斗内；招募阶段没有事件目标，落空。
             Op::Decompose => Vec::new(),
+            Op::Mimic => {
+                self.apply_mimic(state, effect, &targets, ctx);
+                Vec::new()
+            }
+            Op::Devour => {
+                self.apply_devour(state, effect, &targets, ctx);
+                Vec::new()
+            }
             // 新玩法的原语在招募阶段尚无数据使用；结算由各玩法机制任务接入。
-            Op::Mimic
-            | Op::Devour
-            | Op::Detonate
-            | Op::Convert
-            | Op::Revive
-            | Op::Recall
-            | Op::Salvage
-            | Op::Latent => Vec::new(),
+            Op::Detonate | Op::Convert | Op::Revive | Op::Recall | Op::Salvage | Op::Latent => {
+                Vec::new()
+            }
         }
     }
 
@@ -681,6 +684,123 @@ impl Engine {
                 _ => record_grant(minion, name, duration, false),
             }
         }
+    }
+
+    /// 拟态：把目标当前攻防与关键词写到来源上。
+    ///
+    /// 目标缺失、不在敌方或仍在招募阶段时静默落空。攻防按 `ModifyStats`
+    /// 的时长口径写入；关键词写入 `granted`，不复制成长、繁衍、传染与
+    /// 护盾/复生等一次性状态。金色连续触发时逐次覆盖（同值反复写入不叠加）。
+    fn apply_mimic(
+        &self,
+        state: &mut GameState,
+        effect: &Effect,
+        targets: &[InstanceId],
+        ctx: &EffectCtx,
+    ) {
+        let Some(source_id) = ctx.source else {
+            return;
+        };
+        if locate(state, source_id).is_none() {
+            return;
+        }
+        let duration = effect.params.duration.unwrap_or(Duration::Combat);
+        let copied: Vec<(i32, i32, Vec<String>)> = targets
+            .iter()
+            .filter(|id| self.is_enemy_target(state, ctx.seat, **id))
+            .filter_map(|id| {
+                let (_, target) = locate(state, *id)?;
+                let keywords = combat::keywords(&self.catalog, target)
+                    .into_iter()
+                    .collect::<Vec<_>>();
+                Some((target.attack(), target.health(), keywords))
+            })
+            .collect();
+
+        let Some((_, source)) = locate_mut(state, source_id) else {
+            return;
+        };
+        for (target_attack, target_health, keywords) in copied {
+            // 复制当前值：写入「目标当前值 - 来源当前值」的增量，金色第二次
+            // 触发时增量为 0，因此以最后一次结果为准，不会叠加。
+            let attack = target_attack.saturating_sub(source.attack());
+            let health = target_health.saturating_sub(source.health());
+            match duration {
+                Duration::Combat => {
+                    source.stats.attack.add_turn(attack);
+                    source.stats.health.add_turn(health);
+                }
+                Duration::Permanent | Duration::Instant => {
+                    source.stats.attack.add_permanent(attack);
+                    source.stats.health.add_permanent(health);
+                }
+            }
+            for keyword in keywords {
+                record_grant(source, &keyword, duration, false);
+            }
+        }
+    }
+
+    /// 吞噬：对攻击力不超过 `value` 的敌方目标施加致死伤害，并把其卡面
+    /// 基础攻防永久加到来源上。
+    ///
+    /// 目标缺失、不在敌方、仍在招募阶段或攻击力超限时静默落空。伤害直接
+    /// 写入当前生命，不经过护盾判定，因此护盾不能阻止；获得值取卡面基础值，
+    /// 不含成长与光环。
+    fn apply_devour(
+        &self,
+        state: &mut GameState,
+        effect: &Effect,
+        targets: &[InstanceId],
+        ctx: &EffectCtx,
+    ) {
+        let Some(source_id) = ctx.source else {
+            return;
+        };
+        if locate(state, source_id).is_none() {
+            return;
+        }
+        let limit = effect.params.value.unwrap_or(0);
+        for id in targets {
+            if !self.is_enemy_target(state, ctx.seat, *id) {
+                continue;
+            }
+            let Some((base_attack, base_health)) = locate(state, *id).and_then(|(_, target)| {
+                if target.attack() > limit {
+                    return None;
+                }
+                base_stats(&self.catalog, &target.card_id, target.golden)
+            }) else {
+                continue;
+            };
+            let Some((_, target)) = locate_mut(state, *id) else {
+                continue;
+            };
+            // 致死伤害：直接把当前生命打到 0；不经过护盾判定，护盾不能阻止。
+            target
+                .stats
+                .health
+                .apply_damage(target.stats.health.current.max(0));
+            let Some((_, source)) = locate_mut(state, source_id) else {
+                continue;
+            };
+            source.stats.attack.add_permanent(base_attack);
+            source.stats.health.add_permanent(base_health);
+        }
+    }
+
+    /// 目标是否属于本效果来源的敌方：座位不同、玩家仍存活，且已离开招募阶段。
+    fn is_enemy_target(&self, state: &GameState, seat: Seat, id: InstanceId) -> bool {
+        if state.phase == Phase::Recruit {
+            return false;
+        }
+        locate(state, id).is_some_and(|(target_seat, _)| {
+            target_seat != seat
+                && state
+                    .players
+                    .get(usize::from(target_seat))
+                    .is_some_and(|player| !player.eliminated && player.hp > 0)
+        })
     }
 
     fn apply_deal_damage(
@@ -1320,6 +1440,8 @@ impl Engine {
             }
             // 分解：取事件目标（被分解随从）的生命值，加到选择器选出的随从上。
             Op::Decompose => self.apply_combat_decompose(field, effect, &targets, ctx),
+            Op::Mimic => self.apply_combat_mimic(field, effect, &targets, ctx),
+            Op::Devour => self.apply_combat_devour(field, effect, &targets, ctx),
             Op::Summon => self.apply_combat_summon(field, rng, effect, ctx),
             Op::Copy => self.apply_combat_copy(field, effect, ctx, &targets),
             _ => {}
@@ -1368,6 +1490,133 @@ impl Engine {
                 // 数据校验拒绝 `instant`；执行期保守跳过。
                 Duration::Instant => {}
             }
+        }
+    }
+
+    /// 战斗内拟态：读取目标当前攻防与关键词，写入来源并记录动作。
+    ///
+    /// 目标与来源同阵营、目标已离场时跳过；攻防按 `duration` 写入，关键词写入
+    /// `granted`。目标当前值不含光环，也不复制成长、繁衍、传染与一次性状态。
+    fn apply_combat_mimic(
+        &self,
+        field: &mut BattleField,
+        effect: &Effect,
+        targets: &[InstanceId],
+        ctx: &EffectCtx,
+    ) {
+        let Some(source_id) = ctx.source else {
+            return;
+        };
+        let Some((source_side, _)) = field.locate(source_id) else {
+            return;
+        };
+        let duration = effect.params.duration.unwrap_or(Duration::Combat);
+        for target_id in targets {
+            let Some((target_side, _)) = field.locate(*target_id) else {
+                continue;
+            };
+            if target_side == source_side || !field.is_alive(*target_id) {
+                continue;
+            }
+            let Some(target) = field.minion(*target_id) else {
+                continue;
+            };
+            let target_attack = combat::effective_attack(&self.catalog, target);
+            let target_health = combat::effective_health(&self.catalog, target);
+            let keywords: Vec<String> = combat::keywords(&self.catalog, target)
+                .into_iter()
+                .collect();
+            let Some(source) = field.minion(source_id) else {
+                continue;
+            };
+            // 复制当前值：写入差值，金色第二次触发时差值为 0，以最后一次为准。
+            let modifier = Modifier {
+                attack: target_attack
+                    .saturating_sub(combat::effective_attack(&self.catalog, source)),
+                health: target_health
+                    .saturating_sub(combat::effective_health(&self.catalog, source)),
+                duration,
+            };
+
+            field.modify_stats(source_id, modifier);
+            if let Some(source) = field.minion_mut(source_id) {
+                for keyword in keywords {
+                    record_grant(source, &keyword, duration, false);
+                }
+            }
+            let states = field.snapshots(&self.catalog, &[source_id, *target_id]);
+            field.push_action(
+                CombatAction::Mimicked {
+                    source: source_id,
+                    target: *target_id,
+                },
+                states,
+            );
+        }
+    }
+
+    /// 战斗内吞噬：攻击力不超过 `value` 的目标被致死，来源永久获得其卡面基础值。
+    ///
+    /// 伤害直接走 `BattleField::apply_damage`，不经过护盾判定；致死量为当前生命
+    /// 加上目标减伤，保证结算后生命恰为 0。来源记击杀，便于触发击杀类钩子。
+    fn apply_combat_devour(
+        &self,
+        field: &mut BattleField,
+        effect: &Effect,
+        targets: &[InstanceId],
+        ctx: &EffectCtx,
+    ) {
+        let Some(source_id) = ctx.source else {
+            return;
+        };
+        let Some((source_side, _)) = field.locate(source_id) else {
+            return;
+        };
+        let limit = effect.params.value.unwrap_or(0);
+        for target_id in targets {
+            let Some((target_side, _)) = field.locate(*target_id) else {
+                continue;
+            };
+            if target_side == source_side || !field.is_alive(*target_id) {
+                continue;
+            }
+            let Some(target) = field.minion(*target_id) else {
+                continue;
+            };
+            if combat::effective_attack(&self.catalog, target) > limit {
+                continue;
+            }
+            let Some((base_attack, base_health)) =
+                base_stats(&self.catalog, &target.card_id, target.golden)
+            else {
+                continue;
+            };
+            // 护盾不参与判定；减伤仍会吞掉部分伤害，因此致死量含减伤。
+            let amount = target
+                .stats
+                .health
+                .current
+                .max(0)
+                .saturating_add(combat::armor_value(&self.catalog, target));
+            field.apply_damage(
+                &self.catalog,
+                *target_id,
+                amount,
+                true,
+                DamageSource::Minion(source_id),
+            );
+            if let Some(source) = field.minion_mut(source_id) {
+                source.stats.attack.add_permanent(base_attack);
+                source.stats.health.add_permanent(base_health);
+            }
+            let states = field.snapshots(&self.catalog, &[source_id, *target_id]);
+            field.push_action(
+                CombatAction::Devoured {
+                    source: source_id,
+                    target: *target_id,
+                },
+                states,
+            );
         }
     }
 
@@ -1582,12 +1831,16 @@ impl Engine {
     ) -> Vec<InstanceId> {
         match pick {
             Pick::All => pool,
-            Pick::Single => ctx
-                .target
-                .or(ctx.event_target)
-                .filter(|id| pool.contains(id))
-                .map(|id| vec![id])
-                .unwrap_or_default(),
+            Pick::Single => {
+                let chosen = ctx.target.or(ctx.event_target);
+                match chosen {
+                    Some(id) if pool.contains(&id) => vec![id],
+                    // 显式目标不在池中时不改选，保持既有「目标非法即落空」语义。
+                    Some(_) => Vec::new(),
+                    // 战斗内没有玩家待选：单一目标按最左侧结算，保证效果可推进。
+                    None => pool.first().copied().map(|id| vec![id]).unwrap_or_default(),
+                }
+            }
             Pick::Random => {
                 if pool.is_empty() {
                     return Vec::new();
