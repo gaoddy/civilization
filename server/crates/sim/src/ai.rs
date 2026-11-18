@@ -28,7 +28,9 @@ const REROLL_PRICE: u8 = 1;
 /// 5. 升时代：金币够付当前时代的 `era_costs` 时升级；
 /// 6. 刷新：商店没有买得起的随从时刷新一次（每回合最多触发一次：刷新后商店仍买不起时，
 ///    剩余金币已不足以再付一次刷新费，AI 转向升时代或结束）；
-/// 7. `EndRecruit`。
+/// 7. 打出效果牌：手牌中的效果牌先试无目标，被拒后改试己方最左随从。效果牌不花金币，
+///    放在会花钱的动作之后，避免「无合法目标」的牌在每次购买成功后被反复重试；
+/// 8. `EndRecruit`。
 pub fn choose(state: &GameState, seat: Seat, catalog: &Catalog) -> Option<Intent> {
     plan(state, seat, catalog, &[])
 }
@@ -53,6 +55,7 @@ pub fn plan(
         choose_buy(state, player, catalog),
         can_upgrade(player, catalog).then_some(Intent::UpgradeEra),
         choose_reroll(player, catalog),
+        choose_play_effect(player, catalog, blocked),
     ];
     for intent in candidates.into_iter().flatten() {
         if !blocked.contains(&intent) {
@@ -314,6 +317,42 @@ fn choose_buy(state: &GameState, player: &PlayerState, catalog: &Catalog) -> Opt
 
 /// 棋盘有空位时把手牌里的随从打上棋盘；手牌已满导致买不了牌时，
 /// 卖出本回合最弱的随从腾出棋盘空位，让手牌能继续打出。
+fn choose_play_effect(
+    player: &PlayerState,
+    catalog: &Catalog,
+    blocked: &[Intent],
+) -> Option<Intent> {
+    let leftmost = player.board.first().map(|minion| minion.instance_id);
+    for (index, hand) in player.hand.iter().enumerate() {
+        let Some(card) = catalog.cards.get(hand.card_id()) else {
+            continue;
+        };
+        if card.card_type != CardType::Effect {
+            continue;
+        }
+        let hand_index = u8::try_from(index).ok()?;
+        let plain = Intent::PlayCard {
+            hand_index,
+            position: None,
+            target: None,
+        };
+        if !blocked.contains(&plain) {
+            return Some(plain);
+        }
+        if let Some(target) = leftmost {
+            let targeted = Intent::PlayCard {
+                hand_index,
+                position: None,
+                target: Some(target),
+            };
+            if !blocked.contains(&targeted) {
+                return Some(targeted);
+            }
+        }
+    }
+    None
+}
+
 fn choose_fill_board(state: &GameState, player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
     // 三连奖励牌先于普通随从打出：它是零费发现，保证奖励路径被覆盖。
     if let Some(index) = player
@@ -500,6 +539,49 @@ mod tests {
         assert_eq!(
             plan(&state, 0, &catalog, &[Intent::ChooseTarget { minion: 1 }]),
             Some(Intent::ChooseTarget { minion: 2 })
+        );
+    }
+
+    #[test]
+    fn plays_effect_card_from_hand() {
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        let (_, mut state) =
+            Engine::new(catalog.clone(), [7; 32], rule_engine::playstyles::draw(7));
+        state.phase = Phase::Recruit;
+        state.turn = 1;
+        state.players[0].board = vec![MinionInstance::new(&catalog, 1, "saman", false)];
+        state.players[0].hand = vec![rule_engine::state::HandCard::effect(20, "aolinpike-jidian")];
+        assert_eq!(
+            choose_play_effect(&state.players[0], &catalog, &[]),
+            Some(Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None
+            })
+        );
+    }
+
+    #[test]
+    fn effect_play_falls_back_to_leftmost_target() {
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        let (_, mut state) =
+            Engine::new(catalog.clone(), [7; 32], rule_engine::playstyles::draw(7));
+        state.phase = Phase::Recruit;
+        state.turn = 1;
+        state.players[0].board = vec![MinionInstance::new(&catalog, 1, "saman", false)];
+        state.players[0].hand = vec![rule_engine::state::HandCard::effect(20, "faraday-cage")];
+        let plain = Intent::PlayCard {
+            hand_index: 0,
+            position: None,
+            target: None,
+        };
+        assert_eq!(
+            choose_play_effect(&state.players[0], &catalog, &[plain]),
+            Some(Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: Some(1)
+            })
         );
     }
 }

@@ -103,6 +103,9 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 ///
 /// 2026-11-18 卡牌参数重排第一步后第五次重定：三张 2 星双技能卡合并技能、
 /// 六张无技能随从补技能，参战卡牌效果变化，涉及这些卡的批次哈希随之改变。
+///
+/// 2026-11-18 第六次重定：模拟器 AI 增加「打出效果牌」步骤（先无目标、被拒后
+/// 改试己方最左随从），修复效果牌买入手牌后永不打出、挤占手牌空位的问题。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
