@@ -8,8 +8,8 @@ class AuditEffectsTest(unittest.TestCase):
     def test_all_committed_skills_are_clean(self):
         report = audit_effects.audit(SKILLS)
         self.assertEqual(report.violations, [])
-        self.assertEqual(report.skill_count, 131)
-        self.assertEqual(sum(report.matrix.values()), 122)  # 131 个技能中 109 个有 effects，共 122 段效果
+        self.assertEqual(report.skill_count, 159)
+        self.assertEqual(sum(report.matrix.values()), 150)  # 159 个技能中按实际有 effects 的技能汇总，共 150 段效果
     def test_times_if_without_times_is_reported(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = pathlib.Path(tmp) / "bad.md"

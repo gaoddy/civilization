@@ -227,6 +227,8 @@ pub struct Params {
     pub duration: Option<Duration>,
     pub can_kill: Option<bool>,
     pub health_only: Option<bool>,
+    /// 拟态只复制攻防，不复制关键词。
+    pub stats_only: Option<bool>,
     pub times_if: Option<TimesIf>,
     pub condition: Option<Condition>,
     pub when: Option<Filter>,

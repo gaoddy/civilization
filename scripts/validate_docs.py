@@ -62,14 +62,14 @@ KEYWORD_PLAYSTYLE = {
     "decompose": {"fungus", "bacteria"},
     "assemble": {"machine"},
     "sow": {"plant"},
-    "poison": {"reptile", "cephalopod"},
+    "poison": {"reptile", "cephalopod", "cnidarian"},
     "armor": {"reptile", "bacteria", "cnidarian"},
     "stealth": {"cephalopod"},
 }
 # 新机制原语的玩法归属；原语只能出现在对应玩法的卡牌技能里。
 MECHANISM_PLAYSTYLE = {
     "Mimic": {"cephalopod"},
-    "Devour": {"protozoa"},
+    "Devour": {"protozoa", "cephalopod"},
     "Detonate": {"bacteria", "virus"},
     "Convert": {"bacteria"},
     "Revive": {"cnidarian"},
@@ -127,7 +127,7 @@ OP_SPEC = {
     "AddShopSlot": ({"era", "count"}, set(), set()),
     "GainMinion": ({"level", "to"}, {"from"}, set()),
     "Decompose": ({"basis", "duration"}, {"timesIf", "condition", "when"}, set()),
-    "Mimic": ({"duration"}, set(), set()),
+    "Mimic": ({"duration"}, {"statsOnly"}, set()),
     "Devour": ({"value"}, {"duration", "when"}, set()),
     "Detonate": ({"amount"}, {"threshold", "when"}, set()),
     "Convert": ({"threshold"}, {"token", "card", "count", "when"}, {("token", "card")}),
@@ -1067,7 +1067,7 @@ def check_skills():
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
     if len(skills) != 159:
-        fail(f"技能数量 {len(skills)}，期望 131")
+        fail(f"技能数量 {len(skills)}，期望 159")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")

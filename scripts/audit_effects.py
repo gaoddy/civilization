@@ -28,7 +28,8 @@ FILTER_KEYS = validate_docs.FILTER_KEYS
 # 分解的生命值口径；duration 只接受 validate_docs.DURATIONS（permanent / combat）。
 DECOMPOSE_BASES = validate_docs.DECOMPOSE_BASES
 # 新机制原语的目标侧约定（技术方案 §3）；选择器白名单仍以 validate_docs 为准。
-ENEMY_TARGET_OPS = {"Mimic", "Devour", "Detonate", "Convert"}
+ENEMY_TARGET_OPS = {"Devour", "Detonate", "Convert"}
+FRIENDLY_OR_ENEMY_TARGET_OPS = {"Mimic"}
 SELF_TARGET_OPS = {"Revive", "Recall", "Salvage", "Latent"}
 
 
@@ -58,6 +59,8 @@ def check_effect(trigger, op, params, selector=""):
     violations = []
     if op in ENEMY_TARGET_OPS and not selector.startswith("enemy:"):
         violations.append(f"{op} 必须以 enemy 选择器指定目标，实为 {selector!r}")
+    if op in FRIENDLY_OR_ENEMY_TARGET_OPS and not selector.startswith(("enemy:", "friendly:")):
+        violations.append(f"{op} 必须以 enemy 或 friendly 选择器指定目标，实为 {selector!r}")
     if op in SELF_TARGET_OPS and selector != "self":
         violations.append(f"{op} 只能以 self 为目标，实为 {selector!r}")
     if op == "Recall" and params.get("to") != "hand":

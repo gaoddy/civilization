@@ -602,8 +602,8 @@ fn coverage_counts_all_effect_segments() {
     let coverage = effect_coverage(&catalog);
 
     let total: usize = coverage.values().sum();
-    assert_eq!(total, 122, "已提交数据的全部效果段都应被统计");
-    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&15));
+    assert_eq!(total, 150, "已提交数据的全部效果段都应被统计");
+    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&18));
     assert_eq!(coverage.get(&(Trigger::OnPlay, Op::ModifyStats)), Some(&10));
     assert_eq!(coverage.get(&(Trigger::OnUse, Op::ModifyStats)), Some(&1));
 
@@ -620,6 +620,8 @@ fn coverage_counts_all_effect_segments() {
         Op::RefreshShop,
         Op::AddShopSlot,
         Op::GainMinion,
+        Op::Decompose,
+        Op::Devour,
     ]
     .into_iter()
     .collect();
@@ -946,19 +948,20 @@ fn devour_and_mimic_are_silent_when_target_is_missing() {
     state.phase = Phase::Combat;
 
     let effects = [
-        effect("OnCombatStart|Mimic|enemy:single|duration=combat"),
-        effect("OnCombatStart|Devour|enemy:single|value=3"),
-        // 显式目标指向友方同样落空：两个原语都只接受敌方目标。
+        // 目标实例不存在时拟态落空。
         effect("OnCombatStart|Mimic|target|duration=combat"),
+        effect("OnCombatStart|Devour|enemy:single|value=3"),
+        // 吞噬仍只接受敌方目标；指向友方的显式目标落空。
         effect("OnCombatStart|Devour|target|value=3"),
     ];
     for effect in effects {
+        let target = if effect.op == Op::Mimic { Some(99) } else { Some(2) };
         let events = engine.apply_op(
             &mut state,
             &effect,
             &EffectCtx {
                 source: Some(1),
-                target: Some(2),
+                target,
                 ..ctx(0)
             },
             None,
@@ -973,6 +976,81 @@ fn devour_and_mimic_are_silent_when_target_is_missing() {
     assert_eq!(source.stats.attack.permanent, 0, "友方目标不触发永久获得");
     let friend = board_minion(&state, 0, 1);
     assert_eq!(friend.stats.health.current, 5, "友方目标不被消灭");
+}
+
+#[test]
+fn mimic_allows_friendly_target_and_stats_only_skips_keywords() {
+    let (mut engine, mut state) = setup(11);
+    add_card(&mut engine, "mimic-friendly-source", 0, 0, &[]);
+    add_card(&mut engine, "mimic-friendly-target", 5, 5, &["taunt"]);
+    place(&engine.catalog, &mut state, 0, 1, "mimic-friendly-source");
+    place(&engine.catalog, &mut state, 0, 2, "mimic-friendly-target");
+    state.phase = Phase::Combat;
+
+    let mimic = effect("OnCombatStart|Mimic|friendly:single|duration=combat,statsOnly=true");
+    let mimic_ctx = EffectCtx {
+        source: Some(1),
+        target: Some(2),
+        ..ctx(0)
+    };
+    let events = engine.apply_op(&mut state, &mimic, &mimic_ctx, None);
+
+    assert!(events.is_empty(), "拟态不产生事件");
+    let source = board_minion(&state, 0, 0);
+    assert_eq!(combat::effective_attack(&engine.catalog, source), 5);
+    assert_eq!(combat::effective_health(&engine.catalog, source), 5);
+    assert!(
+        source.granted.is_empty(),
+        "statsOnly 只复制攻防，不复制关键词"
+    );
+
+    // 金色第二次触发仍以目标当前值为准，不叠加。
+    engine.apply_op(&mut state, &mimic, &mimic_ctx, None);
+    let source = board_minion(&state, 0, 0);
+    assert_eq!(combat::effective_attack(&engine.catalog, source), 5);
+    assert_eq!(combat::effective_health(&engine.catalog, source), 5);
+    assert!(source.granted.is_empty());
+}
+
+#[test]
+fn mimic_stats_only_in_combat_skips_keywords() {
+    let (mut engine, _state) = setup(11);
+    add_effect_card(
+        &mut engine,
+        "combat-mimic-stats",
+        1,
+        1,
+        &[],
+        &["OnCombatStart|Mimic|enemy:single|duration=combat,statsOnly=true"],
+    );
+    add_card(&mut engine, "combat-mimic-target", 3, 4, &["taunt"]);
+
+    let log = battle(
+        &engine,
+        &[minion(&engine.catalog, 1, "combat-mimic-stats")],
+        &[minion(&engine.catalog, 2, "combat-mimic-target")],
+    );
+
+    assert!(
+        log.actions.iter().any(|action| matches!(
+            action,
+            CombatAction::Mimicked {
+                source: 1,
+                target: 2
+            }
+        )),
+        "战斗内拟态仍记录动作"
+    );
+    let source = final_minion(&log, 1);
+    assert_eq!(source.stats.attack.turn, 2, "复制攻击力增量");
+    assert_eq!(source.stats.health.turn, 3, "复制生命值增量");
+    assert!(
+        !source
+            .granted
+            .iter()
+            .any(|(name, _)| name == "taunt"),
+        "statsOnly 不复制关键词"
+    );
 }
 
 fn battle(engine: &Engine, attacker: &[MinionInstance], defender: &[MinionInstance]) -> CombatLog {

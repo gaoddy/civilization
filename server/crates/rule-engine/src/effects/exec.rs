@@ -686,11 +686,12 @@ impl Engine {
         }
     }
 
-    /// 拟态：把目标当前攻防与关键词写到来源上。
+    /// 拟态：把目标当前攻防（以及非 `statsOnly` 时的关键词）写到来源上。
     ///
-    /// 目标缺失、不在敌方或仍在招募阶段时静默落空。攻防按 `ModifyStats`
-    /// 的时长口径写入；关键词写入 `granted`，不复制成长、繁衍、传染与
-    /// 护盾/复生等一次性状态。金色连续触发时逐次覆盖（同值反复写入不叠加）。
+    /// 目标缺失或已离场时静默落空；目标可为敌方或友方，由选择器决定。
+    /// 攻防按 `ModifyStats` 的时长口径写入；关键词写入 `granted`，不复制
+    /// 成长、繁衍、传染与护盾/复生等一次性状态。金色连续触发时逐次覆盖
+    /// （同值反复写入不叠加）。
     fn apply_mimic(
         &self,
         state: &mut GameState,
@@ -705,14 +706,21 @@ impl Engine {
             return;
         }
         let duration = effect.params.duration.unwrap_or(Duration::Combat);
+        let stats_only = effect.params.stats_only.unwrap_or(false);
         let copied: Vec<(i32, i32, Vec<String>)> = targets
             .iter()
-            .filter(|id| self.is_enemy_target(state, ctx.seat, **id))
             .filter_map(|id| {
                 let (_, target) = locate(state, *id)?;
-                let keywords = combat::keywords(&self.catalog, target)
-                    .into_iter()
-                    .collect::<Vec<_>>();
+                if target.health() <= 0 {
+                    return None;
+                }
+                let keywords = if stats_only {
+                    Vec::new()
+                } else {
+                    combat::keywords(&self.catalog, target)
+                        .into_iter()
+                        .collect::<Vec<_>>()
+                };
                 Some((target.attack(), target.health(), keywords))
             })
             .collect();
@@ -1588,8 +1596,9 @@ impl Engine {
 
     /// 战斗内拟态：读取目标当前攻防与关键词，写入来源并记录动作。
     ///
-    /// 目标与来源同阵营、目标已离场时跳过；攻防按 `duration` 写入，关键词写入
-    /// `granted`。目标当前值不含光环，也不复制成长、繁衍、传染与一次性状态。
+    /// 目标已离场时跳过；敌方与友方目标都允许。攻防按 `duration` 写入，
+    /// 非 `statsOnly` 时关键词写入 `granted`。目标当前值不含光环，也不复制
+    /// 成长、繁衍、传染与一次性状态。
     fn apply_combat_mimic(
         &self,
         field: &mut BattleField,
@@ -1600,15 +1609,13 @@ impl Engine {
         let Some(source_id) = ctx.source else {
             return;
         };
-        let Some((source_side, _)) = field.locate(source_id) else {
+        if field.locate(source_id).is_none() {
             return;
-        };
+        }
         let duration = effect.params.duration.unwrap_or(Duration::Combat);
+        let stats_only = effect.params.stats_only.unwrap_or(false);
         for target_id in targets {
-            let Some((target_side, _)) = field.locate(*target_id) else {
-                continue;
-            };
-            if target_side == source_side || !field.is_alive(*target_id) {
+            if !field.is_alive(*target_id) {
                 continue;
             }
             let Some(target) = field.minion(*target_id) else {
@@ -1616,9 +1623,13 @@ impl Engine {
             };
             let target_attack = combat::effective_attack(&self.catalog, target);
             let target_health = combat::effective_health(&self.catalog, target);
-            let keywords: Vec<String> = combat::keywords(&self.catalog, target)
-                .into_iter()
-                .collect();
+            let keywords: Vec<String> = if stats_only {
+                Vec::new()
+            } else {
+                combat::keywords(&self.catalog, target)
+                    .into_iter()
+                    .collect()
+            };
             let Some(source) = field.minion(source_id) else {
                 continue;
             };

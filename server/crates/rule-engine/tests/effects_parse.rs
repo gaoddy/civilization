@@ -52,6 +52,19 @@ fn parses_all_new_ops() {
 }
 
 #[test]
+fn parses_mimic_stats_only() {
+    let effects = effects_of("OnCombatStart|Mimic|friendly:single|duration=combat,statsOnly=true");
+    assert_eq!(effects[0].op, Op::Mimic);
+    assert_eq!(effects[0].params.stats_only, Some(true));
+
+    // statsOnly 只属于拟态。
+    assert!(
+        parse_effects("OnCombatStart|Devour|enemy:single|value=2,statsOnly=true").is_err(),
+        "statsOnly 不得用于 Devour"
+    );
+}
+
+#[test]
 fn parses_new_picks() {
     let effects = effects_of("Aura|ModifyStats|friendly:adjacent|attack=1");
     assert!(matches!(

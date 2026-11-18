@@ -240,6 +240,7 @@ fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> R
         }
         "canKill" => params.can_kill = Some(parse_bool(key, value, chunk)?),
         "healthOnly" => params.health_only = Some(parse_bool(key, value, chunk)?),
+        "statsOnly" => params.stats_only = Some(parse_bool(key, value, chunk)?),
         "free" => params.free = Some(parse_bool(key, value, chunk)?),
         "timesIf" => params.times_if = Some(parse_times_if(value, chunk)?),
         "condition" => params.condition = Some(parse_condition(value, chunk)?),

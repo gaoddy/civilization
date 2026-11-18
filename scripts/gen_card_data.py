@@ -290,10 +290,11 @@ def _json_params(params):
                 "maxCount": "max_count",
             }.get(key, key)
             result[name] = int(value)
-        elif key in ("canKill", "healthOnly", "free"):
+        elif key in ("canKill", "healthOnly", "statsOnly", "free"):
             name = {
                 "canKill": "can_kill",
                 "healthOnly": "health_only",
+                "statsOnly": "stats_only",
                 "free": "free",
             }[key]
             result[name] = value == "true"

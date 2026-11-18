@@ -97,10 +97,10 @@
 | [decompose-ally-kill-pre-kill](decompose-ally-kill-pre-kill.md) | decompose | 分解：友方随从击杀敌方随从后，获得其被击杀前的生命值 | 1 |
 | [decompose-friendly-death-original](decompose-friendly-death-original.md) | decompose | 分解：友方随从死亡后，获得其原始生命值 | 1 |
 | [decompose-kill-original](decompose-kill-original.md) | decompose | 分解：本随从击杀随从后，获得其原始生命值 | 3 |
-| [devour-1](devour-1.md) | 无 | 吞噬：战吼，消灭一个攻击力不高于 1 的敌方随从，永久获得其攻击力与生命值 | 1 |
-| [devour-2](devour-2.md) | 无 | 吞噬：战吼，消灭一个攻击力不高于 2 的敌方随从，永久获得其攻击力与生命值 | 1 |
-| [devour-3](devour-3.md) | 无 | 吞噬：战吼，消灭一个攻击力不高于 3 的敌方随从，永久获得其攻击力与生命值 | 1 |
-| [devour-4](devour-4.md) | 无 | 吞噬：战吼，消灭一个攻击力不高于 4 的敌方随从，永久获得其攻击力与生命值 | 2 |
+| [devour-1](devour-1.md) | 无 | 吞噬：战斗开始时，消灭一个攻击力不高于 1 的敌方随从，永久获得其攻击力与生命值 | 1 |
+| [devour-2](devour-2.md) | 无 | 吞噬：战斗开始时，消灭一个攻击力不高于 2 的敌方随从，永久获得其攻击力与生命值 | 1 |
+| [devour-3](devour-3.md) | 无 | 吞噬：战斗开始时，消灭一个攻击力不高于 3 的敌方随从，永久获得其攻击力与生命值 | 1 |
+| [devour-4](devour-4.md) | 无 | 吞噬：战斗开始时，消灭一个攻击力不高于 4 的敌方随从，永久获得其攻击力与生命值 | 2 |
 | [分工](division-of-labor.md) | 无 | 使一个友方人科随从获得一次成长；若你控制至少 3 个人科随从，改为两次 | 1 |
 | [高效算法](efficient-algorithm.md) | 无 | 刷新商店并获得一张当前星级的随从 | 1 |
 | [非攻](enemy-random-cannot-attack.md) | 无 | 使随机一个敌方随从本回合无法攻击 | 1 |
