@@ -461,6 +461,27 @@ fn resolve_ghost(
     // 因此按阵营丢弃幽灵侧（side 1）的回手与复制副作用，避免写进落单玩家手牌。
     log.hand_copies.retain(|copy| copy.side == 0);
     log.hand_minions.retain(|recalled| recalled.side == 0);
+    // 幽灵侧的回手不会写进任何手牌（上面已丢弃），回放里也不应留下对应动作，
+    // 否则客户端会凭空收到一条「回手」而棋盘没有变化。动作与状态按下标并行，
+    // 必须同步剔除。
+    let recalled_ids: BTreeSet<InstanceId> = log
+        .hand_minions
+        .iter()
+        .map(|recalled| recalled.minion.instance_id)
+        .collect();
+    let mut kept_actions = Vec::with_capacity(log.actions.len());
+    let mut kept_states = Vec::with_capacity(log.states.len());
+    for (action, states) in log.actions.drain(..).zip(log.states.drain(..)) {
+        if let combat::CombatAction::Recalled { minion } = &action
+            && !recalled_ids.contains(minion)
+        {
+            continue;
+        }
+        kept_actions.push(action);
+        kept_states.push(states);
+    }
+    log.actions = kept_actions;
+    log.states = kept_states;
     write_back_combat_log(catalog, state, &log);
     write_back_persistent(state, seat, &log.attacker_final);
 
