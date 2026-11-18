@@ -1391,11 +1391,11 @@
     "cost": null,
     "display_cost": 3,
     "era": "classical",
-    "health": 3,
+    "health": 4,
     "id": "flying-fish",
     "is_hero": false,
     "is_scholar": false,
-    "level": 2,
+    "level": 3,
     "playstyle": "fish",
     "skills": [
       "keyword-optimal-attack"

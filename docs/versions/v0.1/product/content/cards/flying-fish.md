@@ -5,10 +5,10 @@ name: 飞鱼
 playstyle: fish
 taxon: exocoetidae
 subtype: fish
-level: 2
+level: 3
 era: classical
 attack: 3
-health: 3
+health: 4
 skills: [keyword-optimal-attack]
 is_scholar: false
 ---
@@ -26,10 +26,10 @@ is_scholar: false
 | 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 颌针鱼目 › 飞鱼科 |
 | 关联分类 | 无 |
 | 子类 | 鱼类 |
-| 星级 | 2 |
+| 星级 | 3 |
 | 时代 | 古典 |
 | 攻击力 | 3 |
-| 生命值 | 3 |
+| 生命值 | 4 |
 | 关键词 | 最优攻击 |
 | 技能 | keyword-optimal-attack |
 | 学者 | 否 |
@@ -42,7 +42,7 @@ is_scholar: false
 ## 设计说明
 
 定位：鱼纲的早期最优攻击单位，负责突破嘲讽找残血目标。
-平衡边界：2 星 3/3，攻击力取该星级上限，靠关键词换取生命。
+平衡边界：3 星 3/4，攻击力取该星级下限附近，靠关键词换取攻防。
 使用建议：用于收掉敌方低血关键随从，避免与高攻单位正面交换。
 
 ## 出处

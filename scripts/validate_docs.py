@@ -150,7 +150,7 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16),
          7: (10, 15, 14, 20)}
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
-KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 2,
+KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
              "contagion": 3, "reborn": 4, "divine_shield": 5,
              "poison": 1, "armor": 1, "stealth": 1}
 # TODO(Task 15): 新关键词的卡牌数据落地后删除该常量，并把三个关键词改为硬校验。
@@ -158,7 +158,7 @@ KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 2,
 KW_UNLOCK_PENDING = {"poison", "armor", "stealth"}
 EXPECT_ERA = {"prehistoric": 37, "primitive": 33, "classical": 25, "feudal": 46,
               "industrial": 34, "modern": 61, "future": 40}
-EXPECT_LEVEL = {1: 28, 2: 43, 3: 44, 4: 46, 5: 43, 6: 20, 7: 15}
+EXPECT_LEVEL = {1: 28, 2: 42, 3: 45, 4: 46, 5: 43, 6: 20, 7: 15}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "playstyle", "taxon", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
