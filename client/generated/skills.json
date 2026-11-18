@@ -712,6 +712,33 @@
     "cost": null,
     "effects": [
       {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "bacteria"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "battlecry-friendly-bacteria-plus-0-plus-1",
+    "keyword": "battlecry",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "growth",
         "params": {
           "times": 1
@@ -1668,6 +1695,52 @@
     "cost": null,
     "effects": [
       {
+        "op": "convert",
+        "params": {
+          "count": 1,
+          "threshold": 3,
+          "token": "bacteria-token-2"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "convert-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "convert",
+        "params": {
+          "count": 1,
+          "threshold": 4,
+          "token": "bacteria-token-4"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "convert-4",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "grant_keyword",
         "params": {
           "duration": "permanent",
@@ -1780,6 +1853,58 @@
     ],
     "id": "deathrattle-all-friendly-plus-0-plus-1",
     "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "bacteria"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-friendly-bacteria-growth-once",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "cnidarian"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-friendly-cnidarian-growth-once",
+    "keyword": "deathrattle",
     "uses_per_turn": null
   },
   {
@@ -1921,6 +2046,25 @@
         "op": "summon",
         "params": {
           "count": 2,
+          "token": "ammonite-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-2-ammonites",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 2,
           "token": "amoeba-larva-token-2"
         },
         "selector": {
@@ -1930,6 +2074,25 @@
       }
     ],
     "id": "deathrattle-summon-2-amoeba-larvae-2-2",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 2,
+          "token": "coral-polyp-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-2-coral-polyps",
     "keyword": "deathrattle",
     "uses_per_turn": null
   },
@@ -2016,6 +2179,25 @@
         "op": "summon",
         "params": {
           "count": 1,
+          "token": "coral-polyp-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-coral-polyp",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
           "token": "cordyceps-token"
         },
         "selector": {
@@ -2063,6 +2245,25 @@
       }
     ],
     "id": "deathrattle-summon-fish-fry-3",
+    "keyword": "deathrattle",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "summon",
+        "params": {
+          "count": 1,
+          "token": "octopus-larva-token"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "deathrattle-summon-octopus-larva-1",
     "keyword": "deathrattle",
     "uses_per_turn": null
   },
@@ -2197,6 +2398,48 @@
     ],
     "id": "decompose-kill-original",
     "keyword": "decompose",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "detonate",
+        "params": {
+          "amount": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "detonate-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "detonate",
+        "params": {
+          "amount": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "detonate-2",
+    "keyword": null,
     "uses_per_turn": null
   },
   {
@@ -2523,6 +2766,13 @@
   },
   {
     "cost": null,
+    "effects": [],
+    "id": "keyword-armor-1",
+    "keyword": "armor 1",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
     "effects": [
       {
         "op": "growth",
@@ -2633,6 +2883,13 @@
   {
     "cost": null,
     "effects": [],
+    "id": "keyword-poison",
+    "keyword": "poison",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [],
     "id": "keyword-reborn",
     "keyword": "reborn",
     "uses_per_turn": null
@@ -2654,6 +2911,13 @@
     ],
     "id": "keyword-sow",
     "keyword": "sow",
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [],
+    "id": "keyword-stealth",
+    "keyword": "stealth",
     "uses_per_turn": null
   },
   {
@@ -2724,6 +2988,71 @@
     "cost": null,
     "effects": [
       {
+        "op": "mimic",
+        "params": {
+          "duration": "combat",
+          "stats_only": true
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_play"
+      }
+    ],
+    "id": "mimic-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "mimic",
+        "params": {
+          "duration": "combat",
+          "stats_only": true
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "mimic-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "mimic",
+        "params": {
+          "duration": "combat"
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "enemy"
+        },
+        "trigger": "on_combat_start"
+      }
+    ],
+    "id": "mimic-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
         "op": "add_shop_slot",
         "params": {
           "count": 1,
@@ -2757,6 +3086,81 @@
       }
     ],
     "id": "radiation",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "recall",
+        "params": {
+          "to": "hand"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "recall-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "revive",
+        "params": {
+          "attack": 1,
+          "health": 1
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "revive-1",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "revive",
+        "params": {
+          "attack": 2,
+          "health": 2
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "revive-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "revive",
+        "params": {
+          "attack": 3,
+          "health": 3
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_death"
+      }
+    ],
+    "id": "revive-3",
     "keyword": null,
     "uses_per_turn": null
   },

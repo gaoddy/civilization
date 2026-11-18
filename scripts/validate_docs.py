@@ -152,13 +152,13 @@ RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
 CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "optimal_attack": 3,
              "contagion": 3, "reborn": 4, "divine_shield": 5,
-             "poison": 1, "armor": 1, "stealth": 1}
+             "poison": 3, "armor": 2, "stealth": 3}
 # TODO(Task 15): 新关键词的卡牌数据落地后删除该常量，并把三个关键词改为硬校验。
 # 在此之前，关键词未出现时不要求其已出现，出现后仍校验最小星级。
 KW_UNLOCK_PENDING = {"poison", "armor", "stealth"}
-EXPECT_ERA = {"prehistoric": 37, "primitive": 33, "classical": 25, "feudal": 46,
-              "industrial": 34, "modern": 61, "future": 40}
-EXPECT_LEVEL = {1: 28, 2: 42, 3: 45, 4: 46, 5: 43, 6: 20, 7: 15}
+EXPECT_ERA = {"prehistoric": 45, "primitive": 38, "classical": 28, "feudal": 48,
+              "industrial": 37, "modern": 72, "future": 41}
+EXPECT_LEVEL = {1: 33, 2: 48, 3: 51, 4: 52, 5: 48, 6: 23, 7: 17}
 SKILL_FIELDS = ["id", "text", "effects"]
 MINION_FIELDS = ["id", "name", "card_type", "playstyle", "taxon", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
@@ -1066,8 +1066,8 @@ def check_skills():
     global KEYWORD_LABELS
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 159:
-        fail(f"技能数量 {len(skills)}，期望 159")
+    if len(skills) != 180:
+        fail(f"技能数量 {len(skills)}，期望 180")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
@@ -1285,7 +1285,7 @@ def check_cards(skill_map):
                 fail(message)
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"minion": 239, "effect": 37}:
+    if counts != {"minion": 272, "effect": 37}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]

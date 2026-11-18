@@ -3,15 +3,19 @@ card.adam-smith.name,亚当·斯密
 card.agi.name,通用人工智能
 card.airplane.name,飞机
 card.alan-turing.name,艾伦·图灵
+card.ammonite.name,菊石
 card.amoeba.name,变形虫
 card.aolinpike-jidian.match_text,同左
 card.aolinpike-jidian.name,奥林匹克祭典
 card.aq-jingshen.match_text,同左
 card.aq-jingshen.name,阿Q精神
 card.archimedes.name,阿基米德
+card.argonaut.name,船蛸
 card.aristotle.name,亚里士多德
 card.artificial-womb.name,人造子宫
 card.aspergillus.name,曲霉
+card.bacillus-anthracis.name,炭疽芽孢杆菌
+card.bacteriophage.name,噬菌体（肌尾）
 card.baiyi.name,白蚁
 card.beethoven.name,贝多芬
 card.bingdushizu.name,病毒始祖
@@ -19,6 +23,8 @@ card.bisheng.name,毕昇
 card.black-death-spread.match_text,同左
 card.black-death-spread.name,黑死病·播散
 card.black-death.name,黑死病
+card.blue-ringed-octopus.name,蓝环章鱼
+card.box-jellyfish.name,箱水母
 card.boxer.name,拳击手
 card.bruce-lee.name,李小龙
 card.bulangyundong.match_text,战斗开始时，对敌方最左侧随从造成 2 点伤害
@@ -31,9 +37,13 @@ card.chengbang-faling.match_text,同左
 card.chengbang-faling.name,城邦法令
 card.chengbang-gongmin.name,城邦公民
 card.cholera.name,霍乱
+card.clostridium-tetani.name,破伤风梭菌
 card.clownfish.name,小丑鱼
 card.coelacanth.name,腔棘鱼
+card.colossal-squid.name,大王酸浆鱿
+card.coral-polyp.name,珊瑚虫
 card.cordyceps.name,冬虫夏草
+card.cuttlefish.name,乌贼
 card.darwin.name,达尔文
 card.davinci.name,达·芬奇
 card.dianbaoji.name,电报机
@@ -48,6 +58,7 @@ card.doushouchang-shizi.name,斗兽场狮子
 card.dunkleosteus.name,邓氏鱼
 card.dushe.name,毒蛇
 card.dyson-sphere.name,戴森球
+card.e-coli.name,大肠杆菌
 card.ebola.name,埃博拉
 card.edison.name,爱迪生
 card.eel.name,鳗鲡
@@ -79,6 +90,8 @@ card.galileo.name,伽利略
 card.ganlanshu.name,橄榄树
 card.gauss.name,高斯
 card.giant-amoeba.name,大变形虫
+card.giant-jellyfish.name,巨型水母
+card.giant-squid.name,大王乌贼
 card.giardia.name,贾第虫
 card.godel.name,库尔特·哥德尔
 card.gongchangzhu.name,工厂主
@@ -110,6 +123,7 @@ card.huangrebing.name,黄热病
 card.huochongdui.name,火铳队
 card.huoqiangshou.name,火枪手
 card.hybrid-rice.name,杂交水稻
+card.hydra.name,水螅
 card.influenza-mutation.match_text,同左
 card.influenza-mutation.name,流感病毒·变异
 card.influenza.name,流感病毒
@@ -133,6 +147,7 @@ card.kongzi.name,孔子
 card.kuangquanbing.name,狂犬病
 card.kuangrenriji.match_text,同左
 card.kuangrenriji.name,狂人日记
+card.lactobacillus.name,乳酸菌
 card.lamarck.name,拉马克
 card.langqunshouling.name,狼群首领
 card.lavoisier.name,拉瓦锡
@@ -155,16 +170,20 @@ card.mengmalieren.name,猛犸猎人
 card.mengmaxiang.name,猛犸象
 card.mianhua.name,棉花
 card.michelangelo.name,米开朗基罗
+card.mimic-octopus.name,拟态章鱼（大型）
+card.moon-jellyfish.name,海月水母
 card.morgan.name,摩尔根
 card.moses.name,摩西
 card.mozi.name,墨子
 card.muhammad-ali.name,穆罕默德·阿里
 card.mushroom.name,蘑菇
+card.mycobacterium-tuberculosis.name,结核分枝杆菌
 card.nahan.match_text,同左
 card.nahan.name,呐喊
 card.nami-bingdu.name,纳米病毒
 card.nami-fengqun.name,纳米蜂群
 card.nanobot.name,纳米机器人
+card.nautilus.name,鹦鹉螺
 card.neiranji.name,内燃机
 card.newton.name,牛顿
 card.nitaizhangyu.name,拟态章鱼
@@ -172,6 +191,7 @@ card.nitrogen-crop.name,固氮作物
 card.niuwen.name,牛瘟
 card.nupao.name,弩炮
 card.nushou.name,弩手
+card.octopus-larva.name,章鱼幼体
 card.panghuang.match_text,同左
 card.panghuang.name,彷徨
 card.paramecium.name,草履虫
@@ -182,6 +202,7 @@ card.phonograph.name,留声机
 card.pink-ape.name,带粉色头套的猩猩
 card.plasmodium.name,疟原虫
 card.plato.name,柏拉图
+card.portuguese-man-of-war.name,僧帽水母
 card.prototaxites.name,原杉菌
 card.puffball.name,马勃
 card.pufferfish.name,河豚
@@ -196,6 +217,7 @@ card.quantum-computer.name,量子计算机
 card.qulv-feichuan.name,曲率飞船
 card.quyuan.name,屈原
 card.radiolarian.name,放射虫
+card.red-coral.name,红珊瑚
 card.rengongzhineng.match_text,同左
 card.rengongzhineng.name,人工智能
 card.renzaoshandian.match_text,同左
@@ -209,6 +231,7 @@ card.sagan.name,卡尔·萨根
 card.salmon.name,鲑鱼
 card.saman.name,萨满
 card.schrodinger.name,薛定谔
+card.sea-anemone.name,海葵
 card.self-driving-car.name,自动驾驶汽车
 card.shakespeare.name,莎士比亚
 card.shannon.name,克劳德·香农
@@ -229,13 +252,19 @@ card.shuizhong.name,水钟
 card.sibadayongshi.name,斯巴达勇士
 card.simaqian.name,司马迁
 card.smallpox.name,天花
+card.soft-coral.name,软珊瑚
 card.space-elevator.name,太空电梯
 card.space-rice.name,太空水稻
+card.squid.name,枪乌贼
+card.staghorn-coral.name,鹿角珊瑚
+card.staphylococcus.name,葡萄球菌
 card.steam-engine.name,蒸汽机
 card.stentor.name,喇叭虫
 card.stephenson.name,史蒂芬孙
+card.streptococcus.name,链球菌
 card.sugeladi.name,苏格拉底
 card.suishimaobing.name,燧石矛兵
+card.superbug.name,超级细菌
 card.synthetic-cell.name,合成细胞
 card.tai.name,苔藓
 card.taikongziminzhe.name,太空殖民者
@@ -254,7 +283,10 @@ card.trypanosome.name,锥虫
 card.tufu.name,屠夫
 card.tuna.name,金枪鱼
 card.turing-machine.name,图灵机
+card.turritopsis.name,灯塔水母
+card.vampire-squid.name,吸血鬼乌贼
 card.vertical-farm.name,垂直农场
+card.vibrio-cholerae.name,霍乱弧菌
 card.volvox.name,团藻
 card.von-neumann.name,冯·诺依曼
 card.vorticella.name,钟虫
@@ -278,6 +310,7 @@ card.yadian-wenyi.name,雅典瘟疫
 card.yanhuashi.name,岩画师
 card.yeast.name,酵母
 card.yelang.name,野狼
+card.yersinia-pestis.name,鼠疫耶尔森菌
 card.yezhu.name,野猪
 card.yinlibo.match_text,同左
 card.yinlibo.name,引力波
@@ -825,6 +858,7 @@ skill.battlecry-all-friendly-plus-0-plus-1.text,战吼：使你的所有随从�
 skill.battlecry-all-mech-growth-once-no-keyword.text,战吼：使你的所有机械随从获得一次成长
 skill.battlecry-all-mech-growth-once.text,战吼：使你的所有机械随从获得一次成长
 skill.battlecry-friendly-archers-plus-2-attack.text,战吼：使你的弓箭手获得 +2 攻击力
+skill.battlecry-friendly-bacteria-plus-0-plus-1.text,战吼：使一个友方细菌域随从获得 +0/+1
 skill.battlecry-friendly-fish-growth-once.text,战吼：使一个友方鱼纲随从获得一次成长
 skill.battlecry-friendly-fungus-growth-once.text,战吼：使一个友方真菌界随从获得一次成长
 skill.battlecry-friendly-growth-once.text,战吼：使一个友方随从获得一次成长
@@ -883,25 +917,33 @@ skill.combatstart-top-attack-enemy-cant-attack.match_text,同左
 skill.combatstart-top-attack-enemy-cant-attack.text,战斗开始时，使敌方攻击力最高的随从本回合无法攻击
 skill.combatstart-top-attack-enemy-minus-0-minus-2.match_text,同左
 skill.combatstart-top-attack-enemy-minus-0-minus-2.text,战斗开始时，使敌方攻击力最高的随从获得 -0/-2
+skill.convert-3.text,转化：战斗开始时，若一个敌方随从有 3 层传染，消灭它并召唤一个 2/2 的细菌
+skill.convert-4.text,转化：战斗开始时，若一个敌方随从有 4 层传染，消灭它并召唤一个 4/4 的细菌
 skill.deathrattle-all-enemies-contagion-1.text,亡语：使敌方所有随从获得 1 层传染
 skill.deathrattle-all-enemies-damage-2.text,亡语：对敌方所有随从造成 2 点伤害
 skill.deathrattle-all-enemies-humans-minus-2-health.text,亡语：使敌方所有人科随从获得 -2 生命
 skill.deathrattle-all-enemies-minus-1-health.text,亡语：使敌方所有随从获得 -1 生命
 skill.deathrattle-all-friendly-plus-0-plus-1.text,亡语：使你的所有随从获得 +0/+1
+skill.deathrattle-friendly-bacteria-growth-once.text,亡语：使一个友方细菌域随从获得一次成长
+skill.deathrattle-friendly-cnidarian-growth-once.text,亡语：使一个友方水螅纲随从获得一次成长
 skill.deathrattle-friendly-protozoa-growth-once.text,亡语：使一个友方原生生物界随从获得一次成长
 skill.deathrattle-random-enemy-damage-2.text,亡语：对随机一个敌方随从造成 2 点伤害
 skill.deathrattle-random-enemy-hp-minus-1.text,亡语：使随机一个敌方随从获得 -1 生命值
 skill.deathrattle-random-enemy-minus-1-attack.text,亡语：使随机一个敌方随从获得 -1 攻击力
 skill.deathrattle-random-enemy-minus-1-health.text,亡语：使随机一个敌方随从获得 -1 生命
 skill.deathrattle-summon-2-2-hela-cell-clone.text,亡语：召唤一个 2/2 的海拉细胞（复制体）
+skill.deathrattle-summon-2-ammonites.text,分裂：死亡时召唤两个 5/5 的菊石
 skill.deathrattle-summon-2-amoeba-larvae-2-2.text,分裂：死亡时召唤两个 2/2 的变形虫幼体
+skill.deathrattle-summon-2-coral-polyps.text,分裂：死亡时召唤两个 1/1 的珊瑚虫
 skill.deathrattle-summon-2-spores-2-2.text,分裂：死亡时召唤两个 2/2 的孢子
 skill.deathrattle-summon-3-spores-3-3.text,分裂：死亡时召唤三个 3/3 的孢子
 skill.deathrattle-summon-4-volvox-cells.text,分裂：死亡时召唤四个 1/1 的团藻细胞
 skill.deathrattle-summon-amoeba-larva-1.text,分裂：死亡时召唤一个 1/1 的变形虫幼体
+skill.deathrattle-summon-coral-polyp.text,分裂：死亡时召唤一个 1/1 的珊瑚虫
 skill.deathrattle-summon-cordyceps.text,分裂：死亡时召唤一个 3/3 的虫草
 skill.deathrattle-summon-fish-fry-2.text,分裂：死亡时召唤两个 1/1 的鱼苗
 skill.deathrattle-summon-fish-fry-3.text,分裂：死亡时召唤三个 1/1 的鱼苗
+skill.deathrattle-summon-octopus-larva-1.text,分裂：死亡时召唤一个 1/1 的章鱼幼体
 skill.deathrattle-summon-schizont.text,分裂：死亡时召唤一个 3/3 的裂殖体
 skill.deathrattle-summon-spore-token-1.text,分裂：死亡时召唤一个 1/1 的孢子
 skill.deathrattle-summon-spore-token-2.text,分裂：死亡时召唤一个 2/2 的孢子
@@ -909,6 +951,8 @@ skill.deathrattle-summon-termite.text,亡语：召唤一个 1/2 的白蚁
 skill.decompose-ally-kill-pre-kill.text,分解：友方随从击杀敌方随从后，获得其被击杀前的生命值
 skill.decompose-friendly-death-original.text,分解：友方随从死亡后，获得其原始生命值
 skill.decompose-kill-original.text,分解：本随从击杀随从后，获得其原始生命值
+skill.detonate-1.text,引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 1 点伤害
+skill.detonate-2.text,引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 2 点伤害
 skill.devour-1.text,吞噬：战斗开始时，消灭一个攻击力不高于 1 的敌方随从，永久获得其攻击力与生命值
 skill.devour-2.text,吞噬：战斗开始时，消灭一个攻击力不高于 2 的敌方随从，永久获得其攻击力与生命值
 skill.devour-3.text,吞噬：战斗开始时，消灭一个攻击力不高于 3 的敌方随从，永久获得其攻击力与生命值
@@ -940,6 +984,7 @@ skill.human-growth-twice.text,使一个友方人科随从获得两次成长
 skill.invention-factory.match_text,同左
 skill.invention-factory.name,发明工厂
 skill.invention-factory.text,使你的其他机械随从各获得一次成长
+skill.keyword-armor-1.text,减伤 1：受到伤害时，减免 1 点伤害
 skill.keyword-assemble-1.text,装配 1：进入战场时，使你的其他机械随从各获得 1 次成长
 skill.keyword-assemble-2.text,装配 2：进入战场时，使你的其他机械随从各获得 2 次成长
 skill.keyword-breed-1.text,繁衍 1：回合开始时获得 +1 生命
@@ -949,8 +994,10 @@ skill.keyword-contagion.text,传染：造成伤害后，目标每回合 -1 生�
 skill.keyword-divine-shield.text,护盾：抵消一次伤害
 skill.keyword-evolve.text,进化：从 +2/+2、护盾、复生中选择一个
 skill.keyword-optimal-attack.text,最优攻击：无视嘲讽，优先攻击可被击杀的目标
+skill.keyword-poison.text,剧毒：造成伤害后，若目标仍存活则将其消灭
 skill.keyword-reborn.text,复生：以 1 点生命复活一次
 skill.keyword-sow.text,播种：死亡时召唤一个 1/1 的幼苗
+skill.keyword-stealth.text,潜行：无法被单体攻击与单体效果选中，造成伤害后打破
 skill.keyword-taunt.text,嘲讽
 skill.keyword-windfury.text,连击：每回合可攻击两次
 skill.light-speed-strike.match_text,同左
@@ -959,12 +1006,19 @@ skill.light-speed-strike.text,使一个友方随从本回合获得连击
 skill.microbiology.match_text,同左
 skill.microbiology.name,微生物学
 skill.microbiology.text,战斗开始时使敌方最左侧随从获得 1 层传染
+skill.mimic-1.text,战吼：复制一个友方随从的当前攻击力与生命值
+skill.mimic-2.text,拟态：战斗开始时，复制一个敌方随从的当前攻击力与生命值直到本回合结束
+skill.mimic-3.text,拟态：战斗开始时，复制一个敌方随从的当前攻击力、生命值与关键词直到本回合结束
 skill.observation.match_text,额外出现的随从固定为当前时代当前星级排序第一张
 skill.observation.name,观测
 skill.observation.text,每回合首次刷新时额外出现一张当前时代的随机随从
 skill.radiation.match_text,战斗开始时，对敌方最左侧随从造成 2 点伤害
 skill.radiation.name,放射
 skill.radiation.text,战斗开始时对随机一个敌方随从造成 2 点伤害
+skill.recall-1.text,回手：死亡时返回手牌并保留成长
+skill.revive-1.text,复苏：以 +1/+1 复活一次
+skill.revive-2.text,复苏：以 +2/+2 复活一次
+skill.revive-3.text,复苏：以 +3/+3 复活一次
 skill.scholar-growth-twice.match_text,同左
 skill.scholar-growth-twice.name,推演
 skill.scholar-growth-twice.text,使一个友方学者随从获得两次成长
