@@ -1557,6 +1557,16 @@ impl Engine {
                         .iter()
                         .all(|filter| self.combat_filter_matches(field, filter, *id, ctx))
                 });
+                // 潜行随从不能被敌方指向性效果选中；全体伤害（`Pick::All`）仍可命中。
+                if *pick != Pick::All {
+                    pool.retain(|id| {
+                        let is_enemy = field.locate(*id).is_some_and(|(side, _)| side != friendly);
+                        !is_enemy
+                            || field
+                                .minion(*id)
+                                .is_none_or(|minion| !combat::has_stealth(&self.catalog, minion))
+                    });
+                }
                 self.combat_apply_pick(field, pool, *pick, ctx, rng)
             }
         }

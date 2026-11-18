@@ -113,6 +113,7 @@ pub fn board_minion_from(
         minion_id: minion.instance_id.to_string(),
         sellable,
         stats: Some(stats_to_protocol(&stats_breakdown(minion))),
+        stealth: combat::has_stealth(catalog, minion),
     }
 }
 
@@ -172,6 +173,7 @@ fn self_to_protocol(
                 minion_id: minion.minion_id.to_string(),
                 sellable: affordance.is_some_and(|candidate| candidate.sellable),
                 stats: Some(stats_to_protocol(&minion.stats)),
+                stealth: minion.stealth,
             }
         })
         .collect();

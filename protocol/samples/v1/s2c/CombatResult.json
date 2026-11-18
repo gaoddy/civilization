@@ -35,7 +35,8 @@
         "keywords": [
           "battlecry"
         ],
-        "sellable": true
+        "sellable": true,
+        "stealth": false
       }
     ],
     "opponentBoard": [
@@ -67,7 +68,8 @@
         "keywords": [
           "battlecry"
         ],
-        "sellable": true
+        "sellable": true,
+        "stealth": false
       }
     ],
     "actions": [
@@ -118,7 +120,8 @@
             "attack": 1,
             "health": 1,
             "keywords": [],
-            "sellable": false
+            "sellable": false,
+            "stealth": false
           }
         }
       }

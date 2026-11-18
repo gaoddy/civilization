@@ -125,6 +125,8 @@ pub struct BoardMinionView {
     pub stats: MinionStatsView,
     /// 当前生效的关键词，按字典序。
     pub keywords: Vec<String>,
+    /// 当前是否仍处于潜行：携带 `stealth` 关键词且尚未被打破。
+    pub stealth: bool,
 }
 
 /// 其他座位的公开摘要；不含任何私密数据。
@@ -388,6 +390,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
             keywords: combat::keywords(&engine.catalog, minion)
                 .into_iter()
                 .collect(),
+            stealth: combat::has_stealth(&engine.catalog, minion),
         })
         .collect();
 

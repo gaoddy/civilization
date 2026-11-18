@@ -136,7 +136,8 @@
             "keywords": [
               "battlecry"
             ],
-            "sellable": true
+            "sellable": true,
+            "stealth": false
           }
         ],
         "rerollCost": 1,

@@ -1441,3 +1441,147 @@ fn reborn_minion_does_not_act_again_after_acting() {
         "本轮已行动过的随从复生后不会立即再次行动"
     );
 }
+
+// ---- 潜行与俯冲 ----
+
+#[test]
+fn stealth_cannot_be_targeted_by_single_effects_but_aoe_hits() {
+    let mut single_catalog = test_catalog();
+    add_card(&mut single_catalog, "caster", 0, 100, &[]);
+    add_effect_skill(
+        &mut single_catalog,
+        "caster",
+        "caster-single",
+        "trait",
+        "OnCombatStart|DealDamage|enemy:leftmost|amount=3",
+    );
+    add_card(&mut single_catalog, "hidden", 0, 100, &["stealth"]);
+    add_card(&mut single_catalog, "visible", 0, 100, &[]);
+
+    let (engine, _) = Engine::new(single_catalog.clone(), [7; 32], test_playstyles());
+    let log = simulate_with(
+        &engine,
+        &[minion(&single_catalog, 1, "caster")],
+        &[
+            minion(&single_catalog, 2, "hidden"),
+            minion(&single_catalog, 3, "visible"),
+        ],
+        0,
+        1,
+        0,
+        &mut rng(),
+        Default::default(),
+    );
+
+    assert_eq!(
+        log.defender_final[0].health(),
+        100,
+        "潜行随从不能被单体效果选中"
+    );
+    assert_eq!(
+        log.defender_final[1].health(),
+        97,
+        "单体效果改选未潜行的最左目标"
+    );
+
+    let mut aoe_catalog = test_catalog();
+    add_card(&mut aoe_catalog, "caster", 0, 100, &[]);
+    add_effect_skill(
+        &mut aoe_catalog,
+        "caster",
+        "caster-aoe",
+        "trait",
+        "OnCombatStart|DealDamage|enemy:all|amount=2",
+    );
+    add_card(&mut aoe_catalog, "hidden", 0, 100, &["stealth"]);
+    add_card(&mut aoe_catalog, "visible", 0, 100, &[]);
+
+    let (engine, _) = Engine::new(aoe_catalog.clone(), [7; 32], test_playstyles());
+    let log = simulate_with(
+        &engine,
+        &[minion(&aoe_catalog, 1, "caster")],
+        &[
+            minion(&aoe_catalog, 2, "hidden"),
+            minion(&aoe_catalog, 3, "visible"),
+        ],
+        0,
+        1,
+        0,
+        &mut rng(),
+        Default::default(),
+    );
+
+    assert_eq!(log.defender_final[0].health(), 98, "全体伤害仍命中潜行随从");
+    assert_eq!(log.defender_final[1].health(), 98);
+}
+
+#[test]
+fn all_enemies_stealthed_still_attack_leftmost_and_break_stealth() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "ambusher", 2, 100, &["stealth"]);
+    add_card(&mut catalog, "guard-left", 0, 100, &["stealth"]);
+    add_card(&mut catalog, "guard-right", 0, 100, &["stealth", "taunt"]);
+
+    let log = combat_log(
+        &catalog,
+        &[minion(&catalog, 1, "ambusher")],
+        &[
+            minion(&catalog, 2, "guard-left"),
+            minion(&catalog, 3, "guard-right"),
+        ],
+    );
+
+    let first_attack = attacks(&log)
+        .into_iter()
+        .next()
+        .expect("战斗必须推进并产生攻击");
+    assert_eq!(first_attack.0, 1, "攻击方为潜行随从");
+    assert_eq!(
+        first_attack.1, 2,
+        "所有防守方都潜行时攻击棋盘最左侧，避免死循环"
+    );
+    assert!(
+        log.attacker_final[0].stealth_broken,
+        "潜行随从攻击后打破潜行"
+    );
+}
+
+#[test]
+fn lowest_attack_pick_breaks_ties_leftmost() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "diver", 0, 100, &[]);
+    add_effect_skill(
+        &mut catalog,
+        "diver",
+        "diver-dive",
+        "dive",
+        "OnCombatStart|DealDamage|enemy:lowestAttack|amount=1",
+    );
+    add_card(&mut catalog, "low-left", 2, 100, &[]);
+    add_card(&mut catalog, "low-right", 2, 100, &[]);
+    add_card(&mut catalog, "high", 5, 100, &[]);
+
+    let (engine, _) = Engine::new(catalog.clone(), [7; 32], test_playstyles());
+    let log = simulate_with(
+        &engine,
+        &[minion(&catalog, 1, "diver")],
+        &[
+            minion(&catalog, 2, "low-left"),
+            minion(&catalog, 3, "low-right"),
+            minion(&catalog, 4, "high"),
+        ],
+        0,
+        1,
+        0,
+        &mut rng(),
+        Default::default(),
+    );
+
+    assert_eq!(
+        log.defender_final[0].health(),
+        99,
+        "攻击力并列最低时俯冲命中棋盘最左侧"
+    );
+    assert_eq!(log.defender_final[1].health(), 100);
+    assert_eq!(log.defender_final[2].health(), 100);
+}

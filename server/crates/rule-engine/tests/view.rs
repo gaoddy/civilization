@@ -672,3 +672,34 @@ fn affordances_blocked_while_target_pending() {
     assert!(!affordances.can_use_hero_power);
     assert!(!affordances.can_end_recruit, "目标待选期间不能结束招募");
 }
+
+#[test]
+fn board_view_reports_current_stealth() {
+    use rule_engine::effects::Duration;
+
+    let (engine, mut state) = setup();
+    let card = minion_id();
+
+    let mut stealthed = dummy(&engine, 1, &card);
+    stealthed
+        .granted
+        .push(("stealth".to_string(), Duration::Combat));
+
+    let mut broken = dummy(&engine, 2, &card);
+    broken
+        .granted
+        .push(("stealth".to_string(), Duration::Combat));
+    broken.stealth_broken = true;
+
+    let plain = dummy(&engine, 3, &card);
+    state.players[0].board = vec![stealthed, broken, plain];
+
+    let board = view(&engine, &state, 0)
+        .expect("座位 0 的视图应存在")
+        .self_view
+        .board;
+
+    assert!(board[0].stealth, "潜行未打破时应报告 stealth=true");
+    assert!(!board[1].stealth, "潜行打破后应报告 stealth=false");
+    assert!(!board[2].stealth, "没有潜行关键词时 stealth=false");
+}

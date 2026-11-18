@@ -218,8 +218,19 @@ fn pick_targets(
         }
         // 相邻需要来源实例的棋盘下标，由相邻机制任务在光环求值中接入。
         Pick::Adjacent => Vec::new(),
-        // 最低攻击只用于 DealDamage，光环不会走到这里。
-        Pick::LowestAttack => Vec::new(),
+        // 最低攻击与 `apply_pick` 同口径：攻击力最低，并列取棋盘最左侧。
+        Pick::LowestAttack => {
+            let mut best: Option<(InstanceId, i32)> = None;
+            for id in pool {
+                let Some(attack) = board_attack(engine, state, id) else {
+                    continue;
+                };
+                if best.is_none_or(|(_, current)| attack < current) {
+                    best = Some((id, attack));
+                }
+            }
+            best.map(|(id, _)| vec![id]).unwrap_or_default()
+        }
     }
 }
 

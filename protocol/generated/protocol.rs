@@ -484,7 +484,8 @@ impl ::std::convert::From<&BoardAffordance> for BoardAffordance {
 ///    "index",
 ///    "keywords",
 ///    "minionId",
-///    "sellable"
+///    "sellable",
+///    "stealth"
 ///  ],
 ///  "properties": {
 ///    "attack": {
@@ -523,6 +524,10 @@ impl ::std::convert::From<&BoardAffordance> for BoardAffordance {
 ///    "stats": {
 ///      "description": "攻防分层构成；旧客户端可忽略",
 ///      "$ref": "#/$defs/MinionStats"
+///    },
+///    "stealth": {
+///      "description": "当前是否仍处于潜行：携带 stealth 关键词且尚未被打破",
+///      "type": "boolean"
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -548,6 +553,8 @@ pub struct BoardMinion {
     ///攻防分层构成；旧客户端可忽略
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub stats: ::std::option::Option<MinionStats>,
+    ///当前是否仍处于潜行：携带 stealth 关键词且尚未被打破
+    pub stealth: bool,
 }
 impl ::std::convert::From<&BoardMinion> for BoardMinion {
     fn from(value: &BoardMinion) -> Self {

@@ -231,6 +231,7 @@
 | `attack` | integer | 是 |  |
 | `health` | integer | 是 |  |
 | `keywords` | array<string> | 是 | 当前生效的关键词，取值为英文 id |
+| `stealth` | boolean | 是 | 当前是否仍处于潜行：携带 stealth 关键词且尚未被打破 |
 | `sellable` | boolean | 是 |  |
 | `stats` | MinionStats | 否 | 攻防分层构成；旧客户端可忽略 |
 

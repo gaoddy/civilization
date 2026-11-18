@@ -39,6 +39,8 @@ const SOW: &str = "sow";
 pub(crate) const POISON: &str = "poison";
 /// 关键词：减伤；实际存储为「armor N」。
 pub(crate) const ARMOR: &str = "armor";
+/// 关键词：潜行。
+pub(crate) const STEALTH: &str = "stealth";
 /// 播种召唤的 token。
 pub(crate) const SEEDLING_TOKEN: &str = "seedling";
 
@@ -243,6 +245,11 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
 /// 是否携带剧毒关键词。
 pub fn has_poison(catalog: &Catalog, minion: &MinionInstance) -> bool {
     keywords(catalog, minion).contains(POISON)
+}
+
+/// 当前是否仍处于潜行：携带 `stealth` 关键词且本次战斗尚未将其打破。
+pub fn has_stealth(catalog: &Catalog, minion: &MinionInstance) -> bool {
+    !minion.stealth_broken && keywords(catalog, minion).contains(STEALTH)
 }
 
 /// 当前生效的减伤层数之和；多个「armor N」叠加。
@@ -716,6 +723,9 @@ impl BattleField {
         };
         // 先取阵营，避免在可变借用随从后再借用棋盘。
         let killer_side = killer.and_then(|killer| self.locate(killer).map(|(side, _)| side));
+        let stealth_source = killer
+            .and_then(|killer| self.minion(killer))
+            .is_some_and(|minion| has_stealth(catalog, minion));
         let armor = self
             .locate(id)
             .map(|(side, index)| armor_value(catalog, &self.sides[side].minions[index]))
@@ -738,6 +748,14 @@ impl BattleField {
         };
         minion.stats.health.apply_damage(damage);
         let dead = self.sides[side].alive[index] && minion.stats.health.current <= 0;
+        // 造成实际伤害的潜行随从打破自身潜行；攻击、反击、俯冲与效果伤害都走这里。
+        if damage > 0
+            && stealth_source
+            && let Some(killer) = killer
+            && let Some(source) = self.minion_mut(killer)
+        {
+            source.stealth_broken = true;
+        }
         if dead && let (Some(killer), Some(killer_side)) = (killer, killer_side) {
             self.pending_kills.push(KillRecord {
                 killer,
@@ -974,17 +992,29 @@ impl BattleField {
 }
 
 /// 选择目标：最优攻击 → 嘲讽 → 全体。
+///
+/// 仍有潜行的防守方随从不在候选池内；若所有存活防守方都在潜行，退回完整
+/// 候选池并固定选择最左侧，保证自动战斗必然推进。
 fn pick_target(
     catalog: &Catalog,
     attacker: &MinionInstance,
     defender: &SideBoard,
     rng: &mut RngStreams,
 ) -> Option<usize> {
-    let candidates: Vec<usize> = (0..defender.minions.len())
+    let all_candidates: Vec<usize> = (0..defender.minions.len())
         .filter(|index| defender.alive[*index])
         .collect();
-    if candidates.is_empty() {
+    if all_candidates.is_empty() {
         return None;
+    }
+    let candidates: Vec<usize> = all_candidates
+        .iter()
+        .copied()
+        .filter(|index| !has_stealth(catalog, &defender.minions[*index]))
+        .collect();
+    if candidates.is_empty() {
+        // 全部潜行：攻击最左侧，避免自动战斗卡死。
+        return all_candidates.first().copied();
     }
 
     let attacker_keywords = keywords(catalog, attacker);
@@ -1142,6 +1172,13 @@ fn resolve_attack(
             },
             states,
         );
+    }
+
+    // (c3) 潜行随从的主动攻击本身即打破潜行，即使伤害被护盾抵消或攻击力为 0。
+    if attacker_keywords.contains(STEALTH)
+        && let Some(minion) = field.minion_mut(attacker_id)
+    {
+        minion.stealth_broken = true;
     }
 
     // (d) 只记录主动攻击：快照在反击结算之后抓取，已含双方最终血量。

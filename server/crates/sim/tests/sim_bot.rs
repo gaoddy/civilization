@@ -80,7 +80,8 @@ fn board_minion(minion_id: &str, index: u64) -> Value {
         "index": index,
         "keywords": [],
         "minionId": minion_id,
-        "sellable": true
+        "sellable": true,
+        "stealth": false
     })
 }
 
@@ -282,6 +283,7 @@ fn with_board(mut view: PlayerView, minion_id: &str) -> PlayerView {
         minion_id: minion_id.to_string(),
         sellable: true,
         stats: None,
+        stealth: false,
     });
     view
 }
