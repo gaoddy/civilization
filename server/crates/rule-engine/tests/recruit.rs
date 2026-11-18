@@ -16,7 +16,8 @@ fn remove_effect_cards(engine: &mut Engine) {
         .retain(|_, card| card.card_type != CardType::Effect);
 }
 
-fn effect_card() -> (String, u8) {    test_catalog()
+fn effect_card() -> (String, u8) {
+    test_catalog()
         .cards
         .values()
         .find(|card| card.card_type == CardType::Effect)

@@ -6,7 +6,7 @@
 use std::collections::BTreeMap;
 
 use rule_engine::combat::{effective_attack, effective_health};
-use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill};
+use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill, SpecialtyKind};
 use rule_engine::effects::{Duration, Op, Pick, Selector, Side, Trigger};
 use rule_engine::engine::Engine;
 use rule_engine::intent::{Intent, Reject, RejectCode};
@@ -272,6 +272,25 @@ fn strongest_target(player: &PlayerState, catalog: &Catalog) -> Option<u64> {
 /// 购买候选的排序键：价格 → 卡牌等级 → 槽位下标小者优先。
 type CandidateKey = (u8, u8, std::cmp::Reverse<u8>);
 
+/// 定向效果牌是否适合当前阵容：通用牌始终可买，定向牌只在玩法关联与
+/// 阵容主导玩法一致时购买；没有主导玩法（中立）时视为可买。
+fn effect_matches_playstyle(card: &Card, dominant: Playstyle) -> bool {
+    if card.card_type != CardType::Effect || dominant == Playstyle::Neutral {
+        return true;
+    }
+    let mut any = false;
+    for specialty in &card.specialty {
+        if specialty.kind != SpecialtyKind::Play {
+            continue;
+        }
+        any = true;
+        if Playstyle::from_id(&specialty.value) == Some(dominant) {
+            return true;
+        }
+    }
+    !any
+}
+
 /// 商店中买得起且能放入手牌的候选里按降序键排列后的第一个槽位：
 /// 金币 → 卡牌等级 → 槽位下标小的优先。买入一律入手牌，因此只看手牌是否有空位。
 fn best_affordable(
@@ -283,6 +302,10 @@ fn best_affordable(
     if player.hand.len() >= catalog.config.hand_slots {
         return None;
     }
+    let dominant = dominant_playstyle(
+        player.board.iter().map(|minion| minion.card_id.as_str()),
+        catalog,
+    );
     let mut best: Option<(CandidateKey, u8)> = None;
     for (slot_index, slot) in player.shop.iter().enumerate() {
         let Some(slot) = slot else { continue };
@@ -290,6 +313,9 @@ fn best_affordable(
             continue;
         };
         if card.is_hero {
+            continue;
+        }
+        if !effect_matches_playstyle(card, dominant) {
             continue;
         }
         if card.card_type == CardType::Minion && state.pool.get(&card.id).copied().unwrap_or(0) == 0
@@ -582,6 +608,34 @@ mod tests {
                 position: None,
                 target: Some(1)
             })
+        );
+    }
+
+    #[test]
+    fn buy_skips_targeted_effect_of_other_playstyle() {
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        let (_, mut state) =
+            Engine::new(catalog.clone(), [7; 32], rule_engine::playstyles::draw(7));
+        state.phase = Phase::Recruit;
+        state.turn = 1;
+        state.players[0].board = vec![MinionInstance::new(&catalog, 1, "saman", false)];
+        state.players[0].gold = 10;
+        state.players[0].shop = vec![Some(rule_engine::state::ShopSlot {
+            instance_id: 10,
+            card_id: "yangliu".into(),
+            frozen: false,
+        })];
+        assert_eq!(
+            choose_buy(&state, &state.players[0], &catalog),
+            None,
+            "哺乳玩家不买鱼的定向牌"
+        );
+
+        state.players[0].board = vec![MinionInstance::new(&catalog, 2, "clownfish", false)];
+        assert_eq!(
+            choose_buy(&state, &state.players[0], &catalog),
+            Some(Intent::BuyMinion { slot: 0 }),
+            "鱼纲玩家可以买鱼的定向牌"
         );
     }
 }

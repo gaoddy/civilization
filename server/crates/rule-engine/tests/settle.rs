@@ -43,7 +43,9 @@ fn add_aura_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, health
         Skill {
             id: skill_id.clone(),
             keyword: None,
-            effects: effects_of("Aura|ModifyStats|friendly:all|attack=1,health=1,duration=permanent"),
+            effects: effects_of(
+                "Aura|ModifyStats|friendly:all|attack=1,health=1,duration=permanent",
+            ),
             cost: None,
             uses_per_turn: None,
         },

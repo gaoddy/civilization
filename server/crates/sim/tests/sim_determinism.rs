@@ -119,6 +119,9 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 ///
 /// 2026-11-18 第十次重定：效果牌扩充到 100 张并加入定向玩法关联，共享池
 /// 与商店抽取同步变化；战斗哈希不受影响，只重定模拟对局基线。
+///
+/// 2026-11-18 第十一次重定：AI 定向效果牌购买过滤，机器人不再购买与自身
+/// 主导玩法不匹配的定向效果牌，购买决策与随机流消耗随之改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
