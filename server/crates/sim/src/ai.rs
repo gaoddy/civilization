@@ -47,7 +47,7 @@ pub fn plan(
         return None;
     }
     let candidates = [
-        choose_pending(state, player, catalog),
+        choose_pending(state, player, catalog, blocked),
         choose_hero_power(player, catalog),
         choose_fill_board(state, player, catalog),
         choose_buy(state, player, catalog),
@@ -83,7 +83,12 @@ pub fn buy_cost(card: &Card) -> u8 {
     }
 }
 
-fn choose_pending(state: &GameState, player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
+fn choose_pending(
+    state: &GameState,
+    player: &PlayerState,
+    catalog: &Catalog,
+    blocked: &[Intent],
+) -> Option<Intent> {
     let pending = state
         .pending
         .iter()
@@ -94,10 +99,16 @@ fn choose_pending(state: &GameState, player: &PlayerState, catalog: &Catalog) ->
         }),
         // 进化选项：0 = +2/+2，确定性取首项。
         PendingChoice::Evolve { .. } => Some(Intent::ChooseDiscover { choice: 0 }),
-        // 目标待选：确定性取棋盘最左侧随从。
-        PendingChoice::Target { .. } => player.board.first().map(|minion| Intent::ChooseTarget {
-            minion: minion.instance_id,
-        }),
+        // 目标待选：按棋盘顺序取第一个未被拒过的随从。战吼的目标池可以按玩法或
+        // 种族收窄，最左侧随从未必在池内；若只提议它，被拒后待选无法消费，
+        // 其余招募意图又都会因待选存在被引擎拒绝（`InvalidStage`），整局模拟中断。
+        PendingChoice::Target { .. } => player
+            .board
+            .iter()
+            .map(|minion| Intent::ChooseTarget {
+                minion: minion.instance_id,
+            })
+            .find(|intent| !blocked.contains(intent)),
     }
 }
 
@@ -442,4 +453,53 @@ pub fn dominant_playstyle<'a>(
         }
     }
     best.map_or(Playstyle::Neutral, |(playstyle, _)| playstyle)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::embedded_catalog;
+    use rule_engine::state::{PendingChoice, Phase};
+
+    /// 座位 0 的棋盘按给定卡牌 id 从左到右摆放，并挂一条目标待选。
+    fn state_with_target(cards: &[&str]) -> (Catalog, GameState) {
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        let (_, mut state) =
+            Engine::new(catalog.clone(), [7; 32], rule_engine::playstyles::draw(7));
+        state.phase = Phase::Recruit;
+        state.turn = 1;
+        let player = state.players.first_mut().expect("8 个座位");
+        player.board = cards
+            .iter()
+            .enumerate()
+            .map(|(index, card_id)| MinionInstance::new(&catalog, index as u64 + 1, card_id, false))
+            .collect();
+        state.pending.push_back(PendingChoice::Target {
+            seat: 0,
+            source: 1,
+            card_id: "clownfish".to_string(),
+            golden: false,
+        });
+        (catalog, state)
+    }
+
+    #[test]
+    fn pending_target_defaults_to_leftmost_minion() {
+        let (catalog, state) = state_with_target(&["saman", "clownfish"]);
+        assert_eq!(
+            choose(&state, 0, &catalog),
+            Some(Intent::ChooseTarget { minion: 1 })
+        );
+    }
+
+    #[test]
+    fn pending_target_skips_blocked_minions() {
+        // 筛选型战吼的目标池可能不含最左侧随从；被拒后必须沿棋盘后移，
+        // 否则待选无法消费，其余意图都会因待选存在而被引擎拒绝。
+        let (catalog, state) = state_with_target(&["saman", "clownfish"]);
+        assert_eq!(
+            plan(&state, 0, &catalog, &[Intent::ChooseTarget { minion: 1 }]),
+            Some(Intent::ChooseTarget { minion: 2 })
+        );
+    }
 }

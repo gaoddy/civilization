@@ -60,7 +60,8 @@ pub fn next_intent(view: &PlayerView, catalog: &Catalog, seed: u64) -> Option<In
 }
 
 /// 待选队列的第一条。发现按 `seed` 取候选下标，进化固定取 0（与 M0 AI 一致），
-/// 目标待选取棋盘最左侧随从。
+/// 目标待选优先取战吼来源随从（战吼的合法池按入场后的棋盘判定、包含来源自身），
+/// 来源已不在棋盘时退回棋盘最左侧随从。
 fn pending_intent(me: &PlayerViewSelf, seed: u64) -> Option<Intent> {
     match me.pending_choices.first()? {
         PendingChoice::Discover { candidates } => {
@@ -74,9 +75,17 @@ fn pending_intent(me: &PlayerViewSelf, seed: u64) -> Option<Intent> {
             })
         }
         PendingChoice::Evolve { .. } => Some(Intent::ChooseDiscover { choice: 0 }),
-        PendingChoice::Target { .. } => Some(Intent::ChooseTarget {
-            minion_id: me.board.first()?.minion_id.clone(),
-        }),
+        PendingChoice::Target { source_minion_id } => {
+            let source = source_minion_id.to_string();
+            let target = me
+                .board
+                .iter()
+                .find(|minion| minion.minion_id == source)
+                .or_else(|| me.board.first())?;
+            Some(Intent::ChooseTarget {
+                minion_id: target.minion_id.clone(),
+            })
+        }
     }
 }
 
@@ -152,26 +161,29 @@ pub fn recover_after_error(view: &PlayerView) -> Option<Intent> {
     Some(Intent::EndRecruit)
 }
 
-/// 收到 `NO_VALID_TARGET` 后，给被拒意图补上己方第一个随从并重发。
+/// 收到 `NO_VALID_TARGET` 后，给被拒意图补上己方棋盘上的下一个随从并重发。
 ///
-/// 服务端要求「存在合法目标时」必须指定目标；机器人没有交互界面，按棋盘顺序取
-/// 第一个己方随从作为确定性选择。棋盘为空说明该效果本可落空（服务端不会返回
-/// 该错误），返回 `None` 交给兜底逻辑。
-///
-/// 补选的目标仍可能不合法：效果的目标池可按种族等过滤器收窄，首个己方随从未必
-/// 在池内。因此**已经带目标的意图不再重发**——否则每次拒绝都会补同一个目标，
-/// 形成「补选→拒绝→再补选」的无限空转，机器人永远结束不了招募。
+/// 服务端要求「存在合法目标时」必须指定目标；机器人没有交互界面，按棋盘顺序做
+/// 确定性选择。补选的目标仍可能不合法：效果的目标池可按种族等过滤器收窄，首个
+/// 己方随从未必在池内。因此每次拒绝都沿棋盘后移一位，遍历完棋盘仍无合法目标时
+/// 返回 `None` 交给兜底逻辑——这样既不会重复补同一个目标，也不会无限空转。
 pub fn retry_with_target(view: &PlayerView, rejected: &Intent) -> Option<Intent> {
     if view.phase != Phase::Recruit {
         return None;
     }
-    let target = view.self_.board.first()?.minion_id.clone();
+    let board = &view.self_.board;
+    let next_after = |current: Option<&str>| -> Option<String> {
+        let start = current
+            .and_then(|id| board.iter().position(|minion| minion.minion_id == id))
+            .map_or(0, |index| index + 1);
+        board.get(start).map(|minion| minion.minion_id.clone())
+    };
     match rejected {
         Intent::PlayCard {
             hand_index,
             target_minion_id,
             ..
-        } => target_minion_id.is_none().then_some(Intent::PlayCard {
+        } => next_after(target_minion_id.as_deref()).map(|target| Intent::PlayCard {
             hand_index: *hand_index,
             position: None,
             target_minion_id: Some(target),
@@ -179,10 +191,13 @@ pub fn retry_with_target(view: &PlayerView, rejected: &Intent) -> Option<Intent>
         Intent::UseHeroPower {
             skill_id,
             target_minion_id,
-        } => target_minion_id.is_none().then_some(Intent::UseHeroPower {
+        } => next_after(target_minion_id.as_deref()).map(|target| Intent::UseHeroPower {
             skill_id: skill_id.clone(),
             target_minion_id: Some(target),
         }),
+        Intent::ChooseTarget { minion_id } => {
+            next_after(Some(minion_id)).map(|target| Intent::ChooseTarget { minion_id: target })
+        }
         _ => None,
     }
 }
