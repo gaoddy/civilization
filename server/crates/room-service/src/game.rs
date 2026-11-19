@@ -66,6 +66,28 @@ fn recruit_seconds(turn: u8) -> u64 {
         .min(RECRUIT_CAP_SECONDS)
 }
 
+/// 客户端战斗演示每条动作的间隔（毫秒），与 `client/scenes/game.gd` 的
+/// `COMBAT_PACE_MS` 保持一致。
+const COMBAT_ACTION_MS: u64 = 320;
+
+/// 战斗演示结束横幅停留时长（毫秒），与客户端演示时序一致。
+const COMBAT_BANNER_MS: u64 = 2_000;
+
+/// 进入战斗后的阶段截止：取「下一回合招募截止」与「按动作数估算的演示时长」
+/// 的较大者，避免长战斗被招募兜底提前截断。
+///
+/// `turn` 是进入战斗时的当前回合；下一回合招募从开战时刻起算。演示时长估算为
+/// `最大动作数 × 320ms + 2s`，与客户端逐动作播放的节奏一致。
+fn combat_deadline(now_ms: u64, turn: u8, max_actions: usize) -> u64 {
+    let recruit_deadline =
+        now_ms.saturating_add(recruit_seconds(turn.saturating_add(1)).saturating_mul(1000));
+    let demo_ms = u64::try_from(max_actions)
+        .unwrap_or(u64::MAX)
+        .saturating_mul(COMBAT_ACTION_MS)
+        .saturating_add(COMBAT_BANNER_MS);
+    recruit_deadline.max(now_ms.saturating_add(demo_ms))
+}
+
 /// 剩余多少秒时下发计时警告（由连接层使用，M1a 只暴露常量与 [`GameTask::seconds_left`]）。
 pub const TIMER_WARNING_SECONDS: u64 = 10;
 
@@ -192,6 +214,13 @@ pub struct GameTask {
     hero_uses_baseline: [u32; SEAT_COUNT],
     seed: u64,
     room_id: String,
+    /// 对局开始时刻（Unix epoch 毫秒），用于观察日志的单局时长。
+    started_at_ms: u64,
+    /// 按座位累计的意图总数与拒绝数，用于观察日志的意图拒绝率。
+    intent_counts: [u32; SEAT_COUNT],
+    rejection_counts: [u32; SEAT_COUNT],
+    /// 对局结束观察日志是否已输出，保证每局只打印一次。
+    game_over_logged: bool,
     /// 当前阶段的截止时刻（Unix epoch 毫秒）。
     ///
     /// `Recruit` 时是本回合招募截止；`Combat` 时是下一回合招募截止，同时也是
@@ -278,6 +307,7 @@ impl GameTask {
         let phase_deadline_ms = clock
             .now_ms()
             .saturating_add(recruit_seconds(state.turn).saturating_mul(1000));
+        let started_at_ms = clock.now_ms();
 
         Ok(Self {
             engine,
@@ -291,6 +321,10 @@ impl GameTask {
             hero_uses_baseline: [0; SEAT_COUNT],
             seed,
             room_id: String::new(),
+            started_at_ms,
+            intent_counts: [0; SEAT_COUNT],
+            rejection_counts: [0; SEAT_COUNT],
+            game_over_logged: false,
             phase_deadline_ms,
             combat_reports: None,
             combat_ranks: None,
@@ -602,6 +636,7 @@ impl GameTask {
             self.combat_started_at_ms = None;
             self.combat_acks = [false; SEAT_COUNT];
             self.combat_participants = [false; SEAT_COUNT];
+            self.log_game_over_if_needed();
 
             let mut updates = self.view_updates(&events, &all_seats);
             for seat in all_seats {
@@ -673,8 +708,13 @@ impl GameTask {
             };
         }
 
+        // 去重命中属于重传，不计入意图数；这里开始统计本座位的意图与拒绝。
+        let seat_index = usize::from(seat);
+        self.intent_counts[seat_index] = self.intent_counts[seat_index].saturating_add(1);
+
         if self.state.phase != Phase::Recruit {
             let message = format!("当前阶段 {:?} 不接受招募意图", self.state.phase);
+            self.rejection_counts[seat_index] = self.rejection_counts[seat_index].saturating_add(1);
             self.dedup.insert(
                 key,
                 Deduped::Rejected {
@@ -694,6 +734,8 @@ impl GameTask {
             Ok(intent) => intent,
             Err(code) => {
                 let message = format!("意图参数非法：{code}");
+                self.rejection_counts[seat_index] =
+                    self.rejection_counts[seat_index].saturating_add(1);
                 self.dedup.insert(
                     key,
                     Deduped::Rejected {
@@ -724,6 +766,8 @@ impl GameTask {
             Err(reject) => {
                 let code = error_code_of(reject.code);
                 let message = reject.message;
+                self.rejection_counts[seat_index] =
+                    self.rejection_counts[seat_index].saturating_add(1);
                 self.dedup.insert(
                     key,
                     Deduped::Rejected {
@@ -974,9 +1018,14 @@ impl GameTask {
         let now = self.clock.now_ms();
         self.combat_started_at_ms = Some(now);
         // 下一回合招募计时从开战时刻起算；本截止同时是演示回报的兜底时刻。
-        self.phase_deadline_ms = now.saturating_add(
-            recruit_seconds(self.state.turn.saturating_add(1)).saturating_mul(1000),
-        );
+        // 演示动作数超过招募时长时延长截止，保证客户端播完再结算。
+        let max_actions = outcome
+            .reports
+            .values()
+            .map(|report| report.actions.len())
+            .max()
+            .unwrap_or(0);
+        self.phase_deadline_ms = combat_deadline(now, self.state.turn, max_actions);
         self.combat_acks = [false; SEAT_COUNT];
         self.combat_participants = [false; SEAT_COUNT];
         for &seat in outcome.reports.keys() {
@@ -1028,6 +1077,7 @@ impl GameTask {
         let mut updates = self.view_updates(&events, &all_seats);
 
         if self.state.phase == Phase::GameOver {
+            self.log_game_over_if_needed();
             // 逐座位生成载荷：`selfStats` 只填接收者自己的统计，不能共享同一份。
             for seat in 0..SEAT_COUNT as Seat {
                 if self.is_departed(seat) {
@@ -1040,6 +1090,53 @@ impl GameTask {
             }
         }
         Ok(updates)
+    }
+
+    /// 对局结束观测：一行 JSON，供内测的拒绝率与单局时长记录使用。
+    ///
+    /// 意图数只统计首次提交（去重命中属于重传，不计数）；任何一次拒绝
+    /// （阶段不符、参数非法、引擎拒绝）都计入拒绝数。拒绝率为千分比，
+    /// 没有意图时为 0。
+    fn observation_json(&self) -> serde_json::Value {
+        let intents_total: u64 = self
+            .intent_counts
+            .iter()
+            .map(|count| u64::from(*count))
+            .sum();
+        let rejections_total: u64 = self
+            .rejection_counts
+            .iter()
+            .map(|count| u64::from(*count))
+            .sum();
+        let rejection_rate_permille = if intents_total == 0 {
+            0
+        } else {
+            rejections_total.saturating_mul(1_000) / intents_total
+        };
+        serde_json::json!({
+            "service": "room-service",
+            "event": "game_over",
+            "roomId": self.room_id,
+            "seed": format!("{:016x}", self.seed),
+            "turns": self.state.turn,
+            "durationMs": self.clock.now_ms().saturating_sub(self.started_at_ms),
+            "intentsBySeat": self.intent_counts,
+            "intentsTotal": intents_total,
+            "rejectionsBySeat": self.rejection_counts,
+            "rejectionsTotal": rejections_total,
+            "rejectionRatePermille": rejection_rate_permille,
+            "survivors": self.state.players.iter().filter(|player| !player.eliminated).count(),
+            "winner": self.state.ranking.first().copied(),
+        })
+    }
+
+    /// 进入 `GameOver` 时输出一次观测日志；重复调用不会重复打印。
+    fn log_game_over_if_needed(&mut self) {
+        if self.state.phase != Phase::GameOver || self.game_over_logged {
+            return;
+        }
+        self.game_over_logged = true;
+        eprintln!("{}", self.observation_json());
     }
 
     /// 对局结束载荷：排名（`place` 从 1 起）与 16 位十六进制种子。
@@ -1436,7 +1533,7 @@ mod tests {
     use rule_engine::data::{Catalog, Playstyle};
     use rule_engine::state::{MinionInstance, Pairing, Phase, Seat};
 
-    use super::recruit_seconds;
+    use super::{RoomCommand, combat_deadline, recruit_seconds};
     use crate::clock::FixedClock;
     use crate::envelope::SeatChannel;
     use crate::game::GameTask;
@@ -1610,6 +1707,17 @@ mod tests {
         assert_eq!(recruit_seconds(6), 120);
     }
 
+    #[test]
+    fn combat_deadline_extends_only_for_long_demos() {
+        let now = 1_000_000;
+        // 第 2 回合进入战斗，下一回合招募 75 秒；10 条动作约 5.2 秒，不延长。
+        assert_eq!(combat_deadline(now, 1, 10), now + 75_000);
+        // 300 条动作约 98 秒，超过招募截止，按演示时长延长。
+        assert_eq!(combat_deadline(now, 1, 300), now + 98_000);
+        // 招募已封顶 120 秒时，普通长战斗仍以招募截止为准。
+        assert_eq!(combat_deadline(now, 5, 100), now + 120_000);
+    }
+
     /// 进入战斗后不会按估算时长自动结算；全部参战座位回报后才结算。
     #[test]
     fn combat_waits_for_all_participants_before_settling() {
@@ -1736,5 +1844,70 @@ mod tests {
         })
         .expect_err("非数字编号应被拒绝");
         assert_eq!(error, protocol::ErrorCode::NoSuchMinion);
+    }
+
+    /// 首次提交计入意图数，重传命中去重表不重复计数。
+    #[test]
+    fn observation_counts_only_first_time_intents() {
+        let mut task = task();
+        let intent = || protocol::intents::Intent::RerollShop;
+        task.handle(RoomCommand::Intent {
+            player_id: "p0".to_string(),
+            client_intent_id: "i1".to_string(),
+            intent: intent(),
+        });
+        task.handle(RoomCommand::Intent {
+            player_id: "p0".to_string(),
+            client_intent_id: "i1".to_string(),
+            intent: intent(),
+        });
+
+        let json = task.observation_json();
+        assert_eq!(json["intentsBySeat"][0], 1, "重传不应重复计数");
+        assert_eq!(json["intentsTotal"], 1);
+        assert_eq!(json["rejectionsTotal"], 0, "成功的意图不算拒绝");
+    }
+
+    /// 被拒绝的意图计入拒绝数，拒绝率为千分比。
+    #[test]
+    fn observation_counts_rejections_and_rate() {
+        let mut task = task();
+        task.handle(RoomCommand::Intent {
+            player_id: "p0".to_string(),
+            client_intent_id: "bad".to_string(),
+            // 越界槽位：引擎按「商店槽位为空」拒绝。
+            intent: protocol::intents::Intent::BuyMinion { slot: 99 },
+        });
+        task.handle(RoomCommand::Intent {
+            player_id: "p0".to_string(),
+            client_intent_id: "ok".to_string(),
+            intent: protocol::intents::Intent::RerollShop,
+        });
+
+        let json = task.observation_json();
+        assert_eq!(json["intentsTotal"], 2);
+        assert_eq!(json["rejectionsBySeat"][0], 1);
+        assert_eq!(json["rejectionsTotal"], 1);
+        assert_eq!(json["rejectionRatePermille"], 500);
+    }
+
+    /// 对局结束观测每局只输出一次；字段覆盖时长、名次与存活人数。
+    #[test]
+    fn observation_logs_once_at_game_over() {
+        let mut task = task();
+        task.state.ranking = vec![0, 1, 2, 3, 4, 5, 6, 7];
+        task.state.phase = Phase::GameOver;
+
+        task.log_game_over_if_needed();
+        assert!(task.game_over_logged, "进入 GameOver 应标记已记录");
+        task.log_game_over_if_needed();
+        assert!(task.game_over_logged);
+
+        let json = task.observation_json();
+        assert_eq!(json["event"], "game_over");
+        assert_eq!(json["winner"], 0);
+        assert_eq!(json["survivors"], 8);
+        assert_eq!(json["durationMs"], 0, "固定时钟下开赛即结束");
+        assert!(json["seed"].as_str().is_some_and(|seed| seed.len() == 16));
     }
 }

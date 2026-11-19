@@ -348,6 +348,59 @@ fn snapshot_includes_pending_choice() {
 }
 
 #[test]
+fn reconnect_snapshot_matches_current_state_after_actions() {
+    let (mut task, clock) = task();
+
+    // 断线前座位 0 买入一张牌，状态与开局不同。
+    let bought = task.handle(RoomCommand::Intent {
+        player_id: "p0".to_string(),
+        client_intent_id: "buy-before-reconnect".to_string(),
+        intent: ProtocolIntent::BuyMinion { slot: 0 },
+    });
+    assert!(
+        bought
+            .iter()
+            .all(|update| !matches!(&update.kind, UpdateKind::Error(_))),
+        "买入不应报错"
+    );
+
+    task.handle(RoomCommand::Disconnect {
+        player_id: "p0".to_string(),
+    });
+
+    // 断线期间其他座位继续操作，全局状态推进；重连必须回到当前状态而不是断线前状态。
+    let while_offline = task.handle(RoomCommand::Intent {
+        player_id: "p1".to_string(),
+        client_intent_id: "buy-while-p0-offline".to_string(),
+        intent: ProtocolIntent::BuyMinion { slot: 0 },
+    });
+    assert!(
+        while_offline
+            .iter()
+            .all(|update| !matches!(&update.kind, UpdateKind::Error(_))),
+        "断线期间其他座位的操作不应报错"
+    );
+    clock.advance(10_000);
+
+    let (cmd, _rx) = reconnect("p0", 0);
+    let update = one_update(&mut task, cmd);
+    let (snapshot, _seq) = encode_snapshot(&mut task, &update);
+    let current = task.state_update(0).expect("当前状态应可用");
+
+    assert_eq!(
+        serde_json::to_value(&snapshot.view).expect("快照视图应可序列化"),
+        serde_json::to_value(&current.view).expect("当前视图应可序列化"),
+        "重连快照必须与断线重连后的当前服务端视图完全一致"
+    );
+    assert_eq!(
+        snapshot.view.self_.hand.len(),
+        1,
+        "断线前的买入应保留在重连快照里"
+    );
+    assert_eq!(snapshot.view.self_.gold, 0, "金币应与当前状态一致");
+}
+
+#[test]
 fn combat_reconnect_resends_combat_result() {
     let (mut task, _clock) = task();
 
@@ -378,6 +431,15 @@ fn combat_reconnect_resends_combat_result() {
     );
     assert_eq!(updates[0].player_id, "p0");
     assert_eq!(updates[1].player_id, "p0");
+
+    // 演示阶段重连的快照同样必须与当前服务端视图一致。
+    let (snapshot, _seq) = encode_snapshot(&mut task, &updates[0]);
+    let current = task.state_update(0).expect("当前状态应可用");
+    assert_eq!(
+        serde_json::to_value(&snapshot.view).expect("快照视图应可序列化"),
+        serde_json::to_value(&current.view).expect("当前视图应可序列化"),
+        "演示阶段重连快照必须与当前视图一致"
+    );
 }
 
 // ---------------------------------------------------------------------------
