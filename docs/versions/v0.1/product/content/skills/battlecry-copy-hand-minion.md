@@ -17,6 +17,4 @@ effects: OnPlay|Copy|target:hand:type=minion|from=hand,type=minion,to=hand
 
 ## 效果
 
-战吼：选择一张你手牌中的随从牌并复制
-
-候选为入场时本人手牌中的随从牌；候选为空时战吼落空。
+战吼：复制一张你手牌中的随从牌

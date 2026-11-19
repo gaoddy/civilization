@@ -31,7 +31,7 @@ skills: [trigger-copy-hand-minion]
 
 ## 效果
 
-选择你手牌中的一张随从牌并复制
+复制你手牌中的一张随从牌
 
 ## 出处
 
