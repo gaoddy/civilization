@@ -44,6 +44,7 @@ make m1b-e2e
 | 2026-11-20 | 触控交互 | 通过 | 长按 450ms 显示详情、移动取消、多指与阻塞态不触发；手牌悬停残留复位 |
 | 2026-11-20 | `make m1b-e2e` | 退出码 0 | 客户端到服务端联调未受影响 |
 | 2026-11-20 | 中文字体覆盖 | 通过 | `ui_smoke_text` 断言内置子集覆盖 `zh_CN.csv` 全部字符，默认主题字体为 `NotoSansSC-Regular-subset.ttf`；桌面渲染无缺字 |
+| 2026-11-20 | 移动端默认地址 | 通过 | `ui_smoke_platform` 断言桌面 `ws://127.0.0.1:8080/ws`、移动端 `ws://cooter.local:8080/ws` |
 | 2026-11-20 | iOS 工程编译 | `BUILD SUCCEEDED`（`CODE_SIGNING_ALLOWED=NO`） | 导出 Xcode 工程可编译；正式签名包见 §3.2 |
 
 ### 3.2 真机项（待执行）
