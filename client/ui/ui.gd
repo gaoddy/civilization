@@ -160,6 +160,19 @@ static func avatar(hero_id: String, size := 34) -> PanelContainer:
     box.set_border_width_all(2)
     box.set_corner_radius_all(int(size * 0.3))
     node.add_theme_stylebox_override("panel", box)
+    var avatar_path := CardDB.art_path(hero_id, "avatar")
+    if avatar_path != "" and ResourceLoader.exists(avatar_path):
+        var texture := ResourceLoader.load(avatar_path) as Texture2D
+        if texture != null:
+            var art := TextureRect.new()
+            art.name = "AvatarArt"
+            art.texture = texture
+            art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+            art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+            art.set_anchors_preset(Control.PRESET_FULL_RECT)
+            art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+            node.add_child(art)
+            return node
     var text := label(_avatar_initial(hero_id), int(size * 0.42), false)
     text.name = "Initial"
     text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
