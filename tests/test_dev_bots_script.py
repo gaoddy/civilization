@@ -29,7 +29,7 @@ SERVER_STUB = textwrap.dedent(
 
 # 不解析 argv：脚本传的是 `dev --connect ws://... --intent-seed ...`。
 # 给了 SIM_PID_FILE 就把自身 PID 写进去，测试据此确认 sim 真的启动过；
-# 给了 SIM_RUNS_FILE 就追加一行，测试据此数循环起过几局。
+# 给了 SIM_RUNS_FILE 就追加一行 argv，测试据此数循环起过几局、每局用了什么种子。
 SIM_STUB = textwrap.dedent(
     """
     import os, sys, time
@@ -40,7 +40,7 @@ SIM_STUB = textwrap.dedent(
     runs_file = os.environ.get("SIM_RUNS_FILE")
     if runs_file:
         with open(runs_file, "a", encoding="utf-8") as handle:
-            handle.write("run\\n")
+            handle.write(" ".join(sys.argv[1:]) + "\\n")
     time.sleep(float(os.environ.get("STUB_SLEEP", "0.2")))
     sys.exit(int(os.environ.get("STUB_EXIT", "0")))
     """
@@ -162,6 +162,58 @@ class DevBotsScriptTest(unittest.TestCase):
         output, _ = proc.communicate(timeout=30)
         self.assertEqual(proc.returncode, 1, output)
         self.assertIn("DEV_ROUNDS 必须是正整数", output)
+        self.assertFalse(runs_file.exists(), output)
+
+    @staticmethod
+    def seeds_of(runs_file: pathlib.Path) -> list[int]:
+        seeds = []
+        for line in runs_file.read_text(encoding="utf-8").splitlines():
+            parts = line.split()
+            seeds.append(int(parts[parts.index("--intent-seed") + 1]))
+        return seeds
+
+    def test_each_round_gets_a_new_intent_seed(self):
+        """默认从 0 起，每局 +1，重开时机器人决策不会一成不变。"""
+        port = free_port()
+        runs_file = pathlib.Path(self.tmp.name) / "sim-runs.log"
+        proc = self.spawn(
+            port,
+            {
+                "DEV_ROUNDS": "3",
+                "STUB_SLEEP": "0.02",
+                "SIM_RUNS_FILE": str(runs_file),
+            },
+        )
+        output, _ = proc.communicate(timeout=30)
+        self.assertEqual(proc.returncode, 0, output)
+        self.assertEqual(self.seeds_of(runs_file), [0, 1, 2], output)
+
+    def test_intent_seed_base_is_respected(self):
+        port = free_port()
+        runs_file = pathlib.Path(self.tmp.name) / "sim-runs.log"
+        proc = self.spawn(
+            port,
+            {
+                "DEV_ROUNDS": "2",
+                "STUB_SLEEP": "0.02",
+                "SIM_RUNS_FILE": str(runs_file),
+                "DEV_INTENT_SEED": "7",
+            },
+        )
+        output, _ = proc.communicate(timeout=30)
+        self.assertEqual(proc.returncode, 0, output)
+        self.assertEqual(self.seeds_of(runs_file), [7, 8], output)
+
+    def test_invalid_intent_seed_fails_before_starting_the_sim(self):
+        port = free_port()
+        runs_file = pathlib.Path(self.tmp.name) / "sim-runs.log"
+        proc = self.spawn(
+            port,
+            {"SIM_RUNS_FILE": str(runs_file), "DEV_INTENT_SEED": "-1"},
+        )
+        output, _ = proc.communicate(timeout=30)
+        self.assertEqual(proc.returncode, 1, output)
+        self.assertIn("DEV_INTENT_SEED 必须是非负整数", output)
         self.assertFalse(runs_file.exists(), output)
 
     def test_termination_signals_kill_both_children(self):
