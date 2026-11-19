@@ -13,7 +13,8 @@ const FREEZE_CRYSTAL_LINES := 10
 ## 统一卡面：封面铺满整卡，左上费用、右上时代，底部信息区依次为介绍（最多
 ## 两行）、居中名称与「攻击 · 类型 · 生命」。`cost_text`/`era_text` 为空时
 ## 不渲染角标；`stealth` 为真时在角标行右侧追加潜行状态标识；`frozen` 为真时
-## 盖整卡蒙层、叠冰晶并保留右下「冻」字。
+## 盖整卡蒙层、叠冰晶并保留右下「冻」字；`show_desc` 为假时不渲染介绍，
+## 信息区退回紧凑高度（商店与棋盘卡在手机上放不下两行介绍）。
 ## 所有子节点忽略鼠标，点击与悬停由外层卡片决定。
 static func face(
     card_id: String,
@@ -25,9 +26,10 @@ static func face(
     era_text := "",
     frozen := false,
     stealth := false,
+    show_desc := true,
 ) -> Control:
     var entry := CardDB.card(card_id)
-    var desc_text := CardDB.display_text(card_id)
+    var desc_text := CardDB.display_text(card_id) if show_desc else ""
     var info_height := UITheme.stage_metric(
         "card-info-height" if desc_text != "" else "card-info-compact-height"
     )
@@ -285,6 +287,7 @@ static func read_only_minion_card(minion: Dictionary) -> Control:
         "",
         false,
         bool(minion.get("stealth", false)),
+        false,
     ))
     return panel
 

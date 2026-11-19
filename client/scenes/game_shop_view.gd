@@ -204,6 +204,8 @@ func _refresh_shop(state: GameUiState) -> void:
             str(CardDB.display_cost(card_id)),
             UI.enum_text("era", str(entry.get("era", ""))),
             bool(slot.get("frozen", false)),
+            false,
+            false,
         ))
         if detail != null and is_instance_valid(detail):
             detail.track(panel, {

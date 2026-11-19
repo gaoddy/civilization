@@ -155,10 +155,11 @@ const SCENARIO := {
 	"avatar-rail": 44,
 	"seat-hp-bar-height": 6,
 	"rank-badge-size": 18,
+	"rank-badge-size-compact": 14,
 	"freeze-crystal-gap": 14,
 	# iPhone 基准（960×540）的对局舞台紧凑值。
 	"card-width-compact": 84,
-	"card-height-compact": 100,
+	"card-height-compact": 92,
 	"card-info-height-compact": 60,
 	"hand-card-overlap-compact": 24,
 	"hero-row-height-compact": 64,
@@ -170,10 +171,14 @@ const SCENARIO := {
 	"shop-icon-size-compact": 36,
 	"shop-actions-height": 64,
 	"shop-actions-height-compact": 52,
-	"river-height-compact": 26,
-	"recruit-shop-gap-compact": 12,
+	"river-height-compact": 24,
+	"recruit-shop-gap-compact": 10,
 	"top-bar-height-compact": 26,
 	"portrait-size-compact": 48,
+	# 左栏 8 席需在 960×540 下一屏放下，座位行按紧凑值收缩。
+	"avatar-rail-compact": 40,
+	"seat-hp-bar-height-compact": 4,
+	"seat-row-gap-compact": 2,
 }
 
 const PLAYSTYLE_COLOR := {
@@ -270,6 +275,8 @@ static func panel_style(variant: String) -> StyleBoxFlat:
 	match variant:
 		"row":
 			box.set_content_margin_all(space("space-md"))
+		"row-compact":
+			box.set_content_margin_all(space("space-xs"))
 		"raised":
 			box.bg_color = color("color-surface-raised")
 		"raised-tight":
@@ -286,6 +293,10 @@ static func panel_style(variant: String) -> StyleBoxFlat:
 			box.border_color = color("color-accent")
 		"accent-row":
 			box.set_content_margin_all(space("space-md"))
+			box.bg_color = alpha("color-accent", 0.12)
+			box.border_color = color("color-accent")
+		"accent-row-compact":
+			box.set_content_margin_all(space("space-xs"))
 			box.bg_color = alpha("color-accent", 0.12)
 			box.border_color = color("color-accent")
 		"success":

@@ -39,7 +39,10 @@ func _init() -> void:
     _rail = VBoxContainer.new()
     _rail.name = "PlayersRail"
     _rail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _rail.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    _rail.add_theme_constant_override(
+        "separation",
+        UITheme.metric("seat-row-gap-compact") if _compact() else UITheme.space("space-xs")
+    )
     scroll.add_child(_rail)
 
     _report_panel = UI.card_panel("raised")
@@ -94,12 +97,25 @@ func _has_player(players: Array, player_id: String) -> bool:
     return false
 
 
+## 手机基准（960×540）用紧凑座位行与名次角标，桌面与平板保持原尺寸。
+static func _compact() -> bool:
+    return ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
+
+
+static func _row_variant(is_self: bool, compact: bool) -> String:
+    if is_self:
+        return "accent-row-compact" if compact else "accent-row"
+    return "row-compact" if compact else "row"
+
+
 ## 一行座位：头像（名次角标叠在左上）与同宽血条；本人金色描边，淘汰整行压暗。
+## iPhone 基准用紧凑行，8 席在 960×540 下一屏放下，不出现滚动。
 func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     var player_id := str(player.get("playerId", ""))
     var is_self := player_id == GameStore.player_id
     var alive := bool(player.get("alive", true))
-    var panel := UI.card_panel("accent-row" if is_self else "row")
+    var compact := _compact()
+    var panel := UI.card_panel(_row_variant(is_self, compact))
     panel.name = "SeatRow"
     panel.set_meta("player_id", player_id)
     panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -110,10 +126,13 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
 
     var box := VBoxContainer.new()
     box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    box.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    box.add_theme_constant_override(
+        "separation",
+        UITheme.space("space-2xs") if compact else UITheme.space("space-xs")
+    )
     panel.add_child(box)
 
-    var avatar_size := UITheme.metric("avatar-rail")
+    var avatar_size := UITheme.stage_metric("avatar-rail")
     var avatar_box := Control.new()
     avatar_box.name = "SeatAvatar"
     avatar_box.custom_minimum_size = Vector2(avatar_size, avatar_size)

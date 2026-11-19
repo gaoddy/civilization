@@ -535,30 +535,39 @@ func _check_game_layout() -> void:
         board_scroll != null and is_equal_approx(board_scroll.custom_minimum_size.y, 146.0),
         "棋盘滚动高度应为 card-height"
     )
-    var card_intro_cases := [
-        {"node": "ShopSlot0", "card_id": "aristotle"},
-        {"node": "BoardMinion0", "card_id": "bruce-lee"},
-        {"node": "HandCard0", "card_id": "archimedes"},
-    ]
-    for intro_case in card_intro_cases:
-        var intro_card: Control = instance.find_child(str(intro_case["node"]), true, false)
-        _expect(intro_card != null, "布局中缺少 %s" % str(intro_case["node"]))
-        if intro_card == null:
+    # 商店与棋盘卡不显示介绍；手牌保留介绍，且仍在名称上方。
+    for no_desc_node in ["ShopSlot0", "BoardMinion0"]:
+        var plain_card: Control = instance.find_child(str(no_desc_node), true, false)
+        _expect(plain_card != null, "布局中缺少 %s" % str(no_desc_node))
+        if plain_card == null:
             continue
+        _expect(
+            plain_card.find_child("CardDesc", true, false) == null,
+            "%s 不应显示卡面介绍" % str(no_desc_node),
+        )
+        var plain_info: Control = plain_card.find_child("CardInfo", true, false)
+        _expect(
+            plain_info != null and absf(plain_info.size.y - 56.0) <= 1.0,
+            "%s 的信息区应为紧凑高度 56，实际 %s"
+            % [str(no_desc_node), plain_info.size.y if plain_info != null else -1.0],
+        )
+    var intro_card: Control = instance.find_child("HandCard0", true, false)
+    _expect(intro_card != null, "布局中缺少 HandCard0")
+    if intro_card != null:
         var intro_desc: Label = intro_card.find_child("CardDesc", true, false)
         var intro_name: Label = intro_card.find_child("CardName", true, false)
         _expect(
             intro_desc != null and intro_desc.is_visible_in_tree(),
-            "%s 应显示卡面介绍" % str(intro_case["node"]),
+            "HandCard0 应显示卡面介绍",
         )
         _expect(
-            intro_desc != null and str(intro_desc.text) == CardDB.display_text(str(intro_case["card_id"])),
-            "%s 的介绍应为卡表技能" % str(intro_case["node"]),
+            intro_desc != null and str(intro_desc.text) == CardDB.display_text("archimedes"),
+            "HandCard0 的介绍应为卡表技能",
         )
         if intro_desc != null and intro_name != null:
             _expect(
                 intro_desc.get_global_rect().end.y <= intro_name.get_global_rect().position.y + 1.0,
-                "%s 的介绍应在名称上方" % str(intro_case["node"]),
+                "HandCard0 的介绍应在名称上方",
             )
     var layout_detail = instance.find_child("MinionDetailPanel", true, false)
     var board_minion = instance.find_child("BoardMinion0", true, false)
