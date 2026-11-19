@@ -37,7 +37,7 @@ func _build() -> void:
     box.add_child(UI.label(tr("ui.login.subtitle"), 14))
     box.add_child(HSeparator.new())
 
-    _server = _add_field(box, tr("ui.login.server"), Net.DEFAULT_URL)
+    _server = _add_field(box, tr("ui.login.server"), Net.default_url())
     _phone = _add_field(box, tr("ui.login.phone"), "13900000000")
     _code = _add_field(box, tr("ui.login.code"), "123456")
     _name = _add_field(box, tr("ui.login.display_name"), tr("ui.login.default_display_name"))

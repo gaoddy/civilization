@@ -22,6 +22,8 @@ client/
     card_db.gd               # 只读卡牌/技能展示表与科学分类树；展示文本按文本 id 从文本表取
   text/
     zh_CN.csv                # 唯一的运行时中文文本表（生成物 + 人工 key）
+  assets/
+    fonts/NotoSansSC-Regular-subset.ttf  # 默认主题字体（中文子集）；美术素材见 §10
   ui/
     ui.gd                    # 场景共用控件工具、共享构件与统一导航入口（class_name UI）
     safe_area.gd             # 页面安全区包裹（class_name SafeAreaMargin），触控端叠加键盘边距
@@ -180,13 +182,14 @@ client/
 | `make data` | 生成服务端数据（含 `taxonomy.json`）、`client/generated/{cards,skills,tokens,taxonomy}.json` 与文本表 `client/text/zh_CN.csv` |
 | `make data-check` | 比对服务端与客户端生成数据、文本表漂移，运行效果审计 |
 | `make assets` | 按 `ASSET_MAP` 对源立绘去水印，派生头像与卡面并重写 `client/assets/asset_manifest.json`；见 §10 |
+| `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
 | `make client-smoke` | 用 glob 逐个运行十三个 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR` |
 | `make client-export-ios` | 导出 Xcode 工程并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
 | `make m1b-e2e` | 启动服务端、Godot 无头客户端与 7 个 `sim bot`，要求输出 `M1B_E2E_OK` |
-| `make dev-bots` | 启动服务端与 7 个机器人并打印房间码，供开发者用桌面客户端作为第 8 人手动联调 |
+| `make dev-bots` | 启动服务端（监听 `0.0.0.0`，手机可直连）与 7 个机器人并打印房间码，供开发者用客户端作为第 8 人手动联调 |
 
 Godot 可执行文件通过 `GODOT` 变量覆盖，默认自动探测 `godot` 或 `/Applications/Godot.app/Contents/MacOS/Godot`。
 
@@ -203,11 +206,13 @@ make client-run                                     # 终端 2，大厅填房间
 
 命令打印两行 `ROOM_CODE=<6 位>` 与提示后等待，开发者在客户端大厅输入该房间码、选英雄并准备，8 人齐自动开局；整局结束后命令自行退出并释放端口，Ctrl-C 也可一次退出全部进程。端口被占用时立即失败，用 `make dev-bots DEV_PORT=8081` 换端口。需要自定义机器人名字或英雄时改用下面的手动方式。
 
+`make dev-bots` 把服务端监听在 `0.0.0.0:8080`，手机与开发机同一局域网时可直接连接：移动端登录页默认地址为 `ws://<开发机 Bonjour 主机名>.local:8080/ws`（当前 `cooter.local`），桌面端仍为 `ws://127.0.0.1:8080/ws`。
+
 手动方式：
 
 ```
 make m1b-build
-cd server && cargo run -q -p room-service          # 终端 1，监听 127.0.0.1:8080
+cd server && cargo run -q -p room-service          # 终端 1；手机联调加 --listen 0.0.0.0:8080
 make client-run                                     # 终端 2，手动登录并创建房间
 cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
   --room <房间码> --name Bot1 --hero tesla          # 终端 3 起，共 7 个
@@ -236,6 +241,8 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - **前置条件**：修改 CSV 或任何实体文本后必须运行 `make client-import`（或任何以它为前提的目标，如 `client-run`、`client-smoke`、`m1b-e2e`），让 Godot 重新导入并生成 `.translation`；只在编辑器外改 CSV 而不导入，运行时仍读旧翻译。`make client-check` 已包含 `client-import`。
 - **服务端错误**：`ErrorMessage.messageId` 默认 `error.<CODE>`，`messageParams` 按 `%s` 填充；客户端状态栏先按 `code` 取 `error.<CODE>`，悬停详情优先用 `messageId`/`messageParams`，`message` 仅面向日志。
 - **新增语言**：一个语言一个文件。新增语言需要：新增 `client/text/<locale>.csv`，并扩展 `scripts/gen_text.py` 以支持按语言文件读写与产出（每个语言文件独立生成内容 key 与枚举 key）；用 `make client-import` 导入后把对应 `.translation` 加入 `[internationalization]` 的 `locale/translations`。业务代码（`CardDB`、`UI.*`、`tr()` 调用）与实体文档、协议均无需改动。
+- **内置字体**：`client/assets/fonts/NotoSansSC-Regular-subset.ttf`（Noto Sans SC 子集，OFL 许可见同目录 `OFL.txt`）由 `project.godot` 的 `gui/theme/custom_font` 设为默认主题字体，所有文本不再依赖系统字体回退；iOS 真机因此不再缺字。子集把垂直度量对齐 PingFang SC（`hhea` 1060/−340、`OS/2` typo 860/−140/400），切换前后行高一致，现有布局不需要按字体调整。
+- **字体生成**：`make font-subset` 取 `client/text/zh_CN.csv` 全部字符 + 可打印 ASCII + GB2312 常用字（覆盖玩家自填显示名），输出上述子集。源字体放 `FONT_SOURCE`（默认 `output/fonts/NotoSansSC[wght].ttf`，Google Fonts 的 Noto Sans SC 变量字体），解释器需装 fontTools：先 `python3 -m venv output/fonttools-venv` 并 `output/fonttools-venv/bin/pip install fonttools`，再用 `make font-subset PYTHON=output/fonttools-venv/bin/python`。文案出现子集外生僻字时重跑该目标；`client/tests/ui_smoke_text.gd` 断言子集覆盖文本表全部字符。
 
 ## 7. 与设计的偏差
 
@@ -256,7 +263,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - 两个目标只在 macOS 上可用，非 Darwin 主机直接报错退出；模板版本读不到时同样退出非 0，不猜测版本。
 - Universal 导出要求 `project.godot` 启用 `rendering/textures/vram_compression/import_etc2_astc` 与 `import_s3tc_bptc`，缺失时 Godot 会拒绝导出。
 - 产物未做正式签名与公证：`codesign/codesign=0` 禁用导出时的重签，但可执行文件仍保留 Godot 模板内置的 ad-hoc 签名。首次打开需右键「打开」，或在「系统设置 → 隐私与安全性」中放行；经 zip 下载后解压的副本同样会被 Gatekeeper 拦截。
-- 服务端地址仍在大厅填写，导出物不内置地址。
+- 导出物内置默认服务器地址：桌面 `ws://127.0.0.1:8080/ws`，移动端 `ws://cooter.local:8080/ws`；登录页「服务器」字段仍可手改。
 
 ## 9. iOS 移动端
 
@@ -275,6 +282,12 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - 详情层（`GameDetailLayer`）在触控端由长按状态机驱动：按下只登记第一个触点，450ms 显示，抬手隐藏；位移超过 8 个画布单位或模态浮层打开时取消。触控端忽略触摸模拟出的鼠标悬停与按下，桌面鼠标路径不变。
 - `HandSlot` 在触摸释放、拖拽结束与重建卡片时显式复位缩放、`z_index` 与右侧槽位的 `mouse_filter`，弥补触控端没有 `mouse_exited` 的问题。
 - 单击、拖拽继续依赖 Godot 的 `emulate_mouse_from_touch`；`Esc` 返回在触控端由常驻返回按钮替代。
+
+### 联调地址
+
+- 移动端登录页默认 `ws://cooter.local:8080/ws`（`Net.MOBILE_URL`）：`cooter` 取开发机 `scutil --get LocalHostName`，换机器时改该常量并重新导出；iOS 通过 Bonjour 解析 `.local`，开发机 IP 变化不影响。
+- 桌面端默认 `ws://127.0.0.1:8080/ws`（`Net.DESKTOP_URL`）。`Net.default_url_for(mobile)` 是纯函数，冒烟直接断言两端取值；登录页字段始终可手改，`connect_to("")` 回落到当前平台默认值。
+- 服务端默认只监听 `127.0.0.1:8080`；真机联调必须用 `make dev-bots`（监听 `0.0.0.0`）或手动 `cargo run -p room-service -- --listen 0.0.0.0:8080`。首次连接会触发 iOS 本地网络权限弹窗，描述文案已写入导出预设的 `NSLocalNetworkUsageDescription`。
 
 ### iOS 导出
 

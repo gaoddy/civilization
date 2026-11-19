@@ -5,9 +5,12 @@ signal connected
 signal disconnected
 
 const RETRY_SECONDS := 3.0
-const DEFAULT_URL := "ws://127.0.0.1:8080/ws"
+const DESKTOP_URL := "ws://127.0.0.1:8080/ws"
+## 移动端默认连开发机的 Bonjour 主机名：真机与开发机同一局域网即可直连，
+## 开发机 IP 变化不影响。主机名取 `scutil --get LocalHostName`，换机器时改这里。
+const MOBILE_URL := "ws://cooter.local:8080/ws"
 
-var url := DEFAULT_URL
+var url := default_url()
 ## 连接句柄：生产环境恒为 `WebSocketPeer`；冒烟可替换成只实现就绪状态的桩，
 ## 以便在没有服务端时验证「已连接」分支。`null` 表示未连接。
 var socket = null
@@ -24,10 +27,20 @@ func _ready() -> void:
 
 
 func connect_to(target_url: String) -> void:
-    url = target_url if target_url.strip_edges() != "" else DEFAULT_URL
+    url = target_url if target_url.strip_edges() != "" else default_url()
     _want_connection = true
     _retry_left = 0.0
     _open()
+
+
+## 当前平台的默认调试地址：桌面端连本机，移动端连局域网内的开发机。
+static func default_url() -> String:
+    return default_url_for(OS.has_feature("mobile"))
+
+
+## 平台到默认地址的纯函数，供冒烟按平台直接断言。
+static func default_url_for(mobile: bool) -> String:
+    return MOBILE_URL if mobile else DESKTOP_URL
 
 
 func disconnect_from_server() -> void:

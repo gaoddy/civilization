@@ -5,6 +5,7 @@ var _failures := 0
 
 
 func _ready() -> void:
+    _check_default_url()
     _check_desktop()
     _check_phone()
     _check_tablet()
@@ -14,6 +15,11 @@ func _ready() -> void:
         return
     print("UI_SMOKE_OK")
     get_tree().quit(0)
+
+
+func _check_default_url() -> void:
+    _check(Net.default_url_for(false) == "ws://127.0.0.1:8080/ws", "桌面默认调试地址")
+    _check(Net.default_url_for(true) == "ws://cooter.local:8080/ws", "移动端默认调试地址")
 
 
 func _check_desktop() -> void:

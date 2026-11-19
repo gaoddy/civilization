@@ -3,6 +3,7 @@ extends Node
 
 
 func _ready() -> void:
+    _check_font_coverage()
     _check(CardDB.display_name("adam-smith") == "亚当·斯密", "卡名")
     _check(CardDB.display_name("seedling") == "幼苗", "Token 名")
     _check(CardDB.display_text("adam-smith").contains("成长"), "技能文本")
@@ -20,6 +21,24 @@ func _ready() -> void:
     _check(UI.error_text_by_id("error.DOES_NOT_EXIST") == "", "缺键回退为空串")
     print("UI_SMOKE_OK")
     get_tree().quit(0)
+
+
+func _check_font_coverage() -> void:
+    # 内置子集必须覆盖文本表全部字符：iOS 不依赖系统字体回退。
+    var font: Font = ThemeDB.get_default_theme().default_font
+    _check(font != null, "默认主题字体")
+    if font == null:
+        return
+    var csv := FileAccess.get_file_as_string("res://text/zh_CN.csv")
+    _check(csv != "", "文本表可读")
+    var missing := ""
+    for index in csv.length():
+        var code := csv.unicode_at(index)
+        if code < 0x20:
+            continue
+        if not font.has_char(code) and not missing.contains(csv[index]):
+            missing += csv[index]
+    _check(missing == "", "默认字体缺字：" + missing)
 
 
 func _check(ok: bool, label: String) -> void:

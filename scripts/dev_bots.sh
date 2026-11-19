@@ -51,7 +51,9 @@ trap 'cleanup; exit 130' INT
 trap 'cleanup; exit 143' TERM
 trap 'cleanup; exit 129' HUP
 
-"$SERVER_BIN" --listen "127.0.0.1:${PORT}" >"$SERVER_LOG" 2>&1 &
+# 监听全部网卡：手机与开发机同一局域网时才连得上；桌面端仍连 127.0.0.1。
+DEV_LISTEN=${DEV_LISTEN:-0.0.0.0}
+"$SERVER_BIN" --listen "${DEV_LISTEN}:${PORT}" >"$SERVER_LOG" 2>&1 &
 SERVER_PID=$!
 
 ready=0
@@ -73,6 +75,11 @@ if ! kill -0 "$SERVER_PID" 2>/dev/null; then
   echo "服务端启动后立即退出（端口可能被其他进程占用）"
   tail -n 20 "$SERVER_LOG"
   exit 1
+fi
+
+LAN_HOST=$(scutil --get LocalHostName 2>/dev/null || true)
+if [ -n "$LAN_HOST" ]; then
+  echo "手机端默认地址 ws://${LAN_HOST}.local:${PORT}/ws（桌面端 ${URL}）"
 fi
 
 "$SIM_BIN" dev --connect "$URL" "$@" &
