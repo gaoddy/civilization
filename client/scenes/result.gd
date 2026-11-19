@@ -1,27 +1,11 @@
 extends Control
 ## 结算：展示服务端下发的排名、本人本局数据与对局种子。
 ##
-## 内容区可滚动，返回入口固定在底部；本页只在进入时渲染一次，结算期间房间
-## 状态变化由 `GameStore` 处理，已经展示的结果不会被清掉。
-
-var _room_closed_notice: Label
+## 对局结束时服务端已销毁房间，本页只读本局下发内容；内容区可滚动，
+## 「确定」固定在底部，点一次即回大厅。
 
 func _ready() -> void:
     _build()
-    GameStore.room_closed.connect(_on_room_closed)
-
-
-func _on_room_closed() -> void:
-    # 结算期间房间被解散：保留已渲染的结果，只提示原因；「返回房间」按
-    # `room_id` 为空回退到大厅。
-    if _room_closed_notice == null:
-        return
-    _room_closed_notice.text = (
-        tr("ui.room.kicked_notice")
-        if GameStore.room_closed_reason == "kicked"
-        else tr("ui.room.dissolved_notice")
-    )
-    _room_closed_notice.visible = true
 
 
 func _build() -> void:
@@ -64,10 +48,6 @@ func _build() -> void:
 
     content.add_child(UI.label(tr("ui.result.title"), 28))
     content.add_child(UI.label(_my_place_text(), 20))
-    _room_closed_notice = UI.label("", 16)
-    _room_closed_notice.name = "RoomClosedNotice"
-    _room_closed_notice.visible = false
-    content.add_child(_room_closed_notice)
     content.add_child(HSeparator.new())
     content.add_child(_build_ranking())
 
@@ -217,10 +197,8 @@ func _my_place_text() -> String:
 
 
 func _on_confirm_pressed() -> void:
-    # 结算结束统一回大厅：座位仍属于房间时主动离开，让服务端立即释放，
-    # 而不是等断线宽限超时；房间已在结算期间解散时不发离开请求。
-    if GameStore.room_id != "":
-        Net.send(Protocol.MSG_LEAVE_ROOM, {})
+    # 房间已在对局结束时销毁，点「确定」只做客户端导航：清本地状态后回大厅，
+    # 不再向服务端发送离开房间请求。
     GameStore.reset_room()
     Net.relogin()
     UI.navigate(self, "res://scenes/lobby.tscn")

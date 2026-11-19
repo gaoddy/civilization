@@ -2447,18 +2447,11 @@ func _check_result() -> void:
         "结算页不应再有返回大厅按钮",
     )
 
-    # 结算期间房间被解散：保留已渲染结果，只显示原因提示。
-    GameStore.room_closed_reason = "dissolved"
-    GameStore.room_closed.emit()
-    await get_tree().process_frame
-    var notice = instance.find_child("RoomClosedNotice", true, false)
-    _expect(notice != null and bool(notice.visible), "解散后结算页应显示房间关闭提示")
-    if notice != null:
-        _expect(
-            str(notice.text).contains(TranslationServer.translate("ui.room.dissolved_notice")),
-            "解散提示文案不符：%s" % notice.text,
-        )
-    GameStore.room_closed_reason = ""
+    # 房间在对局结束时已销毁，结算页不展示任何房间状态提示。
+    _expect(
+        instance.find_child("RoomClosedNotice", true, false) == null,
+        "结算页不应再有房间关闭提示",
+    )
     instance.queue_free()
     await get_tree().process_frame
 
