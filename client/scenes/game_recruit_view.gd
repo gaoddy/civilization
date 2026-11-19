@@ -188,6 +188,7 @@ func _minion_card(
         "",
         false,
         bool(minion.get("stealth", false)),
+        false,
     ))
 
     if detail != null:

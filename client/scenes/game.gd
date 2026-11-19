@@ -155,7 +155,7 @@ func _build_center() -> VBoxContainer:
     center.size_flags_vertical = Control.SIZE_EXPAND_FILL
     center.add_theme_constant_override(
         "separation",
-        UITheme.space("space-sm") if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
+        UITheme.space("space-xs") if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
         else UITheme.space("space-md")
     )
 
@@ -181,9 +181,11 @@ func _build_center() -> VBoxContainer:
     _hand_row.target_dropped.connect(_on_hand_target_dropped)
     center.add_child(_hand_row)
 
-    # 只有中央舞台自身撑满：组合、英雄行与手牌都按各自固定高度自上而下排列。
+    # 只有中央舞台自身撑满：组合与英雄行按固定高度自上而下排列，
+    # 手牌吸收富余高度并保持卡片贴底。
     for view in [_recruit_view, _combat_view, _hero_row, _hand_row]:
         (view as Control).size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+    _hand_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
     return center
 
 

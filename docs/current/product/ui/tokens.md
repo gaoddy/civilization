@@ -92,6 +92,27 @@
 | `gallery-page-size` | 40 | 图鉴每页卡面张数（5 列 × 8 行） |
 | `gallery-grid-columns` | 5 | 图鉴卡面网格列数 |
 
+### 5.1 手机基准紧凑值
+
+iPhone 以 960×540 为基准，对局页通过 `UITheme.stage_metric(name)` 优先取 `<name>-compact`；桌面与 iPad 取上表原值。
+
+| 令牌 | 取值 | 用途 |
+| --- | --- | --- |
+| `card-width-compact` / `card-height-compact` | 84 / 92 | iPhone 商店、棋盘、手牌与战斗只读卡 |
+| `card-info-height-compact` | 60 | iPhone 有介绍时的卡面信息区（手牌） |
+| `avatar-rail-compact` | 40 | iPhone 座位行头像边长 |
+| `seat-hp-bar-height-compact` | 4 | iPhone 座位行血量条高度 |
+| `seat-row-gap-compact` | 2 | iPhone 座位行间距 |
+| `rank-badge-size-compact` | 14 | iPhone 座位名次角标边长 |
+| `river-height-compact` | 24 | iPhone 河道行高度 |
+| `recruit-shop-gap-compact` | 10 | iPhone 商店整体到河道的间距 |
+| `shop-actions-height-compact` | 52 | iPhone 商店操作行高度 |
+| `hero-row-height-compact` | 64 | iPhone 英雄行高度 |
+| `top-bar-height-compact` | 26 | iPhone 顶部工具条高度 |
+| `portrait-size-compact` | 48 | iPhone 售货员与对手英雄头像边长 |
+
+- 紧凑座位行（头像 40 + 血量条 4 + 行内边距 4 + 行距 2）让 8 席在 960×540 下一屏放下，左栏不出现滚动。
+
 ## 6. 玩法色
 
 `UITheme.PLAYSTYLE_COLOR` 共 14 个键：13 个玩法与中立，全部是原子色令牌。

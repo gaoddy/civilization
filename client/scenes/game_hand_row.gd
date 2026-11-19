@@ -25,11 +25,24 @@ func _init() -> void:
     _scroll.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_scroll)
 
+    # 舞台有富余高度时先落在手牌上方的留白里，手牌仍贴底居中。
+    var stack := VBoxContainer.new()
+    stack.name = "HandStack"
+    stack.set_anchors_preset(Control.PRESET_FULL_RECT)
+    stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    stack.add_theme_constant_override("separation", 0)
+    _scroll.add_child(stack)
+
+    var top_space := Control.new()
+    top_space.name = "HandTopSpace"
+    top_space.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    top_space.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    stack.add_child(top_space)
+
     _center = CenterContainer.new()
     _center.name = "HandCenter"
-    _center.set_anchors_preset(Control.PRESET_FULL_RECT)
     _center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _scroll.add_child(_center)
+    stack.add_child(_center)
 
     _row = HBoxContainer.new()
     _row.name = "HandRow"

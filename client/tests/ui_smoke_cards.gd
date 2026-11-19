@@ -182,84 +182,72 @@ func _ready() -> void:
         )
     _expect(used_colors.size() == 14, "14 个玩法色应全部可区分")
 
-    # 卡面介绍：位于名称上方，最多两行；无介绍时信息区退回紧凑高度。
-    var intro_cases := [
+    # 商店卡不显示介绍：信息区统一退回紧凑高度，名称与数值仍被信息区包住。
+    var shop_cases := [
         {"slot": 0, "card_id": "aolinpike-jidian"},
-        {"slot": 4, "card_id": "adam-smith"},
+        {"slot": 2, "card_id": "einstein-fridge"},
         {"slot": 3, "card_id": "qishi"},
-        {"slot": 5, "card_id": "baiyi"},
+        {"slot": 4, "card_id": "adam-smith"},
     ]
-    for case in intro_cases:
+    for case in shop_cases:
         var card: Control = recruit.find_child("ShopSlot%d" % int(case["slot"]), true, false)
         var card_id := str(case["card_id"])
         _expect(card != null, "商店应存在 %s" % card_id)
         if card == null:
             continue
-        var desc: Label = card.find_child("CardDesc", true, false)
-        var name_label: Label = card.find_child("CardName", true, false)
+        _expect(card.find_child("CardDesc", true, false) == null, "%s 不应显示介绍" % card_id)
         var info: Control = card.find_child("CardInfo", true, false)
+        var name_label: Control = card.find_child("CardName", true, false)
         var stats: Control = card.find_child("CardStats", true, false)
-        _expect(desc != null and desc.is_visible_in_tree(), "%s 应显示 CardDesc" % card_id)
         _expect(
-            desc != null and str(desc.text) == CardDB.display_text(card_id),
-            "%s 的介绍文本应为卡表技能" % card_id,
+            info != null and absf(info.size.y - 56.0) <= 1.0,
+            "%s 的信息区应为紧凑高度 56，实际 %s"
+            % [card_id, info.size.y if info != null else -1.0],
         )
-        if desc != null:
+        if info != null and name_label != null and stats != null:
             _expect(
-                desc.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART,
-                "%s 的介绍应自动换行" % card_id,
-            )
-            _expect(desc.max_lines_visible == 2, "%s 的介绍最多两行" % card_id)
-            _expect(
-                desc.text_overrun_behavior == TextServer.OVERRUN_TRIM_ELLIPSIS,
-                "%s 的介绍超长应省略" % card_id,
-            )
-            _expect(desc.get_visible_line_count() <= 2, "%s 的介绍不应超过两行" % card_id)
-            if card_id in ["adam-smith", "baiyi"]:
-                _expect(desc.get_visible_line_count() == 2, "%s 的长介绍应显示两行" % card_id)
-        _expect(stats != null, "%s 应有 CardStats" % card_id)
-        if desc != null and name_label != null and info != null and stats != null:
-            var desc_rect: Rect2 = desc.get_global_rect()
-            var name_rect: Rect2 = name_label.get_global_rect()
-            var info_rect: Rect2 = info.get_global_rect()
-            var stats_rect: Rect2 = stats.get_global_rect()
-            _expect(desc_rect.end.y <= name_rect.position.y + 1.0, "%s 介绍应在名称上方" % card_id)
-            _expect(info_rect.encloses(desc_rect), "%s 的信息区应包住介绍" % card_id)
-            _expect(
-                info_rect.encloses(name_rect) and info_rect.encloses(stats_rect),
+                info.get_global_rect().encloses(name_label.get_global_rect())
+                and info.get_global_rect().encloses(stats.get_global_rect()),
                 "%s 的信息区应包住名称与数值" % card_id,
             )
 
-    # 无介绍的随从（einstein-fridge，全池唯一无技能卡）退回两行信息区，名称与数值仍与其他卡对齐。
-    var plain_card: Control = recruit.find_child("ShopSlot2", true, false)
-    _expect(plain_card != null, "商店应存在 ShopSlot2")
-    if plain_card != null:
-        var plain_desc: Label = plain_card.find_child("CardDesc", true, false)
+    # 介绍仍用于图鉴与手牌：长介绍最多两行并省略。
+    var gallery_tile := GalleryCardTile.new("adam-smith")
+    add_child(gallery_tile)
+    gallery_tile.size = Vector2(112, 146)
+    await get_tree().process_frame
+    await get_tree().process_frame
+    var desc: Label = gallery_tile.find_child("CardDesc", true, false)
+    _expect(desc != null and desc.is_visible_in_tree(), "图鉴卡应显示 CardDesc")
+    if desc != null:
         _expect(
-            plain_desc == null or not plain_desc.is_visible_in_tree(),
-            "无介绍卡不应显示 CardDesc",
+            str(desc.text) == CardDB.display_text("adam-smith"),
+            "图鉴卡介绍应为卡表技能",
         )
-        var plain_info: Control = plain_card.find_child("CardInfo", true, false)
         _expect(
-            plain_info != null and absf(plain_info.size.y - 56.0) <= 1.0,
-            "无介绍卡信息区高度应为 56，实际 %s" % (plain_info.size.y if plain_info != null else -1.0),
+            desc.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART,
+            "介绍应自动换行",
         )
-        var qishi_card: Control = recruit.find_child("ShopSlot3", true, false)
-        if qishi_card != null:
-            var qishi_name: Label = qishi_card.find_child("CardName", true, false)
-            var plain_name: Label = plain_card.find_child("CardName", true, false)
-            var qishi_attack: Label = qishi_card.find_child("CardAttack", true, false)
-            var plain_attack: Label = plain_card.find_child("CardAttack", true, false)
+        _expect(desc.max_lines_visible == 2, "介绍最多两行")
+        _expect(
+            desc.text_overrun_behavior == TextServer.OVERRUN_TRIM_ELLIPSIS,
+            "超长介绍应省略",
+        )
+        _expect(desc.get_visible_line_count() <= 2, "介绍不应超过两行")
+        _expect(desc.get_visible_line_count() == 2, "adam-smith 的长介绍应显示两行")
+        var gallery_name: Control = gallery_tile.find_child("CardName", true, false)
+        var gallery_info: Control = gallery_tile.find_child("CardInfo", true, false)
+        if gallery_name != null and gallery_info != null:
             _expect(
-                qishi_name != null and plain_name != null
-                and absf(qishi_name.get_global_rect().position.y - plain_name.get_global_rect().position.y) <= 1.0,
-                "一行介绍与无介绍的名称基线应一致",
+                desc.get_global_rect().end.y <= gallery_name.get_global_rect().position.y + 1.0,
+                "图鉴卡介绍应在名称上方",
             )
             _expect(
-                qishi_attack != null and plain_attack != null
-                and absf(qishi_attack.get_global_rect().position.y - plain_attack.get_global_rect().position.y) <= 1.0,
-                "一行介绍与无介绍的数值基线应一致",
+                gallery_info.get_global_rect().encloses(desc.get_global_rect()),
+                "图鉴卡信息区应包住介绍",
             )
+    gallery_tile.queue_free()
+    await get_tree().process_frame
 
     # 详情分类行：科学分类完整路径、玩法、关联玩法、食物链，缺失字段不显示。
     var mammal_detail := _shop_detail_text("jianchihu")
