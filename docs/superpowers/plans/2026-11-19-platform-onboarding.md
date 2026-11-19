@@ -302,23 +302,26 @@ git commit -m "feat(room-service): 适配 PgBouncer 事务池并支持监听地�
 
 **Files:**
 - Create: `server/Dockerfile`
+- Create: `.dockerignore`（根白名单：`server/`、`protocol/`）
 
 **Interfaces:**
-- Consumes: `server/Cargo.lock`、`server/crates/room-service`、`server/data/v0.1/*.json`
+- Consumes: `server/Cargo.lock`、`server/crates/room-service`、`server/data/v0.1/*.json`、`protocol/generated/protocol.rs`
 - Produces: 镜像 `civilization-server:dev` / `:prod`，默认入口 `room-service`，监听 8080（由 `ROOM_SERVICE_LISTEN` 决定）。
 
 - [ ] **Step 1: 写 Dockerfile**
 
 ```dockerfile
-# room-service 运行镜像。构建上下文必须是 server/：data/ 由 include_str! 内嵌。
+# room-service 运行镜像。构建上下文是仓库根：protocol 生成物与 server/data 都要复制进去。
 FROM rust:1.94.1-bookworm AS builder
 WORKDIR /src
-COPY . .
+COPY server/ /src/server/
+COPY protocol/ /src/protocol/
+WORKDIR /src/server
 RUN cargo build --locked --release -p room-service
 
 FROM debian:bookworm-slim
 RUN useradd --system --uid 10001 --home /nonexistent --shell /usr/sbin/nologin room-service
-COPY --from=builder /src/target/release/room-service /usr/local/bin/room-service
+COPY --from=builder /src/server/target/release/room-service /usr/local/bin/room-service
 USER 10001
 EXPOSE 8080
 ENTRYPOINT ["room-service"]
@@ -326,7 +329,7 @@ ENTRYPOINT ["room-service"]
 
 - [ ] **Step 2: 构建验证**
 
-Run: `docker build --platform linux/amd64 -t civilization-server:dev -f server/Dockerfile server`
+Run: `docker build --platform linux/amd64 -t civilization-server:dev -f server/Dockerfile .`
 Expected: 退出 0；若 `include_str!` 文件缺失会在此失败。
 
 - [ ] **Step 3: 启动验证**
@@ -346,7 +349,7 @@ Expected: `curl` 退出 0；日志出现 `监听 ws://0.0.0.0:8080/ws` 与内存
 - [ ] **Step 4: 提交**
 
 ```bash
-git add server/Dockerfile
+git add server/Dockerfile .dockerignore
 git commit -m "feat(server): 增加 room-service 容器镜像"
 ```
 
@@ -634,7 +637,7 @@ deploy-lint:
 	$(MAKE) deploy-render ENV=prod >/dev/null
 
 deploy-image:
-	docker build --platform linux/amd64 -t $(DEPLOY_IMAGE) -f server/Dockerfile server
+	docker build --platform linux/amd64 -t $(DEPLOY_IMAGE) -f server/Dockerfile .
 
 deploy-load:
 	docker save $(DEPLOY_IMAGE) | ssh $(SERVER) "ctr -n k8s.io images import -"

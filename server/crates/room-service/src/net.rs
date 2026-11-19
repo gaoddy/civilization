@@ -2089,3 +2089,31 @@ mod readiness_tests {
         assert_eq!(readiness(false), StatusCode::SERVICE_UNAVAILABLE);
     }
 }
+
+#[cfg(test)]
+mod probe_tests {
+    use super::router;
+    use crate::{AppState, SystemClock, db::Db};
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use std::sync::Arc;
+    use tower::ServiceExt;
+
+    #[tokio::test]
+    async fn readyz_is_unavailable_when_database_is_unreachable() {
+        let db = Db::lazy_for_test("postgres://postgres:postgres@127.0.0.1:1/civilization")
+            .expect("连接池应能装配");
+        let mut state = AppState::new(Arc::new(SystemClock)).expect("状态应能装配");
+        state.db = Some(Arc::new(db));
+        let response = router(state)
+            .oneshot(
+                Request::builder()
+                    .uri("/readyz")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    }
+}
