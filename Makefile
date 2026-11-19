@@ -2,7 +2,7 @@ PYTHON ?= python3
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
 DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 
-.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test
+.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -110,6 +110,53 @@ DEV_PORT ?= 8080
 
 dev-bots: client-import m1b-build
 	DEV_PORT=$(DEV_PORT) bash scripts/dev_bots.sh
+
+# platform 共享 Kubernetes 发布入口：本机渲染，远端只执行 kubectl/ctr。
+ENV ?= dev
+SERVER ?= root@dell.local
+DEPLOY_CHART ?= deploy/helm/civilization-server
+DEPLOY_VALUES ?= deploy/helm/values.$(ENV).yaml
+DEPLOY_NAMESPACE ?= $(if $(filter prod,$(ENV)),civilization,civilization-dev)
+DEPLOY_HOST ?= $(if $(filter prod,$(ENV)),civilization.platform.internal,civilization.dev.platform.internal)
+DEPLOY_IMAGE ?= civilization-server:$(ENV)
+
+# 输出就是清单本身：命令回显会混进管道，被 kubectl 当成清单解析失败。
+deploy-render:
+	@helm template civilization-server $(DEPLOY_CHART) --namespace $(DEPLOY_NAMESPACE) -f $(DEPLOY_VALUES)
+
+deploy-lint:
+	helm lint $(DEPLOY_CHART) -f deploy/helm/values.dev.yaml
+	helm lint $(DEPLOY_CHART) -f deploy/helm/values.prod.yaml
+	$(MAKE) deploy-render ENV=dev >/dev/null
+	$(MAKE) deploy-render ENV=prod >/dev/null
+
+deploy-image:
+	docker build --platform linux/amd64 -t $(DEPLOY_IMAGE) -f server/Dockerfile .
+
+deploy-load:
+	docker save $(DEPLOY_IMAGE) | ssh $(SERVER) "ctr -n k8s.io images import -"
+
+# ENV 拼错时不能静默回落到 dev 的 namespace 与域名。
+deploy-check-env:
+	@$(if $(filter dev prod,$(ENV)),,$(error ENV 只能是 dev 或 prod，收到：$(ENV)))
+
+# 子 make 必须静默：它回显的命令行会混进管道，被 kubectl 当成清单解析失败。
+deploy-preflight: deploy-check-env
+	$(MAKE) -s deploy-render ENV=$(ENV) | ssh $(SERVER) "kubectl apply --dry-run=server -f -"
+
+deploy-apply: deploy-check-env
+	$(MAKE) -s deploy-render ENV=$(ENV) | ssh $(SERVER) "kubectl apply -f -"
+
+deploy-rollout: deploy-check-env
+	ssh $(SERVER) "kubectl rollout restart deployment/civilization-server -n $(DEPLOY_NAMESPACE) && kubectl rollout status deployment/civilization-server -n $(DEPLOY_NAMESPACE) --timeout=180s"
+
+deploy-status: deploy-check-env
+	ssh $(SERVER) "kubectl get pods,service,httproute -n $(DEPLOY_NAMESPACE) -l app.kubernetes.io/name=civilization-server"
+
+deploy-smoke: deploy-check-env
+	ssh $(SERVER) "curl -fsS https://$(DEPLOY_HOST)/healthz && curl -fsS https://$(DEPLOY_HOST)/readyz"
+
+deploy: deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-smoke
 
 m0-determinism:
 	cd server && cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash

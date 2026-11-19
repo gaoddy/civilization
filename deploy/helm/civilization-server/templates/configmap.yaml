@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: civilization-server-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "civilization-server.labels" . | nindent 4 }}
+data:
+  listen-addr: {{ .Values.config.listenAddr | quote }}

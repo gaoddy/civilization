@@ -11,6 +11,7 @@ const USAGE: &str = "用法：room-service [--listen ADDR]
   --listen ADDR  监听地址，默认 127.0.0.1:8080（写 127.0.0.1:0 由系统分配端口）
 
 环境变量：
+  ROOM_SERVICE_LISTEN  未提供 --listen 时的监听地址，默认 127.0.0.1:8080
   DATABASE_URL   设置后启用持久化（账号、好友、邀请等）；未设置时使用内存存储。";
 
 #[tokio::main]
@@ -25,7 +26,10 @@ async fn main() -> ExitCode {
 }
 
 async fn run(args: Vec<String>) -> Result<(), String> {
-    let mut listen = DEFAULT_LISTEN.to_string();
+    let mut listen = std::env::var("ROOM_SERVICE_LISTEN")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| DEFAULT_LISTEN.to_string());
     let mut iter = args.into_iter();
     while let Some(arg) = iter.next() {
         match arg.as_str() {

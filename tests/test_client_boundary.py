@@ -19,6 +19,15 @@ class ClientBoundaryTest(unittest.TestCase):
         for name in ("GameStore", "Net", "CardDB"):
             self.assertRegex(project, rf"(?m)^{name}=\"")
 
+    def test_insecure_tls_default_off(self):
+        project = (CLIENT / "project.godot").read_text(encoding="utf-8")
+        self.assertRegex(project, r"(?m)^allow_insecure_tls=false$")
+
+    def test_ws_client_reads_tls_setting(self):
+        source = (CLIENT / "autoload" / "ws_client.gd").read_text(encoding="utf-8")
+        self.assertIn('ProjectSettings.get_setting("network/allow_insecure_tls"', source)
+        self.assertIn("TLSOptions.client_unsafe()", source)
+
     def test_no_rule_engine_reference(self):
         offenders = []
         for path in sorted(CLIENT.rglob("*.gd")):

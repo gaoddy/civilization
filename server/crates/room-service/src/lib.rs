@@ -50,6 +50,8 @@ pub struct AppState {
     pub social: Arc<Mutex<social::SocialStore>>,
     /// 在线连接登记；好友推送与控制消息按 `player_id` 定位连接。
     pub connections: Arc<Mutex<net::ConnectionRegistry>>,
+    /// 持久化数据库；未配置 `DATABASE_URL` 时为 `None`，就绪探针直接通过。
+    pub db: Option<Arc<db::Db>>,
 }
 
 impl AppState {
@@ -68,6 +70,7 @@ impl AppState {
             hub: Arc::new(Mutex::new(net::RoomHub::default())),
             social: Arc::new(Mutex::new(social::SocialStore::new())),
             connections: Arc::new(Mutex::new(net::ConnectionRegistry::default())),
+            db: None,
         })
     }
 
@@ -81,7 +84,7 @@ impl AppState {
     pub async fn with_database(clock: Arc<dyn Clock>, db: Arc<db::Db>) -> Result<Self, String> {
         let catalog = load_catalog()?;
         let accounts = account::AccountStore::load(db.clone()).await?;
-        let social = social::SocialStore::load(db, clock.now_ms()).await?;
+        let social = social::SocialStore::load(db.clone(), clock.now_ms()).await?;
         Ok(Self {
             sessions: Arc::new(Mutex::new(SessionStore::new())),
             accounts: Arc::new(Mutex::new(accounts)),
@@ -91,6 +94,7 @@ impl AppState {
             hub: Arc::new(Mutex::new(net::RoomHub::default())),
             social: Arc::new(Mutex::new(social)),
             connections: Arc::new(Mutex::new(net::ConnectionRegistry::default())),
+            db: Some(db),
         })
     }
 

@@ -36,6 +36,7 @@ use std::time::Duration;
 use axum::Router;
 use axum::extract::State;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
+use axum::http::StatusCode;
 use axum::response::Response;
 use axum::routing::get;
 use futures_util::{SinkExt, StreamExt};
@@ -236,11 +237,39 @@ pub enum RoomMessage {
     Ignore,
 }
 
-/// 构造路由：`GET /ws` 升级为 WebSocket。
+/// 构造路由：`GET /ws` 升级为 WebSocket，`/healthz` 与 `/readyz` 供探针使用。
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/ws", get(ws_handler))
+        .route("/healthz", get(healthz))
+        .route("/readyz", get(readyz))
         .with_state(state)
+}
+
+/// 存活检查：进程能响应即可。
+async fn healthz() -> StatusCode {
+    StatusCode::OK
+}
+
+/// 就绪检查：无数据库时恒就绪；有数据库时要求 `SELECT 1` 在 2 秒内成功。
+async fn readyz(State(state): State<AppState>) -> StatusCode {
+    let Some(db) = state.db.as_ref() else {
+        return readiness(true);
+    };
+    let ok = tokio::time::timeout(Duration::from_secs(2), db.ping())
+        .await
+        .map(|result| result.is_ok())
+        .unwrap_or(false);
+    readiness(ok)
+}
+
+/// 数据库可用性映射为就绪状态码；独立出来便于单测覆盖 503 分支。
+fn readiness(is_db_ok: bool) -> StatusCode {
+    if is_db_ok {
+        StatusCode::OK
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    }
 }
 
 async fn ws_handler(ws: WebSocketUpgrade, State(state): State<AppState>) -> Response {
@@ -2046,5 +2075,17 @@ mod tests {
             }
             other => panic!("期望 Error，实际 {other:?}"),
         }
+    }
+}
+
+#[cfg(test)]
+mod readiness_tests {
+    use super::readiness;
+    use axum::http::StatusCode;
+
+    #[test]
+    fn readiness_maps_database_state() {
+        assert_eq!(readiness(true), StatusCode::OK);
+        assert_eq!(readiness(false), StatusCode::SERVICE_UNAVAILABLE);
     }
 }
