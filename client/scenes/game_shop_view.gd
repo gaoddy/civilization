@@ -188,7 +188,7 @@ func _refresh_shop(state: GameUiState) -> void:
         var slot_aff := _find_by_index(aff.get("shopSlots", []), index)
         var buyable := not state.stale and not state.expired and bool(slot_aff.get("buyable", false))
         var entry := CardDB.card(card_id)
-        var panel := UI.card_panel("raised-tight")
+        var panel := UI.card_panel("raised-flush")
         panel.name = "ShopSlot%d" % index
         # PASS：整卡接收点击购买，同时让棋盘卡的出售落点继续冒泡到商店面板。
         panel.mouse_filter = Control.MOUSE_FILTER_PASS

@@ -8,7 +8,7 @@ extends RefCounted
 ## 带外层的棋盘卡：尺寸、节点名与随从元数据由本入口统一设置。
 static func build_card(minion: Dictionary, minion_index: int) -> BoardCard:
     var panel := BoardCard.new()
-    panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-tight"))
+    panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-flush"))
     panel.name = "Board" + ("Minion%d" % minion_index)
     panel.set_meta("minion_id", str(minion.get("minionId", "")))
     panel.set_meta("minion_index", minion_index)

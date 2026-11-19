@@ -70,10 +70,24 @@ func _ready() -> void:
             "卡面应显示玩法「中立」，实际：%s" % (str(type_node.text) if type_node != null else "缺失"),
         )
         var cover_node := open_card.find_child("Cover", true, false)
+        _expect(cover_node is Panel, "卡面封面应为可绘制圆角的面板")
+        if cover_node is Panel:
+            var cover_style := (cover_node as Panel).get_theme_stylebox("panel") as StyleBoxFlat
+            _expect(
+                cover_style != null
+                and cover_style.bg_color == UITheme.playstyle_cover("neutral"),
+                "卡面封面色应取中立玩法色",
+            )
+            _expect(
+                cover_style != null
+                and cover_style.corner_radius_top_left == UITheme.radius("radius-md"),
+                "卡面封面应带卡片圆角",
+            )
+        var face_node := (open_card as Control).get_child(0) as Control
         _expect(
-            cover_node is ColorRect
-            and (cover_node as ColorRect).color == UITheme.playstyle_cover("neutral"),
-            "卡面封面色应取中立玩法色",
+            face_node != null and face_node.size == Vector2(110, 144),
+            "卡面应铺满卡片 1px 描边以内的区域，实际 %s"
+            % (face_node.size if face_node != null else Vector2.ZERO),
         )
         if cost != null and era != null and name_node is Control:
             var card_rect: Rect2 = (open_card as Control).get_global_rect()
@@ -96,7 +110,18 @@ func _ready() -> void:
         _expect(overlay != null, "冻结卡应有 FreezeOverlay 蒙层")
         if overlay is Control:
             _expect((overlay as Control).mouse_filter == Control.MOUSE_FILTER_IGNORE, "冻结蒙层不应拦截鼠标")
-        if overlay is ColorRect:
+        if overlay is Panel:
+            var overlay_style := (overlay as Panel).get_theme_stylebox("panel") as StyleBoxFlat
+            _expect(
+                overlay_style != null
+                and overlay_style.bg_color == UITheme.color("color-info"),
+                "冻结蒙层底色应取 info 色",
+            )
+            _expect(
+                overlay_style != null
+                and overlay_style.corner_radius_top_left == UITheme.radius("radius-md"),
+                "冻结蒙层应带卡片圆角",
+            )
             _expect(
                 is_equal_approx((overlay as CanvasItem).self_modulate.a, UITheme.opacity("freeze-overlay-alpha")),
                 "冻结蒙层 self_modulate alpha 应为 freeze-overlay-alpha 令牌值",
@@ -326,8 +351,126 @@ func _ready() -> void:
         "缺失分类应显示未定：%s" % missing_detail,
     )
 
+    await _check_hand_fit()
+    await _check_cover_art_inset()
     recruit.queue_free()
     _finish()
+
+
+## 手牌介绍不被截断：信息区向上扩展，字号缩到能放下全文；介绍不压名称与角标。
+func _check_hand_fit() -> void:
+    _expect(
+        UITheme.panel_style("raised-flush").content_margin_left == 1,
+        "卡面样式只应让出 1px 描边",
+    )
+    var panel := await _hand_probe_card(112, 146)
+    var info: Control = panel.find_child("CardInfo", true, false)
+    var desc_box: Control = panel.find_child("CardDescBox", true, false)
+    var desc: Label = panel.find_child("CardDesc", true, false)
+    var name_label: Control = panel.find_child("CardName", true, false)
+    var corners: Control = panel.find_child("CardCorners", true, false)
+    _expect(info != null and info.size.y > 90.0, "手牌信息区应向封面扩展，实际 %s" % (info.size.y if info else -1.0))
+    _expect(desc != null and desc.is_visible_in_tree(), "手牌卡应显示介绍")
+    if desc != null and desc_box != null and name_label != null and corners != null:
+        _expect(desc.max_lines_visible == -1, "手牌介绍不应限制行数")
+        _expect(
+            desc.text_overrun_behavior == TextServer.OVERRUN_NO_TRIMMING,
+            "手牌介绍不应省略",
+        )
+        _expect(desc.get_theme_font_size("font_size") >= 8, "手牌介绍字号不应小于 8")
+        _expect(desc.get_line_count() > 2, "最长介绍应超过旧的两行限制")
+        _expect(
+            desc.get_visible_line_count() == desc.get_line_count(),
+            "手牌介绍应完整显示：可见 %d 行 / 共 %d 行"
+            % [desc.get_visible_line_count(), desc.get_line_count()],
+        )
+        _expect(
+            desc.get_minimum_size().y <= desc_box.size.y + 1.0,
+            "介绍高度 %s 应落在承载框 %s 内" % [desc.get_minimum_size().y, desc_box.size.y],
+        )
+        _expect(
+            desc_box.get_global_rect().end.y <= name_label.get_global_rect().position.y + 1.0,
+            "介绍应在名称上方",
+        )
+        _expect(
+            not desc_box.get_global_rect().intersects(corners.get_global_rect()),
+            "介绍不应压住角标",
+        )
+        _expect(
+            corners.get_global_rect().position.y < desc_box.get_global_rect().position.y,
+            "角标应位于介绍上方",
+        )
+    panel.queue_free()
+    await get_tree().process_frame
+
+    # 紧凑卡放不下最长介绍：至少保证不溢出、不压名称，按可用行数截断。
+    ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
+    var compact := await _hand_probe_card(84, 92)
+    var compact_desc: Label = compact.find_child("CardDesc", true, false)
+    var compact_box: Control = compact.find_child("CardDescBox", true, false)
+    var compact_name: Control = compact.find_child("CardName", true, false)
+    if compact_desc != null and compact_box != null and compact_name != null:
+        _expect(
+            compact_desc.get_visible_line_count() <= maxi(compact_desc.get_line_count(), 1),
+            "紧凑手牌介绍行数不应超出文本",
+        )
+        _expect(
+            compact_box.get_global_rect().end.y <= compact_name.get_global_rect().position.y + 1.0,
+            "紧凑手牌介绍不应压住名称",
+        )
+        _expect(
+            compact_desc.get_minimum_size().y <= compact_box.size.y + 1.0,
+            "紧凑手牌介绍应在承载框内",
+        )
+    compact.queue_free()
+    ScreenProfile.set_device_for_test("")
+    await get_tree().process_frame
+
+
+## 构建一张手牌卡并等待布局；`self` 作为文本测量宿主（非容器）。
+func _hand_probe_card(width: int, height: int) -> PanelContainer:
+    var panel := PanelContainer.new()
+    panel.custom_minimum_size = Vector2(width, height)
+    panel.size = Vector2(width, height)
+    panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-flush"))
+    add_child(panel)
+    panel.add_child(HandCardFace.build({
+        "cardId": "superbug",
+        "attack": 2,
+        "health": 3,
+        "golden": false,
+    }, self))
+    await get_tree().process_frame
+    await get_tree().process_frame
+    return panel
+
+
+## 有卡面美术时，方形美术向内收，四角落在卡片圆角以内。
+func _check_cover_art_inset() -> void:
+    if CardDB.art_path("zhenghe", "card_face") == "":
+        return
+    var panel := PanelContainer.new()
+    panel.custom_minimum_size = Vector2(112, 146)
+    panel.size = Vector2(112, 146)
+    panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-flush"))
+    add_child(panel)
+    panel.add_child(ShopCardFace.build("zhenghe", CardDB.card("zhenghe"), false))
+    await get_tree().process_frame
+    var cover := panel.find_child("Cover", true, false)
+    var art := panel.find_child("CoverArt", true, false) as TextureRect
+    _expect(cover is Panel, "有美术的卡面封面仍应是圆角面板")
+    _expect(art != null, "有卡面美术时应创建 CoverArt")
+    if art != null:
+        _expect(
+            art.offset_left == UITheme.metric("card-cover-inset")
+            and art.offset_top == UITheme.metric("card-cover-inset")
+            and art.offset_right == -UITheme.metric("card-cover-inset")
+            and art.offset_bottom == -UITheme.metric("card-cover-inset"),
+            "卡面美术应向内收 %dpx，实际 %s"
+            % [UITheme.metric("card-cover-inset"), str(art.offset_left)],
+        )
+    panel.queue_free()
+    await get_tree().process_frame
 
 
 ## 商店/手牌详情正文：直接走详情渲染，避免依赖具体页面的悬停时机。

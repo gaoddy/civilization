@@ -40,7 +40,7 @@ func show_card(card_id: String) -> void:
     _box.alignment = BoxContainer.ALIGNMENT_BEGIN
 
     var entry := CardDB.card(card_id)
-    var card := UI.card_panel("raised-tight")
+    var card := UI.card_panel("raised-flush")
     card.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
     card.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var era_id := str(entry.get("era", ""))

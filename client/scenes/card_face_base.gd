@@ -10,6 +10,11 @@ const CORNER_BADGE_EXTRA_HEIGHT := 2
 ## 冰晶细线的不透明度与条数；角度固定 45°，间距取主题令牌。
 const FREEZE_CRYSTAL_ALPHA := 0.55
 const FREEZE_CRYSTAL_LINES := 10
+## 封面美术与卡边之间保留的距离：方形美术的角必须落在卡片圆角以内。
+## 手牌介绍的排版范围取 `font-caption` 到 `font-micro`，行距收紧到 0。
+const DESC_LINE_SPACING := 0
+
+static var _line_height_cache: Dictionary = {}
 
 
 ## 卡面根与封面：玩法色铺满整卡；有美术资源时叠卡面纹理，无图或加载失败时
@@ -22,14 +27,21 @@ static func create_face(card_id: String, show_desc: bool) -> Control:
     face_node.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
     var entry := CardDB.card(card_id)
-    var cover := ColorRect.new()
+    # 封面用带圆角的面板而不是色块：卡面容器只留 1px 描边，方形色块会盖住
+    # 卡片四角的圆弧。
+    var cover := Panel.new()
     cover.name = "Cover"
-    cover.color = UITheme.playstyle_cover(str(entry.get("playstyle", "")))
+    var cover_style := StyleBoxFlat.new()
+    cover_style.bg_color = UITheme.playstyle_cover(str(entry.get("playstyle", "")))
+    cover_style.set_corner_radius_all(UITheme.radius("radius-md"))
+    cover_style.set_content_margin_all(0)
+    cover.add_theme_stylebox_override("panel", cover_style)
     cover.set_anchors_preset(Control.PRESET_FULL_RECT)
     cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
     face_node.add_child(cover)
 
     # 有美术资源时在其上叠卡面纹理；无图或加载失败保留上面的纯色封面回退。
+    # 美术本身是方图，向内收几像素后四角落在卡片圆角内，不需要额外的圆角裁剪。
     var cover_path := CardDB.art_path(card_id, "card_face")
     if cover_path != "" and ResourceLoader.exists(cover_path):
         var art := ResourceLoader.load(cover_path) as Texture2D
@@ -40,6 +52,10 @@ static func create_face(card_id: String, show_desc: bool) -> Control:
             cover_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
             cover_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
             cover_art.set_anchors_preset(Control.PRESET_FULL_RECT)
+            cover_art.offset_left = UITheme.metric("card-cover-inset")
+            cover_art.offset_top = UITheme.metric("card-cover-inset")
+            cover_art.offset_right = -UITheme.metric("card-cover-inset")
+            cover_art.offset_bottom = -UITheme.metric("card-cover-inset")
             cover_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
             face_node.add_child(cover_art)
 
@@ -112,9 +128,11 @@ static func add_corner_badges(
         row.add_child(era)
 
 
-## 底部信息区：介绍（最多两行）、居中名称与「攻击 · 类型 · 生命」。
+## 底部信息区：介绍、居中名称与「攻击 · 类型 · 生命」。
 ## `show_desc` 为假时不渲染介绍，信息区退回紧凑高度（商店与棋盘卡在手机上
-## 放不下两行介绍）。
+## 放不下介绍）。`fit_desc` 为真时介绍不再截断：信息区向上扩展并按可用空间
+## 逐档缩小字号与行距，直到整段介绍放下；角标由调用方在信息区之后添加，
+## 保证信息区扩大后角标仍绘制在最上层。
 static func add_info(
     face_node: Control,
     card_id: String,
@@ -122,11 +140,49 @@ static func add_info(
     health_text: String,
     type_text: String,
     show_desc: bool,
+    fit_desc := false,
+    measure_host: Node = null,
 ) -> void:
     var desc_text := CardDB.display_text(card_id) if show_desc else ""
+    var padding := UITheme.space("space-sm")
+    var name_token := "font-body-sm"
+    var stats_token := "font-title"
+    var desc_font := UITheme.font_size("font-caption")
+    var desc_max_lines := 2
+    var desc_overrun := TextServer.OVERRUN_TRIM_ELLIPSIS
     var info_height := UITheme.stage_metric(
         "card-info-height" if desc_text != "" else "card-info-compact-height"
     )
+    var fitting := desc_text != "" and fit_desc and _can_measure(measure_host)
+    if fitting:
+        var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
+        # 手牌卡不显示费用/时代之外的封面信息，名称与数值各收一档，把高度让给介绍。
+        name_token = "font-caption"
+        stats_token = "font-caption" if compact else "font-body"
+        var face_width := UITheme.stage_metric("card-width") - 2
+        var face_height := UITheme.stage_metric("card-height") - 2
+        var desc_width := face_width - padding * 2
+        # 角标行贴顶：上边距 + 胶囊高度。信息区顶边越过角标底边时由绘制顺序兜底，
+        # 介绍文字从信息区内边距之后开始，正好落在角标下方。
+        var badge_bottom := (
+            1
+            + UITheme.space("space-xs")
+            + _line_height(UITheme.font_size("font-caption"), measure_host)
+            + UITheme.space("space-2xs") * 2
+        )
+        var max_info := face_height - (badge_bottom - padding)
+        var non_desc := (
+            padding * 2
+            + _line_height(UITheme.font_size(name_token), measure_host)
+            + _line_height(UITheme.font_size(stats_token), measure_host)
+            + UITheme.space("space-2xs") * 2
+        )
+        var fit := _fit_desc(desc_text, desc_width, max_info - non_desc, measure_host)
+        desc_font = int(fit["font_size"])
+        desc_max_lines = int(fit["lines"])
+        if desc_max_lines < 0:
+            desc_overrun = TextServer.OVERRUN_NO_TRIMMING
+        info_height = clampi(non_desc + int(fit["height"]), info_height, max_info)
     var info := UI.card_panel("cover-info")
     info.name = "CardInfo"
     info.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -142,24 +198,26 @@ static func add_info(
 
     if desc_text != "":
         # 固定高度的承载框隔离 Label 最小尺寸，保证信息区不被长介绍顶高；
-        # 介绍最多两行，超长省略。
+        # 非手牌卡介绍最多两行，超长省略；手牌由上面的 fit 决定字号与行数。
         var desc_box := Control.new()
         desc_box.name = "CardDescBox"
         desc_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
         desc_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-        var desc_label := UI.label(desc_text, UITheme.font_size("font-caption"))
+        var desc_label := UI.label(desc_text, desc_font)
         desc_label.name = "CardDesc"
         desc_label.set_anchors_preset(Control.PRESET_FULL_RECT)
         desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         desc_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-        desc_label.max_lines_visible = 2
-        desc_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+        desc_label.max_lines_visible = desc_max_lines
+        desc_label.text_overrun_behavior = desc_overrun
+        if fit_desc:
+            desc_label.add_theme_constant_override("line_spacing", DESC_LINE_SPACING)
         desc_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
         desc_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
         desc_box.add_child(desc_label)
         info_box.add_child(desc_box)
 
-    var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-body-sm"), false)
+    var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size(name_token), false)
     name_label.name = "CardName"
     name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     name_label.max_lines_visible = 1
@@ -173,7 +231,7 @@ static func add_info(
     stats_row.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     info_box.add_child(stats_row)
 
-    var attack_label := UI.label(attack_text, UITheme.font_size("font-title"), false)
+    var attack_label := UI.label(attack_text, UITheme.font_size(stats_token), false)
     attack_label.name = "CardAttack"
     attack_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     stats_row.add_child(attack_label)
@@ -188,7 +246,7 @@ static func add_info(
     type_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     stats_row.add_child(type_label)
 
-    var health_label := UI.label(health_text, UITheme.font_size("font-title"), false)
+    var health_label := UI.label(health_text, UITheme.font_size(stats_token), false)
     health_label.name = "CardHealth"
     health_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     stats_row.add_child(health_label)
@@ -197,9 +255,14 @@ static func add_info(
 
 ## 冻结表现：整卡半透明蒙层 + 固定角度与间距的冰晶细线 + 右下角「冻」字。
 static func add_freeze(face_node: Control) -> void:
-    var overlay := ColorRect.new()
+    # 蒙层同样用圆角面板，避免铺满卡面后把卡片的圆角盖成直角。
+    var overlay := Panel.new()
     overlay.name = "FreezeOverlay"
-    overlay.color = UITheme.color("color-info")
+    var overlay_style := StyleBoxFlat.new()
+    overlay_style.bg_color = UITheme.color("color-info")
+    overlay_style.set_corner_radius_all(UITheme.radius("radius-md"))
+    overlay_style.set_content_margin_all(0)
+    overlay.add_theme_stylebox_override("panel", overlay_style)
     # self_modulate 只压暗蒙层自身，不向下继承到冰晶与「冻」字。
     overlay.self_modulate.a = UITheme.opacity("freeze-overlay-alpha")
     overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -255,6 +318,56 @@ static func set_stats(face_node: Control, attack_text: String, health_text: Stri
     var health_label := face_node.find_child("CardHealth", true, false) as Label
     if health_label != null:
         health_label.text = health_text
+
+
+## 在给定宽度内选择能让介绍完整放下的最大字号；都放不下时退回最小字号，
+## 并按可用高度给出最多行数（`lines` 为 -1 表示不限制行数）。
+static func _fit_desc(text: String, width: int, available: int, host: Node) -> Dictionary:
+    var min_size := UITheme.font_size("font-micro")
+    for font_size in range(UITheme.font_size("font-caption"), min_size - 1, -1):
+        var height := _measure_text_height(text, width, font_size, host)
+        if height > 0 and height <= available:
+            return {"font_size": font_size, "height": height, "lines": -1}
+    var line_height := _line_height(min_size, host)
+    var lines := maxi(1, floori(float(available) / maxf(float(line_height), 1.0)))
+    return {"font_size": min_size, "height": line_height * lines, "lines": lines}
+
+
+## 测量节点必须挂在一个已在场景树里的普通节点上：容器会改写测量节点的宽度，
+## 所以调用方传入手牌行或测试夹具这类非容器节点。
+static func _can_measure(host: Node) -> bool:
+    return host != null and is_instance_valid(host) and host.is_inside_tree()
+
+
+## 用与卡面介绍相同的换行与行距测量文本高度；测完立即释放，不进入绘制。
+static func _measure_text_height(text: String, width: int, font_size: int, host: Node) -> int:
+    var probe := UI.label(text, font_size)
+    probe.max_lines_visible = -1
+    probe.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+    probe.add_theme_constant_override("line_spacing", DESC_LINE_SPACING)
+    probe.custom_minimum_size = Vector2(width, 0)
+    probe.size = Vector2(width, 0)
+    probe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    host.add_child(probe)
+    probe.size = Vector2(width, 0)
+    var height := int(probe.get_minimum_size().y)
+    probe.free()
+    return height
+
+
+## 单行行高：与项目字体一致的字体度量，供信息区高度计算使用。
+static func _line_height(font_size: int, host: Node) -> int:
+    if _line_height_cache.has(font_size):
+        return int(_line_height_cache[font_size])
+    if not _can_measure(host):
+        return roundi(font_size * 1.45)
+    var probe := UI.label("A", font_size, false)
+    probe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    host.add_child(probe)
+    var height := int(probe.get_minimum_size().y)
+    probe.free()
+    _line_height_cache[font_size] = height
+    return height
 
 
 ## 窄卡角标：比胶囊更紧凑，避免两角标在 112 宽的商店卡上相撞。
