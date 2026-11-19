@@ -7,7 +7,7 @@ DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
 FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 
-.PHONY: test lint audit data data-check assets font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export client-export-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check assets font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -165,6 +165,14 @@ client-export-ios: client-export-templates client-import
 	ditto -c -k --sequesterRsrc --keepParent output/ios/Payload output/ios/Civilization-ios.ipa
 	test -f output/ios/Civilization-ios.ipa
 	@echo "iOS 产物：output/ios/Civilization-ios.ipa"
+
+# iOS 真机开发运行：导出并签名后安装到 iPhone 并启动。
+# 默认取第一台已连接的 iPhone；IOS_DEVICE 用设备名或 UDID 指定，IOS_LAUNCH=0 只安装。
+IOS_DEVICE ?=
+IOS_LAUNCH ?= 1
+
+client-run-ios: client-export-ios
+	IOS_DEVICE="$(IOS_DEVICE)" IOS_LAUNCH="$(IOS_LAUNCH)" bash scripts/ios_run.sh
 
 # 1 个 Godot 客户端 + 7 个机器人的无头端到端。
 m1b-build:
