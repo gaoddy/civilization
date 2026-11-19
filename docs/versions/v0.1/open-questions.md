@@ -34,7 +34,6 @@
 
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
-| 服务端部署编排与多实例切分维度 | 部署 | M2 联机内测前确定 | [服务端技术基线](technical/architecture/server-stack.md) |
 | GDScript 生成器是否值得长期维护 | 实现 | 先用最小生成物（常量与字段名）观察；维护成本高于收益时退回手写常量并由样例测试兜底 | [通信协议](technical/architecture/protocol.md) |
 | 观战只读视图的字段裁剪 | 实现 | v0.1 不做观战，视图按可被第三方只读消费设计，裁剪规则待观战时确定 | [通信协议](technical/architecture/protocol.md) |
 | `TARGET_NOT_ALLOWED` 未校验敌我 | 实现 | 招募阶段客户端拿不到敌方实例编号（§4.4），正常流程不会提交敌方目标，该错误码因此从未构造；但 `instanceId` 全局递增，恶意客户端可猜测编号指向敌方随从，服务端目前不校验敌我、会把效果实际作用于该随从。是否补校验待定 | [核心规则](product/rules/core-rules.md) §4.4 |
