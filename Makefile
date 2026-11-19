@@ -4,8 +4,9 @@ GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Co
 GODOT_VERSION := $(shell "$(GODOT)" --version 2>/dev/null | head -n 1 | cut -d. -f1-3)
 GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates/$(GODOT_VERSION).stable
 DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
+ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
 
-.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export client-export-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check assets balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export client-export-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -41,6 +42,15 @@ data-check:
 	$(PYTHON) scripts/gen_client_data.py --check
 	$(PYTHON) scripts/audit_effects.py
 	$(PYTHON) scripts/gen_text.py --check
+
+# 美术素材后处理：对映射内的源立绘去水印，派生头像与卡面并重写清单。
+assets:
+	@[ -f "$(ASSET_MAP)" ] || { echo "assets 需要映射文件 $(ASSET_MAP)（card_id → 源立绘文件名）" >&2; exit 1; }
+	$(PYTHON) scripts/process_assets.py --map "$(ASSET_MAP)" \
+		--portraits client/assets/characters/portraits \
+		--avatars client/assets/characters/avatars \
+		--faces client/assets/cards/faces \
+		--manifest client/assets/asset_manifest.json
 
 balance-check:
 	$(PYTHON) scripts/balance_report.py --check

@@ -1,0 +1,205 @@
+{
+  "version": 1,
+  "assets": {
+    "zhenghe": {
+      "portrait": "res://assets/characters/portraits/ch_zhenghe_full.png",
+      "avatar": "res://assets/characters/avatars/ch_zhenghe_ava.png",
+      "card_face": "res://assets/cards/faces/card_zhenghe_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "lisshi": {
+      "portrait": "res://assets/characters/portraits/ch_lisshi_full.png",
+      "avatar": "res://assets/characters/avatars/ch_lisshi_ava.png",
+      "card_face": "res://assets/cards/faces/card_lisshi_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "pasteur": {
+      "portrait": "res://assets/characters/portraits/ch_pasteur_full.png",
+      "avatar": "res://assets/characters/avatars/ch_pasteur_ava.png",
+      "card_face": "res://assets/cards/faces/card_pasteur_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "edison": {
+      "portrait": "res://assets/characters/portraits/ch_edison_full.png",
+      "avatar": "res://assets/characters/avatars/ch_edison_ava.png",
+      "card_face": "res://assets/cards/faces/card_edison_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "knuth": {
+      "portrait": "res://assets/characters/portraits/ch_knuth_full.png",
+      "avatar": "res://assets/characters/avatars/ch_knuth_ava.png",
+      "card_face": "res://assets/cards/faces/card_knuth_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "archimedes": {
+      "portrait": "res://assets/characters/portraits/ch_archimedes_full.png",
+      "avatar": "res://assets/characters/avatars/ch_archimedes_ava.png",
+      "card_face": "res://assets/cards/faces/card_archimedes_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "argentavis": {
+      "portrait": "res://assets/characters/portraits/ch_argentavis_full.png",
+      "avatar": "res://assets/characters/avatars/ch_argentavis_ava.png",
+      "card_face": "res://assets/cards/faces/card_argentavis_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "eel": {
+      "portrait": "res://assets/characters/portraits/ch_eel_full.png",
+      "avatar": "res://assets/characters/avatars/ch_eel_ava.png",
+      "card_face": "res://assets/cards/faces/card_eel_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "beetle": {
+      "portrait": "res://assets/characters/portraits/ch_beetle_full.png",
+      "avatar": "res://assets/characters/avatars/ch_beetle_ava.png",
+      "card_face": "res://assets/cards/faces/card_beetle_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "ammonite": {
+      "portrait": "res://assets/characters/portraits/ch_ammonite_full.png",
+      "avatar": "res://assets/characters/avatars/ch_ammonite_ava.png",
+      "card_face": "res://assets/cards/faces/card_ammonite_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "yongsheng-shuimu": {
+      "portrait": "res://assets/characters/portraits/ch_yongsheng-shuimu_full.png",
+      "avatar": "res://assets/characters/avatars/ch_yongsheng-shuimu_ava.png",
+      "card_face": "res://assets/cards/faces/card_yongsheng-shuimu_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "prototaxites": {
+      "portrait": "res://assets/characters/portraits/ch_prototaxites_full.png",
+      "avatar": "res://assets/characters/avatars/ch_prototaxites_ava.png",
+      "card_face": "res://assets/cards/faces/card_prototaxites_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "superbug": {
+      "portrait": "res://assets/characters/portraits/ch_superbug_full.png",
+      "avatar": "res://assets/characters/avatars/ch_superbug_ava.png",
+      "card_face": "res://assets/cards/faces/card_superbug_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "giant-amoeba": {
+      "portrait": "res://assets/characters/portraits/ch_giant-amoeba_full.png",
+      "avatar": "res://assets/characters/avatars/ch_giant-amoeba_ava.png",
+      "card_face": "res://assets/cards/faces/card_giant-amoeba_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "sarcosuchus": {
+      "portrait": "res://assets/characters/portraits/ch_sarcosuchus_full.png",
+      "avatar": "res://assets/characters/avatars/ch_sarcosuchus_ava.png",
+      "card_face": "res://assets/cards/faces/card_sarcosuchus_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "stephenson": {
+      "portrait": "res://assets/characters/portraits/ch_stephenson_full.png",
+      "avatar": "res://assets/characters/avatars/ch_stephenson_ava.png",
+      "card_face": "res://assets/cards/faces/card_stephenson_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "mozi": {
+      "portrait": "res://assets/characters/portraits/ch_mozi_full.png",
+      "avatar": "res://assets/characters/avatars/ch_mozi_ava.png",
+      "card_face": "res://assets/cards/faces/card_mozi_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "shakespeare": {
+      "portrait": "res://assets/characters/portraits/ch_shakespeare_full.png",
+      "avatar": "res://assets/characters/avatars/ch_shakespeare_ava.png",
+      "card_face": "res://assets/cards/faces/card_shakespeare_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "jiyin-gaizaoren": {
+      "portrait": "res://assets/characters/portraits/ch_jiyin-gaizaoren_full.png",
+      "avatar": "res://assets/characters/avatars/ch_jiyin-gaizaoren_ava.png",
+      "card_face": "res://assets/cards/faces/card_jiyin-gaizaoren_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "einstein": {
+      "portrait": "res://assets/characters/portraits/ch_einstein_full.png",
+      "avatar": "res://assets/characters/avatars/ch_einstein_ava.png",
+      "card_face": "res://assets/cards/faces/card_einstein_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    }
+  }
+}
