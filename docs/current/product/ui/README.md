@@ -53,4 +53,4 @@
 
 ## 5. 交互约定
 
-通用交互、状态与无障碍规则见 [interactions.md](interactions.md)；页面特有交互写在页面文档内，同一规则只写一处。
+通用交互、状态与无障碍规则见 [interactions.md](interactions.md)；iOS 端的横屏、缩放与触控规则见 [mobile-adaptation.md](mobile-adaptation.md)；页面特有交互写在页面文档内，同一规则只写一处。

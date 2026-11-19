@@ -3,6 +3,8 @@
 > 状态：已实现
 > 代码：`client/ui/ui.gd`、`client/ui/theme.gd`、`client/scenes/game.gd`、`client/scenes/card_gallery.gd`
 
+本文记录桌面端已实现的通用交互；iOS 端的横屏、缩放、长按与命中尺寸差异见[移动端适配](mobile-adaptation.md)。
+
 ## 1. 控件状态
 
 | 状态 | 表现 | 规则 |
