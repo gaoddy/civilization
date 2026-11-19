@@ -1,0 +1,35 @@
+replicaCount: 1
+
+image:
+  repository: civilization-server
+  tag: dev
+  pullPolicy: Never
+
+namespace: civilization-dev
+platformNamespace: platform-dev
+
+existingSecretName: civilization-postgres-civilization
+
+config:
+  listenAddr: 0.0.0.0:8080
+
+service:
+  port: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+nodeSelector: {}
+
+httpRoute:
+  enabled: true
+  gatewayName: platform-gateway
+  gatewayNamespace: platform-dev
+  sectionName: https
+  hostnames: []
+  pathPrefix: /

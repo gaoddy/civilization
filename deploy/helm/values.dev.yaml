@@ -1,0 +1,8 @@
+namespace: civilization-dev
+platformNamespace: platform-dev
+image:
+  tag: dev
+httpRoute:
+  gatewayNamespace: platform-dev
+  hostnames:
+    - civilization.dev.platform.internal
