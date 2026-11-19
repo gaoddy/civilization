@@ -994,9 +994,12 @@ func _check_combat_layout() -> void:
     GameStore.phase = ""
 
 
-## 演示期间没有跳过或加速入口。
+## 演示期间没有跳过或加速入口。首局引导层自带「跳过」，不属于战斗演示，排除在外。
 func _check_combat_no_skip_entry(instance: Node) -> void:
+    var guide := instance.find_child("FirstGameGuide", true, false)
     for child in instance.find_children("*", "Button", true, false):
+        if guide != null and guide.is_ancestor_of(child):
+            continue
         var text := str((child as Button).text)
         _expect(not text.contains("跳过"), "演示不应提供「跳过」：%s" % text)
         _expect(not text.contains("加速"), "演示不应提供「加速」：%s" % text)
@@ -2332,19 +2335,164 @@ func _check_error_text() -> void:
 
 
 func _check_result() -> void:
+    var previous_ranking = GameStore.ranking
+    var previous_seed = GameStore.game_seed
+    var previous_stats = GameStore.self_stats
+    var previous_room_id = GameStore.room_id
+    var previous_player_id = GameStore.player_id
+    var previous_players = GameStore.room_players
+    var previous_view = GameStore.view
+
+    GameStore.player_id = "p0"
+    GameStore.room_id = "r_test"
+    GameStore.room_players = []
+    GameStore.view = {}
     GameStore.ranking = [
-        {"playerId": "p0", "place": 1},
+        {"playerId": "p0", "place": 1, "survivedTurns": 9, "damageDealt": 31},
         {"playerId": "p1", "place": 2},
     ]
     GameStore.game_seed = "abc123"
+    GameStore.self_stats = {
+        "place": 1,
+        "survivedTurns": 9,
+        "finalHp": 17,
+        "finalEra": 5,
+        "remainingGold": 4,
+        "damageDealt": 31,
+        "damageTaken": 12,
+        "buys": 6,
+        "sells": 3,
+        "rerolls": 8,
+        "triples": 2,
+        "combatWins": 4,
+        "combatDraws": 1,
+        "combatLosses": 2,
+        "heroPowerUses": 5,
+        "board": [
+            {"cardId": "bruce-lee", "golden": true, "attack": 7, "health": 8},
+            {"cardId": "aristotle", "golden": false, "attack": 3, "health": 4},
+        ],
+    }
     var instance := await _check_scene("res://scenes/result.tscn", false)
     if instance == null:
+        _restore_result_state(
+            previous_ranking, previous_seed, previous_stats, previous_room_id,
+            previous_player_id, previous_players, previous_view,
+        )
         return
+
     var list = instance.find_child("RankingList", true, false)
     if list == null:
         _expect(false, "结算场景缺少 RankingList")
     else:
         _expect(list.get_child_count() == 2, "结算场景排名行数为 %d，期望 2" % list.get_child_count())
+        if list.get_child_count() == 2:
+            var first_row := TranslationServer.translate("ui.result.ranking_row") % [1, "p0", 9, 31]
+            var second_row := TranslationServer.translate("ui.result.ranking_row") % [2, "p1", 0, 0]
+            _expect(str(list.get_child(0).text) == first_row, "完整排名行不符：%s" % list.get_child(0).text)
+            _expect(str(list.get_child(1).text) == second_row, "缺失字段应按 0 回退：%s" % list.get_child(1).text)
+
+    var section = instance.find_child("StatsSection", true, false)
+    if section == null:
+        _expect(false, "结算场景缺少 StatsSection")
+    else:
+        var rows := section.find_children("StatRow_*", "", true, false)
+        _expect(rows.size() == 12, "结算数据行数为 %d，期望 12" % rows.size())
+        var stats_text := _node_text(section)
+        for expected in [
+            TranslationServer.translate("ui.result.stat.survived_turns") + "：9",
+            TranslationServer.translate("ui.result.stat.final_hp") + "：17",
+            TranslationServer.translate("ui.result.stat.final_era") + "：" + CardDB.era_name(5),
+            TranslationServer.translate("ui.result.stat.remaining_gold") + "：4",
+            TranslationServer.translate("ui.result.stat.damage_dealt") + "：31",
+            TranslationServer.translate("ui.result.stat.damage_taken") + "：12",
+            TranslationServer.translate("ui.result.stat.buys") + "：6",
+            TranslationServer.translate("ui.result.stat.sells") + "：3",
+            TranslationServer.translate("ui.result.stat.rerolls") + "：8",
+            TranslationServer.translate("ui.result.stat.triples") + "：2",
+            TranslationServer.translate("ui.result.stat.combat_wins") + "：4",
+            TranslationServer.translate("ui.result.stat.combat_draws") + "：1",
+            TranslationServer.translate("ui.result.stat.combat_losses") + "：2",
+            TranslationServer.translate("ui.result.stat.hero_power_uses") + "：5",
+        ]:
+            _expect(stats_text.contains(expected), "结算数据缺少「%s」：%s" % [expected, stats_text])
+
+    var board = instance.find_child("BoardList", true, false)
+    if board == null:
+        _expect(false, "结算场景缺少 BoardList")
+    else:
+        _expect(board.get_child_count() == 2, "阵容项数为 %d，期望 2" % board.get_child_count())
+        var board_text := _node_text(board)
+        _expect(board_text.contains("★"), "金色随从应带标记：%s" % board_text)
+        _expect(board_text.contains("7/8") and board_text.contains("3/4"), "阵容应显示攻防：%s" % board_text)
+
+    _expect(instance.find_child("BackToRoomButton", true, false) != null, "结算场景缺少返回房间按钮")
+    _expect(instance.find_child("BackToLobbyButton", true, false) != null, "结算场景缺少返回大厅按钮")
+
+    # 结算期间房间被解散：保留已渲染结果，只显示原因提示。
+    GameStore.room_closed_reason = "dissolved"
+    GameStore.room_closed.emit()
+    await get_tree().process_frame
+    var notice = instance.find_child("RoomClosedNotice", true, false)
+    _expect(notice != null and bool(notice.visible), "解散后结算页应显示房间关闭提示")
+    if notice != null:
+        _expect(
+            str(notice.text).contains(TranslationServer.translate("ui.room.dissolved_notice")),
+            "解散提示文案不符：%s" % notice.text,
+        )
+    GameStore.room_closed_reason = ""
     instance.queue_free()
-    GameStore.ranking = []
-    GameStore.game_seed = ""
+    await get_tree().process_frame
+
+    GameStore.self_stats = {}
+    var empty_instance := await _check_scene("res://scenes/result.tscn", false)
+    if empty_instance == null:
+        _restore_result_state(
+            previous_ranking, previous_seed, previous_stats, previous_room_id,
+            previous_player_id, previous_players, previous_view,
+        )
+        return
+    var empty_section = empty_instance.find_child("StatsSection", true, false)
+    if empty_section == null:
+        _expect(false, "空统计时结算场景缺少 StatsSection")
+    else:
+        var empty_text := _node_text(empty_section)
+        for expected in [
+            TranslationServer.translate("ui.result.stat.survived_turns") + "：0",
+            TranslationServer.translate("ui.result.stat.final_hp") + "：0",
+            TranslationServer.translate("ui.result.stat.final_era") + "：" + CardDB.era_name(0),
+            TranslationServer.translate("ui.result.stat.remaining_gold") + "：0",
+            TranslationServer.translate("ui.result.stat.combat_wins") + "：0",
+            TranslationServer.translate("ui.result.stat.hero_power_uses") + "：0",
+        ]:
+            _expect(empty_text.contains(expected), "空统计应按 0 显示「%s」：%s" % [expected, empty_text])
+    var empty_board = empty_instance.find_child("BoardList", true, false)
+    if empty_board == null:
+        _expect(false, "空阵容时结算场景缺少 BoardList")
+    else:
+        _expect(empty_board.get_child_count() == 1, "空阵容应只有占位项")
+        _expect(
+            _node_text(empty_board).contains(TranslationServer.translate("ui.result.board_empty")),
+            "空阵容应显示占位文案",
+        )
+    _expect(empty_instance.find_child("BackToRoomButton", true, false) != null, "空统计时缺少返回房间按钮")
+    _expect(empty_instance.find_child("BackToLobbyButton", true, false) != null, "空统计时缺少返回大厅按钮")
+    empty_instance.queue_free()
+    await get_tree().process_frame
+
+    _restore_result_state(
+        previous_ranking, previous_seed, previous_stats, previous_room_id,
+        previous_player_id, previous_players, previous_view,
+    )
+
+
+func _restore_result_state(
+    ranking, seed_text, stats, room_id, player_id, players, view,
+) -> void:
+    GameStore.ranking = ranking
+    GameStore.game_seed = seed_text
+    GameStore.self_stats = stats
+    GameStore.room_id = room_id
+    GameStore.player_id = player_id
+    GameStore.room_players = players
+    GameStore.view = view

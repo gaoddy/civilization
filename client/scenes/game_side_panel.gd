@@ -11,6 +11,10 @@ signal reroll_pressed
 signal upgrade_pressed
 signal freeze_pressed
 signal gallery_pressed
+## 首局引导手动重看。
+signal hint_pressed
+## 对局中主动退出。
+signal leave_game_pressed
 
 ## 悬停详情层，由对局页注入；售货员大图悬停时登记。
 var detail: GameDetailLayer = null
@@ -31,6 +35,8 @@ var _hero_detail: VBoxContainer
 var _stats_row: HBoxContainer
 var _hero_power_button: Button
 var _end_button: Button
+var _hint_button: Button
+var _leave_button: Button
 
 ## 当前阶段截止时间；空串表示没有可展示的倒计时。
 var _deadline := ""
@@ -77,6 +83,13 @@ func _init() -> void:
     gallery_button.name = "GalleryButton"
     gallery_button.pressed.connect(func() -> void: gallery_pressed.emit())
     status_box.add_child(gallery_button)
+    # 「提示」与「退出对局」对局中常驻，仅连接状态影响可用性。
+    _hint_button = _status_action_button("HintButton", tr("ui.guide.hint"))
+    _hint_button.pressed.connect(func() -> void: hint_pressed.emit())
+    status_box.add_child(_hint_button)
+    _leave_button = _status_action_button("LeaveGameButton", tr("ui.room.exit_game"))
+    _leave_button.pressed.connect(func() -> void: leave_game_pressed.emit())
+    status_box.add_child(_leave_button)
     add_child(status_panel)
 
     var hero_panel := UI.card_panel("surface")
@@ -120,6 +133,14 @@ func _build_shop_actions() -> HBoxContainer:
     _freeze_button = _shop_action_button("FreezeButton", tr("ui.game.side_panel.freeze"))
     _freeze_button.pressed.connect(func() -> void: freeze_pressed.emit())
     return _shop_actions
+
+
+## 状态行动作键：比商店操作更紧凑，避免挤占倒计时与回合文案。
+func _status_action_button(node_name: String, text: String) -> Button:
+    var button := UI.styled_button(text, "micro", 26)
+    button.name = node_name
+    button.add_theme_font_size_override("font_size", UITheme.font_size("font-caption"))
+    return button
 
 
 func _shop_action_button(node_name: String, text: String) -> Button:
@@ -466,13 +487,26 @@ func _refresh_hero(state: GameUiState) -> void:
         )
     )
     _stats_row.add_child(
-        _stat_tile(tr("ui.game.side_panel.gold"), str(int(self_state.get("gold", 0))), "color-accent")
+        _stat_tile(
+            tr("ui.game.side_panel.gold"),
+            str(int(self_state.get("gold", 0))),
+            "color-accent",
+            "GoldTile",
+        )
     )
 
 
 ## 贴底的单项数据格：小标题 + 高对比大数值，三项等宽。
-func _stat_tile(title: String, value: String, color_name: String) -> PanelContainer:
+## `node_name` 用于稳定定位（首局引导步骤 1 的金币格）。
+func _stat_tile(
+    title: String,
+    value: String,
+    color_name: String,
+    node_name := "",
+) -> PanelContainer:
     var panel := UI.card_panel("raised-tight")
+    if node_name != "":
+        panel.name = node_name
     panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
@@ -516,3 +550,7 @@ func _refresh_actions(state: GameUiState) -> void:
         tr("ui.game.side_panel.recruited") if state.recruited else tr("ui.game.side_panel.end_recruit")
     )
     _end_button.disabled = blocked or not bool(aff.get("canEndRecruit", false))
+
+    # 提示与退出对局不受回合门控影响，只跟随连接状态。
+    _hint_button.disabled = not state.connected
+    _leave_button.disabled = not state.connected

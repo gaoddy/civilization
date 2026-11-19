@@ -1516,6 +1516,19 @@ ui.game.target.title,选择目标
 ui.game.target.zone.board,我方棋盘
 ui.game.target.zone.hand,手牌
 ui.game.target.zone.shop,商店
+ui.guide.done,完成
+ui.guide.hint,提示
+ui.guide.manual_title,新手引导
+ui.guide.next,下一步
+ui.guide.skip,跳过
+ui.guide.step1.body,购买随从会消耗金币并进入手牌。
+ui.guide.step1.title,商店与金币
+ui.guide.step2.body,拖动手牌到棋盘空位即可出战。
+ui.guide.step2.title,出战
+ui.guide.step3.body,准备好后结束招募，倒计时结束会自动进入战斗。
+ui.guide.step3.title,结束招募
+ui.guide.step4.body,战斗自动进行，结果可在战报中查看。
+ui.guide.step4.title,战斗
 ui.lobby.accept,同意
 ui.lobby.accept_invite,接受
 ui.lobby.accepting_invite,正在接受邀请…
@@ -1561,20 +1574,49 @@ ui.login.submit,登录
 ui.login.subtitle,开发环境登录，验证码固定 123456
 ui.login.title,文明：七时代演进
 ui.result.back_to_lobby,返回大厅
+ui.result.back_to_room,返回房间
+ui.result.board_empty,无随从
+ui.result.board_item,%s  %d/%d
+ui.result.board_title,最终阵容
 ui.result.my_place,你的名次：第 %d 名
 ui.result.my_place_unrecorded,你的名次：未记录
 ui.result.place_row,第 %d 名   %s
+ui.result.ranking_row,第 %d 名  %s · 存活 %d 回合 · 伤害 %d
 ui.result.seed,对局种子：%s
+ui.result.stat.buys,购买
+ui.result.stat.combat,战斗
+ui.result.stat.combat_draws,平
+ui.result.stat.combat_losses,负
+ui.result.stat.combat_wins,胜
+ui.result.stat.damage_dealt,造成伤害
+ui.result.stat.damage_taken,承受伤害
+ui.result.stat.economy,经济
+ui.result.stat.final_era,最终时代
+ui.result.stat.final_hp,最终生命
+ui.result.stat.hero_power_uses,英雄技能使用
+ui.result.stat.remaining_gold,剩余金币
+ui.result.stat.rerolls,刷新
+ui.result.stat.sells,出售
+ui.result.stat.skills,技能
+ui.result.stat.survived_turns,存活回合
+ui.result.stat.triples,三连
+ui.result.stat_row,%s：%s
+ui.result.stats_title,本局数据
 ui.result.title,对局结束
 ui.room.assigning_hero,正在分配英雄…
 ui.room.candidate_hint,从你的 %d 张候选里选一张，确认后不可更改。
 ui.room.confirm,确认
 ui.room.confirmed,已确认
 ui.room.confirmed_hero,已确认英雄：%s
+ui.room.dissolve,解散房间
+ui.room.dissolved_notice,房间已解散
+ui.room.exit_game,退出对局
 ui.room.invite_accepted,好友已接受邀请
 ui.room.invite_declined,好友没有接受邀请
 ui.room.invite_section,邀请好友
 ui.room.invite_sent,已邀请 %s
+ui.room.kick,移除
+ui.room.kicked_notice,你已被房主移出房间
 ui.room.no_friends_to_invite,暂无好友可邀请
 ui.room.not_connected,未连接服务器
 ui.room.select_hero,请选择英雄

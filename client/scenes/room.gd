@@ -9,6 +9,7 @@ const CARD_SIZE := Vector2(160, 200)
 var _others: HBoxContainer
 var _candidates: HBoxContainer
 var _confirm: Button
+var _dissolve: Button
 var _status: Label
 var _invite_box: HBoxContainer
 var _dismiss: Control
@@ -26,6 +27,7 @@ func _ready() -> void:
     GameStore.error_received.connect(_on_error)
     GameStore.social_changed.connect(_render_invites)
     GameStore.invite_result_received.connect(_on_invite_result)
+    GameStore.room_closed.connect(_on_room_closed)
     # 断线不产生房间或视图消息：直接订阅连接状态，否则「未连接」永远不刷新。
     Net.connected.connect(_sync_state)
     Net.disconnected.connect(_sync_state)
@@ -109,6 +111,14 @@ func _build() -> void:
     _confirm.pressed.connect(_on_confirm_pressed)
     root.add_child(_confirm)
 
+    # 解散房间只对房主开放；非房主不显示任何管理控件。
+    _dissolve = UI.button(tr("ui.room.dissolve"))
+    _dissolve.name = "DissolveButton"
+    _dissolve.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    _dissolve.visible = false
+    _dissolve.pressed.connect(_on_dissolve_pressed)
+    root.add_child(_dissolve)
+
     _status = UI.label("", UITheme.font_size("font-body-sm"))
     _status.name = "StatusLabel"
     _status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -154,20 +164,34 @@ func _refresh() -> void:
 
 
 ## 顶部：其他玩家的名字与确认状态；不展示任何人的英雄选择。
+## 房主在等待区时，每名成员行追加移除按钮。
 func _render_others() -> void:
     UI.clear(_others)
     var shown := 0
+    var can_manage := _is_host() and GameStore.phase == Protocol.PHASE_LOBBY
     for player in GameStore.room_players:
-        if str(player.get("playerId", "")) == GameStore.player_id:
+        var player_id := str(player.get("playerId", ""))
+        if player_id == GameStore.player_id:
             continue
         var display := str(player.get("displayName", ""))
         if display == "":
-            display = str(player.get("playerId", ""))
+            display = player_id
         var ready := bool(player.get("ready", false))
         var status := tr("ui.room.confirmed") if ready else tr("ui.room.unconfirmed")
         var text := "%s · %s" % [display, status]
-        var row := UI.pill_label(text, "success" if ready else "neutral")
+
+        var row := HBoxContainer.new()
         row.name = "OtherPlayer%d" % shown
+        row.alignment = BoxContainer.ALIGNMENT_CENTER
+        row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        row.add_theme_constant_override("separation", UITheme.space("space-sm"))
+        row.add_child(UI.pill_label(text, "success" if ready else "neutral"))
+        if can_manage:
+            var kick := UI.button(tr("ui.room.kick"))
+            kick.name = "Kick_%s" % player_id
+            kick.pressed.connect(_on_kick_pressed.bind(player_id))
+            row.add_child(kick)
+
         _others.add_child(row)
         shown += 1
     if shown == 0:
@@ -325,12 +349,21 @@ func _is_confirmed() -> bool:
     return GameStore.my_ready()
 
 
+## 本人是否为房主：以服务端下发的座位字段为准。
+func _is_host() -> bool:
+    for player in GameStore.room_players:
+        if str(player.get("playerId", "")) == GameStore.player_id:
+            return bool(player.get("isHost", false))
+    return false
+
+
 func _sync_state() -> void:
     var confirmed := _is_confirmed()
     var candidates := GameStore.my_hero_candidates()
     var connected := Net.is_open()
     _confirm.disabled = _selected_hero == "" or confirmed or not connected
     _confirm.text = tr("ui.room.confirmed") if confirmed else tr("ui.room.confirm")
+    _dissolve.visible = _is_host()
 
     if confirmed:
         _status.text = tr("ui.room.confirmed_hero") % CardDB.display_name(_selected_hero)
@@ -349,6 +382,23 @@ func _on_confirm_pressed() -> void:
     Net.send(Protocol.MSG_READY, {"ready": true})
     _status.text = tr("ui.room.submitted_hero") % CardDB.display_name(_selected_hero)
     _confirm.disabled = true
+
+
+func _on_kick_pressed(player_id: String) -> void:
+    Net.send(Protocol.MSG_KICK_MEMBER, {"targetPlayerId": player_id})
+
+
+func _on_dissolve_pressed() -> void:
+    Net.send(Protocol.MSG_DISSOLVE_ROOM, {})
+
+
+## 被移出或房间解散：先写原因文案，再回大厅；房间状态已由 GameStore 清空。
+func _on_room_closed() -> void:
+    if GameStore.room_closed_reason == "kicked":
+        _status.text = tr("ui.room.kicked_notice")
+    else:
+        _status.text = tr("ui.room.dissolved_notice")
+    UI.navigate(self, "res://scenes/lobby.tscn")
 
 
 func _on_room_changed() -> void:

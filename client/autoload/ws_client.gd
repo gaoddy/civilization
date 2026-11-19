@@ -42,10 +42,16 @@ func disconnect_from_server() -> void:
 
 
 ## 关闭当前连接并用已有令牌重新认证，用于对局结束后回到大厅。
+##
+## 关闭前先 `poll` 两次把已排队的出站帧（如离开房间）写出，否则同帧
+## `send` 后立即关闭会丢掉最后一帧，服务端按断线而不是主动离开处理。
 func relogin() -> void:
     _want_connection = true
     _pending_reconnect = false
     if socket != null:
+        if socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
+            socket.poll()
+            socket.poll()
         socket.close()
         socket = null
     if _was_open:

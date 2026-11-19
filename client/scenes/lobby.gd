@@ -20,7 +20,20 @@ func _ready() -> void:
     GameStore.social_changed.connect(_render_social)
     if not Net.is_open():
         _status.text = tr("ui.lobby.not_connected")
+    _show_room_closed_reason()
     _render_social()
+
+
+## 被移出或房间解散后回到大厅：在到达的页面上提示原因，读后清空。
+func _show_room_closed_reason() -> void:
+    if GameStore.room_closed_reason == "":
+        return
+    _status.text = (
+        tr("ui.room.kicked_notice")
+        if GameStore.room_closed_reason == "kicked"
+        else tr("ui.room.dissolved_notice")
+    )
+    GameStore.room_closed_reason = ""
 
 
 func _build() -> void:

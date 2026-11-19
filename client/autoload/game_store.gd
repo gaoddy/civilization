@@ -6,6 +6,8 @@ signal room_changed
 signal view_changed
 signal game_started
 signal game_over
+## 房间被解散或本人被移出；页面据此提示原因并回大厅。
+signal room_closed
 signal error_received
 signal social_changed
 signal invite_received
@@ -28,6 +30,12 @@ var last_seq := 0
 
 var ranking: Array = []
 var game_seed := ""
+## 服务端下发的本人本局统计；结算页直接展示，不做二次计算。
+var self_stats: Dictionary = {}
+## `RoomClosed` 的原因：`kicked`（被移出）或 `dissolved`（房间解散）。
+var room_closed_reason := ""
+## 首局引导当前步骤；-1 表示未在引导中，供场景重建后恢复。
+var guide_step := -1
 var last_error: Dictionary = {}
 var last_combat: Dictionary = {}
 ## `last_combat` 所属回合；与当前 `turn` 不一致时不展示，避免旧战报被当成新战斗。
@@ -79,6 +87,7 @@ func handle(type: String, payload: Dictionary) -> void:
             phase = str(payload.get("phase", Protocol.PHASE_LOBBY))
             room_changed.emit()
         Protocol.MSG_GAME_STARTED:
+            guide_step = -1
             _apply_view(payload.get("view", {}))
             game_started.emit()
             view_changed.emit()
@@ -100,8 +109,16 @@ func handle(type: String, payload: Dictionary) -> void:
         Protocol.MSG_GAME_OVER:
             ranking = payload.get("ranking", [])
             game_seed = str(payload.get("seed", ""))
+            self_stats = payload.get("selfStats", {})
             phase = Protocol.PHASE_GAME_OVER
             game_over.emit()
+        Protocol.MSG_ROOM_CLOSED:
+            # `reset_room` 会清空关闭原因，先暂存再在清空后写回，页面才能区分提示文案。
+            var reason := str(payload.get("reason", ""))
+            reset_room()
+            room_closed_reason = reason
+            Net.send(Protocol.MSG_LEAVE_ROOM, {})
+            room_closed.emit()
         Protocol.MSG_ERROR:
             last_error = payload
             error_received.emit()
@@ -135,7 +152,23 @@ func reset_room() -> void:
     last_seq = 0
     ranking = []
     game_seed = ""
+    self_stats = {}
+    room_closed_reason = ""
+    guide_step = -1
     last_error = {}
+    last_combat = {}
+    last_combat_turn = -1
+    timer_seconds = -1
+
+
+## 结算页返回等待区：只清本局视图，保留房间信息与社交列表。
+func clear_game_view() -> void:
+    phase = ""
+    turn = 1
+    deadline = ""
+    view = {}
+    ranking = []
+    self_stats = {}
     last_combat = {}
     last_combat_turn = -1
     timer_seconds = -1

@@ -56,6 +56,9 @@ var _detail: GameDetailLayer
 # 本局卡牌图鉴覆盖层：打开时盖住对局但不切换场景，关闭后对局状态原样保留。
 var _gallery: CardGallery
 
+# 首局引导：非阻塞覆盖层，步骤随阶段与本人视图变化。
+var _guide: FirstGameGuide
+
 
 func _ready() -> void:
     _build()
@@ -65,6 +68,7 @@ func _ready() -> void:
     Net.connected.connect(_refresh_connection)
     Net.disconnected.connect(_refresh_connection)
     _refresh()
+    _guide.start()
     _update_timer()
 
 
@@ -101,6 +105,8 @@ func _build() -> void:
     _side_panel.upgrade_pressed.connect(_on_upgrade)
     _side_panel.freeze_pressed.connect(_on_freeze)
     _side_panel.gallery_pressed.connect(_open_gallery)
+    _side_panel.hint_pressed.connect(_on_hint_pressed)
+    _side_panel.leave_game_pressed.connect(_on_leave_game)
     body.add_child(_side_panel)
 
     _status = UI.label("", UITheme.font_size("font-body-sm"))
@@ -127,6 +133,10 @@ func _build() -> void:
     add_child(_overlay)
     _recruit_view.detail = _detail
     _combat_view.detail = _detail
+
+    _guide = FirstGameGuide.new()
+    _guide.target_root = self
+    add_child(_guide)
 
 
 func _build_center() -> Control:
@@ -197,6 +207,7 @@ func _refresh() -> void:
     var view: Dictionary = GameStore.view
     if view.is_empty():
         _status.text = tr("ui.game.status.waiting_view")
+        _guide.set_phase("", {})
         return
 
     var self_state: Dictionary = view.get("self", {})
@@ -223,6 +234,7 @@ func _refresh() -> void:
     _side_panel.refresh(state)
     _refresh_overlay(self_state, recruited)
     _refresh_connection()
+    _guide.set_phase(phase, self_state)
 
 
 ## 组装本次刷新传给各视图的快照；视图只读，不回写页面状态。
@@ -797,5 +809,19 @@ func _on_error() -> void:
             UI.navigate(self, "res://scenes/login.tscn")
 
 
+func _on_hint_pressed() -> void:
+    _guide.show_manual()
+
+
+## 对局内主动退出：先发 `LeaveRoom` 由服务端按弃权结算，再清房间并用令牌重连回大厅。
+func _on_leave_game() -> void:
+    Net.send(Protocol.MSG_LEAVE_ROOM, {})
+    _guide.hide()
+    GameStore.reset_room()
+    Net.relogin()
+    UI.navigate(self, "res://scenes/lobby.tscn")
+
+
 func _on_game_over() -> void:
+    _guide.hide()
     UI.navigate(self, "res://scenes/result.tscn")
