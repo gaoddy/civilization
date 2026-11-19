@@ -82,6 +82,32 @@ if [ -n "$LAN_HOST" ]; then
   echo "手机端默认地址 ws://${LAN_HOST}.local:${PORT}/ws（桌面端 ${URL}）"
 fi
 
-"$SIM_BIN" dev --connect "$URL" "$@" &
-SIM_PID=$!
-wait "$SIM_PID"
+# 一局结束后自动准备下一局：服务端保持运行（重启会让客户端令牌失效），
+# 由机器人重新建房，房间码按服务端计数器递增。DEV_ROUNDS 为空时一直循环。
+DEV_ROUNDS=${DEV_ROUNDS:-}
+if [ -n "$DEV_ROUNDS" ]; then
+  case "$DEV_ROUNDS" in
+    *[!0-9]* | 0)
+      echo "DEV_ROUNDS 必须是正整数，实际为 ${DEV_ROUNDS}"
+      exit 1
+      ;;
+  esac
+fi
+
+round=1
+while :; do
+  if [ -n "$DEV_ROUNDS" ] && [ "$round" -gt "$DEV_ROUNDS" ]; then
+    break
+  fi
+  echo "第 ${round} 局：起 7 个机器人建房；Ctrl-C 结束全部进程"
+  "$SIM_BIN" dev --connect "$URL" "$@" &
+  SIM_PID=$!
+  status=0
+  wait "$SIM_PID" || status=$?
+  SIM_PID=""
+  if [ "$status" -ne 0 ]; then
+    exit "$status"
+  fi
+  round=$((round + 1))
+  echo "本局结束，下一局自动起新房间；在客户端结算页点「确定」回大厅，输入新房间码继续。"
+done
