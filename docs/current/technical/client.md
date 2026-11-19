@@ -277,7 +277,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 ### iOS 导出
 
-`client/export_presets.cfg` 的 `iOS` 预设：bundle id `com.civilization.banner`、团队 `G9C8R7FDT9`、`development` 签名、iPhone & iPad（`targeted_device_family=2`）、最低 iOS 15.0、只导出 Xcode 工程（`export_project_only=true`）、`Apple Development` 签名身份，并通过 `additional_plist_content` 写入 `UIRequiresFullScreen` 与 `NSLocalNetworkUsageDescription`。
+`client/export_presets.cfg` 的 `iOS` 预设：bundle id `com.civilization.banner`、团队 `Q62EFJPV3C`、`development` 签名、iPhone & iPad（`targeted_device_family=2`）、最低 iOS 15.0、只导出 Xcode 工程（`export_project_only=true`）、`Apple Development` 签名身份，并通过 `additional_plist_content` 写入 `UIRequiresFullScreen` 与 `NSLocalNetworkUsageDescription`。
 
 | 命令 | 内容 |
 | --- | --- |

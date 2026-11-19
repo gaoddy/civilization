@@ -129,7 +129,7 @@ client-export: client-export-templates client-import
 	ditto -c -k --sequesterRsrc --keepParent output/desktop/Civilization.app output/desktop/Civilization-macos.zip
 
 # iOS 真机开发签名包：先导出 Xcode 工程，再由 xcodebuild 自动签名并打包 .ipa。
-# 需要 Xcode 已登录 Apple 团队 G9C8R7FDT9，且目标真机已登记；否则 xcodebuild 失败。
+# 需要 Xcode 已登录 Apple 团队 Q62EFJPV3C，且目标真机已登记；否则 xcodebuild 失败。
 client-export-ios: client-export-templates client-import
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export-ios 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
 	@[ -f "$(GODOT_TEMPLATE_DIR)/ios.zip" ] || { echo "缺少 iOS 导出模板：$(GODOT_TEMPLATE_DIR)/ios.zip" >&2; exit 1; }
