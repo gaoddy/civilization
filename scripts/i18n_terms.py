@@ -17,7 +17,7 @@ GENERATED_PREFIXES = (
     "card.", "skill.", "token.",
     "enum.card_type.", "enum.playstyle.", "enum.taxon.", "enum.era.", "enum.keyword.", "enum.subtype.",
 )
-MANUAL_PREFIXES = ("ui.", "error.", "enum.evolve.", "enum.stat_layer.")
+MANUAL_PREFIXES = ("ui.", "error.", "enum.evolve.", "enum.stat_layer.", "enum.friend_status.")
 # 已废弃的生成前缀：合并时直接丢弃，不再视为未知前缀报错。
 LEGACY_PREFIXES = ("enum.tribe.",)
 
