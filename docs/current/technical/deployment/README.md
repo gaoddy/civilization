@@ -57,6 +57,8 @@ make deploy ENV=dev SERVER=<ssh-target>
 
 单独步骤：`deploy-render`、`deploy-preflight`、`deploy-apply`、`deploy-rollout`、`deploy-status`、`deploy-smoke`。
 
+`ENV` 只接受 `dev` 或 `prod`，写成其他值会直接报错，不会回落到 dev 的 namespace 与域名。`deploy-render` 的 stdout 只有清单，可直接管道给 `kubectl apply -f -`。
+
 prod 首次新增 hostname 时，platform 侧还需要同步 satori nginx 转发：`make sync-satori-prod-nginx SERVER=<ssh-target>`。
 
 ## 5. 客户端
