@@ -40,11 +40,12 @@ use axum::http::StatusCode;
 use axum::response::Response;
 use axum::routing::get;
 use futures_util::{SinkExt, StreamExt};
+use protocol::RoomClosedReason;
 use protocol::server::{
     FriendInvite as FriendInviteMessage, FriendInviteResult, FriendRequestItem,
     FriendUpdate as FriendUpdateMessage, FriendUpdateFriendsItem, FriendUpdateFriendsItemStatus,
-    FriendUpdateOutgoingItem, FriendUpdateRecentItem, FriendUpdateRecentItemRelation,
-    InviteAccepted,
+    FriendUpdateOutgoingItem, FriendUpdateRecentItem, FriendUpdateRecentItemRelation, GameOver,
+    InviteAccepted, RoomClosed,
 };
 use protocol::{ClientEnvelope, ClientMessage, ServerEnvelope};
 use rule_engine::state::Phase;
@@ -1080,6 +1081,13 @@ fn map_room_message(
             let _ = out;
             Err(("INTERNAL_ERROR", "重连入口不应进入房间命令路由"))
         }
+        ClientMessage::KickMember(request) => Ok(RoomMessage::Command(RoomCommand::Kick {
+            player_id,
+            target_player_id: request.target_player_id,
+        })),
+        ClientMessage::DissolveRoom(_) => {
+            Ok(RoomMessage::Command(RoomCommand::Dissolve { player_id }))
+        }
         ClientMessage::LeaveRoom(_)
         | ClientMessage::AuthRequest(_)
         | ClientMessage::CreateRoom(_)
@@ -1350,7 +1358,8 @@ fn spawn_room_task(
         seed,
         game: None,
         senders: BTreeMap::new(),
-        game_over: false,
+        last_game_over: BTreeMap::new(),
+        round: 0,
         presence_end_notified: false,
     };
     tokio::spawn(async move {
@@ -1379,24 +1388,28 @@ struct RoomTask {
     seed: u64,
     game: Option<GameTask>,
     senders: BTreeMap<String, SeatSender>,
-    /// 是否已经向所有座位下发过 `GameOver`。
-    game_over: bool,
+    /// 最近一局结束时按玩家缓存的 `GameOver`；回大厅后重连/晚到补发。
+    /// 新一局开始时清空。
+    last_game_over: BTreeMap<String, GameOver>,
+    /// 已完成局数；每次结束回房时自增，用于派生下一局种子。
+    round: u32,
     /// 是否已向好友推送过「对局结束」状态，避免重复通知。
     presence_end_notified: bool,
 }
 
 impl RoomTask {
-    /// 房间 task 是否应自行回收：注册表里的房间已不存在，或对局结束且所有连接已离开。
+    /// 本局种子：基础种子按已完成局数偏移，避免连续两局同种子。
+    fn game_seed(&self) -> u64 {
+        self.seed.wrapping_add(u64::from(self.round))
+    }
+
+    /// 房间 task 是否应自行回收：注册表里的房间已不存在。
     ///
     /// `hub` 持有房间入口的发送端，是 task 存活的唯一原因；因此摘除 hub 条目必须在
-    /// 房间 task 内完成，随后 loop 才能退出。对局结束时还要经注册表删除房间
-    /// （含 `by_code`），否则长驻服务会按局数线性累积死数据、房间码永不回收。
+    /// 房间 task 内完成，随后 loop 才能退出。对局结束后房间会回到大厅而不是直接
+    /// 回收，只有全员离开（显式离开或断线宽限超时）后注册表删除房间，这里才摘除
+    /// hub，避免按局数线性累积死数据、房间码永不回收。
     async fn retire_if_done(&mut self) -> bool {
-        if self.game_over && self.senders.is_empty() {
-            self.state.hub.lock().await.remove(&self.room_id);
-            self.state.rooms.lock().await.remove(&self.room_id);
-            return true;
-        }
         let gone = {
             let rooms = self.state.rooms.lock().await;
             rooms.room(&self.room_id).is_none()
@@ -1490,6 +1503,11 @@ impl RoomTask {
             },
         );
         if self.game.is_some() {
+            // 对局中的断线曾写回注册表；重连回来要清掉宽限标记，避免回房后被误释放。
+            {
+                let mut rooms = self.state.rooms.lock().await;
+                let _ = rooms.mark_reconnected(&self.room_id, &player_id);
+            }
             let updates = {
                 let game = self.game.as_mut().expect("刚判空");
                 game.bind_sender(&player_id, out);
@@ -1511,7 +1529,8 @@ impl RoomTask {
                 self.senders.remove(&player_id);
                 return;
             }
-            self.broadcast_room_update().await;
+            self.send_room_update_to(&player_id).await;
+            self.resend_cached_game_over(&player_id).await;
         }
     }
 
@@ -1532,6 +1551,11 @@ impl RoomTask {
             },
         );
         if self.game.is_some() {
+            // 同 `attach`：重连清掉对局断线写回的宽限标记。
+            {
+                let mut rooms = self.state.rooms.lock().await;
+                let _ = rooms.mark_reconnected(&self.room_id, &player_id);
+            }
             let updates = {
                 let game = self.game.as_mut().expect("刚判空");
                 game.bind_sender(&player_id, out.clone());
@@ -1557,6 +1581,7 @@ impl RoomTask {
                 return;
             }
             self.send_room_update_to(&player_id).await;
+            self.resend_cached_game_over(&player_id).await;
         }
     }
 
@@ -1568,8 +1593,17 @@ impl RoomTask {
         self.senders.remove(&player_id);
         if self.game.is_some() {
             if let Some(game) = self.game.as_mut() {
-                game.handle(RoomCommand::Disconnect { player_id });
+                game.handle(RoomCommand::Disconnect {
+                    player_id: player_id.clone(),
+                });
             }
+            // 对局中的断线同样写回注册表：对局结束回房后，大厅 tick 才能在
+            // 宽限期后释放该座位；只记在 GameTask 里会让座位永久残留。
+            let now = self.state.clock.now_ms();
+            let _ = {
+                let mut rooms = self.state.rooms.lock().await;
+                rooms.mark_disconnected(&self.room_id, &player_id, now)
+            };
             return;
         }
         // 大厅断线保留座位与候选一个宽限期，重连能拿回同一组；超时由 tick 释放。
@@ -1588,8 +1622,20 @@ impl RoomTask {
             return;
         }
         if self.game.is_some() {
-            self.send_lobby_error(&player_id, "INVALID_STAGE", "对局已开始，不能离开房间")
-                .await;
+            // 对局中退出按弃权结算：座位保留到本局结束，回房重置时统一移除。
+            let updates = {
+                let game = self.game.as_mut().expect("刚判空");
+                game.handle(RoomCommand::Forfeit {
+                    player_id: player_id.clone(),
+                })
+            };
+            self.deliver_excluding(updates, Some(&player_id)).await;
+            self.senders.remove(&player_id);
+            notify_presence(&self.state, &player_id).await;
+            eprintln!(
+                "room-service: forfeit room={} player={} result=ok",
+                self.room_id, player_id
+            );
             return;
         }
         let result = {
@@ -1682,6 +1728,77 @@ impl RoomTask {
                 self.send_lobby_error(&player_id, "INVALID_STAGE", "对局尚未开始")
                     .await;
             }
+            RoomCommand::Kick {
+                player_id,
+                target_player_id,
+            } => {
+                let result = {
+                    let mut rooms = self.state.rooms.lock().await;
+                    rooms.kick(&self.room_id, &player_id, &target_player_id)
+                };
+                match result {
+                    Ok(()) => {
+                        eprintln!(
+                            "room-service: kick room={} actor={} target={} result=ok",
+                            self.room_id, player_id, target_player_id
+                        );
+                        // 先经该座位当前下行通道发出通知，再移除发送端：
+                        // 被移除后座位已不在注册表，后续只能靠发送端自己的序号下限。
+                        self.send_room_closed_to(&target_player_id, RoomClosedReason::Kicked)
+                            .await;
+                        self.senders.remove(&target_player_id);
+                        self.broadcast_room_update().await;
+                        notify_presence(&self.state, &player_id).await;
+                        notify_presence(&self.state, &target_player_id).await;
+                    }
+                    Err(error) => {
+                        eprintln!(
+                            "room-service: kick room={} actor={} target={} result=err({error})",
+                            self.room_id, player_id, target_player_id
+                        );
+                        let code = error.code().to_string();
+                        self.send_lobby_error(&player_id, &code, &error.to_string())
+                            .await;
+                    }
+                }
+            }
+            RoomCommand::Dissolve { player_id } => {
+                let result = {
+                    let mut rooms = self.state.rooms.lock().await;
+                    rooms.dissolve(&self.room_id, &player_id)
+                };
+                match result {
+                    Ok(members) => {
+                        eprintln!(
+                            "room-service: dissolve room={} actor={} members={} result=ok",
+                            self.room_id,
+                            player_id,
+                            members.len()
+                        );
+                        // 注册表已删除房间：逐个下发 RoomClosed 后清空发送端，
+                        // 由下一轮 `retire_if_done` 摘除 hub。
+                        for member in &members {
+                            self.send_room_closed_to(member, RoomClosedReason::Dissolved)
+                                .await;
+                        }
+                        self.senders.clear();
+                    }
+                    Err(error) => {
+                        eprintln!(
+                            "room-service: dissolve room={} actor={} result=err({error})",
+                            self.room_id, player_id
+                        );
+                        let code = error.code().to_string();
+                        self.send_lobby_error(&player_id, &code, &error.to_string())
+                            .await;
+                    }
+                }
+            }
+            RoomCommand::Forfeit { player_id } => {
+                // `Forfeit` 只由对局中的 `LeaveRoom` 生成；大厅阶段不会有合法来源。
+                self.send_lobby_error(&player_id, "INVALID_STAGE", "当前阶段不允许")
+                    .await;
+            }
             RoomCommand::Error {
                 player_id,
                 code,
@@ -1719,9 +1836,10 @@ impl RoomTask {
             return;
         };
 
+        let seed = self.game_seed();
         let mut game = match GameTask::new(
             self.state.catalog.clone(),
-            self.seed,
+            seed,
             playstyles,
             heroes,
             players,
@@ -1764,6 +1882,9 @@ impl RoomTask {
             }
         }
         self.game = Some(game);
+        // 新一局开始：上一局缓存的结果不再补发，结束通知也重新武装。
+        self.last_game_over.clear();
+        self.presence_end_notified = false;
         for (out, envelope) in started {
             let _ = out.try_send(envelope);
         }
@@ -1784,14 +1905,28 @@ impl RoomTask {
 
     /// 把 `SeatUpdate` 编码后经该座位当前发送端投递；发送失败只丢弃。
     async fn deliver(&mut self, updates: Vec<SeatUpdate>) {
+        self.deliver_excluding(updates, None).await;
+    }
+
+    /// 同 [`RoomTask::deliver`]，但跳过 `excluded` 玩家自己的更新（对局中退出时使用）。
+    ///
+    /// 本批出现 `GameOver` 时，先把每个座位的载荷缓存到 `last_game_over`，全部投递
+    /// 完成后把对局置空、按新种子把房间重置回等待区并广播 `RoomUpdate`。回房重置
+    /// 与好友状态通知都只做一次。
+    async fn deliver_excluding(&mut self, updates: Vec<SeatUpdate>, excluded: Option<&str>) {
         let Some(game) = self.game.as_mut() else {
             return;
         };
         let mut ended = false;
         for update in updates {
-            if matches!(&update.kind, UpdateKind::GameOver(_)) {
-                self.game_over = true;
+            if let UpdateKind::GameOver(payload) = &update.kind {
                 ended = true;
+                // 每个座位拿到的 `selfStats` 不同，按接收者缓存原始载荷。
+                self.last_game_over
+                    .insert(update.player_id.clone(), payload.clone());
+            }
+            if excluded.is_some_and(|player_id| player_id == update.player_id) {
+                continue;
             }
             let Some(sender) = self.senders.get(&update.player_id) else {
                 continue;
@@ -1809,7 +1944,29 @@ impl RoomTask {
                 let _ = out.try_send(envelope);
             }
         }
-        if ended && !self.presence_end_notified {
+        if !ended {
+            return;
+        }
+
+        // 全部结果已投递：结束对局并按新种子回到等待区。
+        let Some(game) = self.game.take() else {
+            return;
+        };
+        let departed = game.departed_player_ids();
+        self.round = self.round.saturating_add(1);
+        let reset = {
+            let mut rooms = self.state.rooms.lock().await;
+            rooms.reset_for_next_game(
+                &self.room_id,
+                self.game_seed(),
+                &self.state.catalog,
+                &departed,
+            )
+        };
+        if reset.is_ok() {
+            self.broadcast_room_update().await;
+        }
+        if !self.presence_end_notified {
             self.presence_end_notified = true;
             let players: Vec<String> = self.senders.keys().cloned().collect();
             for player in players {
@@ -1886,6 +2043,69 @@ impl RoomTask {
         };
         slot.channel.set_next_seq(floor.current());
         let Ok(envelope) = slot.channel.bind("RoomUpdate", payload) else {
+            return;
+        };
+        floor.record(envelope.seq.get());
+        drop(rooms);
+        let _ = out.try_send(envelope);
+    }
+
+    /// 若存在上一局缓存结果，就在 `RoomUpdate` 之后经同一座位通道补发 `GameOver`。
+    async fn resend_cached_game_over(&mut self, player_id: &str) {
+        if let Some(payload) = self.last_game_over.get(player_id).cloned() {
+            self.send_game_over_to(player_id, &payload).await;
+        }
+    }
+
+    /// 向该玩家补发缓存的对局结果；编码方式与 [`Self::send_room_update_to`] 一致，
+    /// 复用座位 `channel` 与连接级序号下限，保证 `seq` 连续。
+    async fn send_game_over_to(&mut self, player_id: &str, payload: &GameOver) {
+        let Ok(value) = serde_json::to_value(payload) else {
+            return;
+        };
+        let Value::Object(payload) = value else {
+            return;
+        };
+        self.send_slot_message(player_id, "GameOver", payload).await;
+    }
+
+    /// 向该玩家下发 `RoomClosed`；座位可能已从注册表移除（kick/dissolve），
+    /// 此时用携带当前序号下限的新通道保证 `seq` 继续递增。
+    async fn send_room_closed_to(&mut self, player_id: &str, reason: RoomClosedReason) {
+        let payload = RoomClosed { reason };
+        let Ok(value) = serde_json::to_value(&payload) else {
+            return;
+        };
+        let Value::Object(payload) = value else {
+            return;
+        };
+        self.send_slot_message(player_id, "RoomClosed", payload)
+            .await;
+    }
+
+    /// 经座位通道（若仍在注册表）或新通道下发一条消息。
+    async fn send_slot_message(
+        &mut self,
+        player_id: &str,
+        kind: &str,
+        payload: serde_json::Map<String, Value>,
+    ) {
+        let Some(sender) = self.senders.get(player_id) else {
+            return;
+        };
+        let out = sender.out.clone();
+        let floor = sender.floor.clone();
+
+        let mut fresh = SeatChannel::new();
+        fresh.set_next_seq(floor.current());
+        let mut rooms = self.state.rooms.lock().await;
+        let channel = rooms
+            .room_mut(&self.room_id)
+            .and_then(|room| room.slot_entry_mut(player_id))
+            .map(|slot| &mut slot.channel)
+            .unwrap_or(&mut fresh);
+        channel.set_next_seq(floor.current());
+        let Ok(envelope) = channel.bind(kind, payload) else {
             return;
         };
         floor.record(envelope.seq.get());
@@ -2007,7 +2227,8 @@ mod tests {
             seed: 7,
             game: None,
             senders: BTreeMap::new(),
-            game_over: false,
+            last_game_over: BTreeMap::new(),
+            round: 0,
             presence_end_notified: false,
         };
         task.start_game().await;
@@ -2050,7 +2271,8 @@ mod tests {
             seed: 7,
             game: None,
             senders: BTreeMap::new(),
-            game_over: false,
+            last_game_over: BTreeMap::new(),
+            round: 0,
             presence_end_notified: false,
         };
         task.senders.insert(

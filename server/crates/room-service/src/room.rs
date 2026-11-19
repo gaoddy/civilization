@@ -83,7 +83,9 @@ pub struct Room {
     pub code: String,
     pub host_id: String,
     pub phase: Phase,
-    /// 本局启用的 5 个玩法；创建房间时由房间码种子抽取，之后大厅与对局期间不变。
+    /// 本局种子；创建时由房间码派生，回房重置时由调用方换新。
+    pub seed: u64,
+    /// 本局启用的 5 个玩法；创建房间时由本局种子抽取，回房重置时随新种子重抽。
     pub playstyles: [Playstyle; 5],
     /// 座位 → 玩家；只保存已占用座位，键即座位号（0 起）。
     slots: BTreeMap<Seat, PlayerSlot>,
@@ -158,7 +160,7 @@ impl Room {
         self.slots.values().any(|slot| slot.player_id == player_id)
     }
 
-    /// 按房间种子洗出的英雄序列给一名玩家切出一组候选。
+    /// 按 [`Room::seed`] 洗出的英雄序列给一名玩家切出一组候选。
     ///
     /// 候选只取 [`card_in_pool`] 通过的英雄；池为空时回退到全部英雄卡。
     /// 池大小 ≥ 满座总需求时沿用分段、房间内互不重复；池不足时按
@@ -191,7 +193,7 @@ impl Room {
                 .collect();
         }
         heroes.sort();
-        shuffle(&mut heroes, seed_for_code(&self.code));
+        shuffle(&mut heroes, self.seed);
         if heroes.is_empty() {
             return;
         }
@@ -250,6 +252,8 @@ pub enum RoomError {
     NotAHeroCard,
     /// 玩家不在房间里。
     NotInRoom,
+    /// 操作目标非法，例如房主试图移除自己。
+    InvalidTarget,
     /// 所选英雄不在本人的候选里。
     NotCandidate,
     /// 其他保留原因；字符串是内部说明，不作为协议错误码。
@@ -272,6 +276,7 @@ impl RoomError {
             Self::RoomNotReady => ErrorCode::RoomNotReady,
             Self::NotAHeroCard => ErrorCode::InvalidChoice,
             Self::NotInRoom => ErrorCode::NotInRoom,
+            Self::InvalidTarget => ErrorCode::InvalidChoice,
             Self::NotCandidate => ErrorCode::InvalidChoice,
             Self::Unknown(_) => ErrorCode::InternalError,
         }
@@ -289,6 +294,7 @@ impl fmt::Display for RoomError {
             Self::RoomNotReady => f.write_str("人数不足或尚未全部准备"),
             Self::NotAHeroCard => f.write_str("不是可选的英雄卡"),
             Self::NotInRoom => f.write_str("玩家不在房间内"),
+            Self::InvalidTarget => f.write_str("不能移除自己"),
             Self::NotCandidate => f.write_str("不在可选英雄范围内"),
             Self::Unknown(reason) => f.write_str(reason),
         }
@@ -339,13 +345,16 @@ impl RoomRegistry {
 
         let mut slots = BTreeMap::new();
         slots.insert(0, PlayerSlot::from_session(host));
+        // 本局种子只算一次：玩法抽取与英雄候选分配共用同一个值。
+        let seed = seed_for_code(&code);
         let mut room = Room {
             id: id.clone(),
             code: code.clone(),
             host_id: host.player_id.clone(),
             phase: Phase::Lobby,
-            // 玩法在房间创建时确定：必须先于英雄候选分配，之后大厅与对局期间保持不变。
-            playstyles: rule_engine::playstyles::draw(seed_for_code(&code)),
+            seed,
+            // 玩法在房间创建时确定：必须先于英雄候选分配，之后到本局结束保持不变。
+            playstyles: rule_engine::playstyles::draw(seed),
             slots,
         };
         room.assign_candidates(&host.player_id, catalog);
@@ -391,25 +400,19 @@ impl RoomRegistry {
         Ok(room)
     }
 
-    /// 离开房间。座位立即空出且编号不重排；之后加入的玩家占用最小空位。
+    /// 移除 `seat` 上的座位，并维护房主与房间生命周期。
     ///
-    /// 房主离开时，房主转给座位号最小的剩余玩家；最后一名玩家离开后房间销毁。
-    /// 只有 `Lobby` 阶段允许离开；开局后的断线由 Task 11 的 `Disconnect` 处理，
-    /// 不走本方法，避免房间成员与对局座位发散。
-    pub fn leave(&mut self, room_id: &str, player_id: &str) -> Result<(), RoomError> {
+    /// 房主座位被移除时，房主转给座位号最小的剩余成员；最后一人移除后
+    /// 同时删除 `rooms` 与 `by_code`。调用方负责阶段与权限校验。
+    fn remove_slot(&mut self, room_id: &str, seat: Seat) {
         let Some(room) = self.rooms.get_mut(room_id) else {
-            return Err(RoomError::NotFound);
+            return;
         };
-        if room.phase != Phase::Lobby {
-            return Err(RoomError::WrongPhase);
-        }
-        let Some(seat) = room.seat_of(player_id) else {
-            return Err(RoomError::NotInRoom);
+        let Some(removed) = room.slots.remove(&seat) else {
+            return;
         };
-        room.slots.remove(&seat);
-
-        if room.host_id != player_id {
-            return Ok(());
+        if room.host_id != removed.player_id {
+            return;
         }
 
         let next_host = room
@@ -418,17 +421,123 @@ impl RoomRegistry {
             .next()
             .map(|(_, slot)| slot.player_id.clone());
         match next_host {
-            Some(next_host) => {
-                room.host_id = next_host;
-                Ok(())
-            }
+            Some(next_host) => room.host_id = next_host,
             None => {
                 let code = room.code.clone();
                 self.rooms.remove(room_id);
                 self.by_code.remove(&code);
-                Ok(())
             }
         }
+    }
+
+    /// 离开房间。座位立即空出且编号不重排；之后加入的玩家占用最小空位。
+    ///
+    /// 房主离开时，房主转给座位号最小的剩余玩家；最后一名玩家离开后房间销毁。
+    /// 只有 `Lobby` 阶段允许离开；开局后的断线由 Task 11 的 `Disconnect` 处理，
+    /// 不走本方法，避免房间成员与对局座位发散。
+    pub fn leave(&mut self, room_id: &str, player_id: &str) -> Result<(), RoomError> {
+        let room = self.rooms.get(room_id).ok_or(RoomError::NotFound)?;
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
+        let seat = room.seat_of(player_id).ok_or(RoomError::NotInRoom)?;
+        self.remove_slot(room_id, seat);
+        Ok(())
+    }
+
+    /// 房主移除指定成员；座位立即空出且编号不重排，不触发房主转移。
+    ///
+    /// 只有 `Lobby` 阶段允许移除；房主不能移除自己。
+    pub fn kick(&mut self, room_id: &str, actor: &str, target: &str) -> Result<(), RoomError> {
+        let room = self.rooms.get(room_id).ok_or(RoomError::NotFound)?;
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
+        if room.host_id != actor {
+            return Err(RoomError::NotHost);
+        }
+        if target == actor {
+            return Err(RoomError::InvalidTarget);
+        }
+        let seat = room.seat_of(target).ok_or(RoomError::NotInRoom)?;
+        self.remove_slot(room_id, seat);
+        Ok(())
+    }
+
+    /// 房主解散房间：从注册表与房间码索引删除，返回全部成员 playerId（座位升序）。
+    ///
+    /// 只有 `Lobby` 阶段允许解散。
+    pub fn dissolve(&mut self, room_id: &str, actor: &str) -> Result<Vec<String>, RoomError> {
+        let room = self.rooms.get(room_id).ok_or(RoomError::NotFound)?;
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
+        if room.host_id != actor {
+            return Err(RoomError::NotHost);
+        }
+        let members = room
+            .slots
+            .values()
+            .map(|slot| slot.player_id.clone())
+            .collect();
+        self.remove(room_id);
+        Ok(members)
+    }
+
+    /// 对局结束后把房间重置为下一局等待区。
+    ///
+    /// 阶段回到 `Lobby`，换用 `seed` 并据此重抽玩法；移除 `departed` 中的座位，
+    /// 房主被移除时转给座位号最小的剩余成员；其余座位清空准备、英雄与旧候选后，
+    /// 用新种子重新分配候选。全员离开时删除房间并返回 `Ok(false)`。
+    pub fn reset_for_next_game(
+        &mut self,
+        room_id: &str,
+        seed: u64,
+        catalog: &Catalog,
+        departed: &[String],
+    ) -> Result<bool, RoomError> {
+        if !self.rooms.contains_key(room_id) {
+            return Err(RoomError::NotFound);
+        }
+
+        let departed_seats: Vec<Seat> = {
+            let room = self.rooms.get(room_id).expect("上面已确认房间存在");
+            room.slots
+                .iter()
+                .filter(|(_, slot)| {
+                    departed
+                        .iter()
+                        .any(|player_id| player_id == &slot.player_id)
+                })
+                .map(|(&seat, _)| seat)
+                .collect()
+        };
+        for seat in departed_seats {
+            self.remove_slot(room_id, seat);
+        }
+
+        let Some(room) = self.rooms.get_mut(room_id) else {
+            return Ok(false);
+        };
+        room.phase = Phase::Lobby;
+        room.seed = seed;
+        room.playstyles = rule_engine::playstyles::draw(seed);
+
+        let player_ids: Vec<String> = room
+            .slots
+            .values()
+            .map(|slot| slot.player_id.clone())
+            .collect();
+        for slot in room.slots.values_mut() {
+            slot.ready = false;
+            slot.hero_card_id = None;
+            slot.hero_candidates.clear();
+            slot.candidate_segment = None;
+        }
+        for player_id in player_ids {
+            room.assign_candidates(&player_id, catalog);
+        }
+        Ok(true)
     }
 
     /// 设置准备状态；准备前必须先选英雄。

@@ -20,12 +20,14 @@
 //!   [`for_seat`] 的规则过滤——本人收到自己的私有事件，其他人收到 `events` 为空的
 //!   视图；战斗结果只走逐座位 `CombatResult`。
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use protocol::server::{CombatResult, ErrorMessage, GameOver, GameStarted, Snapshot, StateUpdate};
 use protocol::view::{CombatLogEntry, GameEvent as ProtocolGameEvent};
-use protocol::{ErrorCode, GameOverRankingItem, ProtocolError, ServerEnvelope};
+use protocol::{
+    ErrorCode, GameOverRankingItem, ProtocolError, SelfStats, SelfStatsBoardItem, ServerEnvelope,
+};
 use rule_engine::data::{Catalog, Playstyle};
 use rule_engine::effects::{TargetRef as EngineTargetRef, Zone as EngineZone};
 use rule_engine::engine::Engine;
@@ -70,6 +72,23 @@ pub const TIMER_WARNING_SECONDS: u64 = 10;
 /// 断线后座位的保留时长（毫秒）。超过该时长座位被标记离线，但不释放座位、不结束对局。
 pub const RECONNECT_GRACE_MS: u64 = 30_000;
 
+/// 单个座位本局的增量统计；由引擎事件累计，结束时与终局状态合成 `SelfStats`。
+#[derive(Debug, Default)]
+struct SeatStats {
+    buys: u32,
+    sells: u32,
+    rerolls: u32,
+    triples: u32,
+    damage_taken: i32,
+    combat_wins: u32,
+    combat_draws: u32,
+    combat_losses: u32,
+    /// 英雄主动技能使用次数；`PlayerState.hero_uses` 每回合清空，这里跨回合累计。
+    hero_power_uses: u32,
+    /// 被淘汰的回合；存活至结束的座位保持 `None`。
+    eliminated_turn: Option<u8>,
+}
+
 /// 一条来自连接层的房间命令。
 #[derive(Debug)]
 pub enum RoomCommand {
@@ -99,6 +118,15 @@ pub enum RoomCommand {
     /// 连接断开；记录断开时刻，超过 [`RECONNECT_GRACE_MS`] 后由 [`GameTask::tick`]
     /// 标记离线。对局状态与座位不因断线改变。
     Disconnect { player_id: String },
+    /// 房主移除成员；等待区语义由房间注册表处理，对局中暂不支持（T01 占位）。
+    Kick {
+        player_id: String,
+        target_player_id: String,
+    },
+    /// 房主解散房间；等待区语义由房间注册表处理，对局中暂不支持（T01 占位）。
+    Dissolve { player_id: String },
+    /// 对局中主动退出；按弃权结算名次，该座位此后不再收到任何推送。
+    Forfeit { player_id: String },
     /// 入房之后的连接层错误；由房间 task 统一走该座位的下行通道编码下发，
     /// 保证同一玩家的 `seq` 单调递增（不另开连接层计数器）。
     Error {
@@ -157,6 +185,11 @@ pub struct GameTask {
     clock: Arc<dyn Clock>,
     /// `(playerId, clientIntentId) → 结果`；只增不删。
     dedup: BTreeMap<(String, String), Deduped>,
+    /// 按座位累计的本局统计；只由 [`GameTask::record_events`] 增量写入。
+    seat_stats: [SeatStats; SEAT_COUNT],
+    /// 上次观察到的各座位 `hero_uses` 总和；引擎每回合清空 `hero_uses`，用其与
+    /// 当前总和的差累计 [`SeatStats::hero_power_uses`]。
+    hero_uses_baseline: [u32; SEAT_COUNT],
     seed: u64,
     room_id: String,
     /// 当前阶段的截止时刻（Unix epoch 毫秒）。
@@ -184,6 +217,8 @@ pub struct GameTask {
     /// 只存在 `GameTask` 上，不写入 [`GameState`]，因此不影响 `state_hash` 与
     /// 确定性重放；重连快照从当前视图自然带出。
     combat_log: Vec<CombatLogEntry>,
+    /// 本局主动弃权的玩家；座位保留到本局结束，仅用于停止推送与回房重置。
+    departed: BTreeSet<String>,
     /// 每个座位当前连接的下行发送端；首次建连经 [`GameTask::bind_sender`] 注册，
     /// 重连时被替换。所有权只在这里，连接层通过 [`GameTask::sender`] 借用投递。
     senders: BTreeMap<Seat, mpsc::Sender<ServerEnvelope>>,
@@ -252,6 +287,8 @@ impl GameTask {
             channels,
             clock,
             dedup: BTreeMap::new(),
+            seat_stats: std::array::from_fn(|_| SeatStats::default()),
+            hero_uses_baseline: [0; SEAT_COUNT],
             seed,
             room_id: String::new(),
             phase_deadline_ms,
@@ -261,6 +298,7 @@ impl GameTask {
             combat_acks: [false; SEAT_COUNT],
             combat_participants: [false; SEAT_COUNT],
             combat_log: Vec::new(),
+            departed: BTreeSet::new(),
             senders: BTreeMap::new(),
             connected: [true; SEAT_COUNT],
             disconnected_at_ms: [None; SEAT_COUNT],
@@ -359,6 +397,10 @@ impl GameTask {
     ///
     /// 返回 `false` 表示 `player_id` 不在房间里，此时不保存发送端。
     pub fn bind_sender(&mut self, player_id: &str, out: mpsc::Sender<ServerEnvelope>) -> bool {
+        // 已弃权的座位不再接收任何消息，重连也不重新绑定。
+        if self.departed.contains(player_id) {
+            return false;
+        }
         let Some(seat) = self.seat_of.get(player_id).copied() else {
             return false;
         };
@@ -465,6 +507,11 @@ impl GameTask {
                 out,
             } => self.reconnect(&player_id, last_seq, out),
             RoomCommand::Disconnect { player_id } => self.mark_disconnect(&player_id),
+            RoomCommand::Kick { player_id, .. } | RoomCommand::Dissolve { player_id } => {
+                // 等待区语义由房间注册表处理；对局中暂不支持。
+                self.player_error(&player_id, None, ErrorCode::InvalidStage, "当前阶段不允许")
+            }
+            RoomCommand::Forfeit { player_id } => self.forfeit(&player_id),
             RoomCommand::CombatPlayed { player_id } => self.mark_combat_played(&player_id),
             RoomCommand::Intent {
                 player_id,
@@ -511,6 +558,9 @@ impl GameTask {
         let Some(seat) = self.seat_of.get(player_id).copied() else {
             return Vec::new();
         };
+        if self.is_departed(seat) {
+            return Vec::new();
+        }
         if self.state.phase != Phase::Combat || !self.combat_participants[usize::from(seat)] {
             return vec![self.view_update(seat)];
         }
@@ -519,6 +569,75 @@ impl GameTask {
             return self.finish_combat().unwrap_or_default();
         }
         vec![self.view_update(seat)]
+    }
+
+    /// 对局内主动退出：按规则引擎弃权结算，并把该座位从后续推送中移除。
+    ///
+    /// 未知玩家、已淘汰座位与 `GameOver` 阶段都返回空更新。弃权座位记录在
+    /// `departed` 中，直到回房重置才统一移除；本局内它的座位与名次仍保留在
+    /// 其他人的视图与终局排名里。
+    fn forfeit(&mut self, player_id: &str) -> Vec<SeatUpdate> {
+        let Some(seat) = self.seat_of.get(player_id).copied() else {
+            return Vec::new();
+        };
+        // 离开必须登记，无论座位是否已淘汰或本局是否已终局：回房重置只按
+        // `departed` 移除座位，漏记会让该座位（乃至房主身份）永久残留。
+        self.departed.insert(player_id.to_string());
+        if self.state.phase == Phase::GameOver || self.state.players[usize::from(seat)].eliminated {
+            return Vec::new();
+        }
+
+        let events = rule_engine::settle::forfeit(&mut self.state, seat);
+        if events.is_empty() {
+            return Vec::new();
+        }
+        // 后续视图与结果都不再投递给该座位。
+        self.record_events(&events);
+
+        let all_seats: Vec<Seat> = (0..SEAT_COUNT as Seat).collect();
+        if self.state.phase == Phase::GameOver {
+            // 终结时清除演示期临时状态，结果与视图一并下发（视图在前）。
+            self.combat_reports = None;
+            self.combat_ranks = None;
+            self.combat_started_at_ms = None;
+            self.combat_acks = [false; SEAT_COUNT];
+            self.combat_participants = [false; SEAT_COUNT];
+
+            let mut updates = self.view_updates(&events, &all_seats);
+            for seat in all_seats {
+                if self.is_departed(seat) {
+                    continue;
+                }
+                updates.push(SeatUpdate {
+                    player_id: self.seats[usize::from(seat)].player_id.clone(),
+                    kind: UpdateKind::GameOver(self.game_over_payload(seat)),
+                });
+            }
+            return updates;
+        }
+
+        if self.state.phase == Phase::Combat {
+            // 本场演示不再等待该座位：视为已回报，其余座位播完后立即结算。
+            let index = usize::from(seat);
+            self.combat_participants[index] = false;
+            self.combat_acks[index] = true;
+            if self.all_combat_played() {
+                return self.finish_combat().unwrap_or_default();
+            }
+        }
+
+        self.view_updates(&events, &all_seats)
+    }
+
+    /// 座位是否已在本局弃权。
+    fn is_departed(&self, seat: Seat) -> bool {
+        self.departed
+            .contains(&self.seats[usize::from(seat)].player_id)
+    }
+
+    /// 本局已弃权的玩家；供回房重置时从座位上移除。
+    pub fn departed_player_ids(&self) -> Vec<String> {
+        self.departed.iter().cloned().collect()
     }
 
     /// 本场全部参战座位是否都已回报。
@@ -541,6 +660,10 @@ impl GameTask {
                 "玩家不在房间内",
             )];
         };
+        // 已弃权的座位不再接收任何更新；其意图也一并忽略。
+        if self.is_departed(seat) {
+            return Vec::new();
+        }
 
         let key = (player_id.clone(), client_intent_id.clone());
         if let Some(previous) = self.dedup.get(&key) {
@@ -599,6 +722,7 @@ impl GameTask {
                 }
                 // 私有意图也会改变公开摘要（例如对手的 `boardCount`），因此对全部座位
                 // 推送视图；事件仍按座位过滤，其他人的 `events` 为空。
+                self.record_events(&outcome.events);
                 let all_seats: Vec<Seat> = (0..SEAT_COUNT as Seat).collect();
                 self.view_updates(&outcome.events, &all_seats)
             }
@@ -697,6 +821,93 @@ impl GameTask {
         self.seats[usize::from(seat)].player_id.clone()
     }
 
+    /// 按引擎事件累计各座位统计：只做增量累计，不读取时钟。
+    ///
+    /// 调用方负责保证同一批事件只记录一次；`CombatResolved` 的负场与承受伤害只在
+    /// `damage > 0` 时计入，因此幽灵战的败者事件（`damage == 0`）自然被排除。
+    /// 每批事件末尾同步一次英雄技能累计（`start_turn` 清空 `hero_uses` 时只更新基线）。
+    fn record_events(&mut self, events: &[EngineEvent]) {
+        self.record_events_filtered(events, true);
+    }
+
+    /// 同 [`GameTask::record_events`]；`count_rerolls = false` 时跳过 `ShopRolled`。
+    ///
+    /// `start_turn` 内部的自动刷新也发 `ShopRolled`，它不是玩家主动刷新。
+    fn record_events_filtered(&mut self, events: &[EngineEvent], count_rerolls: bool) {
+        for event in events {
+            match event {
+                EngineEvent::MinionBought { seat, .. } => {
+                    let stats = &mut self.seat_stats[usize::from(*seat)];
+                    stats.buys = stats.buys.saturating_add(1);
+                }
+                EngineEvent::MinionSold { seat, .. } => {
+                    let stats = &mut self.seat_stats[usize::from(*seat)];
+                    stats.sells = stats.sells.saturating_add(1);
+                }
+                EngineEvent::ShopRolled { seat } if count_rerolls => {
+                    let stats = &mut self.seat_stats[usize::from(*seat)];
+                    stats.rerolls = stats.rerolls.saturating_add(1);
+                }
+                EngineEvent::TripleFormed { seat, .. } => {
+                    let stats = &mut self.seat_stats[usize::from(*seat)];
+                    stats.triples = stats.triples.saturating_add(1);
+                }
+                EngineEvent::PlayerEliminated { seat, .. } => {
+                    let turn = self.state.turn;
+                    let stats = &mut self.seat_stats[usize::from(*seat)];
+                    if stats.eliminated_turn.is_none() {
+                        stats.eliminated_turn = Some(turn);
+                    }
+                }
+                EngineEvent::CombatResolved {
+                    winner,
+                    loser,
+                    damage,
+                } => {
+                    if *damage > 0 {
+                        let stats = &mut self.seat_stats[usize::from(*loser)];
+                        stats.combat_losses = stats.combat_losses.saturating_add(1);
+                        stats.damage_taken = stats.damage_taken.saturating_add(*damage);
+                    }
+                    // 幽灵获胜时胜者座位已淘汰，不计胜场。
+                    if !self.state.players[usize::from(*winner)].eliminated {
+                        let stats = &mut self.seat_stats[usize::from(*winner)];
+                        stats.combat_wins = stats.combat_wins.saturating_add(1);
+                    }
+                }
+                EngineEvent::CombatDrawn { a, b } => {
+                    // 幽灵平局双方是同一座位，只计一次。
+                    let seats = [*a, *b];
+                    let count = if a == b { 1 } else { 2 };
+                    for seat in seats.into_iter().take(count) {
+                        if !self.state.players[usize::from(seat)].eliminated {
+                            let stats = &mut self.seat_stats[usize::from(seat)];
+                            stats.combat_draws = stats.combat_draws.saturating_add(1);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        self.sync_hero_uses();
+    }
+
+    /// 把各座位 `hero_uses` 总和的变化累计到 [`SeatStats::hero_power_uses`]。
+    ///
+    /// 引擎在 `start_turn` 清空 `hero_uses`，因此只按「当前总和 > 基线」计入
+    /// 增量；下降或其他变化只把基线更新为当前值，不回退已累计次数。
+    fn sync_hero_uses(&mut self) {
+        for (index, player) in self.state.players.iter().enumerate() {
+            let current: u32 = player.hero_uses.values().map(|uses| u32::from(*uses)).sum();
+            let baseline = self.hero_uses_baseline[index];
+            if current > baseline {
+                let stats = &mut self.seat_stats[index];
+                stats.hero_power_uses = stats.hero_power_uses.saturating_add(current - baseline);
+            }
+            self.hero_uses_baseline[index] = current;
+        }
+    }
+
     /// 把逐座位战斗报告转成 `CombatResult` 更新：一份报告对应一条更新。
     ///
     /// 幽灵战在 `outcome.reports` 里只有该座位自己的一条，因此只会产生 1 条更新。
@@ -704,6 +915,7 @@ impl GameTask {
         let started_at = self.combat_started_at();
         reports
             .iter()
+            .filter(|(seat, _)| !self.is_departed(**seat))
             .map(|(&seat, report)| SeatUpdate {
                 player_id: self.seats[usize::from(seat)].player_id.clone(),
                 kind: UpdateKind::CombatResult(Box::new(combat_result(
@@ -760,6 +972,9 @@ impl GameTask {
                 }
             )
         });
+        // 进入战斗前的事件只在这里记录一次：`handle_intent` 的战斗分支不记录，
+        // 到点进入战斗时本方法收到空事件。
+        self.record_events(&events);
 
         let now = self.clock.now_ms();
         self.combat_started_at_ms = Some(now);
@@ -793,6 +1008,9 @@ impl GameTask {
         // 引擎期望的 `Settle`。
         self.state.phase = Phase::Settle;
         let mut events = self.engine.resolve_settle(&mut self.state)?;
+        // 结算事件的回合号仍是本回合：必须在 `start_turn` 递增回合之前记录，
+        // 否则出局座位的 `survivedTurns` 会多算一回合。
+        self.record_events(&events);
         // 战报在结算时才公开，避免演示期间提前看到本场结果。
         if let Some(reports) = &reports {
             self.record_combat_log(reports);
@@ -801,7 +1019,11 @@ impl GameTask {
         // `placement` 一致）。
         self.combat_ranks = None;
         if self.state.phase != Phase::GameOver {
-            events.extend(self.engine.start_turn(&mut self.state)?);
+            let turn_events = self.engine.start_turn(&mut self.state)?;
+            // 回合开始效果与自动刷新同属新回合的事件，随后记录一次；自动刷新
+            // 不是玩家主动刷新，不计入 `rerolls`。
+            self.record_events_filtered(&turn_events, false);
+            events.extend(turn_events);
         }
         self.combat_started_at_ms = None;
         self.combat_acks = [false; SEAT_COUNT];
@@ -811,11 +1033,14 @@ impl GameTask {
         let mut updates = self.view_updates(&events, &all_seats);
 
         if self.state.phase == Phase::GameOver {
-            let game_over = self.game_over_payload();
+            // 逐座位生成载荷：`selfStats` 只填接收者自己的统计，不能共享同一份。
             for seat in 0..SEAT_COUNT as Seat {
+                if self.is_departed(seat) {
+                    continue;
+                }
                 updates.push(SeatUpdate {
                     player_id: self.seats[usize::from(seat)].player_id.clone(),
-                    kind: UpdateKind::GameOver(game_over.clone()),
+                    kind: UpdateKind::GameOver(self.game_over_payload(seat)),
                 });
             }
         }
@@ -823,25 +1048,92 @@ impl GameTask {
     }
 
     /// 对局结束载荷：排名（`place` 从 1 起）与 16 位十六进制种子。
-    fn game_over_payload(&self) -> GameOver {
+    ///
+    /// `ranking` 对每个座位都完整下发；`selfStats` 只填 `seat` 本人的统计。
+    fn game_over_payload(&self, seat: Seat) -> GameOver {
         let ranking = self
             .state
             .ranking
             .iter()
             .enumerate()
-            .filter_map(|(index, seat)| {
+            .filter_map(|(index, ranked_seat)| {
                 let place = u64::try_from(index + 1)
                     .ok()
                     .and_then(std::num::NonZeroU64::new)?;
                 Some(GameOverRankingItem {
                     place,
-                    player_id: self.seats[usize::from(*seat)].player_id.clone(),
+                    player_id: self.seats[usize::from(*ranked_seat)].player_id.clone(),
+                    survived_turns: Some(self.survived_turns(*ranked_seat)),
+                    damage_dealt: Some(self.damage_dealt(*ranked_seat)),
                 })
             })
             .collect();
         GameOver {
             ranking,
             seed: format!("{:016x}", self.seed),
+            self_stats: Some(self.self_stats(seat)),
+        }
+    }
+
+    /// 座位存活到的回合：出局者取淘汰事件所在回合，存活者取结束回合。
+    fn survived_turns(&self, seat: Seat) -> i64 {
+        let stats = &self.seat_stats[usize::from(seat)];
+        match stats.eliminated_turn {
+            Some(turn) => i64::from(turn),
+            None => i64::from(self.state.turn),
+        }
+    }
+
+    /// 座位本局造成的总伤害；负值按 0 处理。
+    fn damage_dealt(&self, seat: Seat) -> u64 {
+        u64::try_from(self.state.players[usize::from(seat)].damage_dealt.max(0)).unwrap_or(0)
+    }
+
+    /// 座位本人的本局统计；终局读 `PlayerState` 与棋盘，增量字段读事件累计表。
+    fn self_stats(&self, seat: Seat) -> SelfStats {
+        let index = usize::from(seat);
+        let player = &self.state.players[index];
+        let stats = &self.seat_stats[index];
+        // `GameOver` 时 `ranking` 一定包含全部座位；缺失时按最后一名兜底。
+        let place = self
+            .state
+            .ranking
+            .iter()
+            .position(|ranked| *ranked == seat)
+            .map_or(SEAT_COUNT, |position| position + 1);
+        let place = u64::try_from(place)
+            .ok()
+            .and_then(std::num::NonZeroU64::new)
+            .unwrap_or(std::num::NonZeroU64::MIN);
+        let final_era = u64::from(player.era as u8);
+        let final_era = std::num::NonZeroU64::new(final_era).unwrap_or(std::num::NonZeroU64::MIN);
+        SelfStats {
+            board: player
+                .board
+                .iter()
+                .take(7)
+                .map(|minion| SelfStatsBoardItem {
+                    card_id: minion.card_id.clone(),
+                    golden: minion.golden,
+                    attack: u64::try_from(minion.attack().max(0)).unwrap_or(0),
+                    health: u64::try_from(minion.health().max(0)).unwrap_or(0),
+                })
+                .collect(),
+            buys: u64::from(stats.buys),
+            combat_draws: u64::from(stats.combat_draws),
+            combat_losses: u64::from(stats.combat_losses),
+            combat_wins: u64::from(stats.combat_wins),
+            damage_dealt: self.damage_dealt(seat),
+            damage_taken: u64::try_from(stats.damage_taken.max(0)).unwrap_or(0),
+            final_era,
+            final_hp: u64::try_from(player.hp.max(0)).unwrap_or(0),
+            hero_power_uses: u64::from(stats.hero_power_uses),
+            place,
+            remaining_gold: u64::from(player.gold),
+            rerolls: u64::from(stats.rerolls),
+            sells: u64::from(stats.sells),
+            survived_turns: self.survived_turns(seat),
+            triples: u64::from(stats.triples),
         }
     }
 
@@ -867,6 +1159,9 @@ impl GameTask {
     fn view_updates(&self, events: &[EngineEvent], recipients: &[Seat]) -> Vec<SeatUpdate> {
         let mut updates = Vec::new();
         for seat in 0..SEAT_COUNT as Seat {
+            if self.is_departed(seat) {
+                continue;
+            }
             let filtered: Vec<ProtocolGameEvent> = events
                 .iter()
                 .filter_map(|event| for_seat(event, seat, &self.seats))
@@ -888,6 +1183,9 @@ impl GameTask {
     /// 不依赖是否发生过断线。未知玩家不产出更新：`envelope_for` 无法为不存在的
     /// 座位编码，返回错误更新只会制造无法投递的消息。
     fn snapshot_for_player(&self, player_id: &str) -> Vec<SeatUpdate> {
+        if self.departed.contains(player_id) {
+            return Vec::new();
+        }
         match self.seat_of.get(player_id).copied() {
             Some(seat) => vec![self.snapshot_update(seat)],
             None => Vec::new(),
@@ -911,6 +1209,10 @@ impl GameTask {
     ) -> Vec<SeatUpdate> {
         // M1 只回全量快照，`last_seq` 不参与重放判断；保留参数供后续版本使用。
         let _ = last_seq;
+        // 已弃权的座位不再接收任何消息：不绑定发送端、不产出更新。
+        if self.departed.contains(player_id) {
+            return Vec::new();
+        }
         if !self.bind_sender(player_id, out) {
             // 未知玩家的重连直接忽略，不产出无法编码的更新。
             return Vec::new();
@@ -934,6 +1236,14 @@ impl GameTask {
                     &self.seats,
                     self.combat_started_at(),
                 ))),
+            });
+        }
+
+        // 对局已结束时补发该座位本人的结果：快照之后追加一条 `GameOver`。
+        if self.state.phase == Phase::GameOver {
+            updates.push(SeatUpdate {
+                player_id: player_id.to_string(),
+                kind: UpdateKind::GameOver(self.game_over_payload(seat)),
             });
         }
 

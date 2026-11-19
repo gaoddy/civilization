@@ -1,22 +1,30 @@
 //! 重连、全量快照与断线保留窗口测试。
 //!
-//! 全部使用 [`FixedClock`] 与进程内引擎，不启网络；`Reconnect.out` 只绑定不实际读取，
-//! 发送端是否被保存由连接层（Task 12）消费，本文件只验证命令返回值。
+//! 大部分用例使用 [`FixedClock`] 与进程内引擎，不启网络；`Reconnect.out` 只绑定不
+//! 实际读取，发送端是否被保存由连接层（Task 12）消费，这里只验证命令返回值。
+//! 文末另有真实 WebSocket 的「结束回大厅后重连补发缓存 GameOver」用例。
+
+mod common;
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
+use std::time::Duration;
 
+use futures_util::{SinkExt, StreamExt};
 use protocol::intents::Intent as ProtocolIntent;
 use protocol::server::Snapshot;
 use protocol::view::PendingChoice;
-use room_service::clock::{Clock, FixedClock};
+use protocol::{ServerEnvelope, ServerMessage};
+use room_service::clock::{Clock, FixedClock, SystemClock};
 use room_service::envelope::SeatChannel;
 use room_service::game::{GameTask, RoomCommand, SeatUpdate, UpdateKind};
 use room_service::room::PlayerSlot;
 use rule_engine::data::{Catalog, Playstyle};
 use rule_engine::state::Seat;
-use serde_json::Value;
-use tokio::sync::mpsc;
+use serde_json::{Value, json};
+use sim::bot::client::{BotConfig, run};
+use tokio::sync::{mpsc, oneshot};
+use tokio_tungstenite::tungstenite::Message;
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
@@ -370,4 +378,262 @@ fn combat_reconnect_resends_combat_result() {
     );
     assert_eq!(updates[0].player_id, "p0");
     assert_eq!(updates[1].player_id, "p0");
+}
+
+/// 空阵容逐回合超时并回报演示，直到对局结束。
+fn reach_game_over(task: &mut GameTask, clock: &FixedClock) {
+    for _ in 0..30 {
+        clock.advance(150_000);
+        task.tick();
+        for seat in 0..8 {
+            task.handle(RoomCommand::CombatPlayed {
+                player_id: format!("p{seat}"),
+            });
+        }
+        if task.player_view(0).expect("视图应可用").phase == protocol::view::Phase::GameOver {
+            return;
+        }
+    }
+    panic!("30 个回合内应结束对局");
+}
+
+#[test]
+fn reconnect_after_game_over_resends_own_stats() {
+    let (mut task, clock) = task();
+    reach_game_over(&mut task, &clock);
+
+    let (cmd, _rx) = reconnect("p0", 0);
+    let updates = task.handle(cmd);
+    assert_eq!(updates.len(), 2, "重连应回快照与本人结果各一条");
+    assert!(
+        matches!(updates[0].kind, UpdateKind::Snapshot),
+        "第一条应为全量快照"
+    );
+    assert_eq!(updates[0].player_id, "p0");
+
+    match &updates[1] {
+        SeatUpdate {
+            player_id,
+            kind: UpdateKind::GameOver(game_over),
+        } => {
+            assert_eq!(player_id, "p0", "结果只发给重连座位本人");
+            let stats = game_over
+                .self_stats
+                .as_ref()
+                .expect("结束后重连应带本人统计");
+            assert!((1..=8).contains(&stats.place.get()), "本人名次应在 1–8");
+            assert_eq!(game_over.ranking.len(), 8);
+        }
+        other => panic!("第二条应为该座位 GameOver，实际为 {:?}", other.kind),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 真实 WebSocket：结束回大厅后重连补发缓存 GameOver。
+// ---------------------------------------------------------------------------
+
+/// 测试用最小 WebSocket 客户端。
+struct WsClient {
+    ws: common::ClientWs,
+    next_id: u64,
+}
+
+impl WsClient {
+    async fn connect(addr: std::net::SocketAddr) -> Self {
+        let ws = common::connect_with_retry(&format!("ws://{addr}/ws")).await;
+        Self { ws, next_id: 0 }
+    }
+
+    async fn send(&mut self, kind: &str, payload: Value) {
+        self.next_id += 1;
+        let envelope = json!({
+            "v": 1,
+            "id": format!("reconnect_ws_{}", self.next_id),
+            "type": kind,
+            "ts": "2026-01-01T00:00:00Z",
+            "payload": payload,
+        });
+        self.ws
+            .send(Message::Text(envelope.to_string().into()))
+            .await
+            .expect("发送应当成功");
+    }
+
+    async fn recv_room(&mut self) -> ServerMessage {
+        loop {
+            let envelope: ServerEnvelope = match self.ws.next().await {
+                Some(Ok(Message::Text(text))) => {
+                    serde_json::from_str(text.as_str()).expect("下行信封应能解析")
+                }
+                Some(Ok(Message::Close(_))) | None => panic!("连接在断言前关闭"),
+                Some(Ok(_)) => continue,
+                Some(Err(error)) => panic!("WebSocket 读取失败: {error}"),
+            };
+            let message = envelope.parse().expect("下行载荷应能解析");
+            if matches!(message, ServerMessage::FriendUpdate(_)) {
+                continue;
+            }
+            return message;
+        }
+    }
+}
+
+fn phone_for(name: &str) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in name.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    format!("139{:08}", hash % 100_000_000)
+}
+
+async fn authenticate_ws(client: &mut WsClient, name: &str) -> String {
+    client
+        .send(
+            "AuthRequest",
+            json!({ "phone": phone_for(name), "code": "123456", "displayName": name }),
+        )
+        .await;
+    loop {
+        match client.recv_room().await {
+            ServerMessage::AuthResult(result) => return result.player_id,
+            ServerMessage::Error(error) => panic!("认证失败: {} {}", error.code, error.message),
+            _ => {}
+        }
+    }
+}
+
+fn hero_cards() -> Vec<String> {
+    let catalog = sim::embedded_catalog().expect("内嵌卡表应能加载");
+    catalog
+        .cards
+        .values()
+        .filter(|card| card.is_hero)
+        .take(8)
+        .map(|card| card.id.clone())
+        .collect()
+}
+
+/// 跑完一局 8 bot 对局并返回房间码。
+async fn play_one_game(addr: std::net::SocketAddr) -> String {
+    let url = format!("ws://{addr}/ws");
+    let heroes = hero_cards();
+    let (code_tx, code_rx) = oneshot::channel();
+    let host = tokio::spawn(run(BotConfig {
+        url: url.clone(),
+        room: String::new(),
+        name: "reconnect-bot0".to_string(),
+        hero: heroes[0].clone(),
+        create: true,
+        intent_seed: 11,
+        room_code_sink: Some(code_tx),
+    }));
+    let room_code = tokio::time::timeout(Duration::from_secs(10), code_rx)
+        .await
+        .expect("10 秒内应能拿到房间码")
+        .expect("建房 bot 不应提前退出");
+
+    let mut handles = vec![host];
+    for (index, hero) in heroes.iter().enumerate().skip(1) {
+        let index = u64::try_from(index).unwrap_or(0);
+        handles.push(tokio::spawn(run(BotConfig {
+            url: url.clone(),
+            room: room_code.clone(),
+            name: format!("reconnect-bot{index}"),
+            hero: hero.clone(),
+            create: false,
+            intent_seed: index + 11,
+            room_code_sink: None,
+        })));
+    }
+    tokio::time::timeout(Duration::from_secs(600), async move {
+        for handle in handles {
+            handle
+                .await
+                .expect("bot 任务不应 panic")
+                .expect("bot 应正常结束");
+        }
+    })
+    .await
+    .expect("对局应在 600 秒内结束");
+    room_code
+}
+
+/// 结束后（已回大厅）重连：先收到 `RoomUpdate`，再收到缓存 `GameOver`，
+/// 且 `selfStats` 是重连座位本人的数据而不是其他座位的。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn lobby_reconnect_after_game_over_returns_cached_own_stats() {
+    let (addr, router, state) =
+        room_service::bind_state("127.0.0.1:0", Arc::new(SystemClock) as Arc<dyn Clock>)
+            .await
+            .expect("绑定端口应当成功");
+    tokio::spawn(async move {
+        let _ = room_service::serve(addr, router).await;
+    });
+    common::wait_for_server(addr).await;
+
+    let _room_code = play_one_game(addr).await;
+
+    // 用同一手机号恢复账号，再从注册表定位已回到大厅的房间。
+    let mut probe = WsClient::connect(addr).await;
+    let host_id = authenticate_ws(&mut probe, "reconnect-bot0").await;
+    drop(probe);
+    let room_id = tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            let found = {
+                let rooms = state.rooms.lock().await;
+                rooms.room_of_player(&host_id).and_then(|(room, _)| {
+                    (room.phase == rule_engine::state::Phase::Lobby).then(|| room.id.clone())
+                })
+            };
+            if let Some(room_id) = found {
+                return room_id;
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+    })
+    .await
+    .expect("对局结束后房间应回到大厅");
+
+    let mut stats = Vec::new();
+    for index in [0_u64, 3] {
+        let mut client = WsClient::connect(addr).await;
+        let player_id = authenticate_ws(&mut client, &format!("reconnect-bot{index}")).await;
+        client
+            .send("Reconnect", json!({ "roomId": room_id, "lastSeq": 0 }))
+            .await;
+
+        let update = match tokio::time::timeout(Duration::from_secs(5), client.recv_room())
+            .await
+            .expect("重连应返回大厅视图")
+        {
+            ServerMessage::RoomUpdate(update) => update,
+            other => panic!("期望 RoomUpdate，实际 {other:?}"),
+        };
+        assert_eq!(update.phase, protocol::view::Phase::Lobby);
+        assert_eq!(update.players.len(), 8);
+
+        let game_over = match tokio::time::timeout(Duration::from_secs(5), client.recv_room())
+            .await
+            .expect("RoomUpdate 之后应补发缓存 GameOver")
+        {
+            ServerMessage::GameOver(game_over) => game_over,
+            other => panic!("期望 GameOver，实际 {other:?}"),
+        };
+        assert_eq!(game_over.ranking.len(), 8);
+        let own = game_over.self_stats.as_ref().expect("缓存结果应带本人统计");
+        let ranked = game_over
+            .ranking
+            .iter()
+            .find(|item| item.player_id == player_id)
+            .expect("本人应在排名里");
+        assert_eq!(
+            own.place, ranked.place,
+            "selfStats.place 必须对应本人那一项"
+        );
+        stats.push(own.place.get());
+    }
+
+    assert_ne!(stats[0], stats[1], "不同座位拿到的 selfStats 不应相同");
+    println!("cached game over self places={stats:?}");
 }

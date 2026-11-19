@@ -2,16 +2,24 @@
 //!
 //! 覆盖建房、加入/离开、英雄选择、准备与开局前置判定，以及 `RoomUpdate` 视图。
 //! 房间码与座位分配均为确定性行为，测试直接断言具体取值。
+//! 文末另有真实 WebSocket 的房主移除/解散用例。
+
+mod common;
 
 use std::collections::BTreeSet;
 
+use futures_util::{SinkExt, StreamExt};
 use protocol::ErrorCode;
 use protocol::client::AuthRequest;
+use protocol::server::RoomUpdate;
+use protocol::{RoomClosedReason, ServerEnvelope, ServerMessage};
 use room_service::auth::{Session, SessionStore};
 use room_service::clock::FixedClock;
 use room_service::room::{RoomError, RoomRegistry, SEAT_COUNT};
 use rule_engine::data::{Card, Catalog, Playstyle, Specialty, SpecialtyKind, card_in_pool};
 use rule_engine::state::Phase;
+use serde_json::{Value, json};
+use tokio_tungstenite::tungstenite::Message;
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
@@ -1071,6 +1079,247 @@ fn grace_expiry_releases_seat() {
 }
 
 #[test]
+fn host_kicks_member() {
+    let (mut registry, room_id, code, players) = lobby_room();
+    let target = players[2].player_id.clone();
+
+    registry
+        .kick(&room_id, &players[0].player_id, &target)
+        .expect("房主移除成员成功");
+
+    let room = registry.room(&room_id).expect("房间仍存在");
+    assert_eq!(room.players().len(), SEAT_COUNT - 1, "成员数应减 1");
+    assert_eq!(room.code, code, "房间码不变");
+    assert_eq!(room.host_id, players[0].player_id, "房主不变");
+    assert_eq!(room.seat_of(&target), None, "被移除者的座位应释放");
+    assert!(
+        registry.room_of_player(&target).is_none(),
+        "按玩家查询应返回 None"
+    );
+    assert_eq!(
+        room.seat_of(&players[1].player_id),
+        Some(1),
+        "其余座位不重排"
+    );
+    assert_eq!(
+        room.seat_of(&players[3].player_id),
+        Some(3),
+        "被移除座位之后的座位号也不重排"
+    );
+}
+
+#[test]
+fn kick_rejects_invalid_actor_target_and_phase() {
+    let (mut registry, room_id, _code, players) = lobby_room();
+
+    let error = registry
+        .kick(&room_id, &players[1].player_id, &players[2].player_id)
+        .expect_err("非房主不能移除成员");
+    assert_eq!(error, RoomError::NotHost);
+    assert_eq!(error.code(), ErrorCode::NotHost);
+
+    let error = registry
+        .kick(&room_id, &players[0].player_id, &players[0].player_id)
+        .expect_err("房主不能移除自己");
+    assert_eq!(error, RoomError::InvalidTarget);
+    assert_eq!(error.code(), ErrorCode::InvalidChoice);
+    assert_eq!(error.to_string(), "不能移除自己");
+
+    let mut store = SessionStore::new();
+    let outsider = session(&mut store, &FixedClock::new(1_000_000), "路人");
+    assert_eq!(
+        registry
+            .kick(&room_id, &players[0].player_id, &outsider.player_id)
+            .expect_err("目标不在房间"),
+        RoomError::NotInRoom
+    );
+
+    let (mut started, started_room_id, _started_code, started_players) = started_room();
+    assert_eq!(
+        started
+            .kick(
+                &started_room_id,
+                &started_players[0].player_id,
+                &started_players[1].player_id,
+            )
+            .expect_err("开局后不能移除"),
+        RoomError::WrongPhase
+    );
+}
+
+#[test]
+fn host_dissolves_room() {
+    let (mut registry, room_id, code, players) = lobby_room();
+    let expected: Vec<String> = players
+        .iter()
+        .map(|player| player.player_id.clone())
+        .collect();
+
+    let members = registry
+        .dissolve(&room_id, &players[0].player_id)
+        .expect("房主解散成功");
+
+    assert_eq!(members, expected, "应返回全部成员，按座位升序");
+    assert!(registry.room(&room_id).is_none(), "注册表中房间应删除");
+
+    let mut store = SessionStore::new();
+    let newcomer = session(&mut store, &FixedClock::new(1_000_000), "新玩家");
+    assert_eq!(
+        registry
+            .join(&code, &newcomer, &catalog())
+            .expect_err("解散后房间码应失效"),
+        RoomError::NotFound
+    );
+}
+
+#[test]
+fn non_host_dissolve_rejected() {
+    let (mut registry, room_id, _code, players) = lobby_room();
+
+    let error = registry
+        .dissolve(&room_id, &players[1].player_id)
+        .expect_err("非房主不能解散房间");
+    assert_eq!(error, RoomError::NotHost);
+    assert_eq!(error.code(), ErrorCode::NotHost);
+    assert!(registry.room(&room_id).is_some(), "拒绝解散后房间应保留");
+}
+
+#[test]
+fn reset_for_next_game_reopens_lobby_with_new_seed() {
+    let (mut registry, room_id, _code, players) = started_room();
+    let catalog = catalog();
+    let old_playstyles = registry.room(&room_id).expect("房间存在").playstyles;
+    let old_seed = registry.room(&room_id).expect("房间存在").seed;
+    let old_candidates: Vec<Vec<String>> = players
+        .iter()
+        .map(|player| {
+            registry
+                .candidates_of(&room_id, &player.player_id)
+                .expect("有候选")
+        })
+        .collect();
+
+    // 找一个能改变玩法抽取的种子，保证断言确定成立而不是依赖概率。
+    let new_seed = (1..=u64::MAX)
+        .map(|step| old_seed.wrapping_add(step))
+        .find(|&seed| rule_engine::playstyles::draw(seed) != old_playstyles)
+        .expect("总能找到改变玩法抽取的种子");
+
+    let kept = registry
+        .reset_for_next_game(&room_id, new_seed, &catalog, &[])
+        .expect("回房重置成功");
+    assert!(kept, "仍有人留下时应返回 Ok(true)");
+
+    let room = registry.room(&room_id).expect("房间存在");
+    assert_eq!(room.phase, Phase::Lobby, "阶段应回到 Lobby");
+    assert_eq!(room.seed, new_seed, "应换用新种子");
+    assert_eq!(
+        room.playstyles,
+        rule_engine::playstyles::draw(new_seed),
+        "玩法应按新种子重抽"
+    );
+    assert_ne!(room.playstyles, old_playstyles, "新种子应改变玩法");
+    assert!(
+        registry.start_ready(&room_id).is_none(),
+        "重置后无人准备，不可直接开局"
+    );
+
+    for seat in 0..players.len() {
+        let slot = room.slot(seat as u8).expect("座位存在");
+        assert!(!slot.ready, "座位 {seat} 应取消准备");
+        assert_eq!(slot.hero_card_id, None, "座位 {seat} 应清空英雄");
+        assert_eq!(
+            slot.candidate_segment,
+            Some(seat),
+            "段号应按座位顺序重新分配"
+        );
+    }
+
+    let new_candidates: Vec<Vec<String>> = players
+        .iter()
+        .map(|player| {
+            registry
+                .candidates_of(&room_id, &player.player_id)
+                .expect("每座位都应有候选")
+        })
+        .collect();
+    for (seat, candidates) in new_candidates.iter().enumerate() {
+        assert!(!candidates.is_empty(), "座位 {seat} 候选不得为空");
+    }
+    assert!(
+        new_candidates
+            .iter()
+            .zip(old_candidates.iter())
+            .any(|(new, old)| new != old),
+        "换种子后至少一组候选应变化"
+    );
+}
+
+#[test]
+fn reset_removes_departed_and_transfers_host() {
+    let (mut registry, room_id, _code, players) = started_room();
+    let catalog = catalog();
+    let departed_host = players[0].player_id.clone();
+    let new_seed = registry
+        .room(&room_id)
+        .expect("房间存在")
+        .seed
+        .wrapping_add(11);
+
+    let kept = registry
+        .reset_for_next_game(
+            &room_id,
+            new_seed,
+            &catalog,
+            std::slice::from_ref(&departed_host),
+        )
+        .expect("回房重置成功");
+    assert!(kept, "仍有成员时房间应保留");
+
+    let room = registry.room(&room_id).expect("房间仍存在");
+    assert_eq!(
+        room.host_id, players[1].player_id,
+        "房主应转给座位号最小的剩余成员"
+    );
+    assert_eq!(
+        room.seat_of(&players[1].player_id),
+        Some(1),
+        "房主迁移不重排座位"
+    );
+    assert_eq!(room.seat_of(&departed_host), None, "被移除者不再在房间内");
+    assert!(
+        registry.room_of_player(&departed_host).is_none(),
+        "按玩家查询应返回 None"
+    );
+    assert_eq!(room.players().len(), SEAT_COUNT - 1, "成员数应减 1");
+}
+
+#[test]
+fn reset_with_all_departed_removes_room() {
+    let (mut registry, room_id, code, players) = started_room();
+    let catalog = catalog();
+    let departed: Vec<String> = players
+        .iter()
+        .map(|player| player.player_id.clone())
+        .collect();
+
+    let kept = registry
+        .reset_for_next_game(&room_id, 42, &catalog, &departed)
+        .expect("回房重置成功");
+    assert!(!kept, "全员离开时应返回 Ok(false)");
+    assert!(registry.room(&room_id).is_none(), "空房间应删除");
+
+    let mut store = SessionStore::new();
+    let newcomer = session(&mut store, &FixedClock::new(1_000_000), "新玩家");
+    assert_eq!(
+        registry
+            .join(&code, &newcomer, &catalog)
+            .expect_err("房间码应失效"),
+        RoomError::NotFound
+    );
+}
+
+#[test]
 fn error_codes_exist_in_schema() {
     let cases = [
         (RoomError::NotFound, "ROOM_NOT_FOUND"),
@@ -1082,6 +1331,7 @@ fn error_codes_exist_in_schema() {
         (RoomError::NotAHeroCard, "INVALID_CHOICE"),
         (RoomError::NotInRoom, "NOT_IN_ROOM"),
         (RoomError::NotCandidate, "INVALID_CHOICE"),
+        (RoomError::InvalidTarget, "INVALID_CHOICE"),
         (RoomError::Unknown("保留原因".to_string()), "INTERNAL_ERROR"),
     ];
 
@@ -1093,4 +1343,190 @@ fn error_codes_exist_in_schema() {
             serde_json::from_value(json).expect("序列化出的码必须是 schema 中的 ErrorCode");
         assert_eq!(round_trip, code);
     }
+}
+
+// ---------------------------------------------------------------------------
+// 真实 WebSocket：房主移除、非房主拒绝与解散。
+// ---------------------------------------------------------------------------
+
+/// 测试用最小 WebSocket 客户端；只解析下行信封与消息类型。
+struct WsClient {
+    ws: common::ClientWs,
+    next_id: u64,
+}
+
+impl WsClient {
+    async fn connect(addr: std::net::SocketAddr) -> Self {
+        let ws = common::connect_with_retry(&format!("ws://{addr}/ws")).await;
+        Self { ws, next_id: 0 }
+    }
+
+    async fn send(&mut self, kind: &str, payload: Value) {
+        self.next_id += 1;
+        let envelope = json!({
+            "v": 1,
+            "id": format!("room_ws_{}", self.next_id),
+            "type": kind,
+            "ts": "2026-01-01T00:00:00Z",
+            "payload": payload,
+        });
+        self.ws
+            .send(Message::Text(envelope.to_string().into()))
+            .await
+            .expect("发送应当成功");
+    }
+
+    /// 取下一条下行消息；跳过认证与在线状态变化产生的 `FriendUpdate`。
+    async fn recv_room(&mut self) -> ServerMessage {
+        loop {
+            let envelope: ServerEnvelope = match self.ws.next().await {
+                Some(Ok(Message::Text(text))) => {
+                    serde_json::from_str(text.as_str()).expect("下行信封应能解析")
+                }
+                Some(Ok(Message::Close(_))) | None => panic!("连接在断言前关闭"),
+                Some(Ok(_)) => continue,
+                Some(Err(error)) => panic!("WebSocket 读取失败: {error}"),
+            };
+            let message = envelope.parse().expect("下行载荷应能解析");
+            if matches!(message, ServerMessage::FriendUpdate(_)) {
+                continue;
+            }
+            return message;
+        }
+    }
+
+    /// 等到一条 `RoomUpdate`。
+    async fn recv_room_update(&mut self) -> RoomUpdate {
+        loop {
+            if let ServerMessage::RoomUpdate(update) = self.recv_room().await {
+                return update;
+            }
+        }
+    }
+
+    /// 等到一条 `RoomClosed`。
+    async fn recv_room_closed(&mut self) -> RoomClosedReason {
+        loop {
+            if let ServerMessage::RoomClosed(closed) = self.recv_room().await {
+                return closed.reason;
+            }
+        }
+    }
+
+    /// 等到一条 `Error`，返回协议错误码。
+    async fn recv_error(&mut self) -> ErrorCode {
+        loop {
+            if let ServerMessage::Error(error) = self.recv_room().await {
+                return error.code;
+            }
+        }
+    }
+}
+
+/// 由名字派生稳定且互不相同的手机号：同一手机号会恢复同一账号。
+fn phone_for(name: &str) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in name.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    format!("139{:08}", hash % 100_000_000)
+}
+
+/// 认证并返回 `playerId`；token 只用于同一测试内可能的重连。
+async fn authenticate_ws(client: &mut WsClient, name: &str) -> String {
+    client
+        .send(
+            "AuthRequest",
+            json!({ "phone": phone_for(name), "code": "123456", "displayName": name }),
+        )
+        .await;
+    loop {
+        match client.recv_room().await {
+            ServerMessage::AuthResult(result) => return result.player_id,
+            ServerMessage::Error(error) => panic!("认证失败: {} {}", error.code, error.message),
+            _ => {}
+        }
+    }
+}
+
+/// 建房并返回 `(房间码, 房主 playerId)`。
+async fn create_room_ws(client: &mut WsClient, name: &str) -> (String, String) {
+    let player_id = authenticate_ws(client, name).await;
+    client.send("CreateRoom", json!({})).await;
+    let room = client.recv_room_update().await;
+    (room.code, player_id)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn host_kicks_member_and_non_host_is_rejected_over_real_ws() {
+    let addr = common::start_server().await;
+    let mut host = WsClient::connect(addr).await;
+    let (code, host_id) = create_room_ws(&mut host, "ws-kick-host").await;
+
+    let mut guest = WsClient::connect(addr).await;
+    let guest_id = authenticate_ws(&mut guest, "ws-kick-guest").await;
+    guest.send("JoinRoom", json!({ "code": code })).await;
+    let joined = guest.recv_room_update().await;
+    assert_eq!(joined.players.len(), 2, "成员应在房间里");
+
+    // 非房主移除成员必须被拒绝。
+    guest
+        .send("KickMember", json!({ "targetPlayerId": host_id }))
+        .await;
+    assert_eq!(
+        guest.recv_error().await,
+        ErrorCode::NotHost,
+        "非房主应收到 NOT_HOST"
+    );
+
+    // 房主移除成员：目标收到 RoomClosed(kicked)，其余玩家收到不含目标的 RoomUpdate。
+    host.send("KickMember", json!({ "targetPlayerId": guest_id }))
+        .await;
+    assert_eq!(
+        guest.recv_room_closed().await,
+        RoomClosedReason::Kicked,
+        "被移除者应收到 kicked"
+    );
+    let after = host.recv_room_update().await;
+    assert_eq!(after.players.len(), 1, "移除后只剩房主");
+    assert_eq!(after.players[0].player_id, host_id);
+    assert!(after.players[0].is_host, "房主身份不变");
+    println!("kick ok: players={}", after.players.len());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn host_dissolve_notifies_members_and_invalidates_code_over_real_ws() {
+    let addr = common::start_server().await;
+    let mut host = WsClient::connect(addr).await;
+    let (code, _host_id) = create_room_ws(&mut host, "ws-dissolve-host").await;
+
+    let mut guest = WsClient::connect(addr).await;
+    let _guest_id = authenticate_ws(&mut guest, "ws-dissolve-guest").await;
+    guest.send("JoinRoom", json!({ "code": code })).await;
+    let joined = guest.recv_room_update().await;
+    assert_eq!(joined.players.len(), 2);
+
+    host.send("DissolveRoom", json!({})).await;
+    assert_eq!(
+        host.recv_room_closed().await,
+        RoomClosedReason::Dissolved,
+        "房主应收到 dissolved"
+    );
+    assert_eq!(
+        guest.recv_room_closed().await,
+        RoomClosedReason::Dissolved,
+        "成员应收到 dissolved"
+    );
+
+    // 房间码必须已失效。
+    let mut late = WsClient::connect(addr).await;
+    let _ = authenticate_ws(&mut late, "ws-dissolve-late").await;
+    late.send("JoinRoom", json!({ "code": code })).await;
+    assert_eq!(
+        late.recv_error().await,
+        ErrorCode::RoomNotFound,
+        "解散后旧房间码应返回 ROOM_NOT_FOUND"
+    );
+    println!("dissolve ok: code={code} invalidated");
 }

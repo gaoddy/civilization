@@ -882,22 +882,24 @@ fn game_over_emits_ranking_and_seed() {
         protocol::view::Phase::GameOver
     );
 
-    let game_overs: Vec<&protocol::server::GameOver> = updates
+    // 载荷按座位各一份：用接收者 playerId 索引，验证每份只带本人统计。
+    let game_overs: BTreeMap<&str, &protocol::server::GameOver> = updates
         .iter()
         .filter_map(|update| match &update.kind {
-            UpdateKind::GameOver(game_over) => Some(game_over),
+            UpdateKind::GameOver(game_over) => Some((update.player_id.as_str(), game_over)),
             _ => None,
         })
         .collect();
     assert_eq!(game_overs.len(), 8, "8 个座位各收到一份 GameOver");
 
     let expected_seed = format!("{SEED:016x}");
-    for game_over in &game_overs {
+    for game_over in game_overs.values() {
         assert_eq!(game_over.seed, expected_seed);
     }
 
-    // 每份载荷都包含完整排名：名次 1..=8 互不重复，玩家覆盖 8 个座位。
-    for game_over in &game_overs {
+    // 每份载荷都包含完整排名：名次 1..=8 互不重复，玩家覆盖 8 个座位；
+    // 本人统计的 place 必须与本人名次行一致。
+    for (player_id, game_over) in &game_overs {
         let places: BTreeSet<u64> = game_over
             .ranking
             .iter()
@@ -910,7 +912,166 @@ fn game_over_emits_ranking_and_seed() {
             .map(|item| item.player_id.as_str())
             .collect();
         assert_eq!(players.len(), 8);
+
+        let stats = game_over
+            .self_stats
+            .as_ref()
+            .expect("每份 GameOver 都应带接收者本人的统计");
+        let expected_place = game_over
+            .ranking
+            .iter()
+            .position(|item| item.player_id == *player_id)
+            .map(|index| index as u64 + 1)
+            .expect("名次行应覆盖接收者本人");
+        assert_eq!(stats.place.get(), expected_place);
     }
+}
+
+#[test]
+fn game_over_reports_per_seat_self_stats() {
+    let (mut task, clock) = task();
+    let updates = reach_game_over(&mut task, &clock);
+
+    let end_turn = i64::try_from(task.player_view(0).expect("视图应可用").turn.get())
+        .expect("回合数应能放进 i64");
+    assert!(end_turn > 0);
+
+    let game_overs: BTreeMap<&str, &protocol::server::GameOver> = updates
+        .iter()
+        .filter_map(|update| match &update.kind {
+            UpdateKind::GameOver(game_over) => Some((update.player_id.as_str(), game_over)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(game_overs.len(), 8);
+
+    let mut places = BTreeSet::new();
+    for seat in 0..8u8 {
+        let player_id = format!("p{seat}");
+        let game_over = game_overs
+            .get(player_id.as_str())
+            .expect("每个座位都应收到 GameOver");
+        let stats = game_over
+            .self_stats
+            .as_ref()
+            .expect("每份 GameOver 都应带接收者本人的统计");
+
+        assert_eq!(game_over.ranking.len(), 8, "名次行应为 8 行");
+        assert!(
+            (1..=8).contains(&stats.place.get()),
+            "座位 {seat} 的名次应在 1–8"
+        );
+        assert!(places.insert(stats.place.get()), "名次不得跨座位重复");
+        assert!(stats.survived_turns <= end_turn, "存活回合不得超过结束回合");
+        assert!(stats.survived_turns >= 0);
+        assert!(stats.board.len() <= 7, "最终阵容最多 7 项");
+
+        let row = game_over
+            .ranking
+            .iter()
+            .find(|item| item.player_id == player_id)
+            .expect("名次行应覆盖本人");
+        assert_eq!(row.place.get(), stats.place.get(), "本人名次与名次行一致");
+        assert_eq!(
+            row.survived_turns,
+            Some(stats.survived_turns),
+            "名次行存活回合应与本人统计一致"
+        );
+        assert_eq!(
+            row.damage_dealt,
+            Some(stats.damage_dealt),
+            "名次行造成伤害应与本人统计一致"
+        );
+
+        // 终局字段直接来自 `PlayerState` 与棋盘，必须与本人视图一致。
+        let view = task.player_view(seat).expect("视图应可用");
+        assert_eq!(
+            stats.final_hp,
+            u64::try_from(view.self_.hp.max(0)).expect("生命应为非负"),
+            "最终生命应与终局状态一致"
+        );
+        assert_eq!(stats.final_era.get(), view.self_.era.get());
+        assert_eq!(stats.remaining_gold, view.self_.gold);
+        assert_eq!(stats.board.len(), view.self_.board.len());
+        for (stat_item, board_item) in stats.board.iter().zip(&view.self_.board) {
+            assert_eq!(stat_item.card_id, board_item.card_id);
+            assert_eq!(stat_item.golden, board_item.golden);
+            assert_eq!(stat_item.attack, board_item.attack);
+            assert_eq!(stat_item.health, board_item.health);
+        }
+    }
+    assert_eq!(places, (1..=8_u64).collect::<BTreeSet<_>>());
+}
+
+/// 取某座位收到的 `GameOver.selfStats`。
+fn game_over_self_stats(updates: &[SeatUpdate], player_id: &str) -> protocol::server::SelfStats {
+    updates
+        .iter()
+        .find_map(|update| match &update.kind {
+            UpdateKind::GameOver(game_over) if update.player_id == player_id => {
+                game_over.self_stats.clone()
+            }
+            _ => None,
+        })
+        .expect("该座位应收到带 selfStats 的 GameOver")
+}
+
+#[test]
+fn hero_power_uses_accumulate_across_turns() {
+    let (mut task, clock) = task();
+    // 选一个无需指定目标、且本回合金币足够的英雄主动技能座位；英雄表里
+    // darwin / edison / knuth 满足条件，按运行时视图判断而非硬编码座位。
+    let (seat, skill_id) = (0..8u8)
+        .find_map(|seat| {
+            let power = task.player_view(seat)?.self_.hero_power.clone();
+            if power.requires_target {
+                return None;
+            }
+            power.skill_id.map(|skill_id| (seat, skill_id))
+        })
+        .expect("应存在无需目标的英雄主动技能");
+
+    let updates = task.handle(command(
+        &format!("p{seat}"),
+        "hero-power-once",
+        ProtocolIntent::UseHeroPower {
+            skill_id,
+            target: None,
+        },
+    ));
+    assert!(error_codes(&updates).is_empty(), "英雄技能应能成功使用");
+
+    // 跨两次 `start_turn`（引擎会清空 `hero_uses`），累计值不得丢失。
+    advance_turn(&mut task, &clock);
+    advance_turn(&mut task, &clock);
+
+    let updates = reach_game_over(&mut task, &clock);
+    let stats = game_over_self_stats(&updates, &format!("p{seat}"));
+    assert!(
+        stats.hero_power_uses >= 1,
+        "英雄技能次数应跨回合累计，实际为 {}",
+        stats.hero_power_uses
+    );
+}
+
+#[test]
+fn rerolls_exclude_automatic_turn_refresh() {
+    let (mut task, clock) = task();
+    let updates = reach_game_over(&mut task, &clock);
+
+    let stats = game_over_self_stats(&updates, "p0");
+    assert_eq!(stats.rerolls, 0, "回合开始的自动刷新不应计入 rerolls");
+}
+
+#[test]
+fn rerolls_count_player_refresh() {
+    let (mut task, clock) = task();
+    let updates = task.handle(command("p0", "reroll-once", ProtocolIntent::RerollShop));
+    assert!(error_codes(&updates).is_empty(), "主动刷新应成功");
+
+    let updates = reach_game_over(&mut task, &clock);
+    let stats = game_over_self_stats(&updates, "p0");
+    assert_eq!(stats.rerolls, 1, "一次主动刷新应恰好计 1 次");
 }
 
 #[test]
@@ -1463,4 +1624,205 @@ fn player_view_carries_hp_cap() {
 /// 测试夹具用 DSL 构造结构化效果；加载链路本身不再解析 DSL。
 fn effects_of(raw: &str) -> Vec<rule_engine::effects::Effect> {
     rule_engine::effects::parse_effects(raw).expect("测试效果应可解析")
+}
+
+// ---------------------------------------------------------------------------
+// 对局内弃权
+// ---------------------------------------------------------------------------
+
+fn forfeit(player: &str) -> RoomCommand {
+    RoomCommand::Forfeit {
+        player_id: player.to_string(),
+    }
+}
+
+fn rank_of(view: &protocol::view::PlayerView, seat: i64) -> Option<u64> {
+    view.players
+        .iter()
+        .find(|player| player.seat == seat)
+        .and_then(|player| player.rank)
+        .map(std::num::NonZeroU64::get)
+}
+
+/// 本次更新中收到视图的座位。
+fn view_seats(updates: &[SeatUpdate]) -> BTreeSet<String> {
+    updates
+        .iter()
+        .filter_map(|update| match update.kind {
+            UpdateKind::View { .. } => Some(update.player_id.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// 本次更新中收到的 `GameOver`，按接收者索引。
+fn game_overs(updates: &[SeatUpdate]) -> BTreeMap<String, &protocol::server::GameOver> {
+    updates
+        .iter()
+        .filter_map(|update| match &update.kind {
+            UpdateKind::GameOver(game_over) => Some((update.player_id.clone(), game_over)),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn forfeit_during_recruit_marks_seat_and_updates_others() {
+    let (mut task, _clock) = task();
+
+    let updates = task.handle(forfeit("p0"));
+
+    assert!(!updates.is_empty(), "弃权应产生更新");
+    assert!(
+        updates.iter().all(|update| update.player_id != "p0"),
+        "弃权座位不应再收到任何更新"
+    );
+    assert_eq!(
+        view_seats(&updates),
+        (1..8).map(|seat| format!("p{seat}")).collect(),
+        "其余 7 个座位都应收到视图"
+    );
+    assert!(
+        game_overs(&updates).is_empty(),
+        "仍有 7 名存活者，不应结束对局"
+    );
+
+    let view = task.player_view(0).expect("视图应可用");
+    assert_eq!(rank_of(&view, 0), Some(8), "首个弃权者应为第 8 名");
+    assert_eq!(view.self_.hp, 0, "弃权座位生命归零");
+    assert_eq!(task.departed_player_ids(), vec!["p0".to_string()]);
+}
+
+#[test]
+fn second_forfeit_takes_seventh_place() {
+    let (mut task, _clock) = task();
+    task.handle(forfeit("p0"));
+
+    let updates = task.handle(forfeit("p1"));
+    assert!(
+        updates.iter().all(|update| update.player_id != "p1"),
+        "弃权座位不应再收到任何更新"
+    );
+
+    let view = task.player_view(1).expect("视图应可用");
+    assert_eq!(rank_of(&view, 1), Some(7), "第二个弃权者应为第 7 名");
+}
+
+#[test]
+fn forfeit_leaving_one_survivor_ends_the_game() {
+    let (mut task, _clock) = task();
+    for seat in 0..6 {
+        task.handle(forfeit(&format!("p{seat}")));
+    }
+
+    // 只剩 p6、p7 存活；p6 弃权后 p7 成为唯一幸存者。
+    let updates = task.handle(forfeit("p6"));
+
+    assert_eq!(
+        task.player_view(7).expect("视图应可用").phase,
+        protocol::view::Phase::GameOver,
+        "只剩一人时对局结束"
+    );
+    let game_overs = game_overs(&updates);
+    assert_eq!(game_overs.len(), 1, "只有未弃权的幸存者收到 GameOver");
+    let (player_id, payload) = game_overs.iter().next().expect("应有 GameOver");
+    assert_eq!(player_id.as_str(), "p7");
+    assert_eq!(payload.ranking[0].player_id, "p7", "排名首行为幸存者");
+    assert_eq!(payload.ranking.len(), 8, "完整排名包含已弃权者");
+
+    let view_index = updates
+        .iter()
+        .position(|update| {
+            update.player_id == "p7" && matches!(update.kind, UpdateKind::View { .. })
+        })
+        .expect("幸存者应收到视图");
+    let game_over_index = updates
+        .iter()
+        .position(|update| {
+            update.player_id == "p7" && matches!(update.kind, UpdateKind::GameOver(_))
+        })
+        .expect("幸存者应收到 GameOver");
+    assert!(view_index < game_over_index, "先视图后结果");
+}
+
+#[test]
+fn forfeit_during_combat_does_not_block_settlement() {
+    let (mut task, _clock) = task();
+    for seat in 0..8 {
+        task.handle(end_recruit(
+            &format!("p{seat}"),
+            &format!("forfeit-end-{seat}"),
+        ));
+    }
+    assert_eq!(
+        task.player_view(1).expect("视图应可用").phase,
+        protocol::view::Phase::Combat
+    );
+
+    let updates = task.handle(forfeit("p0"));
+    assert!(
+        updates.iter().all(|update| update.player_id != "p0"),
+        "弃权座位不应再收到任何更新"
+    );
+    assert_eq!(
+        task.player_view(1).expect("视图应可用").phase,
+        protocol::view::Phase::Combat,
+        "其余座位尚未播完，继续等待"
+    );
+
+    let mut final_updates = Vec::new();
+    for seat in 1..8u8 {
+        final_updates = task.handle(RoomCommand::CombatPlayed {
+            player_id: format!("p{seat}"),
+        });
+    }
+    assert!(!final_updates.is_empty(), "其余座位播完应立即结算");
+    assert!(
+        final_updates.iter().all(|update| update.player_id != "p0"),
+        "结算更新也不应投递给弃权座位"
+    );
+
+    let view = task.player_view(1).expect("视图应可用");
+    assert_eq!(view.phase, protocol::view::Phase::Recruit);
+    assert_eq!(view.turn.get(), 2, "结算后进入下一回合招募");
+    assert_eq!(rank_of(&view, 0), Some(8), "弃权者保持末位");
+}
+
+#[test]
+fn forfeit_from_eliminated_or_unknown_seat_returns_empty() {
+    let (mut task, _clock) = task();
+    assert!(!task.handle(forfeit("p0")).is_empty(), "首次弃权应成功");
+
+    assert!(
+        task.handle(forfeit("p0")).is_empty(),
+        "已淘汰座位弃权应返回空更新"
+    );
+    assert!(
+        task.handle(forfeit("p99")).is_empty(),
+        "未知玩家弃权应返回空更新"
+    );
+    assert!(
+        !task.departed_player_ids().contains(&"p99".to_string()),
+        "未知玩家不应登记离开"
+    );
+}
+
+#[test]
+fn forfeit_after_game_over_still_records_departure() {
+    let (mut task, _clock) = task();
+    for seat in 0..7 {
+        assert!(
+            !task.handle(forfeit(&format!("p{seat}"))).is_empty(),
+            "第 {seat} 个弃权应产生更新"
+        );
+    }
+    // 只剩 p7，对局已终局；其离开不改名次，但必须登记，回房重置才会移除座位。
+    assert!(
+        task.handle(forfeit("p7")).is_empty(),
+        "终局后弃权不产生更新"
+    );
+    assert!(
+        task.departed_player_ids().contains(&"p7".to_string()),
+        "终局后离开也要登记"
+    );
 }

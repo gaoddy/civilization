@@ -529,8 +529,9 @@ async fn finished_game_room_is_removed_from_registry() {
     .await
     .expect("对局应在 600 秒内结束");
 
-    // bot 结束后连接全部关闭；房间 task 应在最后一轮回收检查中同时摘除 hub 与注册表。
-    let retired = tokio::time::timeout(Duration::from_secs(10), async {
+    // bot 结束后连接全部关闭。对局结束会先回大厅，座位在断线宽限期
+    // （`RECONNECT_GRACE_MS`，30 秒）超时后才释放；宽限 + 余量内应完成回收。
+    let retired = tokio::time::timeout(Duration::from_secs(45), async {
         loop {
             let hub = state.hub_len().await;
             let rooms = state.rooms.lock().await.len();
@@ -603,6 +604,329 @@ async fn lobby_disconnect_keeps_seat_within_grace() {
         "宽限期内重连必须取回同一组候选"
     );
     println!("lobby seat kept through grace and reconnect");
+}
+
+/// 跑完一局 8 bot 对局，返回房间码。
+async fn play_one_bot_game(addr: std::net::SocketAddr, prefix: &str) -> String {
+    let url = format!("ws://{addr}/ws");
+    let heroes = hero_cards();
+    let (code_tx, code_rx) = oneshot::channel();
+    let host = tokio::spawn(run(BotConfig {
+        url: url.clone(),
+        room: String::new(),
+        name: format!("{prefix}0"),
+        hero: heroes[0].clone(),
+        create: true,
+        intent_seed: 11,
+        room_code_sink: Some(code_tx),
+    }));
+    let room_code = tokio::time::timeout(Duration::from_secs(10), code_rx)
+        .await
+        .expect("10 秒内应能拿到房间码")
+        .expect("建房 bot 不应提前退出");
+
+    let mut handles = vec![host];
+    for (index, hero) in heroes.iter().enumerate().skip(1) {
+        let index = u64::try_from(index).unwrap_or(0);
+        handles.push(tokio::spawn(run(BotConfig {
+            url: url.clone(),
+            room: room_code.clone(),
+            name: format!("{prefix}{index}"),
+            hero: hero.clone(),
+            create: false,
+            intent_seed: index + 11,
+            room_code_sink: None,
+        })));
+    }
+    tokio::time::timeout(Duration::from_secs(600), async move {
+        for handle in handles {
+            handle
+                .await
+                .expect("bot 任务不应 panic")
+                .expect("bot 应正常结束");
+        }
+    })
+    .await
+    .expect("对局应在 600 秒内结束");
+    room_code
+}
+
+/// 对局结束后回大厅：8 人重连拿到缓存结果，重选英雄并准备后自动开下一局，
+/// 新种子与玩法都与上一局不同。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn game_over_returns_to_lobby_and_next_game_uses_new_seed() {
+    let clock: Arc<dyn Clock> = Arc::new(SystemClock);
+    let (addr, router, state) = room_service::bind_state("127.0.0.1:0", clock)
+        .await
+        .expect("绑定端口应当成功");
+    tokio::spawn(async move {
+        let _ = room_service::serve(addr, router).await;
+    });
+    wait_for_server(addr).await;
+
+    let room_code = play_one_bot_game(addr, "next-bot").await;
+    println!("ROOM_CODE={room_code}");
+
+    // 用同一手机号恢复账号，拿到 playerId 后从注册表定位房间。
+    let mut probe = RawClient::connect(addr).await;
+    let (host_id, _) = authenticate(&mut probe, "next-bot0").await;
+    drop(probe);
+    let room_id = tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            let found = {
+                let rooms = state.rooms.lock().await;
+                rooms.room_of_player(&host_id).and_then(|(room, _)| {
+                    (room.phase == rule_engine::state::Phase::Lobby).then(|| room.id.clone())
+                })
+            };
+            if let Some(room_id) = found {
+                return room_id;
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+    })
+    .await
+    .expect("对局结束后房间应回到大厅");
+
+    let mut clients = Vec::with_capacity(8);
+    let mut first_seed = String::new();
+    for index in 0..8 {
+        let mut client = RawClient::connect(addr).await;
+        let (player_id, _) = authenticate(&mut client, &format!("next-bot{index}")).await;
+        client
+            .send("Reconnect", json!({ "roomId": room_id, "lastSeq": 0 }))
+            .await;
+
+        let (update_seq, message) =
+            tokio::time::timeout(Duration::from_secs(5), client.recv_room())
+                .await
+                .expect("重连应返回大厅视图")
+                .expect("连接不应关闭");
+        let update = match message {
+            ServerMessage::RoomUpdate(update) => update,
+            other => panic!("期望 RoomUpdate，实际 {other:?}"),
+        };
+        assert_eq!(
+            update.phase,
+            protocol::view::Phase::Lobby,
+            "结束后房间应回到 Lobby"
+        );
+        assert_eq!(update.players.len(), 8, "8 个座位应全部保留");
+
+        let (over_seq, message) = tokio::time::timeout(Duration::from_secs(5), client.recv_room())
+            .await
+            .expect("RoomUpdate 之后应补发 GameOver")
+            .expect("连接不应关闭");
+        let game_over = match message {
+            ServerMessage::GameOver(game_over) => game_over,
+            other => panic!("期望 GameOver，实际 {other:?}"),
+        };
+        assert!(
+            over_seq > update_seq,
+            "缓存 GameOver 的 seq={over_seq} 应接在 RoomUpdate seq={update_seq} 之后"
+        );
+        assert_eq!(game_over.ranking.len(), 8, "每座位都应拿到完整排名");
+        let stats = game_over
+            .self_stats
+            .as_ref()
+            .expect("结束后重连应带本人统计");
+        let ranked = game_over
+            .ranking
+            .iter()
+            .find(|item| item.player_id == player_id)
+            .expect("本人应在排名里");
+        assert_eq!(
+            stats.place, ranked.place,
+            "selfStats 必须是本人那一项的名次"
+        );
+        if index == 0 {
+            first_seed = game_over.seed.clone();
+        }
+
+        let hero = own_candidates(&update, &player_id)
+            .into_iter()
+            .next()
+            .expect("回大厅后每座位应重新拿到候选");
+        client
+            .send("SelectHeroCard", json!({ "cardId": hero }))
+            .await;
+        client.send("Ready", json!({ "ready": true })).await;
+        clients.push(client);
+    }
+
+    // 全员重新准备后应自动开始第二局。
+    let started = tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            let (_, message) = clients[0]
+                .recv_room()
+                .await
+                .expect("等待第二局 GameStarted 时连接关闭");
+            if let ServerMessage::GameStarted(started) = message {
+                return started;
+            }
+        }
+    })
+    .await
+    .expect("8 人重新准备后应自动开始下一局");
+
+    let (new_seed, new_playstyles) = {
+        let rooms = state.rooms.lock().await;
+        let room = rooms.room(&room_id).expect("房间应仍在注册表");
+        (room.seed, room.playstyles)
+    };
+    let old_seed = u64::from_str_radix(first_seed.trim(), 16).expect("上一局种子应为 16 进制");
+    assert_ne!(new_seed, old_seed, "第二局必须使用不同种子");
+    assert_ne!(
+        new_playstyles,
+        rule_engine::playstyles::draw(old_seed),
+        "第二局玩法必须与上一局不同"
+    );
+
+    let mut expected: Vec<String> = new_playstyles
+        .iter()
+        .map(|playstyle| playstyle.id().to_string())
+        .collect();
+    let mut actual: Vec<String> = started.view.enabled_factions.to_vec();
+    expected.sort();
+    actual.sort();
+    assert_eq!(actual, expected, "GameStarted 的玩法应与新种子抽取一致");
+    println!("next game: old_seed={first_seed} new_seed={new_seed:016x} playstyles={expected:?}");
+}
+
+/// 对局中依次退出：其余座位继续，首个退出者名次为 8，仅剩 1 人时立即结束。
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn forfeit_mid_game_ranks_departed_and_finishes_at_one_left() {
+    let addr = start_server().await;
+    let mut fixture = start_eight_raw_clients(addr).await;
+    let player_ids: Vec<String> = fixture
+        .identities
+        .iter()
+        .map(|(player_id, _)| player_id.clone())
+        .collect();
+
+    // 第一个退出者走真实 LeaveRoom：对局应继续，其余座位仍收到状态更新。
+    fixture.clients[7].send("LeaveRoom", json!({})).await;
+    let continued = tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            match fixture.clients[0]
+                .recv_room()
+                .await
+                .expect("等待其余座位更新时连接关闭")
+            {
+                (_, ServerMessage::StateUpdate(_)) => return true,
+                (_, ServerMessage::GameOver(_)) => return false,
+                _ => {}
+            }
+        }
+    })
+    .await
+    .expect("一人退出后其余座位应继续对局");
+    assert!(continued, "首个退出不应立即结束对局");
+
+    // 其余 6 人依次退出，只剩 0 号座位时立即结束。
+    for index in (1..7).rev() {
+        fixture.clients[index].send("LeaveRoom", json!({})).await;
+    }
+    let game_over = tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            if let (_, ServerMessage::GameOver(game_over)) = fixture.clients[0]
+                .recv_room()
+                .await
+                .expect("等待 GameOver 时连接关闭")
+            {
+                return game_over;
+            }
+        }
+    })
+    .await
+    .expect("仅剩 1 人时应立即结束对局");
+
+    assert_eq!(game_over.ranking.len(), 8, "排名应包含全部 8 个座位");
+    let place_of = |player_id: &str| {
+        game_over
+            .ranking
+            .iter()
+            .find(|item| item.player_id == player_id)
+            .map(|item| item.place.get())
+            .unwrap_or_else(|| panic!("{player_id} 应在排名里"))
+    };
+    assert_eq!(place_of(&player_ids[7]), 8, "首个退出者名次应为 8");
+    assert_eq!(place_of(&player_ids[0]), 1, "最后留下者名次应为 1");
+
+    let mut places: Vec<u64> = game_over
+        .ranking
+        .iter()
+        .map(|item| item.place.get())
+        .collect();
+    places.sort_unstable();
+    assert_eq!(places, (1..=8).collect::<Vec<u64>>(), "名次应覆盖 1..=8");
+    println!("forfeit ranking: departed={:?}", place_of(&player_ids[7]));
+}
+
+/// 对局中的断线也要写回注册表：对局结束回房后，大厅 tick 才能按宽限期释放
+/// 该座位；重连回来则清除标记，避免回房时被误释放。
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn mid_game_disconnect_is_recorded_in_registry() {
+    let clock: Arc<dyn Clock> = Arc::new(SystemClock);
+    let (addr, router, state) = room_service::bind_state("127.0.0.1:0", clock)
+        .await
+        .expect("绑定端口应当成功");
+    tokio::spawn(async move {
+        let _ = room_service::serve(addr, router).await;
+    });
+    wait_for_server(addr).await;
+
+    let mut fixture = start_eight_raw_clients(addr).await;
+    let target = fixture.identities[7].0.clone();
+
+    // 直接断开第 8 条连接，不发送 LeaveRoom：服务端应按断线处理并写回注册表。
+    drop(fixture.clients.pop().expect("应有第 8 条连接"));
+
+    let marked = tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            let disconnected = {
+                let rooms = state.rooms.lock().await;
+                rooms
+                    .room_of_player(&target)
+                    .and_then(|(room, seat)| {
+                        room.slot(seat)
+                            .map(|slot| slot.disconnected_at_ms.is_some())
+                    })
+                    .unwrap_or(false)
+            };
+            if disconnected {
+                return;
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+    })
+    .await;
+    assert!(marked.is_ok(), "对局中断线应写回注册表断线时刻");
+
+    let token = fixture.identities[7].1.clone();
+    let mut reconnected = RawClient::connect(addr).await;
+    authenticate_with_token(&mut reconnected, &token).await;
+    reconnected
+        .send(
+            "Reconnect",
+            json!({ "roomId": fixture.room_id, "lastSeq": 0 }),
+        )
+        .await;
+    let _ = tokio::time::timeout(Duration::from_secs(5), reconnected.recv())
+        .await
+        .expect("重连应在 5 秒内收到消息");
+
+    let cleared = {
+        let rooms = state.rooms.lock().await;
+        rooms
+            .room_of_player(&target)
+            .and_then(|(room, seat)| {
+                room.slot(seat)
+                    .map(|slot| slot.disconnected_at_ms.is_none())
+            })
+            .unwrap_or(false)
+    };
+    assert!(cleared, "重连应清除注册表断线标记");
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
