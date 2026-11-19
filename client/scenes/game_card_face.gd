@@ -44,15 +44,32 @@ static func face(
     cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
     face_node.add_child(cover)
 
-    var watermark := UI.label(initial(card_id), UITheme.font_size("font-hero"), false)
-    watermark.name = "CoverMark"
-    watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
-    watermark.offset_bottom = -info_height
-    watermark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    watermark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    watermark.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
-    watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    face_node.add_child(watermark)
+    # 有美术资源时在其上叠卡面纹理；无图或加载失败保留上面的纯色封面回退。
+    var cover_path := CardDB.art_path(card_id, "card_face")
+    if cover_path != "" and ResourceLoader.exists(cover_path):
+        var art := ResourceLoader.load(cover_path) as Texture2D
+        if art != null:
+            var cover_art := TextureRect.new()
+            cover_art.name = "CoverArt"
+            cover_art.texture = art
+            cover_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+            cover_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+            cover_art.set_anchors_preset(Control.PRESET_FULL_RECT)
+            cover_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+            face_node.add_child(cover_art)
+
+    # 有卡面纹理时不叠首字水印，避免与立绘重叠。
+    var has_cover_art := face_node.get_node_or_null("CoverArt") != null
+    if not has_cover_art:
+        var watermark := UI.label(initial(card_id), UITheme.font_size("font-hero"), false)
+        watermark.name = "CoverMark"
+        watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
+        watermark.offset_bottom = -info_height
+        watermark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        watermark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        watermark.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
+        watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        face_node.add_child(watermark)
 
     if cost_text != "" or era_text != "" or badge_text != "" or stealth:
         _add_corner_badges(face_node, cost_text, era_text, badge_text, stealth)

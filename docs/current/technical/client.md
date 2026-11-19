@@ -179,6 +179,7 @@ client/
 | `make protocol-check` | 校验协议样例，并比对两处 GDScript 生成物漂移 |
 | `make data` | 生成服务端数据（含 `taxonomy.json`）、`client/generated/{cards,skills,tokens,taxonomy}.json` 与文本表 `client/text/zh_CN.csv` |
 | `make data-check` | 比对服务端与客户端生成数据、文本表漂移，运行效果审计 |
+| `make assets` | 按 `ASSET_MAP` 对源立绘去水印，派生头像与卡面并重写 `client/assets/asset_manifest.json`；见 §10 |
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
@@ -287,6 +288,16 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - 导出前必须存在 `application/config/icon`（当前 `res://icon.png`）；缺少图标时 Godot 导出失败。图标由 `scripts/gen_app_icon.py` 生成，随源提交。
 - 签名依赖 Xcode 登录 Apple 团队账号并登记目标真机；缺少账号或描述文件时 `xcodebuild` 失败并打印签名错误，不产出未签名包。
 - 构建产物在 `output/ios/build/Build/Products/Release-iphoneos/`；`output/` 不提交。
+
+## 10. 美术素材层
+
+- 位置：`client/assets/`。`characters/portraits/ch_<id>_full.png` 为去水印立绘，`characters/avatars/ch_<id>_ava.png` 为圆形头像，`cards/faces/card_<id>_face.png` 为 448×584 卡面封面；`asset_manifest.json` 按卡牌 id 登记三类路径与展示尺寸。
+- 加载：`CardDB` 启动时读取清单到 `art`，提供 `has_art(id)` 与 `art_path(id, kind)`；清单缺失或条目缺字段时返回空串，不报错。
+- 回退：`GameCardFace.face()` 有卡面纹理时叠 `CoverArt` 并隐藏首字水印，否则保留纯色封面与首字；`UI.avatar()` 有头像纹理时叠 `AvatarArt`，否则退回玩法色块首字。纹理加载失败与无资源走同一回退。
+- 稀有度：`CardDB.rarity_tier(id)` 按卡牌 `level` 映射为 `common`（1–2）、`rare`（3–4）、`epic`（5–6）、`legendary`（7），仅用于展示，不进入协议与服务端数据。
+- 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（默认 `client/assets/characters/portraits/asset_map.json`，内容为 `card_id → 源立绘文件名`）处理源立绘，并重写清单；映射文件缺失时目标直接失败。
+- 批次：首批试点 20 张，覆盖 14 种玩法色与 7 个时代；其余卡牌继续走程序化绘制。源立绘随仓库提交。
+- 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；改图后运行 `make client-import`。
 
 ## 相关文档
 

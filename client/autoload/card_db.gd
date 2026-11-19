@@ -7,6 +7,16 @@ var tokens: Dictionary = {}
 var skills: Dictionary = {}
 ## 科学分类树：节点 id → {id, parent, rank}。
 var taxonomy: Dictionary = {}
+## 美术资源清单：card_id → {portrait, avatar, card_face, display}。缺图时回退程序化绘制。
+var art: Dictionary = {}
+
+## level → 稀有度档位（纯展示，服务端数据与协议不变）。
+const RARITY := {
+    1: "common", 2: "common",
+    3: "rare", 4: "rare",
+    5: "epic", 6: "epic",
+    7: "legendary",
+}
 
 ## 时代序号到文本 id，与服务端 `Era` 枚举一致（1–7）。
 const ERA_IDS := {
@@ -25,6 +35,7 @@ func _ready() -> void:
     _load_table("res://generated/tokens.json", tokens)
     _load_table("res://generated/skills.json", skills)
     _load_taxonomy("res://generated/taxonomy.json")
+    _load_art("res://assets/asset_manifest.json")
     for id in tokens:
         cards[id] = tokens[id]
 
@@ -56,6 +67,22 @@ func _load_taxonomy(path: String) -> void:
     for node in parsed.get("nodes", []):
         if node is Dictionary:
             taxonomy[str(node.get("id", ""))] = node
+
+
+## 美术清单是单对象 `{version, assets}`；按 card_id 建索引。文件缺失不报错，
+## 让全部界面回退到程序化绘制（无素材时游戏照常可玩）。
+func _load_art(path: String) -> void:
+    if not FileAccess.file_exists(path):
+        return
+    var file := FileAccess.open(path, FileAccess.READ)
+    if file == null:
+        return
+    var parsed = JSON.parse_string(file.get_as_text())
+    if not (parsed is Dictionary):
+        return
+    for id in parsed.get("assets", {}):
+        if parsed["assets"][id] is Dictionary:
+            art[str(id)] = parsed["assets"][id]
 
 
 func card(id: String) -> Dictionary:
@@ -155,3 +182,21 @@ func heroes() -> Array:
             out.append(entry)
     out.sort_custom(func(a, b): return str(a.get("id", "")) < str(b.get("id", "")))
     return out
+
+
+## 该卡是否已有美术资源；无资源时调用方应回退程序化绘制。
+func has_art(id: String) -> bool:
+    return art.has(id)
+
+
+## 取某类资源路径（kind: portrait / avatar / card_face）；无资源返回空串。
+func art_path(id: String, kind: String) -> String:
+    if not art.has(id):
+        return ""
+    return str(art[id].get(kind, ""))
+
+
+## 展示用稀有度档位：common / rare / epic / legendary；未知等级回退 common。
+func rarity_tier(id: String) -> String:
+    var level := int(card(id).get("level", 1))
+    return str(RARITY.get(level, "common"))
