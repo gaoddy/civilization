@@ -76,7 +76,7 @@ client/
     ui_smoke_guide.tscn/.gd  # 首局引导：首次展示、步骤推进与条件跳过、跳过落盘、手动重看、输入穿透、重连续接
     ui_smoke_room_ops.tscn/.gd # 房间管理：房主移除/解散、非房主隐藏、RoomClosed 回大厅、离线点击
     ui_smoke_touch.tscn/.gd  # 触控：长按详情、抬手隐藏、位移取消、手牌槽触摸复位
-    ui_smoke_layout.tscn/.gd # 安全区包裹与命中尺寸；960×540 下六页面不越界
+    ui_smoke_layout.tscn/.gd # 安全区包裹与命中尺寸；960×540 下六页面不越界，八人对局积分榜不滚动
     ui_smoke_platform.tscn/.gd # 设备换算：画布缩放、pt→画布、安全区与键盘（固定输入断言）
     smoke_case.gd            # 冒烟公共断言与场景装载
     fixture.gd               # 冒烟用最小 PlayerView
