@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "id": "m_kickmember",
+  "type": "KickMember",
+  "ts": "2026-11-15T10:00:00Z",
+  "payload": {
+    "targetPlayerId": "p_02"
+  }
+}

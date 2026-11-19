@@ -26,6 +26,11 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 
+### DissolveRoom
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+
 ### FriendRemove
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -63,6 +68,12 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `code` | string | 是 | 6 位房间码 |
+
+### KickMember
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `targetPlayerId` | string | 是 | 要被移出房间的玩家 playerId |
 
 ### LeaveRoom
 
@@ -196,7 +207,10 @@
 | `ranking` | array<object> | 是 |  |
 | `ranking[].playerId` | string | 是 |  |
 | `ranking[].place` | integer | 是 |  |
+| `ranking[].survivedTurns` | integer | 否 | 该座位存活到的回合；旧客户端缺省按 0 处理 |
+| `ranking[].damageDealt` | integer | 否 | 该座位本局造成的总伤害；旧客户端缺省按 0 处理 |
 | `seed` | string | 是 | 会战模式对局结束后公开的种子 |
+| `selfStats` | SelfStats | 否 | 接收者本人的本局统计；只填接收者所在座位 |
 
 ### GameStarted
 
@@ -218,6 +232,12 @@
 | `phase` | Phase | 是 |  |
 | `turn` | integer | 是 |  |
 | `deadline` | string | 是 |  |
+
+### RoomClosed
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `reason` | enum | 是 | kicked：被房主移出；dissolved：房间已解散 |
 
 ### RoomUpdate
 
@@ -254,6 +274,51 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `secondsLeft` | integer | 是 |  |
+
+## 共享类型（messages.schema.json）
+
+### CombatMinionState
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `minionId` | string | 是 | 随从实例 id |
+| `attack` | integer | 是 |  |
+| `health` | integer | 是 |  |
+| `alive` | boolean | 是 |  |
+
+### FriendRequestItem
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `playerId` | string | 是 |  |
+| `playerCode` | string | 是 |  |
+| `displayName` | string | 是 |  |
+| `sentAt` | string | 是 |  |
+
+### SelfStats
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `place` | integer | 是 |  |
+| `survivedTurns` | integer | 是 |  |
+| `finalHp` | integer | 是 |  |
+| `finalEra` | integer | 是 |  |
+| `remainingGold` | integer | 是 |  |
+| `damageDealt` | integer | 是 |  |
+| `damageTaken` | integer | 是 |  |
+| `buys` | integer | 是 |  |
+| `sells` | integer | 是 |  |
+| `rerolls` | integer | 是 |  |
+| `triples` | integer | 是 |  |
+| `combatWins` | integer | 是 |  |
+| `combatDraws` | integer | 是 |  |
+| `combatLosses` | integer | 是 |  |
+| `heroPowerUses` | integer | 是 |  |
+| `board` | array<object> | 是 | 终局棋盘，按站位顺序；最多 7 项 |
+| `board[].cardId` | string | 是 |  |
+| `board[].golden` | boolean | 是 |  |
+| `board[].attack` | integer | 是 |  |
+| `board[].health` | integer | 是 |  |
 
 ## 共享类型
 

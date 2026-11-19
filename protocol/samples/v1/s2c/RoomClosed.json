@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "id": "m_roomclosed",
+  "type": "RoomClosed",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 12,
+  "payload": {
+    "reason": "kicked"
+  }
+}

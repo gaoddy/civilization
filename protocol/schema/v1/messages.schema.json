@@ -46,6 +46,20 @@
       "required": [],
       "properties": {}
     },
+    "KickMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetPlayerId"],
+      "properties": {
+        "targetPlayerId": { "type": "string", "description": "要被移出房间的玩家 playerId" }
+      }
+    },
+    "DissolveRoom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
     "Ready": {
       "type": "object",
       "additionalProperties": false,
@@ -173,6 +187,18 @@
               }
             }
           }
+        }
+      }
+    },
+    "RoomClosed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason"],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "enum": ["kicked", "dissolved"],
+          "description": "kicked：被房主移出；dissolved：房间已解散"
         }
       }
     },
@@ -316,11 +342,81 @@
             "required": ["playerId", "place"],
             "properties": {
               "playerId": { "type": "string" },
-              "place": { "type": "integer", "minimum": 1, "maximum": 8 }
+              "place": { "type": "integer", "minimum": 1, "maximum": 8 },
+              "survivedTurns": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 20,
+                "description": "该座位存活到的回合；旧客户端缺省按 0 处理"
+              },
+              "damageDealt": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "该座位本局造成的总伤害；旧客户端缺省按 0 处理"
+              }
             }
           }
         },
-        "seed": { "type": "string", "description": "会战模式对局结束后公开的种子" }
+        "seed": { "type": "string", "description": "会战模式对局结束后公开的种子" },
+        "selfStats": {
+          "$ref": "#/$defs/SelfStats",
+          "description": "接收者本人的本局统计；只填接收者所在座位"
+        }
+      }
+    },
+    "SelfStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "place",
+        "survivedTurns",
+        "finalHp",
+        "finalEra",
+        "remainingGold",
+        "damageDealt",
+        "damageTaken",
+        "buys",
+        "sells",
+        "rerolls",
+        "triples",
+        "combatWins",
+        "combatDraws",
+        "combatLosses",
+        "heroPowerUses",
+        "board"
+      ],
+      "properties": {
+        "place": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "survivedTurns": { "type": "integer", "minimum": 0, "maximum": 20 },
+        "finalHp": { "type": "integer", "minimum": 0 },
+        "finalEra": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "remainingGold": { "type": "integer", "minimum": 0 },
+        "damageDealt": { "type": "integer", "minimum": 0 },
+        "damageTaken": { "type": "integer", "minimum": 0 },
+        "buys": { "type": "integer", "minimum": 0 },
+        "sells": { "type": "integer", "minimum": 0 },
+        "rerolls": { "type": "integer", "minimum": 0 },
+        "triples": { "type": "integer", "minimum": 0 },
+        "combatWins": { "type": "integer", "minimum": 0 },
+        "combatDraws": { "type": "integer", "minimum": 0 },
+        "combatLosses": { "type": "integer", "minimum": 0 },
+        "heroPowerUses": { "type": "integer", "minimum": 0 },
+        "board": {
+          "type": "array",
+          "maxItems": 7,
+          "description": "终局棋盘，按站位顺序；最多 7 项",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["cardId", "golden", "attack", "health"],
+            "properties": {
+              "cardId": { "type": "string" },
+              "golden": { "type": "boolean" },
+              "attack": { "type": "integer", "minimum": 0 },
+              "health": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
       }
     },
     "Error": { "$ref": "errors.schema.json#/$defs/ErrorMessage" },

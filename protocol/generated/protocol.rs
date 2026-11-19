@@ -1690,6 +1690,30 @@ impl ::std::default::Default for CreateRoom {
         Self {}
     }
 }
+///`DissolveRoom`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct DissolveRoom {}
+impl ::std::convert::From<&DissolveRoom> for DissolveRoom {
+    fn from(value: &DissolveRoom) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for DissolveRoom {
+    fn default() -> Self {
+        Self {}
+    }
+}
 ///`Error`
 ///
 /// <details><summary>JSON schema</summary>
@@ -3046,6 +3070,11 @@ impl ::std::convert::TryFrom<::std::string::String> for GameEventKind {
 ///          "playerId"
 ///        ],
 ///        "properties": {
+///          "damageDealt": {
+///            "description": "该座位本局造成的总伤害；旧客户端缺省按 0 处理",
+///            "type": "integer",
+///            "minimum": 0.0
+///          },
 ///          "place": {
 ///            "type": "integer",
 ///            "maximum": 8.0,
@@ -3053,6 +3082,12 @@ impl ::std::convert::TryFrom<::std::string::String> for GameEventKind {
 ///          },
 ///          "playerId": {
 ///            "type": "string"
+///          },
+///          "survivedTurns": {
+///            "description": "该座位存活到的回合；旧客户端缺省按 0 处理",
+///            "type": "integer",
+///            "maximum": 20.0,
+///            "minimum": 0.0
 ///          }
 ///        },
 ///        "additionalProperties": false
@@ -3061,6 +3096,10 @@ impl ::std::convert::TryFrom<::std::string::String> for GameEventKind {
 ///    "seed": {
 ///      "description": "会战模式对局结束后公开的种子",
 ///      "type": "string"
+///    },
+///    "selfStats": {
+///      "description": "接收者本人的本局统计；只填接收者所在座位",
+///      "$ref": "#/$defs/SelfStats"
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -3073,6 +3112,13 @@ pub struct GameOver {
     pub ranking: ::std::vec::Vec<GameOverRankingItem>,
     ///会战模式对局结束后公开的种子
     pub seed: ::std::string::String,
+    ///接收者本人的本局统计；只填接收者所在座位
+    #[serde(
+        rename = "selfStats",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub self_stats: ::std::option::Option<SelfStats>,
 }
 impl ::std::convert::From<&GameOver> for GameOver {
     fn from(value: &GameOver) -> Self {
@@ -3091,6 +3137,11 @@ impl ::std::convert::From<&GameOver> for GameOver {
 ///    "playerId"
 ///  ],
 ///  "properties": {
+///    "damageDealt": {
+///      "description": "该座位本局造成的总伤害；旧客户端缺省按 0 处理",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
 ///    "place": {
 ///      "type": "integer",
 ///      "maximum": 8.0,
@@ -3098,6 +3149,12 @@ impl ::std::convert::From<&GameOver> for GameOver {
 ///    },
 ///    "playerId": {
 ///      "type": "string"
+///    },
+///    "survivedTurns": {
+///      "description": "该座位存活到的回合；旧客户端缺省按 0 处理",
+///      "type": "integer",
+///      "maximum": 20.0,
+///      "minimum": 0.0
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -3107,9 +3164,23 @@ impl ::std::convert::From<&GameOver> for GameOver {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct GameOverRankingItem {
+    ///该座位本局造成的总伤害；旧客户端缺省按 0 处理
+    #[serde(
+        rename = "damageDealt",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub damage_dealt: ::std::option::Option<u64>,
     pub place: ::std::num::NonZeroU64,
     #[serde(rename = "playerId")]
     pub player_id: ::std::string::String,
+    ///该座位存活到的回合；旧客户端缺省按 0 处理
+    #[serde(
+        rename = "survivedTurns",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub survived_turns: ::std::option::Option<i64>,
 }
 impl ::std::convert::From<&GameOverRankingItem> for GameOverRankingItem {
     fn from(value: &GameOverRankingItem) -> Self {
@@ -3793,6 +3864,38 @@ pub struct JoinRoom {
 }
 impl ::std::convert::From<&JoinRoom> for JoinRoom {
     fn from(value: &JoinRoom) -> Self {
+        value.clone()
+    }
+}
+///`KickMember`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "targetPlayerId"
+///  ],
+///  "properties": {
+///    "targetPlayerId": {
+///      "description": "要被移出房间的玩家 playerId",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct KickMember {
+    ///要被移出房间的玩家 playerId
+    #[serde(rename = "targetPlayerId")]
+    pub target_player_id: ::std::string::String,
+}
+impl ::std::convert::From<&KickMember> for KickMember {
+    fn from(value: &KickMember) -> Self {
         value.clone()
     }
 }
@@ -4871,6 +4974,123 @@ impl ::std::convert::From<&RespondInvite> for RespondInvite {
         value.clone()
     }
 }
+///`RoomClosed`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "reason"
+///  ],
+///  "properties": {
+///    "reason": {
+///      "description": "kicked：被房主移出；dissolved：房间已解散",
+///      "type": "string",
+///      "enum": [
+///        "kicked",
+///        "dissolved"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RoomClosed {
+    ///kicked：被房主移出；dissolved：房间已解散
+    pub reason: RoomClosedReason,
+}
+impl ::std::convert::From<&RoomClosed> for RoomClosed {
+    fn from(value: &RoomClosed) -> Self {
+        value.clone()
+    }
+}
+///kicked：被房主移出；dissolved：房间已解散
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "kicked：被房主移出；dissolved：房间已解散",
+///  "type": "string",
+///  "enum": [
+///    "kicked",
+///    "dissolved"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum RoomClosedReason {
+    #[serde(rename = "kicked")]
+    Kicked,
+    #[serde(rename = "dissolved")]
+    Dissolved,
+}
+impl ::std::convert::From<&Self> for RoomClosedReason {
+    fn from(value: &RoomClosedReason) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for RoomClosedReason {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Kicked => f.write_str("kicked"),
+            Self::Dissolved => f.write_str("dissolved"),
+        }
+    }
+}
+impl ::std::str::FromStr for RoomClosedReason {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "kicked" => Ok(Self::Kicked),
+            "dissolved" => Ok(Self::Dissolved),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for RoomClosedReason {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for RoomClosedReason {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for RoomClosedReason {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
 ///`RoomUpdate`
 ///
 /// <details><summary>JSON schema</summary>
@@ -5065,6 +5285,214 @@ pub struct SelectHeroCard {
 }
 impl ::std::convert::From<&SelectHeroCard> for SelectHeroCard {
     fn from(value: &SelectHeroCard) -> Self {
+        value.clone()
+    }
+}
+///`SelfStats`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "board",
+///    "buys",
+///    "combatDraws",
+///    "combatLosses",
+///    "combatWins",
+///    "damageDealt",
+///    "damageTaken",
+///    "finalEra",
+///    "finalHp",
+///    "heroPowerUses",
+///    "place",
+///    "remainingGold",
+///    "rerolls",
+///    "sells",
+///    "survivedTurns",
+///    "triples"
+///  ],
+///  "properties": {
+///    "board": {
+///      "description": "终局棋盘，按站位顺序；最多 7 项",
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "attack",
+///          "cardId",
+///          "golden",
+///          "health"
+///        ],
+///        "properties": {
+///          "attack": {
+///            "type": "integer",
+///            "minimum": 0.0
+///          },
+///          "cardId": {
+///            "type": "string"
+///          },
+///          "golden": {
+///            "type": "boolean"
+///          },
+///          "health": {
+///            "type": "integer",
+///            "minimum": 0.0
+///          }
+///        },
+///        "additionalProperties": false
+///      },
+///      "maxItems": 7
+///    },
+///    "buys": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "combatDraws": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "combatLosses": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "combatWins": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "damageDealt": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "damageTaken": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "finalEra": {
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 1.0
+///    },
+///    "finalHp": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "heroPowerUses": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "place": {
+///      "type": "integer",
+///      "maximum": 8.0,
+///      "minimum": 1.0
+///    },
+///    "remainingGold": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "rerolls": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "sells": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "survivedTurns": {
+///      "type": "integer",
+///      "maximum": 20.0,
+///      "minimum": 0.0
+///    },
+///    "triples": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct SelfStats {
+    ///终局棋盘，按站位顺序；最多 7 项
+    pub board: ::std::vec::Vec<SelfStatsBoardItem>,
+    pub buys: u64,
+    #[serde(rename = "combatDraws")]
+    pub combat_draws: u64,
+    #[serde(rename = "combatLosses")]
+    pub combat_losses: u64,
+    #[serde(rename = "combatWins")]
+    pub combat_wins: u64,
+    #[serde(rename = "damageDealt")]
+    pub damage_dealt: u64,
+    #[serde(rename = "damageTaken")]
+    pub damage_taken: u64,
+    #[serde(rename = "finalEra")]
+    pub final_era: ::std::num::NonZeroU64,
+    #[serde(rename = "finalHp")]
+    pub final_hp: u64,
+    #[serde(rename = "heroPowerUses")]
+    pub hero_power_uses: u64,
+    pub place: ::std::num::NonZeroU64,
+    #[serde(rename = "remainingGold")]
+    pub remaining_gold: u64,
+    pub rerolls: u64,
+    pub sells: u64,
+    #[serde(rename = "survivedTurns")]
+    pub survived_turns: i64,
+    pub triples: u64,
+}
+impl ::std::convert::From<&SelfStats> for SelfStats {
+    fn from(value: &SelfStats) -> Self {
+        value.clone()
+    }
+}
+///`SelfStatsBoardItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "attack",
+///    "cardId",
+///    "golden",
+///    "health"
+///  ],
+///  "properties": {
+///    "attack": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "cardId": {
+///      "type": "string"
+///    },
+///    "golden": {
+///      "type": "boolean"
+///    },
+///    "health": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct SelfStatsBoardItem {
+    pub attack: u64,
+    #[serde(rename = "cardId")]
+    pub card_id: ::std::string::String,
+    pub golden: bool,
+    pub health: u64,
+}
+impl ::std::convert::From<&SelfStatsBoardItem> for SelfStatsBoardItem {
+    fn from(value: &SelfStatsBoardItem) -> Self {
         value.clone()
     }
 }

@@ -17,9 +17,9 @@ pub use generated::*;
 /// 上行载荷类型，按信封 `type` 判别。
 pub mod client {
     pub use crate::{
-        AuthRequest, CombatPlayed, CreateRoom, FriendRemove, FriendRequest, FriendRespond,
-        IntentMessage, InviteToRoom, JoinRoom, LeaveRoom, Ready, Reconnect, RequestSnapshot,
-        RespondInvite, SelectHeroCard,
+        AuthRequest, CombatPlayed, CreateRoom, DissolveRoom, FriendRemove, FriendRequest,
+        FriendRespond, IntentMessage, InviteToRoom, JoinRoom, KickMember, LeaveRoom, Ready,
+        Reconnect, RequestSnapshot, RespondInvite, SelectHeroCard,
     };
 }
 
@@ -29,7 +29,8 @@ pub mod server {
         AuthResult, CombatResult, ErrorMessage, FriendInvite, FriendInviteResult,
         FriendRequestItem, FriendUpdate, FriendUpdateFriendsItem, FriendUpdateFriendsItemStatus,
         FriendUpdateOutgoingItem, FriendUpdateRecentItem, FriendUpdateRecentItemRelation, GameOver,
-        GameStarted, InviteAccepted, PhaseChanged, RoomUpdate, Snapshot, StateUpdate, TimerWarning,
+        GameStarted, InviteAccepted, PhaseChanged, RoomClosed, RoomUpdate, SelfStats, Snapshot,
+        StateUpdate, TimerWarning,
     };
 }
 
@@ -69,6 +70,8 @@ pub enum ClientMessage {
     CreateRoom(CreateRoom),
     JoinRoom(JoinRoom),
     LeaveRoom(LeaveRoom),
+    KickMember(KickMember),
+    DissolveRoom(DissolveRoom),
     Ready(Ready),
     SelectHeroCard(SelectHeroCard),
     Intent(IntentMessage),
@@ -87,6 +90,7 @@ pub enum ClientMessage {
 pub enum ServerMessage {
     AuthResult(AuthResult),
     RoomUpdate(RoomUpdate),
+    RoomClosed(RoomClosed),
     GameStarted(GameStarted),
     Snapshot(Snapshot),
     StateUpdate(StateUpdate),
@@ -102,9 +106,10 @@ pub enum ServerMessage {
 }
 
 /// 已知 s2c 消息类型名，与 `messages.json#/directions/s2c` 一致。
-const SERVER_MESSAGE_TYPES: [&str; 14] = [
+const SERVER_MESSAGE_TYPES: [&str; 15] = [
     "AuthResult",
     "RoomUpdate",
+    "RoomClosed",
     "GameStarted",
     "Snapshot",
     "StateUpdate",
@@ -134,6 +139,8 @@ impl ClientEnvelope {
             "CreateRoom" => parse_payload(payload()).map(ClientMessage::CreateRoom),
             "JoinRoom" => parse_payload(payload()).map(ClientMessage::JoinRoom),
             "LeaveRoom" => parse_payload(payload()).map(ClientMessage::LeaveRoom),
+            "KickMember" => parse_payload(payload()).map(ClientMessage::KickMember),
+            "DissolveRoom" => parse_payload(payload()).map(ClientMessage::DissolveRoom),
             "Ready" => parse_payload(payload()).map(ClientMessage::Ready),
             "SelectHeroCard" => parse_payload(payload()).map(ClientMessage::SelectHeroCard),
             "Intent" => parse_payload(payload()).map(ClientMessage::Intent),
@@ -157,7 +164,7 @@ impl ServerEnvelope {
     /// # Errors
     ///
     /// - `seq == 0`（协议要求从 1 起）返回 `BAD_PAYLOAD`。
-    /// - `kind` 不是 14 种已知 s2c 类型之一返回 `UNKNOWN_TYPE`。
+    /// - `kind` 不是 15 种已知 s2c 类型之一返回 `UNKNOWN_TYPE`。
     pub fn new(
         kind: &str,
         seq: u64,
@@ -205,6 +212,7 @@ impl ServerEnvelope {
         match self.type_.as_str() {
             "AuthResult" => parse_payload(payload()).map(ServerMessage::AuthResult),
             "RoomUpdate" => parse_payload(payload()).map(ServerMessage::RoomUpdate),
+            "RoomClosed" => parse_payload(payload()).map(ServerMessage::RoomClosed),
             "GameStarted" => parse_payload(payload()).map(ServerMessage::GameStarted),
             "Snapshot" => parse_payload(payload()).map(ServerMessage::Snapshot),
             "StateUpdate" => parse_payload(payload()).map(ServerMessage::StateUpdate),

@@ -85,6 +85,19 @@ def render(schema_dir, mapping):
             def_name = mapping["directions"][direction][name].rsplit("/", 1)[-1]
             lines.extend(_table(name, messages[def_name]))
 
+    # messages.schema.json 中被消息以 `$ref` 引用、自身不是消息的类型也要有字段表，
+    # 否则客户端只能看到类型名（例如 `selfStats` 的 16 个字段）。
+    message_defs = {
+        mapping["directions"][direction][name].rsplit("/", 1)[-1]
+        for direction in ("c2s", "s2c")
+        for name in mapping["directions"][direction]
+    }
+    inline_defs = sorted(name for name in messages if name not in message_defs)
+    if inline_defs:
+        lines.extend(["## 共享类型（messages.schema.json）", ""])
+        for name in inline_defs:
+            lines.extend(_table(name, messages[name]))
+
     lines.extend(["## 共享类型", ""])
     for filename in ("view.schema.json", "intents.schema.json", "errors.schema.json"):
         for name, schema in _load(schema_dir, filename)["$defs"].items():

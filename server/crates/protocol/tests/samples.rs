@@ -43,6 +43,8 @@ fn client_variant(message: &ClientMessage) -> &'static str {
         ClientMessage::FriendRemove(_) => "FriendRemove",
         ClientMessage::InviteToRoom(_) => "InviteToRoom",
         ClientMessage::RespondInvite(_) => "RespondInvite",
+        ClientMessage::KickMember(_) => "KickMember",
+        ClientMessage::DissolveRoom(_) => "DissolveRoom",
     }
 }
 
@@ -62,6 +64,7 @@ fn server_variant(message: &ServerMessage) -> &'static str {
         ServerMessage::FriendInvite(_) => "FriendInvite",
         ServerMessage::FriendInviteResult(_) => "FriendInviteResult",
         ServerMessage::InviteAccepted(_) => "InviteAccepted",
+        ServerMessage::RoomClosed(_) => "RoomClosed",
     }
 }
 
