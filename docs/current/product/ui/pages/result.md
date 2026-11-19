@@ -10,8 +10,8 @@
 - 目的：展示服务端下发的本局名次、本人本局统计与对局种子；数据只读，客户端不做推算。
 - 入口：对局页收到 `GameOver` 后由 `GameStore.game_over` 信号触发，导航到 `res://scenes/result.tscn`。
 - 返回：
-  - `BackToRoomButton`：`GameStore.clear_game_view()` 后进入 `res://scenes/room.tscn`，保留房间与社交状态；房间已不在（`GameStore.room_id` 为空）时按返回大厅处理。
-  - `BackToLobbyButton`：`GameStore.reset_room()`、`Net.relogin()` 后导航大厅。
+  - `ConfirmButton`（文案「确定」）：房间仍在时先发送 `LeaveRoom` 释放座位，再 `GameStore.reset_room()`、`Net.relogin()` 并导航大厅；房间已在结算期间解散时不发离开请求，直接回大厅。
+  - 本页只有一个返回入口，不提供「返回房间」。
 - 本页只在进入时构建一次；展示期间房间回到等待区不会清掉已展示的结果。
 
 ## 2. 结构层级
@@ -33,8 +33,7 @@
             │     ├─ StatsSection：12 个 `StatRow_*`、分组标签与 BoardList
             │     └─ 对局种子行
             └─ ResultActions（固定在滚动区之外）
-               ├─ BackToRoomButton：返回房间
-               └─ BackToLobbyButton：返回大厅
+               └─ ConfirmButton：「确定」，离开房间并回大厅
 ```
 
 - 内容再长也不会把返回入口挤出屏幕；返回按钮始终固定在面板底部。
@@ -46,12 +45,12 @@
 
 | 状态 | 触发 | 表现 | 出口 |
 | --- | --- | --- | --- |
-| 完整数据 | 收到 `GameOver` 且 `selfStats` 完整 | 名次、12 个统计行、最终阵容、种子全部展示 | 返回房间或返回大厅 |
-| 字段缺失 | `selfStats` 缺字段或为 `null` | 对应数值按 0 处理；`finalEra` 缺失时 `CardDB.era_name(0)` 回退为 `0`，页面不报错 | 返回房间或返回大厅 |
-| 最终阵容为空 | `selfStats.board` 为空数组 | `BoardList` 只显示「无随从」占位 | 返回房间或返回大厅 |
-| 本人名次缺失 | `ranking` 中没有本人条目 | 顶部显示「你的名次：未记录」；名次列表照常展示已有条目 | 返回房间或返回大厅 |
-| 名次列表缺失 | `ranking` 为空 | `RankingList` 为空，页面其余区域照常展示 | 返回房间或返回大厅 |
-| 房间已不在 | 结算期间房间被解散或本人已离开 | 「返回房间」等同「返回大厅」，不进入无房间的等待区 | 回大厅 |
+| 完整数据 | 收到 `GameOver` 且 `selfStats` 完整 | 名次、12 个统计行、最终阵容、种子全部展示 | 点「确定」回大厅 |
+| 字段缺失 | `selfStats` 缺字段或为 `null` | 对应数值按 0 处理；`finalEra` 缺失时 `CardDB.era_name(0)` 回退为 `0`，页面不报错 | 点「确定」回大厅 |
+| 最终阵容为空 | `selfStats.board` 为空数组 | `BoardList` 只显示「无随从」占位 | 点「确定」回大厅 |
+| 本人名次缺失 | `ranking` 中没有本人条目 | 顶部显示「你的名次：未记录」；名次列表照常展示已有条目 | 点「确定」回大厅 |
+| 名次列表缺失 | `ranking` 为空 | `RankingList` 为空，页面其余区域照常展示 | 点「确定」回大厅 |
+| 房间已不在 | 结算期间房间被解散 | 结果保留展示并显示关闭原因；点「确定」不发离开请求，直接回大厅 | 回大厅 |
 | 离线 | `Net` 未连接 | 本页数据来自 `GameStore`，展示不受影响；返回大厅时重新连接并认证 | 重连后进入大厅 |
 | 无权限 | — | 页面没有按角色区分的操作，也不提供数据修改 | — |
 | 达到上限 | — | 名次最多 8 行；最终阵容最多 7 项（服务端限制） | — |
@@ -68,13 +67,13 @@
 | 卡名与时代名 | `CardDB.display_name`、`CardDB.era_name` |
 
 - 所有数值与名次直接取服务端下发值；客户端不做四舍五入、二次计算或重新排序（只按 `place` 升序展示）。缺失字段统一经 `_int_of` 回退为 0，`finalEra` 为 0 时 `CardDB.era_name` 原样返回 `0`。
-- `GameStore` 在 `GameOver` 中同时保存 `ranking`、`seed` 与 `selfStats`；`clear_game_view()` 只清本局视图，`reset_room()` 连房间一起清空。
+- `GameStore` 在 `GameOver` 中同时保存 `ranking`、`seed` 与 `selfStats`；本页点「确定」调用 `reset_room()` 连房间一起清空，不再使用 `clear_game_view()`。
 
-## 5. 重连与回房
+## 5. 重连与返回大厅
 
 - 对局已结束、座位仍在房间时，服务端在快照后补发本人 `GameOver`；客户端按同一路径写入 `GameStore`，对局页收到 `game_over` 后进入本页。
 - 已回到等待区时，服务端在 `RoomUpdate` 之后补发缓存的上一局 `GameOver`；缓存按座位保存，新一局开始时清空。
-- 本页不重放战斗演示，也不请求额外数据。
+- 本页不重放战斗演示，也不请求额外数据；重连后仍通过「确定」离开房间回大厅。
 
 ## 6. 适配与性能
 
