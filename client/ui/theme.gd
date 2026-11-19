@@ -36,6 +36,7 @@ const PRIMITIVE_COLOR := {
 }
 
 const PRIMITIVE_FONT := {
+	"8": 8,
 	"11": 11,
 	"12": 12,
 	"14": 14,
@@ -83,6 +84,7 @@ const SEMANTIC_COLOR := {
 }
 
 const SEMANTIC_FONT := {
+	"font-micro": "8",
 	"font-caption": "11",
 	"font-body-sm": "12",
 	"font-body": "14",
@@ -119,16 +121,24 @@ const SEMANTIC_OPACITY := {
 
 const SCENARIO := {
 	"rail-width": 88,
-	"side-width": 272,
+	"top-bar-height": 28,
+	"river-height": 32,
+	"hero-row-height": 84,
+	"hero-card-width": 64,
+	"hero-card-height": 84,
+	"hero-cover-height": 40,
+	"hero-name-height": 14,
+	"hero-stats-height": 30,
+	"shop-icon-size": 40,
+	"recruit-shop-gap": 18,
+	"opponent-hp-width": 360,
 	"avatar-sm": 22,
 	"avatar-md": 30,
 	"avatar-lg": 38,
 	"hero-tile-width": 150,
-	"portrait-size": 200,
-	"portrait-height": 150,
+	"portrait-size": 64,
 	"card-width": 112,
 	"card-height": 146,
-	"combat-banner-height": 30,
 	"card-info-height": 90,
 	"card-info-compact-height": 56,
 	"hand-card-overlap": 32,
@@ -247,6 +257,15 @@ static func panel_style(variant: String) -> StyleBoxFlat:
 		"transparent":
 			box.bg_color = Color(0, 0, 0, 0)
 			box.border_color = Color(0, 0, 0, 0)
+		"bare":
+			box.set_content_margin_all(0)
+			box.bg_color = Color(0, 0, 0, 0)
+			box.border_color = Color(0, 0, 0, 0)
+		"accent-bare":
+			box.set_content_margin_all(0)
+			box.bg_color = alpha("color-accent", 0.12)
+			box.border_color = color("color-accent")
+			box.set_border_width_all(2)
 		"cover-info":
 			box.set_corner_radius_all(0)
 			box.corner_radius_bottom_left = radius("radius-md")

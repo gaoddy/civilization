@@ -14,6 +14,10 @@ signal hover_changed(hovering: bool, refund: int)
 ## 由页面按阶段、视图新鲜度、连接与待选汇总；`false` 时整块商店不接收拖拽。
 var enabled := false
 
+## 静息与悬停时的面板样式变体；默认沿用带底色的 surface / accent。
+var style_variant := "surface"
+var hover_variant := "accent"
+
 var _hovering := false
 
 
@@ -37,7 +41,7 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
         return false
     if not _hovering:
         _hovering = true
-        add_theme_stylebox_override("panel", UITheme.panel_style("accent"))
+        add_theme_stylebox_override("panel", UITheme.panel_style(hover_variant))
         hover_changed.emit(true, _refund(data))
     return true
 
@@ -73,4 +77,4 @@ func _clear_hover() -> void:
 
 
 func _restore_style() -> void:
-    add_theme_stylebox_override("panel", UITheme.panel_style("surface"))
+    add_theme_stylebox_override("panel", UITheme.panel_style(style_variant))

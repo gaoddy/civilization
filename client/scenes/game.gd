@@ -1,8 +1,8 @@
 extends Control
 ## 对局：按酒馆战棋结构呈现服务端 PlayerView 与 affordances，操作只发协议意图。
 ##
-## 布局：左栏积分榜 — 中区（招募：商店、我方棋盘、手牌；战斗：双方随从、
-## 结果横幅）— 右栏（场景身份、回合与倒计时、我的英雄与操作）— 状态行（含断线提示）。
+## 布局：顶部工具条 — 左栏积分榜 — 中央舞台（招募/战斗组合、英雄行、贴底手牌）。
+## 状态文本（断线、未发出、错误）写在顶部工具条左侧。
 
 ## 每次 `_send_intent` 先发一条，供冒烟与调试断言意图内容。
 signal intent_sent(intent: Dictionary)
@@ -30,24 +30,23 @@ var _target_pending := false
 ## 已回报「演示播完」的回合；同一回合只回报一次。
 var _combat_ack_turn := -1
 
-# 状态行：错误与断线提示共用。
-var _status: Label
-## 状态行当前承载的是连接提示：恢复连接时据此清空，避免误清错误文案。
+# 顶部工具条：状态文本与图鉴 / 提示 / 退出对局入口。
+var _top_bar: GameTopBar
+## 状态文本当前承载的是连接提示：恢复连接时据此清空，避免误清错误文案。
 var _connection_notice := false
 
 # 左栏积分榜。
 var _players_panel: GamePlayersRail
 
-# 中区 · 招募与战斗。
+# 中央舞台：招募组合、战斗组合、英雄行与贴底手牌。
+var _center: VBoxContainer
 var _recruit_view: GameRecruitView
 var _combat_view: GameCombatView
-var _hand_row: HFlowContainer
-
-# 右栏。
-var _side_panel: GameSidePanel
+var _hero_row: GameHeroRow
+var _hand_row: GameHandRow
 
 var _overlay: Control
-# 左栏战报浮层：位于详情层之上、选择浮层之下，允许覆盖中区与右栏。
+# 左栏战报浮层：位于详情层之上、选择浮层之下，允许覆盖中央舞台。
 var _report_layer: Control
 
 # 随从详情：覆盖全屏但不拦截输入，层级位于内容与战报之上、选择浮层之下。
@@ -82,13 +81,21 @@ func _build() -> void:
 
     var margin := MarginContainer.new()
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-    for side in ["left", "right", "top", "bottom"]:
-        margin.add_theme_constant_override("margin_" + side, UITheme.space("space-xl"))
+    margin.add_theme_constant_override("margin_left", UITheme.space("space-xl"))
+    margin.add_theme_constant_override("margin_right", UITheme.space("space-xl"))
+    margin.add_theme_constant_override("margin_top", UITheme.space("space-lg"))
+    margin.add_theme_constant_override("margin_bottom", UITheme.space("space-md"))
     add_child(margin)
 
     var root := VBoxContainer.new()
     root.add_theme_constant_override("separation", UITheme.space("space-md"))
     margin.add_child(root)
+
+    _top_bar = GameTopBar.new()
+    _top_bar.gallery_pressed.connect(_open_gallery)
+    _top_bar.hint_pressed.connect(_on_hint_pressed)
+    _top_bar.leave_game_pressed.connect(_on_leave_game)
+    root.add_child(_top_bar)
 
     var body := HBoxContainer.new()
     body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -97,27 +104,15 @@ func _build() -> void:
 
     _players_panel = GamePlayersRail.new()
     body.add_child(_players_panel)
-    body.add_child(_build_center())
-    _side_panel = GameSidePanel.new()
-    _side_panel.hero_power_pressed.connect(_on_hero_power)
-    _side_panel.end_recruit_pressed.connect(_on_end_recruit)
-    _side_panel.reroll_pressed.connect(_on_reroll)
-    _side_panel.upgrade_pressed.connect(_on_upgrade)
-    _side_panel.freeze_pressed.connect(_on_freeze)
-    _side_panel.gallery_pressed.connect(_open_gallery)
-    _side_panel.hint_pressed.connect(_on_hint_pressed)
-    _side_panel.leave_game_pressed.connect(_on_leave_game)
-    body.add_child(_side_panel)
-
-    _status = UI.label("", UITheme.font_size("font-body-sm"))
-    _status.name = "StatusLabel"
-    _status.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    root.add_child(_status)
+    _center = _build_center()
+    body.add_child(_center)
 
     _detail = GameDetailLayer.new()
     add_child(_detail)
     _players_panel.detail = _detail
-    _side_panel.detail = _detail
+    _recruit_view.set_detail(_detail)
+    _combat_view.set_detail(_detail)
+    _hero_row.detail = _detail
 
     _report_layer = Control.new()
     _report_layer.name = "ReportLayer"
@@ -131,63 +126,46 @@ func _build() -> void:
     _overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
     _overlay.visible = false
     add_child(_overlay)
-    _recruit_view.detail = _detail
-    _combat_view.detail = _detail
 
     _guide = FirstGameGuide.new()
     _guide.target_root = self
     add_child(_guide)
 
 
-func _build_center() -> Control:
+## 中央舞台：招募组合 → 战斗组合 → 英雄行 → 贴底手牌，自上而下固定顺序。
+func _build_center() -> VBoxContainer:
     var center := VBoxContainer.new()
     center.name = "CenterPanel"
     center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     center.size_flags_vertical = Control.SIZE_EXPAND_FILL
     center.add_theme_constant_override("separation", UITheme.space("space-md"))
+
     _recruit_view = GameRecruitView.new()
     _recruit_view.buy.connect(_on_buy)
+    _recruit_view.reroll_pressed.connect(_on_reroll)
+    _recruit_view.upgrade_pressed.connect(_on_upgrade)
+    _recruit_view.freeze_pressed.connect(_on_freeze)
     _recruit_view.board_dropped.connect(_on_board_dropped)
     _recruit_view.sell_dropped.connect(_on_sell_dropped)
     _recruit_view.sell_hover.connect(_on_sell_hover)
+    _recruit_view.end_recruit_pressed.connect(_on_end_recruit)
     center.add_child(_recruit_view)
 
     _combat_view = GameCombatView.new()
     center.add_child(_combat_view)
 
-    center.add_child(_build_hand_panel())
+    _hero_row = GameHeroRow.new()
+    _hero_row.hero_power_pressed.connect(_on_hero_power)
+    center.add_child(_hero_row)
+
+    _hand_row = GameHandRow.new()
+    _hand_row.target_dropped.connect(_on_hand_target_dropped)
+    center.add_child(_hand_row)
+
+    # 只有中央舞台自身撑满：组合、英雄行与手牌都按各自固定高度自上而下排列。
+    for view in [_recruit_view, _combat_view, _hero_row, _hand_row]:
+        (view as Control).size_flags_vertical = Control.SIZE_SHRINK_BEGIN
     return center
-
-
-func _build_hand_panel() -> Control:
-    var hand_panel := UI.card_panel("surface")
-    hand_panel.name = "HandPanel"
-    var hand_box := VBoxContainer.new()
-    hand_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    hand_panel.add_child(hand_box)
-    hand_box.add_child(UI.section_title(tr("ui.game.hand.title")))
-
-    var hand_scroll := ScrollContainer.new()
-    hand_scroll.name = "HandScroll"
-    hand_scroll.custom_minimum_size = Vector2(0, UITheme.metric("card-height") + UITheme.space("space-md"))
-    hand_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    # 悬停时卡片以底边为轴放大、越出滚动行，需要继续绘制与命中，故关闭裁剪。
-    hand_scroll.clip_contents = false
-    hand_box.add_child(hand_scroll)
-    _hand_row = _flow_row("HandRow")
-    # 手牌走重叠布局：槽位按步进排列，行内不再额外留间距。
-    _hand_row.add_theme_constant_override("h_separation", 0)
-    hand_scroll.add_child(_hand_row)
-    return hand_panel
-
-
-func _flow_row(node_name: String) -> HFlowContainer:
-    var row := HFlowContainer.new()
-    row.name = node_name
-    row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_theme_constant_override("h_separation", UITheme.space("space-sm"))
-    row.add_theme_constant_override("v_separation", UITheme.space("space-sm"))
-    return row
 
 
 # ── 刷新 ──────────────────────────────────────────────────────────────────
@@ -206,7 +184,7 @@ func _refresh() -> void:
     _detail.reset()
     var view: Dictionary = GameStore.view
     if view.is_empty():
-        _status.text = tr("ui.game.status.waiting_view")
+        _top_bar.set_status(tr("ui.game.status.waiting_view"), UITheme.color("color-text-dim"))
         _guide.set_phase("", {})
         return
 
@@ -224,14 +202,16 @@ func _refresh() -> void:
     var in_combat := phase == Protocol.PHASE_COMBAT or phase == Protocol.PHASE_SETTLE
     _set_combat_mode(in_combat)
     if in_combat:
+        # 招募组合隐藏后仍刷新河道：页面唯一的计时源要跟随当前阶段。
         _combat_view.refresh(state)
+        _recruit_view.refresh_clock(state)
     else:
         _combat_view.reset()
         _combat_ack_turn = -1
         _recruit_view.refresh(state)
-    _refresh_hand(self_state, phase)
+    _hero_row.refresh(state)
+    _hand_row.refresh(state)
 
-    _side_panel.refresh(state)
     _refresh_overlay(self_state, recruited)
     _refresh_connection()
     _guide.set_phase(phase, self_state)
@@ -278,82 +258,10 @@ static func drag_gate(
     )
 
 
-## 手牌：只支持拖拽出牌，点击不产生意图。
-func _refresh_hand(self_state: Dictionary, phase: String) -> void:
-    UI.clear(_hand_row)
-    var hand: Array = self_state.get("hand", [])
-    if hand.is_empty():
-        _hand_row.add_child(UI.empty_hint(tr("ui.game.hand.empty")))
-        return
-    var card_step := UITheme.metric("card-width") - UITheme.metric("hand-card-overlap")
-    for card in hand:
-        var index := int(card.get("index", 0))
-        var card_id := str(card.get("cardId", ""))
-        var playable := bool(card.get("playable", false))
-        var entry_data := CardDB.card(card_id)
-        var card_kind := "minion" if str(entry_data.get("card_type", "")) == "minion" else "effect"
-        var entry := HandCard.new()
-        entry.name = "HandCard%d" % index
-        entry.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
-        entry.add_theme_stylebox_override("panel", UITheme.panel_style("raised-tight"))
-        entry.tooltip_text = CardDB.display_text(card_id)
-        if card.get("disabledReason") != null:
-            entry.tooltip_text = UI.error_text(str(card.get("disabledReason")))
-
-        # 随从牌显示服务端给出的真实身材（含成长等全部层数），效果牌不显示身材。
-        var attack_text := GameCardFace.stat_text(card.get("attack"))
-        var health_text := GameCardFace.stat_text(card.get("health"))
-        var golden := bool(card.get("golden", false))
-        var reward_level: Variant = card.get("rewardLevel")
-        var badge_text := "★" if golden else ""
-        if not golden and reward_level != null:
-            # 奖励牌在角标行显示锁定的发现星级。
-            badge_text = str(int(reward_level))
-        entry.add_child(GameCardFace.face(
-            card_id,
-            attack_text,
-            health_text,
-            GameCardFace.playstyle_text(entry_data),
-            badge_text,
-            str(CardDB.display_cost(card_id)),
-            UI.enum_text("era", str(entry_data.get("era", ""))),
-        ))
-        if reward_level != null:
-            entry.tooltip_text = tr("ui.game.reward_card.text") % int(reward_level)
-
-        entry.payload = {
-            "epoch": _view_epoch,
-            "handIndex": index,
-            "instanceId": str(card.get("instanceId", "")),
-            "cardId": card_id,
-            "cardKind": card_kind,
-            "golden": golden,
-            "requiresTarget": bool(card.get("requiresTarget", false)),
-            # 服务端下发的合法目标；效果牌拖到候选上松手才提交。
-            "targets": Array(card.get("targetCandidates", [])),
-        }
-        entry.drag_allowed = drag_gate(
-            phase,
-            _view_stale,
-            _deadline_expired,
-            Net.is_open(),
-            _target_pending,
-            playable
-        )
-        if not entry.drag_allowed:
-            UI.apply_dim(entry)
-        var slot := HandSlot.new()
-        slot.name = "HandSlot%d" % index
-        slot.setup(entry, float(card_step))
-        if bool(card.get("requiresTarget", false)):
-            entry.target_dropped.connect(_on_hand_target_dropped)
-        _hand_row.add_child(slot)
-
-
 func _set_combat_mode(in_combat: bool) -> void:
     _recruit_view.visible = not in_combat
     _combat_view.visible = in_combat
-    _side_panel.set_combat_mode(in_combat)
+    _hero_row.set_combat_mode(in_combat)
 
 
 ## 演示播完后向服务端回报一次；断线时不发送也不重试（服务端把断线视为已回报）。
@@ -371,39 +279,33 @@ func _report_combat_played() -> void:
 
 
 func _refresh_connection() -> void:
-    if _status == null:
+    if _top_bar == null:
         return
+    _top_bar.set_connected(Net.is_open())
     var disconnected := not Net.is_open() and not GameStore.view.is_empty()
     if disconnected:
         # 有连接句柄但未就绪 = 正在重连（dim）；句柄为空 = 断线（danger）。
         var reconnecting := Net.socket != null
-        _status.text = (
-            tr("ui.game.status.reconnecting")
-            if reconnecting
-            else tr("ui.game.status.disconnected")
-        )
-        _status.add_theme_color_override(
-            "font_color",
+        _top_bar.set_status(
+            tr("ui.game.status.reconnecting") if reconnecting else tr("ui.game.status.disconnected"),
             UITheme.color("color-text-dim") if reconnecting else UITheme.color("color-danger"),
         )
         _connection_notice = true
         return
     if _connection_notice:
-        _status.text = ""
-        # 恢复到初始化时的基线颜色；只删除覆盖会丢掉 dim 基线。
-        _status.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+        _top_bar.set_status("", UITheme.color("color-text-dim"))
         _connection_notice = false
 
 
-## 倒计时由右栏维护；页面按「是否存在截止时间」决定清零，避免把已过期
+## 倒计时由招募河道维护；页面按「是否存在截止时间」决定清零，避免把已过期
 ## （秒数为 0）误判成没有截止时间。
 func _update_timer() -> void:
-    if _side_panel == null:
+    if _recruit_view == null:
         return
-    if not _side_panel.has_deadline():
+    if not _recruit_view.has_deadline():
         _set_deadline_expired(false)
         return
-    _set_deadline_expired(_side_panel.seconds_left() <= 0)
+    _set_deadline_expired(_recruit_view.seconds_left() <= 0)
 
 
 func _set_deadline_expired(value: bool) -> void:
@@ -623,7 +525,7 @@ func _send_intent(intent: Dictionary) -> String:
         "intent": intent,
     })
     if intent_id == "":
-        _status.text = tr("ui.game.status.intent_not_sent")
+        _top_bar.set_status(tr("ui.game.status.intent_not_sent"), UITheme.color("color-text-dim"))
     return intent_id
 
 
@@ -798,8 +700,11 @@ func _refresh_overlay_now() -> void:
 
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
-    _status.text = UI.error_text(code)
-    _status.tooltip_text = UI.error_tooltip(code)
+    _top_bar.set_status(
+        UI.error_text(code),
+        UITheme.color("color-danger"),
+        UI.error_tooltip(code),
+    )
     match UI.error_route(code):
         "lobby":
             GameStore.reset_room()
