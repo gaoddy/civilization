@@ -8,7 +8,7 @@ mod common;
 use std::sync::Arc;
 use std::time::Duration;
 
-use common::{ClientWs, connect_with_retry, start_server_with_db, test_db};
+use common::{ClientWs, connect_with_retry, database_url, start_server_with_db, test_db};
 use futures_util::{SinkExt, StreamExt};
 use protocol::{ErrorCode, FriendUpdate, RoomUpdate, ServerEnvelope, ServerMessage};
 use room_service::social::{FriendStatus, SocialError, SocialStore};
@@ -422,4 +422,20 @@ async fn fixed_clock_keeps_invite_window() {
         .expect("固定时钟未推进，邀请仍在有效期内");
     assert_eq!(outcome_room(&outcome), "ABC234");
     store.cleanup().await;
+}
+
+#[tokio::test]
+async fn ping_succeeds_and_migrations_are_repeatable() {
+    let Some(url) = database_url() else {
+        skip("ping_succeeds_and_migrations_are_repeatable");
+        return;
+    };
+    let first = room_service::Db::connect(&url)
+        .await
+        .expect("首次连接与迁移应成功");
+    first.ping().await.expect("SELECT 1 应成功");
+    drop(first);
+    room_service::Db::connect(&url)
+        .await
+        .expect("重复连接与迁移应幂等");
 }

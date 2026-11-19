@@ -151,6 +151,8 @@ impl Db {
     async fn pool(database_url: &str, schema: Option<&str>) -> Result<PgPool, String> {
         let mut options = PgConnectOptions::from_str(database_url)
             .map_err(|err| format!("DATABASE_URL 非法: {err}"))?;
+        // PgBouncer 事务池不保证跨事务复用命名预处理语句；关闭语句缓存。
+        options = options.statement_cache_capacity(0);
         if let Some(schema) = schema {
             options = options.options([("search_path", schema.to_string())]);
         }
@@ -168,7 +170,10 @@ impl Db {
     ///
     /// 迁移失败时返回错误文本。
     pub async fn migrate(&self) -> Result<(), String> {
-        sqlx::migrate!("../../migrations")
+        let mut migrator = sqlx::migrate!("../../migrations");
+        // 事务池下会话级 advisory lock 会泄漏；单实例 + Recreate 保证同一时刻只有一个迁移者。
+        migrator.set_locking(false);
+        migrator
             .run(&self.pool)
             .await
             .map_err(|err| format!("执行数据库迁移失败: {err}"))
