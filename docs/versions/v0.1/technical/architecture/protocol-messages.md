@@ -26,11 +26,24 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 
+### FriendRemove
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `friendId` | string | 是 |  |
+
 ### FriendRequest
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `toPlayerId` | string | 是 |  |
+| `toPlayerCode` | string | 是 | 6 位玩家编号 |
+
+### FriendRespond
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `fromPlayerId` | string | 是 | 申请人的 playerId |
+| `accept` | boolean | 是 |  |
 
 ### Intent
 
@@ -38,6 +51,12 @@
 | --- | --- | --- | --- |
 | `clientIntentId` | string | 是 | 客户端生成，用于幂等 |
 | `intent` | Intent | 是 |  |
+
+### InviteToRoom
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `friendId` | string | 是 |  |
 
 ### JoinRoom
 
@@ -68,6 +87,13 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 
+### RespondInvite
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `inviteId` | string | 是 |  |
+| `accept` | boolean | 是 |  |
+
 ### SelectHeroCard
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -80,7 +106,8 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `playerId` | string | 是 |  |
+| `playerId` | string | 是 | 内部不透明标识，不向玩家展示 |
+| `playerCode` | string | 是 | 6 位玩家编号，用于好友搜索与展示 |
 | `token` | string | 是 |  |
 | `expiresAt` | string | 是 |  |
 
@@ -122,14 +149,45 @@
 | `clientIntentId` | string | 否 | 被拒绝意图的 clientIntentId |
 | `retryable` | boolean | 是 | 是否可原样重试 |
 
+### FriendInvite
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `inviteId` | string | 是 |  |
+| `fromPlayerId` | string | 是 |  |
+| `fromPlayerCode` | string | 是 |  |
+| `fromDisplayName` | string | 是 |  |
+| `roomCode` | string | 是 |  |
+| `expiresAt` | string | 是 |  |
+
+### FriendInviteResult
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `inviteId` | string | 是 |  |
+| `accepted` | boolean | 是 |  |
+| `reason` | string | null | 否 | 拒绝或失败原因的错误码 |
+
 ### FriendUpdate
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `friends` | array<object> | 是 |  |
 | `friends[].playerId` | string | 是 |  |
+| `friends[].playerCode` | string | 是 | 6 位玩家编号 |
 | `friends[].displayName` | string | 是 |  |
-| `friends[].online` | boolean | 是 |  |
+| `friends[].status` | enum | 是 |  |
+| `incoming` | array<FriendRequestItem> | 是 |  |
+| `outgoing` | array<object> | 是 |  |
+| `outgoing[].playerId` | string | 是 |  |
+| `outgoing[].playerCode` | string | 是 |  |
+| `outgoing[].displayName` | string | 是 |  |
+| `outgoing[].sentAt` | string | 是 |  |
+| `recent` | array<object> | 是 |  |
+| `recent[].playerId` | string | 是 |  |
+| `recent[].playerCode` | string | 是 |  |
+| `recent[].displayName` | string | 是 |  |
+| `recent[].relation` | enum | 是 |  |
 
 ### GameOver
 
@@ -145,6 +203,13 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `view` | PlayerView | 是 |  |
+
+### InviteAccepted
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `inviteId` | string | 是 |  |
+| `roomCode` | string | 是 |  |
 
 ### PhaseChanged
 

@@ -46,6 +46,33 @@ fn auth_accepts_dev_code_and_generates_display_name() {
 
     assert_ne!(first.player_id, second.player_id, "playerId 必须逐个生成");
     assert_ne!(first.token, second.token, "token 必须逐个生成");
+    assert_ne!(
+        first.player_code, second.player_code,
+        "玩家编号必须逐个生成"
+    );
+}
+
+#[test]
+fn player_code_is_six_digits_and_stable_across_token_auth() {
+    let clock = FixedClock::new(NOW_MS);
+    let mut store = SessionStore::new();
+
+    let session = store
+        .authenticate(&phone_auth("13800000001", DEV_SMS_CODE), &clock)
+        .expect("首次认证成功");
+    assert_eq!(session.player_code.len(), 6);
+    assert!(
+        session.player_code.chars().all(|ch| ch.is_ascii_digit()),
+        "玩家编号必须是 6 位数字：{}",
+        session.player_code
+    );
+    assert_eq!(session.player_code, "100000", "首个编号从 100000 起");
+
+    let again = store
+        .authenticate(&token_auth(&session.token), &clock)
+        .expect("有效令牌应认证成功");
+    assert_eq!(again.player_code, session.player_code, "续登必须复用编号");
+    assert_eq!(session.auth_result().player_code, session.player_code);
 }
 
 #[test]

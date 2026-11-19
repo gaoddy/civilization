@@ -520,6 +520,9 @@ enum.era.primitive,原始
 enum.evolve.divine_shield,护盾
 enum.evolve.reborn,复生
 enum.evolve.stats,+2/+2
+enum.friend_status.inGame,对局中
+enum.friend_status.offline,离线
+enum.friend_status.online,在线
 enum.keyword.armor,减伤
 enum.keyword.assemble,装配
 enum.keyword.battlecry,战吼
@@ -971,12 +974,24 @@ error.AUTH_FAILED.invalid_code,短信验证码错误
 error.AUTH_RATE_LIMITED,登录过于频繁，请稍后再试
 error.BAD_PAYLOAD,请求格式不正确
 error.CARD_NOT_IN_HAND,手牌中没有这张牌
+error.FRIEND_ALREADY,你们已经是好友
+error.FRIEND_BUSY,对方正在对局中
+error.FRIEND_LIST_FULL,好友列表已满
+error.FRIEND_NOT_FOUND,玩家不存在或申请已失效
+error.FRIEND_OFFLINE,对方不在线
+error.FRIEND_REQUEST_FULL,对方好友申请过多，请稍后再试
+error.FRIEND_REQUEST_LIMIT,对方近期拒绝申请过多，请稍后再试
+error.FRIEND_REQUEST_PENDING,已有待处理的好友申请
+error.FRIEND_SELF,不能添加自己为好友
 error.HERO_NOT_SELECTED,还没有选择英雄
 error.HERO_POWER_LIMIT,英雄技能次数已用完
 error.INTERNAL_ERROR,服务端内部错误
 error.INVALID_CHOICE,选择无效
 error.INVALID_STAGE,当前阶段不能执行该操作
+error.INVITE_EXPIRED,邀请已过期
+error.INVITE_NOT_FOUND,邀请不存在或已处理
 error.NOT_ENOUGH_GOLD,金币不足
+error.NOT_FRIENDS,你们还不是好友
 error.NOT_HOST,只有房主可以操作
 error.NOT_IN_ROOM,已不在房间中
 error.NO_SPACE,棋盘或手牌已满
@@ -1501,15 +1516,37 @@ ui.game.target.title,选择目标
 ui.game.target.zone.board,我方棋盘
 ui.game.target.zone.hand,手牌
 ui.game.target.zone.shop,商店
+ui.lobby.accept,同意
+ui.lobby.accept_invite,接受
+ui.lobby.accepting_invite,正在接受邀请…
+ui.lobby.add_friend,添加好友
+ui.lobby.add_friend_placeholder,6 位玩家编号
 ui.lobby.create_room,创建房间
 ui.lobby.creating,正在创建房间…
+ui.lobby.decline,拒绝
+ui.lobby.decline_invite,拒绝
 ui.lobby.enter_room_code,请输入房间码
+ui.lobby.friend_row,%s（%s）· %s
+ui.lobby.friends_section,好友
+ui.lobby.incoming_section,好友申请
+ui.lobby.invalid_player_code,请输入 6 位玩家编号
+ui.lobby.invite_text,%s（%s）邀请你加入房间 %s
+ui.lobby.invite_title,好友邀请
 ui.lobby.join,加入
 ui.lobby.join_section,加入已有房间
 ui.lobby.joining,正在加入 %s …
-ui.lobby.logged_in,已登录：%s  %s
+ui.lobby.logged_in,已登录：%s  编号 %s
+ui.lobby.no_friends,还没有好友
+ui.lobby.no_recent,还没有最近对局
+ui.lobby.no_requests,没有待处理的好友申请
 ui.lobby.not_connected,未连接服务器
+ui.lobby.outgoing_hint,已发送 %d 条好友申请
+ui.lobby.recent_row,%s（%s）
+ui.lobby.recent_section,最近队友
 ui.lobby.reconnected,连接已恢复
+ui.lobby.remove_friend,删除
+ui.lobby.request_incoming,%s（%s）请求加你为好友
+ui.lobby.request_sent,已向编号 %s 发送好友申请
 ui.lobby.room_code_placeholder,6 位房间码
 ui.lobby.title,大厅
 ui.login.authenticating,正在认证…
@@ -1534,6 +1571,11 @@ ui.room.candidate_hint,从你的 %d 张候选里选一张，确认后不可更�
 ui.room.confirm,确认
 ui.room.confirmed,已确认
 ui.room.confirmed_hero,已确认英雄：%s
+ui.room.invite_accepted,好友已接受邀请
+ui.room.invite_declined,好友没有接受邀请
+ui.room.invite_section,邀请好友
+ui.room.invite_sent,已邀请 %s
+ui.room.no_friends_to_invite,暂无好友可邀请
 ui.room.not_connected,未连接服务器
 ui.room.select_hero,请选择英雄
 ui.room.submitted_hero,已提交英雄：%s

@@ -391,6 +391,7 @@ impl<'de> ::serde::Deserialize<'de> for AuthRequestVariant1DisplayName {
 ///  "type": "object",
 ///  "required": [
 ///    "expiresAt",
+///    "playerCode",
 ///    "playerId",
 ///    "token"
 ///  ],
@@ -399,7 +400,12 @@ impl<'de> ::serde::Deserialize<'de> for AuthRequestVariant1DisplayName {
 ///      "type": "string",
 ///      "format": "date-time"
 ///    },
+///    "playerCode": {
+///      "description": "6 位玩家编号，用于好友搜索与展示",
+///      "type": "string"
+///    },
 ///    "playerId": {
+///      "description": "内部不透明标识，不向玩家展示",
 ///      "type": "string"
 ///    },
 ///    "token": {
@@ -415,6 +421,10 @@ impl<'de> ::serde::Deserialize<'de> for AuthRequestVariant1DisplayName {
 pub struct AuthResult {
     #[serde(rename = "expiresAt")]
     pub expires_at: ::chrono::DateTime<::chrono::offset::Utc>,
+    ///6 位玩家编号，用于好友搜索与展示
+    #[serde(rename = "playerCode")]
+    pub player_code: ::std::string::String,
+    ///内部不透明标识，不向玩家展示
     #[serde(rename = "playerId")]
     pub player_id: ::std::string::String,
     pub token: ::std::string::String,
@@ -1748,6 +1758,18 @@ impl ::std::convert::From<ErrorMessage> for Error {
 ///    "ROOM_FULL",
 ///    "ROOM_NOT_READY",
 ///    "SEQUENCE_STALE",
+///    "FRIEND_NOT_FOUND",
+///    "FRIEND_SELF",
+///    "FRIEND_ALREADY",
+///    "FRIEND_REQUEST_PENDING",
+///    "FRIEND_LIST_FULL",
+///    "FRIEND_REQUEST_FULL",
+///    "FRIEND_REQUEST_LIMIT",
+///    "NOT_FRIENDS",
+///    "FRIEND_OFFLINE",
+///    "FRIEND_BUSY",
+///    "INVITE_NOT_FOUND",
+///    "INVITE_EXPIRED",
 ///    "INTERNAL_ERROR"
 ///  ]
 ///}
@@ -1816,6 +1838,30 @@ pub enum ErrorCode {
     RoomNotReady,
     #[serde(rename = "SEQUENCE_STALE")]
     SequenceStale,
+    #[serde(rename = "FRIEND_NOT_FOUND")]
+    FriendNotFound,
+    #[serde(rename = "FRIEND_SELF")]
+    FriendSelf,
+    #[serde(rename = "FRIEND_ALREADY")]
+    FriendAlready,
+    #[serde(rename = "FRIEND_REQUEST_PENDING")]
+    FriendRequestPending,
+    #[serde(rename = "FRIEND_LIST_FULL")]
+    FriendListFull,
+    #[serde(rename = "FRIEND_REQUEST_FULL")]
+    FriendRequestFull,
+    #[serde(rename = "FRIEND_REQUEST_LIMIT")]
+    FriendRequestLimit,
+    #[serde(rename = "NOT_FRIENDS")]
+    NotFriends,
+    #[serde(rename = "FRIEND_OFFLINE")]
+    FriendOffline,
+    #[serde(rename = "FRIEND_BUSY")]
+    FriendBusy,
+    #[serde(rename = "INVITE_NOT_FOUND")]
+    InviteNotFound,
+    #[serde(rename = "INVITE_EXPIRED")]
+    InviteExpired,
     #[serde(rename = "INTERNAL_ERROR")]
     InternalError,
 }
@@ -1852,6 +1898,18 @@ impl ::std::fmt::Display for ErrorCode {
             Self::RoomFull => f.write_str("ROOM_FULL"),
             Self::RoomNotReady => f.write_str("ROOM_NOT_READY"),
             Self::SequenceStale => f.write_str("SEQUENCE_STALE"),
+            Self::FriendNotFound => f.write_str("FRIEND_NOT_FOUND"),
+            Self::FriendSelf => f.write_str("FRIEND_SELF"),
+            Self::FriendAlready => f.write_str("FRIEND_ALREADY"),
+            Self::FriendRequestPending => f.write_str("FRIEND_REQUEST_PENDING"),
+            Self::FriendListFull => f.write_str("FRIEND_LIST_FULL"),
+            Self::FriendRequestFull => f.write_str("FRIEND_REQUEST_FULL"),
+            Self::FriendRequestLimit => f.write_str("FRIEND_REQUEST_LIMIT"),
+            Self::NotFriends => f.write_str("NOT_FRIENDS"),
+            Self::FriendOffline => f.write_str("FRIEND_OFFLINE"),
+            Self::FriendBusy => f.write_str("FRIEND_BUSY"),
+            Self::InviteNotFound => f.write_str("INVITE_NOT_FOUND"),
+            Self::InviteExpired => f.write_str("INVITE_EXPIRED"),
             Self::InternalError => f.write_str("INTERNAL_ERROR"),
         }
     }
@@ -1887,6 +1945,18 @@ impl ::std::str::FromStr for ErrorCode {
             "ROOM_FULL" => Ok(Self::RoomFull),
             "ROOM_NOT_READY" => Ok(Self::RoomNotReady),
             "SEQUENCE_STALE" => Ok(Self::SequenceStale),
+            "FRIEND_NOT_FOUND" => Ok(Self::FriendNotFound),
+            "FRIEND_SELF" => Ok(Self::FriendSelf),
+            "FRIEND_ALREADY" => Ok(Self::FriendAlready),
+            "FRIEND_REQUEST_PENDING" => Ok(Self::FriendRequestPending),
+            "FRIEND_LIST_FULL" => Ok(Self::FriendListFull),
+            "FRIEND_REQUEST_FULL" => Ok(Self::FriendRequestFull),
+            "FRIEND_REQUEST_LIMIT" => Ok(Self::FriendRequestLimit),
+            "NOT_FRIENDS" => Ok(Self::NotFriends),
+            "FRIEND_OFFLINE" => Ok(Self::FriendOffline),
+            "FRIEND_BUSY" => Ok(Self::FriendBusy),
+            "INVITE_NOT_FOUND" => Ok(Self::InviteNotFound),
+            "INVITE_EXPIRED" => Ok(Self::InviteExpired),
             "INTERNAL_ERROR" => Ok(Self::InternalError),
             _ => Err("invalid value".into()),
         }
@@ -1994,6 +2064,142 @@ impl ::std::convert::From<&ErrorMessage> for ErrorMessage {
         value.clone()
     }
 }
+///`FriendInvite`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "expiresAt",
+///    "fromDisplayName",
+///    "fromPlayerCode",
+///    "fromPlayerId",
+///    "inviteId",
+///    "roomCode"
+///  ],
+///  "properties": {
+///    "expiresAt": {
+///      "type": "string",
+///      "format": "date-time"
+///    },
+///    "fromDisplayName": {
+///      "type": "string"
+///    },
+///    "fromPlayerCode": {
+///      "type": "string"
+///    },
+///    "fromPlayerId": {
+///      "type": "string"
+///    },
+///    "inviteId": {
+///      "type": "string"
+///    },
+///    "roomCode": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct FriendInvite {
+    #[serde(rename = "expiresAt")]
+    pub expires_at: ::chrono::DateTime<::chrono::offset::Utc>,
+    #[serde(rename = "fromDisplayName")]
+    pub from_display_name: ::std::string::String,
+    #[serde(rename = "fromPlayerCode")]
+    pub from_player_code: ::std::string::String,
+    #[serde(rename = "fromPlayerId")]
+    pub from_player_id: ::std::string::String,
+    #[serde(rename = "inviteId")]
+    pub invite_id: ::std::string::String,
+    #[serde(rename = "roomCode")]
+    pub room_code: ::std::string::String,
+}
+impl ::std::convert::From<&FriendInvite> for FriendInvite {
+    fn from(value: &FriendInvite) -> Self {
+        value.clone()
+    }
+}
+///`FriendInviteResult`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "accepted",
+///    "inviteId"
+///  ],
+///  "properties": {
+///    "accepted": {
+///      "type": "boolean"
+///    },
+///    "inviteId": {
+///      "type": "string"
+///    },
+///    "reason": {
+///      "description": "拒绝或失败原因的错误码",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct FriendInviteResult {
+    pub accepted: bool,
+    #[serde(rename = "inviteId")]
+    pub invite_id: ::std::string::String,
+    ///拒绝或失败原因的错误码
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub reason: ::std::option::Option<::std::string::String>,
+}
+impl ::std::convert::From<&FriendInviteResult> for FriendInviteResult {
+    fn from(value: &FriendInviteResult) -> Self {
+        value.clone()
+    }
+}
+///`FriendRemove`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "friendId"
+///  ],
+///  "properties": {
+///    "friendId": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct FriendRemove {
+    #[serde(rename = "friendId")]
+    pub friend_id: ::std::string::String,
+}
+impl ::std::convert::From<&FriendRemove> for FriendRemove {
+    fn from(value: &FriendRemove) -> Self {
+        value.clone()
+    }
+}
 ///`FriendRequest`
 ///
 /// <details><summary>JSON schema</summary>
@@ -2002,10 +2208,11 @@ impl ::std::convert::From<&ErrorMessage> for ErrorMessage {
 ///{
 ///  "type": "object",
 ///  "required": [
-///    "toPlayerId"
+///    "toPlayerCode"
 ///  ],
 ///  "properties": {
-///    "toPlayerId": {
+///    "toPlayerCode": {
+///      "description": "6 位玩家编号",
 ///      "type": "string"
 ///    }
 ///  },
@@ -2016,11 +2223,98 @@ impl ::std::convert::From<&ErrorMessage> for ErrorMessage {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct FriendRequest {
-    #[serde(rename = "toPlayerId")]
-    pub to_player_id: ::std::string::String,
+    ///6 位玩家编号
+    #[serde(rename = "toPlayerCode")]
+    pub to_player_code: ::std::string::String,
 }
 impl ::std::convert::From<&FriendRequest> for FriendRequest {
     fn from(value: &FriendRequest) -> Self {
+        value.clone()
+    }
+}
+///`FriendRequestItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "displayName",
+///    "playerCode",
+///    "playerId",
+///    "sentAt"
+///  ],
+///  "properties": {
+///    "displayName": {
+///      "type": "string"
+///    },
+///    "playerCode": {
+///      "type": "string"
+///    },
+///    "playerId": {
+///      "type": "string"
+///    },
+///    "sentAt": {
+///      "type": "string",
+///      "format": "date-time"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct FriendRequestItem {
+    #[serde(rename = "displayName")]
+    pub display_name: ::std::string::String,
+    #[serde(rename = "playerCode")]
+    pub player_code: ::std::string::String,
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+    #[serde(rename = "sentAt")]
+    pub sent_at: ::chrono::DateTime<::chrono::offset::Utc>,
+}
+impl ::std::convert::From<&FriendRequestItem> for FriendRequestItem {
+    fn from(value: &FriendRequestItem) -> Self {
+        value.clone()
+    }
+}
+///`FriendRespond`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "accept",
+///    "fromPlayerId"
+///  ],
+///  "properties": {
+///    "accept": {
+///      "type": "boolean"
+///    },
+///    "fromPlayerId": {
+///      "description": "申请人的 playerId",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct FriendRespond {
+    pub accept: bool,
+    ///申请人的 playerId
+    #[serde(rename = "fromPlayerId")]
+    pub from_player_id: ::std::string::String,
+}
+impl ::std::convert::From<&FriendRespond> for FriendRespond {
+    fn from(value: &FriendRespond) -> Self {
         value.clone()
     }
 }
@@ -2032,7 +2326,10 @@ impl ::std::convert::From<&FriendRequest> for FriendRequest {
 ///{
 ///  "type": "object",
 ///  "required": [
-///    "friends"
+///    "friends",
+///    "incoming",
+///    "outgoing",
+///    "recent"
 ///  ],
 ///  "properties": {
 ///    "friends": {
@@ -2041,18 +2338,95 @@ impl ::std::convert::From<&FriendRequest> for FriendRequest {
 ///        "type": "object",
 ///        "required": [
 ///          "displayName",
-///          "online",
-///          "playerId"
+///          "playerCode",
+///          "playerId",
+///          "status"
 ///        ],
 ///        "properties": {
 ///          "displayName": {
 ///            "type": "string"
 ///          },
-///          "online": {
-///            "type": "boolean"
+///          "playerCode": {
+///            "description": "6 位玩家编号",
+///            "type": "string"
 ///          },
 ///          "playerId": {
 ///            "type": "string"
+///          },
+///          "status": {
+///            "type": "string",
+///            "enum": [
+///              "online",
+///              "inGame",
+///              "offline"
+///            ]
+///          }
+///        },
+///        "additionalProperties": false
+///      }
+///    },
+///    "incoming": {
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/FriendRequestItem"
+///      }
+///    },
+///    "outgoing": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "displayName",
+///          "playerCode",
+///          "playerId",
+///          "sentAt"
+///        ],
+///        "properties": {
+///          "displayName": {
+///            "type": "string"
+///          },
+///          "playerCode": {
+///            "type": "string"
+///          },
+///          "playerId": {
+///            "type": "string"
+///          },
+///          "sentAt": {
+///            "type": "string",
+///            "format": "date-time"
+///          }
+///        },
+///        "additionalProperties": false
+///      }
+///    },
+///    "recent": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "displayName",
+///          "playerCode",
+///          "playerId",
+///          "relation"
+///        ],
+///        "properties": {
+///          "displayName": {
+///            "type": "string"
+///          },
+///          "playerCode": {
+///            "type": "string"
+///          },
+///          "playerId": {
+///            "type": "string"
+///          },
+///          "relation": {
+///            "type": "string",
+///            "enum": [
+///              "none",
+///              "friend",
+///              "incoming",
+///              "outgoing"
+///            ]
 ///          }
 ///        },
 ///        "additionalProperties": false
@@ -2067,6 +2441,9 @@ impl ::std::convert::From<&FriendRequest> for FriendRequest {
 #[serde(deny_unknown_fields)]
 pub struct FriendUpdate {
     pub friends: ::std::vec::Vec<FriendUpdateFriendsItem>,
+    pub incoming: ::std::vec::Vec<FriendRequestItem>,
+    pub outgoing: ::std::vec::Vec<FriendUpdateOutgoingItem>,
+    pub recent: ::std::vec::Vec<FriendUpdateRecentItem>,
 }
 impl ::std::convert::From<&FriendUpdate> for FriendUpdate {
     fn from(value: &FriendUpdate) -> Self {
@@ -2082,18 +2459,28 @@ impl ::std::convert::From<&FriendUpdate> for FriendUpdate {
 ///  "type": "object",
 ///  "required": [
 ///    "displayName",
-///    "online",
-///    "playerId"
+///    "playerCode",
+///    "playerId",
+///    "status"
 ///  ],
 ///  "properties": {
 ///    "displayName": {
 ///      "type": "string"
 ///    },
-///    "online": {
-///      "type": "boolean"
+///    "playerCode": {
+///      "description": "6 位玩家编号",
+///      "type": "string"
 ///    },
 ///    "playerId": {
 ///      "type": "string"
+///    },
+///    "status": {
+///      "type": "string",
+///      "enum": [
+///        "online",
+///        "inGame",
+///        "offline"
+///      ]
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -2105,13 +2492,295 @@ impl ::std::convert::From<&FriendUpdate> for FriendUpdate {
 pub struct FriendUpdateFriendsItem {
     #[serde(rename = "displayName")]
     pub display_name: ::std::string::String,
-    pub online: bool,
+    ///6 位玩家编号
+    #[serde(rename = "playerCode")]
+    pub player_code: ::std::string::String,
     #[serde(rename = "playerId")]
     pub player_id: ::std::string::String,
+    pub status: FriendUpdateFriendsItemStatus,
 }
 impl ::std::convert::From<&FriendUpdateFriendsItem> for FriendUpdateFriendsItem {
     fn from(value: &FriendUpdateFriendsItem) -> Self {
         value.clone()
+    }
+}
+///`FriendUpdateFriendsItemStatus`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "enum": [
+///    "online",
+///    "inGame",
+///    "offline"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum FriendUpdateFriendsItemStatus {
+    #[serde(rename = "online")]
+    Online,
+    #[serde(rename = "inGame")]
+    InGame,
+    #[serde(rename = "offline")]
+    Offline,
+}
+impl ::std::convert::From<&Self> for FriendUpdateFriendsItemStatus {
+    fn from(value: &FriendUpdateFriendsItemStatus) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for FriendUpdateFriendsItemStatus {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Online => f.write_str("online"),
+            Self::InGame => f.write_str("inGame"),
+            Self::Offline => f.write_str("offline"),
+        }
+    }
+}
+impl ::std::str::FromStr for FriendUpdateFriendsItemStatus {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "online" => Ok(Self::Online),
+            "inGame" => Ok(Self::InGame),
+            "offline" => Ok(Self::Offline),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for FriendUpdateFriendsItemStatus {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for FriendUpdateFriendsItemStatus {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for FriendUpdateFriendsItemStatus {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`FriendUpdateOutgoingItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "displayName",
+///    "playerCode",
+///    "playerId",
+///    "sentAt"
+///  ],
+///  "properties": {
+///    "displayName": {
+///      "type": "string"
+///    },
+///    "playerCode": {
+///      "type": "string"
+///    },
+///    "playerId": {
+///      "type": "string"
+///    },
+///    "sentAt": {
+///      "type": "string",
+///      "format": "date-time"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct FriendUpdateOutgoingItem {
+    #[serde(rename = "displayName")]
+    pub display_name: ::std::string::String,
+    #[serde(rename = "playerCode")]
+    pub player_code: ::std::string::String,
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+    #[serde(rename = "sentAt")]
+    pub sent_at: ::chrono::DateTime<::chrono::offset::Utc>,
+}
+impl ::std::convert::From<&FriendUpdateOutgoingItem> for FriendUpdateOutgoingItem {
+    fn from(value: &FriendUpdateOutgoingItem) -> Self {
+        value.clone()
+    }
+}
+///`FriendUpdateRecentItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "displayName",
+///    "playerCode",
+///    "playerId",
+///    "relation"
+///  ],
+///  "properties": {
+///    "displayName": {
+///      "type": "string"
+///    },
+///    "playerCode": {
+///      "type": "string"
+///    },
+///    "playerId": {
+///      "type": "string"
+///    },
+///    "relation": {
+///      "type": "string",
+///      "enum": [
+///        "none",
+///        "friend",
+///        "incoming",
+///        "outgoing"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct FriendUpdateRecentItem {
+    #[serde(rename = "displayName")]
+    pub display_name: ::std::string::String,
+    #[serde(rename = "playerCode")]
+    pub player_code: ::std::string::String,
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+    pub relation: FriendUpdateRecentItemRelation,
+}
+impl ::std::convert::From<&FriendUpdateRecentItem> for FriendUpdateRecentItem {
+    fn from(value: &FriendUpdateRecentItem) -> Self {
+        value.clone()
+    }
+}
+///`FriendUpdateRecentItemRelation`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "enum": [
+///    "none",
+///    "friend",
+///    "incoming",
+///    "outgoing"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum FriendUpdateRecentItemRelation {
+    #[serde(rename = "none")]
+    None,
+    #[serde(rename = "friend")]
+    Friend,
+    #[serde(rename = "incoming")]
+    Incoming,
+    #[serde(rename = "outgoing")]
+    Outgoing,
+}
+impl ::std::convert::From<&Self> for FriendUpdateRecentItemRelation {
+    fn from(value: &FriendUpdateRecentItemRelation) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for FriendUpdateRecentItemRelation {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::None => f.write_str("none"),
+            Self::Friend => f.write_str("friend"),
+            Self::Incoming => f.write_str("incoming"),
+            Self::Outgoing => f.write_str("outgoing"),
+        }
+    }
+}
+impl ::std::str::FromStr for FriendUpdateRecentItemRelation {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "none" => Ok(Self::None),
+            "friend" => Ok(Self::Friend),
+            "incoming" => Ok(Self::Incoming),
+            "outgoing" => Ok(Self::Outgoing),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for FriendUpdateRecentItemRelation {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for FriendUpdateRecentItemRelation {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for FriendUpdateRecentItemRelation {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
     }
 }
 ///`GameEvent`
@@ -3028,6 +3697,72 @@ impl<'de> ::serde::Deserialize<'de> for IntentMessageClientIntentId {
             .map_err(|e: self::error::ConversionError| {
                 <D::Error as ::serde::de::Error>::custom(e.to_string())
             })
+    }
+}
+///`InviteAccepted`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "inviteId",
+///    "roomCode"
+///  ],
+///  "properties": {
+///    "inviteId": {
+///      "type": "string"
+///    },
+///    "roomCode": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct InviteAccepted {
+    #[serde(rename = "inviteId")]
+    pub invite_id: ::std::string::String,
+    #[serde(rename = "roomCode")]
+    pub room_code: ::std::string::String,
+}
+impl ::std::convert::From<&InviteAccepted> for InviteAccepted {
+    fn from(value: &InviteAccepted) -> Self {
+        value.clone()
+    }
+}
+///`InviteToRoom`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "friendId"
+///  ],
+///  "properties": {
+///    "friendId": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct InviteToRoom {
+    #[serde(rename = "friendId")]
+    pub friend_id: ::std::string::String,
+}
+impl ::std::convert::From<&InviteToRoom> for InviteToRoom {
+    fn from(value: &InviteToRoom) -> Self {
+        value.clone()
     }
 }
 ///`JoinRoom`
@@ -4099,6 +4834,41 @@ impl ::std::convert::From<&RequestSnapshot> for RequestSnapshot {
 impl ::std::default::Default for RequestSnapshot {
     fn default() -> Self {
         Self {}
+    }
+}
+///`RespondInvite`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "accept",
+///    "inviteId"
+///  ],
+///  "properties": {
+///    "accept": {
+///      "type": "boolean"
+///    },
+///    "inviteId": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RespondInvite {
+    pub accept: bool,
+    #[serde(rename = "inviteId")]
+    pub invite_id: ::std::string::String,
+}
+impl ::std::convert::From<&RespondInvite> for RespondInvite {
+    fn from(value: &RespondInvite) -> Self {
+        value.clone()
     }
 }
 ///`RoomUpdate`

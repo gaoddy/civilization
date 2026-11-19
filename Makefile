@@ -1,11 +1,26 @@
 PYTHON ?= python3
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
+DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 
-.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke m1b-build m1b-e2e dev-bots
+.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
 	cd server && cargo test --workspace
+
+db-up:
+	docker compose up -d --wait db
+
+db-down:
+	docker compose down
+
+db-reset:
+	docker compose down -v
+	$(MAKE) db-up
+
+# 持久化测试需要真实 PostgreSQL：账号、好友、最近对局与邀请跨重启恢复。
+db-test: db-up
+	cd server && TEST_DATABASE_URL=$(DATABASE_URL) cargo test -p room-service --test persistence
 
 lint:
 	cd server && cargo fmt --check && cargo clippy --workspace --all-targets -- -D warnings

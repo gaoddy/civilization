@@ -1,10 +1,10 @@
 # 房间服务与联网
 
-> 状态：已实现（v0.1 M1a）
-> 代码：`server/crates/room-service`、`server/crates/protocol`、`server/crates/protocol-gen`、`protocol/schema/v1`、`protocol/generated`
-> 验收：`make m1-check`
+> 状态：已实现（v0.1 M1a + 好友与邀请 + PostgreSQL 持久化）
+> 代码：`server/crates/room-service`、`server/crates/protocol`、`server/crates/protocol-gen`、`server/migrations`、`protocol/schema/v1`、`protocol/generated`
+> 验收：`make m1-check`、`make db-test`
 
-本文记录 v0.1 M1a 已实现的房间服务现状：crate 边界、WebSocket 接入、下行序号、去重、逐座位过滤、计时与断线处理、`sim bot` 用法与验收方式；不描述 M1b 的 Godot 客户端，也不描述产品规则（规则见[规则引擎与模拟器](rule-engine-and-simulator.md)）。
+本文记录 v0.1 M1a 已实现的房间服务现状：crate 边界、WebSocket 接入、下行序号、去重、逐座位过滤、计时与断线处理、好友与邀请、PostgreSQL 持久化、`sim bot` 用法与验收方式；不描述 M1b 的 Godot 客户端，也不描述产品规则（规则见[规则引擎与模拟器](../rule-engine-and-simulator.md)）。
 
 ## 1. 工程结构
 
@@ -24,10 +24,13 @@ server/
       src/filter.rs             # 逐座位事件过滤与 CombatResult 映射
       src/view.rs               # 引擎 SeatView → 协议 PlayerView 的纯函数映射
       src/envelope.rs           # 单连接下行信封序号 SeatChannel
-      src/auth.rs               # 手机号+开发验证码 / 令牌续登
+      src/auth.rs               # 手机号+开发验证码 / 令牌续登 / 6 位玩家编号
+      src/account.rs            # 手机号 → 持久化账号身份，内存缓存 + 写穿
+      src/social.rs             # 好友、申请、最近对局与房间邀请，内存缓存 + 写穿
+      src/db.rs                 # PostgreSQL 连接池、基线迁移与唯一 SQL 落点
       src/clock.rs              # Clock 注入（SystemClock / FixedClock）
       src/error.rs              # 稳定错误码 → ErrorMessage
-      tests/                    # auth / room / game / filter / reconnect / e2e
+      tests/                    # auth / room / game / filter / reconnect / social / social_e2e / persistence / e2e
     sim/
       src/bot/brain.rs          # 只读 PlayerView 的确定性机器人决策
       src/bot/client.rs         # `sim bot --connect` 的真实 WebSocket 客户端
@@ -35,6 +38,8 @@ server/
       src/ai.rs                 # M0 确定性 AI（为保基线未改动）
       src/lib.rs                # run_games / play_game / replay；重导出 seed_from_u64
       src/main.rs               # play / batch / replay / report / check / bot
+  migrations/
+    0001_baseline.sql           # 账号、好友、申请、最近对局、邀请的基线迁移
 protocol/
   schema/v1/                    # 唯一契约来源（JSON Schema draft 2020-12）
   generated/protocol.rs         # typify 生成物，随源提交
@@ -44,6 +49,7 @@ protocol/
 ## 2. 依赖方向与边界
 
 - `room-service → protocol`、`room-service → rule-engine`；`room-service` 的 dev-dependencies 含 `sim`，供 e2e 用真实机器人驱动服务端。
+- `room-service` 直连 PostgreSQL（`sqlx` 0.8），SQL 只出现在 `src/db.rs`：`account.rs` 与 `social.rs` 调用 `Db` 的方法，自己只保留内存缓存与规则。`sqlx::migrate!("../../migrations")` 在启动时执行 `server/migrations/` 下的基线迁移。
 - `sim → protocol`、`sim → rule-engine`；`sim` 不依赖 `room-service`，因此 `bot/mod.rs` 重复声明开发验证码 `DEV_SMS_CODE = "123456"`。
 - `rule-engine` 不依赖 `protocol`、tokio、sqlx 或任何 I/O 库；它不读时钟、不做文件 I/O，并提供自有的逐座位视图 `SeatView`（`src/view.rs`）。
 - 网络、计时与过滤全部在 `room-service`；规则判定全部在 `rule-engine`，由编译期依赖图保证引擎无副作用。
@@ -59,13 +65,13 @@ protocol/
 ## 4. 下行序号
 
 - 每个玩家连接持有独立的 `SeatChannel`，`seq` 从 1 起递增；失败的构造同样消耗序号，不回退。
-- 同一玩家有三条下行来源：连接层 `direct`、大厅 `slot.channel`、对局 `GameTask` 通道。三者共享一个会话级 `SeqFloor`（`Arc<AtomicU64>` 下限）：编码前先把通道推进到当前下限，发送后再把新 `seq` 记回下限，因此**同一连接的任何下行（含 `Error`）都严格递增**，且跨「大厅 → 对局」连续。
+- 同一玩家有多条下行来源：连接层 `direct`、大厅 `slot.channel`、对局 `GameTask` 通道，以及房间外的社交控制通道。三者共享一个会话级 `SeqFloor`（`Arc<AtomicU64>` 下限）：编码前先把通道推进到当前下限，发送后再把新 `seq` 记回下限，因此**同一连接的任何下行（含 `Error`）都严格递增**，且跨「大厅 → 对局」连续。
 - `GameTask::envelope_for` 每调用一次为该座位递增一次；每条 `SeatUpdate` 只调用一次 `envelope_for`，`CombatResult` 等逐座位消息各自独立编号。
 - `Snapshot.seq` 由编码前先取该座位下一个序号再写入载荷，与信封自身 `seq` 必然一致。
 
 ## 5. 大厅流程与房间生命周期
 
-- 认证：手机号 + 开发验证码 `123456` 或令牌续登；`playerId`/`token` 为服务端生成的不可预测串，不暴露手机号。会话有效期 24 小时（`SESSION_TTL_MS`），过期在下次访问或 `purge_expired` 时清除，M1 不跑后台清理任务。
+- 认证：手机号 + 开发验证码 `123456` 或令牌续登；手机号经 `AccountStore` 解析为持久化账号（`playerId`、6 位玩家编号、展示名），同一手机号重新登录恢复同一账号；`playerId`/`token` 为服务端生成的不可预测串，不暴露手机号。认证结果同时下发 6 位数字 `playerCode`，好友申请按编号定位玩家。会话有效期 24 小时（`SESSION_TTL_MS`），过期在下次访问或 `purge_expired` 时清除，M1 不跑后台清理任务；会话仍是进程内状态，不落盘。
 - 建房：创建者坐 0 号座位并成为房主；房间码为 6 位大写字母数字，字母表排除易混字符 `0O1I`，首个房间码 `222222`。对局种子由房间码经 FNV-1a 64 位派生（`seed_for_code`）。
 - 房间玩法：建房时用房间码种子调用 `rule_engine::playstyles::draw(seed_for_code(code))`，抽取 5 个玩法存入 `RoomState.playstyles`；大厅期间保持不变，重开房间与断线重连不重抽。玩法必须早于英雄候选确定，因此抽取时点在房间创建，而不是 `Engine::new`。
 - 入房：坐最小空位；同一玩家重复加入同一房间幂等。非 `Lobby` 阶段成员集合冻结，加入/准备/选英雄/离开都返回 `INVALID_STAGE`。
@@ -77,11 +83,37 @@ protocol/
 - 候选池校验：`AppState::new` 要求英雄卡至少 1 张且分类字段合法（`taxon` 是分类树叶子、`play:` 取值是合法玩法），不再要求 32 张；池不足时由跨玩家重复兜底，房间仍能开局。
 - 大厅断线：`Detach` 不再立即释放座位，而是标记离线并记录 `disconnected_at_ms`；房间 task 的 tick 调用 `tick_disconnects`，超过 `RECONNECT_GRACE_MS` 才按原规则释放座位。`Leave` 命令仍立即释放。座位已被释放后再 `Reconnect` 回 `NOT_IN_ROOM`，并摘除该座位的下行登记。
 - 离开：座位立即空出且不重排；房主离开时转给座位号最小的剩余玩家；**大厅最后一人离开即销毁房间**（注册表同时删 `by_code` 与 `rooms`）。
-- 开局：8 个座位全部占用、全部准备且全部选好英雄后，由房主 `try_start` 把阶段推进到 `Recruit`，并在同一房间 task 内构造 `GameTask`。
+- 开局：8 个座位全部占用、全部准备且全部选好英雄后自动 `try_start`（最后一次 `Ready` 触发，不需要房主额外操作），把阶段推进到 `Recruit`，并在同一房间 task 内构造 `GameTask`。
 - `GameTask::new` 接收房间已抽好的 5 个玩法，开局原样传给 `Engine::new(catalog, seed, playstyles)`；`GameOver.seed` 不变，重开或重连复用同一组玩法。
 - 房间 task 在 `hub` 条目被摘除后退出：`RoomTask::retire_if_done` 在「对局已结束且无连接」或「注册表已无该房间」时摘除 `hub` 条目并结束循环。
 
-## 6. 对局计时与阶段推进
+## 6. 好友、在线状态与房间邀请
+
+- 存储：账号、好友关系、待处理申请与发送记录、最近对局、房间邀请落 PostgreSQL（表见 `server/migrations/0001_baseline.sql`，逐表说明见 [表文档](models/README.md)）。`AccountStore` 与 `SocialStore` 在内存中持有全量缓存，读走内存；写操作先落库、成功后再改内存，失败回 `INTERNAL_ERROR` 且内存不变。启动时 `Db` 全量载入并清理过期申请、发送记录与邀请；未配置 `DATABASE_URL` 时进程退化为纯内存模式（仅供本地开发，启动时打印提示）。
+- 注册：认证成功时用手机号解析账号（`account` 表 `account_id` 即 `playerId`），按 `player_code` 注册档案；`playerCode` 为 6 位数字（`100000` 起，`player_code_seq` 分配、`player_code` 唯一约束兜底），同一手机号复用同一编号，不对其它账号复用；`displayName` 首次创建为 `玩家N`（`account.ordinal` 自增序号，重启不回退），重复登录不覆盖已设置的名字。玩家对外只暴露编号，不暴露 `playerId`。
+- 申请：`FriendRequest{toPlayerCode}` 按编号查找目标；自己、已是好友、任一方有待处理申请（四向检查）分别回 `FRIEND_SELF`、`FRIEND_ALREADY`、`FRIEND_REQUEST_PENDING`；申请 7 天过期，被拒绝后 24 小时内同一人最多再申请 3 次（`FRIEND_REQUEST_LIMIT`）。
+- 上限：好友 100（双向），收到的待处理申请 20；超出回 `FRIEND_LIST_FULL` / `FRIEND_REQUEST_FULL`。
+- 同意/拒绝：`FriendRespond{fromPlayerId, accept}` 只处理发给自己的申请；双方都会收到最新 `FriendUpdate`。
+- 删除：`FriendRemove{friendId}` 双向解除；非好友回 `NOT_FRIENDS`。
+- 最近对局：对局开始时按参战座位记录，每名玩家保留最近 20 名同局玩家，同一人只保留最近一次，最新的在前。
+- 在线状态：`online`（已认证且连接在）、`inGame`（座位处于 `Recruit`/`Combat`）、`offline`。好友列表按 online → inGame → offline、展示名首字符、`playerId` 排序。
+- 连接登记：认证成功后把连接登记进 `ConnectionRegistry`（`playerId` → 控制通道 + 代次），断开时按代次移除；`is_online` 与房间注册表共同决定好友状态。
+- 推送路由：房间内玩家的社交消息投递到房间 task（`RoomMessage::Push`），由房间单写者写回该座位，序号与对局消息共用同一条通道；房间外走连接的控制通道（`ControlMessage`）。锁顺序固定为 connections → rooms → social，避免死锁。
+- 邀请：`InviteToRoom{friendId}` 只在本人处于 `Lobby` 阶段房间、房间未满、对方在线且不在任何房间时成功，否则回 `NOT_IN_ROOM` / `INVALID_STAGE` / `ROOM_FULL` / `FRIEND_OFFLINE` / `FRIEND_BUSY`；邀请 60 秒过期。
+- 接受：被邀请方收 `FriendInvite{inviteId, fromPlayerId, fromDisplayName, fromPlayerCode, roomCode, expiresAt}`；`RespondInvite{inviteId, accept}` 后服务端重新校验房间仍在大厅且未满，通过则给被邀请方 `InviteAccepted{inviteId, roomCode}`、给邀请方 `FriendInviteResult{inviteId, accepted, reason}`。客户端收到 `InviteAccepted` 后自行发普通 `JoinRoom{code}` 入房，房间 task 不跨任务挂载连接。
+- 拒绝/失效：拒绝时双方都收到 `accepted=false` 的回执；邀请过期或已被处理回 `INVITE_EXPIRED` / `INVITE_NOT_FOUND`。
+- 邀请不改变房间成员关系；被邀请者仍按普通 `JoinRoom` 坐最小空位。
+
+### 6.1 持久化
+
+- 连接：入口读取 `DATABASE_URL`，`Db::connect` 建池（10 条连接，5 秒获取超时）并执行 `sqlx::migrate!("../../migrations")`；随后 `AccountStore::load`、`SocialStore::load` 全量载入，再绑定端口。数据库连不上时进程直接失败，不静默降级。
+- 表：`account`、`friendship`、`friend_request`、`friend_request_attempt`、`recent_opponent`、`room_invite` 六张表，基线迁移 `server/migrations/0001_baseline.sql`；逐表说明见 [表文档](models/README.md)。时间列统一 `TIMESTAMPTZ(3)`，值由注入的 `Clock` 传入，不用数据库 `now()`。
+- 写穿：申请（申请行 + 发送记录）、处理申请（删申请 + 建双向好友 + 清双方发送记录）、删除好友（双向关系 + 两个方向申请与记录）、记录对局（逐对写入并裁剪到 20 人）、创建邀请（先清过期再写）各自在一个事务内完成；事务提交后才改内存。失败时映射为 `SocialError::Storage` / `INTERNAL_ERROR`，内存保持原状。
+- 载入：`load_social` 先删除过期的申请、发送记录与邀请，再按上限读回；`AccountStore` 重建手机号索引与编号索引，`SocialStore` 重建好友、申请、发送记录、最近对局与邀请。
+- 邀请 id 为 `inv_<uuid>`，跨重启与多实例不依赖进程内自增序号；房间本身仍在进程内，重启后邀请指向的房间已不存在，接受时按 `ROOM_NOT_FOUND` 失败。
+- 测试：`room-service/tests/persistence.rs` 为每个用例建独立 schema（`CREATE SCHEMA` + `search_path`），在真实 PostgreSQL 上验证重启恢复；`make db-up` / `make db-test` / `make db-reset` 封装起库、跑持久化测试与重建库。未设置 `TEST_DATABASE_URL` / `DATABASE_URL` 时用例打印跳过原因并返回。
+
+## 7. 对局计时与阶段推进
 
 | 常量 | 值 | 含义 |
 | --- | --- | --- |
@@ -106,7 +138,7 @@ protocol/
 - 推进幂等：进入演示后阶段离开 `Recruit`，演示期间再次 `tick` 返回空；全部参战座位回报或兜底到点后阶段离开 `Combat`。
 - 引擎 `resolve_combat` 会把阶段推到 `Settle`：`enter_combat` 随后把阶段拨回 `Combat` 并丢弃 `Settle` 阶段的 `PhaseChanged`，`finish_combat` 结算前再拨回 `Settle`，客户端在整场演示期间只看到 `Combat`。
 
-## 7. 意图去重
+## 8. 意图去重
 
 - 去重键为 `(playerId, clientIntentId)`；表只增不删，随房间销毁。
 - `Applied` 重发只回该座位当前视图的空事件 `StateUpdate`，不重复执行、不重复广播。
@@ -120,7 +152,7 @@ protocol/
 - 目标预检与候选生成共用同一套 `check_targets`：视图的 `targetCandidates` 由引擎 `target_candidates` 逐个候选重跑预检得到，不另写筛选逻辑，避免视图与结算漂移。视图侧「需要目标但没有候选」时把操作标为 `NO_VALID_TARGET` 不可用，而不是把候选塞进 `check_*`。
 - 预检覆盖打出效果牌（`OnPlayEffect` 与全体 `OnUse` 响应）、打出手牌随从的战吼与英雄主动技能；买入只校验金币、手牌空位与牌池余量。
 
-## 8. 逐座位过滤与战斗回放
+## 9. 逐座位过滤与战斗回放
 
 `filter::for_seat` 把引擎事件映射为发给指定座位的协议事件；`filter::combat_result` 把逐座位战斗报告映射为 `CombatResult`。规则如下：
 
@@ -143,7 +175,7 @@ protocol/
 - `summon.minion` 的攻击与生命取该动作的状态快照（含光环与战斗内加成），卡面字段（`cardId`/`golden`/`keywords`）来自动作本身；快照缺失时才退回卡面基础值。
 - `View` 更新广播给全部 8 个座位：任何改变房间可见状态的操作都会推送 `StateUpdate`，因为对手的公开摘要（`boardCount`、`recruited`、阶段与回合）人人可见。事件仍按座位过滤：本人收到自己的私有事件，其他座位的 `events` 为空数组。
 
-## 9. 断线重连
+## 10. 断线重连
 
 - 对局内断线：座位保留 30 秒（`RECONNECT_GRACE_MS`）。窗口内重连回一条全量 `Snapshot`；超过窗口只把座位标记为离线，不释放座位、不结束对局，也不向其他座位下发通知。
 - `Combat` 阶段重连：快照之后追加补发该座位本场 `CombatResult`（报告保留到 `finish_combat` 为止），客户端据此按 `phaseDeadline` 续播。
@@ -152,7 +184,7 @@ protocol/
 - 连接代次：每次 `Attach`/`Reconnect` 带进程内唯一 `generation`；`Detach`/`Leave` 只在代次与当前登记一致时生效，避免新旧连接并存时旧连接迟到关闭误释放座位。
 - M1 不做托管：`PlayerSummary.managed` 恒为 `false`。
 
-## 10. 协议生成物
+## 11. 协议生成物
 
 - `protocol/schema/v1/` 是唯一契约来源；`protocol/generated/protocol.rs` 由 `protocol-gen` 用 typify 生成并随源提交，`protocol/generated/protocol.gd` 由 `scripts/gen_protocol_gdscript.py` 生成并随源提交。
 - `view.schema.json` 的 `enabledFactions` 描述为本局启用的 5 个玩法；字段名与长度不变，取值为 `mammal` 等玩法 id。
@@ -160,7 +192,7 @@ protocol/
 - `make protocol-rs` 重新生成 Rust 类型；`make protocol-rs-check` 比较内存生成结果与磁盘内容，不一致即非零退出。
 - `make protocol` 生成 GDScript 常量与协议字段表；`make protocol-check` 运行样例校验并比对两处生成物漂移。
 
-## 11. `sim bot`
+## 12. `sim bot`
 
 机器人客户端连接真实服务端，按只读视图决策打完一局：
 
@@ -175,9 +207,9 @@ sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
 - 每个意图使用确定性递增的 `clientIntentId`（`{name}-{counter}`）；客户端只对「自身视角有新变化」的视图做一次决策，避免重播视图导致重复意图。
 - 收到 `NO_VALID_TARGET` 时按 `clientIntentId` 找回被拒意图并立即按同一视图重决策：定向出手沿服务端下发的候选（键为 `zone:id`）静默换下一个重发，遍历完仍无合法目标时把这张牌记入本回合阻塞集合并输出一行说明；`ChooseTarget` 把被拒候选记入阻塞集合并换下一个，全部候选都被拒时放弃该待选。整盘没有合法目标、本回合已放弃 3 张且可结束招募时直接 `EndRecruit`。候选本身来自服务端，正常情况下不会拒绝；出现拒绝按视图与结算偏差处理，不按错误上报。
 - `bot/brain.rs` **只读** `PlayerView`（含服务端算好的 `affordances`）与静态卡表，不链接引擎判定、不读时钟与环境变量、不使用浮点；优先级固定为：消费 `pendingChoices`（发现/进化发 `ChooseDiscover`，目标待选取 `candidates` 中第一个未被拒绝的 `TargetRef`）→ 被拒出手达 3 张且可结束时 `EndRecruit` → 打最小下标且未被拒绝的可打手牌 → 买最贵可买槽位 → 升时代 → 刷新 → `EndRecruit`。出牌时若手牌视图 `requiresTarget` 为真，从该牌的 `targetCandidates` 预填第一个未被拒绝的目标；被拒后沿候选列表换下一个，候选遍历完才记入阻塞集合本回合跳过该牌。候选为空时不填（效果落空）。
-- `sim/src/ai.rs` 的 `PendingChoice::Target` 分支与定向效果牌/英雄技能按 `Selector::Target { zone }` 依次尝试本人棋盘、手牌与商店的实例编号；视图驱动的新逻辑在 `bot/brain.rs`。复制手牌类效果的行为变化使 M0 金标准重新冻结（见[规则引擎与模拟器](rule-engine-and-simulator.md) §9）。
+- `sim/src/ai.rs` 的 `PendingChoice::Target` 分支与定向效果牌/英雄技能按 `Selector::Target { zone }` 依次尝试本人棋盘、手牌与商店的实例编号；视图驱动的新逻辑在 `bot/brain.rs`。复制手牌类效果的行为变化使 M0 金标准重新冻结（见[规则引擎与模拟器](../rule-engine-and-simulator.md) §9）。
 
-## 12. 命令与验收证据
+## 13. 命令与验收证据
 
 `make m1-check` 汇总 M1a 验收，目标体为：
 
@@ -193,26 +225,29 @@ m1-check:
 
 **e2e 由 `make test` 覆盖**：`make test` 的 `cargo test --workspace` 已包含 `room-service/tests/e2e.rs`（真实 WebSocket 起 8 个 bot 打完一局），因此 `m1-check` 不单独再跑一次 e2e，避免重复起 8 个 bot。
 
-下表为 `make m1-check` 一次实际运行的结果（整体退出码 0，总耗时约 13 分钟，其中 `dev_bots` 单跑约 242 秒）：
+下表为 `make m1-check` 一次实际运行的结果（整体退出码 0）：
 
 | 步骤 | 命令 | 结果摘要 | 退出码 |
 | --- | --- | --- | --- |
 | 协议 Rust 生成物 | `make protocol-rs-check` → `cargo run -q -p protocol-gen -- --check` | 无差异 | 0 |
 | 协议生成物 | `make protocol-check` → `validate_protocol.py`、`gen_protocol_gdscript.py --check`、`gen_protocol_docs.py --check` | `协议样例校验通过`，GDScript 与字段表无漂移 | 0 |
 | 卡牌数据 | `make data-check` → `gen_card_data.py --check`、`audit_effects.py` | `生成数据无漂移`、`审计通过` | 0 |
-| 测试 | `make test` → `unittest discover`、`cargo test --workspace` | Python `Ran 70 tests ... OK`；workspace 全部 `test result: ok`，其中 `room-service` 集成测试 90 个（auth 10、e2e 9、filter 14、game 24、reconnect 9、room 22、dev_bots 2），e2e 用例 `eight_bots_finish_a_game` 通过 | 0 |
+| 测试 | `make test` → `unittest discover`、`cargo test --workspace` | Python `Ran 130 tests ... OK`；workspace 全部 `test result: ok`，其中 `room-service` 集成测试含 `social`（12 个）、`social_e2e`（12 个）、`persistence`（5 个，无 `DATABASE_URL` 时跳过）、`e2e`（9 个，含 `eight_bots_finish_a_game`） | 0 |
 | 静态检查 | `make lint` → `cargo fmt --check`、`cargo clippy --workspace --all-targets -- -D warnings` | 无警告 | 0 |
-| 确定性 | `make m0-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 22 s） | 0 |
+| 确定性 | `make m0-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 26 s） | 0 |
 
-## 13. 与设计的偏差
+持久化证据由 `make db-test` 单独提供：先 `make db-up` 启动 `postgres:16`，`tests/persistence.rs` 的 5 个用例在真实数据库上全部通过（账号身份恢复、社交数据跨重启恢复、过期数据不载入、重启后重新登录、固定时钟下邀请窗口不变）。
+
+## 14. 与设计的偏差
 
 1. 设计 §5.4 写 `view(state, seat, catalog) -> PlayerView`；因 `rule-engine` 不依赖 `protocol`，改为引擎返回自有 `SeatView`，由 `room-service::view::to_protocol` 做机械映射。规则判定仍全部在引擎。
 2. 设计 §5.5 写「AI 决策改为同时接受 `PlayerView`」；为保住 M0 基线（`ai.rs` 的策略直接决定 1000 局基线数值），改为新增 view 驱动的 `sim/src/bot/brain.rs`，`ai.rs` 仍只读引擎状态、不接受 `PlayerView`（本需求只加了 `PendingChoice::Target` 的确定性分支与 `PlayCard.position: None`）。
-3. 设计 §5.2 要求存 `tokenHash` 与 connection；M1a 在内存中保存明文 token，且不建立 connection 索引。令牌只存在于内存、有效期 24 小时、不落盘；`Session` 的 `Debug` 输出已把 `token` 标为 `<redacted>`，避免日志泄漏。
+3. 设计 §5.2 要求存 `tokenHash` 与 connection；实现中仍保存明文 token，但已建立 `ConnectionRegistry` 连接索引用于好友在线状态与房间外推送。令牌只存在于内存、有效期 24 小时、不落盘；`Session` 的 `Debug` 输出已把 `token` 标为 `<redacted>`，避免日志泄漏。
+4. 设计把 PostgreSQL 列为账号、好友、房间元数据、意图日志与遥测的落点；本轮只落账号身份与社交数据（好友、申请、最近对局、房间邀请），房间、对局状态、意图日志与遥测仍在进程内或尚未实现。未配置 `DATABASE_URL` 时保留纯内存模式供本地开发并打印提示；配置后连不上数据库时进程直接失败，不静默降级。
 
 ## 相关文档
 
-- [规则引擎与模拟器](rule-engine-and-simulator.md)
-- [技术现状索引](README.md)
-- [服务端技术基线](../../versions/v0.1/technical/architecture/server-stack.md)
-- [通信协议](../../versions/v0.1/technical/architecture/protocol.md)
+- [规则引擎与模拟器](../rule-engine-and-simulator.md)
+- [技术现状索引](../README.md)
+- [服务端技术基线](../../../versions/v0.1/technical/architecture/server-stack.md)
+- [通信协议](../../../versions/v0.1/technical/architecture/protocol.md)

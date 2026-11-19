@@ -57,4 +57,4 @@
 - [核心规则](../../product/rules/core-rules.md) §2 阶段状态机、§5.5 战斗演示与回合时长、§8.1 计时、§8.2 重连。
 - [设计总纲](../../product/overview/design-overview.md) §6.4 战斗。
 - 协议 `SkipAnimation` 消息随本需求移除。
-- `docs/current/technical/room-service.md`（阶段推进链）与 `docs/current/product/ui/pages/game.md`（战斗视图）。
+- `docs/current/technical/room-service/README.md`（阶段推进链）与 `docs/current/product/ui/pages/game.md`（战斗视图）。

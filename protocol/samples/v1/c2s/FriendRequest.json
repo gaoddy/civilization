@@ -4,6 +4,6 @@
   "type": "FriendRequest",
   "ts": "2026-11-15T10:00:00Z",
   "payload": {
-    "toPlayerId": "p_04"
+    "toPlayerCode": "204815"
   }
 }

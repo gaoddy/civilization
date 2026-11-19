@@ -261,12 +261,23 @@ pub async fn run(config: BotConfig) -> Result<BotOutcome, String> {
     Err("连接在对局结束前关闭".into())
 }
 
+/// 由机器人名字派生稳定且互不相同的手机号：同一手机号会恢复同一账号，
+/// 多台机器人必须各自拥有独立身份。
+fn phone_for(name: &str) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in name.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    format!("139{:08}", hash % 100_000_000)
+}
+
 async fn authenticate(ws: &mut Ws, config: &BotConfig, seq: &mut u64) -> Result<(), String> {
     send(
         ws,
         "AuthRequest",
         json!({
-            "phone": "13800000000",
+            "phone": phone_for(&config.name),
             "code": crate::bot::DEV_SMS_CODE,
             "displayName": config.name,
         }),

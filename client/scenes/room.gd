@@ -10,6 +10,7 @@ var _others: HBoxContainer
 var _candidates: HBoxContainer
 var _confirm: Button
 var _status: Label
+var _invite_box: HBoxContainer
 var _dismiss: Control
 var _skill_layer: Control
 var _skill_panel: VBoxContainer
@@ -23,6 +24,8 @@ func _ready() -> void:
     GameStore.game_started.connect(_on_game_started)
     GameStore.view_changed.connect(_on_view_changed)
     GameStore.error_received.connect(_on_error)
+    GameStore.social_changed.connect(_render_invites)
+    GameStore.invite_result_received.connect(_on_invite_result)
     # 断线不产生房间或视图消息：直接订阅连接状态，否则「未连接」永远不刷新。
     Net.connected.connect(_sync_state)
     Net.disconnected.connect(_sync_state)
@@ -85,6 +88,20 @@ func _build() -> void:
     _candidates.add_theme_constant_override("separation", UITheme.space("space-md"))
     root.add_child(_candidates)
 
+    # 邀请好友：只列出在线且不在房间里的好友；其余显示为禁用，避免必然失败的请求。
+    var invite_row := HBoxContainer.new()
+    invite_row.name = "InviteRow"
+    invite_row.alignment = BoxContainer.ALIGNMENT_CENTER
+    invite_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    invite_row.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    root.add_child(invite_row)
+    invite_row.add_child(UI.label(tr("ui.room.invite_section"), UITheme.font_size("font-body-sm"), false))
+    _invite_box = HBoxContainer.new()
+    _invite_box.name = "InviteFriends"
+    _invite_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _invite_box.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    invite_row.add_child(_invite_box)
+
     _confirm = UI.styled_button(tr("ui.room.confirm"), "primary", 36)
     _confirm.name = "ConfirmButton"
     # 纵向容器默认拉满整行宽；确认键按自身宽度居中，与其他内容同轴。
@@ -131,6 +148,7 @@ func _refresh() -> void:
         _selected_hero = GameStore.my_hero_id()
     _render_others()
     _render_candidates()
+    _render_invites()
     _show_skill(_selected_hero)
     _sync_state()
 
@@ -271,6 +289,36 @@ func _show_skill(hero_id: String) -> void:
         body.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
         _skill_panel.add_child(body)
     _skill_layer.visible = true
+
+
+## 好友邀请入口：在线且不在房间内的好友可直接邀请，其余置灰。
+func _render_invites() -> void:
+    if _invite_box == null:
+        return
+    UI.clear(_invite_box)
+    if GameStore.friends.is_empty():
+        _invite_box.add_child(UI.empty_hint(tr("ui.room.no_friends_to_invite")))
+        return
+    for friend in GameStore.friends:
+        var player_id := str(friend.get("playerId", ""))
+        var friend_name := str(friend.get("displayName", player_id))
+        var button := UI.button(friend_name)
+        button.name = "Invite_%s" % player_id
+        button.disabled = str(friend.get("status", "")) != "online"
+        button.pressed.connect(_on_invite_pressed.bind(player_id, friend_name))
+        _invite_box.add_child(button)
+
+
+func _on_invite_pressed(player_id: String, friend_name: String) -> void:
+    Net.send(Protocol.MSG_INVITE_TO_ROOM, {"friendId": player_id})
+    _status.text = tr("ui.room.invite_sent") % friend_name
+
+
+func _on_invite_result() -> void:
+    if bool(GameStore.last_invite_result.get("accepted", false)):
+        _status.text = tr("ui.room.invite_accepted")
+    else:
+        _status.text = tr("ui.room.invite_declined")
 
 
 func _is_confirmed() -> bool:

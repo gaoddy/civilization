@@ -6,6 +6,7 @@
   "seq": 101,
   "payload": {
     "playerId": "p_03",
+    "playerCode": "204814",
     "token": "tok_abc",
     "expiresAt": "2026-12-15T10:00:00Z"
   }

@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "id": "m_friendinviteresult",
+  "type": "FriendInviteResult",
+  "ts": "2026-11-15T10:00:30Z",
+  "seq": 113,
+  "payload": {
+    "inviteId": "inv_1",
+    "accepted": false,
+    "reason": "INVITE_EXPIRED"
+  }
+}

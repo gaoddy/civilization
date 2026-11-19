@@ -17,16 +17,19 @@ pub use generated::*;
 /// 上行载荷类型，按信封 `type` 判别。
 pub mod client {
     pub use crate::{
-        AuthRequest, CombatPlayed, CreateRoom, FriendRequest, IntentMessage, JoinRoom, LeaveRoom,
-        Ready, Reconnect, RequestSnapshot, SelectHeroCard,
+        AuthRequest, CombatPlayed, CreateRoom, FriendRemove, FriendRequest, FriendRespond,
+        IntentMessage, InviteToRoom, JoinRoom, LeaveRoom, Ready, Reconnect, RequestSnapshot,
+        RespondInvite, SelectHeroCard,
     };
 }
 
 /// 下行载荷类型，按信封 `type` 判别。
 pub mod server {
     pub use crate::{
-        AuthResult, CombatResult, ErrorMessage, FriendUpdate, GameOver, GameStarted, PhaseChanged,
-        RoomUpdate, Snapshot, StateUpdate, TimerWarning,
+        AuthResult, CombatResult, ErrorMessage, FriendInvite, FriendInviteResult,
+        FriendRequestItem, FriendUpdate, FriendUpdateFriendsItem, FriendUpdateFriendsItemStatus,
+        FriendUpdateOutgoingItem, FriendUpdateRecentItem, FriendUpdateRecentItemRelation, GameOver,
+        GameStarted, InviteAccepted, PhaseChanged, RoomUpdate, Snapshot, StateUpdate, TimerWarning,
     };
 }
 
@@ -73,6 +76,10 @@ pub enum ClientMessage {
     RequestSnapshot(RequestSnapshot),
     Reconnect(Reconnect),
     FriendRequest(FriendRequest),
+    FriendRespond(FriendRespond),
+    FriendRemove(FriendRemove),
+    InviteToRoom(InviteToRoom),
+    RespondInvite(RespondInvite),
 }
 
 /// 下行信封判别结果。只做 `type` → payload 的分派，不含任何业务规则。
@@ -89,10 +96,13 @@ pub enum ServerMessage {
     GameOver(GameOver),
     Error(ErrorMessage),
     FriendUpdate(FriendUpdate),
+    FriendInvite(FriendInvite),
+    FriendInviteResult(FriendInviteResult),
+    InviteAccepted(InviteAccepted),
 }
 
 /// 已知 s2c 消息类型名，与 `messages.json#/directions/s2c` 一致。
-const SERVER_MESSAGE_TYPES: [&str; 11] = [
+const SERVER_MESSAGE_TYPES: [&str; 14] = [
     "AuthResult",
     "RoomUpdate",
     "GameStarted",
@@ -104,6 +114,9 @@ const SERVER_MESSAGE_TYPES: [&str; 11] = [
     "GameOver",
     "Error",
     "FriendUpdate",
+    "FriendInvite",
+    "FriendInviteResult",
+    "InviteAccepted",
 ];
 
 /// 从 payload 值反序列化；失败统一为 `BAD_PAYLOAD`。
@@ -128,6 +141,10 @@ impl ClientEnvelope {
             "RequestSnapshot" => parse_payload(payload()).map(ClientMessage::RequestSnapshot),
             "Reconnect" => parse_payload(payload()).map(ClientMessage::Reconnect),
             "FriendRequest" => parse_payload(payload()).map(ClientMessage::FriendRequest),
+            "FriendRespond" => parse_payload(payload()).map(ClientMessage::FriendRespond),
+            "FriendRemove" => parse_payload(payload()).map(ClientMessage::FriendRemove),
+            "InviteToRoom" => parse_payload(payload()).map(ClientMessage::InviteToRoom),
+            "RespondInvite" => parse_payload(payload()).map(ClientMessage::RespondInvite),
             _ => Err(ProtocolError("UNKNOWN_TYPE")),
         }
     }
@@ -140,7 +157,7 @@ impl ServerEnvelope {
     /// # Errors
     ///
     /// - `seq == 0`（协议要求从 1 起）返回 `BAD_PAYLOAD`。
-    /// - `kind` 不是 11 种已知 s2c 类型之一返回 `UNKNOWN_TYPE`。
+    /// - `kind` 不是 14 种已知 s2c 类型之一返回 `UNKNOWN_TYPE`。
     pub fn new(
         kind: &str,
         seq: u64,
@@ -197,6 +214,9 @@ impl ServerEnvelope {
             "GameOver" => parse_payload(payload()).map(ServerMessage::GameOver),
             "Error" => parse_payload(payload()).map(ServerMessage::Error),
             "FriendUpdate" => parse_payload(payload()).map(ServerMessage::FriendUpdate),
+            "FriendInvite" => parse_payload(payload()).map(ServerMessage::FriendInvite),
+            "FriendInviteResult" => parse_payload(payload()).map(ServerMessage::FriendInviteResult),
+            "InviteAccepted" => parse_payload(payload()).map(ServerMessage::InviteAccepted),
             _ => Err(ProtocolError("UNKNOWN_TYPE")),
         }
     }

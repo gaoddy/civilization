@@ -80,5 +80,5 @@
 
 ## 相关文档
 
-- [选英雄页](../../../current/product/ui/pages/room.md)
-- [房间服务与联网](../../../current/technical/room-service.md)
+- [选英雄页](../../../../current/product/ui/pages/room.md)
+- [房间服务与联网](../../../../current/technical/room-service/README.md)

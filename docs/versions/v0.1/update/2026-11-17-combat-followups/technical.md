@@ -135,5 +135,5 @@ fn has_room(&self, catalog: &Catalog, side: usize) -> bool;
 
 - [产品规则](product.md)
 - [规则引擎与模拟器](../../../../current/technical/rule-engine-and-simulator.md)
-- [房间服务与联网](../../../../current/technical/room-service.md)
+- [房间服务与联网](../../../../current/technical/room-service/README.md)
 - [Godot 客户端](../../../../current/technical/client.md)

@@ -39,7 +39,14 @@ use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::response::Response;
 use axum::routing::get;
 use futures_util::{SinkExt, StreamExt};
+use protocol::server::{
+    FriendInvite as FriendInviteMessage, FriendInviteResult, FriendRequestItem,
+    FriendUpdate as FriendUpdateMessage, FriendUpdateFriendsItem, FriendUpdateFriendsItemStatus,
+    FriendUpdateOutgoingItem, FriendUpdateRecentItem, FriendUpdateRecentItemRelation,
+    InviteAccepted,
+};
 use protocol::{ClientEnvelope, ClientMessage, ServerEnvelope};
+use rule_engine::state::Phase;
 use serde::Serialize;
 use serde_json::Value;
 use tokio::sync::mpsc;
@@ -50,7 +57,8 @@ use crate::auth::Session;
 use crate::envelope::SeatChannel;
 use crate::error::error_message;
 use crate::game::{GameTask, RoomCommand, SeatUpdate, UpdateKind};
-use crate::room::seed_for_code;
+use crate::room::{SEAT_COUNT, seed_for_code};
+use crate::social::{FriendStatus, InviteOutcome, Relation, SocialError, SocialSnapshot};
 
 /// 每个连接下行队列的容量；连接写不动时房间 task 用 `try_send` 丢弃而不是阻塞。
 const OUTBOUND_CAPACITY: usize = 64;
@@ -129,6 +137,72 @@ impl RoomHub {
     }
 }
 
+/// 连接 task 的控制通道消息：社交下行等不经过房间的消息由连接自己发出。
+pub struct ControlMessage {
+    /// 下行消息类型。
+    pub kind: &'static str,
+    /// 已序列化的载荷。
+    pub payload: Value,
+}
+
+/// 在线连接登记项。
+#[derive(Clone)]
+pub struct ConnectionEntry {
+    /// 连接代次；旧连接退出时不得摘除新连接的登记。
+    pub generation: u64,
+    /// 控制通道发送端。
+    pub control: mpsc::Sender<ControlMessage>,
+}
+
+/// 在线连接登记表。
+#[derive(Default)]
+pub struct ConnectionRegistry {
+    entries: BTreeMap<String, ConnectionEntry>,
+}
+
+impl ConnectionRegistry {
+    /// 登记或替换玩家的当前连接。
+    pub fn insert(&mut self, player_id: String, entry: ConnectionEntry) {
+        self.entries.insert(player_id, entry);
+    }
+
+    /// 仅当代次一致时摘除连接；旧连接迟到关闭不会影响新连接。
+    pub fn remove_if(&mut self, player_id: &str, generation: u64) -> bool {
+        if self
+            .entries
+            .get(player_id)
+            .is_some_and(|entry| entry.generation == generation)
+        {
+            self.entries.remove(player_id);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// 玩家当前是否在线。
+    pub fn is_online(&self, player_id: &str) -> bool {
+        self.entries.contains_key(player_id)
+    }
+
+    /// 向玩家当前连接投递控制消息；不在线返回 `false`。
+    pub fn try_send(&self, player_id: &str, message: ControlMessage) -> bool {
+        self.entries
+            .get(player_id)
+            .is_some_and(|entry| entry.control.try_send(message).is_ok())
+    }
+
+    /// 当前在线连接数；供测试断言。
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    /// 是否没有在线连接。
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+}
+
 /// 投递给房间 task 的消息。
 pub enum RoomMessage {
     /// 新建连接登记下行发送端；若对局已开始则绑定座位并回快照。
@@ -152,6 +226,12 @@ pub enum RoomMessage {
     Leave { player_id: String, generation: u64 },
     /// 一条已映射好的房间命令。
     Command(RoomCommand),
+    /// 向房间内某个座位下发非房间消息（社交下行）。
+    Push {
+        player_id: String,
+        kind: &'static str,
+        payload: Value,
+    },
     /// 无需房间处理的合法上行消息（例如跳过动画）。
     Ignore,
 }
@@ -189,15 +269,24 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
         }
     });
 
-    let direct = SeatChannel::new();
+    let mut direct = SeatChannel::new();
     let floor = SeqFloor::default();
-    let mut direct = direct;
     let mut session: Option<Session> = None;
     // (room_id, 房间入口, 本连接代次)
     let mut room: Option<(String, mpsc::UnboundedSender<RoomMessage>, u64)> = None;
+    // 社交下行等不经过房间的消息走控制通道，保证连接 task 是直接通道的唯一写者。
+    let (control_tx, mut control_rx) = mpsc::channel::<ControlMessage>(OUTBOUND_CAPACITY);
+    let conn_id = next_generation();
 
-    while let Some(item) = read.next().await {
-        let text = match item {
+    loop {
+        tokio::select! {
+            biased;
+            Some(control) = control_rx.recv() => {
+                send_value(&out_tx, &mut direct, &floor, control.kind, &control.payload);
+            }
+            item = read.next() => {
+                let Some(item) = item else { break; };
+                let text = match item {
             Ok(Message::Text(text)) => text.as_str().to_string(),
             Ok(Message::Close(_)) | Err(_) => break,
             Ok(_) => continue,
@@ -263,13 +352,62 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                     );
                     continue;
                 }
-                let result = state
-                    .sessions
-                    .lock()
-                    .await
-                    .authenticate(&request, state.clock.as_ref());
+                // 手机号分支先解析持久化账号，再把身份交给会话存储签发令牌。
+                let account = match &request {
+                    protocol::client::AuthRequest::Variant0 {
+                        phone,
+                        display_name,
+                        code,
+                    } => {
+                        if code != crate::auth::DEV_SMS_CODE {
+                            send_payload(
+                                &out_tx,
+                                &mut direct,
+                                &floor,
+                                "Error",
+                                &crate::auth::invalid_code_error(),
+                            );
+                            continue;
+                        }
+                        let login = state
+                            .accounts
+                            .lock()
+                            .await
+                            .login(
+                                phone,
+                                display_name.as_ref().map(|name| name.as_str()),
+                                state.clock.now_ms(),
+                            )
+                            .await;
+                        match login {
+                            Ok(account) => Some(account),
+                            Err(error) => {
+                                send_payload(&out_tx, &mut direct, &floor, "Error", &error);
+                                continue;
+                            }
+                        }
+                    }
+                    protocol::client::AuthRequest::Variant1 { .. } => None,
+                };
+                let result = state.sessions.lock().await.authenticate_with(
+                    &request,
+                    state.clock.as_ref(),
+                    account,
+                );
                 match result {
                     Ok(authorized) => {
+                        state.social.lock().await.register(
+                            &authorized.player_id,
+                            &authorized.player_code,
+                            &authorized.display_name,
+                        );
+                        state.connections.lock().await.insert(
+                            authorized.player_id.clone(),
+                            ConnectionEntry {
+                                generation: conn_id,
+                                control: control_tx.clone(),
+                            },
+                        );
                         session = Some(authorized.clone());
                         send_payload(
                             &out_tx,
@@ -278,6 +416,8 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                             "AuthResult",
                             &authorized.auth_result(),
                         );
+                        // 本人与好友都需要看到最新的在线状态与社交视图。
+                        notify_presence(&state, &authorized.player_id).await;
                     }
                     Err(error) => send_payload(&out_tx, &mut direct, &floor, "Error", &error),
                 }
@@ -454,14 +594,18 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                     continue;
                 }
                 let generation = next_generation();
+                let player_id = authorized.player_id;
                 let _ = handle.tx.send(RoomMessage::Reconnect {
-                    player_id: authorized.player_id,
+                    player_id: player_id.clone(),
                     last_seq: request.last_seq,
                     out: out_tx.clone(),
                     floor: floor.clone(),
                     generation,
                 });
                 room = Some((request.room_id, handle.tx, generation));
+                // 认证时的社交视图可能落在旧连接上；重连登记完成后补发一份，
+                // 走房间通道保证与快照共用同一条序号序列。
+                notify_presence(&state, &player_id).await;
             }
             ClientMessage::LeaveRoom(_) => {
                 let Some(authorized) = session.clone() else {
@@ -490,6 +634,314 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                     player_id: authorized.player_id,
                     generation,
                 });
+            }
+            ClientMessage::FriendRequest(request) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                let now = state.clock.now_ms();
+                let outcome = {
+                    let mut social = state.social.lock().await;
+                    social
+                        .apply(&authorized.player_id, &request.to_player_code, now)
+                        .await
+                        .map(|()| {
+                            social
+                                .profile_by_code(&request.to_player_code)
+                                .map(|(player_id, _)| player_id.to_string())
+                        })
+                };
+                match outcome {
+                    Ok(target) => {
+                        let mut targets = vec![authorized.player_id];
+                        if let Some(target) = target {
+                            targets.push(target);
+                        }
+                        notify_social(&state, &targets).await;
+                    }
+                    Err(error) => route_social_error(
+                        &room,
+                        session.as_ref(),
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        &error,
+                    ),
+                }
+            }
+            ClientMessage::FriendRespond(request) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                let now = state.clock.now_ms();
+                let result = state.social.lock().await.respond(
+                    &authorized.player_id,
+                    &request.from_player_id,
+                    request.accept,
+                    now,
+                )
+                .await;
+                match result {
+                    Ok(()) => {
+                        notify_social(
+                            &state,
+                            &[authorized.player_id, request.from_player_id],
+                        )
+                        .await;
+                    }
+                    Err(error) => route_social_error(
+                        &room,
+                        session.as_ref(),
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        &error,
+                    ),
+                }
+            }
+            ClientMessage::FriendRemove(request) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                let result = state
+                    .social
+                    .lock()
+                    .await
+                    .remove(&authorized.player_id, &request.friend_id)
+                    .await;
+                match result {
+                    Ok(()) => {
+                        notify_social(
+                            &state,
+                            &[authorized.player_id, request.friend_id],
+                        )
+                        .await;
+                    }
+                    Err(error) => route_social_error(
+                        &room,
+                        session.as_ref(),
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        &error,
+                    ),
+                }
+            }
+            ClientMessage::InviteToRoom(request) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                let now = state.clock.now_ms();
+                let room_info = {
+                    let rooms = state.rooms.lock().await;
+                    rooms.room_of_player(&authorized.player_id).map(|(room, _)| {
+                        (
+                            room.id.clone(),
+                            room.code.clone(),
+                            room.phase,
+                            room.slots().len(),
+                        )
+                    })
+                };
+                let Some((room_id, room_code, phase, occupied)) = room_info else {
+                    send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "NOT_IN_ROOM",
+                        "请先加入房间",
+                        false,
+                    );
+                    continue;
+                };
+                if phase != Phase::Lobby {
+                    send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "INVALID_STAGE",
+                        "只有大厅阶段可以邀请好友",
+                        false,
+                    );
+                    continue;
+                }
+                if occupied >= SEAT_COUNT {
+                    send_error(&out_tx, &mut direct, &floor, "ROOM_FULL", "房间已满", false);
+                    continue;
+                }
+                let (online, busy) = {
+                    let connections = state.connections.lock().await;
+                    let rooms = state.rooms.lock().await;
+                    (
+                        connections.is_online(&request.friend_id),
+                        rooms.room_of_player(&request.friend_id).is_some(),
+                    )
+                };
+                if !online {
+                    send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "FRIEND_OFFLINE",
+                        "对方不在线",
+                        false,
+                    );
+                    continue;
+                }
+                if busy {
+                    send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "FRIEND_BUSY",
+                        "对方已在房间中",
+                        false,
+                    );
+                    continue;
+                }
+                let invite = state
+                    .social
+                    .lock()
+                    .await
+                    .create_invite(
+                        &authorized.player_id,
+                        &request.friend_id,
+                        &room_id,
+                        &room_code,
+                        now,
+                    )
+                    .await;
+                match invite {
+                    Ok(invite) => {
+                        let message = FriendInviteMessage {
+                            expires_at: utc(invite.expires_at_ms),
+                            from_display_name: invite.from_display_name,
+                            from_player_code: invite.from_player_code,
+                            from_player_id: invite.from_player_id,
+                            invite_id: invite.id,
+                            room_code: invite.room_code,
+                        };
+                        send_protocol(&state, &request.friend_id, "FriendInvite", &message).await;
+                    }
+                    Err(error) => route_social_error(
+                        &room,
+                        session.as_ref(),
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        &error,
+                    ),
+                }
+            }
+            ClientMessage::RespondInvite(request) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                let now = state.clock.now_ms();
+                let outcome = state.social.lock().await.respond_invite(
+                    &authorized.player_id,
+                    &request.invite_id,
+                    request.accept,
+                    now,
+                )
+                .await;
+                match outcome {
+                    Ok(InviteOutcome::Declined(invite)) => {
+                        let result = FriendInviteResult {
+                            invite_id: invite.id,
+                            accepted: false,
+                            reason: None,
+                        };
+                        // 双方都收一份回执：邀请方知道结果，被邀请方据此收起弹窗。
+                        send_protocol(
+                            &state,
+                            &authorized.player_id,
+                            "FriendInviteResult",
+                            &result,
+                        )
+                        .await;
+                        send_protocol(
+                            &state,
+                            &invite.from_player_id,
+                            "FriendInviteResult",
+                            &result,
+                        )
+                        .await;
+                    }
+                    Ok(InviteOutcome::Accepted(invite)) => {
+                        let joinable = {
+                            let rooms = state.rooms.lock().await;
+                            match rooms.room(&invite.room_id) {
+                                Some(room)
+                                    if room.phase == Phase::Lobby
+                                        && room.slots().len() < SEAT_COUNT =>
+                                {
+                                    Ok(())
+                                }
+                                Some(room) if room.phase != Phase::Lobby => {
+                                    Err(("INVALID_STAGE", "房间已开始对局"))
+                                }
+                                Some(_) => Err(("ROOM_FULL", "房间已满")),
+                                None => Err(("ROOM_NOT_FOUND", "房间不存在")),
+                            }
+                        };
+                        match joinable {
+                            Ok(()) => {
+                                let accepted = InviteAccepted {
+                                    invite_id: invite.id.clone(),
+                                    room_code: invite.room_code.clone(),
+                                };
+                                send_protocol(
+                                    &state,
+                                    &authorized.player_id,
+                                    "InviteAccepted",
+                                    &accepted,
+                                )
+                                .await;
+                                let result = FriendInviteResult {
+                                    invite_id: invite.id,
+                                    accepted: true,
+                                    reason: None,
+                                };
+                                send_protocol(
+                                    &state,
+                                    &invite.from_player_id,
+                                    "FriendInviteResult",
+                                    &result,
+                                )
+                                .await;
+                            }
+                            Err((code, text)) => {
+                                send_error(&out_tx, &mut direct, &floor, code, text, false);
+                                let result = FriendInviteResult {
+                                    invite_id: invite.id,
+                                    accepted: false,
+                                    reason: Some(code.to_string()),
+                                };
+                                send_protocol(
+                                    &state,
+                                    &invite.from_player_id,
+                                    "FriendInviteResult",
+                                    &result,
+                                )
+                                .await;
+                            }
+                        }
+                    }
+                    Err(error) => route_social_error(
+                        &room,
+                        session.as_ref(),
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        &error,
+                    ),
+                }
             }
             other => {
                 let Some(authorized) = session.clone() else {
@@ -535,6 +987,19 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                 }
             }
         }
+            }
+        }
+    }
+
+    // 注销在线登记：仅当代次一致时摘除，避免旧连接误删新连接。
+    if let Some(authorized) = session.as_ref()
+        && state
+            .connections
+            .lock()
+            .await
+            .remove_if(&authorized.player_id, conn_id)
+    {
+        notify_presence(&state, &authorized.player_id).await;
     }
 
     if let Some((_, tx, generation)) = room {
@@ -590,7 +1055,11 @@ fn map_room_message(
         | ClientMessage::AuthRequest(_)
         | ClientMessage::CreateRoom(_)
         | ClientMessage::JoinRoom(_) => Err(("INTERNAL_ERROR", "大厅入口消息不应进入房间路由")),
-        ClientMessage::FriendRequest(_) => Err(("UNKNOWN_TYPE", "M1 不支持好友请求")),
+        ClientMessage::FriendRequest(_)
+        | ClientMessage::FriendRespond(_)
+        | ClientMessage::FriendRemove(_)
+        | ClientMessage::InviteToRoom(_)
+        | ClientMessage::RespondInvite(_) => Err(("INTERNAL_ERROR", "社交消息不应进入房间路由")),
     }
 }
 
@@ -604,7 +1073,17 @@ fn send_payload<T: Serialize>(
     let Ok(value) = serde_json::to_value(payload) else {
         return;
     };
-    let Value::Object(map) = value else {
+    send_value(out, channel, floor, kind, &value);
+}
+
+fn send_value(
+    out: &mpsc::Sender<ServerEnvelope>,
+    channel: &mut SeatChannel,
+    floor: &SeqFloor,
+    kind: &str,
+    payload: &Value,
+) {
+    let Some(map) = payload.as_object().cloned() else {
         return;
     };
     channel.set_next_seq(floor.current());
@@ -658,6 +1137,177 @@ fn route_error(
     send_error(out, direct, floor, code, message, false);
 }
 
+/// 把社交错误按当前连接状态下发：入房后走房间 task，入房前走直接通道。
+fn route_social_error(
+    room: &Option<(String, mpsc::UnboundedSender<RoomMessage>, u64)>,
+    session: Option<&Session>,
+    out: &mpsc::Sender<ServerEnvelope>,
+    direct: &mut SeatChannel,
+    floor: &SeqFloor,
+    error: &SocialError,
+) {
+    let code = error.code().to_string();
+    route_error(room, session, out, direct, floor, &code, &error.to_string());
+}
+
+/// 按连接与房间状态计算好友可见状态；调用方需已持有对应的锁。
+fn presence_status(
+    connections: &ConnectionRegistry,
+    rooms: &crate::room::RoomRegistry,
+    player_id: &str,
+) -> FriendStatus {
+    if let Some((room, _)) = rooms.room_of_player(player_id)
+        && matches!(room.phase, Phase::Recruit | Phase::Combat)
+    {
+        return FriendStatus::InGame;
+    }
+    if connections.is_online(player_id) {
+        FriendStatus::Online
+    } else {
+        FriendStatus::Offline
+    }
+}
+
+fn utc(ms: u64) -> chrono::DateTime<chrono::Utc> {
+    i64::try_from(ms)
+        .ok()
+        .and_then(chrono::DateTime::<chrono::Utc>::from_timestamp_millis)
+        .unwrap_or(chrono::DateTime::UNIX_EPOCH)
+}
+
+/// 把社交快照映射为协议 `FriendUpdate`。
+fn to_protocol_update(snapshot: SocialSnapshot) -> FriendUpdateMessage {
+    FriendUpdateMessage {
+        friends: snapshot
+            .friends
+            .into_iter()
+            .map(|entry| FriendUpdateFriendsItem {
+                display_name: entry.display_name,
+                player_code: entry.player_code,
+                player_id: entry.player_id,
+                status: match entry.status {
+                    FriendStatus::Online => FriendUpdateFriendsItemStatus::Online,
+                    FriendStatus::InGame => FriendUpdateFriendsItemStatus::InGame,
+                    FriendStatus::Offline => FriendUpdateFriendsItemStatus::Offline,
+                },
+            })
+            .collect(),
+        incoming: snapshot
+            .incoming
+            .into_iter()
+            .map(|entry| FriendRequestItem {
+                display_name: entry.display_name,
+                player_code: entry.player_code,
+                player_id: entry.player_id,
+                sent_at: utc(entry.sent_at_ms),
+            })
+            .collect(),
+        outgoing: snapshot
+            .outgoing
+            .into_iter()
+            .map(|entry| FriendUpdateOutgoingItem {
+                display_name: entry.display_name,
+                player_code: entry.player_code,
+                player_id: entry.player_id,
+                sent_at: utc(entry.sent_at_ms),
+            })
+            .collect(),
+        recent: snapshot
+            .recent
+            .into_iter()
+            .map(|entry| FriendUpdateRecentItem {
+                display_name: entry.display_name,
+                player_code: entry.player_code,
+                player_id: entry.player_id,
+                relation: match entry.relation {
+                    Relation::None => FriendUpdateRecentItemRelation::None,
+                    Relation::Friend => FriendUpdateRecentItemRelation::Friend,
+                    Relation::Incoming => FriendUpdateRecentItemRelation::Incoming,
+                    Relation::Outgoing => FriendUpdateRecentItemRelation::Outgoing,
+                },
+            })
+            .collect(),
+    }
+}
+
+/// 构造指定玩家的 `FriendUpdate` 载荷。
+///
+/// 锁顺序固定为 连接 → 房间 → 社交，避免与通知路径交叉死锁。
+async fn build_friend_update(state: &AppState, player_id: &str) -> Option<Value> {
+    let now = state.clock.now_ms();
+    let connections = state.connections.lock().await;
+    let rooms = state.rooms.lock().await;
+    let mut social = state.social.lock().await;
+    let snapshot = social.snapshot(player_id, now, |id| {
+        presence_status(&connections, &rooms, id)
+    });
+    drop(social);
+    drop(rooms);
+    drop(connections);
+    serde_json::to_value(to_protocol_update(snapshot)).ok()
+}
+
+/// 向玩家下发一份最新社交视图。
+async fn send_friend_update(state: &AppState, player_id: &str) {
+    if let Some(payload) = build_friend_update(state, player_id).await {
+        send_social(state, player_id, "FriendUpdate", payload).await;
+    }
+}
+
+/// 玩家在线状态变化：通知本人与其好友。
+async fn notify_presence(state: &AppState, player_id: &str) {
+    let targets = {
+        let social = state.social.lock().await;
+        let mut targets = social.friends_of(player_id);
+        targets.push(player_id.to_string());
+        targets
+    };
+    for target in targets {
+        send_friend_update(state, &target).await;
+    }
+}
+
+/// 社交关系变化：只通知直接相关的玩家。
+async fn notify_social(state: &AppState, player_ids: &[String]) {
+    for player_id in player_ids {
+        send_friend_update(state, player_id).await;
+    }
+}
+
+/// 下行社交消息：房间内走房间 task，房间外走连接控制通道。
+async fn send_social(state: &AppState, player_id: &str, kind: &'static str, payload: Value) {
+    let room_id = {
+        let rooms = state.rooms.lock().await;
+        rooms
+            .room_of_player(player_id)
+            .map(|(room, _)| room.id.clone())
+    };
+    if let Some(room_id) = room_id
+        && let Some(handle) = state.hub.lock().await.get(&room_id)
+    {
+        let _ = handle.tx.send(RoomMessage::Push {
+            player_id: player_id.to_string(),
+            kind,
+            payload,
+        });
+        return;
+    }
+    let connections = state.connections.lock().await;
+    connections.try_send(player_id, ControlMessage { kind, payload });
+}
+
+/// 下发一条已序列化的协议消息；序列化失败时静默丢弃。
+async fn send_protocol<T: Serialize>(
+    state: &AppState,
+    player_id: &str,
+    kind: &'static str,
+    message: &T,
+) {
+    if let Ok(value) = serde_json::to_value(message) {
+        send_social(state, player_id, kind, value).await;
+    }
+}
+
 /// 房间码派生的确定性对局种子（FNV-1a 64 位）。
 fn spawn_room_task(
     state: AppState,
@@ -672,6 +1322,7 @@ fn spawn_room_task(
         game: None,
         senders: BTreeMap::new(),
         game_over: false,
+        presence_end_notified: false,
     };
     tokio::spawn(async move {
         let mut ticker = time::interval(TICK_INTERVAL);
@@ -701,6 +1352,8 @@ struct RoomTask {
     senders: BTreeMap<String, SeatSender>,
     /// 是否已经向所有座位下发过 `GameOver`。
     game_over: bool,
+    /// 是否已向好友推送过「对局结束」状态，避免重复通知。
+    presence_end_notified: bool,
 }
 
 impl RoomTask {
@@ -753,14 +1406,28 @@ impl RoomTask {
                 generation,
             } => self.leave(player_id, generation).await,
             RoomMessage::Command(command) => self.on_command(command).await,
+            RoomMessage::Push {
+                player_id,
+                kind,
+                payload,
+            } => self.push_to(&player_id, kind, &payload),
             RoomMessage::Ignore => {}
         }
+    }
+
+    /// 向房间内某个座位下发非房间消息；玩家已断开时丢弃。
+    fn push_to(&self, player_id: &str, kind: &str, payload: &Value) {
+        let Some(sender) = self.senders.get(player_id) else {
+            return;
+        };
+        let mut channel = SeatChannel::new();
+        send_value(&sender.out, &mut channel, &sender.floor, kind, payload);
     }
 
     async fn on_tick(&mut self) {
         if let Some(game) = self.game.as_mut() {
             let updates = game.tick();
-            self.deliver(updates);
+            self.deliver(updates).await;
             return;
         }
         // 大厅没有对局：只处理断线宽限超时的座位释放。
@@ -802,7 +1469,7 @@ impl RoomTask {
                 }
                 game.handle(RoomCommand::RequestSnapshot { player_id })
             };
-            self.deliver(updates);
+            self.deliver(updates).await;
         } else {
             let result = {
                 let mut rooms = self.state.rooms.lock().await;
@@ -848,7 +1515,7 @@ impl RoomTask {
                     out,
                 })
             };
-            self.deliver(updates);
+            self.deliver(updates).await;
         } else {
             let result = {
                 let mut rooms = self.state.rooms.lock().await;
@@ -919,7 +1586,7 @@ impl RoomTask {
                 let game = self.game.as_mut().expect("刚判空");
                 game.handle(command)
             };
-            self.deliver(updates);
+            self.deliver(updates).await;
         } else {
             self.on_lobby_command(command).await;
         }
@@ -1071,16 +1738,31 @@ impl RoomTask {
         for (out, envelope) in started {
             let _ = out.try_send(envelope);
         }
+        // 进入对局后好友列表显示「对局中」；记录本局参与者用于「最近对局」。
+        let participants: Vec<String> = self.senders.keys().cloned().collect();
+        {
+            let now = self.state.clock.now_ms();
+            let mut social = self.state.social.lock().await;
+            // 落库失败只影响「最近对局」展示，不阻断开局；错误记日志便于排查。
+            if let Err(error) = social.record_match(&participants, now).await {
+                eprintln!("room-service: 记录最近对局失败: {error}");
+            }
+        }
+        for player in participants {
+            notify_presence(&self.state, &player).await;
+        }
     }
 
     /// 把 `SeatUpdate` 编码后经该座位当前发送端投递；发送失败只丢弃。
-    fn deliver(&mut self, updates: Vec<SeatUpdate>) {
+    async fn deliver(&mut self, updates: Vec<SeatUpdate>) {
         let Some(game) = self.game.as_mut() else {
             return;
         };
+        let mut ended = false;
         for update in updates {
             if matches!(&update.kind, UpdateKind::GameOver(_)) {
                 self.game_over = true;
+                ended = true;
             }
             let Some(sender) = self.senders.get(&update.player_id) else {
                 continue;
@@ -1096,6 +1778,13 @@ impl RoomTask {
             floor.record(envelope.seq.get());
             if let Some(out) = game.sender(seat) {
                 let _ = out.try_send(envelope);
+            }
+        }
+        if ended && !self.presence_end_notified {
+            self.presence_end_notified = true;
+            let players: Vec<String> = self.senders.keys().cloned().collect();
+            for player in players {
+                notify_presence(&self.state, &player).await;
             }
         }
     }
@@ -1290,6 +1979,7 @@ mod tests {
             game: None,
             senders: BTreeMap::new(),
             game_over: false,
+            presence_end_notified: false,
         };
         task.start_game().await;
 
@@ -1332,6 +2022,7 @@ mod tests {
             game: None,
             senders: BTreeMap::new(),
             game_over: false,
+            presence_end_notified: false,
         };
         task.senders.insert(
             player_id.clone(),

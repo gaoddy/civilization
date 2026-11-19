@@ -7,8 +7,12 @@ signal view_changed
 signal game_started
 signal game_over
 signal error_received
+signal social_changed
+signal invite_received
+signal invite_result_received
 
 var player_id := ""
+var player_code := ""
 var token := ""
 var display_name := ""
 
@@ -30,13 +34,44 @@ var last_combat: Dictionary = {}
 var last_combat_turn := -1
 var timer_seconds := -1
 
+## 好友视图：服务端下发的四段列表原样保存，展示排序由服务端负责。
+var friends: Array = []
+var incoming_requests: Array = []
+var outgoing_requests: Array = []
+var recent_players: Array = []
+## 待处理的好友邀请；收到 `InviteAccepted` 或回执后按 `inviteId` 移除。
+var pending_invites: Array = []
+var last_invite_result: Dictionary = {}
+
 
 func handle(type: String, payload: Dictionary) -> void:
     match type:
         Protocol.MSG_AUTH_RESULT:
             player_id = str(payload.get("playerId", ""))
+            player_code = str(payload.get("playerCode", ""))
             token = str(payload.get("token", ""))
             auth_changed.emit()
+        Protocol.MSG_FRIEND_UPDATE:
+            friends = payload.get("friends", [])
+            incoming_requests = payload.get("incoming", [])
+            outgoing_requests = payload.get("outgoing", [])
+            recent_players = payload.get("recent", [])
+            social_changed.emit()
+        Protocol.MSG_FRIEND_INVITE:
+            _upsert_invite(payload)
+            social_changed.emit()
+            invite_received.emit()
+        Protocol.MSG_FRIEND_INVITE_RESULT:
+            last_invite_result = payload
+            _drop_invite(str(payload.get("inviteId", "")))
+            social_changed.emit()
+            invite_result_received.emit()
+        Protocol.MSG_INVITE_ACCEPTED:
+            # 接受邀请只拿到房间码；入房仍走普通 `JoinRoom`，避免跨房间任务挂载。
+            _drop_invite(str(payload.get("inviteId", "")))
+            social_changed.emit()
+            reset_room()
+            Net.send(Protocol.MSG_JOIN_ROOM, {"code": str(payload.get("roomCode", ""))})
         Protocol.MSG_ROOM_UPDATE:
             room_id = str(payload.get("roomId", ""))
             room_code = str(payload.get("code", ""))
@@ -137,11 +172,49 @@ func combat_is_current() -> bool:
     return not last_combat.is_empty() and last_combat_turn == turn
 
 
+func reset_social() -> void:
+    friends = []
+    incoming_requests = []
+    outgoing_requests = []
+    recent_players = []
+    pending_invites = []
+    last_invite_result = {}
+
+
 func reset_session() -> void:
     reset_room()
+    reset_social()
     player_id = ""
+    player_code = ""
     token = ""
     display_name = ""
+
+
+## 尚未过期的待处理邀请；服务端仍是最终校验方，这里只用于避免展示已过期的条目。
+func live_invites() -> Array:
+    var now := Time.get_unix_time_from_system()
+    var result: Array = []
+    for invite in pending_invites:
+        var expires := UI.unix_from_rfc3339(str(invite.get("expiresAt", "")))
+        if expires <= 0.0 or expires > now:
+            result.append(invite)
+    return result
+
+
+func _upsert_invite(payload: Dictionary) -> void:
+    var invite_id := str(payload.get("inviteId", ""))
+    if invite_id == "":
+        return
+    _drop_invite(invite_id)
+    pending_invites.push_front(payload)
+
+
+func _drop_invite(invite_id: String) -> void:
+    if invite_id == "":
+        return
+    for index in range(pending_invites.size() - 1, -1, -1):
+        if str(pending_invites[index].get("inviteId", "")) == invite_id:
+            pending_invites.remove_at(index)
 
 
 func player_name(pid: String) -> String:
