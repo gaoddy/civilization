@@ -113,7 +113,10 @@ func _open() -> void:
     # 替换连接后重新开始：避免旧连接的 _was_open 让新连接漏发 connected 与续连。
     _was_open = false
     socket = WebSocketPeer.new()
-    var err: int = socket.connect_to_url(url)
+    # dev 走 platform 自签证书域名时打开该设置；生产构建保持 false。
+    var insecure_tls: bool = ProjectSettings.get_setting("network/allow_insecure_tls", false)
+    var tls: TLSOptions = TLSOptions.client_unsafe() if insecure_tls else null
+    var err: int = socket.connect_to_url(url, tls)
     if err != OK:
         push_error("连接 %s 失败：%s" % [url, error_string(err)])
         socket = null
