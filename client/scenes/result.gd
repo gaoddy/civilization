@@ -82,17 +82,11 @@ func _build() -> void:
     actions.add_theme_constant_override("separation", 10)
     layout.add_child(actions)
 
-    var back_to_room := UI.button(tr("ui.result.back_to_room"))
-    back_to_room.name = "BackToRoomButton"
-    back_to_room.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    back_to_room.pressed.connect(_on_back_to_room_pressed)
-    actions.add_child(back_to_room)
-
-    var back_to_lobby := UI.button(tr("ui.result.back_to_lobby"))
-    back_to_lobby.name = "BackToLobbyButton"
-    back_to_lobby.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    back_to_lobby.pressed.connect(_on_back_to_lobby_pressed)
-    actions.add_child(back_to_lobby)
+    var confirm := UI.button(tr("ui.result.confirm"))
+    confirm.name = "ConfirmButton"
+    confirm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    confirm.pressed.connect(_on_confirm_pressed)
+    actions.add_child(confirm)
 
 
 func _build_ranking() -> VBoxContainer:
@@ -222,21 +216,9 @@ func _my_place_text() -> String:
     return tr("ui.result.my_place_unrecorded")
 
 
-func _on_back_to_room_pressed() -> void:
-    # 房间已在结算期间解散时不再进入无房间的等待区，直接回大厅。
-    if GameStore.room_id == "":
-        _back_to_lobby()
-        return
-    GameStore.clear_game_view()
-    UI.navigate(self, "res://scenes/room.tscn")
-
-
-func _on_back_to_lobby_pressed() -> void:
-    _back_to_lobby()
-
-
-func _back_to_lobby() -> void:
-    # 座位仍属于房间时先主动离开，让服务端立即释放，而不是等断线宽限超时。
+func _on_confirm_pressed() -> void:
+    # 结算结束统一回大厅：座位仍属于房间时主动离开，让服务端立即释放，
+    # 而不是等断线宽限超时；房间已在结算期间解散时不发离开请求。
     if GameStore.room_id != "":
         Net.send(Protocol.MSG_LEAVE_ROOM, {})
     GameStore.reset_room()

@@ -1573,11 +1573,10 @@ ui.login.server,服务器
 ui.login.submit,登录
 ui.login.subtitle,开发环境登录，验证码固定 123456
 ui.login.title,文明：七时代演进
-ui.result.back_to_lobby,返回大厅
-ui.result.back_to_room,返回房间
 ui.result.board_empty,无随从
 ui.result.board_item,%s  %d/%d
 ui.result.board_title,最终阵容
+ui.result.confirm,确定
 ui.result.my_place,你的名次：第 %d 名
 ui.result.my_place_unrecorded,你的名次：未记录
 ui.result.place_row,第 %d 名   %s

@@ -58,6 +58,7 @@ func _ready() -> void:
     await _check_reset_session()
     await _check_error_text()
     await _check_result()
+    await _check_confirm_navigation()
     _finish()
 
 
@@ -2426,8 +2427,25 @@ func _check_result() -> void:
         _expect(board_text.contains("★"), "金色随从应带标记：%s" % board_text)
         _expect(board_text.contains("7/8") and board_text.contains("3/4"), "阵容应显示攻防：%s" % board_text)
 
-    _expect(instance.find_child("BackToRoomButton", true, false) != null, "结算场景缺少返回房间按钮")
-    _expect(instance.find_child("BackToLobbyButton", true, false) != null, "结算场景缺少返回大厅按钮")
+    var confirm := instance.find_child("ConfirmButton", true, false)
+    _expect(confirm != null, "结算场景缺少确定按钮")
+    if confirm != null:
+        _expect(
+            str(confirm.text) == TranslationServer.translate("ui.result.confirm"),
+            "确定按钮文案不符：%s" % confirm.text,
+        )
+        _expect(
+            str(confirm.text) == "确定",
+            "确定按钮文案应为「确定」：%s" % confirm.text,
+        )
+    _expect(
+        instance.find_child("BackToRoomButton", true, false) == null,
+        "结算页不应再有返回房间按钮",
+    )
+    _expect(
+        instance.find_child("BackToLobbyButton", true, false) == null,
+        "结算页不应再有返回大厅按钮",
+    )
 
     # 结算期间房间被解散：保留已渲染结果，只显示原因提示。
     GameStore.room_closed_reason = "dissolved"
@@ -2475,8 +2493,11 @@ func _check_result() -> void:
             _node_text(empty_board).contains(TranslationServer.translate("ui.result.board_empty")),
             "空阵容应显示占位文案",
         )
-    _expect(empty_instance.find_child("BackToRoomButton", true, false) != null, "空统计时缺少返回房间按钮")
-    _expect(empty_instance.find_child("BackToLobbyButton", true, false) != null, "空统计时缺少返回大厅按钮")
+    _expect(empty_instance.find_child("ConfirmButton", true, false) != null, "空统计时缺少确定按钮")
+    _expect(
+        empty_instance.find_child("BackToRoomButton", true, false) == null,
+        "空统计时也不应有返回房间按钮",
+    )
     empty_instance.queue_free()
     await get_tree().process_frame
 
@@ -2484,6 +2505,52 @@ func _check_result() -> void:
         previous_ranking, previous_seed, previous_stats, previous_room_id,
         previous_player_id, previous_players, previous_view,
     )
+
+
+## 结算页点「确定」：清空房间并导航大厅。
+func _check_confirm_navigation() -> void:
+    GameStore.player_id = "p0"
+    GameStore.room_id = "r_test"
+    GameStore.room_players = []
+    GameStore.view = {}
+    GameStore.ranking = []
+    GameStore.self_stats = {}
+    GameStore.game_seed = "seed"
+    var instance := await _check_scene("res://scenes/result.tscn", false)
+    if instance == null:
+        return
+    var confirm = instance.find_child("ConfirmButton", true, false)
+    if confirm == null:
+        _expect(false, "结算场景缺少确定按钮")
+        return
+
+    # 同 room_ops：把结算页挂到 root 并设为当前场景，切场景不会销毁冒烟用例节点。
+    remove_child(instance)
+    get_tree().root.add_child(instance)
+    get_tree().current_scene = instance
+    confirm.pressed.emit()
+    await get_tree().process_frame
+    await get_tree().process_frame
+
+    _expect(GameStore.room_id == "", "点确定后应清空房间，实际：%s" % GameStore.room_id)
+    var current := get_tree().current_scene
+    _expect(
+        current != null and str(current.scene_file_path) == "res://scenes/lobby.tscn",
+        "点确定后应切换到大堂，实际：%s"
+        % ("<null>" if current == null else str(current.scene_file_path)),
+    )
+
+    if current != null and current != self:
+        current.queue_free()
+    get_tree().current_scene = self
+    await get_tree().process_frame
+    GameStore.room_id = ""
+    GameStore.player_id = ""
+    GameStore.room_players = []
+    GameStore.ranking = []
+    GameStore.self_stats = {}
+    GameStore.game_seed = ""
+    _fake_disconnect()
 
 
 func _restore_result_state(
