@@ -169,27 +169,7 @@ func _minion_card(
     epoch: int,
 ) -> PanelContainer:
     var minion_index := int(minion.get("index", position))
-    var panel := BoardCard.new()
-    panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-tight"))
-    panel.name = "Board" + ("Minion%d" % minion_index)
-    panel.set_meta("minion_id", str(minion.get("minionId", "")))
-    panel.set_meta("minion_index", minion_index)
-    panel.custom_minimum_size = Vector2(UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height"))
-
-    var card_id := str(minion.get("cardId", ""))
-    var entry := CardDB.card(card_id)
-    panel.add_child(GameCardFace.face(
-        card_id,
-        GameCardFace.stat_text(minion.get("attack")),
-        GameCardFace.stat_text(minion.get("health")),
-        GameCardFace.playstyle_text(entry),
-        "★" if bool(minion.get("golden", false)) else "",
-        "",
-        "",
-        false,
-        bool(minion.get("stealth", false)),
-        false,
-    ))
+    var panel := BoardCardFace.build_card(minion, minion_index)
 
     if detail != null:
         detail.track(panel, {"detail_kind": "minion", "minion": minion})

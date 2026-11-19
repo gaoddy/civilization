@@ -255,14 +255,14 @@ func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
     var card_id := str(data.get("cardId", ""))
     var entry := CardDB.card(card_id)
     box.add_child(_detail_name(CardDB.display_name(card_id)))
-    box.add_child(_detail_row(tr("ui.game.detail.type"), GameCardFace.type_text(entry)))
+    box.add_child(_detail_row(tr("ui.game.detail.type"), CardText.type_text(entry)))
     _append_classification(box, entry)
     _append_association(box, entry)
     _append_food_chain(box, entry)
     box.add_child(_detail_row(tr("ui.game.detail.cost"), tr("ui.game.detail.cost_value") % CardDB.display_cost(card_id)))
     box.add_child(_detail_row(tr("ui.game.detail.initial_stats"), "%s / %s" % [
-        GameCardFace.stat_text(entry.get("attack")),
-        GameCardFace.stat_text(entry.get("health")),
+        CardText.stat_text(entry.get("attack")),
+        CardText.stat_text(entry.get("health")),
     ]))
     var era := str(entry.get("era", ""))
     if era != "":
@@ -279,8 +279,8 @@ func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
 
 ## 座位详情：名字、英雄、生命（当前/上限）、时代、随从数与状态。
 func _render_seat_detail(box: VBoxContainer, player: Dictionary, hp_cap: int) -> void:
-    box.add_child(_detail_name(GameCardFace.optional_text(player.get("displayName"))))
-    box.add_child(_detail_row(tr("ui.game.detail.hero"), CardDB.display_name(GameCardFace.optional_text(player.get("heroCardId")))))
+    box.add_child(_detail_name(CardText.optional_text(player.get("displayName"))))
+    box.add_child(_detail_row(tr("ui.game.detail.hero"), CardDB.display_name(CardText.optional_text(player.get("heroCardId")))))
     box.add_child(_detail_row(tr("ui.game.detail.hp"), "%d/%d" % [int(player.get("hp", 0)), maxi(hp_cap, 0)]))
     box.add_child(_detail_row(tr("ui.game.detail.era"), CardDB.era_name(int(player.get("era", 1)))))
     box.add_child(_detail_row(tr("ui.game.detail.minions"), "%d" % int(player.get("boardCount", 0))))
@@ -347,8 +347,8 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
             int(minion.get("health", 0)),
         ]))
         return
-    var attack: Dictionary = GameCardFace.stat_layers(stats.get("attack"))
-    var health: Dictionary = GameCardFace.stat_layers(stats.get("health"))
+    var attack: Dictionary = CardText.stat_layers(stats.get("attack"))
+    var health: Dictionary = CardText.stat_layers(stats.get("health"))
     for layer in DETAIL_ROWS:
         var a := int(attack.get(layer, 0))
         var h := int(health.get(layer, 0))
@@ -359,13 +359,13 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
             box.add_child(_detail_row(label, "%d / %d" % [a, h]))
         elif layer == "damage":
             box.add_child(_detail_row(label, "%s / %s" % [
-                GameCardFace.damage_text(a),
-                GameCardFace.damage_text(h),
+                CardText.damage_text(a),
+                CardText.damage_text(h),
             ]))
         else:
             box.add_child(_detail_row(label, "%s / %s" % [
-                GameCardFace.signed(a),
-                GameCardFace.signed(h),
+                CardText.signed(a),
+                CardText.signed(h),
             ]))
     box.add_child(_detail_row(tr("ui.game.detail.current"), "%d / %d" % [
         int(attack.get("current", 0)),

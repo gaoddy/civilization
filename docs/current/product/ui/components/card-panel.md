@@ -41,7 +41,7 @@
 
 ## 卡面与详情中的玩法与分类
 
-卡片容器之上的内容由 `GameCardFace` 与 `GameDetailLayer` 构造，分类展示口径如下：
+卡片容器之上的内容由按场景拆分的卡面组件（`CardFaceBase` 与 `ShopCardFace`、`HandCardFace`、`BoardCardFace`、`GalleryCardFace`）与 `GameDetailLayer` 构造，分类展示口径如下：
 
 - 卡面：封面取玩法色压暗（`UITheme.playstyle_cover`）；底部信息区的类型位显示玩法（`playstyle_text`，走 `enum.playstyle.<id>`，学者与中立工具卡显示「中立」，缺失显示「未定」），完整类型由详情面板给出。
 - 商店卡详情：依次为名称、类型、科学分类（完整路径，缺失显示「未定」）、玩法、关联玩法（仅中立非学者且 `play` 关联非空）、食物链（捕食/寄生，两者都为空时省略）、费用、原始数值、时代、技能文本与不可购买原因。

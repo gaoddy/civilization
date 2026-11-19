@@ -105,7 +105,7 @@ func _ready() -> void:
         _expect(crystals != null, "冻结卡应有 FreezeCrystals 冰晶纹理")
         if crystals is Control:
             _expect(
-                crystals.get_child_count() == GameCardFace.FREEZE_CRYSTAL_LINES,
+                crystals.get_child_count() == CardFaceBase.FREEZE_CRYSTAL_LINES,
                 "冰晶线条数应与常量一致，实际：%d" % crystals.get_child_count(),
             )
             if crystals.get_child_count() >= 2:
@@ -121,7 +121,7 @@ func _ready() -> void:
                 if first is ColorRect:
                     var line := first as ColorRect
                     _expect(
-                        is_equal_approx(line.color.a, GameCardFace.FREEZE_CRYSTAL_ALPHA),
+                        is_equal_approx(line.color.a, CardFaceBase.FREEZE_CRYSTAL_ALPHA),
                         "冰晶线 alpha 应为 FREEZE_CRYSTAL_ALPHA 常量值",
                     )
                     _expect(

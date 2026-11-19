@@ -16,7 +16,7 @@
 
 - 最小尺寸为 `card-width` × `card-height`（112×146）。
 - 节点名为 `GalleryCard_<id>`；原生 tooltip 为卡名。
-- 卡面由 `GameCardFace.face` 构建：原始攻防、玩法、英雄标记、`display_cost` 与时代。
+- 卡面由 `GalleryCardFace.build` 构建：原始攻防、玩法、英雄标记、`display_cost` 与时代。
 
 ## 变体与状态
 

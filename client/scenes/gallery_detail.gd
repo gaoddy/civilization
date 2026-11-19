@@ -44,15 +44,7 @@ func show_card(card_id: String) -> void:
     card.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
     card.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var era_id := str(entry.get("era", ""))
-    card.add_child(GameCardFace.face(
-        card_id,
-        GameCardFace.stat_text(entry.get("attack")),
-        GameCardFace.stat_text(entry.get("health")),
-        GameCardFace.playstyle_text(entry),
-        tr("ui.game.detail.hero") if bool(entry.get("is_hero", false)) else "",
-        str(CardDB.display_cost(card_id)),
-        UI.enum_text("era", era_id) if era_id != "" else "",
-    ))
+    card.add_child(GalleryCardFace.build(card_id, entry))
     var holder := CenterContainer.new()
     holder.add_child(card)
     _box.add_child(holder)
@@ -75,8 +67,8 @@ func show_card(card_id: String) -> void:
         _add_row(
             tr("ui.game.detail.initial_stats"),
             tr("ui.gallery.stats") % [
-                GameCardFace.stat_text(entry.get("attack")),
-                GameCardFace.stat_text(entry.get("health")),
+                CardText.stat_text(entry.get("attack")),
+                CardText.stat_text(entry.get("health")),
             ],
         )
     var skills := _skill_names(entry)

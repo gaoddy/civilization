@@ -25,5 +25,6 @@
 
 - `UI.section_title(text)`：区块标题，`font-body` 字号、`color-text-dim` 颜色，单行不换行。
 - `UI.empty_hint(text)`：居中占位提示，`font-body-sm` 字号、`color-text-muted` 颜色，用于空棋盘、空手牌、无对手。
-- 座位行、商店、河道、英雄行、对手身份、手牌行与随从卡等页面私有结构位于各 `client/scenes/game_*` 视图文件（如 `game_players_rail.gd`、`game_shop_view.gd`、`game_river.gd`、`game_hero_row.gd`、`game_opponent_view.gd`、`game_hand_row.gd`、`game_card_face.gd`），不进入共享层。
+- 座位行、商店、河道、英雄行、对手身份、手牌行与随从卡等页面私有结构位于各 `client/scenes/game_*` 视图文件（如 `game_players_rail.gd`、`game_shop_view.gd`、`game_river.gd`、`game_hero_row.gd`、`game_opponent_view.gd`、`game_hand_row.gd`），不进入共享层。
+- 卡面按场景拆成独立组件：`shop_card_face.gd`、`hand_card_face.gd`、`board_card_face.gd`（棋盘与战斗只读共用）与 `gallery_card_face.gd`；共享绘制与文本在 `card_face_base.gd`、`card_text.gd`。
 - 候选英雄卡、其他玩家状态行与技能浮层是页面私有结构，位于 `client/scenes/room.gd`，不进入共享层。

@@ -181,7 +181,7 @@ func _refresh_shop(state: GameUiState) -> void:
     var aff: Dictionary = state.self_state.get("affordances", {})
     for slot in state.self_state.get("shop", []):
         var index := int(slot.get("index", 0))
-        var card_id := GameCardFace.optional_text(slot.get("cardId"))
+        var card_id := CardText.optional_text(slot.get("cardId"))
         if card_id == "":
             _shop_row.add_child(_empty_slot(index))
             continue
@@ -195,18 +195,7 @@ func _refresh_shop(state: GameUiState) -> void:
         panel.custom_minimum_size = Vector2(UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height"))
         panel.set_meta("buyable", buyable)
         panel.gui_input.connect(_on_shop_card_input.bind(panel, index))
-        panel.add_child(GameCardFace.face(
-            card_id,
-            GameCardFace.stat_text(entry.get("attack")),
-            GameCardFace.stat_text(entry.get("health")),
-            GameCardFace.playstyle_text(entry),
-            "",
-            str(CardDB.display_cost(card_id)),
-            UI.enum_text("era", str(entry.get("era", ""))),
-            bool(slot.get("frozen", false)),
-            false,
-            false,
-        ))
+        panel.add_child(ShopCardFace.build(card_id, entry, bool(slot.get("frozen", false))))
         if detail != null and is_instance_valid(detail):
             detail.track(panel, {
                 "detail_kind": "shop",

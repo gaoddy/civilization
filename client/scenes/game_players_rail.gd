@@ -140,7 +140,7 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     avatar_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
     box.add_child(avatar_box)
 
-    var avatar := UI.avatar(GameCardFace.optional_text(player.get("heroCardId")), avatar_size)
+    var avatar := UI.avatar(CardText.optional_text(player.get("heroCardId")), avatar_size)
     avatar.mouse_filter = Control.MOUSE_FILTER_IGNORE
     avatar_box.add_child(avatar)
     _ignore_mouse(avatar)
@@ -297,7 +297,7 @@ func _player_names(view: Dictionary) -> Dictionary:
     var names := {}
     for player in view.get("players", []):
         if player is Dictionary:
-            names[str(player.get("playerId", ""))] = GameCardFace.optional_text(
+            names[str(player.get("playerId", ""))] = CardText.optional_text(
                 player.get("displayName")
             )
     return names

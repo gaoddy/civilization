@@ -91,7 +91,7 @@ func refresh(hero_id: String, attack: int, hp: int, hp_cap: int, era: int) -> vo
 	_cover.add_theme_stylebox_override(
 		"panel", _cover_style(UITheme.playstyle_cover(playstyle) if hero_id != "" else UITheme.color("color-surface-sunken"))
 	)
-	_cover_mark.text = GameCardFace.initial(hero_id) if hero_id != "" else "?"
+	_cover_mark.text = CardText.initial(hero_id) if hero_id != "" else "?"
 	_name_label.text = CardDB.display_name(hero_id) if hero_id != "" else TranslationServer.translate("ui.common.no_hero")
 	_attack_label.text = str(attack)
 	_era_label.text = CardDB.era_name(era) if era > 0 else "—"

@@ -1,8 +1,9 @@
-class_name GameCardFace
+class_name CardFaceBase
 extends RefCounted
-## 卡面与卡牌文案的共享构造：封面、名称与「攻击 · 类型 · 生命」信息区。
+## 卡面共享绘制：封面、首字水印、角标行、信息区、冻结蒙层与就地改身材。
 ##
-## 只构造控件，不持有页面状态；商店、棋盘与战斗只读卡都从这里取卡面。
+## 只构造通用部件，不决定场景显示哪些元素；商店、手牌、棋盘与图鉴的卡面
+## 组件各自组合本文件的构造入口。
 
 ## 角标行在胶囊高度之外留的余量，避免文字贴边被裁切。
 const CORNER_BADGE_EXTRA_HEIGHT := 2
@@ -10,35 +11,17 @@ const CORNER_BADGE_EXTRA_HEIGHT := 2
 const FREEZE_CRYSTAL_ALPHA := 0.55
 const FREEZE_CRYSTAL_LINES := 10
 
-## 统一卡面：封面铺满整卡，左上费用、右上时代，底部信息区依次为介绍（最多
-## 两行）、居中名称与「攻击 · 类型 · 生命」。`cost_text`/`era_text` 为空时
-## 不渲染角标；`stealth` 为真时在角标行右侧追加潜行状态标识；`frozen` 为真时
-## 盖整卡蒙层、叠冰晶并保留右下「冻」字；`show_desc` 为假时不渲染介绍，
-## 信息区退回紧凑高度（商店与棋盘卡在手机上放不下两行介绍）。
-## 所有子节点忽略鼠标，点击与悬停由外层卡片决定。
-static func face(
-    card_id: String,
-    attack_text: String,
-    health_text: String,
-    type_text: String,
-    badge_text := "",
-    cost_text := "",
-    era_text := "",
-    frozen := false,
-    stealth := false,
-    show_desc := true,
-) -> Control:
-    var entry := CardDB.card(card_id)
-    var desc_text := CardDB.display_text(card_id) if show_desc else ""
-    var info_height := UITheme.stage_metric(
-        "card-info-height" if desc_text != "" else "card-info-compact-height"
-    )
+
+## 卡面根与封面：玩法色铺满整卡；有美术资源时叠卡面纹理，无图或加载失败时
+## 保留纯色封面与首字水印。所有子节点忽略鼠标，点击与悬停由外层卡片决定。
+static func create_face(card_id: String, show_desc: bool) -> Control:
     var face_node := Control.new()
     face_node.name = "CardFace"
     face_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
     face_node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     face_node.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
+    var entry := CardDB.card(card_id)
     var cover := ColorRect.new()
     cover.name = "Cover"
     cover.color = UITheme.playstyle_cover(str(entry.get("playstyle", "")))
@@ -63,7 +46,11 @@ static func face(
     # 有卡面纹理时不叠首字水印，避免与立绘重叠。
     var has_cover_art := face_node.get_node_or_null("CoverArt") != null
     if not has_cover_art:
-        var watermark := UI.label(initial(card_id), UITheme.font_size("font-hero"), false)
+        var desc_text := CardDB.display_text(card_id) if show_desc else ""
+        var info_height := UITheme.stage_metric(
+            "card-info-height" if desc_text != "" else "card-info-compact-height"
+        )
+        var watermark := UI.label(CardText.initial(card_id), UITheme.font_size("font-hero"), false)
         watermark.name = "CoverMark"
         watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
         watermark.offset_bottom = -info_height
@@ -72,10 +59,74 @@ static func face(
         watermark.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
         watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
         face_node.add_child(watermark)
+    return face_node
 
-    if cost_text != "" or era_text != "" or badge_text != "" or stealth:
-        _add_corner_badges(face_node, cost_text, era_text, badge_text, stealth)
 
+## 左上费用、金色/奖励角标与右上时代的角标行；窄卡上左右贴边、互不重叠。
+## 潜行状态标识放在右侧时代角标之前，与金色角标分列两端。全部为空时不建行。
+static func add_corner_badges(
+    face_node: Control,
+    cost_text: String,
+    era_text: String,
+    badge_text: String,
+    stealth := false,
+) -> void:
+    if cost_text == "" and era_text == "" and badge_text == "" and not stealth:
+        return
+    var margin := UITheme.space("space-xs")
+    var row := HBoxContainer.new()
+    row.name = "CardCorners"
+    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    row.set_anchors_preset(Control.PRESET_TOP_WIDE)
+    row.offset_left = margin
+    row.offset_right = -margin
+    row.offset_top = margin
+    row.offset_bottom = margin + _badge_height()
+    face_node.add_child(row)
+
+    if cost_text != "":
+        var cost := _corner_badge(cost_text, "accent")
+        cost.name = "CostBadge"
+        row.add_child(cost)
+
+    if badge_text != "":
+        var badge := _corner_badge(badge_text, "accent")
+        badge.name = "CardBadge"
+        row.add_child(badge)
+
+    var spacer := Control.new()
+    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_child(spacer)
+
+    if stealth:
+        var stealth_badge := _corner_badge(
+            TranslationServer.translate("ui.game.card.stealth_glyph"), "info"
+        )
+        stealth_badge.name = "StealthBadge"
+        row.add_child(stealth_badge)
+
+    if era_text != "":
+        var era := _corner_badge(era_text, "info")
+        era.name = "EraBadge"
+        row.add_child(era)
+
+
+## 底部信息区：介绍（最多两行）、居中名称与「攻击 · 类型 · 生命」。
+## `show_desc` 为假时不渲染介绍，信息区退回紧凑高度（商店与棋盘卡在手机上
+## 放不下两行介绍）。
+static func add_info(
+    face_node: Control,
+    card_id: String,
+    attack_text: String,
+    health_text: String,
+    type_text: String,
+    show_desc: bool,
+) -> void:
+    var desc_text := CardDB.display_text(card_id) if show_desc else ""
+    var info_height := UITheme.stage_metric(
+        "card-info-height" if desc_text != "" else "card-info-compact-height"
+    )
     var info := UI.card_panel("cover-info")
     info.name = "CardInfo"
     info.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -143,76 +194,9 @@ static func face(
     stats_row.add_child(health_label)
     face_node.add_child(info)
 
-    if frozen:
-        _add_freeze_overlay(face_node)
-    return face_node
-
-
-## 左上费用、金色/奖励角标与右上时代的角标行；窄卡上左右贴边、互不重叠。
-## 潜行状态标识放在右侧时代角标之前，与金色角标分列两端。
-static func _add_corner_badges(
-    face_node: Control,
-    cost_text: String,
-    era_text: String,
-    badge_text: String,
-    stealth := false,
-) -> void:
-    var margin := UITheme.space("space-xs")
-    var row := HBoxContainer.new()
-    row.name = "CardCorners"
-    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    row.set_anchors_preset(Control.PRESET_TOP_WIDE)
-    row.offset_left = margin
-    row.offset_right = -margin
-    row.offset_top = margin
-    row.offset_bottom = margin + _badge_height()
-    face_node.add_child(row)
-
-    if cost_text != "":
-        var cost := _corner_badge(cost_text, "accent")
-        cost.name = "CostBadge"
-        row.add_child(cost)
-
-    if badge_text != "":
-        var badge := _corner_badge(badge_text, "accent")
-        badge.name = "CardBadge"
-        row.add_child(badge)
-
-    var spacer := Control.new()
-    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_child(spacer)
-
-    if stealth:
-        var stealth_badge := _corner_badge(
-            TranslationServer.translate("ui.game.card.stealth_glyph"), "info"
-        )
-        stealth_badge.name = "StealthBadge"
-        row.add_child(stealth_badge)
-
-    if era_text != "":
-        var era := _corner_badge(era_text, "info")
-        era.name = "EraBadge"
-        row.add_child(era)
-
-
-## 窄卡角标：比胶囊更紧凑，避免两角标在 112 宽的商店卡上相撞。
-static func _corner_badge(text: String, variant: String) -> Label:
-    var badge := UI.pill_label(text, variant, "font-caption")
-    var style := UITheme.pill_style(variant)
-    style.content_margin_left = UITheme.space("space-xs")
-    style.content_margin_right = UITheme.space("space-xs")
-    badge.add_theme_stylebox_override("normal", style)
-    badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    return badge
-
-
-static func _badge_height() -> int:
-    return UITheme.font_size("font-caption") + UITheme.space("space-2xs") * 2 + CORNER_BADGE_EXTRA_HEIGHT
-
 
 ## 冻结表现：整卡半透明蒙层 + 固定角度与间距的冰晶细线 + 右下角「冻」字。
-static func _add_freeze_overlay(face_node: Control) -> void:
+static func add_freeze(face_node: Control) -> void:
     var overlay := ColorRect.new()
     overlay.name = "FreezeOverlay"
     overlay.color = UITheme.color("color-info")
@@ -263,89 +247,26 @@ static func _add_freeze_overlay(face_node: Control) -> void:
     overlay.add_child(glyph)
 
 
-## 战斗演示的只读随从卡：不带拖拽数据，也不可交互。
-static func read_only_minion_card(minion: Dictionary) -> Control:
-    var minion_index := int(minion.get("index", 0))
-    var panel := BoardCard.new()
-    panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-tight"))
-    panel.name = "Board" + ("Minion%d" % minion_index)
-    panel.set_meta("minion_id", str(minion.get("minionId", "")))
-    panel.set_meta("minion_index", minion_index)
-    panel.custom_minimum_size = Vector2(
-        UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height")
-    )
-
-    var card_id := str(minion.get("cardId", ""))
-    var entry := CardDB.card(card_id)
-    panel.add_child(face(
-        card_id,
-        stat_text(minion.get("attack")),
-        stat_text(minion.get("health")),
-        playstyle_text(entry),
-        "★" if bool(minion.get("golden", false)) else "",
-        "",
-        "",
-        false,
-        bool(minion.get("stealth", false)),
-        false,
-    ))
-    return panel
+## 战斗演示的就地身材更新：按节点名改文本，不重建整张卡。
+static func set_stats(face_node: Control, attack_text: String, health_text: String) -> void:
+    var attack_label := face_node.find_child("CardAttack", true, false) as Label
+    if attack_label != null:
+        attack_label.text = attack_text
+    var health_label := face_node.find_child("CardHealth", true, false) as Label
+    if health_label != null:
+        health_label.text = health_text
 
 
-## 卡面封面的首字水印；空 id 回退问号。
-static func initial(card_id: String) -> String:
-    var display := CardDB.display_name(card_id)
-    return display.substr(0, 1) if display != "" else "?"
+## 窄卡角标：比胶囊更紧凑，避免两角标在 112 宽的商店卡上相撞。
+static func _corner_badge(text: String, variant: String) -> Label:
+    var badge := UI.pill_label(text, variant, "font-caption")
+    var style := UITheme.pill_style(variant)
+    style.content_margin_left = UITheme.space("space-xs")
+    style.content_margin_right = UITheme.space("space-xs")
+    badge.add_theme_stylebox_override("normal", style)
+    badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    return badge
 
 
-## 卡面类型行：卡面宽度有限，只放玩法；完整类型与分类放在详情面板。
-static func playstyle_text(entry: Dictionary) -> String:
-    var playstyle := str(entry.get("playstyle", ""))
-    var text := UI.enum_text("playstyle", playstyle) if playstyle != "" else ""
-    if text != "" and text != playstyle:
-        return text
-    return TranslationServer.translate("ui.game.detail.undetermined")
-
-
-## 详情类型行：只显示卡牌类别，玩法与分类由详情单独成行。
-static func type_text(entry: Dictionary) -> String:
-    var card_type := str(entry.get("card_type", ""))
-    return UI.enum_text("card_type", card_type) if card_type != "" else "—"
-
-
-## 卡面数值：服务端或卡表缺失时用破折号占位。
-static func stat_text(value: Variant) -> String:
-    if value == null:
-        return "—"
-    return str(int(value))
-
-
-static func stat_layers(value: Variant) -> Dictionary:
-    if typeof(value) == TYPE_DICTIONARY:
-        return value
-    return {}
-
-
-static func signed(value: int) -> String:
-    return "+%d" % value if value >= 0 else str(value)
-
-
-## 受击行以「损失量」呈现：层和高于当前量为负数，复生超过层和为正数。
-static func damage_text(value: int) -> String:
-    if value > 0:
-        return "-%d" % value
-    if value < 0:
-        return "+%d" % -value
-    return "0"
-
-
-## 统一时代文案：顶栏、积分榜、属性行与战斗条都显示具体时代名。
-static func era_text(era: int) -> String:
-    return TranslationServer.translate("ui.game.era_format") % CardDB.era_name(era)
-
-
-## 可空字段转文本：缺失统一为空串。
-static func optional_text(value: Variant) -> String:
-    if value == null:
-        return ""
-    return str(value)
+static func _badge_height() -> int:
+    return UITheme.font_size("font-caption") + UITheme.space("space-2xs") * 2 + CORNER_BADGE_EXTRA_HEIGHT

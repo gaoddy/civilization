@@ -18,7 +18,7 @@ func _init() -> void:
 
 func refresh(state: GameUiState) -> void:
     UI.clear(self)
-    var opponent_id := GameCardFace.optional_text(state.view.get("opponentPlayerId"))
+    var opponent_id := CardText.optional_text(state.view.get("opponentPlayerId"))
     if opponent_id == "":
         add_child(UI.empty_hint(tr("ui.game.side_panel.waiting_match")))
         return
@@ -54,7 +54,7 @@ func _ghost_block(player: Dictionary, hp_cap: int) -> Control:
 
 
 func _portrait(player: Dictionary) -> GamePortrait:
-    var hero_id := GameCardFace.optional_text(player.get("heroCardId"))
+    var hero_id := CardText.optional_text(player.get("heroCardId"))
     var display := CardDB.display_name(hero_id) if hero_id != "" else tr("ui.game.side_panel.unknown_hero")
     var tint := (
         UITheme.playstyle_color(str(CardDB.card(hero_id).get("playstyle", "")))
@@ -78,9 +78,9 @@ func _identity_column(player: Dictionary, hp_cap: int, ghost: bool) -> VBoxConta
     var name_row := HBoxContainer.new()
     name_row.add_theme_constant_override("separation", UITheme.space("space-xs"))
     column.add_child(name_row)
-    var display_name := GameCardFace.optional_text(player.get("displayName"))
+    var display_name := CardText.optional_text(player.get("displayName"))
     if display_name == "":
-        display_name = GameCardFace.optional_text(player.get("playerId"))
+        display_name = CardText.optional_text(player.get("playerId"))
     var name_label := UI.label(display_name, UITheme.font_size("font-body-sm"), false)
     name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     name_label.max_lines_visible = 1
@@ -96,7 +96,7 @@ func _identity_column(player: Dictionary, hp_cap: int, ghost: bool) -> VBoxConta
         rank_badge.name = "RankBadge"
         name_row.add_child(rank_badge)
 
-    var hero_id := GameCardFace.optional_text(player.get("heroCardId"))
+    var hero_id := CardText.optional_text(player.get("heroCardId"))
     var hero_label := UI.label(
         CardDB.display_name(hero_id) if hero_id != "" else tr("ui.game.side_panel.unknown_hero"),
         UITheme.font_size("font-body-sm"),
@@ -108,7 +108,7 @@ func _identity_column(player: Dictionary, hp_cap: int, ghost: bool) -> VBoxConta
     var meta := UI.label(tr("ui.game.side_panel.hp_line") % [
         int(player.get("hp", 0)),
         maxi(hp_cap, 1),
-        GameCardFace.era_text(int(player.get("era", 1))),
+        CardText.era_text(int(player.get("era", 1))),
         int(player.get("boardCount", 0)),
     ], UITheme.font_size("font-caption"), false)
     meta.clip_text = true
