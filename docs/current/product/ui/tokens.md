@@ -83,7 +83,8 @@
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
 | `hero-tile-width` | 150 | 英雄小卡宽度（大厅与房间的英雄选择） |
 | `card-width` / `-height` | 112 / 146 | 商店、棋盘、手牌与战斗只读卡（含空位与拖拽占位） |
-| `card-info-height` | 90 | 有介绍时的卡面信息区高度，容纳两行介绍、名称与数值 |
+| `card-cover-inset` | 3 | 卡面美术向内收的距离，保证方形美术的四角落在卡面圆角以内 |
+| `card-info-height` | 90 | 有介绍时的卡面信息区基础高度，容纳名称与数值；手牌介绍超出时信息区向上扩展 |
 | `card-info-compact-height` | 56 | 无介绍时的卡面信息区高度，只容纳名称与数值 |
 | `hand-card-overlap` | 32 | 手牌相邻卡的交叠宽度；槽位步进 = `card-width - hand-card-overlap` = 80，十张单行 |
 | `hand-hover-scale` | 1.12 | 手牌悬停放大倍数，以底边中点为轴；小数令牌用 `UITheme.factor` 读取，不要用 `metric` |

@@ -139,6 +139,7 @@ const SCENARIO := {
 	"portrait-size": 64,
 	"card-width": 112,
 	"card-height": 146,
+	"card-cover-inset": 3,
 	"card-info-height": 90,
 	"card-info-compact-height": 56,
 	"hand-card-overlap": 32,
@@ -282,6 +283,10 @@ static func panel_style(variant: String) -> StyleBoxFlat:
 		"raised-tight":
 			box.bg_color = color("color-surface-raised")
 			box.set_content_margin_all(space("space-md"))
+		"raised-flush":
+			# 卡面容器：内容只让出 1px 描边，封面与美术铺满整张卡。
+			box.bg_color = color("color-surface-raised")
+			box.set_content_margin_all(1)
 		"empty":
 			box.bg_color = alpha("color-surface", 0.4)
 			box.border_color = alpha("color-border", 0.7)

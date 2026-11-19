@@ -50,7 +50,7 @@ func _on_hover_changed(value: bool) -> void:
 
 
 func _apply_style() -> void:
-    var box := UITheme.panel_style("raised-tight")
+    var box := UITheme.panel_style("raised-flush")
     if _selected:
         box.border_color = UITheme.color("color-accent")
         box.set_border_width_all(2)
