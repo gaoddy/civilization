@@ -233,6 +233,17 @@ fn game_from_json_rejects_missing_final_hash() {
 }
 
 #[test]
+fn game_from_json_rejects_missing_event_hash() {
+    let mut json = sample_game_json(5);
+    json.as_object_mut().unwrap().remove("event_hash");
+    let error = report::game_from_json(&json).expect_err("缺 event_hash 应报错");
+    assert!(
+        error.contains("event_hash"),
+        "错误应指出 event_hash：{error}"
+    );
+}
+
+#[test]
 fn game_from_json_rejects_missing_or_unknown_winner_fields() {
     let base = sample_game_json(4);
 

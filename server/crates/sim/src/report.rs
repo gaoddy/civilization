@@ -224,8 +224,9 @@ pub fn playstyle_name(playstyle: Playstyle) -> &'static str {
     playstyle.id()
 }
 
-/// 单局日志的 JSON 形式：`seed`、`intents`、`final_hash`、`ranking`，并附带
-/// （`final_hash` 为 16 位小写十六进制字符串；`replay` 输出为数值哈希，供测试直接比较。）
+/// 单局日志的 JSON 形式：`seed`、`intents`、`final_hash`、`event_hash`、`ranking`，
+/// 并附带 `final_hash` / `event_hash` 为 16 位小写十六进制字符串；`replay` 输出为
+/// 数值哈希，供测试直接比较。
 /// `turns`、`stats` 与 `players` 便于报告与排查。
 ///
 /// `intents` 是驱动序列：招募意图为 `{"seat", "intent"}`，阶段边界为
@@ -238,6 +239,7 @@ pub fn game_to_json(game: &GameLog) -> Value {
         "turns": game.turns,
         "intents": intents,
         "final_hash": format_hash(game.final_hash),
+        "event_hash": format_hash(game.event_hash),
         "ranking": ranking_to_json(&game.ranking),
         "stats": stats_to_json(&game.stats, game.turns),
     })
@@ -331,15 +333,16 @@ fn stats_to_json(stats: &GameStats, turns: u8) -> Value {
     })
 }
 
-/// 批量日志 JSON：`seed` + `games`（每局 `seed` / `intents` / `final_hash` / `ranking`
-/// / `turns` / `stats`）。
+/// 批量日志 JSON：`seed` + `games`（每局 `seed` / `intents` / `final_hash` /
+/// `event_hash` / `ranking` / `turns` / `stats`）。
 pub fn batch_to_json(batch: &BatchJson) -> Value {
     let games: Vec<Value> = batch.games.iter().map(game_to_json).collect();
     json!({ "seed": batch.seed, "games": games })
 }
 
-/// 解析单局 JSON（日志文件中的一局）。`seed`、`intents`、`final_hash` 与 `stats` 中的
-/// `winner_playstyle` / `winner_seat` 缺失或非法时返回错误，不做静默回落。
+/// 解析单局 JSON（日志文件中的一局）。`seed`、`intents`、`final_hash`、
+/// `event_hash` 与 `stats` 中的 `winner_playstyle` / `winner_seat` 缺失或非法时
+/// 返回错误，不做静默回落。
 pub fn game_from_json(value: &Value) -> Result<GameLog, String> {
     let seed = value
         .get("seed")
@@ -384,6 +387,11 @@ pub fn game_from_json(value: &Value) -> Result<GameLog, String> {
         .and_then(Value::as_str)
         .ok_or("日志缺少 final_hash")?;
     let final_hash = parse_hash(final_hash)?;
+    let event_hash = value
+        .get("event_hash")
+        .and_then(Value::as_str)
+        .ok_or("日志缺少 event_hash")?;
+    let event_hash = parse_hash(event_hash)?;
     let ranking = match value.get("ranking").and_then(Value::as_array) {
         Some(ranking) => ranking
             .iter()
@@ -410,6 +418,7 @@ pub fn game_from_json(value: &Value) -> Result<GameLog, String> {
         seed,
         steps,
         final_hash,
+        event_hash,
         ranking,
         turns,
         stats,

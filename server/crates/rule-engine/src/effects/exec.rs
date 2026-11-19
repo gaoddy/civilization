@@ -2556,9 +2556,24 @@ fn board_contains(state: &GameState, seat: Seat, id: InstanceId) -> bool {
 /// 意图提交的第一道边界：棋盘只认本人棋盘、手牌只认本人手牌、商店只认本人商店槽
 /// （`Target` 的棋盘池在引擎内仍取全部座位，以保留战斗内的 `event_target` 语义）。
 pub(crate) fn target_in_own_zone(state: &GameState, seat: Seat, target: TargetRef) -> bool {
-    let Some(player) = state.players.get(usize::from(seat)) else {
-        return false;
-    };
+    state
+        .players
+        .get(usize::from(seat))
+        .is_some_and(|player| player_has_target(player, target))
+}
+
+/// 目标是否落在除 `seat` 之外任一玩家的对应区域内。
+///
+/// 用于把「目标存在但属于敌方」与「目标根本不存在」区分成不同错误码：
+/// 前者返回 `TARGET_NOT_ALLOWED`，后者返回 `NO_VALID_TARGET`。
+pub(crate) fn target_in_other_zone(state: &GameState, seat: Seat, target: TargetRef) -> bool {
+    state
+        .players
+        .iter()
+        .any(|player| player.seat != seat && player_has_target(player, target))
+}
+
+fn player_has_target(player: &PlayerState, target: TargetRef) -> bool {
     match target.zone {
         Zone::Board => player
             .board

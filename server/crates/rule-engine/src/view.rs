@@ -219,6 +219,10 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .iter()
         .find(|pending| pending_seat(pending) == seat)
         .is_some_and(|pending| matches!(pending, PendingChoice::Target { .. }));
+    let has_pending = state
+        .pending
+        .iter()
+        .any(|pending| pending_seat(pending) == seat);
     let gate = if activatable && !player.recruit_done && !head_is_target {
         None
     } else {
@@ -345,8 +349,8 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         },
     };
 
-    // 已结束招募时重复 `EndRecruit` 幂等成功；出局、非招募阶段或目标待选期间不可操作。
-    let can_end_recruit = activatable && !head_is_target && check_end_recruit(state, seat).is_ok();
+    // 已结束招募时重复 `EndRecruit` 幂等成功；出局、非招募阶段或仍有待选时不可操作。
+    let can_end_recruit = activatable && !has_pending && check_end_recruit(state, seat).is_ok();
 
     let shop = player
         .shop

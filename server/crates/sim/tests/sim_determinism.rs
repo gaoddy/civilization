@@ -87,6 +87,30 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
     assert_eq!(second, first, "重放本身应确定");
 }
 
+#[test]
+fn replay_rejects_event_hash_mismatch() {
+    let mut log = sim::run_game(catalog(), 7).expect("单局应能完成");
+    let expected = log.event_hash;
+    log.event_hash ^= 1;
+
+    let error = sim::replay(&log).expect_err("事件序列哈希不一致必须拒绝");
+
+    assert!(
+        error.to_string().contains("事件序列"),
+        "错误应指出事件序列不一致：{error}"
+    );
+    assert_ne!(expected, log.event_hash);
+}
+
+#[test]
+fn same_seed_reproduces_event_sequence_hash() {
+    let first = sim::run_game(catalog(), 11).expect("第一次运行应成功");
+    let second = sim::run_game(catalog(), 11).expect("第二次运行应成功");
+
+    assert_eq!(first.final_hash, second.final_hash, "终局哈希应一致");
+    assert_eq!(first.event_hash, second.event_hash, "事件序列哈希应一致");
+}
+
 /// 批次最终哈希必须与固定基线一致。
 ///
 /// 本基线因卡片分类与玩法体系落地而重定，之后又因「目标被主伤害击杀后仍反击」
@@ -142,6 +166,10 @@ fn replay_keeps_kill_attribution_and_decompose_consistent() {
 /// 2026-11-19 第十四次重定：协议层下发目标候选池。三张「复制手牌随从」卡
 /// （达·芬奇 / 鹦鹉 / 印刷术）改为玩家选目标，引擎与机器人按 `zone:id` 候选
 /// 决策，涉及这些卡的批次哈希随之改变；前两局未抽取到即保持不变。
+///
+/// 2026-11-20 第十五次重定：任何未消费待选都禁止手动 `EndRecruit`；模拟器 AI
+/// 无可消费待选时按超时处理并交给 `finish_recruit` 清空，发现/进化不再跨回合
+/// 保留。此前允许带发现待选结束招募并保留到下一回合，行为与随机流消耗改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

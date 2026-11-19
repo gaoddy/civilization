@@ -1690,7 +1690,7 @@ fn choose_target_outside_filtered_pool_rejects() {
 }
 
 #[test]
-fn target_pending_cleared_on_finish_recruit() {
+fn finish_recruit_clears_all_pending_as_forfeit() {
     let (mut engine, mut state) = turn_started(58);
     play_growth_minion(&mut engine, &mut state);
     state.pending.push_back(PendingChoice::Discover {
@@ -1701,7 +1701,98 @@ fn target_pending_cleared_on_finish_recruit() {
 
     engine.finish_recruit(&mut state).expect("结束招募应成功");
 
-    assert!(target_pending(&state, 0).is_none(), "目标待选被清空");
-    assert_eq!(state.pending.len(), 1, "发现待选保留");
+    assert!(
+        state.pending.is_empty(),
+        "进入战斗前未消费的待选一律视为放弃"
+    );
     assert_eq!(state.phase, Phase::Combat);
+}
+
+#[test]
+fn discover_pending_blocks_manual_end_recruit() {
+    let (mut engine, mut state) = turn_started(59);
+    state.pending.push_back(PendingChoice::Discover {
+        seat: 0,
+        candidates: vec![minion_id(1)],
+        source: 0,
+    });
+    let before = state_hash(&state);
+
+    let reject = engine
+        .apply(&mut state, 0, Intent::EndRecruit)
+        .expect_err("发现待选未消费时不能手动结束招募");
+
+    assert_eq!(reject.code, RejectCode::InvalidStage);
+    assert_eq!(before, state_hash(&state), "拒绝后状态不变");
+    assert_eq!(state.pending.len(), 1, "待选仍在");
+}
+
+#[test]
+fn discover_pending_allows_other_recruit_intents() {
+    let (mut engine, mut state) = turn_started(60);
+    set_shop(&mut state, 0, &[Some(minion_id(1))]);
+    state.players[0].gold = 10;
+    state.pending.push_back(PendingChoice::Discover {
+        seat: 0,
+        candidates: vec![minion_id(1)],
+        source: 0,
+    });
+
+    engine
+        .apply(&mut state, 0, Intent::BuyMinion { slot: 0 })
+        .expect("发现待选只阻止结束招募，其他招募意图仍可执行");
+
+    assert_eq!(state.players[0].hand.len(), 1);
+    assert_eq!(state.pending.len(), 1, "买入不影响待选");
+}
+
+#[test]
+fn play_card_with_enemy_target_rejects_target_not_allowed() {
+    let (mut engine, mut state) = turn_started(61);
+    let enemy_id = 9_100;
+    common::place(&engine.catalog, &mut state, 1, enemy_id, &minion_id(1));
+    state.players[0].hand.push(HandCard::Minion(minion(
+        &engine.catalog,
+        9_000,
+        BATTLECRY_GROWTH_MINION,
+    )));
+    let before = state_hash(&state);
+
+    let reject = engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: Some(board_target(enemy_id)),
+            },
+        )
+        .expect_err("敌方目标必须拒绝");
+
+    assert_eq!(reject.code, RejectCode::TargetNotAllowed);
+    assert_eq!(before, state_hash(&state), "拒绝后状态不变");
+}
+
+#[test]
+fn choose_target_with_enemy_target_rejects_target_not_allowed() {
+    let (mut engine, mut state) = turn_started(62);
+    play_growth_minion(&mut engine, &mut state);
+    let enemy_id = 9_100;
+    common::place(&engine.catalog, &mut state, 1, enemy_id, &minion_id(1));
+    let before = state_hash(&state);
+
+    let reject = engine
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget {
+                target: board_target(enemy_id),
+            },
+        )
+        .expect_err("目标待选不能选敌方随从");
+
+    assert_eq!(reject.code, RejectCode::TargetNotAllowed);
+    assert_eq!(before, state_hash(&state), "拒绝后状态不变");
+    assert!(target_pending(&state, 0).is_some(), "待选仍在");
 }

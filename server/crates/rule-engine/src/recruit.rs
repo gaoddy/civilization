@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::data::{Card, CardType, Catalog, Era, Playstyle, card_in_pool};
-use crate::effects::{EffectCtx, TargetRef, Trigger, target_in_own_zone};
+use crate::effects::{EffectCtx, TargetRef, Trigger, target_in_other_zone, target_in_own_zone};
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::intent::{Intent, Outcome, Reject, RejectCode};
@@ -32,25 +32,44 @@ pub(crate) fn apply(
         ));
     }
 
-    // 队首是目标待选时，该座位除 `ChooseTarget` 外的招募意图一律拒绝（含 `EndRecruit`）。
-    let head_is_target = pending_index(state, seat).is_some_and(|index| {
-        matches!(state.pending.get(index), Some(PendingChoice::Target { .. }))
-    });
-    if head_is_target {
-        match &intent {
-            Intent::ChooseTarget { .. } => {}
-            Intent::ChooseDiscover { .. } => {
+    // 有待选时：目标待选只允许 `ChooseTarget`，其余招募意图一律拒绝；
+    // 发现/进化待选只允许 `ChooseDiscover`，且不能手动 `EndRecruit`，其他招募意图照常执行。
+    // 超时路径不经过本函数，由 `finish_recruit` 把未消费待选视为放弃并清空。
+    if let Some(index) = pending_index(state, seat) {
+        match (&state.pending[index], &intent) {
+            (PendingChoice::Target { .. }, Intent::ChooseTarget { .. }) => {}
+            (
+                PendingChoice::Discover { .. } | PendingChoice::Evolve { .. },
+                Intent::ChooseDiscover { .. },
+            ) => {}
+            (PendingChoice::Target { .. }, Intent::ChooseDiscover { .. }) => {
                 return Err(Reject::new(
                     RejectCode::InvalidChoice,
                     format!("座位 {seat} 有待选目标，不能选择发现"),
                 ));
             }
-            _ => {
+            (
+                PendingChoice::Discover { .. } | PendingChoice::Evolve { .. },
+                Intent::ChooseTarget { .. },
+            ) => {
+                return Err(Reject::new(
+                    RejectCode::InvalidChoice,
+                    format!("座位 {seat} 最靠前的待选不是目标选择"),
+                ));
+            }
+            (PendingChoice::Target { .. }, _) => {
                 return Err(Reject::new(
                     RejectCode::InvalidStage,
                     format!("座位 {seat} 有待选目标，不能执行其它招募意图"),
                 ));
             }
+            (PendingChoice::Discover { .. } | PendingChoice::Evolve { .. }, Intent::EndRecruit) => {
+                return Err(Reject::new(
+                    RejectCode::InvalidStage,
+                    format!("座位 {seat} 有待选未消费，不能手动结束招募"),
+                ));
+            }
+            (PendingChoice::Discover { .. } | PendingChoice::Evolve { .. }, _) => {}
         }
     }
 
@@ -503,17 +522,25 @@ pub(crate) fn check_play_position(
 }
 
 /// 意图提交的目标区域校验：目标必须落在该座位本人的对应区域内。
+///
+/// 目标属于其他座位时返回 `TARGET_NOT_ALLOWED`（与核心规则 §4.4/§4.5 对齐）；
+/// 目标不存在或区域与实例实际所在区域不一致时返回 `NO_VALID_TARGET`。
 fn check_target_zone(
     state: &GameState,
     seat: Seat,
     target: Option<TargetRef>,
 ) -> Result<(), Reject> {
     match target {
-        Some(target) if !target_in_own_zone(state, seat, target) => Err(Reject::new(
+        Some(target) if target_in_own_zone(state, seat, target) => Ok(()),
+        Some(target) if target_in_other_zone(state, seat, target) => Err(Reject::new(
+            RejectCode::TargetNotAllowed,
+            format!("目标 {:?}:{} 属于其他玩家", target.zone, target.id),
+        )),
+        Some(target) => Err(Reject::new(
             RejectCode::NoValidTarget,
             format!("目标 {:?}:{} 不在本座位的该区域内", target.zone, target.id),
         )),
-        _ => Ok(()),
+        None => Ok(()),
     }
 }
 

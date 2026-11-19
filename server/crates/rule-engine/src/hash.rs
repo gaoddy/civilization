@@ -6,11 +6,136 @@
 
 use crate::data::Era;
 use crate::effects::Duration;
+use crate::events::GameEvent;
 use crate::rng::Stream;
 use crate::state::{GameState, MinionInstance, Phase, PlayerState, StatComponent};
 
 const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+/// 事件序列哈希：按产生顺序累计 [`GameEvent`]，用于重放时比对事件流。
+///
+/// 与 [`state_hash`] 相同，编码全部走规范化的 [`Hasher`]；调用方必须保证
+/// 原始对局与重放以相同顺序、相同粒度调用 [`EventHasher::extend`]。
+pub struct EventHasher {
+    hasher: Hasher,
+}
+
+impl Default for EventHasher {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl EventHasher {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            hasher: Hasher::new(),
+        }
+    }
+
+    pub fn extend(&mut self, events: &[GameEvent]) {
+        for event in events {
+            self.push(event);
+        }
+    }
+
+    pub fn push(&mut self, event: &GameEvent) {
+        match event {
+            GameEvent::TurnStarted { turn } => {
+                self.hasher.u8(0);
+                self.hasher.u8(*turn);
+            }
+            GameEvent::PhaseChanged { phase, turn } => {
+                self.hasher.u8(1);
+                self.hasher.u8(phase_tag(*phase));
+                self.hasher.u8(*turn);
+            }
+            GameEvent::MinionBought {
+                seat,
+                slot,
+                card_id,
+            } => {
+                self.hasher.u8(2);
+                self.hasher.u8(*seat);
+                self.hasher.u8(*slot);
+                self.hasher.str(card_id);
+            }
+            GameEvent::MinionSold { seat, minion } => {
+                self.hasher.u8(3);
+                self.hasher.u8(*seat);
+                self.hasher.u64(*minion);
+            }
+            GameEvent::ShopRolled { seat } => {
+                self.hasher.u8(4);
+                self.hasher.u8(*seat);
+            }
+            GameEvent::EraUpgraded { seat, era } => {
+                self.hasher.u8(5);
+                self.hasher.u8(*seat);
+                self.hasher.u8(era_tag(*era));
+            }
+            GameEvent::TripleFormed {
+                seat,
+                card_id,
+                golden_instance_id,
+                sources,
+            } => {
+                self.hasher.u8(6);
+                self.hasher.u8(*seat);
+                self.hasher.str(card_id);
+                self.hasher.u64(*golden_instance_id);
+                self.hasher.len(sources.len());
+                for source in sources {
+                    self.hasher.u64(*source);
+                }
+            }
+            GameEvent::CardDiscovered { seat, card_id } => {
+                self.hasher.u8(7);
+                self.hasher.u8(*seat);
+                self.hasher.str(card_id);
+            }
+            GameEvent::DamageTaken { seat, amount } => {
+                self.hasher.u8(8);
+                self.hasher.u8(*seat);
+                self.hasher.i32(*amount);
+            }
+            GameEvent::PlayerEliminated { seat, place } => {
+                self.hasher.u8(9);
+                self.hasher.u8(*seat);
+                self.hasher.u8(*place);
+            }
+            GameEvent::CombatResolved {
+                winner,
+                loser,
+                damage,
+            } => {
+                self.hasher.u8(10);
+                self.hasher.u8(*winner);
+                self.hasher.u8(*loser);
+                self.hasher.i32(*damage);
+            }
+            GameEvent::CombatDrawn { a, b } => {
+                self.hasher.u8(11);
+                self.hasher.u8(*a);
+                self.hasher.u8(*b);
+            }
+            GameEvent::GameOver { ranking } => {
+                self.hasher.u8(12);
+                self.hasher.len(ranking.len());
+                for seat in ranking {
+                    self.hasher.u8(*seat);
+                }
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn finish(&self) -> u64 {
+        self.hasher.value
+    }
+}
 
 /// 计算对局状态哈希。
 pub fn state_hash(state: &GameState) -> u64 {
