@@ -259,7 +259,7 @@ m1-check:
 - 进入 `GameOver` 时（正常结算与弃权两条路径）各打印一次单行 JSON 到 stderr；`GameTask.game_over_logged` 保证每局只打印一次。不引入指标端点，也不新增依赖。
 - 字段：`service`、`event`（固定 `game_over`）、`roomId`、`seed`（16 位十六进制）、`turns`、`durationMs`（`started_at_ms` 到终局，按注入时钟计算）、`intentsBySeat`、`intentsTotal`、`rejectionsBySeat`、`rejectionsTotal`、`rejectionRatePermille`（向下取整，未有意向时为 0）、`survivors`、`winner`（座位号，排名为空时为 `null`）。
 - 计数口径：首次提交的意图计 1（去重命中属于重传，不计）；任何一次拒绝都计 1，包括非招募阶段、参数非法与引擎拒绝。
-- 内测记录模板见 [v0.1 验收记录](../../../versions/v0.1/acceptance.md)。
+- 内测期间按需从日志抄录观察值，不强制记录，也不作为验收项。
 
 ## 相关文档
 

@@ -60,5 +60,5 @@
 ### 文档
 
 - `docs/` 骨架：`current/` 写已实现状态，`versions/<版本>/` 写未实现或规划中的版本，`docs/plan/` 放实施计划（本地忽略、不提交）。
-- 版本入口：`docs/versions/v0.1/README.md`；验收与观察记录：`docs/versions/v0.1/acceptance.md`；平衡问题：`docs/versions/v0.1/product/content/balance-questions.md`。
+- 版本入口：`docs/versions/v0.1/README.md`；验收记录：`docs/versions/v0.1/acceptance.md`；平衡问题：`docs/versions/v0.1/product/content/balance-questions.md`。
 - 跨版本路线：`docs/version-roadmap.md`。

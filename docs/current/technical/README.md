@@ -9,4 +9,4 @@
 | [Godot 客户端](client.md) | Godot 工程结构、`GameStore`/`Net`/`CardDB` 职责、六场景、生成物与运行方式、客户端验收、桌面端导出（`make client-export`） | `client/`、`Makefile` |
 | [部署与接入](deployment/README.md) | platform Kubernetes 接入、Helm 清单、镜像与发布入口、健康检查、客户端连接方式 | `deploy/helm`、`server/Dockerfile`、`.dockerignore`、`Makefile` |
 
-v0.1 的 M0–M3 能力均已实现：规则引擎与模拟器、房间服务与联机（含断线重连）、Godot 客户端与 macOS 桌面端导出。M2 不设真人完成率验收，断线重连一致性由自动化用例覆盖；M3 的桌面端完整对局与崩溃率、意图拒绝率、单局时长记录方式见 [v0.1 验收记录](../../versions/v0.1/acceptance.md)。
+v0.1 的 M0–M3 能力均已实现：规则引擎与模拟器、房间服务与联机（含断线重连）、Godot 客户端与 macOS 桌面端导出。M2 不设真人完成率验收，断线重连一致性由自动化用例覆盖；M3 不做单独验收记录。结果见 [v0.1 验收记录](../../versions/v0.1/acceptance.md)。
