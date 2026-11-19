@@ -742,6 +742,64 @@ fn resolve_settle(
     Ok(events)
 }
 
+/// 主动弃权：立即淘汰一个座位，必要时直接结束对局。
+///
+/// 名次语义与 [`resolve_settle`] 的批量淘汰一致，均为「最近出局在前」：批量
+/// 结算按座位升序淘汰后 `rev()` 前插，弃权是单座位立即前插。本函数不读取或
+/// 修改 `rng`、配对与待结算伤害。
+pub fn forfeit(state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
+    if state.phase == Phase::GameOver {
+        return Vec::new();
+    }
+    let eliminated = match player(state, seat) {
+        Some(player) => player.eliminated,
+        None => return Vec::new(),
+    };
+    if eliminated {
+        return Vec::new();
+    }
+    let alive_before = alive_count(state);
+    if alive_before <= 1 {
+        return Vec::new();
+    }
+
+    if let Some(player) = player_mut(state, seat) {
+        player.hp = 0;
+        player.eliminated = true;
+    }
+    state.ranking.insert(0, seat);
+    let mut events = vec![GameEvent::PlayerEliminated {
+        seat,
+        place: u8::try_from(alive_before).unwrap_or(u8::MAX),
+    }];
+
+    if alive_before == 2 {
+        if let Some(survivor) = state
+            .players
+            .iter()
+            .find(|player| !player.eliminated)
+            .map(|player| player.seat)
+        {
+            state.ranking.insert(0, survivor);
+        }
+        state.phase = Phase::GameOver;
+        events.push(GameEvent::GameOver {
+            ranking: state.ranking.clone(),
+        });
+    }
+
+    events
+}
+
+/// 未淘汰人数；按 `players` 顺序只读统计，结果确定。
+fn alive_count(state: &GameState) -> usize {
+    state
+        .players
+        .iter()
+        .filter(|player| !player.eliminated)
+        .count()
+}
+
 /// 第 20 回合收束时的排名优先级：生命 → 上战胜者 → 累计伤害 → 座位。
 fn compare_alive(state: &GameState, left: Seat, right: Seat) -> Ordering {
     let (left_player, right_player) = match (player(state, left), player(state, right)) {

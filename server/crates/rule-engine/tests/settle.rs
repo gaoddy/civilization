@@ -9,7 +9,7 @@ use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::rng::RngStreams;
-use rule_engine::settle::{Pairing, damage_formula, ghost_board, pair_round, rank_of};
+use rule_engine::settle::{Pairing, damage_formula, forfeit, ghost_board, pair_round, rank_of};
 use rule_engine::state::{Phase, Seat};
 
 /// 往目录里插入一张合成随从卡，避免测试依赖真实卡面数值。
@@ -1010,6 +1010,83 @@ fn new_settle_fields_participate_in_state_hash() {
     let mut with_won = base.clone();
     with_won.last_won.insert(0);
     assert_ne!(before, state_hash(&with_won));
+}
+
+#[test]
+fn first_forfeit_of_eight_gets_last_place() {
+    let (_, mut state) = Engine::new(test_catalog(), [20; 32], test_playstyles());
+    state.phase = Phase::Recruit;
+
+    let events = forfeit(&mut state, 3);
+
+    assert_eq!(state.players[3].hp, 0);
+    assert!(state.players[3].eliminated);
+    assert_eq!(state.ranking.first(), Some(&3));
+    assert_eq!(rank_of(&state, 3), Some(8));
+    assert_eq!(
+        events,
+        vec![GameEvent::PlayerEliminated { seat: 3, place: 8 }]
+    );
+    assert_eq!(state.phase, Phase::Recruit, "尚有存活者时不结束对局");
+}
+
+#[test]
+fn second_forfeit_gets_next_place() {
+    let (_, mut state) = Engine::new(test_catalog(), [21; 32], test_playstyles());
+    state.phase = Phase::Recruit;
+    forfeit(&mut state, 3);
+
+    let events = forfeit(&mut state, 5);
+
+    assert_eq!(state.ranking, vec![5, 3]);
+    assert_eq!(rank_of(&state, 5), Some(7));
+    assert_eq!(rank_of(&state, 3), Some(8));
+    assert_eq!(
+        events,
+        vec![GameEvent::PlayerEliminated { seat: 5, place: 7 }]
+    );
+    assert_eq!(state.phase, Phase::Recruit);
+}
+
+#[test]
+fn forfeit_at_two_players_ends_game_immediately() {
+    let (_, mut state) = Engine::new(test_catalog(), [22; 32], test_playstyles());
+    state.phase = Phase::Recruit;
+    for seat in [0, 1, 3, 4, 5, 6] {
+        state.players[seat].eliminated = true;
+        state.players[seat].hp = 0;
+    }
+    state.ranking = vec![6, 5, 4, 3, 1, 0];
+
+    let events = forfeit(&mut state, 2);
+
+    assert_eq!(state.phase, Phase::GameOver);
+    assert_eq!(state.ranking, vec![7, 2, 6, 5, 4, 3, 1, 0]);
+    assert_eq!(rank_of(&state, 7), Some(1));
+    assert_eq!(rank_of(&state, 2), Some(2));
+    assert_eq!(
+        events,
+        vec![
+            GameEvent::PlayerEliminated { seat: 2, place: 2 },
+            GameEvent::GameOver {
+                ranking: vec![7, 2, 6, 5, 4, 3, 1, 0],
+            },
+        ]
+    );
+}
+
+#[test]
+fn forfeit_again_for_eliminated_seat_changes_nothing() {
+    let (_, mut state) = Engine::new(test_catalog(), [23; 32], test_playstyles());
+    state.phase = Phase::Recruit;
+    forfeit(&mut state, 2);
+    let before = state_hash(&state);
+
+    let events = forfeit(&mut state, 2);
+
+    assert!(events.is_empty());
+    assert_eq!(state_hash(&state), before);
+    assert_eq!(state.ranking, vec![2]);
 }
 
 #[test]
