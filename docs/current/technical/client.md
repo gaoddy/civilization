@@ -1,20 +1,21 @@
 # Godot 客户端
 
-> 状态：已实现（v0.1 M1b）
+> 状态：已实现（v0.1 M1b + 首版剩余四项：赛后回顾、房间生命周期、首局引导、macOS 导出）
 > 代码：`client/`
-> 验收：`make client-check`、`make client-smoke`、`make m1b-e2e`
+> 验收：`make client-check`、`make client-smoke`、`make m1b-e2e`、`make client-export`
 
-本文记录 v0.1 M1b 已实现的 Godot 客户端现状：工程结构、全局状态与网络层、六个场景、生成物与运行方式；不描述服务端房间服务（见[房间服务与联网](room-service/README.md)）与产品规则（见[规则引擎与模拟器](rule-engine-and-simulator.md)）。
+本文记录 v0.1 已实现的 Godot 客户端现状：工程结构、全局状态与网络层、六个场景、生成物与运行方式；不描述服务端房间服务（见[房间服务与联网](room-service/README.md)）与产品规则（见[规则引擎与模拟器](rule-engine-and-simulator.md)）。
 
 ## 1. 工程结构
 
 ```
 client/
   project.godot              # 主场景 login.tscn；autoload：WindowSizer、GameStore、CardDB、Net
+  export_presets.cfg         # macOS 导出预设：Universal、bundle id、未签名
   .gitignore                 # 忽略 .godot/ 与 *.uid
   autoload/
     window_sizer.gd          # 启动时按当前屏幕可用区域 90% 设置窗口并居中
-    game_store.gd            # 认证、房间与 PlayerView 的全局状态
+    game_store.gd            # 认证、房间、PlayerView、赛后统计与引导进度的全局状态
     ws_client.gd             # WebSocketPeer、自动重连、信封编解码与分发
     card_db.gd               # 只读卡牌/技能展示表与科学分类树；展示文本按文本 id 从文本表取
   text/
@@ -40,7 +41,8 @@ client/
     board_drop.gd            # 我方棋盘落点：命中判定与插入下标（class_name BoardDrop）
     combat_playback.gd       # 战斗动作落地器：节奏与状态应用（class_name CombatPlayback）
     combat_fx.gd             # 战斗演出覆盖层：碰撞往返、闪光、飘字、淡出与出现（class_name CombatFx）
-    result.tscn/.gd          # 结算
+    result.tscn/.gd          # 结算：名次、本人本局数据、最终阵容、种子与返回入口
+    first_game_guide.gd      # 首局非阻塞引导：目标高亮、底部提示条与本地 seen 记录（class_name FirstGameGuide）
     gallery.tscn/.gd         # 卡牌图鉴页：大厅入口，浏览全部卡牌与 Token
     card_gallery.gd          # 图鉴主体：头部、章节栏、目录、网格与常驻详情（class_name CardGallery）
     gallery_chapter_bar.gd   # 图鉴时代章节栏：全部 + 7 时代单选与计数（class_name GalleryChapterBar）
@@ -58,6 +60,8 @@ client/
     ui_smoke_text.tscn/.gd   # 文本表取用、枚举展示与错误文案回退
     ui_smoke_social.tscn/.gd # 大厅好友区、邀请弹窗与房间邀请入口
     ui_smoke_gallery.tscn/.gd # 图鉴页与对局覆盖层：计数、筛选、分页、详情与入口
+    ui_smoke_guide.tscn/.gd  # 首局引导：首次展示、步骤推进与条件跳过、跳过落盘、手动重看、输入穿透、重连续接
+    ui_smoke_room_ops.tscn/.gd # 房间管理：房主移除/解散、非房主隐藏、RoomClosed 回大厅、离线点击
     smoke_case.gd            # 冒烟公共断言与场景装载
     fixture.gd               # 冒烟用最小 PlayerView
     headless_game.tscn/.gd   # 无头对局驱动（1 客户端 + 7 机器人）
@@ -73,7 +77,7 @@ client/
 
 ## 2. 全局状态与网络层
 
-- `GameStore`：保存 `playerId`、`playerCode`、`token`、`roomId`、`roomCode`、房间成员、`PlayerView`、`lastSeq`、排名与种子，以及社交视图 `friends` / `incoming_requests` / `outgoing_requests` / `recent_players` / `pending_invites`。`handle(type, payload)` 只做字段搬运，发出 `auth_changed`、`room_changed`、`view_changed`、`game_started`、`game_over`、`error_received`、`social_changed`、`invite_received`、`invite_result_received` 信号；`FriendUpdate` 整段替换社交列表，`FriendInvite` 按 `inviteId` 去重后入队，`InviteAccepted` 移除邀请并自动补发 `JoinRoom{roomCode}`。`reset_room()` 清空房间，`reset_social()` 清空社交，`reset_session()` 两者都清并清空身份与令牌。
+- `GameStore`：保存 `playerId`、`playerCode`、`token`、`roomId`、`roomCode`、房间成员、`PlayerView`、`lastSeq`、排名、种子、本人赛后统计 `self_stats`、`RoomClosed` 原因 `room_closed_reason`、引导步骤 `guide_step`，以及社交视图 `friends` / `incoming_requests` / `outgoing_requests` / `recent_players` / `pending_invites`。`handle(type, payload)` 只做字段搬运，发出 `auth_changed`、`room_changed`、`view_changed`、`game_started`、`game_over`、`room_closed`、`error_received`、`social_changed`、`invite_received`、`invite_result_received` 信号；`FriendUpdate` 整段替换社交列表，`FriendInvite` 按 `inviteId` 去重后入队，`InviteAccepted` 移除邀请并自动补发 `JoinRoom{roomCode}`。`GameOver` 写入 `ranking`、`game_seed` 与 `selfStats`；`RoomClosed` 先暂存 `reason`，`reset_room()` 后写回 `room_closed_reason`、补发 `LeaveRoom` 并发出 `room_closed`。`reset_room()` 清空房间与对局状态，`clear_game_view()` 只清本局视图（保留房间与社交），`reset_social()` 清空社交，`reset_session()` 两者都清并清空身份与令牌。
 - `Net`：持有一个 `WebSocketPeer`，`_process` 中轮询；连接建立后先认证，断线每 3 秒自动重连。重连时以令牌发 `AuthRequest`，若仍在房间再发 `Reconnect{roomId, lastSeq}`，由服务端回全量 `Snapshot`。
 - 下行信封只校验 `v == 1` 与 `type`，`payload` 原样交给 `GameStore`；未知类型忽略。上行信封为 `{v, id, type, ts, payload}`，`id` 由时间戳与计数器生成。
 - `CardDB`：启动时读取 `client/generated/{cards,skills,tokens,taxonomy}.json`。卡名、技能文本与时代名不放在生成数据里，而是按文本 id 从 `client/text/zh_CN.csv` 取：`display_name` 取 `card.<id>.name`（Token 取 `token.<id>.name`），`display_text` 取 `skill.<id>.text`，`era_name` 取 `enum.era.<id>`。不参与任何规则判定。
@@ -91,11 +95,15 @@ client/
 | --- | --- |
 | 登录 | 输入服务器地址、手机号、固定验证码 `123456` 与显示名；认证成功后进入大厅 |
 | 大厅 | 展示本人 6 位玩家编号；创建房间或凭房间码加入；按编号添加好友、处理收到的申请、删除好友、从最近队友回加；有待处理邀请时弹出邀请浮层，接受后自动入房；收到 `RoomUpdate` 后进入房间 |
-| 房间 | 展示成员确认状态、选择英雄并一键确认；列出在线好友供一键邀请（对局中/离线置灰）；开局完全由服务端决定（全员准备后自动开始） |
-| 对局 | 酒馆战棋式三栏布局：左栏 8 行座位（按服务端 `rank` 升序，头像、名次角标、血量条，点击展开战报），中区招募视图（自上而下为商店、按容量棋盘）与战斗视图（对手随从、结果横幅、我方随从）互斥，手牌行常驻在两者之下，右栏为身份（售货员/对手英雄/幽灵/已淘汰观战）与售货员下方的商店操作、垂直居中的回合与倒计时、自己英雄介绍与贴底的英雄技能；十一种意图对应操作；`pendingChoices` 弹层（发现/进化/战吼目标，候选由视图下发）；英雄技能按 `requiresTarget` / `targetCandidates` 直接释放或弹出候选浮层 |
-| 结算 | 按服务端 `ranking` 展示名次与 `seed`；返回大厅时用令牌重新认证 |
+| 房间 | 展示成员确认状态、选择英雄并一键确认；列出在线好友供一键邀请（对局中/离线置灰）；开局完全由服务端决定（全员准备后自动开始）；房主且等待区时每名成员行带 `Kick_<playerId>`，底部 `DissolveButton`，收到 `RoomClosed` 后按原因提示并回大厅 |
+| 对局 | 酒馆战棋式三栏布局：左栏 8 行座位（按服务端 `rank` 升序，头像、名次角标、血量条，点击展开战报），中区招募视图（自上而下为商店、按容量棋盘）与战斗视图（对手随从、结果横幅、我方随从）互斥，手牌行常驻在两者之下，右栏为身份（售货员/对手英雄/幽灵/已淘汰观战）与售货员下方的商店操作、垂直居中的回合与倒计时及 `HintButton`/`LeaveGameButton`、自己英雄介绍与贴底的英雄技能；十一种意图对应操作；`pendingChoices` 弹层（发现/进化/战吼目标，候选由视图下发）；英雄技能按 `requiresTarget` / `targetCandidates` 直接释放或弹出候选浮层 |
+| 结算 | 按服务端 `ranking` 展示名次行（名次、玩家名、存活回合、造成伤害）、`selfStats` 的本局数据区与最终阵容、`seed`；`BackToRoomButton` 清本局视图后回房间，`BackToLobbyButton` 清房间并重新认证回大厅 |
 | 卡牌图鉴 | 只读浏览卡牌与 Token：时代章节 + 界级分类两维筛选、5 列网格每页 40 张、常驻详情；大厅入口用全量卡表（当前 409 卡 + 23 Token），对局入口以覆盖层只列本局卡池 |
 
+- 结算页节点：`ResultScroll` / `ResultContent` / `RankingList` / `StatsSection` / `BoardList` / `ResultActions` / `BackToRoomButton` / `BackToLobbyButton`。`StatsSection` 共 12 个 `StatRow_*`（战斗胜/平/负合为 `StatRow_combat`），缺字段按 0、空阵容显示一条「无随从」占位；页面只读取 `GameStore.ranking` / `self_stats` / `game_seed`，不推算。
+- 房间管理：`room.gd` 仅在 `_is_host()` 且 `GameStore.phase == PHASE_LOBBY` 时渲染 `Kick_<playerId>`，`DissolveButton` 随房主身份显隐；点击发 `KickMember{targetPlayerId}` / `DissolveRoom{}`。收到 `RoomClosed` 时 `GameStore` 清房间并补发 `LeaveRoom`，`room.gd` 把 `kicked` / `dissolved` 写成 `ui.room.kicked_notice` / `ui.room.dissolved_notice` 后导航大厅。
+- 对局内退出：右栏 `LeaveGameButton` 发 `leave_game_pressed`，`game.gd` 发送 `LeaveRoom`、收起引导、`reset_room()`、`Net.relogin()` 并回大厅；服务端按弃权结算，退出座位保留到本局结束。
+- 首局引导：`FirstGameGuide` 由 `game.gd` 在对局页装配后创建（`target_root` 为对局页），`_refresh` 调 `set_phase(phase, self_state)`，右栏 `HintButton` 调 `show_manual()`；步骤、节点名与本地存储见[首局引导组件](../product/ui/components/first-game-guide.md)。
 - 对局界面整块读取 `GameStore.view`，每次 `view_changed` 重建；按钮可用性只取 `affordances` / `playable` / `can*`，不做本地推导。冻结与棋盘卡拖拽换位没有对应的服务端 affordance，按 `phase`、`self.recruited` 与下标做本地门控，与服务端拒绝条件保持一致。
 - 操作还要求视图自身的 `turn` 与 `GameStore.turn` 一致：新回合的 `PhaseChanged` 会先于新视图到达，旧视图只展示、不可操作，避免用上一回合的商店发意图。
 - 倒计时由 `phaseDeadline` 计算；归零后结束招募、刷新、购买、出牌、出售与换位一并禁用，只等服务端推进阶段。
@@ -137,10 +145,10 @@ client/
   - `contagion`：更新数值后卡片短暂变色。
 - 演出用逐帧推进而不是 `Tween`，便于无头冒烟按帧断言；`reset()` 与 `_start_combat()` 清理覆盖层与进行中的动画。
 - 演示播完后页面为该回合发送一次 `CombatPlayed`（`_combat_ack_turn` 去重），由服务端在全部参战座位回报后结算。
-- 返回大厅不使用 `LeaveRoom`（非大厅阶段会被拒绝），而是清除房间状态后重新连接并以令牌认证。
+- 对局中主动退出使用 `LeaveRoom`：服务端在对局阶段按弃权结算，客户端收起引导、清空房间并重新连接、以令牌认证回大厅。结算页返回大厅同样清空房间并重新认证；返回房间只清本局视图，保留房间与社交状态。
 - 对局页的三栏结构、页面状态与数据来源见[对局页](../product/ui/pages/game.md)；颜色、字号、间距与圆角来自 `UITheme`，页面不写死视觉值。左栏宽 88，右栏身份块与英雄块取相同高度、平分中部状态块之外的剩余高度，商店操作与英雄技能因此分列售货员大图与英雄大图下方，生命/时代/金币三格贴底且逐项高对比展示；中区商店与棋盘不带标题，棋盘面板按内容高度收缩。招募阶段与战斗阶段共用同一页面，战斗与结算阶段隐藏招募视图、商店操作、英雄技能与结束招募，节点保留以便阶段恢复。
 - 详情层（`client/scenes/game_detail_layer.gd` 的 `GameDetailLayer`，面板节点名 `MinionDetailPanel`）统一承载商店、座位、售货员与随从四类详情，我方英雄详情亦由其 `hero` 类别渲染：商店卡、座位行与招募/战斗随从卡在悬停进入、鼠标左键按下或触摸按下时显示；指针移出锚点矩形后隐藏，松开鼠标左键或触摸时按指针所在目标矩形更新（由 `_input` 按全局矩形做命中判断，避免子控件截断悬停通知）。随从详情先显示名称、科学分类（完整路径）、玩法、关联玩法（仅中立非学者）、食物链（捕食/寄生）与 `CardDB.display_text` 介绍，再取协议 `BoardMinion.stats` 按初始、永久、回合、光环、受击、当前六行展示，有符号项带 `+`，受击的攻防都为 0 时省略该行；`stats` 缺失时仍显示名称与介绍，并退化为只显示顶层 `attack` / `health` 的当前攻防。商店详情同样先给分类与关联/食物链行，再接费用、原始数值、时代、技能文本与不可购买原因；英雄详情给科学分类、玩法、擅长玩法、时代与英雄技能。分类路径缺失显示「未定」，关联或食物链为空时省略对应行。座位与商店字段见[对局页](../product/ui/pages/game.md)。面板只读、忽略鼠标输入，位置以锚点矩形为准并按视口边界夹紧；每次 `_refresh` 重建前先隐藏，同一目标重复触发显示时只校正位置、不重建内容。
-- 冒烟测试按 `client/tests/ui_smoke*.tscn` 拆为七个场景，`make client-smoke` 用 glob 逐个运行并要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`。主冒烟覆盖五场景实例化、手牌重叠布局（十张 80 步进单行、相邻交叠、末卡不越界、滚动行不裁剪）、手牌显示服务端身材与奖励牌星级角标、手牌悬停（置顶、底边中点放大 1.12、越出滚动行仍命中、右侧交叠带仍归本卡且拖拽拾起本卡、移出复位、战斗阶段可查看）与拖拽开始复位、真实鼠标事件拖拽（按下、越过阈值、移到落点、松手）落盘与商店出售、拖拽落点意图（首卡 0、次卡 1、末尾空白为随从数）、棋盘卡换位（真实 `force_drag` 通知、原卡隐藏、落点发 `fromIndex/toIndex`）、商店出售落点（可卖与不可卖、手牌拒绝、普通/金色返还提示）、棋盘满时不接收、需要目标的效果牌落点规则、四个不可拖动条件、落点门控（换回合/开战/结束招募/断线时不发意图）、目标待选浮层与控件阻塞、战斗逐动作播放（阵亡卡离场、复生回原位、召唤按存活下标插入）、横幅停留、按截止时间续播、无跳过入口、战斗阶段不弹待选弹层、回合号不匹配时不显示旧战报、离开战斗后清空战报，以及离树导航守卫。`ui_smoke_side` 断言右栏三段的身份判定（含阶段优先、幽灵角标、已淘汰观战）、商店操作位于售货员下方、身份块与英雄块等高且状态块垂直居中、倒计时悬停翻成结束招募与归零文案；`ui_smoke_seats` 断言 8 行座位、头像尺寸、名次角标缺失与压暗、血量条比例、战报展开与刷新保持、无战报文案与座位详情；`ui_smoke_combat` 断言战斗视图只有对手行/横幅/我方行三段且无英雄条，以及固定占位（两行按 `card-height` 取行高、一方全灭后行高与两行位置不变、横幅出现前后两行不动），并以平局夹具断言平局横幅文案。`ui_smoke_cards` 断言商店卡费用与时代角标、冻结蒙层/冰晶/「冻」字、卡面介绍的两行省略、无介绍时的紧凑信息区与名称/数值基线，以及卡牌统一 112×146；卡面类型行显示玩法（中立为「中立」、哺乳纲随从为「哺乳纲」）且封面取 `UITheme.playstyle_cover`；`UITheme.PLAYSTYLE_COLOR` 14 个玩法的颜色互不重复、封面色比原色更暗；详情面板含科学分类与玩法行，机械工具卡与学者卡分别为「机械」与「中立」、英雄详情含科学分类行。`ui_smoke_text` 断言 `CardDB.display_name`（含 Token）、`display_text`、`era_name` 与 `UI.enum_text` 的取用，`CardDB.playstyle_name`（含 `neutral`）、`CardDB.taxon_name` 与 `CardDB.taxon_path`（完整路径、空 id、未知节点），`UI.error_text` 的错误码文案，`UI.error_text_by_id` 的 `messageId` 细分文案，以及缺键时 `UI.error_text_by_id` 返回空串。`ui_smoke_gallery` 断言大厅图鉴页 432 项与「全部」章节计数、每页 40 张与 11 页、常驻详情非空、目录与详情宽度取令牌且整体不溢出视口；时代与分类两维筛选（史前 63、未来下真菌项禁用、未来 + 动物界 14 张、清空后回 432）；空目录显示空态且无详情名；翻页到第 2 页；点击卡面后详情名称与类型/分类行同步；大厅「卡牌图鉴」入口文案；对局覆盖层为 198 张且 `alan-turing`、`airplane` 在池、`bruce-lee`、`ammonite-token`、`aristotle` 不在池，覆盖层不切换场景、返回按钮与 `Esc` 都能收起。
+- 冒烟测试按 `client/tests/ui_smoke*.tscn` 拆为十个场景，`make client-smoke` 用 glob 逐个运行并要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`。主冒烟覆盖五场景实例化、手牌重叠布局（十张 80 步进单行、相邻交叠、末卡不越界、滚动行不裁剪）、手牌显示服务端身材与奖励牌星级角标、手牌悬停（置顶、底边中点放大 1.12、越出滚动行仍命中、右侧交叠带仍归本卡且拖拽拾起本卡、移出复位、战斗阶段可查看）与拖拽开始复位、真实鼠标事件拖拽（按下、越过阈值、移到落点、松手）落盘与商店出售、拖拽落点意图（首卡 0、次卡 1、末尾空白为随从数）、棋盘卡换位（真实 `force_drag` 通知、原卡隐藏、落点发 `fromIndex/toIndex`）、商店出售落点（可卖与不可卖、手牌拒绝、普通/金色返还提示）、棋盘满时不接收、需要目标的效果牌落点规则、四个不可拖动条件、落点门控（换回合/开战/结束招募/断线时不发意图）、目标待选浮层与控件阻塞、战斗逐动作播放（阵亡卡离场、复生回原位、召唤按存活下标插入）、横幅停留、按截止时间续播、无跳过入口、战斗阶段不弹待选弹层、回合号不匹配时不显示旧战报、离开战斗后清空战报，以及离树导航守卫。`ui_smoke_side` 断言右栏三段的身份判定（含阶段优先、幽灵角标、已淘汰观战）、商店操作位于售货员下方、身份块与英雄块等高且状态块垂直居中、倒计时悬停翻成结束招募与归零文案；`ui_smoke_seats` 断言 8 行座位、头像尺寸、名次角标缺失与压暗、血量条比例、战报展开与刷新保持、无战报文案与座位详情；`ui_smoke_combat` 断言战斗视图只有对手行/横幅/我方行三段且无英雄条，以及固定占位（两行按 `card-height` 取行高、一方全灭后行高与两行位置不变、横幅出现前后两行不动），并以平局夹具断言平局横幅文案。`ui_smoke_cards` 断言商店卡费用与时代角标、冻结蒙层/冰晶/「冻」字、卡面介绍的两行省略、无介绍时的紧凑信息区与名称/数值基线，以及卡牌统一 112×146；卡面类型行显示玩法（中立为「中立」、哺乳纲随从为「哺乳纲」）且封面取 `UITheme.playstyle_cover`；`UITheme.PLAYSTYLE_COLOR` 14 个玩法的颜色互不重复、封面色比原色更暗；详情面板含科学分类与玩法行，机械工具卡与学者卡分别为「机械」与「中立」、英雄详情含科学分类行。`ui_smoke_text` 断言 `CardDB.display_name`（含 Token）、`display_text`、`era_name` 与 `UI.enum_text` 的取用，`CardDB.playstyle_name`（含 `neutral`）、`CardDB.taxon_name` 与 `CardDB.taxon_path`（完整路径、空 id、未知节点），`UI.error_text` 的错误码文案，`UI.error_text_by_id` 的 `messageId` 细分文案，以及缺键时 `UI.error_text_by_id` 返回空串。`ui_smoke_gallery` 断言大厅图鉴页 432 项与「全部」章节计数、每页 40 张与 11 页、常驻详情非空、目录与详情宽度取令牌且整体不溢出视口；时代与分类两维筛选（史前 63、未来下真菌项禁用、未来 + 动物界 14 张、清空后回 432）；空目录显示空态且无详情名；翻页到第 2 页；点击卡面后详情名称与类型/分类行同步；大厅「卡牌图鉴」入口文案；对局覆盖层为 198 张且 `alan-turing`、`airplane` 在池、`bruce-lee`、`ammonite-token`、`aristotle` 不在池，覆盖层不切换场景、返回按钮与 `Esc` 都能收起。`ui_smoke_guide` 断言首次进入自动展示第 1 步、下一步推进与手牌/棋盘条件跳过、跳过写入 `seen` 后不再自动展示、`show_manual()` 从第 1 步开始且不写 `seen`、场景重建后从 `GameStore.guide_step` 恢复、引导存在时点击与拖拽仍到达底层控件、存储缺失时按首次处理。`ui_smoke_room_ops` 断言房主可见 `DissolveButton` 与 `Kick_<playerId>`、非房主全部隐藏、`RoomClosed` 的 `kicked` / `dissolved` 提示后回大厅、离线时房主操作不可用。
 
 - 图鉴页大厅入口由 `lobby.gd` 的「卡牌图鉴」按钮经 `UI.navigate` 进入 `res://scenes/gallery.tscn`，目录取 `CardDB.cards.keys()`（已含 Token）；对局入口在右栏 `SideStatus` 回合/倒计时之后，`game.gd._open_gallery` 首次创建 `CardGallery` 覆盖节点（`GalleryOverlay`，铺满视口，`closed` 只收起 `visible`），不切换场景、不暂停视图刷新，拖拽、待选与战斗演示状态保留；`_refresh_overlay` 在选择浮层可见时调用 `_close_gallery`。
 - 图鉴两维筛选交叉生效：章节计数按当前分类过滤、目录计数按当前时代过滤，零计数且未选中的项禁用；筛选与翻页后网格只构建当前页（`gallery-page-size` = 40，`gallery-grid-columns` = 5），选中卡不在结果内时改为结果首张，结果为空时显示空态。排序按时代序号（未知排最后）再按本地化名称。
@@ -157,7 +165,7 @@ client/
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
-| `make client-smoke` | 用 glob 逐个运行七个 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR` |
+| `make client-smoke` | 用 glob 逐个运行十个 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR` |
 | `make m1b-e2e` | 启动服务端、Godot 无头客户端与 7 个 `sim bot`，要求输出 `M1B_E2E_OK` |
 | `make dev-bots` | 启动服务端与 7 个机器人并打印房间码，供开发者用桌面客户端作为第 8 人手动联调 |
 
@@ -216,6 +224,20 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 2. 卡牌展示表新增 `display_cost`：随从固定 3、效果牌取文档 `cost`，仅用于显示；规则判定仍全部在服务端。
 3. `PlayCard` 的目标由拖拽落点直接给出（随从牌带 `position`，需要目标的效果牌带 `target: {zone, id}`，取自视图候选），不再先发无目标再补选；英雄技能按 `heroPower.requiresTarget` 与候选决定直接释放还是弹浮层。`BuyMinion` 只携带槽位，买入一律入手牌，不登记补选目标。
 4. 英雄技能需要目标且候选非空时先弹出候选浮层，可取消；不需要目标时直接发送，候选为空时按钮禁用、不发送。
+
+## 8. 桌面端导出
+
+`client/export_presets.cfg` 提供 macOS 预设 `macOS`：Universal（`x86_64` + `arm64`）、bundle id `com.civilization.banner`、应用名 `Civilization`、不签名（`codesign/codesign=0`、`codesign/identity=""`）。预设的 `export_path` 为 `../output/desktop/Civilization.app`；`make client-export` 以命令行传入绝对路径，二者一致。
+
+| 命令 | 内容 |
+| --- | --- |
+| `make client-export-templates` | 读取 `$(GODOT) --version` 前三段（当前 `4.7.2`），检查 `$HOME/Library/Application Support/Godot/export_templates/4.7.2.stable/`；缺失时下载并解压官方 `Godot_v4.7.2-stable_export_templates.tpz`，只安装其中的 `templates/` |
+| `make client-export` | 依赖 `client-export-templates` 与 `client-import`；清空旧产物后导出 `output/desktop/Civilization.app`，校验 `Contents/MacOS/Civilization` 可执行，再用 `ditto` 打包 `output/desktop/Civilization-macos.zip` |
+
+- 两个目标只在 macOS 上可用，非 Darwin 主机直接报错退出；模板版本读不到时同样退出非 0，不猜测版本。
+- Universal 导出要求 `project.godot` 启用 `rendering/textures/vram_compression/import_etc2_astc` 与 `import_s3tc_bptc`，缺失时 Godot 会拒绝导出。
+- 产物未做正式签名与公证：`codesign/codesign=0` 禁用导出时的重签，但可执行文件仍保留 Godot 模板内置的 ad-hoc 签名。首次打开需右键「打开」，或在「系统设置 → 隐私与安全性」中放行；经 zip 下载后解压的副本同样会被 Gatekeeper 拦截。
+- 服务端地址仍在大厅填写，导出物不内置地址。
 
 ## 相关文档
 

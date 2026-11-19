@@ -29,10 +29,10 @@
 | --- | --- | --- |
 | 登录 | `scenes/login.tscn` | 未单独成文 |
 | 大厅 | `scenes/lobby.tscn` | 未单独成文 |
-| 房间（开局前） | `scenes/room.tscn` | 未单独成文 |
+| 房间（开局前） | `scenes/room.tscn` | [pages/room.md](pages/room.md) |
 | 对局 | `scenes/game.tscn` | [pages/game.md](pages/game.md) |
+| 结算 | `scenes/result.tscn` | [pages/result.md](pages/result.md) |
 | 卡牌图鉴 | `scenes/gallery.tscn` | [pages/gallery.md](pages/gallery.md) |
-| 结算 | `scenes/result.tscn` | 未单独成文 |
 
 ## 4. 组件
 
@@ -49,6 +49,7 @@
 | 图鉴卡面网格 | `GalleryGrid` | [components/gallery-grid.md](components/gallery-grid.md) |
 | 图鉴卡面单元 | `GalleryCardTile` | [components/gallery-card-tile.md](components/gallery-card-tile.md) |
 | 图鉴常驻详情 | `GalleryDetail` | [components/gallery-detail.md](components/gallery-detail.md) |
+| 首局引导 | `FirstGameGuide` | [components/first-game-guide.md](components/first-game-guide.md) |
 
 ## 5. 交互约定
 

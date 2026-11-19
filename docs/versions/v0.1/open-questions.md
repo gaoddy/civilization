@@ -37,8 +37,6 @@
 | GDScript 生成器是否值得长期维护 | 实现 | 先用最小生成物（常量与字段名）观察；维护成本高于收益时退回手写常量并由样例测试兜底 | [通信协议](technical/architecture/protocol.md) |
 | 观战只读视图的字段裁剪 | 实现 | v0.1 不做观战，视图按可被第三方只读消费设计，裁剪规则待观战时确定 | [通信协议](technical/architecture/protocol.md) |
 | `TARGET_NOT_ALLOWED` 未校验敌我 | 实现 | 招募阶段客户端拿不到敌方实例编号（§4.4），正常流程不会提交敌方目标，该错误码因此从未构造；但 `instanceId` 全局递增，恶意客户端可猜测编号指向敌方随从，服务端目前不校验敌我、会把效果实际作用于该随从。是否补校验待定 | [核心规则](product/rules/core-rules.md) §4.4 |
-| 协议 crate 生成物位置 | 实现 | M0 只建了 `rule-engine` 与 `sim` 两个 crate，`protocol` crate 尚未建立；M1 统一为仓库根 `protocol/generated/protocol.rs` 生成、crate 依赖生成文件，并回写 [服务端技术基线](technical/architecture/server-stack.md) | [协议设计](../../superpowers/specs/2026-11-15-protocol-design.md) §8 |
-| `PlayerView` 字段不足 | 实现 | 当前 schema 不能表达对手阵容、淘汰名次、当前对手与托管状态；M1 按「先改 schema + 样例，再改两端」补齐，并与引擎视图映射同批落地 | [协议设计](../../superpowers/specs/2026-11-15-protocol-design.md) |
 | 招募结束与遗留待选的先后 | 实现 | M0 允许仍有发现待选时提交 `EndRecruit`；M1 协议层再定是否拒绝该顺序 | [核心规则](product/rules/core-rules.md) §6 |
 | M0 重放未比对事件序列 | 实现 | `make m0-determinism` 与 `sim replay` 只比对终局哈希与排名，未比对事件序列；规格的「确定性」要求事件序列一致，M1 前补事件序列摘要比对 | [规则引擎与模拟器](technical/rule-engine-and-simulator.md) |
 | `survivors_at_turn_20` 采样时点 | 实现 | 实现中在 `drive` 循环内、第 20 回合 `resolve_settle` 返回后（检查 `state.turn == 20`）采样，即第 20 回合结算后的存活人数；文档原写「招募开始前」，与实现及 `games_reaching_turn_20` = `games_ended_on_turn_20` 的观测一致，但语义需确认（是否改为第 20 回合招募开始前或回合开始前采样） | [规则引擎与模拟器](technical/rule-engine-and-simulator.md) |

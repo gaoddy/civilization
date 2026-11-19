@@ -1,10 +1,10 @@
 # 房间服务与联网
 
-> 状态：已实现（v0.1 M1a + 好友与邀请 + PostgreSQL 持久化）
+> 状态：已实现（v0.1 M1a + 好友与邀请 + PostgreSQL 持久化 + 房间生命周期 + 赛后结果）
 > 代码：`server/crates/room-service`、`server/crates/protocol`、`server/crates/protocol-gen`、`server/migrations`、`protocol/schema/v1`、`protocol/generated`
 > 验收：`make m1-check`、`make db-test`
 
-本文记录 v0.1 M1a 已实现的房间服务现状：crate 边界、WebSocket 接入、下行序号、去重、逐座位过滤、计时与断线处理、好友与邀请、PostgreSQL 持久化、`sim bot` 用法与验收方式；不描述 M1b 的 Godot 客户端，也不描述产品规则（规则见[规则引擎与模拟器](../rule-engine-and-simulator.md)）。
+本文记录 v0.1 已实现的房间服务现状：crate 边界、WebSocket 接入、下行序号、去重、逐座位过滤、计时与断线处理、好友与邀请、房间生命周期、赛后结果、PostgreSQL 持久化、`sim bot` 用法与验收方式；不描述 M1b 的 Godot 客户端，也不描述产品规则（规则见[规则引擎与模拟器](../rule-engine-and-simulator.md)）。
 
 ## 1. 工程结构
 
@@ -73,7 +73,7 @@ protocol/
 
 - 认证：手机号 + 开发验证码 `123456` 或令牌续登；手机号经 `AccountStore` 解析为持久化账号（`playerId`、6 位玩家编号、展示名），同一手机号重新登录恢复同一账号；`playerId`/`token` 为服务端生成的不可预测串，不暴露手机号。认证结果同时下发 6 位数字 `playerCode`，好友申请按编号定位玩家。会话有效期 24 小时（`SESSION_TTL_MS`），过期在下次访问或 `purge_expired` 时清除，M1 不跑后台清理任务；会话仍是进程内状态，不落盘。
 - 建房：创建者坐 0 号座位并成为房主；房间码为 6 位大写字母数字，字母表排除易混字符 `0O1I`，首个房间码 `222222`。对局种子由房间码经 FNV-1a 64 位派生（`seed_for_code`）。
-- 房间玩法：建房时用房间码种子调用 `rule_engine::playstyles::draw(seed_for_code(code))`，抽取 5 个玩法存入 `RoomState.playstyles`；大厅期间保持不变，重开房间与断线重连不重抽。玩法必须早于英雄候选确定，因此抽取时点在房间创建，而不是 `Engine::new`。
+- 房间玩法：建房时用房间码种子调用 `rule_engine::playstyles::draw(seed_for_code(code))`，抽取 5 个玩法存入 `RoomState.playstyles`；大厅期间与断线重连保持不变，对局结束回房时随新种子重抽（见下）。玩法必须早于英雄候选确定，因此抽取时点在房间创建，而不是 `Engine::new`。
 - 入房：坐最小空位；同一玩家重复加入同一房间幂等。非 `Lobby` 阶段成员集合冻结，加入/准备/选英雄/离开都返回 `INVALID_STAGE`。
 - 英雄候选：建房与入房时按房间码派生的种子把全部 `is_hero` 卡 id 升序后做确定性 Fisher–Yates 洗牌，再按进房顺序每 4 张切给一名玩家（`CANDIDATE_COUNT`），因此同房间内各玩家候选互不重复；候选保存在 `PlayerSlot.hero_candidates`，重进与重连都不重抽。
 - 英雄候选过滤：候选只取 `card_in_pool` 通过的英雄卡，按本局 5 个玩法过滤；`playstyle=neutral` 的英雄按 `specialty` 的 `play:` 关联过滤。过滤后一张英雄都没有时回退到全部英雄卡（产品兜底）。
@@ -83,9 +83,14 @@ protocol/
 - 候选池校验：`AppState::new` 要求英雄卡至少 1 张且分类字段合法（`taxon` 是分类树叶子、`play:` 取值是合法玩法），不再要求 32 张；池不足时由跨玩家重复兜底，房间仍能开局。
 - 大厅断线：`Detach` 不再立即释放座位，而是标记离线并记录 `disconnected_at_ms`；房间 task 的 tick 调用 `tick_disconnects`，超过 `RECONNECT_GRACE_MS` 才按原规则释放座位。`Leave` 命令仍立即释放。座位已被释放后再 `Reconnect` 回 `NOT_IN_ROOM`，并摘除该座位的下行登记。
 - 离开：座位立即空出且不重排；房主离开时转给座位号最小的剩余玩家；**大厅最后一人离开即销毁房间**（注册表同时删 `by_code` 与 `rooms`）。
+- 移除：`KickMember{targetPlayerId}` 映射为 `RoomCommand::Kick`；仅房主、仅 `Lobby`、不能移除自己。成功后被移除者收到 `RoomClosed{reason:"kicked"}` 并移除发送端，座位空出且编号不重排；房间码与其余成员不变。错误码沿用 `NOT_HOST` / `INVALID_STAGE` / `NOT_IN_ROOM` / `INVALID_CHOICE`（移除自己映射为 `InvalidTarget`），不新增错误码。
+- 解散：`DissolveRoom{}` 映射为 `RoomCommand::Dissolve`；仅房主、仅 `Lobby`。成功后注册表同时删除 `rooms` 与 `by_code`，所有成员收到 `RoomClosed{reason:"dissolved"}`，房间码立即失效；房间 task 由 `retire_if_done` 回收。
 - 开局：8 个座位全部占用、全部准备且全部选好英雄后自动 `try_start`（最后一次 `Ready` 触发，不需要房主额外操作），把阶段推进到 `Recruit`，并在同一房间 task 内构造 `GameTask`。
-- `GameTask::new` 接收房间已抽好的 5 个玩法，开局原样传给 `Engine::new(catalog, seed, playstyles)`；`GameOver.seed` 不变，重开或重连复用同一组玩法。
-- 房间 task 在 `hub` 条目被摘除后退出：`RoomTask::retire_if_done` 在「对局已结束且无连接」或「注册表已无该房间」时摘除 `hub` 条目并结束循环。
+- `GameTask::new` 接收房间已抽好的 5 个玩法，开局原样传给 `Engine::new(catalog, seed, playstyles)`；同一局内 `GameOver.seed` 不变，断线重连复用同一组玩法；回房再开时由 `reset_for_next_game` 换新种子重抽。
+- 对局结束回房：`RoomTask::deliver_excluding` 见到 `GameOver` 时按座位缓存 `last_game_over`，全部投递后把 `game` 置空并调用 `RoomRegistry::reset_for_next_game`：阶段回 `Lobby`、移除 `departed` 中的座位（房主被移除时转给座位号最小的剩余成员）、清空每座位准备/英雄/旧候选，用新种子重抽 5 个玩法并重新分配候选，然后广播 `RoomUpdate`。
+- 连续开局种子：`RoomTask.round` 在每次结束回房时自增，`game_seed()` 取基础种子加 `round`；第一局用 `seed + 0`，下一局用 `seed + 1`，避免连续两局同种子。
+- 对局中主动退出：对局阶段收到 `LeaveRoom` 时 `RoomTask.leave` 转成 `RoomCommand::Forfeit`；规则引擎 `settle::forfeit` 把未淘汰座位置 `hp = 0`、`eliminated = true`，把座位插到 `ranking` 最前（最近出局在前），发出 `PlayerEliminated{place: 当时存活人数}`；只剩 1 名未淘汰者时立即补齐排名并进入 `GameOver`。已淘汰座位再次退出返回空事件。退出者发送端立即移除、停止接收该局消息，座位保留到本局结束，回房重置时统一移除。
+- 房间 task 在 `hub` 条目被摘除后退出：`RoomTask::retire_if_done` 只在注册表已无该房间时摘除 `hub` 条目并结束循环。对局结束不回收到 task：房间回到等待区继续复用，直到全员离开（或大厅断线宽限超时）后注册表删除房间。
 
 ## 6. 好友、在线状态与房间邀请
 
@@ -135,6 +140,9 @@ protocol/
 - 断线计为已回报：`Combat` 阶段断线时把该座位标记为参战座位已回报，若因此全员回报则当场结算。
 - 战报在结算时才写入 `combatLog`：演示期间观众与参战者都看不到本场条目。
 - 推到 `GameOver` 时逐座位下发 `GameOver`（排名从 1 起、种子为 16 位十六进制），不开始新的招募。
+- `GameOver.ranking[]` 每项含 `place`、`playerId` 与可选 `survivedTurns`（0–20）、`damageDealt`；`selfStats` 只填接收者本人，含 16 个必填字段：`place`、`survivedTurns`、`finalHp`、`finalEra`、`remainingGold`、`damageDealt`、`damageTaken`、`buys`、`sells`、`rerolls`、`triples`、`combatWins`、`combatDraws`、`combatLosses`、`heroPowerUses`、`board`（最多 7 项，每项 `cardId` / `golden` / `attack` / `health`）。
+- 统计来源：`buys` / `sells` / `rerolls` / `triples` 由 `MinionBought` / `MinionSold` / `ShopRolled` / `TripleFormed` 事件累计；`damageTaken` 由 `DamageTaken` 累计；`combatWins` / `combatDraws` / `combatLosses` 由 `CombatResolved` / `CombatDrawn` 累计；`heroPowerUses` 跨回合累计 `PlayerState.hero_uses` 的增量；`survivedTurns` 出局座位取淘汰事件回合、存活至结束取 `state.turn`；`finalHp` / `finalEra` / `remainingGold` / `damageDealt` / `board` 终局直接读 `PlayerState` 与棋盘。
+- 弃权名次：引擎把弃权者视作「最近出局」插到 `ranking` 临时块最前；最终 `GameOver.ranking` 仍是第 1 名在前，弃权者排在后续出局者之前、存活者之后，名次等于弃权时的存活人数。
 - 推进幂等：进入演示后阶段离开 `Recruit`，演示期间再次 `tick` 返回空；全部参战座位回报或兜底到点后阶段离开 `Combat`。
 - 引擎 `resolve_combat` 会把阶段推到 `Settle`：`enter_combat` 随后把阶段拨回 `Combat` 并丢弃 `Settle` 阶段的 `PhaseChanged`，`finish_combat` 结算前再拨回 `Settle`，客户端在整场演示期间只看到 `Combat`。
 
@@ -179,14 +187,16 @@ protocol/
 
 - 对局内断线：座位保留 30 秒（`RECONNECT_GRACE_MS`）。窗口内重连回一条全量 `Snapshot`；超过窗口只把座位标记为离线，不释放座位、不结束对局，也不向其他座位下发通知。
 - `Combat` 阶段重连：快照之后追加补发该座位本场 `CombatResult`（报告保留到 `finish_combat` 为止），客户端据此按 `phaseDeadline` 续播。
+- 对局已结束：`GameTask::reconnect` 在快照之后追加一条该座位本人的 `GameOver`；已回到等待区（`game` 为 `None`）时，`RoomTask` 在 `RoomUpdate` 之后补发 `last_game_over` 中缓存的结果。缓存按座位保存，新一局开始时清空。
 - 重连与 `RequestSnapshot` 共用全量快照路径；M1 **不重放历史**，`last_seq` 不参与判断，一律回全量快照，快照序号必然大于重连前最后一条。
-- 大厅断线：保留座位一个 `RECONNECT_GRACE_MS`（30 秒）宽限，超时由房间 tick 释放并广播 `RoomUpdate`；宽限内 `Reconnect` 回同一座位与同一组候选。房间玩法在创建时已确定，重连不重抽。
+- 大厅断线：保留座位一个 `RECONNECT_GRACE_MS`（30 秒）宽限，超时由房间 tick 释放并广播 `RoomUpdate`；宽限内 `Reconnect` 回同一座位与同一组候选。本局玩法在创建或回房重置时已确定，重连不重抽。
 - 连接代次：每次 `Attach`/`Reconnect` 带进程内唯一 `generation`；`Detach`/`Leave` 只在代次与当前登记一致时生效，避免新旧连接并存时旧连接迟到关闭误释放座位。
 - M1 不做托管：`PlayerSummary.managed` 恒为 `false`。
 
 ## 11. 协议生成物
 
 - `protocol/schema/v1/` 是唯一契约来源；`protocol/generated/protocol.rs` 由 `protocol-gen` 用 typify 生成并随源提交，`protocol/generated/protocol.gd` 由 `scripts/gen_protocol_gdscript.py` 生成并随源提交。
+- 本次新增上行 `KickMember{targetPlayerId}`、`DissolveRoom{}` 与下行 `RoomClosed{reason: "kicked" | "dissolved"}`；`GameOver` 新增可选 `selfStats`，`ranking[]` 新增可选 `survivedTurns` / `damageDealt`。生成物与样例随源提交。
 - `view.schema.json` 的 `enabledFactions` 描述为本局启用的 5 个玩法；字段名与长度不变，取值为 `mammal` 等玩法 id。
 - 协议样例 `protocol/samples/v1/s2c/*.json` 的 `enabledFactions` 为玩法 id，`client/tests/fixture.gd` 同步。
 - `make protocol-rs` 重新生成 Rust 类型；`make protocol-rs-check` 比较内存生成结果与磁盘内容，不一致即非零退出。

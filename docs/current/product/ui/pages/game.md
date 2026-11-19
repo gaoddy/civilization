@@ -9,7 +9,8 @@
 
 - 目的：在酒馆战棋式的三栏布局中呈现服务端 `PlayerView` 与 `CombatResult`，并把玩家操作转成协议意图。
 - 入口：房间页在 `RoomUpdate` 阶段离开 `Lobby` 或收到 `GameStarted` 后导航进入；重连后收到视图也会进入。
-- 返回：对局结束收到 `GameOver` 后进入结算页；认证类错误回登录；`NOT_IN_ROOM` / `ROOM_NOT_FOUND` 回大厅。
+- 返回：对局结束收到 `GameOver` 后进入结算页；右栏「退出对局」发送 `LeaveRoom`，服务端在对局阶段按弃权结算，客户端清空房间并回大厅；认证类错误回登录；`NOT_IN_ROOM` / `ROOM_NOT_FOUND` 回大厅。
+- 首局引导：首次进入对局时挂载非阻塞引导，说明见[首局引导](../components/first-game-guide.md)；右栏「提示」可随时手动重看。
 
 ## 2. 结构层级
 
@@ -31,12 +32,13 @@
       │  │  └─ 手牌行（重叠单行，悬停抬升放大；招募与战斗常驻）
       │  └─ 右栏（272）
       │     ├─ 身份块：售货员大图（名字贴底）与下方商店操作横排 / 对手英雄（幽灵战或已淘汰观战）
-      │     ├─ 状态块：回合数、剩余时间与「图鉴」入口同一行，位于右栏垂直中心
+      │     ├─ 状态块：回合数、剩余时间、「图鉴」「提示」「退出对局」同一行，位于右栏垂直中心
       │     └─ 英雄块：我方英雄大图在上，英雄技能在下，生命/时代/金币三格贴底
       └─ 状态行
 选择浮层（全屏，默认隐藏）：待选/目标弹层
 详情层（全屏，忽略鼠标输入）：卡牌与座位详情面板（默认隐藏）
 图鉴覆盖层（全屏，默认隐藏）：本局卡池的卡牌图鉴，首次点开时创建并复用
+首局引导层（全屏，默认隐藏）：GuideOverlay 压暗层忽略鼠标 + 底部 GuideBar 提示条
 ```
 
 - 页面没有顶栏；生命、时代与金币只在右栏 `SideHero` 的自己英雄介绍里各出现一次。
@@ -62,6 +64,8 @@
 - 手牌拖拽取消或视图刷新后不保留悬停放大：指针不动时需要移出再移入一次才会重新放大。
 - 招募视图自上而下固定为商店、我方棋盘；棋盘面板按内容高度收缩并贴到招募视图底部，下方留白全部落在商店与棋盘之间，使棋盘直接位于手牌上边。
 - 左栏、右栏与状态行在两个阶段都常驻；右栏状态行的「图鉴」入口也常驻，打开后以全屏覆盖层显示本局卡池，不切换场景，也不暂停对局状态。
+- 右栏状态块同时常驻 `HintButton`（「提示」，发出 `hint_pressed`，由 `game.gd` 调起首局引导的手动重看）与 `LeaveGameButton`（「退出对局」，发出 `leave_game_pressed`，由 `game.gd` 发送 `LeaveRoom` 并回大厅）；两者都只受连接状态影响，对局阶段始终可用。
+- 首局引导挂在对局页最上层（`FirstGameGuide`，`layer = 100`）；四块压暗矩形与锚点容器忽略鼠标，只有底部提示条接收「下一步 / 跳过」点击，购买、拖拽、结束招募与倒计时照常工作。
 
 ## 3. 状态清单
 
@@ -87,6 +91,10 @@
 | 倒计时归零 | `phaseDeadline` 已过 | 右栏倒计时显示「等待结算」，全部招募操作禁用 | 服务端推进阶段 |
 | 已结束招募 | `self.recruited` 为真 | 只读；倒计时悬停显示「已结束招募」，冻结禁用 | 服务端推进阶段 |
 | 图鉴覆盖层打开 | 点击右栏「图鉴」 | 全屏图鉴盖住页面，只显示本局卡池；对局数据照常刷新，拖拽、待选与演示状态保留 | 点「返回对局」或 `Esc` 收起；对局选择浮层可见时随刷新自动收起 |
+| 首局引导 | 本机首次进入对局 | 底部提示条与目标高亮显示，当前步骤写入 `GameStore.guide_step`；不拦截输入 | 点「下一步」推进、「跳过」或「完成」结束并写入本地 `seen` |
+| 引导阶段不匹配 | 当前步骤阶段与对局阶段不同 | 隐藏引导但保留当前步骤，回到匹配阶段恢复 | 阶段切回后自动显示 |
+| 手动重看 | 点击右栏「提示」 | 从第 1 步开始显示，不读写本地 `seen`，不改变对局状态 | 点「跳过」/「完成」收起 |
+| 主动退出 | 点击右栏「退出对局」 | 发送 `LeaveRoom`；服务端按弃权结算，退出者立即离开并停止接收该局消息 | 清空房间并回大厅 |
 | 达到上限 | 商店 6 槽、棋盘按 `boardSlots` 计 | 槽位固定，空位以「空位」占位 | 服务端判定手牌与棋盘上限，拒绝原因进 tooltip |
 
 - 同一时刻只呈现一种主状态；错误文本不覆盖正在显示的待选弹层，弹层由独立的视图门槛控制。
@@ -109,6 +117,7 @@
 | 随从详情构成 | 棋盘随从的 `stats`（`attack` / `health` 各含 `initial`、`permanent`、`turn`、`aura`、`damage`、`current`）；缺失时退化为顶层 `attack` / `health` |
 | 卡面与商店详情 | `CardDB` 卡表：`card_type`、`playstyle`、`taxon`、`specialty`、`attack`、`health`、`era`、`display_cost`、`skills`；分类路径走 `CardDB.taxon_path`，玩法/分类名走 `CardDB.playstyle_name` / `CardDB.taxon_name` |
 | 图鉴卡池 | `CardPool.card_ids(view.enabledFactions)`：与服务端 `card_in_pool` 同规则复算本局卡池，排除 Token |
+| 首局引导 | `user://first_game_guide.cfg` 的 `[seen]` 段（键为 `playerId`）与 `GameStore.guide_step`；阶段与手牌/棋盘条件取 `GameStore.phase` 与 `view.self` |
 
 - 页面不做本地规则推导：不计算伤害、不推断可用性、不推导名次；左栏只按服务端 `rank` 排显示顺序。战斗演示按 `actions` 逐条应用服务端下发的数值，不做任何加减。
 - 图鉴覆盖层不参与对局操作：本局卡池用 `CardPool` 按 `enabledFactions` 复算，只用于列出可出现的卡牌，出牌与商店合法性仍以服务端视图为准。
@@ -168,10 +177,12 @@
 - 每次 `view_changed` 重建左栏与中区，节点上限为 8 个座位、按 `boardSlots` 的棋盘点位、6 个商店槽、10 张手牌；不使用图片与字体资源。
 - 座位展开块按当前展开的 `playerId` 重建；同一时刻最多展开一行，战报条目随服务端最近 5 回合上限增长。
 - 图鉴覆盖层首次打开时创建并一直复用，关闭只切可见性；网格每页最多 40 个卡面节点，不随对局视图刷新重建。
+- 首局引导层只在 `_process` 中重算高亮矩形，最多 4 块压暗矩形与 1 条提示条，不参与三栏布局。
 
 ## 8. 关联
 
 - 令牌：[tokens.md](../tokens.md)
 - 通用交互：[interactions.md](../interactions.md)
-- 组件：[hero-tile.md](../components/hero-tile.md)、[avatar.md](../components/avatar.md)、[pill.md](../components/pill.md)、[button.md](../components/button.md)、[card-panel.md](../components/card-panel.md)、[card-gallery.md](../components/card-gallery.md)
+- 组件：[hero-tile.md](../components/hero-tile.md)、[avatar.md](../components/avatar.md)、[pill.md](../components/pill.md)、[button.md](../components/button.md)、[card-panel.md](../components/card-panel.md)、[card-gallery.md](../components/card-gallery.md)、[first-game-guide.md](../components/first-game-guide.md)
 - 图鉴页（目录与详情口径）：[gallery.md](gallery.md)
+- 结算页：[result.md](result.md)

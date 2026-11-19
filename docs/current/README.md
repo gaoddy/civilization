@@ -13,4 +13,4 @@
 | v0.1 M1a 房间服务 | 已实现 | `make m1-check` 整体退出 0，证据见[房间服务与联网](technical/room-service/README.md) §13 | [房间服务与联网](technical/room-service/README.md) |
 | v0.1 M1b Godot 客户端 | 已实现 | `make client-check`、`make client-smoke` 与 `make m1b-e2e` 均退出 0，见[Godot 客户端](technical/client.md) §4 | [Godot 客户端](technical/client.md) |
 
-M1b 之后的里程碑尚未实现。
+v0.1 剩余四项能力（赛后数据回顾、房间生命周期、首局界面引导、macOS 桌面端导出）已实现，现状见 [v0.1 版本说明](../versions/v0.1/README.md) 与下列实现文档。
