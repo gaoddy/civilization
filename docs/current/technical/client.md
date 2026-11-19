@@ -297,11 +297,14 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 | 命令 | 内容 |
 | --- | --- |
 | `make client-export-ios` | 依赖 `client-export-templates` 与 `client-import`；导出 `output/ios/Civilization.xcodeproj`，用 `xcodebuild`（scheme `Civilization`、`-allowProvisioningUpdates`）构建 Release，再把 `Civilization.app` 装入 `Payload/` 打包为 `output/ios/Civilization-ios.ipa` |
+| `make client-run-ios` | 依赖 `client-export-ios`，用 `xcrun devicectl` 把 `output/ios/build/Build/Products/Release-iphoneos/Civilization.app` 安装到 iPhone 并启动 `com.civilization.banner` |
 
 - 只在 macOS 上可用；模板目录缺少 `ios.zip` 时直接退出非 0。
 - 导出前必须存在 `application/config/icon`（当前 `res://icon.png`）；缺少图标时 Godot 导出失败。图标由 `scripts/gen_app_icon.py` 生成，随源提交。
 - 签名依赖 Xcode 登录 Apple 团队账号并登记目标真机；缺少账号或描述文件时 `xcodebuild` 失败并打印签名错误，不产出未签名包。
 - 构建产物在 `output/ios/build/Build/Products/Release-iphoneos/`；`output/` 不提交。
+- `make client-run-ios` 默认取 `devicectl` 中第一台已连接（`connected`）的 iPhone，并打印所选设备名与 UDID；`IOS_DEVICE=<设备名|UDID>` 指定其他设备，`IOS_LAUNCH=0` 只安装不启动（设备锁屏或未解锁时启动失败，安装不受影响）。
+- 安装要求设备已在 Xcode 中信任并开启开发者模式；没有已连接的 iPhone 时目标直接失败并列出当前设备。
 
 ## 10. 美术素材层
 
