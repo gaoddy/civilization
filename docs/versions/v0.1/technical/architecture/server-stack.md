@@ -1,6 +1,6 @@
 # 服务端技术基线
 
-> 状态：M0 已实施（`rule-engine`、`sim`）；M1a 已实施（`protocol`、`room-service`）
+> 状态：M0 已实施（`rule-engine`、`sim`）；M1a 已实施（`protocol`、`room-service`，账号与社交数据已落 PostgreSQL）
 > 依赖：[设计总纲](../../product/overview/design-overview.md)（§8）、[联网与技术架构](network-architecture.md)
 
 本文记录 v0.1 服务端已确定的技术选型、工程形态与确定性约束；不描述客户端选型、接口字段与具体实现。未确定事项见[待确认事项](../../open-questions.md)。
@@ -14,7 +14,7 @@
 | 网络 | axum（WebSocket） | 只暴露 WebSocket 与健康检查，不引入 REST 框架 |
 | 序列化 | serde + serde_json | 协议保持 JSON，见[联网与技术架构](network-architecture.md)第 5 节 |
 | 随机数 | 自实现 xoshiro256++ | 不使用 `rand` 的默认算法：其实现不承诺跨版本稳定，重放会失效 |
-| 数据库 | PostgreSQL + sqlx | 账号、好友、房间元数据、意图日志与遥测；迁移用 `sqlx migrate` |
+| 数据库 | PostgreSQL + sqlx | 已落库：账号身份、好友关系、好友申请与发送记录、最近对局、房间邀请；迁移用 `sqlx::migrate!` 执行 `server/migrations/` |
 | 测试 | cargo test + proptest | 确定性重放测试与属性测试，见[联网与技术架构](network-architecture.md)第 10 节 |
 | 部署 | 单二进制 + Docker | 规则引擎与房间服务同进程发布；初期单实例 |
 
@@ -22,7 +22,7 @@
 
 ## 2. 工程形态
 
-服务端为 Cargo workspace，规则引擎与房间服务通过 crate 边界隔离。当前已建 `rule-engine`（纯库）、`sim`（CLI 模拟器与确定性 AI）、`protocol`（生成的消息与视图类型）、`protocol-gen`（协议生成器）与 `room-service`（WebSocket 房间服务），当前状态见[房间服务与联网](../../../../current/technical/room-service.md)：
+服务端为 Cargo workspace，规则引擎与房间服务通过 crate 边界隔离。当前已建 `rule-engine`（纯库）、`sim`（CLI 模拟器与确定性 AI）、`protocol`（生成的消息与视图类型）、`protocol-gen`（协议生成器）与 `room-service`（WebSocket 房间服务），当前状态见[房间服务与联网](../../../../current/technical/room-service/README.md)：
 
 ```
 server/
@@ -55,13 +55,13 @@ server/
 - 房间服务负责会话、阶段计时、意图排序、广播、掉线与托管，不做任何规则判断；它只调用规则引擎并把结果广播出去。
 - 每房间单 task 串行处理意图；同一房间的意图进入顺序即结算顺序，不并发结算。
 - 隐藏信息按[联网与技术架构](network-architecture.md)第 7.1 节的字段清单过滤后才下发，过滤发生在 `room-service`，不进入规则引擎。
-- 持久化以意图日志 + 种子为准，快照只用于进程崩溃恢复；恢复路径见[联网与技术架构](network-architecture.md)第 9 节。
+- 当前实现不持久化房间、意图日志与快照：房间与对局状态只在进程内，重启即丢失；已持久化的只有账号与社交数据（好友、申请、最近对局、房间邀请），写入方式见[房间服务与联网](../../../../current/technical/room-service/README.md) §6.1。意图日志 + 种子的崩溃恢复路径见[联网与技术架构](network-architecture.md)第 9 节，尚未实现。
 
 ## 5. 未确定事项
 
 - 服务端工程目录的具体落点与 workspace 拆分细度：搭建工程时确定，见[待确认事项](../../open-questions.md)。
 - 部署编排（容器编排方式、单实例到多实例的切分维度）：M2 联机内测前确定。
-- 数据库表结构与迁移文件：进入 M1 前按数据模型另行设计。
+- 房间、对局状态与意图日志的持久化与恢复：M2 前确定。
 
 ## 相关文档
 

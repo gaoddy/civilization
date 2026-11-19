@@ -10,7 +10,7 @@
 | 里程碑 | 状态 | 验证结果 | 实现文档 |
 | --- | --- | --- | --- |
 | v0.1 M0 规则可跑 | 已实现 | 七类验证标准由验证矩阵命令与报告字段支撑，见[规则引擎与模拟器](technical/rule-engine-and-simulator.md) §5；数值基线的口径问题登记在 v0.1 待确认事项 | [规则引擎与模拟器](technical/rule-engine-and-simulator.md) |
-| v0.1 M1a 房间服务 | 已实现 | `make m1-check` 整体退出 0，证据见[房间服务与联网](technical/room-service.md) §12 | [房间服务与联网](technical/room-service.md) |
+| v0.1 M1a 房间服务 | 已实现 | `make m1-check` 整体退出 0，证据见[房间服务与联网](technical/room-service/README.md) §13 | [房间服务与联网](technical/room-service/README.md) |
 | v0.1 M1b Godot 客户端 | 已实现 | `make client-check`、`make client-smoke` 与 `make m1b-e2e` 均退出 0，见[Godot 客户端](technical/client.md) §4 | [Godot 客户端](technical/client.md) |
 
 M1b 之后的里程碑尚未实现。

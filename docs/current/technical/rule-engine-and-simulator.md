@@ -1,6 +1,6 @@
 # 规则引擎与模拟器
 
-> 状态：已实现（v0.1 M0；M1a 的增量见[房间服务与联网](room-service.md)）
+> 状态：已实现（v0.1 M0；M1a 的增量见[房间服务与联网](room-service/README.md)）
 > 代码：`server/crates/rule-engine`、`server/crates/sim`、`scripts/`、`Makefile`
 
 本文记录 v0.1 M0 已实现的规则引擎与模拟器的现状：工程结构、引擎边界、随从属性分层、数据生成、命令与验证方式；不描述产品规则与后续里程碑规划。
@@ -163,7 +163,7 @@ impl Taxonomy {
 - `Neutral`：`specialty` 中没有 `play:` 时视为纯通用，始终在池中；有 `play:` 时至少一个命中本局玩法才在池中。学者、中立工具卡与效果牌同一口径——定向效果牌只在本局启用其 `play:` 关联玩法时进商店。
 - 商店、发现候选、随机召唤、商店类效果（刷新、加槽、获得随从）与英雄候选过滤都走该入口。
 - 复制已有实例、显式 `Summon {card}`、复活是技能明确指定的结果，不走卡池判定。
-- 英雄卡不进商店；英雄候选由房间服务按同一入口过滤（见[房间服务与联网](room-service.md)）。
+- 英雄卡不进商店；英雄候选由房间服务按同一入口过滤（见[房间服务与联网](room-service/README.md)）。
 
 ### 3.5 开局玩法
 
@@ -194,12 +194,12 @@ impl Taxonomy {
 | `make m0-determinism` | 运行 `sim_determinism::replay_same_log_100_times_has_same_hash`：同一局用 `sim replay` 重放 100 次，哈希全部一致 |
 | `make m0-batch` | 1000 局 8 AI 批量对局（seed 1），写入 `output/m0-batch.json` |
 | `make m0-check` | `make data-check && make test && make lint && make m0-determinism`（计划中的 M0 汇总门禁） |
-| `make m1-check` | M1a 汇合门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism`；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service.md) |
+| `make m1-check` | M1a 汇合门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism`；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service/README.md) |
 | `make m0-report` | 先校验批量日志（`sim check --expect-games 1000`：局数、每局 8 名排名），再生成基线报告（字段口径见第 7 节）；输出同时写入 `output/m0-report.log`。可用 `M0_BATCH_LOG`、`M0_GAMES` 指向其他批量日志与局数 |
 | `make dev-bots` | 本地联调：起服务端与 7 个机器人，打印房间码后等开发者作为第 8 人入座。`DEV_PORT` 默认 8080，端口被占用时直接失败 |
 | `python3 scripts/validate_docs.py` | 文档与实体数据校验 |
 
-模拟器直接调用：`sim play --seed N`、`sim batch --games N --seed N --out PATH`、`sim replay --log PATH`、`sim report --log PATH`、`sim check --log PATH [--expect-games N]`、`sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID [--room CODE] [--create] [--intent-seed N]`、`sim dev --connect ws://HOST:PORT/ws [--intent-seed N]`；参数错误、模拟失败或日志校验不通过以非零码退出。`sim bot` 的细节见[房间服务与联网](room-service.md)第 11 节。
+模拟器直接调用：`sim play --seed N`、`sim batch --games N --seed N --out PATH`、`sim replay --log PATH`、`sim report --log PATH`、`sim check --log PATH [--expect-games N]`、`sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID [--room CODE] [--create] [--intent-seed N]`、`sim dev --connect ws://HOST:PORT/ws [--intent-seed N]`；参数错误、模拟失败或日志校验不通过以非零码退出。`sim bot` 的细节见[房间服务与联网](room-service/README.md)第 12 节。
 
 `sim dev` 起 7 个机器人：第 0 个建房并把房间码打印为 `ROOM_CODE=<code>`，其余 6 个在取到码后并发加入，给开发者留出恰好一个座位。英雄卡按 id 升序取自内嵌卡表，第 `index` 个机器人的意图种子为 `intent_seed + index`。取房间码超时 10 秒；取到码后等待开局与整局结束，不设总时限——本地联调时真人每回合可长达 120 秒，固定总时限会中断对局。任一机器人失败时取消其余机器人并以非零码退出。
 
