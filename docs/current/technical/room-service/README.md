@@ -73,7 +73,7 @@ protocol/
 
 - 认证：手机号 + 开发验证码 `123456` 或令牌续登；手机号经 `AccountStore` 解析为持久化账号（`playerId`、6 位玩家编号、展示名），同一手机号重新登录恢复同一账号；`playerId`/`token` 为服务端生成的不可预测串，不暴露手机号。认证结果同时下发 6 位数字 `playerCode`，好友申请按编号定位玩家。会话有效期 24 小时（`SESSION_TTL_MS`），过期在下次访问或 `purge_expired` 时清除，M1 不跑后台清理任务；会话仍是进程内状态，不落盘。
 - 建房：创建者坐 0 号座位并成为房主；房间码为 6 位大写字母数字，字母表排除易混字符 `0O1I`，首个房间码 `222222`。对局种子由房间码经 FNV-1a 64 位派生（`seed_for_code`）。
-- 房间玩法：建房时用房间码种子调用 `rule_engine::playstyles::draw(seed_for_code(code))`，抽取 5 个玩法存入 `RoomState.playstyles`；大厅期间与断线重连保持不变，对局结束回房时随新种子重抽（见下）。玩法必须早于英雄候选确定，因此抽取时点在房间创建，而不是 `Engine::new`。
+- 房间玩法：建房时用房间码种子调用 `rule_engine::playstyles::draw(seed_for_code(code))`，抽取 5 个玩法存入 `RoomState.playstyles`；大厅期间与断线重连保持不变。对局结束即销毁房间，不再重抽。玩法必须早于英雄候选确定，因此抽取时点在房间创建，而不是 `Engine::new`。
 - 入房：坐最小空位；同一玩家重复加入同一房间幂等。非 `Lobby` 阶段成员集合冻结，加入/准备/选英雄/离开都返回 `INVALID_STAGE`。
 - 英雄候选：建房与入房时按房间码派生的种子把全部 `is_hero` 卡 id 升序后做确定性 Fisher–Yates 洗牌，再按进房顺序每 4 张切给一名玩家（`CANDIDATE_COUNT`），因此同房间内各玩家候选互不重复；候选保存在 `PlayerSlot.hero_candidates`，重进与重连都不重抽。
 - 英雄候选过滤：候选只取 `card_in_pool` 通过的英雄卡，按本局 5 个玩法过滤；`playstyle=neutral` 的英雄按 `specialty` 的 `play:` 关联过滤。过滤后一张英雄都没有时回退到全部英雄卡（产品兜底）。
@@ -86,11 +86,10 @@ protocol/
 - 移除：`KickMember{targetPlayerId}` 映射为 `RoomCommand::Kick`；仅房主、仅 `Lobby`、不能移除自己。成功后被移除者收到 `RoomClosed{reason:"kicked"}` 并移除发送端，座位空出且编号不重排；房间码与其余成员不变。错误码沿用 `NOT_HOST` / `INVALID_STAGE` / `NOT_IN_ROOM` / `INVALID_CHOICE`（移除自己映射为 `InvalidTarget`），不新增错误码。
 - 解散：`DissolveRoom{}` 映射为 `RoomCommand::Dissolve`；仅房主、仅 `Lobby`。成功后注册表同时删除 `rooms` 与 `by_code`，所有成员收到 `RoomClosed{reason:"dissolved"}`，房间码立即失效；房间 task 由 `retire_if_done` 回收。
 - 开局：8 个座位全部占用、全部准备且全部选好英雄后自动 `try_start`（最后一次 `Ready` 触发，不需要房主额外操作），把阶段推进到 `Recruit`，并在同一房间 task 内构造 `GameTask`。
-- `GameTask::new` 接收房间已抽好的 5 个玩法，开局原样传给 `Engine::new(catalog, seed, playstyles)`；同一局内 `GameOver.seed` 不变，断线重连复用同一组玩法；回房再开时由 `reset_for_next_game` 换新种子重抽。
-- 对局结束回房：`RoomTask::deliver_excluding` 见到 `GameOver` 时按座位缓存 `last_game_over`，全部投递后把 `game` 置空并调用 `RoomRegistry::reset_for_next_game`：阶段回 `Lobby`、移除 `departed` 中的座位（房主被移除时转给座位号最小的剩余成员）、清空每座位准备/英雄/旧候选，用新种子重抽 5 个玩法并重新分配候选，然后广播 `RoomUpdate`。
-- 连续开局种子：`RoomTask.round` 在每次结束回房时自增，`game_seed()` 取基础种子加 `round`；第一局用 `seed + 0`，下一局用 `seed + 1`，避免连续两局同种子。
-- 对局中主动退出：对局阶段收到 `LeaveRoom` 时 `RoomTask.leave` 转成 `RoomCommand::Forfeit`；规则引擎 `settle::forfeit` 把未淘汰座位置 `hp = 0`、`eliminated = true`，把座位插到 `ranking` 最前（最近出局在前），发出 `PlayerEliminated{place: 当时存活人数}`；只剩 1 名未淘汰者时立即补齐排名并进入 `GameOver`。已淘汰座位再次退出返回空事件。退出者发送端立即移除、停止接收该局消息，座位保留到本局结束，回房重置时统一移除。
-- 房间 task 在 `hub` 条目被摘除后退出：`RoomTask::retire_if_done` 只在注册表已无该房间时摘除 `hub` 条目并结束循环。对局结束不回收到 task：房间回到等待区继续复用，直到全员离开（或大厅断线宽限超时）后注册表删除房间。
+- `GameTask::new` 接收房间已抽好的 5 个玩法，开局原样传给 `Engine::new(catalog, seed, playstyles)`；同一局内 `GameOver.seed` 不变，断线重连复用同一组玩法。
+- 对局结束即销毁：`RoomTask::deliver_excluding` 投递完 `GameOver` 后 `self.game.take()`、清空发送端并调用 `RoomRegistry::remove(room_id)`；房间码随之失效，`retire_if_done` 在下一轮发现注册表已无房间，摘除 `hub` 条目并结束 task。不保留等待区，也不重置给下一局。
+- 对局中主动退出：对局阶段收到 `LeaveRoom` 时 `RoomTask.leave` 转成 `RoomCommand::Forfeit`；规则引擎 `settle::forfeit` 把未淘汰座位置 `hp = 0`、`eliminated = true`，把座位插到 `ranking` 最前（最近出局在前），发出 `PlayerEliminated{place: 当时存活人数}`；只剩 1 名未淘汰者时立即补齐排名并进入 `GameOver`。已淘汰座位再次退出返回空事件。退出者发送端立即移除、停止接收该局消息，座位保留到本局结束，房间销毁时一并消失。
+- 房间 task 在 `hub` 条目被摘除后退出：`RoomTask::retire_if_done` 只在注册表已无该房间时摘除 `hub` 条目并结束循环。对局结束、解散与大厅最后一人离开都会删除注册表房间，task 随之退出。
 
 ## 6. 好友、在线状态与房间邀请
 
@@ -187,9 +186,9 @@ protocol/
 
 - 对局内断线：座位保留 30 秒（`RECONNECT_GRACE_MS`）。窗口内重连回一条全量 `Snapshot`；超过窗口只把座位标记为离线，不释放座位、不结束对局，也不向其他座位下发通知。
 - `Combat` 阶段重连：快照之后追加补发该座位本场 `CombatResult`（报告保留到 `finish_combat` 为止），客户端据此按 `phaseDeadline` 续播。
-- 对局已结束：`GameTask::reconnect` 在快照之后追加一条该座位本人的 `GameOver`；已回到等待区（`game` 为 `None`）时，`RoomTask` 在 `RoomUpdate` 之后补发 `last_game_over` 中缓存的结果。缓存按座位保存，新一局开始时清空。
+- 对局已结束：房间已在对局结束时销毁，旧 `roomId` 重连只回 `ROOM_NOT_FOUND`（房间 task 已退出）或 `NOT_IN_ROOM`（task 尚未回收），不补发 `GameOver`，也不恢复房间。结算页断线后直接回大厅。
 - 重连与 `RequestSnapshot` 共用全量快照路径；M1 **不重放历史**，`last_seq` 不参与判断，一律回全量快照，快照序号必然大于重连前最后一条。
-- 大厅断线：保留座位一个 `RECONNECT_GRACE_MS`（30 秒）宽限，超时由房间 tick 释放并广播 `RoomUpdate`；宽限内 `Reconnect` 回同一座位与同一组候选。本局玩法在创建或回房重置时已确定，重连不重抽。
+- 大厅断线：保留座位一个 `RECONNECT_GRACE_MS`（30 秒）宽限，超时由房间 tick 释放并广播 `RoomUpdate`；宽限内 `Reconnect` 回同一座位与同一组候选。本局玩法在房间创建时已确定，重连不重抽。
 - 连接代次：每次 `Attach`/`Reconnect` 带进程内唯一 `generation`；`Detach`/`Leave` 只在代次与当前登记一致时生效，避免新旧连接并存时旧连接迟到关闭误释放座位。
 - M1 不做托管：`PlayerSummary.managed` 恒为 `false`。
 
