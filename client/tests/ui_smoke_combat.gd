@@ -1,5 +1,5 @@
 extends "res://tests/smoke_case.gd"
-## 战斗视图冒烟：中区只剩对手随从、结果横幅、我方随从，不再有双方英雄条；
+## 战斗视图冒烟：顶部恢复对手英雄、双方随从行夹住河道，结果追加在河道回合数之后；
 ## 演示播完只回报一次 `CombatPlayed`，战斗阶段不显示招募倒计时。
 ##
 ## 断言在演示播放中与播放结束两种状态下都要成立。
@@ -52,7 +52,8 @@ func _check_combat_center_only() -> void:
     GameStore.deadline = ""
 
 
-## 横幅文案：平局夹具显示「平局」与「伤害 0」；幽灵战夹具追加「（幽灵）」。
+## 横幅文案：夹具胜者为我方，显示「胜利」、对手名与伤害；
+## 平局夹具显示「平局」与 0 伤害；幽灵战夹具追加「（幽灵）」。
 func _check_banner_variants() -> void:
     var draw := FixtureScript.combat_result()
     draw["winnerId"] = null
@@ -61,7 +62,8 @@ func _check_banner_variants() -> void:
         draw,
         [
             TranslationServer.translate("ui.game.combat.draw"),
-            TranslationServer.translate("ui.game.rail.damage") % 0,
+            "机器人C",
+            "0",
         ],
         "平局",
     )
@@ -69,7 +71,10 @@ func _check_banner_variants() -> void:
     ghost["mirror"] = true
     await _expect_banner(
         ghost,
-        [TranslationServer.translate("ui.game.combat.ghost_suffix")],
+        [
+            TranslationServer.translate("ui.game.combat.win"),
+            "机器人C" + TranslationServer.translate("ui.game.combat.ghost_suffix"),
+        ],
         "幽灵战",
     )
 
@@ -155,8 +160,10 @@ func _check_started_at_seek() -> void:
         return
     var banner = instance.find_child("CombatBanner", true, false)
     _expect(
-        banner != null and banner.visible,
-        "startedAt 已过去较久时首帧应直接进入结束态",
+        banner != null
+            and banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
+        "startedAt 已过去较久时首帧应直接进入结束态，实际「%s」"
+            % ("" if banner == null else banner.text),
     )
     instance.queue_free()
     await get_tree().process_frame
@@ -167,24 +174,23 @@ func _check_started_at_seek() -> void:
     GameStore.deadline = ""
 
 
-## 战斗阶段状态行显示「战斗中」且不出现招募倒计时；回到招募恢复倒计时。
+## 战斗阶段河道右端是「战斗中」徽标、不出现招募倒计时；回到招募恢复倒计时。
 func _check_combat_hides_countdown() -> void:
     var instance := await _combat_instance("2030-01-01T00:00:00Z")
     if instance == null:
         return
-    var timer: Label = instance.find_child("TimerLabel", true, false)
-    _expect(timer != null, "右栏应有倒计时标签")
-    if timer != null:
-        _expect(
-            timer.text == TranslationServer.translate("ui.game.side_panel.combat"),
-            "战斗阶段状态行应显示战斗中，实际「%s」" % timer.text,
-        )
-        _expect(
-            not timer.text.contains(
-                TranslationServer.translate("ui.game.side_panel.remaining_seconds").split("%")[0]
-            ),
-            "战斗阶段不应显示招募倒计时",
-        )
+    var recruit_river: Control = instance.find_child("RecruitRiver", true, false)
+    _expect(
+        recruit_river == null or not recruit_river.is_visible_in_tree(),
+        "战斗阶段不应显示招募倒计时",
+    )
+    var pill: Label = instance.find_child("CombatStatusPill", true, false)
+    _expect(
+        pill != null
+            and pill.is_visible_in_tree()
+            and pill.text == TranslationServer.translate("ui.game.side_panel.combat"),
+        "战斗河道右端应显示战斗中，实际「%s」" % ("" if pill == null else pill.text),
+    )
     instance.queue_free()
     await get_tree().process_frame
 
@@ -195,7 +201,12 @@ func _check_combat_hides_countdown() -> void:
     GameStore.deadline = "2030-01-01T00:00:00Z"
     var recruit := await _check_scene("res://scenes/game.tscn", false)
     if recruit != null:
-        var recruit_timer: Label = recruit.find_child("TimerLabel", true, false)
+        var combat_river: Control = recruit.find_child("CombatRiver", true, false)
+        _expect(
+            combat_river == null or not combat_river.is_visible_in_tree(),
+            "招募阶段不应显示战斗河道",
+        )
+        var recruit_timer: Label = recruit.find_child("RecruitTimerLabel", true, false)
         var remaining_prefix := TranslationServer.translate(
             "ui.game.side_panel.remaining_seconds"
         ).split("%")[0]
@@ -283,7 +294,7 @@ func _check_death_fades_after_strike() -> void:
     _reset_store()
 
 
-## 固定占位：一方随从全灭后该行高度与位置不变，横幅出现前后两行不动。
+## 固定占位：一方随从全灭后该行高度与位置不变；结果出现前后两行与河道都不动。
 func _check_fixed_slots() -> void:
     GameStore.player_id = "p0"
     GameStore.phase = Protocol.PHASE_COMBAT
@@ -300,24 +311,34 @@ func _check_fixed_slots() -> void:
         return
     var opponent_row: Control = instance.find_child("CombatOpponentRow", true, false)
     var own_row: Control = instance.find_child("CombatOwnRow", true, false)
-    var banner_slot: Control = instance.find_child("CombatBannerSlot", true, false)
+    var river: Control = instance.find_child("CombatRiver", true, false)
     var banner: Label = instance.find_child("CombatBanner", true, false)
     _expect(opponent_row != null and own_row != null, "战斗视图应有两行随从")
-    _expect(banner_slot != null, "结果横幅应有固定占位槽")
-    if opponent_row == null or own_row == null or banner_slot == null:
-        _expect(banner != null, "结果横幅应存在")
+    _expect(river != null and banner != null, "战斗视图应有河道与结果文本")
+    if opponent_row == null or own_row == null or river == null or banner == null:
         instance.queue_free()
         await get_tree().process_frame
         _reset_store()
         return
     var opponent_y := opponent_row.global_position.y
     var own_y := own_row.global_position.y
+    var river_y := river.global_position.y
     var row_height := opponent_row.size.y
-    var slot_height := banner_slot.size.y
+    var river_height := river.size.y
     _expect(
         is_equal_approx(row_height, UITheme.metric("card-height")),
         "随从行应有固定行高 %d，实际 %.1f" % [UITheme.metric("card-height"), row_height],
     )
+    _expect(
+        is_equal_approx(river_height, UITheme.metric("river-height")),
+        "河道应有固定行高 %d，实际 %.1f" % [UITheme.metric("river-height"), river_height],
+    )
+    _expect(
+        opponent_y < river_y and river_y < own_y,
+        "对手行、河道、我方行应自上而下排列",
+    )
+    var turn_text := TranslationServer.translate("ui.game.side_panel.turn") % 3
+    _expect(banner.text == turn_text, "结果出现前河道只显示回合数，实际「%s」" % banner.text)
 
     # 320ms 的阵亡动作让对手行清空；行高与两行位置都必须保持不变。
     instance._process(0.4)
@@ -336,23 +357,31 @@ func _check_fixed_slots() -> void:
         is_equal_approx(own_row.global_position.y, own_y),
         "我方行不应因对手清空而移动",
     )
+    _expect(
+        is_equal_approx(river.global_position.y, river_y),
+        "河道不应因对手清空而移动",
+    )
 
-    # 推进到横幅出现：横幅只填充预留区域，两行不动。
+    # 推进到结果出现：结果追加在回合数之后，两行与河道都不动。
     for _step in 8:
         instance._process(0.4)
     await get_tree().process_frame
-    _expect(banner != null and banner.visible, "演示播完后横幅应出现")
     _expect(
-        is_equal_approx(banner_slot.size.y, slot_height),
-        "横幅出现不应改变占位槽高度，实际 %.1f" % banner_slot.size.y,
+        banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
+        "演示播完后河道应显示结果，实际「%s」" % banner.text,
+    )
+    _expect(banner.text.contains(turn_text), "结果应追加在回合数之后，实际「%s」" % banner.text)
+    _expect(
+        is_equal_approx(river.size.y, river_height),
+        "结果出现不应改变河道高度，实际 %.1f" % river.size.y,
     )
     _expect(
         is_equal_approx(opponent_row.global_position.y, opponent_y),
-        "横幅出现后对手行位置不变",
+        "结果出现后对手行位置不变",
     )
     _expect(
         is_equal_approx(own_row.global_position.y, own_y),
-        "横幅出现后我方行位置不变",
+        "结果出现后我方行位置不变",
     )
 
     instance.queue_free()
@@ -405,56 +434,75 @@ func _sent_count(socket: RecordingSocket, type: String) -> int:
     return count
 
 
-## 中区节点：
-## - 两个英雄条必须不存在；
-## - 结果横幅、对手随从行、我方随从行必须保留，且三者相对顺序固定；
-## - 可见性与行内数量随播放状态变化。
+## 战斗组合节点：
+## - 旧的双方英雄条必须不存在，顶部恢复对手身份块；
+## - 对手行、河道、我方行必须保留且顺序固定；
+## - 结果文本播放前只有回合数，播放后追加结果。
 func _expect_combat_center(instance: Node, finished: bool) -> void:
     var stage := "播放结束后" if finished else "播放中"
     _expect(instance.find_child("CombatOpponentStrip", true, false) == null, "战斗视图不应有对手英雄条（%s）" % stage)
     _expect(instance.find_child("CombatSelfStrip", true, false) == null, "战斗视图不应有我方英雄条（%s）" % stage)
 
+    var opponent_view = instance.find_child("OpponentView", true, false)
+    _expect(opponent_view != null, "战斗顶部应恢复对手身份块（%s）" % stage)
+    if opponent_view != null:
+        _expect(
+            opponent_view.find_child("OpponentPortrait", true, false) != null,
+            "对手身份块应含头像（%s）" % stage,
+        )
+
     var banner = instance.find_child("CombatBanner", true, false)
+    var river = instance.find_child("CombatRiver", true, false)
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
     var own_row = instance.find_child("CombatOwnRow", true, false)
-    _expect(banner != null, "结果横幅保留（%s）" % stage)
+    _expect(river != null, "战斗河道应存在（%s）" % stage)
+    _expect(banner != null, "结果文本保留（%s）" % stage)
     _expect(opponent_row != null, "对手随从行仍在（%s）" % stage)
     _expect(own_row != null, "我方随从行仍在（%s）" % stage)
     _expect_combat_row_order(instance)
 
     if banner == null:
         return
+    var turn_text := TranslationServer.translate("ui.game.side_panel.turn") % GameStore.turn
     if finished:
-        _expect(banner.visible, "动作播完并停留后应显示结果横幅")
+        _expect(
+            banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
+            "动作播完并停留后应显示结果，实际「%s」" % banner.text,
+        )
+        _expect(
+            banner.text.contains(turn_text),
+            "结果应追加在回合数之后，实际「%s」" % banner.text,
+        )
     else:
-        _expect(not banner.visible, "动作播完前不应显示结果横幅")
+        _expect(
+            banner.text == turn_text,
+            "动作播完前河道只显示回合数，实际「%s」" % banner.text,
+        )
         if opponent_row != null:
             _expect(opponent_row.get_child_count() == 2, "对手随从行应为 2 张")
         if own_row != null:
             _expect(own_row.get_child_count() == 3, "我方随从行应为 3 张")
 
 
-## 中区三段在 `CombatBody` 下的相对顺序：对手行 → 横幅 → 我方行（标题 Label 可在其间）。
+## 战斗组合子节点顺序：对手身份块 → 对手行 → 河道 → 我方行（间距块可在其间）。
 func _expect_combat_row_order(instance: Node) -> void:
     var body = instance.find_child("CombatBody", true, false)
     if body == null:
         _expect(false, "战斗视图应有 CombatBody")
         return
-    var opponent_index := -1
-    var banner_index := -1
-    var own_index := -1
+    var order: Array = []
     for position in body.get_child_count():
-        match str(body.get_child(position).name):
-            "CombatOpponentRow":
-                opponent_index = position
-            "CombatBannerSlot":
-                banner_index = position
-            "CombatOwnRow":
-                own_index = position
+        order.append(str(body.get_child(position).name))
+    var expected := [
+        "OpponentView",
+        "CombatOpponentGap",
+        "CombatOpponentRowCenter",
+        "CombatRiverGap",
+        "CombatRiver",
+        "CombatOwnGap",
+        "CombatOwnRowCenter",
+    ]
     _expect(
-        opponent_index >= 0 and banner_index >= 0 and own_index >= 0
-            and opponent_index < banner_index and banner_index < own_index,
-        "中区顺序应为对手随从行 → 结果横幅 → 我方随从行，实际 %d/%d/%d" % [
-            opponent_index, banner_index, own_index,
-        ]
+        order == expected,
+        "战斗组合子节点顺序应为 %s，实际 %s" % [expected, order],
     )

@@ -1,17 +1,17 @@
 class_name GameCombatView
 extends PanelContainer
-## 战斗视图：双方随从行与结果横幅。
+## 战斗组合：高 418 = 对手 64 + 6 + 对手行 146 + 18 + 河道 32 + 6 + 我方行 146。
 ##
 ## 演示进度由 `CombatPlayback` 纯数据播放器驱动；页面只负责在演示中调用
-## `advance()`，本视图不发送任何意图。
+## `advance()`，本视图不发送任何意图。结果追加在河道的回合数之后。
 
 ## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
 var detail: GameDetailLayer = null
 
-var _body: VBoxContainer
+var _state: GameUiState = null
+var _opponent_view: GameOpponentView
+var _river: GameRiver
 var _opponent_row: HFlowContainer
-var _banner_slot: Control
-var _banner: Label
 var _own_row: HFlowContainer
 ## 演示播放器（纯数据）与当前演示所属回合。
 var _combat := CombatPlayback.new()
@@ -22,41 +22,54 @@ var _fx: CombatFx
 
 func _init() -> void:
     name = "CombatPanel"
-    add_theme_stylebox_override("panel", UITheme.panel_style("surface"))
+    add_theme_stylebox_override("panel", UITheme.panel_style("bare"))
+    custom_minimum_size = Vector2(0, 418)
     size_flags_vertical = Control.SIZE_EXPAND_FILL
     visible = false
 
-    _body = VBoxContainer.new()
-    _body.name = "CombatBody"
-    _body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _body.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    add_child(_body)
+    var body := VBoxContainer.new()
+    body.name = "CombatBody"
+    body.add_theme_constant_override("separation", 0)
+    add_child(body)
 
-    _body.add_child(UI.section_title(tr("ui.game.combat.opponent_title")))
+    _opponent_view = GameOpponentView.new()
+    body.add_child(_opponent_view)
+    body.add_child(_gap("CombatOpponentGap", UITheme.space("space-sm")))
+
+    var opponent_center := CenterContainer.new()
+    opponent_center.name = "CombatOpponentRowCenter"
+    opponent_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    body.add_child(opponent_center)
     _opponent_row = _new_flow_row("CombatOpponentRow")
-    _body.add_child(_opponent_row)
+    opponent_center.add_child(_opponent_row)
 
-    # 横幅槽：高度常驻，横幅出现时只填充文案，不推动上下两行。
-    _banner_slot = Control.new()
-    _banner_slot.name = "CombatBannerSlot"
-    _banner_slot.custom_minimum_size = Vector2(0, UITheme.metric("combat-banner-height"))
-    _banner_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _body.add_child(_banner_slot)
+    body.add_child(_gap("CombatRiverGap", UITheme.metric("recruit-shop-gap")))
 
-    _banner = UI.label("", UITheme.font_size("font-display"), false)
-    _banner.name = "CombatBanner"
-    _banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _banner.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    _banner.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _banner_slot.add_child(_banner)
+    _river = GameRiver.new(GameRiver.Mode.COMBAT)
+    body.add_child(_river)
 
-    _body.add_child(UI.section_title(tr("ui.game.combat.own_title")))
+    body.add_child(_gap("CombatOwnGap", UITheme.space("space-sm")))
+
+    var own_center := CenterContainer.new()
+    own_center.name = "CombatOwnRowCenter"
+    own_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    body.add_child(own_center)
     _own_row = _new_flow_row("CombatOwnRow")
-    _body.add_child(_own_row)
+    own_center.add_child(_own_row)
 
-    # 覆盖层最后加入，盖在阵容行与横幅之上；不参与布局。
+    # 覆盖层最后加入，盖在阵容行与河道之上；不参与布局。
     _fx = CombatFx.new()
+    _fx.name = "CombatFxLayer"
+    _fx.set_anchors_preset(Control.PRESET_FULL_RECT)
     add_child(_fx)
+
+
+func _gap(node_name: String, height: int) -> Control:
+    var gap := Control.new()
+    gap.name = node_name
+    gap.custom_minimum_size = Vector2(0, height)
+    gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    return gap
 
 
 func _new_flow_row(node_name: String) -> HFlowContainer:
@@ -64,18 +77,28 @@ func _new_flow_row(node_name: String) -> HFlowContainer:
     row.name = node_name
     # 行高常驻：一方随从全灭时该行不塌陷，两行在演示全程保持位置。
     row.custom_minimum_size = Vector2(0, UITheme.metric("card-height"))
-    row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_theme_constant_override("h_separation", UITheme.space("space-sm"))
-    row.add_theme_constant_override("v_separation", UITheme.space("space-sm"))
+    row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    row.add_theme_constant_override("h_separation", UITheme.space("space-md"))
+    row.add_theme_constant_override("v_separation", UITheme.space("space-md"))
     return row
 
 
-func refresh(_state: GameUiState) -> void:
+func set_detail(value: GameDetailLayer) -> void:
+    detail = value
+    _opponent_view.detail = value
+
+
+func refresh(state: GameUiState) -> void:
+    _state = state
+    _opponent_view.refresh(state)
+    _river.refresh(state)
     if not GameStore.combat_is_current():
-        _banner.visible = false
         UI.clear(_opponent_row)
         UI.clear(_own_row)
+        _opponent_row.custom_minimum_size.x = 0
+        _own_row.custom_minimum_size.x = 0
         _opponent_row.add_child(UI.empty_hint(tr("ui.game.combat.waiting")))
+        _river.set_combat_detail("", UITheme.color("color-accent"))
         return
     var combat: Dictionary = GameStore.last_combat
     if _combat_turn != GameStore.turn:
@@ -88,6 +111,7 @@ func refresh(_state: GameUiState) -> void:
 func reset() -> void:
     _combat_turn = -1
     _fx.clear()
+    _river.set_combat_detail("", UITheme.color("color-accent"))
 
 
 ## 演示进行中：阶段为战斗、播放器属于本回合、有本回合战报且尚未播完。
@@ -281,37 +305,59 @@ func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
         if health_label != null:
             health_label.text = str(int(minion.get("health", 0)))
         row.move_child(panel, position)
+    # HFlowContainer 的最小宽度只按单张卡计算；显式给出整行宽度才能保持单行居中。
+    var count := alive.size()
+    row.custom_minimum_size.x = (
+        count * UITheme.metric("card-width") + maxi(count - 1, 0) * UITheme.space("space-md")
+    )
 
 
-## 横幅：动作播完并经过 TAIL_MS 后才出现。
-func _refresh_combat_banner() -> void:
-    _banner.visible = _combat.banner_visible()
-    if not _banner.visible:
-        return
-    _set_combat_banner(GameStore.last_combat)
-
-
-func _set_combat_banner(combat: Dictionary) -> void:
-    var own_board: Array = combat.get("ownBoard", [])
-    var opponent_board: Array = combat.get("opponentBoard", [])
-    var winner = combat.get("winnerId")
-    var result := tr("ui.game.combat.draw")
+## 胜负与颜色：胜 success、负 danger、平 accent。
+func _result(combat: Dictionary) -> Dictionary:
+    var text := tr("ui.game.combat.draw")
     var variant := "accent"
+    var winner = combat.get("winnerId")
     if winner != null:
         if str(winner) == GameStore.player_id:
-            result = tr("ui.game.combat.win")
+            text = tr("ui.game.combat.win")
             variant = "success"
         else:
-            result = tr("ui.game.combat.lose")
+            text = tr("ui.game.combat.lose")
             variant = "danger"
-    # `mirror` 为真表示本场是对战已出局者的幽灵阵容，不是镜像战。
-    var ghost := tr("ui.game.combat.ghost_suffix") if bool(combat.get("mirror", false)) else ""
-    _banner.text = tr("ui.game.combat.banner") % [
-        result,
-        ghost,
-        int(combat.get("damage", 0)),
-        _combat.own.size(),
-        _combat.opponent.size(),
-    ]
-    _banner.add_theme_color_override("font_color", UITheme.color("color-" + variant) if variant != "accent" else UITheme.color("color-accent"))
+    return {"text": text, "variant": variant}
 
+
+## 对手展示名：优先 `displayName`，缺失回退 `playerId`；幽灵战追加幽灵后缀。
+func _opponent_label() -> String:
+    var opponent_id := ""
+    if _state != null:
+        opponent_id = GameCardFace.optional_text(_state.view.get("opponentPlayerId"))
+    var name := ""
+    if _state != null:
+        for player in _state.view.get("players", []):
+            if player is Dictionary and str(player.get("playerId", "")) == opponent_id:
+                name = GameCardFace.optional_text(player.get("displayName"))
+                if name == "":
+                    name = GameCardFace.optional_text(player.get("playerId"))
+                break
+    if name == "":
+        name = tr("ui.game.side_panel.unknown_hero")
+    if bool(GameStore.last_combat.get("mirror", false)):
+        name += tr("ui.game.combat.ghost_suffix")
+    return name
+
+
+## 横幅：动作播完并经过 TAIL_MS 后才把结果追加到河道的回合数之后。
+func _refresh_combat_banner() -> void:
+    if not _combat.banner_visible():
+        _river.set_combat_detail("", UITheme.color("color-accent"))
+        return
+    var combat: Dictionary = GameStore.last_combat
+    var result := _result(combat)
+    var text := tr("ui.game.combat.banner") % [
+        str(result.get("text", "")),
+        "",
+        _opponent_label(),
+        int(combat.get("damage", 0)),
+    ]
+    _river.set_combat_detail(text, UITheme.color("color-" + str(result.get("variant", "accent"))))

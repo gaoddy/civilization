@@ -25,7 +25,7 @@ const STEPS := [
     {
         "id": 2,
         "phase": Protocol.PHASE_RECRUIT,
-        "targets": ["HandPanel", "BoardRow"],
+        "targets": ["HandRow", "BoardRow"],
         "title": "ui.guide.step2.title",
         "body": "ui.guide.step2.body",
         "condition": "hand",
@@ -33,7 +33,7 @@ const STEPS := [
     {
         "id": 3,
         "phase": Protocol.PHASE_RECRUIT,
-        "targets": ["EndButton", "TimerLabel"],
+        "targets": ["RecruitEndButton", "RecruitTimerLabel"],
         "title": "ui.guide.step3.title",
         "body": "ui.guide.step3.body",
         "condition": "board",
@@ -96,8 +96,12 @@ func _build() -> void:
     margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
     for side in ["left", "right"]:
         margin.add_theme_constant_override("margin_" + side, UITheme.space("space-xl"))
-    for side in ["top", "bottom"]:
-        margin.add_theme_constant_override("margin_" + side, UITheme.space("space-sm"))
+    margin.add_theme_constant_override("margin_top", UITheme.space("space-sm"))
+    # 手牌贴底后占据页面最下 146：提示条上移并留出悬停放大的余量。
+    margin.add_theme_constant_override(
+        "margin_bottom",
+        UITheme.metric("card-height") + UITheme.space("space-md") + UITheme.space("space-xl"),
+    )
     _root.add_child(margin)
 
     var column := VBoxContainer.new()

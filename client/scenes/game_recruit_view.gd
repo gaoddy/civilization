@@ -1,112 +1,118 @@
 class_name GameRecruitView
 extends VBoxContainer
-## 招募视图：商店与我方棋盘。
+## 招募组合：高 418 = 商店 216 + 间距 18 + 河道 32 + 间距 6 + 棋盘 146。
 ##
 ## 只读 `GameUiState` 并按门控设置控件状态，操作一律以信号交给页面；
-## 本视图不构造意图、不判断协议。商店操作按钮在右栏，见 `GameSidePanel`。
-## 商店面板同时是棋盘随从的出售落点。
+## 本视图不构造意图、不判断协议。商店面板同时是棋盘随从的出售落点。
 
 signal buy(slot: int)
+signal reroll_pressed
+signal upgrade_pressed
+signal freeze_pressed
 signal board_dropped(payload: Dictionary, position: int, target: Dictionary)
 signal sell_dropped(payload: Dictionary)
 signal sell_hover(hovering: bool, refund: int)
+signal end_recruit_pressed
 
-## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
+## 卡片详情登记入口，由对局页注入；同步给商店视图。
 var detail: GameDetailLayer = null
 
+var _shop: GameShopView
+var _river: GameRiver
 var _board_row: BoardDrop
-var _shop_row: HFlowContainer
-var _sell_drop: SellDrop
-var _sell_hint: Label
 
 
 func _init() -> void:
     name = "RecruitPanel"
     size_flags_vertical = Control.SIZE_EXPAND_FILL
-    add_theme_constant_override("separation", UITheme.space("space-sm"))
+    add_theme_constant_override("separation", 0)
 
-    _build_shop()
-    _build_board()
+    _shop = GameShopView.new()
+    _shop.buy.connect(func(slot: int) -> void: buy.emit(slot))
+    _shop.reroll_pressed.connect(func() -> void: reroll_pressed.emit())
+    _shop.upgrade_pressed.connect(func() -> void: upgrade_pressed.emit())
+    _shop.freeze_pressed.connect(func() -> void: freeze_pressed.emit())
+    _shop.sell_dropped.connect(func(payload: Dictionary) -> void: sell_dropped.emit(payload))
+    _shop.sell_hover.connect(
+        func(hovering: bool, refund: int) -> void: sell_hover.emit(hovering, refund)
+    )
+    add_child(_shop)
 
+    add_child(_gap("RecruitShopGap", UITheme.metric("recruit-shop-gap")))
 
-func _build_shop() -> void:
-    # 商店：6 个槽位；整块面板同时是棋盘随从的出售落点。面板不带标题，
-    # 出售提示以浮层压在右上角，出现时不改变卡片布局。
-    var shop_panel := SellDrop.new()
-    shop_panel.name = "ShopPanel"
-    _sell_drop = shop_panel
-    shop_panel.sell_dropped.connect(_on_sell_dropped)
-    shop_panel.hover_changed.connect(_on_sell_hover)
-    var shop_box := VBoxContainer.new()
-    shop_box.add_theme_constant_override("separation", UITheme.space("space-xs"))
-    shop_panel.add_child(shop_box)
+    _river = GameRiver.new(GameRiver.Mode.RECRUIT)
+    _river.end_recruit_pressed.connect(func() -> void: end_recruit_pressed.emit())
+    add_child(_river)
 
-    _shop_row = _new_flow_row("ShopRow")
-    shop_box.add_child(_shop_row)
+    add_child(_gap("RecruitRiverGap", UITheme.space("space-sm")))
 
-    _sell_hint = UI.label("", UITheme.font_size("font-caption"), false)
-    _sell_hint.name = "SellHint"
-    _sell_hint.add_theme_color_override("font_color", UITheme.color("color-accent"))
-    _sell_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    _sell_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _sell_hint.visible = false
-    shop_panel.add_child(_sell_hint)
-    add_child(shop_panel)
+    add_child(_build_board())
 
 
-func _build_board() -> void:
-    # 我方棋盘：不带标题，数量与容量由服务端视图决定，不在页面上再报一次。
-    var board_panel := UI.card_panel("surface")
+func _gap(node_name: String, height: int) -> Control:
+    var gap := Control.new()
+    gap.name = node_name
+    gap.custom_minimum_size = Vector2(0, height)
+    gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    return gap
+
+
+func _build_board() -> PanelContainer:
+    var board_panel := UI.card_panel("bare")
     board_panel.name = "BoardPanel"
-    var board_scroll := ScrollContainer.new()
+    board_panel.custom_minimum_size = Vector2(0, UITheme.metric("card-height"))
+
+    # 棋盘行整体居中；棋盘槽宽固定、最大 7 张，不会超出舞台宽度。
+    var board_scroll := Control.new()
     board_scroll.name = "BoardScroll"
     board_scroll.custom_minimum_size = Vector2(0, UITheme.metric("card-height"))
-    board_scroll.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-    board_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    board_scroll.mouse_filter = Control.MOUSE_FILTER_IGNORE
     board_panel.add_child(board_scroll)
+
+    var center := CenterContainer.new()
+    center.name = "BoardCenter"
+    center.set_anchors_preset(Control.PRESET_FULL_RECT)
+    center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    board_scroll.add_child(center)
+
     _board_row = BoardDrop.new()
     _board_row.name = "BoardRow"
-    _board_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _board_row.add_theme_constant_override("h_separation", UITheme.space("space-sm"))
-    _board_row.add_theme_constant_override("v_separation", UITheme.space("space-sm"))
+    _board_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    _board_row.add_theme_constant_override("h_separation", UITheme.space("space-md"))
+    _board_row.add_theme_constant_override("v_separation", UITheme.space("space-md"))
     _board_row.dropped.connect(_on_board_dropped)
-    board_scroll.add_child(_board_row)
-
-    # 棋盘面板按内容高度收缩，顶部留白把棋盘推到面板底部，紧贴下方手牌。
-    var top_spacer := Control.new()
-    top_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    add_child(top_spacer)
-    add_child(board_panel)
+    center.add_child(_board_row)
+    return board_panel
 
 
-func _new_flow_row(node_name: String) -> HFlowContainer:
-    var row := HFlowContainer.new()
-    row.name = node_name
-    row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_theme_constant_override("h_separation", UITheme.space("space-sm"))
-    row.add_theme_constant_override("v_separation", UITheme.space("space-sm"))
-    return row
+## 注入悬停详情层；商店视图同享同一层。
+func set_detail(value: GameDetailLayer) -> void:
+    detail = value
+    _shop.detail = value
 
 
 func refresh(state: GameUiState) -> void:
     _refresh_board(state)
-    _refresh_shop(state)
-    _refresh_sell_gate(state)
+    _shop.refresh(state)
+    _river.refresh(state)
+
+
+## 只刷新河道计时：战斗阶段玩家棋盘与商店保持不变。
+func refresh_clock(state: GameUiState) -> void:
+    _river.refresh(state)
 
 
 ## 出售悬停提示由页面回调转入：松手返还金额来自拖拽数据。
 func set_sell_hint(hovering: bool, refund: int) -> void:
-    _sell_hint.text = tr("ui.game.recruit.sell_hint") % refund
-    _sell_hint.visible = hovering
+    _shop.set_sell_hint(hovering, refund)
 
 
-## 商店出售落点与棋盘拖拽共用一套实时门控；不满足时商店不接收棋盘卡。
-func _refresh_sell_gate(state: GameUiState) -> void:
-    if _sell_drop == null:
-        return
-    _sell_drop.enabled = state.can_play
-    if not _sell_drop.enabled:
-        _sell_hint.visible = false
+func has_deadline() -> bool:
+    return _river.has_deadline()
+
+
+func seconds_left() -> int:
+    return _river.seconds_left()
 
 
 func _refresh_board(state: GameUiState) -> void:
@@ -114,7 +120,13 @@ func _refresh_board(state: GameUiState) -> void:
     var aff: Dictionary = state.self_state.get("affordances", {})
     var board: Array = state.self_state.get("board", [])
     var slots := state.board_slots
-    var can_rearrange := not state.stale and not state.expired and not state.target_pending and state.phase == Protocol.PHASE_RECRUIT and not state.recruited
+    var can_rearrange := (
+        not state.stale
+        and not state.expired
+        and not state.target_pending
+        and state.phase == Protocol.PHASE_RECRUIT
+        and not state.recruited
+    )
     _board_row.board_full = board.size() >= slots
     for position in board.size():
         var minion: Dictionary = board[position]
@@ -122,6 +134,11 @@ func _refresh_board(state: GameUiState) -> void:
         _board_row.add_child(_minion_card(minion, minion_aff, can_rearrange, position, state.epoch))
     for _position in range(board.size(), slots):
         _board_row.add_child(_empty_slot())
+    # HFlowContainer 的最小宽度只按单张卡计算；显式给出整行宽度，
+    # 才能保持 7 槽单行并被 CenterContainer 精确居中。
+    _board_row.custom_minimum_size.x = (
+        slots * UITheme.metric("card-width") + maxi(slots - 1, 0) * UITheme.space("space-md")
+    )
 
 
 func _empty_slot() -> PanelContainer:
@@ -183,81 +200,11 @@ func _minion_card(
     return panel
 
 
-func _refresh_shop(state: GameUiState) -> void:
-    UI.clear(_shop_row)
-    var aff: Dictionary = state.self_state.get("affordances", {})
-    for slot in state.self_state.get("shop", []):
-        var index := int(slot.get("index", 0))
-        var card_id := GameCardFace.optional_text(slot.get("cardId"))
-        if card_id == "":
-            _shop_row.add_child(_empty_shop_slot(index))
-            continue
-        var slot_aff := _find_by_index(aff.get("shopSlots", []), index)
-        var buyable := not state.stale and not state.expired and bool(slot_aff.get("buyable", false))
-        var entry := CardDB.card(card_id)
-        var panel := UI.card_panel("raised-tight")
-        panel.name = "ShopSlot%d" % index
-        # PASS：整卡接收点击购买，同时让棋盘卡的出售落点继续冒泡到商店面板。
-        panel.mouse_filter = Control.MOUSE_FILTER_PASS
-        panel.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
-        panel.set_meta("buyable", buyable)
-        panel.gui_input.connect(_on_shop_card_input.bind(panel, index))
-        panel.add_child(GameCardFace.face(
-            card_id,
-            GameCardFace.stat_text(entry.get("attack")),
-            GameCardFace.stat_text(entry.get("health")),
-            GameCardFace.playstyle_text(entry),
-            "",
-            str(CardDB.display_cost(card_id)),
-            UI.enum_text("era", str(entry.get("era", ""))),
-            bool(slot.get("frozen", false)),
-        ))
-        if detail != null:
-            detail.track(panel, {
-                "detail_kind": "shop",
-                "cardId": card_id,
-                "disabledReason": slot_aff.get("disabledReason"),
-            })
-        if not buyable:
-            UI.apply_dim(panel)
-        _shop_row.add_child(panel)
-
-
-func _empty_shop_slot(index: int) -> PanelContainer:
-    var panel := UI.card_panel("empty")
-    panel.name = "ShopSlot%d" % index
-    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    panel.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
-    var hint := UI.empty_hint(tr("ui.game.recruit.empty_shop_slot"))
-    hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    panel.add_child(hint)
-    return panel
-
-
-## 商店卡点击购买；不可购买时静默忽略，原因在详情面板里给出。
-func _on_shop_card_input(event: InputEvent, panel: Control, index: int) -> void:
-    if not (event is InputEventMouseButton):
-        return
-    var mouse := event as InputEventMouseButton
-    if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
-        return
-    if bool(panel.get_meta("buyable", false)):
-        buy.emit(index)
-
-
 func _find_by_index(items: Array, index: int) -> Dictionary:
     for item in items:
         if int(item.get("index", -1)) == index:
             return item
     return {}
-
-
-func _on_sell_dropped(payload: Dictionary) -> void:
-    sell_dropped.emit(payload)
-
-
-func _on_sell_hover(hovering: bool, refund: int) -> void:
-    sell_hover.emit(hovering, refund)
 
 
 func _on_board_dropped(payload: Dictionary, position: int, target: Dictionary) -> void:
