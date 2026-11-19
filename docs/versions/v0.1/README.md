@@ -2,7 +2,7 @@
 
 本文是 v0.1 的版本入口，描述版本主题、目标、能力清单、状态与文档导航；不复制产品与技术基线内容。
 
-> 状态：开发中（M0–M1b 与首版剩余四项能力已实现）
+> 状态：开发中（M0–M3 能力已实现；M2 断线重连一致性由自动化用例覆盖，M3 桌面端验收与观察项待记录）
 
 ## 主题
 
@@ -37,7 +37,7 @@
 | 新手引导 | 首局非阻塞引导：高亮与提示条、可跳过与手动重看；不做教学局 |
 | 扩展层 | 场景、陨落、英雄坐镇、大决战只保留设计与配置项；v0.1 建房不提供开关，默认关闭 |
 
-M0–M1b 之后的首版剩余能力已实现：赛后数据回顾、房间生命周期（移除/解散/对局结束销毁/主动退出）、首局界面引导与 macOS 桌面端导出。已实现状态以 `docs/current/` 为准。
+M0–M1b 之后的首版剩余能力已实现：赛后数据回顾、房间生命周期（移除/解散/对局结束销毁/主动退出）、首局界面引导与 macOS 桌面端导出。已实现状态以 `docs/current/` 为准。验收口径：M2 不设真人完成率验收，断线重连后状态一致由自动化用例覆盖；M3 只需记录桌面端完整对局验收与崩溃率、意图拒绝率、单局时长三项观察值，记录方式见[验收记录](acceptance.md)。
 
 ## 阅读顺序
 
@@ -48,7 +48,7 @@ M0–M1b 之后的首版剩余能力已实现：赛后数据回顾、房间生�
 3. [数值与经济](product/systems/economy-and-numbers.md)
 4. [卡牌规范与数据](product/content/card-system.md)（含「英雄卡」小节）与[卡牌索引](product/content/cards/README.md)
 5. [技能规范与数据](product/content/skill-system.md) 与[技能索引](product/content/skills/README.md)
-6. [平衡测算](product/content/balance-analysis.md)（从卡表回算的校验输出）
+6. [平衡测算](product/content/balance-analysis.md)（从卡表回算的校验输出）与[平衡问题](product/content/balance-questions.md)（未解决的平衡与节奏问题）
 7. [模式](product/systems/modes.md)、[房间与邀请](product/systems/rooms-and-invites.md) 与[好友](product/systems/friends.md)
 8. [联网与技术架构](technical/architecture/network-architecture.md)
 
@@ -58,6 +58,8 @@ M0–M1b 之后的首版剩余能力已实现：赛后数据回顾、房间生�
 - 技术基线：[technical/README.md](technical/README.md)
 - 玩家向介绍：[游戏介绍](product/overview/game-intro.md)
 - 未确认事项：[open-questions.md](open-questions.md)
+- 平衡问题：[balance-questions.md](product/content/balance-questions.md)
+- 验收记录：[acceptance.md](acceptance.md)
 - 已实现现状：[当前实现状态](../../current/README.md)
 - 跨版本路线：[版本路线与风险](../../version-roadmap.md)、[内容素材库](../../content-backlog.md)
 

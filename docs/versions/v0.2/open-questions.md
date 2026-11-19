@@ -25,6 +25,12 @@
 | 移动端目标设备、断点与安全区处理 | UI 与适配 | UI 设计确定 | [客户端技术基线](technical/architecture/client-stack.md) |
 | 比赛模式与成就在 v0.2 内的上线顺序 | 版本排期 | 需求澄清 | [比赛模式](product/systems/competitive-mode.md) |
 
+## 观战与视图
+
+| 问题 | 影响范围 | 待确认 | 来源 |
+| --- | --- | --- | --- |
+| 观战只读视图的字段裁剪 | 实现 | v0.1 不做观战，视图按可被第三方只读消费设计，裁剪规则待观战时确定 | [通信协议](../v0.1/technical/architecture/protocol.md) |
+
 ## 文档结构
 
 | 问题 | 影响范围 | 待确认 | 来源 |

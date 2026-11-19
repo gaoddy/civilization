@@ -59,9 +59,9 @@ server/
 
 ## 5. 未确定事项
 
-- 服务端工程目录的具体落点与 workspace 拆分细度：搭建工程时确定，见[待确认事项](../../open-questions.md)。
+- 服务端工程目录的具体落点与 workspace 拆分细度：已按 `server/crates/{protocol,protocol-gen,rule-engine,room-service,sim}` 落地，见[房间服务与联网](../../../../current/technical/room-service/README.md) §1。
 - 多实例切分维度：v0.1 固定单实例，房间状态在进程内；扩展到多副本前需要拆分房间归属并改为独立迁移 Job。部署形态与环境见[部署与接入](../../../../current/technical/deployment/README.md)。
-- 房间、对局状态与意图日志的持久化与恢复：M2 前确定。
+- 房间、对局状态与意图日志的持久化与恢复：v0.1 不做；后续版本按崩溃恢复需求确定。
 
 ## 相关文档
 

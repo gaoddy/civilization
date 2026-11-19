@@ -191,7 +191,7 @@ impl Taxonomy {
 | `make audit` | effects DSL 审计 |
 | `make data` / `make data-check` | 生成卡牌数据 / 比对漂移并审计 |
 | `make protocol` / `make protocol-check` | 生成协议 GDScript 常量与字段表 / 漂移检测 |
-| `make m0-determinism` | 运行 `sim_determinism::replay_same_log_100_times_has_same_hash`：同一局用 `sim replay` 重放 100 次，哈希全部一致 |
+| `make m0-determinism` | 运行 `sim_determinism::replay_same_log_100_times_has_same_hash`：同一局用 `sim replay` 重放 100 次，终局状态哈希与事件序列哈希全部一致 |
 | `make m0-batch` | 1000 局 8 AI 批量对局（seed 1），写入 `output/m0-batch.json` |
 | `make m0-check` | `make data-check && make test && make lint && make m0-determinism`（计划中的 M0 汇总门禁） |
 | `make m1-check` | M1a 汇合门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism`；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service/README.md) |
@@ -200,6 +200,8 @@ impl Taxonomy {
 | `python3 scripts/validate_docs.py` | 文档与实体数据校验 |
 
 模拟器直接调用：`sim play --seed N`、`sim batch --games N --seed N --out PATH`、`sim replay --log PATH`、`sim report --log PATH`、`sim check --log PATH [--expect-games N]`、`sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID [--room CODE] [--create] [--intent-seed N]`、`sim dev --connect ws://HOST:PORT/ws [--intent-seed N]`；参数错误、模拟失败或日志校验不通过以非零码退出。`sim bot` 的细节见[房间服务与联网](room-service/README.md)第 12 节。
+
+单局日志除 `final_hash` 外还记录 `event_hash`：`play_game` 把 `start_game` 与每次引擎调用返回的事件按顺序送入 `rule-engine::hash::EventHasher`；`replay` 按同一顺序累计后逐项比对事件序列哈希、终局状态哈希与排名，任一不一致即返回错误。日志缺少 `event_hash` 时 `report::game_from_json` 拒绝解析。
 
 `sim dev` 起 7 个机器人：第 0 个建房并把房间码打印为 `ROOM_CODE=<code>`，其余 6 个在取到码后并发加入，给开发者留出恰好一个座位。英雄卡按 id 升序取自内嵌卡表，第 `index` 个机器人的意图种子为 `intent_seed + index`。取房间码超时 10 秒；取到码后等待开局与整局结束，不设总时限——本地联调时真人每回合可长达 120 秒，固定总时限会中断对局。任一机器人失败时取消其余机器人并以非零码退出。
 
@@ -224,11 +226,11 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 | 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 409 卡 / 247 技能 / 23 Token / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
 | 数据一致 | `make data-check` | 重新生成后输出 `生成数据无漂移`，退出码 0 |
 | 规则覆盖 | `make test` | `server/crates/rule-engine/tests/` 与 `server/crates/sim/tests/` 的用例全部 `test result: ok`（用例清单见第 8 节）；商店池耗尽留空槽由 `recruit::reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects` 锁定 |
-| 确定性 | `make m0-determinism` | `replay_same_log_100_times_has_same_hash` 通过：100 次重放每次退出码 0，`final_hash` 全部等于原局；重放由日志种子重新推导同一组 5 个玩法 |
+| 确定性 | `make m0-determinism` | `replay_same_log_100_times_has_same_hash` 通过：100 次重放每次退出码 0，`final_hash` 全部等于原局，事件序列哈希同样一致；重放由日志种子重新推导同一组 5 个玩法 |
 | 分类与玩法 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 分类树节点、父链、叶子层级与卡牌 `taxon` 全覆盖；`playstyles::draw` 同 seed 固定 5 个玩法；`Engine::new` 拒绝 `Neutral` 与重复玩法；`card_in_pool` 与筛选键由引擎测试覆盖 |
 | 稳定性 | `make m0-batch`、`make m0-report` | `make m0-batch` 退出码 0，无错误输出；产物 `output/m0-batch.json` 的 `games` 数为 1000（每局一条日志）。`make m0-report` 以 `sim check --expect-games 1000` 断言批量日志 `games` = 1000（批量退出码 0、异常/超时 0 的「无缺局」口径），局数不符即非零退出 |
 | 可判定 | `make m0-batch`、`make m0-report` | `sim check`（由 `make m0-report` 调用）逐局断言 `ranking.len() == 8`、座位恰为 0–7、名次 1–8 连续，任一局不满足即非零退出并给出异常局数；`sim report` 也内置同一校验，stdout 仅输出 JSON。契约另由 `sim_cli::single_game_produces_ranking_and_hash`、`batch_of_ten_all_ranked`、`check_fails_on_incomplete_ranking` 固化 |
-| 数值基线 | `make m0-report`（`output/m0-report.log`） | 退出码 0；`wins_by_playstyle`、`win_rate_permille_by_playstyle`、`avg_turns`、`era_upgrade_turns_by_seat`、`avg_era_upgrade_turn`、`triples_per_game`、`games_reaching_turn_20`、`survivors_at_turn_20`、`avg_damage_per_loss` 均有值；越界与口径问题登记 [待确认事项](../../versions/v0.1/open-questions.md) |
+| 数值基线 | `make m0-report`（`output/m0-report.log`） | 退出码 0；`wins_by_playstyle`、`win_rate_permille_by_playstyle`、`avg_turns`、`era_upgrade_turns_by_seat`、`avg_era_upgrade_turn`、`triples_per_game`、`games_reaching_turn_20`、`survivors_at_turn_20`、`avg_damage_per_loss` 均有值；越界与口径问题登记[平衡问题](../../versions/v0.1/product/content/balance-questions.md) |
 
 ## 7. 报告字段口径
 
@@ -246,13 +248,13 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 | `era_upgrade_count` | 有首次升时代记录的（座位, 对局）数 |
 | `triples_per_game` | 三连总数 / 局数，向下取整 |
 | `games_reaching_turn_20` | `survivors_at_turn_20` 非空的局数 |
-| `survivors_at_turn_20` | 上述对局在第 20 回合 `resolve_settle` 完成后的平均存活人数，向下取整；无此类局为 `null`。采样时点语义登记 [待确认事项](../../versions/v0.1/open-questions.md) |
+| `survivors_at_turn_20` | 上述对局在第 20 回合招募结束、`finish_recruit` 与战斗结算之前的平均存活人数，向下取整；无此类局为 `null` |
 | `games_ended_on_turn_20` | 结束回合为 20 的局数 |
 | `avg_survivors_at_end` | 各局结束时的存活人数之和 / 局数，向下取整。「结束时存活人数」在 `GameOver` 时刻采样（驱动循环退出后取一次）。第 20 回合收束时 `resolve_settle` 只做排序与收束，不淘汰剩余玩家（淘汰只发生在生命归零时），未被淘汰的玩家都会被计入，因此该值不保证为 0；seed 1 的 1000 局实测分布为 1 人 62 局、2 人 333 局、3 人 468 局、4 人 124 局、5 人 13 局，平均 2.693（向下取整报告为 2） |
 | `avg_damage_per_loss` | 每次战斗失败的伤害之和 / 败者次数，向下取整 |
 | `final_hashes` | 每局最终状态哈希（16 位小写十六进制，按局序） |
 
-`sim play` 的单局日志 `stats` 含 `era_upgrade_turns`（8 个座位各自的首次升时代回合，未升为 `null`）、`survivors_at_turn_20`（第 20 回合 `resolve_settle` 完成后）、`survivors_at_end`（`GameOver` 时刻）、`damage_per_loss`、`winner_seat`、`winner_playstyle`。`winner_playstyle` 取玩法 id（`neutral` 为合法值），缺失或非法时 `sim check` 拒绝该日志。
+`sim play` 的单局日志 `stats` 含 `era_upgrade_turns`（8 个座位各自的首次升时代回合，未升为 `null`）、`survivors_at_turn_20`（第 20 回合招募结束、`finish_recruit` 与战斗结算之前）、`survivors_at_end`（`GameOver` 时刻）、`damage_per_loss`、`winner_seat`、`winner_playstyle`。`winner_playstyle` 取玩法 id（`neutral` 为合法值），缺失或非法时 `sim check` 拒绝该日志。
 
 模拟器与确定性：
 

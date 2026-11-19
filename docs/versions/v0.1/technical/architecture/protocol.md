@@ -65,6 +65,7 @@
 - 生成物：`protocol/generated/protocol.gd` 与 `client/generated/protocol.gd`（GDScript 常量，两处内容一致）以及[协议字段表](protocol-messages.md)；生成物随源提交。
 - 命令：`make protocol` 重新生成；`make protocol-check` 校验样例并检测生成物漂移。
 - 客户端不做完整运行时校验，只检查 `type`、`v` 与关键字段存在性；字段级契约由服务端与样例校验保证。
+- 保留 GDScript 生成器：常量与字段名由同一 schema 产出，`make protocol-check` 能在一次运行里发现两端漂移；删除后需手写常量，并失去样例与字段表的同源校验。维护成本高于收益时（例如生成器阻塞版本发布超过一次迭代）再退回手写，并由样例测试兜底。
 
 ## 9. 版本演进与兼容
 

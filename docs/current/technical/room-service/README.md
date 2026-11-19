@@ -1,6 +1,6 @@
 # 房间服务与联网
 
-> 状态：已实现（v0.1 M1a + 好友与邀请 + PostgreSQL 持久化 + 房间生命周期 + 赛后结果）
+> 状态：已实现（v0.1 M1a–M2 房间服务与联网，含断线重连一致性用例与对局观察日志）
 > 代码：`server/crates/room-service`、`server/crates/protocol`、`server/crates/protocol-gen`、`server/migrations`、`protocol/schema/v1`、`protocol/generated`
 > 验收：`make m1-check`、`make db-test`
 
@@ -253,6 +253,13 @@ m1-check:
 2. 设计 §5.5 写「AI 决策改为同时接受 `PlayerView`」；为保住 M0 基线（`ai.rs` 的策略直接决定 1000 局基线数值），改为新增 view 驱动的 `sim/src/bot/brain.rs`，`ai.rs` 仍只读引擎状态、不接受 `PlayerView`（本需求只加了 `PendingChoice::Target` 的确定性分支与 `PlayCard.position: None`）。
 3. 设计 §5.2 要求存 `tokenHash` 与 connection；实现中仍保存明文 token，但已建立 `ConnectionRegistry` 连接索引用于好友在线状态与房间外推送。令牌只存在于内存、有效期 24 小时、不落盘；`Session` 的 `Debug` 输出已把 `token` 标为 `<redacted>`，避免日志泄漏。
 4. 设计把 PostgreSQL 列为账号、好友、房间元数据、意图日志与遥测的落点；本轮只落账号身份与社交数据（好友、申请、最近对局、房间邀请），房间、对局状态、意图日志与遥测仍在进程内或尚未实现。未配置 `DATABASE_URL` 时保留纯内存模式供本地开发并打印提示；配置后连不上数据库时进程直接失败，不静默降级。
+
+## 15. 对局观察日志
+
+- 进入 `GameOver` 时（正常结算与弃权两条路径）各打印一次单行 JSON 到 stderr；`GameTask.game_over_logged` 保证每局只打印一次。不引入指标端点，也不新增依赖。
+- 字段：`service`、`event`（固定 `game_over`）、`roomId`、`seed`（16 位十六进制）、`turns`、`durationMs`（`started_at_ms` 到终局，按注入时钟计算）、`intentsBySeat`、`intentsTotal`、`rejectionsBySeat`、`rejectionsTotal`、`rejectionRatePermille`（向下取整，未有意向时为 0）、`survivors`、`winner`（座位号，排名为空时为 `null`）。
+- 计数口径：首次提交的意图计 1（去重命中属于重传，不计）；任何一次拒绝都计 1，包括非招募阶段、参数非法与引擎拒绝。
+- 内测记录模板见 [v0.1 验收记录](../../../versions/v0.1/acceptance.md)。
 
 ## 相关文档
 
