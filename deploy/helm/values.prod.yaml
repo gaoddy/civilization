@@ -1,5 +1,4 @@
 namespace: civilization
-platformNamespace: platform-service
 image:
   tag: prod
 httpRoute:

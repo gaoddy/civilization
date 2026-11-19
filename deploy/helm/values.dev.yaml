@@ -1,5 +1,4 @@
 namespace: civilization-dev
-platformNamespace: platform-dev
 image:
   tag: dev
 httpRoute:

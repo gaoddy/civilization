@@ -6,7 +6,6 @@ image:
   pullPolicy: Never
 
 namespace: civilization-dev
-platformNamespace: platform-dev
 
 existingSecretName: civilization-postgres-civilization
 
