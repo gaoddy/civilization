@@ -28,7 +28,8 @@ SERVER_STUB = textwrap.dedent(
 )
 
 # 不解析 argv：脚本传的是 `dev --connect ws://... --intent-seed ...`。
-# 给了 SIM_PID_FILE 就把自身 PID 写进去，测试据此确认 sim 真的启动过。
+# 给了 SIM_PID_FILE 就把自身 PID 写进去，测试据此确认 sim 真的启动过；
+# 给了 SIM_RUNS_FILE 就追加一行，测试据此数循环起过几局。
 SIM_STUB = textwrap.dedent(
     """
     import os, sys, time
@@ -36,6 +37,10 @@ SIM_STUB = textwrap.dedent(
     if pid_file:
         with open(pid_file, "w", encoding="utf-8") as handle:
             handle.write(str(os.getpid()))
+    runs_file = os.environ.get("SIM_RUNS_FILE")
+    if runs_file:
+        with open(runs_file, "a", encoding="utf-8") as handle:
+            handle.write("run\\n")
     time.sleep(float(os.environ.get("STUB_SLEEP", "0.2")))
     sys.exit(int(os.environ.get("STUB_EXIT", "0")))
     """
@@ -129,6 +134,35 @@ class DevBotsScriptTest(unittest.TestCase):
         proc = self.spawn(port, {"STUB_EXIT": "3"})
         output, _ = proc.communicate(timeout=30)
         self.assertEqual(proc.returncode, 3, output)
+
+    def test_clean_game_starts_the_next_round(self):
+        """一局结束后脚本应再起一次 sim，而不是退出。"""
+        port = free_port()
+        runs_file = pathlib.Path(self.tmp.name) / "sim-runs.log"
+        proc = self.spawn(
+            port,
+            {
+                "DEV_ROUNDS": "2",
+                "STUB_SLEEP": "0.05",
+                "SIM_RUNS_FILE": str(runs_file),
+            },
+        )
+        output, _ = proc.communicate(timeout=30)
+        self.assertEqual(proc.returncode, 0, output)
+        runs = runs_file.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len(runs), 2, output)
+        self.assertIn("第 2 局", output)
+
+    def test_invalid_rounds_fails_before_starting_the_sim(self):
+        port = free_port()
+        runs_file = pathlib.Path(self.tmp.name) / "sim-runs.log"
+        proc = self.spawn(
+            port, {"DEV_ROUNDS": "two", "SIM_RUNS_FILE": str(runs_file)}
+        )
+        output, _ = proc.communicate(timeout=30)
+        self.assertEqual(proc.returncode, 1, output)
+        self.assertIn("DEV_ROUNDS 必须是正整数", output)
+        self.assertFalse(runs_file.exists(), output)
 
     def test_termination_signals_kill_both_children(self):
         for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
