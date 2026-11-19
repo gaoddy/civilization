@@ -11,12 +11,18 @@ var card: HandCard
 
 ## `step_width` 是相邻槽的全局 x 差；卡片保持 `custom_minimum_size` 的完整尺寸。
 func setup(hand_card: HandCard, step_width: float) -> void:
+    # 视图刷新重建卡片时先显式复位旧卡：触控端没有鼠标式悬停移出，
+    # 放大与置顶可能残留，右侧槽位的 mouse_filter 也要恢复。
+    _clear_hover()
+    if is_instance_valid(card) and card != hand_card and card.get_parent() == self:
+        remove_child(card)
     card = hand_card
     mouse_filter = Control.MOUSE_FILTER_IGNORE
     custom_minimum_size = Vector2(step_width, card.custom_minimum_size.y)
     card.position = Vector2.ZERO
     card.size = card.custom_minimum_size
-    add_child(card)
+    if card.get_parent() != self:
+        add_child(card)
     card.mouse_entered.connect(_on_card_mouse_entered)
     card.mouse_exited.connect(_on_card_mouse_exited)
     card.drag_started.connect(_clear_hover)
@@ -46,6 +52,23 @@ func _clear_hover() -> void:
         card.pivot_offset = Vector2.ZERO
     z_index = 0
     _set_later_cards_pointer(true)
+
+
+## 触控端抬手复位：触摸没有鼠标式悬停移出，放大与置顶必须显式撤回。
+## 只在置顶槽位上处理，桌面端的鼠标松开不进入这里。
+func _input(event: InputEvent) -> void:
+    if not ScreenProfile.is_touch() or z_index == 0:
+        return
+    if event is InputEventScreenTouch and not event.pressed:
+        _clear_hover()
+    elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+        _clear_hover()
+
+
+## 触控端拖拽结束（落点成功或被取消）兜底复位；拖拽开始时已经复位过一次。
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_DRAG_END and ScreenProfile.is_touch():
+        _clear_hover()
 
 
 ## 只处理右侧槽位：左侧槽位在树序中晚于本槽被拾取，且不会被本卡盖住。

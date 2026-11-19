@@ -12,6 +12,7 @@ func _ready() -> void:
         tr("ui.gallery.back_lobby"),
         tr("ui.gallery.all_cards"),
     )
+    UI.safe_area(self)
 
 
 func _on_closed() -> void:

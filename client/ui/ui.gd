@@ -3,10 +3,59 @@ extends RefCounted
 ## 场景共用的小工具与共享构件；只负责构建 Godot 控件，视觉取值来自 UITheme。
 
 
+const SAFE_AREA_NAME := "SafeAreaMargin"
+const SAFE_LAYER_NAME := "SafeLayer"
+
+
 static func clear(node: Node) -> void:
     for child in node.get_children():
         node.remove_child(child)
         child.queue_free()
+
+
+## 页面安全区包裹：把页面现有子节点整体移入 SafeAreaMargin，再挂回页面。
+## 幂等：重复调用返回已存在的包裹层，不重复移动节点。
+static func safe_area(page: Control) -> SafeAreaMargin:
+    if page == null:
+        return null
+    var existing := _safe_area_of(page)
+    if existing != null:
+        return existing
+    var area := SafeAreaMargin.new()
+    area.name = SAFE_AREA_NAME
+    page.add_child(area)
+    # 包裹层创建时页面可能已有尺寸：只设锚点会把当前零尺寸保留成负偏移。
+    area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    for child in page.get_children():
+        if child == area:
+            continue
+        page.remove_child(child)
+        # 重新挂入会触发 _exit_tree：依赖 _ready 重新建立订阅的组件需要再就绪一次。
+        child.request_ready()
+        area.add_child(child)
+    return area
+
+
+## 动态全屏覆盖层的挂载点：位于安全区内、内容之上，自身不拦截输入。
+static func safe_layer(page: Control) -> Control:
+    var area := safe_area(page)
+    if area == null:
+        return null
+    var layer := area.get_node_or_null(SAFE_LAYER_NAME) as Control
+    if layer == null:
+        layer = Control.new()
+        layer.name = SAFE_LAYER_NAME
+        layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        area.add_child(layer)
+        layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    return layer
+
+
+static func _safe_area_of(page: Control) -> SafeAreaMargin:
+    for child in page.get_children():
+        if child is SafeAreaMargin:
+            return child
+    return null
 
 
 ## 页面导航入口。change_scene_to_file 会立即把当前场景摘下，摘下后的页面仍连着
@@ -32,7 +81,10 @@ static func label(text: String, size := 16, wrap := true) -> Label:
 static func button(text: String) -> Button:
     var node := Button.new()
     node.text = text
-    node.custom_minimum_size = Vector2(0, 34)
+    var height := 34
+    if ScreenProfile.is_touch():
+        height = UITheme.hit_primary()
+    node.custom_minimum_size = Vector2(0, height)
     return node
 
 
@@ -71,10 +123,15 @@ static func _pill_text_color(variant: String) -> Color:
 
 
 ## 统一按钮外观。variant：default / primary / danger / ghost / slot / micro。
+## 触控端按命中尺寸抬升最小高度，micro 使用较小档；桌面端保留原值。
 static func styled_button(text: String, variant := "default", min_height := 30) -> Button:
     var node := Button.new()
     node.text = text
-    node.custom_minimum_size = Vector2(0, min_height)
+    var height := min_height
+    if ScreenProfile.is_touch():
+        var target := UITheme.hit_small() if variant == "micro" else UITheme.hit_primary()
+        height = maxi(min_height, target)
+    node.custom_minimum_size = Vector2(0, height)
     node.focus_mode = Control.FOCUS_ALL
     for state in ["normal", "hover", "pressed", "focus", "disabled"]:
         node.add_theme_stylebox_override(state, UITheme.button_style(variant, state))

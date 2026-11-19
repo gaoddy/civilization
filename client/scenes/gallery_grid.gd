@@ -35,6 +35,8 @@ func _init() -> void:
     _grid = GridContainer.new()
     _grid.name = "GalleryGridRows"
     _grid.columns = UITheme.metric("gallery-grid-columns")
+    if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
+        _grid.columns = UITheme.metric("gallery-grid-columns-compact")
     _grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _grid.add_theme_constant_override("h_separation", UITheme.space("space-lg"))
     _grid.add_theme_constant_override("v_separation", UITheme.space("space-lg"))

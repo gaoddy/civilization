@@ -138,6 +138,9 @@ const SCENARIO := {
 	"gallery-detail-width": 280,
 	"gallery-page-size": 40,
 	"gallery-grid-columns": 5,
+	"gallery-toc-width-compact": 120,
+	"gallery-detail-width-compact": 200,
+	"gallery-grid-columns-compact": 4,
 	"report-width": 236,
 	"avatar-rail": 44,
 	"seat-hp-bar-height": 6,
@@ -189,6 +192,16 @@ static func radius(name: String) -> int:
 
 static func metric(name: String) -> int:
 	return int(SCENARIO.get(name, 0))
+
+
+## 触控端主操作命中高度：44pt 换算为画布单位；桌面端保持 44。
+static func hit_primary() -> int:
+	return ScreenProfile.hit_min(44)
+
+
+## 触控端次要操作命中高度：32pt 换算为画布单位；桌面端保持 32。
+static func hit_small() -> int:
+	return ScreenProfile.hit_min(32)
 
 
 ## 小数场景令牌（如缩放倍数）；整数令牌请用 [`UITheme.metric`]。

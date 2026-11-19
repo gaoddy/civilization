@@ -3,3 +3,6 @@
 *.uid
 text/*.translation
 text/*.csv.import
+
+# 图片导入缓存
+*.import

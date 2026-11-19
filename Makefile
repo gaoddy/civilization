@@ -5,7 +5,7 @@ GODOT_VERSION := $(shell "$(GODOT)" --version 2>/dev/null | head -n 1 | cut -d. 
 GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates/$(GODOT_VERSION).stable
 DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 
-.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export client-export-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -127,6 +127,27 @@ client-export: client-export-templates client-import
 	"$(GODOT)" --headless --path client --export-release "macOS" "$(CURDIR)/output/desktop/Civilization.app"
 	test -x output/desktop/Civilization.app/Contents/MacOS/Civilization
 	ditto -c -k --sequesterRsrc --keepParent output/desktop/Civilization.app output/desktop/Civilization-macos.zip
+
+# iOS 真机开发签名包：先导出 Xcode 工程，再由 xcodebuild 自动签名并打包 .ipa。
+# 需要 Xcode 已登录 Apple 团队 G9C8R7FDT9，且目标真机已登记；否则 xcodebuild 失败。
+client-export-ios: client-export-templates client-import
+	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export-ios 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
+	@[ -f "$(GODOT_TEMPLATE_DIR)/ios.zip" ] || { echo "缺少 iOS 导出模板：$(GODOT_TEMPLATE_DIR)/ios.zip" >&2; exit 1; }
+	@mkdir -p output/ios
+	rm -rf output/ios/Civilization output/ios/Civilization.xcodeproj output/ios/Civilization.xcframework \
+	  output/ios/MoltenVK.xcframework output/ios/libgodot_camera.*.xcframework \
+	  output/ios/Civilization.pck output/ios/Payload output/ios/Civilization-ios.ipa
+	"$(GODOT)" --headless --path client --export-release "iOS" "$(CURDIR)/output/ios/Civilization.xcodeproj"
+	test -d output/ios/Civilization.xcodeproj
+	xcodebuild -project output/ios/Civilization.xcodeproj -scheme Civilization -configuration Release \
+	  -sdk iphoneos -destination 'generic/platform=iOS' -allowProvisioningUpdates \
+	  -derivedDataPath output/ios/build build
+	test -d output/ios/build/Build/Products/Release-iphoneos/Civilization.app
+	mkdir -p output/ios/Payload
+	ditto output/ios/build/Build/Products/Release-iphoneos/Civilization.app output/ios/Payload/Civilization.app
+	ditto -c -k --sequesterRsrc --keepParent output/ios/Payload output/ios/Civilization-ios.ipa
+	test -f output/ios/Civilization-ios.ipa
+	@echo "iOS 产物：output/ios/Civilization-ios.ipa"
 
 # 1 个 Godot 客户端 + 7 个机器人的无头端到端。
 m1b-build:

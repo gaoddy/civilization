@@ -17,6 +17,9 @@ const DETAIL_SIDES := {
     "seller": ["bottom", "top"],
     "hero": ["left", "right"],
 }
+## 触控长按判定时长与位移取消阈值（画布单位）。
+const LONG_PRESS_MS := 450.0
+const TOUCH_CANCEL_DISTANCE := 8.0
 
 ## 模态浮层打开时置真：详情层会盖住浮层内容，直接隐藏且不再响应悬停。
 var blocked := false
@@ -26,6 +29,12 @@ var report_open := false
 var _panel: PanelContainer
 var _cards: Array = []
 var _hover_card: Control = null
+## 触控长按状态：只跟踪第一个触点，`_touch_index` 为 -1 表示当前没有触摸。
+var _touch_index := -1
+var _touch_start := Vector2.ZERO
+var _touch_elapsed_ms := 0.0
+var _touch_card: Control = null
+var _touch_shown := false
 
 
 func _init() -> void:
@@ -51,12 +60,20 @@ func track(card: Control, data: Dictionary) -> void:
     _cards = _cards.filter(func(entry): return is_instance_valid(entry))
     card.set_meta("detail_data", data)
     _cards.append(card)
-    card.mouse_entered.connect(_show_detail.bind(data, card))
+    card.mouse_entered.connect(_on_card_mouse_entered.bind(data, card))
     card.gui_input.connect(_on_card_gui_input.bind(data, card))
+
+
+## 鼠标悬停进入卡片：触控端由长按状态机驱动，触摸模拟出的悬停不直接显示。
+func _on_card_mouse_entered(data: Dictionary, card: Control) -> void:
+    if ScreenProfile.is_touch():
+        return
+    _show_detail(data, card)
 
 
 ## 每次刷新前清空登记并隐藏当前面板。
 func reset() -> void:
+    _clear_touch()
     hide_panel()
     _cards.clear()
 
@@ -70,6 +87,10 @@ func hide_panel() -> void:
 
 
 func _on_card_gui_input(event: InputEvent, data: Dictionary, card: Control) -> void:
+    # 触控端由 `_input` 的长按状态机统一驱动，同时忽略触摸模拟出的鼠标事件，
+    # 避免「按下即显示」；桌面端保持按下显示、松开重新命中的原有行为。
+    if ScreenProfile.is_touch():
+        return
     if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
         if event.pressed:
             _show_detail(data, card)
@@ -84,6 +105,9 @@ func _on_card_gui_input(event: InputEvent, data: Dictionary, card: Control) -> v
 
 ## 跨子控件的真实命中判断：指针落在卡片矩形内即显示，移出才隐藏。
 func _input(event: InputEvent) -> void:
+    if ScreenProfile.is_touch():
+        _input_touch(event)
+        return
     if event is InputEventMouseMotion:
         _update_detail_hover(_canvas_point(event.position))
     elif event is InputEventScreenTouch:
@@ -92,9 +116,83 @@ func _input(event: InputEvent) -> void:
         _update_detail_hover(_canvas_point(event.position))
 
 
+## 触控端输入：忽略模拟鼠标，只由第一个触点驱动长按状态机。
+func _input_touch(event: InputEvent) -> void:
+    if event is InputEventScreenTouch:
+        if event.pressed:
+            _begin_touch(event)
+        else:
+            _end_touch(event)
+    elif event is InputEventScreenDrag:
+        _drag_touch(event)
+
+
+## 按下只登记触点与卡片，不立即显示；多触点只认第一个。
+func _begin_touch(event: InputEventScreenTouch) -> void:
+    if _touch_index != -1 or blocked or report_open:
+        return
+    var point := _canvas_point(event.position)
+    var card := _card_at(point)
+    if card == null:
+        return
+    _touch_index = event.index
+    _touch_start = point
+    _touch_elapsed_ms = 0.0
+    _touch_card = card
+    _touch_shown = false
+    set_process(true)
+
+
+## 位移超过 8 个画布单位即取消长按，不再显示。
+func _drag_touch(event: InputEventScreenDrag) -> void:
+    if event.index != _touch_index or _touch_shown:
+        return
+    if _canvas_point(event.position).distance_to(_touch_start) > TOUCH_CANCEL_DISTANCE:
+        _clear_touch()
+
+
+## 抬手：已显示则隐藏；未到长按时长的短按不改变原有单击行为。
+func _end_touch(event: InputEventScreenTouch) -> void:
+    if event.index != _touch_index:
+        return
+    if _touch_shown:
+        hide_panel()
+    _clear_touch()
+
+
+## 长按判定放在 `_process` 中按 delta 累加，不依赖具体帧率。
+func _process(delta: float) -> void:
+    if _touch_index == -1 or _touch_shown:
+        return
+    if blocked or report_open or not is_instance_valid(_touch_card):
+        _clear_touch()
+        return
+    _touch_elapsed_ms += delta * 1000.0
+    if _touch_elapsed_ms < LONG_PRESS_MS:
+        return
+    _touch_shown = true
+    _show_detail(_touch_card.get_meta("detail_data", {}), _touch_card)
+
+
+func _clear_touch() -> void:
+    _touch_index = -1
+    _touch_card = null
+    _touch_shown = false
+    _touch_elapsed_ms = 0.0
+    set_process(false)
+
+
 ## 视口坐标转为画布坐标，与 get_global_rect() 同一坐标系。
 func _canvas_point(viewport_point: Vector2) -> Vector2:
     return get_viewport().get_canvas_transform().affine_inverse() * viewport_point
+
+
+## 画布坐标命中的第一张卡片；未登记或已释放的条目直接跳过。
+func _card_at(point: Vector2) -> Control:
+    for card in _cards:
+        if is_instance_valid(card) and card.is_visible_in_tree() and card.get_global_rect().has_point(point):
+            return card
+    return null
 
 
 func _update_detail_hover(point: Vector2) -> void:
@@ -102,11 +200,7 @@ func _update_detail_hover(point: Vector2) -> void:
     if blocked or report_open:
         hide_panel()
         return
-    var found: Control = null
-    for card in _cards:
-        if is_instance_valid(card) and card.is_visible_in_tree() and card.get_global_rect().has_point(point):
-            found = card
-            break
+    var found := _card_at(point)
     if found == null:
         if _hover_card != null:
             hide_panel()

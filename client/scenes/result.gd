@@ -6,6 +6,7 @@ extends Control
 
 func _ready() -> void:
     _build()
+    UI.safe_area(self)
 
 
 func _build() -> void:

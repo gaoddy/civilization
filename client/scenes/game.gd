@@ -70,6 +70,7 @@ func _ready() -> void:
     _refresh()
     _guide.start()
     _update_timer()
+    UI.safe_area(self)
 
 
 # ── 构建 ──────────────────────────────────────────────────────────────────
@@ -425,7 +426,7 @@ func _open_gallery() -> void:
         _gallery.name = "GalleryOverlay"
         _gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
         _gallery.closed.connect(_close_gallery)
-        add_child(_gallery)
+        UI.safe_layer(self).add_child(_gallery)
     _gallery.set_catalog(
         CardPool.card_ids(GameStore.view.get("enabledFactions", [])),
         tr("ui.gallery.title_match"),

@@ -9,7 +9,10 @@ signal taxon_selected(root_id: String)
 
 func _init() -> void:
     name = "GalleryToc"
-    custom_minimum_size = Vector2(UITheme.metric("gallery-toc-width"), 0)
+    var token := "gallery-toc-width"
+    if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
+        token = "gallery-toc-width-compact"
+    custom_minimum_size = Vector2(UITheme.metric(token), 0)
     add_theme_constant_override("separation", UITheme.space("space-xs"))
 
 

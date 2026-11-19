@@ -10,7 +10,10 @@ var _box: VBoxContainer
 
 func _init() -> void:
     name = "GalleryDetail"
-    custom_minimum_size = Vector2(UITheme.metric("gallery-detail-width"), 0)
+    var token := "gallery-detail-width"
+    if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
+        token = "gallery-detail-width-compact"
+    custom_minimum_size = Vector2(UITheme.metric(token), 0)
     size_flags_vertical = Control.SIZE_EXPAND_FILL
     add_theme_stylebox_override("panel", UITheme.panel_style("surface"))
 

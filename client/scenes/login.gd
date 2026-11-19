@@ -15,6 +15,7 @@ func _ready() -> void:
     Net.disconnected.connect(_on_disconnected)
     GameStore.auth_changed.connect(_on_auth_changed)
     GameStore.error_received.connect(_on_error)
+    UI.safe_area(self)
 
 
 func _build() -> void:

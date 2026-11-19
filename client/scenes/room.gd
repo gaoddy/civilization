@@ -32,6 +32,7 @@ func _ready() -> void:
     Net.connected.connect(_sync_state)
     Net.disconnected.connect(_sync_state)
     _refresh()
+    UI.safe_area(self)
 
 
 func _build() -> void:
