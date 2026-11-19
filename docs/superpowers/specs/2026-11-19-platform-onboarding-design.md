@@ -91,7 +91,7 @@
 
 ### 5.2 镜像
 
-- 新增 `server/Dockerfile`，多阶段构建，构建上下文为 `server/`（`server/data` 被 `include_str!` 内嵌，必须一起复制）。
+- 新增 `server/Dockerfile`，多阶段构建，构建上下文为仓库根（`protocol` crate 通过 `../../../../protocol/generated/protocol.rs` 引用根目录生成物，`server/data` 又被 `include_str!` 内嵌，两者必须同时进入构建根）；根 `.dockerignore` 用白名单只放行 `server/` 与 `protocol/`。
 - builder 阶段使用与 `server/rust-toolchain.toml` 一致的 Rust 1.94.1；`cargo build --locked --release -p room-service`。
 - 运行阶段 `debian:bookworm-slim`，非 root 用户，仅拷贝二进制；`ENTRYPOINT ["room-service"]`。
 - 镜像名 `civilization-server`，tag 与 `ENV` 一致（`dev` / `prod`）。
