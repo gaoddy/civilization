@@ -6,7 +6,7 @@
 
 ## 用途
 
-同一玩家编号在本机第一次进入对局时，用非阻塞高亮与底部提示条介绍购买、出战、结束招募与战斗；不暂停对局、不拦截输入、不强制完成步骤。玩家可在对局右栏点「提示」手动重看。
+同一玩家编号在本机第一次进入对局时，用非阻塞高亮与手牌上方的提示条介绍购买、出战、结束招募与战斗；不暂停对局、不拦截输入、不强制完成步骤。玩家可在对局顶部工具条点「提示」手动重看。
 
 ## 挂载与接口
 
@@ -23,7 +23,7 @@ FirstGameGuide（CanvasLayer，layer 100）
 └─ GuideOverlay（全屏，忽略鼠标）
    ├─ GuideShade0..3（四块压暗矩形，围出高亮窗口，忽略鼠标）
    ├─ GuideBarAnchor（全屏边距容器，忽略鼠标）
-   │  └─ GuideBar（底部提示条，接收点击）
+   │  └─ GuideBar（手牌上方的提示条，接收点击）
    │     ├─ GuideTitle（步骤标题）
    │     ├─ GuideStep（「N/4」胶囊）
    │     ├─ GuideBody（步骤说明）
@@ -32,6 +32,7 @@ FirstGameGuide（CanvasLayer，layer 100）
 ```
 
 - 压暗层与锚点容器全部 `MOUSE_FILTER_IGNORE`，只有 `GuideBar` 接收点击；点击、拖拽、倒计时与其它对局操作照常到达底层控件。
+- 提示条停靠在贴底手牌上方（下边距 = `card-height` + `space-md` + `space-xl`），为手牌悬停放大的越界留出余量，不遮挡手牌与拖拽。
 - 高亮矩形取当前步骤目标节点的全局矩形并集，外扩 6px；目标缺失、离树或不可见时只隐藏压暗层，提示条与文案仍可展示。
 
 ## 步骤表
@@ -39,13 +40,13 @@ FirstGameGuide（CanvasLayer，layer 100）
 | 步骤 | 阶段 | 目标节点 | 展示条件 | 文案键 |
 | --- | --- | --- | --- | --- |
 | 1 商店与金币 | `Recruit` | `ShopPanel`、`ShopRow`、`GoldTile` | 无 | `ui.guide.step1.title` / `ui.guide.step1.body` |
-| 2 出战 | `Recruit` | `HandPanel`、`BoardRow` | 本人手牌非空 | `ui.guide.step2.title` / `ui.guide.step2.body` |
-| 3 结束招募 | `Recruit` | `EndButton`、`TimerLabel` | 本人棋盘非空 | `ui.guide.step3.title` / `ui.guide.step3.body` |
+| 2 出战 | `Recruit` | `HandRow`、`BoardRow` | 本人手牌非空 | `ui.guide.step2.title` / `ui.guide.step2.body` |
+| 3 结束招募 | `Recruit` | `RecruitEndButton`、`RecruitTimerLabel` | 本人棋盘非空 | `ui.guide.step3.title` / `ui.guide.step3.body` |
 | 4 战斗 | `Combat` | `CenterPanel`、`ReportLayer` | 无 | `ui.guide.step4.title` / `ui.guide.step4.body` |
 
 - 步骤 2/3 的条件不满足时自动跳到下一步，不阻塞后续步骤。
 - 阶段与步骤不匹配时隐藏引导但保留当前步骤；回到匹配阶段重新显示。
-- `GoldTile` 是右栏 `SideHero` 生命/时代/金币三格中的金币格，供步骤 1 定位。
+- `GoldTile` 是英雄行技能列顶部的金币格，供步骤 1 定位；步骤 3 的 `RecruitEndButton` 在倒计时悬停翻转后才可见，高亮取 `RecruitTimerLabel` 与翻转区的并集。
 
 ## 本地记录与会话恢复
 
@@ -60,7 +61,7 @@ FirstGameGuide（CanvasLayer，layer 100）
 
 - 不用于教学局、强制任务、步骤奖励或服务端进度保存。
 - 不在结算页、房间页或大厅挂载。
-- 不遮挡商店、手牌、棋盘与结束招募按钮的点击；高亮层不得改为 `STOP`。
+- 不遮挡商店、手牌、棋盘与结束招募按钮的点击；高亮层不得改为 `STOP`。提示条停靠在手牌上方，不与手牌悬停区域重叠。
 
 ## 使用者
 

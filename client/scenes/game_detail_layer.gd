@@ -60,6 +60,10 @@ func track(card: Control, data: Dictionary) -> void:
     _cards = _cards.filter(func(entry): return is_instance_valid(entry))
     card.set_meta("detail_data", data)
     _cards.append(card)
+    # 常驻节点每轮刷新都会重新登记：信号只连一次，避免重复连接告警。
+    if card.has_meta("detail_bound"):
+        return
+    card.set_meta("detail_bound", true)
     card.mouse_entered.connect(_on_card_mouse_entered.bind(data, card))
     card.gui_input.connect(_on_card_gui_input.bind(data, card))
 

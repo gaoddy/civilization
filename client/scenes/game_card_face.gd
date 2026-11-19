@@ -28,7 +28,7 @@ static func face(
 ) -> Control:
     var entry := CardDB.card(card_id)
     var desc_text := CardDB.display_text(card_id)
-    var info_height := UITheme.metric(
+    var info_height := UITheme.stage_metric(
         "card-info-height" if desc_text != "" else "card-info-compact-height"
     )
     var face_node := Control.new()
@@ -252,7 +252,9 @@ static func read_only_minion_card(minion: Dictionary) -> Control:
     panel.name = "Board" + ("Minion%d" % minion_index)
     panel.set_meta("minion_id", str(minion.get("minionId", "")))
     panel.set_meta("minion_index", minion_index)
-    panel.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
+    panel.custom_minimum_size = Vector2(
+        UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height")
+    )
 
     var card_id := str(minion.get("cardId", ""))
     var entry := CardDB.card(card_id)

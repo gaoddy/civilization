@@ -36,6 +36,7 @@ const PRIMITIVE_COLOR := {
 }
 
 const PRIMITIVE_FONT := {
+	"8": 8,
 	"11": 11,
 	"12": 12,
 	"14": 14,
@@ -83,6 +84,7 @@ const SEMANTIC_COLOR := {
 }
 
 const SEMANTIC_FONT := {
+	"font-micro": "8",
 	"font-caption": "11",
 	"font-body-sm": "12",
 	"font-body": "14",
@@ -119,16 +121,24 @@ const SEMANTIC_OPACITY := {
 
 const SCENARIO := {
 	"rail-width": 88,
-	"side-width": 272,
+	"top-bar-height": 28,
+	"river-height": 32,
+	"hero-row-height": 84,
+	"hero-card-width": 64,
+	"hero-card-height": 84,
+	"hero-cover-height": 40,
+	"hero-name-height": 14,
+	"hero-stats-height": 30,
+	"shop-icon-size": 40,
+	"recruit-shop-gap": 18,
+	"opponent-hp-width": 360,
 	"avatar-sm": 22,
 	"avatar-md": 30,
 	"avatar-lg": 38,
 	"hero-tile-width": 150,
-	"portrait-size": 200,
-	"portrait-height": 150,
+	"portrait-size": 64,
 	"card-width": 112,
 	"card-height": 146,
-	"combat-banner-height": 30,
 	"card-info-height": 90,
 	"card-info-compact-height": 56,
 	"hand-card-overlap": 32,
@@ -146,6 +156,24 @@ const SCENARIO := {
 	"seat-hp-bar-height": 6,
 	"rank-badge-size": 18,
 	"freeze-crystal-gap": 14,
+	# iPhone 基准（960×540）的对局舞台紧凑值。
+	"card-width-compact": 84,
+	"card-height-compact": 100,
+	"card-info-height-compact": 60,
+	"hand-card-overlap-compact": 24,
+	"hero-row-height-compact": 64,
+	"hero-card-width-compact": 52,
+	"hero-card-height-compact": 64,
+	"hero-cover-height-compact": 30,
+	"hero-name-height-compact": 12,
+	"hero-stats-height-compact": 22,
+	"shop-icon-size-compact": 36,
+	"shop-actions-height": 64,
+	"shop-actions-height-compact": 52,
+	"river-height-compact": 26,
+	"recruit-shop-gap-compact": 12,
+	"top-bar-height-compact": 26,
+	"portrait-size-compact": 48,
 }
 
 const PLAYSTYLE_COLOR := {
@@ -192,6 +220,15 @@ static func radius(name: String) -> int:
 
 static func metric(name: String) -> int:
 	return int(SCENARIO.get(name, 0))
+
+
+## 对局舞台令牌：iPhone 基准取 `<name>-compact`，其余设备与桌面取原值。
+static func stage_metric(name: String) -> int:
+	if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
+		var compact := name + "-compact"
+		if SCENARIO.has(compact):
+			return int(SCENARIO[compact])
+	return metric(name)
 
 
 ## 触控端主操作命中高度：44pt 换算为画布单位；桌面端保持 44。
@@ -260,6 +297,15 @@ static func panel_style(variant: String) -> StyleBoxFlat:
 		"transparent":
 			box.bg_color = Color(0, 0, 0, 0)
 			box.border_color = Color(0, 0, 0, 0)
+		"bare":
+			box.set_content_margin_all(0)
+			box.bg_color = Color(0, 0, 0, 0)
+			box.border_color = Color(0, 0, 0, 0)
+		"accent-bare":
+			box.set_content_margin_all(0)
+			box.bg_color = alpha("color-accent", 0.12)
+			box.border_color = color("color-accent")
+			box.set_border_width_all(2)
 		"cover-info":
 			box.set_corner_radius_all(0)
 			box.corner_radius_bottom_left = radius("radius-md")

@@ -31,14 +31,22 @@ client/
     lobby.tscn/.gd           # 大厅
     invite_popup.gd          # 邀请弹层：订阅 social_changed、逐条接受/拒绝（class_name InvitePopup）
     room.tscn/.gd            # 房间
-    game.tscn/.gd            # 对局页面装配入口：三栏骨架、门控与意图
+    game.tscn/.gd            # 对局页面装配入口：顶部工具条、左栏与中央舞台，门控与意图
     game_ui_state.gd         # 一次刷新的页面快照：视图数据与门控结果
     game_card_face.gd        # 卡面：介绍、费用/时代角标、冻结蒙层与随从详情分层取值；类型行显示玩法
     game_detail_layer.gd     # 详情层：商店、座位、售货员与英雄四类详情及定位；随从详情含分类、关联与食物链
+    game_top_bar.gd          # 顶部工具条：状态文本与图鉴、提示、退出对局（class_name GameTopBar）
     game_players_rail.gd     # 左栏座位列：头像、名次、血条与战报展开
-    game_side_panel.gd       # 右栏：身份与商店操作、回合与倒计时、英雄与操作
-    game_recruit_view.gd     # 招募视图：商店与我方棋盘（操作按钮在右栏）
-    game_combat_view.gd      # 战斗视图：对手随从行、结果横幅与我方随从行
+    game_shop_view.gd        # 商店：售货员两侧的图标操作行、6 槽与出售落点（class_name GameShopView）
+    game_icon_button.gd      # 40×40 图标按钮，费用角标在右上、次数角标在左上（class_name GameIconButton）
+    game_portrait.gd         # 64×64 无图头像块：玩法色底与名字首字（class_name GamePortrait）
+    game_river.gd            # 河道行：回合数、招募倒计时/结束招募、战斗结果（class_name GameRiver）
+    game_hero_row.gd         # 英雄行：身高 84，英雄卡、金币与英雄技能列（class_name GameHeroRow）
+    game_hero_card.gd        # 英雄卡：64×84，封面、名字与攻击/时代/生命三格（class_name GameHeroCard）
+    game_hand_row.gd         # 贴底手牌行：80 步进重叠、整行居中（class_name GameHandRow）
+    game_opponent_view.gd    # 战斗对手身份：头像、名字、英雄、血量条与幽灵（class_name GameOpponentView）
+    game_recruit_view.gd     # 招募视图：商店、河道与我方棋盘
+    game_combat_view.gd      # 战斗视图：对手身份、对手随从行、河道与我方随从行
     hand_card.gd             # 手牌卡：拖拽数据与预览（class_name HandCard）
     hand_slot.gd             # 手牌槽：80 步进重叠、悬停缩放与层级（class_name HandSlot）
     board_drop.gd            # 我方棋盘落点：命中判定与插入下标（class_name BoardDrop）
@@ -56,7 +64,7 @@ client/
     card_pool.gd             # 本局卡池复算：与服务端 card_in_pool 同规则，排除 Token（class_name CardPool）
   tests/
     ui_smoke.tscn/.gd        # 主冒烟：五场景实例化、拖拽/浮层/门控/结算等主流程
-    ui_smoke_side.tscn/.gd   # 右栏身份、回合与倒计时
+    ui_smoke_side.tscn/.gd   # 舞台结构：商店操作行、英雄行、河道与手牌
     ui_smoke_seats.tscn/.gd  # 座位行、名次角标、血量条与战报展开
     ui_smoke_combat.tscn/.gd # 战斗视图三段与结果横幅
     ui_smoke_cards.tscn/.gd  # 商店卡费用/时代角标与冻结蒙层
@@ -102,14 +110,14 @@ client/
 | 登录 | 输入服务器地址、手机号、固定验证码 `123456` 与显示名；认证成功后进入大厅 |
 | 大厅 | 展示本人 6 位玩家编号；创建房间或凭房间码加入；按编号添加好友、处理收到的申请、删除好友、从最近队友回加；有待处理邀请时弹出邀请浮层，接受后自动入房；收到 `RoomUpdate` 后进入房间 |
 | 房间 | 展示成员确认状态、选择英雄并一键确认；列出在线好友供一键邀请（对局中/离线置灰）；开局完全由服务端决定（全员准备后自动开始）；房主且等待区时每名成员行带 `Kick_<playerId>`，底部 `DissolveButton`，收到 `RoomClosed` 后按原因提示并回大厅 |
-| 对局 | 酒馆战棋式三栏布局：左栏 8 行座位（按服务端 `rank` 升序，头像、名次角标、血量条，点击展开战报），中区招募视图（自上而下为商店、按容量棋盘）与战斗视图（对手随从、结果横幅、我方随从）互斥，手牌行常驻在两者之下，右栏为身份（售货员/对手英雄/幽灵/已淘汰观战）与售货员下方的商店操作、垂直居中的回合与倒计时及 `HintButton`/`LeaveGameButton`、自己英雄介绍与贴底的英雄技能；十一种意图对应操作；`pendingChoices` 弹层（发现/进化/战吼目标，候选由视图下发）；英雄技能按 `requiresTarget` / `targetCandidates` 直接释放或弹出候选浮层 |
+| 对局 | 酒馆战棋式布局：顶部工具条左侧为状态文本（断线、未发出、错误），右侧为 `GalleryButton`、`HintButton`、`LeaveGameButton`；左栏 8 行座位（按服务端 `rank` 升序，头像、名次角标、血量条，点击展开战报）；中央舞台自上而下为招募组合或战斗组合、英雄行与贴底手牌。招募组合 418 高：商店操作行（升时代图标—售货员—刷新/冻结图标）、商店 6 槽、河道、按容量棋盘；战斗组合同样 418 高：对手身份、对手随从行、河道（回合与结果）、我方随从行。英雄行 84 高：64×84 英雄卡、金币格与英雄技能图标，淘汰后显示「已淘汰 · 观战中」；手牌行 146 高贴底。十一种意图对应操作；`pendingChoices` 弹层（发现/进化/战吼目标，候选由视图下发）；英雄技能按 `requiresTarget` / `targetCandidates` 直接释放或弹出候选浮层 |
 | 结算 | 按服务端 `ranking` 展示名次行（名次、玩家名、存活回合、造成伤害）、`selfStats` 的本局数据区与最终阵容、`seed`；`ConfirmButton`（「确定」）只清本地房间并重新认证回大厅，不发 `LeaveRoom`（房间已在对局结束时销毁） |
 | 卡牌图鉴 | 只读浏览卡牌与 Token：时代章节 + 界级分类两维筛选、5 列网格每页 40 张、常驻详情；大厅入口用全量卡表（当前 409 卡 + 23 Token），对局入口以覆盖层只列本局卡池 |
 
 - 结算页节点：`ResultScroll` / `ResultContent` / `RankingList` / `StatsSection` / `BoardList` / `ResultActions` / `ConfirmButton`。`StatsSection` 共 12 个 `StatRow_*`（战斗胜/平/负合为 `StatRow_combat`），缺字段按 0、空阵容显示一条「无随从」占位；页面只读取 `GameStore.ranking` / `self_stats` / `game_seed`，不推算；不监听 `RoomClosed`，房间已在对局结束时销毁。
 - 房间管理：`room.gd` 仅在 `_is_host()` 且 `GameStore.phase == PHASE_LOBBY` 时渲染 `Kick_<playerId>`，`DissolveButton` 随房主身份显隐；点击发 `KickMember{targetPlayerId}` / `DissolveRoom{}`。收到 `RoomClosed` 时 `GameStore` 清房间并补发 `LeaveRoom`，`room.gd` 把 `kicked` / `dissolved` 写成 `ui.room.kicked_notice` / `ui.room.dissolved_notice` 后导航大厅。
-- 对局内退出：右栏 `LeaveGameButton` 发 `leave_game_pressed`，`game.gd` 发送 `LeaveRoom`、收起引导、`reset_room()`、`Net.relogin()` 并回大厅；服务端按弃权结算，退出座位保留到本局结束。
-- 首局引导：`FirstGameGuide` 由 `game.gd` 在对局页装配后创建（`target_root` 为对局页），`_refresh` 调 `set_phase(phase, self_state)`，右栏 `HintButton` 调 `show_manual()`；步骤、节点名与本地存储见[首局引导组件](../product/ui/components/first-game-guide.md)。
+- 对局内退出：顶部工具条 `LeaveGameButton` 发 `leave_game_pressed`，`game.gd` 发送 `LeaveRoom`、收起引导、`reset_room()`、`Net.relogin()` 并回大厅；服务端按弃权结算，退出座位保留到本局结束。
+- 首局引导：`FirstGameGuide` 由 `game.gd` 在对局页装配后创建（`target_root` 为对局页），`_refresh` 调 `set_phase(phase, self_state)`，顶部工具条 `HintButton` 调 `show_manual()`；步骤、节点名与本地存储见[首局引导组件](../product/ui/components/first-game-guide.md)。
 - 对局界面整块读取 `GameStore.view`，每次 `view_changed` 重建；按钮可用性只取 `affordances` / `playable` / `can*`，不做本地推导。冻结与棋盘卡拖拽换位没有对应的服务端 affordance，按 `phase`、`self.recruited` 与下标做本地门控，与服务端拒绝条件保持一致。
 - 操作还要求视图自身的 `turn` 与 `GameStore.turn` 一致：新回合的 `PhaseChanged` 会先于新视图到达，旧视图只展示、不可操作，避免用上一回合的商店发意图。
 - 倒计时由 `phaseDeadline` 计算；归零后结束招募、刷新、购买、出牌、出售与换位一并禁用，只等服务端推进阶段。
@@ -130,9 +138,12 @@ client/
 - 需要目标的效果牌也可以落在手牌候选上：`HandCard` 实现 `_can_drop_data` / `_drop_data`，只接受「需要目标的效果牌」且本卡实例编号出现在拖拽数据的 `targets` 中（区域 `hand`），拖到自己身上拒绝；接受时发出 `target_dropped(payload, target)`。
 - 棋盘随从卡也使用拖拽：`BoardCard._get_drag_data` 交出 `{epoch, minionId, fromIndex, sellable, golden}`；`BoardDrop` 在 `NOTIFICATION_DRAG_BEGIN` 时隐藏原卡并插入同尺寸透明占位，指针移动时实时移动占位、其余随从让位，松手按「移除后被拖随从剩余序列中的插入下标」发 `RearrangeBoard`，拖拽结束恢复原顺序。商店面板是 `SellDrop`，只接受可出售的棋盘卡：拖入时金色描边并提示「松手出售 +N 金」（`golden ? 3 : 1`），松手发 `SellMinion`；手牌与不可出售随从静默取消。卡内不再生成出售与左右移位按钮。
 - 拖放冒泡依赖控件的鼠标过滤：Godot 在「`_can_drop_data` 为假且 `mouse_filter == STOP`」的控件上中止沿父链的落点查找。棋盘空位（`EmptySlot`）设 `IGNORE`；棋盘随从卡（`BoardCard`）与商店槽位设 `PASS`，保留自身点击/拖拽起手与悬停详情，同时把落点交给父级 `BoardDrop` / `SellDrop`。新增落点控件或改其鼠标过滤时必须保证落点仍能到达父级。
-- 时代文案由 `CardDB.era_name` 把 1–7 映射为英文 id（`prehistoric`…`future`）后按 `enum.era.<id>` 取文本；玩法、卡牌类型、进化选项与攻防分层同理走 `UI.enum_text(group, id)`；右栏自己英雄的属性行、右栏对手身份块的元信息与座位详情统一显示「时代 X」。
-- 左栏固定宽 88，座位行只渲染头像（`avatar-rail` = 44）、名次角标（`rank` 为 `null` 时不渲染）与血量条（高 6，按 `hp / hpCap` 比例填充，无数字）；行顺序按 `players[].rank` 升序（第 1 名在最上，`rank` 为 `null` 垫底、同序按座位号），每次视图重建重排，客户端不推导名次；已淘汰行经 `UI.apply_dim` 整体压暗但保留名次且仍可点击。点击展开 `view.combatLog` 中按 `participantIds` 过滤的战报，浮层挂在全屏 `ReportLayer` 上、从座位行右侧覆盖中区与右栏，同一时刻只展开一块，展开座位按 `playerId` 在 `GamePlayersRail.refresh` 整块重建后恢复；无条目显示「无战报」。
-- 右栏身份判定以阶段优先：招募阶段固定显示售货员大图（名字「售货员」贴底，营业说明只在悬停时由 `GameDetailLayer` 的 `seller` 详情显示），刷新、升时代与冻结三个商店操作横排在大图正下方，随视图 `affordances` 门控；战斗阶段依次为自身已淘汰「已淘汰 · 观战中」、幽灵战（幽灵归属者英雄 +「幽灵」角标、无血量条、整块压暗）、对手英雄、等待配对，商店操作随招募操作一并隐藏。`SideHero` 的我方英雄同样使用 200×150 大图与贴底名字，玩法、时代与技能文本只在悬停时由 `hero` 详情显示，生命/时代/金币三格仍常驻贴底。`SideIdentity` 与 `SideHero` 按两者最小高度的较大值等高并平分状态块之外的剩余高度，`SideStatus` 因此垂直居中；`SideStatus` 把回合数与 `TimerLabel` 剩余时间放在同一行，归零显示「等待结算」；招募阶段悬停倒计时翻成 `EndButton`「结束招募」，移出恢复，点击发 `EndRecruit`。
+- 时代文案由 `CardDB.era_name` 把 1–7 映射为英文 id（`prehistoric`…`future`）后按 `enum.era.<id>` 取文本；玩法、卡牌类型、进化选项与攻防分层同理走 `UI.enum_text(group, id)`；英雄卡底部的时代格、对手身份块的英雄行与座位详情统一显示「时代 X」。
+- 左栏固定宽 88，座位行只渲染头像（`avatar-rail` = 44）、名次角标（`rank` 为 `null` 时不渲染）与血量条（高 6，按 `hp / hpCap` 比例填充，无数字）；行顺序按 `players[].rank` 升序（第 1 名在最上，`rank` 为 `null` 垫底、同序按座位号），每次视图重建重排，客户端不推导名次；已淘汰行经 `UI.apply_dim` 整体压暗但保留名次且仍可点击。点击展开 `view.combatLog` 中按 `participantIds` 过滤的战报，浮层挂在全屏 `ReportLayer` 上、从座位行右侧覆盖中央舞台，同一时刻只展开一块，展开座位按 `playerId` 在 `GamePlayersRail.refresh` 整块重建后恢复；无条目显示「无战报」。
+- 招募舞台的身份只由商店操作行承担：`SellerTile`（`GamePortrait`，64×64，名字「售货员」贴底）居中，左侧 `UpgradeButton`、右侧 `RerollButton` 与 `FreezeButton` 均为 40×40 `GameIconButton`，费用角标在右上，随 `affordances` 门控；营业说明只在悬停时由 `GameDetailLayer` 的 `seller` 详情显示，不再有「已淘汰观战」身份拦截。
+- 河道行分两种模式：招募河道 `RecruitRiver` 中央是回合数 `RecruitTurnLabel`，右端 `RecruitCountdownFlip` 内为金色胶囊 `RecruitTimerLabel`「剩余 N 秒」，悬停翻成 `RecruitEndButton`「结束招募」，移出恢复，点击只发一次 `EndRecruit`；归零时 `RecruitTimerLabel` 显示「等待结算」并禁用翻转。战斗河道 `CombatRiver` 中央是 `CombatBanner`（演示前「第 N 回合」，播完后追加结果），右端是 `CombatStatusPill`「战斗中」。两套节点名不重名，避免 `find_child` 命中隐藏实例。
+- 我方英雄在英雄行：`HeroCard` 64×84 自上而下为玩法色封面、名字行、攻击/时代/生命三格，生命取服务端当前值与上限；右侧 `HeroSide` 列放 `GoldTile` 金币与英雄技能图标（费用角标右上、剩余次数角标左上，剩 1 次时隐藏次数、0 次时置灰）。本人淘汰后英雄行改显示「已淘汰 · 观战中」并隐藏技能图标；战斗阶段隐藏技能图标，英雄卡与金币保留。玩法、时代与技能文本只在悬停时由 `hero` 详情显示。
+- 战斗舞台的对手身份由 `GameOpponentView` 渲染：普通战为 64×64 头像、名字/英雄/HP 行与 360 宽血量条，幽灵战换成幽灵归属者身份并加「幽灵」角标、整块压暗、不显示血量条，`opponentPlayerId` 为空时显示「等待配对」。身份只随战斗视图出现，招募阶段不渲染。
 - 商店卡左上角渲染 `CostBadge`（`display_cost`）、右上角渲染 `EraBadge`（`era`）；冻结由 `FreezeOverlay` 整卡蒙层（`freeze-overlay-alpha` = 0.22，经 `self_modulate` 只压蒙层自身）、间距 14 的 45° 冰晶细线与右下角「冻」字 `FreezeGlyph` 共同表达。
 - 棋盘容量取自 `PlayerView.boardSlots`（缺失时回退 7），满场标记、提示文案与空位数量用同一数值；`BoardDrop` 仍由页面设置 `board_full`，控件本身不感知容量。
 - 落点回调在 `epoch` 校验之外还要重新过一遍与拖拽起始同源的门控（`drop_gate`）：阶段为招募、未结束招募、视图未过期、倒计时未归零、`Net` 已连接、队首待选不是 `target`。拖拽途中换回合、开战或断线时松手不会发出意图。
@@ -141,7 +152,7 @@ client/
 - 英雄技能浮层只服务主动技能：`heroPower.requiresTarget` 为假时点击直接发 `UseHeroPower`；为真且候选非空时弹出候选浮层，取消不发意图、不扣金币与次数；为真且候选为空时不弹浮层，按钮禁用原因为 `NO_VALID_TARGET`。
 - 战斗演示由 `CombatPlayback` 驱动（`PACE_MS = 320`、`TAIL_MS = 2000`，节奏只在客户端，服务端不估算演示时长）：第 i 条动作在 `(i + 1) × 320ms` 应用，数值只取 `source`/`target`/`summon` 的服务端下发值，客户端不做加减；动作序列只含主动攻击，反击伤害已并入该条动作下发的快照。写入哪一行按动作的 `sourceSide`/`targetSide`（缺失时退回按 `minionId` 双侧查找）。幽灵战改为随机出局者的最终阵容，实例编号只在克隆内与己方重号时按需改写，因此两侧编号仍可判。动作播完并经过 `TAIL_MS` 后才显示胜负横幅。
 - 战斗行只渲染 `alive` 为真的随从：阵亡卡立即离场；播放器仍保留阵亡条目作为顺序锚点，复生把 `alive` 置回真后卡片在原相对位置重现。召唤按 `summon.position`（存活序列下标）插入，换算用 `CombatPlayback.alive_insert_index`，不会把阵亡锚点当计数。
-- 战斗视图的占位在演示全程固定：两行 `custom_minimum_size.y` 取 `card-height`，一方全灭后空行不塌陷；`CombatBannerSlot` 以 `combat-banner-height`（30）常驻占位，`CombatBanner` 锚点铺满槽位并垂直居中，横幅显示与隐藏都不改变三段高度。
+- 战斗视图的占位在演示全程固定：对手身份固定 `portrait-size`（64）、两条随从行的 `custom_minimum_size.y` 取 `card-height`，一方全灭后空行不塌陷；`CombatRiver` 恒取 `river-height`（32），`CombatBanner` 常驻显示回合数，播完追加结果文案，横幅切换不改变任何行高，整个战斗组合固定 418。
 - 战报归属回合：`GameStore.last_combat_turn` 记录收到 `CombatResult` 时的 `turn`，`combat_is_current()` 只在它与当前 `turn` 一致时为真；战报行、战斗横幅与演示都以此为准。`_apply_view` 在阶段离开 `Combat` 时清空 `last_combat` 并复位 `last_combat_turn`，未配对或已出局的座位不会把上一场当成新一场重播。
 - 演示进度以 `CombatResult.startedAt`（服务端开战时刻）为锚点：首帧按 `now − startedAt` 直接 `seek`，已播动作不重播；演示期间没有任何跳过或加速入口。
 - 碰撞演出由 `GameCombatView` 在 `advance` 里驱动 `CombatFx` 覆盖层（`CombatFxLayer`，`mouse_filter = IGNORE`）：播放器返回本帧到期动作，视图先按服务端数值更新数据，再演出：
@@ -152,11 +163,11 @@ client/
 - 演出用逐帧推进而不是 `Tween`，便于无头冒烟按帧断言；`reset()` 与 `_start_combat()` 清理覆盖层与进行中的动画。
 - 演示播完后页面为该回合发送一次 `CombatPlayed`（`_combat_ack_turn` 去重），由服务端在全部参战座位回报后结算。
 - 对局中主动退出使用 `LeaveRoom`：服务端在对局阶段按弃权结算，客户端收起引导、清空房间并重新连接、以令牌认证回大厅。结算页返回大厅同样清空房间并重新认证；对局结束即销毁房间，结算页不再有返回房间入口，也不显示房间关闭提示。
-- 对局页的三栏结构、页面状态与数据来源见[对局页](../product/ui/pages/game.md)；颜色、字号、间距与圆角来自 `UITheme`，页面不写死视觉值。左栏宽 88，右栏身份块与英雄块取相同高度、平分中部状态块之外的剩余高度，商店操作与英雄技能因此分列售货员大图与英雄大图下方，生命/时代/金币三格贴底且逐项高对比展示；中区商店与棋盘不带标题，棋盘面板按内容高度收缩。招募阶段与战斗阶段共用同一页面，战斗与结算阶段隐藏招募视图、商店操作、英雄技能与结束招募，节点保留以便阶段恢复。
+- 对局页的顶部工具条 + 左栏 + 中央舞台结构、页面状态与数据来源见[对局页](../product/ui/pages/game.md)；颜色、字号、间距与圆角来自 `UITheme`，页面不写死视觉值。左栏宽 88；中央舞台自上而下为招募组合（418）或战斗组合（418）、英雄行（84）与贴底手牌（146），四个视图都按 `SIZE_SHRINK_BEGIN` 顶部对齐；商店、棋盘、手牌与英雄行都不带标题。招募阶段与战斗阶段共用同一页面，战斗与结算阶段隐藏招募视图、商店操作、英雄技能、倒计时与结束招募，节点保留以便阶段恢复；战斗组合在招募阶段整块隐藏。
 - 详情层（`client/scenes/game_detail_layer.gd` 的 `GameDetailLayer`，面板节点名 `MinionDetailPanel`）统一承载商店、座位、售货员与随从四类详情，我方英雄详情亦由其 `hero` 类别渲染：商店卡、座位行与招募/战斗随从卡在悬停进入、鼠标左键按下或触摸按下时显示；指针移出锚点矩形后隐藏，松开鼠标左键或触摸时按指针所在目标矩形更新（由 `_input` 按全局矩形做命中判断，避免子控件截断悬停通知）。随从详情先显示名称、科学分类（完整路径）、玩法、关联玩法（仅中立非学者）、食物链（捕食/寄生）与 `CardDB.display_text` 介绍，再取协议 `BoardMinion.stats` 按初始、永久、回合、光环、受击、当前六行展示，有符号项带 `+`，受击的攻防都为 0 时省略该行；`stats` 缺失时仍显示名称与介绍，并退化为只显示顶层 `attack` / `health` 的当前攻防。商店详情同样先给分类与关联/食物链行，再接费用、原始数值、时代、技能文本与不可购买原因；英雄详情给科学分类、玩法、擅长玩法、时代与英雄技能。分类路径缺失显示「未定」，关联或食物链为空时省略对应行。座位与商店字段见[对局页](../product/ui/pages/game.md)。面板只读、忽略鼠标输入，位置以锚点矩形为准并按视口边界夹紧；每次 `_refresh` 重建前先隐藏，同一目标重复触发显示时只校正位置、不重建内容。
-- 冒烟测试按 `client/tests/ui_smoke*.tscn` 拆为十三个场景，`make client-smoke` 用 glob 逐个运行并要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`。主冒烟覆盖五场景实例化、手牌重叠布局（十张 80 步进单行、相邻交叠、末卡不越界、滚动行不裁剪）、手牌显示服务端身材与奖励牌星级角标、手牌悬停（置顶、底边中点放大 1.12、越出滚动行仍命中、右侧交叠带仍归本卡且拖拽拾起本卡、移出复位、战斗阶段可查看）与拖拽开始复位、真实鼠标事件拖拽（按下、越过阈值、移到落点、松手）落盘与商店出售、拖拽落点意图（首卡 0、次卡 1、末尾空白为随从数）、棋盘卡换位（真实 `force_drag` 通知、原卡隐藏、落点发 `fromIndex/toIndex`）、商店出售落点（可卖与不可卖、手牌拒绝、普通/金色返还提示）、棋盘满时不接收、需要目标的效果牌落点规则、四个不可拖动条件、落点门控（换回合/开战/结束招募/断线时不发意图）、目标待选浮层与控件阻塞、战斗逐动作播放（阵亡卡离场、复生回原位、召唤按存活下标插入）、横幅停留、按截止时间续播、无跳过入口、战斗阶段不弹待选弹层、回合号不匹配时不显示旧战报、离开战斗后清空战报，以及离树导航守卫。`ui_smoke_side` 断言右栏三段的身份判定（含阶段优先、幽灵角标、已淘汰观战）、商店操作位于售货员下方、身份块与英雄块等高且状态块垂直居中、倒计时悬停翻成结束招募与归零文案；`ui_smoke_seats` 断言 8 行座位、头像尺寸、名次角标缺失与压暗、血量条比例、战报展开与刷新保持、无战报文案与座位详情；`ui_smoke_combat` 断言战斗视图只有对手行/横幅/我方行三段且无英雄条，以及固定占位（两行按 `card-height` 取行高、一方全灭后行高与两行位置不变、横幅出现前后两行不动），并以平局夹具断言平局横幅文案。`ui_smoke_cards` 断言商店卡费用与时代角标、冻结蒙层/冰晶/「冻」字、卡面介绍的两行省略、无介绍时的紧凑信息区与名称/数值基线，以及卡牌统一 112×146；卡面类型行显示玩法（中立为「中立」、哺乳纲随从为「哺乳纲」）且封面取 `UITheme.playstyle_cover`；`UITheme.PLAYSTYLE_COLOR` 14 个玩法的颜色互不重复、封面色比原色更暗；详情面板含科学分类与玩法行，机械工具卡与学者卡分别为「机械」与「中立」、英雄详情含科学分类行。`ui_smoke_text` 断言 `CardDB.display_name`（含 Token）、`display_text`、`era_name` 与 `UI.enum_text` 的取用，`CardDB.playstyle_name`（含 `neutral`）、`CardDB.taxon_name` 与 `CardDB.taxon_path`（完整路径、空 id、未知节点），`UI.error_text` 的错误码文案，`UI.error_text_by_id` 的 `messageId` 细分文案，以及缺键时 `UI.error_text_by_id` 返回空串。`ui_smoke_gallery` 断言大厅图鉴页 432 项与「全部」章节计数、每页 40 张与 11 页、常驻详情非空、目录与详情宽度取令牌且整体不溢出视口；时代与分类两维筛选（史前 63、未来下真菌项禁用、未来 + 动物界 14 张、清空后回 432）；空目录显示空态且无详情名；翻页到第 2 页；点击卡面后详情名称与类型/分类行同步；大厅「卡牌图鉴」入口文案；对局覆盖层为 198 张且 `alan-turing`、`airplane` 在池、`bruce-lee`、`ammonite-token`、`aristotle` 不在池，覆盖层不切换场景、返回按钮与 `Esc` 都能收起。`ui_smoke_guide` 断言首次进入自动展示第 1 步、下一步推进与手牌/棋盘条件跳过、跳过写入 `seen` 后不再自动展示、`show_manual()` 从第 1 步开始且不写 `seen`、场景重建后从 `GameStore.guide_step` 恢复、引导存在时点击与拖拽仍到达底层控件、存储缺失时按首次处理。`ui_smoke_room_ops` 断言房主可见 `DissolveButton` 与 `Kick_<playerId>`、非房主全部隐藏、`RoomClosed` 的 `kicked` / `dissolved` 提示后回大厅、离线时房主操作不可用。
+- 冒烟测试按 `client/tests/ui_smoke*.tscn` 拆为十三个场景，`make client-smoke` 用 glob 逐个运行并要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`。主冒烟覆盖五场景实例化、手牌重叠布局（十张 80 步进单行、相邻交叠、末卡不越界、滚动行不裁剪）、手牌显示服务端身材与奖励牌星级角标、手牌悬停（置顶、底边中点放大 1.12、越出滚动行仍命中、右侧交叠带仍归本卡且拖拽拾起本卡、移出复位、战斗阶段可查看）与拖拽开始复位、真实鼠标事件拖拽（按下、越过阈值、移到落点、松手）落盘与商店出售、拖拽落点意图（首卡 0、次卡 1、末尾空白为随从数）、棋盘卡换位（真实 `force_drag` 通知、原卡隐藏、落点发 `fromIndex/toIndex`）、商店出售落点（可卖与不可卖、手牌拒绝、普通/金色返还提示）、棋盘满时不接收、需要目标的效果牌落点规则、四个不可拖动条件、落点门控（换回合/开战/结束招募/断线时不发意图）、目标待选浮层与控件阻塞、战斗逐动作播放（阵亡卡离场、复生回原位、召唤按存活下标插入）、横幅停留、按截止时间续播、无跳过入口、战斗阶段不弹待选弹层、回合号不匹配时不显示旧战报、离开战斗后清空战报，以及离树导航守卫。`ui_smoke_side` 断言舞台结构：无右栏与旧手牌节点，中央舞台顺序为招募组合—战斗组合—英雄行—手牌，招募阶段只显示招募组合；商店操作顺序为升时代—售货员—刷新—冻结且均为 40×40，售货员 64×64，河道位于商店与棋盘之间且回合数居中、倒计时贴右端；英雄行 84、英雄卡 64×84（名字在时代上方、攻击在左、时代居中、生命在右）、技能图标 40×40 与金币格；手牌在英雄行下方且底边为 712；倒计时悬停翻成结束招募与归零文案；战斗对手的普通/幽灵/等待配对三种身份，以及淘汰与幽灵舞台；`ui_smoke_seats` 断言 8 行座位、头像尺寸、名次角标缺失与压暗、血量条比例、战报展开与刷新保持、无战报文案与座位详情；`ui_smoke_combat` 断言战斗组合子节点顺序为对手身份块—对手随从行—河道—我方随从行且无旧英雄条，横幅播前只显示回合数、播后追加结果，以及固定占位（两行按 `card-height` 取行高、河道按 `river-height`、一方全灭后行高与位置不变），并以平局夹具断言平局横幅文案。`ui_smoke_cards` 断言商店卡费用与时代角标、冻结蒙层/冰晶/「冻」字、卡面介绍的两行省略、无介绍时的紧凑信息区与名称/数值基线，以及卡牌统一 112×146；卡面类型行显示玩法（中立为「中立」、哺乳纲随从为「哺乳纲」）且封面取 `UITheme.playstyle_cover`；`UITheme.PLAYSTYLE_COLOR` 14 个玩法的颜色互不重复、封面色比原色更暗；详情面板含科学分类与玩法行，机械工具卡与学者卡分别为「机械」与「中立」、英雄详情含科学分类行。`ui_smoke_text` 断言 `CardDB.display_name`（含 Token）、`display_text`、`era_name` 与 `UI.enum_text` 的取用，`CardDB.playstyle_name`（含 `neutral`）、`CardDB.taxon_name` 与 `CardDB.taxon_path`（完整路径、空 id、未知节点），`UI.error_text` 的错误码文案，`UI.error_text_by_id` 的 `messageId` 细分文案，以及缺键时 `UI.error_text_by_id` 返回空串。`ui_smoke_gallery` 断言大厅图鉴页 432 项与「全部」章节计数、每页 40 张与 11 页、常驻详情非空、目录与详情宽度取令牌且整体不溢出视口；时代与分类两维筛选（史前 63、未来下真菌项禁用、未来 + 动物界 14 张、清空后回 432）；空目录显示空态且无详情名；翻页到第 2 页；点击卡面后详情名称与类型/分类行同步；大厅「卡牌图鉴」入口文案；对局覆盖层为 198 张且 `alan-turing`、`airplane` 在池、`bruce-lee`、`ammonite-token`、`aristotle` 不在池，覆盖层不切换场景、返回按钮与 `Esc` 都能收起。`ui_smoke_guide` 断言首次进入自动展示第 1 步、下一步推进与手牌/棋盘条件跳过、跳过写入 `seen` 后不再自动展示、`show_manual()` 从第 1 步开始且不写 `seen`、场景重建后从 `GameStore.guide_step` 恢复、引导存在时点击与拖拽仍到达底层控件、存储缺失时按首次处理。`ui_smoke_room_ops` 断言房主可见 `DissolveButton` 与 `Kick_<playerId>`、非房主全部隐藏、`RoomClosed` 的 `kicked` / `dissolved` 提示后回大厅、离线时房主操作不可用。`ui_smoke_touch` 断言触控端长按 450ms 显示详情、短按不显示、位移取消、多指与阻塞态不触发，以及手牌悬停残留复位；`ui_smoke_layout` 断言六个页面在 960×540 下不越界，并断言安全区与键盘边距取较大值、桌面边距为零；`ui_smoke_platform` 断言桌面、iPhone 与 iPad 三档逻辑基准、44pt/32pt 命中尺寸与安全区、键盘像素换算。
 
-- 图鉴页大厅入口由 `lobby.gd` 的「卡牌图鉴」按钮经 `UI.navigate` 进入 `res://scenes/gallery.tscn`，目录取 `CardDB.cards.keys()`（已含 Token）；对局入口在右栏 `SideStatus` 回合/倒计时之后，`game.gd._open_gallery` 首次创建 `CardGallery` 覆盖节点（`GalleryOverlay`，铺满视口，`closed` 只收起 `visible`），不切换场景、不暂停视图刷新，拖拽、待选与战斗演示状态保留；`_refresh_overlay` 在选择浮层可见时调用 `_close_gallery`。
+- 图鉴页大厅入口由 `lobby.gd` 的「卡牌图鉴」按钮经 `UI.navigate` 进入 `res://scenes/gallery.tscn`，目录取 `CardDB.cards.keys()`（已含 Token）；对局入口是顶部工具条右侧的 `GalleryButton`，`game.gd._open_gallery` 首次创建 `CardGallery` 覆盖节点（`GalleryOverlay`，铺满视口，`closed` 只收起 `visible`），不切换场景、不暂停视图刷新，拖拽、待选与战斗演示状态保留；`_refresh_overlay` 在选择浮层可见时调用 `_close_gallery`。
 - 图鉴两维筛选交叉生效：章节计数按当前分类过滤、目录计数按当前时代过滤，零计数且未选中的项禁用；筛选与翻页后网格只构建当前页（`gallery-page-size` = 40，`gallery-grid-columns` = 5），选中卡不在结果内时改为结果首张，结果为空时显示空态。排序按时代序号（未知排最后）再按本地化名称。
 - 本局卡池由 `CardPool.card_ids` 复算：遍历 `CardDB.cards` 并跳过 Token；非中立卡按 `playstyle` 是否在 `enabledFactions` 判定，中立卡取 `specialty` 中 `kind = "play"` 的关联玩法、至少一个启用才入池且无关联时始终入池，与服务端 `card_in_pool` 一致；结果只用于展示，不影响出牌与商店合法性。
 
@@ -187,7 +198,7 @@ make dev-bots                                       # 终端 1，起服务端与
 make client-run                                     # 终端 2，大厅填房间码
 ```
 
-客户端一律用 `make client-run` 启动：它会先 `--import` 刷新全局类缓存。直接跑 `Godot --path client` 时，若工程新增或改名过 `class_name` 脚本而缓存未更新，依赖它的脚本编译失败，对局页会缺整块区域（例如中区整体不构建，只剩左栏与右栏）。
+客户端一律用 `make client-run` 启动：它会先 `--import` 刷新全局类缓存。直接跑 `Godot --path client` 时，若工程新增或改名过 `class_name` 脚本而缓存未更新，依赖它的脚本编译失败，对局页会缺整块区域（例如中央舞台整体不构建，只剩顶部工具条与左栏）。
 
 命令打印两行 `ROOM_CODE=<6 位>` 与提示后等待，开发者在客户端大厅输入该房间码、选英雄并准备，8 人齐自动开局；整局结束后命令自行退出并释放端口，Ctrl-C 也可一次退出全部进程。端口被占用时立即失败，用 `make dev-bots DEV_PORT=8081` 换端口。需要自定义机器人名字或英雄时改用下面的手动方式。
 
@@ -256,6 +267,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - `UI.safe_area(page)` 把页面子节点整体移入 `SafeAreaMargin`：桌面四边为零；触控端取安全区四边，底部取安全区与键盘高度的较大值。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UI.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。
 - `UITheme.hit_primary()` / `hit_small()` 把 44pt / 32pt 换算为画布单位；`UI.button` 与 `UI.styled_button` 在触控端按此抬升最小高度，桌面端保留原值。
 - 图鉴在 iPhone 基准下收窄目录（`gallery-toc-width-compact`）、详情（`gallery-detail-width-compact`）并改为 4 列（`gallery-grid-columns-compact`）；桌面与 iPad 保持原令牌。
+- 对局页与内部组件统一用 `UITheme.stage_metric(name)` 取场景令牌：iPhone 优先取 `<name>-compact`（卡面 84×100、英雄行 64、河道 26、商店操作行 52、顶部工具条 26、头像 48、图标按钮 36 等），其余设备取原值；页面边距与舞台间距在 iPhone 下同步收紧。桌面端仍为 720 高的完整舞台，iPhone 为 540 高，纵向顺序与操作不变。
 
 ### 触控交互
 

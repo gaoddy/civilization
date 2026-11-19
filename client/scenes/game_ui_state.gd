@@ -39,3 +39,15 @@ var board_slots := 7
 
 ## 生命上限，取视图 `hpCap`。
 var hp_cap := 40
+
+
+## 手牌起始门控：与 `game.gd` 的 `drag_gate` 条件一致。
+func can_drag(playable: bool) -> bool:
+    return (
+        phase == Protocol.PHASE_RECRUIT
+        and not stale
+        and not expired
+        and connected
+        and not target_pending
+        and playable
+    )

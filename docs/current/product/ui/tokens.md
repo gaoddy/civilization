@@ -35,11 +35,12 @@
 
 | 令牌 | 字号 | 用途 |
 | --- | --- | --- |
+| `font-micro` | 8 | 图标按钮的费用与次数角标、英雄卡的数值行 |
 | `font-caption` | 11 | 元信息、关键词、标记 |
-| `font-body-sm` | 12 | 右栏身份与属性行、手牌、状态行 |
+| `font-body-sm` | 12 | 手牌、顶部工具条状态文本与对手身份行 |
 | `font-body` | 14 | 区块标题、按钮 |
 | `font-title` | 16 | 随从攻防、英雄名 |
-| `font-title-lg` | 18 | 右栏回合数 |
+| `font-title-lg` | 18 | 图鉴详情的卡名 |
 | `font-display` | 22 | 战斗结果横幅、弹层标题 |
 | `font-hero` | 28 | 预留，当前页面未使用 |
 
@@ -63,18 +64,25 @@
 | 令牌 | 取值 | 用途 |
 | --- | --- | --- |
 | `rail-width` | 88 | 左栏座位列宽度 |
-| `side-width` | 272 | 右栏宽度 |
+| `top-bar-height` | 28 | 对局页顶部工具条高度 |
+| `river-height` | 32 | 对局页河道行高度，商店与棋盘、双方棋盘之间 |
+| `hero-row-height` | 84 | 对局页英雄行高度，容纳英雄卡与金币、技能列 |
+| `hero-card-width` / `-height` | 64 / 84 | 英雄卡尺寸，与 `card-width` 同宽高比 |
+| `hero-cover-height` | 40 | 英雄卡玩法色封面高度 |
+| `hero-name-height` | 14 | 英雄卡名字行高度 |
+| `hero-stats-height` | 30 | 英雄卡底部攻防与时代行高度 |
+| `shop-icon-size` | 40 | 商店升时代、刷新、冻结与英雄技能图标按钮边长 |
+| `recruit-shop-gap` | 18 | 招募组合中商店操作与商店整体到河道的间距 |
+| `opponent-hp-width` | 360 | 战斗阶段对手身份块与血量条宽度 |
 | `report-width` | 236 | 左栏战报浮层宽度 |
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
 | `avatar-rail` | 44 | 左栏座位行头像边长 |
-| `portrait-size` | 200 | 售货员与我方英雄大图宽度 |
-| `portrait-height` | 150 | 售货员与我方英雄大图高度 |
-| `seat-hp-bar-height` | 6 | 座位行血量条高度，与 `avatar-rail` 同宽；右栏对手身份块的血量条复用该高度 |
+| `portrait-size` | 64 | 售货员与对手英雄头像块边长 |
+| `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
 | `rank-badge-size` | 18 | 座位行名次角标边长 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
-| `hero-tile-width` | 150 | 英雄小卡宽度（右栏按栏宽覆盖） |
+| `hero-tile-width` | 150 | 英雄小卡宽度（大厅与房间的英雄选择） |
 | `card-width` / `-height` | 112 / 146 | 商店、棋盘、手牌与战斗只读卡（含空位与拖拽占位） |
-| `combat-banner-height` | 30 | 战斗视图结果横幅的固定占位高度；横幅出现不推动上下两行 |
 | `card-info-height` | 90 | 有介绍时的卡面信息区高度，容纳两行介绍、名称与数值 |
 | `card-info-compact-height` | 56 | 无介绍时的卡面信息区高度，只容纳名称与数值 |
 | `hand-card-overlap` | 32 | 手牌相邻卡的交叠宽度；槽位步进 = `card-width - hand-card-overlap` = 80，十张单行 |

@@ -3,6 +3,8 @@ extends Node
 
 var cards: Dictionary = {}
 var tokens: Dictionary = {}
+## 技能展示表：只取费用等展示字段，不参与规则判定。
+var skills: Dictionary = {}
 ## 科学分类树：节点 id → {id, parent, rank}。
 var taxonomy: Dictionary = {}
 
@@ -21,6 +23,7 @@ const ERA_IDS := {
 func _ready() -> void:
     _load_table("res://generated/cards.json", cards)
     _load_table("res://generated/tokens.json", tokens)
+    _load_table("res://generated/skills.json", skills)
     _load_taxonomy("res://generated/taxonomy.json")
     for id in tokens:
         cards[id] = tokens[id]
@@ -57,6 +60,18 @@ func _load_taxonomy(path: String) -> void:
 
 func card(id: String) -> Dictionary:
     return cards.get(id, {})
+
+
+func skill(id: String) -> Dictionary:
+    return skills.get(id, {})
+
+
+## 技能展示费用；技能不存在或缺少 `cost` 时返回 -1，供界面隐藏费用角标。
+func skill_cost(id: String) -> int:
+    var entry := skill(id)
+    if not entry.has("cost"):
+        return -1
+    return int(entry.get("cost", -1))
 
 
 ## 展示名：Token 取 `token.<id>.name`，其余取 `card.<id>.name`；缺键回退为实体 id。

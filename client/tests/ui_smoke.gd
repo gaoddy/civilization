@@ -426,22 +426,19 @@ func _check_game() -> void:
         )
         await _push_motion(instance, Vector2(-40, -40))
         _expect(not detail.is_visible_in_tree(), "移出商店卡矩形应隐藏详情面板")
-    # 时代名展示已随顶栏删除迁到右栏英雄段：顶栏删除由 ui_smoke_side 覆盖，
-    # 座位行不再显示时代、悬停详情才显示时代由 ui_smoke_seats 覆盖。
-    var side_hero = instance.find_child("SideHero", true, false)
-    var side_hero_text := "缺失" if side_hero == null else _node_text(side_hero)
-    for text in [
-        TranslationServer.translate("ui.game.side_panel.hp"),
-        "35/40",
-        TranslationServer.translate("ui.game.side_panel.era"),
-        TranslationServer.translate("enum.era.primitive"),
-        TranslationServer.translate("ui.game.side_panel.gold"),
-        "6",
-    ]:
+    # 生命、时代与金币随英雄行展示：英雄卡承载名字与数值，英雄侧列显示金币。
+    var hero_card = instance.find_child("HeroCard", true, false)
+    var hero_text := "缺失" if hero_card == null else _node_text(hero_card)
+    for text in ["35/40", TranslationServer.translate("enum.era.primitive")]:
         _expect(
-            side_hero != null and side_hero_text.contains(text),
-            "右栏英雄段应显示「%s」，实际：%s" % [text, side_hero_text],
+            hero_card != null and hero_text.contains(text),
+            "英雄行应显示「%s」，实际：%s" % [text, hero_text],
         )
+    var gold_tile = instance.find_child("GoldTile", true, false)
+    _expect(
+        gold_tile != null and str(gold_tile.text).contains("6"),
+        "英雄行应显示金币 6，实际：%s" % ("缺失" if gold_tile == null else gold_tile.text),
+    )
     # 重新显示详情，再打开选择浮层，确认浮层会隐藏详情层。
     if detail != null and card != null:
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
@@ -506,8 +503,8 @@ func _check_game_layout() -> void:
     )
     var shop = instance.find_child("ShopPanel", true, false)
     var board_panel = instance.find_child("BoardPanel", true, false)
-    var hand = instance.find_child("HandPanel", true, false)
-    _expect(shop != null and shop.get_parent() == recruit, "商店应位于招募中区")
+    var hand = instance.find_child("HandStrip", true, false)
+    _expect(shop != null and recruit.is_ancestor_of(shop), "商店应位于招募中区")
     _expect(board_panel != null and board_panel.get_parent() == recruit, "我方棋盘应位于招募中区")
     if shop != null:
         _expect(not _node_text(shop).contains("商店"), "商店面板不再显示标题")
@@ -574,8 +571,8 @@ func _check_game_layout() -> void:
         await _push_motion(instance, Vector2(-40, -40))
     var hand_scroll = instance.find_child("HandScroll", true, false)
     _expect(
-        hand_scroll != null and is_equal_approx(hand_scroll.custom_minimum_size.y, 154.0),
-        "手牌滚动高度应为 card-height + space-md"
+        hand != null and is_equal_approx(hand.custom_minimum_size.y, 146.0),
+        "手牌行高度应为 card-height"
     )
     var hand_card_zero = instance.find_child("HandCard0", true, false)
     var hand_slot_one = instance.find_child("HandSlot1", true, false)
@@ -593,7 +590,7 @@ func _check_game_layout() -> void:
         "商店卡应显示玩法：%s" % shop_text,
     )
     _expect(shop_text.contains("9"), "商店卡应显示原始生命值：%s" % shop_text)
-    _expect(instance.find_child("HeroPortrait", true, false) != null, "右栏应显示我的英雄大图")
+    _expect(instance.find_child("HeroCard", true, false) != null, "英雄行应显示我的英雄卡")
     instance.queue_free()
     GameStore.view = {}
     _clear_combat()
@@ -640,9 +637,12 @@ func _check_hand_overlap_layout() -> void:
             if slot == null:
                 continue
             slots.append(slot)
+            var expected_slot := (
+                Vector2(UITheme.metric("card-width"), 146) if index == 9 else Vector2(80, 146)
+            )
             _expect(
-                slot.custom_minimum_size == Vector2(80, 146),
-                "HandSlot%d 应为 80×146 步进，实际 %s" % [index, slot.custom_minimum_size],
+                slot.custom_minimum_size == expected_slot,
+                "HandSlot%d 应为 %s，实际 %s" % [index, expected_slot, slot.custom_minimum_size],
             )
         for index in slots.size():
             var slot: Control = slots[index]
@@ -683,9 +683,10 @@ func _check_hand_overlap_layout() -> void:
                 last_card.get_global_rect().end.x <= hand_scroll.get_global_rect().end.x + 0.5,
                 "末张手牌不应超出滚动行右边界",
             )
+    var hand_strip = instance.find_child("HandStrip", true, false)
     _expect(
-        hand_scroll != null and is_equal_approx(hand_scroll.custom_minimum_size.y, 154.0),
-        "手牌滚动高度应保持 card-height + space-md",
+        hand_strip != null and is_equal_approx(hand_strip.custom_minimum_size.y, 146.0),
+        "手牌行高度应保持 card-height",
     )
     _expect(hand_scroll != null and not hand_scroll.clip_contents, "手牌滚动行不应裁切悬停放大的卡片")
     instance.queue_free()
@@ -965,10 +966,14 @@ func _check_combat_layout() -> void:
     var combat = instance.find_child("CombatPanel", true, false)
     _expect(combat != null and combat.visible, "战斗阶段应显示战斗视图")
     _expect(recruit != null and not recruit.visible, "战斗阶段不应显示招募视图")
-    var hand_panel = instance.find_child("HandPanel", true, false)
+    var hand_panel = instance.find_child("HandStrip", true, false)
     _expect(hand_panel != null and hand_panel.visible, "演示期间手牌仍应可见")
     var banner = instance.find_child("CombatBanner", true, false)
-    _expect(banner != null and not banner.visible, "动作播完前不应显示结果横幅")
+    _expect(
+        banner != null
+            and not banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
+        "动作播完前不应显示结果",
+    )
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
     _expect(opponent_row != null and opponent_row.get_child_count() == 2, "对手随从行应为 2 张")
     var own_row = instance.find_child("CombatOwnRow", true, false)
@@ -979,8 +984,11 @@ func _check_combat_layout() -> void:
                 (row.get_child(0) as Control).custom_minimum_size == Vector2(112, 146),
                 "战斗只读卡应为 112×146",
             )
-    var end_button = instance.find_child("EndButton", true, false)
-    _expect(end_button != null and not end_button.visible, "战斗阶段不应显示结束招募按钮")
+    var end_button = instance.find_child("RecruitEndButton", true, false)
+    _expect(
+        end_button == null or not end_button.is_visible_in_tree(),
+        "战斗阶段不应显示结束招募按钮",
+    )
     var power_button = instance.find_child("HeroPowerButton", true, false)
     _expect(power_button != null and not power_button.visible, "演示期间不应显示英雄技能按钮")
     _expect(instance.find_child("ShopPanel", true, false) != null, "商店节点仍在招募面板内")
@@ -1184,7 +1192,11 @@ func _check_stale_combat_not_shown() -> void:
     var own_row = instance.find_child("CombatOwnRow", true, false)
     var banner = instance.find_child("CombatBanner", true, false)
     _expect(own_row != null and own_row.get_child_count() == 0, "上一回合战报不应渲染随从行")
-    _expect(banner != null and not banner.visible, "上一回合战报不应显示横幅")
+    _expect(
+        banner != null
+            and not banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
+        "上一回合战报不应显示结果",
+    )
     # 事件流已删除（ui_smoke_side 断言 LogText 不存在），旧战报不再有日志行可查。
     instance.queue_free()
     await get_tree().process_frame
@@ -1315,11 +1327,18 @@ func _check_combat_banner_after_tail() -> void:
     if instance == null:
         return
     var banner = instance.find_child("CombatBanner", true, false)
+    var win_text := TranslationServer.translate("ui.game.combat.win")
     for _step in range(4):
         instance._process(0.32)
-    _expect(banner != null and not banner.visible, "动作刚播完且未到横幅停留时不应显示横幅")
+    _expect(
+        banner != null and not banner.text.contains(win_text),
+        "动作刚播完且未到停留结束时不应显示结果",
+    )
     instance._process(2.0)
-    _expect(banner != null and banner.visible, "横幅停留结束后应显示横幅")
+    _expect(
+        banner != null and banner.text.contains(win_text),
+        "停留结束后应显示结果横幅",
+    )
     _expect(
         banner != null and str(banner.text).contains(TranslationServer.translate("ui.game.combat.win")),
         "横幅应显示胜负：%s" % ("" if banner == null else str(banner.text)),
@@ -1365,7 +1384,11 @@ func _check_combat_resume_from_started_at() -> void:
         "续播点前的阵亡动作应立即落地（阵亡卡离场）：实际 %d 张"
         % (0 if opponent_row == null else opponent_row.get_child_count())
     )
-    _expect(banner != null and not banner.visible, "横幅停留未走完时不应显示横幅")
+    _expect(
+        banner != null
+            and not banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
+        "停留结束前不应显示结果",
+    )
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
@@ -1974,7 +1997,7 @@ func _check_target_pending_overlay() -> void:
                 "目标待选不应提供跳过：%s" % button.text,
             )
         _expect(texts.size() == 2 and str(texts[0]).begins_with("★ "), "触发待选的随从应被高亮：%s" % str(texts))
-    for name in ["RerollButton", "UpgradeButton", "FreezeButton", "EndButton", "HeroPowerButton"]:
+    for name in ["RerollButton", "UpgradeButton", "FreezeButton", "RecruitEndButton", "HeroPowerButton"]:
         var button = instance.find_child(name, true, false)
         _expect(button != null and button.disabled, "目标待选期间 %s 应禁用" % name)
     var hand_card = instance.find_child("HandCard0", true, false)
@@ -2218,7 +2241,7 @@ func _check_expired_gate() -> void:
     var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
         return
-    var end_button = instance.find_child("EndButton", true, false)
+    var end_button = instance.find_child("RecruitEndButton", true, false)
     _expect(end_button != null and end_button.disabled, "倒计时归零后结束招募按钮应禁用")
     var reroll = instance.find_child("RerollButton", true, false)
     _expect(reroll != null and reroll.disabled, "倒计时归零后刷新按钮应禁用")
@@ -2237,7 +2260,7 @@ func _check_stale_view_gate() -> void:
     var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
         return
-    var end_button = instance.find_child("EndButton", true, false)
+    var end_button = instance.find_child("RecruitEndButton", true, false)
     _expect(end_button != null and end_button.disabled, "视图与当前回合不一致时结束招募按钮应禁用")
     var reroll = instance.find_child("RerollButton", true, false)
     _expect(reroll != null and reroll.disabled, "视图与当前回合不一致时刷新按钮应禁用")
