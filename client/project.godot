@@ -21,6 +21,10 @@ window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/handheld/orientation=4
 
+[gui]
+
+theme/custom_font="res://assets/fonts/NotoSansSC-Regular-subset.ttf"
+
 [network]
 
 allow_insecure_tls=false

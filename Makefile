@@ -5,8 +5,9 @@ GODOT_VERSION := $(shell "$(GODOT)" --version 2>/dev/null | head -n 1 | cut -d. 
 GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates/$(GODOT_VERSION).stable
 DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
+FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 
-.PHONY: test lint audit data data-check assets balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export client-export-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check assets font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export client-export-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -51,6 +52,12 @@ assets:
 		--avatars client/assets/characters/avatars \
 		--faces client/assets/cards/faces \
 		--manifest client/assets/asset_manifest.json
+
+# 内置中文字体子集：字符集取文本表 + ASCII + GB2312，需先装 fontTools（见脚本说明）。
+font-subset:
+	@[ -f "$(FONT_SOURCE)" ] || { echo "font-subset 需要源字体 $(FONT_SOURCE)（Google Fonts 的 Noto Sans SC 变量字体）" >&2; exit 1; }
+	$(PYTHON) scripts/subset_font.py --csv client/text/zh_CN.csv \
+		--source "$(FONT_SOURCE)" --output client/assets/fonts/NotoSansSC-Regular-subset.ttf
 
 balance-check:
 	$(PYTHON) scripts/balance_report.py --check

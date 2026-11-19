@@ -22,6 +22,8 @@ client/
     card_db.gd               # 只读卡牌/技能展示表与科学分类树；展示文本按文本 id 从文本表取
   text/
     zh_CN.csv                # 唯一的运行时中文文本表（生成物 + 人工 key）
+  assets/
+    fonts/NotoSansSC-Regular-subset.ttf  # 默认主题字体（中文子集）；美术素材见 §10
   ui/
     ui.gd                    # 场景共用控件工具、共享构件与统一导航入口（class_name UI）
     safe_area.gd             # 页面安全区包裹（class_name SafeAreaMargin），触控端叠加键盘边距
@@ -180,6 +182,7 @@ client/
 | `make data` | 生成服务端数据（含 `taxonomy.json`）、`client/generated/{cards,skills,tokens,taxonomy}.json` 与文本表 `client/text/zh_CN.csv` |
 | `make data-check` | 比对服务端与客户端生成数据、文本表漂移，运行效果审计 |
 | `make assets` | 按 `ASSET_MAP` 对源立绘去水印，派生头像与卡面并重写 `client/assets/asset_manifest.json`；见 §10 |
+| `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
@@ -236,6 +239,8 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - **前置条件**：修改 CSV 或任何实体文本后必须运行 `make client-import`（或任何以它为前提的目标，如 `client-run`、`client-smoke`、`m1b-e2e`），让 Godot 重新导入并生成 `.translation`；只在编辑器外改 CSV 而不导入，运行时仍读旧翻译。`make client-check` 已包含 `client-import`。
 - **服务端错误**：`ErrorMessage.messageId` 默认 `error.<CODE>`，`messageParams` 按 `%s` 填充；客户端状态栏先按 `code` 取 `error.<CODE>`，悬停详情优先用 `messageId`/`messageParams`，`message` 仅面向日志。
 - **新增语言**：一个语言一个文件。新增语言需要：新增 `client/text/<locale>.csv`，并扩展 `scripts/gen_text.py` 以支持按语言文件读写与产出（每个语言文件独立生成内容 key 与枚举 key）；用 `make client-import` 导入后把对应 `.translation` 加入 `[internationalization]` 的 `locale/translations`。业务代码（`CardDB`、`UI.*`、`tr()` 调用）与实体文档、协议均无需改动。
+- **内置字体**：`client/assets/fonts/NotoSansSC-Regular-subset.ttf`（Noto Sans SC 子集，OFL 许可见同目录 `OFL.txt`）由 `project.godot` 的 `gui/theme/custom_font` 设为默认主题字体，所有文本不再依赖系统字体回退；iOS 真机因此不再缺字。子集把垂直度量对齐 PingFang SC（`hhea` 1060/−340、`OS/2` typo 860/−140/400），切换前后行高一致，现有布局不需要按字体调整。
+- **字体生成**：`make font-subset` 取 `client/text/zh_CN.csv` 全部字符 + 可打印 ASCII + GB2312 常用字（覆盖玩家自填显示名），输出上述子集。源字体放 `FONT_SOURCE`（默认 `output/fonts/NotoSansSC[wght].ttf`，Google Fonts 的 Noto Sans SC 变量字体），解释器需装 fontTools：先 `python3 -m venv output/fonttools-venv` 并 `output/fonttools-venv/bin/pip install fonttools`，再用 `make font-subset PYTHON=output/fonttools-venv/bin/python`。文案出现子集外生僻字时重跑该目标；`client/tests/ui_smoke_text.gd` 断言子集覆盖文本表全部字符。
 
 ## 7. 与设计的偏差
 
