@@ -148,14 +148,20 @@ impl Db {
         Ok(db)
     }
 
+    /// 只建连接池，不建立连接也不迁移；供就绪探针在数据库不可达时的测试使用。
+    #[cfg(test)]
+    pub(crate) fn lazy_for_test(database_url: &str) -> Result<Self, String> {
+        let options = connect_options(database_url, None)?;
+        Ok(Self {
+            pool: PgPoolOptions::new()
+                .max_connections(10)
+                .acquire_timeout(Duration::from_secs(5))
+                .connect_lazy_with(options),
+        })
+    }
+
     async fn pool(database_url: &str, schema: Option<&str>) -> Result<PgPool, String> {
-        let mut options = PgConnectOptions::from_str(database_url)
-            .map_err(|err| format!("DATABASE_URL 非法: {err}"))?;
-        // PgBouncer 事务池不保证跨事务复用命名预处理语句；关闭语句缓存。
-        options = options.statement_cache_capacity(0);
-        if let Some(schema) = schema {
-            options = options.options([("search_path", schema.to_string())]);
-        }
+        let options = connect_options(database_url, schema)?;
         PgPoolOptions::new()
             .max_connections(10)
             .acquire_timeout(Duration::from_secs(5))
@@ -170,10 +176,7 @@ impl Db {
     ///
     /// 迁移失败时返回错误文本。
     pub async fn migrate(&self) -> Result<(), String> {
-        let mut migrator = sqlx::migrate!("../../migrations");
-        // 事务池下会话级 advisory lock 会泄漏；单实例 + Recreate 保证同一时刻只有一个迁移者。
-        migrator.set_locking(false);
-        migrator
+        build_migrator()
             .run(&self.pool)
             .await
             .map_err(|err| format!("执行数据库迁移失败: {err}"))
@@ -565,4 +568,47 @@ pub async fn drop_schema(database_url: &str, schema: &str) -> Result<(), String>
     .map_err(|err| format!("删除 schema {schema} 失败: {err}"));
     pool.close().await;
     result.map(|_| ())
+}
+
+/// 单次连接的选项：事务池下关闭语句缓存，测试 schema 时固定 `search_path`。
+fn connect_options(database_url: &str, schema: Option<&str>) -> Result<PgConnectOptions, String> {
+    let mut options = PgConnectOptions::from_str(database_url)
+        .map_err(|err| format!("DATABASE_URL 非法: {err}"))?;
+    // PgBouncer 事务池不保证跨事务复用命名预处理语句；关闭语句缓存。
+    options = options.statement_cache_capacity(0);
+    if let Some(schema) = schema {
+        options = options.options([("search_path", schema.to_string())]);
+    }
+    Ok(options)
+}
+
+/// 迁移器：事务池下会话级 advisory lock 会泄漏；单实例 + Recreate 保证同一时刻只有一个迁移者。
+fn build_migrator() -> sqlx::migrate::Migrator {
+    let mut migrator = sqlx::migrate!("../../migrations");
+    migrator.set_locking(false);
+    migrator
+}
+
+#[cfg(test)]
+mod options_tests {
+    use super::{build_migrator, connect_options};
+
+    #[test]
+    fn statement_cache_is_disabled_for_pgbouncer() {
+        let options = connect_options("postgres://app:secret@pgbouncer:6432/civilization", None)
+            .expect("DSN 应能解析");
+        let rendered = format!("{options:?}");
+        assert!(
+            rendered.contains("statement_cache_capacity: 0"),
+            "事务池下必须关闭语句缓存: {rendered}"
+        );
+    }
+
+    #[test]
+    fn migrations_run_without_session_lock() {
+        assert!(
+            !build_migrator().locking,
+            "事务池下迁移不得使用会话级 advisory lock"
+        );
+    }
 }
