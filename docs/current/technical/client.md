@@ -36,7 +36,12 @@ client/
     room.tscn/.gd            # 房间
     game.tscn/.gd            # 对局页面装配入口：顶部工具条、左栏与中央舞台，门控与意图
     game_ui_state.gd         # 一次刷新的页面快照：视图数据与门控结果
-    game_card_face.gd        # 卡面：介绍、费用/时代角标、冻结蒙层与随从详情分层取值；类型行显示玩法
+    card_face_base.gd        # 卡面共享绘制：封面、角标行、信息区、冻结蒙层与就地改身材
+    card_text.gd             # 卡牌与卡面周边的显示文本格式化
+    shop_card_face.gd        # 商店卡面：费用/时代角标与冻结表现，不显示介绍
+    hand_card_face.gd        # 手牌卡面：费用/时代、★ 或奖励星级与两行介绍
+    board_card_face.gd       # 棋盘与战斗只读卡面：★/潜行与当前身材
+    gallery_card_face.gd     # 图鉴卡面：英雄标识、费用/时代与两行介绍
     game_detail_layer.gd     # 详情层：商店、座位、售货员与英雄四类详情及定位；随从详情含分类、关联与食物链
     game_top_bar.gd          # 顶部工具条：状态文本与图鉴、提示、退出对局（class_name GameTopBar）
     game_players_rail.gd     # 左栏座位列：头像、名次、血条与战报展开
@@ -62,7 +67,7 @@ client/
     gallery_chapter_bar.gd   # 图鉴时代章节栏：全部 + 7 时代单选与计数（class_name GalleryChapterBar）
     gallery_toc.gd           # 图鉴界级分类目录：全部 + 8 界单选与计数（class_name GalleryToc）
     gallery_grid.gd          # 图鉴卡面网格与分页：5 列、每页 40（class_name GalleryGrid）
-    gallery_card_tile.gd     # 图鉴卡面单元：复用 GameCardFace，选中/悬停描边（class_name GalleryCardTile）
+    gallery_card_tile.gd     # 图鉴卡面单元：复用 GalleryCardFace，选中/悬停描边（class_name GalleryCardTile）
     gallery_detail.gd        # 图鉴常驻详情：大卡面、分类、玩法、数值、技能与效果（class_name GalleryDetail）
     card_pool.gd             # 本局卡池复算：与服务端 card_in_pool 同规则，排除 Token（class_name CardPool）
   tests/
@@ -134,7 +139,7 @@ client/
 - 邀请弹层是独立组件 `InvitePopup`（`class_name InvitePopup`），由大厅挂载；它自己订阅 `GameStore.social_changed`，按 `live_invites()` 过滤已过期条目并渲染遮罩 + 居中面板，条目显示邀请人名字、编号与房间码。接受与拒绝都发 `RespondInvite`（`accept` 为 `true`/`false`）并立即禁用该条按钮，结果清掉该条邀请后弹层自动隐藏；大厅只监听 `responded` 信号做状态文案。收到 `InviteAccepted` 后由 `GameStore` 自动补发 `JoinRoom{roomCode}`。
 - 房间页的邀请入口只列 `status == "online"` 的好友，其余按钮禁用；点击发 `InviteToRoom{friendId}`，结果由 `FriendInviteResult` 回写状态栏（已接受/未接受）。邀请成功的提示不改变房间成员，受邀者按普通 `JoinRoom` 入房后才出现在座位列表。
 - 商店使用 `HFlowContainer` 自动换行，左侧内容放入 `ScrollContainer`，1280×720 下不会因商店变长而溢出；手牌行同样使用 `HFlowContainer`，但槽位按 `card-width - hand-card-overlap` = 80 步进排列、行内 `h_separation` 为 0，1–10 张保持单行，卡片自身 112×146 向右溢出并与下一槽重叠。
-- 手牌卡使用与商店/棋盘一致的 `GameCardFace` 卡面（介绍、费用、时代角标与底部名称、攻击/类型/生命信息区），只能拖拽出牌（`HandCard._get_drag_data`），点击不产生意图；落点由 `BoardDrop` 判定：随从牌按指针位置换算插入下标、棋盘已满时任何落点都不接收，需要目标的效果牌只有落在服务端下发的候选（`targetCandidates`，区域为棋盘或手牌）上才提交，落点候选即目标；其它落点静默取消。拖拽数据带 `epoch`（`_view_epoch`）与 `targets`（候选的 `{zone, id}` 列表），视图重建后松手按取消处理。
+- 手牌卡使用与商店/棋盘一致的卡面语言（由 `HandCardFace` 构建；介绍、费用、时代角标与底部名称、攻击/类型/生命信息区），只能拖拽出牌（`HandCard._get_drag_data`），点击不产生意图；落点由 `BoardDrop` 判定：随从牌按指针位置换算插入下标、棋盘已满时任何落点都不接收，需要目标的效果牌只有落在服务端下发的候选（`targetCandidates`，区域为棋盘或手牌）上才提交，落点候选即目标；其它落点静默取消。拖拽数据带 `epoch`（`_view_epoch`）与 `targets`（候选的 `{zone, id}` 列表），视图重建后松手按取消处理。
 - 手牌的随从数值读服务端视图 `attack` / `health`（当前值，含成长等全部层数），不读 `CardDB` 卡面值；金色随从带「★」，奖励牌在角标行显示锁定的发现星级，并用「发现一张 N 星随从」作为原生 tooltip。拖拽 payload 带 `instanceId` 与 `golden` 供落点与预览判断，不参与意图。
 - 手牌悬停由 `HandSlot` 承担：进入时槽位 `z_index = 1`，卡片以底边中点为轴放大 `hand-hover-scale`（1.12）；放大后的矩形包含原矩形，不会在卡片下缘反复触发 `mouse_exited`。悬停不读取 `drag_allowed`，禁用与战斗阶段同样生效；不改顺序、`handIndex` 或 payload。`HandCard` 在拖拽真正开始时发出 `drag_started`，槽位同步复位缩放与层级后才复制拖拽预览，保证预览为原始尺寸。`HandScroll` 关闭 `clip_contents`，让放大后的卡顶越过 154 高的滚动行继续绘制与命中；悬停卡会盖住「手牌」标题，属已接受的视觉取舍。Godot 的 GUI 拾取按树序逆序、不比较 `z_index`，因此悬停期间 `HandSlot` 把右侧槽位卡片的 `mouse_filter` 临时设为 `IGNORE`、复位时恢复 `STOP`：否则放大卡被揭示出来的右侧交叠带仍会命中并拖起下一张卡。左侧槽位不用处理，它在树序中本来就晚于本槽被拾取。拖拽取消或视图刷新后不自动恢复悬停，指针需移出再移入。
 - 手牌拖拽期间 `BoardDrop` 逐帧按指针位置复查落点（`hand_drop_accepted`）：空位仍可放置；棋盘外、棋盘已满或需要目标却不在候选上判为无效，指针切换为禁止光标（`CURSOR_FORBIDDEN`），松手不产生意图，卡牌留在手牌。指针离开棋盘矩形时不设置禁止光标，交还给手牌卡的 `_can_drop_data`。
@@ -232,7 +237,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - **配置**：`client/project.godot` 的 `[internationalization]` 设置 `locale/fallback="zh_CN"` 与 `locale/translations=PackedStringArray("res://text/zh_CN.zh_CN.translation")`。Godot 在导入时把 CSV 编译为 `zh_CN.zh_CN.translation`；`.translation` 与 `.csv.import` 被 `.gitignore` 忽略，CSV 本身随源提交。
 - **取文本接口**：
   - 实例方法与 autoload 内取静态 key 用 `tr(key)`，带参数时用 `tr(key) % params`；
-  - 静态函数（如 `GameCardFace.era_text`、`UI.enum_text`）不能用 `tr()`（`tr()` 是 Node 的实例方法），必须用 `TranslationServer.translate(key)`；实例方法与 autoload 内用 `tr(key)`，需要运行时拼接 key 时同样可以调用 `tr(key)`，带参数时用格式化结果；
+  - 静态函数（如 `CardText.era_text`、`UI.enum_text`）不能用 `tr()`（`tr()` 是 Node 的实例方法），必须用 `TranslationServer.translate(key)`；实例方法与 autoload 内用 `tr(key)`，需要运行时拼接 key 时同样可以调用 `tr(key)`，带参数时用格式化结果；
   - 缺 key 时 Godot 原样返回 key，因此封装函数按「返回 key 即缺键」回退：枚举回退为 id，错误码回退为 code，错误详情回退为空串。
 - **key 命名**：
   - 内容文本：`card.<id>.name`、`card.<id>.match_text`、`skill.<id>.name`、`skill.<id>.text`、`skill.<id>.match_text`、`token.<id>.name`；
@@ -310,7 +315,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 - 位置：`client/assets/`。`characters/portraits/ch_<id>_full.png` 为去水印立绘，`characters/avatars/ch_<id>_ava.png` 为圆形头像，`cards/faces/card_<id>_face.png` 为 448×584 卡面封面；`asset_manifest.json` 按卡牌 id 登记三类路径与展示尺寸。
 - 加载：`CardDB` 启动时读取清单到 `art`，提供 `has_art(id)` 与 `art_path(id, kind)`；清单缺失或条目缺字段时返回空串，不报错。
-- 回退：`GameCardFace.face()` 有卡面纹理时叠 `CoverArt` 并隐藏首字水印，否则保留纯色封面与首字；`UI.avatar()` 有头像纹理时叠 `AvatarArt`，否则退回玩法色块首字。纹理加载失败与无资源走同一回退。
+- 回退：`CardFaceBase.create_face()` 有卡面纹理时叠 `CoverArt` 并隐藏首字水印，否则保留纯色封面与首字；`UI.avatar()` 有头像纹理时叠 `AvatarArt`，否则退回玩法色块首字。纹理加载失败与无资源走同一回退。
 - 稀有度：`CardDB.rarity_tier(id)` 按卡牌 `level` 映射为 `common`（1–2）、`rare`（3–4）、`epic`（5–6）、`legendary`（7），仅用于展示，不进入协议与服务端数据。
 - 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（默认 `client/assets/characters/portraits/asset_map.json`，内容为 `card_id → 源立绘文件名`）处理源立绘，并重写清单；映射文件缺失时目标直接失败。
 - 批次：首批试点 20 张，覆盖 14 种玩法色与 7 个时代；其余卡牌继续走程序化绘制。源立绘随仓库提交。

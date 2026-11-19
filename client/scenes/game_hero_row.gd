@@ -61,7 +61,7 @@ func _init() -> void:
 
 func refresh(state: GameUiState) -> void:
     var self_state := state.self_state
-    var hero_id := GameCardFace.optional_text(self_state.get("heroCardId"))
+    var hero_id := CardText.optional_text(self_state.get("heroCardId"))
     var attack := int(CardDB.card(hero_id).get("attack", 0))
     _hero_card.refresh(
         hero_id,
@@ -90,7 +90,7 @@ func set_combat_mode(in_combat: bool) -> void:
 
 func _refresh_power(state: GameUiState, eliminated: bool) -> void:
     var power: Dictionary = state.self_state.get("heroPower", {})
-    var skill_id := GameCardFace.optional_text(power.get("skillId"))
+    var skill_id := CardText.optional_text(power.get("skillId"))
     _has_skill = skill_id != ""
     _power_button.visible = _has_skill and not _in_combat and not eliminated
     if not _has_skill:

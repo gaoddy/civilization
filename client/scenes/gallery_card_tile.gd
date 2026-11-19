@@ -21,17 +21,7 @@ func _init(id: String, selected := false) -> void:
     mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
     tooltip_text = CardDB.display_name(id)
 
-    var entry := CardDB.card(id)
-    var era_id := str(entry.get("era", ""))
-    add_child(GameCardFace.face(
-        id,
-        GameCardFace.stat_text(entry.get("attack")),
-        GameCardFace.stat_text(entry.get("health")),
-        GameCardFace.playstyle_text(entry),
-        tr("ui.game.detail.hero") if bool(entry.get("is_hero", false)) else "",
-        str(CardDB.display_cost(id)),
-        UI.enum_text("era", era_id) if era_id != "" else "",
-    ))
+    add_child(GalleryCardFace.build(id, CardDB.card(id)))
     _apply_style()
 
     gui_input.connect(_on_gui_input)

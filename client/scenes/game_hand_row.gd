@@ -98,19 +98,7 @@ func _build_card(card: Dictionary, state: GameUiState) -> HandCard:
     # 随从牌显示服务端给出的真实身材（含成长等全部层数），效果牌不显示身材。
     var golden := bool(card.get("golden", false))
     var reward_level: Variant = card.get("rewardLevel")
-    var badge_text := "★" if golden else ""
-    if not golden and reward_level != null:
-        # 奖励牌在角标行显示锁定的发现星级。
-        badge_text = str(int(reward_level))
-    node.add_child(GameCardFace.face(
-        card_id,
-        GameCardFace.stat_text(card.get("attack")),
-        GameCardFace.stat_text(card.get("health")),
-        GameCardFace.playstyle_text(entry_data),
-        badge_text,
-        str(CardDB.display_cost(card_id)),
-        UI.enum_text("era", str(entry_data.get("era", ""))),
-    ))
+    node.add_child(HandCardFace.build(card))
     if reward_level != null:
         node.tooltip_text = tr("ui.game.reward_card.text") % int(reward_level)
 

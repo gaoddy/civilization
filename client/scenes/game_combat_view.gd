@@ -304,17 +304,16 @@ func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
         var minion_id := str(minion.get("minionId", ""))
         var panel: Control = existing.get(minion_id)
         if panel == null:
-            panel = GameCardFace.read_only_minion_card(minion)
+            panel = BoardCardFace.build_card(minion, int(minion.get("index", 0)))
             panel.set_meta("minion_id", minion_id)
             if detail != null:
                 detail.track(panel, {"detail_kind": "minion", "minion": minion})
             row.add_child(panel)
-        var attack_label = panel.find_child("CardAttack", true, false)
-        if attack_label != null:
-            attack_label.text = str(int(minion.get("attack", 0)))
-        var health_label = panel.find_child("CardHealth", true, false)
-        if health_label != null:
-            health_label.text = str(int(minion.get("health", 0)))
+        BoardCardFace.set_stats(
+            panel,
+            str(int(minion.get("attack", 0))),
+            str(int(minion.get("health", 0))),
+        )
         row.move_child(panel, position)
     # HFlowContainer 的最小宽度只按单张卡计算；显式给出整行宽度才能保持单行居中。
     var count := alive.size()
@@ -342,14 +341,14 @@ func _result(combat: Dictionary) -> Dictionary:
 func _opponent_label() -> String:
     var opponent_id := ""
     if _state != null:
-        opponent_id = GameCardFace.optional_text(_state.view.get("opponentPlayerId"))
+        opponent_id = CardText.optional_text(_state.view.get("opponentPlayerId"))
     var name := ""
     if _state != null:
         for player in _state.view.get("players", []):
             if player is Dictionary and str(player.get("playerId", "")) == opponent_id:
-                name = GameCardFace.optional_text(player.get("displayName"))
+                name = CardText.optional_text(player.get("displayName"))
                 if name == "":
-                    name = GameCardFace.optional_text(player.get("playerId"))
+                    name = CardText.optional_text(player.get("playerId"))
                 break
     if name == "":
         name = tr("ui.game.side_panel.unknown_hero")
