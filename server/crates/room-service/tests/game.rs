@@ -1690,7 +1690,6 @@ fn forfeit_during_recruit_marks_seat_and_updates_others() {
     let view = task.player_view(0).expect("视图应可用");
     assert_eq!(rank_of(&view, 0), Some(8), "首个弃权者应为第 8 名");
     assert_eq!(view.self_.hp, 0, "弃权座位生命归零");
-    assert_eq!(task.departed_player_ids(), vec!["p0".to_string()]);
 }
 
 #[test]
@@ -1800,29 +1799,5 @@ fn forfeit_from_eliminated_or_unknown_seat_returns_empty() {
     assert!(
         task.handle(forfeit("p99")).is_empty(),
         "未知玩家弃权应返回空更新"
-    );
-    assert!(
-        !task.departed_player_ids().contains(&"p99".to_string()),
-        "未知玩家不应登记离开"
-    );
-}
-
-#[test]
-fn forfeit_after_game_over_still_records_departure() {
-    let (mut task, _clock) = task();
-    for seat in 0..7 {
-        assert!(
-            !task.handle(forfeit(&format!("p{seat}"))).is_empty(),
-            "第 {seat} 个弃权应产生更新"
-        );
-    }
-    // 只剩 p7，对局已终局；其离开不改名次，但必须登记，回房重置才会移除座位。
-    assert!(
-        task.handle(forfeit("p7")).is_empty(),
-        "终局后弃权不产生更新"
-    );
-    assert!(
-        task.departed_player_ids().contains(&"p7".to_string()),
-        "终局后离开也要登记"
     );
 }

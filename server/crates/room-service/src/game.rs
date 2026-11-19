@@ -635,11 +635,6 @@ impl GameTask {
             .contains(&self.seats[usize::from(seat)].player_id)
     }
 
-    /// 本局已弃权的玩家；供回房重置时从座位上移除。
-    pub fn departed_player_ids(&self) -> Vec<String> {
-        self.departed.iter().cloned().collect()
-    }
-
     /// 本场全部参战座位是否都已回报。
     fn all_combat_played(&self) -> bool {
         (0..SEAT_COUNT).all(|seat| !self.combat_participants[seat] || self.combat_acks[seat])
@@ -1239,14 +1234,7 @@ impl GameTask {
             });
         }
 
-        // 对局已结束时补发该座位本人的结果：快照之后追加一条 `GameOver`。
-        if self.state.phase == Phase::GameOver {
-            updates.push(SeatUpdate {
-                player_id: player_id.to_string(),
-                kind: UpdateKind::GameOver(self.game_over_payload(seat)),
-            });
-        }
-
+        // 对局结束即销毁房间，重连不会再到达本 task；这里不再补发 `GameOver`。
         updates
     }
 

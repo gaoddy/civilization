@@ -2,7 +2,7 @@
 //!
 //! 大部分用例使用 [`FixedClock`] 与进程内引擎，不启网络；`Reconnect.out` 只绑定不
 //! 实际读取，发送端是否被保存由连接层（Task 12）消费，这里只验证命令返回值。
-//! 文末另有真实 WebSocket 的「结束回大厅后重连补发缓存 GameOver」用例。
+//! 文末另有真实 WebSocket 的「对局结束即销毁房间、结束后重连不补发结果」用例。
 
 mod common;
 
@@ -380,56 +380,8 @@ fn combat_reconnect_resends_combat_result() {
     assert_eq!(updates[1].player_id, "p0");
 }
 
-/// 空阵容逐回合超时并回报演示，直到对局结束。
-fn reach_game_over(task: &mut GameTask, clock: &FixedClock) {
-    for _ in 0..30 {
-        clock.advance(150_000);
-        task.tick();
-        for seat in 0..8 {
-            task.handle(RoomCommand::CombatPlayed {
-                player_id: format!("p{seat}"),
-            });
-        }
-        if task.player_view(0).expect("视图应可用").phase == protocol::view::Phase::GameOver {
-            return;
-        }
-    }
-    panic!("30 个回合内应结束对局");
-}
-
-#[test]
-fn reconnect_after_game_over_resends_own_stats() {
-    let (mut task, clock) = task();
-    reach_game_over(&mut task, &clock);
-
-    let (cmd, _rx) = reconnect("p0", 0);
-    let updates = task.handle(cmd);
-    assert_eq!(updates.len(), 2, "重连应回快照与本人结果各一条");
-    assert!(
-        matches!(updates[0].kind, UpdateKind::Snapshot),
-        "第一条应为全量快照"
-    );
-    assert_eq!(updates[0].player_id, "p0");
-
-    match &updates[1] {
-        SeatUpdate {
-            player_id,
-            kind: UpdateKind::GameOver(game_over),
-        } => {
-            assert_eq!(player_id, "p0", "结果只发给重连座位本人");
-            let stats = game_over
-                .self_stats
-                .as_ref()
-                .expect("结束后重连应带本人统计");
-            assert!((1..=8).contains(&stats.place.get()), "本人名次应在 1–8");
-            assert_eq!(game_over.ranking.len(), 8);
-        }
-        other => panic!("第二条应为该座位 GameOver，实际为 {:?}", other.kind),
-    }
-}
-
 // ---------------------------------------------------------------------------
-// 真实 WebSocket：结束回大厅后重连补发缓存 GameOver。
+// 真实 WebSocket：对局结束即销毁房间，结束后重连不补发结果。
 // ---------------------------------------------------------------------------
 
 /// 测试用最小 WebSocket 客户端。
@@ -559,10 +511,9 @@ async fn play_one_game(addr: std::net::SocketAddr) -> String {
     room_code
 }
 
-/// 结束后（已回大厅）重连：先收到 `RoomUpdate`，再收到缓存 `GameOver`，
-/// 且 `selfStats` 是重连座位本人的数据而不是其他座位的。
+/// 对局结束即销毁房间：结束后重连旧房间返回错误，既没有大厅视图也没有缓存 `GameOver`。
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn lobby_reconnect_after_game_over_returns_cached_own_stats() {
+async fn reconnect_after_game_over_finds_room_destroyed() {
     let (addr, router, state) =
         room_service::bind_state("127.0.0.1:0", Arc::new(SystemClock) as Arc<dyn Clock>)
             .await
@@ -574,66 +525,39 @@ async fn lobby_reconnect_after_game_over_returns_cached_own_stats() {
 
     let _room_code = play_one_game(addr).await;
 
-    // 用同一手机号恢复账号，再从注册表定位已回到大厅的房间。
+    // 同一手机号恢复账号，等待注册表里不再残留房间。
     let mut probe = WsClient::connect(addr).await;
     let host_id = authenticate_ws(&mut probe, "reconnect-bot0").await;
-    drop(probe);
-    let room_id = tokio::time::timeout(Duration::from_secs(10), async {
+    tokio::time::timeout(Duration::from_secs(10), async {
         loop {
-            let found = {
+            let gone = {
                 let rooms = state.rooms.lock().await;
-                rooms.room_of_player(&host_id).and_then(|(room, _)| {
-                    (room.phase == rule_engine::state::Phase::Lobby).then(|| room.id.clone())
-                })
+                rooms.room_of_player(&host_id).is_none() && rooms.is_empty()
             };
-            if let Some(room_id) = found {
-                return room_id;
+            if gone {
+                return;
             }
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
     })
     .await
-    .expect("对局结束后房间应回到大厅");
+    .expect("对局结束后房间应从注册表删除");
 
-    let mut stats = Vec::new();
-    for index in [0_u64, 3] {
-        let mut client = WsClient::connect(addr).await;
-        let player_id = authenticate_ws(&mut client, &format!("reconnect-bot{index}")).await;
-        client
-            .send("Reconnect", json!({ "roomId": room_id, "lastSeq": 0 }))
-            .await;
-
-        let update = match tokio::time::timeout(Duration::from_secs(5), client.recv_room())
-            .await
-            .expect("重连应返回大厅视图")
-        {
-            ServerMessage::RoomUpdate(update) => update,
-            other => panic!("期望 RoomUpdate，实际 {other:?}"),
-        };
-        assert_eq!(update.phase, protocol::view::Phase::Lobby);
-        assert_eq!(update.players.len(), 8);
-
-        let game_over = match tokio::time::timeout(Duration::from_secs(5), client.recv_room())
-            .await
-            .expect("RoomUpdate 之后应补发缓存 GameOver")
-        {
-            ServerMessage::GameOver(game_over) => game_over,
-            other => panic!("期望 GameOver，实际 {other:?}"),
-        };
-        assert_eq!(game_over.ranking.len(), 8);
-        let own = game_over.self_stats.as_ref().expect("缓存结果应带本人统计");
-        let ranked = game_over
-            .ranking
-            .iter()
-            .find(|item| item.player_id == player_id)
-            .expect("本人应在排名里");
-        assert_eq!(
-            own.place, ranked.place,
-            "selfStats.place 必须对应本人那一项"
-        );
-        stats.push(own.place.get());
-    }
-
-    assert_ne!(stats[0], stats[1], "不同座位拿到的 selfStats 不应相同");
-    println!("cached game over self places={stats:?}");
+    // 测试服务器只创建过一个房间，其 id 为 `room_0`。
+    probe
+        .send("Reconnect", json!({ "roomId": "room_0", "lastSeq": 0 }))
+        .await;
+    let error = match probe.recv_room().await {
+        ServerMessage::Error(error) => error,
+        other => panic!("重连已销毁的房间应只返回错误，实际 {other:?}"),
+    };
+    assert!(
+        matches!(
+            error.code,
+            protocol::ErrorCode::RoomNotFound | protocol::ErrorCode::NotInRoom
+        ),
+        "重连旧房间应视为房间不存在或不在房间，实际 {:?}",
+        error.code
+    );
+    println!("reconnect after game over rejected as {:?}", error.code);
 }

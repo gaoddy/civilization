@@ -44,7 +44,7 @@ use protocol::RoomClosedReason;
 use protocol::server::{
     FriendInvite as FriendInviteMessage, FriendInviteResult, FriendRequestItem,
     FriendUpdate as FriendUpdateMessage, FriendUpdateFriendsItem, FriendUpdateFriendsItemStatus,
-    FriendUpdateOutgoingItem, FriendUpdateRecentItem, FriendUpdateRecentItemRelation, GameOver,
+    FriendUpdateOutgoingItem, FriendUpdateRecentItem, FriendUpdateRecentItemRelation,
     InviteAccepted, RoomClosed,
 };
 use protocol::{ClientEnvelope, ClientMessage, ServerEnvelope};
@@ -1358,8 +1358,6 @@ fn spawn_room_task(
         seed,
         game: None,
         senders: BTreeMap::new(),
-        last_game_over: BTreeMap::new(),
-        round: 0,
         presence_end_notified: false,
     };
     tokio::spawn(async move {
@@ -1388,27 +1386,16 @@ struct RoomTask {
     seed: u64,
     game: Option<GameTask>,
     senders: BTreeMap<String, SeatSender>,
-    /// 最近一局结束时按玩家缓存的 `GameOver`；回大厅后重连/晚到补发。
-    /// 新一局开始时清空。
-    last_game_over: BTreeMap<String, GameOver>,
-    /// 已完成局数；每次结束回房时自增，用于派生下一局种子。
-    round: u32,
     /// 是否已向好友推送过「对局结束」状态，避免重复通知。
     presence_end_notified: bool,
 }
 
 impl RoomTask {
-    /// 本局种子：基础种子按已完成局数偏移，避免连续两局同种子。
-    fn game_seed(&self) -> u64 {
-        self.seed.wrapping_add(u64::from(self.round))
-    }
-
     /// 房间 task 是否应自行回收：注册表里的房间已不存在。
     ///
     /// `hub` 持有房间入口的发送端，是 task 存活的唯一原因；因此摘除 hub 条目必须在
-    /// 房间 task 内完成，随后 loop 才能退出。对局结束后房间会回到大厅而不是直接
-    /// 回收，只有全员离开（显式离开或断线宽限超时）后注册表删除房间，这里才摘除
-    /// hub，避免按局数线性累积死数据、房间码永不回收。
+    /// 房间 task 内完成，随后 loop 才能退出。对局结束、解散与全员离开都会删除注册表
+    /// 房间，这里统一摘除 hub，避免房间码与 task 泄漏。
     async fn retire_if_done(&mut self) -> bool {
         let gone = {
             let rooms = self.state.rooms.lock().await;
@@ -1530,7 +1517,6 @@ impl RoomTask {
                 return;
             }
             self.send_room_update_to(&player_id).await;
-            self.resend_cached_game_over(&player_id).await;
         }
     }
 
@@ -1581,7 +1567,6 @@ impl RoomTask {
                 return;
             }
             self.send_room_update_to(&player_id).await;
-            self.resend_cached_game_over(&player_id).await;
         }
     }
 
@@ -1836,7 +1821,7 @@ impl RoomTask {
             return;
         };
 
-        let seed = self.game_seed();
+        let seed = self.seed;
         let mut game = match GameTask::new(
             self.state.catalog.clone(),
             seed,
@@ -1882,8 +1867,6 @@ impl RoomTask {
             }
         }
         self.game = Some(game);
-        // 新一局开始：上一局缓存的结果不再补发，结束通知也重新武装。
-        self.last_game_over.clear();
         self.presence_end_notified = false;
         for (out, envelope) in started {
             let _ = out.try_send(envelope);
@@ -1910,20 +1893,16 @@ impl RoomTask {
 
     /// 同 [`RoomTask::deliver`]，但跳过 `excluded` 玩家自己的更新（对局中退出时使用）。
     ///
-    /// 本批出现 `GameOver` 时，先把每个座位的载荷缓存到 `last_game_over`，全部投递
-    /// 完成后把对局置空、按新种子把房间重置回等待区并广播 `RoomUpdate`。回房重置
-    /// 与好友状态通知都只做一次。
+    /// 本批出现 `GameOver` 时，全部投递完成后结束对局并销毁房间：清空发送端、
+    /// 从注册表删除房间（房间码立即失效），随后 `retire_if_done` 摘除 hub 条目并退出。
     async fn deliver_excluding(&mut self, updates: Vec<SeatUpdate>, excluded: Option<&str>) {
         let Some(game) = self.game.as_mut() else {
             return;
         };
         let mut ended = false;
         for update in updates {
-            if let UpdateKind::GameOver(payload) = &update.kind {
+            if matches!(update.kind, UpdateKind::GameOver(_)) {
                 ended = true;
-                // 每个座位拿到的 `selfStats` 不同，按接收者缓存原始载荷。
-                self.last_game_over
-                    .insert(update.player_id.clone(), payload.clone());
             }
             if excluded.is_some_and(|player_id| player_id == update.player_id) {
                 continue;
@@ -1948,27 +1927,18 @@ impl RoomTask {
             return;
         }
 
-        // 全部结果已投递：结束对局并按新种子回到等待区。
-        let Some(game) = self.game.take() else {
+        // 全部结果已投递：对局结束即销毁房间，不保留等待区也不重置给下一局。
+        if self.game.take().is_none() {
             return;
-        };
-        let departed = game.departed_player_ids();
-        self.round = self.round.saturating_add(1);
-        let reset = {
+        }
+        let players: Vec<String> = self.senders.keys().cloned().collect();
+        self.senders.clear();
+        {
             let mut rooms = self.state.rooms.lock().await;
-            rooms.reset_for_next_game(
-                &self.room_id,
-                self.game_seed(),
-                &self.state.catalog,
-                &departed,
-            )
-        };
-        if reset.is_ok() {
-            self.broadcast_room_update().await;
+            rooms.remove(&self.room_id);
         }
         if !self.presence_end_notified {
             self.presence_end_notified = true;
-            let players: Vec<String> = self.senders.keys().cloned().collect();
             for player in players {
                 notify_presence(&self.state, &player).await;
             }
@@ -2048,25 +2018,6 @@ impl RoomTask {
         floor.record(envelope.seq.get());
         drop(rooms);
         let _ = out.try_send(envelope);
-    }
-
-    /// 若存在上一局缓存结果，就在 `RoomUpdate` 之后经同一座位通道补发 `GameOver`。
-    async fn resend_cached_game_over(&mut self, player_id: &str) {
-        if let Some(payload) = self.last_game_over.get(player_id).cloned() {
-            self.send_game_over_to(player_id, &payload).await;
-        }
-    }
-
-    /// 向该玩家补发缓存的对局结果；编码方式与 [`Self::send_room_update_to`] 一致，
-    /// 复用座位 `channel` 与连接级序号下限，保证 `seq` 连续。
-    async fn send_game_over_to(&mut self, player_id: &str, payload: &GameOver) {
-        let Ok(value) = serde_json::to_value(payload) else {
-            return;
-        };
-        let Value::Object(payload) = value else {
-            return;
-        };
-        self.send_slot_message(player_id, "GameOver", payload).await;
     }
 
     /// 向该玩家下发 `RoomClosed`；座位可能已从注册表移除（kick/dissolve），
@@ -2227,8 +2178,6 @@ mod tests {
             seed: 7,
             game: None,
             senders: BTreeMap::new(),
-            last_game_over: BTreeMap::new(),
-            round: 0,
             presence_end_notified: false,
         };
         task.start_game().await;
@@ -2271,8 +2220,6 @@ mod tests {
             seed: 7,
             game: None,
             senders: BTreeMap::new(),
-            last_game_over: BTreeMap::new(),
-            round: 0,
             presence_end_notified: false,
         };
         task.senders.insert(

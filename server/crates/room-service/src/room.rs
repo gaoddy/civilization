@@ -484,62 +484,6 @@ impl RoomRegistry {
         Ok(members)
     }
 
-    /// 对局结束后把房间重置为下一局等待区。
-    ///
-    /// 阶段回到 `Lobby`，换用 `seed` 并据此重抽玩法；移除 `departed` 中的座位，
-    /// 房主被移除时转给座位号最小的剩余成员；其余座位清空准备、英雄与旧候选后，
-    /// 用新种子重新分配候选。全员离开时删除房间并返回 `Ok(false)`。
-    pub fn reset_for_next_game(
-        &mut self,
-        room_id: &str,
-        seed: u64,
-        catalog: &Catalog,
-        departed: &[String],
-    ) -> Result<bool, RoomError> {
-        if !self.rooms.contains_key(room_id) {
-            return Err(RoomError::NotFound);
-        }
-
-        let departed_seats: Vec<Seat> = {
-            let room = self.rooms.get(room_id).expect("上面已确认房间存在");
-            room.slots
-                .iter()
-                .filter(|(_, slot)| {
-                    departed
-                        .iter()
-                        .any(|player_id| player_id == &slot.player_id)
-                })
-                .map(|(&seat, _)| seat)
-                .collect()
-        };
-        for seat in departed_seats {
-            self.remove_slot(room_id, seat);
-        }
-
-        let Some(room) = self.rooms.get_mut(room_id) else {
-            return Ok(false);
-        };
-        room.phase = Phase::Lobby;
-        room.seed = seed;
-        room.playstyles = rule_engine::playstyles::draw(seed);
-
-        let player_ids: Vec<String> = room
-            .slots
-            .values()
-            .map(|slot| slot.player_id.clone())
-            .collect();
-        for slot in room.slots.values_mut() {
-            slot.ready = false;
-            slot.hero_card_id = None;
-            slot.hero_candidates.clear();
-            slot.candidate_segment = None;
-        }
-        for player_id in player_ids {
-            room.assign_candidates(&player_id, catalog);
-        }
-        Ok(true)
-    }
-
     /// 设置准备状态；准备前必须先选英雄。
     ///
     /// 非 `Lobby` 阶段成员集合已冻结，返回 [`RoomError::WrongPhase`]。
