@@ -94,13 +94,25 @@ if [ -n "$DEV_ROUNDS" ]; then
   esac
 fi
 
+# 每局的机器人意图种子按局递增，避免重开时机器人的决策序列一成不变；
+# DEV_INTENT_SEED 是第 1 局的起始种子，缺省 0。脚本统一接管 --intent-seed，
+# 转发给 sim dev 的参数里不要再带它，给了也会被这里的值覆盖。
+DEV_INTENT_SEED=${DEV_INTENT_SEED:-0}
+case "$DEV_INTENT_SEED" in
+  '' | *[!0-9]*)
+    echo "DEV_INTENT_SEED 必须是非负整数，实际为 ${DEV_INTENT_SEED}"
+    exit 1
+    ;;
+esac
+
 round=1
 while :; do
   if [ -n "$DEV_ROUNDS" ] && [ "$round" -gt "$DEV_ROUNDS" ]; then
     break
   fi
-  echo "第 ${round} 局：起 7 个机器人建房；Ctrl-C 结束全部进程"
-  "$SIM_BIN" dev --connect "$URL" "$@" &
+  round_seed=$((DEV_INTENT_SEED + round - 1))
+  echo "第 ${round} 局（意图种子 ${round_seed}）：起 7 个机器人建房；Ctrl-C 结束全部进程"
+  "$SIM_BIN" dev --connect "$URL" "$@" --intent-seed "$round_seed" &
   SIM_PID=$!
   status=0
   wait "$SIM_PID" || status=$?
