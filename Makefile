@@ -1,8 +1,11 @@
 PYTHON ?= python3
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
+# 导出模板目录必须与 Godot 精确版本一致：`4.7.2.stable.official.ed1daf0bf` 取前三段。
+GODOT_VERSION := $(shell "$(GODOT)" --version 2>/dev/null | head -n 1 | cut -d. -f1-3)
+GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates/$(GODOT_VERSION).stable
 DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 
-.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -97,6 +100,33 @@ client-smoke: client-import
 	  grep -q "UI_SMOKE_OK" output/$$name.log || exit 1; \
 	  ! grep -q "SCRIPT ERROR" output/$$name.log || exit 1; \
 	done
+
+# macOS 导出模板：目录按 Godot 版本隔离，缺失时下载官方 tpz 并只拷贝其中的 templates/。
+client-export-templates:
+	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export-templates 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
+	@[ -n "$(GODOT_VERSION)" ] || { echo "无法读取 Godot 版本：$(GODOT) --version" >&2; exit 1; }
+	@if [ -d "$(GODOT_TEMPLATE_DIR)" ] && [ -n "$$(ls -A "$(GODOT_TEMPLATE_DIR)" 2>/dev/null)" ]; then \
+	  echo "导出模板已存在：$(GODOT_TEMPLATE_DIR)"; \
+	else \
+	  url="https://github.com/godotengine/godot/releases/download/$(GODOT_VERSION)-stable/Godot_v$(GODOT_VERSION)-stable_export_templates.tpz"; \
+	  tmp="$$(mktemp -d)"; \
+	  trap 'rm -rf "$$tmp"' EXIT; \
+	  echo "下载导出模板：$$url"; \
+	  curl -fL --retry 3 --progress-bar -o "$$tmp/templates.tpz" "$$url" || { echo "导出模板下载失败：$$url" >&2; exit 1; }; \
+	  mkdir -p "$$tmp/unpacked" "$(GODOT_TEMPLATE_DIR)"; \
+	  ditto -x -k "$$tmp/templates.tpz" "$$tmp/unpacked" || { echo "导出模板解压失败" >&2; exit 1; }; \
+	  cp -R "$$tmp/unpacked/templates/." "$(GODOT_TEMPLATE_DIR)/" || { echo "导出模板复制失败" >&2; exit 1; }; \
+	  echo "导出模板已安装：$(GODOT_TEMPLATE_DIR)"; \
+	fi
+
+# 未签名 Universal .app 与 zip 产物。Gatekeeper 放行方式见 docs/current/technical/client.md。
+client-export: client-export-templates client-import
+	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
+	@mkdir -p output/desktop
+	rm -rf output/desktop/Civilization.app output/desktop/Civilization-macos.zip
+	"$(GODOT)" --headless --path client --export-release "macOS" "$(CURDIR)/output/desktop/Civilization.app"
+	test -x output/desktop/Civilization.app/Contents/MacOS/Civilization
+	ditto -c -k --sequesterRsrc --keepParent output/desktop/Civilization.app output/desktop/Civilization-macos.zip
 
 # 1 个 Godot 客户端 + 7 个机器人的无头端到端。
 m1b-build:
