@@ -2,7 +2,7 @@ PYTHON ?= python3
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
 DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 
-.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test
+.PHONY: test lint audit data data-check balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -110,6 +110,47 @@ DEV_PORT ?= 8080
 
 dev-bots: client-import m1b-build
 	DEV_PORT=$(DEV_PORT) bash scripts/dev_bots.sh
+
+# platform 共享 Kubernetes 发布入口：本机渲染，远端只执行 kubectl/ctr。
+ENV ?= dev
+SERVER ?= root@dell.local
+DEPLOY_CHART ?= deploy/helm/civilization-server
+DEPLOY_VALUES ?= deploy/helm/values.$(ENV).yaml
+DEPLOY_NAMESPACE ?= $(if $(filter prod,$(ENV)),civilization,civilization-dev)
+DEPLOY_HOST ?= $(if $(filter prod,$(ENV)),civilization.platform.internal,civilization.dev.platform.internal)
+DEPLOY_IMAGE ?= civilization-server:$(ENV)
+
+deploy-render:
+	helm template civilization-server $(DEPLOY_CHART) --namespace $(DEPLOY_NAMESPACE) -f $(DEPLOY_VALUES)
+
+deploy-lint:
+	helm lint $(DEPLOY_CHART) -f deploy/helm/values.dev.yaml
+	helm lint $(DEPLOY_CHART) -f deploy/helm/values.prod.yaml
+	$(MAKE) deploy-render ENV=dev >/dev/null
+	$(MAKE) deploy-render ENV=prod >/dev/null
+
+deploy-image:
+	docker build --platform linux/amd64 -t $(DEPLOY_IMAGE) -f server/Dockerfile .
+
+deploy-load:
+	docker save $(DEPLOY_IMAGE) | ssh $(SERVER) "ctr -n k8s.io images import -"
+
+deploy-preflight:
+	$(MAKE) deploy-render ENV=$(ENV) | ssh $(SERVER) "kubectl apply --dry-run=server -f -"
+
+deploy-apply:
+	$(MAKE) deploy-render ENV=$(ENV) | ssh $(SERVER) "kubectl apply -f -"
+
+deploy-rollout:
+	ssh $(SERVER) "kubectl rollout restart deployment/civilization-server -n $(DEPLOY_NAMESPACE) && kubectl rollout status deployment/civilization-server -n $(DEPLOY_NAMESPACE) --timeout=180s"
+
+deploy-status:
+	ssh $(SERVER) "kubectl get pods,service,httproute -n $(DEPLOY_NAMESPACE) -l app.kubernetes.io/name=civilization-server"
+
+deploy-smoke:
+	ssh $(SERVER) "curl -fsS https://$(DEPLOY_HOST)/healthz && curl -fsS https://$(DEPLOY_HOST)/readyz"
+
+deploy: deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-smoke
 
 m0-determinism:
 	cd server && cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash
