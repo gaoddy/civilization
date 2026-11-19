@@ -196,7 +196,7 @@ impl Taxonomy {
 | `make m0-check` | `make data-check && make test && make lint && make m0-determinism`（计划中的 M0 汇总门禁） |
 | `make m1-check` | M1a 汇合门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism`；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service/README.md) |
 | `make m0-report` | 先校验批量日志（`sim check --expect-games 1000`：局数、每局 8 名排名），再生成基线报告（字段口径见第 7 节）；输出同时写入 `output/m0-report.log`。可用 `M0_BATCH_LOG`、`M0_GAMES` 指向其他批量日志与局数 |
-| `make dev-bots` | 本地联调：起服务端与 7 个机器人，打印房间码后等开发者作为第 8 人入座。`DEV_PORT` 默认 8080，端口被占用时直接失败 |
+| `make dev-bots` | 本地联调：起服务端与 7 个机器人，打印房间码后等开发者作为第 8 人入座；一局结束后自动建下一局（房间码每局递增），`Ctrl-C` 退出，`DEV_ROUNDS=<正整数>` 限定局数。`DEV_PORT` 默认 8080，端口被占用时直接失败 |
 | `python3 scripts/validate_docs.py` | 文档与实体数据校验 |
 
 模拟器直接调用：`sim play --seed N`、`sim batch --games N --seed N --out PATH`、`sim replay --log PATH`、`sim report --log PATH`、`sim check --log PATH [--expect-games N]`、`sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID [--room CODE] [--create] [--intent-seed N]`、`sim dev --connect ws://HOST:PORT/ws [--intent-seed N]`；参数错误、模拟失败或日志校验不通过以非零码退出。`sim bot` 的细节见[房间服务与联网](room-service/README.md)第 12 节。

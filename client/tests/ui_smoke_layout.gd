@@ -141,6 +141,82 @@ func _check_compact() -> void:
                         "%s 的 %s 越界：%s 不在 %s 内" % [page_case["path"], node_name, str(rect), str(bounds)])
         host.queue_free()
         await get_tree().process_frame
+    await _check_game_compact(compact)
+
+
+## 对局页有完整八人视图时：积分榜 8 席不滚动、棋盘与手牌不越界、
+## 棋盘与商店卡不显示介绍而手牌保留。
+func _check_game_compact(compact: Vector2) -> void:
+    var saved_view: Dictionary = GameStore.view
+    var saved_turn := GameStore.turn
+    var saved_phase := GameStore.phase
+    var saved_player := GameStore.player_id
+    GameStore.player_id = "p0"
+    GameStore.turn = 3
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    GameStore.view = Fixture.game_view()
+
+    var host := Control.new()
+    host.name = "CompactGameHost"
+    host.size = compact
+    add_child(host)
+    var page := await _instantiate_into("res://scenes/game.tscn", host)
+    if page != null:
+        var rail := page.find_child("PlayersRail", true, false) as Control
+        var scroll: ScrollContainer = null
+        if rail != null:
+            scroll = rail.get_parent() as ScrollContainer
+        if rail != null and scroll != null:
+            var content := int(rail.get_combined_minimum_size().y)
+            var viewport := int(scroll.size.y)
+            _check(content <= viewport,
+                "手机基准积分榜不应滚动：内容 %d > 视口 %d" % [content, viewport])
+        var bounds := Rect2(host.get_global_rect().position, compact).grow(1.0)
+        for node_name in ["BoardRow", "HandStrip"]:
+            var node := page.find_child(str(node_name), true, false) as Control
+            _check(node != null, "对局页缺少 %s" % node_name)
+            if node != null:
+                _check(bounds.encloses(node.get_global_rect()),
+                    "%s 越界：%s 不在 %s 内" % [node_name, str(node.get_global_rect()), str(bounds)])
+        var hand_strip := page.find_child("HandStrip", true, false) as Control
+        var hand_row := page.find_child("HandRow", true, false) as Control
+        if hand_strip != null and hand_row != null:
+            _check(
+                hand_row.get_global_rect().end.y >= hand_strip.get_global_rect().end.y - 1.0,
+                "手牌卡应贴住手牌行底部：卡底 %.1f，行底 %.1f"
+                % [hand_row.get_global_rect().end.y, hand_strip.get_global_rect().end.y],
+            )
+            _check(
+                hand_strip.get_global_rect().end.y >= compact.y - 8.0,
+                "手牌行应贴住页面底部，实际底边 %.1f" % hand_strip.get_global_rect().end.y,
+            )
+        _check_empty_desc(page.find_child("BoardRow", true, false), "棋盘卡")
+        _check_empty_desc(page.find_child("ShopRow", true, false), "商店卡")
+        var hand_card := hand_row.get_child(0) if hand_row != null and hand_row.get_child_count() > 0 else null
+        _check(
+            hand_card != null and hand_card.find_child("CardDesc", true, false) != null,
+            "手牌卡应保留介绍",
+        )
+    host.queue_free()
+    GameStore.view = saved_view
+    GameStore.turn = saved_turn
+    GameStore.phase = saved_phase
+    GameStore.player_id = saved_player
+    await get_tree().process_frame
+
+
+## 行内每张卡都不得渲染介绍。
+func _check_empty_desc(row: Node, label: String) -> void:
+    if row == null:
+        _check(false, "%s所在行缺失" % label)
+        return
+    var checked := 0
+    for card in row.get_children():
+        if card is Control and card.find_child("CardDesc", true, false) != null:
+            _check(false, "%s 不应显示介绍" % label)
+            return
+        checked += 1
+    _check(checked > 0, "%s所在行没有卡牌可检查" % label)
 
 
 func _instantiate_into(path: String, host: Control) -> Node:
