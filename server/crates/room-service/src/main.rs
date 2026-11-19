@@ -3,12 +3,15 @@
 use std::process::ExitCode;
 use std::sync::Arc;
 
-use room_service::{SystemClock, bind, serve};
+use room_service::{Db, SystemClock, bind, bind_with_db, serve};
 
 const DEFAULT_LISTEN: &str = "127.0.0.1:8080";
 
 const USAGE: &str = "用法：room-service [--listen ADDR]
-  --listen ADDR  监听地址，默认 127.0.0.1:8080（写 127.0.0.1:0 由系统分配端口）";
+  --listen ADDR  监听地址，默认 127.0.0.1:8080（写 127.0.0.1:0 由系统分配端口）
+
+环境变量：
+  DATABASE_URL   设置后启用持久化（账号、好友、邀请等）；未设置时使用内存存储。";
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -44,7 +47,16 @@ async fn run(args: Vec<String>) -> Result<(), String> {
     }
 
     let clock: Arc<dyn room_service::Clock> = Arc::new(SystemClock);
-    let (addr, router) = bind(&listen, clock).await?;
-    println!("room-service: 监听 ws://{addr}/ws");
+    let database_url = std::env::var("DATABASE_URL").unwrap_or_default();
+    if database_url.trim().is_empty() {
+        println!("room-service: 未配置 DATABASE_URL，使用内存存储（重启后账号与好友丢失）");
+        let (addr, router) = bind(&listen, clock).await?;
+        println!("room-service: 监听 ws://{addr}/ws");
+        return serve(addr, router).await;
+    }
+
+    let db = Arc::new(Db::connect(&database_url).await?);
+    let (addr, router) = bind_with_db(&listen, clock, db).await?;
+    println!("room-service: 监听 ws://{addr}/ws（已连接数据库）");
     serve(addr, router).await
 }

@@ -31,6 +31,18 @@
         "ROOM_FULL",
         "ROOM_NOT_READY",
         "SEQUENCE_STALE",
+        "FRIEND_NOT_FOUND",
+        "FRIEND_SELF",
+        "FRIEND_ALREADY",
+        "FRIEND_REQUEST_PENDING",
+        "FRIEND_LIST_FULL",
+        "FRIEND_REQUEST_FULL",
+        "FRIEND_REQUEST_LIMIT",
+        "NOT_FRIENDS",
+        "FRIEND_OFFLINE",
+        "FRIEND_BUSY",
+        "INVITE_NOT_FOUND",
+        "INVITE_EXPIRED",
         "INTERNAL_ERROR"
       ],
       "description": "稳定错误码，只增不改"

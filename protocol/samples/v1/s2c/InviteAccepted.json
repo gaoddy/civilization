@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "id": "m_inviteaccepted",
+  "type": "InviteAccepted",
+  "ts": "2026-11-15T10:00:30Z",
+  "seq": 114,
+  "payload": {
+    "inviteId": "inv_1",
+    "roomCode": "8F2A1B"
+  }
+}

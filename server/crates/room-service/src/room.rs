@@ -355,6 +355,13 @@ impl RoomRegistry {
         room
     }
 
+    /// 按玩家查所在房间与座位；不在任何房间返回 `None`。
+    pub fn room_of_player(&self, player_id: &str) -> Option<(&Room, Seat)> {
+        self.rooms
+            .values()
+            .find_map(|room| room.seat_of(player_id).map(|seat| (room, seat)))
+    }
+
     /// 按房间码加入，坐第一个空位（座位号从 0 起）。
     ///
     /// 同一玩家重复加入同一房间是幂等的：返回已有房间，不占新座位。

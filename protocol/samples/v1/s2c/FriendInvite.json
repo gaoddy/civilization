@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "id": "m_friendinvite",
+  "type": "FriendInvite",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 112,
+  "payload": {
+    "inviteId": "inv_1",
+    "fromPlayerId": "p_04",
+    "fromPlayerCode": "204815",
+    "fromDisplayName": "Ada",
+    "roomCode": "8F2A1B",
+    "expiresAt": "2026-11-15T10:01:00Z"
+  }
+}

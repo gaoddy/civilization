@@ -39,6 +39,10 @@ fn client_variant(message: &ClientMessage) -> &'static str {
         ClientMessage::RequestSnapshot(_) => "RequestSnapshot",
         ClientMessage::Reconnect(_) => "Reconnect",
         ClientMessage::FriendRequest(_) => "FriendRequest",
+        ClientMessage::FriendRespond(_) => "FriendRespond",
+        ClientMessage::FriendRemove(_) => "FriendRemove",
+        ClientMessage::InviteToRoom(_) => "InviteToRoom",
+        ClientMessage::RespondInvite(_) => "RespondInvite",
     }
 }
 
@@ -55,6 +59,9 @@ fn server_variant(message: &ServerMessage) -> &'static str {
         ServerMessage::GameOver(_) => "GameOver",
         ServerMessage::Error(_) => "Error",
         ServerMessage::FriendUpdate(_) => "FriendUpdate",
+        ServerMessage::FriendInvite(_) => "FriendInvite",
+        ServerMessage::FriendInviteResult(_) => "FriendInviteResult",
+        ServerMessage::InviteAccepted(_) => "InviteAccepted",
     }
 }
 

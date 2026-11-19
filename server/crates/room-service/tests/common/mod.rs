@@ -37,7 +37,11 @@ pub async fn wait_for_server(addr: std::net::SocketAddr) {
 
 /// 启动一个真实 WebSocket 服务并等到端口就绪。
 pub async fn start_server() -> std::net::SocketAddr {
-    let clock: Arc<dyn Clock> = Arc::new(SystemClock);
+    start_server_with_clock(Arc::new(SystemClock)).await
+}
+
+/// 用指定时钟启动服务；调用方保留时钟句柄即可推进时间（邀请过期等用例）。
+pub async fn start_server_with_clock(clock: Arc<dyn Clock>) -> std::net::SocketAddr {
     let (addr, router) = room_service::bind("127.0.0.1:0", clock)
         .await
         .expect("绑定端口应当成功");
@@ -46,4 +50,68 @@ pub async fn start_server() -> std::net::SocketAddr {
     });
     wait_for_server(addr).await;
     addr
+}
+
+/// 数据库连接串：优先 `TEST_DATABASE_URL`，其次 `DATABASE_URL`。
+pub fn database_url() -> Option<String> {
+    std::env::var("TEST_DATABASE_URL")
+        .or_else(|_| std::env::var("DATABASE_URL"))
+        .ok()
+        .filter(|url| !url.trim().is_empty())
+}
+
+/// 测试专用数据库：独立 schema，结束时由 [`TestDb::cleanup`] 删除。
+pub struct TestDb {
+    pub db: Arc<room_service::Db>,
+    pub schema: String,
+    url: String,
+}
+
+impl TestDb {
+    /// 删除测试 schema；失败只打印，不影响测试结论。
+    pub async fn cleanup(self) {
+        if let Err(error) = room_service::db::drop_schema(&self.url, &self.schema).await {
+            eprintln!("清理测试 schema 失败: {error}");
+        }
+    }
+}
+
+/// 建立独立 schema 的测试库；未配置数据库时返回 `None`。
+pub async fn test_db() -> Option<TestDb> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SEQ: AtomicU64 = AtomicU64::new(0);
+
+    let url = database_url()?;
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or(0);
+    let schema = format!(
+        "test_{}_{nanos}_{}",
+        std::process::id(),
+        SEQ.fetch_add(1, Ordering::Relaxed)
+    );
+    let db = room_service::Db::connect_in_schema(&url, &schema)
+        .await
+        .expect("测试库应能连接并迁移");
+    Some(TestDb {
+        db: Arc::new(db),
+        schema,
+        url,
+    })
+}
+
+/// 用指定时钟与数据库启动服务，返回地址与服务任务句柄。
+pub async fn start_server_with_db(
+    clock: Arc<dyn Clock>,
+    db: Arc<room_service::Db>,
+) -> (std::net::SocketAddr, tokio::task::JoinHandle<()>) {
+    let (addr, router) = room_service::bind_with_db("127.0.0.1:0", clock, db)
+        .await
+        .expect("绑定端口应当成功");
+    let handle = tokio::spawn(async move {
+        let _ = room_service::serve(addr, router).await;
+    });
+    wait_for_server(addr).await;
+    (addr, handle)
 }

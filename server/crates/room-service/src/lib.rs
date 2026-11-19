@@ -5,14 +5,17 @@
 //! 依赖方向为 `room-service → protocol`、`room-service → rule-engine`；本 crate 负责
 //! 网络与 I/O 边界，引擎保持纯库、不读时钟。
 
+pub mod account;
 pub mod auth;
 pub mod clock;
+pub mod db;
 pub mod envelope;
 pub mod error;
 pub mod filter;
 pub mod game;
 pub mod net;
 pub mod room;
+pub mod social;
 pub mod view;
 
 use std::net::SocketAddr;
@@ -30,40 +33,64 @@ const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
 /// 服务共享状态。
 ///
-/// 锁粒度：会话表与房间注册表各自一把 [`tokio::sync::Mutex`]，只在短操作内持有、
-/// 不跨网络等待；房间内的权威可变状态由每个房间的写者任务串行持有（见 [`net`]）。
+/// 锁粒度：会话、账号、房间注册表与社交存储各自一把 [`tokio::sync::Mutex`]。配置
+/// 数据库时，账号与社交写操作会在持锁期间等待数据库；持有时间受单次事务限制，
+/// 不跨网络往返叠加。房间内的权威可变状态由每个房间的写者任务串行持有（见 [`net`]）。
 #[derive(Clone)]
 pub struct AppState {
     pub sessions: Arc<Mutex<SessionStore>>,
+    /// 账号身份：数据库写穿与内存缓存；同一手机号恢复同一账号。
+    pub accounts: Arc<Mutex<account::AccountStore>>,
     pub rooms: Arc<Mutex<RoomRegistry>>,
     pub clock: Arc<dyn Clock>,
     pub catalog: Catalog,
     /// 已创建房间 → 房间任务入口（含房间码与对局种子）。
     pub hub: Arc<Mutex<net::RoomHub>>,
+    /// 好友、申请、最近对局与邀请；配置数据库时以库为准。
+    pub social: Arc<Mutex<social::SocialStore>>,
+    /// 在线连接登记；好友推送与控制消息按 `player_id` 定位连接。
+    pub connections: Arc<Mutex<net::ConnectionRegistry>>,
 }
 
 impl AppState {
-    /// 用仓库内嵌的 v0.1 数据装配共享状态。
+    /// 用仓库内嵌的 v0.1 数据装配共享状态；无数据库，身份与社交数据只存在内存。
     ///
     /// # Errors
     ///
     /// 卡表加载失败、或英雄卡为空 / 分类字段不合法时返回错误文本。
     pub fn new(clock: Arc<dyn Clock>) -> Result<Self, String> {
-        let catalog = Catalog::from_json(
-            CARDS_JSON,
-            SKILLS_JSON,
-            TOKENS_JSON,
-            CONFIG_JSON,
-            TAXONOMY_JSON,
-        )
-        .map_err(|err| format!("加载卡牌目录失败: {err}"))?;
-        ensure_hero_pool(&catalog)?;
         Ok(Self {
             sessions: Arc::new(Mutex::new(SessionStore::new())),
+            accounts: Arc::new(Mutex::new(account::AccountStore::new())),
+            rooms: Arc::new(Mutex::new(RoomRegistry::new())),
+            clock,
+            catalog: load_catalog()?,
+            hub: Arc::new(Mutex::new(net::RoomHub::default())),
+            social: Arc::new(Mutex::new(social::SocialStore::new())),
+            connections: Arc::new(Mutex::new(net::ConnectionRegistry::default())),
+        })
+    }
+
+    /// 装配共享状态并从数据库重建账号与社交数据。
+    ///
+    /// 数据库是唯一真相源：账号、好友、申请、最近对局与邀请都在启动时载入。
+    ///
+    /// # Errors
+    ///
+    /// 卡表加载失败或数据库读取失败时返回错误文本。
+    pub async fn with_database(clock: Arc<dyn Clock>, db: Arc<db::Db>) -> Result<Self, String> {
+        let catalog = load_catalog()?;
+        let accounts = account::AccountStore::load(db.clone()).await?;
+        let social = social::SocialStore::load(db, clock.now_ms()).await?;
+        Ok(Self {
+            sessions: Arc::new(Mutex::new(SessionStore::new())),
+            accounts: Arc::new(Mutex::new(accounts)),
             rooms: Arc::new(Mutex::new(RoomRegistry::new())),
             clock,
             catalog,
             hub: Arc::new(Mutex::new(net::RoomHub::default())),
+            social: Arc::new(Mutex::new(social)),
+            connections: Arc::new(Mutex::new(net::ConnectionRegistry::default())),
         })
     }
 
@@ -71,6 +98,20 @@ impl AppState {
     pub async fn hub_len(&self) -> usize {
         self.hub.lock().await.len()
     }
+}
+
+/// 加载并校验仓库内嵌卡表。
+fn load_catalog() -> Result<Catalog, String> {
+    let catalog = Catalog::from_json(
+        CARDS_JSON,
+        SKILLS_JSON,
+        TOKENS_JSON,
+        CONFIG_JSON,
+        TAXONOMY_JSON,
+    )
+    .map_err(|err| format!("加载卡牌目录失败: {err}"))?;
+    ensure_hero_pool(&catalog)?;
+    Ok(catalog)
 }
 
 /// 校验英雄卡池：至少 1 张英雄，且每张英雄的分类字段合法。
@@ -122,6 +163,26 @@ pub async fn bind_state(
     clock: Arc<dyn Clock>,
 ) -> Result<(SocketAddr, Router, AppState), String> {
     let state = AppState::new(clock)?;
+    let (addr, router) = bind_router(listen, state.clone()).await?;
+    Ok((addr, router, state))
+}
+
+/// 绑定监听地址并构造路由，同时返回共享状态；社交数据从数据库载入。
+///
+/// # Errors
+///
+/// 同 [`bind`]，或数据库读取失败。
+pub async fn bind_state_with_db(
+    listen: &str,
+    clock: Arc<dyn Clock>,
+    db: Arc<db::Db>,
+) -> Result<(SocketAddr, Router, AppState), String> {
+    let state = AppState::with_database(clock, db).await?;
+    let (addr, router) = bind_router(listen, state.clone()).await?;
+    Ok((addr, router, state))
+}
+
+async fn bind_router(listen: &str, state: AppState) -> Result<(SocketAddr, Router), String> {
     let listener = tokio::net::TcpListener::bind(listen)
         .await
         .map_err(|err| format!("监听 {listen} 失败: {err}"))?;
@@ -129,7 +190,7 @@ pub async fn bind_state(
         .local_addr()
         .map_err(|err| format!("读取监听地址失败: {err}"))?;
     drop(listener);
-    Ok((addr, net::router(state.clone()), state))
+    Ok((addr, net::router(state)))
 }
 
 /// 绑定监听地址并构造路由，便于测试拿到系统分配的真实端口。
@@ -142,6 +203,20 @@ pub async fn bind_state(
 /// 地址无法解析、端口绑定失败或卡表加载失败。
 pub async fn bind(listen: &str, clock: Arc<dyn Clock>) -> Result<(SocketAddr, Router), String> {
     let (addr, router, _state) = bind_state(listen, clock).await?;
+    Ok((addr, router))
+}
+
+/// 绑定监听地址并构造路由，社交数据从数据库载入。
+///
+/// # Errors
+///
+/// 同 [`bind`]，或数据库读取失败。
+pub async fn bind_with_db(
+    listen: &str,
+    clock: Arc<dyn Clock>,
+    db: Arc<db::Db>,
+) -> Result<(SocketAddr, Router), String> {
+    let (addr, router, _state) = bind_state_with_db(listen, clock, db).await?;
     Ok((addr, router))
 }
 
@@ -159,8 +234,12 @@ pub async fn serve(addr: SocketAddr, router: Router) -> Result<(), String> {
         .map_err(|err| format!("服务退出: {err}"))
 }
 
-pub use auth::{DEV_SMS_CODE, SESSION_TTL_MS, Session, SessionStore};
+pub use account::{Account, AccountStore};
+pub use auth::{
+    DEV_SMS_CODE, PLAYER_CODE_END, PLAYER_CODE_START, SESSION_TTL_MS, Session, SessionStore,
+};
 pub use clock::{Clock, FixedClock, SystemClock};
+pub use db::Db;
 pub use envelope::SeatChannel;
 pub use error::error_message;
 pub use game::{

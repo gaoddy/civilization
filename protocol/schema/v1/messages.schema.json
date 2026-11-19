@@ -95,17 +95,52 @@
     "FriendRequest": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["toPlayerId"],
+      "required": ["toPlayerCode"],
       "properties": {
-        "toPlayerId": { "type": "string" }
+        "toPlayerCode": { "type": "string", "description": "6 位玩家编号" }
+      }
+    },
+    "FriendRespond": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fromPlayerId", "accept"],
+      "properties": {
+        "fromPlayerId": { "type": "string", "description": "申请人的 playerId" },
+        "accept": { "type": "boolean" }
+      }
+    },
+    "FriendRemove": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["friendId"],
+      "properties": {
+        "friendId": { "type": "string" }
+      }
+    },
+    "InviteToRoom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["friendId"],
+      "properties": {
+        "friendId": { "type": "string" }
+      }
+    },
+    "RespondInvite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inviteId", "accept"],
+      "properties": {
+        "inviteId": { "type": "string" },
+        "accept": { "type": "boolean" }
       }
     },
     "AuthResult": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["playerId", "token", "expiresAt"],
+      "required": ["playerId", "playerCode", "token", "expiresAt"],
       "properties": {
-        "playerId": { "type": "string" },
+        "playerId": { "type": "string", "description": "内部不透明标识，不向玩家展示" },
+        "playerCode": { "type": "string", "description": "6 位玩家编号，用于好友搜索与展示" },
         "token": { "type": "string" },
         "expiresAt": { "type": "string", "format": "date-time" }
       }
@@ -292,21 +327,97 @@
     "FriendUpdate": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["friends"],
+      "required": ["friends", "incoming", "outgoing", "recent"],
       "properties": {
         "friends": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["playerId", "displayName", "online"],
+            "required": ["playerId", "playerCode", "displayName", "status"],
             "properties": {
               "playerId": { "type": "string" },
+              "playerCode": { "type": "string", "description": "6 位玩家编号" },
               "displayName": { "type": "string" },
-              "online": { "type": "boolean" }
+              "status": { "type": "string", "enum": ["online", "inGame", "offline"] }
+            }
+          }
+        },
+        "incoming": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/FriendRequestItem" }
+        },
+        "outgoing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["playerId", "playerCode", "displayName", "sentAt"],
+            "properties": {
+              "playerId": { "type": "string" },
+              "playerCode": { "type": "string" },
+              "displayName": { "type": "string" },
+              "sentAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "recent": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["playerId", "playerCode", "displayName", "relation"],
+            "properties": {
+              "playerId": { "type": "string" },
+              "playerCode": { "type": "string" },
+              "displayName": { "type": "string" },
+              "relation": { "type": "string", "enum": ["none", "friend", "incoming", "outgoing"] }
             }
           }
         }
+      }
+    },
+    "FriendRequestItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["playerId", "playerCode", "displayName", "sentAt"],
+      "properties": {
+        "playerId": { "type": "string" },
+        "playerCode": { "type": "string" },
+        "displayName": { "type": "string" },
+        "sentAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "FriendInvite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inviteId", "fromPlayerId", "fromPlayerCode", "fromDisplayName", "roomCode", "expiresAt"],
+      "properties": {
+        "inviteId": { "type": "string" },
+        "fromPlayerId": { "type": "string" },
+        "fromPlayerCode": { "type": "string" },
+        "fromDisplayName": { "type": "string" },
+        "roomCode": { "type": "string" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "FriendInviteResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inviteId", "accepted"],
+      "properties": {
+        "inviteId": { "type": "string" },
+        "accepted": { "type": "boolean" },
+        "reason": { "type": ["string", "null"], "description": "拒绝或失败原因的错误码" }
+      }
+    },
+    "InviteAccepted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inviteId", "roomCode"],
+      "properties": {
+        "inviteId": { "type": "string" },
+        "roomCode": { "type": "string" }
       }
     }
   }

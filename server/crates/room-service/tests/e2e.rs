@@ -140,6 +140,19 @@ impl RawClient {
             .expect("发送应当成功");
     }
 
+    /// 取下一条非 `FriendUpdate` 的下行消息与其 `seq`；连接关闭时返回 `None`。
+    ///
+    /// 认证成功与在线状态变化都会插入社交推送，讨论房间行为的断言不应受其干扰。
+    async fn recv_room(&mut self) -> Option<(u64, ServerMessage)> {
+        loop {
+            let (seq, message) = self.recv().await?;
+            if matches!(message, ServerMessage::FriendUpdate(_)) {
+                continue;
+            }
+            return Some((seq, message));
+        }
+    }
+
     /// 取下一条下行消息与其 `seq`；连接关闭时返回 `None`。
     async fn recv(&mut self) -> Option<(u64, ServerMessage)> {
         while let Some(item) = self.ws.next().await {
@@ -160,11 +173,22 @@ impl RawClient {
     }
 }
 
+/// 由名字派生稳定且互不相同的手机号：同一手机号会恢复同一账号，测试客户端
+/// 必须各自拥有独立身份。
+fn phone_for(name: &str) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in name.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    format!("139{:08}", hash % 100_000_000)
+}
+
 async fn authenticate(client: &mut RawClient, name: &str) -> (String, String) {
     client
         .send(
             "AuthRequest",
-            json!({ "phone": "13800000000", "code": "123456", "displayName": name }),
+            json!({ "phone": phone_for(name), "code": "123456", "displayName": name }),
         )
         .await;
     loop {
@@ -326,7 +350,7 @@ async fn joined_connection_errors_use_room_seq() {
     let mut client = RawClient::connect(addr).await;
     let _ = authenticate(&mut client, "seq").await;
     client.send("CreateRoom", json!({})).await;
-    let (last_seq, message) = client.recv().await.expect("应收到 RoomUpdate");
+    let (last_seq, message) = client.recv_room().await.expect("应收到 RoomUpdate");
     assert!(
         matches!(message, ServerMessage::RoomUpdate(_)),
         "实际 {message:?}"
@@ -334,7 +358,7 @@ async fn joined_connection_errors_use_room_seq() {
 
     // 入房后再次建房：错误必须走房间的下行通道，序号继续递增。
     client.send("CreateRoom", json!({})).await;
-    let (error_seq, message) = tokio::time::timeout(Duration::from_secs(5), client.recv())
+    let (error_seq, message) = tokio::time::timeout(Duration::from_secs(5), client.recv_room())
         .await
         .expect("应收到 Error")
         .expect("连接不应关闭");
@@ -355,7 +379,7 @@ async fn leave_room_then_error_keeps_seq_monotonic() {
     let mut client = RawClient::connect(addr).await;
     let _ = authenticate(&mut client, "leaver-seq").await;
     client.send("CreateRoom", json!({})).await;
-    let (first_seq, message) = client.recv().await.expect("应收到 RoomUpdate");
+    let (first_seq, message) = client.recv_room().await.expect("应收到 RoomUpdate");
     assert!(
         matches!(message, ServerMessage::RoomUpdate(_)),
         "实际 {message:?}"
@@ -363,7 +387,7 @@ async fn leave_room_then_error_keeps_seq_monotonic() {
 
     // 再收一条大厅消息，把该会话的序号推进到多条之后。
     client.send("RequestSnapshot", json!({})).await;
-    let (last_seq, message) = client.recv().await.expect("应收到 RoomUpdate");
+    let (last_seq, message) = client.recv_room().await.expect("应收到 RoomUpdate");
     assert!(
         matches!(message, ServerMessage::RoomUpdate(_)),
         "实际 {message:?}"
@@ -373,7 +397,7 @@ async fn leave_room_then_error_keeps_seq_monotonic() {
     // 离开房间后连接层改走 direct 通道；新的 Error 必须接在最后一条房间消息之后。
     client.send("LeaveRoom", json!({})).await;
     client.send("Ready", json!({ "ready": true })).await;
-    let (error_seq, message) = tokio::time::timeout(Duration::from_secs(5), client.recv())
+    let (error_seq, message) = tokio::time::timeout(Duration::from_secs(5), client.recv_room())
         .await
         .expect("应收到 Error")
         .expect("连接不应关闭");
@@ -527,7 +551,7 @@ async fn finished_game_room_is_removed_from_registry() {
     let mut late = RawClient::connect(addr).await;
     let _ = authenticate(&mut late, "late-joiner").await;
     late.send("JoinRoom", json!({ "code": room_code })).await;
-    let (_, message) = tokio::time::timeout(Duration::from_secs(5), late.recv())
+    let (_, message) = tokio::time::timeout(Duration::from_secs(5), late.recv_room())
         .await
         .expect("加入旧房间码应收到响应")
         .expect("连接不应关闭");

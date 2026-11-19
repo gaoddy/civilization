@@ -8,8 +8,33 @@
     "friends": [
       {
         "playerId": "p_04",
+        "playerCode": "204815",
         "displayName": "Ada",
-        "online": true
+        "status": "online"
+      }
+    ],
+    "incoming": [
+      {
+        "playerId": "p_05",
+        "playerCode": "204816",
+        "displayName": "Bob",
+        "sentAt": "2026-11-15T09:58:00Z"
+      }
+    ],
+    "outgoing": [
+      {
+        "playerId": "p_06",
+        "playerCode": "204817",
+        "displayName": "Cid",
+        "sentAt": "2026-11-15T09:57:00Z"
+      }
+    ],
+    "recent": [
+      {
+        "playerId": "p_04",
+        "playerCode": "204815",
+        "displayName": "Ada",
+        "relation": "friend"
       }
     ]
   }

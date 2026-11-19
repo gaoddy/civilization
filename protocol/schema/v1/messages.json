@@ -12,7 +12,11 @@
       "CombatPlayed": "messages.schema.json#/$defs/CombatPlayed",
       "RequestSnapshot": "messages.schema.json#/$defs/RequestSnapshot",
       "Reconnect": "messages.schema.json#/$defs/Reconnect",
-      "FriendRequest": "messages.schema.json#/$defs/FriendRequest"
+      "FriendRequest": "messages.schema.json#/$defs/FriendRequest",
+      "FriendRespond": "messages.schema.json#/$defs/FriendRespond",
+      "FriendRemove": "messages.schema.json#/$defs/FriendRemove",
+      "InviteToRoom": "messages.schema.json#/$defs/InviteToRoom",
+      "RespondInvite": "messages.schema.json#/$defs/RespondInvite"
     },
     "s2c": {
       "AuthResult": "messages.schema.json#/$defs/AuthResult",
@@ -25,7 +29,10 @@
       "CombatResult": "messages.schema.json#/$defs/CombatResult",
       "GameOver": "messages.schema.json#/$defs/GameOver",
       "Error": "messages.schema.json#/$defs/Error",
-      "FriendUpdate": "messages.schema.json#/$defs/FriendUpdate"
+      "FriendUpdate": "messages.schema.json#/$defs/FriendUpdate",
+      "FriendInvite": "messages.schema.json#/$defs/FriendInvite",
+      "FriendInviteResult": "messages.schema.json#/$defs/FriendInviteResult",
+      "InviteAccepted": "messages.schema.json#/$defs/InviteAccepted"
     }
   }
 }
