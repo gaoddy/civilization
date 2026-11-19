@@ -174,6 +174,18 @@ impl Db {
             .map_err(|err| format!("执行数据库迁移失败: {err}"))
     }
 
+    /// 执行 `SELECT 1`，供就绪探针使用。
+    ///
+    /// # Errors
+    ///
+    /// 查询失败时返回错误。
+    pub async fn ping(&self) -> DbResult<()> {
+        sqlx::query("SELECT 1")
+            .execute(&self.pool)
+            .await
+            .map(|_| ())
+    }
+
     /// 载入全部账号。
     ///
     /// # Errors

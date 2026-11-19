@@ -1236,6 +1236,7 @@ dependencies = [
  "sqlx",
  "tokio",
  "tokio-tungstenite",
+ "tower",
  "uuid",
 ]
 
