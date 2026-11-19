@@ -15,9 +15,9 @@ const PAGES := [
     },
     {
         "path": "res://scenes/lobby.tscn",
-        "children": 3,
-        "direct_names": ["InvitePopup"],
-        "deep_names": ["GalleryButton", "FriendCodeInput"],
+        "children": 4,
+        "direct_names": ["InvitePopup", "FriendsPanel"],
+        "deep_names": ["GalleryButton", "FriendsButton"],
     },
     {
         "path": "res://scenes/room.tscn",

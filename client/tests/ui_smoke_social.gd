@@ -59,11 +59,35 @@ func _check_lobby_social() -> void:
 
     var labels := _node_text(instance)
     _expect(labels.contains("100001"), "大厅应展示本人玩家编号")
-    _expect(labels.contains("在线好友"), "大厅应列出好友")
-    _expect(labels.contains("对局中"), "好友行应展示服务端状态")
-    _expect(labels.contains("申请人"), "大厅应列出收到的申请")
     _expect(labels.contains("ABC234"), "邀请弹窗应展示房间码")
 
+    # 好友管理收在浮层里：主页只留入口，入口显示待处理申请数。
+    var entry := instance.find_child("FriendsButton", true, false)
+    _expect(entry != null, "大厅应有好友入口")
+    _expect(entry != null and str(entry.text).contains("1"), "好友入口应展示待处理申请数")
+    var panel = instance.find_child("FriendsPanel", true, false)
+    _expect(panel != null and not panel.visible, "好友浮层初始应隐藏")
+    if entry == null or panel == null:
+        instance.queue_free()
+        await get_tree().process_frame
+        return
+
+    entry.pressed.emit()
+    await get_tree().process_frame
+    _expect(panel.visible, "点击好友入口应打开浮层")
+
+    labels = _node_text(instance)
+    _expect(labels.contains("在线好友"), "好友浮层应列出好友")
+    _expect(labels.contains("对局中"), "好友行应展示服务端状态")
+    _expect(labels.contains("申请人"), "好友浮层应列出收到的申请")
+    _expect(
+        instance.find_child("FriendCodeInput", true, false) != null,
+        "好友浮层应提供添加好友输入框"
+    )
+    _expect(
+        instance.find_child("AddFriendButton", true, false) != null,
+        "好友浮层应提供添加好友按钮"
+    )
     _expect(
         instance.find_child("Accept_p_request", true, false) != null,
         "收到的申请应有同意按钮"
@@ -80,6 +104,7 @@ func _check_lobby_social() -> void:
         instance.find_child("AddRecent_p_recent", true, false) != null,
         "最近队友应可回加"
     )
+
     var popup = instance.find_child("InvitePopup", true, false)
     _expect(popup != null and popup.visible, "有待处理邀请时应显示邀请弹窗")
     _expect(
@@ -90,6 +115,23 @@ func _check_lobby_social() -> void:
         instance.find_child("DeclineInvite_inv_1", true, false) != null,
         "邀请弹窗应提供拒绝按钮"
     )
+
+    # 关闭按钮与 Esc 都应收起浮层，且不留下遮罩挡住大厅。
+    var close := instance.find_child("FriendsClose", true, false)
+    _expect(close != null, "好友浮层应有关闭按钮")
+    if close != null:
+        close.pressed.emit()
+        await get_tree().process_frame
+        _expect(not panel.visible, "点关闭后好友浮层应隐藏")
+    entry.pressed.emit()
+    await get_tree().process_frame
+    _expect(panel.visible, "再次点击好友入口应重新打开浮层")
+    var cancel := InputEventAction.new()
+    cancel.action = "ui_cancel"
+    cancel.pressed = true
+    instance.get_viewport().push_input(cancel)
+    await get_tree().process_frame
+    _expect(not panel.visible, "Esc 应收起好友浮层")
 
     # 清空邀请后弹窗应隐藏，避免留下遮罩挡住大厅。
     GameStore.pending_invites = []

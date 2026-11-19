@@ -30,7 +30,8 @@ client/
     theme.gd                 # 三层视觉令牌与 StyleBox 工厂（class_name UITheme）
   scenes/
     login.tscn/.gd           # 登录
-    lobby.tscn/.gd           # 大厅
+    lobby.tscn/.gd           # 大厅：开局入口在主页，好友入口在左下角、图鉴入口在右下角
+    friends_panel.gd         # 好友浮层：添加、申请、好友与最近队友（class_name FriendsPanel）
     invite_popup.gd          # 邀请弹层：订阅 social_changed、逐条接受/拒绝（class_name InvitePopup）
     room.tscn/.gd            # 房间
     game.tscn/.gd            # 对局页面装配入口：顶部工具条、左栏与中央舞台，门控与意图
@@ -71,7 +72,7 @@ client/
     ui_smoke_combat.tscn/.gd # 战斗视图三段与结果横幅
     ui_smoke_cards.tscn/.gd  # 商店卡费用/时代角标与冻结蒙层
     ui_smoke_text.tscn/.gd   # 文本表取用、枚举展示与错误文案回退
-    ui_smoke_social.tscn/.gd # 大厅好友区、邀请弹窗与房间邀请入口
+    ui_smoke_social.tscn/.gd # 大厅好友浮层、邀请弹窗与房间邀请入口
     ui_smoke_gallery.tscn/.gd # 图鉴页与对局覆盖层：计数、筛选、分页、详情与入口
     ui_smoke_guide.tscn/.gd  # 首局引导：首次展示、步骤推进与条件跳过、跳过落盘、手动重看、输入穿透、重连续接
     ui_smoke_room_ops.tscn/.gd # 房间管理：房主移除/解散、非房主隐藏、RoomClosed 回大厅、离线点击
@@ -110,7 +111,7 @@ client/
 | 场景 | 职责 |
 | --- | --- |
 | 登录 | 输入服务器地址、手机号、固定验证码 `123456` 与显示名；认证成功后进入大厅 |
-| 大厅 | 展示本人 6 位玩家编号；创建房间或凭房间码加入；按编号添加好友、处理收到的申请、删除好友、从最近队友回加；有待处理邀请时弹出邀请浮层，接受后自动入房；收到 `RoomUpdate` 后进入房间 |
+| 大厅 | 展示本人 6 位玩家编号；创建房间或凭房间码加入；左下角「好友」入口打开好友浮层（按编号添加、处理申请、删除好友、从最近队友回加），右下角进入卡牌图鉴；有待处理邀请时弹出邀请浮层，接受后自动入房；收到 `RoomUpdate` 后进入房间 |
 | 房间 | 展示成员确认状态、选择英雄并一键确认；列出在线好友供一键邀请（对局中/离线置灰）；开局完全由服务端决定（全员准备后自动开始）；房主且等待区时每名成员行带 `Kick_<playerId>`，底部 `DissolveButton`，收到 `RoomClosed` 后按原因提示并回大厅 |
 | 对局 | 酒馆战棋式布局：顶部工具条左侧为状态文本（断线、未发出、错误），右侧为 `GalleryButton`、`HintButton`、`LeaveGameButton`；左栏 8 行座位（按服务端 `rank` 升序，头像、名次角标、血量条，点击展开战报）；中央舞台自上而下为招募组合或战斗组合、英雄行与贴底手牌。招募组合 418 高：商店操作行（升时代图标—售货员—刷新/冻结图标）、商店 6 槽、河道、按容量棋盘；战斗组合同样 418 高：对手身份、对手随从行、河道（回合与结果）、我方随从行。英雄行 84 高：64×84 英雄卡、金币格与英雄技能图标，淘汰后显示「已淘汰 · 观战中」；手牌行 146 高贴底。十一种意图对应操作；`pendingChoices` 弹层（发现/进化/战吼目标，候选由视图下发）；英雄技能按 `requiresTarget` / `targetCandidates` 直接释放或弹出候选浮层 |
 | 结算 | 按服务端 `ranking` 展示名次行（名次、玩家名、存活回合、造成伤害）、`selfStats` 的本局数据区与最终阵容、`seed`；`ConfirmButton`（「确定」）只清本地房间并重新认证回大厅，不发 `LeaveRoom`（房间已在对局结束时销毁） |
@@ -129,7 +130,7 @@ client/
 - 未连接时点击操作不会静默丢弃：状态栏提示「未连接，操作未发出」。客户端不维护目标重试表：目标只能取自视图候选，被拒后只提示错误并等待新视图。
 - 页面切换统一走 `UI.navigate(page, path)`：`change_scene_to_file` 会立即把当前场景摘下，而页面仍连着 `GameStore` 等 autoload 信号；摘下后的回调再取 `get_tree()` 会得到 `null`。`UI.navigate` 以「页面仍在树上」为唯一判定，离树页面的导航直接丢弃并返回 `false`，场景脚本不再直接调用 `get_tree().change_scene_to_file`。
 - 房间场景同时监听 `view_changed`：重连或晚到的视图显示对局已开始时直接进入对局；房间不存在或已不在房间时回大厅。
-- 大厅好友区读取 `GameStore` 的社交列表，不做本地排序：好友顺序、在线状态与最近队友次序都由服务端给出。添加好友按 6 位编号（`FriendRequest{toPlayerCode}`）；申请条目提供同意/拒绝，好友条目提供删除；编号或输入非法时只在状态栏提示，不发请求。
+- 大厅好友浮层是独立组件 `FriendsPanel`（`class_name FriendsPanel`），由大厅挂载，左下角 `FriendsButton` 打开、显示待处理申请数；组件自己订阅 `GameStore.social_changed`，读取 `GameStore` 的社交列表，不做本地排序：好友顺序、在线状态与最近队友次序都由服务端给出。添加好友按 6 位编号（`FriendRequest{toPlayerCode}`）；申请条目提供同意/拒绝，好友条目提供删除；编号或输入非法时只在浮层状态行提示，不发请求。服务端错误在浮层可见时就地显示，不跳回主页。
 - 邀请弹层是独立组件 `InvitePopup`（`class_name InvitePopup`），由大厅挂载；它自己订阅 `GameStore.social_changed`，按 `live_invites()` 过滤已过期条目并渲染遮罩 + 居中面板，条目显示邀请人名字、编号与房间码。接受与拒绝都发 `RespondInvite`（`accept` 为 `true`/`false`）并立即禁用该条按钮，结果清掉该条邀请后弹层自动隐藏；大厅只监听 `responded` 信号做状态文案。收到 `InviteAccepted` 后由 `GameStore` 自动补发 `JoinRoom{roomCode}`。
 - 房间页的邀请入口只列 `status == "online"` 的好友，其余按钮禁用；点击发 `InviteToRoom{friendId}`，结果由 `FriendInviteResult` 回写状态栏（已接受/未接受）。邀请成功的提示不改变房间成员，受邀者按普通 `JoinRoom` 入房后才出现在座位列表。
 - 商店使用 `HFlowContainer` 自动换行，左侧内容放入 `ScrollContainer`，1280×720 下不会因商店变长而溢出；手牌行同样使用 `HFlowContainer`，但槽位按 `card-width - hand-card-overlap` = 80 步进排列、行内 `h_separation` 为 0，1–10 张保持单行，卡片自身 112×146 向右溢出并与下一槽重叠。
