@@ -7,6 +7,8 @@ var tokens: Dictionary = {}
 var skills: Dictionary = {}
 ## 科学分类树：节点 id → {id, parent, rank}。
 var taxonomy: Dictionary = {}
+## 玩法 id 顺序，与 taxonomy.md §2 一致，供图鉴分类目录使用。
+var playstyles: Array = []
 ## 美术资源清单：card_id → {portrait, avatar, card_face, display}。缺图时回退程序化绘制。
 var art: Dictionary = {}
 
@@ -67,6 +69,10 @@ func _load_taxonomy(path: String) -> void:
     for node in parsed.get("nodes", []):
         if node is Dictionary:
             taxonomy[str(node.get("id", ""))] = node
+    playstyles.clear()
+    for entry in parsed.get("playstyles", []):
+        if entry is String:
+            playstyles.append(entry)
 
 
 ## 美术清单是单对象 `{version, assets}`；按 card_id 建索引。文件缺失不报错，

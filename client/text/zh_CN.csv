@@ -1420,7 +1420,6 @@ ui.common.no_hero,未选英雄
 ui.gallery.all_cards,全部卡牌
 ui.gallery.back_lobby,返回大厅
 ui.gallery.back_match,返回对局
-ui.gallery.category_effect,效果牌
 ui.gallery.chapter_all,全部
 ui.gallery.count,%d 张
 ui.gallery.detail_empty,选择一张卡牌查看详情
