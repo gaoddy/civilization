@@ -78,19 +78,19 @@ func _check_lobby_page() -> void:
     _expect(instance.find_child("Taxonhero", true, false) == null, "英雄不应作为左侧分类")
 
     var mode_bar = instance.find_child("GalleryModeBar", true, false)
-    var mode_minion = instance.find_child("ModeMinion", true, false)
-    var mode_hero = instance.find_child("ModeHero", true, false)
+    var mode_toggle = instance.find_child("ModeToggle", true, false)
     _expect(
-        mode_bar != null and mode_minion != null and mode_hero != null,
+        mode_bar != null and mode_toggle != null,
         "标题右侧缺少随从 / 英雄视图切换",
     )
     _expect(
-        mode_minion != null and mode_minion.button_pressed,
-        "图鉴默认应选中随从视图",
+        mode_toggle != null and mode_toggle.text == tr("ui.gallery.mode_minion"),
+        "图鉴默认应显示随从视图，实际：%s" % (mode_toggle.text if mode_toggle != null else "无"),
     )
     _expect(
-        mode_hero != null and not mode_hero.button_pressed,
-        "图鉴默认不应选中英雄视图",
+        instance.find_child("ModeMinion", true, false) == null
+            and instance.find_child("ModeHero", true, false) == null,
+        "视图切换应只显示当前视图的一个按钮",
     )
 
     var toc = instance.find_child("GalleryToc", true, false)
@@ -254,10 +254,15 @@ func _check_hero_section() -> void:
     var instance := await _mount_gallery()
     if instance == null:
         return
-    var mode_hero = instance.find_child("ModeHero", true, false)
-    _expect(mode_hero != null, "标题右侧缺少英雄视图切换")
-    if mode_hero != null:
-        await _push_click(instance, mode_hero.get_global_rect().get_center())
+    var mode_toggle = instance.find_child("ModeToggle", true, false)
+    _expect(mode_toggle != null, "标题右侧缺少视图切换")
+    if mode_toggle != null:
+        await _push_click(instance, mode_toggle.get_global_rect().get_center())
+    _expect(
+        mode_toggle != null and mode_toggle.text == tr("ui.gallery.mode_hero"),
+        "切到英雄视图后按钮应显示英雄，实际：%s"
+        % (mode_toggle.text if mode_toggle != null else "无"),
+    )
     _expect(
         _filtered_count(instance) == 32,
         "英雄视图应有 32 张，实际：%d" % _filtered_count(instance),
@@ -360,9 +365,13 @@ func _check_hero_section() -> void:
             "英雄详情不应显示时代：%s" % text,
         )
     # 切回随从视图恢复普通卡池、左侧目录与时代章节。
-    var mode_minion = instance.find_child("ModeMinion", true, false)
-    if mode_minion != null:
-        await _push_click(instance, mode_minion.get_global_rect().get_center())
+    if mode_toggle != null:
+        await _push_click(instance, mode_toggle.get_global_rect().get_center())
+    _expect(
+        mode_toggle != null and mode_toggle.text == tr("ui.gallery.mode_minion"),
+        "切回随从视图后按钮应显示随从，实际：%s"
+        % (mode_toggle.text if mode_toggle != null else "无"),
+    )
     _expect(
         _filtered_count(instance) == 432,
         "切回随从视图应恢复 432 张，实际：%d" % _filtered_count(instance),
@@ -392,16 +401,15 @@ func _check_mode_filters() -> void:
         _filtered_count(instance) == 63,
         "史前章应有 63 张，实际：%d" % _filtered_count(instance),
     )
-    var mode_hero = instance.find_child("ModeHero", true, false)
-    if mode_hero != null:
-        await _push_click(instance, mode_hero.get_global_rect().get_center())
+    var mode_toggle = instance.find_child("ModeToggle", true, false)
+    if mode_toggle != null:
+        await _push_click(instance, mode_toggle.get_global_rect().get_center())
     _expect(
         _filtered_count(instance) == 32,
         "英雄视图不受时代筛选影响，实际：%d" % _filtered_count(instance),
     )
-    var mode_minion = instance.find_child("ModeMinion", true, false)
-    if mode_minion != null:
-        await _push_click(instance, mode_minion.get_global_rect().get_center())
+    if mode_toggle != null:
+        await _push_click(instance, mode_toggle.get_global_rect().get_center())
     _expect(
         _filtered_count(instance) == 63,
         "切回随从视图应保留史前筛选，实际：%d" % _filtered_count(instance),
@@ -421,8 +429,15 @@ func _check_empty_hero_pool() -> void:
         [],
     )
     await get_tree().process_frame
-    var mode_hero = gallery.find_child("ModeHero", true, false)
-    _expect(mode_hero != null and mode_hero.disabled, "没有可用英雄时应禁用英雄视图")
+    var mode_toggle = gallery.find_child("ModeToggle", true, false)
+    _expect(
+        mode_toggle != null and mode_toggle.disabled,
+        "没有可用英雄时应禁用视图切换",
+    )
+    _expect(
+        mode_toggle != null and mode_toggle.text == tr("ui.gallery.mode_minion"),
+        "没有可用英雄时应保持随从视图",
+    )
     _expect(gallery.call("_filtered_ids").size() == 432, "没有可用英雄时随从视图仍为 432 张")
     gallery.queue_free()
     await get_tree().process_frame

@@ -21,7 +21,7 @@
 ### 2.2 视图切换
 
 - 新增 `client/scenes/gallery_mode_bar.gd`（`GalleryModeBar`）：`set_state(mode, hero_available)`，`mode_selected(mode)` 发出 `minion` / `hero`。
-- 两态单选按钮节点名为 `ModeMinion`、`ModeHero`，样式与章节栏一致；英雄集合为空时 `ModeHero` 禁用。
+- 组件内只有一个按钮 `ModeToggle`，文字为当前视图名称，点击 emit 另一视图；样式与章节栏一致，英雄集合为空时禁用。
 
 ### 2.3 CardGallery
 

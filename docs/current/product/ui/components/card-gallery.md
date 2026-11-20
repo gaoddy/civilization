@@ -16,12 +16,12 @@
 
 - `card_ids` 为卡牌与 Token 的 id 数组，`hero_ids` 为英雄卡 id 数组，均由页面给出；组件不读取 `GameStore`。
 - `title`、`close_text` 为已翻译文案。
-- 内部节点名：`GalleryBackground`、`GalleryHeader`、`GalleryTitle`、`GalleryModeBar`、`GalleryClose`、`GalleryChapters`、`GalleryHeroCategories`、`GalleryBody`、`GalleryToc`、`GalleryGrid`、`GalleryDetail`。
+- 内部节点名：`GalleryBackground`、`GalleryHeader`、`GalleryTitle`、`GalleryModeBar`、`ModeToggle`、`GalleryClose`、`GalleryChapters`、`GalleryHeroCategories`、`GalleryBody`、`GalleryToc`、`GalleryGrid`、`GalleryDetail`。
 - `GalleryHeader` 内依次为标题、`GalleryModeBar`、当前视图的顶部筛选栏与返回按钮；`GalleryChapters` 与 `GalleryHeroCategories` 同时只显示一个。
 
 ## 变体与状态
 
-- 视图分随从与英雄两套，默认随从；英雄集合为空时英雄视图不可进入。
+- 视图分随从与英雄两套，默认随从；标题右侧的 `ModeToggle` 只显示当前视图，点击切到另一视图；英雄集合为空时按钮禁用。
 - 随从视图筛选同时存在时代（`0` 表示全部）、顶层分类（空串表示全部）与二级「随从 / 效果」（空串表示全部），三维交叉生效；每个维度的计数都按另外两维筛选换算。
 - 随从视图顶层分类列 13 个玩法与末尾的「中立」，不含英雄；选中项下方展开二级项，切换顶层分类时二级回到全部。
 - 英雄视图隐藏时代栏与左侧目录，顶部筛选栏为「全部」+ 13 个玩法 +「中立」；英雄按自身 `playstyle` 计数与筛选，零计数项禁用，切换分类回到第 1 页。
