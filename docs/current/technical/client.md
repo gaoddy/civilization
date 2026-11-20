@@ -159,7 +159,7 @@ client/
 - 河道行分两种模式：招募河道 `RecruitRiver` 中央是回合数 `RecruitTurnLabel`，右端 `RecruitCountdownFlip` 内为金色胶囊 `RecruitTimerLabel`「剩余 N 秒」，悬停翻成 `RecruitEndButton`「结束招募」，移出恢复，点击只发一次 `EndRecruit`；归零时 `RecruitTimerLabel` 显示「等待结算」并禁用翻转。战斗河道 `CombatRiver` 中央是 `CombatBanner`（演示前「第 N 回合」，播完后追加结果），右端是 `CombatStatusPill`「战斗中」。两套节点名不重名，避免 `find_child` 命中隐藏实例。
 - 我方英雄在英雄行：`HeroCard` 64×84 自上而下为玩法色封面、名字行、攻击/时代/生命三格，生命取服务端当前值与上限；右侧 `HeroSide` 列自上而下为 `HeroMeta` 行（`HeroPassives` 被动标记与 `GoldTile` 金币，行高取 `hero-meta-row-height`）和 `HeroPowers` 横排。主动技能对应 `HeroPowerButton<下标>`（费用角标右上、剩余次数角标左上，剩 1 次时隐藏次数、0 次时置灰），按 `self.heroPowers` 顺序重建，tooltip 首行为技能名；被动技能取 `CardDB.hero(heroId).skills` 中 `cost` 为空的项，按卡面顺序生成 `HeroPassive<下标>`，只读、不可点击、不置灰，tooltip 为「被动技能：名称 + 效果」，英雄切换时整组重建。本人淘汰后英雄行改显示「已淘汰 · 观战中」并隐藏英雄卡与技能列；战斗阶段隐藏 `HeroPowers` 按钮，英雄卡、金币与被动标记保留。玩法、时代、介绍与技能文本只在悬停时由 `hero` 详情显示。
 - 战斗舞台的对手身份由 `GameOpponentView` 渲染：普通战为 64×64 头像、名字/英雄/HP 行与 360 宽血量条，幽灵战换成幽灵归属者身份并加「幽灵」角标、整块压暗、不显示血量条，`opponentPlayerId` 为空时显示「等待配对」。身份只随战斗视图出现，招募阶段不渲染。
-- 商店卡左上角渲染 `CostBadge`（`display_cost`）、右上角渲染 `EraBadge`（`era`）；冻结由 `FreezeOverlay` 整卡蒙层（`freeze-overlay-alpha` = 0.22，经 `self_modulate` 只压蒙层自身）、间距 14 的 45° 冰晶细线与右下角「冻」字 `FreezeGlyph` 共同表达。
+- 商店卡左上角渲染 `CostBadge`（`display_cost`）、右上角渲染无框 `EraGlyph`（`era`）；冻结由 `FreezeOverlay` 整卡蒙层（`freeze-overlay-alpha` = 0.22，经 `self_modulate` 只压蒙层自身）、间距 14 的 45° 冰晶细线与右下角「冻」字 `FreezeGlyph` 共同表达。
 - 商店卡由 `ShopCard` 承载：`_get_drag_data` 交出 `{epoch, shopSlot, cardId, buyable}`，`drag_allowed` 取 `GameUiState.can_drag(buyable)`，不可拖时整卡压暗；点击不发购买意图。`GameShopView` 在 `NOTIFICATION_DRAG_BEGIN` 收到商店数据时隐藏原卡并在原位插入同尺寸透明占位（`ShopDragSpacer`），`NOTIFICATION_DRAG_END` 或视图重建时移除占位并恢复原卡，起手表现与棋盘卡一致。手牌带底部的 `HandDrop`（节点 `HandDropBand`，高 `card-height`、贴底铺满）是购买落点，只接受 `buyable` 的商店数据并发出 `shop_dropped`；手牌卡自身也接受同一数据并转发给 `GameHandRow`。商店卡拖拽期间 `GameHandRow` 逐帧按指针位置把购买带切为 `accent-bare` 描边，拖拽结束或移出即恢复。
 - 棋盘容量取自 `PlayerView.boardSlots`（缺失时回退 7），满场标记用该数值；棋盘只渲染实际随从，不足满槽时按 `FlowContainer.alignment` 居中，行宽按满槽、行高保持 `card-height` 以保留整行拖放区，空棋盘也能接住首次上场。`BoardDrop` 仍由页面设置 `board_full`，控件本身不感知容量。
 - 落点回调在 `epoch` 校验之外还要重新过一遍与拖拽起始同源的门控（`drop_gate`）：阶段为招募、未结束招募、视图未过期、倒计时未归零、`Net` 已连接、队首待选不是 `target`。拖拽途中换回合、开战或断线时松手不会发出意图。
@@ -323,10 +323,9 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 ## 10. 美术素材层
 
-- 位置：`client/assets/`。`characters/portraits/ch_<id>_full.png` 为去水印立绘，`characters/avatars/ch_<id>_ava.png` 为圆形头像，`cards/faces/card_<id>_face.png` 为 448×584 卡面封面；`asset_manifest.json` 按卡牌 id 登记三类路径与展示尺寸。
+- 位置：`client/assets/`。`characters/portraits/ch_<id>_full.png` 为去水印立绘，`characters/avatars/ch_<id>_ava.png` 为圆形头像，`cards/faces/card_<id>_face.png` 为 448×584 卡面封面；`asset_manifest.json` 按卡牌 id 登记三类路径与展示尺寸。`assets/ui/bg/bg_main.png` 为页面背景纹理（512×512，整屏拉伸，不平铺）。
 - 加载：`CardDB` 启动时读取清单到 `art`，提供 `has_art(id)` 与 `art_path(id, kind)`；清单缺失或条目缺字段时返回空串，不报错。
-- 回退：`CardFaceBase.create_face()` 用带卡面圆角的面板绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；`UI.avatar()` 有头像纹理时叠 `AvatarArt`，否则退回玩法色块首字。纹理加载失败与无资源走同一回退。
-- 稀有度：`CardDB.rarity_tier(id)` 按卡牌 `level` 映射为 `common`（1–2）、`rare`（3–4）、`epic`（5–6）、`legendary`（7），仅用于展示，不进入协议与服务端数据。
+- 回退：`CardFaceBase.create_face()` 用带卡面圆角的面板绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；`UI.avatar()` 有头像纹理时叠 `AvatarArt`，否则退回玩法色块首字。纹理加载失败与无资源走同一回退。页面背景缺图或加载失败时 `UI.background()` 回退 `color-bg` 纯色。
 - 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（默认 `client/assets/characters/portraits/asset_map.json`，内容为 `card_id → 源立绘文件名`）处理源立绘，并重写清单；映射文件缺失时目标直接失败。
 - 批次：首批试点 20 张，覆盖 14 种玩法色与 7 个时代；其余卡牌继续走程序化绘制。源立绘随仓库提交。
 - 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；改图后运行 `make client-import`。

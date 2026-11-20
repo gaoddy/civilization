@@ -105,8 +105,11 @@
 | `aim-outline-width` | 2 | 命中候选呼吸描边的线宽 |
 | `aim-pulse` | 1.2 | 命中候选描边的呼吸周期（秒） |
 | `aim-cross` | 6 | 无效落点叉号的半边长 |
+| `era-glyph-size` | 14 | 卡面右上角时代象形边长 |
+| `era-glyph-size-detail` | 24 | 图鉴详情卡名旁时代象形边长 |
 
 - 瞄准相关令牌都是小数，统一用 `UITheme.factor` 读取；颜色只用语义层的 `color-accent`、`color-text-muted`、`color-danger`。
+- 攻防底牌边长不是独立令牌，按内嵌 Label 的字号推导：`边长 = 字号 + 4`（`font-body` 14 → 18，`font-caption` 11 → 15）。
 
 ### 5.1 手机基准紧凑值
 
