@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 use crate::effects::{Effect, validate_effects};
 use crate::error::CatalogError;
+use crate::keyword::KeywordSet;
 use crate::taxonomy::Taxonomy;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -219,6 +220,11 @@ pub struct Catalog {
     pub skills: BTreeMap<String, Skill>,
     pub config: GameConfig,
     pub taxonomy: Taxonomy,
+    /// 卡面自带关键词的位图侧表；由 `from_json` 预计算。
+    ///
+    /// 测试可能直接往 `cards` / `skills` 插卡，因此 `base_keywords` 在侧表
+    /// 缺失时回退到即时计算。
+    card_keywords: BTreeMap<String, KeywordSet>,
 }
 
 /// 卡牌是否在本局卡池内。
@@ -330,13 +336,53 @@ impl Catalog {
             return Err(CatalogError::Rule(effect_errors.join("\n")));
         }
 
+        let card_keywords = card_map
+            .iter()
+            .map(|(id, card)| {
+                let mut set = KeywordSet::default();
+                for skill_id in &card.skills {
+                    if let Some(keyword) = skill_map
+                        .get(skill_id)
+                        .and_then(|skill| skill.keyword.as_deref())
+                    {
+                        set.insert(keyword);
+                    }
+                }
+                (id.clone(), set)
+            })
+            .collect();
+
         Ok(Catalog {
             cards: card_map,
             heroes: hero_map,
             skills: skill_map,
             config,
             taxonomy,
+            card_keywords,
         })
+    }
+
+    /// 卡面自带关键词的位图集合，不含战斗内授予与光环派生。
+    ///
+    /// 侧表命中的卡直接克隆预计算值；侧表缺失（测试直接插卡）时按当前
+    /// `cards` / `skills` 即时计算，保证与旧口径一致。
+    pub fn base_keywords(&self, card_id: &str) -> KeywordSet {
+        if let Some(set) = self.card_keywords.get(card_id) {
+            return set.clone();
+        }
+        let mut set = KeywordSet::default();
+        if let Some(card) = self.cards.get(card_id) {
+            for skill_id in &card.skills {
+                if let Some(keyword) = self
+                    .skills
+                    .get(skill_id)
+                    .and_then(|skill| skill.keyword.as_deref())
+                {
+                    set.insert(keyword);
+                }
+            }
+        }
+        set
     }
 }
 

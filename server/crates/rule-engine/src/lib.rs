@@ -8,6 +8,7 @@ pub mod error;
 pub mod events;
 pub mod hash;
 pub mod intent;
+pub mod keyword;
 pub mod playstyles;
 pub mod recruit;
 pub mod rng;
