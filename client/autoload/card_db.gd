@@ -133,8 +133,10 @@ func skill_info(skill_id: String) -> Dictionary:
         if effect is Dictionary and str(effect.get("trigger", "")) != "":
             trigger = str(effect.get("trigger", ""))
             break
+    var keyword: Variant = entry.get("keyword")
+    var has_keyword := keyword != null and str(keyword) != ""
     var trigger_label := ""
-    if trigger != "" or str(entry.get("keyword", "")) != "":
+    if trigger != "" or has_keyword:
         trigger_label = trigger_name(trigger)
     var text_key := "skill.%s.text" % skill_id
     var text := tr(text_key)
