@@ -18,7 +18,7 @@ impl Engine {
     ///
     /// 来源为各玩家棋盘上的每个随从，以及该玩家英雄卡；效果只作用于来源
     /// **同一玩家**的棋盘。缺失卡牌、空棋盘与空条件都退化为无光环。
-    pub fn recompute_auras(&mut self, state: &mut GameState) {
+    pub fn recompute_auras(&self, state: &mut GameState) {
         let mut computed: BTreeMap<InstanceId, AuraEffect> = BTreeMap::new();
 
         let mut seats: Vec<Seat> = state
@@ -46,7 +46,7 @@ impl Engine {
     ///
     /// 同时清理已不在任何棋盘上的陈旧条目：本座位刚出售或移除的随从实例已不在
     /// 当前棋盘 id 集合内，若不清理会与全量重算的结果不一致。
-    pub fn recompute_auras_for(&mut self, state: &mut GameState, seat: Seat) {
+    pub fn recompute_auras_for(&self, state: &mut GameState, seat: Seat) {
         let Some(player) = state.players.iter().find(|player| player.seat == seat) else {
             return;
         };

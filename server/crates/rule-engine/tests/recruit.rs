@@ -70,7 +70,7 @@ fn pool_count(state: &GameState, card_id: &str) -> u16 {
 
 #[test]
 fn buy_deducts_gold_and_pool_and_goes_to_hand() {
-    let (mut engine, mut state) = turn_started(1);
+    let (engine, mut state) = turn_started(1);
     let card_id = minion_id(1);
     set_shop(&mut state, 0, &[Some(card_id.clone())]);
     let before_pool = pool_count(&state, &card_id);
@@ -106,7 +106,7 @@ fn buy_deducts_gold_and_pool_and_goes_to_hand() {
 
 #[test]
 fn buy_effect_card_goes_to_hand_and_costs_card_cost() {
-    let (mut engine, mut state) = turn_started(2);
+    let (engine, mut state) = turn_started(2);
     let (card_id, cost) = effect_card();
     set_shop(&mut state, 0, &[Some(card_id.clone())]);
 
@@ -131,7 +131,7 @@ fn buy_effect_card_goes_to_hand_and_costs_card_cost() {
 
 #[test]
 fn buy_without_gold_rejects_without_mutating() {
-    let (mut engine, mut state) = turn_started(3);
+    let (engine, mut state) = turn_started(3);
     let card_id = minion_id(1);
     set_shop(&mut state, 0, &[Some(card_id)]);
     state.players[0].gold = 0;
@@ -145,7 +145,7 @@ fn buy_without_gold_rejects_without_mutating() {
 
 #[test]
 fn buy_empty_slot_rejects() {
-    let (mut engine, mut state) = turn_started(4);
+    let (engine, mut state) = turn_started(4);
     set_shop(&mut state, 0, &[None, None]);
     let before = state_hash(&state);
 
@@ -161,7 +161,7 @@ fn buy_empty_slot_rejects() {
 
 #[test]
 fn buy_when_hand_full_rejects_even_with_board_room() {
-    let (mut engine, mut state) = turn_started(5);
+    let (engine, mut state) = turn_started(5);
     let card_id = minion_id(1);
     set_shop(&mut state, 0, &[Some(card_id)]);
     fill_hand(&mut state, 0, 10);
@@ -175,7 +175,7 @@ fn buy_when_hand_full_rejects_even_with_board_room() {
 
 #[test]
 fn buy_enters_hand_even_when_board_has_room() {
-    let (mut engine, mut state) = turn_started(6);
+    let (engine, mut state) = turn_started(6);
     let card_id = minion_id(1);
     set_shop(&mut state, 0, &[Some(card_id.clone())]);
 
@@ -190,7 +190,7 @@ fn buy_enters_hand_even_when_board_has_room() {
 
 #[test]
 fn sell_returns_gold_and_pool() {
-    let (mut engine, mut state) = turn_started(7);
+    let (engine, mut state) = turn_started(7);
     let card_id = minion_id(1);
     state.players[0]
         .board
@@ -216,7 +216,7 @@ fn sell_returns_gold_and_pool() {
 
 #[test]
 fn sell_golden_returns_three() {
-    let (mut engine, mut state) = turn_started(8);
+    let (engine, mut state) = turn_started(8);
     let card_id = minion_id(2);
     let before_pool = pool_count(&state, &card_id);
     let mut golden = minion(&engine.catalog, 43, &card_id);
@@ -238,7 +238,7 @@ fn sell_golden_returns_three() {
 
 #[test]
 fn sell_missing_minion_rejects() {
-    let (mut engine, mut state) = turn_started(9);
+    let (engine, mut state) = turn_started(9);
     let before = state_hash(&state);
 
     let result = engine.apply(&mut state, 0, Intent::SellMinion { minion: 777 });
@@ -249,7 +249,7 @@ fn sell_missing_minion_rejects() {
 
 #[test]
 fn reroll_first_is_free_then_costs_one() {
-    let (mut engine, mut state) = turn_started(10);
+    let (engine, mut state) = turn_started(10);
     let card_id = minion_id(1);
     let before_pool = pool_count(&state, &card_id);
     assert_eq!(state.players[0].gold, 3);
@@ -271,7 +271,7 @@ fn reroll_first_is_free_then_costs_one() {
 
 #[test]
 fn reroll_without_gold_rejects() {
-    let (mut engine, mut state) = turn_started(11);
+    let (engine, mut state) = turn_started(11);
     state.players[0].gold = 0;
     state.players[0].first_refresh_used = true;
     let before = state_hash(&state);
@@ -284,7 +284,7 @@ fn reroll_without_gold_rejects() {
 
 #[test]
 fn upgrade_era_costs_and_rerolls() {
-    let (mut engine, mut state) = turn_started(12);
+    let (engine, mut state) = turn_started(12);
     state.players[0].gold = 10;
     let frozen_card = minion_id(2);
     set_shop(&mut state, 0, &[Some(frozen_card.clone())]);
@@ -298,7 +298,6 @@ fn upgrade_era_costs_and_rerolls() {
 
     assert_eq!(state.players[0].era, Era::Primitive);
     assert_eq!(state.players[0].gold, 5);
-    assert_eq!(state.players[0].turns_in_era, 0);
     assert!(
         !state.players[0].first_refresh_used,
         "免费重抽不占本回合免费刷新"
@@ -324,7 +323,7 @@ fn upgrade_era_costs_and_rerolls() {
 
 #[test]
 fn upgrade_without_gold_rejects() {
-    let (mut engine, mut state) = turn_started(13);
+    let (engine, mut state) = turn_started(13);
     state.players[0].gold = 4;
     let before = state_hash(&state);
 
@@ -336,7 +335,7 @@ fn upgrade_without_gold_rejects() {
 
 #[test]
 fn upgrade_at_future_rejects() {
-    let (mut engine, mut state) = turn_started(14);
+    let (engine, mut state) = turn_started(14);
     state.players[0].era = Era::Future;
     state.players[0].gold = 200;
     let before = state_hash(&state);
@@ -349,7 +348,7 @@ fn upgrade_at_future_rejects() {
 
 #[test]
 fn play_minion_from_hand_moves_to_board() {
-    let (mut engine, mut state) = turn_started(15);
+    let (engine, mut state) = turn_started(15);
     let card_id = minion_id(1);
     state.players[0]
         .hand
@@ -378,7 +377,7 @@ fn play_minion_from_hand_moves_to_board() {
 
 #[test]
 fn play_effect_card_leaves_hand_without_events() {
-    let (mut engine, mut state) = turn_started(16);
+    let (engine, mut state) = turn_started(16);
     let (card_id, _) = effect_card();
     state.players[0]
         .hand
@@ -403,7 +402,7 @@ fn play_effect_card_leaves_hand_without_events() {
 
 #[test]
 fn play_card_out_of_range_rejects() {
-    let (mut engine, mut state) = turn_started(17);
+    let (engine, mut state) = turn_started(17);
     let before = state_hash(&state);
 
     let result = engine.apply(
@@ -422,7 +421,7 @@ fn play_card_out_of_range_rejects() {
 
 #[test]
 fn play_minion_with_full_board_rejects() {
-    let (mut engine, mut state) = turn_started(18);
+    let (engine, mut state) = turn_started(18);
     fill_board(&mut state, 0, 7);
     let card_id = minion_id(1);
     state.players[0]
@@ -446,7 +445,7 @@ fn play_minion_with_full_board_rejects() {
 
 #[test]
 fn rearrange_moves_minion_to_target_index() {
-    let (mut engine, mut state) = turn_started(19);
+    let (engine, mut state) = turn_started(19);
     state.players[0].board = vec![
         minion(&engine.catalog, 1, "a"),
         minion(&engine.catalog, 2, "b"),
@@ -477,7 +476,7 @@ fn rearrange_moves_minion_to_target_index() {
 
 #[test]
 fn rearrange_out_of_range_rejects() {
-    let (mut engine, mut state) = turn_started(20);
+    let (engine, mut state) = turn_started(20);
     state.players[0].board = vec![
         minion(&engine.catalog, 1, "a"),
         minion(&engine.catalog, 2, "b"),
@@ -497,7 +496,7 @@ fn rearrange_out_of_range_rejects() {
 
 #[test]
 fn frozen_cards_persist_until_manually_thawed() {
-    let (mut engine, mut state) = turn_started(21);
+    let (engine, mut state) = turn_started(21);
     let frozen_id = minion_id(2);
     set_shop(
         &mut state,
@@ -558,7 +557,7 @@ fn frozen_cards_persist_until_manually_thawed() {
 
 #[test]
 fn reroll_clears_frozen_mark_on_new_cards() {
-    let (mut engine, mut state) = turn_started(25);
+    let (engine, mut state) = turn_started(25);
     set_shop(&mut state, 0, &[Some(minion_id(1)), Some(minion_id(2))]);
     engine
         .apply(&mut state, 0, Intent::FreezeShop { slot: None })
@@ -580,7 +579,7 @@ fn reroll_clears_frozen_mark_on_new_cards() {
 
 #[test]
 fn freeze_with_none_freezes_all_slots() {
-    let (mut engine, mut state) = turn_started(22);
+    let (engine, mut state) = turn_started(22);
     set_shop(&mut state, 0, &[Some(minion_id(1)), Some(minion_id(2))]);
 
     engine
@@ -598,7 +597,7 @@ fn freeze_with_none_freezes_all_slots() {
 
 #[test]
 fn freeze_empty_slot_rejects() {
-    let (mut engine, mut state) = turn_started(23);
+    let (engine, mut state) = turn_started(23);
     set_shop(&mut state, 0, &[None]);
     let before = state_hash(&state);
 
@@ -610,7 +609,7 @@ fn freeze_empty_slot_rejects() {
 
 #[test]
 fn unfreeze_with_none_clears_all_slots() {
-    let (mut engine, mut state) = turn_started(31);
+    let (engine, mut state) = turn_started(31);
     let first = minion_id(1);
     let second = minion_id(2);
     set_shop(&mut state, 0, &[Some(first.clone()), Some(second.clone())]);
@@ -647,7 +646,7 @@ fn unfreeze_with_none_clears_all_slots() {
 
 #[test]
 fn unfreeze_some_clears_only_that_slot() {
-    let (mut engine, mut state) = turn_started(32);
+    let (engine, mut state) = turn_started(32);
     set_shop(&mut state, 0, &[Some(minion_id(1)), Some(minion_id(2))]);
     engine
         .apply(&mut state, 0, Intent::FreezeShop { slot: Some(0) })
@@ -666,7 +665,7 @@ fn unfreeze_some_clears_only_that_slot() {
 
 #[test]
 fn unfreeze_empty_slot_rejects() {
-    let (mut engine, mut state) = turn_started(33);
+    let (engine, mut state) = turn_started(33);
     set_shop(&mut state, 0, &[None]);
     let before = state_hash(&state);
 
@@ -678,7 +677,7 @@ fn unfreeze_empty_slot_rejects() {
 
 #[test]
 fn unfreeze_before_next_turn_drops_preservation() {
-    let (mut engine, mut state) = turn_started(34);
+    let (engine, mut state) = turn_started(34);
     let frozen_id = minion_id(2);
     set_shop(&mut state, 0, &[Some(frozen_id), Some(minion_id(3))]);
     engine
@@ -704,7 +703,7 @@ fn unfreeze_before_next_turn_drops_preservation() {
 
 #[test]
 fn use_hero_power_respects_cost_and_uses() {
-    let (mut engine, mut state) = turn_started(24);
+    let (engine, mut state) = turn_started(24);
     assert_eq!(state.players[0].hero.as_deref(), Some("adam-smith"));
     assert_eq!(state.players[0].gold, 3);
 
@@ -757,7 +756,7 @@ fn use_hero_power_respects_cost_and_uses() {
 
 #[test]
 fn use_hero_power_only_fires_selected_skill() {
-    let (mut engine, mut state) = turn_started(24);
+    let (engine, mut state) = turn_started(24);
     // 爱因斯坦有两个主动技能：质能方程（全队成长）与光速出击（单体连击）。
     state.players[0].hero = Some("einstein".to_string());
     state.players[0].gold = 10;
@@ -800,7 +799,7 @@ fn use_hero_power_only_fires_selected_skill() {
 
 #[test]
 fn use_passive_or_unknown_hero_power_rejects() {
-    let (mut engine, mut state) = turn_started(25);
+    let (engine, mut state) = turn_started(25);
     // 默认英雄没有 observation；换成 galileo 才能走到「属于本英雄的被动技能」分支。
     state.players[0].hero = Some("galileo".to_string());
 
@@ -846,7 +845,7 @@ fn use_passive_or_unknown_hero_power_rejects() {
 
 #[test]
 fn use_hero_power_without_gold_rejects() {
-    let (mut engine, mut state) = turn_started(26);
+    let (engine, mut state) = turn_started(26);
     state.players[0].gold = 0;
     let before = state_hash(&state);
 
@@ -865,7 +864,7 @@ fn use_hero_power_without_gold_rejects() {
 
 #[test]
 fn intent_outside_recruit_rejects() {
-    let (mut engine, mut state) = turn_started(27);
+    let (engine, mut state) = turn_started(27);
     state.phase = Phase::Combat;
     let before = state_hash(&state);
 
@@ -884,7 +883,7 @@ fn intent_outside_recruit_rejects() {
 #[test]
 fn end_recruit_marks_seat_until_all_ready() {
     // 核心规则 §2/§3：EndRecruit 只表示「本玩家结束招募」，全员结束后才进入 Combat。
-    let (mut engine, mut state) = turn_started(28);
+    let (engine, mut state) = turn_started(28);
 
     let outcome = engine
         .apply(&mut state, 0, Intent::EndRecruit)
@@ -948,7 +947,7 @@ fn end_recruit_marks_seat_until_all_ready() {
 
 #[test]
 fn end_recruit_ignores_eliminated_seats() {
-    let (mut engine, mut state) = turn_started(33);
+    let (engine, mut state) = turn_started(33);
     state.players[7].eliminated = true;
     for seat in 0..7 {
         engine
@@ -960,7 +959,7 @@ fn end_recruit_ignores_eliminated_seats() {
 
 #[test]
 fn recruit_done_is_hashed_and_reset_each_turn() {
-    let (mut engine, mut state) = turn_started(34);
+    let (engine, mut state) = turn_started(34);
     let before = state_hash(&state);
     state.players[0].recruit_done = true;
     assert_ne!(before, state_hash(&state), "招募就绪标记计入状态哈希");
@@ -1059,7 +1058,7 @@ fn hero_cards_never_appear_in_shop() {
 
 #[test]
 fn start_turn_rolls_shops_and_skips_eliminated() {
-    let (mut engine, mut state) = turn_started(31);
+    let (engine, mut state) = turn_started(31);
     state.players[7].eliminated = true;
     set_shop(&mut state, 7, &[Some(minion_id(1))]);
     let sentinel = state.players[7].shop.clone();
@@ -1085,22 +1084,20 @@ fn start_turn_rolls_shops_and_skips_eliminated() {
 }
 
 #[test]
-fn start_turn_increments_turns_in_era_and_resets_hero_uses() {
-    let (mut engine, mut state) = turn_started(32);
-    state.players[0].turns_in_era = 2;
+fn start_turn_resets_hero_uses() {
+    let (engine, mut state) = turn_started(32);
     state.players[0]
         .hero_uses
         .insert("division-of-labor".to_string(), 1);
 
     engine.start_turn(&mut state).expect("开始下一回合");
 
-    assert_eq!(state.players[0].turns_in_era, 3);
     assert!(state.players[0].hero_uses.is_empty());
 }
 
 #[test]
 fn choose_discover_without_pending_rejects_invalid_stage() {
-    let (mut engine, mut state) = turn_started(33);
+    let (engine, mut state) = turn_started(33);
     let before = state_hash(&state);
 
     let result = engine.apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 });
@@ -1111,7 +1108,7 @@ fn choose_discover_without_pending_rejects_invalid_stage() {
 
 #[test]
 fn choose_discover_out_of_range_rejects_invalid_choice() {
-    let (mut engine, mut state) = turn_started(34);
+    let (engine, mut state) = turn_started(34);
     state
         .pending
         .push_back(rule_engine::state::PendingChoice::Discover {
@@ -1129,7 +1126,7 @@ fn choose_discover_out_of_range_rejects_invalid_choice() {
 
 #[test]
 fn choose_discover_valid_choice_consumes_and_adds_to_hand() {
-    let (mut engine, mut state) = turn_started(35);
+    let (engine, mut state) = turn_started(35);
     let chosen = minion_id(2);
     let before_pool = pool_count(&state, &chosen);
     state
@@ -1160,7 +1157,7 @@ fn choose_discover_valid_choice_consumes_and_adds_to_hand() {
 
 #[test]
 fn buy_fires_no_battlecry_until_played() {
-    let (mut engine, mut state) = turn_started(36);
+    let (engine, mut state) = turn_started(36);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     set_shop(&mut state, 0, &[Some(BATTLECRY_TARGET.to_string())]);
 
@@ -1179,7 +1176,7 @@ fn buy_fires_no_battlecry_until_played() {
 
 #[test]
 fn start_game_fills_turn_one_shops() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [36; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [36; 32], test_playstyles());
     let catalog = test_catalog();
 
     let events = engine
@@ -1240,7 +1237,7 @@ fn put_champion(
 
 #[test]
 fn play_battlecry_without_target_enters_board_then_pends() {
-    let (mut engine, mut state) = turn_started(40);
+    let (engine, mut state) = turn_started(40);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     state.players[0]
         .hand
@@ -1269,7 +1266,7 @@ fn play_battlecry_without_target_enters_board_then_pends() {
 #[test]
 fn play_battlecry_with_unknown_target_rejects() {
     // 客户端只能从服务端下发的候选里选目标；提交不存在的实例编号视为非法目标。
-    let (mut engine, mut state) = turn_started(41);
+    let (engine, mut state) = turn_started(41);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     state.players[0]
         .hand
@@ -1293,7 +1290,7 @@ fn play_battlecry_with_unknown_target_rejects() {
 #[test]
 fn play_effect_card_with_hand_target_copies_it() {
     // 效果牌从手牌复制：目标必须是本人手牌里的随从实例。
-    let (mut engine, mut state) = turn_started(46);
+    let (engine, mut state) = turn_started(46);
     let catalog = engine.catalog.clone();
     state.players[0]
         .hand
@@ -1326,7 +1323,7 @@ fn play_effect_card_with_hand_target_copies_it() {
 #[test]
 fn play_card_rejects_target_from_wrong_zone() {
     // 目标区域与实例所在区域不一致时视为非法目标，不进入效果结算。
-    let (mut engine, mut state) = turn_started(47);
+    let (engine, mut state) = turn_started(47);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     let catalog = engine.catalog.clone();
     state.players[0]
@@ -1358,7 +1355,7 @@ fn play_card_rejects_target_from_wrong_zone() {
 #[test]
 fn choose_target_accepts_hand_target_and_copies_selected() {
     // 战吼待选同样支持手牌区域；复制的是待选提交的那一张，而不是手牌第一张。
-    let (mut engine, mut state) = turn_started(48);
+    let (engine, mut state) = turn_started(48);
     let catalog = engine.catalog.clone();
     state.players[0].hand = vec![
         HandCard::Minion(minion(&catalog, 5, "amoeba")),
@@ -1392,7 +1389,7 @@ fn choose_target_accepts_hand_target_and_copies_selected() {
 
 #[test]
 fn play_battlecry_with_target_applies_effect() {
-    let (mut engine, mut state) = turn_started(42);
+    let (engine, mut state) = turn_started(42);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     state.players[0]
         .hand
@@ -1431,7 +1428,7 @@ fn play_battlecry_with_target_applies_effect() {
 
 #[test]
 fn abandon_target_returns_card_to_original_slot() {
-    let (mut engine, mut state) = turn_started(45);
+    let (engine, mut state) = turn_started(45);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     {
         let hand = &mut state.players[0].hand;
@@ -1480,7 +1477,7 @@ fn abandon_target_returns_card_to_original_slot() {
 
 #[test]
 fn abandon_target_skips_golden_reward() {
-    let (mut engine, mut state) = turn_started(46);
+    let (engine, mut state) = turn_started(46);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     state.players[0]
         .hand
@@ -1523,7 +1520,7 @@ fn abandon_target_skips_golden_reward() {
 
 #[test]
 fn choose_target_grants_deferred_golden_reward() {
-    let (mut engine, mut state) = turn_started(47);
+    let (engine, mut state) = turn_started(47);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     state.players[0]
         .hand
@@ -1575,7 +1572,7 @@ fn choose_target_grants_deferred_golden_reward() {
 
 #[test]
 fn abandon_target_without_pending_rejects() {
-    let (mut engine, mut state) = turn_started(48);
+    let (engine, mut state) = turn_started(48);
     let before = state_hash(&state);
     let reject = engine
         .apply(&mut state, 0, Intent::AbandonTarget)
@@ -1586,7 +1583,7 @@ fn abandon_target_without_pending_rejects() {
 
 #[test]
 fn play_battlecry_with_empty_pool_is_allowed() {
-    let (mut engine, mut state) = turn_started(43);
+    let (engine, mut state) = turn_started(43);
     // 目标筛「机械」，己方棋盘上没有机械目标，池为空。
     put_champion(&engine, &mut state, 0, 9_000, "gutenberg");
     state.players[0]
@@ -1610,7 +1607,7 @@ fn play_battlecry_with_empty_pool_is_allowed() {
 
 #[test]
 fn play_effect_card_without_target_rejects_and_keeps_hand() {
-    let (mut engine, mut state) = turn_started(44);
+    let (engine, mut state) = turn_started(44);
     put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
     state.players[0]
         .hand
@@ -1633,7 +1630,7 @@ fn play_effect_card_without_target_rejects_and_keeps_hand() {
 
 #[test]
 fn play_effect_card_with_empty_pool_is_allowed_and_whiffs() {
-    let (mut engine, mut state) = turn_started(45);
+    let (engine, mut state) = turn_started(45);
     state.players[0]
         .hand
         .push(HandCard::effect(9_000, EFFECT_CARD_TARGET));
@@ -1655,7 +1652,7 @@ fn play_effect_card_with_empty_pool_is_allowed_and_whiffs() {
 
 #[test]
 fn hero_power_without_target_rejects_and_keeps_uses() {
-    let (mut engine, mut state) = turn_started(46);
+    let (engine, mut state) = turn_started(46);
     // 亚当·斯密：condition 要求己方至少 3 个人类，池非空才进入目标校验。
     put_champion(&engine, &mut state, 0, 9_000, "chengbang-gongmin");
     put_champion(&engine, &mut state, 0, 9_001, "dongxuehuajia");
@@ -1678,7 +1675,7 @@ fn hero_power_without_target_rejects_and_keeps_uses() {
 #[test]
 fn hero_power_with_empty_pool_rejects() {
     // 卡牌文档：场上没有合法目标时技能不可用（返回 NO_VALID_TARGET）。
-    let (mut engine, mut state) = turn_started(47);
+    let (engine, mut state) = turn_started(47);
     state.players[0].hero = Some("luxun".to_string());
     let before = state_hash(&state);
 
@@ -1697,7 +1694,7 @@ fn hero_power_with_empty_pool_rejects() {
 
 #[test]
 fn play_minion_at_len_appends() {
-    let (mut engine, mut state) = turn_started(48);
+    let (engine, mut state) = turn_started(48);
     let card_id = minion_id(1);
     state.players[0].board = vec![
         minion(&engine.catalog, 1, "a"),
@@ -1733,7 +1730,7 @@ fn play_minion_at_len_appends() {
 
 #[test]
 fn play_minion_at_position_inserts() {
-    let (mut engine, mut state) = turn_started(49);
+    let (engine, mut state) = turn_started(49);
     let card_id = minion_id(1);
     state.players[0].board = vec![
         minion(&engine.catalog, 1, "a"),
@@ -1768,7 +1765,7 @@ fn play_minion_at_position_inserts() {
 
 #[test]
 fn play_minion_position_beyond_len_rejects() {
-    let (mut engine, mut state) = turn_started(50);
+    let (engine, mut state) = turn_started(50);
     state.players[0].board = vec![
         minion(&engine.catalog, 1, "a"),
         minion(&engine.catalog, 2, "b"),
@@ -1796,7 +1793,7 @@ fn play_minion_position_beyond_len_rejects() {
 
 #[test]
 fn play_minion_without_position_appends() {
-    let (mut engine, mut state) = turn_started(51);
+    let (engine, mut state) = turn_started(51);
     state.players[0].board = vec![
         minion(&engine.catalog, 1, "a"),
         minion(&engine.catalog, 2, "b"),
@@ -1950,7 +1947,7 @@ fn target_pending_skipped_when_filtered_pool_empty() {
 
 #[test]
 fn machine_filter_target_pool_includes_machine_source() {
-    let (mut engine, mut state) = turn_started(60);
+    let (engine, mut state) = turn_started(60);
     // archimedes 自身带 play:machine；机械筛选应把来源自身计入目标池。
     state.players[0].hand.push(HandCard::Minion(minion(
         &engine.catalog,
@@ -2071,7 +2068,7 @@ fn choose_target_outside_board_rejects() {
 fn choose_target_outside_filtered_pool_rejects() {
     // 战吼筛「机械」：棋盘上有机械（因此产生待选），但选一个非机械随从必须被拒，
     // 而不是接受后静默落空（core-rules §4：指定随从不在合法池时返回该码）。
-    let (mut engine, mut state) = turn_started(59);
+    let (engine, mut state) = turn_started(59);
     put_champion(&engine, &mut state, 0, 9_000, "nanobot");
     put_champion(&engine, &mut state, 0, 9_001, "baiyi");
     state.players[0]
@@ -2128,7 +2125,7 @@ fn finish_recruit_clears_all_pending_as_forfeit() {
 
 #[test]
 fn discover_pending_blocks_manual_end_recruit() {
-    let (mut engine, mut state) = turn_started(59);
+    let (engine, mut state) = turn_started(59);
     state.pending.push_back(PendingChoice::Discover {
         seat: 0,
         candidates: vec![minion_id(1)],
@@ -2147,7 +2144,7 @@ fn discover_pending_blocks_manual_end_recruit() {
 
 #[test]
 fn discover_pending_allows_other_recruit_intents() {
-    let (mut engine, mut state) = turn_started(60);
+    let (engine, mut state) = turn_started(60);
     set_shop(&mut state, 0, &[Some(minion_id(1))]);
     state.players[0].gold = 10;
     state.pending.push_back(PendingChoice::Discover {
@@ -2166,7 +2163,7 @@ fn discover_pending_allows_other_recruit_intents() {
 
 #[test]
 fn play_card_with_enemy_target_rejects_target_not_allowed() {
-    let (mut engine, mut state) = turn_started(61);
+    let (engine, mut state) = turn_started(61);
     let enemy_id = 9_100;
     common::place(&engine.catalog, &mut state, 1, enemy_id, &minion_id(1));
     state.players[0].hand.push(HandCard::Minion(minion(

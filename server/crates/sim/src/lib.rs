@@ -195,12 +195,20 @@ pub fn play_game(
 pub fn run_games(games: usize, seed: u64, players: usize) -> Result<BatchJson, EngineError> {
     check_players(players)?;
     let catalog = embedded_catalog()?;
+    let mut engine = Engine::from_catalog(catalog);
     let mut logs = Vec::with_capacity(games);
     for index in 0..games {
         let game_seed = derive_seed(seed, index);
-        logs.push(run_game(catalog.clone(), game_seed)?);
+        logs.push(run_seed(&mut engine, game_seed)?);
     }
     Ok(BatchJson { seed, games: logs })
+}
+
+/// 用已有引擎的只读目录跑一局；每个种子独立抽取玩法与初始状态。
+fn run_seed(engine: &mut Engine, seed: u64) -> Result<GameLog, EngineError> {
+    let playstyles = playstyles::draw(seed);
+    let mut state = engine.initial_state(seed_from_u64(seed), playstyles);
+    play_game(engine, &mut state, seed, usize::from(PLAYER_COUNT))
 }
 
 /// 驱动主循环：`Recruit` 阶段逐座位执行 AI 意图直到 `EndRecruit`，
@@ -227,7 +235,7 @@ fn drive(
 
         event_hasher.extend(&engine.finish_recruit(state)?);
         steps.push(boundary(Step::FinishRecruit));
-        event_hasher.extend(&engine.resolve_combat(state)?.events);
+        event_hasher.extend(&engine.resolve_combat_with(state, false)?.events);
         steps.push(boundary(Step::ResolveCombat));
         let events = engine.resolve_settle(state)?;
         event_hasher.extend(&events);
@@ -482,7 +490,7 @@ fn step_engine(
             .finish_recruit(state)
             .map(|events| event_hasher.extend(&events)),
         Step::ResolveCombat => engine
-            .resolve_combat(state)
+            .resolve_combat_with(state, false)
             .map(|outcome| event_hasher.extend(&outcome.events)),
         Step::ResolveSettle => engine
             .resolve_settle(state)

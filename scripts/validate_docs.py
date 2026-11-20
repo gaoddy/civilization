@@ -95,7 +95,7 @@ EFFECT_TRIGGERS = {
     "OnPlay", "OnPlayEffect", "OnUse", "OnActivate", "OnTurnStart",
     "OnFirstRefresh", "OnCombatStart", "OnDealDamage", "OnKill", "OnAllyKill",
     "OnDeath", "OnFriendlyDeath", "OnEnemyDeath", "OnAllySummon", "OnAllyGrowth",
-    "OnAllyEvolve", "OnCombatEnd", "Aura", "ConditionalAura",
+    "OnAllyEvolve", "Aura", "ConditionalAura",
 }
 EFFECT_OPS = {
     "Growth", "ModifyStats", "GrantKeyword", "RemoveGrowth", "CannotAttack",
@@ -111,7 +111,7 @@ FILTER_KEYS = {"taxon", "playstyle", "play", "prey", "host", "subtype", "id", "t
                "keyword", "other"}
 DURATIONS = {"permanent", "combat"}
 DECOMPOSE_BASES = {"original", "combat_start", "pre_kill"}
-NUMERIC_KEYS = {"times", "count", "amount", "attack", "health", "value", "extra",
+NUMERIC_KEYS = {"times", "count", "amount", "attack", "health", "value",
                 "perAttack", "perHealth", "maxCount", "threshold"}
 AURA_OPS = {"ModifyStats", "GrantKeyword"}
 OP_SPEC = {
@@ -126,7 +126,7 @@ OP_SPEC = {
     "Summon": ({"count"}, {"token", "card", "when"}, {("token", "card")}),
     "Copy": ({"to"}, {"from", "type", "state"}, set()),
     "Discover": ({"pool"}, {"choose"}, set()),
-    "RefreshShop": (set(), {"free", "extra"}, set()),
+    "RefreshShop": (set(), {"free"}, set()),
     "AddShopSlot": ({"era", "count"}, set(), set()),
     "GainMinion": ({"level", "to"}, {"from"}, set()),
     "GrantMinion": ({"level", "to"}, set(), set()),
@@ -147,7 +147,7 @@ CONDITION_RE = re.compile(
 )
 EVENT_TRIGGERS = {
     "OnEnemyDeath", "OnFriendlyDeath", "OnAllySummon", "OnAllyGrowth",
-    "OnAllyEvolve", "OnDealDamage", "OnCombatEnd", "OnUse", "OnKill", "OnAllyKill",
+    "OnAllyEvolve", "OnDealDamage", "OnUse", "OnKill", "OnAllyKill",
 }
 ACHIEVEMENT_FIELDS = ["id", "name", "event", "condition", "count", "reward", "affects_power"]
 RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),

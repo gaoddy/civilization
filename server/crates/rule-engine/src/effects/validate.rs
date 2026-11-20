@@ -45,7 +45,6 @@ pub(crate) const WHEN_TRIGGERS: &[Trigger] = &[
     Trigger::OnAllyGrowth,
     Trigger::OnAllyEvolve,
     Trigger::OnDealDamage,
-    Trigger::OnCombatEnd,
     Trigger::OnUse,
     Trigger::OnDeath,
     Trigger::OnKill,
@@ -63,7 +62,6 @@ const PARAM_KEYS: &[&str] = &[
     "maxCount",
     "threshold",
     "value",
-    "extra",
     "duration",
     "canKill",
     "healthOnly",
@@ -129,7 +127,7 @@ pub(crate) fn op_spec(op: Op) -> OpSpec {
         ),
         Op::Copy => (&["to"], &["from", "type", "state"], &[]),
         Op::Discover => (&["pool", "choose"], &[], &[]),
-        Op::RefreshShop => (&[], &["free", "extra"], &[]),
+        Op::RefreshShop => (&[], &["free"], &[]),
         Op::AddShopSlot => (&["era", "count"], &[], &[]),
         Op::GainMinion => (&["level", "to"], &["from"], &[]),
         Op::GrantMinion => (&["level", "to"], &[], &[]),
@@ -167,7 +165,6 @@ impl Params {
             "maxCount" => self.max_count.is_some(),
             "threshold" => self.threshold.is_some(),
             "value" => self.value.is_some(),
-            "extra" => self.extra.is_some(),
             "duration" => self.duration.is_some(),
             "canKill" => self.can_kill.is_some(),
             "healthOnly" => self.health_only.is_some(),
@@ -413,10 +410,7 @@ fn validate_times_if_filter(times_if: &TimesIf, errors: &mut Vec<String>) {
         errors.push(format!("timesIf 的筛选键非法 {:?}", times_if.key));
         return;
     }
-    match times_if.value.as_deref() {
-        None => errors.push(format!("timesIf 的 {:?} 缺少取值", key)),
-        Some(value) => validate_filter_value(key, value, errors),
-    }
+    validate_filter_value(key, &times_if.value, errors);
 }
 
 /// 按筛选键校验取值；只覆盖有固定取值集合的键。

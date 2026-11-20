@@ -240,7 +240,7 @@ fn parses_structured_params() {
         e[0].params.times_if,
         Some(TimesIf {
             key: "playstyle".into(),
-            value: Some("mammal".into()),
+            value: "mammal".into(),
             times: 2
         })
     );

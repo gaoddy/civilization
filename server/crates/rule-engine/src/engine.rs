@@ -34,11 +34,30 @@ impl Engine {
         seed: [u8; 32],
         playstyles: [Playstyle; 5],
     ) -> (Engine, GameState) {
+        let engine = Engine { catalog };
+        let state = engine.initial_state(seed, playstyles);
+        (engine, state)
+    }
+
+    /// 以只读目录创建引擎句柄。
+    ///
+    /// 同一目录可连续创建多局初始状态，不需要按局复制 [`Catalog`]；
+    /// 批量模拟与同进程多房间共用这一入口。
+    pub fn from_catalog(catalog: Catalog) -> Engine {
+        Engine { catalog }
+    }
+
+    /// 以本引擎的目录创建一局初始状态：8 名玩家、`Lobby` 阶段、`turn = 0`。
+    ///
+    /// # Panics
+    ///
+    /// `playstyles` 含 `Neutral` 或存在重复时 panic；调用方保证传入 5 个不同玩法。
+    pub fn initial_state(&self, seed: [u8; 32], playstyles: [Playstyle; 5]) -> GameState {
         let mut rng = RngStreams::from_seed(seed);
         let first_seat = rng.below(Stream::Matchmaking, u64::from(PLAYER_COUNT)) as Seat;
         let enabled_playstyles = playstyle_set(playstyles);
-        let pool = build_pool(&catalog);
-        let config = &catalog.config;
+        let pool = build_pool(&self.catalog);
+        let config = &self.catalog.config;
 
         let players = (0..PLAYER_COUNT)
             .map(|seat| PlayerState {
@@ -46,7 +65,6 @@ impl Engine {
                 hp: config.initial_hp,
                 gold: 0,
                 era: Era::Prehistoric,
-                turns_in_era: 0,
                 shop: vec![None; config.shop_slots],
                 board: Vec::new(),
                 hand: Vec::new(),
@@ -64,7 +82,7 @@ impl Engine {
         let previous_opponent = (0..PLAYER_COUNT).map(|seat| (seat, None)).collect();
         let ranking = Vec::new();
 
-        let state = GameState {
+        GameState {
             turn: 0,
             phase: Phase::Lobby,
             players,
@@ -81,16 +99,14 @@ impl Engine {
             ranking,
             next_instance_id: 1,
             auras: BTreeMap::new(),
-        };
-
-        (Engine { catalog }, state)
+        }
     }
 
     /// 校验 8 个座位都选了目录中的英雄卡，允许重复；写入英雄，进入第 1 回合招募阶段。
     ///
     /// 第 1 回合金币与商店都在这里完成；`start_turn` 只负责第 2 回合及以后。
     pub fn start_game(
-        &mut self,
+        &self,
         state: &mut GameState,
         heroes: &BTreeMap<Seat, String>,
     ) -> Result<Vec<GameEvent>, EngineError> {
@@ -154,7 +170,7 @@ impl Engine {
     /// 回合开始顺序固定（关键词机制 §2.1）：每个未出局玩家按座位升序，
     /// 其棋盘按站位从左到右依次结算繁衍、传染与其他 `OnTurnStart` 效果；
     /// 全部效果结算完毕后，才发放本回合金币并刷新商店。
-    pub fn start_turn(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+    pub fn start_turn(&self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
         let turn = state
             .turn
             .checked_add(1)
@@ -174,7 +190,6 @@ impl Engine {
             }
             player.first_refresh_used = false;
             player.first_refresh_pending = true;
-            player.turns_in_era = player.turns_in_era.saturating_add(1);
         }
 
         let mut events = vec![GameEvent::TurnStarted { turn }];
@@ -218,7 +233,7 @@ impl Engine {
 
     /// 以指定座位执行一条意图；拒绝时状态保持不变。
     pub fn apply(
-        &mut self,
+        &self,
         state: &mut GameState,
         seat: Seat,
         intent: Intent,
@@ -229,7 +244,7 @@ impl Engine {
     }
 
     /// 重抽指定玩家的商店，保留冻结槽位；返回 `ShopRolled` 事件。
-    pub fn roll_shop(&mut self, state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
+    pub fn roll_shop(&self, state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
         recruit::roll_player(self, state, seat, true);
         vec![GameEvent::ShopRolled { seat }]
     }
@@ -290,7 +305,7 @@ impl Engine {
     ///
     /// 传染致死的随从在移除后结算亡语，再按「播种」召唤幼苗；复生只作用于战斗，
     /// 不在回合开始生效。
-    fn apply_contagion(&mut self, state: &mut GameState, seat: Seat) {
+    fn apply_contagion(&self, state: &mut GameState, seat: Seat) {
         let Some(player) = state.players.get_mut(usize::from(seat)) else {
             return;
         };
@@ -306,7 +321,7 @@ impl Engine {
     ///
     /// 传染与潜伏爆发共用：两者都在招募回合内造成伤害，击杀必须立即离场，
     /// 否则下一次 `Settle` 清掉临时层后会把死掉的随从复活。
-    pub(crate) fn resolve_recruit_deaths(&mut self, state: &mut GameState, seat: Seat) {
+    pub(crate) fn resolve_recruit_deaths(&self, state: &mut GameState, seat: Seat) {
         let dead = {
             let Some(player) = state.players.get_mut(usize::from(seat)) else {
                 return;
@@ -365,7 +380,7 @@ impl Engine {
     ///
     /// 英雄卡先结算：无来源触发由执行器解析到英雄池，与首次刷新、战斗开始的
     /// 「英雄被动优先」口径一致。
-    fn fire_turn_start(&mut self, state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
+    fn fire_turn_start(&self, state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
         let Some(player) = state.players.get(usize::from(seat)) else {
             return Vec::new();
         };

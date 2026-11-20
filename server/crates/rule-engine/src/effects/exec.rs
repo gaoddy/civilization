@@ -58,12 +58,7 @@ impl Engine {
     /// `OnPlay` / `OnActivate`（以及来源在棋盘上的 `OnPlayEffect`）从来源卡牌
     /// 收集该时机下的全部效果；`OnUse` 收集本座位所有响应打出效果牌的随从。
     /// 本任务未实现的触发时机返回空事件。
-    pub fn fire(
-        &mut self,
-        state: &mut GameState,
-        trigger: Trigger,
-        ctx: EffectCtx,
-    ) -> Vec<GameEvent> {
+    pub fn fire(&self, state: &mut GameState, trigger: Trigger, ctx: EffectCtx) -> Vec<GameEvent> {
         match trigger {
             Trigger::OnPlay
             | Trigger::OnPlayEffect
@@ -82,7 +77,7 @@ impl Engine {
     ///
     /// 效果牌打出时没有棋盘实例，调用方用本方法把牌面 `card_id` 交给执行器。
     pub fn fire_card(
-        &mut self,
+        &self,
         state: &mut GameState,
         card_id: &str,
         trigger: Trigger,
@@ -96,7 +91,7 @@ impl Engine {
     /// 英雄可以有多个主动技能；`fire` 按归属收集英雄全部技能，主动技能必须只结算
     /// 被选中的那一个，否则多技能英雄会一次放出全部技能。
     pub(crate) fn fire_skill(
-        &mut self,
+        &self,
         state: &mut GameState,
         skill_id: &str,
         trigger: Trigger,
@@ -108,7 +103,7 @@ impl Engine {
 
     /// 执行一段效果；`chosen` 可用于覆盖 `target` 选择器的显式目标。
     pub fn apply_op(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -342,7 +337,7 @@ impl Engine {
     }
 
     pub(crate) fn run_card_effects(
-        &mut self,
+        &self,
         state: &mut GameState,
         card_id: &str,
         trigger: Trigger,
@@ -354,7 +349,7 @@ impl Engine {
 
     /// 依次执行一段已收集的效果；金色随从连续执行两遍。
     fn run_effects(
-        &mut self,
+        &self,
         state: &mut GameState,
         effects: &[Effect],
         ctx: &EffectCtx,
@@ -370,7 +365,7 @@ impl Engine {
     }
 
     /// `OnUse`：本座位所有带响应效果的随从，按站位顺序依次结算。
-    fn fire_on_use(&mut self, state: &mut GameState, ctx: &EffectCtx) -> Vec<GameEvent> {
+    fn fire_on_use(&self, state: &mut GameState, ctx: &EffectCtx) -> Vec<GameEvent> {
         let Some(player) = state.players.get(usize::from(ctx.seat)) else {
             return Vec::new();
         };
@@ -1017,7 +1012,7 @@ impl Engine {
     /// 立即离场并结算亡语。爆发每局最多一次（`latent_used`）；金色按通用规则
     /// 触发两遍，但第一遍爆发会清零层数，第二遍因此只加 0 点攻击且不会再次爆发。
     fn apply_latent(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -1148,10 +1143,7 @@ impl Engine {
         let Some(facts) = card_facts(&self.catalog, card_id) else {
             return false;
         };
-        let Some(value) = times_if.value.as_deref() else {
-            return false;
-        };
-        facts.matches(&self.catalog, &times_if.key, value)
+        facts.matches(&self.catalog, &times_if.key, &times_if.value)
     }
 
     // -----------------------------------------------------------------------
@@ -1160,7 +1152,7 @@ impl Engine {
 
     /// 执行 `Summon`：token 直接创建，card 从池中扣 1（池空创建副本）。
     fn summon_recruit_from_effect(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         _targets: &[InstanceId],
@@ -1220,12 +1212,7 @@ impl Engine {
     }
 
     /// 友方随从获得成长后，触发其他随从的 `OnAllyGrowth`。
-    fn fire_ally_growth_recruit(
-        &mut self,
-        state: &mut GameState,
-        seat: Seat,
-        grown: &[InstanceId],
-    ) {
+    fn fire_ally_growth_recruit(&self, state: &mut GameState, seat: Seat, grown: &[InstanceId]) {
         if grown.is_empty() {
             return;
         }
@@ -1259,7 +1246,7 @@ impl Engine {
     ///
     /// `position` 为 `None` 时追加到最右侧；`charge_pool` 为真且池中有份数时扣 1。
     pub(crate) fn summon_recruit(
-        &mut self,
+        &self,
         state: &mut GameState,
         seat: Seat,
         card_id: &str,
@@ -1285,7 +1272,7 @@ impl Engine {
 
     /// 召唤后触发同一棋盘上其他随从的 `OnAllySummon`。
     pub(crate) fn fire_ally_summon_recruit(
-        &mut self,
+        &self,
         state: &mut GameState,
         seat: Seat,
         summoned: InstanceId,
@@ -1322,7 +1309,7 @@ impl Engine {
     /// 金色随从复制的仍是金色，卡面基础值同样 ×2。
     /// 复制品落地后与购买、发现、获得一致立即做三连判定（核心规则 §6.1、§6.10）。
     fn apply_recruit_copy(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         targets: &[InstanceId],
@@ -1369,7 +1356,6 @@ impl Engine {
                         let id = state.next_instance_id;
                         state.next_instance_id = id.saturating_add(1);
                         copy.instance_id = id;
-                        copy.sources.clear();
                         player.hand.push(HandCard::Minion(copy));
                     }
                 }
@@ -1378,7 +1364,6 @@ impl Engine {
                         let id = state.next_instance_id;
                         state.next_instance_id = id.saturating_add(1);
                         copy.instance_id = id;
-                        copy.sources.clear();
                         player.board.push(copy);
                     }
                 }
@@ -1390,8 +1375,8 @@ impl Engine {
 
     /// 按复制口径生成新实例：`full` 时整体克隆来源，否则按卡面重建。
     ///
-    /// 两种口径都给副本分配新的实例编号并清空来源记录；战场临时属性层
-    /// （`turn`、`aura`）不随副本离开战场。
+    /// 两种口径都给副本分配新的实例编号；战场临时属性层（`turn`、`aura`）
+    /// 不随副本离开战场。
     fn copy_of_catalog(&self, source: &MinionInstance, full: bool) -> MinionInstance {
         let mut copy = if full {
             source.clone()
@@ -1409,19 +1394,13 @@ impl Engine {
         copy.stats.health.set_aura(0);
         copy.attacks_left = 0;
         copy.cannot_attack = false;
-        copy.sources.clear();
         // 副本是新的入场，延迟战吼不继承来源的结算标记。
         copy.delayed_battlecry_used = false;
         copy
     }
 
     /// 回合开始传染致死：结算亡语（不含播种技能本身）。
-    pub(crate) fn fire_death_recruit(
-        &mut self,
-        state: &mut GameState,
-        card_id: &str,
-        ctx: &EffectCtx,
-    ) {
+    pub(crate) fn fire_death_recruit(&self, state: &mut GameState, card_id: &str, ctx: &EffectCtx) {
         let effects = self.recruit_effects_filtered(card_id, Trigger::OnDeath, Some(SOW_KEYWORD));
         let passes = if ctx.golden { 2 } else { 1 };
         for _ in 0..passes {
@@ -2364,7 +2343,6 @@ impl Engine {
                         break;
                     }
                     copy.instance_id = field.new_instance_id();
-                    copy.sources.clear();
                     let _ = field.append(&self.catalog, side, copy);
                 }
             }

@@ -118,7 +118,7 @@ fn aura_buffs_all_friendly_machines_except_self_if_other() {
 
 #[test]
 fn aura_recomputes_when_source_leaves() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     // 固氮作物：你的植物随从获得 +1/+1（含自身）。
     place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
@@ -215,7 +215,7 @@ fn same_keyword_from_two_sources_applies_once() {
 
 #[test]
 fn conditional_aura_requires_condition() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     // 燧石矛兵：友方人类 >= 2 时自身获得 +1 攻击力。
     place(&engine.catalog, &mut state, 0, 1, "suishimaobing");
 
@@ -233,7 +233,7 @@ fn conditional_aura_requires_condition() {
 
 #[test]
 fn aura_does_not_stack_self() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     // 亚里士多德：你的随从获得 +0/+1（含自身），只应生效一次。
     place(&engine.catalog, &mut state, 0, 1, "aristotle");
 
@@ -245,7 +245,7 @@ fn aura_does_not_stack_self() {
 
 #[test]
 fn aura_never_crosses_seats() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 1, 2, "juzi");
 
@@ -264,7 +264,7 @@ fn aura_never_crosses_seats() {
 
 #[test]
 fn aura_folds_into_combat_snapshot_only() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     // 达尔文（英雄）：你的生物随从获得 +1/+1。
     state.players[0].hero = Some("darwin".to_string());
     place(&engine.catalog, &mut state, 0, 1, "baiyi");
@@ -318,7 +318,7 @@ fn hero_aura_reads_hero_pool() {
         .expect("达尔文随从卡应存在")
         .skills
         .retain(|skill| skill != "aura-biology-plus-1-plus-1");
-    let (mut engine, mut state) = common::setup_with_catalog(catalog, 23);
+    let (engine, mut state) = common::setup_with_catalog(catalog, 23);
     state.players[0].hero = Some("darwin".to_string());
     place(&engine.catalog, &mut state, 0, 1, "baiyi");
 
@@ -333,7 +333,7 @@ fn hero_aura_reads_hero_pool() {
 
 #[test]
 fn recompute_is_idempotent() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
 
@@ -350,7 +350,7 @@ fn recompute_is_idempotent() {
 
 #[test]
 fn apply_recomputes_auras() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     state.players[0].hero = Some("darwin".to_string());
     place(&engine.catalog, &mut state, 0, 1, "baiyi");
 
@@ -384,7 +384,7 @@ fn state_hash_includes_auras() {
 
 #[test]
 fn ghost_fight_does_not_leak_auras_into_stored_state() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
     place(&engine.catalog, &mut state, 3, 3, "juzi");

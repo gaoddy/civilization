@@ -83,7 +83,6 @@ TRIGGER_JSON = {
     "OnAllySummon": "on_ally_summon",
     "OnAllyGrowth": "on_ally_growth",
     "OnAllyEvolve": "on_ally_evolve",
-    "OnCombatEnd": "on_combat_end",
     "Aura": "aura",
     "ConditionalAura": "conditional_aura",
 }
@@ -194,7 +193,7 @@ def _json_keyword(value, params):
 
 
 I32_MIN, I32_MAX = -(2**31), 2**31 - 1
-INTEGER_KEYS = ("times", "count", "amount", "attack", "health", "value", "extra", "choose",
+INTEGER_KEYS = ("times", "count", "amount", "attack", "health", "value", "choose",
                 "per_attack", "per_health", "max_count", "threshold")
 IDENTIFIER_KEYS = ("token", "card", "pool", "era")
 
@@ -293,7 +292,6 @@ def _json_params(params):
             "attack",
             "health",
             "value",
-            "extra",
             "choose",
             "perAttack",
             "perHealth",

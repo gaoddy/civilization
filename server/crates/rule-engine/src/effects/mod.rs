@@ -42,7 +42,6 @@ pub enum Trigger {
     OnAllySummon,
     OnAllyGrowth,
     OnAllyEvolve,
-    OnCombatEnd,
     Aura,
     ConditionalAura,
 }
@@ -223,8 +222,8 @@ pub struct Condition {
 pub struct TimesIf {
     /// 筛选键，取值集合与 [`Filter`] 一致。
     pub key: String,
-    /// 筛选值；当前语法恒为 `Some`。
-    pub value: Option<String>,
+    /// 筛选值；语法要求必须带值。
+    pub value: String,
     pub times: i32,
 }
 
@@ -246,7 +245,6 @@ pub struct Params {
     /// 引爆 / 转化 / 潜伏的层数阈值。
     pub threshold: Option<i32>,
     pub value: Option<i32>,
-    pub extra: Option<i32>,
     pub duration: Option<Duration>,
     pub can_kill: Option<bool>,
     pub health_only: Option<bool>,

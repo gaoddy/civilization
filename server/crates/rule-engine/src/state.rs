@@ -204,8 +204,6 @@ pub struct MinionInstance {
     pub delayed_battlecry_used: bool,
     pub attacks_left: u8,
     pub cannot_attack: bool,
-    /// 三连合成时被合并的三张实例编号（升序）；非三连合成恒为空。
-    pub sources: Vec<InstanceId>,
 }
 
 impl MinionInstance {
@@ -229,7 +227,6 @@ impl MinionInstance {
             delayed_battlecry_used: false,
             attacks_left: 0,
             cannot_attack: false,
-            sources: Vec::new(),
         }
     }
 
@@ -334,7 +331,6 @@ pub struct PlayerState {
     pub hp: i32,
     pub gold: u8,
     pub era: Era,
-    pub turns_in_era: u8,
     pub shop: Vec<Option<ShopSlot>>,
     pub board: Vec<MinionInstance>,
     pub hand: Vec<HandCard>,

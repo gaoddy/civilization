@@ -33,12 +33,7 @@ impl Engine {
     /// 调用时机是「落到战场之后、结算 `OnPlay` 战吼之前」（关键词机制 §2.2）；
     /// 多张同名进化副本同时入场时只登记一个待选：非金色选一次，金色连续选两次。
     /// 进化不推进随机流。
-    pub(crate) fn register_evolve(
-        &mut self,
-        state: &mut GameState,
-        seat: Seat,
-        source: InstanceId,
-    ) {
+    pub(crate) fn register_evolve(&self, state: &mut GameState, seat: Seat, source: InstanceId) {
         let Some(player) = state.players.get(usize::from(seat)) else {
             return;
         };
@@ -75,7 +70,7 @@ impl Engine {
     /// - `Ok(())`：选择已结算（或来源已离场，待选被丢弃）。
     /// - `Err(())`：下标越界，状态不变。
     pub(crate) fn resolve_evolve_choice(
-        &mut self,
+        &self,
         state: &mut GameState,
         index: usize,
         choice: u8,
@@ -126,7 +121,7 @@ impl Engine {
     /// 未登记的情形（没有进化、来源已离场或未找到）在这里按「未发生进化」
     /// 处理，即不触发——`OnAllyEvolve` 不再是入场副作用，而是选择结果的副作用。
     pub(crate) fn fire_evolve_after_enter(
-        &mut self,
+        &self,
         state: &mut GameState,
         seat: Seat,
         entered: InstanceId,
@@ -152,7 +147,7 @@ impl Engine {
     /// 金色「触发两次」照常生效。
     /// `event_target` 为进化来源。
     pub(crate) fn fire_ally_evolve_recruit(
-        &mut self,
+        &self,
         state: &mut GameState,
         seat: Seat,
         evolved: InstanceId,

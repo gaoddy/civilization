@@ -18,7 +18,7 @@ use rule_engine::view::{
 };
 
 fn setup() -> (Engine, GameState) {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
     engine
         .start_game(&mut state, &heroes())
         .expect("开局应成功");

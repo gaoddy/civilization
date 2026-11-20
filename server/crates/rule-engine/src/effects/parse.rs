@@ -23,7 +23,6 @@ const TRIGGERS: &[(&str, Trigger)] = &[
     ("OnAllySummon", Trigger::OnAllySummon),
     ("OnAllyGrowth", Trigger::OnAllyGrowth),
     ("OnAllyEvolve", Trigger::OnAllyEvolve),
-    ("OnCombatEnd", Trigger::OnCombatEnd),
     ("Aura", Trigger::Aura),
     ("ConditionalAura", Trigger::ConditionalAura),
 ];
@@ -269,7 +268,6 @@ fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> R
         "maxCount" => params.max_count = Some(parse_i32(key, value, chunk)?),
         "threshold" => params.threshold = Some(parse_i32(key, value, chunk)?),
         "value" => params.value = Some(parse_i32(key, value, chunk)?),
-        "extra" => params.extra = Some(parse_i32(key, value, chunk)?),
         "duration" => {
             params.duration = Some(match value {
                 "permanent" => Duration::Permanent,
@@ -507,10 +505,10 @@ fn parse_times_if(value: &str, chunk: &str) -> Result<TimesIf, String> {
     let parts: Vec<&str> = value.split(':').map(str::trim).collect();
     let (key, filter_value, count) = match parts.as_slice() {
         // `playstyle:mammal:2`：键、值、次数。
-        [key, filter_value, count] => (key.to_string(), Some(filter_value.to_string()), *count),
+        [key, filter_value, count] => (key.to_string(), filter_value.to_string(), *count),
         _ => return Err(invalid()),
     };
-    if key.is_empty() || filter_value.as_deref() == Some("") || !is_digits(count) {
+    if key.is_empty() || filter_value.is_empty() || !is_digits(count) {
         return Err(invalid());
     }
     Ok(TimesIf {

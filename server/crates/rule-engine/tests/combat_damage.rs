@@ -328,7 +328,7 @@ fn combat_write_back_restores_full_health() {
     );
     add_card(&mut catalog, "weakling", 0, 1, &[]);
 
-    let (mut engine, mut state) = Engine::new(catalog, [29u8; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(catalog, [29u8; 32], test_playstyles());
     state.phase = Phase::Combat;
     state.turn = 2;
     state.first_seat = 0;
@@ -472,7 +472,7 @@ fn armor_reduces_damage_and_does_not_block_contagion_tick() {
 
     // 回合开始的传染掉血直接扣当前生命，不经过 `apply_damage` 的减伤。
     add_card(&mut catalog, "sick", 0, 10, &["armor 1"]);
-    let (mut engine, mut state) = Engine::new(catalog, [19u8; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(catalog, [19u8; 32], test_playstyles());
     state.phase = Phase::Recruit;
     state.turn = 1;
     state.players[0].hp = 30;

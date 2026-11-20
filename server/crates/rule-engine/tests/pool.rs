@@ -233,7 +233,7 @@ fn discover_candidates_exclude_unenabled_playstyle() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "on-mammal", vec![play("mammal")]);
     add_card(&mut catalog, "off-bird", vec![play("bird")]);
-    let (mut engine, mut state) = setup_with(catalog, ENABLED);
+    let (engine, mut state) = setup_with(catalog, ENABLED);
     state.pool.clear();
     state.pool.insert("on-mammal".to_string(), 20);
     state.pool.insert("off-bird".to_string(), 20);
@@ -252,7 +252,7 @@ fn shop_effects_exclude_unenabled_playstyle() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "off-bird", vec![play("bird")]);
     add_card(&mut catalog, "on-mammal", vec![play("mammal")]);
-    let (mut engine, mut state) = setup_with(catalog, ENABLED);
+    let (engine, mut state) = setup_with(catalog, ENABLED);
     state.pool.clear();
     state.pool.insert("off-bird".to_string(), 20);
     state.pool.insert("on-mammal".to_string(), 20);
@@ -372,7 +372,7 @@ fn targeted_effect_follows_enabled_playstyle_through_shop_roll() {
 fn multi_play_minion_discover_uses_play_association() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "on-mammal", vec![play("mammal")]);
-    let (mut engine, mut state) = setup_with(
+    let (engine, mut state) = setup_with(
         catalog,
         [
             Playstyle::Machine,
@@ -404,7 +404,7 @@ fn multi_play_minion_discover_uses_play_association() {
 
 #[test]
 fn taxon_filter_matches_ancestors() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     // adam-smith：hominidae(科) < primates(目) < mammalia(纲)。
     place(&engine.catalog, &mut state, 0, 1, "adam-smith");
 
@@ -452,7 +452,7 @@ fn prey_and_host_filters_match_ancestor_node() {
     catalog
         .cards
         .insert("hunting-card".to_string(), hunting_card);
-    let (mut engine, mut state) = setup_with(catalog, ENABLED);
+    let (engine, mut state) = setup_with(catalog, ENABLED);
     place(&engine.catalog, &mut state, 0, 1, "hunting-card");
 
     // artiodactyla(目) < mammalia(纲)。
@@ -492,7 +492,7 @@ fn prey_and_host_filters_match_ancestor_node() {
 
 #[test]
 fn play_and_playstyle_filters_match_any_play_category() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "nanobot"); // play:machine, automation
 
     engine.apply_op(
@@ -514,7 +514,7 @@ fn play_and_playstyle_filters_match_any_play_category() {
 #[test]
 fn multi_play_minion_with_play_machine_matches_any_machine_filter() {
     // agi 同时带 play:mammal 与 play:machine；两条玩法筛选都应命中它。
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "agi");
 
     engine.apply_op(
@@ -539,7 +539,7 @@ fn multi_play_minion_with_play_machine_matches_any_machine_filter() {
 
 #[test]
 fn multi_play_minion_matches_each_play_filter_independently() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     // aolinpike-jidian 是效果牌，不能上棋盘；agi 同时带 mammal/machine。
     place(&engine.catalog, &mut state, 0, 1, "agi");
     place(&engine.catalog, &mut state, 0, 2, "clownfish"); // play:fish
@@ -639,7 +639,7 @@ fn token_uses_own_playstyle_and_taxon_defaults() {
 
 #[test]
 fn missing_card_facts_are_skipped() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "adam-smith");
     engine.apply_op(
         &mut state,

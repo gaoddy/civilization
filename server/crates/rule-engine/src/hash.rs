@@ -281,7 +281,6 @@ fn hash_player(hasher: &mut Hasher, player: &PlayerState) {
     hasher.i32(player.hp);
     hasher.u8(player.gold);
     hasher.u8(era_tag(player.era));
-    hasher.u8(player.turns_in_era);
 
     hasher.len(player.shop.len());
     for slot in &player.shop {

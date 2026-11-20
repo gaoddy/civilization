@@ -38,7 +38,7 @@ impl Engine {
                 seat,
                 card_id,
                 golden_instance_id: golden.instance_id,
-                sources: golden.sources.clone(),
+                sources: copies.clone(),
             });
         }
         events
@@ -78,8 +78,6 @@ impl Engine {
         let hand_full = player.hand.len() >= hand_slots;
         upgrade_to_golden(&self.catalog, &mut golden);
         golden.instance_id = new_id;
-        golden.sources = copies.to_vec();
-        golden.sources.sort_unstable();
 
         if hand_full {
             // 兜底：金色留在基底原位置，不进手牌，因此没有「从手牌打出」这一步。
@@ -129,7 +127,7 @@ impl Engine {
     /// - 抽取时立即推进 [`Stream::Discover`] 并写入候选，重放结果确定；
     ///   被选择时才扣 1 份共享池（`choose_discover`）。
     pub(crate) fn apply_discover(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,

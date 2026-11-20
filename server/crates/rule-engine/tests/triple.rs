@@ -47,7 +47,7 @@ fn hand_minions(state: &GameState, seat: Seat) -> Vec<&MinionInstance> {
 
 #[test]
 fn three_same_minions_become_golden_in_hand() {
-    let (mut engine, mut state) = turn_started(1);
+    let (engine, mut state) = turn_started(1);
     let card_id = minion_id(1);
     state.players[0].gold = 30;
 
@@ -85,7 +85,6 @@ fn three_same_minions_become_golden_in_hand() {
     assert!(golden.golden);
     assert_eq!(golden.card_id, card_id);
     assert_eq!(golden.instance_id, golden_id, "金色是新实例");
-    assert_eq!(golden.sources, vec![10, 11, shop_instance]);
     assert_eq!(golden.stats.attack.growth, 7, "保留最早副本的成长");
     assert_eq!(golden.stats.health.growth, 7);
     let base_card = test_catalog()
@@ -147,7 +146,7 @@ fn base_is_the_earliest_instance_by_id() {
 
 #[test]
 fn golden_sells_for_three_and_cannot_triple_again() {
-    let (mut engine, mut state) = turn_started(3);
+    let (engine, mut state) = turn_started(3);
     let card_id = minion_id(2);
     state.players[0].gold = 0;
     state.players[0].board = vec![
@@ -215,7 +214,7 @@ fn triple_only_looks_at_board_and_hand() {
 
 #[test]
 fn discovered_third_copy_forms_triple_in_hand() {
-    let (mut engine, mut state) = turn_started(5);
+    let (engine, mut state) = turn_started(5);
     let card_id = minion_id(1);
     state.players[0].hand = vec![hand_card(40, &card_id), hand_card(41, &card_id)];
     state.pending.push_back(PendingChoice::Discover {
@@ -382,7 +381,7 @@ fn hand_triple_with_full_hand_still_goes_to_hand() {
 
 #[test]
 fn reward_is_granted_only_when_golden_is_played() {
-    let (mut engine, mut state) = turn_started(8);
+    let (engine, mut state) = turn_started(8);
     let card_id = minion_id(1);
     state.players[0].board = vec![
         minion(&engine.catalog, 10, &card_id),
@@ -426,7 +425,7 @@ fn reward_is_granted_only_when_golden_is_played() {
 
 #[test]
 fn reward_level_caps_at_six() {
-    let (mut engine, mut state) = turn_started(9);
+    let (engine, mut state) = turn_started(9);
     let card_id = minion_id(7);
     state.players[0].board = vec![
         minion(&engine.catalog, 10, &card_id),
@@ -472,7 +471,7 @@ fn reward_level_caps_at_six() {
 
 #[test]
 fn playing_reward_grants_next_level_minion() {
-    let (mut engine, mut state) = turn_started(10);
+    let (engine, mut state) = turn_started(10);
     let reward_id = state.next_instance_id;
     state.next_instance_id += 1;
     state.players[0].hand.push(HandCard::Effect {
@@ -511,7 +510,7 @@ fn playing_reward_grants_next_level_minion() {
 
 #[test]
 fn reward_card_without_candidates_is_consumed() {
-    let (mut engine, mut state) = turn_started(11);
+    let (engine, mut state) = turn_started(11);
     state.enabled_playstyles.clear();
     state.players[0].hand.push(HandCard::Effect {
         instance_id: 9_000,
@@ -538,7 +537,7 @@ fn reward_card_without_candidates_is_consumed() {
 
 #[test]
 fn reward_card_never_appears_in_shop_or_discover() {
-    let (mut engine, mut state) = turn_started(12);
+    let (engine, mut state) = turn_started(12);
     let catalog = test_catalog();
     let reward = catalog
         .cards
@@ -653,7 +652,7 @@ fn one_check_forms_multiple_triples() {
 
 #[test]
 fn choose_discover_out_of_range_rejects() {
-    let (mut engine, mut state) = turn_started(15);
+    let (engine, mut state) = turn_started(15);
     state.pending.push_back(PendingChoice::Discover {
         seat: 0,
         candidates: vec!["a".to_string(), "b".to_string()],
@@ -669,7 +668,7 @@ fn choose_discover_out_of_range_rejects() {
 
 #[test]
 fn choose_discover_consumes_pending_and_adds_to_hand() {
-    let (mut engine, mut state) = turn_started(16);
+    let (engine, mut state) = turn_started(16);
     let chosen = minion_id(2);
     let other = minion_id(3);
     let before_pool = pool_count(&state, &chosen);
@@ -703,7 +702,7 @@ fn choose_discover_consumes_pending_and_adds_to_hand() {
 
 #[test]
 fn choose_discover_with_full_hand_rejects_without_mutating() {
-    let (mut engine, mut state) = turn_started(17);
+    let (engine, mut state) = turn_started(17);
     let chosen = minion_id(2);
     state.players[0].hand = (0..engine.catalog.config.hand_slots)
         .map(|index| hand_card(2_000 + index as InstanceId, &minion_id(1)))
@@ -724,7 +723,7 @@ fn choose_discover_with_full_hand_rejects_without_mutating() {
 
 #[test]
 fn multiple_pending_choices_consume_frontmost_for_seat() {
-    let (mut engine, mut state) = turn_started(18);
+    let (engine, mut state) = turn_started(18);
     let first = minion_id(2);
     let second = minion_id(3);
     let third = minion_id(4);
@@ -767,7 +766,7 @@ fn multiple_pending_choices_consume_frontmost_for_seat() {
 
 #[test]
 fn golden_played_from_hand_keeps_instance_and_state() {
-    let (mut engine, mut state) = turn_started(19);
+    let (engine, mut state) = turn_started(19);
     let card_id = minion_id(2);
     let mut base = minion(&engine.catalog, 10, &card_id);
     base.stats.health.add_growth(4);
@@ -797,12 +796,11 @@ fn golden_played_from_hand_keeps_instance_and_state() {
     assert_eq!(played.stats.health.growth, 4, "成长随金色入场");
     assert_eq!(played.contagion, 1, "传染随金色入场");
     assert!(played.golden);
-    assert_eq!(played.sources, vec![10, 11, 12], "来源记录随金色入场保留");
 }
 
 #[test]
 fn copy_hand_minion_forming_third_copy_triples_immediately() {
-    let (mut engine, mut state) = turn_started(7);
+    let (engine, mut state) = turn_started(7);
     let card_id = minion_id(1);
     state.players[0]
         .board
@@ -846,7 +844,7 @@ fn copy_hand_minion_forming_third_copy_triples_immediately() {
 
 #[test]
 fn copy_board_minion_forming_third_copy_triples_immediately() {
-    let (mut engine, mut state) = turn_started(8);
+    let (engine, mut state) = turn_started(8);
     let card_id = minion_id(1);
     state.players[0]
         .board

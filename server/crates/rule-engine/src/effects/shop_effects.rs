@@ -24,7 +24,7 @@ impl Engine {
     /// `free = true` 不扣金币、不消耗本回合免费刷新额度；无论免费与否，
     /// 都通过与手动刷新相同的每回合闸门触发 `OnFirstRefresh`。
     pub(crate) fn apply_refresh_shop(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -53,7 +53,7 @@ impl Engine {
     /// 每个槽位放入卡牌目录顺序中第一张合格随从，并从共享池扣 1 张；
     /// 达到 7 槽或没有合格卡牌时停止追加。
     pub(crate) fn apply_add_shop_slot(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -104,7 +104,7 @@ impl Engine {
     /// - 不扣共享池、不登记发现待选；手牌满或没有候选时不发放，效果牌照常消耗。
     /// - 发放后立即执行三连判定。
     pub(crate) fn apply_grant_minion(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -165,7 +165,7 @@ impl Engine {
     ///
     /// 获得后与购买/发现一致立即执行三连判定。
     pub(crate) fn apply_gain_minion(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,

@@ -244,12 +244,12 @@ m0-determinism:
 	cd server && cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash
 
 m0-batch:
-	cd server && cargo run -q -p sim -- batch --games 1000 --seed 1 --out ../output/m0-batch.json
+	cd server && cargo run -q --release -p sim -- batch --games 1000 --seed 1 --out ../output/m0-batch.json
 
 M0_GAMES ?= 1000
 M0_BATCH_LOG ?= ../output/m0-batch.json
 
 m0-report:
 	@mkdir -p ../output
-	cd server && cargo run -q -p sim -- check --log $(M0_BATCH_LOG) --expect-games $(M0_GAMES)
-	cd server && cargo run -q -p sim -- report --log $(M0_BATCH_LOG) 2>&1 | tee ../output/m0-report.log
+	cd server && cargo run -q --release -p sim -- check --log $(M0_BATCH_LOG) --expect-games $(M0_GAMES)
+	cd server && cargo run -q --release -p sim -- report --log $(M0_BATCH_LOG) 2>&1 | tee ../output/m0-report.log
