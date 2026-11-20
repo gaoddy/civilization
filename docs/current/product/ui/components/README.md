@@ -13,7 +13,8 @@
 | 区块标题 | `UI.section_title` | 本文件 |
 | 空态提示 | `UI.empty_hint` | 本文件 |
 | 卡牌图鉴 | `CardGallery`（`client/scenes/card_gallery.gd`） | [card-gallery.md](card-gallery.md) |
-| 图鉴章节栏 | `GalleryChapterBar` | [gallery-chapter-bar.md](gallery-chapter-bar.md) |
+| 图鉴视图切换 | `GalleryModeBar` | [gallery-mode-bar.md](gallery-mode-bar.md) |
+| 图鉴顶部筛选栏 | `GalleryFilterBar` | [gallery-filter-bar.md](gallery-filter-bar.md) |
 | 图鉴分类目录 | `GalleryToc` | [gallery-toc.md](gallery-toc.md) |
 | 图鉴卡面网格 | `GalleryGrid` | [gallery-grid.md](gallery-grid.md) |
 | 图鉴卡面单元 | `GalleryCardTile` | [gallery-card-tile.md](gallery-card-tile.md) |
