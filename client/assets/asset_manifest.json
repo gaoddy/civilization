@@ -200,6 +200,236 @@
         "avatar": "22/30/38",
         "card_face": "112x146"
       }
+    },
+    "marie-curie": {
+      "portrait": "res://assets/characters/portraits/ch_marie-curie_full.png",
+      "avatar": "res://assets/characters/avatars/ch_marie-curie_ava.png",
+      "card_face": "res://assets/cards/faces/card_marie-curie_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "adam-smith": {
+      "portrait": "res://assets/characters/portraits/ch_adam-smith_full.png",
+      "avatar": "res://assets/characters/avatars/ch_adam-smith_ava.png",
+      "card_face": "res://assets/cards/faces/card_adam-smith_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "beethoven": {
+      "portrait": "res://assets/characters/portraits/ch_beethoven_full.png",
+      "avatar": "res://assets/characters/avatars/ch_beethoven_ava.png",
+      "card_face": "res://assets/cards/faces/card_beethoven_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "darwin": {
+      "portrait": "res://assets/characters/portraits/ch_darwin_full.png",
+      "avatar": "res://assets/characters/avatars/ch_darwin_ava.png",
+      "card_face": "res://assets/cards/faces/card_darwin_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "davinci": {
+      "portrait": "res://assets/characters/portraits/ch_davinci_full.png",
+      "avatar": "res://assets/characters/avatars/ch_davinci_ava.png",
+      "card_face": "res://assets/cards/faces/card_davinci_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "faraday": {
+      "portrait": "res://assets/characters/portraits/ch_faraday_full.png",
+      "avatar": "res://assets/characters/avatars/ch_faraday_ava.png",
+      "card_face": "res://assets/cards/faces/card_faraday_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "fleming": {
+      "portrait": "res://assets/characters/portraits/ch_fleming_full.png",
+      "avatar": "res://assets/characters/avatars/ch_fleming_ava.png",
+      "card_face": "res://assets/cards/faces/card_fleming_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "galileo": {
+      "portrait": "res://assets/characters/portraits/ch_galileo_full.png",
+      "avatar": "res://assets/characters/avatars/ch_galileo_ava.png",
+      "card_face": "res://assets/cards/faces/card_galileo_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "gauss": {
+      "portrait": "res://assets/characters/portraits/ch_gauss_full.png",
+      "avatar": "res://assets/characters/avatars/ch_gauss_ava.png",
+      "card_face": "res://assets/cards/faces/card_gauss_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "lamarck": {
+      "portrait": "res://assets/characters/portraits/ch_lamarck_full.png",
+      "avatar": "res://assets/characters/avatars/ch_lamarck_ava.png",
+      "card_face": "res://assets/cards/faces/card_lamarck_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "lavoisier": {
+      "portrait": "res://assets/characters/portraits/ch_lavoisier_full.png",
+      "avatar": "res://assets/characters/avatars/ch_lavoisier_ava.png",
+      "card_face": "res://assets/cards/faces/card_lavoisier_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "linnaeus": {
+      "portrait": "res://assets/characters/portraits/ch_linnaeus_full.png",
+      "avatar": "res://assets/characters/avatars/ch_linnaeus_ava.png",
+      "card_face": "res://assets/cards/faces/card_linnaeus_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "luban": {
+      "portrait": "res://assets/characters/portraits/ch_luban_full.png",
+      "avatar": "res://assets/characters/avatars/ch_luban_ava.png",
+      "card_face": "res://assets/cards/faces/card_luban_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "luxun": {
+      "portrait": "res://assets/characters/portraits/ch_luxun_full.png",
+      "avatar": "res://assets/characters/avatars/ch_luxun_ava.png",
+      "card_face": "res://assets/cards/faces/card_luxun_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "mendel": {
+      "portrait": "res://assets/characters/portraits/ch_mendel_full.png",
+      "avatar": "res://assets/characters/avatars/ch_mendel_ava.png",
+      "card_face": "res://assets/cards/faces/card_mendel_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "morgan": {
+      "portrait": "res://assets/characters/portraits/ch_morgan_full.png",
+      "avatar": "res://assets/characters/avatars/ch_morgan_ava.png",
+      "card_face": "res://assets/cards/faces/card_morgan_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "quyuan": {
+      "portrait": "res://assets/characters/portraits/ch_quyuan_full.png",
+      "avatar": "res://assets/characters/avatars/ch_quyuan_ava.png",
+      "card_face": "res://assets/cards/faces/card_quyuan_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "rutherford": {
+      "portrait": "res://assets/characters/portraits/ch_rutherford_full.png",
+      "avatar": "res://assets/characters/avatars/ch_rutherford_ava.png",
+      "card_face": "res://assets/cards/faces/card_rutherford_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "shenkuo": {
+      "portrait": "res://assets/characters/portraits/ch_shenkuo_full.png",
+      "avatar": "res://assets/characters/avatars/ch_shenkuo_ava.png",
+      "card_face": "res://assets/cards/faces/card_shenkuo_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "simaqian": {
+      "portrait": "res://assets/characters/portraits/ch_simaqian_full.png",
+      "avatar": "res://assets/characters/avatars/ch_simaqian_ava.png",
+      "card_face": "res://assets/cards/faces/card_simaqian_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "tesla": {
+      "portrait": "res://assets/characters/portraits/ch_tesla_full.png",
+      "avatar": "res://assets/characters/avatars/ch_tesla_ava.png",
+      "card_face": "res://assets/cards/faces/card_tesla_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "wright-brothers": {
+      "portrait": "res://assets/characters/portraits/ch_wright-brothers_full.png",
+      "avatar": "res://assets/characters/avatars/ch_wright-brothers_ava.png",
+      "card_face": "res://assets/cards/faces/card_wright-brothers_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
+    },
+    "zhangzhongjing": {
+      "portrait": "res://assets/characters/portraits/ch_zhangzhongjing_full.png",
+      "avatar": "res://assets/characters/avatars/ch_zhangzhongjing_ava.png",
+      "card_face": "res://assets/cards/faces/card_zhangzhongjing_face.png",
+      "display": {
+        "portrait": "200x280",
+        "avatar": "22/30/38",
+        "card_face": "112x146"
+      }
     }
   }
 }
