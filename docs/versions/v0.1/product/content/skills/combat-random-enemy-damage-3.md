@@ -1,7 +1,6 @@
 ---
 id: combat-random-enemy-damage-3
-text: 战斗开始时对随机一个敌方随从造成 3 点伤害
-effects: OnCombatStart|DealDamage|enemy:random|amount=3
+template: combatstart-damage-random-nocomma(amount=3)
 ---
 
 # combat-random-enemy-damage-3
@@ -13,6 +12,7 @@ effects: OnCombatStart|DealDamage|enemy:random|amount=3
 | id | combat-random-enemy-damage-3 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | combatstart-damage-random-nocomma |
 
 ## 效果
 

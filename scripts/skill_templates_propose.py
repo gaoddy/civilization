@@ -107,20 +107,30 @@ def _match_segment(template, segment):
     actual_map = dict(actual_params)
     if len(actual_map) != len(actual_params):
         return None
-    # 引擎把关键词层数拆在 value 里；模板按 `keyword` 参数携带层数。
-    if "keyword" in actual_map and "value" in actual_map:
-        actual_map["keyword"] = f"{actual_map.pop('keyword')} {actual_map.pop('value')}"
     pattern_params = _pairs(template.params or "")
     allowed = {key for key, _ in pattern_params}
-    if set(actual_map) - allowed:
-        return None
-    for key, pattern_value in pattern_params:
-        if key in actual_map:
-            if not _match_value(pattern_value, actual_map[key], values):
-                return None
-        elif _PLACEHOLDER.fullmatch(pattern_value) is None:
-            return None
-    return values
+    candidates = [actual_map]
+    # 引擎把关键词层数拆在 value 里；若模板按 keyword 参数携带层数，再试合并形态。
+    if "keyword" in actual_map and "value" in actual_map:
+        merged = {key: value for key, value in actual_map.items() if key != "value"}
+        merged["keyword"] = f"{actual_map['keyword']} {actual_map['value']}"
+        candidates.append(merged)
+    for candidate in candidates:
+        if set(candidate) - allowed:
+            continue
+        trial = dict(values)
+        matched = True
+        for key, pattern_value in pattern_params:
+            if key in candidate:
+                if not _match_value(pattern_value, candidate[key], trial):
+                    matched = False
+                    break
+            elif _PLACEHOLDER.fullmatch(pattern_value) is None:
+                matched = False
+                break
+        if matched:
+            return trial
+    return None
 
 
 def _call_value(template, values):

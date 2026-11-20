@@ -1,7 +1,6 @@
 ---
 id: mimic-3
-text: 拟态：战斗开始时，复制一个敌方随从的当前攻击力、生命值与关键词直到本回合结束
-effects: OnCombatStart|Mimic|enemy:single|duration=combat
+template: combatstart-mimic-keywords
 ---
 
 # mimic-3
@@ -13,6 +12,7 @@ effects: OnCombatStart|Mimic|enemy:single|duration=combat
 | id | mimic-3 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | combatstart-mimic-keywords |
 
 ## 效果
 
