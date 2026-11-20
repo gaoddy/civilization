@@ -12,12 +12,39 @@ static func initial(card_id: String) -> String:
 
 
 ## 卡面类型行：卡面宽度有限，只放玩法；完整类型与分类放在详情面板。
+## 多条玩法按固定玩法顺序排列，用「、」分隔。
 static func playstyle_text(entry: Dictionary) -> String:
-    var playstyle := str(entry.get("playstyle", ""))
-    var text := UI.enum_text("playstyle", playstyle) if playstyle != "" else ""
-    if text != "" and text != playstyle:
-        return text
-    return TranslationServer.translate("ui.game.detail.undetermined")
+    var names := PackedStringArray()
+    for playstyle in CardDB.play_categories(entry):
+        var name := CardDB.playstyle_name(playstyle)
+        if name != "":
+            names.append(name)
+    if names.is_empty():
+        return TranslationServer.translate("ui.game.detail.undetermined")
+    return "、".join(names)
+
+
+## 详情「关联分类」：只取捕食与寄生分类，按「捕食：…；寄生：…」聚合。
+## 两类都为空时返回空串，由调用方省略该行。
+static func association_text(entry: Dictionary) -> String:
+    var parts := PackedStringArray()
+    var prey := _taxon_names(entry, "prey")
+    var host := _taxon_names(entry, "host")
+    if not prey.is_empty():
+        parts.append("%s：%s" % [TranslationServer.translate("ui.game.detail.prey"), "、".join(prey)])
+    if not host.is_empty():
+        parts.append("%s：%s" % [TranslationServer.translate("ui.game.detail.host"), "、".join(host)])
+    return "；".join(parts)
+
+
+## 某一关联分类的展示名列表；空值与非字符串条目跳过。
+static func _taxon_names(entry: Dictionary, kind: String) -> PackedStringArray:
+    var names := PackedStringArray()
+    for value in CardDB.category_values(entry, kind):
+        var name := CardDB.taxon_name(value)
+        if name != "":
+            names.append(name)
+    return names
 
 
 ## 详情类型行：只显示卡牌类别，玩法与分类由详情单独成行。

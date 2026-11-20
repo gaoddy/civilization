@@ -119,6 +119,46 @@ func skill_cost(id: String) -> int:
     return int(entry.get("cost", -1))
 
 
+## 技能展示信息：名称、文本、触发、费用与次数，供技能列表逐条渲染。
+## 不参与规则判定；缺失的数值字段返回 -1。
+func skill_info(skill_id: String) -> Dictionary:
+    var entry := skill(skill_id)
+    if entry.is_empty():
+        return {
+            "name": "", "text": "", "trigger": "", "trigger_label": "",
+            "cost": -1, "uses": -1, "is_active": false,
+        }
+    var trigger := ""
+    for effect in entry.get("effects", []):
+        if effect is Dictionary and str(effect.get("trigger", "")) != "":
+            trigger = str(effect.get("trigger", ""))
+            break
+    var trigger_label := ""
+    if trigger != "" or str(entry.get("keyword", "")) != "":
+        trigger_label = trigger_name(trigger)
+    var text_key := "skill.%s.text" % skill_id
+    var text := tr(text_key)
+    if text == text_key:
+        text = ""
+    return {
+        "name": skill_name(skill_id),
+        "text": text,
+        "trigger": trigger,
+        "trigger_label": trigger_label,
+        "cost": int(entry.get("cost")) if entry.get("cost") != null else -1,
+        "uses": int(entry.get("uses_per_turn")) if entry.get("uses_per_turn") != null else -1,
+        "is_active": trigger == "on_activate",
+    }
+
+
+## 触发类型标签：读 `ui.skill.trigger.<trigger>`；空触发视为关键词技能，
+## 文案键为 `ui.skill.trigger.keyword`。缺键返回空串，避免内部 id 泄露到界面。
+func trigger_name(trigger: String) -> String:
+    var key := "ui.skill.trigger.%s" % ("keyword" if trigger == "" else trigger)
+    var text := tr(key)
+    return "" if text == key else text
+
+
 ## 展示名：Token 取 `token.<id>.name`，其余取 `card.<id>.name`；缺键回退为实体 id。
 func display_name(id: String) -> String:
     var key := ("token.%s.name" if tokens.has(id) else "card.%s.name") % id
@@ -177,6 +217,49 @@ func playstyle_name(id: String) -> String:
     var key := "enum.playstyle.%s" % id
     var text := tr(key)
     return id if text == key else text
+
+
+## 玩法归属：读 `categories` 的 `play` 条目，按玩法顺序去重排列；
+## Token 没有 `categories` 时回退单值 `playstyle`。
+func play_categories(entry: Dictionary) -> Array[String]:
+    var values := category_values(entry, "play")
+    if values.is_empty():
+        var fallback := str(entry.get("playstyle", ""))
+        if fallback != "":
+            values.append(fallback)
+    var out: Array[String] = []
+    for id in playstyles:
+        var playstyle := str(id)
+        if values.has(playstyle) and not out.has(playstyle):
+            out.append(playstyle)
+    for playstyle in values:
+        if not out.has(playstyle):
+            out.append(playstyle)
+    return out
+
+
+## 主玩法：取第一条 `play:`，供取色与单值展示；Token 回退 `playstyle`。
+## 卡表缺失玩法时返回 `neutral`，与服务端 Token 哨兵一致。
+func primary_playstyle(entry: Dictionary) -> String:
+    var plays := play_categories(entry)
+    return plays[0] if not plays.is_empty() else "neutral"
+
+
+## 关联分类取值：`kind` 为 play / prey / host，保持数据顺序。
+func category_values(entry: Dictionary, kind: String) -> Array[String]:
+    var out: Array[String] = []
+    var categories: Variant = entry.get("categories", [])
+    if not (categories is Array):
+        return out
+    for item in categories:
+        if not (item is Dictionary):
+            continue
+        if str(item.get("kind", "")) != kind:
+            continue
+        var value := str(item.get("value", ""))
+        if value != "":
+            out.append(value)
+    return out
 
 
 ## 科学分类节点展示名；空 id 返回空串，缺键回退为 id。
