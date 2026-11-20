@@ -1,8 +1,7 @@
 ---
 id: keyword-divine-shield
 keyword: divine_shield
-text: 护盾：抵消一次伤害
-effects: []
+template: keyword-self(keyword=divine_shield)
 ---
 
 # keyword-divine-shield
@@ -14,6 +13,7 @@ effects: []
 | id | keyword-divine-shield |
 | 关键词 | 护盾 |
 | 确定性替换 | 不适用 |
+| 模板 | keyword-self |
 
 ## 效果
 

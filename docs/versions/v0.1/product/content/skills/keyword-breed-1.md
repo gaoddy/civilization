@@ -1,8 +1,7 @@
 ---
 id: keyword-breed-1
 keyword: breed 1
-text: 繁衍 1：回合开始时获得 +1 生命
-effects: []
+template: keyword-self(keyword=breed 1)
 ---
 
 # keyword-breed-1
@@ -14,6 +13,7 @@ effects: []
 | id | keyword-breed-1 |
 | 关键词 | 繁衍 1 |
 | 确定性替换 | 不适用 |
+| 模板 | keyword-self |
 
 ## 效果
 

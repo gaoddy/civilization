@@ -1,8 +1,7 @@
 ---
 id: keyword-stealth
 keyword: stealth
-text: 潜行：无法被单体攻击与单体效果选中，造成伤害后打破
-effects: []
+template: keyword-self(keyword=stealth)
 ---
 
 # keyword-stealth
@@ -14,6 +13,7 @@ effects: []
 | id | keyword-stealth |
 | 关键词 | 潜行 |
 | 确定性替换 | 不适用 |
+| 模板 | keyword-self |
 
 ## 效果
 

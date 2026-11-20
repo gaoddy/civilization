@@ -1,8 +1,7 @@
 ---
 id: keyword-taunt
 keyword: taunt
-text: 嘲讽
-effects: []
+template: keyword-self(keyword=taunt)
 ---
 
 # keyword-taunt
@@ -14,6 +13,7 @@ effects: []
 | id | keyword-taunt |
 | 关键词 | 嘲讽 |
 | 确定性替换 | 不适用 |
+| 模板 | keyword-self |
 
 ## 效果
 

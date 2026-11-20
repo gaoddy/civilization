@@ -1,8 +1,7 @@
 ---
 id: keyword-ignore-taunt
 keyword: ignore_taunt
-text: 无视嘲讽：攻击时无视敌方嘲讽
-effects: []
+template: keyword-self(keyword=ignore_taunt)
 ---
 
 # keyword-ignore-taunt
@@ -14,6 +13,7 @@ effects: []
 | id | keyword-ignore-taunt |
 | 关键词 | 无视嘲讽 |
 | 确定性替换 | 不适用 |
+| 模板 | keyword-self |
 
 ## 效果
 

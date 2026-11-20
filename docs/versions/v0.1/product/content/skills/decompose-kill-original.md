@@ -1,8 +1,7 @@
 ---
 id: decompose-kill-original
 keyword: decompose
-text: 分解：本随从击杀随从后，获得其原始生命值
-effects: OnKill|Decompose|self|basis=original,duration=permanent
+template: decompose-kill
 ---
 
 # decompose-kill-original
@@ -14,6 +13,7 @@ effects: OnKill|Decompose|self|basis=original,duration=permanent
 | id | decompose-kill-original |
 | 关键词 | 分解 |
 | 确定性替换 | 不适用 |
+| 模板 | decompose-kill |
 
 ## 效果
 

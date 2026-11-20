@@ -1,8 +1,7 @@
 ---
 id: keyword-windfury
 keyword: windfury
-text: 连击：每回合可攻击两次
-effects: []
+template: keyword-self(keyword=windfury)
 ---
 
 # keyword-windfury
@@ -14,6 +13,7 @@ effects: []
 | id | keyword-windfury |
 | 关键词 | 连击 |
 | 确定性替换 | 不适用 |
+| 模板 | keyword-self |
 
 ## 效果
 
