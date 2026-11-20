@@ -10,7 +10,6 @@ func _ready() -> void:
         CardDB.cards.keys(),
         tr("ui.gallery.title"),
         tr("ui.gallery.back_lobby"),
-        tr("ui.gallery.all_cards"),
     )
     UI.safe_area(self)
 

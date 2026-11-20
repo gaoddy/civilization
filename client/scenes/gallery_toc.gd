@@ -29,7 +29,6 @@ func set_state(
     selected_kind: String,
 ) -> void:
     UI.clear(self)
-    add_child(UI.section_title(tr("ui.gallery.toc_title")))
     var group := ButtonGroup.new()
     group.allow_unpress = false
     _add_item("", tr("ui.gallery.toc_all"), int(counts.get("", 0)), selected == "", group, 0)

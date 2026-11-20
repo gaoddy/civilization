@@ -363,7 +363,6 @@ func _open_gallery() -> void:
         CardPool.card_ids(GameStore.view.get("enabledFactions", [])),
         tr("ui.gallery.title_match"),
         tr("ui.gallery.back_match"),
-        tr("ui.gallery.match_pool"),
     )
     _gallery.visible = true
 
