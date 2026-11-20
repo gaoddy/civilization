@@ -1894,6 +1894,47 @@ fn target_pending_skipped_when_filtered_pool_empty() {
 }
 
 #[test]
+fn machine_filter_target_pool_includes_machine_source() {
+    let (mut engine, mut state) = turn_started(60);
+    // archimedes 自身带 play:machine；机械筛选应把来源自身计入目标池。
+    state.players[0].hand.push(HandCard::Minion(minion(
+        &engine.catalog,
+        9_000,
+        "archimedes",
+    )));
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("带机械筛选战吼的随从入场应成功");
+
+    let (instance_id, ..) =
+        target_pending(&state, 0).expect("来源自身带 play:machine，应产生目标待选");
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget {
+                target: board_target(instance_id),
+            },
+        )
+        .expect("来源自身进入机械筛选的目标池");
+
+    assert!(state.pending.is_empty(), "待选被消费");
+    // archimedes 是学者：成长只加生命。
+    assert_eq!(
+        state.players[0].board[0].stats.health.growth, 1,
+        "机械战吼命中自身"
+    );
+}
+
+#[test]
 fn target_pending_blocks_recruit_intents() {
     let (mut engine, mut state) = turn_started(55);
     set_shop(&mut state, 0, &[Some(minion_id(1))]);

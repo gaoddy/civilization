@@ -13,6 +13,70 @@ fn loads_all_committed_data() {
     assert_eq!(catalog.tokens.len(), 23);
 }
 
+/// 最小合法卡牌夹具；只替换 `taxon` 与 `categories`。
+fn card_json(taxon: &str, categories: &str) -> String {
+    format!(
+        r#"[{{"id":"x","card_type":"minion","taxon":"{taxon}","categories":{categories},"level":1,"skills":[],"is_scholar":false}}]"#
+    )
+}
+
+fn load_cards(cards: &str) -> Result<Catalog, rule_engine::error::CatalogError> {
+    Catalog::from_json(cards, "[]", "[]", "[]", CONFIG_JSON, TAXONOMY_JSON)
+}
+
+#[test]
+fn cards_reject_missing_play_category() {
+    let cards = card_json("hominidae", r#"[{"kind":"prey","value":"hominidae"}]"#);
+    let error = load_cards(&cards).expect_err("没有 play: 的卡必须拒绝加载");
+    assert!(error.to_string().contains("至少要有 1 条 play:"), "{error}");
+}
+
+#[test]
+fn cards_reject_neutral_play_category() {
+    let cards = card_json("hominidae", r#"[{"kind":"play","value":"neutral"}]"#);
+    let error = load_cards(&cards).expect_err("play:neutral 必须拒绝加载");
+    assert!(error.to_string().contains("不是可启用的玩法"), "{error}");
+}
+
+#[test]
+fn cards_reject_duplicate_categories() {
+    let cards = card_json(
+        "hominidae",
+        r#"[{"kind":"play","value":"mammal"},{"kind":"play","value":"mammal"}]"#,
+    );
+    let error = load_cards(&cards).expect_err("重复条目必须拒绝加载");
+    assert!(error.to_string().contains("关联分类条目重复"), "{error}");
+}
+
+#[test]
+fn cards_reject_prey_on_non_biological_taxon() {
+    let cards = card_json(
+        "automation",
+        r#"[{"kind":"play","value":"machine"},{"kind":"prey","value":"hominidae"}]"#,
+    );
+    let error = load_cards(&cards).expect_err("造物卡的 prey: 必须拒绝加载");
+    assert!(error.to_string().contains("只允许生物卡"), "{error}");
+}
+
+#[test]
+fn cards_reject_unknown_prey_node() {
+    let cards = card_json(
+        "hominidae",
+        r#"[{"kind":"play","value":"mammal"},{"kind":"prey","value":"no-such-node"}]"#,
+    );
+    let error = load_cards(&cards).expect_err("分类树外的节点必须拒绝加载");
+    assert!(error.to_string().contains("不在分类树中"), "{error}");
+}
+
+#[test]
+fn heroes_reject_diverging_categories() {
+    let cards = card_json("hominidae", r#"[{"kind":"play","value":"mammal"}]"#);
+    let heroes = r#"[{"id":"x","card_type":"hero","categories":[{"kind":"play","value":"bird"}],"skills":[]}]"#;
+    let error = Catalog::from_json(&cards, heroes, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON)
+        .expect_err("英雄与同名随从的分类不一致必须拒绝加载");
+    assert!(error.to_string().contains("不一致"), "{error}");
+}
+
 #[test]
 fn hero_ids_also_exist_in_the_minion_pool() {
     let catalog = test_catalog();
