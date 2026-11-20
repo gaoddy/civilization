@@ -93,13 +93,13 @@ impl Engine {
         let mut computed = BTreeMap::new();
         for (source, effects) in self.aura_sources(player) {
             for effect in effects {
-                if !self.aura_active(state, player, &effect, source) {
+                if !self.aura_active(state, player, effect, source) {
                     continue;
                 }
                 // 群聚的计数与目标无关，每段效果只算一次。
-                let scale = scaling_count(self, state, player, &effect, source);
-                for target in aura_targets(self, state, &effect, player, source) {
-                    accumulate(&effect, computed.entry(target).or_default(), scale);
+                let scale = scaling_count(self, state, player, effect, source);
+                for target in aura_targets(self, state, effect, player, source) {
+                    accumulate(effect, computed.entry(target).or_default(), scale);
                 }
             }
         }
@@ -107,23 +107,29 @@ impl Engine {
     }
 
     /// 收集某玩家所有光环来源：棋盘点顺序的随从，然后是英雄卡。
-    fn aura_sources(&self, player: &PlayerState) -> Vec<(Option<InstanceId>, Vec<Effect>)> {
-        let mut sources: Vec<(Option<InstanceId>, String)> = player
-            .board
-            .iter()
-            .map(|minion| (Some(minion.instance_id), minion.card_id.clone()))
-            .collect();
-        if let Some(hero) = &player.hero {
-            sources.push((None, hero.clone()));
-        }
+    ///
+    /// 返回的效果直接借用 `self.catalog` 中的技能定义，避免每次重算都克隆整段效果。
+    fn aura_sources<'a>(
+        &'a self,
+        player: &'a PlayerState,
+    ) -> Vec<(Option<InstanceId>, Vec<&'a Effect>)> {
+        // `source == None` 表示英雄卡：光环技能只从英雄池取，避免与同名随从串用。
+        let board_sources = player.board.iter().map(|minion| {
+            (
+                Some(minion.instance_id),
+                self.catalog
+                    .cards
+                    .get(&minion.card_id)
+                    .map(|card| &card.skills),
+            )
+        });
+        let hero_source = player
+            .hero
+            .as_ref()
+            .map(|hero| (None, self.catalog.heroes.get(hero).map(|hero| &hero.skills)));
 
-        let mut result = Vec::with_capacity(sources.len());
-        for (source, card_id) in sources {
-            // `source == None` 表示英雄卡：光环技能只从英雄池取，避免与同名随从串用。
-            let skills = match source {
-                Some(_) => self.catalog.cards.get(&card_id).map(|card| &card.skills),
-                None => self.catalog.heroes.get(&card_id).map(|hero| &hero.skills),
-            };
+        let mut result = Vec::new();
+        for (source, skills) in board_sources.chain(hero_source) {
             let Some(skills) = skills else {
                 continue;
             };
@@ -132,15 +138,9 @@ impl Engine {
                 let Some(skill) = self.catalog.skills.get(skill_id) else {
                     continue;
                 };
-                effects.extend(
-                    skill
-                        .effects
-                        .iter()
-                        .filter(|effect| {
-                            matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura)
-                        })
-                        .cloned(),
-                );
+                effects.extend(skill.effects.iter().filter(|effect| {
+                    matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura)
+                }));
             }
             if !effects.is_empty() {
                 result.push((source, effects));
