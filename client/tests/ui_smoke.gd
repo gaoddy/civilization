@@ -33,6 +33,7 @@ func _ready() -> void:
     await _check_board_drag_sells_over_shop_slot()
     await _check_board_drag_reorders()
     await _check_board_sell_drop()
+    await _check_detail_hidden_while_dragging()
     await _check_drag_rejected_for_target_effect_on_blank()
     await _check_drag_rejected_when_board_full()
     await _check_drag_disabled_when_stale_or_expired()
@@ -2020,6 +2021,86 @@ func _check_board_sell_drop() -> void:
             "金色随从应提示返还 3 金",
         )
         shop._clear_hover()
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 拖拽期间不显示悬停详情：购买经过自己棋盘、出售经过商店卡都不显示，取消后悬停恢复。
+func _check_detail_hidden_while_dragging() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi", 0)]
+    view["self"]["affordances"]["boardMinions"] = [
+        {"index": 0, "sellable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    var detail = instance.find_child("MinionDetailPanel", true, false)
+    var layer = instance.find_child("MinionDetailLayer", true, false)
+    var shop_card = instance.find_child("ShopSlot0", true, false)
+    var board_card = instance.find_child("BoardMinion0", true, false)
+    _expect(
+        detail != null and layer != null and shop_card is ShopCard and board_card is BoardCard,
+        "场景应渲染详情面板、商店卡与棋盘随从卡"
+    )
+    if detail == null or layer == null or not (shop_card is ShopCard) or not (board_card is BoardCard):
+        instance.queue_free()
+        await get_tree().process_frame
+        _fake_disconnect()
+        GameStore.view = {}
+        GameStore.turn = 1
+        return
+    var viewport = instance.get_viewport()
+    var shop_center: Vector2 = shop_card.get_global_rect().get_center()
+    var board_center: Vector2 = board_card.get_global_rect().get_center()
+
+    # 基线：普通悬停商店卡显示详情，移出隐藏。
+    await _hover(instance, shop_card, shop_card.size / 2)
+    _expect(detail.is_visible_in_tree(), "拖拽前悬停商店卡应显示详情")
+    await _push_motion(instance, Vector2(-40, -40))
+    _expect(not detail.is_visible_in_tree(), "移出商店卡后应隐藏详情")
+
+    # 购买拖拽经过自己棋盘：不显示棋盘卡详情。
+    await _push_motion(instance, shop_center)
+    await _push_button(instance, shop_center, true)
+    await _push_motion_held(instance, shop_center + Vector2(0, 24), Vector2(0, 24))
+    await _push_motion_held(instance, board_center, board_center - shop_center - Vector2(0, 24))
+    _expect(viewport.gui_is_dragging(), "商店卡越过拖拽阈值后应进入拖拽")
+    _expect(not detail.is_visible_in_tree(), "购买拖拽经过棋盘时不应显示详情")
+    _expect(layer._hover_card == null, "购买拖拽经过棋盘时详情锚点应为空")
+    if viewport.gui_is_dragging():
+        viewport.gui_cancel_drag()
+    await get_tree().process_frame
+    await _hover(instance, shop_card, shop_card.size / 2)
+    _expect(detail.is_visible_in_tree(), "购买拖拽取消后悬停商店卡应恢复详情")
+    await _push_motion(instance, Vector2(-40, -40))
+
+    # 出售拖拽经过商店卡：不显示商店卡详情。
+    await _push_motion(instance, board_center)
+    await _push_button(instance, board_center, true)
+    await _push_motion_held(instance, board_center + Vector2(0, -24), Vector2(0, -24))
+    await _push_motion_held(instance, shop_center, shop_center - board_center - Vector2(0, -24))
+    _expect(viewport.gui_is_dragging(), "棋盘卡越过拖拽阈值后应进入拖拽")
+    _expect(not detail.is_visible_in_tree(), "出售拖拽经过商店卡时不应显示详情")
+    _expect(layer._hover_card == null, "出售拖拽经过商店卡时详情锚点应为空")
+    if viewport.gui_is_dragging():
+        viewport.gui_cancel_drag()
+    await get_tree().process_frame
+    await _hover(instance, shop_card, shop_card.size / 2)
+    _expect(detail.is_visible_in_tree(), "出售拖拽取消后悬停商店卡应恢复详情")
+    await _push_motion(instance, Vector2(-40, -40))
+    _expect(not detail.is_visible_in_tree(), "移出商店卡后应再次隐藏详情")
+
     instance.queue_free()
     await get_tree().process_frame
     _fake_disconnect()

@@ -75,6 +75,12 @@ func _on_card_mouse_entered(data: Dictionary, card: Control) -> void:
     _show_detail(data, card)
 
 
+## 拖拽开始即收起详情：拖拽途中的悬停经过不再显示别的卡，落点或取消后由悬停重新触发。
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_DRAG_BEGIN:
+        hide_panel()
+
+
 ## 每次刷新前清空登记并隐藏当前面板。
 func reset() -> void:
     _clear_touch()
@@ -191,6 +197,12 @@ func _canvas_point(viewport_point: Vector2) -> Vector2:
     return get_viewport().get_canvas_transform().affine_inverse() * viewport_point
 
 
+## 当前是否有卡片正在拖拽；拖拽期间详情层不参与悬停命中。
+func _is_dragging() -> bool:
+    var viewport := get_viewport()
+    return viewport != null and viewport.gui_is_dragging()
+
+
 ## 画布坐标命中的第一张卡片；未登记或已释放的条目直接跳过。
 func _card_at(point: Vector2) -> Control:
     for card in _cards:
@@ -216,6 +228,10 @@ func _update_detail_hover(point: Vector2) -> void:
 
 func _show_detail(data: Dictionary, anchor: Control) -> void:
     if blocked or report_open:
+        return
+    # 拖拽进行中不显示悬停详情：经过的卡与本次拖拽无关，弹出会遮挡并误导落点。
+    if _is_dragging():
+        hide_panel()
         return
     if _panel == null or anchor == null or not is_instance_valid(anchor):
         return
