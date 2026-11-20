@@ -13,14 +13,6 @@ var playstyles: Array = []
 ## 美术资源清单：card_id → {portrait, avatar, card_face, display}。缺图时回退程序化绘制。
 var art: Dictionary = {}
 
-## level → 稀有度档位（纯展示，服务端数据与协议不变）。
-const RARITY := {
-    1: "common", 2: "common",
-    3: "rare", 4: "rare",
-    5: "epic", 6: "epic",
-    7: "legendary",
-}
-
 ## 时代序号到文本 id，与服务端 `Era` 枚举一致（1–7）。
 const ERA_IDS := {
     1: "prehistoric",
@@ -328,9 +320,3 @@ func art_path(id: String, kind: String) -> String:
     if not art.has(id):
         return ""
     return str(art[id].get(kind, ""))
-
-
-## 展示用稀有度档位：common / rare / epic / legendary；未知等级回退 common。
-func rarity_tier(id: String) -> String:
-    var level := int(card(id).get("level", 1))
-    return str(RARITY.get(level, "common"))

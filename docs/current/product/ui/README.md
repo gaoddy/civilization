@@ -9,7 +9,8 @@
 ## 1. 视觉语言
 
 - 深色酒馆基调：近黑的背景、分层卡片、金色强调，状态色只表达结果（成功、危险、信息）。
-- 资源约束：工程没有字体与主题资源文件，界面由 Godot 内置控件与 `StyleBoxFlat` 构建；卡牌立绘、头像与卡面是唯一的位图资源，清单与回退规则见 [client.md](../../technical/client.md#10-美术素材层)。英雄「头像」无素材时仍是玩法色块加名字首字的排版块。
+- 资源约束：工程没有字体与主题资源文件，界面由 Godot 内置控件与 `StyleBoxFlat` 构建；位图资源只有卡牌立绘、头像、卡面与页面背景 `assets/ui/bg/bg_main.png`，清单与回退规则见 [client.md](../../technical/client.md#10-美术素材层)。英雄「头像」无素材时仍是玩法色块加名字首字的排版块。
+- 代码绘制：卡框（`CardFrame`）、顶部星级、时代象形（`EraGlyph`）与攻防底牌（`StatPlate`）由代码绘制，不占位图；入口见第 4 节组件表。稀有度不是展示维度，卡面以 `level` 的 1–7 星表达成长档位。
 - 深浅色：只有深色一套，不实现浅色主题与主题切换，UI 评审不做浅色检查。
 
 ## 2. 令牌与共享构件
@@ -44,6 +45,9 @@
 | 数值胶囊 | `UI.pill_label` | [components/pill.md](components/pill.md) |
 | 按钮变体 | `UI.styled_button` | [components/button.md](components/button.md) |
 | 卡片容器 | `UI.card_panel` | [components/card-panel.md](components/card-panel.md) |
+| 卡框与星级 | `CardFrame`（`client/ui/card_frame.gd`） | [tokens.md](tokens.md) |
+| 攻防底牌 | `StatPlate`（`client/ui/stat_plate.gd`） | [tokens.md](tokens.md) |
+| 时代象形 | `EraGlyph`（`client/ui/era_glyph.gd`） | [icons.md](icons.md) |
 | 卡牌图鉴 | `CardGallery`（`client/scenes/card_gallery.gd`） | [components/card-gallery.md](components/card-gallery.md) |
 | 图鉴视图切换 | `GalleryModeBar` | [components/gallery-mode-bar.md](components/gallery-mode-bar.md) |
 | 图鉴顶部筛选栏 | `GalleryFilterBar` | [components/gallery-filter-bar.md](components/gallery-filter-bar.md) |
