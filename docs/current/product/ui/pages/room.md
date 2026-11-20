@@ -68,8 +68,8 @@ DraftPanel：卡片面板（surface，铺满整屏，忽略鼠标）
 
 - 触发：选中一张候选卡时显示。
 - 关闭：再点同一张卡、点另一张，或点浮层以外的空白（`SkillDismissLayer` 铺满全屏、位于内容之下）。
-- 内容：英雄名 + `CardDB.display_text(hero_id)` 的技能文本。
-- 样式：`UITheme.panel_style("raised")` 面板，居中显示。浮层本身与其子节点全部忽略鼠标输入，不拦截对候选卡、确认按钮或空白层的点击。
+- 内容：英雄名 + 技能列表。技能列表与图鉴英雄详情共用 `UI.skill_list`，按英雄 `skills` 顺序逐条展示：技能名（没有名称时省略）、触发类型标签、完整技能文本；主动技能追加「费用 N · 每回合 N 次」。无技能时显示「暂无技能」。
+- 样式：`UITheme.panel_style("raised")` 面板，宽 320，居中显示；文本按面板宽度换行，英雄技能最多 2 条，不需要滚动。浮层本身与其子节点全部忽略鼠标输入，不拦截对候选卡、确认按钮或空白层的点击。
 
 ## 6. 数据来源
 
@@ -80,7 +80,7 @@ DraftPanel：卡片面板（surface，铺满整屏，忽略鼠标）
 | 本人已选英雄 | `room_players[]` 中本人那一项的 `heroCardId` |
 | 本人确认状态 | `room_players[]` 中本人那一项的 `ready` |
 | 本人是否房主 | `room_players[]` 中本人那一项的 `isHost`（协议同时下发 `hostId`） |
-| 卡面与技能文本 | `CardDB.card` / `CardDB.display_name` / `CardDB.display_text` |
+| 卡面与技能列表 | `CardDB.card` / `CardDB.hero` / `CardDB.display_name` / `CardDB.skill_info`；技能列表由 `UI.skill_list` 读取英雄卡的 `skills` |
 
 - 页面不做分配逻辑：候选完全由服务端下发，客户端不洗牌、不补齐、不去重。
 - 其他玩家的 `heroCandidates` 恒为 `null`，页面也不读取这一字段用于他人展示。
