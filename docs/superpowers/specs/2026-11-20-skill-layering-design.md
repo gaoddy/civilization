@@ -132,7 +132,7 @@ text: {keyword.text}
 | `taxon` | `taxonomy.md` 分类节点 id | 卡面名词（见 §5.4，如「鱼纲」「动物」） | — |
 | `playstyle` | 玩法 id | 卡面名词（如「机械」「真菌」） | — |
 | `scholar` | 固定 `true` | 「学者」 | — |
-| `keyword` | 关键词 id，可带层数（`breed 2`） | 名称 + 层数（如「繁衍 2」） | `.name` 仅名称、`.level` 仅层数、`.text` 关键词整段规则文本 |
+| `keyword` | 关键词 id，可带层数（`breed 2`） | 名称 + 层数（如「繁衍 2」） | `.name` 仅名称、`.level` 仅层数、`.text` 关键词整段卡面文案（§5.4） |
 | `int` | 整数 | 数字 | `.cn` → 中文数词 |
 | `count` | 整数 1–4 | 中文数词（一/两/三/四） | `.num` → 数字 |
 | `duration` | `permanent` / `combat` | 空串 | `.suffix` → `combat` 为「直到回合结束」，`permanent` 为空 |
@@ -212,7 +212,7 @@ template: on-play-refresh-shop(free=true); on-play-gain-minion(level=current,to=
 - 占位符写作 `{name}` 或 `{name.modifier}`；未知占位符、未声明参数、缺失必填参数都是校验错误。
 - 数字：`int` 默认输出阿拉伯数字；`count` 默认输出中文数词（一/两/三/四），现有「一个」「两个」「三个」「四个」逐字一致。
 - 名词来源：`taxon` / `playstyle` 取 §5.4 卡面名词表；`token` 取 `tokens/README.md` 的展示名与攻/血，查不到时回退为卡牌；`card` 取卡牌 `name`、`attack`、`health`。
-- 关键词：`{kw}` 输出「名称 + 层数」（繁衍 2、减伤 2），`{kw.name}` 只输出名称，`{kw.level}` 只输出层数，`{kw.text}` 输出关键词判定表里的整段规则文本。现有「获得 1 层传染」这类写法单独建模板或使用 `text` 覆盖。
+- 关键词：`{kw}` 输出「名称 + 层数」（繁衍 2、减伤 2），`{kw.name}` 只输出名称，`{kw.level}` 只输出层数，`{kw.text}` 输出 §5.4 关键词文案表里的整段卡面文案。现有「获得 1 层传染」这类写法单独建模板或使用 `text` 覆盖。
 - 时长：`{duration.suffix}` 在 `combat` 时输出「直到回合结束」、在 `permanent` 时输出空串；「本回合获得连击」这类句式另建模板或使用 `text` 覆盖。
 - 标点与空格由模板原文控制，渲染器不自动加空格或标点。
 - 实例 `text` 覆盖时直接使用，不再渲染；但仍受现有「文本前缀与触发时机一致」校验。
@@ -230,8 +230,10 @@ template: on-play-refresh-shop(free=true); on-play-gain-minion(level=current,to=
 | 分类节点 | `taxonomy.md` 的节点 id | 卡面名词，如 `animalia` → 动物、`fish` → 鱼纲 |
 | 玩法 | 玩法 id | 卡面名词，如 `machine` → 机械、`fungus` → 真菌 |
 | 特殊筛选值 | `scholar=true`、`other=true`、`type=minion`、`id=<卡牌 id>` | 卡面名词，如 学者、其他、随从、弓箭手 |
+| 关键词文案 | 关键词 id（`breed`、`armor`、`taunt`…） | 卡面整段文案模板，层数位写 `{N}`，如 `breed` → `繁衍 {N}：回合开始时获得 +{N} 生命`、`taunt` → `嘲讽` |
 
 - 渲染器只从这张表取名词，不回退到 `taxonomy.md` 的显示名：卡面用的是「动物」，分类树写的是「动物界」，两者不能混用。
+- 关键词文案表以卡面为准，不直接复用 `keywords-and-mechanics.md` 的规则表：两处措辞有差异（如潜行的卡面文案比规则表少了「攻击或」），迁移必须逐字一致。
 - 模板用到的每个筛选值必须在表中有条目，缺失即校验错误。
 - 同一取值在现有文案里出现两种写法（如「真菌」与「真菌界」）时，以名词表为准，少数写法用实例 `text` 覆盖，并进入例外清单。
 
