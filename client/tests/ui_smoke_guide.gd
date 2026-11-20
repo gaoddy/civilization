@@ -190,7 +190,7 @@ func _check_manual_in_combat() -> void:
     await _unmount(instance)
 
 
-## 6. 引导显示时点击商店槽位仍能走到购买路径（压暗层不拦截输入）。
+## 6. 引导显示时拖商店卡到手牌带仍能走到购买路径（压暗层不拦截输入）。
 func _check_input_passthrough() -> void:
     _remove_config_file()
     _fake_connect()
@@ -218,13 +218,20 @@ func _check_input_passthrough() -> void:
     var captured: Array = []
     instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
     var slot := instance.find_child("ShopSlot0", true, false)
+    var hand_row := instance.find_child("HandStrip", true, false)
     _expect(slot != null, "应存在可购买商店槽位")
-    if slot != null:
-        await _push_click(instance, slot.get_global_rect().get_center())
+    _expect(hand_row is Control, "应存在手牌带落点")
+    if slot != null and hand_row is Control:
+        var rect := (hand_row as Control).get_global_rect()
+        await _real_drag(
+            instance,
+            slot.get_global_rect().get_center(),
+            Vector2(rect.position.x + 8.0, rect.end.y - 12.0),
+        )
     _expect(
         captured.size() == 1
             and str(captured[0].get("kind", "")) == Protocol.INTENT_BUY_MINION,
-        "引导显示时点击商店应仍购买，实际 %s" % [captured],
+        "引导显示时拖商店卡到手牌带应仍购买，实际 %s" % [captured],
     )
     await _unmount(instance)
     _fake_disconnect()

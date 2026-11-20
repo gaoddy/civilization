@@ -494,14 +494,13 @@ func _check_shop_view() -> void:
             "有卡牌被冻结时冻结按钮应高亮",
         )
     var slot0: Control = shop.find_child("ShopSlot0", true, false)
-    var buys: Array = []
-    shop.buy.connect(func(index: int) -> void: buys.append(index))
-    if slot0 != null:
-        var click := InputEventMouseButton.new()
-        click.button_index = MOUSE_BUTTON_LEFT
-        click.pressed = true
-        slot0.gui_input.emit(click)
-    _expect(buys == [0], "点击可购买卡槽应发出购买信号，实际 %s" % [buys])
+    var slot1: Control = shop.find_child("ShopSlot1", true, false)
+    _expect(slot0 is ShopCard and slot1 is ShopCard, "商店槽位应由 ShopCard 承载")
+    if slot0 is ShopCard and slot1 is ShopCard:
+        _expect(int(slot0.payload.get("shopSlot", -1)) == 0, "商店卡拖拽数据应带槽位 0")
+        _expect(slot0.drag_allowed, "可购买商店卡应允许拖拽")
+        _expect(not slot1.drag_allowed, "不可购买商店卡不应允许拖拽")
+    _expect(not shop.has_signal("buy"), "商店视图不应再提供点击购买信号")
     host.queue_free()
     await get_tree().process_frame
 

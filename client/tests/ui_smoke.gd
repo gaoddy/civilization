@@ -28,6 +28,7 @@ func _ready() -> void:
     await _check_hand_drag_cursor_rule()
     await _check_hand_drag_drops_on_empty_slot()
     await _check_hand_drag_drops_on_minion_card()
+    await _check_shop_drag_buys()
     await _check_board_drag_sells_over_shop_slot()
     await _check_board_drag_reorders()
     await _check_board_sell_drop()
@@ -416,14 +417,7 @@ func _check_game() -> void:
         var captured: Array = []
         instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
         await _push_click(instance, shop_card.get_global_rect().get_center())
-        _expect(
-            captured.size() == 1 and str(captured[0].get("kind", "")) == Protocol.INTENT_BUY_MINION,
-            "点击商店卡应发出购买意图，实际 %s" % [captured]
-        )
-        _expect(
-            captured.is_empty() == false and int(captured[0].get("slot", -1)) == 0,
-            "购买意图应带槽位下标 0，实际 %s" % [captured]
-        )
+        _expect(captured.is_empty(), "点击商店卡不应再发购买意图，实际 %s" % [captured])
         await _push_motion(instance, Vector2(-40, -40))
         _expect(not detail.is_visible_in_tree(), "移出商店卡矩形应隐藏详情面板")
     # 生命、时代与金币随英雄行展示：英雄卡承载名字与数值，英雄侧列显示金币。
@@ -1659,6 +1653,97 @@ func _check_hand_drag_drops_on_minion_card() -> void:
     _fake_disconnect()
     GameStore.view = {}
     GameStore.turn = 1
+
+
+## 商店卡拖到手牌带购买：卡带空白与手牌卡上都可落，点击与无效落点不产生意图。
+func _check_shop_drag_buys() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    GameStore.view = FixtureScript.view()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    var shop_card = instance.find_child("ShopSlot0", true, false)
+    var sold_out = instance.find_child("ShopSlot1", true, false)
+    var hand_card = instance.find_child("HandCard0", true, false)
+    var hand_row = instance.find_child("HandStrip", true, false)
+    var board_panel = instance.find_child("BoardPanel", true, false)
+    _expect(
+        shop_card is ShopCard and sold_out is ShopCard and hand_row is GameHandRow,
+        "场景应渲染商店卡、手牌卡与手牌行"
+    )
+    if shop_card is ShopCard and sold_out is ShopCard and hand_row is GameHandRow:
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var band_point := _hand_band_point(hand_row)
+        await _real_drag(instance, shop_card.get_global_rect().get_center(), band_point)
+        _expect(captured.size() == 1, "商店卡拖到手牌带空白应产生一条意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            _expect(str(captured[0].get("kind", "")) == Protocol.INTENT_BUY_MINION, "落点意图应为购买")
+            _expect(int(captured[0].get("slot", -1)) == 0, "购买意图应带槽位 0，实际 %s" % [captured])
+        captured.clear()
+
+        if hand_card is HandCard:
+            await _real_drag(
+                instance, shop_card.get_global_rect().get_center(), hand_card.get_global_rect().get_center()
+            )
+            _expect(captured.size() == 1, "商店卡落在手牌卡上也应购买，实际 %d" % captured.size())
+            if captured.size() == 1:
+                _expect(str(captured[0].get("kind", "")) == Protocol.INTENT_BUY_MINION, "手牌卡落点应为购买")
+            captured.clear()
+
+        # 不可购买的槽位不能起手；拖到棋盘不产生意图。
+        _expect(not sold_out.drag_allowed, "不可购买槽位不应允许拖拽")
+        _expect(sold_out._get_drag_data(Vector2.ZERO) == null, "不可购买槽位不应交出拖拽数据")
+        _expect(shop_card.drag_allowed, "可购买槽位应允许拖拽")
+        await _real_drag(
+            instance, shop_card.get_global_rect().get_center(), board_panel.get_global_rect().get_center()
+        )
+        _expect(captured.is_empty(), "拖到棋盘不应购买，实际 %s" % [captured])
+
+        # 落点判定：购买带只覆盖贴底卡带，不可购买数据拒绝。
+        var band = hand_row.find_child("HandDropBand", true, false)
+        _expect(band is HandDrop, "手牌行应有购买落点带")
+        if band is HandDrop:
+            var band_rect: Rect2 = (band as Control).get_global_rect()
+            _expect(
+                is_equal_approx(band_rect.size.y, UITheme.stage_metric("card-height")),
+                "购买带高度应为卡片高度，实际 %s" % band_rect.size.y
+            )
+            _expect(
+                is_equal_approx(band_rect.end.y, hand_row.get_global_rect().end.y),
+                "购买带应贴着手牌底部"
+            )
+            var payload: Dictionary = shop_card.payload.duplicate()
+            _expect(band._can_drop_data(Vector2.ZERO, payload), "购买带应接受商店卡")
+            var unbuyable: Dictionary = payload.duplicate()
+            unbuyable["buyable"] = false
+            _expect(not band._can_drop_data(Vector2.ZERO, unbuyable), "不可购买数据不应被接受")
+
+            # 拖拽途中视图已重建：epoch 不符时不发意图。
+            var stale: Dictionary = payload.duplicate()
+            stale["epoch"] = -1
+            band._drop_data(Vector2.ZERO, stale)
+            _expect(captured.is_empty(), "过期 epoch 不应购买，实际 %s" % [captured])
+
+        var viewport = instance.get_viewport()
+        if viewport != null and viewport.gui_is_dragging():
+            viewport.gui_cancel_drag()
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 手牌带底部购买落点：左侧空白处，避开居中的手牌卡。
+func _hand_band_point(hand_row: Control) -> Vector2:
+    var rect := hand_row.get_global_rect()
+    return Vector2(rect.position.x + 8.0, rect.end.y - 12.0)
 
 
 ## 棋盘卡拖到商店槽位按钮上松手：出售落点必须越过槽位按钮交给商店面板。
