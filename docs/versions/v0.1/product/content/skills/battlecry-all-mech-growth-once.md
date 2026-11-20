@@ -1,8 +1,7 @@
 ---
 id: battlecry-all-mech-growth-once
 keyword: battlecry
-text: 战吼：使你的所有机械随从获得一次成长
-effects: OnPlay|Growth|friendly:all:playstyle=machine|times=1
+template: on-play-battlecry-growth-all-ps(playstyle=machine,times=1)
 ---
 
 # battlecry-all-mech-growth-once
@@ -14,6 +13,7 @@ effects: OnPlay|Growth|friendly:all:playstyle=machine|times=1
 | id | battlecry-all-mech-growth-once |
 | 关键词 | 战吼 |
 | 确定性替换 | 不适用 |
+| 模板 | on-play-battlecry-growth-all-ps |
 
 ## 效果
 

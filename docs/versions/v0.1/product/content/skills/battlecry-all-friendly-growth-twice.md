@@ -1,8 +1,7 @@
 ---
 id: battlecry-all-friendly-growth-twice
 keyword: battlecry
-text: 战吼：使你的所有随从获得两次成长
-effects: OnPlay|Growth|friendly:all|times=2
+template: on-play-battlecry-growth-all(times=2)
 ---
 
 # battlecry-all-friendly-growth-twice
@@ -14,6 +13,7 @@ effects: OnPlay|Growth|friendly:all|times=2
 | id | battlecry-all-friendly-growth-twice |
 | 关键词 | 战吼 |
 | 确定性替换 | 不适用 |
+| 模板 | on-play-battlecry-growth-all |
 
 ## 效果
 

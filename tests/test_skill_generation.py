@@ -142,6 +142,15 @@ class ProposeTest(unittest.TestCase):
             self.templates["on-death-summon"], skill, self.renderer)
         self.assertEqual(call.args, {"token": "seedling", "count": "1"})
 
+    def test_match_embedded_placeholder(self):
+        template = skill_templates.Template(
+            "t", "effect", "OnPlay", "Growth", "friendly:single",
+            "times=1,timesIf=playstyle:{playstyle}:2", "",
+            (skill_templates.ArgSpec("playstyle", "playstyle"),))
+        values = propose._match_segment(
+            template, "OnPlay|Growth|friendly:single|times=1,timesIf=playstyle:plant:2")
+        self.assertEqual(values, {"playstyle": "plant"})
+
     def test_fit_rejects_text_mismatch(self):
         skill = {"id": "x", "effects": "OnDeath|Summon|self|token=seedling,count=1",
                  "text": "亡语：召唤一个幼苗"}

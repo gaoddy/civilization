@@ -1,8 +1,7 @@
 ---
 id: battlecry-all-friendly-growth-once
 keyword: battlecry
-text: 战吼：使你的所有随从获得一次成长
-effects: OnPlay|Growth|friendly:all|times=1
+template: on-play-battlecry-growth-all(times=1)
 ---
 
 # battlecry-all-friendly-growth-once
@@ -14,6 +13,7 @@ effects: OnPlay|Growth|friendly:all|times=1
 | id | battlecry-all-friendly-growth-once |
 | 关键词 | 战吼 |
 | 确定性替换 | 不适用 |
+| 模板 | on-play-battlecry-growth-all |
 
 ## 效果
 

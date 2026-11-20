@@ -1,8 +1,7 @@
 ---
 id: battlecry-self-plus-1-health
 keyword: battlecry
-text: 战吼：获得 +1 生命值
-effects: OnPlay|ModifyStats|self|health=1,duration=permanent
+template: on-play-battlecry-stats-self-health-value(health=1)
 ---
 
 # battlecry-self-plus-1-health
@@ -14,6 +13,7 @@ effects: OnPlay|ModifyStats|self|health=1,duration=permanent
 | id | battlecry-self-plus-1-health |
 | 关键词 | 战吼 |
 | 确定性替换 | 不适用 |
+| 模板 | on-play-battlecry-stats-self-health-value |
 
 ## 效果
 

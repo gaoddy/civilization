@@ -55,7 +55,25 @@ def _match_value(pattern, actual, values):
     """模板值匹配实际值；占位符捕获后要求同参数前后一致。"""
     match = _PLACEHOLDER.fullmatch(pattern)
     if match is None:
-        return pattern == actual
+        if "{" not in pattern:
+            return pattern == actual
+        # 参数值内嵌占位（如 timesIf=playstyle:{playstyle}:2）。
+        regex, names = [], []
+        position = 0
+        for index, placeholder in enumerate(_PLACEHOLDER.finditer(pattern)):
+            regex.append(re.escape(pattern[position:placeholder.start()]))
+            regex.append(f"(?P<g{index}>.+?)")
+            names.append(placeholder.group(1))
+            position = placeholder.end()
+        regex.append(re.escape(pattern[position:]))
+        embedded = re.fullmatch("".join(regex), actual)
+        if embedded is None:
+            return False
+        for name, captured in zip(names, embedded.groups()):
+            if values.get(name, captured) != captured:
+                return False
+            values[name] = captured
+        return True
     name = match.group(1)
     if values.get(name, actual) != actual:
         return False

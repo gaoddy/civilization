@@ -1,8 +1,7 @@
 ---
 id: battlecry-friendly-plus-1-attack
 keyword: battlecry
-text: 战吼：使一个友方随从获得 +1 攻击力
-effects: OnPlay|ModifyStats|friendly:single|attack=1,duration=permanent
+template: on-play-battlecry-stats-single-attack(attack=1)
 ---
 
 # battlecry-friendly-plus-1-attack
@@ -14,6 +13,7 @@ effects: OnPlay|ModifyStats|friendly:single|attack=1,duration=permanent
 | id | battlecry-friendly-plus-1-attack |
 | 关键词 | 战吼 |
 | 确定性替换 | 不适用 |
+| 模板 | on-play-battlecry-stats-single-attack |
 
 ## 效果
 
