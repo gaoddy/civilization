@@ -82,6 +82,7 @@ func _build_board() -> PanelContainer:
 
     _board_row = BoardDrop.new()
     _board_row.name = "BoardRow"
+    _board_row.alignment = FlowContainer.ALIGNMENT_CENTER
     _board_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     _board_row.add_theme_constant_override("h_separation", UITheme.space("space-md"))
     _board_row.add_theme_constant_override("v_separation", UITheme.space("space-md"))
@@ -137,26 +138,12 @@ func _refresh_board(state: GameUiState) -> void:
         var minion: Dictionary = board[position]
         var minion_aff := _find_by_index(aff.get("boardMinions", []), int(minion.get("index", position)))
         _board_row.add_child(_minion_card(minion, minion_aff, can_rearrange, position, state.epoch))
-    for _position in range(board.size(), slots):
-        _board_row.add_child(_empty_slot())
-    # HFlowContainer 的最小宽度只按单张卡计算；显式给出整行宽度，
-    # 才能保持 7 槽单行并被 CenterContainer 精确居中。
-    _board_row.custom_minimum_size.x = (
-        slots * UITheme.stage_metric("card-width") + maxi(slots - 1, 0) * UITheme.space("space-md")
+    # HFlowContainer 的最小尺寸只按子卡计算：棋盘为空时高度会收缩为 0，
+    # 拖放区随之消失。显式给出整行宽高，既保留整行拖放区，也让不足满槽的卡片居中。
+    _board_row.custom_minimum_size = Vector2(
+        slots * UITheme.stage_metric("card-width") + maxi(slots - 1, 0) * UITheme.space("space-md"),
+        UITheme.stage_metric("card-height"),
     )
-
-
-func _empty_slot() -> PanelContainer:
-    var panel := UI.card_panel("empty")
-    panel.name = "EmptySlot"
-    # PanelContainer 默认 STOP，会截断 Godot 的拖放冒泡（STOP 且不接收即中止），
-    # 让棋盘容器收不到落点；空位本身不交互，直接放行。
-    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    panel.custom_minimum_size = Vector2(UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height"))
-    var hint := UI.empty_hint(tr("ui.game.recruit.empty_board_slot"))
-    hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    panel.add_child(hint)
-    return panel
 
 
 func _minion_card(

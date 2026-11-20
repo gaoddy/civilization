@@ -481,7 +481,9 @@ func _check_shop_view() -> void:
         for child in shop_row.get_children():
             if str(child.name).begins_with("ShopSlot"):
                 slot_count += 1
-    _expect(slot_count == 6, "商店应有 6 个卡槽，实际 %d" % slot_count)
+    _expect(slot_count == 4, "商店应只渲染 4 个有卡槽位，实际 %d" % slot_count)
+    _expect(shop.find_child("ShopSlot2", true, false) == null, "空商店槽不应渲染占位")
+    _expect(shop.find_child("ShopSlot4", true, false) == null, "空商店槽不应渲染占位")
     var upgrade_badge: Label = shop.find_child("UpgradeCostBadge", true, false)
     var reroll_badge: Label = shop.find_child("RerollCostBadge", true, false)
     _expect(upgrade_badge != null and upgrade_badge.visible and upgrade_badge.text == "5", "升级费用角标应显示 5")
@@ -542,7 +544,7 @@ func _check_recruit_view() -> void:
     var board_scroll: Control = view.find_child("BoardScroll", true, false)
     _expect(board_scroll != null and board_scroll.get_global_rect().size.y == 146, "棋盘滚动区高应为 146")
     var board_row: Control = view.find_child("BoardRow", true, false)
-    _expect(board_row != null and board_row.get_child_count() == 7, "棋盘应有 7 个槽位")
+    _expect(board_row != null and board_row.get_child_count() == 1, "棋盘只应渲染实际随从")
     host.queue_free()
     await get_tree().process_frame
 

@@ -26,7 +26,7 @@ func _ready() -> void:
     await _check_combat_layout()
     await _check_hand_drag_emits_position()
     await _check_hand_drag_cursor_rule()
-    await _check_hand_drag_drops_on_empty_slot()
+    await _check_hand_drag_drops_on_board_blank()
     await _check_hand_drag_drops_on_minion_card()
     await _check_shop_drag_buys()
     await _check_drag_preview_keeps_pointer()
@@ -352,15 +352,17 @@ func _check_game() -> void:
     var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
         return
-    for index in range(6):
+    for index in [0, 1, 3, 5]:
         var name := "ShopSlot%d" % index
         _expect(instance.find_child(name, true, false) != null, "对局场景缺少 %s" % name)
-    var empty_slot = instance.find_child("ShopSlot2", true, false)
-    if empty_slot != null:
-        _expect(
-            _node_text(empty_slot).contains(TranslationServer.translate("ui.game.recruit.empty_shop_slot")),
-            "空商店槽应显示空槽提示，实际：%s" % _node_text(empty_slot),
-        )
+    _expect(
+        instance.find_child("ShopSlot2", true, false) == null,
+        "空商店槽不应渲染占位",
+    )
+    _expect(
+        instance.find_child("ShopSlot4", true, false) == null,
+        "空商店槽不应渲染占位",
+    )
     var detail = instance.find_child("MinionDetailPanel", true, false)
     var detail_layer = instance.find_child("MinionDetailLayer", true, false)
     _expect(detail != null, "对局页应有随从详情面板")
@@ -515,9 +517,11 @@ func _check_game_layout() -> void:
     if hand != null and combat != null:
         _expect(hand.get_index() > combat.get_index(), "手牌应位于战斗视图之下")
     var board = instance.find_child("BoardRow", true, false)
-    _expect(board != null and board.get_child_count() == 7, "棋盘应有 7 个槽位（含空位）")
+    _expect(board != null and board.get_child_count() == 4, "棋盘只应渲染实际随从，实际 %s"
+        % ("null" if board == null else str(board.get_child_count())))
+    _expect(instance.find_child("EmptySlot", true, false) == null, "棋盘不再渲染空位")
     var expected_card := Vector2(112, 146)
-    for node_name in ["ShopSlot0", "ShopSlot2", "BoardMinion0", "HandCard0", "EmptySlot"]:
+    for node_name in ["ShopSlot0", "ShopSlot3", "BoardMinion0", "HandCard0"]:
         var card_node: Control = instance.find_child(node_name, true, false)
         _expect(card_node != null, "布局中缺少 %s" % node_name)
         if card_node != null:
@@ -1254,7 +1258,7 @@ func _check_combat_placeholder_cleared() -> void:
     GameStore.deadline = ""
 
 
-## 棋盘容量取视图：空位数量跟随 `boardSlots`，满场判定用同一数值。
+## 棋盘容量取视图：只渲染实际随从，满场判定用 `boardSlots`。
 func _check_board_capacity_from_view() -> void:
     GameStore.player_id = "p0"
     GameStore.phase = "Recruit"
@@ -1275,12 +1279,31 @@ func _check_board_capacity_from_view() -> void:
     if instance == null:
         return
     var board_row = instance.find_child("BoardRow", true, false)
-    _expect(board_row != null and board_row.get_child_count() == 5,
-        "容量为 5 时棋盘应有 5 个槽位，实际 %s" % ("null" if board_row == null else str(board_row.get_child_count())))
+    _expect(board_row != null and board_row.get_child_count() == 2,
+        "容量为 5 时棋盘只应渲染 2 个随从，实际 %s" % ("null" if board_row == null else str(board_row.get_child_count())))
     _expect(instance.find_child("BoardHint", true, false) == null, "棋盘不再显示「随从 x/x」提示")
     _expect(board_row != null and not board_row.board_full, "2/5 不应判定为满场")
 
-    # 同一视图改成满场：槽位数量与满场标记都跟着容量走。
+    # 空棋盘不渲染占位，但整行拖放区必须保留，否则随从无法首次上场。
+    var hand_card = instance.find_child("HandCard0", true, false)
+    view["self"]["board"] = []
+    GameStore.view = view
+    GameStore.view_changed.emit()
+    await get_tree().process_frame
+    _expect(board_row != null and board_row.get_child_count() == 0, "空棋盘不应渲染任何占位节点")
+    if board_row != null and hand_card != null:
+        _expect(
+            is_equal_approx(board_row.get_global_rect().size.y, 146.0),
+            "空棋盘仍应保留整行拖放区高度，实际 %s" % board_row.get_global_rect().size.y,
+        )
+        _expect(
+            board_row.hand_drop_accepted(
+                board_row.get_global_rect().get_center(), hand_card.payload.duplicate()
+            ),
+            "空棋盘应接受随从牌",
+        )
+
+    # 同一视图改成满场：随从节点数与满场标记都跟着容量走。
     view["self"]["board"] = []
     for index in 5:
         view["self"]["board"].append(FixtureScript.board_minion("mi_%d" % index, "baiyi", index))
@@ -1290,7 +1313,7 @@ func _check_board_capacity_from_view() -> void:
     await get_tree().process_frame
     _expect(board_row != null and board_row.board_full, "5/5 应判定为满场")
     _expect(board_row != null and board_row.get_child_count() == 5,
-        "满场时不应再追加空位，实际 %s" % ("null" if board_row == null else str(board_row.get_child_count())))
+        "满场时应有 5 个随从节点，实际 %s" % ("null" if board_row == null else str(board_row.get_child_count())))
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
@@ -1499,7 +1522,7 @@ func _check_hand_drag_emits_position() -> void:
     GameStore.turn = 1
 
 
-## 手牌拖拽光标规则：空位仍可放置；棋盘外、已满与需要目标的空白落点为无效区域。
+## 手牌拖拽光标规则：棋盘行空白仍可放置；棋盘外、已满与需要目标的空白落点为无效区域。
 func _check_hand_drag_cursor_rule() -> void:
     GameStore.player_id = "p0"
     GameStore.phase = "Recruit"
@@ -1522,23 +1545,20 @@ func _check_hand_drag_cursor_rule() -> void:
     var hand_card = instance.find_child("HandCard0", true, false)
     if board_row != null and hand_card != null:
         var payload: Dictionary = hand_card.payload.duplicate()
-        var empty_slot: Control = null
-        for child in board_row.get_children():
-            if child is Control and child.name == "EmptySlot":
-                empty_slot = child
-                break
-        _expect(empty_slot != null, "棋盘应渲染空位")
-        if empty_slot != null:
-            var empty_point: Vector2 = empty_slot.get_global_rect().get_center()
-            _expect(board_row.hand_drop_accepted(empty_point, payload), "空位仍应接受随从牌")
-            board_row.board_full = true
-            _expect(not board_row.hand_drop_accepted(empty_point, payload), "棋盘已满时空位应无效")
-            board_row.board_full = false
-            var target_payload := {"handIndex": 0, "cardKind": "effect", "requiresTarget": true}
-            _expect(
-                not board_row.hand_drop_accepted(empty_point, target_payload),
-                "需要目标的效果牌落在空位应无效"
-            )
+        # 卡片不足满槽时居中对齐，行内右侧仍是拖放区。
+        var blank_point := Vector2(
+            board_row.get_global_rect().end.x - 56.0,
+            board_row.get_global_rect().get_center().y,
+        )
+        _expect(board_row.hand_drop_accepted(blank_point, payload), "棋盘行空白仍应接受随从牌")
+        board_row.board_full = true
+        _expect(not board_row.hand_drop_accepted(blank_point, payload), "棋盘已满时空白应无效")
+        board_row.board_full = false
+        var target_payload := {"handIndex": 0, "cardKind": "effect", "requiresTarget": true}
+        _expect(
+            not board_row.hand_drop_accepted(blank_point, target_payload),
+            "需要目标的效果牌落在空白应无效"
+        )
         var outside := Vector2(board_row.get_global_rect().end.x + 200, board_row.get_global_rect().get_center().y)
         _expect(not board_row.hand_drop_accepted(outside, payload), "棋盘外应为无效落点")
     instance.queue_free()
@@ -1547,8 +1567,8 @@ func _check_hand_drag_cursor_rule() -> void:
     GameStore.turn = 1
 
 
-## 真实鼠标事件走完「手牌拖到棋盘空位」：引擎的命中判定必须把落点交给 BoardDrop。
-func _check_hand_drag_drops_on_empty_slot() -> void:
+## 真实鼠标事件走完「手牌拖到棋盘行空白」：引擎的命中判定必须把落点交给 BoardDrop。
+func _check_hand_drag_drops_on_board_blank() -> void:
     GameStore.player_id = "p0"
     GameStore.phase = "Recruit"
     GameStore.turn = 3
@@ -1566,19 +1586,16 @@ func _check_hand_drag_drops_on_empty_slot() -> void:
         return
     var board_row = instance.find_child("BoardRow", true, false)
     var hand_card = instance.find_child("HandCard0", true, false)
-    var empty_slot: Control = null
-    if board_row != null:
-        for child in board_row.get_children():
-            if child is Control and child.name == "EmptySlot":
-                empty_slot = child
-                break
     _expect(hand_card != null and bool(hand_card.drag_allowed), "手牌应允许拖拽")
-    _expect(empty_slot != null, "棋盘应渲染空位")
-    if hand_card != null and empty_slot != null:
+    _expect(board_row != null, "棋盘行应存在")
+    if hand_card != null and board_row != null:
         var captured: Array = []
         instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
         var start: Vector2 = hand_card.get_global_rect().get_center()
-        var target: Vector2 = empty_slot.get_global_rect().get_center()
+        var target := Vector2(
+            board_row.get_global_rect().end.x - 56.0,
+            board_row.get_global_rect().get_center().y,
+        )
         var slot: Control = hand_card.get_parent() as Control
         var payload_before: Dictionary = hand_card.payload.duplicate()
         await _push_motion(instance, Vector2(-40, -40))
@@ -1598,7 +1615,7 @@ func _check_hand_drag_drops_on_empty_slot() -> void:
         _expect(hand_card.payload == payload_before, "拖拽开始不应改变拖拽数据")
         await _push_button(instance, target, false)
         await get_tree().process_frame
-        _expect(captured.size() == 1, "手牌落在空位应产生一条出牌意图，实际 %d" % captured.size())
+        _expect(captured.size() == 1, "手牌落在棋盘空白应产生一条出牌意图，实际 %d" % captured.size())
         if captured.size() == 1:
             var intent: Dictionary = captured[0]
             _expect(str(intent.get("kind", "")) == Protocol.INTENT_PLAY_CARD, "落点意图应为出牌")
@@ -1720,7 +1737,7 @@ func _check_shop_drag_buys() -> void:
                 "商店拖拽占位应与被拖卡同尺寸",
             )
             _expect(
-                shop_row.get_child_count() == 7,
+                shop_row.get_child_count() == 5,
                 "占位应补齐被隐藏的原卡位，实际 %d" % shop_row.get_child_count(),
             )
             var drag_viewport = instance.get_viewport()

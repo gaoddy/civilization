@@ -234,7 +234,6 @@ func _refresh_shop(state: GameUiState) -> void:
         var index := int(slot.get("index", 0))
         var card_id := CardText.optional_text(slot.get("cardId"))
         if card_id == "":
-            _shop_row.add_child(_empty_slot(index))
             continue
         var slot_aff := _find_by_index(aff.get("shopSlots", []), index)
         var buyable := not state.stale and not state.expired and bool(slot_aff.get("buyable", false))
@@ -260,17 +259,6 @@ func _refresh_shop(state: GameUiState) -> void:
         if not panel.drag_allowed:
             UI.apply_dim(panel)
         _shop_row.add_child(panel)
-
-
-func _empty_slot(index: int) -> PanelContainer:
-    var panel := UI.card_panel("empty")
-    panel.name = "ShopSlot%d" % index
-    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    panel.custom_minimum_size = Vector2(UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height"))
-    var hint := UI.empty_hint(tr("ui.game.recruit.empty_shop_slot"))
-    hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    panel.add_child(hint)
-    return panel
 
 
 func _find_by_index(items: Array, index: int) -> Dictionary:
