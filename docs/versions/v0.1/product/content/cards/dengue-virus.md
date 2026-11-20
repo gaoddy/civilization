@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 9
 skills: [keyword-contagion, latent-3]
-is_scholar: false
 ---
 
 # 登革病毒
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；latent-3 |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 核糖病毒门 › 黄病毒纲 › 黄病毒目 › 黄病毒科 |
 
 ## 效果

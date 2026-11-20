@@ -7,7 +7,6 @@ era: future
 categories: [play:machine]
 taxon: information-computing
 cost: 3
-match_text: 同左
 skills: [trigger-mech-optimal-attack-this-turn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-mech-optimal-attack-this-turn]
 | 玩法 | 机械 |
 | 技能 | trigger-mech-optimal-attack-this-turn |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 造物 › 信息与计算 |
 
 ## 效果

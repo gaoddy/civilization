@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 4
 skills: [deathrattle-summon-spore-token-2]
-is_scholar: false
 ---
 
 # 蘑菇
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-spore-token-2 |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 伞菌目 › 蘑菇科 |
 
 ## 效果

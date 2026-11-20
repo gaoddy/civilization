@@ -10,7 +10,6 @@ era: future
 attack: 15
 health: 14
 skills: [keyword-windfury]
-is_scholar: false
 ---
 
 # 智慧巨兽
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 14 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 未定科 |
 
 ## 效果

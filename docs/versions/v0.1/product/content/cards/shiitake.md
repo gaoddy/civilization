@@ -10,7 +10,6 @@ era: feudal
 attack: 3
 health: 7
 skills: [decompose-kill-original]
-is_scholar: false
 ---
 
 # 香菇
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 7 |
 | 关键词 | 分解 |
 | 技能 | decompose-kill-original |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 伞菌目 › 光茸菌科 |
 
 ## 效果

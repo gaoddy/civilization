@@ -10,7 +10,6 @@ era: modern
 attack: 8
 health: 16
 skills: [convert-3, microbiology]
-is_scholar: false
 ---
 
 # 噬菌体（肌尾）
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 16 |
 | 关键词 | 无 |
 | 技能 | convert-3；microbiology |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 有尾噬菌体门 › 有尾噬菌体纲 › 有尾噬菌体目 › 肌尾噬菌体科 |
 
 ## 效果

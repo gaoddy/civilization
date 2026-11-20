@@ -10,7 +10,6 @@ era: industrial
 attack: 8
 health: 12
 skills: [battlecry-all-friendly-growth-once, shout]
-is_scholar: false
 ---
 
 # 电话交换机
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-growth-once；shout |
-| 学者 | 否 |
 | 科学分类 | 造物 › 信息与计算 |
 
 ## 效果

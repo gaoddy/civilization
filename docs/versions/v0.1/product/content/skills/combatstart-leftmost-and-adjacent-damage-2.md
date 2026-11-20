@@ -1,7 +1,6 @@
 ---
 id: combatstart-leftmost-and-adjacent-damage-2
 template: combatstart-damage-leftmost-adjacent(amount=2)
-match_text: 同左
 ---
 
 # combatstart-leftmost-and-adjacent-damage-2
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | combatstart-leftmost-and-adjacent-damage-2 |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | combatstart-damage-leftmost-adjacent |
 
 ## 效果

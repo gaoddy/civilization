@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 2
 skills: [trigger-2-humans-self-plus-1-plus-1]
-is_scholar: false
 ---
 
 # 部落战士
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 2 |
 | 关键词 | 无 |
 | 技能 | trigger-2-humans-self-plus-1-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

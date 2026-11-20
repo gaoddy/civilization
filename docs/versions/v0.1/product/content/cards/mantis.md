@@ -10,7 +10,6 @@ era: classical
 attack: 5
 health: 4
 skills: [keyword-ignore-taunt]
-is_scholar: false
 ---
 
 # 螳螂
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 螳螂目 › 螳螂科 |
 
 ## 效果

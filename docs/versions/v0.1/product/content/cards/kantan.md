@@ -7,7 +7,6 @@ era: classical
 categories: [play:machine]
 taxon: earth-science
 cost: 2
-match_text: 同左
 skills: [trigger-discover-tribe-minion]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-discover-tribe-minion]
 | 玩法 | 机械 |
 | 技能 | trigger-discover-tribe-minion |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 地球科学 |
 
 ## 效果

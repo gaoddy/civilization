@@ -351,7 +351,6 @@ fn hash_minion(hasher: &mut Hasher, minion: &MinionInstance) {
     hasher.u64(minion.instance_id);
     hasher.str(&minion.card_id);
     hasher.bool(minion.golden);
-    hasher.bool(minion.is_scholar);
     hash_stat(hasher, &minion.stats.attack);
     hash_stat(hasher, &minion.stats.health);
     hasher.i32(minion.breed);

@@ -11,7 +11,6 @@ template: aura-all-ps-other-both(playstyle=machine,attack=1,health=1)
 | --- | --- |
 | id | aura-other-mech-plus-1-plus-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-all-ps-other-both |
 
 ## 效果

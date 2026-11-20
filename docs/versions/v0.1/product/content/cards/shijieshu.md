@@ -10,7 +10,6 @@ era: future
 attack: 8
 health: 16
 skills: [keyword-sow, aura-plant-plus-1-plus-1]
-is_scholar: false
 ---
 
 # 世界树
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 16 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow；aura-plant-plus-1-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 未定科 |
 
 ## 效果

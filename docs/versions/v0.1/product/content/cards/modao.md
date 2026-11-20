@@ -7,7 +7,6 @@ era: primitive
 categories: [play:bird, play:machine]
 taxon: military
 cost: 1
-match_text: 同左
 skills: [trigger-friendly-plus-2-attack]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-plus-2-attack]
 | 玩法 | 鸟纲、机械 |
 | 技能 | trigger-friendly-plus-2-attack |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 社会 › 军事学 |
 
 ## 效果

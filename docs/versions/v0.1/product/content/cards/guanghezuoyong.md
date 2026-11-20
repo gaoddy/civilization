@@ -7,7 +7,6 @@ era: modern
 categories: [play:plant]
 taxon: biology
 cost: 1
-match_text: 同左
 skills: [trigger-friendly-plant-breed-2]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-plant-breed-2]
 | 玩法 | 植物界 |
 | 技能 | trigger-friendly-plant-breed-2 |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

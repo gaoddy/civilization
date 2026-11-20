@@ -19,7 +19,6 @@ def card(cid, plays, level, attack, health, skills=(), card_type="minion", cost=
         "categories": [{"kind": kind, "value": value}
                        for kind, _, value in (item.partition(":") for item in categories)],
         "taxon": taxon,
-        "is_scholar": False,
     }
 
 
@@ -59,8 +58,8 @@ class SkillDensityTest(unittest.TestCase):
 
 
 class EffectTest(unittest.TestCase):
-    def test_total_must_be_100(self):
-        cards = [card(f"e{i}", ("machine",), 3, 0, 0, ["s"], "effect", 2) for i in range(99)]
+    def test_total_must_be_99(self):
+        cards = [card(f"e{i}", ("machine",), 3, 0, 0, ["s"], "effect", 2) for i in range(98)]
         errors = br.violations(cards)
         self.assertTrue(any("效果牌总数" in e for e in errors))
 
@@ -159,11 +158,10 @@ class VocabularyTest(unittest.TestCase):
         cards = [card("f", ("mammal", "machine"), 3, 3, 4, ["k-taunt", "s-ignore"])]
         self.assertEqual(br.vocabulary_errors(cards, SKILLS), [])
 
-    def test_no_play_and_scholar_are_skipped(self):
+    def test_no_play_and_zero_attack_are_skipped(self):
         no_play = card("n", (), 3, 3, 4, ["s-generic", "s-generic"], categories=[])
-        scholar = card("s", ("mammal",), 3, 0, 6, ["s-generic", "s-generic"])
-        scholar["is_scholar"] = True
-        self.assertEqual(br.vocabulary_errors([no_play, scholar], SKILLS), [])
+        zero = card("z", ("mammal",), 3, 0, 6, ["s-generic", "s-generic"])
+        self.assertEqual(br.vocabulary_errors([no_play, zero], SKILLS), [])
 
     def test_craft_tool_taxon_skips_vocabulary_but_automation_is_checked(self):
         tool = card("tool", ("machine",), 5, 7, 9,

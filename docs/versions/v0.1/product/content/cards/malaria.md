@@ -10,7 +10,6 @@ era: primitive
 attack: 4
 health: 6
 skills: [combatstart-random-enemy-contagion-1]
-is_scholar: false
 ---
 
 # 疟疾
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-1 |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 顶复门 › 无腔纲 › 血孢子虫目 › 疟原虫科 |
 | 关联分类 | 寄生：人科 |
 

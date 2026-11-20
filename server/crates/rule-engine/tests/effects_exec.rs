@@ -54,7 +54,6 @@ fn add_card(engine: &mut Engine, id: &str, attack: i32, health: i32, keywords: &
             attack: Some(attack),
             health: Some(health),
             skills: skill_ids,
-            is_scholar: false,
             cost: Some(1),
         },
     );
@@ -146,7 +145,7 @@ fn battlecry_growth_adds_permanent_stats() {
 }
 
 #[test]
-fn scholar_growth_adds_health_only() {
+fn growth_applies_attack_and_health_to_zero_attack_minion() {
     let (mut engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "aristotle");
 
@@ -157,11 +156,14 @@ fn scholar_growth_adds_health_only() {
         None,
     );
 
-    let scholar = board_minion(&state, 0, 0);
-    assert_eq!(scholar.stats.attack.growth, 0, "学者成长不加攻击");
-    assert_eq!(scholar.stats.health.growth, 1, "学者成长只加生命");
-    assert_eq!(combat::effective_attack(&engine.catalog, scholar), 0);
-    assert_eq!(combat::effective_health(&engine.catalog, scholar), 10);
+    let minion = board_minion(&state, 0, 0);
+    assert_eq!(
+        minion.stats.attack.growth, 1,
+        "攻击力 0 的随从成长照常加攻击"
+    );
+    assert_eq!(minion.stats.health.growth, 1, "成长同时加生命");
+    assert_eq!(combat::effective_attack(&engine.catalog, minion), 1);
+    assert_eq!(combat::effective_health(&engine.catalog, minion), 10);
 }
 
 #[test]
@@ -580,7 +582,7 @@ fn play_effect_card_fires_effect_then_on_use() {
     let responder = board_minion(&state, 0, 0);
     assert_eq!(
         responder.stats.health.growth, 1,
-        "效果牌自身：学者获得一次成长（+0/+1）"
+        "效果牌自身：获得一次成长（+1/+1）"
     );
     assert_eq!(
         responder.stats.health.permanent, 1,
@@ -612,8 +614,8 @@ fn coverage_counts_all_effect_segments() {
 
     let total: usize = coverage.values().sum();
     // 英雄主动技能各带一段 `OnActivate` 效果，效果段总数随之上升。
-    assert_eq!(total, 242, "已提交数据的全部效果段都应被统计");
-    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&21));
+    assert_eq!(total, 241, "已提交数据的全部效果段都应被统计");
+    assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&20));
     assert_eq!(coverage.get(&(Trigger::OnPlay, Op::ModifyStats)), Some(&12));
     assert_eq!(coverage.get(&(Trigger::OnUse, Op::ModifyStats)), Some(&1));
     assert_eq!(coverage.get(&(Trigger::OnActivate, Op::Growth)), Some(&13));

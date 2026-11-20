@@ -10,7 +10,6 @@ era: future
 attack: 6
 health: 10
 skills: [keyword-evolve, keyword-contagion]
-is_scholar: false
 ---
 
 # 合成细胞
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 进化；传染 |
 | 技能 | keyword-evolve；keyword-contagion |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 未定科 |
 
 ## 效果

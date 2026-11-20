@@ -10,7 +10,6 @@ era: future
 attack: 15
 health: 14
 skills: [keyword-ignore-taunt]
-is_scholar: false
 ---
 
 # 曲率飞船
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 14 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt |
-| 学者 | 否 |
 | 科学分类 | 造物 › 交通与运载 |
 
 ## 效果

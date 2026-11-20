@@ -1,8 +1,8 @@
 //! 进化（生物专有关键词）：进入战场时从三项中选择一项，先选后结算。
 //!
 //! 规则口径见 `keywords-and-mechanics.md` §1「进化」与 §2.2：战吼时先由玩家选择，
-//! 再结算；金色选两次，可重复选同一项；进化只作用于自身；学者没有进化
-//! （§1.1，数据层禁止学者携带该关键词）。每次结算对来源随从触发一次
+//! 再结算；金色选两次，可重复选同一项；进化只作用于自身，且只有生物卡能携带
+//! （§1.1）。每次结算对来源随从触发一次
 //! `OnAllyEvolve`。
 //!
 //! 进化以 [`PendingChoice::Evolve`] 表达，只在招募阶段存在；选择由
@@ -53,13 +53,13 @@ impl Engine {
         if !self.card_has_keyword(&card_id, "evolve") {
             return;
         }
-        // 进化是生物专有词；学者与带 `play:machine` 的卡不能进化
+        // 进化是生物专有词；带 `play:machine` 的卡不能进化
         // （数据层已禁止，这里再兜底一次）。
         let evolvable = self
             .catalog
             .cards
             .get(&card_id)
-            .is_some_and(|card| !card.is_scholar && !has_play(&card.categories, "machine"));
+            .is_some_and(|card| !has_play(&card.categories, "machine"));
         if !evolvable {
             return;
         }
@@ -123,7 +123,7 @@ impl Engine {
     /// 入场路径调用：来源登记了进化则等选择结算，否则当场按「进化」处理。
     ///
     /// 数据中带「进化」关键词的卡总会在入场时登记待选；已登记时由选择结算触发。
-    /// 未登记的情形（没有进化、学者、来源已离场或未找到）在这里按「未发生进化」
+    /// 未登记的情形（没有进化、来源已离场或未找到）在这里按「未发生进化」
     /// 处理，即不触发——`OnAllyEvolve` 不再是入场副作用，而是选择结果的副作用。
     pub(crate) fn fire_evolve_after_enter(
         &mut self,

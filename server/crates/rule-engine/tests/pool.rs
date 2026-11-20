@@ -1,4 +1,4 @@
-//! 卡池判定：玩法过滤、中立与学者口径、分类祖先匹配、非池卡事实。
+//! 卡池判定：玩法过滤、中立与多玩法归属口径、分类祖先匹配、非池卡事实。
 
 mod common;
 
@@ -38,7 +38,6 @@ fn card(id: &str, categories: Vec<Category>) -> Card {
         attack: Some(1),
         health: Some(1),
         skills: Vec::new(),
-        is_scholar: false,
         cost: Some(1),
     }
 }
@@ -133,10 +132,9 @@ fn card_in_pool_requires_play_categories() {
 }
 
 #[test]
-fn scholar_enters_pool_by_play_association() {
+fn zero_attack_minion_enters_pool_by_play_association() {
     let catalog = test_catalog();
-    let agi = catalog.cards.get("agi").expect("学者卡 agi 存在");
-    assert!(agi.is_scholar);
+    let agi = catalog.cards.get("agi").expect("多玩法卡 agi 存在");
     assert!(has_play(agi, "mammal"), "agi 带 play:mammal");
     assert!(has_play(agi, "machine"), "agi 带 play:machine");
 
@@ -154,7 +152,7 @@ fn scholar_enters_pool_by_play_association() {
         Playstyle::Insect,
         Playstyle::Virus,
     ]);
-    assert!(card_in_pool(agi, &with_machine), "学者按 play: 进池");
+    assert!(card_in_pool(agi, &with_machine), "按 play: 进池");
     assert!(!card_in_pool(agi, &without), "未命中 play: 时不进池");
 }
 
@@ -371,7 +369,7 @@ fn targeted_effect_follows_enabled_playstyle_through_shop_roll() {
 }
 
 #[test]
-fn scholar_discover_uses_play_association() {
+fn multi_play_minion_discover_uses_play_association() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "on-mammal", vec![play("mammal")]);
     let (mut engine, mut state) = setup_with(
@@ -384,7 +382,7 @@ fn scholar_discover_uses_play_association() {
             Playstyle::Virus,
         ],
     );
-    // 真实学者卡 agi：play:mammal / play:machine。
+    // 真实多玩法卡 agi：play:mammal / play:machine。
     state.pool.clear();
     state.pool.insert("agi".to_string(), 20);
     state.pool.insert("on-mammal".to_string(), 20);
@@ -514,8 +512,8 @@ fn play_and_playstyle_filters_match_any_play_category() {
 }
 
 #[test]
-fn scholar_with_play_machine_matches_any_machine_filter() {
-    // agi 是学者，同时带 play:mammal 与 play:machine；两条玩法筛选都应命中它。
+fn multi_play_minion_with_play_machine_matches_any_machine_filter() {
+    // agi 同时带 play:mammal 与 play:machine；两条玩法筛选都应命中它。
     let (mut engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "agi");
 
@@ -531,10 +529,11 @@ fn scholar_with_play_machine_matches_any_machine_filter() {
         &ctx(0),
         None,
     );
-    // 学者成长只加生命。
+    // 两次成长按普通随从各 +1/+1。
+    assert_eq!(state.players[0].board[0].stats.attack.growth, 2);
     assert_eq!(
         state.players[0].board[0].stats.health.growth, 2,
-        "机械与哺乳纲两条筛选都应命中多玩法学者"
+        "机械与哺乳纲两条筛选都应命中多玩法随从"
     );
 }
 
@@ -609,7 +608,6 @@ fn token_uses_own_playstyle_and_taxon_defaults() {
             attack: Some(1),
             health: Some(1),
             skills: Vec::new(),
-            is_scholar: false,
             cost: None,
         },
     );

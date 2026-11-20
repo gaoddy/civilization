@@ -10,7 +10,6 @@ era: primitive
 attack: 4
 health: 4
 skills: [trigger-friendly-evolve-self-plus-1-plus-1]
-is_scholar: false
 ---
 
 # 始祖兽
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | trigger-friendly-evolve-self-plus-1-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 未定科 |
 
 ## 效果

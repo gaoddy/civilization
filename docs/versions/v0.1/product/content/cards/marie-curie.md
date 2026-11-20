@@ -10,7 +10,6 @@ era: modern
 attack: 0
 health: 16
 skills: [battlecry-friendly-growth-twice, radiation]
-is_scholar: true
 ---
 
 # 玛丽·居里
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 16 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-twice；radiation |
-| 学者 | 是 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
@@ -40,7 +38,7 @@ is_scholar: true
 ## 设计说明
 
 - 定位：被动输出，战斗开始时稳定造成 2 点伤害。
-- 平衡边界：随机目标必须走种子；比赛模式下改为「对最左侧敌方随从造成 2 点伤害」。
+- 平衡边界：随机目标必须走种子，保证同一意图序列可复现。
 - 与其他伤害效果的叠加：先结算英雄卡的被动技能，再结算战斗。
 
 ## 出处

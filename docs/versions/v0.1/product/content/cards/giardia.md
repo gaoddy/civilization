@@ -10,7 +10,6 @@ era: classical
 attack: 7
 health: 9
 skills: [devour-3, aura-other-protozoa-plus-1-attack]
-is_scholar: false
 ---
 
 # 贾第虫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 无 |
 | 技能 | devour-3；aura-other-protozoa-plus-1-attack |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 后滴虫门 › 叉鞭毛纲 › 双滴虫目 › 六鞭毛虫科 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: prehistoric
 attack: 3
 health: 3
 skills: [trigger-friendly-death-self-plus-1-attack]
-is_scholar: false
 ---
 
 # 巨鹰
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | trigger-friendly-death-self-plus-1-attack |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹰形目 › 鹰科 |
 | 关联分类 | 捕食：偶蹄目 |
 

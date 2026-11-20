@@ -10,7 +10,6 @@ era: prehistoric
 attack: 1
 health: 3
 skills: [deathrattle-summon-amoeba-larva-1]
-is_scholar: false
 ---
 
 # 变形虫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-amoeba-larva-1 |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 变形虫门 › 管状根足纲 › 真变形虫目 › 变形虫科 |
 
 ## 效果

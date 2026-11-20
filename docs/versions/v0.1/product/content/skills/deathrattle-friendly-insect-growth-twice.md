@@ -12,7 +12,6 @@ template: on-death-growth-single-ps(playstyle=insect,times=2)
 | --- | --- |
 | id | deathrattle-friendly-insect-growth-twice |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-growth-single-ps |
 
 ## 效果

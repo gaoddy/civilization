@@ -7,7 +7,6 @@ era: feudal
 categories: [play:bacteria, play:virus]
 taxon: medicine
 cost: 3
-match_text: 同左
 skills: [combatstart-all-enemies-contagion-1]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-all-enemies-contagion-1]
 | 玩法 | 细菌域、病毒 |
 | 技能 | combatstart-all-enemies-contagion-1 |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 医学 |
 
 ## 效果

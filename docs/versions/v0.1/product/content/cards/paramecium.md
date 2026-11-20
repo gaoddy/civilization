@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 2
 skills: [battlecry-friendly-protozoa-growth-once]
-is_scholar: false
 ---
 
 # 草履虫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 2 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-protozoa-growth-once |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 纤毛门 › 寡膜纲 › 草履虫目 › 草履虫科 |
 
 ## 效果

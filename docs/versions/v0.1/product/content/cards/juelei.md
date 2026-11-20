@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 5
 skills: [keyword-breed-2]
-is_scholar: false
 ---
 
 # 蕨类
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 繁衍 2 |
 | 技能 | keyword-breed-2 |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 蕨类植物门 › 水龙骨纲 › 水龙骨目 › 水龙骨科 |
 
 ## 效果

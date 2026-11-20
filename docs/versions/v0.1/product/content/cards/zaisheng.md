@@ -7,7 +7,6 @@ era: primitive
 categories: [play:cnidarian]
 taxon: biology
 cost: 2
-match_text: 同左
 skills: [trigger-cnidarian-single-reborn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-cnidarian-single-reborn]
 | 玩法 | 水螅纲 |
 | 技能 | trigger-cnidarian-single-reborn |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

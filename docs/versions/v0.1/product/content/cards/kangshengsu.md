@@ -7,7 +7,6 @@ era: modern
 categories: [play:bacteria]
 taxon: medicine
 cost: 1
-match_text: 同左
 skills: [trigger-bacteria-single-armor-2-this-turn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-bacteria-single-armor-2-this-turn]
 | 玩法 | 细菌域 |
 | 技能 | trigger-bacteria-single-armor-2-this-turn |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 医学 |
 
 ## 效果

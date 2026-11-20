@@ -10,7 +10,6 @@ era: prehistoric
 attack: 3
 health: 3
 skills: [deathrattle-all-friendly-plus-0-plus-1]
-is_scholar: false
 ---
 
 # 猛犸象
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | deathrattle-all-friendly-plus-0-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 长鼻目 › 象科 |
 
 ## 效果

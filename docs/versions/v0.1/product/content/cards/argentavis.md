@@ -10,7 +10,6 @@ era: classical
 attack: 14
 health: 14
 skills: [keyword-windfury, battlecry-friendly-bird-growth-once]
-is_scholar: false
 ---
 
 # 阿根廷巨鹰
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 14 |
 | 关键词 | 连击；战吼 |
 | 技能 | keyword-windfury；battlecry-friendly-bird-growth-once |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 美洲鹫目 › 畸鸟科 |
 
 ## 效果

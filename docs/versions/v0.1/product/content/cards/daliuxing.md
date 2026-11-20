@@ -7,7 +7,6 @@ era: modern
 categories: [play:virus]
 taxon: medicine
 cost: 3
-match_text: 同左
 skills: [combatstart-all-enemies-damage-3]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-all-enemies-damage-3]
 | 玩法 | 病毒 |
 | 技能 | combatstart-all-enemies-damage-3 |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 医学 |
 
 ## 效果

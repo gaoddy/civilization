@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 4
 skills: [deathrattle-friendly-protozoa-growth-once]
-is_scholar: false
 ---
 
 # 钟虫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-protozoa-growth-once |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 纤毛门 › 寡膜纲 › 固着目 › 钟虫科 |
 
 ## 效果

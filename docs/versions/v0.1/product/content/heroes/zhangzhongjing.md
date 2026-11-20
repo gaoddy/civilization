@@ -3,6 +3,7 @@ id: zhangzhongjing
 name: 张仲景
 categories: [play:mammal]
 skills: [cold-damage-treatise]
+introduction: 东汉医学家，著《伤寒杂病论》，确立六经辨证与方剂配伍体系，把临床经验整理为可传承的诊疗规范，被后世尊为医圣。
 ---
 
 # 张仲景
@@ -15,6 +16,10 @@ skills: [cold-damage-treatise]
 | 名称 | 张仲景 |
 | 玩法 | 哺乳纲 |
 | 技能 | cold-damage-treatise |
+
+## 简介
+
+东汉医学家，著《伤寒杂病论》，确立六经辨证与方剂配伍体系，把临床经验整理为可传承的诊疗规范，被后世尊为医圣。
 
 ## 效果
 

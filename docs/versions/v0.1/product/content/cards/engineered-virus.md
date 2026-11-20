@@ -10,7 +10,6 @@ era: future
 attack: 8
 health: 16
 skills: [keyword-contagion, combatstart-all-enemies-contagion-1]
-is_scholar: false
 ---
 
 # 基因工程病毒
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 16 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-all-enemies-contagion-1 |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 未定科 |
 
 ## 效果

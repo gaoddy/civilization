@@ -10,7 +10,6 @@ era: primitive
 attack: 3
 health: 5
 skills: [battlecry-friendly-virus-plus-1-attack]
-is_scholar: false
 ---
 
 # 狂犬病
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-virus-plus-1-attack |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 弹状病毒科 |
 | 关联分类 | 寄生：哺乳纲 |
 

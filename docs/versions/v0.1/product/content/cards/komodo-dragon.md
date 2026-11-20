@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 12
 skills: [keyword-poison, keyword-taunt]
-is_scholar: false
 ---
 
 # 科莫多巨蜥
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 剧毒；嘲讽 |
 | 技能 | keyword-poison；keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 巨蜥科 |
 
 ## 效果

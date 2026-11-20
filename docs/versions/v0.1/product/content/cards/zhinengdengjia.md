@@ -7,7 +7,6 @@ era: future
 categories: [play:machine]
 taxon: physics
 cost: 3
-match_text: 同左
 skills: [combatstart-leftmost-damage-6]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-leftmost-damage-6]
 | 玩法 | 机械 |
 | 技能 | combatstart-leftmost-damage-6 |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 物理学 |
 
 ## 效果

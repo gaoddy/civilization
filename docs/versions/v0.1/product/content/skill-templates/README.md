@@ -56,7 +56,6 @@ template: on-death-summon(token=seedling,count=1)
 | `card` | 进池卡（`in_shop_pool: true`）id | 卡牌名 | `.stats` → 攻/血 |
 | `taxon` | 分类节点 id | 卡面名词 | — |
 | `playstyle` | 玩法 id | 卡面名词 | — |
-| `scholar` | 固定 `true` | 学者 | — |
 | `keyword` | 关键词 id，可带层数（`breed 2`） | 名称 + 层数 | `.name`、`.level`、`.text` |
 | `int` | 整数 | 数字 | `.cn` → 中文数词 |
 | `count` | 整数 1–4 | 中文数词（一/两/三/四） | `.num` → 数字 |

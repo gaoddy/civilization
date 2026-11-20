@@ -10,7 +10,6 @@ era: industrial
 attack: 4
 health: 9
 skills: [keyword-contagion, keyword-armor-1]
-is_scholar: false
 ---
 
 # 结核分枝杆菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 传染；减伤 1 |
 | 技能 | keyword-contagion；keyword-armor-1 |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 放线菌门 › 放线菌纲 › 分枝杆菌目 › 分枝杆菌科 |
 
 ## 效果

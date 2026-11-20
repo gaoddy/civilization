@@ -11,7 +11,6 @@ template: aura-all-ps-both(playstyle=plant,attack=1,health=1)
 | --- | --- |
 | id | aura-plant-plus-1-plus-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-all-ps-both |
 
 ## 效果

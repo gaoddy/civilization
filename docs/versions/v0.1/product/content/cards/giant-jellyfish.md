@@ -10,7 +10,6 @@ era: modern
 attack: 8
 health: 16
 skills: [revive-3, keyword-armor-1]
-is_scholar: false
 ---
 
 # 巨型水母
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 16 |
 | 关键词 | 减伤 1 |
 | 技能 | revive-3；keyword-armor-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 钵水母纲 › 根口水母目 › 根口水母科 |
 
 ## 效果

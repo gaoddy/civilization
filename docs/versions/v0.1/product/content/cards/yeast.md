@@ -10,7 +10,6 @@ era: prehistoric
 attack: 1
 health: 3
 skills: [deathrattle-summon-spore-token-1]
-is_scholar: false
 ---
 
 # 酵母
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-spore-token-1 |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 子囊菌门 › 酵母纲 › 酵母目 › 酵母科 |
 
 ## 效果

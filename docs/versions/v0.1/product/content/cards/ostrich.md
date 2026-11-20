@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 4
 skills: [keyword-windfury, battlecry-friendly-bird-growth-once]
-is_scholar: false
 ---
 
 # 鸵鸟
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 连击；战吼 |
 | 技能 | keyword-windfury；battlecry-friendly-bird-growth-once |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鸵鸟目 › 鸵鸟科 |
 
 ## 效果

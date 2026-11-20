@@ -3,6 +3,7 @@ id: pasteur
 name: 巴斯德
 categories: [play:virus]
 skills: [microbiology]
+introduction: 法国微生物学家与化学家，提出巴氏消毒法并研制狂犬病疫苗，奠定微生物学与免疫学基础，挽救无数生命。
 ---
 
 # 巴斯德
@@ -15,6 +16,10 @@ skills: [microbiology]
 | 名称 | 巴斯德 |
 | 玩法 | 病毒 |
 | 技能 | microbiology |
+
+## 简介
+
+法国微生物学家与化学家，提出巴氏消毒法并研制狂犬病疫苗，奠定微生物学与免疫学基础，挽救无数生命。
 
 ## 效果
 

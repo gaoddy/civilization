@@ -10,7 +10,6 @@ era: modern
 attack: 5
 health: 4
 skills: [keyword-poison, mimic-1]
-is_scholar: false
 ---
 
 # 蓝环章鱼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 剧毒 |
 | 技能 | keyword-poison；mimic-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 章鱼科 |
 
 ## 效果

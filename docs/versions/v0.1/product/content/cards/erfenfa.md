@@ -7,7 +7,6 @@ era: classical
 categories: [play:mammal, play:machine]
 taxon: mathematics
 cost: 0
-match_text: 同左
 skills: [trigger-friendly-plus-2-attack]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-plus-2-attack]
 | 玩法 | 哺乳纲、机械 |
 | 技能 | trigger-friendly-plus-2-attack |
 | 费用 | 0 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 数学 |
 
 ## 效果

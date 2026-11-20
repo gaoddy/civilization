@@ -10,7 +10,6 @@ era: feudal
 attack: 5
 health: 4
 skills: [battlecry-friendly-bird-growth-once, dive-1]
-is_scholar: false
 ---
 
 # 乌鸦
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-bird-growth-once；dive-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 雀形目 › 鸦科 |
 
 ## 效果

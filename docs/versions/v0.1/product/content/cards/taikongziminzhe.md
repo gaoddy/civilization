@@ -10,7 +10,6 @@ era: future
 attack: 8
 health: 11
 skills: [keyword-divine-shield, shout]
-is_scholar: false
 ---
 
 # 太空殖民者
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 11 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；shout |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

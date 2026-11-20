@@ -1,6 +1,6 @@
 //! `BoardMinionView.stats` 分层构成的集成测试。
 //!
-//! 覆盖：各层与 `current` 的自洽、学者攻击投影为零、受击差额进入 `damage`、
+//! 覆盖：各层与 `current` 的自洽、攻击力为 0 的随从分层照常累计、受击差额进入 `damage`、
 //! 招募期负血量被夹到 0 后由 `damage` 吸收，以及光环折叠后 `aura` 与当前量一致。
 
 mod common;
@@ -13,7 +13,7 @@ use rule_engine::view::{BoardMinionView, view};
 
 /// 卡面 3/3 的普通随从。
 const FOUR: &str = "jianchihu";
-/// 卡面 0/5 的学者随从。
+/// 卡面 0/5、攻击力为 0 的随从。
 const SCHOLAR: &str = "euclid";
 
 /// 断言四项构成与 `damage`、`current` 自洽。
@@ -92,13 +92,12 @@ fn layers_and_current_agree_without_damage() {
 }
 
 #[test]
-fn scholar_attack_is_projected_to_zero() {
+fn zero_attack_layers_accumulate_normally() {
     let (engine, mut state) = started(7);
-    let mut scholar = MinionInstance::new(catalog(&engine), 1, SCHOLAR, false);
-    assert!(scholar.is_scholar);
-    scholar.stats.attack.add_permanent(4);
-    scholar.stats.health.add_growth(2);
-    state.players[0].board.push(scholar);
+    let mut minion = MinionInstance::new(catalog(&engine), 1, SCHOLAR, false);
+    minion.stats.attack.add_permanent(4);
+    minion.stats.health.add_growth(2);
+    state.players[0].board.push(minion);
 
     let stats = first_board_minion(&engine, &state).stats;
 
@@ -106,13 +105,13 @@ fn scholar_attack_is_projected_to_zero() {
         stats.attack,
         rule_engine::view::StatBreakdownView {
             initial: 0,
-            permanent: 0,
+            permanent: 4,
             turn: 0,
             aura: 0,
             damage: 0,
-            current: 0,
+            current: 4,
         },
-        "学者攻击的六层全部投影为 0"
+        "攻击力为 0 的随从分层照常累计"
     );
     assert_eq!(stats.health.initial, 5);
     assert_eq!(stats.health.permanent, 2);

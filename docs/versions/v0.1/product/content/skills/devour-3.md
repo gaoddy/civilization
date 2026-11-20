@@ -11,7 +11,6 @@ template: combatstart-devour(value=3)
 | --- | --- |
 | id | devour-3 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | combatstart-devour |
 
 ## 效果

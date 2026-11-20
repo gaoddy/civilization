@@ -10,7 +10,6 @@ era: future
 attack: 5
 health: 6
 skills: [keyword-reborn, shout]
-is_scholar: false
 ---
 
 # 克隆羊多莉
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 复生 |
 | 技能 | keyword-reborn；shout |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 偶蹄目 › 牛科 |
 | 关联分类 | 捕食：植物界 |
 

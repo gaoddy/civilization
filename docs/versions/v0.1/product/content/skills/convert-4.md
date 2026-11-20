@@ -11,7 +11,6 @@ template: combatstart-convert(threshold=4,token=bacteria-token-4,count=1)
 | --- | --- |
 | id | convert-4 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | combatstart-convert |
 
 ## 效果

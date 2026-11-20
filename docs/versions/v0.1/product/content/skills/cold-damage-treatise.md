@@ -4,7 +4,6 @@ name: 伤寒论
 template: activate-stats-all-health(health=1)
 cost: 2
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 伤寒论
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | cold-damage-treatise |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-stats-all-health |
 | 费用 | 2 |
 | 每回合次数 | 1 |

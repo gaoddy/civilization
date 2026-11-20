@@ -7,7 +7,6 @@ era: future
 categories: [play:mammal, play:plant]
 taxon: history
 cost: 4
-match_text: 同左
 skills: [trigger-all-friendly-growth-twice]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-all-friendly-growth-twice]
 | 玩法 | 哺乳纲、植物界 |
 | 技能 | trigger-all-friendly-growth-twice |
 | 费用 | 4 |
-| 确定性替换 | 同左 |
 | 科学分类 | 人文 › 历史学 |
 
 ## 效果

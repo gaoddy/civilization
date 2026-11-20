@@ -44,7 +44,6 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
             attack: Some(attack),
             health: Some(health),
             skills: skill_ids,
-            is_scholar: false,
             cost: Some(1),
         },
     );
@@ -76,7 +75,6 @@ fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, ef
             attack: Some(attack),
             health: Some(health),
             skills: vec![skill_id],
-            is_scholar: false,
             cost: Some(1),
         },
     );
@@ -132,7 +130,6 @@ fn add_effect_card_with_keywords(
             attack: Some(attack),
             health: Some(health),
             skills: skill_ids,
-            is_scholar: false,
             cost: Some(1),
         },
     );

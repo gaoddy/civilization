@@ -67,7 +67,6 @@ def _skill_table(doc, keyword_labels):
     rows = [
         f"| id | {doc['id']} |",
         f"| 关键词 | {_keyword_label(keyword, keyword_labels) if keyword else '无'} |",
-        f"| 确定性替换 | {doc.get('match_text') or '不适用'} |",
     ]
     if "template" in doc:
         ids = "；".join(call.template_id

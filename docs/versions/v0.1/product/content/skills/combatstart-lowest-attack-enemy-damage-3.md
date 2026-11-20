@@ -1,7 +1,6 @@
 ---
 id: combatstart-lowest-attack-enemy-damage-3
 template: combatstart-damage-lowest-attack(amount=3)
-match_text: 同左
 ---
 
 # combatstart-lowest-attack-enemy-damage-3
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | combatstart-lowest-attack-enemy-damage-3 |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | combatstart-damage-lowest-attack |
 
 ## 效果

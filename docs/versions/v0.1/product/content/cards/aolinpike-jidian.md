@@ -7,7 +7,6 @@ era: classical
 categories: [play:mammal, play:plant]
 taxon: sports
 cost: 2
-match_text: 同左
 skills: [trigger-all-friendly-growth-once]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-all-friendly-growth-once]
 | 玩法 | 哺乳纲、植物界 |
 | 技能 | trigger-all-friendly-growth-once |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 社会 › 体育学 |
 
 ## 效果

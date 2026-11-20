@@ -10,7 +10,6 @@ era: primitive
 attack: 4
 health: 5
 skills: [keyword-evolve, shout]
-is_scholar: false
 ---
 
 # 猛虎
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve；shout |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 猫科 |
 | 关联分类 | 捕食：偶蹄目 |
 

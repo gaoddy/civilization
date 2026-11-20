@@ -10,7 +10,6 @@ era: future
 attack: 15
 health: 14
 skills: [keyword-evolve, shout]
-is_scholar: false
 ---
 
 # 基因改造人
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 14 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve；shout |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

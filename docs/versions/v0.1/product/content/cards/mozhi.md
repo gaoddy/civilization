@@ -7,7 +7,6 @@ era: prehistoric
 categories: [play:cephalopod]
 taxon: biology
 cost: 1
-match_text: 同左
 skills: [combatstart-random-enemy-minus-2-attack]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-random-enemy-minus-2-attack]
 | 玩法 | 头足纲 |
 | 技能 | combatstart-random-enemy-minus-2-attack |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

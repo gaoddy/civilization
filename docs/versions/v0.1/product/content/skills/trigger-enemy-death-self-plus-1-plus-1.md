@@ -11,7 +11,6 @@ template: enemy-death-self-stats(attack=1,health=1)
 | --- | --- |
 | id | trigger-enemy-death-self-plus-1-plus-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | enemy-death-self-stats |
 
 ## 效果

@@ -10,7 +10,6 @@ era: feudal
 attack: 4
 health: 5
 skills: [keyword-sow, keyword-taunt]
-is_scholar: false
 ---
 
 # 竹林
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 播种；嘲讽 |
 | 技能 | keyword-sow；keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 禾本目 › 禾本科 |
 
 ## 效果

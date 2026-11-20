@@ -10,7 +10,6 @@ era: modern
 attack: 8
 health: 12
 skills: [keyword-assemble-2, battlecry-all-mech-growth-once-no-keyword]
-is_scholar: false
 ---
 
 # 无线电报
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；battlecry-all-mech-growth-once-no-keyword |
-| 学者 | 否 |
 | 科学分类 | 造物 › 信息与计算 |
 
 ## 效果

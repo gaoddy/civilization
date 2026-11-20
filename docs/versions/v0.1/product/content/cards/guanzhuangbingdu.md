@@ -10,7 +10,6 @@ era: modern
 attack: 8
 health: 13
 skills: [keyword-contagion, deathrattle-all-enemies-contagion-1]
-is_scholar: false
 ---
 
 # 冠状病毒
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 13 |
 | 关键词 | 传染；亡语 |
 | 技能 | keyword-contagion；deathrattle-all-enemies-contagion-1 |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 核糖病毒门 › 小核糖病毒纲 › 网巢病毒目 › 冠状病毒科 |
 | 关联分类 | 寄生：哺乳纲 |
 

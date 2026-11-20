@@ -10,7 +10,6 @@ era: industrial
 attack: 5
 health: 8
 skills: [human-growth-twice]
-is_scholar: false
 ---
 
 # 贝多芬
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | human-growth-twice |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

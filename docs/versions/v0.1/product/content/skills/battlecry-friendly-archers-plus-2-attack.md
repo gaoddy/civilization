@@ -12,7 +12,6 @@ template: on-play-battlecry-stats-all-id-attack(attack=2)
 | --- | --- |
 | id | battlecry-friendly-archers-plus-2-attack |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-stats-all-id-attack |
 
 ## 效果

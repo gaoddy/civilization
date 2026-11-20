@@ -14,7 +14,7 @@ TEMPLATE_DIR = "skill-templates"
 NOUN_FILE = "card-nouns.md"
 
 ARG_TYPES = (
-    "token", "card", "taxon", "playstyle", "scholar",
+    "token", "card", "taxon", "playstyle",
     "keyword", "int", "count", "duration",
 )
 
@@ -284,9 +284,6 @@ class Renderer:
         elif spec.type == "playstyle":
             if value not in self.nouns.playstyle:
                 raise ValueError(f"参数 {spec.name} 的玩法名词缺失 {value!r}")
-        elif spec.type == "scholar":
-            if value != "true":
-                raise ValueError(f"参数 {spec.name} 只能取 true，实为 {value!r}")
         elif spec.type == "keyword":
             match = _KEYWORD_RE.fullmatch(value)
             if not match or match.group(1) not in self.nouns.keyword_text:
@@ -403,8 +400,6 @@ class Renderer:
             return self.nouns.taxon[value]
         elif spec.type == "playstyle":
             return self.nouns.playstyle[value]
-        elif spec.type == "scholar":
-            return "学者"
         elif spec.type == "keyword":
             return self._keyword_text(value, modifier)
         elif spec.type == "int":

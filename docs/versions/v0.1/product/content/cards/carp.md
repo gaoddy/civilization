@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 2
 skills: [aura-other-fish-plus-0-plus-1]
-is_scholar: false
 ---
 
 # 鲤鱼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 2 |
 | 关键词 | 无 |
 | 技能 | aura-other-fish-plus-0-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲤形目 › 鲤科 |
 
 ## 效果

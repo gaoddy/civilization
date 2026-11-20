@@ -12,7 +12,6 @@ template: on-death-summon-split(token=spore-token-2,count=2)
 | --- | --- |
 | id | deathrattle-summon-2-spores-2-2 |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-summon-split |
 
 ## 效果

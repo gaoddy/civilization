@@ -13,7 +13,6 @@ template: on-death-summon-split(token=termite-token,count=3)
 | --- | --- |
 | id | deathrattle-summon-3-termites |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-summon-split |
 
 ## 效果

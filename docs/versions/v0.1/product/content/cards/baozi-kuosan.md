@@ -7,7 +7,6 @@ era: primitive
 categories: [play:fungus]
 taxon: biology
 cost: 2
-match_text: 同左
 skills: [trigger-summon-2-spores-2-2]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-summon-2-spores-2-2]
 | 玩法 | 真菌界 |
 | 技能 | trigger-summon-2-spores-2-2 |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

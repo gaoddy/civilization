@@ -7,7 +7,6 @@ era: prehistoric
 categories: [play:fungus]
 taxon: biology
 cost: 1
-match_text: 同左
 skills: [trigger-fungus-single-plus-0-plus-3]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-fungus-single-plus-0-plus-3]
 | 玩法 | 真菌界 |
 | 技能 | trigger-fungus-single-plus-0-plus-3 |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

@@ -7,7 +7,6 @@ era: industrial
 categories: [play:machine]
 taxon: power-energy
 cost: 2
-match_text: 同左
 skills: [trigger-all-mech-growth-once]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-all-mech-growth-once]
 | 玩法 | 机械 |
 | 技能 | trigger-all-mech-growth-once |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 造物 › 动力与能源 |
 
 ## 效果

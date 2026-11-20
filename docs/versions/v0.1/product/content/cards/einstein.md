@@ -10,7 +10,6 @@ era: modern
 attack: 0
 health: 16
 skills: [battlecry-all-friendly-growth-once, light-speed-strike]
-is_scholar: true
 ---
 
 # 爱因斯坦
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 16 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-growth-once；light-speed-strike |
-| 学者 | 是 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

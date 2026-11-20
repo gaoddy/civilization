@@ -7,7 +7,6 @@ era: industrial
 categories: [play:bird, play:machine]
 taxon: physics
 cost: 1
-match_text: 战斗开始时，对敌方最左侧随从造成 2 点伤害
 skills: [combatstart-random-enemy-damage-2]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-random-enemy-damage-2]
 | 玩法 | 鸟纲、机械 |
 | 技能 | combatstart-random-enemy-damage-2 |
 | 费用 | 1 |
-| 确定性替换 | 战斗开始时，对敌方最左侧随从造成 2 点伤害 |
 | 科学分类 | 科学 › 物理学 |
 
 ## 效果

@@ -11,7 +11,6 @@ template: on-play-battlecry-growth-all-ps(playstyle=machine,times=1)
 | --- | --- |
 | id | battlecry-all-mech-growth-once-no-keyword |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-growth-all-ps |
 
 ## 效果

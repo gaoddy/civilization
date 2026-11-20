@@ -3,6 +3,7 @@ id: mozi
 name: 墨子
 categories: [play:mammal]
 skills: [enemy-random-cannot-attack]
+introduction: 春秋战国思想家与工匠，《墨子·公输》记载其止楚攻宋，以守城器械与论辩阻止战争，主张兼爱非攻。
 ---
 
 # 墨子
@@ -15,6 +16,10 @@ skills: [enemy-random-cannot-attack]
 | 名称 | 墨子 |
 | 玩法 | 哺乳纲 |
 | 技能 | enemy-random-cannot-attack |
+
+## 简介
+
+春秋战国思想家与工匠，《墨子·公输》记载其止楚攻宋，以守城器械与论辩阻止战争，主张兼爱非攻。
 
 ## 效果
 

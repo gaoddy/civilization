@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 2
 skills: [keyword-sow]
-is_scholar: false
 ---
 
 # 原始真菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 2 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 未定科 |
 
 ## 效果

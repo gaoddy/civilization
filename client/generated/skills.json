@@ -1,5 +1,26 @@
 [
   {
+    "cost": 1,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
+    "id": "activate-friendly-growth-twice",
+    "keyword": null,
+    "uses_per_turn": 1
+  },
+  {
     "cost": 2,
     "effects": [
       {
@@ -395,6 +416,60 @@
       {
         "op": "modify_stats",
         "params": {
+          "duration": "permanent",
+          "health": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-other-plus-0-plus-2",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 3
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "other",
+              "value": "true"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "aura"
+      }
+    ],
+    "id": "aura-other-plus-0-plus-3",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
+    "cost": null,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
           "attack": 1,
           "duration": "permanent"
         },
@@ -473,60 +548,6 @@
       }
     ],
     "id": "aura-plant-plus-2-plus-2",
-    "keyword": null,
-    "uses_per_turn": null
-  },
-  {
-    "cost": null,
-    "effects": [
-      {
-        "op": "modify_stats",
-        "params": {
-          "duration": "permanent",
-          "health": 2
-        },
-        "selector": {
-          "filters": [
-            {
-              "key": "scholar",
-              "value": "true"
-            }
-          ],
-          "kind": "side",
-          "pick": "all",
-          "side": "friendly"
-        },
-        "trigger": "aura"
-      }
-    ],
-    "id": "aura-scholar-plus-0-plus-2",
-    "keyword": null,
-    "uses_per_turn": null
-  },
-  {
-    "cost": null,
-    "effects": [
-      {
-        "op": "modify_stats",
-        "params": {
-          "duration": "permanent",
-          "health": 3
-        },
-        "selector": {
-          "filters": [
-            {
-              "key": "scholar",
-              "value": "true"
-            }
-          ],
-          "kind": "side",
-          "pick": "all",
-          "side": "friendly"
-        },
-        "trigger": "aura"
-      }
-    ],
-    "id": "aura-scholar-plus-0-plus-3",
     "keyword": null,
     "uses_per_turn": null
   },
@@ -975,32 +996,6 @@
       }
     ],
     "id": "battlecry-friendly-growth-plant-twice",
-    "keyword": "battlecry",
-    "uses_per_turn": null
-  },
-  {
-    "cost": null,
-    "effects": [
-      {
-        "op": "growth",
-        "params": {
-          "times": 1,
-          "times_if": {
-            "key": "scholar",
-            "times": 2,
-            "value": null
-          }
-        },
-        "selector": {
-          "filters": [],
-          "kind": "side",
-          "pick": "single",
-          "side": "friendly"
-        },
-        "trigger": "on_play"
-      }
-    ],
-    "id": "battlecry-friendly-growth-scholar-twice",
     "keyword": "battlecry",
     "uses_per_turn": null
   },
@@ -3836,32 +3831,6 @@
     "id": "salvage-machine",
     "keyword": null,
     "uses_per_turn": null
-  },
-  {
-    "cost": 1,
-    "effects": [
-      {
-        "op": "growth",
-        "params": {
-          "times": 2
-        },
-        "selector": {
-          "filters": [
-            {
-              "key": "scholar",
-              "value": "true"
-            }
-          ],
-          "kind": "side",
-          "pick": "single",
-          "side": "friendly"
-        },
-        "trigger": "on_activate"
-      }
-    ],
-    "id": "scholar-growth-twice",
-    "keyword": null,
-    "uses_per_turn": 1
   },
   {
     "cost": 1,

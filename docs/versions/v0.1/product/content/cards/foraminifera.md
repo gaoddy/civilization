@@ -10,7 +10,6 @@ era: prehistoric
 attack: 7
 health: 10
 skills: [devour-4, aura-other-protozoa-plus-1-attack]
-is_scholar: false
 ---
 
 # 有孔虫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 无 |
 | 技能 | devour-4；aura-other-protozoa-plus-1-attack |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 有孔虫门 › 球房虫纲 › 轮虫目 › 轮虫科 |
 
 ## 效果

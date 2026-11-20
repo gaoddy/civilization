@@ -13,7 +13,6 @@ SKILL = {
     "id": "light-speed-strike",
     "name": "光速出击",
     "text": "使一个友方随从本回合获得连击",
-    "match_text": "同左",
 }
 
 
@@ -22,13 +21,11 @@ def base_doc(**extra):
         "id": "einstein",
         "name": "爱因斯坦",
         "card_type": "minion",
-        "tribe": "scholar",
         "subtype": "physics",
         "level": 5,
         "era": "modern",
         "attack": 0,
         "health": 16,
-        "is_scholar": True,
         "skills": ["battlecry-all-friendly-growth-once"],
     }
     doc.update(extra)
@@ -41,6 +38,7 @@ def hero_doc(**extra):
         "id": "einstein",
         "name": "爱因斯坦",
         "categories": ["play:machine"],
+        "introduction": "测试用英雄介绍，说明该人物的身份、时代与主要贡献，并满足四十到八十字的校验要求。",
         "skills": ["light-speed-strike"],
     }
     doc.update(extra)
@@ -90,7 +88,6 @@ class SkillAttrsTest(unittest.TestCase):
                 "id": "shout",
                 "name": "呐喊",
                 "text": "使一个友方随从获得一次成长",
-                "match_text": "同左",
                 "cost": 1,
                 "uses_per_turn": 2,
             }
@@ -104,7 +101,6 @@ class SkillAttrsTest(unittest.TestCase):
                 "id": "observation",
                 "name": "观测",
                 "text": "每回合首次刷新时额外出现一张当前时代的随机随从",
-                "match_text": "同左",
             }
         )
         self.assertNotIn("费用", attrs)
@@ -176,8 +172,7 @@ class RealHeroCardsTest(unittest.TestCase):
 class ActiveSkillFieldTest(unittest.TestCase):
     def errors(self, **fields):
         skill = {"_file": "shout.md", "id": "shout",
-                 "name": "呐喊", "text": "使一个友方随从获得一次成长",
-                 "match_text": "同左"}
+                 "name": "呐喊", "text": "使一个友方随从获得一次成长"}
         skill.update(fields)
         return vd.skill_field_errors(skill)
 
@@ -204,12 +199,10 @@ class ActiveSkillFieldTest(unittest.TestCase):
     def test_legal_active_skill_passes(self):
         self.assertEqual(self.errors(cost=1, uses_per_turn=2), [])
 
-    def test_named_passive_skill_without_match_text_is_rejected(self):
+    def test_named_passive_skill_passes(self):
         skill = {"_file": "observation.md", "id": "observation", "name": "观测",
                  "text": "每回合首次刷新时额外出现一张当前时代的随机随从"}
-        messages = vd.skill_field_errors(skill)
-        self.assertTrue(any("有 name 的技能必须填写 match_text" in m
-                            for m in messages), messages)
+        self.assertEqual(vd.skill_field_errors(skill), [])
 
 
 class HeroSkillSemanticsTest(unittest.TestCase):
@@ -282,7 +275,10 @@ class HeroCardsTest(unittest.TestCase):
                 directory = root / kind
                 directory.mkdir()
                 for doc in docs:
-                    (directory / doc["_file"]).write_text("# 标题\n", encoding="utf-8")
+                    body = "# 标题\n"
+                    if kind == "heroes" and doc.get("introduction"):
+                        body += "\n## 简介\n\n%s\n" % doc["introduction"]
+                    (directory / doc["_file"]).write_text(body, encoding="utf-8")
             vd.errors.clear()
             with mock.patch.object(vd, "ROOT", root), \
                     mock.patch.object(vd, "load", return_value=heroes):

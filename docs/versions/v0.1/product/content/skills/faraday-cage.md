@@ -4,7 +4,6 @@ name: 法拉第笼
 template: activate-keyword-single(keyword=divine_shield,duration=permanent)
 cost: 2
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 法拉第笼
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | faraday-cage |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-keyword-single |
 | 费用 | 2 |
 | 每回合次数 | 1 |

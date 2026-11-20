@@ -1,7 +1,6 @@
 ---
 id: trigger-friendly-single-growth-once
 template: on-play-growth-single(times=1)
-match_text: 同左
 ---
 
 # trigger-friendly-single-growth-once
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | trigger-friendly-single-growth-once |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | on-play-growth-single |
 
 ## 效果

@@ -10,7 +10,6 @@ era: modern
 attack: 9
 health: 8
 skills: [keyword-ignore-taunt, shout]
-is_scholar: false
 ---
 
 # 飞机
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt；shout |
-| 学者 | 否 |
 | 科学分类 | 造物 › 交通与运载 |
 
 ## 效果

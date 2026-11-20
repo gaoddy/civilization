@@ -10,7 +10,6 @@ era: industrial
 attack: 2
 health: 3
 skills: [battlecry-friendly-growth-once]
-is_scholar: false
 ---
 
 # 纺织机
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once |
-| 学者 | 否 |
 | 科学分类 | 造物 › 生产与建筑 |
 
 ## 效果

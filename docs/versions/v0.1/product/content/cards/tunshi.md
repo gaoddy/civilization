@@ -7,7 +7,6 @@ era: primitive
 categories: [play:protozoa]
 taxon: biology
 cost: 2
-match_text: 同左
 skills: [trigger-protozoa-single-growth-twice]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-protozoa-single-growth-twice]
 | 玩法 | 原生生物界 |
 | 技能 | trigger-protozoa-single-growth-twice |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

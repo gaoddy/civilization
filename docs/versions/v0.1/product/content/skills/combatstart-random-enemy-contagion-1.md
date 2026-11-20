@@ -11,7 +11,6 @@ template: combatstart-contagion-random(level=1)
 | --- | --- |
 | id | combatstart-random-enemy-contagion-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | combatstart-contagion-random |
 
 ## 效果

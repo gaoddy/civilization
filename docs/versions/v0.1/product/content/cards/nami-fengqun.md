@@ -10,7 +10,6 @@ era: future
 attack: 10
 health: 15
 skills: [keyword-assemble-2, invention-factory]
-is_scholar: false
 ---
 
 # 纳米蜂群
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 15 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；invention-factory |
-| 学者 | 否 |
 | 科学分类 | 造物 › 自动机械 |
 
 ## 效果

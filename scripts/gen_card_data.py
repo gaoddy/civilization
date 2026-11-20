@@ -268,14 +268,12 @@ def check_structured(effect):
 
 
 def _json_times_if(value):
-    """把 `<键>:<值>:<次数>` 转为结构化；`scholar:<次数>` 没有值，输出 value 为 null。
+    """把 `<键>:<值>:<次数>` 转为结构化。
 
     格式与取值域由 validate_docs.times_if_errors 先行校验，这里只做拆分。
     """
     parts = value.split(":")
-    if len(parts) == 2 and parts[0] == "scholar":
-        key, filter_value, times = parts[0], None, parts[1]
-    elif len(parts) == 3 and parts[0] in TIMES_IF_KEYS and parts[0] != "scholar":
+    if len(parts) == 3 and parts[0] in TIMES_IF_KEYS:
         key, filter_value, times = parts
     else:
         raise ValueError(f"timesIf 无法解析: {value!r}")
@@ -387,7 +385,6 @@ def card_entry(doc):
         "attack": doc.get("attack"),
         "health": doc.get("health"),
         "skills": doc.get("skills", []),
-        "is_scholar": doc.get("is_scholar", False),
         "cost": doc.get("cost"),
     }
 

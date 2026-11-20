@@ -10,7 +10,6 @@ era: classical
 attack: 4
 health: 6
 skills: [keyword-stealth]
-is_scholar: false
 ---
 
 # 枪乌贼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 闭眼目 › 枪乌贼科 |
 
 ## 效果

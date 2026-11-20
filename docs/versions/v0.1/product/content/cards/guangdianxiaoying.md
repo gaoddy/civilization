@@ -7,7 +7,6 @@ era: industrial
 categories: [play:bird, play:machine]
 taxon: physics
 cost: 1
-match_text: 同左
 skills: [combatstart-leftmost-damage-3]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-leftmost-damage-3]
 | 玩法 | 鸟纲、机械 |
 | 技能 | combatstart-leftmost-damage-3 |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 物理学 |
 
 ## 效果

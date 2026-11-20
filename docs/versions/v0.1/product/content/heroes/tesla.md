@@ -3,6 +3,7 @@ id: tesla
 name: 特斯拉
 categories: [play:bird, play:machine]
 skills: [alternating-current]
+introduction: 塞尔维亚裔美国发明家与电气工程师，发明交流电系统与感应电动机，推动交流电成为全球输电标准。
 ---
 
 # 特斯拉
@@ -15,6 +16,10 @@ skills: [alternating-current]
 | 名称 | 特斯拉 |
 | 玩法 | 鸟纲、机械 |
 | 技能 | alternating-current |
+
+## 简介
+
+塞尔维亚裔美国发明家与电气工程师，发明交流电系统与感应电动机，推动交流电成为全球输电标准。
 
 ## 效果
 

@@ -1,7 +1,6 @@
 ---
 id: trigger-mammal-all-plus-2-attack
 template: on-play-stats-all-ps-attack(playstyle=mammal,attack=2)
-match_text: 同左
 ---
 
 # trigger-mammal-all-plus-2-attack
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | trigger-mammal-all-plus-2-attack |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | on-play-stats-all-ps-attack |
 
 ## 效果

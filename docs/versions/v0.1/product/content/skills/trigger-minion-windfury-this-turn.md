@@ -1,7 +1,6 @@
 ---
 id: trigger-minion-windfury-this-turn
 template: on-play-keyword-single-this-turn(keyword=windfury)
-match_text: 同左
 ---
 
 # trigger-minion-windfury-this-turn
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | trigger-minion-windfury-this-turn |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | on-play-keyword-single-this-turn |
 
 ## 效果

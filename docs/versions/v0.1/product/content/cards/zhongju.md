@@ -7,7 +7,6 @@ era: future
 categories: [play:mammal, play:machine]
 taxon: military
 cost: 4
-match_text: 同左
 skills: [combatstart-all-enemies-damage-4]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-all-enemies-damage-4]
 | 玩法 | 哺乳纲、机械 |
 | 技能 | combatstart-all-enemies-damage-4 |
 | 费用 | 4 |
-| 确定性替换 | 同左 |
 | 科学分类 | 社会 › 军事学 |
 
 ## 效果

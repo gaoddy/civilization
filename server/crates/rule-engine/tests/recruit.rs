@@ -1587,7 +1587,7 @@ fn abandon_target_without_pending_rejects() {
 #[test]
 fn play_battlecry_with_empty_pool_is_allowed() {
     let (mut engine, mut state) = turn_started(43);
-    // 目标筛「机械」，己方只有学者与即将入场的学者，池为空。
+    // 目标筛「机械」，己方棋盘上没有机械目标，池为空。
     put_champion(&engine, &mut state, 0, 9_000, "gutenberg");
     state.players[0]
         .hand
@@ -1982,7 +1982,8 @@ fn machine_filter_target_pool_includes_machine_source() {
         .expect("来源自身进入机械筛选的目标池");
 
     assert!(state.pending.is_empty(), "待选被消费");
-    // archimedes 是学者：成长只加生命。
+    // archimedes 是攻击力 0 的机械随从：成长按普通随从 +1/+1。
+    assert_eq!(state.players[0].board[0].stats.attack.growth, 1);
     assert_eq!(
         state.players[0].board[0].stats.health.growth, 1,
         "机械战吼命中自身"

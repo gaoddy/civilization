@@ -287,7 +287,7 @@ fn first_shop_slot(
 
 /// 指定星级的合格随从：池内随从、该星级、[`card_in_pool`] 通过。
 ///
-/// 学者的 `playstyle` 为 `neutral`，由 `play:` 决定入池，这里不再额外排除。
+/// `neutral` 只保留给 Token 与内部哨兵，入池完全由 `play:` 决定，这里不再额外排除。
 fn is_level_minion(
     catalog: &Catalog,
     card_id: &str,

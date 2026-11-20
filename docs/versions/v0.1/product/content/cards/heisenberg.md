@@ -10,7 +10,6 @@ era: future
 attack: 0
 health: 26
 skills: [keyword-reborn, deathrattle-all-enemies-minus-1-health]
-is_scholar: true
 ---
 
 # 海森堡
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 26 |
 | 关键词 | 复生；亡语 |
 | 技能 | keyword-reborn；deathrattle-all-enemies-minus-1-health |
-| 学者 | 是 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: future
 attack: 10
 health: 20
 skills: [keyword-divine-shield]
-is_scholar: false
 ---
 
 # 宇宙藤
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 20 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 未定科 |
 
 ## 效果

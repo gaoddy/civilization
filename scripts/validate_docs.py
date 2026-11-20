@@ -32,7 +32,7 @@ _KEYWORD_NAMES = (
 KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+|armor \d+)$")
 # 技能上的 keyword 是携带者自身登记的常驻关键词，不接受卡牌层的「无」哨兵值。
 SKILL_KEYWORD_RE = re.compile(rf"^({_KEYWORD_NAMES}|breed \d+|assemble \d+|armor \d+)$")
-AURA_RE = re.compile(r"^你的(其他)?(人类|人科|机械|生物|动物|植物|真菌|细菌|原生生物|病毒|学者|鱼纲|鸟纲|爬行纲|昆虫纲|头足纲|水螅纲|真菌界|原生生物界)?随从获得 ?(.+)$")
+AURA_RE = re.compile(r"^你的(其他)?(人类|人科|机械|生物|动物|植物|真菌|细菌|原生生物|病毒|鱼纲|鸟纲|爬行纲|昆虫纲|头足纲|水螅纲|真菌界|原生生物界)?随从获得 ?(.+)$")
 AURA_VALUE_RE = re.compile(
     r"^(?:\+\d+/\+\d+|\+\d+ 攻击力|\+\d+ 生命值|无视嘲讽|嘲讽|护盾|复生|连击)$"
 )
@@ -59,7 +59,7 @@ CRAFT_TOOL_TAXA = {"power-energy", "transport", "weapon-siege",
                    "production-construction", "information-computing", "life-medical"}
 CATEGORY_KINDS = ("play", "prey", "host")
 CATEGORY_RANK = {"play": 0, "prey": 1, "host": 2}
-# 专属关键词及其允许的玩法。evolve 另要求生物卡且非学者，在关键词校验里单独处理。
+# 专属关键词及其允许的玩法。evolve 另要求生物卡，在关键词校验里单独处理。
 KEYWORD_PLAYSTYLE = {
     "decompose": {"fungus", "bacteria"},
     "assemble": {"machine"},
@@ -108,7 +108,7 @@ SELECTOR_TARGET_ZONES = {"hand", "shop", "board"}
 SELECTOR_PICKS = {"single", "all", "random", "leftmost", "leftmost+adjacent", "topAttack",
                   "lowestAttack", "adjacent"}
 FILTER_KEYS = {"taxon", "playstyle", "play", "prey", "host", "subtype", "id", "type",
-               "scholar", "keyword", "other"}
+               "keyword", "other"}
 DURATIONS = {"permanent", "combat"}
 DECOMPOSE_BASES = {"original", "combat_start", "pre_kill"}
 NUMERIC_KEYS = {"times", "count", "amount", "attack", "health", "value", "extra",
@@ -162,12 +162,12 @@ EXPECT_ERA = {"prehistoric": 86, "primitive": 60, "classical": 45, "feudal": 57,
 EXPECT_LEVEL = {1: 50, 2: 58, 3: 61, 4: 60, 5: 55, 6: 28, 7: 20}
 SKILL_FIELDS = ["id"]
 SKILL_OPTIONAL_FIELDS = {"text", "template", "keyword", "cost",
-                         "uses_per_turn", "name", "match_text"}
+                         "uses_per_turn", "name"}
 MINION_FIELDS = ["id", "name", "card_type", "taxon", "subtype", "level", "era",
-                 "attack", "health", "is_scholar"]
+                 "attack", "health"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "taxon",
-                 "cost", "match_text"]
-HERO_REQUIRED_FIELDS = ["id", "name", "categories"]
+                 "cost"]
+HERO_REQUIRED_FIELDS = ["id", "name", "categories", "introduction"]
 HERO_OPTIONAL_FIELDS = {"skills"}
 HERO_COUNT = 32
 LEGACY_HERO_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
@@ -201,7 +201,7 @@ def parse_front_matter(path):
         key = key.strip()
         if key in data:
             # dict 会静默覆盖重复键，掩盖「值写进了上一个键」这类损坏（例如
-            # `is_scholar: skills: []`），必须当作解析错误。
+            # `taxon: skills: []`），必须当作解析错误。
             raise ValueError(f"{path.name}: front matter 键重复 {key!r}")
         raw = raw.strip()
         if raw.startswith("[") and raw.endswith("]"):
@@ -243,7 +243,7 @@ def check_filter_value(key, val, chunk):
     elif key == "id":
         if val not in CARD_IDS:
             errors.append(f"id 取值非法 {val!r}（{chunk}）")
-    elif key in ("other", "scholar"):
+    elif key == "other":
         if val not in ("true", "false"):
             errors.append(f"{key} 取值非法 {val!r}（{chunk}）")
     elif key == "subtype":
@@ -276,12 +276,9 @@ def check_filters(segments, chunk):
 
 
 def times_if_errors(value, chunk=""):
-    """timesIf 新格式：<键>:<值>:<次数>；scholar 无值，写 scholar:<次数>。"""
+    """timesIf 格式：<键>:<值>:<次数>。"""
     parts = str(value).split(":")
-    if len(parts) == 2 and parts[0] == "scholar" and parts[1].isdigit():
-        return []
-    if len(parts) == 3 and parts[0] in FILTER_KEYS and parts[0] != "scholar" \
-            and parts[2].isdigit():
+    if len(parts) == 3 and parts[0] in FILTER_KEYS and parts[2].isdigit():
         return check_filter_value(parts[0], parts[1], chunk)
     return [f"timesIf 格式非法 {value!r}（{chunk}）"]
 
@@ -755,8 +752,6 @@ def keyword_errors(doc, keyword):
             return []
         if not is_biological(doc):
             return [f"{label}: 关键词 {keyword!r} 只允许生物卡（taxon 根节点必须是生物界）"]
-        if doc.get("is_scholar") is True:
-            return [f"{label}: 关键词 {keyword!r} 不允许学者卡"]
     return []
 
 
@@ -797,9 +792,9 @@ def skill_count_errors(doc, skill_map):
     if not skills:
         if doc.get("in_shop_pool", True) is False:
             return []
-        if doc.get("is_scholar") is not True and doc.get("taxon") in CRAFT_TOOL_TAXA:
+        if doc.get("taxon") in CRAFT_TOOL_TAXA:
             return []
-        return [f"{label}: 无技能随从只允许非学者造物工具卡"]
+        return [f"{label}: 无技能随从只允许造物工具卡"]
     level = doc.get("level")
     errors = []
     if level in (1, 2) and len(skills) > 1:
@@ -1062,7 +1057,7 @@ def expected_card_attrs(doc, skill_map):
             "子类": enum_label("subtype", doc.get("subtype")), "星级": str(doc["level"]),
             "时代": enum_label("era", doc["era"]), "攻击力": str(doc["attack"]),
             "生命值": str(doc["health"]), "关键词": keyword_value,
-            "技能": skill_value, "学者": "是" if doc["is_scholar"] else "否",
+            "技能": skill_value,
         }
         if taxon_value:
             attrs["科学分类"] = taxon_value
@@ -1077,7 +1072,6 @@ def expected_card_attrs(doc, skill_map):
         "星级": str(doc["level"]), "时代": enum_label("era", doc.get("era", "")),
         "玩法": playstyle_value,
         "技能": skill_value, "费用": str(doc["cost"]),
-        "确定性替换": doc["match_text"],
     }
     if taxon_value:
         attrs["科学分类"] = taxon_value
@@ -1107,7 +1101,6 @@ def expected_skill_attrs(skill):
     attrs = {
         "id": skill["id"],
         "关键词": keyword_display(skill.get("keyword")) if skill.get("keyword") else "无",
-        "确定性替换": skill.get("match_text") or "不适用",
     }
     if "template" in skill:
         try:
@@ -1164,10 +1157,8 @@ def skill_field_errors(skill):
         if has_uses and (type(skill["uses_per_turn"]) is not int
                          or skill["uses_per_turn"] not in (1, 2)):
             messages.append(f"{name}: 每回合次数非法 {skill['uses_per_turn']!r}")
-        if not skill.get("name") or not skill.get("match_text"):
-            messages.append(f"{name}: 主动技能必须填写 name 与 match_text")
-    elif skill.get("name") and not skill.get("match_text"):
-        messages.append(f"{name}: 有 name 的技能必须填写 match_text")
+        if not skill.get("name"):
+            messages.append(f"{name}: 主动技能必须填写 name")
     return messages
 
 
@@ -1175,8 +1166,8 @@ def check_skills():
     global KEYWORD_LABELS
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 255:
-        fail(f"技能数量 {len(skills)}，期望 255")
+    if len(skills) != 254:
+        fail(f"技能数量 {len(skills)}，期望 254")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
@@ -1233,12 +1224,9 @@ def check_skills():
     return skills
 
 
-def check_skill_context(skill_map, effects):
-    effect_refs = {sid for c in effects for sid in card_skills(c)}
-    for sid in sorted(effect_refs):
-        skill = skill_map.get(sid)
-        if skill is not None and not skill.get("match_text"):
-            fail(f"{skill['_file']}: 被效果牌引用的技能缺少 match_text")
+def check_skill_context(_skill_map, _effects):
+    """保留调用点；被效果牌引用的技能不再要求额外文本字段。"""
+    return
 
 
 def check_attr_tables(raw, skill_map):
@@ -1393,19 +1381,17 @@ def check_cards(skill_map):
             continue
         for message in skill_count_errors(c, skill_map):
             fail(message)
-        if c["is_scholar"] and c["attack"] != 0:
-            fail(f"{name}: 学者攻击力必须为 0")
-        if c["is_scholar"]:
-            expected_health = RANGE[c["level"]][3] * 1.3
-            if abs(c["health"] - expected_health) > 1:
-                fail(
-                    f"{name}: 学者生命值 {c['health']} 偏离 {c['level']} 星生命上限×1.3"
-                    f"（{expected_health:g}）超过 1 点"
-                )
-            continue
         if c.get("in_shop_pool", True):
             lo, hi, lh, hh = RANGE[c["level"]]
-            if not (lo <= c["attack"] <= hi and lh <= c["health"] <= hh):
+            if c["attack"] == 0:
+                # 攻击力为 0 的随从保留生命上限 ×1.3 的数值口径，不做攻击下限检查。
+                expected_health = hh * 1.3
+                if abs(c["health"] - expected_health) > 1:
+                    fail(
+                        f"{name}: 攻击力 0 的随从生命值 {c['health']} 偏离 "
+                        f"{c['level']} 星生命上限×1.3（{expected_health:g}）超过 1 点"
+                    )
+            elif not (lo <= c["attack"] <= hi and lh <= c["health"] <= hh):
                 fail(f"{name}: 数值 {c['attack']}/{c['health']} 越出 {c['level']} 星区间")
             if c["attack"] + c["health"] + keyword_cost(c, skill_map) > CAP[c["level"]]:
                 fail(f"{name}: 超模")
@@ -1515,6 +1501,18 @@ def check_hero_cards(cards, minions, effects, skill_map):
         raw_skills = doc.get("skills")
         if raw_skills is not None and not isinstance(raw_skills, list):
             fail(f"{doc['_file']}: skills 必须是列表，实为 {raw_skills!r}")
+        intro = doc.get("introduction")
+        if not isinstance(intro, str) or not intro.strip():
+            fail(f"{doc['_file']}: 缺少非空 introduction")
+        elif not 40 <= len(intro.strip()) <= 80:
+            fail(f"{doc['_file']}: introduction 长度 {len(intro.strip())}，期望 40–80")
+        else:
+            text = (ROOT / "heroes" / doc["_file"]).read_text(encoding="utf-8")
+            body = section_text(text, "简介")
+            if body is None:
+                fail(f"{doc['_file']}: 缺少「## 简介」小节")
+            elif body.strip() != intro.strip():
+                fail(f"{doc['_file']}: 「## 简介」与 introduction 不一致")
         for message in skill_ref_errors(doc, skill_map):
             fail(message)
         # 英雄没有 taxon，生物限制由同 id 随从卡校验。

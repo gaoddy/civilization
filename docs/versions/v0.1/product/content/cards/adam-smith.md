@@ -10,7 +10,6 @@ era: industrial
 attack: 6
 health: 8
 skills: [division-of-labor]
-is_scholar: false
 ---
 
 # 亚当·斯密
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | division-of-labor |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

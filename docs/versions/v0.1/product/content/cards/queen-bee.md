@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 8
 skills: [battlecry-summon-2-worker-bees, deathrattle-summon-1-worker-bee]
-is_scholar: false
 ---
 
 # 蜜蜂皇后
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 战吼；亡语 |
 | 技能 | battlecry-summon-2-worker-bees；deathrattle-summon-1-worker-bee |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 膜翅目 › 蜜蜂科 |
 
 ## 效果

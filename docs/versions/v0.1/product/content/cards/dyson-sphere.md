@@ -10,7 +10,6 @@ era: future
 attack: 12
 health: 18
 skills: [keyword-divine-shield, shout]
-is_scholar: false
 ---
 
 # 戴森球
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 18 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；shout |
-| 学者 | 否 |
 | 科学分类 | 造物 › 动力与能源 |
 
 ## 效果

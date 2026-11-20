@@ -12,7 +12,6 @@ template: keyword-self(keyword=breed 1)
 | --- | --- |
 | id | keyword-breed-1 |
 | 关键词 | 繁衍 1 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

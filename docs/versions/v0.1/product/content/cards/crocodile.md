@@ -10,7 +10,6 @@ era: prehistoric
 attack: 4
 health: 9
 skills: [keyword-poison, keyword-taunt]
-is_scholar: false
 ---
 
 # 鳄鱼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 剧毒；嘲讽 |
 | 技能 | keyword-poison；keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 鳄目 › 鳄科 |
 
 ## 效果

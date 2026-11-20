@@ -10,7 +10,6 @@ era: classical
 attack: 4
 health: 4
 skills: [battlecry-other-friendly-humans-plus-1-attack]
-is_scholar: false
 ---
 
 # 元老院议员
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

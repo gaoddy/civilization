@@ -11,7 +11,6 @@ template: on-play-battlecry-mimic
 | --- | --- |
 | id | mimic-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-mimic |
 
 ## 效果

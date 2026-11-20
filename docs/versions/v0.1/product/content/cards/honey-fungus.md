@@ -10,7 +10,6 @@ era: modern
 attack: 8
 health: 14
 skills: [decompose-kill-original, deathrattle-summon-2-spores-2-2]
-is_scholar: false
 ---
 
 # 蜜环菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 14 |
 | 关键词 | 分解；亡语 |
 | 技能 | decompose-kill-original；deathrattle-summon-2-spores-2-2 |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 伞菌目 › 膨瑚菌科 |
 
 ## 效果

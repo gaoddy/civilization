@@ -7,7 +7,6 @@ era: industrial
 categories: [play:machine]
 taxon: automation
 cost: 1
-match_text: 同左
 skills: [trigger-machine-single-reborn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-machine-single-reborn]
 | 玩法 | 机械 |
 | 技能 | trigger-machine-single-reborn |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 造物 › 自动机械 |
 
 ## 效果

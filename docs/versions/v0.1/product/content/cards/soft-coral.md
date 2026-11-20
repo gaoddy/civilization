@@ -10,7 +10,6 @@ era: classical
 attack: 4
 health: 9
 skills: [revive-1, keyword-armor-1]
-is_scholar: false
 ---
 
 # 软珊瑚
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 减伤 1 |
 | 技能 | revive-1；keyword-armor-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 软珊瑚目 › 软珊瑚科 |
 
 ## 效果

@@ -11,7 +11,6 @@ template: ally-growth-self-attack(attack=1)
 | --- | --- |
 | id | trigger-friendly-growth-self-plus-1-attack |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | ally-growth-self-attack |
 
 ## 效果

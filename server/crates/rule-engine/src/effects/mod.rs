@@ -217,13 +217,13 @@ pub struct Condition {
     pub count: i32,
 }
 
-/// `timesIf` 的结构化表示：`<键>:<值>:<次数>`，`scholar` 没有值。
+/// `timesIf` 的结构化表示：`<键>:<值>:<次数>`。
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TimesIf {
     /// 筛选键，取值集合与 [`Filter`] 一致。
     pub key: String,
-    /// 筛选值；`scholar` 等无值键为 `None`。
+    /// 筛选值；当前语法恒为 `Some`。
     pub value: Option<String>,
     pub times: i32,
 }

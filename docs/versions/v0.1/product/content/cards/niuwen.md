@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 12
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
-is_scholar: false
 ---
 
 # 牛瘟
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 副黏病毒科 |
 | 关联分类 | 寄生：牛科 |
 

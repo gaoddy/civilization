@@ -9,7 +9,6 @@ level: 3
 era: modern
 attack: 4
 health: 5
-is_scholar: false
 skills: []
 ---
 
@@ -30,7 +29,6 @@ skills: []
 | 生命值 | 5 |
 | 关键词 | 无 |
 | 技能 | 无 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 生活与医疗 |
 
 ## 效果

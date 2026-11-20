@@ -10,7 +10,6 @@ era: classical
 attack: 9
 health: 8
 skills: [battlecry-other-bird-plus-1-plus-1, dive-1]
-is_scholar: false
 ---
 
 # 孔雀
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-bird-plus-1-plus-1；dive-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鸡形目 › 雉科 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: feudal
 attack: 9
 health: 8
 skills: [dive-1, battlecry-friendly-bird-growth-once]
-is_scholar: false
 ---
 
 # 金雕
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 战吼 |
 | 技能 | dive-1；battlecry-friendly-bird-growth-once |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹰形目 › 鹰科 |
 
 ## 效果

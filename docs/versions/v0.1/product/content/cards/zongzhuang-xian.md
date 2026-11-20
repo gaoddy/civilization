@@ -7,7 +7,6 @@ era: future
 categories: [play:machine]
 taxon: production-construction
 cost: 3
-match_text: 同左
 skills: [trigger-machine-all-growth-once]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-machine-all-growth-once]
 | 玩法 | 机械 |
 | 技能 | trigger-machine-all-growth-once |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 造物 › 生产与建筑 |
 
 ## 效果

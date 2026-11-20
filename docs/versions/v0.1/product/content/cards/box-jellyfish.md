@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 11
 skills: [keyword-poison, keyword-armor-1]
-is_scholar: false
 ---
 
 # 箱水母
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 11 |
 | 关键词 | 剧毒；减伤 1 |
 | 技能 | keyword-poison；keyword-armor-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 立方水母纲 › 多手立方水母目 › 多手立方水母科 |
 
 ## 效果

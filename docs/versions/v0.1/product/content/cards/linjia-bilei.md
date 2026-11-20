@@ -7,7 +7,6 @@ era: classical
 categories: [play:reptile]
 taxon: biology
 cost: 3
-match_text: 同左
 skills: [trigger-reptile-all-plus-0-plus-3]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-reptile-all-plus-0-plus-3]
 | 玩法 | 爬行纲 |
 | 技能 | trigger-reptile-all-plus-0-plus-3 |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

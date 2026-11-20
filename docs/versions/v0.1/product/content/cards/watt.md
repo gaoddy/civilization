@@ -10,7 +10,6 @@ era: industrial
 attack: 0
 health: 12
 skills: [aura-mech-plus-2-plus-2]
-is_scholar: true
 ---
 
 # 瓦特
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 12 |
 | 关键词 | 无 |
 | 技能 | aura-mech-plus-2-plus-2 |
-| 学者 | 是 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

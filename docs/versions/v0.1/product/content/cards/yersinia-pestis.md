@@ -10,7 +10,6 @@ era: feudal
 attack: 4
 health: 9
 skills: [keyword-contagion, detonate-1]
-is_scholar: false
 ---
 
 # 鼠疫耶尔森菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；detonate-1 |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 耶尔森菌科 |
 
 ## 效果

@@ -7,7 +7,6 @@ era: classical
 categories: [play:insect]
 taxon: biology
 cost: 3
-match_text: 同左
 skills: [trigger-insect-all-plus-1-plus-1]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-insect-all-plus-1-plus-1]
 | 玩法 | 昆虫纲 |
 | 技能 | trigger-insect-all-plus-1-plus-1 |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

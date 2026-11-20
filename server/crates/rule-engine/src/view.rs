@@ -592,16 +592,10 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
 ///
 /// `current` 先取 [`MinionInstance::attack`] / [`MinionInstance::health`]
 /// （已夹非负），再反推 `damage`，因此招募期负血量会被 `damage` 吸收。
-/// 学者攻击沿用 `attack()` 的口径：六层全部投影为 0，存储层保留加成。
-///
 /// 服务层的协议映射复用它，保证规则引擎与服务端视图口径一致。
 pub fn stats_breakdown(minion: &MinionInstance) -> MinionStatsView {
     MinionStatsView {
-        attack: if minion.is_scholar {
-            StatBreakdownView::default()
-        } else {
-            breakdown(&minion.stats.attack, minion.attack())
-        },
+        attack: breakdown(&minion.stats.attack, minion.attack()),
         health: breakdown(&minion.stats.health, minion.health()),
     }
 }

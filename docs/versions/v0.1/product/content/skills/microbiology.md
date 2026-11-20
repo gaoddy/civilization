@@ -2,7 +2,6 @@
 id: microbiology
 name: 微生物学
 template: combatstart-contagion-leftmost(level=1)
-match_text: 同左
 ---
 
 # 微生物学
@@ -13,7 +12,6 @@ match_text: 同左
 | --- | --- |
 | id | microbiology |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | combatstart-contagion-leftmost |
 
 ## 效果

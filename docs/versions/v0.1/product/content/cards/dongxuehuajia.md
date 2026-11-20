@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 2
 skills: [battlecry-friendly-plus-1-health]
-is_scholar: false
 ---
 
 # 洞穴画家
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 2 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-1-health |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

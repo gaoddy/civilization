@@ -7,7 +7,6 @@ era: feudal
 categories: [play:reptile, play:cnidarian]
 taxon: military
 cost: 0
-match_text: 同左
 skills: [trigger-friendly-single-plus-0-plus-1-this-turn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-single-plus-0-plus-1-this-turn]
 | 玩法 | 爬行纲、水螅纲 |
 | 技能 | trigger-friendly-single-plus-0-plus-1-this-turn |
 | 费用 | 0 |
-| 确定性替换 | 同左 |
 | 科学分类 | 社会 › 军事学 |
 
 ## 效果

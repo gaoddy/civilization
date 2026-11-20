@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 12
 skills: [keyword-sow, keyword-breed-2]
-is_scholar: false
 ---
 
 # 红树林
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 播种；繁衍 2 |
 | 技能 | keyword-sow；keyword-breed-2 |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 金虎尾目 › 红树科 |
 
 ## 效果

@@ -12,7 +12,6 @@ template: on-death-stats-enemy-random-health-value(health=-1)
 | --- | --- |
 | id | deathrattle-random-enemy-hp-minus-1 |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-stats-enemy-random-health-value |
 
 ## 效果

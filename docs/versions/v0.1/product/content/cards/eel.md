@@ -10,7 +10,6 @@ era: feudal
 attack: 7
 health: 6
 skills: [aura-school-fish-1, deathrattle-summon-fish-fry-2]
-is_scholar: false
 ---
 
 # 鳗鲡
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 亡语 |
 | 技能 | aura-school-fish-1；deathrattle-summon-fish-fry-2 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鳗鲡目 › 鳗鲡科 |
 
 ## 效果

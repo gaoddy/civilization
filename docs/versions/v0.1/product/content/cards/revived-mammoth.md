@@ -10,7 +10,6 @@ era: future
 attack: 10
 health: 10
 skills: [keyword-evolve, aura-school-mammal]
-is_scholar: false
 ---
 
 # 复活猛犸
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve；aura-school-mammal |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 长鼻目 › 象科 |
 
 ## 效果

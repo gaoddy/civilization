@@ -12,7 +12,6 @@ template: on-play-battlecry-copy-hand-minion
 | --- | --- |
 | id | battlecry-copy-hand-minion |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-copy-hand-minion |
 
 ## 效果

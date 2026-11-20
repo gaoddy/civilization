@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 2
 skills: [keyword-breed-1]
-is_scholar: false
 ---
 
 # 白蚁
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 2 |
 | 关键词 | 繁衍 1 |
 | 技能 | keyword-breed-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 蜚蠊目 › 白蚁科 |
 | 关联分类 | 捕食：植物界 |
 

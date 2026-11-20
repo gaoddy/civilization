@@ -12,7 +12,6 @@ template: keyword-self(keyword=ignore_taunt)
 | --- | --- |
 | id | keyword-ignore-taunt |
 | 关键词 | 无视嘲讽 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

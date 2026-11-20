@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 6
 skills: [keyword-contagion]
-is_scholar: false
 ---
 
 # 立克次体
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 变形菌门 › α-变形菌纲 › 立克次体目 › 立克次体科 |
 | 关联分类 | 寄生：哺乳纲 |
 

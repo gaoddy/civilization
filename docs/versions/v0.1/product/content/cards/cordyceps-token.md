@@ -10,7 +10,6 @@ level: 2
 era: prehistoric
 attack: 3
 health: 3
-is_scholar: false
 ---
 
 # 虫草
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | 无 |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 子囊菌门 › 粪壳菌纲 › 肉座菌目 › 线虫草科 |
 | 进商店卡池 | 否 |
 

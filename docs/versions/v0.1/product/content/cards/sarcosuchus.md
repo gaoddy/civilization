@@ -10,7 +10,6 @@ era: prehistoric
 attack: 10
 health: 16
 skills: [keyword-poison, keyword-armor-2]
-is_scholar: false
 ---
 
 # 帝鳄
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 16 |
 | 关键词 | 剧毒；减伤 2 |
 | 技能 | keyword-poison；keyword-armor-2 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 鳄形类 › 似鳄科 |
 
 ## 效果

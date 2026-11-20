@@ -10,7 +10,6 @@ era: prehistoric
 attack: 1
 health: 4
 skills: [battlecry-friendly-bacteria-plus-0-plus-1]
-is_scholar: false
 ---
 
 # 乳酸菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-bacteria-plus-0-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 乳杆菌目 › 乳杆菌科 |
 
 ## 效果

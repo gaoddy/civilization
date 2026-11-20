@@ -7,7 +7,6 @@ era: primitive
 categories: [play:plant]
 taxon: biology
 cost: 2
-match_text: 同左
 skills: [trigger-plant-all-breed-2]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-plant-all-breed-2]
 | 玩法 | 植物界 |
 | 技能 | trigger-plant-all-breed-2 |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

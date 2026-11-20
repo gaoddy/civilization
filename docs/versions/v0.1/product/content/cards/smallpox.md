@@ -10,7 +10,6 @@ era: primitive
 attack: 3
 health: 5
 skills: [deathrattle-all-enemies-minus-1-health]
-is_scholar: false
 ---
 
 # 天花
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-minus-1-health |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 核质巨 DNA 病毒门 › 痘病毒纲 › 痘病毒目 › 痘病毒科 |
 | 关联分类 | 寄生：人科 |
 

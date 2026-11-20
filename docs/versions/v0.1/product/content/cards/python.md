@@ -10,7 +10,6 @@ era: primitive
 attack: 4
 health: 9
 skills: [keyword-armor-2]
-is_scholar: false
 ---
 
 # 蟒蛇
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 减伤 2 |
 | 技能 | keyword-armor-2 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 蟒科 |
 
 ## 效果

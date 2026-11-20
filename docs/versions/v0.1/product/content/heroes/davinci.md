@@ -3,6 +3,7 @@ id: davinci
 name: 达·芬奇
 categories: [play:mammal, play:cephalopod]
 skills: [universal-manuscript]
+introduction: 文艺复兴时期的博学者，绘制《蒙娜丽莎》，同时研究解剖、飞行器与水利工程，把观察与创造连在一起。
 ---
 
 # 达·芬奇
@@ -15,6 +16,10 @@ skills: [universal-manuscript]
 | 名称 | 达·芬奇 |
 | 玩法 | 哺乳纲、头足纲 |
 | 技能 | universal-manuscript |
+
+## 简介
+
+文艺复兴时期的博学者，绘制《蒙娜丽莎》，同时研究解剖、飞行器与水利工程，把观察与创造连在一起。
 
 ## 效果
 

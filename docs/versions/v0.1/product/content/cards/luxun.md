@@ -10,7 +10,6 @@ era: modern
 attack: 0
 health: 16
 skills: [shout]
-is_scholar: true
 ---
 
 # 鲁迅
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 16 |
 | 关键词 | 无 |
 | 技能 | shout |
-| 学者 | 是 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

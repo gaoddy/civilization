@@ -11,7 +11,6 @@ template: aura-keyword-all-ps(playstyle=machine,keyword=ignore_taunt)
 | --- | --- |
 | id | aura-mech-optimal-attack |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-keyword-all-ps |
 
 ## 效果

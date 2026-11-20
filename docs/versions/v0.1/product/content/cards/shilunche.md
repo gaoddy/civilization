@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 3
 skills: [keyword-assemble-1]
-is_scholar: false
 ---
 
 # 石轮车
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 交通与运载 |
 
 ## 效果

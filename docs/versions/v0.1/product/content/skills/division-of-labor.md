@@ -4,7 +4,6 @@ name: 分工
 template: activate-growth-single-condition(taxon=hominidae,count=3)
 cost: 1
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 分工
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | division-of-labor |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-growth-single-condition |
 | 费用 | 1 |
 | 每回合次数 | 1 |

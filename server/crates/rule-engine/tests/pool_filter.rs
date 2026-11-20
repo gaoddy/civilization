@@ -25,7 +25,6 @@ fn card(categories: Vec<(&str, &str)>) -> Card {
         attack: None,
         health: None,
         skills: vec![],
-        is_scholar: false,
         cost: Some(2),
     }
 }

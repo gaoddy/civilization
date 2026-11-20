@@ -10,7 +10,6 @@ era: industrial
 attack: 3
 health: 7
 skills: [keyword-contagion, microbiology]
-is_scholar: false
 ---
 
 # 破伤风梭菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 7 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；microbiology |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 梭菌纲 › 梭菌目 › 梭菌科 |
 
 ## 效果

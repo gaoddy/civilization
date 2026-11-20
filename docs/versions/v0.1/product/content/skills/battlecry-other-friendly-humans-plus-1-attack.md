@@ -12,7 +12,6 @@ template: on-play-battlecry-stats-all-taxon-other-attack(taxon=hominidae,attack=
 | --- | --- |
 | id | battlecry-other-friendly-humans-plus-1-attack |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-stats-all-taxon-other-attack |
 
 ## 效果

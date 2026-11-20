@@ -10,7 +10,6 @@ era: modern
 attack: 8
 health: 13
 skills: [keyword-stealth, mimic-2]
-is_scholar: false
 ---
 
 # 大王酸浆鱿
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 13 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；mimic-2 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 开眼目 › 小头鱿科 |
 
 ## 效果

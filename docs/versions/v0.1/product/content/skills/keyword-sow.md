@@ -12,7 +12,6 @@ template: on-death-summon-sow(token=seedling,count=1)
 | --- | --- |
 | id | keyword-sow |
 | 关键词 | 播种 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-summon-sow |
 
 ## 效果

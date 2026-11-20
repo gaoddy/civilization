@@ -12,7 +12,6 @@ template: keyword-self(keyword=divine_shield)
 | --- | --- |
 | id | keyword-divine-shield |
 | 关键词 | 护盾 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

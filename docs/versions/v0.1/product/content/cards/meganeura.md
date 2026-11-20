@@ -10,7 +10,6 @@ era: classical
 attack: 14
 health: 14
 skills: [keyword-windfury, keyword-ignore-taunt]
-is_scholar: false
 ---
 
 # 巨脉蜻蜓
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 14 |
 | 关键词 | 连击；无视嘲讽 |
 | 技能 | keyword-windfury；keyword-ignore-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 巨蜻蜓目 › 巨脉蜓科 |
 
 ## 效果

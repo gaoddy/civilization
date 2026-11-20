@@ -6,7 +6,7 @@ use rule_engine::state::{MinionInstance, MinionStats, Phase, StatComponent};
 
 /// 卡面 3/3 的普通随从。
 const FOUR: &str = "jianchihu";
-/// 卡面 0/5 的学者随从。
+/// 卡面 0/5、攻击力为 0 的随从。
 const SCHOLAR: &str = "euclid";
 
 #[test]
@@ -131,8 +131,6 @@ fn new_resolves_card_stats_and_golden_doubles() {
         (3, 3)
     );
     assert_eq!((plain.attack(), plain.health()), (3, 3));
-    assert!(!plain.is_scholar);
-
     let golden = MinionInstance::new(&catalog, 2, FOUR, true);
     assert_eq!(
         (golden.stats.attack.initial, golden.stats.health.initial),
@@ -142,14 +140,13 @@ fn new_resolves_card_stats_and_golden_doubles() {
 }
 
 #[test]
-fn scholar_attack_projects_zero_while_layers_accumulate() {
+fn zero_attack_layers_accumulate_normally() {
     let catalog = test_catalog();
-    let mut scholar = MinionInstance::new(&catalog, 1, SCHOLAR, false);
-    assert!(scholar.is_scholar);
-    scholar.stats.attack.add_permanent(1);
-    assert_eq!(scholar.stats.attack.current, 1);
-    assert_eq!(scholar.attack(), 0);
-    assert_eq!(scholar.health(), 5);
+    let mut minion = MinionInstance::new(&catalog, 1, SCHOLAR, false);
+    minion.stats.attack.add_permanent(1);
+    assert_eq!(minion.stats.attack.current, 1);
+    assert_eq!(minion.attack(), 1);
+    assert_eq!(minion.health(), 5);
 }
 
 #[test]

@@ -7,7 +7,6 @@ era: industrial
 categories: [play:fungus]
 taxon: biology
 cost: 3
-match_text: 同左
 skills: [combatstart-all-enemies-damage-2]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-all-enemies-damage-2]
 | 玩法 | 真菌界 |
 | 技能 | combatstart-all-enemies-damage-2 |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

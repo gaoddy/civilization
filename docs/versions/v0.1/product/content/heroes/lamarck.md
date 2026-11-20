@@ -3,6 +3,7 @@ id: lamarck
 name: 拉马克
 categories: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 skills: [biology-evolve]
+introduction: 法国博物学家，1809 年《动物学哲学》提出用进废退与获得性遗传，是最早系统阐述演化思想的学者之一。
 ---
 
 # 拉马克
@@ -15,6 +16,10 @@ skills: [biology-evolve]
 | 名称 | 拉马克 |
 | 玩法 | 哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
 | 技能 | biology-evolve |
+
+## 简介
+
+法国博物学家，1809 年《动物学哲学》提出用进废退与获得性遗传，是最早系统阐述演化思想的学者之一。
 
 ## 效果
 

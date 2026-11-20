@@ -12,7 +12,6 @@ template: keyword-self(keyword=evolve)
 | --- | --- |
 | id | keyword-evolve |
 | 关键词 | 进化 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

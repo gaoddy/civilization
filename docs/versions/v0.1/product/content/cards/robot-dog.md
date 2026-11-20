@@ -10,7 +10,6 @@ era: modern
 attack: 5
 health: 4
 skills: [keyword-ignore-taunt]
-is_scholar: false
 ---
 
 # 机器狗
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt |
-| 学者 | 否 |
 | 科学分类 | 造物 › 自动机械 |
 
 ## 效果

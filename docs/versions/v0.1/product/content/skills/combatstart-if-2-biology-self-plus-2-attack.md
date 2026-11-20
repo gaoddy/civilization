@@ -11,7 +11,6 @@ template: combatstart-condition-self-attack(attack=2,taxon=animalia,count=2)
 | --- | --- |
 | id | combatstart-if-2-biology-self-plus-2-attack |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | combatstart-condition-self-attack |
 
 ## 效果

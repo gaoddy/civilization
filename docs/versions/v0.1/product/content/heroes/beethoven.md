@@ -3,6 +3,7 @@ id: beethoven
 name: 贝多芬
 categories: [play:mammal]
 skills: [human-growth-twice]
+introduction: 德国作曲家，1808 年完成《第五交响曲》，以四音动机贯穿全曲，在失聪后仍持续创作，把古典主义推向浪漫主义。
 ---
 
 # 贝多芬
@@ -15,6 +16,10 @@ skills: [human-growth-twice]
 | 名称 | 贝多芬 |
 | 玩法 | 哺乳纲 |
 | 技能 | human-growth-twice |
+
+## 简介
+
+德国作曲家，1808 年完成《第五交响曲》，以四音动机贯穿全曲，在失聪后仍持续创作，把古典主义推向浪漫主义。
 
 ## 效果
 

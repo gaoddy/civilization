@@ -7,7 +7,6 @@ era: classical
 categories: [play:plant, play:machine]
 taxon: physics
 cost: 0
-match_text: 同左
 skills: [trigger-friendly-single-plus-0-plus-2]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-single-plus-0-plus-2]
 | 玩法 | 植物界、机械 |
 | 技能 | trigger-friendly-single-plus-0-plus-2 |
 | 费用 | 0 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 物理学 |
 
 ## 效果

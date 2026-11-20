@@ -7,7 +7,6 @@ era: primitive
 categories: [play:fish]
 taxon: biology
 cost: 2
-match_text: 同左
 skills: [trigger-fish-all-growth-once]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-fish-all-growth-once]
 | 玩法 | 鱼纲 |
 | 技能 | trigger-fish-all-growth-once |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

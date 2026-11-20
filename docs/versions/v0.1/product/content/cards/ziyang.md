@@ -7,7 +7,6 @@ era: modern
 categories: [play:cnidarian, play:plant]
 taxon: biology
 cost: 1
-match_text: 同左
 skills: [trigger-all-friendly-plus-0-plus-1]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-all-friendly-plus-0-plus-1]
 | 玩法 | 水螅纲、植物界 |
 | 技能 | trigger-all-friendly-plus-0-plus-1 |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

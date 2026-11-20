@@ -7,7 +7,6 @@ era: modern
 categories: [play:virus]
 taxon: medicine
 cost: 1
-match_text: 同左
 skills: [trigger-virus-single-plus-1-plus-2]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-virus-single-plus-1-plus-2]
 | 玩法 | 病毒 |
 | 技能 | trigger-virus-single-plus-1-plus-2 |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 医学 |
 
 ## 效果

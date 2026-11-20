@@ -11,7 +11,6 @@ template: friendly-death-self-attack(attack=1)
 | --- | --- |
 | id | trigger-friendly-death-self-plus-1-attack |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | friendly-death-self-attack |
 
 ## 效果

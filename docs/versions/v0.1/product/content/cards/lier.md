@@ -10,7 +10,6 @@ era: feudal
 attack: 0
 health: 9
 skills: [battlecry-friendly-growth-once]
-is_scholar: true
 ---
 
 # 李耳
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 9 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once |
-| 学者 | 是 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

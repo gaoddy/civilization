@@ -11,7 +11,6 @@ template: aura-all-taxon-health(taxon=animalia,health=1)
 | --- | --- |
 | id | aura-biology-plus-0-plus-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-all-taxon-health |
 
 ## 效果

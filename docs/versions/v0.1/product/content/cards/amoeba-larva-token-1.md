@@ -10,7 +10,6 @@ level: 1
 era: prehistoric
 attack: 1
 health: 1
-is_scholar: false
 ---
 
 # 变形虫幼体
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 1 |
 | 关键词 | 无 |
 | 技能 | 无 |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 变形虫门 › 管状根足纲 › 真变形虫目 › 变形虫科 |
 | 进商店卡池 | 否 |
 

@@ -3,6 +3,7 @@ id: einstein
 name: 爱因斯坦
 categories: [play:mammal, play:bird]
 skills: [mass-energy-equivalence, light-speed-strike]
+introduction: 德裔物理学家，1905 年提出狭义相对论、解释光电效应并给出质能等价，重塑了时间、空间与能量的关系。
 ---
 
 # 爱因斯坦
@@ -15,6 +16,10 @@ skills: [mass-energy-equivalence, light-speed-strike]
 | 名称 | 爱因斯坦 |
 | 玩法 | 哺乳纲、鸟纲 |
 | 技能 | mass-energy-equivalence；light-speed-strike |
+
+## 简介
+
+德裔物理学家，1905 年提出狭义相对论、解释光电效应并给出质能等价，重塑了时间、空间与能量的关系。
 
 ## 效果
 

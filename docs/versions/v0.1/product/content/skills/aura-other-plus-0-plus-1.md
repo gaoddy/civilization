@@ -11,7 +11,6 @@ template: aura-all-other-health(health=1)
 | --- | --- |
 | id | aura-other-plus-0-plus-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-all-other-health |
 
 ## 效果
@@ -21,4 +20,4 @@ template: aura-all-other-health(health=1)
 ## 设计说明
 
 定位：不挑玩法的常驻生命光环，只作用于自身以外的随从。
-口径：不带「其他」以外的筛选，学者、人科、机械等一律生效。
+口径：不带「其他」以外的筛选，人科、机械等一律生效。

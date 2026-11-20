@@ -10,7 +10,6 @@ era: primitive
 attack: 3
 health: 4
 skills: [keyword-sow, keyword-breed-1]
-is_scholar: false
 ---
 
 # 巨花
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 播种；繁衍 1 |
 | 技能 | keyword-sow；keyword-breed-1 |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 未定科 |
 
 ## 效果

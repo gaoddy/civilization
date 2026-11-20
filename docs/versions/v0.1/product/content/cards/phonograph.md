@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 6
 skills: [keyword-assemble-1, shout]
-is_scholar: false
 ---
 
 # 留声机
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1；shout |
-| 学者 | 否 |
 | 科学分类 | 造物 › 信息与计算 |
 
 ## 效果

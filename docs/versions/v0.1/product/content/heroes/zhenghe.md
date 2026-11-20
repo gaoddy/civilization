@@ -3,6 +3,7 @@ id: zhenghe
 name: 郑和
 categories: [play:mammal]
 skills: [free-refresh]
+introduction: 明代航海家，1405 至 1433 年七下西洋，船队最远抵达东非沿岸，是中国古代规模最大的远洋航行。
 ---
 
 # 郑和
@@ -15,6 +16,10 @@ skills: [free-refresh]
 | 名称 | 郑和 |
 | 玩法 | 哺乳纲 |
 | 技能 | free-refresh |
+
+## 简介
+
+明代航海家，1405 至 1433 年七下西洋，船队最远抵达东非沿岸，是中国古代规模最大的远洋航行。
 
 ## 效果
 

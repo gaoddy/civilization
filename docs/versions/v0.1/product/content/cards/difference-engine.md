@@ -10,7 +10,6 @@ era: industrial
 attack: 8
 health: 13
 skills: [keyword-assemble-2, salvage-machine]
-is_scholar: false
 ---
 
 # 差分机
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 13 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；salvage-machine |
-| 学者 | 否 |
 | 科学分类 | 造物 › 自动机械 |
 
 ## 效果

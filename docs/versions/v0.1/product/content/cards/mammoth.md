@@ -10,7 +10,6 @@ era: prehistoric
 attack: 12
 health: 10
 skills: [aura-school-mammal, shout]
-is_scholar: false
 ---
 
 # 真猛犸
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 无 |
 | 技能 | aura-school-mammal；shout |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 长鼻目 › 象科 |
 
 ## 效果

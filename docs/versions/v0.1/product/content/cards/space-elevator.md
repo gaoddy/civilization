@@ -10,7 +10,6 @@ era: future
 attack: 12
 health: 10
 skills: [keyword-divine-shield, keyword-assemble-1]
-is_scholar: false
 ---
 
 # 太空电梯
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 护盾；装配 1 |
 | 技能 | keyword-divine-shield；keyword-assemble-1 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 生产与建筑 |
 
 ## 效果

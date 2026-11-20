@@ -12,7 +12,6 @@ template: on-play-battlecry-growth-all-taxon(taxon=animalia,times=1)
 | --- | --- |
 | id | battlecry-all-biology-growth-once |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-growth-all-taxon |
 
 ## 效果

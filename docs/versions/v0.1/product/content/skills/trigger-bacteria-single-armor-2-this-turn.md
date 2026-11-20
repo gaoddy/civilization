@@ -1,7 +1,6 @@
 ---
 id: trigger-bacteria-single-armor-2-this-turn
 template: on-play-keyword-single-ps(playstyle=bacteria,keyword=armor 2,duration=combat)
-match_text: 同左
 ---
 
 # trigger-bacteria-single-armor-2-this-turn
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | trigger-bacteria-single-armor-2-this-turn |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | on-play-keyword-single-ps |
 
 ## 效果

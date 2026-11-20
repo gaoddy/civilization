@@ -2,7 +2,7 @@
 
 > 依赖：[卡牌规范与数据](card-system.md) §2.1「英雄卡」、[关键词与机制](../rules/keywords-and-mechanics.md)
 > 状态：方案未实施
-> 数据：`docs/versions/v0.1/product/content/skills/`（255 份，文件名 = id）
+> 数据：`docs/versions/v0.1/product/content/skills/`（254 份，文件名 = id）
 > 模板：`docs/versions/v0.1/product/content/skill-templates/`（文件名 = id）
 
 本文描述技能实体的定义、字段规范、引用与渲染规则、共享规则、数据总览与校验方式；不描述具体实现与后续版本技能。归属版本产品基线的内容。
@@ -34,15 +34,14 @@
 | `template` | 是 | `模板 id(参数=值, ...)`，多个模板以 `；` 分隔 | 模板调用；参数只绑定到同一条模板。语法见 §2.1 |
 | `cost` | 条件必填 | 整数 0–2 | **仅主动技能**；每次使用的金币费用；与 `uses_per_turn` 必须成对出现 |
 | `uses_per_turn` | 条件必填 | 整数 1–2 | **仅主动技能**；每回合可使用次数；与 `cost` 必须成对出现 |
-| `match_text` | 条件必填 | 自由 | 确定性替换文本（v0.1 不消费）；被效果牌引用或属于主动技能的技能必填，无随机写「同左」；运行时由文本表 `skill.<id>.match_text` 承载 |
 
-**运行时文本来源**：front matter 的 `name`、`text` 与 `match_text` 是文本的编辑来源（`text` 缺省时取模板渲染结果），构建期由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`（key 分别为 `skill.<id>.name`、`skill.<id>.text`、`skill.<id>.match_text`），客户端按 id 取文本；服务端生成数据不含这些展示字段。新增语言需要扩展文本生成工具并补充各语言文本、注册对应翻译，业务代码与技能实体结构不改动。
+**运行时文本来源**：front matter 的 `name` 与 `text` 是文本的编辑来源（`text` 缺省时取模板渲染结果），构建期由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`（key 分别为 `skill.<id>.name`、`skill.<id>.text`），客户端按 id 取文本；服务端生成数据不含这些展示字段。新增语言需要扩展文本生成工具并补充各语言文本、注册对应翻译，业务代码与技能实体结构不改动。
 
 **主动与触发的判定**：同时具备 `cost` 与 `uses_per_turn` 的技能是**主动技能**，由玩家支付费用后触发，模板展开后的效果以 `OnActivate` 开头；两者都不具备的是**触发式或常驻技能**，按文本前缀在对应时机自动结算。不允许只出现其中一个字段。
 
 **编码约定**：front matter 一行一个字段；模板调用的参数用 `,`、多个模板用 `；`；模板展开后的 `effects` 段用 `|`、效果用 `;`、参数用 `,`。
 
-**正文约定**：一级标题在 `name` 存在时为显示名，否则为 `id`；`## 属性` 用表格复述 `id`、关键词、模板与确定性替换文本，主动技能再加「费用」「每回合次数」两行；`## 效果` 写渲染后的文案。属性表与 front matter 必须一致，由 §6 的校验脚本交叉核对，派生行由 `render_docs.py` 重写。
+**正文约定**：一级标题在 `name` 存在时为显示名，否则为 `id`；`## 属性` 用表格复述 `id`、关键词与模板，主动技能再加「费用」「每回合次数」两行；`## 效果` 写渲染后的文案。属性表与 front matter 必须一致，由 §6 的校验脚本交叉核对，派生行由 `render_docs.py` 重写。
 
 **`text` 的形态**：沿用卡面现有写法。战吼、亡语、繁衍、装配、播种、进化、传染等带触发关键词的效果保留前缀（如「战吼：使一个友方随从获得一次成长」）；主动技能不带前缀，由 `cost` / `uses_per_turn` 判定为主动；其余被动技能保留触发前缀（如「战斗开始时…」「每回合首次刷新时…」）。
 
@@ -77,7 +76,6 @@
 | `card` | 进池卡 id（`in_shop_pool: true`） | 卡牌名 | `.stats` → 攻/血 |
 | `taxon` | 分类节点 id | 卡面名词 | — |
 | `playstyle` | 玩法 id | 卡面名词 | — |
-| `scholar` | 固定 `true` | 学者 | — |
 | `keyword` | 关键词 id，可带层数（`breed 2`） | 名称 + 层数 | `.name` 仅名称、`.level` 仅层数、`.text` 关键词整段文案 |
 | `int` | 整数 | 数字 | `.cn` → 中文数词 |
 | `count` | 整数 1–4 | 中文数词（一/两/三/四） | `.num` → 数字 |
@@ -87,7 +85,7 @@
 
 **文案渲染**：占位符写作 `{name}` 或 `{name.modifier}`；未知占位符、未声明参数、缺失必填参数都是校验错误。实例写了 `text` 时直接使用覆盖文案，不再渲染。多个模板的效果按顺序拼接，文案用「；」连接。
 
-**卡面名词表**：`content/card-nouns.md`，四张表——分类节点（`taxon` → 卡面名词，如 `animalia` → 动物）、玩法（`playstyle` → 机械、真菌界）、特殊筛选值（`scholar=true` → 学者、`other=true` → 其他、`type=minion` → 随从、`id=<卡牌 id>` → 卡名）、关键词文案（关键词 id → 卡面整段文案，层数位写 `{N}`）。渲染器只从这张表取名词，不回退到 `taxonomy.md` 的显示名：卡面用「动物」，分类树写「动物界」，两者不能混用。
+**卡面名词表**：`content/card-nouns.md`，四张表——分类节点（`taxon` → 卡面名词，如 `animalia` → 动物）、玩法（`playstyle` → 机械、真菌界）、特殊筛选值（`other=true` → 其他、`type=minion` → 随从、`id=<卡牌 id>` → 卡名）、关键词文案（关键词 id → 卡面整段文案，层数位写 `{N}`）。渲染器只从这张表取名词，不回退到 `taxonomy.md` 的显示名：卡面用「动物」，分类树写「动物界」，两者不能混用。
 
 **例外清单**：实例保留 `text` 覆盖的共 5 个，原因如下：
 
@@ -107,14 +105,14 @@
 | --- | --- |
 | `taxon` | 卡牌 `taxon` 等于该节点或位于其下；写上级节点即包含全部下级，如 `taxon=animalia` 命中全部动物卡 |
 | `playstyle` | 卡牌任一条 `play:` 精确相等；不命中 `neutral` |
-| `play` | 卡牌 `categories` 中存在 `play:<值>`；任一条命中即可，不区分学者、工具卡与效果牌 |
+| `play` | 卡牌 `categories` 中存在 `play:<值>`；任一条命中即可，不区分工具卡与效果牌 |
 | `prey` / `host` | 卡牌捕食 / 寄生分类中存在与筛选节点相同或位于其下的节点 |
-| `subtype` / `id` / `type` / `scholar` / `keyword` / `other` | 沿用既有语义；`scholar=true` 表示学者卡 |
+| `subtype` / `id` / `type` / `keyword` / `other` | 沿用既有语义 |
 
 - 科学分类与玩法是两条独立维度：`taxon` 按科学分类筛选；`playstyle` / `play` 按玩法归属筛选，任一条 `play:` 命中即可。非池卡同样按自身 `categories` 参与匹配。
-- 技能文本必须与筛选键一致：写「你的犬科随从」用 `taxon=canidae`，写「你的机械随从」用 `playstyle=machine`，写「你的学者随从」用 `scholar=true`；「你的动物随从」用 `taxon=animalia`。
+- 技能文本必须与筛选键一致：写「你的犬科随从」用 `taxon=canidae`，写「你的机械随从」用 `playstyle=machine`，「你的动物随从」用 `taxon=animalia`。
 - 召唤物按自身玩法与科学分类参与匹配；它们与普通卡同为 `cards.json` 中的卡牌实体，不再有独立注册表或回退路径。
-- 当前数据只有 `taxon`、`playstyle`、`scholar`、`id`、`type`、`keyword`、`other` 被实际使用；`play`、`prey`、`host`、`subtype` 已定义，暂无技能使用。
+- 当前数据只有 `taxon`、`playstyle`、`play`、`id`、`type`、`keyword`、`other` 被实际使用；`play`、`prey`、`host`、`subtype` 已定义，暂无技能使用。
 
 ### 2.3 次数与条件参数
 
@@ -172,7 +170,7 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 
 | 维度 | 数量 |
 | --- | --- |
-| 技能总数 | 255 |
+| 技能总数 | 254 |
 | 经卡牌 `skills` 引用的技能 | 243 |
 | 仅经英雄卡 `skills` 引用的技能 | 7 |
 | 既未被卡牌也未被英雄引用的技能 | 4 |
@@ -181,7 +179,7 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 | 不带技能的随从牌 | 1 |
 | 卡牌技能引用 | 535 段效果单元 |
 
-255 个技能中，244 个经卡牌 `skills` 引用，7 个仅由英雄卡引用（英雄专属主动技能），其余 4 个既未被卡牌也未被英雄引用。卡牌技能共 535 段引用（随从 435 段 + 效果牌 100 段），其中 2 处「若其为<筛选对象>」条件变体已并回前一段（见 §2「技能边界」）。
+254 个技能中，243 个经卡牌 `skills` 引用，7 个仅由英雄卡引用（英雄专属主动技能），其余 4 个既未被卡牌也未被英雄引用。卡牌技能共 535 段引用（随从 435 段 + 效果牌 100 段），其中 2 处「若其为<筛选对象>」条件变体已并回前一段（见 §2「技能边界」）。
 
 ### 5.1 筛选键使用分布
 
@@ -221,20 +219,20 @@ python3 scripts/validate_docs.py
 
 技能相关校验覆盖：
 
-1. 技能文档 255 份，`id` 等于文件名且在技能命名空间内唯一；
+1. 技能文档 254 份，`id` 等于文件名且在技能命名空间内唯一；
 2. 技能属性表与 front matter 一致；
-3. 被效果牌引用的技能必须有 `match_text`；主动技能必须有 `name` 与 `match_text`，`cost` 与 `uses_per_turn` 成对出现且取值在 0–2 / 1–2 内；填写了 `name` 的技能必须有 `match_text`；
+3. 主动技能必须有 `name`，`cost` 与 `uses_per_turn` 成对出现且取值在 0–2 / 1–2 内；
 4. 每张效果牌至少引用 1 个技能；全池恰好 1 张无技能随从（`einstein-fridge`）的 `skills` 为空且 `## 效果` 为「无」；
 5. 卡牌 `## 效果` 与所引用技能 `text` 按顺序拼接的结果一致；
 6. 卡牌属性表的「技能」「关键词」行与 front matter、技能 `keyword` 一致；主动技能的属性表含「费用」「每回合次数」两行；
 7. 英雄卡恰好 32 张，每张英雄卡都有同 id 的同名随从卡且 `name` / `categories` 一致，`skills` 各自维护、不比较；英雄卡引用的技能不得登记 `keyword`，且必须符合主动/被动语义：有 `cost` 的技能只能有 `OnActivate` 触发，无 `cost` 的技能只能有光环、首次刷新、战斗开始或回合开始等被动触发；随从与效果牌不得再有 `is_hero`；卡牌不得残留旧版独立的技能字段或小节；
-8. 每个技能都有 `template` 字段；模板文档存在、参数名已声明、取值在域内、必填参数齐全；模板展开后的 DSL 按[关键词与机制](../rules/keywords-and-mechanics.md) §9.4 校验：段数 3–4 段、触发与动作原语在白名单内、选择器合法（筛选值为英文 id、分类节点合法、玩法 id 合法）、`duration` 取值合法、参数写作 `key=value`；`timesIf` 使用「键:值:次数」或 `scholar:次数`；`Decompose` 必须带 `basis` 与 `duration`；`OnKill` / `OnAllyKill` 在触发白名单内；
+8. 每个技能都有 `template` 字段；模板文档存在、参数名已声明、取值在域内、必填参数齐全；模板展开后的 DSL 按[关键词与机制](../rules/keywords-and-mechanics.md) §9.4 校验：段数 3–4 段、触发与动作原语在白名单内、选择器合法（筛选值为英文 id、分类节点合法、玩法 id 合法）、`duration` 取值合法、参数写作 `key=value`；`timesIf` 使用「键:值:次数」；`Decompose` 必须带 `basis` 与 `duration`；`OnKill` / `OnAllyKill` 在触发白名单内；
 9. 技能文本的固定前缀与触发时机一致：「战吼」对应 `OnPlay`、「亡语」对应 `OnDeath`、「战斗开始时」对应 `OnCombatStart`、「回合开始时」对应 `OnTurnStart`、「每回合首次刷新时」对应 `OnFirstRefresh`、「每当」对应事件类触发、「分解：」对应 `OnKill` / `OnFriendlyDeath` / `OnAllyKill`、`你的…随从获得` 句式对应 `Aura`、「若你控制」对应 `ConditionalAura`；
 10. 卡牌分类字段按[卡牌规范与数据](card-system.md) §1.1 校验：`categories` 至少 1 条 `play:`、玩法取值不含 `neutral`、条目与顺序合法、`prey:` / `host:` 只允许生物卡；`taxon` 为分类树叶子；英雄与同 id 随从的 `categories` 一致；
-11. 专属关键词按玩法与分类校验：`decompose` 仅 play 命中真菌界/细菌域、`assemble` 仅 play 命中机械（含造物六类工具卡）、`sow` 仅 play 命中植物界、`evolve` 仅非学者生物卡；
+11. 专属关键词按玩法与分类校验：`decompose` 仅 play 命中真菌界/细菌域、`assemble` 仅 play 命中机械（含造物六类工具卡）、`sow` 仅 play 命中植物界、`evolve` 仅生物卡；
 12. 派生小节由 `python3 scripts/render_docs.py --check` 校验：技能 `## 属性` 的派生行、技能与卡牌的 `## 效果` 无漂移；`make data-check` 已包含这一步。
 
-期望：输出包含 `随从 332 张、效果牌 100 张、技能 255 个、英雄卡 32 张，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
+期望：输出包含 `随从 332 张、效果牌 100 张、技能 254 个、英雄卡 32 张，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
 
 模板渲染、`effects` 解析与校验函数有独立单元测试，改动校验逻辑后运行：
 

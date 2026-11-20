@@ -10,7 +10,6 @@ era: modern
 attack: 7
 health: 10
 skills: [keyword-stealth, devour-3]
-is_scholar: false
 ---
 
 # 大王乌贼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；devour-3 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 开眼目 › 大王乌贼科 |
 
 ## 效果

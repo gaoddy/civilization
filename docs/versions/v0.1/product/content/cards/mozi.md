@@ -10,7 +10,6 @@ era: classical
 attack: 5
 health: 8
 skills: [enemy-random-cannot-attack]
-is_scholar: false
 ---
 
 # 墨子
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | enemy-random-cannot-attack |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

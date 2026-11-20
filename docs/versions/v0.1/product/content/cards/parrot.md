@@ -10,7 +10,6 @@ era: feudal
 attack: 7
 health: 6
 skills: [battlecry-copy-hand-minion]
-is_scholar: false
 ---
 
 # 鹦鹉
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-copy-hand-minion |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹦形目 › 鹦鹉科 |
 
 ## 效果

@@ -173,7 +173,6 @@ pub struct Card {
     pub attack: Option<i32>,
     pub health: Option<i32>,
     pub skills: Vec<String>,
-    pub is_scholar: bool,
     pub cost: Option<u8>,
 }
 

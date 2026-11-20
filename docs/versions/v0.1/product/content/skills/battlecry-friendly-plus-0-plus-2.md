@@ -12,7 +12,6 @@ template: on-play-battlecry-stats-single-health(health=2)
 | --- | --- |
 | id | battlecry-friendly-plus-0-plus-2 |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-stats-single-health |
 
 ## 效果

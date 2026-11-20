@@ -10,7 +10,6 @@ era: future
 attack: 6
 health: 12
 skills: [aura-plant-plus-1-plus-1, keyword-breed-3]
-is_scholar: false
 ---
 
 # 固氮作物
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 繁衍 3 |
 | 技能 | aura-plant-plus-1-plus-1；keyword-breed-3 |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 豆目 › 豆科 |
 
 ## 效果

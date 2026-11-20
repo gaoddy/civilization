@@ -10,7 +10,6 @@ era: primitive
 attack: 6
 health: 12
 skills: [detonate-2, microbiology]
-is_scholar: false
 ---
 
 # 炭疽芽孢杆菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 无 |
 | 技能 | detonate-2；microbiology |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 芽孢杆菌目 › 芽孢杆菌科 |
 
 ## 效果

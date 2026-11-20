@@ -10,7 +10,6 @@ era: classical
 attack: 2
 health: 3
 skills: [battlecry-friendly-plus-0-plus-1]
-is_scholar: false
 ---
 
 # 水钟
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 信息与计算 |
 
 ## 效果

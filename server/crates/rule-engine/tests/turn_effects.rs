@@ -49,7 +49,6 @@ fn add_card(
             attack: Some(attack),
             health: Some(health),
             skills: vec![skill_id],
-            is_scholar: false,
             cost: None,
         },
     );
@@ -90,7 +89,7 @@ fn catalog_with_synthetics() -> Catalog {
     );
     add_card(
         &mut catalog,
-        "scholar-breed",
+        "zero-breed",
         Playstyle::Neutral,
         (1, 0, 4),
         (Some("breed 2"), "[]"),
@@ -308,12 +307,13 @@ fn breed_includes_dynamic_layers() {
 }
 
 #[test]
-fn scholar_breed_adds_health_only() {
+fn zero_attack_breed_adds_health_only() {
     let (mut engine, mut state) = setup(1);
-    place(&engine.catalog, &mut state, 0, 1, "scholar-breed");
+    place(&engine.catalog, &mut state, 0, 1, "zero-breed");
 
     engine.start_turn(&mut state).expect("开始回合应成功");
 
+    // 繁衍本身只加生命，与随从攻击力是否为 0 无关。
     let minion = board_minion(&state, 0, 0);
     assert_eq!(minion.stats.health.growth, 2);
     assert_eq!(minion.stats.attack.growth, 0);

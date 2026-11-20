@@ -12,7 +12,6 @@ template: decompose-friendly-death
 | --- | --- |
 | id | decompose-friendly-death-original |
 | 关键词 | 分解 |
-| 确定性替换 | 不适用 |
 | 模板 | decompose-friendly-death |
 
 ## 效果

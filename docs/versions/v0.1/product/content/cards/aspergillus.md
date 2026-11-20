@@ -10,7 +10,6 @@ era: industrial
 attack: 3
 health: 7
 skills: [deathrattle-all-enemies-minus-1-health, decompose-kill-original]
-is_scholar: false
 ---
 
 # 曲霉
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 7 |
 | 关键词 | 亡语；分解 |
 | 技能 | deathrattle-all-enemies-minus-1-health；decompose-kill-original |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 子囊菌门 › 散囊菌纲 › 散囊菌目 › 曲霉科 |
 
 ## 效果

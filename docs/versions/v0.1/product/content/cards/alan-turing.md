@@ -10,7 +10,6 @@ era: modern
 attack: 0
 health: 20
 skills: [aura-mech-optimal-attack]
-is_scholar: true
 ---
 
 # 艾伦·图灵
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 20 |
 | 关键词 | 无 |
 | 技能 | aura-mech-optimal-attack |
-| 学者 | 是 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

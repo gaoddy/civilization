@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 4
 skills: [mimic-1]
-is_scholar: false
 ---
 
 # 乌贼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | mimic-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 乌贼目 › 乌贼科 |
 
 ## 效果

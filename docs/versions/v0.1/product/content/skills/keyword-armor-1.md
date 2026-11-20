@@ -12,7 +12,6 @@ template: keyword-self(keyword=armor 1)
 | --- | --- |
 | id | keyword-armor-1 |
 | 关键词 | 减伤 1 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

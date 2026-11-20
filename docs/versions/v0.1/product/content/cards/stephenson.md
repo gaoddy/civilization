@@ -10,7 +10,6 @@ era: industrial
 attack: 7
 health: 11
 skills: [aura-other-mech-plus-1-plus-1]
-is_scholar: false
 ---
 
 # 史蒂芬孙
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 11 |
 | 关键词 | 无 |
 | 技能 | aura-other-mech-plus-1-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
@@ -41,7 +39,7 @@ is_scholar: false
 
 定位：机械流的常驻 +1/+1，机械铺场时收益最高。
 平衡边界：+1/+1 光环按数量放大，与同星级机械光环同口径。
-使用建议：前中期机械越多越值，纯学者阵容时只有自身身材。
+使用建议：前中期机械越多越值，全为低攻高血随从时只有自身身材。
 
 ## 出处
 

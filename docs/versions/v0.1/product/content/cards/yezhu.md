@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 2
 skills: [battlecry-self-plus-1-health]
-is_scholar: false
 ---
 
 # 野猪
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 2 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-self-plus-1-health |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 偶蹄目 › 猪科 |
 | 关联分类 | 捕食：植物界 |
 

@@ -12,7 +12,6 @@ template: keyword-self(keyword=windfury)
 | --- | --- |
 | id | keyword-windfury |
 | 关键词 | 连击 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

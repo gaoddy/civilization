@@ -7,7 +7,6 @@ era: modern
 categories: [play:mammal, play:cephalopod]
 taxon: literature
 cost: 1
-match_text: 同左
 skills: [combatstart-top-attack-enemy-cant-attack]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-top-attack-enemy-cant-attack]
 | 玩法 | 哺乳纲、头足纲 |
 | 技能 | combatstart-top-attack-enemy-cant-attack |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 人文 › 文学 |
 
 ## 效果

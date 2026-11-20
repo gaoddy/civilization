@@ -10,7 +10,6 @@ level: 1
 era: prehistoric
 attack: 1
 health: 1
-is_scholar: false
 ---
 
 # 工蜂
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 1 |
 | 关键词 | 无 |
 | 技能 | 无 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 膜翅目 › 蜜蜂科 |
 | 进商店卡池 | 否 |
 

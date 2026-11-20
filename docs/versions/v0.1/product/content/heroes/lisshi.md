@@ -3,6 +3,7 @@ id: lisshi
 name: 李时珍
 categories: [play:plant]
 skills: [materia-medica]
+introduction: 明代医药学家，《本草纲目》历时二十七年编成，收录药物一千八百余种，系统整理了中国传统药物知识。
 ---
 
 # 李时珍
@@ -15,6 +16,10 @@ skills: [materia-medica]
 | 名称 | 李时珍 |
 | 玩法 | 植物界 |
 | 技能 | materia-medica |
+
+## 简介
+
+明代医药学家，《本草纲目》历时二十七年编成，收录药物一千八百余种，系统整理了中国传统药物知识。
 
 ## 效果
 

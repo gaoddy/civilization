@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 6
 skills: [detonate-2]
-is_scholar: false
 ---
 
 # 诺如病毒
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | detonate-2 |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 核糖病毒门 › 小核糖病毒纲 › 小RNA病毒目 › 杯状病毒科 |
 
 ## 效果

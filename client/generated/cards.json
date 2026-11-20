@@ -14,7 +14,6 @@
     "health": 8,
     "id": "adam-smith",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "division-of-labor"
@@ -41,7 +40,6 @@
     "health": 20,
     "id": "agi",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 6,
     "skills": [
       "battlecry-all-friendly-growth-twice"
@@ -64,7 +62,6 @@
     "health": 8,
     "id": "airplane",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-ignore-taunt",
@@ -88,7 +85,6 @@
     "health": 20,
     "id": "alan-turing",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 6,
     "skills": [
       "aura-mech-optimal-attack"
@@ -111,7 +107,6 @@
     "health": 10,
     "id": "albatross",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "deathrattle-summon-2-seabirds",
@@ -135,7 +130,6 @@
     "health": 15,
     "id": "ammonite",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "deathrattle-summon-2-ammonites",
@@ -159,7 +153,6 @@
     "health": 5,
     "id": "ammonite-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 3,
     "skills": [],
     "subtype": "mollusk",
@@ -180,7 +173,6 @@
     "health": 3,
     "id": "amoeba",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "deathrattle-summon-amoeba-larva-1"
@@ -203,7 +195,6 @@
     "health": 3,
     "id": "amoeba-larva-3-3-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 2,
     "skills": [],
     "subtype": "protozoa",
@@ -224,7 +215,6 @@
     "health": 1,
     "id": "amoeba-larva-token-1",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "protozoa",
@@ -245,7 +235,6 @@
     "health": 2,
     "id": "amoeba-larva-token-2",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "protozoa",
@@ -266,7 +255,6 @@
     "health": 3,
     "id": "ant",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "aura-other-insect-plus-0-plus-1"
@@ -293,7 +281,6 @@
     "health": null,
     "id": "aolinpike-jidian",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-all-friendly-growth-once"
@@ -320,7 +307,6 @@
     "health": null,
     "id": "aq-jingshen",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-friendly-taunt-until-turn-end"
@@ -343,7 +329,6 @@
     "health": 9,
     "id": "archimedes",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 3,
     "skills": [
       "battlecry-friendly-mech-growth-once"
@@ -366,7 +351,6 @@
     "health": 14,
     "id": "argentavis",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-windfury",
@@ -390,7 +374,6 @@
     "health": 7,
     "id": "argonaut",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-stealth",
@@ -414,7 +397,6 @@
     "health": 9,
     "id": "aristotle",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 3,
     "skills": [
       "aura-all-plus-0-plus-1"
@@ -437,7 +419,6 @@
     "health": 9,
     "id": "artificial-womb",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "battlecry-summon-3-3-synthetic-cell",
@@ -461,7 +442,6 @@
     "health": 7,
     "id": "aspergillus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "deathrattle-all-enemies-minus-1-health",
@@ -485,7 +465,6 @@
     "health": 12,
     "id": "bacillus-anthracis",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "detonate-2",
@@ -509,7 +488,6 @@
     "health": 2,
     "id": "bacteria-token-2",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "bacteria",
@@ -530,7 +508,6 @@
     "health": 4,
     "id": "bacteria-token-4",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 3,
     "skills": [],
     "subtype": "bacteria",
@@ -551,7 +528,6 @@
     "health": 16,
     "id": "bacteriophage",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "convert-3",
@@ -579,7 +555,6 @@
     "health": 2,
     "id": "baiyi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "keyword-breed-1"
@@ -602,7 +577,6 @@
     "health": null,
     "id": "baozi-kuosan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-summon-2-spores-2-2"
@@ -625,7 +599,6 @@
     "health": 3,
     "id": "bee",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "deathrattle-summon-1-worker-bee"
@@ -648,7 +621,6 @@
     "health": 8,
     "id": "beethoven",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "human-growth-twice"
@@ -671,7 +643,6 @@
     "health": 6,
     "id": "beetle",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-taunt",
@@ -695,7 +666,6 @@
     "health": null,
     "id": "beiyong-lingjian",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-machine-single-reborn"
@@ -718,7 +688,6 @@
     "health": null,
     "id": "bianyi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "combatstart-all-enemies-contagion-2"
@@ -741,7 +710,6 @@
     "health": 5,
     "id": "bingdushizu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-enemy-death-self-plus-1-plus-1"
@@ -764,7 +732,6 @@
     "health": 9,
     "id": "bisheng",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 3,
     "skills": [
       "battlecry-friendly-growth-once"
@@ -791,7 +758,6 @@
     "health": 9,
     "id": "black-death",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "deathrattle-all-enemies-humans-minus-2-health",
@@ -819,7 +785,6 @@
     "health": null,
     "id": "black-death-spread",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "combatstart-all-enemies-contagion-1"
@@ -842,7 +807,6 @@
     "health": 4,
     "id": "blue-ringed-octopus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-poison",
@@ -866,7 +830,6 @@
     "health": 11,
     "id": "box-jellyfish",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-poison",
@@ -890,7 +853,6 @@
     "health": 9,
     "id": "boxer",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-3-humans-self-plus-2-attack",
@@ -914,7 +876,6 @@
     "health": null,
     "id": "bozhongji",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-plant-sow"
@@ -937,7 +898,6 @@
     "health": 6,
     "id": "bruce-lee",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-windfury",
@@ -965,7 +925,6 @@
     "health": null,
     "id": "bulangyundong",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "combatstart-random-enemy-damage-2"
@@ -988,7 +947,6 @@
     "health": 2,
     "id": "buluozhanshi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-2-humans-self-plus-1-plus-1"
@@ -1011,7 +969,6 @@
     "health": 6,
     "id": "butterfly",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "deathrattle-friendly-insect-growth-twice",
@@ -1035,7 +992,6 @@
     "health": 7,
     "id": "cailun",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 2,
     "skills": [
       "battlecry-friendly-growth-once"
@@ -1058,7 +1014,6 @@
     "health": 2,
     "id": "carp",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "aura-other-fish-plus-0-plus-1"
@@ -1081,7 +1036,6 @@
     "health": 3,
     "id": "changmaoshou",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-human-play-plus-1-attack"
@@ -1104,7 +1058,6 @@
     "health": null,
     "id": "chaopin",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-machine-all-plus-1-plus-1"
@@ -1127,7 +1080,6 @@
     "health": null,
     "id": "chengbang-faling",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-friendly-plus-1-plus-1"
@@ -1150,7 +1102,6 @@
     "health": 2,
     "id": "chengbang-gongmin",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
@@ -1177,7 +1128,6 @@
     "health": 9,
     "id": "cholera",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "combatstart-random-enemy-contagion-1",
@@ -1201,7 +1151,6 @@
     "health": null,
     "id": "chongqun-baofa",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-summon-2-worker-bees"
@@ -1224,7 +1173,6 @@
     "health": null,
     "id": "chushou-chanrao",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "trigger-cephalopod-single-poison"
@@ -1247,7 +1195,6 @@
     "health": null,
     "id": "cixibao",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-cnidarian-single-poison-this-turn"
@@ -1270,7 +1217,6 @@
     "health": 7,
     "id": "clostridium-tetani",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-contagion",
@@ -1294,7 +1240,6 @@
     "health": 3,
     "id": "clownfish",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-friendly-fish-growth-once"
@@ -1317,7 +1262,6 @@
     "health": 6,
     "id": "cobra",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-poison",
@@ -1341,7 +1285,6 @@
     "health": 8,
     "id": "coelacanth",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-reborn",
@@ -1365,7 +1308,6 @@
     "health": 13,
     "id": "colossal-squid",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-stealth",
@@ -1389,7 +1331,6 @@
     "health": 4,
     "id": "coral-polyp",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "deathrattle-summon-coral-polyp"
@@ -1412,7 +1353,6 @@
     "health": 1,
     "id": "coral-polyp-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "ocean",
@@ -1433,7 +1373,6 @@
     "health": 7,
     "id": "cordyceps",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "deathrattle-summon-cordyceps",
@@ -1457,7 +1396,6 @@
     "health": 3,
     "id": "cordyceps-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 2,
     "skills": [],
     "subtype": "fungus",
@@ -1478,7 +1416,6 @@
     "health": 9,
     "id": "crocodile",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-poison",
@@ -1502,7 +1439,6 @@
     "health": 4,
     "id": "crow",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "battlecry-friendly-bird-growth-once",
@@ -1534,7 +1470,6 @@
     "health": null,
     "id": "cuidu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-friendly-single-poison-this-turn"
@@ -1557,7 +1492,6 @@
     "health": 4,
     "id": "cuttlefish",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "mimic-1"
@@ -1580,7 +1514,6 @@
     "health": null,
     "id": "daliuxing",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "combatstart-all-enemies-damage-3"
@@ -1627,7 +1560,6 @@
     "health": 16,
     "id": "darwin",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "aura-biology-plus-1-plus-1",
@@ -1655,7 +1587,6 @@
     "health": 16,
     "id": "davinci",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "universal-manuscript"
@@ -1678,7 +1609,6 @@
     "health": 9,
     "id": "dengue-virus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-contagion",
@@ -1702,7 +1632,6 @@
     "health": 6,
     "id": "dianbaoji",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "combatstart-leftmost-damage-3",
@@ -1726,7 +1655,6 @@
     "health": 12,
     "id": "dianhua-jiaohuanji",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "battlecry-all-friendly-growth-once",
@@ -1750,7 +1678,6 @@
     "health": 13,
     "id": "difference-engine",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-assemble-2",
@@ -1774,7 +1701,6 @@
     "health": null,
     "id": "dishengxiyu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-friendly-plus-1-plus-1"
@@ -1801,7 +1727,6 @@
     "health": null,
     "id": "dna-shuangluoxuan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-friendly-growth-thrice"
@@ -1828,7 +1753,6 @@
     "health": 6,
     "id": "dolly",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-reborn",
@@ -1852,7 +1776,6 @@
     "health": 2,
     "id": "dongxuehuajia",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "battlecry-friendly-plus-1-health"
@@ -1879,7 +1802,6 @@
     "health": 5,
     "id": "doushouchang-shizi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-taunt"
@@ -1902,7 +1824,6 @@
     "health": 8,
     "id": "dragonfly",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-windfury",
@@ -1926,7 +1847,6 @@
     "health": 14,
     "id": "dunkleosteus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "deathrattle-summon-fish-fry-3",
@@ -1950,7 +1870,6 @@
     "health": 5,
     "id": "dushe",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "deathrattle-random-enemy-minus-1-attack"
@@ -1973,7 +1892,6 @@
     "health": null,
     "id": "duya",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-reptile-single-poison-this-turn"
@@ -1996,7 +1914,6 @@
     "health": 18,
     "id": "dyson-sphere",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-divine-shield",
@@ -2020,7 +1937,6 @@
     "health": 4,
     "id": "e-coli",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "deathrattle-friendly-bacteria-growth-once"
@@ -2047,7 +1963,6 @@
     "health": 12,
     "id": "ebola",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-contagion",
@@ -2071,7 +1986,6 @@
     "health": 11,
     "id": "edison",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "invention-factory"
@@ -2094,7 +2008,6 @@
     "health": 6,
     "id": "eel",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "aura-school-fish-1",
@@ -2122,7 +2035,6 @@
     "health": 16,
     "id": "einstein",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "battlecry-all-friendly-growth-once",
@@ -2146,7 +2058,6 @@
     "health": 5,
     "id": "einstein-fridge",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [],
     "subtype": "appliance",
@@ -2167,7 +2078,6 @@
     "health": 16,
     "id": "engineered-virus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-contagion",
@@ -2195,7 +2105,6 @@
     "health": null,
     "id": "erfenfa",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-friendly-plus-2-attack"
@@ -2218,7 +2127,6 @@
     "health": 12,
     "id": "ergot",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "decompose-ally-kill-pre-kill",
@@ -2242,7 +2150,6 @@
     "health": 5,
     "id": "euclid",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 1,
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
@@ -2265,7 +2172,6 @@
     "health": 6,
     "id": "euglena",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "aura-other-protozoa-plus-1-attack",
@@ -2289,7 +2195,6 @@
     "health": 8,
     "id": "famingjia",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "battlecry-all-mech-growth-once",
@@ -2317,7 +2222,6 @@
     "health": null,
     "id": "fangzhen",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-human-taunt-until-turn-end"
@@ -2340,7 +2244,6 @@
     "health": 3,
     "id": "fangzhiji",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-friendly-growth-once"
@@ -2363,7 +2266,6 @@
     "health": null,
     "id": "fanmao",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "trigger-plant-all-growth-twice"
@@ -2390,7 +2292,6 @@
     "health": 16,
     "id": "faraday",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "keyword-divine-shield",
@@ -2418,7 +2319,6 @@
     "health": null,
     "id": "faraday-cage",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-friendly-plus-0-plus-4-this-turn"
@@ -2445,7 +2345,6 @@
     "health": 6,
     "id": "feijiehe",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-contagion",
@@ -2473,7 +2372,6 @@
     "health": 5,
     "id": "feiyan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "deathrattle-random-enemy-minus-1-health"
@@ -2496,7 +2394,6 @@
     "health": 6,
     "id": "fengche",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-assemble-1",
@@ -2520,7 +2417,6 @@
     "health": null,
     "id": "fengqun-zhanshu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-insect-all-plus-1-plus-1"
@@ -2547,7 +2443,6 @@
     "health": 26,
     "id": "fermi",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 7,
     "skills": [
       "battlecry-all-friendly-growth-once"
@@ -2570,7 +2465,6 @@
     "health": 1,
     "id": "fish-fry-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "fish",
@@ -2591,7 +2485,6 @@
     "health": 7,
     "id": "fleming",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "virus-growth-once"
@@ -2614,7 +2507,6 @@
     "health": 5,
     "id": "fly-agaric",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "decompose-kill-original"
@@ -2637,7 +2529,6 @@
     "health": 4,
     "id": "flying-fish",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-ignore-taunt",
@@ -2661,7 +2552,6 @@
     "health": 10,
     "id": "foraminifera",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "devour-4",
@@ -2685,7 +2575,6 @@
     "health": null,
     "id": "fushen-biaodui",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "combatstart-lowest-attack-enemy-damage-3"
@@ -2712,7 +2601,6 @@
     "health": null,
     "id": "fusheng",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-friendly-single-reborn"
@@ -2735,7 +2623,6 @@
     "health": 14,
     "id": "fusion-reactor",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "aura-mech-plus-2-plus-2"
@@ -2766,7 +2653,6 @@
     "health": null,
     "id": "fuzhi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-copy-friendly-minion"
@@ -2789,7 +2675,6 @@
     "health": null,
     "id": "fuzhi-baofa",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "combatstart-all-enemies-damage-2"
@@ -2812,7 +2697,6 @@
     "health": 12,
     "id": "galileo",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 4,
     "skills": [
       "observation"
@@ -2835,7 +2719,6 @@
     "health": 3,
     "id": "ganlanshu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-sow"
@@ -2858,10 +2741,9 @@
     "health": 16,
     "id": "gauss",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
-      "scholar-growth-twice"
+      "activate-friendly-growth-twice"
     ],
     "subtype": "mathematics",
     "taxon": "hominidae"
@@ -2881,7 +2763,6 @@
     "health": 4,
     "id": "gear",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "keyword-assemble-1"
@@ -2904,7 +2785,6 @@
     "health": 5,
     "id": "gecko",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-taunt"
@@ -2927,7 +2807,6 @@
     "health": 13,
     "id": "giant-amoeba",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "devour-4",
@@ -2951,7 +2830,6 @@
     "health": 16,
     "id": "giant-jellyfish",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "revive-3",
@@ -2975,7 +2853,6 @@
     "health": 10,
     "id": "giant-squid",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-stealth",
@@ -2999,7 +2876,6 @@
     "health": 9,
     "id": "giardia",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "devour-3",
@@ -3023,7 +2899,6 @@
     "health": 12,
     "id": "ginkgo",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-sow",
@@ -3047,7 +2922,6 @@
     "health": 20,
     "id": "godel",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 6,
     "skills": [
       "aura-all-plus-0-plus-2"
@@ -3070,7 +2944,6 @@
     "health": 8,
     "id": "golden-eagle",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "dive-1",
@@ -3094,7 +2967,6 @@
     "health": 11,
     "id": "gongchangzhu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack",
@@ -3118,7 +2990,6 @@
     "health": 4,
     "id": "gongchengchui",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-random-enemy-damage-1"
@@ -3141,7 +3012,6 @@
     "health": 6,
     "id": "gongchengta",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-assemble-2",
@@ -3165,7 +3035,6 @@
     "health": 2,
     "id": "gongjianshou",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "battlecry-random-enemy-damage-1"
@@ -3188,7 +3057,6 @@
     "health": 11,
     "id": "gongyegongren",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack",
@@ -3212,7 +3080,6 @@
     "health": 8,
     "id": "great-white-shark",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-ignore-taunt",
@@ -3240,7 +3107,6 @@
     "health": null,
     "id": "guangdianxiaoying",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "combatstart-leftmost-damage-3"
@@ -3263,7 +3129,6 @@
     "health": null,
     "id": "guanghezuoyong",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-plant-breed-2"
@@ -3290,7 +3155,6 @@
     "health": null,
     "id": "guangyixiangduilun",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-all-friendly-plus-1-plus-1"
@@ -3317,7 +3181,6 @@
     "health": 13,
     "id": "guanzhuangbingdu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-contagion",
@@ -3345,7 +3208,6 @@
     "health": 2,
     "id": "guoying",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "keyword-breed-1"
@@ -3372,7 +3234,6 @@
     "health": 12,
     "id": "gutenberg",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 4,
     "skills": [
       "battlecry-friendly-growth-once"
@@ -3395,7 +3256,6 @@
     "health": 3,
     "id": "haikouichthys",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "battlecry-friendly-fish-growth-once"
@@ -3422,7 +3282,6 @@
     "health": 26,
     "id": "heisenberg",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 7,
     "skills": [
       "keyword-reborn",
@@ -3446,7 +3305,6 @@
     "health": 6,
     "id": "hela-cell",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "deathrattle-summon-2-2-hela-cell-clone",
@@ -3470,7 +3328,6 @@
     "health": 2,
     "id": "hela-cell-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "mammal",
@@ -3495,7 +3352,6 @@
     "health": 9,
     "id": "hippocrates",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 3,
     "skills": [
       "trigger-friendly-growth-extra-plus-0-plus-1"
@@ -3522,7 +3378,6 @@
     "health": 9,
     "id": "hiv",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-contagion",
@@ -3546,7 +3401,6 @@
     "health": null,
     "id": "hiv-inhibitor",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "combatstart-remove-all-human-growth"
@@ -3569,7 +3423,6 @@
     "health": 9,
     "id": "homer",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 3,
     "skills": [
       "battlecry-all-friendly-growth-once"
@@ -3592,7 +3445,6 @@
     "health": 14,
     "id": "honey-fungus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "decompose-kill-original",
@@ -3616,7 +3468,6 @@
     "health": 12,
     "id": "hongshulin",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-sow",
@@ -3644,7 +3495,6 @@
     "health": null,
     "id": "houjia",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-friendly-single-armor-2-this-turn"
@@ -3671,7 +3521,6 @@
     "health": 9,
     "id": "huangrebing",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "combatstart-random-enemy-contagion-2"
@@ -3694,7 +3543,6 @@
     "health": 6,
     "id": "huochongdui",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-windfury",
@@ -3718,7 +3566,6 @@
     "health": 5,
     "id": "huoqiangshou",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "battlecry-random-enemy-damage-2",
@@ -3746,7 +3593,6 @@
     "health": null,
     "id": "hushun",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-friendly-single-divine-shield"
@@ -3769,7 +3615,6 @@
     "health": 9,
     "id": "hybrid-rice",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-sow",
@@ -3793,7 +3638,6 @@
     "health": 4,
     "id": "hydra",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "revive-1"
@@ -3820,7 +3664,6 @@
     "health": 6,
     "id": "influenza",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-contagion"
@@ -3843,7 +3686,6 @@
     "health": null,
     "id": "influenza-mutation",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "combatstart-top-attack-enemy-minus-0-minus-2"
@@ -3870,7 +3712,6 @@
     "health": 3,
     "id": "jianchihu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "combatstart-if-2-biology-self-plus-2-attack"
@@ -3897,7 +3738,6 @@
     "health": null,
     "id": "jianshou",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-single-plus-0-plus-1-this-turn"
@@ -3924,7 +3764,6 @@
     "health": null,
     "id": "jiaobiandianliu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-friendly-plus-2-attack-this-turn"
@@ -3951,7 +3790,6 @@
     "health": null,
     "id": "jijie",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-summon-1-neutral-token-2-2"
@@ -3978,7 +3816,6 @@
     "health": null,
     "id": "jili",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "trigger-all-friendly-plus-1-plus-1"
@@ -4005,7 +3842,6 @@
     "health": null,
     "id": "jinghua",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "combatstart-remove-top-attack-enemy-growth"
@@ -4032,7 +3868,6 @@
     "health": null,
     "id": "jinhualun",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-discover-tribe-minion"
@@ -4055,7 +3890,6 @@
     "health": null,
     "id": "jiti-shoulie",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-mammal-all-growth-once"
@@ -4078,7 +3912,6 @@
     "health": 14,
     "id": "jiyin-gaizaoren",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-evolve",
@@ -4106,7 +3939,6 @@
     "health": null,
     "id": "jiyintubian",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-friendly-growth-twice"
@@ -4129,7 +3961,6 @@
     "health": 5,
     "id": "juelei",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-breed-2"
@@ -4152,7 +3983,6 @@
     "health": 4,
     "id": "juhua",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-sow",
@@ -4176,7 +4006,6 @@
     "health": null,
     "id": "junsi-wangluo",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-fungus-single-plus-0-plus-3"
@@ -4203,7 +4032,6 @@
     "health": 5,
     "id": "juxi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-evolve"
@@ -4230,7 +4058,6 @@
     "health": 3,
     "id": "juying",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-death-self-plus-1-attack"
@@ -4253,7 +4080,6 @@
     "health": 4,
     "id": "juzi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "keyword-breed-1"
@@ -4276,7 +4102,6 @@
     "health": null,
     "id": "kaihua",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-plant-all-breed-2"
@@ -4299,7 +4124,6 @@
     "health": null,
     "id": "kangshengsu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-bacteria-single-armor-2-this-turn"
@@ -4322,7 +4146,6 @@
     "health": null,
     "id": "kantan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-discover-tribe-minion"
@@ -4345,7 +4168,6 @@
     "health": 5,
     "id": "kanzi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "battlecry-friendly-growth-once",
@@ -4369,7 +4191,6 @@
     "health": 20,
     "id": "knuth",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 6,
     "skills": [
       "efficient-algorithm"
@@ -4392,7 +4213,6 @@
     "health": 11,
     "id": "koko",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "battlecry-friendly-growth-once",
@@ -4416,7 +4236,6 @@
     "health": 12,
     "id": "komodo-dragon",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-poison",
@@ -4444,10 +4263,9 @@
     "health": 9,
     "id": "kongzi",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 3,
     "skills": [
-      "aura-scholar-plus-0-plus-2"
+      "aura-other-plus-0-plus-2"
     ],
     "subtype": "philosophy",
     "taxon": "hominidae"
@@ -4471,7 +4289,6 @@
     "health": 5,
     "id": "kuangquanbing",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-friendly-virus-plus-1-attack"
@@ -4494,7 +4311,6 @@
     "health": null,
     "id": "kuangrenriji",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "combatstart-remove-top-attack-enemy-growth"
@@ -4517,7 +4333,6 @@
     "health": 4,
     "id": "lactobacillus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "battlecry-friendly-bacteria-plus-0-plus-1"
@@ -4564,7 +4379,6 @@
     "health": 12,
     "id": "lamarck",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 4,
     "skills": [
       "biology-evolve"
@@ -4591,7 +4405,6 @@
     "health": 3,
     "id": "langqunshouling",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "aura-other-biology-plus-1-attack"
@@ -4614,7 +4427,6 @@
     "health": 16,
     "id": "lavoisier",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "aura-other-plus-0-plus-1"
@@ -4641,7 +4453,6 @@
     "health": null,
     "id": "leguan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-friendly-single-plus-1-plus-1-this-turn"
@@ -4664,10 +4475,9 @@
     "health": 9,
     "id": "lianjinshushi",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 3,
     "skills": [
-      "battlecry-friendly-growth-scholar-twice"
+      "battlecry-friendly-growth-once"
     ],
     "subtype": "chemistry",
     "taxon": "hominidae"
@@ -4687,7 +4497,6 @@
     "health": 9,
     "id": "lier",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 3,
     "skills": [
       "battlecry-friendly-growth-once"
@@ -4714,7 +4523,6 @@
     "health": 6,
     "id": "likeciti",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-contagion"
@@ -4741,7 +4549,6 @@
     "health": null,
     "id": "linggan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-single-growth-once"
@@ -4764,7 +4571,6 @@
     "health": null,
     "id": "linjia-bilei",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-reptile-all-plus-0-plus-3"
@@ -4811,7 +4617,6 @@
     "health": 12,
     "id": "linnaeus",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 4,
     "skills": [
       "battlecry-all-biology-growth-once"
@@ -4834,7 +4639,6 @@
     "health": 7,
     "id": "lisshi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "battlecry-plant-growth-twice"
@@ -4857,7 +4661,6 @@
     "health": 4,
     "id": "lizard",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "deathrattle-random-enemy-minus-1-attack"
@@ -4880,7 +4683,6 @@
     "health": 4,
     "id": "locust",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "battlecry-other-insect-growth-once"
@@ -4903,7 +4705,6 @@
     "health": 5,
     "id": "luban",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "battlecry-friendly-mech-growth-once"
@@ -4926,7 +4727,6 @@
     "health": 7,
     "id": "luomajuntuanbing",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-taunt",
@@ -4950,7 +4750,6 @@
     "health": 16,
     "id": "luxun",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "shout"
@@ -4973,7 +4772,6 @@
     "health": 9,
     "id": "maitian",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-sow",
@@ -4997,7 +4795,6 @@
     "health": 5,
     "id": "majidun-changqiangbing",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-taunt"
@@ -5024,7 +4821,6 @@
     "health": 6,
     "id": "malaria",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "combatstart-random-enemy-contagion-1"
@@ -5047,7 +4843,6 @@
     "health": 10,
     "id": "mammoth",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "aura-school-mammal",
@@ -5071,7 +4866,6 @@
     "health": 4,
     "id": "mantis",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-ignore-taunt"
@@ -5098,7 +4892,6 @@
     "health": 16,
     "id": "marie-curie",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "battlecry-friendly-growth-twice",
@@ -5122,7 +4915,6 @@
     "health": 14,
     "id": "meganeura",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-windfury",
@@ -5146,7 +4938,6 @@
     "health": 3,
     "id": "meikuang-jinsique",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "deathrattle-all-enemies-minus-1-health"
@@ -5169,7 +4960,6 @@
     "health": 12,
     "id": "mendel",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 4,
     "skills": [
       "battlecry-friendly-plant-growth-once",
@@ -5197,7 +4987,6 @@
     "health": 5,
     "id": "menghu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-evolve",
@@ -5225,7 +5014,6 @@
     "health": 3,
     "id": "mengmalieren",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-friendly-plus-1-attack"
@@ -5248,7 +5036,6 @@
     "health": 3,
     "id": "mengmaxiang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "deathrattle-all-friendly-plus-0-plus-1"
@@ -5271,7 +5058,6 @@
     "health": 3,
     "id": "mianhua",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-sow"
@@ -5294,7 +5080,6 @@
     "health": 12,
     "id": "michelangelo",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 4,
     "skills": [
       "battlecry-friendly-growth-twice"
@@ -5317,7 +5102,6 @@
     "health": 9,
     "id": "mimic-octopus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "mimic-3"
@@ -5344,7 +5128,6 @@
     "health": null,
     "id": "modao",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-friendly-plus-2-attack"
@@ -5367,7 +5150,6 @@
     "health": 4,
     "id": "moon-jellyfish",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "deathrattle-friendly-cnidarian-growth-once"
@@ -5414,7 +5196,6 @@
     "health": 16,
     "id": "morgan",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "aura-biology-plus-0-plus-1"
@@ -5441,7 +5222,6 @@
     "health": 12,
     "id": "moses",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 4,
     "skills": [
       "battlecry-all-friendly-plus-0-plus-1"
@@ -5464,7 +5244,6 @@
     "health": null,
     "id": "mozhi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "combatstart-random-enemy-minus-2-attack"
@@ -5487,7 +5266,6 @@
     "health": 8,
     "id": "mozi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "enemy-random-cannot-attack"
@@ -5510,7 +5288,6 @@
     "health": 10,
     "id": "muhammad-ali",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-windfury",
@@ -5534,7 +5311,6 @@
     "health": 4,
     "id": "mushroom",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "deathrattle-summon-spore-token-2"
@@ -5557,7 +5333,6 @@
     "health": 9,
     "id": "mycobacterium-tuberculosis",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-contagion",
@@ -5585,7 +5360,6 @@
     "health": null,
     "id": "nahan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-all-friendly-growth-once"
@@ -5608,7 +5382,6 @@
     "health": 20,
     "id": "nami-bingdu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-contagion",
@@ -5632,7 +5405,6 @@
     "health": 15,
     "id": "nami-fengqun",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-assemble-2",
@@ -5656,7 +5428,6 @@
     "health": 8,
     "id": "nanobot",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-ignore-taunt",
@@ -5680,7 +5451,6 @@
     "health": 3,
     "id": "nautilus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-taunt"
@@ -5703,7 +5473,6 @@
     "health": 8,
     "id": "neanderthal",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "aura-adjacent-mammal",
@@ -5727,7 +5496,6 @@
     "health": 6,
     "id": "neiranji",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-ignore-taunt",
@@ -5746,7 +5514,6 @@
     "health": 2,
     "id": "neutral-token-2-2",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "cell",
@@ -5767,7 +5534,6 @@
     "health": 16,
     "id": "newton",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "battlecry-friendly-growth-twice"
@@ -5790,7 +5556,6 @@
     "health": null,
     "id": "nitai",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-friendly-single-stealth-this-turn"
@@ -5817,7 +5582,6 @@
     "health": 4,
     "id": "nitaizhangyu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "mimic-1"
@@ -5840,7 +5604,6 @@
     "health": 12,
     "id": "nitrogen-crop",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "aura-plant-plus-1-plus-1",
@@ -5868,7 +5631,6 @@
     "health": 12,
     "id": "niuwen",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-contagion",
@@ -5892,7 +5654,6 @@
     "health": 6,
     "id": "norovirus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "detonate-2"
@@ -5915,7 +5676,6 @@
     "health": 6,
     "id": "nupao",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "combatstart-leftmost-damage-3",
@@ -5939,7 +5699,6 @@
     "health": 3,
     "id": "nushou",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
@@ -5962,7 +5721,6 @@
     "health": 3,
     "id": "octopus-larva",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "deathrattle-summon-octopus-larva-1"
@@ -5985,7 +5743,6 @@
     "health": 1,
     "id": "octopus-larva-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "mollusk",
@@ -6006,7 +5763,6 @@
     "health": 4,
     "id": "orchid",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-sow",
@@ -6030,7 +5786,6 @@
     "health": 4,
     "id": "ostrich",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-windfury",
@@ -6058,7 +5813,6 @@
     "health": null,
     "id": "panghuang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "combatstart-top-attack-enemy-cant-attack"
@@ -6081,7 +5835,6 @@
     "health": 2,
     "id": "paramecium",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "battlecry-friendly-protozoa-growth-once"
@@ -6104,7 +5857,6 @@
     "health": 6,
     "id": "parrot",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "battlecry-copy-hand-minion"
@@ -6127,7 +5879,6 @@
     "health": 10,
     "id": "pasteur",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "microbiology"
@@ -6150,7 +5901,6 @@
     "health": 12,
     "id": "patrol-mech",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-taunt",
@@ -6174,7 +5924,6 @@
     "health": 8,
     "id": "peafowl",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "battlecry-other-bird-plus-1-plus-1",
@@ -6198,7 +5947,6 @@
     "health": null,
     "id": "peiyangmin",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "combatstart-all-enemies-contagion-1"
@@ -6221,7 +5969,6 @@
     "health": 6,
     "id": "penguin",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-taunt"
@@ -6244,7 +5991,6 @@
     "health": 4,
     "id": "penicillium",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "battlecry-friendly-fungus-growth-once"
@@ -6267,7 +6013,6 @@
     "health": 6,
     "id": "phonograph",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-assemble-1",
@@ -6291,7 +6036,6 @@
     "health": 8,
     "id": "pink-ape",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "battlecry-self-growth-twice"
@@ -6314,7 +6058,6 @@
     "health": 7,
     "id": "plasmodium",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "deathrattle-summon-schizont"
@@ -6337,7 +6080,6 @@
     "health": 12,
     "id": "plato",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 4,
     "skills": [
       "aura-all-plus-0-plus-1"
@@ -6360,7 +6102,6 @@
     "health": 5,
     "id": "portuguese-man-of-war",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-poison",
@@ -6384,7 +6125,6 @@
     "health": 15,
     "id": "prototaxites",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "deathrattle-summon-3-spores-3-3",
@@ -6408,7 +6148,6 @@
     "health": 12,
     "id": "puffball",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "deathrattle-all-enemies-damage-2",
@@ -6432,7 +6171,6 @@
     "health": 4,
     "id": "pufferfish",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-taunt",
@@ -6456,7 +6194,6 @@
     "health": 3,
     "id": "pulley",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-assemble-1"
@@ -6479,7 +6216,6 @@
     "health": 5,
     "id": "pythagoras",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 1,
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
@@ -6502,7 +6238,6 @@
     "health": 9,
     "id": "python",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-armor-2"
@@ -6525,7 +6260,6 @@
     "health": null,
     "id": "qianfuqi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-virus-single-plus-1-plus-2"
@@ -6552,7 +6286,6 @@
     "health": null,
     "id": "qianghua",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "trigger-friendly-single-plus-2-plus-2"
@@ -6575,7 +6308,6 @@
     "health": 9,
     "id": "qinghao",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-sow",
@@ -6603,7 +6335,6 @@
     "health": null,
     "id": "qingmeisu-tichun",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-friendly-growth-twice"
@@ -6626,7 +6357,6 @@
     "health": 5,
     "id": "qishi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-taunt"
@@ -6653,7 +6383,6 @@
     "health": null,
     "id": "qiuzhuangshandian",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "combatstart-leftmost-and-adjacent-damage-2"
@@ -6676,7 +6405,6 @@
     "health": 9,
     "id": "quantum-computer",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-divine-shield",
@@ -6700,7 +6428,6 @@
     "health": 8,
     "id": "queen-bee",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "battlecry-summon-2-worker-bees",
@@ -6724,7 +6451,6 @@
     "health": 14,
     "id": "qulv-feichuan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-ignore-taunt"
@@ -6747,7 +6473,6 @@
     "health": null,
     "id": "qunniao-fengbao",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "combatstart-all-enemies-damage-3"
@@ -6770,7 +6495,6 @@
     "health": 12,
     "id": "quyuan",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 4,
     "skills": [
       "shout"
@@ -6793,7 +6517,6 @@
     "health": 10,
     "id": "radiolarian",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "deathrattle-all-enemies-damage-2",
@@ -6817,7 +6540,6 @@
     "health": 12,
     "id": "red-coral",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "revive-2",
@@ -6841,7 +6563,6 @@
     "health": null,
     "id": "rengongzhineng",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-mech-optimal-attack-this-turn"
@@ -6864,7 +6585,6 @@
     "health": null,
     "id": "renzaoshandian",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "combatstart-leftmost-damage-4"
@@ -6887,7 +6607,6 @@
     "health": 4,
     "id": "renzhe",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-windfury"
@@ -6910,7 +6629,6 @@
     "health": 10,
     "id": "revived-mammoth",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-evolve",
@@ -6938,7 +6656,6 @@
     "health": 5,
     "id": "rice-cooker",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "battlecry-friendly-human-plus-0-plus-1"
@@ -6961,7 +6678,6 @@
     "health": 4,
     "id": "robot-dog",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-ignore-taunt"
@@ -6988,7 +6704,6 @@
     "health": 20,
     "id": "rutherford",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 6,
     "skills": [
       "combat-random-enemy-damage-3"
@@ -7015,10 +6730,9 @@
     "health": 20,
     "id": "sagan",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 6,
     "skills": [
-      "aura-scholar-plus-0-plus-3"
+      "aura-other-plus-0-plus-3"
     ],
     "subtype": "astronomy",
     "taxon": "hominidae"
@@ -7038,7 +6752,6 @@
     "health": 6,
     "id": "salmon",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "deathrattle-summon-fish-fry-2"
@@ -7061,7 +6774,6 @@
     "health": 13,
     "id": "saltwater-crocodile",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-poison",
@@ -7085,7 +6797,6 @@
     "health": 3,
     "id": "saman",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-friendly-growth-once"
@@ -7108,7 +6819,6 @@
     "health": 16,
     "id": "sarcosuchus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-poison",
@@ -7132,7 +6842,6 @@
     "health": 3,
     "id": "schizont-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 2,
     "skills": [],
     "subtype": "protozoa",
@@ -7157,7 +6866,6 @@
     "health": 26,
     "id": "schrodinger",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 7,
     "skills": [
       "keyword-divine-shield",
@@ -7181,7 +6889,6 @@
     "health": 5,
     "id": "sea-anemone",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-armor-1"
@@ -7204,7 +6911,6 @@
     "health": 11,
     "id": "sea-turtle",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-armor-2",
@@ -7228,7 +6934,6 @@
     "health": 3,
     "id": "seabird-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 2,
     "skills": [],
     "subtype": "bird",
@@ -7249,7 +6954,6 @@
     "health": 1,
     "id": "seedling",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "crop",
@@ -7270,7 +6974,6 @@
     "health": 6,
     "id": "self-driving-car",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-ignore-taunt",
@@ -7294,7 +6997,6 @@
     "health": 8,
     "id": "shakespeare",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "battlecry-all-friendly-growth-once"
@@ -7317,7 +7019,6 @@
     "health": null,
     "id": "shanhujiao",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "trigger-cnidarian-all-plus-0-plus-4"
@@ -7340,7 +7041,6 @@
     "health": 16,
     "id": "shannon",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "battlecry-all-mech-growth-once"
@@ -7367,7 +7067,6 @@
     "health": null,
     "id": "shengzhang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-friendly-growth-twice"
@@ -7390,7 +7089,6 @@
     "health": null,
     "id": "shenhai-huixiang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "trigger-fish-all-reborn"
@@ -7413,7 +7111,6 @@
     "health": 16,
     "id": "shenkuo",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "observation"
@@ -7436,7 +7133,6 @@
     "health": 3,
     "id": "shifujiang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-growth-self-plus-1-attack"
@@ -7459,7 +7155,6 @@
     "health": 7,
     "id": "shiitake",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "decompose-kill-original"
@@ -7482,7 +7177,6 @@
     "health": 16,
     "id": "shijieshu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-sow",
@@ -7510,7 +7204,6 @@
     "health": 4,
     "id": "shijunti",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "deathrattle-random-enemy-hp-minus-1"
@@ -7533,7 +7226,6 @@
     "health": 3,
     "id": "shilunche",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "keyword-assemble-1"
@@ -7556,7 +7248,6 @@
     "health": 2,
     "id": "shiyanxiaoshu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "deathrattle-summon-termite"
@@ -7579,7 +7270,6 @@
     "health": 8,
     "id": "shizijun",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-taunt",
@@ -7603,7 +7293,6 @@
     "health": 2,
     "id": "shizuniao",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "dive-1"
@@ -7626,7 +7315,6 @@
     "health": 4,
     "id": "shizushou",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-friendly-evolve-self-plus-1-plus-1"
@@ -7649,7 +7337,6 @@
     "health": 3,
     "id": "shoupijiang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
@@ -7672,7 +7359,6 @@
     "health": null,
     "id": "shouqun-chongfeng",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-mammal-all-plus-2-attack"
@@ -7699,7 +7385,6 @@
     "health": null,
     "id": "shuaxin",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "trigger-refresh-shop-free"
@@ -7722,7 +7407,6 @@
     "health": 3,
     "id": "shuiche",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-assemble-1"
@@ -7745,7 +7429,6 @@
     "health": 5,
     "id": "shuishengjue",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-breed-1"
@@ -7768,7 +7451,6 @@
     "health": 3,
     "id": "shuizhong",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
@@ -7791,7 +7473,6 @@
     "health": 5,
     "id": "sibadayongshi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-taunt"
@@ -7814,7 +7495,6 @@
     "health": 8,
     "id": "simaqian",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "aura-all-plus-0-plus-1"
@@ -7841,7 +7521,6 @@
     "health": 5,
     "id": "smallpox",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "deathrattle-all-enemies-minus-1-health"
@@ -7864,7 +7543,6 @@
     "health": 9,
     "id": "soft-coral",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "revive-1",
@@ -7888,7 +7566,6 @@
     "health": 10,
     "id": "space-elevator",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-divine-shield",
@@ -7912,7 +7589,6 @@
     "health": 12,
     "id": "space-rice",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-sow",
@@ -7936,7 +7612,6 @@
     "health": 1,
     "id": "spore-token-1",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "fungus",
@@ -7957,7 +7632,6 @@
     "health": 2,
     "id": "spore-token-2",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "fungus",
@@ -7978,7 +7652,6 @@
     "health": 3,
     "id": "spore-token-3",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 2,
     "skills": [],
     "subtype": "fungus",
@@ -7999,7 +7672,6 @@
     "health": 6,
     "id": "squid",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-stealth"
@@ -8022,7 +7694,6 @@
     "health": 9,
     "id": "staghorn-coral",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "deathrattle-summon-2-coral-polyps"
@@ -8045,7 +7716,6 @@
     "health": 5,
     "id": "staphylococcus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "combatstart-random-enemy-contagion-1"
@@ -8068,7 +7738,6 @@
     "health": 6,
     "id": "steam-engine",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-assemble-2"
@@ -8091,7 +7760,6 @@
     "health": 4,
     "id": "stentor",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "devour-1"
@@ -8114,7 +7782,6 @@
     "health": 11,
     "id": "stephenson",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "aura-other-mech-plus-1-plus-1"
@@ -8137,7 +7804,6 @@
     "health": 5,
     "id": "streptococcus",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "combatstart-random-enemy-contagion-1"
@@ -8160,7 +7826,6 @@
     "health": 6,
     "id": "sugeladi",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 2,
     "skills": [
       "battlecry-friendly-growth-once"
@@ -8183,7 +7848,6 @@
     "health": 2,
     "id": "suishimaobing",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-2-humans-self-plus-1-attack"
@@ -8206,7 +7870,6 @@
     "health": 20,
     "id": "superbug",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "detonate-2",
@@ -8230,7 +7893,6 @@
     "health": 10,
     "id": "synthetic-cell",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-evolve",
@@ -8254,7 +7916,6 @@
     "health": 3,
     "id": "synthetic-cell-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 2,
     "skills": [],
     "subtype": "bacteria",
@@ -8275,7 +7936,6 @@
     "health": 4,
     "id": "tai",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "keyword-sow"
@@ -8298,7 +7958,6 @@
     "health": 11,
     "id": "taikongziminzhe",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-divine-shield",
@@ -8326,7 +7985,6 @@
     "health": 12,
     "id": "tanju",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-contagion",
@@ -8350,7 +8008,6 @@
     "health": 9,
     "id": "telephone",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-assemble-1"
@@ -8373,7 +8030,6 @@
     "health": 4,
     "id": "tengman",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "keyword-sow"
@@ -8396,7 +8052,6 @@
     "health": 10,
     "id": "termite-king",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "deathrattle-summon-3-termites",
@@ -8420,7 +8075,6 @@
     "health": 2,
     "id": "termite-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "insect",
@@ -8445,7 +8099,6 @@
     "health": 16,
     "id": "tesla",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "alternating-current"
@@ -8468,7 +8121,6 @@
     "health": null,
     "id": "tesla-coil",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "combatstart-all-enemies-damage-2"
@@ -8495,7 +8147,6 @@
     "health": null,
     "id": "tiaoxin",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-taunt-until-turn-end"
@@ -8518,7 +8169,6 @@
     "health": 4,
     "id": "tielu-gongren",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
@@ -8541,7 +8191,6 @@
     "health": 7,
     "id": "tortoise",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-armor-1"
@@ -8564,7 +8213,6 @@
     "health": 5,
     "id": "toushiji",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-assemble-2"
@@ -8591,7 +8239,6 @@
     "health": null,
     "id": "triple-reward",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "gain-next-level-minion"
@@ -8614,7 +8261,6 @@
     "health": 9,
     "id": "truffle",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "decompose-friendly-death-original"
@@ -8637,7 +8283,6 @@
     "health": 6,
     "id": "trypanosome",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "devour-2"
@@ -8664,7 +8309,6 @@
     "health": 3,
     "id": "tufu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-friendly-plus-0-plus-1"
@@ -8687,7 +8331,6 @@
     "health": null,
     "id": "tuike",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-insect-single-reborn"
@@ -8710,7 +8353,6 @@
     "health": 4,
     "id": "tuna",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-windfury"
@@ -8733,7 +8375,6 @@
     "health": null,
     "id": "tunshi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-protozoa-single-growth-twice"
@@ -8756,7 +8397,6 @@
     "health": 8,
     "id": "turing-machine",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "keyword-ignore-taunt",
@@ -8780,7 +8420,6 @@
     "health": 6,
     "id": "turritopsis",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "recall-1"
@@ -8803,7 +8442,6 @@
     "health": 12,
     "id": "vampire-squid",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "mimic-2",
@@ -8827,7 +8465,6 @@
     "health": 11,
     "id": "vertical-farm",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-sow",
@@ -8851,7 +8488,6 @@
     "health": 7,
     "id": "vibrio-cholerae",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "detonate-2",
@@ -8875,7 +8511,6 @@
     "health": 14,
     "id": "volvox",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "deathrattle-summon-4-volvox-cells",
@@ -8899,7 +8534,6 @@
     "health": 1,
     "id": "volvox-cell-token",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "protozoa",
@@ -8924,7 +8558,6 @@
     "health": 16,
     "id": "von-neumann",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 5,
     "skills": [
       "battlecry-friendly-growth-twice"
@@ -8947,7 +8580,6 @@
     "health": 4,
     "id": "vorticella",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "deathrattle-friendly-protozoa-growth-once"
@@ -8970,7 +8602,6 @@
     "health": 4,
     "id": "wandou",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "keyword-breed-1"
@@ -8993,7 +8624,6 @@
     "health": 12,
     "id": "watt",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 4,
     "skills": [
       "aura-mech-plus-2-plus-2"
@@ -9020,7 +8650,6 @@
     "health": null,
     "id": "weiguang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-single-plus-0-plus-2"
@@ -9043,7 +8672,6 @@
     "health": 9,
     "id": "weijingzhanshi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-taunt"
@@ -9066,7 +8694,6 @@
     "health": null,
     "id": "weizu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-protozoa-single-taunt-this-turn"
@@ -9093,7 +8720,6 @@
     "health": null,
     "id": "wenming-feiyue",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "trigger-all-friendly-growth-twice"
@@ -9116,7 +8742,6 @@
     "health": null,
     "id": "wenyi-baofa",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "combatstart-all-enemies-contagion-2"
@@ -9139,7 +8764,6 @@
     "health": 10,
     "id": "whale-shark",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "aura-school-fish-2",
@@ -9163,7 +8787,6 @@
     "health": 12,
     "id": "wireless-telegraph",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "keyword-assemble-2",
@@ -9187,7 +8810,6 @@
     "health": 1,
     "id": "worker-bee-token-1",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "insect",
@@ -9208,7 +8830,6 @@
     "health": 2,
     "id": "worker-bee-token-2",
     "in_shop_pool": false,
-    "is_scholar": false,
     "level": 1,
     "skills": [],
     "subtype": "insect",
@@ -9229,7 +8850,6 @@
     "health": 9,
     "id": "wright-brothers",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "combat-optimal-attack"
@@ -9252,7 +8872,6 @@
     "health": 3,
     "id": "wuyi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-friendly-growth-plant-twice"
@@ -9275,7 +8894,6 @@
     "health": 4,
     "id": "xiake",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-windfury"
@@ -9298,7 +8916,6 @@
     "health": 5,
     "id": "xiangrikui",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "keyword-breed-2"
@@ -9325,7 +8942,6 @@
     "health": null,
     "id": "xiayixiangduilun",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-minion-windfury-this-turn"
@@ -9348,7 +8964,6 @@
     "health": null,
     "id": "xibao-fenlie",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-summon-2-amoeba-larva-3-3"
@@ -9371,7 +8986,6 @@
     "health": 6,
     "id": "xiluoduode",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 2,
     "skills": [
       "battlecry-friendly-plus-0-plus-2"
@@ -9394,7 +9008,6 @@
     "health": 2,
     "id": "xinge",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "battlecry-friendly-growth-once"
@@ -9417,7 +9030,6 @@
     "health": 14,
     "id": "xingji-jianzhang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-taunt",
@@ -9441,7 +9053,6 @@
     "health": 6,
     "id": "xray-machine",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-ignore-taunt"
@@ -9464,7 +9075,6 @@
     "health": 3,
     "id": "xunhuozhe",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
@@ -9491,7 +9101,6 @@
     "health": null,
     "id": "xunjie",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-minion-windfury-this-turn"
@@ -9514,7 +9123,6 @@
     "health": 6,
     "id": "yadian-wenyi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "combatstart-random-enemy-contagion-1"
@@ -9537,7 +9145,6 @@
     "health": null,
     "id": "yangliu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-fish-single-plus-0-plus-2"
@@ -9560,7 +9167,6 @@
     "health": 5,
     "id": "yanhuashi",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 1,
     "skills": [
       "trigger-play-effect-friendly-plus-0-plus-1"
@@ -9583,7 +9189,6 @@
     "health": 3,
     "id": "yeast",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "deathrattle-summon-spore-token-1"
@@ -9610,7 +9215,6 @@
     "health": 3,
     "id": "yelang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 2,
     "skills": [
       "trigger-friendly-biology-play-plus-1-attack"
@@ -9633,7 +9237,6 @@
     "health": 9,
     "id": "yersinia-pestis",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-contagion",
@@ -9661,7 +9264,6 @@
     "health": 2,
     "id": "yezhu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "battlecry-self-plus-1-health"
@@ -9684,7 +9286,6 @@
     "health": null,
     "id": "yinghua-jiake",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-reptile-single-armor-2-this-turn"
@@ -9711,7 +9312,6 @@
     "health": null,
     "id": "yinlibo",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "combatstart-all-enemies-minus-1-attack"
@@ -9734,7 +9334,6 @@
     "health": null,
     "id": "yinni",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-friendly-single-stealth-this-turn"
@@ -9761,7 +9360,6 @@
     "health": null,
     "id": "yinshuashu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-copy-hand-minion"
@@ -9784,7 +9382,6 @@
     "health": 18,
     "id": "yongsheng-shuimu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-reborn",
@@ -9812,7 +9409,6 @@
     "health": null,
     "id": "yousifenlie",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-copy-friendly-minion"
@@ -9835,7 +9431,6 @@
     "health": null,
     "id": "yuandandan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "combatstart-all-enemies-damage-5"
@@ -9858,7 +9453,6 @@
     "health": 4,
     "id": "yuanlaoyuan-yiyuan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "battlecry-other-friendly-humans-plus-1-attack"
@@ -9881,7 +9475,6 @@
     "health": 20,
     "id": "yuanlongping",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 6,
     "skills": [
       "aura-plant-plus-2-plus-2"
@@ -9904,7 +9497,6 @@
     "health": 7,
     "id": "yuanshijixiekuilei",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-assemble-1"
@@ -9927,7 +9519,6 @@
     "health": 2,
     "id": "yuanshizhenjun",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "keyword-sow"
@@ -9950,7 +9541,6 @@
     "health": null,
     "id": "yuqun-jijie",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-fish-all-growth-once"
@@ -9973,7 +9563,6 @@
     "health": null,
     "id": "yuyi-bihu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-bird-single-windfury-this-turn"
@@ -9996,7 +9585,6 @@
     "health": 20,
     "id": "yuzhouteng",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-divine-shield"
@@ -10019,7 +9607,6 @@
     "health": null,
     "id": "zaisheng",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-cnidarian-single-reborn"
@@ -10046,7 +9633,6 @@
     "health": 9,
     "id": "zhangheng",
     "in_shop_pool": true,
-    "is_scholar": true,
     "level": 3,
     "skills": [
       "battlecry-friendly-growth-once"
@@ -10069,7 +9655,6 @@
     "health": 8,
     "id": "zhangzhongjing",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "battlecry-all-friendly-plus-0-plus-1"
@@ -10092,7 +9677,6 @@
     "health": 7,
     "id": "zhanma",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "keyword-evolve"
@@ -10115,7 +9699,6 @@
     "health": 7,
     "id": "zhanxiang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-taunt"
@@ -10142,7 +9725,6 @@
     "health": null,
     "id": "zhaohuan",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "trigger-summon-2-neutral-token-2-2"
@@ -10165,7 +9747,6 @@
     "health": null,
     "id": "zhengbingling",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "trigger-other-friendly-humans-plus-1-attack"
@@ -10188,7 +9769,6 @@
     "health": 10,
     "id": "zhenghe",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "free-refresh"
@@ -10215,7 +9795,6 @@
     "health": null,
     "id": "zhengqi-geming",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-all-friendly-plus-1-plus-1"
@@ -10238,7 +9817,6 @@
     "health": 7,
     "id": "zhengqi-jiche",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-taunt"
@@ -10261,7 +9839,6 @@
     "health": null,
     "id": "zhengqidongli",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-all-mech-growth-once"
@@ -10284,7 +9861,6 @@
     "health": 14,
     "id": "zhihui-jushou",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 7,
     "skills": [
       "keyword-windfury"
@@ -10307,7 +9883,6 @@
     "health": null,
     "id": "zhinengdengjia",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "combatstart-leftmost-damage-6"
@@ -10334,7 +9909,6 @@
     "health": null,
     "id": "zhongju",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 6,
     "skills": [
       "combatstart-all-enemies-damage-4"
@@ -10357,7 +9931,6 @@
     "health": null,
     "id": "zhuanli-zhidu",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 4,
     "skills": [
       "trigger-all-mech-growth-once"
@@ -10380,7 +9953,6 @@
     "health": 4,
     "id": "zhugeliang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "battlecry-friendly-archers-plus-2-attack"
@@ -10403,7 +9975,6 @@
     "health": 5,
     "id": "zhulin",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 3,
     "skills": [
       "keyword-sow",
@@ -10431,7 +10002,6 @@
     "health": null,
     "id": "ziyang",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-all-friendly-plus-0-plus-1"
@@ -10454,7 +10024,6 @@
     "health": null,
     "id": "zongzhuang-xian",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 5,
     "skills": [
       "trigger-machine-all-growth-once"
@@ -10477,7 +10046,6 @@
     "health": null,
     "id": "zuqun-qianxi",
     "in_shop_pool": true,
-    "is_scholar": false,
     "level": 1,
     "skills": [
       "trigger-mammal-all-plus-1-plus-1"

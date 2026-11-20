@@ -7,7 +7,6 @@ era: modern
 categories: [play:cnidarian]
 taxon: biology
 cost: 4
-match_text: 同左
 skills: [trigger-cnidarian-all-plus-0-plus-4]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-cnidarian-all-plus-0-plus-4]
 | 玩法 | 水螅纲 |
 | 技能 | trigger-cnidarian-all-plus-0-plus-4 |
 | 费用 | 4 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

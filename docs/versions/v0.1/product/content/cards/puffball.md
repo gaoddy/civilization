@@ -10,7 +10,6 @@ era: primitive
 attack: 6
 health: 12
 skills: [deathrattle-all-enemies-damage-2, decompose-kill-original]
-is_scholar: false
 ---
 
 # 马勃
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 亡语；分解 |
 | 技能 | deathrattle-all-enemies-damage-2；decompose-kill-original |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 伞菌目 › 蘑菇科 |
 
 ## 效果

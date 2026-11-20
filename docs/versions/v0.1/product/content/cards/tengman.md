@@ -10,7 +10,6 @@ era: primitive
 attack: 1
 health: 4
 skills: [keyword-sow]
-is_scholar: false
 ---
 
 # 藤蔓
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 未定科 |
 
 ## 效果

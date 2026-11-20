@@ -10,7 +10,6 @@ era: prehistoric
 attack: 10
 health: 15
 skills: [deathrattle-summon-2-ammonites, mimic-1]
-is_scholar: false
 ---
 
 # 菊石
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 15 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-2-ammonites；mimic-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 菊石目 › 菊石科 |
 
 ## 效果

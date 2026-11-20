@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 6
 skills: [keyword-assemble-2]
-is_scholar: false
 ---
 
 # 蒸汽机
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 动力与能源 |
 
 ## 效果

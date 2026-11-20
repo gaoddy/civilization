@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 5
 skills: [deathrattle-random-enemy-minus-1-attack]
-is_scholar: false
 ---
 
 # 毒蛇
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 无 |
 | 技能 | deathrattle-random-enemy-minus-1-attack |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 未定科 |
 
 ## 效果

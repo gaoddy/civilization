@@ -10,7 +10,6 @@ era: prehistoric
 attack: 15
 health: 14
 skills: [deathrattle-summon-4-volvox-cells, aura-other-protozoa-plus-1-attack]
-is_scholar: false
 ---
 
 # 团藻
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 14 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-4-volvox-cells；aura-other-protozoa-plus-1-attack |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 绿藻门 › 绿藻纲 › 团藻目 › 团藻科 |
 
 ## 效果

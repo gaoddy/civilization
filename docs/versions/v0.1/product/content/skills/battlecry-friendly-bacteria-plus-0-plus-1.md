@@ -12,7 +12,6 @@ template: on-play-battlecry-stats-single-ps-health(playstyle=bacteria,health=1)
 | --- | --- |
 | id | battlecry-friendly-bacteria-plus-0-plus-1 |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-stats-single-ps-health |
 
 ## 效果

@@ -12,7 +12,6 @@ template: on-play-battlecry-growth-all-ps-other(playstyle=insect,times=1)
 | --- | --- |
 | id | battlecry-other-insect-growth-once |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-growth-all-ps-other |
 
 ## 效果

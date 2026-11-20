@@ -54,7 +54,6 @@ fn add_card(
             attack: Some(attack),
             health: Some(health),
             skills: skill_ids,
-            is_scholar: false,
             cost: Some(1),
         },
     );

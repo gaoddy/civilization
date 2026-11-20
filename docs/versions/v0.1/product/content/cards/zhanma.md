@@ -10,7 +10,6 @@ era: feudal
 attack: 6
 health: 7
 skills: [keyword-evolve]
-is_scholar: false
 ---
 
 # 战马
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 7 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 奇蹄目 › 马科 |
 
 ## 效果

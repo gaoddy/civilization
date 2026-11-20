@@ -7,7 +7,6 @@ era: classical
 categories: [play:cnidarian, play:fungus]
 taxon: biology
 cost: 1
-match_text: 同左
 skills: [trigger-friendly-single-reborn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-single-reborn]
 | 玩法 | 水螅纲、真菌界 |
 | 技能 | trigger-friendly-single-reborn |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

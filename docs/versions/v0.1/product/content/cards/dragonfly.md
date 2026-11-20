@@ -10,7 +10,6 @@ era: classical
 attack: 9
 health: 8
 skills: [keyword-windfury, battlecry-other-insect-growth-once]
-is_scholar: false
 ---
 
 # 蜻蜓
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 连击；战吼 |
 | 技能 | keyword-windfury；battlecry-other-insect-growth-once |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 蜻蜓目 › 蜻科 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: prehistoric
 attack: 6
 health: 8
 skills: [aura-adjacent-mammal, shout]
-is_scholar: false
 ---
 
 # 尼安德特人
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | aura-adjacent-mammal；shout |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

@@ -66,7 +66,6 @@ fn add_minion(
             attack: Some(attack),
             health: Some(health),
             skills: skills.iter().map(|skill| skill.to_string()).collect(),
-            is_scholar: false,
             cost: None,
         },
     );
@@ -85,7 +84,6 @@ fn first_minion_of_level(
             card.card_type == CardType::Minion
                 && card.in_shop_pool
                 && card.level == level
-                && !card.is_scholar
                 && card_in_pool(card, enabled)
         })
         .expect("数据中应存在该星级随从")

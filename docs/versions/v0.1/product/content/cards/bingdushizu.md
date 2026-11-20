@@ -10,7 +10,6 @@ era: prehistoric
 attack: 3
 health: 5
 skills: [trigger-enemy-death-self-plus-1-plus-1]
-is_scholar: false
 ---
 
 # 病毒始祖
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 无 |
 | 技能 | trigger-enemy-death-self-plus-1-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 未定科 |
 
 ## 效果

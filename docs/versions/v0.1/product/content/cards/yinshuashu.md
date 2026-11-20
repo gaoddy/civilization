@@ -7,7 +7,6 @@ era: feudal
 categories: [play:cephalopod, play:machine]
 taxon: information-computing
 cost: 2
-match_text: 同左
 skills: [trigger-copy-hand-minion]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-copy-hand-minion]
 | 玩法 | 头足纲、机械 |
 | 技能 | trigger-copy-hand-minion |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 造物 › 信息与计算 |
 
 ## 效果

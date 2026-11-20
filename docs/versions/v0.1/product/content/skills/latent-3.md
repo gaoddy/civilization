@@ -11,7 +11,6 @@ template: turn-start-latent(amount=1,threshold=3,count=3)
 | --- | --- |
 | id | latent-3 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | turn-start-latent |
 
 ## 效果

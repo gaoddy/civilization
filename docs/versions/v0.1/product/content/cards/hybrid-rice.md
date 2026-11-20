@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 9
 skills: [keyword-sow, keyword-breed-2]
-is_scholar: false
 ---
 
 # 杂交水稻
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 播种；繁衍 2 |
 | 技能 | keyword-sow；keyword-breed-2 |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 禾本目 › 禾本科 |
 
 ## 效果

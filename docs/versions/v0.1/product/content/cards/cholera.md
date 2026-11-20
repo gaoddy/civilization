@@ -10,7 +10,6 @@ era: feudal
 attack: 4
 health: 9
 skills: [combatstart-random-enemy-contagion-1, keyword-contagion]
-is_scholar: false
 ---
 
 # 霍乱
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 传染 |
 | 技能 | combatstart-random-enemy-contagion-1；keyword-contagion |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 弧菌科 |
 | 关联分类 | 寄生：人科 |
 

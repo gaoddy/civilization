@@ -1,7 +1,6 @@
 ---
 id: trigger-reptile-all-plus-0-plus-3
 template: on-play-stats-all-ps-health(playstyle=reptile,health=3)
-match_text: 同左
 ---
 
 # trigger-reptile-all-plus-0-plus-3
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | trigger-reptile-all-plus-0-plus-3 |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | on-play-stats-all-ps-health |
 
 ## 效果

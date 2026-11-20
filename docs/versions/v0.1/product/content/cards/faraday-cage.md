@@ -7,7 +7,6 @@ era: industrial
 categories: [play:reptile, play:machine]
 taxon: physics
 cost: 2
-match_text: 同左
 skills: [trigger-friendly-plus-0-plus-4-this-turn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-plus-0-plus-4-this-turn]
 | 玩法 | 爬行纲、机械 |
 | 技能 | trigger-friendly-plus-0-plus-4-this-turn |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 物理学 |
 
 ## 效果

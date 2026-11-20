@@ -10,7 +10,6 @@ era: classical
 attack: 4
 health: 6
 skills: [combatstart-random-enemy-contagion-1]
-is_scholar: false
 ---
 
 # 雅典瘟疫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-1 |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 未定科 |
 
 ## 效果

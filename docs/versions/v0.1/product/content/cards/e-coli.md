@@ -10,7 +10,6 @@ era: modern
 attack: 1
 health: 4
 skills: [deathrattle-friendly-bacteria-growth-once]
-is_scholar: false
 ---
 
 # 大肠杆菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-bacteria-growth-once |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 肠杆菌科 |
 
 ## 效果

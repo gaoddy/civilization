@@ -1,7 +1,6 @@
 ---
 id: trigger-all-mech-growth-once
 template: on-play-growth-all-ps-each(playstyle=machine)
-match_text: 同左
 ---
 
 # trigger-all-mech-growth-once
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | trigger-all-mech-growth-once |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | on-play-growth-all-ps-each |
 
 ## 效果

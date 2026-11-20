@@ -10,7 +10,6 @@ era: modern
 attack: 2
 health: 5
 skills: [combatstart-random-enemy-contagion-1]
-is_scholar: false
 ---
 
 # 葡萄球菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-1 |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 芽孢杆菌目 › 葡萄球菌科 |
 
 ## 效果

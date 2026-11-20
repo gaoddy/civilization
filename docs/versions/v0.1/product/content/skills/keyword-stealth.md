@@ -12,7 +12,6 @@ template: keyword-self(keyword=stealth)
 | --- | --- |
 | id | keyword-stealth |
 | 关键词 | 潜行 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

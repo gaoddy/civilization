@@ -3,6 +3,7 @@ id: darwin
 name: 达尔文
 categories: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 skills: [aura-biology-plus-1-plus-1, evolution-discovery]
+introduction: 英国博物学家，1859 年出版《物种起源》，以自然选择解释物种演化，奠定现代生物学的共同基础。
 ---
 
 # 达尔文
@@ -15,6 +16,10 @@ skills: [aura-biology-plus-1-plus-1, evolution-discovery]
 | 名称 | 达尔文 |
 | 玩法 | 哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
 | 技能 | aura-biology-plus-1-plus-1；evolution-discovery |
+
+## 简介
+
+英国博物学家，1859 年出版《物种起源》，以自然选择解释物种演化，奠定现代生物学的共同基础。
 
 ## 效果
 

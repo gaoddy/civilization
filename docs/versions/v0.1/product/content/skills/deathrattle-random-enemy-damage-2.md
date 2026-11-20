@@ -12,7 +12,6 @@ template: on-death-damage-random(amount=2)
 | --- | --- |
 | id | deathrattle-random-enemy-damage-2 |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-damage-random |
 
 ## 效果

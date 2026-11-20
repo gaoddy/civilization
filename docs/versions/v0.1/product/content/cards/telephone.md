@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 9
 skills: [keyword-assemble-1]
-is_scholar: false
 ---
 
 # 电话机
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 信息与计算 |
 
 ## 效果

@@ -1,4 +1,4 @@
-本文索引 v0.1 的 32 张英雄卡，一行一张；字段规范与校验规则见[卡牌规范与数据](../card-system.md) §2.1。英雄卡位于 `content/heroes/`，只用于开局选英雄，不进商店、牌池、三连与发现。每张英雄卡与 `content/cards/` 中同 id、同名的随从卡共享 `name` 与 `categories`，两卡分属英雄池与随从池；技能各自维护，英雄技能只能为主动或被动，不登记战吼、护盾等自身战场关键词。「玩法」为英雄的全部玩法归属，按固定玩法顺序用「、」分隔；「技能」为英雄引用的技能 id。
+本文索引 v0.1 的 32 张英雄卡，一行一张；字段规范与校验规则见[卡牌规范与数据](../card-system.md) §2.1。英雄卡位于 `content/heroes/`，只用于开局选英雄，不进商店、牌池、三连与发现。每张英雄卡与 `content/cards/` 中同 id、同名的随从卡共享 `name` 与 `categories`，两卡分属英雄池与随从池；技能各自维护，英雄技能只能为主动或被动，不登记战吼、护盾等自身战场关键词。「玩法」为英雄的全部玩法归属，按固定玩法顺序用「、」分隔；「技能」为英雄引用的技能 id；每张英雄卡另有 40–80 字 `introduction`，正文 `## 简介` 与之一致。
 
 | 英雄 | 玩法 | 技能 |
 | --- | --- | --- |
@@ -11,7 +11,7 @@
 | [法拉第](faraday.md) | 爬行纲、机械 | faraday-cage |
 | [弗莱明](fleming.md) | 病毒 | virus-growth-once |
 | [伽利略](galileo.md) | 哺乳纲 | observation |
-| [高斯](gauss.md) | 哺乳纲 | scholar-growth-twice |
+| [高斯](gauss.md) | 哺乳纲 | activate-friendly-growth-twice |
 | [高德纳](knuth.md) | 机械 | efficient-algorithm |
 | [拉马克](lamarck.md) | 哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 | biology-evolve |
 | [拉瓦锡](lavoisier.md) | 爬行纲 | aura-other-plus-0-plus-1 |

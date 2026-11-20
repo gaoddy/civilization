@@ -10,7 +10,6 @@ era: modern
 attack: 8
 health: 10
 skills: [deathrattle-summon-2-seabirds, battlecry-friendly-bird-growth-once]
-is_scholar: false
 ---
 
 # 信天翁
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 亡语；战吼 |
 | 技能 | deathrattle-summon-2-seabirds；battlecry-friendly-bird-growth-once |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹱形目 › 信天翁科 |
 
 ## 效果

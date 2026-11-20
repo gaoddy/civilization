@@ -12,7 +12,6 @@ template: on-death-summon(token=hela-cell-token,count=1)
 | --- | --- |
 | id | deathrattle-summon-2-2-hela-cell-clone |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-summon |
 
 ## 效果

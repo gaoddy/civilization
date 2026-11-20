@@ -10,7 +10,6 @@ era: modern
 attack: 8
 health: 9
 skills: [combat-optimal-attack]
-is_scholar: false
 ---
 
 # 莱特兄弟
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 无 |
 | 技能 | combat-optimal-attack |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

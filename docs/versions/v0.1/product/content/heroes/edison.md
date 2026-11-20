@@ -3,6 +3,7 @@ id: edison
 name: 爱迪生
 categories: [play:machine]
 skills: [invention-factory]
+introduction: 美国发明家与企业家，1879 年改良白炽灯并建立直流电力系统，推动电力从实验室走向商业化，改变城市照明。
 ---
 
 # 爱迪生
@@ -15,6 +16,10 @@ skills: [invention-factory]
 | 名称 | 爱迪生 |
 | 玩法 | 机械 |
 | 技能 | invention-factory |
+
+## 简介
+
+美国发明家与企业家，1879 年改良白炽灯并建立直流电力系统，推动电力从实验室走向商业化，改变城市照明。
 
 ## 效果
 

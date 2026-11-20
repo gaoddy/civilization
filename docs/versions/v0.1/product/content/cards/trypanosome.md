@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 6
 skills: [devour-2]
-is_scholar: false
 ---
 
 # 锥虫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | devour-2 |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 眼虫门 › 动质体纲 › 锥虫目 › 锥虫科 |
 
 ## 效果

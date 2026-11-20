@@ -3,7 +3,7 @@
 
 读取 ``server/data/v0.1/cards.json``（或 ``--cards`` 指定文件），统计：
 
-- 每个玩法非学者随从的平均攻血比（攻击力 ÷（攻击力 + 生命值））与各星级分布；
+- 每个玩法攻击力非 0 随从的平均攻血比（攻击力 ÷（攻击力 + 生命值））与各星级分布；
 - 3–4 星、5–7 星的多技能密度；
 - 效果牌总数、按星级/费用分布、每星级占比、定向与通用数量。
 
@@ -81,8 +81,9 @@ def _num(value):
 
 
 def _combat_minions(cards):
-    """参与攻血比统计的卡：非学者随从。"""
-    return [c for c in cards if c.get("card_type") == "minion" and not c.get("is_scholar")]
+    """参与攻血比统计的卡：攻击力不为 0 的随从。"""
+    return [c for c in cards
+            if c.get("card_type") == "minion" and c.get("attack") != 0]
 
 
 def _share(attack, health):
@@ -179,7 +180,7 @@ def _band_errors(stats, playstyles):
         entry = stats[playstyle]
         low, high = TARGETS[playstyle]
         if entry["count"] == 0:
-            errors.append(f"玩法 {playstyle} 没有非学者随从")
+            errors.append(f"玩法 {playstyle} 没有攻击力为正的随从")
             continue
         share = entry["attack_share"]
         if not (low - TOLERANCE <= share <= high + TOLERANCE):
@@ -256,13 +257,13 @@ def effect_cost_errors(cards):
 def vocabulary_errors(cards, skills):
     """多技能随从的第二/后续技能必须落在本身玩法的机制词汇内。
 
-    只检查玩法身份卡：机械玩法的身份卡为 ``taxon == "automation"`` 的非学者随从；
+    只检查玩法身份卡：机械玩法的身份卡为 ``taxon == "automation"`` 的攻击力非 0 随从；
     造物六类工具（见 ``MACHINE_TOOL_TAXA``）视为机械玩法可用，跳过机制词汇检查。
     其他玩法按全部 play 词汇的并集检查；没有 play 的卡跳过。
     """
     errors = []
     for card in cards:
-        if card.get("card_type") != "minion" or card.get("is_scholar"):
+        if card.get("card_type") != "minion" or card.get("attack") == 0:
             continue
         if card.get("taxon") in MACHINE_TOOL_TAXA:
             continue

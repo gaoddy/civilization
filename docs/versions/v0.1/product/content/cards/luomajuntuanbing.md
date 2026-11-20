@@ -10,7 +10,6 @@ era: feudal
 attack: 3
 health: 7
 skills: [keyword-taunt, shout]
-is_scholar: false
 ---
 
 # 罗马军团兵
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 7 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；shout |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

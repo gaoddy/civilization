@@ -13,7 +13,6 @@ template: on-death-summon-card(card=baiyi,count=1)
 | --- | --- |
 | id | deathrattle-summon-termite |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-summon-card |
 
 ## 效果

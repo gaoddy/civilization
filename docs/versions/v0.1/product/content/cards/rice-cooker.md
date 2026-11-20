@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 5
 skills: [battlecry-friendly-human-plus-0-plus-1]
-is_scholar: false
 ---
 
 # 电饭煲
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-human-plus-0-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 生活与医疗 |
 
 ## 效果

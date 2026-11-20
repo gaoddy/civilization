@@ -12,7 +12,6 @@ template: on-death-summon-split(token=volvox-cell-token,count=4)
 | --- | --- |
 | id | deathrattle-summon-4-volvox-cells |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-summon-split |
 
 ## 效果

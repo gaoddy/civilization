@@ -4,7 +4,6 @@ name: 进化
 template: activate-discover-playstyle
 cost: 2
 uses_per_turn: 1
-match_text: 改为三选一固定池
 ---
 
 # 进化
@@ -15,7 +14,6 @@ match_text: 改为三选一固定池
 | --- | --- |
 | id | evolution-discovery |
 | 关键词 | 无 |
-| 确定性替换 | 改为三选一固定池 |
 | 模板 | activate-discover-playstyle |
 | 费用 | 2 |
 | 每回合次数 | 1 |

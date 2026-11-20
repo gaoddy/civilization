@@ -10,7 +10,6 @@ era: feudal
 attack: 7
 health: 9
 skills: [decompose-friendly-death-original]
-is_scholar: false
 ---
 
 # 松露
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 分解 |
 | 技能 | decompose-friendly-death-original |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 子囊菌门 › 盘菌纲 › 盘菌目 › 块菌科 |
 
 ## 效果

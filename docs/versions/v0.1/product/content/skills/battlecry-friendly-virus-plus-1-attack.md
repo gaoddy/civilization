@@ -12,7 +12,6 @@ template: on-play-battlecry-stats-single-ps-attack(playstyle=virus,attack=1)
 | --- | --- |
 | id | battlecry-friendly-virus-plus-1-attack |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-stats-single-ps-attack |
 
 ## 效果

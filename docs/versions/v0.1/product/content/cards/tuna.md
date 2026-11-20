@@ -10,7 +10,6 @@ era: modern
 attack: 5
 health: 4
 skills: [keyword-windfury]
-is_scholar: false
 ---
 
 # 金枪鱼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲈形目 › 鲭科 |
 
 ## 效果

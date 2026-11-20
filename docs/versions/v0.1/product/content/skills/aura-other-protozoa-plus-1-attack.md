@@ -11,7 +11,6 @@ template: aura-all-ps-other-attack(playstyle=protozoa,attack=1)
 | --- | --- |
 | id | aura-other-protozoa-plus-1-attack |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-all-ps-other-attack |
 
 ## 效果

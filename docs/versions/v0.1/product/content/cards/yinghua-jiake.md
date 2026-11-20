@@ -7,7 +7,6 @@ era: prehistoric
 categories: [play:reptile]
 taxon: biology
 cost: 1
-match_text: 同左
 skills: [trigger-reptile-single-armor-2-this-turn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-reptile-single-armor-2-this-turn]
 | 玩法 | 爬行纲 |
 | 技能 | trigger-reptile-single-armor-2-this-turn |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

@@ -186,8 +186,6 @@ pub struct MinionInstance {
     pub instance_id: InstanceId,
     pub card_id: String,
     pub golden: bool,
-    /// 学者：攻击读取口径恒为 0，但分层数值照常累积。
-    pub is_scholar: bool,
     /// 攻击与生命的分层构成，`current` 为战斗与视图读取的当前量。
     pub stats: MinionStats,
     pub breed: i32,
@@ -212,20 +210,12 @@ pub struct MinionInstance {
 
 impl MinionInstance {
     /// 按目录解析卡面攻防；token 取注册表数值，普通卡取卡牌攻防，金色 ×2。
-    ///
-    /// 学者标记取卡牌 `is_scholar`，构造后不再变化。
     pub fn new(catalog: &Catalog, instance_id: InstanceId, card_id: &str, golden: bool) -> Self {
         let (attack, health) = base_stats(catalog, card_id, golden).unwrap_or((0, 0));
-        let is_scholar = catalog
-            .cards
-            .get(card_id)
-            .map(|card| card.is_scholar)
-            .unwrap_or(false);
         Self {
             instance_id,
             card_id: card_id.to_string(),
             golden,
-            is_scholar,
             stats: MinionStats::new(attack, health),
             breed: 0,
             breed_applied: 0,
@@ -243,13 +233,9 @@ impl MinionInstance {
         }
     }
 
-    /// 读取攻击力：学者恒 0，其余为 `current` 的非负值。
+    /// 读取攻击力：`current` 的非负值。
     pub fn attack(&self) -> i32 {
-        if self.is_scholar {
-            0
-        } else {
-            self.stats.attack.current_non_negative()
-        }
+        self.stats.attack.current_non_negative()
     }
 
     /// 读取生命值，下限 0。

@@ -7,7 +7,6 @@ era: prehistoric
 categories: [play:insect]
 taxon: biology
 cost: 1
-match_text: 同左
 skills: [trigger-insect-single-reborn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-insect-single-reborn]
 | 玩法 | 昆虫纲 |
 | 技能 | trigger-insect-single-reborn |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

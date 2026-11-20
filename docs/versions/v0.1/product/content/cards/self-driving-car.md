@@ -10,7 +10,6 @@ era: future
 attack: 7
 health: 6
 skills: [keyword-ignore-taunt, keyword-assemble-1]
-is_scholar: false
 ---
 
 # 自动驾驶汽车
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 无视嘲讽；装配 1 |
 | 技能 | keyword-ignore-taunt；keyword-assemble-1 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 自动机械 |
 
 ## 效果

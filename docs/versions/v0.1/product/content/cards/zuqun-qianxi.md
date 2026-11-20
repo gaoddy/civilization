@@ -7,7 +7,6 @@ era: prehistoric
 categories: [play:mammal]
 taxon: biology
 cost: 1
-match_text: 同左
 skills: [trigger-mammal-all-plus-1-plus-1]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-mammal-all-plus-1-plus-1]
 | 玩法 | 哺乳纲 |
 | 技能 | trigger-mammal-all-plus-1-plus-1 |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

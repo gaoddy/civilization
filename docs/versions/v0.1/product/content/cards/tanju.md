@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 12
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
-is_scholar: false
 ---
 
 # 炭疽
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 芽孢杆菌目 › 芽孢杆菌科 |
 | 关联分类 | 寄生：哺乳纲 |
 

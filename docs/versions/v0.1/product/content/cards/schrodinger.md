@@ -10,7 +10,6 @@ era: future
 attack: 0
 health: 26
 skills: [keyword-divine-shield, combatstart-random-enemy-contagion-2]
-is_scholar: true
 ---
 
 # 薛定谔
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 26 |
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；combatstart-random-enemy-contagion-2 |
-| 学者 | 是 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

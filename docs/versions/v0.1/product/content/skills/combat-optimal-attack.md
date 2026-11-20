@@ -4,7 +4,6 @@ name: 航线
 template: activate-keyword-single(keyword=ignore_taunt,duration=combat)
 cost: 1
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 航线
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | combat-optimal-attack |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-keyword-single |
 | 费用 | 1 |
 | 每回合次数 | 1 |

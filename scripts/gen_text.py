@@ -78,24 +78,19 @@ def generated_entries(root):
     entries = {}
     for doc in gen_card_data.load_docs(content, "cards"):
         entries[f"card.{doc['id']}.name"] = doc["name"]
-        match_text = doc.get("match_text")
-        if match_text:
-            entries[f"card.{doc['id']}.match_text"] = match_text
     for doc in gen_card_data.load_docs(content, "skills"):
         if doc.get("name"):
             entries[f"skill.{doc['id']}.name"] = doc["name"]
         entries[f"skill.{doc['id']}.text"] = renderer.instance_text(doc)
-        match_text = doc.get("match_text")
-        if match_text:
-            entries[f"skill.{doc['id']}.match_text"] = match_text
 
     raw = validate_docs.load(
         "cards", ["id", "card_type", "taxon", "era"], root=content)
     enum_labels = validate_docs.card_enum_labels(raw, root=content)
     hero_raw = validate_docs.load(
-        "heroes", ["id", "name", "categories"], root=content)
+        "heroes", ["id", "name", "categories", "introduction"], root=content)
     for doc in hero_raw:
         entries[f"card.{doc['id']}.name"] = doc["name"]
+        entries[f"card.{doc['id']}.introduction"] = doc["introduction"]
     for field, prefix in (("card_type", "enum.card_type."),
                           ("era", "enum.era.")):
         for value, label in enum_labels[field].items():

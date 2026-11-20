@@ -10,7 +10,6 @@ era: primitive
 attack: 3
 health: 5
 skills: [keyword-poison, keyword-armor-1]
-is_scholar: false
 ---
 
 # 僧帽水母
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 剧毒；减伤 1 |
 | 技能 | keyword-poison；keyword-armor-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 水螅纲 › 管水母目 › 僧帽水母科 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: industrial
 attack: 7
 health: 6
 skills: [keyword-ignore-taunt, shout]
-is_scholar: false
 ---
 
 # 内燃机
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt；shout |
-| 学者 | 否 |
 | 科学分类 | 造物 › 动力与能源 |
 
 ## 效果

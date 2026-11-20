@@ -10,7 +10,6 @@ era: prehistoric
 attack: 6
 health: 12
 skills: [keyword-sow, keyword-breed-1]
-is_scholar: false
 ---
 
 # 银杏
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 播种；繁衍 1 |
 | 技能 | keyword-sow；keyword-breed-1 |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 银杏门 › 银杏纲 › 银杏目 › 银杏科 |
 
 ## 效果

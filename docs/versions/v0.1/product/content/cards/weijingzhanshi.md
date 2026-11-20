@@ -10,7 +10,6 @@ era: feudal
 attack: 4
 health: 9
 skills: [keyword-taunt]
-is_scholar: false
 ---
 
 # 维京战士
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

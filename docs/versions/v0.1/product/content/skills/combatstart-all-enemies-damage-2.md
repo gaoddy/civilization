@@ -1,7 +1,6 @@
 ---
 id: combatstart-all-enemies-damage-2
 template: combatstart-damage-all(amount=2)
-match_text: 同左
 ---
 
 # combatstart-all-enemies-damage-2
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | combatstart-all-enemies-damage-2 |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | combatstart-damage-all |
 
 ## 效果

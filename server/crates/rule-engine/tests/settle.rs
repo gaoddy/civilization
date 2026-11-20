@@ -28,7 +28,6 @@ fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, heal
             attack: Some(attack),
             health: Some(health),
             skills: Vec::new(),
-            is_scholar: false,
             cost: Some(1),
         },
     );
@@ -92,7 +91,6 @@ fn add_keyword_card(
             attack: Some(attack),
             health: Some(health),
             skills: vec![skill_id],
-            is_scholar: false,
             cost: Some(1),
         },
     );

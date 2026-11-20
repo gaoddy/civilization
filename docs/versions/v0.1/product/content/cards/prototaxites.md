@@ -10,7 +10,6 @@ era: prehistoric
 attack: 10
 health: 15
 skills: [deathrattle-summon-3-spores-3-3, decompose-kill-original]
-is_scholar: false
 ---
 
 # 原杉菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 15 |
 | 关键词 | 亡语；分解 |
 | 技能 | deathrattle-summon-3-spores-3-3；decompose-kill-original |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 原杉菌目 › 原杉菌科 |
 
 ## 效果

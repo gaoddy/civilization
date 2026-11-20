@@ -10,7 +10,6 @@ era: classical
 attack: 3
 health: 4
 skills: [battlecry-random-enemy-damage-1]
-is_scholar: false
 ---
 
 # 攻城槌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-random-enemy-damage-1 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 武器与攻城 |
 
 ## 效果

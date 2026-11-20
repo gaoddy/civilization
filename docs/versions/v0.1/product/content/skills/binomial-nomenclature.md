@@ -4,7 +4,6 @@ name: 双名法
 template: activate-growth-all-taxon(taxon=animalia,times=1)
 cost: 2
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 双名法
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | binomial-nomenclature |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-growth-all-taxon |
 | 费用 | 2 |
 | 每回合次数 | 1 |

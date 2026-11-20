@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 6
 skills: [recall-1]
-is_scholar: false
 ---
 
 # 灯塔水母
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | recall-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 水螅纲 › 花水螅目 › 海螅水母科 |
 
 ## 效果

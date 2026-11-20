@@ -12,7 +12,6 @@ template: on-death-keyword-contagion-all(keyword=contagion 1)
 | --- | --- |
 | id | deathrattle-all-enemies-contagion-1 |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-keyword-contagion-all |
 
 ## 效果

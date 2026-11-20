@@ -10,7 +10,6 @@ era: primitive
 attack: 4
 health: 7
 skills: [keyword-assemble-1]
-is_scholar: false
 ---
 
 # 原始机械傀儡
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 7 |
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 自动机械 |
 
 ## 效果

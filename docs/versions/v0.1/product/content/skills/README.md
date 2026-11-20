@@ -1,9 +1,10 @@
 # 技能索引
 
-本文索引 v0.1 的 255 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能实例用 `template` 引用[技能模板](../skill-templates/README.md)并只写参数，卡面文本由模板渲染，特殊措辞才用 `text` 覆盖。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.2。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
+本文索引 v0.1 的 254 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能实例用 `template` 引用[技能模板](../skill-templates/README.md)并只写参数，卡面文本由模板渲染，特殊措辞才用 `text` 覆盖。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.2。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
 
 | 技能 | 关键词 | 文本 | 引用数 |
 | --- | --- | --- | --- |
+| [activate-friendly-growth-twice](activate-friendly-growth-twice.md) | 无 | 使一个友方随从获得两次成长 | 1 |
 | [alternating-current](alternating-current.md) | 无 | 使一个友方随从获得无视嘲讽直到回合结束 | 1 |
 | [aura-adjacent-mammal](aura-adjacent-mammal.md) | 无 | 相邻的友方哺乳纲随从获得 +2/+2 | 1 |
 | [aura-all-plus-0-plus-1](aura-all-plus-0-plus-1.md) | 无 | 你的随从获得 +0/+1 | 3 |
@@ -18,11 +19,11 @@
 | [aura-other-mech-plus-1-plus-1](aura-other-mech-plus-1-plus-1.md) | 无 | 你的其他机械随从获得 +1/+1 | 1 |
 | [aura-other-plants-plus-0-plus-1](aura-other-plants-plus-0-plus-1.md) | 无 | 你的其他植物随从获得 +0/+1 | 0 |
 | [aura-other-plus-0-plus-1](aura-other-plus-0-plus-1.md) | 无 | 你的其他随从获得 +0/+1 | 1 |
+| [aura-other-plus-0-plus-2](aura-other-plus-0-plus-2.md) | 无 | 你的其他随从获得 +0/+2 | 1 |
+| [aura-other-plus-0-plus-3](aura-other-plus-0-plus-3.md) | 无 | 你的其他随从获得 +0/+3 | 1 |
 | [aura-other-protozoa-plus-1-attack](aura-other-protozoa-plus-1-attack.md) | 无 | 你的其他原生生物界随从获得 +1 攻击力 | 5 |
 | [aura-plant-plus-1-plus-1](aura-plant-plus-1-plus-1.md) | 无 | 你的植物随从获得 +1/+1 | 2 |
 | [aura-plant-plus-2-plus-2](aura-plant-plus-2-plus-2.md) | 无 | 你的植物随从获得 +2/+2 | 1 |
-| [aura-scholar-plus-0-plus-2](aura-scholar-plus-0-plus-2.md) | 无 | 你的学者随从获得 +0/+2 | 1 |
-| [aura-scholar-plus-0-plus-3](aura-scholar-plus-0-plus-3.md) | 无 | 你的学者随从获得 +0/+3 | 1 |
 | [aura-school-fish-1](aura-school-fish-1.md) | 无 | 群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1 | 6 |
 | [aura-school-fish-2](aura-school-fish-2.md) | 无 | 群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力 | 1 |
 | [aura-school-mammal](aura-school-mammal.md) | 无 | 群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力 | 2 |
@@ -40,7 +41,6 @@
 | [battlecry-friendly-fungus-growth-once](battlecry-friendly-fungus-growth-once.md) | battlecry | 战吼：使一个友方真菌界随从获得一次成长 | 1 |
 | [battlecry-friendly-growth-once](battlecry-friendly-growth-once.md) | battlecry | 战吼：使一个友方随从获得一次成长 | 11 |
 | [battlecry-friendly-growth-plant-twice](battlecry-friendly-growth-plant-twice.md) | battlecry | 战吼：使一个友方随从获得一次成长；若其为植物，改为两次 | 1 |
-| [battlecry-friendly-growth-scholar-twice](battlecry-friendly-growth-scholar-twice.md) | battlecry | 战吼：使一个友方随从获得一次成长；若其为学者，改为两次 | 1 |
 | [battlecry-friendly-growth-twice](battlecry-friendly-growth-twice.md) | battlecry | 战吼：使一个友方随从获得两次成长 | 4 |
 | [battlecry-friendly-human-plus-0-plus-1](battlecry-friendly-human-plus-0-plus-1.md) | battlecry | 战吼：使一个友方人科随从获得 +0/+1 | 1 |
 | [battlecry-friendly-mech-growth-once](battlecry-friendly-mech-growth-once.md) | battlecry | 战吼：使一个友方机械随从获得一次成长 | 3 |
@@ -177,7 +177,6 @@
 | [revive-2](revive-2.md) | 无 | 复苏：以 +2/+2 复活一次 | 1 |
 | [revive-3](revive-3.md) | 无 | 复苏：以 +3/+3 复活一次 | 1 |
 | [salvage-machine](salvage-machine.md) | 无 | 零件回收：死亡时获得一张随机机械随从牌 | 1 |
-| [scholar-growth-twice](scholar-growth-twice.md) | 无 | 使一个友方学者随从获得两次成长 | 1 |
 | [shout](shout.md) | 无 | 使一个友方随从获得一次成长 | 30 |
 | [sonnet](sonnet.md) | 无 | 使你的所有随从获得一次成长 | 0 |
 | [trigger-2-humans-self-plus-1-attack](trigger-2-humans-self-plus-1-attack.md) | 无 | 若你控制至少 2 个人科随从，获得 +1 攻击力 | 1 |

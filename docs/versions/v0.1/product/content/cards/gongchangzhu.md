@@ -10,7 +10,6 @@ era: industrial
 attack: 8
 health: 11
 skills: [battlecry-other-friendly-humans-plus-1-attack, shout]
-is_scholar: false
 ---
 
 # 工厂主
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 11 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack；shout |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

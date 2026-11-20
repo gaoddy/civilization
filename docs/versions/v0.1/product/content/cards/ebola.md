@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 12
 skills: [keyword-contagion, combatstart-random-enemy-contagion-2]
-is_scholar: false
 ---
 
 # 埃博拉
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-2 |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 丝状病毒科 |
 | 关联分类 | 寄生：哺乳纲 |
 

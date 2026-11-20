@@ -10,7 +10,6 @@ era: classical
 attack: 2
 health: 3
 skills: [keyword-sow]
-is_scholar: false
 ---
 
 # 橄榄树
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 唇形目 › 木犀科 |
 
 ## 效果

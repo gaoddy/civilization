@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 4
 skills: [battlecry-friendly-fungus-growth-once]
-is_scholar: false
 ---
 
 # 青霉
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-fungus-growth-once |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 子囊菌门 › 散囊菌纲 › 散囊菌目 › 曲霉科 |
 
 ## 效果

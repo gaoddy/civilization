@@ -10,7 +10,6 @@ era: feudal
 attack: 5
 health: 4
 skills: [keyword-taunt, aura-school-fish-1]
-is_scholar: false
 ---
 
 # 河豚
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；aura-school-fish-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲀形目 › 鲀科 |
 
 ## 效果

@@ -11,7 +11,6 @@ template: aura-all-taxon-other-attack(taxon=animalia,attack=1)
 | --- | --- |
 | id | aura-other-biology-plus-1-attack |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-all-taxon-other-attack |
 
 ## 效果

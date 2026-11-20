@@ -10,7 +10,6 @@ era: industrial
 attack: 4
 health: 6
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
-is_scholar: false
 ---
 
 # 肺结核
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 放线菌门 › 放线菌纲 › 分枝杆菌目 › 分枝杆菌科 |
 | 关联分类 | 寄生：人科 |
 

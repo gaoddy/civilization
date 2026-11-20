@@ -10,7 +10,6 @@ era: modern
 attack: 8
 health: 10
 skills: [deathrattle-summon-3-termites, keyword-breed-3]
-is_scholar: false
 ---
 
 # 白蚁王
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 亡语；繁衍 3 |
 | 技能 | deathrattle-summon-3-termites；keyword-breed-3 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 蜚蠊目 › 白蚁科 |
 
 ## 效果

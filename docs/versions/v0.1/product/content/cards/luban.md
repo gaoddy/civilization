@@ -10,7 +10,6 @@ era: classical
 attack: 4
 health: 5
 skills: [battlecry-friendly-mech-growth-once]
-is_scholar: false
 ---
 
 # 鲁班
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-mech-growth-once |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: industrial
 attack: 4
 health: 6
 skills: [deathrattle-summon-fish-fry-2]
-is_scholar: false
 ---
 
 # 鲑鱼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-fish-fry-2 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲑形目 › 鲑科 |
 
 ## 效果

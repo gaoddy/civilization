@@ -7,7 +7,6 @@ era: modern
 categories: [play:plant]
 taxon: biology
 cost: 4
-match_text: 同左
 skills: [trigger-plant-all-growth-twice]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-plant-all-growth-twice]
 | 玩法 | 植物界 |
 | 技能 | trigger-plant-all-growth-twice |
 | 费用 | 4 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

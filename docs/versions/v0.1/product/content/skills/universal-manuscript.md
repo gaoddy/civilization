@@ -4,7 +4,6 @@ name: 万能手稿
 template: activate-copy-hand-minion
 cost: 2
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 万能手稿
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | universal-manuscript |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-copy-hand-minion |
 | 费用 | 2 |
 | 每回合次数 | 1 |

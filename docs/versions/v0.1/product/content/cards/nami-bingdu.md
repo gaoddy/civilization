@@ -10,7 +10,6 @@ era: future
 attack: 10
 health: 20
 skills: [keyword-contagion, combatstart-random-enemy-contagion-1]
-is_scholar: false
 ---
 
 # 纳米病毒
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 20 |
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 未定科 |
 
 ## 效果

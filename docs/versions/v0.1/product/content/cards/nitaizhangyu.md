@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 4
 skills: [mimic-1]
-is_scholar: false
 ---
 
 # 拟态章鱼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | mimic-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 章鱼科 |
 | 关联分类 | 捕食：鱼纲 |
 

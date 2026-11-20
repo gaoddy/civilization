@@ -4,7 +4,6 @@ name: 技艺
 template: activate-growth-single-taxon(taxon=hominidae,times=2)
 cost: 2
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 技艺
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | human-growth-twice |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-growth-single-taxon |
 | 费用 | 2 |
 | 每回合次数 | 1 |

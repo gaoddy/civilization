@@ -4,7 +4,6 @@ name: 培养
 template: activate-growth-single-playstyle(playstyle=virus,times=1)
 cost: 1
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 培养
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | virus-growth-once |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-growth-single-playstyle |
 | 费用 | 1 |
 | 每回合次数 | 1 |

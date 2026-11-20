@@ -34,7 +34,6 @@
 
 | 键 | 卡面名词 |
 | --- | --- |
-| scholar=true | 学者 |
 | other=true | 其他 |
 | type=minion | 随从 |
 | id=gongjianshou | 弓箭手 |

@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 4
 skills: [deathrattle-summon-coral-polyp]
-is_scholar: false
 ---
 
 # 珊瑚虫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-coral-polyp |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 石珊瑚目 › 滨珊瑚科 |
 
 ## 效果

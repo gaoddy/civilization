@@ -3,6 +3,7 @@ id: shakespeare
 name: 莎士比亚
 categories: [play:mammal]
 skills: [sonnet]
+introduction: 英国剧作家与诗人，一生创作 37 部戏剧，《哈姆雷特》《麦克白》等作品塑造了现代英语文学。
 ---
 
 # 莎士比亚
@@ -15,6 +16,10 @@ skills: [sonnet]
 | 名称 | 莎士比亚 |
 | 玩法 | 哺乳纲 |
 | 技能 | sonnet |
+
+## 简介
+
+英国剧作家与诗人，一生创作 37 部戏剧，《哈姆雷特》《麦克白》等作品塑造了现代英语文学。
 
 ## 效果
 

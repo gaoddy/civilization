@@ -7,7 +7,6 @@ era: industrial
 categories: [play:mammal]
 taxon: military
 cost: 2
-match_text: 同左
 skills: [trigger-other-friendly-humans-plus-1-attack]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-other-friendly-humans-plus-1-attack]
 | 玩法 | 哺乳纲 |
 | 技能 | trigger-other-friendly-humans-plus-1-attack |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 社会 › 军事学 |
 
 ## 效果

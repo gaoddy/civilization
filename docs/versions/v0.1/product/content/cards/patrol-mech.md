@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 12
 skills: [keyword-taunt, battlecry-friendly-mech-growth-once]
-is_scholar: false
 ---
 
 # 巡逻机甲
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 嘲讽；战吼 |
 | 技能 | keyword-taunt；battlecry-friendly-mech-growth-once |
-| 学者 | 否 |
 | 科学分类 | 造物 › 自动机械 |
 
 ## 效果

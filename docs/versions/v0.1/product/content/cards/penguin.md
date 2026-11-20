@@ -10,7 +10,6 @@ era: modern
 attack: 7
 health: 6
 skills: [keyword-taunt]
-is_scholar: false
 ---
 
 # 企鹅
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 企鹅目 › 企鹅科 |
 
 ## 效果

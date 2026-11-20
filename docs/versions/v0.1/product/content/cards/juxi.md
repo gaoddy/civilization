@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 5
 skills: [keyword-evolve]
-is_scholar: false
 ---
 
 # 巨蜥
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 进化 |
 | 技能 | keyword-evolve |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 巨蜥科 |
 | 关联分类 | 捕食：鸟纲 |
 

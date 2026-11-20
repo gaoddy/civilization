@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 5
 skills: [keyword-taunt]
-is_scholar: false
 ---
 
 # 壁虎
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 壁虎科 |
 
 ## 效果

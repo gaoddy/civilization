@@ -7,7 +7,6 @@ era: prehistoric
 categories: [play:fish]
 taxon: earth-science
 cost: 1
-match_text: 同左
 skills: [trigger-fish-single-plus-0-plus-2]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-fish-single-plus-0-plus-2]
 | 玩法 | 鱼纲 |
 | 技能 | trigger-fish-single-plus-0-plus-2 |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 地球科学 |
 
 ## 效果

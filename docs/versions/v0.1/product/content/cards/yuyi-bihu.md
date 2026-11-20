@@ -7,7 +7,6 @@ era: prehistoric
 categories: [play:bird]
 taxon: biology
 cost: 1
-match_text: 同左
 skills: [trigger-bird-single-windfury-this-turn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-bird-single-windfury-this-turn]
 | 玩法 | 鸟纲 |
 | 技能 | trigger-bird-single-windfury-this-turn |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

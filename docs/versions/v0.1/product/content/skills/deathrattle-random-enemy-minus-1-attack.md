@@ -11,7 +11,6 @@ template: on-death-stats-enemy-random-attack(attack=-1)
 | --- | --- |
 | id | deathrattle-random-enemy-minus-1-attack |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-stats-enemy-random-attack |
 
 ## 效果

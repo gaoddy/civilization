@@ -11,7 +11,6 @@ template: turn-start-self-health(health=1)
 | --- | --- |
 | id | trigger-turn-start-self-plus-0-plus-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | turn-start-self-health |
 
 ## 效果

@@ -10,7 +10,6 @@ era: prehistoric
 attack: 1
 health: 4
 skills: [keyword-breed-1]
-is_scholar: false
 ---
 
 # 橘子
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 繁衍 1 |
 | 技能 | keyword-breed-1 |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 无患子目 › 芸香科 |
 
 ## 效果

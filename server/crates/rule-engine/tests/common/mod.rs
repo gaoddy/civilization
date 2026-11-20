@@ -174,7 +174,6 @@ pub fn token_card(id: &str, attack: i32, health: i32) -> rule_engine::data::Card
         attack: Some(attack),
         health: Some(health),
         skills: Vec::new(),
-        is_scholar: false,
         cost: None,
     }
 }

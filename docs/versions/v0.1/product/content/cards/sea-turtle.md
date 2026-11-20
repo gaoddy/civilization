@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 11
 skills: [keyword-armor-2, keyword-taunt]
-is_scholar: false
 ---
 
 # 海龟
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 11 |
 | 关键词 | 减伤 2；嘲讽 |
 | 技能 | keyword-armor-2；keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 龟鳖目 › 海龟科 |
 
 ## 效果

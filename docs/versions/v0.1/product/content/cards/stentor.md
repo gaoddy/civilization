@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 4
 skills: [devour-1]
-is_scholar: false
 ---
 
 # 喇叭虫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | devour-1 |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 纤毛门 › 异毛纲 › 异毛目 › 喇叭虫科 |
 
 ## 效果

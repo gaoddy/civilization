@@ -11,7 +11,6 @@ template: ally-summon-taxon-self-attack(attack=1,taxon=hominidae)
 | --- | --- |
 | id | trigger-friendly-human-play-plus-1-attack |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | ally-summon-taxon-self-attack |
 
 ## 效果

@@ -10,7 +10,6 @@ era: prehistoric
 attack: 1
 health: 4
 skills: [deathrattle-friendly-cnidarian-growth-once]
-is_scholar: false
 ---
 
 # 海月水母
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-cnidarian-growth-once |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 钵水母纲 › 旗口水母目 › 海月水母科 |
 
 ## 效果

@@ -11,7 +11,6 @@ template: aura-all-ps-other-health(playstyle=plant,health=1)
 | --- | --- |
 | id | aura-other-plants-plus-0-plus-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-all-ps-other-health |
 
 ## 效果

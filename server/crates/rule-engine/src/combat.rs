@@ -226,7 +226,7 @@ pub fn effective_attack(_catalog: &Catalog, minion: &MinionInstance) -> i32 {
 
 /// 当前攻击力，含外部传入的光环修正。
 ///
-/// 学者在最后一步被强制为 0，下限为 0。
+/// 结果下限为 0。
 pub fn effective_attack_with(
     _catalog: &Catalog,
     minion: &MinionInstance,
@@ -235,9 +235,6 @@ pub fn effective_attack_with(
     let mut value = minion.attack();
     for aura in auras {
         value = value.saturating_add(aura.attack);
-    }
-    if minion.is_scholar {
-        value = 0;
     }
     value.max(0)
 }
@@ -356,7 +353,7 @@ pub(crate) fn armor_layer(keyword: &str) -> Option<i32> {
 
 /// 每轮该随从拥有的行动次数。
 ///
-/// 「连击」对学者同样生效，学者每轮也行动两次（攻击力仍为 0）。
+/// 「连击」让随从每轮行动两次；攻击力为 0 的随从同样适用。
 fn starting_tokens(catalog: &Catalog, minion: &MinionInstance) -> u8 {
     if minion.cannot_attack {
         0

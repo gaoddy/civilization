@@ -3,6 +3,7 @@ id: simaqian
 name: 司马迁
 categories: [play:mammal]
 skills: [aura-all-plus-0-plus-1]
+introduction: 西汉史学家，《史记》以纪传体通史体例记载上起黄帝下至汉武帝的三千年历史，被誉为史家之绝唱。
 ---
 
 # 司马迁
@@ -15,6 +16,10 @@ skills: [aura-all-plus-0-plus-1]
 | 名称 | 司马迁 |
 | 玩法 | 哺乳纲 |
 | 技能 | aura-all-plus-0-plus-1 |
+
+## 简介
+
+西汉史学家，《史记》以纪传体通史体例记载上起黄帝下至汉武帝的三千年历史，被誉为史家之绝唱。
 
 ## 效果
 

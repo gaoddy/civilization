@@ -7,7 +7,6 @@ era: industrial
 categories: [play:bacteria]
 taxon: biology
 cost: 2
-match_text: 同左
 skills: [combatstart-all-enemies-contagion-1]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-all-enemies-contagion-1]
 | 玩法 | 细菌域 |
 | 技能 | combatstart-all-enemies-contagion-1 |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

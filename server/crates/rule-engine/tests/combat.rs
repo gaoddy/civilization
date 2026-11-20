@@ -22,7 +22,6 @@ fn add_card_with(
     catalog: &mut Catalog,
     id: &str,
     playstyle: Playstyle,
-    is_scholar: bool,
     attack: i32,
     health: i32,
     keyword_list: &[&str],
@@ -56,22 +55,13 @@ fn add_card_with(
             attack: Some(attack),
             health: Some(health),
             skills: skill_ids,
-            is_scholar,
             cost: Some(1),
         },
     );
 }
 
 fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_list: &[&str]) {
-    add_card_with(
-        catalog,
-        id,
-        Playstyle::Mammal,
-        false,
-        attack,
-        health,
-        keyword_list,
-    );
+    add_card_with(catalog, id, Playstyle::Mammal, attack, health, keyword_list);
 }
 
 /// 给已有卡牌追加一个带效果串的技能，用于构造召唤、复制等战斗内效果。
@@ -507,20 +497,12 @@ fn combat_stops_at_200_actions() {
 #[test]
 fn zero_attack_does_not_counterattack() {
     let mut catalog = test_catalog();
-    add_card_with(
-        &mut catalog,
-        "scholar",
-        Playstyle::Neutral,
-        true,
-        0,
-        10,
-        &[],
-    );
+    add_card_with(&mut catalog, "zero", Playstyle::Neutral, 0, 10, &[]);
     add_card(&mut catalog, "b", 2, 3, &[]);
 
     let log = simulate(
         &catalog,
-        &[minion(&catalog, 1, "scholar")],
+        &[minion(&catalog, 1, "zero")],
         &[minion(&catalog, 2, "b")],
         0,
         1,
@@ -538,9 +520,9 @@ fn zero_attack_does_not_counterattack() {
             .iter()
             .filter(|event| event.0 == 1)
             .all(|event| event.2 == 0),
-        "学者主动攻击与反击都造成 0 伤害"
+        "0 攻随从主动攻击与反击都造成 0 伤害"
     );
-    assert_eq!(log.winner, Some(1), "学者被反击致死");
+    assert_eq!(log.winner, Some(1), "0 攻随从被反击致死");
 
     let mut catalog = test_catalog();
     add_card(&mut catalog, "a", 3, 10, &[]);
@@ -566,29 +548,21 @@ fn zero_attack_does_not_counterattack() {
 fn zero_attack_does_not_consume_shield() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "shielded", 10, 10, &["divine_shield"]);
-    add_card_with(
-        &mut catalog,
-        "scholar",
-        Playstyle::Neutral,
-        true,
-        0,
-        1,
-        &["taunt"],
-    );
+    add_card_with(&mut catalog, "zero", Playstyle::Neutral, 0, 1, &["taunt"]);
     add_card(&mut catalog, "brute", 5, 5, &[]);
 
     let log = simulate(
         &catalog,
         &[minion(&catalog, 1, "shielded")],
-        &[minion(&catalog, 2, "scholar"), minion(&catalog, 3, "brute")],
+        &[minion(&catalog, 2, "zero"), minion(&catalog, 3, "brute")],
         0,
         1,
         0,
         &mut rng(),
     );
 
-    // 学者的 0 攻击反击不消耗护盾；随后 5 攻的 brute 仍被护盾挡下。
-    assert!(death_order(&log).contains(&2), "嘲讽学者被击杀");
+    // 0 攻击反击不消耗护盾；随后 5 攻的 brute 仍被护盾挡下。
+    assert!(death_order(&log).contains(&2), "嘲讽的 0 攻随从被击杀");
     assert_eq!(
         log.attacker_final[0].stats.health.current, 10,
         "brute 的攻击应被未被消耗的护盾挡下"
@@ -644,26 +618,17 @@ fn defender_acts_first_when_first_seat_is_defender() {
 }
 
 #[test]
-fn scholar_granted_windfury_attacks_twice() {
+fn zero_attack_minion_granted_windfury_attacks_twice() {
     let mut catalog = test_catalog();
-    add_card_with(
-        &mut catalog,
-        "scholar",
-        Playstyle::Neutral,
-        true,
-        0,
-        10,
-        &[],
-    );
+    add_card_with(&mut catalog, "zero", Playstyle::Neutral, 0, 10, &[]);
     add_card(&mut catalog, "b", 0, 20, &[]);
 
-    let mut scholar = minion(&catalog, 1, "scholar");
-    scholar
-        .granted
+    let mut zero = minion(&catalog, 1, "zero");
+    zero.granted
         .push(("windfury".to_string(), Duration::Combat));
     let log = simulate(
         &catalog,
-        &[scholar],
+        &[zero],
         &[minion(&catalog, 2, "b")],
         0,
         1,
@@ -672,7 +637,7 @@ fn scholar_granted_windfury_attacks_twice() {
     );
 
     let ids: Vec<InstanceId> = attacks(&log).iter().map(|event| event.0).take(3).collect();
-    assert_eq!(ids, vec![1, 1, 2], "学者被授予连击时同样连续攻击两次");
+    assert_eq!(ids, vec![1, 1, 2], "0 攻随从被授予连击时同样连续攻击两次");
 }
 
 #[test]
@@ -714,7 +679,7 @@ fn reborn_attacker_keeps_its_spent_token() {
 fn effective_stats_follow_evaluation_order() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "a", 2, 3, &[]);
-    add_card_with(&mut catalog, "scholar", Playstyle::Neutral, true, 9, 4, &[]);
+    add_card_with(&mut catalog, "zero", Playstyle::Neutral, 0, 4, &[]);
 
     let mut monster = minion(&catalog, 1, "a");
     monster.golden = true;
@@ -739,12 +704,16 @@ fn effective_stats_follow_evaluation_order() {
     assert_eq!(effective_attack_with(&catalog, &monster, &auras), 14);
     assert_eq!(effective_health_with(&catalog, &monster, &auras), 11);
 
-    let mut scholar = minion(&catalog, 2, "scholar");
-    scholar.stats.attack.add_growth(3);
-    scholar.stats.health.add_growth(3);
-    scholar.stats.attack.add_permanent(7);
-    assert_eq!(effective_attack(&catalog, &scholar), 0, "学者攻击力强制 0");
-    assert_eq!(effective_health(&catalog, &scholar), 7);
+    let mut zero = minion(&catalog, 2, "zero");
+    zero.stats.attack.add_growth(3);
+    zero.stats.health.add_growth(3);
+    zero.stats.attack.add_permanent(7);
+    assert_eq!(
+        effective_attack(&catalog, &zero),
+        10,
+        "攻击力 0 的随从按普通成长累计攻击"
+    );
+    assert_eq!(effective_health(&catalog, &zero), 7);
 
     let mut floored = minion(&catalog, 3, "a");
     floored.stats.attack.add_turn(-10);
@@ -967,13 +936,14 @@ fn combat_state_hash_matches_golden_baseline() {
     // 再增加一个布尔值，金标准同步。
     // 新增 froze_this_turn 字段（解冻只在冻结的当回合可用）后玩家哈希再增加
     // 一个布尔值，金标准同步。
+    // 移除 is_scholar 字段后随从哈希少写一个布尔值，金标准同步；战斗行为不变。
     // 行为不变，任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
     let (mut engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "04ebd9b91175b1c9",
+        "b086b2ab72b0e171",
         "固定场景的 state_hash 金标准"
     );
 }

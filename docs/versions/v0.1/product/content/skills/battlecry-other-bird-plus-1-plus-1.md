@@ -12,7 +12,6 @@ template: on-play-battlecry-stats-all-ps-other-both(playstyle=bird,attack=1,heal
 | --- | --- |
 | id | battlecry-other-bird-plus-1-plus-1 |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-stats-all-ps-other-both |
 
 ## 效果

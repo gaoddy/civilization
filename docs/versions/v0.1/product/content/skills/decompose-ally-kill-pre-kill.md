@@ -12,7 +12,6 @@ template: decompose-ally-kill
 | --- | --- |
 | id | decompose-ally-kill-pre-kill |
 | 关键词 | 分解 |
-| 确定性替换 | 不适用 |
 | 模板 | decompose-ally-kill |
 
 ## 效果

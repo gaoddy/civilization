@@ -7,7 +7,6 @@ era: primitive
 categories: [play:cephalopod]
 taxon: biology
 cost: 2
-match_text: 同左
 skills: [trigger-friendly-single-stealth-this-turn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-single-stealth-this-turn]
 | 玩法 | 头足纲 |
 | 技能 | trigger-friendly-single-stealth-this-turn |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

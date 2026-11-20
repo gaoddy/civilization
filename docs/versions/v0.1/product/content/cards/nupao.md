@@ -10,7 +10,6 @@ era: classical
 attack: 4
 health: 6
 skills: [combatstart-leftmost-damage-3, shout]
-is_scholar: false
 ---
 
 # 弩炮
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 无 |
 | 技能 | combatstart-leftmost-damage-3；shout |
-| 学者 | 否 |
 | 科学分类 | 造物 › 武器与攻城 |
 
 ## 效果

@@ -11,7 +11,6 @@ template: aura-school-perattack-duration(playstyle=fish,attack=1,health=1,perAtt
 | --- | --- |
 | id | aura-school-fish-2 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-school-perattack-duration |
 
 ## 效果

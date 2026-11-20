@@ -12,7 +12,6 @@ template: keyword-self(keyword=poison)
 | --- | --- |
 | id | keyword-poison |
 | 关键词 | 剧毒 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

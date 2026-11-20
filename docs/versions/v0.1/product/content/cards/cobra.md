@@ -10,7 +10,6 @@ era: primitive
 attack: 3
 health: 6
 skills: [keyword-poison, keyword-taunt]
-is_scholar: false
 ---
 
 # 眼镜蛇
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 剧毒；嘲讽 |
 | 技能 | keyword-poison；keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 眼镜蛇科 |
 
 ## 效果

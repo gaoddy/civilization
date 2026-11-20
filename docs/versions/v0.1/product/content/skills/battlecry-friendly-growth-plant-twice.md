@@ -12,7 +12,6 @@ template: on-play-battlecry-growth-single-timesif-ps(playstyle=plant)
 | --- | --- |
 | id | battlecry-friendly-growth-plant-twice |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-growth-single-timesif-ps |
 
 ## 效果

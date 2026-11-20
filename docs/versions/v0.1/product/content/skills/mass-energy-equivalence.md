@@ -4,7 +4,6 @@ name: 质能方程
 template: activate-growth-all(times=1)
 cost: 2
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 质能方程
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | mass-energy-equivalence |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-growth-all |
 | 费用 | 2 |
 | 每回合次数 | 1 |

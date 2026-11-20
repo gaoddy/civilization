@@ -10,7 +10,6 @@ era: feudal
 attack: 0
 health: 16
 skills: [universal-manuscript]
-is_scholar: true
 ---
 
 # 达·芬奇
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 16 |
 | 关键词 | 无 |
 | 技能 | universal-manuscript |
-| 学者 | 是 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

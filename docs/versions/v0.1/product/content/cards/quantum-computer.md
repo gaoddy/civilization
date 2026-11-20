@@ -10,7 +10,6 @@ era: future
 attack: 6
 health: 9
 skills: [keyword-divine-shield, keyword-assemble-2]
-is_scholar: false
 ---
 
 # 量子计算机
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 护盾；装配 2 |
 | 技能 | keyword-divine-shield；keyword-assemble-2 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 信息与计算 |
 
 ## 效果

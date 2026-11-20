@@ -12,7 +12,6 @@ template: on-death-summon-split(token=fish-fry-token,count=3)
 | --- | --- |
 | id | deathrattle-summon-fish-fry-3 |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-summon-split |
 
 ## 效果

@@ -10,7 +10,6 @@ era: prehistoric
 attack: 4
 health: 9
 skills: [deathrattle-summon-2-coral-polyps]
-is_scholar: false
 ---
 
 # 鹿角珊瑚
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-2-coral-polyps |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 石珊瑚目 › 鹿角珊瑚科 |
 
 ## 效果

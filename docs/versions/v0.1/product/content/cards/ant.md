@@ -10,7 +10,6 @@ era: primitive
 attack: 3
 health: 3
 skills: [aura-other-insect-plus-0-plus-1]
-is_scholar: false
 ---
 
 # 蚂蚁
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | aura-other-insect-plus-0-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 膜翅目 › 蚁科 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: prehistoric
 attack: 3
 health: 3
 skills: [combatstart-if-2-biology-self-plus-2-attack]
-is_scholar: false
 ---
 
 # 剑齿虎
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 无 |
 | 技能 | combatstart-if-2-biology-self-plus-2-attack |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 猫科 |
 | 关联分类 | 捕食：偶蹄目 |
 

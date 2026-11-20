@@ -45,7 +45,6 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, playstyle: Playstyle, eff
             attack: Some(0),
             health: Some(5),
             skills: vec![skill_id],
-            is_scholar: false,
             cost: Some(1),
         },
     );
@@ -67,7 +66,6 @@ fn add_plain_card(engine: &mut Engine, card_id: &str, playstyle: Playstyle) {
             attack: Some(1),
             health: Some(1),
             skills: Vec::new(),
-            is_scholar: false,
             cost: Some(1),
         },
     );
@@ -89,7 +87,6 @@ fn add_insect_card(engine: &mut Engine, card_id: &str, health: i32) {
             attack: Some(1),
             health: Some(health),
             skills: Vec::new(),
-            is_scholar: false,
             cost: Some(1),
         },
     );

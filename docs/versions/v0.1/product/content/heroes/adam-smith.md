@@ -3,6 +3,7 @@ id: adam-smith
 name: 亚当·斯密
 categories: [play:mammal]
 skills: [division-of-labor]
+introduction: 苏格兰经济学家，1776 年出版《国富论》，以分工与「看不见的手」解释国民财富的增长，被视为现代经济学奠基人。
 ---
 
 # 亚当·斯密
@@ -15,6 +16,10 @@ skills: [division-of-labor]
 | 名称 | 亚当·斯密 |
 | 玩法 | 哺乳纲 |
 | 技能 | division-of-labor |
+
+## 简介
+
+苏格兰经济学家，1776 年出版《国富论》，以分工与「看不见的手」解释国民财富的增长，被视为现代经济学奠基人。
 
 ## 效果
 

@@ -7,7 +7,6 @@ era: future
 categories: [play:machine]
 taxon: automation
 cost: 2
-match_text: 同左
 skills: [trigger-machine-all-plus-1-plus-1]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-machine-all-plus-1-plus-1]
 | 玩法 | 机械 |
 | 技能 | trigger-machine-all-plus-1-plus-1 |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 造物 › 自动机械 |
 
 ## 效果

@@ -7,7 +7,6 @@ era: feudal
 categories: [play:mammal]
 taxon: biology
 cost: 3
-match_text: 同左
 skills: [trigger-mammal-all-plus-2-attack]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-mammal-all-plus-2-attack]
 | 玩法 | 哺乳纲 |
 | 技能 | trigger-mammal-all-plus-2-attack |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

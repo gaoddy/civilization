@@ -11,7 +11,6 @@ template: ally-growth-target-health(health=1)
 | --- | --- |
 | id | trigger-friendly-growth-extra-plus-0-plus-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | ally-growth-target-health |
 
 ## 效果

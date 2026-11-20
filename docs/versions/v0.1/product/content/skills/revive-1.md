@@ -11,7 +11,6 @@ template: on-death-revive(attack=1,health=1)
 | --- | --- |
 | id | revive-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-revive |
 
 ## 效果

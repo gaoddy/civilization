@@ -7,7 +7,6 @@ era: modern
 categories: [play:fungus, play:bacteria]
 taxon: medicine
 cost: 3
-match_text: 同左
 skills: [combatstart-remove-top-attack-enemy-growth]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-remove-top-attack-enemy-growth]
 | 玩法 | 真菌界、细菌域 |
 | 技能 | combatstart-remove-top-attack-enemy-growth |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 医学 |
 
 ## 效果

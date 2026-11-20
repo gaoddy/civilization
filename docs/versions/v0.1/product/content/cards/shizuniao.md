@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 2
 skills: [dive-1]
-is_scholar: false
 ---
 
 # 始祖鸟
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 2 |
 | 关键词 | 无 |
 | 技能 | dive-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 始祖鸟目 › 始祖鸟科 |
 
 ## 效果

@@ -12,7 +12,6 @@ template: on-death-damage-all(amount=2)
 | --- | --- |
 | id | deathrattle-all-enemies-damage-2 |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-damage-all |
 
 ## 效果

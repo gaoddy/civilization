@@ -18,7 +18,7 @@ class NounTableTest(unittest.TestCase):
         self.assertEqual(nouns.playstyle["machine"], "机械")
         self.assertEqual(nouns.playstyle["fungus"], "真菌界")
         self.assertEqual(nouns.playstyle["plant"], "植物")
-        self.assertEqual(nouns.special["scholar=true"], "学者")
+        self.assertEqual(nouns.special["other=true"], "其他")
         self.assertEqual(nouns.keyword_text["taunt"], "嘲讽")
 
     def test_parse_arg_spec_range_and_default(self):

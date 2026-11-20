@@ -10,7 +10,6 @@ era: modern
 attack: 12
 health: 10
 skills: [keyword-windfury, shout]
-is_scholar: false
 ---
 
 # 穆罕默德·阿里
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 连击 |
 | 技能 | keyword-windfury；shout |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

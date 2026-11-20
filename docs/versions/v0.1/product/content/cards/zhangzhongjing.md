@@ -10,7 +10,6 @@ era: feudal
 attack: 5
 health: 8
 skills: [battlecry-all-friendly-plus-0-plus-1]
-is_scholar: false
 ---
 
 # 张仲景
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-plus-0-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

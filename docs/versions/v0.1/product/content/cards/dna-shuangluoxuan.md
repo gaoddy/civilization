@@ -7,7 +7,6 @@ era: future
 categories: [play:plant, play:protozoa]
 taxon: biology
 cost: 2
-match_text: 同左
 skills: [trigger-friendly-growth-thrice]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-growth-thrice]
 | 玩法 | 植物界、原生生物界 |
 | 技能 | trigger-friendly-growth-thrice |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

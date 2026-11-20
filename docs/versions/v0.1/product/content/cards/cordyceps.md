@@ -10,7 +10,6 @@ era: feudal
 attack: 4
 health: 7
 skills: [deathrattle-summon-cordyceps, decompose-kill-original]
-is_scholar: false
 ---
 
 # 冬虫夏草
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 7 |
 | 关键词 | 亡语；分解 |
 | 技能 | deathrattle-summon-cordyceps；decompose-kill-original |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 子囊菌门 › 粪壳菌纲 › 肉座菌目 › 线虫草科 |
 
 ## 效果

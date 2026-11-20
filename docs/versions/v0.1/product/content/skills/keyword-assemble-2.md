@@ -12,7 +12,6 @@ template: on-play-battlecry-assemble(times=2)
 | --- | --- |
 | id | keyword-assemble-2 |
 | 关键词 | 装配 2 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-assemble |
 
 ## 效果

@@ -1,7 +1,6 @@
 ---
 id: trigger-friendly-human-taunt-until-turn-end
 template: on-play-keyword-single-taxon(taxon=hominidae,keyword=taunt,duration=combat)
-match_text: 同左
 ---
 
 # trigger-friendly-human-taunt-until-turn-end
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | trigger-friendly-human-taunt-until-turn-end |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | on-play-keyword-single-taxon |
 
 ## 效果

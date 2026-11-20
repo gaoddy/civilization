@@ -1,7 +1,6 @@
 ---
 id: combatstart-leftmost-damage-4
 template: combatstart-damage-leftmost(amount=4)
-match_text: 同左
 ---
 
 # combatstart-leftmost-damage-4
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | combatstart-leftmost-damage-4 |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | combatstart-damage-leftmost |
 
 ## 效果

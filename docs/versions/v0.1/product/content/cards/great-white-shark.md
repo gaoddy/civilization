@@ -10,7 +10,6 @@ era: modern
 attack: 9
 health: 8
 skills: [keyword-ignore-taunt, aura-school-fish-1]
-is_scholar: false
 ---
 
 # 大白鲨
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt；aura-school-fish-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 软骨鱼纲 › 鼠鲨目 › 鼠鲨科 |
 
 ## 效果

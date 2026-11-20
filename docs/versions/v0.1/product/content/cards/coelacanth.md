@@ -10,7 +10,6 @@ era: modern
 attack: 9
 health: 8
 skills: [keyword-reborn, aura-school-fish-1]
-is_scholar: false
 ---
 
 # 腔棘鱼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 复生 |
 | 技能 | keyword-reborn；aura-school-fish-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 肉鳍鱼纲 › 腔棘鱼目 › 腔棘鱼科 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: primitive
 attack: 4
 health: 7
 skills: [deathrattle-summon-schizont]
-is_scholar: false
 ---
 
 # 疟原虫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 7 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-schizont |
-| 学者 | 否 |
 | 科学分类 | 原生生物界 › 顶复门 › 无腔纲 › 血孢子虫目 › 疟原虫科 |
 
 ## 效果

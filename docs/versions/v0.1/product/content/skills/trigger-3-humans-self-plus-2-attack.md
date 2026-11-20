@@ -11,7 +11,6 @@ template: conditional-taxon-self-attack(attack=2,taxon=hominidae,count=3)
 | --- | --- |
 | id | trigger-3-humans-self-plus-2-attack |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | conditional-taxon-self-attack |
 
 ## 效果

@@ -12,7 +12,6 @@ template: keyword-self(keyword=taunt)
 | --- | --- |
 | id | keyword-taunt |
 | 关键词 | 嘲讽 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

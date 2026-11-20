@@ -10,7 +10,6 @@ era: industrial
 attack: 7
 health: 10
 skills: [free-refresh]
-is_scholar: false
 ---
 
 # 郑和
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 无 |
 | 技能 | free-refresh |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

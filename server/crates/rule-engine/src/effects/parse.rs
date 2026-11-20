@@ -506,8 +506,6 @@ fn parse_times_if(value: &str, chunk: &str) -> Result<TimesIf, String> {
     let invalid = || format!("timesIf 格式非法 {value:?}（{chunk}）");
     let parts: Vec<&str> = value.split(':').map(str::trim).collect();
     let (key, filter_value, count) = match parts.as_slice() {
-        // `scholar:2`：无值键，直接跟次数。
-        [key, count] => (key.to_string(), None, *count),
         // `playstyle:mammal:2`：键、值、次数。
         [key, filter_value, count] => (key.to_string(), Some(filter_value.to_string()), *count),
         _ => return Err(invalid()),

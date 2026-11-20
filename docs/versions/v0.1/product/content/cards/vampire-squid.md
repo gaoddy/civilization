@@ -10,7 +10,6 @@ era: modern
 attack: 9
 health: 12
 skills: [mimic-2, mimic-1]
-is_scholar: false
 ---
 
 # 吸血鬼乌贼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 无 |
 | 技能 | mimic-2；mimic-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 幽灵蛸目 › 幽灵蛸科 |
 
 ## 效果

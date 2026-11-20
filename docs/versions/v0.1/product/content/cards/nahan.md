@@ -7,7 +7,6 @@ era: modern
 categories: [play:mammal, play:plant]
 taxon: literature
 cost: 1
-match_text: 同左
 skills: [trigger-all-friendly-growth-once]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-all-friendly-growth-once]
 | 玩法 | 哺乳纲、植物界 |
 | 技能 | trigger-all-friendly-growth-once |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 人文 › 文学 |
 
 ## 效果

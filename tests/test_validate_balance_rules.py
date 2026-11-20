@@ -109,29 +109,29 @@ class SkillCountTest(unittest.TestCase):
 
     def test_one_two_star_allows_one(self):
         doc = {"level": 2, "categories": ["play:mammal"], "taxon": "hominidae",
-               "is_scholar": False, "skills": ["k1", "k2"]}
+               "skills": ["k1", "k2"]}
         errors = vd.skill_count_errors(doc, self.skill_map)
         self.assertTrue(any("最多 1 个技能" in e for e in errors))
 
     def test_three_four_star_allows_two(self):
         doc = {"level": 4, "categories": ["play:mammal"], "taxon": "hominidae",
-               "is_scholar": False, "skills": ["k1", "k2"]}
+               "skills": ["k1", "k2"]}
         self.assertEqual(vd.skill_count_errors(doc, self.skill_map), [])
 
     def test_five_seven_star_max_two_keywords(self):
         doc = {"level": 6, "categories": ["play:mammal"], "taxon": "hominidae",
-               "is_scholar": False, "skills": ["k1", "k2", "k3", "p"]}
+               "skills": ["k1", "k2", "k3", "p"]}
         errors = vd.skill_count_errors(doc, self.skill_map)
         self.assertTrue(any("最多 2 个登记关键词" in e for e in errors))
 
     def test_skillless_tool_card_allowed(self):
         doc = {"level": 3, "categories": ["play:machine"], "taxon": "life-medical",
-               "is_scholar": False, "skills": []}
+               "skills": []}
         self.assertEqual(vd.skill_count_errors(doc, self.skill_map), [])
 
     def test_skillless_non_tool_rejected(self):
         doc = {"level": 2, "categories": ["play:bird"], "taxon": "archaeopterygidae",
-               "is_scholar": False, "skills": []}
+               "skills": []}
         errors = vd.skill_count_errors(doc, self.skill_map)
         self.assertTrue(any("无技能" in e for e in errors))
 

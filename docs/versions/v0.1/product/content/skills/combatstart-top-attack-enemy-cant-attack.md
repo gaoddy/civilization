@@ -1,7 +1,6 @@
 ---
 id: combatstart-top-attack-enemy-cant-attack
 template: combatstart-top-attack-cannot-attack
-match_text: 同左
 ---
 
 # combatstart-top-attack-enemy-cant-attack
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | combatstart-top-attack-enemy-cant-attack |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | combatstart-top-attack-cannot-attack |
 
 ## 效果

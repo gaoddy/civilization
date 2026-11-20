@@ -10,7 +10,6 @@ era: prehistoric
 attack: 3
 health: 5
 skills: [deathrattle-random-enemy-minus-1-health]
-is_scholar: false
 ---
 
 # 肺炎链球菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-random-enemy-minus-1-health |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 乳杆菌目 › 链球菌科 |
 | 关联分类 | 寄生：人科 |
 

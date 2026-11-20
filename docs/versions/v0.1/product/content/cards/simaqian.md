@@ -10,7 +10,6 @@ era: feudal
 attack: 5
 health: 8
 skills: [aura-all-plus-0-plus-1]
-is_scholar: false
 ---
 
 # 司马迁
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 无 |
 | 技能 | aura-all-plus-0-plus-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

@@ -3,6 +3,7 @@ id: shenkuo
 name: 沈括
 categories: [play:mammal]
 skills: [observation]
+introduction: 北宋科学家与政治家，晚年撰《梦溪笔谈》，记录活字印刷、磁偏角与石油命名等大量实证观察。
 ---
 
 # 沈括
@@ -15,6 +16,10 @@ skills: [observation]
 | 名称 | 沈括 |
 | 玩法 | 哺乳纲 |
 | 技能 | observation |
+
+## 简介
+
+北宋科学家与政治家，晚年撰《梦溪笔谈》，记录活字印刷、磁偏角与石油命名等大量实证观察。
 
 ## 效果
 

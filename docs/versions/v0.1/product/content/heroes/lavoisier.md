@@ -3,6 +3,7 @@ id: lavoisier
 name: 拉瓦锡
 categories: [play:reptile]
 skills: [aura-other-plus-0-plus-1]
+introduction: 法国化学家，1789 年《化学基本论述》确立质量守恒定律，把化学从定性描述推进到定量科学。
 ---
 
 # 拉瓦锡
@@ -15,6 +16,10 @@ skills: [aura-other-plus-0-plus-1]
 | 名称 | 拉瓦锡 |
 | 玩法 | 爬行纲 |
 | 技能 | aura-other-plus-0-plus-1 |
+
+## 简介
+
+法国化学家，1789 年《化学基本论述》确立质量守恒定律，把化学从定性描述推进到定量科学。
 
 ## 效果
 

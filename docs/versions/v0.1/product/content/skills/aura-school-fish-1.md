@@ -11,7 +11,6 @@ template: aura-school-perhealth(playstyle=fish,attack=1,perHealth=1)
 | --- | --- |
 | id | aura-school-fish-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-school-perhealth |
 
 ## 效果

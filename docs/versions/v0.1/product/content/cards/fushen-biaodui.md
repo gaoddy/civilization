@@ -7,7 +7,6 @@ era: primitive
 categories: [play:bird]
 taxon: biology
 cost: 2
-match_text: 同左
 skills: [combatstart-lowest-attack-enemy-damage-3]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-lowest-attack-enemy-damage-3]
 | 玩法 | 鸟纲 |
 | 技能 | combatstart-lowest-attack-enemy-damage-3 |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

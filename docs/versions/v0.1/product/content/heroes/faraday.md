@@ -3,6 +3,7 @@ id: faraday
 name: 法拉第
 categories: [play:reptile, play:machine]
 skills: [faraday-cage]
+introduction: 英国物理学家，1831 年发现电磁感应，奠定发电机原理，把电与磁统一为可实验研究的现象。
 ---
 
 # 法拉第
@@ -15,6 +16,10 @@ skills: [faraday-cage]
 | 名称 | 法拉第 |
 | 玩法 | 爬行纲、机械 |
 | 技能 | faraday-cage |
+
+## 简介
+
+英国物理学家，1831 年发现电磁感应，奠定发电机原理，把电与磁统一为可实验研究的现象。
 
 ## 效果
 

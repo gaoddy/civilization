@@ -7,7 +7,6 @@ era: modern
 categories: [play:fish]
 taxon: biology
 cost: 4
-match_text: 同左
 skills: [trigger-fish-all-reborn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-fish-all-reborn]
 | 玩法 | 鱼纲 |
 | 技能 | trigger-fish-all-reborn |
 | 费用 | 4 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

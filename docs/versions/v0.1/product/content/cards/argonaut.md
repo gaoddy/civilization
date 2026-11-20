@@ -10,7 +10,6 @@ era: classical
 attack: 4
 health: 7
 skills: [keyword-stealth, mimic-1]
-is_scholar: false
 ---
 
 # 船蛸
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 7 |
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；mimic-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 船蛸科 |
 
 ## 效果

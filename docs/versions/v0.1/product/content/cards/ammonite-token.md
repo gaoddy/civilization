@@ -10,7 +10,6 @@ level: 3
 era: prehistoric
 attack: 5
 health: 5
-is_scholar: false
 ---
 
 # 菊石幼体
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 无 |
 | 技能 | 无 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 菊石目 › 菊石科 |
 | 进商店卡池 | 否 |
 

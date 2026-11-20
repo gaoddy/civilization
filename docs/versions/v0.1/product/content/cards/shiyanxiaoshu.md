@@ -10,7 +10,6 @@ era: prehistoric
 attack: 1
 health: 2
 skills: [deathrattle-summon-termite]
-is_scholar: false
 ---
 
 # 实验小鼠
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 2 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-termite |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 啮齿目 › 鼠科 |
 
 ## 效果

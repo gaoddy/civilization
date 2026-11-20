@@ -3,6 +3,7 @@ id: fleming
 name: 弗莱明
 categories: [play:virus]
 skills: [virus-growth-once]
+introduction: 英国细菌学家，1928 年发现青霉素，开启抗生素时代，让细菌感染第一次可以被系统治疗。
 ---
 
 # 弗莱明
@@ -15,6 +16,10 @@ skills: [virus-growth-once]
 | 名称 | 弗莱明 |
 | 玩法 | 病毒 |
 | 技能 | virus-growth-once |
+
+## 简介
+
+英国细菌学家，1928 年发现青霉素，开启抗生素时代，让细菌感染第一次可以被系统治疗。
 
 ## 效果
 

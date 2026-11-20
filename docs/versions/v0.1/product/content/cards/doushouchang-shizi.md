@@ -10,7 +10,6 @@ era: classical
 attack: 2
 health: 5
 skills: [keyword-taunt]
-is_scholar: false
 ---
 
 # 斗兽场狮子
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 猫科 |
 | 关联分类 | 捕食：偶蹄目 |
 

@@ -10,7 +10,6 @@ era: modern
 attack: 6
 health: 8
 skills: [battlecry-self-growth-twice]
-is_scholar: false
 ---
 
 # 带粉色头套的猩猩
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 8 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-self-growth-twice |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

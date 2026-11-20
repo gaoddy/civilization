@@ -7,7 +7,6 @@ era: future
 categories: [play:machine]
 taxon: physics
 cost: 4
-match_text: 同左
 skills: [combatstart-all-enemies-damage-5]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-all-enemies-damage-5]
 | 玩法 | 机械 |
 | 技能 | combatstart-all-enemies-damage-5 |
 | 费用 | 4 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 物理学 |
 
 ## 效果

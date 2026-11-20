@@ -185,7 +185,7 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 20 局哈希全部改变。
 ///
 /// 2026-11-20 第十九次重定：卡牌玩法归属从单值 `playstyle` 迁移为多值
-/// `categories`，学者与工具卡按 `play:machine` 等额外归属进入更多玩法卡池，
+/// `categories`，部分随从与工具卡按 `play:machine` 等额外归属进入更多玩法卡池，
 /// 效果牌也按指派后的玩法进入商店；AI 的主导玩法改为逐条 `play:` 计数，
 /// 定向效果牌购买与随机流消耗随之改变。本批次 20 局哈希全部改变。
 ///
@@ -198,6 +198,10 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 三连奖励改为直接随机发放下一等级池内随从（`GrantMinion`，消耗
 /// `Stream::Effects`），共享池、商店候选与发现候选统一按池内卡过滤；
 /// AI 的对局路径与随机流消耗随之改变，本批次 20 局哈希全部改变。
+///
+/// 2026-11-21 第二十二次重定：移除 `is_scholar` 与学者机制，攻击力 0 的随从
+/// 改为按普通随从成长（+1/+1），4 个学者专属技能替换为通用技能，同时移除
+/// `match_text`。成长结果与技能组合变化涉及参战卡牌，本批次 20 局哈希全部改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

@@ -12,7 +12,6 @@ template: keyword-self(keyword=breed 3)
 | --- | --- |
 | id | keyword-breed-3 |
 | 关键词 | 繁衍 3 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 2
 skills: [trigger-2-humans-self-plus-1-attack]
-is_scholar: false
 ---
 
 # 燧石矛兵
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 2 |
 | 关键词 | 无 |
 | 技能 | trigger-2-humans-self-plus-1-attack |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

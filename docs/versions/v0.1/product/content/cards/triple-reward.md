@@ -8,7 +8,6 @@ era: prehistoric
 categories: [play:mammal, play:machine]
 taxon: economics
 cost: 0
-match_text: 同左
 skills: [gain-next-level-minion]
 ---
 
@@ -26,7 +25,6 @@ skills: [gain-next-level-minion]
 | 玩法 | 哺乳纲、机械 |
 | 技能 | gain-next-level-minion |
 | 费用 | 0 |
-| 确定性替换 | 同左 |
 | 科学分类 | 社会 › 经济学 |
 | 进商店卡池 | 否 |
 

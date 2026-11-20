@@ -3,6 +3,7 @@ id: knuth
 name: 高德纳
 categories: [play:machine]
 skills: [efficient-algorithm]
+introduction: 美国计算机科学家，《计算机程序设计艺术》作者，奠定算法分析与结构化程序设计的基础，并创造了 TeX 排版系统。
 ---
 
 # 高德纳
@@ -15,6 +16,10 @@ skills: [efficient-algorithm]
 | 名称 | 高德纳 |
 | 玩法 | 机械 |
 | 技能 | efficient-algorithm |
+
+## 简介
+
+美国计算机科学家，《计算机程序设计艺术》作者，奠定算法分析与结构化程序设计的基础，并创造了 TeX 排版系统。
 
 ## 效果
 

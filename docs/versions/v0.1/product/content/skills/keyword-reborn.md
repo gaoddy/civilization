@@ -12,7 +12,6 @@ template: keyword-self(keyword=reborn)
 | --- | --- |
 | id | keyword-reborn |
 | 关键词 | 复生 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

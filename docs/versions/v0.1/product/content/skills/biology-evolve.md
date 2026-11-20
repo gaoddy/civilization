@@ -4,7 +4,6 @@ name: 获得性状
 template: activate-keyword-single-taxon(taxon=animalia,keyword=evolve,duration=permanent)
 cost: 2
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 获得性状
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | biology-evolve |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-keyword-single-taxon |
 | 费用 | 2 |
 | 每回合次数 | 1 |

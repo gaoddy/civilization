@@ -12,7 +12,6 @@ template: on-death-summon-split(token=worker-bee-token-1,count=1)
 | --- | --- |
 | id | deathrattle-summon-1-worker-bee |
 | 关键词 | 亡语 |
-| 确定性替换 | 不适用 |
 | 模板 | on-death-summon-split |
 
 ## 效果

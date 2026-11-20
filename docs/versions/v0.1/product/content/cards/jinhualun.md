@@ -7,7 +7,6 @@ era: modern
 categories: [play:mammal, play:protozoa]
 taxon: biology
 cost: 2
-match_text: 改为三选一固定池
 skills: [trigger-discover-tribe-minion]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-discover-tribe-minion]
 | 玩法 | 哺乳纲、原生生物界 |
 | 技能 | trigger-discover-tribe-minion |
 | 费用 | 2 |
-| 确定性替换 | 改为三选一固定池 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

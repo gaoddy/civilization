@@ -10,7 +10,6 @@ era: classical
 attack: 3
 health: 7
 skills: [keyword-taunt]
-is_scholar: false
 ---
 
 # 战象
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 7 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 长鼻目 › 象科 |
 
 ## 效果

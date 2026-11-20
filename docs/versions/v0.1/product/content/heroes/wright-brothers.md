@@ -3,6 +3,7 @@ id: wright-brothers
 name: 莱特兄弟
 categories: [play:machine]
 skills: [combat-optimal-attack]
+introduction: 美国航空先驱，1903 年在基蒂霍克完成人类首次有动力、持续且可控的飞行，开启航空时代。
 ---
 
 # 莱特兄弟
@@ -15,6 +16,10 @@ skills: [combat-optimal-attack]
 | 名称 | 莱特兄弟 |
 | 玩法 | 机械 |
 | 技能 | combat-optimal-attack |
+
+## 简介
+
+美国航空先驱，1903 年在基蒂霍克完成人类首次有动力、持续且可控的飞行，开启航空时代。
 
 ## 效果
 

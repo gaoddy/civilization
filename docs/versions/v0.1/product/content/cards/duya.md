@@ -7,7 +7,6 @@ era: primitive
 categories: [play:reptile]
 taxon: biology
 cost: 2
-match_text: 同左
 skills: [trigger-reptile-single-poison-this-turn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-reptile-single-poison-this-turn]
 | 玩法 | 爬行纲 |
 | 技能 | trigger-reptile-single-poison-this-turn |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

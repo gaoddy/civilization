@@ -7,7 +7,6 @@ era: classical
 categories: [play:mammal, play:bird]
 taxon: psychology
 cost: 0
-match_text: 同左
 skills: [trigger-friendly-single-growth-once]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-single-growth-once]
 | 玩法 | 哺乳纲、鸟纲 |
 | 技能 | trigger-friendly-single-growth-once |
 | 费用 | 0 |
-| 确定性替换 | 同左 |
 | 科学分类 | 人文 › 心理学 |
 
 ## 效果

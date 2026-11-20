@@ -11,7 +11,6 @@ template: aura-school-perattack(playstyle=mammal,attack=1,health=1,perAttack=1)
 | --- | --- |
 | id | aura-school-mammal |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | aura-school-perattack |
 
 ## 效果

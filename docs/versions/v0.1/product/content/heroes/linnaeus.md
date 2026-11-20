@@ -3,6 +3,7 @@ id: linnaeus
 name: 林奈
 categories: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 skills: [binomial-nomenclature]
+introduction: 瑞典博物学家，1735 年《自然系统》建立双名法，为物种分类提供统一命名体系，至今仍是生物命名的基础。
 ---
 
 # 林奈
@@ -15,6 +16,10 @@ skills: [binomial-nomenclature]
 | 名称 | 林奈 |
 | 玩法 | 哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
 | 技能 | binomial-nomenclature |
+
+## 简介
+
+瑞典博物学家，1735 年《自然系统》建立双名法，为物种分类提供统一命名体系，至今仍是生物命名的基础。
 
 ## 效果
 

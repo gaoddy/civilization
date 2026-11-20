@@ -36,17 +36,15 @@ fn minion_id() -> String {
         .clone()
 }
 
-/// 目录中第一张非英雄、非学者且攻击力为正的随从卡（光环数值断言需要）。
+/// 目录中第一张非英雄且攻击力为正的随从卡（光环数值断言需要）。
 fn positive_attack_minion_id() -> String {
     test_catalog()
         .cards
         .values()
         .find(|card| {
-            card.card_type == CardType::Minion
-                && !card.is_scholar
-                && card.attack.is_some_and(|attack| attack > 0)
+            card.card_type == CardType::Minion && card.attack.is_some_and(|attack| attack > 0)
         })
-        .expect("数据中应存在攻击力为正的非学者随从")
+        .expect("数据中应存在攻击力为正的随从")
         .id
         .clone()
 }

@@ -1,7 +1,6 @@
 ---
 id: combatstart-all-enemies-minus-1-attack
 template: combatstart-stats-enemy-all-attack(attack=-1)
-match_text: 同左
 ---
 
 # combatstart-all-enemies-minus-1-attack
@@ -12,7 +11,6 @@ match_text: 同左
 | --- | --- |
 | id | combatstart-all-enemies-minus-1-attack |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | combatstart-stats-enemy-all-attack |
 
 ## 效果

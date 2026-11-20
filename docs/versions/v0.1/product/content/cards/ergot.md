@@ -10,7 +10,6 @@ era: feudal
 attack: 6
 health: 12
 skills: [decompose-ally-kill-pre-kill, deathrattle-summon-2-spores-2-2]
-is_scholar: false
 ---
 
 # 麦角
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 分解；亡语 |
 | 技能 | decompose-ally-kill-pre-kill；deathrattle-summon-2-spores-2-2 |
-| 学者 | 否 |
 | 科学分类 | 真菌界 › 子囊菌门 › 粪壳菌纲 › 肉座菌目 › 麦角科 |
 
 ## 效果

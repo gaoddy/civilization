@@ -10,7 +10,6 @@ era: classical
 attack: 3
 health: 3
 skills: [battlecry-friendly-fish-growth-once]
-is_scholar: false
 ---
 
 # 小丑鱼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-fish-growth-once |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲈形目 › 雀鲷科 |
 
 ## 效果

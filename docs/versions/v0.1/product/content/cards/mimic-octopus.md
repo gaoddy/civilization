@@ -10,7 +10,6 @@ era: modern
 attack: 7
 health: 9
 skills: [mimic-3]
-is_scholar: false
 ---
 
 # 拟态章鱼（大型）
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 无 |
 | 技能 | mimic-3 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 章鱼科 |
 
 ## 效果

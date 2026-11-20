@@ -3,6 +3,7 @@ id: rutherford
 name: 卢瑟福
 categories: [play:mammal, play:machine]
 skills: [combat-random-enemy-damage-3]
+introduction: 新西兰裔英国物理学家，1911 年以 α 粒子散射实验提出原子核式结构模型，开创核物理研究。
 ---
 
 # 卢瑟福
@@ -15,6 +16,10 @@ skills: [combat-random-enemy-damage-3]
 | 名称 | 卢瑟福 |
 | 玩法 | 哺乳纲、机械 |
 | 技能 | combat-random-enemy-damage-3 |
+
+## 简介
+
+新西兰裔英国物理学家，1911 年以 α 粒子散射实验提出原子核式结构模型，开创核物理研究。
 
 ## 效果
 

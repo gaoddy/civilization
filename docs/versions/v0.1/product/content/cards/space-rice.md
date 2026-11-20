@@ -10,7 +10,6 @@ era: future
 attack: 6
 health: 12
 skills: [keyword-sow, keyword-breed-3]
-is_scholar: false
 ---
 
 # 太空水稻
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 播种；繁衍 3 |
 | 技能 | keyword-sow；keyword-breed-3 |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 禾本目 › 禾本科 |
 
 ## 效果

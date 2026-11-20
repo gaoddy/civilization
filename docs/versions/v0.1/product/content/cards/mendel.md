@@ -10,7 +10,6 @@ era: modern
 attack: 0
 health: 12
 skills: [battlecry-friendly-plant-growth-once, heredity]
-is_scholar: true
 ---
 
 # 孟德尔
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 12 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plant-growth-once；heredity |
-| 学者 | 是 |
 | 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果

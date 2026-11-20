@@ -10,7 +10,6 @@ era: modern
 attack: 12
 health: 10
 skills: [aura-school-fish-2, deathrattle-summon-fish-fry-2]
-is_scholar: false
 ---
 
 # 鲸鲨
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 10 |
 | 关键词 | 亡语 |
 | 技能 | aura-school-fish-2；deathrattle-summon-fish-fry-2 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 软骨鱼纲 › 须鲨目 › 鲸鲨科 |
 
 ## 效果

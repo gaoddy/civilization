@@ -10,7 +10,6 @@ era: future
 attack: 10
 health: 18
 skills: [keyword-reborn, keyword-armor-1]
-is_scholar: false
 ---
 
 # 永生水母
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 18 |
 | 关键词 | 复生；减伤 1 |
 | 技能 | keyword-reborn；keyword-armor-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 水螅纲 › 花水螅目 › 海螅水母科 |
 
 ## 效果

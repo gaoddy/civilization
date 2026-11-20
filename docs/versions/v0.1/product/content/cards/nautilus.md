@@ -10,7 +10,6 @@ era: primitive
 attack: 3
 health: 3
 skills: [keyword-taunt]
-is_scholar: false
 ---
 
 # 鹦鹉螺
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 软体动物门 › 头足纲 › 鹦鹉螺目 › 鹦鹉螺科 |
 
 ## 效果

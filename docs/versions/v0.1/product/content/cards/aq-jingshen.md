@@ -7,7 +7,6 @@ era: modern
 categories: [play:mammal, play:reptile]
 taxon: literature
 cost: 0
-match_text: 同左
 skills: [trigger-friendly-taunt-until-turn-end]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-taunt-until-turn-end]
 | 玩法 | 哺乳纲、爬行纲 |
 | 技能 | trigger-friendly-taunt-until-turn-end |
 | 费用 | 0 |
-| 确定性替换 | 同左 |
 | 科学分类 | 人文 › 文学 |
 
 ## 效果

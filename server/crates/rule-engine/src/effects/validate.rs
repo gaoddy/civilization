@@ -14,7 +14,6 @@ pub(crate) const FILTER_KEYS: &[&str] = &[
     "subtype",
     "id",
     "type",
-    "scholar",
     "keyword",
     "other",
 ];
@@ -402,15 +401,12 @@ fn validate_filter(filter: &Filter, check_value: bool, errors: &mut Vec<String>)
     if filter.value.is_empty() {
         errors.push(format!("筛选 {:?} 缺少取值", filter.key));
     }
-    if filter.key == "scholar" && !matches!(filter.value.as_str(), "true" | "false") {
-        errors.push(format!("scholar 取值非法 {:?}", filter.value));
-    }
     if check_value {
         validate_filter_value(&filter.key, &filter.value, errors);
     }
 }
 
-/// `timesIf` 的键必须在筛选键集合内；除 `scholar` 外必须带值。
+/// `timesIf` 的键必须在筛选键集合内，且必须带值。
 fn validate_times_if_filter(times_if: &TimesIf, errors: &mut Vec<String>) {
     let key = times_if.key.as_str();
     if !FILTER_KEYS.contains(&key) {
@@ -418,11 +414,7 @@ fn validate_times_if_filter(times_if: &TimesIf, errors: &mut Vec<String>) {
         return;
     }
     match times_if.value.as_deref() {
-        None if key == "scholar" => {}
         None => errors.push(format!("timesIf 的 {:?} 缺少取值", key)),
-        Some(value) if key == "scholar" => {
-            errors.push(format!("timesIf 的 scholar 不能带取值 {value:?}"));
-        }
         Some(value) => validate_filter_value(key, value, errors),
     }
 }
@@ -441,9 +433,6 @@ fn validate_filter_value(key: &str, value: &str, errors: &mut Vec<String>) {
         }
         "other" if !matches!(value, "true" | "false") => {
             errors.push(format!("other 取值非法 {value:?}"));
-        }
-        "scholar" if !matches!(value, "true" | "false") => {
-            errors.push(format!("scholar 取值非法 {value:?}"));
         }
         _ => {}
     }

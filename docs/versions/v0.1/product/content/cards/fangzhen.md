@@ -7,7 +7,6 @@ era: classical
 categories: [play:mammal, play:reptile]
 taxon: military
 cost: 1
-match_text: 同左
 skills: [trigger-friendly-human-taunt-until-turn-end]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-human-taunt-until-turn-end]
 | 玩法 | 哺乳纲、爬行纲 |
 | 技能 | trigger-friendly-human-taunt-until-turn-end |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 社会 › 军事学 |
 
 ## 效果

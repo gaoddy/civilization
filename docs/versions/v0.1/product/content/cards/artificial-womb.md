@@ -10,7 +10,6 @@ era: future
 attack: 6
 health: 9
 skills: [battlecry-summon-3-3-synthetic-cell, shout]
-is_scholar: false
 ---
 
 # 人造子宫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-summon-3-3-synthetic-cell；shout |
-| 学者 | 否 |
 | 科学分类 | 造物 › 生活与医疗 |
 
 ## 效果

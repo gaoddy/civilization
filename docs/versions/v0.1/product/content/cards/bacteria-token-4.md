@@ -10,7 +10,6 @@ level: 3
 era: prehistoric
 attack: 4
 health: 4
-is_scholar: false
 ---
 
 # 细菌
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 4 |
 | 关键词 | 无 |
 | 技能 | 无 |
-| 学者 | 否 |
 | 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 肠杆菌科 |
 | 进商店卡池 | 否 |
 

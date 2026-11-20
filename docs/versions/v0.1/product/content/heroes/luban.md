@@ -3,6 +3,7 @@ id: luban
 name: 鲁班
 categories: [play:machine]
 skills: [mechanism-art]
+introduction: 春秋时期鲁国工匠公输般，先秦文献多次称道其器械制作技艺，被后世奉为木工与营造业的祖师。
 ---
 
 # 鲁班
@@ -15,6 +16,10 @@ skills: [mechanism-art]
 | 名称 | 鲁班 |
 | 玩法 | 机械 |
 | 技能 | mechanism-art |
+
+## 简介
+
+春秋时期鲁国工匠公输般，先秦文献多次称道其器械制作技艺，被后世奉为木工与营造业的祖师。
 
 ## 效果
 

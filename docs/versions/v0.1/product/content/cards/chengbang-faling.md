@@ -7,7 +7,6 @@ era: classical
 categories: [play:mammal]
 taxon: politics
 cost: 1
-match_text: 同左
 skills: [trigger-friendly-plus-1-plus-1]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-plus-1-plus-1]
 | 玩法 | 哺乳纲 |
 | 技能 | trigger-friendly-plus-1-plus-1 |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 社会 › 政治学 |
 
 ## 效果

@@ -12,7 +12,6 @@ template: keyword-self(keyword=contagion)
 | --- | --- |
 | id | keyword-contagion |
 | 关键词 | 传染 |
-| 确定性替换 | 不适用 |
 | 模板 | keyword-self |
 
 ## 效果

@@ -10,7 +10,6 @@ era: primitive
 attack: 7
 health: 6
 skills: [keyword-taunt, keyword-breed-1]
-is_scholar: false
 ---
 
 # 甲虫
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 6 |
 | 关键词 | 嘲讽；繁衍 1 |
 | 技能 | keyword-taunt；keyword-breed-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 鞘翅目 › 金龟科 |
 
 ## 效果

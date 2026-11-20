@@ -10,7 +10,6 @@ era: primitive
 attack: 2
 health: 5
 skills: [keyword-armor-1]
-is_scholar: false
 ---
 
 # 海葵
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 减伤 1 |
 | 技能 | keyword-armor-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 海葵目 › 海葵科 |
 
 ## 效果

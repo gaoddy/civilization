@@ -11,7 +11,6 @@ template: combatstart-detonate(amount=1)
 | --- | --- |
 | id | detonate-1 |
 | 关键词 | 无 |
-| 确定性替换 | 不适用 |
 | 模板 | combatstart-detonate |
 
 ## 效果

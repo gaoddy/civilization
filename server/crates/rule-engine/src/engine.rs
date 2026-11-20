@@ -237,7 +237,7 @@ impl Engine {
     /// 繁衍：每回合为棋盘随从增加固定层数 + `breed` 层数的生命值。
     ///
     /// 固定层数来自卡牌所引用技能 `keyword` 中的「繁衍 N」（无数字按 1）。
-    /// 繁衍只加生命、不加攻击；学者同样只获得生命。
+    /// 繁衍只加生命、不加攻击，攻击力为 0 的随从也只获得生命。
     fn apply_breed(&self, state: &mut GameState, seat: Seat) {
         let Some(player) = state.players.get_mut(usize::from(seat)) else {
             return;

@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 5
 skills: [keyword-breed-2]
-is_scholar: false
 ---
 
 # 向日葵
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 繁衍 2 |
 | 技能 | keyword-breed-2 |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 菊目 › 菊科 |
 
 ## 效果

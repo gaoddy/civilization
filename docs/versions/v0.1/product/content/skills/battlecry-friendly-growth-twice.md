@@ -12,7 +12,6 @@ template: on-play-battlecry-growth-single(times=2)
 | --- | --- |
 | id | battlecry-friendly-growth-twice |
 | 关键词 | 战吼 |
-| 确定性替换 | 不适用 |
 | 模板 | on-play-battlecry-growth-single |
 
 ## 效果

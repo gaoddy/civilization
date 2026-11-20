@@ -23,18 +23,18 @@ class FrontMatterTest(unittest.TestCase):
         return path
 
     def test_duplicate_key_is_rejected(self):
-        # 重复键会被 dict 静默覆盖，掩盖「skills: [] 写进了 is_scholar 的值」这类损坏。
-        path = self._write("---\nid: a\nis_scholar: false\nis_scholar: false\n---\n")
+        # 重复键会被 dict 静默覆盖，掩盖「skills: [] 写进了 level 的值」这类损坏。
+        path = self._write("---\nid: a\nlevel: 1\nlevel: 1\n---\n")
 
         with self.assertRaisesRegex(ValueError, "键重复"):
             vd.parse_front_matter(path)
 
     def test_plain_values_still_parse(self):
-        path = self._write("---\nid: a\nis_scholar: false\nskills: []\nname: 测试\n---\n")
+        path = self._write("---\nid: a\nlevel: 1\nskills: []\nname: 测试\n---\n")
 
         doc = vd.parse_front_matter(path)
 
         self.assertEqual(doc["id"], "a")
-        self.assertIs(doc["is_scholar"], False)
+        self.assertEqual(doc["level"], 1)
         self.assertEqual(doc["skills"], [])
         self.assertEqual(doc["name"], "测试")

@@ -7,7 +7,6 @@ era: future
 categories: [play:reptile, play:machine]
 taxon: military
 cost: 1
-match_text: 同左
 skills: [trigger-friendly-single-divine-shield]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-single-divine-shield]
 | 玩法 | 爬行纲、机械 |
 | 技能 | trigger-friendly-single-divine-shield |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 社会 › 军事学 |
 
 ## 效果

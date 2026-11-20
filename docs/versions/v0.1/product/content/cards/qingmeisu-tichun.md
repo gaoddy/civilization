@@ -7,7 +7,6 @@ era: modern
 categories: [play:fungus, play:bacteria]
 taxon: medicine
 cost: 2
-match_text: 同左
 skills: [trigger-friendly-growth-twice]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-growth-twice]
 | 玩法 | 真菌界、细菌域 |
 | 技能 | trigger-friendly-growth-twice |
 | 费用 | 2 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 医学 |
 
 ## 效果

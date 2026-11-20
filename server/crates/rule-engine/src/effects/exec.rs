@@ -802,7 +802,7 @@ impl Engine {
                 }
                 _ => base_times,
             };
-            if health_only || minion.is_scholar {
+            if health_only {
                 minion.stats.health.add_growth(times);
             } else {
                 minion.stats.attack.add_growth(times);
@@ -1143,14 +1143,11 @@ impl Engine {
         events
     }
 
-    /// `timesIf` 是否命中该卡牌。`scholar` 只看学者标记，其余按筛选键匹配。
+    /// `timesIf` 是否命中该卡牌，按筛选键匹配。
     fn times_if_matches(&self, card_id: &str, times_if: &TimesIf) -> bool {
         let Some(facts) = card_facts(&self.catalog, card_id) else {
             return false;
         };
-        if times_if.key == "scholar" {
-            return facts.is_scholar;
-        }
         let Some(value) = times_if.value.as_deref() else {
             return false;
         };
@@ -1724,7 +1721,7 @@ impl Engine {
                         }
                         _ => base_times,
                     };
-                    field.add_growth(id, times, health_only || minion.is_scholar);
+                    field.add_growth(id, times, health_only);
                     if let Some((side, _)) = field.locate(id) {
                         self.fire_combat_board_trigger(
                             field,
@@ -2729,7 +2726,6 @@ struct CardFacts<'a> {
     subtype: Option<&'a str>,
     id: &'a str,
     card_type: CardType,
-    is_scholar: bool,
 }
 
 impl CardFacts<'_> {
@@ -2756,11 +2752,6 @@ impl CardFacts<'_> {
                 "effect" => self.card_type == CardType::Effect,
                 _ => false,
             },
-            "scholar" => match value {
-                "true" => self.is_scholar,
-                "false" => !self.is_scholar,
-                _ => false,
-            },
             _ => false,
         }
     }
@@ -2773,7 +2764,6 @@ fn card_facts<'a>(catalog: &'a Catalog, card_id: &str) -> Option<CardFacts<'a>> 
         subtype: card.subtype.as_deref(),
         id: &card.id,
         card_type: card.card_type,
-        is_scholar: card.is_scholar,
     })
 }
 

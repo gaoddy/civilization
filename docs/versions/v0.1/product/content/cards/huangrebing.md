@@ -10,7 +10,6 @@ era: industrial
 attack: 4
 health: 9
 skills: [combatstart-random-enemy-contagion-2]
-is_scholar: false
 ---
 
 # 黄热病
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-2 |
-| 学者 | 否 |
 | 科学分类 | 病毒 › 核糖病毒门 › 黄病毒纲 › 黄病毒目 › 黄病毒科 |
 | 关联分类 | 寄生：哺乳纲 |
 

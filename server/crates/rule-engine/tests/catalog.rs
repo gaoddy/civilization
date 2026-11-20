@@ -9,7 +9,7 @@ fn loads_all_committed_data() {
     let catalog = test_catalog();
     assert_eq!(catalog.cards.len(), 432);
     assert_eq!(catalog.heroes.len(), 32);
-    assert_eq!(catalog.skills.len(), 255);
+    assert_eq!(catalog.skills.len(), 254);
     assert_eq!(
         catalog
             .cards
@@ -23,7 +23,7 @@ fn loads_all_committed_data() {
 /// 最小合法卡牌夹具；只替换 `taxon` 与 `categories`。
 fn card_json(taxon: &str, categories: &str) -> String {
     format!(
-        r#"[{{"id":"x","card_type":"minion","taxon":"{taxon}","categories":{categories},"level":1,"skills":[],"is_scholar":false}}]"#
+        r#"[{{"id":"x","card_type":"minion","taxon":"{taxon}","categories":{categories},"level":1,"skills":[]}}]"#
     )
 }
 
@@ -171,7 +171,7 @@ fn every_card_skill_exists() {
 
 #[test]
 fn unknown_field_fails() {
-    let bad = r#"[{"id":"x","card_type":"minion","categories":[{"kind":"play","value":"mammal"}],"taxon":"hominidae","level":1,"era":"prehistoric","attack":1,"health":2,"is_scholar":false,"oops":1}]"#;
+    let bad = r#"[{"id":"x","card_type":"minion","categories":[{"kind":"play","value":"mammal"}],"taxon":"hominidae","level":1,"era":"prehistoric","attack":1,"health":2,"oops":1}]"#;
     assert!(Catalog::from_json(bad, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 

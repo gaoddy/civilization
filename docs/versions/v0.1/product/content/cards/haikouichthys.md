@@ -10,7 +10,6 @@ era: prehistoric
 attack: 2
 health: 3
 skills: [battlecry-friendly-fish-growth-once]
-is_scholar: false
 ---
 
 # 海口鱼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 3 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-fish-growth-once |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 无颌纲 › 昆明鱼目 › 海口鱼科 |
 
 ## 效果

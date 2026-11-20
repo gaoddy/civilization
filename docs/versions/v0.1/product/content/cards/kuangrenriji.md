@@ -7,7 +7,6 @@ era: modern
 categories: [play:mammal]
 taxon: literature
 cost: 1
-match_text: 同左
 skills: [combatstart-remove-top-attack-enemy-growth]
 ---
 
@@ -25,7 +24,6 @@ skills: [combatstart-remove-top-attack-enemy-growth]
 | 玩法 | 哺乳纲 |
 | 技能 | combatstart-remove-top-attack-enemy-growth |
 | 费用 | 1 |
-| 确定性替换 | 同左 |
 | 科学分类 | 人文 › 文学 |
 
 ## 效果

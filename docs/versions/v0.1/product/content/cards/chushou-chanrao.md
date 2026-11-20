@@ -7,7 +7,6 @@ era: classical
 categories: [play:cephalopod]
 taxon: biology
 cost: 3
-match_text: 同左
 skills: [trigger-cephalopod-single-poison]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-cephalopod-single-poison]
 | 玩法 | 头足纲 |
 | 技能 | trigger-cephalopod-single-poison |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

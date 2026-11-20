@@ -10,7 +10,6 @@ era: future
 attack: 0
 health: 20
 skills: [battlecry-all-friendly-growth-twice]
-is_scholar: true
 ---
 
 # 通用人工智能
@@ -30,7 +29,6 @@ is_scholar: true
 | 生命值 | 20 |
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-growth-twice |
-| 学者 | 是 |
 | 科学分类 | 造物 › 自动机械 |
 
 ## 效果

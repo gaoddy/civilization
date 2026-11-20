@@ -7,7 +7,6 @@ era: modern
 categories: [play:mammal, play:cnidarian]
 taxon: philosophy
 cost: 0
-match_text: 同左
 skills: [trigger-friendly-single-plus-1-plus-1-this-turn]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-friendly-single-plus-1-plus-1-this-turn]
 | 玩法 | 哺乳纲、水螅纲 |
 | 技能 | trigger-friendly-single-plus-1-plus-1-this-turn |
 | 费用 | 0 |
-| 确定性替换 | 同左 |
 | 科学分类 | 人文 › 哲学 |
 
 ## 效果

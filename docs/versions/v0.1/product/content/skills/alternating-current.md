@@ -4,7 +4,6 @@ name: 交流电
 template: activate-keyword-single(keyword=ignore_taunt,duration=combat)
 cost: 2
 uses_per_turn: 1
-match_text: 同左
 ---
 
 # 交流电
@@ -15,7 +14,6 @@ match_text: 同左
 | --- | --- |
 | id | alternating-current |
 | 关键词 | 无 |
-| 确定性替换 | 同左 |
 | 模板 | activate-keyword-single |
 | 费用 | 2 |
 | 每回合次数 | 1 |

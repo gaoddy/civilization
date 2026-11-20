@@ -7,7 +7,6 @@ era: modern
 categories: [play:protozoa]
 taxon: biology
 cost: 3
-match_text: 同左
 skills: [trigger-summon-2-amoeba-larva-3-3]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-summon-2-amoeba-larva-3-3]
 | 玩法 | 原生生物界 |
 | 技能 | trigger-summon-2-amoeba-larva-3-3 |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 科学 › 生物学 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: feudal
 attack: 3
 health: 5
 skills: [keyword-assemble-2]
-is_scholar: false
 ---
 
 # 投石机
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 5 |
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2 |
-| 学者 | 否 |
 | 科学分类 | 造物 › 武器与攻城 |
 
 ## 效果

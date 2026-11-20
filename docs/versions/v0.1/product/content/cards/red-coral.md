@@ -10,7 +10,6 @@ era: feudal
 attack: 6
 health: 12
 skills: [revive-2, keyword-armor-1]
-is_scholar: false
 ---
 
 # 红珊瑚
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 12 |
 | 关键词 | 减伤 1 |
 | 技能 | revive-2；keyword-armor-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 软珊瑚目 › 红珊瑚科 |
 
 ## 效果

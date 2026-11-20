@@ -7,7 +7,6 @@ era: industrial
 categories: [play:mammal, play:machine]
 taxon: power-energy
 cost: 3
-match_text: 同左
 skills: [trigger-all-friendly-plus-1-plus-1]
 ---
 
@@ -25,7 +24,6 @@ skills: [trigger-all-friendly-plus-1-plus-1]
 | 玩法 | 哺乳纲、机械 |
 | 技能 | trigger-all-friendly-plus-1-plus-1 |
 | 费用 | 3 |
-| 确定性替换 | 同左 |
 | 科学分类 | 造物 › 动力与能源 |
 
 ## 效果

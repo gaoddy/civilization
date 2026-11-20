@@ -10,7 +10,6 @@ era: modern
 attack: 4
 health: 9
 skills: [keyword-sow, keyword-taunt]
-is_scholar: false
 ---
 
 # 青蒿
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 9 |
 | 关键词 | 播种；嘲讽 |
 | 技能 | keyword-sow；keyword-taunt |
-| 学者 | 否 |
 | 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 菊目 › 菊科 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: prehistoric
 attack: 15
 health: 14
 skills: [deathrattle-summon-fish-fry-3, aura-school-fish-1]
-is_scholar: false
 ---
 
 # 邓氏鱼
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 14 |
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-fish-fry-3；aura-school-fish-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 盾皮鱼纲 › 节甲鱼目 › 邓氏鱼科 |
 
 ## 效果

@@ -10,7 +10,6 @@ era: modern
 attack: 8
 health: 13
 skills: [keyword-poison, keyword-armor-1]
-is_scholar: false
 ---
 
 # 湾鳄
@@ -30,7 +29,6 @@ is_scholar: false
 | 生命值 | 13 |
 | 关键词 | 剧毒；减伤 1 |
 | 技能 | keyword-poison；keyword-armor-1 |
-| 学者 | 否 |
 | 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 鳄目 › 鳄科 |
 
 ## 效果
