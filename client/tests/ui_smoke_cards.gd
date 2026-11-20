@@ -364,6 +364,9 @@ func _ready() -> void:
         "英雄详情不应再显示擅长玩法：%s" % hero_detail,
     )
 
+    await _check_hero_skill_list()
+    await _check_room_skill_list()
+
     var missing_detail := _classification_text({"playstyle": "", "taxon": "does-not-exist"})
     _expect(
         missing_detail.contains(TranslationServer.translate("ui.game.detail.undetermined")),
@@ -490,6 +493,126 @@ func _check_cover_art_inset() -> void:
         )
     panel.queue_free()
     await get_tree().process_frame
+
+
+## 英雄技能列表：逐条块状展示，无名技能不渲染标题，主动技能带费用与次数。
+func _check_hero_skill_list() -> void:
+    var detail := GalleryDetail.new()
+    add_child(detail)
+    detail.show_hero("darwin")
+    await get_tree().process_frame
+    await get_tree().process_frame
+
+    var blocks := detail.find_children("SkillBlock*", "VBoxContainer", true, false)
+    _expect(blocks.size() == 2, "图鉴英雄详情应逐条渲染 2 个技能块，实际：%d" % blocks.size())
+    var text := _node_text(detail)
+    _expect(
+        text.contains(CardDB.skill_info("aura-biology-plus-1-plus-1").get("text", "")),
+        "图鉴英雄详情应显示技能完整文本：%s" % text,
+    )
+    _expect(
+        text.contains(TranslationServer.translate("ui.skill.trigger.aura")),
+        "图鉴英雄详情应出现光环标签：%s" % text,
+    )
+    _expect(
+        not text.contains(TranslationServer.translate("ui.gallery.skills")),
+        "图鉴英雄详情不应再单独显示技能名称行：%s" % text,
+    )
+
+    if blocks.size() == 2:
+        var unnamed: Control = blocks[0]
+        _expect(
+            unnamed.find_child("SkillName", true, false) == null,
+            "无名称技能不应渲染技能名标题",
+        )
+        var aura := unnamed.find_child("SkillTrigger", true, false)
+        _expect(
+            aura != null and str(aura.text) == TranslationServer.translate("ui.skill.trigger.aura"),
+            "无名称技能应带光环标签",
+        )
+        _expect(
+            unnamed.find_child("SkillCost", true, false) == null,
+            "被动技能不应显示费用与次数",
+        )
+
+        var active: Control = blocks[1]
+        var active_info := CardDB.skill_info("evolution-discovery")
+        var skill_name := active.find_child("SkillName", true, false)
+        _expect(
+            skill_name != null and str(skill_name.text) == str(active_info.get("name", "")),
+            "有名称技能应渲染技能名标题",
+        )
+        var trigger := active.find_child("SkillTrigger", true, false)
+        _expect(
+            trigger != null
+            and str(trigger.text) == TranslationServer.translate("ui.skill.trigger.on_activate"),
+            "主动技能应带主动标签",
+        )
+        var cost := active.find_child("SkillCost", true, false)
+        var expected_cost := "%s · %s" % [
+            TranslationServer.translate("ui.skill.cost") % int(active_info.get("cost", -1)),
+            TranslationServer.translate("ui.skill.uses") % int(active_info.get("uses", -1)),
+        ]
+        _expect(
+            cost != null and str(cost.text) == expected_cost,
+            "主动技能应显示「%s」，实际：%s" % [expected_cost, str(cost.text) if cost != null else "缺失"],
+        )
+    detail.queue_free()
+    await get_tree().process_frame
+
+    # 无技能时显示空态，不渲染空标签或费用行。
+    var empty_box := VBoxContainer.new()
+    add_child(empty_box)
+    UI.skill_list(empty_box, [])
+    await get_tree().process_frame
+    _expect(
+        _node_text(empty_box).contains(TranslationServer.translate("ui.skill.empty")),
+        "无技能时应显示空态文案",
+    )
+    empty_box.queue_free()
+    await get_tree().process_frame
+
+
+## 选英雄页技能浮层：与图鉴共用技能列表，主动技能显示费用与次数。
+func _check_room_skill_list() -> void:
+    GameStore.player_id = "p0"
+    GameStore.room_id = "r_test"
+    GameStore.room_code = "ABC123"
+    GameStore.phase = Protocol.PHASE_LOBBY
+    GameStore.room_players = [
+        {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
+         "heroCardId": null, "heroCandidates": ["gauss"]},
+    ]
+    var instance := await _check_scene("res://scenes/room.tscn", false)
+    if instance != null:
+        var candidates := instance.find_child("HeroCandidates", true, false)
+        _expect(candidates != null and candidates.get_child_count() > 0, "选英雄页应渲染候选英雄")
+        if candidates != null and candidates.get_child_count() > 0:
+            var event := InputEventMouseButton.new()
+            event.button_index = MOUSE_BUTTON_LEFT
+            event.pressed = true
+            candidates.get_child(0).emit_signal("gui_input", event)
+            await get_tree().process_frame
+            var panel := instance.find_child("SkillPanel", true, false)
+            var text := _node_text(panel)
+            var info := CardDB.skill_info("scholar-growth-twice")
+            _expect(
+                text.contains(TranslationServer.translate("ui.skill.trigger.on_activate")),
+                "技能浮层应出现主动标签：%s" % text,
+            )
+            _expect(
+                text.contains(TranslationServer.translate("ui.skill.cost") % int(info.get("cost", -1))),
+                "技能浮层应显示费用：%s" % text,
+            )
+            _expect(
+                text.contains(TranslationServer.translate("ui.skill.uses") % int(info.get("uses", -1))),
+                "技能浮层应显示每回合次数：%s" % text,
+            )
+        instance.queue_free()
+        await get_tree().process_frame
+    GameStore.room_id = ""
+    GameStore.room_code = ""
+    GameStore.room_players = []
 
 
 ## 商店/手牌详情正文：直接走详情渲染，避免依赖具体页面的悬停时机。

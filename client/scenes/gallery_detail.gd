@@ -62,16 +62,7 @@ func _show(card_id: String, hero: bool) -> void:
         var hero_associations := _association_text(entry)
         if hero_associations != "":
             _add_row(tr("ui.game.detail.association"), hero_associations)
-        var hero_skills := _skill_names(entry)
-        if hero_skills != "":
-            _add_row(tr("ui.gallery.skills"), hero_skills)
-        var hero_effect := CardDB.hero_text(card_id)
-        if hero_effect != "":
-            _box.add_child(UI.section_title(tr("ui.gallery.effect")))
-            var hero_effect_label := UI.label(hero_effect, UITheme.font_size("font-body-sm"))
-            hero_effect_label.name = "GalleryDetailEffect"
-            hero_effect_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-            _box.add_child(hero_effect_label)
+        UI.skill_list(_box, entry.get("skills", []))
         return
 
     var era_id := str(entry.get("era", ""))

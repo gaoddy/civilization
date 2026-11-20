@@ -1633,3 +1633,27 @@ ui.room.select_hero,请选择英雄
 ui.room.submitted_hero,已提交英雄：%s
 ui.room.unconfirmed,未确认
 ui.room.waiting_for_players,等待其他玩家加入
+ui.skill.cost,费用 %d
+ui.skill.empty,暂无技能
+ui.skill.trigger.aura,光环
+ui.skill.trigger.conditional_aura,条件光环
+ui.skill.trigger.keyword,关键词
+ui.skill.trigger.on_activate,主动
+ui.skill.trigger.on_ally_evolve,友方进化时
+ui.skill.trigger.on_ally_growth,友方成长时
+ui.skill.trigger.on_ally_kill,友方击杀时
+ui.skill.trigger.on_ally_summon,友方召唤时
+ui.skill.trigger.on_combat_end,战斗结束时
+ui.skill.trigger.on_combat_start,战斗开始时
+ui.skill.trigger.on_deal_damage,造成伤害时
+ui.skill.trigger.on_death,亡语
+ui.skill.trigger.on_enemy_death,敌方死亡时
+ui.skill.trigger.on_first_refresh,每回合首次刷新时
+ui.skill.trigger.on_friendly_death,友方死亡时
+ui.skill.trigger.on_kill,击杀时
+ui.skill.trigger.on_play,战吼
+ui.skill.trigger.on_play_effect,效果牌
+ui.skill.trigger.on_turn_start,回合开始时
+ui.skill.trigger.on_use,使用效果牌时
+ui.skill.trigger.passive,常驻
+ui.skill.uses,每回合 %d 次
