@@ -620,7 +620,7 @@ fn add_germ_token(engine: &mut Engine) {
             health: 2,
             keywords: Vec::new(),
             playstyle: Some(Playstyle::Bacteria),
-            taxon: None,
+            taxon: "biology".to_string(),
         },
     );
 }

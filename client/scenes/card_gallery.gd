@@ -18,10 +18,11 @@ const ERA_IDS := [
     "future",
 ]
 
-## 图鉴在科学分类之外追加的两个横切分类；「现象」根不再直接出现在目录里。
+## 图鉴在科学分类之外追加的两个横切分类。
 const CATEGORY_NEUTRAL := "neutral"
 const CATEGORY_EFFECT := "effect"
-const TAXON_PHENOMENON := "phenomenon"
+## 学科根排在生物/造物根之后，避免与界级分类交错。
+const DISCIPLINE_ROOTS := ["science", "humanities", "society"]
 
 ## 选中顶层分类后展开的二级筛选：随从与效果牌。
 const KIND_ALL := ""
@@ -252,11 +253,11 @@ func _matches_kind(entry: Dictionary) -> bool:
     return _kind_bucket(entry) == _kind
 
 
-## 一张卡可同时属于科学分类根与「中立」「效果牌」横切分类；「现象」不再作为目录项。
+## 一张卡可同时属于分类树根节点与「中立」「效果牌」横切分类。
 func _category_keys(entry: Dictionary) -> Array:
     var keys: Array = []
     var root := _root_taxon(str(entry.get("taxon", "")))
-    if root != "" and root != TAXON_PHENOMENON:
+    if root != "":
         keys.append(root)
     if str(entry.get("playstyle", "")) == "neutral":
         keys.append(CATEGORY_NEUTRAL)
@@ -275,21 +276,20 @@ func _kind_bucket(entry: Dictionary) -> String:
 
 func _categories() -> Array:
     var out: Array = []
-    var inserted := false
+    var disciplines: Array = []
     for id in CardDB.taxonomy:
         var node: Dictionary = CardDB.taxonomy[id]
         if node.get("parent") != null:
             continue
         var root_id := str(id)
-        if root_id == TAXON_PHENOMENON:
-            out.append({"id": CATEGORY_NEUTRAL, "name": CardDB.playstyle_name("neutral")})
-            out.append({"id": CATEGORY_EFFECT, "name": tr("ui.gallery.category_effect")})
-            inserted = true
-            continue
-        out.append({"id": root_id, "name": CardDB.taxon_name(root_id)})
-    if not inserted:
-        out.append({"id": CATEGORY_NEUTRAL, "name": CardDB.playstyle_name("neutral")})
-        out.append({"id": CATEGORY_EFFECT, "name": tr("ui.gallery.category_effect")})
+        var item := {"id": root_id, "name": CardDB.taxon_name(root_id)}
+        if DISCIPLINE_ROOTS.has(root_id):
+            disciplines.append(item)
+        else:
+            out.append(item)
+    out.append_array(disciplines)
+    out.append({"id": CATEGORY_NEUTRAL, "name": CardDB.playstyle_name("neutral")})
+    out.append({"id": CATEGORY_EFFECT, "name": tr("ui.gallery.category_effect")})
     return out
 
 

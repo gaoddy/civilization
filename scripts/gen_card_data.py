@@ -424,18 +424,20 @@ def _token_rows(path):
 def parse_tokens(path):
     """从 tokens/README.md 生成规则字段；展示名由 `parse_token_names` 提供。
 
-    「玩法」「科学分类」两列缺失或为空时回退 `neutral` / `phenomenon`，与引擎口径一致。
+    「玩法」缺失或为空时回退 `neutral`；「科学分类」必填，空值直接报错。
     """
     tokens = []
     for cells in _token_rows(path):
         attack, health, keywords = cells[2], cells[3], cells[4]
+        if not cells[6]:
+            raise ValueError(f"{cells[0].strip('`')}: Token 缺科学分类")
         tokens.append({
             "id": cells[0].strip("`"),
             "attack": int(attack),
             "health": int(health),
             "keywords": [] if keywords == "无" else keywords.split("、"),
             "playstyle": cells[5] or "neutral",
-            "taxon": cells[6] or "phenomenon",
+            "taxon": cells[6],
         })
     return sorted(tokens, key=lambda token: token["id"])
 
@@ -457,7 +459,7 @@ TAXONOMY_RANKS = {
     "目": "order",
     "科": "family",
     "技术分类": "technique",
-    "现象": "phenomenon",
+    "学科": "discipline",
 }
 
 

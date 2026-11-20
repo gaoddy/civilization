@@ -228,7 +228,7 @@ python3 scripts/validate_docs.py
 7. 英雄卡恰好 32 张，非英雄随从与效果牌不得有 `is_hero`；卡牌不得残留旧版独立的技能字段或小节；
 8. 每个技能都有 `template` 字段；模板文档存在、参数名已声明、取值在域内、必填参数齐全；模板展开后的 DSL 按[关键词与机制](../rules/keywords-and-mechanics.md) §9.4 校验：段数 3–4 段、触发与动作原语在白名单内、选择器合法（筛选值为英文 id、分类节点合法、玩法 id 合法）、`duration` 取值合法、参数写作 `key=value`；`timesIf` 使用「键:值:次数」或 `scholar:次数`；`Decompose` 必须带 `basis` 与 `duration`；`OnKill` / `OnAllyKill` 在触发白名单内；
 9. 技能文本的固定前缀与触发时机一致：「战吼」对应 `OnPlay`、「亡语」对应 `OnDeath`、「战斗开始时」对应 `OnCombatStart`、「回合开始时」对应 `OnTurnStart`、「每回合首次刷新时」对应 `OnFirstRefresh`、「每当」对应事件类触发、「分解：」对应 `OnKill` / `OnFriendlyDeath` / `OnAllyKill`、`你的…随从获得` 句式对应 `Aura`、「若你控制」对应 `ConditionalAura`；
-10. 卡牌分类字段按[卡牌规范与数据](card-system.md) §1.1 校验：`playstyle`、`taxon`、`specialty` 的取值与交叉约束；学者固定 `neutral`，非学者 `neutral` 仅造物六类工具卡，效果牌 `neutral` + `phenomenon`；
+10. 卡牌分类字段按[卡牌规范与数据](card-system.md) §1.1 校验：`playstyle`、`taxon`、`specialty` 的取值与交叉约束；学者固定 `neutral`，非学者 `neutral` 仅造物六类工具卡，效果牌 `neutral` 且 `taxon` 为分类树叶子；
 11. 专属关键词按玩法与分类校验：`decompose` 仅真菌界/细菌域、`assemble` 仅机械玩法或 `play:machine` 中立工具卡、`sow` 仅植物界、`evolve` 仅非学者生物卡；
 12. 派生小节由 `python3 scripts/render_docs.py --check` 校验：技能 `## 属性` 的派生行、技能与卡牌的 `## 效果` 无漂移；`make data-check` 已包含这一步。
 

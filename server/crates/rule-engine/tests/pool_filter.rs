@@ -7,7 +7,7 @@ fn card(playstyle: Playstyle, specialty: Vec<(&str, &str)>) -> Card {
         id: "test-card".into(),
         card_type: CardType::Effect,
         playstyle,
-        taxon: "phenomenon".into(),
+        taxon: "biology".into(),
         specialty: specialty
             .into_iter()
             .map(|(kind, value)| Specialty {

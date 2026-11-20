@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: prehistoric
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 1
 specialty: [play:protozoa]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-protozoa-single-taunt-this-turn]
 | 星级 | 2 |
 | 时代 | 史前 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 关联：原生生物界 |
 | 技能 | trigger-protozoa-single-taunt-this-turn |
 | 费用 | 1 |

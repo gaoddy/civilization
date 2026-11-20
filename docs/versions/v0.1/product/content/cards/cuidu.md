@@ -5,7 +5,7 @@ card_type: effect
 level: 4
 era: primitive
 playstyle: neutral
-taxon: phenomenon
+taxon: chemistry
 cost: 1
 match_text: 同左
 skills: [trigger-friendly-single-poison-this-turn]
@@ -23,7 +23,7 @@ skills: [trigger-friendly-single-poison-this-turn]
 | 星级 | 4 |
 | 时代 | 原始 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 化学 |
 | 关联分类 | 无 |
 | 技能 | trigger-friendly-single-poison-this-turn |
 | 费用 | 1 |

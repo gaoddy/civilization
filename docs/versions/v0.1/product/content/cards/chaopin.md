@@ -5,7 +5,7 @@ card_type: effect
 level: 4
 era: future
 playstyle: neutral
-taxon: phenomenon
+taxon: automation
 cost: 2
 specialty: [play:machine]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-machine-all-plus-1-plus-1]
 | 星级 | 4 |
 | 时代 | 未来 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 造物 › 自动机械 |
 | 关联分类 | 关联：机械 |
 | 技能 | trigger-machine-all-plus-1-plus-1 |
 | 费用 | 2 |

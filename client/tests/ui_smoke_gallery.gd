@@ -44,6 +44,9 @@ func _check_lobby_page() -> void:
     _expect(instance.find_child("Taxonneutral", true, false) != null, "分类目录缺少中立")
     _expect(instance.find_child("Taxoneffect", true, false) != null, "分类目录缺少效果牌")
     _expect(instance.find_child("Taxonphenomenon", true, false) == null, "分类目录不应再出现现象")
+    _expect(instance.find_child("Taxonscience", true, false) != null, "分类目录缺少科学")
+    _expect(instance.find_child("Taxonhumanities", true, false) != null, "分类目录缺少人文")
+    _expect(instance.find_child("Taxonsociety", true, false) != null, "分类目录缺少社会")
 
     var toc = instance.find_child("GalleryToc", true, false)
     var detail = instance.find_child("GalleryDetail", true, false)

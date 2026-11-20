@@ -5,7 +5,7 @@ card_type: effect
 level: 6
 era: industrial
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 3
 specialty: [play:fungus]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [combatstart-all-enemies-damage-2]
 | 星级 | 6 |
 | 时代 | 工业 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 关联：真菌界 |
 | 技能 | combatstart-all-enemies-damage-2 |
 | 费用 | 3 |

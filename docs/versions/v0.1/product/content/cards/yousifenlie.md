@@ -5,7 +5,7 @@ card_type: effect
 level: 3
 era: industrial
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 2
 match_text: 同左
 skills: [trigger-copy-friendly-minion]
@@ -23,7 +23,7 @@ skills: [trigger-copy-friendly-minion]
 | 星级 | 3 |
 | 时代 | 工业 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 无 |
 | 技能 | trigger-copy-friendly-minion |
 | 费用 | 2 |

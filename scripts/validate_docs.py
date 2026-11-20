@@ -39,8 +39,8 @@ AURA_VALUE_RE = re.compile(
 TAXONOMY_FILE = ROOT / "taxonomy.md"
 # 分类树层级：中文编辑值 → 生成物 rank。
 TAXONOMY_RANKS = {"界": "kingdom", "门": "phylum", "纲": "class", "目": "order",
-                  "科": "family", "技术分类": "technique", "现象": "phenomenon"}
-# rank 的合法出现位置：根只允许界，现象节点自成一树。
+                  "科": "family", "技术分类": "technique", "学科": "discipline"}
+# rank 的合法出现位置：根只允许界。
 RANK_PARENT_ALLOWED = {
     "kingdom": set(),
     "phylum": {"kingdom"},
@@ -48,6 +48,7 @@ RANK_PARENT_ALLOWED = {
     "order": {"phylum", "class"},
     "family": {"kingdom", "phylum", "class", "order", "family"},
     "technique": {"kingdom"},
+    "discipline": {"kingdom"},
 }
 ROOT_RANKS = {"界"}
 PLAYSTYLE_IDS = ("mammal", "bird", "reptile", "fish", "insect", "cephalopod", "cnidarian",
@@ -82,7 +83,7 @@ MECHANISM_PLAYSTYLE = {
 PICK_PLAYSTYLE = {"lowestAttack": {"bird"}}
 BIOLOGICAL_KINGDOMS = {"animalia", "plantae", "fungi", "bacteria", "protozoa", "virus"}
 CRAFT_ID = "craft"
-PHENOMENON_ID = "phenomenon"
+DISCIPLINE_ROOTS = {"science", "humanities", "society"}
 ERAS = list(i18n_terms.ERAS)
 CARD_TYPES = set(i18n_terms.CARD_TYPES)
 KEYWORD_BASES = set(i18n_terms.KEYWORD_BASES)
@@ -547,9 +548,6 @@ def check_taxonomy():
             fail(f"分类树节点 {node_id!r}: 上级 {parent!r} 不存在")
             continue
         parent_rank = nodes[parent]["rank"]
-        if node["rank"] == "现象":
-            fail(f"分类树节点 {node_id!r}: 现象节点必须是独立根节点")
-            continue
         allowed = RANK_PARENT_ALLOWED.get(TAXONOMY_RANKS.get(node["rank"]), set())
         if TAXONOMY_RANKS.get(parent_rank) not in allowed:
             fail(f"分类树节点 {node_id!r}: 层级 {node['rank']} 不能挂在上级 "
@@ -560,8 +558,8 @@ def check_taxonomy():
     for node_id in nodes:
         if nodes[node_id]["parent"] is None:
             roots.append(node_id)
-            if nodes[node_id]["rank"] not in (ROOT_RANKS | {"现象"}):
-                fail(f"分类树节点 {node_id!r}: 根节点层级必须是界或现象，实为 {nodes[node_id]['rank']}")
+            if nodes[node_id]["rank"] not in ROOT_RANKS:
+                fail(f"分类树节点 {node_id!r}: 根节点层级必须是界，实为 {nodes[node_id]['rank']}")
             continue
         seen = {node_id}
         current = nodes[node_id]["parent"]
@@ -574,30 +572,22 @@ def check_taxonomy():
             seen.add(current)
             current = nodes[current]["parent"]
 
-    # 叶子层级：生物只到科；造物只到技术分类；现象唯一。
+    # 叶子层级：生物只到科；造物只到技术分类；科学/人文/社会只到学科。
     for node_id in nodes:
         if children.get(node_id):
             continue
         rank = nodes[node_id]["rank"]
-        if rank == "科":
-            continue
-        if rank == "技术分类":
-            continue
-        if rank == "现象":
-            if node_id != PHENOMENON_ID:
-                fail(f"分类树节点 {node_id!r}: 现象节点 id 必须为 {PHENOMENON_ID!r}")
+        if rank in ("科", "技术分类", "学科"):
             continue
         root = _root_of(nodes, node_id)
         if root in BIOLOGICAL_KINGDOMS:
             fail(f"分类树节点 {node_id!r}: 生物叶子层级必须是科，实为 {rank}")
         elif root == CRAFT_ID:
             fail(f"分类树节点 {node_id!r}: 造物叶子层级必须是技术分类，实为 {rank}")
+        elif root in DISCIPLINE_ROOTS:
+            fail(f"分类树节点 {node_id!r}: 学科叶子层级必须是学科，实为 {rank}")
         else:
-            fail(f"分类树节点 {node_id!r}: 非科非技术分类的叶子节点 {rank}")
-
-    phenomena = [i for i, n in nodes.items() if n["rank"] == "现象"]
-    if phenomena != [PHENOMENON_ID]:
-        fail(f"分类树现象节点必须唯一且为 {PHENOMENON_ID!r}，实为 {phenomena}")
+            fail(f"分类树节点 {node_id!r}: 非科非技术分类非学科的叶子节点 {rank}")
 
     for kingdom in BIOLOGICAL_KINGDOMS:
         if kingdom not in nodes:
@@ -629,9 +619,9 @@ def card_label(doc):
 
 
 def is_biological(doc):
-    """生物卡：taxon 存在且不在 craft / phenomenon 下。"""
+    """生物卡：taxon 的根节点属于六个生物界之一。"""
     root = _root_of(TAXONOMY_NODES, doc.get("taxon"))
-    return root is not None and root not in (CRAFT_ID, PHENOMENON_ID)
+    return root in BIOLOGICAL_KINGDOMS
 
 
 def effective_playstyle(doc):
@@ -695,8 +685,6 @@ def classification_errors(doc):
     if kind == "效果牌":
         if playstyle not in (None, "neutral"):
             errors.append(f"{label}: 效果牌 playstyle 必须为 neutral，实为 {playstyle!r}")
-        if taxon not in (None, PHENOMENON_ID):
-            errors.append(f"{label}: 效果牌 taxon 必须为 {PHENOMENON_ID}，实为 {taxon!r}")
         if doc.get("specialty"):
             specialty = doc["specialty"]
             plays = [item for item in specialty if item.startswith("play:")]
@@ -726,7 +714,7 @@ def classification_errors(doc):
                 errors.append(f"{label}: play:{target} 取值必须是 13 个玩法之一（不含 neutral）")
         elif prefix in ("prey", "host"):
             if TAXONOMY_NODES and taxon is not None and not is_biological(doc):
-                errors.append(f"{label}: {item!r} 只允许生物卡（taxon 不在 craft / phenomenon 下）")
+                errors.append(f"{label}: {item!r} 只允许生物卡（taxon 根节点必须是生物界）")
             elif TAXONOMY_NODES and target not in TAXONOMY_NODES:
                 errors.append(f"{label}: {item!r} 的节点不在分类树中")
     return errors
@@ -752,7 +740,7 @@ def keyword_errors(doc, keyword):
         if not TAXONOMY_NODES:
             return []
         if not is_biological(doc):
-            return [f"{label}: 关键词 {keyword!r} 只允许生物卡（taxon 不在 craft / phenomenon 下）"]
+            return [f"{label}: 关键词 {keyword!r} 只允许生物卡（taxon 根节点必须是生物界）"]
         if doc.get("is_scholar") is True:
             return [f"{label}: 关键词 {keyword!r} 不允许学者卡"]
     return []

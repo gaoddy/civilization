@@ -5,7 +5,7 @@ card_type: effect
 level: 3
 era: prehistoric
 playstyle: neutral
-taxon: phenomenon
+taxon: military
 cost: 1
 match_text: 同左
 skills: [trigger-minion-windfury-this-turn]
@@ -23,7 +23,7 @@ skills: [trigger-minion-windfury-this-turn]
 | 星级 | 3 |
 | 时代 | 史前 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 军事学 |
 | 关联分类 | 无 |
 | 技能 | trigger-minion-windfury-this-turn |
 | 费用 | 1 |

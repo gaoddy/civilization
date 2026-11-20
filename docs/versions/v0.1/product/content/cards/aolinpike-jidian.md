@@ -5,7 +5,7 @@ card_type: effect
 level: 3
 era: classical
 playstyle: neutral
-taxon: phenomenon
+taxon: sports
 cost: 2
 match_text: 同左
 skills: [trigger-all-friendly-growth-once]
@@ -23,7 +23,7 @@ skills: [trigger-all-friendly-growth-once]
 | 星级 | 3 |
 | 时代 | 古典 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 体育学 |
 | 关联分类 | 无 |
 | 技能 | trigger-all-friendly-growth-once |
 | 费用 | 2 |

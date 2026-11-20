@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: modern
 playstyle: neutral
-taxon: phenomenon
+taxon: medicine
 cost: 1
 specialty: [play:virus]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-virus-single-plus-1-plus-2]
 | 星级 | 2 |
 | 时代 | 现代 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 医学 |
 | 关联分类 | 关联：病毒 |
 | 技能 | trigger-virus-single-plus-1-plus-2 |
 | 费用 | 1 |

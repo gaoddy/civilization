@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: prehistoric
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 1
 specialty: [play:cephalopod]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [combatstart-random-enemy-minus-2-attack]
 | 星级 | 2 |
 | 时代 | 史前 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 关联：头足纲 |
 | 技能 | combatstart-random-enemy-minus-2-attack |
 | 费用 | 1 |

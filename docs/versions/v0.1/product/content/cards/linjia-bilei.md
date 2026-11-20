@@ -5,7 +5,7 @@ card_type: effect
 level: 5
 era: classical
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 3
 specialty: [play:reptile]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-reptile-all-plus-0-plus-3]
 | 星级 | 5 |
 | 时代 | 古典 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 关联：爬行纲 |
 | 技能 | trigger-reptile-all-plus-0-plus-3 |
 | 费用 | 3 |

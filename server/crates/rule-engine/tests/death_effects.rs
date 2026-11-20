@@ -70,7 +70,7 @@ fn add_token(engine: &mut Engine, id: &str, attack: i32, health: i32) {
             health,
             keywords: Vec::new(),
             playstyle: None,
-            taxon: None,
+            taxon: "biology".to_string(),
         },
     );
 }

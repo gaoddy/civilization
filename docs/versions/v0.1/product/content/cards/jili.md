@@ -5,7 +5,7 @@ card_type: effect
 level: 6
 era: modern
 playstyle: neutral
-taxon: phenomenon
+taxon: military
 cost: 3
 match_text: 同左
 skills: [trigger-all-friendly-plus-1-plus-1]
@@ -23,7 +23,7 @@ skills: [trigger-all-friendly-plus-1-plus-1]
 | 星级 | 6 |
 | 时代 | 现代 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 军事学 |
 | 关联分类 | 无 |
 | 技能 | trigger-all-friendly-plus-1-plus-1 |
 | 费用 | 3 |

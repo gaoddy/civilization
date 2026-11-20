@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: modern
 playstyle: neutral
-taxon: phenomenon
+taxon: literature
 cost: 1
 match_text: 同左
 skills: [trigger-all-friendly-growth-once]
@@ -23,7 +23,7 @@ skills: [trigger-all-friendly-growth-once]
 | 星级 | 2 |
 | 时代 | 现代 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 人文 › 文学 |
 | 关联分类 | 无 |
 | 技能 | trigger-all-friendly-growth-once |
 | 费用 | 1 |

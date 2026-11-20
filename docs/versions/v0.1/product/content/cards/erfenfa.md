@@ -5,7 +5,7 @@ card_type: effect
 level: 1
 era: classical
 playstyle: neutral
-taxon: phenomenon
+taxon: mathematics
 cost: 0
 match_text: 同左
 skills: [trigger-friendly-plus-2-attack]
@@ -23,7 +23,7 @@ skills: [trigger-friendly-plus-2-attack]
 | 星级 | 1 |
 | 时代 | 古典 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 数学 |
 | 关联分类 | 无 |
 | 技能 | trigger-friendly-plus-2-attack |
 | 费用 | 0 |

@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: feudal
 playstyle: neutral
-taxon: phenomenon
+taxon: military
 cost: 0
 match_text: 同左
 skills: [trigger-friendly-taunt-until-turn-end]
@@ -23,7 +23,7 @@ skills: [trigger-friendly-taunt-until-turn-end]
 | 星级 | 2 |
 | 时代 | 封建 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 军事学 |
 | 关联分类 | 无 |
 | 技能 | trigger-friendly-taunt-until-turn-end |
 | 费用 | 0 |

@@ -17,7 +17,8 @@ pub enum Rank {
     Order,
     Family,
     Technique,
-    Phenomenon,
+    /// 科学、人文与社会根下的学科叶子。
+    Discipline,
 }
 
 /// 单个分类节点。

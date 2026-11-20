@@ -2632,8 +2632,8 @@ fn is_enemy_selector(selector: &Selector) -> bool {
 
 /// 筛选与 `timesIf` 需要的卡牌/Token 事实。
 ///
-/// `catalog.cards` 查不到时回退 `catalog.tokens`；Token 缺玩法/分类时按
-/// `Neutral` / `phenomenon` 处理。两者都找不到时返回 `None`。
+/// `catalog.cards` 查不到时回退 `catalog.tokens`；Token 缺玩法时按 `Neutral`
+/// 处理，分类直接取 Token 自身的 `taxon`。两者都找不到时返回 `None`。
 struct CardFacts<'a> {
     playstyle: Playstyle,
     taxon: &'a str,
@@ -2695,7 +2695,7 @@ fn card_facts<'a>(catalog: &'a Catalog, card_id: &str) -> Option<CardFacts<'a>> 
     }
     catalog.tokens.get(card_id).map(|token| CardFacts {
         playstyle: token.playstyle(),
-        taxon: token.taxon(),
+        taxon: &token.taxon,
         specialty: &[],
         subtype: None,
         id: &token.id,

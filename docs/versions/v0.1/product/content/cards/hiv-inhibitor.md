@@ -5,7 +5,7 @@ card_type: effect
 level: 5
 era: modern
 playstyle: neutral
-taxon: phenomenon
+taxon: medicine
 cost: 3
 match_text: 同左
 skills: [combatstart-remove-all-human-growth]
@@ -23,7 +23,7 @@ skills: [combatstart-remove-all-human-growth]
 | 星级 | 5 |
 | 时代 | 现代 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 医学 |
 | 关联分类 | 无 |
 | 技能 | combatstart-remove-all-human-growth |
 | 费用 | 3 |

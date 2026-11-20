@@ -5,7 +5,7 @@ card_type: effect
 level: 4
 era: feudal
 playstyle: neutral
-taxon: phenomenon
+taxon: economics
 cost: 2
 match_text: 同左
 skills: [trigger-all-mech-growth-once]
@@ -23,7 +23,7 @@ skills: [trigger-all-mech-growth-once]
 | 星级 | 4 |
 | 时代 | 封建 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 经济学 |
 | 关联分类 | 无 |
 | 技能 | trigger-all-mech-growth-once |
 | 费用 | 2 |

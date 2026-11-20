@@ -108,7 +108,7 @@ fn add_seedling_token(catalog: &mut Catalog) {
             health: 1,
             keywords: Vec::new(),
             playstyle: None,
-            taxon: None,
+            taxon: "biology".to_string(),
         },
     );
 }
@@ -1095,7 +1095,7 @@ fn summon_action_records_position_and_seat() {
             health: 1,
             keywords: Vec::new(),
             playstyle: None,
-            taxon: None,
+            taxon: "biology".to_string(),
         },
     );
 

@@ -518,7 +518,7 @@ fn token_uses_own_playstyle_and_taxon_defaults() {
     );
     assert_eq!(state.players[0].board[0].stats.attack.growth, 2);
 
-    // 缺字段的 Token：按 neutral / phenomenon 处理。
+    // 缺玩法的 Token：按 neutral 处理，分类直接取自身 taxon。
     engine.catalog.tokens.insert(
         "plain-token".to_string(),
         Token {
@@ -527,7 +527,7 @@ fn token_uses_own_playstyle_and_taxon_defaults() {
             health: 1,
             keywords: Vec::new(),
             playstyle: None,
-            taxon: None,
+            taxon: "biology".to_string(),
         },
     );
     let plain_id = state.next_instance_id;
@@ -539,17 +539,17 @@ fn token_uses_own_playstyle_and_taxon_defaults() {
         false,
     ));
 
-    // 缺省玩法与分类的回退口径。
+    // 缺省玩法的回退口径。
     let plain_token = engine
         .catalog
         .tokens
         .get("plain-token")
         .expect("刚插入的 Token");
     assert_eq!(plain_token.playstyle(), Playstyle::Neutral);
-    assert_eq!(plain_token.taxon(), "phenomenon");
+    assert_eq!(plain_token.taxon, "biology");
     engine.apply_op(
         &mut state,
-        &effect("OnActivate|Growth|friendly:all:taxon=phenomenon|times=1"),
+        &effect("OnActivate|Growth|friendly:all:taxon=biology|times=1"),
         &ctx(0),
         None,
     );

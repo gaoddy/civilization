@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: prehistoric
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 1
 specialty: [play:plant]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-friendly-plant-sow]
 | 星级 | 2 |
 | 时代 | 史前 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 关联：植物界 |
 | 技能 | trigger-friendly-plant-sow |
 | 费用 | 1 |
