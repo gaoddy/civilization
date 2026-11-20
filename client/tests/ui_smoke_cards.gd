@@ -278,6 +278,13 @@ func _ready() -> void:
     gallery_tile.queue_free()
     await get_tree().process_frame
 
+    # 关联分类行文案：界面直接展示该键，必须是「关联分类」而非旧的「关联玩法」。
+    var association_label := str(TranslationServer.translate("ui.game.detail.association"))
+    _expect(
+        association_label == "关联分类",
+        "关联分类行文案应为「关联分类」，实际：%s" % association_label,
+    )
+
     # 详情分类行：科学分类完整路径、全部玩法、关联分类（仅 prey/host）。
     var mammal_detail := _shop_detail_text("jianchihu")
     _expect(

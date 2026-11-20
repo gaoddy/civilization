@@ -1449,7 +1449,7 @@ ui.game.combat.lose,失败
 ui.game.combat.waiting,等待战斗动作…
 ui.game.combat.win,胜利
 ui.game.detail.alive,存活
-ui.game.detail.association,关联玩法
+ui.game.detail.association,关联分类
 ui.game.detail.cost,费用
 ui.game.detail.cost_value,%d 金
 ui.game.detail.current,当前
