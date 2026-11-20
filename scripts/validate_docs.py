@@ -18,6 +18,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import i18n_terms
+import skill_templates
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v0.1" / "product" / "content"
 V02_ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v0.2" / "product" / "content"
@@ -157,7 +158,9 @@ KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "ignore_taunt": 3,
 EXPECT_ERA = {"prehistoric": 63, "primitive": 60, "classical": 45, "feudal": 57,
               "industrial": 41, "modern": 96, "future": 47}
 EXPECT_LEVEL = {1: 35, 2: 52, 3: 59, 4: 60, 5: 55, 6: 28, 7: 20}
-SKILL_FIELDS = ["id", "text", "effects"]
+SKILL_FIELDS = ["id"]
+SKILL_OPTIONAL_FIELDS = {"text", "effects", "template", "keyword",
+                         "cost", "uses_per_turn", "name", "match_text"}
 MINION_FIELDS = ["id", "name", "card_type", "playstyle", "taxon", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "playstyle", "taxon",
@@ -889,7 +892,7 @@ def rendered_text(doc, skill_map):
         skill = skill_map.get(sid)
         if skill is None:
             return None
-        parts.append(skill["text"])
+        parts.append(skill.get("_rendered_text", skill.get("text", "")))
     return "；".join(parts) if parts else "无"
 
 
@@ -1085,10 +1088,45 @@ def expected_skill_attrs(skill):
         "关键词": keyword_display(skill.get("keyword")) if skill.get("keyword") else "无",
         "确定性替换": skill.get("match_text") or "不适用",
     }
+    if "template" in skill:
+        try:
+            ids = [call.template_id
+                   for call in skill_templates.parse_template_field(skill["template"])]
+        except ValueError:
+            ids = []  # 解析错误由 validate_skill_template 报告
+        if ids:
+            attrs["模板"] = "；".join(ids)
     if "cost" in skill:
         attrs["费用"] = str(skill["cost"])
         attrs["每回合次数"] = str(skill["uses_per_turn"])
     return attrs
+
+
+def validate_skill_template(skill, templates, renderer):
+    """校验模板实例：模板存在、参数合法、展开后的 DSL 可解析、文案非空。"""
+    name = skill.get("_file", skill.get("id", "?"))
+    errors = []
+    try:
+        calls = skill_templates.parse_template_field(skill["template"])
+    except ValueError as exc:
+        return [f"{name}: {exc}"]
+    for call in calls:
+        template = templates.get(call.template_id)
+        if template is None:
+            errors.append(f"{name}: 模板不存在 {call.template_id!r}")
+            continue
+        try:
+            renderer.expand(call)
+            renderer.text(call)
+        except ValueError as exc:
+            errors.append(f"{name}: {exc}")
+    if not errors:
+        segments = renderer.instance_segments(skill)
+        _, parse_errors = parse_effects(";".join(segments) if segments else "[]")
+        errors.extend(f"{name}: {message}" for message in parse_errors)
+        if not renderer.instance_text(skill).strip():
+            errors.append(f"{name}: 渲染文案为空")
+    return errors
 
 
 def skill_field_errors(skill):
@@ -1121,20 +1159,37 @@ def check_skills():
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
+    templates = skill_templates.load_templates(ROOT)
+    renderer = skill_templates.Renderer(ROOT)
     for skill in skills:
         name = skill["_file"]
-        if not str(skill["text"]).strip():
+        unknown = set(skill) - set(SKILL_FIELDS) - SKILL_OPTIONAL_FIELDS - {"_file"}
+        if unknown:
+            fail(f"{name}: 未知字段 {sorted(unknown)}")
+        if "template" in skill:
+            for message in validate_skill_template(skill, templates, renderer):
+                fail(message)
+            try:
+                segments = renderer.instance_segments(skill)
+            except ValueError:
+                segments = ()
+            raw_effects = ";".join(segments) if segments else "[]"
+            text = renderer.instance_text(skill)
+        else:
+            raw_effects = skill.get("effects")
+            text = str(skill.get("text", ""))
+        skill["_rendered_text"] = text
+        if not text.strip():
             fail(f"{name}: text 为空")
         keyword = skill.get("keyword")
         if keyword and not SKILL_KEYWORD_RE.fullmatch(str(keyword)):
             fail(f"{name}: 关键词非法 {keyword!r}")
         for message in skill_field_errors(skill):
             fail(message)
-        raw_effects = skill.get("effects")
         parsed_effects, effect_errors = parse_effects(raw_effects)
         for message in effect_errors:
             fail(f"{name}: {message}")
-        for message in check_text_trigger(skill["text"], raw_effects):
+        for message in check_text_trigger(text, raw_effects):
             fail(f"{name}: {message}")
         path = ROOT / "skills" / name
         table = parse_attr_table(path)
@@ -1148,7 +1203,7 @@ def check_skills():
         extra = set(table) - set(expected)
         if extra:
             fail(f"{name}: 属性表多出字段 {sorted(extra)}")
-        if body_text(path) != skill["text"]:
+        if body_text(path) != text:
             fail(f"{name}: 「## 效果」与 text 不一致")
     return skills
 

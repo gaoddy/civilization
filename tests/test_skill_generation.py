@@ -9,6 +9,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import gen_card_data
 import render_docs
 import skill_templates
+import validate_docs
 
 
 def build_fixture(tmp):
@@ -98,6 +99,22 @@ class GeneratorTemplateTest(unittest.TestCase):
         rendered = self.renderer.instance_text(
             {"id": "x", "template": "on-death-summon(token=baiyi,count=1)"})
         self.assertEqual(rendered, "亡语：召唤一个 2/2 的白蚁")
+
+
+class ValidateTemplateTest(unittest.TestCase):
+    def setUp(self):
+        self.renderer = skill_templates.Renderer()
+
+    def test_expected_attrs_include_templates(self):
+        skill = {"id": "x", "template": "on-death-summon(token=termite,count=1)"}
+        attrs = validate_docs.expected_skill_attrs(skill)
+        self.assertEqual(attrs["模板"], "on-death-summon")
+
+    def test_missing_template_reported(self):
+        errors = validate_docs.validate_skill_template(
+            {"id": "x", "template": "not-a-template", "_file": "x.md"}, {},
+            self.renderer)
+        self.assertTrue(any("模板不存在" in e for e in errors))
 
 
 if __name__ == "__main__":
