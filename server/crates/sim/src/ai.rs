@@ -1,4 +1,4 @@
-//! 确定性 AI：只读取 `GameState` 与 `Catalog`，按固定优先级给出下一条意图。
+//! 确定性 AI：只读取 `GameState` 与 `Engine`（卡牌目录、只读目标候选校验），按固定优先级给出下一条意图。
 //!
 //! 所有比较都使用稳定键：商店槽位下标、实例编号、目录顺序（`BTreeMap` 的卡牌 id 顺序）。
 //! 输出只依赖输入状态，不读时钟与环境变量，不使用浮点。
@@ -7,10 +7,12 @@ use std::collections::BTreeMap;
 
 use rule_engine::combat::{effective_attack, effective_health};
 use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill, SpecialtyKind};
-use rule_engine::effects::{Duration, Op, Pick, Selector, Side, TargetRef, Trigger, Zone};
+use rule_engine::effects::{
+    Duration, Effect, EffectCtx, Op, Pick, Selector, Side, TargetRef, Trigger, Zone,
+};
 use rule_engine::engine::Engine;
 use rule_engine::intent::{Intent, Reject, RejectCode};
-use rule_engine::state::{GameState, MinionInstance, PendingChoice, PlayerState, Seat};
+use rule_engine::state::{GameState, MinionInstance, PendingChoice, Phase, PlayerState, Seat};
 
 /// 手动刷新商店的金币价格：本回合首次刷新免费，之后每次 1 金币（与引擎一致）。
 const REROLL_PRICE: u8 = 1;
@@ -31,26 +33,22 @@ const REROLL_PRICE: u8 = 1;
 /// 7. 打出效果牌：手牌中的效果牌先试无目标，被拒后改试己方最左随从。效果牌不花金币，
 ///    放在会花钱的动作之后，避免「无合法目标」的牌在每次购买成功后被反复重试；
 /// 8. `EndRecruit`。
-pub fn choose(state: &GameState, seat: Seat, catalog: &Catalog) -> Option<Intent> {
-    plan(state, seat, catalog, &[])
+pub fn choose(state: &GameState, seat: Seat, engine: &Engine) -> Option<Intent> {
+    plan(state, seat, engine, &[])
 }
 
 /// 与 [`choose`] 相同的优先级；`blocked` 中的意图被跳过（本轮曾被引擎拒绝、状态未变）。
 ///
 /// 跳过只会改变选中哪一步，不会改变比较规则，因此结果仍是确定的。
-pub fn plan(
-    state: &GameState,
-    seat: Seat,
-    catalog: &Catalog,
-    blocked: &[Intent],
-) -> Option<Intent> {
+pub fn plan(state: &GameState, seat: Seat, engine: &Engine, blocked: &[Intent]) -> Option<Intent> {
     let player = state.players.get(usize::from(seat))?;
     if player.eliminated {
         return None;
     }
+    let catalog = &engine.catalog;
     let candidates = [
         choose_pending(state, player, catalog, blocked),
-        choose_hero_power(player, catalog),
+        choose_hero_power(state, player, engine),
         choose_fill_board(state, player, catalog),
         choose_buy(state, player, catalog),
         can_upgrade(player, catalog).then_some(Intent::UpgradeEra),
@@ -71,7 +69,7 @@ pub fn play_step(
     state: &mut GameState,
     seat: Seat,
 ) -> Result<Option<Intent>, Reject> {
-    let Some(intent) = choose(state, seat, &engine.catalog) else {
+    let Some(intent) = choose(state, seat, engine) else {
         return Ok(None);
     };
     engine.apply(state, seat, intent.clone())?;
@@ -174,11 +172,11 @@ fn pending_seat(pending: &PendingChoice) -> Seat {
     }
 }
 
-fn choose_hero_power(player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
+fn choose_hero_power(state: &GameState, player: &PlayerState, engine: &Engine) -> Option<Intent> {
     let hero_id = player.hero.as_deref()?;
-    let hero = catalog.heroes.get(hero_id)?;
+    let hero = engine.catalog.heroes.get(hero_id)?;
     for skill_id in &hero.skills {
-        let Some(skill) = catalog.skills.get(skill_id) else {
+        let Some(skill) = engine.catalog.skills.get(skill_id) else {
             continue;
         };
         let Some(cost) = skill.cost else {
@@ -189,7 +187,7 @@ fn choose_hero_power(player: &PlayerState, catalog: &Catalog) -> Option<Intent> 
         if used >= limit || player.gold < cost {
             continue;
         }
-        let Some(target) = hero_power_use(player, catalog, skill) else {
+        let Some(target) = hero_power_use(state, player, engine, skill) else {
             continue;
         };
         return Some(Intent::UseHeroPower {
@@ -202,148 +200,161 @@ fn choose_hero_power(player: &PlayerState, catalog: &Catalog) -> Option<Intent> 
 
 /// 英雄技能的使用与目标；返回 `None` 表示本回合不应使用该技能（没有能收益的目标）。
 ///
-/// 按声明顺序检查技能的 `OnActivate` 效果，取第一个可识别的目标来源：
+/// 只检查技能的 `OnActivate` 效果：
 ///
-/// - `Discover` 且选择器为 `self`（如 `pool=playstyle`）：目标只表示玩法偏好，取棋盘上最强的
-///   随从；棋盘为空时为 `None`。
-/// - 选择器为 `target`：按其区域取该区域内最强的目标（棋盘取最强随从，手牌取最强随从牌，
-///   商店取攻防总和最大的槽位）。
-/// - 友方单体（`friendly:single`，无筛选）、永久生效的关键词授予：取棋盘上（实例编号
-///   升序）第一个尚未拥有该关键词的随从；全部已有时为 `None`。
-/// - 友方单体（`friendly:single`，无筛选）的成长：取成长层数最少（同层取实例编号小者）
-///   的随从；棋盘为空时为 `None`。
+/// - 不需要目标的效果（`friendly:all`、`self`、群聚等）直接使用；但选择器只在敌方或
+///   空棋盘上生效时跳过，避免在招募期空放。
+/// - 需要单一目标时，用引擎的 `target_candidates` 按选择器筛选与组合条件求出合法目标，
+///   再按效果挑选：成长取成长层数最少者；永久关键词取尚未拥有该关键词者；其余取最强。
 ///
-/// `duration=combat` 的授予不会写入 `MinionInstance::granted`，不能作为「何时使用」的
-/// 判据，因此不作为目标来源；没有可识别目标的技能不提议使用。
+/// `duration=combat` 的授予不写入 `MinionInstance::granted`，不能作为「是否已拥有」的
+/// 判据，但仍是有效目标来源。
 fn hero_power_use(
+    state: &GameState,
     player: &PlayerState,
-    catalog: &Catalog,
+    engine: &Engine,
     skill: &Skill,
 ) -> Option<Option<TargetRef>> {
-    for effect in &skill.effects {
-        if effect.trigger != Trigger::OnActivate {
-            continue;
-        }
-        if effect.op == Op::Discover && effect.selector == Selector::SelfCard {
-            if let Some(target) = strongest_target(player, catalog) {
-                return Some(Some(TargetRef {
-                    zone: Zone::Board,
-                    id: target,
-                }));
-            }
-            return None;
-        }
-        if let Selector::Target { zone, .. } = &effect.selector {
-            if let Some(target) = strongest_target_in_zone(player, catalog, *zone) {
-                return Some(Some(target));
-            }
-            return None;
-        }
-        let Selector::Side {
-            side,
-            pick,
-            filters,
-        } = &effect.selector
-        else {
-            continue;
-        };
-        if *side != Side::Friendly
-            || *pick != Pick::Single
-            || !filters.is_empty()
-            || effect.params.duration != Some(Duration::Permanent)
-        {
-            continue;
-        }
-        if effect.op == Op::GrantKeyword
-            && let Some(keyword) = &effect.params.keyword
-        {
-            let keyword = &keyword.keyword;
-            let target = player
-                .board
-                .iter()
-                .filter(|minion| !rule_engine::combat::keywords(catalog, minion).contains(keyword))
-                .min_by_key(|minion| minion.instance_id);
-            if let Some(minion) = target {
-                return Some(Some(TargetRef {
-                    zone: Zone::Board,
-                    id: minion.instance_id,
-                }));
-            }
-            return None;
-        }
-        if effect.op == Op::Growth {
-            let target = player
-                .board
-                .iter()
-                .min_by_key(|minion| (minion.stats.attack.growth, minion.instance_id));
-            if let Some(minion) = target {
-                return Some(Some(TargetRef {
-                    zone: Zone::Board,
-                    id: minion.instance_id,
-                }));
-            }
-            return None;
-        }
-    }
-    None
-}
-
-/// 棋盘上最强的随从（有效攻防之和降序，同强度取实例编号小者）；棋盘为空时为 `None`。
-fn strongest_target(player: &PlayerState, catalog: &Catalog) -> Option<u64> {
-    player
-        .board
+    let effects: Vec<Effect> = skill
+        .effects
         .iter()
-        .max_by_key(|minion| {
-            (
-                strength(catalog, minion),
-                std::cmp::Reverse(minion.instance_id),
-            )
-        })
-        .map(|minion| minion.instance_id)
+        .filter(|effect| effect.trigger == Trigger::OnActivate)
+        .cloned()
+        .collect();
+    if effects.is_empty() {
+        return None;
+    }
+    if !effects.iter().any(effect_requires_target) {
+        return effects
+            .iter()
+            .any(|effect| effect_has_benefit(state, player, effect))
+            .then_some(None);
+    }
+    let ctx = EffectCtx {
+        seat: player.seat,
+        source: None,
+        target: None,
+        event_target: None,
+        golden: false,
+        discover_level: None,
+    };
+    let candidates = engine.target_candidates(state, &effects, &ctx, false);
+    if candidates.is_empty() {
+        return None;
+    }
+    let effect = effects
+        .iter()
+        .find(|effect| effect_requires_target(effect))?;
+    choose_hero_power_target(effect, &candidates, player, &engine.catalog).map(Some)
 }
 
-/// 指定区域内最强的目标；区域为空时为 `None`。
-///
-/// 手牌按随从实例的当前攻防比较，商店槽位按卡面攻防之和比较（商店槽没有实例状态）。
-fn strongest_target_in_zone(
+fn effect_requires_target(effect: &Effect) -> bool {
+    matches!(
+        effect.selector,
+        Selector::Target { .. }
+            | Selector::Side {
+                pick: Pick::Single,
+                ..
+            }
+    )
+}
+
+/// 不需要目标的效果是否有实际作用：发现与商店类效果总是有收益；光环类效果要求
+/// 目标阵营在当前阶段有随从（招募期敌方为空）。
+fn effect_has_benefit(state: &GameState, player: &PlayerState, effect: &Effect) -> bool {
+    if effect.op == Op::Discover
+        || matches!(
+            effect.op,
+            Op::RefreshShop | Op::AddShopSlot | Op::GainMinion
+        )
+    {
+        return true;
+    }
+    match &effect.selector {
+        Selector::SelfCard => false,
+        Selector::Target { .. } => true,
+        Selector::Side { side, .. } => match side {
+            Side::Enemy => {
+                state.phase != Phase::Recruit
+                    && state.players.iter().any(|other| {
+                        other.seat != player.seat && !other.eliminated && !other.board.is_empty()
+                    })
+            }
+            Side::Friendly | Side::Both => !player.board.is_empty(),
+        },
+    }
+}
+
+fn choose_hero_power_target(
+    effect: &Effect,
+    candidates: &[TargetRef],
     player: &PlayerState,
     catalog: &Catalog,
-    zone: Zone,
 ) -> Option<TargetRef> {
-    match zone {
-        Zone::Board => strongest_target(player, catalog).map(|id| TargetRef {
-            zone: Zone::Board,
-            id,
-        }),
+    if effect.op == Op::Growth {
+        return candidates
+            .iter()
+            .copied()
+            .filter(|target| target.zone == Zone::Board)
+            .filter_map(|target| {
+                board_minion(player, target.id)
+                    .map(|minion| (minion.stats.attack.growth, target.id, target))
+            })
+            .min_by_key(|(growth, id, _)| (*growth, *id))
+            .map(|(_, _, target)| target)
+            .or_else(|| candidates.first().copied());
+    }
+    if effect.op == Op::GrantKeyword
+        && effect.params.duration == Some(Duration::Permanent)
+        && let Some(keyword) = &effect.params.keyword
+    {
+        return candidates
+            .iter()
+            .copied()
+            .filter(|target| target.zone == Zone::Board)
+            .filter(|target| {
+                board_minion(player, target.id).is_some_and(|minion| {
+                    !rule_engine::combat::keywords(catalog, minion).contains(&keyword.keyword)
+                })
+            })
+            .min_by_key(|target| target.id);
+    }
+    candidates.iter().copied().max_by_key(|target| {
+        (
+            hero_power_target_strength(player, catalog, *target),
+            std::cmp::Reverse(target.id),
+        )
+    })
+}
+
+fn board_minion(player: &PlayerState, id: u64) -> Option<&MinionInstance> {
+    player.board.iter().find(|minion| minion.instance_id == id)
+}
+
+fn hero_power_target_strength(player: &PlayerState, catalog: &Catalog, target: TargetRef) -> i32 {
+    match target.zone {
+        Zone::Board => board_minion(player, target.id)
+            .map(|minion| strength(catalog, minion))
+            .unwrap_or(i32::MIN),
         Zone::Hand => player
             .hand
             .iter()
             .filter_map(|card| card.minion())
-            .max_by_key(|minion| {
-                (
-                    strength(catalog, minion),
-                    std::cmp::Reverse(minion.instance_id),
-                )
-            })
-            .map(|minion| TargetRef {
-                zone: Zone::Hand,
-                id: minion.instance_id,
-            }),
+            .find(|minion| minion.instance_id == target.id)
+            .map(|minion| strength(catalog, minion))
+            .unwrap_or(i32::MIN),
         Zone::Shop => player
             .shop
             .iter()
             .flatten()
-            .max_by_key(|slot| {
-                let card = catalog.cards.get(&slot.card_id);
-                let power = card.map_or(0, |card| {
-                    card.attack.unwrap_or(0) + card.health.unwrap_or(0)
-                });
-                (power, std::cmp::Reverse(slot.instance_id))
+            .find(|slot| slot.instance_id == target.id)
+            .and_then(|slot| catalog.cards.get(&slot.card_id))
+            .map(|card| {
+                card.attack
+                    .unwrap_or(0)
+                    .saturating_add(card.health.unwrap_or(0))
             })
-            .map(|slot| TargetRef {
-                zone: Zone::Shop,
-                id: slot.instance_id,
-            }),
+            .unwrap_or(i32::MIN),
     }
 }
 
@@ -556,6 +567,7 @@ pub fn planning_reject(code: RejectCode) -> bool {
             | RejectCode::AlreadyMaxEra
             | RejectCode::CardNotInHand
             | RejectCode::HeroPowerLimit
+            | RejectCode::NotActiveSkill
             | RejectCode::NoValidTarget
             | RejectCode::TargetNotAllowed
             | RejectCode::InvalidChoice
@@ -613,33 +625,111 @@ mod tests {
     }
 
     /// 座位 0 的棋盘按给定卡牌 id 从左到右摆放，并挂一条目标待选。
-    fn state_with_target(cards: &[&str]) -> (Catalog, GameState) {
-        let catalog = embedded_catalog().expect("内置卡表应能加载");
-        let (_, mut state) =
-            Engine::new(catalog.clone(), [7; 32], rule_engine::playstyles::draw(7));
+    fn state_with_target(cards: &[&str]) -> (Engine, GameState) {
+        let (engine, mut state) = Engine::new(
+            embedded_catalog().expect("内置卡表应能加载"),
+            [7; 32],
+            rule_engine::playstyles::draw(7),
+        );
         state.phase = Phase::Recruit;
         state.turn = 1;
         let player = state.players.first_mut().expect("8 个座位");
         player.board = cards
             .iter()
             .enumerate()
-            .map(|(index, card_id)| MinionInstance::new(&catalog, index as u64 + 1, card_id, false))
+            .map(|(index, card_id)| {
+                MinionInstance::new(&engine.catalog, index as u64 + 1, card_id, false)
+            })
             .collect();
         state.pending.push_back(PendingChoice::Target {
             seat: 0,
             source: 1,
-            hand_card: HandCard::Minion(MinionInstance::new(&catalog, 1, "clownfish", false)),
+            hand_card: HandCard::Minion(MinionInstance::new(
+                &engine.catalog,
+                1,
+                "clownfish",
+                false,
+            )),
             hand_index: 0,
             fire_ally_evolve: false,
         });
-        (catalog, state)
+        (engine, state)
+    }
+
+    /// 指定英雄与棋盘卡牌的招募态座位，金币由调用方给足。
+    fn hero_state(hero_id: &str, cards: &[&str], gold: u8) -> (Engine, GameState) {
+        let (engine, mut state) = Engine::new(
+            embedded_catalog().expect("内置卡表应能加载"),
+            [7; 32],
+            rule_engine::playstyles::draw(7),
+        );
+        state.phase = Phase::Recruit;
+        state.turn = 1;
+        let player = state.players.first_mut().expect("8 个座位");
+        player.hero = Some(hero_id.to_string());
+        player.gold = gold;
+        player.board = cards
+            .iter()
+            .enumerate()
+            .map(|(index, card_id)| {
+                MinionInstance::new(&engine.catalog, index as u64 + 1, card_id, false)
+            })
+            .collect();
+        (engine, state)
+    }
+
+    #[test]
+    fn hero_power_uses_all_target_skill_without_target() {
+        // 质能方程只作用于全体友方，不需要选目标；旧 AI 因无法识别 All 选择器而跳过。
+        let (engine, state) = hero_state("einstein", &["saman"], 10);
+        assert_eq!(
+            choose_hero_power(&state, &state.players[0], &engine),
+            Some(Intent::UseHeroPower {
+                skill_id: "mass-energy-equivalence".to_string(),
+                target: None,
+            })
+        );
+    }
+
+    #[test]
+    fn hero_power_targets_matching_filtered_minion() {
+        // 本草纲目只作用于友方植物；目标必须在筛选后的候选内，不能固定取最左。
+        let (engine, state) = hero_state("lisshi", &["saman", "wandou"], 10);
+        assert_eq!(
+            choose_hero_power(&state, &state.players[0], &engine),
+            Some(Intent::UseHeroPower {
+                skill_id: "materia-medica".to_string(),
+                target: Some(board_target(2)),
+            })
+        );
+    }
+
+    #[test]
+    fn hero_power_skips_filtered_skill_without_candidate() {
+        let (engine, state) = hero_state("lisshi", &["saman"], 10);
+        assert_eq!(choose_hero_power(&state, &state.players[0], &engine), None);
+    }
+
+    #[test]
+    fn hero_power_uses_combat_keyword_skill() {
+        // 光速出击只持续到本场战斗结束，不能靠「永久授予」判据识别；仍应选一个目标。
+        let (engine, state) = hero_state("einstein", &["saman"], 10);
+        let skill = engine
+            .catalog
+            .skills
+            .get("light-speed-strike")
+            .expect("技能应存在");
+        assert_eq!(
+            hero_power_use(&state, &state.players[0], &engine, skill),
+            Some(Some(board_target(1)))
+        );
     }
 
     #[test]
     fn pending_target_defaults_to_leftmost_minion() {
-        let (catalog, state) = state_with_target(&["saman", "clownfish"]);
+        let (engine, state) = state_with_target(&["saman", "clownfish"]);
         assert_eq!(
-            choose(&state, 0, &catalog),
+            choose(&state, 0, &engine),
             Some(Intent::ChooseTarget {
                 target: board_target(1),
             })
@@ -650,12 +740,12 @@ mod tests {
     fn pending_target_skips_blocked_minions() {
         // 筛选型战吼的目标池可能不含最左侧随从；被拒后必须沿棋盘后移，
         // 否则待选无法消费，其余意图都会因待选存在而被引擎拒绝。
-        let (catalog, state) = state_with_target(&["saman", "clownfish"]);
+        let (engine, state) = state_with_target(&["saman", "clownfish"]);
         assert_eq!(
             plan(
                 &state,
                 0,
-                &catalog,
+                &engine,
                 &[Intent::ChooseTarget {
                     target: board_target(1),
                 }]
