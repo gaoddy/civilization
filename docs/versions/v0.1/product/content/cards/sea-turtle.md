@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 减伤 2；嘲讽 |
 | 技能 | keyword-armor-2；keyword-taunt |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

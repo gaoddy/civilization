@@ -65,7 +65,10 @@ class GenClientDataTest(unittest.TestCase):
         skills = json.loads(data["skills.json"])
         self.assertEqual(len(cards), 409)
         self.assertEqual(len(skills), 247)
-        self.assertEqual(sum(card["is_hero"] for card in cards), 32)
+        heroes = json.loads(data["heroes.json"])
+        self.assertEqual(len(heroes), 32)
+        self.assertEqual([hero["id"] for hero in heroes],
+                         sorted(hero["id"] for hero in heroes))
         self.assertEqual([card["id"] for card in cards], sorted(card["id"] for card in cards))
 
     def test_display_cost(self):

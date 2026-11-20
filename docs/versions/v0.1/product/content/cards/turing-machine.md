@@ -34,7 +34,6 @@ is_scholar: false
 | 关键词 | 无视嘲讽；装配 2 |
 | 技能 | keyword-ignore-taunt；keyword-assemble-2 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

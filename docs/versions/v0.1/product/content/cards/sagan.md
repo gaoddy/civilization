@@ -34,7 +34,6 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | aura-scholar-plus-0-plus-3 |
 | 学者 | 是 |
-| 英雄资格 | 否 |
 
 ## 效果
 

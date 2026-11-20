@@ -11,7 +11,6 @@ attack: 6
 health: 8
 skills: [division-of-labor]
 is_scholar: false
-is_hero: true
 ---
 
 # 亚当·斯密
@@ -34,7 +33,6 @@ is_hero: true
 | 关键词 | 无 |
 | 技能 | division-of-labor |
 | 学者 | 否 |
-| 英雄资格 | 是 |
 
 ## 效果
 

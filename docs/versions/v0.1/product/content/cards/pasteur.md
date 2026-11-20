@@ -11,7 +11,6 @@ attack: 7
 health: 10
 skills: [microbiology]
 is_scholar: false
-is_hero: true
 ---
 
 # 巴斯德
@@ -34,7 +33,6 @@ is_hero: true
 | 关键词 | 无 |
 | 技能 | microbiology |
 | 学者 | 否 |
-| 英雄资格 | 是 |
 
 ## 效果
 

@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 嘲讽；繁衍 1 |
 | 技能 | keyword-taunt；keyword-breed-1 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

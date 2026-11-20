@@ -34,7 +34,6 @@ is_scholar: true
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；combatstart-random-enemy-contagion-2 |
 | 学者 | 是 |
-| 英雄资格 | 否 |
 
 ## 效果
 

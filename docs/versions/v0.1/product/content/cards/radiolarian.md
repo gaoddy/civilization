@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-damage-2；aura-other-protozoa-plus-1-attack |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

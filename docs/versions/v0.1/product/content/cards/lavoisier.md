@@ -12,7 +12,6 @@ attack: 0
 health: 16
 skills: [aura-other-plus-0-plus-1]
 is_scholar: true
-is_hero: true
 ---
 
 # 拉瓦锡
@@ -35,7 +34,6 @@ is_hero: true
 | 关键词 | 无 |
 | 技能 | aura-other-plus-0-plus-1 |
 | 学者 | 是 |
-| 英雄资格 | 是 |
 
 ## 效果
 

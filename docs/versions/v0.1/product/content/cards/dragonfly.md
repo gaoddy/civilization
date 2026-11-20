@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 连击；战吼 |
 | 技能 | keyword-windfury；battlecry-other-insect-growth-once |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

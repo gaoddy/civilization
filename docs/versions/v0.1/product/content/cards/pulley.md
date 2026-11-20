@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 播种；繁衍 3 |
 | 技能 | keyword-sow；keyword-breed-3 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

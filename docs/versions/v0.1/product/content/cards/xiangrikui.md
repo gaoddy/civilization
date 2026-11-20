@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 繁衍 2 |
 | 技能 | keyword-breed-2 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

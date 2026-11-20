@@ -18,7 +18,7 @@ import skill_templates  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "client" / "generated"
-FILES = ("cards.json", "skills.json", "tokens.json", "taxonomy.json")
+FILES = ("cards.json", "heroes.json", "skills.json", "tokens.json", "taxonomy.json")
 
 # 与 rule-engine 的随从购买费用一致；客户端仅用于展示，不参与判定。
 MINION_DISPLAY_COST = 3
@@ -43,12 +43,14 @@ def build(root):
     content = pathlib.Path(root) / "docs" / "versions" / "v0.1" / "product" / "content"
     renderer = skill_templates.Renderer(content)
     cards = [_display_card(doc) for doc in gen_card_data.load_docs(content, "cards")]
+    heroes = [gen_card_data.hero_entry(doc) for doc in gen_card_data.load_docs(content, "heroes")]
     skills = [gen_card_data.skill_entry(doc, renderer)
               for doc in gen_card_data.load_docs(content, "skills")]
     tokens = [_display_token(token) for token in gen_card_data.parse_tokens(content / "tokens" / "README.md")]
     taxonomy = gen_card_data.parse_taxonomy(content / gen_card_data.TAXONOMY_FILE)
     return {
         "cards.json": gen_card_data.dumps(cards),
+        "heroes.json": gen_card_data.dumps(heroes),
         "skills.json": gen_card_data.dumps(skills),
         "tokens.json": gen_card_data.dumps(tokens),
         "taxonomy.json": gen_card_data.dumps(taxonomy),

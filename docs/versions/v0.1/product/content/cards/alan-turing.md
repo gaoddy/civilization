@@ -34,7 +34,6 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | aura-mech-optimal-attack |
 | 学者 | 是 |
-| 英雄资格 | 否 |
 
 ## 效果
 

@@ -1,0 +1,36 @@
+---
+id: mendel
+card_type: hero
+name: 孟德尔
+playstyle: neutral
+specialty: [play:plant]
+skills: [battlecry-friendly-plant-growth-once, heredity]
+---
+
+# 孟德尔
+
+## 属性
+
+| 属性 | 值 |
+| --- | --- |
+| id | mendel |
+| 名称 | 孟德尔 |
+| 类型 | 英雄 |
+| 玩法 | 中立 |
+| 关联分类 | 关联：植物界 |
+| 技能 | battlecry-friendly-plant-growth-once；heredity |
+
+## 效果
+
+战吼：使一个友方植物随从获得一次成长；使一个友方植物随从获得一次成长
+
+## 设计说明
+
+- 定位：植物体系专属，给植物一次成长。
+- 平衡边界：若场上没有植物，技能不可用（返回 `NO_VALID_TARGET`）；不提供「发现植物」的兜底。
+
+## 出处
+
+孟德尔在 1856—1863 年以豌豆杂交实验总结出分离定律与自由组合定律。
+
+对应：素材原始笔记，无外部出处。

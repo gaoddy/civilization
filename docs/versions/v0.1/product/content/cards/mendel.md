@@ -12,7 +12,6 @@ attack: 0
 health: 12
 skills: [battlecry-friendly-plant-growth-once, heredity]
 is_scholar: true
-is_hero: true
 ---
 
 # 孟德尔
@@ -35,7 +34,6 @@ is_hero: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plant-growth-once；heredity |
 | 学者 | 是 |
-| 英雄资格 | 是 |
 
 ## 效果
 

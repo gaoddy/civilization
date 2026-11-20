@@ -12,7 +12,6 @@ attack: 0
 health: 16
 skills: [aura-biology-plus-1-plus-1, evolution-discovery]
 is_scholar: true
-is_hero: true
 ---
 
 # 达尔文
@@ -35,7 +34,6 @@ is_hero: true
 | 关键词 | 无 |
 | 技能 | aura-biology-plus-1-plus-1；evolution-discovery |
 | 学者 | 是 |
-| 英雄资格 | 是 |
 
 ## 效果
 

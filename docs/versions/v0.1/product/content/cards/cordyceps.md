@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 亡语；分解 |
 | 技能 | deathrattle-summon-cordyceps；decompose-kill-original |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

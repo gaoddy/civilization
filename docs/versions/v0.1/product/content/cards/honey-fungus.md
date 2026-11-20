@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 分解；亡语 |
 | 技能 | decompose-kill-original；deathrattle-summon-2-spores-2-2 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

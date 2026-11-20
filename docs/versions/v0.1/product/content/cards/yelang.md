@@ -34,7 +34,6 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | trigger-friendly-biology-play-plus-1-attack |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

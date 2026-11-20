@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 复生 |
 | 技能 | keyword-reborn；aura-school-fish-1 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

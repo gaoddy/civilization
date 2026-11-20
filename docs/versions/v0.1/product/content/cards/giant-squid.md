@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；devour-3 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

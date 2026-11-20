@@ -11,7 +11,6 @@ attack: 4
 health: 5
 skills: [battlecry-friendly-mech-growth-once]
 is_scholar: false
-is_hero: true
 ---
 
 # 鲁班
@@ -34,7 +33,6 @@ is_hero: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-mech-growth-once |
 | 学者 | 否 |
-| 英雄资格 | 是 |
 
 ## 效果
 

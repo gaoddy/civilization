@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 嘲讽；战吼 |
 | 技能 | keyword-taunt；battlecry-friendly-mech-growth-once |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

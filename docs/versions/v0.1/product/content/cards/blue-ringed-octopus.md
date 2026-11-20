@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 剧毒 |
 | 技能 | keyword-poison；mimic-1 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

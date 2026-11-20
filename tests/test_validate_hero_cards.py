@@ -1,7 +1,8 @@
-import collections
 import pathlib
 import sys
+import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -34,19 +35,55 @@ def base_doc(**extra):
     return doc
 
 
-class HeroCardAttrsTest(unittest.TestCase):
-    def test_non_hero_has_no_hero_rows(self):
+def hero_doc(**extra):
+    doc = {
+        "_file": "einstein.md",
+        "id": "einstein",
+        "name": "爱因斯坦",
+        "card_type": "hero",
+        "playstyle": "neutral",
+        "specialty": ["play:machine"],
+        "skills": ["light-speed-strike"],
+    }
+    doc.update(extra)
+    return doc
+
+
+def minion_doc(**extra):
+    doc = {
+        "_file": "einstein.md",
+        "id": "einstein",
+        "name": "爱因斯坦",
+        "card_type": "minion",
+        "playstyle": "neutral",
+        "specialty": ["play:machine"],
+        "skills": ["light-speed-strike"],
+    }
+    doc.update(extra)
+    return doc
+
+
+class CardAttrsTest(unittest.TestCase):
+    def test_minion_has_no_hero_qualification_row(self):
         attrs = vd.expected_card_attrs(base_doc(), {})
-        self.assertEqual(attrs["英雄资格"], "否")
+        self.assertNotIn("英雄资格", attrs)
         for key in vd.LEGACY_HERO_FIELDS:
             self.assertNotIn(key, attrs)
 
-    def test_hero_card_has_no_hero_skill_rows(self):
-        doc = base_doc(is_hero=True, skills=["light-speed-strike"])
-        attrs = vd.expected_card_attrs(doc, {"light-speed-strike": SKILL})
-        self.assertEqual(attrs["英雄资格"], "是")
+
+class HeroAttrsTest(unittest.TestCase):
+    def test_hero_attrs_keep_only_identity_and_skills(self):
+        attrs = vd.expected_hero_attrs(
+            hero_doc(specialty=[], skills=["light-speed-strike"]),
+            {"light-speed-strike": SKILL},
+        )
+        self.assertEqual(attrs["id"], "einstein")
+        self.assertEqual(attrs["名称"], "爱因斯坦")
+        self.assertEqual(attrs["类型"], "英雄")
         self.assertEqual(attrs["技能"], "light-speed-strike")
-        for key in ("英雄技能", "英雄技能费用", "英雄技能类型", "每回合次数", "触发时机"):
+        for key in ("星级", "攻击力", "生命值", "时代", "科学分类",
+                    "英雄技能", "英雄技能费用", "英雄技能类型",
+                    "每回合次数", "触发时机"):
             self.assertNotIn(key, attrs)
 
 
@@ -103,15 +140,15 @@ class RealHeroCardsTest(unittest.TestCase):
             skills[doc["id"]] = doc
 
         heroes = []
-        for path in sorted((vd.ROOT / "cards").glob("*.md")):
+        for path in sorted((vd.ROOT / "heroes").glob("*.md")):
             if path.name == "README.md":
                 continue
             doc = vd.parse_front_matter(path)
-            if doc.get("is_hero") is True:
-                heroes.append(doc)
-                self.assertTrue(vd.card_skills(doc), doc["id"])
-                for sid in vd.card_skills(doc):
-                    self.assertIn(sid, skills, f"{doc['id']} 引用了不存在的技能 {sid}")
+            heroes.append(doc)
+            self.assertEqual(doc["card_type"], "hero", doc["id"])
+            self.assertTrue(vd.card_skills(doc), doc["id"])
+            for sid in vd.card_skills(doc):
+                self.assertIn(sid, skills, f"{doc['id']} 引用了不存在的技能 {sid}")
 
         self.assertEqual(len(heroes), 32)
         # 13 张原英雄各有一个专属技能，扩到 32 张后这些技能仍被引用。
@@ -127,6 +164,18 @@ class RealHeroCardsTest(unittest.TestCase):
         for sid in passive:
             self.assertNotIn("uses_per_turn", skills[sid], sid)
 
+    def test_hero_and_minion_pools_share_ids(self):
+        hero_ids = {
+            vd.parse_front_matter(path)["id"]
+            for path in (vd.ROOT / "heroes").glob("*.md")
+            if path.name != "README.md"
+        }
+        card_ids = {
+            vd.parse_front_matter(path)["id"]
+            for path in (vd.ROOT / "cards").glob("*.md")
+            if path.name != "README.md"
+        }
+        self.assertEqual(hero_ids, hero_ids & card_ids, "每张英雄卡都应有同名随从卡")
 
 
 class ActiveSkillFieldTest(unittest.TestCase):
@@ -180,44 +229,65 @@ class SkillRefsTest(unittest.TestCase):
 
 
 class HeroCardsTest(unittest.TestCase):
-    HERO_IDS = ["adam-smith", "darwin", "davinci", "edison", "einstein",
-                "faraday", "galileo", "knuth", "luxun", "marie-curie",
-                "mendel", "pasteur", "tesla", "gauss", "lavoisier", "rutherford",
-                "linnaeus", "lamarck", "morgan", "mozi", "luban", "shenkuo",
-                "simaqian", "quyuan", "zhangzhongjing", "beethoven",
-                "shakespeare", "zhenghe", "wright-brothers", "stephenson",
-                "fleming", "lisshi"]
+    """`check_hero_cards` 从 content 目录读英雄卡，这里用临时目录注入。"""
 
-    def run_check(self, count, extra_minions=(), extra_effects=()):
-        heroes = [{"_file": f"{card_id}.md", "id": card_id, "name": card_id,
-                   "skills": [], "is_hero": True}
-                  for card_id in self.HERO_IDS[:count]]
-        minions = list(heroes) + list(extra_minions)
-        effects = list(extra_effects)
-        vd.errors.clear()
-        vd.check_hero_cards(minions + effects, minions, effects)
-        return list(vd.errors)
+    def run_check(self, heroes, minions=None, cards=None, effects=()):
+        minions = list(minions if minions is not None else [minion_doc()])
+        cards = list(cards if cards is not None else minions) + list(effects)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            for kind, docs in (("cards", cards), ("heroes", heroes)):
+                directory = root / kind
+                directory.mkdir()
+                for doc in docs:
+                    (directory / doc["_file"]).write_text("# 标题\n", encoding="utf-8")
+            vd.errors.clear()
+            with mock.patch.object(vd, "ROOT", root), \
+                    mock.patch.object(vd, "load", return_value=heroes):
+                vd.check_hero_cards(
+                    cards, minions, list(effects), {"light-speed-strike": SKILL}
+                )
+            return list(vd.errors)
 
     def test_thirty_two_heroes_pass(self):
-        self.assertEqual(self.run_check(32), [])
+        heroes = [hero_doc(_file=f"h{i}.md", id=f"h{i}", name=f"h{i}")
+                  for i in range(32)]
+        minions = [minion_doc(_file=f"h{i}.md", id=f"h{i}", name=f"h{i}")
+                   for i in range(32)]
+        self.assertEqual(self.run_check(heroes, minions, cards=minions), [])
 
     def test_thirty_one_heroes_are_rejected(self):
-        errors = self.run_check(31)
+        heroes = [hero_doc(_file=f"h{i}.md", id=f"h{i}", name=f"h{i}")
+                  for i in range(31)]
+        minions = [minion_doc(_file=f"h{i}.md", id=f"h{i}", name=f"h{i}")
+                   for i in range(32)]
+        errors = self.run_check(heroes, minions, cards=minions)
         self.assertTrue(any("期望 32" in e for e in errors), errors)
 
-    def test_non_hero_minion_with_is_hero_field_is_rejected(self):
-        errors = self.run_check(32, extra_minions=[
-            {"_file": "luxun.md", "id": "fake", "name": "fake",
-             "skills": [], "is_hero": False},
-        ])
-        self.assertTrue(any("非英雄随从不得有 is_hero" in e for e in errors), errors)
+    def test_hero_without_named_minion_is_rejected(self):
+        heroes = [hero_doc(_file="ghost.md", id="ghost", name="ghost")]
+        errors = self.run_check(heroes)
+        self.assertTrue(any("没有对应的随从卡" in e for e in errors), errors)
 
-    def test_effect_card_with_is_hero_is_rejected(self):
-        errors = self.run_check(32, extra_effects=[
-            {"_file": "luxun.md", "id": "effect", "name": "effect",
-             "skills": [], "is_hero": True, "card_type": "effect"},
-        ])
-        self.assertTrue(any("效果牌不得有 is_hero" in e for e in errors), errors)
+    def test_hero_field_mismatch_is_rejected(self):
+        heroes = [hero_doc(skills=[])]
+        errors = self.run_check(heroes)
+        self.assertTrue(any("skills 与随从卡" in e for e in errors), errors)
+
+    def test_minion_with_is_hero_field_is_rejected(self):
+        minions = [minion_doc(is_hero=False)]
+        errors = self.run_check([hero_doc()], minions, cards=minions)
+        self.assertTrue(any("不得再有 is_hero" in e for e in errors), errors)
+
+    def test_hero_with_minion_only_field_is_rejected(self):
+        heroes = [hero_doc(attack=3)]
+        errors = self.run_check(heroes)
+        self.assertTrue(any("英雄卡不得有字段" in e for e in errors), errors)
+
+    def test_hero_with_wrong_card_type_is_rejected(self):
+        heroes = [hero_doc(card_type="minion")]
+        errors = self.run_check(heroes)
+        self.assertTrue(any("card_type 必须为 hero" in e for e in errors), errors)
 
 
 if __name__ == "__main__":

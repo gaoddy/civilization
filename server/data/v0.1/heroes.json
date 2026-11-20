@@ -1,0 +1,505 @@
+[
+  {
+    "card_type": "hero",
+    "id": "adam-smith",
+    "playstyle": "mammal",
+    "skills": [
+      "division-of-labor"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "beethoven",
+    "playstyle": "mammal",
+    "skills": [
+      "human-growth-twice"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "darwin",
+    "playstyle": "neutral",
+    "skills": [
+      "aura-biology-plus-1-plus-1",
+      "evolution-discovery"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "fish"
+      },
+      {
+        "kind": "play",
+        "value": "insect"
+      },
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      },
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "davinci",
+    "playstyle": "neutral",
+    "skills": [
+      "universal-manuscript"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "edison",
+    "playstyle": "machine",
+    "skills": [
+      "invention-factory"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "einstein",
+    "playstyle": "neutral",
+    "skills": [
+      "battlecry-all-friendly-growth-once",
+      "light-speed-strike"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "faraday",
+    "playstyle": "neutral",
+    "skills": [
+      "keyword-divine-shield",
+      "faraday-cage"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "fleming",
+    "playstyle": "virus",
+    "skills": [
+      "virus-growth-once"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "galileo",
+    "playstyle": "neutral",
+    "skills": [
+      "observation"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "gauss",
+    "playstyle": "neutral",
+    "skills": [
+      "scholar-growth-twice"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "knuth",
+    "playstyle": "neutral",
+    "skills": [
+      "efficient-algorithm"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "lamarck",
+    "playstyle": "neutral",
+    "skills": [
+      "biology-evolve"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "fish"
+      },
+      {
+        "kind": "play",
+        "value": "insect"
+      },
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      },
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "lavoisier",
+    "playstyle": "neutral",
+    "skills": [
+      "aura-other-plus-0-plus-1"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "reptile"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "linnaeus",
+    "playstyle": "neutral",
+    "skills": [
+      "battlecry-all-biology-growth-once"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "fish"
+      },
+      {
+        "kind": "play",
+        "value": "insect"
+      },
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      },
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "lisshi",
+    "playstyle": "plant",
+    "skills": [
+      "battlecry-plant-growth-twice"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "luban",
+    "playstyle": "machine",
+    "skills": [
+      "battlecry-friendly-mech-growth-once"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "luxun",
+    "playstyle": "neutral",
+    "skills": [
+      "shout"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "marie-curie",
+    "playstyle": "neutral",
+    "skills": [
+      "battlecry-friendly-growth-twice",
+      "radiation"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "mendel",
+    "playstyle": "neutral",
+    "skills": [
+      "battlecry-friendly-plant-growth-once",
+      "heredity"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "plant"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "morgan",
+    "playstyle": "neutral",
+    "skills": [
+      "aura-biology-plus-0-plus-1"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "insect"
+      },
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "reptile"
+      },
+      {
+        "kind": "play",
+        "value": "fish"
+      },
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      },
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "mozi",
+    "playstyle": "mammal",
+    "skills": [
+      "enemy-random-cannot-attack"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "pasteur",
+    "playstyle": "virus",
+    "skills": [
+      "microbiology"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "quyuan",
+    "playstyle": "neutral",
+    "skills": [
+      "shout"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "rutherford",
+    "playstyle": "neutral",
+    "skills": [
+      "combat-random-enemy-damage-3"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "shakespeare",
+    "playstyle": "mammal",
+    "skills": [
+      "battlecry-all-friendly-growth-once"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "shenkuo",
+    "playstyle": "neutral",
+    "skills": [
+      "observation"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "simaqian",
+    "playstyle": "mammal",
+    "skills": [
+      "aura-all-plus-0-plus-1"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "stephenson",
+    "playstyle": "machine",
+    "skills": [
+      "aura-other-mech-plus-1-plus-1"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "tesla",
+    "playstyle": "neutral",
+    "skills": [
+      "alternating-current"
+    ],
+    "specialty": [
+      {
+        "kind": "play",
+        "value": "bird"
+      },
+      {
+        "kind": "play",
+        "value": "machine"
+      }
+    ]
+  },
+  {
+    "card_type": "hero",
+    "id": "wright-brothers",
+    "playstyle": "machine",
+    "skills": [
+      "combat-optimal-attack"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "zhangzhongjing",
+    "playstyle": "mammal",
+    "skills": [
+      "battlecry-all-friendly-plus-0-plus-1"
+    ],
+    "specialty": []
+  },
+  {
+    "card_type": "hero",
+    "id": "zhenghe",
+    "playstyle": "mammal",
+    "skills": [
+      "free-refresh"
+    ],
+    "specialty": []
+  }
+]

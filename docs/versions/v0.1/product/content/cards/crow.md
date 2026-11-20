@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-bird-growth-once；dive-1 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

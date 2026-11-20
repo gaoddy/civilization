@@ -11,7 +11,6 @@ attack: 7
 health: 11
 skills: [aura-other-mech-plus-1-plus-1]
 is_scholar: false
-is_hero: true
 ---
 
 # 史蒂芬孙
@@ -34,7 +33,6 @@ is_hero: true
 | 关键词 | 无 |
 | 技能 | aura-other-mech-plus-1-plus-1 |
 | 学者 | 否 |
-| 英雄资格 | 是 |
 
 ## 效果
 

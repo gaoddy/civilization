@@ -12,7 +12,6 @@ attack: 0
 health: 16
 skills: [battlecry-friendly-growth-twice, radiation]
 is_scholar: true
-is_hero: true
 ---
 
 # 玛丽·居里
@@ -35,7 +34,6 @@ is_hero: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-twice；radiation |
 | 学者 | 是 |
-| 英雄资格 | 是 |
 
 ## 效果
 

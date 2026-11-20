@@ -12,7 +12,6 @@ attack: 0
 health: 16
 skills: [battlecry-all-friendly-growth-once, light-speed-strike]
 is_scholar: true
-is_hero: true
 ---
 
 # 爱因斯坦
@@ -35,7 +34,6 @@ is_hero: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-growth-once；light-speed-strike |
 | 学者 | 是 |
-| 英雄资格 | 是 |
 
 ## 效果
 

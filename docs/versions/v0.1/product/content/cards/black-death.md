@@ -34,7 +34,6 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-humans-minus-2-health；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

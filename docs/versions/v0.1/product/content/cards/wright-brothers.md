@@ -11,7 +11,6 @@ attack: 8
 health: 9
 skills: [combat-optimal-attack]
 is_scholar: false
-is_hero: true
 ---
 
 # 莱特兄弟
@@ -34,7 +33,6 @@ is_hero: true
 | 关键词 | 无 |
 | 技能 | combat-optimal-attack |
 | 学者 | 否 |
-| 英雄资格 | 是 |
 
 ## 效果
 

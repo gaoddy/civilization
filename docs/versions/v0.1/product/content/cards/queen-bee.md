@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 战吼；亡语 |
 | 技能 | battlecry-summon-2-worker-bees；deathrattle-summon-1-worker-bee |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

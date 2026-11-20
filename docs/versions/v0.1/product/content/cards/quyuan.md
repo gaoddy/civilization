@@ -12,7 +12,6 @@ attack: 0
 health: 12
 skills: [shout]
 is_scholar: true
-is_hero: true
 ---
 
 # 屈原
@@ -35,7 +34,6 @@ is_hero: true
 | 关键词 | 无 |
 | 技能 | shout |
 | 学者 | 是 |
-| 英雄资格 | 是 |
 
 ## 效果
 

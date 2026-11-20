@@ -11,7 +11,6 @@ attack: 5
 health: 8
 skills: [aura-all-plus-0-plus-1]
 is_scholar: false
-is_hero: true
 ---
 
 # 司马迁
@@ -34,7 +33,6 @@ is_hero: true
 | 关键词 | 无 |
 | 技能 | aura-all-plus-0-plus-1 |
 | 学者 | 否 |
-| 英雄资格 | 是 |
 
 ## 效果
 

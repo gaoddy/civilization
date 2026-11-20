@@ -249,7 +249,7 @@ def vocabulary_errors(cards, skills):
     """多技能随从的第二/后续技能必须落在本玩法机制词汇内。"""
     errors = []
     for card in cards:
-        if card.get("card_type") != "minion" or card.get("is_scholar") or card.get("is_hero"):
+        if card.get("card_type") != "minion" or card.get("is_scholar"):
             continue
         vocab = MECHANISM_VOCAB.get(card.get("playstyle"))
         if vocab is None:

@@ -13,7 +13,7 @@ def card(cid, playstyle, level, attack, health, skills=(), card_type="minion", c
         "id": cid, "playstyle": playstyle, "level": level, "attack": attack,
         "health": health, "skills": list(skills), "card_type": card_type,
         "cost": cost, "specialty": [{"kind": "play", "value": s[5:]} for s in specialty],
-        "is_scholar": False, "is_hero": False,
+        "is_scholar": False,
     }
 
 
@@ -138,13 +138,11 @@ class VocabularyTest(unittest.TestCase):
         errors = br.vocabulary_errors(cards, SKILLS)
         self.assertTrue(any("e" in e and "签名机制" in e for e in errors))
 
-    def test_neutral_scholar_and_hero_are_skipped(self):
+    def test_neutral_and_scholar_are_skipped(self):
         neutral = card("n", "neutral", 3, 3, 4, ["s-generic", "s-generic"])
         scholar = card("s", "mammal", 3, 0, 6, ["s-generic", "s-generic"])
         scholar["is_scholar"] = True
-        hero = card("h", "mammal", 3, 3, 4, ["s-generic", "s-generic"])
-        hero["is_hero"] = True
-        self.assertEqual(br.vocabulary_errors([neutral, scholar, hero], SKILLS), [])
+        self.assertEqual(br.vocabulary_errors([neutral, scholar], SKILLS), [])
 
     def test_skill_terms_recognizes_mechanisms(self):
         self.assertEqual(br.skill_terms(SKILLS["s-activate-growth"]), {"成长"})

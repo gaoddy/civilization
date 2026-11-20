@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 进化 |
 | 技能 | keyword-evolve；aura-school-mammal |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

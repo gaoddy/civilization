@@ -11,7 +11,6 @@ attack: 5
 health: 7
 skills: [battlecry-plant-growth-twice]
 is_scholar: false
-is_hero: true
 ---
 
 # 李时珍
@@ -34,7 +33,6 @@ is_hero: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-plant-growth-twice |
 | 学者 | 否 |
-| 英雄资格 | 是 |
 
 ## 效果
 

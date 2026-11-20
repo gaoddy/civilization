@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | aura-school-fish-1；deathrattle-summon-fish-fry-2 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

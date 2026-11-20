@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 播种；嘲讽 |
 | 技能 | keyword-sow；keyword-taunt |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

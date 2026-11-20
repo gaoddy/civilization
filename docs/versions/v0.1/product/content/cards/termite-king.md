@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 亡语；繁衍 3 |
 | 技能 | deathrattle-summon-3-termites；keyword-breed-3 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

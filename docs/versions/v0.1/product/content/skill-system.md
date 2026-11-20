@@ -1,6 +1,6 @@
 # 技能规范与数据
 
-> 依赖：[卡牌规范与数据](card-system.md)（含「英雄卡」小节）、[关键词与机制](../rules/keywords-and-mechanics.md)
+> 依赖：[卡牌规范与数据](card-system.md) §2.1「英雄卡」、[关键词与机制](../rules/keywords-and-mechanics.md)
 > 状态：方案未实施
 > 数据：`docs/versions/v0.1/product/content/skills/`（247 份，文件名 = id）
 > 模板：`docs/versions/v0.1/product/content/skill-templates/`（文件名 = id）
@@ -14,7 +14,7 @@
 - **技能实例**：技能实体文档只写模板调用与参数，不写结构化效果与文案；数值只出现在参数里。
 - **效果牌**：本质上是一定携带技能的卡牌，必须携带至少 1 个技能，技能数量不设上限。
 - **随从牌**：可携带 0–N 个技能；省略 `skills` 等于不带技能。
-- **英雄卡**：一张 `is_hero: true` 的随从卡，技能全部通过 `skills` 引用，与普通随从卡没有结构上的区别。
+- **英雄卡**：`content/heroes/` 下 `card_type: hero` 的独立卡牌，只有身份与技能字段；技能同样全部通过 `skills` 引用，不含数值、时代与科学分类（见 [卡牌规范](card-system.md) §2.1）。
 - **关键词**：不再是卡牌字段，而是技能上的属性 `keyword`；卡牌的关键词由所引用技能派生。
 
 技能 `id` 与卡牌 `id` 分属两个命名空间，各自查重，允许同名。
@@ -154,7 +154,7 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 
 ### 3.2 英雄卡
 
-英雄卡与普通随从卡使用同一套 `skills`，技能 id 不带任何英雄专属前缀，卡上也没有独立的英雄技能字段。32 张英雄卡各自在自己的 `skills` 中引用自己的技能，也可以同时引用普通随从技能；部分英雄卡复用同一技能。主动技能的费用与每回合次数属于技能实体（`cost` / `uses_per_turn`），不写在卡上；被动技能按自身文本前缀触发。同一个技能可以被多张卡共用，触发与结算各自独立。
+英雄卡与普通随从卡使用同一套 `skills`，技能 id 不带任何英雄专属前缀，卡上也没有独立的英雄技能字段。32 张英雄卡各自在自己的 `skills` 中引用自己的技能，也可以同时引用普通随从技能；部分英雄卡复用同一技能。英雄卡与同名随从卡的 `skills` 必须一致，由 §5 校验脚本交叉核对；英雄技能查询只走英雄池，随从与效果牌的技能查询只走随从池。主动技能的费用与每回合次数属于技能实体（`cost` / `uses_per_turn`），不写在卡上；被动技能按自身文本前缀触发。同一个技能可以被多张卡共用，触发与结算各自独立。
 
 ### 3.3 关键词派生
 
@@ -225,7 +225,7 @@ python3 scripts/validate_docs.py
 4. 每张效果牌至少引用 1 个技能；全池恰好 1 张无技能随从（`einstein-fridge`）的 `skills` 为空且 `## 效果` 为「无」；
 5. 卡牌 `## 效果` 与所引用技能 `text` 按顺序拼接的结果一致；
 6. 卡牌属性表的「技能」「关键词」行与 front matter、技能 `keyword` 一致；主动技能的属性表含「费用」「每回合次数」两行；
-7. 英雄卡恰好 32 张，非英雄随从与效果牌不得有 `is_hero`；卡牌不得残留旧版独立的技能字段或小节；
+7. 英雄卡恰好 32 张，每张英雄卡都有同 id 的同名随从卡且 `name` / `playstyle` / `specialty` / `skills` 一致；随从与效果牌不得再有 `is_hero`；卡牌不得残留旧版独立的技能字段或小节；
 8. 每个技能都有 `template` 字段；模板文档存在、参数名已声明、取值在域内、必填参数齐全；模板展开后的 DSL 按[关键词与机制](../rules/keywords-and-mechanics.md) §9.4 校验：段数 3–4 段、触发与动作原语在白名单内、选择器合法（筛选值为英文 id、分类节点合法、玩法 id 合法）、`duration` 取值合法、参数写作 `key=value`；`timesIf` 使用「键:值:次数」或 `scholar:次数`；`Decompose` 必须带 `basis` 与 `duration`；`OnKill` / `OnAllyKill` 在触发白名单内；
 9. 技能文本的固定前缀与触发时机一致：「战吼」对应 `OnPlay`、「亡语」对应 `OnDeath`、「战斗开始时」对应 `OnCombatStart`、「回合开始时」对应 `OnTurnStart`、「每回合首次刷新时」对应 `OnFirstRefresh`、「每当」对应事件类触发、「分解：」对应 `OnKill` / `OnFriendlyDeath` / `OnAllyKill`、`你的…随从获得` 句式对应 `Aura`、「若你控制」对应 `ConditionalAura`；
 10. 卡牌分类字段按[卡牌规范与数据](card-system.md) §1.1 校验：`playstyle`、`taxon`、`specialty` 的取值与交叉约束；学者固定 `neutral`，非学者 `neutral` 仅造物六类工具卡，效果牌 `neutral` 且 `taxon` 为分类树叶子；

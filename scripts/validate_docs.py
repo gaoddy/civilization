@@ -166,6 +166,9 @@ MINION_FIELDS = ["id", "name", "card_type", "playstyle", "taxon", "subtype", "le
                  "attack", "health", "is_scholar"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "playstyle", "taxon",
                  "cost", "match_text"]
+HERO_REQUIRED_FIELDS = ["id", "name", "card_type", "playstyle"]
+HERO_OPTIONAL_FIELDS = {"specialty", "skills"}
+HERO_COUNT = 32
 LEGACY_HERO_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
                       "hero_skill_uses_per_turn", "hero_skill_trigger"]
 
@@ -901,6 +904,7 @@ def derived_keywords(doc, skill_map):
 # 文档属性表里的中文名。校验时由 front matter 的英文 id 反查；gen_text 复用。
 ENUM_LABELS = {}
 KEYWORD_LABELS = {}
+CARD_TYPE_LABELS = {"hero": "英雄"}
 ENUM_COLUMNS = {"card_type": "类型", "playstyle": "玩法", "taxon": "科学分类",
                 "era": "时代", "subtype": "子类"}
 
@@ -913,11 +917,11 @@ def _enum_label_value(table, field, value):
     return label
 
 
-def card_enum_labels(raw, root=ROOT):
-    """从卡牌属性表收集枚举 id → 中文名；同一 id 映射冲突时报错。"""
+def card_enum_labels(raw, root=ROOT, kind="cards"):
+    """从卡牌或英雄属性表收集枚举 id → 中文名；同一 id 映射冲突时报错。"""
     labels = {field: {} for field in ENUM_COLUMNS}
     for doc in raw:
-        table = parse_attr_table(root / "cards" / doc["_file"])
+        table = parse_attr_table(root / kind / doc["_file"])
         if table is None:
             continue
         for field in ENUM_COLUMNS:
@@ -967,6 +971,8 @@ def keyword_display(value):
 
 
 def enum_label(kind, value):
+    if kind == "card_type" and value in CARD_TYPE_LABELS:
+        return CARD_TYPE_LABELS[value]
     return ENUM_LABELS.get(kind, {}).get(value, value)
 
 
@@ -999,8 +1005,11 @@ def play_heading(is_scholar):
     return "擅长：{paths}" if is_scholar else "关联：{paths}"
 
 
-def specialty_display(doc):
-    """关联分类列：按 play / prey / host 分段，段内用、分隔；无内容写「无」。"""
+def specialty_display(doc, hero=False):
+    """关联分类列：按 play / prey / host 分段，段内用、分隔；无内容写「无」。
+
+    英雄卡只保留关联关系，play: 段统一写「关联：」，不沿用学者卡的「擅长：」。
+    """
     items = doc.get("specialty") or []
     groups = collections.OrderedDict()
     for item in items:
@@ -1019,7 +1028,7 @@ def specialty_display(doc):
                 names.append((TAXONOMY_NODES.get(target, {}).get("name") or target)
                              if TAXONOMY_NODES else enum_label("taxon", target))
         if prefix == "play":
-            title = play_heading(doc.get("is_scholar") is True)
+            title = "关联：{paths}" if hero else play_heading(doc.get("is_scholar") is True)
         elif prefix == "prey":
             title = "捕食：{paths}"
         elif prefix == "host":
@@ -1048,7 +1057,6 @@ def expected_card_attrs(doc, skill_map):
             "时代": enum_label("era", doc["era"]), "攻击力": str(doc["attack"]),
             "生命值": str(doc["health"]), "关键词": keyword_value,
             "技能": skill_value, "学者": "是" if doc["is_scholar"] else "否",
-            "英雄资格": "是" if doc.get("is_hero") else "否",
         }
         if taxon_value:
             attrs["科学分类"] = taxon_value
@@ -1065,6 +1073,22 @@ def expected_card_attrs(doc, skill_map):
     }
     if taxon_value:
         attrs["科学分类"] = taxon_value
+    if specialty_value:
+        attrs["关联分类"] = specialty_value
+    return attrs
+
+
+def expected_hero_attrs(doc, skill_map):
+    """英雄卡属性表：只含身份与技能，不含数值、时代与科学分类。"""
+    skills = card_skills(doc)
+    attrs = {
+        "id": doc["id"],
+        "名称": doc["name"],
+        "类型": enum_label("card_type", doc["card_type"]),
+        "玩法": playstyle_display(doc.get("playstyle")),
+        "技能": "；".join(skills) if skills else "无",
+    }
+    specialty_value = specialty_display(doc, hero=True) if TAXONOMY_NODES else ""
     if specialty_value:
         attrs["关联分类"] = specialty_value
     return attrs
@@ -1226,19 +1250,35 @@ def check_attr_tables(raw, skill_map):
             fail(f"{doc['_file']}: 属性表多出字段 {sorted(extra)}")
 
 
-def check_card_rendering(raw, skill_map):
+def check_hero_attr_tables(heroes, skill_map):
+    for doc in heroes:
+        path = ROOT / "heroes" / doc["_file"]
+        table = parse_attr_table(path)
+        if table is None:
+            fail(f"{doc['_file']}: 缺少「## 属性」表")
+            continue
+        expected = expected_hero_attrs(doc, skill_map)
+        for key, value in expected.items():
+            if table.get(key) != value:
+                fail(f"{doc['_file']}: 属性表 {key}={table.get(key)!r}，front matter 为 {value!r}")
+        extra = set(table) - set(expected)
+        if extra:
+            fail(f"{doc['_file']}: 属性表多出字段 {sorted(extra)}")
+
+
+def check_card_rendering(raw, skill_map, kind="cards"):
     for doc in raw:
         expected = rendered_text(doc, skill_map)
         if expected is None:
             continue
-        actual = body_text(ROOT / "cards" / doc["_file"])
+        actual = body_text(ROOT / kind / doc["_file"])
         if actual != expected:
             fail(f"{doc['_file']}: 「## 效果」与技能文本拼接不一致：{actual!r} != {expected!r}")
 
 
-def check_card_sources(raw):
+def check_card_sources(raw, kind="cards"):
     for doc in raw:
-        text = (ROOT / "cards" / doc["_file"]).read_text(encoding="utf-8")
+        text = (ROOT / kind / doc["_file"]).read_text(encoding="utf-8")
         section = source_section(text)
         if section is None or not section:
             fail(f"{doc['_file']}: 缺少「## 出处」或内容为空")
@@ -1306,6 +1346,8 @@ def check_cards(skill_map):
             fail(f"{doc['_file']}: 残留旧字段 keywords，应改用 skills")
         if "tribe" in doc:
             fail(f"{doc['_file']}: 残留旧字段 tribe，应改用 playstyle / taxon / specialty")
+        if "is_hero" in doc:
+            fail(f"{doc['_file']}: 残留 is_hero，英雄卡应放在 heroes 目录")
         for message in skill_ref_errors(doc, skill_map):
             fail(message)
         for message in mechanism_errors(doc, skill_map):
@@ -1409,26 +1451,49 @@ def playstyle_counts(minions):
         for c in minions).items()))
 
 
-def check_hero_cards(cards, minions, effects):
-    hero_cards = [c for c in minions if c.get("is_hero") is True]
-    if len(hero_cards) != 32:
-        fail(f"英雄卡 {len(hero_cards)} 张，期望 32")
-    for c in minions:
-        if c.get("is_hero") is True:
+def check_hero_cards(cards, minions, effects, skill_map):
+    heroes = load("heroes", HERO_REQUIRED_FIELDS)
+    if len(heroes) != HERO_COUNT:
+        fail(f"英雄卡 {len(heroes)} 张，期望 {HERO_COUNT}")
+    allowed = set(HERO_REQUIRED_FIELDS) | HERO_OPTIONAL_FIELDS | {"_file"}
+    by_id = {c["id"]: c for c in minions}
+    for doc in heroes:
+        if doc["card_type"] != "hero":
+            fail(f"{doc['_file']}: card_type 必须为 hero，实为 {doc['card_type']!r}")
+        extra = set(doc) - allowed
+        if extra:
+            fail(f"{doc['_file']}: 英雄卡不得有字段 {sorted(extra)}")
+        raw_skills = doc.get("skills")
+        if raw_skills is not None and not isinstance(raw_skills, list):
+            fail(f"{doc['_file']}: skills 必须是列表，实为 {raw_skills!r}")
+        for message in skill_ref_errors(doc, skill_map):
+            fail(message)
+        base = by_id.get(doc["id"])
+        if base is None:
+            fail(f"{doc['_file']}: 英雄卡 {doc['id']} 没有对应的随从卡")
             continue
-        if "is_hero" in c:
-            fail(f"{c['_file']}: 非英雄随从不得有 is_hero")
-    for c in effects:
-        if "is_hero" in c:
-            fail(f"{c['_file']}: 效果牌不得有 is_hero")
+        for field in ("name", "playstyle", "specialty", "skills"):
+            if doc.get(field) != base.get(field):
+                fail(f"{doc['_file']}: 英雄卡 {field} 与随从卡 {base['_file']} 不一致")
+    for label, group in (("英雄卡", heroes),):
+        dup = [v for v, n in collections.Counter(c["id"] for c in group).items() if n > 1]
+        if dup:
+            fail(f"{label} id 重复: {dup}")
+        dup = [v for v, n in collections.Counter(c["name"] for c in group).items() if n > 1]
+        if dup:
+            fail(f"{label}名称重复: {dup}")
     for doc in cards:
-        legacy = [k for k in LEGACY_HERO_FIELDS if k in doc]
-        if legacy:
-            fail(f"{doc['_file']}: 残留英雄技能字段 {legacy}")
-        text = (ROOT / "cards" / doc["_file"]).read_text(encoding="utf-8")
-        if re.search(r"(?m)^## 英雄技能\s*$", text):
-            fail(f"{doc['_file']}: 不得再有「## 英雄技能」小节")
-    return hero_cards
+        if "is_hero" in doc:
+            fail(f"{doc['_file']}: 随从与效果牌不得再有 is_hero")
+    for kind, group in (("cards", cards), ("heroes", heroes)):
+        for doc in group:
+            legacy = [k for k in LEGACY_HERO_FIELDS if k in doc]
+            if legacy:
+                fail(f"{doc['_file']}: 残留英雄技能字段 {legacy}")
+            text = (ROOT / kind / doc["_file"]).read_text(encoding="utf-8")
+            if re.search(r"(?m)^## 英雄技能\s*$", text):
+                fail(f"{doc['_file']}: 不得再有「## 英雄技能」小节")
+    return heroes
 
 
 def check_achievements():
@@ -1483,12 +1548,15 @@ def main():
     skill_map = {s["id"]: s for s in skills}
     raw, minions, effects = check_cards(skill_map)
     check_keyword_unlock(minions, skill_map)
-    hero_cards = check_hero_cards(raw, minions, effects)
+    hero_cards = check_hero_cards(raw, minions, effects, skill_map)
     check_skill_context(skill_map, effects)
     achievements = check_achievements()
     check_attr_tables(raw, skill_map)
+    check_hero_attr_tables(hero_cards, skill_map)
     check_card_rendering(raw, skill_map)
+    check_card_rendering(hero_cards, skill_map, "heroes")
     check_card_sources(raw)
+    check_card_sources(hero_cards, "heroes")
     check_enemy_selectors(raw)
     check_auras(minions)
     if errors:

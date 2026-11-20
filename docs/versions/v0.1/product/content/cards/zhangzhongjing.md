@@ -11,7 +11,6 @@ attack: 5
 health: 8
 skills: [battlecry-all-friendly-plus-0-plus-1]
 is_scholar: false
-is_hero: true
 ---
 
 # 张仲景
@@ -34,7 +33,6 @@ is_hero: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-plus-0-plus-1 |
 | 学者 | 否 |
-| 英雄资格 | 是 |
 
 ## 效果
 

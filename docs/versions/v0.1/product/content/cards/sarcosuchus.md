@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 剧毒；减伤 2 |
 | 技能 | keyword-poison；keyword-armor-2 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

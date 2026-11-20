@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 连击；无视嘲讽 |
 | 技能 | keyword-windfury；keyword-ignore-taunt |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 繁衍 3 |
 | 技能 | aura-plant-plus-1-plus-1；keyword-breed-3 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | trigger-friendly-evolve-self-plus-1-plus-1 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

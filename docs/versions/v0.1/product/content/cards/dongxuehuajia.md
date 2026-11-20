@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-1-health |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

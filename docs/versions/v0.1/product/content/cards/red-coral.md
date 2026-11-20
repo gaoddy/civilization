@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 减伤 1 |
 | 技能 | revive-2；keyword-armor-1 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

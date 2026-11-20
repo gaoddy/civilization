@@ -1,6 +1,6 @@
 # 联网与技术架构
 
-> 依赖：[设计总纲](../../product/overview/design-overview.md)（§8）、[核心规则](../../product/rules/core-rules.md)、[卡牌规范与数据](../../product/content/card-system.md)（含「英雄卡」小节）
+> 依赖：[设计总纲](../../product/overview/design-overview.md)（§8）、[核心规则](../../product/rules/core-rules.md)、[卡牌规范与数据](../../product/content/card-system.md) §2.1「英雄卡」
 > 状态：方案未实施
 > 注意：**服务端已确定为 Rust，客户端已确定为 Godot 4 + GDScript**，见[服务端技术基线](server-stack.md)与[客户端技术基线](client-stack.md)。本文只锁定与实现无关的架构约束与协议形状；具体语言、框架与部署形态以技术基线为准。
 

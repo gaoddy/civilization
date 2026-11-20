@@ -20,7 +20,7 @@ import skill_templates
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "server" / "data" / "v0.1"
-FILES = ("cards.json", "skills.json", "tokens.json", "config.json", "taxonomy.json")
+FILES = ("cards.json", "heroes.json", "skills.json", "tokens.json", "config.json", "taxonomy.json")
 
 # 产品基线常量；来源 docs/versions/v0.1/product/systems/economy-and-numbers.md
 # 与 rules/ 下的核心规则（生命、槽位、回合上限、伤害上下限）。
@@ -380,8 +380,18 @@ def card_entry(doc):
         "health": doc.get("health"),
         "skills": doc.get("skills", []),
         "is_scholar": doc.get("is_scholar", False),
-        "is_hero": doc.get("is_hero", False),
         "cost": doc.get("cost"),
+    }
+
+
+def hero_entry(doc):
+    """英雄卡只输出身份与技能字段；不含数值、时代与科学分类。"""
+    return {
+        "id": doc["id"],
+        "card_type": doc["card_type"],
+        "playstyle": doc["playstyle"],
+        "specialty": parse_specialty(doc.get("specialty")),
+        "skills": doc.get("skills", []),
     }
 
 
@@ -516,11 +526,13 @@ def build(root):
     content = pathlib.Path(root) / "docs" / "versions" / "v0.1" / "product" / "content"
     renderer = skill_templates.Renderer(content)
     cards = [card_entry(doc) for doc in load_docs(content, "cards")]
+    heroes = [hero_entry(doc) for doc in load_docs(content, "heroes")]
     skills = [skill_entry(doc, renderer) for doc in load_docs(content, "skills")]
     tokens = parse_tokens(content / "tokens" / "README.md")
     taxonomy = parse_taxonomy(content / TAXONOMY_FILE)
     return {
         "cards.json": dumps(cards),
+        "heroes.json": dumps(heroes),
         "skills.json": dumps(skills),
         "tokens.json": dumps(tokens),
         "config.json": dumps(CONFIG),

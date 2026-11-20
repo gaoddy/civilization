@@ -34,7 +34,6 @@ is_scholar: false
 | 关键词 | 繁衍 1 |
 | 技能 | keyword-breed-1 |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

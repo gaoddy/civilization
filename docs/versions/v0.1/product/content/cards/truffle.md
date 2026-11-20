@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 分解 |
 | 技能 | decompose-friendly-death-original |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

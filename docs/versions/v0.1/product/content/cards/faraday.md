@@ -12,7 +12,6 @@ attack: 0
 health: 16
 skills: [keyword-divine-shield, faraday-cage]
 is_scholar: true
-is_hero: true
 ---
 
 # 法拉第
@@ -35,7 +34,6 @@ is_hero: true
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；faraday-cage |
 | 学者 | 是 |
-| 英雄资格 | 是 |
 
 ## 效果
 

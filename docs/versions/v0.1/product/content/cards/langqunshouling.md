@@ -34,7 +34,6 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | aura-other-biology-plus-1-attack |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

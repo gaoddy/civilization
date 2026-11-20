@@ -11,7 +11,6 @@ attack: 5
 health: 8
 skills: [battlecry-all-friendly-growth-once]
 is_scholar: false
-is_hero: true
 ---
 
 # 莎士比亚
@@ -34,7 +33,6 @@ is_hero: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-growth-once |
 | 学者 | 否 |
-| 英雄资格 | 是 |
 
 ## 效果
 

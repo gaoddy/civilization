@@ -11,7 +11,6 @@ attack: 4
 health: 7
 skills: [virus-growth-once]
 is_scholar: false
-is_hero: true
 ---
 
 # 弗莱明
@@ -34,7 +33,6 @@ is_hero: true
 | 关键词 | 无 |
 | 技能 | virus-growth-once |
 | 学者 | 否 |
-| 英雄资格 | 是 |
 
 ## 效果
 

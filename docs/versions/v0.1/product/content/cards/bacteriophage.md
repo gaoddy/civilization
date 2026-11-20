@@ -33,7 +33,6 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | convert-3；microbiology |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 

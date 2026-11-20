@@ -95,6 +95,13 @@ def generated_entries(root):
     raw = validate_docs.load(
         "cards", ["id", "card_type", "playstyle", "taxon", "era"], root=content)
     enum_labels = validate_docs.card_enum_labels(raw, root=content)
+    hero_raw = validate_docs.load(
+        "heroes", ["id", "name", "card_type", "playstyle"], root=content)
+    for doc in hero_raw:
+        entries[f"card.{doc['id']}.name"] = doc["name"]
+    hero_labels = validate_docs.card_enum_labels(hero_raw, root=content, kind="heroes")
+    for value, label in hero_labels["card_type"].items():
+        entries[f"enum.card_type.{value}"] = label
     for field, prefix in (("card_type", "enum.card_type."),
                           ("era", "enum.era.")):
         for value, label in enum_labels[field].items():

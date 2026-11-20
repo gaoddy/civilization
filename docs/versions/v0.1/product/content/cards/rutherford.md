@@ -12,7 +12,6 @@ attack: 0
 health: 20
 skills: [combat-random-enemy-damage-3]
 is_scholar: true
-is_hero: true
 ---
 
 # 卢瑟福
@@ -35,7 +34,6 @@ is_hero: true
 | 关键词 | 无 |
 | 技能 | combat-random-enemy-damage-3 |
 | 学者 | 是 |
-| 英雄资格 | 是 |
 
 ## 效果
 

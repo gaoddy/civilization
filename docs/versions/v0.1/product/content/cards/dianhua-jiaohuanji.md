@@ -34,7 +34,6 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-friendly-growth-once；shout |
 | 学者 | 否 |
-| 英雄资格 | 否 |
 
 ## 效果
 
