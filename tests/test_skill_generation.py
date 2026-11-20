@@ -2,6 +2,7 @@ import pathlib
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -109,6 +110,47 @@ class AuditTemplateTest(unittest.TestCase):
             report = audit_effects.audit(content / "skills")
             self.assertEqual(report.violations, [])
             self.assertEqual(report.matrix, {("OnDeath", "Summon"): 1})
+
+
+class CollectSkillErrorsTest(unittest.TestCase):
+    def test_check_skills_reports_template_error_without_crashing(self):
+        skill = {"id": "bad", "_file": "README.md", "template": "missing-template"}
+        saved = validate_docs.errors
+        validate_docs.errors = []
+        try:
+            with mock.patch.object(validate_docs, "load", return_value=[skill]):
+                validate_docs.check_skills()
+            messages = list(validate_docs.errors)
+        finally:
+            validate_docs.errors = saved
+        self.assertTrue(any("模板不存在" in message for message in messages))
+
+    def test_check_skills_rejects_effects_field(self):
+        skill = {"id": "bad", "_file": "README.md",
+                 "template": "on-death-summon(token=baiyi)",
+                 "effects": "OnDeath|Summon|self|token=baiyi"}
+        saved = validate_docs.errors
+        validate_docs.errors = []
+        try:
+            with mock.patch.object(validate_docs, "load", return_value=[skill]):
+                validate_docs.check_skills()
+            messages = list(validate_docs.errors)
+        finally:
+            validate_docs.errors = saved
+        self.assertTrue(any("未知字段" in message and "effects" in message
+                            for message in messages))
+
+    def test_check_skills_reports_template_load_failure(self):
+        saved = validate_docs.errors
+        validate_docs.errors = []
+        try:
+            with mock.patch.object(validate_docs.skill_templates, "load_templates",
+                                   side_effect=ValueError("坏模板")):
+                validate_docs.check_skills()
+            messages = list(validate_docs.errors)
+        finally:
+            validate_docs.errors = saved
+        self.assertTrue(any("技能模板加载失败" in message for message in messages))
 
 
 class ValidateTemplateTest(unittest.TestCase):

@@ -1159,8 +1159,12 @@ def check_skills():
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
-    templates = skill_templates.load_templates(ROOT)
-    renderer = skill_templates.Renderer(ROOT)
+    try:
+        templates = skill_templates.load_templates(ROOT)
+        renderer = skill_templates.Renderer(ROOT)
+    except (OSError, ValueError) as exc:
+        fail(f"技能模板加载失败: {exc}")
+        return
     for skill in skills:
         name = skill["_file"]
         unknown = set(skill) - set(SKILL_FIELDS) - SKILL_OPTIONAL_FIELDS - {"_file"}
@@ -1169,12 +1173,12 @@ def check_skills():
         if "template" not in skill:
             fail(f"{name}: 缺少 template 字段")
             continue
-        for message in validate_skill_template(skill, templates, renderer):
-            fail(message)
-        try:
-            segments = renderer.instance_segments(skill)
-        except ValueError:
-            segments = ()
+        template_errors = validate_skill_template(skill, templates, renderer)
+        if template_errors:
+            for message in template_errors:
+                fail(message)
+            continue
+        segments = renderer.instance_segments(skill)
         raw_effects = ";".join(segments) if segments else "[]"
         text = renderer.instance_text(skill)
         skill["_rendered_text"] = text

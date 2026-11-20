@@ -255,15 +255,24 @@ class Renderer:
             raise ValueError(f"模板不存在 {call.template_id!r}")
 
     def _arg_values(self, template, call):
+        """返回 (实例提供的值, 渲染文案的值)；默认值只进后者。"""
         specs = {spec.name: spec for spec in template.args}
         unknown = sorted(set(call.args) - set(specs))
         if unknown:
             raise ValueError(f"模板 {template.id} 不认识参数 {unknown}")
-        values = {}
+        provided = {}
+        resolved = {}
         for spec in template.args:
-            raw = call.args.get(spec.name, spec.default)
-            values[spec.name] = None if raw is None else self._check_value(spec, raw)
-        return values
+            if spec.name in call.args:
+                value = self._check_value(spec, call.args[spec.name])
+                provided[spec.name] = value
+                resolved[spec.name] = value
+            elif spec.default is not None:
+                provided[spec.name] = None
+                resolved[spec.name] = self._check_value(spec, spec.default)
+            else:
+                raise ValueError(f"模板 {template.id} 缺少参数 {spec.name}")
+        return provided, resolved
 
     def _check_value(self, spec, raw):
         value = str(raw).strip()
@@ -307,9 +316,9 @@ class Renderer:
         template = self._template(call)
         if template.kind == "keyword":
             return ()
-        values = self._arg_values(template, call)
-        selector = self._substitute_effect(template.selector, values, template)
-        params = self._effect_params(template, values)
+        provided, _ = self._arg_values(template, call)
+        selector = self._substitute_effect(template.selector, provided, template)
+        params = self._effect_params(template, provided)
         segment = f"{template.trigger}|{template.op}|{selector}"
         return (f"{segment}|{params}",) if params else (segment,)
 
@@ -361,7 +370,7 @@ class Renderer:
 
     def text(self, call):
         template = self._template(call)
-        values = self._arg_values(template, call)
+        _, values = self._arg_values(template, call)
         specs = {spec.name: spec for spec in template.args}
 
         output = []

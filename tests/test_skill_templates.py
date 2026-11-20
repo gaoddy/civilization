@@ -7,6 +7,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import skill_templates
+import validate_docs
 
 
 class NounTableTest(unittest.TestCase):
@@ -15,6 +16,8 @@ class NounTableTest(unittest.TestCase):
             ROOT / "docs/versions/v0.1/product/content/card-nouns.md")
         self.assertEqual(nouns.taxon["animalia"], "动物")
         self.assertEqual(nouns.playstyle["machine"], "机械")
+        self.assertEqual(nouns.playstyle["fungus"], "真菌界")
+        self.assertEqual(nouns.playstyle["plant"], "植物")
         self.assertEqual(nouns.special["scholar=true"], "学者")
         self.assertEqual(nouns.keyword_text["taunt"], "嘲讽")
 
@@ -85,6 +88,25 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(self.renderer.expand(call),
                          ("Aura|ModifyStats|friendly:adjacent:playstyle=mammal|attack=2,health=2",))
 
+    def test_expand_omits_default_when_instance_omits_it(self):
+        call = skill_templates.TemplateCall("on-death-summon", {"token": "baiyi"})
+        self.assertEqual(self.renderer.expand(call),
+                         ("OnDeath|Summon|self|token=baiyi",))
+
+    def test_text_uses_default_when_instance_omits_it(self):
+        call = skill_templates.TemplateCall("on-death-summon", {"token": "baiyi"})
+        self.assertEqual(self.renderer.text(call), "亡语：召唤一个 2/2 的白蚁")
+
+    def test_missing_required_param_raises_even_if_only_in_params(self):
+        template = skill_templates.Template(
+            "t", "effect", "OnPlayEffect", "ModifyStats", "friendly:single",
+            "attack={attack},health={health}", "使一个友方随从获得 +1/+1",
+            (skill_templates.ArgSpec("attack", "int"),
+             skill_templates.ArgSpec("health", "int")))
+        self.renderer.templates["t"] = template
+        with self.assertRaises(ValueError):
+            self.renderer.expand(skill_templates.TemplateCall("t", {"attack": "1"}))
+
     def test_text_count_and_stats(self):
         self.assertEqual(self.renderer.text(self.summon_two),
                          "亡语：召唤两个 2/2 的白蚁")
@@ -106,11 +128,19 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(self.renderer.text(call), "使一个友方随从获得嘲讽直到回合结束")
 
     def test_multiple_calls_bind_args_per_template(self):
-        doc = {"template": "on-activate-refresh-shop; on-activate-gain-minion"}
+        doc = {"template": "on-death-summon(token=baiyi,count=2); "
+                           "on-play-keyword-single(keyword=armor 2,duration=combat)"}
         self.assertEqual(self.renderer.instance_segments(doc), (
-            "OnActivate|RefreshShop|self|free=true",
-            "OnActivate|GainMinion|self|from=shop,level=current,to=hand",
+            "OnDeath|Summon|self|token=baiyi,count=2",
+            "OnPlayEffect|GrantKeyword|friendly:single|keyword=armor,value=2,duration=combat",
         ))
+
+    def test_ascii_and_fullwidth_separator_are_equivalent(self):
+        ascii_calls = skill_templates.parse_template_field(
+            "on-death-summon(token=baiyi); keyword-self(keyword=taunt)")
+        fullwidth_calls = skill_templates.parse_template_field(
+            "on-death-summon(token=baiyi)；keyword-self(keyword=taunt)")
+        self.assertEqual(ascii_calls, fullwidth_calls)
 
     def test_effect_params_split_keyword_components(self):
         template = skill_templates.Template(
@@ -160,3 +190,14 @@ class RenderTest(unittest.TestCase):
                "text": "亡语：召唤一个 1/2 的白蚁"}
         self.assertEqual(self.renderer.instance_text(doc),
                          "亡语：召唤一个 1/2 的白蚁")
+
+    def test_real_noun_exception_instances_keep_copy(self):
+        cases = {
+            "battlecry-friendly-plant-kingdom-growth-once": "植物",
+            "trigger-fungus-single-plus-0-plus-3": "真菌界",
+        }
+        for skill_id, noun in cases.items():
+            doc = validate_docs.parse_front_matter(
+                ROOT / f"docs/versions/v0.1/product/content/skills/{skill_id}.md")
+            self.assertEqual(self.renderer.instance_text(doc), doc["text"])
+            self.assertIn(noun, self.renderer.instance_text({**doc, "text": None}))

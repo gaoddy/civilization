@@ -39,6 +39,7 @@ data:
 	$(PYTHON) scripts/gen_text.py
 
 data-check:
+	$(PYTHON) scripts/validate_docs.py
 	$(PYTHON) scripts/gen_card_data.py --check
 	$(PYTHON) scripts/gen_client_data.py --check
 	$(PYTHON) scripts/audit_effects.py
