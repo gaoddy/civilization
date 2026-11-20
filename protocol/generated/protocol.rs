@@ -3276,7 +3276,7 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 ///  ],
 ///  "properties": {
 ///    "attack": {
-///      "description": "随从牌的当前攻击力（已含成长等全部层数，学者为 0）；效果牌为 null",
+///      "description": "随从牌的当前攻击力（已含成长等全部层数）；效果牌为 null",
 ///      "type": [
 ///        "integer",
 ///        "null"
@@ -3344,7 +3344,7 @@ impl ::std::convert::From<&HandAffordance> for HandAffordance {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct HandCard {
-    ///随从牌的当前攻击力（已含成长等全部层数，学者为 0）；效果牌为 null
+    ///随从牌的当前攻击力（已含成长等全部层数）；效果牌为 null
     pub attack: ::std::option::Option<i64>,
     #[serde(rename = "cardId")]
     pub card_id: ::std::string::String,
