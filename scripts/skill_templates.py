@@ -313,20 +313,32 @@ class Renderer:
         segment = f"{template.trigger}|{template.op}|{selector}"
         return (f"{segment}|{params}",) if params else (segment,)
 
+    def _effect_value(self, template, specs, name, modifier, value):
+        """效果段只接受原值；关键词可拆分 `.name` / `.level` 两段。"""
+        if modifier is None:
+            return value
+        spec = specs.get(name)
+        if spec is not None and spec.type == "keyword" \
+                and modifier in ("name", "level"):
+            base, level = _KEYWORD_RE.fullmatch(value).groups()
+            return base if modifier == "name" else (level or "")
+        raise ValueError(f"模板 {template.id} 的效果段不支持修饰符 {{{name}.{modifier}}}")
+
     def _substitute_effect(self, raw, values, template):
+        specs = {spec.name: spec for spec in template.args}
+
         def replace(match):
             name, modifier = match.groups()
-            if modifier:
-                raise ValueError(f"模板 {template.id} 的效果段不支持修饰符 {{{name}.{modifier}}}")
             if values.get(name) is None:
                 raise ValueError(f"模板 {template.id} 缺少参数 {name}")
-            return values[name]
+            return self._effect_value(template, specs, name, modifier, values[name])
 
         return _PLACEHOLDER.sub(replace, raw)
 
     def _effect_params(self, template, values):
         if not template.params:
             return ""
+        specs = {spec.name: spec for spec in template.args}
         pairs = []
         for pair in template.params.split(","):
             pair = pair.strip()
@@ -335,8 +347,14 @@ class Renderer:
             names = {name for name, _ in _PLACEHOLDER.findall(pair)}
             if any(values.get(name) is None for name in names):
                 continue
-            pairs.append(_PLACEHOLDER.sub(
-                lambda m: values[m.group(1)], pair))
+            substituted = _PLACEHOLDER.sub(
+                lambda m: self._effect_value(
+                    template, specs, m.group(1), m.group(2), values[m.group(1)]),
+                pair)
+            # 拆分后为空的分量（如无层数关键词的 value）整段省略。
+            if substituted.split("=", 1)[-1] == "":
+                continue
+            pairs.append(substituted)
         return ",".join(pairs)
 
     # ---- 文案 ----
@@ -346,16 +364,26 @@ class Renderer:
         values = self._arg_values(template, call)
         specs = {spec.name: spec for spec in template.args}
 
-        def replace(match):
+        output = []
+        position = 0
+        for match in _PLACEHOLDER.finditer(template.text):
             name, modifier = match.groups()
             if name not in specs:
                 raise ValueError(f"模板 {template.id} 文案引用未声明参数 {name!r}")
             value = values.get(name)
             if value is None:
                 raise ValueError(f"模板 {template.id} 缺少参数 {name}")
-            return self._render_value(specs[name], modifier, value)
-
-        return _PLACEHOLDER.sub(replace, template.text)
+            output.append(template.text[position:match.start()])
+            rendered = self._render_value(specs[name], modifier, value)
+            # 时长后缀接在数字或拉丁字母后时补一个空格，与现有排版一致。
+            prefix = "".join(output)
+            if modifier == "suffix" and rendered and prefix \
+                    and prefix[-1].isascii() and prefix[-1].isalnum():
+                output.append(" ")
+            output.append(rendered)
+            position = match.end()
+        output.append(template.text[position:])
+        return "".join(output)
 
     def _render_value(self, spec, modifier, value):
         if spec.type in ("token", "card"):

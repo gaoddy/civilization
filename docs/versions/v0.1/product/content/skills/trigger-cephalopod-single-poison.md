@@ -1,7 +1,6 @@
 ---
 id: trigger-cephalopod-single-poison
-text: 使一个友方头足纲随从获得剧毒
-effects: OnPlayEffect|GrantKeyword|friendly:single:playstyle=cephalopod|keyword=poison,duration=permanent
+template: on-play-keyword-single-ps(playstyle=cephalopod,keyword=poison,duration=permanent)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-cephalopod-single-poison |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-keyword-single-ps |
 
 ## 效果
 

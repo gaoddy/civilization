@@ -1,7 +1,6 @@
 ---
 id: trigger-reptile-single-poison-this-turn
-text: 使一个友方爬行纲随从获得剧毒直到回合结束
-effects: OnPlayEffect|GrantKeyword|friendly:single:playstyle=reptile|keyword=poison,duration=combat
+template: on-play-keyword-single-ps(playstyle=reptile,keyword=poison,duration=combat)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-reptile-single-poison-this-turn |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-keyword-single-ps |
 
 ## 效果
 

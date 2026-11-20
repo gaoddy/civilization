@@ -1,7 +1,6 @@
 ---
 id: trigger-friendly-growth-thrice
-text: 使一个友方随从获得三次成长
-effects: OnPlayEffect|Growth|friendly:single|times=3
+template: on-play-growth-single(times=3)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-friendly-growth-thrice |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-growth-single |
 
 ## 效果
 

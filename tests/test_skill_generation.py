@@ -6,6 +6,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import audit_effects
 import gen_card_data
 import render_docs
 import skill_templates
@@ -102,6 +103,15 @@ class GeneratorTemplateTest(unittest.TestCase):
         rendered = self.renderer.instance_text(
             {"id": "x", "template": "on-death-summon(token=baiyi,count=1)"})
         self.assertEqual(rendered, "亡语：召唤一个 2/2 的白蚁")
+
+
+class AuditTemplateTest(unittest.TestCase):
+    def test_audit_expands_template_instance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            content = build_fixture(tmp)
+            report = audit_effects.audit(content / "skills")
+            self.assertEqual(report.violations, [])
+            self.assertEqual(report.matrix, {("OnDeath", "Summon"): 1})
 
 
 class ValidateTemplateTest(unittest.TestCase):

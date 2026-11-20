@@ -1,7 +1,6 @@
 ---
 id: trigger-mech-optimal-attack-this-turn
-text: 你的机械随从获得无视嘲讽直到回合结束
-effects: OnPlayEffect|GrantKeyword|friendly:all:playstyle=machine|keyword=ignore_taunt,duration=combat
+template: on-play-keyword-all-ps-bare(playstyle=machine,keyword=ignore_taunt,duration=combat)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-mech-optimal-attack-this-turn |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-keyword-all-ps-bare |
 
 ## 效果
 

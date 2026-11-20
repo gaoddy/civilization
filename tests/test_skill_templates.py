@@ -105,6 +105,38 @@ class RenderTest(unittest.TestCase):
             "OnActivate|GainMinion|self|from=shop,level=current,to=hand",
         ))
 
+    def test_effect_params_split_keyword_components(self):
+        template = skill_templates.Template(
+            "t", "effect", "OnPlayEffect", "GrantKeyword", "friendly:single",
+            "keyword={keyword.name},value={keyword.level}", "",
+            (skill_templates.ArgSpec("keyword", "keyword"),))
+        self.renderer.templates["t"] = template
+        call = skill_templates.TemplateCall("t", {"keyword": "armor 2"})
+        self.assertEqual(self.renderer.expand(call),
+                         ("OnPlayEffect|GrantKeyword|friendly:single|keyword=armor,value=2",))
+
+    def test_effect_params_drop_empty_component(self):
+        template = skill_templates.Template(
+            "t", "effect", "OnPlayEffect", "GrantKeyword", "friendly:single",
+            "keyword={keyword.name},value={keyword.level}", "",
+            (skill_templates.ArgSpec("keyword", "keyword"),))
+        self.renderer.templates["t"] = template
+        call = skill_templates.TemplateCall("t", {"keyword": "taunt"})
+        self.assertEqual(self.renderer.expand(call),
+                         ("OnPlayEffect|GrantKeyword|friendly:single|keyword=taunt",))
+
+    def test_duration_suffix_spaces_after_number(self):
+        template = skill_templates.Template(
+            "t", "effect", "OnPlayEffect", "ModifyStats", "friendly:single",
+            "", "获得 +{attack}/+{health}{duration.suffix}",
+            (skill_templates.ArgSpec("attack", "int"),
+             skill_templates.ArgSpec("health", "int"),
+             skill_templates.ArgSpec("duration", "duration")))
+        self.renderer.templates["t"] = template
+        call = skill_templates.TemplateCall(
+            "t", {"attack": "0", "health": "1", "duration": "combat"})
+        self.assertEqual(self.renderer.text(call), "获得 +0/+1 直到回合结束")
+
     def test_text_override_wins(self):
         doc = {"template": "on-death-summon(token=baiyi,count=1)",
                "text": "亡语：召唤一个 1/2 的白蚁"}

@@ -1,7 +1,6 @@
 ---
 id: trigger-summon-1-neutral-token-2-2
-text: 召唤一个 2/2 的随从
-effects: OnPlayEffect|Summon|self|token=neutral-token-2-2,count=1
+template: on-play-summon-generic(count=1)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-summon-1-neutral-token-2-2 |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-summon-generic |
 
 ## 效果
 

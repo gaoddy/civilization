@@ -19,7 +19,7 @@ import validate_docs
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CONTENT = pathlib.Path("docs") / "versions" / "v0.1" / "product" / "content"
 
-_PLACEHOLDER = re.compile(r"\{([a-z][a-z0-9_]*)\}")
+_PLACEHOLDER = re.compile(r"\{([a-z][a-z0-9_]*)(?:\.[a-z]+)?\}")
 
 
 def _segments(skill):
@@ -89,6 +89,9 @@ def _match_segment(template, segment):
     actual_map = dict(actual_params)
     if len(actual_map) != len(actual_params):
         return None
+    # 引擎把关键词层数拆在 value 里；模板按 `keyword` 参数携带层数。
+    if "keyword" in actual_map and "value" in actual_map:
+        actual_map["keyword"] = f"{actual_map.pop('keyword')} {actual_map.pop('value')}"
     pattern_params = _pairs(template.params or "")
     allowed = {key for key, _ in pattern_params}
     if set(actual_map) - allowed:
