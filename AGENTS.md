@@ -29,6 +29,7 @@
 - 产品形态：带服务端、带客户端。
 - 用户规模：v0.1 面向小规模内测，房间制、8 人一局，服务端单实例；不做公开匹配与容量承诺，大规模用户量目标在 v0.2 上线时确定。
 - 客户端平台：macOS 桌面端（Godot 4 + GDScript）；移动端在 v0.2。
+- 视觉主题：客户端 UI 只有深色一套，不实现浅色主题与主题切换；UI 验证不做浅色检查。
 - 包名：`com.civilization.banner`（macOS bundle id），应用名 `Civilization`。
 - 初始版本号：`v0.1`，对应 `docs/versions/v0.1/`。
 
