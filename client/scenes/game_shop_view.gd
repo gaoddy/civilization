@@ -12,6 +12,9 @@ signal freeze_pressed
 signal sell_dropped(payload: Dictionary)
 signal sell_hover(hovering: bool, refund: int)
 
+## 售货员立绘资源；文件缺失时 GamePortrait 回退首字色块。
+const SELLER_ART := "res://assets/characters/avatars/seller_ava.png"
+
 ## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
 var detail: GameDetailLayer = null
 
@@ -63,6 +66,7 @@ func _init() -> void:
         tr("ui.game.side_panel.seller_glyph"),
         UITheme.playstyle_color("neutral"),
         true,
+        SELLER_ART,
     )
     actions.add_child(seller)
 

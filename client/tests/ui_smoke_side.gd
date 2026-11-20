@@ -203,6 +203,26 @@ func _check_portrait() -> void:
     portrait.setup("售货员", "售", UITheme.playstyle_color("neutral"), false)
     await get_tree().process_frame
     _expect(portrait.find_child("PortraitName", true, false) == null, "不显示名字时不应创建名字条")
+    var seller_art := "res://assets/characters/avatars/seller_ava.png"
+    portrait.setup("售货员", "售", UITheme.playstyle_color("neutral"), true, seller_art)
+    await get_tree().process_frame
+    _expect(portrait.find_child("PortraitArt", true, false) != null, "有贴图时应挂载头像纹理")
+    _expect(
+        portrait.find_child("PortraitArt", true, false).get_index() == 0,
+        "头像纹理应置于最底层以免遮挡名字条"
+    )
+    _expect(not portrait.find_child("PortraitGlyph", true, false).visible, "有贴图时应隐藏首字")
+    _expect(_node_text(portrait).contains("售货员"), "有贴图时名字条仍应显示")
+    portrait.setup("售货员", "售", UITheme.playstyle_color("neutral"), true, seller_art)
+    await get_tree().process_frame
+    _expect(
+        portrait.find_children("PortraitArt", "", true, false).size() == 1,
+        "重复 setup 不应残留多张头像纹理"
+    )
+    portrait.setup("售货员", "售", UITheme.playstyle_color("neutral"), true)
+    await get_tree().process_frame
+    _expect(portrait.find_child("PortraitArt", true, false) == null, "贴图路径为空时应回退无图")
+    _expect(portrait.find_child("PortraitGlyph", true, false).visible, "回退无图时应恢复首字")
     portrait.queue_free()
     await get_tree().process_frame
 
@@ -461,6 +481,7 @@ func _check_shop_view() -> void:
     _expect(actions != null and actions.get_global_rect().size.y == 64, "商店操作行高应为 64")
     _expect(upgrade != null and upgrade.custom_minimum_size == Vector2(40, 40), "升级按钮应为 40×40")
     _expect(seller != null and seller.custom_minimum_size == Vector2(64, 64), "售货员应为 64×64")
+    _expect(seller != null and seller.find_child("PortraitArt", true, false) != null, "售货员应显示立绘贴图")
     _expect(reroll != null and reroll.custom_minimum_size == Vector2(40, 40), "刷新按钮应为 40×40")
     _expect(freeze != null and freeze.custom_minimum_size == Vector2(40, 40), "冻结按钮应为 40×40")
     if upgrade != null and seller != null and reroll != null:
