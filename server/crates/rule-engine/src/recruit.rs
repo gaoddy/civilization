@@ -797,13 +797,24 @@ pub(crate) fn check_freeze(state: &GameState, seat: Seat, slot: Option<u8>) -> R
     check_shop_slot(state, seat, slot)
 }
 
-/// `UnfreezeShop` 的只读预检，规则见 [`check_shop_slot`]。
+/// `UnfreezeShop` 的只读预检：槽位规则同 [`check_shop_slot`]，且本回合必须冻结过商店。
+///
+/// 解冻只在冻结的当回合可用；跨回合保留的冻结状态不能直接解冻，只能靠刷新换新卡
+/// 或买走。下一回合重新按「冻结」会再次取得解冻权。
 pub(crate) fn check_unfreeze(
     state: &GameState,
     seat: Seat,
     slot: Option<u8>,
 ) -> Result<(), Reject> {
-    check_shop_slot(state, seat, slot)
+    check_shop_slot(state, seat, slot)?;
+    let player = player(state, seat)?;
+    if !player.froze_this_turn {
+        return Err(Reject::new(
+            RejectCode::InvalidStage,
+            "本回合尚未冻结商店，不能解冻".to_string(),
+        ));
+    }
+    Ok(())
 }
 
 /// 设置槽位的冻结标记：指定槽位只改该槽位，`None` 改全部非空槽位。
@@ -829,6 +840,11 @@ fn set_frozen(state: &mut GameState, seat: Seat, slot: Option<u8>, frozen: bool)
 fn freeze(state: &mut GameState, seat: Seat, slot: Option<u8>) -> Result<Outcome, Reject> {
     check_freeze(state, seat, slot)?;
     set_frozen(state, seat, slot, true);
+    let player = state
+        .players
+        .get_mut(usize::from(seat))
+        .expect("check_freeze 已保证座位存在");
+    player.froze_this_turn = true;
     Ok(Outcome::empty())
 }
 
@@ -1248,8 +1264,9 @@ fn choose_discover(
 
 /// 重抽一名玩家的全部非冻结槽位。
 ///
-/// `preserve_frozen == true` 时保留冻结槽位（回合开始）；`false` 时先清除所有冻结
-/// 标记再重抽（手动刷新、升时代）。
+/// `preserve_frozen == true` 时保留冻结槽位的卡牌、实例编号与冻结标记（回合开始）：
+/// 不手动解冻就一直保留，只补足空槽。`false` 时先清除所有冻结标记再重抽（手动刷新、
+/// 升时代），因此刷新后的新卡牌不带冻结状态。
 pub(crate) fn roll_player(
     engine: &Engine,
     state: &mut GameState,
@@ -1278,6 +1295,7 @@ pub(crate) fn roll_player(
             && let Some(Some(existing)) = slot
             && existing.frozen
         {
+            // 冻结标记原样保留：不解冻就一直锁在商店里。
             drawn.push(Some((
                 Some(existing.instance_id),
                 existing.card_id.clone(),
@@ -1752,6 +1770,21 @@ mod tests {
                 check: Box::new(|_, state| check_unfreeze(state, 0, Some(0))),
                 expected: RejectCode::ShopSlotEmpty,
                 expected_message: None,
+            },
+            Case {
+                name: "本回合未冻结就解冻",
+                setup: Box::new(|| {
+                    let (engine, mut state) = setup(124);
+                    set_shop(&mut state, 0, &[Some(minion_id(1))]);
+                    if let Some(Some(slot)) = state.players[0].shop.first_mut() {
+                        slot.frozen = true;
+                    }
+                    (engine, state)
+                }),
+                intent: Intent::UnfreezeShop { slot: Some(0) },
+                check: Box::new(|_, state| check_unfreeze(state, 0, Some(0))),
+                expected: RejectCode::InvalidStage,
+                expected_message: Some("本回合尚未冻结商店，不能解冻"),
             },
             Case {
                 name: "金币不足使用英雄技能",

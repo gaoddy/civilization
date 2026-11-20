@@ -42,6 +42,7 @@ pub mod error {
 ///    "boardMinions",
 ///    "canEndRecruit",
 ///    "canReroll",
+///    "canUnfreeze",
 ///    "canUpgradeEra",
 ///    "canUseHeroPower",
 ///    "handCards",
@@ -59,6 +60,10 @@ pub mod error {
 ///      "type": "boolean"
 ///    },
 ///    "canReroll": {
+///      "type": "boolean"
+///    },
+///    "canUnfreeze": {
+///      "description": "冻结按钮是否为「解冻」态：本回合冻结过商店且仍有冻结槽位；跨回合保留的冻结不算",
 ///      "type": "boolean"
 ///    },
 ///    "canUpgradeEra": {
@@ -106,6 +111,9 @@ pub struct Affordances {
     pub can_end_recruit: bool,
     #[serde(rename = "canReroll")]
     pub can_reroll: bool,
+    ///冻结按钮是否为「解冻」态：本回合冻结过商店且仍有冻结槽位；跨回合保留的冻结不算
+    #[serde(rename = "canUnfreeze")]
+    pub can_unfreeze: bool,
     #[serde(rename = "canUpgradeEra")]
     pub can_upgrade_era: bool,
     #[serde(rename = "canUseHeroPower")]

@@ -57,6 +57,7 @@ impl Engine {
                 first_refresh_used: false,
                 first_refresh_pending: true,
                 recruit_done: false,
+                froze_this_turn: false,
             })
             .collect();
 
@@ -130,6 +131,7 @@ impl Engine {
             player.first_refresh_used = false;
             player.first_refresh_pending = true;
             player.recruit_done = false;
+            player.froze_this_turn = false;
         }
 
         let mut events = vec![
@@ -170,6 +172,8 @@ impl Engine {
         for player in &mut state.players {
             player.hero_uses.clear();
             player.recruit_done = false;
+            // 解冻只在冻结的当回合可用；冻结标记本身保留，见 `recruit::roll_player`。
+            player.froze_this_turn = false;
             if player.eliminated {
                 continue;
             }

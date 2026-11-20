@@ -199,6 +199,7 @@ fn self_to_protocol(
                 .collect(),
             can_end_recruit: view.affordances.can_end_recruit,
             can_reroll: view.affordances.can_reroll,
+            can_unfreeze: view.affordances.can_unfreeze,
             can_upgrade_era: view.affordances.can_upgrade_era,
             can_use_hero_power: view.affordances.can_use_hero_power,
             hand_cards: view
