@@ -5,9 +5,9 @@
 
 mod common;
 
-use common::{categories_for, effects_of, minion, setup_with_gold};
+use common::{categories_for, effects_of, minion, setup_with_gold, token_card};
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
-use rule_engine::data::{Card, CardType, HeroCard, Playstyle, Skill, Token};
+use rule_engine::data::{Card, CardType, HeroCard, Playstyle, Skill};
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
 use rule_engine::state::{InstanceId, MinionInstance, Seat};
@@ -58,6 +58,7 @@ fn add_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(Playstyle::Mammal),
             subtype: None,
@@ -627,19 +628,12 @@ fn infected(mut minion: MinionInstance, layers: i32) -> MinionInstance {
     minion
 }
 
-/// 注册一个 2/2 细菌 Token，供转化召唤测试使用。
+/// 注册一个 2/2 细菌衍生物，供转化召唤测试使用。
 fn add_germ_token(engine: &mut Engine) {
-    engine.catalog.tokens.insert(
-        "germ".to_string(),
-        Token {
-            id: "germ".to_string(),
-            attack: 2,
-            health: 2,
-            keywords: Vec::new(),
-            playstyle: Some(Playstyle::Bacteria),
-            taxon: "biology".to_string(),
-        },
-    );
+    engine
+        .catalog
+        .cards
+        .insert("germ".to_string(), token_card("germ", 2, 2));
 }
 
 #[test]

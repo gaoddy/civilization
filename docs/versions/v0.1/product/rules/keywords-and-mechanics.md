@@ -286,12 +286,13 @@
 | 移除成长 | `RemoveGrowth {selector}` | 移除全部成长 |
 | 禁止攻击 | `CannotAttack {selector, duration}` | 本场无法攻击 |
 | 伤害 | `DealDamage {selector, amount, source}` | 经过护盾与复生 |
-| 召唤 | `Summon {selector, token 或 card, count}` | 召唤位置由 `selector` 决定；`token` 取注册表 id，`card` 取牌池卡 id |
+| 召唤 | `Summon {selector, token 或 card, count}` | 召唤位置由 `selector` 决定；`token` 取非池卡（`in_shop_pool: false`）id，`card` 取进池卡 id |
 | 复制 | `Copy {selector, to}` | `to` 为手牌或战场 |
 | 发现 | `Discover {pool, choose}` | 三选一 |
 | 刷新商店 | `RefreshShop {free, extra}` | 主动技能专用 |
 | 增加商店槽位 | `AddShopSlot {era, count}` | 主动技能专用；商店额外出现 `count` 张 `era=current` 的随从 |
 | 获得随从 | `GainMinion {from, level, to}` | 主动技能专用 |
+| 发放随从 | `GrantMinion {level, to}` | 随机获得一张命中本局启用玩法、`in_shop_pool: true` 的随从进手牌；`level=next` 为来源星级 +1（6 星封顶）；不扣共享牌池，无候选时照常消耗 |
 | 分解 | `Decompose {selector, basis, duration}` | 获得事件目标的生命值；`selector` 固定 `self`，`basis` / `duration` 必填 |
 
 光环不单设原语：静态光环在 §8 登记为 `Aura` / `ConditionalAura` 触发，其动作写 `ModifyStats` 或 `GrantKeyword`，并显式带 `duration=permanent`。
@@ -325,7 +326,7 @@
 | 键 | 匹配 |
 | --- | --- |
 | `taxon` | 卡牌 `taxon` 等于该节点或位于其下，写上级节点包含全部下级 |
-| `playstyle` | 卡牌任一条 `play:` 精确相等；Token 按自身单值 `playstyle` 匹配；不命中 `neutral` |
+| `playstyle` | 卡牌任一条 `play:` 精确相等；不命中 `neutral` |
 | `play` | `categories` 中存在 `play:<值>`；任一条命中即可，不区分学者、工具卡与效果牌 |
 | `prey` / `host` | `categories` 中存在与筛选节点相同或位于其下的捕食 / 寄生分类 |
 | `subtype` / `id` / `type` / `keyword` / `other` | 沿用既有语义 |
@@ -344,13 +345,13 @@
 | `when` | `<键>=<值>` | 限定触发事件的对象，如 `when=taxon=animalia` |
 | `basis` | `original` / `combat_start` / `pre_kill` | 分解的生命值口径，`Decompose` 必填 |
 | `keyword` | §1 的英文 id（如 `taunt`、`ignore_taunt`） | 赋予的关键词；`breed` / `assemble` 另带 `value` 层数 |
-| `token` / `card` | Token 注册表 id / 卡牌 id | 召唤目标；`Summon` 二者取一 |
-| `to` | `hand` / `board` | 复制或获得的目标区域 |
+| `token` / `card` | 非池卡（`in_shop_pool: false`）id / 进池卡 id | 召唤目标；`Summon` 二者取一 |
+| `to` | `hand` / `board` | 复制或获得的目标区域；`GrantMinion` 只接受 `hand` |
 | `from` | `hand` / `board` / `shop` | 复制或获得的来源 |
 | `type` | `minion` / `effect` | 从手牌复制时限定卡牌类型 |
 | `pool` / `choose` | 发现池、可选数量 | `Discover` |
 | `free` | `true` / `false` | 免费刷新 |
-| `era` / `level` | `current` 或具体值 | 商店槽位时代、获得随从的星级 |
+| `era` / `level` | `current` 或具体值 | 商店槽位时代、获得随从的星级；`GrantMinion` 的 `level` 另接受 `next`（来源星级 +1，6 星封顶） |
 
 示例：
 

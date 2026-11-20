@@ -52,6 +52,7 @@ fn add_card_at(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: taxon.to_string(),
             categories: categories_for(Playstyle::Fungus),
             subtype: None,

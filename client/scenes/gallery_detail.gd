@@ -152,9 +152,7 @@ func _preview_metric(name: String) -> int:
     return UITheme.metric(token)
 
 
-func _type_text(card_id: String, entry: Dictionary) -> String:
-    if CardDB.tokens.has(card_id):
-        return tr("ui.gallery.type_token")
+func _type_text(_card_id: String, entry: Dictionary) -> String:
     return UI.enum_text("card_type", str(entry.get("card_type", "")))
 
 

@@ -14,7 +14,7 @@
 | `closed` | `signal` | 点返回按钮或按 `Esc` 时发出，由页面决定跳转或收起 |
 | `set_catalog(card_ids, title, close_text, hero_ids = null)` | `void` | 载入普通卡集合、页面文案与英雄集合；`hero_ids` 为 `null` 时取全部英雄，传数组（含空数组）时按传入集合展示；重置为随从视图与全部筛选，并选中筛选后的首张 |
 
-- `card_ids` 为卡牌与 Token 的 id 数组，`hero_ids` 为英雄卡 id 数组，均由页面给出；组件不读取 `GameStore`。
+- `card_ids` 为普通卡（含非池卡）的 id 数组，`hero_ids` 为英雄卡 id 数组，均由页面给出；组件不读取 `GameStore`。
 - `title`、`close_text` 为已翻译文案。
 - 内部节点名：`GalleryBackground`、`GalleryHeader`、`GalleryTitle`、`GalleryModeBar`、`ModeToggle`、`GalleryClose`、`GalleryChapters`、`GalleryHeroCategories`、`GalleryBody`、`GalleryToc`、`GalleryGrid`、`GalleryDetail`。
 - `GalleryHeader` 内依次为标题、`GalleryModeBar`、当前视图的顶部筛选栏与返回按钮；`GalleryChapters` 与 `GalleryHeroCategories` 同时只显示一个。

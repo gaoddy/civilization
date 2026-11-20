@@ -155,7 +155,6 @@ pub fn embedded_catalog() -> Result<Catalog, EngineError> {
         include_str!("../../../data/v0.1/cards.json"),
         include_str!("../../../data/v0.1/heroes.json"),
         include_str!("../../../data/v0.1/skills.json"),
-        include_str!("../../../data/v0.1/tokens.json"),
         include_str!("../../../data/v0.1/config.json"),
         include_str!("../../../data/v0.1/taxonomy.json"),
     )

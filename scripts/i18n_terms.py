@@ -14,12 +14,12 @@ KEYWORD_BASES = ("battlecry", "deathrattle", "reborn", "taunt", "divine_shield",
 EVOLVE_CHOICES = ("stats", "divine_shield", "reborn")
 STAT_LAYERS = ("initial", "permanent", "turn", "aura", "damage")
 GENERATED_PREFIXES = (
-    "card.", "skill.", "token.",
+    "card.", "skill.",
     "enum.card_type.", "enum.playstyle.", "enum.taxon.", "enum.era.", "enum.keyword.", "enum.subtype.",
 )
 MANUAL_PREFIXES = ("ui.", "error.", "enum.evolve.", "enum.stat_layer.", "enum.friend_status.")
 # 已废弃的生成前缀：合并时直接丢弃，不再视为未知前缀报错。
-LEGACY_PREFIXES = ("enum.tribe.",)
+LEGACY_PREFIXES = ("enum.tribe.", "token.")
 
 _TRAILING_VALUE = re.compile(r"\s+(?:N|\d+)$")
 

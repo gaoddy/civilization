@@ -4,7 +4,11 @@ card.agi.name,通用人工智能
 card.airplane.name,飞机
 card.alan-turing.name,艾伦·图灵
 card.albatross.name,信天翁
+card.ammonite-token.name,菊石幼体
 card.ammonite.name,菊石
+card.amoeba-larva-3-3-token.name,变形虫幼体
+card.amoeba-larva-token-1.name,变形虫幼体
+card.amoeba-larva-token-2.name,变形虫幼体
 card.amoeba.name,变形虫
 card.ant.name,蚂蚁
 card.aolinpike-jidian.match_text,同左
@@ -18,6 +22,8 @@ card.aristotle.name,亚里士多德
 card.artificial-womb.name,人造子宫
 card.aspergillus.name,曲霉
 card.bacillus-anthracis.name,炭疽芽孢杆菌
+card.bacteria-token-2.name,细菌
+card.bacteria-token-4.name,细菌
 card.bacteriophage.name,噬菌体（肌尾）
 card.baiyi.name,白蚁
 card.baozi-kuosan.match_text,同左
@@ -64,7 +70,9 @@ card.clownfish.name,小丑鱼
 card.cobra.name,眼镜蛇
 card.coelacanth.name,腔棘鱼
 card.colossal-squid.name,大王酸浆鱿
+card.coral-polyp-token.name,珊瑚虫
 card.coral-polyp.name,珊瑚虫
+card.cordyceps-token.name,虫草
 card.cordyceps.name,冬虫夏草
 card.crocodile.name,鳄鱼
 card.crow.name,乌鸦
@@ -119,6 +127,7 @@ card.fengche.name,风车
 card.fengqun-zhanshu.match_text,同左
 card.fengqun-zhanshu.name,蜂群战术
 card.fermi.name,费米
+card.fish-fry-token.name,鱼苗
 card.fleming.name,弗莱明
 card.fly-agaric.name,毒蝇伞
 card.flying-fish.name,飞鱼
@@ -161,6 +170,7 @@ card.guoying.name,果蝇
 card.gutenberg.name,古腾堡
 card.haikouichthys.name,海口鱼
 card.heisenberg.name,海森堡
+card.hela-cell-token.name,海拉细胞（复制体）
 card.hela-cell.name,海拉细胞
 card.hippocrates.name,希波克拉底
 card.hiv-inhibitor.match_text,同左
@@ -274,6 +284,7 @@ card.nanobot.name,纳米机器人
 card.nautilus.name,鹦鹉螺
 card.neanderthal.name,尼安德特人
 card.neiranji.name,内燃机
+card.neutral-token-2-2.name,基础细胞
 card.newton.name,牛顿
 card.nitai.match_text,同左
 card.nitai.name,拟态
@@ -283,6 +294,7 @@ card.niuwen.name,牛瘟
 card.norovirus.name,诺如病毒
 card.nupao.name,弩炮
 card.nushou.name,弩手
+card.octopus-larva-token.name,章鱼幼体
 card.octopus-larva.name,章鱼幼体
 card.orchid.name,兰花
 card.ostrich.name,鸵鸟
@@ -340,9 +352,12 @@ card.salmon.name,鲑鱼
 card.saltwater-crocodile.name,湾鳄
 card.saman.name,萨满
 card.sarcosuchus.name,帝鳄
+card.schizont-token.name,裂殖体
 card.schrodinger.name,薛定谔
 card.sea-anemone.name,海葵
 card.sea-turtle.name,海龟
+card.seabird-token.name,海鸟
+card.seedling.name,幼苗
 card.self-driving-car.name,自动驾驶汽车
 card.shakespeare.name,莎士比亚
 card.shanhujiao.match_text,同左
@@ -376,6 +391,9 @@ card.smallpox.name,天花
 card.soft-coral.name,软珊瑚
 card.space-elevator.name,太空电梯
 card.space-rice.name,太空水稻
+card.spore-token-1.name,孢子
+card.spore-token-2.name,孢子
+card.spore-token-3.name,孢子
 card.squid.name,枪乌贼
 card.staghorn-coral.name,鹿角珊瑚
 card.staphylococcus.name,葡萄球菌
@@ -386,6 +404,7 @@ card.streptococcus.name,链球菌
 card.sugeladi.name,苏格拉底
 card.suishimaobing.name,燧石矛兵
 card.superbug.name,超级细菌
+card.synthetic-cell-token.name,合成细胞（幼体）
 card.synthetic-cell.name,合成细胞
 card.tai.name,苔藓
 card.taikongziminzhe.name,太空殖民者
@@ -393,6 +412,7 @@ card.tanju.name,炭疽
 card.telephone.name,电话机
 card.tengman.name,藤蔓
 card.termite-king.name,白蚁王
+card.termite-token.name,白蚁（2/2）
 card.tesla-coil.match_text,同左
 card.tesla-coil.name,特斯拉线圈
 card.tesla.name,特斯拉
@@ -416,6 +436,7 @@ card.turritopsis.name,灯塔水母
 card.vampire-squid.name,吸血鬼乌贼
 card.vertical-farm.name,垂直农场
 card.vibrio-cholerae.name,霍乱弧菌
+card.volvox-cell-token.name,团藻细胞
 card.volvox.name,团藻
 card.von-neumann.name,冯·诺依曼
 card.vorticella.name,钟虫
@@ -432,6 +453,8 @@ card.wenyi-baofa.match_text,同左
 card.wenyi-baofa.name,瘟疫爆发
 card.whale-shark.name,鲸鲨
 card.wireless-telegraph.name,无线电报
+card.worker-bee-token-1.name,工蜂
+card.worker-bee-token-2.name,工蜂
 card.wright-brothers.name,莱特兄弟
 card.wuyi.name,巫医
 card.xiake.name,侠客
@@ -1201,6 +1224,8 @@ skill.faraday-cage.text,使一个友方随从获得护盾
 skill.free-refresh.match_text,同左
 skill.free-refresh.name,启航
 skill.free-refresh.text,免费刷新一次商店
+skill.gain-next-level-minion.match_text,改为随机获得一张下一等级随从
+skill.gain-next-level-minion.text,获得一张下一等级的随从
 skill.heredity.match_text,同左
 skill.heredity.name,遗传
 skill.heredity.text,使一个友方植物随从获得一次成长
@@ -1415,29 +1440,6 @@ skill.universal-manuscript.text,复制一张你手牌中的随从牌
 skill.virus-growth-once.match_text,同左
 skill.virus-growth-once.name,培养
 skill.virus-growth-once.text,使一个友方病毒随从获得一次成长
-token.ammonite-token.name,菊石幼体
-token.amoeba-larva-3-3-token.name,变形虫幼体
-token.amoeba-larva-token-1.name,变形虫幼体
-token.amoeba-larva-token-2.name,变形虫幼体
-token.bacteria-token-2.name,细菌
-token.bacteria-token-4.name,细菌
-token.coral-polyp-token.name,珊瑚虫
-token.cordyceps-token.name,虫草
-token.fish-fry-token.name,鱼苗
-token.hela-cell-token.name,海拉细胞（复制体）
-token.neutral-token-2-2.name,基础细胞
-token.octopus-larva-token.name,章鱼幼体
-token.schizont-token.name,裂殖体
-token.seabird-token.name,海鸟
-token.seedling.name,幼苗
-token.spore-token-1.name,孢子
-token.spore-token-2.name,孢子
-token.spore-token-3.name,孢子
-token.synthetic-cell-token.name,合成细胞（幼体）
-token.termite-token.name,白蚁（2/2）
-token.volvox-cell-token.name,团藻细胞
-token.worker-bee-token-1.name,工蜂
-token.worker-bee-token-2.name,工蜂
 ui.common.no_hero,未选英雄
 ui.gallery.back_lobby,返回大厅
 ui.gallery.back_match,返回对局
@@ -1460,7 +1462,6 @@ ui.gallery.stats,%s / %s
 ui.gallery.title,卡牌图鉴
 ui.gallery.title_match,本局卡牌图鉴
 ui.gallery.toc_all,全部
-ui.gallery.type_token,Token
 ui.game.card.freeze_glyph,冻
 ui.game.card.stealth_glyph,潜
 ui.game.combat.banner,%s%s · 对 %s 造成 %d 点伤害
@@ -1513,7 +1514,7 @@ ui.game.rail.no_report,无战报
 ui.game.rail.turn,第 %d 回合
 ui.game.rail.win,胜
 ui.game.recruit.sell_hint,松手出售 +%d 金
-ui.game.reward_card.text,发现一张 %d 星随从
+ui.game.reward_card.text,获得一张 %d 星随从
 ui.game.side_panel.combat,战斗中
 ui.game.side_panel.eliminated,已淘汰 · 观战中
 ui.game.side_panel.end_recruit,结束招募

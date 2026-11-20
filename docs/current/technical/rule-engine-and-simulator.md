@@ -14,14 +14,13 @@ server/
   data/v0.1/
     cards.json               # 生成物：随从与效果牌
     heroes.json              # 生成物：英雄卡（只含身份与技能）
-    skills.json              # 生成物：247 个技能
-    tokens.json              # 生成物：23 个 Token
+    skills.json              # 生成物：255 个技能
     config.json              # 生成物：经济与对局配置
     taxonomy.json            # 生成物：科学分类树与玩法 id 清单
   crates/
     rule-engine/             # 纯库
       src/state.rs           # GameState / PlayerState / MinionInstance / MinionStats
-      src/data.rs            # Catalog（cards / heroes / skills / tokens）、Playstyle / Category 类型与加载期校验（deny_unknown_fields）
+      src/data.rs            # Catalog（cards / heroes / skills）、Playstyle / Category 类型与加载期校验（deny_unknown_fields）
       src/taxonomy.rs        # 科学分类树：祖先匹配 is_within / 路径 path / 叶子判定
       src/playstyles.rs      # 开局玩法抽取 draw 与 PLAYSTYLES_PER_GAME
       src/effects/           # 结构化效果校验（validate）、解释执行（exec）、光环（auras）；parse 仅保留为 DSL 作者工具
@@ -67,9 +66,9 @@ tests/                       # Python 标准库 unittest
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
 - 实例编号 `InstanceId` 由 `state.next_instance_id` 单调分配：商店每次刷新的每个槽位（含效果牌槽）各有一个，冻结保留原编号与冻结标记直到解冻或重抽；买入、入手牌、打出到棋盘都沿用该编号。三连合成时新建一个金色编号，并在 `sources` 记录三张原始副本的编号（不参与状态哈希）。复制品按复制方式分配新编号。
 - `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼；手牌保留随从实例（含成长等状态），不再退回卡面基础值。`PlayCard` 与 `UseHeroPower` 带 `target: Option<TargetRef>`，M0 由 AI 按区域从本人棋盘、手牌、商店依次选择目标。
-- 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录来源星级 +1（封顶 6），打出该牌才登记发现待选。奖励效果牌不进商店、不进任何候选、不扣共享牌池；普通效果牌按商店概率进入商店槽位，但同样不扣共享牌池。
+- 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录来源星级 +1（封顶 6）。打出该牌由 `GrantMinion { level: next, to: hand }` 直接随机发放一张命中本局启用玩法、`in_shop_pool: true`、星级等于该记录的池内随从到手牌；不登记发现待选、不扣共享牌池，手牌满或无候选时奖励牌照常消耗。奖励效果牌自身 `in_shop_pool: false`，不进商店、不进任何候选、不扣共享牌池；普通效果牌按商店概率进入商店槽位，但同样不扣共享牌池。
 - `PendingChoice::Target { seat, source, hand_card, hand_index, fire_ally_evolve }`：`hand_card` 是入场前的原手牌（含成长、护盾与金色标记），`hand_index` 是原手牌位置，放弃时按 `min(hand_index, len)` 插回；`fire_ally_evolve` 表示入场观察者是否推迟到目标结算后触发。目标待选期间该座位除 `ChooseTarget` 与 `AbandonTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。`ChooseTarget` 要求队首是目标待选、目标属于本人在对应区域的实体，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果，再按固定顺序补做被推迟的入场副作用：金色三连奖励 → `check_triple` → `fire_ally_evolve` 为真时触发入场观察者。`AbandonTarget` 要求来源随从仍在本人棋盘（否则 `NO_SUCH_MINION`），移除来源、把原牌插回原手牌位置、移除待选，不发战吼、不补奖励、不执行三连与入场观察者。发现与进化待选允许留到下回合；目标待选若在 `finish_recruit` 进入战斗前仍未选择，按同样规则退牌（来源仍在场时），随后照常推进阶段。
-- `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。视图同时下发 `targetCandidates`（引擎 `target_candidates` 的结果，只含本人棋盘/手牌/商店）、`instanceId`、`golden`，以及随从牌的 `attack` / `health`（当前值，含成长等全部层数，学者为 0）；效果牌这两项为 `null`，`golden` 恒为 `false`，奖励牌另带 `rewardLevel`（锁定的发现星级）。`requires_target` 为真且候选为空时 `playable=false`、`disabledReason=NO_VALID_TARGET`。
+- `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。视图同时下发 `targetCandidates`（引擎 `target_candidates` 的结果，只含本人棋盘/手牌/商店）、`instanceId`、`golden`，以及随从牌的 `attack` / `health`（当前值，含成长等全部层数，学者为 0）；效果牌这两项为 `null`，`golden` 恒为 `false`，奖励牌另带 `rewardLevel`（锁定的发放星级）。`requires_target` 为真且候选为空时 `playable=false`、`disabledReason=NO_VALID_TARGET`。
 - `SelfView.hero_powers` 按英雄卡 `skills` 顺序列出全部主动技能，每项带 `skill_id`、`uses_left`、`requires_target`、`target_candidates`、`can_use`、`disabled_reason`，目标口径与手牌一致；需要目标且候选为空时该技能 `can_use=false`、`disabled_reason=NO_VALID_TARGET`，不影响同一英雄的其他技能。`PendingChoiceView::Target` 同时下发 `candidates`。
 - `UseHeroPower { skill_id, target }` 只校验并结算 `skill_id` 自身的 `OnActivate` 效果；同一英雄的其它主动技能不随本次意图结算，也不扣金币与次数。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。
@@ -98,19 +97,15 @@ pub struct Card {
     // 既有字段
     pub taxon: String,
     pub categories: Vec<Category>,
-}
-
-pub struct Token {
-    // 既有字段
-    pub playstyle: Option<Playstyle>,
-    pub taxon: Option<String>,
+    // 缺省 true；false 表示不进商店卡池、共享牌池、三连与发现
+    pub in_shop_pool: bool,
 }
 ```
 
 - 数据类型已无部落枚举与卡牌部落字段；卡牌的物种由 `taxon`、玩法归属与捕食/寄生关系由 `categories` 表达，卡牌不再有单值 `playstyle` 字段。
-- `Playstyle::ALL` 固定 13 项且不含 `Neutral`；`id()` / `from_id()` 是数据文件与协议中的玩法 id；`ordinal()` 是状态哈希中的序号（0..13，`Neutral` 为 13）。`Neutral` 只服务 Token 与引擎内部哨兵，不进入卡牌 `categories`，也不参与 `Playstyle::ALL`。
+- `Playstyle::ALL` 固定 13 项且不含 `Neutral`；`id()` / `from_id()` 是数据文件与协议中的玩法 id；`ordinal()` 是状态哈希中的序号（0..13，`Neutral` 为 13）。`Neutral` 只服务引擎内部哨兵，不进入卡牌 `categories`，也不参与 `Playstyle::ALL`。
 - `CategoryKind` 对应卡牌 `categories` 的三种前缀：`Play`（`play:`）、`Prey`（`prey:`）、`Host`（`host:`）；每条为 `{ kind, value }`。
-- Token 保留单值 `playstyle`，为可选项，读取口 `Token::playstyle()` 缺省返回 `Neutral`；`taxon` 必填，直接作为筛选分类节点。
+- 卡牌不再区分独立 Token 实体：衍生物、生成卡（三连奖励）与普通卡共用 `Card` 结构，靠 `in_shop_pool` 区分。`in_shop_pool: false` 的卡不要求 `play:`，其 `taxon`、`era`、`subtype`、`level` 等字段照常参与筛选与展示。
 
 ### 3.2 分类树
 
@@ -134,7 +129,7 @@ impl Taxonomy {
 - `Rank` 对应 `taxonomy.md` 的「界 / 门 / 纲 / 目 / 科 / 技术分类 / 学科」，只表达结构，不参与匹配。
 - `is_within` 沿父链上溯，最多 5 层；任一节点不存在返回 `false`。
 - `path` 从叶子返回至根的 id 列表（含自身），未知节点返回空列表。
-- `Catalog` 持有 `cards`、`heroes`、`skills`、`tokens` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。加载期校验所有卡牌与 Token 的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡，每张卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`）；`CardType` 只有 `minion` / `effect`，`cards.json` 写入 `hero` 在反序列化阶段即被拒绝；英雄卡不含 `card_type`，与随从卡靠独立文件、独立结构体与独立集合区分；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
+- `Catalog` 持有 `cards`、`heroes`、`skills` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。加载期校验所有卡牌的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡；`in_shop_pool: true` 的卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`），非池卡允许没有 `play:`；`CardType` 只有 `minion` / `effect`，`cards.json` 写入 `hero` 在反序列化阶段即被拒绝；英雄卡不含 `card_type`，与随从卡靠独立文件、独立结构体与独立集合区分；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
 - 按用途选池：英雄技能查询（视图、光环、战斗开始、首次刷新、回合开始与主动技能）只读 `catalog.heroes`；商店、卡池、三连、发现与棋盘随从只读 `catalog.cards`。两池同名同 id，任何路径不得跨池回落。
 
 ### 3.3 筛选与匹配
@@ -144,7 +139,7 @@ impl Taxonomy {
 | 键 | 匹配 |
 | --- | --- |
 | `taxon` | 卡牌 `taxon` 等于该节点或位于其下（`Taxonomy::is_within`） |
-| `playstyle` | 卡牌任一条 `play:` 精确相等（按 id 比较）；Token 按自身单值 `playstyle` 匹配 |
+| `playstyle` | 卡牌任一条 `play:` 精确相等（按 id 比较） |
 | `play` | `categories` 中存在 `play:<值>`，任一条命中即可 |
 | `prey` | `categories` 中存在 `prey:<节点>`，且该节点等于筛选节点或位于其下 |
 | `host` | 同 `prey`，匹配 `host:` |
@@ -152,7 +147,7 @@ impl Taxonomy {
 | `keyword` / `other` | 由调用方单独处理 |
 
 - 筛选键集合如上表，不含部落类键。
-- 筛选事实由 `CardFacts` 提供：`catalog.cards` 查不到时回退 `catalog.tokens`；Token 缺玩法按 `Neutral` 处理，分类取自身 `taxon`；两者都找不到时不匹配。
+- 筛选事实由 `CardFacts` 提供：只查 `catalog.cards`，`playstyle` 读 `play:` 归属；查不到时不匹配。
 - `timesIf` 结构为 `{ key, value: Option<String>, times }`，写作 `<键>:<值>:<次数>`（如 `timesIf=playstyle:mammal:2`、`timesIf=taxon:hominidae:2`）；`scholar` 没有值，仍写 `timesIf=scholar:2`。
 - `condition` 与 `when` 复用同一套筛选键与匹配口径；选择器多个筛选并列表示同时满足。
 
@@ -176,7 +171,7 @@ impl Taxonomy {
 
 - 唯一数据源：`docs/versions/v0.1/product/content/` 下的卡牌、技能实体文档与 `taxonomy.md`；`scripts/gen_card_data.py` 复用 `validate_docs.py` 的 front matter 与分类树解析。
 - 分类树与玩法清单由 `taxonomy.md` §1 / §2 解析为 `taxonomy.json`（`{nodes, playstyles}`）；客户端生成物 `client/generated/taxonomy.json` 同源。展示名不进 JSON，由文本表 `enum.taxon.<id>` 与 `enum.playstyle.<id>` 提供。
-- 生成数据只含规则与标识，不含展示文本：`cards.json`、`skills.json`、`tokens.json` 没有 `name`、`text`、`match_text` 字段。卡牌 `card_type` / `categories` / `taxon` / `era` / `subtype`，Token 的 `playstyle`，技能与效果中的 `keyword`、DSL 筛选与枚举（`playstyle`、`taxon`、`play`、`prey`、`host`、`type`、`keyword`、进化选项等）一律为英文 id（如 `minion`、`mammal`、`felidae`、`industrial`、`ignore_taunt`）。展示文本由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`，按 `card.<id>.name`、`skill.<id>.text`、`token.<id>.name` 等文本 id 取用。
+- 生成数据只含规则与标识，不含展示文本：`cards.json`、`skills.json` 没有 `name`、`text`、`match_text` 字段。卡牌 `card_type` / `categories` / `taxon` / `era` / `subtype`、`in_shop_pool`，技能与效果中的 `keyword`、DSL 筛选与枚举（`playstyle`、`taxon`、`play`、`prey`、`host`、`type`、`keyword`、进化选项等）一律为英文 id（如 `minion`、`mammal`、`felidae`、`industrial`、`ignore_taunt`）。展示文本由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`，按 `card.<id>.name`、`skill.<id>.text` 等文本 id 取用；非池卡同样使用 `card.<id>.name`。
 - 经济与对局配置由生成器从产品数值文档口径抄录到 `config.json`（初始生命、棋盘/手牌/商店槽位、回合上限、伤害上下限、升时代费用、星级牌份数、商店概率、金币曲线）。
 - 输出确定性 JSON（UTF-8、两空格缩进、键排序、末尾换行）；生成物随源提交。
 - 引擎用 `include_str!` 嵌入 `server/data/v0.1/*.json`，加载期由 serde 校验结构化字段与枚举，再由 `validate` 校验跨字段组合；未知字段或非法组合直接失败。源文档 `effects` 仍写 DSL，由生成器编译为结构化数组，生成期用与 `validate` 同规则的 `check_structured` 预检，避免 `make data` 通过而引擎加载失败。
@@ -223,7 +218,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 
 | M0 标准 | 命令 | 证据 |
 | --- | --- | --- |
-| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 409 卡 / 254 技能 / 23 Token / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
+| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 432 卡（其中 24 张非池卡）/ 255 技能 / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
 | 数据一致 | `make data-check` | 重新生成后输出 `生成数据无漂移`，退出码 0 |
 | 规则覆盖 | `make test` | `server/crates/rule-engine/tests/` 与 `server/crates/sim/tests/` 的用例全部 `test result: ok`（用例清单见第 8 节）；商店池耗尽留空槽由 `recruit::reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects` 锁定 |
 | 确定性 | `make m0-determinism` | `replay_same_log_100_times_has_same_hash` 通过：100 次重放每次退出码 0，`final_hash` 全部等于原局，事件序列哈希同样一致；重放由日志种子重新推导同一组 5 个玩法 |
@@ -299,7 +294,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 - **`current` 是唯一真相，各层只是构成。**「层和等于 `current`」不是不变量：受击与复生会让二者偏离，`damage()` 返回 `层和 - current`。
 - 变更一律走方法，分量与 `current` 同步：`add_growth` / `add_permanent` / `add_turn` / `set_aura` / `clear_turn` / `remove_growth` / `set_initial`。`apply_damage` 只扣 `current`，`revive_to` 只写 `current`；除这三者外没有直接写 `current` 的公开入口。
 - `StatComponent` 的字段保持 `pub`：集成测试与 `room-service` 需要直接读取各层，视图也要逐项复制。因此「不直接写 `current`」靠约定与评审保证，不是类型约束；新增代码只能经上面列出的方法改动分量。
-- 初始值在 `MinionInstance::new` 时解析：token 取 token 注册表，普通卡取卡牌攻防，金色 ×2；`is_scholar` 同时确定并存储。
+- 初始值在 `MinionInstance::new` 时解析：按卡牌 id 取 `catalog.cards` 的攻防（池内卡与非池卡同一口径），金色 ×2；`is_scholar` 同时确定并存储。
 - 读取口 `attack()` / `health()` 返回 `max(0, current)`；学者 `attack()` 恒为 0，但各层照常累积。战斗内部死亡判定直接用原始 `stats.health.current <= 0`，不经过非负夹紧。
 - 视图 `view::MinionStatsView` / `StatBreakdownView` 把攻防映射为 `initial`、`permanent`（= `growth + permanent`）、`turn`、`aura`、`damage`、`current` 六项；在可达的下发状态下满足 `initial + permanent + turn + aura - damage == current`（复生造成的负 `damage` 只存在于战斗内部，不下发）。学者攻击六层全为 0。`health.current` 在视图中夹到 0，招募期负血量由 `damage` 吸收。`BoardMinion` 协议的 `stats` 与顶层 `attack` / `health` 复用同一口径。
 

@@ -116,7 +116,7 @@
 | 手牌目标与候选 | `self.hand[].requiresTarget` 与 `self.hand[].targetCandidates`；队首待选类型与候选取 `self.pendingChoices[]` 的 `kind` / `candidates`；英雄技能逐个取 `self.heroPowers[].requiresTarget` / `targetCandidates` |
 | 随从详情构成 | 棋盘随从的 `stats`（`attack` / `health` 各含 `initial`、`permanent`、`turn`、`aura`、`damage`、`current`）；缺失时退化为顶层 `attack` / `health` |
 | 卡面与商店详情 | `CardDB` 卡表：`card_type`、`categories`、`taxon`、`attack`、`health`、`era`、`display_cost`、`skills`；分类路径走 `CardDB.taxon_path`，玩法/分类名走 `CardDB.playstyle_name` / `CardDB.taxon_name` |
-| 图鉴卡池 | `CardPool.card_ids(view.enabledFactions)`：与服务端 `card_in_pool` 同规则复算本局卡池，排除 Token |
+| 图鉴卡池 | `CardPool.card_ids(view.enabledFactions)`：与服务端 `card_in_pool` 同规则复算本局卡池，排除非池卡 |
 | 首局引导 | `user://first_game_guide.cfg` 的 `[seen]` 段（键为 `playerId`）与 `GameStore.guide_step`；阶段与手牌/棋盘条件取 `GameStore.phase` 与 `view.self` |
 
 - 页面不做本地规则推导：不计算伤害、不推断可用性、不推导名次；左栏只按服务端 `rank` 排显示顺序。战斗演示按 `actions` 逐条应用服务端下发的数值，不做任何加减。
@@ -153,7 +153,7 @@
 - 商店卡在封面左上角显示购买费用 `CostBadge`，右上角显示时代 `EraBadge`；费用与时代取自 `CardDB` 的 `display_cost` 与 `era`，只用于展示。
 - 商店卡显示 `CardDB` 卡表的**原始**攻击力与生命值，效果牌没有数值时显示「—」；类型位显示全部玩法名（多项用「、」分隔），完整类型（随从/效果）、科学分类与关联分类由详情面板给出。
 - 棋盘卡与战斗只读卡显示服务端下发的**当前**攻击力与生命值；金色随从在封面上角显示「★」。
-- 手牌随从同样显示服务端下发的**当前**攻击力与生命值（含成长等全部加成），金色随从在封面角标显示「★」；「三连奖励」牌在角标行显示锁定的发现星级，悬停提示「发现一张 N 星随从」。
+- 手牌随从同样显示服务端下发的**当前**攻击力与生命值（含成长等全部加成），金色随从在封面角标显示「★」；「三连奖励」牌在角标行显示锁定的发放星级，悬停提示「获得一张 N 星随从」。
 - 冻结的商店卡在整卡上覆盖 `FreezeOverlay`：`color-info` 蒙层透明度 0.22，叠一组间距 14、固定 45° 的冰晶细线，右下角保留「冻」字 `FreezeGlyph`；蒙层只压暗自身，不压暗冰晶与「冻」字；解冻后随视图重建移除蒙层与「冻」字。
 - 商店卡拖到手牌带购买；不可购买时整卡降透明度且无法拖拽，原因在详情面板给出，不使用原生 tooltip。
 - 没有图片资源时封面由玩法色块与卡名首字水印组成；后续有图片资源时按 `cardId` 替换。

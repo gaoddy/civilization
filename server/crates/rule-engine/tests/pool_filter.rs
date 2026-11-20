@@ -6,6 +6,7 @@ fn card(categories: Vec<(&str, &str)>) -> Card {
     Card {
         id: "test-card".into(),
         card_type: CardType::Effect,
+        in_shop_pool: true,
         taxon: "biology".into(),
         categories: categories
             .into_iter()

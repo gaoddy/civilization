@@ -394,7 +394,7 @@ pub(crate) fn fire_first_refresh(
                 target: None,
                 event_target: None,
                 golden: false,
-                discover_level: None,
+                level_override: None,
             },
         ));
     }
@@ -409,7 +409,7 @@ pub(crate) fn fire_first_refresh(
                 target: None,
                 event_target: None,
                 golden,
-                discover_level: None,
+                level_override: None,
             },
         ));
     }
@@ -602,7 +602,7 @@ fn play_card(
                 target,
                 event_target: None,
                 golden: false,
-                discover_level: hand_card.reward_level(),
+                level_override: hand_card.reward_level(),
             };
             engine.check_targets(
                 state,
@@ -624,7 +624,7 @@ fn play_card(
                 state,
                 Trigger::OnUse,
                 EffectCtx {
-                    discover_level: None,
+                    level_override: None,
                     ..ctx
                 },
             ));
@@ -653,7 +653,7 @@ fn play_card(
                 target,
                 event_target: None,
                 golden: minion.golden,
-                discover_level: None,
+                level_override: None,
             };
             let player = state
                 .players
@@ -704,7 +704,7 @@ fn play_card(
                     target,
                     event_target: None,
                     golden,
-                    discover_level: None,
+                    level_override: None,
                 },
             );
             grant_triple_reward(engine, state, seat, &hand_card);
@@ -915,7 +915,7 @@ fn use_hero_power(
         target,
         event_target: None,
         golden: false,
-        discover_level: None,
+        level_override: None,
     };
     // 主动技能只结算被选中的技能：多技能英雄不得一次放出全部技能。
     engine.check_targets(
@@ -956,7 +956,7 @@ fn use_hero_power(
             target,
             event_target: None,
             golden: false,
-            discover_level: None,
+            level_override: None,
         },
     );
     Ok(Outcome::with(events))
@@ -1067,7 +1067,7 @@ fn choose_target(
         target: Some(target.id),
         event_target: None,
         golden: hand_card.golden(),
-        discover_level: None,
+        level_override: None,
     };
     // 与出牌时的预检同源：目标必须在效果的合法池内（core-rules §4 补充返回码
     // 「ChooseTarget 指定的随从不在合法池时同样返回该码」）。只校验棋盘会让
@@ -1357,13 +1357,14 @@ fn pick_star(rng: &mut RngStreams, weights: &[u16; 7]) -> Option<u8> {
     Some(7)
 }
 
-/// 英雄卡不进商店；随从需要池中有副本；卡池判定统一走 [`card_in_pool`]。
+/// 英雄卡不进商店；非池卡（衍生物、生成卡）不进商店；随从需要池中有副本；
+/// 卡池判定统一走 [`card_in_pool`]。
 fn is_eligible(
     card: &Card,
     pool: &BTreeMap<String, u16>,
     playstyles: &BTreeSet<Playstyle>,
 ) -> bool {
-    if card.id == crate::triple::REWARD_CARD_ID {
+    if !card.in_shop_pool {
         return false;
     }
     if card.card_type == CardType::Minion && pool.get(&card.id).copied().unwrap_or(0) == 0 {
@@ -1422,7 +1423,6 @@ mod tests {
     const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
     const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
     const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
-    const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
     const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
     const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
@@ -1431,7 +1431,6 @@ mod tests {
             CARDS_JSON,
             HEROES_JSON,
             SKILLS_JSON,
-            TOKENS_JSON,
             CONFIG_JSON,
             TAXONOMY_JSON,
         )

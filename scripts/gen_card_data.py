@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""从 v0.1 实体文档生成卡牌、技能、Token 与经济配置数据。
+"""从 v0.1 实体文档生成卡牌、技能与经济配置数据。
 
 只读 docs/versions/v0.1/product 下的实体文档与数值系统文档，输出确定性 JSON
 到 server/data/v0.1/。front matter 解析复用 scripts/validate_docs.py，不重复实现。
@@ -20,7 +20,7 @@ import skill_templates
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "server" / "data" / "v0.1"
-FILES = ("cards.json", "heroes.json", "skills.json", "tokens.json", "config.json", "taxonomy.json")
+FILES = ("cards.json", "heroes.json", "skills.json", "config.json", "taxonomy.json")
 
 # 产品基线常量；来源 docs/versions/v0.1/product/systems/economy-and-numbers.md
 # 与 rules/ 下的核心规则（生命、槽位、回合上限、伤害上下限）。
@@ -101,6 +101,7 @@ OP_JSON = {
     "RefreshShop": "refresh_shop",
     "AddShopSlot": "add_shop_slot",
     "GainMinion": "gain_minion",
+    "GrantMinion": "grant_minion",
     "Decompose": "decompose",
     "Mimic": "mimic",
     "Devour": "devour",
@@ -250,6 +251,13 @@ def check_structured(effect):
     if op == "gain_minion" and params.get("from") not in (None, "shop"):
         violations.append(f"GainMinion 的 from 只接受 shop，实为 {params.get('from')!r}")
 
+    if op == "grant_minion":
+        if params.get("to") != "hand":
+            violations.append(f"GrantMinion 的 to 只接受 hand，实为 {params.get('to')!r}")
+        level = params.get("level")
+        if level != "next" and not (isinstance(level, str) and level.isdigit()):
+            violations.append(f"GrantMinion 的 level 只接受 next 或星级，实为 {level!r}")
+
     if selector["kind"] == "side" and selector["side"] not in ("friendly", "enemy", "both"):
         violations.append(f"选择器阵营非法 {selector['side']!r}")
     if selector["kind"] == "target" and "zone" in selector:
@@ -370,6 +378,7 @@ def card_entry(doc):
     return {
         "id": doc["id"],
         "card_type": doc["card_type"],
+        "in_shop_pool": doc.get("in_shop_pool", True),
         "categories": parse_categories(doc.get("categories")),
         "taxon": doc["taxon"],
         "subtype": doc.get("subtype"),
@@ -405,55 +414,6 @@ def skill_entry(doc, renderer=None):
         "effects": effects,
         "cost": doc.get("cost"),
         "uses_per_turn": doc.get("uses_per_turn"),
-    }
-
-
-def _token_rows(path):
-    """解析 tokens/README.md 的「## 2. 注册表」表格，逐行产出单元格。"""
-    text = path.read_text(encoding="utf-8")
-    marker = "## 2. 注册表"
-    if marker not in text:
-        raise ValueError(f"{path.name}: 缺少「{marker}」小节")
-    rest = text.split(marker, 1)[1]
-    section = rest.split("\n## ", 1)[0]
-    for line in section.splitlines():
-        line = line.strip()
-        if not line.startswith("|"):
-            continue
-        cells = [cell.strip() for cell in line.strip("|").split("|")]
-        if len(cells) != 8:
-            continue
-        if set(cells[0]) <= {"-"} or cells[0] == "id":
-            continue
-        yield cells
-
-
-def parse_tokens(path):
-    """从 tokens/README.md 生成规则字段；展示名由 `parse_token_names` 提供。
-
-    「玩法」缺失或为空时回退 `neutral`；「科学分类」必填，空值直接报错。
-    """
-    tokens = []
-    for cells in _token_rows(path):
-        attack, health, keywords = cells[2], cells[3], cells[4]
-        if not cells[6]:
-            raise ValueError(f"{cells[0].strip('`')}: Token 缺科学分类")
-        tokens.append({
-            "id": cells[0].strip("`"),
-            "attack": int(attack),
-            "health": int(health),
-            "keywords": [] if keywords == "无" else keywords.split("、"),
-            "playstyle": cells[5] or "neutral",
-            "taxon": cells[6],
-        })
-    return sorted(tokens, key=lambda token: token["id"])
-
-
-def parse_token_names(path):
-    """从 tokens/README.md 读取 token id 到展示名的映射，供文本表使用。"""
-    return {
-        cells[0].strip("`"): cells[1]
-        for cells in _token_rows(path)
     }
 
 
@@ -525,13 +485,11 @@ def build(root):
     cards = [card_entry(doc) for doc in load_docs(content, "cards")]
     heroes = [hero_entry(doc) for doc in load_docs(content, "heroes")]
     skills = [skill_entry(doc, renderer) for doc in load_docs(content, "skills")]
-    tokens = parse_tokens(content / "tokens" / "README.md")
     taxonomy = parse_taxonomy(content / TAXONOMY_FILE)
     return {
         "cards.json": dumps(cards),
         "heroes.json": dumps(heroes),
         "skills.json": dumps(skills),
-        "tokens.json": dumps(tokens),
         "config.json": dumps(CONFIG),
         "taxonomy.json": dumps(taxonomy),
     }

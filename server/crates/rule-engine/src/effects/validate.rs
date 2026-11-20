@@ -133,6 +133,7 @@ pub(crate) fn op_spec(op: Op) -> OpSpec {
         Op::RefreshShop => (&[], &["free", "extra"], &[]),
         Op::AddShopSlot => (&["era", "count"], &[], &[]),
         Op::GainMinion => (&["level", "to"], &["from"], &[]),
+        Op::GrantMinion => (&["level", "to"], &[], &[]),
         Op::Decompose => (
             &["basis", "duration"],
             &["timesIf", "condition", "when"],
@@ -335,9 +336,17 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
 
     if let Some(level) = &params.level
         && level != "current"
+        && !(effect.op == Op::GrantMinion && level == "next")
         && !is_digits(level)
     {
         errors.push(format!("level 非法 {level:?}"));
+    }
+
+    if effect.op == Op::GrantMinion && params.to != Some(Zone::Hand) {
+        errors.push(format!(
+            "GrantMinion 的 to 只接受 hand，实为 {:?}",
+            params.to
+        ));
     }
 
     for (name, value) in [

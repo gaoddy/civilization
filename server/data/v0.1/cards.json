@@ -12,6 +12,7 @@
     "era": "industrial",
     "health": 8,
     "id": "adam-smith",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -37,6 +38,7 @@
     "era": "future",
     "health": 20,
     "id": "agi",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 6,
     "skills": [
@@ -58,6 +60,7 @@
     "era": "modern",
     "health": 8,
     "id": "airplane",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -80,6 +83,7 @@
     "era": "modern",
     "health": 20,
     "id": "alan-turing",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 6,
     "skills": [
@@ -101,6 +105,7 @@
     "era": "modern",
     "health": 10,
     "id": "albatross",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -123,12 +128,33 @@
     "era": "prehistoric",
     "health": 15,
     "id": "ammonite",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
       "deathrattle-summon-2-ammonites",
       "mimic-1"
     ],
+    "subtype": "mollusk",
+    "taxon": "ammonitidae"
+  },
+  {
+    "attack": 5,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 5,
+    "id": "ammonite-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 3,
+    "skills": [],
     "subtype": "mollusk",
     "taxon": "ammonitidae"
   },
@@ -145,11 +171,72 @@
     "era": "prehistoric",
     "health": 3,
     "id": "amoeba",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
       "deathrattle-summon-amoeba-larva-1"
     ],
+    "subtype": "protozoa",
+    "taxon": "amoebidae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "protozoa"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "amoeba-larva-3-3-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 2,
+    "skills": [],
+    "subtype": "protozoa",
+    "taxon": "amoebidae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "protozoa"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 1,
+    "id": "amoeba-larva-token-1",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
+    "subtype": "protozoa",
+    "taxon": "amoebidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "protozoa"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "amoeba-larva-token-2",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
     "subtype": "protozoa",
     "taxon": "amoebidae"
   },
@@ -166,6 +253,7 @@
     "era": "primitive",
     "health": 3,
     "id": "ant",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -191,6 +279,7 @@
     "era": "classical",
     "health": null,
     "id": "aolinpike-jidian",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -216,6 +305,7 @@
     "era": "modern",
     "health": null,
     "id": "aq-jingshen",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -237,6 +327,7 @@
     "era": "primitive",
     "health": 9,
     "id": "archimedes",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 3,
     "skills": [
@@ -258,6 +349,7 @@
     "era": "classical",
     "health": 14,
     "id": "argentavis",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -280,6 +372,7 @@
     "era": "classical",
     "health": 7,
     "id": "argonaut",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -302,6 +395,7 @@
     "era": "primitive",
     "health": 9,
     "id": "aristotle",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 3,
     "skills": [
@@ -323,6 +417,7 @@
     "era": "future",
     "health": 9,
     "id": "artificial-womb",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -345,6 +440,7 @@
     "era": "industrial",
     "health": 7,
     "id": "aspergillus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -367,6 +463,7 @@
     "era": "primitive",
     "health": 12,
     "id": "bacillus-anthracis",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -375,6 +472,46 @@
     ],
     "subtype": "bacteria",
     "taxon": "bacillaceae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "bacteria"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "bacteria-token-2",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
+    "subtype": "bacteria",
+    "taxon": "enterobacteriaceae"
+  },
+  {
+    "attack": 4,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "bacteria"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 4,
+    "id": "bacteria-token-4",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 3,
+    "skills": [],
+    "subtype": "bacteria",
+    "taxon": "enterobacteriaceae"
   },
   {
     "attack": 8,
@@ -389,6 +526,7 @@
     "era": "modern",
     "health": 16,
     "id": "bacteriophage",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -415,6 +553,7 @@
     "era": "prehistoric",
     "health": 2,
     "id": "baiyi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -436,6 +575,7 @@
     "era": "primitive",
     "health": null,
     "id": "baozi-kuosan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -457,6 +597,7 @@
     "era": "primitive",
     "health": 3,
     "id": "bee",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -478,6 +619,7 @@
     "era": "industrial",
     "health": 8,
     "id": "beethoven",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -499,6 +641,7 @@
     "era": "primitive",
     "health": 6,
     "id": "beetle",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -521,6 +664,7 @@
     "era": "industrial",
     "health": null,
     "id": "beiyong-lingjian",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -542,6 +686,7 @@
     "era": "modern",
     "health": null,
     "id": "bianyi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -563,6 +708,7 @@
     "era": "prehistoric",
     "health": 5,
     "id": "bingdushizu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -584,6 +730,7 @@
     "era": "feudal",
     "health": 9,
     "id": "bisheng",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 3,
     "skills": [
@@ -609,6 +756,7 @@
     "era": "feudal",
     "health": 9,
     "id": "black-death",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -635,6 +783,7 @@
     "era": "feudal",
     "health": null,
     "id": "black-death-spread",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -656,6 +805,7 @@
     "era": "modern",
     "health": 4,
     "id": "blue-ringed-octopus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -678,6 +828,7 @@
     "era": "modern",
     "health": 11,
     "id": "box-jellyfish",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -700,6 +851,7 @@
     "era": "modern",
     "health": 9,
     "id": "boxer",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -722,6 +874,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "bozhongji",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -743,6 +896,7 @@
     "era": "modern",
     "health": 6,
     "id": "bruce-lee",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -769,6 +923,7 @@
     "era": "industrial",
     "health": null,
     "id": "bulangyundong",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -790,6 +945,7 @@
     "era": "primitive",
     "health": 2,
     "id": "buluozhanshi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -811,6 +967,7 @@
     "era": "classical",
     "health": 6,
     "id": "butterfly",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -833,6 +990,7 @@
     "era": "feudal",
     "health": 7,
     "id": "cailun",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 2,
     "skills": [
@@ -854,6 +1012,7 @@
     "era": "primitive",
     "health": 2,
     "id": "carp",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -875,6 +1034,7 @@
     "era": "primitive",
     "health": 3,
     "id": "changmaoshou",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -896,6 +1056,7 @@
     "era": "future",
     "health": null,
     "id": "chaopin",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -917,6 +1078,7 @@
     "era": "classical",
     "health": null,
     "id": "chengbang-faling",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -938,6 +1100,7 @@
     "era": "classical",
     "health": 2,
     "id": "chengbang-gongmin",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -963,6 +1126,7 @@
     "era": "feudal",
     "health": 9,
     "id": "cholera",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -985,6 +1149,7 @@
     "era": "primitive",
     "health": null,
     "id": "chongqun-baofa",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -1006,6 +1171,7 @@
     "era": "classical",
     "health": null,
     "id": "chushou-chanrao",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -1027,6 +1193,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "cixibao",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -1048,6 +1215,7 @@
     "era": "industrial",
     "health": 7,
     "id": "clostridium-tetani",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -1070,6 +1238,7 @@
     "era": "classical",
     "health": 3,
     "id": "clownfish",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -1091,6 +1260,7 @@
     "era": "primitive",
     "health": 6,
     "id": "cobra",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -1113,6 +1283,7 @@
     "era": "modern",
     "health": 8,
     "id": "coelacanth",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -1135,6 +1306,7 @@
     "era": "modern",
     "health": 13,
     "id": "colossal-squid",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -1157,11 +1329,32 @@
     "era": "prehistoric",
     "health": 4,
     "id": "coral-polyp",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
       "deathrattle-summon-coral-polyp"
     ],
+    "subtype": "ocean",
+    "taxon": "poritidae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "cnidarian"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 1,
+    "id": "coral-polyp-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
     "subtype": "ocean",
     "taxon": "poritidae"
   },
@@ -1178,12 +1371,33 @@
     "era": "feudal",
     "health": 7,
     "id": "cordyceps",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
       "deathrattle-summon-cordyceps",
       "decompose-kill-original"
     ],
+    "subtype": "fungus",
+    "taxon": "ophiocordycipitaceae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "fungus"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "cordyceps-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 2,
+    "skills": [],
     "subtype": "fungus",
     "taxon": "ophiocordycipitaceae"
   },
@@ -1200,6 +1414,7 @@
     "era": "prehistoric",
     "health": 9,
     "id": "crocodile",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -1222,6 +1437,7 @@
     "era": "feudal",
     "health": 4,
     "id": "crow",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -1252,6 +1468,7 @@
     "era": "primitive",
     "health": null,
     "id": "cuidu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -1273,6 +1490,7 @@
     "era": "primitive",
     "health": 4,
     "id": "cuttlefish",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -1294,6 +1512,7 @@
     "era": "modern",
     "health": null,
     "id": "daliuxing",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -1339,6 +1558,7 @@
     "era": "modern",
     "health": 16,
     "id": "darwin",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -1365,6 +1585,7 @@
     "era": "feudal",
     "health": 16,
     "id": "davinci",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -1386,6 +1607,7 @@
     "era": "modern",
     "health": 9,
     "id": "dengue-virus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -1408,6 +1630,7 @@
     "era": "industrial",
     "health": 6,
     "id": "dianbaoji",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -1430,6 +1653,7 @@
     "era": "industrial",
     "health": 12,
     "id": "dianhua-jiaohuanji",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -1452,6 +1676,7 @@
     "era": "industrial",
     "health": 13,
     "id": "difference-engine",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -1474,6 +1699,7 @@
     "era": "modern",
     "health": null,
     "id": "dishengxiyu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -1499,6 +1725,7 @@
     "era": "future",
     "health": null,
     "id": "dna-shuangluoxuan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -1524,6 +1751,7 @@
     "era": "future",
     "health": 6,
     "id": "dolly",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -1546,6 +1774,7 @@
     "era": "prehistoric",
     "health": 2,
     "id": "dongxuehuajia",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -1571,6 +1800,7 @@
     "era": "classical",
     "health": 5,
     "id": "doushouchang-shizi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -1592,6 +1822,7 @@
     "era": "classical",
     "health": 8,
     "id": "dragonfly",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -1614,6 +1845,7 @@
     "era": "prehistoric",
     "health": 14,
     "id": "dunkleosteus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -1636,6 +1868,7 @@
     "era": "prehistoric",
     "health": 5,
     "id": "dushe",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -1657,6 +1890,7 @@
     "era": "primitive",
     "health": null,
     "id": "duya",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -1678,6 +1912,7 @@
     "era": "future",
     "health": 18,
     "id": "dyson-sphere",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -1700,6 +1935,7 @@
     "era": "modern",
     "health": 4,
     "id": "e-coli",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -1725,6 +1961,7 @@
     "era": "modern",
     "health": 12,
     "id": "ebola",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -1747,6 +1984,7 @@
     "era": "industrial",
     "health": 11,
     "id": "edison",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -1768,6 +2006,7 @@
     "era": "feudal",
     "health": 6,
     "id": "eel",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -1794,6 +2033,7 @@
     "era": "modern",
     "health": 16,
     "id": "einstein",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -1816,6 +2056,7 @@
     "era": "modern",
     "health": 5,
     "id": "einstein-fridge",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [],
@@ -1835,6 +2076,7 @@
     "era": "future",
     "health": 16,
     "id": "engineered-virus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -1861,6 +2103,7 @@
     "era": "classical",
     "health": null,
     "id": "erfenfa",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -1882,6 +2125,7 @@
     "era": "feudal",
     "health": 12,
     "id": "ergot",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -1904,6 +2148,7 @@
     "era": "primitive",
     "health": 5,
     "id": "euclid",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 1,
     "skills": [
@@ -1925,6 +2170,7 @@
     "era": "classical",
     "health": 6,
     "id": "euglena",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -1947,6 +2193,7 @@
     "era": "industrial",
     "health": 8,
     "id": "famingjia",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -1973,6 +2220,7 @@
     "era": "classical",
     "health": null,
     "id": "fangzhen",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -1994,6 +2242,7 @@
     "era": "industrial",
     "health": 3,
     "id": "fangzhiji",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -2015,6 +2264,7 @@
     "era": "modern",
     "health": null,
     "id": "fanmao",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -2040,6 +2290,7 @@
     "era": "industrial",
     "health": 16,
     "id": "faraday",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -2066,6 +2317,7 @@
     "era": "industrial",
     "health": null,
     "id": "faraday-cage",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -2091,6 +2343,7 @@
     "era": "industrial",
     "health": 6,
     "id": "feijiehe",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -2117,6 +2370,7 @@
     "era": "prehistoric",
     "health": 5,
     "id": "feiyan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -2138,6 +2392,7 @@
     "era": "feudal",
     "health": 6,
     "id": "fengche",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -2160,6 +2415,7 @@
     "era": "classical",
     "health": null,
     "id": "fengqun-zhanshu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -2185,6 +2441,7 @@
     "era": "future",
     "health": 26,
     "id": "fermi",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 7,
     "skills": [
@@ -2192,6 +2449,26 @@
     ],
     "subtype": "nuclear-physics",
     "taxon": "hominidae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "fish"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 1,
+    "id": "fish-fry-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
+    "subtype": "fish",
+    "taxon": "actinopterygii-incertae-sedis"
   },
   {
     "attack": 4,
@@ -2206,6 +2483,7 @@
     "era": "modern",
     "health": 7,
     "id": "fleming",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -2227,6 +2505,7 @@
     "era": "classical",
     "health": 5,
     "id": "fly-agaric",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -2248,6 +2527,7 @@
     "era": "classical",
     "health": 4,
     "id": "flying-fish",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -2270,6 +2550,7 @@
     "era": "prehistoric",
     "health": 10,
     "id": "foraminifera",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -2292,6 +2573,7 @@
     "era": "primitive",
     "health": null,
     "id": "fushen-biaodui",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -2317,6 +2599,7 @@
     "era": "classical",
     "health": null,
     "id": "fusheng",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -2338,6 +2621,7 @@
     "era": "future",
     "health": 14,
     "id": "fusion-reactor",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -2367,6 +2651,7 @@
     "era": "modern",
     "health": null,
     "id": "fuzhi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -2388,6 +2673,7 @@
     "era": "industrial",
     "health": null,
     "id": "fuzhi-baofa",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -2409,6 +2695,7 @@
     "era": "feudal",
     "health": 12,
     "id": "galileo",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 4,
     "skills": [
@@ -2430,6 +2717,7 @@
     "era": "classical",
     "health": 3,
     "id": "ganlanshu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -2451,6 +2739,7 @@
     "era": "modern",
     "health": 16,
     "id": "gauss",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -2472,6 +2761,7 @@
     "era": "prehistoric",
     "health": 4,
     "id": "gear",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -2493,6 +2783,7 @@
     "era": "primitive",
     "health": 5,
     "id": "gecko",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -2514,6 +2805,7 @@
     "era": "modern",
     "health": 13,
     "id": "giant-amoeba",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -2536,6 +2828,7 @@
     "era": "modern",
     "health": 16,
     "id": "giant-jellyfish",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -2558,6 +2851,7 @@
     "era": "modern",
     "health": 10,
     "id": "giant-squid",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -2580,6 +2874,7 @@
     "era": "classical",
     "health": 9,
     "id": "giardia",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -2602,6 +2897,7 @@
     "era": "prehistoric",
     "health": 12,
     "id": "ginkgo",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -2624,6 +2920,7 @@
     "era": "future",
     "health": 20,
     "id": "godel",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 6,
     "skills": [
@@ -2645,6 +2942,7 @@
     "era": "feudal",
     "health": 8,
     "id": "golden-eagle",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -2667,6 +2965,7 @@
     "era": "industrial",
     "health": 11,
     "id": "gongchangzhu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -2689,6 +2988,7 @@
     "era": "classical",
     "health": 4,
     "id": "gongchengchui",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -2710,6 +3010,7 @@
     "era": "feudal",
     "health": 6,
     "id": "gongchengta",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -2732,6 +3033,7 @@
     "era": "prehistoric",
     "health": 2,
     "id": "gongjianshou",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -2753,6 +3055,7 @@
     "era": "modern",
     "health": 11,
     "id": "gongyegongren",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -2775,6 +3078,7 @@
     "era": "modern",
     "health": 8,
     "id": "great-white-shark",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -2801,6 +3105,7 @@
     "era": "industrial",
     "health": null,
     "id": "guangdianxiaoying",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -2822,6 +3127,7 @@
     "era": "modern",
     "health": null,
     "id": "guanghezuoyong",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -2847,6 +3153,7 @@
     "era": "future",
     "health": null,
     "id": "guangyixiangduilun",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -2872,6 +3179,7 @@
     "era": "modern",
     "health": 13,
     "id": "guanzhuangbingdu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -2898,6 +3206,7 @@
     "era": "prehistoric",
     "health": 2,
     "id": "guoying",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -2923,6 +3232,7 @@
     "era": "feudal",
     "health": 12,
     "id": "gutenberg",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 4,
     "skills": [
@@ -2944,6 +3254,7 @@
     "era": "prehistoric",
     "health": 3,
     "id": "haikouichthys",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -2969,6 +3280,7 @@
     "era": "future",
     "health": 26,
     "id": "heisenberg",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 7,
     "skills": [
@@ -2991,6 +3303,7 @@
     "era": "modern",
     "health": 6,
     "id": "hela-cell",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -2998,6 +3311,26 @@
       "shout"
     ],
     "subtype": "cell",
+    "taxon": "hominidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "mammal"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "hela-cell-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
+    "subtype": "mammal",
     "taxon": "hominidae"
   },
   {
@@ -3017,6 +3350,7 @@
     "era": "primitive",
     "health": 9,
     "id": "hippocrates",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 3,
     "skills": [
@@ -3042,6 +3376,7 @@
     "era": "modern",
     "health": 9,
     "id": "hiv",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -3064,6 +3399,7 @@
     "era": "modern",
     "health": null,
     "id": "hiv-inhibitor",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -3085,6 +3421,7 @@
     "era": "classical",
     "health": 9,
     "id": "homer",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 3,
     "skills": [
@@ -3106,6 +3443,7 @@
     "era": "modern",
     "health": 14,
     "id": "honey-fungus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -3128,6 +3466,7 @@
     "era": "modern",
     "health": 12,
     "id": "hongshulin",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -3154,6 +3493,7 @@
     "era": "feudal",
     "health": null,
     "id": "houjia",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -3179,6 +3519,7 @@
     "era": "industrial",
     "health": 9,
     "id": "huangrebing",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -3200,6 +3541,7 @@
     "era": "feudal",
     "health": 6,
     "id": "huochongdui",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -3222,6 +3564,7 @@
     "era": "feudal",
     "health": 5,
     "id": "huoqiangshou",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -3248,6 +3591,7 @@
     "era": "future",
     "health": null,
     "id": "hushun",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -3269,6 +3613,7 @@
     "era": "modern",
     "health": 9,
     "id": "hybrid-rice",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -3291,6 +3636,7 @@
     "era": "prehistoric",
     "health": 4,
     "id": "hydra",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -3316,6 +3662,7 @@
     "era": "modern",
     "health": 6,
     "id": "influenza",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -3337,6 +3684,7 @@
     "era": "modern",
     "health": null,
     "id": "influenza-mutation",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -3362,6 +3710,7 @@
     "era": "prehistoric",
     "health": 3,
     "id": "jianchihu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -3387,6 +3736,7 @@
     "era": "feudal",
     "health": null,
     "id": "jianshou",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -3412,6 +3762,7 @@
     "era": "industrial",
     "health": null,
     "id": "jiaobiandianliu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -3437,6 +3788,7 @@
     "era": "feudal",
     "health": null,
     "id": "jijie",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -3462,6 +3814,7 @@
     "era": "modern",
     "health": null,
     "id": "jili",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -3487,6 +3840,7 @@
     "era": "modern",
     "health": null,
     "id": "jinghua",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -3512,6 +3866,7 @@
     "era": "modern",
     "health": null,
     "id": "jinhualun",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -3533,6 +3888,7 @@
     "era": "primitive",
     "health": null,
     "id": "jiti-shoulie",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -3554,6 +3910,7 @@
     "era": "future",
     "health": 14,
     "id": "jiyin-gaizaoren",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -3580,6 +3937,7 @@
     "era": "future",
     "health": null,
     "id": "jiyintubian",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -3601,6 +3959,7 @@
     "era": "prehistoric",
     "health": 5,
     "id": "juelei",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -3622,6 +3981,7 @@
     "era": "primitive",
     "health": 4,
     "id": "juhua",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -3644,6 +4004,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "junsi-wangluo",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -3669,6 +4030,7 @@
     "era": "primitive",
     "health": 5,
     "id": "juxi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -3694,6 +4056,7 @@
     "era": "prehistoric",
     "health": 3,
     "id": "juying",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -3715,6 +4078,7 @@
     "era": "prehistoric",
     "health": 4,
     "id": "juzi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -3736,6 +4100,7 @@
     "era": "primitive",
     "health": null,
     "id": "kaihua",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -3757,6 +4122,7 @@
     "era": "modern",
     "health": null,
     "id": "kangshengsu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -3778,6 +4144,7 @@
     "era": "classical",
     "health": null,
     "id": "kantan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -3799,6 +4166,7 @@
     "era": "modern",
     "health": 5,
     "id": "kanzi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -3821,6 +4189,7 @@
     "era": "modern",
     "health": 20,
     "id": "knuth",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 6,
     "skills": [
@@ -3842,6 +4211,7 @@
     "era": "modern",
     "health": 11,
     "id": "koko",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -3864,6 +4234,7 @@
     "era": "modern",
     "health": 12,
     "id": "komodo-dragon",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -3890,6 +4261,7 @@
     "era": "feudal",
     "health": 9,
     "id": "kongzi",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 3,
     "skills": [
@@ -3915,6 +4287,7 @@
     "era": "primitive",
     "health": 5,
     "id": "kuangquanbing",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -3936,6 +4309,7 @@
     "era": "modern",
     "health": null,
     "id": "kuangrenriji",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -3957,6 +4331,7 @@
     "era": "prehistoric",
     "health": 4,
     "id": "lactobacillus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -4002,6 +4377,7 @@
     "era": "feudal",
     "health": 12,
     "id": "lamarck",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 4,
     "skills": [
@@ -4027,6 +4403,7 @@
     "era": "primitive",
     "health": 3,
     "id": "langqunshouling",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -4048,6 +4425,7 @@
     "era": "industrial",
     "health": 16,
     "id": "lavoisier",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -4073,6 +4451,7 @@
     "era": "modern",
     "health": null,
     "id": "leguan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -4094,6 +4473,7 @@
     "era": "primitive",
     "health": 9,
     "id": "lianjinshushi",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 3,
     "skills": [
@@ -4115,6 +4495,7 @@
     "era": "feudal",
     "health": 9,
     "id": "lier",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 3,
     "skills": [
@@ -4140,6 +4521,7 @@
     "era": "modern",
     "health": 6,
     "id": "likeciti",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -4165,6 +4547,7 @@
     "era": "classical",
     "health": null,
     "id": "linggan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -4186,6 +4569,7 @@
     "era": "classical",
     "health": null,
     "id": "linjia-bilei",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -4231,6 +4615,7 @@
     "era": "feudal",
     "health": 12,
     "id": "linnaeus",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 4,
     "skills": [
@@ -4252,6 +4637,7 @@
     "era": "feudal",
     "health": 7,
     "id": "lisshi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -4273,6 +4659,7 @@
     "era": "prehistoric",
     "health": 4,
     "id": "lizard",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -4294,6 +4681,7 @@
     "era": "primitive",
     "health": 4,
     "id": "locust",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -4315,6 +4703,7 @@
     "era": "classical",
     "health": 5,
     "id": "luban",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -4336,6 +4725,7 @@
     "era": "feudal",
     "health": 7,
     "id": "luomajuntuanbing",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -4358,6 +4748,7 @@
     "era": "modern",
     "health": 16,
     "id": "luxun",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -4379,6 +4770,7 @@
     "era": "feudal",
     "health": 9,
     "id": "maitian",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -4401,6 +4793,7 @@
     "era": "classical",
     "health": 5,
     "id": "majidun-changqiangbing",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -4426,6 +4819,7 @@
     "era": "primitive",
     "health": 6,
     "id": "malaria",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -4447,6 +4841,7 @@
     "era": "prehistoric",
     "health": 10,
     "id": "mammoth",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -4469,6 +4864,7 @@
     "era": "classical",
     "health": 4,
     "id": "mantis",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -4494,6 +4890,7 @@
     "era": "modern",
     "health": 16,
     "id": "marie-curie",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -4516,6 +4913,7 @@
     "era": "classical",
     "health": 14,
     "id": "meganeura",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -4538,6 +4936,7 @@
     "era": "industrial",
     "health": 3,
     "id": "meikuang-jinsique",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -4559,6 +4958,7 @@
     "era": "modern",
     "health": 12,
     "id": "mendel",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 4,
     "skills": [
@@ -4585,6 +4985,7 @@
     "era": "primitive",
     "health": 5,
     "id": "menghu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -4611,6 +5012,7 @@
     "era": "prehistoric",
     "health": 3,
     "id": "mengmalieren",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -4632,6 +5034,7 @@
     "era": "prehistoric",
     "health": 3,
     "id": "mengmaxiang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -4653,6 +5056,7 @@
     "era": "industrial",
     "health": 3,
     "id": "mianhua",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -4674,6 +5078,7 @@
     "era": "feudal",
     "health": 12,
     "id": "michelangelo",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 4,
     "skills": [
@@ -4695,6 +5100,7 @@
     "era": "modern",
     "health": 9,
     "id": "mimic-octopus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -4720,6 +5126,7 @@
     "era": "primitive",
     "health": null,
     "id": "modao",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -4741,6 +5148,7 @@
     "era": "prehistoric",
     "health": 4,
     "id": "moon-jellyfish",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -4786,6 +5194,7 @@
     "era": "modern",
     "health": 16,
     "id": "morgan",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -4811,6 +5220,7 @@
     "era": "feudal",
     "health": 12,
     "id": "moses",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 4,
     "skills": [
@@ -4832,6 +5242,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "mozhi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -4853,6 +5264,7 @@
     "era": "classical",
     "health": 8,
     "id": "mozi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -4874,6 +5286,7 @@
     "era": "modern",
     "health": 10,
     "id": "muhammad-ali",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -4896,6 +5309,7 @@
     "era": "primitive",
     "health": 4,
     "id": "mushroom",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -4917,6 +5331,7 @@
     "era": "industrial",
     "health": 9,
     "id": "mycobacterium-tuberculosis",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -4943,6 +5358,7 @@
     "era": "modern",
     "health": null,
     "id": "nahan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -4964,6 +5380,7 @@
     "era": "future",
     "health": 20,
     "id": "nami-bingdu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -4986,6 +5403,7 @@
     "era": "future",
     "health": 15,
     "id": "nami-fengqun",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -5008,6 +5426,7 @@
     "era": "future",
     "health": 8,
     "id": "nanobot",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -5030,6 +5449,7 @@
     "era": "primitive",
     "health": 3,
     "id": "nautilus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -5051,6 +5471,7 @@
     "era": "prehistoric",
     "health": 8,
     "id": "neanderthal",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5073,6 +5494,7 @@
     "era": "industrial",
     "health": 6,
     "id": "neiranji",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5081,6 +5503,21 @@
     ],
     "subtype": "power",
     "taxon": "power-energy"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "categories": [],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "neutral-token-2-2",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
+    "subtype": "cell",
+    "taxon": "biology"
   },
   {
     "attack": 0,
@@ -5095,6 +5532,7 @@
     "era": "modern",
     "health": 16,
     "id": "newton",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -5116,6 +5554,7 @@
     "era": "primitive",
     "health": null,
     "id": "nitai",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5141,6 +5580,7 @@
     "era": "prehistoric",
     "health": 4,
     "id": "nitaizhangyu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -5162,6 +5602,7 @@
     "era": "future",
     "health": 12,
     "id": "nitrogen-crop",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -5188,6 +5629,7 @@
     "era": "modern",
     "health": 12,
     "id": "niuwen",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -5210,6 +5652,7 @@
     "era": "modern",
     "health": 6,
     "id": "norovirus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -5231,6 +5674,7 @@
     "era": "classical",
     "health": 6,
     "id": "nupao",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -5253,6 +5697,7 @@
     "era": "feudal",
     "health": 3,
     "id": "nushou",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -5274,11 +5719,32 @@
     "era": "prehistoric",
     "health": 3,
     "id": "octopus-larva",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
       "deathrattle-summon-octopus-larva-1"
     ],
+    "subtype": "mollusk",
+    "taxon": "octopodidae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "cephalopod"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 1,
+    "id": "octopus-larva-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
     "subtype": "mollusk",
     "taxon": "octopodidae"
   },
@@ -5295,6 +5761,7 @@
     "era": "classical",
     "health": 4,
     "id": "orchid",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -5317,6 +5784,7 @@
     "era": "modern",
     "health": 4,
     "id": "ostrich",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -5343,6 +5811,7 @@
     "era": "modern",
     "health": null,
     "id": "panghuang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -5364,6 +5833,7 @@
     "era": "prehistoric",
     "health": 2,
     "id": "paramecium",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -5385,6 +5855,7 @@
     "era": "feudal",
     "health": 6,
     "id": "parrot",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5406,6 +5877,7 @@
     "era": "industrial",
     "health": 10,
     "id": "pasteur",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -5427,6 +5899,7 @@
     "era": "modern",
     "health": 12,
     "id": "patrol-mech",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -5449,6 +5922,7 @@
     "era": "classical",
     "health": 8,
     "id": "peafowl",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -5471,6 +5945,7 @@
     "era": "industrial",
     "health": null,
     "id": "peiyangmin",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5492,6 +5967,7 @@
     "era": "modern",
     "health": 6,
     "id": "penguin",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5513,6 +5989,7 @@
     "era": "primitive",
     "health": 4,
     "id": "penicillium",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -5534,6 +6011,7 @@
     "era": "modern",
     "health": 6,
     "id": "phonograph",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -5556,6 +6034,7 @@
     "era": "modern",
     "health": 8,
     "id": "pink-ape",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5577,6 +6056,7 @@
     "era": "primitive",
     "health": 7,
     "id": "plasmodium",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5598,6 +6078,7 @@
     "era": "feudal",
     "health": 12,
     "id": "plato",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 4,
     "skills": [
@@ -5619,6 +6100,7 @@
     "era": "primitive",
     "health": 5,
     "id": "portuguese-man-of-war",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -5641,6 +6123,7 @@
     "era": "prehistoric",
     "health": 15,
     "id": "prototaxites",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -5663,6 +6146,7 @@
     "era": "primitive",
     "health": 12,
     "id": "puffball",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -5685,6 +6169,7 @@
     "era": "feudal",
     "health": 4,
     "id": "pufferfish",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -5707,6 +6192,7 @@
     "era": "primitive",
     "health": 3,
     "id": "pulley",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -5728,6 +6214,7 @@
     "era": "primitive",
     "health": 5,
     "id": "pythagoras",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 1,
     "skills": [
@@ -5749,6 +6236,7 @@
     "era": "primitive",
     "health": 9,
     "id": "python",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5770,6 +6258,7 @@
     "era": "modern",
     "health": null,
     "id": "qianfuqi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -5795,6 +6284,7 @@
     "era": "modern",
     "health": null,
     "id": "qianghua",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -5816,6 +6306,7 @@
     "era": "modern",
     "health": 9,
     "id": "qinghao",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5842,6 +6333,7 @@
     "era": "modern",
     "health": null,
     "id": "qingmeisu-tichun",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -5863,6 +6355,7 @@
     "era": "feudal",
     "health": 5,
     "id": "qishi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -5888,6 +6381,7 @@
     "era": "industrial",
     "health": null,
     "id": "qiuzhuangshandian",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -5909,6 +6403,7 @@
     "era": "future",
     "health": 9,
     "id": "quantum-computer",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -5931,6 +6426,7 @@
     "era": "modern",
     "health": 8,
     "id": "queen-bee",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -5953,6 +6449,7 @@
     "era": "future",
     "health": 14,
     "id": "qulv-feichuan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -5974,6 +6471,7 @@
     "era": "classical",
     "health": null,
     "id": "qunniao-fengbao",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -5995,6 +6493,7 @@
     "era": "feudal",
     "health": 12,
     "id": "quyuan",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 4,
     "skills": [
@@ -6016,6 +6515,7 @@
     "era": "prehistoric",
     "health": 10,
     "id": "radiolarian",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -6038,6 +6538,7 @@
     "era": "feudal",
     "health": 12,
     "id": "red-coral",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -6060,6 +6561,7 @@
     "era": "future",
     "health": null,
     "id": "rengongzhineng",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -6081,6 +6583,7 @@
     "era": "modern",
     "health": null,
     "id": "renzaoshandian",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -6102,6 +6605,7 @@
     "era": "feudal",
     "health": 4,
     "id": "renzhe",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -6123,6 +6627,7 @@
     "era": "future",
     "health": 10,
     "id": "revived-mammoth",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -6149,6 +6654,7 @@
     "era": "modern",
     "health": 5,
     "id": "rice-cooker",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -6170,6 +6676,7 @@
     "era": "modern",
     "health": 4,
     "id": "robot-dog",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -6195,6 +6702,7 @@
     "era": "modern",
     "health": 20,
     "id": "rutherford",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 6,
     "skills": [
@@ -6220,6 +6728,7 @@
     "era": "future",
     "health": 20,
     "id": "sagan",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 6,
     "skills": [
@@ -6241,6 +6750,7 @@
     "era": "industrial",
     "health": 6,
     "id": "salmon",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -6262,6 +6772,7 @@
     "era": "modern",
     "health": 13,
     "id": "saltwater-crocodile",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -6284,6 +6795,7 @@
     "era": "primitive",
     "health": 3,
     "id": "saman",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -6305,6 +6817,7 @@
     "era": "prehistoric",
     "health": 16,
     "id": "sarcosuchus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -6313,6 +6826,26 @@
     ],
     "subtype": "reptile",
     "taxon": "pholidosauridae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "protozoa"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "schizont-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 2,
+    "skills": [],
+    "subtype": "protozoa",
+    "taxon": "plasmodiidae"
   },
   {
     "attack": 0,
@@ -6331,6 +6864,7 @@
     "era": "future",
     "health": 26,
     "id": "schrodinger",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 7,
     "skills": [
@@ -6353,6 +6887,7 @@
     "era": "primitive",
     "health": 5,
     "id": "sea-anemone",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -6374,6 +6909,7 @@
     "era": "modern",
     "health": 11,
     "id": "sea-turtle",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -6382,6 +6918,46 @@
     ],
     "subtype": "reptile",
     "taxon": "cheloniidae"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "bird"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "seabird-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 2,
+    "skills": [],
+    "subtype": "bird",
+    "taxon": "diomedeidae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "plant"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 1,
+    "id": "seedling",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
+    "subtype": "crop",
+    "taxon": "plantae-incertae-sedis"
   },
   {
     "attack": 7,
@@ -6396,6 +6972,7 @@
     "era": "future",
     "health": 6,
     "id": "self-driving-car",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -6418,6 +6995,7 @@
     "era": "feudal",
     "health": 8,
     "id": "shakespeare",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -6439,6 +7017,7 @@
     "era": "modern",
     "health": null,
     "id": "shanhujiao",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -6460,6 +7039,7 @@
     "era": "future",
     "health": 16,
     "id": "shannon",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -6485,6 +7065,7 @@
     "era": "primitive",
     "health": null,
     "id": "shengzhang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -6506,6 +7087,7 @@
     "era": "modern",
     "health": null,
     "id": "shenhai-huixiang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -6527,6 +7109,7 @@
     "era": "feudal",
     "health": 16,
     "id": "shenkuo",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -6548,6 +7131,7 @@
     "era": "prehistoric",
     "health": 3,
     "id": "shifujiang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -6569,6 +7153,7 @@
     "era": "feudal",
     "health": 7,
     "id": "shiitake",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -6590,6 +7175,7 @@
     "era": "future",
     "health": 16,
     "id": "shijieshu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -6616,6 +7202,7 @@
     "era": "prehistoric",
     "health": 4,
     "id": "shijunti",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -6637,6 +7224,7 @@
     "era": "primitive",
     "health": 3,
     "id": "shilunche",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -6658,6 +7246,7 @@
     "era": "prehistoric",
     "health": 2,
     "id": "shiyanxiaoshu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -6679,6 +7268,7 @@
     "era": "feudal",
     "health": 8,
     "id": "shizijun",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -6701,6 +7291,7 @@
     "era": "prehistoric",
     "health": 2,
     "id": "shizuniao",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -6722,6 +7313,7 @@
     "era": "primitive",
     "health": 4,
     "id": "shizushou",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -6743,6 +7335,7 @@
     "era": "primitive",
     "health": 3,
     "id": "shoupijiang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -6764,6 +7357,7 @@
     "era": "feudal",
     "health": null,
     "id": "shouqun-chongfeng",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -6789,6 +7383,7 @@
     "era": "future",
     "health": null,
     "id": "shuaxin",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -6810,6 +7405,7 @@
     "era": "feudal",
     "health": 3,
     "id": "shuiche",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -6831,6 +7427,7 @@
     "era": "prehistoric",
     "health": 5,
     "id": "shuishengjue",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -6852,6 +7449,7 @@
     "era": "classical",
     "health": 3,
     "id": "shuizhong",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -6873,6 +7471,7 @@
     "era": "prehistoric",
     "health": 5,
     "id": "sibadayongshi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -6894,6 +7493,7 @@
     "era": "feudal",
     "health": 8,
     "id": "simaqian",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -6919,6 +7519,7 @@
     "era": "primitive",
     "health": 5,
     "id": "smallpox",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -6940,6 +7541,7 @@
     "era": "classical",
     "health": 9,
     "id": "soft-coral",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -6962,6 +7564,7 @@
     "era": "future",
     "health": 10,
     "id": "space-elevator",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -6984,6 +7587,7 @@
     "era": "future",
     "health": 12,
     "id": "space-rice",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -6992,6 +7596,66 @@
     ],
     "subtype": "crop",
     "taxon": "poaceae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "fungus"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 1,
+    "id": "spore-token-1",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
+    "subtype": "fungus",
+    "taxon": "fungi-incertae-sedis"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "fungus"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "spore-token-2",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
+    "subtype": "fungus",
+    "taxon": "fungi-incertae-sedis"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "fungus"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "spore-token-3",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 2,
+    "skills": [],
+    "subtype": "fungus",
+    "taxon": "fungi-incertae-sedis"
   },
   {
     "attack": 4,
@@ -7006,6 +7670,7 @@
     "era": "classical",
     "health": 6,
     "id": "squid",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -7027,6 +7692,7 @@
     "era": "prehistoric",
     "health": 9,
     "id": "staghorn-coral",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -7048,6 +7714,7 @@
     "era": "modern",
     "health": 5,
     "id": "staphylococcus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -7069,6 +7736,7 @@
     "era": "modern",
     "health": 6,
     "id": "steam-engine",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -7090,6 +7758,7 @@
     "era": "primitive",
     "health": 4,
     "id": "stentor",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -7111,6 +7780,7 @@
     "era": "industrial",
     "health": 11,
     "id": "stephenson",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -7132,6 +7802,7 @@
     "era": "prehistoric",
     "health": 5,
     "id": "streptococcus",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -7153,6 +7824,7 @@
     "era": "classical",
     "health": 6,
     "id": "sugeladi",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 2,
     "skills": [
@@ -7174,6 +7846,7 @@
     "era": "prehistoric",
     "health": 2,
     "id": "suishimaobing",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -7195,6 +7868,7 @@
     "era": "future",
     "health": 20,
     "id": "superbug",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -7217,6 +7891,7 @@
     "era": "future",
     "health": 10,
     "id": "synthetic-cell",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -7224,6 +7899,26 @@
       "keyword-contagion"
     ],
     "subtype": "synthesis",
+    "taxon": "bacteria-incertae-sedis"
+  },
+  {
+    "attack": 3,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "bacteria"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 3,
+    "id": "synthetic-cell-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 2,
+    "skills": [],
+    "subtype": "bacteria",
     "taxon": "bacteria-incertae-sedis"
   },
   {
@@ -7239,6 +7934,7 @@
     "era": "primitive",
     "health": 4,
     "id": "tai",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -7260,6 +7956,7 @@
     "era": "future",
     "health": 11,
     "id": "taikongziminzhe",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -7286,6 +7983,7 @@
     "era": "modern",
     "health": 12,
     "id": "tanju",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -7308,6 +8006,7 @@
     "era": "modern",
     "health": 9,
     "id": "telephone",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -7329,6 +8028,7 @@
     "era": "primitive",
     "health": 4,
     "id": "tengman",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -7350,12 +8050,33 @@
     "era": "modern",
     "health": 10,
     "id": "termite-king",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
       "deathrattle-summon-3-termites",
       "keyword-breed-3"
     ],
+    "subtype": "insect",
+    "taxon": "termitidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "insect"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "termite-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
     "subtype": "insect",
     "taxon": "termitidae"
   },
@@ -7376,6 +8097,7 @@
     "era": "industrial",
     "health": 16,
     "id": "tesla",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -7397,6 +8119,7 @@
     "era": "industrial",
     "health": null,
     "id": "tesla-coil",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -7422,6 +8145,7 @@
     "era": "feudal",
     "health": null,
     "id": "tiaoxin",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -7443,6 +8167,7 @@
     "era": "industrial",
     "health": 4,
     "id": "tielu-gongren",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -7464,6 +8189,7 @@
     "era": "primitive",
     "health": 7,
     "id": "tortoise",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -7485,6 +8211,7 @@
     "era": "feudal",
     "health": 5,
     "id": "toushiji",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -7510,10 +8237,11 @@
     "era": "prehistoric",
     "health": null,
     "id": "triple-reward",
+    "in_shop_pool": false,
     "is_scholar": false,
     "level": 1,
     "skills": [
-      "trigger-discover-tribe-minion"
+      "gain-next-level-minion"
     ],
     "subtype": null,
     "taxon": "economics"
@@ -7531,6 +8259,7 @@
     "era": "feudal",
     "health": 9,
     "id": "truffle",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -7552,6 +8281,7 @@
     "era": "modern",
     "health": 6,
     "id": "trypanosome",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -7577,6 +8307,7 @@
     "era": "prehistoric",
     "health": 3,
     "id": "tufu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -7598,6 +8329,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "tuike",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -7619,6 +8351,7 @@
     "era": "modern",
     "health": 4,
     "id": "tuna",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -7640,6 +8373,7 @@
     "era": "primitive",
     "health": null,
     "id": "tunshi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -7661,6 +8395,7 @@
     "era": "modern",
     "health": 8,
     "id": "turing-machine",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -7683,6 +8418,7 @@
     "era": "modern",
     "health": 6,
     "id": "turritopsis",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -7704,6 +8440,7 @@
     "era": "modern",
     "health": 12,
     "id": "vampire-squid",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -7726,6 +8463,7 @@
     "era": "future",
     "health": 11,
     "id": "vertical-farm",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -7748,6 +8486,7 @@
     "era": "industrial",
     "health": 7,
     "id": "vibrio-cholerae",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -7770,12 +8509,33 @@
     "era": "prehistoric",
     "health": 14,
     "id": "volvox",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
       "deathrattle-summon-4-volvox-cells",
       "aura-other-protozoa-plus-1-attack"
     ],
+    "subtype": "protozoa",
+    "taxon": "volvocaceae"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "protozoa"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 1,
+    "id": "volvox-cell-token",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
     "subtype": "protozoa",
     "taxon": "volvocaceae"
   },
@@ -7796,6 +8556,7 @@
     "era": "future",
     "health": 16,
     "id": "von-neumann",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 5,
     "skills": [
@@ -7817,6 +8578,7 @@
     "era": "primitive",
     "health": 4,
     "id": "vorticella",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -7838,6 +8600,7 @@
     "era": "prehistoric",
     "health": 4,
     "id": "wandou",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -7859,6 +8622,7 @@
     "era": "industrial",
     "health": 12,
     "id": "watt",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 4,
     "skills": [
@@ -7884,6 +8648,7 @@
     "era": "classical",
     "health": null,
     "id": "weiguang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -7905,6 +8670,7 @@
     "era": "feudal",
     "health": 9,
     "id": "weijingzhanshi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -7926,6 +8692,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "weizu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -7951,6 +8718,7 @@
     "era": "future",
     "health": null,
     "id": "wenming-feiyue",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -7972,6 +8740,7 @@
     "era": "feudal",
     "health": null,
     "id": "wenyi-baofa",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -7993,6 +8762,7 @@
     "era": "modern",
     "health": 10,
     "id": "whale-shark",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -8015,6 +8785,7 @@
     "era": "modern",
     "health": 12,
     "id": "wireless-telegraph",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -8023,6 +8794,46 @@
     ],
     "subtype": "telecommunication",
     "taxon": "information-computing"
+  },
+  {
+    "attack": 1,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "insect"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 1,
+    "id": "worker-bee-token-1",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
+    "subtype": "insect",
+    "taxon": "apidae"
+  },
+  {
+    "attack": 2,
+    "card_type": "minion",
+    "categories": [
+      {
+        "kind": "play",
+        "value": "insect"
+      }
+    ],
+    "cost": null,
+    "era": "prehistoric",
+    "health": 2,
+    "id": "worker-bee-token-2",
+    "in_shop_pool": false,
+    "is_scholar": false,
+    "level": 1,
+    "skills": [],
+    "subtype": "insect",
+    "taxon": "apidae"
   },
   {
     "attack": 8,
@@ -8037,6 +8848,7 @@
     "era": "modern",
     "health": 9,
     "id": "wright-brothers",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -8058,6 +8870,7 @@
     "era": "primitive",
     "health": 3,
     "id": "wuyi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -8079,6 +8892,7 @@
     "era": "feudal",
     "health": 4,
     "id": "xiake",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8100,6 +8914,7 @@
     "era": "prehistoric",
     "health": 5,
     "id": "xiangrikui",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -8125,6 +8940,7 @@
     "era": "future",
     "health": null,
     "id": "xiayixiangduilun",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -8146,6 +8962,7 @@
     "era": "modern",
     "health": null,
     "id": "xibao-fenlie",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -8167,6 +8984,7 @@
     "era": "classical",
     "health": 6,
     "id": "xiluoduode",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 2,
     "skills": [
@@ -8188,6 +9006,7 @@
     "era": "classical",
     "health": 2,
     "id": "xinge",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -8209,6 +9028,7 @@
     "era": "future",
     "health": 14,
     "id": "xingji-jianzhang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -8231,6 +9051,7 @@
     "era": "modern",
     "health": 6,
     "id": "xray-machine",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -8252,6 +9073,7 @@
     "era": "prehistoric",
     "health": 3,
     "id": "xunhuozhe",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -8277,6 +9099,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "xunjie",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8298,6 +9121,7 @@
     "era": "classical",
     "health": 6,
     "id": "yadian-wenyi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8319,6 +9143,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "yangliu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -8340,6 +9165,7 @@
     "era": "primitive",
     "health": 5,
     "id": "yanhuashi",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 1,
     "skills": [
@@ -8361,6 +9187,7 @@
     "era": "prehistoric",
     "health": 3,
     "id": "yeast",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -8386,6 +9213,7 @@
     "era": "prehistoric",
     "health": 3,
     "id": "yelang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 2,
     "skills": [
@@ -8407,6 +9235,7 @@
     "era": "feudal",
     "health": 9,
     "id": "yersinia-pestis",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -8433,6 +9262,7 @@
     "era": "primitive",
     "health": 2,
     "id": "yezhu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -8454,6 +9284,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "yinghua-jiake",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -8479,6 +9310,7 @@
     "era": "future",
     "health": null,
     "id": "yinlibo",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -8500,6 +9332,7 @@
     "era": "classical",
     "health": null,
     "id": "yinni",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -8525,6 +9358,7 @@
     "era": "feudal",
     "health": null,
     "id": "yinshuashu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8546,6 +9380,7 @@
     "era": "future",
     "health": 18,
     "id": "yongsheng-shuimu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -8572,6 +9407,7 @@
     "era": "industrial",
     "health": null,
     "id": "yousifenlie",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8593,6 +9429,7 @@
     "era": "future",
     "health": null,
     "id": "yuandandan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -8614,6 +9451,7 @@
     "era": "classical",
     "health": 4,
     "id": "yuanlaoyuan-yiyuan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8635,6 +9473,7 @@
     "era": "modern",
     "health": 20,
     "id": "yuanlongping",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 6,
     "skills": [
@@ -8656,6 +9495,7 @@
     "era": "primitive",
     "health": 7,
     "id": "yuanshijixiekuilei",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8677,6 +9517,7 @@
     "era": "prehistoric",
     "health": 2,
     "id": "yuanshizhenjun",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -8698,6 +9539,7 @@
     "era": "primitive",
     "health": null,
     "id": "yuqun-jijie",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8719,6 +9561,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "yuyi-bihu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [
@@ -8740,6 +9583,7 @@
     "era": "future",
     "health": 20,
     "id": "yuzhouteng",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -8761,6 +9605,7 @@
     "era": "primitive",
     "health": null,
     "id": "zaisheng",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8786,6 +9631,7 @@
     "era": "primitive",
     "health": 9,
     "id": "zhangheng",
+    "in_shop_pool": true,
     "is_scholar": true,
     "level": 3,
     "skills": [
@@ -8807,6 +9653,7 @@
     "era": "feudal",
     "health": 8,
     "id": "zhangzhongjing",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -8828,6 +9675,7 @@
     "era": "feudal",
     "health": 7,
     "id": "zhanma",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -8849,6 +9697,7 @@
     "era": "classical",
     "health": 7,
     "id": "zhanxiang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8874,6 +9723,7 @@
     "era": "classical",
     "health": null,
     "id": "zhaohuan",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -8895,6 +9745,7 @@
     "era": "industrial",
     "health": null,
     "id": "zhengbingling",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8916,6 +9767,7 @@
     "era": "industrial",
     "health": 10,
     "id": "zhenghe",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -8941,6 +9793,7 @@
     "era": "industrial",
     "health": null,
     "id": "zhengqi-geming",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -8962,6 +9815,7 @@
     "era": "industrial",
     "health": 7,
     "id": "zhengqi-jiche",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -8983,6 +9837,7 @@
     "era": "industrial",
     "health": null,
     "id": "zhengqidongli",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -9004,6 +9859,7 @@
     "era": "future",
     "health": 14,
     "id": "zhihui-jushou",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 7,
     "skills": [
@@ -9025,6 +9881,7 @@
     "era": "future",
     "health": null,
     "id": "zhinengdengjia",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -9050,6 +9907,7 @@
     "era": "future",
     "health": null,
     "id": "zhongju",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 6,
     "skills": [
@@ -9071,6 +9929,7 @@
     "era": "feudal",
     "health": null,
     "id": "zhuanli-zhidu",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 4,
     "skills": [
@@ -9092,6 +9951,7 @@
     "era": "feudal",
     "health": 4,
     "id": "zhugeliang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -9113,6 +9973,7 @@
     "era": "feudal",
     "health": 5,
     "id": "zhulin",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 3,
     "skills": [
@@ -9139,6 +10000,7 @@
     "era": "modern",
     "health": null,
     "id": "ziyang",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -9160,6 +10022,7 @@
     "era": "future",
     "health": null,
     "id": "zongzhuang-xian",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 5,
     "skills": [
@@ -9181,6 +10044,7 @@
     "era": "prehistoric",
     "health": null,
     "id": "zuqun-qianxi",
+    "in_shop_pool": true,
     "is_scholar": false,
     "level": 1,
     "skills": [

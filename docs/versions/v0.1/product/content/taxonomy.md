@@ -47,7 +47,7 @@
 | galliformes | 鸡形目 | aves | 目 | |
 | phasianidae | 雉科 | galliformes | 科 | 孔雀 |
 | procellariiformes | 鹱形目 | aves | 目 | |
-| diomedeidae | 信天翁科 | procellariiformes | 科 | 信天翁、海鸟 Token |
+| diomedeidae | 信天翁科 | procellariiformes | 科 | 信天翁、海鸟（衍生物） |
 | cathartiformes | 美洲鹫目 | aves | 目 | |
 | teratornithidae | 畸鸟科 | cathartiformes | 科 | 阿根廷巨鹰 |
 | corvidae | 鸦科 | passeriformes | 科 | 乌鸦 |
@@ -67,7 +67,7 @@
 | crocodylomorpha | 鳄形类 | reptilia | 目 | 按目处理，含化石类群 |
 | pholidosauridae | 似鳄科 | crocodylomorpha | 科 | 帝鳄 |
 | actinopterygii | 鱼纲 | chordata | 纲 | 玩法 fish |
-| actinopterygii-incertae-sedis | 未定科 | actinopterygii | 科 | 鱼纲未定科节点；鱼苗 Token 与部分鱼纲卡牌使用 |
+| actinopterygii-incertae-sedis | 未定科 | actinopterygii | 科 | 鱼纲未定科节点；鱼苗（衍生物） 与部分鱼纲卡牌使用 |
 | chondrichthyes | 软骨鱼纲 | chordata | 纲 | |
 | lamniformes | 鼠鲨目 | chondrichthyes | 目 | |
 | lamnidae | 鼠鲨科 | lamniformes | 科 | 大白鲨 |
@@ -107,7 +107,7 @@
 | drosophilidae | 果蝇科 | diptera | 科 | |
 | hymenoptera | 膜翅目 | insecta | 目 | |
 | formicidae | 蚁科 | hymenoptera | 科 | 蚂蚁 |
-| apidae | 蜜蜂科 | hymenoptera | 科 | 蜜蜂、蜜蜂皇后、工蜂 Token |
+| apidae | 蜜蜂科 | hymenoptera | 科 | 蜜蜂、蜜蜂皇后、工蜂（衍生物） |
 | orthoptera | 直翅目 | insecta | 目 | |
 | acrididae | 蝗科 | orthoptera | 科 | 蝗虫 |
 | mantodea | 螳螂目 | insecta | 目 | |
@@ -137,7 +137,7 @@
 | vampyromorphida | 幽灵蛸目 | cephalopoda | 目 | |
 | vampyroteuthidae | 幽灵蛸科 | vampyromorphida | 科 | 吸血鬼乌贼 |
 | ammonitida | 菊石目 | cephalopoda | 目 | |
-| ammonitidae | 菊石科 | ammonitida | 科 | 菊石、菊石幼体 Token |
+| ammonitidae | 菊石科 | ammonitida | 科 | 菊石、菊石幼体（衍生物） |
 | cnidaria | 刺胞动物门 | animalia | 门 | |
 | hydrozoa | 水螅纲 | cnidaria | 纲 | 玩法 cnidarian |
 | anthoathecata | 花水螅目 | hydrozoa | 目 | |
@@ -147,7 +147,7 @@
 | physaliidae | 僧帽水母科 | siphonophorae | 科 | 僧帽水母 |
 | anthozoa | 珊瑚纲 | cnidaria | 纲 | |
 | scleractinia | 石珊瑚目 | anthozoa | 目 | |
-| poritidae | 滨珊瑚科 | scleractinia | 科 | 珊瑚虫、珊瑚虫 Token |
+| poritidae | 滨珊瑚科 | scleractinia | 科 | 珊瑚虫、珊瑚虫（衍生物） |
 | acroporidae | 鹿角珊瑚科 | scleractinia | 科 | 鹿角珊瑚 |
 | alcyonacea | 软珊瑚目 | anthozoa | 目 | |
 | alcyoniidae | 软珊瑚科 | alcyonacea | 科 | 软珊瑚 |
@@ -246,7 +246,7 @@
 | mycobacteriales | 分枝杆菌目 | actinomycetia | 目 | |
 | mycobacteriaceae | 分枝杆菌科 | mycobacteriales | 科 | |
 | bacteria-incertae-sedis | 未定科 | bacteria | 科 | 未定科 |
-| enterobacteriaceae | 肠杆菌科 | enterobacterales | 科 | 大肠杆菌、超级细菌、细菌 Token |
+| enterobacteriaceae | 肠杆菌科 | enterobacterales | 科 | 大肠杆菌、超级细菌、细菌（衍生物） |
 | lactobacillaceae | 乳杆菌科 | lactobacillales | 科 | 乳酸菌 |
 | staphylococcaceae | 葡萄球菌科 | bacillales | 科 | 葡萄球菌 |
 | clostridia | 梭菌纲 | firmicutes | 纲 | |
@@ -273,7 +273,7 @@
 | amoebozoa | 变形虫门 | protozoa | 门 | |
 | tubulinea | 管状根足纲 | amoebozoa | 纲 | |
 | euamoebida | 真变形虫目 | tubulinea | 目 | |
-| amoebidae | 变形虫科 | euamoebida | 科 | 变形虫、大变形虫、变形虫幼体 Token |
+| amoebidae | 变形虫科 | euamoebida | 科 | 变形虫、大变形虫、变形虫幼体（衍生物） |
 | euglenozoa | 眼虫门 | protozoa | 门 | |
 | euglenoidea | 眼虫纲 | euglenozoa | 纲 | |
 | euglenida | 眼虫目 | euglenoidea | 目 | |
@@ -296,7 +296,7 @@
 | chlorophyta | 绿藻门 | protozoa | 门 | 按原生生物处理 |
 | chlorophyceae | 绿藻纲 | chlorophyta | 纲 | |
 | volvocales | 团藻目 | chlorophyceae | 目 | |
-| volvocaceae | 团藻科 | volvocales | 科 | 团藻、团藻细胞 Token |
+| volvocaceae | 团藻科 | volvocales | 科 | 团藻、团藻细胞（衍生物） |
 | virus | 病毒 | | 界 | 玩法 virus |
 | riboviria | 核糖病毒门 | virus | 门 | |
 | pisoniviricetes | 小核糖病毒纲 | riboviria | 纲 | |
@@ -361,7 +361,7 @@
 | insect | 昆虫纲 | 昆虫纲 | 快速铺场，亡语继续召唤 |
 | cephalopod | 头足纲 | 头足纲 | 复制敌方随从的属性与关键词，潜行突袭 |
 | cnidarian | 水螅纲 | 水螅纲 | 死亡回手或复活，每次复活更强 |
-| plant | 植物界 | 植物界 | 播种 token，延迟收益、持续成长 |
+| plant | 植物界 | 植物界 | 播种召唤的幼苗，延迟收益、持续成长 |
 | fungus | 真菌界 | 真菌界 | 亡语散播孢子，击杀后分解生命值 |
 | bacteria | 细菌域 | 细菌域 | 给敌方叠感染层，满层转化或消灭 |
 | protozoa | 原生生物界 | 原生生物界 | 吞噬低攻随从获得属性，分裂成更小个体 |

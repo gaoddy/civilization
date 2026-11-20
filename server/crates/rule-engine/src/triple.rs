@@ -135,7 +135,7 @@ impl Engine {
         ctx: &EffectCtx,
     ) -> Vec<GameEvent> {
         // 奖励牌锁定合成时的来源星级 +1；其它发现来源按玩家当前时代。
-        let level = match ctx.discover_level {
+        let level = match ctx.level_override {
             Some(level) => level.min(6),
             None => match state.players.get(usize::from(ctx.seat)) {
                 Some(player) => player.era as u8,
@@ -159,15 +159,15 @@ impl Engine {
 
     /// 找出该座位最早出现、且至少有三张非金色副本的随从卡牌。
     ///
-    /// 棋盘与手牌都要在目录中查得到且为随从；效果牌、缺失 id 与金色随从都不参与。
-    /// 返回按实例编号升序的前三张副本编号，编号即获得先后。
+    /// 棋盘与手牌都要在目录中查得到、为随从且进商店卡池；效果牌、非池卡、
+    /// 缺失 id 与金色随从都不参与。返回按实例编号升序的前三张副本编号，编号即获得先后。
     fn find_triple(&self, state: &GameState, seat: Seat) -> Option<(String, Vec<InstanceId>)> {
         let player = state.players.get(usize::from(seat))?;
         let is_minion = |card_id: &str| {
             self.catalog
                 .cards
                 .get(card_id)
-                .is_some_and(|card| card.card_type == CardType::Minion)
+                .is_some_and(|card| card.card_type == CardType::Minion && card.in_shop_pool)
         };
         let mut entries: Vec<(&str, InstanceId)> = Vec::new();
         for minion in &player.board {
@@ -247,7 +247,7 @@ fn upgrade_to_golden(catalog: &Catalog, minion: &mut MinionInstance) {
     minion.cannot_attack = false;
 }
 
-/// 发现候选：随从、非英雄、指定星级、[`card_in_pool`] 通过、共享池有剩余。
+/// 发现候选：池内随从、指定星级、[`card_in_pool`] 通过、共享池有剩余。
 fn is_discover_candidate(
     card: &Card,
     level: u8,
@@ -255,6 +255,7 @@ fn is_discover_candidate(
     pool: &std::collections::BTreeMap<String, u16>,
 ) -> bool {
     card.card_type == CardType::Minion
+        && card.in_shop_pool
         && card.level == level
         && card_in_pool(card, enabled_playstyles)
         && pool.get(&card.id).copied().unwrap_or(0) > 0

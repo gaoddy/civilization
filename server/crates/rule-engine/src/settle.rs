@@ -1022,7 +1022,6 @@ mod tests {
     const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
     const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
     const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
-    const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
     const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
     const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
@@ -1031,7 +1030,6 @@ mod tests {
             CARDS_JSON,
             HEROES_JSON,
             SKILLS_JSON,
-            TOKENS_JSON,
             CONFIG_JSON,
             TAXONOMY_JSON,
         )

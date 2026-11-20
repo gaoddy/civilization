@@ -4,7 +4,6 @@ extends Node
 var cards: Dictionary = {}
 ## 英雄展示表：只含身份与技能；与 `cards` 中的同名随从卡分属两个集合。
 var heroes: Dictionary = {}
-var tokens: Dictionary = {}
 ## 技能展示表：只取费用等展示字段，不参与规则判定。
 var skills: Dictionary = {}
 ## 科学分类树：节点 id → {id, parent, rank}。
@@ -37,12 +36,9 @@ const ERA_IDS := {
 func _ready() -> void:
     _load_table("res://generated/cards.json", cards)
     _load_table("res://generated/heroes.json", heroes)
-    _load_table("res://generated/tokens.json", tokens)
     _load_table("res://generated/skills.json", skills)
     _load_taxonomy("res://generated/taxonomy.json")
     _load_art("res://assets/asset_manifest.json")
-    for id in tokens:
-        cards[id] = tokens[id]
 
 
 func _load_table(path: String, target: Dictionary) -> void:
@@ -96,6 +92,11 @@ func _load_art(path: String) -> void:
 
 func card(id: String) -> Dictionary:
     return cards.get(id, {})
+
+
+## 是否进入商店卡池、共享牌池、三连与发现；缺字段按进池处理。
+func in_shop_pool(entry: Dictionary) -> bool:
+    return bool(entry.get("in_shop_pool", true))
 
 
 ## 英雄卡条目；英雄只用于开局选人，不参与商店与牌池。
@@ -175,9 +176,9 @@ func trigger_name(trigger: String) -> String:
     return "" if unknown == unknown_key else unknown
 
 
-## 展示名：Token 取 `token.<id>.name`，其余取 `card.<id>.name`；缺键回退为实体 id。
+## 展示名：取 `card.<id>.name`；缺键回退为实体 id。
 func display_name(id: String) -> String:
-    var key := ("token.%s.name" if tokens.has(id) else "card.%s.name") % id
+    var key := "card.%s.name" % id
     var text := tr(key)
     return id if text == key else text
 
@@ -235,15 +236,10 @@ func playstyle_name(id: String) -> String:
     return id if text == key else text
 
 
-## 玩法归属：读 `categories` 的 `play` 条目，按玩法顺序去重排列；
-## 只有 Token 在缺少 `categories` 时回退单值 `playstyle`。
-## 普通卡缺少 `categories` 时返回空，由调用方显示「未定」，不静默按单值展示。
+## 玩法归属：读 `categories` 的 `play` 条目，按玩法顺序去重排列。
+## 缺失 `categories`（非池卡）时返回空，由调用方显示「未定」。
 func play_categories(entry: Dictionary) -> Array[String]:
     var values := category_values(entry, "play")
-    if values.is_empty() and tokens.has(str(entry.get("id", ""))):
-        var fallback := str(entry.get("playstyle", ""))
-        if fallback != "":
-            values.append(fallback)
     var out: Array[String] = []
     for id in playstyles:
         var playstyle := str(id)
@@ -255,8 +251,8 @@ func play_categories(entry: Dictionary) -> Array[String]:
     return out
 
 
-## 主玩法：取第一条 `play:`，供取色与单值展示；Token 回退 `playstyle`。
-## 卡表缺失玩法时返回 `neutral`，与服务端 Token 哨兵一致。
+## 主玩法：取第一条 `play:`，供取色与单值展示。
+## 卡表缺失玩法时返回 `neutral`，与服务端筛选哨兵一致。
 func primary_playstyle(entry: Dictionary) -> String:
     var plays := play_categories(entry)
     return plays[0] if not plays.is_empty() else "neutral"

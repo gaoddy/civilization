@@ -262,7 +262,7 @@ pub fn effective_health_with(
 
 /// 随从当前生效的关键词集合。
 ///
-/// 由所引用技能的 `keyword` 字段与 token 注册表派生，并并入尚未失效的授予关键词；
+/// 由所引用技能的 `keyword` 字段派生，并并入尚未失效的授予关键词；
 /// `Instant` 授予在战斗前就已结算完毕，视为不存在。未知关键词原样保留。
 pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
     let mut result = base_keywords(catalog, minion);
@@ -274,19 +274,16 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
     result
 }
 
-/// 卡面与 Token 自带的关键词，不含战斗内授予与光环派生。
+/// 卡面自带的关键词，不含战斗内授予与光环派生。
 fn base_keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
     base_keyword_occurrences(catalog, minion)
         .into_iter()
         .collect()
 }
 
-/// 卡面与 Token 自带关键词的逐次出现列表，保留重复（供同层减伤累加）。
+/// 卡面自带关键词的逐次出现列表，保留重复（供同层减伤累加）。
 fn base_keyword_occurrences(catalog: &Catalog, minion: &MinionInstance) -> Vec<String> {
     let mut result = Vec::new();
-    if let Some(token) = catalog.tokens.get(&minion.card_id) {
-        result.extend(token.keywords.iter().cloned());
-    }
     if let Some(card) = catalog.cards.get(&minion.card_id) {
         for skill_id in &card.skills {
             if let Some(keyword) = catalog
@@ -976,11 +973,11 @@ impl BattleField {
                         target: None,
                         event_target: None,
                         golden,
-                        discover_level: None,
+                        level_override: None,
                     };
                     engine.fire_combat_death(self, rng, &card_id, ctx);
                     if keywords(catalog, &self.sides[side].minions[index]).contains(SOW)
-                        && catalog.tokens.contains_key(SEEDLING_TOKEN)
+                        && catalog.cards.contains_key(SEEDLING_TOKEN)
                     {
                         let count = if golden { 2 } else { 1 };
                         for _ in 0..count {

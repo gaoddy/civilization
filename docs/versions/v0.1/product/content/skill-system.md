@@ -2,7 +2,7 @@
 
 > 依赖：[卡牌规范与数据](card-system.md) §2.1「英雄卡」、[关键词与机制](../rules/keywords-and-mechanics.md)
 > 状态：方案未实施
-> 数据：`docs/versions/v0.1/product/content/skills/`（254 份，文件名 = id）
+> 数据：`docs/versions/v0.1/product/content/skills/`（255 份，文件名 = id）
 > 模板：`docs/versions/v0.1/product/content/skill-templates/`（文件名 = id）
 
 本文描述技能实体的定义、字段规范、引用与渲染规则、共享规则、数据总览与校验方式；不描述具体实现与后续版本技能。归属版本产品基线的内容。
@@ -73,8 +73,8 @@
 
 | 类型 | 取值 | 默认渲染 `{name}` | 修饰符 |
 | --- | --- | --- | --- |
-| `token` | Token 注册表 id；查不到时回退卡牌 id | 展示名 | `.stats` → 攻/血 |
-| `card` | 卡牌 id | 卡牌名 | `.stats` → 攻/血 |
+| `token` | 非池卡 id（`in_shop_pool: false`） | 展示名 | `.stats` → 攻/血 |
+| `card` | 进池卡 id（`in_shop_pool: true`） | 卡牌名 | `.stats` → 攻/血 |
 | `taxon` | 分类节点 id | 卡面名词 | — |
 | `playstyle` | 玩法 id | 卡面名词 | — |
 | `scholar` | 固定 `true` | 学者 | — |
@@ -96,7 +96,7 @@
 | `battlecry-friendly-plant-kingdom-growth-once` | 名词表 `plant` 渲染为「植物」，卡面写「植物界」 |
 | `trigger-fungus-single-plus-0-plus-3` | 名词表 `fungus` 渲染为「真菌界」，卡面写「真菌」 |
 | `deathrattle-summon-termite` | 卡面沿用手写「1/2 的白蚁」，与 `baiyi` 当前 2/2 不一致 |
-| `deathrattle-summon-3-termites` | Token 展示名已含数值，模板的 `{token.stats}` 会重复 |
+| `deathrattle-summon-3-termites` | 非池卡展示名已含数值，模板的 `{token.stats}` 会重复 |
 | `efficient-algorithm` | 两个模板组合，卡面文案没有「；」 |
 
 ### 2.2 按科学分类与玩法筛选
@@ -106,14 +106,14 @@
 | 键 | 匹配口径 |
 | --- | --- |
 | `taxon` | 卡牌 `taxon` 等于该节点或位于其下；写上级节点即包含全部下级，如 `taxon=animalia` 命中全部动物卡 |
-| `playstyle` | 卡牌任一条 `play:` 精确相等；Token 按自身单值 `playstyle` 匹配；不命中 `neutral` |
+| `playstyle` | 卡牌任一条 `play:` 精确相等；不命中 `neutral` |
 | `play` | 卡牌 `categories` 中存在 `play:<值>`；任一条命中即可，不区分学者、工具卡与效果牌 |
 | `prey` / `host` | 卡牌捕食 / 寄生分类中存在与筛选节点相同或位于其下的节点 |
 | `subtype` / `id` / `type` / `scholar` / `keyword` / `other` | 沿用既有语义；`scholar=true` 表示学者卡 |
 
-- 科学分类与玩法是两条独立维度：`taxon` 按科学分类筛选；`playstyle` / `play` 按玩法归属筛选，任一条 `play:` 命中即可。Token 按自身玩法参与匹配。
+- 科学分类与玩法是两条独立维度：`taxon` 按科学分类筛选；`playstyle` / `play` 按玩法归属筛选，任一条 `play:` 命中即可。非池卡同样按自身 `categories` 参与匹配。
 - 技能文本必须与筛选键一致：写「你的犬科随从」用 `taxon=canidae`，写「你的机械随从」用 `playstyle=machine`，写「你的学者随从」用 `scholar=true`；「你的动物随从」用 `taxon=animalia`。
-- 召唤物（Token）按自身玩法与科学分类参与匹配，召唤物卡池查不到时回退到 Token 注册表。
+- 召唤物按自身玩法与科学分类参与匹配；它们与普通卡同为 `cards.json` 中的卡牌实体，不再有独立注册表或回退路径。
 - 当前数据只有 `taxon`、`playstyle`、`scholar`、`id`、`type`、`keyword`、`other` 被实际使用；`play`、`prey`、`host`、`subtype` 已定义，暂无技能使用。
 
 ### 2.3 次数与条件参数
@@ -172,7 +172,7 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 
 | 维度 | 数量 |
 | --- | --- |
-| 技能总数 | 254 |
+| 技能总数 | 255 |
 | 经卡牌 `skills` 引用的技能 | 243 |
 | 仅经英雄卡 `skills` 引用的技能 | 7 |
 | 既未被卡牌也未被英雄引用的技能 | 4 |
@@ -181,7 +181,7 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 | 不带技能的随从牌 | 1 |
 | 卡牌技能引用 | 535 段效果单元 |
 
-254 个技能中，243 个经卡牌 `skills` 引用，7 个仅由英雄卡引用（英雄专属主动技能），其余 4 个既未被卡牌也未被英雄引用。卡牌技能共 535 段引用（随从 435 段 + 效果牌 100 段），其中 2 处「若其为<筛选对象>」条件变体已并回前一段（见 §2「技能边界」）。
+255 个技能中，244 个经卡牌 `skills` 引用，7 个仅由英雄卡引用（英雄专属主动技能），其余 4 个既未被卡牌也未被英雄引用。卡牌技能共 535 段引用（随从 435 段 + 效果牌 100 段），其中 2 处「若其为<筛选对象>」条件变体已并回前一段（见 §2「技能边界」）。
 
 ### 5.1 筛选键使用分布
 
@@ -221,7 +221,7 @@ python3 scripts/validate_docs.py
 
 技能相关校验覆盖：
 
-1. 技能文档 254 份，`id` 等于文件名且在技能命名空间内唯一；
+1. 技能文档 255 份，`id` 等于文件名且在技能命名空间内唯一；
 2. 技能属性表与 front matter 一致；
 3. 被效果牌引用的技能必须有 `match_text`；主动技能必须有 `name` 与 `match_text`，`cost` 与 `uses_per_turn` 成对出现且取值在 0–2 / 1–2 内；填写了 `name` 的技能必须有 `match_text`；
 4. 每张效果牌至少引用 1 个技能；全池恰好 1 张无技能随从（`einstein-fridge`）的 `skills` 为空且 `## 效果` 为「无」；
@@ -234,7 +234,7 @@ python3 scripts/validate_docs.py
 11. 专属关键词按玩法与分类校验：`decompose` 仅 play 命中真菌界/细菌域、`assemble` 仅 play 命中机械（含造物六类工具卡）、`sow` 仅 play 命中植物界、`evolve` 仅非学者生物卡；
 12. 派生小节由 `python3 scripts/render_docs.py --check` 校验：技能 `## 属性` 的派生行、技能与卡牌的 `## 效果` 无漂移；`make data-check` 已包含这一步。
 
-期望：输出包含 `随从 309 张、效果牌 100 张、技能 254 个、英雄卡 32 张，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
+期望：输出包含 `随从 332 张、效果牌 100 张、技能 255 个、英雄卡 32 张，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
 
 模板渲染、`effects` 解析与校验函数有独立单元测试，改动校验逻辑后运行：
 

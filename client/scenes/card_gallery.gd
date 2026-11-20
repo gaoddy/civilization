@@ -311,7 +311,7 @@ func _matches_kind(entry: Dictionary) -> bool:
     return _kind_bucket(entry) == _kind
 
 
-## 一张卡可同时属于多条 `play:` 归属；Token 由 `play_categories` 回退单值玩法。
+## 一张卡可同时属于多条 `play:` 归属。
 func _category_keys(entry: Dictionary) -> Array:
     return CardDB.play_categories(entry)
 

@@ -338,8 +338,7 @@ fn errors_include_the_raw_segment() {
 #[test]
 fn catalog_rejects_unknown_effect_enum_at_load() {
     let bad_skills = r#"[{"id":"broken-skill","effects":[{"trigger":"on_play","op":"explode","selector":{"kind":"self"},"params":{}}]}]"#;
-    let err =
-        Catalog::from_json("[]", "[]", bad_skills, "[]", CONFIG_JSON, TAXONOMY_JSON).unwrap_err();
+    let err = Catalog::from_json("[]", "[]", bad_skills, CONFIG_JSON, TAXONOMY_JSON).unwrap_err();
     assert!(
         matches!(err, CatalogError::File("skills.json", _)),
         "实为 {err:?}"
@@ -349,8 +348,7 @@ fn catalog_rejects_unknown_effect_enum_at_load() {
 #[test]
 fn catalog_rejects_semantically_invalid_effect_at_load() {
     let bad_skills = r#"[{"id":"broken-skill","effects":[{"trigger":"aura","op":"deal_damage","selector":{"kind":"side","side":"friendly","pick":"all","filters":[]},"params":{"amount":1}}]}]"#;
-    let err =
-        Catalog::from_json("[]", "[]", bad_skills, "[]", CONFIG_JSON, TAXONOMY_JSON).unwrap_err();
+    let err = Catalog::from_json("[]", "[]", bad_skills, CONFIG_JSON, TAXONOMY_JSON).unwrap_err();
     match err {
         CatalogError::Rule(message) => {
             assert!(message.contains("broken-skill"), "{message}");

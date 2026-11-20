@@ -7,9 +7,9 @@ mod common;
 
 use std::collections::BTreeMap;
 
-use common::{categories_for, effects_of, minion, reborn_count, setup_with_gold};
+use common::{categories_for, effects_of, minion, reborn_count, setup_with_gold, token_card};
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
-use rule_engine::data::{Card, CardType, HeroCard, Playstyle, Skill, Token};
+use rule_engine::data::{Card, CardType, HeroCard, Playstyle, Skill};
 use rule_engine::effects::Duration;
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
@@ -45,6 +45,7 @@ fn add_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(playstyle),
             subtype: None,
@@ -78,17 +79,10 @@ fn mirror_as_hero(engine: &mut Engine, id: &str) {
 }
 
 fn add_token(engine: &mut Engine, id: &str, attack: i32, health: i32) {
-    engine.catalog.tokens.insert(
-        id.to_string(),
-        Token {
-            id: id.to_string(),
-            attack,
-            health,
-            keywords: Vec::new(),
-            playstyle: None,
-            taxon: "biology".to_string(),
-        },
-    );
+    engine
+        .catalog
+        .cards
+        .insert(id.to_string(), token_card(id, attack, health));
 }
 
 fn rng() -> RngStreams {

@@ -3197,6 +3197,25 @@
     "uses_per_turn": 1
   },
   {
+    "cost": null,
+    "effects": [
+      {
+        "op": "grant_minion",
+        "params": {
+          "level": "next",
+          "to": "hand"
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_play_effect"
+      }
+    ],
+    "id": "gain-next-level-minion",
+    "keyword": null,
+    "uses_per_turn": null
+  },
+  {
     "cost": 1,
     "effects": [
       {

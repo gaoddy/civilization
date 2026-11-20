@@ -1,7 +1,5 @@
 mod common;
 
-use std::collections::BTreeSet;
-
 use common::{minion, minion_id, set_shop, test_catalog, turn_started};
 use rule_engine::data::{CardType, card_in_pool};
 use rule_engine::effects::{TargetRef, Zone};
@@ -473,9 +471,8 @@ fn reward_level_caps_at_six() {
 }
 
 #[test]
-fn playing_reward_discovers_next_level_minions() {
+fn playing_reward_grants_next_level_minion() {
     let (mut engine, mut state) = turn_started(10);
-    let card_id = minion_id(2);
     let reward_id = state.next_instance_id;
     state.next_instance_id += 1;
     state.players[0].hand.push(HandCard::Effect {
@@ -483,6 +480,7 @@ fn playing_reward_discovers_next_level_minions() {
         card_id: REWARD_CARD_ID.to_string(),
         reward_level: Some(3),
     });
+    let pool_before = state.pool.clone();
 
     engine
         .apply(
@@ -496,42 +494,25 @@ fn playing_reward_discovers_next_level_minions() {
         )
         .expect("打出奖励牌应成功");
 
-    assert!(state.players[0].hand.is_empty(), "奖励牌被消耗");
-    let pending = state.pending.front().expect("应登记发现待选");
-    let PendingChoice::Discover {
-        seat, candidates, ..
-    } = pending
-    else {
-        panic!("奖励牌只登记发现待选");
-    };
-    assert_eq!(*seat, 0);
-    assert!(!candidates.is_empty(), "候选最多三张");
-    assert!(candidates.len() <= 3);
+    assert!(state.pending.is_empty(), "奖励牌不再登记发现待选");
+    assert_eq!(state.players[0].hand.len(), 1, "奖励换成一张手牌随从");
+    let granted_id = state.players[0].hand[0].card_id();
     let catalog = test_catalog();
-    let mut seen = BTreeSet::new();
-    for candidate in candidates {
-        let card = catalog.cards.get(candidate).expect("候选应存在于目录");
-        assert_eq!(card.level, 3, "候选星级取奖励牌锁定星级");
-        assert_eq!(card.card_type, CardType::Minion);
-        assert_ne!(card.id, REWARD_CARD_ID);
-        assert!(
-            card_in_pool(card, &state.enabled_playstyles),
-            "候选玩法需本局启用或为纯通用"
-        );
-        assert!(pool_count(&state, candidate) > 0, "候选池需有剩余");
-        assert!(seen.insert(candidate.clone()), "候选不得重复");
-    }
-    let _ = card_id;
+    let card = catalog.cards.get(granted_id).expect("获得的随从应在目录中");
+    assert_eq!(card.level, 3, "奖励牌锁定星级即发放星级");
+    assert_eq!(card.card_type, CardType::Minion);
+    assert!(card.in_shop_pool, "奖励只会发出池内随从");
+    assert!(
+        card_in_pool(card, &state.enabled_playstyles),
+        "候选玩法需本局启用"
+    );
+    assert_eq!(state.pool, pool_before, "直接发牌不扣共享池");
 }
 
 #[test]
 fn reward_card_without_candidates_is_consumed() {
     let (mut engine, mut state) = turn_started(11);
-    for card in test_catalog().cards.values() {
-        if card.card_type == CardType::Minion && card.level == 6 {
-            state.pool.insert(card.id.clone(), 0);
-        }
-    }
+    state.enabled_playstyles.clear();
     state.players[0].hand.push(HandCard::Effect {
         instance_id: 9_000,
         card_id: REWARD_CARD_ID.to_string(),

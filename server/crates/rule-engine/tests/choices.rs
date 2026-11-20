@@ -9,8 +9,8 @@
 mod common;
 
 use common::{
-    CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON, categories_for,
-    effects_of, test_catalog, test_playstyles, turn_started,
+    CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, categories_for, effects_of,
+    test_catalog, test_playstyles, turn_started,
 };
 use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill, card_in_pool};
 use rule_engine::effects::{Effect, EffectCtx, TargetRef, Zone, parse_effects};
@@ -57,6 +57,7 @@ fn add_minion(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(playstyle),
             subtype: None,
@@ -82,6 +83,7 @@ fn first_minion_of_level(
         .values()
         .find(|card| {
             card.card_type == CardType::Minion
+                && card.in_shop_pool
                 && card.level == level
                 && !card.is_scholar
                 && card_in_pool(card, enabled)
@@ -138,7 +140,7 @@ fn ctx(seat: u8) -> EffectCtx {
         target: None,
         event_target: None,
         golden: false,
-        discover_level: None,
+        level_override: None,
     }
 }
 
@@ -428,7 +430,7 @@ fn discover_fires_from_hero_power() {
 }
 
 #[test]
-fn triple_reward_is_played_and_consumed_by_choose() {
+fn triple_reward_is_played_and_grants_next_level_minion() {
     let (mut engine, mut state) = turn_started(2);
     let card_id = first_minion_of_level(&engine.catalog, 1, &state.enabled_playstyles);
     state.players[0].hand = (0..2).map(|_| hand_card(&card_id)).collect();
@@ -463,9 +465,8 @@ fn triple_reward_is_played_and_consumed_by_choose() {
         )
         .expect("打出金色应成功");
     assert_eq!(pending_count(&state), 0, "奖励牌入手时还没有待选");
-    assert_eq!(state.players[0].hand.len(), 1);
 
-    // 打出奖励牌：此时才登记发现待选。
+    // 打出奖励牌：直接随机获得一张下一等级、命中本局玩法的池内随从。
     engine
         .apply(
             &mut state,
@@ -477,12 +478,15 @@ fn triple_reward_is_played_and_consumed_by_choose() {
             },
         )
         .expect("打出奖励牌应成功");
-    assert_eq!(pending_count(&state), 1, "奖励牌登记发现待选");
-
-    engine
-        .apply(&mut state, 0, Intent::ChooseDiscover { choice: 0 })
-        .expect("发现应可选择");
-    assert_eq!(pending_count(&state), 0);
+    assert_eq!(pending_count(&state), 0, "奖励牌不再登记发现待选");
+    assert_eq!(state.players[0].hand.len(), 1, "奖励换成一张手牌随从");
+    let granted = engine
+        .catalog
+        .cards
+        .get(state.players[0].hand[0].card_id())
+        .expect("获得的随从应在目录中");
+    assert_eq!(granted.level, 2, "来源 1 星 +1 后为 2 星");
+    assert!(granted.in_shop_pool, "奖励只会发出池内随从");
 }
 
 // ---------------------------------------------------------------------------
@@ -1096,15 +1100,8 @@ fn gain_minion_from_board_fails_at_load() {
         "efficient-algorithm",
         r#"[{"trigger":"on_activate","op":"refresh_shop","selector":{"kind":"self"},"params":{"free":true}},{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"from":"board","level":"current","to":"hand"}}]"#,
     );
-    let error = Catalog::from_json(
-        CARDS_JSON,
-        HEROES_JSON,
-        &skills,
-        TOKENS_JSON,
-        CONFIG_JSON,
-        TAXONOMY_JSON,
-    )
-    .expect_err("from=board 必须在加载期失败");
+    let error = Catalog::from_json(CARDS_JSON, HEROES_JSON, &skills, CONFIG_JSON, TAXONOMY_JSON)
+        .expect_err("from=board 必须在加载期失败");
     let message = error.to_string();
     assert!(
         message.contains("efficient-algorithm"),
@@ -1120,15 +1117,7 @@ fn gain_minion_from_hand_fails_at_load() {
         r#"[{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"from":"hand","level":"current","to":"hand"}}]"#,
     );
     assert!(
-        Catalog::from_json(
-            CARDS_JSON,
-            HEROES_JSON,
-            &skills,
-            TOKENS_JSON,
-            CONFIG_JSON,
-            TAXONOMY_JSON
-        )
-        .is_err(),
+        Catalog::from_json(CARDS_JSON, HEROES_JSON, &skills, CONFIG_JSON, TAXONOMY_JSON).is_err(),
         "from=hand 必须在加载期失败"
     );
 }
@@ -1140,15 +1129,8 @@ fn gain_minion_from_shop_or_omitted_loads() {
         r#"[{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"level":"3","to":"board"}}]"#,
     ] {
         let skills = skills_with_effects_json("efficient-algorithm", effects);
-        Catalog::from_json(
-            CARDS_JSON,
-            HEROES_JSON,
-            &skills,
-            TOKENS_JSON,
-            CONFIG_JSON,
-            TAXONOMY_JSON,
-        )
-        .unwrap_or_else(|error| panic!("{effects} 应能加载：{error}"));
+        Catalog::from_json(CARDS_JSON, HEROES_JSON, &skills, CONFIG_JSON, TAXONOMY_JSON)
+            .unwrap_or_else(|error| panic!("{effects} 应能加载：{error}"));
     }
 }
 

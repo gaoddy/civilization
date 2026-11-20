@@ -2,7 +2,9 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::{categories_for, effects_of, minion, reborn_count, test_catalog, test_playstyles};
+use common::{
+    categories_for, effects_of, minion, reborn_count, test_catalog, test_playstyles, token_card,
+};
 use rule_engine::combat::{
     CombatAction, CombatLog, effective_attack, effective_attack_with, effective_health,
     effective_health_with, keywords, simulate, simulate_with,
@@ -45,6 +47,7 @@ fn add_card_with(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(playstyle),
             subtype: None,
@@ -98,17 +101,9 @@ fn add_effect_skill(
 }
 
 fn add_seedling_token(catalog: &mut Catalog) {
-    catalog.tokens.insert(
-        "seedling".to_string(),
-        rule_engine::data::Token {
-            id: "seedling".to_string(),
-            attack: 1,
-            health: 1,
-            keywords: Vec::new(),
-            playstyle: None,
-            taxon: "biology".to_string(),
-        },
-    );
+    catalog
+        .cards
+        .insert("seedling".to_string(), token_card("seedling", 1, 1));
 }
 
 fn rng() -> RngStreams {
@@ -1087,17 +1082,9 @@ fn summon_action_records_position_and_seat() {
     let mut catalog = test_catalog();
     add_card(&mut catalog, "killer", 10, 10, &[]);
     add_card(&mut catalog, "sower", 1, 1, &["sow"]);
-    catalog.tokens.insert(
-        "seedling".to_string(),
-        rule_engine::data::Token {
-            id: "seedling".to_string(),
-            attack: 1,
-            health: 1,
-            keywords: Vec::new(),
-            playstyle: None,
-            taxon: "biology".to_string(),
-        },
-    );
+    catalog
+        .cards
+        .insert("seedling".to_string(), token_card("seedling", 1, 1));
 
     let (engine, _state) = Engine::new(catalog.clone(), [7; 32], test_playstyles());
     let log = simulate_with(

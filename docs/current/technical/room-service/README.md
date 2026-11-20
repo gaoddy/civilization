@@ -56,7 +56,7 @@ protocol/
 
 ## 3. WebSocket 接入与信封
 
-- 路由只有 `GET /ws`（`axum::routing::get`），升级后进入连接 task；`AppState` 内嵌 v0.1 的 `cards.json`、`heroes.json`、`skills.json`、`tokens.json`、`config.json`、`taxonomy.json`。
+- 路由只有 `GET /ws`（`axum::routing::get`），升级后进入连接 task；`AppState` 内嵌 v0.1 的 `cards.json`、`heroes.json`、`skills.json`、`config.json`、`taxonomy.json`。
 - 连接拓扑：每个连接一个读端 task 与一个写端 task；每个房间一个房间 task（单写者，独占 `Room`/`GameTask` 可变状态）。连接层从不直接改房间状态，只投递 `RoomMessage`。
 - 上行统一为 `ClientEnvelope { v, id, type, ts, payload }`。**生成类型不校验 `v`**：连接层显式拒绝 `v != 1`，回 `BAD_PAYLOAD`（`不支持的协议版本`）后关闭连接，避免按 v1 语义执行 v2 载荷。
 - `envelope.parse()` 按 `type` 判别并校验 `payload` 结构；未知 `type` 回 `UNKNOWN_TYPE`，载荷不匹配回 `BAD_PAYLOAD`（`上行载荷与类型不匹配`），两者都继续读下一条，不关闭连接。

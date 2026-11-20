@@ -125,8 +125,8 @@ func _check_filters() -> void:
     if chapter != null:
         await _push_click(instance, chapter.get_global_rect().get_center())
     _expect(
-        _filtered_count(instance) == 63,
-        "史前章应有 63 张，实际：%d" % _filtered_count(instance),
+        _filtered_count(instance) == 86,
+        "史前章应有 86 张，实际：%d" % _filtered_count(instance),
     )
 
     chapter = instance.find_child("Chapter7", true, false)
@@ -398,8 +398,8 @@ func _check_mode_filters() -> void:
     if chapter != null:
         await _push_click(instance, chapter.get_global_rect().get_center())
     _expect(
-        _filtered_count(instance) == 63,
-        "史前章应有 63 张，实际：%d" % _filtered_count(instance),
+        _filtered_count(instance) == 86,
+        "史前章应有 86 张，实际：%d" % _filtered_count(instance),
     )
     var mode_toggle = instance.find_child("ModeToggle", true, false)
     if mode_toggle != null:
@@ -411,7 +411,7 @@ func _check_mode_filters() -> void:
     if mode_toggle != null:
         await _push_click(instance, mode_toggle.get_global_rect().get_center())
     _expect(
-        _filtered_count(instance) == 63,
+        _filtered_count(instance) == 86,
         "切回随从视图应保留史前筛选，实际：%d" % _filtered_count(instance),
     )
     await _unmount(instance)
@@ -574,16 +574,16 @@ func _check_match_overlay() -> void:
     _expect(gallery != null, "对局图鉴缺少 CardGallery")
     if gallery != null:
         var ids: Array = gallery.get("_ids")
-        _expect(ids.size() == 178, "本局卡池应为 178 张，实际：%d" % ids.size())
+        _expect(ids.size() == 177, "本局卡池应为 177 张，实际：%d" % ids.size())
         _expect(ids.has("alan-turing"), "机械玩法卡应在本局卡池")
         _expect(ids.has("airplane"), "机械玩法工具卡应在本局卡池")
         _expect(not ids.has("bruce-lee"), "未启用玩法的哺乳纲卡不应在本局卡池")
-        _expect(not ids.has("ammonite-token"), "本局图鉴不应包含 Token")
+        _expect(not ids.has("ammonite-token"), "本局图鉴不应包含非池卡")
         _expect(not ids.has("aristotle"), "未启用玩法的爬行纲卡不应在本局卡池")
 
     _expect(
-        gallery != null and gallery.call("_filtered_ids").size() == 178,
-        "本局图鉴应筛出 178 张",
+        gallery != null and gallery.call("_filtered_ids").size() == 177,
+        "本局图鉴应筛出 177 张",
     )
     _expect(instance.is_inside_tree(), "打开图鉴不应切换场景")
     _expect(instance.find_child("ShopSlot0", true, false) != null, "打开图鉴不应丢失对局内容")

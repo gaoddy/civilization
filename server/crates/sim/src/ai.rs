@@ -235,7 +235,7 @@ fn hero_power_use(
         target: None,
         event_target: None,
         golden: false,
-        discover_level: None,
+        level_override: None,
     };
     let candidates = engine.target_candidates(state, &effects, &ctx, false);
     if candidates.is_empty() {
