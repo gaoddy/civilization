@@ -1,6 +1,6 @@
 # 技能索引
 
-本文索引 v0.1 的 247 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能实例用 `template` 引用[技能模板](../skill-templates/README.md)并只写参数，卡面文本由模板渲染，特殊措辞才用 `text` 覆盖。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.2。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
+本文索引 v0.1 的 254 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能实例用 `template` 引用[技能模板](../skill-templates/README.md)并只写参数，卡面文本由模板渲染，特殊措辞才用 `text` 覆盖。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.2。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
 
 | 技能 | 关键词 | 文本 | 引用数 |
 | --- | --- | --- | --- |
@@ -62,7 +62,9 @@
 | [battlecry-self-plus-1-health](battlecry-self-plus-1-health.md) | battlecry | 战吼：获得 +1 生命值 | 1 |
 | [battlecry-summon-2-worker-bees](battlecry-summon-2-worker-bees.md) | battlecry | 战吼：召唤两个 2/2 的工蜂 | 1 |
 | [battlecry-summon-3-3-synthetic-cell](battlecry-summon-3-3-synthetic-cell.md) | battlecry | 战吼：召唤一个 3/3 的合成细胞（幼体） | 1 |
+| [binomial-nomenclature](binomial-nomenclature.md) | 无 | 使你的所有动物随从获得一次成长 | 0 |
 | [biology-evolve](biology-evolve.md) | 无 | 使一个友方动物随从获得进化 | 1 |
+| [cold-damage-treatise](cold-damage-treatise.md) | 无 | 使你的所有随从获得 +0/+1 | 0 |
 | [combat-optimal-attack](combat-optimal-attack.md) | 无 | 使一个友方随从获得无视嘲讽直到回合结束 | 1 |
 | [combat-random-enemy-damage-3](combat-random-enemy-damage-3.md) | 无 | 战斗开始时对随机一个敌方随从造成 3 点伤害 | 1 |
 | [combatstart-all-enemies-contagion-1](combatstart-all-enemies-contagion-1.md) | 无 | 战斗开始时，使敌方所有随从获得 1 层传染 | 3 |
@@ -159,12 +161,16 @@
 | [keyword-windfury](keyword-windfury.md) | windfury | 连击：每回合可攻击两次 | 11 |
 | [latent-3](latent-3.md) | 无 | 潜伏：回合开始时，每有 1 层传染获得 +1 攻击力；达到 3 层时对敌方所有随从造成 3 点伤害 | 1 |
 | [light-speed-strike](light-speed-strike.md) | 无 | 使一个友方随从本回合获得连击 | 1 |
+| [mass-energy-equivalence](mass-energy-equivalence.md) | 无 | 使你的所有随从获得一次成长 | 0 |
+| [materia-medica](materia-medica.md) | 无 | 使一个友方植物随从获得两次成长 | 0 |
+| [mechanism-art](mechanism-art.md) | 无 | 使一个友方机械随从获得一次成长 | 0 |
 | [microbiology](microbiology.md) | 无 | 战斗开始时使敌方最左侧随从获得 1 层传染 | 5 |
 | [mimic-1](mimic-1.md) | 无 | 战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束 | 6 |
 | [mimic-2](mimic-2.md) | 无 | 拟态：战斗开始时，复制一个敌方随从的当前攻击力与生命值直到本回合结束 | 2 |
 | [mimic-3](mimic-3.md) | 无 | 拟态：战斗开始时，复制一个敌方随从的当前攻击力、生命值与关键词直到本回合结束 | 1 |
 | [observation](observation.md) | 无 | 每回合首次刷新时额外出现一张当前时代的随机随从 | 2 |
 | [radiation](radiation.md) | 无 | 战斗开始时对随机一个敌方随从造成 2 点伤害 | 1 |
+| [radium](radium.md) | 无 | 使一个友方随从获得两次成长 | 0 |
 | [recall-1](recall-1.md) | 无 | 回手：死亡时返回手牌并保留成长 | 1 |
 | [revive-1](revive-1.md) | 无 | 复苏：以 +1/+1 复活一次 | 2 |
 | [revive-2](revive-2.md) | 无 | 复苏：以 +2/+2 复活一次 | 1 |
@@ -172,6 +178,7 @@
 | [salvage-machine](salvage-machine.md) | 无 | 零件回收：死亡时获得一张随机机械随从牌 | 1 |
 | [scholar-growth-twice](scholar-growth-twice.md) | 无 | 使一个友方学者随从获得两次成长 | 1 |
 | [shout](shout.md) | 无 | 使一个友方随从获得一次成长 | 30 |
+| [sonnet](sonnet.md) | 无 | 使你的所有随从获得一次成长 | 0 |
 | [trigger-2-humans-self-plus-1-attack](trigger-2-humans-self-plus-1-attack.md) | 无 | 若你控制至少 2 个人科随从，获得 +1 攻击力 | 1 |
 | [trigger-2-humans-self-plus-1-plus-1](trigger-2-humans-self-plus-1-plus-1.md) | 无 | 若你控制至少 2 个人科随从，获得 +1/+1 | 1 |
 | [trigger-3-humans-self-plus-1-plus-1](trigger-3-humans-self-plus-1-plus-1.md) | 无 | 若你控制至少 3 个人科随从，获得 +1/+1 | 0 |

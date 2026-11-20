@@ -4,7 +4,7 @@ card_type: hero
 name: 爱因斯坦
 playstyle: neutral
 specialty: [play:bird, play:mammal]
-skills: [battlecry-all-friendly-growth-once, light-speed-strike]
+skills: [mass-energy-equivalence, light-speed-strike]
 ---
 
 # 爱因斯坦
@@ -18,16 +18,17 @@ skills: [battlecry-all-friendly-growth-once, light-speed-strike]
 | 类型 | 英雄 |
 | 玩法 | 中立 |
 | 关联分类 | 关联：鸟纲、哺乳纲 |
-| 技能 | battlecry-all-friendly-growth-once；light-speed-strike |
+| 技能 | mass-energy-equivalence；light-speed-strike |
 
 ## 效果
 
-战吼：使你的所有随从获得一次成长；使一个友方随从本回合获得连击
+使你的所有随从获得一次成长；使一个友方随从本回合获得连击
 
 ## 设计说明
 
 - 定位：进攻型，用「光速」让一个友方随从当回合攻击两次。
 - 平衡边界：只影响 1 个目标、只影响本回合；与既有的「连击」关键词叠加时仍为 2 次，不叠加为 3 次。
+- 质能方程：群体一次成长，2 金每回合 1 次；与光速出击各自计次。
 - 效果口径：连击只在本次战斗生效，战斗结束即清除。
 
 ## 出处

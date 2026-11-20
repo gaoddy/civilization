@@ -217,6 +217,51 @@ class ActiveSkillFieldTest(unittest.TestCase):
                             for m in messages), messages)
 
 
+class HeroSkillSemanticsTest(unittest.TestCase):
+    def errors(self, skill):
+        return vd.hero_skill_errors(hero_doc(), skill)
+
+    def test_active_skill_needs_on_activate(self):
+        messages = self.errors({"id": "shout", "cost": 1,
+                                "_rendered_effects": "OnPlay|Growth|target|times=1"})
+        self.assertTrue(any("必须有 OnActivate 效果" in m for m in messages), messages)
+
+    def test_active_skill_with_on_activate_passes(self):
+        self.assertEqual(self.errors({"id": "shout", "cost": 1,
+                                      "_rendered_effects": "OnActivate|Growth|target|times=1"}), [])
+
+    def test_active_skill_rejects_passive_trigger(self):
+        messages = self.errors({
+            "id": "shout", "cost": 1,
+            "_rendered_effects": "OnActivate|Growth|target|times=1;"
+                                 "Aura|ModifyStats|friendly:all|health=1,duration=permanent",
+        })
+        self.assertTrue(any("英雄主动技能 shout 不得有触发" in m for m in messages), messages)
+
+    def test_passive_skill_rejects_battlecry(self):
+        messages = self.errors({"id": "observation",
+                                "_rendered_effects": "OnPlay|RefreshShop|self"})
+        self.assertTrue(any("不得有触发" in m for m in messages), messages)
+
+    def test_passive_skill_rejects_on_activate(self):
+        messages = self.errors({"id": "observation",
+                                "_rendered_effects": "OnActivate|Growth|self|times=1"})
+        self.assertTrue(any("不得有触发" in m for m in messages), messages)
+
+    def test_passive_skill_needs_passive_trigger(self):
+        messages = self.errors({"id": "observation", "_rendered_effects": "[]"})
+        self.assertTrue(any("缺少被动触发" in m for m in messages), messages)
+
+    def test_passive_skill_with_aura_passes(self):
+        self.assertEqual(self.errors({
+            "id": "observation",
+            "_rendered_effects": "Aura|ModifyStats|friendly:all|health=1,duration=permanent",
+        }), [])
+
+    def test_skill_without_rendered_effects_is_skipped(self):
+        self.assertEqual(self.errors({"id": "observation"}), [])
+
+
 class SkillRefsTest(unittest.TestCase):
     def test_unknown_skill_reference_is_rejected(self):
         doc = base_doc(_file="einstein.md", skills=["no-such-skill"])
@@ -231,9 +276,11 @@ class SkillRefsTest(unittest.TestCase):
 class HeroCardsTest(unittest.TestCase):
     """`check_hero_cards` 从 content 目录读英雄卡，这里用临时目录注入。"""
 
-    def run_check(self, heroes, minions=None, cards=None, effects=()):
+    def run_check(self, heroes, minions=None, cards=None, effects=(), skills=None):
         minions = list(minions if minions is not None else [minion_doc()])
         cards = list(cards if cards is not None else minions) + list(effects)
+        if skills is None:
+            skills = {"light-speed-strike": SKILL}
         with tempfile.TemporaryDirectory() as tmp:
             root = pathlib.Path(tmp)
             for kind, docs in (("cards", cards), ("heroes", heroes)):
@@ -244,9 +291,7 @@ class HeroCardsTest(unittest.TestCase):
             vd.errors.clear()
             with mock.patch.object(vd, "ROOT", root), \
                     mock.patch.object(vd, "load", return_value=heroes):
-                vd.check_hero_cards(
-                    cards, minions, list(effects), {"light-speed-strike": SKILL}
-                )
+                vd.check_hero_cards(cards, minions, list(effects), skills)
             return list(vd.errors)
 
     def test_thirty_two_heroes_pass(self):
@@ -269,10 +314,23 @@ class HeroCardsTest(unittest.TestCase):
         errors = self.run_check(heroes)
         self.assertTrue(any("没有对应的随从卡" in e for e in errors), errors)
 
-    def test_hero_field_mismatch_is_rejected(self):
-        heroes = [hero_doc(skills=[])]
+    def test_hero_skills_may_differ_from_named_minion(self):
+        heroes = [hero_doc(_file=f"h{i}.md", id=f"h{i}", name=f"h{i}", skills=[])
+                  for i in range(32)]
+        minions = [minion_doc(_file=f"h{i}.md", id=f"h{i}", name=f"h{i}")
+                   for i in range(32)]
+        self.assertEqual(self.run_check(heroes, minions, cards=minions), [])
+
+    def test_hero_skill_with_keyword_is_rejected(self):
+        heroes = [hero_doc()]
+        skills = {"light-speed-strike": dict(SKILL, keyword="battlecry")}
+        errors = self.run_check(heroes, skills=skills)
+        self.assertTrue(any("不得登记关键词" in e for e in errors), errors)
+
+    def test_hero_playstyle_mismatch_is_rejected(self):
+        heroes = [hero_doc(playstyle="mammal")]
         errors = self.run_check(heroes)
-        self.assertTrue(any("skills 与随从卡" in e for e in errors), errors)
+        self.assertTrue(any("playstyle 与随从卡" in e for e in errors), errors)
 
     def test_minion_with_is_hero_field_is_rejected(self):
         minions = [minion_doc(is_hero=False)]

@@ -1511,6 +1511,32 @@
     "cost": 2,
     "effects": [
       {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "taxon",
+              "value": "animalia"
+            }
+          ],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
+    "id": "binomial-nomenclature",
+    "keyword": null,
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 2,
+    "effects": [
+      {
         "op": "grant_keyword",
         "params": {
           "duration": "permanent",
@@ -1533,6 +1559,28 @@
       }
     ],
     "id": "biology-evolve",
+    "keyword": null,
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 2,
+    "effects": [
+      {
+        "op": "modify_stats",
+        "params": {
+          "duration": "permanent",
+          "health": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
+    "id": "cold-damage-treatise",
     "keyword": null,
     "uses_per_turn": 1
   },
@@ -3452,6 +3500,79 @@
     "uses_per_turn": 1
   },
   {
+    "cost": 2,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
+    "id": "mass-energy-equivalence",
+    "keyword": null,
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 1,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "plant"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
+    "id": "materia-medica",
+    "keyword": null,
+    "uses_per_turn": 1
+  },
+  {
+    "cost": 1,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [
+            {
+              "key": "playstyle",
+              "value": "machine"
+            }
+          ],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
+    "id": "mechanism-art",
+    "keyword": null,
+    "uses_per_turn": 1
+  },
+  {
     "cost": null,
     "effects": [
       {
@@ -3581,6 +3702,27 @@
     "id": "radiation",
     "keyword": null,
     "uses_per_turn": null
+  },
+  {
+    "cost": 2,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 2
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "single",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
+    "id": "radium",
+    "keyword": null,
+    "uses_per_turn": 1
   },
   {
     "cost": null,
@@ -3722,6 +3864,27 @@
     "id": "shout",
     "keyword": null,
     "uses_per_turn": 2
+  },
+  {
+    "cost": 2,
+    "effects": [
+      {
+        "op": "growth",
+        "params": {
+          "times": 1
+        },
+        "selector": {
+          "filters": [],
+          "kind": "side",
+          "pick": "all",
+          "side": "friendly"
+        },
+        "trigger": "on_activate"
+      }
+    ],
+    "id": "sonnet",
+    "keyword": null,
+    "uses_per_turn": 1
   },
   {
     "cost": null,
