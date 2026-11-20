@@ -58,6 +58,46 @@ class CategoryErrorsTest(unittest.TestCase):
         self.assertTrue(any("前缀非法" in e for e in errors), errors)
 
 
+class CategoryTaxonomyTest(unittest.TestCase):
+    """加载分类树后覆盖 prey/host 的生物限制、节点存在性与同类顺序。"""
+
+    NODES = {
+        "animalia": {"parent": None, "rank": "kingdom", "name": "动物界"},
+        "mammalia": {"parent": "animalia", "rank": "class", "name": "哺乳纲"},
+        "artiodactyla": {"parent": "mammalia", "rank": "order", "name": "偶蹄目"},
+        "craft": {"parent": None, "rank": "kingdom", "name": "造物"},
+        "power-energy": {"parent": "craft", "rank": "technique", "name": "动力与能源"},
+    }
+
+    def setUp(self):
+        self._nodes = vd.TAXONOMY_NODES
+        self._order = vd.TAXONOMY_ORDER
+        vd.TAXONOMY_NODES = dict(self.NODES)
+        vd.TAXONOMY_ORDER = {node_id: index for index, node_id in enumerate(self.NODES)}
+
+    def tearDown(self):
+        vd.TAXONOMY_NODES = self._nodes
+        vd.TAXONOMY_ORDER = self._order
+
+    def test_non_biological_card_cannot_have_prey(self):
+        doc = {"id": "c", "taxon": "power-energy",
+               "categories": ["play:machine", "prey:artiodactyla"]}
+        errors = vd.category_errors(doc)
+        self.assertTrue(any("只允许生物卡" in e for e in errors), errors)
+
+    def test_unknown_prey_node_is_rejected(self):
+        doc = {"id": "c", "taxon": "mammalia",
+               "categories": ["play:mammal", "prey:unknown-node"]}
+        errors = vd.category_errors(doc)
+        self.assertTrue(any("不在分类树" in e for e in errors), errors)
+
+    def test_host_must_come_after_prey(self):
+        doc = {"id": "c", "taxon": "mammalia",
+               "categories": ["play:mammal", "host:animalia", "prey:artiodactyla"]}
+        errors = vd.category_errors(doc)
+        self.assertTrue(any("顺序" in e for e in errors), errors)
+
+
 class SkillCountTest(unittest.TestCase):
     def setUp(self):
         self.skill_map = {
