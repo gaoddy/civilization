@@ -35,7 +35,16 @@ static func view() -> Dictionary:
             "era": 2,
             "gold": 6,
             "heroCardId": "darwin",
-            "heroPower": {"skillId": "evolution-discovery", "usesLeft": 1, "requiresTarget": false, "targetCandidates": []},
+            "heroPowers": [
+                {
+                    "skillId": "evolution-discovery",
+                    "usesLeft": 1,
+                    "requiresTarget": false,
+                    "targetCandidates": [],
+                    "canUse": true,
+                    "disabledReason": null,
+                },
+            ],
             "shop": [
                 {"index": 0, "cardId": "huo", "frozen": false},
                 {"index": 1, "cardId": "lun", "frozen": false},
@@ -85,8 +94,6 @@ static func view() -> Dictionary:
                 "canReroll": true,
                 "canUpgradeEra": true,
                 "upgradeDisabledReason": null,
-                "canUseHeroPower": true,
-                "heroPowerDisabledReason": null,
                 "canEndRecruit": true,
             },
         },

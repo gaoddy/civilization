@@ -376,7 +376,7 @@ func _check_hero_row() -> void:
 
     var card: Control = row.find_child("HeroCard", true, false)
     var gold: Label = row.find_child("GoldTile", true, false)
-    var power: Control = row.find_child("HeroPowerButton", true, false)
+    var power: Control = row.find_child("HeroPowerButton0", true, false)
     _expect(card != null and card.custom_minimum_size == Vector2(64, 84), "英雄行应含 64×84 英雄卡")
     _expect(gold != null and gold.text.contains("6"), "金币格应显示当前金币")
     _expect(
@@ -384,20 +384,33 @@ func _check_hero_row() -> void:
         "金币格应带金币文案",
     )
     _expect(power != null and power.custom_minimum_size == Vector2(40, 40), "英雄技能应为 40×40 图标按钮")
-    var uses_badge: Label = row.find_child("HeroPowerUsesBadge", true, false)
+    var uses_badge: Label = row.find_child("HeroPower0UsesBadge", true, false)
     _expect(uses_badge != null and not uses_badge.visible, "剩余 1 次时不显示次数角标")
 
+    var passive: Control = row.find_child("HeroPassive0", true, false)
+    _expect(passive != null, "英雄行应显示被动技能标记")
+    if passive != null:
+        _expect(passive.custom_minimum_size == Vector2(24, 24), "被动技能应为 24×24 标记")
+        var passive_text := TranslationServer.translate("skill.aura-biology-plus-1-plus-1.text")
+        _expect(
+            passive.tooltip_text.contains(passive_text),
+            "被动技能 tooltip 应包含效果文本",
+        )
+        _expect(passive.modulate == Color.WHITE, "被动技能不应置灰")
+
     var empty_power := _state_for(Protocol.PHASE_RECRUIT, view)
-    empty_power.self_state["heroPower"]["usesLeft"] = 0
-    empty_power.self_state["affordances"]["canUseHeroPower"] = false
+    empty_power.self_state["heroPowers"][0]["usesLeft"] = 0
+    empty_power.self_state["heroPowers"][0]["canUse"] = false
     row.refresh(empty_power)
     await get_tree().process_frame
     _expect(uses_badge != null and uses_badge.visible and uses_badge.text == "0", "0 次时应显示次数角标")
     _expect(power.disabled, "不可用时技能按钮应禁用")
+    _expect(passive != null and passive.modulate == Color.WHITE, "主动技能禁用时被动技能仍不置灰")
 
     row.set_combat_mode(true)
     _expect(not power.visible, "战斗阶段应隐藏技能按钮")
     _expect(card.visible, "战斗阶段英雄卡应保留")
+    _expect(passive != null and passive.is_visible_in_tree(), "战斗阶段被动技能标记应保留")
 
     var dead_view := FixtureScript.game_view()
     dead_view["players"][0]["alive"] = false
@@ -406,6 +419,46 @@ func _check_hero_row() -> void:
     var eliminated: Label = row.find_child("EliminatedLabel", true, false)
     _expect(eliminated != null and eliminated.visible, "本人淘汰时应显示观战提示")
     _expect(not card.visible, "本人淘汰时应隐藏英雄卡")
+    _expect(passive == null or not passive.is_visible_in_tree(), "本人淘汰时应隐藏被动技能标记")
+
+    # 多个主动技能：按视图顺序各出一个按钮。
+    row.set_combat_mode(false)
+    var multi_view := FixtureScript.game_view()
+    multi_view["self"]["heroCardId"] = "einstein"
+    multi_view["self"]["heroPowers"] = [
+        {
+            "skillId": "mass-energy-equivalence",
+            "usesLeft": 1,
+            "requiresTarget": false,
+            "targetCandidates": [],
+            "canUse": true,
+            "disabledReason": null,
+        },
+        {
+            "skillId": "light-speed-strike",
+            "usesLeft": 1,
+            "requiresTarget": true,
+            "targetCandidates": [{"zone": "board", "id": "mi_1"}],
+            "canUse": true,
+            "disabledReason": null,
+        },
+    ]
+    var events: Array[String] = []
+    row.hero_power_pressed.connect(func(skill_id: String) -> void: events.append("pressed:" + skill_id))
+    row.hero_power_down.connect(func(skill_id: String) -> void: events.append("down:" + skill_id))
+    row.refresh(_state_for(Protocol.PHASE_RECRUIT, multi_view))
+    await get_tree().process_frame
+    var first_power: BaseButton = row.find_child("HeroPowerButton0", true, false)
+    var second_power: BaseButton = row.find_child("HeroPowerButton1", true, false)
+    _expect(second_power != null, "两个主动技能应各有一个按钮")
+    _expect(row.find_child("HeroPassive0", true, false) == null, "无被动技能时不应保留被动标记")
+    if first_power != null and second_power != null:
+        first_power.pressed.emit()
+        second_power.button_down.emit()
+        _expect(
+            events == ["pressed:mass-energy-equivalence", "down:light-speed-strike"],
+            "两个主动技能应各自发出带 skill_id 的信号",
+        )
     host.queue_free()
     await get_tree().process_frame
 
@@ -747,11 +800,11 @@ func _check_recruit_stage() -> void:
             )
             _expect(hp.text == "35/40", "生命应显示当前/上限，实际「%s」" % hp.text)
 
-    var power: Control = instance.find_child("HeroPowerButton", true, false)
+    var power: Control = instance.find_child("HeroPowerButton0", true, false)
     _expect(power != null and power.size == Vector2(40, 40), "英雄技能图标应为 40×40")
     if power != null:
-        _expect(power.find_child("HeroPowerCostBadge", true, false) != null, "技能应有费用角标")
-        _expect(power.find_child("HeroPowerUsesBadge", true, false) != null, "技能应有次数角标")
+        _expect(power.find_child("HeroPower0CostBadge", true, false) != null, "技能应有费用角标")
+        _expect(power.find_child("HeroPower0UsesBadge", true, false) != null, "技能应有次数角标")
     _expect(instance.find_child("GoldTile", true, false) != null, "英雄行应显示金币")
 
     # 商店操作行：升时代在售货员左侧，刷新与冻结在右侧，均为 40×40 图标按钮。
@@ -873,7 +926,7 @@ func _check_combat_stage() -> void:
     )
 
     var hero_card: Control = instance.find_child("HeroCard", true, false)
-    var power: Control = instance.find_child("HeroPowerButton", true, false)
+    var power: Control = instance.find_child("HeroPowerButton0", true, false)
     _expect(hero_card != null and hero_card.is_visible_in_tree(), "战斗阶段英雄卡应保留")
     _expect(
         power == null or not power.is_visible_in_tree(),

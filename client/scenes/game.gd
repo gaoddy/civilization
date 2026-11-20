@@ -606,10 +606,17 @@ func _on_freeze() -> void:
     })
 
 
-func _on_hero_power() -> void:
-    var power: Dictionary = GameStore.view.get("self", {}).get("heroPower", {})
-    var skill_id := str(power.get("skillId", ""))
-    if skill_id == "":
+## 按技能 id 取本座位视图里的主动技能条目；不存在时为空字典。
+func _hero_power_of(skill_id: String) -> Dictionary:
+    for power in GameStore.view.get("self", {}).get("heroPowers", []):
+        if power is Dictionary and str(power.get("skillId", "")) == skill_id:
+            return power
+    return {}
+
+
+func _on_hero_power(skill_id: String) -> void:
+    var power := _hero_power_of(skill_id)
+    if power.is_empty():
         return
     # 需要目标的技能由按下事件进入瞄准，抬起由瞄准层接管，不走 `pressed`。
     if bool(power.get("requiresTarget", false)):
@@ -618,18 +625,19 @@ func _on_hero_power() -> void:
 
 
 ## 技能按钮按下：需要目标时从按钮矩形起瞄准；候选为空说明技能不可用，不发意图。
-func _on_hero_power_down() -> void:
-    var power: Dictionary = GameStore.view.get("self", {}).get("heroPower", {})
-    if not bool(power.get("requiresTarget", false)) or not _aim_submit_allowed():
+func _on_hero_power_down(skill_id: String) -> void:
+    var power := _hero_power_of(skill_id)
+    if power.is_empty() or not bool(power.get("requiresTarget", false)):
         return
-    var skill_id := str(power.get("skillId", ""))
+    if not _aim_submit_allowed():
+        return
     var candidates := Array(power.get("targetCandidates", []))
-    if skill_id == "" or candidates.is_empty():
+    if candidates.is_empty():
         return
     _aim_skill_intent = {"kind": Protocol.INTENT_USE_HERO_POWER, "skillId": skill_id}
     _detail.blocked = true
     _detail.hide_panel()
-    _aim.begin_skill(_hero_row.power_rect(), candidates)
+    _aim.begin_skill(_hero_row.power_rect(skill_id), candidates)
 
 
 func _on_end_recruit() -> void:

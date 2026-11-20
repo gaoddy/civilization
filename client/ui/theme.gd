@@ -124,6 +124,7 @@ const SCENARIO := {
 	"top-bar-height": 28,
 	"river-height": 32,
 	"hero-row-height": 84,
+	"hero-meta-row-height": 24,
 	"hero-card-width": 64,
 	"hero-card-height": 84,
 	"hero-cover-height": 40,
