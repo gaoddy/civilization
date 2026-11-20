@@ -14,8 +14,8 @@ server/
   data/v0.1/
     cards.json               # 生成物：随从与效果牌
     heroes.json              # 生成物：英雄卡（只含身份与技能）
-    skills.json              # 生成物：118 个技能
-    tokens.json              # 生成物：3 个 Token
+    skills.json              # 生成物：247 个技能
+    tokens.json              # 生成物：23 个 Token
     config.json              # 生成物：经济与对局配置
     taxonomy.json            # 生成物：科学分类树与玩法 id 清单
   crates/

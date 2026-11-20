@@ -1,6 +1,6 @@
 # 卡牌关联分类技术方案
 
-> 状态：方案未实施
+> 状态：已实施
 > 需求归属：v0.1
 > 产品规则：[product.md](product.md)（已确认）
 
@@ -218,3 +218,11 @@ categories: [play:mammal, play:bird, prey:ungulate, host:bacteria]
 - 协议 `enabledFactions` / `enabledPlaystyles` 等字段不变，客户端与服务端仍按玩法 id 通信。
 - 不新增日志、指标或追踪；玩法分布与效果牌池变化通过 `scripts/balance_report.py` 与模拟器报告观察。
 - 回滚边界：本改动不涉及数据库与部署，回滚即恢复源文档与生成物；已生成的对局日志若包含旧卡牌字段，按 v0.1 未上线处理，不提供跨版本回放兼容。
+
+## 11. 实施记录
+
+本节记录实施中与上文方案的偏离及原因，不改写原有方案正文。
+
+- **触发标签补充人工文本键**：方案 §5.1 / §5.3 只规定空触发按技能有无关键词区分「关键词」与常驻，未列出具体文本键。实施时在 `client/text/zh_CN.csv` 新增 `ui.skill.trigger.keyword` 与 `ui.skill.trigger.passive`，供 `trigger_name` 与技能列表直接取用；后续补充 `ui.skill.trigger.unknown`，未知触发不再冒充常驻。
+- **造物工具卡整卡跳过签名机制检查**：方案 §4 只要求把「中立/学者跳过」改为按 `categories` 判断。实施按 2026-11-20 的用户裁定，造物六类工具分类（动力与能源、交通与运载、武器与攻城、生产与建筑、信息与计算、生活与医疗）的卡整卡跳过机制词汇检查；工具卡按 `play:machine` 入池，但不计入签名机制密度。口径见 [平衡测算](../../product/content/balance-analysis.md) §4 与 [平衡问题](../../product/content/balance-questions.md)。
+- **sim golden 基线第十九次重定**：单值 `playstyle` 迁移为多值 `categories` 后，学者与工具卡按额外 `play:` 归属进入更多玩法卡池，效果牌按指派玩法进入商店，AI 主导玩法改为逐条计数，seed 1 的 20 局哈希全部改变。按 `server/crates/sim/tests/sim_determinism.rs` 既有流程重定 `golden/seed-1-games-20.json`，并在测试注释记录重定原因。
