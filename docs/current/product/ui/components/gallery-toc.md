@@ -21,7 +21,7 @@
 
 ## 变体与状态
 
-- 固定宽 `gallery-toc-width`（168），手机 `gallery-toc-width-compact`（120）；按钮纵向排列，间距 `space-xs`。
+- 固定宽 `gallery-toc-width`（140），手机 `gallery-toc-width-compact`（120）；按钮纵向排列，间距 `space-xs`。
 - 顶层按钮为 `ghost` 变体的单选 `ButtonGroup`，文字左对齐、横向撑满、高 28。
 - 选中「全部」或任一顶层分类后，其下方显示二级按钮（节点名 `KindAll`、`KindMinion`、`KindEffect`），左侧缩进 `space-2xl`，使用独立 `ButtonGroup`。
 - 选中项用 `accent-row` 面板样式（圆角 `radius-sm`），文字转 `color-accent`；未选中文字为 `color-text-dim`。
