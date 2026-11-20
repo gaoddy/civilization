@@ -15,6 +15,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import gen_card_data
 import i18n_terms
+import skill_templates
 import validate_docs
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -73,6 +74,7 @@ def load_existing(path):
 def generated_entries(root):
     """从实体文档派生内容 key 与枚举 key。"""
     content = pathlib.Path(root) / CONTENT
+    renderer = skill_templates.Renderer(content)
     entries = {}
     for doc in gen_card_data.load_docs(content, "cards"):
         entries[f"card.{doc['id']}.name"] = doc["name"]
@@ -82,7 +84,7 @@ def generated_entries(root):
     for doc in gen_card_data.load_docs(content, "skills"):
         if doc.get("name"):
             entries[f"skill.{doc['id']}.name"] = doc["name"]
-        entries[f"skill.{doc['id']}.text"] = doc["text"]
+        entries[f"skill.{doc['id']}.text"] = renderer.instance_text(doc)
         match_text = doc.get("match_text")
         if match_text:
             entries[f"skill.{doc['id']}.match_text"] = match_text

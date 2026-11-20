@@ -14,6 +14,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import gen_card_data  # noqa: E402
+import skill_templates  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "client" / "generated"
@@ -38,8 +39,10 @@ def _display_token(token):
 def build(root):
     """返回文件名到确定性 JSON 文本的映射。"""
     content = pathlib.Path(root) / "docs" / "versions" / "v0.1" / "product" / "content"
+    renderer = skill_templates.Renderer(content)
     cards = [_display_card(doc) for doc in gen_card_data.load_docs(content, "cards")]
-    skills = [gen_card_data.skill_entry(doc) for doc in gen_card_data.load_docs(content, "skills")]
+    skills = [gen_card_data.skill_entry(doc, renderer)
+              for doc in gen_card_data.load_docs(content, "skills")]
     tokens = [_display_token(token) for token in gen_card_data.parse_tokens(content / "tokens" / "README.md")]
     taxonomy = gen_card_data.parse_taxonomy(content / gen_card_data.TAXONOMY_FILE)
     return {
