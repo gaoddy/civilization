@@ -88,7 +88,7 @@
     "id": "einstein",
     "playstyle": "neutral",
     "skills": [
-      "battlecry-all-friendly-growth-once",
+      "mass-energy-equivalence",
       "light-speed-strike"
     ],
     "specialty": [
@@ -107,7 +107,6 @@
     "id": "faraday",
     "playstyle": "neutral",
     "skills": [
-      "keyword-divine-shield",
       "faraday-cage"
     ],
     "specialty": [
@@ -229,7 +228,7 @@
     "id": "linnaeus",
     "playstyle": "neutral",
     "skills": [
-      "battlecry-all-biology-growth-once"
+      "binomial-nomenclature"
     ],
     "specialty": [
       {
@@ -267,7 +266,7 @@
     "id": "lisshi",
     "playstyle": "plant",
     "skills": [
-      "battlecry-plant-growth-twice"
+      "materia-medica"
     ],
     "specialty": []
   },
@@ -276,7 +275,7 @@
     "id": "luban",
     "playstyle": "machine",
     "skills": [
-      "battlecry-friendly-mech-growth-once"
+      "mechanism-art"
     ],
     "specialty": []
   },
@@ -299,7 +298,7 @@
     "id": "marie-curie",
     "playstyle": "neutral",
     "skills": [
-      "battlecry-friendly-growth-twice",
+      "radium",
       "radiation"
     ],
     "specialty": [
@@ -318,7 +317,6 @@
     "id": "mendel",
     "playstyle": "neutral",
     "skills": [
-      "battlecry-friendly-plant-growth-once",
       "heredity"
     ],
     "specialty": [
@@ -421,7 +419,7 @@
     "id": "shakespeare",
     "playstyle": "mammal",
     "skills": [
-      "battlecry-all-friendly-growth-once"
+      "sonnet"
     ],
     "specialty": []
   },
@@ -489,7 +487,7 @@
     "id": "zhangzhongjing",
     "playstyle": "mammal",
     "skills": [
-      "battlecry-all-friendly-plus-0-plus-1"
+      "cold-damage-treatise"
     ],
     "specialty": []
   },

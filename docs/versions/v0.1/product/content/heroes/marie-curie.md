@@ -4,7 +4,7 @@ card_type: hero
 name: 玛丽·居里
 playstyle: neutral
 specialty: [play:mammal, play:machine]
-skills: [battlecry-friendly-growth-twice, radiation]
+skills: [radium, radiation]
 ---
 
 # 玛丽·居里
@@ -18,15 +18,16 @@ skills: [battlecry-friendly-growth-twice, radiation]
 | 类型 | 英雄 |
 | 玩法 | 中立 |
 | 关联分类 | 关联：哺乳纲、机械 |
-| 技能 | battlecry-friendly-growth-twice；radiation |
+| 技能 | radium；radiation |
 
 ## 效果
 
-战吼：使一个友方随从获得两次成长；战斗开始时对随机一个敌方随从造成 2 点伤害
+使一个友方随从获得两次成长；战斗开始时对随机一个敌方随从造成 2 点伤害
 
 ## 设计说明
 
 - 定位：被动输出，战斗开始时稳定造成 2 点伤害。
+- 镭：单体两次成长，2 金每回合 1 次，与「技艺」同档。
 - 平衡边界：随机目标必须走种子；比赛模式下改为「对最左侧敌方随从造成 2 点伤害」。
 - 与其他伤害效果的叠加：先结算英雄卡的被动技能，再结算战斗。
 

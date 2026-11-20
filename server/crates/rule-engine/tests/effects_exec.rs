@@ -611,11 +611,16 @@ fn coverage_counts_all_effect_segments() {
     let coverage = effect_coverage(&catalog);
 
     let total: usize = coverage.values().sum();
-    // 玩法扩充后卡池达到 346 张，效果段总数与打出时的成长/改属性段数同步上升。
-    assert_eq!(total, 234, "已提交数据的全部效果段都应被统计");
+    // 英雄主动技能各带一段 `OnActivate` 效果，效果段总数随之上升。
+    assert_eq!(total, 241, "已提交数据的全部效果段都应被统计");
     assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&21));
     assert_eq!(coverage.get(&(Trigger::OnPlay, Op::ModifyStats)), Some(&12));
     assert_eq!(coverage.get(&(Trigger::OnUse, Op::ModifyStats)), Some(&1));
+    assert_eq!(coverage.get(&(Trigger::OnActivate, Op::Growth)), Some(&13));
+    assert_eq!(
+        coverage.get(&(Trigger::OnActivate, Op::ModifyStats)),
+        Some(&1)
+    );
 
     let executable: BTreeSet<Op> = [
         Op::Growth,

@@ -64,7 +64,7 @@ class GenClientDataTest(unittest.TestCase):
         cards = json.loads(data["cards.json"])
         skills = json.loads(data["skills.json"])
         self.assertEqual(len(cards), 409)
-        self.assertEqual(len(skills), 247)
+        self.assertEqual(len(skills), 254)
         heroes = json.loads(data["heroes.json"])
         self.assertEqual(len(heroes), 32)
         self.assertEqual([hero["id"] for hero in heroes],

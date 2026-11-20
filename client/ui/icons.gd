@@ -20,6 +20,8 @@ static func draw(canvas: CanvasItem, icon: String, rect: Rect2, color: Color, wi
 			_draw_freeze(canvas, rect, color, stroke)
 		"hero_power":
 			_draw_hero_power(canvas, rect, color)
+		"passive_skill":
+			_draw_passive_skill(canvas, rect, color, stroke)
 		_:
 			pass
 
@@ -78,6 +80,16 @@ static func _draw_hero_power(canvas: CanvasItem, rect: Rect2, color: Color) -> v
 		var reach := 10.0 if index % 2 == 0 else 3.8
 		points.append(center + Vector2(cos(angle), sin(angle)) * reach * scale)
 	canvas.draw_colored_polygon(points, color)
+
+
+## 同心圆：外环加实心圆心，表示常驻生效、不可点击的被动技能。
+static func _draw_passive_skill(
+	canvas: CanvasItem, rect: Rect2, color: Color, stroke: float
+) -> void:
+	var center := _map(rect, Vector2(12, 12))
+	var scale := _scale(rect)
+	canvas.draw_arc(center, 8.5 * scale, 0.0, TAU, ARC_SEGMENTS, color, stroke, true)
+	canvas.draw_circle(center, 3.2 * scale, color)
 
 
 static func _line(

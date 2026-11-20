@@ -39,12 +39,7 @@ fn view(
             "era": 1,
             "gold": gold,
             "heroCardId": "adam-smith",
-            "heroPower": {
-                "skillId": null,
-                "usesLeft": 0,
-                "requiresTarget": false,
-                "targetCandidates": []
-            },
+            "heroPowers": [],
             "shop": shop,
             "hand": [],
             "board": [],
@@ -60,7 +55,6 @@ fn view(
                 "canUnfreeze": false,
                 "canUpgradeEra": false,
                 "upgradeDisabledReason": null,
-                "canUseHeroPower": false,
                 "canEndRecruit": can_end_recruit
             }
         },

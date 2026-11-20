@@ -461,9 +461,18 @@
 | `canUnfreeze` | boolean | 是 | 冻结按钮是否为「解冻」态：本回合冻结过商店且仍有冻结槽位；跨回合保留的冻结不算 |
 | `canUpgradeEra` | boolean | 是 |  |
 | `upgradeDisabledReason` | string | null | 是 |  |
-| `canUseHeroPower` | boolean | 是 |  |
-| `heroPowerDisabledReason` | string | null | 否 | 不可使用英雄技能时的错误码 |
 | `canEndRecruit` | boolean | 是 |  |
+
+### HeroPower
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `skillId` | string | 是 |  |
+| `usesLeft` | integer | 是 |  |
+| `requiresTarget` | boolean | 是 | 该主动技能是否需要玩家指定单一目标 |
+| `targetCandidates` | array<TargetRef> | 是 | 该主动技能的合法目标 |
+| `canUse` | boolean | 是 |  |
+| `disabledReason` | string | null | 是 | 不可使用该技能时的错误码 |
 
 ### GameEvent
 
@@ -512,11 +521,7 @@
 | `self.era` | integer | 是 |  |
 | `self.gold` | integer | 是 |  |
 | `self.heroCardId` | string | null | 是 |  |
-| `self.heroPower` | object | 是 |  |
-| `self.heroPower.skillId` | string | null | 是 |  |
-| `self.heroPower.usesLeft` | integer | 是 |  |
-| `self.heroPower.requiresTarget` | boolean | 是 | 该主动技能是否需要玩家指定单一目标 |
-| `self.heroPower.targetCandidates` | array<TargetRef> | 是 | 该主动技能的合法目标 |
+| `self.heroPowers` | array<HeroPower> | 是 | 英雄卡上的全部主动技能，按英雄卡 skills 顺序排列；没有主动技能时为空 |
 | `self.shop` | array<ShopSlot> | 是 |  |
 | `self.hand` | array<HandCard> | 是 |  |
 | `self.board` | array<BoardMinion> | 是 |  |

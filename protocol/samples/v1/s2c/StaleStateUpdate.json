@@ -27,12 +27,6 @@
         "era": 3,
         "gold": 5,
         "heroCardId": "darwin",
-        "heroPower": {
-          "skillId": "darwin-skill",
-          "usesLeft": 1,
-          "requiresTarget": false,
-          "targetCandidates": []
-        },
         "shop": [
           {
             "index": 0,
@@ -156,9 +150,18 @@
           "canUnfreeze": false,
           "canUpgradeEra": true,
           "upgradeDisabledReason": null,
-          "canUseHeroPower": true,
           "canEndRecruit": true
-        }
+        },
+        "heroPowers": [
+          {
+            "skillId": "darwin-skill",
+            "usesLeft": 1,
+            "requiresTarget": false,
+            "targetCandidates": [],
+            "canUse": true,
+            "disabledReason": null
+          }
+        ]
       },
       "players": [
         {
