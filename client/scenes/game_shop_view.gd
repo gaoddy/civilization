@@ -226,7 +226,9 @@ func _refresh_actions(state: GameUiState) -> void:
             frozen = true
             break
     _freeze_button.set_active(frozen)
-    _freeze_button.tooltip_text = tr("ui.game.side_panel.freeze")
+    _freeze_button.tooltip_text = tr(
+        "ui.game.side_panel.unfreeze" if frozen else "ui.game.side_panel.freeze"
+    )
 
 
 func _refresh_shop(state: GameUiState) -> void:

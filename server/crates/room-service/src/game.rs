@@ -1486,6 +1486,9 @@ fn map_intent(intent: protocol::intents::Intent) -> Result<EngineIntent, ErrorCo
         Protocol::FreezeShop { slot } => Ok(EngineIntent::FreezeShop {
             slot: slot.map(to_u8).transpose()?,
         }),
+        Protocol::UnfreezeShop { slot } => Ok(EngineIntent::UnfreezeShop {
+            slot: slot.map(to_u8).transpose()?,
+        }),
         Protocol::UseHeroPower { skill_id, target } => Ok(EngineIntent::UseHeroPower {
             skill_id,
             target: parse_target(target)?,

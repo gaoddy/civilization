@@ -48,6 +48,7 @@ const INTENT_PLAY_CARD := "PlayCard"
 const INTENT_REARRANGE_BOARD := "RearrangeBoard"
 const INTENT_REROLL_SHOP := "RerollShop"
 const INTENT_SELL_MINION := "SellMinion"
+const INTENT_UNFREEZE_SHOP := "UnfreezeShop"
 const INTENT_UPGRADE_ERA := "UpgradeEra"
 const INTENT_USE_HERO_POWER := "UseHeroPower"
 

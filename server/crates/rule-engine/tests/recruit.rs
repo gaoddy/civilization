@@ -560,6 +560,100 @@ fn freeze_empty_slot_rejects() {
 }
 
 #[test]
+fn unfreeze_with_none_clears_all_slots() {
+    let (mut engine, mut state) = turn_started(31);
+    let first = minion_id(1);
+    let second = minion_id(2);
+    set_shop(&mut state, 0, &[Some(first.clone()), Some(second.clone())]);
+    engine
+        .apply(&mut state, 0, Intent::FreezeShop { slot: None })
+        .expect("冻结全部应成功");
+    let before: Vec<(InstanceId, String)> = state.players[0]
+        .shop
+        .iter()
+        .flatten()
+        .map(|slot| (slot.instance_id, slot.card_id.clone()))
+        .collect();
+
+    engine
+        .apply(&mut state, 0, Intent::UnfreezeShop { slot: None })
+        .expect("解冻全部应成功");
+
+    assert!(
+        state.players[0]
+            .shop
+            .iter()
+            .flatten()
+            .all(|slot| !slot.frozen),
+        "解冻全部后不应残留冻结标记"
+    );
+    let after: Vec<(InstanceId, String)> = state.players[0]
+        .shop
+        .iter()
+        .flatten()
+        .map(|slot| (slot.instance_id, slot.card_id.clone()))
+        .collect();
+    assert_eq!(after, before, "解冻不应重抽或改实例编号");
+}
+
+#[test]
+fn unfreeze_some_clears_only_that_slot() {
+    let (mut engine, mut state) = turn_started(32);
+    set_shop(&mut state, 0, &[Some(minion_id(1)), Some(minion_id(2))]);
+    engine
+        .apply(&mut state, 0, Intent::FreezeShop { slot: Some(0) })
+        .expect("冻结 0 号应成功");
+    engine
+        .apply(&mut state, 0, Intent::FreezeShop { slot: Some(1) })
+        .expect("冻结 1 号应成功");
+
+    engine
+        .apply(&mut state, 0, Intent::UnfreezeShop { slot: Some(0) })
+        .expect("解冻 0 号应成功");
+
+    assert!(!state.players[0].shop[0].as_ref().unwrap().frozen);
+    assert!(state.players[0].shop[1].as_ref().unwrap().frozen);
+}
+
+#[test]
+fn unfreeze_empty_slot_rejects() {
+    let (mut engine, mut state) = turn_started(33);
+    set_shop(&mut state, 0, &[None]);
+    let before = state_hash(&state);
+
+    let result = engine.apply(&mut state, 0, Intent::UnfreezeShop { slot: Some(0) });
+
+    assert_eq!(result.unwrap_err().code, RejectCode::ShopSlotEmpty);
+    assert_eq!(before, state_hash(&state));
+}
+
+#[test]
+fn unfreeze_before_next_turn_drops_preservation() {
+    let (mut engine, mut state) = turn_started(34);
+    let frozen_id = minion_id(2);
+    set_shop(&mut state, 0, &[Some(frozen_id), Some(minion_id(3))]);
+    engine
+        .apply(&mut state, 0, Intent::FreezeShop { slot: Some(0) })
+        .expect("冻结应成功");
+    let frozen_instance = state.players[0].shop[0]
+        .as_ref()
+        .expect("冻结槽位应非空")
+        .instance_id;
+    engine
+        .apply(&mut state, 0, Intent::UnfreezeShop { slot: Some(0) })
+        .expect("解冻应成功");
+
+    engine.start_turn(&mut state).expect("开始下一回合");
+
+    let slot = state.players[0].shop[0].as_ref().expect("商店应重抽");
+    assert!(!slot.frozen, "解冻后槽位不应带冻结标记");
+    assert_ne!(
+        slot.instance_id, frozen_instance,
+        "解冻后槽位不应跨回合保留"
+    );
+}
+
+#[test]
 fn use_hero_power_respects_cost_and_uses() {
     let (mut engine, mut state) = turn_started(24);
     assert_eq!(state.players[0].hero.as_deref(), Some("adam-smith"));

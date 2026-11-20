@@ -594,7 +594,15 @@ func _on_upgrade() -> void:
 
 
 func _on_freeze() -> void:
-    _send_intent({"kind": Protocol.INTENT_FREEZE_SHOP, "slot": null})
+    var frozen := false
+    for slot in GameStore.view.get("self", {}).get("shop", []):
+        if bool(slot.get("frozen", false)):
+            frozen = true
+            break
+    _send_intent({
+        "kind": Protocol.INTENT_UNFREEZE_SHOP if frozen else Protocol.INTENT_FREEZE_SHOP,
+        "slot": null,
+    })
 
 
 func _on_hero_power() -> void:

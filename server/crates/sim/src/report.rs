@@ -287,6 +287,7 @@ pub fn intent_to_json(intent: &Intent) -> Value {
             "kind": "rearrange_board", "from": from, "to": to,
         }),
         Intent::FreezeShop { slot } => json!({ "kind": "freeze_shop", "slot": slot }),
+        Intent::UnfreezeShop { slot } => json!({ "kind": "unfreeze_shop", "slot": slot }),
         Intent::UseHeroPower { skill_id, target } => json!({
             "kind": "use_hero_power", "skill_id": skill_id, "target": target_to_json(*target),
         }),
@@ -489,6 +490,12 @@ fn intent_from_json(value: &Value) -> Result<Intent, String> {
             to: field("to")?,
         },
         "freeze_shop" => Intent::FreezeShop {
+            slot: value
+                .get("slot")
+                .and_then(Value::as_u64)
+                .and_then(|slot| u8::try_from(slot).ok()),
+        },
+        "unfreeze_shop" => Intent::UnfreezeShop {
             slot: value
                 .get("slot")
                 .and_then(Value::as_u64)

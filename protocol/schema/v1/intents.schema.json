@@ -72,6 +72,15 @@
         {
           "type": "object",
           "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "UnfreezeShop" },
+            "slot": { "type": ["integer", "null"], "minimum": 0, "maximum": 5, "description": "null 表示全部槽位" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
           "required": ["kind", "skillId"],
           "properties": {
             "kind": { "const": "UseHeroPower" },

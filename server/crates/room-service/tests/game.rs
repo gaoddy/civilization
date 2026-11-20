@@ -798,6 +798,33 @@ fn freeze_shop_succeeds() {
 }
 
 #[test]
+fn unfreeze_shop_succeeds() {
+    let (mut task, _clock) = task();
+    let slot = first_nonempty_slot(&task, 0);
+
+    task.handle(command(
+        "p0",
+        "freeze-1",
+        ProtocolIntent::FreezeShop { slot: Some(slot) },
+    ));
+    let updates = task.handle(command(
+        "p0",
+        "unfreeze-1",
+        ProtocolIntent::UnfreezeShop { slot: Some(slot) },
+    ));
+    assert!(error_codes(&updates).is_empty(), "解冻应成功");
+
+    let view = task.player_view(0).expect("视图应可用");
+    let unfrozen = view
+        .self_
+        .shop
+        .iter()
+        .find(|shop_slot| shop_slot.index == slot)
+        .expect("被解冻的槽位应仍在商店里");
+    assert!(!unfrozen.frozen, "解冻后该槽位不应带冻结标记");
+}
+
+#[test]
 fn choose_discover_consumes_pending_choice() {
     let (mut task, _clock) = task_with(catalog_with_discover_on_play());
     let slot = first_nonempty_slot(&task, 0);

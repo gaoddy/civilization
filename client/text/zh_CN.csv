@@ -1494,6 +1494,7 @@ ui.game.side_panel.reroll_cost,刷新 %d 金
 ui.game.side_panel.seller,售货员
 ui.game.side_panel.seller_glyph,售
 ui.game.side_panel.turn,第 %d 回合
+ui.game.side_panel.unfreeze,解冻
 ui.game.side_panel.unknown_hero,未知英雄
 ui.game.side_panel.upgrade,升时代
 ui.game.side_panel.upgrade_cost,升时代 %d 金

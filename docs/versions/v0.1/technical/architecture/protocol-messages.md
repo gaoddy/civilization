@@ -548,14 +548,16 @@
 | `分支7.kind` | object | 是 |  |
 | `分支7.slot` | integer | null | 否 | null 表示全部槽位 |
 | `分支8.kind` | object | 是 |  |
-| `分支8.skillId` | string | 是 |  |
-| `分支8.target` | TargetRef | 否 | 需要目标的技能才填 |
+| `分支8.slot` | integer | null | 否 | null 表示全部槽位 |
 | `分支9.kind` | object | 是 |  |
+| `分支9.skillId` | string | 是 |  |
+| `分支9.target` | TargetRef | 否 | 需要目标的技能才填 |
 | `分支10.kind` | object | 是 |  |
-| `分支10.choice` | integer | 是 | 发现为候选下标，进化为选项下标 |
 | `分支11.kind` | object | 是 |  |
-| `分支11.target` | TargetRef | 是 | 目标 |
+| `分支11.choice` | integer | 是 | 发现为候选下标，进化为选项下标 |
 | `分支12.kind` | object | 是 |  |
+| `分支12.target` | TargetRef | 是 | 目标 |
+| `分支13.kind` | object | 是 |  |
 
 ### ErrorCode
 

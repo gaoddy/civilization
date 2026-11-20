@@ -20,6 +20,7 @@ func _ready() -> void:
     await _check_hero_row()
     await _check_hand_row()
     await _check_shop_view()
+    await _check_freeze_toggle()
     await _check_recruit_view()
     await _check_opponent_view()
     await _check_recruit_stage()
@@ -516,6 +517,10 @@ func _check_shop_view() -> void:
             box != null and box.border_color.is_equal_approx(UITheme.color("color-info")),
             "有卡牌被冻结时冻结按钮应高亮",
         )
+        _expect(
+            freeze.tooltip_text == TranslationServer.translate("ui.game.side_panel.unfreeze"),
+            "有卡牌被冻结时冻结按钮 tooltip 应为解冻",
+        )
     var slot0: Control = shop.find_child("ShopSlot0", true, false)
     var slot1: Control = shop.find_child("ShopSlot1", true, false)
     _expect(slot0 is ShopCard and slot1 is ShopCard, "商店槽位应由 ShopCard 承载")
@@ -526,6 +531,59 @@ func _check_shop_view() -> void:
     _expect(not shop.has_signal("buy"), "商店视图不应再提供点击购买信号")
     host.queue_free()
     await get_tree().process_frame
+
+
+## 冻结按钮按商店冻结状态切换意图与 tooltip。
+func _check_freeze_toggle() -> void:
+    var view := _base_view(Protocol.PHASE_RECRUIT)
+    var instance := await _mount(view)
+    if instance == null:
+        return
+    var freeze: Button = instance.find_child("FreezeButton", true, false)
+    _expect(freeze != null, "冻结按钮应存在")
+    if freeze == null:
+        await _unmount(instance)
+        return
+    _expect(
+        freeze.tooltip_text == TranslationServer.translate("ui.game.side_panel.unfreeze"),
+        "存在冻结槽位时 tooltip 应为解冻",
+    )
+    var captured: Array = []
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    await _push_click(instance, freeze.get_global_rect().get_center())
+    _expect(
+        captured.size() == 1
+            and str(captured[0].get("kind", "")) == Protocol.INTENT_UNFREEZE_SHOP
+            and captured[0].get("slot") == null,
+        "存在冻结槽位时应发出整店解冻意图，实际 %s" % [captured],
+    )
+    await _unmount(instance)
+
+    var thawed := _base_view(Protocol.PHASE_RECRUIT)
+    for slot in thawed["self"]["shop"]:
+        slot["frozen"] = false
+    instance = await _mount(thawed)
+    if instance == null:
+        return
+    freeze = instance.find_child("FreezeButton", true, false)
+    _expect(freeze != null, "冻结按钮应存在")
+    if freeze == null:
+        await _unmount(instance)
+        return
+    _expect(
+        freeze.tooltip_text == TranslationServer.translate("ui.game.side_panel.freeze"),
+        "无冻结槽位时 tooltip 应为冻结",
+    )
+    captured = []
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    await _push_click(instance, freeze.get_global_rect().get_center())
+    _expect(
+        captured.size() == 1
+            and str(captured[0].get("kind", "")) == Protocol.INTENT_FREEZE_SHOP
+            and captured[0].get("slot") == null,
+        "无冻结槽位时应发出整店冻结意图，实际 %s" % [captured],
+    )
+    await _unmount(instance)
 
 
 ## 招募组合：商店、河道、棋盘的顺序与高度。
