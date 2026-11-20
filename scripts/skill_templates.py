@@ -205,3 +205,222 @@ def parse_arg_spec(name, raw):
         default=default,
     )
 
+
+
+_CN_NUMBERS = {1: "一", 2: "两", 3: "三", 4: "四", 5: "五", 6: "六",
+               7: "七", 8: "八", 9: "九", 10: "十"}
+_PLACEHOLDER = re.compile(r"\{([a-z][a-z0-9_]*)(?:\.([a-z]+))?\}")
+_KEYWORD_RE = re.compile(r"^([a-z_]+)(?: (\d+))?$")
+_DURATION_VALUES = ("permanent", "combat")
+
+
+class Renderer:
+    """把模板调用展开为效果 DSL 段与卡面文案。"""
+
+    def __init__(self, content=CONTENT):
+        import gen_card_data
+        import validate_docs
+
+        content = pathlib.Path(content)
+        self.templates = load_templates(content)
+        self.nouns = load_nouns(content / NOUN_FILE)
+
+        token_path = content / "tokens" / "README.md"
+        token_names = gen_card_data.parse_token_names(token_path)
+        self.tokens = {
+            token["id"]: {
+                "name": token_names.get(token["id"], token["id"]),
+                "attack": token["attack"],
+                "health": token["health"],
+            }
+            for token in gen_card_data.parse_tokens(token_path)
+        }
+        self.cards = {}
+        for path in sorted((content / "cards").glob("*.md")):
+            if path.name == "README.md":
+                continue
+            doc = validate_docs.parse_front_matter(path)
+            self.cards[doc["id"]] = {
+                "name": doc.get("name", doc["id"]),
+                "attack": doc.get("attack"),
+                "health": doc.get("health"),
+            }
+
+    # ---- 参数 ----
+
+    def _template(self, call):
+        try:
+            return self.templates[call.template_id]
+        except KeyError:
+            raise ValueError(f"模板不存在 {call.template_id!r}")
+
+    def _arg_values(self, template, call):
+        specs = {spec.name: spec for spec in template.args}
+        unknown = sorted(set(call.args) - set(specs))
+        if unknown:
+            raise ValueError(f"模板 {template.id} 不认识参数 {unknown}")
+        values = {}
+        for spec in template.args:
+            raw = call.args.get(spec.name, spec.default)
+            values[spec.name] = None if raw is None else self._check_value(spec, raw)
+        return values
+
+    def _check_value(self, spec, raw):
+        value = str(raw).strip()
+        if spec.type == "token":
+            if value not in self.tokens and value not in self.cards:
+                raise ValueError(f"参数 {spec.name} 的 token 不存在 {value!r}")
+        elif spec.type == "card":
+            if value not in self.cards:
+                raise ValueError(f"参数 {spec.name} 的卡牌不存在 {value!r}")
+        elif spec.type == "taxon":
+            if value not in self.nouns.taxon:
+                raise ValueError(f"参数 {spec.name} 的分类名词缺失 {value!r}")
+        elif spec.type == "playstyle":
+            if value not in self.nouns.playstyle:
+                raise ValueError(f"参数 {spec.name} 的玩法名词缺失 {value!r}")
+        elif spec.type == "scholar":
+            if value != "true":
+                raise ValueError(f"参数 {spec.name} 只能取 true，实为 {value!r}")
+        elif spec.type == "keyword":
+            match = _KEYWORD_RE.fullmatch(value)
+            if not match or match.group(1) not in self.nouns.keyword_text:
+                raise ValueError(f"参数 {spec.name} 的关键词非法 {value!r}")
+        elif spec.type == "int":
+            if not re.fullmatch(r"-?\d+", value):
+                raise ValueError(f"参数 {spec.name} 必须为整数，实为 {value!r}")
+        elif spec.type == "count":
+            if not re.fullmatch(r"\d+", value) or not 1 <= int(value) <= 4:
+                raise ValueError(f"参数 {spec.name} 必须为 1–4，实为 {value!r}")
+        elif spec.type == "duration":
+            if value not in _DURATION_VALUES:
+                raise ValueError(f"参数 {spec.name} 的时长非法 {value!r}")
+        if spec.minimum is not None and int(value) < spec.minimum:
+            raise ValueError(f"参数 {spec.name} 小于下限 {spec.minimum}")
+        if spec.maximum is not None and int(value) > spec.maximum:
+            raise ValueError(f"参数 {spec.name} 大于上限 {spec.maximum}")
+        return value
+
+    # ---- 效果 ----
+
+    def expand(self, call):
+        template = self._template(call)
+        if template.kind == "keyword":
+            return ()
+        values = self._arg_values(template, call)
+        selector = self._substitute_effect(template.selector, values, template)
+        params = self._effect_params(template, values)
+        segment = f"{template.trigger}|{template.op}|{selector}"
+        return (f"{segment}|{params}",) if params else (segment,)
+
+    def _substitute_effect(self, raw, values, template):
+        def replace(match):
+            name, modifier = match.groups()
+            if modifier:
+                raise ValueError(f"模板 {template.id} 的效果段不支持修饰符 {{{name}.{modifier}}}")
+            if values.get(name) is None:
+                raise ValueError(f"模板 {template.id} 缺少参数 {name}")
+            return values[name]
+
+        return _PLACEHOLDER.sub(replace, raw)
+
+    def _effect_params(self, template, values):
+        if not template.params:
+            return ""
+        pairs = []
+        for pair in template.params.split(","):
+            pair = pair.strip()
+            if not pair:
+                continue
+            names = {name for name, _ in _PLACEHOLDER.findall(pair)}
+            if any(values.get(name) is None for name in names):
+                continue
+            pairs.append(_PLACEHOLDER.sub(
+                lambda m: values[m.group(1)], pair))
+        return ",".join(pairs)
+
+    # ---- 文案 ----
+
+    def text(self, call):
+        template = self._template(call)
+        values = self._arg_values(template, call)
+        specs = {spec.name: spec for spec in template.args}
+
+        def replace(match):
+            name, modifier = match.groups()
+            if name not in specs:
+                raise ValueError(f"模板 {template.id} 文案引用未声明参数 {name!r}")
+            value = values.get(name)
+            if value is None:
+                raise ValueError(f"模板 {template.id} 缺少参数 {name}")
+            return self._render_value(specs[name], modifier, value)
+
+        return _PLACEHOLDER.sub(replace, template.text)
+
+    def _render_value(self, spec, modifier, value):
+        if spec.type in ("token", "card"):
+            entry = self.tokens.get(value) or self.cards[value]
+            if modifier is None:
+                return entry["name"]
+            if modifier == "name":
+                return entry["name"]
+            if modifier == "stats":
+                return f"{entry['attack']}/{entry['health']}"
+        elif spec.type == "taxon":
+            return self.nouns.taxon[value]
+        elif spec.type == "playstyle":
+            return self.nouns.playstyle[value]
+        elif spec.type == "scholar":
+            return "学者"
+        elif spec.type == "keyword":
+            return self._keyword_text(value, modifier)
+        elif spec.type == "int":
+            if modifier is None:
+                return value
+            if modifier == "cn":
+                return _CN_NUMBERS.get(int(value), value)
+        elif spec.type == "count":
+            if modifier in (None, "cn"):
+                return _CN_NUMBERS[int(value)]
+            if modifier == "num":
+                return str(int(value))
+        elif spec.type == "duration":
+            if modifier is None:
+                return ""
+            if modifier == "suffix":
+                return "直到回合结束" if value == "combat" else ""
+        raise ValueError(f"参数 {spec.name} 不支持修饰符 {modifier!r}")
+
+    def _keyword_text(self, value, modifier):
+        base, level = _KEYWORD_RE.fullmatch(value).groups()
+        text = self.nouns.keyword_text[base]
+        head = text.split("：", 1)[0]
+        name = re.sub(r"\s*\{N\}", "", head).strip()
+        label = f"{name} {level}" if level else name
+        if modifier is None:
+            return label
+        if modifier == "name":
+            return name
+        if modifier == "level":
+            return level or ""
+        if modifier == "text":
+            if "{N}" in text and not level:
+                raise ValueError(f"关键词 {base} 的文案需要层数")
+            return text.replace("{N}", level or "")
+        raise ValueError(f"关键词参数不支持修饰符 {modifier!r}")
+
+    # ---- 实例 ----
+
+    def instance_segments(self, doc):
+        if "template" not in doc:
+            raise ValueError(f"{doc.get('id', '?')}: 缺少 template")
+        segments = []
+        for call in parse_template_field(doc["template"]):
+            segments.extend(self.expand(call))
+        return tuple(segments)
+
+    def instance_text(self, doc):
+        if doc.get("text"):
+            return str(doc["text"])
+        parts = [self.text(call) for call in parse_template_field(doc["template"])]
+        return "；".join(parts)
