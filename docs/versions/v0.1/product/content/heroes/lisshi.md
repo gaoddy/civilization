@@ -16,7 +16,6 @@ skills: [battlecry-plant-growth-twice]
 | 名称 | 李时珍 |
 | 类型 | 英雄 |
 | 玩法 | 植物界 |
-| 关联分类 | 无 |
 | 技能 | battlecry-plant-growth-twice |
 
 ## 效果

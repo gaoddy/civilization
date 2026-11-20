@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 基因工程病毒 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 病毒 › 未定科 |
-| 关联分类 | 无 |
 | 子类 | 病毒 |
 | 星级 | 6 |
 | 时代 | 未来 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-all-enemies-contagion-1 |
 | 学者 | 否 |
+| 科学分类 | 病毒 › 未定科 |
 
 ## 效果
 

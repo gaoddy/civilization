@@ -16,7 +16,6 @@ skills: [enemy-random-cannot-attack]
 | 名称 | 墨子 |
 | 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
-| 关联分类 | 无 |
 | 技能 | enemy-random-cannot-attack |
 
 ## 效果

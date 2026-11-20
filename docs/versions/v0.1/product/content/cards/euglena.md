@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 眼虫 |
 | 类型 | 随从 |
 | 玩法 | 原生生物界 |
-| 科学分类 | 原生生物界 › 眼虫门 › 眼虫纲 › 眼虫目 › 眼虫科 |
-| 关联分类 | 无 |
 | 子类 | 原生生物 |
 | 星级 | 3 |
 | 时代 | 古典 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | aura-other-protozoa-plus-1-attack；deathrattle-summon-amoeba-larva-1 |
 | 学者 | 否 |
+| 科学分类 | 原生生物界 › 眼虫门 › 眼虫纲 › 眼虫目 › 眼虫科 |
 
 ## 效果
 

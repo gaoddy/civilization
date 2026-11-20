@@ -22,12 +22,11 @@ skills: [trigger-friendly-single-plus-1-plus-1-this-turn]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 人文 › 哲学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、水螅纲 |
 | 技能 | trigger-friendly-single-plus-1-plus-1-this-turn |
 | 费用 | 0 |
 | 确定性替换 | 同左 |
+| 科学分类 | 人文 › 哲学 |
 
 ## 效果
 

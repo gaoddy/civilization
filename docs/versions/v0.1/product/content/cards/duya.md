@@ -22,12 +22,11 @@ skills: [trigger-reptile-single-poison-this-turn]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：爬行纲 |
+| 玩法 | 爬行纲 |
 | 技能 | trigger-reptile-single-poison-this-turn |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

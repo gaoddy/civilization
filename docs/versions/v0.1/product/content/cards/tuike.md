@@ -22,12 +22,11 @@ skills: [trigger-insect-single-reborn]
 | 类型 | 效果 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：昆虫纲 |
+| 玩法 | 昆虫纲 |
 | 技能 | trigger-insect-single-reborn |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

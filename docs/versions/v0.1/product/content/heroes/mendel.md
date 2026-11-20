@@ -15,8 +15,7 @@ skills: [battlecry-friendly-plant-growth-once, heredity]
 | id | mendel |
 | 名称 | 孟德尔 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：植物界 |
+| 玩法 | 植物界 |
 | 技能 | battlecry-friendly-plant-growth-once；heredity |
 
 ## 效果

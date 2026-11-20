@@ -15,8 +15,7 @@ skills: [observation]
 | id | shenkuo |
 | 名称 | 沈括 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：哺乳纲 |
+| 玩法 | 哺乳纲 |
 | 技能 | observation |
 
 ## 效果

@@ -22,12 +22,11 @@ skills: [combatstart-all-enemies-damage-2]
 | 类型 | 效果 |
 | 星级 | 6 |
 | 时代 | 工业 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：真菌界 |
+| 玩法 | 真菌界 |
 | 技能 | combatstart-all-enemies-damage-2 |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

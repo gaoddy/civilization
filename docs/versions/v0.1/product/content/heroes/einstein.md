@@ -15,8 +15,7 @@ skills: [battlecry-all-friendly-growth-once, light-speed-strike]
 | id | einstein |
 | 名称 | 爱因斯坦 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：鸟纲、哺乳纲 |
+| 玩法 | 哺乳纲、鸟纲 |
 | 技能 | battlecry-all-friendly-growth-once；light-speed-strike |
 
 ## 效果

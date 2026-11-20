@@ -15,8 +15,7 @@ skills: [aura-biology-plus-1-plus-1, evolution-discovery]
 | id | darwin |
 | 名称 | 达尔文 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
+| 玩法 | 哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
 | 技能 | aura-biology-plus-1-plus-1；evolution-discovery |
 
 ## 效果

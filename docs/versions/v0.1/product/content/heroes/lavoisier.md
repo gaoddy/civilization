@@ -15,8 +15,7 @@ skills: [aura-other-plus-0-plus-1]
 | id | lavoisier |
 | 名称 | 拉瓦锡 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：爬行纲 |
+| 玩法 | 爬行纲 |
 | 技能 | aura-other-plus-0-plus-1 |
 
 ## 效果

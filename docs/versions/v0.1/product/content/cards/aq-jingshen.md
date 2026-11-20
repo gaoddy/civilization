@@ -22,12 +22,11 @@ skills: [trigger-friendly-taunt-until-turn-end]
 | 类型 | 效果 |
 | 星级 | 1 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 人文 › 文学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、爬行纲 |
 | 技能 | trigger-friendly-taunt-until-turn-end |
 | 费用 | 0 |
 | 确定性替换 | 同左 |
+| 科学分类 | 人文 › 文学 |
 
 ## 效果
 

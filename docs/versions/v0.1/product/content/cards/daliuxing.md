@@ -22,12 +22,11 @@ skills: [combatstart-all-enemies-damage-3]
 | 类型 | 效果 |
 | 星级 | 7 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 医学 |
-| 关联分类 | 关联：病毒 |
+| 玩法 | 病毒 |
 | 技能 | combatstart-all-enemies-damage-3 |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 医学 |
 
 ## 效果
 

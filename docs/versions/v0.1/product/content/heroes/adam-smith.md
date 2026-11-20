@@ -16,7 +16,6 @@ skills: [division-of-labor]
 | 名称 | 亚当·斯密 |
 | 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
-| 关联分类 | 无 |
 | 技能 | division-of-labor |
 
 ## 效果

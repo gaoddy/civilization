@@ -22,12 +22,11 @@ skills: [combatstart-leftmost-and-adjacent-damage-2]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 物理学 |
-| 关联分类 | 无 |
+| 玩法 | 鸟纲、机械 |
 | 技能 | combatstart-leftmost-and-adjacent-damage-2 |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 物理学 |
 
 ## 效果
 

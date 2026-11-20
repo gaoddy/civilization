@@ -22,12 +22,11 @@ skills: [combatstart-all-enemies-damage-5]
 | 类型 | 效果 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 物理学 |
-| 关联分类 | 无 |
+| 玩法 | 机械 |
 | 技能 | combatstart-all-enemies-damage-5 |
 | 费用 | 4 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 物理学 |
 
 ## 效果
 

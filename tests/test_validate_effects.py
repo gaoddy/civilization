@@ -164,10 +164,16 @@ class PlaystyleMechanicsTest(unittest.TestCase):
         self.assertEqual(granted[0]["params"]["keyword"], "armor 2")
 
     def test_poison_rejected_for_mammal(self):
-        bad = self._yaml("id: bad-poison\nplaystyle: mammal\nskills: [test-skill]")
+        bad = self._yaml("id: bad-poison\ncategories: [play:mammal]\nskills: [test-skill]")
         self.assertTrue(vd.keyword_errors(bad, "poison"))
-        good = self._yaml("id: ok-poison\nplaystyle: reptile\nskills: [test-skill]")
+        good = self._yaml("id: ok-poison\ncategories: [play:reptile]\nskills: [test-skill]")
         self.assertEqual(vd.keyword_errors(good, "poison"), [])
+
+    def test_poison_allowed_when_any_play_matches(self):
+        multi = self._yaml(
+            "id: ok-multi-poison\ncategories: [play:mammal, play:reptile]\n"
+            "skills: [test-skill]")
+        self.assertEqual(vd.keyword_errors(multi, "poison"), [])
 
     def test_mimic_rejected_outside_cephalopod(self):
         skill = self._yaml(
@@ -175,10 +181,21 @@ class PlaystyleMechanicsTest(unittest.TestCase):
         )
         skill["_rendered_effects"] = skill["effects"]
         skill_map = {"test-mimic": skill}
-        bad = self._yaml("id: bad-mimic\nplaystyle: mammal\nskills: [test-mimic]")
+        bad = self._yaml("id: bad-mimic\ncategories: [play:mammal]\nskills: [test-mimic]")
         self.assertTrue(vd.mechanism_errors(bad, skill_map))
-        good = self._yaml("id: ok-mimic\nplaystyle: cephalopod\nskills: [test-mimic]")
+        good = self._yaml("id: ok-mimic\ncategories: [play:cephalopod]\nskills: [test-mimic]")
         self.assertEqual(vd.mechanism_errors(good, skill_map), [])
+
+    def test_mimic_allowed_when_any_play_matches(self):
+        skill = self._yaml(
+            "id: test-mimic2\neffects: OnPlay|Mimic|enemy:single|duration=combat"
+        )
+        skill["_rendered_effects"] = skill["effects"]
+        skill_map = {"test-mimic2": skill}
+        multi = self._yaml(
+            "id: ok-multi-mimic\ncategories: [play:mammal, play:cephalopod]\n"
+            "skills: [test-mimic2]")
+        self.assertEqual(vd.mechanism_errors(multi, skill_map), [])
 
     def test_adjacent_selector_requires_friendly_side(self):
         effects, errors = vd.parse_effects("Aura|ModifyStats|enemy:adjacent|attack=1")

@@ -15,8 +15,7 @@ skills: [keyword-divine-shield, faraday-cage]
 | id | faraday |
 | 名称 | 法拉第 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：爬行纲、机械 |
+| 玩法 | 爬行纲、机械 |
 | 技能 | keyword-divine-shield；faraday-cage |
 
 ## 效果

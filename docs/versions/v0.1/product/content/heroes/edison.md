@@ -16,7 +16,6 @@ skills: [invention-factory]
 | 名称 | 爱迪生 |
 | 类型 | 英雄 |
 | 玩法 | 机械 |
-| 关联分类 | 无 |
 | 技能 | invention-factory |
 
 ## 效果

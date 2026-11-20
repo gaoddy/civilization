@@ -22,12 +22,11 @@ skills: [combatstart-leftmost-damage-6]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 物理学 |
-| 关联分类 | 无 |
+| 玩法 | 机械 |
 | 技能 | combatstart-leftmost-damage-6 |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 物理学 |
 
 ## 效果
 

@@ -22,12 +22,11 @@ skills: [trigger-friendly-single-stealth-this-turn]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 古典 |
-| 玩法 | 中立 |
-| 科学分类 | 社会 › 军事学 |
-| 关联分类 | 无 |
+| 玩法 | 头足纲 |
 | 技能 | trigger-friendly-single-stealth-this-turn |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 社会 › 军事学 |
 
 ## 效果
 

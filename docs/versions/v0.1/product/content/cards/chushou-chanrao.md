@@ -22,12 +22,11 @@ skills: [trigger-cephalopod-single-poison]
 | 类型 | 效果 |
 | 星级 | 7 |
 | 时代 | 古典 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：头足纲 |
+| 玩法 | 头足纲 |
 | 技能 | trigger-cephalopod-single-poison |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

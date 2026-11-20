@@ -22,12 +22,11 @@ skills: [trigger-reptile-single-armor-2-this-turn]
 | 类型 | 效果 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：爬行纲 |
+| 玩法 | 爬行纲 |
 | 技能 | trigger-reptile-single-armor-2-this-turn |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

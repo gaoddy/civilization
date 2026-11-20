@@ -22,12 +22,11 @@ skills: [trigger-cnidarian-single-poison-this-turn]
 | 类型 | 效果 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：水螅纲 |
+| 玩法 | 水螅纲 |
 | 技能 | trigger-cnidarian-single-poison-this-turn |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

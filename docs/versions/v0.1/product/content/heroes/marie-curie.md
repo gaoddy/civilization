@@ -15,8 +15,7 @@ skills: [battlecry-friendly-growth-twice, radiation]
 | id | marie-curie |
 | 名称 | 玛丽·居里 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：哺乳纲、机械 |
+| 玩法 | 哺乳纲、机械 |
 | 技能 | battlecry-friendly-growth-twice；radiation |
 
 ## 效果

@@ -53,17 +53,20 @@ TARGETS = {
     "fish": (0.43, 0.48), "reptile": (0.28, 0.33), "cnidarian": (0.28, 0.33),
     "plant": (0.26, 0.31), "fungus": (0.35, 0.40), "protozoa": (0.42, 0.47),
     "cephalopod": (0.39, 0.44), "bacteria": (0.31, 0.36), "virus": (0.34, 0.39),
-    "machine": (0.42, 0.47), "neutral": (0.42, 0.47),
+    "machine": (0.42, 0.47),
 }
 TOLERANCE = 0.04
 MIN_SPREAD = 0.20
 EFFECT_LEVELS = {1: 10, 2: 18, 3: 22, 4: 20, 5: 16, 6: 9, 7: 5}
 EFFECT_COSTS = {0: 8, 1: 33, 2: 34, 3: 19, 4: 6}
 EFFECT_SHARE_CAP = 0.30
-TARGETED = 39
-GENERIC = 61
-TARGETED_PER_PLAYSTYLE = 3
-PLAYSTYLES = [key for key in TARGETS if key != "neutral"]
+# 100 张效果牌按各条 play 归属的计数；来源 product.md §3 的指派分布。
+EFFECTS_PER_PLAYSTYLE = {
+    "mammal": 25, "bird": 12, "reptile": 12, "fish": 8, "insect": 7,
+    "cephalopod": 8, "cnidarian": 9, "plant": 12, "fungus": 6,
+    "bacteria": 6, "protozoa": 8, "virus": 6, "machine": 28,
+}
+PLAYSTYLES = list(TARGETS)
 
 
 def _num(value):
@@ -80,28 +83,34 @@ def _share(attack, health):
     return attack / total if total else 0.0
 
 
+def _play_values(card):
+    """卡牌的全部 play 归属；多玩法卡返回多条。"""
+    return [item.get("value") for item in card.get("categories") or []
+            if item.get("kind") == "play"]
+
+
 def playstyle_stats(cards):
     stats = {
         playstyle: {"count": 0, "attack": 0, "health": 0, "attack_share": 0.0, "by_level": {}}
         for playstyle in TARGETS
     }
     for card in _combat_minions(cards):
-        playstyle = card.get("playstyle")
-        if playstyle not in stats:
-            continue
         attack = _num(card.get("attack"))
         health = _num(card.get("health"))
-        entry = stats[playstyle]
-        entry["count"] += 1
-        entry["attack"] += attack
-        entry["health"] += health
         level = card.get("level")
-        bucket = entry["by_level"].setdefault(
-            level, {"count": 0, "attack": 0, "health": 0, "attack_share": 0.0}
-        )
-        bucket["count"] += 1
-        bucket["attack"] += attack
-        bucket["health"] += health
+        for playstyle in _play_values(card):
+            if playstyle not in stats:
+                continue
+            entry = stats[playstyle]
+            entry["count"] += 1
+            entry["attack"] += attack
+            entry["health"] += health
+            bucket = entry["by_level"].setdefault(
+                level, {"count": 0, "attack": 0, "health": 0, "attack_share": 0.0}
+            )
+            bucket["count"] += 1
+            bucket["attack"] += attack
+            bucket["health"] += health
 
     for entry in stats.values():
         entry["attack_share"] = _share(entry["attack"], entry["health"])
@@ -118,13 +127,6 @@ def skill_density(cards):
         multi = [c for c in pool if len(c.get("skills") or []) >= 2]
         result[label] = len(multi) / len(pool) if pool else 0.0
     return result
-
-
-def _targeted_playstyle(card):
-    for specialty in card.get("specialty") or []:
-        if specialty.get("kind") == "play":
-            return specialty.get("value")
-    return None
 
 
 def effect_stats(cards):
@@ -145,23 +147,22 @@ def effect_stats(cards):
         if level_totals.get(level)
     }
 
-    targeted_by_playstyle = {playstyle: 0 for playstyle in PLAYSTYLES}
-    targeted = 0
+    by_playstyle = {playstyle: 0 for playstyle in PLAYSTYLES}
+    attributions = 0
     for card in effects:
-        playstyle = _targeted_playstyle(card)
-        if playstyle is None:
-            continue
-        targeted += 1
-        targeted_by_playstyle[playstyle] = targeted_by_playstyle.get(playstyle, 0) + 1
+        for playstyle in _play_values(card):
+            if playstyle not in by_playstyle:
+                continue
+            by_playstyle[playstyle] += 1
+            attributions += 1
 
     return {
         "total": len(effects),
         "by_level": by_level,
         "by_cost": by_cost,
         "level_share": level_share,
-        "targeted": targeted,
-        "generic": len(effects) - targeted,
-        "targeted_by_playstyle": targeted_by_playstyle,
+        "by_playstyle": by_playstyle,
+        "play_attributions": attributions,
     }
 
 
@@ -246,13 +247,18 @@ def effect_cost_errors(cards):
 
 
 def vocabulary_errors(cards, skills):
-    """多技能随从的第二/后续技能必须落在本玩法机制词汇内。"""
+    """多技能随从的第二/后续技能必须落在本身玩法的机制词汇内。
+
+    多玩法卡取各条 play 词汇的并集；没有 play 的卡跳过。
+    """
     errors = []
     for card in cards:
         if card.get("card_type") != "minion" or card.get("is_scholar"):
             continue
-        vocab = MECHANISM_VOCAB.get(card.get("playstyle"))
-        if vocab is None:
+        vocab = set()
+        for playstyle in _play_values(card):
+            vocab |= MECHANISM_VOCAB.get(playstyle, set())
+        if not vocab:
             continue
         ids = [sid for sid in card.get("skills") or [] if sid in skills]
         if len(ids) < 2:
@@ -315,16 +321,16 @@ def violations(cards, playstyles=None, skills=None):
         actual = effects["by_cost"].get(cost, 0)
         if actual != expected:
             errors.append(f"{cost} 费效果牌应为 {expected} 张，实际 {actual}")
-    if effects["targeted"] != TARGETED:
-        errors.append(f"定向效果牌应为 {TARGETED} 张，实际 {effects['targeted']}")
-    if effects["generic"] != GENERIC:
-        errors.append(f"通用效果牌应为 {GENERIC} 张，实际 {effects['generic']}")
-    for playstyle in PLAYSTYLES:
-        actual = effects["targeted_by_playstyle"].get(playstyle, 0)
-        if actual != TARGETED_PER_PLAYSTYLE:
+    expected_attributions = sum(EFFECTS_PER_PLAYSTYLE.values())
+    if effects["play_attributions"] != expected_attributions:
+        errors.append(
+            f"效果牌玩法归属应为 {expected_attributions} 条，"
+            f"实际 {effects['play_attributions']} 条")
+    for playstyle, expected in EFFECTS_PER_PLAYSTYLE.items():
+        actual = effects["by_playstyle"].get(playstyle, 0)
+        if actual != expected:
             errors.append(
-                f"玩法 {playstyle} 的定向效果牌应为 3 张，实际 {actual} 张"
-            )
+                f"玩法 {playstyle} 的效果牌应为 {expected} 张，实际 {actual} 张")
     return errors
 
 
@@ -356,8 +362,11 @@ def _print_human(data):
     print(f"多技能密度：3–4 星 {density['3-4']:.0%}，5–7 星 {density['5-7']:.0%}")
     effects = data["effects"]
     print(
-        f"效果牌：{effects['total']} 张（定向 {effects['targeted']}，通用 {effects['generic']}）"
+        f"效果牌：{effects['total']} 张（玩法归属 {effects['play_attributions']} 条）"
     )
+    print("  玩法归属：" + "，".join(
+        f"{k} {v}" for k, v in effects["by_playstyle"].items() if v
+    ))
     print("  按星级：" + "，".join(f"{k} 星 {v}" for k, v in sorted(effects["by_level"].items())))
     print("  按费用：" + "，".join(f"{k} 费 {v}" for k, v in sorted(effects["by_cost"].items())))
     print("  星级占比：" + "，".join(

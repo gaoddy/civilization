@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 黑死病 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 耶尔森菌科 |
-| 关联分类 | 寄生：哺乳纲 |
 | 子类 | 瘟疫 |
 | 星级 | 4 |
 | 时代 | 封建 |
@@ -33,6 +31,8 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-humans-minus-2-health；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
+| 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 耶尔森菌科 |
+| 关联分类 | 寄生：哺乳纲 |
 
 ## 效果
 

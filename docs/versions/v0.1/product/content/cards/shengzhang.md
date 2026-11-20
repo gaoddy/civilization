@@ -22,12 +22,11 @@ skills: [trigger-friendly-growth-twice]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 原始 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 无 |
+| 玩法 | 鱼纲、植物界 |
 | 技能 | trigger-friendly-growth-twice |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

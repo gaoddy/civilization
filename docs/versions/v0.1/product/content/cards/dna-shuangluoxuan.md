@@ -22,12 +22,11 @@ skills: [trigger-friendly-growth-thrice]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 未来 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 无 |
+| 玩法 | 植物界、原生生物界 |
 | 技能 | trigger-friendly-growth-thrice |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

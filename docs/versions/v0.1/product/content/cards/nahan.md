@@ -22,12 +22,11 @@ skills: [trigger-all-friendly-growth-once]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 人文 › 文学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、植物界 |
 | 技能 | trigger-all-friendly-growth-once |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 人文 › 文学 |
 
 ## 效果
 

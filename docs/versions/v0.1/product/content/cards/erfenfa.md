@@ -22,12 +22,11 @@ skills: [trigger-friendly-plus-2-attack]
 | 类型 | 效果 |
 | 星级 | 1 |
 | 时代 | 古典 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 数学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、机械 |
 | 技能 | trigger-friendly-plus-2-attack |
 | 费用 | 0 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 数学 |
 
 ## 效果
 

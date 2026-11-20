@@ -16,7 +16,6 @@ skills: [battlecry-friendly-mech-growth-once]
 | 名称 | 鲁班 |
 | 类型 | 英雄 |
 | 玩法 | 机械 |
-| 关联分类 | 无 |
 | 技能 | battlecry-friendly-mech-growth-once |
 
 ## 效果

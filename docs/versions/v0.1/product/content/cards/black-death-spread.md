@@ -22,12 +22,11 @@ skills: [combatstart-all-enemies-contagion-1]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 封建 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 医学 |
-| 关联分类 | 无 |
+| 玩法 | 细菌域、病毒 |
 | 技能 | combatstart-all-enemies-contagion-1 |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 医学 |
 
 ## 效果
 

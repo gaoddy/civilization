@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 马勃 |
 | 类型 | 随从 |
 | 玩法 | 真菌界 |
-| 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 伞菌目 › 蘑菇科 |
-| 关联分类 | 无 |
 | 子类 | 真菌 |
 | 星级 | 5 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语；分解 |
 | 技能 | deathrattle-all-enemies-damage-2；decompose-kill-original |
 | 学者 | 否 |
+| 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 伞菌目 › 蘑菇科 |
 
 ## 效果
 

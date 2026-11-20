@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 巡逻机甲 |
 | 类型 | 随从 |
 | 玩法 | 机械 |
-| 科学分类 | 造物 › 自动机械 |
-| 关联分类 | 无 |
 | 子类 | 机甲 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 嘲讽；战吼 |
 | 技能 | keyword-taunt；battlecry-friendly-mech-growth-once |
 | 学者 | 否 |
+| 科学分类 | 造物 › 自动机械 |
 
 ## 效果
 

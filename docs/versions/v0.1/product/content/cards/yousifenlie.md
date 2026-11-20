@@ -22,12 +22,11 @@ skills: [trigger-copy-friendly-minion]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 无 |
+| 玩法 | 鱼纲、原生生物界 |
 | 技能 | trigger-copy-friendly-minion |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

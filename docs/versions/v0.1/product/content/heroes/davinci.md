@@ -15,8 +15,7 @@ skills: [universal-manuscript]
 | id | davinci |
 | 名称 | 达·芬奇 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：头足纲、哺乳纲 |
+| 玩法 | 哺乳纲、头足纲 |
 | 技能 | universal-manuscript |
 
 ## 效果

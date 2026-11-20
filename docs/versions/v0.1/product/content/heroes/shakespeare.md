@@ -16,7 +16,6 @@ skills: [battlecry-all-friendly-growth-once]
 | 名称 | 莎士比亚 |
 | 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
-| 关联分类 | 无 |
 | 技能 | battlecry-all-friendly-growth-once |
 
 ## 效果

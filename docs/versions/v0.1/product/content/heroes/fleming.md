@@ -16,7 +16,6 @@ skills: [virus-growth-once]
 | 名称 | 弗莱明 |
 | 类型 | 英雄 |
 | 玩法 | 病毒 |
-| 关联分类 | 无 |
 | 技能 | virus-growth-once |
 
 ## 效果

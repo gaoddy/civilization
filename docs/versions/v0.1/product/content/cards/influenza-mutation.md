@@ -22,12 +22,11 @@ skills: [combatstart-top-attack-enemy-minus-0-minus-2]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 医学 |
-| 关联分类 | 无 |
+| 玩法 | 病毒 |
 | 技能 | combatstart-top-attack-enemy-minus-0-minus-2 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 医学 |
 
 ## 效果
 

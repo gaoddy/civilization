@@ -23,6 +23,17 @@ def build_fixture(tmp):
     (content / "tokens").mkdir()
     (content / "skills").mkdir()
     (content / "cards").mkdir()
+    (content / "heroes").mkdir()
+    (content / "taxonomy.md").write_text(
+        "## 1. 科学分类树\n\n"
+        "| id | 名称 | 上级 | 层级 | 备注 |\n"
+        "| --- | --- | --- | --- | --- |\n"
+        "| animalia | 动物界 | | 界 | |\n\n"
+        "## 2. 玩法\n\n"
+        "| id | 名称 | 机制 | 核心循环 |\n"
+        "| --- | --- | --- | --- |\n"
+        "| insect | 昆虫纲 | 繁衍 | 铺场 |\n",
+        encoding="utf-8")
 
     (content / "skill-templates" / "on-death-summon.md").write_text(
         "---\nid: on-death-summon\nkind: effect\ntrigger: OnDeath\nop: Summon\n"
@@ -49,12 +60,20 @@ def build_fixture(tmp):
         "## 效果\n\n旧文案\n",
         encoding="utf-8")
     (content / "cards" / "c.md").write_text(
-        "---\nid: c\ncard_type: minion\nname: 测试随从\nplaystyle: insect\n"
-        "taxon: animalia\nspecialty: []\nsubtype: insect\nlevel: 1\n"
+        "---\nid: c\ncard_type: minion\nname: 测试随从\ncategories: [play:insect]\n"
+        "taxon: animalia\nsubtype: insect\nlevel: 1\n"
         "era: prehistoric\nattack: 1\nhealth: 2\nskills: [x]\nis_scholar: false\n---\n\n"
         "# 测试随从\n\n## 属性\n\n| 属性 | 值 |\n| --- | --- |\n"
         "| id | c |\n| 名称 | 测试随从 |\n| 关键词 | 无 |\n| 技能 | 无 |\n\n"
         "## 效果\n\n旧文案\n\n## 设计说明\n\n定位：测试。\n\n## 出处\n\n测试出处。\n",
+        encoding="utf-8")
+    (content / "heroes" / "c.md").write_text(
+        "---\nid: c\ncard_type: hero\nname: 测试随从\n"
+        "categories: [play:insect]\nskills: [x]\n---\n\n"
+        "# 测试随从\n\n## 属性\n\n| 属性 | 值 |\n| --- | --- |\n"
+        "| id | c |\n| 名称 | 测试随从 |\n| 类型 | 英雄 |\n| 玩法 | 中立 |\n"
+        "| 关联分类 | 无 |\n| 技能 | x |\n\n"
+        "## 效果\n\n亡语：召唤一个 1/2 的白蚁\n",
         encoding="utf-8")
     return content
 
@@ -75,6 +94,14 @@ class RenderDocsTest(unittest.TestCase):
             text = (content / "cards" / "c.md").read_text(encoding="utf-8")
             self.assertIn("## 设计说明\n\n定位：测试。", text)
             self.assertIn("## 出处\n\n测试出处。", text)
+
+    def test_render_hero_attrs_uses_categories(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            content = build_fixture(tmp)
+            render_docs.render(content, write=True)
+            text = (content / "heroes" / "c.md").read_text(encoding="utf-8")
+            self.assertIn("| 玩法 | 昆虫纲 |", text)
+            self.assertNotIn("关联分类", text)
 
     def test_render_check_reports_drift_without_writing(self):
         with tempfile.TemporaryDirectory() as tmp:

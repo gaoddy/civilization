@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 蝴蝶 |
 | 类型 | 随从 |
 | 玩法 | 昆虫纲 |
-| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 鳞翅目 › 凤蝶科 |
-| 关联分类 | 无 |
 | 子类 | 昆虫 |
 | 星级 | 4 |
 | 时代 | 古典 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语；繁衍 1 |
 | 技能 | deathrattle-friendly-insect-growth-twice；keyword-breed-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 鳞翅目 › 凤蝶科 |
 
 ## 效果
 

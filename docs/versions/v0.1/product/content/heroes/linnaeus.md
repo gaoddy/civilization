@@ -15,8 +15,7 @@ skills: [battlecry-all-biology-growth-once]
 | id | linnaeus |
 | 名称 | 林奈 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
+| 玩法 | 哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
 | 技能 | battlecry-all-biology-growth-once |
 
 ## 效果

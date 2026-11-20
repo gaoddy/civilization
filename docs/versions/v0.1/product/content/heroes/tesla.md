@@ -15,8 +15,7 @@ skills: [alternating-current]
 | id | tesla |
 | 名称 | 特斯拉 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：鸟纲、机械 |
+| 玩法 | 鸟纲、机械 |
 | 技能 | alternating-current |
 
 ## 效果

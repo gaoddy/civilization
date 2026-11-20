@@ -16,7 +16,6 @@ skills: [aura-all-plus-0-plus-1]
 | 名称 | 司马迁 |
 | 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
-| 关联分类 | 无 |
 | 技能 | aura-all-plus-0-plus-1 |
 
 ## 效果

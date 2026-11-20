@@ -16,7 +16,6 @@ skills: [battlecry-all-friendly-plus-0-plus-1]
 | 名称 | 张仲景 |
 | 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
-| 关联分类 | 无 |
 | 技能 | battlecry-all-friendly-plus-0-plus-1 |
 
 ## 效果

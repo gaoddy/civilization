@@ -16,7 +16,6 @@ skills: [aura-other-mech-plus-1-plus-1]
 | 名称 | 史蒂芬孙 |
 | 类型 | 英雄 |
 | 玩法 | 机械 |
-| 关联分类 | 无 |
 | 技能 | aura-other-mech-plus-1-plus-1 |
 
 ## 效果

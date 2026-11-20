@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 曲霉 |
 | 类型 | 随从 |
 | 玩法 | 真菌界 |
-| 科学分类 | 真菌界 › 子囊菌门 › 散囊菌纲 › 散囊菌目 › 曲霉科 |
-| 关联分类 | 无 |
 | 子类 | 真菌 |
 | 星级 | 3 |
 | 时代 | 工业 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语；分解 |
 | 技能 | deathrattle-all-enemies-minus-1-health；decompose-kill-original |
 | 学者 | 否 |
+| 科学分类 | 真菌界 › 子囊菌门 › 散囊菌纲 › 散囊菌目 › 曲霉科 |
 
 ## 效果
 

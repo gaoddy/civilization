@@ -22,9 +22,7 @@ is_scholar: true
 | id | schrodinger |
 | 名称 | 薛定谔 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：病毒、爬行纲 |
+| 玩法 | 爬行纲、病毒 |
 | 子类 | 量子 |
 | 星级 | 7 |
 | 时代 | 未来 |
@@ -33,6 +31,7 @@ is_scholar: true
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；combatstart-random-enemy-contagion-2 |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

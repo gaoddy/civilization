@@ -22,12 +22,11 @@ skills: [trigger-all-friendly-growth-twice]
 | 类型 | 效果 |
 | 星级 | 7 |
 | 时代 | 未来 |
-| 玩法 | 中立 |
-| 科学分类 | 人文 › 历史学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、植物界 |
 | 技能 | trigger-all-friendly-growth-twice |
 | 费用 | 4 |
 | 确定性替换 | 同左 |
+| 科学分类 | 人文 › 历史学 |
 
 ## 效果
 
