@@ -9,7 +9,7 @@ fn loads_all_committed_data() {
     let catalog = test_catalog();
     assert_eq!(catalog.cards.len(), 409);
     assert_eq!(catalog.heroes.len(), 32);
-    assert_eq!(catalog.skills.len(), 247);
+    assert_eq!(catalog.skills.len(), 254);
     assert_eq!(catalog.tokens.len(), 23);
 }
 
@@ -53,8 +53,23 @@ fn heroes_reject_matching_effect_card() {
 }
 
 #[test]
-fn heroes_reject_skills_that_diverge_from_minion() {
+fn heroes_allow_skills_that_diverge_from_minion() {
+    // 英雄技能与同名随从卡各自维护：同名随从卡带战吼时，英雄可以不带技能。
     let heroes = r#"[{"id":"adam-smith","card_type":"hero","playstyle":"mammal","skills":[]}]"#;
+    Catalog::from_json(
+        CARDS_JSON,
+        heroes,
+        SKILLS_JSON,
+        "[]",
+        CONFIG_JSON,
+        TAXONOMY_JSON,
+    )
+    .expect("英雄与同名随从卡的 skills 不要求一致");
+}
+
+#[test]
+fn heroes_reject_playstyle_that_diverges_from_minion() {
+    let heroes = r#"[{"id":"adam-smith","card_type":"hero","playstyle":"bird","skills":[]}]"#;
     let error = Catalog::from_json(
         CARDS_JSON,
         heroes,
@@ -63,7 +78,7 @@ fn heroes_reject_skills_that_diverge_from_minion() {
         CONFIG_JSON,
         TAXONOMY_JSON,
     )
-    .expect_err("英雄与同名随从的技能必须一致");
+    .expect_err("英雄与同名随从的玩法必须一致");
     assert!(error.to_string().contains("不一致"), "{error}");
 }
 

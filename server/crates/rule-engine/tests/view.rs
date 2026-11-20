@@ -68,7 +68,6 @@ fn assert_all_false(affordances: &Affordances) {
     );
     assert!(!affordances.can_reroll);
     assert!(!affordances.can_upgrade_era);
-    assert!(!affordances.can_use_hero_power);
     assert!(!affordances.can_end_recruit);
 }
 
@@ -92,14 +91,71 @@ fn hero_power_reads_hero_pool() {
 
     let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
     assert_eq!(
-        Some(skill_id),
-        seat_view.self_view.hero_power_skill_id.as_deref(),
+        seat_view
+            .self_view
+            .hero_powers
+            .iter()
+            .map(|power| power.skill_id.as_str())
+            .collect::<Vec<_>>(),
+        vec![skill_id],
         "英雄主动技能只读英雄池"
     );
     assert!(
-        seat_view.self_view.hero_power_requires_target,
+        seat_view.self_view.hero_powers[0].requires_target,
         "英雄技能是否需要目标只读英雄池"
     );
+}
+
+#[test]
+fn hero_powers_lists_every_active_skill_in_card_order() {
+    let (engine, mut state) = setup();
+    // 爱因斯坦有两个主动技能：质能方程与光速出击。
+    state.players[0].hero = Some("einstein".to_string());
+
+    let powers = &view(&engine, &state, 0)
+        .expect("座位 0 的视图应存在")
+        .self_view
+        .hero_powers;
+    assert_eq!(
+        powers
+            .iter()
+            .map(|power| power.skill_id.as_str())
+            .collect::<Vec<_>>(),
+        vec!["mass-energy-equivalence", "light-speed-strike"],
+        "全部主动技能按英雄卡顺序逐个给出"
+    );
+    assert_eq!(
+        powers
+            .iter()
+            .map(|power| (power.skill_id.as_str(), power.requires_target))
+            .collect::<Vec<_>>(),
+        vec![
+            ("mass-energy-equivalence", false),
+            ("light-speed-strike", true),
+        ],
+        "全部主动技能按英雄卡顺序逐个给出，目标需求各自计算"
+    );
+}
+
+#[test]
+fn hero_power_exhausted_skill_does_not_block_other_skill() {
+    let (engine, mut state) = setup();
+    state.players[0].hero = Some("einstein".to_string());
+    state.players[0].gold = 10;
+    state.players[0].board.push(dummy(&engine, 1, &minion_id()));
+    state.players[0]
+        .hero_uses
+        .insert("mass-energy-equivalence".to_string(), 1);
+
+    let powers = &view(&engine, &state, 0)
+        .expect("座位 0 的视图应存在")
+        .self_view
+        .hero_powers;
+    assert_eq!(powers[0].skill_id, "mass-energy-equivalence");
+    assert_eq!(powers[0].uses_left, 0);
+    assert!(!powers[0].can_use);
+    assert_eq!(powers[0].disabled_reason, Some(RejectCode::HeroPowerLimit));
+    assert!(powers[1].can_use, "一个技能用尽不影响另一个");
 }
 
 #[test]
@@ -175,8 +231,7 @@ fn view_never_exposes_other_seats_private_state() {
         era: _,
         gold,
         hero_card_id: _,
-        hero_power_skill_id: _,
-        hero_power_uses_left: _,
+        hero_powers: _,
         shop: _,
         hand: _,
         board: _,
@@ -185,8 +240,6 @@ fn view_never_exposes_other_seats_private_state() {
         recruited: _,
         pending_choices: _,
         affordances: _,
-        hero_power_requires_target: _,
-        hero_power_target_candidates: _,
     } = &seat_view.self_view;
     assert_eq!(*gold, 7, "自身视图只读取本座位金币");
     assert!(
@@ -227,8 +280,8 @@ fn collect_strings(seat_view: &SeatView) -> Vec<String> {
     if let Some(hero) = &seat_view.self_view.hero_card_id {
         strings.push(hero.clone());
     }
-    if let Some(skill) = &seat_view.self_view.hero_power_skill_id {
-        strings.push(skill.clone());
+    for power in &seat_view.self_view.hero_powers {
+        strings.push(power.skill_id.clone());
     }
     for summary in &seat_view.players {
         strings.extend(summary.hero_card_id.iter().cloned());
@@ -530,9 +583,9 @@ fn lobby_phase_disables_all_affordances() {
         seat_view.self_view.affordances.upgrade_disabled_reason,
         Some(RejectCode::InvalidStage)
     );
-    assert_eq!(
-        seat_view.self_view.affordances.hero_power_disabled_reason,
-        Some(RejectCode::InvalidStage)
+    assert!(
+        seat_view.self_view.hero_powers.is_empty(),
+        "未选英雄时没有主动技能"
     );
 }
 
@@ -567,7 +620,6 @@ fn recruited_seat_cannot_act_but_can_end_recruit() {
     );
     assert!(!affordances.can_reroll);
     assert!(!affordances.can_upgrade_era);
-    assert!(!affordances.can_use_hero_power);
     assert!(affordances.can_end_recruit, "重复 EndRecruit 幂等成功");
 }
 
@@ -758,9 +810,10 @@ fn hero_power_target_candidates_follow_selector_zone() {
     let self_view = &view(&engine, &state, 0)
         .expect("座位 0 的视图应存在")
         .self_view;
-    assert!(self_view.hero_power_requires_target);
+    let power = self_view.hero_powers.first().expect("达·芬奇有主动技能");
+    assert!(power.requires_target);
     assert_eq!(
-        self_view.hero_power_target_candidates,
+        power.target_candidates,
         vec![TargetRef {
             zone: Zone::Hand,
             id: 7
@@ -779,13 +832,11 @@ fn hero_power_without_candidates_reports_no_valid_target() {
     let self_view = &view(&engine, &state, 0)
         .expect("座位 0 的视图应存在")
         .self_view;
-    assert!(self_view.hero_power_requires_target);
-    assert!(self_view.hero_power_target_candidates.is_empty());
-    assert!(!self_view.affordances.can_use_hero_power);
-    assert_eq!(
-        self_view.affordances.hero_power_disabled_reason,
-        Some(RejectCode::NoValidTarget)
-    );
+    let power = self_view.hero_powers.first().expect("达·芬奇有主动技能");
+    assert!(power.requires_target);
+    assert!(power.target_candidates.is_empty());
+    assert!(!power.can_use);
+    assert_eq!(power.disabled_reason, Some(RejectCode::NoValidTarget));
 }
 
 #[test]
@@ -811,10 +862,8 @@ fn affordances_blocked_while_target_pending() {
         fire_ally_evolve: true,
     });
 
-    let affordances = view(&engine, &state, 0)
-        .expect("座位 0 的视图应存在")
-        .self_view
-        .affordances;
+    let self_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
+    let affordances = &self_view.self_view.affordances;
     assert!(affordances.shop_slots.iter().all(|slot| !slot.buyable));
     assert!(affordances.hand_cards.iter().all(|card| !card.playable));
     assert!(
@@ -825,8 +874,15 @@ fn affordances_blocked_while_target_pending() {
     );
     assert!(!affordances.can_reroll);
     assert!(!affordances.can_upgrade_era);
-    assert!(!affordances.can_use_hero_power);
     assert!(!affordances.can_end_recruit, "目标待选期间不能结束招募");
+    assert!(
+        self_view
+            .self_view
+            .hero_powers
+            .iter()
+            .all(|power| !power.can_use),
+        "目标待选期间英雄技能全部不可用"
+    );
 }
 
 #[test]

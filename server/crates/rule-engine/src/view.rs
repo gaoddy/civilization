@@ -39,6 +39,17 @@ pub struct SeatView {
     pub enabled_playstyles: Vec<String>,
 }
 
+/// 英雄的单个主动技能及其本回合可用性。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HeroPowerView {
+    pub skill_id: String,
+    pub uses_left: u8,
+    pub requires_target: bool,
+    pub target_candidates: Vec<TargetRef>,
+    pub can_use: bool,
+    pub disabled_reason: Option<RejectCode>,
+}
+
 /// 本座位自己的私密数据与可操作项。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SelfView {
@@ -46,13 +57,8 @@ pub struct SelfView {
     pub era: u8,
     pub gold: u8,
     pub hero_card_id: Option<String>,
-    /// 英雄的第一个主动技能（`skill.cost.is_some()`），没有则为 `None`。
-    pub hero_power_skill_id: Option<String>,
-    pub hero_power_uses_left: u8,
-    /// 主动技能是否需要玩家指定单一目标。
-    pub hero_power_requires_target: bool,
-    /// 主动技能的合法目标候选；不需要目标时为空。
-    pub hero_power_target_candidates: Vec<TargetRef>,
+    /// 英雄卡上的全部主动技能（`skill.cost.is_some()`），按英雄卡 `skills` 顺序排列。
+    pub hero_powers: Vec<HeroPowerView>,
     pub shop: Vec<ShopSlotView>,
     pub hand: Vec<HandCardView>,
     pub board: Vec<BoardMinionView>,
@@ -176,8 +182,6 @@ pub struct Affordances {
     pub can_reroll: bool,
     pub can_upgrade_era: bool,
     pub upgrade_disabled_reason: Option<RejectCode>,
-    pub can_use_hero_power: bool,
-    pub hero_power_disabled_reason: Option<RejectCode>,
     pub can_end_recruit: bool,
 }
 
@@ -285,69 +289,70 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         },
     };
 
-    let hero_power_skill_id = player
+    let hero_powers = player
         .hero
         .as_deref()
         .and_then(|hero_id| engine.catalog.heroes.get(hero_id))
-        .and_then(|hero| {
-            hero.skills.iter().find(|skill_id| {
-                engine
-                    .catalog
-                    .skills
-                    .get(*skill_id)
-                    .is_some_and(|skill| skill.cost.is_some())
-            })
+        .map(|hero| {
+            hero.skills
+                .iter()
+                .filter(|skill_id| {
+                    engine
+                        .catalog
+                        .skills
+                        .get(*skill_id)
+                        .is_some_and(|skill| skill.cost.is_some())
+                })
+                .map(|skill_id| {
+                    let uses_left = engine
+                        .catalog
+                        .skills
+                        .get(skill_id)
+                        .map(|skill| {
+                            let limit = skill.uses_per_turn.unwrap_or(1);
+                            let used = player.hero_uses.get(skill_id).copied().unwrap_or(0);
+                            limit.saturating_sub(used)
+                        })
+                        .unwrap_or(0);
+                    let requires_target =
+                        engine.skill_requires_target(skill_id, Trigger::OnActivate);
+                    let target_candidates = if requires_target {
+                        let ctx = EffectCtx {
+                            seat,
+                            source: None,
+                            target: None,
+                            event_target: None,
+                            golden: false,
+                            discover_level: None,
+                        };
+                        let effects = engine.skill_effects_of(skill_id, Trigger::OnActivate);
+                        engine.target_candidates(state, &effects, &ctx, false)
+                    } else {
+                        Vec::new()
+                    };
+                    let (can_use, disabled_reason) = match gate {
+                        Some(code) => (false, Some(code)),
+                        // 需要目标而候选为空：该技能没有合法落点，按不可使用处理。
+                        None if requires_target && target_candidates.is_empty() => {
+                            (false, Some(RejectCode::NoValidTarget))
+                        }
+                        None => match check_hero_power(engine, state, seat, skill_id) {
+                            Ok(()) => (true, None),
+                            Err(reject) => (false, Some(reject.code)),
+                        },
+                    };
+                    HeroPowerView {
+                        skill_id: skill_id.clone(),
+                        uses_left,
+                        requires_target,
+                        target_candidates,
+                        can_use,
+                        disabled_reason,
+                    }
+                })
+                .collect()
         })
-        .cloned();
-
-    let hero_power_uses_left = hero_power_skill_id
-        .as_deref()
-        .and_then(|skill_id| {
-            engine.catalog.skills.get(skill_id).map(|skill| {
-                let limit = skill.uses_per_turn.unwrap_or(1);
-                let used = player.hero_uses.get(skill_id).copied().unwrap_or(0);
-                limit.saturating_sub(used)
-            })
-        })
-        .unwrap_or(0);
-
-    let hero_power_requires_target = player
-        .hero
-        .as_deref()
-        .is_some_and(|hero_id| engine.hero_requires_target(hero_id, Trigger::OnActivate));
-    let hero_power_target_candidates = if hero_power_requires_target {
-        let ctx = EffectCtx {
-            seat,
-            source: None,
-            target: None,
-            event_target: None,
-            golden: false,
-            discover_level: None,
-        };
-        let effects = player
-            .hero
-            .as_deref()
-            .map(|hero_id| engine.hero_effects_of(hero_id, Trigger::OnActivate))
-            .unwrap_or_default();
-        engine.target_candidates(state, &effects, &ctx, false)
-    } else {
-        Vec::new()
-    };
-
-    let (can_use_hero_power, hero_power_disabled_reason) = match gate {
-        Some(code) => (false, Some(code)),
-        None => match hero_power_skill_id.as_deref() {
-            None => (false, Some(RejectCode::HeroPowerLimit)),
-            // 需要目标而候选为空：技能没有合法落点，按不可使用处理。
-            Some(_) if hero_power_requires_target && hero_power_target_candidates.is_empty() => {
-                (false, Some(RejectCode::NoValidTarget))
-            }
-            Some(skill_id) => match check_hero_power(engine, state, seat, skill_id) {
-                Ok(()) => (true, None),
-                Err(reject) => (false, Some(reject.code)),
-            },
-        },
-    };
+        .unwrap_or_default();
 
     // 已结束招募时重复 `EndRecruit` 幂等成功；出局、非招募阶段或仍有待选时不可操作。
     let can_end_recruit = activatable && !has_pending && check_end_recruit(state, seat).is_ok();
@@ -543,10 +548,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
             era: player.era as u8,
             gold: player.gold,
             hero_card_id: player.hero.clone(),
-            hero_power_skill_id,
-            hero_power_uses_left,
-            hero_power_requires_target,
-            hero_power_target_candidates,
+            hero_powers,
             shop,
             hand,
             board,
@@ -566,8 +568,6 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                 can_reroll,
                 can_upgrade_era,
                 upgrade_disabled_reason,
-                can_use_hero_power,
-                hero_power_disabled_reason,
                 can_end_recruit,
             },
         },

@@ -11,8 +11,8 @@ use protocol::view::{
     PlayerSummary, PlayerView, ShopAffordance, ShopSlot,
 };
 use protocol::{
-    MinionStatBreakdown, MinionStats, PlayerViewSelf, PlayerViewSelfHeroPower, ProtocolError,
-    TargetRef, TargetZone,
+    HeroPower, MinionStatBreakdown, MinionStats, PlayerViewSelf, ProtocolError, TargetRef,
+    TargetZone,
 };
 use rule_engine::combat;
 use rule_engine::data::Catalog;
@@ -200,7 +200,6 @@ fn self_to_protocol(
             can_end_recruit: view.affordances.can_end_recruit,
             can_reroll: view.affordances.can_reroll,
             can_upgrade_era: view.affordances.can_upgrade_era,
-            can_use_hero_power: view.affordances.can_use_hero_power,
             hand_cards: view
                 .affordances
                 .hand_cards
@@ -211,10 +210,6 @@ fn self_to_protocol(
                     playable: affordance.playable,
                 })
                 .collect(),
-            hero_power_disabled_reason: view
-                .affordances
-                .hero_power_disabled_reason
-                .map(reject_reason),
             shop_slots: view
                 .affordances
                 .shop_slots
@@ -232,16 +227,22 @@ fn self_to_protocol(
         gold: u64::from(view.gold),
         hand,
         hero_card_id: view.hero_card_id.clone(),
-        hero_power: PlayerViewSelfHeroPower {
-            skill_id: view.hero_power_skill_id.clone(),
-            uses_left: u64::from(view.hero_power_uses_left),
-            requires_target: view.hero_power_requires_target,
-            target_candidates: view
-                .hero_power_target_candidates
-                .iter()
-                .map(target_to_protocol)
-                .collect(),
-        },
+        hero_powers: view
+            .hero_powers
+            .iter()
+            .map(|power| HeroPower {
+                can_use: power.can_use,
+                disabled_reason: power.disabled_reason.map(reject_reason),
+                requires_target: power.requires_target,
+                skill_id: power.skill_id.clone(),
+                target_candidates: power
+                    .target_candidates
+                    .iter()
+                    .map(target_to_protocol)
+                    .collect(),
+                uses_left: u64::from(power.uses_left),
+            })
+            .collect(),
         hp: i64::from(view.hp),
         pending_choices: view
             .pending_choices

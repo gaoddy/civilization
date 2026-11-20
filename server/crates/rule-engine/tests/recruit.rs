@@ -1,6 +1,9 @@
 mod common;
 
-use common::{heroes, minion, minion_id, set_shop, test_catalog, test_playstyles, turn_started};
+use common::{
+    heroes, minion, minion_id, place, set_shop, test_catalog, test_playstyles, turn_started,
+};
+use rule_engine::combat;
 use rule_engine::data::{CardType, Era};
 use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::engine::Engine;
@@ -704,6 +707,49 @@ fn use_hero_power_respects_cost_and_uses() {
         )
         .expect("新回合技能次数已重置");
     assert_eq!(state.players[0].gold, 3);
+}
+
+#[test]
+fn use_hero_power_only_fires_selected_skill() {
+    let (mut engine, mut state) = turn_started(24);
+    // 爱因斯坦有两个主动技能：质能方程（全队成长）与光速出击（单体连击）。
+    state.players[0].hero = Some("einstein".to_string());
+    state.players[0].gold = 10;
+    let card_id = minion_id(1);
+    place(&engine.catalog, &mut state, 0, 1, &card_id);
+    place(&engine.catalog, &mut state, 0, 2, &card_id);
+    let before_target = combat::keywords(&engine.catalog, &state.players[0].board[0]);
+    let before_other = combat::keywords(&engine.catalog, &state.players[0].board[1]);
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::UseHeroPower {
+                skill_id: "light-speed-strike".to_string(),
+                target: Some(board_target(1)),
+            },
+        )
+        .expect("主动技能应成功");
+
+    assert_eq!(state.players[0].gold, 9, "只扣被选中技能的费用");
+    assert_ne!(
+        combat::keywords(&engine.catalog, &state.players[0].board[0]),
+        before_target,
+        "被选中的技能应结算"
+    );
+    assert_eq!(
+        combat::keywords(&engine.catalog, &state.players[0].board[1]),
+        before_other,
+        "未选中的技能不得连带结算"
+    );
+    for minion in &state.players[0].board {
+        assert_eq!(
+            (minion.stats.attack.growth, minion.stats.health.growth),
+            (0, 0),
+            "质能方程的全队成长不应随光速出击一起结算"
+        );
+    }
 }
 
 #[test]

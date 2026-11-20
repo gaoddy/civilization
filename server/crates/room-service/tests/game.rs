@@ -1048,11 +1048,12 @@ fn hero_power_uses_accumulate_across_turns() {
     // darwin / edison / knuth 满足条件，按运行时视图判断而非硬编码座位。
     let (seat, skill_id) = (0..8u8)
         .find_map(|seat| {
-            let power = task.player_view(seat)?.self_.hero_power.clone();
-            if power.requires_target {
-                return None;
-            }
-            power.skill_id.map(|skill_id| (seat, skill_id))
+            let view = task.player_view(seat)?;
+            view.self_
+                .hero_powers
+                .iter()
+                .find(|power| !power.requires_target)
+                .map(|power| (seat, power.skill_id.clone()))
         })
         .expect("应存在无需目标的英雄主动技能");
 
