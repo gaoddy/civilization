@@ -13,6 +13,20 @@ static func clear(node: Node) -> void:
         child.queue_free()
 
 
+## 拖拽预览：让指针停在起手时的卡片位置，而不是 Godot 默认的预览左上角贴指针。
+##
+## Viewport 在拖拽中每帧把预览控件的位置设成指针位置，直接偏移预览会被覆盖；
+## 这里用包裹层承载被拖卡片，并按起手点 `at_position` 反向偏移。
+static func drag_preview(card: Control, at_position: Vector2) -> Control:
+    var holder := Control.new()
+    holder.name = "DragPreview"
+    holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    card.position = -at_position
+    holder.add_child(card)
+    return holder
+
+
 ## 页面安全区包裹：把页面现有子节点整体移入 SafeAreaMargin，再挂回页面。
 ## 幂等：重复调用返回已存在的包裹层，不重复移动节点。
 static func safe_area(page: Control) -> SafeAreaMargin:

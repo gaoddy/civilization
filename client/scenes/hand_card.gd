@@ -24,15 +24,18 @@ signal target_dropped(data: Dictionary, target: Dictionary)
 signal shop_dropped(payload: Dictionary)
 
 
-func _get_drag_data(_at_position: Vector2) -> Variant:
+func _get_drag_data(at_position: Vector2) -> Variant:
     if not drag_allowed or payload.is_empty():
         return null
     # 预览会复制当前的 scale/pivot，必须先复位悬停再复制。
+    # `at_position` 是悬停放大后的局部坐标，先换算到画布再按复位后的卡片取起手点。
+    var grabbed := get_global_transform_with_canvas() * at_position
     drag_started.emit()
+    var grab := get_global_transform_with_canvas().affine_inverse() * grabbed
     var preview := duplicate() as Control
     preview.modulate = Color(1, 1, 1, 0.7)
     preview.custom_minimum_size = custom_minimum_size
-    set_drag_preview(preview)
+    set_drag_preview(UI.drag_preview(preview, grab))
     return payload.duplicate()
 
 
