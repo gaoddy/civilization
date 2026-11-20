@@ -142,6 +142,56 @@ func _check_compact() -> void:
         host.queue_free()
         await get_tree().process_frame
     await _check_game_compact(compact)
+    await _check_gallery_hero_compact(compact)
+
+
+## 图鉴英雄视图在 iPhone 基准下：隐藏左侧目录，顶部筛选、网格、分页与详情不越界。
+func _check_gallery_hero_compact(compact: Vector2) -> void:
+    var host := Control.new()
+    host.name = "CompactGalleryHost"
+    host.size = compact
+    add_child(host)
+    var page := await _instantiate_into("res://scenes/gallery.tscn", host)
+    if page != null:
+        var mode_hero := page.find_child("ModeHero", true, false) as Button
+        _check(mode_hero != null and not mode_hero.disabled, "英雄视图切换应可用")
+        if mode_hero != null:
+            mode_hero.pressed.emit()
+            await get_tree().process_frame
+            await get_tree().process_frame
+            var bounds := Rect2(host.get_global_rect().position, compact).grow(1.0)
+            for node_name in [
+                "GalleryHeader",
+                "GalleryHeroCategories",
+                "GalleryGridRows",
+                "GalleryPager",
+                "GalleryDetail",
+            ]:
+                var node := page.find_child(str(node_name), true, false) as Control
+                _check(
+                    node != null and node.is_visible_in_tree(),
+                    "手机英雄视图缺少可见的 %s" % node_name,
+                )
+                if node != null:
+                    _check(
+                        bounds.encloses(node.get_global_rect()),
+                        "%s 在英雄视图越界：%s 不在 %s 内"
+                        % [node_name, str(node.get_global_rect()), str(bounds)],
+                    )
+            var toc := page.find_child("GalleryToc", true, false) as Control
+            _check(
+                toc != null and not toc.is_visible_in_tree(),
+                "手机英雄视图不应显示左侧目录",
+            )
+            var header := page.find_child("GalleryHeader", true, false) as Control
+            var bar := page.find_child("GalleryHeroCategories", true, false) as Control
+            _check(
+                header != null and bar != null
+                    and header.get_global_rect().encloses(bar.get_global_rect()),
+                "英雄分类栏应位于头部内",
+            )
+    host.queue_free()
+    await get_tree().process_frame
 
 
 ## 对局页有完整八人视图时：积分榜 8 席不滚动、棋盘与手牌不越界、

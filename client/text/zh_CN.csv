@@ -1420,7 +1420,6 @@ token.worker-bee-token-2.name,工蜂
 ui.common.no_hero,未选英雄
 ui.gallery.back_lobby,返回大厅
 ui.gallery.back_match,返回对局
-ui.gallery.category_hero,英雄
 ui.gallery.chapter_all,全部
 ui.gallery.detail_empty,选择一张卡牌查看详情
 ui.gallery.effect,效果
@@ -1430,6 +1429,8 @@ ui.gallery.entry_match,图鉴
 ui.gallery.kind_all,全部
 ui.gallery.kind_effect,效果
 ui.gallery.kind_minion,随从
+ui.gallery.mode_hero,英雄
+ui.gallery.mode_minion,随从
 ui.gallery.next,下一页
 ui.gallery.page,第 %d/%d 页
 ui.gallery.prev,上一页

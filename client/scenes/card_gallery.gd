@@ -1,6 +1,6 @@
 class_name CardGallery
 extends Control
-## 卡牌图鉴：时代章节 + 分类目录 + 卡面网格 + 常驻详情。
+## 卡牌图鉴：随从 / 英雄视图 + 顶部筛选 + 卡面网格 + 常驻详情。
 ##
 ## 大厅与对局共用的业务组件。卡牌集合、标题、返回文案与副标题由页面传入；
 ## 本组件不读取房间或对局状态，筛选与选中只影响自身展示。Esc 与返回按钮
@@ -18,10 +18,12 @@ const ERA_IDS := [
     "future",
 ]
 
+## 随从与英雄两套视图：随从视图按时代与玩法筛选，英雄视图按英雄玩法筛选。
+const MODE_MINION := "minion"
+const MODE_HERO := "hero"
+
 ## 玩法之外追加的横切分类；效果牌不再作为顶层分类。
 const CATEGORY_NEUTRAL := "neutral"
-## 独立英雄分区：英雄卡只在开局选人中出场，不参与时代与随从/效果二级筛选。
-const CATEGORY_HERO := "hero"
 
 ## 选中顶层分类后展开的二级筛选：随从与效果牌。
 const KIND_ALL := ""
@@ -30,14 +32,18 @@ const KIND_EFFECT := "effect"
 
 var _ids: Array = []
 var _hero_ids: Array = []
+var _mode := MODE_MINION
 var _era := 0
 var _taxon := ""
 var _kind := KIND_ALL
+var _hero_taxon := ""
 var _selected := ""
 
 var _title: Label
+var _mode_bar: GalleryModeBar
+var _chapter_bar: GalleryFilterBar
+var _hero_bar: GalleryFilterBar
 var _close_button: Button
-var _chapter_bar: GalleryChapterBar
 var _toc: GalleryToc
 var _grid: GalleryGrid
 var _detail: GalleryDetail
@@ -74,10 +80,20 @@ func _init() -> void:
     _title.name = "GalleryTitle"
     header.add_child(_title)
 
-    _chapter_bar = GalleryChapterBar.new()
+    _mode_bar = GalleryModeBar.new()
+    _mode_bar.mode_selected.connect(_on_mode_selected)
+    header.add_child(_mode_bar)
+
+    _chapter_bar = GalleryFilterBar.new("GalleryChapters", "Chapter")
     _chapter_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _chapter_bar.chapter_selected.connect(_on_chapter_selected)
+    _chapter_bar.item_selected.connect(_on_chapter_selected)
     header.add_child(_chapter_bar)
+
+    _hero_bar = GalleryFilterBar.new("GalleryHeroCategories", "HeroCategory")
+    _hero_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _hero_bar.item_selected.connect(_on_hero_taxon_selected)
+    _hero_bar.visible = false
+    header.add_child(_hero_bar)
 
     _close_button = UI.styled_button("", "default", 32)
     _close_button.name = "GalleryClose"
@@ -105,18 +121,20 @@ func _init() -> void:
     body.add_child(_detail)
 
 
-## 载入卡牌集合与页面文案；重置筛选并选中首张。
+## 载入卡牌集合与页面文案；重置视图、筛选并选中首张。
 ##
 ## `hero_ids` 为 `null` 时取全部英雄卡；本局图鉴传入按启用法则过滤后的英雄，
-## 传空数组表示本局没有可用英雄（英雄分区显示空态）。
+## 传空数组表示本局没有可用英雄（英雄视图不可进入）。
 func set_catalog(card_ids: Array, title: String, close_text: String, hero_ids: Variant = null) -> void:
     _ids = _sorted_ids(card_ids)
     _hero_ids = _sorted_hero_ids(CardDB.heroes_array() if hero_ids == null else hero_ids)
     _title.text = title
     _close_button.text = close_text
+    _mode = MODE_MINION
     _era = 0
     _taxon = ""
     _kind = KIND_ALL
+    _hero_taxon = ""
     _selected = ""
     _rebuild()
 
@@ -130,41 +148,57 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _rebuild() -> void:
-    var in_hero := _taxon == CATEGORY_HERO
-    _chapter_bar.visible = not in_hero
-    if not in_hero:
-        _chapter_bar.set_state(_count_by_era(), _era)
-    _toc.set_state(
-        _categories(),
-        _count_by_category(),
-        _taxon,
-        [] if in_hero else _kinds(),
-        {} if in_hero else _count_by_kind(),
-        _kind,
-    )
+    if _mode == MODE_HERO and _hero_ids.is_empty():
+        _mode = MODE_MINION
+    var hero := _mode == MODE_HERO
+    _mode_bar.set_state(_mode, not _hero_ids.is_empty())
+    _chapter_bar.visible = not hero
+    _hero_bar.visible = hero
+    _toc.visible = not hero
+    if hero:
+        _hero_bar.set_state(_hero_category_items(), _count_by_hero_category(), _hero_taxon)
+    else:
+        _chapter_bar.set_state(_chapter_items(), _count_by_era(), "" if _era == 0 else str(_era))
+        _toc.set_state(
+            _categories(),
+            _count_by_category(),
+            _taxon,
+            _kinds(),
+            _count_by_kind(),
+            _kind,
+        )
     var filtered := _filtered_ids()
     if filtered.is_empty():
         _selected = ""
     elif not filtered.has(_selected):
         _selected = str(filtered[0])
-    _grid.set_cards(filtered, _selected, in_hero)
-    if in_hero:
+    _grid.set_cards(filtered, _selected, hero)
+    if hero:
         _detail.show_hero(_selected)
     else:
         _detail.show_card(_selected)
 
 
-func _on_chapter_selected(era: int) -> void:
-    _era = era
+func _on_mode_selected(mode: String) -> void:
+    if mode == _mode or (mode == MODE_HERO and _hero_ids.is_empty()):
+        return
+    _mode = mode
+    _rebuild()
+
+
+func _on_chapter_selected(era_id: String) -> void:
+    _era = 0 if era_id == "" else int(era_id)
     _rebuild()
 
 
 func _on_taxon_selected(root_id: String) -> void:
     _taxon = root_id
     _kind = KIND_ALL
-    # 英雄没有时代维度：进入英雄分区时清掉时代筛选，避免切回普通分区后无结果。
-    if root_id == CATEGORY_HERO:
-        _era = 0
+    _rebuild()
+
+
+func _on_hero_taxon_selected(root_id: String) -> void:
+    _hero_taxon = root_id
     _rebuild()
 
 
@@ -176,7 +210,7 @@ func _on_kind_selected(kind: String) -> void:
 func _on_card_selected(card_id: String) -> void:
     _selected = card_id
     _grid.select(card_id)
-    if _taxon == CATEGORY_HERO:
+    if _mode == MODE_HERO:
         _detail.show_hero(card_id)
     else:
         _detail.show_card(card_id)
@@ -187,8 +221,13 @@ func _on_close() -> void:
 
 
 func _filtered_ids() -> Array:
-    if _taxon == CATEGORY_HERO:
-        return _hero_ids.duplicate()
+    if _mode == MODE_HERO:
+        var heroes: Array = []
+        for id in _hero_ids:
+            var entry := CardDB.hero(str(id))
+            if _hero_taxon == "" or str(entry.get("playstyle", "")) == _hero_taxon:
+                heroes.append(str(id))
+        return heroes
     var out: Array = []
     for id in _ids:
         var entry := CardDB.card(str(id))
@@ -198,23 +237,34 @@ func _filtered_ids() -> Array:
     return out
 
 
+func _chapter_items() -> Array:
+    var out: Array = [{"id": "", "name": tr("ui.gallery.chapter_all")}]
+    for era in range(1, ERA_IDS.size() + 1):
+        out.append({"id": str(era), "name": UI.enum_text("era", ERA_IDS[era - 1])})
+    return out
+
+
+func _hero_category_items() -> Array:
+    var out: Array = [{"id": "", "name": tr("ui.gallery.toc_all")}]
+    out.append_array(_categories())
+    return out
+
+
 func _count_by_era() -> Dictionary:
     var counts := {}
     for id in _ids:
         var entry := CardDB.card(str(id))
         if not _matches_category(entry) or not _matches_kind(entry):
             continue
-        counts[0] = int(counts.get(0, 0)) + 1
+        counts[""] = int(counts.get("", 0)) + 1
         var era := _era_index(str(entry.get("era", "")))
         if era <= ERA_IDS.size():
-            counts[era] = int(counts.get(era, 0)) + 1
+            counts[str(era)] = int(counts.get(str(era), 0)) + 1
     return counts
 
 
 func _count_by_category() -> Dictionary:
     var counts := {}
-    if not _hero_ids.is_empty():
-        counts[CATEGORY_HERO] = _hero_ids.size()
     for id in _ids:
         var entry := CardDB.card(str(id))
         if not _matches_era(entry) or not _matches_kind(entry):
@@ -234,6 +284,16 @@ func _count_by_kind() -> Dictionary:
         counts[KIND_ALL] = int(counts.get(KIND_ALL, 0)) + 1
         var kind := _kind_bucket(entry)
         counts[kind] = int(counts.get(kind, 0)) + 1
+    return counts
+
+
+## 英雄分类只按自身玩法计数，不重复计入关联玩法。
+func _count_by_hero_category() -> Dictionary:
+    var counts := {"": _hero_ids.size()}
+    for id in _hero_ids:
+        var playstyle := str(CardDB.hero(str(id)).get("playstyle", ""))
+        if playstyle != "":
+            counts[playstyle] = int(counts.get(playstyle, 0)) + 1
     return counts
 
 
@@ -282,8 +342,6 @@ func _kind_bucket(entry: Dictionary) -> String:
 
 func _categories() -> Array:
     var out: Array = []
-    if not _hero_ids.is_empty():
-        out.append({"id": CATEGORY_HERO, "name": tr("ui.gallery.category_hero")})
     for id in CardDB.playstyles:
         out.append({"id": str(id), "name": CardDB.playstyle_name(str(id))})
     out.append({"id": CATEGORY_NEUTRAL, "name": CardDB.playstyle_name("neutral")})
