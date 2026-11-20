@@ -153,10 +153,10 @@ func _check_gallery_hero_compact(compact: Vector2) -> void:
     add_child(host)
     var page := await _instantiate_into("res://scenes/gallery.tscn", host)
     if page != null:
-        var mode_hero := page.find_child("ModeHero", true, false) as Button
-        _check(mode_hero != null and not mode_hero.disabled, "英雄视图切换应可用")
-        if mode_hero != null:
-            mode_hero.pressed.emit()
+        var mode_toggle := page.find_child("ModeToggle", true, false) as Button
+        _check(mode_toggle != null and not mode_toggle.disabled, "视图切换应可用")
+        if mode_toggle != null:
+            mode_toggle.pressed.emit()
             await get_tree().process_frame
             await get_tree().process_frame
             var bounds := Rect2(host.get_global_rect().position, compact).grow(1.0)
