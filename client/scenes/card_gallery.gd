@@ -20,6 +20,8 @@ const ERA_IDS := [
 
 ## 玩法之外追加的横切分类；效果牌不再作为顶层分类。
 const CATEGORY_NEUTRAL := "neutral"
+## 独立英雄分区：英雄卡只在开局选人中出场，不参与时代与随从/效果二级筛选。
+const CATEGORY_HERO := "hero"
 
 ## 选中顶层分类后展开的二级筛选：随从与效果牌。
 const KIND_ALL := ""
@@ -27,6 +29,7 @@ const KIND_MINION := "minion"
 const KIND_EFFECT := "effect"
 
 var _ids: Array = []
+var _hero_ids: Array = []
 var _era := 0
 var _taxon := ""
 var _kind := KIND_ALL
@@ -103,8 +106,12 @@ func _init() -> void:
 
 
 ## 载入卡牌集合与页面文案；重置筛选并选中首张。
-func set_catalog(card_ids: Array, title: String, close_text: String) -> void:
+##
+## `hero_ids` 为 `null` 时取全部英雄卡；本局图鉴传入按启用法则过滤后的英雄，
+## 传空数组表示本局没有可用英雄（英雄分区显示空态）。
+func set_catalog(card_ids: Array, title: String, close_text: String, hero_ids: Variant = null) -> void:
     _ids = _sorted_ids(card_ids)
+    _hero_ids = _sorted_hero_ids(CardDB.heroes_array() if hero_ids == null else hero_ids)
     _title.text = title
     _close_button.text = close_text
     _era = 0
@@ -123,13 +130,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _rebuild() -> void:
-    _chapter_bar.set_state(_count_by_era(), _era)
+    var in_hero := _taxon == CATEGORY_HERO
+    _chapter_bar.visible = not in_hero
+    if not in_hero:
+        _chapter_bar.set_state(_count_by_era(), _era)
     _toc.set_state(
         _categories(),
         _count_by_category(),
         _taxon,
-        _kinds(),
-        _count_by_kind(),
+        [] if in_hero else _kinds(),
+        {} if in_hero else _count_by_kind(),
         _kind,
     )
     var filtered := _filtered_ids()
@@ -137,8 +147,11 @@ func _rebuild() -> void:
         _selected = ""
     elif not filtered.has(_selected):
         _selected = str(filtered[0])
-    _grid.set_cards(filtered, _selected)
-    _detail.show_card(_selected)
+    _grid.set_cards(filtered, _selected, in_hero)
+    if in_hero:
+        _detail.show_hero(_selected)
+    else:
+        _detail.show_card(_selected)
 
 
 func _on_chapter_selected(era: int) -> void:
@@ -149,6 +162,9 @@ func _on_chapter_selected(era: int) -> void:
 func _on_taxon_selected(root_id: String) -> void:
     _taxon = root_id
     _kind = KIND_ALL
+    # 英雄没有时代维度：进入英雄分区时清掉时代筛选，避免切回普通分区后无结果。
+    if root_id == CATEGORY_HERO:
+        _era = 0
     _rebuild()
 
 
@@ -160,7 +176,10 @@ func _on_kind_selected(kind: String) -> void:
 func _on_card_selected(card_id: String) -> void:
     _selected = card_id
     _grid.select(card_id)
-    _detail.show_card(card_id)
+    if _taxon == CATEGORY_HERO:
+        _detail.show_hero(card_id)
+    else:
+        _detail.show_card(card_id)
 
 
 func _on_close() -> void:
@@ -168,6 +187,8 @@ func _on_close() -> void:
 
 
 func _filtered_ids() -> Array:
+    if _taxon == CATEGORY_HERO:
+        return _hero_ids.duplicate()
     var out: Array = []
     for id in _ids:
         var entry := CardDB.card(str(id))
@@ -192,6 +213,8 @@ func _count_by_era() -> Dictionary:
 
 func _count_by_category() -> Dictionary:
     var counts := {}
+    if not _hero_ids.is_empty():
+        counts[CATEGORY_HERO] = _hero_ids.size()
     for id in _ids:
         var entry := CardDB.card(str(id))
         if not _matches_era(entry) or not _matches_kind(entry):
@@ -259,6 +282,8 @@ func _kind_bucket(entry: Dictionary) -> String:
 
 func _categories() -> Array:
     var out: Array = []
+    if not _hero_ids.is_empty():
+        out.append({"id": CATEGORY_HERO, "name": tr("ui.gallery.category_hero")})
     for id in CardDB.playstyles:
         out.append({"id": str(id), "name": CardDB.playstyle_name(str(id))})
     out.append({"id": CATEGORY_NEUTRAL, "name": CardDB.playstyle_name("neutral")})
@@ -276,6 +301,21 @@ func _kinds() -> Array:
 func _era_index(era_id: String) -> int:
     var index := ERA_IDS.find(era_id)
     return index + 1 if index >= 0 else ERA_IDS.size() + 1
+
+
+## 英雄按展示名排序，与普通卡的「时代 → 名称」顺序区分开。
+func _sorted_hero_ids(hero_ids: Array) -> Array:
+    var out: Array = []
+    for id in hero_ids:
+        if CardDB.heroes.has(str(id)):
+            out.append(str(id))
+    out.sort_custom(func(a: String, b: String) -> bool:
+        var a_name := CardDB.display_name(a)
+        var b_name := CardDB.display_name(b)
+        if a_name != b_name:
+            return a_name < b_name
+        return a < b)
+    return out
 
 
 func _sorted_ids(card_ids: Array) -> Array:

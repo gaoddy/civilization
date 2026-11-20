@@ -65,10 +65,8 @@ func _init() -> void:
 func refresh(state: GameUiState) -> void:
     var self_state := state.self_state
     var hero_id := CardText.optional_text(self_state.get("heroCardId"))
-    var attack := int(CardDB.card(hero_id).get("attack", 0))
     _hero_card.refresh(
         hero_id,
-        attack,
         int(self_state.get("hp", 0)),
         state.hp_cap,
         int(self_state.get("era", 1)),

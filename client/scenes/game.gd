@@ -359,10 +359,12 @@ func _open_gallery() -> void:
         _gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
         _gallery.closed.connect(_close_gallery)
         UI.safe_layer(self).add_child(_gallery)
+    var enabled: Array = GameStore.view.get("enabledFactions", [])
     _gallery.set_catalog(
-        CardPool.card_ids(GameStore.view.get("enabledFactions", [])),
+        CardPool.card_ids(enabled),
         tr("ui.gallery.title_match"),
         tr("ui.gallery.back_match"),
+        CardPool.hero_ids(enabled),
     )
     _gallery.visible = true
 

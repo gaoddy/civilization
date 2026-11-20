@@ -166,7 +166,7 @@ static func avatar(hero_id: String, size := 34) -> PanelContainer:
     var node := PanelContainer.new()
     node.name = "Avatar"
     node.custom_minimum_size = Vector2(size, size)
-    var playstyle := str(CardDB.card(hero_id).get("playstyle", ""))
+    var playstyle := str(CardDB.hero(hero_id).get("playstyle", ""))
     var tint := UITheme.playstyle_color(playstyle) if hero_id != "" else UITheme.color("color-border-strong")
     var box := StyleBoxFlat.new()
     box.bg_color = tint.darkened(0.55)
@@ -262,14 +262,14 @@ static func _avatar_initial(hero_id: String) -> String:
     return display.substr(0, 1)
 
 
-## 英雄小卡：头像、名字、玩法与时代、技能摘要。hero_id 为空表示未选英雄。
+## 英雄小卡：头像、名字、玩法与技能摘要。hero_id 为空表示未选英雄。
 static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
     var node := PanelContainer.new()
     node.name = "HeroTile"
     node.custom_minimum_size = Vector2(width, 0)
     var box := UITheme.panel_style("raised")
     if hero_id != "":
-        box.border_color = UITheme.playstyle_color(str(CardDB.card(hero_id).get("playstyle", "")))
+        box.border_color = UITheme.playstyle_color(str(CardDB.hero(hero_id).get("playstyle", "")))
     node.add_theme_stylebox_override("panel", box)
 
     var row := HBoxContainer.new()
@@ -290,20 +290,17 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
     name_label.name = "Name"
     lines.add_child(name_label)
 
-    var entry := CardDB.card(hero_id)
+    var entry := CardDB.hero(hero_id)
     var meta_parts := PackedStringArray()
     var playstyle := str(entry.get("playstyle", ""))
-    var era := str(entry.get("era", ""))
     if playstyle != "":
         meta_parts.append(enum_text("playstyle", playstyle))
-    if era != "":
-        meta_parts.append(enum_text("era", era))
     var meta := label(" · ".join(meta_parts) if not meta_parts.is_empty() else "—", UITheme.font_size("font-caption"), false)
     meta.name = "Meta"
     meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     lines.add_child(meta)
 
-    var skill_text := CardDB.display_text(hero_id)
+    var skill_text := CardDB.hero_text(hero_id)
     if skill_text != "":
         var skill := label(skill_text, UITheme.font_size("font-caption"))
         skill.name = "Skill"

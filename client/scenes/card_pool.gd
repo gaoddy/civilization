@@ -22,6 +22,20 @@ static func card_ids(enabled: Array) -> Array:
     return out
 
 
+## 本局英雄候选池的卡牌 id，按 id 升序；口径与 `hero_in_pool` 一致。
+static func hero_ids(enabled: Array) -> Array:
+    var enabled_set := {}
+    for id in enabled:
+        enabled_set[str(id)] = true
+    var out: Array = []
+    for id in CardDB.heroes:
+        var entry: Dictionary = CardDB.heroes[id]
+        if in_pool(entry, enabled_set):
+            out.append(str(id))
+    out.sort()
+    return out
+
+
 ## 单张卡是否在本局卡池；`enabled` 为玩法 id 集合。
 static func in_pool(entry: Dictionary, enabled: Dictionary) -> bool:
     var playstyle := str(entry.get("playstyle", ""))

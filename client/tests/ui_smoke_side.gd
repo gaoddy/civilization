@@ -153,7 +153,7 @@ func _check_icon_button() -> void:
     await get_tree().process_frame
 
 
-## 英雄卡：尺寸、名字行、三格数值与左右顺序。
+## 英雄卡：尺寸、名字行、时代与生命两格及其左右顺序。
 func _check_hero_card() -> void:
     var card := GameHeroCard.new()
     add_child(card)
@@ -162,17 +162,16 @@ func _check_hero_card() -> void:
         card.custom_minimum_size == Vector2(64, 84),
         "英雄卡最小尺寸应为 64×84，实际 %s" % card.custom_minimum_size,
     )
-    card.refresh("adam-smith", 6, 35, 40, 5)
+    card.refresh("adam-smith", 35, 40, 5)
     await get_tree().process_frame
     var name_label: Label = card.find_child("HeroCardName", true, false)
-    var attack_label: Label = card.find_child("HeroAttack", true, false)
     var era_label: Label = card.find_child("HeroEra", true, false)
     var hp_label: Label = card.find_child("HeroHp", true, false)
     _expect(name_label != null, "英雄卡应有名字行")
-    _expect(attack_label != null and era_label != null and hp_label != null, "英雄卡应有攻击、时代与生命三格")
-    if name_label != null and attack_label != null and era_label != null and hp_label != null:
+    _expect(era_label != null and hp_label != null, "英雄卡应有时代与生命两格")
+    _expect(card.find_child("HeroAttack", true, false) == null, "英雄卡不应再显示攻击力")
+    if name_label != null and era_label != null and hp_label != null:
         _expect(name_label.text == CardDB.display_name("adam-smith"), "英雄卡应显示英雄名")
-        _expect(attack_label.text == "6", "英雄卡攻击应为 6")
         _expect(hp_label.text == "35/40", "英雄卡生命应为 35/40")
         _expect(era_label.text == CardDB.era_name(5), "英雄卡时代应为工业")
         var stats_node: Control = card.find_child("HeroCardStats", true, false)
@@ -182,11 +181,9 @@ func _check_hero_card() -> void:
             "名字行应在数值行上方",
         )
         _expect(
-            attack_label.get_global_rect().get_center().x
-                < era_label.get_global_rect().get_center().x
-            and era_label.get_global_rect().get_center().x
+            era_label.get_global_rect().get_center().x
                 < hp_label.get_global_rect().get_center().x,
-            "数值顺序应为攻击、时代、生命",
+            "数值顺序应为时代、生命",
         )
     card.queue_free()
     await get_tree().process_frame
@@ -715,7 +712,7 @@ func _check_recruit_stage() -> void:
     _expect(recruit != null and recruit.visible, "招募阶段应显示招募组合")
     _expect(combat != null and not combat.visible, "招募阶段不应显示战斗组合")
 
-    # 英雄行 84，英雄卡 64×84；名字在时代上方，攻击在左、生命在右。
+    # 英雄行 84，英雄卡 64×84；名字在时代上方，时代在左、生命在右。
     var hero_row: Control = instance.find_child("HeroRow", true, false)
     var hero_card: Control = instance.find_child("HeroCard", true, false)
     _expect(
@@ -728,23 +725,25 @@ func _check_recruit_stage() -> void:
     )
     if hero_card != null:
         var name_label: Label = hero_card.find_child("HeroCardName", true, false)
-        var attack: Label = hero_card.find_child("HeroAttack", true, false)
         var era: Label = hero_card.find_child("HeroEra", true, false)
         var hp: Label = hero_card.find_child("HeroHp", true, false)
         _expect(
-            name_label != null and attack != null and era != null and hp != null,
-            "英雄卡应含名字、攻击、时代与生命",
+            name_label != null and era != null and hp != null,
+            "英雄卡应含名字、时代与生命",
         )
-        if name_label != null and attack != null and era != null and hp != null:
+        _expect(
+            hero_card.find_child("HeroAttack", true, false) == null,
+            "英雄卡不应再显示攻击力",
+        )
+        if name_label != null and era != null and hp != null:
             _expect(name_label.text.contains("达尔文"), "英雄卡应显示英雄名")
             _expect(
                 name_label.get_global_rect().end.y <= era.get_global_rect().position.y,
                 "英雄名应在时代上方单独一行",
             )
             _expect(
-                attack.get_global_rect().get_center().x < era.get_global_rect().get_center().x
-                    and era.get_global_rect().get_center().x < hp.get_global_rect().get_center().x,
-                "攻击应在左、时代居中、生命在右",
+                era.get_global_rect().get_center().x < hp.get_global_rect().get_center().x,
+                "时代应在左、生命在右",
             )
             _expect(hp.text == "35/40", "生命应显示当前/上限，实际「%s」" % hp.text)
 

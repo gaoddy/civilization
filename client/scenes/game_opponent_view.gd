@@ -57,7 +57,7 @@ func _portrait(player: Dictionary) -> GamePortrait:
     var hero_id := CardText.optional_text(player.get("heroCardId"))
     var display := CardDB.display_name(hero_id) if hero_id != "" else tr("ui.game.side_panel.unknown_hero")
     var tint := (
-        UITheme.playstyle_color(str(CardDB.card(hero_id).get("playstyle", "")))
+        UITheme.playstyle_color(str(CardDB.hero(hero_id).get("playstyle", "")))
         if hero_id != ""
         else UITheme.color("color-border-strong")
     )

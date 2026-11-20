@@ -8,6 +8,7 @@ signal card_selected(card_id: String)
 
 var _ids: Array = []
 var _selected := ""
+var _hero := false
 var _page := 0
 var _tiles: Array = []
 
@@ -64,9 +65,11 @@ func _init() -> void:
 
 
 ## 用新的卡牌集合重建第一页；`selected_id` 不在集合内时页面会选中首张。
-func set_cards(ids: Array, selected_id: String) -> void:
+## `hero` 为真时卡面走英雄样式（无费用、时代与攻击/生命）。
+func set_cards(ids: Array, selected_id: String, hero := false) -> void:
     _ids = ids.duplicate()
     _selected = selected_id
+    _hero = hero
     _page = 0
     _rebuild()
 
@@ -102,7 +105,7 @@ func _rebuild() -> void:
     var stop := mini(start + page_size, total)
     for index in range(start, stop):
         var id := str(_ids[index])
-        var tile := GalleryCardTile.new(id, id == _selected)
+        var tile := GalleryCardTile.new(id, id == _selected, _hero)
         tile.card_selected.connect(func(card_id: String) -> void: card_selected.emit(card_id))
         _grid.add_child(tile)
         _tiles.append(tile)

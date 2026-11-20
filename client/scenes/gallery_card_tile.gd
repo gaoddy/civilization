@@ -12,7 +12,7 @@ var _selected := false
 var _hovered := false
 
 
-func _init(id: String, selected := false) -> void:
+func _init(id: String, selected := false, hero := false) -> void:
     card_id = id
     _selected = selected
     name = "GalleryCard_%s" % id
@@ -21,7 +21,10 @@ func _init(id: String, selected := false) -> void:
     mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
     tooltip_text = CardDB.display_name(id)
 
-    add_child(GalleryCardFace.build(id, CardDB.card(id)))
+    if hero:
+        add_child(GalleryCardFace.build_hero(id, CardDB.hero(id)))
+    else:
+        add_child(GalleryCardFace.build(id, CardDB.card(id)))
     _apply_style()
 
     gui_input.connect(_on_gui_input)

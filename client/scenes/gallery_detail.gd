@@ -32,6 +32,15 @@ func _init() -> void:
 
 ## 空 id 显示占位提示；否则重建详情内容。
 func show_card(card_id: String) -> void:
+    _show(card_id, false)
+
+
+## 英雄详情：只展示身份与技能，不显示科学分类、时代、费用与初始数值。
+func show_hero(card_id: String) -> void:
+    _show(card_id, true)
+
+
+func _show(card_id: String, hero: bool) -> void:
     UI.clear(_box)
     if card_id == "":
         _box.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -39,8 +48,7 @@ func show_card(card_id: String) -> void:
         return
     _box.alignment = BoxContainer.ALIGNMENT_BEGIN
 
-    var entry := CardDB.card(card_id)
-    var era_id := str(entry.get("era", ""))
+    var entry := CardDB.hero(card_id) if hero else CardDB.card(card_id)
     _box.add_child(_build_preview(card_id, entry))
 
     var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-title-lg"))
@@ -48,6 +56,25 @@ func show_card(card_id: String) -> void:
     name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _box.add_child(name_label)
 
+    if hero:
+        _add_row(tr("ui.game.detail.type"), tr("ui.game.detail.hero"))
+        _add_row(tr("ui.game.detail.playstyle"), _playstyle_text(entry))
+        var hero_associations := _association_text(entry)
+        if hero_associations != "":
+            _add_row(tr("ui.game.detail.association"), hero_associations)
+        var hero_skills := _skill_names(entry)
+        if hero_skills != "":
+            _add_row(tr("ui.gallery.skills"), hero_skills)
+        var hero_effect := CardDB.hero_text(card_id)
+        if hero_effect != "":
+            _box.add_child(UI.section_title(tr("ui.gallery.effect")))
+            var hero_effect_label := UI.label(hero_effect, UITheme.font_size("font-body-sm"))
+            hero_effect_label.name = "GalleryDetailEffect"
+            hero_effect_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+            _box.add_child(hero_effect_label)
+        return
+
+    var era_id := str(entry.get("era", ""))
     _add_row(tr("ui.game.detail.type"), _type_text(card_id, entry))
     _add_row(tr("ui.game.detail.taxonomy"), _taxonomy_text(entry))
     _add_row(tr("ui.game.detail.playstyle"), _playstyle_text(entry))
@@ -137,10 +164,7 @@ func _preview_metric(name: String) -> int:
 func _type_text(card_id: String, entry: Dictionary) -> String:
     if CardDB.tokens.has(card_id):
         return tr("ui.gallery.type_token")
-    var text := UI.enum_text("card_type", str(entry.get("card_type", "")))
-    if bool(entry.get("is_hero", false)):
-        text = "%s · %s" % [text, tr("ui.game.detail.hero")]
-    return text
+    return UI.enum_text("card_type", str(entry.get("card_type", "")))
 
 
 func _taxonomy_text(entry: Dictionary) -> String:

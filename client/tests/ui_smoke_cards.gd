@@ -330,9 +330,12 @@ func _ready() -> void:
 
     var hero_detail := _hero_detail_text("darwin")
     _expect(
-        hero_detail.contains(TranslationServer.translate("ui.game.detail.taxonomy"))
-        and hero_detail.contains("人科"),
-        "英雄详情应显示科学分类：%s" % hero_detail,
+        not hero_detail.contains(TranslationServer.translate("ui.game.detail.taxonomy")),
+        "英雄详情不应显示科学分类：%s" % hero_detail,
+    )
+    _expect(
+        not hero_detail.contains(TranslationServer.translate("ui.game.detail.era")),
+        "英雄详情不应显示时代：%s" % hero_detail,
     )
     _expect(
         hero_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))

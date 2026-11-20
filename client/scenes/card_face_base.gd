@@ -19,14 +19,14 @@ static var _line_height_cache: Dictionary = {}
 
 ## 卡面根与封面：玩法色铺满整卡；有美术资源时叠卡面纹理，无图或加载失败时
 ## 保留纯色封面与首字水印。所有子节点忽略鼠标，点击与悬停由外层卡片决定。
-static func create_face(card_id: String, show_desc: bool) -> Control:
+static func create_face(card_id: String, show_desc: bool, hero := false) -> Control:
     var face_node := Control.new()
     face_node.name = "CardFace"
     face_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
     face_node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     face_node.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-    var entry := CardDB.card(card_id)
+    var entry := CardDB.hero(card_id) if hero else CardDB.card(card_id)
     # 封面用带圆角的面板而不是色块：卡面容器只留 1px 描边，方形色块会盖住
     # 卡片四角的圆弧。
     var cover := Panel.new()
@@ -62,7 +62,7 @@ static func create_face(card_id: String, show_desc: bool) -> Control:
     # 有卡面纹理时不叠首字水印，避免与立绘重叠。
     var has_cover_art := face_node.get_node_or_null("CoverArt") != null
     if not has_cover_art:
-        var desc_text := CardDB.display_text(card_id) if show_desc else ""
+        var desc_text := _desc_text(card_id, hero) if show_desc else ""
         var info_height := UITheme.stage_metric(
             "card-info-height" if desc_text != "" else "card-info-compact-height"
         )
@@ -142,8 +142,10 @@ static func add_info(
     show_desc: bool,
     fit_desc := false,
     measure_host: Node = null,
+    show_stats := true,
+    hero := false,
 ) -> void:
-    var desc_text := CardDB.display_text(card_id) if show_desc else ""
+    var desc_text := _desc_text(card_id, hero) if show_desc else ""
     var padding := UITheme.space("space-sm")
     var name_token := "font-body-sm"
     var stats_token := "font-title"
@@ -231,10 +233,11 @@ static func add_info(
     stats_row.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     info_box.add_child(stats_row)
 
-    var attack_label := UI.label(attack_text, UITheme.font_size(stats_token), false)
-    attack_label.name = "CardAttack"
-    attack_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stats_row.add_child(attack_label)
+    if show_stats:
+        var attack_label := UI.label(attack_text, UITheme.font_size(stats_token), false)
+        attack_label.name = "CardAttack"
+        attack_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        stats_row.add_child(attack_label)
 
     var type_label := UI.label(type_text, UITheme.font_size("font-caption"), false)
     type_label.name = "CardType"
@@ -246,10 +249,11 @@ static func add_info(
     type_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     stats_row.add_child(type_label)
 
-    var health_label := UI.label(health_text, UITheme.font_size(stats_token), false)
-    health_label.name = "CardHealth"
-    health_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stats_row.add_child(health_label)
+    if show_stats:
+        var health_label := UI.label(health_text, UITheme.font_size(stats_token), false)
+        health_label.name = "CardHealth"
+        health_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        stats_row.add_child(health_label)
     face_node.add_child(info)
 
 
@@ -322,6 +326,11 @@ static func set_stats(face_node: Control, attack_text: String, health_text: Stri
 
 ## 在给定宽度内选择能让介绍完整放下的最大字号；都放不下时退回最小字号，
 ## 并按可用高度给出最多行数（`lines` 为 -1 表示不限制行数）。
+## 卡面介绍：英雄只读英雄池，避免与同名随从的技能文本串用。
+static func _desc_text(card_id: String, hero: bool) -> String:
+    return CardDB.hero_text(card_id) if hero else CardDB.display_text(card_id)
+
+
 static func _fit_desc(text: String, width: int, available: int, host: Node) -> Dictionary:
     var min_size := UITheme.font_size("font-micro")
     for font_size in range(UITheme.font_size("font-caption"), min_size - 1, -1):

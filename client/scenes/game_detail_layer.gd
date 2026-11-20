@@ -326,17 +326,16 @@ func _render_seller_detail(box: VBoxContainer) -> void:
     box.add_child(hint)
 
 
-## 我方英雄详情：科学分类、玩法、擅长玩法、时代与英雄技能，替代常驻技能文本。
+## 我方英雄详情：玩法、擅长玩法与英雄技能；英雄卡不含科学分类与时代。
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
     var id := "" if hero_id == null else str(hero_id)
     box.add_child(_detail_name(CardDB.display_name(id)))
-    var entry := CardDB.card(id)
-    _append_classification(box, entry)
+    var entry := CardDB.hero(id)
+    var playstyle := CardDB.playstyle_name(str(entry.get("playstyle", "")))
+    if playstyle != "":
+        box.add_child(_detail_row(tr("ui.game.detail.playstyle"), playstyle))
     _append_specialty(box, entry)
-    var era := str(entry.get("era", ""))
-    if era != "":
-        box.add_child(_detail_row(tr("ui.game.detail.era"), UI.enum_text("era", era)))
-    var skill_text := CardDB.display_text(id)
+    var skill_text := CardDB.hero_text(id)
     if skill_text == "":
         return
     var heading := UI.label(tr("ui.game.detail.hero_power"), UITheme.font_size("font-caption"), false)

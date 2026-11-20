@@ -2,6 +2,8 @@ extends Node
 ## 只读卡牌展示表：卡名、技能文本与展示费用，不参与任何规则判定。
 
 var cards: Dictionary = {}
+## 英雄展示表：只含身份与技能；与 `cards` 中的同名随从卡分属两个集合。
+var heroes: Dictionary = {}
 var tokens: Dictionary = {}
 ## 技能展示表：只取费用等展示字段，不参与规则判定。
 var skills: Dictionary = {}
@@ -34,6 +36,7 @@ const ERA_IDS := {
 
 func _ready() -> void:
     _load_table("res://generated/cards.json", cards)
+    _load_table("res://generated/heroes.json", heroes)
     _load_table("res://generated/tokens.json", tokens)
     _load_table("res://generated/skills.json", skills)
     _load_taxonomy("res://generated/taxonomy.json")
@@ -95,6 +98,15 @@ func card(id: String) -> Dictionary:
     return cards.get(id, {})
 
 
+## 英雄卡条目；英雄只用于开局选人，不参与商店与牌池。
+func hero(id: String) -> Dictionary:
+    return heroes.get(id, {})
+
+
+func is_hero(id: String) -> bool:
+    return heroes.has(id)
+
+
 func skill(id: String) -> Dictionary:
     return skills.get(id, {})
 
@@ -116,8 +128,17 @@ func display_name(id: String) -> String:
 
 ## 技能文本按技能顺序拼接；缺键的技能跳过。
 func display_text(id: String) -> String:
+    return _skill_text(card(id).get("skills", []))
+
+
+## 英雄技能文本：只读英雄卡自己的技能列表，不回落到同名随从卡。
+func hero_text(id: String) -> String:
+    return _skill_text(hero(id).get("skills", []))
+
+
+func _skill_text(skill_ids: Array) -> String:
     var lines: Array = []
-    for skill_id in card(id).get("skills", []):
+    for skill_id in skill_ids:
         var key := "skill.%s.text" % str(skill_id)
         var line := tr(key)
         if line == key:
@@ -180,13 +201,17 @@ func taxon_path(id: String) -> Array:
     return names
 
 
-func heroes() -> Array:
+## 全部英雄卡 id，按展示名排序。
+func heroes_array() -> Array:
     var out: Array = []
-    for id in cards:
-        var entry: Dictionary = cards[id]
-        if bool(entry.get("is_hero", false)):
-            out.append(entry)
-    out.sort_custom(func(a, b): return str(a.get("id", "")) < str(b.get("id", "")))
+    for id in heroes:
+        out.append(str(id))
+    out.sort_custom(func(a: String, b: String) -> bool:
+        var a_name := display_name(a)
+        var b_name := display_name(b)
+        if a_name != b_name:
+            return a_name < b_name
+        return a < b)
     return out
 
 

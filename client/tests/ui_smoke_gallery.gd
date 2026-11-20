@@ -6,6 +6,7 @@ func _ready() -> void:
     await _check_lobby_page()
     await _check_filters()
     await _check_categories_and_kinds()
+    await _check_hero_section()
     await _check_detail_art()
     await _check_empty_catalog()
     await _check_pagination()
@@ -227,6 +228,77 @@ func _check_detail_art() -> void:
     )
     detail.queue_free()
     await get_tree().process_frame
+
+
+## 独立英雄分区：32 张、隐藏时代章节，详情只显示身份与技能。
+func _check_hero_section() -> void:
+    var instance := await _mount_gallery()
+    if instance == null:
+        return
+    var hero_button = instance.find_child("Taxonhero", true, false)
+    _expect(hero_button != null, "分类目录缺少英雄分区")
+    _expect(
+        hero_button != null and hero_button.text.contains("32"),
+        "英雄分区应计 32 张，实际：%s" % (hero_button.text if hero_button != null else "无"),
+    )
+    if hero_button != null:
+        await _push_click(instance, hero_button.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 32,
+        "英雄分区应有 32 张，实际：%d" % _filtered_count(instance),
+    )
+    var chapters = instance.find_child("GalleryChapters", true, false)
+    _expect(chapters != null and not chapters.is_visible_in_tree(), "英雄分区不应显示时代章节")
+    _expect(
+        instance.find_child("KindAll", true, false) == null,
+        "英雄分区不应展开随从/效果二级筛选",
+    )
+    var rows = instance.find_child("GalleryGridRows", true, false)
+    if rows != null and rows.get_child_count() > 0:
+        var first_tile: Control = rows.get_child(0)
+        _expect(
+            first_tile.find_child("CardBadge", true, false) != null,
+            "英雄卡面应有「英雄」角标",
+        )
+        _expect(
+            first_tile.find_child("CostBadge", true, false) == null,
+            "英雄卡面不应有费用角标",
+        )
+        _expect(
+            first_tile.find_child("CardAttack", true, false) == null
+                and first_tile.find_child("CardHealth", true, false) == null,
+            "英雄卡面不应有攻击与生命",
+        )
+    var detail = instance.find_child("GalleryDetail", true, false)
+    var detail_name = instance.find_child("GalleryDetailName", true, false)
+    _expect(detail_name != null and detail_name.text != "", "英雄分区应常驻选中首张英雄")
+    if detail != null:
+        var text := _node_text(detail)
+        _expect(
+            text.contains(TranslationServer.translate("ui.game.detail.hero")),
+            "英雄详情应标为英雄：%s" % text,
+        )
+        _expect(
+            not text.contains(TranslationServer.translate("ui.game.detail.taxonomy")),
+            "英雄详情不应显示科学分类：%s" % text,
+        )
+        _expect(
+            not text.contains(TranslationServer.translate("ui.game.detail.era")),
+            "英雄详情不应显示时代：%s" % text,
+        )
+    # 切回「全部」恢复普通卡池与时代章节。
+    var all_button = instance.find_child("TaxonAll", true, false)
+    if all_button != null:
+        await _push_click(instance, all_button.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 432,
+        "切回全部后应恢复 432 张，实际：%d" % _filtered_count(instance),
+    )
+    _expect(
+        chapters != null and chapters.is_visible_in_tree(),
+        "切回全部后应恢复时代章节",
+    )
+    await _unmount(instance)
 
 
 ## 空图鉴：没有章节、没有卡片，只显示空态与详情占位。

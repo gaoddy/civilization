@@ -217,7 +217,7 @@ func _render_candidates() -> void:
 
 ## 候选卡：玩法色封面铺满、居中首字水印、底部居中名字。
 func _build_card(hero_id: String, locked: bool) -> PanelContainer:
-    var entry := CardDB.card(hero_id)
+    var entry := CardDB.hero(hero_id)
     var playstyle := str(entry.get("playstyle", ""))
     var card := PanelContainer.new()
     card.name = "HeroCard_%s" % hero_id
@@ -308,7 +308,7 @@ func _show_skill(hero_id: String) -> void:
         return
     var title := UI.label(CardDB.display_name(hero_id), UITheme.font_size("font-title"), false)
     _skill_panel.add_child(title)
-    var skill := CardDB.display_text(hero_id)
+    var skill := CardDB.hero_text(hero_id)
     if skill != "":
         var body := UI.label(skill, UITheme.font_size("font-body"))
         body.add_theme_color_override("font_color", UITheme.color("color-text-muted"))

@@ -11,7 +11,7 @@ static func build(card_id: String, entry: Dictionary) -> Control:
         face_node,
         str(CardDB.display_cost(card_id)),
         UI.enum_text("era", era_id) if era_id != "" else "",
-        TranslationServer.translate("ui.game.detail.hero") if bool(entry.get("is_hero", false)) else "",
+        "",
         false,
     )
     CardFaceBase.add_info(
@@ -20,6 +20,31 @@ static func build(card_id: String, entry: Dictionary) -> Control:
         CardText.stat_text(entry.get("attack")),
         CardText.stat_text(entry.get("health")),
         CardText.playstyle_text(entry),
+        true,
+    )
+    return face_node
+
+
+## 英雄卡面：只展示身份与技能，没有费用、时代与攻击/生命。
+static func build_hero(card_id: String, entry: Dictionary) -> Control:
+    var face_node := CardFaceBase.create_face(card_id, true, true)
+    CardFaceBase.add_corner_badges(
+        face_node,
+        "",
+        "",
+        TranslationServer.translate("ui.game.detail.hero"),
+        false,
+    )
+    CardFaceBase.add_info(
+        face_node,
+        card_id,
+        "",
+        "",
+        CardText.playstyle_text(entry),
+        true,
+        false,
+        null,
+        false,
         true,
     )
     return face_node

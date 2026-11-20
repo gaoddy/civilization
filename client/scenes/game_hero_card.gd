@@ -1,13 +1,13 @@
 class_name GameHeroCard
 extends PanelContainer
-## 英雄卡：64×84，玩法色封面、名字行与底部「攻击 · 时代 · 生命」三格。
+## 英雄卡：64×84，玩法色封面、名字行与底部「时代 · 生命」两格。
 ##
-## 攻击取英雄卡数据，生命取服务端视图的当前值与上限，时代取玩家视图的当前时代。
+## 英雄卡只承载身份与技能，不显示攻击力；生命取服务端视图的当前值与上限，
+## 时代取玩家视图的当前时代。
 
 const COVER_MARK_ALPHA := 0.22
 
 var hero_id := ""
-var attack := 0
 var hp := 0
 var hp_cap := 0
 var era := 0
@@ -15,7 +15,6 @@ var era := 0
 var _cover: PanelContainer
 var _cover_mark: Label
 var _name_label: Label
-var _attack_label: Label
 var _era_label: Label
 var _hp_label: Label
 
@@ -68,24 +67,21 @@ func _init() -> void:
 	stats.add_theme_constant_override("separation", UITheme.space("space-2xs"))
 	lines.add_child(stats)
 
-	_attack_label = _stat_label("HeroAttack", Vector2(14, 16), UITheme.color("color-border-strong"))
-	stats.add_child(_attack_label)
-	_era_label = _stat_label("HeroEra", Vector2(20, 16), Color(0, 0, 0, 0))
+	_era_label = _stat_label("HeroEra", Vector2(24, 16), Color(0, 0, 0, 0))
 	_era_label.add_theme_color_override("font_color", UITheme.color("color-info"))
 	stats.add_child(_era_label)
-	_hp_label = _stat_label("HeroHp", Vector2(26, 16), UITheme.alpha("color-success", 0.55))
+	_hp_label = _stat_label("HeroHp", Vector2(34, 16), UITheme.alpha("color-success", 0.55))
 	stats.add_child(_hp_label)
 
-	refresh("", 0, 0, 0, 0)
+	refresh("", 0, 0, 0)
 
 
-func refresh(hero_id: String, attack: int, hp: int, hp_cap: int, era: int) -> void:
+func refresh(hero_id: String, hp: int, hp_cap: int, era: int) -> void:
 	self.hero_id = hero_id
-	self.attack = attack
 	self.hp = hp
 	self.hp_cap = hp_cap
 	self.era = era
-	var entry := CardDB.card(hero_id)
+	var entry := CardDB.hero(hero_id)
 	var playstyle := str(entry.get("playstyle", ""))
 	add_theme_stylebox_override("panel", _panel_style(playstyle))
 	_cover.add_theme_stylebox_override(
@@ -93,7 +89,6 @@ func refresh(hero_id: String, attack: int, hp: int, hp_cap: int, era: int) -> vo
 	)
 	_cover_mark.text = CardText.initial(hero_id) if hero_id != "" else "?"
 	_name_label.text = CardDB.display_name(hero_id) if hero_id != "" else TranslationServer.translate("ui.common.no_hero")
-	_attack_label.text = str(attack)
 	_era_label.text = CardDB.era_name(era) if era > 0 else "—"
 	_hp_label.text = ("%d/%d" % [hp, hp_cap]) if hp_cap > 0 else "—"
 	tooltip_text = _name_label.text
