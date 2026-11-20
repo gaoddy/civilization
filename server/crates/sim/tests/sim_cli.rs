@@ -173,8 +173,8 @@ fn ai_choose_is_deterministic_for_seat() {
         .map(|(index, hero)| (index as Seat, hero.id.clone()))
         .collect();
     engine.start_game(&mut state, &heroes).expect("开局应成功");
-    let a = ai::choose(&state, 0, &engine.catalog);
-    let b = ai::choose(&state, 0, &engine.catalog);
+    let a = ai::choose(&state, 0, &engine);
+    let b = ai::choose(&state, 0, &engine);
     assert_eq!(a, b);
     assert!(a.is_some());
     let _: &GameState = &state;

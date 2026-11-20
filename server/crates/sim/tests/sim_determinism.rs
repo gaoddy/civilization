@@ -183,6 +183,11 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 2026-11-20 第十八次重定：玩家状态新增 `froze_this_turn`（解冻只在冻结的当回合
 /// 可用），状态哈希为每名玩家多写一个布尔值；机器人不冻结，行为不变，但本批次
 /// 20 局哈希全部改变。
+///
+/// 2026-11-20 第十九次重定：模拟器 AI 使用英雄主动技能。此前只处理无目标技能，
+/// 「全选友方」「筛选后单体」与「战斗期关键词」三种技能形状一律跳过；现在按
+/// 引擎下发的合法目标池选择目标，技能结算与随机流消耗随之改变，本批次 20 局
+/// 哈希全部改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
