@@ -2,15 +2,22 @@ import pathlib, sys, tempfile, unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import audit_effects
+import skill_templates
 import validate_docs
 SKILLS = ROOT / "docs/versions/v0.1/product/content/skills"
 
 def expected_counts():
     """按技能文档实际内容统计技能数与效果段数，避免写死数字。"""
     paths = [path for path in SKILLS.glob("*.md") if path.name != "README.md"]
+    renderer = skill_templates.Renderer(SKILLS.parent)
     segments = 0
     for path in paths:
-        effects, _ = validate_docs.parse_effects(validate_docs.parse_front_matter(path)["effects"])
+        doc = validate_docs.parse_front_matter(path)
+        if "template" in doc:
+            raw = ";".join(renderer.instance_segments(doc)) or "[]"
+        else:
+            raw = doc["effects"]
+        effects, _ = validate_docs.parse_effects(raw)
         segments += len(effects)
     return len(paths), segments
 
