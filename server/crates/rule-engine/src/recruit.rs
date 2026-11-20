@@ -892,7 +892,7 @@ pub(crate) fn check_hero_power(
     })?;
     let cost = skill.cost.ok_or_else(|| {
         Reject::new(
-            RejectCode::HeroPowerLimit,
+            RejectCode::NotActiveSkill,
             format!("技能 {skill_id} 是被动技能，不能主动使用"),
         )
     })?;
@@ -1813,7 +1813,7 @@ mod tests {
                     target: None,
                 },
                 check: Box::new(|engine, state| check_hero_power(engine, state, 0, "observation")),
-                expected: RejectCode::HeroPowerLimit,
+                expected: RejectCode::NotActiveSkill,
                 expected_message: Some("技能 observation 是被动技能，不能主动使用"),
             },
             Case {

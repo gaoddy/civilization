@@ -1515,6 +1515,7 @@ fn error_code_of(code: RejectCode) -> ErrorCode {
         RejectCode::AlreadyMaxEra => ErrorCode::AlreadyMaxEra,
         RejectCode::CardNotInHand => ErrorCode::CardNotInHand,
         RejectCode::HeroPowerLimit => ErrorCode::HeroPowerLimit,
+        RejectCode::NotActiveSkill => ErrorCode::NotActiveSkill,
         RejectCode::NoValidTarget => ErrorCode::NoValidTarget,
         RejectCode::TargetNotAllowed => ErrorCode::TargetNotAllowed,
         RejectCode::InvalidChoice => ErrorCode::InvalidChoice,
