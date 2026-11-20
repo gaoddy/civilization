@@ -23,7 +23,6 @@
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
 | 移动端目标设备、断点与安全区处理 | UI 与适配 | UI 设计确定 | [客户端技术基线](technical/architecture/client-stack.md) |
-| 比赛模式与成就在 v0.2 内的上线顺序 | 版本排期 | 需求澄清 | [比赛模式](product/systems/competitive-mode.md) |
 
 ## 观战与视图
 

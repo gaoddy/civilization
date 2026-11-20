@@ -76,7 +76,7 @@ protocol/
 - 房间玩法：建房时用房间码种子调用 `rule_engine::playstyles::draw(seed_for_code(code))`，抽取 5 个玩法存入 `RoomState.playstyles`；大厅期间与断线重连保持不变。对局结束即销毁房间，不再重抽。玩法必须早于英雄候选确定，因此抽取时点在房间创建，而不是 `Engine::new`。
 - 入房：坐最小空位；同一玩家重复加入同一房间幂等。非 `Lobby` 阶段成员集合冻结，加入/准备/选英雄/离开都返回 `INVALID_STAGE`。
 - 英雄候选：建房与入房时按房间码派生的种子把全部英雄卡（`Catalog.heroes`）id 升序后做确定性 Fisher–Yates 洗牌，再按进房顺序每 4 张切给一名玩家（`CANDIDATE_COUNT`），因此同房间内各玩家候选互不重复；候选保存在 `PlayerSlot.hero_candidates`，重进与重连都不重抽。
-- 英雄候选过滤：候选只取 `hero_in_pool` 通过的英雄卡，按本局 5 个玩法过滤；英雄 `categories` 中任一条 `play:` 命中即通过，学者、工具卡与普通英雄同一口径。过滤后一张英雄都没有时回退到全部英雄卡（产品兜底）。
+- 英雄候选过滤：候选只取 `hero_in_pool` 通过的英雄卡，按本局 5 个玩法过滤；英雄 `categories` 中任一条 `play:` 命中即通过，工具卡与普通英雄同一口径。过滤后一张英雄都没有时回退到全部英雄卡（产品兜底）。
 - 候选池不足：池大小 ≥ `SEAT_COUNT * CANDIDATE_COUNT`（32）时沿用分段、房间内互不重复；不足 32 时按 `(segment * 4 + i) % len` 取 `min(4, len)` 张，允许跨玩家重复；池小于 4 时每人取整个池并至少 1 张。
 - 选英雄校验：id 必须在英雄池 `Catalog.heroes` 中，且在本人候选内（否则 `NOT_CANDIDATE` → `INVALID_CHOICE`）；座位已 `ready` 时再选返回 `INVALID_STAGE`。
 - 候选下发：`RoomUpdate.players[].heroCandidates` 只在发给本人的那份里填充，其余座位为 `null`；广播按座位逐个序列化，不共用 payload。这是展示规则而非机密：选中的 `heroCardId` 仍对全体成员可见，候选分组也能由房间码确定性复算。

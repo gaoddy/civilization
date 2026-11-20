@@ -356,7 +356,7 @@
 | `instanceId` | string | 是 | 卡牌实例编号；买入、上手与三连合成沿用同一编号 |
 | `cardId` | string | 是 |  |
 | `golden` | boolean | 是 | 随从牌为金色三连结果；效果牌恒为 false |
-| `attack` | integer | null | 是 | 随从牌的当前攻击力（已含成长等全部层数，学者为 0）；效果牌为 null |
+| `attack` | integer | null | 是 | 随从牌的当前攻击力（已含成长等全部层数）；效果牌为 null |
 | `health` | integer | null | 是 | 随从牌的当前生命值；效果牌为 null |
 | `rewardLevel` | integer | null | 是 | 「三连奖励」锁定的发现星级；其它牌为 null |
 | `playable` | boolean | 是 | 服务端算好的可打出提示 |
