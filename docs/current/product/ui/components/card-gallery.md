@@ -5,18 +5,19 @@
 
 ## 用途
 
-只读的卡牌图鉴主体：头部、时代章节栏、分类目录、卡面网格、常驻详情与返回按钮的整体装配。大厅页整页使用，对局页作为全屏覆盖层使用。
+只读的卡牌图鉴主体：标题、时代章节栏与返回按钮同处头部一行，主体由分类目录、卡面网格与常驻详情装配。大厅页整页使用，对局页作为全屏覆盖层使用。
 
 ## 属性与方法
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | `closed` | `signal` | 点返回按钮或按 `Esc` 时发出，由页面决定跳转或收起 |
-| `set_catalog(card_ids, title, close_text, subtitle)` | `void` | 载入卡牌 id 集合与页面文案；重置筛选与选中，并选中筛选后的首张 |
+| `set_catalog(card_ids, title, close_text)` | `void` | 载入卡牌 id 集合与页面文案；重置筛选与选中，并选中筛选后的首张 |
 
 - `card_ids` 为卡牌与 Token 的 id 数组，由页面给出；组件不读取 `GameStore`。
-- `title`、`close_text`、`subtitle` 为已翻译文案。
-- 内部节点名：`GalleryBackground`、`GalleryHeader`、`GalleryTitle`、`GallerySubtitle`、`GalleryCount`、`GalleryClose`、`GalleryChapters`、`GalleryBody`、`GalleryToc`、`GalleryGrid`、`GalleryDetail`。
+- `title`、`close_text` 为已翻译文案。
+- 内部节点名：`GalleryBackground`、`GalleryHeader`、`GalleryTitle`、`GalleryClose`、`GalleryChapters`、`GalleryBody`、`GalleryToc`、`GalleryGrid`、`GalleryDetail`。
+- `GalleryHeader` 内依次为标题、`GalleryChapters` 与返回按钮；章节栏横向撑满剩余宽度，不显示副标题与总计数。
 
 ## 变体与状态
 

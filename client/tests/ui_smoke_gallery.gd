@@ -21,10 +21,17 @@ func _check_lobby_page() -> void:
     if instance == null:
         return
     _expect(instance.find_child("GalleryTitle", true, false) != null, "图鉴页缺少标题")
-    var count = instance.find_child("GalleryCount", true, false)
+    var header = instance.find_child("GalleryHeader", true, false)
+    var chapters = instance.find_child("GalleryChapters", true, false)
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 432,
-        "大厅图鉴应显示 432 张，实际：%s" % (count.text if count != null else "无"),
+        header != null and chapters != null and chapters.get_parent() == header,
+        "时代章节栏应与标题、返回按钮同处头部一行",
+    )
+    _expect(instance.find_child("GallerySubtitle", true, false) == null, "头部不应再有副标题胶囊")
+    _expect(instance.find_child("GalleryCount", true, false) == null, "头部不应再有计数")
+    _expect(
+        _filtered_count(instance) == 432,
+        "大厅图鉴应有 432 张，实际：%d" % _filtered_count(instance),
     )
     var all_button = instance.find_child("ChapterAll", true, false)
     _expect(
@@ -51,6 +58,10 @@ func _check_lobby_page() -> void:
     var detail = instance.find_child("GalleryDetail", true, false)
     var body = instance.find_child("GalleryBody", true, false)
     _expect(
+        toc != null and toc.get_child_count() > 0 and str(toc.get_child(0).name) == "TaxonAll",
+        "分类列表不应再有标题，首项应为「全部」",
+    )
+    _expect(
         toc != null and toc.size.x >= UITheme.metric("gallery-toc-width"),
         "分类目录应按令牌宽度占位",
     )
@@ -74,10 +85,9 @@ func _check_filters() -> void:
     _expect(chapter != null, "章节栏缺少史前章")
     if chapter != null:
         await _push_click(instance, chapter.get_global_rect().get_center())
-    var count = instance.find_child("GalleryCount", true, false)
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 63,
-        "史前章应显示 63 张，实际：%s" % (count.text if count != null else "无"),
+        _filtered_count(instance) == 63,
+        "史前章应有 63 张，实际：%d" % _filtered_count(instance),
     )
 
     chapter = instance.find_child("Chapter7", true, false)
@@ -92,10 +102,9 @@ func _check_filters() -> void:
     if mammal != null:
         await _push_click(instance, mammal.get_global_rect().get_center())
 
-    count = instance.find_child("GalleryCount", true, false)
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 11,
-        "未来 + 哺乳纲应显示 11 张，实际：%s" % (count.text if count != null else "无"),
+        _filtered_count(instance) == 11,
+        "未来 + 哺乳纲应有 11 张，实际：%d" % _filtered_count(instance),
     )
 
     var all_taxon = instance.find_child("TaxonAll", true, false)
@@ -106,10 +115,9 @@ func _check_filters() -> void:
     _expect(all_chapter != null, "章节栏缺少「全部」")
     if all_chapter != null:
         await _push_click(instance, all_chapter.get_global_rect().get_center())
-    count = instance.find_child("GalleryCount", true, false)
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 432,
-        "清除筛选后应恢复 432 张",
+        _filtered_count(instance) == 432,
+        "清除筛选后应恢复 432 张，实际：%d" % _filtered_count(instance),
     )
     await _unmount(instance)
 
@@ -119,14 +127,13 @@ func _check_categories_and_kinds() -> void:
     var instance := await _mount_gallery()
     if instance == null:
         return
-    var count = instance.find_child("GalleryCount", true, false)
     var neutral = instance.find_child("Taxonneutral", true, false)
     _expect(neutral != null, "分类目录缺少中立")
     if neutral != null:
         await _push_click(instance, neutral.get_global_rect().get_center())
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 178,
-        "中立应显示 178 张，实际：%s" % (count.text if count != null else "无"),
+        _filtered_count(instance) == 178,
+        "中立应有 178 张，实际：%d" % _filtered_count(instance),
     )
 
     var kind_minion = instance.find_child("KindMinion", true, false)
@@ -140,16 +147,16 @@ func _check_categories_and_kinds() -> void:
     if kind_minion != null:
         await _push_click(instance, kind_minion.get_global_rect().get_center())
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 78,
-        "中立 + 随从应显示 78 张，实际：%s" % (count.text if count != null else "无"),
+        _filtered_count(instance) == 78,
+        "中立 + 随从应有 78 张，实际：%d" % _filtered_count(instance),
     )
     # 二级筛选重建后旧节点已释放，必须重新取当前节点。
     kind_effect = instance.find_child("KindEffect", true, false)
     if kind_effect != null:
         await _push_click(instance, kind_effect.get_global_rect().get_center())
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 100,
-        "中立 + 效果应显示 100 张，实际：%s" % (count.text if count != null else "无"),
+        _filtered_count(instance) == 100,
+        "中立 + 效果应有 100 张，实际：%d" % _filtered_count(instance),
     )
 
     var mammal_taxon = instance.find_child("Taxonmammal", true, false)
@@ -157,8 +164,8 @@ func _check_categories_and_kinds() -> void:
     if mammal_taxon != null:
         await _push_click(instance, mammal_taxon.get_global_rect().get_center())
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 100,
-        "哺乳纲顶层应显示 100 张，实际：%s" % (count.text if count != null else "无"),
+        _filtered_count(instance) == 100,
+        "哺乳纲顶层应有 100 张，实际：%d" % _filtered_count(instance),
     )
     var kind_all = instance.find_child("KindAll", true, false)
     _expect(
@@ -170,8 +177,8 @@ func _check_categories_and_kinds() -> void:
     if all_taxon != null:
         await _push_click(instance, all_taxon.get_global_rect().get_center())
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 432,
-        "清除分类筛选后应恢复 432 张",
+        _filtered_count(instance) == 432,
+        "清除分类筛选后应恢复 432 张，实际：%d" % _filtered_count(instance),
     )
     await _unmount(instance)
 
@@ -212,14 +219,9 @@ func _check_empty_catalog() -> void:
         [],
         tr("ui.gallery.title"),
         tr("ui.gallery.back_lobby"),
-        tr("ui.gallery.all_cards"),
     )
     await get_tree().process_frame
-    var count = gallery.find_child("GalleryCount", true, false)
-    _expect(
-        count != null and count.text == tr("ui.gallery.count") % 0,
-        "空图鉴应显示 0 张",
-    )
+    _expect(gallery.call("_filtered_ids").size() == 0, "空图鉴不应有可展示卡牌")
     var empty := gallery.find_child("GalleryEmpty", true, false)
     _expect(empty != null and empty.is_visible_in_tree(), "空图鉴应显示空态")
     _expect(gallery.find_child("GalleryDetailName", true, false) == null, "空图鉴不应有详情卡名")
@@ -335,7 +337,7 @@ func _check_match_overlay() -> void:
         await _unmount(instance)
         return
 
-    var gallery := _card_gallery(instance.find_child("GalleryCount", true, false))
+    var gallery := _card_gallery(instance.find_child("GalleryHeader", true, false))
     _expect(gallery != null, "对局图鉴缺少 CardGallery")
     if gallery != null:
         var ids: Array = gallery.get("_ids")
@@ -346,10 +348,9 @@ func _check_match_overlay() -> void:
         _expect(not ids.has("ammonite-token"), "本局图鉴不应包含 Token")
         _expect(not ids.has("aristotle"), "关联玩法未启用的中立卡不应在本局卡池")
 
-    var count = instance.find_child("GalleryCount", true, false)
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 198,
-        "本局图鉴计数应为 198 张，实际：%s" % (count.text if count != null else "无"),
+        gallery != null and gallery.call("_filtered_ids").size() == 198,
+        "本局图鉴应筛出 198 张",
     )
     _expect(instance.is_inside_tree(), "打开图鉴不应切换场景")
     _expect(instance.find_child("ShopSlot0", true, false) != null, "打开图鉴不应丢失对局内容")
@@ -385,6 +386,11 @@ func _card_gallery(node: Node) -> CardGallery:
             return current as CardGallery
         current = current.get_parent()
     return null
+
+
+func _filtered_count(instance: Node) -> int:
+    var gallery := instance.find_child("CardGallery", true, false) as CardGallery
+    return gallery.call("_filtered_ids").size() if gallery != null else 0
 
 
 func _unmount(instance: Node) -> void:

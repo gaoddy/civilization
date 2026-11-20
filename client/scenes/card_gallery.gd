@@ -33,8 +33,6 @@ var _kind := KIND_ALL
 var _selected := ""
 
 var _title: Label
-var _subtitle: Label
-var _count: Label
 var _close_button: Button
 var _chapter_bar: GalleryChapterBar
 var _toc: GalleryToc
@@ -73,29 +71,15 @@ func _init() -> void:
     _title.name = "GalleryTitle"
     header.add_child(_title)
 
-    _subtitle = UI.pill_label("", "accent", "font-caption")
-    _subtitle.name = "GallerySubtitle"
-    _subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    header.add_child(_subtitle)
-
-    _count = UI.label("", UITheme.font_size("font-body-sm"), false)
-    _count.name = "GalleryCount"
-    _count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    _count.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    header.add_child(_count)
-
-    var spacer := Control.new()
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    header.add_child(spacer)
+    _chapter_bar = GalleryChapterBar.new()
+    _chapter_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _chapter_bar.chapter_selected.connect(_on_chapter_selected)
+    header.add_child(_chapter_bar)
 
     _close_button = UI.styled_button("", "default", 32)
     _close_button.name = "GalleryClose"
     _close_button.pressed.connect(_on_close)
     header.add_child(_close_button)
-
-    _chapter_bar = GalleryChapterBar.new()
-    _chapter_bar.chapter_selected.connect(_on_chapter_selected)
-    root.add_child(_chapter_bar)
 
     var body := HBoxContainer.new()
     body.name = "GalleryBody"
@@ -119,11 +103,10 @@ func _init() -> void:
 
 
 ## 载入卡牌集合与页面文案；重置筛选并选中首张。
-func set_catalog(card_ids: Array, title: String, close_text: String, subtitle: String) -> void:
+func set_catalog(card_ids: Array, title: String, close_text: String) -> void:
     _ids = _sorted_ids(card_ids)
     _title.text = title
     _close_button.text = close_text
-    _subtitle.text = subtitle
     _era = 0
     _taxon = ""
     _kind = KIND_ALL
@@ -154,7 +137,6 @@ func _rebuild() -> void:
         _selected = ""
     elif not filtered.has(_selected):
         _selected = str(filtered[0])
-    _count.text = tr("ui.gallery.count") % filtered.size()
     _grid.set_cards(filtered, _selected)
     _detail.show_card(_selected)
 
