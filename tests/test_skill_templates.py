@@ -125,6 +125,17 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(self.renderer.expand(call),
                          ("OnPlayEffect|GrantKeyword|friendly:single|keyword=taunt",))
 
+    def test_camel_case_placeholder(self):
+        template = skill_templates.Template(
+            "t", "effect", "Aura", "ModifyStats", "friendly:all",
+            "perHealth={perHealth}", "+0/+{perHealth}",
+            (skill_templates.ArgSpec("perHealth", "int"),))
+        self.renderer.templates["t"] = template
+        call = skill_templates.TemplateCall("t", {"perHealth": "1"})
+        self.assertEqual(self.renderer.expand(call),
+                         ("Aura|ModifyStats|friendly:all|perHealth=1",))
+        self.assertEqual(self.renderer.text(call), "+0/+1")
+
     def test_duration_suffix_spaces_after_number(self):
         template = skill_templates.Template(
             "t", "effect", "OnPlayEffect", "ModifyStats", "friendly:single",

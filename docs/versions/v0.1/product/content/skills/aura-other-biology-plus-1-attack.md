@@ -1,7 +1,6 @@
 ---
 id: aura-other-biology-plus-1-attack
-text: 你的其他动物随从获得 +1 攻击力
-effects: Aura|ModifyStats|friendly:all:taxon=animalia:other=true|attack=1,duration=permanent
+template: aura-all-taxon-other-attack(taxon=animalia,attack=1)
 ---
 
 # aura-other-biology-plus-1-attack
@@ -13,6 +12,7 @@ effects: Aura|ModifyStats|friendly:all:taxon=animalia:other=true|attack=1,durati
 | id | aura-other-biology-plus-1-attack |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | aura-all-taxon-other-attack |
 
 ## 效果
 

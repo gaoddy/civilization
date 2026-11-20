@@ -1,7 +1,6 @@
 ---
 id: aura-all-plus-0-plus-1
-text: 你的随从获得 +0/+1
-effects: Aura|ModifyStats|friendly:all|health=1,duration=permanent
+template: aura-all-health(health=1)
 ---
 
 # aura-all-plus-0-plus-1
@@ -13,6 +12,7 @@ effects: Aura|ModifyStats|friendly:all|health=1,duration=permanent
 | id | aura-all-plus-0-plus-1 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | aura-all-health |
 
 ## 效果
 

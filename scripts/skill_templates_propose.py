@@ -19,7 +19,7 @@ import validate_docs
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CONTENT = pathlib.Path("docs") / "versions" / "v0.1" / "product" / "content"
 
-_PLACEHOLDER = re.compile(r"\{([a-z][a-z0-9_]*)(?:\.[a-z]+)?\}")
+_PLACEHOLDER = re.compile(r"\{([a-zA-Z][a-zA-Z0-9_]*)(?:\.[a-z]+)?\}")
 
 
 def _segments(skill):

@@ -1,7 +1,6 @@
 ---
 id: aura-other-mech-plus-1-plus-1
-text: 你的其他机械随从获得 +1/+1
-effects: Aura|ModifyStats|friendly:all:playstyle=machine:other=true|attack=1,health=1,duration=permanent
+template: aura-all-ps-other-both(playstyle=machine,attack=1,health=1)
 ---
 
 # aura-other-mech-plus-1-plus-1
@@ -13,6 +12,7 @@ effects: Aura|ModifyStats|friendly:all:playstyle=machine:other=true|attack=1,hea
 | id | aura-other-mech-plus-1-plus-1 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | aura-all-ps-other-both |
 
 ## 效果
 

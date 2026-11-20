@@ -1,7 +1,6 @@
 ---
 id: aura-plant-plus-1-plus-1
-text: 你的植物随从获得 +1/+1
-effects: Aura|ModifyStats|friendly:all:playstyle=plant|attack=1,health=1,duration=permanent
+template: aura-all-ps-both(playstyle=plant,attack=1,health=1)
 ---
 
 # aura-plant-plus-1-plus-1
@@ -13,6 +12,7 @@ effects: Aura|ModifyStats|friendly:all:playstyle=plant|attack=1,health=1,duratio
 | id | aura-plant-plus-1-plus-1 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | aura-all-ps-both |
 
 ## 效果
 

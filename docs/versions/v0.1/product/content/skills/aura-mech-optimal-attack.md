@@ -1,7 +1,6 @@
 ---
 id: aura-mech-optimal-attack
-text: 你的机械随从获得无视嘲讽
-effects: Aura|GrantKeyword|friendly:all:playstyle=machine|keyword=ignore_taunt,duration=permanent
+template: aura-keyword-all-ps(playstyle=machine,keyword=ignore_taunt)
 ---
 
 # aura-mech-optimal-attack
@@ -13,6 +12,7 @@ effects: Aura|GrantKeyword|friendly:all:playstyle=machine|keyword=ignore_taunt,d
 | id | aura-mech-optimal-attack |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | aura-keyword-all-ps |
 
 ## 效果
 

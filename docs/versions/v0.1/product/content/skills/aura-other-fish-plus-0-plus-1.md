@@ -1,7 +1,6 @@
 ---
 id: aura-other-fish-plus-0-plus-1
-text: 你的其他鱼纲随从获得 +0/+1
-effects: Aura|ModifyStats|friendly:all:playstyle=fish:other=true|health=1,duration=permanent
+template: aura-all-ps-other-health(playstyle=fish,health=1)
 ---
 
 # aura-other-fish-plus-0-plus-1
@@ -13,6 +12,7 @@ effects: Aura|ModifyStats|friendly:all:playstyle=fish:other=true|health=1,durati
 | id | aura-other-fish-plus-0-plus-1 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | aura-all-ps-other-health |
 
 ## 效果
 

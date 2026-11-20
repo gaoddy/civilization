@@ -209,7 +209,7 @@ def parse_arg_spec(name, raw):
 
 _CN_NUMBERS = {1: "一", 2: "两", 3: "三", 4: "四", 5: "五", 6: "六",
                7: "七", 8: "八", 9: "九", 10: "十"}
-_PLACEHOLDER = re.compile(r"\{([a-z][a-z0-9_]*)(?:\.([a-z]+))?\}")
+_PLACEHOLDER = re.compile(r"\{([a-zA-Z][a-zA-Z0-9_]*)(?:\.([a-z]+))?\}")
 _KEYWORD_RE = re.compile(r"^([a-z_]+)(?: (\d+))?$")
 _DURATION_VALUES = ("permanent", "combat")
 
