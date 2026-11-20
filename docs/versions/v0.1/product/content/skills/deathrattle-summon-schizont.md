@@ -1,8 +1,7 @@
 ---
 id: deathrattle-summon-schizont
 keyword: deathrattle
-text: 分裂：死亡时召唤一个 3/3 的裂殖体
-effects: OnDeath|Summon|self|token=schizont-token,count=1
+template: on-death-summon-split(token=schizont-token,count=1)
 ---
 
 # deathrattle-summon-schizont
@@ -14,6 +13,7 @@ effects: OnDeath|Summon|self|token=schizont-token,count=1
 | id | deathrattle-summon-schizont |
 | 关键词 | 亡语 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-summon-split |
 
 ## 效果
 

@@ -1,7 +1,6 @@
 ---
 id: deathrattle-all-friendly-plus-0-plus-1
-text: 亡语：使你的所有随从获得 +0/+1
-effects: OnDeath|ModifyStats|friendly:all|health=1,duration=permanent
+template: on-death-stats-all-friendly-health(health=1)
 ---
 
 # deathrattle-all-friendly-plus-0-plus-1
@@ -13,6 +12,7 @@ effects: OnDeath|ModifyStats|friendly:all|health=1,duration=permanent
 | id | deathrattle-all-friendly-plus-0-plus-1 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-stats-all-friendly-health |
 
 ## 效果
 

@@ -1,8 +1,7 @@
 ---
 id: deathrattle-all-enemies-contagion-1
 keyword: deathrattle
-text: 亡语：使敌方所有随从获得 1 层传染
-effects: OnDeath|GrantKeyword|enemy:all|keyword=contagion,value=1,duration=permanent
+template: on-death-keyword-contagion-all(keyword=contagion 1)
 ---
 
 # deathrattle-all-enemies-contagion-1
@@ -14,6 +13,7 @@ effects: OnDeath|GrantKeyword|enemy:all|keyword=contagion,value=1,duration=perma
 | id | deathrattle-all-enemies-contagion-1 |
 | 关键词 | 亡语 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-keyword-contagion-all |
 
 ## 效果
 

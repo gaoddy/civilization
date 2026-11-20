@@ -1,8 +1,7 @@
 ---
 id: deathrattle-all-enemies-damage-2
 keyword: deathrattle
-text: 亡语：对敌方所有随从造成 2 点伤害
-effects: OnDeath|DealDamage|enemy:all|amount=2
+template: on-death-damage-all(amount=2)
 ---
 
 # deathrattle-all-enemies-damage-2
@@ -14,6 +13,7 @@ effects: OnDeath|DealDamage|enemy:all|amount=2
 | id | deathrattle-all-enemies-damage-2 |
 | 关键词 | 亡语 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-damage-all |
 
 ## 效果
 

@@ -1,8 +1,7 @@
 ---
 id: deathrattle-friendly-protozoa-growth-once
 keyword: deathrattle
-text: 亡语：使一个友方原生生物界随从获得一次成长
-effects: OnDeath|Growth|friendly:single:playstyle=protozoa|times=1
+template: on-death-growth-single-ps(playstyle=protozoa,times=1)
 ---
 
 # deathrattle-friendly-protozoa-growth-once
@@ -14,6 +13,7 @@ effects: OnDeath|Growth|friendly:single:playstyle=protozoa|times=1
 | id | deathrattle-friendly-protozoa-growth-once |
 | 关键词 | 亡语 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-growth-single-ps |
 
 ## 效果
 

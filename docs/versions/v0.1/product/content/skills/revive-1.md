@@ -1,7 +1,6 @@
 ---
 id: revive-1
-text: 复苏：以 +1/+1 复活一次
-effects: OnDeath|Revive|self|attack=1,health=1
+template: on-death-revive(attack=1,health=1)
 ---
 
 # revive-1
@@ -13,6 +12,7 @@ effects: OnDeath|Revive|self|attack=1,health=1
 | id | revive-1 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-revive |
 
 ## 效果
 

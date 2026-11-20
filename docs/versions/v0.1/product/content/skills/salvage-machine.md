@@ -1,7 +1,6 @@
 ---
 id: salvage-machine
-text: 零件回收：死亡时获得一张随机机械随从牌
-effects: OnDeath|Salvage|self|pool=playstyle,count=1
+template: on-death-salvage-machine
 ---
 
 # salvage-machine
@@ -13,6 +12,7 @@ effects: OnDeath|Salvage|self|pool=playstyle,count=1
 | id | salvage-machine |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-salvage-machine |
 
 ## 效果
 

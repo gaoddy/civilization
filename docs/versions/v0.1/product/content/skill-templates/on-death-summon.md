@@ -4,7 +4,7 @@ trigger: OnDeath
 op: Summon
 selector: self
 arg.token: token
-arg.count: count 1..3 default=1
+arg.count: count 1..4 default=1
 params: token={token},count={count}
 text: 亡语：召唤{count.cn}个 {token.stats} 的{token.name}
 ---
