@@ -5,7 +5,6 @@ extends VBoxContainer
 ## 只读 `GameUiState` 并按门控设置控件状态，操作一律以信号交给页面；
 ## 本视图不构造意图、不判断协议。商店面板同时是棋盘随从的出售落点。
 
-signal buy(slot: int)
 signal reroll_pressed
 signal upgrade_pressed
 signal freeze_pressed
@@ -28,7 +27,6 @@ func _init() -> void:
     add_theme_constant_override("separation", 0)
 
     _shop = GameShopView.new()
-    _shop.buy.connect(func(slot: int) -> void: buy.emit(slot))
     _shop.reroll_pressed.connect(func() -> void: reroll_pressed.emit())
     _shop.upgrade_pressed.connect(func() -> void: upgrade_pressed.emit())
     _shop.freeze_pressed.connect(func() -> void: freeze_pressed.emit())

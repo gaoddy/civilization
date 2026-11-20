@@ -5,6 +5,7 @@ extends PanelContainer
 ## 页面把「现在能不能拖」汇总成 [`HandCard.drag_allowed`]（阶段、视图新鲜度、
 ## 倒计时、连接、待选与 `playable`），本控件只负责在被允许时交出拖拽数据。
 ## 拖拽数据同时带上页面视图版本 `epoch`：落点方按它判断这次拖拽是否已过期。
+## 本卡同时也是商店卡拖入手牌区的落点：接受可购买的商店卡数据并转发给手牌行。
 
 ## {epoch, handIndex, instanceId, cardId, cardKind: "minion"|"effect", requiresTarget, targets}
 ## `targets` 为服务端下发的合法目标 `{zone, id}`，只有需要目标的效果牌非空。
@@ -18,6 +19,9 @@ signal drag_started
 
 ## 需要目标的牌拖到本卡（本人手牌候选）上松手时发出。
 signal target_dropped(data: Dictionary, target: Dictionary)
+
+## 商店卡拖到本卡上松手时发出，由手牌行统一上抛给页面。
+signal shop_dropped(payload: Dictionary)
 
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
@@ -33,14 +37,16 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-    return not _accepted_target(data).is_empty()
+    return not _accepted_target(data).is_empty() or HandDrop.accepts_shop(data)
 
 
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
     var target := _accepted_target(data)
-    if target.is_empty():
+    if not target.is_empty():
+        target_dropped.emit(data as Dictionary, target)
         return
-    target_dropped.emit(data as Dictionary, target)
+    if HandDrop.accepts_shop(data):
+        shop_dropped.emit((data as Dictionary).duplicate())
 
 
 ## 本卡作为手牌目标候选时返回拖拽数据里的该候选；否则返回空字典。

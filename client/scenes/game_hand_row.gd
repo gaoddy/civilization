@@ -4,18 +4,38 @@ extends Control
 ##
 ## 槽位按 `card-width - hand-card-overlap` 步进重叠；最后一张补齐整卡宽度，
 ## 十张总宽正好 832。手牌仍只支持拖拽出牌，点击不产生意图。
+## 底部 `card-height` 带同时是商店卡的购买落点：拖入时描边高亮，松手交给页面。
 
 signal target_dropped(payload: Dictionary, target: Dictionary)
+signal shop_dropped(payload: Dictionary)
 
 var _scroll: Control
 var _center: CenterContainer
 var _row: HBoxContainer
+var _band: HandDrop
+var _band_hovering := false
+var _watching_shop_drag := false
 
 
 func _init() -> void:
     name = "HandStrip"
     custom_minimum_size = Vector2(0, UITheme.stage_metric("card-height"))
     mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+    # 购买落点只占底部卡带，同时承担悬停描边；放在最底层，不参与布局。
+    _band = HandDrop.new()
+    _band.name = "HandDropBand"
+    _band.add_theme_stylebox_override("panel", UITheme.panel_style("bare"))
+    _band.anchor_left = 0.0
+    _band.anchor_right = 1.0
+    _band.anchor_top = 1.0
+    _band.anchor_bottom = 1.0
+    _band.offset_top = -float(UITheme.stage_metric("card-height"))
+    _band.offset_bottom = 0.0
+    _band.shop_dropped.connect(_on_card_shop_dropped)
+    add_child(_band)
+    # 只在商店卡拖拽期间逐帧更新购买带高亮。
+    set_process(false)
 
     # 十张手牌总宽 832，小于舞台宽度；用普通 Control 承载，避免滚动容器
     # 在内容小于视口时改变子节点宽度而破坏居中。
@@ -70,12 +90,15 @@ func refresh(state: GameUiState) -> void:
             slot.custom_minimum_size.x = UITheme.stage_metric("card-width")
         if bool(card.get("requiresTarget", false)):
             entry.target_dropped.connect(_on_target_dropped)
+        entry.shop_dropped.connect(_on_card_shop_dropped)
         _row.add_child(slot)
 
 
 func _empty_hint() -> Label:
     var label := UI.empty_hint(tr("ui.game.hand.empty"))
     label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    # 空手牌时提示文本不能截断商店卡的落点。
+    label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     return label
 
 
@@ -121,3 +144,55 @@ func _build_card(card: Dictionary, state: GameUiState) -> HandCard:
 
 func _on_target_dropped(payload: Dictionary, target: Dictionary) -> void:
     target_dropped.emit(payload, target)
+
+
+func _on_card_shop_dropped(payload: Dictionary) -> void:
+    shop_dropped.emit(payload)
+
+
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_DRAG_BEGIN:
+        var payload = get_viewport().gui_get_drag_data()
+        if HandDrop.accepts_shop(payload):
+            _watching_shop_drag = true
+            set_process(true)
+    elif what == NOTIFICATION_DRAG_END:
+        _stop_shop_watch()
+
+
+## 拖拽期间逐帧复查指针是否在卡带内：卡片自身会接住落点，靠 `_can_drop_data`
+## 无法覆盖悬停在卡片上的情况。
+func _process(_delta: float) -> void:
+    var viewport := get_viewport()
+    if (
+        viewport == null
+        or not viewport.gui_is_dragging()
+        or not HandDrop.accepts_shop(viewport.gui_get_drag_data())
+    ):
+        _stop_shop_watch()
+        return
+    var rect := get_global_rect()
+    var band := Rect2(
+        rect.position.x,
+        rect.end.y - float(UITheme.stage_metric("card-height")),
+        rect.size.x,
+        float(UITheme.stage_metric("card-height"))
+    )
+    _set_band_hover(band.has_point(get_global_mouse_position()))
+
+
+func _stop_shop_watch() -> void:
+    if not _watching_shop_drag:
+        return
+    _watching_shop_drag = false
+    set_process(false)
+    _set_band_hover(false)
+
+
+func _set_band_hover(hovering: bool) -> void:
+    if hovering == _band_hovering:
+        return
+    _band_hovering = hovering
+    _band.add_theme_stylebox_override(
+        "panel", UITheme.panel_style("accent-bare" if hovering else "bare")
+    )

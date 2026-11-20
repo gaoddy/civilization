@@ -3,9 +3,9 @@ extends VBoxContainer
 ## 商店视图：高 216 = 操作行 64 + 间距 6 + 商店 146。
 ##
 ## 操作行以售货员为中心，左侧升级时代，右侧刷新与冻结；三个动作都是 40×40 图标按钮。
-## 商店面板整块是棋盘随从的出售落点；只发信号，不构造意图。
+## 商店面板整块是棋盘随从的出售落点；商店卡拖到手牌区购买，购买落点在手牌行。
+## 本视图只提供拖拽源并发操作信号，不构造意图。
 
-signal buy(slot: int)
 signal reroll_pressed
 signal upgrade_pressed
 signal freeze_pressed
@@ -188,13 +188,17 @@ func _refresh_shop(state: GameUiState) -> void:
         var slot_aff := _find_by_index(aff.get("shopSlots", []), index)
         var buyable := not state.stale and not state.expired and bool(slot_aff.get("buyable", false))
         var entry := CardDB.card(card_id)
-        var panel := UI.card_panel("raised-flush")
+        var panel := ShopCard.new()
         panel.name = "ShopSlot%d" % index
-        # PASS：整卡接收点击购买，同时让棋盘卡的出售落点继续冒泡到商店面板。
-        panel.mouse_filter = Control.MOUSE_FILTER_PASS
+        panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-flush"))
         panel.custom_minimum_size = Vector2(UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height"))
-        panel.set_meta("buyable", buyable)
-        panel.gui_input.connect(_on_shop_card_input.bind(panel, index))
+        panel.payload = {
+            "epoch": state.epoch,
+            "shopSlot": index,
+            "cardId": card_id,
+            "buyable": buyable,
+        }
+        panel.drag_allowed = state.can_drag(buyable)
         panel.add_child(ShopCardFace.build(card_id, entry, bool(slot.get("frozen", false))))
         if detail != null and is_instance_valid(detail):
             detail.track(panel, {
@@ -202,7 +206,7 @@ func _refresh_shop(state: GameUiState) -> void:
                 "cardId": card_id,
                 "disabledReason": slot_aff.get("disabledReason"),
             })
-        if not buyable:
+        if not panel.drag_allowed:
             UI.apply_dim(panel)
         _shop_row.add_child(panel)
 
@@ -216,17 +220,6 @@ func _empty_slot(index: int) -> PanelContainer:
     hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     panel.add_child(hint)
     return panel
-
-
-## 商店卡点击购买；不可购买时静默忽略，原因在详情面板里给出。
-func _on_shop_card_input(event: InputEvent, panel: Control, index: int) -> void:
-    if not (event is InputEventMouseButton):
-        return
-    var mouse := event as InputEventMouseButton
-    if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
-        return
-    if bool(panel.get_meta("buyable", false)):
-        buy.emit(index)
 
 
 func _find_by_index(items: Array, index: int) -> Dictionary:

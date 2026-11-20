@@ -160,7 +160,6 @@ func _build_center() -> VBoxContainer:
     )
 
     _recruit_view = GameRecruitView.new()
-    _recruit_view.buy.connect(_on_buy)
     _recruit_view.reroll_pressed.connect(_on_reroll)
     _recruit_view.upgrade_pressed.connect(_on_upgrade)
     _recruit_view.freeze_pressed.connect(_on_freeze)
@@ -179,6 +178,7 @@ func _build_center() -> VBoxContainer:
 
     _hand_row = GameHandRow.new()
     _hand_row.target_dropped.connect(_on_hand_target_dropped)
+    _hand_row.shop_dropped.connect(_on_shop_dropped)
     center.add_child(_hand_row)
 
     # 只有中央舞台自身撑满：组合与英雄行按固定高度自上而下排列，
@@ -558,9 +558,13 @@ func _on_choose_target(target: Dictionary) -> void:
     _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "target": target})
 
 
-func _on_buy(index: int) -> void:
-    # 买入只入手牌，不涉及目标。
-    _send_intent({"kind": Protocol.INTENT_BUY_MINION, "slot": index})
+## 商店卡落在手牌带上：买牌只入手牌，不涉及目标；落点复查与其它拖拽同源。
+func _on_shop_dropped(data: Dictionary) -> void:
+    if int(data.get("epoch", -1)) != _view_epoch:
+        return
+    if not _can_play_now():
+        return
+    _send_intent({"kind": Protocol.INTENT_BUY_MINION, "slot": int(data.get("shopSlot", 0))})
 
 
 ## 棋盘落点回调：随从牌入场与定点效果牌的唯一入口。拖拽途中视图已重建时按取消处理。

@@ -1519,7 +1519,7 @@ ui.guide.hint,提示
 ui.guide.manual_title,新手引导
 ui.guide.next,下一步
 ui.guide.skip,跳过
-ui.guide.step1.body,购买随从会消耗金币并进入手牌。
+ui.guide.step1.body,把商店卡拖到手牌区购买，会消耗金币并进入手牌。
 ui.guide.step1.title,商店与金币
 ui.guide.step2.body,拖动手牌到棋盘空位即可出战。
 ui.guide.step2.title,出战
