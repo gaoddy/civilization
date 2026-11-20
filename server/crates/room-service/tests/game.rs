@@ -823,6 +823,174 @@ fn unfreeze_shop_succeeds() {
 }
 
 #[test]
+fn frozen_cards_survive_next_recruit_and_empty_slots_refill() {
+    let (mut task, clock) = task();
+    let freeze = task.handle(command(
+        "p0",
+        "freeze-all",
+        ProtocolIntent::FreezeShop { slot: None },
+    ));
+    assert!(error_codes(&freeze).is_empty(), "整店冻结应成功");
+
+    let before = task.player_view(0).expect("视图应可用");
+    let frozen: Vec<(i64, String)> = before
+        .self_
+        .shop
+        .iter()
+        .filter(|slot| slot.frozen)
+        .filter_map(|slot| {
+            slot.instance_id
+                .clone()
+                .map(|instance_id| (slot.index, instance_id))
+        })
+        .collect();
+    assert_eq!(frozen.len(), 6, "首回合商店应 6 槽且全部冻结");
+
+    let bought_slot = first_nonempty_slot(&task, 0);
+    task.handle(command("p0", "buy-frozen-card", buy(bought_slot)));
+
+    advance_turn(&mut task, &clock);
+
+    let after = task.player_view(0).expect("视图应可用");
+    assert_eq!(after.self_.shop.len(), 6, "下回合商店应补满 6 槽");
+    for (index, instance_id) in &frozen {
+        if *index == bought_slot {
+            continue;
+        }
+        let kept = after
+            .self_
+            .shop
+            .iter()
+            .find(|slot| slot.index == *index)
+            .expect("槽位应存在");
+        assert_eq!(
+            kept.instance_id.as_deref(),
+            Some(instance_id.as_str()),
+            "{index} 号冻结卡应原位保留下回合"
+        );
+        assert!(kept.frozen, "{index} 号保留卡未解冻时应继续带冻结标记");
+    }
+    assert!(
+        !after.self_.affordances.can_unfreeze,
+        "新回合解冻权不继承，按钮应回到冻结"
+    );
+    let rejected = task.handle(command(
+        "p0",
+        "unfreeze-carried",
+        ProtocolIntent::UnfreezeShop { slot: None },
+    ));
+    assert_eq!(error_codes(&rejected), vec![ErrorCode::InvalidStage]);
+    let refilled = after
+        .self_
+        .shop
+        .iter()
+        .find(|slot| slot.index == bought_slot)
+        .expect("槽位应存在");
+    assert!(
+        refilled.card_id.is_some(),
+        "被买空的 {bought_slot} 号槽位下回合应补上新牌"
+    );
+
+    // 新回合重新按「冻结」后重新取得解冻权，解冻后保留卡才随商店重抽。
+    task.handle(command(
+        "p0",
+        "freeze-again",
+        ProtocolIntent::FreezeShop { slot: None },
+    ));
+    let armed = task.player_view(0).expect("视图应可用");
+    assert!(
+        armed.self_.affordances.can_unfreeze,
+        "本回合冻结过后按钮应切到解冻"
+    );
+    let unfrozen = task.handle(command(
+        "p0",
+        "unfreeze-now",
+        ProtocolIntent::UnfreezeShop { slot: None },
+    ));
+    assert!(
+        error_codes(&unfrozen).is_empty(),
+        "同回合重新冻结后解冻应成功"
+    );
+
+    advance_turn(&mut task, &clock);
+    let third = task.player_view(0).expect("视图应可用");
+    for (index, instance_id) in &frozen {
+        if *index == bought_slot {
+            continue;
+        }
+        let rerolled = third
+            .self_
+            .shop
+            .iter()
+            .find(|slot| slot.index == *index)
+            .expect("槽位应存在");
+        assert_ne!(
+            rerolled.instance_id.as_deref(),
+            Some(instance_id.as_str()),
+            "{index} 号保留卡解冻后，再下一回合应随商店重抽"
+        );
+    }
+}
+
+#[test]
+fn frozen_cards_survive_next_recruit_when_all_end_recruit() {
+    let (mut task, _clock) = task();
+    let freeze = task.handle(command(
+        "p0",
+        "freeze-all",
+        ProtocolIntent::FreezeShop { slot: None },
+    ));
+    assert!(error_codes(&freeze).is_empty(), "整店冻结应成功");
+
+    let before = task.player_view(0).expect("视图应可用");
+    let frozen: Vec<(i64, String)> = before
+        .self_
+        .shop
+        .iter()
+        .filter(|slot| slot.frozen)
+        .filter_map(|slot| {
+            slot.instance_id
+                .clone()
+                .map(|instance_id| (slot.index, instance_id))
+        })
+        .collect();
+    assert_eq!(frozen.len(), 6, "首回合商店应 6 槽且全部冻结");
+
+    let bought_slot = first_nonempty_slot(&task, 0);
+    task.handle(command("p0", "buy-frozen-card", buy(bought_slot)));
+
+    for seat in 0..8 {
+        task.handle(end_recruit(&format!("p{seat}"), &format!("end-{seat}")));
+    }
+    let updates = play_combat(&mut task);
+    assert!(!updates.is_empty(), "全员结束后演示播完应推进到下一回合");
+
+    let after = task.player_view(0).expect("视图应可用");
+    assert_eq!(after.self_.shop.len(), 6, "下回合商店应补满 6 槽");
+    for (index, instance_id) in &frozen {
+        if *index == bought_slot {
+            continue;
+        }
+        let kept = after
+            .self_
+            .shop
+            .iter()
+            .find(|slot| slot.index == *index)
+            .expect("槽位应存在");
+        assert_eq!(
+            kept.instance_id.as_deref(),
+            Some(instance_id.as_str()),
+            "{index} 号冻结卡应原位保留下回合"
+        );
+        assert!(kept.frozen, "{index} 号保留卡未解冻时应继续带冻结标记");
+    }
+    assert!(
+        !after.self_.affordances.can_unfreeze,
+        "新回合解冻权不继承，按钮应回到冻结"
+    );
+}
+
+#[test]
 fn choose_discover_consumes_pending_choice() {
     let (mut task, _clock) = task_with(catalog_with_discover_on_play());
     let slot = first_nonempty_slot(&task, 0);

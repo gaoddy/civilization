@@ -179,6 +179,10 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 2026-11-20 第十七次重定：英雄卡从普通卡池拆出为独立英雄卡，原 32 张英雄随从
 /// 保留在随从池且不再带 `is_hero` 标记，因此这些卡重新进入商店与随机池；本批次
 /// 20 局哈希随之全部改变。
+///
+/// 2026-11-20 第十八次重定：玩家状态新增 `froze_this_turn`（解冻只在冻结的当回合
+/// 可用），状态哈希为每名玩家多写一个布尔值；机器人不冻结，行为不变，但本批次
+/// 20 局哈希全部改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

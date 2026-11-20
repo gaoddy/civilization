@@ -220,14 +220,11 @@ func _refresh_actions(state: GameUiState) -> void:
     _freeze_button.disabled = (
         blocked or state.phase != Protocol.PHASE_RECRUIT or state.recruited
     )
-    var frozen := false
-    for slot in state.self_state.get("shop", []):
-        if bool(slot.get("frozen", false)):
-            frozen = true
-            break
-    _freeze_button.set_active(frozen)
+    # 冻结标记跨回合保留，但解冻权只在冻结的当回合有效，按钮态跟随 `canUnfreeze`。
+    var can_unfreeze := bool(aff.get("canUnfreeze", false))
+    _freeze_button.set_active(can_unfreeze)
     _freeze_button.tooltip_text = tr(
-        "ui.game.side_panel.unfreeze" if frozen else "ui.game.side_panel.freeze"
+        "ui.game.side_panel.unfreeze" if can_unfreeze else "ui.game.side_panel.freeze"
     )
 
 

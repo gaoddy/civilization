@@ -153,6 +153,7 @@
             }
           ],
           "canReroll": true,
+          "canUnfreeze": false,
           "canUpgradeEra": true,
           "upgradeDisabledReason": null,
           "canUseHeroPower": true,

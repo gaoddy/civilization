@@ -174,6 +174,8 @@ pub struct Affordances {
     pub hand_cards: Vec<HandAffordanceView>,
     pub board_minions: Vec<BoardAffordanceView>,
     pub can_reroll: bool,
+    /// 冻结按钮是否处于「解冻」状态：本回合冻结过商店且仍有冻结槽位。
+    pub can_unfreeze: bool,
     pub can_upgrade_era: bool,
     pub upgrade_disabled_reason: Option<RejectCode>,
     pub can_use_hero_power: bool,
@@ -276,6 +278,11 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .collect();
 
     let can_reroll = gate.is_none() && check_reroll(state, seat).is_ok();
+
+    // 解冻权只在冻结的当回合有效；冻结标记跨回合保留，新回合按钮仍按「冻结」显示。
+    let can_unfreeze = gate.is_none()
+        && player.froze_this_turn
+        && player.shop.iter().flatten().any(|slot| slot.frozen);
 
     let (can_upgrade_era, upgrade_disabled_reason) = match gate {
         Some(code) => (false, Some(code)),
@@ -564,6 +571,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                 hand_cards,
                 board_minions,
                 can_reroll,
+                can_unfreeze,
                 can_upgrade_era,
                 upgrade_disabled_reason,
                 can_use_hero_power,

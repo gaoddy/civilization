@@ -366,6 +366,9 @@ pub struct PlayerState {
     pub first_refresh_pending: bool,
     /// 本回合是否已提交 `EndRecruit`（本玩家结束招募）；全员结束或超时后才进入 `Combat`。
     pub recruit_done: bool,
+    /// 本回合是否冻结过商店。解冻只在冻结的当回合可用，进入下一回合后清零；
+    /// 冻结标记本身跨回合保留，只由手动刷新或解冻清除。
+    pub froze_this_turn: bool,
 }
 
 /// 等待玩家做出的选择。

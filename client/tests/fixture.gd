@@ -83,6 +83,7 @@ static func view() -> Dictionary:
                     {"index": 0, "sellable": true, "disabledReason": null},
                 ],
                 "canReroll": true,
+                "canUnfreeze": true,
                 "canUpgradeEra": true,
                 "upgradeDisabledReason": null,
                 "canUseHeroPower": true,

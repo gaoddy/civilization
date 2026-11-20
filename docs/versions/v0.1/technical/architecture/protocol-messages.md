@@ -458,6 +458,7 @@
 | `handCards` | array<HandAffordance> | 是 |  |
 | `boardMinions` | array<BoardAffordance> | 是 |  |
 | `canReroll` | boolean | 是 |  |
+| `canUnfreeze` | boolean | 是 | 冻结按钮是否为「解冻」态：本回合冻结过商店且仍有冻结槽位；跨回合保留的冻结不算 |
 | `canUpgradeEra` | boolean | 是 |  |
 | `upgradeDisabledReason` | string | null | 是 |  |
 | `canUseHeroPower` | boolean | 是 |  |

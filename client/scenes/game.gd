@@ -595,13 +595,14 @@ func _on_upgrade() -> void:
 
 
 func _on_freeze() -> void:
-    var frozen := false
-    for slot in GameStore.view.get("self", {}).get("shop", []):
-        if bool(slot.get("frozen", false)):
-            frozen = true
-            break
+    # 解冻只在冻结的当回合可用；跨回合保留的冻结仍走「冻结」按钮。
+    var aff: Dictionary = GameStore.view.get("self", {}).get("affordances", {})
     _send_intent({
-        "kind": Protocol.INTENT_UNFREEZE_SHOP if frozen else Protocol.INTENT_FREEZE_SHOP,
+        "kind": (
+            Protocol.INTENT_UNFREEZE_SHOP
+            if bool(aff.get("canUnfreeze", false))
+            else Protocol.INTENT_FREEZE_SHOP
+        ),
         "slot": null,
     })
 

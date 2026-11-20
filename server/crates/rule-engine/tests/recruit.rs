@@ -493,14 +493,13 @@ fn rearrange_out_of_range_rejects() {
 }
 
 #[test]
-fn freeze_persists_next_turn_and_reroll_clears() {
+fn frozen_cards_persist_until_manually_thawed() {
     let (mut engine, mut state) = turn_started(21);
     let frozen_id = minion_id(2);
-    let other_id = minion_id(3);
     set_shop(
         &mut state,
         0,
-        &[Some(frozen_id.clone()), Some(other_id.clone())],
+        &[Some(frozen_id.clone()), Some(minion_id(3))],
     );
 
     engine
@@ -508,24 +507,71 @@ fn freeze_persists_next_turn_and_reroll_clears() {
         .expect("冻结应成功");
     assert!(state.players[0].shop[0].as_ref().unwrap().frozen);
     assert!(!state.players[0].shop[1].as_ref().unwrap().frozen);
+    assert!(state.players[0].froze_this_turn, "冻结后本回合可解冻");
 
     let turn_before = state.turn;
     engine.start_turn(&mut state).expect("开始下一回合");
     assert_eq!(state.turn, turn_before + 1);
     let kept = state.players[0].shop[0].as_ref().expect("冻结槽位应保留");
     assert_eq!(kept.card_id, frozen_id);
-    assert!(kept.frozen, "冻结标记跨回合保留");
+    let kept_instance = kept.instance_id;
+    assert!(kept.frozen, "未解冻时冻结状态跨回合保留");
+    assert!(!state.players[0].froze_this_turn, "解冻权不跨回合");
 
+    let rejected = engine.apply(&mut state, 0, Intent::UnfreezeShop { slot: Some(0) });
+    assert_eq!(
+        rejected.unwrap_err().code,
+        RejectCode::InvalidStage,
+        "新回合不能直接解冻跨回合保留的冻结"
+    );
+    assert!(
+        state.players[0].shop[0].as_ref().unwrap().frozen,
+        "解冻被拒后冻结保持"
+    );
+
+    // 新回合重新按「冻结」才重新取得解冻权。
     engine
-        .apply(&mut state, 0, Intent::RerollShop)
-        .expect("手动刷新应成功");
+        .apply(&mut state, 0, Intent::FreezeShop { slot: None })
+        .expect("再次冻结应成功");
+    engine
+        .apply(&mut state, 0, Intent::UnfreezeShop { slot: None })
+        .expect("同回合解冻应成功");
     assert!(
         state.players[0]
             .shop
             .iter()
             .flatten()
             .all(|slot| !slot.frozen),
-        "手动刷新清除所有冻结"
+        "解冻应清除全部冻结标记"
+    );
+
+    engine.start_turn(&mut state).expect("开始再下一回合");
+    let next = state.players[0].shop[0].as_ref().expect("槽位应重抽");
+    assert_ne!(
+        next.instance_id, kept_instance,
+        "解冻后的卡不再受保护，应随商店重抽"
+    );
+}
+
+#[test]
+fn reroll_clears_frozen_mark_on_new_cards() {
+    let (mut engine, mut state) = turn_started(25);
+    set_shop(&mut state, 0, &[Some(minion_id(1)), Some(minion_id(2))]);
+    engine
+        .apply(&mut state, 0, Intent::FreezeShop { slot: None })
+        .expect("冻结全部应成功");
+
+    engine
+        .apply(&mut state, 0, Intent::RerollShop)
+        .expect("手动刷新应成功");
+
+    assert!(
+        state.players[0]
+            .shop
+            .iter()
+            .flatten()
+            .all(|slot| !slot.frozen),
+        "刷新后的新卡牌不带冻结状态"
     );
 }
 

@@ -57,6 +57,7 @@ fn view(
                 "handCards": hand_cards,
                 "boardMinions": [],
                 "canReroll": false,
+                "canUnfreeze": false,
                 "canUpgradeEra": false,
                 "upgradeDisabledReason": null,
                 "canUseHeroPower": false,

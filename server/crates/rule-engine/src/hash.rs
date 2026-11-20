@@ -337,6 +337,7 @@ fn hash_player(hasher: &mut Hasher, player: &PlayerState) {
     hasher.bool(player.first_refresh_used);
     hasher.bool(player.first_refresh_pending);
     hasher.bool(player.recruit_done);
+    hasher.bool(player.froze_this_turn);
 }
 
 fn hash_minions(hasher: &mut Hasher, minions: &[MinionInstance]) {

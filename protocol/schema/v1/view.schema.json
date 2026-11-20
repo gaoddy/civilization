@@ -164,13 +164,14 @@
     "Affordances": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["shopSlots", "handCards", "boardMinions", "canReroll", "canUpgradeEra",
+      "required": ["shopSlots", "handCards", "boardMinions", "canReroll", "canUnfreeze", "canUpgradeEra",
                    "upgradeDisabledReason", "canUseHeroPower", "canEndRecruit"],
       "properties": {
         "shopSlots": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/ShopAffordance" } },
         "handCards": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/HandAffordance" } },
         "boardMinions": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/BoardAffordance" } },
         "canReroll": { "type": "boolean" },
+        "canUnfreeze": { "type": "boolean", "description": "冻结按钮是否为「解冻」态：本回合冻结过商店且仍有冻结槽位；跨回合保留的冻结不算" },
         "canUpgradeEra": { "type": "boolean" },
         "upgradeDisabledReason": { "type": ["string", "null"] },
         "canUseHeroPower": { "type": "boolean" },

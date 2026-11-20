@@ -556,9 +556,36 @@ func _check_freeze_toggle() -> void:
     )
     await _unmount(instance)
 
+    # 跨回合保留冻结但没有解冻权：按钮仍显示「冻结」，按下也只是再次冻结。
+    var carried := _base_view(Protocol.PHASE_RECRUIT)
+    carried["self"]["affordances"]["canUnfreeze"] = false
+    instance = await _mount(carried)
+    if instance == null:
+        return
+    freeze = instance.find_child("FreezeButton", true, false)
+    _expect(freeze != null, "冻结按钮应存在")
+    if freeze == null:
+        await _unmount(instance)
+        return
+    _expect(
+        freeze.tooltip_text == TranslationServer.translate("ui.game.side_panel.freeze"),
+        "跨回合保留冻结时 tooltip 应为冻结",
+    )
+    captured = []
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    await _push_click(instance, freeze.get_global_rect().get_center())
+    _expect(
+        captured.size() == 1
+            and str(captured[0].get("kind", "")) == Protocol.INTENT_FREEZE_SHOP
+            and captured[0].get("slot") == null,
+        "跨回合保留冻结时应发出整店冻结意图，实际 %s" % [captured],
+    )
+    await _unmount(instance)
+
     var thawed := _base_view(Protocol.PHASE_RECRUIT)
     for slot in thawed["self"]["shop"]:
         slot["frozen"] = false
+    thawed["self"]["affordances"]["canUnfreeze"] = false
     instance = await _mount(thawed)
     if instance == null:
         return
