@@ -1,8 +1,7 @@
 ---
 id: biology-evolve
 name: 获得性状
-text: 使一个友方动物随从获得进化
-effects: OnActivate|GrantKeyword|friendly:single:taxon=animalia|keyword=evolve,duration=permanent
+template: activate-keyword-single-taxon(taxon=animalia,keyword=evolve,duration=permanent)
 cost: 2
 uses_per_turn: 1
 match_text: 同左
@@ -17,6 +16,7 @@ match_text: 同左
 | id | biology-evolve |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | activate-keyword-single-taxon |
 | 费用 | 2 |
 | 每回合次数 | 1 |
 

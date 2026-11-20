@@ -1,8 +1,7 @@
 ---
 id: enemy-random-cannot-attack
 name: 非攻
-text: 使随机一个敌方随从本回合无法攻击
-effects: OnActivate|CannotAttack|enemy:random|duration=combat
+template: activate-cannot-attack-random
 cost: 2
 uses_per_turn: 1
 match_text: 同左
@@ -17,6 +16,7 @@ match_text: 同左
 | id | enemy-random-cannot-attack |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | activate-cannot-attack-random |
 | 费用 | 2 |
 | 每回合次数 | 1 |
 

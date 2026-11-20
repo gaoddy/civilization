@@ -1,8 +1,7 @@
 ---
 id: light-speed-strike
 name: 光速出击
-text: 使一个友方随从本回合获得连击
-effects: OnActivate|GrantKeyword|friendly:single|keyword=windfury,duration=combat
+template: activate-keyword-single-this-turn(keyword=windfury)
 cost: 1
 uses_per_turn: 1
 match_text: 同左
@@ -17,6 +16,7 @@ match_text: 同左
 | id | light-speed-strike |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | activate-keyword-single-this-turn |
 | 费用 | 1 |
 | 每回合次数 | 1 |
 

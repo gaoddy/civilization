@@ -1,8 +1,7 @@
 ---
 id: scholar-growth-twice
 name: 推演
-text: 使一个友方学者随从获得两次成长
-effects: OnActivate|Growth|friendly:single:scholar=true|times=2
+template: activate-growth-single-scholar(times=2)
 cost: 1
 uses_per_turn: 1
 match_text: 同左
@@ -17,6 +16,7 @@ match_text: 同左
 | id | scholar-growth-twice |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | activate-growth-single-scholar |
 | 费用 | 1 |
 | 每回合次数 | 1 |
 

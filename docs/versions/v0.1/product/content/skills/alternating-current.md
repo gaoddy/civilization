@@ -1,8 +1,7 @@
 ---
 id: alternating-current
 name: 交流电
-text: 使一个友方随从获得无视嘲讽直到回合结束
-effects: OnActivate|GrantKeyword|friendly:single|keyword=ignore_taunt,duration=combat
+template: activate-keyword-single(keyword=ignore_taunt,duration=combat)
 cost: 2
 uses_per_turn: 1
 match_text: 同左
@@ -17,6 +16,7 @@ match_text: 同左
 | id | alternating-current |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | activate-keyword-single |
 | 费用 | 2 |
 | 每回合次数 | 1 |
 

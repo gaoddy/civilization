@@ -1,8 +1,7 @@
 ---
 id: invention-factory
 name: 发明工厂
-text: 使你的其他机械随从各获得一次成长
-effects: OnActivate|Growth|friendly:all:playstyle=machine:other=true|times=1
+template: activate-growth-all-ps-other-each(playstyle=machine)
 cost: 2
 uses_per_turn: 1
 match_text: 同左
@@ -17,6 +16,7 @@ match_text: 同左
 | id | invention-factory |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | activate-growth-all-ps-other-each |
 | 费用 | 2 |
 | 每回合次数 | 1 |
 

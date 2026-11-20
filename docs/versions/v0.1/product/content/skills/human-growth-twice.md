@@ -1,8 +1,7 @@
 ---
 id: human-growth-twice
 name: 技艺
-text: 使一个友方人科随从获得两次成长
-effects: OnActivate|Growth|friendly:single:taxon=hominidae|times=2
+template: activate-growth-single-taxon(taxon=hominidae,times=2)
 cost: 2
 uses_per_turn: 1
 match_text: 同左
@@ -17,6 +16,7 @@ match_text: 同左
 | id | human-growth-twice |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | activate-growth-single-taxon |
 | 费用 | 2 |
 | 每回合次数 | 1 |
 
