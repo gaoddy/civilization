@@ -457,9 +457,7 @@ fn board_view_folds_auras_into_stats_and_keywords() {
         AuraEffect {
             attack: 2,
             health: 1,
-            keywords: ["divine_shield".to_string(), "光环测试词".to_string()]
-                .into_iter()
-                .collect(),
+            keywords: rule_engine::keyword::KeywordSet::from_names(["divine_shield", "光环测试词"]),
             floor_one: true,
         },
     );

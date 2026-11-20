@@ -268,12 +268,12 @@ fn grant_keyword_respects_duration() {
             .granted
             .contains(&("windfury".into(), Duration::Combat))
     );
-    assert!(combat::keywords(&engine.catalog, windfury).contains("windfury"));
+    assert!(combat::keyword_set(&engine.catalog, windfury).contains_name("windfury"));
 
     state.phase = Phase::Settle;
     engine.resolve_settle(&mut state).expect("结算应成功");
     assert!(
-        !combat::keywords(&engine.catalog, board_minion(&state, 0, 1)).contains("windfury"),
+        !combat::keyword_set(&engine.catalog, board_minion(&state, 0, 1)).contains_name("windfury"),
         "combat 关键词在 Settle 前清除"
     );
     assert!(
@@ -912,7 +912,7 @@ fn mimic_copies_current_stats_and_keywords_not_growth() {
         "关键词按 duration 写入 granted"
     );
     assert!(
-        combat::keywords(&engine.catalog, source).contains("taunt"),
+        combat::keyword_set(&engine.catalog, source).contains_name("taunt"),
         "拟态后获得嘲讽"
     );
 
@@ -946,7 +946,7 @@ fn mimic_copies_current_stats_and_keywords_not_growth() {
         "combat 拟态在本回合结束后回滚"
     );
     assert!(
-        !combat::keywords(&engine.catalog, source).contains("taunt"),
+        !combat::keyword_set(&engine.catalog, source).contains_name("taunt"),
         "combat 关键词在结算后移除"
     );
 }
@@ -1260,7 +1260,7 @@ fn mimic_in_combat_excludes_aura_stats_and_keywords() {
         "卡面关键词照常复制"
     );
     assert!(
-        !combat::keywords(&engine.catalog, source).contains("ignore_taunt"),
+        !combat::keyword_set(&engine.catalog, source).contains_name("ignore_taunt"),
         "光环授予的关键词不复制"
     );
 }

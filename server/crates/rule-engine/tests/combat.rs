@@ -1,13 +1,11 @@
 mod common;
 
-use std::collections::BTreeSet;
-
 use common::{
     categories_for, effects_of, minion, reborn_count, test_catalog, test_playstyles, token_card,
 };
 use rule_engine::combat::{
     CombatAction, CombatLog, effective_attack, effective_attack_with, effective_health,
-    effective_health_with, keywords, simulate, simulate_with,
+    effective_health_with, keyword_set, simulate, simulate_with,
 };
 use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill};
 use rule_engine::effects::Duration;
@@ -724,7 +722,7 @@ fn effective_stats_follow_evaluation_order() {
     let missing = minion(&catalog, 4, "missing-card");
     assert_eq!(effective_attack(&catalog, &missing), 0);
     assert_eq!(effective_health(&catalog, &missing), 0);
-    assert!(keywords(&catalog, &missing).is_empty());
+    assert!(keyword_set(&catalog, &missing).is_empty());
 }
 
 #[test]
@@ -740,11 +738,10 @@ fn keywords_merge_card_and_active_grants() {
         ("未知关键词".to_string(), Duration::Permanent),
     ];
 
-    let expected: BTreeSet<String> = ["divine_shield", "未知关键词", "taunt", "windfury"]
-        .into_iter()
+    let expected = ["divine_shield", "taunt", "windfury", "未知关键词"]
         .map(str::to_string)
-        .collect();
-    assert_eq!(keywords(&catalog, &subject), expected);
+        .to_vec();
+    assert_eq!(keyword_set(&catalog, &subject).names(), expected);
 }
 
 /// 构造一场真实配对战斗：座位 0、1 存活，其余标淘汰。
@@ -765,7 +762,7 @@ fn real_combat_state() -> (Engine, rule_engine::state::GameState) {
         AuraEffect {
             attack: 2,
             health: 1,
-            keywords: ["divine_shield"].into_iter().map(str::to_string).collect(),
+            keywords: rule_engine::keyword::KeywordSet::from_names(["divine_shield"]),
             floor_one: true,
         },
     );
@@ -799,12 +796,12 @@ fn resolve_combat_returns_one_report_per_participant() {
     let folded_a = &report_a.own_board[0];
     assert_eq!(effective_attack(&engine.catalog, folded_a), 7);
     assert_eq!(effective_health(&engine.catalog, folded_a), 6);
-    assert!(keywords(&engine.catalog, folded_a).contains("divine_shield"));
+    assert!(keyword_set(&engine.catalog, folded_a).contains_name("divine_shield"));
     // 座位 1 视角的 opponent_board 看到的是同一份折叠后数值。
     let folded_b_view = &report_b.opponent_board[0];
     assert_eq!(effective_attack(&engine.catalog, folded_b_view), 7);
     assert_eq!(effective_health(&engine.catalog, folded_b_view), 6);
-    assert!(keywords(&engine.catalog, folded_b_view).contains("divine_shield"));
+    assert!(keyword_set(&engine.catalog, folded_b_view).contains_name("divine_shield"));
     // 持久棋盘保持原始数值：折叠只发生在报告副本上。
     assert_eq!(
         effective_attack(&engine.catalog, &state.players[0].board[0]),
@@ -814,7 +811,9 @@ fn resolve_combat_returns_one_report_per_participant() {
         effective_health(&engine.catalog, &state.players[0].board[0]),
         5
     );
-    assert!(!keywords(&engine.catalog, &state.players[0].board[0]).contains("divine_shield"));
+    assert!(
+        !keyword_set(&engine.catalog, &state.players[0].board[0]).contains_name("divine_shield")
+    );
     assert_eq!(state.players[0].board[0].stats.attack.layers(), 5);
     assert_eq!(state.players[0].board[0].stats.health.layers(), 5);
     assert!(state.players[0].board[0].granted.is_empty());

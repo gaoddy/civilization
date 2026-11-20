@@ -3,8 +3,8 @@ mod common;
 use common::{CONFIG_JSON, TAXONOMY_JSON, effects_of};
 use rule_engine::data::{CardType, Catalog};
 use rule_engine::effects::{
-    Basis, Compare, Duration, Filter, KeywordSpec, Op, Pick, Selector, Side, TimesIf, Trigger,
-    Zone, parse_effects,
+    Basis, Compare, Duration, Filter, FilterKey, KeywordSpec, Op, Pick, Selector, Side, TimesIf,
+    Trigger, Zone, parse_effects,
 };
 use rule_engine::error::CatalogError;
 
@@ -171,7 +171,7 @@ fn parses_aura_and_keyword_value() {
             side: Side::Friendly,
             pick: Pick::All,
             filters: vec![Filter {
-                key: "playstyle".into(),
+                key: FilterKey::Playstyle,
                 value: "machine".into(),
             }],
         }
@@ -205,11 +205,11 @@ fn parses_selector_shorthands_and_multiple_filters() {
     match &filters[0].selector {
         Selector::Side { filters, .. } => {
             assert_eq!(filters.len(), 3);
-            assert_eq!(filters[0].key, "playstyle");
+            assert_eq!(filters[0].key, FilterKey::Playstyle);
             assert_eq!(filters[0].value, "plant");
-            assert_eq!(filters[1].key, "other");
+            assert_eq!(filters[1].key, FilterKey::Other);
             assert_eq!(filters[1].value, "true");
-            assert_eq!(filters[2].key, "type");
+            assert_eq!(filters[2].key, FilterKey::Type);
             assert_eq!(filters[2].value, "minion");
         }
         other => panic!("expected side selector, got {other:?}"),
@@ -227,7 +227,7 @@ fn parses_structured_params() {
     assert_eq!(
         condition.filter,
         Filter {
-            key: "playstyle".into(),
+            key: FilterKey::Playstyle,
             value: "mammal".into(),
         }
     );
@@ -239,7 +239,7 @@ fn parses_structured_params() {
     assert_eq!(
         e[0].params.times_if,
         Some(TimesIf {
-            key: "playstyle".into(),
+            key: FilterKey::Playstyle,
             value: "mammal".into(),
             times: 2
         })
@@ -249,7 +249,7 @@ fn parses_structured_params() {
     assert_eq!(
         e[0].params.when,
         Some(Filter {
-            key: "playstyle".into(),
+            key: FilterKey::Playstyle,
             value: "mammal".into(),
         })
     );

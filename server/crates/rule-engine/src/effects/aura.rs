@@ -379,32 +379,17 @@ fn accumulate(effect: &Effect, target: &mut AuraEffect, scale: i32) {
                 return;
             };
             // 与 `exec.rs` 的 GrantKeyword 分支一致：`armor N` 的层数写进
-            // 关键词字符串，否则战斗折叠后会退化为无层数的 `armor`。
+            // 关键词位图，多个光环来源的减伤自动累加。
             let name = keyword.keyword.as_str();
             let layer = keyword.value.or(effect.params.value);
             match (name, layer) {
                 (combat::ARMOR, Some(count)) => {
-                    // 多个光环来源的减伤累加到同一条 `armor N`：关键词集合按
-                    // 字符串去重，直接插入会让同层来源互相覆盖。
-                    let existing = target.keywords.iter().find_map(|keyword| {
-                        combat::armor_layer(keyword).map(|v| (keyword.clone(), v))
-                    });
-                    match existing {
-                        Some((old, value)) => {
-                            target.keywords.remove(&old);
-                            target.keywords.insert(format!(
-                                "{} {}",
-                                combat::ARMOR,
-                                value.saturating_add(count)
-                            ));
-                        }
-                        None => {
-                            target.keywords.insert(format!("{} {count}", combat::ARMOR));
-                        }
-                    }
+                    target
+                        .keywords
+                        .insert(&format!("{} {count}", combat::ARMOR));
                 }
                 _ => {
-                    target.keywords.insert(name.to_string());
+                    target.keywords.insert(name);
                 }
             }
         }

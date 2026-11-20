@@ -467,9 +467,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
             attack: combat::effective_attack(&engine.catalog, minion),
             health: combat::effective_health(&engine.catalog, minion),
             stats: stats_breakdown(minion),
-            keywords: combat::keywords(&engine.catalog, minion)
-                .into_iter()
-                .collect(),
+            keywords: combat::keyword_set(&engine.catalog, minion).names(),
             stealth: combat::has_stealth(&engine.catalog, minion),
         })
         .collect();

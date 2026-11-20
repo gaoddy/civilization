@@ -100,6 +100,19 @@ impl Playstyle {
             Playstyle::Neutral => 13,
         }
     }
+
+    /// 卡牌 `play:` 位掩码中的二进制位。
+    pub(crate) fn bit(self) -> u16 {
+        1u16 << self.ordinal()
+    }
+}
+
+/// 筛选键取值的玩法位；`neutral` 也是可被筛中的实体取值。
+pub(crate) fn play_bit(value: &str) -> Option<u16> {
+    if value == Playstyle::Neutral.id() {
+        return Some(Playstyle::Neutral.bit());
+    }
+    Playstyle::from_id(value).map(Playstyle::bit)
 }
 
 /// 卡牌 `categories` 条目的类型。
@@ -130,9 +143,43 @@ pub(crate) fn play_categories(categories: &[Category]) -> impl Iterator<Item = &
         .map(|category| category.value.as_str())
 }
 
-/// 卡牌是否带指定玩法归属。
-pub(crate) fn has_play(categories: &[Category], playstyle: &str) -> bool {
-    play_categories(categories).any(|value| value == playstyle)
+/// 筛选键在加载期预计算的卡牌事实。
+///
+/// `play_mask` 把 `play:` 归属压成位掩码；`prey_ancestors` / `host_ancestors`
+/// 把捕食/寄生分类节点连同祖先压成整数下标，筛选时不再逐条比较字符串。
+#[derive(Debug, Clone, Default)]
+pub(crate) struct CardFilterFacts {
+    pub play_mask: u16,
+    /// 捕食分类节点及其祖先的整数下标（升序、去重）。
+    pub prey_ancestors: Vec<u16>,
+    /// 寄生分类节点及其祖先的整数下标（升序、去重）。
+    pub host_ancestors: Vec<u16>,
+}
+
+/// 由卡牌关联分类计算筛选事实；分类树缺失的节点按不命中处理。
+fn compute_filter_facts(taxonomy: &Taxonomy, categories: &[Category]) -> CardFilterFacts {
+    let mut facts = CardFilterFacts::default();
+    for category in categories {
+        match category.kind {
+            CategoryKind::Play => {
+                facts.play_mask |= play_bit(&category.value).unwrap_or(0);
+            }
+            CategoryKind::Prey | CategoryKind::Host => {
+                let Some(node) = taxonomy.node_id(&category.value) else {
+                    continue;
+                };
+                let target = if category.kind == CategoryKind::Prey {
+                    &mut facts.prey_ancestors
+                } else {
+                    &mut facts.host_ancestors
+                };
+                target.extend(taxonomy.ancestor_ids(node));
+                target.sort_unstable();
+                target.dedup();
+            }
+        }
+    }
+    facts
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
@@ -230,6 +277,8 @@ pub struct Catalog {
     /// 测试可能直接往 `cards` / `skills` 插卡，因此 `base_keywords` 在侧表
     /// 缺失时回退到即时计算。
     card_keywords: BTreeMap<String, KeywordSet>,
+    /// 筛选键的预计算事实；由 `from_json` 生成，测试直接插卡时回退即时计算。
+    card_filter_facts: BTreeMap<String, CardFilterFacts>,
 }
 
 /// 卡牌是否在本局卡池内。
@@ -357,6 +406,16 @@ impl Catalog {
             })
             .collect();
 
+        let card_filter_facts = card_map
+            .iter()
+            .map(|(id, card)| {
+                (
+                    id.clone(),
+                    compute_filter_facts(&taxonomy, &card.categories),
+                )
+            })
+            .collect();
+
         Ok(Catalog {
             cards: card_map,
             heroes: hero_map,
@@ -364,6 +423,20 @@ impl Catalog {
             config,
             taxonomy,
             card_keywords,
+            card_filter_facts,
+        })
+    }
+
+    /// 筛选键使用的卡牌事实；侧表缺失时按当前分类即时计算。
+    pub(crate) fn filter_facts(
+        &self,
+        card_id: &str,
+    ) -> Option<std::borrow::Cow<'_, CardFilterFacts>> {
+        if let Some(facts) = self.card_filter_facts.get(card_id) {
+            return Some(std::borrow::Cow::Borrowed(facts));
+        }
+        self.cards.get(card_id).map(|card| {
+            std::borrow::Cow::Owned(compute_filter_facts(&self.taxonomy, &card.categories))
         })
     }
 

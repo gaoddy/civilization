@@ -141,6 +141,25 @@ impl Taxonomy {
         false
     }
 
+    /// 节点 id 的整数下标；未知节点返回 `None`。
+    pub fn node_id(&self, name: &str) -> Option<u16> {
+        self.ids.get(name).copied()
+    }
+
+    /// 节点自身与全部祖先的整数下标；循环引用时提前停止。
+    pub fn ancestor_ids(&self, node: u16) -> Vec<u16> {
+        let mut result = Vec::new();
+        let mut current = Some(node);
+        while let Some(id) = current {
+            if result.contains(&id) {
+                break;
+            }
+            result.push(id);
+            current = self.parents[usize::from(id)];
+        }
+        result
+    }
+
     /// 从叶子到根的节点路径（含自身）；未知节点返回空列表。
     pub fn path<'a>(&'a self, leaf: &'a str) -> Vec<&'a str> {
         let mut path = Vec::new();

@@ -209,8 +209,8 @@ fn same_keyword_from_two_sources_applies_once() {
     engine.recompute_auras(&mut state);
 
     let aura = state.auras.get(&3).expect("目标应获得关键词光环");
-    assert_eq!(aura.keywords.len(), 1);
-    assert!(aura.keywords.contains("taunt"));
+    assert_eq!(aura.keywords.names().len(), 1);
+    assert!(aura.keywords.contains_name("taunt"));
 }
 
 #[test]
@@ -572,9 +572,9 @@ fn aura_grant_keyword_keeps_armor_layer() {
 
     let aura = state.auras.get(&2).expect("目标应获得减伤光环");
     assert!(
-        aura.keywords.contains("armor 3"),
+        aura.keywords.names().contains(&"armor 3".to_string()),
         "光环授予关键词应保留层数，实为 {:?}",
-        aura.keywords
+        aura.keywords.names()
     );
 
     let folded = fold_auras(
@@ -613,6 +613,7 @@ fn aura_armor_stacks_across_sources() {
     let aura = state.auras.get(&3).expect("目标应同时获得两个减伤光环");
     assert_eq!(
         aura.keywords
+            .names()
             .iter()
             .filter(|k| k.starts_with("armor"))
             .count(),

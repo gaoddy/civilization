@@ -1,22 +1,11 @@
 use crate::data::Playstyle;
 
-use super::{Duration, Effect, Filter, Op, Params, Pick, Selector, TimesIf, Trigger, Zone};
+use super::{
+    Duration, Effect, Filter, FilterKey, Op, Params, Pick, Selector, TimesIf, Trigger, Zone,
+};
 
 /// 光环触发允许的原语。
 pub(crate) const AURA_OPS: &[Op] = &[Op::ModifyStats, Op::GrantKeyword];
-/// 选择器筛选允许的键；`condition` 与 `when` 复用同一套键。
-pub(crate) const FILTER_KEYS: &[&str] = &[
-    "taxon",
-    "playstyle",
-    "play",
-    "prey",
-    "host",
-    "subtype",
-    "id",
-    "type",
-    "keyword",
-    "other",
-];
 /// 卡牌类型取值。
 pub(crate) const CARD_TYPES: &[&str] = &["minion", "effect"];
 /// 关键词基名。
@@ -392,40 +381,34 @@ pub fn validate_effects(effects: &[Effect]) -> Result<(), Vec<String>> {
 }
 
 fn validate_filter(filter: &Filter, check_value: bool, errors: &mut Vec<String>) {
-    if !FILTER_KEYS.contains(&filter.key.as_str()) {
-        errors.push(format!("未知筛选键 {:?}", filter.key));
-    }
     if filter.value.is_empty() {
-        errors.push(format!("筛选 {:?} 缺少取值", filter.key));
+        errors.push(format!("筛选 {:?} 缺少取值", filter.key.id()));
     }
     if check_value {
-        validate_filter_value(&filter.key, &filter.value, errors);
+        validate_filter_value(filter.key, &filter.value, errors);
     }
 }
 
-/// `timesIf` 的键必须在筛选键集合内，且必须带值。
+/// `timesIf` 必须带值；键已在解析期枚举化。
 fn validate_times_if_filter(times_if: &TimesIf, errors: &mut Vec<String>) {
-    let key = times_if.key.as_str();
-    if !FILTER_KEYS.contains(&key) {
-        errors.push(format!("timesIf 的筛选键非法 {:?}", times_if.key));
-        return;
-    }
-    validate_filter_value(key, &times_if.value, errors);
+    validate_filter_value(times_if.key, &times_if.value, errors);
 }
 
 /// 按筛选键校验取值；只覆盖有固定取值集合的键。
 ///
 /// `playstyle` 接受 13 个玩法与 `neutral`：中立卡是可被筛中的实体玩法取值
 /// （`filter_matches` 按 id 比较），只有 `from_id` 把 `neutral` 排除在可启用集合之外。
-fn validate_filter_value(key: &str, value: &str, errors: &mut Vec<String>) {
+fn validate_filter_value(key: FilterKey, value: &str, errors: &mut Vec<String>) {
     match key {
-        "playstyle" if value != Playstyle::Neutral.id() && Playstyle::from_id(value).is_none() => {
+        FilterKey::Playstyle
+            if value != Playstyle::Neutral.id() && Playstyle::from_id(value).is_none() =>
+        {
             errors.push(format!("playstyle 取值非法 {value:?}"));
         }
-        "type" if !CARD_TYPES.contains(&value) => {
+        FilterKey::Type if !CARD_TYPES.contains(&value) => {
             errors.push(format!("type 取值非法 {value:?}"));
         }
-        "other" if !matches!(value, "true" | "false") => {
+        FilterKey::Other if !matches!(value, "true" | "false") => {
             errors.push(format!("other 取值非法 {value:?}"));
         }
         _ => {}
@@ -433,9 +416,6 @@ fn validate_filter_value(key: &str, value: &str, errors: &mut Vec<String>) {
 }
 
 fn validate_condition_filter(filter: &Filter, errors: &mut Vec<String>) {
-    if filter.key.is_empty() || !filter.key.chars().all(|c| c.is_ascii_lowercase()) {
-        errors.push(format!("condition 的筛选键非法 {:?}", filter.key));
-    }
     if filter.value.is_empty() {
         errors.push("condition 的筛选值不能为空".to_string());
     }

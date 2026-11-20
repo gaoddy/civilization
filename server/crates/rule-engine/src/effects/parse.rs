@@ -2,8 +2,8 @@ use crate::data::CardType;
 
 use super::validate::validate_effect;
 use super::{
-    Basis, Compare, Condition, CopyState, Duration, Effect, Filter, KeywordSpec, Op, Params, Pick,
-    Selector, Side, TimesIf, Trigger, Zone,
+    Basis, Compare, Condition, CopyState, Duration, Effect, Filter, FilterKey, KeywordSpec, Op,
+    Params, Pick, Selector, Side, TimesIf, Trigger, Zone,
 };
 
 const TRIGGERS: &[(&str, Trigger)] = &[
@@ -334,7 +334,9 @@ fn parse_condition(value: &str, chunk: &str) -> Result<Condition, String> {
     let Some((key, filter_value)) = segments[1].split_once('=') else {
         return Err(invalid());
     };
-    let key = key.trim().to_string();
+    let Some(key) = FilterKey::from_id(key.trim()) else {
+        return Err(invalid());
+    };
     let filter_value = filter_value.trim().to_string();
 
     let (compare, digits) = if let Some(digits) = segments[2].strip_prefix(">=") {
@@ -451,8 +453,12 @@ fn parse_filter(raw: &str, chunk: &str) -> Result<Filter, String> {
     let Some((key, value)) = raw.split_once('=') else {
         return Err(format!("筛选缺少 =: {raw:?}（{chunk}）"));
     };
+    let key = key.trim();
+    let Some(key) = FilterKey::from_id(key) else {
+        return Err(format!("未知筛选键 {key:?}（{chunk}）"));
+    };
     Ok(Filter {
-        key: key.trim().to_string(),
+        key,
         value: value.trim().to_string(),
     })
 }
@@ -505,10 +511,15 @@ fn parse_times_if(value: &str, chunk: &str) -> Result<TimesIf, String> {
     let parts: Vec<&str> = value.split(':').map(str::trim).collect();
     let (key, filter_value, count) = match parts.as_slice() {
         // `playstyle:mammal:2`：键、值、次数。
-        [key, filter_value, count] => (key.to_string(), filter_value.to_string(), *count),
+        [key, filter_value, count] => {
+            let Some(key) = FilterKey::from_id(key) else {
+                return Err(invalid());
+            };
+            (key, filter_value.to_string(), *count)
+        }
         _ => return Err(invalid()),
     };
-    if key.is_empty() || filter_value.is_empty() || !is_digits(count) {
+    if filter_value.is_empty() || !is_digits(count) {
         return Err(invalid());
     }
     Ok(TimesIf {

@@ -9,7 +9,7 @@
 //! `recruit::choose_discover` 与发现共用 FIFO 与按座位的消费规则。
 //! `OnAllyEvolve` 只在进化实际完成（最后一次选择结算完）时触发。
 
-use crate::data::has_play;
+use crate::data::Playstyle;
 use crate::effects::{Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::state::{GameState, InstanceId, MinionInstance, PendingChoice, Seat};
@@ -52,9 +52,8 @@ impl Engine {
         // （数据层已禁止，这里再兜底一次）。
         let evolvable = self
             .catalog
-            .cards
-            .get(&card_id)
-            .is_some_and(|card| !has_play(&card.categories, "machine"));
+            .filter_facts(&card_id)
+            .is_some_and(|facts| facts.play_mask & Playstyle::Machine.bit() == 0);
         if !evolvable {
             return;
         }

@@ -637,13 +637,13 @@ pub fn fold_auras(
         }
         minion.stats.attack.set_aura(attack);
         minion.stats.health.set_aura(health);
-        for keyword in &aura.keywords {
+        for keyword in aura.keywords.names() {
             if !minion
                 .granted
                 .iter()
-                .any(|(existing, _)| existing == keyword)
+                .any(|(existing, _)| *existing == keyword)
             {
-                minion.granted.push((keyword.clone(), Duration::Aura));
+                minion.granted.push((keyword, Duration::Aura));
             }
         }
     }

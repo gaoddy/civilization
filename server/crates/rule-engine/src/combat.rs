@@ -240,24 +240,11 @@ pub fn effective_health_with(
     value.max(0)
 }
 
-/// 随从当前生效的关键词集合。
-///
-/// 由所引用技能的 `keyword` 字段派生，并并入尚未失效的授予关键词；
-/// `Instant` 授予在战斗前就已结算完毕，视为不存在。未知关键词原样保留。
-pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
-    let mut result = base_keywords(catalog, minion);
-    for (keyword, duration) in &minion.granted {
-        if *duration != Duration::Instant {
-            result.insert(keyword.clone());
-        }
-    }
-    result
-}
-
-/// 随从当前生效的关键词位图集合；与 [`keywords`] 同口径，但查询不分配。
+/// 随从当前生效的关键词位图集合。
 ///
 /// 卡面自带关键词取 [`Catalog::base_keywords`]，再并入尚未失效的授予关键词；
-/// `Instant` 授予视为不存在。未知关键词原样保留。
+/// `Instant` 授予视为不存在。未知关键词原样保留。视图与哈希需要字符串时
+/// 走 [`KeywordSet::names`]。
 pub fn keyword_set(catalog: &Catalog, minion: &MinionInstance) -> KeywordSet {
     let mut result = catalog.base_keywords(&minion.card_id);
     for (keyword, duration) in &minion.granted {
@@ -268,40 +255,20 @@ pub fn keyword_set(catalog: &Catalog, minion: &MinionInstance) -> KeywordSet {
     result
 }
 
-/// 卡面自带的关键词，不含战斗内授予与光环派生。
-fn base_keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
-    base_keyword_occurrences(catalog, minion)
-        .into_iter()
-        .collect()
-}
-
-/// 卡面自带关键词的逐次出现列表，保留重复（供同层减伤累加）。
-fn base_keyword_occurrences(catalog: &Catalog, minion: &MinionInstance) -> Vec<String> {
-    let mut result = Vec::new();
-    if let Some(card) = catalog.cards.get(&minion.card_id) {
-        for skill_id in &card.skills {
-            if let Some(keyword) = catalog
-                .skills
-                .get(skill_id)
-                .and_then(|skill| skill.keyword.as_ref())
-            {
-                result.push(keyword.clone());
-            }
-        }
-    }
-    result
-}
-
 /// 排除光环派生关键词后的关键词集合，供「不复制光环」的效果（拟态）使用。
 ///
 /// 卡面本身就有的关键词即使同时被光环授予也保留。
-pub fn keywords_without_aura(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
-    let base = base_keywords(catalog, minion);
-    let mut result = keywords(catalog, minion);
+pub fn keywords_without_aura(catalog: &Catalog, minion: &MinionInstance) -> KeywordSet {
+    let base = catalog.base_keywords(&minion.card_id);
+    let mut result = base.clone();
     for (keyword, duration) in &minion.granted {
-        if *duration == Duration::Aura && !base.contains(keyword) {
-            result.remove(keyword);
+        if *duration == Duration::Instant {
+            continue;
         }
+        if *duration == Duration::Aura && !base.contains_name(keyword) {
+            continue;
+        }
+        result.insert(keyword);
     }
     result
 }

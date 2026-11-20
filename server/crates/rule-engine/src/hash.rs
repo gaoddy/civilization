@@ -261,9 +261,10 @@ pub fn state_hash(state: &GameState) -> u64 {
         hasher.u64(*instance_id);
         hasher.i32(aura.attack);
         hasher.i32(aura.health);
-        hasher.len(aura.keywords.len());
-        for keyword in &aura.keywords {
-            hasher.str(keyword);
+        let keywords = aura.keywords.names();
+        hasher.len(keywords.len());
+        for keyword in keywords {
+            hasher.str(&keyword);
         }
         hasher.bool(aura.floor_one);
     }

@@ -99,11 +99,64 @@ pub enum Pick {
     Adjacent,
 }
 
+/// 选择器筛选键；数据与协议中的字符串在加载期解析成该枚举。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FilterKey {
+    Taxon,
+    Playstyle,
+    Play,
+    Prey,
+    Host,
+    Subtype,
+    Id,
+    #[serde(rename = "type")]
+    Type,
+    Keyword,
+    Other,
+}
+
+impl FilterKey {
+    /// 数据与协议中的字符串形式。
+    pub fn id(self) -> &'static str {
+        match self {
+            FilterKey::Taxon => "taxon",
+            FilterKey::Playstyle => "playstyle",
+            FilterKey::Play => "play",
+            FilterKey::Prey => "prey",
+            FilterKey::Host => "host",
+            FilterKey::Subtype => "subtype",
+            FilterKey::Id => "id",
+            FilterKey::Type => "type",
+            FilterKey::Keyword => "keyword",
+            FilterKey::Other => "other",
+        }
+    }
+
+    /// 由字符串解析；未知筛选键返回 `None`。
+    pub fn from_id(id: &str) -> Option<FilterKey> {
+        [
+            FilterKey::Taxon,
+            FilterKey::Playstyle,
+            FilterKey::Play,
+            FilterKey::Prey,
+            FilterKey::Host,
+            FilterKey::Subtype,
+            FilterKey::Id,
+            FilterKey::Type,
+            FilterKey::Keyword,
+            FilterKey::Other,
+        ]
+        .into_iter()
+        .find(|key| key.id() == id)
+    }
+}
+
 /// 选择器筛选条件，写作 `key=value`。
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Filter {
-    pub key: String,
+    pub key: FilterKey,
     pub value: String,
 }
 
@@ -221,7 +274,7 @@ pub struct Condition {
 #[serde(deny_unknown_fields)]
 pub struct TimesIf {
     /// 筛选键，取值集合与 [`Filter`] 一致。
-    pub key: String,
+    pub key: FilterKey,
     /// 筛选值；语法要求必须带值。
     pub value: String,
     pub times: i32,

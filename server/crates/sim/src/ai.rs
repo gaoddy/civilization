@@ -313,7 +313,8 @@ fn choose_hero_power_target(
             .filter(|target| target.zone == Zone::Board)
             .filter(|target| {
                 board_minion(player, target.id).is_some_and(|minion| {
-                    !rule_engine::combat::keywords(catalog, minion).contains(&keyword.keyword)
+                    !rule_engine::combat::keyword_set(catalog, minion)
+                        .contains_name(&keyword.keyword)
                 })
             })
             .min_by_key(|target| target.id);

@@ -161,7 +161,7 @@ impl MinionStats {
 pub struct AuraEffect {
     pub attack: i32,
     pub health: i32,
-    pub keywords: BTreeSet<String>,
+    pub keywords: crate::keyword::KeywordSet,
     /// 受到任一光环作用；用于战斗快照的生命下限 1。
     pub floor_one: bool,
 }

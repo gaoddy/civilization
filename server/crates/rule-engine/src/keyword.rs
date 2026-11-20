@@ -29,6 +29,26 @@ pub enum Keyword {
     Decompose,
 }
 
+/// 全部已知关键词，顺序即位图位序。
+const KNOWN: [Keyword; 16] = [
+    Keyword::Battlecry,
+    Keyword::Deathrattle,
+    Keyword::Reborn,
+    Keyword::Taunt,
+    Keyword::DivineShield,
+    Keyword::Windfury,
+    Keyword::Contagion,
+    Keyword::IgnoreTaunt,
+    Keyword::Sow,
+    Keyword::Evolve,
+    Keyword::Breed,
+    Keyword::Assemble,
+    Keyword::Poison,
+    Keyword::Armor,
+    Keyword::Stealth,
+    Keyword::Decompose,
+];
+
 impl Keyword {
     /// 数据与协议中的基名。
     pub fn id(self) -> &'static str {
@@ -54,26 +74,7 @@ impl Keyword {
 
     /// 由基名解析；未知基名返回 `None`。
     pub fn from_id(id: &str) -> Option<Keyword> {
-        [
-            Keyword::Battlecry,
-            Keyword::Deathrattle,
-            Keyword::Reborn,
-            Keyword::Taunt,
-            Keyword::DivineShield,
-            Keyword::Windfury,
-            Keyword::Contagion,
-            Keyword::IgnoreTaunt,
-            Keyword::Sow,
-            Keyword::Evolve,
-            Keyword::Breed,
-            Keyword::Assemble,
-            Keyword::Poison,
-            Keyword::Armor,
-            Keyword::Stealth,
-            Keyword::Decompose,
-        ]
-        .into_iter()
-        .find(|keyword| keyword.id() == id)
+        KNOWN.into_iter().find(|keyword| keyword.id() == id)
     }
 
     /// 位图中使用的单个二进制位。
@@ -127,6 +128,15 @@ pub struct KeywordSet {
 }
 
 impl KeywordSet {
+    /// 由关键词字符串列表构建集合；测试与边界适配使用。
+    pub fn from_names<'a>(names: impl IntoIterator<Item = &'a str>) -> Self {
+        let mut set = Self::default();
+        for name in names {
+            set.insert(name);
+        }
+        set
+    }
+
     /// 并入一条关键词字符串：已知关键词置位，层数类同时累加。
     pub fn insert(&mut self, raw: &str) {
         match parse_keyword(raw) {
@@ -184,5 +194,28 @@ impl KeywordSet {
     /// 是否不含任何已知或未知关键词。
     pub fn is_empty(&self) -> bool {
         self.bits == 0 && self.unknown.is_empty()
+    }
+
+    /// 按字符串集合口径展开全部关键词，供视图、哈希与跨模块边界使用。
+    ///
+    /// 已知关键词写成数据与协议中的基名；`breed` / `assemble` / `armor`
+    /// 写成 `基名 层数`（位图已把同一关键词的层数累加）。结果按字典序排序，
+    /// 与旧 `BTreeSet<String>` 的遍历顺序一致。
+    pub fn names(&self) -> Vec<String> {
+        let mut names = Vec::with_capacity(self.unknown.len() + 4);
+        for keyword in KNOWN {
+            if !self.contains(keyword) {
+                continue;
+            }
+            names.push(match keyword {
+                Keyword::Breed => format!("{} {}", keyword.id(), self.breed),
+                Keyword::Assemble => format!("{} {}", keyword.id(), self.assemble),
+                Keyword::Armor => format!("{} {}", keyword.id(), self.armor),
+                _ => keyword.id().to_string(),
+            });
+        }
+        names.extend(self.unknown.iter().cloned());
+        names.sort_unstable();
+        names
     }
 }

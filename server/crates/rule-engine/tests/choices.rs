@@ -883,7 +883,7 @@ fn evolve_choice_divine_shield_grants_keyword() {
         .find(|minion| minion.instance_id == evolver)
         .expect("进化随从仍在场");
     assert!(
-        rule_engine::combat::keywords(&engine.catalog, minion).contains("divine_shield"),
+        rule_engine::combat::keyword_set(&engine.catalog, minion).contains_name("divine_shield"),
         "进化选护盾应获得护盾关键词"
     );
 }

@@ -14,15 +14,16 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::combat::{self, BattleField, CombatAction, CombatSetup, DamageSource};
 use crate::data::{
-    CardType, Catalog, Category, CategoryKind, Playstyle, card_in_pool, has_play, play_categories,
+    CardFilterFacts, CardType, Catalog, Playstyle, card_in_pool, play_bit, play_categories,
 };
 use crate::effects::{
-    CopyState, Duration, Effect, Filter, Op, Pick, Selector, Side, TargetRef, TimesIf, Trigger,
-    Zone,
+    CopyState, Duration, Effect, Filter, FilterKey, Op, Pick, Selector, Side, TargetRef, TimesIf,
+    Trigger, Zone,
 };
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::intent::{Reject, RejectCode};
+use crate::keyword::Keyword;
 use crate::recruit::new_minion;
 use crate::rng::{RngStreams, Stream};
 use crate::state::{
@@ -714,18 +715,17 @@ impl Engine {
         let Some(facts) = card_facts(&self.catalog, card_id) else {
             return false;
         };
-        match filter.key.as_str() {
-            "keyword" => minion.is_some_and(|minion| {
-                combat::keywords(&self.catalog, minion).contains(&filter.value)
+        match filter.key {
+            FilterKey::Keyword => minion.is_some_and(|minion| {
+                combat::keyword_set(&self.catalog, minion).contains_name(&filter.value)
             }),
-            "other" => {
+            FilterKey::Other => {
                 if filter.value == "true" {
                     ctx.source != Some(id)
                 } else {
                     true
                 }
             }
-            // 加载期已拒绝未知筛选键；条件里的未知键按「匹配不到任何结果」处理。
             key => facts.matches(&self.catalog, key, &filter.value),
         }
     }
@@ -910,9 +910,7 @@ impl Engine {
                 let keywords = if stats_only {
                     Vec::new()
                 } else {
-                    combat::keywords_without_aura(&self.catalog, target)
-                        .into_iter()
-                        .collect::<Vec<_>>()
+                    combat::keywords_without_aura(&self.catalog, target).names()
                 };
                 Some((target.attack(), target.health(), keywords))
             })
@@ -1092,7 +1090,8 @@ impl Engine {
         if amount == 0 {
             return 0;
         }
-        if combat::keywords(&self.catalog, minion).contains("divine_shield") && !minion.shield_used
+        if combat::keyword_set(&self.catalog, minion).contains(Keyword::DivineShield)
+            && !minion.shield_used
         {
             minion.shield_used = true;
             return 0;
@@ -1143,7 +1142,7 @@ impl Engine {
         let Some(facts) = card_facts(&self.catalog, card_id) else {
             return false;
         };
-        facts.matches(&self.catalog, &times_if.key, &times_if.value)
+        facts.matches(&self.catalog, times_if.key, &times_if.value)
     }
 
     // -----------------------------------------------------------------------
@@ -1879,9 +1878,7 @@ impl Engine {
             let keywords: Vec<String> = if stats_only {
                 Vec::new()
             } else {
-                combat::keywords_without_aura(&self.catalog, target)
-                    .into_iter()
-                    .collect()
+                combat::keywords_without_aura(&self.catalog, target).names()
             };
             let Some(source) = field.minion(source_id) else {
                 continue;
@@ -2009,7 +2006,8 @@ impl Engine {
             if layers <= 0 {
                 continue;
             }
-            let shielded = combat::keywords(&self.catalog, target).contains("divine_shield")
+            let shielded = combat::keyword_set(&self.catalog, target)
+                .contains(Keyword::DivineShield)
                 && !target.shield_used;
             if let Some(target) = field.minion_mut(*target_id) {
                 target.contagion = 0;
@@ -2526,9 +2524,11 @@ impl Engine {
         let Some(facts) = card_facts(&self.catalog, &minion.card_id) else {
             return false;
         };
-        match filter.key.as_str() {
-            "keyword" => combat::keywords(&self.catalog, minion).contains(&filter.value),
-            "other" => {
+        match filter.key {
+            FilterKey::Keyword => {
+                combat::keyword_set(&self.catalog, minion).contains_name(&filter.value)
+            }
+            FilterKey::Other => {
                 if filter.value == "true" {
                     ctx.source != Some(id)
                 } else {
@@ -2696,11 +2696,11 @@ fn is_enemy_selector(selector: &Selector) -> bool {
 
 /// 筛选与 `timesIf` 需要的卡牌事实。
 ///
-/// 衍生物与非池卡同样在 `catalog.cards` 中；按 `categories` 的多条 `play:` 判定玩法。
-/// 查不到时返回 `None`。
+/// 玩法归属与捕食/寄生分类在加载期预计算成位掩码与整数下标；衍生物与非池卡
+/// 同样在 `catalog.cards` 中。查不到时返回 `None`。
 struct CardFacts<'a> {
     taxon: &'a str,
-    categories: &'a [Category],
+    filter: std::borrow::Cow<'a, CardFilterFacts>,
     subtype: Option<&'a str>,
     id: &'a str,
     card_type: CardType,
@@ -2708,37 +2708,42 @@ struct CardFacts<'a> {
 
 impl CardFacts<'_> {
     /// 按筛选键匹配；`keyword` / `other` 由调用方单独处理。
-    fn matches(&self, catalog: &Catalog, key: &str, value: &str) -> bool {
+    fn matches(&self, catalog: &Catalog, key: FilterKey, value: &str) -> bool {
         match key {
-            "taxon" => catalog.taxonomy.is_within(self.taxon, value),
+            FilterKey::Taxon => catalog.taxonomy.is_within(self.taxon, value),
             // `playstyle` 与 `play` 同口径：任一条 `play:` 命中即可。
-            "playstyle" | "play" => has_play(self.categories, value),
-            "prey" | "host" => {
-                let kind = if key == "prey" {
-                    CategoryKind::Prey
-                } else {
-                    CategoryKind::Host
-                };
-                self.categories.iter().any(|category| {
-                    category.kind == kind && catalog.taxonomy.is_within(&category.value, value)
-                })
+            FilterKey::Playstyle | FilterKey::Play => {
+                play_bit(value).is_some_and(|bit| self.filter.play_mask & bit != 0)
             }
-            "subtype" => self.subtype == Some(value),
-            "id" => self.id == value,
-            "type" => match value {
+            FilterKey::Prey | FilterKey::Host => {
+                let Some(node) = catalog.taxonomy.node_id(value) else {
+                    return false;
+                };
+                let ancestors = if key == FilterKey::Prey {
+                    &self.filter.prey_ancestors
+                } else {
+                    &self.filter.host_ancestors
+                };
+                ancestors.binary_search(&node).is_ok()
+            }
+            FilterKey::Subtype => self.subtype == Some(value),
+            FilterKey::Id => self.id == value,
+            FilterKey::Type => match value {
                 "minion" => self.card_type == CardType::Minion,
                 "effect" => self.card_type == CardType::Effect,
                 _ => false,
             },
-            _ => false,
+            // `keyword` / `other` 由调用方单独处理。
+            FilterKey::Keyword | FilterKey::Other => false,
         }
     }
 }
 
 fn card_facts<'a>(catalog: &'a Catalog, card_id: &str) -> Option<CardFacts<'a>> {
-    catalog.cards.get(card_id).map(|card| CardFacts {
+    let card = catalog.cards.get(card_id)?;
+    Some(CardFacts {
         taxon: &card.taxon,
-        categories: &card.categories,
+        filter: catalog.filter_facts(card_id)?,
         subtype: card.subtype.as_deref(),
         id: &card.id,
         card_type: card.card_type,

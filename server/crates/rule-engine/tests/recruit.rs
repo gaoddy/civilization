@@ -763,8 +763,8 @@ fn use_hero_power_only_fires_selected_skill() {
     let card_id = minion_id(1);
     place(&engine.catalog, &mut state, 0, 1, &card_id);
     place(&engine.catalog, &mut state, 0, 2, &card_id);
-    let before_target = combat::keywords(&engine.catalog, &state.players[0].board[0]);
-    let before_other = combat::keywords(&engine.catalog, &state.players[0].board[1]);
+    let before_target = combat::keyword_set(&engine.catalog, &state.players[0].board[0]);
+    let before_other = combat::keyword_set(&engine.catalog, &state.players[0].board[1]);
 
     engine
         .apply(
@@ -779,12 +779,12 @@ fn use_hero_power_only_fires_selected_skill() {
 
     assert_eq!(state.players[0].gold, 9, "只扣被选中技能的费用");
     assert_ne!(
-        combat::keywords(&engine.catalog, &state.players[0].board[0]),
+        combat::keyword_set(&engine.catalog, &state.players[0].board[0]),
         before_target,
         "被选中的技能应结算"
     );
     assert_eq!(
-        combat::keywords(&engine.catalog, &state.players[0].board[1]),
+        combat::keyword_set(&engine.catalog, &state.players[0].board[1]),
         before_other,
         "未选中的技能不得连带结算"
     );

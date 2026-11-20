@@ -1,18 +1,19 @@
 mod common;
 
 use common::{effects_of, minion, test_catalog};
-use rule_engine::combat::{keyword_set, keywords};
+use rule_engine::combat::keyword_set;
 use rule_engine::data::{Card, CardType, Skill};
 use rule_engine::effects::Duration;
 use rule_engine::keyword::Keyword;
 
+/// 位图集合展开成字符串后仍能按同一口径查询。
 #[test]
-fn keyword_set_agrees_with_string_aggregate() {
+fn names_round_trip_to_membership() {
     let catalog = test_catalog();
     for card_id in ["nanobot", "ant", "bee"] {
         let subject = minion(&catalog, 1, card_id);
         let set = keyword_set(&catalog, &subject);
-        for name in keywords(&catalog, &subject) {
+        for name in set.names() {
             assert!(
                 set.contains_name(&name),
                 "{card_id} 的 {name} 应在 KeywordSet 中"
