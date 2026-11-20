@@ -21,7 +21,7 @@ server/
   crates/
     rule-engine/             # 纯库
       src/state.rs           # GameState / PlayerState / MinionInstance / MinionStats
-      src/data.rs            # Catalog（cards / heroes / skills / tokens）、Playstyle / Specialty 类型与加载期校验（deny_unknown_fields）
+      src/data.rs            # Catalog（cards / heroes / skills / tokens）、Playstyle / Category 类型与加载期校验（deny_unknown_fields）
       src/taxonomy.rs        # 科学分类树：祖先匹配 is_within / 路径 path / 叶子判定
       src/playstyles.rs      # 开局玩法抽取 draw 与 PLAYSTYLES_PER_GAME
       src/effects/           # 结构化效果校验（validate）、解释执行（exec）、光环（auras）；parse 仅保留为 DSL 作者工具
@@ -89,15 +89,14 @@ pub enum Playstyle {
     Plant, Fungus, Bacteria, Protozoa, Virus, Machine, Neutral,
 }
 
-pub enum SpecialtyKind { Play, Prey, Host }
+pub enum CategoryKind { Play, Prey, Host }
 
-pub struct Specialty { pub kind: SpecialtyKind, pub value: String }
+pub struct Category { pub kind: CategoryKind, pub value: String }
 
 pub struct Card {
     // 既有字段
-    pub playstyle: Playstyle,
     pub taxon: String,
-    pub specialty: Vec<Specialty>,
+    pub categories: Vec<Category>,
 }
 
 pub struct Token {
@@ -107,10 +106,10 @@ pub struct Token {
 }
 ```
 
-- 数据类型已无部落枚举与卡牌部落字段；卡牌的物种与玩法改由 `playstyle` / `taxon` / `specialty` 表达。
-- `Playstyle::ALL` 固定 13 项且不含 `Neutral`；`id()` / `from_id()` 是数据文件与协议中的玩法 id；`ordinal()` 是状态哈希中的序号（0..13，`Neutral` 为 13）。
-- `SpecialtyKind` 对应卡牌 `specialty` 的三种前缀：`Play`（`play:`）、`Prey`（`prey:`）、`Host`（`host:`）。
-- Token 的 `playstyle` 为可选项，读取口 `Token::playstyle()` 缺省返回 `Neutral`；`taxon` 必填，直接作为筛选分类节点。
+- 数据类型已无部落枚举与卡牌部落字段；卡牌的物种由 `taxon`、玩法归属与捕食/寄生关系由 `categories` 表达，卡牌不再有单值 `playstyle` 字段。
+- `Playstyle::ALL` 固定 13 项且不含 `Neutral`；`id()` / `from_id()` 是数据文件与协议中的玩法 id；`ordinal()` 是状态哈希中的序号（0..13，`Neutral` 为 13）。`Neutral` 只服务 Token 与引擎内部哨兵，不进入卡牌 `categories`，也不参与 `Playstyle::ALL`。
+- `CategoryKind` 对应卡牌 `categories` 的三种前缀：`Play`（`play:`）、`Prey`（`prey:`）、`Host`（`host:`）；每条为 `{ kind, value }`。
+- Token 保留单值 `playstyle`，为可选项，读取口 `Token::playstyle()` 缺省返回 `Neutral`；`taxon` 必填，直接作为筛选分类节点。
 
 ### 3.2 分类树
 
@@ -134,7 +133,7 @@ impl Taxonomy {
 - `Rank` 对应 `taxonomy.md` 的「界 / 门 / 纲 / 目 / 科 / 技术分类 / 学科」，只表达结构，不参与匹配。
 - `is_within` 沿父链上溯，最多 5 层；任一节点不存在返回 `false`。
 - `path` 从叶子返回至根的 id 列表（含自身），未知节点返回空列表。
-- `Catalog` 持有 `cards`、`heroes`、`skills`、`tokens` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。加载期校验所有卡牌与 Token 的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在，`play:` 取值是 13 个可启用玩法之一；随从与效果牌不得为 `hero` 类型，英雄卡必须为 `hero` 类型且技能存在；每张英雄卡必须有同 id 的随从卡且 `playstyle` / `specialty` / `skills` 一致；校验失败即拒绝加载。
+- `Catalog` 持有 `cards`、`heroes`、`skills`、`tokens` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。加载期校验所有卡牌与 Token 的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡，每张卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`）；随从与效果牌不得为 `hero` 类型，英雄卡必须为 `hero` 类型且技能存在；每张英雄卡必须有同 id 的随从卡且 `categories` / `skills` 完全一致；校验失败即拒绝加载。
 - 按用途选池：英雄技能查询（视图、光环、战斗开始、首次刷新、回合开始与主动技能）只读 `catalog.heroes`；商店、卡池、三连、发现与棋盘随从只读 `catalog.cards`。两池同名同 id，任何路径不得跨池回落。
 
 ### 3.3 筛选与匹配
@@ -144,9 +143,9 @@ impl Taxonomy {
 | 键 | 匹配 |
 | --- | --- |
 | `taxon` | 卡牌 `taxon` 等于该节点或位于其下（`Taxonomy::is_within`） |
-| `playstyle` | 卡牌 `playstyle` 精确相等（按 id 比较） |
-| `play` | `specialty` 中存在 `play:<值>` |
-| `prey` | `specialty` 中存在 `prey:<节点>`，且该节点等于筛选节点或位于其下 |
+| `playstyle` | 卡牌任一条 `play:` 精确相等（按 id 比较）；Token 按自身单值 `playstyle` 匹配 |
+| `play` | `categories` 中存在 `play:<值>`，任一条命中即可 |
+| `prey` | `categories` 中存在 `prey:<节点>`，且该节点等于筛选节点或位于其下 |
 | `host` | 同 `prey`，匹配 `host:` |
 | `subtype` / `id` / `type` / `scholar` | 保持既有语义；`scholar` 读 `is_scholar`，取值 `true` / `false` |
 | `keyword` / `other` | 由调用方单独处理 |
@@ -160,8 +159,7 @@ impl Taxonomy {
 
 `data.rs::card_in_pool(card, enabled)` 是统一入口：
 
-- 非 `Neutral` 玩法：玩法被启用才在池中。
-- `Neutral`：`specialty` 中没有 `play:` 时视为纯通用，始终在池中；有 `play:` 时至少一个命中本局玩法才在池中。学者、中立工具卡与效果牌同一口径——定向效果牌只在本局启用其 `play:` 关联玩法时进商店。
+- 卡牌 `categories` 中任一条 `play:` 命中启用玩法即入池；卡牌没有 `play:` 时在加载期被拒绝，不会走到这里。学者、工具卡与效果牌同一口径——效果牌只在本局启用其任一条 `play:` 归属玩法时进商店。
 - 商店、发现候选、随机召唤、商店类效果（刷新、加槽、获得随从）与英雄候选过滤都走该入口。
 - 复制已有实例、显式 `Summon {card}`、复活是技能明确指定的结果，不走卡池判定。
 - 英雄卡不进商店；英雄候选由房间服务按同一入口过滤（见[房间服务与联网](room-service/README.md)）。
@@ -177,7 +175,7 @@ impl Taxonomy {
 
 - 唯一数据源：`docs/versions/v0.1/product/content/` 下的卡牌、技能实体文档与 `taxonomy.md`；`scripts/gen_card_data.py` 复用 `validate_docs.py` 的 front matter 与分类树解析。
 - 分类树与玩法清单由 `taxonomy.md` §1 / §2 解析为 `taxonomy.json`（`{nodes, playstyles}`）；客户端生成物 `client/generated/taxonomy.json` 同源。展示名不进 JSON，由文本表 `enum.taxon.<id>` 与 `enum.playstyle.<id>` 提供。
-- 生成数据只含规则与标识，不含展示文本：`cards.json`、`skills.json`、`tokens.json` 没有 `name`、`text`、`match_text` 字段。卡牌 `card_type` / `playstyle` / `taxon` / `specialty` / `era` / `subtype`、技能与效果中的 `keyword`、DSL 筛选与枚举（`playstyle`、`taxon`、`play`、`prey`、`host`、`type`、`keyword`、进化选项等）一律为英文 id（如 `minion`、`mammal`、`felidae`、`industrial`、`ignore_taunt`）。展示文本由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`，按 `card.<id>.name`、`skill.<id>.text`、`token.<id>.name` 等文本 id 取用。
+- 生成数据只含规则与标识，不含展示文本：`cards.json`、`skills.json`、`tokens.json` 没有 `name`、`text`、`match_text` 字段。卡牌 `card_type` / `categories` / `taxon` / `era` / `subtype`，Token 的 `playstyle`，技能与效果中的 `keyword`、DSL 筛选与枚举（`playstyle`、`taxon`、`play`、`prey`、`host`、`type`、`keyword`、进化选项等）一律为英文 id（如 `minion`、`mammal`、`felidae`、`industrial`、`ignore_taunt`）。展示文本由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`，按 `card.<id>.name`、`skill.<id>.text`、`token.<id>.name` 等文本 id 取用。
 - 经济与对局配置由生成器从产品数值文档口径抄录到 `config.json`（初始生命、棋盘/手牌/商店槽位、回合上限、伤害上下限、升时代费用、星级牌份数、商店概率、金币曲线）。
 - 输出确定性 JSON（UTF-8、两空格缩进、键排序、末尾换行）；生成物随源提交。
 - 引擎用 `include_str!` 嵌入 `server/data/v0.1/*.json`，加载期由 serde 校验结构化字段与枚举，再由 `validate` 校验跨字段组合；未知字段或非法组合直接失败。源文档 `effects` 仍写 DSL，由生成器编译为结构化数组，生成期用与 `validate` 同规则的 `check_structured` 预检，避免 `make data` 通过而引擎加载失败。
@@ -212,7 +210,7 @@ impl Taxonomy {
 
 M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 
-- **购买**：`best_affordable` 跳过「定向效果牌且其 `play:` 关联与当前阵容主导玩法不一致」的槽位。主导玩法取棋盘随从中非 `neutral` 的 `playstyle` 众数，同票取枚举序靠前者；没有主导玩法时所有效果牌都可买，通用效果牌始终可买。
+- **购买**：`best_affordable` 跳过「效果牌且其全部 `play:` 归属都不等于当前阵容主导玩法」的槽位。主导玩法取棋盘随从全部 `play:` 归属的众数，多条归属各计一次，同票取枚举序靠前者；没有主导玩法时所有效果牌都可买。
 - **打出**：`choose_play_effect` 先尝试不带目标地打出效果牌（合法池为空时效果落空、意图仍生效）；该意图被引擎以 `NO_VALID_TARGET` 拒绝后，同一回合改为按本人棋盘、手牌、商店依次带目标重试。
 - **重规划预算**：`sim/src/lib.rs` 的驱动循环按座位、按回合统计连续被拒意图数，上限 `MAX_REPLANS_PER_SEAT_TURN = 64`；任一次成功执行都会清空 `blocked` 并把计数归零，预算只用于识别「状态不变的连续被拒」死循环，不跨成功动作累计。
 
@@ -240,7 +238,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 | 字段 | 口径 |
 | --- | --- |
 | `games` / `seed` | 局数；批量起始种子（第 i 局种子为 `seed + i`） |
-| `wins_by_playstyle` | 各玩法夺冠局数，按玩法 id 升序，只列出夺冠过的玩法；冠军玩法按冠军最终阵容随从的 `playstyle` 统计，无可统计随从时为 `neutral` |
+| `wins_by_playstyle` | 各玩法夺冠局数，按玩法 id 升序，只列出夺冠过的玩法；冠军玩法按冠军最终阵容随从的全部 `play:` 条目统计，多条归属各计一次，没有可统计归属时为 `neutral` |
 | `win_rate_permille_by_playstyle` | 各玩法夺冠率整数千分比 = 夺冠局数 × 1000 / `games`，向下取整；13 个玩法与中立全部列出 |
 | `avg_turns` | 各局结束回合之和 / 局数，向下取整 |
 | `era_upgrade_turns_by_seat` | 8 个座位各自「首次升时代回合」的累加值（未升级的座位计 0） |
