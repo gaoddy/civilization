@@ -12,7 +12,7 @@
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | `card_selected` | `signal(String)` | 点击某张卡面时发出卡牌 id |
-| `set_cards(ids, selected_id)` | `void` | 用新的卡牌集合重建第 1 页 |
+| `set_cards(ids, selected_id, hero = false)` | `void` | 用新的卡牌集合重建第 1 页；`hero` 为真时卡面走英雄样式 |
 | `select(selected_id)` | `void` | 只更新选中描边，不重建当前页 |
 
 - 页大小取 `gallery-page-size`（18 = 6 列 × 3 行），手机取 `gallery-page-size-compact`（8 = 4 列 × 2 行）；列数取 `gallery-grid-columns`（6），手机取 `gallery-grid-columns-compact`（4）。
@@ -22,6 +22,7 @@
 ## 变体与状态
 
 - 集合为空时隐藏网格与分页条，显示「没有符合条件的卡牌」。
+- `hero` 只影响卡面构建（无费用、时代与攻击/生命），分页与选中逻辑不变。
 - 页码文案为「第 N/M 页」；首页禁用上一页，末页禁用下一页。
 - 列/行间距 `space-lg`；网格不滚动，内容超出视口高度时按页切分。
 

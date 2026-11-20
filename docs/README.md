@@ -29,4 +29,4 @@
 
 ## 数据与校验
 
-卡牌实体文档是唯一数据源（含 32 张英雄卡），索引于[卡牌索引](versions/v0.1/product/content/cards/README.md)；一致性由 `python3 scripts/validate_docs.py` 校验。
+卡牌实体文档是唯一数据源，索引于[卡牌索引](versions/v0.1/product/content/cards/README.md)；32 张英雄卡在 `content/heroes/` 单独索引于[英雄卡索引](versions/v0.1/product/content/heroes/README.md)；一致性由 `python3 scripts/validate_docs.py` 校验。

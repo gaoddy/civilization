@@ -1,7 +1,7 @@
 # 图鉴卡面单元
 
 > 状态：已实现
-> 入口：`GalleryCardTile.new(id, selected)`，`client/scenes/gallery_card_tile.gd`（`class_name GalleryCardTile`）
+> 入口：`GalleryCardTile.new(id, selected, hero = false)`，`client/scenes/gallery_card_tile.gd`（`class_name GalleryCardTile`）
 
 ## 用途
 
@@ -16,7 +16,8 @@
 
 - 最小尺寸为 `card-width` × `card-height`（112×146）。
 - 节点名为 `GalleryCard_<id>`；原生 tooltip 为卡名。
-- 卡面由 `GalleryCardFace.build` 构建：原始攻防、玩法、英雄标记、`display_cost` 与时代。
+- 普通卡面由 `GalleryCardFace.build` 构建：原始攻防、玩法、`display_cost` 与时代。
+- `hero` 为真时改由 `GalleryCardFace.build_hero` 构建：左上「英雄」角标、玩法与技能介绍，不含费用、时代与攻击/生命。
 
 ## 变体与状态
 

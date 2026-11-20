@@ -93,6 +93,7 @@ client/
   generated/
     protocol.gd              # schema 生成的 GDScript 常量
     cards.json               # 产品文档生成的卡牌展示表
+    heroes.json              # 英雄卡展示表（只含身份与技能）
     skills.json              # 技能展示表（effects 为结构化数组，仅展示不解析）
     tokens.json              # Token 展示表
     taxonomy.json            # 分类树生成物：{nodes, playstyles}
@@ -105,14 +106,15 @@ client/
 - `GameStore`：保存 `playerId`、`playerCode`、`token`、`roomId`、`roomCode`、房间成员、`PlayerView`、`lastSeq`、排名、种子、本人赛后统计 `self_stats`、`RoomClosed` 原因 `room_closed_reason`、引导步骤 `guide_step`，以及社交视图 `friends` / `incoming_requests` / `outgoing_requests` / `recent_players` / `pending_invites`。`handle(type, payload)` 只做字段搬运，发出 `auth_changed`、`room_changed`、`view_changed`、`game_started`、`game_over`、`room_closed`、`error_received`、`social_changed`、`invite_received`、`invite_result_received` 信号；`FriendUpdate` 整段替换社交列表，`FriendInvite` 按 `inviteId` 去重后入队，`InviteAccepted` 移除邀请并自动补发 `JoinRoom{roomCode}`。`GameOver` 写入 `ranking`、`game_seed` 与 `selfStats`；`RoomClosed` 先暂存 `reason`，`reset_room()` 后写回 `room_closed_reason`、补发 `LeaveRoom` 并发出 `room_closed`。`reset_room()` 清空房间与对局状态，`clear_game_view()` 只清本局视图（保留房间与社交），`reset_social()` 清空社交，`reset_session()` 两者都清并清空身份与令牌。
 - `Net`：持有一个 `WebSocketPeer`，`_process` 中轮询；连接建立后先认证，断线每 3 秒自动重连。重连时以令牌发 `AuthRequest`，若仍在房间再发 `Reconnect{roomId, lastSeq}`，由服务端回全量 `Snapshot`。
 - 下行信封只校验 `v == 1` 与 `type`，`payload` 原样交给 `GameStore`；未知类型忽略。上行信封为 `{v, id, type, ts, payload}`，`id` 由时间戳与计数器生成。
-- `CardDB`：启动时读取 `client/generated/{cards,skills,tokens,taxonomy}.json`。卡名、技能文本与时代名不放在生成数据里，而是按文本 id 从 `client/text/zh_CN.csv` 取：`display_name` 取 `card.<id>.name`（Token 取 `token.<id>.name`），`display_text` 取 `skill.<id>.text`，`era_name` 取 `enum.era.<id>`。不参与任何规则判定。
+- `CardDB`：启动时读取 `client/generated/{cards,heroes,skills,tokens,taxonomy}.json`。卡名、技能文本与时代名不放在生成数据里，而是按文本 id 从 `client/text/zh_CN.csv` 取：`display_name` 取 `card.<id>.name`（Token 取 `token.<id>.name`），`display_text` 取 `skill.<id>.text`，`era_name` 取 `enum.era.<id>`。不参与任何规则判定。
 - `CardDB` 的玩法与分类接口：
   - `taxonomy`：节点 id → `{id, parent, rank}` 的字典，来自 `generated/taxonomy.json` 的 `nodes`；
   - `playstyle_name(id)`：取 `enum.playstyle.<id>`，空 id 返回空串，缺键回退为 id；
   - `taxon_name(id)`：取 `enum.taxon.<id>`，空 id 返回空串，缺键回退为 id；
   - `taxon_path(id)`：从叶子沿 `parent` 上溯到根（最多 7 层），返回「界 → 科」顺序的展示名数组；未知节点或空 id 返回空数组。
 - `skill_name(id)`：取 `skill.<id>.name`，空 id 或缺键返回空串，避免内部技能 id 泄露到界面；卡牌详情与图鉴详情据此跳过没有展示名的技能。
-- `cards.json` 含 `playstyle` / `taxon` / `specialty`；`tokens.json` 的条目并入 `CardDB.cards`，因此 Token 卡面同样可按自身玩法与分类展示。
+- `heroes.json` 单独载入 `CardDB.heroes`，不与 `cards` 合并：英雄与同名随从卡 id 相同但分属两个集合。`CardDB.hero(id)` / `hero_text(id)` 只读英雄池；英雄卡没有 `taxon`、时代与数值，界面按需只展示玩法、关联与技能。
+- `cards.json` 含 `playstyle` / `taxon` / `specialty`，不再含 `is_hero`；`tokens.json` 的条目并入 `CardDB.cards`，因此 Token 卡面同样可按自身玩法与分类展示。
 
 ## 3. 六个场景
 

@@ -12,9 +12,9 @@
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | `closed` | `signal` | 点返回按钮或按 `Esc` 时发出，由页面决定跳转或收起 |
-| `set_catalog(card_ids, title, close_text)` | `void` | 载入卡牌 id 集合与页面文案；重置筛选与选中，并选中筛选后的首张 |
+| `set_catalog(card_ids, title, close_text, hero_ids = null)` | `void` | 载入普通卡集合、页面文案与英雄集合；`hero_ids` 为 `null` 时取全部英雄，传数组（含空数组）时按传入集合展示；重置筛选与选中，并选中筛选后的首张 |
 
-- `card_ids` 为卡牌与 Token 的 id 数组，由页面给出；组件不读取 `GameStore`。
+- `card_ids` 为卡牌与 Token 的 id 数组，`hero_ids` 为英雄卡 id 数组，均由页面给出；组件不读取 `GameStore`。
 - `title`、`close_text` 为已翻译文案。
 - 内部节点名：`GalleryBackground`、`GalleryHeader`、`GalleryTitle`、`GalleryClose`、`GalleryChapters`、`GalleryBody`、`GalleryToc`、`GalleryGrid`、`GalleryDetail`。
 - `GalleryHeader` 内依次为标题、`GalleryChapters` 与返回按钮；章节栏横向撑满剩余宽度，不显示副标题与总计数。
@@ -24,8 +24,9 @@
 - 无视觉变体；大厅与对局只差文案与目录内容。
 - 筛选同时存在时代（`0` 表示全部）、顶层分类（空串表示全部）与二级「随从 / 效果」（空串表示全部），三维交叉生效。
 - 每个维度的计数都按另外两维筛选换算，计数等于点下去能看到的张数。
-- 顶层分类按 13 个玩法展示，并追加「中立」；选中项下方展开二级项，切换顶层分类时二级回到全部。
-- 详情预览区显示卡面美术大图，无美术时显示玩法色 + 首字占位。
+- 顶层分类在英雄集合非空时先列「英雄」，再列 13 个玩法，末尾追加「中立」；选中项下方展开二级项，切换顶层分类时二级回到全部。
+- 「英雄」是独立分区：选中后网格只列英雄卡，隐藏时代章节栏、不展开随从/效果二级筛选，并清空时代筛选；切回普通分类恢复时代章节。
+- 详情预览区显示卡面美术大图，无美术时显示玩法色 + 首字占位；英雄分区走 `GalleryDetail.show_hero`，只显示身份与技能。
 - 选中卡不在筛选结果内时自动落到结果首张；结果为空时选中清空，网格与详情分别显示空态。
 - `Esc` 只在可见时响应，并标记输入已处理。
 

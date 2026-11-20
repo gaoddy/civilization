@@ -72,7 +72,7 @@
 | `hero-card-width` / `-height` | 64 / 84 | 英雄卡尺寸，与 `card-width` 同宽高比 |
 | `hero-cover-height` | 40 | 英雄卡玩法色封面高度 |
 | `hero-name-height` | 14 | 英雄卡名字行高度 |
-| `hero-stats-height` | 30 | 英雄卡底部攻防与时代行高度 |
+| `hero-stats-height` | 30 | 英雄卡底部时代与生命行高度 |
 | `shop-icon-size` | 40 | 商店升时代、刷新、冻结与英雄技能图标按钮边长 |
 | `recruit-shop-gap` | 18 | 招募组合中商店操作与商店整体到河道的间距 |
 | `opponent-hp-width` | 360 | 战斗阶段对手身份块与血量条宽度 |

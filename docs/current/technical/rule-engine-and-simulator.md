@@ -12,7 +12,8 @@ server/
   Cargo.toml                 # workspace：crates/rule-engine、crates/sim
   rust-toolchain.toml        # 工具链 1.94.1，edition 2024
   data/v0.1/
-    cards.json               # 生成物：220 张卡
+    cards.json               # 生成物：随从与效果牌
+    heroes.json              # 生成物：英雄卡（只含身份与技能）
     skills.json              # 生成物：118 个技能
     tokens.json              # 生成物：3 个 Token
     config.json              # 生成物：经济与对局配置
@@ -20,7 +21,7 @@ server/
   crates/
     rule-engine/             # 纯库
       src/state.rs           # GameState / PlayerState / MinionInstance / MinionStats
-      src/data.rs            # Catalog、Playstyle / Specialty 类型与加载期校验（deny_unknown_fields）
+      src/data.rs            # Catalog（cards / heroes / skills / tokens）、Playstyle / Specialty 类型与加载期校验（deny_unknown_fields）
       src/taxonomy.rs        # 科学分类树：祖先匹配 is_within / 路径 path / 叶子判定
       src/playstyles.rs      # 开局玩法抽取 draw 与 PLAYSTYLES_PER_GAME
       src/effects/           # 结构化效果校验（validate）、解释执行（exec）、光环（auras）；parse 仅保留为 DSL 作者工具
@@ -133,7 +134,8 @@ impl Taxonomy {
 - `Rank` 对应 `taxonomy.md` 的「界 / 门 / 纲 / 目 / 科 / 技术分类 / 学科」，只表达结构，不参与匹配。
 - `is_within` 沿父链上溯，最多 5 层；任一节点不存在返回 `false`。
 - `path` 从叶子返回至根的 id 列表（含自身），未知节点返回空列表。
-- `Catalog` 持有 `taxonomy: Taxonomy`。加载期校验所有卡牌与 Token 的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在，`play:` 取值是 13 个可启用玩法之一；校验失败即拒绝加载。
+- `Catalog` 持有 `cards`、`heroes`、`skills`、`tokens` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。加载期校验所有卡牌与 Token 的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在，`play:` 取值是 13 个可启用玩法之一；随从与效果牌不得为 `hero` 类型，英雄卡必须为 `hero` 类型且技能存在；每张英雄卡必须有同 id 的随从卡且 `playstyle` / `specialty` / `skills` 一致；校验失败即拒绝加载。
+- 按用途选池：英雄技能查询（视图、光环、战斗开始、首次刷新、回合开始与主动技能）只读 `catalog.heroes`；商店、卡池、三连、发现与棋盘随从只读 `catalog.cards`。两池同名同 id，任何路径不得跨池回落。
 
 ### 3.3 筛选与匹配
 
@@ -257,7 +259,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 
 模拟器与确定性：
 
-- `sim::assign_heroes` 只保留 `card_in_pool` 通过的英雄卡，按 id 升序取 8 张依次分配给座位 0–7；不足 8 张时从头循环取，没有任何可用英雄时报错。
+- `sim::assign_heroes` 只保留 `hero_in_pool` 通过的英雄卡（遍历 `Catalog.heroes`），按 id 升序取 8 张依次分配给座位 0–7；不足 8 张时从头循环取，没有任何可用英雄时报错。
 - `play_game` 与 `replay` 都由日志种子调用 `playstyles::draw(seed)` 得到本局 5 个玩法，再传给 `Engine::new`；因此重放与批量运行使用同一组玩法。
 - 报表字段为 `wins_by_playstyle` / `win_rate_permille_by_playstyle`，单局日志字段为 `winner_playstyle`。
 
