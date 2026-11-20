@@ -112,10 +112,15 @@ pub struct Card {
 `server/crates/rule-engine/src/taxonomy.rs`：
 
 ```rust
-pub struct Taxonomy { nodes: BTreeMap<String, TaxonNode> }
+pub struct Taxonomy {
+    nodes: BTreeMap<String, TaxonNode>,
+    ids: HashMap<String, u16>,
+    parents: Vec<Option<u16>>,
+    names: Vec<String>,
+}
 pub struct TaxonNode { pub parent: Option<String>, pub rank: Rank }
 
-pub enum Rank { Kingdom, Phylum, Class, Order, Family, Technique, Phenomenon }
+pub enum Rank { Kingdom, Phylum, Class, Order, Family, Technique, Discipline }
 
 impl Taxonomy {
     pub fn contains(&self, id: &str) -> bool;
@@ -127,9 +132,9 @@ impl Taxonomy {
 
 - `taxonomy.json` 结构为 `{ "nodes": [{id, parent, rank}], "playstyles": [玩法 id] }`；节点按 id 去重，重复 id 解析失败。
 - `Rank` 对应 `taxonomy.md` 的「界 / 门 / 纲 / 目 / 科 / 技术分类 / 学科」，只表达结构，不参与匹配。
-- `is_within` 沿父链上溯，最多 5 层；任一节点不存在返回 `false`。
+- `is_within` 先把两侧 id 解析为整数下标，再沿 `parents` 的整数父链上溯，最多 5 层；公开签名不变，任一节点不存在返回 `false`。`names` 是下标到 id 的反向映射，主要供构建期生成 `ids` / `parents` 与调试使用，运行期匹配不经过它。
 - `path` 从叶子返回至根的 id 列表（含自身），未知节点返回空列表。
-- `Catalog` 持有 `cards`、`heroes`、`skills` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。加载期校验所有卡牌的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡；`in_shop_pool: true` 的卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`），非池卡允许没有 `play:`；`CardType` 只有 `minion` / `effect`，`cards.json` 写入 `hero` 在反序列化阶段即被拒绝；英雄卡不含 `card_type`，与随从卡靠独立文件、独立结构体与独立集合区分；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
+- `Catalog` 持有 `cards`、`heroes`、`skills` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。`Catalog` 另持私有侧表 `card_keywords: BTreeMap<String, KeywordSet>`：加载期按每张卡 `skills` 的 `keyword` 预计算卡面自带关键词；`base_keywords(card_id)` 命中侧表时直接克隆预计算值，侧表缺失（测试直接向 `cards` / `skills` 插卡）时按当前数据即时计算回退，两者口径一致。加载期校验所有卡牌的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡；`in_shop_pool: true` 的卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`），非池卡允许没有 `play:`；`CardType` 只有 `minion` / `effect`，`cards.json` 写入 `hero` 在反序列化阶段即被拒绝；英雄卡不含 `card_type`，与随从卡靠独立文件、独立结构体与独立集合区分；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
 - 按用途选池：英雄技能查询（视图、光环、战斗开始、首次刷新、回合开始与主动技能）只读 `catalog.heroes`；商店、卡池、三连、发现与棋盘随从只读 `catalog.cards`。两池同名同 id，任何路径不得跨池回落。
 
 ### 3.3 筛选与匹配
@@ -313,7 +318,9 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 - 进入结算时 `clear_combat_duration` 调用 `clear_turn` 清除攻防的 `turn` 层，同时保留 `granted` 的时长清理与禁攻规则。
 - 幽灵战（`settle.rs::resolve_ghost`）的幽灵来自 `state.ranking`（全部出局者，最近出局在前）：每回合用 `Stream::Matchmaking` 随机抽一名，可能连续抽到同一人；没有出局者时幽灵为空阵容，落单座位仍产生配对与战报。幽灵取其最终棋盘（死亡时的真实数值，保留成长与永久增益），并按幽灵自己的光环来源（`player_auras`）折叠一次；不结算英雄被动、不产生手牌、不写回牌池与持久棋盘。若幽灵与己方棋盘实例编号重号，`renumber_ghost` 只在本次模拟的克隆上改号。双方同回合清场判平局；幽灵获胜时落单座位按伤害公式扣血，落单座位获胜时计入 `last_won`/`last_winner`。
 - 光环只经 `fold_auras` 折叠进克隆：把 `state.auras` 的派生值写入克隆的 `aura` 层并保留「光环失效不致死」的夹紧，持久实例的 `aura` 层始终为 0。
+- `state.auras` 由引擎在固定时机重算：`recompute_auras` 全量扫描全部未出局座位并整体替换，用于开局、回合开始、招募结束（`Engine::finish_recruit`）与结算（`Engine::resolve_settle`）；`recompute_auras_for(seat)` 只重算单个座位，供 `Engine::apply` 在每条意图成功后调用——移除并重建该座位棋盘的条目，同时清理已不在任何未出局玩家棋盘上的陈旧条目，结果与全量重算一致。
 - `hash.rs` 编码 `stats` 各分量（含 `current`）与 `is_scholar`；编码变化会改变状态哈希，同代码重放仍保持确定。
+- 关键词仍按原字符串编码：`hash.rs` 对光环 `keywords` 与随从 `granted` 逐条写入关键词原文。战斗内部的 `KeywordSet` 位图只用于判定与层数累加，不参与状态哈希，因此 B 阶段的位图化不改变既有日志与黄金基线的哈希。
 
 ### 10.1 伤害来源与击杀归属
 
