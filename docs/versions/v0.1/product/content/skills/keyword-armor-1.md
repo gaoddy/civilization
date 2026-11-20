@@ -1,8 +1,7 @@
 ---
 id: keyword-armor-1
 keyword: armor 1
-text: 减伤 1：受到伤害时，减免 1 点伤害
-effects: []
+template: keyword-self(keyword=armor 1)
 ---
 
 # keyword-armor-1
@@ -14,6 +13,7 @@ effects: []
 | id | keyword-armor-1 |
 | 关键词 | 减伤 1 |
 | 确定性替换 | 不适用 |
+| 模板 | keyword-self |
 
 ## 效果
 

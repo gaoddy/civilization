@@ -1,8 +1,7 @@
 ---
 id: deathrattle-summon-2-2-hela-cell-clone
 keyword: deathrattle
-text: 亡语：召唤一个 2/2 的海拉细胞（复制体）
-effects: OnDeath|Summon|self|token=hela-cell-token,count=1
+template: on-death-summon(token=hela-cell-token,count=1)
 ---
 
 # deathrattle-summon-2-2-hela-cell-clone
@@ -14,6 +13,7 @@ effects: OnDeath|Summon|self|token=hela-cell-token,count=1
 | id | deathrattle-summon-2-2-hela-cell-clone |
 | 关键词 | 亡语 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-summon |
 
 ## 效果
 

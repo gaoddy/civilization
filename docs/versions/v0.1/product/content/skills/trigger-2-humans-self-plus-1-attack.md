@@ -1,7 +1,6 @@
 ---
 id: trigger-2-humans-self-plus-1-attack
-text: 若你控制至少 2 个人科随从，获得 +1 攻击力
-effects: ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:taxon=hominidae:>=2
+template: conditional-taxon-self-attack(attack=1,taxon=hominidae,count=2)
 ---
 
 # trigger-2-humans-self-plus-1-attack
@@ -13,6 +12,7 @@ effects: ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=
 | id | trigger-2-humans-self-plus-1-attack |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | conditional-taxon-self-attack |
 
 ## 效果
 

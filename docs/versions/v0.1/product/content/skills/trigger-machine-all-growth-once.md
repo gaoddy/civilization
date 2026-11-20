@@ -1,7 +1,6 @@
 ---
 id: trigger-machine-all-growth-once
-text: 使你的机械随从获得一次成长
-effects: OnPlayEffect|Growth|friendly:all:playstyle=machine|times=1
+template: on-play-growth-all-ps(playstyle=machine,times=1)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-machine-all-growth-once |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-growth-all-ps |
 
 ## 效果
 

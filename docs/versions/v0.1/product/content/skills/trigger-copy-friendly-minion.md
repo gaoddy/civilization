@@ -1,7 +1,6 @@
 ---
 id: trigger-copy-friendly-minion
-text: 复制一个友方随从
-effects: OnPlayEffect|Copy|friendly:single|to=hand,state=current
+template: on-play-copy-friendly
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-copy-friendly-minion |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-copy-friendly |
 
 ## 效果
 

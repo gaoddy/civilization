@@ -1,8 +1,7 @@
 ---
 id: universal-manuscript
 name: 万能手稿
-text: 复制一张你手牌中的随从牌
-effects: OnActivate|Copy|target:hand:type=minion|from=hand,type=minion,to=hand
+template: activate-copy-hand-minion
 cost: 2
 uses_per_turn: 1
 match_text: 同左
@@ -17,6 +16,7 @@ match_text: 同左
 | id | universal-manuscript |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | activate-copy-hand-minion |
 | 费用 | 2 |
 | 每回合次数 | 1 |
 

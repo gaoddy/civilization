@@ -1,7 +1,6 @@
 ---
 id: trigger-fish-all-growth-once
-text: 使你的鱼纲随从获得一次成长
-effects: OnPlayEffect|Growth|friendly:all:playstyle=fish|times=1
+template: on-play-growth-all-ps(playstyle=fish,times=1)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-fish-all-growth-once |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-growth-all-ps |
 
 ## 效果
 

@@ -1,8 +1,7 @@
 ---
 id: keyword-evolve
 keyword: evolve
-text: 进化：从 +2/+2、护盾、复生中选择一个
-effects: []
+template: keyword-self(keyword=evolve)
 ---
 
 # keyword-evolve
@@ -14,6 +13,7 @@ effects: []
 | id | keyword-evolve |
 | 关键词 | 进化 |
 | 确定性替换 | 不适用 |
+| 模板 | keyword-self |
 
 ## 效果
 

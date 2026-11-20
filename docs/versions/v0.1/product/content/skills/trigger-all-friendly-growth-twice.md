@@ -1,7 +1,6 @@
 ---
 id: trigger-all-friendly-growth-twice
-text: 使你的随从获得两次成长
-effects: OnPlayEffect|Growth|friendly:all|times=2
+template: on-play-growth-all(times=2)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-all-friendly-growth-twice |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-growth-all |
 
 ## 效果
 

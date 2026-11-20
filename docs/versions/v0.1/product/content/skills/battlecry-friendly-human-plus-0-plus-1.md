@@ -1,8 +1,7 @@
 ---
 id: battlecry-friendly-human-plus-0-plus-1
 keyword: battlecry
-text: 战吼：使一个友方人科随从获得 +0/+1
-effects: OnPlay|ModifyStats|friendly:single:taxon=hominidae|health=1,duration=permanent
+template: on-play-battlecry-stats-single-taxon-health(taxon=hominidae,health=1)
 ---
 
 # battlecry-friendly-human-plus-0-plus-1
@@ -14,6 +13,7 @@ effects: OnPlay|ModifyStats|friendly:single:taxon=hominidae|health=1,duration=pe
 | id | battlecry-friendly-human-plus-0-plus-1 |
 | 关键词 | 战吼 |
 | 确定性替换 | 不适用 |
+| 模板 | on-play-battlecry-stats-single-taxon-health |
 
 ## 效果
 

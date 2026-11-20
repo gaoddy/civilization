@@ -1,7 +1,6 @@
 ---
 id: aura-adjacent-mammal
-text: 相邻的友方哺乳纲随从获得 +2/+2
-effects: Aura|ModifyStats|friendly:adjacent:playstyle=mammal|attack=2,health=2
+template: aura-adjacent-playstyle-stats(playstyle=mammal,attack=2,health=2)
 ---
 
 # aura-adjacent-mammal
@@ -13,6 +12,7 @@ effects: Aura|ModifyStats|friendly:adjacent:playstyle=mammal|attack=2,health=2
 | id | aura-adjacent-mammal |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | aura-adjacent-playstyle-stats |
 
 ## 效果
 

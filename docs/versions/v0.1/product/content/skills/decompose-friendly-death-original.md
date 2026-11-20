@@ -1,8 +1,7 @@
 ---
 id: decompose-friendly-death-original
 keyword: decompose
-text: 分解：友方随从死亡后，获得其原始生命值
-effects: OnFriendlyDeath|Decompose|self|basis=original,duration=permanent
+template: decompose-friendly-death
 ---
 
 # decompose-friendly-death-original
@@ -14,6 +13,7 @@ effects: OnFriendlyDeath|Decompose|self|basis=original,duration=permanent
 | id | decompose-friendly-death-original |
 | 关键词 | 分解 |
 | 确定性替换 | 不适用 |
+| 模板 | decompose-friendly-death |
 
 ## 效果
 

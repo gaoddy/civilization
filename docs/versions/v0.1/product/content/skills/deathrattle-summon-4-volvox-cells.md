@@ -1,8 +1,7 @@
 ---
 id: deathrattle-summon-4-volvox-cells
 keyword: deathrattle
-text: 分裂：死亡时召唤四个 1/1 的团藻细胞
-effects: OnDeath|Summon|self|token=volvox-cell-token,count=4
+template: on-death-summon-split(token=volvox-cell-token,count=4)
 ---
 
 # deathrattle-summon-4-volvox-cells
@@ -14,6 +13,7 @@ effects: OnDeath|Summon|self|token=volvox-cell-token,count=4
 | id | deathrattle-summon-4-volvox-cells |
 | 关键词 | 亡语 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-summon-split |
 
 ## 效果
 

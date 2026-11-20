@@ -1,8 +1,7 @@
 ---
 id: virus-growth-once
 name: 培养
-text: 使一个友方病毒随从获得一次成长
-effects: OnActivate|Growth|friendly:single:playstyle=virus|times=1
+template: activate-growth-single-playstyle(playstyle=virus,times=1)
 cost: 1
 uses_per_turn: 1
 match_text: 同左
@@ -17,6 +16,7 @@ match_text: 同左
 | id | virus-growth-once |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | activate-growth-single-playstyle |
 | 费用 | 1 |
 | 每回合次数 | 1 |
 

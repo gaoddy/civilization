@@ -1,7 +1,6 @@
 ---
 id: trigger-protozoa-single-growth-twice
-text: 使一个友方原生生物界随从获得两次成长
-effects: OnPlayEffect|Growth|friendly:single:playstyle=protozoa|times=2
+template: on-play-growth-single-ps(playstyle=protozoa,times=2)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-protozoa-single-growth-twice |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-growth-single-ps |
 
 ## 效果
 

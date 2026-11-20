@@ -1,7 +1,6 @@
 ---
 id: trigger-refresh-shop-free
-text: 刷新商店
-effects: OnPlayEffect|RefreshShop|self|free=true
+template: on-play-refresh-shop
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-refresh-shop-free |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-refresh-shop |
 
 ## 效果
 

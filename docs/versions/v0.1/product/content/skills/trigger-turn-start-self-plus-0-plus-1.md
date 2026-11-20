@@ -1,7 +1,6 @@
 ---
 id: trigger-turn-start-self-plus-0-plus-1
-text: 回合开始时获得 +0/+1
-effects: OnTurnStart|ModifyStats|self|health=1,duration=permanent
+template: turn-start-self-health(health=1)
 ---
 
 # trigger-turn-start-self-plus-0-plus-1
@@ -13,6 +12,7 @@ effects: OnTurnStart|ModifyStats|self|health=1,duration=permanent
 | id | trigger-turn-start-self-plus-0-plus-1 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | turn-start-self-health |
 
 ## 效果
 

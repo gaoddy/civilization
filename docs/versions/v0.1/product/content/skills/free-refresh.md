@@ -1,8 +1,7 @@
 ---
 id: free-refresh
 name: 启航
-text: 免费刷新一次商店
-effects: OnActivate|RefreshShop|self|free=true
+template: activate-refresh-shop-free-again
 cost: 1
 uses_per_turn: 1
 match_text: 同左
@@ -17,6 +16,7 @@ match_text: 同左
 | id | free-refresh |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | activate-refresh-shop-free-again |
 | 费用 | 1 |
 | 每回合次数 | 1 |
 

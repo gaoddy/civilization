@@ -1,7 +1,6 @@
 ---
 id: trigger-all-friendly-growth-once
-text: 使你的随从各获得一次成长
-effects: OnPlayEffect|Growth|friendly:all|times=1
+template: on-play-growth-all-each
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-all-friendly-growth-once |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-growth-all-each |
 
 ## 效果
 

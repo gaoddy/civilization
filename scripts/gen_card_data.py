@@ -16,6 +16,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import validate_docs
 import audit_effects
+import skill_templates
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "server" / "data" / "v0.1"
@@ -384,11 +385,17 @@ def card_entry(doc):
     }
 
 
-def skill_entry(doc):
+def skill_entry(doc, renderer=None):
+    if "template" not in doc:
+        raise ValueError(f"{doc['id']}: 缺少 template 字段")
+    if renderer is None:
+        raise ValueError(f"{doc['id']}: 模板实例需要 renderer")
+    segments = renderer.instance_segments(doc)
+    effects = structured_effects(";".join(segments) if segments else "[]")
     return {
         "id": doc["id"],
         "keyword": doc.get("keyword"),
-        "effects": structured_effects(doc["effects"]),
+        "effects": effects,
         "cost": doc.get("cost"),
         "uses_per_turn": doc.get("uses_per_turn"),
     }
@@ -505,8 +512,9 @@ def parse_taxonomy(path):
 def build(root):
     """返回文件名到确定性 JSON 文本的映射。"""
     content = pathlib.Path(root) / "docs" / "versions" / "v0.1" / "product" / "content"
+    renderer = skill_templates.Renderer(content)
     cards = [card_entry(doc) for doc in load_docs(content, "cards")]
-    skills = [skill_entry(doc) for doc in load_docs(content, "skills")]
+    skills = [skill_entry(doc, renderer) for doc in load_docs(content, "skills")]
     tokens = parse_tokens(content / "tokens" / "README.md")
     taxonomy = parse_taxonomy(content / TAXONOMY_FILE)
     return {

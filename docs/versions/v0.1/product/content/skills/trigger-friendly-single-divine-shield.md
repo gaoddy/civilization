@@ -1,7 +1,6 @@
 ---
 id: trigger-friendly-single-divine-shield
-text: 使一个友方随从获得护盾
-effects: OnPlayEffect|GrantKeyword|friendly:single|keyword=divine_shield,duration=permanent
+template: on-play-keyword-single(keyword=divine_shield,duration=permanent)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | trigger-friendly-single-divine-shield |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | on-play-keyword-single |
 
 ## 效果
 

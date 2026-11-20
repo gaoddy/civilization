@@ -1,8 +1,7 @@
 ---
 id: deathrattle-summon-fish-fry-3
 keyword: deathrattle
-text: 分裂：死亡时召唤三个 1/1 的鱼苗
-effects: OnDeath|Summon|self|token=fish-fry-token,count=3
+template: on-death-summon-split(token=fish-fry-token,count=3)
 ---
 
 # deathrattle-summon-fish-fry-3
@@ -14,6 +13,7 @@ effects: OnDeath|Summon|self|token=fish-fry-token,count=3
 | id | deathrattle-summon-fish-fry-3 |
 | 关键词 | 亡语 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-summon-split |
 
 ## 效果
 

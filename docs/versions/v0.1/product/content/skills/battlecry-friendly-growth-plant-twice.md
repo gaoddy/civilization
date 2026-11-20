@@ -1,8 +1,7 @@
 ---
 id: battlecry-friendly-growth-plant-twice
 keyword: battlecry
-text: 战吼：使一个友方随从获得一次成长；若其为植物，改为两次
-effects: OnPlay|Growth|friendly:single|times=1,timesIf=playstyle:plant:2
+template: on-play-battlecry-growth-single-timesif-ps(playstyle=plant)
 ---
 
 # battlecry-friendly-growth-plant-twice
@@ -14,6 +13,7 @@ effects: OnPlay|Growth|friendly:single|times=1,timesIf=playstyle:plant:2
 | id | battlecry-friendly-growth-plant-twice |
 | 关键词 | 战吼 |
 | 确定性替换 | 不适用 |
+| 模板 | on-play-battlecry-growth-single-timesif-ps |
 
 ## 效果
 

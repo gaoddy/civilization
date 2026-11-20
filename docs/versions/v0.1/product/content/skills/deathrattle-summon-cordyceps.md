@@ -1,8 +1,7 @@
 ---
 id: deathrattle-summon-cordyceps
 keyword: deathrattle
-text: 分裂：死亡时召唤一个 3/3 的虫草
-effects: OnDeath|Summon|self|token=cordyceps-token,count=1
+template: on-death-summon-split(token=cordyceps-token,count=1)
 ---
 
 # deathrattle-summon-cordyceps
@@ -14,6 +13,7 @@ effects: OnDeath|Summon|self|token=cordyceps-token,count=1
 | id | deathrattle-summon-cordyceps |
 | 关键词 | 亡语 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-summon-split |
 
 ## 效果
 

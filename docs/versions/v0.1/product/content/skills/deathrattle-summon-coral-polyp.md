@@ -1,8 +1,7 @@
 ---
 id: deathrattle-summon-coral-polyp
 keyword: deathrattle
-text: 分裂：死亡时召唤一个 1/1 的珊瑚虫
-effects: OnDeath|Summon|self|token=coral-polyp-token,count=1
+template: on-death-summon-split(token=coral-polyp-token,count=1)
 ---
 
 # deathrattle-summon-coral-polyp
@@ -14,6 +13,7 @@ effects: OnDeath|Summon|self|token=coral-polyp-token,count=1
 | id | deathrattle-summon-coral-polyp |
 | 关键词 | 亡语 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-summon-split |
 
 ## 效果
 

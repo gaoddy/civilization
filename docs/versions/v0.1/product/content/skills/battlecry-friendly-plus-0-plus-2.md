@@ -1,8 +1,7 @@
 ---
 id: battlecry-friendly-plus-0-plus-2
 keyword: battlecry
-text: 战吼：使一个友方随从获得 +0/+2
-effects: OnPlay|ModifyStats|friendly:single|health=2,duration=permanent
+template: on-play-battlecry-stats-single-health(health=2)
 ---
 
 # battlecry-friendly-plus-0-plus-2
@@ -14,6 +13,7 @@ effects: OnPlay|ModifyStats|friendly:single|health=2,duration=permanent
 | id | battlecry-friendly-plus-0-plus-2 |
 | 关键词 | 战吼 |
 | 确定性替换 | 不适用 |
+| 模板 | on-play-battlecry-stats-single-health |
 
 ## 效果
 

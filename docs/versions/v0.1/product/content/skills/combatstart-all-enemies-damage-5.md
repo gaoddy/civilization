@@ -1,7 +1,6 @@
 ---
 id: combatstart-all-enemies-damage-5
-text: 战斗开始时，对敌方所有随从造成 5 点伤害
-effects: OnCombatStart|DealDamage|enemy:all|amount=5
+template: combatstart-damage-all(amount=5)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | combatstart-all-enemies-damage-5 |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | combatstart-damage-all |
 
 ## 效果
 

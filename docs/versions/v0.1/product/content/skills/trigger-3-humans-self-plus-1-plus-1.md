@@ -1,7 +1,6 @@
 ---
 id: trigger-3-humans-self-plus-1-plus-1
-text: 若你控制至少 3 个人科随从，获得 +1/+1
-effects: ConditionalAura|ModifyStats|self|attack=1,health=1,duration=permanent,condition=count:friendly:taxon=hominidae:>=3
+template: conditional-taxon-self-both(attack=1,health=1,taxon=hominidae,count=3)
 ---
 
 # trigger-3-humans-self-plus-1-plus-1
@@ -13,6 +12,7 @@ effects: ConditionalAura|ModifyStats|self|attack=1,health=1,duration=permanent,c
 | id | trigger-3-humans-self-plus-1-plus-1 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | conditional-taxon-self-both |
 
 ## 效果
 

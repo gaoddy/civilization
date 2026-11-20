@@ -1,7 +1,6 @@
 ---
 id: trigger-friendly-human-play-plus-1-attack
-text: 每当一个友方人科随从进入战场，获得 +1 攻击力
-effects: OnAllySummon|ModifyStats|self|attack=1,duration=permanent,when=taxon=hominidae
+template: ally-summon-taxon-self-attack(attack=1,taxon=hominidae)
 ---
 
 # trigger-friendly-human-play-plus-1-attack
@@ -13,6 +12,7 @@ effects: OnAllySummon|ModifyStats|self|attack=1,duration=permanent,when=taxon=ho
 | id | trigger-friendly-human-play-plus-1-attack |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | ally-summon-taxon-self-attack |
 
 ## 效果
 

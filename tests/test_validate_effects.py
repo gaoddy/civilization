@@ -170,11 +170,11 @@ class PlaystyleMechanicsTest(unittest.TestCase):
         self.assertEqual(vd.keyword_errors(good, "poison"), [])
 
     def test_mimic_rejected_outside_cephalopod(self):
-        skill_map = {
-            "test-mimic": self._yaml(
-                "id: test-mimic\neffects: OnPlay|Mimic|enemy:single|duration=combat"
-            )
-        }
+        skill = self._yaml(
+            "id: test-mimic\neffects: OnPlay|Mimic|enemy:single|duration=combat"
+        )
+        skill["_rendered_effects"] = skill["effects"]
+        skill_map = {"test-mimic": skill}
         bad = self._yaml("id: bad-mimic\nplaystyle: mammal\nskills: [test-mimic]")
         self.assertTrue(vd.mechanism_errors(bad, skill_map))
         good = self._yaml("id: ok-mimic\nplaystyle: cephalopod\nskills: [test-mimic]")

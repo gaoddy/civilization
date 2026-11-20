@@ -1,8 +1,7 @@
 ---
 id: keyword-sow
 keyword: sow
-text: 播种：死亡时召唤一个 1/1 的幼苗
-effects: OnDeath|Summon|self|token=seedling,count=1
+template: on-death-summon-sow(token=seedling,count=1)
 ---
 
 # keyword-sow
@@ -14,6 +13,7 @@ effects: OnDeath|Summon|self|token=seedling,count=1
 | id | keyword-sow |
 | 关键词 | 播种 |
 | 确定性替换 | 不适用 |
+| 模板 | on-death-summon-sow |
 
 ## 效果
 

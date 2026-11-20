@@ -1,8 +1,7 @@
 ---
 id: keyword-reborn
 keyword: reborn
-text: 复生：以 1 点生命复活一次
-effects: []
+template: keyword-self(keyword=reborn)
 ---
 
 # keyword-reborn
@@ -14,6 +13,7 @@ effects: []
 | id | keyword-reborn |
 | 关键词 | 复生 |
 | 确定性替换 | 不适用 |
+| 模板 | keyword-self |
 
 ## 效果
 

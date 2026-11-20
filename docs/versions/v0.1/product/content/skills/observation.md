@@ -1,8 +1,7 @@
 ---
 id: observation
 name: 观测
-text: 每回合首次刷新时额外出现一张当前时代的随机随从
-effects: OnFirstRefresh|AddShopSlot|self|era=current,count=1
+template: first-refresh-add-shop-slot
 match_text: 额外出现的随从固定为当前时代当前星级排序第一张
 ---
 
@@ -15,6 +14,7 @@ match_text: 额外出现的随从固定为当前时代当前星级排序第一�
 | id | observation |
 | 关键词 | 无 |
 | 确定性替换 | 额外出现的随从固定为当前时代当前星级排序第一张 |
+| 模板 | first-refresh-add-shop-slot |
 
 ## 效果
 

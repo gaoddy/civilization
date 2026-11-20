@@ -1,7 +1,6 @@
 ---
 id: combatstart-random-enemy-contagion-1
-text: 战斗开始时，使一个随机敌方随从获得 1 层传染
-effects: OnCombatStart|GrantKeyword|enemy:random|keyword=contagion,value=1,duration=permanent
+template: combatstart-contagion-random(level=1)
 ---
 
 # combatstart-random-enemy-contagion-1
@@ -13,6 +12,7 @@ effects: OnCombatStart|GrantKeyword|enemy:random|keyword=contagion,value=1,durat
 | id | combatstart-random-enemy-contagion-1 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | combatstart-contagion-random |
 
 ## 效果
 

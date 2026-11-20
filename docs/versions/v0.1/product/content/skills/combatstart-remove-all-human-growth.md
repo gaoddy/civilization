@@ -1,7 +1,6 @@
 ---
 id: combatstart-remove-all-human-growth
-text: 战斗开始时，移除所有人科随从的全部成长
-effects: OnCombatStart|RemoveGrowth|both:all:taxon=hominidae
+template: combatstart-remove-all-taxon-growth(taxon=hominidae)
 match_text: 同左
 ---
 
@@ -14,6 +13,7 @@ match_text: 同左
 | id | combatstart-remove-all-human-growth |
 | 关键词 | 无 |
 | 确定性替换 | 同左 |
+| 模板 | combatstart-remove-all-taxon-growth |
 
 ## 效果
 

@@ -1,7 +1,6 @@
 ---
 id: aura-biology-plus-1-plus-1
-text: 你的动物随从获得 +1/+1
-effects: Aura|ModifyStats|friendly:all:taxon=animalia|attack=1,health=1,duration=permanent
+template: aura-all-taxon-both(taxon=animalia,attack=1,health=1)
 ---
 
 # aura-biology-plus-1-plus-1
@@ -13,6 +12,7 @@ effects: Aura|ModifyStats|friendly:all:taxon=animalia|attack=1,health=1,duration
 | id | aura-biology-plus-1-plus-1 |
 | 关键词 | 无 |
 | 确定性替换 | 不适用 |
+| 模板 | aura-all-taxon-both |
 
 ## 效果
 
