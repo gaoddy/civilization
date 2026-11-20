@@ -44,7 +44,6 @@ pub mod error {
 ///    "canReroll",
 ///    "canUnfreeze",
 ///    "canUpgradeEra",
-///    "canUseHeroPower",
 ///    "handCards",
 ///    "shopSlots",
 ///    "upgradeDisabledReason"
@@ -69,21 +68,11 @@ pub mod error {
 ///    "canUpgradeEra": {
 ///      "type": "boolean"
 ///    },
-///    "canUseHeroPower": {
-///      "type": "boolean"
-///    },
 ///    "handCards": {
 ///      "type": "array",
 ///      "items": {
 ///        "$ref": "#/$defs/HandAffordance"
 ///      }
-///    },
-///    "heroPowerDisabledReason": {
-///      "description": "不可使用英雄技能时的错误码",
-///      "type": [
-///        "string",
-///        "null"
-///      ]
 ///    },
 ///    "shopSlots": {
 ///      "type": "array",
@@ -116,17 +105,8 @@ pub struct Affordances {
     pub can_unfreeze: bool,
     #[serde(rename = "canUpgradeEra")]
     pub can_upgrade_era: bool,
-    #[serde(rename = "canUseHeroPower")]
-    pub can_use_hero_power: bool,
     #[serde(rename = "handCards")]
     pub hand_cards: ::std::vec::Vec<HandAffordance>,
-    ///不可使用英雄技能时的错误码
-    #[serde(
-        rename = "heroPowerDisabledReason",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub hero_power_disabled_reason: ::std::option::Option<::std::string::String>,
     #[serde(rename = "shopSlots")]
     pub shop_slots: ::std::vec::Vec<ShopAffordance>,
     #[serde(rename = "upgradeDisabledReason")]
@@ -1774,6 +1754,7 @@ impl ::std::convert::From<ErrorMessage> for Error {
 ///    "CARD_NOT_IN_HAND",
 ///    "HERO_NOT_SELECTED",
 ///    "HERO_POWER_LIMIT",
+///    "NOT_ACTIVE_SKILL",
 ///    "INVALID_CHOICE",
 ///    "NO_VALID_TARGET",
 ///    "TARGET_NOT_ALLOWED",
@@ -1838,6 +1819,8 @@ pub enum ErrorCode {
     HeroNotSelected,
     #[serde(rename = "HERO_POWER_LIMIT")]
     HeroPowerLimit,
+    #[serde(rename = "NOT_ACTIVE_SKILL")]
+    NotActiveSkill,
     #[serde(rename = "INVALID_CHOICE")]
     InvalidChoice,
     #[serde(rename = "NO_VALID_TARGET")]
@@ -1914,6 +1897,7 @@ impl ::std::fmt::Display for ErrorCode {
             Self::CardNotInHand => f.write_str("CARD_NOT_IN_HAND"),
             Self::HeroNotSelected => f.write_str("HERO_NOT_SELECTED"),
             Self::HeroPowerLimit => f.write_str("HERO_POWER_LIMIT"),
+            Self::NotActiveSkill => f.write_str("NOT_ACTIVE_SKILL"),
             Self::InvalidChoice => f.write_str("INVALID_CHOICE"),
             Self::NoValidTarget => f.write_str("NO_VALID_TARGET"),
             Self::TargetNotAllowed => f.write_str("TARGET_NOT_ALLOWED"),
@@ -1961,6 +1945,7 @@ impl ::std::str::FromStr for ErrorCode {
             "CARD_NOT_IN_HAND" => Ok(Self::CardNotInHand),
             "HERO_NOT_SELECTED" => Ok(Self::HeroNotSelected),
             "HERO_POWER_LIMIT" => Ok(Self::HeroPowerLimit),
+            "NOT_ACTIVE_SKILL" => Ok(Self::NotActiveSkill),
             "INVALID_CHOICE" => Ok(Self::InvalidChoice),
             "NO_VALID_TARGET" => Ok(Self::NoValidTarget),
             "TARGET_NOT_ALLOWED" => Ok(Self::TargetNotAllowed),
@@ -3391,6 +3376,79 @@ impl ::std::convert::From<&HandCard> for HandCard {
         value.clone()
     }
 }
+///`HeroPower`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "canUse",
+///    "disabledReason",
+///    "requiresTarget",
+///    "skillId",
+///    "targetCandidates",
+///    "usesLeft"
+///  ],
+///  "properties": {
+///    "canUse": {
+///      "type": "boolean"
+///    },
+///    "disabledReason": {
+///      "description": "不可使用该技能时的错误码",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "requiresTarget": {
+///      "description": "该主动技能是否需要玩家指定单一目标",
+///      "type": "boolean"
+///    },
+///    "skillId": {
+///      "type": "string"
+///    },
+///    "targetCandidates": {
+///      "description": "该主动技能的合法目标",
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/TargetRef"
+///      }
+///    },
+///    "usesLeft": {
+///      "type": "integer",
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct HeroPower {
+    #[serde(rename = "canUse")]
+    pub can_use: bool,
+    ///不可使用该技能时的错误码
+    #[serde(rename = "disabledReason")]
+    pub disabled_reason: ::std::option::Option<::std::string::String>,
+    ///该主动技能是否需要玩家指定单一目标
+    #[serde(rename = "requiresTarget")]
+    pub requires_target: bool,
+    #[serde(rename = "skillId")]
+    pub skill_id: ::std::string::String,
+    ///该主动技能的合法目标
+    #[serde(rename = "targetCandidates")]
+    pub target_candidates: ::std::vec::Vec<TargetRef>,
+    #[serde(rename = "usesLeft")]
+    pub uses_left: u64,
+}
+impl ::std::convert::From<&HeroPower> for HeroPower {
+    fn from(value: &HeroPower) -> Self {
+        value.clone()
+    }
+}
 ///`Intent`
 ///
 /// <details><summary>JSON schema</summary>
@@ -4508,7 +4566,7 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 ///        "gold",
 ///        "hand",
 ///        "heroCardId",
-///        "heroPower",
+///        "heroPowers",
 ///        "hp",
 ///        "pendingChoices",
 ///        "playerId",
@@ -4549,38 +4607,12 @@ impl ::std::convert::From<&PlayerSummary> for PlayerSummary {
 ///            "null"
 ///          ]
 ///        },
-///        "heroPower": {
-///          "type": "object",
-///          "required": [
-///            "requiresTarget",
-///            "skillId",
-///            "targetCandidates",
-///            "usesLeft"
-///          ],
-///          "properties": {
-///            "requiresTarget": {
-///              "description": "该主动技能是否需要玩家指定单一目标",
-///              "type": "boolean"
-///            },
-///            "skillId": {
-///              "type": [
-///                "string",
-///                "null"
-///              ]
-///            },
-///            "targetCandidates": {
-///              "description": "该主动技能的合法目标",
-///              "type": "array",
-///              "items": {
-///                "$ref": "#/$defs/TargetRef"
-///              }
-///            },
-///            "usesLeft": {
-///              "type": "integer",
-///              "minimum": 0.0
-///            }
-///          },
-///          "additionalProperties": false
+///        "heroPowers": {
+///          "description": "英雄卡上的全部主动技能，按英雄卡 skills 顺序排列；没有主动技能时为空",
+///          "type": "array",
+///          "items": {
+///            "$ref": "#/$defs/HeroPower"
+///          }
 ///        },
 ///        "hp": {
 ///          "type": "integer"
@@ -4685,7 +4717,7 @@ impl ::std::convert::From<&PlayerView> for PlayerView {
 ///    "gold",
 ///    "hand",
 ///    "heroCardId",
-///    "heroPower",
+///    "heroPowers",
 ///    "hp",
 ///    "pendingChoices",
 ///    "playerId",
@@ -4726,38 +4758,12 @@ impl ::std::convert::From<&PlayerView> for PlayerView {
 ///        "null"
 ///      ]
 ///    },
-///    "heroPower": {
-///      "type": "object",
-///      "required": [
-///        "requiresTarget",
-///        "skillId",
-///        "targetCandidates",
-///        "usesLeft"
-///      ],
-///      "properties": {
-///        "requiresTarget": {
-///          "description": "该主动技能是否需要玩家指定单一目标",
-///          "type": "boolean"
-///        },
-///        "skillId": {
-///          "type": [
-///            "string",
-///            "null"
-///          ]
-///        },
-///        "targetCandidates": {
-///          "description": "该主动技能的合法目标",
-///          "type": "array",
-///          "items": {
-///            "$ref": "#/$defs/TargetRef"
-///          }
-///        },
-///        "usesLeft": {
-///          "type": "integer",
-///          "minimum": 0.0
-///        }
-///      },
-///      "additionalProperties": false
+///    "heroPowers": {
+///      "description": "英雄卡上的全部主动技能，按英雄卡 skills 顺序排列；没有主动技能时为空",
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/HeroPower"
+///      }
 ///    },
 ///    "hp": {
 ///      "type": "integer"
@@ -4813,8 +4819,9 @@ pub struct PlayerViewSelf {
     pub hand: ::std::vec::Vec<HandCard>,
     #[serde(rename = "heroCardId")]
     pub hero_card_id: ::std::option::Option<::std::string::String>,
-    #[serde(rename = "heroPower")]
-    pub hero_power: PlayerViewSelfHeroPower,
+    ///英雄卡上的全部主动技能，按英雄卡 skills 顺序排列；没有主动技能时为空
+    #[serde(rename = "heroPowers")]
+    pub hero_powers: ::std::vec::Vec<HeroPower>,
     pub hp: i64,
     ///本座位待处理的发现或进化选择，按先到先处理排序
     #[serde(rename = "pendingChoices")]
@@ -4832,65 +4839,6 @@ pub struct PlayerViewSelf {
 }
 impl ::std::convert::From<&PlayerViewSelf> for PlayerViewSelf {
     fn from(value: &PlayerViewSelf) -> Self {
-        value.clone()
-    }
-}
-///`PlayerViewSelfHeroPower`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "object",
-///  "required": [
-///    "requiresTarget",
-///    "skillId",
-///    "targetCandidates",
-///    "usesLeft"
-///  ],
-///  "properties": {
-///    "requiresTarget": {
-///      "description": "该主动技能是否需要玩家指定单一目标",
-///      "type": "boolean"
-///    },
-///    "skillId": {
-///      "type": [
-///        "string",
-///        "null"
-///      ]
-///    },
-///    "targetCandidates": {
-///      "description": "该主动技能的合法目标",
-///      "type": "array",
-///      "items": {
-///        "$ref": "#/$defs/TargetRef"
-///      }
-///    },
-///    "usesLeft": {
-///      "type": "integer",
-///      "minimum": 0.0
-///    }
-///  },
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct PlayerViewSelfHeroPower {
-    ///该主动技能是否需要玩家指定单一目标
-    #[serde(rename = "requiresTarget")]
-    pub requires_target: bool,
-    #[serde(rename = "skillId")]
-    pub skill_id: ::std::option::Option<::std::string::String>,
-    ///该主动技能的合法目标
-    #[serde(rename = "targetCandidates")]
-    pub target_candidates: ::std::vec::Vec<TargetRef>,
-    #[serde(rename = "usesLeft")]
-    pub uses_left: u64,
-}
-impl ::std::convert::From<&PlayerViewSelfHeroPower> for PlayerViewSelfHeroPower {
-    fn from(value: &PlayerViewSelfHeroPower) -> Self {
         value.clone()
     }
 }

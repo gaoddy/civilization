@@ -91,6 +91,21 @@ impl Engine {
         self.run_card_effects(state, card_id, trigger, &ctx)
     }
 
+    /// 直接执行单个技能在某个触发时机下的效果。
+    ///
+    /// 英雄可以有多个主动技能；`fire` 按归属收集英雄全部技能，主动技能必须只结算
+    /// 被选中的那一个，否则多技能英雄会一次放出全部技能。
+    pub(crate) fn fire_skill(
+        &mut self,
+        state: &mut GameState,
+        skill_id: &str,
+        trigger: Trigger,
+        ctx: EffectCtx,
+    ) -> Vec<GameEvent> {
+        let effects = self.skill_effects_of(skill_id, trigger);
+        self.run_effects(state, &effects, &ctx)
+    }
+
     /// 执行一段效果；`chosen` 可用于覆盖 `target` 选择器的显式目标。
     pub fn apply_op(
         &mut self,
@@ -302,23 +317,27 @@ impl Engine {
         self.skill_effects(&hero.skills, trigger)
     }
 
+    /// 收集单个技能在指定触发时机下的效果。
+    ///
+    /// 与 `effects_of` 的过滤口径一致：只取该时机、且招募阶段的 `OnPlay` 不含敌方选择器。
+    pub(crate) fn skill_effects_of(&self, skill_id: &str, trigger: Trigger) -> Vec<Effect> {
+        let Some(skill) = self.catalog.skills.get(skill_id) else {
+            return Vec::new();
+        };
+        skill
+            .effects
+            .iter()
+            .filter(|effect| effect.trigger == trigger)
+            .filter(|effect| !(trigger == Trigger::OnPlay && is_enemy_selector(&effect.selector)))
+            .cloned()
+            .collect()
+    }
+
     fn skill_effects(&self, skills: &[String], trigger: Trigger) -> Vec<Effect> {
-        let mut effects = Vec::new();
-        for skill_id in skills {
-            if let Some(skill) = self.catalog.skills.get(skill_id) {
-                effects.extend(
-                    skill
-                        .effects
-                        .iter()
-                        .filter(|effect| effect.trigger == trigger)
-                        .filter(|effect| {
-                            !(trigger == Trigger::OnPlay && is_enemy_selector(&effect.selector))
-                        })
-                        .cloned(),
-                );
-            }
-        }
-        effects
+        skills
+            .iter()
+            .flat_map(|skill_id| self.skill_effects_of(skill_id, trigger))
+            .collect()
     }
 
     pub(crate) fn run_card_effects(
@@ -400,6 +419,13 @@ impl Engine {
     /// 卡的效果不得影响英雄技能的瞄准与可用性。
     pub fn hero_requires_target(&self, hero_id: &str, trigger: Trigger) -> bool {
         Self::effects_require_target(&self.hero_effects_of(hero_id, trigger))
+    }
+
+    /// 单个技能是否在指定触发时机下存在需要玩家指定单一目标的效果。
+    ///
+    /// 判定口径与 [`Self::requires_target`] 一致，只作用于给定的技能。
+    pub(crate) fn skill_requires_target(&self, skill_id: &str, trigger: Trigger) -> bool {
+        Self::effects_require_target(&self.skill_effects_of(skill_id, trigger))
     }
 
     fn effects_require_target(effects: &[Effect]) -> bool {

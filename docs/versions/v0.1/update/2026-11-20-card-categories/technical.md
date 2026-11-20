@@ -61,7 +61,7 @@ categories: [play:mammal, play:bird, prey:ungulate, host:bacteria]
 - 每张卡与英雄至少 1 条 `play:`；玩法 id 合法且不含 `neutral`。
 - `prey:` / `host:` 节点在分类树中，且卡牌 `taxon` 根节点属于生物界。
 - 同卡不允许重复 `categories` 条目。
-- 英雄与同 id 随从的 `categories` 与 `skills` 完全一致。
+- 英雄与同 id 随从的 `categories` 完全一致；`skills` 各自维护、不要求相同（与英雄主动/被动技能方案一致）。
 - 移除「造物卡机械玩法必须 taxon=automation」的限制：28 张工具卡改为 `play:machine` 后仍保留各自造物分类；机械玩法可落在造物六类工具分类。
 
 ### 3.2 效果筛选与 AI

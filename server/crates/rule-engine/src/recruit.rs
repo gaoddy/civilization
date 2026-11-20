@@ -892,7 +892,7 @@ pub(crate) fn check_hero_power(
     })?;
     let cost = skill.cost.ok_or_else(|| {
         Reject::new(
-            RejectCode::HeroPowerLimit,
+            RejectCode::NotActiveSkill,
             format!("技能 {skill_id} 是被动技能，不能主动使用"),
         )
     })?;
@@ -922,11 +922,6 @@ fn use_hero_power(
     check_target_zone(state, seat, target)?;
     let target = target.map(|target| target.id);
 
-    let hero_id = player(state, seat)
-        .expect("check_hero_power 已保证座位存在")
-        .hero
-        .clone()
-        .expect("check_hero_power 已保证英雄存在");
     let ctx = EffectCtx {
         seat,
         source: None,
@@ -935,10 +930,10 @@ fn use_hero_power(
         golden: false,
         discover_level: None,
     };
-    // 主动技能的效果来自英雄卡：预检口径与 `fire(OnActivate)` 一致。
+    // 主动技能只结算被选中的技能：多技能英雄不得一次放出全部技能。
     engine.check_targets(
         state,
-        &engine.hero_effects_of(&hero_id, Trigger::OnActivate),
+        &engine.skill_effects_of(skill_id, Trigger::OnActivate),
         &ctx,
         true,
     )?;
@@ -964,8 +959,9 @@ fn use_hero_power(
     let uses = player.hero_uses.entry(skill_id.to_string()).or_insert(0);
     *uses = uses.saturating_add(1);
 
-    let events = engine.fire(
+    let events = engine.fire_skill(
         state,
+        skill_id,
         Trigger::OnActivate,
         EffectCtx {
             seat,
@@ -1817,7 +1813,7 @@ mod tests {
                     target: None,
                 },
                 check: Box::new(|engine, state| check_hero_power(engine, state, 0, "observation")),
-                expected: RejectCode::HeroPowerLimit,
+                expected: RejectCode::NotActiveSkill,
                 expected_message: Some("技能 observation 是被动技能，不能主动使用"),
             },
             Case {

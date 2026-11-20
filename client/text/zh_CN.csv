@@ -1008,6 +1008,7 @@ error.INVALID_CHOICE,选择无效
 error.INVALID_STAGE,当前阶段不能执行该操作
 error.INVITE_EXPIRED,邀请已过期
 error.INVITE_NOT_FOUND,邀请不存在或已处理
+error.NOT_ACTIVE_SKILL,被动技能不能主动使用
 error.NOT_ENOUGH_GOLD,金币不足
 error.NOT_FRIENDS,你们还不是好友
 error.NOT_HOST,只有房主可以操作
@@ -1086,9 +1087,15 @@ skill.battlecry-self-growth-twice.text,战吼：获得两次成长
 skill.battlecry-self-plus-1-health.text,战吼：获得 +1 生命值
 skill.battlecry-summon-2-worker-bees.text,战吼：召唤两个 2/2 的工蜂
 skill.battlecry-summon-3-3-synthetic-cell.text,战吼：召唤一个 3/3 的合成细胞（幼体）
+skill.binomial-nomenclature.match_text,同左
+skill.binomial-nomenclature.name,双名法
+skill.binomial-nomenclature.text,使你的所有动物随从获得一次成长
 skill.biology-evolve.match_text,同左
 skill.biology-evolve.name,获得性状
 skill.biology-evolve.text,使一个友方动物随从获得进化
+skill.cold-damage-treatise.match_text,同左
+skill.cold-damage-treatise.name,伤寒论
+skill.cold-damage-treatise.text,使你的所有随从获得 +0/+1
 skill.combat-optimal-attack.match_text,同左
 skill.combat-optimal-attack.name,航线
 skill.combat-optimal-attack.text,使一个友方随从获得无视嘲讽直到回合结束
@@ -1225,6 +1232,15 @@ skill.latent-3.text,潜伏：回合开始时，每有 1 层传染获得 +1 攻�
 skill.light-speed-strike.match_text,同左
 skill.light-speed-strike.name,光速出击
 skill.light-speed-strike.text,使一个友方随从本回合获得连击
+skill.mass-energy-equivalence.match_text,同左
+skill.mass-energy-equivalence.name,质能方程
+skill.mass-energy-equivalence.text,使你的所有随从获得一次成长
+skill.materia-medica.match_text,同左
+skill.materia-medica.name,本草纲目
+skill.materia-medica.text,使一个友方植物随从获得两次成长
+skill.mechanism-art.match_text,同左
+skill.mechanism-art.name,机关术
+skill.mechanism-art.text,使一个友方机械随从获得一次成长
 skill.microbiology.match_text,同左
 skill.microbiology.name,微生物学
 skill.microbiology.text,战斗开始时使敌方最左侧随从获得 1 层传染
@@ -1237,6 +1253,9 @@ skill.observation.text,每回合首次刷新时额外出现一张当前时代的
 skill.radiation.match_text,战斗开始时，对敌方最左侧随从造成 2 点伤害
 skill.radiation.name,放射
 skill.radiation.text,战斗开始时对随机一个敌方随从造成 2 点伤害
+skill.radium.match_text,同左
+skill.radium.name,镭
+skill.radium.text,使一个友方随从获得两次成长
 skill.recall-1.text,回手：死亡时返回手牌并保留成长
 skill.revive-1.text,复苏：以 +1/+1 复活一次
 skill.revive-2.text,复苏：以 +2/+2 复活一次
@@ -1248,6 +1267,9 @@ skill.scholar-growth-twice.text,使一个友方学者随从获得两次成长
 skill.shout.match_text,同左
 skill.shout.name,呐喊
 skill.shout.text,使一个友方随从获得一次成长
+skill.sonnet.match_text,同左
+skill.sonnet.name,十四行诗
+skill.sonnet.text,使你的所有随从获得一次成长
 skill.trigger-2-humans-self-plus-1-attack.text,若你控制至少 2 个人科随从，获得 +1 攻击力
 skill.trigger-2-humans-self-plus-1-plus-1.text,若你控制至少 2 个人科随从，获得 +1/+1
 skill.trigger-3-humans-self-plus-1-plus-1.text,若你控制至少 3 个人科随从，获得 +1/+1
@@ -1505,6 +1527,7 @@ ui.game.side_panel.hero_power,英雄技能
 ui.game.side_panel.hero_power_uses,英雄技能（剩 %d）
 ui.game.side_panel.hp,生命
 ui.game.side_panel.hp_line,HP %d/%d · %s · 随从 %d
+ui.game.side_panel.passive_skill,被动技能
 ui.game.side_panel.rank,第 %d 名
 ui.game.side_panel.recruited,已结束招募
 ui.game.side_panel.remaining_seconds,剩余 %d 秒

@@ -69,6 +69,7 @@
 | `top-bar-height` | 28 | 对局页顶部工具条高度 |
 | `river-height` | 32 | 对局页河道行高度，商店与棋盘、双方棋盘之间 |
 | `hero-row-height` | 84 | 对局页英雄行高度，容纳英雄卡与金币、技能列 |
+| `hero-meta-row-height` | 24 | 英雄行金币与被动技能标记所在行的高度，也是被动标记的边长 |
 | `hero-card-width` / `-height` | 64 / 84 | 英雄卡尺寸，与 `card-width` 同宽高比 |
 | `hero-cover-height` | 40 | 英雄卡玩法色封面高度 |
 | `hero-name-height` | 14 | 英雄卡名字行高度 |

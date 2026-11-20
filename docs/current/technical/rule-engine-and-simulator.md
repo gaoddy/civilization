@@ -61,7 +61,7 @@ tests/                       # Python 标准库 unittest
 ## 2. 引擎边界
 
 - `Engine::apply(state, seat, intent)` 是唯一的状态变更入口，返回 `Outcome`（本意图产生的事件）；拒绝时返回 `Reject { code, message }` 且不改变状态。
-- 拒绝码与核心规则 §3 一致：`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE`。
+- 拒绝码与核心规则 §3 一致：`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NOT_ACTIVE_SKILL`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE`。
 - 协议十三种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UnfreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`、`ChooseTarget`、`AbandonTarget`。`UnfreezeShop` 与 `FreezeShop` 对称：指定槽位解冻该槽位，`None` 解冻全部非空槽位，不重抽、不改实例编号、不消耗随机流。`UnfreezeShop` 要求本回合冻结过商店（`PlayerState::froze_this_turn`，回合开始清零），否则返回 `INVALID_STAGE`；冻结标记本身跨回合保留，只由解冻或重抽（手动刷新、升时代）清除。`ChooseDiscover`、`ChooseTarget` 与 `AbandonTarget` 都用于消费引擎产生的 `PendingChoice`（发现/进化、目标）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。`AbandonTarget` 只消费本座位队首的目标待选，撤销本次出牌并把原牌退回原手牌位置；没有待选或队首不是目标待选时返回 `INVALID_CHOICE`。
 - `PlayCard { hand_index, position, target }`：`position` 只对随从牌生效，是入场后的插入下标，`None` 表示追加到最右；超出当前随从数返回 `INVALID_CHOICE`。效果牌不带落点：目标缺失或不在合法池内时整条意图返回 `NO_VALID_TARGET`，合法池为空时效果落空、意图仍生效。效果牌与主动技能的 `target` 是 `TargetRef { zone, id }`，`zone` 取 `hand` / `shop` / `board`；提交时先校验实例是否属于本人在该区域，再进入合法池校验，不符返回 `NO_VALID_TARGET`。随从牌入场后判定战吼：未带 `target` 且服务端算出候选非空时只推入 `PendingChoice::Target`，由 `ChooseTarget { target }` 指定目标，本次意图内不发金色「三连奖励」、不执行 `check_triple`、不触发入场观察者；候选为空（含被过滤器收窄为空）时战吼直接落空、不产生待选，这些入场副作用照基线顺序立即执行。
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
@@ -70,7 +70,8 @@ tests/                       # Python 标准库 unittest
 - 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录来源星级 +1（封顶 6），打出该牌才登记发现待选。奖励效果牌不进商店、不进任何候选、不扣共享牌池；普通效果牌按商店概率进入商店槽位，但同样不扣共享牌池。
 - `PendingChoice::Target { seat, source, hand_card, hand_index, fire_ally_evolve }`：`hand_card` 是入场前的原手牌（含成长、护盾与金色标记），`hand_index` 是原手牌位置，放弃时按 `min(hand_index, len)` 插回；`fire_ally_evolve` 表示入场观察者是否推迟到目标结算后触发。目标待选期间该座位除 `ChooseTarget` 与 `AbandonTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。`ChooseTarget` 要求队首是目标待选、目标属于本人在对应区域的实体，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果，再按固定顺序补做被推迟的入场副作用：金色三连奖励 → `check_triple` → `fire_ally_evolve` 为真时触发入场观察者。`AbandonTarget` 要求来源随从仍在本人棋盘（否则 `NO_SUCH_MINION`），移除来源、把原牌插回原手牌位置、移除待选，不发战吼、不补奖励、不执行三连与入场观察者。发现与进化待选允许留到下回合；目标待选若在 `finish_recruit` 进入战斗前仍未选择，按同样规则退牌（来源仍在场时），随后照常推进阶段。
 - `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。视图同时下发 `targetCandidates`（引擎 `target_candidates` 的结果，只含本人棋盘/手牌/商店）、`instanceId`、`golden`，以及随从牌的 `attack` / `health`（当前值，含成长等全部层数，学者为 0）；效果牌这两项为 `null`，`golden` 恒为 `false`，奖励牌另带 `rewardLevel`（锁定的发现星级）。`requires_target` 为真且候选为空时 `playable=false`、`disabledReason=NO_VALID_TARGET`。
-- `SelfView` 的 `hero_power_requires_target` 与 `hero_power_target_candidates` 同口径；需要目标且候选为空时 `can_use_hero_power=false`、`heroPowerDisabledReason=NO_VALID_TARGET`。`PendingChoiceView::Target` 同时下发 `candidates`。
+- `SelfView.hero_powers` 按英雄卡 `skills` 顺序列出全部主动技能，每项带 `skill_id`、`uses_left`、`requires_target`、`target_candidates`、`can_use`、`disabled_reason`，目标口径与手牌一致；需要目标且候选为空时该技能 `can_use=false`、`disabled_reason=NO_VALID_TARGET`，不影响同一英雄的其他技能。`PendingChoiceView::Target` 同时下发 `candidates`。
+- `UseHeroPower { skill_id, target }` 只校验并结算 `skill_id` 自身的 `OnActivate` 效果；同一英雄的其它主动技能不随本次意图结算，也不扣金币与次数。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。
 - `settle::finish_recruit` 幂等：`Recruit` 阶段（超时路径）生成配对并切 `Combat`；`Combat` 阶段只补齐一次配对，不重复发事件、不重复配对。
 - 阶段推进由驱动方按固定顺序调用 `finish_recruit` / `resolve_combat` / `resolve_settle` / `start_turn`，引擎不自行推进时间。
@@ -133,7 +134,7 @@ impl Taxonomy {
 - `Rank` 对应 `taxonomy.md` 的「界 / 门 / 纲 / 目 / 科 / 技术分类 / 学科」，只表达结构，不参与匹配。
 - `is_within` 沿父链上溯，最多 5 层；任一节点不存在返回 `false`。
 - `path` 从叶子返回至根的 id 列表（含自身），未知节点返回空列表。
-- `Catalog` 持有 `cards`、`heroes`、`skills`、`tokens` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。加载期校验所有卡牌与 Token 的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡，每张卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`）；随从与效果牌不得为 `hero` 类型，英雄卡必须为 `hero` 类型且技能存在；每张英雄卡必须有同 id 的随从卡且 `categories` / `skills` 完全一致；校验失败即拒绝加载。
+- `Catalog` 持有 `cards`、`heroes`、`skills`、`tokens` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。加载期校验所有卡牌与 Token 的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡，每张卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`）；随从与效果牌不得为 `hero` 类型，英雄卡必须为 `hero` 类型且技能存在；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
 - 按用途选池：英雄技能查询（视图、光环、战斗开始、首次刷新、回合开始与主动技能）只读 `catalog.heroes`；商店、卡池、三连、发现与棋盘随从只读 `catalog.cards`。两池同名同 id，任何路径不得跨池回落。
 
 ### 3.3 筛选与匹配
@@ -222,7 +223,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 
 | M0 标准 | 命令 | 证据 |
 | --- | --- | --- |
-| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 409 卡 / 247 技能 / 23 Token / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
+| 卡池完整 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 命令退出码 0；`catalog::loads_all_committed_data` 断言 409 卡 / 254 技能 / 23 Token / 32 英雄卡全部加载，`every_card_skill_exists`、`unknown_field_fails`、`catalog::committed_data_is_structured`；`audit_effects.py` 输出 `审计通过` |
 | 数据一致 | `make data-check` | 重新生成后输出 `生成数据无漂移`，退出码 0 |
 | 规则覆盖 | `make test` | `server/crates/rule-engine/tests/` 与 `server/crates/sim/tests/` 的用例全部 `test result: ok`（用例清单见第 8 节）；商店池耗尽留空槽由 `recruit::reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects` 锁定 |
 | 确定性 | `make m0-determinism` | `replay_same_log_100_times_has_same_hash` 通过：100 次重放每次退出码 0，`final_hash` 全部等于原局，事件序列哈希同样一致；重放由日志种子重新推导同一组 5 个玩法 |

@@ -333,7 +333,7 @@ fn run_turn(
         let mut replans = 0usize;
         let mut blocked: Vec<Intent> = Vec::new();
         loop {
-            let Some(intent) = ai::plan(state, seat, &engine.catalog, &blocked) else {
+            let Some(intent) = ai::plan(state, seat, engine, &blocked) else {
                 return Err(EngineError(format!(
                     "座位 {seat} 在回合 {turn} 无可执行意图（阶段 {:?}）",
                     state.phase

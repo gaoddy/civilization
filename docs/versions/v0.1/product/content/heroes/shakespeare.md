@@ -3,7 +3,7 @@ id: shakespeare
 card_type: hero
 name: 莎士比亚
 categories: [play:mammal]
-skills: [battlecry-all-friendly-growth-once]
+skills: [sonnet]
 ---
 
 # 莎士比亚
@@ -16,17 +16,17 @@ skills: [battlecry-all-friendly-growth-once]
 | 名称 | 莎士比亚 |
 | 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
-| 技能 | battlecry-all-friendly-growth-once |
+| 技能 | sonnet |
 
 ## 效果
 
-战吼：使你的所有随从获得一次成长
+使你的所有随从获得一次成长
 
 ## 设计说明
 
-定位：入场给全队一次成长，铺场阵容的中期爆发点。
-平衡边界：群体一次成长按战吼折算 2 点，5/8 加 2 等于 15，未超上限。
-使用建议：场上随从越多收益越高，空场打出等于纯 5/8。
+定位：全队成长的主动技能，铺场阵容的持续成长来源。
+平衡边界：群体一次成长按 2 金每回合 1 次，对齐「发明工厂」。
+使用建议：场上随从越多收益越高；空场使用只消耗金币，不产生效果。
 
 ## 出处
 

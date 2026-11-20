@@ -3,7 +3,7 @@ id: zhangzhongjing
 card_type: hero
 name: 张仲景
 categories: [play:mammal]
-skills: [battlecry-all-friendly-plus-0-plus-1]
+skills: [cold-damage-treatise]
 ---
 
 # 张仲景
@@ -16,17 +16,17 @@ skills: [battlecry-all-friendly-plus-0-plus-1]
 | 名称 | 张仲景 |
 | 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
-| 技能 | battlecry-all-friendly-plus-0-plus-1 |
+| 技能 | cold-damage-treatise |
 
 ## 效果
 
-战吼：使你的所有随从获得 +0/+1
+使你的所有随从获得 +0/+1
 
 ## 设计说明
 
-定位：入场即给的群体 +0/+1，把战吼收益摊到全队。
-平衡边界：群体 +0/+1 按战吼折算 2 点，5/8 加 2 等于 15，未超过 4 星上限 17。
-使用建议：场上已有 2 个以上随从时打出，收益接近同星级上限。
+定位：群体 +0/+1 的主动技能，把生命增益摊到全队。
+平衡边界：群体 +0/+1 按 2 金每回合 1 次。
+使用建议：场上已有 2 个以上随从时使用，收益最高。
 
 ## 出处
 

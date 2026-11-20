@@ -57,6 +57,8 @@ pub enum RejectCode {
     AlreadyMaxEra,
     CardNotInHand,
     HeroPowerLimit,
+    /// 提交的是被动技能；被动技能只在触发时结算，不能主动使用。
+    NotActiveSkill,
     NoValidTarget,
     TargetNotAllowed,
     /// 待选（如发现）的候选下标非法。
@@ -75,6 +77,7 @@ impl RejectCode {
             Self::AlreadyMaxEra => "ALREADY_MAX_ERA",
             Self::CardNotInHand => "CARD_NOT_IN_HAND",
             Self::HeroPowerLimit => "HERO_POWER_LIMIT",
+            Self::NotActiveSkill => "NOT_ACTIVE_SKILL",
             Self::NoValidTarget => "NO_VALID_TARGET",
             Self::TargetNotAllowed => "TARGET_NOT_ALLOWED",
             Self::InvalidChoice => "INVALID_CHOICE",

@@ -3,7 +3,7 @@ id: faraday
 card_type: hero
 name: 法拉第
 categories: [play:reptile, play:machine]
-skills: [keyword-divine-shield, faraday-cage]
+skills: [faraday-cage]
 ---
 
 # 法拉第
@@ -16,11 +16,11 @@ skills: [keyword-divine-shield, faraday-cage]
 | 名称 | 法拉第 |
 | 类型 | 英雄 |
 | 玩法 | 爬行纲、机械 |
-| 技能 | keyword-divine-shield；faraday-cage |
+| 技能 | faraday-cage |
 
 ## 效果
 
-护盾：抵消一次伤害；使一个友方随从获得护盾
+使一个友方随从获得护盾
 
 ## 设计说明
 

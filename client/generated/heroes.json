@@ -107,7 +107,7 @@
     ],
     "id": "einstein",
     "skills": [
-      "battlecry-all-friendly-growth-once",
+      "mass-energy-equivalence",
       "light-speed-strike"
     ]
   },
@@ -125,7 +125,6 @@
     ],
     "id": "faraday",
     "skills": [
-      "keyword-divine-shield",
       "faraday-cage"
     ]
   },
@@ -265,7 +264,7 @@
     ],
     "id": "linnaeus",
     "skills": [
-      "battlecry-all-biology-growth-once"
+      "binomial-nomenclature"
     ]
   },
   {
@@ -278,7 +277,7 @@
     ],
     "id": "lisshi",
     "skills": [
-      "battlecry-plant-growth-twice"
+      "materia-medica"
     ]
   },
   {
@@ -291,7 +290,7 @@
     ],
     "id": "luban",
     "skills": [
-      "battlecry-friendly-mech-growth-once"
+      "mechanism-art"
     ]
   },
   {
@@ -321,7 +320,7 @@
     ],
     "id": "marie-curie",
     "skills": [
-      "battlecry-friendly-growth-twice",
+      "radium",
       "radiation"
     ]
   },
@@ -335,7 +334,6 @@
     ],
     "id": "mendel",
     "skills": [
-      "battlecry-friendly-plant-growth-once",
       "heredity"
     ]
   },
@@ -442,7 +440,7 @@
     ],
     "id": "shakespeare",
     "skills": [
-      "battlecry-all-friendly-growth-once"
+      "sonnet"
     ]
   },
   {
@@ -524,7 +522,7 @@
     ],
     "id": "zhangzhongjing",
     "skills": [
-      "battlecry-all-friendly-plus-0-plus-1"
+      "cold-damage-treatise"
     ]
   },
   {

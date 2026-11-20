@@ -1163,8 +1163,8 @@ def check_skills():
     global KEYWORD_LABELS
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 247:
-        fail(f"技能数量 {len(skills)}，期望 247")
+    if len(skills) != 254:
+        fail(f"技能数量 {len(skills)}，期望 254")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
@@ -1457,6 +1457,35 @@ def playstyle_counts(minions):
     return dict(sorted(counts.items()))
 
 
+HERO_PASSIVE_TRIGGERS = {"Aura", "ConditionalAura", "OnFirstRefresh",
+                         "OnCombatStart", "OnTurnStart"}
+
+
+def hero_skill_errors(doc, skill):
+    """英雄技能只有主动与被动：有 cost 只走 OnActivate，无 cost 只走被动触发。"""
+    name = doc["_file"]
+    skill_id = skill["id"]
+    rendered = skill.get("_rendered_effects")
+    if rendered is None:
+        return []
+    effects, _ = parse_effects(rendered)
+    triggers = {effect["trigger"] for effect in effects}
+    messages = []
+    if "cost" in skill:
+        if "OnActivate" not in triggers:
+            messages.append(f"{name}: 英雄主动技能 {skill_id} 必须有 OnActivate 效果")
+        illegal = triggers - {"OnActivate"}
+        if illegal:
+            messages.append(f"{name}: 英雄主动技能 {skill_id} 不得有触发 {sorted(illegal)}")
+    else:
+        illegal = triggers - HERO_PASSIVE_TRIGGERS
+        if illegal:
+            messages.append(f"{name}: 英雄被动技能 {skill_id} 不得有触发 {sorted(illegal)}")
+        if not triggers & HERO_PASSIVE_TRIGGERS:
+            messages.append(f"{name}: 英雄被动技能 {skill_id} 缺少被动触发")
+    return messages
+
+
 def check_hero_cards(cards, minions, effects, skill_map):
     heroes = load("heroes", HERO_REQUIRED_FIELDS)
     if len(heroes) != HERO_COUNT:
@@ -1477,11 +1506,19 @@ def check_hero_cards(cards, minions, effects, skill_map):
         # 英雄没有 taxon，生物限制由同 id 随从卡校验。
         for message in category_errors(doc, check_biological=False):
             fail(message)
+        for skill_id in doc.get("skills", []):
+            skill = skill_map.get(skill_id)
+            if skill is None:
+                continue
+            if skill.get("keyword"):
+                fail(f"{doc['_file']}: 英雄技能 {skill_id} 不得登记关键词")
+            for message in hero_skill_errors(doc, skill):
+                fail(message)
         base = by_id.get(doc["id"])
         if base is None:
             fail(f"{doc['_file']}: 英雄卡 {doc['id']} 没有对应的随从卡")
             continue
-        for field in ("name", "categories", "skills"):
+        for field in ("name", "categories"):
             if doc.get(field) != base.get(field):
                 fail(f"{doc['_file']}: 英雄卡 {field} 与随从卡 {base['_file']} 不一致")
     for label, group in (("英雄卡", heroes),):

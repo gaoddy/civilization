@@ -165,7 +165,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["shopSlots", "handCards", "boardMinions", "canReroll", "canUnfreeze", "canUpgradeEra",
-                   "upgradeDisabledReason", "canUseHeroPower", "canEndRecruit"],
+                   "upgradeDisabledReason", "canEndRecruit"],
       "properties": {
         "shopSlots": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/ShopAffordance" } },
         "handCards": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/HandAffordance" } },
@@ -174,9 +174,20 @@
         "canUnfreeze": { "type": "boolean", "description": "冻结按钮是否为「解冻」态：本回合冻结过商店且仍有冻结槽位；跨回合保留的冻结不算" },
         "canUpgradeEra": { "type": "boolean" },
         "upgradeDisabledReason": { "type": ["string", "null"] },
-        "canUseHeroPower": { "type": "boolean" },
-        "heroPowerDisabledReason": { "type": ["string", "null"], "description": "不可使用英雄技能时的错误码" },
         "canEndRecruit": { "type": "boolean" }
+      }
+    },
+    "HeroPower": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skillId", "usesLeft", "requiresTarget", "targetCandidates", "canUse", "disabledReason"],
+      "properties": {
+        "skillId": { "type": "string" },
+        "usesLeft": { "type": "integer", "minimum": 0 },
+        "requiresTarget": { "type": "boolean", "description": "该主动技能是否需要玩家指定单一目标" },
+        "targetCandidates": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/TargetRef" }, "description": "该主动技能的合法目标" },
+        "canUse": { "type": "boolean" },
+        "disabledReason": { "type": ["string", "null"], "description": "不可使用该技能时的错误码" }
       }
     },
     "GameEvent": {
@@ -257,7 +268,7 @@
         "self": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["playerId", "seat", "hp", "era", "gold", "heroCardId", "heroPower",
+          "required": ["playerId", "seat", "hp", "era", "gold", "heroCardId", "heroPowers",
                        "shop", "hand", "board", "rerollCost", "upgradeCost", "recruited", "pendingChoices", "affordances"],
           "properties": {
             "playerId": { "type": "string" },
@@ -266,16 +277,10 @@
             "era": { "type": "integer", "minimum": 1, "maximum": 7 },
             "gold": { "type": "integer", "minimum": 0 },
             "heroCardId": { "type": ["string", "null"] },
-            "heroPower": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["skillId", "usesLeft", "requiresTarget", "targetCandidates"],
-              "properties": {
-                "skillId": { "type": ["string", "null"] },
-                "usesLeft": { "type": "integer", "minimum": 0 },
-                "requiresTarget": { "type": "boolean", "description": "该主动技能是否需要玩家指定单一目标" },
-                "targetCandidates": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/TargetRef" }, "description": "该主动技能的合法目标" }
-              }
+            "heroPowers": {
+              "type": "array",
+              "items": { "$ref": "view.schema.json#/$defs/HeroPower" },
+              "description": "英雄卡上的全部主动技能，按英雄卡 skills 顺序排列；没有主动技能时为空"
             },
             "shop": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/ShopSlot" } },
             "hand": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/HandCard" } },

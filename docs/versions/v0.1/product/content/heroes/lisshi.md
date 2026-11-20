@@ -3,7 +3,7 @@ id: lisshi
 card_type: hero
 name: 李时珍
 categories: [play:plant]
-skills: [battlecry-plant-growth-twice]
+skills: [materia-medica]
 ---
 
 # 李时珍
@@ -16,16 +16,16 @@ skills: [battlecry-plant-growth-twice]
 | 名称 | 李时珍 |
 | 类型 | 英雄 |
 | 玩法 | 植物界 |
-| 技能 | battlecry-plant-growth-twice |
+| 技能 | materia-medica |
 
 ## 效果
 
-战吼：使一个友方植物随从获得两次成长
+使一个友方植物随从获得两次成长
 
 ## 设计说明
 
-定位：植物流的定向双成长战吼，把播种体系的身材拉开。
-平衡边界：单体两次成长按战吼折算 2 点，5/7 加 2 等于 14，未超上限 17。
+定位：植物流的定向双成长主动技能，把播种体系的身材拉开。
+平衡边界：单体两次成长按 1 金每回合 1 次，与「推演」同档；实测偏强时优先调费用。
 使用建议：打给带播种的植物随从，让死亡召唤的幼苗也更结实。
 
 ## 出处

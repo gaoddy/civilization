@@ -3,7 +3,7 @@ id: mendel
 card_type: hero
 name: 孟德尔
 categories: [play:plant]
-skills: [battlecry-friendly-plant-growth-once, heredity]
+skills: [heredity]
 ---
 
 # 孟德尔
@@ -16,15 +16,16 @@ skills: [battlecry-friendly-plant-growth-once, heredity]
 | 名称 | 孟德尔 |
 | 类型 | 英雄 |
 | 玩法 | 植物界 |
-| 技能 | battlecry-friendly-plant-growth-once；heredity |
+| 技能 | heredity |
 
 ## 效果
 
-战吼：使一个友方植物随从获得一次成长；使一个友方植物随从获得一次成长
+使一个友方植物随从获得一次成长
 
 ## 设计说明
 
 - 定位：植物体系专属，给植物一次成长。
+- 主动技能：1 金每回合 1 次。
 - 平衡边界：若场上没有植物，技能不可用（返回 `NO_VALID_TARGET`）；不提供「发现植物」的兜底。
 
 ## 出处

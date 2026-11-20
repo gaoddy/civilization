@@ -3,7 +3,7 @@ id: linnaeus
 card_type: hero
 name: 林奈
 categories: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
-skills: [battlecry-all-biology-growth-once]
+skills: [binomial-nomenclature]
 ---
 
 # 林奈
@@ -16,17 +16,17 @@ skills: [battlecry-all-biology-growth-once]
 | 名称 | 林奈 |
 | 类型 | 英雄 |
 | 玩法 | 哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
-| 技能 | battlecry-all-biology-growth-once |
+| 技能 | binomial-nomenclature |
 
 ## 效果
 
-战吼：使你的所有动物随从获得一次成长
+使你的所有动物随从获得一次成长
 
 ## 设计说明
 
-定位：生物流的群体成长战吼，把一次入场变成全队收益。
-平衡边界：群体一次成长按战吼折算 2 点，与同星级战吼卡一致。
-使用建议：生物随从已铺到 2–3 个时再打出，单个生物时收益最低。
+定位：生物流的群体成长主动技能，每回合把一次成长摊给全队动物。
+平衡边界：群体一次成长按 2 金每回合 1 次，对齐「发明工厂」。
+使用建议：生物随从已铺到 2–3 个时再使用，单个生物时收益最低。
 
 ## 出处
 

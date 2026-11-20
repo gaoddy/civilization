@@ -14,7 +14,7 @@
 - 对局在第 20 回合结束后强制收束（见 §7）。
 - 房间必须有 8 名真人就绪才进入对局，**不设 AI 补位**；人数不足时房间保持 `Lobby` 继续等待。
 - 断线与 AFK 由 AI 托管（§8.1），托管只接管已有座位，不改变对局人数。
-- 开局时，服务端按本局启用的 5 个玩法为每位玩家分配 4 张候选英雄卡，玩家从自己的候选中选 1 张作为英雄；同一房间内候选互不重复，重进房间（含断线重连）不重新分配；选择不消耗牌池份数、不进入手牌或战场，多人可以选择同一张。英雄身份来自 `content/heroes/` 下的独立英雄卡，授予该卡的 `skills`；随从池中与英雄同 id、同名的随从卡照常可被购买，按普通随从结算，并同样获得该随从卡的全部 `skills`（两张卡技能一致，但分属英雄池与随从池）。
+- 开局时，服务端按本局启用的 5 个玩法为每位玩家分配 4 张候选英雄卡，玩家从自己的候选中选 1 张作为英雄；同一房间内候选互不重复，重进房间（含断线重连）不重新分配；选择不消耗牌池份数、不进入手牌或战场，多人可以选择同一张。英雄身份来自 `content/heroes/` 下的独立英雄卡，授予该卡的 `skills`；随从池中与英雄同 id、同名的随从卡照常可被购买，按普通随从结算，并同样获得该随从卡的全部 `skills`（两张卡分属英雄池与随从池，`skills` 各自维护）。英雄技能只能为主动或被动技能，不登记战吼、护盾等随从战场关键词；一个英雄可以有多个主动技能，各自计次。
 
 ## 2. 阶段状态机
 
@@ -48,7 +48,7 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 | `RearrangeBoard` | 处于 `Recruit` | 无 | 把随从移动到指定站位，原位及其右侧依次移位 | `NO_SUCH_MINION` |
 | `FreezeShop` | 处于 `Recruit` | 无 | 冻结当前槽位到下回合开始 | — |
 | `UnfreezeShop` | 处于 `Recruit` | 无 | 解冻指定槽位或全部已冻结槽位 | — |
-| `UseHeroPower` | 处于 `Recruit`；费用足够；本回合次数未用尽 | −技能的 `cost` | 使用所选英雄卡上的一个主动技能，次数受该技能 `uses_per_turn` 限制 | `NOT_ENOUGH_GOLD` / `HERO_POWER_LIMIT` / `NO_VALID_TARGET` |
+| `UseHeroPower` | 处于 `Recruit`；技能是英雄卡上的主动技能；费用足够；本回合次数未用尽 | −技能的 `cost` | 使用所选英雄卡上的一个主动技能，次数受该技能 `uses_per_turn` 限制 | `NOT_ACTIVE_SKILL` / `NOT_ENOUGH_GOLD` / `HERO_POWER_LIMIT` / `NO_VALID_TARGET` |
 | `EndRecruit` | 处于 `Recruit` | 无 | 本玩家结束招募 | — |
 | `ChooseDiscover` | 存在本座位的发现或进化待选 | 无 | 消费最靠前的待选 | `INVALID_CHOICE` |
 | `ChooseTarget` | 存在本座位的目标待选 | 无 | 以指定目标结算该待选的战吼，随后补做被推迟的金色奖励、三连判定与入场观察者 | `NO_VALID_TARGET` |
@@ -56,7 +56,7 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 
 **通用规则**：同一回合内，`BuyMinion` / `RerollShop` / `UpgradeEra` / `PlayCard` / `UseHeroPower` 共用同一个金币池，顺序不限；金币不跨回合累积，多余部分清零。
 
-**补充返回码**：`NO_VALID_TARGET`（效果需要指定单一目标、存在合法候选但未指定、指定了不在候选内的目标，或目标区域与实例实际所在区域不一致；没有合法候选时主动技能不可用并返回该错误，随从战吼与效果牌则效果落空、意图仍可提交；`ChooseTarget` 指定的目标不在候选内时同样返回该码；见 [卡牌规范与数据](../content/card-system.md) §2.1「英雄卡」）；`TARGET_NOT_ALLOWED`（招募阶段试图指定敌方目标）；`INVALID_CHOICE`（`ChooseDiscover` 的候选索引不合法）。
+**补充返回码**：`NOT_ACTIVE_SKILL`（`UseHeroPower` 提交的是被动技能；被动技能没有 `cost`，只在触发条件满足时结算）；`NO_VALID_TARGET`（效果需要指定单一目标、存在合法候选但未指定、指定了不在候选内的目标，或目标区域与实例实际所在区域不一致；没有合法候选时主动技能不可用并返回该错误，随从战吼与效果牌则效果落空、意图仍可提交；`ChooseTarget` 指定的目标不在候选内时同样返回该码；见 [卡牌规范与数据](../content/card-system.md) §2.1「英雄卡」）；`TARGET_NOT_ALLOWED`（招募阶段试图指定敌方目标）；`INVALID_CHOICE`（`ChooseDiscover` 的候选索引不合法）。
 
 ## 4. 招募阶段细则
 

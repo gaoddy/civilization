@@ -316,8 +316,9 @@ impl Catalog {
                     )));
                 }
             }
-            // 两池同名同 id，但必须各自从自己的池取数；共享字段不一致会让
-            // 仅按用途选池的查询产生分叉，因此在加载期直接拒绝。
+            // 两池同名同 id，但必须各自从自己的池取数；关联分类不一致会让
+            // 仅按用途选池的查询产生分叉，因此在加载期直接拒绝。技能各自维护，
+            // 英雄技能与同名随从卡的技能不要求一致。
             let Some(card) = card_map.get(&hero.id) else {
                 return Err(CatalogError::Rule(format!(
                     "heroes.json: 英雄卡 {} 缺少同 id 的随从卡",
@@ -330,9 +331,9 @@ impl Catalog {
                     hero.id
                 )));
             }
-            if card.categories != hero.categories || card.skills != hero.skills {
+            if card.categories != hero.categories {
                 return Err(CatalogError::Rule(format!(
-                    "heroes.json: 英雄卡 {} 与同名随从卡的关联分类或技能不一致",
+                    "heroes.json: 英雄卡 {} 与同名随从卡的关联分类不一致",
                     hero.id
                 )));
             }

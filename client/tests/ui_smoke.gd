@@ -970,8 +970,13 @@ func _check_combat_layout() -> void:
         end_button == null or not end_button.is_visible_in_tree(),
         "战斗阶段不应显示结束招募按钮",
     )
-    var power_button = instance.find_child("HeroPowerButton", true, false)
+    var power_button = instance.find_child("HeroPowerButton0", true, false)
     _expect(power_button != null and not power_button.visible, "演示期间不应显示英雄技能按钮")
+    var passive_mark = instance.find_child("HeroPassive0", true, false)
+    _expect(
+        passive_mark != null and passive_mark.is_visible_in_tree(),
+        "演示期间被动技能标记应保留",
+    )
     _expect(instance.find_child("ShopPanel", true, false) != null, "商店节点仍在招募面板内")
     var hand_card = instance.find_child("HandCard0", true, false)
     _expect(hand_card != null and not hand_card.drag_allowed, "演示期间手牌不可拖动")
@@ -2234,7 +2239,7 @@ func _check_target_pending_aim() -> void:
     var aim = instance.find_child("AimLayer", true, false)
     _expect(aim != null and aim.pending_active(), "目标待选应开启瞄准层")
     _expect(aim != null and aim._candidates.size() == 2, "瞄准层应收到 2 个候选")
-    for name in ["RerollButton", "UpgradeButton", "FreezeButton", "RecruitEndButton", "HeroPowerButton"]:
+    for name in ["RerollButton", "UpgradeButton", "FreezeButton", "RecruitEndButton", "HeroPowerButton0"]:
         var button = instance.find_child(name, true, false)
         _expect(button != null and button.disabled, "目标待选期间 %s 应禁用" % name)
     var hand_card = instance.find_child("HandCard0", true, false)
@@ -2316,18 +2321,22 @@ func _check_skill_aim() -> void:
     GameStore.turn = 3
     GameStore.deadline = "2030-01-01T00:00:00Z"
     GameStore.view = FixtureScript.view()
-    GameStore.view["self"]["heroPower"] = {
-        "skillId": "universal-manuscript",
-        "usesLeft": 1,
-        "requiresTarget": true,
-        "targetCandidates": [{"zone": "board", "id": "mi_1"}],
-    }
+    GameStore.view["self"]["heroPowers"] = [
+        {
+            "skillId": "universal-manuscript",
+            "usesLeft": 1,
+            "requiresTarget": true,
+            "targetCandidates": [{"zone": "board", "id": "mi_1"}],
+            "canUse": true,
+            "disabledReason": null,
+        },
+    ]
     var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
         return
     await _dismiss_guide(instance)
     var aim = instance.find_child("AimLayer", true, false)
-    var power = instance.find_child("HeroPowerButton", true, false)
+    var power = instance.find_child("HeroPowerButton0", true, false)
     var card := _board_card(instance, "mi_1")
     var detail = instance.find_child("MinionDetailLayer", true, false)
     _expect(aim != null and power != null and card != null, "技能瞄准夹具缺少节点")
