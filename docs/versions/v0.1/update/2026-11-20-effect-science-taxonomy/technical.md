@@ -30,8 +30,7 @@
 
 ## 4. 客户端
 
-- `client/scenes/card_gallery.gd`：删除 `TAXON_PHENOMENON` 跳过逻辑；顶层分类按分类树根节点展示，最后追加「中立」「效果牌」。
-- `client/tests/ui_smoke_gallery.gd`：保留「不含现象」断言，新增「科学」「人文」「社会」存在断言；既有计数不变。
+- 图鉴分类目录已由 [2026-11-20-gallery-playstyle-categories](../2026-11-20-gallery-playstyle-categories/technical.md) 改为玩法分类；本需求只保留 `client/scenes/card_gallery.gd` 删除 `TAXON_PHENOMENON` 跳过逻辑。
 - 生成物 `client/generated/cards.json`、`taxonomy.json`、`tokens.json` 与文本表由 `make data` 重新生成。
 
 ## 5. 文档同步

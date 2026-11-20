@@ -18,11 +18,8 @@ const ERA_IDS := [
     "future",
 ]
 
-## 图鉴在科学分类之外追加的两个横切分类。
+## 玩法之外追加的横切分类；效果牌不再作为顶层分类。
 const CATEGORY_NEUTRAL := "neutral"
-const CATEGORY_EFFECT := "effect"
-## 学科根排在生物/造物根之后，避免与界级分类交错。
-const DISCIPLINE_ROOTS := ["science", "humanities", "society"]
 
 ## 选中顶层分类后展开的二级筛选：随从与效果牌。
 const KIND_ALL := ""
@@ -253,16 +250,20 @@ func _matches_kind(entry: Dictionary) -> bool:
     return _kind_bucket(entry) == _kind
 
 
-## 一张卡可同时属于分类树根节点与「中立」「效果牌」横切分类。
+## 一张卡可同时属于自身玩法、`play:` 关联玩法与「中立」横切分类。
 func _category_keys(entry: Dictionary) -> Array:
     var keys: Array = []
-    var root := _root_taxon(str(entry.get("taxon", "")))
-    if root != "":
-        keys.append(root)
-    if str(entry.get("playstyle", "")) == "neutral":
+    var playstyle := str(entry.get("playstyle", ""))
+    if playstyle != "" and playstyle != CATEGORY_NEUTRAL:
+        keys.append(playstyle)
+    for item in entry.get("specialty", []):
+        if str(item.get("kind", "")) != "play":
+            continue
+        var value := str(item.get("value", ""))
+        if value != "" and not keys.has(value):
+            keys.append(value)
+    if playstyle == CATEGORY_NEUTRAL:
         keys.append(CATEGORY_NEUTRAL)
-    if _is_effect(entry):
-        keys.append(CATEGORY_EFFECT)
     return keys
 
 
@@ -276,20 +277,9 @@ func _kind_bucket(entry: Dictionary) -> String:
 
 func _categories() -> Array:
     var out: Array = []
-    var disciplines: Array = []
-    for id in CardDB.taxonomy:
-        var node: Dictionary = CardDB.taxonomy[id]
-        if node.get("parent") != null:
-            continue
-        var root_id := str(id)
-        var item := {"id": root_id, "name": CardDB.taxon_name(root_id)}
-        if DISCIPLINE_ROOTS.has(root_id):
-            disciplines.append(item)
-        else:
-            out.append(item)
-    out.append_array(disciplines)
+    for id in CardDB.playstyles:
+        out.append({"id": str(id), "name": CardDB.playstyle_name(str(id))})
     out.append({"id": CATEGORY_NEUTRAL, "name": CardDB.playstyle_name("neutral")})
-    out.append({"id": CATEGORY_EFFECT, "name": tr("ui.gallery.category_effect")})
     return out
 
 
@@ -299,18 +289,6 @@ func _kinds() -> Array:
         {"id": KIND_MINION, "name": tr("ui.gallery.kind_minion")},
         {"id": KIND_EFFECT, "name": tr("ui.gallery.kind_effect")},
     ]
-
-
-func _root_taxon(taxon_id: String) -> String:
-    var current := taxon_id
-    var guard := 0
-    while current != "" and CardDB.taxonomy.has(current) and guard < 8:
-        var parent: Variant = CardDB.taxonomy[current].get("parent")
-        if parent == null or str(parent) == "":
-            return current
-        current = str(parent)
-        guard += 1
-    return current
 
 
 func _era_index(era_id: String) -> int:

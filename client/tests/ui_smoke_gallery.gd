@@ -42,11 +42,10 @@ func _check_lobby_page() -> void:
     _expect(detail_name != null and detail_name.text != "", "首屏应常驻选中首张卡")
 
     _expect(instance.find_child("Taxonneutral", true, false) != null, "分类目录缺少中立")
-    _expect(instance.find_child("Taxoneffect", true, false) != null, "分类目录缺少效果牌")
-    _expect(instance.find_child("Taxonphenomenon", true, false) == null, "分类目录不应再出现现象")
-    _expect(instance.find_child("Taxonscience", true, false) != null, "分类目录缺少科学")
-    _expect(instance.find_child("Taxonhumanities", true, false) != null, "分类目录缺少人文")
-    _expect(instance.find_child("Taxonsociety", true, false) != null, "分类目录缺少社会")
+    _expect(instance.find_child("Taxonmammal", true, false) != null, "分类目录缺少哺乳纲")
+    _expect(instance.find_child("Taxonmachine", true, false) != null, "分类目录缺少机械")
+    _expect(instance.find_child("Taxoneffect", true, false) == null, "效果牌不应作为顶层分类")
+    _expect(instance.find_child("Taxonscience", true, false) == null, "科学分类不应作为顶层分类")
 
     var toc = instance.find_child("GalleryToc", true, false)
     var detail = instance.find_child("GalleryDetail", true, false)
@@ -85,18 +84,18 @@ func _check_filters() -> void:
     _expect(chapter != null, "章节栏缺少未来章")
     if chapter != null:
         await _push_click(instance, chapter.get_global_rect().get_center())
-    var fungi = instance.find_child("Taxonfungi", true, false)
-    _expect(fungi != null, "分类目录缺少真菌界")
-    _expect(fungi != null and fungi.disabled, "未来章下没有真菌卡时该分类应禁用")
-    var animalia = instance.find_child("Taxonanimalia", true, false)
-    _expect(animalia != null, "分类目录缺少动物界")
-    if animalia != null:
-        await _push_click(instance, animalia.get_global_rect().get_center())
+    var fish = instance.find_child("Taxonfish", true, false)
+    _expect(fish != null, "分类目录缺少鱼纲")
+    _expect(fish != null and fish.disabled, "未来章下没有鱼纲卡时该分类应禁用")
+    var mammal = instance.find_child("Taxonmammal", true, false)
+    _expect(mammal != null, "分类目录缺少哺乳纲")
+    if mammal != null:
+        await _push_click(instance, mammal.get_global_rect().get_center())
 
     count = instance.find_child("GalleryCount", true, false)
     _expect(
-        count != null and count.text == tr("ui.gallery.count") % 14,
-        "未来 + 动物界应显示 14 张，实际：%s" % (count.text if count != null else "无"),
+        count != null and count.text == tr("ui.gallery.count") % 11,
+        "未来 + 哺乳纲应显示 11 张，实际：%s" % (count.text if count != null else "无"),
     )
 
     var all_taxon = instance.find_child("TaxonAll", true, false)
@@ -115,7 +114,7 @@ func _check_filters() -> void:
     await _unmount(instance)
 
 
-## 中立 / 效果牌两个顶层分类，以及选中后展开的随从 / 效果二级筛选。
+## 玩法与「中立」顶层分类，以及选中后展开的随从 / 效果二级筛选。
 func _check_categories_and_kinds() -> void:
     var instance := await _mount_gallery()
     if instance == null:
@@ -153,13 +152,13 @@ func _check_categories_and_kinds() -> void:
         "中立 + 效果应显示 100 张，实际：%s" % (count.text if count != null else "无"),
     )
 
-    var effect_taxon = instance.find_child("Taxoneffect", true, false)
-    _expect(effect_taxon != null, "分类目录缺少效果牌")
-    if effect_taxon != null:
-        await _push_click(instance, effect_taxon.get_global_rect().get_center())
+    var mammal_taxon = instance.find_child("Taxonmammal", true, false)
+    _expect(mammal_taxon != null, "分类目录缺少哺乳纲")
+    if mammal_taxon != null:
+        await _push_click(instance, mammal_taxon.get_global_rect().get_center())
     _expect(
         count != null and count.text == tr("ui.gallery.count") % 100,
-        "效果牌顶层应显示 100 张，实际：%s" % (count.text if count != null else "无"),
+        "哺乳纲顶层应显示 100 张，实际：%s" % (count.text if count != null else "无"),
     )
     var kind_all = instance.find_child("KindAll", true, false)
     _expect(

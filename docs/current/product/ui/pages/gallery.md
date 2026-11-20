@@ -66,8 +66,8 @@
 | 卡名 | `CardDB.display_name`：`card.<id>.name` / `token.<id>.name` |
 | 类型 | `card_type` 经 `UI.enum_text("card_type")`；Token 显示「Token」；英雄追加「· 英雄」 |
 | 科学分类 | `CardDB.taxon_path(taxon)` 的完整路径，以「 · 」连接；缺失显示「未定」 |
-| 分类目录 | `CardDB.taxonomy` 中 `parent` 为空（`null`）的根节点全部展示；卡牌按 `taxon` 沿 `parent` 上溯到根归入对应界 |
-| 中立 / 效果牌分类 | 「中立」取 `playstyle = neutral`；「效果牌」取 `card_type = effect`；两者与界级分类可同时命中，计数按各自规则累加 |
+| 分类目录 | `CardDB.playstyles` 的 13 个玩法按固定顺序展示，末尾追加「中立」；效果牌不作为顶层分类 |
+| 玩法分类归属 | 卡牌按自身 `playstyle` 归入对应玩法；带 `play:` 关联玩法的卡额外归入该玩法；`playstyle = neutral` 的卡归入「中立」，可同时命中玩法分类 |
 | 随从 / 效果二级筛选 | 「效果」取 `card_type = effect`，「随从」取其余条目；Token 在客户端展示表中带 `card_type = minion`，按随从计 |
 | 玩法与关联玩法 | `playstyle` 取 `CardDB.playstyle_name`；关联玩法取 `specialty` 中 `kind = "play"` 的值 |
 | 时代 | `era` 经 `UI.enum_text("era")`；未识别的时代排在最后，且不算入任何时代章节 |
