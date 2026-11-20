@@ -18,9 +18,20 @@ const ERA_IDS := [
     "future",
 ]
 
+## 图鉴在科学分类之外追加的两个横切分类；「现象」根不再直接出现在目录里。
+const CATEGORY_NEUTRAL := "neutral"
+const CATEGORY_EFFECT := "effect"
+const TAXON_PHENOMENON := "phenomenon"
+
+## 选中顶层分类后展开的二级筛选：随从与效果牌。
+const KIND_ALL := ""
+const KIND_MINION := "minion"
+const KIND_EFFECT := "effect"
+
 var _ids: Array = []
 var _era := 0
 var _taxon := ""
+var _kind := KIND_ALL
 var _selected := ""
 
 var _title: Label
@@ -96,6 +107,7 @@ func _init() -> void:
 
     _toc = GalleryToc.new()
     _toc.taxon_selected.connect(_on_taxon_selected)
+    _toc.kind_selected.connect(_on_kind_selected)
     body.add_child(_toc)
 
     _grid = GalleryGrid.new()
@@ -116,6 +128,7 @@ func set_catalog(card_ids: Array, title: String, close_text: String, subtitle: S
     _subtitle.text = subtitle
     _era = 0
     _taxon = ""
+    _kind = KIND_ALL
     _selected = ""
     _rebuild()
 
@@ -130,7 +143,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _rebuild() -> void:
     _chapter_bar.set_state(_count_by_era(), _era)
-    _toc.set_state(_roots(), _count_by_taxon(), _taxon)
+    _toc.set_state(
+        _categories(),
+        _count_by_category(),
+        _taxon,
+        _kinds(),
+        _count_by_kind(),
+        _kind,
+    )
     var filtered := _filtered_ids()
     if filtered.is_empty():
         _selected = ""
@@ -148,6 +168,12 @@ func _on_chapter_selected(era: int) -> void:
 
 func _on_taxon_selected(root_id: String) -> void:
     _taxon = root_id
+    _kind = KIND_ALL
+    _rebuild()
+
+
+func _on_kind_selected(kind: String) -> void:
+    _kind = kind
     _rebuild()
 
 
@@ -165,7 +191,7 @@ func _filtered_ids() -> Array:
     var out: Array = []
     for id in _ids:
         var entry := CardDB.card(str(id))
-        if not _matches_era(entry) or not _matches_taxon(entry):
+        if not _matches_era(entry) or not _matches_category(entry) or not _matches_kind(entry):
             continue
         out.append(str(id))
     return out
@@ -175,7 +201,7 @@ func _count_by_era() -> Dictionary:
     var counts := {}
     for id in _ids:
         var entry := CardDB.card(str(id))
-        if not _matches_taxon(entry):
+        if not _matches_category(entry) or not _matches_kind(entry):
             continue
         counts[0] = int(counts.get(0, 0)) + 1
         var era := _era_index(str(entry.get("era", "")))
@@ -184,16 +210,27 @@ func _count_by_era() -> Dictionary:
     return counts
 
 
-func _count_by_taxon() -> Dictionary:
+func _count_by_category() -> Dictionary:
     var counts := {}
     for id in _ids:
         var entry := CardDB.card(str(id))
-        if not _matches_era(entry):
+        if not _matches_era(entry) or not _matches_kind(entry):
             continue
         counts[""] = int(counts.get("", 0)) + 1
-        var root := _root_taxon(str(entry.get("taxon", "")))
-        if root != "":
-            counts[root] = int(counts.get(root, 0)) + 1
+        for key in _category_keys(entry):
+            counts[key] = int(counts.get(key, 0)) + 1
+    return counts
+
+
+func _count_by_kind() -> Dictionary:
+    var counts := {}
+    for id in _ids:
+        var entry := CardDB.card(str(id))
+        if not _matches_era(entry) or not _matches_category(entry):
+            continue
+        counts[KIND_ALL] = int(counts.get(KIND_ALL, 0)) + 1
+        var kind := _kind_bucket(entry)
+        counts[kind] = int(counts.get(kind, 0)) + 1
     return counts
 
 
@@ -203,19 +240,65 @@ func _matches_era(entry: Dictionary) -> bool:
     return _era_index(str(entry.get("era", ""))) == _era
 
 
-func _matches_taxon(entry: Dictionary) -> bool:
+func _matches_category(entry: Dictionary) -> bool:
     if _taxon == "":
         return true
-    return _root_taxon(str(entry.get("taxon", ""))) == _taxon
+    return _category_keys(entry).has(_taxon)
 
 
-func _roots() -> Array:
+func _matches_kind(entry: Dictionary) -> bool:
+    if _kind == KIND_ALL:
+        return true
+    return _kind_bucket(entry) == _kind
+
+
+## 一张卡可同时属于科学分类根与「中立」「效果牌」横切分类；「现象」不再作为目录项。
+func _category_keys(entry: Dictionary) -> Array:
+    var keys: Array = []
+    var root := _root_taxon(str(entry.get("taxon", "")))
+    if root != "" and root != TAXON_PHENOMENON:
+        keys.append(root)
+    if str(entry.get("playstyle", "")) == "neutral":
+        keys.append(CATEGORY_NEUTRAL)
+    if _is_effect(entry):
+        keys.append(CATEGORY_EFFECT)
+    return keys
+
+
+func _is_effect(entry: Dictionary) -> bool:
+    return str(entry.get("card_type", "")) == "effect"
+
+
+func _kind_bucket(entry: Dictionary) -> String:
+    return KIND_EFFECT if _is_effect(entry) else KIND_MINION
+
+
+func _categories() -> Array:
     var out: Array = []
+    var inserted := false
     for id in CardDB.taxonomy:
         var node: Dictionary = CardDB.taxonomy[id]
-        if node.get("parent") == null:
-            out.append(str(id))
+        if node.get("parent") != null:
+            continue
+        var root_id := str(id)
+        if root_id == TAXON_PHENOMENON:
+            out.append({"id": CATEGORY_NEUTRAL, "name": CardDB.playstyle_name("neutral")})
+            out.append({"id": CATEGORY_EFFECT, "name": tr("ui.gallery.category_effect")})
+            inserted = true
+            continue
+        out.append({"id": root_id, "name": CardDB.taxon_name(root_id)})
+    if not inserted:
+        out.append({"id": CATEGORY_NEUTRAL, "name": CardDB.playstyle_name("neutral")})
+        out.append({"id": CATEGORY_EFFECT, "name": tr("ui.gallery.category_effect")})
     return out
+
+
+func _kinds() -> Array:
+    return [
+        {"id": KIND_ALL, "name": tr("ui.gallery.kind_all")},
+        {"id": KIND_MINION, "name": tr("ui.gallery.kind_minion")},
+        {"id": KIND_EFFECT, "name": tr("ui.gallery.kind_effect")},
+    ]
 
 
 func _root_taxon(taxon_id: String) -> String:

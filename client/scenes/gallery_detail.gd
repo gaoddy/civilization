@@ -1,6 +1,6 @@
 class_name GalleryDetail
 extends PanelContainer
-## 图鉴常驻详情：选中卡的大卡面与类型、分类、玩法、数值、技能文本。
+## 图鉴常驻详情：选中卡的卡面美术图与类型、分类、玩法、数值、技能文本。
 ##
 ## 只读展示；数据全部来自 `CardDB` 的只读展示表。
 
@@ -40,14 +40,8 @@ func show_card(card_id: String) -> void:
     _box.alignment = BoxContainer.ALIGNMENT_BEGIN
 
     var entry := CardDB.card(card_id)
-    var card := UI.card_panel("raised-flush")
-    card.custom_minimum_size = Vector2(UITheme.metric("card-width"), UITheme.metric("card-height"))
-    card.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var era_id := str(entry.get("era", ""))
-    card.add_child(GalleryCardFace.build(card_id, entry))
-    var holder := CenterContainer.new()
-    holder.add_child(card)
-    _box.add_child(holder)
+    _box.add_child(_build_preview(card_id, entry))
 
     var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-title-lg"))
     name_label.name = "GalleryDetailName"
@@ -81,6 +75,63 @@ func show_card(card_id: String) -> void:
         effect_label.name = "GalleryDetailEffect"
         effect_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
         _box.add_child(effect_label)
+
+
+## 预览区只显示卡面美术大图；无美术时用玩法色与首字占位，不再现场拼装卡面组件。
+func _build_preview(card_id: String, entry: Dictionary) -> Control:
+    var holder := CenterContainer.new()
+    holder.name = "GalleryDetailPreview"
+    holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var size := Vector2(
+        _preview_metric("gallery-preview-width"),
+        _preview_metric("gallery-preview-height"),
+    )
+
+    var frame := PanelContainer.new()
+    frame.name = "GalleryDetailArtFrame"
+    frame.custom_minimum_size = size
+    frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var style := StyleBoxFlat.new()
+    style.bg_color = UITheme.playstyle_cover(str(entry.get("playstyle", "")))
+    style.set_corner_radius_all(UITheme.radius("radius-md"))
+    style.set_content_margin_all(UITheme.metric("card-cover-inset"))
+    frame.add_theme_stylebox_override("panel", style)
+    holder.add_child(frame)
+
+    var texture := _card_face_texture(card_id)
+    if texture != null:
+        var art := TextureRect.new()
+        art.name = "GalleryDetailArt"
+        art.texture = texture
+        art.custom_minimum_size = size
+        art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+        art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        frame.add_child(art)
+    else:
+        var placeholder := UI.label(CardText.initial(card_id), UITheme.font_size("font-hero"), false)
+        placeholder.name = "GalleryDetailArtPlaceholder"
+        placeholder.custom_minimum_size = size
+        placeholder.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        placeholder.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        placeholder.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
+        placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        frame.add_child(placeholder)
+    return holder
+
+
+func _card_face_texture(card_id: String) -> Texture2D:
+    var path := CardDB.art_path(card_id, "card_face")
+    if path == "" or not ResourceLoader.exists(path):
+        return null
+    return ResourceLoader.load(path) as Texture2D
+
+
+func _preview_metric(name: String) -> int:
+    var token := name
+    if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
+        token = name + "-compact"
+    return UITheme.metric(token)
 
 
 func _type_text(card_id: String, entry: Dictionary) -> String:

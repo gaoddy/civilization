@@ -90,6 +90,7 @@
 | `hand-hover-scale` | 1.12 | 手牌悬停放大倍数，以底边中点为轴；小数令牌用 `UITheme.factor` 读取，不要用 `metric` |
 | `gallery-toc-width` | 168 | 图鉴分类目录宽度 |
 | `gallery-detail-width` | 280 | 图鉴常驻详情宽度 |
+| `gallery-preview-width` / `-height` | 200 / 260 | 图鉴详情卡面美术图尺寸；手机为 160 / 208 |
 | `gallery-page-size` | 40 | 图鉴每页卡面张数（5 列 × 8 行） |
 | `gallery-grid-columns` | 5 | 图鉴卡面网格列数 |
 | `aim-arc-width` | 2.5 | 选目标弧线与角标的线宽 |

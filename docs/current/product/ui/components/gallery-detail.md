@@ -5,7 +5,7 @@
 
 ## 用途
 
-图鉴右侧的常驻详情：选中卡的大卡面、名称与类型、科学分类、玩法、费用、原始数值、技能与效果文本。
+图鉴右侧的常驻详情：选中卡的卡面美术图、名称与类型、科学分类、玩法、费用、原始数值、技能与效果文本。
 
 ## 属性与方法
 
@@ -14,12 +14,13 @@
 | `show_card(card_id)` | `void` | 重建为指定卡的详情；空 id 显示占位提示 |
 
 - 固定宽 `gallery-detail-width`（280），纵向撑满，面板样式 `surface`。
-- 内部节点名：`GalleryDetailScroll`、`GalleryDetailBody`、`GalleryDetailName`、`GalleryDetailEffect`。
+- 内部节点名：`GalleryDetailScroll`、`GalleryDetailBody`、`GalleryDetailPreview`、`GalleryDetailArt`、`GalleryDetailArtPlaceholder`、`GalleryDetailName`、`GalleryDetailEffect`。
 
 ## 变体与状态
 
 - 空 id：「选择一张卡牌查看详情」居中显示，无其它内容。
-- 有内容时顺序固定：大卡面（112×146）→ 名称 → 类型 → 科学分类 → 玩法 → 关联玩法 → 时代 → 费用 → 原始 → 技能 → 效果。
+- 有内容时顺序固定：卡面美术图（200×260，手机 160×208）→ 名称 → 类型 → 科学分类 → 玩法 → 关联玩法 → 时代 → 费用 → 原始 → 技能 → 效果。
+- 有 `card_face` 美术时显示等比放大的美术图；无美术时显示玩法色底与卡名首字占位。预览不再拼装卡面组件、费用/时代角标或卡面信息区。
 - 关联玩法、时代、原始、技能、效果各自在数据为空时省略整行，不留空标签。
 - 属性行为「小标题 + 值」的横向两栏：标题固定宽 64、`font-caption`、`color-text-muted`、顶部对齐；值 `font-body-sm`、横向扩展、自动换行。
 - 效果区先给区块标题「效果」，正文为 `font-body-sm`、`color-text-dim`。
