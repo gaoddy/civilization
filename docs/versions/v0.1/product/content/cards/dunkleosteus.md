@@ -2,7 +2,7 @@
 id: dunkleosteus
 card_type: minion
 name: 邓氏鱼
-playstyle: fish
+categories: [play:fish]
 taxon: dunkleosteidae
 subtype: fish
 level: 7

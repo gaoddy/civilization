@@ -4,7 +4,7 @@ name: 厚甲
 card_type: effect
 level: 4
 era: feudal
-playstyle: neutral
+categories: [play:reptile, play:cnidarian]
 taxon: military
 cost: 1
 match_text: 同左

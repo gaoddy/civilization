@@ -2,7 +2,7 @@
 id: ant
 card_type: minion
 name: 蚂蚁
-playstyle: insect
+categories: [play:insect]
 taxon: formicidae
 subtype: insect
 level: 2

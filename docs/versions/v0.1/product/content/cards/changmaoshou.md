@@ -2,7 +2,7 @@
 id: changmaoshou
 card_type: minion
 name: 长矛手
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 2

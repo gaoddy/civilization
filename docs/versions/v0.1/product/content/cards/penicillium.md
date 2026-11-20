@@ -2,7 +2,7 @@
 id: penicillium
 card_type: minion
 name: 青霉
-playstyle: fungus
+categories: [play:fungus]
 taxon: aspergillaceae
 subtype: fungus
 level: 1

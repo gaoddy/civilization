@@ -4,7 +4,7 @@ name: 生长
 card_type: effect
 level: 4
 era: primitive
-playstyle: neutral
+categories: [play:fish, play:plant]
 taxon: biology
 cost: 1
 match_text: 同左

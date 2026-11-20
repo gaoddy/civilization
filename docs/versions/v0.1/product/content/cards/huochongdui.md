@@ -2,7 +2,7 @@
 id: huochongdui
 card_type: minion
 name: 火铳队
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 4

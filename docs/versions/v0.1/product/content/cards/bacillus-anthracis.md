@@ -2,7 +2,7 @@
 id: bacillus-anthracis
 card_type: minion
 name: 炭疽芽孢杆菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: bacillaceae
 subtype: bacteria
 level: 5

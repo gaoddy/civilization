@@ -2,7 +2,7 @@
 id: superbug
 card_type: minion
 name: 超级细菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: enterobacteriaceae
 subtype: bacteria
 level: 7

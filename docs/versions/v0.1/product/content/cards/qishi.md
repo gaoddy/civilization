@@ -2,7 +2,7 @@
 id: qishi
 card_type: minion
 name: 骑士
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 2

@@ -2,9 +2,8 @@
 id: mengmalieren
 card_type: minion
 name: 猛犸猎人
-playstyle: mammal
+categories: [play:mammal, prey:proboscidea]
 taxon: hominidae
-specialty: [prey:proboscidea]
 subtype: primitive
 level: 2
 era: prehistoric

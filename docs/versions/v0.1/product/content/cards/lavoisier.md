@@ -2,9 +2,8 @@
 id: lavoisier
 card_type: minion
 name: 拉瓦锡
-playstyle: neutral
+categories: [play:reptile]
 taxon: hominidae
-specialty: [play:reptile]
 subtype: chemistry
 level: 5
 era: industrial

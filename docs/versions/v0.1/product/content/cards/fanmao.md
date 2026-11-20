@@ -4,10 +4,9 @@ name: 繁茂
 card_type: effect
 level: 6
 era: modern
-playstyle: neutral
+categories: [play:plant]
 taxon: biology
 cost: 4
-specialty: [play:plant]
 match_text: 同左
 skills: [trigger-plant-all-growth-twice]
 ---

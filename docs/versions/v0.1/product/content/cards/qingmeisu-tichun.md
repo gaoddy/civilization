@@ -4,7 +4,7 @@ name: 青霉素·提纯
 card_type: effect
 level: 3
 era: modern
-playstyle: neutral
+categories: [play:fungus, play:bacteria]
 taxon: medicine
 cost: 2
 match_text: 同左

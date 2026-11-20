@@ -2,9 +2,8 @@
 id: juying
 card_type: minion
 name: 巨鹰
-playstyle: bird
+categories: [play:bird, prey:artiodactyla]
 taxon: accipitridae
-specialty: [prey:artiodactyla]
 subtype: bird
 level: 2
 era: prehistoric

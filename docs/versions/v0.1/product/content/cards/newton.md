@@ -2,9 +2,8 @@
 id: newton
 card_type: minion
 name: 牛顿
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: physics
 level: 5
 era: modern

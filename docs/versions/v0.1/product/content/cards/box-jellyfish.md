@@ -2,7 +2,7 @@
 id: box-jellyfish
 card_type: minion
 name: 箱水母
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: chirodropidae
 subtype: ocean
 level: 5

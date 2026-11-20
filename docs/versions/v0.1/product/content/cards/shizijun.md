@@ -2,7 +2,7 @@
 id: shizijun
 card_type: minion
 name: 十字军
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 5

@@ -4,7 +4,7 @@ name: 交变电流
 card_type: effect
 level: 3
 era: industrial
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: physics
 cost: 2
 match_text: 同左

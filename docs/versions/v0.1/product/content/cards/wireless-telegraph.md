@@ -2,9 +2,8 @@
 id: wireless-telegraph
 card_type: minion
 name: 无线电报
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: telecommunication
 level: 6
 era: modern

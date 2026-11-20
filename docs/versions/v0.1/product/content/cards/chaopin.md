@@ -4,10 +4,9 @@ name: 超频
 card_type: effect
 level: 4
 era: future
-playstyle: neutral
+categories: [play:machine]
 taxon: automation
 cost: 2
-specialty: [play:machine]
 match_text: 同左
 skills: [trigger-machine-all-plus-1-plus-1]
 ---

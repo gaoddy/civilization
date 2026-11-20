@@ -2,7 +2,7 @@
 id: gongjianshou
 card_type: minion
 name: 弓箭手
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 1

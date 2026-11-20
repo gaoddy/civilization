@@ -2,7 +2,7 @@
 id: suishimaobing
 card_type: minion
 name: 燧石矛兵
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primitive
 level: 1

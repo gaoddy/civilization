@@ -2,9 +2,8 @@
 id: heisenberg
 card_type: minion
 name: 海森堡
-playstyle: neutral
+categories: [play:cnidarian, play:fungus]
 taxon: hominidae
-specialty: [play:cnidarian, play:fungus]
 subtype: quantum
 level: 7
 era: future

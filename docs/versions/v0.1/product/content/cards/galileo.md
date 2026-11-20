@@ -2,9 +2,8 @@
 id: galileo
 card_type: minion
 name: 伽利略
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: physics
 level: 4
 era: feudal

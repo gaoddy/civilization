@@ -2,7 +2,7 @@
 id: tielu-gongren
 card_type: minion
 name: 铁路工人
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: worker
 level: 3

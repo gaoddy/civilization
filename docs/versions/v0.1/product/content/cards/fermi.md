@@ -2,9 +2,8 @@
 id: fermi
 card_type: minion
 name: 费米
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: hominidae
-specialty: [play:mammal, play:machine]
 subtype: nuclear-physics
 level: 7
 era: future

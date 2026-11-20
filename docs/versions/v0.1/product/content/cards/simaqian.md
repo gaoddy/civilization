@@ -2,7 +2,7 @@
 id: simaqian
 card_type: minion
 name: 司马迁
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: history
 level: 4

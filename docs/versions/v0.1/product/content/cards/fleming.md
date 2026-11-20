@@ -2,7 +2,7 @@
 id: fleming
 card_type: minion
 name: 弗莱明
-playstyle: virus
+categories: [play:virus]
 taxon: hominidae
 subtype: microbiology
 level: 4

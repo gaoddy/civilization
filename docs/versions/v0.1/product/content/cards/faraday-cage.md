@@ -4,7 +4,7 @@ name: 法拉第笼
 card_type: effect
 level: 3
 era: industrial
-playstyle: neutral
+categories: [play:reptile, play:machine]
 taxon: physics
 cost: 2
 match_text: 同左

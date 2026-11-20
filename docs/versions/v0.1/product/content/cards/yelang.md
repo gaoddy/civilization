@@ -2,9 +2,8 @@
 id: yelang
 card_type: minion
 name: 野狼
-playstyle: mammal
+categories: [play:mammal, prey:artiodactyla]
 taxon: canidae
-specialty: [prey:artiodactyla]
 subtype: mammal
 level: 2
 era: prehistoric

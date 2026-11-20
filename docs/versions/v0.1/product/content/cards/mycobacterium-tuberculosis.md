@@ -2,7 +2,7 @@
 id: mycobacterium-tuberculosis
 card_type: minion
 name: 结核分枝杆菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: mycobacteriaceae
 subtype: bacteria
 level: 4

@@ -2,7 +2,7 @@
 id: vertical-farm
 card_type: minion
 name: 垂直农场
-playstyle: plant
+categories: [play:plant]
 taxon: plantae-incertae-sedis
 subtype: architecture
 level: 6

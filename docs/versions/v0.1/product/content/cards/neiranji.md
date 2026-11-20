@@ -2,9 +2,8 @@
 id: neiranji
 card_type: minion
 name: 内燃机
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
-specialty: [play:machine]
 subtype: power
 level: 4
 era: industrial

@@ -4,7 +4,7 @@ name: 征兵令
 card_type: effect
 level: 3
 era: industrial
-playstyle: neutral
+categories: [play:mammal]
 taxon: military
 cost: 2
 match_text: 同左

@@ -4,10 +4,9 @@ name: 吞噬
 card_type: effect
 level: 4
 era: primitive
-playstyle: neutral
+categories: [play:protozoa]
 taxon: biology
 cost: 2
-specialty: [play:protozoa]
 match_text: 同左
 skills: [trigger-protozoa-single-growth-twice]
 ---

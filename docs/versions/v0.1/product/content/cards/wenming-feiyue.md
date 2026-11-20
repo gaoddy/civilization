@@ -4,7 +4,7 @@ name: 文明飞跃
 card_type: effect
 level: 7
 era: future
-playstyle: neutral
+categories: [play:mammal, play:plant]
 taxon: history
 cost: 4
 match_text: 同左

@@ -2,8 +2,7 @@
 id: galileo
 card_type: hero
 name: 伽利略
-playstyle: neutral
-specialty: [play:mammal]
+categories: [play:mammal]
 skills: [observation]
 ---
 

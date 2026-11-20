@@ -2,9 +2,8 @@
 id: homer
 card_type: minion
 name: 荷马
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: literature
 level: 3
 era: classical

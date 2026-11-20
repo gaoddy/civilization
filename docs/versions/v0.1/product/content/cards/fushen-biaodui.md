@@ -4,10 +4,9 @@ name: 俯冲编队
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:bird]
 taxon: biology
 cost: 2
-specialty: [play:bird]
 match_text: 同左
 skills: [combatstart-lowest-attack-enemy-damage-3]
 ---

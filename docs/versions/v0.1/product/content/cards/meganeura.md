@@ -2,7 +2,7 @@
 id: meganeura
 card_type: minion
 name: 巨脉蜻蜓
-playstyle: insect
+categories: [play:insect]
 taxon: meganeuridae
 subtype: insect
 level: 7

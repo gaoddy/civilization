@@ -2,7 +2,7 @@
 id: dushe
 card_type: minion
 name: 毒蛇
-playstyle: reptile
+categories: [play:reptile]
 taxon: squamata-incertae-sedis
 subtype: reptile
 level: 2

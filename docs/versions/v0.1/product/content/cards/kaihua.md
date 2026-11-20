@@ -4,10 +4,9 @@ name: 开花
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:plant]
 taxon: biology
 cost: 2
-specialty: [play:plant]
 match_text: 同左
 skills: [trigger-plant-all-breed-2]
 ---

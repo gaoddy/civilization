@@ -2,7 +2,7 @@
 id: shizuniao
 card_type: minion
 name: 始祖鸟
-playstyle: bird
+categories: [play:bird]
 taxon: archaeopterygidae
 subtype: bird
 level: 1

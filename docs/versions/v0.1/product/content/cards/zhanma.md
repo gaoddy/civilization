@@ -2,7 +2,7 @@
 id: zhanma
 card_type: minion
 name: 战马
-playstyle: mammal
+categories: [play:mammal]
 taxon: equidae
 subtype: mammal
 level: 4

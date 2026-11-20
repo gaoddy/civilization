@@ -2,7 +2,7 @@
 id: zhugeliang
 card_type: minion
 name: 诸葛亮
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: strategist
 level: 3

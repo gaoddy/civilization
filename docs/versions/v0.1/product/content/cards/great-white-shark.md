@@ -2,7 +2,7 @@
 id: great-white-shark
 card_type: minion
 name: 大白鲨
-playstyle: fish
+categories: [play:fish]
 taxon: lamnidae
 subtype: fish
 level: 5

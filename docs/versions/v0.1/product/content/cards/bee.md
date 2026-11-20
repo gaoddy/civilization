@@ -2,7 +2,7 @@
 id: bee
 card_type: minion
 name: 蜜蜂
-playstyle: insect
+categories: [play:insect]
 taxon: apidae
 subtype: insect
 level: 2

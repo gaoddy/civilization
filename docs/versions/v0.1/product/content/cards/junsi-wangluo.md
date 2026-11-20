@@ -4,10 +4,9 @@ name: 菌丝网络
 card_type: effect
 level: 2
 era: prehistoric
-playstyle: neutral
+categories: [play:fungus]
 taxon: biology
 cost: 1
-specialty: [play:fungus]
 match_text: 同左
 skills: [trigger-fungus-single-plus-0-plus-3]
 ---

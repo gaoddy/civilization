@@ -2,7 +2,7 @@
 id: adam-smith
 card_type: hero
 name: 亚当·斯密
-playstyle: mammal
+categories: [play:mammal]
 skills: [division-of-labor]
 ---
 

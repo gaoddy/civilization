@@ -2,7 +2,7 @@
 id: juzi
 card_type: minion
 name: 橘子
-playstyle: plant
+categories: [play:plant]
 taxon: rutaceae
 subtype: fruit-tree
 level: 1

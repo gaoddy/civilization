@@ -2,7 +2,7 @@
 id: buluozhanshi
 card_type: minion
 name: 部落战士
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primitive
 level: 1

@@ -4,7 +4,7 @@ name: 微光
 card_type: effect
 level: 2
 era: classical
-playstyle: neutral
+categories: [play:plant, play:machine]
 taxon: physics
 cost: 0
 match_text: 同左

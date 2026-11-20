@@ -2,9 +2,8 @@
 id: michelangelo
 card_type: minion
 name: 米开朗基罗
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: art
 level: 4
 era: feudal

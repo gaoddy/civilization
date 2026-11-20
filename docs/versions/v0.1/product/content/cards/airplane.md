@@ -2,9 +2,8 @@
 id: airplane
 card_type: minion
 name: 飞机
-playstyle: neutral
+categories: [play:machine]
 taxon: transport
-specialty: [play:machine]
 subtype: flight
 level: 5
 era: modern

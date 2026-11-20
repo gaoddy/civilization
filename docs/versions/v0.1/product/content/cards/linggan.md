@@ -4,7 +4,7 @@ name: 灵感
 card_type: effect
 level: 2
 era: classical
-playstyle: neutral
+categories: [play:mammal, play:bird]
 taxon: psychology
 cost: 0
 match_text: 同左

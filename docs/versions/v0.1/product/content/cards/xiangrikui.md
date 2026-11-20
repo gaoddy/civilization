@@ -2,7 +2,7 @@
 id: xiangrikui
 card_type: minion
 name: 向日葵
-playstyle: plant
+categories: [play:plant]
 taxon: asteraceae
 subtype: crop
 level: 2

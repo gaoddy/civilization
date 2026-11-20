@@ -2,9 +2,8 @@
 id: nitaizhangyu
 card_type: minion
 name: 拟态章鱼
-playstyle: cephalopod
+categories: [play:cephalopod, prey:actinopterygii]
 taxon: octopodidae
-specialty: [prey:actinopterygii]
 subtype: mollusk
 level: 2
 era: prehistoric

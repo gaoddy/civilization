@@ -2,9 +2,8 @@
 id: sugeladi
 card_type: minion
 name: 苏格拉底
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: philosophy
 level: 2
 era: classical

@@ -2,7 +2,7 @@
 id: crow
 card_type: minion
 name: 乌鸦
-playstyle: bird
+categories: [play:bird]
 taxon: corvidae
 subtype: bird
 level: 3

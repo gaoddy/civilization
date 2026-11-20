@@ -2,7 +2,7 @@
 id: staghorn-coral
 card_type: minion
 name: 鹿角珊瑚
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: acroporidae
 subtype: ocean
 level: 4

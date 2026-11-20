@@ -2,7 +2,7 @@
 id: turritopsis
 card_type: minion
 name: 灯塔水母
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: oceaniidae
 subtype: ocean
 level: 3

@@ -2,7 +2,7 @@
 id: luban
 card_type: hero
 name: 鲁班
-playstyle: machine
+categories: [play:machine]
 skills: [battlecry-friendly-mech-growth-once]
 ---
 

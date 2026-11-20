@@ -4,10 +4,9 @@ name: 播种季
 card_type: effect
 level: 2
 era: prehistoric
-playstyle: neutral
+categories: [play:plant]
 taxon: biology
 cost: 1
-specialty: [play:plant]
 match_text: 同左
 skills: [trigger-friendly-plant-sow]
 ---

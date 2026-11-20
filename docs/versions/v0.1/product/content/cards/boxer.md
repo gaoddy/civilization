@@ -2,7 +2,7 @@
 id: boxer
 card_type: minion
 name: 拳击手
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: athlete
 level: 4

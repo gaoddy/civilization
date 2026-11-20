@@ -2,8 +2,7 @@
 id: luxun
 card_type: hero
 name: 鲁迅
-playstyle: neutral
-specialty: [play:mammal]
+categories: [play:mammal]
 skills: [shout]
 ---
 

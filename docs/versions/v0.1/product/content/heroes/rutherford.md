@@ -2,8 +2,7 @@
 id: rutherford
 card_type: hero
 name: 卢瑟福
-playstyle: neutral
-specialty: [play:mammal, play:machine]
+categories: [play:mammal, play:machine]
 skills: [combat-random-enemy-damage-3]
 ---
 

@@ -2,7 +2,7 @@
 id: zhenghe
 card_type: hero
 name: 郑和
-playstyle: mammal
+categories: [play:mammal]
 skills: [free-refresh]
 ---
 

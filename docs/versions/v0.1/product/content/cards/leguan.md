@@ -4,7 +4,7 @@ name: 乐观
 card_type: effect
 level: 3
 era: modern
-playstyle: neutral
+categories: [play:mammal, play:cnidarian]
 taxon: philosophy
 cost: 0
 match_text: 同左

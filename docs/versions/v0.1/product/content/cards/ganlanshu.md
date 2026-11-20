@@ -2,7 +2,7 @@
 id: ganlanshu
 card_type: minion
 name: 橄榄树
-playstyle: plant
+categories: [play:plant]
 taxon: oleaceae
 subtype: crop
 level: 2

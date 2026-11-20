@@ -2,7 +2,7 @@
 id: locust
 card_type: minion
 name: 蝗虫
-playstyle: insect
+categories: [play:insect]
 taxon: acrididae
 subtype: insect
 level: 3

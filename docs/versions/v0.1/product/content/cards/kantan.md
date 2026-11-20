@@ -4,7 +4,7 @@ name: 勘探
 card_type: effect
 level: 5
 era: classical
-playstyle: neutral
+categories: [play:machine]
 taxon: earth-science
 cost: 2
 match_text: 同左

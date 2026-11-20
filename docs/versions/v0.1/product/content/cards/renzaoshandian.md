@@ -4,7 +4,7 @@ name: 人造闪电
 card_type: effect
 level: 3
 era: modern
-playstyle: neutral
+categories: [play:machine]
 taxon: physics
 cost: 2
 match_text: 同左

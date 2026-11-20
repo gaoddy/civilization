@@ -2,9 +2,8 @@
 id: lianjinshushi
 card_type: minion
 name: 炼金术士
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: chemistry
 level: 3
 era: primitive

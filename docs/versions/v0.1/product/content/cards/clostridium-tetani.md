@@ -2,7 +2,7 @@
 id: clostridium-tetani
 card_type: minion
 name: 破伤风梭菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: clostridiaceae
 subtype: bacteria
 level: 3

@@ -2,7 +2,7 @@
 id: lizard
 card_type: minion
 name: 蜥蜴
-playstyle: reptile
+categories: [play:reptile]
 taxon: lacertidae
 subtype: reptile
 level: 1

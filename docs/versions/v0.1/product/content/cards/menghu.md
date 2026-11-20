@@ -2,9 +2,8 @@
 id: menghu
 card_type: minion
 name: 猛虎
-playstyle: mammal
+categories: [play:mammal, prey:artiodactyla]
 taxon: felidae
-specialty: [prey:artiodactyla]
 subtype: mammal
 level: 3
 era: primitive

@@ -4,10 +4,9 @@ name: 洋流
 card_type: effect
 level: 1
 era: prehistoric
-playstyle: neutral
+categories: [play:fish]
 taxon: earth-science
 cost: 1
-specialty: [play:fish]
 match_text: 同左
 skills: [trigger-fish-single-plus-0-plus-2]
 ---

@@ -2,7 +2,7 @@
 id: mozi
 card_type: hero
 name: 墨子
-playstyle: mammal
+categories: [play:mammal]
 skills: [enemy-random-cannot-attack]
 ---
 

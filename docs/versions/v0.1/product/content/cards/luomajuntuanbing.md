@@ -2,7 +2,7 @@
 id: luomajuntuanbing
 card_type: minion
 name: 罗马军团兵
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 3

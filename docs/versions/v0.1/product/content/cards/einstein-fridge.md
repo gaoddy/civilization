@@ -2,9 +2,8 @@
 id: einstein-fridge
 card_type: minion
 name: 爱因斯坦冰箱
-playstyle: neutral
+categories: [play:machine]
 taxon: life-medical
-specialty: [play:machine]
 subtype: appliance
 level: 3
 era: modern

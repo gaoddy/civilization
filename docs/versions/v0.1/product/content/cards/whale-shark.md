@@ -2,7 +2,7 @@
 id: whale-shark
 card_type: minion
 name: 鲸鲨
-playstyle: fish
+categories: [play:fish]
 taxon: rhincodontidae
 subtype: fish
 level: 6

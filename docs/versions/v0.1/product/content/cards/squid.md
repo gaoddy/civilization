@@ -2,7 +2,7 @@
 id: squid
 card_type: minion
 name: 枪乌贼
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: loliginidae
 subtype: mollusk
 level: 3

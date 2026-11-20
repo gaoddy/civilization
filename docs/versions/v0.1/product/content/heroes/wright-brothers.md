@@ -2,7 +2,7 @@
 id: wright-brothers
 card_type: hero
 name: 莱特兄弟
-playstyle: machine
+categories: [play:machine]
 skills: [combat-optimal-attack]
 ---
 

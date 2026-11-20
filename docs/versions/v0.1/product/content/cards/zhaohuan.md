@@ -4,7 +4,7 @@ name: 召唤
 card_type: effect
 level: 6
 era: classical
-playstyle: neutral
+categories: [play:fish, play:insect]
 taxon: military
 cost: 2
 match_text: 同左

@@ -2,7 +2,7 @@
 id: wuyi
 card_type: minion
 name: 巫医
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primitive
 level: 2

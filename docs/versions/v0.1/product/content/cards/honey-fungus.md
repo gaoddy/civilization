@@ -2,7 +2,7 @@
 id: honey-fungus
 card_type: minion
 name: 蜜环菌
-playstyle: fungus
+categories: [play:fungus]
 taxon: physalacriaceae
 subtype: fungus
 level: 6

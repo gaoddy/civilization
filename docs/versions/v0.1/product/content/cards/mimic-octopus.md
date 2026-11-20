@@ -2,7 +2,7 @@
 id: mimic-octopus
 card_type: minion
 name: 拟态章鱼（大型）
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: octopodidae
 subtype: mollusk
 level: 4

@@ -2,9 +2,8 @@
 id: mendel
 card_type: minion
 name: 孟德尔
-playstyle: neutral
+categories: [play:plant]
 taxon: hominidae
-specialty: [play:plant]
 subtype: organism
 level: 4
 era: modern

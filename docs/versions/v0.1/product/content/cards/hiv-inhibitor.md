@@ -4,7 +4,7 @@ name: 艾滋病毒·抑制剂
 card_type: effect
 level: 5
 era: modern
-playstyle: neutral
+categories: [play:virus]
 taxon: medicine
 cost: 3
 match_text: 同左

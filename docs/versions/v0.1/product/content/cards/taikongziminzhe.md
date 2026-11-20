@@ -2,7 +2,7 @@
 id: taikongziminzhe
 card_type: minion
 name: 太空殖民者
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: colonist
 level: 6

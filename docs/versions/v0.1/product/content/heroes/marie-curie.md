@@ -2,8 +2,7 @@
 id: marie-curie
 card_type: hero
 name: 玛丽·居里
-playstyle: neutral
-specialty: [play:mammal, play:machine]
+categories: [play:mammal, play:machine]
 skills: [battlecry-friendly-growth-twice, radiation]
 ---
 

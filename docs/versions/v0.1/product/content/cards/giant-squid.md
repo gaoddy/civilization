@@ -2,7 +2,7 @@
 id: giant-squid
 card_type: minion
 name: 大王乌贼
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: architeuthidae
 subtype: mollusk
 level: 5

@@ -2,7 +2,7 @@
 id: beethoven
 card_type: minion
 name: 贝多芬
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: music
 level: 4

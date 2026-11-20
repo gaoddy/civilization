@@ -4,7 +4,7 @@ name: 二分法
 card_type: effect
 level: 1
 era: classical
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: mathematics
 cost: 0
 match_text: 同左

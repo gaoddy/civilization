@@ -2,7 +2,7 @@
 id: argentavis
 card_type: minion
 name: 阿根廷巨鹰
-playstyle: bird
+categories: [play:bird]
 taxon: teratornithidae
 subtype: bird
 level: 7

@@ -2,9 +2,8 @@
 id: guoying
 card_type: minion
 name: 果蝇
-playstyle: insect
+categories: [play:insect, prey:plantae]
 taxon: drosophilidae
-specialty: [prey:plantae]
 subtype: insect
 level: 1
 era: prehistoric

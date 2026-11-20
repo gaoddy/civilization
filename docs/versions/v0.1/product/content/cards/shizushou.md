@@ -2,7 +2,7 @@
 id: shizushou
 card_type: minion
 name: 始祖兽
-playstyle: mammal
+categories: [play:mammal]
 taxon: mammalia-incertae-sedis
 subtype: mammal
 level: 3

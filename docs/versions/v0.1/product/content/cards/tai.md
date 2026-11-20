@@ -2,7 +2,7 @@
 id: tai
 card_type: minion
 name: 苔藓
-playstyle: plant
+categories: [play:plant]
 taxon: bryaceae
 subtype: moss
 level: 1

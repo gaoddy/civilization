@@ -2,9 +2,8 @@
 id: einstein
 card_type: minion
 name: 爱因斯坦
-playstyle: neutral
+categories: [play:mammal, play:bird]
 taxon: hominidae
-specialty: [play:bird, play:mammal]
 subtype: physics
 level: 5
 era: modern

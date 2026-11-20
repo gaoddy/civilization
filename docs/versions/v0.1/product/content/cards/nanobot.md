@@ -2,7 +2,7 @@
 id: nanobot
 card_type: minion
 name: 纳米机器人
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: robot
 level: 5

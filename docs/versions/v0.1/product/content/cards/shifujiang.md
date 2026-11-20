@@ -2,7 +2,7 @@
 id: shifujiang
 card_type: minion
 name: 石斧匠
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primitive
 level: 2

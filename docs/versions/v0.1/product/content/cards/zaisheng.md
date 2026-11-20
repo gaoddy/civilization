@@ -4,10 +4,9 @@ name: 再生
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:cnidarian]
 taxon: biology
 cost: 2
-specialty: [play:cnidarian]
 match_text: 同左
 skills: [trigger-cnidarian-single-reborn]
 ---

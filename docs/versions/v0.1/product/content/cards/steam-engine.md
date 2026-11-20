@@ -2,9 +2,8 @@
 id: steam-engine
 card_type: minion
 name: 蒸汽机
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
-specialty: [play:machine]
 subtype: power
 level: 4
 era: modern

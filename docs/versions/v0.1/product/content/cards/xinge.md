@@ -2,7 +2,7 @@
 id: xinge
 card_type: minion
 name: 信鸽
-playstyle: bird
+categories: [play:bird]
 taxon: columbidae
 subtype: communication
 level: 1

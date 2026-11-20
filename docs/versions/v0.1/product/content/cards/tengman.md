@@ -2,7 +2,7 @@
 id: tengman
 card_type: minion
 name: 藤蔓
-playstyle: plant
+categories: [play:plant]
 taxon: plantae-incertae-sedis
 subtype: vine
 level: 1

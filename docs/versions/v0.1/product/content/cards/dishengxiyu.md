@@ -4,7 +4,7 @@ name: 低声细语
 card_type: effect
 level: 1
 era: modern
-playstyle: neutral
+categories: [play:mammal]
 taxon: psychology
 cost: 1
 match_text: 同左

@@ -2,7 +2,7 @@
 id: juelei
 card_type: minion
 name: 蕨类
-playstyle: plant
+categories: [play:plant]
 taxon: polypodiaceae
 subtype: fern
 level: 2

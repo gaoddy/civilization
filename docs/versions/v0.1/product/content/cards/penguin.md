@@ -2,7 +2,7 @@
 id: penguin
 card_type: minion
 name: 企鹅
-playstyle: bird
+categories: [play:bird]
 taxon: spheniscidae
 subtype: bird
 level: 4

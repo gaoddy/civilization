@@ -2,7 +2,7 @@
 id: orchid
 card_type: minion
 name: 兰花
-playstyle: plant
+categories: [play:plant]
 taxon: orchidaceae
 subtype: flower
 level: 3

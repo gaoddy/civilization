@@ -2,9 +2,8 @@
 id: davinci
 card_type: minion
 name: 达·芬奇
-playstyle: neutral
+categories: [play:mammal, play:cephalopod]
 taxon: hominidae
-specialty: [play:cephalopod, play:mammal]
 subtype: polymath
 level: 5
 era: feudal

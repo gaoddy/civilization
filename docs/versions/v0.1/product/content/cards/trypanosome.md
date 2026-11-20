@@ -2,7 +2,7 @@
 id: trypanosome
 card_type: minion
 name: 锥虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: trypanosomatidae
 subtype: protozoa
 level: 3

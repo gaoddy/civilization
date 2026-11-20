@@ -4,7 +4,7 @@ name: 方阵
 card_type: effect
 level: 2
 era: classical
-playstyle: neutral
+categories: [play:mammal, play:reptile]
 taxon: military
 cost: 1
 match_text: 同左

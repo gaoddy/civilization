@@ -2,9 +2,8 @@
 id: niuwen
 card_type: minion
 name: 牛瘟
-playstyle: virus
+categories: [play:virus, host:bovidae]
 taxon: paramyxoviridae
-specialty: [host:bovidae]
 subtype: virus
 level: 5
 era: modern

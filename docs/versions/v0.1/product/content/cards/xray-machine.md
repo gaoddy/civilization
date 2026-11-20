@@ -2,9 +2,8 @@
 id: xray-machine
 card_type: minion
 name: X射线机
-playstyle: neutral
+categories: [play:machine]
 taxon: life-medical
-specialty: [play:machine]
 subtype: medical
 level: 4
 era: modern

@@ -2,9 +2,8 @@
 id: morgan
 card_type: minion
 name: 摩尔根
-playstyle: neutral
+categories: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 taxon: hominidae
-specialty: [play:insect, play:mammal, play:bird, play:reptile, play:fish, play:cephalopod, play:cnidarian]
 subtype: genetics
 level: 5
 era: modern

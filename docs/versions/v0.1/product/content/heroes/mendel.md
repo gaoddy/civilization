@@ -2,8 +2,7 @@
 id: mendel
 card_type: hero
 name: 孟德尔
-playstyle: neutral
-specialty: [play:plant]
+categories: [play:plant]
 skills: [battlecry-friendly-plant-growth-once, heredity]
 ---
 

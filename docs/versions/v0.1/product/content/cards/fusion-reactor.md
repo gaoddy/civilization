@@ -2,9 +2,8 @@
 id: fusion-reactor
 card_type: minion
 name: 聚变反应堆
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
-specialty: [play:machine]
 subtype: power
 level: 6
 era: future

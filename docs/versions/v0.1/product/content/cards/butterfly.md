@@ -2,7 +2,7 @@
 id: butterfly
 card_type: minion
 name: 蝴蝶
-playstyle: insect
+categories: [play:insect]
 taxon: papilionidae
 subtype: insect
 level: 4

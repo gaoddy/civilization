@@ -2,7 +2,7 @@
 id: peafowl
 card_type: minion
 name: 孔雀
-playstyle: bird
+categories: [play:bird]
 taxon: phasianidae
 subtype: bird
 level: 5

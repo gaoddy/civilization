@@ -4,7 +4,7 @@ name: 激励
 card_type: effect
 level: 6
 era: modern
-playstyle: neutral
+categories: [play:mammal, play:insect]
 taxon: military
 cost: 3
 match_text: 同左

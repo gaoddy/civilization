@@ -2,7 +2,7 @@
 id: argonaut
 card_type: minion
 name: 船蛸
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: argonautidae
 subtype: mollusk
 level: 4

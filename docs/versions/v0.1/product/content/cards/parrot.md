@@ -2,7 +2,7 @@
 id: parrot
 card_type: minion
 name: 鹦鹉
-playstyle: bird
+categories: [play:bird]
 taxon: psittacidae
 subtype: bird
 level: 4

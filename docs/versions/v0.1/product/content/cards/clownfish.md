@@ -2,7 +2,7 @@
 id: clownfish
 card_type: minion
 name: 小丑鱼
-playstyle: fish
+categories: [play:fish]
 taxon: pomacentridae
 subtype: fish
 level: 2

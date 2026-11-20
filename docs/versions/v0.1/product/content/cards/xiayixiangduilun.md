@@ -4,7 +4,7 @@ name: 狭义相对论
 card_type: effect
 level: 4
 era: future
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: physics
 cost: 2
 match_text: 同左

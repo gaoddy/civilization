@@ -2,9 +2,8 @@
 id: hippocrates
 card_type: minion
 name: 希波克拉底
-playstyle: neutral
+categories: [play:mammal, play:plant]
 taxon: hominidae
-specialty: [play:mammal, play:plant]
 subtype: medicine
 level: 3
 era: primitive

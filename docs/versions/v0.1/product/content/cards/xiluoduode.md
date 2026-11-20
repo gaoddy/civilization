@@ -2,9 +2,8 @@
 id: xiluoduode
 card_type: minion
 name: 希罗多德
-playstyle: neutral
+categories: [play:reptile]
 taxon: hominidae
-specialty: [play:reptile]
 subtype: history
 level: 2
 era: classical

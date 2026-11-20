@@ -2,7 +2,7 @@
 id: red-coral
 card_type: minion
 name: 红珊瑚
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: coralliidae
 subtype: ocean
 level: 5

@@ -2,7 +2,7 @@
 id: hybrid-rice
 card_type: minion
 name: 杂交水稻
-playstyle: plant
+categories: [play:plant]
 taxon: poaceae
 subtype: crop
 level: 4

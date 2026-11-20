@@ -2,7 +2,7 @@
 id: norovirus
 card_type: minion
 name: 诺如病毒
-playstyle: virus
+categories: [play:virus]
 taxon: caliciviridae
 subtype: virus
 level: 3

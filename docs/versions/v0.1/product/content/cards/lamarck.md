@@ -2,9 +2,8 @@
 id: lamarck
 card_type: minion
 name: 拉马克
-playstyle: neutral
+categories: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 taxon: hominidae
-specialty: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 subtype: biology
 level: 4
 era: feudal

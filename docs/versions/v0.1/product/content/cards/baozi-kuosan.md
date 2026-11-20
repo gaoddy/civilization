@@ -4,10 +4,9 @@ name: 孢子扩散
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:fungus]
 taxon: biology
 cost: 2
-specialty: [play:fungus]
 match_text: 同左
 skills: [trigger-summon-2-spores-2-2]
 ---

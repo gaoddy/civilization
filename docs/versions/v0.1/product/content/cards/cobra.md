@@ -2,7 +2,7 @@
 id: cobra
 card_type: minion
 name: 眼镜蛇
-playstyle: reptile
+categories: [play:reptile]
 taxon: elapidae
 subtype: reptile
 level: 3

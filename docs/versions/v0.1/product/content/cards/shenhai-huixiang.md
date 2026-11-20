@@ -4,10 +4,9 @@ name: 深海回响
 card_type: effect
 level: 6
 era: modern
-playstyle: neutral
+categories: [play:fish]
 taxon: biology
 cost: 4
-specialty: [play:fish]
 match_text: 同左
 skills: [trigger-fish-all-reborn]
 ---

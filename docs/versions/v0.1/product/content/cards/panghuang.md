@@ -4,7 +4,7 @@ name: 彷徨
 card_type: effect
 level: 2
 era: modern
-playstyle: neutral
+categories: [play:mammal, play:cephalopod]
 taxon: literature
 cost: 1
 match_text: 同左

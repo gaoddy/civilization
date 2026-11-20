@@ -2,7 +2,7 @@
 id: streptococcus
 card_type: minion
 name: 链球菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: streptococcaceae
 subtype: bacteria
 level: 2

@@ -2,7 +2,7 @@
 id: gongchangzhu
 card_type: minion
 name: 工厂主
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: capital
 level: 5

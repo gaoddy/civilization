@@ -2,8 +2,7 @@
 id: davinci
 card_type: hero
 name: 达·芬奇
-playstyle: neutral
-specialty: [play:cephalopod, play:mammal]
+categories: [play:mammal, play:cephalopod]
 skills: [universal-manuscript]
 ---
 

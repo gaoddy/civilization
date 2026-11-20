@@ -4,10 +4,9 @@ name: 拟态
 card_type: effect
 level: 4
 era: primitive
-playstyle: neutral
+categories: [play:cephalopod]
 taxon: biology
 cost: 2
-specialty: [play:cephalopod]
 match_text: 同左
 skills: [trigger-friendly-single-stealth-this-turn]
 ---

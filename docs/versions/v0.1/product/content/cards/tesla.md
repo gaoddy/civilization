@@ -2,9 +2,8 @@
 id: tesla
 card_type: minion
 name: 特斯拉
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: hominidae
-specialty: [play:bird, play:machine]
 subtype: physics
 level: 5
 era: industrial

@@ -4,7 +4,7 @@ name: 特斯拉线圈
 card_type: effect
 level: 4
 era: industrial
-playstyle: neutral
+categories: [play:machine]
 taxon: physics
 cost: 3
 match_text: 同左

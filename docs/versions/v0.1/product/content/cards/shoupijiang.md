@@ -2,7 +2,7 @@
 id: shoupijiang
 card_type: minion
 name: 兽皮匠
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primitive
 level: 2

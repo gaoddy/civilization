@@ -2,9 +2,8 @@
 id: faraday
 card_type: minion
 name: 法拉第
-playstyle: neutral
+categories: [play:reptile, play:machine]
 taxon: hominidae
-specialty: [play:reptile, play:machine]
 subtype: physics
 level: 5
 era: industrial

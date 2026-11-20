@@ -2,7 +2,7 @@
 id: shakespeare
 card_type: hero
 name: 莎士比亚
-playstyle: mammal
+categories: [play:mammal]
 skills: [battlecry-all-friendly-growth-once]
 ---
 

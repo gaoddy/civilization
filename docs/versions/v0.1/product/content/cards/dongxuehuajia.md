@@ -2,7 +2,7 @@
 id: dongxuehuajia
 card_type: minion
 name: 洞穴画家
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primitive
 level: 1

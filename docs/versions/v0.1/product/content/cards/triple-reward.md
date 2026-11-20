@@ -4,7 +4,7 @@ name: 三连奖励
 card_type: effect
 level: 1
 era: prehistoric
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: economics
 cost: 0
 match_text: 同左

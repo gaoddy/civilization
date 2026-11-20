@@ -2,9 +2,8 @@
 id: shenkuo
 card_type: minion
 name: 沈括
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: natural-history
 level: 5
 era: feudal

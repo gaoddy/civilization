@@ -2,8 +2,7 @@
 id: quyuan
 card_type: hero
 name: 屈原
-playstyle: neutral
-specialty: [play:mammal]
+categories: [play:mammal]
 skills: [shout]
 ---
 

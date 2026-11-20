@@ -2,7 +2,7 @@
 id: wandou
 card_type: minion
 name: 豌豆
-playstyle: plant
+categories: [play:plant]
 taxon: fabaceae
 subtype: crop
 level: 1

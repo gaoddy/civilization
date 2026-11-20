@@ -4,7 +4,7 @@ name: 集结
 card_type: effect
 level: 4
 era: feudal
-playstyle: neutral
+categories: [play:fish, play:insect]
 taxon: military
 cost: 1
 match_text: 同左

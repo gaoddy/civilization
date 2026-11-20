@@ -4,7 +4,7 @@ name: 蒸汽革命
 card_type: effect
 level: 5
 era: industrial
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: power-energy
 cost: 3
 match_text: 同左

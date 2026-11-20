@@ -2,7 +2,7 @@
 id: ammonite
 card_type: minion
 name: 菊石
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: ammonitidae
 subtype: mollusk
 level: 7

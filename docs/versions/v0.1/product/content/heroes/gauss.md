@@ -2,8 +2,7 @@
 id: gauss
 card_type: hero
 name: 高斯
-playstyle: neutral
-specialty: [play:mammal]
+categories: [play:mammal]
 skills: [scholar-growth-twice]
 ---
 

@@ -4,7 +4,7 @@ name: 坚守
 card_type: effect
 level: 2
 era: feudal
-playstyle: neutral
+categories: [play:reptile, play:cnidarian]
 taxon: military
 cost: 0
 match_text: 同左

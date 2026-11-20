@@ -2,7 +2,7 @@
 id: salmon
 card_type: minion
 name: 鲑鱼
-playstyle: fish
+categories: [play:fish]
 taxon: salmonidae
 subtype: fish
 level: 4

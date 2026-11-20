@@ -4,7 +4,7 @@ name: 专利制度
 card_type: effect
 level: 4
 era: feudal
-playstyle: neutral
+categories: [play:machine]
 taxon: economics
 cost: 2
 match_text: 同左

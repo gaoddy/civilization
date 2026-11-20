@@ -2,9 +2,8 @@
 id: dyson-sphere
 card_type: minion
 name: 戴森球
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
-specialty: [play:machine]
 subtype: megastructure
 level: 7
 era: future

@@ -4,7 +4,7 @@ name: 刷新
 card_type: effect
 level: 6
 era: future
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: economics
 cost: 2
 match_text: 同左

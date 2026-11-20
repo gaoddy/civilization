@@ -2,9 +2,8 @@
 id: cholera
 card_type: minion
 name: 霍乱
-playstyle: virus
+categories: [play:virus, host:hominidae]
 taxon: vibrionaceae
-specialty: [host:hominidae]
 subtype: bacteria
 level: 4
 era: feudal

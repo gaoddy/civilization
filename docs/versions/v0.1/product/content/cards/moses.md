@@ -2,9 +2,8 @@
 id: moses
 card_type: minion
 name: 摩西
-playstyle: neutral
+categories: [play:mammal, play:reptile]
 taxon: hominidae
-specialty: [play:reptile, play:mammal]
 subtype: philosophy
 level: 4
 era: feudal

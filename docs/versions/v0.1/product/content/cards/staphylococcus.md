@@ -2,7 +2,7 @@
 id: staphylococcus
 card_type: minion
 name: 葡萄球菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: staphylococcaceae
 subtype: bacteria
 level: 2

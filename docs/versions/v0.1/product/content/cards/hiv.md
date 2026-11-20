@@ -2,9 +2,8 @@
 id: hiv
 card_type: minion
 name: 艾滋病毒
-playstyle: virus
+categories: [play:virus, host:hominidae]
 taxon: retroviridae
-specialty: [host:hominidae]
 subtype: virus
 level: 4
 era: modern

@@ -2,7 +2,7 @@
 id: carp
 card_type: minion
 name: 鲤鱼
-playstyle: fish
+categories: [play:fish]
 taxon: cyprinidae
 subtype: fish
 level: 1

@@ -2,7 +2,7 @@
 id: ergot
 card_type: minion
 name: 麦角
-playstyle: fungus
+categories: [play:fungus]
 taxon: clavicipitaceae
 subtype: fungus
 level: 5

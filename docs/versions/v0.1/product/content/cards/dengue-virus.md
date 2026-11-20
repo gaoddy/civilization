@@ -2,7 +2,7 @@
 id: dengue-virus
 card_type: minion
 name: 登革病毒
-playstyle: virus
+categories: [play:virus]
 taxon: flaviviridae
 subtype: virus
 level: 4

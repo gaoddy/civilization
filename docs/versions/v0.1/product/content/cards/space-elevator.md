@@ -2,9 +2,8 @@
 id: space-elevator
 card_type: minion
 name: 太空电梯
-playstyle: neutral
+categories: [play:machine]
 taxon: production-construction
-specialty: [play:machine]
 subtype: architecture
 level: 6
 era: future

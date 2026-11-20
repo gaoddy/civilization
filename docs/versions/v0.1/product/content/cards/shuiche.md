@@ -2,9 +2,8 @@
 id: shuiche
 card_type: minion
 name: 水车
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
-specialty: [play:machine]
 subtype: vehicle
 level: 2
 era: feudal

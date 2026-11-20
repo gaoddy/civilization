@@ -2,7 +2,7 @@
 id: zhihui-jushou
 card_type: minion
 name: 智慧巨兽
-playstyle: mammal
+categories: [play:mammal]
 taxon: mammalia-incertae-sedis
 subtype: behemoth
 level: 7

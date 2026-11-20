@@ -2,9 +2,8 @@
 id: plato
 card_type: minion
 name: 柏拉图
-playstyle: neutral
+categories: [play:reptile]
 taxon: hominidae
-specialty: [play:reptile]
 subtype: philosophy
 level: 4
 era: feudal

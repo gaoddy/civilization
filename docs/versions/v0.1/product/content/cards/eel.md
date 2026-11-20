@@ -2,7 +2,7 @@
 id: eel
 card_type: minion
 name: 鳗鲡
-playstyle: fish
+categories: [play:fish]
 taxon: anguillidae
 subtype: fish
 level: 4

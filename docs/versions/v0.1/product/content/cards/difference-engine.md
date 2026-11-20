@@ -2,7 +2,7 @@
 id: difference-engine
 card_type: minion
 name: 差分机
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: robot
 level: 6

@@ -2,7 +2,7 @@
 id: zhulin
 card_type: minion
 name: 竹林
-playstyle: plant
+categories: [play:plant]
 taxon: poaceae
 subtype: tree
 level: 3

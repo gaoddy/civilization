@@ -2,8 +2,7 @@
 id: knuth
 card_type: hero
 name: 高德纳
-playstyle: neutral
-specialty: [play:machine]
+categories: [play:machine]
 skills: [efficient-algorithm]
 ---
 

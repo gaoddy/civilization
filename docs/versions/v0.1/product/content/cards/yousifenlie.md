@@ -4,7 +4,7 @@ name: 有丝分裂
 card_type: effect
 level: 3
 era: industrial
-playstyle: neutral
+categories: [play:fish, play:protozoa]
 taxon: biology
 cost: 2
 match_text: 同左

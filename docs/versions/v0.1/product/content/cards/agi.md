@@ -2,9 +2,8 @@
 id: agi
 card_type: minion
 name: 通用人工智能
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: automation
-specialty: [play:machine, play:mammal]
 subtype: computer
 level: 6
 era: future

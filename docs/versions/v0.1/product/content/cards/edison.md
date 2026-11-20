@@ -2,7 +2,7 @@
 id: edison
 card_type: minion
 name: 爱迪生
-playstyle: machine
+categories: [play:machine]
 taxon: hominidae
 subtype: engineering
 level: 5

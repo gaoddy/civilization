@@ -2,9 +2,8 @@
 id: baiyi
 card_type: minion
 name: 白蚁
-playstyle: insect
+categories: [play:insect, prey:plantae]
 taxon: termitidae
-specialty: [prey:plantae]
 subtype: insect
 level: 1
 era: prehistoric

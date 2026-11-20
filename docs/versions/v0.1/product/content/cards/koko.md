@@ -2,7 +2,7 @@
 id: koko
 card_type: minion
 name: 大猩猩科科
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primate
 level: 5

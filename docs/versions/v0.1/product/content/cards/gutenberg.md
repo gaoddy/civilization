@@ -2,9 +2,8 @@
 id: gutenberg
 card_type: minion
 name: 古腾堡
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: hominidae
-specialty: [play:mammal, play:machine]
 subtype: invention
 level: 4
 era: feudal

@@ -4,10 +4,9 @@ name: 蜂群战术
 card_type: effect
 level: 5
 era: classical
-playstyle: neutral
+categories: [play:insect]
 taxon: biology
 cost: 3
-specialty: [play:insect]
 match_text: 同左
 skills: [trigger-insect-all-plus-1-plus-1]
 ---

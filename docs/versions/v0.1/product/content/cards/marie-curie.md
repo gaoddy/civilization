@@ -2,9 +2,8 @@
 id: marie-curie
 card_type: minion
 name: 玛丽·居里
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: hominidae
-specialty: [play:mammal, play:machine]
 subtype: physics
 level: 5
 era: modern

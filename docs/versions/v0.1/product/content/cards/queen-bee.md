@@ -2,7 +2,7 @@
 id: queen-bee
 card_type: minion
 name: 蜜蜂皇后
-playstyle: insect
+categories: [play:insect]
 taxon: apidae
 subtype: insect
 level: 5

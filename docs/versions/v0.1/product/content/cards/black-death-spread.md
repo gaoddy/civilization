@@ -4,7 +4,7 @@ name: 黑死病·播散
 card_type: effect
 level: 5
 era: feudal
-playstyle: neutral
+categories: [play:bacteria, play:virus]
 taxon: medicine
 cost: 3
 match_text: 同左

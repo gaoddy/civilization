@@ -2,7 +2,7 @@
 id: muhammad-ali
 card_type: minion
 name: 穆罕默德·阿里
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: athlete
 level: 6

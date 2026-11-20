@@ -2,7 +2,7 @@
 id: self-driving-car
 card_type: minion
 name: 自动驾驶汽车
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: vehicle
 level: 4

@@ -2,7 +2,7 @@
 id: robot-dog
 card_type: minion
 name: 机器狗
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: robot
 level: 3

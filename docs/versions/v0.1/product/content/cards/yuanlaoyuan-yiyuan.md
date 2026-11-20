@@ -2,7 +2,7 @@
 id: yuanlaoyuan-yiyuan
 card_type: minion
 name: 元老院议员
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: politics
 level: 3

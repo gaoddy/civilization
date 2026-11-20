@@ -2,7 +2,7 @@
 id: foraminifera
 card_type: minion
 name: 有孔虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: rotaliidae
 subtype: protozoa
 level: 5

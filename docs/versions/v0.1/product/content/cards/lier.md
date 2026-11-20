@@ -2,9 +2,8 @@
 id: lier
 card_type: minion
 name: 李耳
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: philosophy
 level: 3
 era: feudal

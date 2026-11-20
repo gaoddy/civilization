@@ -4,10 +4,9 @@ name: 硬化甲壳
 card_type: effect
 level: 1
 era: prehistoric
-playstyle: neutral
+categories: [play:reptile]
 taxon: biology
 cost: 1
-specialty: [play:reptile]
 match_text: 同左
 skills: [trigger-reptile-single-armor-2-this-turn]
 ---

@@ -4,7 +4,7 @@ name: 淬毒
 card_type: effect
 level: 4
 era: primitive
-playstyle: neutral
+categories: [play:reptile, play:cephalopod, play:cnidarian]
 taxon: chemistry
 cost: 1
 match_text: 同左

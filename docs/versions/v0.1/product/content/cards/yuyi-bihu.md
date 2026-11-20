@@ -4,10 +4,9 @@ name: 羽翼庇护
 card_type: effect
 level: 1
 era: prehistoric
-playstyle: neutral
+categories: [play:bird]
 taxon: biology
 cost: 1
-specialty: [play:bird]
 match_text: 同左
 skills: [trigger-bird-single-windfury-this-turn]
 ---

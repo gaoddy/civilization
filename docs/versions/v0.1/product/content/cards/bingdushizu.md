@@ -2,7 +2,7 @@
 id: bingdushizu
 card_type: minion
 name: 病毒始祖
-playstyle: virus
+categories: [play:virus]
 taxon: virus-incertae-sedis
 subtype: microorganism
 level: 2

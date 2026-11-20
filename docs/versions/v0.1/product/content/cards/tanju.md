@@ -2,9 +2,8 @@
 id: tanju
 card_type: minion
 name: 炭疽
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: bacillaceae
-specialty: [host:mammalia]
 subtype: bacteria
 level: 5
 era: modern

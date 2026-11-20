@@ -2,7 +2,7 @@
 id: pasteur
 card_type: hero
 name: 巴斯德
-playstyle: virus
+categories: [play:virus]
 skills: [microbiology]
 ---
 

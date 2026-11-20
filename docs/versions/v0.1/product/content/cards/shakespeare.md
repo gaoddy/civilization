@@ -2,7 +2,7 @@
 id: shakespeare
 card_type: minion
 name: 莎士比亚
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: literature
 level: 4

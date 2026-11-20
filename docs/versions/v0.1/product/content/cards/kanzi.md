@@ -2,7 +2,7 @@
 id: kanzi
 card_type: minion
 name: 黑猩猩坎兹
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primate
 level: 3

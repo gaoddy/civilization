@@ -2,9 +2,8 @@
 id: shannon
 card_type: minion
 name: 克劳德·香农
-playstyle: neutral
+categories: [play:machine]
 taxon: hominidae
-specialty: [play:machine]
 subtype: mathematics
 level: 5
 era: future

@@ -2,7 +2,7 @@
 id: fleming
 card_type: hero
 name: 弗莱明
-playstyle: virus
+categories: [play:virus]
 skills: [virus-growth-once]
 ---
 

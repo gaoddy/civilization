@@ -2,9 +2,8 @@
 id: telephone
 card_type: minion
 name: 电话机
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: telecommunication
 level: 4
 era: modern

@@ -4,10 +4,9 @@ name: 大流行
 card_type: effect
 level: 7
 era: modern
-playstyle: neutral
+categories: [play:virus]
 taxon: medicine
 cost: 3
-specialty: [play:virus]
 match_text: 同左
 skills: [combatstart-all-enemies-damage-3]
 ---

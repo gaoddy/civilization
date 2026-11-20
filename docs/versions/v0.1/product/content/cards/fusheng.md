@@ -4,7 +4,7 @@ name: 复生
 card_type: effect
 level: 4
 era: classical
-playstyle: neutral
+categories: [play:cnidarian, play:fungus]
 taxon: biology
 cost: 1
 match_text: 同左

@@ -2,7 +2,7 @@
 id: mozi
 card_type: minion
 name: 墨子
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: philosophy
 level: 4

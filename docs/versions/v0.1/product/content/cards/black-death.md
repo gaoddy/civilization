@@ -2,9 +2,8 @@
 id: black-death
 card_type: minion
 name: 黑死病
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: yersiniaceae
-specialty: [host:mammalia]
 subtype: plague
 level: 4
 era: feudal

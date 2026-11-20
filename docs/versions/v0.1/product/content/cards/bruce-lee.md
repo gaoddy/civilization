@@ -2,7 +2,7 @@
 id: bruce-lee
 card_type: minion
 name: 李小龙
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: martial-artist
 level: 4

@@ -2,7 +2,7 @@
 id: soft-coral
 card_type: minion
 name: 软珊瑚
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: alcyoniidae
 subtype: ocean
 level: 4

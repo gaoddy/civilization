@@ -2,7 +2,7 @@
 id: luban
 card_type: minion
 name: 鲁班
-playstyle: machine
+categories: [play:machine]
 taxon: hominidae
 subtype: artisan
 level: 3

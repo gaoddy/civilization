@@ -4,10 +4,9 @@ name: 虫群爆发
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:insect]
 taxon: biology
 cost: 2
-specialty: [play:insect]
 match_text: 同左
 skills: [trigger-summon-2-worker-bees]
 ---

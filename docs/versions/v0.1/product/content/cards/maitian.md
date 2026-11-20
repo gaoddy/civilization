@@ -2,7 +2,7 @@
 id: maitian
 card_type: minion
 name: 麦田
-playstyle: plant
+categories: [play:plant]
 taxon: poaceae
 subtype: crop
 level: 4

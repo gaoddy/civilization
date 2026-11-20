@@ -2,7 +2,7 @@
 id: weijingzhanshi
 card_type: minion
 name: 维京战士
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 4

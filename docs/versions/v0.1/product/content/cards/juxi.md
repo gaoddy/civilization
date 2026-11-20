@@ -2,9 +2,8 @@
 id: juxi
 card_type: minion
 name: 巨蜥
-playstyle: reptile
+categories: [play:reptile, prey:aves]
 taxon: varanidae
-specialty: [prey:aves]
 subtype: reptile
 level: 2
 era: primitive

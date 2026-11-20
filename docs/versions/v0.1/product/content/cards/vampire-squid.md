@@ -2,7 +2,7 @@
 id: vampire-squid
 card_type: minion
 name: 吸血鬼乌贼
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: vampyroteuthidae
 subtype: mollusk
 level: 5

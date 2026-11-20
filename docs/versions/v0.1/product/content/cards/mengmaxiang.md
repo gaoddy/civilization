@@ -2,7 +2,7 @@
 id: mengmaxiang
 card_type: minion
 name: 猛犸象
-playstyle: mammal
+categories: [play:mammal]
 taxon: elephantidae
 subtype: mammal
 level: 2

@@ -2,7 +2,7 @@
 id: jiyin-gaizaoren
 card_type: minion
 name: 基因改造人
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: modification
 level: 7

@@ -2,7 +2,7 @@
 id: mantis
 card_type: minion
 name: 螳螂
-playstyle: insect
+categories: [play:insect]
 taxon: mantidae
 subtype: insect
 level: 3

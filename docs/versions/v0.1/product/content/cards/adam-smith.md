@@ -2,7 +2,7 @@
 id: adam-smith
 card_type: minion
 name: 亚当·斯密
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: economics
 level: 4

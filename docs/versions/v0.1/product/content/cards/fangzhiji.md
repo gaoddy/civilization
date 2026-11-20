@@ -2,9 +2,8 @@
 id: fangzhiji
 card_type: minion
 name: 纺织机
-playstyle: neutral
+categories: [play:machine]
 taxon: production-construction
-specialty: [play:machine]
 subtype: factory
 level: 2
 era: industrial

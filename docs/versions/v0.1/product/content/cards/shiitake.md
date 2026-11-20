@@ -2,7 +2,7 @@
 id: shiitake
 card_type: minion
 name: 香菇
-playstyle: fungus
+categories: [play:fungus]
 taxon: omphalotaceae
 subtype: fungus
 level: 3

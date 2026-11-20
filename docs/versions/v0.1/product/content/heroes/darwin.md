@@ -2,8 +2,7 @@
 id: darwin
 card_type: hero
 name: 达尔文
-playstyle: neutral
-specialty: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
+categories: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 skills: [aura-biology-plus-1-plus-1, evolution-discovery]
 ---
 

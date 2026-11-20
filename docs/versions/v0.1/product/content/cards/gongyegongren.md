@@ -2,7 +2,7 @@
 id: gongyegongren
 card_type: minion
 name: 工业工人
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: worker
 level: 5

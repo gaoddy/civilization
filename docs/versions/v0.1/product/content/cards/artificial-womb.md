@@ -2,9 +2,8 @@
 id: artificial-womb
 card_type: minion
 name: 人造子宫
-playstyle: neutral
+categories: [play:mammal]
 taxon: life-medical
-specialty: [play:mammal]
 subtype: medical
 level: 5
 era: future

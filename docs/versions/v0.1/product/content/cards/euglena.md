@@ -2,7 +2,7 @@
 id: euglena
 card_type: minion
 name: 眼虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: euglenaceae
 subtype: protozoa
 level: 3

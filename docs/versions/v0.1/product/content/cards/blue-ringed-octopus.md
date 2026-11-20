@@ -2,7 +2,7 @@
 id: blue-ringed-octopus
 card_type: minion
 name: 蓝环章鱼
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: octopodidae
 subtype: mollusk
 level: 3

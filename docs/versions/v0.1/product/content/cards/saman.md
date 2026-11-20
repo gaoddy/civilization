@@ -2,7 +2,7 @@
 id: saman
 card_type: minion
 name: 萨满
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primitive
 level: 2

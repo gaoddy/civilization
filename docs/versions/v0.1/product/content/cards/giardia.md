@@ -2,7 +2,7 @@
 id: giardia
 card_type: minion
 name: 贾第虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: hexamitidae
 subtype: protozoa
 level: 4

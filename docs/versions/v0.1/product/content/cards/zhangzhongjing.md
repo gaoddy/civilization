@@ -2,7 +2,7 @@
 id: zhangzhongjing
 card_type: minion
 name: 张仲景
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: medicine
 level: 4

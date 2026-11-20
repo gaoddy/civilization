@@ -2,7 +2,7 @@
 id: huoqiangshou
 card_type: minion
 name: 火枪手
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 3

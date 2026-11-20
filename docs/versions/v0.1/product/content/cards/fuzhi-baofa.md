@@ -4,10 +4,9 @@ name: 腐殖爆发
 card_type: effect
 level: 6
 era: industrial
-playstyle: neutral
+categories: [play:fungus]
 taxon: biology
 cost: 3
-specialty: [play:fungus]
 match_text: 同左
 skills: [combatstart-all-enemies-damage-2]
 ---

@@ -2,7 +2,7 @@
 id: hydra
 card_type: minion
 name: 水螅
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: hydridae
 subtype: ocean
 level: 1

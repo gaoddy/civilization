@@ -4,10 +4,9 @@ name: 毒牙
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:reptile]
 taxon: biology
 cost: 2
-specialty: [play:reptile]
 match_text: 同左
 skills: [trigger-reptile-single-poison-this-turn]
 ---

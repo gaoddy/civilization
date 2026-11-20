@@ -2,7 +2,7 @@
 id: giant-jellyfish
 card_type: minion
 name: 巨型水母
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: rhizostomatidae
 subtype: ocean
 level: 6

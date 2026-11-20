@@ -2,7 +2,7 @@
 id: space-rice
 card_type: minion
 name: 太空水稻
-playstyle: plant
+categories: [play:plant]
 taxon: poaceae
 subtype: crop
 level: 5

@@ -2,9 +2,8 @@
 id: nupao
 card_type: minion
 name: 弩炮
-playstyle: neutral
+categories: [play:machine]
 taxon: weapon-siege
-specialty: [play:machine]
 subtype: siege
 level: 3
 era: classical

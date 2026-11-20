@@ -2,7 +2,7 @@
 id: yuanshijixiekuilei
 card_type: minion
 name: 原始机械傀儡
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: puppet
 level: 3

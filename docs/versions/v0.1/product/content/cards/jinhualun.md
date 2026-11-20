@@ -4,7 +4,7 @@ name: 进化论
 card_type: effect
 level: 4
 era: modern
-playstyle: neutral
+categories: [play:mammal, play:protozoa]
 taxon: biology
 cost: 2
 match_text: 改为三选一固定池

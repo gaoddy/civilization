@@ -4,7 +4,7 @@ name: 光电效应
 card_type: effect
 level: 3
 era: industrial
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: physics
 cost: 1
 match_text: 同左

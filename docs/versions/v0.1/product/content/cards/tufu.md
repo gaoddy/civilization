@@ -2,9 +2,8 @@
 id: tufu
 card_type: minion
 name: 屠夫
-playstyle: mammal
+categories: [play:mammal, prey:artiodactyla]
 taxon: hominidae
-specialty: [prey:artiodactyla]
 subtype: primitive
 level: 2
 era: prehistoric

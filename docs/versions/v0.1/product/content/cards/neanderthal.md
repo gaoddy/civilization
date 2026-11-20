@@ -2,7 +2,7 @@
 id: neanderthal
 card_type: minion
 name: 尼安德特人
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primate
 level: 4

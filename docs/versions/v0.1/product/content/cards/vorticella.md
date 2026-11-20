@@ -2,7 +2,7 @@
 id: vorticella
 card_type: minion
 name: 钟虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: vorticellidae
 subtype: protozoa
 level: 2

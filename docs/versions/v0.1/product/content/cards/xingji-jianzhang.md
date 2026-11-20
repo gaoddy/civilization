@@ -2,7 +2,7 @@
 id: xingji-jianzhang
 card_type: minion
 name: 星际舰长
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: captain
 level: 7

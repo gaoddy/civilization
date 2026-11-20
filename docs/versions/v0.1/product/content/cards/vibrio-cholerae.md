@@ -2,7 +2,7 @@
 id: vibrio-cholerae
 card_type: minion
 name: 霍乱弧菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: vibrionaceae
 subtype: bacteria
 level: 3

@@ -2,9 +2,8 @@
 id: malaria
 card_type: minion
 name: 疟疾
-playstyle: virus
+categories: [play:virus, host:hominidae]
 taxon: plasmodiidae
-specialty: [host:hominidae]
 subtype: parasite
 level: 3
 era: primitive

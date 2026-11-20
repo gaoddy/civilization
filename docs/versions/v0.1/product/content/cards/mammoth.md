@@ -2,7 +2,7 @@
 id: mammoth
 card_type: minion
 name: 真猛犸
-playstyle: mammal
+categories: [play:mammal]
 taxon: elephantidae
 subtype: beast
 level: 6

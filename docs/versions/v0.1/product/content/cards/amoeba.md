@@ -2,7 +2,7 @@
 id: amoeba
 card_type: minion
 name: 变形虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: amoebidae
 subtype: protozoa
 level: 1

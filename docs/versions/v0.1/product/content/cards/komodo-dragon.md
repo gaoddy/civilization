@@ -2,7 +2,7 @@
 id: komodo-dragon
 card_type: minion
 name: 科莫多巨蜥
-playstyle: reptile
+categories: [play:reptile]
 taxon: varanidae
 subtype: reptile
 level: 5

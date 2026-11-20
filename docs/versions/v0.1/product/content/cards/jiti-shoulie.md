@@ -4,10 +4,9 @@ name: 集体狩猎
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:mammal]
 taxon: biology
 cost: 2
-specialty: [play:mammal]
 match_text: 同左
 skills: [trigger-mammal-all-growth-once]
 ---

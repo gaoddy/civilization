@@ -2,7 +2,7 @@
 id: beethoven
 card_type: hero
 name: 贝多芬
-playstyle: mammal
+categories: [play:mammal]
 skills: [human-growth-twice]
 ---
 

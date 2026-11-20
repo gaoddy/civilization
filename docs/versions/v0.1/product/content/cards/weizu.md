@@ -4,10 +4,9 @@ name: 伪足
 card_type: effect
 level: 2
 era: prehistoric
-playstyle: neutral
+categories: [play:protozoa]
 taxon: biology
 cost: 1
-specialty: [play:protozoa]
 match_text: 同左
 skills: [trigger-protozoa-single-taunt-this-turn]
 ---

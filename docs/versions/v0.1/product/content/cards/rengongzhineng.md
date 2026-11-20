@@ -4,7 +4,7 @@ name: 人工智能
 card_type: effect
 level: 5
 era: future
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
 cost: 3
 match_text: 同左

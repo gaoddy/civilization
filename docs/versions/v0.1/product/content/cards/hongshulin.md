@@ -2,7 +2,7 @@
 id: hongshulin
 card_type: minion
 name: 红树林
-playstyle: plant
+categories: [play:plant]
 taxon: rhizophoraceae
 subtype: tree
 level: 5

@@ -2,7 +2,7 @@
 id: nami-bingdu
 card_type: minion
 name: 纳米病毒
-playstyle: virus
+categories: [play:virus]
 taxon: virus-incertae-sedis
 subtype: nanotech
 level: 7

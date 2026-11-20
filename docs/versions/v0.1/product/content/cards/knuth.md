@@ -2,9 +2,8 @@
 id: knuth
 card_type: minion
 name: 高德纳
-playstyle: neutral
+categories: [play:machine]
 taxon: hominidae
-specialty: [play:machine]
 subtype: computer
 level: 6
 era: modern

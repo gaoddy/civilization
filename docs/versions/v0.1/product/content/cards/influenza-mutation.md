@@ -4,7 +4,7 @@ name: 流感病毒·变异
 card_type: effect
 level: 2
 era: modern
-playstyle: neutral
+categories: [play:virus]
 taxon: medicine
 cost: 1
 match_text: 同左

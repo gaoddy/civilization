@@ -2,7 +2,7 @@
 id: meikuang-jinsique
 card_type: minion
 name: 煤矿金丝雀
-playstyle: bird
+categories: [play:bird]
 taxon: fringillidae
 subtype: animal
 level: 2

@@ -4,7 +4,7 @@ name: 隐匿
 card_type: effect
 level: 4
 era: classical
-playstyle: neutral
+categories: [play:cephalopod]
 taxon: military
 cost: 1
 match_text: 同左

@@ -2,7 +2,7 @@
 id: yuanshizhenjun
 card_type: minion
 name: 原始真菌
-playstyle: plant
+categories: [play:plant]
 taxon: fungi-incertae-sedis
 subtype: fungus
 level: 1

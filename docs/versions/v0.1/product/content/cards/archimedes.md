@@ -2,9 +2,8 @@
 id: archimedes
 card_type: minion
 name: 阿基米德
-playstyle: neutral
+categories: [play:machine]
 taxon: hominidae
-specialty: [play:machine]
 subtype: physics
 level: 3
 era: primitive

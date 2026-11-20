@@ -2,9 +2,8 @@
 id: rice-cooker
 card_type: minion
 name: 电饭煲
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: life-medical
-specialty: [play:machine, play:mammal]
 subtype: appliance
 level: 3
 era: modern

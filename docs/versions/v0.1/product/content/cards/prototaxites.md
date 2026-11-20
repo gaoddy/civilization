@@ -2,7 +2,7 @@
 id: prototaxites
 card_type: minion
 name: 原杉菌
-playstyle: fungus
+categories: [play:fungus]
 taxon: prototaxitaceae
 subtype: fungus
 level: 7

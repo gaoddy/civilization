@@ -2,9 +2,8 @@
 id: quantum-computer
 card_type: minion
 name: 量子计算机
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: computer
 level: 5
 era: future

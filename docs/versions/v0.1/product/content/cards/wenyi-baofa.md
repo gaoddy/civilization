@@ -4,10 +4,9 @@ name: 瘟疫爆发
 card_type: effect
 level: 5
 era: feudal
-playstyle: neutral
+categories: [play:bacteria]
 taxon: medicine
 cost: 3
-specialty: [play:bacteria]
 match_text: 同左
 skills: [combatstart-all-enemies-contagion-2]
 ---

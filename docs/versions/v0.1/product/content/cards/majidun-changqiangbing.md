@@ -2,7 +2,7 @@
 id: majidun-changqiangbing
 card_type: minion
 name: 马其顿长枪兵
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 2

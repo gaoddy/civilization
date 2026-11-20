@@ -2,7 +2,7 @@
 id: gear
 card_type: minion
 name: 齿轮
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: robot
 level: 1

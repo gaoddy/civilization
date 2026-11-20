@@ -4,7 +4,7 @@ name: 强化
 card_type: effect
 level: 7
 era: modern
-playstyle: neutral
+categories: [play:mammal, play:reptile]
 taxon: military
 cost: 2
 match_text: 同左

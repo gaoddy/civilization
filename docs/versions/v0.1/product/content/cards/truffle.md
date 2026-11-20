@@ -2,7 +2,7 @@
 id: truffle
 card_type: minion
 name: 松露
-playstyle: fungus
+categories: [play:fungus]
 taxon: tuberaceae
 subtype: fungus
 level: 4

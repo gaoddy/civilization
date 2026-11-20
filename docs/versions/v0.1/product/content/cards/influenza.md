@@ -2,9 +2,8 @@
 id: influenza
 card_type: minion
 name: 流感病毒
-playstyle: virus
+categories: [play:virus, host:aves]
 taxon: orthomyxoviridae
-specialty: [host:aves]
 subtype: virus
 level: 3
 era: modern

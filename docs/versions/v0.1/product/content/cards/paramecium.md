@@ -2,7 +2,7 @@
 id: paramecium
 card_type: minion
 name: 草履虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: parameciidae
 subtype: protozoa
 level: 1

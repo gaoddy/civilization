@@ -2,7 +2,7 @@
 id: giant-amoeba
 card_type: minion
 name: 大变形虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: amoebidae
 subtype: protozoa
 level: 6

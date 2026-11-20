@@ -2,7 +2,7 @@
 id: chengbang-gongmin
 card_type: minion
 name: 城邦公民
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: city-state
 level: 1

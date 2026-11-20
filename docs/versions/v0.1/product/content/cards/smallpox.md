@@ -2,9 +2,8 @@
 id: smallpox
 card_type: minion
 name: 天花
-playstyle: virus
+categories: [play:virus, host:hominidae]
 taxon: poxviridae
-specialty: [host:hominidae]
 subtype: virus
 level: 2
 era: primitive

@@ -4,7 +4,7 @@ name: 狂人日记
 card_type: effect
 level: 2
 era: modern
-playstyle: neutral
+categories: [play:mammal]
 taxon: literature
 cost: 1
 match_text: 同左

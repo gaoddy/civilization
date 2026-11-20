@@ -2,9 +2,8 @@
 id: zhangheng
 card_type: minion
 name: 张衡
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: hominidae
-specialty: [play:mammal, play:machine]
 subtype: astronomy
 level: 3
 era: primitive

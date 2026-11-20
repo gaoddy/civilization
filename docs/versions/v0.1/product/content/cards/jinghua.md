@@ -4,7 +4,7 @@ name: 净化
 card_type: effect
 level: 7
 era: modern
-playstyle: neutral
+categories: [play:fungus, play:bacteria]
 taxon: medicine
 cost: 3
 match_text: 同左

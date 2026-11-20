@@ -4,7 +4,7 @@ name: 原子弹
 card_type: effect
 level: 6
 era: future
-playstyle: neutral
+categories: [play:machine]
 taxon: physics
 cost: 4
 match_text: 同左

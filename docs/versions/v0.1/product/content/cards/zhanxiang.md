@@ -2,7 +2,7 @@
 id: zhanxiang
 card_type: minion
 name: 战象
-playstyle: mammal
+categories: [play:mammal]
 taxon: elephantidae
 subtype: beast
 level: 3

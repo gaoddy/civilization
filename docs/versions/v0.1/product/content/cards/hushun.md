@@ -4,7 +4,7 @@ name: 护盾
 card_type: effect
 level: 4
 era: future
-playstyle: neutral
+categories: [play:reptile, play:machine]
 taxon: military
 cost: 1
 match_text: 同左

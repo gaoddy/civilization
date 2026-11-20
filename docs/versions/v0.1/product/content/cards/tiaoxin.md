@@ -4,7 +4,7 @@ name: 挑衅
 card_type: effect
 level: 2
 era: feudal
-playstyle: neutral
+categories: [play:mammal, play:reptile]
 taxon: military
 cost: 0
 match_text: 同左

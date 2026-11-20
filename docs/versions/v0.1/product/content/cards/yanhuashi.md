@@ -2,9 +2,8 @@
 id: yanhuashi
 card_type: minion
 name: 岩画师
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: art
 level: 1
 era: primitive

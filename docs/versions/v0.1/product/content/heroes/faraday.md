@@ -2,8 +2,7 @@
 id: faraday
 card_type: hero
 name: 法拉第
-playstyle: neutral
-specialty: [play:reptile, play:machine]
+categories: [play:reptile, play:machine]
 skills: [keyword-divine-shield, faraday-cage]
 ---
 

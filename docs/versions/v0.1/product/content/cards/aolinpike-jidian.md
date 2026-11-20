@@ -4,7 +4,7 @@ name: 奥林匹克祭典
 card_type: effect
 level: 3
 era: classical
-playstyle: neutral
+categories: [play:mammal, play:plant]
 taxon: sports
 cost: 2
 match_text: 同左

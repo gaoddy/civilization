@@ -2,9 +2,8 @@
 id: luxun
 card_type: minion
 name: 鲁迅
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: literature
 level: 5
 era: modern

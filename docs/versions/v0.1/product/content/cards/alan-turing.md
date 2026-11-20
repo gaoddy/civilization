@@ -2,9 +2,8 @@
 id: alan-turing
 card_type: minion
 name: 艾伦·图灵
-playstyle: neutral
+categories: [play:machine]
 taxon: hominidae
-specialty: [play:machine]
 subtype: computer
 level: 6
 era: modern

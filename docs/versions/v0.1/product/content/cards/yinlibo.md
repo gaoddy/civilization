@@ -4,7 +4,7 @@ name: 引力波
 card_type: effect
 level: 4
 era: future
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: astronomy
 cost: 2
 match_text: 同左

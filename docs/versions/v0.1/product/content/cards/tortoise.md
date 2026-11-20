@@ -2,7 +2,7 @@
 id: tortoise
 card_type: minion
 name: 陆龟
-playstyle: reptile
+categories: [play:reptile]
 taxon: testudinidae
 subtype: reptile
 level: 3

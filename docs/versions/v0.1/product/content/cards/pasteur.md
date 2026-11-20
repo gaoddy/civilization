@@ -2,7 +2,7 @@
 id: pasteur
 card_type: minion
 name: 巴斯德
-playstyle: virus
+categories: [play:virus]
 taxon: hominidae
 subtype: microbiology
 level: 5

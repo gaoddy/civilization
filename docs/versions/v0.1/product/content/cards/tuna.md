@@ -2,7 +2,7 @@
 id: tuna
 card_type: minion
 name: 金枪鱼
-playstyle: fish
+categories: [play:fish]
 taxon: scombridae
 subtype: fish
 level: 3

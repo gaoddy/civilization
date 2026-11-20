@@ -2,9 +2,8 @@
 id: dianhua-jiaohuanji
 card_type: minion
 name: 电话交换机
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: communication
 level: 5
 era: industrial

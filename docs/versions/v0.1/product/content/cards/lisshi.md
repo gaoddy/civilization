@@ -2,7 +2,7 @@
 id: lisshi
 card_type: minion
 name: 李时珍
-playstyle: plant
+categories: [play:plant]
 taxon: hominidae
 subtype: pharmacology
 level: 4

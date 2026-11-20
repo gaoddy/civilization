@@ -2,7 +2,7 @@
 id: xunhuozhe
 card_type: minion
 name: 驯火者
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primitive
 level: 2

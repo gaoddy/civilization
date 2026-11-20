@@ -2,7 +2,7 @@
 id: shijieshu
 card_type: minion
 name: 世界树
-playstyle: plant
+categories: [play:plant]
 taxon: plantae-incertae-sedis
 subtype: tree
 level: 6

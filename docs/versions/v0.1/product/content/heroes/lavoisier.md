@@ -2,8 +2,7 @@
 id: lavoisier
 card_type: hero
 name: 拉瓦锡
-playstyle: neutral
-specialty: [play:reptile]
+categories: [play:reptile]
 skills: [aura-other-plus-0-plus-1]
 ---
 

@@ -2,7 +2,7 @@
 id: mushroom
 card_type: minion
 name: 蘑菇
-playstyle: fungus
+categories: [play:fungus]
 taxon: agaricaceae
 subtype: fungus
 level: 2

@@ -2,7 +2,7 @@
 id: termite-king
 card_type: minion
 name: 白蚁王
-playstyle: insect
+categories: [play:insect]
 taxon: termitidae
 subtype: insect
 level: 6

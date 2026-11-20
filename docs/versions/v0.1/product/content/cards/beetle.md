@@ -2,7 +2,7 @@
 id: beetle
 card_type: minion
 name: 甲虫
-playstyle: insect
+categories: [play:insect]
 taxon: scarabaeidae
 subtype: insect
 level: 4

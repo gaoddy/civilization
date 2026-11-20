@@ -4,10 +4,9 @@ name: 备用零件
 card_type: effect
 level: 2
 era: industrial
-playstyle: neutral
+categories: [play:machine]
 taxon: automation
 cost: 1
-specialty: [play:machine]
 match_text: 同左
 skills: [trigger-machine-single-reborn]
 ---

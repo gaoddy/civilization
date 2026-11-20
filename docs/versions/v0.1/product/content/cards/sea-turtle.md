@@ -2,7 +2,7 @@
 id: sea-turtle
 card_type: minion
 name: 海龟
-playstyle: reptile
+categories: [play:reptile]
 taxon: cheloniidae
 subtype: reptile
 level: 5

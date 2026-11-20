@@ -2,7 +2,7 @@
 id: python
 card_type: minion
 name: 蟒蛇
-playstyle: reptile
+categories: [play:reptile]
 taxon: pythonidae
 subtype: reptile
 level: 4

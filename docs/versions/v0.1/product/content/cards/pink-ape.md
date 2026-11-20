@@ -2,7 +2,7 @@
 id: pink-ape
 card_type: minion
 name: 带粉色头套的猩猩
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primate
 level: 4

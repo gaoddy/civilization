@@ -2,9 +2,8 @@
 id: zhengqi-jiche
 card_type: minion
 name: 蒸汽机车
-playstyle: neutral
+categories: [play:machine]
 taxon: transport
-specialty: [play:machine]
 subtype: transport
 level: 3
 era: industrial

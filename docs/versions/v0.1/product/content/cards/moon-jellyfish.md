@@ -2,7 +2,7 @@
 id: moon-jellyfish
 card_type: minion
 name: 海月水母
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: ulmaridae
 subtype: ocean
 level: 1

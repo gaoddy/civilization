@@ -4,7 +4,7 @@ name: 迅捷
 card_type: effect
 level: 3
 era: prehistoric
-playstyle: neutral
+categories: [play:bird, play:insect]
 taxon: military
 cost: 1
 match_text: 同左

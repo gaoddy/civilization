@@ -4,7 +4,7 @@ name: 印刷术
 card_type: effect
 level: 3
 era: feudal
-playstyle: neutral
+categories: [play:cephalopod, play:machine]
 taxon: information-computing
 cost: 2
 match_text: 同左

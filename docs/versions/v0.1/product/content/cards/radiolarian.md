@@ -2,7 +2,7 @@
 id: radiolarian
 card_type: minion
 name: 放射虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: spongodiscidae
 subtype: protozoa
 level: 5

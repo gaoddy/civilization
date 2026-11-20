@@ -2,7 +2,7 @@
 id: revived-mammoth
 card_type: minion
 name: 复活猛犸
-playstyle: mammal
+categories: [play:mammal]
 taxon: elephantidae
 subtype: clone
 level: 6

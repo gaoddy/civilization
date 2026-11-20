@@ -2,7 +2,7 @@
 id: sea-anemone
 card_type: minion
 name: 海葵
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: actiniidae
 subtype: ocean
 level: 2

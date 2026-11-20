@@ -2,7 +2,7 @@
 id: flying-fish
 card_type: minion
 name: 飞鱼
-playstyle: fish
+categories: [play:fish]
 taxon: exocoetidae
 subtype: fish
 level: 3

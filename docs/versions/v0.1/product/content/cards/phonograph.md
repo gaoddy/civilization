@@ -2,9 +2,8 @@
 id: phonograph
 card_type: minion
 name: 留声机
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: appliance
 level: 3
 era: modern

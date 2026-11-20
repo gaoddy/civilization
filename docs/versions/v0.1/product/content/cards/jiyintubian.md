@@ -4,7 +4,7 @@ name: 基因突变
 card_type: effect
 level: 3
 era: future
-playstyle: neutral
+categories: [play:plant, play:protozoa]
 taxon: biology
 cost: 2
 match_text: 同左

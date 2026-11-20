@@ -2,7 +2,7 @@
 id: juhua
 card_type: minion
 name: 巨花
-playstyle: plant
+categories: [play:plant]
 taxon: plantae-incertae-sedis
 subtype: flower
 level: 3

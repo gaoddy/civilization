@@ -2,7 +2,7 @@
 id: aspergillus
 card_type: minion
 name: 曲霉
-playstyle: fungus
+categories: [play:fungus]
 taxon: aspergillaceae
 subtype: fungus
 level: 3

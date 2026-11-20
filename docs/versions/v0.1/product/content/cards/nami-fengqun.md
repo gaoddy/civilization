@@ -2,7 +2,7 @@
 id: nami-fengqun
 card_type: minion
 name: 纳米蜂群
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: nanotech
 level: 7

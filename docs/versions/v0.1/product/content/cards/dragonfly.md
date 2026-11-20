@@ -2,7 +2,7 @@
 id: dragonfly
 card_type: minion
 name: 蜻蜓
-playstyle: insect
+categories: [play:insect]
 taxon: libellulidae
 subtype: insect
 level: 5

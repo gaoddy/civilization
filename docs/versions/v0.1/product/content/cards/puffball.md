@@ -2,7 +2,7 @@
 id: puffball
 card_type: minion
 name: 马勃
-playstyle: fungus
+categories: [play:fungus]
 taxon: agaricaceae
 subtype: fungus
 level: 5

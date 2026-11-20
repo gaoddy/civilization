@@ -2,7 +2,7 @@
 id: simaqian
 card_type: hero
 name: 司马迁
-playstyle: mammal
+categories: [play:mammal]
 skills: [aura-all-plus-0-plus-1]
 ---
 

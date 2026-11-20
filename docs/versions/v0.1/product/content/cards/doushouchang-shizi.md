@@ -2,9 +2,8 @@
 id: doushouchang-shizi
 card_type: minion
 name: 斗兽场狮子
-playstyle: mammal
+categories: [play:mammal, prey:artiodactyla]
 taxon: felidae
-specialty: [prey:artiodactyla]
 subtype: beast
 level: 2
 era: classical

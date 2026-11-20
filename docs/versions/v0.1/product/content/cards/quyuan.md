@@ -2,9 +2,8 @@
 id: quyuan
 card_type: minion
 name: 屈原
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: literature
 level: 4
 era: feudal

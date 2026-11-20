@@ -2,7 +2,7 @@
 id: lisshi
 card_type: hero
 name: 李时珍
-playstyle: plant
+categories: [play:plant]
 skills: [battlecry-plant-growth-twice]
 ---
 

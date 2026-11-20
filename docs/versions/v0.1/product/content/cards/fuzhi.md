@@ -4,7 +4,7 @@ name: 复制
 card_type: effect
 level: 5
 era: modern
-playstyle: neutral
+categories: [play:fish, play:cephalopod, play:protozoa]
 taxon: biology
 cost: 2
 match_text: 同左

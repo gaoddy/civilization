@@ -2,9 +2,8 @@
 id: shuizhong
 card_type: minion
 name: 水钟
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: timekeeping
 level: 1
 era: classical

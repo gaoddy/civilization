@@ -2,7 +2,7 @@
 id: coelacanth
 card_type: minion
 name: 腔棘鱼
-playstyle: fish
+categories: [play:fish]
 taxon: coelacanthidae
 subtype: fish
 level: 5

@@ -2,9 +2,8 @@
 id: kongzi
 card_type: minion
 name: 孔子
-playstyle: neutral
+categories: [play:mammal, play:reptile]
 taxon: hominidae
-specialty: [play:reptile, play:mammal]
 subtype: philosophy
 level: 3
 era: feudal

@@ -2,9 +2,8 @@
 id: pythagoras
 card_type: minion
 name: 毕达哥拉斯
-playstyle: neutral
+categories: [play:reptile]
 taxon: hominidae
-specialty: [play:reptile]
 subtype: mathematics
 level: 1
 era: primitive

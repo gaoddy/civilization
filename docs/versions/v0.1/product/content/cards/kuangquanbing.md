@@ -2,9 +2,8 @@
 id: kuangquanbing
 card_type: minion
 name: 狂犬病
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: rhabdoviridae
-specialty: [host:mammalia]
 subtype: virus
 level: 2
 era: primitive

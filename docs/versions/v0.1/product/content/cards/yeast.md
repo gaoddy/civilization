@@ -2,7 +2,7 @@
 id: yeast
 card_type: minion
 name: 酵母
-playstyle: fungus
+categories: [play:fungus]
 taxon: saccharomycetaceae
 subtype: fungus
 level: 1

@@ -2,7 +2,7 @@
 id: yongsheng-shuimu
 card_type: minion
 name: 永生水母
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: oceaniidae
 subtype: ocean
 level: 7

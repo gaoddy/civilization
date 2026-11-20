@@ -2,7 +2,7 @@
 id: sibadayongshi
 card_type: minion
 name: 斯巴达勇士
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 2

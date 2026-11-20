@@ -2,9 +2,8 @@
 id: langqunshouling
 card_type: minion
 name: 狼群首领
-playstyle: mammal
+categories: [play:mammal, prey:artiodactyla]
 taxon: canidae
-specialty: [prey:artiodactyla]
 subtype: mammal
 level: 2
 era: primitive

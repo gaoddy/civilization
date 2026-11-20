@@ -2,7 +2,7 @@
 id: sarcosuchus
 card_type: minion
 name: 帝鳄
-playstyle: reptile
+categories: [play:reptile]
 taxon: pholidosauridae
 subtype: reptile
 level: 7

@@ -2,9 +2,8 @@
 id: gongchengta
 card_type: minion
 name: 攻城塔
-playstyle: neutral
+categories: [play:machine]
 taxon: weapon-siege
-specialty: [play:machine]
 subtype: siege
 level: 4
 era: feudal

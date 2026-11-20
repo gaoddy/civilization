@@ -4,10 +4,9 @@ name: 蜕壳
 card_type: effect
 level: 1
 era: prehistoric
-playstyle: neutral
+categories: [play:insect]
 taxon: biology
 cost: 1
-specialty: [play:insect]
 match_text: 同左
 skills: [trigger-insect-single-reborn]
 ---

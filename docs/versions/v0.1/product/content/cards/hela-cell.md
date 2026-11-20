@@ -2,7 +2,7 @@
 id: hela-cell
 card_type: minion
 name: 海拉细胞
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: cell
 level: 4

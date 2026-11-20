@@ -2,9 +2,8 @@
 id: bisheng
 card_type: minion
 name: 毕昇
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: invention
 level: 3
 era: feudal

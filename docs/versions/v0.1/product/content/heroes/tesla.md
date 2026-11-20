@@ -2,8 +2,7 @@
 id: tesla
 card_type: hero
 name: 特斯拉
-playstyle: neutral
-specialty: [play:bird, play:machine]
+categories: [play:bird, play:machine]
 skills: [alternating-current]
 ---
 

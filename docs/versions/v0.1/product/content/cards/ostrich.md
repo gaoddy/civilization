@@ -2,7 +2,7 @@
 id: ostrich
 card_type: minion
 name: 鸵鸟
-playstyle: bird
+categories: [play:bird]
 taxon: struthionidae
 subtype: bird
 level: 3

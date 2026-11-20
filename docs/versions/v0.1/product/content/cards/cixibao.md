@@ -4,10 +4,9 @@ name: 刺细胞
 card_type: effect
 level: 1
 era: prehistoric
-playstyle: neutral
+categories: [play:cnidarian]
 taxon: biology
 cost: 1
-specialty: [play:cnidarian]
 match_text: 同左
 skills: [trigger-cnidarian-single-poison-this-turn]
 ---

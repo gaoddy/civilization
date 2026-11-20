@@ -2,8 +2,7 @@
 id: einstein
 card_type: hero
 name: 爱因斯坦
-playstyle: neutral
-specialty: [play:bird, play:mammal]
+categories: [play:mammal, play:bird]
 skills: [battlecry-all-friendly-growth-once, light-speed-strike]
 ---
 

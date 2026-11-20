@@ -2,9 +2,8 @@
 id: aristotle
 card_type: minion
 name: 亚里士多德
-playstyle: neutral
+categories: [play:reptile]
 taxon: hominidae
-specialty: [play:reptile]
 subtype: philosophy
 level: 3
 era: primitive

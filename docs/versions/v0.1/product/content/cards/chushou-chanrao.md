@@ -4,10 +4,9 @@ name: 触手缠绕
 card_type: effect
 level: 7
 era: classical
-playstyle: neutral
+categories: [play:cephalopod]
 taxon: biology
 cost: 3
-specialty: [play:cephalopod]
 match_text: 同左
 skills: [trigger-cephalopod-single-poison]
 ---

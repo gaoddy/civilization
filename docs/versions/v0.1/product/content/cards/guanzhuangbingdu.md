@@ -2,9 +2,8 @@
 id: guanzhuangbingdu
 card_type: minion
 name: 冠状病毒
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: coronaviridae
-specialty: [host:mammalia]
 subtype: virus
 level: 6
 era: modern

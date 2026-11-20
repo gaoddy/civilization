@@ -2,7 +2,7 @@
 id: stentor
 card_type: minion
 name: 喇叭虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: stentoridae
 subtype: protozoa
 level: 2

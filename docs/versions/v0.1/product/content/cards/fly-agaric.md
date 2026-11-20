@@ -2,7 +2,7 @@
 id: fly-agaric
 card_type: minion
 name: 毒蝇伞
-playstyle: fungus
+categories: [play:fungus]
 taxon: amanitaceae
 subtype: fungus
 level: 2

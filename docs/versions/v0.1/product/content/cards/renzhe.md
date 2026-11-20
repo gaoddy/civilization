@@ -2,7 +2,7 @@
 id: renzhe
 card_type: minion
 name: 忍者
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 3

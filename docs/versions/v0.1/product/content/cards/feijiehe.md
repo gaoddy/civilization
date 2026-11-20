@@ -2,9 +2,8 @@
 id: feijiehe
 card_type: minion
 name: 肺结核
-playstyle: virus
+categories: [play:virus, host:hominidae]
 taxon: mycobacteriaceae
-specialty: [host:hominidae]
 subtype: disease
 level: 3
 era: industrial

@@ -2,9 +2,8 @@
 id: dolly
 card_type: minion
 name: 克隆羊多莉
-playstyle: mammal
+categories: [play:mammal, prey:plantae]
 taxon: bovidae
-specialty: [prey:plantae]
 subtype: clone
 level: 4
 era: future

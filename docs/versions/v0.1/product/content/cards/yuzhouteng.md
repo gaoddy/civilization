@@ -2,7 +2,7 @@
 id: yuzhouteng
 card_type: minion
 name: 宇宙藤
-playstyle: plant
+categories: [play:plant]
 taxon: plantae-incertae-sedis
 subtype: universe
 level: 7

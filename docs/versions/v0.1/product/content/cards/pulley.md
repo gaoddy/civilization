@@ -2,7 +2,7 @@
 id: pulley
 card_type: minion
 name: 滑轮
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: robot
 level: 2

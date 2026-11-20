@@ -4,10 +4,9 @@ name: 变异
 card_type: effect
 level: 4
 era: modern
-playstyle: neutral
+categories: [play:virus]
 taxon: biology
 cost: 2
-specialty: [play:virus]
 match_text: 同左
 skills: [combatstart-all-enemies-contagion-2]
 ---

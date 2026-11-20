@@ -2,9 +2,8 @@
 id: huangrebing
 card_type: minion
 name: 黄热病
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: flaviviridae
-specialty: [host:mammalia]
 subtype: disease
 level: 4
 era: industrial

@@ -2,7 +2,7 @@
 id: yersinia-pestis
 card_type: minion
 name: 鼠疫耶尔森菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: yersiniaceae
 subtype: bacteria
 level: 4

@@ -4,10 +4,9 @@ name: 总装线
 card_type: effect
 level: 5
 era: future
-playstyle: neutral
+categories: [play:machine]
 taxon: production-construction
 cost: 3
-specialty: [play:machine]
 match_text: 同左
 skills: [trigger-machine-all-growth-once]
 ---

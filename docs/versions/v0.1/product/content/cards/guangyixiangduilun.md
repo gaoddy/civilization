@@ -4,7 +4,7 @@ name: 广义相对论
 card_type: effect
 level: 5
 era: future
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: physics
 cost: 3
 match_text: 同左

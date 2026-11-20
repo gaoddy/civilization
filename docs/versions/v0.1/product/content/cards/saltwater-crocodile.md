@@ -2,7 +2,7 @@
 id: saltwater-crocodile
 card_type: minion
 name: 湾鳄
-playstyle: reptile
+categories: [play:reptile]
 taxon: crocodylidae
 subtype: reptile
 level: 6

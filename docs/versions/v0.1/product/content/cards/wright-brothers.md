@@ -2,7 +2,7 @@
 id: wright-brothers
 card_type: minion
 name: 莱特兄弟
-playstyle: machine
+categories: [play:machine]
 taxon: hominidae
 subtype: aviation
 level: 5

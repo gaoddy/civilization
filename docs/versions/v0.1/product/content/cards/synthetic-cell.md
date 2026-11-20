@@ -2,7 +2,7 @@
 id: synthetic-cell
 card_type: minion
 name: 合成细胞
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: bacteria-incertae-sedis
 subtype: synthesis
 level: 5

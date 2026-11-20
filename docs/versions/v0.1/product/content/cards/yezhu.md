@@ -2,9 +2,8 @@
 id: yezhu
 card_type: minion
 name: 野猪
-playstyle: mammal
+categories: [play:mammal, prey:plantae]
 taxon: suidae
-specialty: [prey:plantae]
 subtype: mammal
 level: 1
 era: primitive

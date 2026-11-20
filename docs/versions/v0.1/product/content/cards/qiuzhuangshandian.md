@@ -4,7 +4,7 @@ name: 球状闪电
 card_type: effect
 level: 4
 era: industrial
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: physics
 cost: 2
 match_text: 同左

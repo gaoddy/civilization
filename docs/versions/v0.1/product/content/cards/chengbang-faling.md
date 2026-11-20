@@ -4,7 +4,7 @@ name: 城邦法令
 card_type: effect
 level: 3
 era: classical
-playstyle: neutral
+categories: [play:mammal]
 taxon: politics
 cost: 1
 match_text: 同左

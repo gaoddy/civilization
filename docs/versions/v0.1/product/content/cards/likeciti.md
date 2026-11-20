@@ -2,9 +2,8 @@
 id: likeciti
 card_type: minion
 name: 立克次体
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: rickettsiaceae
-specialty: [host:mammalia]
 subtype: bacteria
 level: 3
 era: modern

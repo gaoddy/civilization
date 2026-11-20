@@ -4,7 +4,7 @@ name: 布朗运动
 card_type: effect
 level: 2
 era: industrial
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: physics
 cost: 1
 match_text: 战斗开始时，对敌方最左侧随从造成 2 点伤害

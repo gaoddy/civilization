@@ -2,9 +2,8 @@
 id: von-neumann
 card_type: minion
 name: 冯·诺依曼
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: hominidae
-specialty: [play:mammal, play:machine]
 subtype: mathematics
 level: 5
 era: future

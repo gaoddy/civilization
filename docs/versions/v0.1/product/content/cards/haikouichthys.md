@@ -2,7 +2,7 @@
 id: haikouichthys
 card_type: minion
 name: 海口鱼
-playstyle: fish
+categories: [play:fish]
 taxon: haikouichthyidae
 subtype: fish
 level: 1

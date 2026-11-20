@@ -2,9 +2,8 @@
 id: qulv-feichuan
 card_type: minion
 name: 曲率飞船
-playstyle: neutral
+categories: [play:machine]
 taxon: transport
-specialty: [play:machine]
 subtype: spaceflight
 level: 7
 era: future

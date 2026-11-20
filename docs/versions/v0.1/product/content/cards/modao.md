@@ -4,7 +4,7 @@ name: 磨刀
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: military
 cost: 1
 match_text: 同左

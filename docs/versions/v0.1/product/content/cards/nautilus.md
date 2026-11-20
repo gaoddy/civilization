@@ -2,7 +2,7 @@
 id: nautilus
 card_type: minion
 name: 鹦鹉螺
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: nautilidae
 subtype: mollusk
 level: 2

@@ -2,7 +2,7 @@
 id: golden-eagle
 card_type: minion
 name: 金雕
-playstyle: bird
+categories: [play:bird]
 taxon: accipitridae
 subtype: bird
 level: 5

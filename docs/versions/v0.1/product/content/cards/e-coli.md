@@ -2,7 +2,7 @@
 id: e-coli
 card_type: minion
 name: 大肠杆菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: enterobacteriaceae
 subtype: bacteria
 level: 1

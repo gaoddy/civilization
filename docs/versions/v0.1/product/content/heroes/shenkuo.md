@@ -2,8 +2,7 @@
 id: shenkuo
 card_type: hero
 name: 沈括
-playstyle: neutral
-specialty: [play:mammal]
+categories: [play:mammal]
 skills: [observation]
 ---
 

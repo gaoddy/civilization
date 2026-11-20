@@ -2,7 +2,7 @@
 id: octopus-larva
 card_type: minion
 name: 章鱼幼体
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: octopodidae
 subtype: mollusk
 level: 1

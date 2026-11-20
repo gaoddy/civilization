@@ -4,7 +4,7 @@ name: 滋养
 card_type: effect
 level: 5
 era: modern
-playstyle: neutral
+categories: [play:cnidarian, play:plant]
 taxon: biology
 cost: 1
 match_text: 同左

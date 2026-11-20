@@ -2,7 +2,7 @@
 id: zhenghe
 card_type: minion
 name: 郑和
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: navigation
 level: 5

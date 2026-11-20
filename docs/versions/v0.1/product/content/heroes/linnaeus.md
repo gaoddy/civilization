@@ -2,8 +2,7 @@
 id: linnaeus
 card_type: hero
 name: 林奈
-playstyle: neutral
-specialty: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
+categories: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 skills: [battlecry-all-biology-growth-once]
 ---
 

@@ -2,7 +2,7 @@
 id: engineered-virus
 card_type: minion
 name: 基因工程病毒
-playstyle: virus
+categories: [play:virus]
 taxon: virus-incertae-sedis
 subtype: virus
 level: 6

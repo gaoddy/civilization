@@ -2,7 +2,7 @@
 id: edison
 card_type: hero
 name: 爱迪生
-playstyle: machine
+categories: [play:machine]
 skills: [invention-factory]
 ---
 

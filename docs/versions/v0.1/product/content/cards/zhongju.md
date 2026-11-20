@@ -4,7 +4,7 @@ name: 终局
 card_type: effect
 level: 6
 era: future
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: military
 cost: 4
 match_text: 同左

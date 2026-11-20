@@ -2,9 +2,8 @@
 id: schrodinger
 card_type: minion
 name: 薛定谔
-playstyle: neutral
+categories: [play:reptile, play:virus]
 taxon: hominidae
-specialty: [play:virus, play:reptile]
 subtype: quantum
 level: 7
 era: future

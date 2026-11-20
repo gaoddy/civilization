@@ -2,9 +2,8 @@
 id: cailun
 card_type: minion
 name: 蔡伦
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: invention
 level: 2
 era: feudal

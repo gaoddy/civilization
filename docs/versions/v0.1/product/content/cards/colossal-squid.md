@@ -2,7 +2,7 @@
 id: colossal-squid
 card_type: minion
 name: 大王酸浆鱿
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: cranchiidae
 subtype: mollusk
 level: 6

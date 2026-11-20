@@ -2,7 +2,7 @@
 id: plasmodium
 card_type: minion
 name: 疟原虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: plasmodiidae
 subtype: protozoa
 level: 4

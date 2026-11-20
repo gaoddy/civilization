@@ -2,9 +2,8 @@
 id: shilunche
 card_type: minion
 name: 石轮车
-playstyle: neutral
+categories: [play:machine]
 taxon: transport
-specialty: [play:machine]
 subtype: vehicle
 level: 1
 era: primitive

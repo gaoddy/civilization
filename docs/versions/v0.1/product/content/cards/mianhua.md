@@ -2,7 +2,7 @@
 id: mianhua
 card_type: minion
 name: 棉花
-playstyle: plant
+categories: [play:plant]
 taxon: malvaceae
 subtype: crop
 level: 2

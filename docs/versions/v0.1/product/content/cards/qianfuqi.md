@@ -4,10 +4,9 @@ name: 潜伏期
 card_type: effect
 level: 2
 era: modern
-playstyle: neutral
+categories: [play:virus]
 taxon: medicine
 cost: 1
-specialty: [play:virus]
 match_text: 同左
 skills: [trigger-virus-single-plus-1-plus-2]
 ---

@@ -2,7 +2,7 @@
 id: albatross
 card_type: minion
 name: 信天翁
-playstyle: bird
+categories: [play:bird]
 taxon: diomedeidae
 subtype: bird
 level: 6

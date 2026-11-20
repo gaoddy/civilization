@@ -2,7 +2,7 @@
 id: zhangzhongjing
 card_type: hero
 name: 张仲景
-playstyle: mammal
+categories: [play:mammal]
 skills: [battlecry-all-friendly-plus-0-plus-1]
 ---
 

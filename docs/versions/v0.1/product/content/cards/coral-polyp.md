@@ -2,7 +2,7 @@
 id: coral-polyp
 card_type: minion
 name: 珊瑚虫
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: poritidae
 subtype: ocean
 level: 2

@@ -4,10 +4,9 @@ name: 墨汁
 card_type: effect
 level: 2
 era: prehistoric
-playstyle: neutral
+categories: [play:cephalopod]
 taxon: biology
 cost: 1
-specialty: [play:cephalopod]
 match_text: 同左
 skills: [combatstart-random-enemy-minus-2-attack]
 ---

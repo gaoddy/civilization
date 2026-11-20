@@ -2,7 +2,7 @@
 id: nushou
 card_type: minion
 name: 弩手
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 2

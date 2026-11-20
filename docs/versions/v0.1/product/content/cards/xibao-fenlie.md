@@ -4,10 +4,9 @@ name: 细胞分裂
 card_type: effect
 level: 5
 era: modern
-playstyle: neutral
+categories: [play:protozoa]
 taxon: biology
 cost: 3
-specialty: [play:protozoa]
 match_text: 同左
 skills: [trigger-summon-2-amoeba-larva-3-3]
 ---

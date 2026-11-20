@@ -2,7 +2,7 @@
 id: pufferfish
 card_type: minion
 name: 河豚
-playstyle: fish
+categories: [play:fish]
 taxon: tetraodontidae
 subtype: fish
 level: 3

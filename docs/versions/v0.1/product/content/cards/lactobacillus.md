@@ -2,7 +2,7 @@
 id: lactobacillus
 card_type: minion
 name: 乳酸菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: lactobacillaceae
 subtype: bacteria
 level: 1

@@ -4,10 +4,9 @@ name: 抗生素
 card_type: effect
 level: 2
 era: modern
-playstyle: neutral
+categories: [play:bacteria]
 taxon: medicine
 cost: 1
-specialty: [play:bacteria]
 match_text: 同左
 skills: [trigger-bacteria-single-armor-2-this-turn]
 ---

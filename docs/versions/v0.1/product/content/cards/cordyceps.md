@@ -2,7 +2,7 @@
 id: cordyceps
 card_type: minion
 name: 冬虫夏草
-playstyle: fungus
+categories: [play:fungus]
 taxon: ophiocordycipitaceae
 subtype: fungus
 level: 4

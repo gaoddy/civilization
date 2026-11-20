@@ -2,7 +2,7 @@
 id: volvox
 card_type: minion
 name: 团藻
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: volvocaceae
 subtype: protozoa
 level: 7

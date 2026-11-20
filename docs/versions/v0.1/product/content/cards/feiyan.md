@@ -2,9 +2,8 @@
 id: feiyan
 card_type: minion
 name: 肺炎链球菌
-playstyle: virus
+categories: [play:virus, host:hominidae]
 taxon: streptococcaceae
-specialty: [host:hominidae]
 subtype: bacteria
 level: 2
 era: prehistoric

@@ -2,9 +2,8 @@
 id: sagan
 card_type: minion
 name: 卡尔·萨根
-playstyle: neutral
+categories: [play:mammal, play:reptile]
 taxon: hominidae
-specialty: [play:reptile, play:mammal]
 subtype: astronomy
 level: 6
 era: future

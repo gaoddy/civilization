@@ -2,9 +2,8 @@
 id: turing-machine
 card_type: minion
 name: 图灵机
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: computer
 level: 5
 era: modern

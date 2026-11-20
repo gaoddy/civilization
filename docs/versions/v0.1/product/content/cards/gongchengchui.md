@@ -2,9 +2,8 @@
 id: gongchengchui
 card_type: minion
 name: 攻城槌
-playstyle: neutral
+categories: [play:machine]
 taxon: weapon-siege
-specialty: [play:machine]
 subtype: siege
 level: 2
 era: classical

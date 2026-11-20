@@ -2,7 +2,7 @@
 id: portuguese-man-of-war
 card_type: minion
 name: 僧帽水母
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: physaliidae
 subtype: ocean
 level: 3

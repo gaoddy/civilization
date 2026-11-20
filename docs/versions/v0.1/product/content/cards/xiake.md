@@ -2,7 +2,7 @@
 id: xiake
 card_type: minion
 name: 侠客
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 3

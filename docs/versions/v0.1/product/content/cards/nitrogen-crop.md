@@ -2,7 +2,7 @@
 id: nitrogen-crop
 card_type: minion
 name: 固氮作物
-playstyle: plant
+categories: [play:plant]
 taxon: fabaceae
 subtype: crop
 level: 5

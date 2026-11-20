@@ -2,7 +2,7 @@
 id: crocodile
 card_type: minion
 name: 鳄鱼
-playstyle: reptile
+categories: [play:reptile]
 taxon: crocodylidae
 subtype: reptile
 level: 4

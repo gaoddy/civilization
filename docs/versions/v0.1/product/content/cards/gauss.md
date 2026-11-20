@@ -2,9 +2,8 @@
 id: gauss
 card_type: minion
 name: 高斯
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: mathematics
 level: 5
 era: modern

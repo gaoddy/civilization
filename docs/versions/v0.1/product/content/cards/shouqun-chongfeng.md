@@ -4,10 +4,9 @@ name: 兽群冲锋
 card_type: effect
 level: 5
 era: feudal
-playstyle: neutral
+categories: [play:mammal]
 taxon: biology
 cost: 3
-specialty: [play:mammal]
 match_text: 同左
 skills: [trigger-mammal-all-plus-2-attack]
 ---

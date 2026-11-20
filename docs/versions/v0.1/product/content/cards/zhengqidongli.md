@@ -4,7 +4,7 @@ name: 蒸汽动力
 card_type: effect
 level: 4
 era: industrial
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
 cost: 2
 match_text: 同左

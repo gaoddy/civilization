@@ -4,10 +4,9 @@ name: 族群迁徙
 card_type: effect
 level: 1
 era: prehistoric
-playstyle: neutral
+categories: [play:mammal]
 taxon: biology
 cost: 1
-specialty: [play:mammal]
 match_text: 同左
 skills: [trigger-mammal-all-plus-1-plus-1]
 ---

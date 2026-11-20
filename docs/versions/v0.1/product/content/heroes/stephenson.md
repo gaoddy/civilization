@@ -2,7 +2,7 @@
 id: stephenson
 card_type: hero
 name: 史蒂芬孙
-playstyle: machine
+categories: [play:machine]
 skills: [aura-other-mech-plus-1-plus-1]
 ---
 

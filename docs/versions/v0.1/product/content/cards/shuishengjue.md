@@ -2,7 +2,7 @@
 id: shuishengjue
 card_type: minion
 name: 水生蕨
-playstyle: plant
+categories: [play:plant]
 taxon: salviniaceae
 subtype: aquatic-plant
 level: 2

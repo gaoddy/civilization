@@ -4,10 +4,9 @@ name: 培养皿
 card_type: effect
 level: 4
 era: industrial
-playstyle: neutral
+categories: [play:bacteria]
 taxon: biology
 cost: 2
-specialty: [play:bacteria]
 match_text: 同左
 skills: [combatstart-all-enemies-contagion-1]
 ---

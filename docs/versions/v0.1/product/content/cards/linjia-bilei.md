@@ -4,10 +4,9 @@ name: 鳞甲壁垒
 card_type: effect
 level: 5
 era: classical
-playstyle: neutral
+categories: [play:reptile]
 taxon: biology
 cost: 3
-specialty: [play:reptile]
 match_text: 同左
 skills: [trigger-reptile-all-plus-0-plus-3]
 ---

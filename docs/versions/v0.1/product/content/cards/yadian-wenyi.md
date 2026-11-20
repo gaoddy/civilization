@@ -2,7 +2,7 @@
 id: yadian-wenyi
 card_type: minion
 name: 雅典瘟疫
-playstyle: virus
+categories: [play:virus]
 taxon: virus-incertae-sedis
 subtype: plague
 level: 3

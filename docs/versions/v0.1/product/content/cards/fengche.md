@@ -2,9 +2,8 @@
 id: fengche
 card_type: minion
 name: 风车
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
-specialty: [play:machine]
 subtype: vehicle
 level: 3
 era: feudal

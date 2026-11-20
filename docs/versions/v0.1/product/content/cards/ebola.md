@@ -2,9 +2,8 @@
 id: ebola
 card_type: minion
 name: 埃博拉
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: filoviridae
-specialty: [host:mammalia]
 subtype: virus
 level: 5
 era: modern

@@ -2,9 +2,8 @@
 id: watt
 card_type: minion
 name: 瓦特
-playstyle: neutral
+categories: [play:machine]
 taxon: hominidae
-specialty: [play:machine]
 subtype: engineering
 level: 4
 era: industrial

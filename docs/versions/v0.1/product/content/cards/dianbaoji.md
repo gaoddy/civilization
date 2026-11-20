@@ -2,9 +2,8 @@
 id: dianbaoji
 card_type: minion
 name: 电报机
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: communication
 level: 3
 era: industrial

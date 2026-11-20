@@ -2,7 +2,7 @@
 id: shiyanxiaoshu
 card_type: minion
 name: 实验小鼠
-playstyle: mammal
+categories: [play:mammal]
 taxon: muridae
 subtype: mammal
 level: 1

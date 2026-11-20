@@ -2,7 +2,7 @@
 id: ginkgo
 card_type: minion
 name: 银杏
-playstyle: plant
+categories: [play:plant]
 taxon: ginkgoaceae
 subtype: tree
 level: 5

@@ -2,7 +2,7 @@
 id: gecko
 card_type: minion
 name: 壁虎
-playstyle: reptile
+categories: [play:reptile]
 taxon: gekkonidae
 subtype: reptile
 level: 2

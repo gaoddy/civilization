@@ -4,7 +4,7 @@ name: 质能等价
 card_type: effect
 level: 5
 era: future
-playstyle: neutral
+categories: [play:machine]
 taxon: physics
 cost: 3
 match_text: 同左

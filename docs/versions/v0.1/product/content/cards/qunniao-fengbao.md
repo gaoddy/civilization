@@ -4,10 +4,9 @@ name: 群鸟风暴
 card_type: effect
 level: 5
 era: classical
-playstyle: neutral
+categories: [play:bird]
 taxon: biology
 cost: 3
-specialty: [play:bird]
 match_text: 同左
 skills: [combatstart-all-enemies-damage-3]
 ---

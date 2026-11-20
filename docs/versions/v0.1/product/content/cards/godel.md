@@ -2,9 +2,8 @@
 id: godel
 card_type: minion
 name: 库尔特·哥德尔
-playstyle: neutral
+categories: [play:reptile]
 taxon: hominidae
-specialty: [play:reptile]
 subtype: mathematics
 level: 6
 era: future

@@ -4,7 +4,7 @@ name: 阿Q精神
 card_type: effect
 level: 1
 era: modern
-playstyle: neutral
+categories: [play:mammal, play:reptile]
 taxon: literature
 cost: 0
 match_text: 同左

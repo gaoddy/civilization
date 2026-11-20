@@ -4,10 +4,9 @@ name: 鱼群集结
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:fish]
 taxon: biology
 cost: 2
-specialty: [play:fish]
 match_text: 同左
 skills: [trigger-fish-all-growth-once]
 ---

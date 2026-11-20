@@ -2,9 +2,8 @@
 id: euclid
 card_type: minion
 name: 欧几里得
-playstyle: neutral
+categories: [play:reptile]
 taxon: hominidae
-specialty: [play:reptile]
 subtype: mathematics
 level: 1
 era: primitive

@@ -2,7 +2,7 @@
 id: qinghao
 card_type: minion
 name: 青蒿
-playstyle: plant
+categories: [play:plant]
 taxon: asteraceae
 subtype: medicinal
 level: 4

@@ -2,7 +2,7 @@
 id: cuttlefish
 card_type: minion
 name: 乌贼
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: sepiidae
 subtype: mollusk
 level: 2

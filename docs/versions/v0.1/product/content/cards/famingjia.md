@@ -2,7 +2,7 @@
 id: famingjia
 card_type: minion
 name: 发明家
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: invention
 level: 4

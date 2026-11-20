@@ -2,9 +2,8 @@
 id: yuanlongping
 card_type: minion
 name: 袁隆平
-playstyle: neutral
+categories: [play:plant]
 taxon: hominidae
-specialty: [play:plant]
 subtype: organism
 level: 6
 era: modern

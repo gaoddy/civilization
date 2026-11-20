@@ -2,7 +2,7 @@
 id: bacteriophage
 card_type: minion
 name: 噬菌体（肌尾）
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: myoviridae
 subtype: bacteria
 level: 6

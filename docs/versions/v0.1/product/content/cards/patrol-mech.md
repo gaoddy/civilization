@@ -2,7 +2,7 @@
 id: patrol-mech
 card_type: minion
 name: 巡逻机甲
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: mecha
 level: 5
