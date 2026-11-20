@@ -380,8 +380,23 @@ func _ready() -> void:
 
     await _check_hand_fit()
     await _check_cover_art_inset()
+    await _check_card_frame()
     recruit.queue_free()
     _finish()
+
+
+## 卡框独立可建：记录星级、星数等于星级、不拦截鼠标。
+func _check_card_frame() -> void:
+    var frame := CardFrame.create(5)
+    frame.name = "StandaloneFrame"
+    add_child(frame)
+    frame.set_anchors_preset(Control.PRESET_TOP_LEFT)
+    frame.size = Vector2(112, 146)
+    await get_tree().process_frame
+    _expect(frame.level == 5, "CardFrame 应记录星级")
+    _expect(frame.star_count == 5, "CardFrame 星数应等于星级")
+    _expect(frame.mouse_filter == Control.MOUSE_FILTER_IGNORE, "卡框不应拦截鼠标")
+    frame.queue_free()
 
 
 ## 手牌介绍不被截断：信息区向上扩展，字号缩到能放下全文；介绍不压名称与角标。
