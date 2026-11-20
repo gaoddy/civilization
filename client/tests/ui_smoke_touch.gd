@@ -11,6 +11,7 @@ const DETAIL_CARD_SIZE := Vector2(112, 146)
 func _ready() -> void:
     ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
     await _check_detail_long_press()
+    await _check_aim_touch()
     await _check_hand_slot_reset()
     ScreenProfile.set_device_for_test("")
     _finish()
@@ -88,6 +89,68 @@ func _check_detail_long_press() -> void:
     stage.queue_free()
     await get_tree().process_frame
     await get_tree().process_frame
+
+
+## 瞄准层：触控按住拖出与松手提交；技能模式由按钮按下开启时也要接管触点编号。
+func _check_aim_touch() -> void:
+    var stage := Control.new()
+    stage.size = Vector2(1280, 720)
+    add_child(stage)
+    var aim := GameAimLayer.new()
+    stage.add_child(aim)
+    var source := _aim_card(stage, "board", "mi_src", Vector2(40, 40))
+    var candidate := _aim_card(stage, "board", "mi_1", Vector2(300, 300))
+    await get_tree().process_frame
+
+    var chosen: Array = []
+    var cancelled := []
+    aim.target_chosen.connect(func(target: Dictionary) -> void: chosen.append(target))
+    aim.aim_cancelled.connect(func() -> void: cancelled.append(true))
+    var candidate_point: Vector2 = candidate.get_global_rect().get_center()
+    var candidates := [{"zone": "board", "id": "mi_1"}]
+
+    # 技能模式：按钮按下已把 `_pressed` 置真，但本层没见过起始触点。
+    aim.begin_skill(source.get_global_rect(), candidates)
+    _expect(aim.skill_active(), "技能瞄准应开启")
+    await _push_drag(candidate_point, 0)
+    _expect(str(aim._hovered.get("id", "")) == "mi_1", "触控拖动应跟随触点并命中候选")
+    await _push_touch(candidate_point, 0, false)
+    _expect(not aim.skill_active(), "触控抬手后应结束技能瞄准")
+    _expect(chosen.size() == 1, "触控抬手应提交命中候选，实际 %d" % chosen.size())
+    _expect(cancelled.is_empty(), "命中候选不应发出取消")
+
+    # 待选模式：按下开始瞄准，拖到候选后抬手提交。
+    chosen.clear()
+    aim.begin_pending("mi_src", candidates)
+    _expect(aim.pending_active(), "战吼待选应开启瞄准")
+    await _push_touch(Vector2(20, 20), 0, true)
+    await _push_drag(candidate_point, 0)
+    await _push_touch(candidate_point, 0, false)
+    _expect(not aim.pending_active(), "触控抬手后应结束待选瞄准")
+    _expect(chosen.size() == 1, "待选触控抬手应提交候选，实际 %d" % chosen.size())
+
+    # 待选模式落在非候选处：抬手视为放弃。
+    chosen.clear()
+    var abandoned := []
+    aim.target_abandoned.connect(func() -> void: abandoned.append(true))
+    aim.begin_pending("mi_src", candidates)
+    await _push_touch(Vector2(20, 20), 0, true)
+    await _push_touch(Vector2(20, 20), 0, false)
+    _expect(abandoned.size() == 1 and chosen.is_empty(), "待选落空应发放弃且不提交目标")
+
+    stage.queue_free()
+    await get_tree().process_frame
+
+
+## 瞄准候选用控件：命中只看 `target_zone` / `target_id` 元数据。
+func _aim_card(stage: Control, zone: String, id: String, position: Vector2) -> Control:
+    var card := Control.new()
+    card.position = position
+    card.size = Vector2(112, 146)
+    card.set_meta("target_zone", zone)
+    card.set_meta("target_id", id)
+    stage.add_child(card)
+    return card
 
 
 ## 手牌槽：触摸释放、拖拽取消、视图刷新都要复位缩放、层级与右侧槽位鼠标过滤。

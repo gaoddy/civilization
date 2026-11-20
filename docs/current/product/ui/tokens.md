@@ -92,6 +92,17 @@
 | `gallery-detail-width` | 280 | 图鉴常驻详情宽度 |
 | `gallery-page-size` | 40 | 图鉴每页卡面张数（5 列 × 8 行） |
 | `gallery-grid-columns` | 5 | 图鉴卡面网格列数 |
+| `aim-arc-width` | 2.5 | 选目标弧线与角标的线宽 |
+| `aim-dash` / `aim-gap` | 10 / 6 | 弧线虚线段长与间隔 |
+| `aim-dot-radius` | 2.5 | 弧线上流动光点的半径 |
+| `aim-flow-speed` | 0.55 | 光点沿弧线循环的速度（每秒圈数） |
+| `aim-source-radius` | 12 | 弧线起点圆环半径，起点为技能按钮或入场随从中心 |
+| `aim-mark-length` / `aim-mark-inset` | 8 / 3 | 候选卡四角角标的臂长与向内收的距离 |
+| `aim-outline-width` | 2 | 命中候选呼吸描边的线宽 |
+| `aim-pulse` | 1.2 | 命中候选描边的呼吸周期（秒） |
+| `aim-cross` | 6 | 无效落点叉号的半边长 |
+
+- 瞄准相关令牌都是小数，统一用 `UITheme.factor` 读取；颜色只用语义层的 `color-accent`、`color-text-muted`、`color-danger`。
 
 ### 5.1 手机基准紧凑值
 

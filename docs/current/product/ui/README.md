@@ -51,6 +51,7 @@
 | 图鉴卡面单元 | `GalleryCardTile` | [components/gallery-card-tile.md](components/gallery-card-tile.md) |
 | 图鉴常驻详情 | `GalleryDetail` | [components/gallery-detail.md](components/gallery-detail.md) |
 | 首局引导 | `FirstGameGuide` | [components/first-game-guide.md](components/first-game-guide.md) |
+| 技能瞄准层 | `GameAimLayer`（`client/scenes/game_aim_layer.gd`） | [components/aim-layer.md](components/aim-layer.md) |
 
 ## 5. 交互约定
 

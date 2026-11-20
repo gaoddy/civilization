@@ -249,9 +249,12 @@ func _refresh_shop(state: GameUiState) -> void:
         panel.payload = {
             "epoch": state.epoch,
             "shopSlot": index,
+            "instanceId": str(slot.get("instanceId", "")),
             "cardId": card_id,
             "buyable": buyable,
         }
+        panel.set_meta("target_zone", "shop")
+        panel.set_meta("target_id", str(slot.get("instanceId", "")))
         panel.drag_allowed = state.can_drag(buyable)
         panel.add_child(ShopCardFace.build(card_id, entry, bool(slot.get("frozen", false))))
         if detail != null and is_instance_valid(detail):

@@ -180,6 +180,18 @@ const SCENARIO := {
 	"avatar-rail-compact": 40,
 	"seat-hp-bar-height-compact": 4,
 	"seat-row-gap-compact": 2,
+	# 技能瞄准：弧线、流动光点、候选角标与命中描边。小数令牌经 `factor` 读取。
+	"aim-arc-width": 2.5,
+	"aim-dash": 10.0,
+	"aim-gap": 6.0,
+	"aim-dot-radius": 2.5,
+	"aim-flow-speed": 0.55,
+	"aim-source-radius": 12.0,
+	"aim-mark-length": 8.0,
+	"aim-mark-inset": 3.0,
+	"aim-outline-width": 2.0,
+	"aim-pulse": 1.2,
+	"aim-cross": 6.0,
 }
 
 const PLAYSTYLE_COLOR := {

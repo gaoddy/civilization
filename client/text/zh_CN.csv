@@ -1460,8 +1460,6 @@ ui.game.detail.undetermined,未定
 ui.game.era_format,时代 %s
 ui.game.hand.empty,手牌为空
 ui.game.hand.title,手牌
-ui.game.overlay.battlecry_hint,选择一个目标结算战吼
-ui.game.overlay.battlecry_title,战吼目标
 ui.game.overlay.discover_hint,发现：选择一张卡牌
 ui.game.overlay.evolve_hint,进化：选择一项
 ui.game.overlay.title,待选择
@@ -1505,13 +1503,7 @@ ui.game.status.disconnected,未连接 · 正在重连
 ui.game.status.intent_not_sent,未连接，操作未发出
 ui.game.status.reconnecting,正在重连…
 ui.game.status.waiting_view,等待对局状态…
-ui.game.target.cancel,取消
-ui.game.target.hero_power_title,英雄技能目标
 ui.game.target.required,该操作需要目标
-ui.game.target.title,选择目标
-ui.game.target.zone.board,我方棋盘
-ui.game.target.zone.hand,手牌
-ui.game.target.zone.shop,商店
 ui.guide.done,完成
 ui.guide.hint,提示
 ui.guide.manual_title,新手引导
