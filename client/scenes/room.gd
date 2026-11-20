@@ -36,11 +36,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-    var background := ColorRect.new()
-    background.color = UITheme.color("color-bg")
-    background.set_anchors_preset(Control.PRESET_FULL_RECT)
-    background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    add_child(background)
+    add_child(UI.background())
 
     # 点浮层外的空白关闭选中：铺满全屏、位于内容之下，候选卡仍然优先接收点击。
     _dismiss = Control.new()

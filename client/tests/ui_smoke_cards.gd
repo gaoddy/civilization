@@ -418,6 +418,7 @@ func _ready() -> void:
     await _check_card_frame()
     await _check_stat_plate()
     await _check_era_glyph()
+    _check_page_background()
     recruit.queue_free()
     _finish()
 
@@ -463,6 +464,19 @@ func _check_era_glyph() -> void:
         _expect(glyph.custom_minimum_size == Vector2(14, 14), "卡面象形应为 14×14")
         _expect(glyph.mouse_filter == Control.MOUSE_FILTER_IGNORE, "象形不应拦截鼠标")
         glyph.queue_free()
+
+
+## 页面背景：纹理已导入、节点名固定、不拦截鼠标。
+func _check_page_background() -> void:
+    _expect(
+        ResourceLoader.exists("res://assets/ui/bg/bg_main.png"),
+        "页面背景纹理应已导入",
+    )
+    var background := UI.background()
+    _expect(background.name == "PageBackground", "背景节点名应为 PageBackground")
+    _expect(background.mouse_filter == Control.MOUSE_FILTER_IGNORE, "背景不应拦截鼠标")
+    _expect(background is TextureRect, "有纹理时应使用 TextureRect")
+    background.free()
 
 
 ## 手牌介绍不被截断：信息区向上扩展，字号缩到能放下全文；介绍不压名称与角标。

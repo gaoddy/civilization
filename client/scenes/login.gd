@@ -19,10 +19,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-    var background := ColorRect.new()
-    background.color = Color("10141c")
-    background.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(background)
+    add_child(UI.background())
 
     var center := CenterContainer.new()
     center.set_anchors_preset(Control.PRESET_FULL_RECT)
