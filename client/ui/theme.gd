@@ -287,10 +287,6 @@ static func panel_style(variant: String) -> StyleBoxFlat:
 			# 卡面容器：内容只让出 1px 描边，封面与美术铺满整张卡。
 			box.bg_color = color("color-surface-raised")
 			box.set_content_margin_all(1)
-		"empty":
-			box.bg_color = alpha("color-surface", 0.4)
-			box.border_color = alpha("color-border", 0.7)
-			box.set_content_margin_all(space("space-md"))
 		"sunken":
 			box.bg_color = color("color-surface-sunken")
 		"accent":

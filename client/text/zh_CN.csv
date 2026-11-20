@@ -1474,8 +1474,6 @@ ui.game.rail.lose,负
 ui.game.rail.no_report,无战报
 ui.game.rail.turn,第 %d 回合
 ui.game.rail.win,胜
-ui.game.recruit.empty_board_slot,空位
-ui.game.recruit.empty_shop_slot,空槽
 ui.game.recruit.sell_hint,松手出售 +%d 金
 ui.game.reward_card.text,发现一张 %d 星随从
 ui.game.side_panel.combat,战斗中
