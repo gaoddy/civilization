@@ -5,7 +5,7 @@
 
 mod common;
 
-use common::{effects_of, minion, setup_with_gold};
+use common::{categories_for, effects_of, minion, setup_with_gold};
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
 use rule_engine::data::{Card, CardType, HeroCard, Playstyle, Skill, Token};
 use rule_engine::engine::Engine;
@@ -25,8 +25,7 @@ fn mirror_as_hero(engine: &mut Engine, id: &str) {
         HeroCard {
             id: id.to_string(),
             card_type: CardType::Hero,
-            playstyle: card.playstyle,
-            specialty: card.specialty,
+            categories: card.categories,
             skills: card.skills,
         },
     );
@@ -60,9 +59,8 @@ fn add_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle: Playstyle::Mammal,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(Playstyle::Mammal),
             subtype: None,
             level: 1,
             era: None,

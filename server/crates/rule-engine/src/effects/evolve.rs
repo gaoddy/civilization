@@ -9,7 +9,7 @@
 //! `recruit::choose_discover` 与发现共用 FIFO 与按座位的消费规则。
 //! `OnAllyEvolve` 只在进化实际完成（最后一次选择结算完）时触发。
 
-use crate::data::Playstyle;
+use crate::data::has_play;
 use crate::effects::{Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::state::{GameState, InstanceId, MinionInstance, PendingChoice, Seat};
@@ -53,10 +53,13 @@ impl Engine {
         if !self.card_has_keyword(&card_id, "evolve") {
             return;
         }
-        // 进化是生物专有词；学者与机械、中立卡不能进化（数据层已禁止，这里再兜底一次）。
-        let evolvable = self.catalog.cards.get(&card_id).is_some_and(|card| {
-            !card.is_scholar && !matches!(card.playstyle, Playstyle::Neutral | Playstyle::Machine)
-        });
+        // 进化是生物专有词；学者与带 `play:machine` 的卡不能进化
+        // （数据层已禁止，这里再兜底一次）。
+        let evolvable = self
+            .catalog
+            .cards
+            .get(&card_id)
+            .is_some_and(|card| !card.is_scholar && !has_play(&card.categories, "machine"));
         if !evolvable {
             return;
         }

@@ -10,10 +10,12 @@
 //! §2、§3、§8、§9、§10。所有随机性只来自 [`Stream::Effects`]，集合与遍历顺序
 //! 全部确定。
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::combat::{self, BattleField, CombatAction, CombatSetup, DamageSource};
-use crate::data::{CardType, Catalog, Playstyle, Specialty, SpecialtyKind, card_in_pool};
+use crate::data::{
+    CardType, Catalog, Category, CategoryKind, Playstyle, card_in_pool, has_play, play_categories,
+};
 use crate::effects::{
     CopyState, Duration, Effect, Filter, Op, Pick, Selector, Side, TargetRef, TimesIf, Trigger,
     Zone,
@@ -2126,19 +2128,20 @@ impl Engine {
             return;
         }
 
-        // `pool=playstyle`：载体所在玩法的随从牌，排除 Token、英雄专属与奖励牌。
-        let carrier_playstyle = self
-            .catalog
-            .cards
-            .get(&carrier_card_id)
-            .map(|card| card.playstyle)
-            .or_else(|| {
-                self.catalog
-                    .tokens
-                    .get(&carrier_card_id)
-                    .map(|token| token.playstyle())
-            })
-            .unwrap_or(Playstyle::Neutral);
+        // `pool=playstyle`：载体所属玩法的随从牌，排除 Token、英雄专属与奖励牌。
+        // 多玩法载体按任意一条 `play:` 取并集；Token 仍按单值玩法。
+        let carrier_playstyles: BTreeSet<Playstyle> = match self.catalog.cards.get(&carrier_card_id)
+        {
+            Some(card) => play_categories(&card.categories)
+                .filter_map(Playstyle::from_id)
+                .collect(),
+            None => self
+                .catalog
+                .tokens
+                .get(&carrier_card_id)
+                .map(|token| BTreeSet::from([token.playstyle()]))
+                .unwrap_or_default(),
+        };
         let mut candidates: Vec<String> = self
             .catalog
             .cards
@@ -2146,7 +2149,11 @@ impl Engine {
             .filter(|card| card.card_type == CardType::Minion)
             .filter(|card| card.id != REWARD_CARD_ID)
             .filter(|card| !self.catalog.tokens.contains_key(&card.id))
-            .filter(|card| card.playstyle == carrier_playstyle)
+            .filter(|card| {
+                play_categories(&card.categories)
+                    .filter_map(Playstyle::from_id)
+                    .any(|playstyle| carrier_playstyles.contains(&playstyle))
+            })
             .filter(|card| {
                 field
                     .playstyles
@@ -2674,12 +2681,15 @@ fn is_enemy_selector(selector: &Selector) -> bool {
 
 /// 筛选与 `timesIf` 需要的卡牌/Token 事实。
 ///
-/// `catalog.cards` 查不到时回退 `catalog.tokens`；Token 缺玩法时按 `Neutral`
-/// 处理，分类直接取 Token 自身的 `taxon`。两者都找不到时返回 `None`。
+/// `catalog.cards` 查不到时回退 `catalog.tokens`。卡牌按 `categories` 的多条
+/// `play:` 判定；Token 没有 `categories`，由 `playstyle` 合成一条玩法。
+/// Token 缺玩法时按 `Neutral` 处理，分类直接取 Token 自身的 `taxon`。
+/// 两者都找不到时返回 `None`。
 struct CardFacts<'a> {
-    playstyle: Playstyle,
+    /// Token 的单值玩法；卡牌为 `None`。
+    token_playstyle: Option<Playstyle>,
     taxon: &'a str,
-    specialty: &'a [Specialty],
+    categories: &'a [Category],
     subtype: Option<&'a str>,
     id: &'a str,
     card_type: CardType,
@@ -2691,19 +2701,21 @@ impl CardFacts<'_> {
     fn matches(&self, catalog: &Catalog, key: &str, value: &str) -> bool {
         match key {
             "taxon" => catalog.taxonomy.is_within(self.taxon, value),
-            "playstyle" => self.playstyle.id() == value,
-            "play" => self
-                .specialty
-                .iter()
-                .any(|specialty| specialty.kind == SpecialtyKind::Play && specialty.value == value),
+            // 卡牌的 `playstyle` 与 `play` 同口径：任一条 `play:` 命中即可。
+            "playstyle" => {
+                self.token_playstyle
+                    .is_some_and(|playstyle| playstyle.id() == value)
+                    || has_play(self.categories, value)
+            }
+            "play" => has_play(self.categories, value),
             "prey" | "host" => {
                 let kind = if key == "prey" {
-                    SpecialtyKind::Prey
+                    CategoryKind::Prey
                 } else {
-                    SpecialtyKind::Host
+                    CategoryKind::Host
                 };
-                self.specialty.iter().any(|specialty| {
-                    specialty.kind == kind && catalog.taxonomy.is_within(&specialty.value, value)
+                self.categories.iter().any(|category| {
+                    category.kind == kind && catalog.taxonomy.is_within(&category.value, value)
                 })
             }
             "subtype" => self.subtype == Some(value),
@@ -2726,9 +2738,9 @@ impl CardFacts<'_> {
 fn card_facts<'a>(catalog: &'a Catalog, card_id: &str) -> Option<CardFacts<'a>> {
     if let Some(card) = catalog.cards.get(card_id) {
         return Some(CardFacts {
-            playstyle: card.playstyle,
+            token_playstyle: None,
             taxon: &card.taxon,
-            specialty: &card.specialty,
+            categories: &card.categories,
             subtype: card.subtype.as_deref(),
             id: &card.id,
             card_type: card.card_type,
@@ -2736,9 +2748,9 @@ fn card_facts<'a>(catalog: &'a Catalog, card_id: &str) -> Option<CardFacts<'a>> 
         });
     }
     catalog.tokens.get(card_id).map(|token| CardFacts {
-        playstyle: token.playstyle(),
+        token_playstyle: Some(token.playstyle()),
         taxon: &token.taxon,
-        specialty: &[],
+        categories: &[],
         subtype: None,
         id: &token.id,
         card_type: CardType::Minion,

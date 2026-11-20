@@ -32,14 +32,13 @@ fn hero_ids_also_exist_in_the_minion_pool() {
 
 #[test]
 fn heroes_reject_missing_matching_minion() {
-    let heroes = r#"[{"id":"no-such-card","card_type":"hero","playstyle":"mammal","skills":[]}]"#;
+    let heroes = r#"[{"id":"no-such-card","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     assert!(Catalog::from_json("[]", heroes, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn heroes_reject_matching_effect_card() {
-    let heroes =
-        r#"[{"id":"aolinpike-jidian","card_type":"hero","playstyle":"neutral","skills":[]}]"#;
+    let heroes = r#"[{"id":"aolinpike-jidian","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     let error = Catalog::from_json(
         CARDS_JSON,
         heroes,
@@ -54,7 +53,7 @@ fn heroes_reject_matching_effect_card() {
 
 #[test]
 fn heroes_reject_skills_that_diverge_from_minion() {
-    let heroes = r#"[{"id":"adam-smith","card_type":"hero","playstyle":"mammal","skills":[]}]"#;
+    let heroes = r#"[{"id":"adam-smith","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     let error = Catalog::from_json(
         CARDS_JSON,
         heroes,
@@ -69,19 +68,19 @@ fn heroes_reject_skills_that_diverge_from_minion() {
 
 #[test]
 fn heroes_reject_non_hero_card_type() {
-    let bad = r#"[{"id":"x","card_type":"minion","playstyle":"mammal","skills":[]}]"#;
+    let bad = r#"[{"id":"x","card_type":"minion","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     assert!(Catalog::from_json("[]", bad, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn heroes_reject_unknown_skill() {
-    let bad = r#"[{"id":"x","card_type":"hero","playstyle":"mammal","skills":["no-such-skill"]}]"#;
+    let bad = r#"[{"id":"x","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":["no-such-skill"]}]"#;
     assert!(Catalog::from_json("[]", bad, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn cards_reject_hero_card_type() {
-    let bad = r#"[{"id":"x","card_type":"hero","playstyle":"mammal","skills":[]}]"#;
+    let bad = r#"[{"id":"x","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     assert!(Catalog::from_json(bad, "[]", "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
@@ -102,7 +101,7 @@ fn every_card_skill_exists() {
 
 #[test]
 fn unknown_field_fails() {
-    let bad = r#"[{"id":"x","card_type":"minion","playstyle":"mammal","taxon":"hominidae","level":1,"era":"prehistoric","attack":1,"health":2,"is_scholar":false,"oops":1}]"#;
+    let bad = r#"[{"id":"x","card_type":"minion","categories":[{"kind":"play","value":"mammal"}],"taxon":"hominidae","level":1,"era":"prehistoric","attack":1,"health":2,"is_scholar":false,"oops":1}]"#;
     assert!(Catalog::from_json(bad, "[]", "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
@@ -141,7 +140,7 @@ fn rejects_unknown_enum_and_param() {
 
 #[test]
 fn accepts_neutral_playstyle_filter() {
-    // 中立卡是可被筛中的实体玩法取值：从 13 个可启用玩法里取不到，但筛选合法。
+    // `neutral` 保留给 Token 与内部哨兵：从 13 个可启用玩法里取不到，但筛选合法。
     let raw = r#"[{"trigger":"on_play","op":"growth","selector":{"kind":"side","side":"friendly","pick":"all","filters":[{"key":"playstyle","value":"neutral"}]},"params":{"times":1}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
     assert!(validate_effects(&effects).is_ok());

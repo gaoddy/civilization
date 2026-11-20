@@ -2,7 +2,7 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::{effects_of, place, test_catalog, test_playstyles};
+use common::{card_has_play, categories_for, effects_of, place, test_catalog, test_playstyles};
 use rule_engine::combat::{self, CombatAction, CombatLog, CombatSetup};
 use rule_engine::data::{Card, CardType, Catalog, Era, Playstyle, Skill, card_in_pool};
 use rule_engine::effects::{Effect, EffectCtx, parse_effects};
@@ -40,9 +40,8 @@ fn add_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(playstyle),
             subtype: None,
             level,
             era: None,
@@ -1119,7 +1118,10 @@ fn salvage_adds_only_machine_minions_to_hand() {
             .cards
             .get(&copy.card_id)
             .expect("获得的牌应在目录中");
-        assert_eq!(card.playstyle, Playstyle::Machine, "随机池只含机械");
+        assert!(
+            card_has_play(card, "machine"),
+            "随机池只含带 play:machine 的牌"
+        );
         assert!(
             !engine.catalog.tokens.contains_key(&copy.card_id),
             "排除 Token"
@@ -1174,9 +1176,8 @@ fn salvage_pool_follows_carrier_playstyle() {
         .cards
         .get(&log.hand_copies[0].card_id)
         .expect("获得的牌应在目录中");
-    assert_eq!(
-        card.playstyle,
-        Playstyle::Mammal,
+    assert!(
+        card_has_play(card, "mammal"),
         "随机池应跟随载体随从的玩法，而不是写死机械"
     );
 }

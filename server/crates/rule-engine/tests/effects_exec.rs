@@ -2,7 +2,7 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::{effects_of, minion, place, setup, test_catalog};
+use common::{categories_for, effects_of, minion, place, setup, test_catalog};
 use rule_engine::combat::{self, CombatAction, CombatLog, CombatSetup, simulate_with};
 use rule_engine::data::{Card, CardType, Playstyle, Skill};
 use rule_engine::effects::{
@@ -45,9 +45,8 @@ fn add_card(engine: &mut Engine, id: &str, attack: i32, health: i32, keywords: &
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle: Playstyle::Mammal,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(Playstyle::Mammal),
             subtype: None,
             level: 1,
             era: None,

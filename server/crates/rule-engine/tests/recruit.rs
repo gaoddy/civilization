@@ -1,7 +1,7 @@
 mod common;
 
 use common::{heroes, minion, minion_id, set_shop, test_catalog, test_playstyles, turn_started};
-use rule_engine::data::{CardType, Era};
+use rule_engine::data::{CardType, Category, CategoryKind, Era};
 use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
@@ -987,8 +987,7 @@ fn hero_cards_never_appear_in_shop() {
         rule_engine::data::HeroCard {
             id: hero_only.to_string(),
             card_type: CardType::Hero,
-            playstyle: rule_engine::data::Playstyle::Neutral,
-            specialty: Vec::new(),
+            categories: Vec::new(),
             skills: Vec::new(),
         },
     );
@@ -1860,6 +1859,17 @@ fn target_pending_pool_includes_self() {
 fn target_pending_skipped_when_filtered_pool_empty() {
     let (mut engine, mut state) = turn_started(54);
     // 战吼筛「机械」，己方棋盘没有机械，入场后池仍为空。
+    // archimedes 自身带 play:machine；先从测试目录里换成非机械归属，
+    // 才保留「来源自身不计入目标池」的空池场景。
+    let archimedes = engine
+        .catalog
+        .cards
+        .get_mut("archimedes")
+        .expect("archimedes 应存在");
+    archimedes.categories = vec![Category {
+        kind: CategoryKind::Play,
+        value: "mammal".to_string(),
+    }];
     state.players[0].hand.push(HandCard::Minion(minion(
         &engine.catalog,
         9_000,
@@ -1962,11 +1972,11 @@ fn choose_target_outside_board_rejects() {
 
 #[test]
 fn choose_target_outside_filtered_pool_rejects() {
-    // 战吼筛「机械」：棋盘上有机械（因此产生待选），但选一个学者必须被拒，
+    // 战吼筛「机械」：棋盘上有机械（因此产生待选），但选一个非机械随从必须被拒，
     // 而不是接受后静默落空（core-rules §4：指定随从不在合法池时返回该码）。
     let (mut engine, mut state) = turn_started(59);
     put_champion(&engine, &mut state, 0, 9_000, "nanobot");
-    put_champion(&engine, &mut state, 0, 9_001, "gutenberg");
+    put_champion(&engine, &mut state, 0, 9_001, "baiyi");
     state.players[0]
         .hand
         .push(HandCard::effect(9_000, BATTLECRY_TRIBE_TARGET));

@@ -6,7 +6,7 @@
 use std::collections::BTreeMap;
 
 use rule_engine::combat::{effective_attack, effective_health};
-use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill, SpecialtyKind};
+use rule_engine::data::{Card, CardType, Catalog, CategoryKind, Playstyle, Skill};
 use rule_engine::effects::{Duration, Op, Pick, Selector, Side, TargetRef, Trigger, Zone};
 use rule_engine::engine::Engine;
 use rule_engine::intent::{Intent, Reject, RejectCode};
@@ -350,19 +350,20 @@ fn strongest_target_in_zone(
 /// 购买候选的排序键：价格 → 卡牌等级 → 槽位下标小者优先。
 type CandidateKey = (u8, u8, std::cmp::Reverse<u8>);
 
-/// 定向效果牌是否适合当前阵容：通用牌始终可买，定向牌只在玩法关联与
-/// 阵容主导玩法一致时购买；没有主导玩法（中立）时视为可买。
+/// 定向效果牌是否适合当前阵容：没有主导玩法时始终可买；有主导玩法时，
+/// 任一条 `play:` 等于主导玩法才可买；没有 `play:` 的效果牌按可买处理
+/// （加载期已拒绝，这里防御性兜底）。
 fn effect_matches_playstyle(card: &Card, dominant: Playstyle) -> bool {
     if card.card_type != CardType::Effect || dominant == Playstyle::Neutral {
         return true;
     }
     let mut any = false;
-    for specialty in &card.specialty {
-        if specialty.kind != SpecialtyKind::Play {
+    for category in &card.categories {
+        if category.kind != CategoryKind::Play {
             continue;
         }
         any = true;
-        if Playstyle::from_id(&specialty.value) == Some(dominant) {
+        if Playstyle::from_id(&category.value) == Some(dominant) {
             return true;
         }
     }
@@ -562,9 +563,9 @@ pub fn planning_reject(code: RejectCode) -> bool {
     )
 }
 
-/// 玩法判定：统计阵容随从的 `playstyle`，取数量最多的玩法；并列时按玩法声明顺序
-/// （`Playstyle` 的 `Ord`）取靠前者。中立随从与未知卡牌不参与统计；没有可统计随从时
-/// 返回 `Neutral`。
+/// 玩法判定：统计阵容随从的全部 `play:` 归属，每张卡按每条 `play:` 各计 1 次，
+/// 取数量最多的玩法；并列时按玩法声明顺序（`Playstyle` 的 `Ord`）取靠前者。
+/// 没有 `play:` 的卡跳过；没有可统计归属时返回 `Neutral`。
 pub fn dominant_playstyle<'a>(
     board: impl IntoIterator<Item = &'a str>,
     catalog: &Catalog,
@@ -574,10 +575,14 @@ pub fn dominant_playstyle<'a>(
         let Some(card) = catalog.cards.get(card_id) else {
             continue;
         };
-        if card.playstyle == Playstyle::Neutral {
-            continue;
+        for category in &card.categories {
+            if category.kind != CategoryKind::Play {
+                continue;
+            }
+            if let Some(playstyle) = Playstyle::from_id(&category.value) {
+                *counts.entry(playstyle).or_insert(0) += 1;
+            }
         }
-        *counts.entry(card.playstyle).or_insert(0) += 1;
     }
     let mut best: Option<(Playstyle, usize)> = None;
     for (&playstyle, &count) in &counts {

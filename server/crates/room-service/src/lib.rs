@@ -22,7 +22,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use axum::Router;
-use rule_engine::data::{Catalog, Playstyle, SpecialtyKind};
+use rule_engine::data::{Catalog, CategoryKind, Playstyle};
 use tokio::sync::Mutex;
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
@@ -124,26 +124,45 @@ fn load_catalog() -> Result<Catalog, String> {
 ///
 /// 候选池允许小于满座需求（池不足时跨玩家重复），因此不要求英雄达到
 /// `SEAT_COUNT * CANDIDATE_COUNT` 张；只要至少有一张可用英雄，房间就能开局。
-/// 英雄卡不持有 `taxon`；`specialty` 的 `play:` 取值必须是合法玩法。
+/// 英雄卡不持有 `taxon`；`categories` 至少 1 条 `play:`，玩法取值必须合法，
+/// `prey:` / `host:` 节点必须在分类树中。
 ///
 /// # Errors
 ///
-/// 英雄卡为空，或任意英雄的 `play:` 关联不合法时返回错误文本。
+/// 英雄卡为空，或任意英雄的分类条目不合法时返回错误文本。
 fn ensure_hero_pool(catalog: &Catalog) -> Result<(), String> {
     let heroes: Vec<&rule_engine::data::HeroCard> = catalog.heroes.values().collect();
     if heroes.is_empty() {
         return Err("卡表没有英雄卡".to_string());
     }
     for hero in heroes {
-        for specialty in &hero.specialty {
-            if specialty.kind == SpecialtyKind::Play
-                && Playstyle::from_id(&specialty.value).is_none()
-            {
-                return Err(format!(
-                    "英雄卡 {} 的 specialty play:{} 不是合法玩法",
-                    hero.id, specialty.value
-                ));
+        let mut has_play = false;
+        for category in &hero.categories {
+            match category.kind {
+                CategoryKind::Play => {
+                    has_play = true;
+                    if Playstyle::from_id(&category.value).is_none() {
+                        return Err(format!(
+                            "英雄卡 {} 的 categories play:{} 不是合法玩法",
+                            hero.id, category.value
+                        ));
+                    }
+                }
+                CategoryKind::Prey | CategoryKind::Host => {
+                    if !catalog.taxonomy.contains(&category.value) {
+                        return Err(format!(
+                            "英雄卡 {} 的 categories 节点 {} 不在分类树中",
+                            hero.id, category.value
+                        ));
+                    }
+                }
             }
+        }
+        if !has_play {
+            return Err(format!(
+                "英雄卡 {} 的 categories 至少要有 1 条 play:",
+                hero.id
+            ));
         }
     }
     Ok(())
@@ -251,7 +270,7 @@ mod tests {
         CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON,
         ensure_hero_pool,
     };
-    use rule_engine::data::{Catalog, Specialty, SpecialtyKind};
+    use rule_engine::data::{Catalog, Category, CategoryKind};
 
     fn catalog() -> Catalog {
         Catalog::from_json(
@@ -274,11 +293,11 @@ mod tests {
     }
 
     #[test]
-    fn hero_pool_rejects_invalid_playstyle_specialty() {
+    fn hero_pool_rejects_invalid_play_category() {
         let mut catalog = catalog();
         let hero = catalog.heroes.values_mut().next().expect("应有英雄卡");
-        hero.specialty = vec![Specialty {
-            kind: SpecialtyKind::Play,
+        hero.categories = vec![Category {
+            kind: CategoryKind::Play,
             value: "not-a-playstyle".to_string(),
         }];
         let error = ensure_hero_pool(&catalog).expect_err("非法玩法关联必须拒绝启动");

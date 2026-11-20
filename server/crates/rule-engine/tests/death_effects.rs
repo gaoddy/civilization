@@ -7,7 +7,7 @@ mod common;
 
 use std::collections::BTreeMap;
 
-use common::{effects_of, minion, reborn_count, setup_with_gold};
+use common::{categories_for, effects_of, minion, reborn_count, setup_with_gold};
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
 use rule_engine::data::{Card, CardType, HeroCard, Playstyle, Skill, Token};
 use rule_engine::effects::Duration;
@@ -45,9 +45,8 @@ fn add_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(playstyle),
             subtype: None,
             level: 1,
             era: None,
@@ -73,8 +72,7 @@ fn mirror_as_hero(engine: &mut Engine, id: &str) {
         HeroCard {
             id: id.to_string(),
             card_type: CardType::Hero,
-            playstyle: card.playstyle,
-            specialty: card.specialty,
+            categories: card.categories,
             skills: card.skills,
         },
     );
