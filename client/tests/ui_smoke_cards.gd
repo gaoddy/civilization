@@ -381,6 +381,7 @@ func _ready() -> void:
     await _check_hand_fit()
     await _check_cover_art_inset()
     await _check_card_frame()
+    await _check_stat_plate()
     recruit.queue_free()
     _finish()
 
@@ -397,6 +398,23 @@ func _check_card_frame() -> void:
     _expect(frame.star_count == 5, "CardFrame 星数应等于星级")
     _expect(frame.mouse_filter == Control.MOUSE_FILTER_IGNORE, "卡框不应拦截鼠标")
     frame.queue_free()
+
+
+## 攻防底牌：记录类型、尺寸随字号、内含带描边的数字。
+func _check_stat_plate() -> void:
+    for kind in ["attack", "health"]:
+        var plate := StatPlate.create(kind, "4", 14, "Card" + kind.capitalize())
+        add_child(plate)
+        await get_tree().process_frame
+        _expect(plate.kind == kind, "底牌应记录类型")
+        _expect(plate.custom_minimum_size == Vector2(18, 18), "14 号字底牌应为 18×18")
+        var label := plate.find_child("Card" + kind.capitalize(), true, false)
+        _expect(label is Label and (label as Label).text == "4", "底牌应包含数字 Label")
+        _expect(
+            (label as Label).get_theme_constant("outline_size") >= 1,
+            "数字应有描边",
+        )
+        plate.queue_free()
 
 
 ## 手牌介绍不被截断：信息区向上扩展，字号缩到能放下全文；介绍不压名称与角标。
