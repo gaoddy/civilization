@@ -6,7 +6,7 @@
 //! 规则口径见 `docs/versions/v0.1/product/rules/keywords-and-mechanics.md`
 //! §3.2 与 §10。遍历顺序固定：座位升序、棋盘点顺序；不消耗随机流。
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::combat;
 use crate::effects::{Compare, Effect, EffectCtx, Op, Pick, Selector, Side, Trigger};
@@ -37,6 +37,48 @@ impl Engine {
         }
 
         state.auras = computed;
+    }
+
+    /// 只重算一个座位的棋盘光环。
+    ///
+    /// 光环只作用于来源同一玩家的棋盘，因此可以先移除该玩家棋盘实例的旧条目，
+    /// 再并入新计算结果；其他玩家的条目原样保留。
+    ///
+    /// 同时清理已不在任何未出局玩家棋盘上的陈旧条目：本座位刚出售或移除的随从
+    /// 实例已不在当前棋盘 id 集合内，若不清理会与全量重算的结果不一致。
+    pub fn recompute_auras_for(&mut self, state: &mut GameState, seat: Seat) {
+        let computed = {
+            let Some(player) = state.players.iter().find(|player| player.seat == seat) else {
+                return;
+            };
+            if player.eliminated {
+                BTreeMap::new()
+            } else {
+                self.player_auras(state, player)
+            }
+        };
+        let own_ids: BTreeSet<InstanceId> = state
+            .players
+            .iter()
+            .find(|player| player.seat == seat)
+            .map(|player| {
+                player
+                    .board
+                    .iter()
+                    .map(|minion| minion.instance_id)
+                    .collect()
+            })
+            .unwrap_or_default();
+        let live_ids: BTreeSet<InstanceId> = state
+            .players
+            .iter()
+            .filter(|player| !player.eliminated)
+            .flat_map(|player| player.board.iter().map(|minion| minion.instance_id))
+            .collect();
+        state
+            .auras
+            .retain(|id, _| !own_ids.contains(id) && live_ids.contains(id));
+        state.auras.extend(computed);
     }
 
     /// 某名玩家棋盘与其英雄卡产生的全部光环派生值。

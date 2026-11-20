@@ -653,3 +653,74 @@ fn non_aura_effects_reject_clustering_params_and_adjacent() {
         "adjacent 只能用于光环"
     );
 }
+
+#[test]
+fn incremental_recompute_matches_full_recompute() {
+    let (mut engine, mut state) = setup(23);
+    add_aura_source(
+        &mut engine,
+        "test-mech-aura",
+        Playstyle::Machine,
+        "Aura|ModifyStats|friendly:all:playstyle=machine|attack=1,health=1,duration=permanent",
+    );
+    place(&engine.catalog, &mut state, 0, 1, "test-mech-aura");
+    place(&engine.catalog, &mut state, 0, 2, "nanobot");
+    place(&engine.catalog, &mut state, 1, 3, "test-mech-aura");
+    place(&engine.catalog, &mut state, 1, 4, "nanobot");
+
+    engine.recompute_auras(&mut state);
+    let seat0_before: std::collections::BTreeMap<_, _> = state
+        .auras
+        .iter()
+        .filter(|(id, _)| {
+            state.players[0]
+                .board
+                .iter()
+                .any(|minion| minion.instance_id == **id)
+        })
+        .map(|(id, aura)| (*id, aura.clone()))
+        .collect();
+
+    // 只改座位 1：新增一个受光环影响的机械随从。
+    place(&engine.catalog, &mut state, 1, 5, "nanobot");
+    engine.recompute_auras_for(&mut state, 1);
+    let incremental = state.auras.clone();
+
+    engine.recompute_auras(&mut state);
+
+    assert_eq!(incremental, state.auras, "增量结果应与全量重算一致");
+    for (id, aura) in &seat0_before {
+        assert_eq!(
+            state.auras.get(id),
+            Some(aura),
+            "座位 0 的光环条目不应被座位 1 的重算改动"
+        );
+    }
+}
+
+#[test]
+fn incremental_recompute_drops_sold_minion_aura() {
+    let (mut engine, mut state) = setup(23);
+    add_aura_source(
+        &mut engine,
+        "test-mech-aura",
+        Playstyle::Machine,
+        "Aura|ModifyStats|friendly:all:playstyle=machine|attack=1,health=1,duration=permanent",
+    );
+    place(&engine.catalog, &mut state, 0, 1, "test-mech-aura");
+    place(&engine.catalog, &mut state, 0, 2, "nanobot");
+
+    engine.recompute_auras(&mut state);
+    assert!(state.auras.contains_key(&2), "出售前目标应有光环");
+
+    engine
+        .apply(&mut state, 0, Intent::SellMinion { minion: 2 })
+        .expect("出售应成功");
+    assert!(
+        !state.auras.contains_key(&2),
+        "出售后不应残留已离场实例的光环条目"
+    );
+    let incremental = state.auras.clone();
+    engine.recompute_auras(&mut state);
+    assert_eq!(incremental, state.auras, "出售后增量结果应与全量重算一致");
+}

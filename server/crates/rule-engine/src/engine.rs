@@ -224,7 +224,7 @@ impl Engine {
         intent: Intent,
     ) -> Result<Outcome, Reject> {
         let outcome = recruit::apply(self, state, seat, intent)?;
-        self.recompute_auras(state);
+        self.recompute_auras_for(state, seat);
         Ok(outcome)
     }
 
