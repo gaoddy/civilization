@@ -13,10 +13,7 @@ def expected_counts():
     segments = 0
     for path in paths:
         doc = validate_docs.parse_front_matter(path)
-        if "template" in doc:
-            raw = ";".join(renderer.instance_segments(doc)) or "[]"
-        else:
-            raw = doc["effects"]
+        raw = ";".join(renderer.instance_segments(doc)) or "[]"
         effects, _ = validate_docs.parse_effects(raw)
         segments += len(effects)
     return len(paths), segments
@@ -29,12 +26,18 @@ class AuditEffectsTest(unittest.TestCase):
         self.assertEqual(report.skill_count, count)
         self.assertEqual(sum(report.matrix.values()), segments)
     def test_times_if_without_times_is_reported(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            p = pathlib.Path(tmp) / "bad.md"
-            p.write_text("---\nid: bad\ntext: 战吼：成长\neffects: OnPlay|Growth|friendly:single|timesIf=human:2\n---\n")
-            self.assertTrue(any("timesIf" in v for v in audit_effects.audit(pathlib.Path(tmp)).violations))
+        violations = audit_effects.check_effect(
+            "OnPlay", "Growth", {"timesIf": "taxon=animalia:2"}, "friendly:single")
+        self.assertTrue(any("timesIf" in v for v in violations))
+
     def test_when_on_play_is_reported(self):
+        violations = audit_effects.check_effect(
+            "OnPlay", "Growth", {"times": "1", "when": "taxon=animalia"}, "self")
+        self.assertTrue(any("when" in v for v in violations))
+
+    def test_missing_template_is_reported(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = pathlib.Path(tmp) / "bad.md"
-            p.write_text("---\nid: bad\ntext: 战吼：成长\neffects: OnPlay|Growth|self|times=1,when=tribe=human\n---\n")
-            self.assertTrue(any("when" in v for v in audit_effects.audit(pathlib.Path(tmp)).violations))
+            p.write_text("---\nid: bad\ntext: 战吼：成长\n---\n", encoding="utf-8")
+            violations = audit_effects.audit(pathlib.Path(tmp)).violations
+            self.assertTrue(any("template" in v for v in violations))

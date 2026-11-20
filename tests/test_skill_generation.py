@@ -10,7 +10,6 @@ import audit_effects
 import gen_card_data
 import render_docs
 import skill_templates
-import skill_templates_propose as propose
 import validate_docs
 
 CONTENT = ROOT / "docs/versions/v0.1/product/content"
@@ -91,13 +90,11 @@ class GeneratorTemplateTest(unittest.TestCase):
     def setUp(self):
         self.renderer = skill_templates.Renderer()
 
-    def test_skill_entry_template_matches_legacy(self):
+    def test_skill_entry_requires_template(self):
         legacy = {"id": "x", "keyword": "deathrattle",
                   "effects": "OnDeath|Summon|self|token=baiyi,count=1"}
-        templated = {"id": "x", "keyword": "deathrattle",
-                     "template": "on-death-summon(token=baiyi,count=1)"}
-        self.assertEqual(gen_card_data.skill_entry(legacy, self.renderer),
-                         gen_card_data.skill_entry(templated, self.renderer))
+        with self.assertRaisesRegex(ValueError, "template"):
+            gen_card_data.skill_entry(legacy, self.renderer)
 
     def test_skill_text_template_matches_renderer(self):
         rendered = self.renderer.instance_text(
@@ -128,34 +125,6 @@ class ValidateTemplateTest(unittest.TestCase):
             {"id": "x", "template": "not-a-template", "_file": "x.md"}, {},
             self.renderer)
         self.assertTrue(any("模板不存在" in e for e in errors))
-
-
-class ProposeTest(unittest.TestCase):
-    def setUp(self):
-        self.renderer = skill_templates.Renderer()
-        self.templates = skill_templates.load_templates(CONTENT)
-
-    def test_fit_template_extracts_args(self):
-        skill = {"id": "x", "effects": "OnDeath|Summon|self|token=seedling,count=1",
-                 "text": "亡语：召唤一个 1/1 的幼苗"}
-        call = propose.fit_template(
-            self.templates["on-death-summon"], skill, self.renderer)
-        self.assertEqual(call.args, {"token": "seedling", "count": "1"})
-
-    def test_match_embedded_placeholder(self):
-        template = skill_templates.Template(
-            "t", "effect", "OnPlay", "Growth", "friendly:single",
-            "times=1,timesIf=playstyle:{playstyle}:2", "",
-            (skill_templates.ArgSpec("playstyle", "playstyle"),))
-        values = propose._match_segment(
-            template, "OnPlay|Growth|friendly:single|times=1,timesIf=playstyle:plant:2")
-        self.assertEqual(values, {"playstyle": "plant"})
-
-    def test_fit_rejects_text_mismatch(self):
-        skill = {"id": "x", "effects": "OnDeath|Summon|self|token=seedling,count=1",
-                 "text": "亡语：召唤一个幼苗"}
-        self.assertIsNone(propose.fit_template(
-            self.templates["on-death-summon"], skill, self.renderer))
 
 
 if __name__ == "__main__":

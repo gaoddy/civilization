@@ -386,13 +386,12 @@ def card_entry(doc):
 
 
 def skill_entry(doc, renderer=None):
-    if "template" in doc:
-        if renderer is None:
-            raise ValueError(f"{doc['id']}: 模板实例需要 renderer")
-        segments = renderer.instance_segments(doc)
-        effects = structured_effects(";".join(segments) if segments else "[]")
-    else:
-        effects = structured_effects(doc["effects"])
+    if "template" not in doc:
+        raise ValueError(f"{doc['id']}: 缺少 template 字段")
+    if renderer is None:
+        raise ValueError(f"{doc['id']}: 模板实例需要 renderer")
+    segments = renderer.instance_segments(doc)
+    effects = structured_effects(";".join(segments) if segments else "[]")
     return {
         "id": doc["id"],
         "keyword": doc.get("keyword"),

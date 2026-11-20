@@ -94,8 +94,15 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(self.renderer.text(call), "减伤 2：受到伤害时，减免 2 点伤害")
 
     def test_duration_suffix(self):
+        template = skill_templates.Template(
+            "t", "effect", "OnPlayEffect", "GrantKeyword", "friendly:single",
+            "keyword={keyword},duration={duration}",
+            "使一个友方随从获得{keyword}{duration.suffix}",
+            (skill_templates.ArgSpec("keyword", "keyword"),
+             skill_templates.ArgSpec("duration", "duration")))
+        self.renderer.templates["t"] = template
         call = skill_templates.TemplateCall(
-            "trigger-friendly-taunt", {"keyword": "taunt", "duration": "combat"})
+            "t", {"keyword": "taunt", "duration": "combat"})
         self.assertEqual(self.renderer.text(call), "使一个友方随从获得嘲讽直到回合结束")
 
     def test_multiple_calls_bind_args_per_template(self):

@@ -159,8 +159,8 @@ EXPECT_ERA = {"prehistoric": 63, "primitive": 60, "classical": 45, "feudal": 57,
               "industrial": 41, "modern": 96, "future": 47}
 EXPECT_LEVEL = {1: 35, 2: 52, 3: 59, 4: 60, 5: 55, 6: 28, 7: 20}
 SKILL_FIELDS = ["id"]
-SKILL_OPTIONAL_FIELDS = {"text", "effects", "template", "keyword",
-                         "cost", "uses_per_turn", "name", "match_text"}
+SKILL_OPTIONAL_FIELDS = {"text", "template", "keyword", "cost",
+                         "uses_per_turn", "name", "match_text"}
 MINION_FIELDS = ["id", "name", "card_type", "playstyle", "taxon", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "playstyle", "taxon",
@@ -767,7 +767,7 @@ def mechanism_errors(doc, skill_map):
         skill = skill_map.get(sid)
         if skill is None:
             continue
-        effects, parse_errors = parse_effects(skill.get("effects"))
+        effects, parse_errors = parse_effects(skill.get("_rendered_effects"))
         if parse_errors:
             continue
         for effect in effects:
@@ -1166,19 +1166,19 @@ def check_skills():
         unknown = set(skill) - set(SKILL_FIELDS) - SKILL_OPTIONAL_FIELDS - {"_file"}
         if unknown:
             fail(f"{name}: 未知字段 {sorted(unknown)}")
-        if "template" in skill:
-            for message in validate_skill_template(skill, templates, renderer):
-                fail(message)
-            try:
-                segments = renderer.instance_segments(skill)
-            except ValueError:
-                segments = ()
-            raw_effects = ";".join(segments) if segments else "[]"
-            text = renderer.instance_text(skill)
-        else:
-            raw_effects = skill.get("effects")
-            text = str(skill.get("text", ""))
+        if "template" not in skill:
+            fail(f"{name}: 缺少 template 字段")
+            continue
+        for message in validate_skill_template(skill, templates, renderer):
+            fail(message)
+        try:
+            segments = renderer.instance_segments(skill)
+        except ValueError:
+            segments = ()
+        raw_effects = ";".join(segments) if segments else "[]"
+        text = renderer.instance_text(skill)
         skill["_rendered_text"] = text
+        skill["_rendered_effects"] = raw_effects
         if not text.strip():
             fail(f"{name}: text 为空")
         keyword = skill.get("keyword")

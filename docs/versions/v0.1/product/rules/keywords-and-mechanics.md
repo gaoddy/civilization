@@ -298,7 +298,7 @@
 
 ### 9.4 数据语法
 
-技能实体用 `effects` 字段记录结构化效果（见[技能规范与数据](../content/skill-system.md) §2），单行 DSL：
+技能模板在构建期把参数展开为单行效果 DSL（见[技能规范与数据](../content/skill-system.md) §2.1），技能实例不手写 DSL。DSL 语法：
 
 ```
 <effect>[ ; <effect>...]
@@ -360,7 +360,7 @@
 - `OnActivate|Copy|self|from=hand,type=minion,to=hand`
 - `OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent`
 
-`effects` 是机器字段，不进入 `## 属性` 表；`## 效果` 仍由技能 `text` 渲染，与 `effects` 语义一致。卡牌不重复记录 `effects`——它们通过 `skills` 引用技能，效果由技能实体统一维护。
+DSL 是模板展开后的机器表示，不写在技能实例上，也不进入技能 `## 属性` 表；`## 效果` 显示实例 `text` 覆盖或模板渲染结果，与 DSL 语义一致。卡牌不重复记录效果——它们通过 `skills` 引用技能，效果由技能模板与实例参数统一维护。
 
 ## 10. 属性求值顺序
 

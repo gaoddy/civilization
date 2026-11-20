@@ -126,21 +126,17 @@ def audit(skills_dir):
     docs.sort(key=lambda item: item[0])
     renderer = None
     for skill_id, doc in docs:
-        if "template" in doc:
-            if renderer is None:
-                renderer = skill_templates.Renderer(
-                    pathlib.Path(skills_dir).parent)
-            try:
-                segments = renderer.instance_segments(doc)
-            except ValueError as exc:
-                violations.append(f"{skill_id}: {exc}")
-                continue
-            raw_effects = ";".join(segments) if segments else "[]"
-        else:
-            if "effects" not in doc:
-                violations.append(f"{skill_id}: 缺少 effects 字段")
-                continue
-            raw_effects = doc["effects"]
+        if "template" not in doc:
+            violations.append(f"{skill_id}: 缺少 template 字段")
+            continue
+        if renderer is None:
+            renderer = skill_templates.Renderer(pathlib.Path(skills_dir).parent)
+        try:
+            segments = renderer.instance_segments(doc)
+        except ValueError as exc:
+            violations.append(f"{skill_id}: {exc}")
+            continue
+        raw_effects = ";".join(segments) if segments else "[]"
         effects, errors = validate_docs.parse_effects(raw_effects)
         for message in errors:
             violations.append(f"{skill_id}: {message}")
