@@ -603,7 +603,7 @@ pub fn dominant_playstyle<'a>(
 mod tests {
     use super::*;
     use crate::embedded_catalog;
-    use rule_engine::state::{PendingChoice, Phase};
+    use rule_engine::state::{HandCard, PendingChoice, Phase};
 
     /// 棋盘目标。
     fn board_target(id: u64) -> TargetRef {
@@ -629,8 +629,9 @@ mod tests {
         state.pending.push_back(PendingChoice::Target {
             seat: 0,
             source: 1,
-            card_id: "clownfish".to_string(),
-            golden: false,
+            hand_card: HandCard::Minion(MinionInstance::new(&catalog, 1, "clownfish", false)),
+            hand_index: 0,
+            fire_ally_evolve: false,
         });
         (catalog, state)
     }

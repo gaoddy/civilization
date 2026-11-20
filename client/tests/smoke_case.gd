@@ -65,6 +65,16 @@ func _push_button(instance: Node, canvas_point: Vector2, pressed: bool) -> void:
     await get_tree().process_frame
 
 
+## 把一次按键按下推给页面（`Esc` 等单次按键）。
+func _push_key(instance: Node, keycode: Key) -> void:
+    var event := InputEventKey.new()
+    event.keycode = keycode
+    event.physical_keycode = keycode
+    event.pressed = true
+    instance.get_viewport().push_input(event, true)
+    await get_tree().process_frame
+
+
 ## 在画布坐标处用真实鼠标按下/松开事件点击。
 func _push_click(instance: Node, canvas_point: Vector2) -> void:
     await _push_motion(instance, canvas_point)

@@ -32,12 +32,13 @@ pub(crate) fn apply(
         ));
     }
 
-    // 有待选时：目标待选只允许 `ChooseTarget`，其余招募意图一律拒绝；
+    // 有待选时：目标待选只允许 `ChooseTarget` 与 `AbandonTarget`，其余招募意图一律拒绝；
     // 发现/进化待选只允许 `ChooseDiscover`，且不能手动 `EndRecruit`，其他招募意图照常执行。
     // 超时路径不经过本函数，由 `finish_recruit` 把未消费待选视为放弃并清空。
     if let Some(index) = pending_index(state, seat) {
         match (&state.pending[index], &intent) {
-            (PendingChoice::Target { .. }, Intent::ChooseTarget { .. }) => {}
+            (PendingChoice::Target { .. }, Intent::ChooseTarget { .. } | Intent::AbandonTarget) => {
+            }
             (
                 PendingChoice::Discover { .. } | PendingChoice::Evolve { .. },
                 Intent::ChooseDiscover { .. },
@@ -103,6 +104,35 @@ pub(crate) fn apply(
         Intent::EndRecruit => unreachable!("EndRecruit 在分派前处理"),
         Intent::ChooseDiscover { choice } => choose_discover(engine, state, seat, choice),
         Intent::ChooseTarget { target } => choose_target(engine, state, seat, target),
+        Intent::AbandonTarget => abandon_target(state, seat),
+    }
+}
+
+/// 金色随从从手牌打出并成功入场：发放一张「三连奖励」效果牌。
+///
+/// 星级在合成来源卡的基础上 +1、封顶 6 星，与玩家时代无关。
+/// 战吼带目标时由 [`choose_target`] 在目标结算后调用；放弃时不发放。
+fn grant_triple_reward(engine: &Engine, state: &mut GameState, seat: Seat, hand_card: &HandCard) {
+    if !hand_card.golden() {
+        return;
+    }
+    let Some(level) = engine
+        .catalog
+        .cards
+        .get(hand_card.card_id())
+        .and_then(|card| card.level.checked_add(1))
+        .map(|level| level.min(6))
+    else {
+        return;
+    };
+    let reward_id = state.next_instance_id;
+    state.next_instance_id = reward_id.saturating_add(1);
+    if let Some(player) = state.players.get_mut(usize::from(seat)) {
+        player.hand.push(HandCard::Effect {
+            instance_id: reward_id,
+            card_id: crate::triple::REWARD_CARD_ID.to_string(),
+            reward_level: Some(level),
+        });
     }
 }
 
@@ -623,12 +653,6 @@ fn play_card(
             minion.cannot_attack = false;
             let instance_id = minion.instance_id;
             let golden = minion.golden;
-            let source_star = engine
-                .catalog
-                .cards
-                .get(minion.card_id.as_str())
-                .and_then(|card| card.level.checked_add(1))
-                .map(|level| level.min(6));
             let ctx = EffectCtx {
                 seat,
                 source: Some(instance_id),
@@ -648,6 +672,13 @@ fn play_card(
             // 玩家选择结算完再触发 OnAllyEvolve；战吼带出的效果牌与响应在本次
             // 意图内同步结算，不跨意图排队。
             engine.register_evolve(state, seat, instance_id);
+            let evolve_registered = state.pending.iter().any(|pending| {
+                matches!(
+                    pending,
+                    PendingChoice::Evolve { seat: pending_seat, source, .. }
+                        if *pending_seat == seat && *source == instance_id
+                )
+            });
 
             // 战吼需要单一目标时改为先入场、再推入目标待选：合法池按入场后的棋盘
             // 判定，因此池内包含刚入场的这个随从本身；候选为空时战吼直接落空。
@@ -657,50 +688,33 @@ fn play_card(
                 && !engine
                     .target_candidates(state, &effects, &ctx, false)
                     .is_empty();
-            let mut events = if has_candidates {
+            if has_candidates {
+                // 待选期间的入场副作用（金色奖励、三连、入场观察者）推迟到选定
+                // 目标之后结算；放弃时只需撤回入场本身，不留残余效果。
                 state.pending.push_back(PendingChoice::Target {
                     seat,
                     source: instance_id,
-                    card_id: hand_card.card_id().to_string(),
-                    golden: hand_card.golden(),
+                    hand_card,
+                    hand_index,
+                    fire_ally_evolve: !evolve_registered,
                 });
-                Vec::new()
-            } else {
-                engine.fire(
-                    state,
-                    Trigger::OnPlay,
-                    EffectCtx {
-                        seat,
-                        source: Some(instance_id),
-                        target,
-                        event_target: None,
-                        golden: hand_card.golden(),
-                        discover_level: None,
-                    },
-                )
-            };
-            // 金色随从从手牌打出并成功入场：发放一张「三连奖励」效果牌。
-            // 星级在合成来源卡的基础上 +1、封顶 6 星，与玩家时代无关。
-            if golden && let Some(level) = source_star {
-                let reward_id = state.next_instance_id;
-                state.next_instance_id = reward_id.saturating_add(1);
-                if let Some(player) = state.players.get_mut(usize::from(seat)) {
-                    player.hand.push(HandCard::Effect {
-                        instance_id: reward_id,
-                        card_id: crate::triple::REWARD_CARD_ID.to_string(),
-                        reward_level: Some(level),
-                    });
-                }
+                return Ok(Outcome::empty());
             }
+
+            let mut events = engine.fire(
+                state,
+                Trigger::OnPlay,
+                EffectCtx {
+                    seat,
+                    source: Some(instance_id),
+                    target,
+                    event_target: None,
+                    golden,
+                    discover_level: None,
+                },
+            );
+            grant_triple_reward(engine, state, seat, &hand_card);
             events.extend(engine.check_triple(state, seat));
-            // 三连可能把刚入场的随从合并掉：此时目标待选失去来源，视同战吼落空。
-            state.pending.retain(|pending| {
-                !matches!(pending, PendingChoice::Target { source, .. } if *source == instance_id)
-                    || state.players[usize::from(seat)]
-                        .board
-                        .iter()
-                        .any(|minion| minion.instance_id == instance_id)
-            });
             engine.fire_evolve_after_enter(state, seat, instance_id);
             Ok(Outcome::with(events))
         }
@@ -993,7 +1007,7 @@ fn pending_index(state: &GameState, seat: Seat) -> Option<usize> {
 
 /// `ChooseTarget`：为队首的目标待选指定一个本人区域内的目标，随后结算该战吼。
 ///
-/// 目标待选没有「取消」：候选非空时玩家必须选定一个。
+/// 选定后补做被推迟的入场副作用：金色奖励、三连与入场观察者。
 fn choose_target(
     engine: &mut Engine,
     state: &mut GameState,
@@ -1008,8 +1022,8 @@ fn choose_target(
     })?;
     let PendingChoice::Target {
         source,
-        card_id,
-        golden,
+        hand_card,
+        fire_ally_evolve,
         ..
     } = state.pending[index].clone()
     else {
@@ -1020,12 +1034,13 @@ fn choose_target(
     };
     check_target_zone(state, seat, Some(target))?;
 
+    let card_id = hand_card.card_id().to_string();
     let ctx = EffectCtx {
         seat,
         source: Some(source),
         target: Some(target.id),
         event_target: None,
-        golden,
+        golden: hand_card.golden(),
         discover_level: None,
     };
     // 与出牌时的预检同源：目标必须在效果的合法池内（core-rules §4 补充返回码
@@ -1039,12 +1054,57 @@ fn choose_target(
     )?;
 
     state.pending.remove(index);
-    Ok(Outcome::with(engine.fire_card(
-        state,
-        &card_id,
-        Trigger::OnPlay,
-        ctx,
-    )))
+    let mut events = engine.fire_card(state, &card_id, Trigger::OnPlay, ctx);
+    grant_triple_reward(engine, state, seat, &hand_card);
+    events.extend(engine.check_triple(state, seat));
+    if fire_ally_evolve {
+        engine.fire_evolve_after_enter(state, seat, source);
+    }
+    Ok(Outcome::with(events))
+}
+
+/// `AbandonTarget`：放弃队首目标待选，撤销本次出牌。
+///
+/// 来源随从离场，入场前的原手牌按原下标退回；战吼不结算，被推迟的金色奖励、
+/// 三连与入场观察者都不发生。出牌本身不消耗金币，因此不涉及退款。
+fn abandon_target(state: &mut GameState, seat: Seat) -> Result<Outcome, Reject> {
+    let index = pending_index(state, seat).ok_or_else(|| {
+        Reject::new(
+            RejectCode::InvalidChoice,
+            format!("座位 {seat} 没有待选目标"),
+        )
+    })?;
+    let PendingChoice::Target {
+        source,
+        hand_card,
+        hand_index,
+        ..
+    } = state.pending[index].clone()
+    else {
+        return Err(Reject::new(
+            RejectCode::InvalidChoice,
+            format!("座位 {seat} 最靠前的待选不是目标选择"),
+        ));
+    };
+    let player = state
+        .players
+        .get_mut(usize::from(seat))
+        .ok_or_else(|| Reject::new(RejectCode::NoSuchMinion, format!("座位 {seat} 不存在")))?;
+    let position = player
+        .board
+        .iter()
+        .position(|minion| minion.instance_id == source)
+        .ok_or_else(|| {
+            Reject::new(
+                RejectCode::NoSuchMinion,
+                format!("待选来源随从 {source} 不在棋盘上"),
+            )
+        })?;
+    player.board.remove(position);
+    let at = usize::from(hand_index).min(player.hand.len());
+    player.hand.insert(at, hand_card);
+    state.pending.remove(index);
+    Ok(Outcome::empty())
 }
 
 /// `ChooseDiscover` 的只读预检：本座位有待选、下标合法；发现还需要手牌有空位。

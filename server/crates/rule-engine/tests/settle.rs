@@ -10,7 +10,7 @@ use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::rng::RngStreams;
 use rule_engine::settle::{Pairing, damage_formula, forfeit, ghost_board, pair_round, rank_of};
-use rule_engine::state::{Phase, Seat};
+use rule_engine::state::{HandCard, PendingChoice, Phase, Seat};
 
 /// 往目录里插入一张合成随从卡，避免测试依赖真实卡面数值。
 fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, health: i32) {
@@ -280,6 +280,31 @@ fn finish_recruit_after_timeout_enters_combat() {
             turn: state.turn,
         }]
     );
+}
+
+#[test]
+fn finish_recruit_returns_pending_target_card_to_hand() {
+    // 超时时目标待选视为放弃：来源随从离场，原牌退回手牌。
+    let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
+    state.phase = Phase::Recruit;
+    state.players[0]
+        .board
+        .push(minion(&engine.catalog, 101, "bisheng"));
+    state.pending.push_back(PendingChoice::Target {
+        seat: 0,
+        source: 101,
+        hand_card: HandCard::Minion(minion(&engine.catalog, 101, "bisheng")),
+        hand_index: 0,
+        fire_ally_evolve: true,
+    });
+
+    engine.finish_recruit(&mut state).unwrap();
+
+    assert!(state.pending.is_empty(), "待选被清空");
+    assert!(state.players[0].board.is_empty(), "来源随从离场");
+    assert_eq!(state.players[0].hand.len(), 1);
+    assert_eq!(state.players[0].hand[0].card_id(), "bisheng");
+    assert_eq!(state.players[0].hand[0].instance_id(), 101);
 }
 
 #[test]

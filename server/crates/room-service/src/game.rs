@@ -1475,6 +1475,7 @@ fn map_intent(intent: protocol::intents::Intent) -> Result<EngineIntent, ErrorCo
         Protocol::ChooseTarget { target } => Ok(EngineIntent::ChooseTarget {
             target: map_target(target)?,
         }),
+        Protocol::AbandonTarget => Ok(EngineIntent::AbandonTarget),
         Protocol::RearrangeBoard {
             from_index,
             to_index,

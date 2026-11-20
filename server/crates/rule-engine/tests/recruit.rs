@@ -7,7 +7,9 @@ use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
-use rule_engine::state::{GameState, HandCard, InstanceId, PendingChoice, Phase, Seat};
+use rule_engine::state::{
+    GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase, Seat,
+};
 
 /// 棋盘目标：测试里的意图目标统一指向本人棋盘。
 fn board_target(id: InstanceId) -> TargetRef {
@@ -1163,8 +1165,9 @@ fn choose_target_accepts_hand_target_and_copies_selected() {
     state.pending.push_back(PendingChoice::Target {
         seat: 0,
         source: 9_000,
-        card_id: "parrot".to_string(),
-        golden: false,
+        hand_card: HandCard::Minion(minion(&catalog, 9_000, "parrot")),
+        hand_index: 0,
+        fire_ally_evolve: true,
     });
 
     engine
@@ -1222,6 +1225,161 @@ fn play_battlecry_with_target_applies_effect() {
     assert_eq!(target.stats.attack.growth, 1, "战吼成长命中目标");
     assert_eq!(state.players[0].board.len(), 2, "打出的随从进入棋盘");
     assert!(state.players[0].hand.is_empty());
+}
+
+#[test]
+fn abandon_target_returns_card_to_original_slot() {
+    let (mut engine, mut state) = turn_started(45);
+    put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
+    {
+        let hand = &mut state.players[0].hand;
+        hand.push(HandCard::Minion(minion(&engine.catalog, 100, "amoeba")));
+        hand.push(HandCard::Minion(minion(
+            &engine.catalog,
+            101,
+            BATTLECRY_TARGET,
+        )));
+        hand.push(HandCard::Minion(minion(&engine.catalog, 102, "e-coli")));
+    }
+    let before = state_hash(&state);
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 1,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("打出随从应成功");
+
+    assert_eq!(state.players[0].board.len(), 2, "随从先入场");
+    assert!(
+        matches!(state.pending.front(), Some(PendingChoice::Target { .. })),
+        "战吼推入目标待选"
+    );
+
+    engine
+        .apply(&mut state, 0, Intent::AbandonTarget)
+        .expect("放弃目标待选应成功");
+
+    assert!(state.pending.is_empty(), "待选被消费");
+    assert_eq!(state.players[0].board.len(), 1, "来源随从离场");
+    let hand = &state.players[0].hand;
+    assert_eq!(hand.len(), 3);
+    assert_eq!(hand[0].card_id(), "amoeba");
+    assert_eq!(hand[1].card_id(), BATTLECRY_TARGET, "回到原手牌位置");
+    assert_eq!(hand[2].card_id(), "e-coli");
+    assert_eq!(hand[1].instance_id(), 101, "原实例原样退回");
+    assert_eq!(state_hash(&state), before, "放弃后状态与出牌前一致");
+}
+
+#[test]
+fn abandon_target_skips_golden_reward() {
+    let (mut engine, mut state) = turn_started(46);
+    put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(MinionInstance::new(
+            &engine.catalog,
+            101,
+            BATTLECRY_TARGET,
+            true,
+        )));
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("打出金色随从应成功");
+    assert!(
+        state.players[0]
+            .hand
+            .iter()
+            .all(|card| card.reward_level().is_none()),
+        "待选期间不发放奖励牌"
+    );
+
+    engine
+        .apply(&mut state, 0, Intent::AbandonTarget)
+        .expect("放弃目标待选应成功");
+
+    let hand = &state.players[0].hand;
+    assert_eq!(hand.len(), 1, "只退回原牌，不产生奖励牌");
+    assert!(hand[0].golden(), "金色状态保留");
+    assert_eq!(hand[0].card_id(), BATTLECRY_TARGET);
+    assert_eq!(state.players[0].board.len(), 1);
+}
+
+#[test]
+fn choose_target_grants_deferred_golden_reward() {
+    let (mut engine, mut state) = turn_started(47);
+    put_champion(&engine, &mut state, 0, 9_000, "adam-smith");
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(MinionInstance::new(
+            &engine.catalog,
+            101,
+            BATTLECRY_TARGET,
+            true,
+        )));
+    let expected_level = (engine.catalog.cards[BATTLECRY_TARGET].level + 1).min(6);
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("打出金色随从应成功");
+    assert!(
+        state.players[0]
+            .hand
+            .iter()
+            .all(|card| card.reward_level().is_none()),
+        "待选期间不发放奖励牌"
+    );
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget {
+                target: board_target(9_000),
+            },
+        )
+        .expect("选定目标应成功");
+
+    assert!(state.pending.is_empty(), "待选被消费");
+    let reward = state.players[0]
+        .hand
+        .iter()
+        .find(|card| card.reward_level().is_some())
+        .expect("目标结算后发放奖励牌");
+    assert_eq!(reward.reward_level(), Some(expected_level));
+}
+
+#[test]
+fn abandon_target_without_pending_rejects() {
+    let (mut engine, mut state) = turn_started(48);
+    let before = state_hash(&state);
+    let reject = engine
+        .apply(&mut state, 0, Intent::AbandonTarget)
+        .unwrap_err();
+    assert_eq!(reject.code, RejectCode::InvalidChoice);
+    assert_eq!(state_hash(&state), before, "拒绝时不改变状态");
 }
 
 #[test]
@@ -1499,9 +1657,11 @@ fn target_pending(state: &GameState, seat: Seat) -> Option<(InstanceId, String, 
         PendingChoice::Target {
             seat: pending_seat,
             source,
-            card_id,
-            golden,
-        } if *pending_seat == seat => Some((*source, card_id.clone(), *golden)),
+            hand_card,
+            ..
+        } if *pending_seat == seat => {
+            Some((*source, hand_card.card_id().to_string(), hand_card.golden()))
+        }
         _ => None,
     })
 }

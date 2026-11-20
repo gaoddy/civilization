@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "id": "c-16",
+  "type": "Intent",
+  "ts": "2026-11-20T10:00:00Z",
+  "roomId": "r-1",
+  "playerId": "p-3",
+  "payload": {
+    "clientIntentId": "ci-16",
+    "intent": {
+      "kind": "AbandonTarget"
+    }
+  }
+}

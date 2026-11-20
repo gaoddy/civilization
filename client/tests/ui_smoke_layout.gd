@@ -27,8 +27,8 @@ const PAGES := [
     },
     {
         "path": "res://scenes/game.tscn",
-        "children": 6,
-        "direct_names": ["MinionDetailLayer", "ReportLayer", "ChooserOverlay", "FirstGameGuide"],
+        "children": 7,
+        "direct_names": ["AimLayer", "MinionDetailLayer", "ReportLayer", "ChooserOverlay", "FirstGameGuide"],
         "deep_names": ["CenterPanel", "StatusLabel", "PlayersPanel"],
     },
     {

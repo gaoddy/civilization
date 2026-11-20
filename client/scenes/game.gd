@@ -15,10 +15,8 @@ const COMBAT_TAIL_MS := 2000
 
 # 页面级状态与门槛。
 var _intent_counter := 0
-## 主动技能的目标浮层：待发意图与服务端下发的候选目标。
-var _target_intent: Dictionary = {}
-var _target_candidates: Array = []
-var _target_title := "ui.game.target.title"
+## 技能瞄准期间缓存的 `UseHeroPower` 意图；命中候选后补 `target` 再发出。
+var _aim_skill_intent: Dictionary = {}
 var _elapsed := 0.0
 var _deadline_expired := false
 var _view_stale := false
@@ -51,6 +49,9 @@ var _report_layer: Control
 
 # 随从详情：覆盖全屏但不拦截输入，层级位于内容与战报之上、选择浮层之下。
 var _detail: GameDetailLayer
+
+# 技能瞄准：弧线与候选标记，位于战报之上、选择浮层之下；本身不拦截输入。
+var _aim: GameAimLayer
 
 # 本局卡牌图鉴覆盖层：打开时盖住对局但不切换场景，关闭后对局状态原样保留。
 var _gallery: CardGallery
@@ -136,6 +137,13 @@ func _build() -> void:
     add_child(_report_layer)
     _players_panel.report_layer = _report_layer
 
+    _aim = GameAimLayer.new()
+    _aim.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _aim.target_chosen.connect(_on_aim_target_chosen)
+    _aim.target_abandoned.connect(_on_aim_target_abandoned)
+    _aim.aim_cancelled.connect(_on_aim_cancelled)
+    add_child(_aim)
+
     _overlay = Control.new()
     _overlay.name = "ChooserOverlay"
     _overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -174,6 +182,7 @@ func _build_center() -> VBoxContainer:
 
     _hero_row = GameHeroRow.new()
     _hero_row.hero_power_pressed.connect(_on_hero_power)
+    _hero_row.hero_power_down.connect(_on_hero_power_down)
     center.add_child(_hero_row)
 
     _hand_row = GameHandRow.new()
@@ -234,6 +243,7 @@ func _refresh() -> void:
     _hand_row.refresh(state)
 
     _refresh_overlay(self_state, recruited)
+    _refresh_aim(self_state, phase, recruited)
     _refresh_connection()
     _guide.set_phase(phase, self_state)
 
@@ -369,26 +379,43 @@ func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
     var phase := str(GameStore.view.get("phase", GameStore.phase))
     # 待选只在招募阶段可操作：跨回合保留的发现/进化待选不能盖在战斗演示上。
     if _view_stale or _deadline_expired or recruited or phase != Protocol.PHASE_RECRUIT:
-        _target_intent = {}
-        _target_candidates = []
         _overlay.visible = false
+    elif not choices.is_empty() and str(choices[0].get("kind", "")) != "target":
+        _build_choice_overlay(choices[0])
     else:
-        var head: Dictionary = choices[0] if not choices.is_empty() else {}
-        if str(head.get("kind", "")) == "target":
-            # 服务端目标待选优先：丢弃英雄技能的客户端目标态，改为选目标结算战吼。
-            _target_intent = {}
-            _target_candidates = []
-            _build_target_pending_overlay(head, self_state)
-        elif not _target_intent.is_empty():
-            _build_target_overlay(self_state)
-        elif not choices.is_empty():
-            _build_choice_overlay(choices[0])
-        else:
-            _overlay.visible = false
+        # 目标待选由瞄准层承接，不再构建候选弹层。
+        _overlay.visible = false
     # 浮层可见性只在本函数收口；打开浮层时同步遮住详情层与图鉴。
     _detail.blocked = _overlay.visible
     if _overlay.visible:
         _close_gallery()
+
+
+## 瞄准层的待选状态：视图过期、倒计时归零、已结束招募、非招募阶段或离线时关闭；
+## 否则以服务端下发的目标待选为准，选目标与放弃都直接发意图，不等本地确认。
+func _refresh_aim(self_state: Dictionary, phase: String, recruited: bool) -> void:
+    var pending: Array = self_state.get("pendingChoices", [])
+    var head: Dictionary = pending[0] if not pending.is_empty() else {}
+    var blocked := (
+        _view_stale
+        or _deadline_expired
+        or recruited
+        or phase != Protocol.PHASE_RECRUIT
+        or not Net.is_open()
+    )
+    if not blocked and str(head.get("kind", "")) == "target":
+        _close_gallery()
+        _aim_skill_intent = {}
+        _aim.begin_pending(
+            str(head.get("sourceMinionId", "")), Array(head.get("candidates", []))
+        )
+    elif _aim.skill_active():
+        if blocked:
+            _aim_skill_intent = {}
+            _aim.clear()
+    else:
+        _aim.clear()
+    _detail.blocked = _overlay.visible or _aim.aiming()
 
 
 func _overlay_frame(title: String, parent: VBoxContainer) -> void:
@@ -443,99 +470,6 @@ func _build_choice_overlay(choice: Dictionary) -> void:
     _overlay_frame(tr("ui.game.overlay.title"), box)
 
 
-## 战吼目标待选：按服务端下发的候选渲染，按区域分组；没有取消与跳过（必须选一个）。
-func _build_target_pending_overlay(choice: Dictionary, self_state: Dictionary) -> void:
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", UITheme.space("space-md"))
-    box.add_child(UI.label(tr("ui.game.overlay.battlecry_hint"), UITheme.font_size("font-body")))
-    var source_id := str(choice.get("sourceMinionId", ""))
-    _add_candidates(box, Array(choice.get("candidates", [])), self_state, _on_choose_target, source_id)
-    _overlay_frame(tr("ui.game.overlay.battlecry_title"), box)
-
-
-## 主动技能的目标浮层：候选由服务端下发；取消不发意图。
-func _build_target_overlay(self_state: Dictionary) -> void:
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", UITheme.space("space-md"))
-    box.add_child(UI.label(tr(_target_title), UITheme.font_size("font-body")))
-    _add_candidates(box, _target_candidates, self_state, _on_target_chosen, "")
-    var cancel := UI.styled_button(tr("ui.game.target.cancel"), "default", 36)
-    cancel.pressed.connect(_on_target_cancel)
-    box.add_child(cancel)
-    _overlay_frame(tr("ui.game.target.title"), box)
-
-
-## 按区域分组渲染候选；`accent_id` 为需要高亮的来源随从（战吼来源）。
-func _add_candidates(
-    box: VBoxContainer,
-    candidates: Array,
-    self_state: Dictionary,
-    on_pick: Callable,
-    accent_id: String,
-) -> void:
-    var current_zone := ""
-    for candidate in candidates:
-        if not (candidate is Dictionary):
-            continue
-        var zone := str(candidate.get("zone", ""))
-        if zone != current_zone:
-            current_zone = zone
-            box.add_child(
-                UI.label(tr("ui.game.target.zone.%s" % zone), UITheme.font_size("font-body"))
-            )
-        var target_id := str(candidate.get("id", ""))
-        var highlighted := accent_id != "" and target_id == accent_id
-        var prefix := "★ " if highlighted else ""
-        var button := UI.styled_button(
-            "%s%s" % [prefix, _target_text(candidate, self_state)], "slot", 40
-        )
-        if highlighted:
-            button.add_theme_color_override("font_color", UITheme.color("color-accent"))
-        button.pressed.connect(on_pick.bind(candidate))
-        box.add_child(button)
-
-
-## 候选目标的展示文本：棋盘/手牌随从显示攻防，效果牌与商店显示费用。
-func _target_text(candidate: Dictionary, self_state: Dictionary) -> String:
-    var zone := str(candidate.get("zone", ""))
-    var target_id := str(candidate.get("id", ""))
-    if zone == "board":
-        for minion in self_state.get("board", []):
-            if str(minion.get("minionId", "")) == target_id:
-                return "%s  %d/%d" % [
-                    CardDB.display_name(str(minion.get("cardId", ""))),
-                    int(minion.get("attack", 0)),
-                    int(minion.get("health", 0)),
-                ]
-    elif zone == "hand":
-        for card in self_state.get("hand", []):
-            if str(card.get("instanceId", "")) == target_id:
-                return _hand_target_text(card)
-    elif zone == "shop":
-        for slot in self_state.get("shop", []):
-            if str(slot.get("instanceId", "")) == target_id:
-                return _cost_target_text(str(slot.get("cardId", "")))
-    return target_id
-
-
-func _hand_target_text(card: Dictionary) -> String:
-    var card_id := str(card.get("cardId", ""))
-    if card.get("attack") != null:
-        return "%s  %d/%d" % [
-            CardDB.display_name(card_id),
-            int(card.get("attack", 0)),
-            int(card.get("health", 0)),
-        ]
-    return _cost_target_text(card_id)
-
-
-func _cost_target_text(card_id: String) -> String:
-    return "%s  %s" % [
-        CardDB.display_name(card_id),
-        tr("ui.game.detail.cost_value") % CardDB.display_cost(card_id),
-    ]
-
-
 # ── 意图 ──────────────────────────────────────────────────────────────────
 
 func _send_intent(intent: Dictionary) -> String:
@@ -549,13 +483,6 @@ func _send_intent(intent: Dictionary) -> String:
         _top_bar.set_status(tr("ui.game.status.intent_not_sent"), UITheme.color("color-text-dim"))
     return intent_id
 
-
-func _on_choose_target(target: Dictionary) -> void:
-    if _deadline_expired or _view_stale:
-        return
-    if str(GameStore.view.get("phase", GameStore.phase)) != Protocol.PHASE_RECRUIT:
-        return
-    _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "target": target})
 
 
 ## 商店卡落在手牌带上：买牌只入手牌，不涉及目标；落点复查与其它拖拽同源。
@@ -675,18 +602,25 @@ func _on_hero_power() -> void:
     var skill_id := str(power.get("skillId", ""))
     if skill_id == "":
         return
-    var intent := {"kind": Protocol.INTENT_USE_HERO_POWER, "skillId": skill_id}
-    if not bool(power.get("requiresTarget", false)):
-        _send_intent(intent)
+    # 需要目标的技能由按下事件进入瞄准，抬起由瞄准层接管，不走 `pressed`。
+    if bool(power.get("requiresTarget", false)):
         return
+    _send_intent({"kind": Protocol.INTENT_USE_HERO_POWER, "skillId": skill_id})
+
+
+## 技能按钮按下：需要目标时从按钮矩形起瞄准；候选为空说明技能不可用，不发意图。
+func _on_hero_power_down() -> void:
+    var power: Dictionary = GameStore.view.get("self", {}).get("heroPower", {})
+    if not bool(power.get("requiresTarget", false)) or not _aim_submit_allowed():
+        return
+    var skill_id := str(power.get("skillId", ""))
     var candidates := Array(power.get("targetCandidates", []))
-    if candidates.is_empty():
-        # 需要目标却没有候选：技能不可用，不发意图。
+    if skill_id == "" or candidates.is_empty():
         return
-    _target_intent = intent
-    _target_candidates = candidates
-    _target_title = "ui.game.target.hero_power_title"
-    _refresh_overlay_now()
+    _aim_skill_intent = {"kind": Protocol.INTENT_USE_HERO_POWER, "skillId": skill_id}
+    _detail.blocked = true
+    _detail.hide_panel()
+    _aim.begin_skill(_hero_row.power_rect(), candidates)
 
 
 func _on_end_recruit() -> void:
@@ -699,26 +633,43 @@ func _on_choose(choice_index: int) -> void:
     _send_intent({"kind": Protocol.INTENT_CHOOSE_DISCOVER, "choice": choice_index})
 
 
-func _on_target_chosen(target: Dictionary) -> void:
-    if _target_intent.is_empty():
+## 瞄准提交：技能模式补 `target` 发 `UseHeroPower`；待选模式发 `ChooseTarget`。
+func _on_aim_target_chosen(target: Dictionary) -> void:
+    if not _aim_submit_allowed():
         return
-    var intent := _target_intent.duplicate()
-    intent["target"] = target
-    _target_intent = {}
-    _target_candidates = []
-    _send_intent(intent)
-    _refresh_overlay_now()
+    if not _aim_skill_intent.is_empty():
+        var intent := _aim_skill_intent.duplicate()
+        _aim_skill_intent = {}
+        intent["target"] = target
+        _send_intent(intent)
+        _detail.blocked = _overlay.visible
+        return
+    _send_intent({"kind": Protocol.INTENT_CHOOSE_TARGET, "target": target})
+    _detail.blocked = _overlay.visible
 
 
-func _on_target_cancel() -> void:
-    _target_intent = {}
-    _target_candidates = []
-    _refresh_overlay_now()
+## 战吼待选放弃：服务端撤销本次入场，原牌退回原手牌位置。
+func _on_aim_target_abandoned() -> void:
+    if not _aim_submit_allowed():
+        return
+    _send_intent({"kind": Protocol.INTENT_ABANDON_TARGET})
+    _detail.blocked = _overlay.visible
 
 
-func _refresh_overlay_now() -> void:
-    var self_state: Dictionary = GameStore.view.get("self", {})
-    _refresh_overlay(self_state, bool(self_state.get("recruited", false)))
+## 技能瞄准取消：只清本地待发意图，不发 `AbandonTarget`。
+func _on_aim_cancelled() -> void:
+    _aim_skill_intent = {}
+    _detail.blocked = _overlay.visible
+
+
+## 选目标与放弃的前提：招募阶段、视图新鲜、倒计时未归零、连接可用。
+func _aim_submit_allowed() -> bool:
+    return (
+        str(GameStore.view.get("phase", GameStore.phase)) == Protocol.PHASE_RECRUIT
+        and not _view_stale
+        and not _deadline_expired
+        and Net.is_open()
+    )
 
 
 # ── 错误与结算 ────────────────────────────────────────────────────────────

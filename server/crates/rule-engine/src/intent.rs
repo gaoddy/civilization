@@ -7,7 +7,7 @@ use crate::effects::TargetRef;
 use crate::events::GameEvent;
 use crate::state::InstanceId;
 
-/// 招募阶段玩家可以提交的十一种意图。
+/// 招募阶段玩家可以提交的十二种意图。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Intent {
     /// 购买商店槽位；买到的牌进入手牌，不需要目标。
@@ -40,6 +40,8 @@ pub enum Intent {
     ChooseDiscover { choice: u8 },
     /// 为队首的目标待选指定一个本人区域内的目标。
     ChooseTarget { target: TargetRef },
+    /// 放弃队首的目标待选：撤销该次出牌，原牌退回手牌，战吼不结算。
+    AbandonTarget,
 }
 
 /// 意图被拒绝的原因，与核心规则 §3 的返回码一一对应。

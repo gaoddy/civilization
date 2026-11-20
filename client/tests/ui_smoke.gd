@@ -48,8 +48,10 @@ func _ready() -> void:
     await _check_summon_inserts_at_alive_rank()
     await _check_stale_combat_not_shown()
     await _check_combat_placeholder_cleared()
-    await _check_target_pending_overlay()
-    await _check_choose_target_sends_intent()
+    await _check_target_pending_aim()
+    await _check_pending_aim_abandon()
+    await _check_skill_aim()
+    await _check_effect_drag_aim_visual()
     await _check_overlay_hidden_in_combat()
     await _check_last_combat_cleared_on_next_recruit()
     await _check_recruited_gate()
@@ -437,36 +439,6 @@ func _check_game() -> void:
         gold_tile != null and str(gold_tile.text).contains("6"),
         "英雄行应显示金币 6，实际：%s" % ("缺失" if gold_tile == null else gold_tile.text),
     )
-    # 重新显示详情，再打开选择浮层，确认浮层会隐藏详情层。
-    if detail != null and card != null:
-        await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
-        _expect(detail.is_visible_in_tree(), "打开浮层前详情面板应可见")
-    var power = instance.find_child("HeroPowerButton", true, false)
-    if power == null:
-        _expect(false, "对局场景缺少 HeroPowerButton")
-    else:
-        # 需要目标的英雄技能：按下后打开候选浮层，候选来自服务端下发。
-        GameStore.view["self"]["heroPower"] = {
-            "skillId": "universal-manuscript",
-            "usesLeft": 1,
-            "requiresTarget": true,
-            "targetCandidates": [{"zone": "board", "id": "mi_1"}],
-        }
-        power.pressed.emit()
-        await get_tree().process_frame
-        var overlay = instance.find_child("ChooserOverlay", true, false)
-        _expect(overlay != null and overlay.visible, "英雄技能应打开目标选择弹层")
-        _expect(detail != null and not detail.is_visible_in_tree(), "打开选择浮层时详情面板应隐藏")
-        var has_candidate := false
-        var has_skip := false
-        if overlay != null:
-            for child in overlay.find_children("*", "Button", true, false):
-                if child is Button and str(child.text) == TranslationServer.translate("ui.game.target.skip"):
-                    has_skip = true
-                elif child is Button and not str(child.text) == TranslationServer.translate("ui.game.target.cancel"):
-                    has_candidate = true
-        _expect(has_candidate, "英雄技能弹层应列出候选目标")
-        _expect(not has_skip, "英雄技能弹层不应提供「不指定目标」")
     instance.queue_free()
     await get_tree().process_frame
     await _check_detail_without_stats()
@@ -2160,9 +2132,7 @@ func _check_drag_rejected_for_target_effect_on_blank() -> void:
     GameStore.deadline = "2030-01-01T00:00:00Z"
     var view: Dictionary = FixtureScript.view()
     view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi")]
-    view["self"]["hand"] = [
-        FixtureScript.hand("erfenfa", true, false, null, null, null, [{"zone": "board", "id": "mi_1"}]),
-    ]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
     view["self"]["affordances"]["handCards"] = [
         {"index": 0, "playable": true, "disabledReason": null},
     ]
@@ -2248,8 +2218,9 @@ func _check_drag_cancelled_after_view_rebuild() -> void:
     GameStore.turn = 1
 
 
-## 目标待选：浮层只列候选随从，没有任何退出路径，且所有招募控件被阻塞。
-func _check_target_pending_overlay() -> void:
+## 目标待选：不再弹候选浮层，改由瞄准层承载；其它招募控件全部禁用。
+func _check_target_pending_aim() -> void:
+    _fake_connect()
     GameStore.player_id = "p0"
     GameStore.phase = "Recruit"
     GameStore.turn = 3
@@ -2259,24 +2230,10 @@ func _check_target_pending_overlay() -> void:
     if instance == null:
         return
     var overlay = instance.find_child("ChooserOverlay", true, false)
-    _expect(overlay != null and overlay.visible, "目标待选应弹出选择浮层")
-    if overlay != null:
-        var buttons: Array = []
-        for child in overlay.find_children("*", "Button", true, false):
-            buttons.append(child)
-        _expect(buttons.size() == 2, "浮层内应只有 2 个候选随从按钮，实际 %d" % buttons.size())
-        var texts: Array = []
-        for button in buttons:
-            texts.append(str(button.text))
-            _expect(
-                not str(button.text).contains(TranslationServer.translate("ui.game.target.cancel")),
-                "目标待选不应提供取消：%s" % button.text,
-            )
-            _expect(
-                not str(button.text).contains(TranslationServer.translate("ui.game.target.skip")),
-                "目标待选不应提供跳过：%s" % button.text,
-            )
-        _expect(texts.size() == 2 and str(texts[0]).begins_with("★ "), "触发待选的随从应被高亮：%s" % str(texts))
+    _expect(overlay == null or not overlay.visible, "目标待选不应再弹候选浮层")
+    var aim = instance.find_child("AimLayer", true, false)
+    _expect(aim != null and aim.pending_active(), "目标待选应开启瞄准层")
+    _expect(aim != null and aim._candidates.size() == 2, "瞄准层应收到 2 个候选")
     for name in ["RerollButton", "UpgradeButton", "FreezeButton", "RecruitEndButton", "HeroPowerButton"]:
         var button = instance.find_child(name, true, false)
         _expect(button != null and button.disabled, "目标待选期间 %s 应禁用" % name)
@@ -2286,10 +2243,12 @@ func _check_target_pending_overlay() -> void:
     await get_tree().process_frame
     GameStore.view = {}
     GameStore.turn = 1
+    _fake_disconnect()
 
 
-## 选中候选后只发一条 ChooseTarget。
-func _check_choose_target_sends_intent() -> void:
+## 待选瞄准：松手落在候选上发 ChooseTarget；落在非候选处或按 Esc 发 AbandonTarget。
+func _check_pending_aim_abandon() -> void:
+    _fake_connect()
     GameStore.player_id = "p0"
     GameStore.phase = "Recruit"
     GameStore.turn = 3
@@ -2298,26 +2257,205 @@ func _check_choose_target_sends_intent() -> void:
     var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
         return
-    var overlay = instance.find_child("ChooserOverlay", true, false)
-    var captured: Array = []
-    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
-    if overlay != null:
-        # 第二个候选是 mi_2（第一个是触发待选的 mi_1）。
-        var candidates: Array = overlay.find_children("*", "Button", true, false)
-        if candidates.size() >= 2:
-            candidates[1].pressed.emit()
-    await get_tree().process_frame
-    _expect(captured.size() == 1, "选中候选只应发出 1 条意图，实际 %d" % captured.size())
-    if captured.size() == 1:
-        var intent: Dictionary = captured[0]
-        _expect(str(intent.get("kind", "")) == Protocol.INTENT_CHOOSE_TARGET, "应发出 ChooseTarget")
-        var target: Dictionary = intent.get("target", {})
-        _expect(str(target.get("zone", "")) == "board", "应带上目标区域")
-        _expect(str(target.get("id", "")) == "mi_2", "应带上被选随从 id")
+    var aim = instance.find_child("AimLayer", true, false)
+    var card := _board_card(instance, "mi_2")
+    _expect(aim != null and card != null, "待选瞄准夹具缺少瞄准层或候选随从")
+    if aim != null and card != null:
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var point: Vector2 = card.get_global_rect().get_center()
+        await _push_button(instance, point, true)
+        await _push_button(instance, point, false)
+        _expect(captured.size() == 1, "选中候选只应发出 1 条意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(
+                str(intent.get("kind", "")) == Protocol.INTENT_CHOOSE_TARGET,
+                "应发出 ChooseTarget",
+            )
+            var target: Dictionary = intent.get("target", {})
+            _expect(str(target.get("zone", "")) == "board", "应带上目标区域")
+            _expect(str(target.get("id", "")) == "mi_2", "应带上被选随从 id")
+
+        # 同一待选重新下发：瞄准层按服务端待选重新开启。
+        captured.clear()
+        GameStore.view_changed.emit()
+        await get_tree().process_frame
+        await _push_button(instance, Vector2(4, 4), true)
+        await _push_button(instance, Vector2(4, 4), false)
+        _expect(captured.size() == 1, "落在非候选处应发出 1 条意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            _expect(
+                str(captured[0].get("kind", "")) == Protocol.INTENT_ABANDON_TARGET,
+                "落在非候选处应发 AbandonTarget",
+            )
+
+        captured.clear()
+        GameStore.view_changed.emit()
+        await get_tree().process_frame
+        await _push_key(instance, KEY_ESCAPE)
+        _expect(captured.size() == 1, "Esc 应发出 1 条意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            _expect(
+                str(captured[0].get("kind", "")) == Protocol.INTENT_ABANDON_TARGET,
+                "Esc 应发 AbandonTarget",
+            )
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
     GameStore.turn = 1
+    _fake_disconnect()
+
+
+## 需要目标的英雄技能：按下按钮起瞄准，落在候选上发 UseHeroPower；
+## 落在非候选处或按 Esc 取消，不发意图。
+func _check_skill_aim() -> void:
+    _fake_connect()
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = FixtureScript.view()
+    GameStore.view["self"]["heroPower"] = {
+        "skillId": "universal-manuscript",
+        "usesLeft": 1,
+        "requiresTarget": true,
+        "targetCandidates": [{"zone": "board", "id": "mi_1"}],
+    }
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    await _dismiss_guide(instance)
+    var aim = instance.find_child("AimLayer", true, false)
+    var power = instance.find_child("HeroPowerButton", true, false)
+    var card := _board_card(instance, "mi_1")
+    var detail = instance.find_child("MinionDetailLayer", true, false)
+    _expect(aim != null and power != null and card != null, "技能瞄准夹具缺少节点")
+    if aim != null and power != null and card != null:
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var button_point: Vector2 = power.get_global_rect().get_center()
+        var card_point: Vector2 = card.get_global_rect().get_center()
+        await _push_motion(instance, button_point)
+        await _push_button(instance, button_point, true)
+        _expect(aim.skill_active(), "按下需要目标的技能按钮应进入瞄准")
+        var overlay = instance.find_child("ChooserOverlay", true, false)
+        _expect(overlay == null or not overlay.visible, "技能瞄准不应再弹候选浮层")
+        await _push_motion(instance, card_point)
+        _expect(str(aim._hovered.get("id", "")) == "mi_1", "指针落在候选上应命中该候选")
+        _expect(detail != null and not detail.is_visible_in_tree(), "瞄准期间不应弹悬停详情")
+        await _push_button(instance, card_point, false)
+        _expect(not aim.skill_active(), "松手后应结束瞄准")
+        _expect(captured.size() == 1, "落在候选中应只发 1 条意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(
+                str(intent.get("kind", "")) == Protocol.INTENT_USE_HERO_POWER,
+                "应发出 UseHeroPower",
+            )
+            _expect(
+                str(intent.get("skillId", "")) == "universal-manuscript",
+                "应带技能 id",
+            )
+            var target: Dictionary = intent.get("target", {})
+            _expect(str(target.get("zone", "")) == "board", "应带上目标区域")
+            _expect(str(target.get("id", "")) == "mi_1", "应带上命中目标")
+
+        captured.clear()
+        await _push_button(instance, button_point, true)
+        await _push_motion(instance, Vector2(4, 4))
+        await _push_button(instance, Vector2(4, 4), false)
+        _expect(not aim.skill_active() and captured.is_empty(), "落在非候选处应取消且不发意图")
+
+        await _push_button(instance, button_point, true)
+        await _push_key(instance, KEY_ESCAPE)
+        _expect(not aim.skill_active() and captured.is_empty(), "Esc 应取消技能瞄准且不发意图")
+        # 收尾松开鼠标，避免把按住状态留给后续用例。
+        await _push_button(instance, button_point, false)
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+    _fake_disconnect()
+
+
+## 需要目标的效果牌拖动：瞄准层画同一套视觉，落点仍由棋盘提交 PlayCard。
+func _check_effect_drag_aim_visual() -> void:
+    _fake_connect()
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [FixtureScript.board_minion("mi_1", "baiyi")]
+    view["self"]["hand"] = [
+        FixtureScript.hand("erfenfa", true, false, null, null, null, [{"zone": "board", "id": "mi_1"}]),
+    ]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    await _dismiss_guide(instance)
+    var aim = instance.find_child("AimLayer", true, false)
+    var card := instance.find_child("HandCard0", true, false)
+    var target := _board_card(instance, "mi_1")
+    _expect(aim != null and card != null and target != null, "效果牌瞄准夹具缺少节点")
+    if aim != null and card != null and target != null:
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var start: Vector2 = card.get_global_rect().get_center()
+        var point: Vector2 = target.get_global_rect().get_center()
+        await _push_motion(instance, start)
+        await _push_button(instance, start, true)
+        await _push_motion_held(instance, start + Vector2(24, 0), Vector2(24, 0))
+        _expect(aim._mode == GameAimLayer.Mode.DRAG, "拖动需要目标的牌时应显示瞄准弧线")
+        var viewport := instance.get_viewport()
+        if viewport.gui_is_dragging():
+            viewport.gui_cancel_drag()
+        await get_tree().process_frame
+        await _push_button(instance, start, false)
+        _expect(aim._mode == GameAimLayer.Mode.NONE, "拖拽结束后收起瞄准视觉")
+        # 无头视口不更新真实指针位置，落点判定直接按棋盘局部坐标调用。
+        var board_row = instance.find_child("BoardRow", true, false)
+        var local: Vector2 = board_row.get_global_transform().affine_inverse() * point
+        var payload: Dictionary = card.payload.duplicate()
+        _expect(board_row._can_drop_data(local, payload), "需要目标的牌落在候选随从上应被接受")
+        board_row._drop_data(local, payload)
+        await get_tree().process_frame
+        _expect(captured.size() == 1, "效果牌落在候选上应发 1 条意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(str(intent.get("kind", "")) == Protocol.INTENT_PLAY_CARD, "应发出 PlayCard")
+            _expect(str(intent.get("target", {}).get("id", "")) == "mi_1", "应带命中目标")
+        _expect(aim._mode == GameAimLayer.Mode.NONE, "拖拽结束后收起瞄准视觉")
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+    _fake_disconnect()
+
+
+## 首局引导的底栏会盖住英雄技能按钮：真实输入用例先卸掉引导。
+func _dismiss_guide(instance: Node) -> void:
+    var guide := instance.find_child("FirstGameGuide", true, false)
+    if guide != null:
+        guide.queue_free()
+        await get_tree().process_frame
+
+
+## 棋盘上按 `minion_id` 找随从卡。
+func _board_card(instance: Node, minion_id: String) -> Control:
+    var board_row = instance.find_child("BoardRow", true, false)
+    if board_row == null:
+        return null
+    for child in board_row.get_children():
+        if child is Control and child.has_meta("minion_id"):
+            if str(child.get_meta("minion_id")) == minion_id:
+                return child
+    return null
 
 
 ## 战斗阶段即使留有跨回合的发现待选，也不能把招募弹层盖在演示上。
@@ -2337,10 +2475,11 @@ func _check_overlay_hidden_in_combat() -> void:
         return
     var overlay = instance.find_child("ChooserOverlay", true, false)
     _expect(overlay != null and not overlay.visible, "战斗阶段不应弹出招募待选弹层")
+    var aim = instance.find_child("AimLayer", true, false)
+    _expect(aim != null and not aim.aiming(), "战斗阶段不应进入瞄准")
     var captured: Array = []
     instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
     instance._on_choose(0)
-    instance._on_choose_target({"zone": "board", "id": "mi_1"})
     await get_tree().process_frame
     _expect(captured.is_empty(), "战斗阶段不应发出待选意图，实际 %d 条" % captured.size())
     instance.queue_free()

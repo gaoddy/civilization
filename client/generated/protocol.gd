@@ -38,6 +38,7 @@ const MSG_STATE_UPDATE := "StateUpdate"
 const MSG_TIMER_WARNING := "TimerWarning"
 
 # 意图
+const INTENT_ABANDON_TARGET := "AbandonTarget"
 const INTENT_BUY_MINION := "BuyMinion"
 const INTENT_CHOOSE_DISCOVER := "ChooseDiscover"
 const INTENT_CHOOSE_TARGET := "ChooseTarget"

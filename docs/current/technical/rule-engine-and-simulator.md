@@ -24,7 +24,7 @@ server/
       src/taxonomy.rs        # 科学分类树：祖先匹配 is_within / 路径 path / 叶子判定
       src/playstyles.rs      # 开局玩法抽取 draw 与 PLAYSTYLES_PER_GAME
       src/effects/           # 结构化效果校验（validate）、解释执行（exec）、光环（auras）；parse 仅保留为 DSL 作者工具
-      src/intent.rs          # 协议十一种意图（含 ChooseDiscover、ChooseTarget）与 11 个规则拒绝码（各自映射到对应的协议错误码）
+      src/intent.rs          # 协议十二种意图（含 ChooseDiscover、ChooseTarget、AbandonTarget）与 11 个规则拒绝码（各自映射到对应的协议错误码）
       src/engine.rs          # Engine::new（含玩法参数）/ apply / start_game / start_turn
       src/recruit.rs         # 商店、买/卖/刷新/冻结/升时代/打出/结束招募
       src/triple.rs          # 三连与发现
@@ -61,13 +61,13 @@ tests/                       # Python 标准库 unittest
 
 - `Engine::apply(state, seat, intent)` 是唯一的状态变更入口，返回 `Outcome`（本意图产生的事件）；拒绝时返回 `Reject { code, message }` 且不改变状态。
 - 拒绝码与核心规则 §3 一致：`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE`。
-- 协议十一种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`、`ChooseTarget`。`ChooseDiscover` 与 `ChooseTarget` 都用于消费引擎产生的 `PendingChoice`（发现/进化、目标）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。
-- `PlayCard { hand_index, position, target }`：`position` 只对随从牌生效，是入场后的插入下标，`None` 表示追加到最右；超出当前随从数返回 `INVALID_CHOICE`。效果牌不带落点：目标缺失或不在合法池内时整条意图返回 `NO_VALID_TARGET`，合法池为空时效果落空、意图仍生效。效果牌与主动技能的 `target` 是 `TargetRef { zone, id }`，`zone` 取 `hand` / `shop` / `board`；提交时先校验实例是否属于本人在该区域，再进入合法池校验，不符返回 `NO_VALID_TARGET`。随从牌入场后判定战吼：未带 `target` 且服务端算出候选非空时推入 `PendingChoice::Target`，由 `ChooseTarget { target }` 指定目标；候选为空（含被过滤器收窄为空）时战吼直接落空、不产生待选。
+- 协议十二种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`、`ChooseTarget`、`AbandonTarget`。`ChooseDiscover`、`ChooseTarget` 与 `AbandonTarget` 都用于消费引擎产生的 `PendingChoice`（发现/进化、目标）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。`AbandonTarget` 只消费本座位队首的目标待选，撤销本次出牌并把原牌退回原手牌位置；没有待选或队首不是目标待选时返回 `INVALID_CHOICE`。
+- `PlayCard { hand_index, position, target }`：`position` 只对随从牌生效，是入场后的插入下标，`None` 表示追加到最右；超出当前随从数返回 `INVALID_CHOICE`。效果牌不带落点：目标缺失或不在合法池内时整条意图返回 `NO_VALID_TARGET`，合法池为空时效果落空、意图仍生效。效果牌与主动技能的 `target` 是 `TargetRef { zone, id }`，`zone` 取 `hand` / `shop` / `board`；提交时先校验实例是否属于本人在该区域，再进入合法池校验，不符返回 `NO_VALID_TARGET`。随从牌入场后判定战吼：未带 `target` 且服务端算出候选非空时只推入 `PendingChoice::Target`，由 `ChooseTarget { target }` 指定目标，本次意图内不发金色「三连奖励」、不执行 `check_triple`、不触发入场观察者；候选为空（含被过滤器收窄为空）时战吼直接落空、不产生待选，这些入场副作用照基线顺序立即执行。
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
 - 实例编号 `InstanceId` 由 `state.next_instance_id` 单调分配：商店每次刷新的每个槽位（含效果牌槽）各有一个，冻结保留原编号；买入、入手牌、打出到棋盘都沿用该编号。三连合成时新建一个金色编号，并在 `sources` 记录三张原始副本的编号（不参与状态哈希）。复制品按复制方式分配新编号。
 - `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼；手牌保留随从实例（含成长等状态），不再退回卡面基础值。`PlayCard` 与 `UseHeroPower` 带 `target: Option<TargetRef>`，M0 由 AI 按区域从本人棋盘、手牌、商店依次选择目标。
 - 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录来源星级 +1（封顶 6），打出该牌才登记发现待选。奖励效果牌不进商店、不进任何候选、不扣共享牌池；普通效果牌按商店概率进入商店槽位，但同样不扣共享牌池。
-- `PendingChoice::Target { seat, source, card_id, golden }`：目标待选期间该座位除 `ChooseTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。目标待选在 `finish_recruit` 进入战斗前作废（战吼落空）；发现与进化待选允许留到下回合。`ChooseTarget` 要求队首是目标待选、目标属于本人在对应区域的实体，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果。
+- `PendingChoice::Target { seat, source, hand_card, hand_index, fire_ally_evolve }`：`hand_card` 是入场前的原手牌（含成长、护盾与金色标记），`hand_index` 是原手牌位置，放弃时按 `min(hand_index, len)` 插回；`fire_ally_evolve` 表示入场观察者是否推迟到目标结算后触发。目标待选期间该座位除 `ChooseTarget` 与 `AbandonTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。`ChooseTarget` 要求队首是目标待选、目标属于本人在对应区域的实体，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果，再按固定顺序补做被推迟的入场副作用：金色三连奖励 → `check_triple` → `fire_ally_evolve` 为真时触发入场观察者。`AbandonTarget` 要求来源随从仍在本人棋盘（否则 `NO_SUCH_MINION`），移除来源、把原牌插回原手牌位置、移除待选，不发战吼、不补奖励、不执行三连与入场观察者。发现与进化待选允许留到下回合；目标待选若在 `finish_recruit` 进入战斗前仍未选择，按同样规则退牌（来源仍在场时），随后照常推进阶段。
 - `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。视图同时下发 `targetCandidates`（引擎 `target_candidates` 的结果，只含本人棋盘/手牌/商店）、`instanceId`、`golden`，以及随从牌的 `attack` / `health`（当前值，含成长等全部层数，学者为 0）；效果牌这两项为 `null`，`golden` 恒为 `false`，奖励牌另带 `rewardLevel`（锁定的发现星级）。`requires_target` 为真且候选为空时 `playable=false`、`disabledReason=NO_VALID_TARGET`。
 - `SelfView` 的 `hero_power_requires_target` 与 `hero_power_target_candidates` 同口径；需要目标且候选为空时 `can_use_hero_power=false`、`heroPowerDisabledReason=NO_VALID_TARGET`。`PendingChoiceView::Target` 同时下发 `candidates`。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。
@@ -207,7 +207,7 @@ impl Taxonomy {
 
 `sim bot` 只在视图变化时决策；服务端拒绝意图不会带来新视图，因此收到非目标类 `Error` 后每回合最多补发一次 `EndRecruit`（`brain::recover_after_error`），避免整局停在招募阶段等超时。`NO_VALID_TARGET` 走另一条路径：记入本回合阻塞集合后按同一视图立即重决策。
 
-`sim bot` 的意图表同步扩到十一种：`pendingChoices` 头部为 `target` 时发 `ChooseTarget { target }`，取 `candidates` 中第一个未被拒绝的 `TargetRef`；`PlayCard` 一律带 `position: None`（追加到最右），并读手牌视图 `requiresTarget`：为真时从 `targetCandidates` 预填第一个未被拒绝的目标，候选为空时不填（效果可落空）。被拒目标按 `zone:id` 记入阻塞集合，沿候选列表换下一个。`sim/src/ai.rs`（M0 基线）按 `Selector::Target { zone }` 依次尝试本人三个区域的实例编号。
+`sim bot` 的意图表同步扩到十二种，不主动发送 `AbandonTarget`：`pendingChoices` 头部为 `target` 时发 `ChooseTarget { target }`，取 `candidates` 中第一个未被拒绝的 `TargetRef`；`PlayCard` 一律带 `position: None`（追加到最右）；需要目标的随从牌按两段式先不带 `target`，等目标待选后再发 `ChooseTarget`；效果牌读手牌视图 `requiresTarget`，为真时从 `targetCandidates` 预填第一个未被拒绝的目标，候选为空时不填（效果可落空）。被拒目标按 `zone:id` 记入阻塞集合，沿候选列表换下一个。`sim/src/ai.rs`（M0 基线）按 `Selector::Target { zone }` 依次尝试本人三个区域的实例编号。
 
 M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 
@@ -269,7 +269,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 | 规则章节 | 用例文件 |
 | --- | --- |
 | 核心规则 §2 阶段状态机、§7 淘汰排名、§8 边界 | `rule-engine/tests/settle.rs`、`recruit.rs` |
-| 核心规则 §3 十一种意图与 11 个失败码 | `rule-engine/tests/recruit.rs`、`choices.rs` |
+| 核心规则 §3 十二种意图与 11 个失败码 | `rule-engine/tests/recruit.rs`、`choices.rs` |
 | 核心规则 §4 招募细则 | `rule-engine/tests/recruit.rs`、`choices.rs`；商店重试后仍空即空槽，此时 `BuyMinion` 返回 `SHOP_SLOT_EMPTY`（`reroll_with_empty_star_retries_then_leaves_slot_empty`、`reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects`） |
 | 核心规则 §5 战斗与伤害公式 | `rule-engine/tests/combat.rs` |
 | 核心规则 §6 三连与发现 | `rule-engine/tests/triple.rs`、`choices.rs` |

@@ -170,6 +170,11 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 2026-11-20 第十五次重定：任何未消费待选都禁止手动 `EndRecruit`；模拟器 AI
 /// 无可消费待选时按超时处理并交给 `finish_recruit` 清空，发现/进化不再跨回合
 /// 保留。此前允许带发现待选结束招募并保留到下一回合，行为与随机流消耗改变。
+///
+/// 2026-11-20 第十六次重定：带目标战吼的随从改为两段式入场（放置先提交，目标
+/// 由 `ChooseTarget` 另行提交，新增 `AbandonTarget` 撤销入场）。金色奖励、
+/// 三连合并与入场观察者因此从「入场当次意图」推迟到「选定目标之后」；本批次
+/// 20 局中第 1、11 局走到该路径，最终哈希改变，其余局保持原值。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

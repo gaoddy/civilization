@@ -5,6 +5,8 @@ extends HBoxContainer
 ## 只发技能按钮信号；是否可点由 `refresh(state)` 按页面门控决定。
 
 signal hero_power_pressed
+## 技能按钮按下：页面据此判断是否需要进入瞄准；抬起仍由 `pressed` 或瞄准层处理。
+signal hero_power_down
 
 ## 悬停详情层，由对局页注入；英雄卡悬停时登记。
 var detail: GameDetailLayer = null
@@ -47,6 +49,7 @@ func _init() -> void:
     _power_button.uses_visible = true
     _power_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     _power_button.pressed.connect(func() -> void: hero_power_pressed.emit())
+    _power_button.button_down.connect(func() -> void: hero_power_down.emit())
     _side.add_child(_power_button)
 
     _eliminated_label = UI.label(tr("ui.game.side_panel.eliminated"), UITheme.font_size("font-body-sm"), false)
@@ -81,6 +84,11 @@ func refresh(state: GameUiState) -> void:
     _side.visible = not eliminated
     _eliminated_label.visible = eliminated
     _refresh_power(state, eliminated)
+
+
+## 技能按钮的全局矩形：瞄准弧线的起点。
+func power_rect() -> Rect2:
+    return _power_button.get_global_rect()
 
 
 func set_combat_mode(in_combat: bool) -> void:

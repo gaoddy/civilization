@@ -3591,6 +3591,18 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///        }
 ///      },
 ///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "kind"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "AbandonTarget"
+///        }
+///      },
+///      "additionalProperties": false
 ///    }
 ///  ]
 ///}
@@ -3648,6 +3660,7 @@ pub enum Intent {
         ///目标
         target: TargetRef,
     },
+    AbandonTarget,
 }
 impl ::std::convert::From<&Self> for Intent {
     fn from(value: &Intent) -> Self {

@@ -104,6 +104,14 @@
             "kind": { "const": "ChooseTarget" },
             "target": { "$ref": "view.schema.json#/$defs/TargetRef", "description": "目标" }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "AbandonTarget" }
+          }
         }
       ]
     }

@@ -623,8 +623,9 @@ fn pending_choice_view_target_carries_source() {
     state.pending.push_back(PendingChoice::Target {
         seat: 0,
         source: 42,
-        card_id: "fangzhiji".to_string(),
-        golden: false,
+        hand_card: HandCard::Minion(MinionInstance::new(&engine.catalog, 42, "fangzhiji", false)),
+        hand_index: 0,
+        fire_ally_evolve: true,
     });
 
     let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
@@ -649,8 +650,9 @@ fn pending_choice_view_target_carries_candidates() {
     state.pending.push_back(PendingChoice::Target {
         seat: 0,
         source: 42,
-        card_id: "parrot".to_string(),
-        golden: false,
+        hand_card: HandCard::Minion(MinionInstance::new(&engine.catalog, 42, "parrot", false)),
+        hand_index: 0,
+        fire_ally_evolve: true,
     });
 
     let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
@@ -775,8 +777,9 @@ fn affordances_blocked_while_target_pending() {
     state.pending.push_back(PendingChoice::Target {
         seat: 0,
         source: 1,
-        card_id: card,
-        golden: false,
+        hand_card: HandCard::Minion(MinionInstance::new(&engine.catalog, 1, &card, false)),
+        hand_index: 0,
+        fire_ally_evolve: true,
     });
 
     let affordances = view(&engine, &state, 0)

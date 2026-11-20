@@ -134,8 +134,12 @@ func _build_card(card: Dictionary, state: GameUiState) -> HandCard:
         "golden": golden,
         "requiresTarget": bool(card.get("requiresTarget", false)),
         # 服务端下发的合法目标；效果牌拖到候选上松手才提交。
-        "targets": Array(card.get("targetCandidates", [])),
+        # 必须深拷贝，避免拖拽数据与视图数组互相污染。
+        "targets": Array(card.get("targetCandidates", [])).duplicate(true),
     }
+    # 瞄准层的候选命中依赖这组元数据：手牌按实例编号定位。
+    node.set_meta("target_zone", "hand")
+    node.set_meta("target_id", str(card.get("instanceId", "")))
     node.drag_allowed = state.can_drag(playable)
     if not node.drag_allowed:
         UI.apply_dim(node)

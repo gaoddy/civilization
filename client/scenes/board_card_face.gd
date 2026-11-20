@@ -12,6 +12,8 @@ static func build_card(minion: Dictionary, minion_index: int) -> BoardCard:
     panel.name = "Board" + ("Minion%d" % minion_index)
     panel.set_meta("minion_id", str(minion.get("minionId", "")))
     panel.set_meta("minion_index", minion_index)
+    panel.set_meta("target_zone", "board")
+    panel.set_meta("target_id", str(minion.get("minionId", "")))
     panel.custom_minimum_size = Vector2(
         UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height")
     )

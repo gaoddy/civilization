@@ -36,7 +36,7 @@
 
 ## 5. 意图与幂等
 
-- `Intent` 载荷为 `{clientIntentId, intent}`，`intent.kind` 对应[核心规则](../../product/rules/core-rules.md) §3 的十种意图。
+- `Intent` 载荷为 `{clientIntentId, intent}`，`intent.kind` 对应[核心规则](../../product/rules/core-rules.md) §3 的十二种意图。
 - 同一 `clientIntentId` 只处理一次；重复到达返回原结果，不重复结算。
 - 去重表只存在于房间进程内，按房间生命周期保留，不持久化；重连后重发未收到回复的意图仍返回原结果。
 - 意图被拒绝时返回 `Error{code, clientIntentId}`；客户端没有可回滚的本地状态。

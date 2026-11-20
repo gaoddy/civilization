@@ -448,6 +448,22 @@ fn reward_level_caps_at_six() {
         )
         .expect("打出金色应成功");
 
+    assert!(state.players[0].hand.is_empty(), "战吼待选期间不发放奖励牌");
+
+    let source = state.players[0].board[0].instance_id;
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget {
+                target: TargetRef {
+                    zone: Zone::Board,
+                    id: source,
+                },
+            },
+        )
+        .expect("选定目标应成功");
+
     let reward = state.players[0]
         .hand
         .iter()

@@ -19,9 +19,11 @@
 | 图鉴卡面单元 | `GalleryCardTile` | [gallery-card-tile.md](gallery-card-tile.md) |
 | 图鉴常驻详情 | `GalleryDetail` | [gallery-detail.md](gallery-detail.md) |
 | 首局引导 | `FirstGameGuide`（`client/scenes/first_game_guide.gd`） | [first-game-guide.md](first-game-guide.md) |
+| 技能瞄准层 | `GameAimLayer`（`client/scenes/game_aim_layer.gd`） | [aim-layer.md](aim-layer.md) |
 
 - `UI` 之外的图鉴组件按 `class_name` 直接实例化，位于 `client/scenes/`，供大厅图鉴页与对局覆盖层共用；它们的卡牌数据仍来自 `CardDB`。
 - `FirstGameGuide` 由对局页实例化并挂载，只服务对局页；高亮层忽略鼠标，提示条自身接收点击。
+- `GameAimLayer` 由对局页实例化并挂载，承接技能与战吼的选目标手势；全屏但忽略鼠标，只有瞄准期间临时接管按下与抬起。
 
 - `UI.section_title(text)`：区块标题，`font-body` 字号、`color-text-dim` 颜色，单行不换行。
 - `UI.empty_hint(text)`：居中占位提示，`font-body-sm` 字号、`color-text-muted` 颜色，用于空棋盘、空手牌、无对手。
