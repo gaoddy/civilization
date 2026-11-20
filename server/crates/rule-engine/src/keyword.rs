@@ -98,6 +98,9 @@ pub fn parse_keyword(raw: &str) -> Option<(Keyword, u8)> {
                     return None;
                 }
                 match text.parse::<u32>() {
+                    // 旧 `armor_layer` 按 `i32` 解析层数；这里把单段层数钳到
+                    // `u8::MAX`。当前数据层数 ≤3、动态授予只有 `armor 2`，
+                    // 超过 255 的输入不可达。
                     Ok(value) => value.min(u32::from(u8::MAX)) as u8,
                     Err(_) => 0,
                 }

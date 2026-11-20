@@ -21,6 +21,8 @@ fn is_within_follows_path() {
     assert!(!taxonomy.is_within("hominidae", "plantae"));
     assert!(!taxonomy.is_within("missing", "animalia"));
     assert!(!taxonomy.is_within("animalia", "missing"));
+    // 两侧同时缺失也返回 false：文档契约要求任一节点不存在即不匹配。
+    assert!(!taxonomy.is_within("missing", "missing"));
 }
 
 #[test]

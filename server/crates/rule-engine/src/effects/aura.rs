@@ -41,34 +41,29 @@ impl Engine {
 
     /// 只重算一个座位的棋盘光环。
     ///
-    /// 光环只作用于来源同一玩家的棋盘，因此可以先移除该玩家棋盘实例的旧条目，
-    /// 再并入新计算结果；其他玩家的条目原样保留。
+    /// 光环只作用于来源同一玩家的棋盘，因此本座位棋盘上的旧条目被移除并重算；
+    /// 其他未出局玩家的**有效**条目原样保留。
     ///
-    /// 同时清理已不在任何未出局玩家棋盘上的陈旧条目：本座位刚出售或移除的随从
-    /// 实例已不在当前棋盘 id 集合内，若不清理会与全量重算的结果不一致。
+    /// 同时清理已不在任何棋盘上的陈旧条目：本座位刚出售或移除的随从实例已不在
+    /// 当前棋盘 id 集合内，若不清理会与全量重算的结果不一致。
     pub fn recompute_auras_for(&mut self, state: &mut GameState, seat: Seat) {
-        let computed = {
-            let Some(player) = state.players.iter().find(|player| player.seat == seat) else {
-                return;
-            };
-            if player.eliminated {
-                BTreeMap::new()
-            } else {
-                self.player_auras(state, player)
-            }
+        let Some(player) = state.players.iter().find(|player| player.seat == seat) else {
+            return;
         };
-        let own_ids: BTreeSet<InstanceId> = state
-            .players
+        let own_ids: BTreeSet<InstanceId> = player
+            .board
             .iter()
-            .find(|player| player.seat == seat)
-            .map(|player| {
-                player
-                    .board
-                    .iter()
-                    .map(|minion| minion.instance_id)
-                    .collect()
-            })
-            .unwrap_or_default();
+            .map(|minion| minion.instance_id)
+            .collect();
+        let computed = if player.eliminated {
+            BTreeMap::new()
+        } else {
+            self.player_auras(state, player)
+        };
+        debug_assert!(
+            computed.keys().all(|id| own_ids.contains(id)),
+            "光环目标必须属于来源玩家自己的棋盘"
+        );
         let live_ids: BTreeSet<InstanceId> = state
             .players
             .iter()

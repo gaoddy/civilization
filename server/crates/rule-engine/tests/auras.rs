@@ -1,6 +1,6 @@
 mod common;
 
-use common::{categories_for, effects_of, place, setup};
+use common::{categories_for, effects_of, place, set_shop, setup, setup_with_gold};
 use rule_engine::combat;
 use rule_engine::data::{Card, CardType, Playstyle, Skill};
 use rule_engine::effects::parse_effects;
@@ -669,33 +669,20 @@ fn incremental_recompute_matches_full_recompute() {
     place(&engine.catalog, &mut state, 1, 4, "nanobot");
 
     engine.recompute_auras(&mut state);
-    let seat0_before: std::collections::BTreeMap<_, _> = state
-        .auras
-        .iter()
-        .filter(|(id, _)| {
-            state.players[0]
-                .board
-                .iter()
-                .any(|minion| minion.instance_id == **id)
-        })
-        .map(|(id, aura)| (*id, aura.clone()))
-        .collect();
 
     // 只改座位 1：新增一个受光环影响的机械随从。
     place(&engine.catalog, &mut state, 1, 5, "nanobot");
     engine.recompute_auras_for(&mut state, 1);
+
+    assert!(
+        state.auras.contains_key(&1),
+        "座位 0 的光环条目不应被座位 1 的重算移除"
+    );
     let incremental = state.auras.clone();
 
     engine.recompute_auras(&mut state);
 
     assert_eq!(incremental, state.auras, "增量结果应与全量重算一致");
-    for (id, aura) in &seat0_before {
-        assert_eq!(
-            state.auras.get(id),
-            Some(aura),
-            "座位 0 的光环条目不应被座位 1 的重算改动"
-        );
-    }
 }
 
 #[test]
@@ -723,4 +710,107 @@ fn incremental_recompute_drops_sold_minion_aura() {
     let incremental = state.auras.clone();
     engine.recompute_auras(&mut state);
     assert_eq!(incremental, state.auras, "出售后增量结果应与全量重算一致");
+}
+
+#[test]
+fn incremental_recompute_drops_aura_when_source_sold() {
+    let (mut engine, mut state) = setup(23);
+    add_aura_source(
+        &mut engine,
+        "test-mech-aura",
+        Playstyle::Machine,
+        "Aura|ModifyStats|friendly:all:playstyle=machine|attack=1,health=1,duration=permanent",
+    );
+    place(&engine.catalog, &mut state, 0, 1, "test-mech-aura");
+    place(&engine.catalog, &mut state, 0, 2, "nanobot");
+
+    engine.recompute_auras(&mut state);
+    assert!(state.auras.contains_key(&2), "出售来源前目标应有光环");
+
+    engine
+        .apply(&mut state, 0, Intent::SellMinion { minion: 1 })
+        .expect("出售来源应成功");
+    assert!(
+        !state.auras.contains_key(&2),
+        "来源出售后目标不应残留光环条目"
+    );
+    let incremental = state.auras.clone();
+    engine.recompute_auras(&mut state);
+    assert_eq!(
+        incremental, state.auras,
+        "来源出售后增量结果应与全量重算一致"
+    );
+}
+
+#[test]
+fn incremental_recompute_adds_aura_when_source_bought() {
+    let (mut engine, mut state) = setup_with_gold(23);
+    add_aura_source(
+        &mut engine,
+        "test-mech-aura",
+        Playstyle::Machine,
+        "Aura|ModifyStats|friendly:all:playstyle=machine|attack=1,health=1,duration=permanent",
+    );
+    place(&engine.catalog, &mut state, 0, 1, "nanobot");
+    // 测试注入的卡不在开局共享池内，且固定实例编号已用到 1；补池计数并让
+    // 商店槽拿到不冲突的实例编号，买入预检才能通过。
+    state.pool.insert("test-mech-aura".to_string(), 1);
+    state.next_instance_id = 2;
+    set_shop(&mut state, 0, &[Some("test-mech-aura".to_string())]);
+
+    engine
+        .apply(&mut state, 0, Intent::BuyMinion { slot: 0 })
+        .expect("购买来源应成功");
+    // 买入只进手牌；打出后来源才进入棋盘并触发增量重算。
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("打出来源应成功");
+
+    assert!(state.auras.contains_key(&1), "来源入场后目标应获得光环条目");
+    let incremental = state.auras.clone();
+    engine.recompute_auras(&mut state);
+    assert_eq!(
+        incremental, state.auras,
+        "来源入场后增量结果应与全量重算一致"
+    );
+}
+
+#[test]
+fn incremental_recompute_clears_eliminated_seat() {
+    let (mut engine, mut state) = setup(23);
+    add_aura_source(
+        &mut engine,
+        "test-mech-aura",
+        Playstyle::Machine,
+        "Aura|ModifyStats|friendly:all:playstyle=machine|attack=1,health=1,duration=permanent",
+    );
+    place(&engine.catalog, &mut state, 0, 1, "test-mech-aura");
+    place(&engine.catalog, &mut state, 0, 2, "nanobot");
+
+    engine.recompute_auras(&mut state);
+    assert!(
+        state.auras.contains_key(&1) && state.auras.contains_key(&2),
+        "出局前该座位的来源与目标都应有光环"
+    );
+
+    state.players[0].eliminated = true;
+    engine.recompute_auras_for(&mut state, 0);
+    assert!(
+        state.players[0]
+            .board
+            .iter()
+            .all(|minion| !state.auras.contains_key(&minion.instance_id)),
+        "出局座位的棋盘光环条目应全部清除"
+    );
+    let incremental = state.auras.clone();
+    engine.recompute_auras(&mut state);
+    assert_eq!(incremental, state.auras, "出局座位增量结果应与全量重算一致");
 }

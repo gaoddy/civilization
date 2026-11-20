@@ -83,7 +83,12 @@ impl Taxonomy {
         let ids: HashMap<String, u16> = names
             .iter()
             .enumerate()
-            .map(|(index, name)| (name.clone(), index as u16))
+            .map(|(index, name)| {
+                (
+                    name.clone(),
+                    u16::try_from(index).expect("分类树节点数超出 u16 上限"),
+                )
+            })
             .collect();
         let parents: Vec<Option<u16>> = names
             .iter()
