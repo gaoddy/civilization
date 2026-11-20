@@ -218,33 +218,29 @@ class Renderer:
     """把模板调用展开为效果 DSL 段与卡面文案。"""
 
     def __init__(self, content=CONTENT):
-        import gen_card_data
         import validate_docs
 
         content = pathlib.Path(content)
         self.templates = load_templates(content)
         self.nouns = load_nouns(content / NOUN_FILE)
 
-        token_path = content / "tokens" / "README.md"
-        token_names = gen_card_data.parse_token_names(token_path)
-        self.tokens = {
-            token["id"]: {
-                "name": token_names.get(token["id"], token["id"]),
-                "attack": token["attack"],
-                "health": token["health"],
-            }
-            for token in gen_card_data.parse_tokens(token_path)
-        }
+        self.tokens = {}
         self.cards = {}
+        self.pool_cards = {}
         for path in sorted((content / "cards").glob("*.md")):
             if path.name == "README.md":
                 continue
             doc = validate_docs.parse_front_matter(path)
-            self.cards[doc["id"]] = {
+            entry = {
                 "name": doc.get("name", doc["id"]),
                 "attack": doc.get("attack"),
                 "health": doc.get("health"),
             }
+            self.cards[doc["id"]] = entry
+            if doc.get("in_shop_pool", True):
+                self.pool_cards[doc["id"]] = entry
+            else:
+                self.tokens[doc["id"]] = entry
 
     # ---- 参数 ----
 
@@ -277,11 +273,11 @@ class Renderer:
     def _check_value(self, spec, raw):
         value = str(raw).strip()
         if spec.type == "token":
-            if value not in self.tokens and value not in self.cards:
-                raise ValueError(f"参数 {spec.name} 的 token 不存在 {value!r}")
+            if value not in self.tokens:
+                raise ValueError(f"参数 {spec.name} 的 token 不存在或不是衍生物 {value!r}")
         elif spec.type == "card":
-            if value not in self.cards:
-                raise ValueError(f"参数 {spec.name} 的卡牌不存在 {value!r}")
+            if value not in self.pool_cards:
+                raise ValueError(f"参数 {spec.name} 的卡牌不存在或不在商店卡池 {value!r}")
         elif spec.type == "taxon":
             if value not in self.nouns.taxon:
                 raise ValueError(f"参数 {spec.name} 的分类名词缺失 {value!r}")

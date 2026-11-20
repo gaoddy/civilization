@@ -332,7 +332,7 @@ impl Engine {
                 target: None,
                 event_target: None,
                 golden: minion.golden,
-                discover_level: None,
+                level_override: None,
             };
             self.fire_death_recruit(state, &minion.card_id, &ctx);
             if self.card_has_keyword(&minion.card_id, "sow") {
@@ -386,7 +386,7 @@ impl Engine {
                     target: None,
                     event_target: None,
                     golden: false,
-                    discover_level: None,
+                    level_override: None,
                 },
             ));
         }
@@ -400,7 +400,7 @@ impl Engine {
                     target: None,
                     event_target: None,
                     golden,
-                    discover_level: None,
+                    level_override: None,
                 },
             ));
         }
@@ -439,14 +439,11 @@ fn playstyle_set(playstyles: [Playstyle; 5]) -> BTreeSet<Playstyle> {
     enabled
 }
 
-/// 按 `pool_counts[level - 1]` 为每张非 token 随从填充共享池。
+/// 按 `pool_counts[level - 1]` 为每张进商店卡池的随从填充共享池。
 fn build_pool(catalog: &Catalog) -> BTreeMap<String, u16> {
     let mut pool = BTreeMap::new();
     for card in catalog.cards.values() {
-        if card.card_type != CardType::Minion {
-            continue;
-        }
-        if catalog.tokens.contains_key(&card.id) {
+        if card.card_type != CardType::Minion || !card.in_shop_pool {
             continue;
         }
         let Some(level_index) = card.level.checked_sub(1).map(usize::from) else {

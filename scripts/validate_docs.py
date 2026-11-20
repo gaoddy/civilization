@@ -101,7 +101,7 @@ EFFECT_OPS = {
     "Growth", "ModifyStats", "GrantKeyword", "RemoveGrowth", "CannotAttack",
     "DealDamage", "Summon", "Copy", "Discover", "RefreshShop", "AddShopSlot",
     "GainMinion", "Decompose", "Mimic", "Devour", "Detonate", "Convert", "Revive",
-    "Recall", "Salvage", "Latent",
+    "Recall", "Salvage", "Latent", "GrantMinion",
 }
 SELECTOR_SIDES = {"friendly", "enemy", "both", "self", "target"}
 SELECTOR_TARGET_ZONES = {"hand", "shop", "board"}
@@ -129,6 +129,7 @@ OP_SPEC = {
     "RefreshShop": (set(), {"free", "extra"}, set()),
     "AddShopSlot": ({"era", "count"}, set(), set()),
     "GainMinion": ({"level", "to"}, {"from"}, set()),
+    "GrantMinion": ({"level", "to"}, set(), set()),
     "Decompose": ({"basis", "duration"}, {"timesIf", "condition", "when"}, set()),
     "Mimic": ({"duration"}, {"statsOnly"}, set()),
     "Devour": ({"value"}, {"duration", "when"}, set()),
@@ -156,15 +157,15 @@ CAP = {1: 8, 2: 10, 3: 13, 4: 17, 5: 22, 6: 26, 7: 33}
 KW_UNLOCK = {"breed": 1, "taunt": 2, "windfury": 3, "ignore_taunt": 3,
              "contagion": 3, "reborn": 4, "divine_shield": 5,
              "poison": 3, "armor": 2, "stealth": 3}
-EXPECT_ERA = {"prehistoric": 63, "primitive": 60, "classical": 45, "feudal": 57,
+EXPECT_ERA = {"prehistoric": 86, "primitive": 60, "classical": 45, "feudal": 57,
               "industrial": 41, "modern": 96, "future": 47}
-EXPECT_LEVEL = {1: 35, 2: 52, 3: 59, 4: 60, 5: 55, 6: 28, 7: 20}
+EXPECT_LEVEL = {1: 50, 2: 58, 3: 61, 4: 60, 5: 55, 6: 28, 7: 20}
 SKILL_FIELDS = ["id"]
 SKILL_OPTIONAL_FIELDS = {"text", "template", "keyword", "cost",
                          "uses_per_turn", "name", "match_text"}
-MINION_FIELDS = ["id", "name", "card_type", "categories", "taxon", "subtype", "level", "era",
+MINION_FIELDS = ["id", "name", "card_type", "taxon", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
-EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "categories", "taxon",
+EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "taxon",
                  "cost", "match_text"]
 HERO_REQUIRED_FIELDS = ["id", "name", "categories"]
 HERO_OPTIONAL_FIELDS = {"skills"}
@@ -330,7 +331,7 @@ def check_params(op, params, chunk):
     for key, val in params.items():
         if key in NUMERIC_KEYS and not re.fullmatch(r"-?\d+", val):
             errors.append(f"参数 {key} 必须为整数，实为 {val!r}（{chunk}）")
-        elif key == "level" and val not in ("current",) and not re.fullmatch(r"\d+", val):
+        elif key == "level" and val not in ("current", "next") and not re.fullmatch(r"\d+", val):
             errors.append(f"参数 level 非法 {val!r}（{chunk}）")
         elif key == "duration" and val not in DURATIONS:
             errors.append(f"duration 非法 {val!r}（{chunk}）")
@@ -360,6 +361,10 @@ def check_params(op, params, chunk):
             else:
                 when_key, when_val = val.split("=", 1)
                 errors.extend(check_filter_value(when_key, when_val, chunk))
+    if op == "GrantMinion" and params.get("to") != "hand":
+        errors.append(f"GrantMinion 的 to 只接受 hand，实为 {params.get('to')!r}（{chunk}）")
+    if params.get("level") == "next" and op != "GrantMinion":
+        errors.append(f"level=next 只用于 GrantMinion（{chunk}）")
     return errors
 
 
@@ -643,7 +648,7 @@ def parse_categories(doc):
 
 
 def effective_playstyles(doc):
-    """卡牌的全部玩法归属；Token 仍单独使用单值 playstyle。"""
+    """卡牌的全部玩法归属。"""
     return [target for kind, target in parse_categories(doc) if kind == "play"]
 
 
@@ -659,11 +664,16 @@ def _category_order(target, kind):
 
 
 def category_errors(doc, check_biological=True):
-    """解析并校验 categories：语法、前缀、重复、至少 1 条 play、取值与顺序。"""
+    """解析并校验 categories：语法、前缀、重复、至少 1 条 play、取值与顺序。
+
+    不进商店卡池的卡（衍生物、生成卡）不参与玩法筛选，允许没有 categories。
+    """
     label = card_label(doc)
     value = doc.get("categories")
     if value is None:
-        return [f"{label}: 缺字段 categories"]
+        if doc.get("in_shop_pool", True):
+            return [f"{label}: 缺字段 categories"]
+        return []
     if not isinstance(value, list):
         return [f"{label}: categories 必须是列表，实为 {value!r}"]
     errors = []
@@ -700,7 +710,7 @@ def category_errors(doc, check_biological=True):
                 errors.append(f"{label}: {item!r} 的节点不在分类树中")
             if check_biological and TAXONOMY_NODES and not is_biological(doc):
                 errors.append(f"{label}: {item!r} 只允许生物卡（taxon 根节点必须是生物界）")
-    if plays == 0:
+    if plays == 0 and doc.get("in_shop_pool", True):
         errors.append(f"{label}: categories 至少要有 1 条 play:")
     expected = sorted(ordered, key=lambda pair: _category_order(pair[1], pair[0]))
     if ordered != expected:
@@ -785,6 +795,8 @@ def skill_count_errors(doc, skill_map):
     label = card_label(doc)
     skills = card_skills(doc)
     if not skills:
+        if doc.get("in_shop_pool", True) is False:
+            return []
         if doc.get("is_scholar") is not True and doc.get("taxon") in CRAFT_TOOL_TAXA:
             return []
         return [f"{label}: 无技能随从只允许非学者造物工具卡"]
@@ -988,7 +1000,7 @@ def taxon_path(node_id):
 
 
 def playstyle_display(playstyle):
-    """单值玩法展示名；neutral 显示「中立」（Token 与筛选兜底使用）。"""
+    """单值玩法展示名；neutral 显示「中立」（筛选兜底使用）。"""
     if playstyle == "neutral":
         return "中立"
     return playstyle_name(playstyle)
@@ -1056,6 +1068,8 @@ def expected_card_attrs(doc, skill_map):
             attrs["科学分类"] = taxon_value
         if specialty_value:
             attrs["关联分类"] = specialty_value
+        if not doc.get("in_shop_pool", True):
+            attrs["进商店卡池"] = "否"
         return attrs
     attrs = {
         "id": doc["id"], "名称": doc["name"],
@@ -1069,6 +1083,8 @@ def expected_card_attrs(doc, skill_map):
         attrs["科学分类"] = taxon_value
     if specialty_value:
         attrs["关联分类"] = specialty_value
+    if not doc.get("in_shop_pool", True):
+        attrs["进商店卡池"] = "否"
     return attrs
 
 
@@ -1159,8 +1175,8 @@ def check_skills():
     global KEYWORD_LABELS
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 254:
-        fail(f"技能数量 {len(skills)}，期望 254")
+    if len(skills) != 255:
+        fail(f"技能数量 {len(skills)}，期望 255")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
@@ -1325,10 +1341,12 @@ def skill_ref_errors(doc, skill_map):
 
 
 def check_cards(skill_map):
-    raw = load("cards", ["id", "name", "card_type", "level", "categories", "taxon"])
+    raw = load("cards", ["id", "name", "card_type", "level", "taxon"])
     for doc in raw:
         if doc["card_type"] not in CARD_TYPES:
             fail(f"{doc['_file']}: card_type 非法 {doc['card_type']!r}")
+        if "in_shop_pool" in doc and not isinstance(doc["in_shop_pool"], bool):
+            fail(f"{doc['_file']}: in_shop_pool 必须是 true / false，实为 {doc['in_shop_pool']!r}")
         raw_skills = doc.get("skills")
         if raw_skills is not None and not isinstance(raw_skills, list):
             fail(f"{doc['_file']}: skills 必须是列表，实为 {raw_skills!r}")
@@ -1355,7 +1373,7 @@ def check_cards(skill_map):
     minions = [c for c in raw if c["card_type"] == "minion"]
     effects = [c for c in raw if c["card_type"] == "effect"]
 
-    skillless = [c for c in minions if not card_skills(c)]
+    skillless = [c for c in minions if not card_skills(c) and c.get("in_shop_pool", True)]
     if len(skillless) != 1:
         fail(f"无技能随从 {len(skillless)} 张，期望 1 张（仅造物工具卡）")
     for c in skillless:
@@ -1385,11 +1403,12 @@ def check_cards(skill_map):
                     f"（{expected_health:g}）超过 1 点"
                 )
             continue
-        lo, hi, lh, hh = RANGE[c["level"]]
-        if not (lo <= c["attack"] <= hi and lh <= c["health"] <= hh):
-            fail(f"{name}: 数值 {c['attack']}/{c['health']} 越出 {c['level']} 星区间")
-        if c["attack"] + c["health"] + keyword_cost(c, skill_map) > CAP[c["level"]]:
-            fail(f"{name}: 超模")
+        if c.get("in_shop_pool", True):
+            lo, hi, lh, hh = RANGE[c["level"]]
+            if not (lo <= c["attack"] <= hi and lh <= c["health"] <= hh):
+                fail(f"{name}: 数值 {c['attack']}/{c['health']} 越出 {c['level']} 星区间")
+            if c["attack"] + c["health"] + keyword_cost(c, skill_map) > CAP[c["level"]]:
+                fail(f"{name}: 超模")
 
     for c in minions:
         for k in derived_keywords(c, skill_map):
@@ -1421,14 +1440,15 @@ def check_cards(skill_map):
                 fail(message)
 
     counts = collections.Counter(c["card_type"] for c in raw)
-    if counts != {"minion": 309, "effect": 100}:
+    if counts != {"minion": 332, "effect": 100}:
         fail(f"卡牌类型分布不符: {dict(counts)}")
     ids = [c["id"] for c in raw]
     dup = [v for v, n in collections.Counter(ids).items() if n > 1]
     if dup:
         fail(f"卡牌 id 重复: {dup}")
     for label, group in (("随从", minions), ("效果", effects)):
-        dup = [v for v, n in collections.Counter(c["name"] for c in group).items() if n > 1]
+        pool = [c for c in group if c.get("in_shop_pool", True)]
+        dup = [v for v, n in collections.Counter(c["name"] for c in pool).items() if n > 1]
         if dup:
             fail(f"{label}名称重复: {dup}")
 

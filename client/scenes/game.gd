@@ -348,7 +348,7 @@ func _set_deadline_expired(value: bool) -> void:
 
 # ── 弹层 ──────────────────────────────────────────────────────────────────
 
-## 打开本局卡牌图鉴：只列服务端 `enabledFactions` 对应的卡池，不含 Token。
+## 打开本局卡牌图鉴：只列服务端 `enabledFactions` 对应的卡池，不含非池卡。
 ## 不切场景，关闭后保留拖拽、待选与战斗演示的全部状态。
 func _open_gallery() -> void:
     if _overlay.visible:

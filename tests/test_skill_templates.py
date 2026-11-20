@@ -72,14 +72,14 @@ class RenderTest(unittest.TestCase):
     def setUp(self):
         self.renderer = skill_templates.Renderer()
         self.summon_one = skill_templates.TemplateCall(
-            "on-death-summon", {"token": "baiyi", "count": "1"})
+            "on-death-summon", {"token": "termite-token", "count": "1"})
         self.summon_two = skill_templates.TemplateCall(
-            "on-death-summon", {"token": "baiyi", "count": "2"})
+            "on-death-summon", {"token": "termite-token", "count": "2"})
 
     def test_expand_effect(self):
         self.assertEqual(
             self.renderer.expand(self.summon_one),
-            ("OnDeath|Summon|self|token=baiyi,count=1",))
+            ("OnDeath|Summon|self|token=termite-token,count=1",))
 
     def test_expand_omits_missing_arg(self):
         call = skill_templates.TemplateCall(
@@ -89,13 +89,13 @@ class RenderTest(unittest.TestCase):
                          ("Aura|ModifyStats|friendly:adjacent:playstyle=mammal|attack=2,health=2",))
 
     def test_expand_omits_default_when_instance_omits_it(self):
-        call = skill_templates.TemplateCall("on-death-summon", {"token": "baiyi"})
+        call = skill_templates.TemplateCall("on-death-summon", {"token": "termite-token"})
         self.assertEqual(self.renderer.expand(call),
-                         ("OnDeath|Summon|self|token=baiyi",))
+                         ("OnDeath|Summon|self|token=termite-token",))
 
     def test_text_uses_default_when_instance_omits_it(self):
-        call = skill_templates.TemplateCall("on-death-summon", {"token": "baiyi"})
-        self.assertEqual(self.renderer.text(call), "亡语：召唤一个 2/2 的白蚁")
+        call = skill_templates.TemplateCall("on-death-summon", {"token": "termite-token"})
+        self.assertEqual(self.renderer.text(call), "亡语：召唤一个 2/2 的白蚁（2/2）")
 
     def test_missing_required_param_raises_even_if_only_in_params(self):
         template = skill_templates.Template(
@@ -109,7 +109,7 @@ class RenderTest(unittest.TestCase):
 
     def test_text_count_and_stats(self):
         self.assertEqual(self.renderer.text(self.summon_two),
-                         "亡语：召唤两个 2/2 的白蚁")
+                         "亡语：召唤两个 2/2 的白蚁（2/2）")
 
     def test_keyword_text_substitutes_level(self):
         call = skill_templates.TemplateCall("keyword-self", {"keyword": "armor 2"})
@@ -128,18 +128,18 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(self.renderer.text(call), "使一个友方随从获得嘲讽直到回合结束")
 
     def test_multiple_calls_bind_args_per_template(self):
-        doc = {"template": "on-death-summon(token=baiyi,count=2); "
+        doc = {"template": "on-death-summon(token=termite-token,count=2); "
                            "on-play-keyword-single(keyword=armor 2,duration=combat)"}
         self.assertEqual(self.renderer.instance_segments(doc), (
-            "OnDeath|Summon|self|token=baiyi,count=2",
+            "OnDeath|Summon|self|token=termite-token,count=2",
             "OnPlayEffect|GrantKeyword|friendly:single|keyword=armor,value=2,duration=combat",
         ))
 
     def test_ascii_and_fullwidth_separator_are_equivalent(self):
         ascii_calls = skill_templates.parse_template_field(
-            "on-death-summon(token=baiyi); keyword-self(keyword=taunt)")
+            "on-death-summon(token=termite-token); keyword-self(keyword=taunt)")
         fullwidth_calls = skill_templates.parse_template_field(
-            "on-death-summon(token=baiyi)；keyword-self(keyword=taunt)")
+            "on-death-summon(token=termite-token)；keyword-self(keyword=taunt)")
         self.assertEqual(ascii_calls, fullwidth_calls)
 
     def test_effect_params_split_keyword_components(self):
@@ -186,7 +186,7 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(self.renderer.text(call), "获得 +0/+1 直到回合结束")
 
     def test_text_override_wins(self):
-        doc = {"template": "on-death-summon(token=baiyi,count=1)",
+        doc = {"template": "on-death-summon(token=termite-token,count=1)",
                "text": "亡语：召唤一个 1/2 的白蚁"}
         self.assertEqual(self.renderer.instance_text(doc),
                          "亡语：召唤一个 1/2 的白蚁")

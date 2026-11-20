@@ -12,6 +12,7 @@ use crate::effects::{Effect, EffectCtx, Trigger, Zone};
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::recruit::new_minion;
+use crate::rng::Stream;
 use crate::state::{GameState, HandCard, ShopSlot};
 
 /// 商店槽位硬上限；追加槽位不得越过该值。
@@ -93,6 +94,63 @@ impl Engine {
             }
         }
         Vec::new()
+    }
+
+    /// `GrantMinion{level, to}`：不经过发现与共享池，直接发放一张随从到手牌。
+    ///
+    /// - `level = next` 取 `level_override`（三连奖励在发牌时已算好来源星级 +1），
+    ///   缺省用玩家当前时代的下一级，6 星封顶；`current` 与具体星级同 `GainMinion`。
+    /// - 候选为进商店卡池、命中本局启用玩法的随从；随机只走 [`Stream::Effects`]。
+    /// - 不扣共享池、不登记发现待选；手牌满或没有候选时不发放，效果牌照常消耗。
+    /// - 发放后立即执行三连判定。
+    pub(crate) fn apply_grant_minion(
+        &mut self,
+        state: &mut GameState,
+        effect: &Effect,
+        ctx: &EffectCtx,
+    ) -> Vec<GameEvent> {
+        let Some(player) = state.players.get(usize::from(ctx.seat)) else {
+            return Vec::new();
+        };
+        if player.hand.len() >= self.catalog.config.hand_slots {
+            return Vec::new();
+        }
+        let star = match effect.params.level.as_deref() {
+            Some("next") => ctx.level_override.unwrap_or(player.era as u8 + 1).min(6),
+            Some("current") | None => ctx.level_override.unwrap_or(player.era as u8).min(6),
+            Some(other) => match other.parse::<u8>() {
+                Ok(star) => star,
+                Err(_) => return Vec::new(),
+            },
+        };
+        let candidates: Vec<&str> = self
+            .catalog
+            .cards
+            .values()
+            .filter(|card| {
+                card.card_type == CardType::Minion
+                    && card.in_shop_pool
+                    && card.level == star
+                    && card_in_pool(card, &state.enabled_playstyles)
+            })
+            .map(|card| card.id.as_str())
+            .collect();
+        if candidates.is_empty() {
+            return Vec::new();
+        }
+        let index = state.rng.below(Stream::Effects, candidates.len() as u64) as usize;
+        let card_id = candidates[index].to_string();
+        let instance_id = state.next_instance_id;
+        state.next_instance_id = instance_id.saturating_add(1);
+        state.players[usize::from(ctx.seat)]
+            .hand
+            .push(HandCard::Minion(new_minion(
+                &self.catalog,
+                instance_id,
+                &card_id,
+                false,
+            )));
+        self.check_triple(state, ctx.seat)
     }
 
     /// `GainMinion{from, level, to}`：按 `level` 从商店获得一张随从，放到 `to`。
@@ -186,7 +244,7 @@ impl Engine {
                         target: None,
                         event_target: None,
                         golden: false,
-                        discover_level: None,
+                        level_override: None,
                     },
                 );
                 self.fire_ally_summon_recruit(state, ctx.seat, instance_id);
@@ -227,7 +285,7 @@ fn first_shop_slot(
         })
 }
 
-/// 指定星级的合格随从：随从、非英雄、该星级、[`card_in_pool`] 通过。
+/// 指定星级的合格随从：池内随从、该星级、[`card_in_pool`] 通过。
 ///
 /// 学者的 `playstyle` 为 `neutral`，由 `play:` 决定入池，这里不再额外排除。
 fn is_level_minion(
@@ -237,11 +295,14 @@ fn is_level_minion(
     playstyles: &BTreeSet<Playstyle>,
 ) -> bool {
     catalog.cards.get(card_id).is_some_and(|card| {
-        card.card_type == CardType::Minion && card.level == star && card_in_pool(card, playstyles)
+        card.card_type == CardType::Minion
+            && card.in_shop_pool
+            && card.level == star
+            && card_in_pool(card, playstyles)
     })
 }
 
-/// 指定星级的「排序第一张」合格随从：随从、非英雄、池中有货、[`card_in_pool`] 通过。
+/// 指定星级的「排序第一张」合格随从：池内随从、池中有货、[`card_in_pool`] 通过。
 fn first_eligible(
     catalog: &Catalog,
     pool: &BTreeMap<String, u16>,
@@ -253,6 +314,7 @@ fn first_eligible(
         .values()
         .find(|card| {
             card.card_type == CardType::Minion
+                && card.in_shop_pool
                 && card.level == star
                 && pool.get(&card.id).copied().unwrap_or(0) > 0
                 && card_in_pool(card, playstyles)

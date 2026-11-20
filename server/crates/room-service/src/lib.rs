@@ -28,7 +28,6 @@ use tokio::sync::Mutex;
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
-const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
 const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
@@ -111,7 +110,6 @@ fn load_catalog() -> Result<Catalog, String> {
         CARDS_JSON,
         HEROES_JSON,
         SKILLS_JSON,
-        TOKENS_JSON,
         CONFIG_JSON,
         TAXONOMY_JSON,
     )
@@ -267,8 +265,7 @@ pub use view::SeatInfo;
 #[cfg(test)]
 mod tests {
     use super::{
-        CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON,
-        ensure_hero_pool,
+        CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, ensure_hero_pool,
     };
     use rule_engine::data::{Catalog, Category, CategoryKind};
 
@@ -277,7 +274,6 @@ mod tests {
             CARDS_JSON,
             HEROES_JSON,
             SKILLS_JSON,
-            TOKENS_JSON,
             CONFIG_JSON,
             TAXONOMY_JSON,
         )

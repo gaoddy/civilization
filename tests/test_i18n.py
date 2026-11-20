@@ -62,11 +62,11 @@ class TextTableTest(unittest.TestCase):
         self.assertEqual(len(keys), len(set(keys)))
         self.assertEqual([row for row in rows[1:] if not row[1]], [])
 
-    def test_content_keys_cover_cards_skills_tokens(self):
+    def test_content_keys_cover_cards_and_skills(self):
         keys = _keys(gen_text.build(ROOT))
         self.assertIn("card.adam-smith.name", keys)
         self.assertIn("skill.division-of-labor.text", keys)
-        self.assertIn("token.seedling.name", keys)
+        self.assertIn("card.seedling.name", keys)
 
     def test_generated_prefix_keys_are_replaced(self):
         existing = {"ui.test.only": "只用于测试", "card.old.name": "旧卡"}
@@ -154,7 +154,7 @@ class TextTableTest(unittest.TestCase):
             for value in values:
                 self.assertIn(f"enum.{group}.{value}", keys)
         labels = validate_docs.card_enum_labels(
-            validate_docs.load("cards", ["id", "card_type", "categories", "taxon", "era"])
+            validate_docs.load("cards", ["id", "card_type", "taxon", "era"])
         )
         for slug in labels["subtype"]:
             self.assertIn(f"enum.subtype.{slug}", keys)
@@ -166,8 +166,6 @@ class TextTableTest(unittest.TestCase):
             self.assertIn(f"card.{doc['id']}.name", keys)
         for doc in gen_card_data.load_docs(content, "skills"):
             self.assertIn(f"skill.{doc['id']}.text", keys)
-        for token in gen_card_data.parse_tokens(content / "tokens" / "README.md"):
-            self.assertIn(f"token.{token['id']}.name", keys)
 
     def test_csv_has_no_literal_newlines(self):
         raw = (ROOT / "client/text/zh_CN.csv").read_text(encoding="utf-8")

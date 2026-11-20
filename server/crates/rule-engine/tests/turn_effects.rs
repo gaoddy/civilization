@@ -40,6 +40,7 @@ fn add_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(playstyle),
             subtype: None,
@@ -229,7 +230,7 @@ fn ctx(seat: Seat) -> EffectCtx {
         target: None,
         event_target: None,
         golden: false,
-        discover_level: None,
+        level_override: None,
     }
 }
 
@@ -1138,10 +1139,7 @@ fn salvage_adds_only_machine_minions_to_hand() {
             card_has_play(card, "machine"),
             "随机池只含带 play:machine 的牌"
         );
-        assert!(
-            !engine.catalog.tokens.contains_key(&copy.card_id),
-            "排除 Token"
-        );
+        assert!(card.in_shop_pool, "排除非池卡");
         assert_eq!(
             card.card_type,
             CardType::Minion,

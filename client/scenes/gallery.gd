@@ -1,5 +1,5 @@
 extends Control
-## 卡牌图鉴页：大厅入口，浏览全部卡牌与 Token，返回大厅。
+## 卡牌图鉴页：大厅入口，浏览全部卡牌，返回大厅。
 
 func _ready() -> void:
     var gallery := CardGallery.new()

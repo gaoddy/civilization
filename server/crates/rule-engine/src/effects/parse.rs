@@ -41,6 +41,7 @@ const OPS: &[(&str, Op)] = &[
     ("RefreshShop", Op::RefreshShop),
     ("AddShopSlot", Op::AddShopSlot),
     ("GainMinion", Op::GainMinion),
+    ("GrantMinion", Op::GrantMinion),
     ("Decompose", Op::Decompose),
     ("Mimic", Op::Mimic),
     ("Devour", Op::Devour),

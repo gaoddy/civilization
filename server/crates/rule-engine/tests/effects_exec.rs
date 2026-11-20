@@ -45,6 +45,7 @@ fn add_card(engine: &mut Engine, id: &str, attack: i32, health: i32, keywords: &
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(Playstyle::Mammal),
             subtype: None,
@@ -106,7 +107,7 @@ fn ctx(seat: Seat) -> EffectCtx {
         target: None,
         event_target: None,
         golden: false,
-        discover_level: None,
+        level_override: None,
     }
 }
 
@@ -611,7 +612,7 @@ fn coverage_counts_all_effect_segments() {
 
     let total: usize = coverage.values().sum();
     // 英雄主动技能各带一段 `OnActivate` 效果，效果段总数随之上升。
-    assert_eq!(total, 241, "已提交数据的全部效果段都应被统计");
+    assert_eq!(total, 242, "已提交数据的全部效果段都应被统计");
     assert_eq!(coverage.get(&(Trigger::OnPlay, Op::Growth)), Some(&21));
     assert_eq!(coverage.get(&(Trigger::OnPlay, Op::ModifyStats)), Some(&12));
     assert_eq!(coverage.get(&(Trigger::OnUse, Op::ModifyStats)), Some(&1));
@@ -634,6 +635,7 @@ fn coverage_counts_all_effect_segments() {
         Op::RefreshShop,
         Op::AddShopSlot,
         Op::GainMinion,
+        Op::GrantMinion,
         Op::Decompose,
         Op::Mimic,
         Op::Devour,

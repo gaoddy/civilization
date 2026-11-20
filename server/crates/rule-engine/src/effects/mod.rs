@@ -63,6 +63,7 @@ pub enum Op {
     RefreshShop,
     AddShopSlot,
     GainMinion,
+    GrantMinion,
     Decompose,
     Mimic,
     Devour,

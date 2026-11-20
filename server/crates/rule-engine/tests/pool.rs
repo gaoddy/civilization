@@ -1,4 +1,4 @@
-//! 卡池判定：玩法过滤、中立与学者口径、分类祖先匹配、Token 回退。
+//! 卡池判定：玩法过滤、中立与学者口径、分类祖先匹配、非池卡事实。
 
 mod common;
 
@@ -6,8 +6,7 @@ use std::collections::BTreeSet;
 
 use common::{effects_of, place, setup, test_catalog};
 use rule_engine::data::{
-    Card, CardType, Catalog, Category, CategoryKind, Era, Playstyle, Token, card_in_pool,
-    hero_in_pool,
+    Card, CardType, Catalog, Category, CategoryKind, Era, Playstyle, card_in_pool, hero_in_pool,
 };
 use rule_engine::effects::{Effect, EffectCtx};
 use rule_engine::engine::Engine;
@@ -30,6 +29,7 @@ fn card(id: &str, categories: Vec<Category>) -> Card {
     Card {
         id: id.to_string(),
         card_type: CardType::Minion,
+        in_shop_pool: true,
         taxon: "hominidae".to_string(),
         categories,
         subtype: None,
@@ -86,7 +86,7 @@ fn ctx(seat: u8) -> EffectCtx {
         target: None,
         event_target: None,
         golden: false,
-        discover_level: None,
+        level_override: None,
     }
 }
 
@@ -390,7 +390,7 @@ fn scholar_discover_uses_play_association() {
     state.pool.insert("on-mammal".to_string(), 20);
 
     let mut discover_ctx = ctx(0);
-    discover_ctx.discover_level = Some(6);
+    discover_ctx.level_override = Some(6);
     engine.apply_op(
         &mut state,
         &effect("OnActivate|Discover|self|pool=playstyle,choose=1"),
@@ -594,16 +594,23 @@ fn token_uses_own_playstyle_and_taxon_defaults() {
     );
     assert_eq!(state.players[0].board[0].stats.attack.growth, 2);
 
-    // 缺玩法的 Token：按 neutral 处理，分类直接取自身 taxon。
-    engine.catalog.tokens.insert(
+    // 缺玩法的非池卡：没有 play 归属，分类直接取自身 taxon。
+    engine.catalog.cards.insert(
         "plain-token".to_string(),
-        Token {
+        Card {
             id: "plain-token".to_string(),
-            attack: 1,
-            health: 1,
-            keywords: Vec::new(),
-            playstyle: None,
+            card_type: CardType::Minion,
+            in_shop_pool: false,
             taxon: "biology".to_string(),
+            categories: Vec::new(),
+            subtype: None,
+            level: 1,
+            era: None,
+            attack: Some(1),
+            health: Some(1),
+            skills: Vec::new(),
+            is_scholar: false,
+            cost: None,
         },
     );
     let plain_id = state.next_instance_id;
@@ -615,13 +622,13 @@ fn token_uses_own_playstyle_and_taxon_defaults() {
         false,
     ));
 
-    // 缺省玩法的回退口径。
+    // 缺省玩法：没有 play 归属，taxon 仍可参与筛选。
     let plain_token = engine
         .catalog
-        .tokens
+        .cards
         .get("plain-token")
-        .expect("刚插入的 Token");
-    assert_eq!(plain_token.playstyle(), Playstyle::Neutral);
+        .expect("刚插入的非池卡");
+    assert!(plain_token.categories.is_empty());
     assert_eq!(plain_token.taxon, "biology");
     engine.apply_op(
         &mut state,

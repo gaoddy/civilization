@@ -18,7 +18,6 @@ use rule_engine::state::Seat;
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
-const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
 const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 
@@ -42,7 +41,6 @@ fn catalog() -> Catalog {
         CARDS_JSON,
         HEROES_JSON,
         SKILLS_JSON,
-        TOKENS_JSON,
         CONFIG_JSON,
         TAXONOMY_JSON,
     )
@@ -111,9 +109,8 @@ fn catalog_with_discover_on_play() -> Catalog {
             uses_per_turn: None,
         },
     );
-    let token_ids: BTreeSet<String> = catalog.tokens.keys().cloned().collect();
     for card in catalog.cards.values_mut() {
-        if card.card_type == CardType::Minion && card.level == 1 && !token_ids.contains(&card.id) {
+        if card.card_type == CardType::Minion && card.level == 1 && card.in_shop_pool {
             card.skills.push("test-discover-on-play".to_string());
         }
     }

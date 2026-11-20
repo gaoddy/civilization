@@ -20,7 +20,6 @@ def build_fixture(tmp):
     """构造最小内容目录：一条模板、一个技能实例、一张引用它的卡牌。"""
     content = pathlib.Path(tmp) / "content"
     (content / "skill-templates").mkdir(parents=True)
-    (content / "tokens").mkdir()
     (content / "skills").mkdir()
     (content / "cards").mkdir()
     (content / "heroes").mkdir()
@@ -48,10 +47,12 @@ def build_fixture(tmp):
         "## 4. 关键词文案\n\n| 键 | 文案 |\n| --- | --- |\n"
         "| deathrattle | 亡语：死亡时触发 |\n| taunt | 嘲讽 |\n",
         encoding="utf-8")
-    (content / "tokens" / "README.md").write_text(
-        "## 2. 注册表\n\n| id | 名称 | 攻击力 | 生命值 | 关键词 | 玩法 | 科学分类 | 引用 |\n"
-        "| --- | --- | --- | --- | --- | --- | --- | --- |\n"
-        "| `baiyi` | 白蚁 | 1 | 2 | 无 | insect | animalia | 1 |\n",
+    (content / "cards" / "baiyi.md").write_text(
+        "---\nid: baiyi\nname: 白蚁\ncard_type: minion\nin_shop_pool: false\n"
+        "taxon: animalia\nsubtype: insect\nlevel: 1\nera: prehistoric\n"
+        "attack: 1\nhealth: 2\nis_scholar: false\n---\n\n"
+        "# 白蚁\n\n## 属性\n\n| 属性 | 值 |\n| --- | --- |\n| id | baiyi |\n\n"
+        "## 效果\n\n无\n",
         encoding="utf-8")
     (content / "skills" / "x.md").write_text(
         "---\nid: x\ntemplate: on-death-summon(token=baiyi,count=1)\n"
@@ -126,8 +127,8 @@ class GeneratorTemplateTest(unittest.TestCase):
 
     def test_skill_text_template_matches_renderer(self):
         rendered = self.renderer.instance_text(
-            {"id": "x", "template": "on-death-summon(token=baiyi,count=1)"})
-        self.assertEqual(rendered, "亡语：召唤一个 2/2 的白蚁")
+            {"id": "x", "template": "on-death-summon(token=termite-token,count=1)"})
+        self.assertEqual(rendered, "亡语：召唤一个 2/2 的白蚁（2/2）")
 
 
 class AuditTemplateTest(unittest.TestCase):

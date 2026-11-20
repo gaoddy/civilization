@@ -11,7 +11,6 @@ use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat, Sho
 pub const CARDS_JSON: &str = include_str!("../../../../data/v0.1/cards.json");
 pub const HEROES_JSON: &str = include_str!("../../../../data/v0.1/heroes.json");
 pub const SKILLS_JSON: &str = include_str!("../../../../data/v0.1/skills.json");
-pub const TOKENS_JSON: &str = include_str!("../../../../data/v0.1/tokens.json");
 pub const CONFIG_JSON: &str = include_str!("../../../../data/v0.1/config.json");
 pub const TAXONOMY_JSON: &str = include_str!("../../../../data/v0.1/taxonomy.json");
 
@@ -21,7 +20,6 @@ pub fn test_catalog() -> Catalog {
         CARDS_JSON,
         HEROES_JSON,
         SKILLS_JSON,
-        TOKENS_JSON,
         CONFIG_JSON,
         TAXONOMY_JSON,
     )
@@ -143,7 +141,7 @@ pub fn minion_id(level: u8) -> String {
     test_catalog()
         .cards
         .values()
-        .find(|card| card.card_type == CardType::Minion && card.level == level)
+        .find(|card| card.card_type == CardType::Minion && card.in_shop_pool && card.level == level)
         .expect("数据中应存在该星级随从")
         .id
         .clone()
@@ -160,4 +158,23 @@ pub fn reborn_count(log: &CombatLog) -> usize {
         .iter()
         .filter(|action| matches!(action, CombatAction::Reborn { .. }))
         .count()
+}
+
+/// 构造一张非池随从卡（衍生物/生成卡），供测试登记到目录。
+pub fn token_card(id: &str, attack: i32, health: i32) -> rule_engine::data::Card {
+    rule_engine::data::Card {
+        id: id.to_string(),
+        card_type: CardType::Minion,
+        in_shop_pool: false,
+        taxon: "biology".to_string(),
+        categories: Vec::new(),
+        subtype: None,
+        level: 1,
+        era: None,
+        attack: Some(attack),
+        health: Some(health),
+        skills: Vec::new(),
+        is_scholar: false,
+        cost: None,
+    }
 }

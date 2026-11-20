@@ -193,6 +193,11 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 模拟器 AI 使用英雄主动技能，按引擎下发的合法目标池选择目标，「全选友方」
 /// 「筛选后单体」与「战斗期关键词」三种技能形状不再跳过；与多玩法卡池、
 /// 商店抽取叠加后技能结算与随机流消耗再次改变，本批次 20 局哈希全部改变。
+///
+/// 2026-11-21 第二十一次重定：Token 合入卡牌实体并新增 `in_shop_pool`，
+/// 三连奖励改为直接随机发放下一等级池内随从（`GrantMinion`，消耗
+/// `Stream::Effects`），共享池、商店候选与发现候选统一按池内卡过滤；
+/// AI 的对局路径与随机流消耗随之改变，本批次 20 局哈希全部改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

@@ -49,7 +49,7 @@ pub struct EffectCtx {
     /// 来源是否为金色（整段效果连续执行两次）。
     pub golden: bool,
     /// 本次发现锁定的星级（「三连奖励」）；`None` 时发现按玩家时代取星级。
-    pub discover_level: Option<u8>,
+    pub level_override: Option<u8>,
 }
 
 impl Engine {
@@ -184,6 +184,7 @@ impl Engine {
             Op::RefreshShop => self.apply_refresh_shop(state, effect, ctx),
             Op::AddShopSlot => self.apply_add_shop_slot(state, effect, ctx),
             Op::GainMinion => self.apply_gain_minion(state, effect, ctx),
+            Op::GrantMinion => self.apply_grant_minion(state, effect, ctx),
             Op::Summon => {
                 self.summon_recruit_from_effect(state, effect, &targets, ctx);
                 Vec::new()
@@ -1142,7 +1143,7 @@ impl Engine {
         events
     }
 
-    /// `timesIf` 是否命中该卡牌/Token。`scholar` 只看学者标记，其余按筛选键匹配。
+    /// `timesIf` 是否命中该卡牌。`scholar` 只看学者标记，其余按筛选键匹配。
     fn times_if_matches(&self, card_id: &str, times_if: &TimesIf) -> bool {
         let Some(facts) = card_facts(&self.catalog, card_id) else {
             return false;
@@ -1197,15 +1198,24 @@ impl Engine {
         }
     }
 
-    /// 解析召唤来源：token 优先，其次卡牌；返回 `(card_id, 是否扣池)`。
+    /// 解析召唤来源：`token` 只命中非池卡（衍生物），`card` 只命中池内卡；
+    /// 返回 `(card_id, 是否扣池)`。
     fn recruit_summon_card(&self, effect: &Effect) -> Option<(String, bool)> {
         if let Some(token_id) = &effect.params.token
-            && self.catalog.tokens.contains_key(token_id)
+            && self
+                .catalog
+                .cards
+                .get(token_id)
+                .is_some_and(|card| !card.in_shop_pool)
         {
             return Some((token_id.clone(), false));
         }
         if let Some(card_id) = &effect.params.card
-            && self.catalog.cards.contains_key(card_id)
+            && self
+                .catalog
+                .cards
+                .get(card_id)
+                .is_some_and(|card| card.in_shop_pool)
         {
             return Some((card_id.clone(), true));
         }
@@ -1241,7 +1251,7 @@ impl Engine {
                     target: None,
                     event_target: Some(*target),
                     golden: *golden,
-                    discover_level: None,
+                    level_override: None,
                 };
                 let _ = self.run_card_effects(state, card_id, Trigger::OnAllyGrowth, &ctx);
             }
@@ -1302,7 +1312,7 @@ impl Engine {
                 target: None,
                 event_target: Some(summoned),
                 golden,
-                discover_level: None,
+                level_override: None,
             };
             let _ = self.run_card_effects(state, &card_id, Trigger::OnAllySummon, &ctx);
         }
@@ -1481,7 +1491,7 @@ impl Engine {
                     target: None,
                     event_target: None,
                     golden: false,
-                    discover_level: None,
+                    level_override: None,
                 };
                 self.fire_combat_effects(field, rng, &effects, ctx);
             }
@@ -1523,7 +1533,7 @@ impl Engine {
             target: None,
             event_target,
             golden: minion.golden,
-            discover_level: None,
+            level_override: None,
         };
         self.fire_combat_effects(field, rng, &effects, ctx);
     }
@@ -1564,7 +1574,7 @@ impl Engine {
             target: None,
             event_target: None,
             golden: minion.golden,
-            discover_level: None,
+            level_override: None,
         };
         self.fire_combat_effects(field, rng, &effects, ctx);
     }
@@ -1651,7 +1661,7 @@ impl Engine {
                 target: None,
                 event_target,
                 golden: minion.golden,
-                discover_level: None,
+                level_override: None,
             };
             self.fire_combat_effects(field, rng, &effects, ctx);
         }
@@ -2154,27 +2164,25 @@ impl Engine {
             return;
         }
 
-        // `pool=playstyle`：载体所属玩法的随从牌，排除 Token、英雄专属与奖励牌。
-        // 多玩法载体按任意一条 `play:` 取并集；Token 仍按单值玩法。
-        let carrier_playstyles: BTreeSet<Playstyle> = match self.catalog.cards.get(&carrier_card_id)
-        {
-            Some(card) => play_categories(&card.categories)
-                .filter_map(Playstyle::from_id)
-                .collect(),
-            None => self
-                .catalog
-                .tokens
-                .get(&carrier_card_id)
-                .map(|token| BTreeSet::from([token.playstyle()]))
-                .unwrap_or_default(),
-        };
+        // `pool=playstyle`：载体所属玩法的随从牌，排除非池卡、英雄专属与奖励牌。
+        // 多玩法载体按任意一条 `play:` 取并集。
+        let carrier_playstyles: BTreeSet<Playstyle> = self
+            .catalog
+            .cards
+            .get(&carrier_card_id)
+            .map(|card| {
+                play_categories(&card.categories)
+                    .filter_map(Playstyle::from_id)
+                    .collect()
+            })
+            .unwrap_or_default();
         let mut candidates: Vec<String> = self
             .catalog
             .cards
             .values()
             .filter(|card| card.card_type == CardType::Minion)
             .filter(|card| card.id != REWARD_CARD_ID)
-            .filter(|card| !self.catalog.tokens.contains_key(&card.id))
+            .filter(|card| card.in_shop_pool)
             .filter(|card| {
                 play_categories(&card.categories)
                     .filter_map(Playstyle::from_id)
@@ -2296,18 +2304,24 @@ impl Engine {
         }
     }
 
-    /// 构造召唤实例；缺失 token/card 时返回 `None`，card 会记录扣池。
+    /// 构造召唤实例；`token` 只命中非池卡、`card` 只命中池内卡，card 会记录扣池。
     fn combat_summon_instance(
         &self,
         field: &mut BattleField,
         effect: &Effect,
     ) -> Option<MinionInstance> {
         if let Some(token_id) = &effect.params.token {
-            let token = self.catalog.tokens.get(token_id)?;
-            return Some(new_minion(&self.catalog, 0, &token.id, false));
+            self.catalog
+                .cards
+                .get(token_id)
+                .filter(|card| !card.in_shop_pool)?;
+            return Some(new_minion(&self.catalog, 0, token_id, false));
         }
         if let Some(card_id) = &effect.params.card {
-            self.catalog.cards.get(card_id)?;
+            self.catalog
+                .cards
+                .get(card_id)
+                .filter(|card| card.in_shop_pool)?;
             field.record_pool_spend(card_id);
             return Some(new_minion(&self.catalog, 0, card_id, false));
         }
@@ -2705,15 +2719,11 @@ fn is_enemy_selector(selector: &Selector) -> bool {
     )
 }
 
-/// 筛选与 `timesIf` 需要的卡牌/Token 事实。
+/// 筛选与 `timesIf` 需要的卡牌事实。
 ///
-/// `catalog.cards` 查不到时回退 `catalog.tokens`。卡牌按 `categories` 的多条
-/// `play:` 判定；Token 没有 `categories`，由 `playstyle` 合成一条玩法。
-/// Token 缺玩法时按 `Neutral` 处理，分类直接取 Token 自身的 `taxon`。
-/// 两者都找不到时返回 `None`。
+/// 衍生物与非池卡同样在 `catalog.cards` 中；按 `categories` 的多条 `play:` 判定玩法。
+/// 查不到时返回 `None`。
 struct CardFacts<'a> {
-    /// Token 的单值玩法；卡牌为 `None`。
-    token_playstyle: Option<Playstyle>,
     taxon: &'a str,
     categories: &'a [Category],
     subtype: Option<&'a str>,
@@ -2727,13 +2737,8 @@ impl CardFacts<'_> {
     fn matches(&self, catalog: &Catalog, key: &str, value: &str) -> bool {
         match key {
             "taxon" => catalog.taxonomy.is_within(self.taxon, value),
-            // 卡牌的 `playstyle` 与 `play` 同口径：任一条 `play:` 命中即可。
-            "playstyle" => {
-                self.token_playstyle
-                    .is_some_and(|playstyle| playstyle.id() == value)
-                    || has_play(self.categories, value)
-            }
-            "play" => has_play(self.categories, value),
+            // `playstyle` 与 `play` 同口径：任一条 `play:` 命中即可。
+            "playstyle" | "play" => has_play(self.categories, value),
             "prey" | "host" => {
                 let kind = if key == "prey" {
                     CategoryKind::Prey
@@ -2762,25 +2767,13 @@ impl CardFacts<'_> {
 }
 
 fn card_facts<'a>(catalog: &'a Catalog, card_id: &str) -> Option<CardFacts<'a>> {
-    if let Some(card) = catalog.cards.get(card_id) {
-        return Some(CardFacts {
-            token_playstyle: None,
-            taxon: &card.taxon,
-            categories: &card.categories,
-            subtype: card.subtype.as_deref(),
-            id: &card.id,
-            card_type: card.card_type,
-            is_scholar: card.is_scholar,
-        });
-    }
-    catalog.tokens.get(card_id).map(|token| CardFacts {
-        token_playstyle: Some(token.playstyle()),
-        taxon: &token.taxon,
-        categories: &[],
-        subtype: None,
-        id: &token.id,
-        card_type: CardType::Minion,
-        is_scholar: false,
+    catalog.cards.get(card_id).map(|card| CardFacts {
+        taxon: &card.taxon,
+        categories: &card.categories,
+        subtype: card.subtype.as_deref(),
+        id: &card.id,
+        card_type: card.card_type,
+        is_scholar: card.is_scholar,
     })
 }
 

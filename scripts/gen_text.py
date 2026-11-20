@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """生成客户端文本表 client/text/zh_CN.csv。
 
-内容 key（card/skill/token）由实体文档派生；人工 key（ui/error/枚举）保留在
+内容 key（card/skill）由实体文档派生；人工 key（ui/error/枚举）保留在
 CSV 中参与合并。生成部分每次整体重算，人工部分原样保留，未知前缀直接报错。
 """
 
@@ -88,12 +88,9 @@ def generated_entries(root):
         match_text = doc.get("match_text")
         if match_text:
             entries[f"skill.{doc['id']}.match_text"] = match_text
-    token_names = gen_card_data.parse_token_names(content / "tokens" / "README.md")
-    for token_id, name in token_names.items():
-        entries[f"token.{token_id}.name"] = name
 
     raw = validate_docs.load(
-        "cards", ["id", "card_type", "categories", "taxon", "era"], root=content)
+        "cards", ["id", "card_type", "taxon", "era"], root=content)
     enum_labels = validate_docs.card_enum_labels(raw, root=content)
     hero_raw = validate_docs.load(
         "heroes", ["id", "name", "categories"], root=content)

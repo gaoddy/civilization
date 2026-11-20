@@ -5,7 +5,7 @@ extends Node
 func _ready() -> void:
     _check_font_coverage()
     _check(CardDB.display_name("adam-smith") == "亚当·斯密", "卡名")
-    _check(CardDB.display_name("seedling") == "幼苗", "Token 名")
+    _check(CardDB.display_name("seedling") == "幼苗", "衍生物卡名")
     _check(CardDB.display_text("adam-smith").contains("成长"), "技能文本")
     _check(CardDB.era_name(5) == "工业", "时代名")
     _check(UI.enum_text("playstyle", "mammal") == "哺乳纲", "玩法名")

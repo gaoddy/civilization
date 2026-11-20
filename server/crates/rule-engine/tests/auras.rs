@@ -36,6 +36,7 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, playstyle: Playstyle, eff
         Card {
             id: card_id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(playstyle),
             subtype: None,
@@ -57,6 +58,7 @@ fn add_plain_card(engine: &mut Engine, card_id: &str, playstyle: Playstyle) {
         Card {
             id: card_id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(playstyle),
             subtype: None,
@@ -78,6 +80,7 @@ fn add_insect_card(engine: &mut Engine, card_id: &str, health: i32) {
         Card {
             id: card_id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(Playstyle::Insect),
             subtype: None,

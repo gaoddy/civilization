@@ -18,21 +18,21 @@ import gen_client_data  # noqa: E402
 class GenCardDataTest(unittest.TestCase):
     def test_counts_and_sorted_ids(self):
         data = json.loads(gen_card_data.build(ROOT)["cards.json"])
-        self.assertEqual(len(data), 409)
-        self.assertEqual(sum(c["card_type"] == "minion" for c in data), 309)
+        self.assertEqual(len(data), 432)
+        self.assertEqual(sum(c["card_type"] == "minion" for c in data), 332)
         self.assertEqual([c["id"] for c in data], sorted(c["id"] for c in data))
 
-    def test_skills_and_tokens(self):
+    def test_skills_and_non_pool_cards(self):
         out = gen_card_data.build(ROOT)
+        self.assertNotIn("tokens.json", out)
         skills_dir = ROOT / "docs/versions/v0.1/product/content/skills"
         expected = sum(1 for path in skills_dir.glob("*.md") if path.name != "README.md")
         self.assertEqual(len(json.loads(out["skills.json"])), expected)
-        tokens = json.loads(out["tokens.json"])
-        ids = [t["id"] for t in tokens]
-        self.assertEqual(ids, sorted(ids))
-        self.assertGreaterEqual(len(ids), 3)
+        cards = json.loads(out["cards.json"])
+        non_pool = {c["id"] for c in cards if not c["in_shop_pool"]}
         self.assertLessEqual(
-            {"hela-cell-token", "seedling", "synthetic-cell-token"}, set(ids))
+            {"hela-cell-token", "seedling", "synthetic-cell-token", "triple-reward"},
+            non_pool)
 
     def test_skill_effects_are_structured(self):
         skills = json.loads(gen_card_data.build(ROOT)["skills.json"])
@@ -63,8 +63,8 @@ class GenClientDataTest(unittest.TestCase):
         data = gen_client_data.build(ROOT)
         cards = json.loads(data["cards.json"])
         skills = json.loads(data["skills.json"])
-        self.assertEqual(len(cards), 409)
-        self.assertEqual(len(skills), 254)
+        self.assertEqual(len(cards), 432)
+        self.assertEqual(len(skills), 255)
         heroes = json.loads(data["heroes.json"])
         self.assertEqual(len(heroes), 32)
         self.assertEqual([hero["id"] for hero in heroes],
@@ -79,15 +79,18 @@ class GenClientDataTest(unittest.TestCase):
             else:
                 self.assertIsInstance(card["display_cost"], int, card["id"])
 
-    def test_tokens_have_display_cost(self):
-        tokens = json.loads(gen_client_data.build(ROOT)["tokens.json"])
-        ids = [token["id"] for token in tokens]
-        self.assertEqual(ids, sorted(ids))
-        self.assertGreaterEqual(len(ids), 3)
+    def test_non_pool_cards_have_display_cost(self):
+        data = gen_client_data.build(ROOT)
+        self.assertNotIn("tokens.json", data)
+        cards = json.loads(data["cards.json"])
+        non_pool = [
+            card for card in cards
+            if not card["in_shop_pool"] and card["card_type"] == "minion"
+        ]
         self.assertLessEqual(
-            {"hela-cell-token", "seedling", "synthetic-cell-token"}, set(ids))
-        for token in tokens:
-            self.assertEqual(token["display_cost"], 3)
+            {"hela-cell-token", "seedling", "synthetic-cell-token"}, {c["id"] for c in non_pool})
+        for card in non_pool:
+            self.assertEqual(card["display_cost"], 3)
 
     def test_build_is_deterministic(self):
         self.assertEqual(gen_client_data.build(ROOT), gen_client_data.build(ROOT))

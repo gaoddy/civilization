@@ -2,20 +2,19 @@ class_name CardPool
 extends RefCounted
 ## 本局卡池：按服务端 `enabledFactions` 复算图鉴要展示的卡牌集合。
 ##
-## 只用于展示筛选，不参与规则判定；Token 不属于本局卡池。判定与服务端
-## `card_in_pool` 保持一致：任一条 `play:` 归属命中启用玩法即入池，没有
-## `play:` 归属的卡不入池（加载期已拒绝这类数据）。
+## 只用于展示筛选，不参与规则判定；非池卡（衍生物、生成卡）不属于本局卡池。
+## 判定与服务端一致：进商店卡池、且任一条 `play:` 归属命中启用玩法才入池。
 
-## 本局卡池的卡牌 id，按 id 升序；不含 Token。
+## 本局卡池的卡牌 id，按 id 升序；不含非池卡。
 static func card_ids(enabled: Array) -> Array:
     var enabled_set := {}
     for id in enabled:
         enabled_set[str(id)] = true
     var out: Array = []
     for id in CardDB.cards:
-        if CardDB.tokens.has(id):
-            continue
         var entry: Dictionary = CardDB.cards[id]
+        if not CardDB.in_shop_pool(entry):
+            continue
         if in_pool(entry, enabled_set):
             out.append(str(id))
     out.sort()

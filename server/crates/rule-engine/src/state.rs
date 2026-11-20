@@ -166,18 +166,13 @@ pub struct AuraEffect {
     pub floor_one: bool,
 }
 
-/// 解析卡牌或 token 的基础攻防；金色按卡面 ×2。
+/// 解析卡牌的基础攻防；金色按卡面 ×2。
 ///
-/// token 优先取注册表，普通卡取卡牌攻防；两者都找不到时返回 `None`。
+/// 衍生物与生成卡同样在 `cards` 中，按 `in_shop_pool` 区分仅影响入池，不影响取值。
 /// 「金色 ×2」规则只在这里实现，`MinionInstance::new` 与三连升金共用。
 pub(crate) fn base_stats(catalog: &Catalog, card_id: &str, golden: bool) -> Option<(i32, i32)> {
-    let (attack, health) = match catalog.tokens.get(card_id) {
-        Some(token) => (token.attack, token.health),
-        None => {
-            let card = catalog.cards.get(card_id)?;
-            (card.attack.unwrap_or(0), card.health.unwrap_or(0))
-        }
-    };
+    let card = catalog.cards.get(card_id)?;
+    let (attack, health) = (card.attack.unwrap_or(0), card.health.unwrap_or(0));
     Some(if golden {
         (attack.saturating_mul(2), health.saturating_mul(2))
     } else {

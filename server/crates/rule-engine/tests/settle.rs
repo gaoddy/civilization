@@ -19,6 +19,7 @@ fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, heal
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(Playstyle::Mammal),
             subtype: None,
@@ -82,6 +83,7 @@ fn add_keyword_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(Playstyle::Mammal),
             subtype: None,

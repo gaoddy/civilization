@@ -330,7 +330,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                             target: None,
                             event_target: None,
                             golden: false,
-                            discover_level: None,
+                            level_override: None,
                         };
                         let effects = engine.skill_effects_of(skill_id, Trigger::OnActivate);
                         engine.target_candidates(state, &effects, &ctx, false)
@@ -393,7 +393,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                     target: None,
                     event_target: None,
                     golden: false,
-                    discover_level: hand_card.reward_level(),
+                    level_override: hand_card.reward_level(),
                 };
                 engine.target_candidates(
                     state,
@@ -500,7 +500,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                     target: None,
                     event_target: None,
                     golden: hand_card.golden(),
-                    discover_level: None,
+                    level_override: None,
                 };
                 PendingChoiceView::Target {
                     source_minion_id: *source,

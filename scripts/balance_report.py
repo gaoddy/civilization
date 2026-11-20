@@ -62,14 +62,16 @@ TARGETS = {
 }
 TOLERANCE = 0.04
 MIN_SPREAD = 0.20
-EFFECT_LEVELS = {1: 10, 2: 18, 3: 22, 4: 20, 5: 16, 6: 9, 7: 5}
-EFFECT_COSTS = {0: 8, 1: 33, 2: 34, 3: 19, 4: 6}
+EFFECT_LEVELS = {1: 9, 2: 18, 3: 22, 4: 20, 5: 16, 6: 9, 7: 5}
+EFFECT_COSTS = {0: 7, 1: 33, 2: 34, 3: 19, 4: 6}
 EFFECT_SHARE_CAP = 0.30
-# 100 张效果牌按各条 play 归属的计数；来源 product.md §3 的指派分布。
+# 池内效果牌按各条 play 归属的计数；来源 product.md §3 的指派分布。
+# 三连奖励牌不进商店卡池，不计入平衡统计。
+EFFECT_TOTAL = 99
 EFFECTS_PER_PLAYSTYLE = {
-    "mammal": 25, "bird": 12, "reptile": 12, "fish": 8, "insect": 7,
+    "mammal": 24, "bird": 12, "reptile": 12, "fish": 8, "insect": 7,
     "cephalopod": 8, "cnidarian": 9, "plant": 12, "fungus": 6,
-    "bacteria": 6, "protozoa": 8, "virus": 6, "machine": 28,
+    "bacteria": 6, "protozoa": 8, "virus": 6, "machine": 27,
 }
 PLAYSTYLES = list(TARGETS)
 
@@ -318,7 +320,7 @@ def violations(cards, playstyles=None, skills=None):
 
     effects = effect_stats(cards)
     if effects["total"] != sum(EFFECT_LEVELS.values()):
-        errors.append(f"效果牌总数应为 100，实际 {effects['total']}")
+        errors.append(f"效果牌总数应为 {EFFECT_TOTAL}，实际 {effects['total']}")
     for level, expected in EFFECT_LEVELS.items():
         actual = effects["by_level"].get(level, 0)
         if actual != expected:
@@ -394,7 +396,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     with open(args.cards, encoding="utf-8") as handle:
-        cards = json.load(handle)
+        cards = [card for card in json.load(handle) if card.get("in_shop_pool", True)]
     with open(args.skills, encoding="utf-8") as handle:
         skills = {skill["id"]: skill for skill in json.load(handle)}
 

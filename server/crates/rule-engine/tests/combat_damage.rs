@@ -35,6 +35,7 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(Playstyle::Mammal),
             subtype: None,
@@ -66,6 +67,7 @@ fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, ef
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(Playstyle::Mammal),
             subtype: None,
@@ -121,6 +123,7 @@ fn add_effect_card_with_keywords(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
+            in_shop_pool: true,
             taxon: "hominidae".to_string(),
             categories: categories_for(Playstyle::Mammal),
             subtype: None,

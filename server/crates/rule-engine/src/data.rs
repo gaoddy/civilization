@@ -153,11 +153,18 @@ pub enum Era {
     Future = 7,
 }
 
+fn default_true() -> bool {
+    true
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Card {
     pub id: String,
     pub card_type: CardType,
+    /// 是否进入商店卡池、共享牌池、三连与发现；衍生物与生成卡为 `false`。
+    #[serde(default = "default_true")]
+    pub in_shop_pool: bool,
     pub taxon: String,
     pub categories: Vec<Category>,
     pub subtype: Option<String>,
@@ -191,26 +198,6 @@ pub struct Skill {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Token {
-    pub id: String,
-    pub attack: i32,
-    pub health: i32,
-    pub keywords: Vec<String>,
-    /// 缺省按 `Neutral` 处理。
-    pub playstyle: Option<Playstyle>,
-    /// 参与筛选的分类节点；必填。
-    pub taxon: String,
-}
-
-impl Token {
-    /// 参与筛选的玩法；缺字段按 `Neutral`。
-    pub fn playstyle(&self) -> Playstyle {
-        self.playstyle.unwrap_or(Playstyle::Neutral)
-    }
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct GameConfig {
     pub initial_hp: i32,
     pub board_slots: usize,
@@ -230,7 +217,6 @@ pub struct Catalog {
     pub cards: BTreeMap<String, Card>,
     pub heroes: BTreeMap<String, HeroCard>,
     pub skills: BTreeMap<String, Skill>,
-    pub tokens: BTreeMap<String, Token>,
     pub config: GameConfig,
     pub taxonomy: Taxonomy,
 }
@@ -259,7 +245,6 @@ impl Catalog {
         cards: &str,
         heroes: &str,
         skills: &str,
-        tokens: &str,
         config: &str,
         taxonomy: &str,
     ) -> Result<Catalog, CatalogError> {
@@ -269,8 +254,6 @@ impl Catalog {
             serde_json::from_str(heroes).map_err(|err| CatalogError::File("heroes.json", err))?;
         let skills: Vec<Skill> =
             serde_json::from_str(skills).map_err(|err| CatalogError::File("skills.json", err))?;
-        let tokens: Vec<Token> =
-            serde_json::from_str(tokens).map_err(|err| CatalogError::File("tokens.json", err))?;
         let config: GameConfig =
             serde_json::from_str(config).map_err(|err| CatalogError::File("config.json", err))?;
         let taxonomy: Taxonomy = Taxonomy::from_json(taxonomy)
@@ -279,7 +262,6 @@ impl Catalog {
         let card_map = collect_unique(cards, "cards.json", |card| &card.id)?;
         let hero_map = collect_unique(heroes, "heroes.json", |hero| &hero.id)?;
         let skill_map = collect_unique(skills, "skills.json", |skill| &skill.id)?;
-        let token_map = collect_unique(tokens, "tokens.json", |token| &token.id)?;
 
         for card in card_map.values() {
             for skill in &card.skills {
@@ -324,7 +306,7 @@ impl Catalog {
             }
         }
 
-        let taxonomy_errors = validate_taxonomy(&taxonomy, &card_map, &token_map);
+        let taxonomy_errors = validate_taxonomy(&taxonomy, &card_map);
         if !taxonomy_errors.is_empty() {
             return Err(CatalogError::Rule(taxonomy_errors.join("\n")));
         }
@@ -352,7 +334,6 @@ impl Catalog {
             cards: card_map,
             heroes: hero_map,
             skills: skill_map,
-            tokens: token_map,
             config,
             taxonomy,
         })
@@ -360,11 +341,7 @@ impl Catalog {
 }
 
 /// 加载期校验分类关联：所有 `taxon`、`prey:`、`host:` 节点存在，且 `taxon` 是叶子。
-fn validate_taxonomy(
-    taxonomy: &Taxonomy,
-    cards: &BTreeMap<String, Card>,
-    tokens: &BTreeMap<String, Token>,
-) -> Vec<String> {
+fn validate_taxonomy(taxonomy: &Taxonomy, cards: &BTreeMap<String, Card>) -> Vec<String> {
     let mut errors = Vec::new();
     for card in cards.values() {
         let owner = format!("cards.json: 卡牌 {}", card.id);
@@ -374,12 +351,9 @@ fn validate_taxonomy(
             &owner,
             &card.categories,
             Some(&card.taxon),
+            card.in_shop_pool,
             &mut errors,
         );
-    }
-    for token in tokens.values() {
-        let owner = format!("tokens.json: Token {}", token.id);
-        check_taxon(taxonomy, &owner, &token.taxon, &mut errors);
     }
     errors
 }
@@ -394,7 +368,7 @@ fn validate_hero_categories(
     let mut errors = Vec::new();
     for hero in heroes.values() {
         let owner = format!("heroes.json: 英雄卡 {}", hero.id);
-        validate_categories(taxonomy, &owner, &hero.categories, None, &mut errors);
+        validate_categories(taxonomy, &owner, &hero.categories, None, true, &mut errors);
     }
     errors
 }
@@ -404,14 +378,16 @@ const BIOLOGICAL_KINGDOMS: [&str; 6] = [
     "animalia", "plantae", "fungi", "bacteria", "protozoa", "virus",
 ];
 
-/// 校验一份关联分类：玩法合法、节点存在、无重复、至少 1 条 `play:`。
+/// 校验一份关联分类：玩法合法、节点存在、无重复；`require_play` 时至少 1 条 `play:`。
 ///
 /// `taxon` 为 `Some` 时额外要求 `prey:` / `host:` 落在生物界卡牌上。
+/// 不进商店卡池的卡不参与玩法筛选，因此不要求 `play:`。
 fn validate_categories(
     taxonomy: &Taxonomy,
     owner: &str,
     categories: &[Category],
     taxon: Option<&str>,
+    require_play: bool,
     errors: &mut Vec<String>,
 ) {
     let biological = taxon.is_some_and(|taxon| is_biological(taxonomy, taxon));
@@ -452,7 +428,7 @@ fn validate_categories(
             }
         }
     }
-    if plays == 0 {
+    if require_play && plays == 0 {
         errors.push(format!("{owner}: 关联分类至少要有 1 条 play:"));
     }
 }
