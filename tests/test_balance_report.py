@@ -58,8 +58,11 @@ class SkillDensityTest(unittest.TestCase):
 
 
 class EffectTest(unittest.TestCase):
-    def test_total_must_be_99(self):
-        cards = [card(f"e{i}", ("machine",), 3, 0, 0, ["s"], "effect", 2) for i in range(98)]
+    def test_total_must_match_effect_total(self):
+        cards = [
+            card(f"e{i}", ("machine",), 3, 0, 0, ["s"], "effect", 2)
+            for i in range(br.EFFECT_TOTAL - 1)
+        ]
         errors = br.violations(cards)
         self.assertTrue(any("效果牌总数" in e for e in errors))
 

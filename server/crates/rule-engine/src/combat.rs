@@ -12,6 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::data::{Catalog, Playstyle};
 use crate::effects::{Basis, Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
+use crate::keyword::{Keyword, KeywordSet};
 use crate::recruit::new_minion;
 use crate::rng::{RngStreams, Stream};
 use crate::state::{InstanceId, MinionInstance, Modifier, Seat, base_stats};
@@ -21,26 +22,8 @@ const MAX_ACTIONS: u16 = 200;
 /// 单场战斗的效果触发总数上限（关键词 §8）。
 pub(crate) const MAX_TRIGGERS: u16 = 200;
 
-/// 关键词：连击。
-const WINDFURY: &str = "windfury";
-/// 关键词：嘲讽。
-const TAUNT: &str = "taunt";
-/// 关键词：护盾。
-const DIVINE_SHIELD: &str = "divine_shield";
-/// 关键词：复生。
-const REBORN: &str = "reborn";
-/// 关键词：传染。
-const CONTAGION: &str = "contagion";
-/// 关键词：无视嘲讽。
-const IGNORE_TAUNT: &str = "ignore_taunt";
-/// 关键词：播种。
-const SOW: &str = "sow";
-/// 关键词：剧毒。
-pub(crate) const POISON: &str = "poison";
 /// 关键词：减伤；实际存储为「armor N」。
 pub(crate) const ARMOR: &str = "armor";
-/// 关键词：潜行。
-pub(crate) const STEALTH: &str = "stealth";
 /// 播种召唤的 token。
 pub(crate) const SEEDLING_TOKEN: &str = "seedling";
 
@@ -271,6 +254,20 @@ pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> 
     result
 }
 
+/// 随从当前生效的关键词位图集合；与 [`keywords`] 同口径，但查询不分配。
+///
+/// 卡面自带关键词取 [`Catalog::base_keywords`]，再并入尚未失效的授予关键词；
+/// `Instant` 授予视为不存在。未知关键词原样保留。
+pub fn keyword_set(catalog: &Catalog, minion: &MinionInstance) -> KeywordSet {
+    let mut result = catalog.base_keywords(&minion.card_id);
+    for (keyword, duration) in &minion.granted {
+        if *duration != Duration::Instant {
+            result.insert(keyword);
+        }
+    }
+    result
+}
+
 /// 卡面自带的关键词，不含战斗内授予与光环派生。
 fn base_keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
     base_keyword_occurrences(catalog, minion)
@@ -311,12 +308,12 @@ pub fn keywords_without_aura(catalog: &Catalog, minion: &MinionInstance) -> BTre
 
 /// 是否携带剧毒关键词。
 pub fn has_poison(catalog: &Catalog, minion: &MinionInstance) -> bool {
-    keywords(catalog, minion).contains(POISON)
+    keyword_set(catalog, minion).contains(Keyword::Poison)
 }
 
 /// 当前是否仍处于潜行：携带 `stealth` 关键词且本次战斗尚未将其打破。
 pub fn has_stealth(catalog: &Catalog, minion: &MinionInstance) -> bool {
-    !minion.stealth_broken && keywords(catalog, minion).contains(STEALTH)
+    !minion.stealth_broken && keyword_set(catalog, minion).contains(Keyword::Stealth)
 }
 
 /// 当前生效的减伤层数之和；多个「armor N」叠加，同层重复也累加。
@@ -325,16 +322,7 @@ pub fn has_stealth(catalog: &Catalog, minion: &MinionInstance) -> bool {
 /// 卡面自带与授予分别逐条统计，因此卡面重复的 `armor 1`、多次授予、光环派生
 /// 与卡面层的组合都会相加；`Instant` 授予与关键词集合口径一致，视为不存在。
 pub fn armor_value(catalog: &Catalog, minion: &MinionInstance) -> i32 {
-    let base = base_keyword_occurrences(catalog, minion)
-        .iter()
-        .filter_map(|keyword| armor_layer(keyword))
-        .fold(0i32, i32::saturating_add);
-    minion
-        .granted
-        .iter()
-        .filter(|(_, duration)| *duration != Duration::Instant)
-        .filter_map(|(keyword, _)| armor_layer(keyword))
-        .fold(base, i32::saturating_add)
+    keyword_set(catalog, minion).armor()
 }
 
 /// 解析 `armor N` 关键词的层数；不是减伤关键词时返回 `None`。
@@ -357,7 +345,7 @@ pub(crate) fn armor_layer(keyword: &str) -> Option<i32> {
 fn starting_tokens(catalog: &Catalog, minion: &MinionInstance) -> u8 {
     if minion.cannot_attack {
         0
-    } else if keywords(catalog, minion).contains(WINDFURY) {
+    } else if keyword_set(catalog, minion).contains(Keyword::Windfury) {
         2
     } else {
         1
@@ -973,7 +961,7 @@ impl BattleField {
                         level_override: None,
                     };
                     engine.fire_combat_death(self, rng, &card_id, ctx);
-                    if keywords(catalog, &self.sides[side].minions[index]).contains(SOW)
+                    if keyword_set(catalog, &self.sides[side].minions[index]).contains(Keyword::Sow)
                         && catalog.cards.contains_key(SEEDLING_TOKEN)
                     {
                         let count = if golden { 2 } else { 1 };
@@ -992,8 +980,8 @@ impl BattleField {
                     }
                 }
 
-                let can_reborn = keywords(catalog, &self.sides[side].minions[index])
-                    .contains(REBORN)
+                let can_reborn = keyword_set(catalog, &self.sides[side].minions[index])
+                    .contains(Keyword::Reborn)
                     && !self.sides[side].minions[index].reborn_used
                     // 死亡 → 召唤 → 复生：召唤占满棋盘时复生作废。
                     && self.has_room(catalog, side);
@@ -1170,14 +1158,16 @@ fn pick_target(
         return all_candidates.first().copied();
     }
 
-    let attacker_keywords = keywords(catalog, attacker);
-    let pool = if attacker_keywords.contains(IGNORE_TAUNT) {
+    let attacker_keywords = keyword_set(catalog, attacker);
+    let pool = if attacker_keywords.contains(Keyword::IgnoreTaunt) {
         candidates
     } else {
         let taunts: Vec<usize> = candidates
             .iter()
             .copied()
-            .filter(|index| keywords(catalog, &defender.minions[*index]).contains(TAUNT))
+            .filter(|index| {
+                keyword_set(catalog, &defender.minions[*index]).contains(Keyword::Taunt)
+            })
             .collect();
         if taunts.is_empty() {
             candidates
@@ -1223,7 +1213,7 @@ fn resolve_attack(
         catalog,
         &field.sides[attacking_side].minions[attacker_index],
     );
-    let attacker_keywords = keywords(
+    let attacker_keywords = keyword_set(
         catalog,
         &field.sides[attacking_side].minions[attacker_index],
     );
@@ -1235,7 +1225,8 @@ fn resolve_attack(
     let pending_before = field.pending_kills.len();
     {
         let target = &field.sides[defending_side].minions[target_index];
-        let shielded = keywords(catalog, target).contains(DIVINE_SHIELD) && !target.shield_used;
+        let shielded =
+            keyword_set(catalog, target).contains(Keyword::DivineShield) && !target.shield_used;
         if shielded {
             field.sides[defending_side].minions[target_index].shield_used = true;
             blocked = true;
@@ -1251,7 +1242,7 @@ fn resolve_attack(
     }
 
     // (b) 传染只在造成实际伤害时叠加。
-    if attacker_keywords.contains(CONTAGION) && damage > 0 {
+    if attacker_keywords.contains(Keyword::Contagion) && damage > 0 {
         let target = &mut field.sides[defending_side].minions[target_index];
         target.contagion = target.contagion.saturating_add(1);
         let states = field.snapshots(catalog, &[target_id]);
@@ -1260,7 +1251,8 @@ fn resolve_attack(
 
     // (b2) 剧毒：主伤害 > 0 且目标仍存活时补一次致死伤害。
     // 护盾抵消时主伤害为 0，不会进入这里。
-    if attacker_keywords.contains(POISON) && damage > 0 && still_standing(field, target_id) {
+    if attacker_keywords.contains(Keyword::Poison) && damage > 0 && still_standing(field, target_id)
+    {
         field.apply_damage(
             catalog,
             target_id,
@@ -1277,7 +1269,8 @@ fn resolve_attack(
     let mut counter_damage = 0;
     if counter > 0 {
         let attacker = &field.sides[attacking_side].minions[attacker_index];
-        let shielded = keywords(catalog, attacker).contains(DIVINE_SHIELD) && !attacker.shield_used;
+        let shielded =
+            keyword_set(catalog, attacker).contains(Keyword::DivineShield) && !attacker.shield_used;
         if shielded {
             field.sides[attacking_side].minions[attacker_index].shield_used = true;
         } else {
@@ -1311,7 +1304,7 @@ fn resolve_attack(
     }
 
     // (c3) 潜行随从的主动攻击本身即打破潜行，即使伤害被护盾抵消或攻击力为 0。
-    if attacker_keywords.contains(STEALTH)
+    if attacker_keywords.contains(Keyword::Stealth)
         && let Some(minion) = field.minion_mut(attacker_id)
     {
         minion.stealth_broken = true;

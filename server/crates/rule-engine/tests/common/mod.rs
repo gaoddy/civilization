@@ -63,7 +63,14 @@ pub fn heroes() -> BTreeMap<Seat, String> {
 
 /// 进入招募阶段的空局：每个座位 30 点生命。
 pub fn setup(seed: u8) -> (Engine, GameState) {
-    let (engine, mut state) = Engine::new(test_catalog(), [seed; 32], test_playstyles());
+    setup_with_catalog(test_catalog(), seed)
+}
+
+/// 用给定目录进入招募阶段的空局，其余口径与 [`setup`] 一致。
+///
+/// 供需要在创建引擎前修改目录的测试使用，避免加载后原地改动 `Catalog`。
+pub fn setup_with_catalog(catalog: Catalog, seed: u8) -> (Engine, GameState) {
+    let (engine, mut state) = Engine::new(catalog, [seed; 32], test_playstyles());
     state.phase = Phase::Recruit;
     state.turn = 1;
     for player in &mut state.players {

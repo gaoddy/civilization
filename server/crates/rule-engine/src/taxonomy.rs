@@ -3,7 +3,7 @@
 //! 数据来自 `server/data/v0.1/taxonomy.json`，节点按 id 去重。
 //! 祖先匹配沿父链上溯，深度不超过 5；240 张卡规模下无需缓存。
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use serde::Deserialize;
 
@@ -50,6 +50,13 @@ struct TaxonomyFile {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Taxonomy {
     nodes: BTreeMap<String, TaxonNode>,
+    /// 节点 id 到整数下标的映射；下标按 `nodes` 的升序分配，构建后不再变化。
+    ids: HashMap<String, u16>,
+    /// 与 `names` 下标一一对应的父节点下标；根节点为 `None`。
+    parents: Vec<Option<u16>>,
+    /// 下标到节点 id 的反向映射，与 `parents` 同序。
+    #[allow(dead_code)]
+    names: Vec<String>,
 }
 
 impl Taxonomy {
@@ -72,7 +79,32 @@ impl Taxonomy {
                 },
             );
         }
-        Ok(Self { nodes })
+        let names: Vec<String> = nodes.keys().cloned().collect();
+        let ids: HashMap<String, u16> = names
+            .iter()
+            .enumerate()
+            .map(|(index, name)| {
+                (
+                    name.clone(),
+                    u16::try_from(index).expect("分类树节点数超出 u16 上限"),
+                )
+            })
+            .collect();
+        let parents: Vec<Option<u16>> = names
+            .iter()
+            .map(|name| {
+                nodes[name]
+                    .parent
+                    .as_deref()
+                    .and_then(|parent| ids.get(parent).copied())
+            })
+            .collect();
+        Ok(Self {
+            nodes,
+            ids,
+            parents,
+            names,
+        })
     }
 
     /// 节点是否存在。
@@ -93,19 +125,16 @@ impl Taxonomy {
 
     /// `leaf` 是否为 `ancestor` 本身或其后代。
     ///
-    /// 沿父链上溯，最多 5 层；任一节点不存在时返回 `false`。
+    /// 沿整数父链上溯，最多 5 层；任一节点不存在时返回 `false`。
     pub fn is_within(&self, leaf: &str, ancestor: &str) -> bool {
-        let mut current = leaf;
+        let (Some(&leaf), Some(&ancestor)) = (self.ids.get(leaf), self.ids.get(ancestor)) else {
+            return false;
+        };
+        let mut current = Some(leaf);
         for _ in 0..=5 {
-            if current == ancestor {
-                return true;
-            }
-            match self
-                .nodes
-                .get(current)
-                .and_then(|node| node.parent.as_deref())
-            {
-                Some(parent) => current = parent,
+            match current {
+                Some(id) if id == ancestor => return true,
+                Some(id) => current = self.parents[usize::from(id)],
                 None => return false,
             }
         }
