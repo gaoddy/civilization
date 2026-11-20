@@ -4,10 +4,9 @@ name: 深海回响
 card_type: effect
 level: 6
 era: modern
-playstyle: neutral
+categories: [play:fish]
 taxon: biology
 cost: 4
-specialty: [play:fish]
 match_text: 同左
 skills: [trigger-fish-all-reborn]
 ---
@@ -23,12 +22,11 @@ skills: [trigger-fish-all-reborn]
 | 类型 | 效果 |
 | 星级 | 6 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：鱼纲 |
+| 玩法 | 鱼纲 |
 | 技能 | trigger-fish-all-reborn |
 | 费用 | 4 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

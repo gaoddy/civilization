@@ -4,7 +4,7 @@ name: 淬毒
 card_type: effect
 level: 4
 era: primitive
-playstyle: neutral
+categories: [play:reptile, play:cephalopod, play:cnidarian]
 taxon: chemistry
 cost: 1
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-friendly-single-poison-this-turn]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 原始 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 化学 |
-| 关联分类 | 无 |
+| 玩法 | 爬行纲、头足纲、水螅纲 |
 | 技能 | trigger-friendly-single-poison-this-turn |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 化学 |
 
 ## 效果
 

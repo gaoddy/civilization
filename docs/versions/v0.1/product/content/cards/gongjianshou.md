@@ -2,7 +2,7 @@
 id: gongjianshou
 card_type: minion
 name: 弓箭手
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: unit
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 弓箭手 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 兵种 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-random-enemy-damage-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

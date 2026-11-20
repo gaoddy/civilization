@@ -2,7 +2,7 @@
 id: xunhuozhe
 card_type: minion
 name: 驯火者
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primitive
 level: 2
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 驯火者 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 原始 |
 | 星级 | 2 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

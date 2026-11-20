@@ -114,7 +114,7 @@ OP_JSON = {
 
 # timesIf 的键与取值域；与 validate_docs.FILTER_KEYS / check_filter_value 一致。
 TIMES_IF_KEYS = validate_docs.FILTER_KEYS
-SPECIALTY_KINDS = validate_docs.SPECIALTY_KINDS
+CATEGORY_KINDS = validate_docs.CATEGORY_KINDS
 
 PICK_JSON = {
     "single": "single",
@@ -348,7 +348,7 @@ def structured_effects(value):
     return result
 
 
-def parse_specialty(value):
+def parse_categories(value):
     """把 `kind:value` 列表转成 `[{"kind": ..., "value": ...}]`；省略时为 []。
 
     前缀与取值由 validate_docs 校验；这里只做拆分，未知前缀直接报错。
@@ -356,12 +356,12 @@ def parse_specialty(value):
     if value is None:
         return []
     if not isinstance(value, list):
-        raise ValueError(f"specialty 必须是列表，实为 {value!r}")
+        raise ValueError(f"categories 必须是列表，实为 {value!r}")
     items = []
     for item in value:
-        kind, _, target = item.partition(":")
-        if kind not in SPECIALTY_KINDS or not target:
-            raise ValueError(f"specialty 项无法解析: {item!r}")
+        kind, _, target = str(item).partition(":")
+        if kind not in CATEGORY_KINDS or not target:
+            raise ValueError(f"categories 项无法解析: {item!r}")
         items.append({"kind": kind, "value": target})
     return items
 
@@ -370,9 +370,8 @@ def card_entry(doc):
     return {
         "id": doc["id"],
         "card_type": doc["card_type"],
-        "playstyle": doc["playstyle"],
+        "categories": parse_categories(doc.get("categories")),
         "taxon": doc["taxon"],
-        "specialty": parse_specialty(doc.get("specialty")),
         "subtype": doc.get("subtype"),
         "level": doc["level"],
         "era": doc.get("era"),
@@ -389,8 +388,7 @@ def hero_entry(doc):
     return {
         "id": doc["id"],
         "card_type": doc["card_type"],
-        "playstyle": doc["playstyle"],
-        "specialty": parse_specialty(doc.get("specialty")),
+        "categories": parse_categories(doc.get("categories")),
         "skills": doc.get("skills", []),
     }
 

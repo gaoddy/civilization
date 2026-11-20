@@ -2,7 +2,7 @@
 id: lisshi
 card_type: minion
 name: 李时珍
-playstyle: plant
+categories: [play:plant]
 taxon: hominidae
 subtype: pharmacology
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 李时珍 |
 | 类型 | 随从 |
 | 玩法 | 植物界 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 医药学 |
 | 星级 | 4 |
 | 时代 | 封建 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-plant-growth-twice |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

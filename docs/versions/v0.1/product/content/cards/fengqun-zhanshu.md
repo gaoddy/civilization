@@ -4,10 +4,9 @@ name: 蜂群战术
 card_type: effect
 level: 5
 era: classical
-playstyle: neutral
+categories: [play:insect]
 taxon: biology
 cost: 3
-specialty: [play:insect]
 match_text: 同左
 skills: [trigger-insect-all-plus-1-plus-1]
 ---
@@ -23,12 +22,11 @@ skills: [trigger-insect-all-plus-1-plus-1]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 古典 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：昆虫纲 |
+| 玩法 | 昆虫纲 |
 | 技能 | trigger-insect-all-plus-1-plus-1 |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

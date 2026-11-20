@@ -2,7 +2,7 @@
 id: radiolarian
 card_type: minion
 name: 放射虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: spongodiscidae
 subtype: protozoa
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 放射虫 |
 | 类型 | 随从 |
 | 玩法 | 原生生物界 |
-| 科学分类 | 原生生物界 › 放射虫门 › 多囊纲 › 泡沫虫目 › 海绵盘虫科 |
-| 关联分类 | 无 |
 | 子类 | 原生生物 |
 | 星级 | 5 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-damage-2；aura-other-protozoa-plus-1-attack |
 | 学者 | 否 |
+| 科学分类 | 原生生物界 › 放射虫门 › 多囊纲 › 泡沫虫目 › 海绵盘虫科 |
 
 ## 效果
 

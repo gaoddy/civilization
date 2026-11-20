@@ -2,9 +2,8 @@
 id: cailun
 card_type: minion
 name: 蔡伦
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: invention
 level: 2
 era: feudal
@@ -23,9 +22,7 @@ is_scholar: true
 | id | cailun |
 | 名称 | 蔡伦 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：哺乳纲 |
+| 玩法 | 哺乳纲 |
 | 子类 | 发明 |
 | 星级 | 2 |
 | 时代 | 封建 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

@@ -2,7 +2,7 @@
 id: vibrio-cholerae
 card_type: minion
 name: 霍乱弧菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: vibrionaceae
 subtype: bacteria
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 霍乱弧菌 |
 | 类型 | 随从 |
 | 玩法 | 细菌域 |
-| 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 弧菌科 |
-| 关联分类 | 无 |
 | 子类 | 细菌 |
 | 星级 | 3 |
 | 时代 | 工业 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | detonate-2；microbiology |
 | 学者 | 否 |
+| 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 弧菌科 |
 
 ## 效果
 

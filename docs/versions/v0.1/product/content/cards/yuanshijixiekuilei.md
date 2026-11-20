@@ -2,7 +2,7 @@
 id: yuanshijixiekuilei
 card_type: minion
 name: 原始机械傀儡
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: puppet
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 原始机械傀儡 |
 | 类型 | 随从 |
 | 玩法 | 机械 |
-| 科学分类 | 造物 › 自动机械 |
-| 关联分类 | 无 |
 | 子类 | 傀儡 |
 | 星级 | 3 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 学者 | 否 |
+| 科学分类 | 造物 › 自动机械 |
 
 ## 效果
 

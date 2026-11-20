@@ -2,8 +2,7 @@
 id: rutherford
 card_type: hero
 name: 卢瑟福
-playstyle: neutral
-specialty: [play:mammal, play:machine]
+categories: [play:mammal, play:machine]
 skills: [combat-random-enemy-damage-3]
 ---
 
@@ -16,8 +15,7 @@ skills: [combat-random-enemy-damage-3]
 | id | rutherford |
 | 名称 | 卢瑟福 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：哺乳纲、机械 |
+| 玩法 | 哺乳纲、机械 |
 | 技能 | combat-random-enemy-damage-3 |
 
 ## 效果

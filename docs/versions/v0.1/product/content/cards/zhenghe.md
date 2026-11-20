@@ -2,7 +2,7 @@
 id: zhenghe
 card_type: minion
 name: 郑和
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: navigation
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 郑和 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 航海 |
 | 星级 | 5 |
 | 时代 | 工业 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | free-refresh |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

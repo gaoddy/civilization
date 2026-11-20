@@ -2,7 +2,7 @@
 id: e-coli
 card_type: minion
 name: 大肠杆菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: enterobacteriaceae
 subtype: bacteria
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 大肠杆菌 |
 | 类型 | 随从 |
 | 玩法 | 细菌域 |
-| 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 肠杆菌科 |
-| 关联分类 | 无 |
 | 子类 | 细菌 |
 | 星级 | 1 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-bacteria-growth-once |
 | 学者 | 否 |
+| 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 肠杆菌科 |
 
 ## 效果
 

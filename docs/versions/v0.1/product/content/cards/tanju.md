@@ -2,9 +2,8 @@
 id: tanju
 card_type: minion
 name: 炭疽
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: bacillaceae
-specialty: [host:mammalia]
 subtype: bacteria
 level: 5
 era: modern
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 炭疽 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 芽孢杆菌目 › 芽孢杆菌科 |
-| 关联分类 | 寄生：哺乳纲 |
 | 子类 | 细菌 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
+| 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 芽孢杆菌目 › 芽孢杆菌科 |
+| 关联分类 | 寄生：哺乳纲 |
 
 ## 效果
 

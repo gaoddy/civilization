@@ -2,7 +2,7 @@
 id: komodo-dragon
 card_type: minion
 name: 科莫多巨蜥
-playstyle: reptile
+categories: [play:reptile]
 taxon: varanidae
 subtype: reptile
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 科莫多巨蜥 |
 | 类型 | 随从 |
 | 玩法 | 爬行纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 巨蜥科 |
-| 关联分类 | 无 |
 | 子类 | 爬行 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 剧毒；嘲讽 |
 | 技能 | keyword-poison；keyword-taunt |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 巨蜥科 |
 
 ## 效果
 

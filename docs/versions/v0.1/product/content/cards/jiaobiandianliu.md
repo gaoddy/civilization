@@ -4,7 +4,7 @@ name: 交变电流
 card_type: effect
 level: 3
 era: industrial
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: physics
 cost: 2
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-friendly-plus-2-attack-this-turn]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 物理学 |
-| 关联分类 | 无 |
+| 玩法 | 鸟纲、机械 |
 | 技能 | trigger-friendly-plus-2-attack-this-turn |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 物理学 |
 
 ## 效果
 

@@ -4,7 +4,7 @@ name: 灵感
 card_type: effect
 level: 2
 era: classical
-playstyle: neutral
+categories: [play:mammal, play:bird]
 taxon: psychology
 cost: 0
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-friendly-single-growth-once]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 古典 |
-| 玩法 | 中立 |
-| 科学分类 | 人文 › 心理学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、鸟纲 |
 | 技能 | trigger-friendly-single-growth-once |
 | 费用 | 0 |
 | 确定性替换 | 同左 |
+| 科学分类 | 人文 › 心理学 |
 
 ## 效果
 

@@ -1,20 +1,19 @@
 use std::collections::BTreeSet;
 
-use rule_engine::data::{Card, CardType, Playstyle, Specialty, SpecialtyKind, card_in_pool};
+use rule_engine::data::{Card, CardType, Category, CategoryKind, Playstyle, card_in_pool};
 
-fn card(playstyle: Playstyle, specialty: Vec<(&str, &str)>) -> Card {
+fn card(categories: Vec<(&str, &str)>) -> Card {
     Card {
         id: "test-card".into(),
         card_type: CardType::Effect,
-        playstyle,
         taxon: "biology".into(),
-        specialty: specialty
+        categories: categories
             .into_iter()
-            .map(|(kind, value)| Specialty {
+            .map(|(kind, value)| Category {
                 kind: match kind {
-                    "play" => SpecialtyKind::Play,
-                    "prey" => SpecialtyKind::Prey,
-                    _ => SpecialtyKind::Host,
+                    "play" => CategoryKind::Play,
+                    "prey" => CategoryKind::Prey,
+                    _ => CategoryKind::Host,
                 },
                 value: value.into(),
             })
@@ -35,22 +34,31 @@ fn enabled(list: &[Playstyle]) -> BTreeSet<Playstyle> {
 }
 
 #[test]
-fn effect_with_play_association_follows_enabled_playstyle() {
-    let c = card(Playstyle::Neutral, vec![("play", "fish")]);
+fn effect_with_play_category_follows_enabled_playstyle() {
+    let c = card(vec![("play", "fish")]);
     assert!(!card_in_pool(&c, &enabled(&[Playstyle::Bird])));
     assert!(card_in_pool(&c, &enabled(&[Playstyle::Fish])));
 }
 
 #[test]
-fn generic_effect_is_always_available() {
-    let c = card(Playstyle::Neutral, vec![]);
-    assert!(card_in_pool(&c, &enabled(&[Playstyle::Bird])));
-    assert!(card_in_pool(&c, &enabled(&[])));
+fn card_without_play_is_never_in_pool() {
+    // 加载期会拒绝没有 `play:` 的卡；绕过加载构造时也不入池。
+    let c = card(vec![]);
+    assert!(!card_in_pool(&c, &enabled(&[Playstyle::Bird])));
+    assert!(!card_in_pool(&c, &enabled(&[])));
 }
 
 #[test]
-fn playstyle_minion_requires_its_playstyle() {
-    let mut c = card(Playstyle::Bird, vec![]);
+fn multi_play_card_enters_pool_on_any_match() {
+    let c = card(vec![("play", "bird"), ("play", "mammal")]);
+    assert!(card_in_pool(&c, &enabled(&[Playstyle::Bird])));
+    assert!(card_in_pool(&c, &enabled(&[Playstyle::Mammal])));
+    assert!(!card_in_pool(&c, &enabled(&[Playstyle::Fish])));
+}
+
+#[test]
+fn playstyle_minion_requires_any_play_match() {
+    let mut c = card(vec![("play", "bird")]);
     c.card_type = CardType::Minion;
     assert!(!card_in_pool(&c, &enabled(&[Playstyle::Fish])));
     assert!(card_in_pool(&c, &enabled(&[Playstyle::Bird])));

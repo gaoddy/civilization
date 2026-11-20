@@ -2,7 +2,7 @@
 id: plasmodium
 card_type: minion
 name: 疟原虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: plasmodiidae
 subtype: protozoa
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 疟原虫 |
 | 类型 | 随从 |
 | 玩法 | 原生生物界 |
-| 科学分类 | 原生生物界 › 顶复门 › 无腔纲 › 血孢子虫目 › 疟原虫科 |
-| 关联分类 | 无 |
 | 子类 | 原生生物 |
 | 星级 | 4 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-schizont |
 | 学者 | 否 |
+| 科学分类 | 原生生物界 › 顶复门 › 无腔纲 › 血孢子虫目 › 疟原虫科 |
 
 ## 效果
 

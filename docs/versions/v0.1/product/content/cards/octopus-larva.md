@@ -2,7 +2,7 @@
 id: octopus-larva
 card_type: minion
 name: 章鱼幼体
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: octopodidae
 subtype: mollusk
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 章鱼幼体 |
 | 类型 | 随从 |
 | 玩法 | 头足纲 |
-| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 章鱼科 |
-| 关联分类 | 无 |
 | 子类 | 软体 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-octopus-larva-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 章鱼科 |
 
 ## 效果
 

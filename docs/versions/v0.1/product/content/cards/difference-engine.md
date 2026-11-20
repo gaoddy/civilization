@@ -2,7 +2,7 @@
 id: difference-engine
 card_type: minion
 name: 差分机
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: robot
 level: 6
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 差分机 |
 | 类型 | 随从 |
 | 玩法 | 机械 |
-| 科学分类 | 造物 › 自动机械 |
-| 关联分类 | 无 |
 | 子类 | 机器人 |
 | 星级 | 6 |
 | 时代 | 工业 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；salvage-machine |
 | 学者 | 否 |
+| 科学分类 | 造物 › 自动机械 |
 
 ## 效果
 

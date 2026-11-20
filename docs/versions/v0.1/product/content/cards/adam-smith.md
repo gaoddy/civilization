@@ -2,7 +2,7 @@
 id: adam-smith
 card_type: minion
 name: 亚当·斯密
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: economics
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 亚当·斯密 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 经济学 |
 | 星级 | 4 |
 | 时代 | 工业 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | division-of-labor |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

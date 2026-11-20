@@ -2,7 +2,7 @@
 id: moon-jellyfish
 card_type: minion
 name: 海月水母
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: ulmaridae
 subtype: ocean
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 海月水母 |
 | 类型 | 随从 |
 | 玩法 | 水螅纲 |
-| 科学分类 | 动物界 › 刺胞动物门 › 钵水母纲 › 旗口水母目 › 海月水母科 |
-| 关联分类 | 无 |
 | 子类 | 海洋 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-cnidarian-growth-once |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 刺胞动物门 › 钵水母纲 › 旗口水母目 › 海月水母科 |
 
 ## 效果
 

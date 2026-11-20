@@ -4,7 +4,7 @@ name: 奥林匹克祭典
 card_type: effect
 level: 3
 era: classical
-playstyle: neutral
+categories: [play:mammal, play:plant]
 taxon: sports
 cost: 2
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-all-friendly-growth-once]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 玩法 | 中立 |
-| 科学分类 | 社会 › 体育学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、植物界 |
 | 技能 | trigger-all-friendly-growth-once |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 社会 › 体育学 |
 
 ## 效果
 

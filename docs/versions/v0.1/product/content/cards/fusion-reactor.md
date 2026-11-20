@@ -2,9 +2,8 @@
 id: fusion-reactor
 card_type: minion
 name: 聚变反应堆
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
-specialty: [play:machine]
 subtype: power
 level: 6
 era: future
@@ -23,9 +22,7 @@ is_scholar: false
 | id | fusion-reactor |
 | 名称 | 聚变反应堆 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 动力与能源 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 动力 |
 | 星级 | 6 |
 | 时代 | 未来 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | aura-mech-plus-2-plus-2 |
 | 学者 | 否 |
+| 科学分类 | 造物 › 动力与能源 |
 
 ## 效果
 

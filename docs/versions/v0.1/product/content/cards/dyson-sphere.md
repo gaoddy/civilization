@@ -2,9 +2,8 @@
 id: dyson-sphere
 card_type: minion
 name: 戴森球
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
-specialty: [play:machine]
 subtype: megastructure
 level: 7
 era: future
@@ -23,9 +22,7 @@ is_scholar: false
 | id | dyson-sphere |
 | 名称 | 戴森球 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 动力与能源 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 巨构 |
 | 星级 | 7 |
 | 时代 | 未来 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；shout |
 | 学者 | 否 |
+| 科学分类 | 造物 › 动力与能源 |
 
 ## 效果
 

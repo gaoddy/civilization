@@ -2,7 +2,7 @@
 id: hela-cell
 card_type: minion
 name: 海拉细胞
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: cell
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 海拉细胞 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 细胞 |
 | 星级 | 4 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-2-2-hela-cell-clone；shout |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

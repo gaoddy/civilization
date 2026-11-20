@@ -4,10 +4,9 @@ name: 变异
 card_type: effect
 level: 4
 era: modern
-playstyle: neutral
+categories: [play:virus]
 taxon: biology
 cost: 2
-specialty: [play:virus]
 match_text: 同左
 skills: [combatstart-all-enemies-contagion-2]
 ---
@@ -23,12 +22,11 @@ skills: [combatstart-all-enemies-contagion-2]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：病毒 |
+| 玩法 | 病毒 |
 | 技能 | combatstart-all-enemies-contagion-2 |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

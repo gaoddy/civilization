@@ -2,7 +2,7 @@
 id: dunkleosteus
 card_type: minion
 name: 邓氏鱼
-playstyle: fish
+categories: [play:fish]
 taxon: dunkleosteidae
 subtype: fish
 level: 7
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 邓氏鱼 |
 | 类型 | 随从 |
 | 玩法 | 鱼纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 盾皮鱼纲 › 节甲鱼目 › 邓氏鱼科 |
-| 关联分类 | 无 |
 | 子类 | 鱼类 |
 | 星级 | 7 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-fish-fry-3；aura-school-fish-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 盾皮鱼纲 › 节甲鱼目 › 邓氏鱼科 |
 
 ## 效果
 

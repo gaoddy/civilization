@@ -2,7 +2,7 @@
 id: ant
 card_type: minion
 name: 蚂蚁
-playstyle: insect
+categories: [play:insect]
 taxon: formicidae
 subtype: insect
 level: 2
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 蚂蚁 |
 | 类型 | 随从 |
 | 玩法 | 昆虫纲 |
-| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 膜翅目 › 蚁科 |
-| 关联分类 | 无 |
 | 子类 | 昆虫 |
 | 星级 | 2 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | aura-other-insect-plus-0-plus-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 膜翅目 › 蚁科 |
 
 ## 效果
 

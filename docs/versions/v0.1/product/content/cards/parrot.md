@@ -2,7 +2,7 @@
 id: parrot
 card_type: minion
 name: 鹦鹉
-playstyle: bird
+categories: [play:bird]
 taxon: psittacidae
 subtype: bird
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 鹦鹉 |
 | 类型 | 随从 |
 | 玩法 | 鸟纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹦形目 › 鹦鹉科 |
-| 关联分类 | 无 |
 | 子类 | 鸟类 |
 | 星级 | 4 |
 | 时代 | 封建 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-copy-hand-minion |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹦形目 › 鹦鹉科 |
 
 ## 效果
 

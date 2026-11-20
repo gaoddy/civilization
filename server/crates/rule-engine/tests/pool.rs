@@ -6,7 +6,8 @@ use std::collections::BTreeSet;
 
 use common::{effects_of, place, setup, test_catalog};
 use rule_engine::data::{
-    Card, CardType, Catalog, Era, Playstyle, Specialty, SpecialtyKind, Token, card_in_pool,
+    Card, CardType, Catalog, Category, CategoryKind, Era, Playstyle, Token, card_in_pool,
+    hero_in_pool,
 };
 use rule_engine::effects::{Effect, EffectCtx};
 use rule_engine::engine::Engine;
@@ -25,13 +26,12 @@ fn enabled_set(playstyles: [Playstyle; 5]) -> BTreeSet<Playstyle> {
     playstyles.into_iter().collect()
 }
 
-fn card(id: &str, playstyle: Playstyle, specialty: Vec<Specialty>) -> Card {
+fn card(id: &str, categories: Vec<Category>) -> Card {
     Card {
         id: id.to_string(),
         card_type: CardType::Minion,
-        playstyle,
         taxon: "hominidae".to_string(),
-        specialty,
+        categories,
         subtype: None,
         level: 1,
         era: None,
@@ -43,17 +43,21 @@ fn card(id: &str, playstyle: Playstyle, specialty: Vec<Specialty>) -> Card {
     }
 }
 
-fn play(value: &str) -> Specialty {
-    Specialty {
-        kind: SpecialtyKind::Play,
+fn play(value: &str) -> Category {
+    Category {
+        kind: CategoryKind::Play,
         value: value.to_string(),
     }
 }
 
-fn add_card(catalog: &mut Catalog, id: &str, playstyle: Playstyle, specialty: Vec<Specialty>) {
-    catalog
-        .cards
-        .insert(id.to_string(), card(id, playstyle, specialty));
+fn has_play(card: &Card, value: &str) -> bool {
+    card.categories
+        .iter()
+        .any(|category| category.kind == CategoryKind::Play && category.value == value)
+}
+
+fn add_card(catalog: &mut Catalog, id: &str, categories: Vec<Category>) {
+    catalog.cards.insert(id.to_string(), card(id, categories));
 }
 
 /// 只保留 1 星权重，保证商店只抽 1 星测试夹具。
@@ -102,38 +106,28 @@ fn discover_candidates(state: &GameState) -> Vec<String> {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn card_in_pool_checks_non_neutral_by_exact_playstyle() {
+fn card_in_pool_requires_any_play_match() {
     let enabled = enabled_set(ENABLED);
     assert!(card_in_pool(
-        &card("mammal", Playstyle::Mammal, vec![]),
+        &card("mammal", vec![play("mammal")]),
         &enabled
     ));
-    assert!(!card_in_pool(
-        &card("bird", Playstyle::Bird, vec![]),
-        &enabled
-    ));
+    assert!(!card_in_pool(&card("bird", vec![play("bird")]), &enabled));
 }
 
 #[test]
-fn card_in_pool_neutral_uses_play_associations() {
+fn card_in_pool_requires_play_categories() {
     let enabled = enabled_set(ENABLED);
-    // 没有 `play:`：纯通用，始终可用。
-    assert!(card_in_pool(
-        &card("generic", Playstyle::Neutral, vec![]),
-        &enabled
-    ));
+    // 没有 `play:`：加载期已拒绝，构造出的卡也不入池。
+    assert!(!card_in_pool(&card("no-play", vec![]), &enabled));
     // 有 `play:` 但一个都不命中：不进池。
     assert!(!card_in_pool(
-        &card("bird-tool", Playstyle::Neutral, vec![play("bird")]),
+        &card("bird-tool", vec![play("bird")]),
         &enabled
     ));
     // 任一命中即进池。
     assert!(card_in_pool(
-        &card(
-            "multi-tool",
-            Playstyle::Neutral,
-            vec![play("bird"), play("mammal")]
-        ),
+        &card("multi-tool", vec![play("bird"), play("mammal")]),
         &enabled
     ));
 }
@@ -143,7 +137,8 @@ fn scholar_enters_pool_by_play_association() {
     let catalog = test_catalog();
     let agi = catalog.cards.get("agi").expect("学者卡 agi 存在");
     assert!(agi.is_scholar);
-    assert_eq!(agi.playstyle, Playstyle::Neutral);
+    assert!(has_play(agi, "mammal"), "agi 带 play:mammal");
+    assert!(has_play(agi, "machine"), "agi 带 play:machine");
 
     let with_machine = enabled_set([
         Playstyle::Machine,
@@ -163,6 +158,46 @@ fn scholar_enters_pool_by_play_association() {
     assert!(!card_in_pool(agi, &without), "未命中 play: 时不进池");
 }
 
+#[test]
+fn hero_pool_documents_playstyles_without_direct_heroes() {
+    // 真实英雄数据当前只覆盖 10 个玩法：真菌、细菌、原生生物没有直接归属英雄。
+    // 房间层依赖 `assign_candidates` 在过滤后池为空时回退全部英雄（32 张，见
+    // room-service 的 `empty_filtered_pool_falls_back_to_all_heroes`）。本用例
+    // 固定这一数据事实；后续若为这三个玩法补英雄，应随数据一并更新。
+    let catalog = test_catalog();
+    let direct = |playstyle: Playstyle| {
+        let enabled = BTreeSet::from([playstyle]);
+        catalog
+            .heroes
+            .values()
+            .filter(|hero| hero_in_pool(hero, &enabled))
+            .count()
+    };
+
+    for playstyle in [Playstyle::Fungus, Playstyle::Bacteria, Playstyle::Protozoa] {
+        assert_eq!(
+            direct(playstyle),
+            0,
+            "{} 目前没有直接归属英雄，房间层依赖回退",
+            playstyle.id()
+        );
+    }
+    for playstyle in Playstyle::ALL {
+        if matches!(
+            playstyle,
+            Playstyle::Fungus | Playstyle::Bacteria | Playstyle::Protozoa
+        ) {
+            continue;
+        }
+        assert!(
+            direct(playstyle) > 0,
+            "{} 应至少有一张直接归属英雄",
+            playstyle.id()
+        );
+    }
+    assert_eq!(catalog.heroes.len(), 32, "回退池为全部英雄卡");
+}
+
 // ---------------------------------------------------------------------------
 // 商店 / 发现 / 商店效果
 // ---------------------------------------------------------------------------
@@ -170,8 +205,8 @@ fn scholar_enters_pool_by_play_association() {
 #[test]
 fn shop_roll_excludes_unenabled_playstyle() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "on-mammal", Playstyle::Mammal, vec![]);
-    add_card(&mut catalog, "off-bird", Playstyle::Bird, vec![]);
+    add_card(&mut catalog, "on-mammal", vec![play("mammal")]);
+    add_card(&mut catalog, "off-bird", vec![play("bird")]);
     let (mut engine, mut state) = setup_with(catalog, ENABLED);
     only_first_star(&mut engine);
     state.pool.clear();
@@ -198,8 +233,8 @@ fn shop_roll_excludes_unenabled_playstyle() {
 #[test]
 fn discover_candidates_exclude_unenabled_playstyle() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "on-mammal", Playstyle::Mammal, vec![]);
-    add_card(&mut catalog, "off-bird", Playstyle::Bird, vec![]);
+    add_card(&mut catalog, "on-mammal", vec![play("mammal")]);
+    add_card(&mut catalog, "off-bird", vec![play("bird")]);
     let (mut engine, mut state) = setup_with(catalog, ENABLED);
     state.pool.clear();
     state.pool.insert("on-mammal".to_string(), 20);
@@ -217,8 +252,8 @@ fn discover_candidates_exclude_unenabled_playstyle() {
 #[test]
 fn shop_effects_exclude_unenabled_playstyle() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "off-bird", Playstyle::Bird, vec![]);
-    add_card(&mut catalog, "on-mammal", Playstyle::Mammal, vec![]);
+    add_card(&mut catalog, "off-bird", vec![play("bird")]);
+    add_card(&mut catalog, "on-mammal", vec![play("mammal")]);
     let (mut engine, mut state) = setup_with(catalog, ENABLED);
     state.pool.clear();
     state.pool.insert("off-bird".to_string(), 20);
@@ -271,36 +306,25 @@ fn shop_effects_exclude_unenabled_playstyle() {
 }
 
 #[test]
-fn neutral_generic_card_always_available() {
+fn card_without_play_never_enters_shop() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "generic-tool", Playstyle::Neutral, vec![]);
+    add_card(&mut catalog, "generic-tool", vec![]);
     let (mut engine, mut state) = setup_with(catalog, ENABLED);
     only_first_star(&mut engine);
     state.pool.clear();
     state.pool.insert("generic-tool".to_string(), 20);
 
-    let mut seen = false;
     for _ in 0..30 {
         engine.roll_shop(&mut state, 0);
-        for slot in &state.players[0].shop {
-            let slot = slot.as_ref().expect("1 星池非空，槽位应有卡");
-            let card = engine
-                .catalog
-                .cards
-                .get(&slot.card_id)
-                .expect("商店卡应存在于目录");
-            if card.card_type == CardType::Minion {
-                assert_eq!(card.id, "generic-tool", "纯通用随从始终在池中");
-                seen = true;
-            }
+        for slot in state.players[0].shop.iter().flatten() {
+            assert_ne!(slot.card_id, "generic-tool", "没有 play: 的卡不得进商店");
         }
     }
-    assert!(seen, "纯通用卡应能被抽到");
 }
 
 #[test]
 fn targeted_effect_follows_enabled_playstyle_through_shop_roll() {
-    // 真实卡表：yangliu 是鱼纲定向 1 星效果牌，dishengxiyu 是通用 1 星效果牌。
+    // 真实卡表：yangliu 是鱼纲效果牌，dishengxiyu 是哺乳纲效果牌。
     let no_fish = [
         Playstyle::Mammal,
         Playstyle::Bird,
@@ -319,37 +343,37 @@ fn targeted_effect_follows_enabled_playstyle_through_shop_roll() {
     let (mut engine, mut state) = setup_with(test_catalog(), no_fish);
     only_first_star(&mut engine);
     state.pool.clear(); // 效果牌不占共享池；清空后随从无份数，候选只剩效果牌。
-    let mut saw_generic = false;
+    let mut saw_mammal = false;
     for _ in 0..30 {
         engine.roll_shop(&mut state, 0);
         for slot in &state.players[0].shop {
             let slot = slot.as_ref().expect("1 星效果牌非空");
             assert_ne!(slot.card_id, "yangliu", "未启用鱼纲时定向牌不得进商店");
-            saw_generic |= slot.card_id == "dishengxiyu";
+            saw_mammal |= slot.card_id == "dishengxiyu";
         }
     }
-    assert!(saw_generic, "通用效果牌始终可抽");
+    assert!(saw_mammal, "启用哺乳纲后对应效果牌可抽");
 
     let (mut engine, mut state) = setup_with(test_catalog(), with_fish);
     only_first_star(&mut engine);
     state.pool.clear();
-    let (mut saw_targeted, mut saw_generic) = (false, false);
+    let (mut saw_targeted, mut saw_mammal) = (false, false);
     for _ in 0..30 {
         engine.roll_shop(&mut state, 0);
         for slot in &state.players[0].shop {
             let slot = slot.as_ref().expect("1 星效果牌非空");
             saw_targeted |= slot.card_id == "yangliu";
-            saw_generic |= slot.card_id == "dishengxiyu";
+            saw_mammal |= slot.card_id == "dishengxiyu";
         }
     }
     assert!(saw_targeted, "启用鱼纲后定向牌可进商店");
-    assert!(saw_generic, "通用效果牌始终可抽");
+    assert!(saw_mammal, "哺乳纲效果牌仍可抽");
 }
 
 #[test]
 fn scholar_discover_uses_play_association() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "on-mammal", Playstyle::Mammal, vec![]);
+    add_card(&mut catalog, "on-mammal", vec![play("mammal")]);
     let (mut engine, mut state) = setup_with(
         catalog,
         [
@@ -360,7 +384,7 @@ fn scholar_discover_uses_play_association() {
             Playstyle::Virus,
         ],
     );
-    // 真实学者卡 agi：neutral + play:machine / play:mammal。
+    // 真实学者卡 agi：play:mammal / play:machine。
     state.pool.clear();
     state.pool.insert("agi".to_string(), 20);
     state.pool.insert("on-mammal".to_string(), 20);
@@ -416,17 +440,17 @@ fn taxon_filter_matches_ancestors() {
 #[test]
 fn prey_and_host_filters_match_ancestor_node() {
     let mut catalog = test_catalog();
-    let mut hunting_card = card("hunting-card", Playstyle::Mammal, vec![]);
-    hunting_card.specialty = vec![
-        Specialty {
-            kind: SpecialtyKind::Prey,
+    let mut hunting_card = card("hunting-card", vec![play("mammal")]);
+    hunting_card.categories.extend([
+        Category {
+            kind: CategoryKind::Prey,
             value: "artiodactyla".to_string(),
         },
-        Specialty {
-            kind: SpecialtyKind::Host,
+        Category {
+            kind: CategoryKind::Host,
             value: "hominidae".to_string(),
         },
-    ];
+    ]);
     catalog
         .cards
         .insert("hunting-card".to_string(), hunting_card);
@@ -469,9 +493,9 @@ fn prey_and_host_filters_match_ancestor_node() {
 }
 
 #[test]
-fn play_and_playstyle_filters_use_card_playstyle() {
+fn play_and_playstyle_filters_match_any_play_category() {
     let (mut engine, mut state) = setup(1);
-    place(&engine.catalog, &mut state, 0, 1, "nanobot"); // machine, automation
+    place(&engine.catalog, &mut state, 0, 1, "nanobot"); // play:machine, automation
 
     engine.apply_op(
         &mut state,
@@ -479,14 +503,67 @@ fn play_and_playstyle_filters_use_card_playstyle() {
         &ctx(0),
         None,
     );
-    // play：取 specialty 中的 play 关联；nanobot 没有 play 关联，不命中。
+    // play 与 playstyle 同口径：nanobot 带 play:machine，两键都命中。
     engine.apply_op(
         &mut state,
         &effect("OnActivate|Growth|friendly:all:play=machine|times=1"),
         &ctx(0),
         None,
     );
-    assert_eq!(state.players[0].board[0].stats.attack.growth, 1);
+    assert_eq!(state.players[0].board[0].stats.attack.growth, 2);
+}
+
+#[test]
+fn scholar_with_play_machine_matches_any_machine_filter() {
+    // agi 是学者，同时带 play:mammal 与 play:machine；两条玩法筛选都应命中它。
+    let (mut engine, mut state) = setup(1);
+    place(&engine.catalog, &mut state, 0, 1, "agi");
+
+    engine.apply_op(
+        &mut state,
+        &effect("OnActivate|Growth|friendly:all:playstyle=machine|times=1"),
+        &ctx(0),
+        None,
+    );
+    engine.apply_op(
+        &mut state,
+        &effect("OnActivate|Growth|friendly:all:playstyle=mammal|times=1"),
+        &ctx(0),
+        None,
+    );
+    // 学者成长只加生命。
+    assert_eq!(
+        state.players[0].board[0].stats.health.growth, 2,
+        "机械与哺乳纲两条筛选都应命中多玩法学者"
+    );
+}
+
+#[test]
+fn multi_play_minion_matches_each_play_filter_independently() {
+    let (mut engine, mut state) = setup(1);
+    // aolinpike-jidian 是效果牌，不能上棋盘；agi 同时带 mammal/machine。
+    place(&engine.catalog, &mut state, 0, 1, "agi");
+    place(&engine.catalog, &mut state, 0, 2, "clownfish"); // play:fish
+
+    engine.apply_op(
+        &mut state,
+        &effect("OnActivate|Growth|friendly:all:play=machine|times=1"),
+        &ctx(0),
+        None,
+    );
+    assert_eq!(state.players[0].board[0].stats.health.growth, 1);
+    assert_eq!(
+        state.players[0].board[1].stats.health.growth, 0,
+        "只命中带 play:machine 的随从"
+    );
+
+    engine.apply_op(
+        &mut state,
+        &effect("OnActivate|Growth|friendly:all:play=fish|times=1"),
+        &ctx(0),
+        None,
+    );
+    assert_eq!(state.players[0].board[1].stats.health.growth, 1);
 }
 
 #[test]

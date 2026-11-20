@@ -2,7 +2,7 @@
 id: beetle
 card_type: minion
 name: 甲虫
-playstyle: insect
+categories: [play:insect]
 taxon: scarabaeidae
 subtype: insect
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 甲虫 |
 | 类型 | 随从 |
 | 玩法 | 昆虫纲 |
-| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 鞘翅目 › 金龟科 |
-| 关联分类 | 无 |
 | 子类 | 昆虫 |
 | 星级 | 4 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 嘲讽；繁衍 1 |
 | 技能 | keyword-taunt；keyword-breed-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 鞘翅目 › 金龟科 |
 
 ## 效果
 

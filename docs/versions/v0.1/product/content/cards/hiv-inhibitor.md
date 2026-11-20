@@ -4,7 +4,7 @@ name: 艾滋病毒·抑制剂
 card_type: effect
 level: 5
 era: modern
-playstyle: neutral
+categories: [play:virus]
 taxon: medicine
 cost: 3
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [combatstart-remove-all-human-growth]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 医学 |
-| 关联分类 | 无 |
+| 玩法 | 病毒 |
 | 技能 | combatstart-remove-all-human-growth |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 医学 |
 
 ## 效果
 

@@ -2,7 +2,7 @@
 id: red-coral
 card_type: minion
 name: 红珊瑚
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: coralliidae
 subtype: ocean
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 红珊瑚 |
 | 类型 | 随从 |
 | 玩法 | 水螅纲 |
-| 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 软珊瑚目 › 红珊瑚科 |
-| 关联分类 | 无 |
 | 子类 | 海洋 |
 | 星级 | 5 |
 | 时代 | 封建 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 减伤 1 |
 | 技能 | revive-2；keyword-armor-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 软珊瑚目 › 红珊瑚科 |
 
 ## 效果
 

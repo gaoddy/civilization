@@ -4,7 +4,7 @@ name: 广义相对论
 card_type: effect
 level: 5
 era: future
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: physics
 cost: 3
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-all-friendly-plus-1-plus-1]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 物理学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、机械 |
 | 技能 | trigger-all-friendly-plus-1-plus-1 |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 物理学 |
 
 ## 效果
 

@@ -2,7 +2,7 @@
 id: argonaut
 card_type: minion
 name: 船蛸
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: argonautidae
 subtype: mollusk
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 船蛸 |
 | 类型 | 随从 |
 | 玩法 | 头足纲 |
-| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 船蛸科 |
-| 关联分类 | 无 |
 | 子类 | 软体 |
 | 星级 | 4 |
 | 时代 | 古典 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；mimic-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 八腕目 › 船蛸科 |
 
 ## 效果
 

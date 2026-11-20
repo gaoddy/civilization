@@ -2,7 +2,7 @@
 id: flying-fish
 card_type: minion
 name: 飞鱼
-playstyle: fish
+categories: [play:fish]
 taxon: exocoetidae
 subtype: fish
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 飞鱼 |
 | 类型 | 随从 |
 | 玩法 | 鱼纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 颌针鱼目 › 飞鱼科 |
-| 关联分类 | 无 |
 | 子类 | 鱼类 |
 | 星级 | 3 |
 | 时代 | 古典 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt；aura-school-fish-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 颌针鱼目 › 飞鱼科 |
 
 ## 效果
 

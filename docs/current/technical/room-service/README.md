@@ -76,11 +76,11 @@ protocol/
 - 房间玩法：建房时用房间码种子调用 `rule_engine::playstyles::draw(seed_for_code(code))`，抽取 5 个玩法存入 `RoomState.playstyles`；大厅期间与断线重连保持不变。对局结束即销毁房间，不再重抽。玩法必须早于英雄候选确定，因此抽取时点在房间创建，而不是 `Engine::new`。
 - 入房：坐最小空位；同一玩家重复加入同一房间幂等。非 `Lobby` 阶段成员集合冻结，加入/准备/选英雄/离开都返回 `INVALID_STAGE`。
 - 英雄候选：建房与入房时按房间码派生的种子把全部英雄卡（`Catalog.heroes`）id 升序后做确定性 Fisher–Yates 洗牌，再按进房顺序每 4 张切给一名玩家（`CANDIDATE_COUNT`），因此同房间内各玩家候选互不重复；候选保存在 `PlayerSlot.hero_candidates`，重进与重连都不重抽。
-- 英雄候选过滤：候选只取 `hero_in_pool` 通过的英雄卡，按本局 5 个玩法过滤；`playstyle=neutral` 的英雄按 `specialty` 的 `play:` 关联过滤。过滤后一张英雄都没有时回退到全部英雄卡（产品兜底）。
+- 英雄候选过滤：候选只取 `hero_in_pool` 通过的英雄卡，按本局 5 个玩法过滤；英雄 `categories` 中任一条 `play:` 命中即通过，学者、工具卡与普通英雄同一口径。过滤后一张英雄都没有时回退到全部英雄卡（产品兜底）。
 - 候选池不足：池大小 ≥ `SEAT_COUNT * CANDIDATE_COUNT`（32）时沿用分段、房间内互不重复；不足 32 时按 `(segment * 4 + i) % len` 取 `min(4, len)` 张，允许跨玩家重复；池小于 4 时每人取整个池并至少 1 张。
 - 选英雄校验：id 必须在英雄池 `Catalog.heroes` 中，且在本人候选内（否则 `NOT_CANDIDATE` → `INVALID_CHOICE`）；座位已 `ready` 时再选返回 `INVALID_STAGE`。
 - 候选下发：`RoomUpdate.players[].heroCandidates` 只在发给本人的那份里填充，其余座位为 `null`；广播按座位逐个序列化，不共用 payload。这是展示规则而非机密：选中的 `heroCardId` 仍对全体成员可见，候选分组也能由房间码确定性复算。
-- 候选池校验：`AppState::new` 要求英雄卡至少 1 张且 `play:` 取值是合法玩法（`specialty` 中 `kind = play`），不再要求 32 张；池不足时由跨玩家重复兜底，房间仍能开局。
+- 候选池校验：`AppState::new` 要求英雄卡至少 1 张，且每张英雄卡的 `categories` 至少 1 条 `play:`、取值是合法玩法（不含 `neutral`），`prey:` / `host:` 节点必须在分类树中；不再要求 32 张。池不足时由跨玩家重复兜底，房间仍能开局。
 - 大厅断线：`Detach` 不再立即释放座位，而是标记离线并记录 `disconnected_at_ms`；房间 task 的 tick 调用 `tick_disconnects`，超过 `RECONNECT_GRACE_MS` 才按原规则释放座位。`Leave` 命令仍立即释放。座位已被释放后再 `Reconnect` 回 `NOT_IN_ROOM`，并摘除该座位的下行登记。
 - 离开：座位立即空出且不重排；房主离开时转给座位号最小的剩余玩家；**大厅最后一人离开即销毁房间**（注册表同时删 `by_code` 与 `rooms`）。
 - 移除：`KickMember{targetPlayerId}` 映射为 `RoomCommand::Kick`；仅房主、仅 `Lobby`、不能移除自己。成功后被移除者收到 `RoomClosed{reason:"kicked"}` 并移除发送端，座位空出且编号不重排；房间码与其余成员不变。错误码沿用 `NOT_HOST` / `INVALID_STAGE` / `NOT_IN_ROOM` / `INVALID_CHOICE`（移除自己映射为 `InvalidTarget`），不新增错误码。

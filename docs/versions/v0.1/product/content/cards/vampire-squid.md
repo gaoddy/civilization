@@ -2,7 +2,7 @@
 id: vampire-squid
 card_type: minion
 name: 吸血鬼乌贼
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: vampyroteuthidae
 subtype: mollusk
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 吸血鬼乌贼 |
 | 类型 | 随从 |
 | 玩法 | 头足纲 |
-| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 幽灵蛸目 › 幽灵蛸科 |
-| 关联分类 | 无 |
 | 子类 | 软体 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | mimic-2；mimic-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 幽灵蛸目 › 幽灵蛸科 |
 
 ## 效果
 

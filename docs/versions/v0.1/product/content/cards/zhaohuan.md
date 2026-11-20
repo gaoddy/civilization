@@ -4,7 +4,7 @@ name: 召唤
 card_type: effect
 level: 6
 era: classical
-playstyle: neutral
+categories: [play:fish, play:insect]
 taxon: military
 cost: 2
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-summon-2-neutral-token-2-2]
 | 类型 | 效果 |
 | 星级 | 6 |
 | 时代 | 古典 |
-| 玩法 | 中立 |
-| 科学分类 | 社会 › 军事学 |
-| 关联分类 | 无 |
+| 玩法 | 鱼纲、昆虫纲 |
 | 技能 | trigger-summon-2-neutral-token-2-2 |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 社会 › 军事学 |
 
 ## 效果
 

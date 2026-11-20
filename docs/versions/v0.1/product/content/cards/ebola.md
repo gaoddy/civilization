@@ -2,9 +2,8 @@
 id: ebola
 card_type: minion
 name: 埃博拉
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: filoviridae
-specialty: [host:mammalia]
 subtype: virus
 level: 5
 era: modern
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 埃博拉 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 丝状病毒科 |
-| 关联分类 | 寄生：哺乳纲 |
 | 子类 | 病毒 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；combatstart-random-enemy-contagion-2 |
 | 学者 | 否 |
+| 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 丝状病毒科 |
+| 关联分类 | 寄生：哺乳纲 |
 
 ## 效果
 

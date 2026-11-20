@@ -4,7 +4,7 @@ name: 布朗运动
 card_type: effect
 level: 2
 era: industrial
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: physics
 cost: 1
 match_text: 战斗开始时，对敌方最左侧随从造成 2 点伤害
@@ -22,12 +22,11 @@ skills: [combatstart-random-enemy-damage-2]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 工业 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 物理学 |
-| 关联分类 | 无 |
+| 玩法 | 鸟纲、机械 |
 | 技能 | combatstart-random-enemy-damage-2 |
 | 费用 | 1 |
 | 确定性替换 | 战斗开始时，对敌方最左侧随从造成 2 点伤害 |
+| 科学分类 | 科学 › 物理学 |
 
 ## 效果
 

@@ -2,7 +2,7 @@
 id: zhenghe
 card_type: hero
 name: 郑和
-playstyle: mammal
+categories: [play:mammal]
 skills: [free-refresh]
 ---
 
@@ -16,7 +16,6 @@ skills: [free-refresh]
 | 名称 | 郑和 |
 | 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
-| 关联分类 | 无 |
 | 技能 | free-refresh |
 
 ## 效果

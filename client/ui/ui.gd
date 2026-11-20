@@ -166,7 +166,7 @@ static func avatar(hero_id: String, size := 34) -> PanelContainer:
     var node := PanelContainer.new()
     node.name = "Avatar"
     node.custom_minimum_size = Vector2(size, size)
-    var playstyle := str(CardDB.hero(hero_id).get("playstyle", ""))
+    var playstyle := CardDB.primary_playstyle(CardDB.hero(hero_id)) if hero_id != "" else ""
     var tint := UITheme.playstyle_color(playstyle) if hero_id != "" else UITheme.color("color-border-strong")
     var box := StyleBoxFlat.new()
     box.bg_color = tint.darkened(0.55)
@@ -269,7 +269,7 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
     node.custom_minimum_size = Vector2(width, 0)
     var box := UITheme.panel_style("raised")
     if hero_id != "":
-        box.border_color = UITheme.playstyle_color(str(CardDB.hero(hero_id).get("playstyle", "")))
+        box.border_color = UITheme.playstyle_color(CardDB.primary_playstyle(CardDB.hero(hero_id)))
     node.add_theme_stylebox_override("panel", box)
 
     var row := HBoxContainer.new()
@@ -292,7 +292,7 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
 
     var entry := CardDB.hero(hero_id)
     var meta_parts := PackedStringArray()
-    var playstyle := str(entry.get("playstyle", ""))
+    var playstyle := CardDB.primary_playstyle(entry) if hero_id != "" else ""
     if playstyle != "":
         meta_parts.append(enum_text("playstyle", playstyle))
     var meta := label(" · ".join(meta_parts) if not meta_parts.is_empty() else "—", UITheme.font_size("font-caption"), false)
@@ -309,6 +309,66 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
         skill.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
         lines.add_child(skill)
     return node
+
+
+## 英雄技能列表：每条技能一个块，技能名（有名称时）与触发标签同行，
+## 完整文本在下一行；主动技能追加费用与每回合次数。
+## 只渲染能解析到的技能；全部 id 无效时显示空态，不渲染空块。
+static func skill_list(parent: VBoxContainer, skill_ids: Array) -> void:
+    var infos: Array[Dictionary] = []
+    for skill_id in skill_ids:
+        var info := CardDB.skill_info(str(skill_id))
+        if bool(info.get("exists", false)):
+            infos.append(info)
+    if infos.is_empty():
+        parent.add_child(empty_hint(_translated_or_empty("ui.skill.empty")))
+        return
+    var index := 0
+    for info in infos:
+        var block := VBoxContainer.new()
+        block.name = "SkillBlock%d" % index
+        block.add_theme_constant_override("separation", UITheme.space("space-2xs"))
+        parent.add_child(block)
+
+        var name_text := str(info.get("name", ""))
+        var trigger_text := str(info.get("trigger_label", ""))
+        if name_text != "" or trigger_text != "":
+            var header := HBoxContainer.new()
+            header.name = "SkillHeader"
+            header.add_theme_constant_override("separation", UITheme.space("space-sm"))
+            block.add_child(header)
+            if name_text != "":
+                var name_label := label(name_text, UITheme.font_size("font-body"), false)
+                name_label.name = "SkillName"
+                header.add_child(name_label)
+            if trigger_text != "":
+                var trigger := pill_label(trigger_text, "info")
+                trigger.name = "SkillTrigger"
+                header.add_child(trigger)
+
+        var body_text := str(info.get("text", ""))
+        if body_text != "":
+            var body := label(body_text, UITheme.font_size("font-body-sm"))
+            body.name = "SkillText"
+            body.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+            block.add_child(body)
+
+        if bool(info.get("is_active", false)):
+            var parts := PackedStringArray()
+            var cost_text := _translated_or_empty("ui.skill.cost")
+            var uses_text := _translated_or_empty("ui.skill.uses")
+            var cost := int(info.get("cost", -1))
+            var uses := int(info.get("uses", -1))
+            if cost >= 0 and cost_text != "":
+                parts.append(cost_text % cost)
+            if uses >= 0 and uses_text != "":
+                parts.append(uses_text % uses)
+            if not parts.is_empty():
+                var meta := label(" · ".join(parts), UITheme.font_size("font-caption"), false)
+                meta.name = "SkillCost"
+                meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+                block.add_child(meta)
+        index += 1
 
 
 ## 淘汰或失效的行：统一降低透明度，不改变布局。
@@ -347,6 +407,12 @@ static func enum_text(group: String, id: String) -> String:
     var key := "enum.%s.%s" % [group, id]
     var text := TranslationServer.translate(key)
     return id if text == key else text
+
+
+## 按完整文本 id 取文案；缺键返回空串，避免内部 id 泄露到界面。
+static func _translated_or_empty(key: String) -> String:
+    var text := TranslationServer.translate(key)
+    return "" if text == key else text
 
 
 ## 错误码对应的展示文案；缺键回退为错误码。

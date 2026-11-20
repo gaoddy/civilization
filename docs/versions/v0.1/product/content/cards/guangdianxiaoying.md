@@ -4,7 +4,7 @@ name: 光电效应
 card_type: effect
 level: 3
 era: industrial
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: physics
 cost: 1
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [combatstart-leftmost-damage-3]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 工业 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 物理学 |
-| 关联分类 | 无 |
+| 玩法 | 鸟纲、机械 |
 | 技能 | combatstart-leftmost-damage-3 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 物理学 |
 
 ## 效果
 

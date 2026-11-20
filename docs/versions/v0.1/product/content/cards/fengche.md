@@ -2,9 +2,8 @@
 id: fengche
 card_type: minion
 name: 风车
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
-specialty: [play:machine]
 subtype: vehicle
 level: 3
 era: feudal
@@ -23,9 +22,7 @@ is_scholar: false
 | id | fengche |
 | 名称 | 风车 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 动力与能源 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 载具 |
 | 星级 | 3 |
 | 时代 | 封建 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1；trigger-turn-start-self-plus-0-plus-1 |
 | 学者 | 否 |
+| 科学分类 | 造物 › 动力与能源 |
 
 ## 效果
 

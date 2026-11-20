@@ -2,7 +2,7 @@
 id: vorticella
 card_type: minion
 name: 钟虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: vorticellidae
 subtype: protozoa
 level: 2
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 钟虫 |
 | 类型 | 随从 |
 | 玩法 | 原生生物界 |
-| 科学分类 | 原生生物界 › 纤毛门 › 寡膜纲 › 固着目 › 钟虫科 |
-| 关联分类 | 无 |
 | 子类 | 原生生物 |
 | 星级 | 2 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-friendly-protozoa-growth-once |
 | 学者 | 否 |
+| 科学分类 | 原生生物界 › 纤毛门 › 寡膜纲 › 固着目 › 钟虫科 |
 
 ## 效果
 

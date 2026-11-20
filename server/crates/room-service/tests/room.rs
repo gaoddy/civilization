@@ -16,7 +16,7 @@ use protocol::{RoomClosedReason, ServerEnvelope, ServerMessage};
 use room_service::auth::{Session, SessionStore};
 use room_service::clock::FixedClock;
 use room_service::room::{RoomError, RoomRegistry, SEAT_COUNT};
-use rule_engine::data::{Catalog, HeroCard, Playstyle, Specialty, SpecialtyKind, hero_in_pool};
+use rule_engine::data::{Catalog, Category, CategoryKind, HeroCard, Playstyle, hero_in_pool};
 use rule_engine::state::Phase;
 use serde_json::{Value, json};
 use tokio_tungstenite::tungstenite::Message;
@@ -89,7 +89,7 @@ fn lobby_room_with(catalog: Catalog) -> (RoomRegistry, String, String, Vec<Sessi
     (registry, room_id, code, players)
 }
 
-/// 只保留指定英雄、并清空玩法关联；中立且无 `play:` 的英雄始终在候选池内。
+/// 只保留指定英雄，并给每张英雄补全 13 条 `play:`，使其对任意启用玩法都入池。
 fn catalog_with_generic_heroes(hero_ids: &[&str]) -> Catalog {
     let mut catalog = catalog();
     let keep_all = hero_ids.is_empty();
@@ -102,10 +102,15 @@ fn catalog_with_generic_heroes(hero_ids: &[&str]) -> Catalog {
     catalog
 }
 
-/// 把英雄改成「中立且无玩法关联」，`hero_in_pool` 恒为真。
+/// 给英雄挂上全部 13 个玩法归属，`hero_in_pool` 对任意本局玩法组合恒为真。
 fn make_generic_hero(hero: &mut HeroCard) {
-    hero.playstyle = Playstyle::Neutral;
-    hero.specialty.clear();
+    hero.categories = Playstyle::ALL
+        .iter()
+        .map(|playstyle| Category {
+            kind: CategoryKind::Play,
+            value: playstyle.id().to_string(),
+        })
+        .collect();
 }
 
 /// 在满座大厅里让所有人选好不同英雄并准备，但仍停留在 `Lobby`。
@@ -787,16 +792,54 @@ fn candidates_are_limited_to_enabled_playstyles() {
             let hero = catalog.heroes.get(&id).expect("候选必须是卡表中的英雄");
             assert!(
                 hero_in_pool(hero, &enabled),
-                "候选 {id}（playstyle={:?}）不在本局启用的玩法内",
-                hero.playstyle
+                "候选 {id}（categories={:?}）不在本局启用的玩法内",
+                hero.categories
             );
         }
     }
 }
 
 #[test]
+fn every_playstyle_yields_non_empty_candidates() {
+    // 13 个玩法都要至少在某个房间的启用集合中出现一次，且该房间的候选非空。
+    // 真实英雄数据中真菌、细菌、原生生物没有直接归属的英雄；任意 5 个玩法
+    // 的组合仍至少包含一个有英雄的玩法，因此候选始终非空。
+    let catalog = catalog();
+    let all: BTreeSet<Playstyle> = Playstyle::ALL.into_iter().collect();
+    let mut seen = BTreeSet::new();
+    for seed in 0..500 {
+        let clock = FixedClock::new(1_000_000);
+        let mut store = SessionStore::new();
+        let mut registry = RoomRegistry::with_seed(seed);
+        let host = session(&mut store, &clock, "房主");
+        let room = registry.create(&host, &catalog);
+        let candidates = registry
+            .candidates_of(&room.id, &host.player_id)
+            .expect("房主应有候选");
+        assert!(
+            !candidates.is_empty(),
+            "seed {seed}、玩法 {:?} 的候选不应为空",
+            room.playstyles
+        );
+        let enabled: BTreeSet<Playstyle> = room.playstyles.iter().copied().collect();
+        for id in &candidates {
+            let hero = catalog.heroes.get(id).expect("候选必须是真实英雄卡");
+            assert!(
+                hero_in_pool(hero, &enabled),
+                "候选 {id} 必须命中本局启用玩法"
+            );
+        }
+        seen.extend(enabled);
+        if seen.len() == all.len() {
+            break;
+        }
+    }
+    assert_eq!(seen, all, "遍历房间种子应覆盖全部 13 个玩法");
+}
+
+#[test]
 fn each_seat_gets_four_distinct_candidates_when_pool_is_large() {
-    // 32 张英雄全部中立且无 play:，候选池恰好 32 张，走满座分段。
+    // 32 张英雄全部带 13 条 play:，候选池恰好 32 张，走满座分段。
     let (registry, room_id, _code, players) = lobby_room_with(catalog_with_generic_heroes(&[]));
     let mut seen = BTreeSet::new();
     for player in &players {
@@ -862,14 +905,10 @@ fn pool_smaller_than_candidate_count_takes_whole_pool() {
 
 #[test]
 fn empty_filtered_pool_falls_back_to_all_heroes() {
-    // 所有英雄都带 `play:neutral`：`hero_in_pool` 不命中，过滤后池为空。
+    // 所有英雄都没有 `play:` 归属：`hero_in_pool` 不命中，过滤后池为空。
     let mut catalog = catalog();
     for hero in catalog.heroes.values_mut() {
-        hero.playstyle = Playstyle::Neutral;
-        hero.specialty = vec![Specialty {
-            kind: SpecialtyKind::Play,
-            value: "neutral".to_string(),
-        }];
+        hero.categories.clear();
     }
     let all_heroes: BTreeSet<String> = catalog.heroes.keys().cloned().collect();
 

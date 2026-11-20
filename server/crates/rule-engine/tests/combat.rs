@@ -2,7 +2,7 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::{effects_of, minion, reborn_count, test_catalog, test_playstyles};
+use common::{categories_for, effects_of, minion, reborn_count, test_catalog, test_playstyles};
 use rule_engine::combat::{
     CombatAction, CombatLog, effective_attack, effective_attack_with, effective_health,
     effective_health_with, keywords, simulate, simulate_with,
@@ -45,9 +45,8 @@ fn add_card_with(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(playstyle),
             subtype: None,
             level: 1,
             era: None,

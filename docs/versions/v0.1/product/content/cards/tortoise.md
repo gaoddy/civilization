@@ -2,7 +2,7 @@
 id: tortoise
 card_type: minion
 name: 陆龟
-playstyle: reptile
+categories: [play:reptile]
 taxon: testudinidae
 subtype: reptile
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 陆龟 |
 | 类型 | 随从 |
 | 玩法 | 爬行纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 龟鳖目 › 陆龟科 |
-| 关联分类 | 无 |
 | 子类 | 爬行 |
 | 星级 | 3 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 减伤 1 |
 | 技能 | keyword-armor-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 龟鳖目 › 陆龟科 |
 
 ## 效果
 

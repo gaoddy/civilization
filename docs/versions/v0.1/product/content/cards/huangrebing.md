@@ -2,9 +2,8 @@
 id: huangrebing
 card_type: minion
 name: 黄热病
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: flaviviridae
-specialty: [host:mammalia]
 subtype: disease
 level: 4
 era: industrial
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 黄热病 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 病毒 › 核糖病毒门 › 黄病毒纲 › 黄病毒目 › 黄病毒科 |
-| 关联分类 | 寄生：哺乳纲 |
 | 子类 | 疾病 |
 | 星级 | 4 |
 | 时代 | 工业 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-2 |
 | 学者 | 否 |
+| 科学分类 | 病毒 › 核糖病毒门 › 黄病毒纲 › 黄病毒目 › 黄病毒科 |
+| 关联分类 | 寄生：哺乳纲 |
 
 ## 效果
 

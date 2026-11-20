@@ -2,7 +2,7 @@
 id: dragonfly
 card_type: minion
 name: 蜻蜓
-playstyle: insect
+categories: [play:insect]
 taxon: libellulidae
 subtype: insect
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 蜻蜓 |
 | 类型 | 随从 |
 | 玩法 | 昆虫纲 |
-| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 蜻蜓目 › 蜻科 |
-| 关联分类 | 无 |
 | 子类 | 昆虫 |
 | 星级 | 5 |
 | 时代 | 古典 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 连击；战吼 |
 | 技能 | keyword-windfury；battlecry-other-insect-growth-once |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 蜻蜓目 › 蜻科 |
 
 ## 效果
 

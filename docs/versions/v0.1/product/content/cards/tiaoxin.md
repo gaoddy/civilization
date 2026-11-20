@@ -4,7 +4,7 @@ name: 挑衅
 card_type: effect
 level: 2
 era: feudal
-playstyle: neutral
+categories: [play:mammal, play:reptile]
 taxon: military
 cost: 0
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-friendly-taunt-until-turn-end]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 封建 |
-| 玩法 | 中立 |
-| 科学分类 | 社会 › 军事学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、爬行纲 |
 | 技能 | trigger-friendly-taunt-until-turn-end |
 | 费用 | 0 |
 | 确定性替换 | 同左 |
+| 科学分类 | 社会 › 军事学 |
 
 ## 效果
 

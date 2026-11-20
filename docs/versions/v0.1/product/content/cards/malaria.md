@@ -2,9 +2,8 @@
 id: malaria
 card_type: minion
 name: 疟疾
-playstyle: virus
+categories: [play:virus, host:hominidae]
 taxon: plasmodiidae
-specialty: [host:hominidae]
 subtype: parasite
 level: 3
 era: primitive
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 疟疾 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 原生生物界 › 顶复门 › 无腔纲 › 血孢子虫目 › 疟原虫科 |
-| 关联分类 | 寄生：人科 |
 | 子类 | 寄生虫 |
 | 星级 | 3 |
 | 时代 | 原始 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
+| 科学分类 | 原生生物界 › 顶复门 › 无腔纲 › 血孢子虫目 › 疟原虫科 |
+| 关联分类 | 寄生：人科 |
 
 ## 效果
 

@@ -54,11 +54,11 @@ ROOT_RANKS = {"界"}
 PLAYSTYLE_IDS = ("mammal", "bird", "reptile", "fish", "insect", "cephalopod", "cnidarian",
                  "plant", "fungus", "bacteria", "protozoa", "virus", "machine")
 PLAYSTYLE_VALUES = set(PLAYSTYLE_IDS) | {"neutral"}
-# 非学者中立卡只允许造物六类工具卡；自动机械归机械玩法。
+# 无技能随从只允许造物六类工具卡。
 CRAFT_TOOL_TAXA = {"power-energy", "transport", "weapon-siege",
                    "production-construction", "information-computing", "life-medical"}
-MACHINE_TAXON = "automation"
-SPECIALTY_KINDS = ("play", "prey", "host")
+CATEGORY_KINDS = ("play", "prey", "host")
+CATEGORY_RANK = {"play": 0, "prey": 1, "host": 2}
 # 专属关键词及其允许的玩法。evolve 另要求生物卡且非学者，在关键词校验里单独处理。
 KEYWORD_PLAYSTYLE = {
     "decompose": {"fungus", "bacteria"},
@@ -162,12 +162,12 @@ EXPECT_LEVEL = {1: 35, 2: 52, 3: 59, 4: 60, 5: 55, 6: 28, 7: 20}
 SKILL_FIELDS = ["id"]
 SKILL_OPTIONAL_FIELDS = {"text", "template", "keyword", "cost",
                          "uses_per_turn", "name", "match_text"}
-MINION_FIELDS = ["id", "name", "card_type", "playstyle", "taxon", "subtype", "level", "era",
+MINION_FIELDS = ["id", "name", "card_type", "categories", "taxon", "subtype", "level", "era",
                  "attack", "health", "is_scholar"]
-EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "playstyle", "taxon",
+EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "categories", "taxon",
                  "cost", "match_text"]
-HERO_REQUIRED_FIELDS = ["id", "name", "card_type", "playstyle"]
-HERO_OPTIONAL_FIELDS = {"specialty", "skills"}
+HERO_REQUIRED_FIELDS = ["id", "name", "card_type", "categories"]
+HERO_OPTIONAL_FIELDS = {"skills"}
 HERO_COUNT = 32
 LEGACY_HERO_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
                       "hero_skill_uses_per_turn", "hero_skill_trigger"]
@@ -175,6 +175,7 @@ LEGACY_HERO_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
 # 分类上下文，main 在 check_taxonomy 之后写入；单测可直接赋值。
 TAXONOMY_NODES = {}
 TAXONOMY_CHILDREN = {}
+TAXONOMY_ORDER = {}
 PLAYSTYLE_NAMES = {}
 
 errors = []
@@ -614,7 +615,7 @@ def check_taxonomy():
     return nodes, children, ids, names
 
 
-# ---- 卡牌分类字段：playstyle / taxon / specialty / 关键词 ----
+# ---- 卡牌分类字段：categories / taxon / 关键词 ----
 
 def card_label(doc):
     """错误信息定位：优先卡牌 id，其次文件名。"""
@@ -627,50 +628,92 @@ def is_biological(doc):
     return root in BIOLOGICAL_KINGDOMS
 
 
-def effective_playstyle(doc):
-    """校验归属时使用的玩法：效果牌取 play: 关联，其余卡取自身 playstyle。"""
-    if doc.get("card_type") == "effect":
-        plays = [item.split(":", 1)[1] for item in doc.get("specialty") or []
-                 if item.startswith("play:")]
-        if len(plays) == 1:
-            return plays[0]
-    return doc.get("playstyle")
-
-
-def specialty_errors(doc):
-    """解析并校验 specialty 列表：每条为 kind:value，kind ∈ play/prey/host，且不带空白。"""
-    value = doc.get("specialty")
-    if value is None:
-        return []
+def parse_categories(doc):
+    """把 `categories: [kind:value, ...]` 拆成 [(kind, value)]；非法项由 category_errors 报告。"""
+    value = doc.get("categories")
     if not isinstance(value, list):
-        return [f"specialty 必须是列表，实为 {value!r}"]
-    errors = []
+        return []
+    items = []
     for item in value:
-        if ":" not in item:
-            errors.append(f"specialty 项缺少前缀 {item!r}（需 kind:value）")
+        if not isinstance(item, str) or ":" not in item:
             continue
         kind, target = item.split(":", 1)
-        if kind not in SPECIALTY_KINDS:
-            errors.append(f"specialty 前缀非法 {kind!r}（需 play / prey / host）")
-        elif not ID_RE.fullmatch(target):
-            errors.append(f"specialty 取值格式非法 {item!r}")
+        items.append((kind, target))
+    return items
+
+
+def effective_playstyles(doc):
+    """卡牌的全部玩法归属；Token 仍单独使用单值 playstyle。"""
+    return [target for kind, target in parse_categories(doc) if kind == "play"]
+
+
+def _category_order(target, kind):
+    """排序键：先按玩法表顺序，其余按分类树声明顺序。"""
+    if kind == "play":
+        index = PLAYSTYLE_IDS.index(target) if target in PLAYSTYLE_IDS else len(PLAYSTYLE_IDS)
+        return (CATEGORY_RANK[kind], index)
+    index = TAXONOMY_ORDER.get(target)
+    if index is None and target in TAXONOMY_NODES:
+        index = list(TAXONOMY_NODES).index(target)
+    return (CATEGORY_RANK[kind], index if index is not None else len(TAXONOMY_NODES))
+
+
+def category_errors(doc, check_biological=True):
+    """解析并校验 categories：语法、前缀、重复、至少 1 条 play、取值与顺序。"""
+    label = card_label(doc)
+    value = doc.get("categories")
+    if value is None:
+        return [f"{label}: 缺字段 categories"]
+    if not isinstance(value, list):
+        return [f"{label}: categories 必须是列表，实为 {value!r}"]
+    errors = []
+    seen = set()
+    plays = 0
+    ordered = []
+    for item in value:
+        if not isinstance(item, str):
+            errors.append(f"{label}: categories 项必须是字符串，实为 {item!r}")
+            continue
+        if ":" not in item:
+            errors.append(f"{label}: categories 项缺少前缀 {item!r}（需 kind:value）")
+            continue
+        kind, target = item.split(":", 1)
+        if not target:
+            errors.append(f"{label}: categories 项缺少取值 {item!r}")
+            continue
+        if item in seen:
+            errors.append(f"{label}: categories 条目重复 {item!r}")
+        seen.add(item)
+        if kind not in CATEGORY_KINDS:
+            errors.append(f"{label}: categories 前缀非法 {kind!r}（需 play / prey / host）")
+            continue
+        if not ID_RE.fullmatch(target):
+            errors.append(f"{label}: categories 取值格式非法 {item!r}")
+            continue
+        ordered.append((kind, target))
+        if kind == "play":
+            plays += 1
+            if target not in PLAYSTYLE_IDS:
+                errors.append(f"{label}: play:{target} 取值必须是 13 个玩法之一（不含 neutral）")
+        else:
+            if TAXONOMY_NODES and target not in TAXONOMY_NODES:
+                errors.append(f"{label}: {item!r} 的节点不在分类树中")
+            if check_biological and TAXONOMY_NODES and not is_biological(doc):
+                errors.append(f"{label}: {item!r} 只允许生物卡（taxon 根节点必须是生物界）")
+    if plays == 0:
+        errors.append(f"{label}: categories 至少要有 1 条 play:")
+    expected = sorted(ordered, key=lambda pair: _category_order(pair[1], pair[0]))
+    if ordered != expected:
+        errors.append(f"{label}: categories 顺序必须先 play（按玩法顺序）、再 prey、再 host，"
+                      f"同类按分类树顺序")
     return errors
 
 
 def classification_errors(doc):
-    """卡牌 playstyle / taxon / specialty 的交叉校验；taxonomy 未加载时只做取值域校验。"""
+    """卡牌 taxon 与 categories 的交叉校验；taxonomy 未加载时只做取值域校验。"""
     label = card_label(doc)
     errors = []
-    card_type = doc.get("card_type")
-    kind = "效果牌" if card_type == "effect" else "随从"
-    playstyle = doc.get("playstyle")
     taxon = doc.get("taxon")
-    is_scholar = doc.get("is_scholar") is True
-    if playstyle is None:
-        errors.append(f"{label}: 缺字段 playstyle")
-    elif playstyle not in PLAYSTYLE_VALUES:
-        errors.append(f"{label}: playstyle 非法 {playstyle!r}（需 13 个玩法之一或 neutral）")
-        playstyle = None
     if taxon is None:
         errors.append(f"{label}: 缺字段 taxon")
         taxon = None
@@ -683,62 +726,20 @@ def classification_errors(doc):
             taxon = None
         elif TAXONOMY_CHILDREN.get(taxon):
             errors.append(f"{label}: taxon {taxon!r} 不是叶子节点")
-    errors.extend(f"{label}: {e}" for e in specialty_errors(doc))
-
-    if kind == "效果牌":
-        if playstyle not in (None, "neutral"):
-            errors.append(f"{label}: 效果牌 playstyle 必须为 neutral，实为 {playstyle!r}")
-        if doc.get("specialty"):
-            specialty = doc["specialty"]
-            plays = [item for item in specialty if item.startswith("play:")]
-            others = [item for item in specialty if not item.startswith("play:")]
-            if others:
-                errors.append(f"{label}: 效果牌 specialty 只允许 1 条 play: 关联，实为 {specialty!r}")
-            elif len(plays) > 1:
-                errors.append(f"{label}: 效果牌 specialty 只允许 1 条 play: 关联，实为 {len(plays)} 条")
-    else:
-        if playstyle == "neutral" and not is_scholar:
-            if taxon is not None and taxon not in CRAFT_TOOL_TAXA:
-                errors.append(f"{label}: 非学者中立卡只允许造物六类工具卡，taxon 实为 {taxon!r}")
-        elif playstyle == "machine" and taxon in CRAFT_TOOL_TAXA:
-            errors.append(f"{label}: 造物卡的机械玩法要求 taxon={MACHINE_TAXON}，实为 {taxon!r}")
-        if is_scholar and playstyle not in (None, "neutral"):
-            errors.append(f"{label}: 学者卡 playstyle 必须为 neutral，实为 {playstyle!r}")
-
-    for item in doc.get("specialty") or []:
-        if ":" not in item:
-            continue
-        prefix, target = item.split(":", 1)
-        if prefix == "play":
-            if card_type != "effect" and not (is_scholar or playstyle == "neutral"):
-                errors.append(f"{label}: play:{target} 只允许学者卡或中立非学者卡"
-                              f"（本卡 playstyle={playstyle}）")
-            if target not in PLAYSTYLE_IDS:
-                errors.append(f"{label}: play:{target} 取值必须是 13 个玩法之一（不含 neutral）")
-        elif prefix in ("prey", "host"):
-            if TAXONOMY_NODES and taxon is not None and not is_biological(doc):
-                errors.append(f"{label}: {item!r} 只允许生物卡（taxon 根节点必须是生物界）")
-            elif TAXONOMY_NODES and target not in TAXONOMY_NODES:
-                errors.append(f"{label}: {item!r} 的节点不在分类树中")
+    errors.extend(category_errors(doc))
     return errors
 
 
 def keyword_errors(doc, keyword):
-    """专属关键词的玩法/形态约束。"""
+    """专属关键词的玩法/形态约束：任一 play 命中允许集合即可。"""
     label = card_label(doc)
     base = str(keyword).split()[0]
-    playstyle = effective_playstyle(doc)
+    plays = set(effective_playstyles(doc))
     if base in KEYWORD_PLAYSTYLE:
         allowed = KEYWORD_PLAYSTYLE[base]
-        if base == "assemble":
-            # 中立工具卡用 play:machine 声明机械关联，允许携带装配。
-            plays = {item.split(":", 1)[1] for item in doc.get("specialty") or []
-                     if item.startswith("play:")}
-            if playstyle in allowed or "machine" in plays:
-                return []
-        if playstyle not in allowed:
-            return [f"{label}: 关键词 {keyword!r} 只允许 playstyle ∈ {sorted(allowed)}，"
-                    f"实为 {playstyle!r}"]
+        if not plays & allowed:
+            return [f"{label}: 关键词 {keyword!r} 只允许 play 命中 {sorted(allowed)}，"
+                    f"实为 {sorted(plays)}"]
     if base == "evolve":
         if not TAXONOMY_NODES:
             return []
@@ -752,7 +753,7 @@ def keyword_errors(doc, keyword):
 def mechanism_errors(doc, skill_map):
     """新机制原语与选择器的玩法归属；技能解析错误由 check_skills 报告。"""
     label = card_label(doc)
-    playstyle = effective_playstyle(doc)
+    plays = set(effective_playstyles(doc))
     errors = []
     for sid in card_skills(doc):
         skill = skill_map.get(sid)
@@ -764,18 +765,18 @@ def mechanism_errors(doc, skill_map):
         for effect in effects:
             op = effect["op"]
             allowed = MECHANISM_PLAYSTYLE.get(op)
-            if allowed is not None and playstyle not in allowed:
-                errors.append(f"{label}: 原语 {op} 只允许 playstyle ∈ {sorted(allowed)}，"
-                              f"实为 {playstyle!r}")
+            if allowed is not None and not plays & allowed:
+                errors.append(f"{label}: 原语 {op} 只允许 play 命中 {sorted(allowed)}，"
+                              f"实为 {sorted(plays)}")
             selector = effect["selector"]
             if selector in ("self", "target") or selector.startswith("target:"):
                 continue
             parts = selector.split(":")
             pick = parts[1] if len(parts) > 1 else ""
             allowed = PICK_PLAYSTYLE.get(pick)
-            if allowed is not None and playstyle not in allowed:
-                errors.append(f"{label}: 选择器 {pick} 只允许 playstyle ∈ {sorted(allowed)}，"
-                              f"实为 {playstyle!r}")
+            if allowed is not None and not plays & allowed:
+                errors.append(f"{label}: 选择器 {pick} 只允许 play 命中 {sorted(allowed)}，"
+                              f"实为 {sorted(plays)}")
     return errors
 
 
@@ -784,11 +785,9 @@ def skill_count_errors(doc, skill_map):
     label = card_label(doc)
     skills = card_skills(doc)
     if not skills:
-        if (doc.get("playstyle") == "neutral"
-                and doc.get("is_scholar") is not True
-                and doc.get("taxon") in CRAFT_TOOL_TAXA):
+        if doc.get("is_scholar") is not True and doc.get("taxon") in CRAFT_TOOL_TAXA:
             return []
-        return [f"{label}: 无技能随从只允许中立非学者工具卡"]
+        return [f"{label}: 无技能随从只允许非学者造物工具卡"]
     level = doc.get("level")
     errors = []
     if level in (1, 2) and len(skills) > 1:
@@ -992,51 +991,50 @@ def taxon_path(node_id):
 
 
 def playstyle_display(playstyle):
-    """玩法列：13 个玩法取名，neutral 显示「中立」。"""
+    """单值玩法展示名；neutral 显示「中立」（Token 与筛选兜底使用）。"""
     if playstyle == "neutral":
         return "中立"
+    return playstyle_name(playstyle)
+
+
+def playstyle_name(playstyle):
+    """13 个玩法的中文名；未知取值原样返回。"""
     if PLAYSTYLE_NAMES:
         return PLAYSTYLE_NAMES.get(playstyle, str(playstyle))
     return enum_label("playstyle", playstyle)
 
 
-def play_heading(is_scholar):
-    """play: 段标题：学者为「擅长：」，中立非学者为「关联：」。"""
-    return "擅长：{paths}" if is_scholar else "关联：{paths}"
+def play_categories_display(doc):
+    """玩法列：全部 play 归属，按玩法表固定顺序用「、」分隔。"""
+    plays = set(effective_playstyles(doc))
+    ordered = [pid for pid in PLAYSTYLE_IDS if pid in plays]
+    if not ordered:
+        return "无"
+    return "、".join(playstyle_name(pid) for pid in ordered)
 
 
 def specialty_display(doc, hero=False):
-    """关联分类列：按 play / prey / host 分段，段内用、分隔；无内容写「无」。
+    """关联分类列：只渲染 prey / host，段内用「、」分隔；没有时返回空串。
 
-    英雄卡只保留关联关系，play: 段统一写「关联：」，不沿用学者卡的「擅长：」。
+    hero 参数保留调用兼容；英雄与随从使用同一套「捕食：…；寄生：…」格式。
     """
-    items = doc.get("specialty") or []
     groups = collections.OrderedDict()
-    for item in items:
-        if ":" not in item:
-            continue
-        prefix, target = item.split(":", 1)
-        groups.setdefault(prefix, []).append(target)
+    for kind, target in parse_categories(doc):
+        if kind in ("prey", "host"):
+            groups.setdefault(kind, []).append(target)
     parts = []
-    for prefix, targets in groups.items():
-        names = []
-        for target in targets:
-            if prefix == "play":
-                names.append((PLAYSTYLE_NAMES.get(target) or enum_label("playstyle", target))
-                             if PLAYSTYLE_NAMES else enum_label("playstyle", target))
-            else:
-                names.append((TAXONOMY_NODES.get(target, {}).get("name") or target)
-                             if TAXONOMY_NODES else enum_label("taxon", target))
-        if prefix == "play":
-            title = "关联：{paths}" if hero else play_heading(doc.get("is_scholar") is True)
-        elif prefix == "prey":
-            title = "捕食：{paths}"
-        elif prefix == "host":
-            title = "寄生：{paths}"
-        else:
+    for prefix in ("prey", "host"):
+        targets = groups.get(prefix)
+        if not targets:
             continue
+        names = [
+            (TAXONOMY_NODES.get(target, {}).get("name") or target)
+            if TAXONOMY_NODES else enum_label("taxon", target)
+            for target in targets
+        ]
+        title = "捕食：{paths}" if prefix == "prey" else "寄生：{paths}"
         parts.append(title.format(paths="、".join(names)))
-    return "；".join(parts) if parts else "无"
+    return "；".join(parts)
 
 
 def expected_card_attrs(doc, skill_map):
@@ -1044,8 +1042,7 @@ def expected_card_attrs(doc, skill_map):
     skill_value = "；".join(skills) if skills else "无"
     keyword_list = derived_keywords(doc, skill_map)
     keyword_value = "；".join(keyword_display(k) for k in keyword_list) if keyword_list else "无"
-    playstyle = doc.get("playstyle")
-    playstyle_value = playstyle_display(playstyle) if playstyle is not None else ""
+    playstyle_value = play_categories_display(doc)
     taxon_value = taxon_path(doc.get("taxon")) if TAXONOMY_NODES else ""
     specialty_value = specialty_display(doc) if TAXONOMY_NODES else ""
     if doc["card_type"] == "minion":
@@ -1085,7 +1082,7 @@ def expected_hero_attrs(doc, skill_map):
         "id": doc["id"],
         "名称": doc["name"],
         "类型": enum_label("card_type", doc["card_type"]),
-        "玩法": playstyle_display(doc.get("playstyle")),
+        "玩法": play_categories_display(doc),
         "技能": "；".join(skills) if skills else "无",
     }
     specialty_value = specialty_display(doc, hero=True) if TAXONOMY_NODES else ""
@@ -1332,7 +1329,7 @@ def skill_ref_errors(doc, skill_map):
 
 
 def check_cards(skill_map):
-    raw = load("cards", ["id", "name", "card_type", "level", "playstyle", "taxon"])
+    raw = load("cards", ["id", "name", "card_type", "level", "categories", "taxon"])
     for doc in raw:
         if doc["card_type"] not in CARD_TYPES:
             fail(f"{doc['_file']}: card_type 非法 {doc['card_type']!r}")
@@ -1345,7 +1342,11 @@ def check_cards(skill_map):
         if "keywords" in doc:
             fail(f"{doc['_file']}: 残留旧字段 keywords，应改用 skills")
         if "tribe" in doc:
-            fail(f"{doc['_file']}: 残留旧字段 tribe，应改用 playstyle / taxon / specialty")
+            fail(f"{doc['_file']}: 残留旧字段 tribe，应改用 categories / taxon")
+        if "playstyle" in doc:
+            fail(f"{doc['_file']}: 残留旧字段 playstyle，应改用 categories")
+        if "specialty" in doc:
+            fail(f"{doc['_file']}: 残留旧字段 specialty，应改用 categories")
         if "is_hero" in doc:
             fail(f"{doc['_file']}: 残留 is_hero，英雄卡应放在 heroes 目录")
         for message in skill_ref_errors(doc, skill_map):
@@ -1360,7 +1361,7 @@ def check_cards(skill_map):
 
     skillless = [c for c in minions if not card_skills(c)]
     if len(skillless) != 1:
-        fail(f"无技能随从 {len(skillless)} 张，期望 1 张（仅中立工具卡）")
+        fail(f"无技能随从 {len(skillless)} 张，期望 1 张（仅造物工具卡）")
     for c in skillless:
         if body_text(ROOT / "cards" / c["_file"]) != "无":
             fail(f"{c['_file']}: 无技能随从的「## 效果」必须为「无」")
@@ -1445,10 +1446,15 @@ def check_cards(skill_map):
 
 
 def playstyle_counts(minions):
-    """按玩法统计随从数量（含中立）；缺字段的卡单独计数。"""
-    return dict(sorted(collections.Counter(
-        c.get("playstyle") if c.get("playstyle") is not None else "<缺字段>"
-        for c in minions).items()))
+    """按玩法多归属统计随从数量；一张卡计入每条 play，缺 play 的卡单独计数。"""
+    counts = collections.Counter()
+    for card in minions:
+        plays = effective_playstyles(card)
+        if not plays:
+            counts["<无 play>"] += 1
+        for play in plays:
+            counts[play] += 1
+    return dict(sorted(counts.items()))
 
 
 HERO_PASSIVE_TRIGGERS = {"Aura", "ConditionalAura", "OnFirstRefresh",
@@ -1497,6 +1503,9 @@ def check_hero_cards(cards, minions, effects, skill_map):
             fail(f"{doc['_file']}: skills 必须是列表，实为 {raw_skills!r}")
         for message in skill_ref_errors(doc, skill_map):
             fail(message)
+        # 英雄没有 taxon，生物限制由同 id 随从卡校验。
+        for message in category_errors(doc, check_biological=False):
+            fail(message)
         for skill_id in doc.get("skills", []):
             skill = skill_map.get(skill_id)
             if skill is None:
@@ -1509,7 +1518,7 @@ def check_hero_cards(cards, minions, effects, skill_map):
         if base is None:
             fail(f"{doc['_file']}: 英雄卡 {doc['id']} 没有对应的随从卡")
             continue
-        for field in ("name", "playstyle", "specialty"):
+        for field in ("name", "categories"):
             if doc.get(field) != base.get(field):
                 fail(f"{doc['_file']}: 英雄卡 {field} 与随从卡 {base['_file']} 不一致")
     for label, group in (("英雄卡", heroes),):
@@ -1576,10 +1585,11 @@ def check_enemy_selectors(raw):
 
 
 def main():
-    global TAXONOMY_NODES, TAXONOMY_CHILDREN, PLAYSTYLE_NAMES, ENUM_LABELS
+    global TAXONOMY_NODES, TAXONOMY_CHILDREN, TAXONOMY_ORDER, PLAYSTYLE_NAMES, ENUM_LABELS
     taxonomy_nodes, taxonomy_children, playstyles, playstyle_names = check_taxonomy()
     TAXONOMY_NODES = taxonomy_nodes or {}
     TAXONOMY_CHILDREN = taxonomy_children or {}
+    TAXONOMY_ORDER = {node_id: index for index, node_id in enumerate(TAXONOMY_NODES)}
     PLAYSTYLE_NAMES = playstyle_names or {}
     skills = check_skills()
     skill_map = {s["id"]: s for s in skills}

@@ -2,7 +2,7 @@
 id: ginkgo
 card_type: minion
 name: 银杏
-playstyle: plant
+categories: [play:plant]
 taxon: ginkgoaceae
 subtype: tree
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 银杏 |
 | 类型 | 随从 |
 | 玩法 | 植物界 |
-| 科学分类 | 植物界 › 银杏门 › 银杏纲 › 银杏目 › 银杏科 |
-| 关联分类 | 无 |
 | 子类 | 树木 |
 | 星级 | 5 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 播种；繁衍 1 |
 | 技能 | keyword-sow；keyword-breed-1 |
 | 学者 | 否 |
+| 科学分类 | 植物界 › 银杏门 › 银杏纲 › 银杏目 › 银杏科 |
 
 ## 效果
 

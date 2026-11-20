@@ -4,10 +4,9 @@ name: 潜伏期
 card_type: effect
 level: 2
 era: modern
-playstyle: neutral
+categories: [play:virus]
 taxon: medicine
 cost: 1
-specialty: [play:virus]
 match_text: 同左
 skills: [trigger-virus-single-plus-1-plus-2]
 ---
@@ -23,12 +22,11 @@ skills: [trigger-virus-single-plus-1-plus-2]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 医学 |
-| 关联分类 | 关联：病毒 |
+| 玩法 | 病毒 |
 | 技能 | trigger-virus-single-plus-1-plus-2 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 医学 |
 
 ## 效果
 

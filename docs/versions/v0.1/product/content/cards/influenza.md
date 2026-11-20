@@ -2,9 +2,8 @@
 id: influenza
 card_type: minion
 name: 流感病毒
-playstyle: virus
+categories: [play:virus, host:aves]
 taxon: orthomyxoviridae
-specialty: [host:aves]
 subtype: virus
 level: 3
 era: modern
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 流感病毒 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 病毒 › 核糖病毒门 › 流感病毒纲 › 节段病毒目 › 正黏病毒科 |
-| 关联分类 | 寄生：鸟纲 |
 | 子类 | 病毒 |
 | 星级 | 3 |
 | 时代 | 现代 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 传染 |
 | 技能 | keyword-contagion |
 | 学者 | 否 |
+| 科学分类 | 病毒 › 核糖病毒门 › 流感病毒纲 › 节段病毒目 › 正黏病毒科 |
+| 关联分类 | 寄生：鸟纲 |
 
 ## 效果
 

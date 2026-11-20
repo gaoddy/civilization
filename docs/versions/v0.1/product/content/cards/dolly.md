@@ -2,9 +2,8 @@
 id: dolly
 card_type: minion
 name: 克隆羊多莉
-playstyle: mammal
+categories: [play:mammal, prey:plantae]
 taxon: bovidae
-specialty: [prey:plantae]
 subtype: clone
 level: 4
 era: future
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 克隆羊多莉 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 偶蹄目 › 牛科 |
-| 关联分类 | 捕食：植物界 |
 | 子类 | 克隆 |
 | 星级 | 4 |
 | 时代 | 未来 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 复生 |
 | 技能 | keyword-reborn；shout |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 偶蹄目 › 牛科 |
+| 关联分类 | 捕食：植物界 |
 
 ## 效果
 

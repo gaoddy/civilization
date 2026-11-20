@@ -4,7 +4,7 @@ name: 三连奖励
 card_type: effect
 level: 1
 era: prehistoric
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: economics
 cost: 0
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-discover-tribe-minion]
 | 类型 | 效果 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 玩法 | 中立 |
-| 科学分类 | 社会 › 经济学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、机械 |
 | 技能 | trigger-discover-tribe-minion |
 | 费用 | 0 |
 | 确定性替换 | 同左 |
+| 科学分类 | 社会 › 经济学 |
 
 ## 效果
 

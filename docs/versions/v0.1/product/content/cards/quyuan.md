@@ -2,9 +2,8 @@
 id: quyuan
 card_type: minion
 name: 屈原
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: literature
 level: 4
 era: feudal
@@ -23,9 +22,7 @@ is_scholar: true
 | id | quyuan |
 | 名称 | 屈原 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：哺乳纲 |
+| 玩法 | 哺乳纲 |
 | 子类 | 文学 |
 | 星级 | 4 |
 | 时代 | 封建 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | shout |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

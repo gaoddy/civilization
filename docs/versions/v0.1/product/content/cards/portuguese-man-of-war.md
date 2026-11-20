@@ -2,7 +2,7 @@
 id: portuguese-man-of-war
 card_type: minion
 name: 僧帽水母
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: physaliidae
 subtype: ocean
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 僧帽水母 |
 | 类型 | 随从 |
 | 玩法 | 水螅纲 |
-| 科学分类 | 动物界 › 刺胞动物门 › 水螅纲 › 管水母目 › 僧帽水母科 |
-| 关联分类 | 无 |
 | 子类 | 海洋 |
 | 星级 | 3 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 剧毒；减伤 1 |
 | 技能 | keyword-poison；keyword-armor-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 刺胞动物门 › 水螅纲 › 管水母目 › 僧帽水母科 |
 
 ## 效果
 

@@ -2,7 +2,7 @@
 id: paramecium
 card_type: minion
 name: 草履虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: parameciidae
 subtype: protozoa
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 草履虫 |
 | 类型 | 随从 |
 | 玩法 | 原生生物界 |
-| 科学分类 | 原生生物界 › 纤毛门 › 寡膜纲 › 草履虫目 › 草履虫科 |
-| 关联分类 | 无 |
 | 子类 | 原生生物 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-protozoa-growth-once |
 | 学者 | 否 |
+| 科学分类 | 原生生物界 › 纤毛门 › 寡膜纲 › 草履虫目 › 草履虫科 |
 
 ## 效果
 

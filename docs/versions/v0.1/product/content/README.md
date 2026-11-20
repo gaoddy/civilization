@@ -14,4 +14,4 @@
 | [分类树与玩法](taxonomy.md) | 科学分类树、13 个玩法、关联分类（`play:` / `prey:` / `host:`）的唯一编辑源 |
 | [Token 注册表](tokens/README.md) | 不进牌池的衍生随从 |
 | [平衡测算](balance-analysis.md) | 玩法攻血比、星级身材、技能密度、1000 局模拟与失衡判据 |
-| [平衡问题](balance-questions.md) | v0.1 未解决的平衡与节奏问题归档 |
+| [平衡问题](balance-questions.md) | v0.1 平衡与节奏问题（已裁定与待确认）归档 |

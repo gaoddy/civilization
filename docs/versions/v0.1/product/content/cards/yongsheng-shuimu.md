@@ -2,7 +2,7 @@
 id: yongsheng-shuimu
 card_type: minion
 name: 永生水母
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: oceaniidae
 subtype: ocean
 level: 7
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 永生水母 |
 | 类型 | 随从 |
 | 玩法 | 水螅纲 |
-| 科学分类 | 动物界 › 刺胞动物门 › 水螅纲 › 花水螅目 › 海螅水母科 |
-| 关联分类 | 无 |
 | 子类 | 海洋 |
 | 星级 | 7 |
 | 时代 | 未来 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 复生；减伤 1 |
 | 技能 | keyword-reborn；keyword-armor-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 刺胞动物门 › 水螅纲 › 花水螅目 › 海螅水母科 |
 
 ## 效果
 

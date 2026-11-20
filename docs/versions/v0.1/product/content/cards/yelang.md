@@ -2,9 +2,8 @@
 id: yelang
 card_type: minion
 name: 野狼
-playstyle: mammal
+categories: [play:mammal, prey:artiodactyla]
 taxon: canidae
-specialty: [prey:artiodactyla]
 subtype: mammal
 level: 2
 era: prehistoric
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 野狼 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 犬科 |
-| 关联分类 | 捕食：偶蹄目 |
 | 子类 | 哺乳 |
 | 星级 | 2 |
 | 时代 | 史前 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | trigger-friendly-biology-play-plus-1-attack |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 犬科 |
+| 关联分类 | 捕食：偶蹄目 |
 
 ## 效果
 

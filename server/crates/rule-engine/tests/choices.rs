@@ -9,8 +9,8 @@
 mod common;
 
 use common::{
-    CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON, effects_of,
-    test_catalog, test_playstyles, turn_started,
+    CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON, categories_for,
+    effects_of, test_catalog, test_playstyles, turn_started,
 };
 use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill, card_in_pool};
 use rule_engine::effects::{Effect, EffectCtx, TargetRef, Zone, parse_effects};
@@ -57,9 +57,8 @@ fn add_minion(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(playstyle),
             subtype: None,
             level,
             era: None,
@@ -212,7 +211,7 @@ fn discover_pool_uses_enabled_playstyles() {
         assert!(
             card_in_pool(card, &state.enabled_playstyles),
             "候选 {card_id} 的玩法 {:?} 未在本局启用（{:?}）",
-            card.playstyle,
+            card.categories,
             state.enabled_playstyles
         );
         assert!(pool_count(&state, card_id) > 0, "候选必须在共享池中");
@@ -496,10 +495,15 @@ fn gain_minion_level_current_uses_player_era() {
     // 1 星与 2 星同时在货，玩家处于原始：若误用「回合对应的时代」会取 1 星。
     // 史前的商店等级同样是 1 星，因此必须把玩家放到原始才能区分两种口径。
     let one_star = first_minion_of_level(&engine.catalog, 1, &state.enabled_playstyles);
+    let enabled = *state
+        .enabled_playstyles
+        .iter()
+        .next()
+        .expect("至少一个启用玩法");
     add_minion(
         &mut engine.catalog,
         "probe-two-star",
-        Playstyle::Neutral,
+        enabled,
         (2, 4, 4),
         &[],
     );

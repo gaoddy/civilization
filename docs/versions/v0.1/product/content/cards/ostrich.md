@@ -2,7 +2,7 @@
 id: ostrich
 card_type: minion
 name: 鸵鸟
-playstyle: bird
+categories: [play:bird]
 taxon: struthionidae
 subtype: bird
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 鸵鸟 |
 | 类型 | 随从 |
 | 玩法 | 鸟纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鸵鸟目 › 鸵鸟科 |
-| 关联分类 | 无 |
 | 子类 | 鸟类 |
 | 星级 | 3 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 连击；战吼 |
 | 技能 | keyword-windfury；battlecry-friendly-bird-growth-once |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鸵鸟目 › 鸵鸟科 |
 
 ## 效果
 

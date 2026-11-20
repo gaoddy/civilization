@@ -2,7 +2,7 @@
 id: crow
 card_type: minion
 name: 乌鸦
-playstyle: bird
+categories: [play:bird]
 taxon: corvidae
 subtype: bird
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 乌鸦 |
 | 类型 | 随从 |
 | 玩法 | 鸟纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 雀形目 › 鸦科 |
-| 关联分类 | 无 |
 | 子类 | 鸟类 |
 | 星级 | 3 |
 | 时代 | 封建 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-bird-growth-once；dive-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 雀形目 › 鸦科 |
 
 ## 效果
 

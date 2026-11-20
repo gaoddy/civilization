@@ -4,10 +4,9 @@ name: 瘟疫爆发
 card_type: effect
 level: 5
 era: feudal
-playstyle: neutral
+categories: [play:bacteria]
 taxon: medicine
 cost: 3
-specialty: [play:bacteria]
 match_text: 同左
 skills: [combatstart-all-enemies-contagion-2]
 ---
@@ -23,12 +22,11 @@ skills: [combatstart-all-enemies-contagion-2]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 封建 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 医学 |
-| 关联分类 | 关联：细菌域 |
+| 玩法 | 细菌域 |
 | 技能 | combatstart-all-enemies-contagion-2 |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 医学 |
 
 ## 效果
 

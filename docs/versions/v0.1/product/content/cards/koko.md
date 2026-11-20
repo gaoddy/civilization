@@ -2,7 +2,7 @@
 id: koko
 card_type: minion
 name: 大猩猩科科
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: primate
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 大猩猩科科 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 灵长 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-once；shout |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

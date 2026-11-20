@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use rule_engine::combat::{CombatAction, CombatLog};
-use rule_engine::data::{CardType, Catalog, Playstyle};
+use rule_engine::data::{CardType, Catalog, Category, CategoryKind, Playstyle};
 use rule_engine::effects::{Effect, parse_effects};
 use rule_engine::engine::Engine;
 use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat, ShopSlot};
@@ -31,6 +31,25 @@ pub fn test_catalog() -> Catalog {
 /// 测试用固定玩法：由种子 7 抽出，保证各测试开局一致。
 pub fn test_playstyles() -> [Playstyle; 5] {
     rule_engine::playstyles::draw(7)
+}
+
+/// 按单值玩法构造一条 `play:` 关联；`Neutral` 返回空列表（新数据不再允许）。
+pub fn categories_for(playstyle: Playstyle) -> Vec<Category> {
+    if playstyle == Playstyle::Neutral {
+        Vec::new()
+    } else {
+        vec![Category {
+            kind: CategoryKind::Play,
+            value: playstyle.id().to_string(),
+        }]
+    }
+}
+
+/// 卡牌是否带指定玩法归属；供测试断言多玩法。
+pub fn card_has_play(card: &rule_engine::data::Card, playstyle: &str) -> bool {
+    card.categories
+        .iter()
+        .any(|category| category.kind == CategoryKind::Play && category.value == playstyle)
 }
 
 /// 按卡牌 id 顺序取前 8 张英雄卡，映射到座位 0..8，供开局测试复用。

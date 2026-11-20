@@ -2,7 +2,7 @@
 id: tuna
 card_type: minion
 name: 金枪鱼
-playstyle: fish
+categories: [play:fish]
 taxon: scombridae
 subtype: fish
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 金枪鱼 |
 | 类型 | 随从 |
 | 玩法 | 鱼纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲈形目 › 鲭科 |
-| 关联分类 | 无 |
 | 子类 | 鱼类 |
 | 星级 | 3 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 连击 |
 | 技能 | keyword-windfury |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲈形目 › 鲭科 |
 
 ## 效果
 

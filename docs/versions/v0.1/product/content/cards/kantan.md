@@ -4,7 +4,7 @@ name: 勘探
 card_type: effect
 level: 5
 era: classical
-playstyle: neutral
+categories: [play:machine]
 taxon: earth-science
 cost: 2
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-discover-tribe-minion]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 古典 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 地球科学 |
-| 关联分类 | 无 |
+| 玩法 | 机械 |
 | 技能 | trigger-discover-tribe-minion |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 地球科学 |
 
 ## 效果
 

@@ -63,20 +63,24 @@ func _ready() -> void:
         _expect(open_card.find_child("FreezeGlyph", true, false) == null, "未冻结卡不应有「冻」字")
         var name_node := open_card.find_child("CardName", true, false)
         _expect(name_node != null, "商店卡应有 CardName")
-        # 卡面类型行固定显示玩法；效果牌与学者都显示「中立」。
+        # 卡面类型行显示全部玩法，多玩法用「、」连接。
+        var expected_type := CardText.playstyle_text(CardDB.card("aolinpike-jidian"))
         var type_node := open_card.find_child("CardType", true, false)
         _expect(
-            type_node != null and str(type_node.text) == TranslationServer.translate("enum.playstyle.neutral"),
-            "卡面应显示玩法「中立」，实际：%s" % (str(type_node.text) if type_node != null else "缺失"),
+            type_node != null and str(type_node.text) == expected_type,
+            "卡面应显示全部玩法「%s」，实际：%s"
+            % [expected_type, str(type_node.text) if type_node != null else "缺失"],
         )
         var cover_node := open_card.find_child("Cover", true, false)
         _expect(cover_node is Panel, "卡面封面应为可绘制圆角的面板")
         if cover_node is Panel:
+            var expected_cover := UITheme.playstyle_cover(
+                CardDB.primary_playstyle(CardDB.card("aolinpike-jidian"))
+            )
             var cover_style := (cover_node as Panel).get_theme_stylebox("panel") as StyleBoxFlat
             _expect(
-                cover_style != null
-                and cover_style.bg_color == UITheme.playstyle_cover("neutral"),
-                "卡面封面色应取中立玩法色",
+                cover_style != null and cover_style.bg_color == expected_cover,
+                "卡面封面色应取首个玩法色",
             )
             _expect(
                 cover_style != null
@@ -274,7 +278,14 @@ func _ready() -> void:
     gallery_tile.queue_free()
     await get_tree().process_frame
 
-    # 详情分类行：科学分类完整路径、玩法、关联玩法、食物链，缺失字段不显示。
+    # 关联分类行文案：界面直接展示该键，必须是「关联分类」而非旧的「关联玩法」。
+    var association_label := str(TranslationServer.translate("ui.game.detail.association"))
+    _expect(
+        association_label == "关联分类",
+        "关联分类行文案应为「关联分类」，实际：%s" % association_label,
+    )
+
+    # 详情分类行：科学分类完整路径、全部玩法、关联分类（仅 prey/host）。
     var mammal_detail := _shop_detail_text("jianchihu")
     _expect(
         mammal_detail.contains(TranslationServer.translate("ui.game.detail.taxonomy")),
@@ -285,18 +296,19 @@ func _ready() -> void:
         "随从详情应显示完整分类路径：%s" % mammal_detail,
     )
     _expect(
-        mammal_detail.contains(TranslationServer.translate("ui.game.detail.playstyle")),
-        "随从详情应显示玩法",
+        mammal_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))
+        and mammal_detail.contains(TranslationServer.translate("enum.playstyle.mammal")),
+        "随从详情应显示玩法：%s" % mammal_detail,
     )
     _expect(
-        mammal_detail.contains(TranslationServer.translate("ui.game.detail.food_chain"))
+        mammal_detail.contains(TranslationServer.translate("ui.game.detail.association"))
         and mammal_detail.contains(TranslationServer.translate("ui.game.detail.prey"))
         and mammal_detail.contains("偶蹄目"),
-        "随从详情应显示捕食关系：%s" % mammal_detail,
+        "随从详情应显示捕食关联：%s" % mammal_detail,
     )
     _expect(
-        not mammal_detail.contains(TranslationServer.translate("ui.game.detail.association")),
-        "非中立玩法不应显示关联玩法",
+        not mammal_detail.contains(TranslationServer.translate("ui.game.detail.food_chain")),
+        "关联分类已合并捕食/寄生，不应再显示食物链行：%s" % mammal_detail,
     )
     _expect(
         mammal_detail.contains(TranslationServer.translate("enum.card_type.minion")),
@@ -309,23 +321,28 @@ func _ready() -> void:
         "造物卡应显示技术分类路径：%s" % tool_detail,
     )
     _expect(
-        tool_detail.contains(TranslationServer.translate("ui.game.detail.association"))
+        tool_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))
         and tool_detail.contains(TranslationServer.translate("enum.playstyle.machine")),
-        "中立工具卡应显示关联玩法：%s" % tool_detail,
+        "机械工具卡应显示玩法：%s" % tool_detail,
     )
     _expect(
-        not tool_detail.contains(TranslationServer.translate("ui.game.detail.food_chain")),
-        "无捕食/寄生的卡不应显示食物链",
+        not tool_detail.contains(TranslationServer.translate("ui.game.detail.association")),
+        "没有 prey/host 的卡不应显示关联分类：%s" % tool_detail,
     )
 
     var scholar_detail := _shop_detail_text("alan-turing")
     _expect(
-        scholar_detail.contains(TranslationServer.translate("enum.playstyle.neutral")),
-        "学者详情玩法应为中立",
+        scholar_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))
+        and scholar_detail.contains(TranslationServer.translate("enum.playstyle.machine")),
+        "学者详情应显示机械玩法：%s" % scholar_detail,
+    )
+    _expect(
+        not scholar_detail.contains(TranslationServer.translate("enum.playstyle.neutral")),
+        "学者详情不应再显示中立：%s" % scholar_detail,
     )
     _expect(
         not scholar_detail.contains(TranslationServer.translate("ui.game.detail.association")),
-        "学者不应显示关联玩法行",
+        "学者不应显示关联分类行：%s" % scholar_detail,
     )
 
     var hero_detail := _hero_detail_text("darwin")
@@ -339,14 +356,17 @@ func _ready() -> void:
     )
     _expect(
         hero_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))
-        and hero_detail.contains(TranslationServer.translate("enum.playstyle.neutral")),
-        "英雄详情应显示玩法",
+        and hero_detail.contains(TranslationServer.translate("enum.playstyle.mammal")),
+        "英雄详情应显示全部玩法：%s" % hero_detail,
     )
     _expect(
-        hero_detail.contains(TranslationServer.translate("ui.game.detail.specialty"))
-        and hero_detail.contains(TranslationServer.translate("enum.playstyle.mammal")),
-        "英雄详情应显示擅长玩法",
+        not hero_detail.contains(TranslationServer.translate("ui.game.detail.specialty")),
+        "英雄详情不应再显示擅长玩法：%s" % hero_detail,
     )
+
+    await _check_hero_skill_list()
+    await _check_skill_trigger_labels()
+    await _check_room_skill_list()
 
     var missing_detail := _classification_text({"playstyle": "", "taxon": "does-not-exist"})
     _expect(
@@ -474,6 +494,180 @@ func _check_cover_art_inset() -> void:
         )
     panel.queue_free()
     await get_tree().process_frame
+
+
+## 英雄技能列表：逐条块状展示，无名技能不渲染标题，主动技能带费用与次数。
+func _check_hero_skill_list() -> void:
+    var detail := GalleryDetail.new()
+    add_child(detail)
+    detail.show_hero("darwin")
+    await get_tree().process_frame
+    await get_tree().process_frame
+
+    var blocks := detail.find_children("SkillBlock*", "VBoxContainer", true, false)
+    _expect(blocks.size() == 2, "图鉴英雄详情应逐条渲染 2 个技能块，实际：%d" % blocks.size())
+    var text := _node_text(detail)
+    _expect(
+        text.contains(CardDB.skill_info("aura-biology-plus-1-plus-1").get("text", "")),
+        "图鉴英雄详情应显示技能完整文本：%s" % text,
+    )
+    _expect(
+        text.contains(TranslationServer.translate("ui.skill.trigger.aura")),
+        "图鉴英雄详情应出现光环标签：%s" % text,
+    )
+    _expect(
+        not text.contains(TranslationServer.translate("ui.gallery.skills")),
+        "图鉴英雄详情不应再单独显示技能名称行：%s" % text,
+    )
+
+    if blocks.size() == 2:
+        var unnamed: Control = blocks[0]
+        _expect(
+            unnamed.find_child("SkillName", true, false) == null,
+            "无名称技能不应渲染技能名标题",
+        )
+        var aura := unnamed.find_child("SkillTrigger", true, false)
+        _expect(
+            aura != null and str(aura.text) == TranslationServer.translate("ui.skill.trigger.aura"),
+            "无名称技能应带光环标签",
+        )
+        _expect(
+            unnamed.find_child("SkillCost", true, false) == null,
+            "被动技能不应显示费用与次数",
+        )
+
+        var active: Control = blocks[1]
+        var active_info := CardDB.skill_info("evolution-discovery")
+        var skill_name := active.find_child("SkillName", true, false)
+        _expect(
+            skill_name != null and str(skill_name.text) == str(active_info.get("name", "")),
+            "有名称技能应渲染技能名标题",
+        )
+        var trigger := active.find_child("SkillTrigger", true, false)
+        _expect(
+            trigger != null
+            and str(trigger.text) == TranslationServer.translate("ui.skill.trigger.on_activate"),
+            "主动技能应带主动标签",
+        )
+        var cost := active.find_child("SkillCost", true, false)
+        var expected_cost := "%s · %s" % [
+            TranslationServer.translate("ui.skill.cost") % int(active_info.get("cost", -1)),
+            TranslationServer.translate("ui.skill.uses") % int(active_info.get("uses", -1)),
+        ]
+        _expect(
+            cost != null and str(cost.text) == expected_cost,
+            "主动技能应显示「%s」，实际：%s" % [expected_cost, str(cost.text) if cost != null else "缺失"],
+        )
+    detail.queue_free()
+    await get_tree().process_frame
+
+    # 无技能时显示空态，不渲染空标签或费用行。
+    var empty_box := VBoxContainer.new()
+    add_child(empty_box)
+    UI.skill_list(empty_box, [])
+    await get_tree().process_frame
+    _expect(
+        _node_text(empty_box).contains(TranslationServer.translate("ui.skill.empty")),
+        "无技能时应显示空态文案",
+    )
+    empty_box.queue_free()
+    await get_tree().process_frame
+
+
+## 触发标签：空触发 + 关键词显示「关键词」；未知触发显示「未知」，不冒充常驻。
+## 全部技能 id 无效时 skill_list 显示空态，不渲染空块。
+func _check_skill_trigger_labels() -> void:
+    var keyword_info := CardDB.skill_info("keyword-armor-1")
+    _expect(
+        str(keyword_info.get("trigger_label", "")) == TranslationServer.translate("ui.skill.trigger.keyword"),
+        "空触发 + 关键词应显示关键词标签，实际：%s" % str(keyword_info.get("trigger_label", "")),
+    )
+    _expect(
+        CardDB.trigger_name("smoke-unknown-trigger") == TranslationServer.translate("ui.skill.trigger.unknown"),
+        "未知触发应显示未知标签",
+    )
+
+    CardDB.skills["smoke-unknown-trigger"] = {
+        "id": "smoke-unknown-trigger",
+        "effects": [{"trigger": "smoke-unknown-trigger"}],
+    }
+    var box := VBoxContainer.new()
+    add_child(box)
+    UI.skill_list(box, ["smoke-unknown-trigger"])
+    await get_tree().process_frame
+    var text := _node_text(box)
+    _expect(
+        text.contains(TranslationServer.translate("ui.skill.trigger.unknown")),
+        "未知触发应渲染未知标签：%s" % text,
+    )
+    _expect(
+        not text.contains(TranslationServer.translate("ui.skill.trigger.passive")),
+        "未知触发不应冒充常驻：%s" % text,
+    )
+    _expect(
+        box.find_children("SkillBlock*", "VBoxContainer", true, false).size() == 1,
+        "未知触发应渲染一个技能块",
+    )
+    box.queue_free()
+    CardDB.skills.erase("smoke-unknown-trigger")
+    await get_tree().process_frame
+
+    var invalid_box := VBoxContainer.new()
+    add_child(invalid_box)
+    UI.skill_list(invalid_box, ["does-not-exist"])
+    await get_tree().process_frame
+    _expect(
+        _node_text(invalid_box).contains(TranslationServer.translate("ui.skill.empty")),
+        "全部技能 id 无效时应显示空态",
+    )
+    _expect(
+        invalid_box.find_children("SkillBlock*", "VBoxContainer", true, false).is_empty(),
+        "无效技能 id 不应渲染空块",
+    )
+    invalid_box.queue_free()
+    await get_tree().process_frame
+
+
+## 选英雄页技能浮层：与图鉴共用技能列表，主动技能显示费用与次数。
+func _check_room_skill_list() -> void:
+    GameStore.player_id = "p0"
+    GameStore.room_id = "r_test"
+    GameStore.room_code = "ABC123"
+    GameStore.phase = Protocol.PHASE_LOBBY
+    GameStore.room_players = [
+        {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
+         "heroCardId": null, "heroCandidates": ["gauss"]},
+    ]
+    var instance := await _check_scene("res://scenes/room.tscn", false)
+    if instance != null:
+        var candidates := instance.find_child("HeroCandidates", true, false)
+        _expect(candidates != null and candidates.get_child_count() > 0, "选英雄页应渲染候选英雄")
+        if candidates != null and candidates.get_child_count() > 0:
+            var event := InputEventMouseButton.new()
+            event.button_index = MOUSE_BUTTON_LEFT
+            event.pressed = true
+            candidates.get_child(0).emit_signal("gui_input", event)
+            await get_tree().process_frame
+            var panel := instance.find_child("SkillPanel", true, false)
+            var text := _node_text(panel)
+            var info := CardDB.skill_info("scholar-growth-twice")
+            _expect(
+                text.contains(TranslationServer.translate("ui.skill.trigger.on_activate")),
+                "技能浮层应出现主动标签：%s" % text,
+            )
+            _expect(
+                text.contains(TranslationServer.translate("ui.skill.cost") % int(info.get("cost", -1))),
+                "技能浮层应显示费用：%s" % text,
+            )
+            _expect(
+                text.contains(TranslationServer.translate("ui.skill.uses") % int(info.get("uses", -1))),
+                "技能浮层应显示每回合次数：%s" % text,
+            )
+        instance.queue_free()
+        await get_tree().process_frame
+    GameStore.room_id = ""
+    GameStore.room_code = ""
+    GameStore.room_players = []
 
 
 ## 商店/手牌详情正文：直接走详情渲染，避免依赖具体页面的悬停时机。

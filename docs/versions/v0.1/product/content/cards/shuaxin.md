@@ -4,7 +4,7 @@ name: 刷新
 card_type: effect
 level: 6
 era: future
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: economics
 cost: 2
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-refresh-shop-free]
 | 类型 | 效果 |
 | 星级 | 6 |
 | 时代 | 未来 |
-| 玩法 | 中立 |
-| 科学分类 | 社会 › 经济学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲、机械 |
 | 技能 | trigger-refresh-shop-free |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 社会 › 经济学 |
 
 ## 效果
 

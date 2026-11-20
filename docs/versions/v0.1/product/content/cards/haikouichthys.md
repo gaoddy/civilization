@@ -2,7 +2,7 @@
 id: haikouichthys
 card_type: minion
 name: 海口鱼
-playstyle: fish
+categories: [play:fish]
 taxon: haikouichthyidae
 subtype: fish
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 海口鱼 |
 | 类型 | 随从 |
 | 玩法 | 鱼纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 无颌纲 › 昆明鱼目 › 海口鱼科 |
-| 关联分类 | 无 |
 | 子类 | 鱼类 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-fish-growth-once |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 无颌纲 › 昆明鱼目 › 海口鱼科 |
 
 ## 效果
 

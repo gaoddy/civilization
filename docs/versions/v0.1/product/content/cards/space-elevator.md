@@ -2,9 +2,8 @@
 id: space-elevator
 card_type: minion
 name: 太空电梯
-playstyle: neutral
+categories: [play:machine]
 taxon: production-construction
-specialty: [play:machine]
 subtype: architecture
 level: 6
 era: future
@@ -23,9 +22,7 @@ is_scholar: false
 | id | space-elevator |
 | 名称 | 太空电梯 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 生产与建筑 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 建筑 |
 | 星级 | 6 |
 | 时代 | 未来 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 护盾；装配 1 |
 | 技能 | keyword-divine-shield；keyword-assemble-1 |
 | 学者 | 否 |
+| 科学分类 | 造物 › 生产与建筑 |
 
 ## 效果
 

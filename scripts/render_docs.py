@@ -55,32 +55,6 @@ def _table(rows):
     return ["| 属性 | 值 |", "| --- | --- |"] + list(rows)
 
 
-def _set_table_rows(text, heading, values):
-    """只替换属性表中键出现在 values 里的行，其余行原样保留。"""
-    lines = text.split("\n")
-    start = None
-    for index, line in enumerate(lines):
-        if line.strip() == f"## {heading}":
-            start = index + 1
-            break
-    if start is None:
-        raise ValueError(f"缺少「## {heading}」小节")
-    end = len(lines)
-    for index in range(start, len(lines)):
-        if lines[index].startswith("## "):
-            end = index
-            break
-    for index in range(start, end):
-        cells = lines[index].split("|")
-        if len(cells) < 3:
-            continue
-        key = cells[1].strip()
-        if key in values:
-            cells[2] = f" {values[key]} "
-            lines[index] = "|".join(cells)
-    return "\n".join(lines)
-
-
 def _keyword_label(keyword, keyword_labels):
     """`breed 1` 渲染为「繁衍 1」；无层数时只取名词。"""
     slug, _, level = str(keyword).partition(" ")
@@ -106,23 +80,32 @@ def _skill_table(doc, keyword_labels):
     return rows
 
 
-def _card_sections(card, skills, renderer, keyword_labels):
-    """返回卡牌「技能」「关键词」两行与「效果」正文。"""
-    ids = card.get("skills", [])
-    labels = []
-    for skill_id in ids:
-        if skill_id not in skills:
-            raise ValueError(f"{card['id']}: 引用的技能不存在 {skill_id!r}")
-        keyword = skills[skill_id].get("keyword")
-        if keyword:
-            label = _keyword_label(keyword, keyword_labels)
-            if label not in labels:
-                labels.append(label)
-    texts = [renderer.instance_text(skills[skill_id]) for skill_id in ids]
-    return {
-        "技能": "；".join(ids) if ids else "无",
-        "关键词": "；".join(labels) if labels else "无",
-    }, ["；".join(texts) if texts else "无"]
+def _attrs_rows(attrs):
+    """属性表数据行：键值对按 expected_*_attrs 的顺序输出。"""
+    return [f"| {key} | {value} |" for key, value in attrs.items()]
+
+
+def _card_body(card, skills, renderer):
+    """卡牌「效果」正文：按 skills 顺序拼接技能文本。"""
+    texts = [renderer.instance_text(skills[skill_id])
+             for skill_id in card.get("skills", [])]
+    return ["；".join(texts) if texts else "无"]
+
+
+def _prepare_context(content, keyword_labels):
+    """填充 validate_docs 的展示上下文，供 expected_*_attrs 使用。"""
+    nodes, playstyles = validate_docs.parse_taxonomy(content / "taxonomy.md")
+    validate_docs.TAXONOMY_NODES = nodes or {}
+    validate_docs.TAXONOMY_CHILDREN = {}
+    validate_docs.TAXONOMY_ORDER = {
+        node_id: index for index, node_id in enumerate(nodes or {})
+    }
+    validate_docs.PLAYSTYLE_NAMES = dict(playstyles or {})
+    validate_docs.KEYWORD_LABELS = keyword_labels
+    cards = gen_card_data.load_docs(content, "cards")
+    for doc in cards:
+        doc["_file"] = f"{doc['id']}.md"
+    validate_docs.ENUM_LABELS = validate_docs.card_enum_labels(cards, root=content)
 
 
 def _render_readme(text, skills, renderer):
@@ -143,6 +126,20 @@ def _render(content, keyword_labels):
     """返回 {相对路径: 渲染后文本}。"""
     content = pathlib.Path(content)
     renderer = skill_templates.Renderer(content)
+    saved = (validate_docs.TAXONOMY_NODES, validate_docs.TAXONOMY_CHILDREN,
+             validate_docs.TAXONOMY_ORDER, validate_docs.PLAYSTYLE_NAMES,
+             validate_docs.KEYWORD_LABELS, validate_docs.ENUM_LABELS)
+    try:
+        _prepare_context(content, keyword_labels)
+        return _render_context(content, renderer, keyword_labels)
+    finally:
+        (validate_docs.TAXONOMY_NODES, validate_docs.TAXONOMY_CHILDREN,
+         validate_docs.TAXONOMY_ORDER, validate_docs.PLAYSTYLE_NAMES,
+         validate_docs.KEYWORD_LABELS, validate_docs.ENUM_LABELS) = saved
+
+
+def _render_context(content, renderer, keyword_labels):
+    """在已填充的展示上下文中生成所有文档文本。"""
     skills = {doc["id"]: doc for doc in gen_card_data.load_docs(content, "skills")}
     rendered = {}
     for path in sorted((content / "skills").glob("*.md")):
@@ -158,9 +155,17 @@ def _render(content, keyword_labels):
             continue
         doc = validate_docs.parse_front_matter(path)
         text = path.read_text(encoding="utf-8")
-        rows, body = _card_sections(doc, skills, renderer, keyword_labels)
-        text = _set_table_rows(text, "属性", rows)
-        text = _set_section(text, "效果", body)
+        attrs = validate_docs.expected_card_attrs(doc, skills)
+        text = _set_section(text, "属性", _table(_attrs_rows(attrs)))
+        text = _set_section(text, "效果", _card_body(doc, skills, renderer))
+        rendered[path.relative_to(content).as_posix()] = text
+    for path in sorted((content / "heroes").glob("*.md")):
+        if path.name == README:
+            continue
+        doc = validate_docs.parse_front_matter(path)
+        text = path.read_text(encoding="utf-8")
+        attrs = validate_docs.expected_hero_attrs(doc, skills)
+        text = _set_section(text, "属性", _table(_attrs_rows(attrs)))
         rendered[path.relative_to(content).as_posix()] = text
     readme_path = content / "skills" / README
     if readme_path.exists():

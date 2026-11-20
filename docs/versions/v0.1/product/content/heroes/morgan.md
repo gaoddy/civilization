@@ -2,8 +2,7 @@
 id: morgan
 card_type: hero
 name: 摩尔根
-playstyle: neutral
-specialty: [play:insect, play:mammal, play:bird, play:reptile, play:fish, play:cephalopod, play:cnidarian]
+categories: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 skills: [aura-biology-plus-0-plus-1]
 ---
 
@@ -16,8 +15,7 @@ skills: [aura-biology-plus-0-plus-1]
 | id | morgan |
 | 名称 | 摩尔根 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：昆虫纲、哺乳纲、鸟纲、爬行纲、鱼纲、头足纲、水螅纲 |
+| 玩法 | 哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
 | 技能 | aura-biology-plus-0-plus-1 |
 
 ## 效果

@@ -2,7 +2,7 @@
 id: cuttlefish
 card_type: minion
 name: 乌贼
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: sepiidae
 subtype: mollusk
 level: 2
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 乌贼 |
 | 类型 | 随从 |
 | 玩法 | 头足纲 |
-| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 乌贼目 › 乌贼科 |
-| 关联分类 | 无 |
 | 子类 | 软体 |
 | 星级 | 2 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | mimic-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 乌贼目 › 乌贼科 |
 
 ## 效果
 

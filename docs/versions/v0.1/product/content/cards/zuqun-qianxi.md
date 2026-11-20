@@ -4,10 +4,9 @@ name: 族群迁徙
 card_type: effect
 level: 1
 era: prehistoric
-playstyle: neutral
+categories: [play:mammal]
 taxon: biology
 cost: 1
-specialty: [play:mammal]
 match_text: 同左
 skills: [trigger-mammal-all-plus-1-plus-1]
 ---
@@ -23,12 +22,11 @@ skills: [trigger-mammal-all-plus-1-plus-1]
 | 类型 | 效果 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：哺乳纲 |
+| 玩法 | 哺乳纲 |
 | 技能 | trigger-mammal-all-plus-1-plus-1 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

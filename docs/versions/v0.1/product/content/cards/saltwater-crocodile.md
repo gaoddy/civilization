@@ -2,7 +2,7 @@
 id: saltwater-crocodile
 card_type: minion
 name: 湾鳄
-playstyle: reptile
+categories: [play:reptile]
 taxon: crocodylidae
 subtype: reptile
 level: 6
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 湾鳄 |
 | 类型 | 随从 |
 | 玩法 | 爬行纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 鳄目 › 鳄科 |
-| 关联分类 | 无 |
 | 子类 | 爬行 |
 | 星级 | 6 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 剧毒；减伤 1 |
 | 技能 | keyword-poison；keyword-armor-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 鳄目 › 鳄科 |
 
 ## 效果
 

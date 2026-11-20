@@ -2,7 +2,7 @@
 id: staphylococcus
 card_type: minion
 name: 葡萄球菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: staphylococcaceae
 subtype: bacteria
 level: 2
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 葡萄球菌 |
 | 类型 | 随从 |
 | 玩法 | 细菌域 |
-| 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 芽孢杆菌目 › 葡萄球菌科 |
-| 关联分类 | 无 |
 | 子类 | 细菌 |
 | 星级 | 2 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | combatstart-random-enemy-contagion-1 |
 | 学者 | 否 |
+| 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 芽孢杆菌目 › 葡萄球菌科 |
 
 ## 效果
 

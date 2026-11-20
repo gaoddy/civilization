@@ -4,10 +4,9 @@ name: 墨汁
 card_type: effect
 level: 2
 era: prehistoric
-playstyle: neutral
+categories: [play:cephalopod]
 taxon: biology
 cost: 1
-specialty: [play:cephalopod]
 match_text: 同左
 skills: [combatstart-random-enemy-minus-2-attack]
 ---
@@ -23,12 +22,11 @@ skills: [combatstart-random-enemy-minus-2-attack]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 史前 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：头足纲 |
+| 玩法 | 头足纲 |
 | 技能 | combatstart-random-enemy-minus-2-attack |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

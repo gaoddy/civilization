@@ -2,7 +2,7 @@
 id: lactobacillus
 card_type: minion
 name: 乳酸菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: lactobacillaceae
 subtype: bacteria
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 乳酸菌 |
 | 类型 | 随从 |
 | 玩法 | 细菌域 |
-| 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 乳杆菌目 › 乳杆菌科 |
-| 关联分类 | 无 |
 | 子类 | 细菌 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-bacteria-plus-0-plus-1 |
 | 学者 | 否 |
+| 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 乳杆菌目 › 乳杆菌科 |
 
 ## 效果
 

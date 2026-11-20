@@ -4,10 +4,9 @@ name: 菌丝网络
 card_type: effect
 level: 2
 era: prehistoric
-playstyle: neutral
+categories: [play:fungus]
 taxon: biology
 cost: 1
-specialty: [play:fungus]
 match_text: 同左
 skills: [trigger-fungus-single-plus-0-plus-3]
 ---
@@ -23,12 +22,11 @@ skills: [trigger-fungus-single-plus-0-plus-3]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 史前 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：真菌界 |
+| 玩法 | 真菌界 |
 | 技能 | trigger-fungus-single-plus-0-plus-3 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

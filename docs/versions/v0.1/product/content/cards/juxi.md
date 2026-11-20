@@ -2,9 +2,8 @@
 id: juxi
 card_type: minion
 name: 巨蜥
-playstyle: reptile
+categories: [play:reptile, prey:aves]
 taxon: varanidae
-specialty: [prey:aves]
 subtype: reptile
 level: 2
 era: primitive
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 巨蜥 |
 | 类型 | 随从 |
 | 玩法 | 爬行纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 巨蜥科 |
-| 关联分类 | 捕食：鸟纲 |
 | 子类 | 爬行 |
 | 星级 | 2 |
 | 时代 | 原始 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 进化 |
 | 技能 | keyword-evolve |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 巨蜥科 |
+| 关联分类 | 捕食：鸟纲 |
 
 ## 效果
 

@@ -2,7 +2,7 @@
 id: trypanosome
 card_type: minion
 name: 锥虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: trypanosomatidae
 subtype: protozoa
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 锥虫 |
 | 类型 | 随从 |
 | 玩法 | 原生生物界 |
-| 科学分类 | 原生生物界 › 眼虫门 › 动质体纲 › 锥虫目 › 锥虫科 |
-| 关联分类 | 无 |
 | 子类 | 原生生物 |
 | 星级 | 3 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | devour-2 |
 | 学者 | 否 |
+| 科学分类 | 原生生物界 › 眼虫门 › 动质体纲 › 锥虫目 › 锥虫科 |
 
 ## 效果
 

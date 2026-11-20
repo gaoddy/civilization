@@ -4,7 +4,7 @@ name: 人工智能
 card_type: effect
 level: 5
 era: future
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
 cost: 3
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-mech-optimal-attack-this-turn]
 | 类型 | 效果 |
 | 星级 | 5 |
 | 时代 | 未来 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 信息与计算 |
-| 关联分类 | 无 |
+| 玩法 | 机械 |
 | 技能 | trigger-mech-optimal-attack-this-turn |
 | 费用 | 3 |
 | 确定性替换 | 同左 |
+| 科学分类 | 造物 › 信息与计算 |
 
 ## 效果
 

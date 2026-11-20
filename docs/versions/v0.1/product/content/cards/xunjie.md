@@ -4,7 +4,7 @@ name: 迅捷
 card_type: effect
 level: 3
 era: prehistoric
-playstyle: neutral
+categories: [play:bird, play:insect]
 taxon: military
 cost: 1
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-minion-windfury-this-turn]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 史前 |
-| 玩法 | 中立 |
-| 科学分类 | 社会 › 军事学 |
-| 关联分类 | 无 |
+| 玩法 | 鸟纲、昆虫纲 |
 | 技能 | trigger-minion-windfury-this-turn |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 社会 › 军事学 |
 
 ## 效果
 

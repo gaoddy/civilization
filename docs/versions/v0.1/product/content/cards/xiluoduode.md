@@ -2,9 +2,8 @@
 id: xiluoduode
 card_type: minion
 name: 希罗多德
-playstyle: neutral
+categories: [play:reptile]
 taxon: hominidae
-specialty: [play:reptile]
 subtype: history
 level: 2
 era: classical
@@ -23,9 +22,7 @@ is_scholar: true
 | id | xiluoduode |
 | 名称 | 希罗多德 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：爬行纲 |
+| 玩法 | 爬行纲 |
 | 子类 | 史学 |
 | 星级 | 2 |
 | 时代 | 古典 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-2 |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

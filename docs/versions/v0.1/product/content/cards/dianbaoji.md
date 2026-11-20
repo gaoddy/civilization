@@ -2,9 +2,8 @@
 id: dianbaoji
 card_type: minion
 name: 电报机
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: communication
 level: 3
 era: industrial
@@ -23,9 +22,7 @@ is_scholar: false
 | id | dianbaoji |
 | 名称 | 电报机 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 信息与计算 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 通信 |
 | 星级 | 3 |
 | 时代 | 工业 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | combatstart-leftmost-damage-3；shout |
 | 学者 | 否 |
+| 科学分类 | 造物 › 信息与计算 |
 
 ## 效果
 

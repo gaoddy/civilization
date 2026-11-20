@@ -2,9 +2,8 @@
 id: gauss
 card_type: minion
 name: 高斯
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: mathematics
 level: 5
 era: modern
@@ -23,9 +22,7 @@ is_scholar: true
 | id | gauss |
 | 名称 | 高斯 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：哺乳纲 |
+| 玩法 | 哺乳纲 |
 | 子类 | 数学 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | scholar-growth-twice |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

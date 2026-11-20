@@ -2,9 +2,8 @@
 id: faraday
 card_type: minion
 name: 法拉第
-playstyle: neutral
+categories: [play:reptile, play:machine]
 taxon: hominidae
-specialty: [play:reptile, play:machine]
 subtype: physics
 level: 5
 era: industrial
@@ -23,9 +22,7 @@ is_scholar: true
 | id | faraday |
 | 名称 | 法拉第 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：爬行纲、机械 |
+| 玩法 | 爬行纲、机械 |
 | 子类 | 物理 |
 | 星级 | 5 |
 | 时代 | 工业 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 护盾 |
 | 技能 | keyword-divine-shield；faraday-cage |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

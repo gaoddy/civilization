@@ -2,7 +2,7 @@
 id: carp
 card_type: minion
 name: 鲤鱼
-playstyle: fish
+categories: [play:fish]
 taxon: cyprinidae
 subtype: fish
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 鲤鱼 |
 | 类型 | 随从 |
 | 玩法 | 鱼纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲤形目 › 鲤科 |
-| 关联分类 | 无 |
 | 子类 | 鱼类 |
 | 星级 | 1 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | aura-other-fish-plus-0-plus-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲤形目 › 鲤科 |
 
 ## 效果
 

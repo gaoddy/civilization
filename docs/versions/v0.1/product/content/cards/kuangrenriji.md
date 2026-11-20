@@ -4,7 +4,7 @@ name: 狂人日记
 card_type: effect
 level: 2
 era: modern
-playstyle: neutral
+categories: [play:mammal]
 taxon: literature
 cost: 1
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [combatstart-remove-top-attack-enemy-growth]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 人文 › 文学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲 |
 | 技能 | combatstart-remove-top-attack-enemy-growth |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 人文 › 文学 |
 
 ## 效果
 

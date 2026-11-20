@@ -2,9 +2,8 @@
 id: smallpox
 card_type: minion
 name: 天花
-playstyle: virus
+categories: [play:virus, host:hominidae]
 taxon: poxviridae
-specialty: [host:hominidae]
 subtype: virus
 level: 2
 era: primitive
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 天花 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 病毒 › 核质巨 DNA 病毒门 › 痘病毒纲 › 痘病毒目 › 痘病毒科 |
-| 关联分类 | 寄生：人科 |
 | 子类 | 病毒 |
 | 星级 | 2 |
 | 时代 | 原始 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-all-enemies-minus-1-health |
 | 学者 | 否 |
+| 科学分类 | 病毒 › 核质巨 DNA 病毒门 › 痘病毒纲 › 痘病毒目 › 痘病毒科 |
+| 关联分类 | 寄生：人科 |
 
 ## 效果
 

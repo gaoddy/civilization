@@ -2,7 +2,7 @@
 id: clownfish
 card_type: minion
 name: 小丑鱼
-playstyle: fish
+categories: [play:fish]
 taxon: pomacentridae
 subtype: fish
 level: 2
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 小丑鱼 |
 | 类型 | 随从 |
 | 玩法 | 鱼纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲈形目 › 雀鲷科 |
-| 关联分类 | 无 |
 | 子类 | 鱼类 |
 | 星级 | 2 |
 | 时代 | 古典 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-fish-growth-once |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲈形目 › 雀鲷科 |
 
 ## 效果
 

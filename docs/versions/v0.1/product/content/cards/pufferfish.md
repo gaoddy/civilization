@@ -2,7 +2,7 @@
 id: pufferfish
 card_type: minion
 name: 河豚
-playstyle: fish
+categories: [play:fish]
 taxon: tetraodontidae
 subtype: fish
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 河豚 |
 | 类型 | 随从 |
 | 玩法 | 鱼纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲀形目 › 鲀科 |
-| 关联分类 | 无 |
 | 子类 | 鱼类 |
 | 星级 | 3 |
 | 时代 | 封建 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；aura-school-fish-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲀形目 › 鲀科 |
 
 ## 效果
 

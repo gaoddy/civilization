@@ -2,7 +2,7 @@
 id: giant-squid
 card_type: minion
 name: 大王乌贼
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: architeuthidae
 subtype: mollusk
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 大王乌贼 |
 | 类型 | 随从 |
 | 玩法 | 头足纲 |
-| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 开眼目 › 大王乌贼科 |
-| 关联分类 | 无 |
 | 子类 | 软体 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 潜行 |
 | 技能 | keyword-stealth；devour-3 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 开眼目 › 大王乌贼科 |
 
 ## 效果
 

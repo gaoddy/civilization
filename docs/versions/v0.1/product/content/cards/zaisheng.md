@@ -4,10 +4,9 @@ name: 再生
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:cnidarian]
 taxon: biology
 cost: 2
-specialty: [play:cnidarian]
 match_text: 同左
 skills: [trigger-cnidarian-single-reborn]
 ---
@@ -23,12 +22,11 @@ skills: [trigger-cnidarian-single-reborn]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：水螅纲 |
+| 玩法 | 水螅纲 |
 | 技能 | trigger-cnidarian-single-reborn |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

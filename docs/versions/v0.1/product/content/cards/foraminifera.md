@@ -2,7 +2,7 @@
 id: foraminifera
 card_type: minion
 name: 有孔虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: rotaliidae
 subtype: protozoa
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 有孔虫 |
 | 类型 | 随从 |
 | 玩法 | 原生生物界 |
-| 科学分类 | 原生生物界 › 有孔虫门 › 球房虫纲 › 轮虫目 › 轮虫科 |
-| 关联分类 | 无 |
 | 子类 | 原生生物 |
 | 星级 | 5 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | devour-4；aura-other-protozoa-plus-1-attack |
 | 学者 | 否 |
+| 科学分类 | 原生生物界 › 有孔虫门 › 球房虫纲 › 轮虫目 › 轮虫科 |
 
 ## 效果
 

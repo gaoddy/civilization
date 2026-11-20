@@ -2,7 +2,7 @@
 id: python
 card_type: minion
 name: 蟒蛇
-playstyle: reptile
+categories: [play:reptile]
 taxon: pythonidae
 subtype: reptile
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 蟒蛇 |
 | 类型 | 随从 |
 | 玩法 | 爬行纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 蟒科 |
-| 关联分类 | 无 |
 | 子类 | 爬行 |
 | 星级 | 4 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 减伤 2 |
 | 技能 | keyword-armor-2 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 蟒科 |
 
 ## 效果
 

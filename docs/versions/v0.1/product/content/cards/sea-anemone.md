@@ -2,7 +2,7 @@
 id: sea-anemone
 card_type: minion
 name: 海葵
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: actiniidae
 subtype: ocean
 level: 2
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 海葵 |
 | 类型 | 随从 |
 | 玩法 | 水螅纲 |
-| 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 海葵目 › 海葵科 |
-| 关联分类 | 无 |
 | 子类 | 海洋 |
 | 星级 | 2 |
 | 时代 | 原始 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 减伤 1 |
 | 技能 | keyword-armor-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 海葵目 › 海葵科 |
 
 ## 效果
 

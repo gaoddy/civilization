@@ -2,7 +2,7 @@
 id: albatross
 card_type: minion
 name: 信天翁
-playstyle: bird
+categories: [play:bird]
 taxon: diomedeidae
 subtype: bird
 level: 6
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 信天翁 |
 | 类型 | 随从 |
 | 玩法 | 鸟纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹱形目 › 信天翁科 |
-| 关联分类 | 无 |
 | 子类 | 鸟类 |
 | 星级 | 6 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语；战吼 |
 | 技能 | deathrattle-summon-2-seabirds；battlecry-friendly-bird-growth-once |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹱形目 › 信天翁科 |
 
 ## 效果
 

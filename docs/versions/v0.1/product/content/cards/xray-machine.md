@@ -2,9 +2,8 @@
 id: xray-machine
 card_type: minion
 name: X射线机
-playstyle: neutral
+categories: [play:machine]
 taxon: life-medical
-specialty: [play:machine]
 subtype: medical
 level: 4
 era: modern
@@ -23,9 +22,7 @@ is_scholar: false
 | id | xray-machine |
 | 名称 | X射线机 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 生活与医疗 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 医疗 |
 | 星级 | 4 |
 | 时代 | 现代 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt |
 | 学者 | 否 |
+| 科学分类 | 造物 › 生活与医疗 |
 
 ## 效果
 

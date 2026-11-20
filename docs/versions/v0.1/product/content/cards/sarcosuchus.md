@@ -2,7 +2,7 @@
 id: sarcosuchus
 card_type: minion
 name: 帝鳄
-playstyle: reptile
+categories: [play:reptile]
 taxon: pholidosauridae
 subtype: reptile
 level: 7
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 帝鳄 |
 | 类型 | 随从 |
 | 玩法 | 爬行纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 鳄形类 › 似鳄科 |
-| 关联分类 | 无 |
 | 子类 | 爬行 |
 | 星级 | 7 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 剧毒；减伤 2 |
 | 技能 | keyword-poison；keyword-armor-2 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 鳄形类 › 似鳄科 |
 
 ## 效果
 

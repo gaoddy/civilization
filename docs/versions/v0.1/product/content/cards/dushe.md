@@ -2,7 +2,7 @@
 id: dushe
 card_type: minion
 name: 毒蛇
-playstyle: reptile
+categories: [play:reptile]
 taxon: squamata-incertae-sedis
 subtype: reptile
 level: 2
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 毒蛇 |
 | 类型 | 随从 |
 | 玩法 | 爬行纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 未定科 |
-| 关联分类 | 无 |
 | 子类 | 爬行 |
 | 星级 | 2 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | deathrattle-random-enemy-minus-1-attack |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 有鳞目 › 未定科 |
 
 ## 效果
 

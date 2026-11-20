@@ -2,8 +2,7 @@
 id: marie-curie
 card_type: hero
 name: 玛丽·居里
-playstyle: neutral
-specialty: [play:mammal, play:machine]
+categories: [play:mammal, play:machine]
 skills: [radium, radiation]
 ---
 
@@ -16,8 +15,7 @@ skills: [radium, radiation]
 | id | marie-curie |
 | 名称 | 玛丽·居里 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：哺乳纲、机械 |
+| 玩法 | 哺乳纲、机械 |
 | 技能 | radium；radiation |
 
 ## 效果

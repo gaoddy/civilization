@@ -2,7 +2,7 @@
 id: giant-jellyfish
 card_type: minion
 name: 巨型水母
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: rhizostomatidae
 subtype: ocean
 level: 6
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 巨型水母 |
 | 类型 | 随从 |
 | 玩法 | 水螅纲 |
-| 科学分类 | 动物界 › 刺胞动物门 › 钵水母纲 › 根口水母目 › 根口水母科 |
-| 关联分类 | 无 |
 | 子类 | 海洋 |
 | 星级 | 6 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 减伤 1 |
 | 技能 | revive-3；keyword-armor-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 刺胞动物门 › 钵水母纲 › 根口水母目 › 根口水母科 |
 
 ## 效果
 

@@ -2,7 +2,7 @@
 id: sea-turtle
 card_type: minion
 name: 海龟
-playstyle: reptile
+categories: [play:reptile]
 taxon: cheloniidae
 subtype: reptile
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 海龟 |
 | 类型 | 随从 |
 | 玩法 | 爬行纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 龟鳖目 › 海龟科 |
-| 关联分类 | 无 |
 | 子类 | 爬行 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 减伤 2；嘲讽 |
 | 技能 | keyword-armor-2；keyword-taunt |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 爬行纲 › 龟鳖目 › 海龟科 |
 
 ## 效果
 

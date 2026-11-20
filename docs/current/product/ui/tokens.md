@@ -131,7 +131,7 @@ iPhone 以 960×540 为基准，对局页通过 `UITheme.stage_metric(name)` 优
 
 ## 6. 玩法色
 
-`UITheme.PLAYSTYLE_COLOR` 共 14 个键：13 个玩法与中立，全部是原子色令牌。
+`UITheme.PLAYSTYLE_COLOR` 共 14 个键：13 个玩法与 1 个 Token/缺省兜底色，全部是原子色令牌。
 
 | 玩法 | 名称 | 令牌 | 取值 |
 | --- | --- | --- | --- |
@@ -148,9 +148,9 @@ iPhone 以 960×540 为基准，对局页通过 `UITheme.stage_metric(name)` 优
 | `protozoa` | 原生生物界 | `magenta-400` | `#d979c4` |
 | `virus` | 病毒 | `red-400` | `#e2666b` |
 | `machine` | 机械 | `slate-400` | `#93a6bd` |
-| `neutral` | 中立 | `sand-400` | `#cdb98c` |
+| `neutral` | 中立（仅 Token 与缺省兜底，不是卡牌分类） | `sand-400` | `#cdb98c` |
 
 - 新增原子色令牌：`cyan-400`、`teal-400`、`olive-400`、`amber-400`、`orange-400`、`magenta-400`；`blue-400`、`green-400`、`purple-400`、`rose-400`、`red-400`、`slate-400`、`sand-400` 沿用。
-- 14 个键的颜色互不重复（`red-400` 与语义 `color-danger` 同值，但中立色不与任何玩法色重复）。
+- 14 个键的颜色互不重复（`red-400` 与语义 `color-danger` 同值，但中立色不与任何玩法色重复）；卡牌不再使用 `neutral`，该键只用于 Token；未知玩法色彩回退 `snow-500`。
 - 取值入口：`UITheme.playstyle_color(id)` 返回玩法色；`playstyle_cover(id)` 返回压暗 0.62 的玩法色，作为卡面与房间英雄候选卡的封面底色。未知 id 回退 `snow-500`。
 - 玩法色用于卡面封面、英雄头像块描边与名字首字、英雄小卡描边，不改变布局与结构。

@@ -2,7 +2,7 @@
 id: ganlanshu
 card_type: minion
 name: 橄榄树
-playstyle: plant
+categories: [play:plant]
 taxon: oleaceae
 subtype: crop
 level: 2
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 橄榄树 |
 | 类型 | 随从 |
 | 玩法 | 植物界 |
-| 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 唇形目 › 木犀科 |
-| 关联分类 | 无 |
 | 子类 | 作物 |
 | 星级 | 2 |
 | 时代 | 古典 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 播种 |
 | 技能 | keyword-sow |
 | 学者 | 否 |
+| 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 唇形目 › 木犀科 |
 
 ## 效果
 

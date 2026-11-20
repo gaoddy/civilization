@@ -2,9 +2,8 @@
 id: steam-engine
 card_type: minion
 name: 蒸汽机
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
-specialty: [play:machine]
 subtype: power
 level: 4
 era: modern
@@ -23,9 +22,7 @@ is_scholar: false
 | id | steam-engine |
 | 名称 | 蒸汽机 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 动力与能源 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 动力 |
 | 星级 | 4 |
 | 时代 | 现代 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2 |
 | 学者 | 否 |
+| 科学分类 | 造物 › 动力与能源 |
 
 ## 效果
 

@@ -4,7 +4,7 @@ name: 蒸汽动力
 card_type: effect
 level: 4
 era: industrial
-playstyle: neutral
+categories: [play:machine]
 taxon: power-energy
 cost: 2
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-all-mech-growth-once]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 工业 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 动力与能源 |
-| 关联分类 | 无 |
+| 玩法 | 机械 |
 | 技能 | trigger-all-mech-growth-once |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 造物 › 动力与能源 |
 
 ## 效果
 

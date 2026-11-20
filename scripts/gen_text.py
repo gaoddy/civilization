@@ -93,10 +93,10 @@ def generated_entries(root):
         entries[f"token.{token_id}.name"] = name
 
     raw = validate_docs.load(
-        "cards", ["id", "card_type", "playstyle", "taxon", "era"], root=content)
+        "cards", ["id", "card_type", "categories", "taxon", "era"], root=content)
     enum_labels = validate_docs.card_enum_labels(raw, root=content)
     hero_raw = validate_docs.load(
-        "heroes", ["id", "name", "card_type", "playstyle"], root=content)
+        "heroes", ["id", "name", "card_type", "categories"], root=content)
     for doc in hero_raw:
         entries[f"card.{doc['id']}.name"] = doc["name"]
     hero_labels = validate_docs.card_enum_labels(hero_raw, root=content, kind="heroes")
@@ -110,8 +110,14 @@ def generated_entries(root):
     taxonomy_nodes, playstyles = validate_docs.parse_taxonomy(content / "taxonomy.md")
     for playstyle_id, label in playstyles or []:
         entries[f"enum.playstyle.{playstyle_id}"] = label
-    # 中立不是玩法表的一行，但卡面与详情需要同样的取值入口。
+    # 中立不是玩法表的一行，但 Token 与筛选需要同样的取值入口。
     entries["enum.playstyle.neutral"] = "中立"
+    playstyle_ids = {playstyle_id for playstyle_id, _ in playstyles or []}
+    for doc in raw + hero_raw:
+        for kind, target in validate_docs.parse_categories(doc):
+            if kind == "play" and target not in playstyle_ids:
+                raise ValueError(
+                    f"{doc['id']}: play {target!r} 不在 taxonomy.md 的玩法表中")
     for node_id, node in (taxonomy_nodes or {}).items():
         entries[f"enum.taxon.{node_id}"] = node["name"]
     for value, label in enum_labels["playstyle"].items():

@@ -41,8 +41,7 @@ def hero_doc(**extra):
         "id": "einstein",
         "name": "爱因斯坦",
         "card_type": "hero",
-        "playstyle": "neutral",
-        "specialty": ["play:machine"],
+        "categories": ["play:machine"],
         "skills": ["light-speed-strike"],
     }
     doc.update(extra)
@@ -55,8 +54,7 @@ def minion_doc(**extra):
         "id": "einstein",
         "name": "爱因斯坦",
         "card_type": "minion",
-        "playstyle": "neutral",
-        "specialty": ["play:machine"],
+        "categories": ["play:machine"],
         "skills": ["light-speed-strike"],
     }
     doc.update(extra)
@@ -74,7 +72,7 @@ class CardAttrsTest(unittest.TestCase):
 class HeroAttrsTest(unittest.TestCase):
     def test_hero_attrs_keep_only_identity_and_skills(self):
         attrs = vd.expected_hero_attrs(
-            hero_doc(specialty=[], skills=["light-speed-strike"]),
+            hero_doc(categories=["play:machine"], skills=["light-speed-strike"]),
             {"light-speed-strike": SKILL},
         )
         self.assertEqual(attrs["id"], "einstein")
@@ -327,10 +325,10 @@ class HeroCardsTest(unittest.TestCase):
         errors = self.run_check(heroes, skills=skills)
         self.assertTrue(any("不得登记关键词" in e for e in errors), errors)
 
-    def test_hero_playstyle_mismatch_is_rejected(self):
-        heroes = [hero_doc(playstyle="mammal")]
+    def test_hero_category_mismatch_is_rejected(self):
+        heroes = [hero_doc(categories=["play:bird"])]
         errors = self.run_check(heroes)
-        self.assertTrue(any("playstyle 与随从卡" in e for e in errors), errors)
+        self.assertTrue(any("categories 与随从卡" in e for e in errors), errors)
 
     def test_minion_with_is_hero_field_is_rejected(self):
         minions = [minion_doc(is_hero=False)]

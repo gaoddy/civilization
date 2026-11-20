@@ -2,7 +2,7 @@
 id: hydra
 card_type: minion
 name: 水螅
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: hydridae
 subtype: ocean
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 水螅 |
 | 类型 | 随从 |
 | 玩法 | 水螅纲 |
-| 科学分类 | 动物界 › 刺胞动物门 › 水螅纲 › 花水螅目 › 水螅科 |
-| 关联分类 | 无 |
 | 子类 | 海洋 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | revive-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 刺胞动物门 › 水螅纲 › 花水螅目 › 水螅科 |
 
 ## 效果
 

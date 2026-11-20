@@ -2,7 +2,7 @@
 id: ergot
 card_type: minion
 name: 麦角
-playstyle: fungus
+categories: [play:fungus]
 taxon: clavicipitaceae
 subtype: fungus
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 麦角 |
 | 类型 | 随从 |
 | 玩法 | 真菌界 |
-| 科学分类 | 真菌界 › 子囊菌门 › 粪壳菌纲 › 肉座菌目 › 麦角科 |
-| 关联分类 | 无 |
 | 子类 | 真菌 |
 | 星级 | 5 |
 | 时代 | 封建 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 分解；亡语 |
 | 技能 | decompose-ally-kill-pre-kill；deathrattle-summon-2-spores-2-2 |
 | 学者 | 否 |
+| 科学分类 | 真菌界 › 子囊菌门 › 粪壳菌纲 › 肉座菌目 › 麦角科 |
 
 ## 效果
 

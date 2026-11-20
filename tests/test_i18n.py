@@ -154,7 +154,7 @@ class TextTableTest(unittest.TestCase):
             for value in values:
                 self.assertIn(f"enum.{group}.{value}", keys)
         labels = validate_docs.card_enum_labels(
-            validate_docs.load("cards", ["id", "card_type", "playstyle", "taxon", "era"])
+            validate_docs.load("cards", ["id", "card_type", "categories", "taxon", "era"])
         )
         for slug in labels["subtype"]:
             self.assertIn(f"enum.subtype.{slug}", keys)

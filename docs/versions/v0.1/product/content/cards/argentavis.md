@@ -2,7 +2,7 @@
 id: argentavis
 card_type: minion
 name: 阿根廷巨鹰
-playstyle: bird
+categories: [play:bird]
 taxon: teratornithidae
 subtype: bird
 level: 7
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 阿根廷巨鹰 |
 | 类型 | 随从 |
 | 玩法 | 鸟纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 美洲鹫目 › 畸鸟科 |
-| 关联分类 | 无 |
 | 子类 | 鸟类 |
 | 星级 | 7 |
 | 时代 | 古典 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 连击；战吼 |
 | 技能 | keyword-windfury；battlecry-friendly-bird-growth-once |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 美洲鹫目 › 畸鸟科 |
 
 ## 效果
 

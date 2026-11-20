@@ -2,9 +2,8 @@
 id: rice-cooker
 card_type: minion
 name: 电饭煲
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: life-medical
-specialty: [play:machine, play:mammal]
 subtype: appliance
 level: 3
 era: modern
@@ -23,9 +22,7 @@ is_scholar: false
 | id | rice-cooker |
 | 名称 | 电饭煲 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 生活与医疗 |
-| 关联分类 | 关联：机械、哺乳纲 |
+| 玩法 | 哺乳纲、机械 |
 | 子类 | 家电 |
 | 星级 | 3 |
 | 时代 | 现代 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-human-plus-0-plus-1 |
 | 学者 | 否 |
+| 科学分类 | 造物 › 生活与医疗 |
 
 ## 效果
 

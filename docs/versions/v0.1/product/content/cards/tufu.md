@@ -2,9 +2,8 @@
 id: tufu
 card_type: minion
 name: 屠夫
-playstyle: mammal
+categories: [play:mammal, prey:artiodactyla]
 taxon: hominidae
-specialty: [prey:artiodactyla]
 subtype: primitive
 level: 2
 era: prehistoric
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 屠夫 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 捕食：偶蹄目 |
 | 子类 | 原始 |
 | 星级 | 2 |
 | 时代 | 史前 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-plus-0-plus-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
+| 关联分类 | 捕食：偶蹄目 |
 
 ## 效果
 

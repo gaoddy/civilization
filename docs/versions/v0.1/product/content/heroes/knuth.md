@@ -2,8 +2,7 @@
 id: knuth
 card_type: hero
 name: 高德纳
-playstyle: neutral
-specialty: [play:machine]
+categories: [play:machine]
 skills: [efficient-algorithm]
 ---
 
@@ -16,8 +15,7 @@ skills: [efficient-algorithm]
 | id | knuth |
 | 名称 | 高德纳 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 技能 | efficient-algorithm |
 
 ## 效果

@@ -2,7 +2,7 @@
 id: gear
 card_type: minion
 name: 齿轮
-playstyle: machine
+categories: [play:machine]
 taxon: automation
 subtype: robot
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 齿轮 |
 | 类型 | 随从 |
 | 玩法 | 机械 |
-| 科学分类 | 造物 › 自动机械 |
-| 关联分类 | 无 |
 | 子类 | 机器人 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 学者 | 否 |
+| 科学分类 | 造物 › 自动机械 |
 
 ## 效果
 

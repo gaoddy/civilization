@@ -2,9 +2,8 @@
 id: telephone
 card_type: minion
 name: 电话机
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: telecommunication
 level: 4
 era: modern
@@ -23,9 +22,7 @@ is_scholar: false
 | id | telephone |
 | 名称 | 电话机 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 信息与计算 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 通讯 |
 | 星级 | 4 |
 | 时代 | 现代 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 学者 | 否 |
+| 科学分类 | 造物 › 信息与计算 |
 
 ## 效果
 

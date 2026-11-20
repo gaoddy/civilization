@@ -2,8 +2,7 @@
 id: mendel
 card_type: hero
 name: 孟德尔
-playstyle: neutral
-specialty: [play:plant]
+categories: [play:plant]
 skills: [heredity]
 ---
 
@@ -16,8 +15,7 @@ skills: [heredity]
 | id | mendel |
 | 名称 | 孟德尔 |
 | 类型 | 英雄 |
-| 玩法 | 中立 |
-| 关联分类 | 关联：植物界 |
+| 玩法 | 植物界 |
 | 技能 | heredity |
 
 ## 效果

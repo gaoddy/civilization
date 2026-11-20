@@ -2,7 +2,7 @@
 id: yersinia-pestis
 card_type: minion
 name: 鼠疫耶尔森菌
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: yersiniaceae
 subtype: bacteria
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 鼠疫耶尔森菌 |
 | 类型 | 随从 |
 | 玩法 | 细菌域 |
-| 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 耶尔森菌科 |
-| 关联分类 | 无 |
 | 子类 | 细菌 |
 | 星级 | 4 |
 | 时代 | 封建 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 传染 |
 | 技能 | keyword-contagion；detonate-1 |
 | 学者 | 否 |
+| 科学分类 | 细菌域 › 变形菌门 › γ-变形菌纲 › 肠杆菌目 › 耶尔森菌科 |
 
 ## 效果
 

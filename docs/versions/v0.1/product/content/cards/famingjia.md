@@ -2,7 +2,7 @@
 id: famingjia
 card_type: minion
 name: 发明家
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: invention
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 发明家 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 发明 |
 | 星级 | 4 |
 | 时代 | 工业 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-all-mech-growth-once；shout |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

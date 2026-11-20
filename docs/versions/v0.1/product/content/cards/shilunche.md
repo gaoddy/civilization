@@ -2,9 +2,8 @@
 id: shilunche
 card_type: minion
 name: 石轮车
-playstyle: neutral
+categories: [play:machine]
 taxon: transport
-specialty: [play:machine]
 subtype: vehicle
 level: 1
 era: primitive
@@ -23,9 +22,7 @@ is_scholar: false
 | id | shilunche |
 | 名称 | 石轮车 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 交通与运载 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 载具 |
 | 星级 | 1 |
 | 时代 | 原始 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 装配 1 |
 | 技能 | keyword-assemble-1 |
 | 学者 | 否 |
+| 科学分类 | 造物 › 交通与运载 |
 
 ## 效果
 

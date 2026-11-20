@@ -4,10 +4,9 @@ name: 孢子扩散
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:fungus]
 taxon: biology
 cost: 2
-specialty: [play:fungus]
 match_text: 同左
 skills: [trigger-summon-2-spores-2-2]
 ---
@@ -23,12 +22,11 @@ skills: [trigger-summon-2-spores-2-2]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：真菌界 |
+| 玩法 | 真菌界 |
 | 技能 | trigger-summon-2-spores-2-2 |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

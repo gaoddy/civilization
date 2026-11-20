@@ -4,10 +4,9 @@ name: 开花
 card_type: effect
 level: 3
 era: primitive
-playstyle: neutral
+categories: [play:plant]
 taxon: biology
 cost: 2
-specialty: [play:plant]
 match_text: 同左
 skills: [trigger-plant-all-breed-2]
 ---
@@ -23,12 +22,11 @@ skills: [trigger-plant-all-breed-2]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 原始 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 生物学 |
-| 关联分类 | 关联：植物界 |
+| 玩法 | 植物界 |
 | 技能 | trigger-plant-all-breed-2 |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 生物学 |
 
 ## 效果
 

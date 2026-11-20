@@ -2,7 +2,7 @@
 id: stephenson
 card_type: minion
 name: 史蒂芬孙
-playstyle: machine
+categories: [play:machine]
 taxon: hominidae
 subtype: engineering
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 史蒂芬孙 |
 | 类型 | 随从 |
 | 玩法 | 机械 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 工程 |
 | 星级 | 5 |
 | 时代 | 工业 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | aura-other-mech-plus-1-plus-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

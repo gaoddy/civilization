@@ -5,7 +5,7 @@
 
 mod common;
 
-use common::{effects_of, minion, test_catalog, test_playstyles};
+use common::{categories_for, effects_of, minion, test_catalog, test_playstyles};
 use rule_engine::combat::{self, CombatAction, CombatSetup, simulate, simulate_with};
 use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill};
 use rule_engine::effects::Duration;
@@ -35,9 +35,8 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle: Playstyle::Mammal,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(Playstyle::Mammal),
             subtype: None,
             level: 1,
             era: None,
@@ -67,9 +66,8 @@ fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, ef
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle: Playstyle::Mammal,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(Playstyle::Mammal),
             subtype: None,
             level: 1,
             era: None,
@@ -123,9 +121,8 @@ fn add_effect_card_with_keywords(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle: Playstyle::Mammal,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(Playstyle::Mammal),
             subtype: None,
             level: 1,
             era: None,

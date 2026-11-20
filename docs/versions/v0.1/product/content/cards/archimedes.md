@@ -2,9 +2,8 @@
 id: archimedes
 card_type: minion
 name: 阿基米德
-playstyle: neutral
+categories: [play:machine]
 taxon: hominidae
-specialty: [play:machine]
 subtype: physics
 level: 3
 era: primitive
@@ -23,9 +22,7 @@ is_scholar: true
 | id | archimedes |
 | 名称 | 阿基米德 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：机械 |
+| 玩法 | 机械 |
 | 子类 | 物理 |
 | 星级 | 3 |
 | 时代 | 原始 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-mech-growth-once |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

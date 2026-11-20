@@ -2,9 +2,8 @@
 id: yuanlongping
 card_type: minion
 name: 袁隆平
-playstyle: neutral
+categories: [play:plant]
 taxon: hominidae
-specialty: [play:plant]
 subtype: organism
 level: 6
 era: modern
@@ -23,9 +22,7 @@ is_scholar: true
 | id | yuanlongping |
 | 名称 | 袁隆平 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：植物界 |
+| 玩法 | 植物界 |
 | 子类 | 生物 |
 | 星级 | 6 |
 | 时代 | 现代 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | aura-plant-plus-2-plus-2 |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

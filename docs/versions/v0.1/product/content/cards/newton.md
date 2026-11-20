@@ -2,9 +2,8 @@
 id: newton
 card_type: minion
 name: 牛顿
-playstyle: neutral
+categories: [play:mammal]
 taxon: hominidae
-specialty: [play:mammal]
 subtype: physics
 level: 5
 era: modern
@@ -23,9 +22,7 @@ is_scholar: true
 | id | newton |
 | 名称 | 牛顿 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：哺乳纲 |
+| 玩法 | 哺乳纲 |
 | 子类 | 物理 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-twice |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

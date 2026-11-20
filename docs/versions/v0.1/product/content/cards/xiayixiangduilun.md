@@ -4,7 +4,7 @@ name: 狭义相对论
 card_type: effect
 level: 4
 era: future
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: physics
 cost: 2
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-minion-windfury-this-turn]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 未来 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 物理学 |
-| 关联分类 | 无 |
+| 玩法 | 鸟纲、机械 |
 | 技能 | trigger-minion-windfury-this-turn |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 物理学 |
 
 ## 效果
 

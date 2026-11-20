@@ -2,9 +2,8 @@
 id: nupao
 card_type: minion
 name: 弩炮
-playstyle: neutral
+categories: [play:machine]
 taxon: weapon-siege
-specialty: [play:machine]
 subtype: siege
 level: 3
 era: classical
@@ -23,9 +22,7 @@ is_scholar: false
 | id | nupao |
 | 名称 | 弩炮 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 武器与攻城 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 攻城 |
 | 星级 | 3 |
 | 时代 | 古典 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | combatstart-leftmost-damage-3；shout |
 | 学者 | 否 |
+| 科学分类 | 造物 › 武器与攻城 |
 
 ## 效果
 

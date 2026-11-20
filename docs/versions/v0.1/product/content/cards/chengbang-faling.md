@@ -4,7 +4,7 @@ name: 城邦法令
 card_type: effect
 level: 3
 era: classical
-playstyle: neutral
+categories: [play:mammal]
 taxon: politics
 cost: 1
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-friendly-plus-1-plus-1]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 古典 |
-| 玩法 | 中立 |
-| 科学分类 | 社会 › 政治学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲 |
 | 技能 | trigger-friendly-plus-1-plus-1 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 社会 › 政治学 |
 
 ## 效果
 

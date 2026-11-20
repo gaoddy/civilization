@@ -4,7 +4,7 @@ name: 印刷术
 card_type: effect
 level: 3
 era: feudal
-playstyle: neutral
+categories: [play:cephalopod, play:machine]
 taxon: information-computing
 cost: 2
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-copy-hand-minion]
 | 类型 | 效果 |
 | 星级 | 3 |
 | 时代 | 封建 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 信息与计算 |
-| 关联分类 | 无 |
+| 玩法 | 头足纲、机械 |
 | 技能 | trigger-copy-hand-minion |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 造物 › 信息与计算 |
 
 ## 效果
 

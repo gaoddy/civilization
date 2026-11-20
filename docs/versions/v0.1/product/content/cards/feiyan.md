@@ -2,9 +2,8 @@
 id: feiyan
 card_type: minion
 name: 肺炎链球菌
-playstyle: virus
+categories: [play:virus, host:hominidae]
 taxon: streptococcaceae
-specialty: [host:hominidae]
 subtype: bacteria
 level: 2
 era: prehistoric
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 肺炎链球菌 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 乳杆菌目 › 链球菌科 |
-| 关联分类 | 寄生：人科 |
 | 子类 | 细菌 |
 | 星级 | 2 |
 | 时代 | 史前 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-random-enemy-minus-1-health |
 | 学者 | 否 |
+| 科学分类 | 细菌域 › 厚壁菌门 › 芽孢杆菌纲 › 乳杆菌目 › 链球菌科 |
+| 关联分类 | 寄生：人科 |
 
 ## 效果
 

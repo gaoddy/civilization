@@ -2,9 +2,8 @@
 id: guoying
 card_type: minion
 name: 果蝇
-playstyle: insect
+categories: [play:insect, prey:plantae]
 taxon: drosophilidae
-specialty: [prey:plantae]
 subtype: insect
 level: 1
 era: prehistoric
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 果蝇 |
 | 类型 | 随从 |
 | 玩法 | 昆虫纲 |
-| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 双翅目 › 果蝇科 |
-| 关联分类 | 捕食：植物界 |
 | 子类 | 昆虫 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 繁衍 1 |
 | 技能 | keyword-breed-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 节肢动物门 › 昆虫纲 › 双翅目 › 果蝇科 |
+| 关联分类 | 捕食：植物界 |
 
 ## 效果
 

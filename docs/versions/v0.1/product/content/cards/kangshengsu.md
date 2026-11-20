@@ -4,10 +4,9 @@ name: 抗生素
 card_type: effect
 level: 2
 era: modern
-playstyle: neutral
+categories: [play:bacteria]
 taxon: medicine
 cost: 1
-specialty: [play:bacteria]
 match_text: 同左
 skills: [trigger-bacteria-single-armor-2-this-turn]
 ---
@@ -23,12 +22,11 @@ skills: [trigger-bacteria-single-armor-2-this-turn]
 | 类型 | 效果 |
 | 星级 | 2 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 医学 |
-| 关联分类 | 关联：细菌域 |
+| 玩法 | 细菌域 |
 | 技能 | trigger-bacteria-single-armor-2-this-turn |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 医学 |
 
 ## 效果
 

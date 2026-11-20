@@ -4,10 +4,9 @@ name: 洋流
 card_type: effect
 level: 1
 era: prehistoric
-playstyle: neutral
+categories: [play:fish]
 taxon: earth-science
 cost: 1
-specialty: [play:fish]
 match_text: 同左
 skills: [trigger-fish-single-plus-0-plus-2]
 ---
@@ -23,12 +22,11 @@ skills: [trigger-fish-single-plus-0-plus-2]
 | 类型 | 效果 |
 | 星级 | 1 |
 | 时代 | 史前 |
-| 玩法 | 中立 |
-| 科学分类 | 科学 › 地球科学 |
-| 关联分类 | 关联：鱼纲 |
+| 玩法 | 鱼纲 |
 | 技能 | trigger-fish-single-plus-0-plus-2 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 科学 › 地球科学 |
 
 ## 效果
 

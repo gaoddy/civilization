@@ -2,9 +2,8 @@
 id: lavoisier
 card_type: minion
 name: 拉瓦锡
-playstyle: neutral
+categories: [play:reptile]
 taxon: hominidae
-specialty: [play:reptile]
 subtype: chemistry
 level: 5
 era: industrial
@@ -23,9 +22,7 @@ is_scholar: true
 | id | lavoisier |
 | 名称 | 拉瓦锡 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：爬行纲 |
+| 玩法 | 爬行纲 |
 | 子类 | 化学 |
 | 星级 | 5 |
 | 时代 | 工业 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | aura-other-plus-0-plus-1 |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

@@ -1,6 +1,6 @@
 mod common;
 
-use common::{effects_of, place, setup};
+use common::{categories_for, effects_of, place, setup};
 use rule_engine::combat;
 use rule_engine::data::{Card, CardType, Playstyle, Skill};
 use rule_engine::effects::parse_effects;
@@ -36,9 +36,8 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, playstyle: Playstyle, eff
         Card {
             id: card_id.to_string(),
             card_type: CardType::Minion,
-            playstyle,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(playstyle),
             subtype: None,
             level: 1,
             era: None,
@@ -58,9 +57,8 @@ fn add_plain_card(engine: &mut Engine, card_id: &str, playstyle: Playstyle) {
         Card {
             id: card_id.to_string(),
             card_type: CardType::Minion,
-            playstyle,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(playstyle),
             subtype: None,
             level: 1,
             era: None,
@@ -80,9 +78,8 @@ fn add_insect_card(engine: &mut Engine, card_id: &str, health: i32) {
         Card {
             id: card_id.to_string(),
             card_type: CardType::Minion,
-            playstyle: Playstyle::Insect,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(Playstyle::Insect),
             subtype: None,
             level: 1,
             era: None,

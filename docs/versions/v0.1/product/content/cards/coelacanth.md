@@ -2,7 +2,7 @@
 id: coelacanth
 card_type: minion
 name: 腔棘鱼
-playstyle: fish
+categories: [play:fish]
 taxon: coelacanthidae
 subtype: fish
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 腔棘鱼 |
 | 类型 | 随从 |
 | 玩法 | 鱼纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 肉鳍鱼纲 › 腔棘鱼目 › 腔棘鱼科 |
-| 关联分类 | 无 |
 | 子类 | 鱼类 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 复生 |
 | 技能 | keyword-reborn；aura-school-fish-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 肉鳍鱼纲 › 腔棘鱼目 › 腔棘鱼科 |
 
 ## 效果
 

@@ -2,7 +2,7 @@
 id: jiyin-gaizaoren
 card_type: minion
 name: 基因改造人
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: modification
 level: 7
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 基因改造人 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 改造 |
 | 星级 | 7 |
 | 时代 | 未来 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 进化 |
 | 技能 | keyword-evolve；shout |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

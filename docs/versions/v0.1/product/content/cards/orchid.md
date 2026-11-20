@@ -2,7 +2,7 @@
 id: orchid
 card_type: minion
 name: 兰花
-playstyle: plant
+categories: [play:plant]
 taxon: orchidaceae
 subtype: flower
 level: 3
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 兰花 |
 | 类型 | 随从 |
 | 玩法 | 植物界 |
-| 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 天门冬目 › 兰科 |
-| 关联分类 | 无 |
 | 子类 | 花卉 |
 | 星级 | 3 |
 | 时代 | 古典 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 播种；繁衍 1 |
 | 技能 | keyword-sow；keyword-breed-1 |
 | 学者 | 否 |
+| 科学分类 | 植物界 › 被子植物门 › 单子叶植物纲 › 天门冬目 › 兰科 |
 
 ## 效果
 

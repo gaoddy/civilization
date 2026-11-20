@@ -2,7 +2,7 @@
 id: amoeba
 card_type: minion
 name: 变形虫
-playstyle: protozoa
+categories: [play:protozoa]
 taxon: amoebidae
 subtype: protozoa
 level: 1
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 变形虫 |
 | 类型 | 随从 |
 | 玩法 | 原生生物界 |
-| 科学分类 | 原生生物界 › 变形虫门 › 管状根足纲 › 真变形虫目 › 变形虫科 |
-| 关联分类 | 无 |
 | 子类 | 原生生物 |
 | 星级 | 1 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-amoeba-larva-1 |
 | 学者 | 否 |
+| 科学分类 | 原生生物界 › 变形虫门 › 管状根足纲 › 真变形虫目 › 变形虫科 |
 
 ## 效果
 

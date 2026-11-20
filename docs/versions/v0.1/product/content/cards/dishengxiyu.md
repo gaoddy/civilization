@@ -4,7 +4,7 @@ name: 低声细语
 card_type: effect
 level: 1
 era: modern
-playstyle: neutral
+categories: [play:mammal]
 taxon: psychology
 cost: 1
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-friendly-plus-1-plus-1]
 | 类型 | 效果 |
 | 星级 | 1 |
 | 时代 | 现代 |
-| 玩法 | 中立 |
-| 科学分类 | 人文 › 心理学 |
-| 关联分类 | 无 |
+| 玩法 | 哺乳纲 |
 | 技能 | trigger-friendly-plus-1-plus-1 |
 | 费用 | 1 |
 | 确定性替换 | 同左 |
+| 科学分类 | 人文 › 心理学 |
 
 ## 效果
 

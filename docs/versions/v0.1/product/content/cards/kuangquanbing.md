@@ -2,9 +2,8 @@
 id: kuangquanbing
 card_type: minion
 name: 狂犬病
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: rhabdoviridae
-specialty: [host:mammalia]
 subtype: virus
 level: 2
 era: primitive
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 狂犬病 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 弹状病毒科 |
-| 关联分类 | 寄生：哺乳纲 |
 | 子类 | 病毒 |
 | 星级 | 2 |
 | 时代 | 原始 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-virus-plus-1-attack |
 | 学者 | 否 |
+| 科学分类 | 病毒 › 核糖病毒门 › 单股负链病毒纲 › 单股负链病毒目 › 弹状病毒科 |
+| 关联分类 | 寄生：哺乳纲 |
 
 ## 效果
 

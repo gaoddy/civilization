@@ -2,7 +2,7 @@
 id: peafowl
 card_type: minion
 name: 孔雀
-playstyle: bird
+categories: [play:bird]
 taxon: phasianidae
 subtype: bird
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 孔雀 |
 | 类型 | 随从 |
 | 玩法 | 鸟纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鸡形目 › 雉科 |
-| 关联分类 | 无 |
 | 子类 | 鸟类 |
 | 星级 | 5 |
 | 时代 | 古典 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-bird-plus-1-plus-1；dive-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鸡形目 › 雉科 |
 
 ## 效果
 

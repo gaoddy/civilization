@@ -2,9 +2,8 @@
 id: wireless-telegraph
 card_type: minion
 name: 无线电报
-playstyle: neutral
+categories: [play:machine]
 taxon: information-computing
-specialty: [play:machine]
 subtype: telecommunication
 level: 6
 era: modern
@@ -23,9 +22,7 @@ is_scholar: false
 | id | wireless-telegraph |
 | 名称 | 无线电报 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 信息与计算 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 通讯 |
 | 星级 | 6 |
 | 时代 | 现代 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 装配 2 |
 | 技能 | keyword-assemble-2；battlecry-all-mech-growth-once-no-keyword |
 | 学者 | 否 |
+| 科学分类 | 造物 › 信息与计算 |
 
 ## 效果
 

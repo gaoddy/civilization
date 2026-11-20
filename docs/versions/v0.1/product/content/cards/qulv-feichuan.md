@@ -2,9 +2,8 @@
 id: qulv-feichuan
 card_type: minion
 name: 曲率飞船
-playstyle: neutral
+categories: [play:machine]
 taxon: transport
-specialty: [play:machine]
 subtype: spaceflight
 level: 7
 era: future
@@ -23,9 +22,7 @@ is_scholar: false
 | id | qulv-feichuan |
 | 名称 | 曲率飞船 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 造物 › 交通与运载 |
-| 关联分类 | 关联：机械 |
+| 玩法 | 机械 |
 | 子类 | 航天 |
 | 星级 | 7 |
 | 时代 | 未来 |
@@ -34,6 +31,7 @@ is_scholar: false
 | 关键词 | 无视嘲讽 |
 | 技能 | keyword-ignore-taunt |
 | 学者 | 否 |
+| 科学分类 | 造物 › 交通与运载 |
 
 ## 效果
 

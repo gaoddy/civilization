@@ -2,7 +2,7 @@
 id: salmon
 card_type: minion
 name: 鲑鱼
-playstyle: fish
+categories: [play:fish]
 taxon: salmonidae
 subtype: fish
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 鲑鱼 |
 | 类型 | 随从 |
 | 玩法 | 鱼纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲑形目 › 鲑科 |
-| 关联分类 | 无 |
 | 子类 | 鱼类 |
 | 星级 | 4 |
 | 时代 | 工业 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-fish-fry-2 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鱼纲 › 鲑形目 › 鲑科 |
 
 ## 效果
 

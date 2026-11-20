@@ -2,7 +2,7 @@
 id: juelei
 card_type: minion
 name: 蕨类
-playstyle: plant
+categories: [play:plant]
 taxon: polypodiaceae
 subtype: fern
 level: 2
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 蕨类 |
 | 类型 | 随从 |
 | 玩法 | 植物界 |
-| 科学分类 | 植物界 › 蕨类植物门 › 水龙骨纲 › 水龙骨目 › 水龙骨科 |
-| 关联分类 | 无 |
 | 子类 | 蕨类 |
 | 星级 | 2 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 繁衍 2 |
 | 技能 | keyword-breed-2 |
 | 学者 | 否 |
+| 科学分类 | 植物界 › 蕨类植物门 › 水龙骨纲 › 水龙骨目 › 水龙骨科 |
 
 ## 效果
 

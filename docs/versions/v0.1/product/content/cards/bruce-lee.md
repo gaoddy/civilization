@@ -2,7 +2,7 @@
 id: bruce-lee
 card_type: minion
 name: 李小龙
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: martial-artist
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 李小龙 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 武术家 |
 | 星级 | 4 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 连击 |
 | 技能 | keyword-windfury；shout |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

@@ -2,7 +2,7 @@
 id: honey-fungus
 card_type: minion
 name: 蜜环菌
-playstyle: fungus
+categories: [play:fungus]
 taxon: physalacriaceae
 subtype: fungus
 level: 6
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 蜜环菌 |
 | 类型 | 随从 |
 | 玩法 | 真菌界 |
-| 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 伞菌目 › 膨瑚菌科 |
-| 关联分类 | 无 |
 | 子类 | 真菌 |
 | 星级 | 6 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 分解；亡语 |
 | 技能 | decompose-kill-original；deathrattle-summon-2-spores-2-2 |
 | 学者 | 否 |
+| 科学分类 | 真菌界 › 担子菌门 › 伞菌纲 › 伞菌目 › 膨瑚菌科 |
 
 ## 效果
 

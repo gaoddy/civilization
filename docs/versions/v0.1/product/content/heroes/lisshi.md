@@ -2,7 +2,7 @@
 id: lisshi
 card_type: hero
 name: 李时珍
-playstyle: plant
+categories: [play:plant]
 skills: [materia-medica]
 ---
 
@@ -16,7 +16,6 @@ skills: [materia-medica]
 | 名称 | 李时珍 |
 | 类型 | 英雄 |
 | 玩法 | 植物界 |
-| 关联分类 | 无 |
 | 技能 | materia-medica |
 
 ## 效果

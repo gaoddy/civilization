@@ -13,6 +13,70 @@ fn loads_all_committed_data() {
     assert_eq!(catalog.tokens.len(), 23);
 }
 
+/// 最小合法卡牌夹具；只替换 `taxon` 与 `categories`。
+fn card_json(taxon: &str, categories: &str) -> String {
+    format!(
+        r#"[{{"id":"x","card_type":"minion","taxon":"{taxon}","categories":{categories},"level":1,"skills":[],"is_scholar":false}}]"#
+    )
+}
+
+fn load_cards(cards: &str) -> Result<Catalog, rule_engine::error::CatalogError> {
+    Catalog::from_json(cards, "[]", "[]", "[]", CONFIG_JSON, TAXONOMY_JSON)
+}
+
+#[test]
+fn cards_reject_missing_play_category() {
+    let cards = card_json("hominidae", r#"[{"kind":"prey","value":"hominidae"}]"#);
+    let error = load_cards(&cards).expect_err("没有 play: 的卡必须拒绝加载");
+    assert!(error.to_string().contains("至少要有 1 条 play:"), "{error}");
+}
+
+#[test]
+fn cards_reject_neutral_play_category() {
+    let cards = card_json("hominidae", r#"[{"kind":"play","value":"neutral"}]"#);
+    let error = load_cards(&cards).expect_err("play:neutral 必须拒绝加载");
+    assert!(error.to_string().contains("不是可启用的玩法"), "{error}");
+}
+
+#[test]
+fn cards_reject_duplicate_categories() {
+    let cards = card_json(
+        "hominidae",
+        r#"[{"kind":"play","value":"mammal"},{"kind":"play","value":"mammal"}]"#,
+    );
+    let error = load_cards(&cards).expect_err("重复条目必须拒绝加载");
+    assert!(error.to_string().contains("关联分类条目重复"), "{error}");
+}
+
+#[test]
+fn cards_reject_prey_on_non_biological_taxon() {
+    let cards = card_json(
+        "automation",
+        r#"[{"kind":"play","value":"machine"},{"kind":"prey","value":"hominidae"}]"#,
+    );
+    let error = load_cards(&cards).expect_err("造物卡的 prey: 必须拒绝加载");
+    assert!(error.to_string().contains("只允许生物卡"), "{error}");
+}
+
+#[test]
+fn cards_reject_unknown_prey_node() {
+    let cards = card_json(
+        "hominidae",
+        r#"[{"kind":"play","value":"mammal"},{"kind":"prey","value":"no-such-node"}]"#,
+    );
+    let error = load_cards(&cards).expect_err("分类树外的节点必须拒绝加载");
+    assert!(error.to_string().contains("不在分类树中"), "{error}");
+}
+
+#[test]
+fn heroes_reject_diverging_categories() {
+    let cards = card_json("hominidae", r#"[{"kind":"play","value":"mammal"}]"#);
+    let heroes = r#"[{"id":"x","card_type":"hero","categories":[{"kind":"play","value":"bird"}],"skills":[]}]"#;
+    let error = Catalog::from_json(&cards, heroes, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON)
+        .expect_err("英雄与同名随从的分类不一致必须拒绝加载");
+    assert!(error.to_string().contains("不一致"), "{error}");
+}
+
 #[test]
 fn hero_ids_also_exist_in_the_minion_pool() {
     let catalog = test_catalog();
@@ -32,14 +96,13 @@ fn hero_ids_also_exist_in_the_minion_pool() {
 
 #[test]
 fn heroes_reject_missing_matching_minion() {
-    let heroes = r#"[{"id":"no-such-card","card_type":"hero","playstyle":"mammal","skills":[]}]"#;
+    let heroes = r#"[{"id":"no-such-card","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     assert!(Catalog::from_json("[]", heroes, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn heroes_reject_matching_effect_card() {
-    let heroes =
-        r#"[{"id":"aolinpike-jidian","card_type":"hero","playstyle":"neutral","skills":[]}]"#;
+    let heroes = r#"[{"id":"aolinpike-jidian","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     let error = Catalog::from_json(
         CARDS_JSON,
         heroes,
@@ -55,7 +118,7 @@ fn heroes_reject_matching_effect_card() {
 #[test]
 fn heroes_allow_skills_that_diverge_from_minion() {
     // 英雄技能与同名随从卡各自维护：同名随从卡带战吼时，英雄可以不带技能。
-    let heroes = r#"[{"id":"adam-smith","card_type":"hero","playstyle":"mammal","skills":[]}]"#;
+    let heroes = r#"[{"id":"adam-smith","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     Catalog::from_json(
         CARDS_JSON,
         heroes,
@@ -68,8 +131,8 @@ fn heroes_allow_skills_that_diverge_from_minion() {
 }
 
 #[test]
-fn heroes_reject_playstyle_that_diverges_from_minion() {
-    let heroes = r#"[{"id":"adam-smith","card_type":"hero","playstyle":"bird","skills":[]}]"#;
+fn heroes_reject_categories_that_diverge_from_minion() {
+    let heroes = r#"[{"id":"adam-smith","card_type":"hero","categories":[{"kind":"play","value":"bird"}],"skills":[]}]"#;
     let error = Catalog::from_json(
         CARDS_JSON,
         heroes,
@@ -78,25 +141,25 @@ fn heroes_reject_playstyle_that_diverges_from_minion() {
         CONFIG_JSON,
         TAXONOMY_JSON,
     )
-    .expect_err("英雄与同名随从的玩法必须一致");
+    .expect_err("英雄与同名随从的关联分类必须一致");
     assert!(error.to_string().contains("不一致"), "{error}");
 }
 
 #[test]
 fn heroes_reject_non_hero_card_type() {
-    let bad = r#"[{"id":"x","card_type":"minion","playstyle":"mammal","skills":[]}]"#;
+    let bad = r#"[{"id":"x","card_type":"minion","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     assert!(Catalog::from_json("[]", bad, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn heroes_reject_unknown_skill() {
-    let bad = r#"[{"id":"x","card_type":"hero","playstyle":"mammal","skills":["no-such-skill"]}]"#;
+    let bad = r#"[{"id":"x","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":["no-such-skill"]}]"#;
     assert!(Catalog::from_json("[]", bad, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn cards_reject_hero_card_type() {
-    let bad = r#"[{"id":"x","card_type":"hero","playstyle":"mammal","skills":[]}]"#;
+    let bad = r#"[{"id":"x","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     assert!(Catalog::from_json(bad, "[]", "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
@@ -117,7 +180,7 @@ fn every_card_skill_exists() {
 
 #[test]
 fn unknown_field_fails() {
-    let bad = r#"[{"id":"x","card_type":"minion","playstyle":"mammal","taxon":"hominidae","level":1,"era":"prehistoric","attack":1,"health":2,"is_scholar":false,"oops":1}]"#;
+    let bad = r#"[{"id":"x","card_type":"minion","categories":[{"kind":"play","value":"mammal"}],"taxon":"hominidae","level":1,"era":"prehistoric","attack":1,"health":2,"is_scholar":false,"oops":1}]"#;
     assert!(Catalog::from_json(bad, "[]", "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
@@ -156,7 +219,7 @@ fn rejects_unknown_enum_and_param() {
 
 #[test]
 fn accepts_neutral_playstyle_filter() {
-    // 中立卡是可被筛中的实体玩法取值：从 13 个可启用玩法里取不到，但筛选合法。
+    // `neutral` 保留给 Token 与内部哨兵：从 13 个可启用玩法里取不到，但筛选合法。
     let raw = r#"[{"trigger":"on_play","op":"growth","selector":{"kind":"side","side":"friendly","pick":"all","filters":[{"key":"playstyle","value":"neutral"}]},"params":{"times":1}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
     assert!(validate_effects(&effects).is_ok());

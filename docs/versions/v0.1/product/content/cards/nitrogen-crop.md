@@ -2,7 +2,7 @@
 id: nitrogen-crop
 card_type: minion
 name: 固氮作物
-playstyle: plant
+categories: [play:plant]
 taxon: fabaceae
 subtype: crop
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 固氮作物 |
 | 类型 | 随从 |
 | 玩法 | 植物界 |
-| 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 豆目 › 豆科 |
-| 关联分类 | 无 |
 | 子类 | 作物 |
 | 星级 | 5 |
 | 时代 | 未来 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 繁衍 3 |
 | 技能 | aura-plant-plus-1-plus-1；keyword-breed-3 |
 | 学者 | 否 |
+| 科学分类 | 植物界 › 被子植物门 › 双子叶植物纲 › 豆目 › 豆科 |
 
 ## 效果
 

@@ -2,7 +2,7 @@
 id: xingji-jianzhang
 card_type: minion
 name: 星际舰长
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: captain
 level: 7
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 星际舰长 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 舰长 |
 | 星级 | 7 |
 | 时代 | 未来 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 嘲讽 |
 | 技能 | keyword-taunt；shout |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

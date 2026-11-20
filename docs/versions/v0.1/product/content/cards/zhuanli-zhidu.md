@@ -4,7 +4,7 @@ name: 专利制度
 card_type: effect
 level: 4
 era: feudal
-playstyle: neutral
+categories: [play:machine]
 taxon: economics
 cost: 2
 match_text: 同左
@@ -22,12 +22,11 @@ skills: [trigger-all-mech-growth-once]
 | 类型 | 效果 |
 | 星级 | 4 |
 | 时代 | 封建 |
-| 玩法 | 中立 |
-| 科学分类 | 社会 › 经济学 |
-| 关联分类 | 无 |
+| 玩法 | 机械 |
 | 技能 | trigger-all-mech-growth-once |
 | 费用 | 2 |
 | 确定性替换 | 同左 |
+| 科学分类 | 社会 › 经济学 |
 
 ## 效果
 

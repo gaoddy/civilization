@@ -2,7 +2,7 @@
 id: bacteriophage
 card_type: minion
 name: 噬菌体（肌尾）
-playstyle: bacteria
+categories: [play:bacteria]
 taxon: myoviridae
 subtype: bacteria
 level: 6
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 噬菌体（肌尾） |
 | 类型 | 随从 |
 | 玩法 | 细菌域 |
-| 科学分类 | 病毒 › 有尾噬菌体门 › 有尾噬菌体纲 › 有尾噬菌体目 › 肌尾噬菌体科 |
-| 关联分类 | 无 |
 | 子类 | 细菌 |
 | 星级 | 6 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 无 |
 | 技能 | convert-3；microbiology |
 | 学者 | 否 |
+| 科学分类 | 病毒 › 有尾噬菌体门 › 有尾噬菌体纲 › 有尾噬菌体目 › 肌尾噬菌体科 |
 
 ## 效果
 

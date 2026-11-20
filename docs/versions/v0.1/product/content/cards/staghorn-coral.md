@@ -2,7 +2,7 @@
 id: staghorn-coral
 card_type: minion
 name: 鹿角珊瑚
-playstyle: cnidarian
+categories: [play:cnidarian]
 taxon: acroporidae
 subtype: ocean
 level: 4
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 鹿角珊瑚 |
 | 类型 | 随从 |
 | 玩法 | 水螅纲 |
-| 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 石珊瑚目 › 鹿角珊瑚科 |
-| 关联分类 | 无 |
 | 子类 | 海洋 |
 | 星级 | 4 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-2-coral-polyps |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 刺胞动物门 › 珊瑚纲 › 石珊瑚目 › 鹿角珊瑚科 |
 
 ## 效果
 

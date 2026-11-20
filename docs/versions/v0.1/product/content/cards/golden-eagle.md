@@ -2,7 +2,7 @@
 id: golden-eagle
 card_type: minion
 name: 金雕
-playstyle: bird
+categories: [play:bird]
 taxon: accipitridae
 subtype: bird
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 金雕 |
 | 类型 | 随从 |
 | 玩法 | 鸟纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹰形目 › 鹰科 |
-| 关联分类 | 无 |
 | 子类 | 鸟类 |
 | 星级 | 5 |
 | 时代 | 封建 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | dive-1；battlecry-friendly-bird-growth-once |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 鸟纲 › 鹰形目 › 鹰科 |
 
 ## 效果
 

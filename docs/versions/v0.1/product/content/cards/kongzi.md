@@ -2,9 +2,8 @@
 id: kongzi
 card_type: minion
 name: 孔子
-playstyle: neutral
+categories: [play:mammal, play:reptile]
 taxon: hominidae
-specialty: [play:reptile, play:mammal]
 subtype: philosophy
 level: 3
 era: feudal
@@ -23,9 +22,7 @@ is_scholar: true
 | id | kongzi |
 | 名称 | 孔子 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：爬行纲、哺乳纲 |
+| 玩法 | 哺乳纲、爬行纲 |
 | 子类 | 哲学 |
 | 星级 | 3 |
 | 时代 | 封建 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | aura-scholar-plus-0-plus-2 |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

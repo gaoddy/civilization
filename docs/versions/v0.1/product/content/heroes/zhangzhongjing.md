@@ -2,7 +2,7 @@
 id: zhangzhongjing
 card_type: hero
 name: 张仲景
-playstyle: mammal
+categories: [play:mammal]
 skills: [cold-damage-treatise]
 ---
 
@@ -16,7 +16,6 @@ skills: [cold-damage-treatise]
 | 名称 | 张仲景 |
 | 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
-| 关联分类 | 无 |
 | 技能 | cold-damage-treatise |
 
 ## 效果

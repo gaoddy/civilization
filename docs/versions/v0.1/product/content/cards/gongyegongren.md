@@ -2,7 +2,7 @@
 id: gongyegongren
 card_type: minion
 name: 工业工人
-playstyle: mammal
+categories: [play:mammal]
 taxon: hominidae
 subtype: worker
 level: 5
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 工业工人 |
 | 类型 | 随从 |
 | 玩法 | 哺乳纲 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 无 |
 | 子类 | 工人 |
 | 星级 | 5 |
 | 时代 | 现代 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 战吼 |
 | 技能 | battlecry-other-friendly-humans-plus-1-attack；shout |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

@@ -2,9 +2,8 @@
 id: aristotle
 card_type: minion
 name: 亚里士多德
-playstyle: neutral
+categories: [play:reptile]
 taxon: hominidae
-specialty: [play:reptile]
 subtype: philosophy
 level: 3
 era: primitive
@@ -23,9 +22,7 @@ is_scholar: true
 | id | aristotle |
 | 名称 | 亚里士多德 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：爬行纲 |
+| 玩法 | 爬行纲 |
 | 子类 | 哲学 |
 | 星级 | 3 |
 | 时代 | 原始 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | aura-all-plus-0-plus-1 |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

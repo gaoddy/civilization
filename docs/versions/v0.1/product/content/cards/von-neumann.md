@@ -2,9 +2,8 @@
 id: von-neumann
 card_type: minion
 name: 冯·诺依曼
-playstyle: neutral
+categories: [play:mammal, play:machine]
 taxon: hominidae
-specialty: [play:mammal, play:machine]
 subtype: mathematics
 level: 5
 era: future
@@ -23,9 +22,7 @@ is_scholar: true
 | id | von-neumann |
 | 名称 | 冯·诺依曼 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：哺乳纲、机械 |
+| 玩法 | 哺乳纲、机械 |
 | 子类 | 数学 |
 | 星级 | 5 |
 | 时代 | 未来 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 战吼 |
 | 技能 | battlecry-friendly-growth-twice |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

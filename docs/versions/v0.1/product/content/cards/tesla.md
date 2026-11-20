@@ -2,9 +2,8 @@
 id: tesla
 card_type: minion
 name: 特斯拉
-playstyle: neutral
+categories: [play:bird, play:machine]
 taxon: hominidae
-specialty: [play:bird, play:machine]
 subtype: physics
 level: 5
 era: industrial
@@ -23,9 +22,7 @@ is_scholar: true
 | id | tesla |
 | 名称 | 特斯拉 |
 | 类型 | 随从 |
-| 玩法 | 中立 |
-| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
-| 关联分类 | 擅长：鸟纲、机械 |
+| 玩法 | 鸟纲、机械 |
 | 子类 | 物理 |
 | 星级 | 5 |
 | 时代 | 工业 |
@@ -34,6 +31,7 @@ is_scholar: true
 | 关键词 | 无 |
 | 技能 | alternating-current |
 | 学者 | 是 |
+| 科学分类 | 动物界 › 脊索动物门 › 哺乳纲 › 灵长目 › 人科 |
 
 ## 效果
 

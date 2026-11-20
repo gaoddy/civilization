@@ -2,9 +2,8 @@
 id: likeciti
 card_type: minion
 name: 立克次体
-playstyle: virus
+categories: [play:virus, host:mammalia]
 taxon: rickettsiaceae
-specialty: [host:mammalia]
 subtype: bacteria
 level: 3
 era: modern
@@ -24,8 +23,6 @@ is_scholar: false
 | 名称 | 立克次体 |
 | 类型 | 随从 |
 | 玩法 | 病毒 |
-| 科学分类 | 细菌域 › 变形菌门 › α-变形菌纲 › 立克次体目 › 立克次体科 |
-| 关联分类 | 寄生：哺乳纲 |
 | 子类 | 细菌 |
 | 星级 | 3 |
 | 时代 | 现代 |
@@ -34,6 +31,8 @@ is_scholar: false
 | 关键词 | 传染 |
 | 技能 | keyword-contagion |
 | 学者 | 否 |
+| 科学分类 | 细菌域 › 变形菌门 › α-变形菌纲 › 立克次体目 › 立克次体科 |
+| 关联分类 | 寄生：哺乳纲 |
 
 ## 效果
 

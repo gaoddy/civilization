@@ -2,7 +2,7 @@
 id: shijieshu
 card_type: minion
 name: 世界树
-playstyle: plant
+categories: [play:plant]
 taxon: plantae-incertae-sedis
 subtype: tree
 level: 6
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 世界树 |
 | 类型 | 随从 |
 | 玩法 | 植物界 |
-| 科学分类 | 植物界 › 未定科 |
-| 关联分类 | 无 |
 | 子类 | 树木 |
 | 星级 | 6 |
 | 时代 | 未来 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 播种 |
 | 技能 | keyword-sow；aura-plant-plus-1-plus-1 |
 | 学者 | 否 |
+| 科学分类 | 植物界 › 未定科 |
 
 ## 效果
 

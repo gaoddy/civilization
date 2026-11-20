@@ -2,7 +2,7 @@
 id: ammonite
 card_type: minion
 name: 菊石
-playstyle: cephalopod
+categories: [play:cephalopod]
 taxon: ammonitidae
 subtype: mollusk
 level: 7
@@ -23,8 +23,6 @@ is_scholar: false
 | 名称 | 菊石 |
 | 类型 | 随从 |
 | 玩法 | 头足纲 |
-| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 菊石目 › 菊石科 |
-| 关联分类 | 无 |
 | 子类 | 软体 |
 | 星级 | 7 |
 | 时代 | 史前 |
@@ -33,6 +31,7 @@ is_scholar: false
 | 关键词 | 亡语 |
 | 技能 | deathrattle-summon-2-ammonites；mimic-1 |
 | 学者 | 否 |
+| 科学分类 | 动物界 › 软体动物门 › 头足纲 › 菊石目 › 菊石科 |
 
 ## 效果
 

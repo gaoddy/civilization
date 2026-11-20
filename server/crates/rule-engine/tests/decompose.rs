@@ -7,7 +7,7 @@
 
 mod common;
 
-use common::{effects_of, minion, setup_with_gold};
+use common::{categories_for, effects_of, minion, setup_with_gold};
 use rule_engine::combat::{CombatLog, CombatSetup, simulate_with};
 use rule_engine::data::{Card, CardType, Playstyle, Skill};
 use rule_engine::engine::Engine;
@@ -52,9 +52,8 @@ fn add_card_at(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle: Playstyle::Fungus,
             taxon: taxon.to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(Playstyle::Fungus),
             subtype: None,
             level: 1,
             era: None,

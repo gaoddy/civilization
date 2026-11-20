@@ -2,7 +2,7 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::{effects_of, minion, test_catalog, test_playstyles};
+use common::{categories_for, effects_of, minion, test_catalog, test_playstyles};
 use rule_engine::combat;
 use rule_engine::data::{Card, CardType, Catalog, Era, Playstyle, Skill};
 use rule_engine::engine::Engine;
@@ -19,9 +19,8 @@ fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, heal
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle: Playstyle::Mammal,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(Playstyle::Mammal),
             subtype: None,
             level,
             era: None,
@@ -83,9 +82,8 @@ fn add_keyword_card(
         Card {
             id: id.to_string(),
             card_type: CardType::Minion,
-            playstyle: Playstyle::Mammal,
             taxon: "hominidae".to_string(),
-            specialty: Vec::new(),
+            categories: categories_for(Playstyle::Mammal),
             subtype: None,
             level,
             era: None,

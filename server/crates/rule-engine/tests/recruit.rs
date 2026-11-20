@@ -4,7 +4,7 @@ use common::{
     heroes, minion, minion_id, place, set_shop, test_catalog, test_playstyles, turn_started,
 };
 use rule_engine::combat;
-use rule_engine::data::{CardType, Era};
+use rule_engine::data::{CardType, Category, CategoryKind, Era};
 use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
@@ -1040,8 +1040,7 @@ fn hero_cards_never_appear_in_shop() {
         rule_engine::data::HeroCard {
             id: hero_only.to_string(),
             card_type: CardType::Hero,
-            playstyle: rule_engine::data::Playstyle::Neutral,
-            specialty: Vec::new(),
+            categories: Vec::new(),
             skills: Vec::new(),
         },
     );
@@ -1913,10 +1912,24 @@ fn target_pending_pool_includes_self() {
 fn target_pending_skipped_when_filtered_pool_empty() {
     let (mut engine, mut state) = turn_started(54);
     // 战吼筛「机械」，己方棋盘没有机械，入场后池仍为空。
+    // 用专用夹具卡（同名战吼、仅哺乳归属）保留「来源自身不计入目标池」的场景，
+    // 不改写真实 archimedes 的 categories。
+    let mut fixture = engine
+        .catalog
+        .cards
+        .get("archimedes")
+        .expect("archimedes 应存在")
+        .clone();
+    fixture.id = "nonmachine-mech-growth-battler".to_string();
+    fixture.categories = vec![Category {
+        kind: CategoryKind::Play,
+        value: "mammal".to_string(),
+    }];
+    engine.catalog.cards.insert(fixture.id.clone(), fixture);
     state.players[0].hand.push(HandCard::Minion(minion(
         &engine.catalog,
         9_000,
-        "archimedes",
+        "nonmachine-mech-growth-battler",
     )));
 
     engine
@@ -1934,6 +1947,47 @@ fn target_pending_skipped_when_filtered_pool_empty() {
     assert!(target_pending(&state, 0).is_none(), "不产生待选");
     assert_eq!(state.players[0].board.len(), 1);
     assert_eq!(state.players[0].board[0].stats.attack.growth, 0, "战吼落空");
+}
+
+#[test]
+fn machine_filter_target_pool_includes_machine_source() {
+    let (mut engine, mut state) = turn_started(60);
+    // archimedes 自身带 play:machine；机械筛选应把来源自身计入目标池。
+    state.players[0].hand.push(HandCard::Minion(minion(
+        &engine.catalog,
+        9_000,
+        "archimedes",
+    )));
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("带机械筛选战吼的随从入场应成功");
+
+    let (instance_id, ..) =
+        target_pending(&state, 0).expect("来源自身带 play:machine，应产生目标待选");
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::ChooseTarget {
+                target: board_target(instance_id),
+            },
+        )
+        .expect("来源自身进入机械筛选的目标池");
+
+    assert!(state.pending.is_empty(), "待选被消费");
+    // archimedes 是学者：成长只加生命。
+    assert_eq!(
+        state.players[0].board[0].stats.health.growth, 1,
+        "机械战吼命中自身"
+    );
 }
 
 #[test]
@@ -2015,11 +2069,11 @@ fn choose_target_outside_board_rejects() {
 
 #[test]
 fn choose_target_outside_filtered_pool_rejects() {
-    // 战吼筛「机械」：棋盘上有机械（因此产生待选），但选一个学者必须被拒，
+    // 战吼筛「机械」：棋盘上有机械（因此产生待选），但选一个非机械随从必须被拒，
     // 而不是接受后静默落空（core-rules §4：指定随从不在合法池时返回该码）。
     let (mut engine, mut state) = turn_started(59);
     put_champion(&engine, &mut state, 0, 9_000, "nanobot");
-    put_champion(&engine, &mut state, 0, 9_001, "gutenberg");
+    put_champion(&engine, &mut state, 0, 9_001, "baiyi");
     state.players[0]
         .hand
         .push(HandCard::effect(9_000, BATTLECRY_TRIBE_TARGET));

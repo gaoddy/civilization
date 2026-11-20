@@ -106,12 +106,12 @@
 | 键 | 匹配口径 |
 | --- | --- |
 | `taxon` | 卡牌 `taxon` 等于该节点或位于其下；写上级节点即包含全部下级，如 `taxon=animalia` 命中全部动物卡 |
-| `playstyle` | 卡牌玩法子叶精确相等；不命中 `neutral` |
-| `play` | 卡牌 `specialty` 中存在 `play:<值>`；学者按擅长玩法、中立工具卡按关联玩法判定 |
+| `playstyle` | 卡牌任一条 `play:` 精确相等；Token 按自身单值 `playstyle` 匹配；不命中 `neutral` |
+| `play` | 卡牌 `categories` 中存在 `play:<值>`；任一条命中即可，不区分学者、工具卡与效果牌 |
 | `prey` / `host` | 卡牌捕食 / 寄生分类中存在与筛选节点相同或位于其下的节点 |
 | `subtype` / `id` / `type` / `scholar` / `keyword` / `other` | 沿用既有语义；`scholar=true` 表示学者卡 |
 
-- 科学分类与玩法是两条独立维度：按 `taxon` 筛选会包含中立卡，按 `playstyle` 筛选不会。
+- 科学分类与玩法是两条独立维度：`taxon` 按科学分类筛选；`playstyle` / `play` 按玩法归属筛选，任一条 `play:` 命中即可。Token 按自身玩法参与匹配。
 - 技能文本必须与筛选键一致：写「你的犬科随从」用 `taxon=canidae`，写「你的机械随从」用 `playstyle=machine`，写「你的学者随从」用 `scholar=true`；「你的动物随从」用 `taxon=animalia`。
 - 召唤物（Token）按自身玩法与科学分类参与匹配，召唤物卡池查不到时回退到 Token 注册表。
 - 当前数据只有 `taxon`、`playstyle`、`scholar`、`id`、`type`、`keyword`、`other` 被实际使用；`play`、`prey`、`host`、`subtype` 已定义，暂无技能使用。
@@ -130,7 +130,7 @@
 - **生命值口径**（`basis`）：`original` 原始生命值（卡面基础生命值，金色 ×2）、`combat_start` 战斗开始时生命值、`pre_kill` 被击杀前生命值。
 - **时长**（`duration`，必填）：`permanent` 永久，生命值上限与当前生命值同时增加；`combat` 本回合，只增加当前生命值，回合结束时回落。省略或写 `instant` 视为数据错误。
 - **结算**：被分解随从的亡语先结算，再结算分解；金色随从触发两次；多个分解各自独立触发；获得量为 0、目标已离场或快照缺失时不获得生命值，不报错。
-- **归属约束**：只有玩法为真菌界或细菌域的卡可以登记 `decompose`；本版本尚无卡牌携带分解，规则与校验先行。
+- **归属约束**：任一条 `play:` 命中真菌界或细菌域的卡可以登记 `decompose`；本版本尚无卡牌携带分解，规则与校验先行。
 
 数据写法示例：
 
@@ -154,7 +154,7 @@ OnAllyKill|Decompose|self|basis=pre_kill,duration=permanent
 
 ### 3.2 英雄卡
 
-英雄卡与普通随从卡使用同一套 `skills`，技能 id 不带任何英雄专属前缀，卡上也没有独立的英雄技能字段。32 张英雄卡各自在自己的 `skills` 中引用自己的技能，也可以同时引用普通随从技能；部分英雄卡复用同一技能。英雄卡与同名随从卡的 `skills` 各自维护、不要求一致，只要求 `name`、`playstyle`、`specialty` 相同；英雄技能查询只走英雄池，随从与效果牌的技能查询只走随从池。英雄技能只能为主动或被动技能，不登记战吼、护盾、亡语等随从战场关键词，因为英雄不进入战场；一个英雄可以有多个主动技能，按英雄卡 `skills` 顺序展示与结算，各自计次。主动技能的费用与每回合次数属于技能实体（`cost` / `uses_per_turn`），不写在卡上；被动技能按自身文本前缀触发。同一个技能可以被多张卡共用，触发与结算各自独立。
+英雄卡与普通随从卡使用同一套 `skills`，技能 id 不带任何英雄专属前缀，卡上也没有独立的英雄技能字段。32 张英雄卡各自在自己的 `skills` 中引用自己的技能，也可以同时引用普通随从技能；部分英雄卡复用同一技能。英雄卡与同名随从卡的 `skills` 各自维护、不要求一致，只要求 `name`、`categories` 相同；英雄技能查询只走英雄池，随从与效果牌的技能查询只走随从池。英雄技能只能为主动或被动技能，不登记战吼、护盾、亡语等随从战场关键词，因为英雄不进入战场；一个英雄可以有多个主动技能，按英雄卡 `skills` 顺序展示与结算，各自计次。主动技能的费用与每回合次数属于技能实体（`cost` / `uses_per_turn`），不写在卡上；被动技能按自身文本前缀触发。同一个技能可以被多张卡共用，触发与结算各自独立。
 
 ### 3.3 关键词派生
 
@@ -227,11 +227,11 @@ python3 scripts/validate_docs.py
 4. 每张效果牌至少引用 1 个技能；全池恰好 1 张无技能随从（`einstein-fridge`）的 `skills` 为空且 `## 效果` 为「无」；
 5. 卡牌 `## 效果` 与所引用技能 `text` 按顺序拼接的结果一致；
 6. 卡牌属性表的「技能」「关键词」行与 front matter、技能 `keyword` 一致；主动技能的属性表含「费用」「每回合次数」两行；
-7. 英雄卡恰好 32 张，每张英雄卡都有同 id 的同名随从卡且 `name` / `playstyle` / `specialty` 一致，`skills` 各自维护、不比较；英雄卡引用的技能不得登记 `keyword`，且必须符合主动/被动语义：有 `cost` 的技能只能有 `OnActivate` 触发，无 `cost` 的技能只能有光环、首次刷新、战斗开始或回合开始等被动触发；随从与效果牌不得再有 `is_hero`；卡牌不得残留旧版独立的技能字段或小节；
+7. 英雄卡恰好 32 张，每张英雄卡都有同 id 的同名随从卡且 `name` / `categories` 一致，`skills` 各自维护、不比较；英雄卡引用的技能不得登记 `keyword`，且必须符合主动/被动语义：有 `cost` 的技能只能有 `OnActivate` 触发，无 `cost` 的技能只能有光环、首次刷新、战斗开始或回合开始等被动触发；随从与效果牌不得再有 `is_hero`；卡牌不得残留旧版独立的技能字段或小节；
 8. 每个技能都有 `template` 字段；模板文档存在、参数名已声明、取值在域内、必填参数齐全；模板展开后的 DSL 按[关键词与机制](../rules/keywords-and-mechanics.md) §9.4 校验：段数 3–4 段、触发与动作原语在白名单内、选择器合法（筛选值为英文 id、分类节点合法、玩法 id 合法）、`duration` 取值合法、参数写作 `key=value`；`timesIf` 使用「键:值:次数」或 `scholar:次数`；`Decompose` 必须带 `basis` 与 `duration`；`OnKill` / `OnAllyKill` 在触发白名单内；
 9. 技能文本的固定前缀与触发时机一致：「战吼」对应 `OnPlay`、「亡语」对应 `OnDeath`、「战斗开始时」对应 `OnCombatStart`、「回合开始时」对应 `OnTurnStart`、「每回合首次刷新时」对应 `OnFirstRefresh`、「每当」对应事件类触发、「分解：」对应 `OnKill` / `OnFriendlyDeath` / `OnAllyKill`、`你的…随从获得` 句式对应 `Aura`、「若你控制」对应 `ConditionalAura`；
-10. 卡牌分类字段按[卡牌规范与数据](card-system.md) §1.1 校验：`playstyle`、`taxon`、`specialty` 的取值与交叉约束；学者固定 `neutral`，非学者 `neutral` 仅造物六类工具卡，效果牌 `neutral` 且 `taxon` 为分类树叶子；
-11. 专属关键词按玩法与分类校验：`decompose` 仅真菌界/细菌域、`assemble` 仅机械玩法或 `play:machine` 中立工具卡、`sow` 仅植物界、`evolve` 仅非学者生物卡；
+10. 卡牌分类字段按[卡牌规范与数据](card-system.md) §1.1 校验：`categories` 至少 1 条 `play:`、玩法取值不含 `neutral`、条目与顺序合法、`prey:` / `host:` 只允许生物卡；`taxon` 为分类树叶子；英雄与同 id 随从的 `categories` 一致；
+11. 专属关键词按玩法与分类校验：`decompose` 仅 play 命中真菌界/细菌域、`assemble` 仅 play 命中机械（含造物六类工具卡）、`sow` 仅 play 命中植物界、`evolve` 仅非学者生物卡；
 12. 派生小节由 `python3 scripts/render_docs.py --check` 校验：技能 `## 属性` 的派生行、技能与卡牌的 `## 效果` 无漂移；`make data-check` 已包含这一步。
 
 期望：输出包含 `随从 309 张、效果牌 100 张、技能 254 个、英雄卡 32 张，校验通过`，退出码 0；否则逐条打印违规并以退出码 1 结束。
