@@ -9,7 +9,10 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import gen_card_data
 import render_docs
 import skill_templates
+import skill_templates_propose as propose
 import validate_docs
+
+CONTENT = ROOT / "docs/versions/v0.1/product/content"
 
 
 def build_fixture(tmp):
@@ -115,6 +118,25 @@ class ValidateTemplateTest(unittest.TestCase):
             {"id": "x", "template": "not-a-template", "_file": "x.md"}, {},
             self.renderer)
         self.assertTrue(any("模板不存在" in e for e in errors))
+
+
+class ProposeTest(unittest.TestCase):
+    def setUp(self):
+        self.renderer = skill_templates.Renderer()
+        self.templates = skill_templates.load_templates(CONTENT)
+
+    def test_fit_template_extracts_args(self):
+        skill = {"id": "x", "effects": "OnDeath|Summon|self|token=seedling,count=1",
+                 "text": "亡语：召唤一个 1/1 的幼苗"}
+        call = propose.fit_template(
+            self.templates["on-death-summon"], skill, self.renderer)
+        self.assertEqual(call.args, {"token": "seedling", "count": "1"})
+
+    def test_fit_rejects_text_mismatch(self):
+        skill = {"id": "x", "effects": "OnDeath|Summon|self|token=seedling,count=1",
+                 "text": "亡语：召唤一个幼苗"}
+        self.assertIsNone(propose.fit_template(
+            self.templates["on-death-summon"], skill, self.renderer))
 
 
 if __name__ == "__main__":
