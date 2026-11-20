@@ -385,12 +385,17 @@ pub enum PendingChoice {
         source: InstanceId,
         remaining: u8,
     },
-    /// 战吼已入场但尚未选定目标；`card_id` / `golden` 用于选定后重建效果上下文。
+    /// 战吼已入场但尚未选定目标。
+    ///
+    /// `hand_card` 是入场前的原手牌，`hand_index` 是它原来的位置：放弃时原样退回，
+    /// 保留成长、护盾与金色标记。`fire_ally_evolve` 表示入场观察者是否推迟到
+    /// 目标结算后触发——来源登记了进化待选时为假，由进化结算负责触发。
     Target {
         seat: Seat,
         source: InstanceId,
-        card_id: String,
-        golden: bool,
+        hand_card: HandCard,
+        hand_index: u8,
+        fire_ally_evolve: bool,
     },
 }
 

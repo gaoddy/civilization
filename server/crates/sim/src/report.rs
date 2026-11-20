@@ -297,6 +297,7 @@ pub fn intent_to_json(intent: &Intent) -> Value {
         Intent::ChooseTarget { target } => json!({
             "kind": "choose_target", "target": target_to_json(Some(*target)),
         }),
+        Intent::AbandonTarget => json!({ "kind": "abandon_target" }),
     }
 }
 
@@ -508,6 +509,7 @@ fn intent_from_json(value: &Value) -> Result<Intent, String> {
         "choose_target" => Intent::ChooseTarget {
             target: target.ok_or("缺少 target")?,
         },
+        "abandon_target" => Intent::AbandonTarget,
         other => return Err(format!("未知意图 kind {other}")),
     })
 }

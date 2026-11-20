@@ -555,6 +555,7 @@
 | `分支10.choice` | integer | 是 | 发现为候选下标，进化为选项下标 |
 | `分支11.kind` | object | 是 |  |
 | `分支11.target` | TargetRef | 是 | 目标 |
+| `分支12.kind` | object | 是 |  |
 
 ### ErrorCode
 

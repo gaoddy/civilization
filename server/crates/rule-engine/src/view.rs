@@ -479,22 +479,22 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
             PendingChoice::Target {
                 seat: pending_seat,
                 source,
-                card_id,
-                golden,
+                hand_card,
+                ..
             } => {
                 let ctx = EffectCtx {
                     seat: *pending_seat,
                     source: Some(*source),
                     target: None,
                     event_target: None,
-                    golden: *golden,
+                    golden: hand_card.golden(),
                     discover_level: None,
                 };
                 PendingChoiceView::Target {
                     source_minion_id: *source,
                     candidates: engine.target_candidates(
                         state,
-                        &engine.effects_of(card_id, Trigger::OnPlay),
+                        &engine.effects_of(hand_card.card_id(), Trigger::OnPlay),
                         &ctx,
                         false,
                     ),

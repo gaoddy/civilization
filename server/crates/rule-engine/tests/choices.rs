@@ -1147,25 +1147,37 @@ fn copy_from_hand_requires_target_selector() {
 
 #[test]
 fn hash_covers_target_pending() {
-    let (_, state) = turn_started(2);
-    let target =
-        |seat: Seat, source: InstanceId, card_id: &str, golden: bool| PendingChoice::Target {
-            seat,
+    let (engine, state) = turn_started(2);
+    let target = |seat: Seat,
+                  source: InstanceId,
+                  card_id: &str,
+                  golden: bool,
+                  hand_index: u8,
+                  fire_ally_evolve: bool| PendingChoice::Target {
+        seat,
+        source,
+        hand_card: HandCard::Minion(MinionInstance::new(
+            &engine.catalog,
             source,
-            card_id: card_id.to_string(),
+            card_id,
             golden,
-        };
+        )),
+        hand_index,
+        fire_ally_evolve,
+    };
     let mut with_base = state.clone();
     with_base
         .pending
-        .push_back(target(0, 1, "fangzhiji", false));
+        .push_back(target(0, 1, "fangzhiji", false, 0, false));
     let base_hash = state_hash(&with_base);
 
     let variants: Vec<PendingChoice> = vec![
-        target(1, 1, "fangzhiji", false),
-        target(0, 2, "fangzhiji", false),
-        target(0, 1, "bisheng", false),
-        target(0, 1, "fangzhiji", true),
+        target(1, 1, "fangzhiji", false, 0, false),
+        target(0, 2, "fangzhiji", false, 0, false),
+        target(0, 1, "bisheng", false, 0, false),
+        target(0, 1, "fangzhiji", true, 0, false),
+        target(0, 1, "fangzhiji", false, 3, false),
+        target(0, 1, "fangzhiji", false, 0, true),
     ];
     for variant in variants {
         let mut other = state.clone();

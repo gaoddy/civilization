@@ -17,7 +17,8 @@ use crate::events::GameEvent;
 use crate::recruit::new_minion;
 use crate::rng::Stream;
 use crate::state::{
-    AuraEffect, GameState, HandCard, InstanceId, MinionInstance, Phase, PlayerState, Seat,
+    AuraEffect, GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase, PlayerState,
+    Seat,
 };
 
 /// 配对在放弃"排除上一场对手"前最多重洗的次数。
@@ -230,9 +231,10 @@ fn finish_recruit(state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> 
             state.phase
         )));
     }
-    // 进入战斗前未消费的待选一律视为放弃：目标待选引用本回合刚入场的随从，
-    // 跨回合后棋盘已变；发现与进化待选在招募超时时也不再保留。手动结束招募
-    // 已由 `recruit::apply` 拒绝，因此这里只覆盖超时路径。
+    // 进入战斗前未消费的待选一律视为放弃：目标待选撤销本次入场并把原牌退回
+    // 原手牌位置，发现与进化待选直接丢弃。手动结束招募已由 `recruit::apply`
+    // 拒绝，因此这里只覆盖超时路径。
+    abandon_pending_targets(state);
     state.pending.clear();
     state.pairings = pair_round(state);
     if state.phase == Phase::Combat {
@@ -243,6 +245,42 @@ fn finish_recruit(state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> 
         phase: Phase::Combat,
         turn: state.turn,
     }])
+}
+
+/// 超时放弃目标待选：来源随从离场，入场前的原手牌按原下标退回。
+///
+/// 与 `recruit::abandon_target` 同义，只在进入战斗前批量处理；来源已不在棋盘
+/// （理论上不会发生）时跳过，不阻塞阶段推进。
+fn abandon_pending_targets(state: &mut GameState) {
+    let targets: Vec<(Seat, InstanceId, HandCard, u8)> = state
+        .pending
+        .iter()
+        .filter_map(|pending| match pending {
+            PendingChoice::Target {
+                seat,
+                source,
+                hand_card,
+                hand_index,
+                ..
+            } => Some((*seat, *source, hand_card.clone(), *hand_index)),
+            PendingChoice::Discover { .. } | PendingChoice::Evolve { .. } => None,
+        })
+        .collect();
+    for (seat, source, hand_card, hand_index) in targets {
+        let Some(player) = state.players.get_mut(usize::from(seat)) else {
+            continue;
+        };
+        let Some(position) = player
+            .board
+            .iter()
+            .position(|minion| minion.instance_id == source)
+        else {
+            continue;
+        };
+        player.board.remove(position);
+        let at = usize::from(hand_index).min(player.hand.len());
+        player.hand.insert(at, hand_card);
+    }
 }
 
 fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<CombatOutcome, EngineError> {
