@@ -1705,6 +1705,33 @@ func _check_shop_drag_buys() -> void:
         )
         _expect(captured.is_empty(), "拖到棋盘不应购买，实际 %s" % [captured])
 
+        # 起手预览与棋盘一致：隐藏原卡并在原位放同尺寸透明占位，取消后恢复。
+        var shop_row = instance.find_child("ShopRow", true, false)
+        _expect(shop_row != null, "商店应有槽位行")
+        if shop_row != null:
+            shop_card.force_drag(shop_card.payload.duplicate(), Control.new())
+            await get_tree().process_frame
+            _expect(not shop_card.visible, "商店卡拖起后原卡应隐藏")
+            var shop_spacer = shop_row.find_child("ShopDragSpacer", true, false)
+            _expect(
+                shop_spacer != null
+                    and (shop_spacer as Control).custom_minimum_size == shop_card.custom_minimum_size,
+                "商店拖拽占位应与被拖卡同尺寸",
+            )
+            _expect(
+                shop_row.get_child_count() == 7,
+                "占位应补齐被隐藏的原卡位，实际 %d" % shop_row.get_child_count(),
+            )
+            var drag_viewport = instance.get_viewport()
+            if drag_viewport != null and drag_viewport.has_method("gui_cancel_drag"):
+                drag_viewport.gui_cancel_drag()
+            await get_tree().process_frame
+            _expect(shop_card.visible, "拖拽取消后应恢复原商店卡可见")
+            _expect(
+                shop_row.find_child("ShopDragSpacer", true, false) == null,
+                "拖拽取消后应移除商店拖拽占位",
+            )
+
         # 落点判定：购买带只覆盖贴底卡带，不可购买数据拒绝。
         var band = hand_row.find_child("HandDropBand", true, false)
         _expect(band is HandDrop, "手牌行应有购买落点带")

@@ -22,6 +22,10 @@ var _shop_panel: SellDrop
 var _shop_row: HBoxContainer
 var _sell_hint: Label
 
+## 商店卡拖拽预览：被拖卡片与同尺寸透明占位，起手与棋盘卡保持一致。
+var _drag_card: Control = null
+var _drag_spacer: Control = null
+
 
 ## 舞台内小间距：iPhone 基准下再收紧一档。
 func _stage_gap() -> int:
@@ -123,6 +127,51 @@ func _init() -> void:
     stack.add_child(_sell_hint)
 
 
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_DRAG_BEGIN:
+        var payload = get_viewport().gui_get_drag_data()
+        if payload is Dictionary and payload.has("shopSlot"):
+            _begin_shop_drag(int(payload.get("shopSlot", -1)))
+    elif what == NOTIFICATION_DRAG_END:
+        _end_shop_drag()
+
+
+## 起手与棋盘卡一致：隐藏被拖商店卡，并在原位放同尺寸透明占位，保持 6 槽布局。
+func _begin_shop_drag(slot: int) -> void:
+    _end_shop_drag()
+    var card := _shop_card_at(slot)
+    if card == null:
+        return
+    _drag_card = card
+    _drag_spacer = Control.new()
+    _drag_spacer.name = "ShopDragSpacer"
+    _drag_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _drag_spacer.custom_minimum_size = card.custom_minimum_size
+    _shop_row.add_child(_drag_spacer)
+    _shop_row.move_child(_drag_spacer, card.get_index())
+    card.visible = false
+
+
+## 结束预览（落点或取消）：移除占位并恢复原商店卡。
+func _end_shop_drag() -> void:
+    if _drag_spacer == null and _drag_card == null:
+        return
+    if is_instance_valid(_drag_spacer):
+        _drag_spacer.queue_free()
+    _drag_spacer = null
+    if is_instance_valid(_drag_card):
+        _drag_card.visible = true
+    _drag_card = null
+
+
+func _shop_card_at(slot: int) -> ShopCard:
+    for child in _shop_row.get_children():
+        var card := child as ShopCard
+        if card != null and int(card.payload.get("shopSlot", -1)) == slot:
+            return card
+    return null
+
+
 func refresh(state: GameUiState) -> void:
     if detail != null and is_instance_valid(detail):
         var seller := find_child("SellerTile", true, false)
@@ -177,6 +226,8 @@ func _refresh_actions(state: GameUiState) -> void:
 
 
 func _refresh_shop(state: GameUiState) -> void:
+    # 拖拽途中重建会整块换掉槽位：先按取消收尾，旧占位与旧卡随重建释放。
+    _end_shop_drag()
     UI.clear(_shop_row)
     var aff: Dictionary = state.self_state.get("affordances", {})
     for slot in state.self_state.get("shop", []):
