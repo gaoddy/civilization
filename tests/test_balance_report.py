@@ -9,7 +9,7 @@ import balance_report as br  # noqa: E402
 
 
 def card(cid, plays, level, attack, health, skills=(), card_type="minion", cost=None,
-         categories=None):
+         categories=None, taxon=None):
     """plays 为玩法 id 元组；需要 prey/host 时用 categories 传 kind:value 列表。"""
     if categories is None:
         categories = [f"play:{play}" for play in plays]
@@ -18,6 +18,7 @@ def card(cid, plays, level, attack, health, skills=(), card_type="minion", cost=
         "skills": list(skills), "card_type": card_type, "cost": cost,
         "categories": [{"kind": kind, "value": value}
                        for kind, _, value in (item.partition(":") for item in categories)],
+        "taxon": taxon,
         "is_scholar": False,
     }
 
@@ -163,6 +164,15 @@ class VocabularyTest(unittest.TestCase):
         scholar = card("s", ("mammal",), 3, 0, 6, ["s-generic", "s-generic"])
         scholar["is_scholar"] = True
         self.assertEqual(br.vocabulary_errors([no_play, scholar], SKILLS), [])
+
+    def test_craft_tool_taxon_skips_vocabulary_but_automation_is_checked(self):
+        tool = card("tool", ("machine",), 5, 7, 9,
+                    ["s-generic", "s-worker", "s-generic"], taxon="power-energy")
+        automation = card("auto", ("machine",), 5, 7, 9,
+                          ["s-generic", "s-worker"], taxon="automation")
+        errors = br.vocabulary_errors([tool, automation], SKILLS)
+        self.assertFalse(any("tool" in e for e in errors))
+        self.assertTrue(any("auto" in e and "签名机制" in e for e in errors))
 
     def test_skill_terms_recognizes_mechanisms(self):
         self.assertEqual(br.skill_terms(SKILLS["s-activate-growth"]), {"成长"})

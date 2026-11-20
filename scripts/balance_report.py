@@ -37,6 +37,11 @@ MECHANISM_VOCAB = {
     "virus": {"传染", "潜伏", "亡语 AOE"},
     "machine": {"装配", "零件回收", "最优攻击", "战吼成长"},
 }
+# 造物分类中的六类工具；这些随从视为机械玩法可用，不参与机制词汇检查。
+MACHINE_TOOL_TAXA = frozenset({
+    "power-energy", "transport", "weapon-siege",
+    "production-construction", "information-computing", "life-medical",
+})
 KEYWORD_TERMS = {
     "taunt": "嘲讽", "windfury": "连击", "poison": "剧毒", "reborn": "复生",
     "sow": "播种", "decompose": "分解", "stealth": "潜行", "contagion": "传染",
@@ -249,11 +254,15 @@ def effect_cost_errors(cards):
 def vocabulary_errors(cards, skills):
     """多技能随从的第二/后续技能必须落在本身玩法的机制词汇内。
 
-    多玩法卡取各条 play 词汇的并集；没有 play 的卡跳过。
+    只检查玩法身份卡：机械玩法的身份卡为 ``taxon == "automation"`` 的非学者随从；
+    造物六类工具（见 ``MACHINE_TOOL_TAXA``）视为机械玩法可用，跳过机制词汇检查。
+    其他玩法按全部 play 词汇的并集检查；没有 play 的卡跳过。
     """
     errors = []
     for card in cards:
         if card.get("card_type") != "minion" or card.get("is_scholar"):
+            continue
+        if card.get("taxon") in MACHINE_TOOL_TAXA:
             continue
         vocab = set()
         for playstyle in _play_values(card):
