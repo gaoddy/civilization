@@ -51,22 +51,18 @@ fn known_keywords_query_by_variant() {
     assert_eq!(set.armor(), 0);
 }
 
-/// 测试直接往 `catalog.cards` / `catalog.skills` 插卡时，侧表缺失，
+/// 测试直接往 `catalog.cards` 插卡时，侧表缺失，
 /// `base_keywords` 必须回退到即时计算。
 #[test]
 fn base_keywords_falls_back_for_directly_inserted_card() {
     let mut catalog = test_catalog();
-    let skill_id = "fallback-skill".to_string();
-    catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: Some("taunt".to_string()),
-            effects: effects_of("[]"),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = catalog.insert_skill(Skill {
+        id: "fallback-skill".to_string(),
+        keyword: Some("taunt".to_string()),
+        effects: effects_of("[]"),
+        cost: None,
+        uses_per_turn: None,
+    });
     catalog.cards.insert(
         "fallback-card".to_string(),
         Card {

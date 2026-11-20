@@ -12,7 +12,7 @@ use common::{
     CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, categories_for, effects_of,
     test_catalog, test_playstyles, turn_started,
 };
-use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill, card_in_pool};
+use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill, SkillId, card_in_pool};
 use rule_engine::effects::{Effect, EffectCtx, TargetRef, Zone, parse_effects};
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
@@ -38,9 +38,9 @@ fn skill(id: &str, keyword: Option<&str>, effects: &str, cost: Option<u8>) -> Sk
     }
 }
 
-/// 把技能写入目录。
-fn add_skill(catalog: &mut Catalog, skill: Skill) {
-    catalog.skills.insert(skill.id.clone(), skill);
+/// 把技能写入目录，返回其整数标识。
+fn add_skill(catalog: &mut Catalog, skill: Skill) -> SkillId {
+    catalog.insert_skill(skill)
 }
 
 /// 往目录里插入一张合成随从卡。
@@ -52,6 +52,14 @@ fn add_minion(
     skills: &[&str],
 ) {
     let (level, attack, health) = stats;
+    let resolved: Vec<SkillId> = skills
+        .iter()
+        .map(|skill| {
+            catalog
+                .skill_id(skill)
+                .expect("测试卡引用的技能应先写入目录")
+        })
+        .collect();
     catalog.cards.insert(
         id.to_string(),
         Card {
@@ -65,7 +73,7 @@ fn add_minion(
             era: None,
             attack: Some(attack),
             health: Some(health),
-            skills: skills.iter().map(|skill| skill.to_string()).collect(),
+            skills: resolved,
             cost: None,
         },
     );
@@ -380,7 +388,7 @@ fn choose_in_combat_rejects_invalid_stage() {
 #[test]
 fn discover_fires_from_hero_power() {
     let (mut engine, mut state) = turn_started(2);
-    add_skill(
+    let skill_id = add_skill(
         &mut engine.catalog,
         skill(
             "test-discover",
@@ -403,7 +411,7 @@ fn discover_fires_from_hero_power() {
         .get_mut(&hero)
         .expect("英雄存在")
         .skills
-        .push("test-discover".to_string());
+        .push(skill_id);
     state.players[0].hero = Some(hero);
     state.players[0].gold = 10;
 

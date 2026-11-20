@@ -20,17 +20,13 @@ fn board_minion(state: &GameState, seat: Seat, id: InstanceId) -> &MinionInstanc
 
 /// 注入一张自定义光环来源卡（非英雄），用于数据表中不存在的负值与重复关键词场景。
 fn add_aura_source(engine: &mut Engine, card_id: &str, playstyle: Playstyle, effects: &str) {
-    let skill_id = format!("{card_id}-skill");
-    engine.catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: None,
-            effects: effects_of(effects),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = engine.catalog.insert_skill(Skill {
+        id: format!("{card_id}-skill"),
+        keyword: None,
+        effects: effects_of(effects),
+        cost: None,
+        uses_per_turn: None,
+    });
     engine.catalog.cards.insert(
         card_id.to_string(),
         Card {
@@ -312,12 +308,15 @@ fn aura_folds_into_combat_snapshot_only() {
 fn hero_aura_reads_hero_pool() {
     // 先从同名随从卡移除光环技能，再构建目录与引擎，避免加载后原地改动 `Catalog`。
     let mut catalog = common::test_catalog();
+    let aura = catalog
+        .skill_id("aura-biology-plus-1-plus-1")
+        .expect("光环技能应存在");
     catalog
         .cards
         .get_mut("darwin")
         .expect("达尔文随从卡应存在")
         .skills
-        .retain(|skill| skill != "aura-biology-plus-1-plus-1");
+        .retain(|skill| *skill != aura);
     let (engine, mut state) = common::setup_with_catalog(catalog, 23);
     state.players[0].hero = Some("darwin".to_string());
     place(&engine.catalog, &mut state, 0, 1, "baiyi");

@@ -99,19 +99,16 @@ fn task() -> (GameTask, FixedClock) {
 /// 用于在不改引擎的前提下确定性构造 `ChooseDiscover`。
 fn catalog_with_discover_on_play() -> Catalog {
     let mut catalog = catalog();
-    catalog.skills.insert(
-        "test-discover-on-play".to_string(),
-        Skill {
-            id: "test-discover-on-play".to_string(),
-            keyword: None,
-            effects: effects_of("OnPlay|Discover|self|pool=tribe,choose=1"),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = catalog.insert_skill(Skill {
+        id: "test-discover-on-play".to_string(),
+        keyword: None,
+        effects: effects_of("OnPlay|Discover|self|pool=tribe,choose=1"),
+        cost: None,
+        uses_per_turn: None,
+    });
     for card in catalog.cards.values_mut() {
         if card.card_type == CardType::Minion && card.level == 1 && card.in_shop_pool {
-            card.skills.push("test-discover-on-play".to_string());
+            card.skills.push(skill_id);
         }
     }
     catalog

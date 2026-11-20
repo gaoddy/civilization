@@ -26,17 +26,13 @@ fn add_card_with(
 ) {
     let mut skill_ids = Vec::new();
     for (index, keyword) in keyword_list.iter().enumerate() {
-        let skill_id = format!("{id}-skill-{index}");
-        catalog.skills.insert(
-            skill_id.clone(),
-            Skill {
-                id: skill_id.clone(),
-                keyword: Some((*keyword).to_string()),
-                effects: effects_of("[]"),
-                cost: None,
-                uses_per_turn: None,
-            },
-        );
+        let skill_id = catalog.insert_skill(Skill {
+            id: format!("{id}-skill-{index}"),
+            keyword: Some((*keyword).to_string()),
+            effects: effects_of("[]"),
+            cost: None,
+            uses_per_turn: None,
+        });
         skill_ids.push(skill_id);
     }
     catalog.cards.insert(
@@ -70,22 +66,19 @@ fn add_effect_skill(
     keyword: &str,
     effects: &str,
 ) {
-    catalog.skills.insert(
-        skill_id.to_string(),
-        Skill {
-            id: skill_id.to_string(),
-            keyword: Some(keyword.to_string()),
-            effects: effects_of(effects),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill = catalog.insert_skill(Skill {
+        id: skill_id.to_string(),
+        keyword: Some(keyword.to_string()),
+        effects: effects_of(effects),
+        cost: None,
+        uses_per_turn: None,
+    });
     catalog
         .cards
         .get_mut(card_id)
         .expect("卡牌应存在")
         .skills
-        .push(skill_id.to_string());
+        .push(skill);
 }
 
 fn add_seedling_token(catalog: &mut Catalog) {

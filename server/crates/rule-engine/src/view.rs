@@ -303,24 +303,15 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .map(|hero| {
             hero.skills
                 .iter()
-                .filter(|skill_id| {
-                    engine
-                        .catalog
-                        .skills
-                        .get(*skill_id)
-                        .is_some_and(|skill| skill.cost.is_some())
+                .filter_map(|skill_id| {
+                    let skill = engine.catalog.skill(*skill_id);
+                    skill.cost.map(|_| skill)
                 })
-                .map(|skill_id| {
-                    let uses_left = engine
-                        .catalog
-                        .skills
-                        .get(skill_id)
-                        .map(|skill| {
-                            let limit = skill.uses_per_turn.unwrap_or(1);
-                            let used = player.hero_uses.get(skill_id).copied().unwrap_or(0);
-                            limit.saturating_sub(used)
-                        })
-                        .unwrap_or(0);
+                .map(|skill| {
+                    let skill_id = skill.id.as_str();
+                    let limit = skill.uses_per_turn.unwrap_or(1);
+                    let used = player.hero_uses.get(skill_id).copied().unwrap_or(0);
+                    let uses_left = limit.saturating_sub(used);
                     let requires_target =
                         engine.skill_requires_target(skill_id, Trigger::OnActivate);
                     let target_candidates = if requires_target {
@@ -349,7 +340,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                         },
                     };
                     HeroPowerView {
-                        skill_id: skill_id.clone(),
+                        skill_id: skill_id.to_string(),
                         uses_left,
                         requires_target,
                         target_candidates,

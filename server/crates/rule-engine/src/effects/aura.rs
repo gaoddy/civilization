@@ -130,9 +130,7 @@ impl Engine {
             };
             let mut effects = Vec::new();
             for skill_id in skills {
-                let Some(skill) = self.catalog.skills.get(skill_id) else {
-                    continue;
-                };
+                let skill = self.catalog.skill(*skill_id);
                 effects.extend(skill.effects.iter().filter(|effect| {
                     matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura)
                 }));

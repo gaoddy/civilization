@@ -125,7 +125,10 @@ pub enum Rank { Kingdom, Phylum, Class, Order, Family, Technique, Discipline }
 impl Taxonomy {
     pub fn contains(&self, id: &str) -> bool;
     pub fn is_leaf(&self, id: &str) -> bool;
+    pub fn node_id(&self, id: &str) -> Option<u16>;
+    pub fn ancestor_ids(&self, node: u16) -> Vec<u16>;
     pub fn is_within(&self, leaf: &str, ancestor: &str) -> bool;
+    pub fn is_within_id(&self, leaf: u16, ancestor: u16) -> bool;
     pub fn path(&self, leaf: &str) -> Vec<&str>;
 }
 ```
@@ -134,7 +137,9 @@ impl Taxonomy {
 - `Rank` 对应 `taxonomy.md` 的「界 / 门 / 纲 / 目 / 科 / 技术分类 / 学科」，只表达结构，不参与匹配。
 - `is_within` 先把两侧 id 解析为整数下标，再沿 `parents` 的整数父链上溯，最多 5 层；公开签名不变，任一节点不存在返回 `false`。`names` 是下标到 id 的反向映射，与 `parents` 同序，仅用于构建期生成 `ids` / `parents`；当前运行期不读取（字段带 `#[allow(dead_code)]`，为后续 `path` 整数化保留）。
 - `path` 从叶子返回至根的 id 列表（含自身），未知节点返回空列表。
-- `Catalog` 持有 `cards`、`heroes`、`skills` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。`Catalog` 另持私有侧表 `card_keywords: BTreeMap<String, KeywordSet>`：加载期按每张卡 `skills` 的 `keyword` 预计算卡面自带关键词；`base_keywords(card_id)` 命中侧表时直接克隆预计算值，侧表缺失（测试直接向 `cards` / `skills` 插卡）时按当前数据即时计算回退，两者口径一致。加载期校验所有卡牌的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡；`in_shop_pool: true` 的卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`），非池卡允许没有 `play:`；`CardType` 只有 `minion` / `effect`，`cards.json` 写入 `hero` 在反序列化阶段即被拒绝；英雄卡不含 `card_type`，与随从卡靠独立文件、独立结构体与独立集合区分；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
+- `Catalog` 持有 `cards`、`heroes`、`skills: Vec<Skill>`、`skill_ids: HashMap<String, SkillId>` 与 `taxonomy: Taxonomy`；技能按 id 升序编号为 `SkillId`，卡牌与英雄的 `skills` 保存整数标识，触发与效果收集按下标取技能，协议、视图与 `hero_uses` 仍以字符串技能 id 为标识。英雄卡按 `id` 独立存储，与同名随从卡分属两个池。`Catalog` 另持私有侧表 `card_keywords: BTreeMap<String, KeywordSet>`：加载期按每张卡 `skills` 的 `keyword` 预计算卡面自带关键词；`base_keywords(card_id)` 命中侧表时直接克隆预计算值，侧表缺失（测试直接向 `cards` 插卡）时按当前数据即时计算回退，两者口径一致。加载期校验所有卡牌的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡；`in_shop_pool: true` 的卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`），非池卡允许没有 `play:`；`CardType` 只有 `minion` / `effect`，`cards.json` 写入 `hero` 在反序列化阶段即被拒绝；英雄卡不含 `card_type`，与随从卡靠独立文件、独立结构体与独立集合区分；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
+- `Catalog` 的分类侧表 `card_filter_facts` 在加载期把每张卡的 `taxon`、`play:` 归属与捕食/寄生分类节点压成整数下标与位掩码（`CardFilterFacts`）；筛选按整数比较，测试直接插卡时回退即时计算。
+- 卡牌标识在状态、事件与协议中保持字符串：`MinionInstance.card_id`、`ShopSlot.card_id`、`HandCard` 与 `GameEvent` 的卡牌字段都是稳定 id，整数化只发生在目录内部（技能表与分类侧表）。
 - 按用途选池：英雄技能查询（视图、光环、战斗开始、首次刷新、回合开始与主动技能）只读 `catalog.heroes`；商店、卡池、三连、发现与棋盘随从只读 `catalog.cards`。两池同名同 id，任何路径不得跨池回落。
 
 ### 3.3 筛选与匹配
@@ -151,9 +156,9 @@ impl Taxonomy {
 | `subtype` / `id` / `type` | 保持既有语义 |
 | `keyword` / `other` | 由调用方单独处理 |
 
-- 筛选键集合如上表，不含部落类键。
-- 筛选事实由 `CardFacts` 提供：只查 `catalog.cards`，`playstyle` 读 `play:` 归属；查不到时不匹配。
-- `timesIf` 结构为 `{ key, value: Option<String>, times }`，写作 `<键>:<值>:<次数>`（如 `timesIf=playstyle:mammal:2`、`timesIf=taxon:hominidae:2`）。
+- 筛选键集合如上表，不含部落类键；`Filter.key` / `TimesIf.key` 是 `FilterKey` 枚举，未知键在解析期即报错。
+- 筛选事实由 `CardFacts` 提供：只查 `catalog.cards`，`playstyle` / `prey` / `host` / `taxon` 读 `CardFilterFacts` 的位掩码与整数下标；查不到时不匹配。
+- `timesIf` 结构为 `{ key: FilterKey, value: String, times }`，写作 `<键>:<值>:<次数>`（如 `timesIf=playstyle:mammal:2`、`timesIf=taxon:hominidae:2`），取值必填。
 - `condition` 与 `when` 复用同一套筛选键与匹配口径；选择器多个筛选并列表示同时满足。
 
 ### 3.4 卡池与候选
@@ -320,7 +325,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 - 光环只经 `fold_auras` 折叠进克隆：把 `state.auras` 的派生值写入克隆的 `aura` 层并保留「光环失效不致死」的夹紧，持久实例的 `aura` 层始终为 0。
 - `state.auras` 由引擎在固定时机重算：`recompute_auras` 全量扫描全部未出局座位并整体替换，用于开局、回合开始、招募结束（`Engine::finish_recruit`）与结算（`Engine::resolve_settle`）；`recompute_auras_for(seat)` 只重算单个座位，供 `Engine::apply` 在每条意图成功后调用——移除并重建该座位棋盘的条目，同时清理已不在任何未出局玩家棋盘上的陈旧条目，结果与全量重算一致。
 - `hash.rs` 编码 `stats` 各分量（含 `current`）；编码变化会改变状态哈希，同代码重放仍保持确定。
-- 关键词仍按原字符串编码：`hash.rs` 对光环 `keywords` 与随从 `granted` 逐条写入关键词原文。战斗内部的 `KeywordSet` 位图只用于判定与层数累加，不参与状态哈希，因此关键词位图化不改变既有日志与黄金基线的哈希。
+- 关键词编码：光环关键词存 `KeywordSet` 位图，`hash.rs` 经 `names()` 输出排序后的原文逐条写入；随从的 `granted` 仍按 `(关键词原文, 时长)` 逐条写入。战斗内部的位图判定与层数累加不改变哈希口径，因此关键词位图化不改变既有日志与黄金基线的哈希。
 
 ### 10.1 伤害来源与击杀归属
 

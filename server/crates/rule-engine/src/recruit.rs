@@ -859,18 +859,19 @@ pub(crate) fn check_hero_power(
             format!("英雄卡 {hero_id} 不在英雄目录中"),
         )
     })?;
-    if !hero.skills.iter().any(|known| known == skill_id) {
+    let Some(skill_ref) = engine.catalog.skill_id(skill_id) else {
+        return Err(Reject::new(
+            RejectCode::HeroPowerLimit,
+            format!("技能 {skill_id} 不在目录中"),
+        ));
+    };
+    if !hero.skills.contains(&skill_ref) {
         return Err(Reject::new(
             RejectCode::HeroPowerLimit,
             format!("技能 {skill_id} 不属于英雄 {hero_id}"),
         ));
     }
-    let skill = engine.catalog.skills.get(skill_id).ok_or_else(|| {
-        Reject::new(
-            RejectCode::HeroPowerLimit,
-            format!("技能 {skill_id} 不在目录中"),
-        )
-    })?;
+    let skill = engine.catalog.skill(skill_ref);
     let cost = skill.cost.ok_or_else(|| {
         Reject::new(
             RejectCode::NotActiveSkill,
@@ -922,8 +923,7 @@ fn use_hero_power(
     let player = player(state, seat).expect("check_hero_power 已保证座位存在");
     let cost = engine
         .catalog
-        .skills
-        .get(skill_id)
+        .skill_by_name(skill_id)
         .expect("check_hero_power 已保证技能在目录中")
         .cost
         .expect("check_hero_power 已保证技能是主动技能");

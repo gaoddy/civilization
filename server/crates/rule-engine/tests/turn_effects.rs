@@ -24,17 +24,13 @@ fn add_card(
 ) {
     let (level, attack, health) = stats;
     let (keyword, effects) = skill;
-    let skill_id = format!("{id}-skill");
-    catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: keyword.map(str::to_string),
-            effects: effects_of(effects),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = catalog.insert_skill(Skill {
+        id: format!("{id}-skill"),
+        keyword: keyword.map(str::to_string),
+        effects: effects_of(effects),
+        cost: None,
+        uses_per_turn: None,
+    });
     catalog.cards.insert(
         id.to_string(),
         Card {
@@ -438,13 +434,17 @@ fn first_refresh_reads_hero_pool() {
     state.players[0].first_refresh_used = false;
     state.players[0].first_refresh_pending = true;
     // 从同名随从卡移除首次刷新技能，英雄池保留。
+    let observation = engine
+        .catalog
+        .skill_id("observation")
+        .expect("首次刷新技能应存在");
     engine
         .catalog
         .cards
         .get_mut("galileo")
         .expect("伽利略随从卡应存在")
         .skills
-        .retain(|skill| skill != "observation");
+        .retain(|skill| *skill != observation);
 
     engine
         .apply(&mut state, 0, Intent::RerollShop)

@@ -318,7 +318,7 @@ impl Engine {
     ///
     /// 与 `effects_of` 的过滤口径一致：只取该时机、且招募阶段的 `OnPlay` 不含敌方选择器。
     pub(crate) fn skill_effects_of(&self, skill_id: &str, trigger: Trigger) -> Vec<Effect> {
-        let Some(skill) = self.catalog.skills.get(skill_id) else {
+        let Some(skill) = self.catalog.skill_by_name(skill_id) else {
             return Vec::new();
         };
         skill
@@ -330,11 +330,22 @@ impl Engine {
             .collect()
     }
 
-    fn skill_effects(&self, skills: &[String], trigger: Trigger) -> Vec<Effect> {
-        skills
-            .iter()
-            .flat_map(|skill_id| self.skill_effects_of(skill_id, trigger))
-            .collect()
+    fn skill_effects(&self, skills: &[crate::data::SkillId], trigger: Trigger) -> Vec<Effect> {
+        let mut effects = Vec::new();
+        for skill_id in skills {
+            effects.extend(
+                self.catalog
+                    .skill(*skill_id)
+                    .effects
+                    .iter()
+                    .filter(|effect| effect.trigger == trigger)
+                    .filter(|effect| {
+                        !(trigger == Trigger::OnPlay && is_enemy_selector(&effect.selector))
+                    })
+                    .cloned(),
+            );
+        }
+        effects
     }
 
     pub(crate) fn run_card_effects(
@@ -618,9 +629,10 @@ impl Engine {
         };
         card.skills.iter().any(|skill_id| {
             self.catalog
-                .skills
-                .get(skill_id)
-                .is_some_and(|skill| skill.effects.iter().any(|effect| effect.trigger == trigger))
+                .skill(*skill_id)
+                .effects
+                .iter()
+                .any(|effect| effect.trigger == trigger)
         })
     }
 
@@ -1420,9 +1432,7 @@ impl Engine {
         };
         let mut effects = Vec::new();
         for skill_id in &card.skills {
-            let Some(skill) = self.catalog.skills.get(skill_id) else {
-                continue;
-            };
+            let skill = self.catalog.skill(*skill_id);
             if let Some(skip) = skip_keyword
                 && skill.keyword.as_deref() == Some(skip)
             {
@@ -2371,9 +2381,7 @@ impl Engine {
         };
         let mut effects = Vec::new();
         for skill_id in &card.skills {
-            let Some(skill) = self.catalog.skills.get(skill_id) else {
-                continue;
-            };
+            let skill = self.catalog.skill(*skill_id);
             if let Some(skip) = skip_keyword
                 && skill.keyword.as_deref() == Some(skip)
             {
@@ -2572,7 +2580,7 @@ impl Engine {
 /// 统计每个「触发 × 动作」组合被多少段效果使用；总和应等于数据中的效果段数。
 pub fn effect_coverage(catalog: &Catalog) -> BTreeMap<(Trigger, Op), usize> {
     let mut coverage = BTreeMap::new();
-    for skill in catalog.skills.values() {
+    for skill in catalog.skills() {
         for effect in &skill.effects {
             *coverage.entry((effect.trigger, effect.op)).or_insert(0) += 1;
         }
@@ -2696,10 +2704,9 @@ fn is_enemy_selector(selector: &Selector) -> bool {
 
 /// 筛选与 `timesIf` 需要的卡牌事实。
 ///
-/// 玩法归属与捕食/寄生分类在加载期预计算成位掩码与整数下标；衍生物与非池卡
-/// 同样在 `catalog.cards` 中。查不到时返回 `None`。
+/// 分类节点、玩法归属与捕食/寄生分类在加载期预计算成整数下标与位掩码；
+/// 衍生物与非池卡同样在 `catalog.cards` 中。查不到时返回 `None`。
 struct CardFacts<'a> {
-    taxon: &'a str,
     filter: std::borrow::Cow<'a, CardFilterFacts>,
     subtype: Option<&'a str>,
     id: &'a str,
@@ -2710,7 +2717,14 @@ impl CardFacts<'_> {
     /// 按筛选键匹配；`keyword` / `other` 由调用方单独处理。
     fn matches(&self, catalog: &Catalog, key: FilterKey, value: &str) -> bool {
         match key {
-            FilterKey::Taxon => catalog.taxonomy.is_within(self.taxon, value),
+            FilterKey::Taxon => {
+                let Some(node) = catalog.taxonomy.node_id(value) else {
+                    return false;
+                };
+                self.filter
+                    .taxon
+                    .is_some_and(|taxon| catalog.taxonomy.is_within_id(taxon, node))
+            }
             // `playstyle` 与 `play` 同口径：任一条 `play:` 命中即可。
             FilterKey::Playstyle | FilterKey::Play => {
                 play_bit(value).is_some_and(|bit| self.filter.play_mask & bit != 0)
@@ -2742,7 +2756,6 @@ impl CardFacts<'_> {
 fn card_facts<'a>(catalog: &'a Catalog, card_id: &str) -> Option<CardFacts<'a>> {
     let card = catalog.cards.get(card_id)?;
     Some(CardFacts {
-        taxon: &card.taxon,
         filter: catalog.filter_facts(card_id)?,
         subtype: card.subtype.as_deref(),
         id: &card.id,

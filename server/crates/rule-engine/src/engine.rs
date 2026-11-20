@@ -279,12 +279,7 @@ impl Engine {
         };
         let mut total = 0i32;
         for skill_id in &card.skills {
-            let Some(keyword) = self
-                .catalog
-                .skills
-                .get(skill_id)
-                .and_then(|skill| skill.keyword.as_deref())
-            else {
+            let Some(keyword) = self.catalog.skill(*skill_id).keyword.as_deref() else {
                 continue;
             };
             let Some(rest) = keyword.strip_prefix("breed") else {
@@ -366,11 +361,7 @@ impl Engine {
             .get(card_id)
             .map(|card| {
                 card.skills.iter().any(|skill_id| {
-                    self.catalog
-                        .skills
-                        .get(skill_id)
-                        .and_then(|skill| skill.keyword.as_deref())
-                        == Some(keyword)
+                    self.catalog.skill(*skill_id).keyword.as_deref() == Some(keyword)
                 })
             })
             .unwrap_or(false)

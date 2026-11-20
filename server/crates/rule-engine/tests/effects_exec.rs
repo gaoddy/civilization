@@ -27,17 +27,13 @@ fn board_target(id: u64) -> TargetRef {
 fn add_card(engine: &mut Engine, id: &str, attack: i32, health: i32, keywords: &[&str]) {
     let mut skill_ids = Vec::new();
     for (index, keyword) in keywords.iter().enumerate() {
-        let skill_id = format!("{id}-skill-{index}");
-        engine.catalog.skills.insert(
-            skill_id.clone(),
-            Skill {
-                id: skill_id.clone(),
-                keyword: Some((*keyword).to_string()),
-                effects: Vec::new(),
-                cost: None,
-                uses_per_turn: None,
-            },
-        );
+        let skill_id = engine.catalog.insert_skill(Skill {
+            id: format!("{id}-skill-{index}"),
+            keyword: Some((*keyword).to_string()),
+            effects: Vec::new(),
+            cost: None,
+            uses_per_turn: None,
+        });
         skill_ids.push(skill_id);
     }
     engine.catalog.cards.insert(
@@ -70,17 +66,13 @@ fn add_effect_card(
 ) {
     add_card(engine, id, attack, health, keywords);
     for (index, raw) in effects.iter().enumerate() {
-        let skill_id = format!("{id}-effect-{index}");
-        engine.catalog.skills.insert(
-            skill_id.clone(),
-            Skill {
-                id: skill_id.clone(),
-                keyword: None,
-                effects: effects_of(raw),
-                cost: None,
-                uses_per_turn: None,
-            },
-        );
+        let skill_id = engine.catalog.insert_skill(Skill {
+            id: format!("{id}-effect-{index}"),
+            keyword: None,
+            effects: effects_of(raw),
+            cost: None,
+            uses_per_turn: None,
+        });
         engine
             .catalog
             .cards

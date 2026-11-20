@@ -130,6 +130,11 @@ impl Taxonomy {
         let (Some(&leaf), Some(&ancestor)) = (self.ids.get(leaf), self.ids.get(ancestor)) else {
             return false;
         };
+        self.is_within_id(leaf, ancestor)
+    }
+
+    /// 整数下标的祖先匹配；供加载期预计算过节点下标的调用方复用。
+    pub fn is_within_id(&self, leaf: u16, ancestor: u16) -> bool {
         let mut current = Some(leaf);
         for _ in 0..=5 {
             match current {

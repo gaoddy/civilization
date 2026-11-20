@@ -9,7 +9,7 @@ fn loads_all_committed_data() {
     let catalog = test_catalog();
     assert_eq!(catalog.cards.len(), 432);
     assert_eq!(catalog.heroes.len(), 32);
-    assert_eq!(catalog.skills.len(), 254);
+    assert_eq!(catalog.skills().len(), 254);
     assert_eq!(
         catalog
             .cards
@@ -159,11 +159,13 @@ fn every_card_skill_exists() {
     let catalog = test_catalog();
     for card in catalog.cards.values() {
         for skill in &card.skills {
-            assert!(
-                catalog.skills.contains_key(skill),
+            let name = catalog.skill_name(*skill);
+            assert_eq!(
+                catalog.skill_id(name),
+                Some(*skill),
                 "{} -> {}",
                 card.id,
-                skill
+                name
             );
         }
     }
@@ -252,13 +254,15 @@ fn rejects_invalid_summon_and_discover() {
 #[test]
 fn committed_data_is_structured() {
     let catalog = test_catalog();
-    let skill = catalog.skills.get("division-of-labor").expect("技能存在");
+    let skill = catalog
+        .skill_by_name("division-of-labor")
+        .expect("技能存在");
     assert_eq!(skill.effects.len(), 1);
     assert_eq!(skill.effects[0].trigger, Trigger::OnActivate);
     assert!(
         catalog
-            .skills
-            .values()
+            .skills()
+            .iter()
             .all(|skill| validate_effects(&skill.effects).is_ok())
     );
 }

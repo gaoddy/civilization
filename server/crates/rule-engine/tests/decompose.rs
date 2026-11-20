@@ -34,17 +34,13 @@ fn add_card_at(
 ) {
     let mut skill_ids = Vec::new();
     for (index, (keyword, effects)) in skills.iter().enumerate() {
-        let skill_id = format!("{id}-skill-{index}");
-        engine.catalog.skills.insert(
-            skill_id.clone(),
-            Skill {
-                id: skill_id.clone(),
-                keyword: keyword.map(str::to_string),
-                effects: effects_of(effects),
-                cost: None,
-                uses_per_turn: None,
-            },
-        );
+        let skill_id = engine.catalog.insert_skill(Skill {
+            id: format!("{id}-skill-{index}"),
+            keyword: keyword.map(str::to_string),
+            effects: effects_of(effects),
+            cost: None,
+            uses_per_turn: None,
+        });
         skill_ids.push(skill_id);
     }
     engine.catalog.cards.insert(

@@ -35,19 +35,13 @@ fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, heal
 
 /// 插入一张带 +1/+1 友方光环的合成随从卡。
 fn add_aura_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, health: i32) {
-    let skill_id = format!("{id}-aura");
-    catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: None,
-            effects: effects_of(
-                "Aura|ModifyStats|friendly:all|attack=1,health=1,duration=permanent",
-            ),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = catalog.insert_skill(Skill {
+        id: format!("{id}-aura"),
+        keyword: None,
+        effects: effects_of("Aura|ModifyStats|friendly:all|attack=1,health=1,duration=permanent"),
+        cost: None,
+        uses_per_turn: None,
+    });
     add_minion_card(catalog, id, level, attack, health);
     catalog
         .cards
@@ -66,17 +60,13 @@ fn add_keyword_card(
     health: i32,
     keyword: &str,
 ) {
-    let skill_id = format!("{id}-keyword");
-    catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: Some(keyword.to_string()),
-            effects: effects_of("[]"),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = catalog.insert_skill(Skill {
+        id: format!("{id}-keyword"),
+        keyword: Some(keyword.to_string()),
+        effects: effects_of("[]"),
+        cost: None,
+        uses_per_turn: None,
+    });
     catalog.cards.insert(
         id.to_string(),
         Card {
@@ -602,17 +592,13 @@ fn delayed_battlecry_runs_once_across_combats() {
     add_minion_card(&mut engine.catalog, "delayed", 1, 0, 5);
     add_minion_card(&mut engine.catalog, "tank", 1, 0, 3);
     // 敌方选择器的 OnPlay：招募阶段不结算，延迟到战斗开始。
-    let skill_id = "delayed-battlecry".to_string();
-    engine.catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: Some("battlecry".to_string()),
-            effects: effects_of("OnPlay|DealDamage|enemy:all|amount=3"),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = engine.catalog.insert_skill(Skill {
+        id: "delayed-battlecry".to_string(),
+        keyword: Some("battlecry".to_string()),
+        effects: effects_of("OnPlay|DealDamage|enemy:all|amount=3"),
+        cost: None,
+        uses_per_turn: None,
+    });
     engine
         .catalog
         .cards
