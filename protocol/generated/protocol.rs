@@ -1754,6 +1754,7 @@ impl ::std::convert::From<ErrorMessage> for Error {
 ///    "CARD_NOT_IN_HAND",
 ///    "HERO_NOT_SELECTED",
 ///    "HERO_POWER_LIMIT",
+///    "NOT_ACTIVE_SKILL",
 ///    "INVALID_CHOICE",
 ///    "NO_VALID_TARGET",
 ///    "TARGET_NOT_ALLOWED",
@@ -1818,6 +1819,8 @@ pub enum ErrorCode {
     HeroNotSelected,
     #[serde(rename = "HERO_POWER_LIMIT")]
     HeroPowerLimit,
+    #[serde(rename = "NOT_ACTIVE_SKILL")]
+    NotActiveSkill,
     #[serde(rename = "INVALID_CHOICE")]
     InvalidChoice,
     #[serde(rename = "NO_VALID_TARGET")]
@@ -1894,6 +1897,7 @@ impl ::std::fmt::Display for ErrorCode {
             Self::CardNotInHand => f.write_str("CARD_NOT_IN_HAND"),
             Self::HeroNotSelected => f.write_str("HERO_NOT_SELECTED"),
             Self::HeroPowerLimit => f.write_str("HERO_POWER_LIMIT"),
+            Self::NotActiveSkill => f.write_str("NOT_ACTIVE_SKILL"),
             Self::InvalidChoice => f.write_str("INVALID_CHOICE"),
             Self::NoValidTarget => f.write_str("NO_VALID_TARGET"),
             Self::TargetNotAllowed => f.write_str("TARGET_NOT_ALLOWED"),
@@ -1941,6 +1945,7 @@ impl ::std::str::FromStr for ErrorCode {
             "CARD_NOT_IN_HAND" => Ok(Self::CardNotInHand),
             "HERO_NOT_SELECTED" => Ok(Self::HeroNotSelected),
             "HERO_POWER_LIMIT" => Ok(Self::HeroPowerLimit),
+            "NOT_ACTIVE_SKILL" => Ok(Self::NotActiveSkill),
             "INVALID_CHOICE" => Ok(Self::InvalidChoice),
             "NO_VALID_TARGET" => Ok(Self::NoValidTarget),
             "TARGET_NOT_ALLOWED" => Ok(Self::TargetNotAllowed),
