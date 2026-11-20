@@ -183,6 +183,11 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 2026-11-20 第十八次重定：玩家状态新增 `froze_this_turn`（解冻只在冻结的当回合
 /// 可用），状态哈希为每名玩家多写一个布尔值；机器人不冻结，行为不变，但本批次
 /// 20 局哈希全部改变。
+///
+/// 2026-11-20 第十九次重定：卡牌玩法归属从单值 `playstyle` 迁移为多值
+/// `categories`，学者与工具卡按 `play:machine` 等额外归属进入更多玩法卡池，
+/// 效果牌也按指派后的玩法进入商店；AI 的主导玩法改为逐条 `play:` 计数，
+/// 定向效果牌购买与随机流消耗随之改变。本批次 20 局哈希全部改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

@@ -1859,21 +1859,24 @@ fn target_pending_pool_includes_self() {
 fn target_pending_skipped_when_filtered_pool_empty() {
     let (mut engine, mut state) = turn_started(54);
     // 战吼筛「机械」，己方棋盘没有机械，入场后池仍为空。
-    // archimedes 自身带 play:machine；先从测试目录里换成非机械归属，
-    // 才保留「来源自身不计入目标池」的空池场景。
-    let archimedes = engine
+    // 用专用夹具卡（同名战吼、仅哺乳归属）保留「来源自身不计入目标池」的场景，
+    // 不改写真实 archimedes 的 categories。
+    let mut fixture = engine
         .catalog
         .cards
-        .get_mut("archimedes")
-        .expect("archimedes 应存在");
-    archimedes.categories = vec![Category {
+        .get("archimedes")
+        .expect("archimedes 应存在")
+        .clone();
+    fixture.id = "nonmachine-mech-growth-battler".to_string();
+    fixture.categories = vec![Category {
         kind: CategoryKind::Play,
         value: "mammal".to_string(),
     }];
+    engine.catalog.cards.insert(fixture.id.clone(), fixture);
     state.players[0].hand.push(HandCard::Minion(minion(
         &engine.catalog,
         9_000,
-        "archimedes",
+        "nonmachine-mech-growth-battler",
     )));
 
     engine

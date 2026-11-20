@@ -54,6 +54,22 @@ fn add_card(
     );
 }
 
+/// 往目录里插入一张多玩法合成随从卡；卡片同时带每条 `play:` 归属。
+fn add_card_with_plays(
+    catalog: &mut Catalog,
+    id: &str,
+    playstyles: &[Playstyle],
+    stats: (u8, i32, i32),
+    skill: (Option<&str>, &str),
+) {
+    add_card(catalog, id, playstyles[0], stats, skill);
+    let mut categories = Vec::new();
+    for playstyle in playstyles {
+        categories.extend(categories_for(*playstyle));
+    }
+    catalog.cards.get_mut(id).expect("刚插入的卡").categories = categories;
+}
+
 /// 在真实 v0.1 数据上追加测试专用的确定性卡牌。
 fn catalog_with_synthetics() -> Catalog {
     let mut catalog = test_catalog();
@@ -1179,6 +1195,92 @@ fn salvage_pool_follows_carrier_playstyle() {
     assert!(
         card_has_play(card, "mammal"),
         "随机池应跟随载体随从的玩法，而不是写死机械"
+    );
+}
+
+#[test]
+fn salvage_pool_unions_all_carrier_playstyles() {
+    // 载体同时带 play:machine 与 play:mammal；取池按并集，机械专属与哺乳专属
+    // 随从都应进入候选，而不是只取两条玩法都命中的交集。
+    let mut catalog = catalog_with_synthetics();
+    add_card_with_plays(
+        &mut catalog,
+        "multi-salvager",
+        &[Playstyle::Machine, Playstyle::Mammal],
+        (1, 1, 1),
+        (None, "OnDeath|Salvage|self|pool=playstyle,count=4"),
+    );
+    add_card_with_plays(
+        &mut catalog,
+        "machine-only",
+        &[Playstyle::Machine],
+        (1, 1, 1),
+        (None, "[]"),
+    );
+    add_card_with_plays(
+        &mut catalog,
+        "mammal-only",
+        &[Playstyle::Mammal],
+        (1, 1, 1),
+        (None, "[]"),
+    );
+    add_card_with_plays(
+        &mut catalog,
+        "bird-only",
+        &[Playstyle::Bird],
+        (1, 1, 1),
+        (None, "[]"),
+    );
+    catalog.cards.retain(|id, _| {
+        matches!(
+            id.as_str(),
+            "multi-salvager" | "machine-only" | "mammal-only" | "bird-only" | "killer"
+        )
+    });
+    // 防守方改为未启用的鸟纲，避免它作为机械随从进入取池。
+    catalog
+        .cards
+        .get_mut("killer")
+        .expect("killer 存在")
+        .categories = categories_for(Playstyle::Bird);
+
+    let (engine, _) = Engine::new(catalog, [3; 32], test_playstyles());
+    let attacker = vec![MinionInstance::new(
+        &engine.catalog,
+        1,
+        "multi-salvager",
+        false,
+    )];
+    let defender = vec![MinionInstance::new(&engine.catalog, 2, "killer", false)];
+    let mut rng = RngStreams::from_seed([3; 32]);
+    let mut playstyles = machine_playstyles();
+    playstyles.insert(Playstyle::Mammal);
+    let log = combat::simulate_with(
+        &engine,
+        &attacker,
+        &defender,
+        0,
+        1,
+        0,
+        &mut rng,
+        CombatSetup {
+            attacker_hand: 0,
+            defender_hand: 0,
+            hand_slots: 10,
+            playstyles: Some(&playstyles),
+            ..CombatSetup::default()
+        },
+    );
+
+    let got: BTreeSet<&str> = log
+        .hand_copies
+        .iter()
+        .map(|copy| copy.card_id.as_str())
+        .collect();
+    assert_eq!(
+        got,
+        BTreeSet::from(["multi-salvager", "machine-only", "mammal-only"]),
+        "并集应同时包含机械专属与哺乳专属随从，且排除未命中玩法的鸟纲随从"
     );
 }
 

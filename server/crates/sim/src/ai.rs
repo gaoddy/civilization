@@ -749,6 +749,130 @@ mod tests {
     }
 
     #[test]
+    fn dominant_playstyle_counts_every_play_category() {
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        // agi 同时带 play:mammal 与 play:machine，各计 1 次；并列时取声明顺序靠前者。
+        assert_eq!(dominant_playstyle(["agi"], &catalog), Playstyle::Mammal);
+        // agi 的 machine 与 nanobot 的 machine 合计 2 次，压过 mammal 的 1 次。
+        assert_eq!(
+            dominant_playstyle(["agi", "nanobot"], &catalog),
+            Playstyle::Machine
+        );
+        // agi 的 mammal 与 saman 的 mammal 合计 2 次。
+        assert_eq!(
+            dominant_playstyle(["agi", "saman"], &catalog),
+            Playstyle::Mammal
+        );
+        assert_eq!(
+            dominant_playstyle(std::iter::empty(), &catalog),
+            Playstyle::Neutral
+        );
+    }
+
+    #[test]
+    fn dominant_playstyle_skips_cards_without_play() {
+        let mut catalog = embedded_catalog().expect("内置卡表应能加载");
+        let mut card = catalog.cards.get("saman").expect("saman 存在").clone();
+        card.id = "no-play".to_string();
+        card.categories.clear();
+        catalog.cards.insert(card.id.clone(), card);
+        assert_eq!(
+            dominant_playstyle(["no-play"], &catalog),
+            Playstyle::Neutral
+        );
+    }
+
+    #[test]
+    fn effect_matches_playstyle_uses_any_play_category() {
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        // faraday-cage 带 play:reptile 与 play:machine。
+        let faraday = catalog
+            .cards
+            .get("faraday-cage")
+            .expect("faraday-cage 存在");
+        assert!(effect_matches_playstyle(faraday, Playstyle::Machine));
+        assert!(effect_matches_playstyle(faraday, Playstyle::Reptile));
+        assert!(!effect_matches_playstyle(faraday, Playstyle::Mammal));
+        // 没有主导玩法时始终可买。
+        assert!(effect_matches_playstyle(faraday, Playstyle::Neutral));
+
+        // aolinpike-jidian 带 play:mammal 与 play:plant。
+        let aolinpike = catalog
+            .cards
+            .get("aolinpike-jidian")
+            .expect("aolinpike-jidian 存在");
+        assert!(effect_matches_playstyle(aolinpike, Playstyle::Mammal));
+        assert!(effect_matches_playstyle(aolinpike, Playstyle::Plant));
+        assert!(!effect_matches_playstyle(aolinpike, Playstyle::Machine));
+    }
+
+    #[test]
+    fn effect_without_play_is_buyable_defensively() {
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        let mut card = catalog
+            .cards
+            .get("faraday-cage")
+            .expect("faraday-cage 存在")
+            .clone();
+        card.categories.clear();
+        assert!(
+            effect_matches_playstyle(&card, Playstyle::Machine),
+            "没有 play: 的效果牌按可买处理"
+        );
+    }
+
+    #[test]
+    fn buy_accepts_effect_card_matching_any_dominant_play() {
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        let (_, mut state) =
+            Engine::new(catalog.clone(), [7; 32], rule_engine::playstyles::draw(7));
+        state.phase = Phase::Recruit;
+        state.turn = 1;
+        let player = &mut state.players[0];
+        player.board = vec![
+            MinionInstance::new(&catalog, 1, "nanobot", false),
+            MinionInstance::new(&catalog, 2, "agi", false),
+        ];
+        player.gold = 10;
+        player.shop = vec![Some(rule_engine::state::ShopSlot {
+            instance_id: 10,
+            card_id: "faraday-cage".into(),
+            frozen: false,
+        })];
+        assert_eq!(
+            choose_buy(&state, &state.players[0], &catalog),
+            Some(Intent::BuyMinion { slot: 0 }),
+            "机械主导时可买带 play:machine 的跨玩法效果牌"
+        );
+
+        state.players[0].board = vec![
+            MinionInstance::new(&catalog, 3, "saman", false),
+            MinionInstance::new(&catalog, 4, "agi", false),
+        ];
+        state.players[0].shop = vec![Some(rule_engine::state::ShopSlot {
+            instance_id: 11,
+            card_id: "aolinpike-jidian".into(),
+            frozen: false,
+        })];
+        assert_eq!(
+            choose_buy(&state, &state.players[0], &catalog),
+            Some(Intent::BuyMinion { slot: 0 }),
+            "哺乳纲主导时可买带 play:mammal 的跨玩法效果牌"
+        );
+
+        state.players[0].shop = vec![Some(rule_engine::state::ShopSlot {
+            instance_id: 12,
+            card_id: "faraday-cage".into(),
+            frozen: false,
+        })];
+        assert_eq!(
+            choose_buy(&state, &state.players[0], &catalog),
+            None,
+            "哺乳纲主导时不买只有爬行纲/机械归属的效果牌"
+        );
+    }
+
+    #[test]
     fn buy_skips_targeted_effect_of_other_playstyle() {
         let catalog = embedded_catalog().expect("内置卡表应能加载");
         let (_, mut state) =

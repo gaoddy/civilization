@@ -7,6 +7,7 @@ use std::collections::BTreeSet;
 use common::{effects_of, place, setup, test_catalog};
 use rule_engine::data::{
     Card, CardType, Catalog, Category, CategoryKind, Era, Playstyle, Token, card_in_pool,
+    hero_in_pool,
 };
 use rule_engine::effects::{Effect, EffectCtx};
 use rule_engine::engine::Engine;
@@ -155,6 +156,46 @@ fn scholar_enters_pool_by_play_association() {
     ]);
     assert!(card_in_pool(agi, &with_machine), "学者按 play: 进池");
     assert!(!card_in_pool(agi, &without), "未命中 play: 时不进池");
+}
+
+#[test]
+fn hero_pool_documents_playstyles_without_direct_heroes() {
+    // 真实英雄数据当前只覆盖 10 个玩法：真菌、细菌、原生生物没有直接归属英雄。
+    // 房间层依赖 `assign_candidates` 在过滤后池为空时回退全部英雄（32 张，见
+    // room-service 的 `empty_filtered_pool_falls_back_to_all_heroes`）。本用例
+    // 固定这一数据事实；后续若为这三个玩法补英雄，应随数据一并更新。
+    let catalog = test_catalog();
+    let direct = |playstyle: Playstyle| {
+        let enabled = BTreeSet::from([playstyle]);
+        catalog
+            .heroes
+            .values()
+            .filter(|hero| hero_in_pool(hero, &enabled))
+            .count()
+    };
+
+    for playstyle in [Playstyle::Fungus, Playstyle::Bacteria, Playstyle::Protozoa] {
+        assert_eq!(
+            direct(playstyle),
+            0,
+            "{} 目前没有直接归属英雄，房间层依赖回退",
+            playstyle.id()
+        );
+    }
+    for playstyle in Playstyle::ALL {
+        if matches!(
+            playstyle,
+            Playstyle::Fungus | Playstyle::Bacteria | Playstyle::Protozoa
+        ) {
+            continue;
+        }
+        assert!(
+            direct(playstyle) > 0,
+            "{} 应至少有一张直接归属英雄",
+            playstyle.id()
+        );
+    }
+    assert_eq!(catalog.heroes.len(), 32, "回退池为全部英雄卡");
 }
 
 // ---------------------------------------------------------------------------
@@ -470,6 +511,59 @@ fn play_and_playstyle_filters_match_any_play_category() {
         None,
     );
     assert_eq!(state.players[0].board[0].stats.attack.growth, 2);
+}
+
+#[test]
+fn scholar_with_play_machine_matches_any_machine_filter() {
+    // agi 是学者，同时带 play:mammal 与 play:machine；两条玩法筛选都应命中它。
+    let (mut engine, mut state) = setup(1);
+    place(&engine.catalog, &mut state, 0, 1, "agi");
+
+    engine.apply_op(
+        &mut state,
+        &effect("OnActivate|Growth|friendly:all:playstyle=machine|times=1"),
+        &ctx(0),
+        None,
+    );
+    engine.apply_op(
+        &mut state,
+        &effect("OnActivate|Growth|friendly:all:playstyle=mammal|times=1"),
+        &ctx(0),
+        None,
+    );
+    // 学者成长只加生命。
+    assert_eq!(
+        state.players[0].board[0].stats.health.growth, 2,
+        "机械与哺乳纲两条筛选都应命中多玩法学者"
+    );
+}
+
+#[test]
+fn multi_play_minion_matches_each_play_filter_independently() {
+    let (mut engine, mut state) = setup(1);
+    // aolinpike-jidian 是效果牌，不能上棋盘；agi 同时带 mammal/machine。
+    place(&engine.catalog, &mut state, 0, 1, "agi");
+    place(&engine.catalog, &mut state, 0, 2, "clownfish"); // play:fish
+
+    engine.apply_op(
+        &mut state,
+        &effect("OnActivate|Growth|friendly:all:play=machine|times=1"),
+        &ctx(0),
+        None,
+    );
+    assert_eq!(state.players[0].board[0].stats.health.growth, 1);
+    assert_eq!(
+        state.players[0].board[1].stats.health.growth, 0,
+        "只命中带 play:machine 的随从"
+    );
+
+    engine.apply_op(
+        &mut state,
+        &effect("OnActivate|Growth|friendly:all:play=fish|times=1"),
+        &ctx(0),
+        None,
+    );
+    assert_eq!(state.players[0].board[1].stats.health.growth, 1);
 }
 
 #[test]

@@ -95,7 +95,7 @@ pub struct GameStats {
     pub damage_per_loss: Vec<i32>,
     /// 冠军座位（排名第 1）。
     pub winner: Seat,
-    /// 冠军最终阵容的玩法（按随从 `playstyle` 统计）。
+    /// 冠军最终阵容的玩法（按随从 `categories` 的每条 `play:` 统计）。
     pub winner_playstyle: Playstyle,
 }
 
