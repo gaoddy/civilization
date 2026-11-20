@@ -382,6 +382,7 @@ func _ready() -> void:
     await _check_cover_art_inset()
     await _check_card_frame()
     await _check_stat_plate()
+    await _check_era_glyph()
     recruit.queue_free()
     _finish()
 
@@ -415,6 +416,18 @@ func _check_stat_plate() -> void:
             "数字应有描边",
         )
         plate.queue_free()
+
+
+## 时代象形：七个时代都能建，记录 id、按尺寸占位、不拦截鼠标。
+func _check_era_glyph() -> void:
+    for era in ["prehistoric", "primitive", "classical", "feudal", "industrial", "modern", "future"]:
+        var glyph := EraGlyph.create(era, 14)
+        add_child(glyph)
+        await get_tree().process_frame
+        _expect(glyph.era_id == era, "时代象形应记录 era id")
+        _expect(glyph.custom_minimum_size == Vector2(14, 14), "卡面象形应为 14×14")
+        _expect(glyph.mouse_filter == Control.MOUSE_FILTER_IGNORE, "象形不应拦截鼠标")
+        glyph.queue_free()
 
 
 ## 手牌介绍不被截断：信息区向上扩展，字号缩到能放下全文；介绍不压名称与角标。

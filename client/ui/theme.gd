@@ -198,6 +198,8 @@ const SCENARIO := {
 	"aim-outline-width": 2.0,
 	"aim-pulse": 1.2,
 	"aim-cross": 6.0,
+	"era-glyph-size": 14,
+	"era-glyph-size-detail": 24,
 }
 
 const PLAYSTYLE_COLOR := {
