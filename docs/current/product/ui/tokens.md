@@ -88,11 +88,11 @@
 | `card-info-compact-height` | 56 | 无介绍时的卡面信息区高度，只容纳名称与数值 |
 | `hand-card-overlap` | 32 | 手牌相邻卡的交叠宽度；槽位步进 = `card-width - hand-card-overlap` = 80，十张单行 |
 | `hand-hover-scale` | 1.12 | 手牌悬停放大倍数，以底边中点为轴；小数令牌用 `UITheme.factor` 读取，不要用 `metric` |
-| `gallery-toc-width` | 168 | 图鉴分类目录宽度 |
+| `gallery-toc-width` | 140 | 图鉴分类目录宽度；手机 120 |
 | `gallery-detail-width` | 280 | 图鉴常驻详情宽度 |
 | `gallery-preview-width` / `-height` | 200 / 260 | 图鉴详情卡面美术图尺寸；手机为 160 / 208 |
-| `gallery-page-size` | 40 | 图鉴每页卡面张数（5 列 × 8 行） |
-| `gallery-grid-columns` | 5 | 图鉴卡面网格列数 |
+| `gallery-page-size` | 18 | 图鉴每页卡面张数（6 列 × 3 行）；手机 8（4 列 × 2 行） |
+| `gallery-grid-columns` | 6 | 图鉴卡面网格列数；手机 4 |
 | `aim-arc-width` | 2.5 | 选目标弧线与角标的线宽 |
 | `aim-dash` / `aim-gap` | 10 / 6 | 弧线虚线段长与间隔 |
 | `aim-dot-radius` | 2.5 | 弧线上流动光点的半径 |

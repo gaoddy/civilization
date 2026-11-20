@@ -49,11 +49,20 @@ func _check_lobby_page() -> void:
         "章节按钮应为名称在上、计数在下，实际：%s" % (all_button.text if all_button != null else "无"),
     )
     var rows = instance.find_child("GalleryGridRows", true, false)
-    _expect(rows != null and rows.get_child_count() == 40, "首屏应只构建 40 张卡")
+    _expect(rows != null and rows.columns == 6, "图鉴网格应为 6 列")
+    _expect(rows != null and rows.get_child_count() == 18, "首屏应只构建 18 张卡")
+    _expect(instance.find_child("GalleryScroll", true, false) == null, "图鉴网格不应再有滚动容器")
+    if rows != null and rows.get_child_count() > 0:
+        var last_tile := rows.get_child(rows.get_child_count() - 1) as Control
+        _expect(
+            last_tile != null
+                and last_tile.get_global_rect().end.y <= instance.get_viewport_rect().size.y,
+            "18 张应在一屏内放下，不出现纵向滚动",
+        )
     var label = instance.find_child("GalleryPageLabel", true, false)
     _expect(
-        label != null and label.text == tr("ui.gallery.page") % [1, 11],
-        "432 张应按 40 张一页显示 1/11，实际：%s" % (label.text if label != null else "无"),
+        label != null and label.text == tr("ui.gallery.page") % [1, 24],
+        "432 张应按 18 张一页显示 1/24，实际：%s" % (label.text if label != null else "无"),
     )
     var detail_name = instance.find_child("GalleryDetailName", true, false)
     _expect(detail_name != null and detail_name.text != "", "首屏应常驻选中首张卡")
@@ -249,8 +258,8 @@ func _check_pagination() -> void:
         await _push_click(instance, next.get_global_rect().get_center())
     var label = instance.find_child("GalleryPageLabel", true, false)
     _expect(
-        label != null and label.text == tr("ui.gallery.page") % [2, 11],
-        "翻页后应显示 2/11，实际：%s" % (label.text if label != null else "无"),
+        label != null and label.text == tr("ui.gallery.page") % [2, 24],
+        "翻页后应显示 2/24，实际：%s" % (label.text if label != null else "无"),
     )
     var prev = instance.find_child("GalleryPrev", true, false)
     _expect(prev != null and not prev.disabled, "第二页「上一页」应可用")

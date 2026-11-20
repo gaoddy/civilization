@@ -11,7 +11,6 @@ var _selected := ""
 var _page := 0
 var _tiles: Array = []
 
-var _scroll: ScrollContainer
 var _grid: GridContainer
 var _empty: Label
 var _pager: HBoxContainer
@@ -24,23 +23,16 @@ func _init() -> void:
     name = "GalleryGrid"
     add_theme_constant_override("separation", UITheme.space("space-sm"))
 
-    _scroll = ScrollContainer.new()
-    _scroll.name = "GalleryScroll"
-    _scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    _scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-    add_child(_scroll)
-
     _grid = GridContainer.new()
     _grid.name = "GalleryGridRows"
     _grid.columns = UITheme.metric("gallery-grid-columns")
     if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
         _grid.columns = UITheme.metric("gallery-grid-columns-compact")
     _grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _grid.add_theme_constant_override("h_separation", UITheme.space("space-lg"))
     _grid.add_theme_constant_override("v_separation", UITheme.space("space-lg"))
-    _scroll.add_child(_grid)
+    add_child(_grid)
 
     _empty = UI.empty_hint(tr("ui.gallery.empty"))
     _empty.name = "GalleryEmpty"
@@ -96,11 +88,11 @@ func _rebuild() -> void:
     UI.clear(_grid)
     _tiles.clear()
     var total := _ids.size()
-    var page_size := maxi(1, UITheme.metric("gallery-page-size"))
+    var page_size := _page_size()
     var pages := int(ceil(float(total) / float(page_size))) if total > 0 else 0
     _page = clampi(_page, 0, maxi(pages - 1, 0))
 
-    _scroll.visible = total > 0
+    _grid.visible = total > 0
     _empty.visible = total == 0
     _pager.visible = total > 0
     if total == 0:
@@ -118,4 +110,11 @@ func _rebuild() -> void:
     _page_label.text = tr("ui.gallery.page") % [_page + 1, pages]
     _prev.disabled = _page <= 0
     _next.disabled = _page >= pages - 1
-    _scroll.scroll_vertical = 0
+
+
+## 每页张数：桌面 6 列 × 3 行，手机 4 列 × 2 行，与去掉滚动条后的可见行数一致。
+func _page_size() -> int:
+    var token := "gallery-page-size"
+    if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
+        token = "gallery-page-size-compact"
+    return maxi(1, UITheme.metric(token))
