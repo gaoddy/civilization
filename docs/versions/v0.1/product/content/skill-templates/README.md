@@ -44,7 +44,7 @@ template: on-death-summon(token=seedling,count=1)
 ---
 ```
 
-同一个模板按参数产生多个技能：「繁衍 1/2/3」「亡语召唤不同 Token 与数量」都是同模板不同参数。调平衡时只改实例参数，卡面文案随模板渲染，不再手改 `## 效果`。
+同一个模板按参数产生多个技能：「繁衍 1/2/3」「亡语召唤不同非池卡与数量」都是同模板不同参数。调平衡时只改实例参数，卡面文案随模板渲染，不再手改 `## 效果`。
 
 ## 2. 参数声明
 
@@ -52,8 +52,8 @@ template: on-death-summon(token=seedling,count=1)
 
 | 类型 | 取值 | 默认渲染 | 修饰符 |
 | --- | --- | --- | --- |
-| `token` | Token 注册表 id，查不到时回退卡牌 id | 展示名 | `.stats` → 攻/血 |
-| `card` | 卡牌 id | 卡牌名 | `.stats` → 攻/血 |
+| `token` | 非池卡（`in_shop_pool: false`）id | 展示名 | `.stats` → 攻/血 |
+| `card` | 进池卡（`in_shop_pool: true`）id | 卡牌名 | `.stats` → 攻/血 |
 | `taxon` | 分类节点 id | 卡面名词 | — |
 | `playstyle` | 玩法 id | 卡面名词 | — |
 | `scholar` | 固定 `true` | 学者 | — |
@@ -86,7 +86,7 @@ template: on-death-summon(token=seedling,count=1)
 
 | 前缀 | 含义 | 例 |
 | --- | --- | --- |
-| `on-play-` | 战吼 / 出场效果 | `on-play-stats-single-both`、`on-play-refresh-shop` |
+| `on-play-` | 战吼 / 出场效果 | `on-play-stats-single-both`、`on-play-refresh-shop`、`on-play-grant-minion` |
 | `on-death-` | 亡语与死亡触发 | `on-death-summon`、`on-death-summon-split` |
 | `on-activate-` | 主动技能 | `on-activate-refresh-shop`、`on-activate-gain-minion` |
 | `on-combat-start-` / `combatstart-` | 战斗开始时 | `combatstart-damage-all` |

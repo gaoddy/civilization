@@ -7,10 +7,10 @@
 
 ## 1. 目的、入口与返回
 
-- 目的：只读浏览卡牌与 Token 的完整信息，在随从视图按时代与玩法筛选，在英雄视图按英雄玩法筛选；不读取房间、对局或手牌状态。
+- 目的：只读浏览全部卡牌（含衍生物与生成卡等非池卡）的完整信息，在随从视图按时代与玩法筛选，在英雄视图按英雄玩法筛选；不读取房间、对局或手牌状态。
 - 入口：
-  - 大厅「卡牌图鉴」按钮，导航到 `scenes/gallery.tscn`，随从视图为全部卡牌（当前生成表 409 张卡 + 23 个 Token，共 432 项），英雄视图为 32 张英雄卡。
-  - 对局顶部工具条右侧的「图鉴」按钮，以全屏覆盖层 `GalleryOverlay` 叠在对局页上，不切换场景，随从视图只含本局卡池（按 `view.enabledFactions` 复算，排除 Token；默认夹具为 178 张），英雄视图只含本局玩法可用的英雄。
+  - 大厅「卡牌图鉴」按钮，导航到 `scenes/gallery.tscn`，随从视图为全部卡牌（当前 432 张，其中 24 张非池卡），英雄视图为 32 张英雄卡。
+  - 对局顶部工具条右侧的「图鉴」按钮，以全屏覆盖层 `GalleryOverlay` 叠在对局页上，不切换场景，随从视图只含本局卡池（按 `view.enabledFactions` 复算，排除非池卡；默认夹具为 177 张），英雄视图只含本局玩法可用的英雄。
 - 返回：大厅页点「返回大厅」或按 `Esc` 回大厅；对局覆盖层点「返回对局」或按 `Esc` 只收起覆盖层，对局状态与拖拽、待选、战斗演示全部保留。
 
 ## 2. 结构层级
@@ -70,21 +70,21 @@
 
 | 数据 | 来源 |
 | --- | --- |
-| 卡牌与 Token 展示表 | `CardDB.cards`（启动时合并 `generated/cards.json` 与 `tokens.json`） |
+| 卡牌展示表 | `CardDB.cards`（`generated/cards.json`，含非池卡与 `in_shop_pool`） |
 | 英雄展示表 | `CardDB.heroes`（`generated/heroes.json`），与 `cards` 分开，只含身份与技能 |
-| 卡名 | `CardDB.display_name`：`card.<id>.name` / `token.<id>.name` |
-| 类型 | `card_type` 经 `UI.enum_text("card_type")`；Token 显示「Token」；英雄视图固定显示「英雄」 |
+| 卡名 | `CardDB.display_name`：`card.<id>.name` |
+| 类型 | `card_type` 经 `UI.enum_text("card_type")`；英雄视图固定显示「英雄」 |
 | 科学分类 | `CardDB.taxon_path(taxon)` 的完整路径，以「 · 」连接；缺失显示「未定」 |
 | 分类目录 | `CardDB.playstyles` 的 13 个玩法按固定顺序展示，不含「中立」；效果牌与英雄不作为顶层分类 |
 | 英雄分类 | `CardDB.playstyles` 的 13 个玩法按同一顺序展示；英雄按全部 `play:` 归属归入对应玩法，带多条归属的英雄在多个分类中同时出现，不按单一玩法去重 |
 | 玩法分类归属 | 随从视图的卡牌按全部 `play:` 归属归入对应玩法；带多条归属的卡在多个分类中同时出现；「全部」按唯一卡牌 id 去重计数 |
-| 随从 / 效果二级筛选 | 「效果」取 `card_type = effect`，「随从」取其余条目；Token 在客户端展示表中带 `card_type = minion`，按随从计 |
+| 随从 / 效果二级筛选 | 「效果」取 `card_type = effect`，「随从」取其余条目；非池卡同样按自身 `card_type` 归类 |
 | 玩法与关联分类 | 玩法取 `CardText.playstyle_text`，拼接全部 `play:` 的展示名；关联分类取 `CardText.association_text`，只聚合 `prey:` / `host:` |
 | 时代 | `era` 经 `UI.enum_text("era")`；未识别的时代排在最后，且不算入任何时代章节 |
 | 费用与原始数值 | `display_cost`、`attack`、`health`；数值缺失显示「—」 |
 | 技能 | `skills[]` 经 `CardDB.skill_name` 取 `skill.<id>.name`，缺键返回空串并跳过（不显示内部 id） |
 | 效果文本 | `CardDB.display_text`：`skills[]` 的 `skill.<id>.text` 按顺序换行拼接，缺键跳过 |
-| 本局卡池 | `CardPool.card_ids(view.enabledFactions)`：与服务端 `card_in_pool` 同规则，卡牌任一条 `play:` 命中启用玩法即入池；Token 不入池 |
+| 本局卡池 | `CardPool.card_ids(view.enabledFactions)`：与服务端 `card_in_pool` 同规则，`in_shop_pool: true` 且任一条 `play:` 命中启用玩法即入池；非池卡不入池 |
 | 本局英雄池 | `CardPool.hero_ids(view.enabledFactions)`：与服务端 `hero_in_pool` 同规则，英雄任一条 `play:` 命中启用玩法即入选；过滤后为空时回退到全部英雄 |
 
 - 图鉴只做展示，不参与规则判定；费用、攻防均取卡表原始值，不代表对局中的当前数值。

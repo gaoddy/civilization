@@ -1,6 +1,6 @@
 # 技能索引
 
-本文索引 v0.1 的 254 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能实例用 `template` 引用[技能模板](../skill-templates/README.md)并只写参数，卡面文本由模板渲染，特殊措辞才用 `text` 覆盖。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.2。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
+本文索引 v0.1 的 255 个技能实体文档，一行一个；字段规范与校验规则见[技能系统](../skill-system.md)。文件名等于技能 `id`，是数据契约的一部分；技能 `id` 与卡牌 `id` 分属两个命名空间，允许同名。技能实例用 `template` 引用[技能模板](../skill-templates/README.md)并只写参数，卡面文本由模板渲染，特殊措辞才用 `text` 覆盖。技能按科学分类（`taxon`）、玩法（`playstyle`）与关联分类（`play` / `prey` / `host`）筛选，筛选口径见[技能系统](../skill-system.md) §2.2。英雄卡引用的技能不带英雄专属前缀；主动技能带 `cost` 与 `uses_per_turn`，触发式技能按文本前缀结算。
 
 | 技能 | 关键词 | 文本 | 引用数 |
 | --- | --- | --- | --- |
@@ -139,6 +139,7 @@
 | [evolution-discovery](evolution-discovery.md) | 无 | 发现一张本局启用的玩法随从 | 1 |
 | [faraday-cage](faraday-cage.md) | 无 | 使一个友方随从获得护盾 | 1 |
 | [free-refresh](free-refresh.md) | 无 | 免费刷新一次商店 | 1 |
+| [gain-next-level-minion](gain-next-level-minion.md) | 无 | 获得一张下一等级的随从 | 1 |
 | [heredity](heredity.md) | 无 | 使一个友方植物随从获得一次成长 | 1 |
 | [human-growth-twice](human-growth-twice.md) | 无 | 使一个友方人科随从获得两次成长 | 1 |
 | [invention-factory](invention-factory.md) | 无 | 使你的其他机械随从各获得一次成长 | 2 |

@@ -11,7 +11,7 @@
 
 | 属性 | 类型 | 说明 |
 | --- | --- | --- |
-| `card_id` | `String` | 卡牌或 Token 的 id |
+| `card_id` | `String` | 卡牌 id |
 | `set_selected(value)` | `void` | 切换选中描边 |
 
 - 最小尺寸为 `card-width` × `card-height`（112×146）。
