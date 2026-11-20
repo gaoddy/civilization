@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 
 use common::{minion, minion_id, set_shop, test_catalog, turn_started};
 use rule_engine::data::{CardType, card_in_pool};
+use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::{Intent, RejectCode};
@@ -801,4 +802,92 @@ fn golden_played_from_hand_keeps_instance_and_state() {
     assert_eq!(played.contagion, 1, "传染随金色入场");
     assert!(played.golden);
     assert_eq!(played.sources, vec![10, 11, 12], "来源记录随金色入场保留");
+}
+
+#[test]
+fn copy_hand_minion_forming_third_copy_triples_immediately() {
+    let (mut engine, mut state) = turn_started(7);
+    let card_id = minion_id(1);
+    state.players[0]
+        .board
+        .push(minion(&engine.catalog, 10, &card_id));
+    state.players[0].hand.push(hand_card(11, &card_id));
+    let effect_id = state.next_instance_id;
+    state.next_instance_id = effect_id.saturating_add(1);
+    state.players[0]
+        .hand
+        .push(HandCard::effect(effect_id, "yinshuashu"));
+
+    let outcome = engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 1,
+                position: None,
+                target: Some(TargetRef {
+                    zone: Zone::Hand,
+                    id: 11,
+                }),
+            },
+        )
+        .expect("印刷术应能打出");
+
+    assert!(
+        outcome.events.iter().any(|event| matches!(
+            event,
+            GameEvent::TripleFormed { card_id: id, .. } if id == &card_id
+        )),
+        "复制形成第三张同名随从后应立即三连"
+    );
+    assert!(state.players[0].board.is_empty(), "三张副本离场");
+    let golden = hand_minions(&state, 0)
+        .into_iter()
+        .find(|minion| minion.golden)
+        .expect("金色进入手牌");
+    assert_eq!(golden.card_id, card_id);
+}
+
+#[test]
+fn copy_board_minion_forming_third_copy_triples_immediately() {
+    let (mut engine, mut state) = turn_started(8);
+    let card_id = minion_id(1);
+    state.players[0]
+        .board
+        .push(minion(&engine.catalog, 10, &card_id));
+    state.players[0].hand.push(hand_card(11, &card_id));
+    let effect_id = state.next_instance_id;
+    state.next_instance_id = effect_id.saturating_add(1);
+    state.players[0]
+        .hand
+        .push(HandCard::effect(effect_id, "fuzhi"));
+
+    let outcome = engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 1,
+                position: None,
+                target: Some(TargetRef {
+                    zone: Zone::Board,
+                    id: 10,
+                }),
+            },
+        )
+        .expect("复制应能打出");
+
+    assert!(
+        outcome.events.iter().any(|event| matches!(
+            event,
+            GameEvent::TripleFormed { card_id: id, .. } if id == &card_id
+        )),
+        "复制棋盘随从形成第三张后应立即三连"
+    );
+    assert!(state.players[0].board.is_empty(), "三张副本离场");
+    let golden = hand_minions(&state, 0)
+        .into_iter()
+        .find(|minion| minion.golden)
+        .expect("金色进入手牌");
+    assert_eq!(golden.card_id, card_id);
 }

@@ -171,10 +171,7 @@ impl Engine {
                 self.summon_recruit_from_effect(state, effect, &targets, ctx);
                 Vec::new()
             }
-            Op::Copy => {
-                self.apply_recruit_copy(state, effect, &targets, ctx);
-                Vec::new()
-            }
+            Op::Copy => self.apply_recruit_copy(state, effect, &targets, ctx),
             Op::Discover => self.apply_discover(state, effect, ctx),
             // 分解只发生在战斗内；招募阶段没有事件目标，落空。
             Op::Decompose => Vec::new(),
@@ -1253,15 +1250,16 @@ impl Engine {
     /// `state` 决定复制口径：`base` 只按卡面构造（不继承任何状态），
     /// `current` 为完全复制，继承成长、繁衍、传染、护盾、已授予关键词与金色标记。
     /// 金色随从复制的仍是金色，卡面基础值同样 ×2。
+    /// 复制品落地后与购买、发现、获得一致立即做三连判定（核心规则 §6.1、§6.10）。
     fn apply_recruit_copy(
         &mut self,
         state: &mut GameState,
         effect: &Effect,
         targets: &[InstanceId],
         ctx: &EffectCtx,
-    ) {
+    ) -> Vec<GameEvent> {
         let Some(player) = state.players.get(usize::from(ctx.seat)) else {
-            return;
+            return Vec::new();
         };
         let hand_slots = self.catalog.config.hand_slots;
         let board_slots = self.catalog.config.board_slots;
@@ -1317,6 +1315,7 @@ impl Engine {
                 Zone::Shop => {}
             }
         }
+        self.check_triple(state, ctx.seat)
     }
 
     /// 按复制口径生成新实例：`full` 时整体克隆来源，否则按卡面重建。
