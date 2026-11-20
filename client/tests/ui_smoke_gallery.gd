@@ -235,7 +235,7 @@ func _check_detail_art() -> void:
         "有卡面美术时不应显示占位",
     )
 
-    detail.show_card("adam-smith")
+    detail.show_card("alan-turing")
     await get_tree().process_frame
     _expect(
         detail.find_child("GalleryDetailArt", true, false) == null,
@@ -352,6 +352,11 @@ func _check_hero_section() -> void:
     _expect(detail_name != null and detail_name.text != "", "英雄视图应常驻选中首张英雄")
     if detail != null:
         var text := _node_text(detail)
+        var intro = instance.find_child("GalleryDetailIntroduction", true, false)
+        _expect(
+            intro != null and intro.text != "",
+            "英雄详情应显示介绍：%s" % text,
+        )
         _expect(
             text.contains(TranslationServer.translate("ui.game.detail.hero")),
             "英雄详情应标为英雄：%s" % text,

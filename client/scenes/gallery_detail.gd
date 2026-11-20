@@ -57,6 +57,13 @@ func _show(card_id: String, hero: bool) -> void:
     _box.add_child(name_label)
 
     if hero:
+        var introduction := CardDB.hero_introduction(card_id)
+        if introduction != "":
+            var intro := UI.label(introduction, UITheme.font_size("font-body-sm"))
+            intro.name = "GalleryDetailIntroduction"
+            intro.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+            intro.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+            _box.add_child(intro)
         _add_row(tr("ui.game.detail.type"), tr("ui.game.detail.hero"))
         _add_row(tr("ui.game.detail.playstyle"), _playstyle_text(entry))
         var hero_associations := _association_text(entry)

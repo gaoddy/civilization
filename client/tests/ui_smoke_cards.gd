@@ -330,22 +330,26 @@ func _ready() -> void:
         "没有 prey/host 的卡不应显示关联分类：%s" % tool_detail,
     )
 
-    var scholar_detail := _shop_detail_text("alan-turing")
+    var machine_detail := _shop_detail_text("alan-turing")
     _expect(
-        scholar_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))
-        and scholar_detail.contains(TranslationServer.translate("enum.playstyle.machine")),
-        "学者详情应显示机械玩法：%s" % scholar_detail,
+        machine_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))
+        and machine_detail.contains(TranslationServer.translate("enum.playstyle.machine")),
+        "alan-turing 详情应显示机械玩法：%s" % machine_detail,
     )
     _expect(
-        not scholar_detail.contains(TranslationServer.translate("enum.playstyle.neutral")),
-        "学者详情不应再显示中立：%s" % scholar_detail,
+        not machine_detail.contains(TranslationServer.translate("enum.playstyle.neutral")),
+        "alan-turing 详情不应显示中立：%s" % machine_detail,
     )
     _expect(
-        not scholar_detail.contains(TranslationServer.translate("ui.game.detail.association")),
-        "学者不应显示关联分类行：%s" % scholar_detail,
+        not machine_detail.contains(TranslationServer.translate("ui.game.detail.association")),
+        "alan-turing 不应显示关联分类行：%s" % machine_detail,
     )
 
     var hero_detail := _hero_detail_text("darwin")
+    _expect(
+        hero_detail.contains(CardDB.hero_introduction("darwin")),
+        "英雄详情应显示介绍：%s" % hero_detail,
+    )
     _expect(
         not hero_detail.contains(TranslationServer.translate("ui.game.detail.taxonomy")),
         "英雄详情不应显示科学分类：%s" % hero_detail,
@@ -650,7 +654,11 @@ func _check_room_skill_list() -> void:
             await get_tree().process_frame
             var panel := instance.find_child("SkillPanel", true, false)
             var text := _node_text(panel)
-            var info := CardDB.skill_info("scholar-growth-twice")
+            var info := CardDB.skill_info("activate-friendly-growth-twice")
+            _expect(
+                text.contains(CardDB.hero_introduction("gauss")),
+                "技能浮层应显示英雄介绍：%s" % text,
+            )
             _expect(
                 text.contains(TranslationServer.translate("ui.skill.trigger.on_activate")),
                 "技能浮层应出现主动标签：%s" % text,

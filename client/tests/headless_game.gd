@@ -16,7 +16,7 @@ var _last_fingerprint := ""
 var _pending_buys: Dictionary = {}
 var _pending_intents: Dictionary = {}
 ## 本回合已被服务端以 `NO_VALID_TARGET` 拒绝的出手，键为「回合:手牌下标」。
-## 该牌的目标池可能收窄（按分类、玩法或学者过滤），首个己方随从未必在池内；
+## 该牌的目标池可能收窄（按分类或玩法过滤），首个己方随从未必在池内；
 ## 继续重发只会空转，本回合跳过它，交给后续的刷新与结束招募兜底。
 var _blocked_hand: Dictionary = {}
 ## 本回合已被拒绝的目标，键为 `zone:id`；候选池非空，轮换到下一个即可。

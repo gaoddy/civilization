@@ -308,6 +308,12 @@ func _show_skill(hero_id: String) -> void:
         return
     var title := UI.label(CardDB.display_name(hero_id), UITheme.font_size("font-title"), false)
     _skill_panel.add_child(title)
+    var introduction := CardDB.hero_introduction(hero_id)
+    if introduction != "":
+        var intro := UI.label(introduction, UITheme.font_size("font-body-sm"))
+        intro.name = "HeroIntroduction"
+        intro.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+        _skill_panel.add_child(intro)
     UI.skill_list(_skill_panel, CardDB.hero(hero_id).get("skills", []))
     _skill_layer.visible = true
 

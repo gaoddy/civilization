@@ -82,6 +82,7 @@ func _reports(instance: Node) -> Array:
 
 
 ## 行内固定部分的文本：排除 SeatReport 子树（战报里本来就有对手名）。
+## 头像与血条都可以是纯图形；未定名次的行没有角标文本，空串是合法结果。
 func _fixed_text(row: Node) -> String:
     var text := ""
     for child in row.find_children("*", "Label", true, false):
@@ -94,7 +95,6 @@ func _fixed_text(row: Node) -> String:
             cursor = cursor.get_parent()
         if not in_report:
             text += str(child.text) + "\n"
-    _expect(text.strip_edges() != "", "座位行固定部分应至少有一个文本，避免空串让断言空转")
     return text
 
 

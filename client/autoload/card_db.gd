@@ -183,6 +183,13 @@ func display_name(id: String) -> String:
     return id if text == key else text
 
 
+## 英雄介绍：取 `card.<id>.introduction`；缺键返回空串。
+func hero_introduction(id: String) -> String:
+    var key := "card.%s.introduction" % id
+    var text := tr(key)
+    return "" if text == key else text
+
+
 ## 技能文本按技能顺序拼接；缺键的技能跳过。
 func display_text(id: String) -> String:
     return _skill_text(card(id).get("skills", []))
