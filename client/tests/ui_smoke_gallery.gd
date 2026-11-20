@@ -7,6 +7,8 @@ func _ready() -> void:
     await _check_filters()
     await _check_categories_and_kinds()
     await _check_hero_section()
+    await _check_mode_filters()
+    await _check_empty_hero_pool()
     await _check_detail_art()
     await _check_empty_catalog()
     await _check_pagination()
@@ -73,6 +75,23 @@ func _check_lobby_page() -> void:
     _expect(instance.find_child("Taxonmachine", true, false) != null, "分类目录缺少机械")
     _expect(instance.find_child("Taxoneffect", true, false) == null, "效果牌不应作为顶层分类")
     _expect(instance.find_child("Taxonscience", true, false) == null, "科学分类不应作为顶层分类")
+    _expect(instance.find_child("Taxonhero", true, false) == null, "英雄不应作为左侧分类")
+
+    var mode_bar = instance.find_child("GalleryModeBar", true, false)
+    var mode_minion = instance.find_child("ModeMinion", true, false)
+    var mode_hero = instance.find_child("ModeHero", true, false)
+    _expect(
+        mode_bar != null and mode_minion != null and mode_hero != null,
+        "标题右侧缺少随从 / 英雄视图切换",
+    )
+    _expect(
+        mode_minion != null and mode_minion.button_pressed,
+        "图鉴默认应选中随从视图",
+    )
+    _expect(
+        mode_hero != null and not mode_hero.button_pressed,
+        "图鉴默认不应选中英雄视图",
+    )
 
     var toc = instance.find_child("GalleryToc", true, false)
     var detail = instance.find_child("GalleryDetail", true, false)
@@ -230,28 +249,82 @@ func _check_detail_art() -> void:
     await get_tree().process_frame
 
 
-## 独立英雄分区：32 张、隐藏时代章节，详情只显示身份与技能。
+## 随从 / 英雄视图切换：英雄视图隐藏左侧目录，英雄分类顶部居中，详情走英雄口径。
 func _check_hero_section() -> void:
     var instance := await _mount_gallery()
     if instance == null:
         return
-    var hero_button = instance.find_child("Taxonhero", true, false)
-    _expect(hero_button != null, "分类目录缺少英雄分区")
-    _expect(
-        hero_button != null and hero_button.text.contains("32"),
-        "英雄分区应计 32 张，实际：%s" % (hero_button.text if hero_button != null else "无"),
-    )
-    if hero_button != null:
-        await _push_click(instance, hero_button.get_global_rect().get_center())
+    var mode_hero = instance.find_child("ModeHero", true, false)
+    _expect(mode_hero != null, "标题右侧缺少英雄视图切换")
+    if mode_hero != null:
+        await _push_click(instance, mode_hero.get_global_rect().get_center())
     _expect(
         _filtered_count(instance) == 32,
-        "英雄分区应有 32 张，实际：%d" % _filtered_count(instance),
+        "英雄视图应有 32 张，实际：%d" % _filtered_count(instance),
+    )
+    var toc = instance.find_child("GalleryToc", true, false)
+    _expect(
+        toc != null and not toc.is_visible_in_tree(),
+        "英雄视图不应显示左侧分类目录",
     )
     var chapters = instance.find_child("GalleryChapters", true, false)
-    _expect(chapters != null and not chapters.is_visible_in_tree(), "英雄分区不应显示时代章节")
     _expect(
-        instance.find_child("KindAll", true, false) == null,
-        "英雄分区不应展开随从/效果二级筛选",
+        chapters != null and not chapters.is_visible_in_tree(),
+        "英雄视图不应显示时代章节",
+    )
+    var hero_bar = instance.find_child("GalleryHeroCategories", true, false)
+    _expect(
+        hero_bar != null and hero_bar.is_visible_in_tree(),
+        "英雄视图应显示顶部居中的英雄分类栏",
+    )
+    var kind_all = instance.find_child("KindAll", true, false)
+    _expect(
+        kind_all == null or not kind_all.is_visible_in_tree(),
+        "英雄视图不应展开随从/效果二级筛选",
+    )
+    var hero_all = instance.find_child("HeroCategoryAll", true, false)
+    _expect(
+        hero_all != null and hero_all.text.contains("32"),
+        "英雄分类「全部」应计 32 张，实际：%s" % (hero_all.text if hero_all != null else "无"),
+    )
+    var header = instance.find_child("GalleryHeader", true, false) as Control
+    var body = instance.find_child("GalleryBody", true, false) as Control
+    var view_size: Vector2 = instance.get_viewport_rect().size
+    _expect(
+        header != null and header.get_global_rect().end.x <= view_size.x,
+        "英雄视图头部不应横向溢出视口",
+    )
+    _expect(
+        body != null and body.get_global_rect().end.x <= view_size.x,
+        "英雄视图主体不应横向溢出视口",
+    )
+    var hero_rows = instance.find_child("GalleryGridRows", true, false) as Control
+    _expect(
+        hero_rows != null and hero_rows.get_global_rect().end.y <= view_size.y,
+        "英雄视图网格不应纵向溢出视口",
+    )
+    var mammal = instance.find_child("HeroCategoryMammal", true, false)
+    _expect(
+        mammal != null and mammal.text.contains("7"),
+        "英雄分类哺乳纲应计 7 张，实际：%s" % (mammal.text if mammal != null else "无"),
+    )
+    var fungus = instance.find_child("HeroCategoryFungus", true, false)
+    _expect(
+        fungus != null and fungus.disabled,
+        "没有英雄的玩法分类应显示并禁用",
+    )
+    if mammal != null:
+        await _push_click(instance, mammal.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 7,
+        "英雄哺乳纲应有 7 张，实际：%d" % _filtered_count(instance),
+    )
+    hero_all = instance.find_child("HeroCategoryAll", true, false)
+    if hero_all != null:
+        await _push_click(instance, hero_all.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 32,
+        "英雄分类清空后应恢复 32 张，实际：%d" % _filtered_count(instance),
     )
     var rows = instance.find_child("GalleryGridRows", true, false)
     if rows != null and rows.get_child_count() > 0:
@@ -271,7 +344,7 @@ func _check_hero_section() -> void:
         )
     var detail = instance.find_child("GalleryDetail", true, false)
     var detail_name = instance.find_child("GalleryDetailName", true, false)
-    _expect(detail_name != null and detail_name.text != "", "英雄分区应常驻选中首张英雄")
+    _expect(detail_name != null and detail_name.text != "", "英雄视图应常驻选中首张英雄")
     if detail != null:
         var text := _node_text(detail)
         _expect(
@@ -286,19 +359,73 @@ func _check_hero_section() -> void:
             not text.contains(TranslationServer.translate("ui.game.detail.era")),
             "英雄详情不应显示时代：%s" % text,
         )
-    # 切回「全部」恢复普通卡池与时代章节。
-    var all_button = instance.find_child("TaxonAll", true, false)
-    if all_button != null:
-        await _push_click(instance, all_button.get_global_rect().get_center())
+    # 切回随从视图恢复普通卡池、左侧目录与时代章节。
+    var mode_minion = instance.find_child("ModeMinion", true, false)
+    if mode_minion != null:
+        await _push_click(instance, mode_minion.get_global_rect().get_center())
     _expect(
         _filtered_count(instance) == 432,
-        "切回全部后应恢复 432 张，实际：%d" % _filtered_count(instance),
+        "切回随从视图应恢复 432 张，实际：%d" % _filtered_count(instance),
     )
+    toc = instance.find_child("GalleryToc", true, false)
+    _expect(
+        toc != null and toc.is_visible_in_tree(),
+        "切回随从视图应恢复左侧分类目录",
+    )
+    chapters = instance.find_child("GalleryChapters", true, false)
     _expect(
         chapters != null and chapters.is_visible_in_tree(),
-        "切回全部后应恢复时代章节",
+        "切回随从视图应恢复时代章节",
     )
     await _unmount(instance)
+
+
+## 切换视图保留各视图筛选：随从视图选中的时代在英雄视图往返后仍然生效。
+func _check_mode_filters() -> void:
+    var instance := await _mount_gallery()
+    if instance == null:
+        return
+    var chapter = instance.find_child("Chapter1", true, false)
+    if chapter != null:
+        await _push_click(instance, chapter.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 63,
+        "史前章应有 63 张，实际：%d" % _filtered_count(instance),
+    )
+    var mode_hero = instance.find_child("ModeHero", true, false)
+    if mode_hero != null:
+        await _push_click(instance, mode_hero.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 32,
+        "英雄视图不受时代筛选影响，实际：%d" % _filtered_count(instance),
+    )
+    var mode_minion = instance.find_child("ModeMinion", true, false)
+    if mode_minion != null:
+        await _push_click(instance, mode_minion.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 63,
+        "切回随从视图应保留史前筛选，实际：%d" % _filtered_count(instance),
+    )
+    await _unmount(instance)
+
+
+## 本局没有可用英雄时，英雄视图切换禁用且保持随从视图。
+func _check_empty_hero_pool() -> void:
+    var gallery := CardGallery.new()
+    gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
+    add_child(gallery)
+    gallery.set_catalog(
+        CardDB.cards.keys(),
+        tr("ui.gallery.title"),
+        tr("ui.gallery.back_lobby"),
+        [],
+    )
+    await get_tree().process_frame
+    var mode_hero = gallery.find_child("ModeHero", true, false)
+    _expect(mode_hero != null and mode_hero.disabled, "没有可用英雄时应禁用英雄视图")
+    _expect(gallery.call("_filtered_ids").size() == 432, "没有可用英雄时随从视图仍为 432 张")
+    gallery.queue_free()
+    await get_tree().process_frame
 
 
 ## 空图鉴：没有章节、没有卡片，只显示空态与详情占位。

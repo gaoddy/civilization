@@ -1,52 +1,38 @@
-class_name GalleryChapterBar
+class_name GalleryFilterBar
 extends HFlowContainer
-## 图鉴章节栏：全部时代与 1–7 时代的卡牌计数，单选切换。
+## 图鉴顶部筛选栏：横向居中的单选按钮组，供时代章节与英雄分类共用。
 ##
-## 计数由页面按当前分类筛选换算后传入；本组件只呈现与发出选择。
+## 条目、计数与选中项都由页面给出；本组件只呈现与发出选择，不推导分类。
 
-signal chapter_selected(era: int)
+signal item_selected(id: String)
 
-const ERA_IDS := [
-    "prehistoric",
-    "primitive",
-    "classical",
-    "feudal",
-    "industrial",
-    "modern",
-    "future",
-]
+var _button_prefix := ""
 
 
-func _init() -> void:
-    name = "GalleryChapters"
+## `node_name` 与 `button_prefix` 决定节点名，例如 `GalleryChapters` + `Chapter`。
+func _init(node_name: String, button_prefix: String) -> void:
+    name = node_name
+    _button_prefix = button_prefix
     alignment = FlowContainer.ALIGNMENT_CENTER
     add_theme_constant_override("h_separation", UITheme.space("space-xs"))
     add_theme_constant_override("v_separation", UITheme.space("space-xs"))
 
 
-## `counts` 以时代序号为键（0 表示全部），`selected` 为当前时代序号。
-func set_state(counts: Dictionary, selected: int) -> void:
+## `items` 为 `{id, name}` 条目；`counts` 以 id 为键，空串表示「全部」。
+func set_state(items: Array, counts: Dictionary, selected: String) -> void:
     UI.clear(self)
     var group := ButtonGroup.new()
     group.allow_unpress = false
-    _add_chapter(
-        "%s\n%d" % [tr("ui.gallery.chapter_all"), int(counts.get(0, 0))],
-        int(counts.get(0, 0)),
-        selected == 0,
-        0,
-        group,
-    )
-    for era in range(1, ERA_IDS.size() + 1):
-        var label := "%s\n%d" % [
-            UI.enum_text("era", ERA_IDS[era - 1]),
-            int(counts.get(era, 0)),
-        ]
-        _add_chapter(label, int(counts.get(era, 0)), selected == era, era, group)
+    for item in items:
+        var id := str(item.get("id", ""))
+        var count := int(counts.get(id, 0))
+        var text := "%s\n%d" % [str(item.get("name", id)), count]
+        _add_item(id, text, count, selected == id, group)
 
 
-func _add_chapter(text: String, count: int, selected: bool, era: int, group: ButtonGroup) -> void:
+func _add_item(id: String, text: String, count: int, selected: bool, group: ButtonGroup) -> void:
     var button := Button.new()
-    button.name = "ChapterAll" if era == 0 else "Chapter%d" % era
+    button.name = _button_prefix + ("All" if id == "" else id.capitalize())
     button.text = text
     button.toggle_mode = true
     button.button_group = group
@@ -65,5 +51,5 @@ func _add_chapter(text: String, count: int, selected: bool, era: int, group: But
     button.add_theme_color_override("font_hover_pressed_color", UITheme.color("color-bg"))
     button.add_theme_color_override("font_focus_color", UITheme.color("color-text"))
     button.add_theme_color_override("font_disabled_color", UITheme.color("color-text-muted"))
-    button.pressed.connect(func() -> void: chapter_selected.emit(era))
+    button.pressed.connect(func() -> void: item_selected.emit(id))
     add_child(button)
