@@ -190,7 +190,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "sports"
   },
   {
     "attack": null,
@@ -209,7 +209,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "literature"
   },
   {
     "attack": 0,
@@ -430,7 +430,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 2,
@@ -512,7 +512,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "automation"
   },
   {
     "attack": null,
@@ -536,7 +536,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 3,
@@ -623,7 +623,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "medicine"
   },
   {
     "attack": 5,
@@ -707,7 +707,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 7,
@@ -746,7 +746,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": 2,
@@ -871,7 +871,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "automation"
   },
   {
     "attack": null,
@@ -890,7 +890,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "politics"
   },
   {
     "attack": 2,
@@ -958,7 +958,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -982,7 +982,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -1006,7 +1006,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 3,
@@ -1203,7 +1203,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "chemistry"
   },
   {
     "attack": 2,
@@ -1246,7 +1246,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "medicine"
   },
   {
     "attack": 0,
@@ -1432,7 +1432,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "psychology"
   },
   {
     "attack": null,
@@ -1451,7 +1451,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 5,
@@ -1602,7 +1602,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 12,
@@ -1800,7 +1800,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "mathematics"
   },
   {
     "attack": 6,
@@ -1903,7 +1903,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": 2,
@@ -1951,7 +1951,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 0,
@@ -1999,7 +1999,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": 4,
@@ -2097,7 +2097,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 0,
@@ -2227,7 +2227,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -2246,7 +2246,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 11,
@@ -2289,7 +2289,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -2313,7 +2313,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 0,
@@ -2709,7 +2709,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": null,
@@ -2728,7 +2728,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -2747,7 +2747,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": 8,
@@ -2964,7 +2964,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "medicine"
   },
   {
     "attack": 0,
@@ -3047,7 +3047,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": 4,
@@ -3130,7 +3130,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": 4,
@@ -3212,7 +3212,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "medicine"
   },
   {
     "attack": 3,
@@ -3255,7 +3255,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": null,
@@ -3274,7 +3274,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": null,
@@ -3293,7 +3293,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": null,
@@ -3312,7 +3312,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": null,
@@ -3331,7 +3331,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "medicine"
   },
   {
     "attack": null,
@@ -3350,7 +3350,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -3374,7 +3374,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 15,
@@ -3413,7 +3413,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 2,
@@ -3476,7 +3476,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 2,
@@ -3567,7 +3567,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -3591,7 +3591,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "medicine"
   },
   {
     "attack": null,
@@ -3610,7 +3610,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "earth-science"
   },
   {
     "attack": 4,
@@ -3765,7 +3765,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "literature"
   },
   {
     "attack": 1,
@@ -3899,7 +3899,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "philosophy"
   },
   {
     "attack": 0,
@@ -3990,7 +3990,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "psychology"
   },
   {
     "attack": null,
@@ -4014,7 +4014,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 0,
@@ -4526,7 +4526,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": 1,
@@ -4645,7 +4645,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 5,
@@ -4742,7 +4742,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "literature"
   },
   {
     "attack": 10,
@@ -4914,7 +4914,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 2,
@@ -5124,7 +5124,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "literature"
   },
   {
     "attack": 2,
@@ -5245,7 +5245,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 7,
@@ -5536,7 +5536,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "medicine"
   },
   {
     "attack": null,
@@ -5555,7 +5555,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": 4,
@@ -5594,7 +5594,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "medicine"
   },
   {
     "attack": 2,
@@ -5632,7 +5632,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": 6,
@@ -5725,7 +5725,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 0,
@@ -5808,7 +5808,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "information-computing"
   },
   {
     "attack": null,
@@ -5827,7 +5827,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": 5,
@@ -6178,7 +6178,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 0,
@@ -6221,7 +6221,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -6245,7 +6245,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 0,
@@ -6495,7 +6495,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -6514,7 +6514,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "economics"
   },
   {
     "attack": 2,
@@ -7103,7 +7103,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": null,
@@ -7122,7 +7122,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": 4,
@@ -7203,7 +7203,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "economics"
   },
   {
     "attack": 7,
@@ -7289,7 +7289,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 5,
@@ -7332,7 +7332,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 8,
@@ -7565,7 +7565,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": 4,
@@ -7608,7 +7608,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -7627,7 +7627,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "history"
   },
   {
     "attack": null,
@@ -7651,7 +7651,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "medicine"
   },
   {
     "attack": 12,
@@ -7791,7 +7791,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": null,
@@ -7815,7 +7815,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 0,
@@ -7940,7 +7940,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": 4,
@@ -7983,7 +7983,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "earth-science"
   },
   {
     "attack": 0,
@@ -8118,7 +8118,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -8137,7 +8137,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "astronomy"
   },
   {
     "attack": null,
@@ -8156,7 +8156,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": null,
@@ -8175,7 +8175,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "information-computing"
   },
   {
     "attack": 10,
@@ -8214,7 +8214,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -8233,7 +8233,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": 4,
@@ -8338,7 +8338,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -8362,7 +8362,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 10,
@@ -8405,7 +8405,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": 0,
@@ -8509,7 +8509,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": null,
@@ -8528,7 +8528,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": 7,
@@ -8566,7 +8566,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "power-energy"
   },
   {
     "attack": 3,
@@ -8609,7 +8609,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "power-energy"
   },
   {
     "attack": 15,
@@ -8647,7 +8647,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "physics"
   },
   {
     "attack": null,
@@ -8666,7 +8666,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "military"
   },
   {
     "attack": null,
@@ -8685,7 +8685,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "economics"
   },
   {
     "attack": 4,
@@ -8743,7 +8743,7 @@
     ],
     "specialty": [],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   },
   {
     "attack": null,
@@ -8767,7 +8767,7 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "production-construction"
   },
   {
     "attack": null,
@@ -8791,6 +8791,6 @@
       }
     ],
     "subtype": null,
-    "taxon": "phenomenon"
+    "taxon": "biology"
   }
 ]

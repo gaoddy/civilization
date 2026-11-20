@@ -5,7 +5,7 @@ card_type: effect
 level: 7
 era: modern
 playstyle: neutral
-taxon: phenomenon
+taxon: medicine
 cost: 3
 specialty: [play:virus]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [combatstart-all-enemies-damage-3]
 | 星级 | 7 |
 | 时代 | 现代 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 医学 |
 | 关联分类 | 关联：病毒 |
 | 技能 | combatstart-all-enemies-damage-3 |
 | 费用 | 3 |

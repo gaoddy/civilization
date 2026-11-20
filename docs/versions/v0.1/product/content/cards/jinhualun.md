@@ -5,7 +5,7 @@ card_type: effect
 level: 4
 era: modern
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 2
 match_text: 改为三选一固定池
 skills: [trigger-discover-tribe-minion]
@@ -23,7 +23,7 @@ skills: [trigger-discover-tribe-minion]
 | 星级 | 4 |
 | 时代 | 现代 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 无 |
 | 技能 | trigger-discover-tribe-minion |
 | 费用 | 2 |

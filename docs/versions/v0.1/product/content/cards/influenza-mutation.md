@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: modern
 playstyle: neutral
-taxon: phenomenon
+taxon: medicine
 cost: 1
 match_text: 同左
 skills: [combatstart-top-attack-enemy-minus-0-minus-2]
@@ -23,7 +23,7 @@ skills: [combatstart-top-attack-enemy-minus-0-minus-2]
 | 星级 | 2 |
 | 时代 | 现代 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 医学 |
 | 关联分类 | 无 |
 | 技能 | combatstart-top-attack-enemy-minus-0-minus-2 |
 | 费用 | 1 |

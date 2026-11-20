@@ -5,7 +5,7 @@ card_type: effect
 level: 4
 era: future
 playstyle: neutral
-taxon: phenomenon
+taxon: military
 cost: 1
 match_text: 同左
 skills: [trigger-friendly-single-divine-shield]
@@ -23,7 +23,7 @@ skills: [trigger-friendly-single-divine-shield]
 | 星级 | 4 |
 | 时代 | 未来 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 军事学 |
 | 关联分类 | 无 |
 | 技能 | trigger-friendly-single-divine-shield |
 | 费用 | 1 |

@@ -5,7 +5,7 @@ card_type: effect
 level: 5
 era: modern
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 1
 match_text: 同左
 skills: [trigger-all-friendly-plus-0-plus-1]
@@ -23,7 +23,7 @@ skills: [trigger-all-friendly-plus-0-plus-1]
 | 星级 | 5 |
 | 时代 | 现代 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 无 |
 | 技能 | trigger-all-friendly-plus-0-plus-1 |
 | 费用 | 1 |

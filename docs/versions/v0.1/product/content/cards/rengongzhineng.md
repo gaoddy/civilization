@@ -5,7 +5,7 @@ card_type: effect
 level: 5
 era: future
 playstyle: neutral
-taxon: phenomenon
+taxon: information-computing
 cost: 3
 match_text: 同左
 skills: [trigger-mech-optimal-attack-this-turn]
@@ -23,7 +23,7 @@ skills: [trigger-mech-optimal-attack-this-turn]
 | 星级 | 5 |
 | 时代 | 未来 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 造物 › 信息与计算 |
 | 关联分类 | 无 |
 | 技能 | trigger-mech-optimal-attack-this-turn |
 | 费用 | 3 |

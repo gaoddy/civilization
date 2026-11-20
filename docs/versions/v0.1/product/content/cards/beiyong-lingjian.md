@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: industrial
 playstyle: neutral
-taxon: phenomenon
+taxon: automation
 cost: 1
 specialty: [play:machine]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-machine-single-reborn]
 | 星级 | 2 |
 | 时代 | 工业 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 造物 › 自动机械 |
 | 关联分类 | 关联：机械 |
 | 技能 | trigger-machine-single-reborn |
 | 费用 | 1 |

@@ -5,7 +5,7 @@ card_type: effect
 level: 5
 era: modern
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 3
 specialty: [play:protozoa]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-summon-2-amoeba-larva-3-3]
 | 星级 | 5 |
 | 时代 | 现代 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 关联：原生生物界 |
 | 技能 | trigger-summon-2-amoeba-larva-3-3 |
 | 费用 | 3 |

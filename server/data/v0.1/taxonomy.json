@@ -226,6 +226,11 @@
       "rank": "order"
     },
     {
+      "id": "astronomy",
+      "parent": "science",
+      "rank": "discipline"
+    },
+    {
       "id": "automation",
       "parent": "craft",
       "rank": "technique"
@@ -269,6 +274,11 @@
       "id": "beloniformes",
       "parent": "actinopterygii",
       "rank": "order"
+    },
+    {
+      "id": "biology",
+      "parent": "science",
+      "rank": "discipline"
     },
     {
       "id": "blattodea",
@@ -339,6 +349,11 @@
       "id": "cheloniidae",
       "parent": "testudines",
       "rank": "family"
+    },
+    {
+      "id": "chemistry",
+      "parent": "science",
+      "rank": "discipline"
     },
     {
       "id": "chirodropida",
@@ -509,6 +524,16 @@
       "id": "dunkleosteidae",
       "parent": "arthrodira",
       "rank": "family"
+    },
+    {
+      "id": "earth-science",
+      "parent": "science",
+      "rank": "discipline"
+    },
+    {
+      "id": "economics",
+      "parent": "society",
+      "rank": "discipline"
     },
     {
       "id": "elapidae",
@@ -706,9 +731,19 @@
       "rank": "family"
     },
     {
+      "id": "history",
+      "parent": "humanities",
+      "rank": "discipline"
+    },
+    {
       "id": "hominidae",
       "parent": "primates",
       "rank": "family"
+    },
+    {
+      "id": "humanities",
+      "parent": null,
+      "rank": "kingdom"
     },
     {
       "id": "hydridae",
@@ -801,6 +836,11 @@
       "rank": "class"
     },
     {
+      "id": "literature",
+      "parent": "humanities",
+      "rank": "discipline"
+    },
+    {
       "id": "loliginidae",
       "parent": "myopsida",
       "rank": "family"
@@ -856,6 +896,16 @@
       "rank": "order"
     },
     {
+      "id": "mathematics",
+      "parent": "science",
+      "rank": "discipline"
+    },
+    {
+      "id": "medicine",
+      "parent": "science",
+      "rank": "discipline"
+    },
+    {
       "id": "meganeuridae",
       "parent": "meganisoptera",
       "rank": "family"
@@ -869,6 +919,11 @@
       "id": "metamonada",
       "parent": "protozoa",
       "rank": "phylum"
+    },
+    {
+      "id": "military",
+      "parent": "society",
+      "rank": "discipline"
     },
     {
       "id": "mollusca",
@@ -1076,9 +1131,9 @@
       "rank": "family"
     },
     {
-      "id": "phenomenon",
-      "parent": null,
-      "rank": "phenomenon"
+      "id": "philosophy",
+      "parent": "humanities",
+      "rank": "discipline"
     },
     {
       "id": "pholidosauridae",
@@ -1094,6 +1149,11 @@
       "id": "physaliidae",
       "parent": "siphonophorae",
       "rank": "family"
+    },
+    {
+      "id": "physics",
+      "parent": "science",
+      "rank": "discipline"
     },
     {
       "id": "picornavirales",
@@ -1139,6 +1199,11 @@
       "id": "pokkesviricetes",
       "parent": "nucleocytoviricota",
       "rank": "class"
+    },
+    {
+      "id": "politics",
+      "parent": "society",
+      "rank": "discipline"
     },
     {
       "id": "polycystinea",
@@ -1229,6 +1294,11 @@
       "id": "psittaciformes",
       "parent": "aves",
       "rank": "order"
+    },
+    {
+      "id": "psychology",
+      "parent": "humanities",
+      "rank": "discipline"
     },
     {
       "id": "pteridophyta",
@@ -1371,6 +1441,11 @@
       "rank": "family"
     },
     {
+      "id": "science",
+      "parent": null,
+      "rank": "kingdom"
+    },
+    {
       "id": "scleractinia",
       "parent": "anthozoa",
       "rank": "order"
@@ -1411,6 +1486,11 @@
       "rank": "order"
     },
     {
+      "id": "society",
+      "parent": null,
+      "rank": "kingdom"
+    },
+    {
       "id": "sordariomycetes",
       "parent": "ascomycota",
       "rank": "class"
@@ -1429,6 +1509,11 @@
       "id": "spongodiscidae",
       "parent": "spumellarida",
       "rank": "family"
+    },
+    {
+      "id": "sports",
+      "parent": "society",
+      "rank": "discipline"
     },
     {
       "id": "spumellarida",

@@ -5,7 +5,7 @@ card_type: effect
 level: 3
 era: feudal
 playstyle: neutral
-taxon: phenomenon
+taxon: information-computing
 cost: 2
 match_text: 同左
 skills: [trigger-copy-hand-minion]
@@ -23,7 +23,7 @@ skills: [trigger-copy-hand-minion]
 | 星级 | 3 |
 | 时代 | 封建 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 造物 › 信息与计算 |
 | 关联分类 | 无 |
 | 技能 | trigger-copy-hand-minion |
 | 费用 | 2 |

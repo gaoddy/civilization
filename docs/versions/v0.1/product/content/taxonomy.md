@@ -331,7 +331,24 @@
 | information-computing | 信息与计算 | craft | 技术分类 | |
 | life-medical | 生活与医疗 | craft | 技术分类 | |
 | automation | 自动机械 | craft | 技术分类 | 玩法 machine |
-| phenomenon | 现象 | | 现象 | 效果牌叶子 |
+| science | 科学 | | 界 | 效果牌学科根 |
+| physics | 物理学 | science | 学科 | |
+| chemistry | 化学 | science | 学科 | |
+| mathematics | 数学 | science | 学科 | |
+| astronomy | 天文学 | science | 学科 | |
+| biology | 生物学 | science | 学科 | |
+| medicine | 医学 | science | 学科 | |
+| earth-science | 地球科学 | science | 学科 | |
+| humanities | 人文 | | 界 | 效果牌学科根 |
+| literature | 文学 | humanities | 学科 | |
+| philosophy | 哲学 | humanities | 学科 | |
+| psychology | 心理学 | humanities | 学科 | |
+| history | 历史学 | humanities | 学科 | |
+| society | 社会 | | 界 | 效果牌学科根 |
+| military | 军事学 | society | 学科 | |
+| politics | 政治学 | society | 学科 | |
+| economics | 经济学 | society | 学科 | |
+| sports | 体育学 | society | 学科 | |
 
 ## 2. 玩法
 
@@ -359,8 +376,8 @@
   效果牌表示**定向玩法**（至多 1 条，只在该玩法启用的对局中进入商店）；取值域为
   §2 的 13 个玩法 id，不含 `neutral`。其他卡不得使用。
 - `prey:<分类节点 id>`：捕食分类。表示这张卡捕食的对象分类，取 §1 的任一节点；
-  按祖先关系匹配，写上级节点即覆盖其全部下级。只允许生物卡使用（`taxon` 不在
-  `craft` / `phenomenon` 下）。
+  按祖先关系匹配，写上级节点即覆盖其全部下级。只允许生物卡使用（`taxon` 的根节点
+  属于动物界、植物界、真菌界、细菌域、原生生物界或病毒）。
 - `host:<分类节点 id>`：寄生分类。表示这张卡寄生的宿主分类，取值域与匹配规则同 `prey:`；
   只允许生物卡使用。
 

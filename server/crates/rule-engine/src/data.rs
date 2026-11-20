@@ -179,8 +179,8 @@ pub struct Token {
     pub keywords: Vec<String>,
     /// 缺省按 `Neutral` 处理。
     pub playstyle: Option<Playstyle>,
-    /// 缺省按 `phenomenon` 处理。
-    pub taxon: Option<String>,
+    /// 参与筛选的分类节点；必填。
+    pub taxon: String,
 }
 
 impl Token {
@@ -188,15 +188,7 @@ impl Token {
     pub fn playstyle(&self) -> Playstyle {
         self.playstyle.unwrap_or(Playstyle::Neutral)
     }
-
-    /// 参与筛选的分类节点；缺字段按 `phenomenon`。
-    pub fn taxon(&self) -> &str {
-        self.taxon.as_deref().unwrap_or(PHENOMENON)
-    }
 }
-
-/// 效果牌与缺省 Token 的分类节点。
-pub const PHENOMENON: &str = "phenomenon";
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -344,10 +336,8 @@ fn validate_taxonomy(
         }
     }
     for token in tokens.values() {
-        if let Some(taxon) = &token.taxon {
-            let owner = format!("tokens.json: Token {}", token.id);
-            check_taxon(taxonomy, &owner, taxon, &mut errors);
-        }
+        let owner = format!("tokens.json: Token {}", token.id);
+        check_taxon(taxonomy, &owner, &token.taxon, &mut errors);
     }
     errors
 }

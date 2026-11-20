@@ -5,7 +5,7 @@ card_type: effect
 level: 1
 era: prehistoric
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 1
 specialty: [play:mammal]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-mammal-all-plus-1-plus-1]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 关联：哺乳纲 |
 | 技能 | trigger-mammal-all-plus-1-plus-1 |
 | 费用 | 1 |

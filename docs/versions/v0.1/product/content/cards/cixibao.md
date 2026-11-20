@@ -5,7 +5,7 @@ card_type: effect
 level: 1
 era: prehistoric
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 1
 specialty: [play:cnidarian]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-cnidarian-single-poison-this-turn]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 关联：水螅纲 |
 | 技能 | trigger-cnidarian-single-poison-this-turn |
 | 费用 | 1 |

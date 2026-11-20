@@ -5,7 +5,7 @@ card_type: effect
 level: 3
 era: classical
 playstyle: neutral
-taxon: phenomenon
+taxon: politics
 cost: 1
 match_text: 同左
 skills: [trigger-friendly-plus-1-plus-1]
@@ -23,7 +23,7 @@ skills: [trigger-friendly-plus-1-plus-1]
 | 星级 | 3 |
 | 时代 | 古典 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 政治学 |
 | 关联分类 | 无 |
 | 技能 | trigger-friendly-plus-1-plus-1 |
 | 费用 | 1 |

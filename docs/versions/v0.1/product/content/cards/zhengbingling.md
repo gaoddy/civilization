@@ -5,7 +5,7 @@ card_type: effect
 level: 3
 era: industrial
 playstyle: neutral
-taxon: phenomenon
+taxon: military
 cost: 2
 match_text: 同左
 skills: [trigger-other-friendly-humans-plus-1-attack]
@@ -23,7 +23,7 @@ skills: [trigger-other-friendly-humans-plus-1-attack]
 | 星级 | 3 |
 | 时代 | 工业 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 军事学 |
 | 关联分类 | 无 |
 | 技能 | trigger-other-friendly-humans-plus-1-attack |
 | 费用 | 2 |

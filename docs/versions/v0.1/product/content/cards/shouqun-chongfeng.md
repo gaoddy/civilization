@@ -5,7 +5,7 @@ card_type: effect
 level: 5
 era: feudal
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 3
 specialty: [play:mammal]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-mammal-all-plus-2-attack]
 | 星级 | 5 |
 | 时代 | 封建 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 关联：哺乳纲 |
 | 技能 | trigger-mammal-all-plus-2-attack |
 | 费用 | 3 |

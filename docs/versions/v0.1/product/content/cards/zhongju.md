@@ -5,7 +5,7 @@ card_type: effect
 level: 6
 era: future
 playstyle: neutral
-taxon: phenomenon
+taxon: military
 cost: 4
 match_text: 同左
 skills: [combatstart-all-enemies-damage-4]
@@ -23,7 +23,7 @@ skills: [combatstart-all-enemies-damage-4]
 | 星级 | 6 |
 | 时代 | 未来 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 军事学 |
 | 关联分类 | 无 |
 | 技能 | combatstart-all-enemies-damage-4 |
 | 费用 | 4 |

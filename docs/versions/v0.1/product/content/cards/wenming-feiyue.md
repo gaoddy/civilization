@@ -5,7 +5,7 @@ card_type: effect
 level: 7
 era: future
 playstyle: neutral
-taxon: phenomenon
+taxon: history
 cost: 4
 match_text: 同左
 skills: [trigger-all-friendly-growth-twice]
@@ -23,7 +23,7 @@ skills: [trigger-all-friendly-growth-twice]
 | 星级 | 7 |
 | 时代 | 未来 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 人文 › 历史学 |
 | 关联分类 | 无 |
 | 技能 | trigger-all-friendly-growth-twice |
 | 费用 | 4 |

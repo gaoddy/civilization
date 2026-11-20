@@ -692,6 +692,7 @@ enum.taxon.asparagales,天门冬目
 enum.taxon.aspergillaceae,曲霉科
 enum.taxon.asteraceae,菊科
 enum.taxon.asterales,菊目
+enum.taxon.astronomy,天文学
 enum.taxon.automation,自动机械
 enum.taxon.aves,鸟纲
 enum.taxon.bacillaceae,芽孢杆菌科
@@ -701,6 +702,7 @@ enum.taxon.bacteria,细菌域
 enum.taxon.bacteria-incertae-sedis,未定科
 enum.taxon.basidiomycota,担子菌门
 enum.taxon.beloniformes,颌针鱼目
+enum.taxon.biology,生物学
 enum.taxon.blattodea,蜚蠊目
 enum.taxon.bovidae,牛科
 enum.taxon.bryaceae,真藓科
@@ -715,6 +717,7 @@ enum.taxon.caudovirales,有尾噬菌体目
 enum.taxon.caudoviricetes,有尾噬菌体纲
 enum.taxon.cephalopoda,头足纲
 enum.taxon.cheloniidae,海龟科
+enum.taxon.chemistry,化学
 enum.taxon.chirodropida,多手立方水母目
 enum.taxon.chirodropidae,多手立方水母科
 enum.taxon.chitovirales,痘病毒目
@@ -749,6 +752,8 @@ enum.taxon.diplomonadida,双滴虫目
 enum.taxon.diptera,双翅目
 enum.taxon.drosophilidae,果蝇科
 enum.taxon.dunkleosteidae,邓氏鱼科
+enum.taxon.earth-science,地球科学
+enum.taxon.economics,经济学
 enum.taxon.elapidae,眼镜蛇科
 enum.taxon.elephantidae,象科
 enum.taxon.enterobacterales,肠杆菌目
@@ -788,7 +793,9 @@ enum.taxon.haikouichthyidae,海口鱼科
 enum.taxon.heterotrichea,异毛纲
 enum.taxon.heterotrichida,异毛目
 enum.taxon.hexamitidae,六鞭毛虫科
+enum.taxon.history,历史学
 enum.taxon.hominidae,人科
+enum.taxon.humanities,人文
 enum.taxon.hydridae,水螅科
 enum.taxon.hydrozoa,水螅纲
 enum.taxon.hymenoptera,膜翅目
@@ -807,6 +814,7 @@ enum.taxon.lepidoptera,鳞翅目
 enum.taxon.libellulidae,蜻科
 enum.taxon.life-medical,生活与医疗
 enum.taxon.liliopsida,单子叶植物纲
+enum.taxon.literature,文学
 enum.taxon.loliginidae,枪乌贼科
 enum.taxon.lophiidae,鮟鱇科
 enum.taxon.lophiiformes,鮟鱇目
@@ -818,9 +826,12 @@ enum.taxon.mammalia,哺乳纲
 enum.taxon.mammalia-incertae-sedis,未定科
 enum.taxon.mantidae,螳螂科
 enum.taxon.mantodea,螳螂目
+enum.taxon.mathematics,数学
+enum.taxon.medicine,医学
 enum.taxon.meganeuridae,巨脉蜓科
 enum.taxon.meganisoptera,巨蜻蜓目
 enum.taxon.metamonada,后滴虫门
+enum.taxon.military,军事学
 enum.taxon.mollusca,软体动物门
 enum.taxon.monjiviricetes,单股负链病毒纲
 enum.taxon.mononegavirales,单股负链病毒目
@@ -862,10 +873,11 @@ enum.taxon.perissodactyla,奇蹄目
 enum.taxon.pezizales,盘菌目
 enum.taxon.pezizomycetes,盘菌纲
 enum.taxon.phasianidae,雉科
-enum.taxon.phenomenon,现象
+enum.taxon.philosophy,哲学
 enum.taxon.pholidosauridae,似鳄科
 enum.taxon.physalacriaceae,膨瑚菌科
 enum.taxon.physaliidae,僧帽水母科
+enum.taxon.physics,物理学
 enum.taxon.picornavirales,小RNA病毒目
 enum.taxon.pisoniviricetes,小核糖病毒纲
 enum.taxon.placodermi,盾皮鱼纲
@@ -875,6 +887,7 @@ enum.taxon.plasmodiidae,疟原虫科
 enum.taxon.poaceae,禾本科
 enum.taxon.poales,禾本目
 enum.taxon.pokkesviricetes,痘病毒纲
+enum.taxon.politics,政治学
 enum.taxon.polycystinea,多囊纲
 enum.taxon.polypodiaceae,水龙骨科
 enum.taxon.polypodiales,水龙骨目
@@ -893,6 +906,7 @@ enum.taxon.prototaxitaceae,原杉菌科
 enum.taxon.protozoa,原生生物界
 enum.taxon.psittacidae,鹦鹉科
 enum.taxon.psittaciformes,鹦形目
+enum.taxon.psychology,心理学
 enum.taxon.pteridophyta,蕨类植物门
 enum.taxon.pythonidae,蟒科
 enum.taxon.radiolaria,放射虫门
@@ -921,6 +935,7 @@ enum.taxon.salviniales,槐叶苹目
 enum.taxon.sapindales,无患子目
 enum.taxon.sarcopterygii,肉鳍鱼纲
 enum.taxon.scarabaeidae,金龟科
+enum.taxon.science,科学
 enum.taxon.scleractinia,石珊瑚目
 enum.taxon.scombridae,鲭科
 enum.taxon.scyphozoa,钵水母纲
@@ -929,10 +944,12 @@ enum.taxon.sepiida,乌贼目
 enum.taxon.sepiidae,乌贼科
 enum.taxon.sessilida,固着目
 enum.taxon.siphonophorae,管水母目
+enum.taxon.society,社会
 enum.taxon.sordariomycetes,粪壳菌纲
 enum.taxon.spheniscidae,企鹅科
 enum.taxon.sphenisciformes,企鹅目
 enum.taxon.spongodiscidae,海绵盘虫科
+enum.taxon.sports,体育学
 enum.taxon.spumellarida,泡沫虫目
 enum.taxon.squamata,有鳞目
 enum.taxon.squamata-incertae-sedis,未定科

@@ -5,7 +5,7 @@ card_type: effect
 level: 3
 era: modern
 playstyle: neutral
-taxon: phenomenon
+taxon: physics
 cost: 2
 match_text: 同左
 skills: [combatstart-leftmost-damage-4]
@@ -23,7 +23,7 @@ skills: [combatstart-leftmost-damage-4]
 | 星级 | 3 |
 | 时代 | 现代 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 物理学 |
 | 关联分类 | 无 |
 | 技能 | combatstart-leftmost-damage-4 |
 | 费用 | 2 |

@@ -5,7 +5,7 @@ card_type: effect
 level: 6
 era: classical
 playstyle: neutral
-taxon: phenomenon
+taxon: military
 cost: 2
 match_text: 同左
 skills: [trigger-summon-2-neutral-token-2-2]
@@ -23,7 +23,7 @@ skills: [trigger-summon-2-neutral-token-2-2]
 | 星级 | 6 |
 | 时代 | 古典 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 军事学 |
 | 关联分类 | 无 |
 | 技能 | trigger-summon-2-neutral-token-2-2 |
 | 费用 | 2 |

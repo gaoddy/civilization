@@ -5,7 +5,7 @@ card_type: effect
 level: 5
 era: future
 playstyle: neutral
-taxon: phenomenon
+taxon: physics
 cost: 3
 match_text: 同左
 skills: [trigger-all-friendly-plus-1-plus-1]
@@ -23,7 +23,7 @@ skills: [trigger-all-friendly-plus-1-plus-1]
 | 星级 | 5 |
 | 时代 | 未来 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 物理学 |
 | 关联分类 | 无 |
 | 技能 | trigger-all-friendly-plus-1-plus-1 |
 | 费用 | 3 |

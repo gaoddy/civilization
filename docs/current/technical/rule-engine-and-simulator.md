@@ -109,8 +109,7 @@ pub struct Token {
 - 数据类型已无部落枚举与卡牌部落字段；卡牌的物种与玩法改由 `playstyle` / `taxon` / `specialty` 表达。
 - `Playstyle::ALL` 固定 13 项且不含 `Neutral`；`id()` / `from_id()` 是数据文件与协议中的玩法 id；`ordinal()` 是状态哈希中的序号（0..13，`Neutral` 为 13）。
 - `SpecialtyKind` 对应卡牌 `specialty` 的三种前缀：`Play`（`play:`）、`Prey`（`prey:`）、`Host`（`host:`）。
-- Token 的 `playstyle` / `taxon` 为可选项；读取口 `Token::playstyle()` 缺省返回 `Neutral`，`Token::taxon()` 缺省返回常量 `PHENOMENON`（`"phenomenon"`）。
-- 常量 `PHENOMENON = "phenomenon"` 同时作为效果牌与缺省 Token 的分类节点。
+- Token 的 `playstyle` 为可选项，读取口 `Token::playstyle()` 缺省返回 `Neutral`；`taxon` 必填，直接作为筛选分类节点。
 
 ### 3.2 分类树
 
@@ -131,7 +130,7 @@ impl Taxonomy {
 ```
 
 - `taxonomy.json` 结构为 `{ "nodes": [{id, parent, rank}], "playstyles": [玩法 id] }`；节点按 id 去重，重复 id 解析失败。
-- `Rank` 对应 `taxonomy.md` 的「界 / 门 / 纲 / 目 / 科 / 技术分类 / 现象」，只表达结构，不参与匹配。
+- `Rank` 对应 `taxonomy.md` 的「界 / 门 / 纲 / 目 / 科 / 技术分类 / 学科」，只表达结构，不参与匹配。
 - `is_within` 沿父链上溯，最多 5 层；任一节点不存在返回 `false`。
 - `path` 从叶子返回至根的 id 列表（含自身），未知节点返回空列表。
 - `Catalog` 持有 `taxonomy: Taxonomy`。加载期校验所有卡牌与 Token 的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在，`play:` 取值是 13 个可启用玩法之一；校验失败即拒绝加载。
@@ -151,7 +150,7 @@ impl Taxonomy {
 | `keyword` / `other` | 由调用方单独处理 |
 
 - 筛选键集合如上表，不含部落类键。
-- 筛选事实由 `CardFacts` 提供：`catalog.cards` 查不到时回退 `catalog.tokens`；Token 缺字段按 `Neutral` / `phenomenon` 处理；两者都找不到时不匹配。
+- 筛选事实由 `CardFacts` 提供：`catalog.cards` 查不到时回退 `catalog.tokens`；Token 缺玩法按 `Neutral` 处理，分类取自身 `taxon`；两者都找不到时不匹配。
 - `timesIf` 结构为 `{ key, value: Option<String>, times }`，写作 `<键>:<值>:<次数>`（如 `timesIf=playstyle:mammal:2`、`timesIf=taxon:hominidae:2`）；`scholar` 没有值，仍写 `timesIf=scholar:2`。
 - `condition` 与 `when` 复用同一套筛选键与匹配口径；选择器多个筛选并列表示同时满足。
 

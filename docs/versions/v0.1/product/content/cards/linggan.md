@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: classical
 playstyle: neutral
-taxon: phenomenon
+taxon: psychology
 cost: 0
 match_text: 同左
 skills: [trigger-friendly-single-growth-once]
@@ -23,7 +23,7 @@ skills: [trigger-friendly-single-growth-once]
 | 星级 | 2 |
 | 时代 | 古典 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 人文 › 心理学 |
 | 关联分类 | 无 |
 | 技能 | trigger-friendly-single-growth-once |
 | 费用 | 0 |

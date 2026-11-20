@@ -5,7 +5,7 @@ card_type: effect
 level: 5
 era: classical
 playstyle: neutral
-taxon: phenomenon
+taxon: earth-science
 cost: 2
 match_text: 同左
 skills: [trigger-discover-tribe-minion]
@@ -23,7 +23,7 @@ skills: [trigger-discover-tribe-minion]
 | 星级 | 5 |
 | 时代 | 古典 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 地球科学 |
 | 关联分类 | 无 |
 | 技能 | trigger-discover-tribe-minion |
 | 费用 | 2 |

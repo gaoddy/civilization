@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: classical
 playstyle: neutral
-taxon: phenomenon
+taxon: physics
 cost: 0
 match_text: 同左
 skills: [trigger-friendly-single-plus-0-plus-2]
@@ -23,7 +23,7 @@ skills: [trigger-friendly-single-plus-0-plus-2]
 | 星级 | 2 |
 | 时代 | 古典 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 物理学 |
 | 关联分类 | 无 |
 | 技能 | trigger-friendly-single-plus-0-plus-2 |
 | 费用 | 0 |

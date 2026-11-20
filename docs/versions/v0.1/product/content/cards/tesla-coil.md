@@ -5,7 +5,7 @@ card_type: effect
 level: 4
 era: industrial
 playstyle: neutral
-taxon: phenomenon
+taxon: physics
 cost: 3
 match_text: 同左
 skills: [combatstart-all-enemies-damage-2]
@@ -23,7 +23,7 @@ skills: [combatstart-all-enemies-damage-2]
 | 星级 | 4 |
 | 时代 | 工业 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 物理学 |
 | 关联分类 | 无 |
 | 技能 | combatstart-all-enemies-damage-2 |
 | 费用 | 3 |

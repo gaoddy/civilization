@@ -5,7 +5,7 @@ card_type: effect
 level: 6
 era: future
 playstyle: neutral
-taxon: phenomenon
+taxon: physics
 cost: 4
 match_text: 同左
 skills: [combatstart-all-enemies-damage-5]
@@ -23,7 +23,7 @@ skills: [combatstart-all-enemies-damage-5]
 | 星级 | 6 |
 | 时代 | 未来 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 物理学 |
 | 关联分类 | 无 |
 | 技能 | combatstart-all-enemies-damage-5 |
 | 费用 | 4 |

@@ -5,7 +5,7 @@ card_type: effect
 level: 2
 era: industrial
 playstyle: neutral
-taxon: phenomenon
+taxon: physics
 cost: 1
 match_text: 战斗开始时，对敌方最左侧随从造成 2 点伤害
 skills: [combatstart-random-enemy-damage-2]
@@ -23,7 +23,7 @@ skills: [combatstart-random-enemy-damage-2]
 | 星级 | 2 |
 | 时代 | 工业 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 物理学 |
 | 关联分类 | 无 |
 | 技能 | combatstart-random-enemy-damage-2 |
 | 费用 | 1 |

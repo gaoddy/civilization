@@ -5,7 +5,7 @@ card_type: effect
 level: 4
 era: primitive
 playstyle: neutral
-taxon: phenomenon
+taxon: biology
 cost: 2
 specialty: [play:protozoa]
 match_text: 同左
@@ -24,7 +24,7 @@ skills: [trigger-protozoa-single-growth-twice]
 | 星级 | 4 |
 | 时代 | 原始 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 生物学 |
 | 关联分类 | 关联：原生生物界 |
 | 技能 | trigger-protozoa-single-growth-twice |
 | 费用 | 2 |

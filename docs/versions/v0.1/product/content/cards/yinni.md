@@ -5,7 +5,7 @@ card_type: effect
 level: 4
 era: classical
 playstyle: neutral
-taxon: phenomenon
+taxon: military
 cost: 1
 match_text: 同左
 skills: [trigger-friendly-single-stealth-this-turn]
@@ -23,7 +23,7 @@ skills: [trigger-friendly-single-stealth-this-turn]
 | 星级 | 4 |
 | 时代 | 古典 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 军事学 |
 | 关联分类 | 无 |
 | 技能 | trigger-friendly-single-stealth-this-turn |
 | 费用 | 1 |

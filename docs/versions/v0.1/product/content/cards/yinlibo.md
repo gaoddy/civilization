@@ -5,7 +5,7 @@ card_type: effect
 level: 4
 era: future
 playstyle: neutral
-taxon: phenomenon
+taxon: astronomy
 cost: 2
 match_text: 同左
 skills: [combatstart-all-enemies-minus-1-attack]
@@ -23,7 +23,7 @@ skills: [combatstart-all-enemies-minus-1-attack]
 | 星级 | 4 |
 | 时代 | 未来 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 科学 › 天文学 |
 | 关联分类 | 无 |
 | 技能 | combatstart-all-enemies-minus-1-attack |
 | 费用 | 2 |

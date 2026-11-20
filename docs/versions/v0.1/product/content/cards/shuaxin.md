@@ -5,7 +5,7 @@ card_type: effect
 level: 6
 era: future
 playstyle: neutral
-taxon: phenomenon
+taxon: economics
 cost: 2
 match_text: 同左
 skills: [trigger-refresh-shop-free]
@@ -23,7 +23,7 @@ skills: [trigger-refresh-shop-free]
 | 星级 | 6 |
 | 时代 | 未来 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 经济学 |
 | 关联分类 | 无 |
 | 技能 | trigger-refresh-shop-free |
 | 费用 | 2 |

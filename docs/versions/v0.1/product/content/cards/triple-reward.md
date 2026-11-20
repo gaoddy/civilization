@@ -5,7 +5,7 @@ card_type: effect
 level: 1
 era: prehistoric
 playstyle: neutral
-taxon: phenomenon
+taxon: economics
 cost: 0
 match_text: 同左
 skills: [trigger-discover-tribe-minion]
@@ -23,7 +23,7 @@ skills: [trigger-discover-tribe-minion]
 | 星级 | 1 |
 | 时代 | 史前 |
 | 玩法 | 中立 |
-| 科学分类 | 现象 |
+| 科学分类 | 社会 › 经济学 |
 | 关联分类 | 无 |
 | 技能 | trigger-discover-tribe-minion |
 | 费用 | 0 |
