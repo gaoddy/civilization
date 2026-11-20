@@ -1008,6 +1008,7 @@ error.INVALID_CHOICE,选择无效
 error.INVALID_STAGE,当前阶段不能执行该操作
 error.INVITE_EXPIRED,邀请已过期
 error.INVITE_NOT_FOUND,邀请不存在或已处理
+error.NOT_ACTIVE_SKILL,被动技能不能主动使用
 error.NOT_ENOUGH_GOLD,金币不足
 error.NOT_FRIENDS,你们还不是好友
 error.NOT_HOST,只有房主可以操作
