@@ -134,7 +134,7 @@ impl Taxonomy {
 - `Rank` 对应 `taxonomy.md` 的「界 / 门 / 纲 / 目 / 科 / 技术分类 / 学科」，只表达结构，不参与匹配。
 - `is_within` 沿父链上溯，最多 5 层；任一节点不存在返回 `false`。
 - `path` 从叶子返回至根的 id 列表（含自身），未知节点返回空列表。
-- `Catalog` 持有 `cards`、`heroes`、`skills`、`tokens` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。加载期校验所有卡牌与 Token 的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡，每张卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`）；随从与效果牌不得为 `hero` 类型，英雄卡必须为 `hero` 类型且技能存在；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
+- `Catalog` 持有 `cards`、`heroes`、`skills`、`tokens` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。加载期校验所有卡牌与 Token 的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡，每张卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`）；`CardType` 只有 `minion` / `effect`，`cards.json` 写入 `hero` 在反序列化阶段即被拒绝；英雄卡不含 `card_type`，与随从卡靠独立文件、独立结构体与独立集合区分；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
 - 按用途选池：英雄技能查询（视图、光环、战斗开始、首次刷新、回合开始与主动技能）只读 `catalog.heroes`；商店、卡池、三连、发现与棋盘随从只读 `catalog.cards`。两池同名同 id，任何路径不得跨池回落。
 
 ### 3.3 筛选与匹配

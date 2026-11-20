@@ -1,6 +1,5 @@
 ---
 id: gauss
-card_type: hero
 name: 高斯
 categories: [play:mammal]
 skills: [scholar-growth-twice]
@@ -14,7 +13,6 @@ skills: [scholar-growth-twice]
 | --- | --- |
 | id | gauss |
 | 名称 | 高斯 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
 | 技能 | scholar-growth-twice |
 

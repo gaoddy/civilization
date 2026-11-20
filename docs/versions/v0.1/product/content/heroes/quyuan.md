@@ -1,6 +1,5 @@
 ---
 id: quyuan
-card_type: hero
 name: 屈原
 categories: [play:mammal]
 skills: [shout]
@@ -14,7 +13,6 @@ skills: [shout]
 | --- | --- |
 | id | quyuan |
 | 名称 | 屈原 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
 | 技能 | shout |
 

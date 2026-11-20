@@ -387,7 +387,6 @@ def hero_entry(doc):
     """英雄卡只输出身份与技能字段；不含数值、时代与科学分类。"""
     return {
         "id": doc["id"],
-        "card_type": doc["card_type"],
         "categories": parse_categories(doc.get("categories")),
         "skills": doc.get("skills", []),
     }

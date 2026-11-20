@@ -105,13 +105,8 @@ impl Engine {
             let card_id = heroes
                 .get(&seat)
                 .ok_or_else(|| EngineError(format!("缺少座位 {seat} 的英雄选择")))?;
-            let card = self
-                .catalog
-                .heroes
-                .get(card_id)
-                .ok_or_else(|| EngineError(format!("英雄卡 {card_id} 不在英雄目录中")))?;
-            if card.card_type != CardType::Hero {
-                return Err(EngineError(format!("卡牌 {card_id} 不是英雄卡")));
+            if !self.catalog.heroes.contains_key(card_id) {
+                return Err(EngineError(format!("英雄卡 {card_id} 不在英雄目录中")));
             }
         }
 

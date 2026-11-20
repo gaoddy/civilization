@@ -1,6 +1,5 @@
 ---
 id: shenkuo
-card_type: hero
 name: 沈括
 categories: [play:mammal]
 skills: [observation]
@@ -14,7 +13,6 @@ skills: [observation]
 | --- | --- |
 | id | shenkuo |
 | 名称 | 沈括 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
 | 技能 | observation |
 

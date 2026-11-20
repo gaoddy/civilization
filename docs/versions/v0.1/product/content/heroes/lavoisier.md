@@ -1,6 +1,5 @@
 ---
 id: lavoisier
-card_type: hero
 name: 拉瓦锡
 categories: [play:reptile]
 skills: [aura-other-plus-0-plus-1]
@@ -14,7 +13,6 @@ skills: [aura-other-plus-0-plus-1]
 | --- | --- |
 | id | lavoisier |
 | 名称 | 拉瓦锡 |
-| 类型 | 英雄 |
 | 玩法 | 爬行纲 |
 | 技能 | aura-other-plus-0-plus-1 |
 

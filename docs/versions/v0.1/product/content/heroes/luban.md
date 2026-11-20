@@ -1,6 +1,5 @@
 ---
 id: luban
-card_type: hero
 name: 鲁班
 categories: [play:machine]
 skills: [mechanism-art]
@@ -14,7 +13,6 @@ skills: [mechanism-art]
 | --- | --- |
 | id | luban |
 | 名称 | 鲁班 |
-| 类型 | 英雄 |
 | 玩法 | 机械 |
 | 技能 | mechanism-art |
 

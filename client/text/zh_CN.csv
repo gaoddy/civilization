@@ -509,7 +509,6 @@ card.zongzhuang-xian.name,总装线
 card.zuqun-qianxi.match_text,同左
 card.zuqun-qianxi.name,族群迁徙
 enum.card_type.effect,效果
-enum.card_type.hero,英雄
 enum.card_type.minion,随从
 enum.era.classical,古典
 enum.era.feudal,封建

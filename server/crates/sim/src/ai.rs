@@ -81,7 +81,6 @@ pub fn buy_cost(card: &Card) -> u8 {
     match card.card_type {
         CardType::Minion => 3,
         CardType::Effect => card.cost.unwrap_or(3),
-        CardType::Hero => 0,
     }
 }
 

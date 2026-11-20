@@ -40,7 +40,6 @@ def hero_doc(**extra):
         "_file": "einstein.md",
         "id": "einstein",
         "name": "爱因斯坦",
-        "card_type": "hero",
         "categories": ["play:machine"],
         "skills": ["light-speed-strike"],
     }
@@ -77,9 +76,8 @@ class HeroAttrsTest(unittest.TestCase):
         )
         self.assertEqual(attrs["id"], "einstein")
         self.assertEqual(attrs["名称"], "爱因斯坦")
-        self.assertEqual(attrs["类型"], "英雄")
         self.assertEqual(attrs["技能"], "light-speed-strike")
-        for key in ("星级", "攻击力", "生命值", "时代", "科学分类",
+        for key in ("类型", "星级", "攻击力", "生命值", "时代", "科学分类",
                     "英雄技能", "英雄技能费用", "英雄技能类型",
                     "每回合次数", "触发时机"):
             self.assertNotIn(key, attrs)
@@ -143,7 +141,6 @@ class RealHeroCardsTest(unittest.TestCase):
                 continue
             doc = vd.parse_front_matter(path)
             heroes.append(doc)
-            self.assertEqual(doc["card_type"], "hero", doc["id"])
             self.assertTrue(vd.card_skills(doc), doc["id"])
             for sid in vd.card_skills(doc):
                 self.assertIn(sid, skills, f"{doc['id']} 引用了不存在的技能 {sid}")
@@ -339,11 +336,6 @@ class HeroCardsTest(unittest.TestCase):
         heroes = [hero_doc(attack=3)]
         errors = self.run_check(heroes)
         self.assertTrue(any("英雄卡不得有字段" in e for e in errors), errors)
-
-    def test_hero_with_wrong_card_type_is_rejected(self):
-        heroes = [hero_doc(card_type="minion")]
-        errors = self.run_check(heroes)
-        self.assertTrue(any("card_type 必须为 hero" in e for e in errors), errors)
 
 
 if __name__ == "__main__":

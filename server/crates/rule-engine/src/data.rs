@@ -12,8 +12,6 @@ pub enum CardType {
     Minion,
     #[serde(rename = "effect")]
     Effect,
-    #[serde(rename = "hero")]
-    Hero,
 }
 
 /// 玩法：本局启用的 13 种物种/造物路线，外加中立的通用卡。
@@ -177,7 +175,6 @@ pub struct Card {
 #[serde(deny_unknown_fields)]
 pub struct HeroCard {
     pub id: String,
-    pub card_type: CardType,
     pub categories: Vec<Category>,
     pub skills: Vec<String>,
 }
@@ -285,12 +282,6 @@ impl Catalog {
         let token_map = collect_unique(tokens, "tokens.json", |token| &token.id)?;
 
         for card in card_map.values() {
-            if card.card_type == CardType::Hero {
-                return Err(CatalogError::Rule(format!(
-                    "cards.json: 卡牌 {} 不得为英雄类型",
-                    card.id
-                )));
-            }
             for skill in &card.skills {
                 if !skill_map.contains_key(skill) {
                     return Err(CatalogError::Rule(format!(
@@ -302,12 +293,6 @@ impl Catalog {
         }
 
         for hero in hero_map.values() {
-            if hero.card_type != CardType::Hero {
-                return Err(CatalogError::Rule(format!(
-                    "heroes.json: 英雄卡 {} 类型必须为 hero",
-                    hero.id
-                )));
-            }
             for skill in &hero.skills {
                 if !skill_map.contains_key(skill) {
                     return Err(CatalogError::Rule(format!(

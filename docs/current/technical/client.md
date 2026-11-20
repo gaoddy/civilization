@@ -114,7 +114,7 @@ client/
   - `taxon_name(id)`：取 `enum.taxon.<id>`，空 id 返回空串，缺键回退为 id；
   - `taxon_path(id)`：从叶子沿 `parent` 上溯到根（最多 7 层），返回「界 → 科」顺序的展示名数组；未知节点或空 id 返回空数组。
 - `skill_name(id)`：取 `skill.<id>.name`，空 id 或缺键返回空串，避免内部技能 id 泄露到界面；卡牌详情与图鉴详情据此跳过没有展示名的技能。
-- `heroes.json` 单独载入 `CardDB.heroes`，不与 `cards` 合并：英雄与同名随从卡 id 相同但分属两个集合。`CardDB.hero(id)` / `hero_text(id)` 只读英雄池；英雄卡没有 `taxon`、时代与数值，界面按需只展示玩法、关联与技能。
+- `heroes.json` 单独载入 `CardDB.heroes`，不与 `cards` 合并：英雄与同名随从卡 id 相同但分属两个集合。`CardDB.hero(id)` / `hero_text(id)` 只读英雄池；英雄卡没有 `card_type`、`taxon`、时代与数值，界面按需只展示玩法、关联与技能。
 - `cards.json` 含 `categories`（`[{kind, value}]`，`kind` 为 `play` / `prey` / `host`）与 `taxon`，不再含 `is_hero`；每张卡至少 1 条 `play:`，没有 `neutral`。`tokens.json` 保留单值 `playstyle`（可缺省，缺省按 `neutral`）与 `taxon`，条目并入 `CardDB.cards`，因此 Token 卡面同样可按自身玩法与分类展示。
 
 ## 3. 六个场景

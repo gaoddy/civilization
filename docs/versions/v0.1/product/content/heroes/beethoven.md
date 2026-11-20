@@ -1,6 +1,5 @@
 ---
 id: beethoven
-card_type: hero
 name: 贝多芬
 categories: [play:mammal]
 skills: [human-growth-twice]
@@ -14,7 +13,6 @@ skills: [human-growth-twice]
 | --- | --- |
 | id | beethoven |
 | 名称 | 贝多芬 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
 | 技能 | human-growth-twice |
 

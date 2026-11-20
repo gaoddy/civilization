@@ -166,7 +166,7 @@ MINION_FIELDS = ["id", "name", "card_type", "categories", "taxon", "subtype", "l
                  "attack", "health", "is_scholar"]
 EFFECT_FIELDS = ["id", "name", "card_type", "level", "era", "categories", "taxon",
                  "cost", "match_text"]
-HERO_REQUIRED_FIELDS = ["id", "name", "card_type", "categories"]
+HERO_REQUIRED_FIELDS = ["id", "name", "categories"]
 HERO_OPTIONAL_FIELDS = {"skills"}
 HERO_COUNT = 32
 LEGACY_HERO_FIELDS = ["hero_skill", "hero_skill_cost", "hero_skill_type",
@@ -903,7 +903,6 @@ def derived_keywords(doc, skill_map):
 # 文档属性表里的中文名。校验时由 front matter 的英文 id 反查；gen_text 复用。
 ENUM_LABELS = {}
 KEYWORD_LABELS = {}
-CARD_TYPE_LABELS = {"hero": "英雄"}
 ENUM_COLUMNS = {"card_type": "类型", "playstyle": "玩法", "taxon": "科学分类",
                 "era": "时代", "subtype": "子类"}
 
@@ -970,8 +969,6 @@ def keyword_display(value):
 
 
 def enum_label(kind, value):
-    if kind == "card_type" and value in CARD_TYPE_LABELS:
-        return CARD_TYPE_LABELS[value]
     return ENUM_LABELS.get(kind, {}).get(value, value)
 
 
@@ -1081,7 +1078,6 @@ def expected_hero_attrs(doc, skill_map):
     attrs = {
         "id": doc["id"],
         "名称": doc["name"],
-        "类型": enum_label("card_type", doc["card_type"]),
         "玩法": play_categories_display(doc),
         "技能": "；".join(skills) if skills else "无",
     }
@@ -1493,8 +1489,6 @@ def check_hero_cards(cards, minions, effects, skill_map):
     allowed = set(HERO_REQUIRED_FIELDS) | HERO_OPTIONAL_FIELDS | {"_file"}
     by_id = {c["id"]: c for c in minions}
     for doc in heroes:
-        if doc["card_type"] != "hero":
-            fail(f"{doc['_file']}: card_type 必须为 hero，实为 {doc['card_type']!r}")
         extra = set(doc) - allowed
         if extra:
             fail(f"{doc['_file']}: 英雄卡不得有字段 {sorted(extra)}")

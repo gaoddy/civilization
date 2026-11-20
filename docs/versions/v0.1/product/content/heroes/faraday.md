@@ -1,6 +1,5 @@
 ---
 id: faraday
-card_type: hero
 name: 法拉第
 categories: [play:reptile, play:machine]
 skills: [faraday-cage]
@@ -14,7 +13,6 @@ skills: [faraday-cage]
 | --- | --- |
 | id | faraday |
 | 名称 | 法拉第 |
-| 类型 | 英雄 |
 | 玩法 | 爬行纲、机械 |
 | 技能 | faraday-cage |
 

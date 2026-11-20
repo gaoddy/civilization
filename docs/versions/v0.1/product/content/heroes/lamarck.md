@@ -1,6 +1,5 @@
 ---
 id: lamarck
-card_type: hero
 name: 拉马克
 categories: [play:mammal, play:bird, play:reptile, play:fish, play:insect, play:cephalopod, play:cnidarian]
 skills: [biology-evolve]
@@ -14,7 +13,6 @@ skills: [biology-evolve]
 | --- | --- |
 | id | lamarck |
 | 名称 | 拉马克 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲、鸟纲、爬行纲、鱼纲、昆虫纲、头足纲、水螅纲 |
 | 技能 | biology-evolve |
 

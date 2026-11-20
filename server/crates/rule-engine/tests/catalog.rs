@@ -71,7 +71,7 @@ fn cards_reject_unknown_prey_node() {
 #[test]
 fn heroes_reject_diverging_categories() {
     let cards = card_json("hominidae", r#"[{"kind":"play","value":"mammal"}]"#);
-    let heroes = r#"[{"id":"x","card_type":"hero","categories":[{"kind":"play","value":"bird"}],"skills":[]}]"#;
+    let heroes = r#"[{"id":"x","categories":[{"kind":"play","value":"bird"}],"skills":[]}]"#;
     let error = Catalog::from_json(&cards, heroes, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON)
         .expect_err("英雄与同名随从的分类不一致必须拒绝加载");
     assert!(error.to_string().contains("不一致"), "{error}");
@@ -96,13 +96,14 @@ fn hero_ids_also_exist_in_the_minion_pool() {
 
 #[test]
 fn heroes_reject_missing_matching_minion() {
-    let heroes = r#"[{"id":"no-such-card","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
+    let heroes =
+        r#"[{"id":"no-such-card","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     assert!(Catalog::from_json("[]", heroes, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn heroes_reject_matching_effect_card() {
-    let heroes = r#"[{"id":"aolinpike-jidian","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
+    let heroes = r#"[{"id":"aolinpike-jidian","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     let error = Catalog::from_json(
         CARDS_JSON,
         heroes,
@@ -118,7 +119,8 @@ fn heroes_reject_matching_effect_card() {
 #[test]
 fn heroes_allow_skills_that_diverge_from_minion() {
     // 英雄技能与同名随从卡各自维护：同名随从卡带战吼时，英雄可以不带技能。
-    let heroes = r#"[{"id":"adam-smith","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
+    let heroes =
+        r#"[{"id":"adam-smith","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     Catalog::from_json(
         CARDS_JSON,
         heroes,
@@ -132,7 +134,8 @@ fn heroes_allow_skills_that_diverge_from_minion() {
 
 #[test]
 fn heroes_reject_categories_that_diverge_from_minion() {
-    let heroes = r#"[{"id":"adam-smith","card_type":"hero","categories":[{"kind":"play","value":"bird"}],"skills":[]}]"#;
+    let heroes =
+        r#"[{"id":"adam-smith","categories":[{"kind":"play","value":"bird"}],"skills":[]}]"#;
     let error = Catalog::from_json(
         CARDS_JSON,
         heroes,
@@ -146,19 +149,21 @@ fn heroes_reject_categories_that_diverge_from_minion() {
 }
 
 #[test]
-fn heroes_reject_non_hero_card_type() {
+fn heroes_reject_unknown_field() {
+    // 英雄卡不再有 card_type；写入该字段按未知字段拒绝，防止把随从卡复制进英雄池。
     let bad = r#"[{"id":"x","card_type":"minion","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     assert!(Catalog::from_json("[]", bad, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn heroes_reject_unknown_skill() {
-    let bad = r#"[{"id":"x","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":["no-such-skill"]}]"#;
+    let bad = r#"[{"id":"x","categories":[{"kind":"play","value":"mammal"}],"skills":["no-such-skill"]}]"#;
     assert!(Catalog::from_json("[]", bad, "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
 
 #[test]
 fn cards_reject_hero_card_type() {
+    // CardType 已无 hero 变体，cards.json 写入 hero 在反序列化阶段即被拒绝。
     let bad = r#"[{"id":"x","card_type":"hero","categories":[{"kind":"play","value":"mammal"}],"skills":[]}]"#;
     assert!(Catalog::from_json(bad, "[]", "[]", "[]", CONFIG_JSON, TAXONOMY_JSON).is_err());
 }
