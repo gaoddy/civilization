@@ -45,8 +45,8 @@ func _check_lobby_page() -> void:
     )
     var all_button = instance.find_child("ChapterAll", true, false)
     _expect(
-        all_button != null and all_button.text.contains("432"),
-        "章节栏「全部」应显示 432，实际：%s" % (all_button.text if all_button != null else "无"),
+        all_button != null and all_button.text.contains("432") and all_button.text.contains("\n"),
+        "章节按钮应为名称在上、计数在下，实际：%s" % (all_button.text if all_button != null else "无"),
     )
     var rows = instance.find_child("GalleryGridRows", true, false)
     _expect(rows != null and rows.get_child_count() == 40, "首屏应只构建 40 张卡")
