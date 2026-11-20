@@ -45,6 +45,9 @@
 | 数值胶囊 | `UI.pill_label` | [components/pill.md](components/pill.md) |
 | 按钮变体 | `UI.styled_button` | [components/button.md](components/button.md) |
 | 卡片容器 | `UI.card_panel` | [components/card-panel.md](components/card-panel.md) |
+| 卡框与星级 | `CardFrame`（`client/ui/card_frame.gd`） | [tokens.md](tokens.md) |
+| 攻防底牌 | `StatPlate`（`client/ui/stat_plate.gd`） | [tokens.md](tokens.md) |
+| 时代象形 | `EraGlyph`（`client/ui/era_glyph.gd`） | [icons.md](icons.md) |
 | 卡牌图鉴 | `CardGallery`（`client/scenes/card_gallery.gd`） | [components/card-gallery.md](components/card-gallery.md) |
 | 图鉴视图切换 | `GalleryModeBar` | [components/gallery-mode-bar.md](components/gallery-mode-bar.md) |
 | 图鉴顶部筛选栏 | `GalleryFilterBar` | [components/gallery-filter-bar.md](components/gallery-filter-bar.md) |

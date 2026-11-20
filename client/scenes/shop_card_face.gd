@@ -6,13 +6,6 @@ extends RefCounted
 
 static func build(card_id: String, entry: Dictionary, frozen := false) -> Control:
     var face_node := CardFaceBase.create_face(card_id, false)
-    CardFaceBase.add_corner_badges(
-        face_node,
-        str(CardDB.display_cost(card_id)),
-        str(entry.get("era", "")),
-        "",
-        false,
-    )
     CardFaceBase.add_info(
         face_node,
         card_id,
@@ -22,6 +15,14 @@ static func build(card_id: String, entry: Dictionary, frozen := false) -> Contro
         false,
     )
     CardFaceBase.add_frame(face_node, card_id)
+    # 卡框压在信息区之上、角标之下：角标最后添加。
+    CardFaceBase.add_corner_badges(
+        face_node,
+        str(CardDB.display_cost(card_id)),
+        str(entry.get("era", "")),
+        "",
+        false,
+    )
     if frozen:
         CardFaceBase.add_freeze(face_node)
     return face_node

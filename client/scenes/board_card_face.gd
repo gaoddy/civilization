@@ -25,13 +25,6 @@ static func build(minion: Dictionary) -> Control:
     var card_id := str(minion.get("cardId", ""))
     var entry := CardDB.card(card_id)
     var face_node := CardFaceBase.create_face(card_id, false)
-    CardFaceBase.add_corner_badges(
-        face_node,
-        "",
-        "",
-        "★" if bool(minion.get("golden", false)) else "",
-        bool(minion.get("stealth", false)),
-    )
     CardFaceBase.add_info(
         face_node,
         card_id,
@@ -41,6 +34,14 @@ static func build(minion: Dictionary) -> Control:
         false,
     )
     CardFaceBase.add_frame(face_node, card_id)
+    # 卡框压在信息区之上、角标之下：角标最后添加。
+    CardFaceBase.add_corner_badges(
+        face_node,
+        "",
+        "",
+        "★" if bool(minion.get("golden", false)) else "",
+        bool(minion.get("stealth", false)),
+    )
     return face_node
 
 

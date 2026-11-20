@@ -115,6 +115,11 @@ func _ready() -> void:
                 (frame as Control).size == (face_node as Control).size,
                 "卡框应铺满卡面",
             )
+            var corners := open_card.find_child("CardCorners", true, false)
+            _expect(
+                corners is Control and (frame as Control).get_index() < (corners as Control).get_index(),
+                "卡框应绘制在角标之下",
+            )
         _expect(open_card.find_child("AttackPlate", true, false) is StatPlate, "卡面应有攻击底牌")
         _expect(open_card.find_child("HealthPlate", true, false) is StatPlate, "卡面应有血量底牌")
 
@@ -451,6 +456,13 @@ func _check_stat_plate() -> void:
             (label as Label).get_theme_constant("outline_size") >= 1,
             "数字应有描边",
         )
+        for sample in ["", "—", " "]:
+            var blank := StatPlate.create(kind, sample, 14)
+            _expect(not blank.draws_chrome(), "空值「%s」不应画底牌" % sample)
+            blank.free()
+        var numeric := StatPlate.create(kind, "-1", 14)
+        _expect(numeric.draws_chrome(), "数字应画底牌")
+        numeric.free()
         plate.queue_free()
 
 

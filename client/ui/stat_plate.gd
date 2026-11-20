@@ -38,13 +38,17 @@ func set_text(text: String) -> void:
 		queue_redraw()
 
 
-func _draw() -> void:
-	# 空值与「—」不画底牌，只留描边文字：效果牌、未知身材保持原排版。
+## 是否画底牌装饰：空值与「—」只留描边文字，效果牌与未知身材保持原排版。
+func draws_chrome() -> bool:
 	var label := get_child(0) as Label
 	if label == null:
-		return
+		return false
 	var value := label.text.strip_edges()
-	if value == "" or value == "—":
+	return value != "" and value != "—"
+
+
+func _draw() -> void:
+	if not draws_chrome():
 		return
 	if kind == HEALTH:
 		_draw_drop()
