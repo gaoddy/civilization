@@ -365,6 +365,7 @@ func _ready() -> void:
     )
 
     await _check_hero_skill_list()
+    await _check_skill_trigger_labels()
     await _check_room_skill_list()
 
     var missing_detail := _classification_text({"playstyle": "", "taxon": "does-not-exist"})
@@ -570,6 +571,60 @@ func _check_hero_skill_list() -> void:
         "无技能时应显示空态文案",
     )
     empty_box.queue_free()
+    await get_tree().process_frame
+
+
+## 触发标签：空触发 + 关键词显示「关键词」；未知触发显示「未知」，不冒充常驻。
+## 全部技能 id 无效时 skill_list 显示空态，不渲染空块。
+func _check_skill_trigger_labels() -> void:
+    var keyword_info := CardDB.skill_info("keyword-armor-1")
+    _expect(
+        str(keyword_info.get("trigger_label", "")) == TranslationServer.translate("ui.skill.trigger.keyword"),
+        "空触发 + 关键词应显示关键词标签，实际：%s" % str(keyword_info.get("trigger_label", "")),
+    )
+    _expect(
+        CardDB.trigger_name("smoke-unknown-trigger") == TranslationServer.translate("ui.skill.trigger.unknown"),
+        "未知触发应显示未知标签",
+    )
+
+    CardDB.skills["smoke-unknown-trigger"] = {
+        "id": "smoke-unknown-trigger",
+        "effects": [{"trigger": "smoke-unknown-trigger"}],
+    }
+    var box := VBoxContainer.new()
+    add_child(box)
+    UI.skill_list(box, ["smoke-unknown-trigger"])
+    await get_tree().process_frame
+    var text := _node_text(box)
+    _expect(
+        text.contains(TranslationServer.translate("ui.skill.trigger.unknown")),
+        "未知触发应渲染未知标签：%s" % text,
+    )
+    _expect(
+        not text.contains(TranslationServer.translate("ui.skill.trigger.passive")),
+        "未知触发不应冒充常驻：%s" % text,
+    )
+    _expect(
+        box.find_children("SkillBlock*", "VBoxContainer", true, false).size() == 1,
+        "未知触发应渲染一个技能块",
+    )
+    box.queue_free()
+    CardDB.skills.erase("smoke-unknown-trigger")
+    await get_tree().process_frame
+
+    var invalid_box := VBoxContainer.new()
+    add_child(invalid_box)
+    UI.skill_list(invalid_box, ["does-not-exist"])
+    await get_tree().process_frame
+    _expect(
+        _node_text(invalid_box).contains(TranslationServer.translate("ui.skill.empty")),
+        "全部技能 id 无效时应显示空态",
+    )
+    _expect(
+        invalid_box.find_children("SkillBlock*", "VBoxContainer", true, false).is_empty(),
+        "无效技能 id 不应渲染空块",
+    )
+    invalid_box.queue_free()
     await get_tree().process_frame
 
 

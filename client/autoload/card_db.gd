@@ -126,7 +126,7 @@ func skill_info(skill_id: String) -> Dictionary:
     if entry.is_empty():
         return {
             "name": "", "text": "", "trigger": "", "trigger_label": "",
-            "cost": -1, "uses": -1, "is_active": false,
+            "cost": -1, "uses": -1, "is_active": false, "exists": false,
         }
     var trigger := ""
     for effect in entry.get("effects", []):
@@ -136,8 +136,14 @@ func skill_info(skill_id: String) -> Dictionary:
     var keyword: Variant = entry.get("keyword")
     var has_keyword := keyword != null and str(keyword) != ""
     var trigger_label := ""
-    if trigger != "" or has_keyword:
+    if trigger != "":
         trigger_label = trigger_name(trigger)
+    elif has_keyword:
+        trigger_label = trigger_name("")
+    else:
+        var passive_key := "ui.skill.trigger.passive"
+        var passive := tr(passive_key)
+        trigger_label = "" if passive == passive_key else passive
     var text_key := "skill.%s.text" % skill_id
     var text := tr(text_key)
     if text == text_key:
@@ -150,15 +156,23 @@ func skill_info(skill_id: String) -> Dictionary:
         "cost": int(entry.get("cost")) if entry.get("cost") != null else -1,
         "uses": int(entry.get("uses_per_turn")) if entry.get("uses_per_turn") != null else -1,
         "is_active": trigger == "on_activate",
+        "exists": true,
     }
 
 
 ## 触发类型标签：读 `ui.skill.trigger.<trigger>`；空触发视为关键词技能，
-## 文案键为 `ui.skill.trigger.keyword`。缺键返回空串，避免内部 id 泄露到界面。
+## 文案键为 `ui.skill.trigger.keyword`。未知触发不冒充常驻，回退
+## `ui.skill.trigger.unknown`；标签缺键时返回空串，避免内部 id 泄露到界面。
 func trigger_name(trigger: String) -> String:
     var key := "ui.skill.trigger.%s" % ("keyword" if trigger == "" else trigger)
     var text := tr(key)
-    return "" if text == key else text
+    if text != key:
+        return text
+    if trigger == "":
+        return ""
+    var unknown_key := "ui.skill.trigger.unknown"
+    var unknown := tr(unknown_key)
+    return "" if unknown == unknown_key else unknown
 
 
 ## 展示名：Token 取 `token.<id>.name`，其余取 `card.<id>.name`；缺键回退为实体 id。
@@ -222,10 +236,11 @@ func playstyle_name(id: String) -> String:
 
 
 ## 玩法归属：读 `categories` 的 `play` 条目，按玩法顺序去重排列；
-## Token 没有 `categories` 时回退单值 `playstyle`。
+## 只有 Token 在缺少 `categories` 时回退单值 `playstyle`。
+## 普通卡缺少 `categories` 时返回空，由调用方显示「未定」，不静默按单值展示。
 func play_categories(entry: Dictionary) -> Array[String]:
     var values := category_values(entry, "play")
-    if values.is_empty():
+    if values.is_empty() and tokens.has(str(entry.get("id", ""))):
         var fallback := str(entry.get("playstyle", ""))
         if fallback != "":
             values.append(fallback)

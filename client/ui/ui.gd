@@ -313,13 +313,18 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
 
 ## 英雄技能列表：每条技能一个块，技能名（有名称时）与触发标签同行，
 ## 完整文本在下一行；主动技能追加费用与每回合次数。
+## 只渲染能解析到的技能；全部 id 无效时显示空态，不渲染空块。
 static func skill_list(parent: VBoxContainer, skill_ids: Array) -> void:
-    if skill_ids.is_empty():
+    var infos: Array[Dictionary] = []
+    for skill_id in skill_ids:
+        var info := CardDB.skill_info(str(skill_id))
+        if bool(info.get("exists", false)):
+            infos.append(info)
+    if infos.is_empty():
         parent.add_child(empty_hint(_translated_or_empty("ui.skill.empty")))
         return
     var index := 0
-    for skill_id in skill_ids:
-        var info := CardDB.skill_info(str(skill_id))
+    for info in infos:
         var block := VBoxContainer.new()
         block.name = "SkillBlock%d" % index
         block.add_theme_constant_override("separation", UITheme.space("space-2xs"))
@@ -327,8 +332,6 @@ static func skill_list(parent: VBoxContainer, skill_ids: Array) -> void:
 
         var name_text := str(info.get("name", ""))
         var trigger_text := str(info.get("trigger_label", ""))
-        if trigger_text == "":
-            trigger_text = _translated_or_empty("ui.skill.trigger.passive")
         if name_text != "" or trigger_text != "":
             var header := HBoxContainer.new()
             header.name = "SkillHeader"

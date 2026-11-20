@@ -1656,4 +1656,5 @@ ui.skill.trigger.on_play_effect,效果牌
 ui.skill.trigger.on_turn_start,回合开始时
 ui.skill.trigger.on_use,使用效果牌时
 ui.skill.trigger.passive,常驻
+ui.skill.trigger.unknown,未知
 ui.skill.uses,每回合 %d 次
