@@ -106,10 +106,10 @@ impl Engine {
                 .ok_or_else(|| EngineError(format!("缺少座位 {seat} 的英雄选择")))?;
             let card = self
                 .catalog
-                .cards
+                .heroes
                 .get(card_id)
-                .ok_or_else(|| EngineError(format!("英雄卡 {card_id} 不在卡牌目录中")))?;
-            if !card.is_hero {
+                .ok_or_else(|| EngineError(format!("英雄卡 {card_id} 不在英雄目录中")))?;
+            if card.card_type != CardType::Hero {
                 return Err(EngineError(format!("卡牌 {card_id} 不是英雄卡")));
             }
         }
@@ -363,16 +363,34 @@ impl Engine {
     }
 
     /// 按站位从左到右触发棋盘随从的 `OnTurnStart`；金色随从由执行器触发两次。
+    ///
+    /// 英雄卡先结算：无来源触发由执行器解析到英雄池，与首次刷新、战斗开始的
+    /// 「英雄被动优先」口径一致。
     fn fire_turn_start(&mut self, state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
         let Some(player) = state.players.get(usize::from(seat)) else {
             return Vec::new();
         };
+        let has_hero = player.hero.is_some();
         let owners: Vec<(InstanceId, bool)> = player
             .board
             .iter()
             .map(|minion| (minion.instance_id, minion.golden))
             .collect();
         let mut events = Vec::new();
+        if has_hero {
+            events.extend(self.fire(
+                state,
+                Trigger::OnTurnStart,
+                EffectCtx {
+                    seat,
+                    source: None,
+                    target: None,
+                    event_target: None,
+                    golden: false,
+                    discover_level: None,
+                },
+            ));
+        }
         for (instance_id, golden) in owners {
             events.extend(self.fire(
                 state,

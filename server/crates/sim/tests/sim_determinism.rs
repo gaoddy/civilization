@@ -175,6 +175,10 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 由 `ChooseTarget` 另行提交，新增 `AbandonTarget` 撤销入场）。金色奖励、
 /// 三连合并与入场观察者因此从「入场当次意图」推迟到「选定目标之后」；本批次
 /// 20 局中第 1、11 局走到该路径，最终哈希改变，其余局保持原值。
+///
+/// 2026-11-20 第十七次重定：英雄卡从普通卡池拆出为独立英雄卡，原 32 张英雄随从
+/// 保留在随从池且不再带 `is_hero` 标记，因此这些卡重新进入商店与随机池；本批次
+/// 20 局哈希随之全部改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

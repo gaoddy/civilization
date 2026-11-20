@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use common::{effects_of, minion, reborn_count, setup_with_gold};
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
-use rule_engine::data::{Card, CardType, Playstyle, Skill, Token};
+use rule_engine::data::{Card, CardType, HeroCard, Playstyle, Skill, Token};
 use rule_engine::effects::Duration;
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
@@ -55,8 +55,27 @@ fn add_card(
             health: Some(health),
             skills: skill_ids,
             is_scholar: false,
-            is_hero: false,
             cost: Some(1),
+        },
+    );
+}
+
+/// 把同 id 的随从卡镜像为英雄池条目：战斗开始的英雄技能只从英雄池读取。
+fn mirror_as_hero(engine: &mut Engine, id: &str) {
+    let card = engine
+        .catalog
+        .cards
+        .get(id)
+        .expect("镜像源卡应存在")
+        .clone();
+    engine.catalog.heroes.insert(
+        id.to_string(),
+        HeroCard {
+            id: id.to_string(),
+            card_type: CardType::Hero,
+            playstyle: card.playstyle,
+            specialty: card.specialty,
+            skills: card.skills,
         },
     );
 }
@@ -785,6 +804,7 @@ fn combat_start_order_heroes_then_minions() {
         30,
         &[(None, "OnCombatStart|DealDamage|enemy:all|amount=5")],
     );
+    mirror_as_hero(&mut engine, "hero");
     add_card(
         &mut engine,
         "minion0",
@@ -831,6 +851,42 @@ fn combat_start_order_heroes_then_minions() {
 }
 
 #[test]
+fn combat_start_hero_effects_read_hero_pool() {
+    let (mut engine, _state) = setup_with_gold(31);
+    add_card(
+        &mut engine,
+        "hero-only",
+        Playstyle::Mammal,
+        0,
+        30,
+        &[(None, "OnCombatStart|DealDamage|enemy:all|amount=5")],
+    );
+    mirror_as_hero(&mut engine, "hero-only");
+    // 同名随从卡移除技能，仅英雄池保留：战斗开始仍应打出 5 点伤害。
+    engine
+        .catalog
+        .cards
+        .get_mut("hero-only")
+        .expect("同名随从卡应存在")
+        .skills
+        .clear();
+    add_card(&mut engine, "tank", Playstyle::Mammal, 0, 10, &[]);
+    add_card(&mut engine, "defender", Playstyle::Mammal, 0, 5, &[]);
+
+    let log = battle_with(
+        &engine,
+        &[minion(&engine.catalog, 1, "tank")],
+        &[minion(&engine.catalog, 2, "defender")],
+        CombatSetup {
+            attacker_hero: Some("hero-only"),
+            ..CombatSetup::default()
+        },
+    );
+
+    assert!(deaths(&log).contains(&2), "英雄战斗开始技能只从英雄池读取");
+}
+
+#[test]
 fn delayed_battlecry_enemy_target_runs_at_combat_start() {
     let (mut engine, _state) = setup_with_gold(31);
     add_card(
@@ -869,6 +925,7 @@ fn delayed_battlecry_cancelled_if_source_left() {
         30,
         &[(None, "OnCombatStart|DealDamage|enemy:all|amount=5")],
     );
+    mirror_as_hero(&mut engine, "hero");
     add_card(
         &mut engine,
         "delayed",
@@ -1077,6 +1134,7 @@ fn combat_start_heroes_follow_first_side_order() {
         30,
         &[(None, "OnCombatStart|DealDamage|both:all|amount=5")],
     );
+    mirror_as_hero(&mut engine, "hero-a");
     add_card(
         &mut engine,
         "hero-b",
@@ -1088,6 +1146,7 @@ fn combat_start_heroes_follow_first_side_order() {
             "OnCombatStart|ModifyStats|both:all|attack=1,duration=permanent",
         )],
     );
+    mirror_as_hero(&mut engine, "hero-b");
     add_card(&mut engine, "p", Playstyle::Mammal, 0, 5, &[]);
     add_card(
         &mut engine,

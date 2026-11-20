@@ -21,6 +21,7 @@ use rule_engine::settle::SeatCombatReport;
 use rule_engine::state::{MinionInstance, Seat};
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
+const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
 const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
@@ -41,6 +42,7 @@ const HEROES: [&str; 8] = [
 fn catalog() -> Catalog {
     Catalog::from_json(
         CARDS_JSON,
+        HEROES_JSON,
         SKILLS_JSON,
         TOKENS_JSON,
         CONFIG_JSON,

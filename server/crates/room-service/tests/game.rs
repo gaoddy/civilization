@@ -16,6 +16,7 @@ use rule_engine::data::{CardType, Catalog, Playstyle, Skill};
 use rule_engine::state::Seat;
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
+const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
 const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
@@ -39,6 +40,7 @@ const SEED: u64 = 7;
 fn catalog() -> Catalog {
     Catalog::from_json(
         CARDS_JSON,
+        HEROES_JSON,
         SKILLS_JSON,
         TOKENS_JSON,
         CONFIG_JSON,
@@ -111,11 +113,7 @@ fn catalog_with_discover_on_play() -> Catalog {
     );
     let token_ids: BTreeSet<String> = catalog.tokens.keys().cloned().collect();
     for card in catalog.cards.values_mut() {
-        if card.card_type == CardType::Minion
-            && card.level == 1
-            && !card.is_hero
-            && !token_ids.contains(&card.id)
-        {
+        if card.card_type == CardType::Minion && card.level == 1 && !token_ids.contains(&card.id) {
             card.skills.push("test-discover-on-play".to_string());
         }
     }

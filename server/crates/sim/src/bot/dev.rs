@@ -9,7 +9,7 @@ use std::time::Duration;
 
 use futures_util::StreamExt;
 use futures_util::stream::FuturesUnordered;
-use rule_engine::data::Card;
+use rule_engine::data::HeroCard;
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
@@ -50,12 +50,11 @@ pub struct DevOutcome {
 ///
 /// `BTreeMap` 的迭代顺序即 id 升序，因此结果确定；英雄卡不足时返回错误，
 /// 避免调用方越界取英雄。
-fn take_heroes(cards: &BTreeMap<String, Card>, needed: usize) -> Result<Vec<String>, String> {
-    let heroes: Vec<String> = cards
+fn take_heroes(heroes: &BTreeMap<String, HeroCard>, needed: usize) -> Result<Vec<String>, String> {
+    let heroes: Vec<String> = heroes
         .values()
-        .filter(|card| card.is_hero)
         .take(needed)
-        .map(|card| card.id.clone())
+        .map(|hero| hero.id.clone())
         .collect();
     if heroes.len() < needed {
         return Err(format!(
@@ -80,7 +79,7 @@ pub async fn run(config: DevConfig) -> Result<DevOutcome, String> {
     } = config;
 
     let catalog = crate::embedded_catalog().map_err(|err| err.to_string())?;
-    let heroes = take_heroes(&catalog.cards, DEV_BOTS)?;
+    let heroes = take_heroes(&catalog.heroes, DEV_BOTS)?;
 
     let (code_tx, code_rx) = oneshot::channel();
     let mut handles: Vec<JoinHandle<Result<BotOutcome, String>>> = Vec::with_capacity(DEV_BOTS);

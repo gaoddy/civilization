@@ -50,7 +50,6 @@ fn add_card(
             health: Some(health),
             skills: vec![skill_id],
             is_scholar: false,
-            is_hero: false,
             cost: None,
         },
     );
@@ -231,7 +230,6 @@ fn first_eligible(engine: &Engine, state: &GameState, star: u8) -> Option<String
         .values()
         .find(|card| {
             card.card_type == CardType::Minion
-                && !card.is_hero
                 && card.level == star
                 && state.pool.get(&card.id).copied().unwrap_or(0) > 0
                 && card_in_pool(card, &state.enabled_playstyles)
@@ -415,6 +413,32 @@ fn first_refresh_adds_extra_slot_once() {
     let player = &state.players[0];
     assert_eq!(player.shop.len(), 6, "本回合不再追加额外槽位");
     assert_eq!(player.gold, gold_before - 1, "第二次刷新消耗 1 金币");
+}
+
+#[test]
+fn first_refresh_reads_hero_pool() {
+    let (mut engine, mut state) = setup(1);
+    state.players[0].hero = Some("galileo".to_string());
+    state.players[0].first_refresh_used = false;
+    state.players[0].first_refresh_pending = true;
+    // 从同名随从卡移除首次刷新技能，英雄池保留。
+    engine
+        .catalog
+        .cards
+        .get_mut("galileo")
+        .expect("伽利略随从卡应存在")
+        .skills
+        .retain(|skill| skill != "observation");
+
+    engine
+        .apply(&mut state, 0, Intent::RerollShop)
+        .expect("首次刷新应成功");
+
+    assert_eq!(
+        state.players[0].shop.len(),
+        7,
+        "英雄首次刷新技能只从英雄池读取"
+    );
 }
 
 #[test]
@@ -648,7 +672,6 @@ fn gain_minion_from_shop_moves_to_hand() {
         .values()
         .find(|card| {
             card.card_type == CardType::Minion
-                && !card.is_hero
                 && card.level == 2
                 && card_in_pool(card, &state.enabled_playstyles)
         })
@@ -697,7 +720,6 @@ fn gain_minion_runs_triple_check() {
         .values()
         .find(|card| {
             card.card_type == CardType::Minion
-                && !card.is_hero
                 && card.level == 2
                 && card_in_pool(card, &state.enabled_playstyles)
         })
@@ -1098,7 +1120,6 @@ fn salvage_adds_only_machine_minions_to_hand() {
             .get(&copy.card_id)
             .expect("获得的牌应在目录中");
         assert_eq!(card.playstyle, Playstyle::Machine, "随机池只含机械");
-        assert!(!card.is_hero, "排除英雄专属牌");
         assert!(
             !engine.catalog.tokens.contains_key(&copy.card_id),
             "排除 Token"

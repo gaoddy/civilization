@@ -26,7 +26,6 @@ fn card(playstyle: Playstyle, specialty: Vec<(&str, &str)>) -> Card {
         health: None,
         skills: vec![],
         is_scholar: false,
-        is_hero: false,
         cost: Some(2),
     }
 }

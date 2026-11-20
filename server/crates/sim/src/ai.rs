@@ -83,6 +83,7 @@ pub fn buy_cost(card: &Card) -> u8 {
     match card.card_type {
         CardType::Minion => 3,
         CardType::Effect => card.cost.unwrap_or(3),
+        CardType::Hero => 0,
     }
 }
 
@@ -175,7 +176,7 @@ fn pending_seat(pending: &PendingChoice) -> Seat {
 
 fn choose_hero_power(player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
     let hero_id = player.hero.as_deref()?;
-    let hero = catalog.cards.get(hero_id)?;
+    let hero = catalog.heroes.get(hero_id)?;
     for skill_id in &hero.skills {
         let Some(skill) = catalog.skills.get(skill_id) else {
             continue;
@@ -389,9 +390,6 @@ fn best_affordable(
         let Some(card) = catalog.cards.get(&slot.card_id) else {
             continue;
         };
-        if card.is_hero {
-            continue;
-        }
         if !effect_matches_playstyle(card, dominant) {
             continue;
         }
@@ -529,9 +527,10 @@ fn can_upgrade(player: &PlayerState, catalog: &Catalog) -> bool {
 /// 因此每回合最多连续刷新一次；引擎拒绝时驱动方会跳过该意图重新规划。
 fn choose_reroll(player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
     let any_affordable = player.shop.iter().flatten().any(|slot| {
-        catalog.cards.get(&slot.card_id).is_some_and(|card| {
-            !card.is_hero && card.card_type == CardType::Minion && buy_cost(card) <= player.gold
-        })
+        catalog
+            .cards
+            .get(&slot.card_id)
+            .is_some_and(|card| card.card_type == CardType::Minion && buy_cost(card) <= player.gold)
     });
     if any_affordable {
         return None;

@@ -5,8 +5,8 @@
 
 mod common;
 
-use common::{heroes, set_shop, test_catalog, test_playstyles};
-use rule_engine::data::CardType;
+use common::{effects_of, heroes, set_shop, test_catalog, test_playstyles};
+use rule_engine::data::{CardType, Skill};
 use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::engine::Engine;
 use rule_engine::intent::RejectCode;
@@ -30,7 +30,7 @@ fn minion_id() -> String {
     test_catalog()
         .cards
         .values()
-        .find(|card| card.card_type == CardType::Minion && !card.is_hero)
+        .find(|card| card.card_type == CardType::Minion)
         .expect("数据中应存在非英雄随从")
         .id
         .clone()
@@ -43,7 +43,6 @@ fn positive_attack_minion_id() -> String {
         .values()
         .find(|card| {
             card.card_type == CardType::Minion
-                && !card.is_hero
                 && !card.is_scholar
                 && card.attack.is_some_and(|attack| attack > 0)
         })
@@ -71,6 +70,36 @@ fn assert_all_false(affordances: &Affordances) {
     assert!(!affordances.can_upgrade_era);
     assert!(!affordances.can_use_hero_power);
     assert!(!affordances.can_end_recruit);
+}
+
+#[test]
+fn hero_power_reads_hero_pool() {
+    let (mut engine, state) = setup();
+    let hero_id = state.players[0].hero.clone().expect("应已选择英雄");
+    let skill_id = "test-hero-only-active";
+    engine.catalog.skills.insert(
+        skill_id.to_string(),
+        Skill {
+            id: skill_id.to_string(),
+            keyword: None,
+            effects: effects_of("OnActivate|DealDamage|enemy:single|amount=1"),
+            cost: Some(1),
+            uses_per_turn: None,
+        },
+    );
+    // 只把技能挂到英雄池；同名随从卡保持原技能。
+    engine.catalog.heroes.get_mut(&hero_id).unwrap().skills = vec![skill_id.to_string()];
+
+    let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
+    assert_eq!(
+        Some(skill_id),
+        seat_view.self_view.hero_power_skill_id.as_deref(),
+        "英雄主动技能只读英雄池"
+    );
+    assert!(
+        seat_view.self_view.hero_power_requires_target,
+        "英雄技能是否需要目标只读英雄池"
+    );
 }
 
 #[test]

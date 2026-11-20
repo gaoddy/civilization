@@ -201,6 +201,7 @@ fn shop_cost(card: &rule_engine::data::Card) -> u8 {
     match card.card_type {
         CardType::Minion => MINION_COST,
         CardType::Effect => card.cost.unwrap_or(MINION_COST),
+        CardType::Hero => 0,
     }
 }
 

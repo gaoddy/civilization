@@ -166,12 +166,11 @@ fn ai_choose_is_deterministic_for_seat() {
         Engine::new(catalog(), [11; 32], rule_engine::playstyles::draw(11));
     let heroes: std::collections::BTreeMap<Seat, String> = engine
         .catalog
-        .cards
+        .heroes
         .values()
-        .filter(|card| card.is_hero)
         .take(8)
         .enumerate()
-        .map(|(index, card)| (index as Seat, card.id.clone()))
+        .map(|(index, hero)| (index as Seat, hero.id.clone()))
         .collect();
     engine.start_game(&mut state, &heroes).expect("开局应成功");
     let a = ai::choose(&state, 0, &engine.catalog);
@@ -183,7 +182,7 @@ fn ai_choose_is_deterministic_for_seat() {
 
 #[test]
 fn assign_heroes_filters_by_enabled_playstyles_and_cycles() {
-    use rule_engine::data::{Playstyle, card_in_pool};
+    use rule_engine::data::{Playstyle, hero_in_pool};
     use std::collections::BTreeSet;
 
     let catalog = catalog();
@@ -199,9 +198,8 @@ fn assign_heroes_filters_by_enabled_playstyles_and_cycles() {
         "可用英雄不足 8 张时应循环取"
     );
     for id in &ids {
-        let card = catalog.cards.get(*id).expect("英雄卡应存在");
-        assert!(card.is_hero, "{id} 不是英雄卡");
-        assert!(card_in_pool(card, &plant), "{id} 不属于植物玩法卡池");
+        let hero = catalog.heroes.get(*id).expect("英雄卡应存在");
+        assert!(hero_in_pool(hero, &plant), "{id} 不属于植物玩法卡池");
     }
 
     // 哺乳玩法英雄充足：按 id 升序取前 8 张，不重复。

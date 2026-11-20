@@ -55,7 +55,6 @@ fn add_card(engine: &mut Engine, id: &str, attack: i32, health: i32, keywords: &
             health: Some(health),
             skills: skill_ids,
             is_scholar: false,
-            is_hero: false,
             cost: Some(1),
         },
     );

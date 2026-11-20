@@ -237,10 +237,7 @@ fn is_level_minion(
     playstyles: &BTreeSet<Playstyle>,
 ) -> bool {
     catalog.cards.get(card_id).is_some_and(|card| {
-        card.card_type == CardType::Minion
-            && !card.is_hero
-            && card.level == star
-            && card_in_pool(card, playstyles)
+        card.card_type == CardType::Minion && card.level == star && card_in_pool(card, playstyles)
     })
 }
 
@@ -256,7 +253,6 @@ fn first_eligible(
         .values()
         .find(|card| {
             card.card_type == CardType::Minion
-                && !card.is_hero
                 && card.level == star
                 && pool.get(&card.id).copied().unwrap_or(0) > 0
                 && card_in_pool(card, playstyles)

@@ -54,10 +54,11 @@ fn start_game_rejects_missing_seat() {
 fn start_game_rejects_non_hero_card() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
     let mut heroes = heroes();
-    let non_hero = test_catalog()
+    let catalog = test_catalog();
+    let non_hero = catalog
         .cards
         .values()
-        .find(|card| !card.is_hero)
+        .find(|card| !catalog.heroes.contains_key(&card.id))
         .expect("数据中应存在非英雄卡")
         .id
         .clone();

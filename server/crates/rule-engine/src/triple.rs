@@ -255,7 +255,6 @@ fn is_discover_candidate(
     pool: &std::collections::BTreeMap<String, u16>,
 ) -> bool {
     card.card_type == CardType::Minion
-        && !card.is_hero
         && card.level == level
         && card_in_pool(card, enabled_playstyles)
         && pool.get(&card.id).copied().unwrap_or(0) > 0

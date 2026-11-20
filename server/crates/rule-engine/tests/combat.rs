@@ -55,7 +55,6 @@ fn add_card_with(
             health: Some(health),
             skills: skill_ids,
             is_scholar,
-            is_hero: false,
             cost: Some(1),
         },
     );

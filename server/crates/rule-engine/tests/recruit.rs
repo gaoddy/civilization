@@ -41,7 +41,7 @@ fn fill_board(state: &mut GameState, seat: Seat, count: usize) {
     let ids: Vec<String> = catalog
         .cards
         .values()
-        .filter(|card| card.card_type == CardType::Minion && !card.is_hero)
+        .filter(|card| card.card_type == CardType::Minion)
         .map(|card| card.id.clone())
         .take(count)
         .collect();
@@ -934,6 +934,18 @@ fn hero_cards_never_appear_in_shop() {
     // 只刷 6 星：该星级同时有英雄卡 knuth 与普通随从。
     engine.catalog.config.shop_weights[0] = [0, 0, 0, 0, 0, 100, 0];
     let catalog = test_catalog();
+    // 只在英雄池存在的 id：商店若误读英雄池就会把它刷出来。
+    let hero_only = "hero-only-in-hero-pool";
+    engine.catalog.heroes.insert(
+        hero_only.to_string(),
+        rule_engine::data::HeroCard {
+            id: hero_only.to_string(),
+            card_type: CardType::Hero,
+            playstyle: rule_engine::data::Playstyle::Neutral,
+            specialty: Vec::new(),
+            skills: Vec::new(),
+        },
+    );
 
     for _ in 0..40 {
         engine.roll_shop(&mut state, 0);
@@ -942,8 +954,8 @@ fn hero_cards_never_appear_in_shop() {
                 .cards
                 .get(&slot.card_id)
                 .expect("商店卡牌应存在于目录");
-            assert!(!card.is_hero, "英雄卡 {} 不应出现在商店", card.id);
             assert_eq!(card.level, 6);
+            assert_ne!(slot.card_id, hero_only, "商店不得从英雄池取卡");
         }
     }
 }
@@ -1090,11 +1102,10 @@ fn start_game_fills_turn_one_shops() {
             "座位 {seat} 的第 1 回合商店应有卡"
         );
         for slot in shop.iter().flatten() {
-            let card = catalog
+            catalog
                 .cards
                 .get(&slot.card_id)
                 .expect("商店卡牌应存在于目录");
-            assert!(!card.is_hero, "第 1 回合商店不应出现英雄卡 {}", card.id);
         }
     }
 

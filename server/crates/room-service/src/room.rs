@@ -13,7 +13,7 @@ use std::fmt;
 
 use protocol::RoomUpdatePlayersItem;
 use protocol::server::RoomUpdate;
-use rule_engine::data::{Catalog, Playstyle, card_in_pool};
+use rule_engine::data::{Catalog, Playstyle, hero_in_pool};
 use rule_engine::state::{Phase, Seat};
 
 use crate::auth::Session;
@@ -178,18 +178,17 @@ impl Room {
         }
         let enabled: BTreeSet<Playstyle> = self.playstyles.iter().copied().collect();
         let mut heroes: Vec<String> = catalog
-            .cards
+            .heroes
             .values()
-            .filter(|card| card.is_hero && card_in_pool(card, &enabled))
-            .map(|card| card.id.clone())
+            .filter(|hero| hero_in_pool(hero, &enabled))
+            .map(|hero| hero.id.clone())
             .collect();
         // 产品兜底：本局玩法过滤后一张英雄都没有时，回退到全部英雄卡。
         if heroes.is_empty() {
             heroes = catalog
-                .cards
+                .heroes
                 .values()
-                .filter(|card| card.is_hero)
-                .map(|card| card.id.clone())
+                .map(|hero| hero.id.clone())
                 .collect();
         }
         heroes.sort();
@@ -500,7 +499,7 @@ impl RoomRegistry {
         Ok(())
     }
 
-    /// 选择英雄。卡必须存在、`is_hero`，且在本人的候选里；确认后不可改选。
+    /// 选择英雄。卡必须存在于英雄池，且在本人的候选里；确认后不可改选。
     ///
     /// 非 `Lobby` 阶段成员集合已冻结，返回 [`RoomError::WrongPhase`]。
     pub fn select_hero(
@@ -517,7 +516,7 @@ impl RoomRegistry {
         if !room.is_occupied(player_id) {
             return Err(RoomError::NotInRoom);
         }
-        if !catalog.cards.get(card_id).is_some_and(|card| card.is_hero) {
+        if !catalog.heroes.contains_key(card_id) {
             return Err(RoomError::NotAHeroCard);
         }
         if room.slot_mut(player_id).is_some_and(|slot| slot.ready) {

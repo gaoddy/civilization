@@ -77,11 +77,16 @@ impl Engine {
 
         let mut result = Vec::with_capacity(sources.len());
         for (source, card_id) in sources {
-            let Some(card) = self.catalog.cards.get(&card_id) else {
+            // `source == None` 表示英雄卡：光环技能只从英雄池取，避免与同名随从串用。
+            let skills = match source {
+                Some(_) => self.catalog.cards.get(&card_id).map(|card| &card.skills),
+                None => self.catalog.heroes.get(&card_id).map(|hero| &hero.skills),
+            };
+            let Some(skills) = skills else {
                 continue;
             };
             let mut effects = Vec::new();
-            for skill_id in &card.skills {
+            for skill_id in skills {
                 let Some(skill) = self.catalog.skills.get(skill_id) else {
                     continue;
                 };

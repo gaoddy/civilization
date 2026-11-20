@@ -62,7 +62,6 @@ fn add_card_at(
             health: Some(health),
             skills: skill_ids,
             is_scholar: false,
-            is_hero: false,
             cost: Some(1),
         },
     );

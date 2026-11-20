@@ -16,12 +16,13 @@ use protocol::{RoomClosedReason, ServerEnvelope, ServerMessage};
 use room_service::auth::{Session, SessionStore};
 use room_service::clock::FixedClock;
 use room_service::room::{RoomError, RoomRegistry, SEAT_COUNT};
-use rule_engine::data::{Card, Catalog, Playstyle, Specialty, SpecialtyKind, card_in_pool};
+use rule_engine::data::{Catalog, HeroCard, Playstyle, Specialty, SpecialtyKind, hero_in_pool};
 use rule_engine::state::Phase;
 use serde_json::{Value, json};
 use tokio_tungstenite::tungstenite::Message;
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
+const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
 const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
@@ -31,6 +32,7 @@ const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
 fn catalog() -> Catalog {
     Catalog::from_json(
         CARDS_JSON,
+        HEROES_JSON,
         SKILLS_JSON,
         TOKENS_JSON,
         CONFIG_JSON,
@@ -92,18 +94,18 @@ fn catalog_with_generic_heroes(hero_ids: &[&str]) -> Catalog {
     let mut catalog = catalog();
     let keep_all = hero_ids.is_empty();
     catalog
-        .cards
-        .retain(|_, card| !card.is_hero || keep_all || hero_ids.contains(&card.id.as_str()));
-    for card in catalog.cards.values_mut().filter(|card| card.is_hero) {
-        make_generic_hero(card);
+        .heroes
+        .retain(|_, hero| keep_all || hero_ids.contains(&hero.id.as_str()));
+    for hero in catalog.heroes.values_mut() {
+        make_generic_hero(hero);
     }
     catalog
 }
 
-/// 把英雄改成「中立且无玩法关联」，`card_in_pool` 恒为真。
-fn make_generic_hero(card: &mut Card) {
-    card.playstyle = Playstyle::Neutral;
-    card.specialty.clear();
+/// 把英雄改成「中立且无玩法关联」，`hero_in_pool` 恒为真。
+fn make_generic_hero(hero: &mut HeroCard) {
+    hero.playstyle = Playstyle::Neutral;
+    hero.specialty.clear();
 }
 
 /// 在满座大厅里让所有人选好不同英雄并准备，但仍停留在 `Lobby`。
@@ -782,12 +784,11 @@ fn candidates_are_limited_to_enabled_playstyles() {
             .candidates_of(&room_id, &player.player_id)
             .expect("每个座位都应有候选")
         {
-            let card = catalog.cards.get(&id).expect("候选必须是卡表中的英雄");
-            assert!(card.is_hero, "候选 {id} 必须是英雄卡");
+            let hero = catalog.heroes.get(&id).expect("候选必须是卡表中的英雄");
             assert!(
-                card_in_pool(card, &enabled),
+                hero_in_pool(hero, &enabled),
                 "候选 {id}（playstyle={:?}）不在本局启用的玩法内",
-                card.playstyle
+                hero.playstyle
             );
         }
     }
@@ -861,21 +862,16 @@ fn pool_smaller_than_candidate_count_takes_whole_pool() {
 
 #[test]
 fn empty_filtered_pool_falls_back_to_all_heroes() {
-    // 所有英雄都带 `play:neutral`：`card_in_pool` 不命中，过滤后池为空。
+    // 所有英雄都带 `play:neutral`：`hero_in_pool` 不命中，过滤后池为空。
     let mut catalog = catalog();
-    for card in catalog.cards.values_mut().filter(|card| card.is_hero) {
-        card.playstyle = Playstyle::Neutral;
-        card.specialty = vec![Specialty {
+    for hero in catalog.heroes.values_mut() {
+        hero.playstyle = Playstyle::Neutral;
+        hero.specialty = vec![Specialty {
             kind: SpecialtyKind::Play,
             value: "neutral".to_string(),
         }];
     }
-    let all_heroes: BTreeSet<String> = catalog
-        .cards
-        .values()
-        .filter(|card| card.is_hero)
-        .map(|card| card.id.clone())
-        .collect();
+    let all_heroes: BTreeSet<String> = catalog.heroes.keys().cloned().collect();
 
     let (registry, room_id, _code, players) = lobby_room_with(catalog);
     let mut seen = BTreeSet::new();
@@ -957,10 +953,10 @@ fn select_hero_outside_candidates_is_rejected() {
 
     let candidates = registry.candidates_of(&room_id, player).expect("有候选");
     let outside = catalog
-        .cards
-        .values()
-        .find(|card| card.is_hero && !candidates.contains(&card.id))
-        .map(|card| card.id.clone())
+        .heroes
+        .keys()
+        .find(|id| !candidates.contains(*id))
+        .cloned()
         .expect("存在不在候选里的英雄卡");
 
     let error = registry

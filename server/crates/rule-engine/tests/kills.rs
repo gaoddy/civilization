@@ -7,10 +7,30 @@ mod common;
 
 use common::{effects_of, minion, setup_with_gold};
 use rule_engine::combat::{CombatAction, CombatLog, CombatSetup, simulate_with};
-use rule_engine::data::{Card, CardType, Playstyle, Skill, Token};
+use rule_engine::data::{Card, CardType, HeroCard, Playstyle, Skill, Token};
 use rule_engine::engine::Engine;
 use rule_engine::rng::RngStreams;
 use rule_engine::state::{InstanceId, MinionInstance, Seat};
+
+/// 把同 id 的随从卡镜像为英雄池条目：战斗开始的英雄技能只从英雄池读取。
+fn mirror_as_hero(engine: &mut Engine, id: &str) {
+    let card = engine
+        .catalog
+        .cards
+        .get(id)
+        .expect("镜像源卡应存在")
+        .clone();
+    engine.catalog.heroes.insert(
+        id.to_string(),
+        HeroCard {
+            id: id.to_string(),
+            card_type: CardType::Hero,
+            playstyle: card.playstyle,
+            specialty: card.specialty,
+            skills: card.skills,
+        },
+    );
+}
 
 /// 插入一张合成随从卡，携带若干 `(keyword, effects)` 技能。
 fn add_card(
@@ -50,7 +70,6 @@ fn add_card(
             health: Some(health),
             skills: skill_ids,
             is_scholar: false,
-            is_hero: false,
             cost: Some(1),
         },
     );
@@ -199,6 +218,7 @@ fn hero_effect_has_no_kill_attribution() {
         0,
         &[(Some("hero"), "OnCombatStart|DealDamage|enemy:all|amount=9")],
     );
+    mirror_as_hero(&mut engine, "hero");
 
     let log = simulate_with(
         &engine,

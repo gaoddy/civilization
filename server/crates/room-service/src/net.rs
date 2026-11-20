@@ -2170,7 +2170,7 @@ mod tests {
         };
 
         // 移除一张已选英雄卡，使 `GameTask::new` 必然失败。
-        state.catalog.cards.remove(&last_hero);
+        state.catalog.heroes.remove(&last_hero);
 
         let mut task = RoomTask {
             state,

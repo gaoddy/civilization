@@ -26,6 +26,7 @@ use rule_engine::data::{Catalog, Playstyle, SpecialtyKind};
 use tokio::sync::Mutex;
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
+const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
 const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
@@ -108,6 +109,7 @@ impl AppState {
 fn load_catalog() -> Result<Catalog, String> {
     let catalog = Catalog::from_json(
         CARDS_JSON,
+        HEROES_JSON,
         SKILLS_JSON,
         TOKENS_JSON,
         CONFIG_JSON,
@@ -118,38 +120,28 @@ fn load_catalog() -> Result<Catalog, String> {
     Ok(catalog)
 }
 
-/// 校验英雄卡池：至少 1 张英雄，且每张英雄的分类字段合法。
+/// 校验英雄卡池：至少 1 张英雄，且每张英雄的关联分类合法。
 ///
-/// 候选池允许小于满座需求（池不足时跨玩家重复），因此不再要求英雄达到
+/// 候选池允许小于满座需求（池不足时跨玩家重复），因此不要求英雄达到
 /// `SEAT_COUNT * CANDIDATE_COUNT` 张；只要至少有一张可用英雄，房间就能开局。
-/// 分类字段要求 `taxon` 是分类树中的叶子、`specialty` 的 `play:` 取值是合法玩法。
+/// 英雄卡不持有 `taxon`；`specialty` 的 `play:` 取值必须是合法玩法。
 ///
 /// # Errors
 ///
-/// 英雄卡为空，或任意英雄的 `taxon` / `play:` 关联不合法时返回错误文本。
+/// 英雄卡为空，或任意英雄的 `play:` 关联不合法时返回错误文本。
 fn ensure_hero_pool(catalog: &Catalog) -> Result<(), String> {
-    let heroes: Vec<&rule_engine::data::Card> =
-        catalog.cards.values().filter(|card| card.is_hero).collect();
+    let heroes: Vec<&rule_engine::data::HeroCard> = catalog.heroes.values().collect();
     if heroes.is_empty() {
         return Err("卡表没有英雄卡".to_string());
     }
-    for card in heroes {
-        if card.taxon.is_empty()
-            || !catalog.taxonomy.contains(&card.taxon)
-            || !catalog.taxonomy.is_leaf(&card.taxon)
-        {
-            return Err(format!(
-                "英雄卡 {} 的分类字段不合法：taxon {}",
-                card.id, card.taxon
-            ));
-        }
-        for specialty in &card.specialty {
+    for hero in heroes {
+        for specialty in &hero.specialty {
             if specialty.kind == SpecialtyKind::Play
                 && Playstyle::from_id(&specialty.value).is_none()
             {
                 return Err(format!(
                     "英雄卡 {} 的 specialty play:{} 不是合法玩法",
-                    card.id, specialty.value
+                    hero.id, specialty.value
                 ));
             }
         }
@@ -256,13 +248,15 @@ pub use view::SeatInfo;
 #[cfg(test)]
 mod tests {
     use super::{
-        CARDS_JSON, CONFIG_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON, ensure_hero_pool,
+        CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON,
+        ensure_hero_pool,
     };
-    use rule_engine::data::Catalog;
+    use rule_engine::data::{Catalog, Specialty, SpecialtyKind};
 
     fn catalog() -> Catalog {
         Catalog::from_json(
             CARDS_JSON,
+            HEROES_JSON,
             SKILLS_JSON,
             TOKENS_JSON,
             CONFIG_JSON,
@@ -274,22 +268,21 @@ mod tests {
     #[test]
     fn hero_pool_requires_at_least_one_hero() {
         let mut catalog = catalog();
-        catalog.cards.retain(|_, card| !card.is_hero);
+        catalog.heroes.clear();
         let error = ensure_hero_pool(&catalog).expect_err("没有英雄卡必须拒绝启动");
         assert!(error.contains("没有英雄卡"), "实际：{error}");
     }
 
     #[test]
-    fn hero_pool_rejects_invalid_classification() {
+    fn hero_pool_rejects_invalid_playstyle_specialty() {
         let mut catalog = catalog();
-        let hero = catalog
-            .cards
-            .values_mut()
-            .find(|card| card.is_hero)
-            .expect("应有英雄卡");
-        hero.taxon = "not-a-taxon".to_string();
-        let error = ensure_hero_pool(&catalog).expect_err("非法分类必须拒绝启动");
-        assert!(error.contains("分类字段不合法"), "实际：{error}");
+        let hero = catalog.heroes.values_mut().next().expect("应有英雄卡");
+        hero.specialty = vec![Specialty {
+            kind: SpecialtyKind::Play,
+            value: "not-a-playstyle".to_string(),
+        }];
+        let error = ensure_hero_pool(&catalog).expect_err("非法玩法关联必须拒绝启动");
+        assert!(error.contains("不是合法玩法"), "实际：{error}");
     }
 
     #[test]

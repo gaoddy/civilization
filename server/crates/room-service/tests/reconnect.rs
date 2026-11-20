@@ -26,6 +26,7 @@ use sim::bot::client::{BotConfig, run};
 use tokio::sync::{mpsc, oneshot};
 use tokio_tungstenite::tungstenite::Message;
 
+const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
 const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
@@ -49,6 +50,7 @@ const SEED: u64 = 7;
 fn catalog() -> Catalog {
     Catalog::from_json(
         CARDS_JSON,
+        HEROES_JSON,
         SKILLS_JSON,
         TOKENS_JSON,
         CONFIG_JSON,
@@ -520,11 +522,10 @@ async fn authenticate_ws(client: &mut WsClient, name: &str) -> String {
 fn hero_cards() -> Vec<String> {
     let catalog = sim::embedded_catalog().expect("内嵌卡表应能加载");
     catalog
-        .cards
+        .heroes
         .values()
-        .filter(|card| card.is_hero)
         .take(8)
-        .map(|card| card.id.clone())
+        .map(|hero| hero.id.clone())
         .collect()
 }
 

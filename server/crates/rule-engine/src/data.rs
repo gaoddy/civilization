@@ -12,6 +12,8 @@ pub enum CardType {
     Minion,
     #[serde(rename = "effect")]
     Effect,
+    #[serde(rename = "hero")]
+    Hero,
 }
 
 /// 玩法：本局启用的 13 种物种/造物路线，外加中立的通用卡。
@@ -156,8 +158,19 @@ pub struct Card {
     pub health: Option<i32>,
     pub skills: Vec<String>,
     pub is_scholar: bool,
-    pub is_hero: bool,
     pub cost: Option<u8>,
+}
+
+/// 英雄卡：只保留身份与技能字段，与随从卡分属不同集合。
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HeroCard {
+    pub id: String,
+    pub card_type: CardType,
+    pub playstyle: Playstyle,
+    #[serde(default)]
+    pub specialty: Vec<Specialty>,
+    pub skills: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -209,6 +222,7 @@ pub struct GameConfig {
 #[derive(Debug, Clone)]
 pub struct Catalog {
     pub cards: BTreeMap<String, Card>,
+    pub heroes: BTreeMap<String, HeroCard>,
     pub skills: BTreeMap<String, Skill>,
     pub tokens: BTreeMap<String, Token>,
     pub config: GameConfig,
@@ -221,11 +235,19 @@ pub struct Catalog {
 /// - `Neutral`：`specialty` 中没有 `play:` 时视为纯通用，始终在池中；
 ///   有 `play:` 时至少一个命中本局玩法才在池中。学者与中立工具卡同一口径。
 pub fn card_in_pool(card: &Card, enabled: &BTreeSet<Playstyle>) -> bool {
-    if card.playstyle != Playstyle::Neutral {
-        return enabled.contains(&card.playstyle);
+    in_pool(card.playstyle, &card.specialty, enabled)
+}
+
+/// 英雄卡是否在本局英雄候选池内；口径与 [`card_in_pool`] 一致。
+pub fn hero_in_pool(hero: &HeroCard, enabled: &BTreeSet<Playstyle>) -> bool {
+    in_pool(hero.playstyle, &hero.specialty, enabled)
+}
+
+fn in_pool(playstyle: Playstyle, specialty: &[Specialty], enabled: &BTreeSet<Playstyle>) -> bool {
+    if playstyle != Playstyle::Neutral {
+        return enabled.contains(&playstyle);
     }
-    let associations = card
-        .specialty
+    let associations = specialty
         .iter()
         .filter(|specialty| specialty.kind == SpecialtyKind::Play);
     let mut any = false;
@@ -243,6 +265,7 @@ pub fn card_in_pool(card: &Card, enabled: &BTreeSet<Playstyle>) -> bool {
 impl Catalog {
     pub fn from_json(
         cards: &str,
+        heroes: &str,
         skills: &str,
         tokens: &str,
         config: &str,
@@ -250,6 +273,8 @@ impl Catalog {
     ) -> Result<Catalog, CatalogError> {
         let cards: Vec<Card> =
             serde_json::from_str(cards).map_err(|err| CatalogError::File("cards.json", err))?;
+        let heroes: Vec<HeroCard> =
+            serde_json::from_str(heroes).map_err(|err| CatalogError::File("heroes.json", err))?;
         let skills: Vec<Skill> =
             serde_json::from_str(skills).map_err(|err| CatalogError::File("skills.json", err))?;
         let tokens: Vec<Token> =
@@ -260,10 +285,17 @@ impl Catalog {
             .map_err(|err| CatalogError::File("taxonomy.json", err))?;
 
         let card_map = collect_unique(cards, "cards.json", |card| &card.id)?;
+        let hero_map = collect_unique(heroes, "heroes.json", |hero| &hero.id)?;
         let skill_map = collect_unique(skills, "skills.json", |skill| &skill.id)?;
         let token_map = collect_unique(tokens, "tokens.json", |token| &token.id)?;
 
         for card in card_map.values() {
+            if card.card_type == CardType::Hero {
+                return Err(CatalogError::Rule(format!(
+                    "cards.json: 卡牌 {} 不得为英雄类型",
+                    card.id
+                )));
+            }
             for skill in &card.skills {
                 if !skill_map.contains_key(skill) {
                     return Err(CatalogError::Rule(format!(
@@ -274,9 +306,53 @@ impl Catalog {
             }
         }
 
+        for hero in hero_map.values() {
+            if hero.card_type != CardType::Hero {
+                return Err(CatalogError::Rule(format!(
+                    "heroes.json: 英雄卡 {} 类型必须为 hero",
+                    hero.id
+                )));
+            }
+            for skill in &hero.skills {
+                if !skill_map.contains_key(skill) {
+                    return Err(CatalogError::Rule(format!(
+                        "heroes.json: 英雄卡 {} 引用了不存在的技能 {}",
+                        hero.id, skill
+                    )));
+                }
+            }
+            // 两池同名同 id，但必须各自从自己的池取数；共享字段不一致会让
+            // 仅按用途选池的查询产生分叉，因此在加载期直接拒绝。
+            let Some(card) = card_map.get(&hero.id) else {
+                return Err(CatalogError::Rule(format!(
+                    "heroes.json: 英雄卡 {} 缺少同 id 的随从卡",
+                    hero.id
+                )));
+            };
+            if card.card_type != CardType::Minion {
+                return Err(CatalogError::Rule(format!(
+                    "heroes.json: 英雄卡 {} 的同 id 卡不是随从卡",
+                    hero.id
+                )));
+            }
+            if card.playstyle != hero.playstyle
+                || card.specialty != hero.specialty
+                || card.skills != hero.skills
+            {
+                return Err(CatalogError::Rule(format!(
+                    "heroes.json: 英雄卡 {} 与同名随从卡的玩法、关联或技能不一致",
+                    hero.id
+                )));
+            }
+        }
+
         let taxonomy_errors = validate_taxonomy(&taxonomy, &card_map, &token_map);
         if !taxonomy_errors.is_empty() {
             return Err(CatalogError::Rule(taxonomy_errors.join("\n")));
+        }
+        let hero_errors = validate_hero_specialty(&taxonomy, &hero_map);
+        if !hero_errors.is_empty() {
+            return Err(CatalogError::Rule(hero_errors.join("\n")));
         }
 
         let mut effect_errors = Vec::new();
@@ -296,6 +372,7 @@ impl Catalog {
 
         Ok(Catalog {
             cards: card_map,
+            heroes: hero_map,
             skills: skill_map,
             tokens: token_map,
             config,
@@ -338,6 +415,38 @@ fn validate_taxonomy(
     for token in tokens.values() {
         let owner = format!("tokens.json: Token {}", token.id);
         check_taxon(taxonomy, &owner, &token.taxon, &mut errors);
+    }
+    errors
+}
+
+/// 校验英雄卡的关联分类：`play:` 必须是合法玩法，其余节点必须在分类树中。
+fn validate_hero_specialty(
+    taxonomy: &Taxonomy,
+    heroes: &BTreeMap<String, HeroCard>,
+) -> Vec<String> {
+    let mut errors = Vec::new();
+    for hero in heroes.values() {
+        let owner = format!("heroes.json: 英雄卡 {}", hero.id);
+        for specialty in &hero.specialty {
+            match specialty.kind {
+                SpecialtyKind::Play => {
+                    if Playstyle::from_id(&specialty.value).is_none() {
+                        errors.push(format!(
+                            "{owner}: specialty play:{} 不是可启用的玩法",
+                            specialty.value
+                        ));
+                    }
+                }
+                SpecialtyKind::Prey | SpecialtyKind::Host => {
+                    if !taxonomy.contains(&specialty.value) {
+                        errors.push(format!(
+                            "{owner}: specialty 节点 {} 不在分类树中",
+                            specialty.value
+                        ));
+                    }
+                }
+            }
+        }
     }
     errors
 }

@@ -67,10 +67,10 @@ impl Engine {
             | Trigger::OnPlayEffect
             | Trigger::OnActivate
             | Trigger::OnTurnStart
-            | Trigger::OnFirstRefresh => match self.owner_card_id(state, trigger, &ctx) {
-                Some(card_id) => self.run_card_effects(state, &card_id, trigger, &ctx),
-                None => Vec::new(),
-            },
+            | Trigger::OnFirstRefresh => {
+                let effects = self.owner_effects(state, trigger, &ctx);
+                self.run_effects(state, &effects, &ctx)
+            }
             Trigger::OnUse => self.fire_on_use(state, &ctx),
             _ => Vec::new(),
         }
@@ -255,26 +255,28 @@ impl Engine {
         }
     }
 
-    fn owner_card_id(
-        &self,
-        state: &GameState,
-        trigger: Trigger,
-        ctx: &EffectCtx,
-    ) -> Option<String> {
+    /// 本次触发所归属的卡牌效果：棋盘实例走随从池，无实例的主动/回合触发走英雄池。
+    fn owner_effects(&self, state: &GameState, trigger: Trigger, ctx: &EffectCtx) -> Vec<Effect> {
         match trigger {
-            Trigger::OnPlay | Trigger::OnPlayEffect => {
-                ctx.source.and_then(|id| board_card_id(state, ctx.seat, id))
-            }
+            Trigger::OnPlay | Trigger::OnPlayEffect => ctx
+                .source
+                .and_then(|id| board_card_id(state, ctx.seat, id))
+                .map(|card_id| self.effects_of(&card_id, trigger))
+                .unwrap_or_default(),
             Trigger::OnActivate | Trigger::OnTurnStart | Trigger::OnFirstRefresh => {
                 match ctx.source {
-                    Some(id) => board_card_id(state, ctx.seat, id),
+                    Some(id) => board_card_id(state, ctx.seat, id)
+                        .map(|card_id| self.effects_of(&card_id, trigger))
+                        .unwrap_or_default(),
                     None => state
                         .players
                         .get(usize::from(ctx.seat))
-                        .and_then(|player| player.hero.clone()),
+                        .and_then(|player| player.hero.as_deref())
+                        .map(|hero_id| self.hero_effects_of(hero_id, trigger))
+                        .unwrap_or_default(),
                 }
             }
-            _ => None,
+            _ => Vec::new(),
         }
     }
 
@@ -287,8 +289,20 @@ impl Engine {
         let Some(card) = self.catalog.cards.get(card_id) else {
             return Vec::new();
         };
+        self.skill_effects(&card.skills, trigger)
+    }
+
+    /// 收集一张英雄卡在指定触发时机下的效果；英雄查询只走英雄池。
+    pub(crate) fn hero_effects_of(&self, hero_id: &str, trigger: Trigger) -> Vec<Effect> {
+        let Some(hero) = self.catalog.heroes.get(hero_id) else {
+            return Vec::new();
+        };
+        self.skill_effects(&hero.skills, trigger)
+    }
+
+    fn skill_effects(&self, skills: &[String], trigger: Trigger) -> Vec<Effect> {
         let mut effects = Vec::new();
-        for skill_id in &card.skills {
+        for skill_id in skills {
             if let Some(skill) = self.catalog.skills.get(skill_id) {
                 effects.extend(
                     skill
@@ -313,11 +327,20 @@ impl Engine {
         ctx: &EffectCtx,
     ) -> Vec<GameEvent> {
         let effects = self.effects_of(card_id, trigger);
+        self.run_effects(state, &effects, ctx)
+    }
 
+    /// 依次执行一段已收集的效果；金色随从连续执行两遍。
+    fn run_effects(
+        &mut self,
+        state: &mut GameState,
+        effects: &[Effect],
+        ctx: &EffectCtx,
+    ) -> Vec<GameEvent> {
         let passes = if ctx.golden { 2 } else { 1 };
         let mut events = Vec::new();
         for _ in 0..passes {
-            for effect in &effects {
+            for effect in effects {
                 events.extend(self.apply_op(state, effect, ctx, None));
             }
         }
@@ -366,7 +389,19 @@ impl Engine {
     /// **不考虑 `condition`**：条件依赖运行时状态，本判定要能在没有座位上下文时回答，
     /// 因此是保守超集——视图只用它做交互提示，真正的池判定在 `check_targets`。
     pub fn requires_target(&self, card_id: &str, trigger: Trigger) -> bool {
-        self.effects_of(card_id, trigger).iter().any(|effect| {
+        Self::effects_require_target(&self.effects_of(card_id, trigger))
+    }
+
+    /// 英雄卡是否在指定触发时机下存在需要玩家指定单一目标的效果。
+    ///
+    /// 与 [`Self::requires_target`] 的判定口径一致，但技能只走英雄池；同名随从
+    /// 卡的效果不得影响英雄技能的瞄准与可用性。
+    pub fn hero_requires_target(&self, hero_id: &str, trigger: Trigger) -> bool {
+        Self::effects_require_target(&self.hero_effects_of(hero_id, trigger))
+    }
+
+    fn effects_require_target(effects: &[Effect]) -> bool {
+        effects.iter().any(|effect| {
             matches!(
                 effect.selector,
                 Selector::Target { .. }
@@ -1411,7 +1446,7 @@ impl Engine {
                 setup.defender_hero
             };
             if let Some(hero) = hero {
-                let effects = self.combat_effects(hero, Trigger::OnCombatStart);
+                let effects = self.combat_hero_effects(hero, Trigger::OnCombatStart);
                 let ctx = EffectCtx {
                     seat: field.seat(side),
                     source: None,
@@ -2109,7 +2144,6 @@ impl Engine {
             .cards
             .values()
             .filter(|card| card.card_type == CardType::Minion)
-            .filter(|card| !card.is_hero)
             .filter(|card| card.id != REWARD_CARD_ID)
             .filter(|card| !self.catalog.tokens.contains_key(&card.id))
             .filter(|card| card.playstyle == carrier_playstyle)
@@ -2296,6 +2330,14 @@ impl Engine {
 
     fn combat_effects(&self, card_id: &str, trigger: Trigger) -> Vec<Effect> {
         self.combat_effects_filtered(card_id, trigger, None)
+    }
+
+    /// 英雄的战斗时机效果：技能只走英雄池，同名随从卡的战斗技能不参与。
+    fn combat_hero_effects(&self, hero_id: &str, trigger: Trigger) -> Vec<Effect> {
+        let Some(hero) = self.catalog.heroes.get(hero_id) else {
+            return Vec::new();
+        };
+        self.skill_effects(&hero.skills, trigger)
     }
 
     fn combat_effects_filtered(

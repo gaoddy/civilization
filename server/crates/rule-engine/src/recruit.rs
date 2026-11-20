@@ -162,17 +162,14 @@ pub(crate) fn check_buy(
             format!("商店卡牌 {card_id} 不在目录中"),
         )
     })?;
-    if card.is_hero {
-        return Err(Reject::new(
-            RejectCode::ShopSlotEmpty,
-            format!("英雄卡 {card_id} 不能购买"),
-        ));
-    }
-
     let card_type = card.card_type;
     let cost = match card_type {
         CardType::Minion => 3,
         CardType::Effect => card.cost.unwrap_or(3),
+        CardType::Hero => {
+            debug_assert!(false, "cards.json 不得包含英雄卡");
+            0
+        }
     };
     let config = &engine.catalog.config;
     let current = player(state, seat)?;
@@ -222,6 +219,10 @@ fn buy(
     let cost = match card_type {
         CardType::Minion => 3,
         CardType::Effect => card.cost.unwrap_or(3),
+        CardType::Hero => {
+            debug_assert!(false, "cards.json 不得包含英雄卡");
+            0
+        }
     };
     let current = player(state, seat).expect("check_buy 已保证座位存在");
     let remaining_gold = current
@@ -250,6 +251,7 @@ fn buy(
             false,
         ))),
         CardType::Effect => player.hand.push(HandCard::effect(instance_id, &card_id)),
+        CardType::Hero => debug_assert!(false, "cards.json 不得包含英雄卡"),
     }
 
     let mut events = vec![GameEvent::MinionBought {
@@ -390,10 +392,10 @@ pub(crate) fn fire_first_refresh(
         .collect();
 
     let mut events = Vec::new();
-    if let Some(hero_id) = hero {
-        events.extend(engine.fire_card(
+    if hero.is_some() {
+        // 英雄技能只走英雄池：无来源触发由执行器解析到英雄卡。
+        events.extend(engine.fire(
             state,
-            &hero_id,
             Trigger::OnFirstRefresh,
             EffectCtx {
                 seat,
@@ -719,6 +721,10 @@ fn play_card(
             engine.fire_evolve_after_enter(state, seat, instance_id);
             Ok(Outcome::with(events))
         }
+        CardType::Hero => {
+            debug_assert!(false, "手牌不得包含英雄卡");
+            Ok(Outcome::empty())
+        }
     }
 }
 
@@ -850,10 +856,10 @@ pub(crate) fn check_hero_power(
         .hero
         .as_deref()
         .ok_or_else(|| Reject::new(RejectCode::HeroPowerLimit, "该玩家没有选择英雄"))?;
-    let hero = engine.catalog.cards.get(hero_id).ok_or_else(|| {
+    let hero = engine.catalog.heroes.get(hero_id).ok_or_else(|| {
         Reject::new(
             RejectCode::HeroPowerLimit,
-            format!("英雄卡 {hero_id} 不在目录中"),
+            format!("英雄卡 {hero_id} 不在英雄目录中"),
         )
     })?;
     if !hero.skills.iter().any(|known| known == skill_id) {
@@ -916,7 +922,7 @@ fn use_hero_power(
     // 主动技能的效果来自英雄卡：预检口径与 `fire(OnActivate)` 一致。
     engine.check_targets(
         state,
-        &engine.effects_of(&hero_id, Trigger::OnActivate),
+        &engine.hero_effects_of(&hero_id, Trigger::OnActivate),
         &ctx,
         true,
     )?;
@@ -1356,7 +1362,7 @@ fn is_eligible(
     pool: &BTreeMap<String, u16>,
     playstyles: &BTreeSet<Playstyle>,
 ) -> bool {
-    if card.is_hero || card.id == crate::triple::REWARD_CARD_ID {
+    if card.id == crate::triple::REWARD_CARD_ID {
         return false;
     }
     if card.card_type == CardType::Minion && pool.get(&card.id).copied().unwrap_or(0) == 0 {
@@ -1413,6 +1419,7 @@ mod tests {
     use crate::hash::state_hash;
 
     const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
+    const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
     const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
     const TOKENS_JSON: &str = include_str!("../../../data/v0.1/tokens.json");
     const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
@@ -1421,6 +1428,7 @@ mod tests {
     fn test_catalog() -> Catalog {
         Catalog::from_json(
             CARDS_JSON,
+            HEROES_JSON,
             SKILLS_JSON,
             TOKENS_JSON,
             CONFIG_JSON,
@@ -1435,12 +1443,11 @@ mod tests {
 
     fn heroes() -> BTreeMap<Seat, String> {
         test_catalog()
-            .cards
+            .heroes
             .values()
-            .filter(|card| card.is_hero)
             .take(8)
             .enumerate()
-            .map(|(index, card)| (index as Seat, card.id.clone()))
+            .map(|(index, hero)| (index as Seat, hero.id.clone()))
             .collect()
     }
 
@@ -1457,7 +1464,7 @@ mod tests {
         test_catalog()
             .cards
             .values()
-            .find(|card| card.card_type == CardType::Minion && !card.is_hero && card.level == level)
+            .find(|card| card.card_type == CardType::Minion && card.level == level)
             .expect("数据中应存在该星级随从")
             .id
             .clone()
@@ -1495,7 +1502,7 @@ mod tests {
         let ids: Vec<String> = catalog
             .cards
             .values()
-            .filter(|card| card.card_type == CardType::Minion && !card.is_hero)
+            .filter(|card| card.card_type == CardType::Minion)
             .map(|card| card.id.clone())
             .take(count)
             .collect();

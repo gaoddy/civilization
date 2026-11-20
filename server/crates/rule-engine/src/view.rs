@@ -288,7 +288,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
     let hero_power_skill_id = player
         .hero
         .as_deref()
-        .and_then(|hero_id| engine.catalog.cards.get(hero_id))
+        .and_then(|hero_id| engine.catalog.heroes.get(hero_id))
         .and_then(|hero| {
             hero.skills.iter().find(|skill_id| {
                 engine
@@ -314,7 +314,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
     let hero_power_requires_target = player
         .hero
         .as_deref()
-        .is_some_and(|hero_id| engine.requires_target(hero_id, Trigger::OnActivate));
+        .is_some_and(|hero_id| engine.hero_requires_target(hero_id, Trigger::OnActivate));
     let hero_power_target_candidates = if hero_power_requires_target {
         let ctx = EffectCtx {
             seat,
@@ -327,7 +327,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         let effects = player
             .hero
             .as_deref()
-            .map(|hero_id| engine.effects_of(hero_id, Trigger::OnActivate))
+            .map(|hero_id| engine.hero_effects_of(hero_id, Trigger::OnActivate))
             .unwrap_or_default();
         engine.target_candidates(state, &effects, &ctx, false)
     } else {

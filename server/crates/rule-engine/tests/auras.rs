@@ -46,7 +46,6 @@ fn add_aura_source(engine: &mut Engine, card_id: &str, playstyle: Playstyle, eff
             health: Some(5),
             skills: vec![skill_id],
             is_scholar: false,
-            is_hero: false,
             cost: Some(1),
         },
     );
@@ -69,7 +68,6 @@ fn add_plain_card(engine: &mut Engine, card_id: &str, playstyle: Playstyle) {
             health: Some(1),
             skills: Vec::new(),
             is_scholar: false,
-            is_hero: false,
             cost: Some(1),
         },
     );
@@ -92,7 +90,6 @@ fn add_insect_card(engine: &mut Engine, card_id: &str, health: i32) {
             health: Some(health),
             skills: Vec::new(),
             is_scholar: false,
-            is_hero: false,
             cost: Some(1),
         },
     );
@@ -312,6 +309,29 @@ fn aura_folds_into_combat_snapshot_only() {
         "光环不写回持久实例的光环层"
     );
     assert!(board_minion(&state, 0, 1).granted.is_empty());
+}
+
+#[test]
+fn hero_aura_reads_hero_pool() {
+    let (mut engine, mut state) = setup(23);
+    state.players[0].hero = Some("darwin".to_string());
+    place(&engine.catalog, &mut state, 0, 1, "baiyi");
+    // 从同名随从卡移除光环技能，英雄池保留：光环仍应由英雄技能生效。
+    engine
+        .catalog
+        .cards
+        .get_mut("darwin")
+        .expect("达尔文随从卡应存在")
+        .skills
+        .retain(|skill| skill != "aura-biology-plus-1-plus-1");
+
+    engine.recompute_auras(&mut state);
+
+    assert_eq!(
+        state.auras.get(&1).map(|aura| (aura.attack, aura.health)),
+        Some((1, 1)),
+        "英雄光环只从英雄池读取"
+    );
 }
 
 #[test]

@@ -9,7 +9,7 @@ pub mod report;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rule_engine::data::{Catalog, Playstyle, card_in_pool};
+use rule_engine::data::{Catalog, Playstyle, hero_in_pool};
 use rule_engine::engine::Engine;
 use rule_engine::error::EngineError;
 use rule_engine::hash::{EventHasher, state_hash};
@@ -127,18 +127,18 @@ pub fn derive_seed(seed: u64, game_index: usize) -> u64 {
 
 /// 本局可用英雄卡按 id 升序取 8 张，依次分配给座位 0..8。
 ///
-/// 只保留通过 [`card_in_pool`] 的英雄卡（按本局 `enabled_playstyles` 过滤；
-/// 目录 `cards` 为 `BTreeMap`，遍历顺序即 id 升序）。不足 8 张时从头循环取，
+/// 只保留通过 [`hero_in_pool`] 的英雄卡（按本局 `enabled_playstyles` 过滤；
+/// 目录 `heroes` 为 `BTreeMap`，遍历顺序即 id 升序）。不足 8 张时从头循环取，
 /// 保证每个座位都有英雄；没有任何可用英雄时返回错误。
 pub fn assign_heroes(
     catalog: &Catalog,
     enabled: &BTreeSet<Playstyle>,
 ) -> Result<BTreeMap<Seat, String>, EngineError> {
     let heroes: Vec<&str> = catalog
-        .cards
+        .heroes
         .values()
-        .filter(|card| card.is_hero && card_in_pool(card, enabled))
-        .map(|card| card.id.as_str())
+        .filter(|hero| hero_in_pool(hero, enabled))
+        .map(|hero| hero.id.as_str())
         .collect();
     if heroes.is_empty() {
         return Err(EngineError("目录中没有本局玩法可用的英雄卡".to_string()));
@@ -153,6 +153,7 @@ pub fn assign_heroes(
 pub fn embedded_catalog() -> Result<Catalog, EngineError> {
     Catalog::from_json(
         include_str!("../../../data/v0.1/cards.json"),
+        include_str!("../../../data/v0.1/heroes.json"),
         include_str!("../../../data/v0.1/skills.json"),
         include_str!("../../../data/v0.1/tokens.json"),
         include_str!("../../../data/v0.1/config.json"),

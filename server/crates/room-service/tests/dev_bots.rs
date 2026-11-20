@@ -13,10 +13,10 @@ use tokio::sync::oneshot;
 fn any_hero() -> String {
     let catalog = sim::embedded_catalog().expect("内嵌卡表应能加载");
     catalog
-        .cards
+        .heroes
         .values()
-        .find(|card| card.is_hero)
-        .map(|card| card.id.clone())
+        .next()
+        .map(|hero| hero.id.clone())
         .expect("卡表应有英雄卡")
 }
 

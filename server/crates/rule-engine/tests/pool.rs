@@ -39,7 +39,6 @@ fn card(id: &str, playstyle: Playstyle, specialty: Vec<Specialty>) -> Card {
         health: Some(1),
         skills: Vec::new(),
         is_scholar: false,
-        is_hero: false,
         cost: Some(1),
     }
 }

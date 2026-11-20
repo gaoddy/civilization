@@ -292,7 +292,7 @@ fn all_board_triple_with_full_hand_keeps_golden_on_board() {
     let filler: Vec<String> = catalog
         .cards
         .values()
-        .filter(|card| card.card_type == CardType::Minion && !card.is_hero && card.id != card_id)
+        .filter(|card| card.card_type == CardType::Minion && card.id != card_id)
         .take(hand_slots)
         .map(|card| card.id.clone())
         .collect();
@@ -346,7 +346,7 @@ fn hand_triple_with_full_hand_still_goes_to_hand() {
     let filler: Vec<String> = catalog
         .cards
         .values()
-        .filter(|card| card.card_type == CardType::Minion && !card.is_hero && card.id != card_id)
+        .filter(|card| card.card_type == CardType::Minion && card.id != card_id)
         .take(hand_slots - 2)
         .map(|card| card.id.clone())
         .collect();
@@ -513,7 +513,6 @@ fn playing_reward_discovers_next_level_minions() {
         let card = catalog.cards.get(candidate).expect("候选应存在于目录");
         assert_eq!(card.level, 3, "候选星级取奖励牌锁定星级");
         assert_eq!(card.card_type, CardType::Minion);
-        assert!(!card.is_hero);
         assert_ne!(card.id, REWARD_CARD_ID);
         assert!(
             card_in_pool(card, &state.enabled_playstyles),
@@ -529,7 +528,7 @@ fn playing_reward_discovers_next_level_minions() {
 fn reward_card_without_candidates_is_consumed() {
     let (mut engine, mut state) = turn_started(11);
     for card in test_catalog().cards.values() {
-        if card.card_type == CardType::Minion && !card.is_hero && card.level == 6 {
+        if card.card_type == CardType::Minion && card.level == 6 {
             state.pool.insert(card.id.clone(), 0);
         }
     }

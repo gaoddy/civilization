@@ -9,8 +9,8 @@
 mod common;
 
 use common::{
-    CARDS_JSON, CONFIG_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON, effects_of, test_catalog,
-    test_playstyles, turn_started,
+    CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, TOKENS_JSON, effects_of,
+    test_catalog, test_playstyles, turn_started,
 };
 use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill, card_in_pool};
 use rule_engine::effects::{Effect, EffectCtx, TargetRef, Zone, parse_effects};
@@ -67,7 +67,6 @@ fn add_minion(
             health: Some(health),
             skills: skills.iter().map(|skill| skill.to_string()).collect(),
             is_scholar: false,
-            is_hero: false,
             cost: None,
         },
     );
@@ -84,7 +83,6 @@ fn first_minion_of_level(
         .values()
         .find(|card| {
             card.card_type == CardType::Minion
-                && !card.is_hero
                 && card.level == level
                 && !card.is_scholar
                 && card_in_pool(card, enabled)
@@ -211,7 +209,6 @@ fn discover_pool_uses_enabled_playstyles() {
     for card_id in candidates {
         let card = engine.catalog.cards.get(card_id).expect("候选应在目录中");
         assert_eq!(card.card_type, CardType::Minion);
-        assert!(!card.is_hero);
         assert!(
             card_in_pool(card, &state.enabled_playstyles),
             "候选 {card_id} 的玩法 {:?} 未在本局启用（{:?}）",
@@ -395,15 +392,15 @@ fn discover_fires_from_hero_power() {
     );
     let hero = engine
         .catalog
-        .cards
+        .heroes
         .values()
-        .find(|card| card.is_hero)
+        .next()
         .expect("数据中应有英雄")
         .id
         .clone();
     engine
         .catalog
-        .cards
+        .heroes
         .get_mut(&hero)
         .expect("英雄存在")
         .skills
@@ -1095,8 +1092,15 @@ fn gain_minion_from_board_fails_at_load() {
         "efficient-algorithm",
         r#"[{"trigger":"on_activate","op":"refresh_shop","selector":{"kind":"self"},"params":{"free":true}},{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"from":"board","level":"current","to":"hand"}}]"#,
     );
-    let error = Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON, TAXONOMY_JSON)
-        .expect_err("from=board 必须在加载期失败");
+    let error = Catalog::from_json(
+        CARDS_JSON,
+        HEROES_JSON,
+        &skills,
+        TOKENS_JSON,
+        CONFIG_JSON,
+        TAXONOMY_JSON,
+    )
+    .expect_err("from=board 必须在加载期失败");
     let message = error.to_string();
     assert!(
         message.contains("efficient-algorithm"),
@@ -1112,7 +1116,15 @@ fn gain_minion_from_hand_fails_at_load() {
         r#"[{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"from":"hand","level":"current","to":"hand"}}]"#,
     );
     assert!(
-        Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON, TAXONOMY_JSON).is_err(),
+        Catalog::from_json(
+            CARDS_JSON,
+            HEROES_JSON,
+            &skills,
+            TOKENS_JSON,
+            CONFIG_JSON,
+            TAXONOMY_JSON
+        )
+        .is_err(),
         "from=hand 必须在加载期失败"
     );
 }
@@ -1124,8 +1136,15 @@ fn gain_minion_from_shop_or_omitted_loads() {
         r#"[{"trigger":"on_activate","op":"gain_minion","selector":{"kind":"self"},"params":{"level":"3","to":"board"}}]"#,
     ] {
         let skills = skills_with_effects_json("efficient-algorithm", effects);
-        Catalog::from_json(CARDS_JSON, &skills, TOKENS_JSON, CONFIG_JSON, TAXONOMY_JSON)
-            .unwrap_or_else(|error| panic!("{effects} 应能加载：{error}"));
+        Catalog::from_json(
+            CARDS_JSON,
+            HEROES_JSON,
+            &skills,
+            TOKENS_JSON,
+            CONFIG_JSON,
+            TAXONOMY_JSON,
+        )
+        .unwrap_or_else(|error| panic!("{effects} 应能加载：{error}"));
     }
 }
 

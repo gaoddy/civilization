@@ -21,11 +21,10 @@ use tokio_tungstenite::tungstenite::Message;
 fn hero_cards() -> Vec<String> {
     let catalog = sim::embedded_catalog().expect("内嵌卡表应能加载");
     catalog
-        .cards
+        .heroes
         .values()
-        .filter(|card| card.is_hero)
         .take(8)
-        .map(|card| card.id.clone())
+        .map(|hero| hero.id.clone())
         .collect()
 }
 

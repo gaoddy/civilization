@@ -9,6 +9,7 @@ use rule_engine::engine::Engine;
 use rule_engine::state::{GameState, InstanceId, MinionInstance, Phase, Seat, ShopSlot};
 
 pub const CARDS_JSON: &str = include_str!("../../../../data/v0.1/cards.json");
+pub const HEROES_JSON: &str = include_str!("../../../../data/v0.1/heroes.json");
 pub const SKILLS_JSON: &str = include_str!("../../../../data/v0.1/skills.json");
 pub const TOKENS_JSON: &str = include_str!("../../../../data/v0.1/tokens.json");
 pub const CONFIG_JSON: &str = include_str!("../../../../data/v0.1/config.json");
@@ -18,6 +19,7 @@ pub const TAXONOMY_JSON: &str = include_str!("../../../../data/v0.1/taxonomy.jso
 pub fn test_catalog() -> Catalog {
     Catalog::from_json(
         CARDS_JSON,
+        HEROES_JSON,
         SKILLS_JSON,
         TOKENS_JSON,
         CONFIG_JSON,
@@ -34,12 +36,11 @@ pub fn test_playstyles() -> [Playstyle; 5] {
 /// 按卡牌 id 顺序取前 8 张英雄卡，映射到座位 0..8，供开局测试复用。
 pub fn heroes() -> BTreeMap<Seat, String> {
     test_catalog()
-        .cards
+        .heroes
         .values()
-        .filter(|card| card.is_hero)
         .take(8)
         .enumerate()
-        .map(|(index, card)| (index as Seat, card.id.clone()))
+        .map(|(index, hero)| (index as Seat, hero.id.clone()))
         .collect()
 }
 
@@ -118,12 +119,12 @@ pub fn set_shop(state: &mut GameState, seat: Seat, ids: &[Option<String>]) {
     state.players[usize::from(seat)].shop = shop;
 }
 
-/// 取某星级的第一张非英雄随从卡 id。
+/// 取某星级的第一张随从卡 id。
 pub fn minion_id(level: u8) -> String {
     test_catalog()
         .cards
         .values()
-        .find(|card| card.card_type == CardType::Minion && !card.is_hero && card.level == level)
+        .find(|card| card.card_type == CardType::Minion && card.level == level)
         .expect("数据中应存在该星级随从")
         .id
         .clone()
