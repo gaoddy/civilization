@@ -29,6 +29,7 @@ func _ready() -> void:
     await _check_hand_drag_drops_on_empty_slot()
     await _check_hand_drag_drops_on_minion_card()
     await _check_shop_drag_buys()
+    await _check_drag_preview_keeps_pointer()
     await _check_board_drag_sells_over_shop_slot()
     await _check_board_drag_reorders()
     await _check_board_sell_drop()
@@ -1765,6 +1766,66 @@ func _check_shop_drag_buys() -> void:
     _fake_disconnect()
     GameStore.view = {}
     GameStore.turn = 1
+
+
+## 三种卡的拖拽预览都保持起手点：指针落在按下时的卡片位置，不跳到预览左上角。
+func _check_drag_preview_keeps_pointer() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    GameStore.view = FixtureScript.view()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    var shop_card = instance.find_child("ShopSlot0", true, false)
+    var board_card = instance.find_child("BoardMinion0", true, false)
+    var hand_card = instance.find_child("HandCard0", true, false)
+    _expect(
+        shop_card is ShopCard and board_card is BoardCard and hand_card is HandCard,
+        "场景应渲染商店、棋盘与手牌三种可拖拽卡片",
+    )
+    if shop_card is ShopCard and board_card is BoardCard and hand_card is HandCard:
+        await _expect_preview_offset(instance, shop_card, Vector2(28, 36))
+        await _expect_preview_offset(instance, board_card, Vector2(12, 48))
+        # 手牌悬停以底边中点为轴放大；取底边中点内侧，复位缩放前后起手点只差不到 1px。
+        var hand_grab := Vector2(hand_card.size.x * 0.5, hand_card.size.y - 1.0)
+        await _expect_preview_offset(instance, hand_card, hand_grab)
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 真实鼠标按在起手点并越过拖拽阈值，断言预览包裹层把卡片反向偏移，随后取消。
+func _expect_preview_offset(instance: Node, card: Control, grab: Vector2) -> void:
+    _expect(card.drag_allowed, "%s 应允许拖拽" % card.name)
+    var viewport: Viewport = instance.get_viewport()
+    if viewport != null and viewport.gui_is_dragging():
+        viewport.gui_cancel_drag()
+        await get_tree().process_frame
+    var start: Vector2 = card.get_global_rect().position + grab
+    await _push_motion(instance, start)
+    await _push_button(instance, start, true)
+    await _push_motion_held(instance, start + Vector2(24, 0), Vector2(24, 0))
+    _expect(viewport != null and viewport.gui_is_dragging(), "%s 越过阈值后应进入拖拽" % card.name)
+    var holder := instance.find_child("DragPreview", true, false) as Control
+    _expect(
+        holder != null and holder.get_child_count() == 1,
+        "%s 拖拽预览应包一层定位容器" % card.name,
+    )
+    if holder != null and holder.get_child_count() == 1:
+        var preview := holder.get_child(0) as Control
+        _expect(
+            preview.position.distance_to(-grab) <= 1.0,
+            "%s 拖拽预览应保持起手点，实际偏移 %s" % [card.name, preview.position],
+        )
+    if viewport != null and viewport.gui_is_dragging():
+        viewport.gui_cancel_drag()
+        await get_tree().process_frame
 
 
 ## 手牌带底部购买落点：左侧空白处，避开居中的手牌卡。

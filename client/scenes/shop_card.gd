@@ -18,11 +18,11 @@ func _ready() -> void:
     mouse_filter = Control.MOUSE_FILTER_PASS
 
 
-func _get_drag_data(_at_position: Vector2) -> Variant:
+func _get_drag_data(at_position: Vector2) -> Variant:
     if not drag_allowed or payload.is_empty():
         return null
     var preview := duplicate() as Control
     preview.modulate = Color(1, 1, 1, 0.7)
     preview.custom_minimum_size = custom_minimum_size
-    set_drag_preview(preview)
+    set_drag_preview(UI.drag_preview(preview, at_position))
     return payload.duplicate()
