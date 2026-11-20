@@ -313,17 +313,17 @@ fn aura_folds_into_combat_snapshot_only() {
 
 #[test]
 fn hero_aura_reads_hero_pool() {
-    let (mut engine, mut state) = setup(23);
-    state.players[0].hero = Some("darwin".to_string());
-    place(&engine.catalog, &mut state, 0, 1, "baiyi");
-    // 从同名随从卡移除光环技能，英雄池保留：光环仍应由英雄技能生效。
-    engine
-        .catalog
+    // 先从同名随从卡移除光环技能，再构建目录与引擎，避免加载后原地改动 `Catalog`。
+    let mut catalog = common::test_catalog();
+    catalog
         .cards
         .get_mut("darwin")
         .expect("达尔文随从卡应存在")
         .skills
         .retain(|skill| skill != "aura-biology-plus-1-plus-1");
+    let (mut engine, mut state) = common::setup_with_catalog(catalog, 23);
+    state.players[0].hero = Some("darwin".to_string());
+    place(&engine.catalog, &mut state, 0, 1, "baiyi");
 
     engine.recompute_auras(&mut state);
 
