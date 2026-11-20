@@ -48,16 +48,16 @@ func _ready() -> void:
         if cost != null:
             _expect(str(cost.text) == str(CardDB.display_cost("aolinpike-jidian")), "CostBadge 文本应为展示费用")
             _expect(str(cost.text) == "2", "CostBadge 应显示该卡展示费用 2，实际：%s" % str(cost.text))
-        var era := open_card.find_child("EraBadge", true, false)
-        _expect(era != null, "商店卡右上角应有 EraBadge")
-        if era != null:
+        var era := open_card.find_child("EraGlyph", true, false)
+        _expect(era is EraGlyph, "商店卡右上角应有 EraGlyph")
+        if era is EraGlyph:
             _expect(
-                str(era.text) == UI.enum_text("era", str(CardDB.card("aolinpike-jidian").get("era", ""))),
-                "EraBadge 文本应为卡表时代的展示名",
+                (era as EraGlyph).era_id == str(CardDB.card("aolinpike-jidian").get("era", "")),
+                "时代象形应取卡表 era id",
             )
             _expect(
-                str(era.text) == TranslationServer.translate("enum.era.classical"),
-                "EraBadge 应显示时代文案，实际：%s" % str(era.text),
+                (era as EraGlyph).era_id == "classical",
+                "时代象形应取该卡的古典时代，实际：%s" % (era as EraGlyph).era_id,
             )
         _expect(open_card.find_child("FreezeOverlay", true, false) == null, "未冻结卡不应有冻结蒙层")
         _expect(open_card.find_child("FreezeGlyph", true, false) == null, "未冻结卡不应有「冻」字")
@@ -105,6 +105,41 @@ func _ready() -> void:
             _expect(not cost_rect.intersects(era_rect), "费用与时代角标不应相交")
             _expect(not cost_rect.intersects(name_rect), "费用角标不应与卡名相交")
             _expect(not era_rect.intersects(name_rect), "时代角标不应与卡名相交")
+        var frame := open_card.find_child("CardFrame", true, false)
+        _expect(frame is CardFrame, "卡面应有 CardFrame")
+        if frame is CardFrame:
+            var level := int(CardDB.card("aolinpike-jidian").get("level", 1))
+            _expect((frame as CardFrame).level == level, "卡框星级应取卡表 level")
+            _expect((frame as CardFrame).star_count == level, "卡框星数应等于 level")
+            _expect(
+                (frame as Control).size == (face_node as Control).size,
+                "卡框应铺满卡面",
+            )
+        _expect(open_card.find_child("AttackPlate", true, false) is StatPlate, "卡面应有攻击底牌")
+        _expect(open_card.find_child("HealthPlate", true, false) is StatPlate, "卡面应有血量底牌")
+
+    # 英雄卡：无星级、无攻防底牌、无时代象形。
+    var hero_face := GalleryCardFace.build_hero("adam-smith", CardDB.hero("adam-smith"))
+    add_child(hero_face)
+    await get_tree().process_frame
+    _expect(hero_face.find_child("CardFrame", true, false) == null, "英雄卡不应有卡框星级")
+    _expect(hero_face.find_child("AttackPlate", true, false) == null, "英雄卡不应有攻击底牌")
+    _expect(hero_face.find_child("EraGlyph", true, false) == null, "英雄卡不应有时代象形")
+    hero_face.queue_free()
+
+    # 棋盘卡：有卡框，无时代象形；空身材不出现底牌装饰（文字仍为「—」）。
+    var board_face := BoardCardFace.build({
+        "cardId": "aolinpike-jidian", "attack": 2, "health": 3,
+        "golden": false, "stealth": false,
+    })
+    add_child(board_face)
+    await get_tree().process_frame
+    _expect(board_face.find_child("CardFrame", true, false) is CardFrame, "棋盘卡应有卡框")
+    _expect(board_face.find_child("EraGlyph", true, false) == null, "棋盘卡不应有时代象形")
+    var effect_plate := StatPlate.create(StatPlate.ATTACK, "—", UITheme.font_size("font-title"), "CardAttack")
+    _expect(effect_plate.get_child(0).text == "—", "效果牌身材文字应保持「—」")
+    effect_plate.free()
+    board_face.queue_free()
 
     # 冻结卡：整卡蒙层 + 冰晶 + 右下「冻」字，且不再使用「冻」角标。
     var frozen_card := recruit.find_child("ShopSlot1", true, false)

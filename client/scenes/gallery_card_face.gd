@@ -10,7 +10,7 @@ static func build(card_id: String, entry: Dictionary) -> Control:
     CardFaceBase.add_corner_badges(
         face_node,
         str(CardDB.display_cost(card_id)),
-        UI.enum_text("era", era_id) if era_id != "" else "",
+        era_id,
         "",
         false,
     )
@@ -22,6 +22,7 @@ static func build(card_id: String, entry: Dictionary) -> Control:
         CardText.playstyle_text(entry),
         true,
     )
+    CardFaceBase.add_frame(face_node, card_id)
     return face_node
 
 
@@ -47,4 +48,5 @@ static func build_hero(card_id: String, entry: Dictionary) -> Control:
         false,
         true,
     )
+    CardFaceBase.add_frame(face_node, card_id, true)
     return face_node

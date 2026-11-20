@@ -83,11 +83,11 @@ static func create_face(card_id: String, show_desc: bool, hero := false) -> Cont
 static func add_corner_badges(
     face_node: Control,
     cost_text: String,
-    era_text: String,
+    era_id: String,
     badge_text: String,
     stealth := false,
 ) -> void:
-    if cost_text == "" and era_text == "" and badge_text == "" and not stealth:
+    if cost_text == "" and era_id == "" and badge_text == "" and not stealth:
         return
     var margin := UITheme.space("space-xs")
     var row := HBoxContainer.new()
@@ -122,9 +122,9 @@ static func add_corner_badges(
         stealth_badge.name = "StealthBadge"
         row.add_child(stealth_badge)
 
-    if era_text != "":
-        var era := _corner_badge(era_text, "info")
-        era.name = "EraBadge"
+    if era_id != "":
+        var era := EraGlyph.create(era_id, UITheme.metric("era-glyph-size"))
+        era.name = "EraGlyph"
         row.add_child(era)
 
 
@@ -233,11 +233,13 @@ static func add_info(
     stats_row.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     info_box.add_child(stats_row)
 
+    # 底牌始终创建：文本可能为空或稍后由 `set_stats` 写入，空值时不画装饰。
     if show_stats:
-        var attack_label := UI.label(attack_text, UITheme.font_size(stats_token), false)
-        attack_label.name = "CardAttack"
-        attack_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        stats_row.add_child(attack_label)
+        var attack := StatPlate.create(
+            StatPlate.ATTACK, attack_text, UITheme.font_size(stats_token), "CardAttack"
+        )
+        attack.name = "AttackPlate"
+        stats_row.add_child(attack)
 
     var type_label := UI.label(type_text, UITheme.font_size("font-caption"), false)
     type_label.name = "CardType"
@@ -250,11 +252,22 @@ static func add_info(
     stats_row.add_child(type_label)
 
     if show_stats:
-        var health_label := UI.label(health_text, UITheme.font_size(stats_token), false)
-        health_label.name = "CardHealth"
-        health_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        stats_row.add_child(health_label)
+        var health := StatPlate.create(
+            StatPlate.HEALTH, health_text, UITheme.font_size(stats_token), "CardHealth"
+        )
+        health.name = "HealthPlate"
+        stats_row.add_child(health)
     face_node.add_child(info)
+
+
+## 卡框：按卡表等级画三条嵌套描边与顶部星级。英雄卡没有等级，不建卡框。
+## 在 `add_info` 之后、冻结蒙层与角标之前调用：卡框要压在信息区之上，
+## 又要在冻结蒙层之下。
+static func add_frame(face_node: Control, card_id: String, hero := false) -> void:
+    if hero:
+        return
+    var level := int(CardDB.card(card_id).get("level", 1))
+    face_node.add_child(CardFrame.create(level))
 
 
 ## 冻结表现：整卡半透明蒙层 + 固定角度与间距的冰晶细线 + 右下角「冻」字。

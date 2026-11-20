@@ -9,7 +9,7 @@ static func build(card_id: String, entry: Dictionary, frozen := false) -> Contro
     CardFaceBase.add_corner_badges(
         face_node,
         str(CardDB.display_cost(card_id)),
-        UI.enum_text("era", str(entry.get("era", ""))),
+        str(entry.get("era", "")),
         "",
         false,
     )
@@ -21,6 +21,7 @@ static func build(card_id: String, entry: Dictionary, frozen := false) -> Contro
         CardText.playstyle_text(entry),
         false,
     )
+    CardFaceBase.add_frame(face_node, card_id)
     if frozen:
         CardFaceBase.add_freeze(face_node)
     return face_node

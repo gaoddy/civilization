@@ -40,6 +40,7 @@ static func build(minion: Dictionary) -> Control:
         CardText.playstyle_text(entry),
         false,
     )
+    CardFaceBase.add_frame(face_node, card_id)
     return face_node
 
 
