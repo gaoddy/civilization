@@ -70,7 +70,7 @@ func _check_lobby_page() -> void:
     var detail_name = instance.find_child("GalleryDetailName", true, false)
     _expect(detail_name != null and detail_name.text != "", "首屏应常驻选中首张卡")
 
-    _expect(instance.find_child("Taxonneutral", true, false) != null, "分类目录缺少中立")
+    _expect(instance.find_child("Taxonneutral", true, false) == null, "分类目录不应再有中立")
     _expect(instance.find_child("Taxonmammal", true, false) != null, "分类目录缺少哺乳纲")
     _expect(instance.find_child("Taxonmachine", true, false) != null, "分类目录缺少机械")
     _expect(instance.find_child("Taxoneffect", true, false) == null, "效果牌不应作为顶层分类")
@@ -142,8 +142,8 @@ func _check_filters() -> void:
         await _push_click(instance, mammal.get_global_rect().get_center())
 
     _expect(
-        _filtered_count(instance) == 11,
-        "未来 + 哺乳纲应有 11 张，实际：%d" % _filtered_count(instance),
+        _filtered_count(instance) == 15,
+        "未来 + 哺乳纲应有 15 张，实际：%d" % _filtered_count(instance),
     )
 
     var all_taxon = instance.find_child("TaxonAll", true, false)
@@ -161,18 +161,18 @@ func _check_filters() -> void:
     await _unmount(instance)
 
 
-## 玩法与「中立」顶层分类，以及选中后展开的随从 / 效果二级筛选。
+## 13 个玩法顶层分类与随从 / 效果二级筛选；多玩法卡按全部归属计数。
 func _check_categories_and_kinds() -> void:
     var instance := await _mount_gallery()
     if instance == null:
         return
-    var neutral = instance.find_child("Taxonneutral", true, false)
-    _expect(neutral != null, "分类目录缺少中立")
-    if neutral != null:
-        await _push_click(instance, neutral.get_global_rect().get_center())
+    var mammal_taxon = instance.find_child("Taxonmammal", true, false)
+    _expect(mammal_taxon != null, "分类目录缺少哺乳纲")
+    if mammal_taxon != null:
+        await _push_click(instance, mammal_taxon.get_global_rect().get_center())
     _expect(
-        _filtered_count(instance) == 178,
-        "中立应有 178 张，实际：%d" % _filtered_count(instance),
+        _filtered_count(instance) == 122,
+        "哺乳纲应有 122 张，实际：%d" % _filtered_count(instance),
     )
 
     var kind_minion = instance.find_child("KindMinion", true, false)
@@ -186,25 +186,25 @@ func _check_categories_and_kinds() -> void:
     if kind_minion != null:
         await _push_click(instance, kind_minion.get_global_rect().get_center())
     _expect(
-        _filtered_count(instance) == 78,
-        "中立 + 随从应有 78 张，实际：%d" % _filtered_count(instance),
+        _filtered_count(instance) == 97,
+        "哺乳纲 + 随从应有 97 张，实际：%d" % _filtered_count(instance),
     )
     # 二级筛选重建后旧节点已释放，必须重新取当前节点。
     kind_effect = instance.find_child("KindEffect", true, false)
     if kind_effect != null:
         await _push_click(instance, kind_effect.get_global_rect().get_center())
     _expect(
-        _filtered_count(instance) == 100,
-        "中立 + 效果应有 100 张，实际：%d" % _filtered_count(instance),
+        _filtered_count(instance) == 25,
+        "哺乳纲 + 效果应有 25 张，实际：%d" % _filtered_count(instance),
     )
 
-    var mammal_taxon = instance.find_child("Taxonmammal", true, false)
+    mammal_taxon = instance.find_child("Taxonmammal", true, false)
     _expect(mammal_taxon != null, "分类目录缺少哺乳纲")
     if mammal_taxon != null:
         await _push_click(instance, mammal_taxon.get_global_rect().get_center())
     _expect(
-        _filtered_count(instance) == 100,
-        "哺乳纲顶层应有 100 张，实际：%d" % _filtered_count(instance),
+        _filtered_count(instance) == 122,
+        "哺乳纲顶层应有 122 张，实际：%d" % _filtered_count(instance),
     )
     var kind_all = instance.find_child("KindAll", true, false)
     _expect(
@@ -310,8 +310,8 @@ func _check_hero_section() -> void:
     )
     var mammal = instance.find_child("HeroCategoryMammal", true, false)
     _expect(
-        mammal != null and mammal.text.contains("7"),
-        "英雄分类哺乳纲应计 7 张，实际：%s" % (mammal.text if mammal != null else "无"),
+        mammal != null and mammal.text.contains("20"),
+        "英雄分类哺乳纲应计 20 张，实际：%s" % (mammal.text if mammal != null else "无"),
     )
     var fungus = instance.find_child("HeroCategoryFungus", true, false)
     _expect(
@@ -321,8 +321,8 @@ func _check_hero_section() -> void:
     if mammal != null:
         await _push_click(instance, mammal.get_global_rect().get_center())
     _expect(
-        _filtered_count(instance) == 7,
-        "英雄哺乳纲应有 7 张，实际：%d" % _filtered_count(instance),
+        _filtered_count(instance) == 20,
+        "英雄哺乳纲应有 20 张，实际：%d" % _filtered_count(instance),
     )
     hero_all = instance.find_child("HeroCategoryAll", true, false)
     if hero_all != null:
@@ -574,16 +574,16 @@ func _check_match_overlay() -> void:
     _expect(gallery != null, "对局图鉴缺少 CardGallery")
     if gallery != null:
         var ids: Array = gallery.get("_ids")
-        _expect(ids.size() == 198, "本局卡池应为 198 张，实际：%d" % ids.size())
-        _expect(ids.has("alan-turing"), "中立且关联机械的卡应在本局卡池")
-        _expect(ids.has("airplane"), "中立且无玩法关联的卡应在本局卡池")
+        _expect(ids.size() == 178, "本局卡池应为 178 张，实际：%d" % ids.size())
+        _expect(ids.has("alan-turing"), "机械玩法卡应在本局卡池")
+        _expect(ids.has("airplane"), "机械玩法工具卡应在本局卡池")
         _expect(not ids.has("bruce-lee"), "未启用玩法的哺乳纲卡不应在本局卡池")
         _expect(not ids.has("ammonite-token"), "本局图鉴不应包含 Token")
-        _expect(not ids.has("aristotle"), "关联玩法未启用的中立卡不应在本局卡池")
+        _expect(not ids.has("aristotle"), "未启用玩法的爬行纲卡不应在本局卡池")
 
     _expect(
-        gallery != null and gallery.call("_filtered_ids").size() == 198,
-        "本局图鉴应筛出 198 张",
+        gallery != null and gallery.call("_filtered_ids").size() == 178,
+        "本局图鉴应筛出 178 张",
     )
     _expect(instance.is_inside_tree(), "打开图鉴不应切换场景")
     _expect(instance.find_child("ShopSlot0", true, false) != null, "打开图鉴不应丢失对局内容")

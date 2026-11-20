@@ -166,7 +166,7 @@ static func avatar(hero_id: String, size := 34) -> PanelContainer:
     var node := PanelContainer.new()
     node.name = "Avatar"
     node.custom_minimum_size = Vector2(size, size)
-    var playstyle := str(CardDB.hero(hero_id).get("playstyle", ""))
+    var playstyle := CardDB.primary_playstyle(CardDB.hero(hero_id)) if hero_id != "" else ""
     var tint := UITheme.playstyle_color(playstyle) if hero_id != "" else UITheme.color("color-border-strong")
     var box := StyleBoxFlat.new()
     box.bg_color = tint.darkened(0.55)
@@ -269,7 +269,7 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
     node.custom_minimum_size = Vector2(width, 0)
     var box := UITheme.panel_style("raised")
     if hero_id != "":
-        box.border_color = UITheme.playstyle_color(str(CardDB.hero(hero_id).get("playstyle", "")))
+        box.border_color = UITheme.playstyle_color(CardDB.primary_playstyle(CardDB.hero(hero_id)))
     node.add_theme_stylebox_override("panel", box)
 
     var row := HBoxContainer.new()
@@ -292,7 +292,7 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
 
     var entry := CardDB.hero(hero_id)
     var meta_parts := PackedStringArray()
-    var playstyle := str(entry.get("playstyle", ""))
+    var playstyle := CardDB.primary_playstyle(entry) if hero_id != "" else ""
     if playstyle != "":
         meta_parts.append(enum_text("playstyle", playstyle))
     var meta := label(" · ".join(meta_parts) if not meta_parts.is_empty() else "—", UITheme.font_size("font-caption"), false)

@@ -22,9 +22,6 @@ const ERA_IDS := [
 const MODE_MINION := "minion"
 const MODE_HERO := "hero"
 
-## 玩法之外追加的横切分类；效果牌不再作为顶层分类。
-const CATEGORY_NEUTRAL := "neutral"
-
 ## 选中顶层分类后展开的二级筛选：随从与效果牌。
 const KIND_ALL := ""
 const KIND_MINION := "minion"
@@ -225,7 +222,7 @@ func _filtered_ids() -> Array:
         var heroes: Array = []
         for id in _hero_ids:
             var entry := CardDB.hero(str(id))
-            if _hero_taxon == "" or str(entry.get("playstyle", "")) == _hero_taxon:
+            if _hero_taxon == "" or CardDB.play_categories(entry).has(_hero_taxon):
                 heroes.append(str(id))
         return heroes
     var out: Array = []
@@ -287,12 +284,11 @@ func _count_by_kind() -> Dictionary:
     return counts
 
 
-## 英雄分类只按自身玩法计数，不重复计入关联玩法。
+## 英雄按全部 `play:` 归属计数；「全部」按英雄张数去重。
 func _count_by_hero_category() -> Dictionary:
     var counts := {"": _hero_ids.size()}
     for id in _hero_ids:
-        var playstyle := str(CardDB.hero(str(id)).get("playstyle", ""))
-        if playstyle != "":
+        for playstyle in CardDB.play_categories(CardDB.hero(str(id))):
             counts[playstyle] = int(counts.get(playstyle, 0)) + 1
     return counts
 
@@ -315,21 +311,9 @@ func _matches_kind(entry: Dictionary) -> bool:
     return _kind_bucket(entry) == _kind
 
 
-## 一张卡可同时属于自身玩法、`play:` 关联玩法与「中立」横切分类。
+## 一张卡可同时属于多条 `play:` 归属；Token 由 `play_categories` 回退单值玩法。
 func _category_keys(entry: Dictionary) -> Array:
-    var keys: Array = []
-    var playstyle := str(entry.get("playstyle", ""))
-    if playstyle != "" and playstyle != CATEGORY_NEUTRAL:
-        keys.append(playstyle)
-    for item in entry.get("specialty", []):
-        if str(item.get("kind", "")) != "play":
-            continue
-        var value := str(item.get("value", ""))
-        if value != "" and not keys.has(value):
-            keys.append(value)
-    if playstyle == CATEGORY_NEUTRAL:
-        keys.append(CATEGORY_NEUTRAL)
-    return keys
+    return CardDB.play_categories(entry)
 
 
 func _is_effect(entry: Dictionary) -> bool:
@@ -344,7 +328,6 @@ func _categories() -> Array:
     var out: Array = []
     for id in CardDB.playstyles:
         out.append({"id": str(id), "name": CardDB.playstyle_name(str(id))})
-    out.append({"id": CATEGORY_NEUTRAL, "name": CardDB.playstyle_name("neutral")})
     return out
 
 

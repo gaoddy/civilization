@@ -119,7 +119,7 @@ func _build_preview(card_id: String, entry: Dictionary) -> Control:
     frame.custom_minimum_size = size
     frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var style := StyleBoxFlat.new()
-    style.bg_color = UITheme.playstyle_cover(str(entry.get("playstyle", "")))
+    style.bg_color = UITheme.playstyle_cover(CardDB.primary_playstyle(entry))
     style.set_corner_radius_all(UITheme.radius("radius-md"))
     style.set_content_margin_all(UITheme.metric("card-cover-inset"))
     frame.add_theme_stylebox_override("panel", style)
@@ -172,22 +172,14 @@ func _taxonomy_text(entry: Dictionary) -> String:
     return " · ".join(path) if not path.is_empty() else tr("ui.game.detail.undetermined")
 
 
+## 玩法行展示全部 `play:` 归属，按固定玩法顺序用「、」分隔。
 func _playstyle_text(entry: Dictionary) -> String:
-    var name := CardDB.playstyle_name(str(entry.get("playstyle", "")))
-    return name if name != "" else tr("ui.game.detail.undetermined")
+    return CardText.playstyle_text(entry)
 
 
+## 关联分类行只展示 prey / host，格式为「捕食：…；寄生：…」。
 func _association_text(entry: Dictionary) -> String:
-    var names: Array = []
-    var specialty: Variant = entry.get("specialty", [])
-    if specialty is Array:
-        for item in specialty:
-            if not (item is Dictionary) or str(item.get("kind", "")) != "play":
-                continue
-            var name := CardDB.playstyle_name(str(item.get("value", "")))
-            if name != "" and not names.has(name):
-                names.append(name)
-    return "、".join(names)
+    return CardText.association_text(entry)
 
 
 func _skill_names(entry: Dictionary) -> String:

@@ -63,20 +63,24 @@ func _ready() -> void:
         _expect(open_card.find_child("FreezeGlyph", true, false) == null, "未冻结卡不应有「冻」字")
         var name_node := open_card.find_child("CardName", true, false)
         _expect(name_node != null, "商店卡应有 CardName")
-        # 卡面类型行固定显示玩法；效果牌与学者都显示「中立」。
+        # 卡面类型行显示全部玩法，多玩法用「、」连接。
+        var expected_type := CardText.playstyle_text(CardDB.card("aolinpike-jidian"))
         var type_node := open_card.find_child("CardType", true, false)
         _expect(
-            type_node != null and str(type_node.text) == TranslationServer.translate("enum.playstyle.neutral"),
-            "卡面应显示玩法「中立」，实际：%s" % (str(type_node.text) if type_node != null else "缺失"),
+            type_node != null and str(type_node.text) == expected_type,
+            "卡面应显示全部玩法「%s」，实际：%s"
+            % [expected_type, str(type_node.text) if type_node != null else "缺失"],
         )
         var cover_node := open_card.find_child("Cover", true, false)
         _expect(cover_node is Panel, "卡面封面应为可绘制圆角的面板")
         if cover_node is Panel:
+            var expected_cover := UITheme.playstyle_cover(
+                CardDB.primary_playstyle(CardDB.card("aolinpike-jidian"))
+            )
             var cover_style := (cover_node as Panel).get_theme_stylebox("panel") as StyleBoxFlat
             _expect(
-                cover_style != null
-                and cover_style.bg_color == UITheme.playstyle_cover("neutral"),
-                "卡面封面色应取中立玩法色",
+                cover_style != null and cover_style.bg_color == expected_cover,
+                "卡面封面色应取首个玩法色",
             )
             _expect(
                 cover_style != null
@@ -274,7 +278,7 @@ func _ready() -> void:
     gallery_tile.queue_free()
     await get_tree().process_frame
 
-    # 详情分类行：科学分类完整路径、玩法、关联玩法、食物链，缺失字段不显示。
+    # 详情分类行：科学分类完整路径、全部玩法、关联分类（仅 prey/host）。
     var mammal_detail := _shop_detail_text("jianchihu")
     _expect(
         mammal_detail.contains(TranslationServer.translate("ui.game.detail.taxonomy")),
@@ -285,18 +289,19 @@ func _ready() -> void:
         "随从详情应显示完整分类路径：%s" % mammal_detail,
     )
     _expect(
-        mammal_detail.contains(TranslationServer.translate("ui.game.detail.playstyle")),
-        "随从详情应显示玩法",
+        mammal_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))
+        and mammal_detail.contains(TranslationServer.translate("enum.playstyle.mammal")),
+        "随从详情应显示玩法：%s" % mammal_detail,
     )
     _expect(
-        mammal_detail.contains(TranslationServer.translate("ui.game.detail.food_chain"))
+        mammal_detail.contains(TranslationServer.translate("ui.game.detail.association"))
         and mammal_detail.contains(TranslationServer.translate("ui.game.detail.prey"))
         and mammal_detail.contains("偶蹄目"),
-        "随从详情应显示捕食关系：%s" % mammal_detail,
+        "随从详情应显示捕食关联：%s" % mammal_detail,
     )
     _expect(
-        not mammal_detail.contains(TranslationServer.translate("ui.game.detail.association")),
-        "非中立玩法不应显示关联玩法",
+        not mammal_detail.contains(TranslationServer.translate("ui.game.detail.food_chain")),
+        "关联分类已合并捕食/寄生，不应再显示食物链行：%s" % mammal_detail,
     )
     _expect(
         mammal_detail.contains(TranslationServer.translate("enum.card_type.minion")),
@@ -309,23 +314,28 @@ func _ready() -> void:
         "造物卡应显示技术分类路径：%s" % tool_detail,
     )
     _expect(
-        tool_detail.contains(TranslationServer.translate("ui.game.detail.association"))
+        tool_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))
         and tool_detail.contains(TranslationServer.translate("enum.playstyle.machine")),
-        "中立工具卡应显示关联玩法：%s" % tool_detail,
+        "机械工具卡应显示玩法：%s" % tool_detail,
     )
     _expect(
-        not tool_detail.contains(TranslationServer.translate("ui.game.detail.food_chain")),
-        "无捕食/寄生的卡不应显示食物链",
+        not tool_detail.contains(TranslationServer.translate("ui.game.detail.association")),
+        "没有 prey/host 的卡不应显示关联分类：%s" % tool_detail,
     )
 
     var scholar_detail := _shop_detail_text("alan-turing")
     _expect(
-        scholar_detail.contains(TranslationServer.translate("enum.playstyle.neutral")),
-        "学者详情玩法应为中立",
+        scholar_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))
+        and scholar_detail.contains(TranslationServer.translate("enum.playstyle.machine")),
+        "学者详情应显示机械玩法：%s" % scholar_detail,
+    )
+    _expect(
+        not scholar_detail.contains(TranslationServer.translate("enum.playstyle.neutral")),
+        "学者详情不应再显示中立：%s" % scholar_detail,
     )
     _expect(
         not scholar_detail.contains(TranslationServer.translate("ui.game.detail.association")),
-        "学者不应显示关联玩法行",
+        "学者不应显示关联分类行：%s" % scholar_detail,
     )
 
     var hero_detail := _hero_detail_text("darwin")
@@ -339,13 +349,12 @@ func _ready() -> void:
     )
     _expect(
         hero_detail.contains(TranslationServer.translate("ui.game.detail.playstyle"))
-        and hero_detail.contains(TranslationServer.translate("enum.playstyle.neutral")),
-        "英雄详情应显示玩法",
+        and hero_detail.contains(TranslationServer.translate("enum.playstyle.mammal")),
+        "英雄详情应显示全部玩法：%s" % hero_detail,
     )
     _expect(
-        hero_detail.contains(TranslationServer.translate("ui.game.detail.specialty"))
-        and hero_detail.contains(TranslationServer.translate("enum.playstyle.mammal")),
-        "英雄详情应显示擅长玩法",
+        not hero_detail.contains(TranslationServer.translate("ui.game.detail.specialty")),
+        "英雄详情不应再显示擅长玩法：%s" % hero_detail,
     )
 
     var missing_detail := _classification_text({"playstyle": "", "taxon": "does-not-exist"})

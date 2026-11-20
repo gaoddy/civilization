@@ -32,7 +32,7 @@ static func create_face(card_id: String, show_desc: bool, hero := false) -> Cont
     var cover := Panel.new()
     cover.name = "Cover"
     var cover_style := StyleBoxFlat.new()
-    cover_style.bg_color = UITheme.playstyle_cover(str(entry.get("playstyle", "")))
+    cover_style.bg_color = UITheme.playstyle_cover(CardDB.primary_playstyle(entry))
     cover_style.set_corner_radius_all(UITheme.radius("radius-md"))
     cover_style.set_content_margin_all(0)
     cover.add_theme_stylebox_override("panel", cover_style)

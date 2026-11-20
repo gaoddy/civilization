@@ -82,7 +82,7 @@ func refresh(hero_id: String, hp: int, hp_cap: int, era: int) -> void:
 	self.hp_cap = hp_cap
 	self.era = era
 	var entry := CardDB.hero(hero_id)
-	var playstyle := str(entry.get("playstyle", ""))
+	var playstyle := CardDB.primary_playstyle(entry) if hero_id != "" else ""
 	add_theme_stylebox_override("panel", _panel_style(playstyle))
 	_cover.add_theme_stylebox_override(
 		"panel", _cover_style(UITheme.playstyle_cover(playstyle) if hero_id != "" else UITheme.color("color-surface-sunken"))
