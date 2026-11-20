@@ -1,6 +1,5 @@
 ---
 id: stephenson
-card_type: hero
 name: 史蒂芬孙
 categories: [play:machine]
 skills: [aura-other-mech-plus-1-plus-1]
@@ -14,7 +13,6 @@ skills: [aura-other-mech-plus-1-plus-1]
 | --- | --- |
 | id | stephenson |
 | 名称 | 史蒂芬孙 |
-| 类型 | 英雄 |
 | 玩法 | 机械 |
 | 技能 | aura-other-mech-plus-1-plus-1 |
 

@@ -1,6 +1,5 @@
 ---
 id: shakespeare
-card_type: hero
 name: 莎士比亚
 categories: [play:mammal]
 skills: [sonnet]
@@ -14,7 +13,6 @@ skills: [sonnet]
 | --- | --- |
 | id | shakespeare |
 | 名称 | 莎士比亚 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
 | 技能 | sonnet |
 

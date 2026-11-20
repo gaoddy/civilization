@@ -68,10 +68,10 @@ def build_fixture(tmp):
         "## 效果\n\n旧文案\n\n## 设计说明\n\n定位：测试。\n\n## 出处\n\n测试出处。\n",
         encoding="utf-8")
     (content / "heroes" / "c.md").write_text(
-        "---\nid: c\ncard_type: hero\nname: 测试随从\n"
+        "---\nid: c\nname: 测试随从\n"
         "categories: [play:insect]\nskills: [x]\n---\n\n"
         "# 测试随从\n\n## 属性\n\n| 属性 | 值 |\n| --- | --- |\n"
-        "| id | c |\n| 名称 | 测试随从 |\n| 类型 | 英雄 |\n| 玩法 | 中立 |\n"
+        "| id | c |\n| 名称 | 测试随从 |\n| 玩法 | 中立 |\n"
         "| 关联分类 | 无 |\n| 技能 | x |\n\n"
         "## 效果\n\n亡语：召唤一个 1/2 的白蚁\n",
         encoding="utf-8")

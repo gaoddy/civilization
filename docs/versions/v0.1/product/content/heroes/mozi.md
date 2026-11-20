@@ -1,6 +1,5 @@
 ---
 id: mozi
-card_type: hero
 name: 墨子
 categories: [play:mammal]
 skills: [enemy-random-cannot-attack]
@@ -14,7 +13,6 @@ skills: [enemy-random-cannot-attack]
 | --- | --- |
 | id | mozi |
 | 名称 | 墨子 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
 | 技能 | enemy-random-cannot-attack |
 

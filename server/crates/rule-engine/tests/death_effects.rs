@@ -71,7 +71,6 @@ fn mirror_as_hero(engine: &mut Engine, id: &str) {
         id.to_string(),
         HeroCard {
             id: id.to_string(),
-            card_type: CardType::Hero,
             categories: card.categories,
             skills: card.skills,
         },

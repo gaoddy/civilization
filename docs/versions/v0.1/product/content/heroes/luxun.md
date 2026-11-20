@@ -1,6 +1,5 @@
 ---
 id: luxun
-card_type: hero
 name: 鲁迅
 categories: [play:mammal]
 skills: [shout]
@@ -14,7 +13,6 @@ skills: [shout]
 | --- | --- |
 | id | luxun |
 | 名称 | 鲁迅 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
 | 技能 | shout |
 

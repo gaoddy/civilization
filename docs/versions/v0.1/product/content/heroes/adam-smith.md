@@ -1,6 +1,5 @@
 ---
 id: adam-smith
-card_type: hero
 name: 亚当·斯密
 categories: [play:mammal]
 skills: [division-of-labor]
@@ -14,7 +13,6 @@ skills: [division-of-labor]
 | --- | --- |
 | id | adam-smith |
 | 名称 | 亚当·斯密 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
 | 技能 | division-of-labor |
 

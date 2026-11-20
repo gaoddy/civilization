@@ -1,6 +1,5 @@
 ---
 id: einstein
-card_type: hero
 name: 爱因斯坦
 categories: [play:mammal, play:bird]
 skills: [mass-energy-equivalence, light-speed-strike]
@@ -14,7 +13,6 @@ skills: [mass-energy-equivalence, light-speed-strike]
 | --- | --- |
 | id | einstein |
 | 名称 | 爱因斯坦 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲、鸟纲 |
 | 技能 | mass-energy-equivalence；light-speed-strike |
 

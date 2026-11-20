@@ -1,6 +1,5 @@
 ---
 id: pasteur
-card_type: hero
 name: 巴斯德
 categories: [play:virus]
 skills: [microbiology]
@@ -14,7 +13,6 @@ skills: [microbiology]
 | --- | --- |
 | id | pasteur |
 | 名称 | 巴斯德 |
-| 类型 | 英雄 |
 | 玩法 | 病毒 |
 | 技能 | microbiology |
 

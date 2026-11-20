@@ -1,6 +1,5 @@
 ---
 id: fleming
-card_type: hero
 name: 弗莱明
 categories: [play:virus]
 skills: [virus-growth-once]
@@ -14,7 +13,6 @@ skills: [virus-growth-once]
 | --- | --- |
 | id | fleming |
 | 名称 | 弗莱明 |
-| 类型 | 英雄 |
 | 玩法 | 病毒 |
 | 技能 | virus-growth-once |
 

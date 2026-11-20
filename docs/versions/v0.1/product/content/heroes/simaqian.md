@@ -1,6 +1,5 @@
 ---
 id: simaqian
-card_type: hero
 name: 司马迁
 categories: [play:mammal]
 skills: [aura-all-plus-0-plus-1]
@@ -14,7 +13,6 @@ skills: [aura-all-plus-0-plus-1]
 | --- | --- |
 | id | simaqian |
 | 名称 | 司马迁 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
 | 技能 | aura-all-plus-0-plus-1 |
 

@@ -1,6 +1,5 @@
 ---
 id: mendel
-card_type: hero
 name: 孟德尔
 categories: [play:plant]
 skills: [heredity]
@@ -14,7 +13,6 @@ skills: [heredity]
 | --- | --- |
 | id | mendel |
 | 名称 | 孟德尔 |
-| 类型 | 英雄 |
 | 玩法 | 植物界 |
 | 技能 | heredity |
 

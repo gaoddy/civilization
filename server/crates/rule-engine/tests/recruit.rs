@@ -1039,7 +1039,6 @@ fn hero_cards_never_appear_in_shop() {
         hero_only.to_string(),
         rule_engine::data::HeroCard {
             id: hero_only.to_string(),
-            card_type: CardType::Hero,
             categories: Vec::new(),
             skills: Vec::new(),
         },

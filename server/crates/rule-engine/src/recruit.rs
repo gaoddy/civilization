@@ -166,10 +166,6 @@ pub(crate) fn check_buy(
     let cost = match card_type {
         CardType::Minion => 3,
         CardType::Effect => card.cost.unwrap_or(3),
-        CardType::Hero => {
-            debug_assert!(false, "cards.json 不得包含英雄卡");
-            0
-        }
     };
     let config = &engine.catalog.config;
     let current = player(state, seat)?;
@@ -219,10 +215,6 @@ fn buy(
     let cost = match card_type {
         CardType::Minion => 3,
         CardType::Effect => card.cost.unwrap_or(3),
-        CardType::Hero => {
-            debug_assert!(false, "cards.json 不得包含英雄卡");
-            0
-        }
     };
     let current = player(state, seat).expect("check_buy 已保证座位存在");
     let remaining_gold = current
@@ -251,7 +243,6 @@ fn buy(
             false,
         ))),
         CardType::Effect => player.hand.push(HandCard::effect(instance_id, &card_id)),
-        CardType::Hero => debug_assert!(false, "cards.json 不得包含英雄卡"),
     }
 
     let mut events = vec![GameEvent::MinionBought {
@@ -720,10 +711,6 @@ fn play_card(
             events.extend(engine.check_triple(state, seat));
             engine.fire_evolve_after_enter(state, seat, instance_id);
             Ok(Outcome::with(events))
-        }
-        CardType::Hero => {
-            debug_assert!(false, "手牌不得包含英雄卡");
-            Ok(Outcome::empty())
         }
     }
 }

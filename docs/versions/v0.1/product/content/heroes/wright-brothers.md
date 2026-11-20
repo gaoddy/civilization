@@ -1,6 +1,5 @@
 ---
 id: wright-brothers
-card_type: hero
 name: 莱特兄弟
 categories: [play:machine]
 skills: [combat-optimal-attack]
@@ -14,7 +13,6 @@ skills: [combat-optimal-attack]
 | --- | --- |
 | id | wright-brothers |
 | 名称 | 莱特兄弟 |
-| 类型 | 英雄 |
 | 玩法 | 机械 |
 | 技能 | combat-optimal-attack |
 

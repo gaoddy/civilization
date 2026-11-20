@@ -1,6 +1,5 @@
 ---
 id: galileo
-card_type: hero
 name: 伽利略
 categories: [play:mammal]
 skills: [observation]
@@ -14,7 +13,6 @@ skills: [observation]
 | --- | --- |
 | id | galileo |
 | 名称 | 伽利略 |
-| 类型 | 英雄 |
 | 玩法 | 哺乳纲 |
 | 技能 | observation |
 
