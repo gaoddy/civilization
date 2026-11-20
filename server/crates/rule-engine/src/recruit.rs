@@ -98,6 +98,7 @@ pub(crate) fn apply(
         } => play_card(engine, state, seat, hand_index, position, target),
         Intent::RearrangeBoard { from, to } => rearrange(state, seat, from, to),
         Intent::FreezeShop { slot } => freeze(state, seat, slot),
+        Intent::UnfreezeShop { slot } => unfreeze(state, seat, slot),
         Intent::UseHeroPower { skill_id, target } => {
             use_hero_power(engine, state, seat, &skill_id, target)
         }
@@ -762,12 +763,12 @@ fn rearrange(state: &mut GameState, seat: Seat, from: u8, to: u8) -> Result<Outc
     Ok(Outcome::empty())
 }
 
-/// `FreezeShop` 的只读预检：指定槽位时必须非空；冻结全部槽位无需额外条件。
-/// 不修改状态、不消耗随机流。
+/// `FreezeShop` 与 `UnfreezeShop` 共用的只读预检：指定槽位时必须非空；
+/// 操作全部槽位无需额外条件。不修改状态、不消耗随机流。
 ///
 /// **不校验** `Recruit` 阶段、`recruit_done`、`eliminated` 与 `target`；调用方（视图层）
 /// 必须自行门控阶段与玩家状态，不能仅凭返回 `Ok` 认定该意图可操作。
-pub(crate) fn check_freeze(state: &GameState, seat: Seat, slot: Option<u8>) -> Result<(), Reject> {
+fn check_shop_slot(state: &GameState, seat: Seat, slot: Option<u8>) -> Result<(), Reject> {
     let player = player(state, seat)?;
     if let Some(slot) = slot {
         let exists = player
@@ -785,29 +786,49 @@ pub(crate) fn check_freeze(state: &GameState, seat: Seat, slot: Option<u8>) -> R
     Ok(())
 }
 
-fn freeze(state: &mut GameState, seat: Seat, slot: Option<u8>) -> Result<Outcome, Reject> {
-    check_freeze(state, seat, slot)?;
+/// `FreezeShop` 的只读预检，规则见 [`check_shop_slot`]。
+pub(crate) fn check_freeze(state: &GameState, seat: Seat, slot: Option<u8>) -> Result<(), Reject> {
+    check_shop_slot(state, seat, slot)
+}
 
+/// `UnfreezeShop` 的只读预检，规则见 [`check_shop_slot`]。
+pub(crate) fn check_unfreeze(
+    state: &GameState,
+    seat: Seat,
+    slot: Option<u8>,
+) -> Result<(), Reject> {
+    check_shop_slot(state, seat, slot)
+}
+
+/// 设置槽位的冻结标记：指定槽位只改该槽位，`None` 改全部非空槽位。
+fn set_frozen(state: &mut GameState, seat: Seat, slot: Option<u8>, frozen: bool) {
+    let player = state
+        .players
+        .get_mut(usize::from(seat))
+        .expect("check_shop_slot 已保证座位存在");
     match slot {
         Some(slot) => {
-            let player = state
-                .players
-                .get_mut(usize::from(seat))
-                .expect("check_freeze 已保证座位存在");
             if let Some(Some(shop_slot)) = player.shop.get_mut(usize::from(slot)) {
-                shop_slot.frozen = true;
+                shop_slot.frozen = frozen;
             }
         }
         None => {
-            let player = state
-                .players
-                .get_mut(usize::from(seat))
-                .expect("check_freeze 已保证座位存在");
             for shop_slot in player.shop.iter_mut().flatten() {
-                shop_slot.frozen = true;
+                shop_slot.frozen = frozen;
             }
         }
     }
+}
+
+fn freeze(state: &mut GameState, seat: Seat, slot: Option<u8>) -> Result<Outcome, Reject> {
+    check_freeze(state, seat, slot)?;
+    set_frozen(state, seat, slot, true);
+    Ok(Outcome::empty())
+}
+
+fn unfreeze(state: &mut GameState, seat: Seat, slot: Option<u8>) -> Result<Outcome, Reject> {
+    check_unfreeze(state, seat, slot)?;
+    set_frozen(state, seat, slot, false);
     Ok(Outcome::empty())
 }
 
@@ -1710,6 +1731,18 @@ mod tests {
                 }),
                 intent: Intent::FreezeShop { slot: Some(0) },
                 check: Box::new(|_, state| check_freeze(state, 0, Some(0))),
+                expected: RejectCode::ShopSlotEmpty,
+                expected_message: None,
+            },
+            Case {
+                name: "解冻空槽位",
+                setup: Box::new(|| {
+                    let (engine, mut state) = setup(123);
+                    set_shop(&mut state, 0, &[None]);
+                    (engine, state)
+                }),
+                intent: Intent::UnfreezeShop { slot: Some(0) },
+                check: Box::new(|_, state| check_unfreeze(state, 0, Some(0))),
                 expected: RejectCode::ShopSlotEmpty,
                 expected_message: None,
             },

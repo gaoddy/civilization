@@ -47,6 +47,7 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 | `PlayCard` | 处于 `Recruit`；卡在手中；随从需棋盘有空位 | 无（费用在获得该牌时已支付） | 从手牌打出到指定站位（缺省追加到最右）；效果牌即时结算；随从入场，需要目标的战吼在候选非空时转为待选目标，金色「三连奖励」、三连判定与入场观察者推迟到目标结算之后；候选为空时战吼落空，入场副作用照常执行 | `CARD_NOT_IN_HAND` / `NO_SPACE` / `INVALID_CHOICE` / `NO_VALID_TARGET` |
 | `RearrangeBoard` | 处于 `Recruit` | 无 | 把随从移动到指定站位，原位及其右侧依次移位 | `NO_SUCH_MINION` |
 | `FreezeShop` | 处于 `Recruit` | 无 | 冻结当前槽位到下回合开始 | — |
+| `UnfreezeShop` | 处于 `Recruit` | 无 | 解冻指定槽位或全部已冻结槽位 | — |
 | `UseHeroPower` | 处于 `Recruit`；费用足够；本回合次数未用尽 | −技能的 `cost` | 使用所选英雄卡上的一个主动技能，次数受该技能 `uses_per_turn` 限制 | `NOT_ENOUGH_GOLD` / `HERO_POWER_LIMIT` / `NO_VALID_TARGET` |
 | `EndRecruit` | 处于 `Recruit` | 无 | 本玩家结束招募 | — |
 | `ChooseDiscover` | 存在本座位的发现或进化待选 | 无 | 消费最靠前的待选 | `INVALID_CHOICE` |
@@ -63,6 +64,7 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 
 - 6 个槽位。回合开始时自动刷新，首次手动刷新免费，之后每次 1 金币。
 - 冻结的槽位在下回合开始时保留，不自动刷新；手动刷新会取消冻结。
+- 商店存在冻结槽位时，再按一次冻结按钮解冻全部已冻结槽位；解冻不重抽、不消耗金币，未冻结槽位不变。
 - 冻结只保留下回合开始；若本回合升时代，商店按新时代概率免费重抽，冻结同时取消。
 - 槽位内容按"当前商店等级（= 玩家时代）× 星级"的概率表抽取，并且只从本局启用玩法的卡（含关联玩法命中的中立卡）中选（见 [数值与经济](../systems/economy-and-numbers.md)），再从共享牌池中实际扣除该卡。
 - 牌池中某张卡被抽完时，该卡不再出现在任何人的商店。

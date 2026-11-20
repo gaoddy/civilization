@@ -3527,6 +3527,27 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///    {
 ///      "type": "object",
 ///      "required": [
+///        "kind"
+///      ],
+///      "properties": {
+///        "kind": {
+///          "const": "UnfreezeShop"
+///        },
+///        "slot": {
+///          "description": "null 表示全部槽位",
+///          "type": [
+///            "integer",
+///            "null"
+///          ],
+///          "maximum": 5.0,
+///          "minimum": 0.0
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
 ///        "kind",
 ///        "skillId"
 ///      ],
@@ -3640,6 +3661,11 @@ pub enum Intent {
         to_index: i64,
     },
     FreezeShop {
+        ///null 表示全部槽位
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        slot: ::std::option::Option<i64>,
+    },
+    UnfreezeShop {
         ///null 表示全部槽位
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         slot: ::std::option::Option<i64>,
