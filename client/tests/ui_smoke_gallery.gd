@@ -29,6 +29,16 @@ func _check_lobby_page() -> void:
     )
     _expect(instance.find_child("GallerySubtitle", true, false) == null, "头部不应再有副标题胶囊")
     _expect(instance.find_child("GalleryCount", true, false) == null, "头部不应再有计数")
+    var same_row := true
+    if chapters != null:
+        for child in chapters.get_children():
+            if child is Button and not is_equal_approx(child.position.y, chapters.get_child(0).position.y):
+                same_row = false
+    _expect(same_row, "时代章节按钮应保持在头部同一行")
+    _expect(
+        header != null and header.get_global_rect().end.x <= instance.get_viewport_rect().size.x,
+        "图鉴头部不应横向溢出视口",
+    )
     _expect(
         _filtered_count(instance) == 432,
         "大厅图鉴应有 432 张，实际：%d" % _filtered_count(instance),
