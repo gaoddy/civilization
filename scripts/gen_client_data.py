@@ -32,6 +32,8 @@ def _display_card(doc):
 
 def _display_token(token):
     token = dict(token)
+    # Token 都是衍生的随从；客户端筛选与展示需要显式的 card_type。
+    token["card_type"] = "minion"
     token["display_cost"] = MINION_DISPLAY_COST
     return token
 

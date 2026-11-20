@@ -5,6 +5,8 @@ extends "res://tests/smoke_case.gd"
 func _ready() -> void:
     await _check_lobby_page()
     await _check_filters()
+    await _check_categories_and_kinds()
+    await _check_detail_art()
     await _check_empty_catalog()
     await _check_pagination()
     await _check_detail()
@@ -38,6 +40,10 @@ func _check_lobby_page() -> void:
     )
     var detail_name = instance.find_child("GalleryDetailName", true, false)
     _expect(detail_name != null and detail_name.text != "", "首屏应常驻选中首张卡")
+
+    _expect(instance.find_child("Taxonneutral", true, false) != null, "分类目录缺少中立")
+    _expect(instance.find_child("Taxoneffect", true, false) != null, "分类目录缺少效果牌")
+    _expect(instance.find_child("Taxonphenomenon", true, false) == null, "分类目录不应再出现现象")
 
     var toc = instance.find_child("GalleryToc", true, false)
     var detail = instance.find_child("GalleryDetail", true, false)
@@ -104,6 +110,95 @@ func _check_filters() -> void:
         "清除筛选后应恢复 432 张",
     )
     await _unmount(instance)
+
+
+## 中立 / 效果牌两个顶层分类，以及选中后展开的随从 / 效果二级筛选。
+func _check_categories_and_kinds() -> void:
+    var instance := await _mount_gallery()
+    if instance == null:
+        return
+    var count = instance.find_child("GalleryCount", true, false)
+    var neutral = instance.find_child("Taxonneutral", true, false)
+    _expect(neutral != null, "分类目录缺少中立")
+    if neutral != null:
+        await _push_click(instance, neutral.get_global_rect().get_center())
+    _expect(
+        count != null and count.text == tr("ui.gallery.count") % 178,
+        "中立应显示 178 张，实际：%s" % (count.text if count != null else "无"),
+    )
+
+    var kind_minion = instance.find_child("KindMinion", true, false)
+    var kind_effect = instance.find_child("KindEffect", true, false)
+    _expect(
+        instance.find_child("KindAll", true, false) != null
+            and kind_minion != null
+            and kind_effect != null,
+        "选中顶层分类后应展开随从 / 效果二级目录",
+    )
+    if kind_minion != null:
+        await _push_click(instance, kind_minion.get_global_rect().get_center())
+    _expect(
+        count != null and count.text == tr("ui.gallery.count") % 78,
+        "中立 + 随从应显示 78 张，实际：%s" % (count.text if count != null else "无"),
+    )
+    # 二级筛选重建后旧节点已释放，必须重新取当前节点。
+    kind_effect = instance.find_child("KindEffect", true, false)
+    if kind_effect != null:
+        await _push_click(instance, kind_effect.get_global_rect().get_center())
+    _expect(
+        count != null and count.text == tr("ui.gallery.count") % 100,
+        "中立 + 效果应显示 100 张，实际：%s" % (count.text if count != null else "无"),
+    )
+
+    var effect_taxon = instance.find_child("Taxoneffect", true, false)
+    _expect(effect_taxon != null, "分类目录缺少效果牌")
+    if effect_taxon != null:
+        await _push_click(instance, effect_taxon.get_global_rect().get_center())
+    _expect(
+        count != null and count.text == tr("ui.gallery.count") % 100,
+        "效果牌顶层应显示 100 张，实际：%s" % (count.text if count != null else "无"),
+    )
+    var kind_all = instance.find_child("KindAll", true, false)
+    _expect(
+        kind_all != null and kind_all.button_pressed,
+        "切换顶层分类后二级筛选应回到全部",
+    )
+
+    var all_taxon = instance.find_child("TaxonAll", true, false)
+    if all_taxon != null:
+        await _push_click(instance, all_taxon.get_global_rect().get_center())
+    _expect(
+        count != null and count.text == tr("ui.gallery.count") % 432,
+        "清除分类筛选后应恢复 432 张",
+    )
+    await _unmount(instance)
+
+
+## 详情预览：有美术显示卡图，无美术显示占位，不再现场拼装卡面。
+func _check_detail_art() -> void:
+    var detail := GalleryDetail.new()
+    add_child(detail)
+    detail.show_card("zhenghe")
+    await get_tree().process_frame
+    var art := detail.find_child("GalleryDetailArt", true, false) as TextureRect
+    _expect(art != null and art.texture != null, "有卡面美术的卡应显示卡图")
+    _expect(
+        detail.find_child("GalleryDetailArtPlaceholder", true, false) == null,
+        "有卡面美术时不应显示占位",
+    )
+
+    detail.show_card("adam-smith")
+    await get_tree().process_frame
+    _expect(
+        detail.find_child("GalleryDetailArt", true, false) == null,
+        "无卡面美术时不应构建卡图",
+    )
+    _expect(
+        detail.find_child("GalleryDetailArtPlaceholder", true, false) != null,
+        "无卡面美术时应显示占位",
+    )
+    detail.queue_free()
+    await get_tree().process_frame
 
 
 ## 空图鉴：没有章节、没有卡片，只显示空态与详情占位。
