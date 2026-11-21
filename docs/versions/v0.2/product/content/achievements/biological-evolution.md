@@ -5,6 +5,7 @@ event: 成长触发
 condition: 一局中累计触发 3 次成长
 count: 3
 reward: 获得 1 金币
+steam_api_name: BIOLOGICAL_EVOLUTION
 affects_power: true
 ---
 

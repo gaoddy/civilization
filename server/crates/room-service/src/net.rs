@@ -42,10 +42,10 @@ use axum::routing::get;
 use futures_util::{SinkExt, StreamExt};
 use protocol::RoomClosedReason;
 use protocol::server::{
-    FriendInvite as FriendInviteMessage, FriendInviteResult, FriendRequestItem,
+    AchievementState, FriendInvite as FriendInviteMessage, FriendInviteResult, FriendRequestItem,
     FriendUpdate as FriendUpdateMessage, FriendUpdateFriendsItem, FriendUpdateFriendsItemStatus,
     FriendUpdateOutgoingItem, FriendUpdateRecentItem, FriendUpdateRecentItemRelation,
-    InviteAccepted, RoomClosed,
+    InviteAccepted, PhoneCodeSent, RoomClosed, RoomInviteCode,
 };
 use protocol::{ClientEnvelope, ClientMessage, ServerEnvelope};
 use rule_engine::state::Phase;
@@ -418,6 +418,36 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                         }
                     }
                     protocol::client::AuthRequest::Variant1 { .. } => None,
+                    protocol::client::AuthRequest::Variant2 {
+                        steam_ticket,
+                        display_name,
+                    } => {
+                        // 身份只信服务端验票结果；票据无效或未配置时不建号。
+                        let steam_id = match state.steam.verify(steam_ticket.as_str()).await {
+                            Ok(steam_id) => steam_id,
+                            Err(error) => {
+                                send_payload(&out_tx, &mut direct, &floor, "Error", &error);
+                                continue;
+                            }
+                        };
+                        let login = state
+                            .accounts
+                            .lock()
+                            .await
+                            .login_steam(
+                                &steam_id,
+                                display_name.as_ref().map(|name| name.as_str()),
+                                state.clock.now_ms(),
+                            )
+                            .await;
+                        match login {
+                            Ok(account) => Some(account),
+                            Err(error) => {
+                                send_payload(&out_tx, &mut direct, &floor, "Error", &error);
+                                continue;
+                            }
+                        }
+                    }
                 };
                 let result = state.sessions.lock().await.authenticate_with(
                     &request,
@@ -446,9 +476,140 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                             "AuthResult",
                             &authorized.auth_result(),
                         );
+                        // 账号视图紧随认证结果；旧客户端按类型忽略。
+                        if let Some(view) = state.accounts.lock().await.view(&authorized.player_id)
+                        {
+                            send_payload(&out_tx, &mut direct, &floor, "AccountView", &view);
+                        }
+                        // 成就状态：成就运行时尚未实现，没有可下发的解锁记录，先下发空列表。
+                        // 运行时落地后用 `state.achievements.steam_api_name` 生成同结构条目，
+                        // `AchievementUnlocked` 走同一映射。非 Steam 客户端按类型忽略。
+                        send_payload(
+                            &out_tx,
+                            &mut direct,
+                            &floor,
+                            "AchievementState",
+                            &AchievementState {
+                                unlocked: Vec::new(),
+                            },
+                        );
                         // 本人与好友都需要看到最新的在线状态与社交视图。
                         notify_presence(&state, &authorized.player_id).await;
                     }
+                    Err(error) => send_payload(&out_tx, &mut direct, &floor, "Error", &error),
+                }
+            }
+            ClientMessage::RequestAccount(_) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                match state.accounts.lock().await.view(&authorized.player_id) {
+                    Some(view) => send_payload(&out_tx, &mut direct, &floor, "AccountView", &view),
+                    None => send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "INTERNAL_ERROR",
+                        "账号不存在",
+                        true,
+                    ),
+                }
+            }
+            ClientMessage::RequestPhoneCode(request) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                if !crate::phone_code::is_valid_phone(&request.phone) {
+                    send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "PHONE_INVALID",
+                        "手机号格式不正确",
+                        false,
+                    );
+                    continue;
+                }
+                let issued = state.phone_codes.lock().await.issue(
+                    &authorized.player_id,
+                    &request.phone,
+                    state.clock.now_ms(),
+                );
+                match issued {
+                    Ok(expires_at_ms) => {
+                        let sent = PhoneCodeSent {
+                            expires_at: crate::db::ms_to_utc(expires_at_ms),
+                        };
+                        send_payload(&out_tx, &mut direct, &floor, "PhoneCodeSent", &sent);
+                    }
+                    Err(crate::phone_code::IssueError::Cooldown) => send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "RATE_LIMITED",
+                        "验证码发送过于频繁",
+                        true,
+                    ),
+                }
+            }
+            ClientMessage::BindPhone(request) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                if !crate::phone_code::is_valid_phone(&request.phone) {
+                    send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "PHONE_INVALID",
+                        "手机号格式不正确",
+                        false,
+                    );
+                    continue;
+                }
+                let now = state.clock.now_ms();
+                let checked = state.phone_codes.lock().await.consume(
+                    &authorized.player_id,
+                    &request.phone,
+                    &request.code,
+                    now,
+                );
+                match checked {
+                    Ok(()) => {}
+                    Err(crate::phone_code::CheckError::Expired) => {
+                        send_error(
+                            &out_tx,
+                            &mut direct,
+                            &floor,
+                            "CODE_EXPIRED",
+                            "验证码已过期",
+                            false,
+                        );
+                        continue;
+                    }
+                    Err(crate::phone_code::CheckError::Invalid) => {
+                        send_error(
+                            &out_tx,
+                            &mut direct,
+                            &floor,
+                            "CODE_INVALID",
+                            "验证码错误",
+                            false,
+                        );
+                        continue;
+                    }
+                }
+                let bound = state
+                    .accounts
+                    .lock()
+                    .await
+                    .bind_phone(&authorized.player_id, &request.phone, now)
+                    .await;
+                match bound {
+                    Ok(view) => send_payload(&out_tx, &mut direct, &floor, "AccountView", &view),
                     Err(error) => send_payload(&out_tx, &mut direct, &floor, "Error", &error),
                 }
             }
@@ -516,7 +677,7 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                         &out_tx,
                         &mut direct,
                         &floor,
-                        "INVALID_STAGE",
+                        "ALREADY_IN_ROOM",
                         "已在房间中",
                     );
                     continue;
@@ -529,31 +690,14 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                 };
                 match joined {
                     Ok(room_id) => {
-                        let Some(handle) = state.hub.lock().await.get(&room_id) else {
-                            // 先改注册表后查 hub：失败必须回滚刚加入的座位。
-                            let _ = state
-                                .rooms
-                                .lock()
-                                .await
-                                .leave(&room_id, &authorized.player_id);
-                            send_error(
-                                &out_tx,
-                                &mut direct,
-                                &floor,
-                                "ROOM_NOT_FOUND",
-                                "房间任务不存在",
-                                false,
-                            );
-                            continue;
-                        };
-                        let generation = next_generation();
-                        let _ = handle.tx.send(RoomMessage::Attach {
-                            player_id: authorized.player_id,
-                            out: out_tx.clone(),
-                            floor: floor.clone(),
-                            generation,
-                        });
-                        room = Some((room_id, handle.tx, generation));
+                        match attach_joined_room(&state, room_id, &authorized, &out_tx, &floor)
+                            .await
+                        {
+                            Ok(attached) => room = Some(attached),
+                            Err((code, text)) => {
+                                send_error(&out_tx, &mut direct, &floor, code, text, false);
+                            }
+                        }
                     }
                     Err(error) => {
                         let code = error.code().to_string();
@@ -566,6 +710,84 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                             false,
                         );
                     }
+                }
+            }
+            ClientMessage::CreateRoomInvite(_) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                let created = state
+                    .rooms
+                    .lock()
+                    .await
+                    .create_invite(&authorized.player_id, state.clock.now_ms());
+                match created {
+                    Ok(invite) => {
+                        let payload = RoomInviteCode {
+                            token: invite.token,
+                            room_code: invite.room_code,
+                            expires_at: crate::db::ms_to_utc(invite.expires_at_ms),
+                        };
+                        send_payload(&out_tx, &mut direct, &floor, "RoomInviteCode", &payload);
+                    }
+                    Err(error) => send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        &error.code().to_string(),
+                        &error.to_string(),
+                        false,
+                    ),
+                }
+            }
+            ClientMessage::RedeemRoomInvite(request) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                if room.is_some() {
+                    route_error(
+                        &room,
+                        session.as_ref(),
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "ALREADY_IN_ROOM",
+                        "已在房间中",
+                    );
+                    continue;
+                }
+                let joined = {
+                    let mut rooms = state.rooms.lock().await;
+                    rooms
+                        .redeem_invite(
+                            &request.token,
+                            &authorized,
+                            &state.catalog,
+                            state.clock.now_ms(),
+                        )
+                        .map(|joined_room| joined_room.id.clone())
+                };
+                match joined {
+                    Ok(room_id) => {
+                        match attach_joined_room(&state, room_id, &authorized, &out_tx, &floor)
+                            .await
+                        {
+                            Ok(attached) => room = Some(attached),
+                            Err((code, text)) => {
+                                send_error(&out_tx, &mut direct, &floor, code, text, false);
+                            }
+                        }
+                    }
+                    Err(error) => send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        &error.code().to_string(),
+                        &error.to_string(),
+                        false,
+                    ),
                 }
             }
             ClientMessage::Reconnect(request) => {
@@ -1046,6 +1268,33 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
     let _ = tokio::time::timeout(FLUSH_TIMEOUT, writer).await;
 }
 
+/// 把已加入注册表的玩家接到房间 task；失败时回滚刚占的座位。
+async fn attach_joined_room(
+    state: &AppState,
+    room_id: String,
+    authorized: &Session,
+    out_tx: &mpsc::Sender<ServerEnvelope>,
+    floor: &SeqFloor,
+) -> Result<(String, mpsc::UnboundedSender<RoomMessage>, u64), (&'static str, &'static str)> {
+    let Some(handle) = state.hub.lock().await.get(&room_id) else {
+        // 先改注册表后查 hub：失败必须回滚刚加入的座位。
+        let _ = state
+            .rooms
+            .lock()
+            .await
+            .leave(&room_id, &authorized.player_id);
+        return Err(("ROOM_NOT_FOUND", "房间任务不存在"));
+    };
+    let generation = next_generation();
+    let _ = handle.tx.send(RoomMessage::Attach {
+        player_id: authorized.player_id.clone(),
+        out: out_tx.clone(),
+        floor: floor.clone(),
+        generation,
+    });
+    Ok((room_id, handle.tx, generation))
+}
+
 /// 把非大厅入口的上行消息映射成房间消息。
 fn map_room_message(
     message: ClientMessage,
@@ -1091,7 +1340,14 @@ fn map_room_message(
         ClientMessage::LeaveRoom(_)
         | ClientMessage::AuthRequest(_)
         | ClientMessage::CreateRoom(_)
-        | ClientMessage::JoinRoom(_) => Err(("INTERNAL_ERROR", "大厅入口消息不应进入房间路由")),
+        | ClientMessage::JoinRoom(_)
+        | ClientMessage::RequestAccount(_)
+        | ClientMessage::RequestPhoneCode(_)
+        | ClientMessage::BindPhone(_)
+        | ClientMessage::CreateRoomInvite(_)
+        | ClientMessage::RedeemRoomInvite(_) => {
+            Err(("INTERNAL_ERROR", "大厅入口消息不应进入房间路由"))
+        }
         ClientMessage::FriendRequest(_)
         | ClientMessage::FriendRespond(_)
         | ClientMessage::FriendRemove(_)

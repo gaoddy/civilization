@@ -147,10 +147,12 @@ impl SessionStore {
     /// - 手机号分支：验证码等于 [`DEV_SMS_CODE`] 才成功；`display_name` 缺省时按本进程
     ///   第几个新会话生成 `玩家N`（从 1 起）。提供了 `account` 时直接签发会话。
     /// - 令牌分支：按令牌查到会话且未过期才成功，否则 `TOKEN_EXPIRED`。
+    /// - Steam 分支：身份由调用方验票后解析为 `account`，本方法只签发会话。
     ///
     /// # Errors
     ///
-    /// 验证码错误 `AUTH_FAILED`，令牌无效或过期 `TOKEN_EXPIRED`，两者都不可原样重试。
+    /// 验证码错误 `AUTH_FAILED`，令牌无效或过期 `TOKEN_EXPIRED`，Steam 分支缺少已解析
+    /// 账号时 `STEAM_AUTH_FAILED`；三者都不可原样重试。
     pub fn authenticate_with(
         &mut self,
         req: &AuthRequest,
@@ -180,25 +182,13 @@ impl SessionStore {
                             player_code: self.allocate_code(&player_id),
                             player_id,
                             display_name,
+                            phone: None,
+                            steam_id: None,
                         }
                     }
                 };
 
-                self.codes
-                    .insert(account.player_code.clone(), account.player_id.clone());
-                let session = Session {
-                    player_id: account.player_id,
-                    player_code: account.player_code,
-                    token: Uuid::new_v4().simple().to_string(),
-                    display_name: account.display_name,
-                    expires_at_ms: clock.now_ms().saturating_add(SESSION_TTL_MS),
-                };
-
-                self.by_token
-                    .insert(session.token.clone(), session.player_id.clone());
-                self.by_player
-                    .insert(session.player_id.clone(), session.clone());
-                Ok(session)
+                Ok(self.issue(account, clock))
             }
             AuthRequest::Variant1 { token, .. } => {
                 let Some(player_id) = self.by_token.get(token).cloned() else {
@@ -217,7 +207,38 @@ impl SessionStore {
                 }
                 Ok(session)
             }
+            AuthRequest::Variant2 { .. } => {
+                let Some(account) = account else {
+                    return Err(error_message_with_id(
+                        "STEAM_AUTH_FAILED",
+                        "error.STEAM_AUTH_FAILED",
+                        &[],
+                        "Steam 身份未解析",
+                        true,
+                    ));
+                };
+                Ok(self.issue(account, clock))
+            }
         }
+    }
+
+    /// 用已解析账号签发会话；编号登记与会话表写入只在这里。
+    fn issue(&mut self, account: Account, clock: &dyn Clock) -> Session {
+        self.codes
+            .insert(account.player_code.clone(), account.player_id.clone());
+        let session = Session {
+            player_id: account.player_id,
+            player_code: account.player_code,
+            token: Uuid::new_v4().simple().to_string(),
+            display_name: account.display_name,
+            expires_at_ms: clock.now_ms().saturating_add(SESSION_TTL_MS),
+        };
+
+        self.by_token
+            .insert(session.token.clone(), session.player_id.clone());
+        self.by_player
+            .insert(session.player_id.clone(), session.clone());
+        session
     }
 
     /// 清除所有已过期会话，返回清除的会话条数。

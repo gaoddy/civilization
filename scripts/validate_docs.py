@@ -149,7 +149,10 @@ EVENT_TRIGGERS = {
     "OnEnemyDeath", "OnFriendlyDeath", "OnAllySummon", "OnAllyGrowth",
     "OnAllyEvolve", "OnDealDamage", "OnUse", "OnKill", "OnAllyKill",
 }
-ACHIEVEMENT_FIELDS = ["id", "name", "event", "condition", "count", "reward", "affects_power"]
+ACHIEVEMENT_FIELDS = ["id", "name", "event", "condition", "count", "reward",
+                      "steam_api_name", "affects_power"]
+# Steamworks 成就 API 名：ASCII 大写字母开头，后接大写字母、数字或下划线。
+STEAM_API_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]{2,63}$")
 RANGE = {1: (1, 2, 2, 4), 2: (2, 3, 3, 5), 3: (3, 5, 4, 7),
          4: (4, 7, 6, 9), 5: (6, 9, 8, 12), 6: (8, 12, 10, 16),
          7: (10, 15, 14, 20)}
@@ -1558,7 +1561,7 @@ def check_achievements():
     achievements = load("achievements", ACHIEVEMENT_FIELDS, V02_ROOT)
     if len(achievements) != 6:
         fail(f"成就数量 {len(achievements)}，期望 6")
-    for key in ("id", "name"):
+    for key in ("id", "name", "steam_api_name"):
         values = [a[key] for a in achievements]
         dup = [v for v, n in collections.Counter(values).items() if n > 1]
         if dup:
@@ -1572,6 +1575,8 @@ def check_achievements():
             fail(f"{a['name']}: affects_power 必须为布尔")
         if not a["condition"] or not a["reward"]:
             fail(f"{a['name']}: condition 或 reward 为空")
+        if not STEAM_API_NAME_RE.fullmatch(str(a["steam_api_name"])):
+            fail(f"{a['name']}: steam_api_name 格式非法 {a['steam_api_name']!r}")
     return achievements
 
 

@@ -5,6 +5,7 @@ event: 三连合成
 condition: 本局完成一次植物随从的三连
 count: 1
 reward: 发现一张植物随从
+steam_api_name: GENETICS
 affects_power: true
 ---
 

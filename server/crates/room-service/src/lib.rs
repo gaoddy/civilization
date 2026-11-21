@@ -14,10 +14,13 @@ pub mod error;
 pub mod filter;
 pub mod game;
 pub mod net;
+pub mod phone_code;
 pub mod room;
 pub mod social;
+pub mod steam;
 pub mod view;
 
+use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
@@ -30,6 +33,66 @@ const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
 const SKILLS_JSON: &str = include_str!("../../../data/v0.1/skills.json");
 const CONFIG_JSON: &str = include_str!("../../../data/v0.1/config.json");
 const TAXONOMY_JSON: &str = include_str!("../../../data/v0.1/taxonomy.json");
+const ACHIEVEMENTS_JSON: &str = include_str!("../../../data/v0.2/achievements.json");
+
+/// 成就定义目录：成就 id → Steamworks 成就 API 名。
+///
+/// 成就运行时尚未实现，本目录只承担 Steam 侧的映射与下发；判定与奖励仍由
+/// v0.2 成就运行时负责。
+#[derive(Clone, Debug, Default)]
+pub struct AchievementCatalog {
+    by_id: BTreeMap<String, String>,
+}
+
+/// 生成数据的单条成就；只反序列化映射需要的字段。
+#[derive(Debug, serde::Deserialize)]
+struct AchievementRecord {
+    id: String,
+    steam_api_name: String,
+}
+
+impl AchievementCatalog {
+    /// 从生成 JSON 建立映射，拒绝空 id、空 API 名与重复 id。
+    ///
+    /// # Errors
+    ///
+    /// JSON 无法解析、字段为空或 id 重复时返回错误文本。
+    pub fn from_json(raw: &str) -> Result<Self, String> {
+        let records: Vec<AchievementRecord> =
+            serde_json::from_str(raw).map_err(|err| format!("解析成就数据失败: {err}"))?;
+        let mut by_id = BTreeMap::new();
+        for record in records {
+            if record.id.is_empty() || record.steam_api_name.is_empty() {
+                return Err("成就数据的 id 与 steam_api_name 不得为空".to_string());
+            }
+            if by_id
+                .insert(record.id.clone(), record.steam_api_name)
+                .is_some()
+            {
+                return Err(format!("成就 id 重复: {}", record.id));
+            }
+        }
+        if by_id.is_empty() {
+            return Err("成就数据为空".to_string());
+        }
+        Ok(Self { by_id })
+    }
+
+    /// 查询成就对应的 Steamworks API 名。
+    pub fn steam_api_name(&self, achievement_id: &str) -> Option<&str> {
+        self.by_id.get(achievement_id).map(String::as_str)
+    }
+
+    /// 成就数量。
+    pub fn len(&self) -> usize {
+        self.by_id.len()
+    }
+
+    /// 是否没有成就定义。
+    pub fn is_empty(&self) -> bool {
+        self.by_id.is_empty()
+    }
+}
 
 /// 服务共享状态。
 ///
@@ -50,6 +113,12 @@ pub struct AppState {
     pub social: Arc<Mutex<social::SocialStore>>,
     /// 在线连接登记；好友推送与控制消息按 `player_id` 定位连接。
     pub connections: Arc<Mutex<net::ConnectionRegistry>>,
+    /// Steam 票据校验；未配置时为 `Disabled`，手机号登录不受影响。
+    pub steam: Arc<steam::SteamVerifier>,
+    /// 成就 id → Steam API 名映射；随仓库数据内嵌，启动时加载。
+    pub achievements: Arc<AchievementCatalog>,
+    /// 手机号绑定验证码；进程内，重启失效。
+    pub phone_codes: Arc<Mutex<phone_code::PhoneCodeStore>>,
     /// 持久化数据库；未配置 `DATABASE_URL` 时为 `None`，就绪探针直接通过。
     pub db: Option<Arc<db::Db>>,
 }
@@ -70,6 +139,9 @@ impl AppState {
             hub: Arc::new(Mutex::new(net::RoomHub::default())),
             social: Arc::new(Mutex::new(social::SocialStore::new())),
             connections: Arc::new(Mutex::new(net::ConnectionRegistry::default())),
+            steam: Arc::new(steam::SteamVerifier::disabled()),
+            achievements: Arc::new(load_achievements()?),
+            phone_codes: Arc::new(Mutex::new(phone_code::PhoneCodeStore::new())),
             db: None,
         })
     }
@@ -94,6 +166,9 @@ impl AppState {
             hub: Arc::new(Mutex::new(net::RoomHub::default())),
             social: Arc::new(Mutex::new(social)),
             connections: Arc::new(Mutex::new(net::ConnectionRegistry::default())),
+            steam: Arc::new(steam::SteamVerifier::disabled()),
+            achievements: Arc::new(load_achievements()?),
+            phone_codes: Arc::new(Mutex::new(phone_code::PhoneCodeStore::new())),
             db: Some(db),
         })
     }
@@ -101,6 +176,12 @@ impl AppState {
     /// 当前存活房间 task 的数量；供测试断言房间回收。
     pub async fn hub_len(&self) -> usize {
         self.hub.lock().await.len()
+    }
+
+    /// 装配 Steam 校验器；未调用时为 `Disabled`。
+    pub fn with_steam(mut self, verifier: steam::SteamVerifier) -> Self {
+        self.steam = Arc::new(verifier);
+        self
     }
 }
 
@@ -116,6 +197,15 @@ fn load_catalog() -> Result<Catalog, String> {
     .map_err(|err| format!("加载卡牌目录失败: {err}"))?;
     ensure_hero_pool(&catalog)?;
     Ok(catalog)
+}
+
+/// 加载仓库内嵌成就映射。
+///
+/// # Errors
+///
+/// 成就数据无法解析、为空或 id 重复时返回错误文本。
+fn load_achievements() -> Result<AchievementCatalog, String> {
+    AchievementCatalog::from_json(ACHIEVEMENTS_JSON)
 }
 
 /// 校验英雄卡池：至少 1 张英雄，且每张英雄的关联分类合法。
@@ -164,6 +254,25 @@ fn ensure_hero_pool(catalog: &Catalog) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+/// 绑定监听地址并构造路由，Steam 校验器可指定；`db` 为 `None` 时使用内存存储。
+///
+/// # Errors
+///
+/// 同 [`bind`]；数据库读取失败时同样返回错误。
+pub async fn bind_with_steam(
+    listen: &str,
+    clock: Arc<dyn Clock>,
+    db: Option<Arc<db::Db>>,
+    verifier: steam::SteamVerifier,
+) -> Result<(SocketAddr, Router), String> {
+    let state = match db {
+        Some(db) => AppState::with_database(clock, db).await?,
+        None => AppState::new(clock)?,
+    };
+    let (addr, router) = bind_router(listen, state.with_steam(verifier)).await?;
+    Ok((addr, router))
 }
 
 /// 绑定监听地址并构造路由，同时返回共享状态（测试用它观察房间回收）。
@@ -265,7 +374,8 @@ pub use view::SeatInfo;
 #[cfg(test)]
 mod tests {
     use super::{
-        CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON, ensure_hero_pool,
+        AchievementCatalog, CARDS_JSON, CONFIG_JSON, HEROES_JSON, SKILLS_JSON, TAXONOMY_JSON,
+        ensure_hero_pool, load_achievements,
     };
     use rule_engine::data::{Catalog, Category, CategoryKind};
 
@@ -306,5 +416,33 @@ mod tests {
             ensure_hero_pool(&catalog()).is_ok(),
             "仓库内嵌卡表应通过英雄校验"
         );
+    }
+
+    #[test]
+    fn achievement_catalog_maps_repo_data() {
+        let achievements = load_achievements().expect("仓库内嵌成就数据应能加载");
+        assert_eq!(achievements.len(), 6, "v0.2 应有 6 个成就");
+        assert_eq!(
+            achievements.steam_api_name("genetics"),
+            Some("GENETICS"),
+            "成就 id 应映射到 Steam API 名"
+        );
+        assert_eq!(achievements.steam_api_name("unknown"), None);
+    }
+
+    #[test]
+    fn achievement_catalog_rejects_duplicate_id() {
+        let raw = r#"[
+            {"id": "a", "steam_api_name": "AAA"},
+            {"id": "a", "steam_api_name": "BBB"}
+        ]"#;
+        let error = AchievementCatalog::from_json(raw).expect_err("重复 id 必须拒绝");
+        assert!(error.contains("重复"), "实际：{error}");
+    }
+
+    #[test]
+    fn achievement_catalog_rejects_empty_mapping() {
+        let error = AchievementCatalog::from_json("[]").expect_err("空映射必须拒绝");
+        assert!(error.contains("为空"), "实际：{error}");
     }
 }

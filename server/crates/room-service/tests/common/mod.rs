@@ -52,6 +52,21 @@ pub async fn start_server_with_clock(clock: Arc<dyn Clock>) -> std::net::SocketA
     addr
 }
 
+/// 用指定 Steam 校验器启动服务；内存存储，适合验票与登录用例。
+pub async fn start_server_with_steam(
+    clock: Arc<dyn Clock>,
+    verifier: room_service::steam::SteamVerifier,
+) -> std::net::SocketAddr {
+    let (addr, router) = room_service::bind_with_steam("127.0.0.1:0", clock, None, verifier)
+        .await
+        .expect("绑定端口应当成功");
+    tokio::spawn(async move {
+        let _ = room_service::serve(addr, router).await;
+    });
+    wait_for_server(addr).await;
+    addr
+}
+
 /// 数据库连接串：优先 `TEST_DATABASE_URL`，其次 `DATABASE_URL`。
 pub fn database_url() -> Option<String> {
     std::env::var("TEST_DATABASE_URL")

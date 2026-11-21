@@ -14,8 +14,8 @@ use protocol::client::AuthRequest;
 use protocol::server::RoomUpdate;
 use protocol::{RoomClosedReason, ServerEnvelope, ServerMessage};
 use room_service::auth::{Session, SessionStore};
-use room_service::clock::FixedClock;
-use room_service::room::{RoomError, RoomRegistry, SEAT_COUNT};
+use room_service::clock::{Clock, FixedClock};
+use room_service::room::{ROOM_INVITE_TTL_MS, RoomError, RoomRegistry, SEAT_COUNT};
 use rule_engine::data::{Catalog, Category, CategoryKind, HeroCard, Playstyle, hero_in_pool};
 use rule_engine::state::Phase;
 use serde_json::{Value, json};
@@ -1328,6 +1328,130 @@ async fn create_room_ws(client: &mut WsClient, name: &str) -> (String, String) {
     client.send("CreateRoom", json!({})).await;
     let room = client.recv_room_update().await;
     (room.code, player_id)
+}
+
+/// 创建房间邀请 token，返回 `(token, 房间码)`。
+async fn create_invite_ws(client: &mut WsClient) -> (String, String) {
+    client.send("CreateRoomInvite", json!({})).await;
+    loop {
+        if let ServerMessage::RoomInviteCode(invite) = client.recv_room().await {
+            return (invite.token, invite.room_code);
+        }
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn invite_token_joins_room_once() {
+    let addr = common::start_server().await;
+    let mut host = WsClient::connect(addr).await;
+    let (code, _host_id) = create_room_ws(&mut host, "invite-host").await;
+
+    let (token, invite_code) = create_invite_ws(&mut host).await;
+    assert_eq!(invite_code, code, "token 应指向当前房间");
+
+    let mut guest = WsClient::connect(addr).await;
+    authenticate_ws(&mut guest, "invite-guest").await;
+    guest
+        .send("RedeemRoomInvite", json!({ "token": token }))
+        .await;
+    let joined = guest.recv_room_update().await;
+    assert_eq!(joined.players.len(), 2, "被邀请者应入房");
+    assert_eq!(joined.code, code);
+
+    // token 一次性：其他玩家再消费返回 INVITE_NOT_FOUND。
+    let mut third = WsClient::connect(addr).await;
+    authenticate_ws(&mut third, "invite-third").await;
+    third
+        .send("RedeemRoomInvite", json!({ "token": token }))
+        .await;
+    assert_eq!(third.recv_error().await, ErrorCode::InviteNotFound);
+
+    // 已在房间的连接再消费先命中 ALREADY_IN_ROOM。
+    host.send("RedeemRoomInvite", json!({ "token": token }))
+        .await;
+    assert_eq!(host.recv_error().await, ErrorCode::AlreadyInRoom);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn join_room_twice_reports_already_in_room() {
+    let addr = common::start_server().await;
+    let mut host = WsClient::connect(addr).await;
+    let (code, _host_id) = create_room_ws(&mut host, "dup-host").await;
+
+    let mut guest = WsClient::connect(addr).await;
+    authenticate_ws(&mut guest, "dup-guest").await;
+    guest.send("JoinRoom", json!({ "code": code })).await;
+    guest.recv_room_update().await;
+    guest.send("JoinRoom", json!({ "code": code })).await;
+    assert_eq!(guest.recv_error().await, ErrorCode::AlreadyInRoom);
+}
+
+#[test]
+fn invite_token_expires_and_requires_lobby() {
+    let clock = FixedClock::new(1_000_000);
+    let mut store = SessionStore::new();
+    let mut registry = RoomRegistry::with_seed(0);
+    let host = session(&mut store, &clock, "invite-expiry-host");
+    let room = registry.create(&host, &catalog());
+    let room_id = room.id.clone();
+
+    let invite = registry
+        .create_invite(&host.player_id, clock.now_ms())
+        .expect("大厅内应能创建邀请");
+    let guest = session(&mut store, &clock, "invite-expiry-guest");
+    let expired = registry
+        .redeem_invite(
+            &invite.token,
+            &guest,
+            &catalog(),
+            clock.now_ms() + ROOM_INVITE_TTL_MS,
+        )
+        .expect_err("过期 token 必须拒绝");
+    assert!(matches!(expired, RoomError::InviteExpired));
+
+    let fresh = registry
+        .create_invite(&host.player_id, clock.now_ms())
+        .expect("大厅内应能创建邀请");
+    registry.commit_start(&room_id).expect("应能进入开局阶段");
+    let wrong_phase = registry
+        .redeem_invite(&fresh.token, &guest, &catalog(), clock.now_ms())
+        .expect_err("开局后 token 不能入房");
+    assert!(matches!(wrong_phase, RoomError::WrongPhase));
+    assert!(
+        registry
+            .create_invite(&host.player_id, clock.now_ms())
+            .is_err(),
+        "开局后不能再创建邀请"
+    );
+
+    let outsider = session(&mut store, &clock, "invite-outsider");
+    let not_in_room = registry
+        .create_invite(&outsider.player_id, clock.now_ms())
+        .expect_err("不在房间不能创建邀请");
+    assert!(matches!(not_in_room, RoomError::NotInRoom));
+}
+
+#[test]
+fn invite_token_requires_free_seat() {
+    let clock = FixedClock::new(2_000_000);
+    let mut store = SessionStore::new();
+    let mut registry = RoomRegistry::with_seed(0);
+    let host = session(&mut store, &clock, "invite-full-host");
+    let room = registry.create(&host, &catalog());
+    for index in 1..SEAT_COUNT {
+        let member = session(&mut store, &clock, &format!("invite-full-{index}"));
+        registry
+            .join(&room.code, &member, &catalog())
+            .expect("应能补满座位");
+    }
+    let invite = registry
+        .create_invite(&host.player_id, clock.now_ms())
+        .expect("大厅内应能创建邀请");
+    let extra = session(&mut store, &clock, "invite-full-extra");
+    let full = registry
+        .redeem_invite(&invite.token, &extra, &catalog(), clock.now_ms())
+        .expect_err("满座必须拒绝");
+    assert!(matches!(full, RoomError::Full));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

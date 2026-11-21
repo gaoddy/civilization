@@ -27,14 +27,26 @@ pub fn utc_to_ms(at: DateTime<Utc>) -> u64 {
     u64::try_from(at.timestamp_millis()).unwrap_or(0)
 }
 
-/// 账号行。
+/// 账号行。手机号与 SteamID 各自可空但只少有一个非空，由表约束保证。
 #[derive(Debug, Clone, FromRow)]
 pub struct StoredAccount {
     pub account_id: String,
-    pub phone: String,
+    pub phone: Option<String>,
+    pub steam_id: Option<String>,
     pub player_code: String,
     pub display_name: String,
     pub ordinal: i64,
+}
+
+/// 绑定手机号的结果。
+#[derive(Debug)]
+pub enum BindPhoneOutcome {
+    /// 已绑定成功；账号已带新手机号。
+    Bound(StoredAccount),
+    /// 账号已绑定其他手机号，或目标手机号被其他账号占用。
+    AlreadyBound,
+    /// 账号不存在。
+    NotFound,
 }
 
 /// 好友关系行。
@@ -201,7 +213,7 @@ impl Db {
     /// 查询失败时返回错误。
     pub async fn load_accounts(&self) -> DbResult<Vec<StoredAccount>> {
         sqlx::query_as::<_, StoredAccount>(
-            "SELECT account_id, phone, player_code, display_name, ordinal
+            "SELECT account_id, phone, steam_id, player_code, display_name, ordinal
              FROM account ORDER BY ordinal",
         )
         .fetch_all(&self.pool)
@@ -215,10 +227,25 @@ impl Db {
     /// 查询失败时返回错误。
     pub async fn find_account(&self, phone: &str) -> DbResult<Option<StoredAccount>> {
         sqlx::query_as::<_, StoredAccount>(
-            "SELECT account_id, phone, player_code, display_name, ordinal
+            "SELECT account_id, phone, steam_id, player_code, display_name, ordinal
              FROM account WHERE phone = $1",
         )
         .bind(phone)
+        .fetch_optional(&self.pool)
+        .await
+    }
+
+    /// 按 SteamID 查账号。
+    ///
+    /// # Errors
+    ///
+    /// 查询失败时返回错误。
+    pub async fn find_account_by_steam(&self, steam_id: &str) -> DbResult<Option<StoredAccount>> {
+        sqlx::query_as::<_, StoredAccount>(
+            "SELECT account_id, phone, steam_id, player_code, display_name, ordinal
+             FROM account WHERE steam_id = $1",
+        )
+        .bind(steam_id)
         .fetch_optional(&self.pool)
         .await
     }
@@ -234,8 +261,35 @@ impl Db {
         display_name: Option<&str>,
         at: DateTime<Utc>,
     ) -> DbResult<StoredAccount> {
+        self.create_account_with_identity(Some(phone), None, display_name, at)
+            .await
+    }
+
+    /// 按 SteamID 取账号，不存在则创建；默认展示名由持久化序号生成。
+    ///
+    /// # Errors
+    ///
+    /// 事务或写入失败时返回错误。同一 SteamID 并发创建视为已存在，回查后返回。
+    pub async fn create_steam_account(
+        &self,
+        steam_id: &str,
+        display_name: Option<&str>,
+        at: DateTime<Utc>,
+    ) -> DbResult<StoredAccount> {
+        self.create_account_with_identity(None, Some(steam_id), display_name, at)
+            .await
+    }
+
+    /// 两个身份入口共用的插入逻辑；恰有一个身份非空。
+    async fn create_account_with_identity(
+        &self,
+        phone: Option<&str>,
+        steam_id: Option<&str>,
+        display_name: Option<&str>,
+        at: DateTime<Utc>,
+    ) -> DbResult<StoredAccount> {
         let mut tx = self.pool.begin().await?;
-        if let Some(account) = fetch_account(&mut *tx, phone).await? {
+        if let Some(account) = fetch_account_identity(&mut *tx, phone, steam_id).await? {
             tx.commit().await?;
             return Ok(account);
         }
@@ -243,12 +297,13 @@ impl Db {
         let account_id = format!("p_{}", Uuid::new_v4().simple());
         let inserted = sqlx::query_as::<_, StoredAccount>(
             "INSERT INTO account
-                 (account_id, phone, player_code, display_name, created_at, updated_at)
-             VALUES ($1, $2, nextval('player_code_seq')::text, $3, $4, $4)
-             RETURNING account_id, phone, player_code, display_name, ordinal",
+                 (account_id, phone, steam_id, player_code, display_name, created_at, updated_at)
+             VALUES ($1, $2, $3, nextval('player_code_seq')::text, $4, $5, $5)
+             RETURNING account_id, phone, steam_id, player_code, display_name, ordinal",
         )
         .bind(&account_id)
         .bind(phone)
+        .bind(steam_id)
         .bind(display_name.unwrap_or("玩家"))
         .bind(at)
         .fetch_one(&mut *tx)
@@ -258,7 +313,12 @@ impl Db {
             Ok(account) => account,
             Err(error) => {
                 tx.rollback().await?;
-                if let Some(account) = self.find_account(phone).await? {
+                let existing = match (phone, steam_id) {
+                    (Some(phone), _) => self.find_account(phone).await?,
+                    (_, Some(steam_id)) => self.find_account_by_steam(steam_id).await?,
+                    _ => None,
+                };
+                if let Some(account) = existing {
                     return Ok(account);
                 }
                 return Err(error);
@@ -279,6 +339,74 @@ impl Db {
 
         tx.commit().await?;
         Ok(account)
+    }
+
+    /// 给 Steam 账号绑定手机号；同号重复请求幂等。
+    ///
+    /// # Errors
+    ///
+    /// 事务或写入失败时返回错误；唯一约束冲突映射为 [`BindPhoneOutcome::AlreadyBound`]。
+    pub async fn bind_phone(
+        &self,
+        account_id: &str,
+        phone: &str,
+        at: DateTime<Utc>,
+    ) -> DbResult<BindPhoneOutcome> {
+        let mut tx = self.pool.begin().await?;
+        let existing = sqlx::query_as::<_, StoredAccount>(
+            "SELECT account_id, phone, steam_id, player_code, display_name, ordinal
+             FROM account WHERE account_id = $1 FOR UPDATE",
+        )
+        .bind(account_id)
+        .fetch_optional(&mut *tx)
+        .await?;
+        let Some(existing) = existing else {
+            tx.rollback().await?;
+            return Ok(BindPhoneOutcome::NotFound);
+        };
+        if existing.phone.as_deref() == Some(phone) {
+            tx.commit().await?;
+            return Ok(BindPhoneOutcome::Bound(existing));
+        }
+        if existing.phone.is_some() {
+            tx.rollback().await?;
+            return Ok(BindPhoneOutcome::AlreadyBound);
+        }
+        let occupied = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM account WHERE phone = $1 AND account_id <> $2",
+        )
+        .bind(phone)
+        .bind(account_id)
+        .fetch_one(&mut *tx)
+        .await?;
+        if occupied > 0 {
+            tx.rollback().await?;
+            return Ok(BindPhoneOutcome::AlreadyBound);
+        }
+
+        let updated = sqlx::query_as::<_, StoredAccount>(
+            "UPDATE account SET phone = $2, updated_at = $3 WHERE account_id = $1
+             RETURNING account_id, phone, steam_id, player_code, display_name, ordinal",
+        )
+        .bind(account_id)
+        .bind(phone)
+        .bind(at)
+        .fetch_one(&mut *tx)
+        .await;
+        match updated {
+            Ok(account) => {
+                tx.commit().await?;
+                Ok(BindPhoneOutcome::Bound(account))
+            }
+            Err(error) => {
+                tx.rollback().await?;
+                if is_unique_violation(&error) {
+                    Ok(BindPhoneOutcome::AlreadyBound)
+                } else {
+                    Err(error)
+                }
+            }
+        }
     }
 
     /// 载入未过期的社交数据，并顺手清理过期申请、发送记录与邀请。
@@ -534,15 +662,29 @@ impl Db {
     }
 }
 
-async fn fetch_account<'e, E>(executor: E, phone: &str) -> DbResult<Option<StoredAccount>>
+/// PostgreSQL 唯一约束冲突（SQLSTATE 23505）。
+fn is_unique_violation(error: &sqlx::Error) -> bool {
+    error
+        .as_database_error()
+        .and_then(|error| error.code())
+        .is_some_and(|code| code == "23505")
+}
+
+async fn fetch_account_identity<'e, E>(
+    executor: E,
+    phone: Option<&str>,
+    steam_id: Option<&str>,
+) -> DbResult<Option<StoredAccount>>
 where
     E: Executor<'e, Database = sqlx::Postgres>,
 {
     sqlx::query_as::<_, StoredAccount>(
-        "SELECT account_id, phone, player_code, display_name, ordinal
-         FROM account WHERE phone = $1",
+        "SELECT account_id, phone, steam_id, player_code, display_name, ordinal
+         FROM account WHERE phone = $1 OR steam_id = $2
+         LIMIT 1",
     )
     .bind(phone)
+    .bind(steam_id)
     .fetch_optional(executor)
     .await
 }

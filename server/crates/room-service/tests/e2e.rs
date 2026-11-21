@@ -139,13 +139,20 @@ impl RawClient {
             .expect("发送应当成功");
     }
 
-    /// 取下一条非 `FriendUpdate` 的下行消息与其 `seq`；连接关闭时返回 `None`。
+    /// 取下一条非社交/账号推送的下行消息与其 `seq`；连接关闭时返回 `None`。
     ///
-    /// 认证成功与在线状态变化都会插入社交推送，讨论房间行为的断言不应受其干扰。
+    /// 认证成功与在线状态变化都会插入社交推送与 `AccountView`，讨论房间行为的断言
+    /// 不应受其干扰。
     async fn recv_room(&mut self) -> Option<(u64, ServerMessage)> {
         loop {
             let (seq, message) = self.recv().await?;
-            if matches!(message, ServerMessage::FriendUpdate(_)) {
+            if matches!(
+                message,
+                ServerMessage::FriendUpdate(_)
+                    | ServerMessage::AccountView(_)
+                    | ServerMessage::AchievementState(_)
+                    | ServerMessage::AchievementUnlocked(_)
+            ) {
                 continue;
             }
             return Some((seq, message));
@@ -325,7 +332,7 @@ async fn reconnect_with_token_returns_snapshot() {
         )
         .await;
 
-    let (_, message) = tokio::time::timeout(Duration::from_secs(5), reconnected.recv())
+    let (_, message) = tokio::time::timeout(Duration::from_secs(5), reconnected.recv_room())
         .await
         .expect("重连应在 5 秒内返回快照")
         .expect("重连连接不应关闭");
@@ -723,7 +730,7 @@ async fn mid_game_disconnect_is_recorded_in_registry() {
             json!({ "roomId": fixture.room_id, "lastSeq": 0 }),
         )
         .await;
-    let _ = tokio::time::timeout(Duration::from_secs(5), reconnected.recv())
+    let _ = tokio::time::timeout(Duration::from_secs(5), reconnected.recv_room())
         .await
         .expect("重连应在 5 秒内收到消息");
 

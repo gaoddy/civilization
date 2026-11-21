@@ -87,6 +87,111 @@ async fn account_identity_survives_restart() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn steam_identity_survives_restart() {
+    let Some(store) = test_db().await else {
+        skip("steam_identity_survives_restart");
+        return;
+    };
+
+    let mut accounts = AccountStore::load(store.db.clone())
+        .await
+        .expect("账号应能载入");
+    let first = accounts
+        .login_steam("76561198000000001", Some("Steam 玩家"), NOW)
+        .await
+        .expect("首次 Steam 登录应建号");
+    assert_eq!(first.phone, None);
+    assert_eq!(first.steam_id.as_deref(), Some("76561198000000001"));
+
+    let again = accounts
+        .login_steam("76561198000000001", Some("改名"), NOW)
+        .await
+        .expect("同一 SteamID 再登录应恢复同一账号");
+    assert_eq!(again.player_id, first.player_id);
+    assert_eq!(again.player_code, first.player_code);
+    assert_eq!(again.display_name, "Steam 玩家", "重新登录不覆盖已存展示名");
+
+    let mut reloaded = AccountStore::load(store.db.clone())
+        .await
+        .expect("重启后账号应能载入");
+    let restored = reloaded
+        .login_steam("76561198000000001", None, NOW)
+        .await
+        .expect("重启后同 SteamID 登录应恢复账号");
+    assert_eq!(restored.player_id, first.player_id);
+    assert_eq!(restored.phone, None);
+
+    let view = reloaded.view(&restored.player_id).expect("账号视图应存在");
+    assert!(view.steam_bound);
+    assert!(!view.phone_bound);
+    assert_eq!(view.masked_phone, None);
+
+    store.cleanup().await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn bind_phone_links_identities_in_database() {
+    let Some(store) = test_db().await else {
+        skip("bind_phone_links_identities_in_database");
+        return;
+    };
+
+    let mut accounts = AccountStore::load(store.db.clone())
+        .await
+        .expect("账号应能载入");
+    let steam = accounts
+        .login_steam("76561198000000002", Some("Ada"), NOW)
+        .await
+        .expect("Steam 账号应创建");
+    let view = accounts
+        .bind_phone(&steam.player_id, "13800000009", NOW)
+        .await
+        .expect("绑定手机号应成功");
+    assert!(view.phone_bound);
+    assert_eq!(view.masked_phone.as_deref(), Some("138****0009"));
+
+    let phone_login = accounts
+        .login("13800000009", Some("改名"), NOW)
+        .await
+        .expect("绑定后手机号应恢复同一账号");
+    assert_eq!(phone_login.player_id, steam.player_id);
+
+    let idempotent = accounts
+        .bind_phone(&steam.player_id, "13800000009", NOW)
+        .await
+        .expect("同号重复绑定应幂等");
+    assert_eq!(idempotent.player_id, steam.player_id);
+
+    let wrong_phone = accounts
+        .bind_phone(&steam.player_id, "13800000008", NOW)
+        .await
+        .expect_err("已绑定账号不能换绑");
+    assert_eq!(wrong_phone.code, ErrorCode::PhoneAlreadyBound);
+
+    let other = accounts
+        .login("13800000007", None, NOW)
+        .await
+        .expect("手机号账号应创建");
+    let steam_two = accounts
+        .login_steam("76561198000000003", None, NOW)
+        .await
+        .expect("第二个 Steam 账号应创建");
+    let occupied = accounts
+        .bind_phone(&steam_two.player_id, "13800000007", NOW)
+        .await
+        .expect_err("占用中的手机号必须拒绝");
+    assert_eq!(occupied.code, ErrorCode::PhoneAlreadyBound);
+
+    let phone_only = accounts
+        .bind_phone(&other.player_id, "13800000006", NOW)
+        .await
+        .expect_err("手机号账号不能再绑定手机号");
+    assert_eq!(phone_only.code, ErrorCode::InvalidStage);
+
+    store.cleanup().await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn social_data_survives_restart() {
     let Some(store) = test_db().await else {
         skip("social_data_survives_restart");

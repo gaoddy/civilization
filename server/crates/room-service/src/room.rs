@@ -6,7 +6,7 @@
 //! 确定性约定：
 //! - 座位从 0 起，0 号座位是房主；`slots` 用 `BTreeMap<Seat, _>` 保持座位顺序。
 //! - 房间码由注册表的单调计数器派生，6 位大写字母数字，排除易混字符 `0O1I`。
-//! - 本模块不读系统时间，也不持有随机源。
+//! - 本模块不读系统时间；邀请 token 使用进程内随机 UUID，不影响对局确定性。
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
@@ -15,6 +15,7 @@ use protocol::RoomUpdatePlayersItem;
 use protocol::server::RoomUpdate;
 use rule_engine::data::{Catalog, Playstyle, hero_in_pool};
 use rule_engine::state::{Phase, Seat};
+use uuid::Uuid;
 
 use crate::auth::Session;
 use crate::envelope::SeatChannel;
@@ -31,6 +32,24 @@ const CODE_LEN: usize = 6;
 
 /// 每名玩家分到的候选英雄数量。
 pub const CANDIDATE_COUNT: usize = 4;
+
+/// 房间邀请 token 有效期：60 秒。
+pub const ROOM_INVITE_TTL_MS: u64 = 60_000;
+
+/// 房间的一次性邀请 token。
+#[derive(Debug, Clone)]
+pub struct InviteToken {
+    pub room_id: RoomId,
+    pub expires_at_ms: u64,
+}
+
+/// 新建邀请 token 的结果。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CreatedInvite {
+    pub token: String,
+    pub room_code: String,
+    pub expires_at_ms: u64,
+}
 
 /// 房间标识；进程内唯一，不对外暴露给玩家。
 pub type RoomId = String;
@@ -89,6 +108,8 @@ pub struct Room {
     pub playstyles: [Playstyle; 5],
     /// 座位 → 玩家；只保存已占用座位，键即座位号（0 起）。
     slots: BTreeMap<Seat, PlayerSlot>,
+    /// 一次性邀请 token；只在大厅阶段创建，消费或过期即移除。
+    invite_tokens: BTreeMap<String, InviteToken>,
 }
 
 impl Room {
@@ -257,6 +278,10 @@ pub enum RoomError {
     NotCandidate,
     /// 其他保留原因；字符串是内部说明，不作为协议错误码。
     Unknown(String),
+    /// 邀请 token 不存在或已被消费。
+    InviteNotFound,
+    /// 邀请 token 已过期。
+    InviteExpired,
 }
 
 impl RoomError {
@@ -277,6 +302,8 @@ impl RoomError {
             Self::NotInRoom => ErrorCode::NotInRoom,
             Self::InvalidTarget => ErrorCode::InvalidChoice,
             Self::NotCandidate => ErrorCode::InvalidChoice,
+            Self::InviteNotFound => ErrorCode::InviteNotFound,
+            Self::InviteExpired => ErrorCode::InviteExpired,
             Self::Unknown(_) => ErrorCode::InternalError,
         }
     }
@@ -295,6 +322,8 @@ impl fmt::Display for RoomError {
             Self::NotInRoom => f.write_str("玩家不在房间内"),
             Self::InvalidTarget => f.write_str("不能移除自己"),
             Self::NotCandidate => f.write_str("不在可选英雄范围内"),
+            Self::InviteNotFound => f.write_str("邀请不存在或已使用"),
+            Self::InviteExpired => f.write_str("邀请已过期"),
             Self::Unknown(reason) => f.write_str(reason),
         }
     }
@@ -310,6 +339,8 @@ impl std::error::Error for RoomError {}
 pub struct RoomRegistry {
     by_code: BTreeMap<String, RoomId>,
     rooms: BTreeMap<RoomId, Room>,
+    /// 邀请 token → 房间；房间销毁或 token 消费/过期时同步移除。
+    token_rooms: BTreeMap<String, RoomId>,
     next_room_seq: u64,
 }
 
@@ -324,6 +355,7 @@ impl RoomRegistry {
         Self {
             by_code: BTreeMap::new(),
             rooms: BTreeMap::new(),
+            token_rooms: BTreeMap::new(),
             next_room_seq: seed,
         }
     }
@@ -355,6 +387,7 @@ impl RoomRegistry {
             // 玩法在房间创建时确定：必须先于英雄候选分配，之后到本局结束保持不变。
             playstyles: rule_engine::playstyles::draw(seed),
             slots,
+            invite_tokens: BTreeMap::new(),
         };
         room.assign_candidates(&host.player_id, catalog);
         // 注册表持有权威副本；返回值供调用者立即广播大厅视图。
@@ -399,6 +432,101 @@ impl RoomRegistry {
         Ok(room)
     }
 
+    /// 为玩家所在大厅房间创建一次性邀请 token。
+    ///
+    /// # Errors
+    ///
+    /// 不在房间为 [`RoomError::NotInRoom`]；房间已离开大厅阶段为
+    /// [`RoomError::WrongPhase`]。
+    pub fn create_invite(
+        &mut self,
+        player_id: &str,
+        now_ms: u64,
+    ) -> Result<CreatedInvite, RoomError> {
+        let room_id = self
+            .room_of_player(player_id)
+            .map(|(room, _seat)| room.id.clone())
+            .ok_or(RoomError::NotInRoom)?;
+        let room = self.rooms.get_mut(&room_id).expect("索引与房间表一致");
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
+        let token = Uuid::new_v4().simple().to_string();
+        let expires_at_ms = now_ms.saturating_add(ROOM_INVITE_TTL_MS);
+        room.invite_tokens.insert(
+            token.clone(),
+            InviteToken {
+                room_id: room_id.clone(),
+                expires_at_ms,
+            },
+        );
+        self.token_rooms.insert(token.clone(), room_id);
+        Ok(CreatedInvite {
+            token,
+            room_code: room.code.clone(),
+            expires_at_ms,
+        })
+    }
+
+    /// 消费邀请 token 并入房；token 只能用一次。
+    ///
+    /// 与 [`RoomRegistry::join`] 共用座位规则：大厅阶段、有空位；同一玩家重复加入
+    /// 幂等。token 缺失或过期分别返回 [`RoomError::InviteNotFound`] /
+    /// [`RoomError::InviteExpired`]，房间状态不变。
+    ///
+    /// # Errors
+    ///
+    /// 见上；房间已开局为 [`RoomError::WrongPhase`]，满座为 [`RoomError::Full`]。
+    pub fn redeem_invite(
+        &mut self,
+        token: &str,
+        player: &Session,
+        catalog: &Catalog,
+        now_ms: u64,
+    ) -> Result<&mut Room, RoomError> {
+        let Some(room_id) = self.token_rooms.get(token).cloned() else {
+            return Err(RoomError::InviteNotFound);
+        };
+        let Some(invite) = self
+            .rooms
+            .get(&room_id)
+            .and_then(|room| room.invite_tokens.get(token))
+            .cloned()
+        else {
+            self.token_rooms.remove(token);
+            return Err(RoomError::InviteNotFound);
+        };
+        if now_ms >= invite.expires_at_ms {
+            self.remove_token(token);
+            return Err(RoomError::InviteExpired);
+        }
+        // 消费即删除；后续阶段、容量与座位判定失败也不恢复 token。
+        self.remove_token(token);
+
+        let room = self.rooms.get_mut(&room_id).expect("索引与房间表一致");
+        if room.phase != Phase::Lobby {
+            return Err(RoomError::WrongPhase);
+        }
+        if room.is_occupied(&player.player_id) {
+            return Ok(room);
+        }
+        let seat = (0..SEAT_COUNT as Seat)
+            .find(|seat| !room.slots.contains_key(seat))
+            .ok_or(RoomError::Full)?;
+        room.slots.insert(seat, PlayerSlot::from_session(player));
+        room.assign_candidates(&player.player_id, catalog);
+        Ok(room)
+    }
+
+    /// 从房间与索引中同时删除邀请 token。
+    fn remove_token(&mut self, token: &str) {
+        if let Some(room_id) = self.token_rooms.remove(token)
+            && let Some(room) = self.rooms.get_mut(&room_id)
+        {
+            room.invite_tokens.remove(token);
+        }
+    }
+
     /// 移除 `seat` 上的座位，并维护房主与房间生命周期。
     ///
     /// 房主座位被移除时，房主转给座位号最小的剩余成员；最后一人移除后
@@ -423,8 +551,12 @@ impl RoomRegistry {
             Some(next_host) => room.host_id = next_host,
             None => {
                 let code = room.code.clone();
+                let tokens: Vec<String> = room.invite_tokens.keys().cloned().collect();
                 self.rooms.remove(room_id);
                 self.by_code.remove(&code);
+                for token in tokens {
+                    self.token_rooms.remove(&token);
+                }
             }
         }
     }
@@ -654,6 +786,9 @@ impl RoomRegistry {
     pub fn remove(&mut self, room_id: &str) -> Option<Room> {
         let room = self.rooms.remove(room_id)?;
         self.by_code.remove(&room.code);
+        for token in room.invite_tokens.keys() {
+            self.token_rooms.remove(token);
+        }
         Some(room)
     }
 
