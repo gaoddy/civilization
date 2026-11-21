@@ -222,7 +222,7 @@ func _check_categories_and_kinds() -> void:
     await _unmount(instance)
 
 
-## 详情预览：有美术显示卡图，无美术显示占位，不再现场拼装卡面。
+## 详情预览：英雄与随从都取卡面美术，无美术显示占位，不再现场拼装卡面。
 func _check_detail_art() -> void:
     var detail := GalleryDetail.new()
     add_child(detail)
@@ -234,14 +234,27 @@ func _check_detail_art() -> void:
         detail.find_child("GalleryDetailArtPlaceholder", true, false) == null,
         "有卡面美术时不应显示占位",
     )
+    var card_face_path := ""
+    if art != null and art.texture != null:
+        card_face_path = art.texture.resource_path
 
     detail.show_hero("zhenghe")
     await get_tree().process_frame
     var hero_art := detail.find_child("GalleryDetailArt", true, false) as TextureRect
-    _expect(hero_art != null and hero_art.texture != null, "英雄详情应显示立绘")
+    _expect(hero_art != null and hero_art.texture != null, "英雄详情应显示卡图")
     _expect(
-        hero_art != null and hero_art.texture.resource_path.contains("portraits"),
-        "英雄详情预览应使用立绘而不是卡面",
+        hero_art != null and hero_art.texture.resource_path.contains("cards/faces"),
+        "英雄详情预览应使用卡面而不是立绘",
+    )
+    _expect(
+        hero_art != null and hero_art.texture.resource_path == card_face_path,
+        "英雄与随从详情应使用同一张卡面",
+    )
+    var frame := detail.find_child("GalleryDetailArtFrame", true, false) as Control
+    _expect(
+        frame != null and frame.custom_minimum_size == Vector2(200, 261),
+        "详情预览框应按卡面比例显示为 200×261，实际：%s"
+        % (frame.custom_minimum_size if frame != null else "无"),
     )
 
     detail.show_card("alan-turing")

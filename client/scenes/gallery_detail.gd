@@ -49,7 +49,7 @@ func _show(card_id: String, hero: bool) -> void:
     _box.alignment = BoxContainer.ALIGNMENT_BEGIN
 
     var entry := CardDB.hero(card_id) if hero else CardDB.card(card_id)
-    _box.add_child(_build_preview(card_id, entry, hero))
+    _box.add_child(_build_preview(card_id, entry))
 
     var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-title-lg"))
     name_label.name = "GalleryDetailName"
@@ -112,16 +112,14 @@ func _show(card_id: String, hero: bool) -> void:
         _box.add_child(effect_label)
 
 
-## 预览区显示美术大图：普通卡用卡面，英雄用立绘；无美术时用玩法色与首字占位，
+## 预览区显示卡面美术：英雄与随从都取 `card_face`；无美术时用玩法色与首字占位，
 ## 不再现场拼装卡面组件。
-func _build_preview(card_id: String, entry: Dictionary, hero := false) -> Control:
+func _build_preview(card_id: String, entry: Dictionary) -> Control:
     var holder := CenterContainer.new()
     holder.name = "GalleryDetailPreview"
     holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    var size := Vector2(
-        _preview_metric("gallery-preview-width"),
-        _preview_metric("gallery-preview-height"),
-    )
+    var width := _preview_metric("gallery-preview-width")
+    var size := Vector2(width, UITheme.card_face_height(width))
 
     var frame := PanelContainer.new()
     frame.name = "GalleryDetailArtFrame"
@@ -134,7 +132,7 @@ func _build_preview(card_id: String, entry: Dictionary, hero := false) -> Contro
     frame.add_theme_stylebox_override("panel", style)
     holder.add_child(frame)
 
-    var texture := _preview_texture(card_id, hero)
+    var texture := _preview_texture(card_id)
     if texture != null:
         var art := TextureRect.new()
         art.name = "GalleryDetailArt"
@@ -156,8 +154,8 @@ func _build_preview(card_id: String, entry: Dictionary, hero := false) -> Contro
     return holder
 
 
-func _preview_texture(card_id: String, hero: bool) -> Texture2D:
-    return UI.art_texture(CardDB.art_path(card_id, "portrait" if hero else "card_face"))
+func _preview_texture(card_id: String) -> Texture2D:
+    return UI.art_texture(CardDB.art_path(card_id, "card_face"))
 
 
 func _preview_metric(name: String) -> int:

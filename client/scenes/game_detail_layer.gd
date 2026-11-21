@@ -327,16 +327,16 @@ func _render_seller_detail(box: VBoxContainer) -> void:
 ## 我方英雄详情：介绍、玩法、关联分类与英雄技能；英雄卡不含科学分类与时代。
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
     var id := "" if hero_id == null else str(hero_id)
-    # 详情顶部叠立绘：竖版按原始比例缩放，无图时只显示文字内容。
-    var portrait := UI.art_layer(
-        CardDB.art_path(id, "portrait"),
+    # 详情顶部叠卡面美术：按卡面比例铺满，无图时只显示文字内容。
+    var art := UI.art_layer(
+        CardDB.art_path(id, "card_face"),
         "HeroDetailArt",
-        TextureRect.STRETCH_KEEP_ASPECT_CENTERED,
+        TextureRect.STRETCH_KEEP_ASPECT_COVERED,
     )
-    if portrait != null:
+    if art != null:
         var width := _detail_text_width()
-        portrait.custom_minimum_size = Vector2(width, int(width * 1.5))
-        box.add_child(portrait)
+        art.custom_minimum_size = Vector2(width, UITheme.card_face_height(width))
+        box.add_child(art)
     box.add_child(_detail_name(CardDB.display_name(id)))
     var introduction := CardDB.hero_introduction(id)
     if introduction != "":

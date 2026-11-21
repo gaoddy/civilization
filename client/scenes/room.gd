@@ -4,8 +4,6 @@ extends Control
 ## 本页不显示房间码，也没有离开房间入口；点卡选中、点确认一次完成「选英雄 + 准备」。
 ## 候选由服务端分配且只发给本人，因此这里从不展示别人的英雄。
 
-const CARD_SIZE := Vector2(160, 200)
-
 var _others: HBoxContainer
 var _candidates: HBoxContainer
 var _confirm: Button
@@ -211,13 +209,20 @@ func _render_candidates() -> void:
         _candidates.add_child(card)
 
 
+## 候选卡与技能浮层的英雄卡面尺寸：宽度取 hero-detail-width，高度按卡面 112:146。
+func _hero_card_size() -> Vector2:
+    var width := UITheme.metric("hero-detail-width")
+    return Vector2(width, UITheme.card_face_height(width))
+
+
 ## 候选卡：玩法色封面铺满、居中首字水印、底部居中名字。
 func _build_card(hero_id: String, locked: bool) -> PanelContainer:
     var entry := CardDB.hero(hero_id)
     var playstyle := CardDB.primary_playstyle(entry)
+    var card_size := _hero_card_size()
     var card := PanelContainer.new()
     card.name = "HeroCard_%s" % hero_id
-    card.custom_minimum_size = CARD_SIZE
+    card.custom_minimum_size = card_size
     card.mouse_filter = Control.MOUSE_FILTER_STOP
 
     var box := UITheme.panel_style("raised")
@@ -229,7 +234,7 @@ func _build_card(hero_id: String, locked: bool) -> PanelContainer:
     card.add_theme_stylebox_override("panel", box)
 
     var stack := Control.new()
-    stack.custom_minimum_size = CARD_SIZE
+    stack.custom_minimum_size = card_size
     stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
     card.add_child(stack)
 
@@ -317,19 +322,16 @@ func _show_skill(hero_id: String) -> void:
     if hero_id == "":
         _skill_layer.visible = false
         return
-    # 浮层顶部叠立绘：竖版保持原始比例，无图时只显示文字内容。
-    var portrait := UI.art_layer(
-        CardDB.art_path(hero_id, "portrait"),
+    # 浮层顶部叠卡面：按卡面比例铺满，无图时只显示文字内容。
+    var art := UI.art_layer(
+        CardDB.art_path(hero_id, "card_face"),
         "HeroPortrait",
-        TextureRect.STRETCH_KEEP_ASPECT_CENTERED,
+        TextureRect.STRETCH_KEEP_ASPECT_COVERED,
     )
-    if portrait != null:
-        portrait.custom_minimum_size = Vector2(
-            UITheme.metric("hero-portrait-width"),
-            UITheme.metric("hero-portrait-height"),
-        )
-        portrait.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-        _skill_panel.add_child(portrait)
+    if art != null:
+        art.custom_minimum_size = _hero_card_size()
+        art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+        _skill_panel.add_child(art)
     var title := UI.label(CardDB.display_name(hero_id), UITheme.font_size("font-title"), false)
     _skill_panel.add_child(title)
     var introduction := CardDB.hero_introduction(hero_id)

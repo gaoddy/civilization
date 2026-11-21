@@ -366,6 +366,8 @@ func _ready() -> void:
         "alan-turing 不应显示关联分类行：%s" % machine_detail,
     )
 
+    _check_hero_detail_art()
+
     var hero_detail := _hero_detail_text("darwin")
     _expect(
         hero_detail.contains(CardDB.hero_introduction("darwin")),
@@ -735,30 +737,51 @@ func _check_room_skill_list() -> void:
         var candidates := instance.find_child("HeroCandidates", true, false)
         _expect(candidates != null and candidates.get_child_count() > 0, "选英雄页应渲染候选英雄")
         if candidates != null and candidates.get_child_count() > 0:
+            var candidate := candidates.get_child(0) as Control
+            var candidate_size := candidate.custom_minimum_size
+            _expect(
+                candidate_size == Vector2(160, 209),
+                "候选英雄卡应为 160×209，实际 %s" % candidate_size,
+            )
             var event := InputEventMouseButton.new()
             event.button_index = MOUSE_BUTTON_LEFT
             event.pressed = true
             candidates.get_child(0).emit_signal("gui_input", event)
             await get_tree().process_frame
             var panel := instance.find_child("SkillPanel", true, false)
-            var text := _node_text(panel)
-            var info := CardDB.skill_info("activate-friendly-growth-twice")
-            _expect(
-                text.contains(CardDB.hero_introduction("gauss")),
-                "技能浮层应显示英雄介绍：%s" % text,
-            )
-            _expect(
-                text.contains(TranslationServer.translate("ui.skill.trigger.on_activate")),
-                "技能浮层应出现主动标签：%s" % text,
-            )
-            _expect(
-                text.contains(TranslationServer.translate("ui.skill.cost") % int(info.get("cost", -1))),
-                "技能浮层应显示费用：%s" % text,
-            )
-            _expect(
-                text.contains(TranslationServer.translate("ui.skill.uses") % int(info.get("uses", -1))),
-                "技能浮层应显示每回合次数：%s" % text,
-            )
+            _expect(panel != null, "技能浮层应存在 SkillPanel")
+            if panel != null:
+                var text := _node_text(panel)
+                var info := CardDB.skill_info("activate-friendly-growth-twice")
+                _expect(
+                    text.contains(CardDB.hero_introduction("gauss")),
+                    "技能浮层应显示英雄介绍：%s" % text,
+                )
+                _expect(
+                    text.contains(TranslationServer.translate("ui.skill.trigger.on_activate")),
+                    "技能浮层应出现主动标签：%s" % text,
+                )
+                _expect(
+                    text.contains(TranslationServer.translate("ui.skill.cost") % int(info.get("cost", -1))),
+                    "技能浮层应显示费用：%s" % text,
+                )
+                _expect(
+                    text.contains(TranslationServer.translate("ui.skill.uses") % int(info.get("uses", -1))),
+                    "技能浮层应显示每回合次数：%s" % text,
+                )
+                var face_found := false
+                var portrait_found := false
+                for node in panel.find_children("*", "TextureRect", true, false):
+                    var art := node as TextureRect
+                    if art.texture == null:
+                        continue
+                    var path := art.texture.resource_path
+                    if path.contains("cards/faces"):
+                        face_found = true
+                    if path.contains("portraits"):
+                        portrait_found = true
+                _expect(face_found, "技能浮层应显示卡面美术（cards/faces）")
+                _expect(not portrait_found, "技能浮层不应再显示立绘（portraits）")
         instance.queue_free()
         await get_tree().process_frame
     GameStore.room_id = ""
@@ -775,6 +798,28 @@ func _shop_detail_text(card_id: String) -> String:
     box.free()
     layer.free()
     return text
+
+
+## 对局英雄详情：顶部使用卡面美术，按 112:146 预留高度。
+func _check_hero_detail_art() -> void:
+    var layer := GameDetailLayer.new()
+    var box := VBoxContainer.new()
+    layer._render_hero_detail(box, "gauss")
+    var art := box.find_child("HeroDetailArt", true, false) as TextureRect
+    _expect(art != null, "英雄详情应有 HeroDetailArt 卡面美术")
+    if art != null:
+        _expect(
+            art.texture != null and art.texture.resource_path.contains("cards/faces"),
+            "英雄详情应使用卡面美术，实际：%s"
+            % (art.texture.resource_path if art.texture != null else "无纹理"),
+        )
+        var size := art.custom_minimum_size
+        _expect(
+            size.x > 0.0 and absf(size.y - size.x * 146.0 / 112.0) <= 1.0,
+            "英雄详情美术宽高比应为 112:146，实际 %s" % size,
+        )
+    box.free()
+    layer.free()
 
 
 func _hero_detail_text(hero_id: String) -> String:
