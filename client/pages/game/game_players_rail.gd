@@ -1,7 +1,7 @@
 class_name GamePlayersRail
 extends PanelContainer
-## 左栏座位列：按服务端名次升序（第 1 名在最上），每座位一行头像 + 名次角标 + 血条，
-## 点击展开该座位的战报。
+## 左栏座位列：按服务端名次升序（第 1 名在最上），每座位一行头像，名次角标叠在左上、
+## 血条叠在头像底部内侧；点击展开该座位的战报。
 ##
 ## 只读 `GameUiState.view`，不持有页面门控与意图；展开的座位按 `playerId`
 ## 记住，刷新整块重建后同一玩家仍然展开。
@@ -19,7 +19,10 @@ var detail: DetailLayer = null
 var report_layer: Control = null
 
 var _rail: VBoxContainer
+var _scroll: ScrollContainer
 var _report_panel: PanelContainer
+## 最近一次构行使用的头像边长；左栏尺寸变化后据此判断是否需要重排。
+var _avatar_side := 0
 
 
 func _init() -> void:
@@ -30,17 +33,22 @@ func _init() -> void:
     box.add_theme_constant_override("separation", UITheme.space("space-sm"))
     add_child(box)
 
-    var scroll := ScrollContainer.new()
-    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    box.add_child(scroll)
-    scroll.get_v_scroll_bar().value_changed.connect(_on_scroll_changed)
+    _scroll = ScrollContainer.new()
+    _scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    box.add_child(_scroll)
+    _scroll.get_v_scroll_bar().value_changed.connect(_on_scroll_changed)
 
     _rail = VBoxContainer.new()
     _rail.name = "PlayersRail"
     _rail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    # 撑满左栏可视高度，8 个座位行再按 EXPAND_FILL 均分这段高度。
+    _rail.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _rail.add_theme_constant_override("separation", UITheme.stage_metric("seat-row-gap"))
-    scroll.add_child(_rail)
+    # 视口尺寸变化时按新的可用高度重算头像；监听滚动视口而不是内容高度，
+    # 否则上一次的较大头像会把内容撑住、无法随视口收缩。
+    _scroll.resized.connect(_on_rail_resized)
+    _scroll.add_child(_rail)
 
     _report_panel = UIControls.card_panel("raised")
     _report_panel.name = "SeatReportPanel"
@@ -55,14 +63,17 @@ func refresh(state: GameUiState) -> void:
     var players: Array = _sorted_players(state.view)
     if players.is_empty():
         _expanded_player_id = ""
+        _avatar_side = 0
         _hide_report()
         _rail.add_child(UIControls.empty_hint(tr("ui.game.rail.empty")))
         return
     # 记住的 id 在新视图里找不到就清空，否则保持展开。
     if _expanded_player_id != "" and not _has_player(players, _expanded_player_id):
         _expanded_player_id = ""
+    var avatar_side := _seat_avatar_side(players.size())
+    _avatar_side = avatar_side
     for player in players:
-        _rail.add_child(_seat_row(player, state))
+        _rail.add_child(_seat_row(player, state, avatar_side))
     _sync_report()
 
 
@@ -105,9 +116,37 @@ static func _row_variant(is_self: bool, compact: bool) -> String:
     return "row-compact" if compact else "row"
 
 
-## 一行座位：头像（名次角标叠在左上）与同宽血条；本人金色描边，淘汰整行压暗。
-## iPhone 基准用紧凑行，8 席在 960×540 下一屏放下，不出现滚动。
-func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
+## 座位头像边长：座位行均分左栏高度后，每行内容高度与左栏内宽的较小值；
+## 布局尚未完成（左栏尺寸为 0）时退回 `avatar-rail` 令牌。
+func _seat_avatar_side(count: int) -> int:
+    var fallback := UITheme.stage_metric("avatar-rail")
+    if count <= 0 or _rail == null or _scroll == null:
+        return fallback
+    if _scroll.size.y <= 0.0 or _scroll.size.x <= 0.0:
+        return fallback
+    var gap := UITheme.stage_metric("seat-row-gap")
+    var margin := UITheme.space("space-2xs") if _compact() else UITheme.space("space-md")
+    var cell := (_scroll.size.y - float(gap * (count - 1))) / float(count)
+    var by_height := int(floor(cell - float(margin * 2)))
+    var by_width := int(floor(_scroll.size.x - float(margin * 2)))
+    return maxi(mini(by_height, by_width), 1)
+
+
+## 左栏尺寸变化后按新的可用空间重算头像边长；边长没变就不重排。
+func _on_rail_resized() -> void:
+    if _last_state == null:
+        return
+    var count := int(_last_state.view.get("players", []).size())
+    if count == 0:
+        return
+    if _seat_avatar_side(count) == _avatar_side:
+        return
+    call_deferred("_rebuild")
+
+
+## 一行座位：头像块内叠名次角标与贴底血条，不为血条单独留行高；本人金色描边，淘汰整行压暗。
+## 座位行垂直均分左栏高度，头像边长按行内容高度与左栏内宽解算，手机基准随之放大。
+func _seat_row(player: Dictionary, state: GameUiState, avatar_size: int) -> PanelContainer:
     var player_id := str(player.get("playerId", ""))
     var is_self := player_id == GameStore.player_id
     var alive := bool(player.get("alive", true))
@@ -116,6 +155,8 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     panel.name = "SeatRow"
     panel.set_meta("player_id", player_id)
     panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    # 8 行平分左栏剩余高度，行高不再由头像固定尺寸决定。
+    panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
     panel.mouse_filter = Control.MOUSE_FILTER_STOP
     panel.gui_input.connect(_on_seat_input.bind(player_id))
     if not alive:
@@ -129,7 +170,6 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     )
     panel.add_child(box)
 
-    var avatar_size := UITheme.stage_metric("avatar-rail")
     var avatar_box := Control.new()
     avatar_box.name = "SeatAvatar"
     avatar_box.custom_minimum_size = Vector2(avatar_size, avatar_size)
@@ -142,6 +182,20 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     avatar_box.add_child(avatar)
     _ignore_mouse(avatar)
 
+    # 血条叠在头像底部内侧：左右与底部各留 `space-2xs`，圆角取高度一半成胶囊；
+    # 宽度随头像边长变化，不额外占行高。
+    var hp_height := UITheme.stage_metric("seat-hp-bar-height")
+    var hp_inset := UITheme.space("space-2xs")
+    var hp := HpBar.create(
+        int(player.get("hp", 0)),
+        state.hp_cap,
+        avatar_size - hp_inset * 2,
+        int(hp_height * 0.5),
+    )
+    hp.name = "SeatHpBar"
+    hp.position = Vector2(hp_inset, avatar_size - hp_height - hp_inset)
+    avatar_box.add_child(hp)
+
     if player.get("rank") != null:
         var badge := RankBadge.create(int(player.get("rank")))
         badge.name = "SeatRankBadge"
@@ -150,20 +204,18 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
         avatar_box.add_child(badge)
         _ignore_mouse(badge)
 
-    var hp := HpBar.create(int(player.get("hp", 0)), state.hp_cap, avatar_size)
-    hp.name = "SeatHpBar"
-    box.add_child(hp)
-
     _track_detail(panel, player, state.hp_cap)
     return panel
 
 
 ## 点击行切换展开；重建在下一帧做，避免在自身输入回调里释放行。
 func _on_seat_input(event: InputEvent, player_id: String) -> void:
+    # 模拟触控档位下鼠标事件会同时产生触摸事件，只认触摸，避免一次点击翻两次。
     var pressed := false
-    if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+    if event is InputEventScreenTouch:
         pressed = event.pressed
-    elif event is InputEventScreenTouch:
+    elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
+            and not ScreenProfile.is_simulated_touch():
         pressed = event.pressed
     if not pressed:
         return

@@ -1,7 +1,8 @@
 extends Node
 ## 设备与布局能力：设备类型、逻辑基准、逻辑点到画布换算、安全区与键盘边距。
 ##
-## 只服务布局，不含业务规则。桌面端保持 1280 宽基准与零边距，高度随窗口扩展。
+## 只服务布局，不含业务规则。桌面端默认保持 1280 宽基准与零边距，高度随窗口扩展。
+## 环境变量 `CIVILIZATION_DEVICE` 可在桌面模拟 phone / tablet 档位，用于本地验证移动端布局与触控输入。
 ## 换算公式是纯函数，冒烟用固定输入直接断言，不依赖真实设备。
 
 const BASE_CANVAS_PHONE := Vector2i(960, 540)
@@ -9,6 +10,8 @@ const BASE_CANVAS_TABLET := Vector2i(1280, 720)
 const DEVICE_PHONE := "phone"
 const DEVICE_TABLET := "tablet"
 const DEVICE_DESKTOP := "desktop"
+## 桌面端模拟设备档位的环境变量：phone / tablet / desktop，其余值按未指定处理。
+const ENV_DEVICE := "CIVILIZATION_DEVICE"
 
 var _device := ""
 var _forced := ""
@@ -16,6 +19,7 @@ var _forced := ""
 
 func _ready() -> void:
     _apply_base_canvas()
+    _apply_touch_emulation()
 
 
 ## 当前设备类型：phone / tablet / desktop。测试可通过 set_device_for_test 覆盖。
@@ -29,6 +33,12 @@ func device_kind() -> String:
 
 func is_touch() -> bool:
     return device_kind() != DEVICE_DESKTOP
+
+
+## 桌面端通过环境变量模拟触控档位：鼠标事件会同时转成触摸事件。
+## 同时接受鼠标与触摸的回调需要跳过鼠标，避免一次点击触发两次。
+func is_simulated_touch() -> bool:
+    return is_touch() and not _is_native_touch_platform()
 
 
 ## 逻辑宽度基准：iPhone 为 960×540，iPad 与桌面为 1280×720；高度随窗口扩展。
@@ -50,6 +60,9 @@ func hit_min(pt: float) -> int:
 func safe_insets() -> Vector4i:
     if not is_touch():
         return Vector4i.ZERO
+    # 系统屏幕安全区只在真机触控平台成立；桌面端模拟档位读到的整屏安全区会算出错误边距。
+    if not _is_native_touch_platform():
+        return Vector4i.ZERO
     return canvas_insets(
         Vector2(DisplayServer.window_get_size()),
         base_canvas(),
@@ -61,6 +74,8 @@ func safe_insets() -> Vector4i:
 ## 虚拟键盘高度换算为画布单位；桌面端与键盘收起时为零。
 func keyboard_inset() -> int:
     if not is_touch():
+        return 0
+    if not _is_native_touch_platform():
         return 0
     var height := DisplayServer.virtual_keyboard_get_height()
     if height <= 0:
@@ -117,6 +132,15 @@ static func content_frame(viewport: Vector2, base: Vector2i) -> Rect2:
     var height := minf(viewport.y, viewport.x / ratio)
     var width := height * ratio
     return Rect2(Vector2((viewport.x - width) * 0.5, (viewport.y - height) * 0.5), Vector2(width, height))
+
+
+## 解析设备档位覆盖值：只接受 phone / tablet / desktop，忽略大小写与空白。
+## 其余值返回空串，由调用方回退平台自动判定。
+static func parse_device(text: String) -> String:
+    var value := text.strip_edges().to_lower()
+    if value == DEVICE_PHONE or value == DEVICE_TABLET or value == DEVICE_DESKTOP:
+        return value
+    return ""
 
 
 ## 解析显式窗口尺寸 `<宽>x<高>`：宽高都必须是正整数。
@@ -176,7 +200,23 @@ func _apply_base_canvas() -> void:
     window.content_scale_size = base_canvas()
 
 
+## 桌面端模拟触控档位时，把鼠标事件同时转成触摸事件，触控输入分支才可用。
+## 真机触控平台本来就产生触摸事件；桌面正常档位保持关闭，避免鼠标事件重复触发。
+func _apply_touch_emulation() -> void:
+    if DisplayServer.get_name() == "headless":
+        return
+    Input.set_emulate_touch_from_mouse(is_simulated_touch())
+
+
+## 是否运行在真机触控平台：桌面模拟档位没有系统屏幕安全区与虚拟键盘。
+func _is_native_touch_platform() -> bool:
+    return DisplayServer.get_name() == "iOS"
+
+
 func _detect_device() -> String:
+    var override := parse_device(OS.get_environment(ENV_DEVICE))
+    if override != "":
+        return override
     if DisplayServer.get_name() != "iOS":
         return DEVICE_DESKTOP
     var model := OS.get_model_name()

@@ -11,6 +11,7 @@ func _ready() -> void:
     _check_content_frame()
     _check_launch_window()
     _check_parse_window_size()
+    _check_parse_device()
     _check_desktop()
     _check_phone()
     _check_tablet()
@@ -105,10 +106,20 @@ func _check_parse_window_size() -> void:
         _check(ScreenProfile.parse_window_size(text) == Vector2i.ZERO, "非法尺寸回退默认：" + text)
 
 
+## 设备档位覆盖值：只接受 phone / tablet / desktop，忽略大小写与空白。
+func _check_parse_device() -> void:
+    _check(ScreenProfile.parse_device("phone") == "phone", "解析 phone 档位")
+    _check(ScreenProfile.parse_device(" Tablet ") == "tablet", "解析 tablet 档位并忽略空白与大小写")
+    _check(ScreenProfile.parse_device("DESKTOP") == "desktop", "解析 desktop 档位")
+    for text in ["", "watch", "ipad", "phone2"]:
+        _check(ScreenProfile.parse_device(text) == "", "非法档位视为未指定：" + text)
+
+
 func _check_desktop() -> void:
     ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_DESKTOP)
     _check(ScreenProfile.base_canvas() == Vector2i(1280, 720), "桌面基准 1280×720")
     _check(not ScreenProfile.is_touch(), "桌面非触控")
+    _check(not ScreenProfile.is_simulated_touch(), "桌面非模拟档位")
     _check(ScreenProfile.hit_min(44) == 44, "桌面命中尺寸不换算")
     _check(ScreenProfile.safe_insets() == Vector4i.ZERO, "桌面无安全区")
     _check(ScreenProfile.keyboard_inset() == 0, "桌面无键盘边距")
@@ -120,6 +131,10 @@ func _check_phone() -> void:
     ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
     _check(ScreenProfile.base_canvas() == Vector2i(960, 540), "iPhone 基准 960×540")
     _check(ScreenProfile.is_touch(), "iPhone 为触控")
+    _check(ScreenProfile.is_simulated_touch(), "非真机触控平台为模拟档位")
+    # 非真机触控平台（headless 夹具与桌面模拟档位）不读系统屏幕安全区与虚拟键盘。
+    _check(ScreenProfile.safe_insets() == Vector4i.ZERO, "非真机触控平台安全区为零")
+    _check(ScreenProfile.keyboard_inset() == 0, "非真机触控平台无键盘边距")
     _check(is_equal_approx(ScreenProfile.canvas_scale(window, base), 2.183333), "iPhone 画布缩放")
     _check(ScreenProfile.canvas_hit_min(44, 3.0, base, window) == 60, "iPhone 44pt 换算")
     _check(ScreenProfile.canvas_hit_min(32, 3.0, base, window) == 44, "iPhone 32pt 换算")

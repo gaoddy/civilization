@@ -24,7 +24,7 @@ import argparse
 import json
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image
 
 # Watermark sits in the bottom-right corner of generated 1024x1536 images.
 # Region is sampled per-column from a clean row just above it so the local
@@ -34,7 +34,10 @@ SAMPLE_Y = 1446
 FEATHER = 6
 
 FACE_SIDE = 256          # source avatar resolution
-FACE_CROP = (0.18, 0.08, 0.82, 0.60)  # fractional crop of portrait (face area)
+# Fractional crop of the portrait covering the face area. The crop is cut to a
+# square (top-aligned, horizontally centered) before resizing, so avatars are
+# never stretched and stay square with opaque corners.
+FACE_CROP = (0.18, 0.08, 0.82, 0.60)
 CARD_SIZE = (448, 584)   # 4x of the 112x146 in-game card
 
 
@@ -61,13 +64,13 @@ def dewatermark(im: Image.Image) -> Image.Image:
 def derive_avatar(im: Image.Image) -> Image.Image:
     w, h = im.size
     l, t, r, b = FACE_CROP
-    box = (int(w * l), int(h * t), int(w * r), int(h * b))
-    avatar = im.crop(box).resize((FACE_SIDE, FACE_SIDE), Image.LANCZOS)
-    # circular mask with transparent corners
-    mask = Image.new("L", (FACE_SIDE, FACE_SIDE), 0)
-    ImageDraw.Draw(mask).ellipse((0, 0, FACE_SIDE - 1, FACE_SIDE - 1), fill=255)
-    avatar.putalpha(mask)
-    return avatar
+    crop_w = int(w * (r - l))
+    crop_h = int(h * (b - t))
+    side = min(crop_w, crop_h)
+    left = int(w * l) + (crop_w - side) // 2
+    top = int(h * t)  # keep the head framed by the top edge
+    box = (left, top, left + side, top + side)
+    return im.crop(box).resize((FACE_SIDE, FACE_SIDE), Image.LANCZOS)
 
 
 def derive_face_cover(im: Image.Image) -> Image.Image:

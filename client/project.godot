@@ -1,14 +1,22 @@
 ; Engine configuration file.
-; 由仓库维护，Godot 编辑器可能重写此文件。
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
 config_version=5
 
 [application]
+
 config/name="Civilization"
-config/icon="res://icon.png"
 run/main_scene="res://pages/login/login.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.png"
 
 [autoload]
+
 ScreenProfile="*res://autoload/screen_profile.gd"
 WindowSizer="*res://autoload/window_sizer.gd"
 GameStore="*res://autoload/game_store.gd"
@@ -18,6 +26,7 @@ Sfx="*res://autoload/sfx.gd"
 Platform="*res://autoload/platform.gd"
 
 [display]
+
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
@@ -28,17 +37,18 @@ window/handheld/orientation=4
 
 theme/custom_font="res://assets/fonts/NotoSansSC-Regular-subset.ttf"
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://text/zh_CN.zh_CN.translation")
+locale/fallback="zh_CN"
+
 [network]
 
 allow_insecure_tls=false
 
-[internationalization]
-
-locale/fallback="zh_CN"
-locale/translations=PackedStringArray("res://text/zh_CN.zh_CN.translation")
-
 [rendering]
+
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-textures/vram_compression/import_etc2_astc=true
 textures/vram_compression/import_s3tc_bptc=true
+textures/vram_compression/import_etc2_astc=true

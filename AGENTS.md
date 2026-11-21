@@ -36,7 +36,8 @@
 ### 仓库与入口
 
 - 服务端：`server/`，Rust workspace（`protocol`、`protocol-gen`、`rule-engine`、`room-service`、`sim`），房间服务入口 `server/crates/room-service/src/main.rs`，默认监听 `127.0.0.1:8080`。
-- 客户端：`client/`，Godot 4 + GDScript，入口场景 `client/pages/login/login.tscn`。
+- 客户端：`client/`，Godot 4.7.2 + GDScript，入口场景 `client/pages/login/login.tscn`。
+- 客户端引擎补丁版本固定 `4.7.2`（`Makefile` 的 `GODOT_VERSION`）；`make client-import` 与导出目标先校验本机引擎，版本不符直接失败。
 - 规则引擎：`server/crates/rule-engine`，纯库，不依赖网络、数据库、时钟或文件 I/O；所有对局结算只在这里。
 - 卡牌数据：唯一数据源在 `docs/versions/v0.1/product/content/`，生成到 `server/data/v0.1/` 与客户端生成物；生成物随源提交。
 - 协议契约：唯一来源 `protocol/schema/v1/`；生成物 `protocol/generated/protocol.rs`、`protocol/generated/protocol.gd` 与 `client/generated/protocol.gd` 随源提交。
@@ -47,6 +48,7 @@
 
 - 顶层入口统一走根目录 `Makefile`，不手写等效命令。
 - 全量检查：`make m1-check`（协议生成物、文档数据、测试、静态检查、确定性）；客户端另有 `make client-check`、`make client-smoke`。
+- 页面线框图：`make ui-wireframe PAGE=gallery`（`ALL=1` 出全部页面，`DEVICE=phone` 出手机档位），无头解算真实布局后写到 `output/wireframes/`（忽略目录）。
 - 服务端测试：`make test`（Python unittest + `cargo test --workspace`）；静态检查：`make lint`。
 - 文档与数据：`make data-check`、`python3 scripts/validate_docs.py`。
 - 端到端入口：

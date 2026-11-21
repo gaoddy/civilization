@@ -36,7 +36,7 @@
 
 - `UIControls.section_title(text)`：区块标题，`font-body` 字号、`color-text-dim` 颜色，单行不换行。
 - `UIControls.empty_hint(text)`：居中占位提示，`font-body-sm` 字号、`color-text-muted` 颜色，用于空棋盘、空手牌、无对手。
-- `HpBar.create(value, cap, width)`：座位与对手身份使用的血量条，按 `value / cap` 比例填充，不显示数字。
+- `HpBar.create(value, cap, width, corner_radius = 0)`：座位与对手身份使用的血量条，按 `value / cap` 比例填充，不显示数字；`corner_radius` 大于 0 时按圆角绘制，座位行用它做叠在头像底部内侧的胶囊。
 - `RankBadge.create(rank)`：名次角标，`rank` 为 `null` 时不渲染。
 - `SkillList.build(parent, skill_ids)`：英雄技能列表，按 `skills` 顺序逐条展示技能名、触发类型、完整文本与主动技能费用/次数。
 - 座位行、商店、河道、英雄行、对手身份、手牌行、选择浮层与随从卡等页面私有结构位于 `client/pages/game/` 的 `game_*` 视图文件（如 `game_players_rail.gd`、`game_shop_view.gd`、`game_river.gd`、`game_hero_row.gd`、`game_opponent_view.gd`、`game_hand_row.gd`、`game_choice_overlay.gd`），不进入共享层。

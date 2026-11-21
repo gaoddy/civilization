@@ -1,13 +1,14 @@
 PYTHON ?= python3
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
-# 导出模板目录必须与 Godot 精确版本一致：`4.7.2.stable.official.ed1daf0bf` 取前三段。
-GODOT_VERSION := $(shell "$(GODOT)" --version 2>/dev/null | head -n 1 | cut -d. -f1-3)
+# 补丁版本固定，导出模板目录与之精确一致；本机引擎不符时由 client-godot-check 拒绝执行。
+GODOT_VERSION := 4.7.2
+GODOT_INSTALLED_VERSION = $(shell "$(GODOT)" --version 2>/dev/null | head -n 1 | cut -d. -f1-3)
 GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates/$(GODOT_VERSION).stable
 DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
 FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 
-.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke client-export-templates client-export client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke ui-wireframe client-export-templates client-export client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -105,37 +106,44 @@ m1-check:
 	$(MAKE) lint
 	$(MAKE) m0-determinism
 
+# 本机引擎必须与固定的补丁版本一致，避免用错版本导入或导出。
+client-godot-check:
+	@[ -n "$(GODOT_INSTALLED_VERSION)" ] || { echo "无法读取 Godot 版本：$(GODOT) --version" >&2; exit 1; }
+	@[ "$(GODOT_INSTALLED_VERSION)" = "$(GODOT_VERSION)" ] || { echo "Godot 版本不符：需要 $(GODOT_VERSION)，当前 $(GODOT_INSTALLED_VERSION)" >&2; exit 1; }
+
 # 客户端工程导入与静态边界检查。
-client-import:
+client-import: client-godot-check
 	$(GODOT) --headless --path client --import
 
 # 桌面客户端统一从这里启动：先导入刷新全局类缓存。新增或改名 class_name
 # 脚本后直接跑 Godot 会沿用旧缓存，缺类的脚本编译失败，对局页可能只构建一半。
 # 模拟不同尺寸设备：make client-run WIDTH=960 HEIGHT=540；两者需同时为正整数，缺省按屏幕自动收拢。
+# 模拟设备档位：make client-run CLIENT_DEVICE=phone；phone / tablet / desktop，其余值按未指定处理。
 WIDTH ?=
 HEIGHT ?=
+CLIENT_DEVICE ?=
 
 client-run: client-import
 	@if [ -z "$(WIDTH)" ] && [ -z "$(HEIGHT)" ]; then \
-	  $(GODOT) --path client; \
+	  CIVILIZATION_DEVICE="$(CLIENT_DEVICE)" $(GODOT) --path client; \
 	elif [ "$(WIDTH)" -gt 0 ] 2>/dev/null && [ "$(HEIGHT)" -gt 0 ] 2>/dev/null; then \
-	  CIVILIZATION_WINDOW_SIZE="$(WIDTH)x$(HEIGHT)" $(GODOT) --path client; \
+	  CIVILIZATION_WINDOW_SIZE="$(WIDTH)x$(HEIGHT)" CIVILIZATION_DEVICE="$(CLIENT_DEVICE)" $(GODOT) --path client; \
 	else \
 	  echo "WIDTH 与 HEIGHT 需同时传入正整数：make client-run WIDTH=960 HEIGHT=540" >&2; \
 	  exit 1; \
 	fi
 
-# 设备档别名：等价于直接传 WIDTH/HEIGHT，只改窗口尺寸，设备档案仍按桌面。
+# 设备档别名：同时切换窗口尺寸与设备档案（布局基准、控件尺寸、触控输入）。
 # 目标名可被 shell 自带的 make 补全列出，`make client-run-on-<Tab>` 即可选择。
 # 尺寸取项目验收用机的横屏物理分辨率：iPhone 17 Pro、iPad Air 11。
 client-run-on-iphone:
-	$(MAKE) client-run WIDTH=2622 HEIGHT=1206
+	$(MAKE) client-run WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone
 
 client-run-on-ipad:
-	$(MAKE) client-run WIDTH=2360 HEIGHT=1640
+	$(MAKE) client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet
 
 client-run-on-desktop:
-	$(MAKE) client-run
+	$(MAKE) client-run CLIENT_DEVICE=desktop
 
 client-check:
 	$(MAKE) protocol-check
@@ -154,10 +162,22 @@ client-smoke: client-import
 	  ! grep -q "SCRIPT ERROR" output/$$name.log || exit 1; \
 	done
 
-# macOS 导出模板：目录按 Godot 版本隔离，缺失时下载官方 tpz 并只拷贝其中的 templates/。
-client-export-templates:
+# 页面线框图：无头装载真实场景解算布局，导出 SVG 与 PNG 到 output/wireframes/。
+# PAGE 取 client/pages 下的页面名（gallery、room 等）；ALL=1 生成全部；DEVICE=phone 出手机档位。
+PAGE ?=
+DEVICE ?=
+
+ui-wireframe: client-import
+	@if [ -z "$(PAGE)" ] && [ "$(ALL)" != "1" ]; then \
+	  echo "用法：make ui-wireframe PAGE=gallery [DEVICE=phone]，或 make ui-wireframe ALL=1" >&2; \
+	  exit 1; \
+	fi
+	$(PYTHON) scripts/ui_wireframe.py --godot "$(GODOT)" \
+		$(if $(PAGE),--page $(PAGE),) $(if $(ALL),--all,) $(if $(DEVICE),--device $(DEVICE),)
+
+# macOS 导出模板：目录按固定的 Godot 版本隔离，缺失时下载官方 tpz 并只拷贝其中的 templates/。
+client-export-templates: client-godot-check
 	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export-templates 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
-	@[ -n "$(GODOT_VERSION)" ] || { echo "无法读取 Godot 版本：$(GODOT) --version" >&2; exit 1; }
 	@if [ -d "$(GODOT_TEMPLATE_DIR)" ] && [ -n "$$(ls -A "$(GODOT_TEMPLATE_DIR)" 2>/dev/null)" ]; then \
 	  echo "导出模板已存在：$(GODOT_TEMPLATE_DIR)"; \
 	else \
