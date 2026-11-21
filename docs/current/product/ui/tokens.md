@@ -86,7 +86,7 @@
 | `opponent-hp-width` | 360 | 战斗阶段对手身份块与血量条宽度 |
 | `report-width` | 236 | 左栏战报浮层宽度 |
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
-| `avatar-rail` | 44 | 左栏座位行头像边长兜底值，左栏尺寸未解算时使用；实际边长按行高与左栏内宽解算（上限为 88 宽减两侧边距），手机兜底 40 |
+| `avatar-rail` | 44 | 左栏座位行边长兜底值，左栏尺寸未解算时使用；实际边长取栏内宽与人均可用高度的较小值，头像边长再减两侧描边 4，手机兜底 40 |
 | `seat-row-gap` | 4 | 座位行间距；手机 2 |
 | `portrait-size` | 64 | 售货员与对手英雄头像块边长 |
 | `hero-detail-width` | 160 | 选英雄页悬停详情与房间候选卡宽度，手机 120；高度由 `UITheme.card_face_height` 按卡面比例计算 |
@@ -128,7 +128,7 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | --- | --- | --- |
 | `card-width-compact` / `card-height-compact` | 70 / 91 | iPhone 商店、棋盘、手牌与战斗只读卡；保持桌面 112:146 的卡形 |
 | `card-info-height-compact` | 60 | iPhone 有介绍时的卡面信息区（手牌） |
-| `avatar-rail-compact` | 40 | iPhone 座位行头像边长兜底值，左栏尺寸未解算时使用；实际边长按行高与左栏内宽解算 |
+| `avatar-rail-compact` | 40 | iPhone 座位行边长兜底值，左栏尺寸未解算时使用；实际边长按栏内宽与人均可用高度解算 |
 | `seat-hp-bar-height-compact` | 4 | iPhone 座位行血量条高度 |
 | `seat-row-gap-compact` | 2 | iPhone 座位行间距 |
 | `rank-badge-size-compact` | 14 | iPhone 座位名次圆形角标直径 |
@@ -142,7 +142,7 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `room-hero-detail-width-compact` | 200 | iPhone 选英雄页悬停详情卡宽度 |
 | `hero-detail-width-compact` | 120 | iPhone 选英雄页悬停详情与候选卡宽度；高度由 `card_face_height` 计算 |
 
-- 紧凑座位行（头像 40 + 上下行内边距各 2，血量条叠在头像底部内侧、不额外占高；行距 2）让 8 席在 960×540 下一屏放下，左栏不出现滚动。
+- 座位行边长取栏内宽与人均可用高度的较小值（960×540 下约 57），不再使用固定行内边距；头像边长 = 行边长 − 4，血量条叠在头像底部内侧、不额外占高；行距 2 让 8 席一屏放下，左栏不出现滚动。
 
 ## 6. 玩法色
 

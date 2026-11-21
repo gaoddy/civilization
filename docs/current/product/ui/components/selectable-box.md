@@ -27,7 +27,7 @@
 
 | 变体 / 状态 | 表现 |
 | --- | --- |
-| `Outline.INLINE` | 常态沿用底板 1px 描边；悬停改 `color-border-strong`；选中改 2px `color-accent`，选中优先于悬停 |
+| `Outline.INLINE` | 常态沿用底板描边（宽度由调用方决定）；悬停改 `color-border-strong`；选中改 2px `color-accent`，选中优先于悬停 |
 | `Outline.OUTER` | 底板描边不变；悬停改 `color-border-strong`；选中在内容区外扩 `space-2xs` 显示 2px `color-accent` 的 `SelectedFrame`，圆角跟随底板 |
 | 按下 | 不改变样式；位移超过 12 画布单位视为拖拽，不发出 `activated` |
 
@@ -50,3 +50,4 @@
 
 - [图鉴卡面单元](gallery-card-tile.md)：`Outline.INLINE`。
 - [房间页](../pages/room.md) 的候选英雄卡：`Outline.OUTER`。
+- [对局页](../pages/game.md) 左栏座位行：`Outline.INLINE`，底板 2px 描边、`radius-md` 圆角、内容边距 2，头像铺满框内；只用悬停态，不调用 `set_selected`，`activated` 用于展开座位战报。
