@@ -15,11 +15,8 @@ var _selected_hero := ""
 ## 最近一次鼠标事件的画布坐标；候选重建后据此判断指针是否仍停在原卡上。
 var _pointer := Vector2.ZERO
 
-var _touch_index := -1
-var _touch_start := Vector2.ZERO
-var _touch_elapsed_ms := 0.0
-var _touch_card: RoomHeroCard = null
-var _touch_cancelled := false
+## 触控长按状态：与详情层共用同一套阈值与计时。
+var _touch := LongPressTracker.new()
 
 
 func _ready() -> void:
@@ -194,42 +191,37 @@ func _input(event: InputEvent) -> void:
         _sync_hover_styles()
 
 
-## 触控长按计时与详情层同源：都按帧 delta 累加，避免两套时钟在 450ms 附近判定不一致。
+## 触控长按计时与详情层同源：共用 LongPressTracker，按帧 delta 累加。
 func _process(delta: float) -> void:
-    if _touch_index == -1 or _touch_cancelled:
+    if not _touch.active() or _touch.cancelled:
         return
-    _touch_elapsed_ms += delta * 1000.0
+    _touch.advance(delta)
 
 
 func _begin_touch(event: InputEventScreenTouch) -> void:
-    if _touch_index != -1 or _is_confirmed():
+    if _touch.active() or _is_confirmed():
         return
     var point := _canvas_point(event.position)
     var card := _candidates.card_at(point)
     if card == null:
         return
-    _touch_index = event.index
-    _touch_start = point
-    _touch_elapsed_ms = 0.0
-    _touch_card = card
-    _touch_cancelled = false
+    _touch.begin(event.index, point, card)
 
 
 func _drag_touch(event: InputEventScreenDrag) -> void:
-    if event.index != _touch_index or _touch_cancelled:
+    if not _touch.matches(event.index):
         return
-    if _canvas_point(event.position).distance_to(_touch_start) > DetailLayer.TOUCH_CANCEL_DISTANCE:
-        _touch_cancelled = true
+    _touch.dragged(event.index, _canvas_point(event.position))
 
 
 func _end_touch(event: InputEventScreenTouch) -> void:
-    if event.index != _touch_index:
+    if not _touch.matches(event.index):
         return
-    var card := _touch_card
-    var cancelled := _touch_cancelled
-    var elapsed := _touch_elapsed_ms
+    var card := _touch.target
+    var cancelled := _touch.cancelled
+    var elapsed := _touch.elapsed_ms
     _clear_touch()
-    if card == null or not is_instance_valid(card) or cancelled or elapsed >= float(DetailLayer.LONG_PRESS_MS):
+    if card == null or not is_instance_valid(card) or cancelled or elapsed >= _touch.long_press_ms:
         return
     if _is_confirmed() or card.locked:
         return
@@ -239,10 +231,7 @@ func _end_touch(event: InputEventScreenTouch) -> void:
 
 
 func _clear_touch() -> void:
-    _touch_index = -1
-    _touch_card = null
-    _touch_cancelled = false
-    _touch_elapsed_ms = 0.0
+    _touch.cancel()
 
 
 ## 视口坐标转为画布坐标，与详情层的 `_input` 命中同一坐标系。

@@ -123,9 +123,9 @@ func _check_room_touch_select() -> void:
         await get_tree().create_timer(0.5).timeout
         await get_tree().process_frame
         _expect(panel != null and panel.visible, "长按候选卡应显示详情")
+        var touch = instance.get("_touch")
         _expect(
-            instance.get("_touch_elapsed_ms") != null
-            and float(instance.get("_touch_elapsed_ms")) >= float(DetailLayer.LONG_PRESS_MS),
+            touch != null and float(touch.get("elapsed_ms")) >= float(DetailLayer.LONG_PRESS_MS),
             "页面应按与详情层相同的累计时钟判定长按",
         )
         _expect(
@@ -163,8 +163,15 @@ func _check_room_touch_select() -> void:
         GameStore.room_changed.emit()
         await get_tree().process_frame
         await get_tree().process_frame
-        _expect(instance.get("_touch_index") == -1, "候选重排后应丢弃进行中的触点")
-        _expect(instance.get("_touch_card") == null, "候选重排后不应保留旧卡片引用")
+        var rebuilt_touch = instance.get("_touch")
+        _expect(
+            rebuilt_touch != null and int(rebuilt_touch.get("index")) == -1,
+            "候选重排后应丢弃进行中的触点",
+        )
+        _expect(
+            rebuilt_touch != null and rebuilt_touch.get("target") == null,
+            "候选重排后不应保留旧卡片引用",
+        )
         await _push_touch(second_point, 0, false)
         var rebuilt_cards := instance.find_child("HeroCandidates", true, false)
         var rebuilt_selected := 0

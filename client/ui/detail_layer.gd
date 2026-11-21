@@ -14,9 +14,9 @@ const DETAIL_SIDES := {
     "seller": ["bottom", "top"],
     "hero": ["left", "right"],
 }
-## 触控长按判定时长与位移取消阈值（画布单位）。
-const LONG_PRESS_MS := 450.0
-const TOUCH_CANCEL_DISTANCE := 8.0
+## 触控长按判定时长与位移取消阈值（画布单位），与选英雄页共用同一套取值。
+const LONG_PRESS_MS := LongPressTracker.DEFAULT_LONG_PRESS_MS
+const TOUCH_CANCEL_DISTANCE := LongPressTracker.DEFAULT_CANCEL_DISTANCE
 
 ## 模态浮层打开时置真：详情层会盖住浮层内容，直接隐藏且不再响应悬停。
 var blocked := false
@@ -26,12 +26,8 @@ var report_open := false
 var _panel: PanelContainer
 var _cards: Array = []
 var _hover_card: Control = null
-## 触控长按状态：只跟踪第一个触点，`_touch_index` 为 -1 表示当前没有触摸。
-var _touch_index := -1
-var _touch_start := Vector2.ZERO
-var _touch_elapsed_ms := 0.0
-var _touch_card: Control = null
-var _touch_shown := false
+## 触控长按状态：只跟踪第一个触点；`fired` 表示长按已触发显示。
+var _touch := LongPressTracker.new()
 
 
 func _init() -> void:
@@ -136,56 +132,47 @@ func _input_touch(event: InputEvent) -> void:
 
 ## 按下只登记触点与卡片，不立即显示；多触点只认第一个。
 func _begin_touch(event: InputEventScreenTouch) -> void:
-    if _touch_index != -1 or blocked or report_open:
+    if _touch.active() or blocked or report_open:
         return
     var point := _canvas_point(event.position)
     var card := _card_at(point)
     if card == null:
         return
-    _touch_index = event.index
-    _touch_start = point
-    _touch_elapsed_ms = 0.0
-    _touch_card = card
-    _touch_shown = false
+    _touch.begin(event.index, point, card)
     set_process(true)
 
 
 ## 位移超过 8 个画布单位即取消长按，不再显示。
 func _drag_touch(event: InputEventScreenDrag) -> void:
-    if event.index != _touch_index or _touch_shown:
+    if not _touch.matches(event.index) or _touch.fired:
         return
-    if _canvas_point(event.position).distance_to(_touch_start) > TOUCH_CANCEL_DISTANCE:
+    if _touch.dragged(event.index, _canvas_point(event.position)):
         _clear_touch()
 
 
 ## 抬手：已显示则隐藏；未到长按时长的短按不改变原有单击行为。
 func _end_touch(event: InputEventScreenTouch) -> void:
-    if event.index != _touch_index:
+    if not _touch.matches(event.index):
         return
-    if _touch_shown:
+    if _touch.fired:
         hide_panel()
     _clear_touch()
 
 
 ## 长按判定放在 `_process` 中按 delta 累加，不依赖具体帧率。
 func _process(delta: float) -> void:
-    if _touch_index == -1 or _touch_shown:
+    if not _touch.active() or _touch.fired:
         return
-    if blocked or report_open or not is_instance_valid(_touch_card):
+    if blocked or report_open or not is_instance_valid(_touch.target):
         _clear_touch()
         return
-    _touch_elapsed_ms += delta * 1000.0
-    if _touch_elapsed_ms < LONG_PRESS_MS:
+    if not _touch.advance(delta):
         return
-    _touch_shown = true
-    _show_detail(_touch_card.get_meta("detail_data", {}), _touch_card)
+    _show_detail(_touch.target.get_meta("detail_data", {}), _touch.target)
 
 
 func _clear_touch() -> void:
-    _touch_index = -1
-    _touch_card = null
-    _touch_shown = false
-    _touch_elapsed_ms = 0.0
+    _touch.cancel()
     set_process(false)
 
 
