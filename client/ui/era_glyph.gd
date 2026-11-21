@@ -4,7 +4,9 @@ extends Control
 ##
 ## 只按 62% 金色低调出现，不参与悬停与点击。
 
-var era_id := ""
+## 时代标识。导出以便 `Node.duplicate()` 复制：拖拽预览与战斗克隆都由
+## `duplicate()` 生成卡面，非导出脚本变量在副本里会丢失时代图标。
+@export var era_id := ""
 
 
 static func create(era_value: String, side: int) -> EraGlyph:

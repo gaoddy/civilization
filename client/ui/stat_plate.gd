@@ -7,7 +7,9 @@ extends Control
 const ATTACK := "attack"
 const HEALTH := "health"
 
-var kind := ATTACK
+## 底牌类型。导出以便 `Node.duplicate()` 复制：拖拽预览与战斗克隆都由
+## `duplicate()` 生成卡面，非导出脚本变量在副本里会回退成默认攻击圆。
+@export var kind := ATTACK
 
 
 static func create(kind_value: String, text: String, font_size: int, label_name := "StatLabel") -> StatPlate:

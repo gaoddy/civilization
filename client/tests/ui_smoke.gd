@@ -2104,6 +2104,27 @@ func _expect_preview_offset(instance: Node, card: Control, grab: Vector2) -> voi
     )
     if holder != null and holder.get_child_count() == 1:
         var preview := holder.get_child(0) as Control
+        # 预览是 `duplicate()` 副本：卡面自绘状态必须导出才能随复制保留，
+        # 否则血量底牌退回攻击圆、时代图标为空、卡框星级回到 1 星。
+        var health := preview.find_child("HealthPlate", true, false)
+        if health != null:
+            _expect(health.kind == StatPlate.HEALTH, "%s 拖拽预览的血量底牌应保持血量样式" % card.name)
+        var era := preview.find_child("EraGlyph", true, false)
+        var source_era := card.find_child("EraGlyph", true, false)
+        if era != null and source_era != null:
+            _expect(
+                era.era_id == source_era.era_id,
+                "%s 拖拽预览的时代图标应与原卡一致，实际 %s / %s"
+                    % [card.name, era.era_id, source_era.era_id],
+            )
+        var frame := preview.find_child("CardFrame", true, false)
+        var source_frame := card.find_child("CardFrame", true, false)
+        if frame != null and source_frame != null:
+            _expect(
+                frame.level == source_frame.level,
+                "%s 拖拽预览的卡框星级应与原卡一致，实际 %d / %d"
+                    % [card.name, frame.level, source_frame.level],
+            )
         _expect(
             preview.position.distance_to(-grab) <= 1.0,
             "%s 拖拽预览应保持起手点，实际偏移 %s" % [card.name, preview.position],
