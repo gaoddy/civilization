@@ -2,7 +2,8 @@ class_name BoardDrop
 extends HFlowContainer
 ## 我方棋盘的拖拽落点：接受手牌与棋盘随从两种拖拽数据。
 ##
-## 手牌落点：按指针位置判定是否接受，并把落点换算成插入下标。
+## 手牌落点：按指针位置判定是否接受，把落点换算成插入下标，并在拖拽期间用
+## 同尺寸透明占位实时预览插入位。
 ## 棋盘卡落点：拖起后隐藏原卡、插入一个同尺寸透明占位，指针移动时实时移动占位，
 ## 其余随从随之让位；松手时返回「移除后剩余随从序列中的插入下标」，与
 ## `RearrangeBoard.to` 的语义一致。
@@ -26,6 +27,9 @@ var _preview_index := -1
 
 ## 手牌拖拽期间监听指针位置，只在无效落点上显示禁止光标。
 var _watching_hand_drag := false
+
+## 手牌随从牌进入棋盘后，在插入位放同尺寸透明占位；与棋盘卡换位占位互不复用。
+var _hand_spacer: Control = null
 
 
 func _ready() -> void:
@@ -96,6 +100,8 @@ func end_drag() -> void:
 func _process(_delta: float) -> void:
     if _watching_hand_drag:
         _update_hand_cursor()
+        if _watching_hand_drag:
+            _update_hand_preview(get_global_mouse_position())
     if _drag_id == "":
         return
     # 拖拽途中视图重建会整块换掉棋盘子节点：旧卡与占位失效时按取消收尾。
@@ -145,12 +151,87 @@ func _update_hand_cursor() -> void:
     Input.set_default_cursor_shape(Input.CURSOR_ARROW if accepted else Input.CURSOR_FORBIDDEN)
 
 
+## 手牌拖拽预览：随从牌进入棋盘时按落点移动透明占位，无效落点或非随从牌移除。
+func _update_hand_preview(pointer: Vector2) -> void:
+    var viewport := get_viewport()
+    if viewport == null or not viewport.gui_is_dragging():
+        _clear_hand_preview()
+        return
+    var payload = viewport.gui_get_drag_data()
+    if not (payload is Dictionary) or not payload.has("handIndex"):
+        _clear_hand_preview()
+        return
+    var index := hand_preview_index(pointer, payload)
+    if index < 0:
+        _clear_hand_preview()
+        return
+    _place_hand_preview(index)
+
+
+## 手牌随从牌的预览插入下标；效果牌、棋盘外或无效落点返回 -1。
+func hand_preview_index(global_point: Vector2, payload: Dictionary) -> int:
+    if str(payload.get("cardKind", "")) != "minion":
+        return -1
+    if not get_global_rect().has_point(global_point):
+        return -1
+    var local: Vector2 = get_global_transform().affine_inverse() * global_point
+    var resolved := _resolve(local, payload)
+    if resolved.is_empty():
+        return -1
+    return int(resolved.get("position", 0))
+
+
+## 把透明占位放到预览下标对应的子节点位置；首次进入棋盘时按卡片尺寸创建。
+func _place_hand_preview(gap: int) -> void:
+    if (
+        not is_instance_valid(_hand_spacer)
+        or _hand_spacer.get_parent() != self
+        or _hand_spacer.is_queued_for_deletion()
+    ):
+        _hand_spacer = Control.new()
+        _hand_spacer.name = "HandDragSpacer"
+        _hand_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        _hand_spacer.custom_minimum_size = Vector2(
+            UITheme.stage_metric("card-width"),
+            UITheme.stage_metric("card-height")
+        )
+        add_child(_hand_spacer)
+    var target := _hand_spacer_child_index(gap)
+    if _hand_spacer.get_index() != target:
+        move_child(_hand_spacer, target)
+
+
+## 移除手牌拖拽占位。先移出子节点再释放，避免同一帧内重建时旧占位仍参与换算。
+func _clear_hand_preview() -> void:
+    if is_instance_valid(_hand_spacer):
+        if _hand_spacer.get_parent() == self:
+            remove_child(_hand_spacer)
+        _hand_spacer.queue_free()
+    _hand_spacer = null
+
+
+## 预览下标换算成占位的子节点下标：跳过占位自身，只数可见随从卡。
+func _hand_spacer_child_index(gap: int) -> int:
+    var position := 0
+    var seen := 0
+    for child in get_children():
+        if child == _hand_spacer:
+            continue
+        if child is Control and child.visible and child.has_meta("minion_id"):
+            if seen == gap:
+                return position
+            seen += 1
+        position += 1
+    return position
+
+
 ## 停止手牌拖拽光标监听并恢复正常指针。
 func _stop_hand_watch() -> void:
     if not _watching_hand_drag:
         return
     _watching_hand_drag = false
     Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+    _clear_hand_preview()
     if _drag_id == "":
         set_process(false)
 
@@ -169,6 +250,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
         Dictionary(resolved.get("target", {}))
     )
     end_drag()
+    _clear_hand_preview()
 
 
 ## 判定落点：返回空字典表示拒绝，否则带 `position` 与 `target`。

@@ -26,6 +26,7 @@ func _ready() -> void:
     await _check_combat_layout()
     await _check_hand_drag_emits_position()
     await _check_hand_drag_cursor_rule()
+    await _check_hand_drag_board_preview()
     await _check_hand_drag_drops_on_board_blank()
     await _check_hand_drag_drops_on_minion_card()
     await _check_effect_drag_drops_on_hand_minion()
@@ -1828,18 +1829,130 @@ func _check_hand_drag_cursor_rule() -> void:
             board_row.get_global_rect().get_center().y,
         )
         _expect(board_row.hand_drop_accepted(blank_point, payload), "棋盘行空白仍应接受随从牌")
+        _expect(
+            board_row.hand_preview_index(blank_point, payload) == 2,
+            "随从牌落在末尾空白应预览插入下标 2"
+        )
+        var first: Control = instance.find_child("BoardMinion0", true, false)
+        if first != null:
+            var on_first: Vector2 = first.get_global_rect().position + Vector2(4, 4)
+            _expect(
+                board_row.hand_preview_index(on_first, payload) == 0,
+                "随从牌落在首张卡上应预览插入下标 0"
+            )
         board_row.board_full = true
         _expect(not board_row.hand_drop_accepted(blank_point, payload), "棋盘已满时空白应无效")
+        _expect(board_row.hand_preview_index(blank_point, payload) < 0, "棋盘已满时不应显示插入预览")
         board_row.board_full = false
         var target_payload := {"handIndex": 0, "cardKind": "effect", "requiresTarget": true}
         _expect(
             not board_row.hand_drop_accepted(blank_point, target_payload),
             "需要目标的效果牌落在空白应无效"
         )
+        _expect(
+            board_row.hand_preview_index(blank_point, target_payload) < 0,
+            "需要目标的效果牌不显示插入占位"
+        )
+        var plain_effect := {"handIndex": 0, "cardKind": "effect"}
+        _expect(
+            board_row.hand_preview_index(blank_point, plain_effect) < 0,
+            "不需要目标的效果牌不显示插入占位"
+        )
         var outside := Vector2(board_row.get_global_rect().end.x + 200, board_row.get_global_rect().get_center().y)
         _expect(not board_row.hand_drop_accepted(outside, payload), "棋盘外应为无效落点")
+        _expect(board_row.hand_preview_index(outside, payload) < 0, "棋盘外不应显示插入预览")
     instance.queue_free()
     await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 手牌随从拖入棋盘：拖拽期间按指针位置实时显示透明占位，其余随从让位，结束后清除。
+func _check_hand_drag_board_preview() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = [
+        FixtureScript.board_minion("mi_1", "baiyi", 0),
+        FixtureScript.board_minion("mi_2", "airplane", 1),
+    ]
+    view["self"]["hand"] = [FixtureScript.hand("archimedes", false)]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var board_row = instance.find_child("BoardRow", true, false)
+    var hand_card = instance.find_child("HandCard0", true, false)
+    var last = instance.find_child("BoardMinion1", true, false)
+    _expect(hand_card != null and board_row != null and last != null, "场景应渲染手牌与两张棋盘随从")
+    if hand_card != null and board_row != null and last != null:
+        var viewport = instance.get_viewport()
+        var payload: Dictionary = hand_card.payload.duplicate()
+        var gap_point := Vector2(
+            last.get_global_rect().end.x + 16.0,
+            last.get_global_rect().get_center().y,
+        )
+        # 无头视口不更新真实指针位置：用引擎拖拽通知建立状态，再按显式坐标驱动预览。
+        hand_card.force_drag(payload.duplicate(), Control.new())
+        await get_tree().process_frame
+        _expect(viewport.gui_is_dragging(), "手牌拖拽应进入引擎拖拽状态")
+        board_row._update_hand_preview(gap_point)
+        var spacer: Control = board_row.find_child("HandDragSpacer", true, false)
+        _expect(spacer != null, "手牌拖入棋盘应显示落点占位")
+        if spacer != null:
+            _expect(
+                spacer.custom_minimum_size == Vector2(112, 146),
+                "手牌落点占位应与卡片同为 112×146",
+            )
+            _expect(spacer.get_index() == 2, "落在末尾空白时占位应在两张随从卡之后")
+        var first = instance.find_child("BoardMinion0", true, false)
+        if first != null:
+            var first_point := Vector2(
+                first.get_global_rect().position.x + 8.0,
+                first.get_global_rect().get_center().y,
+            )
+            board_row._update_hand_preview(first_point)
+            spacer = board_row.find_child("HandDragSpacer", true, false)
+            _expect(
+                spacer != null and spacer.get_index() == 0,
+                "落到首张卡左半边时占位应插到最前",
+            )
+        board_row.board_full = true
+        board_row._update_hand_preview(gap_point)
+        _expect(board_row._hand_spacer == null, "棋盘已满时手牌落点占位应移除")
+        board_row.board_full = false
+        board_row._update_hand_preview(gap_point)
+        spacer = board_row.find_child("HandDragSpacer", true, false)
+        _expect(spacer != null, "恢复容量后手牌落点占位应重新出现")
+        if spacer != null:
+            _expect(spacer.get_index() == 2, "移回末尾空白后占位应回到两张随从卡之后")
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var local: Vector2 = board_row.get_global_transform().affine_inverse() * gap_point
+        board_row._drop_data(local, payload)
+        await get_tree().process_frame
+        _expect(captured.size() == 1, "手牌落在棋盘应产生一条出牌意图，实际 %d" % captured.size())
+        if captured.size() == 1:
+            _expect(
+                int(captured[0].get("position", -1)) == 2,
+                "落在末尾空白应发出插入下标 2，实际 %s" % [captured[0]],
+            )
+        _expect(board_row._hand_spacer == null, "松手后手牌落点占位引用应清空")
+        _expect(
+            board_row.find_child("HandDragSpacer", true, false) == null,
+            "松手后手牌落点占位节点应移除",
+        )
+        if viewport.gui_is_dragging():
+            viewport.gui_cancel_drag()
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
     GameStore.view = {}
     GameStore.turn = 1
 
