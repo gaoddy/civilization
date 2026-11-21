@@ -81,7 +81,8 @@
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
 | `avatar-rail` | 44 | 左栏座位行头像边长 |
 | `portrait-size` | 64 | 售货员与对手英雄头像块边长 |
-| `hero-portrait-width` / `-height` | 160 / 240 | 房间技能浮层中的立绘尺寸 |
+| `hero-portrait-width` / `-height` | 160 / 240 | 选英雄页悬停详情中的立绘尺寸 |
+| `room-hero-detail-width` | 280 | 选英雄页悬停详情卡宽度；手机 200 |
 | `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
 | `rank-badge-size` | 18 | 座位行名次角标边长 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
@@ -130,6 +131,8 @@ iPhone 以 960×540 为基准，对局页通过 `UITheme.stage_metric(name)` 优
 | `hero-row-height-compact` | 64 | iPhone 英雄行高度 |
 | `top-bar-height-compact` | 26 | iPhone 顶部工具条高度 |
 | `portrait-size-compact` | 48 | iPhone 售货员与对手英雄头像边长 |
+| `room-hero-detail-width-compact` | 200 | iPhone 选英雄页悬停详情卡宽度 |
+| `hero-portrait-width-compact` / `-height-compact` | 120 / 180 | iPhone 选英雄页悬停详情立绘 |
 
 - 紧凑座位行（头像 40 + 血量条 4 + 行内边距 4 + 行距 2）让 8 席在 960×540 下一屏放下，左栏不出现滚动。
 

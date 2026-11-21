@@ -11,6 +11,7 @@ const DETAIL_CARD_SIZE := Vector2(112, 146)
 func _ready() -> void:
     ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
     await _check_detail_long_press()
+    await _check_room_touch_select()
     await _check_aim_touch()
     await _check_hand_slot_reset()
     ScreenProfile.set_device_for_test("")
@@ -89,6 +90,153 @@ func _check_detail_long_press() -> void:
     stage.queue_free()
     await get_tree().process_frame
     await get_tree().process_frame
+
+
+## 选英雄页：长按显示详情且抬手不选中，短按选中，位移超阈值取消长按且不选中。
+func _check_room_touch_select() -> void:
+    GameStore.player_id = "p0"
+    GameStore.room_id = "r_touch"
+    GameStore.room_code = "ABC123"
+    GameStore.phase = Protocol.PHASE_LOBBY
+    GameStore.room_players = [
+        {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
+         "heroCardId": null, "heroCandidates": ["gauss", "mozi"]},
+    ]
+    var instance := await _check_scene("res://scenes/room.tscn", false)
+    if instance == null:
+        return
+    var candidates := instance.find_child("HeroCandidates", true, false)
+    _expect(candidates != null and candidates.get_child_count() == 2, "触控房间页应渲染 2 张候选卡")
+    if candidates != null and candidates.get_child_count() == 2:
+        var first: Control = candidates.get_child(0)
+        var second: Control = candidates.get_child(1)
+        var point := first.get_global_rect().get_center()
+        var panel := instance.find_child("RoomHeroDetail", true, false)
+        var first_frame := first.find_child("SelectedFrame", true, false)
+        var second_frame := second.find_child("SelectedFrame", true, false)
+
+        # 长按 450ms 显示详情；抬手隐藏且不选中。
+        await _push_touch(point, 0, true)
+        await get_tree().create_timer(0.5).timeout
+        await get_tree().process_frame
+        _expect(panel != null and panel.visible, "长按候选卡应显示详情")
+        _expect(
+            instance.get("_touch_elapsed_ms") != null
+            and float(instance.get("_touch_elapsed_ms")) >= float(GameDetailLayer.LONG_PRESS_MS),
+            "页面应按与详情层相同的累计时钟判定长按",
+        )
+        var touch_layer := instance.find_child("HeroDetailLayer", true, false)
+        _expect(
+            touch_layer != null and panel != null
+            and touch_layer.get_global_rect().encloses(panel.get_global_rect()),
+            "手机端详情卡应始终留在安全区内",
+        )
+        await _push_touch(point, 0, false)
+        _expect(panel != null and not panel.visible, "抬手应隐藏详情")
+        _expect(first_frame != null and not first_frame.is_visible_in_tree(), "长按抬手不应选中")
+
+        # 短按选中。
+        await _push_touch(point, 0, true)
+        await get_tree().create_timer(0.1).timeout
+        await _push_touch(point, 0, false)
+        _expect(first_frame != null and first_frame.is_visible_in_tree(), "短按候选卡应选中")
+
+        # 在第二张上位移超过 8：取消长按且不选中。
+        var second_point := second.get_global_rect().get_center()
+        await _push_touch(second_point, 0, true)
+        await _push_drag(second_point + Vector2(9, 0), 0)
+        await get_tree().create_timer(0.5).timeout
+        await get_tree().process_frame
+        _expect(panel != null and not panel.visible, "位移超过阈值应取消长按")
+        await _push_touch(second_point + Vector2(9, 0), 0, false)
+        _expect(first_frame != null and first_frame.is_visible_in_tree(), "位移后不应改变原选中")
+        _expect(second_frame != null and not second_frame.is_visible_in_tree(), "位移后不应选中第二张")
+
+        # 触控进行中候选被重排：页面必须丢弃这次触点，抬手不得访问已释放的卡片。
+        await _push_touch(second_point, 0, true)
+        var rebuilt := GameStore.room_players.duplicate(true)
+        rebuilt[0]["heroCandidates"] = ["gauss", "mozi", "luban"]
+        GameStore.room_players = rebuilt
+        GameStore.room_changed.emit()
+        await get_tree().process_frame
+        await get_tree().process_frame
+        _expect(instance.get("_touch_index") == -1, "候选重排后应丢弃进行中的触点")
+        _expect(instance.get("_touch_card") == null, "候选重排后不应保留旧卡片引用")
+        await _push_touch(second_point, 0, false)
+        var rebuilt_cards := instance.find_child("HeroCandidates", true, false)
+        var rebuilt_selected := 0
+        if rebuilt_cards != null:
+            for card in rebuilt_cards.get_children():
+                var frame = card.find_child("SelectedFrame", true, false)
+                if frame != null and frame.is_visible_in_tree():
+                    rebuilt_selected += 1
+        _expect(rebuilt_selected == 1, "重排后抬手不得额外选中卡片，实际：%d" % rebuilt_selected)
+
+        # 多触点：第二个触点不接管长按，也不触发选择。
+        if rebuilt_cards != null and rebuilt_cards.get_child_count() == 3:
+            var finger_card: Control = rebuilt_cards.get_child(1)
+            var extra_card: Control = rebuilt_cards.get_child(2)
+            var finger_point := finger_card.get_global_rect().get_center()
+            var extra_point := extra_card.get_global_rect().get_center()
+            await _push_touch(finger_point, 0, true)
+            await _push_touch(extra_point, 1, true)
+            await get_tree().create_timer(0.5).timeout
+            await get_tree().process_frame
+            _expect(panel != null and panel.visible, "多触点时应以第一个触点显示详情")
+            await _push_touch(extra_point, 1, false)
+            await get_tree().process_frame
+            _expect(panel != null and panel.visible, "第二个触点抬手不应关闭第一个触点的详情")
+            await _push_touch(finger_point, 0, false)
+            _expect(panel != null and not panel.visible, "第一个触点抬手应关闭详情")
+            var multi_selected := 0
+            for card in rebuilt_cards.get_children():
+                var multi_frame = card.find_child("SelectedFrame", true, false)
+                if multi_frame != null and multi_frame.is_visible_in_tree():
+                    multi_selected += 1
+            _expect(multi_selected == 1, "多触点抬手不得改选，选中框数量：%d" % multi_selected)
+
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.room_id = ""
+    GameStore.room_code = ""
+    GameStore.room_players = []
+
+    # 已确认后长按仍显示详情、抬手不得改选，选中框保留在已确认的英雄上。
+    GameStore.player_id = "p0"
+    GameStore.room_id = "r_touch_locked"
+    GameStore.room_code = "ABC123"
+    GameStore.phase = Protocol.PHASE_LOBBY
+    GameStore.room_players = [
+        {"playerId": "p0", "displayName": "玩家A", "ready": true, "isHost": true,
+         "heroCardId": "gauss", "heroCandidates": ["gauss", "mozi"]},
+    ]
+    var locked_instance := await _check_scene("res://scenes/room.tscn", false)
+    if locked_instance != null:
+        var locked_cards := locked_instance.find_child("HeroCandidates", true, false)
+        var locked_panel := locked_instance.find_child("RoomHeroDetail", true, false)
+        if locked_cards != null and locked_cards.get_child_count() == 2:
+            var locked_second: Control = locked_cards.get_child(1)
+            var locked_point := locked_second.get_global_rect().get_center()
+            await _push_touch(locked_point, 0, true)
+            await get_tree().create_timer(0.5).timeout
+            await get_tree().process_frame
+            _expect(locked_panel != null and locked_panel.visible, "已确认后长按仍应显示详情")
+            await _push_touch(locked_point, 0, false)
+            _expect(locked_panel != null and not locked_panel.visible, "已确认后抬手应隐藏详情")
+            var selected_frames := 0
+            for card in locked_cards.get_children():
+                var frame = card.find_child("SelectedFrame", true, false)
+                if frame != null and frame.is_visible_in_tree():
+                    selected_frames += 1
+            _expect(selected_frames == 1, "已确认后长按不得改选，选中框数量：%d" % selected_frames)
+            var locked_first_frame = locked_cards.get_child(0).find_child("SelectedFrame", true, false)
+            _expect(locked_first_frame != null and locked_first_frame.is_visible_in_tree(),
+                "已确认后长按不得把选中框移到其他卡")
+        locked_instance.queue_free()
+        await get_tree().process_frame
+    GameStore.room_id = ""
+    GameStore.room_code = ""
+    GameStore.room_players = []
 
 
 ## 瞄准层：触控按住拖出与松手提交；技能模式由按钮按下开启时也要接管触点编号。

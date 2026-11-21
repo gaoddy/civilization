@@ -739,7 +739,7 @@ func _check_skill_trigger_labels() -> void:
     await get_tree().process_frame
 
 
-## 选英雄页技能浮层：与图鉴共用技能列表，主动技能显示费用与次数。
+## 选英雄页悬停详情：与图鉴共用技能列表，主动技能显示费用与次数。
 func _check_room_skill_list() -> void:
     GameStore.player_id = "p0"
     GameStore.room_id = "r_test"
@@ -754,30 +754,29 @@ func _check_room_skill_list() -> void:
         var candidates := instance.find_child("HeroCandidates", true, false)
         _expect(candidates != null and candidates.get_child_count() > 0, "选英雄页应渲染候选英雄")
         if candidates != null and candidates.get_child_count() > 0:
-            var event := InputEventMouseButton.new()
-            event.button_index = MOUSE_BUTTON_LEFT
-            event.pressed = true
-            candidates.get_child(0).emit_signal("gui_input", event)
-            await get_tree().process_frame
-            var panel := instance.find_child("SkillPanel", true, false)
-            var text := _node_text(panel)
-            var info := CardDB.skill_info("activate-friendly-growth-twice")
-            _expect(
-                text.contains(CardDB.hero_introduction("gauss")),
-                "技能浮层应显示英雄介绍：%s" % text,
-            )
-            _expect(
-                text.contains(TranslationServer.translate("ui.skill.trigger.on_activate")),
-                "技能浮层应出现主动标签：%s" % text,
-            )
-            _expect(
-                text.contains(TranslationServer.translate("ui.skill.cost") % int(info.get("cost", -1))),
-                "技能浮层应显示费用：%s" % text,
-            )
-            _expect(
-                text.contains(TranslationServer.translate("ui.skill.uses") % int(info.get("uses", -1))),
-                "技能浮层应显示每回合次数：%s" % text,
-            )
+            var card: Control = candidates.get_child(0)
+            await _hover(instance, card, card.size * 0.5)
+            var panel := instance.find_child("RoomHeroDetail", true, false)
+            _expect(panel != null and panel.visible, "悬停候选卡应显示详情卡")
+            if panel != null:
+                var text := _node_text(panel)
+                var info := CardDB.skill_info("activate-friendly-growth-twice")
+                _expect(
+                    text.contains(CardDB.hero_introduction("gauss")),
+                    "悬停详情应显示英雄介绍：%s" % text,
+                )
+                _expect(
+                    text.contains(TranslationServer.translate("ui.skill.trigger.on_activate")),
+                    "悬停详情应出现主动标签：%s" % text,
+                )
+                _expect(
+                    text.contains(TranslationServer.translate("ui.skill.cost") % int(info.get("cost", -1))),
+                    "悬停详情应显示费用：%s" % text,
+                )
+                _expect(
+                    text.contains(TranslationServer.translate("ui.skill.uses") % int(info.get("uses", -1))),
+                    "悬停详情应显示每回合次数：%s" % text,
+                )
         instance.queue_free()
         await get_tree().process_frame
     GameStore.room_id = ""
