@@ -317,6 +317,11 @@ func _ready() -> void:
                 gallery_info.get_global_rect().encloses(desc.get_global_rect()),
                 "图鉴卡信息区应包住介绍",
             )
+    var gallery_type: Control = gallery_tile.find_child("CardType", true, false)
+    _expect(
+        gallery_type == null or str(gallery_type.text) == "",
+        "图鉴卡不应显示玩法，实际：%s" % (str(gallery_type.text) if gallery_type != null else "缺失"),
+    )
     gallery_tile.queue_free()
     await get_tree().process_frame
 
