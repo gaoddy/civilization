@@ -37,7 +37,7 @@ func _init() -> void:
 
     _side = VBoxContainer.new()
     _side.name = "HeroSide"
-    _side.custom_minimum_size = Vector2(UITheme.stage_metric("hero-card-width"), 0)
+    _side.custom_minimum_size = Vector2(UITheme.stage_metric("hero-card-size"), 0)
     _side.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     _side.alignment = BoxContainer.ALIGNMENT_CENTER
     _side.add_theme_constant_override("separation", UITheme.space("space-xs"))
@@ -86,7 +86,6 @@ func refresh(state: GameUiState) -> void:
         hero_id,
         int(self_state.get("hp", 0)),
         state.hp_cap,
-        int(self_state.get("era", 1)),
     )
     if hero_id != "" and detail != null and is_instance_valid(detail):
         detail.track(_hero_card, {"detail_kind": "hero", "heroId": hero_id})

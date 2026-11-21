@@ -1,103 +1,105 @@
 class_name GameHeroCard
 extends PanelContainer
-## 英雄卡：64×84，玩法色封面、名字行与底部「时代 · 生命」两格。
+## 英雄卡：方形头像铺满整卡，右下角只叠当前生命。
 ##
-## 英雄卡只承载身份与技能，不显示攻击力；生命取服务端视图的当前值与上限，
-## 时代取玩家视图的当前时代。
+## 卡只承载身份与当前生命，不显示名字、时代与攻击力；名字只出现在 tooltip 与悬停详情，
+## 生命取服务端视图的当前值。无头像素材时回退玩法色封面与名字首字。
 
-const COVER_MARK_ALPHA := 0.22
+const COVER_MARK_ALPHA := 0.55
+const BORDER_WIDTH := 2
 
 var hero_id := ""
 var hp := 0
 var hp_cap := 0
-var era := 0
 
-var _cover: PanelContainer
+var _body: Control
 var _cover_mark: Label
 var _cover_art: TextureRect = null
 var _cover_art_path := ""
-var _name_label: Label
-var _era_label: Label
+var _hp_plate: PanelContainer
 var _hp_label: Label
 
 
 func _init() -> void:
 	name = "HeroCard"
-	custom_minimum_size = Vector2(
-		UITheme.stage_metric("hero-card-width"), UITheme.stage_metric("hero-card-height")
-	)
+	var side := UITheme.stage_metric("hero-card-size")
+	custom_minimum_size = Vector2(side, side)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	add_theme_stylebox_override("panel", _panel_style())
-	var lines := VBoxContainer.new()
-	lines.name = "HeroCardLines"
-	lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lines.add_theme_constant_override("separation", UITheme.space("space-none"))
-	add_child(lines)
 
-	_cover = PanelContainer.new()
-	_cover.name = "HeroCardCover"
-	_cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_cover.custom_minimum_size = Vector2(0, UITheme.stage_metric("hero-cover-height"))
-	_cover.add_theme_stylebox_override("panel", _cover_style(UITheme.color("color-surface-sunken")))
-	lines.add_child(_cover)
+	_body = Control.new()
+	_body.name = "HeroCardBody"
+	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_body)
 
 	_cover_mark = UIControls.label("?", UITheme.font_size("font-hero"), false)
 	_cover_mark.name = "HeroCardMark"
+	_cover_mark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_cover_mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_cover_mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_cover_mark.add_theme_color_override("font_color", UITheme.alpha("color-text", COVER_MARK_ALPHA))
 	_cover_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_cover.add_child(_cover_mark)
+	_body.add_child(_cover_mark)
 
-	_name_label = UIControls.label("", UITheme.font_size("font-micro"), false)
-	_name_label.name = "HeroCardName"
-	_name_label.custom_minimum_size = Vector2(0, UITheme.stage_metric("hero-name-height"))
-	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_name_label.max_lines_visible = 1
-	_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_name_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-	_name_label.add_theme_stylebox_override("normal", _name_style())
-	_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lines.add_child(_name_label)
-
-	var stats := HBoxContainer.new()
-	stats.name = "HeroCardStats"
-	stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	stats.custom_minimum_size = Vector2(0, UITheme.stage_metric("hero-stats-height"))
-	stats.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-	lines.add_child(stats)
-
-	_era_label = _stat_label("HeroEra", Vector2(24, 16), UITheme.color("color-transparent"))
-	_era_label.add_theme_color_override("font_color", UITheme.color("color-info"))
-	stats.add_child(_era_label)
-	_hp_label = _stat_label("HeroHp", Vector2(34, 16), UITheme.alpha("color-success", 0.55))
-	stats.add_child(_hp_label)
-
-	refresh("", 0, 0, 0)
+	_build_hp_plate()
+	refresh("", 0, 0)
 
 
-func refresh(hero_id: String, hp: int, hp_cap: int, era: int) -> void:
+func refresh(hero_id: String, hp: int, hp_cap: int) -> void:
 	self.hero_id = hero_id
 	self.hp = hp
 	self.hp_cap = hp_cap
-	self.era = era
 	var entry := CardDB.hero(hero_id)
 	var playstyle := CardDB.primary_playstyle(entry) if hero_id != "" else ""
 	add_theme_stylebox_override("panel", _panel_style(playstyle))
-	_cover.add_theme_stylebox_override(
-		"panel", _cover_style(UITheme.playstyle_cover(playstyle) if hero_id != "" else UITheme.color("color-surface-sunken"))
-	)
 	_refresh_cover_art(hero_id)
 	_cover_mark.text = CardText.initial(hero_id) if hero_id != "" else "?"
-	_name_label.text = CardDB.display_name(hero_id) if hero_id != "" else TranslationServer.translate("ui.common.no_hero")
-	_era_label.text = CardDB.era_name(era) if era > 0 else "—"
-	_hp_label.text = ("%d/%d" % [hp, hp_cap]) if hp_cap > 0 else "—"
-	tooltip_text = _name_label.text
+	_hp_label.text = str(hp)
+	_hp_plate.visible = hero_id != "" and hp_cap > 0
+	tooltip_text = CardDB.display_name(hero_id) if hero_id != "" else ""
 
 
-## 封面头像：有素材时叠图并隐藏首字；方形头像四角向内收，落在封面圆角以内。
+## 生命牌贴右下角，与英雄行 84 高无关；只显示当前值，上限由悬停详情给出。
+func _build_hp_plate() -> void:
+	var margin := MarginContainer.new()
+	margin.name = "HeroHpMargin"
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var inset := UITheme.space("space-2xs")
+	margin.add_theme_constant_override("margin_left", inset)
+	margin.add_theme_constant_override("margin_top", inset)
+	margin.add_theme_constant_override("margin_right", inset)
+	margin.add_theme_constant_override("margin_bottom", inset)
+	_body.add_child(margin)
+
+	var column := VBoxContainer.new()
+	column.name = "HeroHpColumn"
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.alignment = BoxContainer.ALIGNMENT_END
+	margin.add_child(column)
+
+	var row := HBoxContainer.new()
+	row.name = "HeroHpRow"
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.alignment = BoxContainer.ALIGNMENT_END
+	column.add_child(row)
+
+	_hp_plate = PanelContainer.new()
+	_hp_plate.name = "HeroHpPlate"
+	_hp_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hp_plate.add_theme_stylebox_override("panel", _hp_style())
+	row.add_child(_hp_plate)
+
+	_hp_label = UIControls.label("", UITheme.font_size("font-caption"), false)
+	_hp_label.name = "HeroHp"
+	_hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_hp_label.add_theme_color_override("font_color", UITheme.color("color-white"))
+	_hp_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hp_plate.add_child(_hp_label)
+
+
+## 封面头像：方形素材按 cover 裁切铺满整卡，四边不留玩法色；无素材时回退首字。
 func _refresh_cover_art(hero_id: String) -> void:
 	var path := CardDB.art_path(hero_id, "avatar") if hero_id != "" else ""
 	if path == _cover_art_path and (_cover_art != null or path == ""):
@@ -105,71 +107,44 @@ func _refresh_cover_art(hero_id: String) -> void:
 		return
 	_cover_art_path = path
 	if _cover_art != null:
-		_cover.remove_child(_cover_art)
+		_body.remove_child(_cover_art)
 		_cover_art.queue_free()
 		_cover_art = null
 	var art := UIArt.layer(
-		path, "HeroCoverArt", TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		path, "HeroCoverArt", TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	)
 	if art != null:
-		var inset := UITheme.stage_metric("card-cover-inset")
-		art.offset_left = inset
-		art.offset_top = inset
-		art.offset_right = -inset
-		art.offset_bottom = -inset
-		_cover.add_child(art)
-		_cover.move_child(art, 0)
+		_body.add_child(art)
+		_body.move_child(art, 0)
 		_cover_art = art
 	_cover_mark.visible = art == null
 
 
-func _stat_label(node_name: String, size: Vector2, border: Color) -> Label:
-	var node := UIControls.label("", UITheme.font_size("font-micro"), false)
-	node.name = node_name
-	node.custom_minimum_size = size
-	node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	node.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	node.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	node.add_theme_color_override("font_color", UITheme.color("color-text"))
-	var box := StyleBoxFlat.new()
-	box.bg_color = UITheme.color("color-bg")
-	box.border_color = border
-	box.set_border_width_all(1)
-	box.set_corner_radius_all(UITheme.radius("radius-sm"))
-	box.set_content_margin_all(0)
-	node.add_theme_stylebox_override("normal", box)
-	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return node
-
-
+## 卡片面板：玩法色描边包住整块头像，内容边距等于描边宽，头像不被描边遮住。
 func _panel_style(playstyle := "") -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
-	box.bg_color = UITheme.color("color-surface-raised")
+	box.bg_color = (
+		UITheme.playstyle_cover(playstyle)
+		if playstyle != ""
+		else UITheme.color("color-surface-sunken")
+	)
 	box.border_color = (
 		UITheme.playstyle_color(playstyle)
 		if playstyle != ""
 		else UITheme.color("color-border-strong")
 	)
-	box.set_border_width_all(2)
+	box.set_border_width_all(BORDER_WIDTH)
 	box.set_corner_radius_all(UITheme.radius("radius-md"))
-	box.set_content_margin_all(0)
+	box.set_content_margin_all(BORDER_WIDTH)
 	return box
 
 
-func _cover_style(background: Color) -> StyleBoxFlat:
+## 生命牌：深色半透明底保证压在头像上仍可读，白字只写当前值。
+func _hp_style() -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
-	box.bg_color = background
-	box.border_color = UITheme.color("color-border")
-	box.border_width_bottom = 1
-	box.corner_radius_top_left = UITheme.radius("radius-md")
-	box.corner_radius_top_right = UITheme.radius("radius-md")
-	box.set_content_margin_all(0)
-	return box
-
-
-func _name_style() -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = UITheme.alpha("color-surface-raised", 0.92)
-	box.border_color = UITheme.color("color-transparent")
-	box.set_content_margin_all(0)
+	box.bg_color = UITheme.alpha("color-bg", 0.72)
+	box.border_color = UITheme.alpha("color-white", 0.25)
+	box.set_border_width_all(1)
+	box.set_corner_radius_all(UITheme.radius("radius-sm"))
+	box.set_content_margin_all(UITheme.space("space-2xs"))
 	return box
