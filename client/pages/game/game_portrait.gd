@@ -3,7 +3,7 @@ extends PanelContainer
 ## 头像块：可选贴图 + 玩法色底 + 名字首字回退，64×64；`show_name` 为真时底部附 18 高名字条。
 ##
 ## 传入 `art_path` 且资源存在时叠加头像纹理并隐藏首字；缺失或加载失败回退首字色块。
-## 只做展示，不持有状态；详情登记由调用方通过 `GameDetailLayer.track` 完成。
+## 只做展示，不持有状态；详情登记由调用方通过 `DetailLayer.track` 完成。
 
 const NAME_HEIGHT := 18
 const GLYPH_ALPHA := 0.55

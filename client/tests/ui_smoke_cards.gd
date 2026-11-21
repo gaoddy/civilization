@@ -800,7 +800,7 @@ func _check_room_skill_list() -> void:
 
 ## 商店/手牌详情正文：直接走详情渲染，避免依赖具体页面的悬停时机。
 func _shop_detail_text(card_id: String) -> String:
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_shop_detail(box, {"cardId": card_id})
     var text := _node_text(box)
@@ -841,7 +841,7 @@ func _check_minion_gained_keywords() -> void:
 
 
 func _minion_detail_text(card_id: String, keywords: Array) -> String:
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_minion_detail(box, _minion_fixture(card_id, keywords))
     var text := _node_text(box)
@@ -851,7 +851,7 @@ func _minion_detail_text(card_id: String, keywords: Array) -> String:
 
 
 func _minion_gained_summary(card_id: String, keywords: Array) -> String:
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_minion_detail(box, _minion_fixture(card_id, keywords))
     var row := box.find_child("DetailGainedKeywords", true, false)
@@ -872,7 +872,7 @@ func _minion_fixture(card_id: String, keywords: Array) -> Dictionary:
 
 ## 对局英雄详情：顶部使用卡面美术，按 112:146 预留高度。
 func _check_hero_detail_art() -> void:
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_hero_detail(box, "gauss")
     var art := box.find_child("HeroDetailArt", true, false) as TextureRect
@@ -893,7 +893,7 @@ func _check_hero_detail_art() -> void:
 
 
 func _hero_detail_text(hero_id: String) -> String:
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_hero_detail(box, hero_id)
     var text := _node_text(box)
@@ -903,10 +903,8 @@ func _hero_detail_text(hero_id: String) -> String:
 
 
 func _classification_text(entry: Dictionary) -> String:
-    var layer := GameDetailLayer.new()
     var box := VBoxContainer.new()
-    layer._append_classification(box, entry)
+    DetailKit.new(200).append_classification(box, entry)
     var text := _node_text(box)
     box.free()
-    layer.free()
     return text

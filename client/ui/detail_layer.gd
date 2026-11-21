@@ -1,13 +1,11 @@
-class_name GameDetailLayer
+class_name DetailLayer
 extends Control
 ## 随从详情浮层：覆盖全屏但不拦截输入，层级位于内容与战报之上、选择浮层之下。
 ##
 ## 卡片通过 `track()` 登记，本层用 `_input` 做跨子控件的矩形命中判断；
 ## 模态浮层打开时由页面把 `blocked` 置真，本层直接隐藏且不再响应悬停。
+## 各详情内容由 `ui/detail_sections/` 的单文件组件渲染，本层只做命中、定位与装配。
 
-const DETAIL_ROWS := ["initial", "permanent", "turn", "aura", "damage"]
-## 科学分类完整路径的连接符。
-const TAXON_PATH_SEPARATOR := " › "
 ## 详情面板的挂载方向：商店卡在左右，棋盘卡在上下。
 const DETAIL_SIDES := {
     "shop": ["right", "left"],
@@ -279,188 +277,36 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
 ## 商店卡详情：类型、科学分类、玩法、关联分类、费用、原始数值、时代、
 ## 技能文本与不可购买原因。
 func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
-    var card_id := str(data.get("cardId", ""))
-    var entry := CardDB.card(card_id)
-    box.add_child(_detail_name(CardDB.display_name(card_id)))
-    box.add_child(_detail_row(tr("ui.game.detail.type"), CardText.type_text(entry)))
-    _append_classification(box, entry)
-    _append_association(box, entry)
-    box.add_child(_detail_row(tr("ui.game.detail.cost"), tr("ui.game.detail.cost_value") % CardDB.display_cost(card_id)))
-    box.add_child(_detail_row(tr("ui.game.detail.initial_stats"), "%s / %s" % [
-        CardText.stat_text(entry.get("attack")),
-        CardText.stat_text(entry.get("health")),
-    ]))
-    var era := str(entry.get("era", ""))
-    if era != "":
-        box.add_child(_detail_row(tr("ui.game.detail.era"), UIWording.enum_text("era", era)))
-    var skill_text := CardDB.display_text(card_id)
-    if skill_text != "":
-        box.add_child(_detail_text_block(skill_text))
-    if data.get("disabledReason") != null:
-        var reason := UIControls.label(UIWording.error_text(str(data.get("disabledReason"))), UITheme.font_size("font-body-sm"))
-        reason.name = "DetailBlocked"
-        reason.add_theme_color_override("font_color", UITheme.color("color-danger"))
-        box.add_child(reason)
+    ShopDetailSection.render(box, data, _kit())
 
 
 ## 座位详情：名字、英雄、生命（当前/上限）、时代、随从数与状态。
 func _render_seat_detail(box: VBoxContainer, player: Dictionary, hp_cap: int) -> void:
-    box.add_child(_detail_name(CardText.optional_text(player.get("displayName"))))
-    box.add_child(_detail_row(tr("ui.game.detail.hero"), CardDB.display_name(CardText.optional_text(player.get("heroCardId")))))
-    box.add_child(_detail_row(tr("ui.game.detail.hp"), "%d/%d" % [int(player.get("hp", 0)), maxi(hp_cap, 0)]))
-    box.add_child(_detail_row(tr("ui.game.detail.era"), CardDB.era_name(int(player.get("era", 1)))))
-    box.add_child(_detail_row(tr("ui.game.detail.minions"), "%d" % int(player.get("boardCount", 0))))
-    var alive := bool(player.get("alive", true))
-    box.add_child(_detail_row(
-        tr("ui.game.detail.status"),
-        tr("ui.game.detail.alive") if alive else tr("ui.game.detail.eliminated"),
-    ))
-    if alive:
-        box.add_child(_detail_row(
-            tr("ui.game.detail.recruit"),
-            tr("ui.game.detail.recruited") if bool(player.get("recruited", false)) else tr("ui.game.detail.not_recruited"),
-        ))
+    SeatDetailSection.render(box, player, hp_cap, _kit())
 
 
 ## 售货员详情：营业状态与可执行的商店操作，替代常驻文字。
 func _render_seller_detail(box: VBoxContainer) -> void:
-    box.add_child(_detail_name(tr("ui.game.detail.seller")))
-    box.add_child(_detail_row(tr("ui.game.detail.status"), tr("ui.game.detail.shop_open")))
-    var hint := UIControls.label(
-        tr("ui.game.detail.shop_hint"),
-        UITheme.font_size("font-body-sm"),
-    )
-    hint.custom_minimum_size = Vector2(_detail_text_width(), 0)
-    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    hint.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    box.add_child(hint)
+    SellerDetailSection.render(box, _kit())
 
 
 ## 我方英雄详情：介绍、玩法、关联分类与英雄技能；英雄卡不含科学分类与时代。
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
-    var id := "" if hero_id == null else str(hero_id)
-    # 详情顶部叠卡面美术：按卡面比例铺满，无图时只显示文字内容。
-    var art := UIArt.layer(
-        CardDB.art_path(id, "card_face"),
-        "HeroDetailArt",
-        TextureRect.STRETCH_KEEP_ASPECT_COVERED,
-    )
-    if art != null:
-        var width := _detail_text_width()
-        art.custom_minimum_size = Vector2(width, UITheme.card_face_height(width))
-        box.add_child(art)
-    box.add_child(_detail_name(CardDB.display_name(id)))
-    var introduction := CardDB.hero_introduction(id)
-    if introduction != "":
-        box.add_child(_detail_text_block(introduction))
-    var entry := CardDB.hero(id)
-    box.add_child(_detail_row(tr("ui.game.detail.playstyle"), CardText.playstyle_text(entry)))
-    _append_association(box, entry)
-    var skill_text := CardDB.hero_text(id)
-    if skill_text == "":
-        return
-    var heading := UIControls.label(tr("ui.game.detail.hero_power"), UITheme.font_size("font-caption"), false)
-    heading.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    box.add_child(heading)
-    box.add_child(_detail_text_block(skill_text))
+    HeroDetailSection.render(box, hero_id, _kit())
 
 
 ## 棋盘随从详情：名称、科学分类、玩法、关联分类与攻击/生命的构成分层。
 func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
-    var card_id := str(minion.get("cardId", ""))
-    box.add_child(_detail_name(CardDB.display_name(card_id)))
-    var entry := CardDB.card(card_id)
-    _append_classification(box, entry)
-    _append_association(box, entry)
-    var skill_text := CardDB.display_text(card_id)
-    if skill_text != "":
-        box.add_child(_detail_text_block(skill_text))
-    _append_gained_keywords(box, minion)
-    var stats: Dictionary = minion.get("stats", {})
-    if typeof(stats) != TYPE_DICTIONARY or stats.is_empty():
-        box.add_child(_detail_row(tr("ui.game.detail.current"), "%d / %d" % [
-            int(minion.get("attack", 0)),
-            int(minion.get("health", 0)),
-        ]))
-        return
-    var attack: Dictionary = CardText.stat_layers(stats.get("attack"))
-    var health: Dictionary = CardText.stat_layers(stats.get("health"))
-    for layer in DETAIL_ROWS:
-        var a := int(attack.get(layer, 0))
-        var h := int(health.get(layer, 0))
-        if layer == "damage" and a == 0 and h == 0:
-            continue
-        var label := UIWording.enum_text("stat_layer", layer)
-        if layer == "initial":
-            box.add_child(_detail_row(label, "%d / %d" % [a, h]))
-        elif layer == "damage":
-            box.add_child(_detail_row(label, "%s / %s" % [
-                CardText.damage_text(a),
-                CardText.damage_text(h),
-            ]))
-        else:
-            box.add_child(_detail_row(label, "%s / %s" % [
-                CardText.signed(a),
-                CardText.signed(h),
-            ]))
-    box.add_child(_detail_row(tr("ui.game.detail.current"), "%d / %d" % [
-        int(attack.get("current", 0)),
-        int(health.get("current", 0)),
-    ]))
+    MinionDetailSection.render(box, minion, _kit())
 
 
-## 对局中获得的关键词：摘要行后逐条给出规则说明；没有获得项时不显示。
-## 说明缺失的未知关键词只保留摘要，不暴露内部 id。
-func _append_gained_keywords(box: VBoxContainer, minion: Dictionary) -> void:
-    var gained := CardText.gained_keywords(
-        str(minion.get("cardId", "")),
-        minion.get("keywords", []),
-    )
-    if gained.is_empty():
-        return
-    var names := PackedStringArray()
-    for raw in gained:
-        names.append(CardText.keyword_name(str(raw)))
-    var summary := _detail_row(tr("ui.game.detail.gained"), "、".join(names))
-    summary.name = "DetailGainedKeywords"
-    box.add_child(summary)
-    for raw in gained:
-        var description := CardText.keyword_description(str(raw))
-        if description == "":
-            continue
-        box.add_child(_detail_text_block("%s：%s" % [
-            CardText.keyword_name(str(raw)),
-            description,
-        ]))
-
-
-## 科学分类与玩法：分类路径缺失显示「未定」，卡表无该实体时整组跳过。
-func _append_classification(box: VBoxContainer, entry: Dictionary) -> void:
-    if entry.is_empty():
-        return
-    var path: Array = CardDB.taxon_path(str(entry.get("taxon", "")))
-    var path_text := TAXON_PATH_SEPARATOR.join(PackedStringArray(path)) if not path.is_empty() else tr("ui.game.detail.undetermined")
-    box.add_child(_detail_row(tr("ui.game.detail.taxonomy"), path_text))
-    box.add_child(_detail_row(tr("ui.game.detail.playstyle"), CardText.playstyle_text(entry)))
-
-
-## 关联分类：只展示 prey / host，空列表省略整行。
-func _append_association(box: VBoxContainer, entry: Dictionary) -> void:
-    if entry.is_empty():
-        return
-    var associations := CardText.association_text(entry)
-    if associations == "":
-        return
-    box.add_child(_detail_row(tr("ui.game.detail.association"), associations))
+## 当前详情块的公共排版；文本宽度按面板令牌与子类覆写计算。
+func _kit() -> DetailKit:
+    return DetailKit.new(_detail_text_width())
 
 
 func _detail_name(text: String) -> Label:
-    var name_label := UIControls.label(text, UITheme.font_size("font-title"), false)
-    name_label.name = "DetailName"
-    name_label.max_lines_visible = 1
-    name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    return name_label
+    return _kit().name_label(text)
 
 
 ## 面板宽度扣除卡片内边距后的文本宽度，供技能文本换行。
@@ -470,12 +316,7 @@ func _detail_text_width() -> int:
 
 ## 详情里的介绍/技能文本块：按面板宽度换行，颜色弱于正文。
 func _detail_text_block(text: String) -> Label:
-    var label := UIControls.label(text, UITheme.font_size("font-body-sm"))
-    label.name = "DetailText"
-    label.custom_minimum_size = Vector2(_detail_text_width(), 0)
-    label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    return label
+    return _kit().text_block(text)
 
 
 ## 详情定位：商店卡先右后左，棋盘卡先下后上；夹紧内容框且不覆盖当前卡片。
@@ -506,22 +347,3 @@ func _place_detail(card_rect: Rect2, kind: String) -> void:
             _panel.position = pos
             return
     _panel.position = fallback
-
-
-func _detail_row(prefix: String, value: String) -> HBoxContainer:
-    var row := HBoxContainer.new()
-    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    row.add_theme_constant_override("separation", UITheme.space("space-md"))
-    var key := UIControls.label(prefix, UITheme.font_size("font-body-sm"), false)
-    key.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    key.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    row.add_child(key)
-    var spacer := Control.new()
-    spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_child(spacer)
-    var text := UIControls.label(value, UITheme.font_size("font-body-sm"), false)
-    text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    row.add_child(text)
-    return row

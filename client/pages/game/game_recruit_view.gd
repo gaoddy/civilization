@@ -14,7 +14,7 @@ signal sell_hover(hovering: bool, refund: int)
 signal end_recruit_pressed
 
 ## 卡片详情登记入口，由对局页注入；同步给商店视图。
-var detail: GameDetailLayer = null
+var detail: DetailLayer = null
 
 var _shop: GameShopView
 var _river: GameRiver
@@ -92,7 +92,7 @@ func _build_board() -> PanelContainer:
 
 
 ## 注入悬停详情层；商店视图同享同一层。
-func set_detail(value: GameDetailLayer) -> void:
+func set_detail(value: DetailLayer) -> void:
     detail = value
     _shop.detail = value
 

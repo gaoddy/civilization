@@ -13,7 +13,7 @@ var _expanded_player_id := ""
 var _last_state: GameUiState
 
 ## 同页面的详情层，由页面注入；悬停座位行时登记。
-var detail: GameDetailLayer = null
+var detail: DetailLayer = null
 
 ## 战报浮层，由页面注入；展开战报时挂在全屏层上，允许覆盖其他 UI。
 var report_layer: Control = null

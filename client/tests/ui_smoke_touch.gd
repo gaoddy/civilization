@@ -25,7 +25,7 @@ func _check_detail_long_press() -> void:
     var stage := Control.new()
     stage.size = Vector2(1280, 720)
     add_child(stage)
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     stage.add_child(layer)
     var card := Control.new()
     card.position = DETAIL_CARD_POSITION
@@ -125,7 +125,7 @@ func _check_room_touch_select() -> void:
         _expect(panel != null and panel.visible, "长按候选卡应显示详情")
         _expect(
             instance.get("_touch_elapsed_ms") != null
-            and float(instance.get("_touch_elapsed_ms")) >= float(GameDetailLayer.LONG_PRESS_MS),
+            and float(instance.get("_touch_elapsed_ms")) >= float(DetailLayer.LONG_PRESS_MS),
             "页面应按与详情层相同的累计时钟判定长按",
         )
         _expect(
@@ -410,9 +410,9 @@ func _push_touch(canvas_point: Vector2, index: int, pressed: bool) -> void:
 ## 视口像素要按该层的全局缩放换算，才能保证真正超过阈值。
 func _cancel_shift(layer: Control) -> Vector2:
     if layer == null:
-        return Vector2(GameDetailLayer.TOUCH_CANCEL_DISTANCE + 1.0, 0.0)
+        return Vector2(DetailLayer.TOUCH_CANCEL_DISTANCE + 1.0, 0.0)
     var scale := maxf(layer.get_global_transform_with_canvas().get_scale().x, 0.001)
-    return Vector2(GameDetailLayer.TOUCH_CANCEL_DISTANCE * scale + 1.0, 0.0)
+    return Vector2(DetailLayer.TOUCH_CANCEL_DISTANCE * scale + 1.0, 0.0)
 
 
 func _push_drag(canvas_point: Vector2, index: int) -> void:

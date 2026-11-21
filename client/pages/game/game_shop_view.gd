@@ -16,7 +16,7 @@ signal sell_hover(hovering: bool, refund: int)
 const SELLER_ART := "res://assets/characters/avatars/seller_ava.png"
 
 ## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
-var detail: GameDetailLayer = null
+var detail: DetailLayer = null
 
 var _upgrade_button: GameIconButton
 var _reroll_button: GameIconButton

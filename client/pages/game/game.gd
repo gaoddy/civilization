@@ -61,7 +61,7 @@ var _overlay: GameChoiceOverlay
 var _report_layer: Control
 
 # 随从详情：覆盖全屏但不拦截输入，层级位于内容与战报之上、选择浮层之下。
-var _detail: GameDetailLayer
+var _detail: DetailLayer
 
 # 技能瞄准：弧线与候选标记，位于战报之上、选择浮层之下；本身不拦截输入。
 var _aim: GameAimLayer
@@ -134,7 +134,7 @@ func _build() -> void:
     _center = _build_center()
     body.add_child(_center)
 
-    _detail = GameDetailLayer.new()
+    _detail = DetailLayer.new()
     add_child(_detail)
     _players_panel.detail = _detail
     _recruit_view.set_detail(_detail)

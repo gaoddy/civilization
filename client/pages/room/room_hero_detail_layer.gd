@@ -1,5 +1,5 @@
 class_name RoomHeroDetailLayer
-extends GameDetailLayer
+extends DetailLayer
 ## 选英雄页悬停详情：复用详情层的悬停/长按状态机，只替换内容与定位。
 ##
 ## 桌面悬停或触控长按候选卡时，在悬停卡外侧显示名字、介绍与技能，不显示图片；

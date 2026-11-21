@@ -11,7 +11,7 @@ signal hero_power_pressed(skill_id: String)
 signal hero_power_down(skill_id: String)
 
 ## 悬停详情层，由对局页注入；英雄卡悬停时登记。
-var detail: GameDetailLayer = null
+var detail: DetailLayer = null
 
 var _hero_card: GameHeroCard
 var _side: VBoxContainer

@@ -4,10 +4,10 @@ extends RefCounted
 
 
 static func render(box: VBoxContainer, kit: DetailKit) -> void:
-    box.add_child(kit.name_label(tr("ui.game.detail.seller")))
-    box.add_child(kit.row(tr("ui.game.detail.status"), tr("ui.game.detail.shop_open")))
+    box.add_child(kit.name_label(TranslationServer.translate("ui.game.detail.seller")))
+    box.add_child(kit.row(TranslationServer.translate("ui.game.detail.status"), TranslationServer.translate("ui.game.detail.shop_open")))
     var hint := UIControls.label(
-        tr("ui.game.detail.shop_hint"),
+        TranslationServer.translate("ui.game.detail.shop_hint"),
         UITheme.font_size("font-body-sm"),
     )
     hint.custom_minimum_size = Vector2(kit.text_width, 0)

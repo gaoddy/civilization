@@ -8,17 +8,17 @@ static func render(box: VBoxContainer, data: Dictionary, kit: DetailKit) -> void
     var card_id := str(data.get("cardId", ""))
     var entry := CardDB.card(card_id)
     box.add_child(kit.name_label(CardDB.display_name(card_id)))
-    box.add_child(kit.row(tr("ui.game.detail.type"), CardText.type_text(entry)))
+    box.add_child(kit.row(TranslationServer.translate("ui.game.detail.type"), CardText.type_text(entry)))
     kit.append_classification(box, entry)
     kit.append_association(box, entry)
-    box.add_child(kit.row(tr("ui.game.detail.cost"), tr("ui.game.detail.cost_value") % CardDB.display_cost(card_id)))
-    box.add_child(kit.row(tr("ui.game.detail.initial_stats"), "%s / %s" % [
+    box.add_child(kit.row(TranslationServer.translate("ui.game.detail.cost"), TranslationServer.translate("ui.game.detail.cost_value") % CardDB.display_cost(card_id)))
+    box.add_child(kit.row(TranslationServer.translate("ui.game.detail.initial_stats"), "%s / %s" % [
         CardText.stat_text(entry.get("attack")),
         CardText.stat_text(entry.get("health")),
     ]))
     var era := str(entry.get("era", ""))
     if era != "":
-        box.add_child(kit.row(tr("ui.game.detail.era"), UIWording.enum_text("era", era)))
+        box.add_child(kit.row(TranslationServer.translate("ui.game.detail.era"), UIWording.enum_text("era", era)))
     var skill_text := CardDB.display_text(card_id)
     if skill_text != "":
         box.add_child(kit.text_block(skill_text))

@@ -5,7 +5,7 @@ extends HBoxContainer
 ## 只读展示，不发信号：对方为空显示等待配对；幽灵战只换身份块并去掉血量条。
 
 ## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
-var detail: GameDetailLayer = null
+var detail: DetailLayer = null
 
 
 func _init() -> void:

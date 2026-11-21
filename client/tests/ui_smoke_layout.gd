@@ -165,7 +165,7 @@ func _check_detail_local_composed() -> void:
     _check(frame.position.x > 0.0, "组合用例应有非零内容框原点，实际 %s" % str(frame.position))
     _check(not is_equal_approx(root.scale.x, 1.0),
         "组合用例应有非 1 的内容框缩放，实际 %s" % str(root.scale))
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     area.add_child(layer)
     layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     var anchor := Control.new()

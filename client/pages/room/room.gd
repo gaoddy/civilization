@@ -290,7 +290,7 @@ func _begin_touch(event: InputEventScreenTouch) -> void:
 func _drag_touch(event: InputEventScreenDrag) -> void:
     if event.index != _touch_index or _touch_cancelled:
         return
-    if _canvas_point(event.position).distance_to(_touch_start) > GameDetailLayer.TOUCH_CANCEL_DISTANCE:
+    if _canvas_point(event.position).distance_to(_touch_start) > DetailLayer.TOUCH_CANCEL_DISTANCE:
         _touch_cancelled = true
 
 
@@ -301,7 +301,7 @@ func _end_touch(event: InputEventScreenTouch) -> void:
     var cancelled := _touch_cancelled
     var elapsed := _touch_elapsed_ms
     _clear_touch()
-    if card == null or not is_instance_valid(card) or cancelled or elapsed >= float(GameDetailLayer.LONG_PRESS_MS):
+    if card == null or not is_instance_valid(card) or cancelled or elapsed >= float(DetailLayer.LONG_PRESS_MS):
         return
     if _is_confirmed() or card.locked:
         return

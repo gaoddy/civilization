@@ -6,7 +6,7 @@ extends PanelContainer
 ## `advance()`，本视图不发送任何意图。结果追加在河道的回合数之后。
 
 ## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
-var detail: GameDetailLayer = null
+var detail: DetailLayer = null
 
 var _state: GameUiState = null
 var _opponent_view: GameOpponentView
@@ -102,7 +102,7 @@ func _new_flow_row(node_name: String) -> HFlowContainer:
     return row
 
 
-func set_detail(value: GameDetailLayer) -> void:
+func set_detail(value: DetailLayer) -> void:
     detail = value
     _opponent_view.detail = value
 
