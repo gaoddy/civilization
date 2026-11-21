@@ -119,7 +119,7 @@ func _check_drag_preview() -> void:
     area.remove_child(card)
     var preview := UI.drag_preview(card, Vector2(10, 20), area)
     _check(is_equal_approx(preview.scale.x, scale), "拖拽预览应按内容框缩放")
-    _check(card.position.is_equal_approx(Vector2(-10, -20) / scale), "拖拽预览起手点应对齐")
+    _check(card.position.is_equal_approx(Vector2(-10, -20)), "拖拽预览起手点应对齐")
     preview.free()
     page.queue_free()
     await get_tree().process_frame

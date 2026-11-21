@@ -46,7 +46,7 @@ func hit_min(pt: float) -> int:
 
 
 ## 安全区四边边距，单位为画布单位，顺序为左、上、右、下。
-## 已落在左右留白内的边距记零，不重复扣减；窗口上下始终由内容铺满。
+## 已落在内容框外背景带内的边距记零，不重复扣减。
 func safe_insets() -> Vector4i:
     if not is_touch():
         return Vector4i.ZERO
@@ -65,7 +65,9 @@ func keyboard_inset() -> int:
     var height := DisplayServer.virtual_keyboard_get_height()
     if height <= 0:
         return 0
-    return canvas_from_pixels(float(height), base_canvas(), Vector2(DisplayServer.window_get_size()))
+    return keyboard_from_pixels(
+        float(height), base_canvas(), Vector2(DisplayServer.window_get_size())
+    )
 
 
 ## 测试入口：固定设备类型并同步基准视口；传空串恢复自动判定。
@@ -79,6 +81,16 @@ static func canvas_scale(window_size: Vector2, base: Vector2i) -> float:
     if window_size.x <= 0.0 or window_size.y <= 0.0 or base.x <= 0 or base.y <= 0:
         return 0.0
     return minf(window_size.x / float(base.x), window_size.y / float(base.y))
+
+
+## 虚拟键盘侵入内容框的高度，换算为画布单位。
+## 窄于基准比例时内容框上下留背景带，键盘先从背景带算起，只有越过内容框底边的部分才让位。
+static func keyboard_from_pixels(pixels: float, base: Vector2i, window_size: Vector2) -> int:
+    var scale := canvas_scale(window_size, base)
+    if scale <= 0.0 or pixels <= 0.0:
+        return 0
+    var band := maxf(0.0, (window_size.y - float(base.y) * scale) * 0.5)
+    return maxi(0, int(round((pixels - band) / scale)))
 
 
 ## 像素换算为画布单位。

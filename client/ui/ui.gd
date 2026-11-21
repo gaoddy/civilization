@@ -28,7 +28,8 @@ static func drag_preview(card: Control, at_position: Vector2, context: Node = nu
     var scale := root_scale(context if context != null else card)
     holder.scale = Vector2(scale, scale)
     card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    card.position = -at_position / scale
+    # 起手点是内容框局部单位；包裹层按同一比例缩放，子节点偏移不能再除缩放。
+    card.position = -at_position
     holder.add_child(card)
     return holder
 

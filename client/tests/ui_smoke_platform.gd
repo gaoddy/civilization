@@ -87,6 +87,8 @@ func _check_phone() -> void:
     )
     _check(insets == Vector4i(0, 0, 0, 29), "iPhone 安全区只在底部生效")
     _check(ScreenProfile.canvas_from_pixels(336.0, base, window) == 154, "iPhone 键盘边距")
+    # 19.5:9 内容框贴满窗口高度，没有底部背景带，键盘高度全额换算。
+    _check(ScreenProfile.keyboard_from_pixels(336.0, base, window) == 154, "iPhone 键盘无背景带抵扣")
 
 
 func _check_tablet() -> void:
@@ -108,6 +110,9 @@ func _check_tablet() -> void:
         window, base, Rect2i(12, 24, 2708, 2000), Vector2.ZERO
     )
     _check(vertical == Vector4i(6, 0, 6, 0), "iPad 上下安全区被背景带吸收")
+    # 4:3 视口内容框上下各留约 256px 背景带；键盘先从背景带算起。
+    _check(ScreenProfile.keyboard_from_pixels(336.0, base, window) == 38, "iPad 键盘抵扣背景带")
+    _check(ScreenProfile.keyboard_from_pixels(200.0, base, window) == 0, "键盘未越过背景带时为零")
 
 
 func _check(ok: bool, label: String) -> void:
