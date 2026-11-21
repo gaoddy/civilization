@@ -64,7 +64,7 @@ tests/                       # Python 标准库 unittest
 - 协议十三种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UnfreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`、`ChooseTarget`、`AbandonTarget`。`UnfreezeShop` 与 `FreezeShop` 对称：指定槽位解冻该槽位，`None` 解冻全部非空槽位，不重抽、不改实例编号、不消耗随机流。`UnfreezeShop` 要求本回合冻结过商店（`PlayerState::froze_this_turn`，回合开始清零），否则返回 `INVALID_STAGE`；冻结标记本身跨回合保留，只由解冻或重抽（手动刷新、升时代）清除。`ChooseDiscover`、`ChooseTarget` 与 `AbandonTarget` 都用于消费引擎产生的 `PendingChoice`（发现/进化、目标）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。`AbandonTarget` 只消费本座位队首的目标待选，撤销本次出牌并把原牌退回原手牌位置；没有待选或队首不是目标待选时返回 `INVALID_CHOICE`。
 - `PlayCard { hand_index, position, target }`：`position` 只对随从牌生效，是入场后的插入下标，`None` 表示追加到最右；超出当前随从数返回 `INVALID_CHOICE`。效果牌不带落点：目标缺失或不在合法池内时整条意图返回 `NO_VALID_TARGET`，合法池为空时效果落空、意图仍生效。效果牌与主动技能的 `target` 是 `TargetRef { zone, id }`，`zone` 取 `hand` / `shop` / `board`；提交时先校验实例是否属于本人在该区域，再进入合法池校验，不符返回 `NO_VALID_TARGET`。随从牌入场后判定战吼：未带 `target` 且服务端算出候选非空时只推入 `PendingChoice::Target`，由 `ChooseTarget { target }` 指定目标，本次意图内不发金色「三连奖励」、不执行 `check_triple`、不触发入场观察者；候选为空（含被过滤器收窄为空）时战吼直接落空、不产生待选，这些入场副作用照基线顺序立即执行。
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
-- 实例编号 `InstanceId` 由 `state.next_instance_id` 单调分配：商店每次刷新的每个槽位（含效果牌槽）各有一个，冻结保留原编号与冻结标记直到解冻或重抽；买入、入手牌、打出到棋盘都沿用该编号。三连合成时新建一个金色编号，并在 `sources` 记录三张原始副本的编号（不参与状态哈希）。复制品按复制方式分配新编号。
+- 实例编号 `InstanceId` 由 `state.next_instance_id` 单调分配：商店每次刷新的每个槽位（含效果牌槽）各有一个，冻结保留原编号与冻结标记直到解冻或重抽；买入、入手牌、打出到棋盘都沿用该编号。三连合成时新建一个金色编号，`TripleFormed` 事件携带被合并的三张原始副本编号（实例本身不保存来源记录）。复制品按复制方式分配新编号。
 - `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼；手牌保留随从实例（含成长等状态），不再退回卡面基础值。`PlayCard` 与 `UseHeroPower` 带 `target: Option<TargetRef>`，M0 由 AI 按区域从本人棋盘、手牌、商店依次选择目标。
 - 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录来源星级 +1（封顶 6）。打出该牌由 `GrantMinion { level: next, to: hand }` 直接随机发放一张命中本局启用玩法、`in_shop_pool: true`、星级等于该记录的池内随从到手牌；不登记发现待选、不扣共享牌池，手牌满或无候选时奖励牌照常消耗。奖励效果牌自身 `in_shop_pool: false`，不进商店、不进任何候选、不扣共享牌池；普通效果牌按商店概率进入商店槽位，但同样不扣共享牌池。
 - `PendingChoice::Target { seat, source, hand_card, hand_index, fire_ally_evolve }`：`hand_card` 是入场前的原手牌（含成长、护盾与金色标记），`hand_index` 是原手牌位置，放弃时按 `min(hand_index, len)` 插回；`fire_ally_evolve` 表示入场观察者是否推迟到目标结算后触发。目标待选期间该座位除 `ChooseTarget` 与 `AbandonTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。`ChooseTarget` 要求队首是目标待选、目标属于本人在对应区域的实体，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果，再按固定顺序补做被推迟的入场副作用：金色三连奖励 → `check_triple` → `fire_ally_evolve` 为真时触发入场观察者。`AbandonTarget` 要求来源随从仍在本人棋盘（否则 `NO_SUCH_MINION`），移除来源、把原牌插回原手牌位置、移除待选，不发战吼、不补奖励、不执行三连与入场观察者。发现与进化待选允许留到下回合；目标待选若在 `finish_recruit` 进入战斗前仍未选择，按同样规则退牌（来源仍在场时），随后照常推进阶段。
@@ -125,7 +125,10 @@ pub enum Rank { Kingdom, Phylum, Class, Order, Family, Technique, Discipline }
 impl Taxonomy {
     pub fn contains(&self, id: &str) -> bool;
     pub fn is_leaf(&self, id: &str) -> bool;
+    pub fn node_id(&self, id: &str) -> Option<u16>;
+    pub fn ancestor_ids(&self, node: u16) -> Vec<u16>;
     pub fn is_within(&self, leaf: &str, ancestor: &str) -> bool;
+    pub fn is_within_id(&self, leaf: u16, ancestor: u16) -> bool;
     pub fn path(&self, leaf: &str) -> Vec<&str>;
 }
 ```
@@ -134,7 +137,9 @@ impl Taxonomy {
 - `Rank` 对应 `taxonomy.md` 的「界 / 门 / 纲 / 目 / 科 / 技术分类 / 学科」，只表达结构，不参与匹配。
 - `is_within` 先把两侧 id 解析为整数下标，再沿 `parents` 的整数父链上溯，最多 5 层；公开签名不变，任一节点不存在返回 `false`。`names` 是下标到 id 的反向映射，与 `parents` 同序，仅用于构建期生成 `ids` / `parents`；当前运行期不读取（字段带 `#[allow(dead_code)]`，为后续 `path` 整数化保留）。
 - `path` 从叶子返回至根的 id 列表（含自身），未知节点返回空列表。
-- `Catalog` 持有 `cards`、`heroes`、`skills` 与 `taxonomy: Taxonomy`；英雄卡按 `id` 独立存储，与同名随从卡分属两个池。`Catalog` 另持私有侧表 `card_keywords: BTreeMap<String, KeywordSet>`：加载期按每张卡 `skills` 的 `keyword` 预计算卡面自带关键词；`base_keywords(card_id)` 命中侧表时直接克隆预计算值，侧表缺失（测试直接向 `cards` / `skills` 插卡）时按当前数据即时计算回退，两者口径一致。加载期校验所有卡牌的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡；`in_shop_pool: true` 的卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`），非池卡允许没有 `play:`；`CardType` 只有 `minion` / `effect`，`cards.json` 写入 `hero` 在反序列化阶段即被拒绝；英雄卡不含 `card_type`，与随从卡靠独立文件、独立结构体与独立集合区分；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
+- `Catalog` 持有 `cards`、`heroes`、`skills: Vec<Skill>`、`skill_ids: HashMap<String, SkillId>` 与 `taxonomy: Taxonomy`；技能按 id 升序编号为 `SkillId`，卡牌与英雄的 `skills` 保存整数标识，触发与效果收集按下标取技能，协议、视图与 `hero_uses` 仍以字符串技能 id 为标识。英雄卡按 `id` 独立存储，与同名随从卡分属两个池。`Catalog` 另持私有侧表 `card_keywords: BTreeMap<String, KeywordSet>`：加载期按每张卡 `skills` 的 `keyword` 预计算卡面自带关键词；`base_keywords(card_id)` 命中侧表时直接克隆预计算值，侧表缺失（测试直接向 `cards` 插卡）时按当前数据即时计算回退，两者口径一致。加载期校验所有卡牌的 `taxon` 节点存在且为叶子，`prey:` / `host:` 节点存在且只用于生物卡；`in_shop_pool: true` 的卡至少 1 条 `play:` 且取值是 13 个可启用玩法之一（不含 `neutral`），非池卡允许没有 `play:`；`CardType` 只有 `minion` / `effect`，`cards.json` 写入 `hero` 在反序列化阶段即被拒绝；英雄卡不含 `card_type`，与随从卡靠独立文件、独立结构体与独立集合区分；每张英雄卡必须有同 id 的随从卡且 `categories` 完全一致，`skills` 各自维护、不要求相同；校验失败即拒绝加载。
+- `Catalog` 的分类侧表 `card_filter_facts` 在加载期把每张卡的 `taxon`、`play:` 归属与捕食/寄生分类节点压成整数下标与位掩码（`CardFilterFacts`）；筛选按整数比较，测试直接插卡时回退即时计算。
+- 卡牌标识在状态、事件与协议中保持字符串：`MinionInstance.card_id`、`ShopSlot.card_id`、`HandCard` 与 `GameEvent` 的卡牌字段都是稳定 id，整数化只发生在目录内部（技能表与分类侧表）。
 - 按用途选池：英雄技能查询（视图、光环、战斗开始、首次刷新、回合开始与主动技能）只读 `catalog.heroes`；商店、卡池、三连、发现与棋盘随从只读 `catalog.cards`。两池同名同 id，任何路径不得跨池回落。
 
 ### 3.3 筛选与匹配
@@ -151,9 +156,9 @@ impl Taxonomy {
 | `subtype` / `id` / `type` | 保持既有语义 |
 | `keyword` / `other` | 由调用方单独处理 |
 
-- 筛选键集合如上表，不含部落类键。
-- 筛选事实由 `CardFacts` 提供：只查 `catalog.cards`，`playstyle` 读 `play:` 归属；查不到时不匹配。
-- `timesIf` 结构为 `{ key, value: Option<String>, times }`，写作 `<键>:<值>:<次数>`（如 `timesIf=playstyle:mammal:2`、`timesIf=taxon:hominidae:2`）。
+- 筛选键集合如上表，不含部落类键；`Filter.key` / `TimesIf.key` 是 `FilterKey` 枚举，未知键在解析期即报错。
+- 筛选事实由 `CardFacts` 提供：只查 `catalog.cards`，`playstyle` / `prey` / `host` / `taxon` 读 `CardFilterFacts` 的位掩码与整数下标；查不到时不匹配。
+- `timesIf` 结构为 `{ key: FilterKey, value: String, times }`，写作 `<键>:<值>:<次数>`（如 `timesIf=playstyle:mammal:2`、`timesIf=taxon:hominidae:2`），取值必填。
 - `condition` 与 `when` 复用同一套筛选键与匹配口径；选择器多个筛选并列表示同时满足。
 
 ### 3.4 卡池与候选
@@ -180,6 +185,7 @@ impl Taxonomy {
 - 经济与对局配置由生成器从产品数值文档口径抄录到 `config.json`（初始生命、棋盘/手牌/商店槽位、回合上限、伤害上下限、升时代费用、星级牌份数、商店概率、金币曲线）。
 - 输出确定性 JSON（UTF-8、两空格缩进、键排序、末尾换行）；生成物随源提交。
 - 引擎用 `include_str!` 嵌入 `server/data/v0.1/*.json`，加载期由 serde 校验结构化字段与枚举，再由 `validate` 校验跨字段组合；未知字段或非法组合直接失败。源文档 `effects` 仍写 DSL，由生成器编译为结构化数组，生成期用与 `validate` 同规则的 `check_structured` 预检，避免 `make data` 通过而引擎加载失败。
+- 效果参数按 `op` 类型化：`skills.json` 的 `params` 仍是扁平对象，自定义 `Effect` 反序列化按 `op` 把对象解码为 `Params` 的对应变体（如 `Params::Decompose(DecomposeParams)`），不属于该原语的字段与缺失的必填字段都在加载期被拒绝；跨字段规则（光环可用原语、`token`/`card` 二选一、`level` 取值等）仍由 `validate` 校验。执行层按变体解构，不再共享可空参数包。
 - `make data-check` 重新生成到临时文件并比对（含文本表漂移检测），同时运行 DSL 审计。
 
 ## 5. 命令
@@ -320,7 +326,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 - 光环只经 `fold_auras` 折叠进克隆：把 `state.auras` 的派生值写入克隆的 `aura` 层并保留「光环失效不致死」的夹紧，持久实例的 `aura` 层始终为 0。
 - `state.auras` 由引擎在固定时机重算：`recompute_auras` 全量扫描全部未出局座位并整体替换，用于开局、回合开始、招募结束（`Engine::finish_recruit`）与结算（`Engine::resolve_settle`）；`recompute_auras_for(seat)` 只重算单个座位，供 `Engine::apply` 在每条意图成功后调用——移除并重建该座位棋盘的条目，同时清理已不在任何未出局玩家棋盘上的陈旧条目，结果与全量重算一致。
 - `hash.rs` 编码 `stats` 各分量（含 `current`）；编码变化会改变状态哈希，同代码重放仍保持确定。
-- 关键词仍按原字符串编码：`hash.rs` 对光环 `keywords` 与随从 `granted` 逐条写入关键词原文。战斗内部的 `KeywordSet` 位图只用于判定与层数累加，不参与状态哈希，因此关键词位图化不改变既有日志与黄金基线的哈希。
+- 关键词编码：光环关键词存 `KeywordSet` 位图，`hash.rs` 经 `names()` 输出排序后的原文逐条写入；随从的 `granted` 仍按 `(关键词原文, 时长)` 逐条写入。战斗内部的位图判定与层数累加不改变哈希口径，因此关键词位图化不改变既有日志与黄金基线的哈希。
 
 ### 10.1 伤害来源与击杀归属
 
@@ -362,10 +368,18 @@ pub enum Op { /* 既有 */ Decompose }
 
 pub enum Basis { Original, CombatStart, PreKill }
 
-pub struct Params {
-    // 既有
+pub struct DecomposeParams {
     /// 分解取生命值的口径：original / combat_start / pre_kill。
-    pub basis: Option<Basis>,
+    pub basis: Basis,
+    /// 必填：permanent / combat；instant 由校验拒绝。
+    pub duration: Duration,
+    pub condition: Option<Condition>,
+    pub when: Option<Filter>,
+}
+
+pub enum Params {
+    // 其他原语的变体省略
+    Decompose(DecomposeParams),
 }
 ```
 
@@ -379,7 +393,7 @@ pub struct Params {
 | `pre_kill` | 承受致命伤害前的当前生命值 | `pre_kill_health[victim]` |
 
 - `BattleField` 持有 `combat_start_health` / `pre_kill_health` 两张 `BTreeMap<InstanceId, i32>`：构造时写入双方全部随从的当前生命值，召唤物在召唤时写入 `combat_start_health`；`apply_damage` 在本段伤害足以致死时、扣血前写入 `pre_kill_health`。
-- `duration` 必填，数据校验只接受 `permanent` / `combat`：`permanent` 走 `health.add_permanent`，`combat` 走 `health.add_turn`；`instant` 或省略由校验拒绝，执行期保守跳过。
+- `duration` 必填，数据校验只接受 `permanent` / `combat`：`permanent` 走 `health.add_permanent`，`combat` 走 `health.add_turn`；`instant` 由校验拒绝、省略由反序列化拒绝；执行期保守跳过。
 - 获得量为 ≤0、目标已离场、`event_target` 缺失或快照缺失时静默跳过，不报错。
 - 金色来源的双倍触发复用战斗效果的 `passes`：携带者金色时整段效果执行两遍，分解因此触发两次。
 - 触发时点由技能数据选择（`OnKill` / `OnFriendlyDeath` / `OnAllyKill`），引擎不限制 `Decompose` 只能配这些触发。

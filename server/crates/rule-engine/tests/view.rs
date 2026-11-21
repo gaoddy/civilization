@@ -18,7 +18,7 @@ use rule_engine::view::{
 };
 
 fn setup() -> (Engine, GameState) {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
     engine
         .start_game(&mut state, &heroes())
         .expect("开局应成功");
@@ -73,19 +73,15 @@ fn assert_all_false(affordances: &Affordances) {
 fn hero_power_reads_hero_pool() {
     let (mut engine, state) = setup();
     let hero_id = state.players[0].hero.clone().expect("应已选择英雄");
-    let skill_id = "test-hero-only-active";
-    engine.catalog.skills.insert(
-        skill_id.to_string(),
-        Skill {
-            id: skill_id.to_string(),
-            keyword: None,
-            effects: effects_of("OnActivate|DealDamage|enemy:single|amount=1"),
-            cost: Some(1),
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = engine.catalog.insert_skill(Skill {
+        id: "test-hero-only-active".to_string(),
+        keyword: None,
+        effects: effects_of("OnActivate|DealDamage|enemy:single|amount=1"),
+        cost: Some(1),
+        uses_per_turn: None,
+    });
     // 只把技能挂到英雄池；同名随从卡保持原技能。
-    engine.catalog.heroes.get_mut(&hero_id).unwrap().skills = vec![skill_id.to_string()];
+    engine.catalog.heroes.get_mut(&hero_id).unwrap().skills = vec![skill_id];
 
     let seat_view = view(&engine, &state, 0).expect("座位 0 的视图应存在");
     assert_eq!(
@@ -95,7 +91,7 @@ fn hero_power_reads_hero_pool() {
             .iter()
             .map(|power| power.skill_id.as_str())
             .collect::<Vec<_>>(),
-        vec![skill_id],
+        vec!["test-hero-only-active"],
         "英雄主动技能只读英雄池"
     );
     assert!(
@@ -457,9 +453,7 @@ fn board_view_folds_auras_into_stats_and_keywords() {
         AuraEffect {
             attack: 2,
             health: 1,
-            keywords: ["divine_shield".to_string(), "光环测试词".to_string()]
-                .into_iter()
-                .collect(),
+            keywords: rule_engine::keyword::KeywordSet::from_names(["divine_shield", "光环测试词"]),
             floor_one: true,
         },
     );

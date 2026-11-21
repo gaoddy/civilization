@@ -14,15 +14,16 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::combat::{self, BattleField, CombatAction, CombatSetup, DamageSource};
 use crate::data::{
-    CardType, Catalog, Category, CategoryKind, Playstyle, card_in_pool, has_play, play_categories,
+    CardFilterFacts, CardType, Catalog, Playstyle, card_in_pool, play_bit, play_categories,
 };
 use crate::effects::{
-    CopyState, Duration, Effect, Filter, Op, Pick, Selector, Side, TargetRef, TimesIf, Trigger,
-    Zone,
+    CopyState, Duration, Effect, Filter, FilterKey, Op, Params, Pick, Selector, Side, TargetRef,
+    TimesIf, Trigger, Zone,
 };
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::intent::{Reject, RejectCode};
+use crate::keyword::Keyword;
 use crate::recruit::new_minion;
 use crate::rng::{RngStreams, Stream};
 use crate::state::{
@@ -58,12 +59,7 @@ impl Engine {
     /// `OnPlay` / `OnActivate`（以及来源在棋盘上的 `OnPlayEffect`）从来源卡牌
     /// 收集该时机下的全部效果；`OnUse` 收集本座位所有响应打出效果牌的随从。
     /// 本任务未实现的触发时机返回空事件。
-    pub fn fire(
-        &mut self,
-        state: &mut GameState,
-        trigger: Trigger,
-        ctx: EffectCtx,
-    ) -> Vec<GameEvent> {
+    pub fn fire(&self, state: &mut GameState, trigger: Trigger, ctx: EffectCtx) -> Vec<GameEvent> {
         match trigger {
             Trigger::OnPlay
             | Trigger::OnPlayEffect
@@ -82,7 +78,7 @@ impl Engine {
     ///
     /// 效果牌打出时没有棋盘实例，调用方用本方法把牌面 `card_id` 交给执行器。
     pub fn fire_card(
-        &mut self,
+        &self,
         state: &mut GameState,
         card_id: &str,
         trigger: Trigger,
@@ -96,7 +92,7 @@ impl Engine {
     /// 英雄可以有多个主动技能；`fire` 按归属收集英雄全部技能，主动技能必须只结算
     /// 被选中的那一个，否则多技能英雄会一次放出全部技能。
     pub(crate) fn fire_skill(
-        &mut self,
+        &self,
         state: &mut GameState,
         skill_id: &str,
         trigger: Trigger,
@@ -108,7 +104,7 @@ impl Engine {
 
     /// 执行一段效果；`chosen` 可用于覆盖 `target` 选择器的显式目标。
     pub fn apply_op(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -128,7 +124,7 @@ impl Engine {
             effective.target = Some(id);
         }
 
-        if let Some(condition) = &effect.params.condition
+        if let Some(condition) = effect.params.condition()
             && !self.condition_holds(state, condition, &effective)
         {
             return Vec::new();
@@ -136,7 +132,7 @@ impl Engine {
 
         let mut targets = self.resolve_selector_mut(state, &effect.selector, &effective);
 
-        if let Some(when) = &effect.params.when
+        if let Some(when) = effect.params.when()
             && (effect.op == Op::DealDamage || matches!(effect.selector, Selector::Target { .. }))
         {
             targets.retain(|id| self.filter_matches(state, when, *id, &effective));
@@ -168,9 +164,13 @@ impl Engine {
             Op::CannotAttack => {
                 // 卡面「本场无法攻击」是唯一写法；省略 duration 时按 `Combat` 处理，
                 // 否则 `Instant` 标记将永远没有清除时点。
-                let duration = match effect.params.duration {
-                    Some(Duration::Instant) | None => Duration::Combat,
-                    Some(other) => other,
+                let duration = match &effect.params {
+                    Params::CannotAttack(params) => match params.duration {
+                        Some(Duration::Instant) | None => Duration::Combat,
+                        Some(other) => other,
+                    },
+                    // 参数变体与 op 由构造保证一致；不一致时按「本场」处理。
+                    _ => Duration::Combat,
                 };
                 for id in targets {
                     if let Some((_, minion)) = locate_mut(state, id) {
@@ -322,7 +322,7 @@ impl Engine {
     ///
     /// 与 `effects_of` 的过滤口径一致：只取该时机、且招募阶段的 `OnPlay` 不含敌方选择器。
     pub(crate) fn skill_effects_of(&self, skill_id: &str, trigger: Trigger) -> Vec<Effect> {
-        let Some(skill) = self.catalog.skills.get(skill_id) else {
+        let Some(skill) = self.catalog.skill_by_name(skill_id) else {
             return Vec::new();
         };
         skill
@@ -334,15 +334,26 @@ impl Engine {
             .collect()
     }
 
-    fn skill_effects(&self, skills: &[String], trigger: Trigger) -> Vec<Effect> {
-        skills
-            .iter()
-            .flat_map(|skill_id| self.skill_effects_of(skill_id, trigger))
-            .collect()
+    fn skill_effects(&self, skills: &[crate::data::SkillId], trigger: Trigger) -> Vec<Effect> {
+        let mut effects = Vec::new();
+        for skill_id in skills {
+            effects.extend(
+                self.catalog
+                    .skill(*skill_id)
+                    .effects
+                    .iter()
+                    .filter(|effect| effect.trigger == trigger)
+                    .filter(|effect| {
+                        !(trigger == Trigger::OnPlay && is_enemy_selector(&effect.selector))
+                    })
+                    .cloned(),
+            );
+        }
+        effects
     }
 
     pub(crate) fn run_card_effects(
-        &mut self,
+        &self,
         state: &mut GameState,
         card_id: &str,
         trigger: Trigger,
@@ -354,7 +365,7 @@ impl Engine {
 
     /// 依次执行一段已收集的效果；金色随从连续执行两遍。
     fn run_effects(
-        &mut self,
+        &self,
         state: &mut GameState,
         effects: &[Effect],
         ctx: &EffectCtx,
@@ -370,7 +381,7 @@ impl Engine {
     }
 
     /// `OnUse`：本座位所有带响应效果的随从，按站位顺序依次结算。
-    fn fire_on_use(&mut self, state: &mut GameState, ctx: &EffectCtx) -> Vec<GameEvent> {
+    fn fire_on_use(&self, state: &mut GameState, ctx: &EffectCtx) -> Vec<GameEvent> {
         let Some(player) = state.players.get(usize::from(ctx.seat)) else {
             return Vec::new();
         };
@@ -450,7 +461,7 @@ impl Engine {
         reject_on_empty_pool: bool,
     ) -> Result<(), Reject> {
         for effect in effects {
-            if let Some(condition) = &effect.params.condition
+            if let Some(condition) = effect.params.condition()
                 && !self.condition_holds(state, condition, ctx)
             {
                 continue;
@@ -622,9 +633,10 @@ impl Engine {
         };
         card.skills.iter().any(|skill_id| {
             self.catalog
-                .skills
-                .get(skill_id)
-                .is_some_and(|skill| skill.effects.iter().any(|effect| effect.trigger == trigger))
+                .skill(*skill_id)
+                .effects
+                .iter()
+                .any(|effect| effect.trigger == trigger)
         })
     }
 
@@ -719,18 +731,17 @@ impl Engine {
         let Some(facts) = card_facts(&self.catalog, card_id) else {
             return false;
         };
-        match filter.key.as_str() {
-            "keyword" => minion.is_some_and(|minion| {
-                combat::keywords(&self.catalog, minion).contains(&filter.value)
+        match filter.key {
+            FilterKey::Keyword => minion.is_some_and(|minion| {
+                combat::keyword_set(&self.catalog, minion).contains_name(&filter.value)
             }),
-            "other" => {
+            FilterKey::Other => {
                 if filter.value == "true" {
                     ctx.source != Some(id)
                 } else {
                     true
                 }
             }
-            // 加载期已拒绝未知筛选键；条件里的未知键按「匹配不到任何结果」处理。
             key => facts.matches(&self.catalog, key, &filter.value),
         }
     }
@@ -789,14 +800,17 @@ impl Engine {
     }
 
     fn apply_growth(&self, state: &mut GameState, effect: &Effect, targets: &[InstanceId]) {
-        let base_times = effect.params.times.unwrap_or(1);
-        let health_only = effect.params.health_only == Some(true);
+        let Params::Growth(params) = &effect.params else {
+            return;
+        };
+        let base_times = params.times;
+        let health_only = params.health_only == Some(true);
 
         for id in targets {
             let Some((_, minion)) = locate_mut(state, *id) else {
                 continue;
             };
-            let times = match &effect.params.times_if {
+            let times = match &params.times_if {
                 Some(times_if) if self.times_if_matches(&minion.card_id, times_if) => {
                     times_if.times
                 }
@@ -812,9 +826,12 @@ impl Engine {
     }
 
     fn apply_modify_stats(&self, state: &mut GameState, effect: &Effect, targets: &[InstanceId]) {
-        let attack = effect.params.attack.unwrap_or(0);
-        let health = effect.params.health.unwrap_or(0);
-        let turn_scoped = effect.params.duration == Some(Duration::Combat);
+        let Params::ModifyStats(params) = &effect.params else {
+            return;
+        };
+        let attack = params.attack.unwrap_or(0);
+        let health = params.health.unwrap_or(0);
+        let turn_scoped = params.duration == Some(Duration::Combat);
         for id in targets {
             if let Some((_, minion)) = locate_mut(state, *id) {
                 if turn_scoped {
@@ -830,12 +847,13 @@ impl Engine {
     }
 
     fn apply_grant_keyword(&self, state: &mut GameState, effect: &Effect, targets: &[InstanceId]) {
-        let Some(keyword) = &effect.params.keyword else {
+        let Params::GrantKeyword(params) = &effect.params else {
             return;
         };
+        let keyword = &params.keyword;
         let name = keyword.keyword.as_str();
-        let layer = keyword.value.or(effect.params.value);
-        let duration = effect.params.duration.unwrap_or(Duration::Instant);
+        let layer = keyword.value.or(params.value);
+        let duration = params.duration.unwrap_or(Duration::Instant);
 
         for id in targets {
             let Some((_, minion)) = locate_mut(state, *id) else {
@@ -903,8 +921,11 @@ impl Engine {
         if locate(state, source_id).is_none() {
             return;
         }
-        let duration = effect.params.duration.unwrap_or(Duration::Combat);
-        let stats_only = effect.params.stats_only.unwrap_or(false);
+        let Params::Mimic(params) = &effect.params else {
+            return;
+        };
+        let duration = params.duration;
+        let stats_only = params.stats_only.unwrap_or(false);
         let copied: Vec<(i32, i32, Vec<String>)> = targets
             .iter()
             .filter_map(|id| {
@@ -915,9 +936,7 @@ impl Engine {
                 let keywords = if stats_only {
                     Vec::new()
                 } else {
-                    combat::keywords_without_aura(&self.catalog, target)
-                        .into_iter()
-                        .collect::<Vec<_>>()
+                    combat::keywords_without_aura(&self.catalog, target).names()
                 };
                 Some((target.attack(), target.health(), keywords))
             })
@@ -966,7 +985,10 @@ impl Engine {
         if locate(state, source_id).is_none() {
             return;
         }
-        let limit = effect.params.value.unwrap_or(0);
+        let Params::Devour(params) = &effect.params else {
+            return;
+        };
+        let limit = params.value;
         for id in targets {
             if !self.is_enemy_target(state, ctx.seat, *id) {
                 continue;
@@ -1017,7 +1039,7 @@ impl Engine {
     /// 立即离场并结算亡语。爆发每局最多一次（`latent_used`）；金色按通用规则
     /// 触发两遍，但第一遍爆发会清零层数，第二遍因此只加 0 点攻击且不会再次爆发。
     fn apply_latent(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -1037,7 +1059,10 @@ impl Engine {
         };
 
         let layers = source.contagion.max(0);
-        let amount = effect.params.amount.unwrap_or(0).max(0);
+        let Params::Latent(params) = &effect.params else {
+            return Vec::new();
+        };
+        let amount = params.amount.max(0);
         source
             .stats
             .attack
@@ -1045,11 +1070,10 @@ impl Engine {
 
         // `count = 0` 时没有爆发可结算：不清层、不置标记，避免白白消耗
         // 「每局一次」的爆发机会。
-        let count = effect.params.count.unwrap_or(0).max(0);
+        let count = params.count.max(0);
         let burst = count > 0
             && !source.latent_used
-            && effect
-                .params
+            && params
                 .threshold
                 .is_some_and(|threshold| layers >= threshold);
         if !burst {
@@ -1097,7 +1121,8 @@ impl Engine {
         if amount == 0 {
             return 0;
         }
-        if combat::keywords(&self.catalog, minion).contains("divine_shield") && !minion.shield_used
+        if combat::keyword_set(&self.catalog, minion).contains(Keyword::DivineShield)
+            && !minion.shield_used
         {
             minion.shield_used = true;
             return 0;
@@ -1118,8 +1143,11 @@ impl Engine {
         effect: &Effect,
         targets: &[InstanceId],
     ) -> Vec<GameEvent> {
-        let amount = effect.params.amount.unwrap_or(0);
-        let cannot_kill = effect.params.can_kill == Some(false);
+        let Params::DealDamage(params) = &effect.params else {
+            return Vec::new();
+        };
+        let amount = params.amount;
+        let cannot_kill = params.can_kill == Some(false);
         let mut events = Vec::new();
 
         for id in targets {
@@ -1148,10 +1176,7 @@ impl Engine {
         let Some(facts) = card_facts(&self.catalog, card_id) else {
             return false;
         };
-        let Some(value) = times_if.value.as_deref() else {
-            return false;
-        };
-        facts.matches(&self.catalog, &times_if.key, value)
+        facts.matches(&self.catalog, times_if.key, &times_if.value)
     }
 
     // -----------------------------------------------------------------------
@@ -1160,13 +1185,16 @@ impl Engine {
 
     /// 执行 `Summon`：token 直接创建，card 从池中扣 1（池空创建副本）。
     fn summon_recruit_from_effect(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         _targets: &[InstanceId],
         ctx: &EffectCtx,
     ) {
-        let count = effect.params.count.unwrap_or(1).max(0);
+        let Params::Summon(params) = &effect.params else {
+            return;
+        };
+        let count = params.count.max(0);
         let adjacent = matches!(
             effect.selector,
             Selector::Side {
@@ -1198,7 +1226,10 @@ impl Engine {
     /// 解析召唤来源：`token` 只命中非池卡（衍生物），`card` 只命中池内卡；
     /// 返回 `(card_id, 是否扣池)`。
     fn recruit_summon_card(&self, effect: &Effect) -> Option<(String, bool)> {
-        if let Some(token_id) = &effect.params.token
+        let Params::Summon(params) = &effect.params else {
+            return None;
+        };
+        if let Some(token_id) = &params.token
             && self
                 .catalog
                 .cards
@@ -1207,7 +1238,7 @@ impl Engine {
         {
             return Some((token_id.clone(), false));
         }
-        if let Some(card_id) = &effect.params.card
+        if let Some(card_id) = &params.card
             && self
                 .catalog
                 .cards
@@ -1220,12 +1251,7 @@ impl Engine {
     }
 
     /// 友方随从获得成长后，触发其他随从的 `OnAllyGrowth`。
-    fn fire_ally_growth_recruit(
-        &mut self,
-        state: &mut GameState,
-        seat: Seat,
-        grown: &[InstanceId],
-    ) {
+    fn fire_ally_growth_recruit(&self, state: &mut GameState, seat: Seat, grown: &[InstanceId]) {
         if grown.is_empty() {
             return;
         }
@@ -1259,7 +1285,7 @@ impl Engine {
     ///
     /// `position` 为 `None` 时追加到最右侧；`charge_pool` 为真且池中有份数时扣 1。
     pub(crate) fn summon_recruit(
-        &mut self,
+        &self,
         state: &mut GameState,
         seat: Seat,
         card_id: &str,
@@ -1285,7 +1311,7 @@ impl Engine {
 
     /// 召唤后触发同一棋盘上其他随从的 `OnAllySummon`。
     pub(crate) fn fire_ally_summon_recruit(
-        &mut self,
+        &self,
         state: &mut GameState,
         seat: Seat,
         summoned: InstanceId,
@@ -1322,7 +1348,7 @@ impl Engine {
     /// 金色随从复制的仍是金色，卡面基础值同样 ×2。
     /// 复制品落地后与购买、发现、获得一致立即做三连判定（核心规则 §6.1、§6.10）。
     fn apply_recruit_copy(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         targets: &[InstanceId],
@@ -1333,8 +1359,11 @@ impl Engine {
         };
         let hand_slots = self.catalog.config.hand_slots;
         let board_slots = self.catalog.config.board_slots;
-        let to = effect.params.to.unwrap_or(Zone::Hand);
-        let full = effect.params.state.unwrap_or(CopyState::Base) == CopyState::Current;
+        let Params::Copy(params) = &effect.params else {
+            return Vec::new();
+        };
+        let to = params.to;
+        let full = params.state.unwrap_or(CopyState::Base) == CopyState::Current;
 
         let mut copies: Vec<MinionInstance> = Vec::new();
         if matches!(
@@ -1369,7 +1398,6 @@ impl Engine {
                         let id = state.next_instance_id;
                         state.next_instance_id = id.saturating_add(1);
                         copy.instance_id = id;
-                        copy.sources.clear();
                         player.hand.push(HandCard::Minion(copy));
                     }
                 }
@@ -1378,7 +1406,6 @@ impl Engine {
                         let id = state.next_instance_id;
                         state.next_instance_id = id.saturating_add(1);
                         copy.instance_id = id;
-                        copy.sources.clear();
                         player.board.push(copy);
                     }
                 }
@@ -1390,8 +1417,8 @@ impl Engine {
 
     /// 按复制口径生成新实例：`full` 时整体克隆来源，否则按卡面重建。
     ///
-    /// 两种口径都给副本分配新的实例编号并清空来源记录；战场临时属性层
-    /// （`turn`、`aura`）不随副本离开战场。
+    /// 两种口径都给副本分配新的实例编号；战场临时属性层（`turn`、`aura`）
+    /// 不随副本离开战场。
     fn copy_of_catalog(&self, source: &MinionInstance, full: bool) -> MinionInstance {
         let mut copy = if full {
             source.clone()
@@ -1409,19 +1436,13 @@ impl Engine {
         copy.stats.health.set_aura(0);
         copy.attacks_left = 0;
         copy.cannot_attack = false;
-        copy.sources.clear();
         // 副本是新的入场，延迟战吼不继承来源的结算标记。
         copy.delayed_battlecry_used = false;
         copy
     }
 
     /// 回合开始传染致死：结算亡语（不含播种技能本身）。
-    pub(crate) fn fire_death_recruit(
-        &mut self,
-        state: &mut GameState,
-        card_id: &str,
-        ctx: &EffectCtx,
-    ) {
+    pub(crate) fn fire_death_recruit(&self, state: &mut GameState, card_id: &str, ctx: &EffectCtx) {
         let effects = self.recruit_effects_filtered(card_id, Trigger::OnDeath, Some(SOW_KEYWORD));
         let passes = if ctx.golden { 2 } else { 1 };
         for _ in 0..passes {
@@ -1442,9 +1463,7 @@ impl Engine {
         };
         let mut effects = Vec::new();
         for skill_id in &card.skills {
-            let Some(skill) = self.catalog.skills.get(skill_id) else {
-                continue;
-            };
+            let skill = self.catalog.skill(*skill_id);
             if let Some(skip) = skip_keyword
                 && skill.keyword.as_deref() == Some(skip)
             {
@@ -1596,10 +1615,10 @@ impl Engine {
         self.combat_effects(card_id, Trigger::OnDeath)
             .into_iter()
             .find_map(|effect| match effect.op {
-                Op::Revive => Some((
-                    effect.params.attack.unwrap_or(0),
-                    effect.params.health.unwrap_or(0),
-                )),
+                Op::Revive => match &effect.params {
+                    Params::Revive(params) => Some((params.attack, params.health)),
+                    _ => None,
+                },
                 _ => None,
             })
     }
@@ -1610,7 +1629,12 @@ impl Engine {
     pub(crate) fn death_recall(&self, card_id: &str) -> bool {
         self.combat_effects(card_id, Trigger::OnDeath)
             .into_iter()
-            .any(|effect| effect.op == Op::Recall && effect.params.to == Some(Zone::Hand))
+            .any(|effect| {
+                matches!(
+                    &effect.params,
+                    Params::Recall(params) if params.to == Zone::Hand
+                )
+            })
     }
 
     /// 召唤后触发召唤者棋盘的 `OnAllySummon`。
@@ -1694,14 +1718,14 @@ impl Engine {
         effect: &Effect,
         ctx: &EffectCtx,
     ) {
-        if let Some(condition) = &effect.params.condition
+        if let Some(condition) = effect.params.condition()
             && !self.combat_condition_holds(field, condition, ctx)
         {
             return;
         }
 
         let mut targets = self.combat_targets(field, &effect.selector, ctx, rng);
-        if let Some(when) = &effect.params.when
+        if let Some(when) = effect.params.when()
             && (effect.op == Op::DealDamage || matches!(effect.selector, Selector::Target { .. }))
         {
             targets.retain(|id| self.combat_filter_matches(field, when, *id, ctx));
@@ -1709,13 +1733,16 @@ impl Engine {
 
         match effect.op {
             Op::Growth => {
-                let health_only = effect.params.health_only == Some(true);
-                let base_times = effect.params.times.unwrap_or(1);
+                let Params::Growth(params) = &effect.params else {
+                    return;
+                };
+                let health_only = params.health_only == Some(true);
+                let base_times = params.times;
                 for id in targets {
                     let Some(minion) = field.minion(id) else {
                         continue;
                     };
-                    let times = match &effect.params.times_if {
+                    let times = match &params.times_if {
                         Some(times_if) if self.times_if_matches(&minion.card_id, times_if) => {
                             times_if.times
                         }
@@ -1735,22 +1762,26 @@ impl Engine {
                 }
             }
             Op::ModifyStats => {
+                let Params::ModifyStats(params) = &effect.params else {
+                    return;
+                };
                 let modifier = Modifier {
-                    attack: effect.params.attack.unwrap_or(0),
-                    health: effect.params.health.unwrap_or(0),
-                    duration: effect.params.duration.unwrap_or(Duration::Instant),
+                    attack: params.attack.unwrap_or(0),
+                    health: params.health.unwrap_or(0),
+                    duration: params.duration.unwrap_or(Duration::Instant),
                 };
                 for id in targets {
                     field.modify_stats(id, modifier.clone());
                 }
             }
             Op::GrantKeyword => {
-                let Some(keyword) = &effect.params.keyword else {
+                let Params::GrantKeyword(params) = &effect.params else {
                     return;
                 };
+                let keyword = &params.keyword;
                 let name = keyword.keyword.as_str();
-                let layer = keyword.value.or(effect.params.value);
-                let duration = effect.params.duration.unwrap_or(Duration::Instant);
+                let layer = keyword.value.or(params.value);
+                let duration = params.duration.unwrap_or(Duration::Instant);
                 for id in targets {
                     let Some(minion) = field.minion_mut(id) else {
                         continue;
@@ -1790,8 +1821,11 @@ impl Engine {
                 }
             }
             Op::DealDamage => {
-                let amount = effect.params.amount.unwrap_or(0);
-                let can_kill = effect.params.can_kill != Some(false);
+                let Params::DealDamage(params) = &effect.params else {
+                    return;
+                };
+                let amount = params.amount;
+                let can_kill = params.can_kill != Some(false);
                 // 效果伤害归因给施放该效果的随从；无来源效果不产生击杀。
                 for id in targets {
                     match ctx.source {
@@ -1834,13 +1868,14 @@ impl Engine {
         targets: &[InstanceId],
         ctx: &EffectCtx,
     ) {
-        let (Some(basis), Some(duration)) = (effect.params.basis, effect.params.duration) else {
+        let Params::Decompose(params) = &effect.params else {
             return;
         };
+        let (basis, duration) = (params.basis, params.duration);
         let Some(victim) = ctx.event_target else {
             return;
         };
-        if let Some(when) = &effect.params.when
+        if let Some(when) = effect.params.when()
             && !self.combat_filter_matches(field, when, victim, ctx)
         {
             return;
@@ -1883,8 +1918,11 @@ impl Engine {
         if field.locate(source_id).is_none() {
             return;
         }
-        let duration = effect.params.duration.unwrap_or(Duration::Combat);
-        let stats_only = effect.params.stats_only.unwrap_or(false);
+        let Params::Mimic(params) = &effect.params else {
+            return;
+        };
+        let duration = params.duration;
+        let stats_only = params.stats_only.unwrap_or(false);
         for target_id in targets {
             if !field.is_alive(*target_id) {
                 continue;
@@ -1900,9 +1938,7 @@ impl Engine {
             let keywords: Vec<String> = if stats_only {
                 Vec::new()
             } else {
-                combat::keywords_without_aura(&self.catalog, target)
-                    .into_iter()
-                    .collect()
+                combat::keywords_without_aura(&self.catalog, target).names()
             };
             let Some(source) = field.minion(source_id) else {
                 continue;
@@ -1950,7 +1986,10 @@ impl Engine {
         let Some((source_side, _)) = field.locate(source_id) else {
             return;
         };
-        let limit = effect.params.value.unwrap_or(0);
+        let Params::Devour(params) = &effect.params else {
+            return;
+        };
+        let limit = params.value;
         for target_id in targets {
             let Some((target_side, _)) = field.locate(*target_id) else {
                 continue;
@@ -2015,7 +2054,10 @@ impl Engine {
         let Some((source_side, _)) = field.locate(source_id) else {
             return;
         };
-        let amount = effect.params.amount.unwrap_or(0).max(0);
+        let Params::Detonate(params) = &effect.params else {
+            return;
+        };
+        let amount = params.amount.max(0);
         for target_id in targets {
             let Some((target_side, _)) = field.locate(*target_id) else {
                 continue;
@@ -2030,7 +2072,8 @@ impl Engine {
             if layers <= 0 {
                 continue;
             }
-            let shielded = combat::keywords(&self.catalog, target).contains("divine_shield")
+            let shielded = combat::keyword_set(&self.catalog, target)
+                .contains(Keyword::DivineShield)
                 && !target.shield_used;
             if let Some(target) = field.minion_mut(*target_id) {
                 target.contagion = 0;
@@ -2055,8 +2098,7 @@ impl Engine {
                 )
             };
 
-            let reached = effect
-                .params
+            let reached = params
                 .threshold
                 .is_some_and(|threshold| layers >= threshold);
             // 按层伤害已经致死时不再补一次致死伤害，避免重复击杀记录。
@@ -2098,9 +2140,10 @@ impl Engine {
         let Some((source_side, _)) = field.locate(source_id) else {
             return;
         };
-        let Some(threshold) = effect.params.threshold else {
+        let Params::Convert(params) = &effect.params else {
             return;
         };
+        let threshold = params.threshold;
         for target_id in targets {
             let Some((target_side, _)) = field.locate(*target_id) else {
                 continue;
@@ -2116,7 +2159,7 @@ impl Engine {
             }
 
             self.apply_lethal_damage(field, *target_id, source_id);
-            let token = effect.params.token.clone().unwrap_or_default();
+            let token = params.token.clone().unwrap_or_default();
             let states = field.snapshots(&self.catalog, &[*target_id]);
             field.push_action(
                 CombatAction::Converted {
@@ -2156,7 +2199,10 @@ impl Engine {
         else {
             return;
         };
-        let count = effect.params.count.unwrap_or(1).max(0);
+        let Params::Salvage(params) = &effect.params else {
+            return;
+        };
+        let count = params.count.max(0);
         if count == 0 {
             return;
         }
@@ -2263,7 +2309,13 @@ impl Engine {
         ctx: &EffectCtx,
         side: usize,
     ) {
-        let count = effect.params.count.unwrap_or(1).max(0);
+        // 召唤参数也可来自 `Convert`：转化致死目标后在同一来源方召唤 Token。
+        let count = match &effect.params {
+            Params::Summon(params) => params.count,
+            Params::Convert(params) => params.count.unwrap_or(1),
+            _ => return,
+        }
+        .max(0);
         let adjacent = matches!(
             effect.selector,
             Selector::Side {
@@ -2307,14 +2359,19 @@ impl Engine {
         field: &mut BattleField,
         effect: &Effect,
     ) -> Option<MinionInstance> {
-        if let Some(token_id) = &effect.params.token {
+        let (token, card) = match &effect.params {
+            Params::Summon(params) => (params.token.as_ref(), params.card.as_ref()),
+            Params::Convert(params) => (params.token.as_ref(), params.card.as_ref()),
+            _ => return None,
+        };
+        if let Some(token_id) = token {
             self.catalog
                 .cards
                 .get(token_id)
                 .filter(|card| !card.in_shop_pool)?;
             return Some(new_minion(&self.catalog, 0, token_id, false));
         }
-        if let Some(card_id) = &effect.params.card {
+        if let Some(card_id) = card {
             self.catalog
                 .cards
                 .get(card_id)
@@ -2332,9 +2389,12 @@ impl Engine {
         ctx: &EffectCtx,
         targets: &[InstanceId],
     ) {
-        let to = effect.params.to.unwrap_or(Zone::Hand);
+        let Params::Copy(params) = &effect.params else {
+            return;
+        };
+        let to = params.to;
         // 战斗内无法读取持久手牌；`from=hand` 在此阶段按无目标处理。
-        if effect.params.from == Some(Zone::Hand) {
+        if params.from == Some(Zone::Hand) {
             return;
         }
         match to {
@@ -2364,7 +2424,6 @@ impl Engine {
                         break;
                     }
                     copy.instance_id = field.new_instance_id();
-                    copy.sources.clear();
                     let _ = field.append(&self.catalog, side, copy);
                 }
             }
@@ -2395,9 +2454,7 @@ impl Engine {
         };
         let mut effects = Vec::new();
         for skill_id in &card.skills {
-            let Some(skill) = self.catalog.skills.get(skill_id) else {
-                continue;
-            };
+            let skill = self.catalog.skill(*skill_id);
             if let Some(skip) = skip_keyword
                 && skill.keyword.as_deref() == Some(skip)
             {
@@ -2548,9 +2605,11 @@ impl Engine {
         let Some(facts) = card_facts(&self.catalog, &minion.card_id) else {
             return false;
         };
-        match filter.key.as_str() {
-            "keyword" => combat::keywords(&self.catalog, minion).contains(&filter.value),
-            "other" => {
+        match filter.key {
+            FilterKey::Keyword => {
+                combat::keyword_set(&self.catalog, minion).contains_name(&filter.value)
+            }
+            FilterKey::Other => {
                 if filter.value == "true" {
                     ctx.source != Some(id)
                 } else {
@@ -2594,7 +2653,7 @@ impl Engine {
 /// 统计每个「触发 × 动作」组合被多少段效果使用；总和应等于数据中的效果段数。
 pub fn effect_coverage(catalog: &Catalog) -> BTreeMap<(Trigger, Op), usize> {
     let mut coverage = BTreeMap::new();
-    for skill in catalog.skills.values() {
+    for skill in catalog.skills() {
         for effect in &skill.effects {
             *coverage.entry((effect.trigger, effect.op)).or_insert(0) += 1;
         }
@@ -2718,11 +2777,10 @@ fn is_enemy_selector(selector: &Selector) -> bool {
 
 /// 筛选与 `timesIf` 需要的卡牌事实。
 ///
-/// 衍生物与非池卡同样在 `catalog.cards` 中；按 `categories` 的多条 `play:` 判定玩法。
-/// 查不到时返回 `None`。
+/// 分类节点、玩法归属与捕食/寄生分类在加载期预计算成整数下标与位掩码；
+/// 衍生物与非池卡同样在 `catalog.cards` 中。查不到时返回 `None`。
 struct CardFacts<'a> {
-    taxon: &'a str,
-    categories: &'a [Category],
+    filter: std::borrow::Cow<'a, CardFilterFacts>,
     subtype: Option<&'a str>,
     id: &'a str,
     card_type: CardType,
@@ -2730,37 +2788,48 @@ struct CardFacts<'a> {
 
 impl CardFacts<'_> {
     /// 按筛选键匹配；`keyword` / `other` 由调用方单独处理。
-    fn matches(&self, catalog: &Catalog, key: &str, value: &str) -> bool {
+    fn matches(&self, catalog: &Catalog, key: FilterKey, value: &str) -> bool {
         match key {
-            "taxon" => catalog.taxonomy.is_within(self.taxon, value),
-            // `playstyle` 与 `play` 同口径：任一条 `play:` 命中即可。
-            "playstyle" | "play" => has_play(self.categories, value),
-            "prey" | "host" => {
-                let kind = if key == "prey" {
-                    CategoryKind::Prey
-                } else {
-                    CategoryKind::Host
+            FilterKey::Taxon => {
+                let Some(node) = catalog.taxonomy.node_id(value) else {
+                    return false;
                 };
-                self.categories.iter().any(|category| {
-                    category.kind == kind && catalog.taxonomy.is_within(&category.value, value)
-                })
+                self.filter
+                    .taxon
+                    .is_some_and(|taxon| catalog.taxonomy.is_within_id(taxon, node))
             }
-            "subtype" => self.subtype == Some(value),
-            "id" => self.id == value,
-            "type" => match value {
+            // `playstyle` 与 `play` 同口径：任一条 `play:` 命中即可。
+            FilterKey::Playstyle | FilterKey::Play => {
+                play_bit(value).is_some_and(|bit| self.filter.play_mask & bit != 0)
+            }
+            FilterKey::Prey | FilterKey::Host => {
+                let Some(node) = catalog.taxonomy.node_id(value) else {
+                    return false;
+                };
+                let ancestors = if key == FilterKey::Prey {
+                    &self.filter.prey_ancestors
+                } else {
+                    &self.filter.host_ancestors
+                };
+                ancestors.binary_search(&node).is_ok()
+            }
+            FilterKey::Subtype => self.subtype == Some(value),
+            FilterKey::Id => self.id == value,
+            FilterKey::Type => match value {
                 "minion" => self.card_type == CardType::Minion,
                 "effect" => self.card_type == CardType::Effect,
                 _ => false,
             },
-            _ => false,
+            // `keyword` / `other` 由调用方单独处理。
+            FilterKey::Keyword | FilterKey::Other => false,
         }
     }
 }
 
 fn card_facts<'a>(catalog: &'a Catalog, card_id: &str) -> Option<CardFacts<'a>> {
-    catalog.cards.get(card_id).map(|card| CardFacts {
-        taxon: &card.taxon,
-        categories: &card.categories,
+    let card = catalog.cards.get(card_id)?;
+    Some(CardFacts {
+        filter: catalog.filter_facts(card_id)?,
         subtype: card.subtype.as_deref(),
         id: &card.id,
         card_type: card.card_type,

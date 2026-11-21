@@ -1488,7 +1488,6 @@ ui.skill.trigger.on_ally_evolve,友方进化时
 ui.skill.trigger.on_ally_growth,友方成长时
 ui.skill.trigger.on_ally_kill,友方击杀时
 ui.skill.trigger.on_ally_summon,友方召唤时
-ui.skill.trigger.on_combat_end,战斗结束时
 ui.skill.trigger.on_combat_start,战斗开始时
 ui.skill.trigger.on_deal_damage,造成伤害时
 ui.skill.trigger.on_death,亡语

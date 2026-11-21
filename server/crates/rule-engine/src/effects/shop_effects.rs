@@ -8,7 +8,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::data::{CardType, Catalog, Era, Playstyle, card_in_pool};
-use crate::effects::{Effect, EffectCtx, Trigger, Zone};
+use crate::effects::{Effect, EffectCtx, Params, Trigger, Zone};
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::recruit::new_minion;
@@ -24,7 +24,7 @@ impl Engine {
     /// `free = true` 不扣金币、不消耗本回合免费刷新额度；无论免费与否，
     /// 都通过与手动刷新相同的每回合闸门触发 `OnFirstRefresh`。
     pub(crate) fn apply_refresh_shop(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -32,7 +32,10 @@ impl Engine {
         if state.players.get(usize::from(ctx.seat)).is_none() {
             return Vec::new();
         }
-        if effect.params.free.unwrap_or(false) {
+        let Params::RefreshShop(params) = &effect.params else {
+            return Vec::new();
+        };
+        if params.free.unwrap_or(false) {
             crate::recruit::roll_player(self, state, ctx.seat, false);
             let mut events = vec![GameEvent::ShopRolled { seat: ctx.seat }];
             events.extend(crate::recruit::maybe_fire_first_refresh(
@@ -53,7 +56,7 @@ impl Engine {
     /// 每个槽位放入卡牌目录顺序中第一张合格随从，并从共享池扣 1 张；
     /// 达到 7 槽或没有合格卡牌时停止追加。
     pub(crate) fn apply_add_shop_slot(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -65,7 +68,10 @@ impl Engine {
         else {
             return Vec::new();
         };
-        let count = usize::try_from(effect.params.count.unwrap_or(1)).unwrap_or(0);
+        let Params::AddShopSlot(params) = &effect.params else {
+            return Vec::new();
+        };
+        let count = usize::try_from(params.count).unwrap_or(0);
 
         for _ in 0..count {
             let full = state
@@ -104,7 +110,7 @@ impl Engine {
     /// - 不扣共享池、不登记发现待选；手牌满或没有候选时不发放，效果牌照常消耗。
     /// - 发放后立即执行三连判定。
     pub(crate) fn apply_grant_minion(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
@@ -115,10 +121,13 @@ impl Engine {
         if player.hand.len() >= self.catalog.config.hand_slots {
             return Vec::new();
         }
-        let star = match effect.params.level.as_deref() {
-            Some("next") => ctx.level_override.unwrap_or(player.era as u8 + 1).min(6),
-            Some("current") | None => ctx.level_override.unwrap_or(player.era as u8).min(6),
-            Some(other) => match other.parse::<u8>() {
+        let Params::GrantMinion(params) = &effect.params else {
+            return Vec::new();
+        };
+        let star = match params.level.as_str() {
+            "next" => ctx.level_override.unwrap_or(player.era as u8 + 1).min(6),
+            "current" => ctx.level_override.unwrap_or(player.era as u8).min(6),
+            other => match other.parse::<u8>() {
                 Ok(star) => star,
                 Err(_) => return Vec::new(),
             },
@@ -165,21 +174,25 @@ impl Engine {
     ///
     /// 获得后与购买/发现一致立即执行三连判定。
     pub(crate) fn apply_gain_minion(
-        &mut self,
+        &self,
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
     ) -> Vec<GameEvent> {
-        let Some(star) = effect.params.level.as_deref().and_then(|level| {
-            let player = state.players.get(usize::from(ctx.seat))?;
-            level_star(level, player.era)
-        }) else {
+        let Params::GainMinion(params) = &effect.params else {
             return Vec::new();
         };
-        let to = match effect.params.to {
-            Some(Zone::Hand) => Zone::Hand,
-            Some(Zone::Board) => Zone::Board,
-            Some(Zone::Shop) | None => return Vec::new(),
+        let Some(star) = state
+            .players
+            .get(usize::from(ctx.seat))
+            .and_then(|player| level_star(&params.level, player.era))
+        else {
+            return Vec::new();
+        };
+        let to = match params.to {
+            Zone::Hand => Zone::Hand,
+            Zone::Board => Zone::Board,
+            Zone::Shop => return Vec::new(),
         };
         let (hand_slots, board_slots) = (
             self.catalog.config.hand_slots,

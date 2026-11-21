@@ -130,6 +130,11 @@ impl Taxonomy {
         let (Some(&leaf), Some(&ancestor)) = (self.ids.get(leaf), self.ids.get(ancestor)) else {
             return false;
         };
+        self.is_within_id(leaf, ancestor)
+    }
+
+    /// 整数下标的祖先匹配；供加载期预计算过节点下标的调用方复用。
+    pub fn is_within_id(&self, leaf: u16, ancestor: u16) -> bool {
         let mut current = Some(leaf);
         for _ in 0..=5 {
             match current {
@@ -139,6 +144,25 @@ impl Taxonomy {
             }
         }
         false
+    }
+
+    /// 节点 id 的整数下标；未知节点返回 `None`。
+    pub fn node_id(&self, name: &str) -> Option<u16> {
+        self.ids.get(name).copied()
+    }
+
+    /// 节点自身与全部祖先的整数下标；循环引用时提前停止。
+    pub fn ancestor_ids(&self, node: u16) -> Vec<u16> {
+        let mut result = Vec::new();
+        let mut current = Some(node);
+        while let Some(id) = current {
+            if result.contains(&id) {
+                break;
+            }
+            result.push(id);
+            current = self.parents[usize::from(id)];
+        }
+        result
     }
 
     /// 从叶子到根的节点路径（含自身）；未知节点返回空列表。

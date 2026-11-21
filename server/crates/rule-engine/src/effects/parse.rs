@@ -1,9 +1,7 @@
-use crate::data::CardType;
-
 use super::validate::validate_effect;
 use super::{
-    Basis, Compare, Condition, CopyState, Duration, Effect, Filter, KeywordSpec, Op, Params, Pick,
-    Selector, Side, TimesIf, Trigger, Zone,
+    Compare, Condition, Effect, Filter, FilterKey, KeywordSpec, Op, Params, Pick, Selector, Side,
+    TimesIf, Trigger, Zone,
 };
 
 const TRIGGERS: &[(&str, Trigger)] = &[
@@ -23,7 +21,6 @@ const TRIGGERS: &[(&str, Trigger)] = &[
     ("OnAllySummon", Trigger::OnAllySummon),
     ("OnAllyGrowth", Trigger::OnAllyGrowth),
     ("OnAllyEvolve", Trigger::OnAllyEvolve),
-    ("OnCombatEnd", Trigger::OnCombatEnd),
     ("Aura", Trigger::Aura),
     ("ConditionalAura", Trigger::ConditionalAura),
 ];
@@ -115,18 +112,21 @@ fn parse_chunk(chunk: &str) -> Result<Effect, Vec<String>> {
         }
     };
 
-    let mut params = Params::default();
+    let mut parsed_params = None;
     if let Some(op) = op {
-        let (parsed, mut param_errors) = parse_params(op, parts.get(3).copied(), chunk);
-        params = parsed;
-        errors.append(&mut param_errors);
+        match parse_params(op, parts.get(3).copied(), chunk) {
+            Ok(params) => parsed_params = Some(params),
+            Err(mut param_errors) => errors.append(&mut param_errors),
+        }
     }
 
     if !errors.is_empty() {
         return Err(errors);
     }
 
-    let (Some(trigger), Some(op), Some(selector)) = (trigger, op, selector) else {
+    let (Some(trigger), Some(op), Some(selector), Some(params)) =
+        (trigger, op, selector, parsed_params)
+    else {
         return Err(vec![format!("效果段无法解析: {chunk}")]);
     };
     let effect = Effect {
@@ -257,63 +257,98 @@ fn parse_target_selector(rest: &str, chunk: &str) -> Result<Selector, Vec<String
     })
 }
 
-fn assign(params: &mut Params, op: Op, key: &str, value: &str, chunk: &str) -> Result<(), String> {
-    match key {
-        "times" => params.times = Some(parse_i32(key, value, chunk)?),
-        "count" => params.count = Some(parse_i32(key, value, chunk)?),
-        "amount" => params.amount = Some(parse_i32(key, value, chunk)?),
-        "attack" => params.attack = Some(parse_i32(key, value, chunk)?),
-        "health" => params.health = Some(parse_i32(key, value, chunk)?),
-        "perAttack" => params.per_attack = Some(parse_i32(key, value, chunk)?),
-        "perHealth" => params.per_health = Some(parse_i32(key, value, chunk)?),
-        "maxCount" => params.max_count = Some(parse_i32(key, value, chunk)?),
-        "threshold" => params.threshold = Some(parse_i32(key, value, chunk)?),
-        "value" => params.value = Some(parse_i32(key, value, chunk)?),
-        "extra" => params.extra = Some(parse_i32(key, value, chunk)?),
-        "duration" => {
-            params.duration = Some(match value {
-                "permanent" => Duration::Permanent,
-                "combat" => Duration::Combat,
-                _ => return Err(format!("duration 非法 {value:?}（{chunk}）")),
-            })
+fn assign_json(
+    op: Op,
+    key: &str,
+    value: &str,
+    chunk: &str,
+    object: &mut serde_json::Map<String, serde_json::Value>,
+) -> Result<(), String> {
+    let json_key = match key {
+        "perAttack" => "per_attack",
+        "perHealth" => "per_health",
+        "maxCount" => "max_count",
+        "canKill" => "can_kill",
+        "healthOnly" => "health_only",
+        "statsOnly" => "stats_only",
+        "timesIf" => "times_if",
+        "type" => "card_type",
+        other => other,
+    };
+    let entry = match key {
+        "times" | "count" | "amount" | "attack" | "health" | "perAttack" | "perHealth"
+        | "maxCount" | "threshold" | "value" => {
+            serde_json::Value::from(parse_i32(key, value, chunk)?)
         }
-        "canKill" => params.can_kill = Some(parse_bool(key, value, chunk)?),
-        "healthOnly" => params.health_only = Some(parse_bool(key, value, chunk)?),
-        "statsOnly" => params.stats_only = Some(parse_bool(key, value, chunk)?),
-        "free" => params.free = Some(parse_bool(key, value, chunk)?),
-        "timesIf" => params.times_if = Some(parse_times_if(value, chunk)?),
-        "condition" => params.condition = Some(parse_condition(value, chunk)?),
-        "when" => params.when = Some(parse_filter(value, chunk)?),
-        "keyword" => params.keyword = Some(parse_keyword(value, chunk)?),
-        "token" => params.token = Some(non_empty(key, value, chunk)?),
-        "card" => params.card = Some(non_empty(key, value, chunk)?),
-        "to" => params.to = Some(parse_zone(key, value, chunk)?),
-        "from" => params.from = Some(parse_zone(key, value, chunk)?),
-        "type" => params.card_type = Some(parse_card_type(value, chunk)?),
-        "pool" => params.pool = Some(non_empty(key, value, chunk)?),
-        "choose" => params.choose = Some(parse_u8(key, value, chunk)?),
-        "era" => params.era = Some(non_empty(key, value, chunk)?),
-        "level" => params.level = Some(non_empty(key, value, chunk)?),
-        "state" => {
-            params.state = Some(match value {
-                "base" => CopyState::Base,
-                "current" => CopyState::Current,
-                _ => return Err(format!("state 非法 {value:?}（{chunk}）")),
-            })
+        "duration" => serde_json::Value::from(match value {
+            "permanent" => "permanent",
+            "combat" => "combat",
+            _ => return Err(format!("duration 非法 {value:?}（{chunk}）")),
+        }),
+        "canKill" | "healthOnly" | "statsOnly" | "free" => {
+            serde_json::Value::from(parse_bool(key, value, chunk)?)
         }
-        "basis" => {
-            params.basis = Some(match value {
-                "original" => Basis::Original,
-                "combat_start" => Basis::CombatStart,
-                "pre_kill" => Basis::PreKill,
-                _ => return Err(format!("basis 非法 {value:?}（{chunk}）")),
-            })
-        }
+        "timesIf" => serde_json::to_value(parse_times_if(value, chunk)?)
+            .map_err(|err| format!("timesIf 非法 {value:?}（{chunk}）：{err}"))?,
+        "condition" => serde_json::to_value(parse_condition(value, chunk)?)
+            .map_err(|err| format!("condition 非法 {value:?}（{chunk}）：{err}"))?,
+        "when" => serde_json::to_value(parse_filter(value, chunk)?)
+            .map_err(|err| format!("when 非法 {value:?}（{chunk}）：{err}"))?,
+        "keyword" => serde_json::to_value(parse_keyword(value, chunk)?)
+            .map_err(|err| format!("keyword 非法 {value:?}（{chunk}）：{err}"))?,
+        "token" => serde_json::Value::from(non_empty(key, value, chunk)?),
+        "card" => serde_json::Value::from(non_empty(key, value, chunk)?),
+        "to" | "from" => serde_json::to_value(parse_zone(key, value, chunk)?)
+            .map_err(|err| format!("参数 {key} 非法 {value:?}（{chunk}）：{err}"))?,
+        "type" => serde_json::Value::from(match value {
+            "minion" => "minion",
+            "effect" => "effect",
+            _ => return Err(format!("参数 {key} 非法 {value:?}（{chunk}）")),
+        }),
+        "pool" | "era" | "level" => serde_json::Value::from(non_empty(key, value, chunk)?),
+        "choose" => serde_json::Value::from(parse_u8(key, value, chunk)?),
+        "state" => serde_json::Value::from(match value {
+            "base" => "base",
+            "current" => "current",
+            _ => return Err(format!("state 非法 {value:?}（{chunk}）")),
+        }),
+        "basis" => serde_json::Value::from(match value {
+            "original" => "original",
+            "combat_start" => "combat_start",
+            "pre_kill" => "pre_kill",
+            _ => return Err(format!("basis 非法 {value:?}（{chunk}）")),
+        }),
         other => {
             return Err(format!("参数 {other:?} 不属于原语 {op:?}（{chunk}）"));
         }
-    }
+    };
+    object.insert(json_key.to_string(), entry);
     Ok(())
+}
+
+/// 把 `keyword` 的内联层数规范化：`breed 2` 与 `keyword=breed,value=2` 同义。
+fn normalize_keyword_value(object: &mut serde_json::Map<String, serde_json::Value>) {
+    let Some(serde_json::Value::Object(keyword)) = object.get("keyword").cloned() else {
+        return;
+    };
+    let Some(serde_json::Value::String(base)) = keyword.get("keyword") else {
+        return;
+    };
+    if keyword.get("value").is_some_and(|value| !value.is_null())
+        || !matches!(base.as_str(), "breed" | "assemble" | "contagion")
+    {
+        return;
+    }
+    let Some(value) = object
+        .get("value")
+        .filter(|value| !value.is_null())
+        .cloned()
+    else {
+        return;
+    };
+    let mut keyword = keyword;
+    keyword.insert("value".to_string(), value);
+    object.insert("keyword".to_string(), serde_json::Value::Object(keyword));
 }
 
 fn parse_condition(value: &str, chunk: &str) -> Result<Condition, String> {
@@ -336,7 +371,9 @@ fn parse_condition(value: &str, chunk: &str) -> Result<Condition, String> {
     let Some((key, filter_value)) = segments[1].split_once('=') else {
         return Err(invalid());
     };
-    let key = key.trim().to_string();
+    let Some(key) = FilterKey::from_id(key.trim()) else {
+        return Err(invalid());
+    };
     let filter_value = filter_value.trim().to_string();
 
     let (compare, digits) = if let Some(digits) = segments[2].strip_prefix(">=") {
@@ -397,14 +434,6 @@ fn parse_zone(key: &str, value: &str, chunk: &str) -> Result<Zone, String> {
     }
 }
 
-fn parse_card_type(value: &str, chunk: &str) -> Result<CardType, String> {
-    match value {
-        "minion" => Ok(CardType::Minion),
-        "effect" => Ok(CardType::Effect),
-        _ => Err(format!("参数 type 非法 {value:?}（{chunk}）")),
-    }
-}
-
 fn parse_i32(key: &str, value: &str, chunk: &str) -> Result<i32, String> {
     if !is_integer(value) {
         return Err(format!("参数 {key} 必须为整数，实为 {value:?}（{chunk}）"));
@@ -453,16 +482,20 @@ fn parse_filter(raw: &str, chunk: &str) -> Result<Filter, String> {
     let Some((key, value)) = raw.split_once('=') else {
         return Err(format!("筛选缺少 =: {raw:?}（{chunk}）"));
     };
+    let key = key.trim();
+    let Some(key) = FilterKey::from_id(key) else {
+        return Err(format!("未知筛选键 {key:?}（{chunk}）"));
+    };
     Ok(Filter {
-        key: key.trim().to_string(),
+        key,
         value: value.trim().to_string(),
     })
 }
 
-fn parse_params(op: Op, raw: Option<&str>, chunk: &str) -> (Params, Vec<String>) {
-    let mut params = Params::default();
+fn parse_params(op: Op, raw: Option<&str>, chunk: &str) -> Result<Params, Vec<String>> {
+    let mut object = serde_json::Map::new();
     let mut errors = Vec::new();
-    let mut pairs: Vec<(String, String)> = Vec::new();
+    let mut seen: Vec<String> = Vec::new();
 
     if let Some(raw) = raw {
         for pair in raw.split(',') {
@@ -475,31 +508,23 @@ fn parse_params(op: Op, raw: Option<&str>, chunk: &str) -> (Params, Vec<String>)
                 continue;
             };
             let key = key.trim().to_string();
-            let value = value.trim().to_string();
-            if pairs.iter().any(|(existing, _)| *existing == key) {
+            let value = value.trim();
+            if seen.contains(&key) {
                 errors.push(format!("参数重复 {key:?}（{chunk}）"));
             }
-            pairs.push((key, value));
+            seen.push(key.clone());
+            if let Err(message) = assign_json(op, &key, value, chunk, &mut object) {
+                errors.push(message);
+            }
         }
     }
 
-    for (key, value) in &pairs {
-        if let Err(message) = assign(&mut params, op, key, value, chunk) {
-            errors.push(message);
-        }
+    if !errors.is_empty() {
+        return Err(errors);
     }
-
-    // 繁衍 / 装配 / 传染 的层数可以直接写在 keyword 上，也可以由 value 参数承载；
-    // 后者统一规范化为 `KeywordSpec { value: Some(n) }`，供执行器只读 keyword。
-    if let Some(keyword) = &mut params.keyword
-        && keyword.value.is_none()
-        && matches!(keyword.keyword.as_str(), "breed" | "assemble" | "contagion")
-        && let Some(value) = params.value
-    {
-        keyword.value = Some(value);
-    }
-
-    (params, errors)
+    normalize_keyword_value(&mut object);
+    super::decode_params(op, Some(serde_json::Value::Object(object)))
+        .map_err(|err| vec![format!("{err}（{chunk}）")])
 }
 
 fn parse_times_if(value: &str, chunk: &str) -> Result<TimesIf, String> {
@@ -507,10 +532,15 @@ fn parse_times_if(value: &str, chunk: &str) -> Result<TimesIf, String> {
     let parts: Vec<&str> = value.split(':').map(str::trim).collect();
     let (key, filter_value, count) = match parts.as_slice() {
         // `playstyle:mammal:2`：键、值、次数。
-        [key, filter_value, count] => (key.to_string(), Some(filter_value.to_string()), *count),
+        [key, filter_value, count] => {
+            let Some(key) = FilterKey::from_id(key) else {
+                return Err(invalid());
+            };
+            (key, filter_value.to_string(), *count)
+        }
         _ => return Err(invalid()),
     };
-    if key.is_empty() || filter_value.as_deref() == Some("") || !is_digits(count) {
+    if filter_value.is_empty() || !is_digits(count) {
         return Err(invalid());
     }
     Ok(TimesIf {

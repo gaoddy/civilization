@@ -20,7 +20,7 @@ const EMPTY_STAR_RETRIES: u32 = 5;
 
 /// 按意图分派；调用方已用 [`crate::engine::Engine::apply`] 指定座位。
 pub(crate) fn apply(
-    engine: &mut Engine,
+    engine: &Engine,
     state: &mut GameState,
     seat: Seat,
     intent: Intent,
@@ -190,12 +190,7 @@ pub(crate) fn check_buy(
 ///
 /// 买入不入场，因此不触发战吼、不登记进化，也不需要目标与实例编号；
 /// 随从要上棋盘须另提交 `PlayCard`。随从买入后仍立即做三连判定（手牌参与三连）。
-fn buy(
-    engine: &mut Engine,
-    state: &mut GameState,
-    seat: Seat,
-    slot: u8,
-) -> Result<Outcome, Reject> {
+fn buy(engine: &Engine, state: &mut GameState, seat: Seat, slot: u8) -> Result<Outcome, Reject> {
     check_buy(engine, state, seat, slot)?;
 
     let shop_slot = player(state, seat)
@@ -315,7 +310,7 @@ pub(crate) fn check_reroll(state: &GameState, seat: Seat) -> Result<(), Reject> 
 }
 
 pub(crate) fn reroll(
-    engine: &mut Engine,
+    engine: &Engine,
     state: &mut GameState,
     seat: Seat,
 ) -> Result<Outcome, Reject> {
@@ -347,7 +342,7 @@ pub(crate) fn reroll(
 /// 手动 `RerollShop` 与效果驱动的 `RefreshShop` 共用这一闸门；升时代重抽与
 /// 回合开始自动刷新不调用本函数。
 pub(crate) fn maybe_fire_first_refresh(
-    engine: &mut Engine,
+    engine: &Engine,
     state: &mut GameState,
     seat: Seat,
 ) -> Vec<GameEvent> {
@@ -368,7 +363,7 @@ pub(crate) fn maybe_fire_first_refresh(
 ///
 /// 未携带 `OnFirstRefresh` 效果的卡牌由执行器收集为空；金色随从由执行器触发两次。
 pub(crate) fn fire_first_refresh(
-    engine: &mut Engine,
+    engine: &Engine,
     state: &mut GameState,
     seat: Seat,
 ) -> Vec<GameEvent> {
@@ -462,7 +457,6 @@ fn upgrade(engine: &Engine, state: &mut GameState, seat: Seat) -> Result<Outcome
         .expect("check_upgrade 已保证座位存在");
     player.gold = remaining_gold;
     player.era = next;
-    player.turns_in_era = 0;
 
     // 升时代附带的免费重抽取消冻结、也不消耗本回合的免费刷新（core-rules.md:61）。
     roll_player(engine, state, seat, false);
@@ -569,7 +563,7 @@ fn check_target_zone(
 }
 
 fn play_card(
-    engine: &mut Engine,
+    engine: &Engine,
     state: &mut GameState,
     seat: Seat,
     hand_index: u8,
@@ -865,18 +859,19 @@ pub(crate) fn check_hero_power(
             format!("英雄卡 {hero_id} 不在英雄目录中"),
         )
     })?;
-    if !hero.skills.iter().any(|known| known == skill_id) {
+    let Some(skill_ref) = engine.catalog.skill_id(skill_id) else {
+        return Err(Reject::new(
+            RejectCode::HeroPowerLimit,
+            format!("技能 {skill_id} 不在目录中"),
+        ));
+    };
+    if !hero.skills.contains(&skill_ref) {
         return Err(Reject::new(
             RejectCode::HeroPowerLimit,
             format!("技能 {skill_id} 不属于英雄 {hero_id}"),
         ));
     }
-    let skill = engine.catalog.skills.get(skill_id).ok_or_else(|| {
-        Reject::new(
-            RejectCode::HeroPowerLimit,
-            format!("技能 {skill_id} 不在目录中"),
-        )
-    })?;
+    let skill = engine.catalog.skill(skill_ref);
     let cost = skill.cost.ok_or_else(|| {
         Reject::new(
             RejectCode::NotActiveSkill,
@@ -899,7 +894,7 @@ pub(crate) fn check_hero_power(
 }
 
 fn use_hero_power(
-    engine: &mut Engine,
+    engine: &Engine,
     state: &mut GameState,
     seat: Seat,
     skill_id: &str,
@@ -928,8 +923,7 @@ fn use_hero_power(
     let player = player(state, seat).expect("check_hero_power 已保证座位存在");
     let cost = engine
         .catalog
-        .skills
-        .get(skill_id)
+        .skill_by_name(skill_id)
         .expect("check_hero_power 已保证技能在目录中")
         .cost
         .expect("check_hero_power 已保证技能是主动技能");
@@ -1035,7 +1029,7 @@ fn pending_index(state: &GameState, seat: Seat) -> Option<usize> {
 ///
 /// 选定后补做被推迟的入场副作用：金色奖励、三连与入场观察者。
 fn choose_target(
-    engine: &mut Engine,
+    engine: &Engine,
     state: &mut GameState,
     seat: Seat,
     target: TargetRef,
@@ -1197,7 +1191,7 @@ pub(crate) fn check_choose_discover(
 /// 发现待选与进化待选共用该意图：`choice` 对发现是候选下标，对进化是选项下标
 /// （`0` = +2/+2，`1` = 护盾，`2` = 复生，见 `effects::evolve`）。
 fn choose_discover(
-    engine: &mut Engine,
+    engine: &Engine,
     state: &mut GameState,
     seat: Seat,
     choice: u8,
@@ -1452,7 +1446,7 @@ mod tests {
     }
 
     fn setup(seed: u8) -> (Engine, GameState) {
-        let (mut engine, mut state) = Engine::new(test_catalog(), [seed; 32], test_playstyles());
+        let (engine, mut state) = Engine::new(test_catalog(), [seed; 32], test_playstyles());
         engine
             .start_game(&mut state, &heroes())
             .expect("开局应成功");
@@ -1863,7 +1857,7 @@ mod tests {
         ];
 
         for case in cases {
-            let (mut engine, mut state) = (case.setup)();
+            let (engine, mut state) = (case.setup)();
             let before = state_hash(&state);
 
             let checked = (case.check)(&engine, &state).unwrap_err();
@@ -1913,7 +1907,7 @@ mod tests {
     /// `check_choose_discover` 的 `Evolve` 分支：越界选项与 `apply` 一致拒绝。
     #[test]
     fn check_choose_discover_evolve_branch_rejects_out_of_range() {
-        let (mut engine, mut state) = setup(122);
+        let (engine, mut state) = setup(122);
         state.players[0].board.push(dummy(1, &minion_id(1)));
         state.pending.push_back(PendingChoice::Evolve {
             seat: 0,
@@ -1938,7 +1932,7 @@ mod tests {
     /// `check_choose_discover` 的 `Evolve` 分支：合法选项预检通过，`apply` 消费待选。
     #[test]
     fn check_choose_discover_evolve_choice_consumes_pending() {
-        let (mut engine, mut state) = setup(123);
+        let (engine, mut state) = setup(123);
         state.players[0].board.push(dummy(1, &minion_id(1)));
         state.pending.push_back(PendingChoice::Evolve {
             seat: 0,

@@ -93,7 +93,7 @@ pub fn setup_with_gold(seed: u8) -> (Engine, GameState) {
 
 /// 用前 8 张英雄卡开局后的状态。
 pub fn started(seed: u8) -> (Engine, GameState) {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [seed; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [seed; 32], test_playstyles());
     engine
         .start_game(&mut state, &heroes())
         .expect("开局应成功");
@@ -102,7 +102,7 @@ pub fn started(seed: u8) -> (Engine, GameState) {
 
 /// 开局并进入第一回合招募。
 pub fn turn_started(seed: u8) -> (Engine, GameState) {
-    let (mut engine, mut state) = started(seed);
+    let (engine, mut state) = started(seed);
     engine.start_turn(&mut state).expect("开始回合应成功");
     (engine, state)
 }

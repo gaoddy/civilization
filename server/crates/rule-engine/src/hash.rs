@@ -261,9 +261,10 @@ pub fn state_hash(state: &GameState) -> u64 {
         hasher.u64(*instance_id);
         hasher.i32(aura.attack);
         hasher.i32(aura.health);
-        hasher.len(aura.keywords.len());
-        for keyword in &aura.keywords {
-            hasher.str(keyword);
+        let keywords = aura.keywords.names();
+        hasher.len(keywords.len());
+        for keyword in keywords {
+            hasher.str(&keyword);
         }
         hasher.bool(aura.floor_one);
     }
@@ -281,7 +282,6 @@ fn hash_player(hasher: &mut Hasher, player: &PlayerState) {
     hasher.i32(player.hp);
     hasher.u8(player.gold);
     hasher.u8(era_tag(player.era));
-    hasher.u8(player.turns_in_era);
 
     hasher.len(player.shop.len());
     for slot in &player.shop {

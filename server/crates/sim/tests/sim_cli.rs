@@ -162,8 +162,7 @@ fn ai_never_loops_and_matches_state_hash() {
 
 #[test]
 fn ai_choose_is_deterministic_for_seat() {
-    let (mut engine, mut state) =
-        Engine::new(catalog(), [11; 32], rule_engine::playstyles::draw(11));
+    let (engine, mut state) = Engine::new(catalog(), [11; 32], rule_engine::playstyles::draw(11));
     let heroes: std::collections::BTreeMap<Seat, String> = engine
         .catalog
         .heroes

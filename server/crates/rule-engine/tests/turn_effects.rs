@@ -24,17 +24,13 @@ fn add_card(
 ) {
     let (level, attack, health) = stats;
     let (keyword, effects) = skill;
-    let skill_id = format!("{id}-skill");
-    catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: keyword.map(str::to_string),
-            effects: effects_of(effects),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = catalog.insert_skill(Skill {
+        id: format!("{id}-skill"),
+        keyword: keyword.map(str::to_string),
+        effects: effects_of(effects),
+        cost: None,
+        uses_per_turn: None,
+    });
     catalog.cards.insert(
         id.to_string(),
         Card {
@@ -258,7 +254,7 @@ fn first_eligible(engine: &Engine, state: &GameState, star: u8) -> Option<String
 
 #[test]
 fn breed_adds_health_each_turn() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "breed2");
 
     engine.start_turn(&mut state).expect("开始回合应成功");
@@ -277,7 +273,7 @@ fn breed_adds_health_each_turn() {
 
 #[test]
 fn golden_breed_doubles_health() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "breed2");
     state.players[0].board[0].golden = true;
 
@@ -294,7 +290,7 @@ fn golden_breed_doubles_health() {
 
 #[test]
 fn breed_includes_dynamic_layers() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "breed1");
     state.players[0].board[0].breed = 3;
 
@@ -308,7 +304,7 @@ fn breed_includes_dynamic_layers() {
 
 #[test]
 fn zero_attack_breed_adds_health_only() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "zero-breed");
 
     engine.start_turn(&mut state).expect("开始回合应成功");
@@ -323,7 +319,7 @@ fn zero_attack_breed_adds_health_only() {
 
 #[test]
 fn breed_resolves_before_contagion() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "breed2");
     state.players[0].board[0].contagion = 2;
 
@@ -338,7 +334,7 @@ fn breed_resolves_before_contagion() {
 
 #[test]
 fn contagion_decrements_health_and_can_kill() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "sickly");
     place(&engine.catalog, &mut state, 0, 2, "sickly");
     state.players[0].board[0].contagion = 5;
@@ -355,7 +351,7 @@ fn contagion_decrements_health_and_can_kill() {
 
 #[test]
 fn turn_start_effect_runs_left_to_right() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "turn9");
     place(&engine.catalog, &mut state, 0, 2, "turn7");
 
@@ -373,7 +369,7 @@ fn turn_start_effect_runs_left_to_right() {
 
 #[test]
 fn golden_turn_start_effect_runs_twice() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "turn9");
     state.players[0].board[0].golden = true;
 
@@ -391,7 +387,7 @@ fn golden_turn_start_effect_runs_twice() {
 
 #[test]
 fn turn_start_skips_eliminated_players() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "breed2");
     state.players[0].eliminated = true;
 
@@ -406,7 +402,7 @@ fn turn_start_skips_eliminated_players() {
 
 #[test]
 fn first_refresh_adds_extra_slot_once() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     state.players[0].hero = Some("galileo".to_string());
     state.players[0].first_refresh_used = false;
     state.players[0].first_refresh_pending = true;
@@ -438,13 +434,17 @@ fn first_refresh_reads_hero_pool() {
     state.players[0].first_refresh_used = false;
     state.players[0].first_refresh_pending = true;
     // 从同名随从卡移除首次刷新技能，英雄池保留。
+    let observation = engine
+        .catalog
+        .skill_id("observation")
+        .expect("首次刷新技能应存在");
     engine
         .catalog
         .cards
         .get_mut("galileo")
         .expect("伽利略随从卡应存在")
         .skills
-        .retain(|skill| skill != "observation");
+        .retain(|skill| *skill != observation);
 
     engine
         .apply(&mut state, 0, Intent::RerollShop)
@@ -459,7 +459,7 @@ fn first_refresh_reads_hero_pool() {
 
 #[test]
 fn first_refresh_fires_only_once_per_turn() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     state.players[0].hero = Some("galileo".to_string());
     state.players[0].first_refresh_used = false;
     state.players[0].first_refresh_pending = true;
@@ -484,7 +484,7 @@ fn first_refresh_fires_only_once_per_turn() {
 
 #[test]
 fn era_upgrade_reroll_does_not_fire_first_refresh() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     state.players[0].hero = Some("galileo".to_string());
     state.players[0].first_refresh_pending = true;
 
@@ -501,7 +501,7 @@ fn era_upgrade_reroll_does_not_fire_first_refresh() {
 
 #[test]
 fn first_refresh_pending_is_hashed_and_reset_each_turn() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     assert!(state.players[0].first_refresh_pending, "开局应为待触发");
 
     let before = state_hash(&state);
@@ -518,7 +518,7 @@ fn first_refresh_pending_is_hashed_and_reset_each_turn() {
 
 #[test]
 fn refresh_shop_free_sets_cost_zero() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     state.players[0].gold = 5;
     state.players[0].first_refresh_used = true;
     state.players[0].first_refresh_pending = false;
@@ -540,7 +540,7 @@ fn refresh_shop_free_sets_cost_zero() {
 
 #[test]
 fn effect_refresh_fires_first_refresh_once() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     state.players[0].hero = Some("galileo".to_string());
     state.players[0].gold = 5;
     state.players[0].first_refresh_pending = true;
@@ -568,7 +568,7 @@ fn effect_refresh_fires_first_refresh_once() {
 
 #[test]
 fn refresh_shop_paid_costs_one_gold() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     state.players[0].gold = 5;
     state.players[0].first_refresh_used = true;
     state.players[0].first_refresh_pending = false;
@@ -586,7 +586,7 @@ fn refresh_shop_paid_costs_one_gold() {
 
 #[test]
 fn refresh_shop_without_gold_is_a_no_op() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     state.players[0].gold = 0;
     state.players[0].first_refresh_used = true;
 
@@ -604,7 +604,7 @@ fn refresh_shop_without_gold_is_a_no_op() {
 
 #[test]
 fn add_shop_slot_uses_current_era() {
-    let (mut engine, mut state) = setup(2);
+    let (engine, mut state) = setup(2);
     state.players[0].era = Era::Primitive;
     state.players[0].shop = vec![None; 6];
 
@@ -635,7 +635,7 @@ fn add_shop_slot_uses_current_era() {
 
 #[test]
 fn add_shop_slot_is_capped_at_seven() {
-    let (mut engine, mut state) = setup(2);
+    let (engine, mut state) = setup(2);
     state.players[0].era = Era::Primitive;
     state.players[0].shop = vec![None; 7];
 
@@ -652,7 +652,7 @@ fn add_shop_slot_is_capped_at_seven() {
 
 #[test]
 fn add_shop_slot_skips_when_no_eligible_card() {
-    let (mut engine, mut state) = setup(2);
+    let (engine, mut state) = setup(2);
     state.players[0].era = Era::Primitive;
     state.players[0].shop = vec![None; 6];
     let level_two: Vec<String> = engine
@@ -679,7 +679,7 @@ fn add_shop_slot_skips_when_no_eligible_card() {
 
 #[test]
 fn gain_minion_from_shop_moves_to_hand() {
-    let (mut engine, mut state) = setup(2);
+    let (engine, mut state) = setup(2);
     state.players[0].era = Era::Primitive;
     // 商店里放一张 2 星随从：获得它时清空槽位、扣 1 份池。
     let expected = engine
@@ -728,7 +728,7 @@ fn gain_minion_from_shop_moves_to_hand() {
 
 #[test]
 fn gain_minion_runs_triple_check() {
-    let (mut engine, mut state) = setup(2);
+    let (engine, mut state) = setup(2);
     state.players[0].era = Era::Primitive;
     let expected = engine
         .catalog
@@ -785,7 +785,7 @@ fn gain_minion_runs_triple_check() {
 
 #[test]
 fn gain_minion_with_full_hand_is_a_no_op() {
-    let (mut engine, mut state) = setup(2);
+    let (engine, mut state) = setup(2);
     state.players[0].era = Era::Primitive;
     let hand_slots = engine.catalog.config.hand_slots;
     state.players[0].hand = (0..hand_slots)
@@ -809,7 +809,7 @@ fn gain_minion_with_full_hand_is_a_no_op() {
 
 #[test]
 fn contagion_persists_across_combat() {
-    let (mut engine, mut state) = setup(3);
+    let (engine, mut state) = setup(3);
     state.phase = Phase::Combat;
     state.turn = 2;
     state.first_seat = 0;
@@ -861,7 +861,7 @@ fn ghost_combat_writes_back_attacker_only() {
         (1, 1, 20),
         (Some("contagion"), "[]"),
     );
-    let (mut engine, mut state) = Engine::new(catalog, [3u8; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(catalog, [3u8; 32], test_playstyles());
     state.phase = Phase::Combat;
     state.turn = 2;
     for player in &mut state.players {
@@ -901,7 +901,7 @@ fn ghost_combat_writes_back_attacker_only() {
 #[test]
 fn turn_start_keeps_b_tree_ordering() {
     // 座位顺序固定：先结算座位 0，再结算座位 1。
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 1, 2, "turn7");
     place(&engine.catalog, &mut state, 0, 1, "turn9");
     state.players[1].board[0].breed = 0;
@@ -923,7 +923,7 @@ fn turn_start_keeps_b_tree_ordering() {
 
 #[test]
 fn latent_adds_attack_per_contagion_layer_and_bursts_at_threshold() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "latent");
     place(&engine.catalog, &mut state, 1, 2, "target");
     state.players[0].board[0].contagion = 2;
@@ -981,7 +981,7 @@ fn latent_adds_attack_per_contagion_layer_and_bursts_at_threshold() {
 fn latent_burst_removes_killed_minion_and_fires_deathrattle() {
     // 潜伏在座位 1，受害者座位 0：座位 0 的传染结算已结束，无法替爆发「清理」
     // 尸体，因此这条用例能区分爆发自身是否结算了离场与亡语。
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 1, 1, "latent");
     place(&engine.catalog, &mut state, 0, 2, "frail");
     place(&engine.catalog, &mut state, 0, 3, "witness");
@@ -1001,7 +1001,7 @@ fn latent_burst_removes_killed_minion_and_fires_deathrattle() {
 
 #[test]
 fn latent_burst_respects_armor() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "latent");
     place(&engine.catalog, &mut state, 1, 2, "armored");
     state.players[0].board[0].contagion = 3;
@@ -1017,7 +1017,7 @@ fn latent_burst_respects_armor() {
 
 #[test]
 fn latent_burst_consumes_divine_shield() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "latent");
     place(&engine.catalog, &mut state, 1, 2, "shielded");
     state.players[0].board[0].contagion = 3;
@@ -1035,7 +1035,7 @@ fn latent_burst_consumes_divine_shield() {
 
 #[test]
 fn latent_burst_with_zero_count_keeps_layers_and_marker() {
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "latent0");
     place(&engine.catalog, &mut state, 1, 2, "target");
     state.players[0].board[0].contagion = 3;
@@ -1056,7 +1056,7 @@ fn latent_burst_with_zero_count_keeps_layers_and_marker() {
 fn golden_latent_doubles_attack_but_bursts_once() {
     // 金色按通用规则触发两遍：未达阈值时每层攻击力获得双倍；达到阈值时
     // 第一遍爆发并清零层数、置 latent_used，第二遍层数为 0，因此只爆发一次。
-    let (mut engine, mut state) = setup(1);
+    let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "latent");
     place(&engine.catalog, &mut state, 1, 2, "target");
     state.players[0].board[0].golden = true;

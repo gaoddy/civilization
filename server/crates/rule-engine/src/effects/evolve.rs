@@ -9,7 +9,7 @@
 //! `recruit::choose_discover` 与发现共用 FIFO 与按座位的消费规则。
 //! `OnAllyEvolve` 只在进化实际完成（最后一次选择结算完）时触发。
 
-use crate::data::has_play;
+use crate::data::Playstyle;
 use crate::effects::{Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
 use crate::state::{GameState, InstanceId, MinionInstance, PendingChoice, Seat};
@@ -33,12 +33,7 @@ impl Engine {
     /// 调用时机是「落到战场之后、结算 `OnPlay` 战吼之前」（关键词机制 §2.2）；
     /// 多张同名进化副本同时入场时只登记一个待选：非金色选一次，金色连续选两次。
     /// 进化不推进随机流。
-    pub(crate) fn register_evolve(
-        &mut self,
-        state: &mut GameState,
-        seat: Seat,
-        source: InstanceId,
-    ) {
+    pub(crate) fn register_evolve(&self, state: &mut GameState, seat: Seat, source: InstanceId) {
         let Some(player) = state.players.get(usize::from(seat)) else {
             return;
         };
@@ -57,9 +52,8 @@ impl Engine {
         // （数据层已禁止，这里再兜底一次）。
         let evolvable = self
             .catalog
-            .cards
-            .get(&card_id)
-            .is_some_and(|card| !has_play(&card.categories, "machine"));
+            .filter_facts(&card_id)
+            .is_some_and(|facts| facts.play_mask & Playstyle::Machine.bit() == 0);
         if !evolvable {
             return;
         }
@@ -75,7 +69,7 @@ impl Engine {
     /// - `Ok(())`：选择已结算（或来源已离场，待选被丢弃）。
     /// - `Err(())`：下标越界，状态不变。
     pub(crate) fn resolve_evolve_choice(
-        &mut self,
+        &self,
         state: &mut GameState,
         index: usize,
         choice: u8,
@@ -126,7 +120,7 @@ impl Engine {
     /// 未登记的情形（没有进化、来源已离场或未找到）在这里按「未发生进化」
     /// 处理，即不触发——`OnAllyEvolve` 不再是入场副作用，而是选择结果的副作用。
     pub(crate) fn fire_evolve_after_enter(
-        &mut self,
+        &self,
         state: &mut GameState,
         seat: Seat,
         entered: InstanceId,
@@ -152,7 +146,7 @@ impl Engine {
     /// 金色「触发两次」照常生效。
     /// `event_target` 为进化来源。
     pub(crate) fn fire_ally_evolve_recruit(
-        &mut self,
+        &self,
         state: &mut GameState,
         seat: Seat,
         evolved: InstanceId,

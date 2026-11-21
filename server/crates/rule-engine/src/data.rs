@@ -1,13 +1,13 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::effects::{Effect, validate_effects};
 use crate::error::CatalogError;
 use crate::keyword::KeywordSet;
 use crate::taxonomy::Taxonomy;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CardType {
     #[serde(rename = "minion")]
     Minion,
@@ -100,6 +100,19 @@ impl Playstyle {
             Playstyle::Neutral => 13,
         }
     }
+
+    /// 卡牌 `play:` 位掩码中的二进制位。
+    pub(crate) fn bit(self) -> u16 {
+        1u16 << self.ordinal()
+    }
+}
+
+/// 筛选键取值的玩法位；`neutral` 也是可被筛中的实体取值。
+pub(crate) fn play_bit(value: &str) -> Option<u16> {
+    if value == Playstyle::Neutral.id() {
+        return Some(Playstyle::Neutral.bit());
+    }
+    Playstyle::from_id(value).map(Playstyle::bit)
 }
 
 /// 卡牌 `categories` 条目的类型。
@@ -130,9 +143,65 @@ pub(crate) fn play_categories(categories: &[Category]) -> impl Iterator<Item = &
         .map(|category| category.value.as_str())
 }
 
-/// 卡牌是否带指定玩法归属。
-pub(crate) fn has_play(categories: &[Category], playstyle: &str) -> bool {
-    play_categories(categories).any(|value| value == playstyle)
+/// 技能在目录内的整数标识；下标即 [`Catalog::skills`] 的位置。
+///
+/// 卡牌与英雄的 `skills` 字段保存该标识，触发与效果收集按整数下标取技能，
+/// 不再每次按字符串查表；协议、视图与 `hero_uses` 仍以字符串技能 id 为标识。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SkillId(u16);
+
+impl SkillId {
+    pub(crate) fn from_index(index: usize) -> Self {
+        Self(u16::try_from(index).expect("技能数超出 u16 上限"))
+    }
+
+    pub(crate) fn index(self) -> usize {
+        usize::from(self.0)
+    }
+}
+
+/// 筛选键在加载期预计算的卡牌事实。
+///
+/// `play_mask` 把 `play:` 归属压成位掩码；`prey_ancestors` / `host_ancestors`
+/// 把捕食/寄生分类节点连同祖先压成整数下标，筛选时不再逐条比较字符串。
+#[derive(Debug, Clone, Default)]
+pub(crate) struct CardFilterFacts {
+    pub play_mask: u16,
+    /// 卡牌 `taxon` 的分类节点下标（加载期已校验为叶子）。
+    pub taxon: Option<u16>,
+    /// 捕食分类节点及其祖先的整数下标（升序、去重）。
+    pub prey_ancestors: Vec<u16>,
+    /// 寄生分类节点及其祖先的整数下标（升序、去重）。
+    pub host_ancestors: Vec<u16>,
+}
+
+/// 由卡牌计算筛选事实；分类树缺失的节点按不命中处理。
+fn compute_filter_facts(taxonomy: &Taxonomy, card: &Card) -> CardFilterFacts {
+    let mut facts = CardFilterFacts {
+        taxon: taxonomy.node_id(&card.taxon),
+        ..CardFilterFacts::default()
+    };
+    for category in &card.categories {
+        match category.kind {
+            CategoryKind::Play => {
+                facts.play_mask |= play_bit(&category.value).unwrap_or(0);
+            }
+            CategoryKind::Prey | CategoryKind::Host => {
+                let Some(node) = taxonomy.node_id(&category.value) else {
+                    continue;
+                };
+                let target = if category.kind == CategoryKind::Prey {
+                    &mut facts.prey_ancestors
+                } else {
+                    &mut facts.host_ancestors
+                };
+                target.extend(taxonomy.ancestor_ids(node));
+                target.sort_unstable();
+                target.dedup();
+            }
+        }
+    }
+    facts
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
@@ -158,13 +227,11 @@ fn default_true() -> bool {
     true
 }
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone)]
 pub struct Card {
     pub id: String,
     pub card_type: CardType,
     /// 是否进入商店卡池、共享牌池、三连与发现；衍生物与生成卡为 `false`。
-    #[serde(default = "default_true")]
     pub in_shop_pool: bool,
     pub taxon: String,
     pub categories: Vec<Category>,
@@ -173,17 +240,44 @@ pub struct Card {
     pub era: Option<Era>,
     pub attack: Option<i32>,
     pub health: Option<i32>,
-    pub skills: Vec<String>,
+    pub skills: Vec<SkillId>,
     pub cost: Option<u8>,
 }
 
 /// 英雄卡：只保留身份与技能字段，与随从卡分属不同集合。
-#[derive(Debug, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone)]
 pub struct HeroCard {
     pub id: String,
     pub categories: Vec<Category>,
-    pub skills: Vec<String>,
+    pub skills: Vec<SkillId>,
+}
+
+/// `cards.json` 的原始条目；`skills` 在技能表建立后再解析为整数标识。
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawCard {
+    id: String,
+    card_type: CardType,
+    #[serde(default = "default_true")]
+    in_shop_pool: bool,
+    taxon: String,
+    categories: Vec<Category>,
+    subtype: Option<String>,
+    level: u8,
+    era: Option<Era>,
+    attack: Option<i32>,
+    health: Option<i32>,
+    skills: Vec<String>,
+    cost: Option<u8>,
+}
+
+/// `heroes.json` 的原始条目。
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawHeroCard {
+    id: String,
+    categories: Vec<Category>,
+    skills: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -214,22 +308,29 @@ pub struct GameConfig {
 
 /// 加载期构建的只读目录。
 ///
-/// `cards` / `skills` 虽然公开，但 `card_keywords` 位图侧表只在 [`Catalog::from_json`]
-/// 时按当时的内容构建一次。加载完成后不得原地修改 `cards` / `skills` 中**已存在**
-/// 条目的技能或关键词；需要改动时重建 `Catalog`。加载后**新增**的卡 id 不在侧表内，
+/// `cards` / `heroes` 公开，但 `card_keywords` 位图侧表只在 [`Catalog::from_json`]
+/// 时按当时的内容构建一次。加载完成后不得原地修改 `cards` 中**已存在**条目的
+/// 技能或关键词；需要改动时重建 `Catalog`。加载后**新增**的卡 id 不在侧表内，
 /// `base_keywords` 会回退到字符串路径，结果与加载期口径一致。
+///
+/// 卡牌与英雄引用技能时保存 [`SkillId`]，测试新增技能走 [`Catalog::insert_skill`]。
 #[derive(Debug, Clone)]
 pub struct Catalog {
     pub cards: BTreeMap<String, Card>,
     pub heroes: BTreeMap<String, HeroCard>,
-    pub skills: BTreeMap<String, Skill>,
+    /// 技能表，下标即 [`SkillId`]。
+    skills: Vec<Skill>,
+    /// 技能 id 到整数标识的映射；与 `skills` 下标一一对应。
+    skill_ids: HashMap<String, SkillId>,
     pub config: GameConfig,
     pub taxonomy: Taxonomy,
     /// 卡面自带关键词的位图侧表；由 `from_json` 预计算。
     ///
-    /// 测试可能直接往 `cards` / `skills` 插卡，因此 `base_keywords` 在侧表
+    /// 测试可能直接往 `cards` 插卡，因此 `base_keywords` 在侧表
     /// 缺失时回退到即时计算。
     card_keywords: BTreeMap<String, KeywordSet>,
+    /// 筛选键的预计算事实；由 `from_json` 生成，测试直接插卡时回退即时计算。
+    card_filter_facts: BTreeMap<String, CardFilterFacts>,
 }
 
 /// 卡牌是否在本局卡池内。
@@ -259,9 +360,9 @@ impl Catalog {
         config: &str,
         taxonomy: &str,
     ) -> Result<Catalog, CatalogError> {
-        let cards: Vec<Card> =
+        let raw_cards: Vec<RawCard> =
             serde_json::from_str(cards).map_err(|err| CatalogError::File("cards.json", err))?;
-        let heroes: Vec<HeroCard> =
+        let raw_heroes: Vec<RawHeroCard> =
             serde_json::from_str(heroes).map_err(|err| CatalogError::File("heroes.json", err))?;
         let skills: Vec<Skill> =
             serde_json::from_str(skills).map_err(|err| CatalogError::File("skills.json", err))?;
@@ -270,30 +371,64 @@ impl Catalog {
         let taxonomy: Taxonomy = Taxonomy::from_json(taxonomy)
             .map_err(|err| CatalogError::File("taxonomy.json", err))?;
 
-        let card_map = collect_unique(cards, "cards.json", |card| &card.id)?;
-        let hero_map = collect_unique(heroes, "heroes.json", |hero| &hero.id)?;
+        let raw_card_map = collect_unique(raw_cards, "cards.json", |card| &card.id)?;
+        let raw_hero_map = collect_unique(raw_heroes, "heroes.json", |hero| &hero.id)?;
         let skill_map = collect_unique(skills, "skills.json", |skill| &skill.id)?;
 
-        for card in card_map.values() {
-            for skill in &card.skills {
-                if !skill_map.contains_key(skill) {
-                    return Err(CatalogError::Rule(format!(
-                        "cards.json: 卡牌 {} 引用了不存在的技能 {}",
-                        card.id, skill
-                    )));
-                }
-            }
-        }
+        // 技能按下标编号；`BTreeMap` 的升序遍历让编号只由 id 排序决定。
+        let skill_list: Vec<Skill> = skill_map.values().cloned().collect();
+        let skill_ids: HashMap<String, SkillId> = skill_map
+            .keys()
+            .enumerate()
+            .map(|(index, id)| (id.clone(), SkillId::from_index(index)))
+            .collect();
+
+        let card_map = raw_card_map
+            .into_iter()
+            .map(|(id, raw)| {
+                let skills =
+                    resolve_skills(&skill_ids, &raw.skills, "cards.json", &format!("卡牌 {id}"))?;
+                Ok((
+                    id,
+                    Card {
+                        id: raw.id,
+                        card_type: raw.card_type,
+                        in_shop_pool: raw.in_shop_pool,
+                        taxon: raw.taxon,
+                        categories: raw.categories,
+                        subtype: raw.subtype,
+                        level: raw.level,
+                        era: raw.era,
+                        attack: raw.attack,
+                        health: raw.health,
+                        skills,
+                        cost: raw.cost,
+                    },
+                ))
+            })
+            .collect::<Result<BTreeMap<String, Card>, CatalogError>>()?;
+
+        let hero_map = raw_hero_map
+            .into_iter()
+            .map(|(id, raw)| {
+                let skills = resolve_skills(
+                    &skill_ids,
+                    &raw.skills,
+                    "heroes.json",
+                    &format!("英雄卡 {id}"),
+                )?;
+                Ok((
+                    id,
+                    HeroCard {
+                        id: raw.id,
+                        categories: raw.categories,
+                        skills,
+                    },
+                ))
+            })
+            .collect::<Result<BTreeMap<String, HeroCard>, CatalogError>>()?;
 
         for hero in hero_map.values() {
-            for skill in &hero.skills {
-                if !skill_map.contains_key(skill) {
-                    return Err(CatalogError::Rule(format!(
-                        "heroes.json: 英雄卡 {} 引用了不存在的技能 {}",
-                        hero.id, skill
-                    )));
-                }
-            }
             // 两池同名同 id，但必须各自从自己的池取数；关联分类不一致会让
             // 仅按用途选池的查询产生分叉，因此在加载期直接拒绝。技能各自维护，
             // 英雄技能与同名随从卡的技能不要求一致。
@@ -346,10 +481,7 @@ impl Catalog {
             .map(|(id, card)| {
                 let mut set = KeywordSet::default();
                 for skill_id in &card.skills {
-                    if let Some(keyword) = skill_map
-                        .get(skill_id)
-                        .and_then(|skill| skill.keyword.as_deref())
-                    {
+                    if let Some(keyword) = skill_list[skill_id.index()].keyword.as_deref() {
                         set.insert(keyword);
                     }
                 }
@@ -357,14 +489,74 @@ impl Catalog {
             })
             .collect();
 
+        let card_filter_facts = card_map
+            .iter()
+            .map(|(id, card)| (id.clone(), compute_filter_facts(&taxonomy, card)))
+            .collect();
+
         Ok(Catalog {
             cards: card_map,
             heroes: hero_map,
-            skills: skill_map,
+            skills: skill_list,
+            skill_ids,
             config,
             taxonomy,
             card_keywords,
+            card_filter_facts,
         })
+    }
+
+    /// 技能表。
+    pub fn skills(&self) -> &[Skill] {
+        &self.skills
+    }
+
+    /// 按整数标识取技能；标识只由本目录产生，越界属调用方缺陷。
+    pub fn skill(&self, id: SkillId) -> &Skill {
+        &self.skills[id.index()]
+    }
+
+    /// 整数标识对应的技能 id；与 [`Catalog::skill`] 同源。
+    pub fn skill_name(&self, id: SkillId) -> &str {
+        &self.skill(id).id
+    }
+
+    /// 技能 id 的整数标识；未知 id 返回 `None`。
+    pub fn skill_id(&self, id: &str) -> Option<SkillId> {
+        self.skill_ids.get(id).copied()
+    }
+
+    /// 按字符串技能 id 取技能；视图与意图入口使用。
+    pub fn skill_by_name(&self, id: &str) -> Option<&Skill> {
+        self.skill_id(id).map(|skill| self.skill(skill))
+    }
+
+    /// 新增或替换一个技能，返回其整数标识；测试构造目录时使用。
+    ///
+    /// 替换同名技能不改变已有 [`SkillId`]，因此已经解析过该技能的卡牌条目
+    /// 会读到最后写入的内容。
+    pub fn insert_skill(&mut self, skill: Skill) -> SkillId {
+        if let Some(existing) = self.skill_id(&skill.id) {
+            self.skills[existing.index()] = skill;
+            return existing;
+        }
+        let id = SkillId::from_index(self.skills.len());
+        self.skill_ids.insert(skill.id.clone(), id);
+        self.skills.push(skill);
+        id
+    }
+
+    /// 筛选键使用的卡牌事实；侧表缺失时按当前分类即时计算。
+    pub(crate) fn filter_facts(
+        &self,
+        card_id: &str,
+    ) -> Option<std::borrow::Cow<'_, CardFilterFacts>> {
+        if let Some(facts) = self.card_filter_facts.get(card_id) {
+            return Some(std::borrow::Cow::Borrowed(facts));
+        }
+        self.cards
+            .get(card_id)
+            .map(|card| std::borrow::Cow::Owned(compute_filter_facts(&self.taxonomy, card)))
     }
 
     /// 卡面自带关键词的位图集合，不含战斗内授予与光环派生。
@@ -379,11 +571,7 @@ impl Catalog {
         let mut set = KeywordSet::default();
         if let Some(card) = self.cards.get(card_id) {
             for skill_id in &card.skills {
-                if let Some(keyword) = self
-                    .skills
-                    .get(skill_id)
-                    .and_then(|skill| skill.keyword.as_deref())
-                {
+                if let Some(keyword) = self.skill(*skill_id).keyword.as_deref() {
                     set.insert(keyword);
                 }
             }
@@ -500,6 +688,23 @@ fn check_taxon(taxonomy: &Taxonomy, owner: &str, taxon: &str, errors: &mut Vec<S
     } else if !taxonomy.is_leaf(taxon) {
         errors.push(format!("{owner}: taxon {taxon} 不是叶子节点"));
     }
+}
+
+/// 把技能 id 列表解析为整数标识；未知技能带上文件与归属信息报错。
+fn resolve_skills(
+    skill_ids: &HashMap<String, SkillId>,
+    names: &[String],
+    file: &'static str,
+    owner: &str,
+) -> Result<Vec<SkillId>, CatalogError> {
+    names
+        .iter()
+        .map(|name| {
+            skill_ids.get(name).copied().ok_or_else(|| {
+                CatalogError::Rule(format!("{file}: {owner} 引用了不存在的技能 {name}"))
+            })
+        })
+        .collect()
 }
 
 fn collect_unique<T>(

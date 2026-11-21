@@ -284,7 +284,7 @@ impl GameTask {
             )));
         }
 
-        let (mut engine, mut state) = Engine::new(catalog, seed_from_u64(seed), playstyles);
+        let (engine, mut state) = Engine::new(catalog, seed_from_u64(seed), playstyles);
         engine.start_game(&mut state, &heroes)?;
 
         // 下标即座位号：`Room::players` 按 `BTreeMap<Seat, _>` 升序遍历，

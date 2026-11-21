@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use rule_engine::combat::{effective_attack, effective_health};
 use rule_engine::data::{Card, CardType, Catalog, CategoryKind, Playstyle, Skill};
 use rule_engine::effects::{
-    Duration, Effect, EffectCtx, Op, Pick, Selector, Side, TargetRef, Trigger, Zone,
+    Duration, Effect, EffectCtx, Op, Params, Pick, Selector, Side, TargetRef, Trigger, Zone,
 };
 use rule_engine::engine::Engine;
 use rule_engine::intent::{Intent, Reject, RejectCode};
@@ -175,14 +175,12 @@ fn choose_hero_power(state: &GameState, player: &PlayerState, engine: &Engine) -
     let hero_id = player.hero.as_deref()?;
     let hero = engine.catalog.heroes.get(hero_id)?;
     for skill_id in &hero.skills {
-        let Some(skill) = engine.catalog.skills.get(skill_id) else {
-            continue;
-        };
+        let skill = engine.catalog.skill(*skill_id);
         let Some(cost) = skill.cost else {
             continue;
         };
         let limit = skill.uses_per_turn.unwrap_or(1);
-        let used = player.hero_uses.get(skill_id).copied().unwrap_or(0);
+        let used = player.hero_uses.get(&skill.id).copied().unwrap_or(0);
         if used >= limit || player.gold < cost {
             continue;
         }
@@ -190,7 +188,7 @@ fn choose_hero_power(state: &GameState, player: &PlayerState, engine: &Engine) -
             continue;
         };
         return Some(Intent::UseHeroPower {
-            skill_id: skill_id.clone(),
+            skill_id: skill.id.clone(),
             target,
         });
     }
@@ -304,8 +302,8 @@ fn choose_hero_power_target(
             .or_else(|| candidates.first().copied());
     }
     if effect.op == Op::GrantKeyword
-        && effect.params.duration == Some(Duration::Permanent)
-        && let Some(keyword) = &effect.params.keyword
+        && let Params::GrantKeyword(params) = &effect.params
+        && params.duration == Some(Duration::Permanent)
     {
         return candidates
             .iter()
@@ -313,7 +311,8 @@ fn choose_hero_power_target(
             .filter(|target| target.zone == Zone::Board)
             .filter(|target| {
                 board_minion(player, target.id).is_some_and(|minion| {
-                    !rule_engine::combat::keywords(catalog, minion).contains(&keyword.keyword)
+                    !rule_engine::combat::keyword_set(catalog, minion)
+                        .contains_name(&params.keyword.keyword)
                 })
             })
             .min_by_key(|target| target.id);
@@ -720,8 +719,7 @@ mod tests {
         let (engine, state) = hero_state("einstein", &["saman"], 10);
         let skill = engine
             .catalog
-            .skills
-            .get("light-speed-strike")
+            .skill_by_name("light-speed-strike")
             .expect("技能应存在");
         assert_eq!(
             hero_power_use(&state, &state.players[0], &engine, skill),

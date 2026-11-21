@@ -1,13 +1,11 @@
 mod common;
 
-use std::collections::BTreeSet;
-
 use common::{
     categories_for, effects_of, minion, reborn_count, test_catalog, test_playstyles, token_card,
 };
 use rule_engine::combat::{
     CombatAction, CombatLog, effective_attack, effective_attack_with, effective_health,
-    effective_health_with, keywords, simulate, simulate_with,
+    effective_health_with, keyword_set, simulate, simulate_with,
 };
 use rule_engine::data::{Card, CardType, Catalog, Playstyle, Skill};
 use rule_engine::effects::Duration;
@@ -28,17 +26,13 @@ fn add_card_with(
 ) {
     let mut skill_ids = Vec::new();
     for (index, keyword) in keyword_list.iter().enumerate() {
-        let skill_id = format!("{id}-skill-{index}");
-        catalog.skills.insert(
-            skill_id.clone(),
-            Skill {
-                id: skill_id.clone(),
-                keyword: Some((*keyword).to_string()),
-                effects: effects_of("[]"),
-                cost: None,
-                uses_per_turn: None,
-            },
-        );
+        let skill_id = catalog.insert_skill(Skill {
+            id: format!("{id}-skill-{index}"),
+            keyword: Some((*keyword).to_string()),
+            effects: effects_of("[]"),
+            cost: None,
+            uses_per_turn: None,
+        });
         skill_ids.push(skill_id);
     }
     catalog.cards.insert(
@@ -72,22 +66,19 @@ fn add_effect_skill(
     keyword: &str,
     effects: &str,
 ) {
-    catalog.skills.insert(
-        skill_id.to_string(),
-        Skill {
-            id: skill_id.to_string(),
-            keyword: Some(keyword.to_string()),
-            effects: effects_of(effects),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill = catalog.insert_skill(Skill {
+        id: skill_id.to_string(),
+        keyword: Some(keyword.to_string()),
+        effects: effects_of(effects),
+        cost: None,
+        uses_per_turn: None,
+    });
     catalog
         .cards
         .get_mut(card_id)
         .expect("卡牌应存在")
         .skills
-        .push(skill_id.to_string());
+        .push(skill);
 }
 
 fn add_seedling_token(catalog: &mut Catalog) {
@@ -724,7 +715,7 @@ fn effective_stats_follow_evaluation_order() {
     let missing = minion(&catalog, 4, "missing-card");
     assert_eq!(effective_attack(&catalog, &missing), 0);
     assert_eq!(effective_health(&catalog, &missing), 0);
-    assert!(keywords(&catalog, &missing).is_empty());
+    assert!(keyword_set(&catalog, &missing).is_empty());
 }
 
 #[test]
@@ -740,11 +731,10 @@ fn keywords_merge_card_and_active_grants() {
         ("未知关键词".to_string(), Duration::Permanent),
     ];
 
-    let expected: BTreeSet<String> = ["divine_shield", "未知关键词", "taunt", "windfury"]
-        .into_iter()
+    let expected = ["divine_shield", "taunt", "windfury", "未知关键词"]
         .map(str::to_string)
-        .collect();
-    assert_eq!(keywords(&catalog, &subject), expected);
+        .to_vec();
+    assert_eq!(keyword_set(&catalog, &subject).names(), expected);
 }
 
 /// 构造一场真实配对战斗：座位 0、1 存活，其余标淘汰。
@@ -765,7 +755,7 @@ fn real_combat_state() -> (Engine, rule_engine::state::GameState) {
         AuraEffect {
             attack: 2,
             health: 1,
-            keywords: ["divine_shield"].into_iter().map(str::to_string).collect(),
+            keywords: rule_engine::keyword::KeywordSet::from_names(["divine_shield"]),
             floor_one: true,
         },
     );
@@ -779,7 +769,7 @@ fn real_combat_state() -> (Engine, rule_engine::state::GameState) {
 
 #[test]
 fn resolve_combat_returns_one_report_per_participant() {
-    let (mut engine, mut state) = real_combat_state();
+    let (engine, mut state) = real_combat_state();
 
     let outcome = engine.resolve_combat(&mut state).unwrap();
 
@@ -799,12 +789,12 @@ fn resolve_combat_returns_one_report_per_participant() {
     let folded_a = &report_a.own_board[0];
     assert_eq!(effective_attack(&engine.catalog, folded_a), 7);
     assert_eq!(effective_health(&engine.catalog, folded_a), 6);
-    assert!(keywords(&engine.catalog, folded_a).contains("divine_shield"));
+    assert!(keyword_set(&engine.catalog, folded_a).contains_name("divine_shield"));
     // 座位 1 视角的 opponent_board 看到的是同一份折叠后数值。
     let folded_b_view = &report_b.opponent_board[0];
     assert_eq!(effective_attack(&engine.catalog, folded_b_view), 7);
     assert_eq!(effective_health(&engine.catalog, folded_b_view), 6);
-    assert!(keywords(&engine.catalog, folded_b_view).contains("divine_shield"));
+    assert!(keyword_set(&engine.catalog, folded_b_view).contains_name("divine_shield"));
     // 持久棋盘保持原始数值：折叠只发生在报告副本上。
     assert_eq!(
         effective_attack(&engine.catalog, &state.players[0].board[0]),
@@ -814,7 +804,9 @@ fn resolve_combat_returns_one_report_per_participant() {
         effective_health(&engine.catalog, &state.players[0].board[0]),
         5
     );
-    assert!(!keywords(&engine.catalog, &state.players[0].board[0]).contains("divine_shield"));
+    assert!(
+        !keyword_set(&engine.catalog, &state.players[0].board[0]).contains_name("divine_shield")
+    );
     assert_eq!(state.players[0].board[0].stats.attack.layers(), 5);
     assert_eq!(state.players[0].board[0].stats.health.layers(), 5);
     assert!(state.players[0].board[0].granted.is_empty());
@@ -865,7 +857,7 @@ fn ghost_report_names_ghost_owner() {
 }
 
 fn state_hash_after_combat() -> u64 {
-    let (mut engine, mut state) = real_combat_state();
+    let (engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     // 保留报告并读取，模拟服务端需要这份数据；报告不得进入 GameState。
     assert_eq!(outcome.reports.len(), 2);
@@ -877,7 +869,7 @@ fn state_hash_after_combat() -> u64 {
 fn combat_reports_do_not_change_state_hash() {
     // 两次相同的 seed 与相同操作序列：一份取用报告，一份只丢哈希前不触碰报告。
     let with_reports = state_hash_after_combat();
-    let (mut engine, mut state) = real_combat_state();
+    let (engine, mut state) = real_combat_state();
     engine.resolve_combat(&mut state).unwrap();
     let discarded = state_hash(&state);
     assert_eq!(with_reports, discarded);
@@ -885,7 +877,7 @@ fn combat_reports_do_not_change_state_hash() {
 
 #[test]
 fn combat_reports_do_not_mutate_state_fields() {
-    let (mut engine, mut state) = real_combat_state();
+    let (engine, mut state) = real_combat_state();
     let before = state.clone();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     let damage = outcome.reports.get(&0).expect("座位 0 的报告").damage;
@@ -937,13 +929,14 @@ fn combat_state_hash_matches_golden_baseline() {
     // 新增 froze_this_turn 字段（解冻只在冻结的当回合可用）后玩家哈希再增加
     // 一个布尔值，金标准同步。
     // 移除 is_scholar 字段后随从哈希少写一个布尔值，金标准同步；战斗行为不变。
+    // 移除仅参与哈希的 turns_in_era 后玩家哈希少写一个字段，金标准同步；规则行为不变。
     // 行为不变，任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
-    let (mut engine, mut state) = real_combat_state();
+    let (engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "b086b2ab72b0e171",
+        "710e73f7570d6ce3",
         "固定场景的 state_hash 金标准"
     );
 }

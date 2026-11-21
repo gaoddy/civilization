@@ -111,7 +111,7 @@ pub fn board_minion_from(
         golden: minion.golden,
         health: non_negative(combat::effective_health(catalog, minion)),
         index: u64::try_from(index).unwrap_or(u64::MAX),
-        keywords: combat::keywords(catalog, minion).into_iter().collect(),
+        keywords: combat::keyword_set(catalog, minion).names(),
         minion_id: minion.instance_id.to_string(),
         sellable,
         stats: Some(stats_to_protocol(&stats_breakdown(minion))),

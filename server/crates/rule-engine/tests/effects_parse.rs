@@ -3,9 +3,19 @@ mod common;
 use common::{CONFIG_JSON, TAXONOMY_JSON, effects_of};
 use rule_engine::data::{CardType, Catalog};
 use rule_engine::effects::{
-    Basis, Compare, Duration, Filter, KeywordSpec, Op, Pick, Selector, Side, TimesIf, Trigger,
-    Zone, parse_effects,
+    Basis, Compare, Duration, Filter, FilterKey, KeywordSpec, Op, Params, Pick, Selector, Side,
+    TimesIf, Trigger, Zone, parse_effects,
 };
+
+/// 取出与 `op` 对应的参数变体；类型不一致说明解析结果有误。
+macro_rules! params {
+    ($effect:expr, $variant:ident) => {
+        match &$effect.params {
+            Params::$variant(params) => params,
+            other => panic!("期望 Params::{}，实为 {other:?}", stringify!($variant)),
+        }
+    };
+}
 use rule_engine::error::CatalogError;
 
 #[test]
@@ -13,11 +23,12 @@ fn parses_new_ops_and_params() {
     let effects = effects_of(
         "Aura|ModifyStats|friendly:all:playstyle=fish|attack=1,health=1,perAttack=1,perHealth=0,maxCount=6",
     );
-    assert_eq!(effects[0].params.per_attack, Some(1));
-    assert_eq!(effects[0].params.max_count, Some(6));
+    let stats = params!(effects[0], ModifyStats);
+    assert_eq!(stats.per_attack, Some(1));
+    assert_eq!(stats.max_count, Some(6));
     let effects = effects_of("OnCombatStart|Detonate|enemy:single|amount=2,threshold=3");
     assert_eq!(effects[0].op, Op::Detonate);
-    assert_eq!(effects[0].params.threshold, Some(3));
+    assert_eq!(params!(effects[0], Detonate).threshold, Some(3));
 }
 
 #[test]
@@ -55,7 +66,7 @@ fn parses_all_new_ops() {
 fn parses_mimic_stats_only() {
     let effects = effects_of("OnCombatStart|Mimic|friendly:single|duration=combat,statsOnly=true");
     assert_eq!(effects[0].op, Op::Mimic);
-    assert_eq!(effects[0].params.stats_only, Some(true));
+    assert_eq!(params!(effects[0], Mimic).stats_only, Some(true));
 
     // statsOnly 只属于拟态。
     assert!(
@@ -99,29 +110,29 @@ fn parses_new_picks() {
 fn parses_new_keywords() {
     let effects = effects_of("OnCombatStart|GrantKeyword|friendly:single|keyword=poison");
     assert_eq!(
-        effects[0].params.keyword,
-        Some(KeywordSpec {
+        params!(effects[0], GrantKeyword).keyword,
+        KeywordSpec {
             keyword: "poison".into(),
             value: None,
-        })
+        }
     );
 
     let effects = effects_of("OnCombatStart|GrantKeyword|friendly:single|keyword=armor 2");
     assert_eq!(
-        effects[0].params.keyword,
-        Some(KeywordSpec {
+        params!(effects[0], GrantKeyword).keyword,
+        KeywordSpec {
             keyword: "armor".into(),
             value: Some(2),
-        })
+        }
     );
 
     let effects = effects_of("OnCombatStart|GrantKeyword|friendly:single|keyword=stealth");
     assert_eq!(
-        effects[0].params.keyword,
-        Some(KeywordSpec {
+        params!(effects[0], GrantKeyword).keyword,
+        KeywordSpec {
             keyword: "stealth".into(),
             value: None,
-        })
+        }
     );
 
     // armor 必须带层数，poison / stealth 禁止层数。
@@ -152,8 +163,7 @@ fn parses_a_growth_effect() {
             ..
         }
     ));
-    assert_eq!(e[0].params.times, Some(2));
-    assert_eq!(e[0].params.duration, None);
+    assert_eq!(params!(e[0], Growth).times, 2);
 }
 
 #[test]
@@ -162,16 +172,17 @@ fn parses_aura_and_keyword_value() {
         "Aura|ModifyStats|friendly:all:playstyle=machine|attack=2,health=2,duration=permanent",
     )
     .unwrap();
-    assert_eq!(e[0].params.duration, Some(Duration::Permanent));
-    assert_eq!(e[0].params.attack, Some(2));
-    assert_eq!(e[0].params.health, Some(2));
+    let stats = params!(e[0], ModifyStats);
+    assert_eq!(stats.duration, Some(Duration::Permanent));
+    assert_eq!(stats.attack, Some(2));
+    assert_eq!(stats.health, Some(2));
     assert_eq!(
         e[0].selector,
         Selector::Side {
             side: Side::Friendly,
             pick: Pick::All,
             filters: vec![Filter {
-                key: "playstyle".into(),
+                key: FilterKey::Playstyle,
                 value: "machine".into(),
             }],
         }
@@ -180,7 +191,7 @@ fn parses_aura_and_keyword_value() {
     let k = parse_effects("OnPlay|GrantKeyword|friendly:single|keyword=breed 2,duration=permanent")
         .unwrap();
     assert!(
-        matches!(k[0].params.keyword, Some(KeywordSpec { keyword: ref s, value: Some(2) }) if s == "breed")
+        matches!(&params!(k[0], GrantKeyword).keyword, KeywordSpec { keyword: s, value: Some(2) } if s == "breed")
     );
 }
 
@@ -205,11 +216,11 @@ fn parses_selector_shorthands_and_multiple_filters() {
     match &filters[0].selector {
         Selector::Side { filters, .. } => {
             assert_eq!(filters.len(), 3);
-            assert_eq!(filters[0].key, "playstyle");
+            assert_eq!(filters[0].key, FilterKey::Playstyle);
             assert_eq!(filters[0].value, "plant");
-            assert_eq!(filters[1].key, "other");
+            assert_eq!(filters[1].key, FilterKey::Other);
             assert_eq!(filters[1].value, "true");
-            assert_eq!(filters[2].key, "type");
+            assert_eq!(filters[2].key, FilterKey::Type);
             assert_eq!(filters[2].value, "minion");
         }
         other => panic!("expected side selector, got {other:?}"),
@@ -222,12 +233,12 @@ fn parses_structured_params() {
         "ConditionalAura|ModifyStats|self|attack=1,duration=permanent,condition=count:friendly:playstyle=mammal:>=2",
     )
     .unwrap();
-    let condition = e[0].params.condition.as_ref().unwrap();
+    let condition = e[0].params.condition().unwrap();
     assert_eq!(condition.side, Side::Friendly);
     assert_eq!(
         condition.filter,
         Filter {
-            key: "playstyle".into(),
+            key: FilterKey::Playstyle,
             value: "mammal".into(),
         }
     );
@@ -237,52 +248,55 @@ fn parses_structured_params() {
     let e =
         parse_effects("OnPlay|Growth|friendly:single|times=1,timesIf=playstyle:mammal:2").unwrap();
     assert_eq!(
-        e[0].params.times_if,
+        params!(e[0], Growth).times_if,
         Some(TimesIf {
-            key: "playstyle".into(),
-            value: Some("mammal".into()),
+            key: FilterKey::Playstyle,
+            value: "mammal".into(),
             times: 2
         })
     );
 
     let e = parse_effects("OnAllySummon|ModifyStats|self|attack=1,when=playstyle=mammal").unwrap();
     assert_eq!(
-        e[0].params.when,
+        params!(e[0], ModifyStats).when,
         Some(Filter {
-            key: "playstyle".into(),
+            key: FilterKey::Playstyle,
             value: "mammal".into(),
         })
     );
 
     let e = parse_effects("OnActivate|Copy|target:hand:type=minion|from=hand,type=minion,to=hand")
         .unwrap();
-    assert_eq!(e[0].params.from, Some(Zone::Hand));
-    assert_eq!(e[0].params.to, Some(Zone::Hand));
-    assert_eq!(e[0].params.card_type, Some(CardType::Minion));
+    let copy = params!(e[0], Copy);
+    assert_eq!(copy.from, Some(Zone::Hand));
+    assert_eq!(copy.to, Zone::Hand);
+    assert_eq!(copy.card_type, Some(CardType::Minion));
 
     let e = parse_effects("OnActivate|Discover|self|pool=playstyle,choose=1").unwrap();
-    assert_eq!(e[0].params.pool.as_deref(), Some("playstyle"));
-    assert_eq!(e[0].params.choose, Some(1));
+    let discover = params!(e[0], Discover);
+    assert_eq!(discover.pool, "playstyle");
+    assert_eq!(discover.choose, 1);
 
     let e = parse_effects("OnFirstRefresh|AddShopSlot|self|era=current,count=1").unwrap();
-    assert_eq!(e[0].params.era.as_deref(), Some("current"));
-    assert_eq!(e[0].params.count, Some(1));
+    let slots = params!(e[0], AddShopSlot);
+    assert_eq!(slots.era, "current");
+    assert_eq!(slots.count, 1);
 
     let e =
         parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=contagion,value=1").unwrap();
     assert!(matches!(
-        e[0].params.keyword,
-        Some(KeywordSpec { keyword: ref name, value: Some(1) }) if name == "contagion"
+        &params!(e[0], GrantKeyword).keyword,
+        KeywordSpec { keyword: name, value: Some(1) } if name == "contagion"
     ));
-    assert_eq!(e[0].params.value, Some(1));
+    assert_eq!(params!(e[0], GrantKeyword).value, Some(1));
 
     let e =
         parse_effects("OnPlayEffect|GrantKeyword|friendly:single|keyword=breed,value=2").unwrap();
     assert!(matches!(
-        e[0].params.keyword,
-        Some(KeywordSpec { keyword: ref name, value: Some(2) }) if name == "breed"
+        &params!(e[0], GrantKeyword).keyword,
+        KeywordSpec { keyword: name, value: Some(2) } if name == "breed"
     ));
-    assert_eq!(e[0].params.value, Some(2));
+    assert_eq!(params!(e[0], GrantKeyword).value, Some(2));
 }
 
 #[test]
@@ -294,8 +308,8 @@ fn parses_multiple_segments_and_empty_effects() {
     )
     .unwrap();
     assert_eq!(e.len(), 2);
-    assert_eq!(e[0].params.free, Some(true));
-    assert_eq!(e[1].params.level.as_deref(), Some("current"));
+    assert_eq!(params!(e[0], RefreshShop).free, Some(true));
+    assert_eq!(params!(e[1], GainMinion).level, "current");
 }
 
 #[test]
@@ -362,8 +376,8 @@ fn catalog_rejects_semantically_invalid_effect_at_load() {
 fn parses_deal_damage_can_kill() {
     let e = parse_effects("OnCombatStart|DealDamage|enemy:random|amount=3,canKill=false").unwrap();
     assert_eq!(e[0].op, Op::DealDamage);
-    assert_eq!(e[0].params.amount, Some(3));
-    assert_eq!(e[0].params.can_kill, Some(false));
+    assert_eq!(params!(e[0], DealDamage).amount, 3);
+    assert_eq!(params!(e[0], DealDamage).can_kill, Some(false));
 }
 
 #[test]
@@ -386,11 +400,11 @@ fn semantic_rules_live_in_validate_only() {
     let e = parse_effects("OnCombatStart|GrantKeyword|enemy:all|keyword=breed 2")
         .expect("内联层数应可解析");
     assert_eq!(
-        e[0].params.keyword,
-        Some(KeywordSpec {
+        params!(e[0], GrantKeyword).keyword,
+        KeywordSpec {
             keyword: "breed".into(),
             value: Some(2)
-        })
+        }
     );
 }
 
@@ -399,17 +413,17 @@ fn parses_kill_triggers_and_decompose_basis() {
     let e = parse_effects("OnKill|Decompose|self|basis=original,duration=permanent").unwrap();
     assert_eq!(e[0].trigger, Trigger::OnKill);
     assert_eq!(e[0].op, Op::Decompose);
-    assert_eq!(e[0].params.basis, Some(Basis::Original));
-    assert_eq!(e[0].params.duration, Some(Duration::Permanent));
+    assert_eq!(params!(e[0], Decompose).basis, Basis::Original);
+    assert_eq!(params!(e[0], Decompose).duration, Duration::Permanent);
 
     let ally =
         parse_effects("OnAllyKill|Decompose|self|basis=combat_start,duration=combat").unwrap();
     assert_eq!(ally[0].trigger, Trigger::OnAllyKill);
-    assert_eq!(ally[0].params.basis, Some(Basis::CombatStart));
+    assert_eq!(params!(ally[0], Decompose).basis, Basis::CombatStart);
 
     let pre_kill =
         parse_effects("OnFriendlyDeath|Decompose|self|basis=pre_kill,duration=permanent").unwrap();
-    assert_eq!(pre_kill[0].params.basis, Some(Basis::PreKill));
+    assert_eq!(params!(pre_kill[0], Decompose).basis, Basis::PreKill);
 }
 
 #[test]

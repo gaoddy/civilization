@@ -237,7 +237,6 @@
 | 友方随从入场 | `OnAllySummon` | 招募 / 战斗 | 召唤物 |
 | 友方获得成长 | `OnAllyGrowth` | 招募 / 战斗 | 获得成长者 |
 | 友方进化 | `OnAllyEvolve` | 招募 | 进化者 |
-| 战斗结束 | `OnCombatEnd` | 战斗 · 结算前 | 自身 |
 | 静态光环 | `Aura` | 持续求值 | — |
 | 条件静态 | `ConditionalAura` | 持续求值 | — |
 
@@ -277,7 +276,7 @@
 | 召唤 | `Summon {selector, token 或 card, count}` | 召唤位置由 `selector` 决定；`token` 取非池卡（`in_shop_pool: false`）id，`card` 取进池卡 id |
 | 复制 | `Copy {selector, to}` | `to` 为手牌或战场 |
 | 发现 | `Discover {pool, choose}` | 三选一 |
-| 刷新商店 | `RefreshShop {free, extra}` | 主动技能专用 |
+| 刷新商店 | `RefreshShop {free}` | 主动技能专用 |
 | 增加商店槽位 | `AddShopSlot {era, count}` | 主动技能专用；商店额外出现 `count` 张 `era=current` 的随从 |
 | 获得随从 | `GainMinion {from, level, to}` | 主动技能专用 |
 | 发放随从 | `GrantMinion {level, to}` | 随机获得一张命中本局启用玩法、`in_shop_pool: true` 的随从进手牌；`level=next` 为来源星级 +1（6 星封顶）；不扣共享牌池，无候选时照常消耗 |
@@ -323,7 +322,7 @@
 
 | 参数 | 取值 | 用于 |
 | --- | --- | --- |
-| `times` / `count` / `amount` / `attack` / `health` / `value` / `extra` | 整数（可为负） | 次数、数量、伤害与数值改动 |
+| `times` / `count` / `amount` / `attack` / `health` / `value` | 整数（可为负） | 次数、数量、伤害与数值改动 |
 | `duration` | `permanent` / `combat` | 见 §3.1；`Decompose` 必填，其余省略按 `instant` |
 | `canKill` | `true` / `false` | 负向修改是否可致死 |
 | `healthOnly` | `true` / `false` | 成长只加生命值 |

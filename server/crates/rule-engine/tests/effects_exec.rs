@@ -6,7 +6,8 @@ use common::{categories_for, effects_of, minion, place, setup, test_catalog};
 use rule_engine::combat::{self, CombatAction, CombatLog, CombatSetup, simulate_with};
 use rule_engine::data::{Card, CardType, Playstyle, Skill};
 use rule_engine::effects::{
-    Duration, Effect, EffectCtx, Op, TargetRef, Trigger, Zone, effect_coverage, parse_effects,
+    Duration, Effect, EffectCtx, Op, Params, TargetRef, Trigger, Zone, effect_coverage,
+    parse_effects,
 };
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
@@ -27,17 +28,13 @@ fn board_target(id: u64) -> TargetRef {
 fn add_card(engine: &mut Engine, id: &str, attack: i32, health: i32, keywords: &[&str]) {
     let mut skill_ids = Vec::new();
     for (index, keyword) in keywords.iter().enumerate() {
-        let skill_id = format!("{id}-skill-{index}");
-        engine.catalog.skills.insert(
-            skill_id.clone(),
-            Skill {
-                id: skill_id.clone(),
-                keyword: Some((*keyword).to_string()),
-                effects: Vec::new(),
-                cost: None,
-                uses_per_turn: None,
-            },
-        );
+        let skill_id = engine.catalog.insert_skill(Skill {
+            id: format!("{id}-skill-{index}"),
+            keyword: Some((*keyword).to_string()),
+            effects: Vec::new(),
+            cost: None,
+            uses_per_turn: None,
+        });
         skill_ids.push(skill_id);
     }
     engine.catalog.cards.insert(
@@ -70,17 +67,13 @@ fn add_effect_card(
 ) {
     add_card(engine, id, attack, health, keywords);
     for (index, raw) in effects.iter().enumerate() {
-        let skill_id = format!("{id}-effect-{index}");
-        engine.catalog.skills.insert(
-            skill_id.clone(),
-            Skill {
-                id: skill_id.clone(),
-                keyword: None,
-                effects: effects_of(raw),
-                cost: None,
-                uses_per_turn: None,
-            },
-        );
+        let skill_id = engine.catalog.insert_skill(Skill {
+            id: format!("{id}-effect-{index}"),
+            keyword: None,
+            effects: effects_of(raw),
+            cost: None,
+            uses_per_turn: None,
+        });
         engine
             .catalog
             .cards
@@ -116,7 +109,7 @@ fn board_minion(state: &GameState, seat: Seat, index: usize) -> &MinionInstance 
 
 #[test]
 fn battlecry_growth_adds_permanent_stats() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "pink-ape");
     let attack_before = combat::effective_attack(&engine.catalog, board_minion(&state, 0, 0));
     let health_before = combat::effective_health(&engine.catalog, board_minion(&state, 0, 0));
@@ -146,7 +139,7 @@ fn battlecry_growth_adds_permanent_stats() {
 
 #[test]
 fn growth_applies_attack_and_health_to_zero_attack_minion() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "aristotle");
 
     engine.apply_op(
@@ -188,7 +181,7 @@ fn health_only_growth_adds_no_attack() {
 
 #[test]
 fn modify_stats_permanent_and_combat() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
     let source_ctx = EffectCtx {
         source: Some(1),
@@ -220,7 +213,7 @@ fn modify_stats_permanent_and_combat() {
 
 #[test]
 fn grant_keyword_respects_duration() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
     place(&engine.catalog, &mut state, 0, 2, "yezhu");
     state.players[0].board[0].shield_used = true;
@@ -268,12 +261,12 @@ fn grant_keyword_respects_duration() {
             .granted
             .contains(&("windfury".into(), Duration::Combat))
     );
-    assert!(combat::keywords(&engine.catalog, windfury).contains("windfury"));
+    assert!(combat::keyword_set(&engine.catalog, windfury).contains_name("windfury"));
 
     state.phase = Phase::Settle;
     engine.resolve_settle(&mut state).expect("结算应成功");
     assert!(
-        !combat::keywords(&engine.catalog, board_minion(&state, 0, 1)).contains("windfury"),
+        !combat::keyword_set(&engine.catalog, board_minion(&state, 0, 1)).contains_name("windfury"),
         "combat 关键词在 Settle 前清除"
     );
     assert!(
@@ -287,7 +280,7 @@ fn grant_keyword_respects_duration() {
 
 #[test]
 fn remove_growth_reduces_growth_count() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
     state.players[0].board[0].stats.attack.add_growth(5);
     state.players[0].board[0].stats.health.add_growth(5);
@@ -307,7 +300,7 @@ fn remove_growth_reduces_growth_count() {
 
 #[test]
 fn cannot_attack_blocks_attacks() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
@@ -355,12 +348,15 @@ fn deal_damage_uses_selector_and_amount() {
 
 #[test]
 fn deal_damage_cannot_kill_floors_health_at_one() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     state.phase = Phase::Combat;
     place(&engine.catalog, &mut state, 1, 10, "yanhuashi");
 
     let mut damage = effect("OnCombatStart|DealDamage|enemy:all|amount=10");
-    damage.params.can_kill = Some(false);
+    let Params::DealDamage(params) = &mut damage.params else {
+        panic!("期望 DealDamage 参数");
+    };
+    params.can_kill = Some(false);
     let events = engine.apply_op(&mut state, &damage, &ctx(0), None);
 
     assert_eq!(events, vec![GameEvent::DamageTaken { seat: 1, amount: 4 }]);
@@ -370,7 +366,7 @@ fn deal_damage_cannot_kill_floors_health_at_one() {
 
 #[test]
 fn enemy_selectors_are_empty_during_recruit() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 1, 10, "yezhu");
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
@@ -393,7 +389,7 @@ fn enemy_selectors_are_empty_during_recruit() {
 
 #[test]
 fn times_if_changes_times_by_playstyle() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "tengman");
     place(&engine.catalog, &mut state, 0, 2, "yezhu");
     let growth_effect = effect("OnPlay|Growth|friendly:single|times=1,timesIf=playstyle:plant:2");
@@ -423,7 +419,7 @@ fn times_if_changes_times_by_playstyle() {
 
 #[test]
 fn condition_gates_effect() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "buluozhanshi");
     place(&engine.catalog, &mut state, 0, 2, "bruce-lee");
     let gated = effect(
@@ -452,7 +448,7 @@ fn condition_gates_effect() {
 
 #[test]
 fn golden_triggers_battlecry_twice() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "pink-ape");
 
     engine.fire(
@@ -474,7 +470,7 @@ fn golden_triggers_battlecry_twice() {
 
 #[test]
 fn on_activate_respects_cost_and_uses() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     state.players[0].hero = Some("luxun".to_string());
     state.players[0].gold = 5;
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
@@ -520,7 +516,7 @@ fn on_activate_respects_cost_and_uses() {
 
 #[test]
 fn buy_enters_hand_then_play_fires_on_play() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     state.players[0].gold = 10;
     state.players[0].shop = vec![Some(ShopSlot {
         instance_id: 4_242,
@@ -561,7 +557,7 @@ fn buy_enters_hand_then_play_fires_on_play() {
 
 #[test]
 fn play_effect_card_fires_effect_then_on_use() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yanhuashi");
     state.players[0]
         .hand
@@ -592,7 +588,7 @@ fn play_effect_card_fires_effect_then_on_use() {
 
 #[test]
 fn unimplemented_triggers_return_empty() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "pink-ape");
 
     let events = engine.fire(
@@ -696,7 +692,7 @@ fn selector_picks_cover_leftmost_adjacent_top_attack_and_other() {
 
 #[test]
 fn grant_contagion_stacks_layer() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
@@ -715,7 +711,7 @@ fn grant_contagion_stacks_layer() {
 
 #[test]
 fn grant_armor_keeps_layer_in_keyword_string() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
@@ -739,7 +735,7 @@ fn grant_armor_keeps_layer_in_keyword_string() {
 
 #[test]
 fn grant_armor_stacks_repeated_same_layer() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     for keyword in ["armor 1", "armor 1", "armor 2"] {
@@ -772,7 +768,7 @@ fn grant_armor_stacks_repeated_same_layer() {
 
 #[test]
 fn golden_minion_played_from_hand_doubles_battlecry() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
     state.next_instance_id = 100;
     state.players[0]
@@ -807,7 +803,7 @@ fn golden_minion_played_from_hand_doubles_battlecry() {
 #[test]
 fn golden_on_use_responder_triggers_twice() {
     fn responder_effect_count(golden: bool) -> usize {
-        let (mut engine, mut state) = setup(11);
+        let (engine, mut state) = setup(11);
         let mut responder = minion(&engine.catalog, 1, "yanhuashi");
         responder.golden = golden;
         state.players[0].board.push(responder);
@@ -852,7 +848,7 @@ fn both_side_merges_in_ascending_seat_order() {
 
 #[test]
 fn cannot_attack_without_duration_clears_at_settle() {
-    let (mut engine, mut state) = setup(11);
+    let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "yezhu");
 
     engine.apply_op(
@@ -912,7 +908,7 @@ fn mimic_copies_current_stats_and_keywords_not_growth() {
         "关键词按 duration 写入 granted"
     );
     assert!(
-        combat::keywords(&engine.catalog, source).contains("taunt"),
+        combat::keyword_set(&engine.catalog, source).contains_name("taunt"),
         "拟态后获得嘲讽"
     );
 
@@ -946,7 +942,7 @@ fn mimic_copies_current_stats_and_keywords_not_growth() {
         "combat 拟态在本回合结束后回滚"
     );
     assert!(
-        !combat::keywords(&engine.catalog, source).contains("taunt"),
+        !combat::keyword_set(&engine.catalog, source).contains_name("taunt"),
         "combat 关键词在结算后移除"
     );
 }
@@ -1260,7 +1256,7 @@ fn mimic_in_combat_excludes_aura_stats_and_keywords() {
         "卡面关键词照常复制"
     );
     assert!(
-        !combat::keywords(&engine.catalog, source).contains("ignore_taunt"),
+        !combat::keyword_set(&engine.catalog, source).contains_name("ignore_taunt"),
         "光环授予的关键词不复制"
     );
 }

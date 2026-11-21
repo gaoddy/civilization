@@ -80,7 +80,7 @@ pub struct CombatOutcome {
 
 impl Engine {
     /// 结束招募：生成本回合配对并进入 `Combat`。只做配对，不模拟战斗。
-    pub fn finish_recruit(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+    pub fn finish_recruit(&self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
         if state.phase == Phase::Recruit {
             self.recompute_auras(state);
         }
@@ -90,12 +90,24 @@ impl Engine {
     /// 按配对顺序模拟全部战斗，写入伤害、对手与阵容快照，进入 `Settle`。
     ///
     /// 返回的事件流与逐座位战斗报告；报告不写入 `GameState`，不影响 `state_hash`。
-    pub fn resolve_combat(&mut self, state: &mut GameState) -> Result<CombatOutcome, EngineError> {
-        resolve_combat(self, state)
+    pub fn resolve_combat(&self, state: &mut GameState) -> Result<CombatOutcome, EngineError> {
+        self.resolve_combat_with(state, true)
+    }
+
+    /// 同 [`Engine::resolve_combat`]，由调用方决定是否记录逐动作快照。
+    ///
+    /// 批量模拟不消费客户端回放数据，传入 `false` 可省去现场状态计算与
+    /// 按座位克隆；事件流与状态写回不受影响。
+    pub fn resolve_combat_with(
+        &self,
+        state: &mut GameState,
+        record_states: bool,
+    ) -> Result<CombatOutcome, EngineError> {
+        resolve_combat(self, state, record_states)
     }
 
     /// 结算伤害、淘汰与排名；正常结束时停留在 `Settle`，游戏结束时进入 `GameOver`。
-    pub fn resolve_settle(&mut self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
+    pub fn resolve_settle(&self, state: &mut GameState) -> Result<Vec<GameEvent>, EngineError> {
         let result = resolve_settle(&self.catalog.config, state);
         self.recompute_auras(state);
         result
@@ -283,7 +295,11 @@ fn abandon_pending_targets(state: &mut GameState) {
     }
 }
 
-fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<CombatOutcome, EngineError> {
+fn resolve_combat(
+    engine: &Engine,
+    state: &mut GameState,
+    record_states: bool,
+) -> Result<CombatOutcome, EngineError> {
     if state.phase != Phase::Combat {
         return Err(EngineError(format!(
             "当前阶段 {:?} 不能结算战斗",
@@ -299,9 +315,23 @@ fn resolve_combat(engine: &Engine, state: &mut GameState) -> Result<CombatOutcom
     let mut reports = BTreeMap::new();
     for pairing in pairings {
         if pairing.is_ghost() {
-            resolve_ghost(engine, state, pairing, &mut events, &mut reports);
+            resolve_ghost(
+                engine,
+                state,
+                pairing,
+                &mut events,
+                &mut reports,
+                record_states,
+            );
         } else {
-            resolve_real(engine, state, pairing, &mut events, &mut reports);
+            resolve_real(
+                engine,
+                state,
+                pairing,
+                &mut events,
+                &mut reports,
+                record_states,
+            );
         }
     }
 
@@ -331,6 +361,7 @@ fn resolve_real(
     pairing: Pairing,
     events: &mut Vec<GameEvent>,
     reports: &mut BTreeMap<Seat, SeatCombatReport>,
+    record_states: bool,
 ) {
     let catalog = &engine.catalog;
     let (a, b) = (pairing.a, pairing.b);
@@ -357,7 +388,7 @@ fn resolve_real(
         hand_slots: catalog.config.hand_slots,
         playstyles: Some(&playstyles),
     };
-    let log = combat::simulate_with(
+    let log = combat::simulate_with_recording(
         engine,
         &board_a,
         &board_b,
@@ -366,6 +397,7 @@ fn resolve_real(
         first,
         &mut state.rng,
         setup,
+        record_states,
     );
     write_back_combat_log(catalog, state, &log);
     // 战斗内写入的传染层数（以及成长记录）需要回到持久棋盘；其余字段保持不变。
@@ -460,6 +492,7 @@ fn resolve_ghost(
     pairing: Pairing,
     events: &mut Vec<GameEvent>,
     reports: &mut BTreeMap<Seat, SeatCombatReport>,
+    record_states: bool,
 ) {
     let catalog = &engine.catalog;
     let seat = pairing.a;
@@ -481,7 +514,7 @@ fn resolve_ghost(
         hand_slots: catalog.config.hand_slots,
         playstyles: Some(&playstyles),
     };
-    let mut log = combat::simulate_with(
+    let mut log = combat::simulate_with_recording(
         engine,
         &own_board,
         &ghost,
@@ -490,6 +523,7 @@ fn resolve_ghost(
         seat,
         &mut state.rng,
         setup,
+        record_states,
     );
     state.next_instance_id = state.next_instance_id.max(log.next_instance_id);
     // 与真实战一致：落单座位自己的战斗日志副作用与持久成长/传染写回；
@@ -603,13 +637,13 @@ pub fn fold_auras(
         }
         minion.stats.attack.set_aura(attack);
         minion.stats.health.set_aura(health);
-        for keyword in &aura.keywords {
+        for keyword in aura.keywords.names() {
             if !minion
                 .granted
                 .iter()
-                .any(|(existing, _)| existing == keyword)
+                .any(|(existing, _)| *existing == keyword)
             {
-                minion.granted.push((keyword.clone(), Duration::Aura));
+                minion.granted.push((keyword, Duration::Aura));
             }
         }
     }

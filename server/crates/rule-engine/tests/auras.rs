@@ -20,17 +20,13 @@ fn board_minion(state: &GameState, seat: Seat, id: InstanceId) -> &MinionInstanc
 
 /// 注入一张自定义光环来源卡（非英雄），用于数据表中不存在的负值与重复关键词场景。
 fn add_aura_source(engine: &mut Engine, card_id: &str, playstyle: Playstyle, effects: &str) {
-    let skill_id = format!("{card_id}-skill");
-    engine.catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: None,
-            effects: effects_of(effects),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = engine.catalog.insert_skill(Skill {
+        id: format!("{card_id}-skill"),
+        keyword: None,
+        effects: effects_of(effects),
+        cost: None,
+        uses_per_turn: None,
+    });
     engine.catalog.cards.insert(
         card_id.to_string(),
         Card {
@@ -118,7 +114,7 @@ fn aura_buffs_all_friendly_machines_except_self_if_other() {
 
 #[test]
 fn aura_recomputes_when_source_leaves() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     // 固氮作物：你的植物随从获得 +1/+1（含自身）。
     place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
@@ -209,13 +205,13 @@ fn same_keyword_from_two_sources_applies_once() {
     engine.recompute_auras(&mut state);
 
     let aura = state.auras.get(&3).expect("目标应获得关键词光环");
-    assert_eq!(aura.keywords.len(), 1);
-    assert!(aura.keywords.contains("taunt"));
+    assert_eq!(aura.keywords.names().len(), 1);
+    assert!(aura.keywords.contains_name("taunt"));
 }
 
 #[test]
 fn conditional_aura_requires_condition() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     // 燧石矛兵：友方人类 >= 2 时自身获得 +1 攻击力。
     place(&engine.catalog, &mut state, 0, 1, "suishimaobing");
 
@@ -233,7 +229,7 @@ fn conditional_aura_requires_condition() {
 
 #[test]
 fn aura_does_not_stack_self() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     // 亚里士多德：你的随从获得 +0/+1（含自身），只应生效一次。
     place(&engine.catalog, &mut state, 0, 1, "aristotle");
 
@@ -245,7 +241,7 @@ fn aura_does_not_stack_self() {
 
 #[test]
 fn aura_never_crosses_seats() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 1, 2, "juzi");
 
@@ -264,7 +260,7 @@ fn aura_never_crosses_seats() {
 
 #[test]
 fn aura_folds_into_combat_snapshot_only() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     // 达尔文（英雄）：你的生物随从获得 +1/+1。
     state.players[0].hero = Some("darwin".to_string());
     place(&engine.catalog, &mut state, 0, 1, "baiyi");
@@ -312,13 +308,16 @@ fn aura_folds_into_combat_snapshot_only() {
 fn hero_aura_reads_hero_pool() {
     // 先从同名随从卡移除光环技能，再构建目录与引擎，避免加载后原地改动 `Catalog`。
     let mut catalog = common::test_catalog();
+    let aura = catalog
+        .skill_id("aura-biology-plus-1-plus-1")
+        .expect("光环技能应存在");
     catalog
         .cards
         .get_mut("darwin")
         .expect("达尔文随从卡应存在")
         .skills
-        .retain(|skill| skill != "aura-biology-plus-1-plus-1");
-    let (mut engine, mut state) = common::setup_with_catalog(catalog, 23);
+        .retain(|skill| *skill != aura);
+    let (engine, mut state) = common::setup_with_catalog(catalog, 23);
     state.players[0].hero = Some("darwin".to_string());
     place(&engine.catalog, &mut state, 0, 1, "baiyi");
 
@@ -333,7 +332,7 @@ fn hero_aura_reads_hero_pool() {
 
 #[test]
 fn recompute_is_idempotent() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
 
@@ -350,7 +349,7 @@ fn recompute_is_idempotent() {
 
 #[test]
 fn apply_recomputes_auras() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     state.players[0].hero = Some("darwin".to_string());
     place(&engine.catalog, &mut state, 0, 1, "baiyi");
 
@@ -384,7 +383,7 @@ fn state_hash_includes_auras() {
 
 #[test]
 fn ghost_fight_does_not_leak_auras_into_stored_state() {
-    let (mut engine, mut state) = setup(23);
+    let (engine, mut state) = setup(23);
     place(&engine.catalog, &mut state, 0, 1, "nitrogen-crop");
     place(&engine.catalog, &mut state, 0, 2, "juzi");
     place(&engine.catalog, &mut state, 3, 3, "juzi");
@@ -572,9 +571,9 @@ fn aura_grant_keyword_keeps_armor_layer() {
 
     let aura = state.auras.get(&2).expect("目标应获得减伤光环");
     assert!(
-        aura.keywords.contains("armor 3"),
+        aura.keywords.names().contains(&"armor 3".to_string()),
         "光环授予关键词应保留层数，实为 {:?}",
-        aura.keywords
+        aura.keywords.names()
     );
 
     let folded = fold_auras(
@@ -613,6 +612,7 @@ fn aura_armor_stacks_across_sources() {
     let aura = state.auras.get(&3).expect("目标应同时获得两个减伤光环");
     assert_eq!(
         aura.keywords
+            .names()
             .iter()
             .filter(|k| k.starts_with("armor"))
             .count(),

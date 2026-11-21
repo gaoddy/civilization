@@ -240,24 +240,11 @@ pub fn effective_health_with(
     value.max(0)
 }
 
-/// 随从当前生效的关键词集合。
-///
-/// 由所引用技能的 `keyword` 字段派生，并并入尚未失效的授予关键词；
-/// `Instant` 授予在战斗前就已结算完毕，视为不存在。未知关键词原样保留。
-pub fn keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
-    let mut result = base_keywords(catalog, minion);
-    for (keyword, duration) in &minion.granted {
-        if *duration != Duration::Instant {
-            result.insert(keyword.clone());
-        }
-    }
-    result
-}
-
-/// 随从当前生效的关键词位图集合；与 [`keywords`] 同口径，但查询不分配。
+/// 随从当前生效的关键词位图集合。
 ///
 /// 卡面自带关键词取 [`Catalog::base_keywords`]，再并入尚未失效的授予关键词；
-/// `Instant` 授予视为不存在。未知关键词原样保留。
+/// `Instant` 授予视为不存在。未知关键词原样保留。视图与哈希需要字符串时
+/// 走 [`KeywordSet::names`]。
 pub fn keyword_set(catalog: &Catalog, minion: &MinionInstance) -> KeywordSet {
     let mut result = catalog.base_keywords(&minion.card_id);
     for (keyword, duration) in &minion.granted {
@@ -268,40 +255,20 @@ pub fn keyword_set(catalog: &Catalog, minion: &MinionInstance) -> KeywordSet {
     result
 }
 
-/// 卡面自带的关键词，不含战斗内授予与光环派生。
-fn base_keywords(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
-    base_keyword_occurrences(catalog, minion)
-        .into_iter()
-        .collect()
-}
-
-/// 卡面自带关键词的逐次出现列表，保留重复（供同层减伤累加）。
-fn base_keyword_occurrences(catalog: &Catalog, minion: &MinionInstance) -> Vec<String> {
-    let mut result = Vec::new();
-    if let Some(card) = catalog.cards.get(&minion.card_id) {
-        for skill_id in &card.skills {
-            if let Some(keyword) = catalog
-                .skills
-                .get(skill_id)
-                .and_then(|skill| skill.keyword.as_ref())
-            {
-                result.push(keyword.clone());
-            }
-        }
-    }
-    result
-}
-
 /// 排除光环派生关键词后的关键词集合，供「不复制光环」的效果（拟态）使用。
 ///
 /// 卡面本身就有的关键词即使同时被光环授予也保留。
-pub fn keywords_without_aura(catalog: &Catalog, minion: &MinionInstance) -> BTreeSet<String> {
-    let base = base_keywords(catalog, minion);
-    let mut result = keywords(catalog, minion);
+pub fn keywords_without_aura(catalog: &Catalog, minion: &MinionInstance) -> KeywordSet {
+    let base = catalog.base_keywords(&minion.card_id);
+    let mut result = base.clone();
     for (keyword, duration) in &minion.granted {
-        if *duration == Duration::Aura && !base.contains(keyword) {
-            result.remove(keyword);
+        if *duration == Duration::Instant {
+            continue;
         }
+        if *duration == Duration::Aura && !base.contains_name(keyword) {
+            continue;
+        }
+        result.insert(keyword);
     }
     result
 }
@@ -453,6 +420,14 @@ impl SideBoard {
     }
 }
 
+/// 战斗本体创建参数：先手座位与是否记录逐动作快照。
+#[derive(Debug, Clone, Copy)]
+struct BattleInit<'a> {
+    first: Seat,
+    record_states: bool,
+    setup: CombatSetup<'a>,
+}
+
 /// 战斗局部的棋盘：双方克隆、座位、实例编号计数器与触发预算。
 #[derive(Debug, Clone)]
 pub struct BattleField {
@@ -463,6 +438,8 @@ pub struct BattleField {
     pub(crate) summon_count: u16,
     pub(crate) actions: Vec<CombatAction>,
     pub(crate) states: Vec<Vec<MinionSnapshot>>,
+    /// 是否记录逐动作快照；批量模拟不需要客户端回放数据时可关闭。
+    pub(crate) record_states: bool,
     pub(crate) hand_copies: Vec<CombatHandCopy>,
     pub(crate) hand_minions: Vec<CombatHandMinion>,
     pub(crate) pool: BTreeMap<String, u16>,
@@ -489,9 +466,13 @@ impl BattleField {
         defender: &[MinionInstance],
         attacker_seat: Seat,
         defender_seat: Seat,
-        first: Seat,
-        setup: CombatSetup<'_>,
+        init: BattleInit<'_>,
     ) -> Self {
+        let BattleInit {
+            first,
+            record_states,
+            setup,
+        } = init;
         let max_id = attacker
             .iter()
             .chain(defender.iter())
@@ -522,6 +503,7 @@ impl BattleField {
             summon_count: 0,
             actions: Vec::new(),
             states: Vec::new(),
+            record_states,
             hand_copies: Vec::new(),
             hand_minions: Vec::new(),
             pool: setup.pool.cloned().unwrap_or_default(),
@@ -595,7 +577,13 @@ impl BattleField {
     }
 
     /// 收集若干随从的现场状态，跳过已不在场上的编号。
+    ///
+    /// `record_states` 为假时返回空集合；调用方仍按动作逐条写入空快照，
+    /// 保持 `actions` 与 `states` 同序同长。
     pub(crate) fn snapshots(&self, catalog: &Catalog, ids: &[InstanceId]) -> Vec<MinionSnapshot> {
+        if !self.record_states {
+            return Vec::new();
+        }
         ids.iter()
             .filter_map(|id| self.snapshot_of(catalog, *id))
             .collect()
@@ -1398,6 +1386,7 @@ pub fn simulate(
         rng,
         None,
         CombatSetup::default(),
+        true,
     )
 }
 
@@ -1413,6 +1402,35 @@ pub fn simulate_with(
     rng: &mut RngStreams,
     setup: CombatSetup<'_>,
 ) -> CombatLog {
+    simulate_with_recording(
+        engine,
+        attacker,
+        defender,
+        attacker_seat,
+        defender_seat,
+        first,
+        rng,
+        setup,
+        true,
+    )
+}
+
+/// 同 [`simulate_with`]，由调用方决定是否记录逐动作快照。
+///
+/// 批量模拟只需要胜负与写回字段，不消费客户端回放数据；关闭快照可省去
+/// 每条动作的现场状态计算与后续按座位克隆。
+#[allow(clippy::too_many_arguments)]
+pub fn simulate_with_recording(
+    engine: &Engine,
+    attacker: &[MinionInstance],
+    defender: &[MinionInstance],
+    attacker_seat: Seat,
+    defender_seat: Seat,
+    first: Seat,
+    rng: &mut RngStreams,
+    setup: CombatSetup<'_>,
+    record_states: bool,
+) -> CombatLog {
     simulate_inner(
         &engine.catalog,
         attacker,
@@ -1423,6 +1441,7 @@ pub fn simulate_with(
         rng,
         Some(engine),
         setup,
+        record_states,
     )
 }
 
@@ -1437,6 +1456,7 @@ fn simulate_inner(
     rng: &mut RngStreams,
     engine: Option<&Engine>,
     setup: CombatSetup<'_>,
+    record_states: bool,
 ) -> CombatLog {
     let mut field = BattleField::new(
         catalog,
@@ -1444,8 +1464,11 @@ fn simulate_inner(
         defender,
         attacker_seat,
         defender_seat,
-        first,
-        setup,
+        BattleInit {
+            first,
+            record_states,
+            setup,
+        },
     );
 
     // 开场先结算生命已 ≤0 的随从（攻击方在前），复生者可重新入场。

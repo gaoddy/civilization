@@ -2,14 +2,16 @@ mod common;
 
 use common::{CARDS_JSON, CONFIG_JSON, SKILLS_JSON, TAXONOMY_JSON, test_catalog};
 use rule_engine::data::{CardType, Catalog};
-use rule_engine::effects::{Compare, Effect, Op, Pick, Selector, Side, Trigger, validate_effects};
+use rule_engine::effects::{
+    Compare, Effect, Op, Params, Pick, Selector, Side, Trigger, validate_effects,
+};
 
 #[test]
 fn loads_all_committed_data() {
     let catalog = test_catalog();
     assert_eq!(catalog.cards.len(), 432);
     assert_eq!(catalog.heroes.len(), 32);
-    assert_eq!(catalog.skills.len(), 254);
+    assert_eq!(catalog.skills().len(), 254);
     assert_eq!(
         catalog
             .cards
@@ -159,11 +161,13 @@ fn every_card_skill_exists() {
     let catalog = test_catalog();
     for card in catalog.cards.values() {
         for skill in &card.skills {
-            assert!(
-                catalog.skills.contains_key(skill),
+            let name = catalog.skill_name(*skill);
+            assert_eq!(
+                catalog.skill_id(name),
+                Some(*skill),
                 "{} -> {}",
                 card.id,
-                skill
+                name
             );
         }
     }
@@ -190,12 +194,12 @@ fn deserializes_a_structured_effect() {
             ..
         }
     ));
-    assert_eq!(effects[0].params.times, Some(1));
-    assert_eq!(effects[0].params.times_if.as_ref().unwrap().times, 2);
-    assert_eq!(
-        effects[0].params.condition.as_ref().unwrap().compare,
-        Compare::Ge
-    );
+    let Params::Growth(params) = &effects[0].params else {
+        panic!("期望 Growth 参数");
+    };
+    assert_eq!(params.times, 1);
+    assert_eq!(params.times_if.as_ref().unwrap().times, 2);
+    assert_eq!(params.condition.as_ref().unwrap().compare, Compare::Ge);
 }
 
 #[test]
@@ -232,10 +236,12 @@ fn rejects_gain_minion_from_board() {
 
 #[test]
 fn omits_duration_by_default() {
-    let raw =
-        r#"[{"trigger":"on_play","op":"growth","selector":{"kind":"self"},"params":{"times":1}}]"#;
+    let raw = r#"[{"trigger":"on_play","op":"modify_stats","selector":{"kind":"self"},"params":{"attack":1}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
-    assert_eq!(effects[0].params.duration, None);
+    let Params::ModifyStats(params) = &effects[0].params else {
+        panic!("期望 ModifyStats 参数");
+    };
+    assert_eq!(params.duration, None);
 }
 
 #[test]
@@ -252,13 +258,15 @@ fn rejects_invalid_summon_and_discover() {
 #[test]
 fn committed_data_is_structured() {
     let catalog = test_catalog();
-    let skill = catalog.skills.get("division-of-labor").expect("技能存在");
+    let skill = catalog
+        .skill_by_name("division-of-labor")
+        .expect("技能存在");
     assert_eq!(skill.effects.len(), 1);
     assert_eq!(skill.effects[0].trigger, Trigger::OnActivate);
     assert!(
         catalog
-            .skills
-            .values()
+            .skills()
+            .iter()
             .all(|skill| validate_effects(&skill.effects).is_ok())
     );
 }
@@ -278,13 +286,13 @@ fn rejects_unknown_selector_field() {
 #[test]
 fn rejects_discover_without_choose() {
     let raw = r#"[{"trigger":"on_activate","op":"discover","selector":{"kind":"self"},"params":{"pool":"playstyle"}}]"#;
-    let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
-    assert!(validate_effects(&effects).is_err());
+    // 缺失的必填字段在解码期即被拒绝，不再等到语义校验。
+    assert!(serde_json::from_str::<Vec<Effect>>(raw).is_err());
 }
 
 #[test]
 fn rejects_explicit_duration_on_growth() {
     let raw = r#"[{"trigger":"on_play","op":"growth","selector":{"kind":"self"},"params":{"times":1,"duration":"instant"}}]"#;
-    let effects: Vec<Effect> = serde_json::from_str(raw).unwrap();
-    assert!(validate_effects(&effects).is_err());
+    // 不属于 Growth 的字段由 `deny_unknown_fields` 在解码期拒绝。
+    assert!(serde_json::from_str::<Vec<Effect>>(raw).is_err());
 }

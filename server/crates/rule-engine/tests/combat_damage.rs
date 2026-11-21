@@ -18,17 +18,13 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
     let mut skill_ids = Vec::new();
     for (index, keyword) in keyword_list.iter().enumerate() {
         let skill_id = format!("{id}-skill-{index}");
-        catalog.skills.insert(
-            skill_id.clone(),
-            Skill {
-                id: skill_id.clone(),
-                keyword: Some((*keyword).to_string()),
-                effects: effects_of("[]"),
-                cost: None,
-                uses_per_turn: None,
-            },
-        );
-        skill_ids.push(skill_id);
+        skill_ids.push(catalog.insert_skill(Skill {
+            id: skill_id.clone(),
+            keyword: Some((*keyword).to_string()),
+            effects: effects_of("[]"),
+            cost: None,
+            uses_per_turn: None,
+        }));
     }
     catalog.cards.insert(
         id.to_string(),
@@ -50,17 +46,13 @@ fn add_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, keyword_l
 }
 
 fn add_effect_card(catalog: &mut Catalog, id: &str, attack: i32, health: i32, effects: &str) {
-    let skill_id = format!("{id}-skill");
-    catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: None,
-            effects: effects_of(effects),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = catalog.insert_skill(Skill {
+        id: format!("{id}-skill"),
+        keyword: None,
+        effects: effects_of(effects),
+        cost: None,
+        uses_per_turn: None,
+    });
     catalog.cards.insert(
         id.to_string(),
         Card {
@@ -92,29 +84,21 @@ fn add_effect_card_with_keywords(
     let mut skill_ids = Vec::new();
     for (index, keyword) in keyword_list.iter().enumerate() {
         let skill_id = format!("{id}-skill-{index}");
-        catalog.skills.insert(
-            skill_id.clone(),
-            Skill {
-                id: skill_id.clone(),
-                keyword: Some((*keyword).to_string()),
-                effects: effects_of("[]"),
-                cost: None,
-                uses_per_turn: None,
-            },
-        );
-        skill_ids.push(skill_id);
-    }
-    let effect_skill_id = format!("{id}-effect");
-    catalog.skills.insert(
-        effect_skill_id.clone(),
-        Skill {
-            id: effect_skill_id.clone(),
-            keyword: None,
-            effects: effects_of(effects),
+        skill_ids.push(catalog.insert_skill(Skill {
+            id: skill_id.clone(),
+            keyword: Some((*keyword).to_string()),
+            effects: effects_of("[]"),
             cost: None,
             uses_per_turn: None,
-        },
-    );
+        }));
+    }
+    let effect_skill_id = catalog.insert_skill(Skill {
+        id: format!("{id}-effect"),
+        keyword: None,
+        effects: effects_of(effects),
+        cost: None,
+        uses_per_turn: None,
+    });
     skill_ids.push(effect_skill_id);
     catalog.cards.insert(
         id.to_string(),
@@ -328,7 +312,7 @@ fn combat_write_back_restores_full_health() {
     );
     add_card(&mut catalog, "weakling", 0, 1, &[]);
 
-    let (mut engine, mut state) = Engine::new(catalog, [29u8; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(catalog, [29u8; 32], test_playstyles());
     state.phase = Phase::Combat;
     state.turn = 2;
     state.first_seat = 0;
@@ -472,7 +456,7 @@ fn armor_reduces_damage_and_does_not_block_contagion_tick() {
 
     // 回合开始的传染掉血直接扣当前生命，不经过 `apply_damage` 的减伤。
     add_card(&mut catalog, "sick", 0, 10, &["armor 1"]);
-    let (mut engine, mut state) = Engine::new(catalog, [19u8; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(catalog, [19u8; 32], test_playstyles());
     state.phase = Phase::Recruit;
     state.turn = 1;
     state.players[0].hp = 30;

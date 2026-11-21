@@ -9,7 +9,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::combat;
-use crate::effects::{Compare, Effect, EffectCtx, Op, Pick, Selector, Side, Trigger};
+use crate::effects::{Compare, Effect, EffectCtx, Op, Params, Pick, Selector, Side, Trigger};
 use crate::engine::Engine;
 use crate::state::{AuraEffect, GameState, InstanceId, MinionInstance, PlayerState, Seat};
 
@@ -18,7 +18,7 @@ impl Engine {
     ///
     /// 来源为各玩家棋盘上的每个随从，以及该玩家英雄卡；效果只作用于来源
     /// **同一玩家**的棋盘。缺失卡牌、空棋盘与空条件都退化为无光环。
-    pub fn recompute_auras(&mut self, state: &mut GameState) {
+    pub fn recompute_auras(&self, state: &mut GameState) {
         let mut computed: BTreeMap<InstanceId, AuraEffect> = BTreeMap::new();
 
         let mut seats: Vec<Seat> = state
@@ -46,7 +46,7 @@ impl Engine {
     ///
     /// 同时清理已不在任何棋盘上的陈旧条目：本座位刚出售或移除的随从实例已不在
     /// 当前棋盘 id 集合内，若不清理会与全量重算的结果不一致。
-    pub fn recompute_auras_for(&mut self, state: &mut GameState, seat: Seat) {
+    pub fn recompute_auras_for(&self, state: &mut GameState, seat: Seat) {
         let Some(player) = state.players.iter().find(|player| player.seat == seat) else {
             return;
         };
@@ -130,9 +130,7 @@ impl Engine {
             };
             let mut effects = Vec::new();
             for skill_id in skills {
-                let Some(skill) = self.catalog.skills.get(skill_id) else {
-                    continue;
-                };
+                let skill = self.catalog.skill(*skill_id);
                 effects.extend(skill.effects.iter().filter(|effect| {
                     matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura)
                 }));
@@ -154,7 +152,7 @@ impl Engine {
     ) -> bool {
         match effect.trigger {
             Trigger::Aura => true,
-            Trigger::ConditionalAura => effect.params.condition.as_ref().is_some_and(|condition| {
+            Trigger::ConditionalAura => effect.params.condition().is_some_and(|condition| {
                 self.condition_holds_on_board(state, player, condition, source)
             }),
             _ => false,
@@ -250,7 +248,10 @@ fn scaling_count(
     effect: &Effect,
     source: Option<InstanceId>,
 ) -> i32 {
-    if effect.params.per_attack.is_none() && effect.params.per_health.is_none() {
+    let Params::ModifyStats(params) = &effect.params else {
+        return 0;
+    };
+    if params.per_attack.is_none() && params.per_health.is_none() {
         return 0;
     }
     let Selector::Side { filters, .. } = &effect.selector else {
@@ -267,7 +268,7 @@ fn scaling_count(
                     .all(|filter| engine.filter_matches(state, filter, minion.instance_id, &ctx))
         })
         .count();
-    let max_count = effect.params.max_count.unwrap_or(6).max(0) as usize;
+    let max_count = params.max_count.unwrap_or(6).max(0) as usize;
     count.min(max_count) as i32
 }
 
@@ -364,47 +365,36 @@ fn aura_ctx(seat: Seat, source: Option<InstanceId>) -> EffectCtx {
 /// 友方随从」再加一次 `perAttack`/`perHealth`。金色不额外翻倍。
 fn accumulate(effect: &Effect, target: &mut AuraEffect, scale: i32) {
     match effect.op {
-        Op::ModifyStats => {
-            target.attack = target
-                .attack
-                .saturating_add(effect.params.attack.unwrap_or(0))
-                .saturating_add(effect.params.per_attack.unwrap_or(0).saturating_mul(scale));
-            target.health = target
-                .health
-                .saturating_add(effect.params.health.unwrap_or(0))
-                .saturating_add(effect.params.per_health.unwrap_or(0).saturating_mul(scale));
-        }
+        Op::ModifyStats => match &effect.params {
+            Params::ModifyStats(params) => {
+                target.attack = target
+                    .attack
+                    .saturating_add(params.attack.unwrap_or(0))
+                    .saturating_add(params.per_attack.unwrap_or(0).saturating_mul(scale));
+                target.health = target
+                    .health
+                    .saturating_add(params.health.unwrap_or(0))
+                    .saturating_add(params.per_health.unwrap_or(0).saturating_mul(scale));
+            }
+            _ => return,
+        },
         Op::GrantKeyword => {
-            let Some(keyword) = &effect.params.keyword else {
+            let Params::GrantKeyword(params) = &effect.params else {
                 return;
             };
+            let keyword = &params.keyword;
             // 与 `exec.rs` 的 GrantKeyword 分支一致：`armor N` 的层数写进
-            // 关键词字符串，否则战斗折叠后会退化为无层数的 `armor`。
+            // 关键词位图，多个光环来源的减伤自动累加。
             let name = keyword.keyword.as_str();
-            let layer = keyword.value.or(effect.params.value);
+            let layer = keyword.value.or(params.value);
             match (name, layer) {
                 (combat::ARMOR, Some(count)) => {
-                    // 多个光环来源的减伤累加到同一条 `armor N`：关键词集合按
-                    // 字符串去重，直接插入会让同层来源互相覆盖。
-                    let existing = target.keywords.iter().find_map(|keyword| {
-                        combat::armor_layer(keyword).map(|v| (keyword.clone(), v))
-                    });
-                    match existing {
-                        Some((old, value)) => {
-                            target.keywords.remove(&old);
-                            target.keywords.insert(format!(
-                                "{} {}",
-                                combat::ARMOR,
-                                value.saturating_add(count)
-                            ));
-                        }
-                        None => {
-                            target.keywords.insert(format!("{} {count}", combat::ARMOR));
-                        }
-                    }
+                    target
+                        .keywords
+                        .insert(&format!("{} {count}", combat::ARMOR));
                 }
                 _ => {
-                    target.keywords.insert(name.to_string());
+                    target.keywords.insert(name);
                 }
             }
         }

@@ -35,19 +35,13 @@ fn add_minion_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, heal
 
 /// 插入一张带 +1/+1 友方光环的合成随从卡。
 fn add_aura_card(catalog: &mut Catalog, id: &str, level: u8, attack: i32, health: i32) {
-    let skill_id = format!("{id}-aura");
-    catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: None,
-            effects: effects_of(
-                "Aura|ModifyStats|friendly:all|attack=1,health=1,duration=permanent",
-            ),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = catalog.insert_skill(Skill {
+        id: format!("{id}-aura"),
+        keyword: None,
+        effects: effects_of("Aura|ModifyStats|friendly:all|attack=1,health=1,duration=permanent"),
+        cost: None,
+        uses_per_turn: None,
+    });
     add_minion_card(catalog, id, level, attack, health);
     catalog
         .cards
@@ -66,17 +60,13 @@ fn add_keyword_card(
     health: i32,
     keyword: &str,
 ) {
-    let skill_id = format!("{id}-keyword");
-    catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: Some(keyword.to_string()),
-            effects: effects_of("[]"),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = catalog.insert_skill(Skill {
+        id: format!("{id}-keyword"),
+        keyword: Some(keyword.to_string()),
+        effects: effects_of("[]"),
+        cost: None,
+        uses_per_turn: None,
+    });
     catalog.cards.insert(
         id.to_string(),
         Card {
@@ -237,7 +227,7 @@ fn damage_is_capped_and_floored() {
 
 #[test]
 fn finish_recruit_pairs_alive_players_and_enters_combat() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [5; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [5; 32], test_playstyles());
     state.phase = Phase::Recruit;
     state.players[6].hp = 0;
     state.players[7].eliminated = true;
@@ -262,7 +252,7 @@ fn finish_recruit_pairs_alive_players_and_enters_combat() {
 #[test]
 fn finish_recruit_after_timeout_enters_combat() {
     // 超时路径：未全员 EndRecruit，阶段仍为 Recruit，finish_recruit 生成配对并推进。
-    let (mut engine, mut state) = Engine::new(test_catalog(), [6; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [6; 32], test_playstyles());
     state.phase = Phase::Recruit;
 
     let events = engine.finish_recruit(&mut state).unwrap();
@@ -281,7 +271,7 @@ fn finish_recruit_after_timeout_enters_combat() {
 #[test]
 fn finish_recruit_returns_pending_target_card_to_hand() {
     // 超时时目标待选视为放弃：来源随从离场，原牌退回手牌。
-    let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
     state.phase = Phase::Recruit;
     state.players[0]
         .board
@@ -306,7 +296,7 @@ fn finish_recruit_returns_pending_target_card_to_hand() {
 #[test]
 fn finish_recruit_is_idempotent_after_all_ready() {
     // 全员就绪进入 Combat 后连续调用：配对与状态哈希都不变。
-    let (mut engine, mut state) = Engine::new(test_catalog(), [8; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [8; 32], test_playstyles());
     state.phase = Phase::Recruit;
     let _ = engine.finish_recruit(&mut state).unwrap();
     assert_eq!(state.phase, Phase::Combat);
@@ -326,7 +316,7 @@ fn finish_recruit_is_idempotent_after_all_ready() {
 #[test]
 fn finish_recruit_pairs_without_phase_event_after_all_ready() {
     // 全员 EndRecruit 后阶段已进入 Combat：finish_recruit 只生成配对，不重复发阶段事件。
-    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
     state.phase = Phase::Recruit;
     for player in &mut state.players {
         player.recruit_done = true;
@@ -602,17 +592,13 @@ fn delayed_battlecry_runs_once_across_combats() {
     add_minion_card(&mut engine.catalog, "delayed", 1, 0, 5);
     add_minion_card(&mut engine.catalog, "tank", 1, 0, 3);
     // 敌方选择器的 OnPlay：招募阶段不结算，延迟到战斗开始。
-    let skill_id = "delayed-battlecry".to_string();
-    engine.catalog.skills.insert(
-        skill_id.clone(),
-        Skill {
-            id: skill_id.clone(),
-            keyword: Some("battlecry".to_string()),
-            effects: effects_of("OnPlay|DealDamage|enemy:all|amount=3"),
-            cost: None,
-            uses_per_turn: None,
-        },
-    );
+    let skill_id = engine.catalog.insert_skill(Skill {
+        id: "delayed-battlecry".to_string(),
+        keyword: Some("battlecry".to_string()),
+        effects: effects_of("OnPlay|DealDamage|enemy:all|amount=3"),
+        cost: None,
+        uses_per_turn: None,
+    });
     engine
         .catalog
         .cards
@@ -669,7 +655,7 @@ fn delayed_battlecry_runs_once_across_combats() {
 
 #[test]
 fn mutual_wipe_in_real_combat_is_a_draw() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     state.phase = Phase::Combat;
     state.players[0].board = vec![];
     state.players[1].board = vec![];
@@ -700,7 +686,7 @@ fn mutual_wipe_in_real_combat_is_a_draw() {
 
 #[test]
 fn ghost_mutual_wipe_is_a_draw() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
     // 落单座位与幽灵都为空阵容 → 双方同回合清场。
     state.phase = Phase::Combat;
     state.players[0].board = vec![];
@@ -727,7 +713,7 @@ fn ghost_mutual_wipe_is_a_draw() {
 
 #[test]
 fn elimination_order_defines_ranking() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
     state.phase = Phase::Settle;
     state.turn = 5;
     for seat in 4..8 {
@@ -769,7 +755,7 @@ fn elimination_order_defines_ranking() {
 
 #[test]
 fn turn_20_forces_ranking() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [8; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [8; 32], test_playstyles());
     state.phase = Phase::Settle;
     state.turn = 20;
     for seat in 6..8 {
@@ -806,7 +792,7 @@ fn turn_20_forces_ranking() {
 
 #[test]
 fn last_survivor_wins_immediately() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
     state.phase = Phase::Settle;
     state.turn = 5;
     for seat in 0..6 {
@@ -831,7 +817,7 @@ fn last_survivor_wins_immediately() {
 
 #[test]
 fn wrong_phase_calls_are_rejected_without_mutation() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [6; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [6; 32], test_playstyles());
     let before = state_hash(&state);
     assert!(engine.finish_recruit(&mut state).is_err());
     assert_eq!(before, state_hash(&state));
@@ -852,7 +838,7 @@ fn wrong_phase_calls_are_rejected_without_mutation() {
 
 #[test]
 fn start_turn_accepts_settle_and_returns_to_recruit() {
-    let (mut engine, mut state) = Engine::new(test_catalog(), [10; 32], test_playstyles());
+    let (engine, mut state) = Engine::new(test_catalog(), [10; 32], test_playstyles());
     state.phase = Phase::Settle;
     state.turn = 3;
 
