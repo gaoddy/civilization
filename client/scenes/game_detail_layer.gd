@@ -363,6 +363,7 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
     var skill_text := CardDB.display_text(card_id)
     if skill_text != "":
         box.add_child(_detail_text_block(skill_text))
+    _append_gained_keywords(box, minion)
     var stats: Dictionary = minion.get("stats", {})
     if typeof(stats) != TYPE_DICTIONARY or stats.is_empty():
         box.add_child(_detail_row(tr("ui.game.detail.current"), "%d / %d" % [
@@ -394,6 +395,31 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
         int(attack.get("current", 0)),
         int(health.get("current", 0)),
     ]))
+
+
+## 对局中获得的关键词：摘要行后逐条给出规则说明；没有获得项时不显示。
+## 说明缺失的未知关键词只保留摘要，不暴露内部 id。
+func _append_gained_keywords(box: VBoxContainer, minion: Dictionary) -> void:
+    var gained := CardText.gained_keywords(
+        str(minion.get("cardId", "")),
+        minion.get("keywords", []),
+    )
+    if gained.is_empty():
+        return
+    var names := PackedStringArray()
+    for raw in gained:
+        names.append(CardText.keyword_name(str(raw)))
+    var summary := _detail_row(tr("ui.game.detail.gained"), "、".join(names))
+    summary.name = "DetailGainedKeywords"
+    box.add_child(summary)
+    for raw in gained:
+        var description := CardText.keyword_description(str(raw))
+        if description == "":
+            continue
+        box.add_child(_detail_text_block("%s：%s" % [
+            CardText.keyword_name(str(raw)),
+            description,
+        ]))
 
 
 ## 科学分类与玩法：分类路径缺失显示「未定」，卡表无该实体时整组跳过。

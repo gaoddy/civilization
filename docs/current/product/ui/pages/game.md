@@ -115,6 +115,7 @@
 | 战斗动作 | `CombatResult.actions` 的 `kind`（`attack`/`death`/`reborn`/`contagion`/`summon`）、`sourceMinionId`/`targetMinionId`、动作后的 `source`/`target` 随从状态（`minionId`/`attack`/`health`/`alive`）与 `summon`（`side`/`position`/`minion`） |
 | 手牌目标与候选 | `self.hand[].requiresTarget` 与 `self.hand[].targetCandidates`；队首待选类型与候选取 `self.pendingChoices[]` 的 `kind` / `candidates`；英雄技能逐个取 `self.heroPowers[].requiresTarget` / `targetCandidates` |
 | 随从详情构成 | 棋盘随从的 `stats`（`attack` / `health` 各含 `initial`、`permanent`、`turn`、`aura`、`damage`、`current`）；缺失时退化为顶层 `attack` / `health` |
+| 随从获得的效果 | 当前生效的 `keywords` 减去卡面 `skills` 的 `keyword` 派生值；名称取 `enum.keyword.<id>`，规则说明取 `ui.game.detail.keyword.<id>`，层数词把层数代入 `%d` |
 | 卡面与商店详情 | `CardDB` 卡表：`card_type`、`categories`、`taxon`、`attack`、`health`、`era`、`display_cost`、`skills`；分类路径走 `CardDB.taxon_path`，玩法/分类名走 `CardDB.playstyle_name` / `CardDB.taxon_name` |
 | 图鉴卡池 | `CardPool.card_ids(view.enabledFactions)`：与服务端 `card_in_pool` 同规则复算本局卡池，排除非池卡 |
 | 首局引导 | `user://first_game_guide.cfg` 的 `[seen]` 段（键为 `playerId`）与 `GameStore.guide_step`；阶段与手牌/棋盘条件取 `GameStore.phase` 与 `view.self` |
@@ -166,7 +167,8 @@
 - 定位：商店卡详情优先挂在卡片右侧，放不下换左侧；棋盘卡详情优先挂在下方，放不下换上方；座位详情按左栏位置挂在右侧或左侧。面板始终夹紧在视口内，且不与当前锚点矩形相交。
 - 商店详情显示「名称 / 类型 / 科学分类 / 玩法 / 关联分类 / 费用 / 原始 / 时代 / 技能文本 / 不可购买原因」，技能文本按面板宽度换行；关联分类只显示 `prey:` / `host:`，为空时省略该行。
 - 座位详情显示「名字 / 英雄 / 生命（当前/上限）/ 时代 / 随从数 / 状态」；存活时追加「招募」行（已招募/未招募）。
-- 随从详情显示顺序固定为「随从名称 / 科学分类 / 玩法 / 关联分类 / 技能介绍 / 初始 / 永久 / 回合 / 光环 / 受击 / 当前」，名称与介绍单独成行，其余数值行同时给出攻击与生命两个数值。
+- 随从详情显示顺序固定为「随从名称 / 科学分类 / 玩法 / 关联分类 / 技能介绍 / 获得 / 初始 / 永久 / 回合 / 光环 / 受击 / 当前」，名称与介绍单独成行，其余数值行同时给出攻击与生命两个数值。
+- 「获得」行只列对局中获得、卡面技能文本未覆盖的关键词，按固定关键词顺序用「、」连接并按层数显示（如「嘲讽、减伤 2」）；随后逐条给出「关键词：规则说明」，说明按面板宽度换行。没有获得项或卡表缺少该卡时整组省略。
 - 科学分类显示为从界到科的完整路径（如「动物界 › 脊索动物门 › 哺乳纲 › 食肉目 › 猫科」），路径缺失显示「未定」；玩法缺失同样显示「未定」。
 - 关联分类行把捕食与寄生分别聚合，格式为「捕食：偶蹄目；寄生：人科」，两类都为空时不显示该行。
 - 英雄详情显示顺序为「英雄卡面美术 / 英雄名称 / 英雄介绍 / 玩法 / 关联分类 / 英雄技能」，卡面美术无素材时省略；英雄卡不含科学分类、时代、费用与原始数值，关联分类为空时不显示该行。对手英雄与幽灵归属者的英雄详情走同一口径，技能文本取 `CardDB.hero_text`。

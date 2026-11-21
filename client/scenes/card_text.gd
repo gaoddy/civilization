@@ -4,6 +4,13 @@ extends RefCounted
 ##
 ## 只做取值与格式化，不构造控件；卡面组件、详情层与座位行都从这里取文本。
 
+## 关键词展示顺序：沿用关键词判定表，未知词排在末尾。
+const KEYWORD_ORDER := [
+    "breed", "battlecry", "deathrattle", "reborn", "taunt", "divine_shield",
+    "windfury", "contagion", "ignore_taunt", "poison", "armor",
+    "stealth", "assemble", "sow", "evolve", "decompose",
+]
+
 
 ## 卡面封面的首字水印；空 id 回退问号。
 static func initial(card_id: String) -> String:
@@ -89,3 +96,71 @@ static func optional_text(value: Variant) -> String:
     if value == null:
         return ""
     return str(value)
+
+
+## 关键词基名：`breed 2` → `breed`；无层数的词原样返回。
+static func keyword_base(raw: String) -> String:
+    var parts := raw.split(" ", false, 1)
+    return parts[0] if not parts.is_empty() else raw
+
+
+## 关键词层数：`breed 2` → `2`；无层数返回空串。
+static func keyword_layer(raw: String) -> String:
+    var parts := raw.split(" ", false, 1)
+    return parts[1] if parts.size() > 1 else ""
+
+
+## 关键词展示名：枚举名加层数，如「减伤 2」；缺文案回退英文 id。
+static func keyword_name(raw: String) -> String:
+    var name := UI.enum_text("keyword", keyword_base(raw))
+    var layer := keyword_layer(raw)
+    return "%s %s" % [name, layer] if layer != "" else name
+
+
+## 关键词规则说明；缺文案或未知词返回空串，由调用方省略该行。
+static func keyword_description(raw: String) -> String:
+    var key := "ui.game.detail.keyword.%s" % keyword_base(raw)
+    var text := TranslationServer.translate(key)
+    if text == key:
+        return ""
+    var layer := keyword_layer(raw)
+    if layer == "" or not text.contains("%d"):
+        return text
+    return text % int(layer)
+
+
+## 对局中获得的关键词：当前关键词里卡面技能未登记的部分。
+## 卡表缺失时无法区分卡面与获得项，返回空数组；层数增加按完整字符串视为获得。
+static func gained_keywords(card_id: String, current: Variant) -> Array:
+    var entry := CardDB.card(card_id)
+    if entry.is_empty() or not (current is Array):
+        return []
+    var skills: Variant = entry.get("skills", [])
+    var base := {}
+    if skills is Array:
+        for skill_id in skills:
+            var keyword: Variant = CardDB.skill(str(skill_id)).get("keyword")
+            if keyword != null and str(keyword) != "":
+                base[str(keyword)] = true
+    var gained: Array = []
+    for value in current:
+        var raw := str(value)
+        if raw != "" and not base.has(raw) and not gained.has(raw):
+            gained.append(raw)
+    gained.sort_custom(func(a: String, b: String) -> bool:
+        return _keyword_before(a, b)
+    )
+    return gained
+
+
+## 按固定关键词顺序排序；未知词排在已知词之后，彼此按 id 排序。
+static func _keyword_before(a: String, b: String) -> bool:
+    var rank_a := KEYWORD_ORDER.find(keyword_base(a))
+    var rank_b := KEYWORD_ORDER.find(keyword_base(b))
+    if rank_a == -1 and rank_b == -1:
+        return a < b
+    if rank_a == -1:
+        return false
+    if rank_b == -1:
+        return true
+    return rank_a < rank_b
