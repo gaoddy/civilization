@@ -97,27 +97,37 @@ static func canvas_hit_min(pt: float, px_per_pt: float, base: Vector2i, window_s
     return maxi(1, int(round(pt * px_per_pt / scale)))
 
 
-## 窗口宽度下限：宽度不得小于高度 ×（基准宽 ÷ 基准高），避免内容比基准比例更窄。
-## 宽度不足时优先加宽；加宽会超出可用区域时改为按宽度收窄高度。
-static func fit_aspect_floor(size: Vector2i, usable: Vector2i, base: Vector2i) -> Vector2i:
-    if base.x <= 0 or base.y <= 0 or size.x <= 0 or size.y <= 0:
-        return size
-    var min_width := _ceil_div(size.y * base.x, base.y)
-    if size.x >= min_width:
-        return size
-    if usable.x <= 0 or min_width <= usable.x:
-        return Vector2i(min_width, size.y)
-    return Vector2i(size.x, maxi(1, size.x * base.y / base.x))
+## 逻辑视口内的基准比例内容框：宽或高按比例收拢后居中。
+static func content_frame(viewport: Vector2, base: Vector2i) -> Rect2:
+    if viewport.x <= 0.0 or viewport.y <= 0.0 or base.x <= 0 or base.y <= 0:
+        return Rect2(Vector2.ZERO, viewport)
+    var ratio := float(base.x) / float(base.y)
+    var height := minf(viewport.y, viewport.x / ratio)
+    var width := height * ratio
+    return Rect2(Vector2((viewport.x - width) * 0.5, (viewport.y - height) * 0.5), Vector2(width, height))
 
 
-## 内容矩形与安全矩形的差，换算为画布单位；左右留白内的边距为零。
-## keep_width：宽度按基准等比缩放，高度始终等于窗口高度；宽度不足时左右居中留白。
+## 启动窗口：可用区域的 90%，再收拢成基准比例；可用区域未知时回退基准尺寸。
+static func launch_window_size(usable: Vector2i, base: Vector2i) -> Vector2i:
+    if usable.x <= 0 or usable.y <= 0:
+        return base
+    var target := Vector2i(int(float(usable.x) * 0.9), int(float(usable.y) * 0.9))
+    var ratio := float(base.x) / float(base.y)
+    if float(target.x) / float(target.y) > ratio:
+        target.x = int(round(float(target.y) * ratio))
+    else:
+        target.y = int(round(float(target.x) / ratio))
+    return target
+
+
+## 内容矩形与安全矩形的差，换算为画布单位；背景带内的边距为零。
+## 内容框按基准比例 contain 居中，与 `content_frame` 同一模型。
 static func canvas_insets(window_size: Vector2, base: Vector2i, safe: Rect2i, window_position: Vector2) -> Vector4i:
     var scale := canvas_scale(window_size, base)
     if scale <= 0.0:
         return Vector4i.ZERO
-    var content := Vector2(base.x * scale, window_size.y)
-    var origin := Vector2((window_size.x - content.x) * 0.5, 0.0)
+    var content := Vector2(base.x * scale, base.y * scale)
+    var origin := (window_size - content) * 0.5
     var safe_position := Vector2(safe.position) - window_position
     var safe_end := Vector2(safe.end) - window_position
     return Vector4i(
@@ -126,10 +136,6 @@ static func canvas_insets(window_size: Vector2, base: Vector2i, safe: Rect2i, wi
         maxi(0, int(round(maxf(0.0, origin.x + content.x - safe_end.x) / scale))),
         maxi(0, int(round(maxf(0.0, origin.y + content.y - safe_end.y) / scale)))
     )
-
-
-static func _ceil_div(value: int, divisor: int) -> int:
-    return (value + divisor - 1) / divisor
 
 
 func _apply_base_canvas() -> void:

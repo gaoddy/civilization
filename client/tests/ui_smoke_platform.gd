@@ -7,7 +7,8 @@ var _failures := 0
 func _ready() -> void:
     _check_default_url()
     _check_stretch()
-    _check_window_floor()
+    _check_content_frame()
+    _check_launch_window()
     _check_desktop()
     _check_phone()
     _check_tablet()
@@ -32,30 +33,34 @@ func _check_stretch() -> void:
     )
 
 
-## 窗口宽度下限：宽度不小于高度 × 16:9；放不下时收窄高度，已更宽时不动。
-func _check_window_floor() -> void:
+## 内容框：视口更宽时左右留白，更窄时上下留白，比例恒为基准比例。
+func _check_content_frame() -> void:
     var base := ScreenProfile.BASE_CANVAS_TABLET
-    var screen := Vector2i(1920, 1080)
-    _check(
-        ScreenProfile.fit_aspect_floor(Vector2i(1600, 720), screen, base) == Vector2i(1600, 720),
-        "窗口比 16:9 更宽时不调整",
-    )
-    _check(
-        ScreenProfile.fit_aspect_floor(Vector2i(1280, 720), screen, base) == Vector2i(1280, 720),
-        "窗口正好 16:9 时不调整",
-    )
-    _check(
-        ScreenProfile.fit_aspect_floor(Vector2i(1000, 720), screen, base) == Vector2i(1280, 720),
-        "窗口过窄且屏幕放得下时加宽",
-    )
-    _check(
-        ScreenProfile.fit_aspect_floor(Vector2i(1000, 720), Vector2i.ZERO, base) == Vector2i(1280, 720),
-        "可用区域未知时仍加宽",
-    )
-    _check(
-        ScreenProfile.fit_aspect_floor(Vector2i(1360, 884), Vector2i(1512, 982), base) == Vector2i(1360, 765),
-        "窗口过窄且屏幕放不下时收窄高度",
-    )
+    var full: Rect2 = ScreenProfile.content_frame(Vector2(1280, 720), base)
+    _check(full.is_equal_approx(Rect2(0, 0, 1280, 720)), "16:9 视口内容框应铺满")
+    var wide: Rect2 = ScreenProfile.content_frame(Vector2(1280, 480), base)
+    _check(is_equal_approx(wide.size.y, 480), "超宽视口内容框高应等于视口高")
+    _check(is_equal_approx(wide.size.x, 480.0 * 16.0 / 9.0), "超宽视口内容框宽按比例")
+    _check(is_equal_approx(wide.position.x, (1280.0 - wide.size.x) * 0.5), "超宽视口内容框应水平居中")
+    var tall: Rect2 = ScreenProfile.content_frame(Vector2(1280, 960), base)
+    _check(is_equal_approx(tall.size.x, 1280), "窄视口内容框宽应等于视口宽")
+    _check(is_equal_approx(tall.size.y, 720), "窄视口内容框高按比例")
+    _check(is_equal_approx(tall.position.y, 120), "窄视口内容框应垂直居中")
+
+
+## 启动窗口：可用区域的 90% 收拢成 16:9。
+func _check_launch_window() -> void:
+    var base := ScreenProfile.BASE_CANVAS_TABLET
+    _check(ScreenProfile.launch_window_size(Vector2i(1920, 1080), base) == Vector2i(1728, 972),
+        "16:9 屏幕启动窗口保持 16:9")
+    _check(ScreenProfile.launch_window_size(Vector2i(2560, 1600), base) == Vector2i(2304, 1296),
+        "16:10 屏幕启动窗口按宽收拢")
+    _check(ScreenProfile.launch_window_size(Vector2i(3440, 1440), base) == Vector2i(2304, 1296),
+        "21:9 屏幕启动窗口按高收拢")
+    _check(ScreenProfile.launch_window_size(Vector2i(1512, 982), base) == Vector2i(1360, 765),
+        "真实 16:10 屏幕启动窗口收拢为 16:9")
+    _check(ScreenProfile.launch_window_size(Vector2i.ZERO, base) == base,
+        "可用区域未知时回退基准尺寸")
 
 
 func _check_desktop() -> void:
@@ -93,16 +98,16 @@ func _check_tablet() -> void:
     _check(is_equal_approx(ScreenProfile.canvas_scale(window, base), 2.134375), "iPad 画布缩放")
     _check(ScreenProfile.canvas_hit_min(44, 2.0, base, window) == 41, "iPad 44pt 换算")
     _check(ScreenProfile.canvas_hit_min(32, 2.0, base, window) == 30, "iPad 32pt 换算")
-    # 4:3 窗口纵向扩展，内容高度铺满窗口；圆角只影响左右。
+    # 4:3 视口：内容上下各留 256px 背景，圆角只影响左右。
     var insets := ScreenProfile.canvas_insets(
         window, base, Rect2i(12, 0, 2708, 2048), Vector2.ZERO
     )
     _check(insets == Vector4i(6, 0, 6, 0), "iPad 左右安全区生效")
-    # 上下内缩的安全区按窗口边换算，不再被等比留白吞掉。
+    # 上下内缩的安全区整体落在背景带内，不再产生边距。
     var vertical := ScreenProfile.canvas_insets(
         window, base, Rect2i(12, 24, 2708, 2000), Vector2.ZERO
     )
-    _check(vertical == Vector4i(6, 11, 6, 11), "iPad 上下安全区按窗口边换算")
+    _check(vertical == Vector4i(6, 0, 6, 0), "iPad 上下安全区被背景带吸收")
 
 
 func _check(ok: bool, label: String) -> void:
