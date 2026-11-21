@@ -2340,6 +2340,14 @@ func _check_target_pending_aim() -> void:
     var aim = instance.find_child("AimLayer", true, false)
     _expect(aim != null and aim.pending_active(), "目标待选应开启瞄准层")
     _expect(aim != null and aim._candidates.size() == 2, "瞄准层应收到 2 个候选")
+    var source_card := _board_card(instance, "mi_1")
+    _expect(aim != null and source_card != null, "待选瞄准夹具缺少来源随从")
+    if aim != null and source_card != null:
+        _expect(
+            aim._source_rect == source_card.get_global_rect(),
+            "战吼待选应从入场随从卡起画，实际 %s / 卡片 %s"
+                % [aim._source_rect, source_card.get_global_rect()],
+        )
     for name in ["RerollButton", "UpgradeButton", "FreezeButton", "RecruitEndButton", "HeroPowerButton0"]:
         var button = instance.find_child(name, true, false)
         _expect(button != null and button.disabled, "目标待选期间 %s 应禁用" % name)

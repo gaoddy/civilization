@@ -61,11 +61,12 @@ func _init() -> void:
     var seller := GamePortrait.new()
     seller.name = "SellerTile"
     seller.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    # 立绘已能表达身份，操作行不再附「售货员」名字条；悬停详情保持不变。
     seller.setup(
         tr("ui.game.side_panel.seller"),
         tr("ui.game.side_panel.seller_glyph"),
         UITheme.playstyle_color("neutral"),
-        true,
+        false,
         SELLER_ART,
     )
     actions.add_child(seller)
