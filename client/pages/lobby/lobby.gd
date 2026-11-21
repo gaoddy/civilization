@@ -1,10 +1,9 @@
 extends Control
 ## 大厅：创建或凭房间码加入；好友管理与邀请分别放在浮层里，主页只留开局入口。
 
-var _status: Label
-var _code_input: LineEdit
-var _greeting: Label
-var _friends_button: Button
+var _top: LobbyTopBar
+var _actions: LobbyActions
+var _bottom: LobbyBottomBar
 var _friends: FriendsPanel
 var _invite_popup: InvitePopup
 
@@ -16,7 +15,7 @@ func _ready() -> void:
     GameStore.auth_changed.connect(_on_auth_changed)
     GameStore.social_changed.connect(_render_friends_entry)
     if not Net.is_open():
-        _status.text = tr("ui.lobby.not_connected")
+        _top.status.text = tr("ui.lobby.not_connected")
     _show_room_closed_reason()
     _render_friends_entry()
     UILayout.safe_area(self)
@@ -26,7 +25,7 @@ func _ready() -> void:
 func _show_room_closed_reason() -> void:
     if GameStore.room_closed_reason == "":
         return
-    _status.text = (
+    _top.status.text = (
         tr("ui.room.kicked_notice")
         if GameStore.room_closed_reason == "kicked"
         else tr("ui.room.dissolved_notice")
@@ -56,23 +55,9 @@ func _build() -> void:
     column.add_theme_constant_override("separation", UITheme.space("space-lg"))
     scroll.add_child(column)
 
-    var top := HBoxContainer.new()
-    top.name = "LobbyTop"
-    top.add_theme_constant_override("separation", UITheme.space("space-lg"))
-    column.add_child(top)
-    top.add_child(UIControls.label(tr("ui.lobby.title"), UITheme.font_size("font-hero"), false))
-    _greeting = UIControls.label(
-        tr("ui.lobby.logged_in") % [GameStore.display_name, GameStore.player_code],
-        UITheme.font_size("font-body"),
-        false,
-    )
-    top.add_child(_greeting)
-    var top_spacer := Control.new()
-    top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    top.add_child(top_spacer)
-    _status = UIControls.label("", UITheme.font_size("font-body-sm"))
-    _status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    top.add_child(_status)
+    _top = LobbyTopBar.new()
+    _top.set_identity(GameStore.display_name, GameStore.player_code)
+    column.add_child(_top)
 
     var center := CenterContainer.new()
     center.name = "LobbyCenter"
@@ -80,52 +65,16 @@ func _build() -> void:
     center.size_flags_vertical = Control.SIZE_EXPAND_FILL
     column.add_child(center)
 
-    var panel := UIControls.card_panel("surface")
-    panel.name = "LobbyActions"
-    panel.custom_minimum_size = Vector2(620, 0)
-    center.add_child(panel)
-
-    var actions := VBoxContainer.new()
-    actions.add_theme_constant_override("separation", UITheme.space("space-lg"))
-    panel.add_child(actions)
-
-    var create := UIControls.styled_button(tr("ui.lobby.create_room"), "primary", 50)
-    create.name = "CreateRoomButton"
-    create.pressed.connect(_on_create_pressed)
-    actions.add_child(create)
-
-    actions.add_child(UIControls.label(tr("ui.lobby.join_section"), UITheme.font_size("font-title"), false))
-    var join_row := HBoxContainer.new()
-    join_row.add_theme_constant_override("separation", UITheme.space("space-md"))
-    actions.add_child(join_row)
-    _code_input = LineEdit.new()
-    _code_input.placeholder_text = tr("ui.lobby.room_code_placeholder")
-    _code_input.custom_minimum_size = Vector2(220, 0)
-    _code_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    join_row.add_child(_code_input)
-    var join := UIControls.button(tr("ui.lobby.join"))
-    join.name = "JoinButton"
-    join.pressed.connect(_on_join_pressed)
-    join_row.add_child(join)
+    _actions = LobbyActions.new()
+    _actions.create_pressed.connect(_on_create_pressed)
+    _actions.join_pressed.connect(_on_join_pressed)
+    center.add_child(_actions)
 
     # 好友与图鉴固定在底部两角，中间留给开局操作。
-    var bottom := HBoxContainer.new()
-    bottom.name = "LobbyBottom"
-    bottom.add_theme_constant_override("separation", UITheme.space("space-md"))
-    column.add_child(bottom)
-    _friends_button = UIControls.button("")
-    _friends_button.name = "FriendsButton"
-    _friends_button.custom_minimum_size = Vector2(200, _friends_button.custom_minimum_size.y)
-    _friends_button.pressed.connect(_on_friends_pressed)
-    bottom.add_child(_friends_button)
-    var bottom_spacer := Control.new()
-    bottom_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    bottom.add_child(bottom_spacer)
-    var gallery := UIControls.button(tr("ui.gallery.entry"))
-    gallery.name = "GalleryButton"
-    gallery.custom_minimum_size = Vector2(200, gallery.custom_minimum_size.y)
-    gallery.pressed.connect(_on_gallery_pressed)
-    bottom.add_child(gallery)
+    _bottom = LobbyBottomBar.new()
+    _bottom.friends_pressed.connect(_on_friends_pressed)
+    _bottom.gallery_pressed.connect(_on_gallery_pressed)
+    column.add_child(_bottom)
 
     _friends = FriendsPanel.new()
     _friends.closed.connect(_close_friends)
@@ -141,7 +90,7 @@ func _build() -> void:
 ## 好友入口只显示待处理申请数，社交列表不参与主页排版。
 func _render_friends_entry() -> void:
     var pending := GameStore.incoming_requests.size()
-    _friends_button.text = (
+    _bottom.friends_button.text = (
         tr("ui.lobby.friends_entry_pending") % pending
         if pending > 0
         else tr("ui.lobby.friends_entry")
@@ -149,7 +98,7 @@ func _render_friends_entry() -> void:
 
 
 func _on_create_pressed() -> void:
-    _status.text = tr("ui.lobby.creating")
+    _top.status.text = tr("ui.lobby.creating")
     Net.send(Protocol.MSG_CREATE_ROOM, {})
 
 
@@ -166,17 +115,17 @@ func _close_friends() -> void:
 
 
 func _on_join_pressed() -> void:
-    var code := _code_input.text.strip_edges().to_upper()
+    var code := _actions.code_input.text.strip_edges().to_upper()
     if code == "":
-        _status.text = tr("ui.lobby.enter_room_code")
+        _top.status.text = tr("ui.lobby.enter_room_code")
         return
-    _status.text = tr("ui.lobby.joining") % code
+    _top.status.text = tr("ui.lobby.joining") % code
     Net.send(Protocol.MSG_JOIN_ROOM, {"code": code})
 
 
 func _on_invite_responded(_invite_id: String, accept: bool) -> void:
     if accept:
-        _status.text = tr("ui.lobby.accepting_invite")
+        _top.status.text = tr("ui.lobby.accepting_invite")
 
 
 func _on_room_changed() -> void:
@@ -184,14 +133,14 @@ func _on_room_changed() -> void:
 
 
 func _on_auth_changed() -> void:
-    _greeting.text = tr("ui.lobby.logged_in") % [GameStore.display_name, GameStore.player_code]
-    _status.text = tr("ui.lobby.reconnected")
+    _top.set_identity(GameStore.display_name, GameStore.player_code)
+    _top.status.text = tr("ui.lobby.reconnected")
 
 
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
-    _status.text = UIWording.error_text(code)
-    _status.tooltip_text = UIWording.error_tooltip(code)
+    _top.status.text = UIWording.error_text(code)
+    _top.status.tooltip_text = UIWording.error_tooltip(code)
     if _friends.visible:
         _friends.show_error(code)
     if UINavigation.error_route(code) == UINavigation.ROUTE_LOGIN:
