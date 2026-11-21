@@ -528,21 +528,10 @@ func _check_detail() -> void:
         detail_name != null and detail_name.text == CardDB.display_name(card_id),
         "点击第二张卡后详情应切换为 %s" % CardDB.display_name(card_id),
     )
-    var glyph = instance.find_child("GalleryDetailEraGlyph", true, false)
-    var entry := CardDB.card(card_id)
-    if str(entry.get("card_type", "")) == "minion":
-        _expect(glyph == null, "随从详情卡名旁不应有时代象形")
-    else:
-        _expect(glyph is EraGlyph, "效果卡详情卡名旁应有时代象形")
-        if glyph is EraGlyph:
-            _expect(
-                (glyph as EraGlyph).era_id == str(entry.get("era", "")),
-                "详情时代象形应取卡表 era id",
-            )
-            _expect(
-                (glyph as Control).custom_minimum_size == Vector2(24, 24),
-                "详情时代象形应为 24×24",
-            )
+    _expect(
+        instance.find_child("GalleryDetailEraGlyph", true, false) == null,
+        "普通卡详情卡名旁不应有时代象形",
+    )
     var detail_text := _node_text(instance.find_child("GalleryDetail", true, false))
     _expect(
         detail_text.contains(tr("ui.game.detail.type")),
@@ -552,22 +541,17 @@ func _check_detail() -> void:
         detail_text.contains(tr("ui.game.detail.taxonomy")),
         "详情应包含分类行",
     )
-    # 随从与效果卡对照：随从详情不画时代象形，效果卡仍画。
-    var probe := GalleryDetail.new()
-    add_child(probe)
-    probe.show_card("adam-smith")
-    await get_tree().process_frame
-    _expect(
-        probe.find_child("GalleryDetailEraGlyph", true, false) == null,
-        "随从详情不应有时代象形",
-    )
-    probe.show_card("aolinpike-jidian")
-    await get_tree().process_frame
-    _expect(
-        probe.find_child("GalleryDetailEraGlyph", true, false) is EraGlyph,
-        "效果卡详情应有时代象形",
-    )
-    probe.queue_free()
+    # 随从与效果卡都不画时代象形。
+    for probe_id in ["adam-smith", "aolinpike-jidian"]:
+        var probe := GalleryDetail.new()
+        add_child(probe)
+        probe.show_card(probe_id)
+        await get_tree().process_frame
+        _expect(
+            probe.find_child("GalleryDetailEraGlyph", true, false) == null,
+            "详情不应有时代象形：%s" % probe_id,
+        )
+        probe.queue_free()
     await _unmount(instance)
 
 
