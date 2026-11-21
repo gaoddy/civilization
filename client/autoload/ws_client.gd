@@ -43,6 +43,40 @@ static func default_url_for(mobile: bool) -> String:
     return MOBILE_URL if mobile else DESKTOP_URL
 
 
+## 连接前把 URL 里的主机名换成解析出的 IPv4。
+##
+## `WebSocketPeer` 只取解析结果的第一条地址，双栈主机名（如 `cooter.local`）常先拿到
+## IPv6，而服务端只监听 IPv4，直接连接会失败。主机已是 IP 字面量、解析失败或拿到
+## 非 IPv4 时原样返回，交给连接层报错。
+static func prefer_ipv4_url(url: String, resolver = null) -> String:
+    var sep := url.find("://")
+    if sep < 0:
+        return url
+    var rest := url.substr(sep + 3)
+    var slash := rest.find("/")
+    var authority := rest if slash < 0 else rest.substr(0, slash)
+    var tail := "" if slash < 0 else rest.substr(slash)
+    # IPv6 字面量必须带方括号，不需要也不应该改写。
+    if authority.begins_with("["):
+        return url
+    var host := authority
+    var port := ""
+    var colon := authority.rfind(":")
+    if colon >= 0:
+        host = authority.substr(0, colon)
+        port = authority.substr(colon)
+    if host.is_valid_ip_address():
+        return url
+    var ip := ""
+    if resolver is Callable and resolver.is_valid():
+        ip = str(resolver.call(host))
+    else:
+        ip = IP.resolve_hostname(host, IP.TYPE_IPV4)
+    if not ip.is_valid_ip_address() or ip.contains(":"):
+        return url
+    return "%s://%s%s%s" % [url.substr(0, sep), ip, port, tail]
+
+
 func disconnect_from_server() -> void:
     _want_connection = false
     _pending_reconnect = false
@@ -135,7 +169,7 @@ func _open() -> void:
     # dev 走 platform 自签证书域名时打开该设置；生产构建保持 false。
     var insecure_tls: bool = ProjectSettings.get_setting("network/allow_insecure_tls", false)
     var tls: TLSOptions = TLSOptions.client_unsafe() if insecure_tls else null
-    var err: int = socket.connect_to_url(url, tls)
+    var err: int = socket.connect_to_url(prefer_ipv4_url(url), tls)
     if err != OK:
         push_error("连接 %s 失败：%s" % [url, error_string(err)])
         socket = null
