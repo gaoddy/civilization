@@ -64,6 +64,8 @@ func _ready() -> void:
     await _check_expired_gate()
     await _check_stale_view_gate()
     await _check_disconnected_send()
+    await _check_click_gates()
+    await _check_error_notice_lifecycle()
     await _check_navigation_guard()
     await _check_error_route()
     await _check_reset_session()
@@ -3222,6 +3224,163 @@ func _check_disconnected_send() -> void:
         )
     instance.queue_free()
     GameStore.view = {}
+    GameStore.turn = 1
+    GameStore.deadline = ""
+
+
+## 点击类入口先按服务端语义挡下必然被拒的意图：非招募、已结束招募、旧视图、出局与待选。
+func _check_click_gates() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_COMBAT
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["phase"] = Protocol.PHASE_COMBAT
+    _fake_connect()
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    var captured: Array = []
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    for node_name in [
+        "RerollButton", "UpgradeButton", "FreezeButton", "RecruitEndButton", "HeroPowerButton0"
+    ]:
+        var button = instance.find_child(node_name, true, false)
+        if button == null:
+            _expect(false, "对局场景缺少 %s" % node_name)
+            continue
+        button.pressed.emit()
+        await get_tree().process_frame
+    _expect(captured.is_empty(), "非招募阶段点击不应发出意图，实际 %s" % [captured])
+    instance.queue_free()
+
+    # 已结束招募：刷新类入口不应再发意图。
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    view = FixtureScript.view()
+    view["self"]["recruited"] = true
+    GameStore.view = view
+    instance = await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    captured.clear()
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    var reroll = instance.find_child("RerollButton", true, false)
+    if reroll != null:
+        reroll.pressed.emit()
+        await get_tree().process_frame
+    _expect(captured.is_empty(), "已结束招募时刷新不应发出意图，实际 %s" % [captured])
+    instance.queue_free()
+
+    # 旧视图：回合已推进但视图未更新。
+    GameStore.turn = 4
+    GameStore.view = FixtureScript.view()
+    instance = await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    captured.clear()
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    reroll = instance.find_child("RerollButton", true, false)
+    if reroll != null:
+        reroll.pressed.emit()
+        await get_tree().process_frame
+    _expect(captured.is_empty(), "旧视图点击不应发出意图，实际 %s" % [captured])
+    instance.queue_free()
+    GameStore.turn = 3
+
+    # 出局座位：冻结按钮禁用，点击也不发意图。
+    view = FixtureScript.view()
+    view["players"][0]["alive"] = false
+    GameStore.view = view
+    instance = await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    captured.clear()
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    var freeze = instance.find_child("FreezeButton", true, false)
+    _expect(freeze != null and freeze.disabled, "出局座位冻结按钮应禁用")
+    if freeze != null:
+        freeze.pressed.emit()
+        await get_tree().process_frame
+    reroll = instance.find_child("RerollButton", true, false)
+    if reroll != null:
+        reroll.pressed.emit()
+        await get_tree().process_frame
+    _expect(captured.is_empty(), "出局座位点击不应发出意图，实际 %s" % [captured])
+    instance.queue_free()
+
+    # 目标待选：结束招募不应发出意图。
+    GameStore.view = _target_pending_view()
+    instance = await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    captured.clear()
+    instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+    var end_button = instance.find_child("RecruitEndButton", true, false)
+    if end_button != null:
+        end_button.pressed.emit()
+        await get_tree().process_frame
+    _expect(captured.is_empty(), "目标待选时结束招募不应发出意图，实际 %s" % [captured])
+    instance.queue_free()
+
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.phase = ""
+    GameStore.turn = 1
+    GameStore.deadline = ""
+
+
+## 错误文案到时或阶段/回合变化后清空，不再整局常驻。
+func _check_error_notice_lifecycle() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    GameStore.view = FixtureScript.view()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    var status = instance.find_child("StatusLabel", true, false)
+    if status == null:
+        _expect(false, "对局场景缺少 StatusLabel")
+        instance.queue_free()
+        _fake_disconnect()
+        return
+
+    GameStore.last_error = {"code": Protocol.ERROR_INVALID_STAGE}
+    GameStore.error_received.emit()
+    await get_tree().process_frame
+    _expect(
+        str(status.text) == UI.error_text(Protocol.ERROR_INVALID_STAGE),
+        "错误应写入顶栏，实际：%s" % status.text,
+    )
+    # 模拟经过错误文案停留时长；引擎帧不会在无头用例里推进这么久。
+    instance._process(10.0)
+    _expect(str(status.text) == "", "错误文案应在到时后清空，实际：%s" % status.text)
+
+    GameStore.error_received.emit()
+    await get_tree().process_frame
+    _expect(str(status.text) != "", "错误应重新写入顶栏")
+    GameStore.turn = 4
+    var next_view: Dictionary = FixtureScript.view()
+    next_view["turn"] = 4
+    GameStore.view = next_view
+    GameStore.view_changed.emit()
+    await get_tree().process_frame
+    _expect(str(status.text) == "", "回合变化后错误文案应清空，实际：%s" % status.text)
+
+    instance.queue_free()
+    _fake_disconnect()
+    GameStore.last_error = {}
+    GameStore.view = {}
+    GameStore.phase = ""
     GameStore.turn = 1
     GameStore.deadline = ""
 
