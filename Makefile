@@ -139,6 +139,7 @@ client-check:
 	$(MAKE) protocol-check
 	$(MAKE) data-check
 	$(PYTHON) -m unittest tests.test_client_boundary -v
+	$(PYTHON) -m unittest tests.test_client_style -v
 	$(PYTHON) -m unittest tests.test_i18n -v
 	$(MAKE) client-import
 

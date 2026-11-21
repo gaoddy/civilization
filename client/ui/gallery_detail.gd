@@ -10,10 +10,7 @@ var _box: VBoxContainer
 
 func _init() -> void:
     name = "GalleryDetail"
-    var token := "gallery-detail-width"
-    if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
-        token = "gallery-detail-width-compact"
-    custom_minimum_size = Vector2(UITheme.metric(token), 0)
+    custom_minimum_size = Vector2(UITheme.stage_metric("gallery-detail-width"), 0)
     size_flags_vertical = Control.SIZE_EXPAND_FILL
     var panel_style := UITheme.panel_style("surface")
     if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
@@ -113,7 +110,7 @@ func _build_preview(card_id: String, entry: Dictionary) -> Control:
     var holder := CenterContainer.new()
     holder.name = "GalleryDetailPreview"
     holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    var width := _preview_metric("gallery-preview-width")
+    var width := UITheme.stage_metric("gallery-preview-width")
     var size := Vector2(width, UITheme.card_face_height(width))
 
     var frame := PanelContainer.new()
@@ -123,7 +120,7 @@ func _build_preview(card_id: String, entry: Dictionary) -> Control:
     var style := StyleBoxFlat.new()
     style.bg_color = UITheme.playstyle_cover(CardDB.primary_playstyle(entry))
     style.set_corner_radius_all(UITheme.radius("radius-md"))
-    style.set_content_margin_all(UITheme.metric("card-cover-inset"))
+    style.set_content_margin_all(UITheme.stage_metric("card-cover-inset"))
     frame.add_theme_stylebox_override("panel", style)
     holder.add_child(frame)
 
@@ -151,13 +148,6 @@ func _build_preview(card_id: String, entry: Dictionary) -> Control:
 
 func _preview_texture(card_id: String) -> Texture2D:
     return UIArt.texture(CardDB.art_path(card_id, "card_face"))
-
-
-func _preview_metric(name: String) -> int:
-    var token := name
-    if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
-        token = name + "-compact"
-    return UITheme.metric(token)
 
 
 func _type_text(_card_id: String, entry: Dictionary) -> String:

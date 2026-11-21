@@ -33,7 +33,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
     drag_started.emit()
     var grab := get_global_transform_with_canvas().affine_inverse() * grabbed
     var preview := duplicate() as Control
-    preview.modulate = Color(1, 1, 1, 0.7)
+    preview.modulate = UITheme.alpha("color-white", UITheme.opacity("preview-dim"))
     preview.custom_minimum_size = custom_minimum_size
     set_drag_preview(UIDrag.preview(preview, grab, self))
     return payload.duplicate()

@@ -47,6 +47,8 @@ const PAGES := [
 
 
 func _ready() -> void:
+    await _check_early_safe_area()
+    _check_control_defaults()
     await _check_desktop()
     await _check_drag_preview()
     await _check_aim_local()
@@ -60,6 +62,50 @@ func _ready() -> void:
         return
     print("UI_SMOKE_OK")
     get_tree().quit(0)
+
+
+## 页面在 `_ready()` 第一句调用 `safe_area` 时还没有子节点：
+## 之后加入的直接子节点必须自动收进安全区，背景仍置底留在框外，顺序不变。
+func _check_early_safe_area() -> void:
+    var page := Control.new()
+    page.name = "EarlySafeAreaPage"
+    page.size = Vector2(1280, 720)
+    add_child(page)
+    var area := UILayout.safe_area(page)
+    _check(area != null, "先调用 safe_area 应创建安全区")
+    var background := UIControls.background()
+    page.add_child(background)
+    var first := Control.new()
+    first.name = "FirstContent"
+    page.add_child(first)
+    var second := Control.new()
+    second.name = "SecondContent"
+    page.add_child(second)
+    await get_tree().process_frame
+    await get_tree().process_frame
+    _check(page.get_child_count() == 2,
+        "先调用 safe_area 后加入的内容应收进安全区，根节点实际 %d 个" % page.get_child_count())
+    _check(background.get_parent() == page and page.get_child(0) == background,
+        "后加入的背景应置底留在框外")
+    _check(first.get_parent() == area and second.get_parent() == area,
+        "后加入的内容应在安全区内")
+    _check(first.get_index() < second.get_index(), "安全区应保持加入顺序")
+    page.queue_free()
+    await get_tree().process_frame
+
+
+## 工厂默认值必须落在令牌上：标签默认正文字号，边距默认大号间距。
+func _check_control_defaults() -> void:
+    var default_label := UIControls.label("默认字号")
+    _check(default_label.get_theme_font_size("font_size") == UITheme.font_size("font-body"),
+        "标签默认字号应为 font-body 令牌，实际 %d"
+        % default_label.get_theme_font_size("font_size"))
+    default_label.free()
+    var default_margin := UIControls.margin(Control.new())
+    _check(default_margin.get_theme_constant("margin_left") == UITheme.space("space-lg"),
+        "边距默认宽度应为 space-lg 令牌，实际 %d"
+        % default_margin.get_theme_constant("margin_left"))
+    default_margin.free()
 
 
 func _check_desktop() -> void:

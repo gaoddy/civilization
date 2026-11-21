@@ -9,8 +9,6 @@ extends PopupLayer
 ## 点击第 `index` 个卡面或选项块；下标与该待选的候选 / 选项顺序一致。
 signal chosen(index: int)
 
-## 全屏压暗透明度，与改版前的选择浮层保持一致。
-const SHADE_ALPHA := 0.72
 ## 悬停与按下时的强调描边宽度。
 const ACTIVE_BORDER_WIDTH := 2
 ## 卡面与按钮描边之间让出的距离，与 `raised-flush` 的内容内边距一致。
@@ -26,7 +24,11 @@ var _signature := ""
 
 
 func _init() -> void:
-    super(PopupLayer.Placement.CENTER, SHADE_ALPHA, UITheme.color("color-bg"))
+    super(
+        PopupLayer.Placement.CENTER,
+        UITheme.opacity("scrim-alpha-choice"),
+        UITheme.color("color-bg"),
+    )
     name = "ChooserOverlay"
 
 
@@ -78,7 +80,7 @@ func _clear() -> void:
 
 ## 单个候选项：按钮承接点击，内部放卡面或选项文字。
 func _build_choice(kind: String, item: String, index: int) -> Button:
-    var button := Button.new()
+    var button := UIControls.button("")
     button.name = "Choice%d" % index
     button.custom_minimum_size = Vector2(
         UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height")

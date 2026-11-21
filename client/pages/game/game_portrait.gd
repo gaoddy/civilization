@@ -78,7 +78,7 @@ func _build_name_label() -> void:
 	_name_label.add_theme_color_override("font_color", UITheme.color("color-text"))
 	var box := StyleBoxFlat.new()
 	box.bg_color = UITheme.alpha("color-bg", 0.72)
-	box.border_color = Color(0, 0, 0, 0)
+	box.border_color = UITheme.color("color-transparent")
 	box.set_content_margin_all(0)
 	_name_label.add_theme_stylebox_override("normal", box)
 	_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE

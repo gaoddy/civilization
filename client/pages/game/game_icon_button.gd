@@ -10,7 +10,6 @@ const BADGE_OVERHANG := 6.0
 const ICON_INSET := 10.0
 const ICON_EXTENT := 20.0
 const ICON_STROKE := 2.0
-const DISABLED_ALPHA := 0.45
 
 var icon_name := ""
 var cost := -1
@@ -88,7 +87,11 @@ func _icon_color() -> Color:
 
 ## 禁用时整枚按钮压暗；由 `_draw` 前同步，避免依赖原生属性变更信号。
 func _sync_disabled_visual() -> void:
-	var target := Color(1, 1, 1, DISABLED_ALPHA) if disabled else Color.WHITE
+	var target := (
+		UITheme.alpha("color-white", UITheme.opacity("opacity-dim"))
+		if disabled
+		else UITheme.color("color-white")
+	)
 	if modulate != target:
 		modulate = target
 
@@ -118,16 +121,15 @@ func _refresh_uses_badge() -> void:
 
 
 func _make_badge(node_name: String, background: Color, text_color: Color, right_side: bool) -> Label:
-	var badge := Label.new()
+	var badge := UIControls.label("", UITheme.font_size("font-micro"), false)
 	badge.name = node_name
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	badge.add_theme_font_size_override("font_size", UITheme.font_size("font-micro"))
 	badge.add_theme_color_override("font_color", text_color)
 	var box := StyleBoxFlat.new()
 	box.bg_color = background
-	box.border_color = Color(0, 0, 0, 0)
+	box.border_color = UITheme.color("color-transparent")
 	box.set_corner_radius_all(UITheme.radius("radius-sm"))
 	box.set_content_margin_all(0)
 	badge.add_theme_stylebox_override("normal", box)

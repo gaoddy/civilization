@@ -23,7 +23,7 @@ func setup(id: String, is_selected: bool, is_locked: bool) -> void:
 	hero_id = id
 	name = "HeroCard_%s" % id
 	# 候选卡按卡面比例：宽度取详情宽度令牌，高度按 112:146 等比。
-	var width := UITheme.metric("hero-detail-width")
+	var width := UITheme.stage_metric("hero-detail-width")
 	_card_size = Vector2(width, UITheme.card_face_height(width))
 	custom_minimum_size = _card_size
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -52,7 +52,7 @@ func set_locked(value: bool) -> void:
 			continue
 		var item := child as CanvasItem
 		if item != null:
-			item.modulate = Color(1, 1, 1, alpha)
+			item.modulate = UITheme.alpha("color-white", alpha)
 
 
 func _build() -> void:
@@ -86,14 +86,16 @@ func _build() -> void:
 	# 有卡面时叠图并隐藏首字水印：方形卡面四角向内收，落在卡片圆角以内。
 	var cover_art := UIArt.layer(CardDB.art_path(hero_id, "card_face"), "CoverArt")
 	if cover_art != null:
-		var inset := UITheme.metric("card-cover-inset")
+		var inset := UITheme.stage_metric("card-cover-inset")
 		cover_art.offset_left = inset
 		cover_art.offset_top = inset
 		cover_art.offset_right = -inset
 		cover_art.offset_bottom = -inset
 		_stack.add_child(cover_art)
 	else:
-		var watermark := UIControls.label(CardDB.display_name(hero_id).substr(0, 1), 72, false)
+		var watermark := UIControls.label(
+			CardDB.display_name(hero_id).substr(0, 1), UITheme.font_size("font-watermark"), false
+		)
 		watermark.name = "Watermark"
 		watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
 		watermark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -127,7 +129,7 @@ func _build() -> void:
 	_frame.offset_bottom = grow
 	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = Color(0, 0, 0, 0)
+	frame_style.bg_color = UITheme.color("color-transparent")
 	frame_style.border_color = UITheme.color("color-accent")
 	frame_style.set_border_width_all(2)
 	frame_style.set_corner_radius_all(UITheme.radius("radius-lg"))

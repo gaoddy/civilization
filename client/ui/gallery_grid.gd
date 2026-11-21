@@ -153,10 +153,8 @@ func _is_phone() -> bool:
 
 
 func _columns() -> int:
-    var token := "gallery-grid-columns-compact" if _is_phone() else "gallery-grid-columns"
-    return UITheme.metric(token)
+    return UITheme.stage_metric("gallery-grid-columns")
 
 
 func _batch_size() -> int:
-    var token := "gallery-batch-size-compact" if _is_phone() else "gallery-batch-size"
-    return maxi(1, UITheme.metric(token))
+    return maxi(1, UITheme.stage_metric("gallery-batch-size"))

@@ -50,7 +50,7 @@ func _init() -> void:
     stack.name = "HandStack"
     stack.set_anchors_preset(Control.PRESET_FULL_RECT)
     stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stack.add_theme_constant_override("separation", 0)
+    stack.add_theme_constant_override("separation", UITheme.space("space-none"))
     _scroll.add_child(stack)
 
     var top_space := Control.new()
@@ -67,7 +67,7 @@ func _init() -> void:
     _row = HBoxContainer.new()
     _row.name = "HandRow"
     _row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _row.add_theme_constant_override("separation", 0)
+    _row.add_theme_constant_override("separation", UITheme.space("space-none"))
     _center.add_child(_row)
 
 

@@ -11,10 +11,12 @@ static func clear(node: Node) -> void:
         child.queue_free()
 
 
-static func label(text: String, size := 16, wrap := true) -> Label:
+## 标签：省略字号时落到正文字号令牌，调用方只在需要其他档位时传令牌值。
+static func label(text: String, size := -1, wrap := true) -> Label:
     var node := Label.new()
     node.text = text
-    node.add_theme_font_size_override("font_size", size)
+    var resolved := UITheme.font_size("font-body") if size < 0 else size
+    node.add_theme_font_size_override("font_size", resolved)
     node.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wrap else TextServer.AUTOWRAP_OFF
     return node
 
@@ -123,7 +125,7 @@ static func styled_button(text: String, variant := "default", min_height := 30) 
 
 ## 淘汰或失效的行：统一降低透明度，不改变布局。
 static func apply_dim(node: CanvasItem) -> void:
-    node.modulate = Color(1, 1, 1, UITheme.opacity("opacity-dim"))
+    node.modulate = UITheme.alpha("color-white", UITheme.opacity("opacity-dim"))
 
 
 ## 空态/占位提示，居中且不抢排版。
@@ -142,11 +144,13 @@ static func section_title(text: String) -> Label:
     return node
 
 
-static func margin(container: Control, value := 12) -> MarginContainer:
+## 统一边距容器：省略数值时四边落到大号间距令牌。
+static func margin(container: Control, value := -1) -> MarginContainer:
+    var resolved := UITheme.space("space-lg") if value < 0 else value
     var node := MarginContainer.new()
-    node.add_theme_constant_override("margin_left", value)
-    node.add_theme_constant_override("margin_right", value)
-    node.add_theme_constant_override("margin_top", value)
-    node.add_theme_constant_override("margin_bottom", value)
+    node.add_theme_constant_override("margin_left", resolved)
+    node.add_theme_constant_override("margin_right", resolved)
+    node.add_theme_constant_override("margin_top", resolved)
+    node.add_theme_constant_override("margin_bottom", resolved)
     node.add_child(container)
     return node

@@ -7,7 +7,6 @@ extends CanvasLayer
 
 ## 目标矩形外扩，避免压暗层贴边盖住目标。
 const HIGHLIGHT_PADDING := 6.0
-const SHADE_COLOR := Color(0, 0, 0, 0.55)
 
 ## 步骤表：id、阶段、目标节点名与文案键。
 const STEPS := [
@@ -74,7 +73,7 @@ func _build() -> void:
     for index in 4:
         var shade := ColorRect.new()
         shade.name = "GuideShade%d" % index
-        shade.color = SHADE_COLOR
+        shade.color = UITheme.alpha("color-black", UITheme.opacity("scrim-alpha"))
         shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
         shade.visible = false
         _root.add_child(shade)
@@ -90,7 +89,7 @@ func _build() -> void:
     # 手牌贴底后占据页面最下 146：提示条上移并留出悬停放大的余量。
     margin.add_theme_constant_override(
         "margin_bottom",
-        UITheme.metric("card-height") + UITheme.space("space-md") + UITheme.space("space-xl"),
+        UITheme.stage_metric("card-height") + UITheme.space("space-md") + UITheme.space("space-xl"),
     )
     _root.add_child(margin)
 

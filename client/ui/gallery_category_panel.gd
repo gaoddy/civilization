@@ -12,7 +12,7 @@ var _toc: GalleryToc
 
 
 func _init() -> void:
-    super(PopupLayer.Placement.ANCHORED, 0.62, UITheme.color("color-bg"))
+    super(PopupLayer.Placement.ANCHORED, UITheme.opacity("scrim-alpha-gallery"), UITheme.color("color-bg"))
     name = "GalleryCategoryPanel"
     mouse_filter = Control.MOUSE_FILTER_IGNORE
     dismiss_on_scrim = true
@@ -22,7 +22,7 @@ func _init() -> void:
     _panel = PanelContainer.new()
     _panel.name = "GalleryCategoryBody"
     _panel.mouse_filter = Control.MOUSE_FILTER_STOP
-    _panel.custom_minimum_size = Vector2(UITheme.metric("gallery-category-panel-width"), 0)
+    _panel.custom_minimum_size = Vector2(UITheme.stage_metric("gallery-category-panel-width"), 0)
     _panel.add_theme_stylebox_override("panel", UITheme.panel_style("surface"))
     set_content(_panel)
 

@@ -43,7 +43,7 @@ func _init() -> void:
         0, UITheme.stage_metric("shop-actions-height") + _stage_gap()
             + UITheme.stage_metric("card-height")
     )
-    add_theme_constant_override("separation", 0)
+    add_theme_constant_override("separation", UITheme.space("space-none"))
 
     var actions := HBoxContainer.new()
     actions.name = "ShopActions"

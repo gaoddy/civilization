@@ -5,8 +5,8 @@ extends Control
 ## 「确定」固定在底部，点一次即回大厅。
 
 func _ready() -> void:
-    _build()
     UILayout.safe_area(self)
+    _build()
 
 
 func _build() -> void:

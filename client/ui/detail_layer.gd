@@ -39,7 +39,7 @@ func _init() -> void:
     _panel = UIControls.card_panel("raised")
     _panel.name = "MinionDetailPanel"
     _panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _panel.custom_minimum_size = Vector2(UITheme.metric("detail-panel-width"), 0)
+    _panel.custom_minimum_size = Vector2(UITheme.stage_metric("detail-panel-width"), 0)
     _panel.visible = false
     add_child(_panel)
 
@@ -298,7 +298,7 @@ func _detail_name(text: String) -> Label:
 
 ## 面板宽度扣除卡片内边距后的文本宽度，供技能文本换行。
 func _detail_text_width() -> int:
-    return UITheme.metric("detail-panel-width") - UITheme.space("space-lg") * 2
+    return UITheme.stage_metric("detail-panel-width") - UITheme.space("space-lg") * 2
 
 
 ## 详情里的介绍/技能文本块：按面板宽度换行，颜色弱于正文。

@@ -9,9 +9,12 @@ const SAFE_LAYER_NAME := "SafeLayer"
 const PAGE_BACKGROUND_NAME := "PageBackground"
 const CONTENT_FRAME_NAME := "ContentFrame"
 const CONTENT_ROOT_NAME := "ContentRoot"
+const ADOPT_PENDING_META := "content_layout_adopt_pending"
+const ADOPT_CONNECTED_META := "content_layout_adopts"
 
 
 ## 页面安全区包裹：在页面与内容之间插入 16:9 内容框与逻辑画布，再把内容移入安全区。
+## 页面可在建内容前调用；之后加入的直接子节点会按顺序补收进安全区。
 ## 整屏背景留在内容框外并置底，安全区只约束内容；幂等：重复调用返回已存在的包裹层。
 static func safe_area(page: Control) -> SafeAreaMargin:
     if page == null:
@@ -33,21 +36,44 @@ static func safe_area(page: Control) -> SafeAreaMargin:
     root.add_child(area)
     # 包裹层创建时页面可能已有尺寸：只设锚点会把当前零尺寸保留成负偏移。
     area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _adopt_children(page, frame, area)
+    _layout_content(page, frame, root)
+    if not page.has_meta("content_layout_connected"):
+        page.set_meta("content_layout_connected", true)
+        page.resized.connect(_layout_content.bind(page, frame, root))
+    if not page.has_meta(ADOPT_CONNECTED_META):
+        page.set_meta(ADOPT_CONNECTED_META, true)
+        page.child_entered_tree.connect(_on_child_entered.bind(page, frame, area))
+    return area
+
+
+## 子节点在 safe_area 之后加入：同一帧只排一次延迟收纳，保证按加入顺序处理。
+static func _on_child_entered(child: Node, page: Control, frame: Control, area: SafeAreaMargin) -> void:
+    if child == frame or not is_instance_valid(page):
+        return
+    if page.has_meta(ADOPT_PENDING_META):
+        return
+    page.set_meta(ADOPT_PENDING_META, true)
+    _adopt_children.call_deferred(page, frame, area)
+
+
+## 按当前顺序把页面的直接子节点收进安全区；背景置底留在框外。
+## 遍历前取出快照，移动子节点不影响本次处理。
+static func _adopt_children(page: Control, frame: Control, area: SafeAreaMargin) -> void:
+    if page.has_meta(ADOPT_PENDING_META):
+        page.remove_meta(ADOPT_PENDING_META)
+    if not is_instance_valid(frame) or not is_instance_valid(area):
+        return
     for child in page.get_children():
         if child == frame:
             continue
-        if child.name == PAGE_BACKGROUND_NAME:
+        if str(child.name) == PAGE_BACKGROUND_NAME:
             page.move_child(child, 0)
             continue
         page.remove_child(child)
         # 重新挂入会触发 _exit_tree：依赖 _ready 重新建立订阅的组件需要再就绪一次。
         child.request_ready()
         area.add_child(child)
-    _layout_content(page, frame, root)
-    if not page.has_meta("content_layout_connected"):
-        page.set_meta("content_layout_connected", true)
-        page.resized.connect(_layout_content.bind(page, frame, root))
-    return area
 
 
 ## 按页面尺寸把内容框收拢成基准比例，并缩放逻辑画布。

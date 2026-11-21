@@ -31,7 +31,7 @@ func set_state(items: Array, counts: Dictionary, selected: String) -> void:
 
 
 func _add_item(id: String, text: String, count: int, selected: bool, group: ButtonGroup) -> void:
-    var button := Button.new()
+    var button := UIControls.button("")
     button.name = _button_prefix + ("All" if id == "" else id.capitalize())
     button.text = text
     button.toggle_mode = true

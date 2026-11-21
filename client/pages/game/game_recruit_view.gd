@@ -24,7 +24,7 @@ var _board_row: BoardDrop
 func _init() -> void:
     name = "RecruitPanel"
     size_flags_vertical = Control.SIZE_EXPAND_FILL
-    add_theme_constant_override("separation", 0)
+    add_theme_constant_override("separation", UITheme.space("space-none"))
 
     _shop = GameShopView.new()
     _shop.reroll_pressed.connect(func() -> void: reroll_pressed.emit())

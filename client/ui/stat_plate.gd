@@ -24,8 +24,8 @@ static func create(kind_value: String, text: String, font_size: int, label_name 
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_color_override("font_color", Color.WHITE)
-	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_color_override("font_color", UITheme.color("color-white"))
+	label.add_theme_color_override("font_outline_color", UITheme.color("color-black"))
 	label.add_theme_constant_override("outline_size", 2)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	node.add_child(label)

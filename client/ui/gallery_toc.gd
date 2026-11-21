@@ -25,7 +25,7 @@ func _init(compact := false) -> void:
         add_child(grid)
         _list = grid
     else:
-        custom_minimum_size = Vector2(UITheme.metric("gallery-toc-width"), 0)
+        custom_minimum_size = Vector2(UITheme.stage_metric("gallery-toc-width"), 0)
         add_theme_constant_override("separation", UITheme.space("space-xs"))
         _list = self
 
@@ -76,7 +76,7 @@ func _add_item(
     indent: int,
     is_kind := false,
 ) -> void:
-    var button := Button.new()
+    var button := UIControls.button("")
     if is_kind:
         button.name = "KindAll" if id == "" else "Kind%s" % id.capitalize()
     else:

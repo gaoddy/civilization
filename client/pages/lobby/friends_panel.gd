@@ -19,7 +19,7 @@ var _outgoing: Label
 
 
 func _init() -> void:
-    super(PopupLayer.Placement.CENTER, 0.58)
+    super(PopupLayer.Placement.CENTER, UITheme.opacity("scrim-alpha-friends"))
     name = "FriendsPanel"
     mouse_filter = Control.MOUSE_FILTER_STOP
     scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE

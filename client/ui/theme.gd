@@ -34,6 +34,9 @@ const PRIMITIVE_COLOR := {
 	"lime-400": "a3cf61",
 	"rose-400": "d9799b",
 	"sand-400": "cdb98c",
+	"red-200": "ff8c8c",
+	"white": "ffffff",
+	"black": "000000",
 }
 
 const PRIMITIVE_FONT := {
@@ -46,9 +49,12 @@ const PRIMITIVE_FONT := {
 	"20": 20,
 	"22": 22,
 	"28": 28,
+	"30": 30,
+	"72": 72,
 }
 
 const PRIMITIVE_SPACE := {
+	"0": 0,
 	"2": 2,
 	"4": 4,
 	"6": 6,
@@ -85,6 +91,9 @@ const SEMANTIC_COLOR := {
 	"color-danger": "red-400",
 	"color-info": "blue-400",
 	"color-highlight": "blue-300",
+	"color-combat-tint": "red-200",
+	"color-white": "white",
+	"color-black": "black",
 }
 
 const SEMANTIC_FONT := {
@@ -97,9 +106,12 @@ const SEMANTIC_FONT := {
 	"font-title-xl": "20",
 	"font-display": "22",
 	"font-hero": "28",
+	"font-display-lg": "30",
+	"font-watermark": "72",
 }
 
 const SEMANTIC_SPACE := {
+	"space-none": "0",
 	"space-2xs": "2",
 	"space-xs": "4",
 	"space-sm": "6",
@@ -121,6 +133,12 @@ const SEMANTIC_RADIUS := {
 const SEMANTIC_OPACITY := {
 	"opacity-dim": 0.45,
 	"freeze-overlay-alpha": 0.22,
+	"preview-dim": 0.7,
+	"scrim-alpha": 0.55,
+	"scrim-alpha-friends": 0.58,
+	"scrim-alpha-strong": 0.6,
+	"scrim-alpha-gallery": 0.62,
+	"scrim-alpha-choice": 0.72,
 }
 
 # ── 组件与场景层 ──────────────────────────────────────────────────────────
@@ -167,6 +185,7 @@ const SCENARIO := {
 	"gallery-batch-size-compact": 12,
 	"report-width": 236,
 	"avatar-rail": 44,
+	"seat-row-gap": 4,
 	"seat-hp-bar-height": 6,
 	"rank-badge-size": 18,
 	"rank-badge-size-compact": 14,
@@ -228,6 +247,8 @@ const PLAYSTYLE_COLOR := {
 # ── 取值入口 ──────────────────────────────────────────────────────────────
 
 static func color(name: String) -> Color:
+	if name == "color-transparent":
+		return Color(0, 0, 0, 0)
 	var primitive := str(SEMANTIC_COLOR.get(name, name))
 	return Color(str(PRIMITIVE_COLOR.get(primitive, "ffffff")))
 

@@ -12,7 +12,7 @@ var _list: VBoxContainer
 
 
 func _init() -> void:
-    super(PopupLayer.Placement.CENTER, 0.55)
+    super(PopupLayer.Placement.CENTER, UITheme.opacity("scrim-alpha"))
     name = "InvitePopup"
     mouse_filter = Control.MOUSE_FILTER_STOP
 

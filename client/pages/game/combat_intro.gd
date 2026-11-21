@@ -33,7 +33,7 @@ var _opponent_block: VBoxContainer
 
 
 func _init() -> void:
-    super(PopupLayer.Placement.CENTER, 0.6, UITheme.color("color-bg"))
+    super(PopupLayer.Placement.CENTER, UITheme.opacity("scrim-alpha-strong"), UITheme.color("color-bg"))
     name = "CombatIntro"
     mouse_filter = Control.MOUSE_FILTER_IGNORE
     scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -128,7 +128,7 @@ func _apply_progress() -> void:
 ## 一侧的纵向槽：头像、名字、英雄名，幽灵战追加角标并压暗。
 func _fill_slot(block: VBoxContainer, player: Dictionary, ghost: bool) -> void:
     UIControls.clear(block)
-    block.modulate = Color(1, 1, 1, 1)
+    block.modulate = UITheme.color("color-white")
     var hero_id := CardText.optional_text(player.get("heroCardId"))
     var hero_name := (
         CardDB.display_name(hero_id)

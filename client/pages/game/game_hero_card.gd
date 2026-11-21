@@ -31,7 +31,7 @@ func _init() -> void:
 	var lines := VBoxContainer.new()
 	lines.name = "HeroCardLines"
 	lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lines.add_theme_constant_override("separation", 0)
+	lines.add_theme_constant_override("separation", UITheme.space("space-none"))
 	add_child(lines)
 
 	_cover = PanelContainer.new()
@@ -69,7 +69,7 @@ func _init() -> void:
 	stats.add_theme_constant_override("separation", UITheme.space("space-2xs"))
 	lines.add_child(stats)
 
-	_era_label = _stat_label("HeroEra", Vector2(24, 16), Color(0, 0, 0, 0))
+	_era_label = _stat_label("HeroEra", Vector2(24, 16), UITheme.color("color-transparent"))
 	_era_label.add_theme_color_override("font_color", UITheme.color("color-info"))
 	stats.add_child(_era_label)
 	_hp_label = _stat_label("HeroHp", Vector2(34, 16), UITheme.alpha("color-success", 0.55))
@@ -110,7 +110,7 @@ func _refresh_cover_art(hero_id: String) -> void:
 		_cover_art = null
 	var art := UIArt.layer(path, "HeroCoverArt")
 	if art != null:
-		var inset := UITheme.metric("card-cover-inset")
+		var inset := UITheme.stage_metric("card-cover-inset")
 		art.offset_left = inset
 		art.offset_top = inset
 		art.offset_right = -inset
@@ -168,6 +168,6 @@ func _cover_style(background: Color) -> StyleBoxFlat:
 func _name_style() -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.bg_color = UITheme.alpha("color-surface-raised", 0.92)
-	box.border_color = Color(0, 0, 0, 0)
+	box.border_color = UITheme.color("color-transparent")
 	box.set_content_margin_all(0)
 	return box

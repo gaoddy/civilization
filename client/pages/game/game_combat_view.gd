@@ -44,7 +44,7 @@ func _init() -> void:
 
     var body := VBoxContainer.new()
     body.name = "CombatBody"
-    body.add_theme_constant_override("separation", 0)
+    body.add_theme_constant_override("separation", UITheme.space("space-none"))
     add_child(body)
 
     _opponent_view = GameOpponentView.new()

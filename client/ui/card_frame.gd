@@ -40,7 +40,7 @@ func _draw() -> void:
 
 func _draw_rule(inset: float, radius: float, color: Color) -> void:
 	var box := StyleBoxFlat.new()
-	box.bg_color = Color(0, 0, 0, 0)
+	box.bg_color = UITheme.color("color-transparent")
 	box.draw_center = false
 	box.border_color = color
 	box.set_border_width_all(1)

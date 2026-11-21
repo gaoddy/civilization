@@ -25,7 +25,7 @@ var _report_panel: PanelContainer
 func _init() -> void:
     name = "PlayersPanel"
     add_theme_stylebox_override("panel", UITheme.panel_style("surface"))
-    custom_minimum_size = Vector2(UITheme.metric("rail-width"), 0)
+    custom_minimum_size = Vector2(UITheme.stage_metric("rail-width"), 0)
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", UITheme.space("space-sm"))
     add_child(box)
@@ -39,15 +39,12 @@ func _init() -> void:
     _rail = VBoxContainer.new()
     _rail.name = "PlayersRail"
     _rail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _rail.add_theme_constant_override(
-        "separation",
-        UITheme.metric("seat-row-gap-compact") if _compact() else UITheme.space("space-xs")
-    )
+    _rail.add_theme_constant_override("separation", UITheme.stage_metric("seat-row-gap"))
     scroll.add_child(_rail)
 
     _report_panel = UIControls.card_panel("raised")
     _report_panel.name = "SeatReportPanel"
-    _report_panel.custom_minimum_size = Vector2(UITheme.metric("report-width"), 0)
+    _report_panel.custom_minimum_size = Vector2(UITheme.stage_metric("report-width"), 0)
     _report_panel.mouse_filter = Control.MOUSE_FILTER_STOP
     _report_panel.visible = false
 
@@ -348,7 +345,7 @@ func _report_line(text: String) -> Label:
     var line := UIControls.label(text, UITheme.font_size("font-caption"), false)
     line.mouse_filter = Control.MOUSE_FILTER_IGNORE
     line.custom_minimum_size = Vector2(
-        UITheme.metric("report-width") - UITheme.space("space-lg") * 2,
+        UITheme.stage_metric("report-width") - UITheme.space("space-lg") * 2,
         0,
     )
     line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

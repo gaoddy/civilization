@@ -20,6 +20,7 @@ var _touch := LongPressTracker.new()
 
 
 func _ready() -> void:
+    UILayout.safe_area(self)
     _build()
     GameStore.room_changed.connect(_on_room_changed)
     GameStore.game_started.connect(_on_game_started)
@@ -32,7 +33,6 @@ func _ready() -> void:
     Net.connected.connect(_sync_state)
     Net.disconnected.connect(_sync_state)
     _refresh()
-    UILayout.safe_area(self)
 
 
 func _build() -> void:

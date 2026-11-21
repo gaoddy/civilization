@@ -10,12 +10,12 @@ var _name: LineEdit
 
 
 func _ready() -> void:
+    UILayout.safe_area(self)
     _build()
     Net.connected.connect(_on_connected)
     Net.disconnected.connect(_on_disconnected)
     GameStore.auth_changed.connect(_on_auth_changed)
     GameStore.error_received.connect(_on_error)
-    UILayout.safe_area(self)
 
 
 func _build() -> void:
@@ -30,8 +30,8 @@ func _build() -> void:
     box.add_theme_constant_override("separation", UITheme.space("space-md-plus"))
     center.add_child(box)
 
-    box.add_child(UIControls.label(tr("ui.login.title"), 30))
-    box.add_child(UIControls.label(tr("ui.login.subtitle"), 14))
+    box.add_child(UIControls.label(tr("ui.login.title"), UITheme.font_size("font-display-lg")))
+    box.add_child(UIControls.label(tr("ui.login.subtitle"), UITheme.font_size("font-body")))
     box.add_child(HSeparator.new())
 
     _server = _add_field(box, tr("ui.login.server"), Net.default_url())
@@ -43,7 +43,7 @@ func _build() -> void:
     _login_button.pressed.connect(_on_login_pressed)
     box.add_child(_login_button)
 
-    _status = UIControls.label("", 14)
+    _status = UIControls.label("", UITheme.font_size("font-body"))
     box.add_child(_status)
 
 

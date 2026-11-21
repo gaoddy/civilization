@@ -52,10 +52,10 @@ static func create_face(card_id: String, show_desc: bool, hero := false) -> Cont
             cover_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
             cover_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
             cover_art.set_anchors_preset(Control.PRESET_FULL_RECT)
-            cover_art.offset_left = UITheme.metric("card-cover-inset")
-            cover_art.offset_top = UITheme.metric("card-cover-inset")
-            cover_art.offset_right = -UITheme.metric("card-cover-inset")
-            cover_art.offset_bottom = -UITheme.metric("card-cover-inset")
+            cover_art.offset_left = UITheme.stage_metric("card-cover-inset")
+            cover_art.offset_top = UITheme.stage_metric("card-cover-inset")
+            cover_art.offset_right = -UITheme.stage_metric("card-cover-inset")
+            cover_art.offset_bottom = -UITheme.stage_metric("card-cover-inset")
             cover_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
             face_node.add_child(cover_art)
 
@@ -123,7 +123,7 @@ static func add_corner_badges(
         row.add_child(stealth_badge)
 
     if era_id != "":
-        var era := EraGlyph.create(era_id, UITheme.metric("era-glyph-size"))
+        var era := EraGlyph.create(era_id, UITheme.stage_metric("era-glyph-size"))
         era.name = "EraGlyph"
         row.add_child(era)
 
@@ -294,7 +294,7 @@ static func add_freeze(face_node: Control) -> void:
     overlay.add_child(crystals)
 
     # 斜向细线：角度与间距由令牌固定，不随卡片尺寸变化。
-    var gap := UITheme.metric("freeze-crystal-gap")
+    var gap := UITheme.stage_metric("freeze-crystal-gap")
     var line_color := UITheme.alpha("color-info", FREEZE_CRYSTAL_ALPHA)
     for index in FREEZE_CRYSTAL_LINES:
         var line := ColorRect.new()

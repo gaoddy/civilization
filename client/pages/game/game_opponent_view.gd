@@ -72,7 +72,7 @@ func _portrait(player: Dictionary) -> GamePortrait:
 
 func _identity_column(player: Dictionary, hp_cap: int, ghost: bool) -> VBoxContainer:
     var column := VBoxContainer.new()
-    column.custom_minimum_size = Vector2(UITheme.metric("opponent-hp-width"), 0)
+    column.custom_minimum_size = Vector2(UITheme.stage_metric("opponent-hp-width"), 0)
     column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     column.add_theme_constant_override("separation", UITheme.space("space-2xs"))
 
@@ -121,7 +121,7 @@ func _identity_column(player: Dictionary, hp_cap: int, ghost: bool) -> VBoxConta
             HpBar.create(
                 int(player.get("hp", 0)),
                 hp_cap,
-                UITheme.metric("opponent-hp-width"),
+                UITheme.stage_metric("opponent-hp-width"),
             )
         )
     return column

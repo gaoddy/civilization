@@ -221,7 +221,9 @@ func _advance_flashes(delta_ms: float) -> void:
             index -= 1
             continue
         var k := clampf(float(flash_entry["t"]) / FLASH_MS, 0.0, 1.0)
-        card.modulate = Color(1, 1, 1).lerp(Color(1.0, 0.55, 0.55), 1.0 - k)
+        card.modulate = UITheme.color("color-white").lerp(
+            UITheme.color("color-combat-tint"), 1.0 - k
+        )
         if k >= 1.0:
             _reset_card(card)
             _flashes.remove_at(index)
@@ -264,7 +266,7 @@ func _clone_card(card: Control, clone_name: String) -> Control:
     add_child(clone)
     clone.size = card.size
     clone.scale = Vector2.ONE
-    clone.modulate = Color(1, 1, 1, 1)
+    clone.modulate = UITheme.color("color-white")
     return clone
 
 
@@ -283,7 +285,7 @@ func _local_point(point: Vector2) -> Vector2:
 func _reset_card(card: Control) -> void:
     if not is_instance_valid(card):
         return
-    card.modulate = Color(1, 1, 1, 1)
+    card.modulate = UITheme.color("color-white")
     card.scale = Vector2.ONE
     card.pivot_offset = Vector2.ZERO
 

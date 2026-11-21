@@ -74,6 +74,7 @@ var _guide: FirstGameGuide
 
 
 func _ready() -> void:
+    UILayout.safe_area(self)
     _build()
     GameStore.view_changed.connect(_refresh)
     GameStore.events_received.connect(_on_game_events)
@@ -83,7 +84,6 @@ func _ready() -> void:
     Net.disconnected.connect(_refresh_connection)
     _refresh()
     _update_timer()
-    UILayout.safe_area(self)
 
 
 # ── 构建 ──────────────────────────────────────────────────────────────────

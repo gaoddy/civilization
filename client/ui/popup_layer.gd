@@ -40,12 +40,12 @@ var content: Control
 var dismiss_on_scrim := false
 
 ## 贴边与锚点定位时内容块与图层边缘的间距。
-var edge_margin := 8
+var edge_margin := 0
 
 var _anchor := Vector2.ZERO
 
 
-func _init(placement_value := Placement.CENTER, scrim_alpha := 0.55, scrim_tint := Color.BLACK) -> void:
+func _init(placement_value := Placement.CENTER, scrim_alpha := -1.0, scrim_tint = null) -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	visible = false
 	placement = placement_value
@@ -54,8 +54,8 @@ func _init(placement_value := Placement.CENTER, scrim_alpha := 0.55, scrim_tint 
 	scrim = ColorRect.new()
 	scrim.name = SCRIM_NAME
 	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var tint := scrim_tint
-	tint.a = scrim_alpha
+	var tint: Color = scrim_tint if scrim_tint != null else UITheme.color("color-black")
+	tint.a = scrim_alpha if scrim_alpha >= 0.0 else UITheme.opacity("scrim-alpha")
 	scrim.color = tint
 	scrim.gui_input.connect(_on_scrim_input)
 	add_child(scrim)
