@@ -2,7 +2,7 @@ class_name RoomHeroDetailLayer
 extends GameDetailLayer
 ## 选英雄页悬停详情：复用详情层的悬停/长按状态机，只替换内容与定位。
 ##
-## 桌面悬停或触控长按候选卡时，在候选行左右外侧显示立绘、名字、介绍与技能；
+## 桌面悬停或触控长按候选卡时，在悬停卡外侧显示名字、介绍与技能，不显示图片；
 ## 详情层与全部子控件忽略鼠标，点击仍落到候选卡上。
 
 var row: Control
@@ -38,17 +38,6 @@ func _detail_text_width() -> int:
 
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
 	var id := "" if hero_id == null else str(hero_id)
-	# 详情顶部叠卡面：按 112:146 比例铺满，无图时只显示文字内容。
-	var art := UI.art_layer(
-		CardDB.art_path(id, "card_face"),
-		"HeroPortrait",
-		TextureRect.STRETCH_KEEP_ASPECT_COVERED,
-	)
-	if art != null:
-		var width := UITheme.stage_metric("hero-detail-width")
-		art.custom_minimum_size = Vector2(width, UITheme.card_face_height(width))
-		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		box.add_child(art)
 	box.add_child(_detail_name(CardDB.display_name(id)))
 	var introduction := CardDB.hero_introduction(id)
 	if introduction != "":
@@ -59,7 +48,7 @@ func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
 	_ignore_mouse(box)
 
 
-## 详情卡按候选行左右外侧挂载：卡片中心在行中心左侧就挂左外侧，否则右外侧。
+## 详情卡贴着悬停卡外侧挂载：卡片中心在层中心左侧就挂左外侧，否则右外侧。
 func _place_detail(card_rect: Rect2, kind: String) -> void:
 	if _panel == null:
 		return
@@ -67,10 +56,9 @@ func _place_detail(card_rect: Rect2, kind: String) -> void:
 		super._place_detail(card_rect, kind)
 		return
 
-	var row_rect := row.get_global_rect()
 	# 面板不在容器内，只靠最小尺寸不会在换到更矮的英雄时收缩；定位前按当前内容重设尺寸。
 	_panel.reset_size()
-	_layout_hero_detail(card_rect, row_rect, _panel.size)
+	_layout_hero_detail(card_rect, _panel.size)
 	# 新内容的最小尺寸要到下一帧才结算：再校正一次，避免沿用上一张英雄的高度。
 	_correct_panel_size.call_deferred()
 
@@ -79,39 +67,44 @@ func _place_detail(card_rect: Rect2, kind: String) -> void:
 func _correct_panel_size() -> void:
 	if _panel == null or not _panel.visible:
 		return
-	if _hover_card == null or not is_instance_valid(_hover_card) or row == null or not is_instance_valid(row):
+	if _hover_card == null or not is_instance_valid(_hover_card):
 		return
 	_panel.reset_size()
-	_layout_hero_detail(_hover_card.get_global_rect(), row.get_global_rect(), _panel.size)
+	_layout_hero_detail(_hover_card.get_global_rect(), _panel.size)
 
 
-func _layout_hero_detail(card_rect: Rect2, row_rect: Rect2, panel_size: Vector2) -> void:
+## 定位：横向贴着悬停卡外侧，纵向与悬停卡居中对齐；夹紧安全区后若压住悬停卡，换到另一侧。
+func _layout_hero_detail(card_rect: Rect2, panel_size: Vector2) -> void:
 	var layer_rect := get_global_rect()
-	var margin := UITheme.space("space-xs")
-	var gap := UITheme.space("space-sm")
-	var side_left := card_rect.get_center().x < row_rect.get_center().x
-	var pos := Vector2.ZERO
-	if side_left:
-		pos.x = row_rect.position.x - panel_size.x - gap
-	else:
-		pos.x = row_rect.end.x + gap
-	pos.y = row_rect.get_center().y - panel_size.y * 0.5
+	var side_left := card_rect.get_center().x < layer_rect.get_center().x
+	var pos := _side_position(card_rect, panel_size, side_left)
+	pos = _clamp_to_layer(pos, panel_size, layer_rect)
 
+	# 手机安全区夹紧后可能盖住锚点卡：改放另一侧，优先保证长按的卡可见。
+	if Rect2(pos, panel_size).intersects(card_rect):
+		var alt_pos := _clamp_to_layer(_side_position(card_rect, panel_size, not side_left), panel_size, layer_rect)
+		if not Rect2(alt_pos, panel_size).intersects(card_rect):
+			pos = alt_pos
+	_panel.set_global_position(pos)
+
+
+## 悬停卡左/右外侧的位置：与卡片留 `space-sm` 间隙，纵向中心与卡片对齐。
+func _side_position(card_rect: Rect2, panel_size: Vector2, side_left: bool) -> Vector2:
+	var gap := UITheme.space("space-sm")
+	return Vector2(
+		card_rect.position.x - panel_size.x - gap if side_left else card_rect.end.x + gap,
+		card_rect.get_center().y - panel_size.y * 0.5,
+	)
+
+
+## 把面板夹在详情层边界内，四周留 `space-xs`。
+func _clamp_to_layer(pos: Vector2, panel_size: Vector2, layer_rect: Rect2) -> Vector2:
+	var margin := UITheme.space("space-xs")
 	var min_x := layer_rect.position.x + margin
 	var max_x := maxf(min_x, layer_rect.end.x - panel_size.x - margin)
 	var min_y := layer_rect.position.y + margin
 	var max_y := maxf(min_y, layer_rect.end.y - panel_size.y - margin)
-	pos.x = clampf(pos.x, min_x, max_x)
-	pos.y = clampf(pos.y, min_y, max_y)
-
-	# 手机安全区夹紧后可能盖住锚点卡：改放另一侧，优先保证长按的卡可见。
-	if Rect2(pos, panel_size).intersects(card_rect):
-		var alt_x := card_rect.end.x + gap if side_left else card_rect.position.x - panel_size.x - gap
-		alt_x = clampf(alt_x, min_x, max_x)
-		var alt_pos := Vector2(alt_x, pos.y)
-		if not Rect2(alt_pos, panel_size).intersects(card_rect):
-			pos = alt_pos
-	_panel.set_global_position(pos)
+	return Vector2(clampf(pos.x, min_x, max_x), clampf(pos.y, min_y, max_y))
 
 
 func _ignore_mouse(node: Node) -> void:

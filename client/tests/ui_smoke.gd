@@ -258,8 +258,8 @@ func _check_room_hero_picker() -> void:
         _expect(detail_layer != null and detail_layer.visible, "悬停候选卡应显示详情层")
         _expect(detail_panel != null and detail_panel.visible, "悬停候选卡应显示详情卡")
         _expect(
-            detail_panel != null and detail_panel.find_child("HeroPortrait", true, false) != null,
-            "悬停详情应显示英雄立绘",
+            detail_panel != null and detail_panel.find_child("HeroPortrait", true, false) == null,
+            "悬停详情不应显示图片",
         )
         _expect(detail_layer != null and not _blocks_mouse(detail_layer), "悬停详情层及其子节点不得拦截鼠标点击")
         if detail_panel != null:
@@ -342,8 +342,8 @@ func _check_room_hero_picker() -> void:
         await get_tree().process_frame
         _expect(detail_panel != null and detail_panel.visible, "候选重排后应恢复悬停详情")
         _expect(
-            detail_panel != null and detail_panel.find_child("HeroPortrait", true, false) != null,
-            "恢复的悬停详情应仍显示英雄立绘",
+            detail_panel != null and detail_panel.find_child("HeroPortrait", true, false) == null,
+            "恢复的悬停详情也不应显示图片",
         )
         var restored := candidates.get_child(1) as RoomHeroCard
         var restored_style = restored.get_theme_stylebox("panel")
