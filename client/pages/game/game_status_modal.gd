@@ -23,13 +23,20 @@ func _init() -> void:
 func _build() -> void:
 	var panel := UIControls.card_panel("raised")
 	panel.name = "StatusPanel"
+	# 面板与内部容器都放行输入，状态提示不锁对局；只有「知道了」按钮接收点击。
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var inner := VBoxContainer.new()
+	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner.add_theme_constant_override("separation", UITheme.space("space-sm"))
-	panel.add_child(UIControls.margin(inner, UITheme.space("space-lg")))
+	var padded := UIControls.margin(inner, UITheme.space("space-lg"))
+	padded.name = "StatusBody"
+	padded.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(padded)
 
 	var width := UITheme.stage_metric("status-dialog-width")
-	var text_width := width - UITheme.space("space-lg") * 2
+	# 面板样式与内层 margin 各留 space-lg，文案宽度要扣掉共四侧内边距。
+	var text_width := width - UITheme.space("space-lg") * 4
 
 	_message = UIControls.label("", UITheme.font_size("font-body"), true)
 	_message.name = "StatusMessage"
@@ -46,7 +53,9 @@ func _build() -> void:
 	inner.add_child(_detail)
 
 	var actions := HBoxContainer.new()
+	actions.name = "StatusActions"
 	actions.alignment = BoxContainer.ALIGNMENT_END
+	actions.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner.add_child(actions)
 
 	var confirm := PillButton.new(tr("ui.common.got_it"), "primary")

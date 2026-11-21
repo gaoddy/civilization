@@ -144,6 +144,11 @@ func _build() -> void:
 	_aim.aim_cancelled.connect(_on_aim_cancelled)
 	add_child(_aim)
 
+	# 状态模态压在选择浮层之下：发现 / 进化待选时提示不遮挡候选。
+	_status_modal = GameStatusModal.new()
+	_status_modal.acknowledged.connect(_on_notice_acknowledged)
+	add_child(_status_modal)
+
 	_overlay = GameChoiceOverlay.new()
 	_overlay.chosen.connect(_on_choose)
 	add_child(_overlay)
@@ -151,10 +156,6 @@ func _build() -> void:
 	_guide = FirstGameGuide.new()
 	_guide.target_root = self
 	add_child(_guide)
-
-	_status_modal = GameStatusModal.new()
-	_status_modal.acknowledged.connect(_on_notice_acknowledged)
-	add_child(_status_modal)
 
 
 ## 右上角悬浮工具组：与页面外边距对齐，只占按钮自身尺寸，不挤压中央舞台。
@@ -252,10 +253,13 @@ func _clear_error_notice() -> void:
 	_clear_timed_notice()
 
 
-## 到时收起；仍断线时恢复连接提示，避免提示消失后状态无从得知。
+## 到时收起；仍断线时恢复连接提示，视图已清空时回到等待提示。
 func _clear_timed_notice() -> void:
 	_error_notice_left = 0.0
-	if not Net.is_open() and not GameStore.view.is_empty():
+	if GameStore.view.is_empty():
+		_show_notice("waiting", tr("ui.game.status.waiting_view"))
+		return
+	if not Net.is_open():
 		_show_connection_notice()
 		return
 	_hide_notice()
@@ -286,7 +290,8 @@ func _refresh() -> void:
 		_clear_error_notice()
 	var view: Dictionary = GameStore.view
 	if view.is_empty():
-		if _notice_kind == "":
+		# 等待视图是空视图下的主状态；错误与未发出到期前保留自己的提示。
+		if _notice_kind != "error" and _notice_kind != "intent":
 			_show_notice("waiting", tr("ui.game.status.waiting_view"))
 		_guide.set_phase("", {})
 		_shop_frozen.clear()
