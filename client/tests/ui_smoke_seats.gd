@@ -4,6 +4,7 @@ extends "res://tests/smoke_case.gd"
 func _ready() -> void:
     await _check_seat_rows()
     await _check_report_toggle()
+    await _check_report_position_composed()
     await _check_seat_detail()
     await _check_expanded_memory()
     await _check_hp_clamp()
@@ -59,6 +60,26 @@ func _setup(view: Dictionary) -> void:
 func _open(view: Dictionary) -> Node:
     _setup(view)
     return await _check_scene("res://scenes/game.tscn", false)
+
+
+## 缩放内容框下的对局实例：宿主 1280×480 让内容框原点非零、缩放非 1。
+## 返回对局实例，宿主为其父节点，调用方负责释放宿主。
+func _open_composed(view: Dictionary) -> Node:
+    _setup(view)
+    var host := Control.new()
+    host.name = "ComposedGameHost"
+    host.size = Vector2(1280, 480)
+    add_child(host)
+    var packed = load("res://scenes/game.tscn")
+    if packed == null:
+        _expect(false, "无法加载对局场景")
+        host.queue_free()
+        return null
+    var instance = packed.instantiate()
+    host.add_child(instance)
+    await get_tree().process_frame
+    await get_tree().process_frame
+    return instance
 
 
 func _rows(rail: Node) -> Array:
@@ -192,6 +213,48 @@ func _check_report_toggle() -> void:
     await get_tree().process_frame
     _expect(_reports(instance).is_empty(), "再次点击应收起战报")
     instance.queue_free()
+    await get_tree().process_frame
+
+
+## 内容框原点非零且整体缩放时，战报仍贴在被点座位行右侧并留在浮层内。
+## 直接把全局坐标当局部坐标（忽略原点与缩放）的做法会在这里失败。
+func _check_report_position_composed() -> void:
+    var instance := await _open_composed(_view_with_log())
+    if instance == null:
+        return
+    var host := instance.get_parent() as Control
+    var rail = instance.find_child("PlayersRail", true, false)
+    var report_layer := instance.find_child("ReportLayer", true, false) as Control
+    var row := _row_of(rail, "p0") if rail != null else null
+    if row == null or report_layer == null:
+        _expect(false, "组合用例缺少 p0 座位行或 ReportLayer")
+        host.queue_free()
+        return
+    var layer_scale := report_layer.get_global_transform().get_scale().x
+    _expect(not is_equal_approx(layer_scale, 1.0),
+        "组合用例战报层应有非 1 缩放，实际 %.4f" % layer_scale)
+    var layer_origin := report_layer.get_global_position()
+    _expect(not layer_origin.is_zero_approx(),
+        "组合用例战报层应有非零原点，实际 %s" % str(layer_origin))
+    await _push_click(instance, row.get_global_rect().get_center())
+    await get_tree().process_frame
+    await get_tree().process_frame
+    row = _row_of(rail, "p0")
+    var panel := report_layer.find_child("SeatReportPanel", true, false) as Control
+    if row == null or panel == null or not panel.visible:
+        _expect(false, "组合用例未展开战报面板")
+        host.queue_free()
+        await get_tree().process_frame
+        return
+    var row_global: Rect2 = row.get_global_rect()
+    var gap := float(UITheme.space("space-sm")) * layer_scale
+    var expected := Vector2(row_global.end.x + gap, row_global.position.y)
+    var actual := panel.get_global_rect().position
+    _expect(actual.distance_to(expected) < 0.5,
+        "战报应贴在座位行右侧：实际 %s 期望 %s" % [str(actual), str(expected)])
+    _expect(report_layer.get_global_rect().grow(1.0).has_point(actual),
+        "战报应落在浮层内：%s" % str(actual))
+    host.queue_free()
     await get_tree().process_frame
 
 
