@@ -19,7 +19,7 @@
   - `show_choice(choice: Dictionary)`：按待选构建并显示；同一份待选（`kind` 与候选/选项数组序列化一致）重复调用不重建，避免每次视图刷新丢失焦点与悬停。
   - `hide_choice()`：隐藏并清空子节点。
 - 结构：全屏 `ColorRect` 压暗（`color-bg`，透明度沿用现有 0.72）→ `CenterContainer` → `VBoxContainer`（间距 `space-md`）→ 提示标签 + `HBoxContainer` 卡片行（间距 `space-md`）。提示文字沿用 `ui.game.overlay.discover_hint` 与 `ui.game.overlay.evolve_hint`。
-- 卡面 / 选项块统一为 `Button` 根节点：尺寸取 `UITheme.stage_metric("card-width")` × `card-height`（桌面 112×146，iPhone 紧凑 84×92），`focus_mode` 关闭，鼠标指针为手型。`normal` / `hover` / `pressed` / `focus` / `disabled` 五个状态使用 `UITheme.panel_style("raised-flush")`：`hover` / `pressed` 把描边换成 `color-accent`，描边宽度取组件常量 2。
+- 卡面 / 选项块统一为 `Button` 根节点：尺寸取 `UITheme.stage_metric("card-width")` × `card-height`（桌面 112×146，iPhone 紧凑 70×91，保持 112:146 卡形），`focus_mode` 关闭，鼠标指针为手型。`normal` / `hover` / `pressed` / `focus` / `disabled` 五个状态使用 `UITheme.panel_style("raised-flush")`：`hover` / `pressed` 把描边换成 `color-accent`，描边宽度取组件常量 2。
 - 发现卡面：`HandCardFace.build({"cardId": card_id, "attack": 基础攻击, "health": 基础生命}, self)`，与手牌同源，介绍优先压缩字号，空间不足时沿用同一省略规则；卡面节点铺满按钮并让出 1px 描边，鼠标事件由按钮承接。
 - 进化选项块：同尺寸按钮内放居中标签，文字取 `UI.enum_text("evolve", option)`，不构造卡面。
 - 只支持点击：按下即选中，不做拖拽、长按或双击手势。

@@ -129,7 +129,7 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 
 | 令牌 | 取值 | 用途 |
 | --- | --- | --- |
-| `card-width-compact` / `card-height-compact` | 84 / 92 | iPhone 商店、棋盘、手牌与战斗只读卡 |
+| `card-width-compact` / `card-height-compact` | 70 / 91 | iPhone 商店、棋盘、手牌与战斗只读卡；保持桌面 112:146 的卡形 |
 | `card-info-height-compact` | 60 | iPhone 有介绍时的卡面信息区（手牌） |
 | `avatar-rail-compact` | 40 | iPhone 座位行头像边长 |
 | `seat-hp-bar-height-compact` | 4 | iPhone 座位行血量条高度 |
@@ -144,7 +144,7 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `room-hero-detail-width-compact` | 200 | iPhone 选英雄页悬停详情卡宽度 |
 | `hero-detail-width-compact` | 120 | iPhone 选英雄页悬停详情与候选卡宽度；高度由 `card_face_height` 计算 |
 
-- 紧凑座位行（头像 40 + 血量条 4 + 行内边距 4 + 行距 2）让 8 席在 960×540 下一屏放下，左栏不出现滚动。
+- 紧凑座位行（头像 40 + 血量条 4 + 行内边距 2 + 行距 2）让 8 席在 960×540 下一屏放下，左栏不出现滚动。
 
 ## 6. 玩法色
 
