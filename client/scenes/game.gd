@@ -322,7 +322,7 @@ func _on_game_events(events: Array) -> void:
 
 
 ## 冻结/解冻以服务端视图的 `frozen` 变化为准：同一槽位 false→true 或
-## true→false 才播；新建/移除槽位、重抽与进入新回合都不算。
+## true→false 才播；新建/移除槽位、实例编号变化、重抽与进入新回合都不算。
 func _track_shop_frozen(state: GameUiState) -> void:
     var frozen_now: Dictionary = {}
     for slot in state.self_state.get("shop", []):
