@@ -59,6 +59,8 @@ func _ready() -> void:
     await _check_skill_aim()
     await _check_effect_drag_aim_visual()
     await _check_overlay_hidden_in_combat()
+    await _check_discover_choice_row()
+    await _check_evolve_choice_row()
     await _check_last_combat_cleared_on_next_recruit()
     await _check_recruited_gate()
     await _check_expired_gate()
@@ -2968,6 +2970,93 @@ func _board_card(instance: Node, minion_id: String) -> Control:
             if str(child.get_meta("minion_id")) == minion_id:
                 return child
     return null
+
+
+## 发现待选：一排卡面按候选顺序显示，点击第 2 张发出 choice=1。
+func _check_discover_choice_row() -> void:
+    _fake_connect()
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["pendingChoices"] = [{"kind": "discover", "candidates": ["huo", "lun", "che"]}]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var overlay = instance.find_child("ChooserOverlay", true, false)
+    var row = instance.find_child("ChoiceRow", true, false)
+    _expect(overlay != null and overlay.visible, "发现待选应显示选择浮层")
+    _expect(row != null and row.get_child_count() == 3, "发现待选应横排 3 张候选卡面")
+    if row != null and row.get_child_count() == 3:
+        var first_name = row.get_child(0).find_child("CardName", true, false)
+        var second_name = row.get_child(1).find_child("CardName", true, false)
+        _expect(
+            first_name != null and first_name.text == CardDB.display_name("huo"),
+            "第 1 张卡面应显示候选 huo",
+        )
+        _expect(
+            second_name != null and second_name.text == CardDB.display_name("lun"),
+            "第 2 张卡面应显示候选 lun",
+        )
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        (row.get_child(1) as Button).pressed.emit()
+        await get_tree().process_frame
+        _expect(
+            captured.size() == 1
+                and str(captured[0].get("kind", "")) == Protocol.INTENT_CHOOSE_DISCOVER
+                and int(captured[0].get("choice", -1)) == 1,
+            "点击第 2 张卡面应发出 choice=1，实际 %s" % str(captured),
+        )
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+    _fake_disconnect()
+
+
+## 进化待选：一排同尺寸选项块，点击第 3 项发出 choice=2。
+func _check_evolve_choice_row() -> void:
+    _fake_connect()
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["pendingChoices"] = [
+        {"kind": "evolve", "options": ["divine_shield", "reborn", "stats"]},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var overlay = instance.find_child("ChooserOverlay", true, false)
+    var row = instance.find_child("ChoiceRow", true, false)
+    _expect(overlay != null and overlay.visible, "进化待选应显示选择浮层")
+    _expect(row != null and row.get_child_count() == 3, "进化待选应横排 3 个选项块")
+    if row != null and row.get_child_count() == 3:
+        var third_label = row.get_child(2).find_child("ChoiceLabel", true, false)
+        _expect(
+            third_label != null and third_label.text == UI.enum_text("evolve", "stats"),
+            "第 3 个选项块应显示 +2/+2",
+        )
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        (row.get_child(2) as Button).pressed.emit()
+        await get_tree().process_frame
+        _expect(
+            captured.size() == 1
+                and str(captured[0].get("kind", "")) == Protocol.INTENT_CHOOSE_DISCOVER
+                and int(captured[0].get("choice", -1)) == 2,
+            "点击第 3 个选项块应发出 choice=2，实际 %s" % str(captured),
+        )
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+    _fake_disconnect()
 
 
 ## 战斗阶段即使留有跨回合的发现待选，也不能把招募弹层盖在演示上。

@@ -56,7 +56,7 @@ var _combat_view: GameCombatView
 var _hero_row: GameHeroRow
 var _hand_row: GameHandRow
 
-var _overlay: Control
+var _overlay: GameChoiceOverlay
 # 左栏战报浮层：位于详情层之上、选择浮层之下，允许覆盖中央舞台。
 var _report_layer: Control
 
@@ -155,10 +155,8 @@ func _build() -> void:
     _aim.aim_cancelled.connect(_on_aim_cancelled)
     add_child(_aim)
 
-    _overlay = Control.new()
-    _overlay.name = "ChooserOverlay"
-    _overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _overlay.visible = false
+    _overlay = GameChoiceOverlay.new()
+    _overlay.chosen.connect(_on_choose)
     add_child(_overlay)
 
     _guide = FirstGameGuide.new()
@@ -500,20 +498,20 @@ func _close_gallery() -> void:
 
 
 func _refresh_overlay(self_state: Dictionary, recruited: bool) -> void:
-    UI.clear(_overlay)
     var choices: Array = self_state.get("pendingChoices", [])
     var phase := str(GameStore.view.get("phase", GameStore.phase))
     # 待选只在招募阶段可操作：跨回合保留的发现/进化待选不能盖在战斗演示上。
     if _view_stale or _deadline_expired or recruited or phase != Protocol.PHASE_RECRUIT:
-        _overlay.visible = false
+        _overlay.hide_choice()
     elif not choices.is_empty() and str(choices[0].get("kind", "")) != "target":
-        _build_choice_overlay(choices[0])
+        _overlay.show_choice(choices[0])
     else:
         # 目标待选由瞄准层承接，不再构建候选弹层。
-        _overlay.visible = false
+        _overlay.hide_choice()
     # 浮层可见性只在本函数收口；打开浮层时同步遮住详情层与图鉴。
     _detail.blocked = _overlay.visible
     if _overlay.visible:
+        _detail.hide_panel()
         _close_gallery()
 
 
@@ -542,58 +540,6 @@ func _refresh_aim(self_state: Dictionary, phase: String, recruited: bool) -> voi
     else:
         _aim.clear()
     _detail.blocked = _overlay.visible or _aim.aiming()
-
-
-func _overlay_frame(title: String, parent: VBoxContainer) -> void:
-    _overlay.visible = true
-    _detail.hide_panel()
-    var shade := ColorRect.new()
-    shade.color = UITheme.alpha("color-bg", 0.72)
-    shade.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _overlay.add_child(shade)
-    var center := CenterContainer.new()
-    center.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _overlay.add_child(center)
-    var panel := UI.card_panel("raised")
-    panel.custom_minimum_size = Vector2(420, 0)
-    center.add_child(panel)
-    var margin := MarginContainer.new()
-    for side in ["left", "right", "top", "bottom"]:
-        margin.add_theme_constant_override("margin_" + side, UITheme.space("space-xl"))
-    panel.add_child(margin)
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", UITheme.space("space-md"))
-    margin.add_child(box)
-    box.add_child(UI.label(title, UITheme.font_size("font-display"), false))
-    for child in parent.get_children():
-        parent.remove_child(child)
-        box.add_child(child)
-
-
-func _build_choice_overlay(choice: Dictionary) -> void:
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", UITheme.space("space-md"))
-    var kind := str(choice.get("kind", ""))
-    if kind == "discover":
-        box.add_child(UI.label(tr("ui.game.overlay.discover_hint"), UITheme.font_size("font-body")))
-        var index := 0
-        for card_id in choice.get("candidates", []):
-            var button := UI.styled_button("%s\n%s" % [
-                CardDB.display_name(str(card_id)),
-                CardDB.display_text(str(card_id)),
-            ], "slot", 64)
-            button.pressed.connect(_on_choose.bind(index))
-            box.add_child(button)
-            index += 1
-    else:
-        box.add_child(UI.label(tr("ui.game.overlay.evolve_hint"), UITheme.font_size("font-body")))
-        var index := 0
-        for option in choice.get("options", []):
-            var button := UI.styled_button(UI.enum_text("evolve", str(option)), "slot", 44)
-            button.pressed.connect(_on_choose.bind(index))
-            box.add_child(button)
-            index += 1
-    _overlay_frame(tr("ui.game.overlay.title"), box)
 
 
 # ── 意图 ──────────────────────────────────────────────────────────────────

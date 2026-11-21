@@ -1344,7 +1344,6 @@ ui.game.hand.empty,手牌为空
 ui.game.hand.title,手牌
 ui.game.overlay.discover_hint,发现：选择一张卡牌
 ui.game.overlay.evolve_hint,进化：选择一项
-ui.game.overlay.title,待选择
 ui.game.rail.damage,伤害 %d
 ui.game.rail.draw,平
 ui.game.rail.empty,暂无玩家
