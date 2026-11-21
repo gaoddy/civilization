@@ -145,27 +145,33 @@ func _check_seat_rows() -> void:
     var hp_inset := UITheme.space("space-2xs")
     if not rows.is_empty():
         var rail_rect: Rect2 = (rail as Control).get_global_rect()
+        _expect(
+            not (rail.get_parent() is ScrollContainer),
+            "左栏座位列不应使用滚动容器",
+        )
         var first_rect: Rect2 = (rows[0] as Control).get_global_rect()
         var last_rect: Rect2 = (rows[rows.size() - 1] as Control).get_global_rect()
         _expect(
-            absf(first_rect.position.y - rail_rect.position.y) <= 1.0,
-            "首行应贴左栏顶部：行顶 %.1f，左栏顶 %.1f"
-            % [first_rect.position.y, rail_rect.position.y],
+            rail_rect.grow(1.0).encloses(first_rect),
+            "首行应落在左栏内：行 %s，左栏 %s" % [str(first_rect), str(rail_rect)],
         )
         _expect(
-            absf(last_rect.end.y - rail_rect.end.y) <= 1.0,
-            "末行应贴左栏底部：行底 %.1f，左栏底 %.1f"
-            % [last_rect.end.y, rail_rect.end.y],
+            rail_rect.grow(1.0).encloses(last_rect),
+            "末行应落在左栏内：行 %s，左栏 %s" % [str(last_rect), str(rail_rect)],
         )
-        var min_height := first_rect.size.y
-        var max_height := first_rect.size.y
+        var min_side := first_rect.size.x
+        var max_side := first_rect.size.x
         for row in rows:
-            var height: float = (row as Control).get_global_rect().size.y
-            min_height = minf(min_height, height)
-            max_height = maxf(max_height, height)
+            var rect: Rect2 = (row as Control).get_global_rect()
+            _expect(
+                is_equal_approx(rect.size.x, rect.size.y),
+                "座位行应为正方形：%s" % str(rect.size),
+            )
+            min_side = minf(min_side, rect.size.x)
+            max_side = maxf(max_side, rect.size.x)
         _expect(
-            max_height - min_height <= 1.0,
-            "8 行应均分左栏高度：最高 %.1f，最低 %.1f" % [max_height, min_height],
+            max_side - min_side <= 1.0,
+            "8 个座位行应等边长：最大 %.1f，最小 %.1f" % [max_side, min_side],
         )
     for row in rows:
         _expect(row.find_child("Avatar", true, false) != null, "座位行缺少头像")
@@ -190,6 +196,12 @@ func _check_seat_rows() -> void:
             )
             var avatar_rect := avatar_box.get_global_rect()
             var bar_rect := bar.get_global_rect()
+            var row_rect := (row as Control).get_global_rect()
+            _expect(
+                is_equal_approx(row_rect.size.x - avatar_rect.size.x, 4.0),
+                "行边长应为头像边长加两侧描边：行 %.1f，头像 %.1f"
+                % [row_rect.size.x, avatar_rect.size.x],
+            )
             _expect(
                 is_equal_approx(avatar_rect.size.x, avatar_rect.size.y),
                 "头像应为正方形：%s" % str(avatar_rect.size),

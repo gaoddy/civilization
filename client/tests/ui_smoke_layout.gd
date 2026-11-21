@@ -421,45 +421,38 @@ func _check_game_compact(compact: Vector2) -> void:
             await get_tree().process_frame
             await get_tree().process_frame
         var rail := page.find_child("PlayersRail", true, false) as Control
-        var scroll: ScrollContainer = null
         if rail != null:
-            scroll = rail.get_parent() as ScrollContainer
-        if rail != null and scroll != null:
-            var content := int(rail.get_combined_minimum_size().y)
-            var viewport := int(scroll.size.y)
-            _check(content <= viewport,
-                "手机基准积分榜不应滚动：内容 %d > 视口 %d" % [content, viewport])
-        if rail != null:
+            _check(
+                not (rail.get_parent() is ScrollContainer),
+                "手机基准左栏座位列不应使用滚动容器",
+            )
             var seat_rows: Array = []
             for child in rail.get_children():
                 if child.has_meta("player_id"):
                     seat_rows.append(child as Control)
             _check(seat_rows.size() == 8, "手机基准积分榜应有 8 个座位行，实际 %d" % seat_rows.size())
             if seat_rows.size() == 8:
-                # 8 行均分左栏高度：首行贴顶、末行贴底、行高一致。
+                # 8 个正方形座位行按同一间距排列并落在左栏内，不再均分拉伸行高。
                 var rail_rect := rail.get_global_rect()
                 var first_rect: Rect2 = seat_rows[0].get_global_rect()
-                var last_rect: Rect2 = seat_rows[seat_rows.size() - 1].get_global_rect()
-                _check(
-                    absf(first_rect.position.y - rail_rect.position.y) <= 1.0,
-                    "手机基准首行应贴左栏顶部：行顶 %.1f，左栏顶 %.1f"
-                    % [first_rect.position.y, rail_rect.position.y],
-                )
-                _check(
-                    absf(last_rect.end.y - rail_rect.end.y) <= 1.0,
-                    "手机基准末行应贴左栏底部：行底 %.1f，左栏底 %.1f"
-                    % [last_rect.end.y, rail_rect.end.y],
-                )
-                var min_height := first_rect.size.y
-                var max_height := first_rect.size.y
+                var min_side := first_rect.size.x
+                var max_side := first_rect.size.x
                 for row in seat_rows:
-                    var height: float = row.get_global_rect().size.y
-                    min_height = minf(min_height, height)
-                    max_height = maxf(max_height, height)
+                    var rect: Rect2 = row.get_global_rect()
+                    _check(
+                        rail_rect.grow(1.0).encloses(rect),
+                        "手机基准座位行应落在左栏内：行 %s，左栏 %s" % [str(rect), str(rail_rect)],
+                    )
+                    _check(
+                        is_equal_approx(rect.size.x, rect.size.y),
+                        "手机基准座位行应为正方形：%s" % str(rect.size),
+                    )
+                    min_side = minf(min_side, rect.size.x)
+                    max_side = maxf(max_side, rect.size.x)
                 _check(
-                    max_height - min_height <= 1.0,
-                    "手机基准 8 行应均分左栏高度：最高 %.1f，最低 %.1f"
-                    % [max_height, min_height],
+                    max_side - min_side <= 1.0,
+                    "手机基准 8 个座位行应等边长：最大 %.1f，最小 %.1f"
+                    % [max_side, min_side],
                 )
                 var avatar_box := seat_rows[0].find_child("SeatAvatar", true, false) as Control
                 var fallback_side := float(UITheme.stage_metric("avatar-rail"))
