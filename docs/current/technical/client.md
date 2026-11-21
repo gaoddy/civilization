@@ -10,7 +10,7 @@
 
 ```
 client/
-  project.godot              # 主场景 login.tscn；autoload：ScreenProfile、WindowSizer、GameStore、CardDB、Net
+  project.godot              # 主场景 login.tscn；autoload：ScreenProfile、WindowSizer、GameStore、CardDB、Net、Sfx
   export_presets.cfg         # macOS 预设（Universal、未签名）与 iOS 预设（开发签名）
   icon.png                   # 应用图标 1024×1024；iOS 导出按尺寸缩放生成
   .gitignore                 # 忽略 .godot/ 与 *.uid
@@ -20,10 +20,13 @@ client/
     game_store.gd            # 认证、房间、PlayerView、赛后统计与引导进度的全局状态
     ws_client.gd             # WebSocketPeer、自动重连、信封编解码与分发
     card_db.gd               # 只读卡牌/技能展示表与科学分类树；展示文本按文本 id 从文本表取
+    sfx.gd                   # 对局音效播放池、场景/卡牌资源路径与默认音效回落（autoload Sfx）
   text/
     zh_CN.csv                # 唯一的运行时中文文本表（生成物 + 人工 key）
   assets/
     fonts/NotoSansSC-Regular-subset.ttf  # 默认主题字体（中文子集）；美术素材见 §10
+    audio/sfx/                           # 场景音效：刷新、冻结、解冻、商店入场；见 §11
+    audio/cards/default/                 # 卡牌默认音效：购入、攻击、死亡；逐卡覆盖见 §11
   ui/
     ui.gd                    # 场景共用控件工具、共享构件与统一导航入口（class_name UI）
     safe_area.gd             # 页面安全区包裹（class_name SafeAreaMargin），触控端叠加键盘边距；整屏背景留在包裹层外
@@ -105,7 +108,7 @@ client/
 
 ## 2. 全局状态与网络层
 
-- `GameStore`：保存 `playerId`、`playerCode`、`token`、`roomId`、`roomCode`、房间成员、`PlayerView`、`lastSeq`、排名、种子、本人赛后统计 `self_stats`、`RoomClosed` 原因 `room_closed_reason`、引导步骤 `guide_step`，以及社交视图 `friends` / `incoming_requests` / `outgoing_requests` / `recent_players` / `pending_invites`。`handle(type, payload)` 只做字段搬运，发出 `auth_changed`、`room_changed`、`view_changed`、`game_started`、`game_over`、`room_closed`、`error_received`、`social_changed`、`invite_received`、`invite_result_received` 信号；`FriendUpdate` 整段替换社交列表，`FriendInvite` 按 `inviteId` 去重后入队，`InviteAccepted` 移除邀请并自动补发 `JoinRoom{roomCode}`。`GameOver` 写入 `ranking`、`game_seed` 与 `selfStats`；`RoomClosed` 先暂存 `reason`，`reset_room()` 后写回 `room_closed_reason`、补发 `LeaveRoom` 并发出 `room_closed`。`reset_room()` 清空房间与对局状态，`clear_game_view()` 只清本局视图（保留房间与社交），`reset_social()` 清空社交，`reset_session()` 两者都清并清空身份与令牌。
+- `GameStore`：保存 `playerId`、`playerCode`、`token`、`roomId`、`roomCode`、房间成员、`PlayerView`、`lastSeq`、排名、种子、本人赛后统计 `self_stats`、`RoomClosed` 原因 `room_closed_reason`、引导步骤 `guide_step`，以及社交视图 `friends` / `incoming_requests` / `outgoing_requests` / `recent_players` / `pending_invites`。`handle(type, payload)` 只做字段搬运，发出 `auth_changed`、`room_changed`、`view_changed`、`events_received`、`game_started`、`game_over`、`room_closed`、`error_received`、`social_changed`、`invite_received`、`invite_result_received` 信号；每封 `StateUpdate` 的 `events` 在视图写入后原样转发一次，`Snapshot` 重连补发不转发；`FriendUpdate` 整段替换社交列表，`FriendInvite` 按 `inviteId` 去重后入队，`InviteAccepted` 移除邀请并自动补发 `JoinRoom{roomCode}`。`GameOver` 写入 `ranking`、`game_seed` 与 `selfStats`；`RoomClosed` 先暂存 `reason`，`reset_room()` 后写回 `room_closed_reason`、补发 `LeaveRoom` 并发出 `room_closed`。`reset_room()` 清空房间与对局状态，`clear_game_view()` 只清本局视图（保留房间与社交），`reset_social()` 清空社交，`reset_session()` 两者都清并清空身份与令牌。
 - `Net`：持有一个 `WebSocketPeer`，`_process` 中轮询；连接建立后先认证，断线每 3 秒自动重连。重连时以令牌发 `AuthRequest`，若仍在房间再发 `Reconnect{roomId, lastSeq}`，由服务端回全量 `Snapshot`。连接前用 `prefer_ipv4_url` 把 URL 主机名解析成 IPv4：`WebSocketPeer` 只尝试解析结果的第一条地址，双栈主机名常先拿到 IPv6。
 - 下行信封只校验 `v == 1` 与 `type`，`payload` 原样交给 `GameStore`；未知类型忽略。上行信封为 `{v, id, type, ts, payload}`，`id` 由时间戳与计数器生成。
 - `CardDB`：启动时读取 `client/generated/{cards,heroes,skills,taxonomy}.json`。卡名、技能文本与时代名不放在生成数据里，而是按文本 id 从 `client/text/zh_CN.csv` 取：`display_name` 取 `card.<id>.name`，`hero_introduction` 取 `card.<id>.introduction`，`display_text` 取 `skill.<id>.text`，`era_name` 取 `enum.era.<id>`。不参与任何规则判定。
@@ -118,6 +121,7 @@ client/
 - `skill_name(id)`：取 `skill.<id>.name`，空 id 或缺键返回空串，避免内部技能 id 泄露到界面；卡牌详情与图鉴详情据此跳过没有展示名的技能。
 - `heroes.json` 单独载入 `CardDB.heroes`，不与 `cards` 合并：英雄与同名随从卡 id 相同但分属两个集合。`CardDB.hero(id)` / `hero_text(id)` 只读英雄池；英雄卡没有 `card_type`、`taxon`、时代与数值，界面按需只展示介绍、玩法、关联与技能。
 - `cards.json` 含 `categories`（`[{kind, value}]`，`kind` 为 `play` / `prey` / `host`）、`taxon` 与 `in_shop_pool`，不再含 `is_hero`；`in_shop_pool: true` 的卡至少 1 条 `play:`，没有 `neutral`；非池卡允许没有 `play:`，`card_type` 按玩法需要取 `minion` 或 `effect`，卡面照常展示名称、分类与数值。
+- `Sfx`：8 路 `AudioStreamPlayer` 轮转播放，场景音效按 cue 读 `assets/audio/sfx/`，卡牌音效优先读 `assets/audio/cards/<cardId>/` 并回落 `assets/audio/cards/default/`；缺失资源静默，不阻塞对局。`cue_log` 只供无头冒烟断言，不参与运行时逻辑。资源与触发规则见 §11。
 
 ## 3. 六个场景
 
@@ -200,6 +204,7 @@ client/
 | `make data` | 生成服务端数据（含 `taxonomy.json`）、`client/generated/{cards,skills,taxonomy}.json` 与文本表 `client/text/zh_CN.csv` |
 | `make data-check` | 比对服务端与客户端生成数据、文本表漂移，运行效果审计 |
 | `make assets` | 按 `ASSET_MAP` 对源立绘去水印，派生头像与卡面并重写 `client/assets/asset_manifest.json`；见 §10 |
+| `make sfx` | 生成 7 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存 |
@@ -333,6 +338,14 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（默认 `client/assets/characters/portraits/asset_map.json`，内容为 `card_id → 源立绘文件名`）处理源立绘，并重写清单；映射文件缺失时目标直接失败。
 - 批次：首批试点 20 张，覆盖 14 种玩法色与 7 个时代；其余卡牌继续走程序化绘制。源立绘随仓库提交。
 - 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；改图后运行 `make client-import`。
+
+## 11. 音效层
+
+- 位置：`client/assets/audio/`。场景音效 `sfx/{reroll,freeze,unfreeze,shop_enter}.wav`；卡牌默认音效 `cards/default/{buy,attack,death}.wav`；逐卡覆盖为 `cards/<cardId>/{buy,attack,death}.wav`。
+- 播放：`Sfx` 自动加载单例，8 路播放池轮转、统一 `-6 dB`；`play_cue(cue)` 播场景音效，`play_card(cardId, cue)` 播卡牌音效。卡牌音效先查逐卡路径，缺失回落默认目录；所有路径按需加载并缓存，文件缺失时静默跳过。
+- 触发：`game.gd` 监听 `GameStore.events_received`，同批含 `TurnStarted` 播商店入场、否则 `ShopRolled` 播刷新、每条 `MinionBought` 按 `cardId` 播购入；冻结/解冻由视图 `frozen` 变化判断，带重抽事件的批次不误判。`game_combat_view.gd` 在应用 `attack` / `death` 动作时按随从实例反查卡牌 id，播放攻击/死亡音效；`seek()` 续播不补播旧动作。
+- 资源：当前 7 个默认音效由 `make sfx` 调用 `scripts/gen_sfx.py` 合成，作为占位素材随源提交；正式素材可直接替换同名文件。`.import` 被 `client/.gitignore` 忽略，替换后运行 `make client-import`。
+- 测试：`tests/test_client_boundary.py` 断言 `Sfx` 注册与 7 个默认资源存在；`client/tests/ui_smoke.gd` 的 `_check_sfx_events`、`_check_sfx_freeze`、`_check_sfx_combat` 断言事件到 cue 的映射、次数与卡牌 id。
 
 ## 相关文档
 

@@ -184,22 +184,21 @@ func _play_events(events: Array) -> void:
         var data: Dictionary = action
         match str(data.get("kind", "")):
             "attack":
-                var source := _card_for(
-                    str(data.get("sourceSide", "")),
-                    _minion_id(data.get("sourceMinionId"), data.get("source"))
-                )
-                var target := _card_for(
-                    str(data.get("targetSide", "")),
-                    _minion_id(data.get("targetMinionId"), data.get("target"))
-                )
+                var source_side := str(data.get("sourceSide", ""))
+                var source_id := _minion_id(data.get("sourceMinionId"), data.get("source"))
+                var target_side := str(data.get("targetSide", ""))
+                var target_id := _minion_id(data.get("targetMinionId"), data.get("target"))
+                Sfx.play_card(_card_id_for(source_side, source_id), Sfx.CUE_CARD_ATTACK)
+                var source := _card_for(source_side, source_id)
+                var target := _card_for(target_side, target_id)
                 if source != null and target != null:
                     _fx.play_attack(source, target, int(data.get("damage", 0)))
             "death":
                 # 阵亡动作的定位字段写在 `sourceSide`（受影响随从所在侧）。
-                var card := _card_for(
-                    str(data.get("sourceSide", "")),
-                    _minion_id(null, data.get("target"))
-                )
+                var side := str(data.get("sourceSide", ""))
+                var minion_id := _minion_id(null, data.get("target"))
+                Sfx.play_card(_card_id_for(side, minion_id), Sfx.CUE_CARD_DEATH)
+                var card := _card_for(side, minion_id)
                 if card != null:
                     _fx.fade_out(card)
             "contagion":
@@ -261,6 +260,27 @@ func _card_for(side: String, minion_id: String) -> Control:
             if child is Control and str(child.get_meta("minion_id", "")) == minion_id:
                 return child
     return null
+
+
+## 动作涉及的卡牌 id：战斗动作只带随从实例 id，按侧别回到播放器列表反查。
+##
+## 列表保留已阵亡条目，召唤随从也带 `cardId`；查不到时返回空串，音效层回落默认。
+func _card_id_for(side: String, minion_id: String) -> String:
+    if minion_id == "":
+        return ""
+    var boards: Array = []
+    match side:
+        "own":
+            boards = [_combat.own]
+        "opponent":
+            boards = [_combat.opponent]
+        _:
+            boards = [_combat.own, _combat.opponent]
+    for board in boards:
+        for minion in board:
+            if str(minion.get("minionId", "")) == minion_id:
+                return str(minion.get("cardId", ""))
+    return ""
 
 
 ## 按播放器当前状态重画两行：已存在的节点只改数值与明暗，召唤的随从插入新卡。

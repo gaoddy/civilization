@@ -16,8 +16,21 @@ class ClientBoundaryTest(unittest.TestCase):
 
     def test_autoloads_declared(self):
         project = (CLIENT / "project.godot").read_text(encoding="utf-8")
-        for name in ("GameStore", "Net", "CardDB"):
+        for name in ("GameStore", "Net", "CardDB", "Sfx"):
             self.assertRegex(project, rf"(?m)^{name}=\"")
+
+    def test_sfx_default_assets_exist(self):
+        audio = CLIENT / "assets" / "audio"
+        for relative in (
+            "sfx/reroll.wav",
+            "sfx/freeze.wav",
+            "sfx/unfreeze.wav",
+            "sfx/shop_enter.wav",
+            "cards/default/buy.wav",
+            "cards/default/attack.wav",
+            "cards/default/death.wav",
+        ):
+            self.assertTrue((audio / relative).is_file(), f"缺少默认音效 {relative}")
 
     def test_insecure_tls_default_off(self):
         project = (CLIENT / "project.godot").read_text(encoding="utf-8")
