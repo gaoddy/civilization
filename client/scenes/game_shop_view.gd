@@ -219,7 +219,10 @@ func _refresh_actions(state: GameUiState) -> void:
     )
 
     _freeze_button.disabled = (
-        blocked or state.phase != Protocol.PHASE_RECRUIT or state.recruited
+        blocked
+        or state.self_eliminated()
+        or state.phase != Protocol.PHASE_RECRUIT
+        or state.recruited
     )
     # 冻结标记跨回合保留，但解冻权只在冻结的当回合有效，按钮态跟随 `canUnfreeze`。
     var can_unfreeze := bool(aff.get("canUnfreeze", false))

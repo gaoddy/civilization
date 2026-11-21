@@ -48,6 +48,20 @@ func can_drag(playable: bool) -> bool:
         and not stale
         and not expired
         and connected
+        and not self_eliminated()
         and not target_pending
         and playable
     )
+
+
+## 本人是否已出局：出局后只能观战，服务端拒绝一切招募意图。
+func self_eliminated() -> bool:
+    return view_eliminated(view, GameStore.player_id)
+
+
+## 按视图座位表判断指定玩家是否出局；缺失该玩家时按未出局处理。
+static func view_eliminated(view: Dictionary, player_id: String) -> bool:
+    for player in view.get("players", []):
+        if player is Dictionary and str(player.get("playerId", "")) == player_id:
+            return not bool(player.get("alive", true))
+    return false

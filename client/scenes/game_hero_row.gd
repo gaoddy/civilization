@@ -94,7 +94,7 @@ func refresh(state: GameUiState) -> void:
     _gold_tile.text = "%d %s" % [
         int(self_state.get("gold", 0)), tr("ui.game.side_panel.gold")
     ]
-    var eliminated := _self_eliminated(state.view)
+    var eliminated := state.self_eliminated()
     _hero_card.visible = not eliminated
     _side.visible = not eliminated
     _eliminated_label.visible = eliminated
@@ -213,15 +213,6 @@ func _sync_power_buttons(powers: Array) -> void:
         button.button_down.connect(func() -> void: hero_power_down.emit(skill_id))
         _powers.add_child(button)
         _power_buttons[skill_id] = button
-
-
-func _self_eliminated(view: Dictionary) -> bool:
-    for player in view.get("players", []):
-        if not (player is Dictionary):
-            continue
-        if str(player.get("playerId", "")) == GameStore.player_id:
-            return not bool(player.get("alive", true))
-    return false
 
 
 ## 被动技能标记：与金币同高的静态格，只提供悬停文案，不发信号、不置灰。

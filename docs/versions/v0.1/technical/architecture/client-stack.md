@@ -18,7 +18,7 @@
 ## 2. 运行边界
 
 - 客户端不加载、不执行规则引擎，不做本地预演；状态变化只来自服务端事件，见[联网与技术架构](network-architecture.md)硬约束第 2、3 条。
-- 客户端不自行推导「是否买得起」「能否三连」等规则结论，以服务端接受或拒绝为准；可操作提示只读 `PlayerView.affordances`。
+- 客户端不自行推导「是否买得起」「能否三连」等规则结论，以服务端接受或拒绝为准；可操作提示只读 `PlayerView.affordances`。点击入口另按视图阶段、`self.recruited` 与本人存活状态做与服务端一致的语义预检，挡住阶段切换瞬间仍可点的按钮，不推导任何规则结论。
 - 战斗只播放服务端下发的 `CombatResult`，播放速度不影响结算。
 - 协议常量由 `protocol/schema/v1/` 生成，仓库根产物为 `protocol/generated/protocol.gd`，客户端产物为 `client/generated/protocol.gd`，两处由 `make protocol` 同批输出、`make protocol-check` 检测漂移；客户端不做完整运行时 schema 校验，只检查 `type`、`v` 与关键字段，字段级契约由服务端与样例测试保证。规则见[通信协议](protocol.md) §8。
 

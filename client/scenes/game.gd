@@ -13,6 +13,9 @@ const COMBAT_PACE_MS := 320
 ## 服务端演示节奏：结果横幅停留（与 room-service 的 TAIL_MS 一致）。
 const COMBAT_TAIL_MS := 2000
 
+## 错误文案在顶栏的停留时长；连接提示优先，出现连接提示时立即让位。
+const ERROR_NOTICE_SECONDS := 4.0
+
 # 页面级状态与门槛。
 var _intent_counter := 0
 ## 技能瞄准期间缓存的 `UseHeroPower` 意图；命中候选后补 `target` 再发出。
@@ -37,6 +40,11 @@ var _initial_shop_enter_done := false
 var _top_bar: GameTopBar
 ## 状态文本当前承载的是连接提示：恢复连接时据此清空，避免误清错误文案。
 var _connection_notice := false
+## 顶栏当前显示的是错误文案：到时或阶段/回合变化后清空，不让一次性拒绝常驻整局。
+var _error_notice := false
+var _error_notice_left := 0.0
+var _error_notice_phase := ""
+var _error_notice_turn := -1
 
 # 左栏积分榜。
 var _players_panel: GamePlayersRail
@@ -205,6 +213,7 @@ func _build_center() -> VBoxContainer:
 
 func _process(delta: float) -> void:
     _elapsed += delta
+    _tick_error_notice(delta)
     if _elapsed >= 0.25:
         _elapsed = 0.0
         _update_timer()
@@ -213,10 +222,37 @@ func _process(delta: float) -> void:
     _report_combat_played()
 
 
+## 错误文案的生命周期：停留时长用完即清空；阶段或回合变化由 `_refresh` 提前清空。
+func _tick_error_notice(delta: float) -> void:
+    if not _error_notice:
+        return
+    _error_notice_left -= delta
+    if _error_notice_left <= 0.0:
+        _clear_error_notice()
+
+
+## 只清错误文案，不覆盖连接提示；调用方写入其它提示前也要取消错误计时。
+func _clear_error_notice() -> void:
+    _error_notice = false
+    _error_notice_left = 0.0
+    if _connection_notice:
+        return
+    _top_bar.set_status("", UITheme.color("color-text-dim"))
+
+
 func _refresh() -> void:
     _detail.reset()
+    if (
+        _error_notice
+        and (
+            GameStore.phase != _error_notice_phase
+            or GameStore.turn != _error_notice_turn
+        )
+    ):
+        _clear_error_notice()
     var view: Dictionary = GameStore.view
     if view.is_empty():
+        _error_notice = false
         _top_bar.set_status(tr("ui.game.status.waiting_view"), UITheme.color("color-text-dim"))
         _guide.set_phase("", {})
         _shop_frozen.clear()
@@ -405,6 +441,7 @@ func _refresh_connection() -> void:
     if disconnected:
         # 有连接句柄但未就绪 = 正在重连（dim）；句柄为空 = 断线（danger）。
         var reconnecting := Net.socket != null
+        _error_notice = false
         _top_bar.set_status(
             tr("ui.game.status.reconnecting") if reconnecting else tr("ui.game.status.disconnected"),
             UITheme.color("color-text-dim") if reconnecting else UITheme.color("color-danger"),
@@ -569,6 +606,7 @@ func _send_intent(intent: Dictionary) -> String:
         "intent": intent,
     })
     if intent_id == "":
+        _error_notice = false
         _top_bar.set_status(tr("ui.game.status.intent_not_sent"), UITheme.color("color-text-dim"))
     return intent_id
 
@@ -649,7 +687,7 @@ static func drop_gate(
 
 ## 落点门控的实时复查：拖拽期间状态可能已经变化，落点按当前页面状态重判。
 func _can_play_now() -> bool:
-    return drop_gate(
+    return not _self_eliminated() and drop_gate(
         str(GameStore.view.get("phase", GameStore.phase)),
         _view_stale,
         _deadline_expired,
@@ -657,6 +695,25 @@ func _can_play_now() -> bool:
         _target_pending,
         bool(GameStore.view.get("self", {}).get("recruited", false))
     )
+
+
+## 点击类操作的服务端语义门控：非招募阶段、旧视图、倒计时归零、待选、已结束招募
+## 与出局座位都会被服务端拒绝，这里先挡下，避免产生必然失败的意图。
+## 不含连接状态：断线时仍交给 `_send_intent` 提示「未发出」。
+func _click_allowed() -> bool:
+    return (
+        str(GameStore.view.get("phase", GameStore.phase)) == Protocol.PHASE_RECRUIT
+        and not _view_stale
+        and not _deadline_expired
+        and not _target_pending
+        and not bool(GameStore.view.get("self", {}).get("recruited", false))
+        and not _self_eliminated()
+    )
+
+
+## 本人是否已出局：出局座位在招募阶段也只能观战，服务端会拒绝一切招募意图。
+func _self_eliminated() -> bool:
+    return GameUiState.view_eliminated(GameStore.view, GameStore.player_id)
 
 
 func _on_sell_hover(hovering: bool, refund: int) -> void:
@@ -675,14 +732,20 @@ func _on_sell_dropped(payload: Dictionary) -> void:
 
 
 func _on_reroll() -> void:
+    if not _click_allowed():
+        return
     _send_intent({"kind": Protocol.INTENT_REROLL_SHOP})
 
 
 func _on_upgrade() -> void:
+    if not _click_allowed():
+        return
     _send_intent({"kind": Protocol.INTENT_UPGRADE_ERA})
 
 
 func _on_freeze() -> void:
+    if not _click_allowed():
+        return
     # 解冻只在冻结的当回合可用；跨回合保留的冻结仍走「冻结」按钮。
     var aff: Dictionary = GameStore.view.get("self", {}).get("affordances", {})
     _send_intent({
@@ -704,6 +767,8 @@ func _hero_power_of(skill_id: String) -> Dictionary:
 
 
 func _on_hero_power(skill_id: String) -> void:
+    if not _click_allowed():
+        return
     var power := _hero_power_of(skill_id)
     if power.is_empty():
         return
@@ -730,11 +795,13 @@ func _on_hero_power_down(skill_id: String) -> void:
 
 
 func _on_end_recruit() -> void:
+    if not _click_allowed():
+        return
     _send_intent({"kind": Protocol.INTENT_END_RECRUIT})
 
 
 func _on_choose(choice_index: int) -> void:
-    if _deadline_expired or str(GameStore.view.get("phase", GameStore.phase)) != Protocol.PHASE_RECRUIT:
+    if not _click_allowed():
         return
     _send_intent({"kind": Protocol.INTENT_CHOOSE_DISCOVER, "choice": choice_index})
 
@@ -787,6 +854,11 @@ func _on_error() -> void:
         UITheme.color("color-danger"),
         UI.error_tooltip(code),
     )
+    # 一次拒绝只提示一段时间；阶段/回合变化后的下一次刷新会提前清空。
+    _error_notice = true
+    _error_notice_left = ERROR_NOTICE_SECONDS
+    _error_notice_phase = GameStore.phase
+    _error_notice_turn = GameStore.turn
     match UI.error_route(code):
         "lobby":
             GameStore.reset_room()
