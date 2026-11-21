@@ -49,7 +49,7 @@ client/
     game_players_rail.gd     # 左栏座位列：头像、名次、血条与战报展开
     game_shop_view.gd        # 商店：售货员两侧的图标操作行、6 槽与出售落点（class_name GameShopView）
     game_icon_button.gd      # 40×40 图标按钮，费用角标在右上、次数角标在左上（class_name GameIconButton）
-    game_portrait.gd         # 64×64 头像块：可选立绘贴图 + 玩法色底与名字首字回退（class_name GamePortrait）
+    game_portrait.gd         # 64×64 头像块：可选的头像贴图 + 玩法色底与名字首字回退（class_name GamePortrait）
     game_river.gd            # 河道行：回合数、招募倒计时/结束招募、战斗结果（class_name GameRiver）
     game_hero_row.gd         # 英雄行：身高 84，英雄卡、金币、被动标记与全部主动技能列（class_name GameHeroRow）
     game_hero_card.gd        # 英雄卡：64×84，封面、名字与攻击/时代/生命三格（class_name GameHeroCard）
@@ -186,7 +186,7 @@ client/
 
 - 图鉴页大厅入口由 `lobby.gd` 的「卡牌图鉴」按钮经 `UI.navigate` 进入 `res://scenes/gallery.tscn`，随从视图取 `CardDB.cards.keys()`（含非池卡），英雄视图取 `CardDB.heroes_array()`；对局入口是顶部工具条右侧的 `GalleryButton`，`game.gd._open_gallery` 首次创建 `CardGallery` 覆盖节点（`GalleryOverlay`，铺满视口，`closed` 只收起 `visible`），英雄集合按本局 `CardPool.hero_ids(view.enabledFactions)` 过滤，不切换场景、不暂停视图刷新，拖拽、待选与战斗演示状态保留；`_refresh_overlay` 在选择浮层可见时调用 `_close_gallery`。
 - 图鉴视图由标题右侧的 `GalleryModeBar` 单按钮切换：按钮文字为当前视图，点击 emit 另一视图，默认 `minion`；英雄集合为空时按钮禁用并保持随从。随从视图三维筛选交叉生效：时代、顶层分类与「随从 / 效果」二级项；每个维度的计数都按另外两维过滤，零计数且未选中的项禁用。顶层分类按 `CardDB.playstyles` 的固定顺序展示「全部」与 13 个玩法，不含「中立」；卡牌按 `categories` 中的全部 `play:` 归属归入对应玩法，带多条归属的卡在多个分类中同时出现，「全部」按唯一卡牌 id 计数。效果牌与英雄不作为顶层分类。英雄视图隐藏时代章节栏与左侧目录，顶部 `GalleryHeroCategories` 按同一玩法顺序展示「全部」与 13 个玩法，英雄按全部 `play:` 归属计数，带多条归属的英雄在多个分类中同时出现，零计数分类显示并禁用；两套视图各自保留筛选，切换后回到第 1 页并选中结果首张。非池卡随 `cards.json` 自带 `card_type`，按自身类型参与「随从 / 效果」筛选。筛选与翻页后网格只构建当前页（桌面 `gallery-page-size` = 18、`gallery-grid-columns` = 6；手机 8 与 4，无滚动容器），选中卡不在结果内时改为结果首张，结果为空时显示空态。普通卡排序按时代序号（未知排最后）再按本地化名称，英雄按本地化名称。
-- 图鉴详情预览区以 `CardDB.art_path(id, "card_face")` 取卡面美术，按 `gallery-preview-width` / `gallery-preview-height`（手机 `-compact`）等比放大；无美术时用 `UITheme.playstyle_cover` 底色与 `CardText.initial` 占位，不再实例化 `GalleryCardFace`。
+- 图鉴详情预览区以 `CardDB.art_path(id, "card_face")` 取卡面美术，英雄视图与随从视图共用同一张图；宽度取 `gallery-preview-width`（手机 `-compact`），高度由 `UITheme.card_face_height(width)` 按 112:146 计算，不再使用独立高度令牌。无美术时用 `UITheme.playstyle_cover` 底色与 `CardText.initial` 占位，不再实例化 `GalleryCardFace`。
 - 本局卡池由 `CardPool.card_ids` 复算：遍历 `CardDB.cards` 并跳过 `in_shop_pool: false` 的非池卡；卡牌任一条 `play:` 命中 `enabledFactions` 即入池，池内卡没有 `play:` 在加载期已被拒绝，与服务端 `card_in_pool` 一致；结果只用于展示，不影响出牌与商店合法性。
 
 ## 4. 生成物与命令
@@ -290,7 +290,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - 换算公式是纯函数：`canvas_scale`、`canvas_hit_min`、`canvas_from_pixels`、`canvas_insets`。`DisplayServer.get_display_safe_area()` 与 `virtual_keyboard_get_height()` 返回像素，按内容矩形（含等比缩放留白）换算为画布单位，落在留白内的边距记零。
 - `UI.safe_area(page)` 把页面子节点整体移入 `SafeAreaMargin`：桌面四边为零；触控端取安全区四边，底部取安全区与键盘高度的较大值。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UI.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。
 - `UITheme.hit_primary()` / `hit_small()` 把 44pt / 32pt 换算为画布单位；`UI.button` 与 `UI.styled_button` 在触控端按此抬升最小高度，桌面端保留原值。
-- 图鉴在 iPhone 基准下收窄目录（`gallery-toc-width-compact`）、详情（`gallery-detail-width-compact`）与详情卡图（`gallery-preview-width-compact` / `gallery-preview-height-compact`），并改为 4 列（`gallery-grid-columns-compact`）；英雄视图隐藏目录，网格只让出详情宽度。桌面与 iPad 保持原令牌。
+- 图鉴在 iPhone 基准下收窄目录（`gallery-toc-width-compact`）、详情（`gallery-detail-width-compact`）与详情卡图宽度（`gallery-preview-width-compact`，高度随 `card_face_height`），并改为 4 列（`gallery-grid-columns-compact`）；英雄视图隐藏目录，网格只让出详情宽度。桌面与 iPad 保持原令牌。
 - 对局页与内部组件统一用 `UITheme.stage_metric(name)` 取场景令牌：iPhone 优先取 `<name>-compact`（卡面 84×92、英雄行 64、河道 24、商店操作行 52、顶部工具条 26、头像 48、图标按钮 36、座位行头像 40 等），其余设备取原值；页面边距与舞台间距在 iPhone 下同步收紧。桌面端仍为 720 高的完整舞台，iPhone 为 540 高，纵向顺序与操作不变。
 
 ### 触控交互
@@ -325,7 +325,8 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 - 位置：`client/assets/`。`characters/portraits/ch_<id>_full.png` 为去水印立绘，`characters/avatars/ch_<id>_ava.png` 为圆形头像，`cards/faces/card_<id>_face.png` 为 448×584 卡面封面；`asset_manifest.json` 按卡牌 id 登记三类路径与展示尺寸。`assets/ui/bg/bg_main.png` 为页面背景纹理（512×512，整屏拉伸，不平铺）。
 - 加载：`CardDB` 启动时读取清单到 `art`，提供 `has_art(id)` 与 `art_path(id, kind)`；清单缺失或条目缺字段时返回空串，不报错。
-- 回退：`UI.art_texture()` / `UI.art_layer()` 统一取图与铺层，纹理加载失败与无资源返回空；`CardFaceBase.create_face()` 用带卡面圆角的面板绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；房间候选卡叠 `card_face`、技能浮层叠 `portrait`；对局英雄卡封面与对手头像用 `avatar`，`UI.avatar()` 同样有头像纹理时叠 `AvatarArt`；英雄详情（对局与图鉴）用 `portrait`。各类无图时回退玩法色块与首字（英雄卡封面回退玩法色与首字，技能浮层与详情省略图片）。页面背景缺图或加载失败时 `UI.background()` 回退 `color-bg` 纯色。
+- 卡面展示位：图鉴网格与详情、房间候选卡与技能浮层、对局英雄详情一律取 `card_face`，同一个 id 在英雄视图与随从视图显示同一张图；展示框宽高比固定 112:146，只给宽度时高度由 `UITheme.card_face_height(width)` 计算。头像位（对局英雄卡封面、对手头像、`UI.avatar()`）仍取 `avatar`，不参与卡面比例。
+- 回退：`UI.art_texture()` / `UI.art_layer()` 统一取图与铺层，纹理加载失败与无资源返回空；`CardFaceBase.create_face()` 用带卡面圆角的面板绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；房间候选卡与技能浮层叠 `card_face`；对局英雄卡封面与对手头像用 `avatar`，`UI.avatar()` 同样有头像纹理时叠 `AvatarArt`；英雄详情（对局与图鉴）用 `card_face`。各类无图时回退玩法色块与首字（英雄卡封面回退玩法色与首字，技能浮层与详情省略图片）。页面背景缺图或加载失败时 `UI.background()` 回退 `color-bg` 纯色。
 - 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（默认 `client/assets/characters/portraits/asset_map.json`，内容为 `card_id → 源立绘文件名`）处理源立绘，并重写清单；映射文件缺失时目标直接失败。
 - 批次：首批试点 20 张，覆盖 14 种玩法色与 7 个时代；其余卡牌继续走程序化绘制。源立绘随仓库提交。
 - 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；改图后运行 `make client-import`。
