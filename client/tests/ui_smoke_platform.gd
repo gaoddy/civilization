@@ -55,12 +55,12 @@ func _check_prefer_ipv4_url() -> void:
     )
 
 
-## 窗口缩放策略：keep_width 固定逻辑宽度、逻辑高度随窗口比例扩展；
+## 窗口缩放策略：expand 让逻辑视口铺满整个窗口，比例不匹配时由页面背景填满背景带；
 ## 可见内容的比例与留白由 `ContentFrame` 的 contain 计算保证，不由此项拉伸。
 func _check_stretch() -> void:
     _check(
-        str(ProjectSettings.get_setting("display/window/stretch/aspect")) == "keep_width",
-        "窗口缩放应为 keep_width",
+        str(ProjectSettings.get_setting("display/window/stretch/aspect")) == "expand",
+        "窗口缩放应为 expand",
     )
 
 
