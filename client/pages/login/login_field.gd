@@ -7,6 +7,6 @@ var edit: LineEdit
 
 func _init(title := "", value := "") -> void:
     add_child(UIControls.label(title, UITheme.font_size("font-body")))
-    edit = LineEdit.new()
+    edit = UIControls.line_edit()
     edit.text = value
     add_child(edit)

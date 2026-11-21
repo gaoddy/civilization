@@ -66,6 +66,11 @@ func _check_desktop() -> void:
     ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_DESKTOP)
     _check(UITheme.hit_primary() == 44, "桌面主操作命中高度应保持 44")
     _check(UITheme.hit_small() == 32, "桌面次要操作命中高度应保持 32")
+    var input := UIControls.line_edit("房间码", 220)
+    _check(input is LineEdit, "输入框工厂应返回 LineEdit")
+    _check(input.custom_minimum_size == Vector2(220, 34),
+        "桌面输入框应保留 34 高与指定宽度，实际 %s" % str(input.custom_minimum_size))
+    input.free()
 
     for page_case in PAGES:
         var page := await _instantiate(str(page_case["path"]))
@@ -193,6 +198,11 @@ func _check_touch() -> void:
         "触控主操作命中高度不应低于 44，实际 %d" % UITheme.hit_primary())
     _check(UITheme.hit_small() >= 32,
         "触控次要操作命中高度不应低于 32，实际 %d" % UITheme.hit_small())
+    var input := UIControls.line_edit("", 220)
+    _check(input is LineEdit, "触控输入框工厂应返回 LineEdit")
+    _check(input.custom_minimum_size.y >= UITheme.hit_primary(),
+        "触控输入框最小高度应不低于主操作命中高度，实际 %d" % int(input.custom_minimum_size.y))
+    input.free()
 
     var page := Control.new()
     page.name = "SafeAreaFixture"

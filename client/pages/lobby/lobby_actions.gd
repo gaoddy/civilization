@@ -28,9 +28,7 @@ func _init() -> void:
     var join_row := HBoxContainer.new()
     join_row.add_theme_constant_override("separation", UITheme.space("space-md"))
     actions.add_child(join_row)
-    code_input = LineEdit.new()
-    code_input.placeholder_text = tr("ui.lobby.room_code_placeholder")
-    code_input.custom_minimum_size = Vector2(220, 0)
+    code_input = UIControls.line_edit(tr("ui.lobby.room_code_placeholder"), 220)
     code_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     join_row.add_child(code_input)
     var join := UIControls.button(tr("ui.lobby.join"))

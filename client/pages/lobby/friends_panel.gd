@@ -61,10 +61,8 @@ func _init() -> void:
     var add_row := HBoxContainer.new()
     add_row.add_theme_constant_override("separation", UITheme.space("space-md"))
     body.add_child(add_row)
-    _add_input = LineEdit.new()
+    _add_input = UIControls.line_edit(tr("ui.lobby.add_friend_placeholder"), 220)
     _add_input.name = "FriendCodeInput"
-    _add_input.placeholder_text = tr("ui.lobby.add_friend_placeholder")
-    _add_input.custom_minimum_size = Vector2(220, 0)
     _add_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     add_row.add_child(_add_input)
     var add := UIControls.button(tr("ui.lobby.add_friend"))

@@ -29,6 +29,17 @@ static func button(text: String) -> Button:
     return node
 
 
+## 输入框：桌面与按钮同高，触控端按主操作命中尺寸抬升；宽度由调用方按场景给出。
+static func line_edit(placeholder := "", min_width := 0) -> LineEdit:
+    var node := LineEdit.new()
+    node.placeholder_text = placeholder
+    var height := 34
+    if ScreenProfile.is_touch():
+        height = UITheme.hit_primary()
+    node.custom_minimum_size = Vector2(min_width, height)
+    return node
+
+
 static func panel() -> PanelContainer:
     return PanelContainer.new()
 
