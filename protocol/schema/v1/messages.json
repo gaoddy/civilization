@@ -18,7 +18,12 @@
       "FriendRespond": "messages.schema.json#/$defs/FriendRespond",
       "FriendRemove": "messages.schema.json#/$defs/FriendRemove",
       "InviteToRoom": "messages.schema.json#/$defs/InviteToRoom",
-      "RespondInvite": "messages.schema.json#/$defs/RespondInvite"
+      "RespondInvite": "messages.schema.json#/$defs/RespondInvite",
+      "RequestAccount": "messages.schema.json#/$defs/RequestAccount",
+      "RequestPhoneCode": "messages.schema.json#/$defs/RequestPhoneCode",
+      "BindPhone": "messages.schema.json#/$defs/BindPhone",
+      "CreateRoomInvite": "messages.schema.json#/$defs/CreateRoomInvite",
+      "RedeemRoomInvite": "messages.schema.json#/$defs/RedeemRoomInvite"
     },
     "s2c": {
       "AuthResult": "messages.schema.json#/$defs/AuthResult",
@@ -35,7 +40,12 @@
       "FriendUpdate": "messages.schema.json#/$defs/FriendUpdate",
       "FriendInvite": "messages.schema.json#/$defs/FriendInvite",
       "FriendInviteResult": "messages.schema.json#/$defs/FriendInviteResult",
-      "InviteAccepted": "messages.schema.json#/$defs/InviteAccepted"
+      "InviteAccepted": "messages.schema.json#/$defs/InviteAccepted",
+      "AccountView": "messages.schema.json#/$defs/AccountView",
+      "PhoneCodeSent": "messages.schema.json#/$defs/PhoneCodeSent",
+      "RoomInviteCode": "messages.schema.json#/$defs/RoomInviteCode",
+      "AchievementState": "messages.schema.json#/$defs/AchievementState",
+      "AchievementUnlocked": "messages.schema.json#/$defs/AchievementUnlocked"
     }
   }
 }

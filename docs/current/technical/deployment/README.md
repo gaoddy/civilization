@@ -33,6 +33,8 @@ make deploy-load ENV=dev SERVER=<ssh-target>
 
 - 非敏感配置只有监听地址：ConfigMap `civilization-server-config` 的 `listen-addr`，以 `ROOM_SERVICE_LISTEN` 注入。
 - 数据库凭据全部来自平台生成的 Secret `civilization-postgres-civilization`（键 `username`、`password`、`DATABASE_URL`；prod 另有 `DATABASE_READ_URL`）。chart 只引用、不创建。
+- Steam 渠道另从同一 Secret 注入 `STEAM_WEB_API_KEY` 与 `STEAM_APP_ID`；缺任一项时服务端降级为 `STEAM_DISABLED`。
+- 集群需要放行 `api.steampowered.com:443`；chart 的 `networkPolicy.enabled` 默认关闭，打开后按端口放行 443 与 DNS。详见 [Steam 接入](../steam-integration.md) §4。
 - 仓库与 chart 内不出现密码、token 或运行时 Secret 文件。
 
 ## 4. 发布

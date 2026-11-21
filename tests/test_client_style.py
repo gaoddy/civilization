@@ -15,6 +15,7 @@ PAGES = (
     "pages/game/game.gd",
     "pages/result/result.gd",
     "pages/gallery/gallery.gd",
+    "pages/account/account.gd",
 )
 
 SKIP_PREFIXES = ("generated/", "tests/")

@@ -484,7 +484,13 @@ impl WsClient {
                 Some(Err(error)) => panic!("WebSocket 读取失败: {error}"),
             };
             let message = envelope.parse().expect("下行载荷应能解析");
-            if matches!(message, ServerMessage::FriendUpdate(_)) {
+            if matches!(
+                message,
+                ServerMessage::FriendUpdate(_)
+                    | ServerMessage::AccountView(_)
+                    | ServerMessage::AchievementState(_)
+                    | ServerMessage::AchievementUnlocked(_)
+            ) {
                 continue;
             }
             return message;

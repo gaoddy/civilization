@@ -44,6 +44,15 @@
         "FRIEND_BUSY",
         "INVITE_NOT_FOUND",
         "INVITE_EXPIRED",
+        "STEAM_AUTH_FAILED",
+        "STEAM_UNAVAILABLE",
+        "STEAM_DISABLED",
+        "PHONE_INVALID",
+        "PHONE_ALREADY_BOUND",
+        "PHONE_CODE_UNAVAILABLE",
+        "CODE_INVALID",
+        "CODE_EXPIRED",
+        "ALREADY_IN_ROOM",
         "INTERNAL_ERROR"
       ],
       "description": "稳定错误码，只增不改"

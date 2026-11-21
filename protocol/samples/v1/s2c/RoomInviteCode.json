@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "id": "m_roominvitecode",
+  "type": "RoomInviteCode",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 104,
+  "payload": {
+    "token": "inv_steam_abc",
+    "roomCode": "8F2A1B",
+    "expiresAt": "2026-11-15T10:01:00Z"
+  }
+}

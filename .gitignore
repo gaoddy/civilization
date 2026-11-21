@@ -14,6 +14,9 @@ venv/
 # 临时输出
 output/
 
+# Steam 开发用 App ID（只在本机存在，不进 depot）
+steam_appid.txt
+
 # 实施计划（本地，不提交）
 docs/plan/
 

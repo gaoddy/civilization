@@ -15,6 +15,15 @@
 | `分支1.displayName` | string | 否 | 缺省由服务端生成「玩家N」 |
 | `分支2.token` | string | 是 | 上次登录返回的令牌 |
 | `分支2.displayName` | string | 否 | 缺省由服务端生成「玩家N」 |
+| `分支3.steamTicket` | string | 是 | Steam Web API 票据十六进制串 |
+| `分支3.displayName` | string | 否 | Steam 个人资料名；仅作展示，服务端截断为 20 字符 |
+
+### BindPhone
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `phone` | string | 是 | 待绑定的手机号 |
+| `code` | string | 是 | 短信验证码 |
 
 ### CombatPlayed
 
@@ -22,6 +31,11 @@
 | --- | --- | --- | --- |
 
 ### CreateRoom
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+
+### CreateRoomInvite
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
@@ -93,6 +107,23 @@
 | `roomId` | string | 是 |  |
 | `lastSeq` | integer | 是 | 客户端最后收到的 seq |
 
+### RedeemRoomInvite
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `token` | string | 是 | 一次性邀请 token |
+
+### RequestAccount
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+
+### RequestPhoneCode
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `phone` | string | 是 | 待绑定的手机号 |
+
 ### RequestSnapshot
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -112,6 +143,32 @@
 | `cardId` | string | 是 |  |
 
 ## 下行消息（S→C）
+
+### AccountView
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `playerId` | string | 是 | 内部不透明标识，不向玩家展示 |
+| `playerCode` | string | 是 | 6 位玩家编号 |
+| `displayName` | string | 是 |  |
+| `steamBound` | boolean | 是 | 账号是否绑定 Steam 身份 |
+| `phoneBound` | boolean | 是 | 账号是否绑定手机号 |
+| `maskedPhone` | string | null | 否 | 前 3 位与后 4 位保留，其余用 *；未绑定为 null |
+
+### AchievementState
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `unlocked` | array<object> | 是 |  |
+| `unlocked[].achievementId` | string | 是 |  |
+| `unlocked[].steamApiName` | string | 是 |  |
+
+### AchievementUnlocked
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `achievementId` | string | 是 |  |
+| `steamApiName` | string | 是 |  |
 
 ### AuthResult
 
@@ -233,11 +290,25 @@
 | `turn` | integer | 是 |  |
 | `deadline` | string | 是 |  |
 
+### PhoneCodeSent
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `expiresAt` | string | 是 | 验证码失效时刻 |
+
 ### RoomClosed
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `reason` | enum | 是 | kicked：被房主移出；dissolved：房间已解散 |
+
+### RoomInviteCode
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `token` | string | 是 | 一次性邀请 token |
+| `roomCode` | string | 是 | 6 位房间码 |
+| `expiresAt` | string | 是 | token 失效时刻，创建后 60 秒 |
 
 ### RoomUpdate
 

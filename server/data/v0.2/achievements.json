@@ -1,0 +1,62 @@
+[
+  {
+    "affects_power": true,
+    "condition": "一局中累计触发 3 次成长",
+    "count": 3,
+    "event": "成长触发",
+    "id": "biological-evolution",
+    "name": "生物进化",
+    "reward": "获得 1 金币",
+    "steam_api_name": "BIOLOGICAL_EVOLUTION"
+  },
+  {
+    "affects_power": true,
+    "condition": "一局中使 5 个不同学科的随从获得成长",
+    "count": 5,
+    "event": "成长触发",
+    "id": "education-for-all",
+    "name": "有教无类",
+    "reward": "获得一张随机效果牌",
+    "steam_api_name": "EDUCATION_FOR_ALL"
+  },
+  {
+    "affects_power": true,
+    "condition": "本局完成一次植物随从的三连",
+    "count": 1,
+    "event": "三连合成",
+    "id": "genetics",
+    "name": "遗传学",
+    "reward": "发现一张植物随从",
+    "steam_api_name": "GENETICS"
+  },
+  {
+    "affects_power": true,
+    "condition": "本局使用过「蒸汽机」",
+    "count": 1,
+    "event": "卡牌使用",
+    "id": "machines-roar",
+    "name": "机器轰鸣",
+    "reward": "你的机械随从本回合费用 −1（最低 1）",
+    "steam_api_name": "MACHINES_ROAR"
+  },
+  {
+    "affects_power": true,
+    "condition": "本局首次将时代升至「未来」",
+    "count": 1,
+    "event": "时代升级",
+    "id": "one-small-step",
+    "name": "人类一小步",
+    "reward": "下回合金币 +1（一次性）",
+    "steam_api_name": "ONE_SMALL_STEP"
+  },
+  {
+    "affects_power": true,
+    "condition": "一名机械随从在本局同时拥有「无视嘲讽」与「连击」",
+    "count": 1,
+    "event": "关键词组合",
+    "id": "turing-moment",
+    "name": "图灵时刻",
+    "reward": "该随从永久 +2/+2",
+    "steam_api_name": "TURING_MOMENT"
+  }
+]

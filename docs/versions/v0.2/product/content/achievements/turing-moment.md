@@ -5,6 +5,7 @@ event: 关键词组合
 condition: 一名机械随从在本局同时拥有「无视嘲讽」与「连击」
 count: 1
 reward: 该随从永久 +2/+2
+steam_api_name: TURING_MOMENT
 affects_power: true
 ---
 

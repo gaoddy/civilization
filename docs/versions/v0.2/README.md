@@ -13,6 +13,7 @@
 | 内容 | 范围 |
 | --- | --- |
 | 移动端适配 | 移动端横竖屏布局与两端验收；与桌面端共用同一份客户端工程与协议 |
+| 发行渠道与账号 | macOS Steam 国际版构建、Steam 自动登录、手机号绑定、Steam 成就同步与 Steam 好友邀请；契约与适配已实现 |
 | 成就 | 6 个局内成就接入运行时 |
 | 自动匹配 | 8 人按积分匹配，等待时间逐级放宽；房间局仍不计分 |
 | 天梯 | 会战自动匹配局计分，动态积分差、8 段位、全服榜与好友榜 |
@@ -25,6 +26,8 @@
 ## 文档导航
 
 - 产品增量：[product/README.md](product/README.md)
+- 技术增量：[客户端技术基线](technical/architecture/client-stack.md)、[发行渠道与账号技术基线](technical/architecture/accounts-and-distribution.md)
+- Steam 上线操作：[Steam 上线操作清单](technical/steam-onboarding.md)
 - 未确认事项：[open-questions.md](open-questions.md)
 - 跨版本路线：[版本路线与风险](../../version-roadmap.md)
 

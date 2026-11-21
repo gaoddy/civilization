@@ -5,7 +5,8 @@
 | 文档 | 内容 |
 | --- | --- |
 | [天梯与匹配](systems/ranked-and-matchmaking.md) | 自动匹配、动态积分、段位、好友小队与排行榜 |
+| [发行渠道与账号](systems/accounts-and-distribution.md) | Steam 国际版发行、Steam 登录、手机号绑定、成就同步与 Steam 好友邀请 |
 | [成就](systems/achievements.md) | 6 个局内成就的接入、启用方式与设计原则 |
 | [成就索引](content/achievements/README.md) | 6 个成就实体文档 |
 
-全部增量文档状态为「方案未实施」。
+状态：[发行渠道与账号](systems/accounts-and-distribution.md) 已实现 Steam 契约与适配（成就运行时除外）；[天梯与匹配](systems/ranked-and-matchmaking.md) 与[成就](systems/achievements.md) 仍为方案未实施。

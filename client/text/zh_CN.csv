@@ -940,12 +940,15 @@ enum.taxon.volvocales,团藻目
 enum.taxon.vorticellidae,钟虫科
 enum.taxon.weapon-siege,武器与攻城
 enum.taxon.yersiniaceae,耶尔森菌科
+error.ALREADY_IN_ROOM,已在房间中
 error.ALREADY_MAX_ERA,时代已满
 error.AUTH_FAILED,登录失败
 error.AUTH_FAILED.invalid_code,短信验证码错误
 error.AUTH_RATE_LIMITED,登录过于频繁，请稍后再试
 error.BAD_PAYLOAD,请求格式不正确
 error.CARD_NOT_IN_HAND,手牌中没有这张牌
+error.CODE_EXPIRED,验证码已过期
+error.CODE_INVALID,验证码错误
 error.FRIEND_ALREADY,你们已经是好友
 error.FRIEND_BUSY,对方正在对局中
 error.FRIEND_LIST_FULL,好友列表已满
@@ -970,6 +973,9 @@ error.NOT_IN_ROOM,已不在房间中
 error.NO_SPACE,棋盘或手牌已满
 error.NO_SUCH_MINION,随从不存在
 error.NO_VALID_TARGET,需要选择目标
+error.PHONE_ALREADY_BOUND,该手机号已绑定其他账号
+error.PHONE_CODE_UNAVAILABLE,验证码发送不可用，请稍后重试
+error.PHONE_INVALID,手机号格式不正确
 error.RATE_LIMITED,操作过于频繁，请稍后再试
 error.ROOM_FULL,房间已满
 error.ROOM_NOT_FOUND,房间不存在
@@ -977,6 +983,9 @@ error.ROOM_NOT_READY,房间尚未满足开局条件
 error.SEQUENCE_STALE,消息序号过期
 error.SESSION_REPLACED,账号已在其他位置登录
 error.SHOP_SLOT_EMPTY,商店槽位为空
+error.STEAM_AUTH_FAILED,Steam 登录失败
+error.STEAM_DISABLED,此版本未启用 Steam 登录
+error.STEAM_UNAVAILABLE,Steam 服务暂不可用，请稍后重试
 error.TARGET_NOT_ALLOWED,该操作不能指定目标
 error.TOKEN_EXPIRED,登录已过期，请重新登录
 error.TOKEN_EXPIRED.invalid_token,令牌无效或已过期
@@ -1262,6 +1271,24 @@ skill.universal-manuscript.name,万能手稿
 skill.universal-manuscript.text,复制一张你手牌中的随从牌
 skill.virus-growth-once.name,培养
 skill.virus-growth-once.text,使一个友方病毒随从获得一次成长
+ui.account.back,返回大厅
+ui.account.bind,绑定
+ui.account.binding,绑定中…
+ui.account.bound_note,手机号绑定后不可更换
+ui.account.code_sent,验证码已发送
+ui.account.display_name,显示名
+ui.account.load_failed,账号加载失败
+ui.account.loading,正在加载账号…
+ui.account.phone,手机号
+ui.account.phone_bound,已绑定 %s
+ui.account.phone_code,验证码
+ui.account.phone_unbound,未绑定手机号
+ui.account.player_code,玩家编号
+ui.account.retry,重试
+ui.account.send_code,获取验证码
+ui.account.send_code_wait,%d 秒后可重发
+ui.account.sending_code,发送中…
+ui.account.title,账号
 ui.common.no_hero,未选英雄
 ui.gallery.back_lobby,返回大厅
 ui.gallery.back_match,返回对局
@@ -1446,6 +1473,18 @@ ui.login.disconnected,连接已断开，正在自动重连…
 ui.login.display_name,显示名
 ui.login.phone,手机号
 ui.login.server,服务器
+ui.login.steam.authenticating,正在校验 Steam 身份…
+ui.login.steam.connecting,正在连接服务器…
+ui.login.steam.exit,退出游戏
+ui.login.steam.failed,Steam 登录失败，请重试
+ui.login.steam.network_error,网络异常，请重试
+ui.login.steam.not_logged_in,请先登录 Steam 客户端
+ui.login.steam.not_running,请从 Steam 启动游戏
+ui.login.steam.retry,重试
+ui.login.steam.signing_in,正在登录 Steam…
+ui.login.steam.starting,正在启动 Steam…
+ui.login.steam.subtitle,使用 Steam 账号自动登录
+ui.login.steam.unavailable,Steam 暂不可用，请稍后重试
 ui.login.submit,登录
 ui.login.subtitle,开发环境登录，验证码固定 123456
 ui.login.title,文明：七时代演进
@@ -1490,6 +1529,11 @@ ui.room.invite_accepted,好友已接受邀请
 ui.room.invite_declined,好友没有接受邀请
 ui.room.invite_section,邀请好友
 ui.room.invite_sent,已邀请 %s
+ui.room.invite_steam.already_in_room,请先离开当前房间
+ui.room.invite_steam.creating,正在创建邀请…
+ui.room.invite_steam.entry,邀请 Steam 好友
+ui.room.invite_steam.sent,已打开 Steam 好友邀请
+ui.room.invite_steam.unavailable,Steam 邀请不可用，可使用房间码
 ui.room.kick,移除
 ui.room.kicked_notice,你已被房主移出房间
 ui.room.no_friends_to_invite,暂无好友可邀请

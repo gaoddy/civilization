@@ -17,20 +17,22 @@ pub use generated::*;
 /// 上行载荷类型，按信封 `type` 判别。
 pub mod client {
     pub use crate::{
-        AuthRequest, CombatPlayed, CreateRoom, DissolveRoom, FriendRemove, FriendRequest,
-        FriendRespond, IntentMessage, InviteToRoom, JoinRoom, KickMember, LeaveRoom, Ready,
-        Reconnect, RequestSnapshot, RespondInvite, SelectHeroCard,
+        AuthRequest, BindPhone, CombatPlayed, CreateRoom, CreateRoomInvite, DissolveRoom,
+        FriendRemove, FriendRequest, FriendRespond, IntentMessage, InviteToRoom, JoinRoom,
+        KickMember, LeaveRoom, Ready, Reconnect, RedeemRoomInvite, RequestAccount,
+        RequestPhoneCode, RequestSnapshot, RespondInvite, SelectHeroCard,
     };
 }
 
 /// 下行载荷类型，按信封 `type` 判别。
 pub mod server {
     pub use crate::{
-        AuthResult, CombatResult, ErrorMessage, FriendInvite, FriendInviteResult,
-        FriendRequestItem, FriendUpdate, FriendUpdateFriendsItem, FriendUpdateFriendsItemStatus,
-        FriendUpdateOutgoingItem, FriendUpdateRecentItem, FriendUpdateRecentItemRelation, GameOver,
-        GameStarted, InviteAccepted, PhaseChanged, RoomClosed, RoomUpdate, SelfStats, Snapshot,
-        StateUpdate, TimerWarning,
+        AccountView, AchievementState, AchievementUnlocked, AuthResult, CombatResult, ErrorMessage,
+        FriendInvite, FriendInviteResult, FriendRequestItem, FriendUpdate, FriendUpdateFriendsItem,
+        FriendUpdateFriendsItemStatus, FriendUpdateOutgoingItem, FriendUpdateRecentItem,
+        FriendUpdateRecentItemRelation, GameOver, GameStarted, InviteAccepted, PhaseChanged,
+        PhoneCodeSent, RoomClosed, RoomInviteCode, RoomUpdate, SelfStats, Snapshot, StateUpdate,
+        TimerWarning,
     };
 }
 
@@ -83,6 +85,11 @@ pub enum ClientMessage {
     FriendRemove(FriendRemove),
     InviteToRoom(InviteToRoom),
     RespondInvite(RespondInvite),
+    RequestAccount(RequestAccount),
+    RequestPhoneCode(RequestPhoneCode),
+    BindPhone(BindPhone),
+    CreateRoomInvite(CreateRoomInvite),
+    RedeemRoomInvite(RedeemRoomInvite),
 }
 
 /// 下行信封判别结果。只做 `type` → payload 的分派，不含任何业务规则。
@@ -103,10 +110,15 @@ pub enum ServerMessage {
     FriendInvite(FriendInvite),
     FriendInviteResult(FriendInviteResult),
     InviteAccepted(InviteAccepted),
+    AccountView(AccountView),
+    PhoneCodeSent(PhoneCodeSent),
+    RoomInviteCode(RoomInviteCode),
+    AchievementState(AchievementState),
+    AchievementUnlocked(AchievementUnlocked),
 }
 
 /// 已知 s2c 消息类型名，与 `messages.json#/directions/s2c` 一致。
-const SERVER_MESSAGE_TYPES: [&str; 15] = [
+const SERVER_MESSAGE_TYPES: [&str; 20] = [
     "AuthResult",
     "RoomUpdate",
     "RoomClosed",
@@ -122,6 +134,11 @@ const SERVER_MESSAGE_TYPES: [&str; 15] = [
     "FriendInvite",
     "FriendInviteResult",
     "InviteAccepted",
+    "AccountView",
+    "PhoneCodeSent",
+    "RoomInviteCode",
+    "AchievementState",
+    "AchievementUnlocked",
 ];
 
 /// 从 payload 值反序列化；失败统一为 `BAD_PAYLOAD`。
@@ -152,6 +169,11 @@ impl ClientEnvelope {
             "FriendRemove" => parse_payload(payload()).map(ClientMessage::FriendRemove),
             "InviteToRoom" => parse_payload(payload()).map(ClientMessage::InviteToRoom),
             "RespondInvite" => parse_payload(payload()).map(ClientMessage::RespondInvite),
+            "RequestAccount" => parse_payload(payload()).map(ClientMessage::RequestAccount),
+            "RequestPhoneCode" => parse_payload(payload()).map(ClientMessage::RequestPhoneCode),
+            "BindPhone" => parse_payload(payload()).map(ClientMessage::BindPhone),
+            "CreateRoomInvite" => parse_payload(payload()).map(ClientMessage::CreateRoomInvite),
+            "RedeemRoomInvite" => parse_payload(payload()).map(ClientMessage::RedeemRoomInvite),
             _ => Err(ProtocolError("UNKNOWN_TYPE")),
         }
     }
@@ -164,7 +186,7 @@ impl ServerEnvelope {
     /// # Errors
     ///
     /// - `seq == 0`（协议要求从 1 起）返回 `BAD_PAYLOAD`。
-    /// - `kind` 不是 15 种已知 s2c 类型之一返回 `UNKNOWN_TYPE`。
+    /// - `kind` 不是 20 种已知 s2c 类型之一返回 `UNKNOWN_TYPE`。
     pub fn new(
         kind: &str,
         seq: u64,
@@ -225,6 +247,13 @@ impl ServerEnvelope {
             "FriendInvite" => parse_payload(payload()).map(ServerMessage::FriendInvite),
             "FriendInviteResult" => parse_payload(payload()).map(ServerMessage::FriendInviteResult),
             "InviteAccepted" => parse_payload(payload()).map(ServerMessage::InviteAccepted),
+            "AccountView" => parse_payload(payload()).map(ServerMessage::AccountView),
+            "PhoneCodeSent" => parse_payload(payload()).map(ServerMessage::PhoneCodeSent),
+            "RoomInviteCode" => parse_payload(payload()).map(ServerMessage::RoomInviteCode),
+            "AchievementState" => parse_payload(payload()).map(ServerMessage::AchievementState),
+            "AchievementUnlocked" => {
+                parse_payload(payload()).map(ServerMessage::AchievementUnlocked)
+            }
             _ => Err(ProtocolError("UNKNOWN_TYPE")),
         }
     }

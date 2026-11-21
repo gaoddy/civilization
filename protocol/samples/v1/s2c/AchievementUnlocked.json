@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "id": "m_achievementunlocked",
+  "type": "AchievementUnlocked",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 106,
+  "payload": {
+    "achievementId": "first_win",
+    "steamApiName": "ACH_FIRST_WIN"
+  }
+}

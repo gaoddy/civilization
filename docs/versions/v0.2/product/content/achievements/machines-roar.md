@@ -5,6 +5,7 @@ event: 卡牌使用
 condition: 本局使用过「蒸汽机」
 count: 1
 reward: 你的机械随从本回合费用 −1（最低 1）
+steam_api_name: MACHINES_ROAR
 affects_power: true
 ---
 

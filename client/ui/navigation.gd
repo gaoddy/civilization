@@ -10,6 +10,7 @@ const PAGE_ROOM := "res://pages/room/room.tscn"
 const PAGE_GAME := "res://pages/game/game.tscn"
 const PAGE_RESULT := "res://pages/result/result.tscn"
 const PAGE_GALLERY := "res://pages/gallery/gallery.tscn"
+const PAGE_ACCOUNT := "res://pages/account/account.tscn"
 
 const ROUTE_LOGIN := "login"
 const ROUTE_LOBBY := "lobby"

@@ -12,6 +12,10 @@ var _invite: RoomInviteRow
 var _detail_layer: RoomHeroDetailLayer
 
 var _selected_hero := ""
+## Steam 邀请请求进行中：按钮置灰，避免重复创建 token 与大厅。
+var _steam_invite_busy := false
+## 大厅创建失败后保持置灰，提示改用房间码。
+var _steam_invite_blocked := false
 ## 最近一次鼠标事件的画布坐标；候选重建后据此判断指针是否仍停在原卡上。
 var _pointer := Vector2.ZERO
 
@@ -28,6 +32,8 @@ func _ready() -> void:
     GameStore.error_received.connect(_on_error)
     GameStore.social_changed.connect(_render_invites)
     GameStore.invite_result_received.connect(_on_invite_result)
+    GameStore.room_invite_received.connect(_on_room_invite_received)
+    GameStore.steam_invite_rejected.connect(_on_steam_invite_rejected)
     GameStore.room_closed.connect(_on_room_closed)
     # 断线不产生房间或视图消息：直接订阅连接状态，否则「未连接」永远不刷新。
     Net.connected.connect(_sync_state)
@@ -80,6 +86,7 @@ func _build() -> void:
     _actions = RoomActionBar.new()
     _actions.confirm_pressed.connect(_on_confirm_pressed)
     _actions.dissolve_pressed.connect(_on_dissolve_pressed)
+    _actions.steam_invite_pressed.connect(_on_steam_invite_pressed)
     root.add_child(_actions)
 
     # 悬停详情层位于内容之上但整体忽略鼠标：详情不得挡住候选卡与确认按钮。
@@ -271,11 +278,14 @@ func _is_host() -> bool:
 
 
 func _sync_state() -> void:
+    if not Net.is_open():
+        _steam_invite_busy = false
     var confirmed := _is_confirmed()
     var candidates := GameStore.my_hero_candidates()
     var connected := Net.is_open()
     _actions.set_state(_selected_hero, confirmed, connected, _is_host())
 
+    _sync_steam_invite()
     if confirmed:
         _actions.status.text = tr("ui.room.confirmed_hero") % CardDB.display_name(_selected_hero)
     elif not connected:
@@ -284,6 +294,60 @@ func _sync_state() -> void:
         _actions.status.text = tr("ui.room.assigning_hero")
     else:
         _actions.status.text = tr("ui.room.candidate_hint") % candidates.size()
+
+
+## Steam 邀请入口：已入房、已连接、等待区且大厅可用时才可点击。
+func _sync_steam_invite() -> void:
+    if _actions.steam_invite == null:
+        return
+    var available := (
+        not _steam_invite_busy
+        and not _steam_invite_blocked
+        and Platform.lobby_available()
+        and Net.is_open()
+        and GameStore.phase == Protocol.PHASE_LOBBY
+    )
+    _actions.set_steam_available(
+        available,
+        tr("ui.room.invite_steam.unavailable") if not available else "",
+    )
+
+
+func _on_steam_invite_pressed() -> void:
+    if _steam_invite_busy:
+        return
+    _steam_invite_busy = true
+    _actions.status.text = tr("ui.room.invite_steam.creating")
+    _sync_steam_invite()
+    GameStore.create_room_invite()
+
+
+## 服务端下发 token 后才创建 Steam 大厅：大厅只承载邀请，房间仍以服务端为准。
+func _on_room_invite_received() -> void:
+    if _actions.steam_invite == null:
+        return
+    var token := str(GameStore.room_invite.get("token", ""))
+    var room_code := str(GameStore.room_invite.get("roomCode", GameStore.room_code))
+    var expires_at := str(GameStore.room_invite.get("expiresAt", ""))
+    if token == "":
+        _steam_invite_busy = false
+        _sync_steam_invite()
+        return
+    var created: bool = await Platform.create_lobby(room_code, token, expires_at)
+    if not is_inside_tree():
+        return
+    _steam_invite_busy = false
+    if created:
+        Platform.invite_friends()
+        _actions.status.text = tr("ui.room.invite_steam.sent")
+    else:
+        _steam_invite_blocked = true
+        _actions.status.text = tr("ui.room.invite_steam.unavailable")
+    _sync_steam_invite()
+
+
+func _on_steam_invite_rejected(_reason: String) -> void:
+    _actions.status.text = tr("ui.room.invite_steam.already_in_room")
 
 
 func _on_confirm_pressed() -> void:
@@ -330,6 +394,8 @@ func _on_view_changed() -> void:
 
 
 func _goto_game() -> void:
+    # 对局开始后邀请 token 已无意义，离开大厅避免好友继续加入旧大厅。
+    Platform.leave_lobby()
     UINavigation.navigate(self, UINavigation.PAGE_GAME)
 
 
@@ -338,6 +404,7 @@ func _error_route(code: String) -> String:
 
 
 func _on_error() -> void:
+    _steam_invite_busy = false
     var code := str(GameStore.last_error.get("code", ""))
     match _error_route(code):
         UINavigation.ROUTE_LOBBY:

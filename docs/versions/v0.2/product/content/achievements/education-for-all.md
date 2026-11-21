@@ -5,6 +5,7 @@ event: 成长触发
 condition: 一局中使 5 个不同学科的随从获得成长
 count: 5
 reward: 获得一张随机效果牌
+steam_api_name: EDUCATION_FOR_ALL
 affects_power: true
 ---
 

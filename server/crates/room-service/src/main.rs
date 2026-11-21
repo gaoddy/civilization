@@ -3,7 +3,7 @@
 use std::process::ExitCode;
 use std::sync::Arc;
 
-use room_service::{Db, SystemClock, bind, bind_with_db, serve};
+use room_service::{Db, SystemClock, bind_with_steam, serve};
 
 const DEFAULT_LISTEN: &str = "127.0.0.1:8080";
 
@@ -12,7 +12,9 @@ const USAGE: &str = "用法：room-service [--listen ADDR]
 
 环境变量：
   ROOM_SERVICE_LISTEN  未提供 --listen 时的监听地址，默认 127.0.0.1:8080
-  DATABASE_URL   设置后启用持久化（账号、好友、邀请等）；未设置时使用内存存储。";
+  DATABASE_URL   设置后启用持久化（账号、好友、邀请等）；未设置时使用内存存储。
+  STEAM_WEB_API_KEY  Steam Web API 密钥；未设置时 Steam 登录返回 STEAM_DISABLED。
+  STEAM_APP_ID    Steam App ID；与 STEAM_WEB_API_KEY 同时设置后才启用验票。";
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -51,16 +53,17 @@ async fn run(args: Vec<String>) -> Result<(), String> {
     }
 
     let clock: Arc<dyn room_service::Clock> = Arc::new(SystemClock);
+    let steam = room_service::steam::SteamVerifier::from_env();
     let database_url = std::env::var("DATABASE_URL").unwrap_or_default();
     if database_url.trim().is_empty() {
         println!("room-service: 未配置 DATABASE_URL，使用内存存储（重启后账号与好友丢失）");
-        let (addr, router) = bind(&listen, clock).await?;
+        let (addr, router) = bind_with_steam(&listen, clock, None, steam).await?;
         println!("room-service: 监听 ws://{addr}/ws");
         return serve(addr, router).await;
     }
 
     let db = Arc::new(Db::connect(&database_url).await?);
-    let (addr, router) = bind_with_db(&listen, clock, db).await?;
+    let (addr, router) = bind_with_steam(&listen, clock, Some(db), steam).await?;
     println!("room-service: 监听 ws://{addr}/ws（已连接数据库）");
     serve(addr, router).await
 }

@@ -31,6 +31,200 @@ pub mod error {
         }
     }
 }
+///`AccountView`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "displayName",
+///    "phoneBound",
+///    "playerCode",
+///    "playerId",
+///    "steamBound"
+///  ],
+///  "properties": {
+///    "displayName": {
+///      "type": "string"
+///    },
+///    "maskedPhone": {
+///      "description": "前 3 位与后 4 位保留，其余用 *；未绑定为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "phoneBound": {
+///      "description": "账号是否绑定手机号",
+///      "type": "boolean"
+///    },
+///    "playerCode": {
+///      "description": "6 位玩家编号",
+///      "type": "string"
+///    },
+///    "playerId": {
+///      "description": "内部不透明标识，不向玩家展示",
+///      "type": "string"
+///    },
+///    "steamBound": {
+///      "description": "账号是否绑定 Steam 身份",
+///      "type": "boolean"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct AccountView {
+    #[serde(rename = "displayName")]
+    pub display_name: ::std::string::String,
+    ///前 3 位与后 4 位保留，其余用 *；未绑定为 null
+    #[serde(
+        rename = "maskedPhone",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub masked_phone: ::std::option::Option<::std::string::String>,
+    ///账号是否绑定手机号
+    #[serde(rename = "phoneBound")]
+    pub phone_bound: bool,
+    ///6 位玩家编号
+    #[serde(rename = "playerCode")]
+    pub player_code: ::std::string::String,
+    ///内部不透明标识，不向玩家展示
+    #[serde(rename = "playerId")]
+    pub player_id: ::std::string::String,
+    ///账号是否绑定 Steam 身份
+    #[serde(rename = "steamBound")]
+    pub steam_bound: bool,
+}
+impl ::std::convert::From<&AccountView> for AccountView {
+    fn from(value: &AccountView) -> Self {
+        value.clone()
+    }
+}
+///`AchievementState`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "unlocked"
+///  ],
+///  "properties": {
+///    "unlocked": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "achievementId",
+///          "steamApiName"
+///        ],
+///        "properties": {
+///          "achievementId": {
+///            "type": "string"
+///          },
+///          "steamApiName": {
+///            "type": "string"
+///          }
+///        },
+///        "additionalProperties": false
+///      }
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct AchievementState {
+    pub unlocked: ::std::vec::Vec<AchievementStateUnlockedItem>,
+}
+impl ::std::convert::From<&AchievementState> for AchievementState {
+    fn from(value: &AchievementState) -> Self {
+        value.clone()
+    }
+}
+///`AchievementStateUnlockedItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "achievementId",
+///    "steamApiName"
+///  ],
+///  "properties": {
+///    "achievementId": {
+///      "type": "string"
+///    },
+///    "steamApiName": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct AchievementStateUnlockedItem {
+    #[serde(rename = "achievementId")]
+    pub achievement_id: ::std::string::String,
+    #[serde(rename = "steamApiName")]
+    pub steam_api_name: ::std::string::String,
+}
+impl ::std::convert::From<&AchievementStateUnlockedItem>
+for AchievementStateUnlockedItem {
+    fn from(value: &AchievementStateUnlockedItem) -> Self {
+        value.clone()
+    }
+}
+///`AchievementUnlocked`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "achievementId",
+///    "steamApiName"
+///  ],
+///  "properties": {
+///    "achievementId": {
+///      "type": "string"
+///    },
+///    "steamApiName": {
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct AchievementUnlocked {
+    #[serde(rename = "achievementId")]
+    pub achievement_id: ::std::string::String,
+    #[serde(rename = "steamApiName")]
+    pub steam_api_name: ::std::string::String,
+}
+impl ::std::convert::From<&AchievementUnlocked> for AchievementUnlocked {
+    fn from(value: &AchievementUnlocked) -> Self {
+        value.clone()
+    }
+}
 ///`Affordances`
 ///
 /// <details><summary>JSON schema</summary>
@@ -166,6 +360,27 @@ impl ::std::convert::From<&Affordances> for Affordances {
 ///        }
 ///      },
 ///      "additionalProperties": false
+///    },
+///    {
+///      "type": "object",
+///      "required": [
+///        "steamTicket"
+///      ],
+///      "properties": {
+///        "displayName": {
+///          "description": "Steam 个人资料名；仅作展示，服务端截断为 20 字符",
+///          "type": "string",
+///          "maxLength": 64,
+///          "minLength": 1
+///        },
+///        "steamTicket": {
+///          "description": "Steam Web API 票据十六进制串",
+///          "type": "string",
+///          "maxLength": 2048,
+///          "minLength": 1
+///        }
+///      },
+///      "additionalProperties": false
 ///    }
 ///  ]
 ///}
@@ -197,6 +412,18 @@ pub enum AuthRequest {
         display_name: ::std::option::Option<AuthRequestVariant1DisplayName>,
         ///上次登录返回的令牌
         token: ::std::string::String,
+    },
+    Variant2 {
+        ///Steam 个人资料名；仅作展示，服务端截断为 20 字符
+        #[serde(
+            rename = "displayName",
+            default,
+            skip_serializing_if = "::std::option::Option::is_none"
+        )]
+        display_name: ::std::option::Option<AuthRequestVariant2DisplayName>,
+        ///Steam Web API 票据十六进制串
+        #[serde(rename = "steamTicket")]
+        steam_ticket: AuthRequestVariant2SteamTicket,
     },
 }
 impl ::std::convert::From<&Self> for AuthRequest {
@@ -370,6 +597,172 @@ impl<'de> ::serde::Deserialize<'de> for AuthRequestVariant1DisplayName {
             })
     }
 }
+///Steam 个人资料名；仅作展示，服务端截断为 20 字符
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "Steam 个人资料名；仅作展示，服务端截断为 20 字符",
+///  "type": "string",
+///  "maxLength": 64,
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct AuthRequestVariant2DisplayName(::std::string::String);
+impl ::std::ops::Deref for AuthRequestVariant2DisplayName {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<AuthRequestVariant2DisplayName> for ::std::string::String {
+    fn from(value: AuthRequestVariant2DisplayName) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&AuthRequestVariant2DisplayName>
+for AuthRequestVariant2DisplayName {
+    fn from(value: &AuthRequestVariant2DisplayName) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for AuthRequestVariant2DisplayName {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() > 64usize {
+            return Err("longer than 64 characters".into());
+        }
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for AuthRequestVariant2DisplayName {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for AuthRequestVariant2DisplayName {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for AuthRequestVariant2DisplayName {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for AuthRequestVariant2DisplayName {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///Steam Web API 票据十六进制串
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "Steam Web API 票据十六进制串",
+///  "type": "string",
+///  "maxLength": 2048,
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct AuthRequestVariant2SteamTicket(::std::string::String);
+impl ::std::ops::Deref for AuthRequestVariant2SteamTicket {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<AuthRequestVariant2SteamTicket> for ::std::string::String {
+    fn from(value: AuthRequestVariant2SteamTicket) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&AuthRequestVariant2SteamTicket>
+for AuthRequestVariant2SteamTicket {
+    fn from(value: &AuthRequestVariant2SteamTicket) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for AuthRequestVariant2SteamTicket {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() > 2048usize {
+            return Err("longer than 2048 characters".into());
+        }
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for AuthRequestVariant2SteamTicket {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for AuthRequestVariant2SteamTicket {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for AuthRequestVariant2SteamTicket {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for AuthRequestVariant2SteamTicket {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
 ///`AuthResult`
 ///
 /// <details><summary>JSON schema</summary>
@@ -419,6 +812,44 @@ pub struct AuthResult {
 }
 impl ::std::convert::From<&AuthResult> for AuthResult {
     fn from(value: &AuthResult) -> Self {
+        value.clone()
+    }
+}
+///`BindPhone`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "code",
+///    "phone"
+///  ],
+///  "properties": {
+///    "code": {
+///      "description": "短信验证码",
+///      "type": "string"
+///    },
+///    "phone": {
+///      "description": "待绑定的手机号",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct BindPhone {
+    ///短信验证码
+    pub code: ::std::string::String,
+    ///待绑定的手机号
+    pub phone: ::std::string::String,
+}
+impl ::std::convert::From<&BindPhone> for BindPhone {
+    fn from(value: &BindPhone) -> Self {
         value.clone()
     }
 }
@@ -1678,6 +2109,30 @@ impl ::std::default::Default for CreateRoom {
         Self {}
     }
 }
+///`CreateRoomInvite`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CreateRoomInvite {}
+impl ::std::convert::From<&CreateRoomInvite> for CreateRoomInvite {
+    fn from(value: &CreateRoomInvite) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for CreateRoomInvite {
+    fn default() -> Self {
+        Self {}
+    }
+}
 ///`DissolveRoom`
 ///
 /// <details><summary>JSON schema</summary>
@@ -1783,6 +2238,15 @@ impl ::std::convert::From<ErrorMessage> for Error {
 ///    "FRIEND_BUSY",
 ///    "INVITE_NOT_FOUND",
 ///    "INVITE_EXPIRED",
+///    "STEAM_AUTH_FAILED",
+///    "STEAM_UNAVAILABLE",
+///    "STEAM_DISABLED",
+///    "PHONE_INVALID",
+///    "PHONE_ALREADY_BOUND",
+///    "PHONE_CODE_UNAVAILABLE",
+///    "CODE_INVALID",
+///    "CODE_EXPIRED",
+///    "ALREADY_IN_ROOM",
 ///    "INTERNAL_ERROR"
 ///  ]
 ///}
@@ -1877,6 +2341,24 @@ pub enum ErrorCode {
     InviteNotFound,
     #[serde(rename = "INVITE_EXPIRED")]
     InviteExpired,
+    #[serde(rename = "STEAM_AUTH_FAILED")]
+    SteamAuthFailed,
+    #[serde(rename = "STEAM_UNAVAILABLE")]
+    SteamUnavailable,
+    #[serde(rename = "STEAM_DISABLED")]
+    SteamDisabled,
+    #[serde(rename = "PHONE_INVALID")]
+    PhoneInvalid,
+    #[serde(rename = "PHONE_ALREADY_BOUND")]
+    PhoneAlreadyBound,
+    #[serde(rename = "PHONE_CODE_UNAVAILABLE")]
+    PhoneCodeUnavailable,
+    #[serde(rename = "CODE_INVALID")]
+    CodeInvalid,
+    #[serde(rename = "CODE_EXPIRED")]
+    CodeExpired,
+    #[serde(rename = "ALREADY_IN_ROOM")]
+    AlreadyInRoom,
     #[serde(rename = "INTERNAL_ERROR")]
     InternalError,
 }
@@ -1926,6 +2408,15 @@ impl ::std::fmt::Display for ErrorCode {
             Self::FriendBusy => f.write_str("FRIEND_BUSY"),
             Self::InviteNotFound => f.write_str("INVITE_NOT_FOUND"),
             Self::InviteExpired => f.write_str("INVITE_EXPIRED"),
+            Self::SteamAuthFailed => f.write_str("STEAM_AUTH_FAILED"),
+            Self::SteamUnavailable => f.write_str("STEAM_UNAVAILABLE"),
+            Self::SteamDisabled => f.write_str("STEAM_DISABLED"),
+            Self::PhoneInvalid => f.write_str("PHONE_INVALID"),
+            Self::PhoneAlreadyBound => f.write_str("PHONE_ALREADY_BOUND"),
+            Self::PhoneCodeUnavailable => f.write_str("PHONE_CODE_UNAVAILABLE"),
+            Self::CodeInvalid => f.write_str("CODE_INVALID"),
+            Self::CodeExpired => f.write_str("CODE_EXPIRED"),
+            Self::AlreadyInRoom => f.write_str("ALREADY_IN_ROOM"),
             Self::InternalError => f.write_str("INTERNAL_ERROR"),
         }
     }
@@ -1974,6 +2465,15 @@ impl ::std::str::FromStr for ErrorCode {
             "FRIEND_BUSY" => Ok(Self::FriendBusy),
             "INVITE_NOT_FOUND" => Ok(Self::InviteNotFound),
             "INVITE_EXPIRED" => Ok(Self::InviteExpired),
+            "STEAM_AUTH_FAILED" => Ok(Self::SteamAuthFailed),
+            "STEAM_UNAVAILABLE" => Ok(Self::SteamUnavailable),
+            "STEAM_DISABLED" => Ok(Self::SteamDisabled),
+            "PHONE_INVALID" => Ok(Self::PhoneInvalid),
+            "PHONE_ALREADY_BOUND" => Ok(Self::PhoneAlreadyBound),
+            "PHONE_CODE_UNAVAILABLE" => Ok(Self::PhoneCodeUnavailable),
+            "CODE_INVALID" => Ok(Self::CodeInvalid),
+            "CODE_EXPIRED" => Ok(Self::CodeExpired),
+            "ALREADY_IN_ROOM" => Ok(Self::AlreadyInRoom),
             "INTERNAL_ERROR" => Ok(Self::InternalError),
             _ => Err("invalid value".into()),
         }
@@ -4373,6 +4873,39 @@ impl ::std::convert::From<&PhaseChanged> for PhaseChanged {
         value.clone()
     }
 }
+///`PhoneCodeSent`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "expiresAt"
+///  ],
+///  "properties": {
+///    "expiresAt": {
+///      "description": "验证码失效时刻",
+///      "type": "string",
+///      "format": "date-time"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct PhoneCodeSent {
+    ///验证码失效时刻
+    #[serde(rename = "expiresAt")]
+    pub expires_at: ::chrono::DateTime<::chrono::offset::Utc>,
+}
+impl ::std::convert::From<&PhoneCodeSent> for PhoneCodeSent {
+    fn from(value: &PhoneCodeSent) -> Self {
+        value.clone()
+    }
+}
 ///`PlayerSummary`
 ///
 /// <details><summary>JSON schema</summary>
@@ -4910,6 +5443,92 @@ impl ::std::convert::From<&Reconnect> for Reconnect {
         value.clone()
     }
 }
+///`RedeemRoomInvite`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "token"
+///  ],
+///  "properties": {
+///    "token": {
+///      "description": "一次性邀请 token",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RedeemRoomInvite {
+    ///一次性邀请 token
+    pub token: ::std::string::String,
+}
+impl ::std::convert::From<&RedeemRoomInvite> for RedeemRoomInvite {
+    fn from(value: &RedeemRoomInvite) -> Self {
+        value.clone()
+    }
+}
+///`RequestAccount`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RequestAccount {}
+impl ::std::convert::From<&RequestAccount> for RequestAccount {
+    fn from(value: &RequestAccount) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for RequestAccount {
+    fn default() -> Self {
+        Self {}
+    }
+}
+///`RequestPhoneCode`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "phone"
+///  ],
+///  "properties": {
+///    "phone": {
+///      "description": "待绑定的手机号",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RequestPhoneCode {
+    ///待绑定的手机号
+    pub phone: ::std::string::String,
+}
+impl ::std::convert::From<&RequestPhoneCode> for RequestPhoneCode {
+    fn from(value: &RequestPhoneCode) -> Self {
+        value.clone()
+    }
+}
 ///`RequestSnapshot`
 ///
 /// <details><summary>JSON schema</summary>
@@ -5084,6 +5703,54 @@ impl ::std::convert::TryFrom<::std::string::String> for RoomClosedReason {
         value: ::std::string::String,
     ) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
+    }
+}
+///`RoomInviteCode`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "expiresAt",
+///    "roomCode",
+///    "token"
+///  ],
+///  "properties": {
+///    "expiresAt": {
+///      "description": "token 失效时刻，创建后 60 秒",
+///      "type": "string",
+///      "format": "date-time"
+///    },
+///    "roomCode": {
+///      "description": "6 位房间码",
+///      "type": "string"
+///    },
+///    "token": {
+///      "description": "一次性邀请 token",
+///      "type": "string"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RoomInviteCode {
+    ///token 失效时刻，创建后 60 秒
+    #[serde(rename = "expiresAt")]
+    pub expires_at: ::chrono::DateTime<::chrono::offset::Utc>,
+    ///6 位房间码
+    #[serde(rename = "roomCode")]
+    pub room_code: ::std::string::String,
+    ///一次性邀请 token
+    pub token: ::std::string::String,
+}
+impl ::std::convert::From<&RoomInviteCode> for RoomInviteCode {
+    fn from(value: &RoomInviteCode) -> Self {
+        value.clone()
     }
 }
 ///`RoomUpdate`

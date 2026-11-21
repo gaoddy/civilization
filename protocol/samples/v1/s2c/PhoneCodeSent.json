@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "id": "m_phonecodesent",
+  "type": "PhoneCodeSent",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 103,
+  "payload": {
+    "expiresAt": "2026-11-15T10:05:00Z"
+  }
+}

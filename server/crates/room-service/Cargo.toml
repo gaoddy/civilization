@@ -8,8 +8,12 @@ axum = { version = "0.8", features = ["ws"] }
 chrono = "0.4"
 futures-util = "0.3"
 protocol = { path = "../protocol" }
+reqwest = { version = "0.12", default-features = false, features = [
+    "rustls-tls",
+    "json",
+] }
 rule-engine = { path = "../rule-engine" }
-serde = "1"
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sqlx = { version = "0.8", default-features = false, features = [
     "runtime-tokio-rustls",

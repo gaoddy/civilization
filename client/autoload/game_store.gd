@@ -14,11 +14,31 @@ signal error_received
 signal social_changed
 signal invite_received
 signal invite_result_received
+## 账号视图（`AccountView`）更新；账号页与大厅底栏据此展示绑定状态。
+signal account_changed
+## 绑定验证码已发出；账号页开始 60 秒倒计时。
+signal phone_code_sent
+## 房间内邀请 token 已创建；房间页据此打开 Steam 好友邀请。
+signal room_invite_received
+## 成就新解锁；参数为 Steam 成就 API 名，由 `Platform` 同步到 Steam。
+signal achievement_unlocked(api_name: String)
+## Steam 邀请不能处理：`already_in_room`；页面据此提示，不改房间状态。
+signal steam_invite_rejected(reason: String)
 
 var player_id := ""
 var player_code := ""
 var token := ""
 var display_name := ""
+## 服务端下发的本人账号视图；未登录时为空字典。
+var account: Dictionary = {}
+## 绑定验证码过期时间；只用于账号页倒计时。
+var phone_code_expires_at := ""
+## 本房间的 Steam 邀请 token 视图；离开房间即清空。
+var room_invite: Dictionary = {}
+## 未登录时收到的 Steam 邀请 token；认证成功后补发。
+var pending_steam_invite := ""
+## 已解锁成就：`achievementId -> steamApiName`，用于幂等补同步。
+var unlocked_achievements: Dictionary = {}
 
 var room_id := ""
 var room_code := ""
@@ -58,7 +78,27 @@ func handle(type: String, payload: Dictionary) -> void:
             player_id = str(payload.get("playerId", ""))
             player_code = str(payload.get("playerCode", ""))
             token = str(payload.get("token", ""))
+            _flush_pending_steam_invite()
             auth_changed.emit()
+        Protocol.MSG_ACCOUNT_VIEW:
+            account = payload
+            player_code = str(payload.get("playerCode", player_code))
+            display_name = str(payload.get("displayName", display_name))
+            account_changed.emit()
+        Protocol.MSG_PHONE_CODE_SENT:
+            phone_code_expires_at = str(payload.get("expiresAt", ""))
+            phone_code_sent.emit()
+        Protocol.MSG_ROOM_INVITE_CODE:
+            room_invite = payload
+            room_invite_received.emit()
+        Protocol.MSG_ACHIEVEMENT_STATE:
+            var unlocked = payload.get("unlocked", [])
+            if unlocked is Array:
+                for item in unlocked:
+                    if item is Dictionary:
+                        _unlock_achievement(item)
+        Protocol.MSG_ACHIEVEMENT_UNLOCKED:
+            _unlock_achievement(payload)
         Protocol.MSG_FRIEND_UPDATE:
             friends = payload.get("friends", [])
             incoming_requests = payload.get("incoming", [])
@@ -168,6 +208,9 @@ func reset_room() -> void:
     last_combat = {}
     last_combat_turn = -1
     timer_seconds = -1
+    room_invite = {}
+    if is_instance_valid(Platform):
+        Platform.leave_lobby()
 
 
 ## 结算页返回等待区：只清本局视图，保留房间信息与社交列表。
@@ -230,6 +273,86 @@ func reset_session() -> void:
     player_code = ""
     token = ""
     display_name = ""
+    account = {}
+    phone_code_expires_at = ""
+    unlocked_achievements = {}
+    pending_steam_invite = ""
+
+
+## Steam 登录：票据只在登录时使用，续登与重连仍走令牌。
+func login_steam(ticket: String, persona_name: String) -> void:
+    var payload := {"steamTicket": ticket}
+    var name := steam_display_name(persona_name)
+    if name != "":
+        payload["displayName"] = name
+        display_name = name
+    Net.send(Protocol.MSG_AUTH_REQUEST, payload)
+
+
+## Steam 个人资料名只作展示：去空白后按字符截断到 20，与服务端上限一致。
+static func steam_display_name(value: String) -> String:
+    return value.strip_edges().left(20)
+
+
+## 处理 Steam 好友邀请：未认证先缓存，已在房间只提示，成功则消费 token 入房。
+func accept_steam_invite(invite_token: String) -> void:
+    var value := invite_token.strip_edges()
+    if value == "":
+        return
+    if player_id == "" or token == "" or not Net.is_open():
+        pending_steam_invite = value
+        return
+    if room_id != "":
+        # 页面按现有错误码展示「请先离开当前房间」，房间状态保持不变。
+        last_error = {"code": Protocol.ERROR_ALREADY_IN_ROOM}
+        error_received.emit()
+        steam_invite_rejected.emit("already_in_room")
+        return
+    redeem_room_invite(value)
+
+
+func _flush_pending_steam_invite() -> void:
+    if pending_steam_invite == "" or room_id != "":
+        return
+    var value := pending_steam_invite
+    pending_steam_invite = ""
+    redeem_room_invite(value)
+
+
+func request_account() -> void:
+    Net.send(Protocol.MSG_REQUEST_ACCOUNT, {})
+
+
+func request_phone_code(phone: String) -> void:
+    Net.send(Protocol.MSG_REQUEST_PHONE_CODE, {"phone": phone.strip_edges()})
+
+
+func bind_phone(phone: String, code: String) -> void:
+    Net.send(
+        Protocol.MSG_BIND_PHONE,
+        {"phone": phone.strip_edges(), "code": code.strip_edges()},
+    )
+
+
+func create_room_invite() -> void:
+    Net.send(Protocol.MSG_CREATE_ROOM_INVITE, {})
+
+
+func redeem_room_invite(token: String) -> void:
+    if token.strip_edges() == "":
+        return
+    Net.send(Protocol.MSG_REDEEM_ROOM_INVITE, {"token": token})
+
+
+func _unlock_achievement(item: Dictionary) -> void:
+    var achievement_id := str(item.get("achievementId", ""))
+    var api_name := str(item.get("steamApiName", ""))
+    if achievement_id == "" or api_name == "":
+        return
+    if str(unlocked_achievements.get(achievement_id, "")) == api_name:
+        return
+    unlocked_achievements[achievement_id] = api_name
+    achievement_unlocked.emit(api_name)
 
 
 ## 尚未过期的待处理邀请；服务端仍是最终校验方，这里只用于避免展示已过期的条目。

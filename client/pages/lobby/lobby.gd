@@ -74,6 +74,7 @@ func _build() -> void:
     _bottom = LobbyBottomBar.new()
     _bottom.friends_pressed.connect(_on_friends_pressed)
     _bottom.gallery_pressed.connect(_on_gallery_pressed)
+    _bottom.account_pressed.connect(_on_account_pressed)
     column.add_child(_bottom)
 
     _friends = FriendsPanel.new()
@@ -104,6 +105,10 @@ func _on_create_pressed() -> void:
 
 func _on_gallery_pressed() -> void:
     UINavigation.navigate(self, UINavigation.PAGE_GALLERY)
+
+
+func _on_account_pressed() -> void:
+    UINavigation.navigate(self, UINavigation.PAGE_ACCOUNT)
 
 
 func _on_friends_pressed() -> void:

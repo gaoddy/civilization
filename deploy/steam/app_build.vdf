@@ -1,0 +1,13 @@
+"appbuild"
+{
+	"appid" "__APP_ID__"
+	"desc" "Civilization macOS Steam build"
+	"buildoutput" "__BUILD_OUTPUT__"
+	"contentroot" "__CONTENT_ROOT__"
+	"setlive" ""
+	"preview" "0"
+	"depots"
+	{
+		"__DEPOT_ID__" "depot_build.vdf"
+	}
+}

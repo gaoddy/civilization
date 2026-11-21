@@ -6,12 +6,14 @@ CREATE SEQUENCE player_code_seq AS BIGINT START WITH 100000 MAXVALUE 999999 CYCL
 
 CREATE TABLE account (
     account_id TEXT PRIMARY KEY,
-    phone TEXT NOT NULL UNIQUE,
+    phone TEXT UNIQUE,
+    steam_id TEXT UNIQUE,
     player_code TEXT NOT NULL UNIQUE CHECK (player_code ~ '^[0-9]{6}$'),
     display_name TEXT NOT NULL CHECK (display_name <> ''),
     ordinal BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
     created_at TIMESTAMPTZ(3) NOT NULL,
-    updated_at TIMESTAMPTZ(3) NOT NULL
+    updated_at TIMESTAMPTZ(3) NOT NULL,
+    CHECK (phone IS NOT NULL OR steam_id IS NOT NULL)
 );
 
 CREATE INDEX account_display_name_idx ON account (display_name, account_id);

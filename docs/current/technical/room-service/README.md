@@ -263,6 +263,7 @@ m1-check:
 
 ## 相关文档
 
+- [Steam 接入](../steam-integration.md)
 - [规则引擎与模拟器](../rule-engine-and-simulator.md)
 - [技术现状索引](../README.md)
 - [服务端技术基线](../../../versions/v0.1/technical/architecture/server-stack.md)
