@@ -546,6 +546,10 @@ func _check_shop_view() -> void:
     _expect(upgrade != null and upgrade.custom_minimum_size == Vector2(40, 40), "升级按钮应为 40×40")
     _expect(seller != null and seller.custom_minimum_size == Vector2(64, 64), "售货员应为 64×64")
     _expect(seller != null and seller.find_child("PortraitArt", true, false) != null, "售货员应显示立绘贴图")
+    _expect(
+        seller != null and seller.find_child("PortraitName", true, false) == null,
+        "售货员不应再显示名字条",
+    )
     _expect(reroll != null and reroll.custom_minimum_size == Vector2(40, 40), "刷新按钮应为 40×40")
     _expect(freeze != null and freeze.custom_minimum_size == Vector2(40, 40), "冻结按钮应为 40×40")
     if upgrade != null and seller != null and reroll != null:
@@ -857,6 +861,10 @@ func _check_recruit_stage() -> void:
     var reroll: Control = instance.find_child("RerollButton", true, false)
     var freeze: Control = instance.find_child("FreezeButton", true, false)
     _expect(seller != null and seller.size == Vector2(64, 64), "售货员应为 64×64")
+    _expect(
+        seller != null and seller.find_child("PortraitName", true, false) == null,
+        "售货员不应再显示名字条",
+    )
     for button in [upgrade, reroll, freeze]:
         _expect(button != null and button.size == Vector2(40, 40), "商店操作应为 40×40 图标")
     if seller != null and upgrade != null and reroll != null and freeze != null:
