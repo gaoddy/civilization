@@ -223,14 +223,26 @@ func _check_hero_card() -> void:
     var hp_label: Label = card.find_child("HeroHp", true, false)
     var hp_plate: Control = card.find_child("HeroHpPlate", true, false)
     _expect(hp_label != null and hp_plate != null, "英雄卡应有右下角当前生命")
-    var cover_art: TextureRect = card.find_child("HeroCoverArt", true, false)
-    var cover_mark: Label = card.find_child("HeroCardMark", true, false)
+    var cover_art: TextureRect = card.find_child("AvatarFrameArt", true, false)
+    var cover_mark: Label = card.find_child("AvatarFrameGlyph", true, false)
     _expect(cover_art != null and cover_art.visible, "有头像素材的英雄卡应显示封面图")
     _expect(
         cover_art != null and cover_art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED,
         "英雄卡封面应裁切铺满整卡",
     )
     _expect(cover_mark != null and not cover_mark.visible, "有封面图时应隐藏首字")
+    var clip := card.find_child("AvatarFrameClip", true, false) as CanvasItem
+    var border := card.find_child("AvatarFrameBorder", true, false) as Control
+    _expect(clip != null, "英雄卡应有头像裁切层")
+    _expect(
+        clip != null and clip.clip_children != CanvasItem.CLIP_CHILDREN_DISABLED,
+        "英雄卡头像应按圆角裁切",
+    )
+    _expect(cover_art != null and clip != null and cover_art.get_parent() == clip, "头像图应位于裁切层内")
+    _expect(
+        border != null and clip != null and border.get_index() > clip.get_index(),
+        "圆角描边应叠在头像之上",
+    )
     if hp_label != null and hp_plate != null:
         _expect(hp_label.text == "35", "英雄卡生命只显示当前值，实际「%s」" % hp_label.text)
         var card_rect := card.get_global_rect()
@@ -247,9 +259,9 @@ func _check_hero_card() -> void:
     _expect(card.tooltip_text == CardDB.display_name("adam-smith"), "英雄名应由 tooltip 承担")
     card.refresh("", 0, 0)
     await get_tree().process_frame
-    _expect(card.find_child("HeroCoverArt", true, false) == null, "无英雄时应移除封面图")
+    _expect(card.find_child("AvatarFrameArt", true, false) == null, "无英雄时应移除封面图")
     _expect(
-        card.find_child("HeroCardMark", true, false).visible,
+        card.find_child("AvatarFrameGlyph", true, false).visible,
         "无英雄时应显示首字",
     )
     _expect(

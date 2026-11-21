@@ -51,7 +51,7 @@
 - 点击座位行在行右侧展开这名玩家的战报浮层，浮层覆盖中央舞台但不改变左栏宽度；同一时刻只有一行展开，展开状态按 `playerId` 在视图刷新重建后保持。
 - 招募阶段：商店操作行居中（升时代图标、64×64 售货员、刷新与冻结图标），商店与棋盘各 6 / 7 槽居中，河道夹在两者之间；售货员只显示立绘、不显示名字条，图标 tooltip 与售货员悬停详情承担操作说明。
 - 战斗阶段：顶部恢复对手身份块（头像、名字、名次、HP 行与血量条），双方随从行夹住河道；幽灵战换成幽灵身份块并压暗、去掉血量条。
-- 自己英雄行常驻：84×84 英雄卡是整块方形头像，有素材时按 cover 裁切铺满卡面（无头像素材时回退玩法色与名字首字），不显示名字与时代，只在右下角叠当前生命数字（深色半透明底、白字，不显示上限）；英雄名由 tooltip 与悬停详情承担。右侧窄列自上而下为全部被动技能标记与金币（同一行，24 高、按英雄卡 `skills` 顺序横排）、全部主动技能图标（40 高、按 `self.heroPowers` 顺序横排）。被动技能只读、不可点击、不置灰，悬停显示「被动技能：名称 + 效果」；主动技能只有不可用时置灰并给出原因。
+- 自己英雄行常驻：84×84 英雄卡是整块方形头像，有素材时按 cover 裁切铺满卡面并收进框的圆角（无头像素材时回退玩法色与名字首字），玩法色 2px 圆角描边叠在头像之上、四角不露方形头像；不显示名字与时代，只在右下角叠当前生命数字（深色半透明底、白字，不显示上限，位于描边之上不被裁切）；英雄名由 tooltip 与悬停详情承担。右侧窄列自上而下为全部被动技能标记与金币（同一行，24 高、按英雄卡 `skills` 顺序横排）、全部主动技能图标（40 高、按 `self.heroPowers` 顺序横排）。被动技能只读、不可点击、不置灰，悬停显示「被动技能：名称 + 效果」；主动技能只有不可用时置灰并给出原因。
 - 战斗阶段隐藏主动技能图标，英雄卡、金币与被动技能标记保留；结算阶段尚未离开战斗视图时同样如此。
 - 自己淘汰后英雄行改为「已淘汰 · 观战中」，不再显示英雄卡与技能。
 - 两条河道：招募河道中央显示回合数，右端倒计时悬停翻成「结束招募」，点击发出 `EndRecruit`；战斗河道中央始终显示回合数，播完后追加胜负与伤害，右端固定「战斗中」。
@@ -209,6 +209,6 @@
 
 - 令牌：[tokens.md](../tokens.md)
 - 通用交互：[interactions.md](../interactions.md)
-- 组件：[avatar.md](../components/avatar.md)、[pill.md](../components/pill.md)、[button.md](../components/button.md)、[card-panel.md](../components/card-panel.md)、[card-gallery.md](../components/card-gallery.md)、[first-game-guide.md](../components/first-game-guide.md)、[aim-layer.md](../components/aim-layer.md)、[icons.md](../icons.md)
+- 组件：[avatar-frame.md](../components/avatar-frame.md)、[avatar.md](../components/avatar.md)、[pill.md](../components/pill.md)、[button.md](../components/button.md)、[card-panel.md](../components/card-panel.md)、[card-gallery.md](../components/card-gallery.md)、[first-game-guide.md](../components/first-game-guide.md)、[aim-layer.md](../components/aim-layer.md)、[icons.md](../icons.md)
 - 图鉴页（目录与详情口径）：[gallery.md](gallery.md)
 - 结算页：[result.md](result.md)
