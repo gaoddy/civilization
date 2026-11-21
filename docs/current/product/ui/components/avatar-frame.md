@@ -15,6 +15,7 @@
 | `set_art(path)` | `void` | 换头像图；有素材时按 cover 铺满并隐藏首字，路径为空或缺图时回退首字 |
 | `set_glyph(text, color)` | `void` | 设置无头像素材时显示的首字与颜色 |
 | `content()` | `Control` | 业务内容叠层；位于描边之上，不参与头像裁切 |
+| `clipped_content()` | `Control` | 裁切内内容叠层；位于头像之上、描边之下，随头像一起裁到圆角 |
 
 - 尺寸由调用方 `custom_minimum_size` 决定，组件内部子节点全部用满幅锚点，不参与容器布局。
 - `BORDER_WIDTH = 2`、圆角取 `radius-md`，不开放参数。
@@ -23,7 +24,8 @@
 
 | 层 | 节点名 | 说明 |
 | --- | --- | --- |
-| 头像 / 首字 | `AvatarFrameClip` 内的 `AvatarFrameArt`、`AvatarFrameGlyph` | 面板绘制形状（圆角矩形）作为裁切遮罩，`clip_children = CLIP_CHILDREN_ONLY`；有头像图时首字隐藏 |
+| 头像 / 首字 | `AvatarFrameClip` 内的 `AvatarFrameArt`、`AvatarFrameGlyph` | 面板绘制形状（圆角矩形）作为裁切遮罩，`clip_children = CLIP_CHILDREN_AND_DRAW`：裁切层自身绘制玩法色封面，子节点按圆角裁切；有头像图时首字隐藏 |
+| 裁切内内容 | `AvatarFrameClip` 内的 `AvatarFrameClippedContent` | 满宽贴底的名字条等需要保留圆角的内容挂这里 |
 | 描边 | `AvatarFrameBorder` | 透明底、只画 2px 圆角描边的覆盖层，叠在头像之上，四角压住头像 |
 | 业务内容 | `AvatarFrameContent` | 调用方内容叠层（如生命牌），在描边之上且不被裁切 |
 
@@ -33,8 +35,10 @@
 ## 禁用场景
 
 - 不承载业务数据、状态与点击语义，不接受任意圆角、描边宽度或字号参数。
-- 不用于直角方形头像位：[头像块](avatar.md)（座位行）与页面内直角头像块仍用各自实现。
+- 不用于卡面展示（112:146 比例）与圆形头像；非方形头像位不使用本组件。
 
 ## 使用者
 
+- [头像块](avatar.md)：`Avatar.create` 基于本组件，座位行使用；玩法色封面 + 玩法色 2px 描边。
+- 对局页的 `GamePortrait`（对手、售货员、战斗开场）：基于本组件，名字条挂在 `clipped_content()`，随头像收进圆角。
 - [对局页](../pages/game.md) 的英雄卡：`GameHeroCard` 继承本组件，头像取英雄 `avatar`，描边取玩法色，生命牌挂在 `content()`。

@@ -21,7 +21,7 @@
 - `set_art(path: String)`：头像图按 `STRETCH_KEEP_ASPECT_COVERED` 铺满；路径为空或素材缺失时移除图并回退首字。
 - `set_glyph(text: String, color: Color)`：无头像素材时的首字与颜色（`GLYPH_ALPHA = 0.55` 由调用方给出颜色）。
 - `content() -> Control`：业务内容叠层，位于描边之上，不参与头像裁切。
-- 节点层序：`AvatarFrameClip`（`Panel`，`clip_children = CLIP_CHILDREN_ONLY`，面板圆角形状即裁切遮罩；内含 `AvatarFrameGlyph` 与索引 0 的 `AvatarFrameArt`）→ `AvatarFrameBorder`（透明底、只画 2px 圆角描边的 `Panel` 覆盖层）→ `AvatarFrameContent`。
+- 节点层序：`AvatarFrameClip`（`Panel`，`clip_children = CLIP_CHILDREN_ONLY`，面板圆角形状即裁切遮罩；内含 `AvatarFrameGlyph` 与索引 0 的 `AvatarFrameArt`）→ `AvatarFrameBorder`（透明底、只画 2px 圆角描边的 `Panel` 覆盖层）→ `AvatarFrameContent`。后续在 `2026-11-22-square-avatar-frame` 中改为 `CLIP_CHILDREN_AND_DRAW`，以同时绘制封面。
 - 尺寸由调用方 `custom_minimum_size` 决定；子节点全部满幅锚点，不参与容器布局。
 
 ## 4. 落位与消费者

@@ -1,37 +1,19 @@
 class_name Avatar
-extends RefCounted
-## 英雄头像块：方形；有头像纹理时叠图，否则用玩法色块 + 名字首字表示。
+extends AvatarFrame
+## 英雄头像块：方形，继承 AvatarFrame 的圆角裁切与叠在头像之上的描边。
+##
+## 有头像纹理时按 cover 铺满并收进圆角，否则用玩法色封面 + 名字首字。
 
 
-static func create(hero_id: String, size := 34) -> PanelContainer:
-    var node := PanelContainer.new()
+static func create(hero_id: String, size := 34) -> Avatar:
+    var node := Avatar.new()
     node.name = "Avatar"
     node.custom_minimum_size = Vector2(size, size)
     var playstyle := CardDB.primary_playstyle(CardDB.hero(hero_id)) if hero_id != "" else ""
     var tint := UITheme.playstyle_color(playstyle) if hero_id != "" else UITheme.color("color-border-strong")
-    var box := StyleBoxFlat.new()
-    box.bg_color = tint.darkened(0.55)
-    box.border_color = tint
-    box.set_border_width_all(2)
-    box.set_corner_radius_all(0)
-    node.add_theme_stylebox_override("panel", box)
-    var texture := UIArt.texture(CardDB.art_path(hero_id, "avatar"))
-    if texture != null:
-        var art := TextureRect.new()
-        art.name = "AvatarArt"
-        art.texture = texture
-        art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-        art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-        art.set_anchors_preset(Control.PRESET_FULL_RECT)
-        art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        node.add_child(art)
-        return node
-    var text := UIControls.label(initial(hero_id), int(size * 0.42), false)
-    text.name = "Initial"
-    text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    text.add_theme_color_override("font_color", tint.lightened(0.5))
-    node.add_child(text)
+    node.configure(tint.darkened(0.55), tint)
+    node.set_glyph(initial(hero_id), tint.lightened(0.5))
+    node.set_art(CardDB.art_path(hero_id, "avatar") if hero_id != "" else "")
     return node
 
 
