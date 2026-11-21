@@ -7,7 +7,7 @@ extends VBoxContainer
 
 func _init(entries: Array, my_player_id: String, name_of: Callable) -> void:
     name = "RankingList"
-    add_theme_constant_override("separation", 6)
+    add_theme_constant_override("separation", UITheme.space("space-sm"))
     var sorted := entries.duplicate()
     sorted.sort_custom(func(a, b): return int(a.get("place", 99)) < int(b.get("place", 99)))
     for entry in sorted:
@@ -17,7 +17,7 @@ func _init(entries: Array, my_player_id: String, name_of: Callable) -> void:
             name_of.call(player_id),
             _int_of(entry, "survivedTurns"),
             _int_of(entry, "damageDealt"),
-        ], 18)
+        ], UITheme.font_size("font-title-lg"))
         if player_id == my_player_id:
             row.modulate = Color("8fd3ff")
         add_child(row)

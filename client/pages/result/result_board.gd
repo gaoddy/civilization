@@ -5,9 +5,9 @@ extends VBoxContainer
 
 func _init(items: Array) -> void:
     name = "BoardList"
-    add_theme_constant_override("separation", 4)
+    add_theme_constant_override("separation", UITheme.space("space-xs"))
     if items.is_empty():
-        add_child(UIControls.label(tr("ui.result.board_empty"), 16))
+        add_child(UIControls.label(tr("ui.result.board_empty"), UITheme.font_size("font-title")))
         return
     for item in items:
         if not (item is Dictionary):
@@ -20,7 +20,7 @@ func _init(items: Array) -> void:
             card_name,
             _int_of(item, "attack"),
             _int_of(item, "health"),
-        ], 16))
+        ], UITheme.font_size("font-title")))
 
 
 ## 结算字段一律直接取服务端下发值；缺失、空值按 0 处理。

@@ -23,11 +23,11 @@ func _build() -> void:
 
     var margin := MarginContainer.new()
     for side in ["left", "right", "top", "bottom"]:
-        margin.add_theme_constant_override("margin_" + side, 24)
+        margin.add_theme_constant_override("margin_" + side, UITheme.space("space-2xl"))
     panel.add_child(margin)
 
     var layout := VBoxContainer.new()
-    layout.add_theme_constant_override("separation", 12)
+    layout.add_theme_constant_override("separation", UITheme.space("space-lg"))
     margin.add_child(layout)
 
     # 内容列放进滚动区，按钮行留在滚动区之外，数据再多也不会把入口挤走。
@@ -44,7 +44,7 @@ func _build() -> void:
     content.add_theme_constant_override("separation", 10)
     scroll.add_child(content)
 
-    content.add_child(UIControls.label(tr("ui.result.title"), 28))
+    content.add_child(UIControls.label(tr("ui.result.title"), UITheme.font_size("font-hero")))
     content.add_child(UIControls.label(_my_place_text(), 20))
     content.add_child(HSeparator.new())
     content.add_child(ResultRanking.new(
@@ -55,7 +55,7 @@ func _build() -> void:
     content.add_child(UIControls.label(tr("ui.result.stats_title"), 20))
     content.add_child(ResultStatsSection.new(_stats_data()))
 
-    content.add_child(UIControls.label(tr("ui.result.seed") % GameStore.game_seed, 14))
+    content.add_child(UIControls.label(tr("ui.result.seed") % GameStore.game_seed, UITheme.font_size("font-body")))
 
     var actions := HBoxContainer.new()
     actions.name = "ResultActions"

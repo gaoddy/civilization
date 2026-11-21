@@ -7,7 +7,7 @@ extends VBoxContainer
 
 func _init(stats: Dictionary) -> void:
     name = "StatsSection"
-    add_theme_constant_override("separation", 6)
+    add_theme_constant_override("separation", UITheme.space("space-sm"))
 
     add_child(_stat_row("ui.result.stat.survived_turns", _int_of(stats, "survivedTurns")))
     add_child(_stat_row("ui.result.stat.final_hp", _int_of(stats, "finalHp")))
@@ -31,19 +31,19 @@ func _init(stats: Dictionary) -> void:
     add_child(_group_label(tr("ui.result.stat.skills")))
     add_child(_stat_row("ui.result.stat.hero_power_uses", _int_of(stats, "heroPowerUses")))
 
-    add_child(UIControls.label(tr("ui.result.board_title"), 18))
+    add_child(UIControls.label(tr("ui.result.board_title"), UITheme.font_size("font-title-lg")))
     var board = stats.get("board", [])
     add_child(ResultBoard.new(board if board is Array else []))
 
 
 func _group_label(text: String) -> Label:
-    var label := UIControls.label(text, 16)
+    var label := UIControls.label(text, UITheme.font_size("font-title"))
     label.add_theme_color_override("font_color", Color("8fd3ff"))
     return label
 
 
 func _stat_row(label_key: String, value) -> Label:
-    var row := UIControls.label(tr("ui.result.stat_row") % [tr(label_key), str(value)], 16)
+    var row := UIControls.label(tr("ui.result.stat_row") % [tr(label_key), str(value)], UITheme.font_size("font-title"))
     row.name = "StatRow_" + label_key.get_slice(".", 3)
     return row
 
@@ -52,7 +52,7 @@ func _stat_row(label_key: String, value) -> Label:
 func _combat_row(stats: Dictionary) -> HBoxContainer:
     var row := HBoxContainer.new()
     row.name = "StatRow_combat"
-    row.add_theme_constant_override("separation", 16)
+    row.add_theme_constant_override("separation", UITheme.space("space-xl"))
     for entry in [
         ["ui.result.stat.combat_wins", "combatWins"],
         ["ui.result.stat.combat_draws", "combatDraws"],
@@ -60,7 +60,7 @@ func _combat_row(stats: Dictionary) -> HBoxContainer:
     ]:
         var cell := UIControls.label(
             tr("ui.result.stat_row") % [tr(entry[0]), str(_int_of(stats, entry[1]))],
-            16,
+            UITheme.font_size("font-title"),
         )
         cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         row.add_child(cell)
