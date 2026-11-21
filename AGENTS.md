@@ -48,6 +48,7 @@
 
 - 顶层入口统一走根目录 `Makefile`，不手写等效命令。
 - 全量检查：`make m1-check`（协议生成物、文档数据、测试、静态检查、确定性）；客户端另有 `make client-check`、`make client-smoke`。
+- 页面线框图：`make ui-wireframe PAGE=gallery`（`ALL=1` 出全部页面，`DEVICE=phone` 出手机档位），无头解算真实布局后写到 `output/wireframes/`（忽略目录）。
 - 服务端测试：`make test`（Python unittest + `cargo test --workspace`）；静态检查：`make lint`。
 - 文档与数据：`make data-check`、`python3 scripts/validate_docs.py`。
 - 端到端入口：

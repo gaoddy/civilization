@@ -67,3 +67,10 @@
 ## 5. 交互约定
 
 通用交互、状态与无障碍规则见 [interactions.md](interactions.md)；iOS 端的横屏、缩放与触控规则见 [mobile-adaptation.md](mobile-adaptation.md)；页面特有交互写在页面文档内，同一规则只写一处。
+
+## 6. 线框图
+
+- 入口：`make ui-wireframe PAGE=gallery`；`ALL=1` 生成全部页面，`DEVICE=phone` 按手机档位（960×540）生成，产物在 `output/wireframes/<页面>[-<设备>].{json,svg,png}`，该目录不提交。
+- 做法：`client/tests/wireframe_probe.tscn` 作为主场景装载页面，等布局解算后导出每个可见 Control 的 `get_global_rect()`；`scripts/ui_wireframe.py` 画成 SVG，再交给本机浏览器截图出 PNG（没有浏览器时退回引擎栅格化，只有框线没有文字）。
+- 边界：矩形来自真实场景，不是手绘估算；但页面内容依赖服务端状态，`room`、`game`、`lobby` 在无数据时只出加载/空态骨架。`gallery` 用离线卡表，最适合核对布局。
+- 线框图只作布局核对，不替代实机验证；颜色、字体与状态表现仍以 `make client-run` 与页面文档为准。
