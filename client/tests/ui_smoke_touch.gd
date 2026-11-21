@@ -13,6 +13,7 @@ func _ready() -> void:
     await _check_detail_long_press()
     await _check_room_touch_select()
     await _check_aim_touch()
+    await _check_aim_pending_guide()
     await _check_hand_slot_reset()
     ScreenProfile.set_device_for_test("")
     _finish()
@@ -287,6 +288,38 @@ func _check_aim_touch() -> void:
     await _push_touch(Vector2(20, 20), 0, true)
     await _push_touch(Vector2(20, 20), 0, false)
     _expect(abandoned.size() == 1 and chosen.is_empty(), "待选落空应发放弃且不提交目标")
+
+    stage.queue_free()
+    await get_tree().process_frame
+
+
+## 待选模式：触控端按下前没有指针，候选角标与来源环也必须显示；弧线等按下后再画。
+func _check_aim_pending_guide() -> void:
+    var stage := Control.new()
+    stage.size = Vector2(1280, 720)
+    add_child(stage)
+    var aim := GameAimLayer.new()
+    stage.add_child(aim)
+    _aim_card(stage, "board", "mi_src", Vector2(40, 40))
+    var candidate := _aim_card(stage, "board", "mi_1", Vector2(300, 300))
+    await get_tree().process_frame
+
+    var candidates := [{"zone": "board", "id": "mi_1"}]
+    aim.begin_pending("mi_src", candidates)
+    _expect(aim.pending_active(), "战吼待选应开启瞄准")
+    _expect(not aim._pointer_valid, "触控待选按下前不应有指针")
+    _expect(aim.draws_pending_guide(), "触控待选按下前应显示候选角标与来源环")
+
+    var chosen: Array = []
+    aim.target_chosen.connect(func(target: Dictionary) -> void: chosen.append(target))
+    var candidate_point: Vector2 = candidate.get_global_rect().get_center()
+    await _push_touch(Vector2(20, 20), 0, true)
+    _expect(aim._pointer_valid, "触控按下后应接入指针")
+    _expect(aim.draws_pending_guide(), "触控按下后候选角标应保持显示")
+    await _push_drag(candidate_point, 0)
+    await _push_touch(candidate_point, 0, false)
+    _expect(chosen.size() == 1, "待选触控抬手应提交候选，实际 %d" % chosen.size())
+    _expect(not aim.draws_pending_guide(), "提交后应关闭待选指南")
 
     stage.queue_free()
     await get_tree().process_frame
