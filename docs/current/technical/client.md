@@ -26,7 +26,7 @@ client/
     fonts/NotoSansSC-Regular-subset.ttf  # 默认主题字体（中文子集）；美术素材见 §10
   ui/
     ui.gd                    # 场景共用控件工具、共享构件与统一导航入口（class_name UI）
-    safe_area.gd             # 页面安全区包裹（class_name SafeAreaMargin），触控端叠加键盘边距
+    safe_area.gd             # 页面安全区包裹（class_name SafeAreaMargin），触控端叠加键盘边距；整屏背景留在包裹层外
     theme.gd                 # 三层视觉令牌与 StyleBox 工厂（class_name UITheme）
   scenes/
     login.tscn/.gd           # 登录
@@ -290,7 +290,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - `ScreenProfile`（autoload）在启动时按设备设置 `content_scale_size`：iPhone 为 960×540，iPad 与桌面为 1280×720；`keep_width` 下宽度按基准等比缩放、高度随窗口扩展，不再固定 16:9 视口；`fit_aspect_floor` 给出桌面窗口宽度下限（宽度 ≥ 高度 × 基准宽 ÷ 基准高），`project.godot` 的 `display/window/handheld/orientation=4`（`SCREEN_SENSOR_LANDSCAPE`）锁定左右横屏。
 - 设备判定：iOS 上按 `OS.get_model_name()` 前缀区分 iPad 与 iPhone；机型名不可用时按屏幕长宽比兜底。非 iOS 与无头环境一律按桌面处理。
 - 换算公式是纯函数：`canvas_scale`、`canvas_hit_min`、`canvas_from_pixels`、`canvas_insets`。`DisplayServer.get_display_safe_area()` 与 `virtual_keyboard_get_height()` 返回像素，按内容矩形换算为画布单位；内容矩形宽为基准宽 × 缩放、高等于窗口高，上下不留白，落在左右留白内的边距记零。
-- `UI.safe_area(page)` 把页面子节点整体移入 `SafeAreaMargin`：桌面四边为零；触控端取安全区四边，底部取安全区与键盘高度的较大值。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UI.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。
+- `UI.safe_area(page)` 把页面内容移入 `SafeAreaMargin`：桌面四边为零；触控端取安全区四边，底部取安全区与键盘高度的较大值。整屏背景（`PageBackground`）留在包裹层外并置底，背景铺满视口，安全区只约束内容控件；图鉴页自带整屏背景时关闭 `CardGallery` 的组件背景。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UI.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。
 - `UITheme.hit_primary()` / `hit_small()` 把 44pt / 32pt 换算为画布单位；`UI.button` 与 `UI.styled_button` 在触控端按此抬升最小高度，桌面端保留原值。
 - 图鉴在 iPhone 基准下收窄目录（`gallery-toc-width-compact`）、详情（`gallery-detail-width-compact`）与详情卡图宽度（`gallery-preview-width-compact`，高度随 `card_face_height`），并改为 4 列（`gallery-grid-columns-compact`）；英雄视图隐藏目录，网格只让出详情宽度。桌面与 iPad 保持原令牌。
 - 对局页与内部组件统一用 `UITheme.stage_metric(name)` 取场景令牌：iPhone 优先取 `<name>-compact`（卡面 84×92、英雄行 64、河道 24、商店操作行 52、顶部工具条 26、头像 48、图标按钮 36、座位行头像 40 等），其余设备取原值；页面边距与舞台间距在 iPhone 下同步收紧。桌面与 iPad 的舞台按窗口高度扩展（基准 720 高），iPhone 固定 540 高，纵向顺序与操作不变。

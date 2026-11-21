@@ -9,31 +9,31 @@ var _failures := 0
 const PAGES := [
     {
         "path": "res://scenes/login.tscn",
-        "children": 2,
+        "children": 1,
         "direct_names": [],
         "deep_names": [],
     },
     {
         "path": "res://scenes/lobby.tscn",
-        "children": 4,
+        "children": 3,
         "direct_names": ["InvitePopup", "FriendsPanel"],
         "deep_names": ["GalleryButton", "FriendsButton"],
     },
     {
         "path": "res://scenes/room.tscn",
-        "children": 3,
+        "children": 2,
         "direct_names": ["DraftPanel", "HeroDetailLayer"],
         "deep_names": ["ConfirmButton", "OtherPlayers", "HeroCandidates"],
     },
     {
         "path": "res://scenes/game.tscn",
-        "children": 7,
+        "children": 6,
         "direct_names": ["AimLayer", "MinionDetailLayer", "ReportLayer", "ChooserOverlay", "FirstGameGuide"],
         "deep_names": ["CenterPanel", "StatusLabel", "PlayersPanel"],
     },
     {
         "path": "res://scenes/result.tscn",
-        "children": 2,
+        "children": 1,
         "direct_names": [],
         "deep_names": ["ResultScroll", "ConfirmButton", "ResultActions"],
     },
@@ -71,9 +71,12 @@ func _check_desktop() -> void:
         var area := _safe_area(page)
         _check(area != null, "%s 缺少 SafeAreaMargin" % page_case["path"])
         if area != null:
-            _check(page.get_child_count() == 1, "%s 根节点应只剩 SafeAreaMargin" % page_case["path"])
+            _check(page.get_child_count() == 2, "%s 根节点应为背景 + SafeAreaMargin" % page_case["path"])
+            var background := page.get_node_or_null("PageBackground")
+            _check(background != null and background.get_parent() == page,
+                "%s 背景应留在安全区外" % page_case["path"])
             _check(area.get_child_count() == int(page_case["children"]),
-                "%s 原直接子节点数量应保持 %d" % [page_case["path"], int(page_case["children"])])
+                "%s 安全区内直接子节点数量应为 %d" % [page_case["path"], int(page_case["children"])])
             _check(_margins(area) == Vector4i.ZERO, "%s 桌面安全区边距应为 0" % page_case["path"])
             for node_name in page_case["direct_names"]:
                 var node := page.find_child(str(node_name), true, false)
