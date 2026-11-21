@@ -2,7 +2,7 @@
 
 > 状态：已实现
 > 入口：`client/scenes/game_aim_layer.gd`（`class_name GameAimLayer`，`extends Control`）
-> 验证：`make client-smoke`（`client/tests/ui_smoke.gd` 的目标待选、放弃、技能瞄准与效果牌拖拽用例）
+> 验证：`make client-smoke`（`client/tests/ui_smoke.gd` 的目标待选、放弃、技能瞄准与效果牌拖拽用例；`client/tests/ui_smoke_touch.gd` 的触控待选指南用例）
 
 ## 用途
 
@@ -22,7 +22,7 @@
 | 模式 | 开启 | 输入 | 松手命中 | 松手落空 / `Esc` |
 | --- | --- | --- | --- | --- |
 | `SKILL` | 英雄技能按钮按下，技能 `requiresTarget` 且候选非空 | 本层接收并吞掉按下、移动、抬起 | 发 `target_chosen` | 发 `aim_cancelled`，不发意图 |
-| `PENDING` | 视图队首待选 `kind = target` | 按下开始瞄准；桌面端未按下时弧线跟随指针 | 发 `target_chosen` | 发 `target_abandoned` |
+| `PENDING` | 视图队首待选 `kind = target` | 按下开始瞄准；触控端按下前没有指针，先显示候选角标与来源圆环；桌面端未按下时弧线跟随指针 | 发 `target_chosen` | 发 `target_abandoned` |
 | `DRAG` | 检测到 Godot 手牌拖拽且数据带 `targets` | 只读拖拽数据，不接收输入 | 由 `BoardDrop` / `HandCard` 原有落点提交 | 拖拽取消后收起视觉 |
 | `NONE` | 默认 / 关闭 | 不绘制、不接收输入 | — | — |
 
@@ -42,8 +42,8 @@
 | --- | --- |
 | 弧线 | 二次贝塞尔，控制点在中垂线向上弯曲，弯曲比例 `aim-bend` = 0.22；金色虚线（`aim-dash` / `aim-gap`），宽度 `aim-arc-width` |
 | 流动光点 | 沿弧线等距 3 个，按 `aim-flow-speed` 循环前进，半径 `aim-dot-radius` |
-| 起点圆环 | 技能按钮或入场随从中心，半径 `aim-source-radius`；待选模式逐帧按来源卡当前矩形校准，布局落定前后都从卡片起画 |
-| 候选角标 | 每张候选卡四角向内收 `aim-mark-inset` 的 L 形角标，长 `aim-mark-length`；进入瞄准即全部显示 |
+| 起点圆环 | 技能按钮或入场随从中心，半径 `aim-source-radius`；待选模式逐帧按来源卡当前矩形校准，布局落定前后都从卡片起画；触控端按下前也显示 |
+| 候选角标 | 每张候选卡四角向内收 `aim-mark-inset` 的 L 形角标，长 `aim-mark-length`；进入瞄准即全部显示，不依赖指针 |
 | 命中描边 | 指针所在候选外框呼吸描边，周期 `aim-pulse`，宽度 `aim-outline-width` |
 | 无效终点 | 按住但未命中时候选弧线转 `color-text-muted`，指针处画 `color-danger` 叉（`aim-cross`） |
 
