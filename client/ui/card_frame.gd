@@ -11,7 +11,9 @@ const STAR_RADIUS := 2.15
 const STAR_GAP := 5.0
 const STAR_Y := 7.4
 
-var level := 1
+## 卡牌等级；导出以便 `Node.duplicate()` 复制：拖拽预览与战斗克隆都由
+## `duplicate()` 生成卡面，非导出脚本变量在副本里会回退成 1 星。
+@export var level := 1
 var star_count: int:
 	get:
 		return clampi(level, 0, 7)
