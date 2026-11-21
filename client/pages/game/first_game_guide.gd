@@ -1,18 +1,15 @@
 class_name FirstGameGuide
 extends CanvasLayer
-## 首局非阻塞引导：压暗当前步骤目标，底部提示条只覆盖自身，不拦截对局输入。
+## 首局非阻塞引导：由顶部「提示」手动打开，压暗当前步骤目标，
+## 底部提示条只覆盖自身，不拦截对局输入。
 ##
-## 步骤表按「阶段 + 展示条件」门控；步骤 2/3 的条件不满足时自动跳到下一步。
-## 当前步骤写回 `GameStore.guide_step`，供断线重连后的场景重建恢复；
-## 首次展示记录在 `user://first_game_guide.cfg` 的 `seen/<playerId>`。
+## 步骤表按「阶段」门控：阶段不匹配时切换到当前阶段对应的步骤，终局收起。
 
-const CONFIG_PATH := "user://first_game_guide.cfg"
-const SEEN_SECTION := "seen"
 ## 目标矩形外扩，避免压暗层贴边盖住目标。
 const HIGHLIGHT_PADDING := 6.0
 const SHADE_COLOR := Color(0, 0, 0, 0.55)
 
-## 步骤表：id、阶段、目标节点名、文案键与展示条件。
+## 步骤表：id、阶段、目标节点名与文案键。
 const STEPS := [
     {
         "id": 1,
@@ -20,7 +17,6 @@ const STEPS := [
         "targets": ["ShopPanel", "ShopRow", "GoldTile"],
         "title": "ui.guide.step1.title",
         "body": "ui.guide.step1.body",
-        "condition": "",
     },
     {
         "id": 2,
@@ -28,7 +24,6 @@ const STEPS := [
         "targets": ["HandRow", "BoardRow"],
         "title": "ui.guide.step2.title",
         "body": "ui.guide.step2.body",
-        "condition": "hand",
     },
     {
         "id": 3,
@@ -36,7 +31,6 @@ const STEPS := [
         "targets": ["RecruitEndButton", "RecruitTimerLabel"],
         "title": "ui.guide.step3.title",
         "body": "ui.guide.step3.body",
-        "condition": "board",
     },
     {
         "id": 4,
@@ -44,19 +38,15 @@ const STEPS := [
         "targets": ["CenterPanel", "ReportLayer"],
         "title": "ui.guide.step4.title",
         "body": "ui.guide.step4.body",
-        "condition": "",
     },
 ]
 
 ## 目标节点查找的根：由对局页传入自身；缺省时回退到当前场景。
 var target_root: Node = null
-## 当前步骤下标；-1 表示未在引导中。重连续接时从这里恢复。
+## 当前步骤下标；-1 表示引导未打开。
 var step := -1
-## 手动重看：不读写 `seen`，关闭后只清会话步骤。
-var manual := false
 
 var _phase := ""
-var _self_view: Dictionary = {}
 var _root: Control
 var _bars: Array = []
 var _bar: PanelContainer
@@ -160,23 +150,9 @@ func _process(_delta: float) -> void:
         _sync_shade()
 
 
-## 自动展示：优先恢复会话步骤；否则按本地 `seen` 决定是否从第 1 步开始。
-func start() -> void:
-    manual = false
-    if GameStore.guide_step >= 0:
-        _set_step(clampi(GameStore.guide_step, 0, STEPS.size() - 1))
-        return
-    if GameStore.player_id == "" or _has_seen():
-        _set_step(-1, false)
-        return
-    _set_step(0)
-
-
-## 右栏「提示」：手动重看不读写 `seen`，也不受阶段门控——从当前阶段对应的
-## 步骤开始，非招募/战斗阶段回退到第 1 步。
+## 顶部「提示」：从当前阶段对应的步骤开始，不读写本地记录。
 func show_manual() -> void:
-    manual = true
-    _set_step(_step_for_phase(_phase), false)
+    _set_step(_step_for_phase(_phase))
 
 
 ## 当前阶段对应的步骤下标；没有匹配步骤时回退到第 1 步。
@@ -187,67 +163,32 @@ func _step_for_phase(phase: String) -> int:
     return 0
 
 
-## 对局页每次刷新同步阶段与本人视图，用于阶段门控与步骤 2/3 的条件跳过。
-func set_phase(phase: String, self_view: Dictionary) -> void:
+## 对局页每次刷新同步阶段，用于阶段门控。
+func set_phase(phase: String, _self_view: Dictionary) -> void:
     _phase = phase
-    _self_view = self_view
     _evaluate()
 
 
-func _set_step(index: int, write_store := true) -> void:
+func _set_step(index: int) -> void:
     step = index
-    if write_store:
-        GameStore.guide_step = index
     _evaluate()
 
 
-## 阶段不匹配时隐藏但保留步骤；条件不满足时跳过到下一步。
+## 阶段不匹配时切换到当前阶段对应的步骤，终局收起；未打开时保持隐藏。
 func _evaluate() -> void:
     if step < 0:
         _apply_visibility(false)
         return
-    if manual:
-        # 手动重看不按阶段隐藏：跟随刷新换到当前阶段对应的步骤，终局才收起。
-        if step >= STEPS.size():
-            step = 0
-        if _phase == Protocol.PHASE_GAME_OVER:
-            _apply_visibility(false)
-            return
-        if _phase != "" and str(STEPS[step]["phase"]) != _phase:
-            step = _step_for_phase(_phase)
-        _update_texts()
-        _apply_visibility(true)
-        _sync_shade()
-        return
-    while step < STEPS.size():
-        var entry: Dictionary = STEPS[step]
-        # 阶段未知（视图尚未到达）与阶段不匹配都隐藏，等下一次刷新再恢复。
-        if _phase == "" or str(entry["phase"]) != _phase:
-            _apply_visibility(false)
-            return
-        if not _condition_met(str(entry.get("condition", ""))):
-            step += 1
-            GameStore.guide_step = step
-            continue
-        break
     if step >= STEPS.size():
+        step = 0
+    if _phase == Protocol.PHASE_GAME_OVER:
         _apply_visibility(false)
         return
+    if _phase != "" and str(STEPS[step]["phase"]) != _phase:
+        step = _step_for_phase(_phase)
     _update_texts()
     _apply_visibility(true)
     _sync_shade()
-
-
-func _condition_met(condition: String) -> bool:
-    match condition:
-        "hand":
-            var hand = _self_view.get("hand", [])
-            return hand is Array and not hand.is_empty()
-        "board":
-            var board = _self_view.get("board", [])
-            return board is Array and not board.is_empty()
-        _:
-            return true
 
 
 func _update_texts() -> void:
@@ -280,37 +221,10 @@ func _on_skip_pressed() -> void:
     _finish()
 
 
-## 完成/跳过：自动展示写 `seen`，手动重看不写；两种情况都清会话步骤。
+## 完成/跳过：只收起引导，不写本地记录。
 func _finish() -> void:
-    if not manual:
-        _mark_seen()
-    manual = false
     step = -1
-    GameStore.guide_step = -1
     _apply_visibility(false)
-
-
-func _has_seen() -> bool:
-    var config := ConfigFile.new()
-    var err := config.load(CONFIG_PATH)
-    if err != OK:
-        # 文件不存在或损坏都按「未看过」处理，不阻塞对局。
-        return false
-    return bool(config.get_value(SEEN_SECTION, GameStore.player_id, false))
-
-
-func _mark_seen() -> void:
-    if GameStore.player_id == "":
-        return
-    var config := ConfigFile.new()
-    var loaded := config.load(CONFIG_PATH)
-    if loaded != OK and loaded != ERR_FILE_NOT_FOUND:
-        push_warning("首局引导读取失败：%s" % error_string(loaded))
-    config.set_value(SEEN_SECTION, GameStore.player_id, true)
-    var saved := config.save(CONFIG_PATH)
-    if saved != OK:
-        # 写入失败只影响下次是否再次展示，不影响本局。
-        push_warning("首局引导写入失败：%s" % error_string(saved))
 
 
 func _sync_shade() -> void:
