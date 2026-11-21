@@ -6,6 +6,7 @@ var _failures := 0
 
 func _ready() -> void:
     _check_default_url()
+    _check_prefer_ipv4_url()
     _check_stretch()
     _check_window_floor()
     _check_desktop()
@@ -22,6 +23,35 @@ func _ready() -> void:
 func _check_default_url() -> void:
     _check(Net.default_url_for(false) == "ws://127.0.0.1:8080/ws", "桌面默认调试地址")
     _check(Net.default_url_for(true) == "ws://cooter.local:8080/ws", "移动端默认调试地址")
+
+
+## 主机名先解析成 IPv4 再连接：双栈解析返回的第一条常是 IPv6，服务端只监听 IPv4。
+func _check_prefer_ipv4_url() -> void:
+    var resolve := func(host: String) -> String:
+        return "192.168.31.3" if host == "cooter.local" else ""
+    _check(
+        Net.prefer_ipv4_url("ws://cooter.local:8080/ws", resolve)
+        == "ws://192.168.31.3:8080/ws",
+        "主机名解析为 IPv4 后连接",
+    )
+    _check(
+        Net.prefer_ipv4_url("ws://unresolvable.local:8080/ws", resolve)
+        == "ws://unresolvable.local:8080/ws",
+        "解析失败时保留原地址",
+    )
+    _check(
+        Net.prefer_ipv4_url("ws://192.168.31.3:8080/ws", func(_host: String) -> String: return "")
+        == "ws://192.168.31.3:8080/ws",
+        "IP 字面量不做解析",
+    )
+    _check(
+        Net.prefer_ipv4_url("ws://cooter.local/ws", resolve) == "ws://192.168.31.3/ws",
+        "省略端口时保留路径",
+    )
+    _check(
+        Net.prefer_ipv4_url("ws://[::1]:8080/ws", resolve) == "ws://[::1]:8080/ws",
+        "IPv6 字面量原样保留",
+    )
 
 
 ## 窗口缩放策略：keep_width 保证窗口上下始终由内容铺满。
