@@ -49,6 +49,7 @@ const PAGES := [
 func _ready() -> void:
     await _check_desktop()
     await _check_drag_preview()
+    await _check_aim_local()
     await _check_touch()
     await _check_compact()
     await _check_tall()
@@ -121,6 +122,30 @@ func _check_drag_preview() -> void:
     _check(card.position.is_equal_approx(Vector2(-10, -20) / scale), "拖拽预览起手点应对齐")
     preview.free()
     page.queue_free()
+    await get_tree().process_frame
+
+
+## 超宽视口下瞄准层把全局矩形换算到内容框局部坐标。
+func _check_aim_local() -> void:
+    var host := Control.new()
+    host.name = "AimHost"
+    host.size = Vector2(1280, 480)
+    add_child(host)
+    var page := await _instantiate_into("res://scenes/game.tscn", host)
+    if page != null:
+        var aim := page.find_child("AimLayer", true, false) as Control
+        _check(aim != null, "对局页缺少 AimLayer")
+        if aim != null:
+            var global := Rect2(400, 100, 80, 80)
+            aim.begin_skill(global, [{"zone": "board", "id": "none"}])
+            var local: Rect2 = aim.source_rect_local()
+            _check(local.position.is_equal_approx(aim.get_global_transform().affine_inverse() * global.position),
+                "瞄准层源矩形应转为局部坐标")
+            _check(is_equal_approx(local.size.x, global.size.x / aim.get_global_transform().get_scale().x),
+                "瞄准层源矩形尺寸应除以内容框缩放")
+            _check(Rect2(Vector2.ZERO, aim.size).encloses(local), "瞄准层源矩形应落在层内")
+            aim.clear()
+    host.queue_free()
     await get_tree().process_frame
 
 

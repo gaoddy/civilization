@@ -70,12 +70,12 @@ func _correct_panel_size() -> void:
 	if _hover_card == null or not is_instance_valid(_hover_card):
 		return
 	_panel.reset_size()
-	_layout_hero_detail(_hover_card.get_global_rect(), _panel.size)
+	_layout_hero_detail(_local_rect(_hover_card.get_global_rect()), _panel.size)
 
 
 ## 定位：横向贴着悬停卡外侧，纵向与悬停卡居中对齐；夹紧安全区后若压住悬停卡，换到另一侧。
 func _layout_hero_detail(card_rect: Rect2, panel_size: Vector2) -> void:
-	var layer_rect := get_global_rect()
+	var layer_rect := Rect2(Vector2.ZERO, size)
 	var side_left := card_rect.get_center().x < layer_rect.get_center().x
 	var pos := _side_position(card_rect, panel_size, side_left)
 	pos = _clamp_to_layer(pos, panel_size, layer_rect)
@@ -85,7 +85,7 @@ func _layout_hero_detail(card_rect: Rect2, panel_size: Vector2) -> void:
 		var alt_pos := _clamp_to_layer(_side_position(card_rect, panel_size, not side_left), panel_size, layer_rect)
 		if not Rect2(alt_pos, panel_size).intersects(card_rect):
 			pos = alt_pos
-	_panel.set_global_position(pos)
+	_panel.position = pos
 
 
 ## 悬停卡左/右外侧的位置：与卡片留 `space-sm` 间隙，纵向中心与卡片对齐。

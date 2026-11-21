@@ -104,12 +104,12 @@ func _on_card_gui_input(event: InputEvent, data: Dictionary, card: Control) -> v
         if event.pressed:
             _show_detail(data, card)
         else:
-            _update_detail_hover(card.get_global_rect().position + event.position)
+            _update_detail_hover(_local_point(card.get_global_rect().position) + event.position)
     elif event is InputEventScreenTouch:
         if event.pressed:
             _show_detail(data, card)
         else:
-            _update_detail_hover(card.get_global_rect().position + event.position)
+            _update_detail_hover(_local_point(card.get_global_rect().position) + event.position)
 
 
 ## 跨子控件的真实命中判断：指针落在卡片矩形内即显示，移出才隐藏。
@@ -191,9 +191,21 @@ func _clear_touch() -> void:
     set_process(false)
 
 
-## 视口坐标转为画布坐标，与 get_global_rect() 同一坐标系。
+## 视口坐标转为本层局部坐标，与转换后的卡片矩形同一坐标系。
 func _canvas_point(viewport_point: Vector2) -> Vector2:
-    return get_viewport().get_canvas_transform().affine_inverse() * viewport_point
+    return _local_point(get_viewport().get_canvas_transform().affine_inverse() * viewport_point)
+
+
+func _local_point(global: Vector2) -> Vector2:
+    return get_global_transform().affine_inverse() * global
+
+
+## 全局画布矩形转本层局部矩形；尺寸按本层全局缩放换算。
+func _local_rect(global: Rect2) -> Rect2:
+    if global.size == Vector2.ZERO:
+        return Rect2()
+    var scale := get_global_transform().get_scale().x
+    return Rect2(_local_point(global.position), global.size / scale)
 
 
 ## 当前是否有卡片正在拖拽；拖拽期间详情层不参与悬停命中。
@@ -202,10 +214,10 @@ func _is_dragging() -> bool:
     return viewport != null and viewport.gui_is_dragging()
 
 
-## 画布坐标命中的第一张卡片；未登记或已释放的条目直接跳过。
+## 局部坐标命中的第一张卡片；未登记或已释放的条目直接跳过。
 func _card_at(point: Vector2) -> Control:
     for card in _cards:
-        if is_instance_valid(card) and card.is_visible_in_tree() and card.get_global_rect().has_point(point):
+        if is_instance_valid(card) and card.is_visible_in_tree() and _local_rect(card.get_global_rect()).has_point(point):
             return card
     return null
 
@@ -238,7 +250,7 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
     # 同一张卡已在展示：只校正位置，避免每次按下/移入都重建整块面板。
     # `reset()` 会先隐藏面板，因此数据更新仍会触发重建。
     if anchor == _hover_card and _panel.visible:
-        _place_detail(anchor.get_global_rect(), kind)
+        _place_detail(_local_rect(anchor.get_global_rect()), kind)
         return
     if not is_instance_valid(_hover_card) or _hover_card != anchor:
         _hover_card = anchor
@@ -261,7 +273,7 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
 
     visible = true
     _panel.visible = true
-    _place_detail(anchor.get_global_rect(), kind)
+    _place_detail(_local_rect(anchor.get_global_rect()), kind)
 
 
 ## 商店卡详情：类型、科学分类、玩法、关联分类、费用、原始数值、时代、
@@ -466,9 +478,9 @@ func _detail_text_block(text: String) -> Label:
     return label
 
 
-## 详情定位：商店卡先右后左，棋盘卡先下后上；夹紧视口且不覆盖当前卡片。
+## 详情定位：商店卡先右后左，棋盘卡先下后上；夹紧内容框且不覆盖当前卡片。
 func _place_detail(card_rect: Rect2, kind: String) -> void:
-    var viewport := get_viewport_rect().size
+    var bounds := size
     var panel_size := _panel.get_combined_minimum_size()
     var margin := UITheme.space("space-xs")
     var gap := UITheme.space("space-sm")
@@ -485,8 +497,8 @@ func _place_detail(card_rect: Rect2, kind: String) -> void:
                 pos = Vector2(card_rect.position.x, card_rect.end.y + gap)
             _:
                 pos = Vector2(card_rect.position.x, card_rect.position.y - panel_size.y - gap)
-        pos.x = clampf(pos.x, margin, maxf(margin, viewport.x - panel_size.x - margin))
-        pos.y = clampf(pos.y, margin, maxf(margin, viewport.y - panel_size.y - margin))
+        pos.x = clampf(pos.x, margin, maxf(margin, bounds.x - panel_size.x - margin))
+        pos.y = clampf(pos.y, margin, maxf(margin, bounds.y - panel_size.y - margin))
         if not has_fallback:
             fallback = pos
             has_fallback = true

@@ -222,10 +222,15 @@ func _position_report() -> void:
         return
     var panel_size := _report_panel.get_combined_minimum_size()
     _report_panel.size = panel_size
-    var layer_rect := report_layer.get_global_rect()
+    var layer_rect := Rect2(Vector2.ZERO, report_layer.size)
     var margin := UITheme.space("space-xs")
     var gap := UITheme.space("space-sm")
-    var row_rect := row.get_global_rect()
+    var row_global := row.get_global_rect()
+    var layer_scale := report_layer.get_global_transform().get_scale().x
+    var row_rect := Rect2(
+        report_layer.get_global_transform().affine_inverse() * row_global.position,
+        row_global.size / layer_scale
+    )
     var position := Vector2(row_rect.end.x + gap, row_rect.position.y)
     position.x = clampf(
         position.x,
@@ -237,7 +242,7 @@ func _position_report() -> void:
         margin,
         maxf(margin, layer_rect.size.y - panel_size.y - margin)
     )
-    _report_panel.position = position - layer_rect.position
+    _report_panel.position = position
 
 
 func _on_scroll_changed(_value: float) -> void:
