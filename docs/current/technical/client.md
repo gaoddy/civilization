@@ -136,6 +136,7 @@ client/
     smoke_case.gd            # 冒烟公共断言与场景装载
     fixture.gd               # 冒烟用最小 PlayerView
     headless_game.tscn/.gd   # 无头对局驱动（1 客户端 + 7 机器人）
+    wireframe_probe.tscn/.gd # 线框图探针：导出可见 Control 的全局矩形（`make ui-wireframe`）
   generated/
     protocol.gd              # schema 生成的 GDScript 常量
     cards.json               # 产品文档生成的卡牌展示表

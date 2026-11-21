@@ -8,7 +8,7 @@ DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
 FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 
-.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke client-export-templates client-export client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke ui-wireframe client-export-templates client-export client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -157,6 +157,19 @@ client-smoke: client-import
 	  grep -q "UI_SMOKE_OK" output/$$name.log || exit 1; \
 	  ! grep -q "SCRIPT ERROR" output/$$name.log || exit 1; \
 	done
+
+# 页面线框图：无头装载真实场景解算布局，导出 SVG 与 PNG 到 output/wireframes/。
+# PAGE 取 client/pages 下的页面名（gallery、room 等）；ALL=1 生成全部；DEVICE=phone 出手机档位。
+PAGE ?=
+DEVICE ?=
+
+ui-wireframe: client-import
+	@if [ -z "$(PAGE)" ] && [ "$(ALL)" != "1" ]; then \
+	  echo "用法：make ui-wireframe PAGE=gallery [DEVICE=phone]，或 make ui-wireframe ALL=1" >&2; \
+	  exit 1; \
+	fi
+	$(PYTHON) scripts/ui_wireframe.py --godot "$(GODOT)" \
+		$(if $(PAGE),--page $(PAGE),) $(if $(ALL),--all,) $(if $(DEVICE),--device $(DEVICE),)
 
 # macOS 导出模板：目录按固定的 Godot 版本隔离，缺失时下载官方 tpz 并只拷贝其中的 templates/。
 client-export-templates: client-godot-check
