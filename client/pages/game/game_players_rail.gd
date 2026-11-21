@@ -1,7 +1,7 @@
 class_name GamePlayersRail
 extends PanelContainer
-## 左栏座位列：按服务端名次升序（第 1 名在最上），每座位一行头像 + 名次角标 + 血条，
-## 点击展开该座位的战报。
+## 左栏座位列：按服务端名次升序（第 1 名在最上），每座位一行头像，名次角标叠在左上、
+## 血条叠在头像底部内侧；点击展开该座位的战报。
 ##
 ## 只读 `GameUiState.view`，不持有页面门控与意图；展开的座位按 `playerId`
 ## 记住，刷新整块重建后同一玩家仍然展开。
@@ -105,7 +105,7 @@ static func _row_variant(is_self: bool, compact: bool) -> String:
     return "row-compact" if compact else "row"
 
 
-## 一行座位：头像（名次角标叠在左上）与同宽血条；本人金色描边，淘汰整行压暗。
+## 一行座位：头像块内叠名次角标与贴底血条，不为血条单独留行高；本人金色描边，淘汰整行压暗。
 ## iPhone 基准用紧凑行，8 席在 960×540 下一屏放下，不出现滚动。
 func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     var player_id := str(player.get("playerId", ""))
@@ -142,6 +142,20 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     avatar_box.add_child(avatar)
     _ignore_mouse(avatar)
 
+    # 血条叠在头像底部内侧：左右与底部各留 `space-2xs`，圆角取高度一半成胶囊；
+    # 不单独占行高，头像仍按 `avatar-rail` 占满座位块。
+    var hp_height := UITheme.stage_metric("seat-hp-bar-height")
+    var hp_inset := UITheme.space("space-2xs")
+    var hp := HpBar.create(
+        int(player.get("hp", 0)),
+        state.hp_cap,
+        avatar_size - hp_inset * 2,
+        int(hp_height * 0.5),
+    )
+    hp.name = "SeatHpBar"
+    hp.position = Vector2(hp_inset, avatar_size - hp_height - hp_inset)
+    avatar_box.add_child(hp)
+
     if player.get("rank") != null:
         var badge := RankBadge.create(int(player.get("rank")))
         badge.name = "SeatRankBadge"
@@ -149,10 +163,6 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
         badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
         avatar_box.add_child(badge)
         _ignore_mouse(badge)
-
-    var hp := HpBar.create(int(player.get("hp", 0)), state.hp_cap, avatar_size)
-    hp.name = "SeatHpBar"
-    box.add_child(hp)
 
     _track_detail(panel, player, state.hp_cap)
     return panel

@@ -138,9 +138,38 @@ func _check_seat_rows() -> void:
     var rows := _rows(rail)
     _expect(rows.size() == 8, "积分榜应有 8 个座位行，实际 %d" % rows.size())
     var names := ["玩家A", "机器人B", "机器人C", "机器人D", "机器人E", "机器人F", "机器人G", "机器人H"]
+    var avatar_size := UITheme.stage_metric("avatar-rail")
+    var hp_inset := UITheme.space("space-2xs")
     for row in rows:
         _expect(row.find_child("Avatar", true, false) != null, "座位行缺少头像")
-        _expect(row.find_child("SeatHpBar", true, false) != null, "座位行缺少血条")
+        var avatar_box: Control = row.find_child("SeatAvatar", true, false)
+        var bar: Control = row.find_child("SeatHpBar", true, false)
+        _expect(bar != null, "座位行缺少血条")
+        if avatar_box != null and bar != null:
+            _expect(
+                bar.get_parent() == avatar_box,
+                "血条应叠在头像块内，实际父节点 %s" % str(bar.get_parent()),
+            )
+            var avatar_rect := avatar_box.get_global_rect()
+            var bar_rect := bar.get_global_rect()
+            _expect(
+                avatar_rect.encloses(bar_rect),
+                "血条应完全位于头像范围内：血条 %s，头像 %s" % [str(bar_rect), str(avatar_rect)],
+            )
+            _expect(
+                is_equal_approx(bar.size.x, float(avatar_size - hp_inset * 2)),
+                "血条宽度应为 %d，实际 %s" % [avatar_size - hp_inset * 2, bar.size.x],
+            )
+            _expect(
+                is_equal_approx(bar_rect.end.y, avatar_rect.end.y - float(hp_inset)),
+                "血条底边应距头像底边 %d：血条底 %.1f，头像底 %.1f"
+                % [hp_inset, bar_rect.end.y, avatar_rect.end.y],
+            )
+            var avatar_node: Control = avatar_box.find_child("Avatar", true, false)
+            _expect(
+                avatar_node != null and bar.get_index() > avatar_node.get_index(),
+                "血条层级应位于头像之上",
+            )
         var fixed := _fixed_text(row)
         _expect(not fixed.contains("HP"), "座位行内不应出现 HP 文本：%s" % fixed)
         _expect(
@@ -388,7 +417,7 @@ func _check_hp_clamp() -> void:
     if instance == null:
         return
     var rail = instance.find_child("PlayersRail", true, false)
-    var width := UITheme.metric("avatar-rail")
+    var width := UITheme.stage_metric("avatar-rail") - UITheme.space("space-2xs") * 2
     for case in [["p0", width], ["p2", width], ["p4", 0]]:
         var row := _row_of(rail, case[0])
         var bar = row.find_child("SeatHpBar", true, false) if row != null else null
@@ -497,7 +526,7 @@ func _expect_hp_fill(rail: Node, player_id: String, hp: int, cap: int) -> void:
     if fill == null:
         _expect(false, "%s 座位血条缺少 HpFill" % player_id)
         return
-    var width := float(UITheme.metric("avatar-rail"))
+    var width := float(UITheme.stage_metric("avatar-rail") - UITheme.space("space-2xs") * 2)
     var expected := roundf(width * float(hp) / float(cap))
     _expect(
         is_equal_approx(fill.size.x, expected),
