@@ -886,3 +886,8 @@ func _on_leave_game() -> void:
 func _on_game_over() -> void:
 	_guide.hide()
 	UINavigation.navigate(self, UINavigation.PAGE_RESULT)
+
+
+## 预览入口：返回对局页实例；状态由 `make ui-preview` 在调用前注入 GameStore。
+static func preview(_opts: Dictionary = {}) -> Node:
+	return (load("res://pages/game/game.tscn") as PackedScene).instantiate()
