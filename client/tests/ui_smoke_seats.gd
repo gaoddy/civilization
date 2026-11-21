@@ -169,6 +169,17 @@ func _check_seat_rows() -> void:
         )
     for row in rows:
         _expect(row.find_child("Avatar", true, false) != null, "座位行缺少头像")
+        var seat_clip := row.find_child("AvatarFrameClip", true, false) as CanvasItem
+        var seat_border := row.find_child("AvatarFrameBorder", true, false) as Control
+        _expect(
+            seat_clip != null and seat_clip.clip_children == CanvasItem.CLIP_CHILDREN_AND_DRAW,
+            "座位头像应同时绘制封面并裁切子节点",
+        )
+        _expect(
+            seat_border != null and seat_clip != null
+                and seat_border.get_index() > seat_clip.get_index(),
+            "座位头像圆角描边应叠在头像之上",
+        )
         var avatar_box: Control = row.find_child("SeatAvatar", true, false)
         var bar: Control = row.find_child("SeatHpBar", true, false)
         _expect(bar != null, "座位行缺少血条")
@@ -206,13 +217,17 @@ func _check_seat_rows() -> void:
                 avatar_node != null and bar.get_index() > avatar_node.get_index(),
                 "血条层级应位于头像之上",
             )
-            var avatar_panel := (
-                avatar_node.get_theme_stylebox("panel") as StyleBoxFlat if avatar_node != null else null
-            )
+            var avatar_clip: Panel = null
+            if avatar_node != null:
+                avatar_clip = avatar_node.find_child("AvatarFrameClip", true, false) as Panel
+            var avatar_cover: StyleBoxFlat = null
+            if avatar_clip != null:
+                avatar_cover = avatar_clip.get_theme_stylebox("panel") as StyleBoxFlat
             _expect(
-                avatar_panel != null and avatar_panel.corner_radius_top_left == 0,
-                "头像块应为直角方形，实际圆角 %s"
-                % (avatar_panel.corner_radius_top_left if avatar_panel != null else "缺失"),
+                avatar_cover != null
+                and avatar_cover.corner_radius_top_left == UITheme.radius("radius-md"),
+                "头像块圆角应取 radius-md，实际 %s"
+                % (avatar_cover.corner_radius_top_left if avatar_cover != null else "缺失"),
             )
         var fixed := _fixed_text(row)
         _expect(not fixed.contains("HP"), "座位行内不应出现 HP 文本：%s" % fixed)

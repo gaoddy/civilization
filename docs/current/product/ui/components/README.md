@@ -35,7 +35,7 @@
 - `DetailLayer` 统一承载商店、座位、售货员、英雄与随从详情；选英雄页的 `RoomHeroDetailLayer` 继承它，只覆盖内容与定位。
 - 长按判定由 `LongPressTracker`（`client/ui/long_press.gd`）承担，详情层与选英雄页共用同一套 450ms 阈值与 8 画布单位的位移取消距离。
 - 可选项框由 `SelectableBox`（`client/ui/selectable_box.gd`）承担内容承载、常态 / 悬停 / 选中三态描边与框内点击；`RoomHeroCard` 与 `GalleryCardTile` 继承它，分别使用外扩与内联两种选中描边。
-- 头像框由 `AvatarFrame`（`client/ui/avatar_frame.gd`）承担圆角头像裁切、头像之上的圆角描边与首字回退；`GameHeroCard` 继承它，业务内容（生命牌）挂在 `content()` 叠层。
+- 头像框由 `AvatarFrame`（`client/ui/avatar_frame.gd`）承担圆角头像裁切、头像之上的圆角描边与首字回退；`GameHeroCard` 继承它，业务内容（生命牌）挂在 `content()`；`Avatar` 与 `GamePortrait` 同样基于它，满宽贴底的名字条挂在 `clipped_content()`。
 - 弹出层外壳由 `PopupLayer`（`client/ui/popup_layer.gd`）承担遮罩、居中 / 锚点 / 四向贴边定位与点击遮罩关闭；`InvitePopup`、`FriendsPanel`、`GameChoiceOverlay`、`CombatIntro` 与 `GalleryCategoryPanel` 继承它，内容仍由各自构建。
 
 - `UIControls.section_title(text)`：区块标题，`font-body` 字号、`color-text-dim` 颜色，单行不换行。

@@ -235,8 +235,8 @@ func _check_hero_card() -> void:
     var border := card.find_child("AvatarFrameBorder", true, false) as Control
     _expect(clip != null, "英雄卡应有头像裁切层")
     _expect(
-        clip != null and clip.clip_children != CanvasItem.CLIP_CHILDREN_DISABLED,
-        "英雄卡头像应按圆角裁切",
+        clip != null and clip.clip_children == CanvasItem.CLIP_CHILDREN_AND_DRAW,
+        "英雄卡应同时绘制封面并裁切头像",
     )
     _expect(cover_art != null and clip != null and cover_art.get_parent() == clip, "头像图应位于裁切层内")
     _expect(
@@ -272,44 +272,62 @@ func _check_hero_card() -> void:
     await get_tree().process_frame
 
 
-## 无图头像：尺寸、首字与名字条。
+## 圆角头像块：尺寸、裁切、描边层次、首字与名字条。
 func _check_portrait() -> void:
     var portrait := GamePortrait.new()
     add_child(portrait)
     await get_tree().process_frame
     _expect(portrait.custom_minimum_size == Vector2(64, 64), "头像最小尺寸应为 64×64")
-    var portrait_panel := portrait.get_theme_stylebox("panel") as StyleBoxFlat
+    var clip := portrait.find_child("AvatarFrameClip", true, false) as Panel
+    var border := portrait.find_child("AvatarFrameBorder", true, false) as Panel
     _expect(
-        portrait_panel != null and portrait_panel.corner_radius_top_left == 0,
-        "头像块应为直角方形，实际圆角 %s"
-        % (portrait_panel.corner_radius_top_left if portrait_panel != null else "缺失")
+        clip != null and clip.clip_children == CanvasItem.CLIP_CHILDREN_AND_DRAW,
+        "头像块应同时绘制封面并裁切子节点"
+    )
+    var cover: StyleBoxFlat = null
+    if clip != null:
+        cover = clip.get_theme_stylebox("panel") as StyleBoxFlat
+    _expect(
+        cover != null and cover.corner_radius_top_left == UITheme.radius("radius-md"),
+        "头像块圆角应取 radius-md，实际 %s"
+        % (cover.corner_radius_top_left if cover != null else "缺失")
+    )
+    _expect(
+        border != null and clip != null and border.get_index() > clip.get_index(),
+        "圆角描边应叠在头像之上"
     )
     portrait.setup("售货员", "售", UITheme.playstyle_color("neutral"), true)
     await get_tree().process_frame
     _expect(_node_text(portrait).contains("售货员"), "头像应显示名字")
+    var name_label := portrait.find_child("PortraitName", true, false) as Label
+    _expect(
+        name_label != null and name_label.get_parent() == portrait.clipped_content(),
+        "名字条应挂在裁切内叠层，随头像收进圆角"
+    )
     portrait.setup("售货员", "售", UITheme.playstyle_color("neutral"), false)
     await get_tree().process_frame
     _expect(portrait.find_child("PortraitName", true, false) == null, "不显示名字时不应创建名字条")
     var seller_art := "res://assets/characters/avatars/seller_ava.png"
     portrait.setup("售货员", "售", UITheme.playstyle_color("neutral"), true, seller_art)
     await get_tree().process_frame
-    _expect(portrait.find_child("PortraitArt", true, false) != null, "有贴图时应挂载头像纹理")
+    var art := portrait.find_child("AvatarFrameArt", true, false) as TextureRect
+    _expect(art != null, "有贴图时应挂载头像纹理")
     _expect(
-        portrait.find_child("PortraitArt", true, false).get_index() == 0,
-        "头像纹理应置于最底层以免遮挡名字条"
+        art != null and clip != null and art.get_parent() == clip and art.get_index() == 0,
+        "头像纹理应位于裁切层最底层，避免遮挡名字条"
     )
-    _expect(not portrait.find_child("PortraitGlyph", true, false).visible, "有贴图时应隐藏首字")
+    _expect(not portrait.find_child("AvatarFrameGlyph", true, false).visible, "有贴图时应隐藏首字")
     _expect(_node_text(portrait).contains("售货员"), "有贴图时名字条仍应显示")
     portrait.setup("售货员", "售", UITheme.playstyle_color("neutral"), true, seller_art)
     await get_tree().process_frame
     _expect(
-        portrait.find_children("PortraitArt", "", true, false).size() == 1,
+        portrait.find_children("AvatarFrameArt", "", true, false).size() == 1,
         "重复 setup 不应残留多张头像纹理"
     )
     portrait.setup("售货员", "售", UITheme.playstyle_color("neutral"), true)
     await get_tree().process_frame
-    _expect(portrait.find_child("PortraitArt", true, false) == null, "贴图路径为空时应回退无图")
-    _expect(portrait.find_child("PortraitGlyph", true, false).visible, "回退无图时应恢复首字")
+    _expect(portrait.find_child("AvatarFrameArt", true, false) == null, "贴图路径为空时应回退无图")
+    _expect(portrait.find_child("AvatarFrameGlyph", true, false).visible, "回退无图时应恢复首字")
     portrait.queue_free()
     await get_tree().process_frame
 
@@ -621,7 +639,7 @@ func _check_shop_view() -> void:
     _expect(actions != null and actions.get_global_rect().size.y == 64, "商店操作行高应为 64")
     _expect(upgrade != null and upgrade.custom_minimum_size == Vector2(40, 40), "升级按钮应为 40×40")
     _expect(seller != null and seller.custom_minimum_size == Vector2(64, 64), "售货员应为 64×64")
-    _expect(seller != null and seller.find_child("PortraitArt", true, false) != null, "售货员应显示立绘贴图")
+    _expect(seller != null and seller.find_child("AvatarFrameArt", true, false) != null, "售货员应显示立绘贴图")
     _expect(
         seller != null and seller.find_child("PortraitName", true, false) == null,
         "售货员不应再显示名字条",
@@ -825,7 +843,7 @@ func _check_opponent_view() -> void:
     )
     _expect(opponent.find_child("HpBar", true, false) != null, "普通对手应有血量条")
     _expect(
-        portrait != null and portrait.find_child("PortraitArt", true, false) != null,
+        portrait != null and portrait.find_child("AvatarFrameArt", true, false) != null,
         "对手头像有素材时应显示头像图",
     )
 

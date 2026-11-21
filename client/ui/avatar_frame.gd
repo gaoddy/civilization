@@ -15,6 +15,7 @@ var _clip: Panel
 var _art: TextureRect = null
 var _art_path := ""
 var _glyph: Label
+var _clip_content: Control
 var _border: Panel
 var _content: Control
 var _cover_color := Color.TRANSPARENT
@@ -28,8 +29,8 @@ func _init() -> void:
 	_clip.name = "AvatarFrameClip"
 	_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_clip.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# 面板绘制形状是子节点的裁切遮罩：头像四角落在圆角以内。
-	_clip.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
+	# 面板绘制形状是子节点的裁切遮罩，同时自身要绘制玩法色封面：头像四角落在圆角以内。
+	_clip.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
 	add_child(_clip)
 
 	_glyph = UIControls.label("?", UITheme.font_size("font-hero"), false)
@@ -37,7 +38,14 @@ func _init() -> void:
 	_glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_glyph.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_clip.add_child(_glyph)
+
+	_clip_content = Control.new()
+	_clip_content.name = "AvatarFrameClippedContent"
+	_clip_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_clip_content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_clip.add_child(_clip_content)
 
 	_border = Panel.new()
 	_border.name = "AvatarFrameBorder"
@@ -89,6 +97,12 @@ func set_glyph(text: String, color: Color) -> void:
 ## 业务内容叠层：位于描边之上，不参与头像裁切。
 func content() -> Control:
 	return _content
+
+
+## 裁切内内容叠层：位于头像之上、圆角描边之下，随头像一起裁到圆角。
+## 满宽贴底的名字条等需要保留圆角的内容挂这里。
+func clipped_content() -> Control:
+	return _clip_content
 
 
 func _apply_styles() -> void:

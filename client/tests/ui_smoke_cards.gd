@@ -1016,8 +1016,15 @@ func _check_avatar_frame() -> void:
     var border := frame.find_child("AvatarFrameBorder", true, false) as Control
     _expect(clip != null, "头像框应有裁切层")
     _expect(
-        clip != null and clip.clip_children != CanvasItem.CLIP_CHILDREN_DISABLED,
-        "头像框裁切层应启用于子节点裁切",
+        clip != null and clip.clip_children == CanvasItem.CLIP_CHILDREN_AND_DRAW,
+        "头像框裁切层应同时绘制封面并裁切子节点",
+    )
+    var cover: StyleBoxFlat = null
+    if clip != null:
+        cover = clip.get_theme_stylebox("panel") as StyleBoxFlat
+    _expect(
+        cover != null and cover.bg_color.a > 0.0,
+        "头像框裁切层应绘制不透明封面",
     )
     _expect(
         border != null and clip != null and border.get_index() > clip.get_index(),
