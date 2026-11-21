@@ -7,7 +7,7 @@ DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
 FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 
-.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke client-export-templates client-export client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -122,6 +122,18 @@ client-run: client-import
 	  echo "WIDTH 与 HEIGHT 需同时传入正整数：make client-run WIDTH=960 HEIGHT=540" >&2; \
 	  exit 1; \
 	fi
+
+# 设备档别名：等价于直接传 WIDTH/HEIGHT，只改窗口尺寸，设备档案仍按桌面。
+# 目标名可被 shell 自带的 make 补全列出，`make client-run-on-<Tab>` 即可选择。
+# 尺寸取项目验收用机的横屏物理分辨率：iPhone 17 Pro、iPad Air 11。
+client-run-on-iphone:
+	$(MAKE) client-run WIDTH=2622 HEIGHT=1206
+
+client-run-on-ipad:
+	$(MAKE) client-run WIDTH=2360 HEIGHT=1640
+
+client-run-on-desktop:
+	$(MAKE) client-run
 
 client-check:
 	$(MAKE) protocol-check

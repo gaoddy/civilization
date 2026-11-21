@@ -251,6 +251,9 @@ client/
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗，用于模拟不同尺寸设备 |
+| `make client-run-on-iphone` | 等价于 `make client-run WIDTH=2622 HEIGHT=1206`，按 iPhone 17 Pro 横屏物理分辨率开窗 |
+| `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640`，按 iPad Air 11 横屏物理分辨率开窗 |
+| `make client-run-on-desktop` | 等价于 `make client-run`，窗口按屏幕可用区自动收拢 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
 | `make client-smoke` | 用 glob 逐个运行十三个 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR` |
 | `make client-export-ios` | 导出 Xcode 工程并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
@@ -276,6 +279,16 @@ make client-run WIDTH=2556 HEIGHT=1179               # iPhone 横屏物理像素
 ```
 
 指定尺寸只改变窗口大小并居中，设备类型仍按桌面处理（基准 1280×720、无安全区）；不传时窗口按屏幕可用区自动收拢。尺寸不合法或只传一个时命令直接报错，不启动客户端。
+
+常用设备档封装成别名，三者等价于传对应尺寸，不改变其他行为：
+
+```
+make client-run-on-iphone                          # 等价 WIDTH=2622 HEIGHT=1206
+make client-run-on-ipad                            # 等价 WIDTH=2360 HEIGHT=1640
+make client-run-on-desktop                         # 等价不传尺寸
+```
+
+`make client-run-on-<Tab>` 由 shell 自带的 make 目标补全列出三个别名，不必记具体像素。
 
 客户端一律用 `make client-run` 启动：它会先 `--import` 刷新全局类缓存。直接跑 `Godot --path client` 时，若工程新增或改名过 `class_name` 脚本而缓存未更新，依赖它的脚本编译失败，对局页会缺整块区域（例如中央舞台整体不构建，只剩顶部工具条与左栏）。
 
