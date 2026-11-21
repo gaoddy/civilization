@@ -1,8 +1,8 @@
 extends Control
 ## 对局：按酒馆战棋结构呈现服务端 PlayerView 与 affordances，操作只发协议意图。
 ##
-## 布局：顶部工具条 — 左栏积分榜 — 中央舞台（招募/战斗组合、英雄行、贴底手牌）。
-## 状态文本（断线、未发出、错误）写在顶部工具条左侧。
+## 布局：右上角悬浮工具组 — 左栏积分榜 — 中央舞台（招募/战斗组合、英雄行、贴底手牌）。
+## 状态提示（断线、未发出、错误、等待视图）走居中模态框。
 
 ## 每次 `_send_intent` 先发一条，供冒烟与调试断言意图内容。
 signal intent_sent(intent: Dictionary)
@@ -13,7 +13,7 @@ const COMBAT_PACE_MS := 320
 ## 服务端演示节奏：结果横幅停留（与 room-service 的 TAIL_MS 一致）。
 const COMBAT_TAIL_MS := 2000
 
-## 错误文案在顶栏的停留时长；连接提示优先，出现连接提示时立即让位。
+## 错误文案在状态模态中的停留时长。
 const ERROR_NOTICE_SECONDS := 4.0
 
 # 页面级状态与门槛。
@@ -36,12 +36,16 @@ var _shop_frozen: Dictionary = {}
 var _suppress_frozen_cue := false
 var _initial_shop_enter_done := false
 
-# 顶部工具条：状态文本与图鉴 / 提示 / 退出对局入口。
-var _top_bar: GameTopBar
-## 状态文本当前承载的是连接提示：恢复连接时据此清空，避免误清错误文案。
-var _connection_notice := false
-## 顶栏当前显示的是错误文案：到时或阶段/回合变化后清空，不让一次性拒绝常驻整局。
-var _error_notice := false
+# 右上角悬浮工具组：图鉴、提示与退出对局。
+var _tools: GameToolButtons
+
+# 状态模态：等待、断线、未发出与错误的唯一提示载体。
+var _status_modal: GameStatusModal
+## 模态当前来源：waiting / connection / error / intent / 空。
+var _notice_kind := ""
+## 已应用的连接状态：open / reconnecting / disconnected；只在变化时弹模态。
+var _connection_key := ""
+## 错误文案停留计时；到时收起并恢复仍有效的连接提示。
 var _error_notice_left := 0.0
 var _error_notice_phase := ""
 var _error_notice_turn := -1
@@ -93,45 +97,31 @@ func _build() -> void:
 
 	# iPhone 基准 960×540：页边距、页面间距与舞台间距整体收紧，结构与桌面一致。
 	var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
+	var page_side := UITheme.space("space-sm") if compact else UITheme.space("space-xl")
+	var page_top := UITheme.space("space-sm") if compact else UITheme.space("space-lg")
+	var page_bottom := UITheme.space("space-xs") if compact else UITheme.space("space-md")
+
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override(
-		"margin_left", UITheme.space("space-sm") if compact else UITheme.space("space-xl")
-	)
-	margin.add_theme_constant_override(
-		"margin_right", UITheme.space("space-sm") if compact else UITheme.space("space-xl")
-	)
-	margin.add_theme_constant_override(
-		"margin_top", UITheme.space("space-sm") if compact else UITheme.space("space-lg")
-	)
-	margin.add_theme_constant_override(
-		"margin_bottom", UITheme.space("space-xs") if compact else UITheme.space("space-md")
-	)
+	margin.add_theme_constant_override("margin_left", page_side)
+	margin.add_theme_constant_override("margin_right", page_side)
+	margin.add_theme_constant_override("margin_top", page_top)
+	margin.add_theme_constant_override("margin_bottom", page_bottom)
 	add_child(margin)
-
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override(
-		"separation", UITheme.space("space-xs") if compact else UITheme.space("space-md")
-	)
-	margin.add_child(root)
-
-	_top_bar = GameTopBar.new()
-	_top_bar.gallery_pressed.connect(_open_gallery)
-	_top_bar.hint_pressed.connect(_on_hint_pressed)
-	_top_bar.leave_game_pressed.connect(_on_leave_game)
-	root.add_child(_top_bar)
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override(
 		"separation", UITheme.space("space-sm") if compact else UITheme.space("space-lg")
 	)
-	root.add_child(body)
+	margin.add_child(body)
 
 	_players_panel = GamePlayersRail.new()
 	body.add_child(_players_panel)
 	_center = _build_center()
 	body.add_child(_center)
+
+	_build_tools(page_side, page_top)
 
 	_detail = DetailLayer.new()
 	add_child(_detail)
@@ -154,6 +144,11 @@ func _build() -> void:
 	_aim.aim_cancelled.connect(_on_aim_cancelled)
 	add_child(_aim)
 
+	# 状态模态压在选择浮层之下：发现 / 进化待选时提示不遮挡候选。
+	_status_modal = GameStatusModal.new()
+	_status_modal.acknowledged.connect(_on_notice_acknowledged)
+	add_child(_status_modal)
+
 	_overlay = GameChoiceOverlay.new()
 	_overlay.chosen.connect(_on_choose)
 	add_child(_overlay)
@@ -161,6 +156,30 @@ func _build() -> void:
 	_guide = FirstGameGuide.new()
 	_guide.target_root = self
 	add_child(_guide)
+
+
+## 右上角悬浮工具组：与页面外边距对齐，只占按钮自身尺寸，不挤压中央舞台。
+## 外层容器全部放行输入，只有三枚胶囊按钮接收点击。
+func _build_tools(page_side: int, page_top: int) -> void:
+	var frame := MarginContainer.new()
+	frame.name = "GameToolsOverlay"
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_theme_constant_override("margin_right", page_side)
+	frame.add_theme_constant_override("margin_top", page_top)
+	add_child(frame)
+
+	var column := VBoxContainer.new()
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_child(column)
+
+	_tools = GameToolButtons.new()
+	_tools.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tools.gallery_pressed.connect(_open_gallery)
+	_tools.hint_pressed.connect(_on_hint_pressed)
+	_tools.leave_game_pressed.connect(_on_leave_game)
+	_tools.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tools.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	column.add_child(_tools)
 
 
 ## 中央舞台：招募组合 → 战斗组合 → 英雄行 → 贴底手牌，自上而下固定顺序。
@@ -219,28 +238,50 @@ func _process(delta: float) -> void:
 	_report_combat_played()
 
 
-## 错误文案的生命周期：停留时长用完即清空；阶段或回合变化由 `_refresh` 提前清空。
+## 错误与未发出的生命周期：停留时长用完即收起；阶段或回合变化由 `_refresh` 提前收起错误。
 func _tick_error_notice(delta: float) -> void:
-	if not _error_notice:
+	if _notice_kind != "error" and _notice_kind != "intent":
 		return
 	_error_notice_left -= delta
 	if _error_notice_left <= 0.0:
-		_clear_error_notice()
+		_clear_timed_notice()
 
 
-## 只清错误文案，不覆盖连接提示；调用方写入其它提示前也要取消错误计时。
 func _clear_error_notice() -> void:
-	_error_notice = false
-	_error_notice_left = 0.0
-	if _connection_notice:
+	if _notice_kind != "error":
 		return
-	_top_bar.set_status("", UITheme.color("color-text-dim"))
+	_clear_timed_notice()
+
+
+## 到时收起；仍断线时恢复连接提示，视图已清空时回到等待提示。
+func _clear_timed_notice() -> void:
+	_error_notice_left = 0.0
+	if GameStore.view.is_empty():
+		_show_notice("waiting", tr("ui.game.status.waiting_view"))
+		return
+	if not Net.is_open():
+		_show_connection_notice()
+		return
+	_hide_notice()
+
+
+## 状态模态的唯一写入口；来源只用于判断收起与恢复，不参与文案。
+func _show_notice(kind: String, text: String, tone := "dim", detail := "") -> void:
+	_notice_kind = kind
+	_error_notice_left = ERROR_NOTICE_SECONDS if kind in ["error", "intent"] else 0.0
+	_status_modal.show_status(text, tone, detail)
+
+
+func _hide_notice() -> void:
+	_notice_kind = ""
+	_error_notice_left = 0.0
+	_status_modal.hide_status()
 
 
 func _refresh() -> void:
 	_detail.reset()
 	if (
-		_error_notice
+		_notice_kind == "error"
 		and (
 			GameStore.phase != _error_notice_phase
 			or GameStore.turn != _error_notice_turn
@@ -249,12 +290,16 @@ func _refresh() -> void:
 		_clear_error_notice()
 	var view: Dictionary = GameStore.view
 	if view.is_empty():
-		_error_notice = false
-		_top_bar.set_status(tr("ui.game.status.waiting_view"), UITheme.color("color-text-dim"))
+		# 等待视图是空视图下的主状态；错误与未发出到期前保留自己的提示。
+		if _notice_kind != "error" and _notice_kind != "intent":
+			_show_notice("waiting", tr("ui.game.status.waiting_view"))
 		_guide.set_phase("", {})
 		_shop_frozen.clear()
 		_suppress_frozen_cue = false
+		_refresh_connection()
 		return
+	if _notice_kind == "waiting":
+		_hide_notice()
 
 	var self_state: Dictionary = view.get("self", {})
 	var recruited := bool(self_state.get("recruited", false))
@@ -431,23 +476,32 @@ func _report_combat_played() -> void:
 
 
 func _refresh_connection() -> void:
-	if _top_bar == null:
+	if _tools == null or _status_modal == null:
 		return
-	_top_bar.set_connected(Net.is_open())
-	var disconnected := not Net.is_open() and not GameStore.view.is_empty()
-	if disconnected:
-		# 有连接句柄但未就绪 = 正在重连（dim）；句柄为空 = 断线（danger）。
-		var reconnecting := Net.socket != null
-		_error_notice = false
-		_top_bar.set_status(
-			tr("ui.game.status.reconnecting") if reconnecting else tr("ui.game.status.disconnected"),
-			UITheme.color("color-text-dim") if reconnecting else UITheme.color("color-danger"),
-		)
-		_connection_notice = true
+	_tools.set_connected(Net.is_open())
+	# 空视图时先由「等待对局状态」承载，收到视图后再显示连接提示。
+	var key := "open"
+	if not Net.is_open() and not GameStore.view.is_empty():
+		# 有连接句柄但未就绪 = 正在重连；句柄为空 = 断线。
+		key = "reconnecting" if Net.socket != null else "disconnected"
+	if key == _connection_key:
 		return
-	if _connection_notice:
-		_top_bar.set_status("", UITheme.color("color-text-dim"))
-		_connection_notice = false
+	_connection_key = key
+	if key == "open":
+		if _notice_kind == "connection":
+			_hide_notice()
+		return
+	_show_connection_notice()
+
+
+## 连接提示只在连接状态变化时弹出；手动关闭后同一状态不重复弹出。
+func _show_connection_notice() -> void:
+	var reconnecting := Net.socket != null
+	_show_notice(
+		"connection",
+		tr("ui.game.status.reconnecting") if reconnecting else tr("ui.game.status.disconnected"),
+		"dim" if reconnecting else "danger",
+	)
 
 
 ## 倒计时由招募河道维护；页面按「是否存在截止时间」决定清零，避免把已过期
@@ -551,8 +605,7 @@ func _send_intent(intent: Dictionary) -> String:
 		"intent": intent,
 	})
 	if intent_id == "":
-		_error_notice = false
-		_top_bar.set_status(tr("ui.game.status.intent_not_sent"), UITheme.color("color-text-dim"))
+		_show_notice("intent", tr("ui.game.status.intent_not_sent"))
 	return intent_id
 
 
@@ -794,14 +847,10 @@ func _aim_submit_allowed() -> bool:
 
 func _on_error() -> void:
 	var code := str(GameStore.last_error.get("code", ""))
-	_top_bar.set_status(
-		UIWording.error_text(code),
-		UITheme.color("color-danger"),
-		UIWording.error_tooltip(code),
-	)
-	# 一次拒绝只提示一段时间；阶段/回合变化后的下一次刷新会提前清空。
-	_error_notice = true
-	_error_notice_left = ERROR_NOTICE_SECONDS
+	var text := UIWording.error_text(code)
+	var detail := UIWording.error_tooltip(code)
+	_show_notice("error", text, "danger", detail if detail != text else "")
+	# 一次拒绝只提示一段时间；阶段/回合变化后的下一次刷新会提前收起。
 	_error_notice_phase = GameStore.phase
 	_error_notice_turn = GameStore.turn
 	match UINavigation.error_route(code):
@@ -815,6 +864,14 @@ func _on_error() -> void:
 
 func _on_hint_pressed() -> void:
 	_guide.show_manual()
+
+
+## 「知道了」：清空当前来源并取消计时；断线时手动关掉错误或未发出后恢复连接提示。
+func _on_notice_acknowledged() -> void:
+	var kind := _notice_kind
+	_hide_notice()
+	if kind != "connection" and not Net.is_open() and not GameStore.view.is_empty():
+		_show_connection_notice()
 
 
 ## 对局内主动退出：先发 `LeaveRoom` 由服务端按弃权结算，再清房间并用令牌重连回大厅。
