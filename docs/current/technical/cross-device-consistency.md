@@ -172,6 +172,7 @@ static func canvas_hit_min(pt: float, px_per_pt: float, base: Vector2i, window_s
 - **常规按钮**：通过 `UIControls.button()` / `UIControls.styled_button()` 创建，不直接 `new()`
 - **分组切换按钮**：图鉴筛选栏、目录与发现/进化候选项需要 `toggle_mode`、`button_group` 或自绘选中态，在组件内直接构造并复用 `UITheme.button_style()`
 - **标签**：通过 `UIControls.label()` 创建，字体大小由调用方传入 `UITheme.font_size()` 令牌
+- **自绘角标**：图标按钮上的数量角标需要独立 StyleBox 定位与字号，在组件内直接构造 `Label` 并覆盖样式
 - **输入框**：通过 `UIControls.line_edit()` 创建；桌面与按钮同高 34，触控端按 `hit_primary()` 抬升，最小宽度由调用方按场景给出
 
 ### 4. 页面统一入口
@@ -341,6 +342,7 @@ static func keyboard_from_pixels(pixels: float, base: Vector2i, window_size: Vec
 2. **所有颜色**：只使用 `UITheme.color_*()` 或 `stage_metric("color-*")`
 3. **所有字体大小**：只使用 `UITheme.font_size_*()` 或 `stage_metric("font-*")`
 4. **紧凑变体**：标准令牌名 + `-compact` 后缀，开发时不需要手动判断设备
+5. **显式清零**：间隔写 `0` 表示容器内不留间距，不属于绕过令牌
 
 ### 控件规则
 
