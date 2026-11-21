@@ -13,9 +13,27 @@ func _ready() -> void:
 ## 房主 + 两名成员：每个成员行带移除按钮，底部显示解散按钮。
 func _check_host_controls() -> void:
     _seed_room(true)
+    GameStore.room_players[0]["heroCandidates"] = ["zhenghe"]
     var instance := await _check_scene("res://scenes/room.tscn", false)
     if instance == null:
         return
+
+    var hero_card = instance.find_child("HeroCard_zhenghe", true, false)
+    _expect(hero_card != null, "本人候选应渲染英雄卡")
+    if hero_card != null:
+        _expect(
+            hero_card.find_child("CoverArt", true, false) != null,
+            "候选卡有卡面素材时应显示卡面图",
+        )
+        _expect(
+            hero_card.find_child("Watermark", true, false) == null,
+            "有卡面图时不应显示首字水印",
+        )
+        await _push_click(instance, hero_card.get_global_rect().get_center())
+        _expect(
+            instance.find_child("HeroPortrait", true, false) != null,
+            "技能浮层应显示英雄立绘",
+        )
 
     var dissolve = instance.find_child("DissolveButton", true, false)
     _expect(dissolve != null and dissolve.is_visible_in_tree(), "房主应看到解散房间按钮")

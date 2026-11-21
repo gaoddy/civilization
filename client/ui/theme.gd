@@ -138,6 +138,8 @@ const SCENARIO := {
 	"avatar-lg": 38,
 	"hero-tile-width": 150,
 	"portrait-size": 64,
+	"hero-portrait-width": 160,
+	"hero-portrait-height": 240,
 	"card-width": 112,
 	"card-height": 146,
 	"card-cover-inset": 3,

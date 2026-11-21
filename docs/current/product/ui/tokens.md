@@ -81,6 +81,7 @@
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
 | `avatar-rail` | 44 | 左栏座位行头像边长 |
 | `portrait-size` | 64 | 售货员与对手英雄头像块边长 |
+| `hero-portrait-width` / `-height` | 160 / 240 | 房间技能浮层中的立绘尺寸 |
 | `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
 | `rank-badge-size` | 18 | 座位行名次角标边长 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |

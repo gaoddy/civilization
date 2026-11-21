@@ -325,7 +325,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 - 位置：`client/assets/`。`characters/portraits/ch_<id>_full.png` 为去水印立绘，`characters/avatars/ch_<id>_ava.png` 为圆形头像，`cards/faces/card_<id>_face.png` 为 448×584 卡面封面；`asset_manifest.json` 按卡牌 id 登记三类路径与展示尺寸。`assets/ui/bg/bg_main.png` 为页面背景纹理（512×512，整屏拉伸，不平铺）。
 - 加载：`CardDB` 启动时读取清单到 `art`，提供 `has_art(id)` 与 `art_path(id, kind)`；清单缺失或条目缺字段时返回空串，不报错。
-- 回退：`CardFaceBase.create_face()` 用带卡面圆角的面板绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；`UI.avatar()` 有头像纹理时叠 `AvatarArt`，否则退回玩法色块首字。纹理加载失败与无资源走同一回退。页面背景缺图或加载失败时 `UI.background()` 回退 `color-bg` 纯色。
+- 回退：`UI.art_texture()` / `UI.art_layer()` 统一取图与铺层，纹理加载失败与无资源返回空；`CardFaceBase.create_face()` 用带卡面圆角的面板绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；房间候选卡叠 `card_face`、技能浮层叠 `portrait`；对局英雄卡封面与对手头像用 `avatar`，`UI.avatar()` 同样有头像纹理时叠 `AvatarArt`；英雄详情（对局与图鉴）用 `portrait`。各类无图时回退玩法色块与首字（英雄卡封面回退玩法色与首字，技能浮层与详情省略图片）。页面背景缺图或加载失败时 `UI.background()` 回退 `color-bg` 纯色。
 - 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（默认 `client/assets/characters/portraits/asset_map.json`，内容为 `card_id → 源立绘文件名`）处理源立绘，并重写清单；映射文件缺失时目标直接失败。
 - 批次：首批试点 20 张，覆盖 14 种玩法色与 7 个时代；其余卡牌继续走程序化绘制。源立绘随仓库提交。
 - 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；改图后运行 `make client-import`。

@@ -170,6 +170,19 @@ func _check_hero_card() -> void:
     _expect(name_label != null, "英雄卡应有名字行")
     _expect(era_label != null and hp_label != null, "英雄卡应有时代与生命两格")
     _expect(card.find_child("HeroAttack", true, false) == null, "英雄卡不应再显示攻击力")
+    var cover_art: TextureRect = card.find_child("HeroCoverArt", true, false)
+    var cover_mark: Label = card.find_child("HeroCardMark", true, false)
+    _expect(cover_art != null and cover_art.visible, "有头像素材的英雄卡应显示封面图")
+    _expect(cover_mark != null and not cover_mark.visible, "有封面图时应隐藏首字")
+    card.refresh("", 0, 0, 0)
+    await get_tree().process_frame
+    _expect(card.find_child("HeroCoverArt", true, false) == null, "无英雄时应移除封面图")
+    _expect(
+        card.find_child("HeroCardMark", true, false).visible,
+        "无英雄时应显示首字",
+    )
+    card.refresh("adam-smith", 35, 40, 5)
+    await get_tree().process_frame
     if name_label != null and era_label != null and hp_label != null:
         _expect(name_label.text == CardDB.display_name("adam-smith"), "英雄卡应显示英雄名")
         _expect(hp_label.text == "35/40", "英雄卡生命应为 35/40")
@@ -731,6 +744,10 @@ func _check_opponent_view() -> void:
         "对手视图应显示展示名，实际「%s」" % _node_text(opponent),
     )
     _expect(opponent.find_child("HpBar", true, false) != null, "普通对手应有血量条")
+    _expect(
+        portrait != null and portrait.find_child("PortraitArt", true, false) != null,
+        "对手头像有素材时应显示头像图",
+    )
 
     var ghost_view := FixtureScript.game_view()
     ghost_view["opponentPlayerId"] = "p2"

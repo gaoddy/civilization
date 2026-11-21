@@ -235,6 +235,15 @@ func _check_detail_art() -> void:
         "有卡面美术时不应显示占位",
     )
 
+    detail.show_hero("zhenghe")
+    await get_tree().process_frame
+    var hero_art := detail.find_child("GalleryDetailArt", true, false) as TextureRect
+    _expect(hero_art != null and hero_art.texture != null, "英雄详情应显示立绘")
+    _expect(
+        hero_art != null and hero_art.texture.resource_path.contains("portraits"),
+        "英雄详情预览应使用立绘而不是卡面",
+    )
+
     detail.show_card("alan-turing")
     await get_tree().process_frame
     _expect(
