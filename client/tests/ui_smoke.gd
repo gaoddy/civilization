@@ -1177,8 +1177,8 @@ func _check_combat_reborn_reappears() -> void:
     var own_row = instance.find_child("CombatOwnRow", true, false)
     _expect(own_row != null and own_row.get_child_count() == 2, "阵亡前我方行应为 2 张")
     if own_row != null:
-        # 0.6 秒开战画面结束后才开始计数。
-        instance._process(0.7)
+        # 开战画面结束后才开始计数。
+        instance._process(CombatIntro.INTRO_MS / 1000.0 + 0.1)
         instance._process(0.32)
         _expect(own_row.get_child_count() == 1, "阵亡后我方行应只剩 1 张，实际 %d" % own_row.get_child_count())
         if own_row.get_child_count() == 1:
@@ -1417,8 +1417,8 @@ func _check_combat_playback() -> void:
         _expect(false, "战斗视图缺少随从行")
         instance.queue_free()
         return
-    # 0.6 秒开战画面结束后才开始计数。
-    instance._process(0.7)
+    # 开战画面结束后才开始计数。
+    instance._process(CombatIntro.INTRO_MS / 1000.0 + 0.1)
     instance._process(0.32)
     _expect(_stats_text(own_row.get_child(0)) == "7 / 6", "第一条攻击后我方首卡应为 7/6，实际 %s" % _stats_text(own_row.get_child(0)))
     _expect(_stats_text(opponent_row.get_child(0)) == "6 / 2", "第一条攻击后对手首卡应为 6/2，实际 %s" % _stats_text(opponent_row.get_child(0)))
@@ -1571,8 +1571,8 @@ func _check_sfx_combat() -> void:
     _expect(Sfx.count_cue(Sfx.CUE_COMBAT_START) == 1, "战斗装载应播一次开始音效")
     _expect(_sfx_played(Sfx.CUE_COMBAT_START), "战斗开始音效资源应可播放")
     Sfx.clear_log()
-    # 0.6 秒开战画面结束后才开始计数。
-    instance._process(0.7)
+    # 开战画面结束后才开始计数。
+    instance._process(CombatIntro.INTRO_MS / 1000.0 + 0.1)
     instance._process(0.32)
     _expect(Sfx.count_cue(Sfx.CUE_CARD_ATTACK) == 1, "攻击动作应播一次攻击音效")
     _expect(
@@ -1621,8 +1621,8 @@ func _check_combat_banner_after_tail() -> void:
         return
     var banner = instance.find_child("CombatBanner", true, false)
     var win_text := TranslationServer.translate("ui.game.combat.win")
-    # 0.6 秒开战画面结束后才开始计数。
-    instance._process(0.7)
+    # 开战画面结束后才开始计数。
+    instance._process(CombatIntro.INTRO_MS / 1000.0 + 0.1)
     for _step in range(4):
         instance._process(0.32)
     _expect(

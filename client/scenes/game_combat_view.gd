@@ -20,7 +20,7 @@ var _combat_turn := -1
 var _combat_end_cued := false
 ## 覆盖层演出：克隆卡碰撞往返、闪光、飘字与淡出。
 var _fx: CombatFx
-## 开战画面：双方对阵约 0.6 秒，显示期间暂停演示推进。
+## 开战画面：双方对阵约 1.2 秒，显示期间暂停演示推进。
 var _intro: CombatIntro
 
 

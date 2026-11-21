@@ -1,6 +1,6 @@
 class_name CombatIntro
 extends Control
-## 战斗开场覆盖层：双方头像、名字与 VS 标记，约 0.6 秒后淡出。
+## 战斗开场覆盖层：双方头像、名字与 VS 标记，约 1.2 秒后淡出。
 ##
 ## 与 `CombatFx` 一样按帧驱动，不用 `Tween`，便于无头冒烟按帧断言；只做视觉，
 ## 显示期间由 `GameCombatView` 暂停演示推进。覆盖层忽略鼠标，不抢详情与输入。
@@ -9,7 +9,7 @@ extends Control
 ## 幽灵战对手块压暗并追加「幽灵」角标；对手缺失时回退首字色块与「未知英雄」。
 
 ## 开场总时长。
-const INTRO_MS := 600.0
+const INTRO_MS := 1200.0
 
 ## 入场缩放淡入时长。
 const ENTER_MS := 160.0

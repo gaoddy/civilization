@@ -42,8 +42,9 @@ func _check_combat_center_only() -> void:
     if instance == null:
         return
     _expect_combat_center(instance, false)
-    # 3 条动作 × 320ms + 2000ms 横幅停留之外再多推一拍，确保进入结束态。
-    for _step in 10:
+    # 开战画面 1200ms + 3 条动作 × 320ms + 2000ms 横幅停留之外再多推一拍，
+    # 确保进入结束态。
+    for _step in 12:
         instance._process(0.4)
     _expect_combat_center(instance, true)
     instance.queue_free()
@@ -97,7 +98,7 @@ func _expect_banner(combat: Dictionary, expected: Array, stage: String) -> void:
     if instance == null:
         _clear_combat()
         return
-    for _step in 10:
+    for _step in 12:
         instance._process(0.4)
     var banner = instance.find_child("CombatBanner", true, false)
     _expect(banner != null and banner.visible, "%s横幅应可见" % stage)
@@ -124,7 +125,7 @@ func _check_combat_played_once() -> void:
     if instance == null:
         _fake_disconnect()
         return
-    for _step in 10:
+    for _step in 12:
         instance._process(0.4)
     var sent := _sent_count(socket, Protocol.MSG_COMBAT_PLAYED)
     _expect(sent == 1, "演示完成后应发送一次 CombatPlayed，实际 %d 次" % sent)
@@ -186,7 +187,7 @@ func _check_started_at_seek() -> void:
     GameStore.deadline = ""
 
 
-## 开战画面：首条动作前出现，显示期间暂停演示；0.6 秒后淡出并恢复推进。
+## 开战画面：首条动作前出现，显示期间暂停演示；1.2 秒后淡出并恢复推进。
 func _check_combat_intro_pauses_playback() -> void:
     var instance := await _combat_instance("2030-01-01T00:00:00Z")
     if instance == null:
@@ -229,8 +230,8 @@ func _check_combat_intro_pauses_playback() -> void:
         first != null and _stats_text(first) == "6 / 8",
         "开战画面显示期间不应推进战斗演示",
     )
-    instance._process(0.2)
-    _expect(intro != null and not intro.visible, "0.6 秒后开战画面应淡出")
+    instance._process(CombatIntro.INTRO_MS / 1000.0)
+    _expect(intro != null and not intro.visible, "开战画面应在总时长后淡出")
     instance._process(0.4)
     first = (
         opponent_row.get_child(0)
@@ -356,8 +357,8 @@ func _check_attack_collision_flight() -> void:
             fx.mouse_filter == Control.MOUSE_FILTER_IGNORE,
             "演出覆盖层不应拦截鼠标",
         )
-    # 0.6 秒开战画面结束后才开始计数；第一条攻击在 320ms 到期。
-    instance._process(0.7)
+    # 开战画面结束后才开始计数；第一条攻击在 320ms 到期。
+    instance._process(CombatIntro.INTRO_MS / 1000.0 + 0.1)
     instance._process(0.32)
     var clone := _fx_child(fx, "CombatFxAttack")
     _expect(clone != null, "攻击动作应产生飞行中的克隆卡")
@@ -391,8 +392,8 @@ func _check_death_fades_after_strike() -> void:
     var instance := await _combat_instance("2030-01-01T00:00:00Z")
     if instance == null:
         return
-    # 0.6 秒开战画面结束后才开始计数；320ms 攻击、640ms 阵亡，推进到 0.66s。
-    instance._process(0.7)
+    # 开战画面结束后才开始计数；320ms 攻击、640ms 阵亡，推进到 0.66s。
+    instance._process(CombatIntro.INTRO_MS / 1000.0 + 0.1)
     instance._process(0.5)
     instance._process(0.16)
     _expect(
@@ -454,9 +455,9 @@ func _check_fixed_slots() -> void:
     var turn_text := TranslationServer.translate("ui.game.side_panel.turn") % 3
     _expect(banner.text == turn_text, "结果出现前河道只显示回合数，实际「%s」" % banner.text)
 
-    # 0.6 秒开战画面结束后，320ms 的阵亡动作让对手行清空；
+    # 开战画面结束后，320ms 的阵亡动作让对手行清空；
     # 行高与两行位置都必须保持不变。
-    instance._process(0.7)
+    instance._process(CombatIntro.INTRO_MS / 1000.0 + 0.1)
     instance._process(0.4)
     await get_tree().process_frame
     _expect(opponent_row.get_child_count() == 0, "对手随从全灭后行内应为空")
