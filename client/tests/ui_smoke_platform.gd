@@ -10,6 +10,7 @@ func _ready() -> void:
     _check_stretch()
     _check_content_frame()
     _check_launch_window()
+    _check_parse_window_size()
     _check_desktop()
     _check_phone()
     _check_tablet()
@@ -94,6 +95,14 @@ func _check_launch_window() -> void:
         "可用区域未知时回退基准尺寸")
     _check(ScreenProfile.launch_window_size(Vector2i(1, 1), base) == base,
         "可用区域过小、取整为零时回退基准尺寸")
+
+
+## 显式窗口尺寸：只接受 `<宽>x<高>` 的正整数，其余一律视为未指定。
+func _check_parse_window_size() -> void:
+    _check(ScreenProfile.parse_window_size("960x540") == Vector2i(960, 540), "解析显式窗口尺寸")
+    _check(ScreenProfile.parse_window_size(" 1280x720 ") == Vector2i(1280, 720), "忽略两端空白")
+    for text in ["", "960", "960x", "x540", "0x540", "960x0", "960x540x1", "宽x高"]:
+        _check(ScreenProfile.parse_window_size(text) == Vector2i.ZERO, "非法尺寸回退默认：" + text)
 
 
 func _check_desktop() -> void:

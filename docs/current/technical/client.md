@@ -250,7 +250,7 @@ client/
 | `make sfx` | 生成 9 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
-| `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存 |
+| `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗，用于模拟不同尺寸设备 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
 | `make client-smoke` | 用 glob 逐个运行十三个 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR` |
 | `make client-export-ios` | 导出 Xcode 工程并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
@@ -267,6 +267,15 @@ Godot 可执行文件通过 `GODOT` 变量覆盖，默认自动探测 `godot` �
 make dev-bots                                       # 终端 1，起服务端与 7 个机器人
 make client-run                                     # 终端 2，大厅填房间码
 ```
+
+需要检查不同尺寸下的布局时，用 `WIDTH` 与 `HEIGHT` 指定窗口像素尺寸，两者需同时传入：
+
+```
+make client-run WIDTH=960 HEIGHT=540                 # 16:9 小窗
+make client-run WIDTH=2556 HEIGHT=1179               # iPhone 横屏物理像素
+```
+
+指定尺寸只改变窗口大小并居中，设备类型仍按桌面处理（基准 1280×720、无安全区）；不传时窗口按屏幕可用区自动收拢。尺寸不合法或只传一个时命令直接报错，不启动客户端。
 
 客户端一律用 `make client-run` 启动：它会先 `--import` 刷新全局类缓存。直接跑 `Godot --path client` 时，若工程新增或改名过 `class_name` 脚本而缓存未更新，依赖它的脚本编译失败，对局页会缺整块区域（例如中央舞台整体不构建，只剩顶部工具条与左栏）。
 
