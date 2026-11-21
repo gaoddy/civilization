@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "id": "m_accountview",
+  "type": "AccountView",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 102,
+  "payload": {
+    "playerId": "p_03",
+    "playerCode": "204814",
+    "displayName": "Ada",
+    "steamBound": true,
+    "phoneBound": true,
+    "maskedPhone": "138****0000"
+  }
+}

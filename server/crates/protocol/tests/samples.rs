@@ -45,6 +45,11 @@ fn client_variant(message: &ClientMessage) -> &'static str {
         ClientMessage::RespondInvite(_) => "RespondInvite",
         ClientMessage::KickMember(_) => "KickMember",
         ClientMessage::DissolveRoom(_) => "DissolveRoom",
+        ClientMessage::RequestAccount(_) => "RequestAccount",
+        ClientMessage::RequestPhoneCode(_) => "RequestPhoneCode",
+        ClientMessage::BindPhone(_) => "BindPhone",
+        ClientMessage::CreateRoomInvite(_) => "CreateRoomInvite",
+        ClientMessage::RedeemRoomInvite(_) => "RedeemRoomInvite",
     }
 }
 
@@ -65,6 +70,11 @@ fn server_variant(message: &ServerMessage) -> &'static str {
         ServerMessage::FriendInviteResult(_) => "FriendInviteResult",
         ServerMessage::InviteAccepted(_) => "InviteAccepted",
         ServerMessage::RoomClosed(_) => "RoomClosed",
+        ServerMessage::AccountView(_) => "AccountView",
+        ServerMessage::PhoneCodeSent(_) => "PhoneCodeSent",
+        ServerMessage::RoomInviteCode(_) => "RoomInviteCode",
+        ServerMessage::AchievementState(_) => "AchievementState",
+        ServerMessage::AchievementUnlocked(_) => "AchievementUnlocked",
     }
 }
 

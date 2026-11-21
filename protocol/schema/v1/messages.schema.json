@@ -23,6 +23,15 @@
             "token": { "type": "string", "description": "上次登录返回的令牌" },
             "displayName": { "type": "string", "minLength": 1, "maxLength": 20, "description": "缺省由服务端生成「玩家N」" }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["steamTicket"],
+          "properties": {
+            "steamTicket": { "type": "string", "minLength": 1, "maxLength": 2048, "description": "Steam Web API 票据十六进制串" },
+            "displayName": { "type": "string", "minLength": 1, "maxLength": 64, "description": "Steam 个人资料名；仅作展示，服务端截断为 20 字符" }
+          }
         }
       ]
     },
@@ -514,6 +523,102 @@
       "properties": {
         "inviteId": { "type": "string" },
         "roomCode": { "type": "string" }
+      }
+    },
+    "RequestAccount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "RequestPhoneCode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phone"],
+      "properties": {
+        "phone": { "type": "string", "description": "待绑定的手机号" }
+      }
+    },
+    "BindPhone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phone", "code"],
+      "properties": {
+        "phone": { "type": "string", "description": "待绑定的手机号" },
+        "code": { "type": "string", "description": "短信验证码" }
+      }
+    },
+    "CreateRoomInvite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "RedeemRoomInvite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["token"],
+      "properties": {
+        "token": { "type": "string", "description": "一次性邀请 token" }
+      }
+    },
+    "AccountView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["playerId", "playerCode", "displayName", "steamBound", "phoneBound"],
+      "properties": {
+        "playerId": { "type": "string", "description": "内部不透明标识，不向玩家展示" },
+        "playerCode": { "type": "string", "description": "6 位玩家编号" },
+        "displayName": { "type": "string" },
+        "steamBound": { "type": "boolean", "description": "账号是否绑定 Steam 身份" },
+        "phoneBound": { "type": "boolean", "description": "账号是否绑定手机号" },
+        "maskedPhone": { "type": ["string", "null"], "description": "前 3 位与后 4 位保留，其余用 *；未绑定为 null" }
+      }
+    },
+    "PhoneCodeSent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expiresAt"],
+      "properties": {
+        "expiresAt": { "type": "string", "format": "date-time", "description": "验证码失效时刻" }
+      }
+    },
+    "RoomInviteCode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["token", "roomCode", "expiresAt"],
+      "properties": {
+        "token": { "type": "string", "description": "一次性邀请 token" },
+        "roomCode": { "type": "string", "description": "6 位房间码" },
+        "expiresAt": { "type": "string", "format": "date-time", "description": "token 失效时刻，创建后 60 秒" }
+      }
+    },
+    "AchievementState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unlocked"],
+      "properties": {
+        "unlocked": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["achievementId", "steamApiName"],
+            "properties": {
+              "achievementId": { "type": "string" },
+              "steamApiName": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "AchievementUnlocked": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["achievementId", "steamApiName"],
+      "properties": {
+        "achievementId": { "type": "string" },
+        "steamApiName": { "type": "string" }
       }
     }
   }
