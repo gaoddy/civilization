@@ -232,6 +232,10 @@ func _process(delta: float) -> void:
 	_time += delta
 	if _mode == Mode.NONE or _mode == Mode.DRAG:
 		_refresh_drag_mode()
+	if _mode == Mode.PENDING:
+		# 待选与棋盘重建常在同一帧：入场卡布局落定前 `get_global_rect()` 还是零位置，
+		# 起点逐帧按来源卡当前矩形校准，视图重建后也能跟上。
+		_source_rect = _board_rect(_source_id)
 	if _mode == Mode.PENDING and not _pressed and not ScreenProfile.is_touch():
 		_set_pointer(get_global_mouse_position())
 	elif _mode != Mode.NONE and _pointer_valid:

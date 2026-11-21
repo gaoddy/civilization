@@ -12,7 +12,7 @@
 
 - 由 `client/scenes/game.gd` 在 `ChooserOverlay` 之前创建并挂载，节点名 `AimLayer`，全屏铺满、`MOUSE_FILTER_IGNORE`，本身不拦截鼠标。
 - `begin_skill(source_rect, candidates)`：按下的主动技能按钮开启技能模式，起点取该按钮全局矩形；候选为空时不开。
-- `begin_pending(source_minion_id, candidates)`：服务端下发目标待选时开启待选模式，起点按 `minion_id` 找到棋盘卡；同一来源与同一候选重复调用不重置手势。
+- `begin_pending(source_minion_id, candidates)`：服务端下发目标待选时开启待选模式，起点按 `minion_id` 找到入场战吼随从的棋盘卡；同一来源与同一候选重复调用不重置手势。
 - `clear()`：关闭瞄准，保留的只是一次操作，不是页面状态。
 - `aiming()` / `skill_active()` / `pending_active()`：页面据此决定悬停详情是否暂停。
 - 信号：`target_chosen(target)` 松手命中候选；`target_abandoned` 待选模式松手落空或按 `Esc`；`aim_cancelled` 技能模式松手落空或按 `Esc`。
@@ -42,7 +42,7 @@
 | --- | --- |
 | 弧线 | 二次贝塞尔，控制点在中垂线向上弯曲，弯曲比例 `aim-bend` = 0.22；金色虚线（`aim-dash` / `aim-gap`），宽度 `aim-arc-width` |
 | 流动光点 | 沿弧线等距 3 个，按 `aim-flow-speed` 循环前进，半径 `aim-dot-radius` |
-| 起点圆环 | 技能按钮或入场随从中心，半径 `aim-source-radius` |
+| 起点圆环 | 技能按钮或入场随从中心，半径 `aim-source-radius`；待选模式逐帧按来源卡当前矩形校准，布局落定前后都从卡片起画 |
 | 候选角标 | 每张候选卡四角向内收 `aim-mark-inset` 的 L 形角标，长 `aim-mark-length`；进入瞄准即全部显示 |
 | 命中描边 | 指针所在候选外框呼吸描边，周期 `aim-pulse`，宽度 `aim-outline-width` |
 | 无效终点 | 按住但未命中时候选弧线转 `color-text-muted`，指针处画 `color-danger` 叉（`aim-cross`） |
