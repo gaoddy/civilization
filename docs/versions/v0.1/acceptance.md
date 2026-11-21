@@ -46,6 +46,9 @@ make m1b-e2e
 | 2026-11-20 | 中文字体覆盖 | 通过 | `ui_smoke_text` 断言内置子集覆盖 `zh_CN.csv` 全部字符，默认主题字体为 `NotoSansSC-Regular-subset.ttf`；桌面渲染无缺字 |
 | 2026-11-20 | 移动端默认地址 | 通过 | `ui_smoke_platform` 断言桌面 `ws://127.0.0.1:8080/ws`、移动端 `ws://cooter.local:8080/ws` |
 | 2026-11-20 | iOS 工程编译 | `BUILD SUCCEEDED`（`CODE_SIGNING_ALLOWED=NO`） | 导出 Xcode 工程可编译；正式签名包见 §3.2 |
+| 2026-11-21 | 窗口高度铺满 | 通过 | `keep_width`；1280×800（桌面 16:10）与 1280×960（iPad 4:3）下六页面不越界、对局手牌贴底；iPad 安全区上下按窗口边换算 |
+| 2026-11-21 | `make client-check` / `make client-smoke` | 退出码 0 / 13 个场景全部 `UI_SMOKE_OK` | 本次窗口策略改动后复跑，无 `SCRIPT ERROR` |
+| 2026-11-21 | 桌面 16:10 实机 | 通过 | `make client-run` 窗口上下无留白，登录页铺满窗口 |
 
 ### 3.2 真机项（待执行）
 

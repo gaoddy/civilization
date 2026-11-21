@@ -114,7 +114,7 @@
 
 ### 5.1 手机基准紧凑值
 
-iPhone 以 960×540 为基准，对局页通过 `UITheme.stage_metric(name)` 优先取 `<name>-compact`；桌面与 iPad 取上表原值。
+iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过 `UITheme.stage_metric(name)` 优先取 `<name>-compact`；桌面与 iPad 取上表原值。
 
 | 令牌 | 取值 | 用途 |
 | --- | --- | --- |
