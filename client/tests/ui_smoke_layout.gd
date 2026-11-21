@@ -50,6 +50,7 @@ func _ready() -> void:
     await _check_desktop()
     await _check_drag_preview()
     await _check_aim_local()
+    await _check_detail_local_composed()
     await _check_touch()
     await _check_compact()
     await _check_tall()
@@ -88,6 +89,8 @@ func _check_desktop() -> void:
             var background := page.get_node_or_null("PageBackground")
             _check(background != null and background.get_parent() == page,
                 "%s 背景应留在安全区外" % page_case["path"])
+            _check(page.get_child_count() > 0 and page.get_child(0) == background,
+                "%s 背景应置底、排在 ContentFrame 之前" % page_case["path"])
             _check(area.get_child_count() == int(page_case["children"]),
                 "%s 安全区内直接子节点数量应为 %d" % [page_case["path"], int(page_case["children"])])
             _check(_margins(area) == Vector4i.ZERO, "%s 桌面安全区边距应为 0" % page_case["path"])
@@ -149,6 +152,39 @@ func _check_aim_local() -> void:
     await get_tree().process_frame
 
 
+## 内容框原点不为零且整体缩放时，详情层仍把全局矩形换算到自身局部坐标。
+## 只减 `global_position`、忽略内容框缩放的做法会在这里失败。
+func _check_detail_local_composed() -> void:
+    var host := Control.new()
+    host.name = "DetailComposedHost"
+    host.size = Vector2(1280, 480)
+    add_child(host)
+    var area := UI.safe_area(host)
+    var frame := host.get_node(UI.CONTENT_FRAME_NAME) as Control
+    var root := frame.get_node(UI.CONTENT_ROOT_NAME) as Control
+    _check(frame.position.x > 0.0, "组合用例应有非零内容框原点，实际 %s" % str(frame.position))
+    _check(not is_equal_approx(root.scale.x, 1.0),
+        "组合用例应有非 1 的内容框缩放，实际 %s" % str(root.scale))
+    var layer := GameDetailLayer.new()
+    area.add_child(layer)
+    layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    var anchor := Control.new()
+    anchor.position = Vector2(400, 300)
+    anchor.size = Vector2(84, 92)
+    area.add_child(anchor)
+    await get_tree().process_frame
+    var global := anchor.get_global_rect()
+    var local: Rect2 = layer._local_rect(global)
+    var expected := layer.get_global_transform().affine_inverse() * global.position
+    _check(local.position.is_equal_approx(expected),
+        "详情层源矩形应按整体变换换算，实际 %s 期望 %s" % [str(local.position), str(expected)])
+    var layer_scale := layer.get_global_transform().get_scale().x
+    _check(is_equal_approx(local.size.x, global.size.x / layer_scale),
+        "详情层源矩形尺寸应除以内容框缩放")
+    host.queue_free()
+    await get_tree().process_frame
+
+
 func _check_touch() -> void:
     ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
     # 无头环境没有真实窗口尺寸，`hit_min` 按 44/32 原值返回；
@@ -179,6 +215,8 @@ func _check_touch() -> void:
 
 
 ## iPhone 基准 960×540：六个页面在此尺寸下实例化，关键节点不得越界。
+## 无头视口固定 1280×720，手机基准因此被放大 1.333；真机 19.5:9 的内容框约
+## 960×443、缩放约 0.82，方向相反。精确换算以 `ui_smoke_platform` 的固定窗口断言为准。
 func _check_compact() -> void:
     ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
     var compact := Vector2(960, 540)

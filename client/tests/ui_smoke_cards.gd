@@ -473,6 +473,13 @@ func _check_page_background() -> void:
     _expect(background.name == "PageBackground", "背景节点名应为 PageBackground")
     _expect(background.mouse_filter == Control.MOUSE_FILTER_IGNORE, "背景不应拦截鼠标")
     _expect(background is TextureRect, "有纹理时应使用 TextureRect")
+    if background is TextureRect:
+        var rect := background as TextureRect
+        _expect(rect.expand_mode == TextureRect.EXPAND_IGNORE_SIZE, "背景应忽略纹理原始尺寸")
+        _expect(
+            rect.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED,
+            "背景应按等比裁切铺满视口",
+        )
     background.free()
 
 

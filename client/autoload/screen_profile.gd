@@ -119,11 +119,14 @@ static func content_frame(viewport: Vector2, base: Vector2i) -> Rect2:
     return Rect2(Vector2((viewport.x - width) * 0.5, (viewport.y - height) * 0.5), Vector2(width, height))
 
 
-## 启动窗口：可用区域的 90%，再收拢成基准比例；可用区域未知时回退基准尺寸。
+## 启动窗口：可用区域的 90%，再收拢成基准比例。
+## 可用区域未知或过小、90% 取整后为 0 时回退基准尺寸，不返回零尺寸。
 static func launch_window_size(usable: Vector2i, base: Vector2i) -> Vector2i:
     if usable.x <= 0 or usable.y <= 0:
         return base
     var target := Vector2i(int(float(usable.x) * 0.9), int(float(usable.y) * 0.9))
+    if target.x <= 0 or target.y <= 0:
+        return base
     var ratio := float(base.x) / float(base.y)
     if float(target.x) / float(target.y) > ratio:
         target.x = int(round(float(target.y) * ratio))
