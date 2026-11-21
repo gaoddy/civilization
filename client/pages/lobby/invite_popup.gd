@@ -22,7 +22,7 @@ func _init() -> void:
     set_content(panel)
 
     var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", 8)
+    box.add_theme_constant_override("separation", UITheme.space("space-md"))
     panel.add_child(box)
     box.add_child(UIControls.section_title(tr("ui.lobby.invite_title")))
     _list = VBoxContainer.new()
@@ -57,7 +57,7 @@ func _refresh() -> void:
 func _invite_card(invite: Dictionary) -> VBoxContainer:
     var invite_id := str(invite.get("inviteId", ""))
     var card := VBoxContainer.new()
-    card.add_theme_constant_override("separation", 6)
+    card.add_theme_constant_override("separation", UITheme.space("space-sm"))
     card.add_child(
         UIControls.label(
             tr("ui.lobby.invite_text") % [
@@ -65,11 +65,11 @@ func _invite_card(invite: Dictionary) -> VBoxContainer:
                 str(invite.get("fromPlayerCode", "")),
                 str(invite.get("roomCode", "")),
             ],
-            14,
+            UITheme.font_size("font-body"),
         )
     )
     var row := HBoxContainer.new()
-    row.add_theme_constant_override("separation", 8)
+    row.add_theme_constant_override("separation", UITheme.space("space-md"))
     var accept := UIControls.button(tr("ui.lobby.accept_invite"))
     accept.name = "AcceptInvite_%s" % invite_id
     accept.pressed.connect(_on_respond.bind(invite_id, true))
