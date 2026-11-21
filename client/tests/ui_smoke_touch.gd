@@ -25,7 +25,7 @@ func _check_detail_long_press() -> void:
     var stage := Control.new()
     stage.size = Vector2(1280, 720)
     add_child(stage)
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     stage.add_child(layer)
     var card := Control.new()
     card.position = DETAIL_CARD_POSITION
@@ -104,7 +104,7 @@ func _check_room_touch_select() -> void:
         {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
          "heroCardId": null, "heroCandidates": ["gauss", "mozi"]},
     ]
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
     var candidates := instance.find_child("HeroCandidates", true, false)
@@ -123,9 +123,9 @@ func _check_room_touch_select() -> void:
         await get_tree().create_timer(0.5).timeout
         await get_tree().process_frame
         _expect(panel != null and panel.visible, "长按候选卡应显示详情")
+        var touch = instance.get("_touch")
         _expect(
-            instance.get("_touch_elapsed_ms") != null
-            and float(instance.get("_touch_elapsed_ms")) >= float(GameDetailLayer.LONG_PRESS_MS),
+            touch != null and float(touch.get("elapsed_ms")) >= float(DetailLayer.LONG_PRESS_MS),
             "页面应按与详情层相同的累计时钟判定长按",
         )
         _expect(
@@ -163,8 +163,15 @@ func _check_room_touch_select() -> void:
         GameStore.room_changed.emit()
         await get_tree().process_frame
         await get_tree().process_frame
-        _expect(instance.get("_touch_index") == -1, "候选重排后应丢弃进行中的触点")
-        _expect(instance.get("_touch_card") == null, "候选重排后不应保留旧卡片引用")
+        var rebuilt_touch = instance.get("_touch")
+        _expect(
+            rebuilt_touch != null and int(rebuilt_touch.get("index")) == -1,
+            "候选重排后应丢弃进行中的触点",
+        )
+        _expect(
+            rebuilt_touch != null and rebuilt_touch.get("target") == null,
+            "候选重排后不应保留旧卡片引用",
+        )
         await _push_touch(second_point, 0, false)
         var rebuilt_cards := instance.find_child("HeroCandidates", true, false)
         var rebuilt_selected := 0
@@ -213,7 +220,7 @@ func _check_room_touch_select() -> void:
         {"playerId": "p0", "displayName": "玩家A", "ready": true, "isHost": true,
          "heroCardId": "gauss", "heroCandidates": ["gauss", "mozi"]},
     ]
-    var locked_instance := await _check_scene("res://scenes/room.tscn", false)
+    var locked_instance := await _check_scene("res://pages/room/room.tscn", false)
     if locked_instance != null:
         var locked_cards := locked_instance.find_child("HeroCandidates", true, false)
         var locked_panel := locked_instance.find_child("RoomHeroDetail", true, false)
@@ -410,9 +417,9 @@ func _push_touch(canvas_point: Vector2, index: int, pressed: bool) -> void:
 ## 视口像素要按该层的全局缩放换算，才能保证真正超过阈值。
 func _cancel_shift(layer: Control) -> Vector2:
     if layer == null:
-        return Vector2(GameDetailLayer.TOUCH_CANCEL_DISTANCE + 1.0, 0.0)
+        return Vector2(DetailLayer.TOUCH_CANCEL_DISTANCE + 1.0, 0.0)
     var scale := maxf(layer.get_global_transform_with_canvas().get_scale().x, 0.001)
-    return Vector2(GameDetailLayer.TOUCH_CANCEL_DISTANCE * scale + 1.0, 0.0)
+    return Vector2(DetailLayer.TOUCH_CANCEL_DISTANCE * scale + 1.0, 0.0)
 
 
 func _push_drag(canvas_point: Vector2, index: int) -> void:

@@ -1,7 +1,7 @@
 # 数值胶囊
 
 > 状态：已实现
-> 入口：`UI.pill_label(text, variant, font_token)`，`client/ui/ui.gd`
+> 入口：`UIControls.pill_label(text, variant, font_token)`，`client/ui/controls.gd`
 
 ## 用途
 

@@ -1,7 +1,7 @@
 # 按钮
 
 > 状态：已实现
-> 入口：`UI.styled_button(text, variant, min_height)`，`client/ui/ui.gd`
+> 入口：`UIControls.styled_button(text, variant, min_height)`，`client/ui/controls.gd`
 
 ## 用途
 

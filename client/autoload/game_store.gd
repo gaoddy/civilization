@@ -241,7 +241,7 @@ func live_invites() -> Array:
     var now := Time.get_unix_time_from_system()
     var result: Array = []
     for invite in pending_invites:
-        var expires := UI.unix_from_rfc3339(str(invite.get("expiresAt", "")))
+        var expires := UIFormat.unix_from_rfc3339(str(invite.get("expiresAt", "")))
         if expires <= 0.0 or expires > now:
             result.append(invite)
     return result

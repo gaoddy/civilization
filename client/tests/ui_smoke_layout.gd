@@ -8,37 +8,37 @@ var _failures := 0
 
 const PAGES := [
     {
-        "path": "res://scenes/login.tscn",
+        "path": "res://pages/login/login.tscn",
         "children": 1,
         "direct_names": [],
         "deep_names": [],
     },
     {
-        "path": "res://scenes/lobby.tscn",
+        "path": "res://pages/lobby/lobby.tscn",
         "children": 3,
         "direct_names": ["InvitePopup", "FriendsPanel"],
         "deep_names": ["GalleryButton", "FriendsButton"],
     },
     {
-        "path": "res://scenes/room.tscn",
+        "path": "res://pages/room/room.tscn",
         "children": 2,
         "direct_names": ["DraftPanel", "HeroDetailLayer"],
         "deep_names": ["ConfirmButton", "OtherPlayers", "HeroCandidates"],
     },
     {
-        "path": "res://scenes/game.tscn",
+        "path": "res://pages/game/game.tscn",
         "children": 6,
         "direct_names": ["AimLayer", "MinionDetailLayer", "ReportLayer", "ChooserOverlay", "FirstGameGuide"],
         "deep_names": ["CenterPanel", "StatusLabel", "PlayersPanel"],
     },
     {
-        "path": "res://scenes/result.tscn",
+        "path": "res://pages/result/result.tscn",
         "children": 1,
         "direct_names": [],
         "deep_names": ["ResultScroll", "ConfirmButton", "ResultActions"],
     },
     {
-        "path": "res://scenes/gallery.tscn",
+        "path": "res://pages/gallery/gallery.tscn",
         "children": 1,
         "direct_names": ["CardGallery"],
         "deep_names": ["GalleryHeader", "GalleryClose"],
@@ -74,11 +74,11 @@ func _check_desktop() -> void:
         var area := _safe_area(page)
         _check(area != null, "%s 缺少 SafeAreaMargin" % page_case["path"])
         if area != null:
-            var frame := page.get_node_or_null(UI.CONTENT_FRAME_NAME) as Control
+            var frame := page.get_node_or_null(UILayout.CONTENT_FRAME_NAME) as Control
             _check(frame != null and frame.get_parent() == page, "%s 应有 ContentFrame" % page_case["path"])
             var root: Control = null
             if frame != null:
-                root = frame.get_node_or_null(UI.CONTENT_ROOT_NAME) as Control
+                root = frame.get_node_or_null(UILayout.CONTENT_ROOT_NAME) as Control
             _check(root != null, "%s 的 ContentFrame 应包含 ContentRoot" % page_case["path"])
             if root != null:
                 _check(root.size.is_equal_approx(Vector2(ScreenProfile.base_canvas())),
@@ -101,7 +101,7 @@ func _check_desktop() -> void:
             for node_name in page_case["deep_names"]:
                 _check(page.find_child(str(node_name), true, false) != null,
                     "%s 应能按名找到 %s" % [page_case["path"], node_name])
-            var again := UI.safe_area(page)
+            var again := UILayout.safe_area(page)
             _check(again == area, "%s 重复调用应返回同一个 SafeAreaMargin" % page_case["path"])
             _check(_count_safe_areas(page) == 1,
                 "%s 重复调用后应只有一个 SafeAreaMargin" % page_case["path"])
@@ -114,13 +114,13 @@ func _check_drag_preview() -> void:
     var page := Control.new()
     page.size = Vector2(1280, 480)
     add_child(page)
-    var area := UI.safe_area(page)
+    var area := UILayout.safe_area(page)
     var card := Control.new()
     card.size = Vector2(84, 92)
     area.add_child(card)
-    var scale := UI.root_scale(card)
+    var scale := UILayout.root_scale(card)
     area.remove_child(card)
-    var preview := UI.drag_preview(card, Vector2(10, 20), area)
+    var preview := UIDrag.preview(card, Vector2(10, 20), area)
     _check(is_equal_approx(preview.scale.x, scale), "拖拽预览应按内容框缩放")
     _check(card.position.is_equal_approx(Vector2(-10, -20)), "拖拽预览起手点应对齐")
     preview.free()
@@ -134,7 +134,7 @@ func _check_aim_local() -> void:
     host.name = "AimHost"
     host.size = Vector2(1280, 480)
     add_child(host)
-    var page := await _instantiate_into("res://scenes/game.tscn", host)
+    var page := await _instantiate_into("res://pages/game/game.tscn", host)
     if page != null:
         var aim := page.find_child("AimLayer", true, false) as Control
         _check(aim != null, "对局页缺少 AimLayer")
@@ -159,13 +159,13 @@ func _check_detail_local_composed() -> void:
     host.name = "DetailComposedHost"
     host.size = Vector2(1280, 480)
     add_child(host)
-    var area := UI.safe_area(host)
-    var frame := host.get_node(UI.CONTENT_FRAME_NAME) as Control
-    var root := frame.get_node(UI.CONTENT_ROOT_NAME) as Control
+    var area := UILayout.safe_area(host)
+    var frame := host.get_node(UILayout.CONTENT_FRAME_NAME) as Control
+    var root := frame.get_node(UILayout.CONTENT_ROOT_NAME) as Control
     _check(frame.position.x > 0.0, "组合用例应有非零内容框原点，实际 %s" % str(frame.position))
     _check(not is_equal_approx(root.scale.x, 1.0),
         "组合用例应有非 1 的内容框缩放，实际 %s" % str(root.scale))
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     area.add_child(layer)
     layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     var anchor := Control.new()
@@ -197,7 +197,7 @@ func _check_touch() -> void:
     var page := Control.new()
     page.name = "SafeAreaFixture"
     add_child(page)
-    var area := UI.safe_area(page)
+    var area := UILayout.safe_area(page)
     _check(area != null, "触控夹具应创建 SafeAreaMargin")
     if area == null:
         page.queue_free()
@@ -208,7 +208,7 @@ func _check_touch() -> void:
     area.apply_for_test(Vector4i(6, 4, 8, 10), 0)
     _check(_margins(area) == Vector4i(6, 4, 8, 10),
         "键盘收起后底部应回到安全区 10，实际 %s" % str(_margins(area)))
-    _check(UI.safe_area(page) == area, "触控夹具重复调用应返回同一个 SafeAreaMargin")
+    _check(UILayout.safe_area(page) == area, "触控夹具重复调用应返回同一个 SafeAreaMargin")
     _check(_count_safe_areas(page) == 1, "触控夹具重复调用后应只有一个 SafeAreaMargin")
     page.queue_free()
     await get_tree().process_frame
@@ -249,7 +249,7 @@ func _check_gallery_hero_compact(compact: Vector2) -> void:
     host.name = "CompactGalleryHost"
     host.size = compact
     add_child(host)
-    var page := await _instantiate_into("res://scenes/gallery.tscn", host)
+    var page := await _instantiate_into("res://pages/gallery/gallery.tscn", host)
     if page != null:
         var mode_toggle := page.find_child("ModeToggle", true, false) as Button
         _check(mode_toggle != null and not mode_toggle.disabled, "视图切换应可用")
@@ -307,7 +307,7 @@ func _check_game_compact(compact: Vector2) -> void:
     host.name = "CompactGameHost"
     host.size = compact
     add_child(host)
-    var page := await _instantiate_into("res://scenes/game.tscn", host)
+    var page := await _instantiate_into("res://pages/game/game.tscn", host)
     if page != null:
         var rail := page.find_child("PlayersRail", true, false) as Control
         var scroll: ScrollContainer = null
@@ -399,10 +399,10 @@ func _check_game_tall(size: Vector2) -> void:
     host.name = "TallGameHost"
     host.size = size
     add_child(host)
-    var page := await _instantiate_into("res://scenes/game.tscn", host)
+    var page := await _instantiate_into("res://pages/game/game.tscn", host)
     if page != null:
         var bounds := Rect2(host.get_global_rect().position, size).grow(1.0)
-        var frame := page.get_node_or_null(UI.CONTENT_FRAME_NAME) as Control
+        var frame := page.get_node_or_null(UILayout.CONTENT_FRAME_NAME) as Control
         var bottom := size.y
         if frame != null:
             bottom = frame.get_global_rect().end.y
@@ -482,11 +482,11 @@ func _instantiate(path: String) -> Node:
 
 
 func _safe_area(page: Node) -> SafeAreaMargin:
-    return page.find_child(UI.SAFE_AREA_NAME, true, false) as SafeAreaMargin
+    return page.find_child(UILayout.SAFE_AREA_NAME, true, false) as SafeAreaMargin
 
 
 func _count_safe_areas(page: Node) -> int:
-    return _count_named(page, UI.SAFE_AREA_NAME)
+    return _count_named(page, UILayout.SAFE_AREA_NAME)
 
 
 func _count_named(node: Node, node_name: String) -> int:

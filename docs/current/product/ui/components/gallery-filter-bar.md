@@ -1,7 +1,7 @@
 # 图鉴顶部筛选栏
 
 > 状态：已实现
-> 入口：`GalleryFilterBar.new(node_name, button_prefix)`，`client/scenes/gallery_filter_bar.gd`（`class_name GalleryFilterBar`）
+> 入口：`GalleryFilterBar.new(node_name, button_prefix)`，`client/ui/gallery_filter_bar.gd`（`class_name GalleryFilterBar`）
 
 ## 用途
 

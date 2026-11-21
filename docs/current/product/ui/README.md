@@ -1,7 +1,7 @@
 # 客户端 UI
 
 > 状态：已实现
-> 代码：`client/ui/theme.gd`（令牌）、`client/ui/ui.gd`（共享构件）、`client/scenes/`
+> 代码：`client/ui/theme.gd`（令牌）、`client/ui/controls.gd` 等共享构件、`client/pages/`
 > 验证：`make client-check`、`make client-smoke`
 
 本文记录客户端已实现的 UI 现状：视觉语言、令牌入口、页面与共享组件索引。设计流程与评审规则见项目 runbook（仓库外）。
@@ -18,37 +18,41 @@
 | 入口 | 内容 |
 | --- | --- |
 | `client/ui/theme.gd`（`UITheme`） | 原子 → 语义 → 组件与场景三层令牌；取值见 [tokens.md](tokens.md) |
-| `client/ui/ui.gd`（`UI`） | 场景共用控件构造、统一导航入口 `UI.navigate`、文本取用（`UI.enum_text` / `UI.error_text` / `UI.error_tooltip`） |
+| `client/ui/controls.gd`（`UIControls`） | 共用控件构造：label、button、panel、margin、背景、胶囊、区块标题与空态 |
+| `client/ui/navigation.gd`（`UINavigation`） | 页面路径常量、统一导航入口 `navigate` 与错误码去向 `error_route` |
+| `client/ui/wording.gd`（`UIWording`） | 枚举展示与错误文案取用（`enum_text` / `error_text` / `error_tooltip`） |
+| `client/ui/layout.gd`（`UILayout`） | 安全区包裹、内容框与共享图层 |
+| `client/ui/art.gd`（`UIArt`） | 图片取用与铺层（`texture` / `layer`） |
+| `client/ui/avatar.gd`、`hp_bar.gd`、`rank_badge.gd`、`skill_list.gd` | 单组件：头像块、血量条、名次角标、技能列表 |
 | `client/ui/icons.gd`（`Icons`） | 代码绘制的矢量图标；清单与绘制约定见 [icons.md](icons.md) |
 | `client/text/zh_CN.csv` | 唯一的运行时中文文本表：卡牌与技能名称、效果、枚举展示、错误与页面文案；来源与取用规则见 [client.md](../../technical/client.md)「国际化与文本表」 |
 
-- 页面通过 `UI` 的构件与 `UITheme.metric` 取值，不直接写颜色、字号、间距与圆角。
+- 页面通过 `UIControls` 等共享构件与 `UITheme.metric` 取值，不直接写颜色、字号、间距与圆角。
 - `UITheme` 的原子层与语义层按刻度扩展，不因单个页面新增。
 
 ## 3. 页面
 
 | 页面 | 场景 | 文档 |
 | --- | --- | --- |
-| 登录 | `scenes/login.tscn` | 未单独成文 |
-| 大厅 | `scenes/lobby.tscn` | 未单独成文 |
-| 房间（开局前） | `scenes/room.tscn` | [pages/room.md](pages/room.md) |
-| 对局 | `scenes/game.tscn` | [pages/game.md](pages/game.md) |
-| 结算 | `scenes/result.tscn` | [pages/result.md](pages/result.md) |
-| 卡牌图鉴 | `scenes/gallery.tscn` | [pages/gallery.md](pages/gallery.md) |
+| 登录 | `pages/login/login.tscn` | 未单独成文 |
+| 大厅 | `pages/lobby/lobby.tscn` | 未单独成文 |
+| 房间（开局前） | `pages/room/room.tscn` | [pages/room.md](pages/room.md) |
+| 对局 | `pages/game/game.tscn` | [pages/game.md](pages/game.md) |
+| 结算 | `pages/result/result.tscn` | [pages/result.md](pages/result.md) |
+| 卡牌图鉴 | `pages/gallery/gallery.tscn` | [pages/gallery.md](pages/gallery.md) |
 
 ## 4. 组件
 
 | 组件 | 入口 | 文档 |
 | --- | --- | --- |
-| 英雄小卡 | `UI.hero_tile` | [components/hero-tile.md](components/hero-tile.md) |
-| 头像块 | `UI.avatar` | [components/avatar.md](components/avatar.md) |
-| 数值胶囊 | `UI.pill_label` | [components/pill.md](components/pill.md) |
-| 按钮变体 | `UI.styled_button` | [components/button.md](components/button.md) |
-| 卡片容器 | `UI.card_panel` | [components/card-panel.md](components/card-panel.md) |
+| 头像块 | `Avatar.create` | [components/avatar.md](components/avatar.md) |
+| 数值胶囊 | `UIControls.pill_label` | [components/pill.md](components/pill.md) |
+| 按钮变体 | `UIControls.styled_button` | [components/button.md](components/button.md) |
+| 卡片容器 | `UIControls.card_panel` | [components/card-panel.md](components/card-panel.md) |
 | 卡框与星级 | `CardFrame`（`client/ui/card_frame.gd`） | [tokens.md](tokens.md) |
 | 攻防底牌 | `StatPlate`（`client/ui/stat_plate.gd`） | [tokens.md](tokens.md) |
 | 时代象形 | `EraGlyph`（`client/ui/era_glyph.gd`） | [icons.md](icons.md) |
-| 卡牌图鉴 | `CardGallery`（`client/scenes/card_gallery.gd`） | [components/card-gallery.md](components/card-gallery.md) |
+| 卡牌图鉴 | `CardGallery`（`client/ui/card_gallery.gd`） | [components/card-gallery.md](components/card-gallery.md) |
 | 图鉴视图切换 | `GalleryModeBar` | [components/gallery-mode-bar.md](components/gallery-mode-bar.md) |
 | 图鉴顶部筛选栏 | `GalleryFilterBar` | [components/gallery-filter-bar.md](components/gallery-filter-bar.md) |
 | 图鉴分类目录 | `GalleryToc` | [components/gallery-toc.md](components/gallery-toc.md) |
@@ -56,9 +60,9 @@
 | 图鉴卡面单元 | `GalleryCardTile` | [components/gallery-card-tile.md](components/gallery-card-tile.md) |
 | 图鉴常驻详情 | `GalleryDetail` | [components/gallery-detail.md](components/gallery-detail.md) |
 | 首局引导 | `FirstGameGuide` | [components/first-game-guide.md](components/first-game-guide.md) |
-| 技能瞄准层 | `GameAimLayer`（`client/scenes/game_aim_layer.gd`） | [components/aim-layer.md](components/aim-layer.md) |
-| 房间候选英雄卡 | `RoomHeroCard`（`client/scenes/room_hero_card.gd`） | [pages/room.md](pages/room.md) |
-| 房间悬停详情层 | `RoomHeroDetailLayer`（`client/scenes/room_hero_detail_layer.gd`） | [pages/room.md](pages/room.md) |
+| 技能瞄准层 | `GameAimLayer`（`client/pages/game/game_aim_layer.gd`） | [components/aim-layer.md](components/aim-layer.md) |
+| 房间候选英雄卡 | `RoomHeroCard`（`client/pages/room/room_hero_card.gd`） | [pages/room.md](pages/room.md) |
+| 房间悬停详情层 | `RoomHeroDetailLayer`（`client/pages/room/room_hero_detail_layer.gd`） | [pages/room.md](pages/room.md) |
 
 ## 5. 交互约定
 

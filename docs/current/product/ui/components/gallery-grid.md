@@ -1,7 +1,7 @@
 # 图鉴卡面网格
 
 > 状态：已实现
-> 入口：`GalleryGrid.new()`，`client/scenes/gallery_grid.gd`（`class_name GalleryGrid`）
+> 入口：`GalleryGrid.new()`，`client/ui/gallery_grid.gd`（`class_name GalleryGrid`）
 
 ## 用途
 

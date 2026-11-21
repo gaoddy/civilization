@@ -14,7 +14,7 @@ func _ready() -> void:
 func _check_host_controls() -> void:
     _seed_room(true)
     GameStore.room_players[0]["heroCandidates"] = ["zhenghe"]
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
 
@@ -73,7 +73,7 @@ func _check_host_controls() -> void:
 ## 非房主：移除与解散按钮都不可见。
 func _check_non_host_controls() -> void:
     _seed_room(false)
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
 
@@ -93,7 +93,7 @@ func _check_non_host_controls() -> void:
 ## RoomClosed(kicked)：先写状态文案，再切到大堂。
 func _check_room_closed_navigation() -> void:
     _seed_room(true)
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
     var status = instance.find_child("StatusLabel", true, false)
@@ -114,7 +114,7 @@ func _check_room_closed_navigation() -> void:
     await get_tree().process_frame
     var current := get_tree().current_scene
     _expect(
-        current != null and str(current.scene_file_path) == "res://scenes/lobby.tscn",
+        current != null and str(current.scene_file_path) == "res://pages/lobby/lobby.tscn",
         "RoomClosed 后应切换到大堂，实际：%s"
         % ("<null>" if current == null else str(current.scene_file_path)),
     )
@@ -130,7 +130,7 @@ func _check_room_closed_navigation() -> void:
 func _check_offline_clicks() -> void:
     _seed_room(true)
     _fake_disconnect()
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
 

@@ -1,7 +1,7 @@
 # 图鉴分类目录
 
 > 状态：已实现
-> 入口：`GalleryToc.new()` 与 `GalleryToc.new(true)`，`client/scenes/gallery_toc.gd`（`class_name GalleryToc`）；手机面板入口 `GalleryCategoryPanel`，`client/scenes/gallery_category_panel.gd`
+> 入口：`GalleryToc.new()` 与 `GalleryToc.new(true)`，`client/ui/gallery_toc.gd`（`class_name GalleryToc`）；手机面板入口 `GalleryCategoryPanel`，`client/ui/gallery_category_panel.gd`
 
 ## 用途
 

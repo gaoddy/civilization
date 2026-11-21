@@ -1,8 +1,8 @@
 # 对局页
 
 > 状态：已实现
-> 场景：`client/scenes/game.tscn`
-> 脚本：`client/scenes/game.gd`
+> 场景：`client/pages/game/game.tscn`
+> 脚本：`client/pages/game/game.gd`
 > 验证：`make client-smoke`
 
 ## 1. 目的、入口与返回

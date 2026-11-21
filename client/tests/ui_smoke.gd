@@ -2,9 +2,9 @@ extends "res://tests/smoke_case.gd"
 ## 无头冒烟：实例化各场景，确认脚本、控件与关键展示无错误。
 
 const SCENES := [
-    "res://scenes/login.tscn",
-    "res://scenes/lobby.tscn",
-    "res://scenes/room.tscn",
+    "res://pages/login/login.tscn",
+    "res://pages/lobby/lobby.tscn",
+    "res://pages/room/room.tscn",
 ]
 
 
@@ -111,7 +111,7 @@ func _check_detail_without_stats() -> void:
     var view: Dictionary = FixtureScript.game_view()
     view["self"]["board"][0].erase("stats")
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var detail = instance.find_child("MinionDetailPanel", true, false)
@@ -157,7 +157,7 @@ func _check_room_null_hero() -> void:
         "isHost": true,
         "heroCardId": null,
     }]
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
     var others = instance.find_child("OtherPlayers", true, false)
@@ -184,7 +184,7 @@ func _check_room_hero_picker() -> void:
         {"playerId": "p1", "displayName": "玩家B", "ready": true, "isHost": false,
          "heroCardId": "darwin", "heroCandidates": null},
     ]
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
 
@@ -382,7 +382,7 @@ func _check_room_hero_picker() -> void:
         {"playerId": "p1", "displayName": "玩家B", "ready": false, "isHost": false,
          "heroCardId": null, "heroCandidates": null},
     ]
-    var online := await _check_scene("res://scenes/room.tscn", false)
+    var online := await _check_scene("res://pages/room/room.tscn", false)
     if online != null:
         var online_cards := online.find_child("HeroCandidates", true, false)
         var online_confirm := online.find_child("ConfirmButton", true, false)
@@ -412,7 +412,7 @@ func _check_room_hero_picker() -> void:
         {"playerId": "p1", "displayName": "玩家B", "ready": false, "isHost": false,
          "heroCardId": null, "heroCandidates": null},
     ]
-    var locked_instance := await _check_scene("res://scenes/room.tscn", false)
+    var locked_instance := await _check_scene("res://pages/room/room.tscn", false)
     if locked_instance != null:
         var locked_confirm = locked_instance.find_child("ConfirmButton", true, false)
         _expect(locked_confirm != null and locked_confirm.disabled, "已确认后确认按钮必须禁用")
@@ -463,7 +463,7 @@ func _check_game() -> void:
     GameStore.turn = 3
     GameStore.view = FixtureScript.view()
     GameStore.deadline = "2030-01-01T00:00:00Z"
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     for index in [0, 1, 3, 5]:
@@ -565,7 +565,7 @@ func _check_game_layout() -> void:
     GameStore.deadline = "2030-01-01T00:00:00Z"
     GameStore.view = FixtureScript.game_view()
     _clear_combat()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var rail = instance.find_child("PlayersRail", true, false)
@@ -710,7 +710,7 @@ func _check_hand_overlap_layout() -> void:
     view["self"]["hand"] = hand
     view["self"]["affordances"]["handCards"] = affordances
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var hand_row = instance.find_child("HandRow", true, false)
@@ -804,7 +804,7 @@ func _check_hand_shows_server_stats() -> void:
         {"index": 1, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var golden_card = instance.find_child("HandCard0", true, false)
@@ -843,7 +843,7 @@ func _check_hand_reward_card_badge() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var card = instance.find_child("HandCard0", true, false)
@@ -870,7 +870,7 @@ func _check_hand_hover() -> void:
     GameStore.turn = 3
     GameStore.deadline = "2030-01-01T00:00:00Z"
     GameStore.view = FixtureScript.game_view()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var card: Control = instance.find_child("HandCard0", true, false)
@@ -942,7 +942,7 @@ func _ten_card_instance(playable: bool) -> Node:
     view["self"]["hand"] = hand
     view["self"]["affordances"]["handCards"] = affordances
     GameStore.view = view
-    return await _check_scene("res://scenes/game.tscn", false)
+    return await _check_scene("res://pages/game/game.tscn", false)
 
 
 ## 悬停卡右侧交叠带仍归这张卡：Godot 按树序逆序拾取，z_index 不参与命中。
@@ -1051,7 +1051,7 @@ func _check_combat_layout() -> void:
     view["opponentPlayerId"] = "p2"
     GameStore.view = view
     _set_combat(FixtureScript.combat_result())
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var recruit = instance.find_child("RecruitPanel", true, false)
@@ -1114,7 +1114,7 @@ func _check_combat_no_skip_entry(instance: Node) -> void:
 ## 落点门控：拖拽期间阶段改变、结束招募、视图过期、倒计时归零、断线或进入
 ## 目标待选时，落点不构造意图。
 func _check_drop_gate() -> void:
-    var gate: Callable = Callable(load("res://scenes/game.gd"), "drop_gate")
+    var gate: Callable = Callable(load("res://pages/game/game.gd"), "drop_gate")
     _expect(gate.call(Protocol.PHASE_RECRUIT, false, false, true, false, false), "正常招募态应允许落点")
     _expect(not gate.call(Protocol.PHASE_COMBAT, false, false, true, false, false), "战斗阶段不应允许落点")
     _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, true, false, true), "已结束招募不应允许落点")
@@ -1136,7 +1136,7 @@ func _check_drop_gate() -> void:
     ]
     _fake_connect()
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _fake_disconnect()
         return
@@ -1175,7 +1175,7 @@ func _check_combat_reborn_reappears() -> void:
     view["opponentPlayerId"] = "p2"
     GameStore.view = view
     _set_combat(FixtureScript.combat_result_with_reborn())
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _clear_combat()
         return
@@ -1253,7 +1253,7 @@ func _check_board_stealth_badge() -> void:
     ]
     view["self"]["hand"] = []
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var stealth_card = instance.find_child("BoardMinion0", true, false)
@@ -1284,7 +1284,7 @@ func _check_stale_combat_not_shown() -> void:
     GameStore.view = view
     GameStore.last_combat = FixtureScript.combat_result()
     GameStore.last_combat_turn = 3
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _clear_combat()
         return
@@ -1302,7 +1302,7 @@ func _check_stale_combat_not_shown() -> void:
 
     # 同一份战报标成本回合后恢复展示。
     GameStore.last_combat_turn = 4
-    var fresh := await _check_scene("res://scenes/game.tscn", false)
+    var fresh := await _check_scene("res://pages/game/game.tscn", false)
     if fresh != null:
         var fresh_row = fresh.find_child("CombatOwnRow", true, false)
         _expect(fresh_row != null and fresh_row.get_child_count() == 3, "本回合战报应渲染 3 张随从")
@@ -1326,7 +1326,7 @@ func _check_combat_placeholder_cleared() -> void:
     view["opponentPlayerId"] = "p2"
     GameStore.view = view
     _clear_combat()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
@@ -1366,7 +1366,7 @@ func _check_board_capacity_from_view() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var board_row = instance.find_child("BoardRow", true, false)
@@ -1449,7 +1449,7 @@ func _check_sfx_events() -> void:
     GameStore.deadline = "2030-01-01T00:00:00Z"
     GameStore.view = FixtureScript.view()
     _clear_combat()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
 
@@ -1504,7 +1504,7 @@ func _check_sfx_initial_shop_enter() -> void:
     GameStore.view = view
     _clear_combat()
     Sfx.clear_log()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     _expect(
@@ -1532,7 +1532,7 @@ func _check_sfx_freeze() -> void:
     var view: Dictionary = FixtureScript.view()
     GameStore.view = view
     _clear_combat()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
 
@@ -1669,7 +1669,7 @@ func _check_combat_resume_from_started_at() -> void:
     ) + "Z"
     _set_combat(combat)
     Sfx.clear_log()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _clear_combat()
         return
@@ -1724,7 +1724,7 @@ func _check_hand_drag_emits_position() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     _expect(
@@ -1820,7 +1820,7 @@ func _check_hand_drag_cursor_rule() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var board_row = instance.find_child("BoardRow", true, false)
@@ -1888,7 +1888,7 @@ func _check_hand_drag_board_preview() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var board_row = instance.find_child("BoardRow", true, false)
@@ -1975,7 +1975,7 @@ func _check_hand_drag_drops_on_board_blank() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var board_row = instance.find_child("BoardRow", true, false)
@@ -2038,7 +2038,7 @@ func _check_hand_drag_drops_on_minion_card() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var hand_card = instance.find_child("HandCard0", true, false)
@@ -2092,7 +2092,7 @@ func _check_effect_drag_drops_on_hand_minion() -> void:
         {"index": 1, "playable": false, "disabledReason": "NO_SPACE"},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var effect_node = instance.find_child("HandCard0", true, false)
@@ -2135,7 +2135,7 @@ func _check_shop_drag_buys() -> void:
     GameStore.deadline = "2030-01-01T00:00:00Z"
     _fake_connect()
     GameStore.view = FixtureScript.view()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _fake_disconnect()
         return
@@ -2247,7 +2247,7 @@ func _check_drag_preview_keeps_pointer() -> void:
     GameStore.deadline = "2030-01-01T00:00:00Z"
     _fake_connect()
     GameStore.view = FixtureScript.view()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _fake_disconnect()
         return
@@ -2339,7 +2339,7 @@ func _check_board_drag_sells_over_shop_slot() -> void:
         {"index": 0, "sellable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var card = instance.find_child("BoardMinion0", true, false)
@@ -2389,7 +2389,7 @@ func _check_board_drag_reorders() -> void:
         {"index": 2, "sellable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var board_row = instance.find_child("BoardRow", true, false)
@@ -2453,7 +2453,7 @@ func _check_board_sell_drop() -> void:
         {"index": 0, "sellable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var shop = instance.find_child("ShopPanel", true, false)
@@ -2515,7 +2515,7 @@ func _check_detail_hidden_while_dragging() -> void:
         {"index": 0, "sellable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _fake_disconnect()
         return
@@ -2598,7 +2598,7 @@ func _check_drag_rejected_when_board_full() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var board_row = instance.find_child("BoardRow", true, false)
@@ -2639,7 +2639,7 @@ func _check_drag_rejected_for_target_effect_on_blank() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var board_row = instance.find_child("BoardRow", true, false)
@@ -2670,7 +2670,7 @@ func _check_drag_rejected_for_target_effect_on_blank() -> void:
 
 ## 视图过期、倒计时归零、未连接、目标待选或不可打出时，拖拽不开始。
 func _check_drag_disabled_when_stale_or_expired() -> void:
-    var gate: Callable = Callable(load("res://scenes/game.gd"), "drag_gate")
+    var gate: Callable = Callable(load("res://pages/game/game.gd"), "drag_gate")
     _expect(not gate.call(Protocol.PHASE_RECRUIT, true, false, true, false, true), "视图过期时不应允许拖拽")
     _expect(not gate.call(Protocol.PHASE_RECRUIT, false, true, true, false, true), "倒计时归零时不应允许拖拽")
     _expect(not gate.call(Protocol.PHASE_RECRUIT, false, false, false, false, true), "未连接时不应允许拖拽")
@@ -2698,7 +2698,7 @@ func _check_drag_cancelled_after_view_rebuild() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var hand_card = instance.find_child("HandCard0", true, false)
@@ -2728,7 +2728,7 @@ func _check_target_pending_aim() -> void:
     GameStore.turn = 3
     GameStore.deadline = "2030-01-01T00:00:00Z"
     GameStore.view = _target_pending_view()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var overlay = instance.find_child("ChooserOverlay", true, false)
@@ -2764,7 +2764,7 @@ func _check_pending_aim_abandon() -> void:
     GameStore.turn = 3
     GameStore.deadline = "2030-01-01T00:00:00Z"
     GameStore.view = _target_pending_view()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var aim = instance.find_child("AimLayer", true, false)
@@ -2836,7 +2836,7 @@ func _check_skill_aim() -> void:
             "disabledReason": null,
         },
     ]
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     await _dismiss_guide(instance)
@@ -2909,7 +2909,7 @@ func _check_effect_drag_aim_visual() -> void:
         {"index": 0, "playable": true, "disabledReason": null},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     await _dismiss_guide(instance)
@@ -2982,7 +2982,7 @@ func _check_discover_choice_row() -> void:
     var view: Dictionary = FixtureScript.view()
     view["self"]["pendingChoices"] = [{"kind": "discover", "candidates": ["huo", "lun", "che"]}]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var overlay = instance.find_child("ChooserOverlay", true, false)
@@ -3029,7 +3029,7 @@ func _check_evolve_choice_row() -> void:
         {"kind": "evolve", "options": ["divine_shield", "reborn", "stats"]},
     ]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var overlay = instance.find_child("ChooserOverlay", true, false)
@@ -3039,7 +3039,7 @@ func _check_evolve_choice_row() -> void:
     if row != null and row.get_child_count() == 3:
         var third_label = row.get_child(2).find_child("ChoiceLabel", true, false)
         _expect(
-            third_label != null and third_label.text == UI.enum_text("evolve", "stats"),
+            third_label != null and third_label.text == UIWording.enum_text("evolve", "stats"),
             "第 3 个选项块应显示 +2/+2",
         )
         var captured: Array = []
@@ -3071,7 +3071,7 @@ func _check_overlay_hidden_in_combat() -> void:
     view["self"]["pendingChoices"] = [{"kind": "discover", "candidates": ["huo", "lun", "che"]}]
     GameStore.view = view
     _set_combat(FixtureScript.combat_result())
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var overlay = instance.find_child("ChooserOverlay", true, false)
@@ -3240,7 +3240,7 @@ func _check_recruited_gate() -> void:
     view["self"]["recruited"] = true
     view["self"]["pendingChoices"] = [{"kind": "discover", "candidates": ["huo", "lun", "che"]}]
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var freeze = instance.find_child("FreezeButton", true, false)
@@ -3258,7 +3258,7 @@ func _check_expired_gate() -> void:
     GameStore.turn = 3
     GameStore.deadline = "2000-01-01T00:00:00Z"
     GameStore.view = FixtureScript.view()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var end_button = instance.find_child("RecruitEndButton", true, false)
@@ -3277,7 +3277,7 @@ func _check_stale_view_gate() -> void:
     GameStore.turn = 4
     GameStore.deadline = "2030-01-01T00:00:00Z"
     GameStore.view = FixtureScript.view()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var end_button = instance.find_child("RecruitEndButton", true, false)
@@ -3297,7 +3297,7 @@ func _check_disconnected_send() -> void:
     GameStore.turn = 3
     GameStore.view = FixtureScript.view()
     GameStore.deadline = "2030-01-01T00:00:00Z"
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
     var reroll = instance.find_child("RerollButton", true, false)
@@ -3327,7 +3327,7 @@ func _check_click_gates() -> void:
     view["phase"] = Protocol.PHASE_COMBAT
     _fake_connect()
     GameStore.view = view
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _fake_disconnect()
         return
@@ -3350,7 +3350,7 @@ func _check_click_gates() -> void:
     view = FixtureScript.view()
     view["self"]["recruited"] = true
     GameStore.view = view
-    instance = await _check_scene("res://scenes/game.tscn", false)
+    instance = await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _fake_disconnect()
         return
@@ -3366,7 +3366,7 @@ func _check_click_gates() -> void:
     # 旧视图：回合已推进但视图未更新。
     GameStore.turn = 4
     GameStore.view = FixtureScript.view()
-    instance = await _check_scene("res://scenes/game.tscn", false)
+    instance = await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _fake_disconnect()
         return
@@ -3384,7 +3384,7 @@ func _check_click_gates() -> void:
     view = FixtureScript.view()
     view["players"][0]["alive"] = false
     GameStore.view = view
-    instance = await _check_scene("res://scenes/game.tscn", false)
+    instance = await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _fake_disconnect()
         return
@@ -3404,7 +3404,7 @@ func _check_click_gates() -> void:
 
     # 目标待选：结束招募不应发出意图。
     GameStore.view = _target_pending_view()
-    instance = await _check_scene("res://scenes/game.tscn", false)
+    instance = await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _fake_disconnect()
         return
@@ -3432,7 +3432,7 @@ func _check_error_notice_lifecycle() -> void:
     GameStore.deadline = "2030-01-01T00:00:00Z"
     _fake_connect()
     GameStore.view = FixtureScript.view()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _fake_disconnect()
         return
@@ -3447,7 +3447,7 @@ func _check_error_notice_lifecycle() -> void:
     GameStore.error_received.emit()
     await get_tree().process_frame
     _expect(
-        str(status.text) == UI.error_text(Protocol.ERROR_INVALID_STAGE),
+        str(status.text) == UIWording.error_text(Protocol.ERROR_INVALID_STAGE),
         "错误应写入顶栏，实际：%s" % status.text,
     )
     # 模拟经过错误文案停留时长；引擎帧不会在无头用例里推进这么久。
@@ -3481,13 +3481,13 @@ func _check_navigation_guard() -> void:
     GameStore.room_code = "ABC123"
     GameStore.phase = "Recruit"
     GameStore.view = FixtureScript.view()
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
     var before = get_tree().current_scene
     remove_child(instance)
     _expect(not instance.is_inside_tree(), "移出树后房间场景应已离树")
-    _expect(not UI.navigate(instance, "res://scenes/game.tscn"), "已离树的页面不应再执行导航")
+    _expect(not UINavigation.navigate(instance, "res://pages/game/game.tscn"), "已离树的页面不应再执行导航")
     GameStore.view_changed.emit()
     _expect(get_tree().current_scene == before, "已离树的房间场景不应改变当前场景")
     instance.queue_free()
@@ -3498,7 +3498,7 @@ func _check_navigation_guard() -> void:
 
 
 func _check_error_route() -> void:
-    var instance := await _check_scene("res://scenes/room.tscn", true)
+    var instance := await _check_scene("res://pages/room/room.tscn", true)
     if instance == null:
         return
     if not instance.has_method("_error_route"):
@@ -3525,14 +3525,14 @@ func _check_reset_session() -> void:
 
 func _check_error_text() -> void:
     _expect(
-        UI.error_text("NOT_ENOUGH_GOLD") == TranslationServer.translate("error.NOT_ENOUGH_GOLD"),
+        UIWording.error_text("NOT_ENOUGH_GOLD") == TranslationServer.translate("error.NOT_ENOUGH_GOLD"),
         "NOT_ENOUGH_GOLD 应有中文文案",
     )
     _expect(
-        UI.error_text("INVALID_STAGE") == TranslationServer.translate("error.INVALID_STAGE"),
+        UIWording.error_text("INVALID_STAGE") == TranslationServer.translate("error.INVALID_STAGE"),
         "INVALID_STAGE 应有中文文案",
     )
-    _expect(UI.error_text("SOME_UNKNOWN_CODE") == "SOME_UNKNOWN_CODE", "未知错误码应回退为原文")
+    _expect(UIWording.error_text("SOME_UNKNOWN_CODE") == "SOME_UNKNOWN_CODE", "未知错误码应回退为原文")
 
 
 func _check_result() -> void:
@@ -3574,7 +3574,7 @@ func _check_result() -> void:
             {"cardId": "aristotle", "golden": false, "attack": 3, "health": 4},
         ],
     }
-    var instance := await _check_scene("res://scenes/result.tscn", false)
+    var instance := await _check_scene("res://pages/result/result.tscn", false)
     if instance == null:
         _restore_result_state(
             previous_ranking, previous_seed, previous_stats, previous_room_id,
@@ -3656,7 +3656,7 @@ func _check_result() -> void:
     await get_tree().process_frame
 
     GameStore.self_stats = {}
-    var empty_instance := await _check_scene("res://scenes/result.tscn", false)
+    var empty_instance := await _check_scene("res://pages/result/result.tscn", false)
     if empty_instance == null:
         _restore_result_state(
             previous_ranking, previous_seed, previous_stats, previous_room_id,
@@ -3709,7 +3709,7 @@ func _check_confirm_navigation() -> void:
     GameStore.ranking = []
     GameStore.self_stats = {}
     GameStore.game_seed = "seed"
-    var instance := await _check_scene("res://scenes/result.tscn", false)
+    var instance := await _check_scene("res://pages/result/result.tscn", false)
     if instance == null:
         return
     var confirm = instance.find_child("ConfirmButton", true, false)
@@ -3728,7 +3728,7 @@ func _check_confirm_navigation() -> void:
     _expect(GameStore.room_id == "", "点确定后应清空房间，实际：%s" % GameStore.room_id)
     var current := get_tree().current_scene
     _expect(
-        current != null and str(current.scene_file_path) == "res://scenes/lobby.tscn",
+        current != null and str(current.scene_file_path) == "res://pages/lobby/lobby.tscn",
         "点确定后应切换到大堂，实际：%s"
         % ("<null>" if current == null else str(current.scene_file_path)),
     )

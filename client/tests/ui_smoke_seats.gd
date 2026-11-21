@@ -59,7 +59,7 @@ func _setup(view: Dictionary) -> void:
 
 func _open(view: Dictionary) -> Node:
     _setup(view)
-    return await _check_scene("res://scenes/game.tscn", false)
+    return await _check_scene("res://pages/game/game.tscn", false)
 
 
 ## 缩放内容框下的对局实例：宿主 1280×480 让内容框原点非零、缩放非 1。
@@ -70,7 +70,7 @@ func _open_composed(view: Dictionary) -> Node:
     host.name = "ComposedGameHost"
     host.size = Vector2(1280, 480)
     add_child(host)
-    var packed = load("res://scenes/game.tscn")
+    var packed = load("res://pages/game/game.tscn")
     if packed == null:
         _expect(false, "无法加载对局场景")
         host.queue_free()

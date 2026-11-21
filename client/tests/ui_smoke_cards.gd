@@ -469,7 +469,7 @@ func _check_page_background() -> void:
         ResourceLoader.exists("res://assets/ui/bg/bg_main.png"),
         "页面背景纹理应已导入",
     )
-    var background := UI.background()
+    var background := UIControls.background()
     _expect(background.name == "PageBackground", "背景节点名应为 PageBackground")
     _expect(background.mouse_filter == Control.MOUSE_FILTER_IGNORE, "背景不应拦截鼠标")
     _expect(background is TextureRect, "有纹理时应使用 TextureRect")
@@ -667,7 +667,7 @@ func _check_hero_skill_list() -> void:
     # 无技能时显示空态，不渲染空标签或费用行。
     var empty_box := VBoxContainer.new()
     add_child(empty_box)
-    UI.skill_list(empty_box, [])
+    SkillList.build(empty_box, [])
     await get_tree().process_frame
     _expect(
         _node_text(empty_box).contains(TranslationServer.translate("ui.skill.empty")),
@@ -696,7 +696,7 @@ func _check_skill_trigger_labels() -> void:
     }
     var box := VBoxContainer.new()
     add_child(box)
-    UI.skill_list(box, ["smoke-unknown-trigger"])
+    SkillList.build(box, ["smoke-unknown-trigger"])
     await get_tree().process_frame
     var text := _node_text(box)
     _expect(
@@ -717,7 +717,7 @@ func _check_skill_trigger_labels() -> void:
 
     var invalid_box := VBoxContainer.new()
     add_child(invalid_box)
-    UI.skill_list(invalid_box, ["does-not-exist"])
+    SkillList.build(invalid_box, ["does-not-exist"])
     await get_tree().process_frame
     _expect(
         _node_text(invalid_box).contains(TranslationServer.translate("ui.skill.empty")),
@@ -741,7 +741,7 @@ func _check_room_skill_list() -> void:
         {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
          "heroCardId": null, "heroCandidates": ["gauss", "mozi", "luban", "shenkuo"]},
     ]
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance != null:
         var candidates := instance.find_child("HeroCandidates", true, false)
         _expect(candidates != null and candidates.get_child_count() > 0, "选英雄页应渲染候选英雄")
@@ -800,7 +800,7 @@ func _check_room_skill_list() -> void:
 
 ## 商店/手牌详情正文：直接走详情渲染，避免依赖具体页面的悬停时机。
 func _shop_detail_text(card_id: String) -> String:
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_shop_detail(box, {"cardId": card_id})
     var text := _node_text(box)
@@ -841,7 +841,7 @@ func _check_minion_gained_keywords() -> void:
 
 
 func _minion_detail_text(card_id: String, keywords: Array) -> String:
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_minion_detail(box, _minion_fixture(card_id, keywords))
     var text := _node_text(box)
@@ -851,7 +851,7 @@ func _minion_detail_text(card_id: String, keywords: Array) -> String:
 
 
 func _minion_gained_summary(card_id: String, keywords: Array) -> String:
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_minion_detail(box, _minion_fixture(card_id, keywords))
     var row := box.find_child("DetailGainedKeywords", true, false)
@@ -872,7 +872,7 @@ func _minion_fixture(card_id: String, keywords: Array) -> Dictionary:
 
 ## 对局英雄详情：顶部使用卡面美术，按 112:146 预留高度。
 func _check_hero_detail_art() -> void:
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_hero_detail(box, "gauss")
     var art := box.find_child("HeroDetailArt", true, false) as TextureRect
@@ -893,7 +893,7 @@ func _check_hero_detail_art() -> void:
 
 
 func _hero_detail_text(hero_id: String) -> String:
-    var layer := GameDetailLayer.new()
+    var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_hero_detail(box, hero_id)
     var text := _node_text(box)
@@ -903,10 +903,8 @@ func _hero_detail_text(hero_id: String) -> String:
 
 
 func _classification_text(entry: Dictionary) -> String:
-    var layer := GameDetailLayer.new()
     var box := VBoxContainer.new()
-    layer._append_classification(box, entry)
+    DetailKit.new(200).append_classification(box, entry)
     var text := _node_text(box)
     box.free()
-    layer.free()
     return text

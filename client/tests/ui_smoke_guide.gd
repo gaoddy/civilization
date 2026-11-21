@@ -45,7 +45,7 @@ func _mount(player_id: String, view: Dictionary, guide_step := -1) -> Node:
     GameStore.guide_step = guide_step
     GameStore.view = view
     _clear_combat()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     await get_tree().process_frame
     return instance
 

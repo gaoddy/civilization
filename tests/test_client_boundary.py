@@ -68,7 +68,7 @@ class ClientBoundaryTest(unittest.TestCase):
 
     def test_play_card_only_from_drag(self):
         """出牌只有拖拽一条路径：手牌没有点击回调，PlayCard 只在落点回调里构造。"""
-        source = (CLIENT / "scenes" / "game.gd").read_text(encoding="utf-8")
+        source = (CLIENT / "pages" / "game" / "game.gd").read_text(encoding="utf-8")
         self.assertNotIn("_on_play", source)
         # 棋盘落点、手牌落点共用 `_send_play_card`；三者之外不得构造 PlayCard。
         allowed = {"_on_board_dropped", "_on_hand_target_dropped", "_send_play_card"}
@@ -84,7 +84,7 @@ class ClientBoundaryTest(unittest.TestCase):
 
     def test_hand_card_has_no_click_callback(self):
         """HandCard 只提供拖拽数据，不接点击。"""
-        source = (CLIENT / "scenes" / "hand_card.gd").read_text(encoding="utf-8")
+        source = (CLIENT / "pages" / "game" / "hand_card.gd").read_text(encoding="utf-8")
         self.assertNotIn("pressed.connect", source)
         self.assertIn("_get_drag_data", source)
 

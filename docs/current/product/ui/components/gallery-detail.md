@@ -1,7 +1,7 @@
 # 图鉴常驻详情
 
 > 状态：已实现
-> 入口：`GalleryDetail.new()`，`client/scenes/gallery_detail.gd`（`class_name GalleryDetail`）
+> 入口：`GalleryDetail.new()`，`client/ui/gallery_detail.gd`（`class_name GalleryDetail`）
 
 ## 用途
 

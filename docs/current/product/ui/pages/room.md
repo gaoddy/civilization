@@ -1,8 +1,8 @@
 # 选英雄页（房间）
 
 > 状态：已实现
-> 场景：`client/scenes/room.tscn`
-> 脚本：`client/scenes/room.gd`；候选卡 `client/scenes/room_hero_card.gd`（`RoomHeroCard`），悬停详情层 `client/scenes/room_hero_detail_layer.gd`（`RoomHeroDetailLayer`）
+> 场景：`client/pages/room/room.tscn`
+> 脚本：`client/pages/room/room.gd`；成员行 `room_player_row.gd`、候选列表 `room_candidate_list.gd`、邀请行 `room_invite_row.gd`、底部操作区 `room_action_bar.gd`；候选卡 `room_hero_card.gd`（`RoomHeroCard`），悬停详情层 `room_hero_detail_layer.gd`（`RoomHeroDetailLayer`）
 > 验证：`make client-smoke`
 
 ## 1. 目的、入口与返回
@@ -71,7 +71,7 @@ HeroDetailLayer：悬停详情层（全屏，默认隐藏，忽略鼠标）
 - 触发：桌面鼠标移入候选卡，或触控端长按候选卡 450ms（位移超过 8 画布单位取消）。
 - 关闭：桌面移出候选卡；触控端抬手。点击只切换选中，不打开或关闭详情。
 - 位置：详情卡贴着悬停的那张候选卡：悬停卡中心在详情层中心左侧时挂在卡片左侧外侧，否则挂右侧外侧；与卡片间隙 `space-sm`，竖直方向与卡片居中对齐。面板四周夹紧在详情层安全区内，夹紧后若压住悬停卡则换到另一侧；贴卡定位允许覆盖其他候选卡。
-- 内容：英雄名 + 英雄介绍（`CardDB.hero_introduction`，非空时显示，弱化色） + 技能列表；不显示卡面或立绘图片。技能列表与图鉴英雄详情共用 `UI.skill_list`，按英雄 `skills` 顺序逐条展示：技能名（没有名称时省略）、触发类型标签、完整技能文本；主动技能追加「费用 N · 每回合 N 次」。无技能时显示「暂无技能」。
+- 内容：英雄名 + 英雄介绍（`CardDB.hero_introduction`，非空时显示，弱化色） + 技能列表；不显示卡面或立绘图片。技能列表与图鉴英雄详情共用 `SkillList.build`，按英雄 `skills` 顺序逐条展示：技能名（没有名称时省略）、触发类型标签、完整技能文本；主动技能追加「费用 N · 每回合 N 次」。无技能时显示「暂无技能」。
 - 样式：`UITheme.panel_style("raised")` 面板；文本按详情宽度换行，英雄技能最多 2 条，不需要滚动。详情层与其子节点全部忽略鼠标输入，不拦截对候选卡、确认按钮或空白处的点击。
 - 候选刷新时若候选 id 未变，只更新选中/锁定状态，不重建卡片，避免悬停详情被意外关闭；必须重建时，若指针仍停在原英雄卡上则恢复详情。
 
@@ -84,7 +84,7 @@ HeroDetailLayer：悬停详情层（全屏，默认隐藏，忽略鼠标）
 | 本人已选英雄 | `room_players[]` 中本人那一项的 `heroCardId` |
 | 本人确认状态 | `room_players[]` 中本人那一项的 `ready` |
 | 本人是否房主 | `room_players[]` 中本人那一项的 `isHost`（协议同时下发 `hostId`） |
-| 卡面与技能列表 | `CardDB.card` / `CardDB.hero` / `CardDB.display_name` / `CardDB.skill_info`；技能列表由 `UI.skill_list` 读取英雄卡的 `skills` |
+| 卡面与技能列表 | `CardDB.card` / `CardDB.hero` / `CardDB.display_name` / `CardDB.skill_info`；技能列表由 `SkillList.build` 读取英雄卡的 `skills` |
 
 - 页面不做分配逻辑：候选完全由服务端下发，客户端不洗牌、不补齐、不去重。
 - 其他玩家的 `heroCandidates` 恒为 `null`，页面也不读取这一字段用于他人展示。

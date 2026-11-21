@@ -1,7 +1,7 @@
 # 卡片容器
 
 > 状态：已实现
-> 入口：`UI.card_panel(variant)`，`client/ui/ui.gd`
+> 入口：`UIControls.card_panel(variant)`，`client/ui/controls.gd`
 > 样式来源：`UITheme.panel_style(variant)`，`client/ui/theme.gd`
 
 ## 用途
@@ -43,7 +43,7 @@
 
 ## 卡面与详情中的玩法与分类
 
-卡片容器之上的内容由按场景拆分的卡面组件（`CardFaceBase` 与 `ShopCardFace`、`HandCardFace`、`BoardCardFace`、`GalleryCardFace`）与 `GameDetailLayer` 构造，分类展示口径如下：
+卡片容器之上的内容由按场景拆分的卡面组件（`CardFaceBase` 与 `ShopCardFace`、`HandCardFace`、`BoardCardFace`、`GalleryCardFace`）与 `DetailLayer` 构造，分类展示口径如下：
 
 - 卡面：封面取首条玩法色压暗（`UITheme.playstyle_cover`）；底部信息区的类型位显示全部玩法名（`playstyle_text`，走 `enum.playstyle.<id>`，多项用「、」分隔，缺失显示「未定」），完整类型由详情面板给出。
 - 商店卡详情：依次为名称、类型、科学分类（完整路径，缺失显示「未定」）、玩法、关联分类（只含 `prey:` / `host:`，为空时省略）、费用、原始数值、时代、技能文本与不可购买原因。

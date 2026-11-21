@@ -1,0 +1,141 @@
+class_name UIControls
+extends RefCounted
+## 通用控件工厂：标签、按钮、面板、背景与区块标题。
+##
+## 只构建 Godot 控件，视觉取值来自 UITheme；业务状态由调用方设置。
+
+
+static func clear(node: Node) -> void:
+    for child in node.get_children():
+        node.remove_child(child)
+        child.queue_free()
+
+
+static func label(text: String, size := 16, wrap := true) -> Label:
+    var node := Label.new()
+    node.text = text
+    node.add_theme_font_size_override("font_size", size)
+    node.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wrap else TextServer.AUTOWRAP_OFF
+    return node
+
+
+static func button(text: String) -> Button:
+    var node := Button.new()
+    node.text = text
+    var height := 34
+    if ScreenProfile.is_touch():
+        height = UITheme.hit_primary()
+    node.custom_minimum_size = Vector2(0, height)
+    return node
+
+
+static func panel() -> PanelContainer:
+    return PanelContainer.new()
+
+
+## 页面背景：整屏拉伸的纯质感深底；纹理缺失时退回纯色，不留空白页。
+static func background() -> Control:
+    var path := "res://assets/ui/bg/bg_main.png"
+    if ResourceLoader.exists(path):
+        var texture := ResourceLoader.load(path) as Texture2D
+        if texture != null:
+            var rect := TextureRect.new()
+            rect.name = "PageBackground"
+            rect.texture = texture
+            rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+            rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+            rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+            rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+            return rect
+    var fallback := ColorRect.new()
+    fallback.name = "PageBackground"
+    fallback.color = UITheme.color("color-bg")
+    fallback.set_anchors_preset(Control.PRESET_FULL_RECT)
+    fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    return fallback
+
+
+## 带视觉令牌的卡片容器；variant 见 UITheme.panel_style。
+static func card_panel(variant := "surface") -> PanelContainer:
+    var node := PanelContainer.new()
+    node.add_theme_stylebox_override("panel", UITheme.panel_style(variant))
+    return node
+
+
+## 胶囊标签：数值、状态与计时使用。variant：neutral / accent / success / danger / info / plain。
+static func pill_label(text: String, variant := "neutral", font_token := "font-body") -> Label:
+    var node := label(text, UITheme.font_size(font_token), false)
+    node.add_theme_stylebox_override("normal", UITheme.pill_style(variant))
+    node.add_theme_color_override("font_color", _pill_text_color(variant))
+    node.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    return node
+
+
+static func _pill_text_color(variant: String) -> Color:
+    match variant:
+        "accent":
+            return UITheme.color("color-accent")
+        "success":
+            return UITheme.color("color-success")
+        "danger":
+            return UITheme.color("color-danger")
+        "info":
+            return UITheme.color("color-info")
+        _:
+            return UITheme.color("color-text")
+
+
+## 统一按钮外观。variant：default / primary / danger / ghost / slot / micro。
+## 触控端按命中尺寸抬升最小高度，micro 使用较小档；桌面端保留原值。
+static func styled_button(text: String, variant := "default", min_height := 30) -> Button:
+    var node := Button.new()
+    node.text = text
+    var height := min_height
+    if ScreenProfile.is_touch():
+        var target := UITheme.hit_small() if variant == "micro" else UITheme.hit_primary()
+        height = maxi(min_height, target)
+    node.custom_minimum_size = Vector2(0, height)
+    node.focus_mode = Control.FOCUS_ALL
+    for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+        node.add_theme_stylebox_override(state, UITheme.button_style(variant, state))
+    var text_color := UITheme.color("color-text")
+    if variant == "primary":
+        text_color = UITheme.color("color-bg")
+    node.add_theme_color_override("font_color", text_color)
+    node.add_theme_color_override("font_hover_color", text_color)
+    node.add_theme_color_override("font_pressed_color", text_color)
+    node.add_theme_color_override("font_focus_color", text_color)
+    node.add_theme_color_override("font_disabled_color", UITheme.color("color-text-muted"))
+    node.add_theme_font_size_override("font_size", UITheme.font_size("font-body"))
+    return node
+
+
+## 淘汰或失效的行：统一降低透明度，不改变布局。
+static func apply_dim(node: CanvasItem) -> void:
+    node.modulate = Color(1, 1, 1, UITheme.opacity("opacity-dim"))
+
+
+## 空态/占位提示，居中且不抢排版。
+static func empty_hint(text: String) -> Label:
+    var node := label(text, UITheme.font_size("font-body-sm"), false)
+    node.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    return node
+
+
+## 小标题：区块名与计数。
+static func section_title(text: String) -> Label:
+    var node := label(text, UITheme.font_size("font-body"), false)
+    node.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+    return node
+
+
+static func margin(container: Control, value := 12) -> MarginContainer:
+    var node := MarginContainer.new()
+    node.add_theme_constant_override("margin_left", value)
+    node.add_theme_constant_override("margin_right", value)
+    node.add_theme_constant_override("margin_top", value)
+    node.add_theme_constant_override("margin_bottom", value)
+    node.add_child(container)
+    return node

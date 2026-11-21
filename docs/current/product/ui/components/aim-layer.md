@@ -1,7 +1,7 @@
 # 技能瞄准层
 
 > 状态：已实现
-> 入口：`client/scenes/game_aim_layer.gd`（`class_name GameAimLayer`，`extends Control`）
+> 入口：`client/pages/game/game_aim_layer.gd`（`class_name GameAimLayer`，`extends Control`）
 > 验证：`make client-smoke`（`client/tests/ui_smoke.gd` 的目标待选、放弃、技能瞄准与效果牌拖拽用例；`client/tests/ui_smoke_touch.gd` 的触控待选指南用例）
 
 ## 用途
@@ -10,7 +10,7 @@
 
 ## 挂载与接口
 
-- 由 `client/scenes/game.gd` 在 `ChooserOverlay` 之前创建并挂载，节点名 `AimLayer`，全屏铺满、`MOUSE_FILTER_IGNORE`，本身不拦截鼠标。
+- 由 `client/pages/game/game.gd` 在 `ChooserOverlay` 之前创建并挂载，节点名 `AimLayer`，全屏铺满、`MOUSE_FILTER_IGNORE`，本身不拦截鼠标。
 - `begin_skill(source_rect, candidates)`：按下的主动技能按钮开启技能模式，起点取该按钮全局矩形；候选为空时不开。
 - `begin_pending(source_minion_id, candidates)`：服务端下发目标待选时开启待选模式，起点按 `minion_id` 找到入场战吼随从的棋盘卡；同一来源与同一候选重复调用不重置手势。
 - `clear()`：关闭瞄准，保留的只是一次操作，不是页面状态。
@@ -55,7 +55,7 @@
 - 技能：`GameHeroRow` 某个主动技能按钮的 `button_down` 带技能 id 触发页面 `_on_hero_power_down(skill_id)`，页面按 id 取对应 `heroPowers` 条目，判断 `requiresTarget`、候选非空与门控后进入瞄准；`pressed` 对需要目标的技能不再发意图。
 - 战吼待选：页面每次刷新按队首待选调用 `begin_pending`；视图过期、倒计时归零、已结束招募、非招募阶段或离线时关闭。
 - 提交都在页面里完成：技能模式补 `target` 发 `UseHeroPower`；待选模式发 `ChooseTarget` 或 `AbandonTarget`；取消只清本地待发意图。
-- 瞄准期间页面暂停悬停详情（`GameDetailLayer.blocked`），关闭图鉴；发现与进化待选仍走 `ChooserOverlay`。
+- 瞄准期间页面暂停悬停详情（`DetailLayer.blocked`），关闭图鉴；发现与进化待选仍走 `ChooserOverlay`。
 
 ## 边界
 

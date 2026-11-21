@@ -11,6 +11,7 @@ class IconProbe extends Control:
 
 func _ready() -> void:
     await _check_shared_layer()
+    await _check_popup_layer()
     await _check_icon_button()
     await _check_hero_card()
     await _check_portrait()
@@ -47,7 +48,7 @@ func _mount(view: Dictionary, combat: Dictionary = {}) -> Node:
         _clear_combat()
     else:
         _set_combat(combat)
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     await get_tree().process_frame
     return instance
 
@@ -99,6 +100,59 @@ func _check_shared_layer() -> void:
         probe.queue_redraw()
         await get_tree().process_frame
         probe.queue_free()
+    await get_tree().process_frame
+
+
+## 弹出层外壳：内容替换、居中、锚点夹紧与底边贴边。
+func _check_popup_layer() -> void:
+    var host := Control.new()
+    host.size = Vector2(400, 300)
+    add_child(host)
+
+    var centered := PopupLayer.new()
+    host.add_child(centered)
+    await get_tree().process_frame
+    _expect(not centered.is_layer_open(), "弹出层初始应隐藏")
+    var panel := Control.new()
+    panel.custom_minimum_size = Vector2(160, 100)
+    centered.set_content(panel)
+    centered.open_layer()
+    await get_tree().process_frame
+    _expect(centered.is_layer_open(), "open 后弹层应显示")
+    _expect(panel.get_parent() == centered.content_host, "内容应挂在 PopupBody")
+    centered.close_layer()
+    _expect(not centered.is_layer_open(), "close 后弹层应隐藏")
+
+    var anchored := PopupLayer.new(PopupLayer.Placement.ANCHORED, 0.62, UITheme.color("color-bg"))
+    host.add_child(anchored)
+    var anchored_panel := Control.new()
+    anchored_panel.custom_minimum_size = Vector2(120, 80)
+    anchored.set_content(anchored_panel)
+    anchored.open_layer_at(Vector2(900, 900))
+    await get_tree().process_frame
+    _expect(
+        anchored_panel.position.x >= anchored.edge_margin
+        and anchored_panel.position.y >= anchored.edge_margin,
+        "锚点弹层不应越过边缘间距"
+    )
+    _expect(
+        anchored_panel.position.x <= host.size.x - anchored_panel.size.x,
+        "锚点弹层应夹紧在图层内"
+    )
+
+    var edge := PopupLayer.new(PopupLayer.Placement.EDGE_BOTTOM, 0.55)
+    host.add_child(edge)
+    var edge_panel := Control.new()
+    edge_panel.custom_minimum_size = Vector2(200, 60)
+    edge.set_content(edge_panel)
+    edge.open_layer()
+    await get_tree().process_frame
+    _expect(
+        is_equal_approx(edge_panel.position.y, host.size.y - edge_panel.size.y - edge.edge_margin),
+        "底边弹层应贴底"
+    )
+
+    host.queue_free()
     await get_tree().process_frame
 
 

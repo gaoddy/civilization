@@ -1,7 +1,7 @@
 # 头像块
 
 > 状态：已实现
-> 入口：`UI.avatar(hero_id, size)`，`client/ui/ui.gd`
+> 入口：`Avatar.create(hero_id, size)`，`client/ui/avatar.gd`
 
 ## 用途
 

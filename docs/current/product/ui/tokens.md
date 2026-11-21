@@ -2,7 +2,7 @@
 
 > 状态：已实现
 > 定义：`client/ui/theme.gd`
-> 使用：页面与组件通过 `UITheme.metric` 与 `UI` 构件取值，不直接写视觉值。
+> 使用：页面与组件通过 `UITheme.metric` 与 `UIControls` 等共享构件取值，不直接写视觉值。
 
 ## 1. 分层
 
@@ -32,6 +32,7 @@
 | `color-success` | `#5fce86` | 胜利、已准备 |
 | `color-danger` | `#e2666b` | 失败、生命、断线 |
 | `color-info` | `#62a8e8` | 时代、中性提示 |
+| `color-highlight` | `#8fd3ff` | 结算页本人名次行与数据分组标题 |
 
 ## 3. 字体
 
@@ -43,8 +44,9 @@
 | `font-body` | 14 | 区块标题、按钮 |
 | `font-title` | 16 | 随从攻防、英雄名 |
 | `font-title-lg` | 18 | 图鉴详情的卡名 |
+| `font-title-xl` | 20 | 结算页本人名次与数据分区标题 |
 | `font-display` | 22 | 战斗结果横幅、弹层标题 |
-| `font-hero` | 28 | 预留，当前页面未使用 |
+| `font-hero` | 28 | 结算页标题 |
 
 ## 4. 间距与圆角
 
@@ -54,12 +56,13 @@
 | `space-xs` | 4 | | `radius-md` | 8 |
 | `space-sm` | 6 | | `radius-lg` | 12 |
 | `space-md` | 8 | | `radius-pill` | 16 |
+| `space-md-plus` | 10 | | | |
 | `space-lg` | 12 | | | |
 | `space-xl` | 16 | | | |
 | `space-2xl` | 24 | | | |
 | `space-3xl` | 32 | | | |
 
-语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行与幽灵身份块，经 `UI.apply_dim` 应用；`freeze-overlay-alpha` = 0.22，用于冻结蒙层自身，经 `self_modulate.a` 应用，不向下压暗冰晶与「冻」字。
+语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行与幽灵身份块，经 `UIControls.apply_dim` 应用；`freeze-overlay-alpha` = 0.22，用于冻结蒙层自身，经 `self_modulate.a` 应用，不向下压暗冰晶与「冻」字。
 
 ## 5. 组件与场景度量
 
@@ -86,7 +89,6 @@
 | `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
 | `rank-badge-size` | 18 | 座位行名次角标边长 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
-| `hero-tile-width` | 150 | 英雄小卡宽度（大厅与房间的英雄选择） |
 | `card-width` / `-height` | 112 / 146 | 商店、棋盘、手牌与战斗只读卡（含拖拽占位） |
 | `card-cover-inset` | 3 | 卡面美术向内收的距离，保证方形美术的四角落在卡面圆角以内 |
 | `card-info-height` | 90 | 有介绍时的卡面信息区基础高度，容纳名称与数值；手牌介绍超出时信息区向上扩展 |
