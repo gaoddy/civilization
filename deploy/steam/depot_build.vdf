@@ -1,0 +1,13 @@
+"DepotBuildConfig"
+{
+	"DepotID" "__DEPOT_ID__"
+	"ContentRoot" "__CONTENT_ROOT__"
+	"FileMapping"
+	{
+		"LocalPath" "Civilization.app/*"
+		"DepotPath" "."
+		"recursive" "1"
+	}
+	"FileExclusion" "*.DS_Store"
+	"FileExclusion" "steam_appid.txt"
+}

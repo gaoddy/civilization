@@ -7,7 +7,16 @@ image:
 
 namespace: civilization-dev
 
+# Secret 以 envFrom 注入；Steam 发行环境另需 STEAM_WEB_API_KEY 与 STEAM_APP_ID
+# 两个键，缺任一项时服务端降级为 STEAM_DISABLED，手机号登录不受影响。
 existingSecretName: civilization-postgres-civilization
+
+networkPolicy:
+  # 默认不创建，避免改变现有集群的出网行为。
+  enabled: false
+  # 放行 Steam Web API（api.steampowered.com:443）；NetworkPolicy 只能按端口放行，
+  # 域名限制由集群 DNS / 出网防火墙承担。
+  steamEgress: true
 
 config:
   listenAddr: 0.0.0.0:8080
