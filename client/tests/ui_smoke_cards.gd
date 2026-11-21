@@ -123,13 +123,15 @@ func _ready() -> void:
         _expect(open_card.find_child("AttackPlate", true, false) is StatPlate, "卡面应有攻击底牌")
         _expect(open_card.find_child("HealthPlate", true, false) is StatPlate, "卡面应有血量底牌")
 
-    # 英雄卡：无星级、无攻防底牌、无时代象形。
+    # 英雄卡：无星级、无攻防底牌、无时代象形、无角标与技能文本。
     var hero_face := GalleryCardFace.build_hero("adam-smith", CardDB.hero("adam-smith"))
     add_child(hero_face)
     await get_tree().process_frame
     _expect(hero_face.find_child("CardFrame", true, false) == null, "英雄卡不应有卡框星级")
     _expect(hero_face.find_child("AttackPlate", true, false) == null, "英雄卡不应有攻击底牌")
     _expect(hero_face.find_child("EraGlyph", true, false) == null, "英雄卡不应有时代象形")
+    _expect(hero_face.find_child("CardBadge", true, false) == null, "英雄卡不应有角标")
+    _expect(hero_face.find_child("CardDesc", true, false) == null, "英雄卡不应显示技能文本")
     hero_face.queue_free()
 
     # 棋盘卡：有卡框，无时代象形；空身材不出现底牌装饰（文字仍为「—」）。
@@ -280,41 +282,20 @@ func _ready() -> void:
                 "%s 的信息区应包住名称与数值" % card_id,
             )
 
-    # 介绍仍用于图鉴与手牌：长介绍最多两行并省略。
+    # 图鉴卡显示玩法、不显示效果文本；信息区为紧凑高度。
     var gallery_tile := GalleryCardTile.new("adam-smith")
     add_child(gallery_tile)
     gallery_tile.size = Vector2(112, 146)
     await get_tree().process_frame
     await get_tree().process_frame
-    var desc: Label = gallery_tile.find_child("CardDesc", true, false)
-    _expect(desc != null and desc.is_visible_in_tree(), "图鉴卡应显示 CardDesc")
-    if desc != null:
-        _expect(
-            str(desc.text) == CardDB.display_text("adam-smith"),
-            "图鉴卡介绍应为卡表技能",
-        )
-        _expect(
-            desc.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART,
-            "介绍应自动换行",
-        )
-        _expect(desc.max_lines_visible == 2, "介绍最多两行")
-        _expect(
-            desc.text_overrun_behavior == TextServer.OVERRUN_TRIM_ELLIPSIS,
-            "超长介绍应省略",
-        )
-        _expect(desc.get_visible_line_count() <= 2, "介绍不应超过两行")
-        _expect(desc.get_visible_line_count() == 2, "adam-smith 的长介绍应显示两行")
-        var gallery_name: Control = gallery_tile.find_child("CardName", true, false)
-        var gallery_info: Control = gallery_tile.find_child("CardInfo", true, false)
-        if gallery_name != null and gallery_info != null:
-            _expect(
-                desc.get_global_rect().end.y <= gallery_name.get_global_rect().position.y + 1.0,
-                "图鉴卡介绍应在名称上方",
-            )
-            _expect(
-                gallery_info.get_global_rect().encloses(desc.get_global_rect()),
-                "图鉴卡信息区应包住介绍",
-            )
+    var gallery_type: Control = gallery_tile.find_child("CardType", true, false)
+    var expected_playstyle := CardText.playstyle_text(CardDB.card("adam-smith"))
+    _expect(
+        gallery_type != null and str(gallery_type.text) == expected_playstyle,
+        "图鉴卡应显示玩法「%s」，实际：%s"
+        % [expected_playstyle, str(gallery_type.text) if gallery_type != null else "缺失"],
+    )
+    _expect(gallery_tile.find_child("CardDesc", true, false) == null, "图鉴卡不应显示效果文本")
     gallery_tile.queue_free()
     await get_tree().process_frame
 

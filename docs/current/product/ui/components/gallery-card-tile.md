@@ -16,8 +16,8 @@
 
 - 最小尺寸为 `card-width` × `card-height`（112×146）。
 - 节点名为 `GalleryCard_<id>`；原生 tooltip 为卡名。
-- 普通卡面由 `GalleryCardFace.build` 构建：原始攻防、玩法、`display_cost` 与时代。
-- `hero` 为真时改由 `GalleryCardFace.build_hero` 构建：左上「英雄」角标、玩法与技能介绍，不含费用、时代与攻击/生命。
+- 普通卡面由 `GalleryCardFace.build` 构建：原始攻防、玩法、`display_cost` 与时代，不显示效果文本。
+- `hero` 为真时改由 `GalleryCardFace.build_hero` 构建：封面、名称与玩法，不含角标、技能文本、费用、时代与攻击/生命。
 
 ## 变体与状态
 
