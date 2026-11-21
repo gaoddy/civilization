@@ -9,6 +9,7 @@
 | 数值胶囊 | `UIControls.pill_label`（`client/ui/controls.gd`） | [pill.md](pill.md) |
 | 按钮 | `UIControls.styled_button`（`client/ui/controls.gd`） | [button.md](button.md) |
 | 卡片容器 | `UIControls.card_panel`（`client/ui/controls.gd`） | [card-panel.md](card-panel.md) |
+| 可选项框 | `SelectableBox`（`client/ui/selectable_box.gd`） | [selectable-box.md](selectable-box.md) |
 | 弹出层外壳 | `PopupLayer`（`client/ui/popup_layer.gd`） | [popup-layer.md](popup-layer.md) |
 | 区块标题 | `UIControls.section_title` | 本文件 |
 | 空态提示 | `UIControls.empty_hint` | 本文件 |
@@ -32,6 +33,7 @@
 - `GameAimLayer` 由对局页实例化并挂载，承接技能与战吼的选目标手势；全屏但忽略鼠标，只有瞄准期间临时接管按下与抬起。
 - `DetailLayer` 统一承载商店、座位、售货员、英雄与随从详情；选英雄页的 `RoomHeroDetailLayer` 继承它，只覆盖内容与定位。
 - 长按判定由 `LongPressTracker`（`client/ui/long_press.gd`）承担，详情层与选英雄页共用同一套 450ms 阈值与 8 画布单位的位移取消距离。
+- 可选项框由 `SelectableBox`（`client/ui/selectable_box.gd`）承担内容承载、常态 / 悬停 / 选中三态描边与框内点击；`RoomHeroCard` 与 `GalleryCardTile` 继承它，分别使用外扩与内联两种选中描边。
 - 弹出层外壳由 `PopupLayer`（`client/ui/popup_layer.gd`）承担遮罩、居中 / 锚点 / 四向贴边定位与点击遮罩关闭；`InvitePopup`、`FriendsPanel`、`GameChoiceOverlay`、`CombatIntro` 与 `GalleryCategoryPanel` 继承它，内容仍由各自构建。
 
 - `UIControls.section_title(text)`：区块标题，`font-body` 字号、`color-text-dim` 颜色，单行不换行。

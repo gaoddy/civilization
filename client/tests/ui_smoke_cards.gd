@@ -299,6 +299,64 @@ func _ready() -> void:
     gallery_tile.queue_free()
     await get_tree().process_frame
 
+    # 可选项框内联变体：选中为 2px 强调描边并优先于悬停，悬停为 1px 强描边。
+    var selectable := SelectableBox.new()
+    selectable.configure(UITheme.panel_style("raised-flush"), SelectableBox.Outline.INLINE)
+    selectable.custom_minimum_size = Vector2(112, 146)
+    add_child(selectable)
+    await get_tree().process_frame
+    selectable.set_selected(true)
+    var selected_box := selectable.get_theme_stylebox("panel") as StyleBoxFlat
+    _expect(
+        selected_box != null
+        and selected_box.border_width_left == 2
+        and selected_box.border_color == UITheme.color("color-accent"),
+        "可选项框选中应为 2px 强调描边",
+    )
+    selectable.set_hovered(true)
+    var selected_hover := selectable.get_theme_stylebox("panel") as StyleBoxFlat
+    _expect(
+        selected_hover != null and selected_hover.border_color == UITheme.color("color-accent"),
+        "可选项框选中态应优先于悬停",
+    )
+    selectable.set_selected(false)
+    var hover_box := selectable.get_theme_stylebox("panel") as StyleBoxFlat
+    _expect(
+        hover_box != null
+        and hover_box.border_width_left == 1
+        and hover_box.border_color == UITheme.color("color-border-strong"),
+        "可选项框悬停应为 1px 强描边",
+    )
+    selectable.queue_free()
+    await get_tree().process_frame
+
+    # 可选项框外扩变体：选中显示框外一圈，且范围大于框本身。
+    var outer := SelectableBox.new()
+    var outer_base := UITheme.panel_style("raised")
+    # 外扩选中框以内容区为基准；内容铺满整卡时使用零内边距底板。
+    outer_base.set_content_margin_all(0)
+    outer.configure(outer_base, SelectableBox.Outline.OUTER)
+    outer.custom_minimum_size = Vector2(112, 146)
+    add_child(outer)
+    await get_tree().process_frame
+    await get_tree().process_frame
+    outer.set_selected(true)
+    var outer_frame := outer.find_child("SelectedFrame", true, false) as Control
+    _expect(
+        outer_frame != null and outer_frame.is_visible_in_tree(),
+        "外扩可选项框选中应显示选中框",
+    )
+    _expect(
+        outer_frame != null
+        and outer_frame.get_global_rect().size.x > outer.get_global_rect().size.x
+        and outer_frame.get_global_rect().size.y > outer.get_global_rect().size.y,
+        "外扩可选项框的选中框应大于框本身：框 %s，选中框 %s" % [
+            str(outer.get_global_rect()), str(outer_frame.get_global_rect()) if outer_frame != null else "缺失",
+        ],
+    )
+    outer.queue_free()
+    await get_tree().process_frame
+
     # 关联分类行文案：界面直接展示该键，必须是「关联分类」而非旧的「关联玩法」。
     var association_label := str(TranslationServer.translate("ui.game.detail.association"))
     _expect(

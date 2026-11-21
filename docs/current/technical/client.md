@@ -43,6 +43,7 @@ client/
     hp_bar.gd                # 血量条：按 hp / hpCap 比例填充，可选圆角（class_name HpBar）
     rank_badge.gd            # 名次角标：rank 为空时不渲染（class_name RankBadge）
     skill_list.gd            # 英雄技能列表：技能名、触发类型、完整文本与费用/次数（class_name SkillList）
+    selectable_box.gd        # 可选项框：内容容器 + 常态/悬停/选中描边与框内点击（class_name SelectableBox）
     icons.gd                 # 代码绘制的矢量图标（class_name Icons）
     stat_plate.gd            # 攻防底牌（class_name StatPlate）
     card_frame.gd            # 卡框与星级（class_name CardFrame）
@@ -57,7 +58,7 @@ client/
     gallery_filter_bar.gd    # 图鉴顶部筛选栏：时代章节与英雄分类共用（class_name GalleryFilterBar）
     gallery_toc.gd           # 图鉴分类目录：随从视图的顶层分类单选与随从/效果二级筛选（class_name GalleryToc）
     gallery_grid.gd          # 图鉴卡面网格：6 列、滚动分批加载（class_name GalleryGrid）
-    gallery_card_tile.gd     # 图鉴卡面单元：复用 GalleryCardFace，选中/悬停描边（class_name GalleryCardTile）
+    gallery_card_tile.gd     # 图鉴卡面单元：复用 GalleryCardFace，继承 SelectableBox 的内联选中描边（class_name GalleryCardTile）
     gallery_card_face.gd     # 图鉴卡面：攻防、玩法、费用/时代与名称，不含效果文本
     gallery_detail.gd        # 图鉴常驻详情：卡面美术图/占位、分类、玩法、数值、技能与效果（class_name GalleryDetail）
   pages/
@@ -76,7 +77,7 @@ client/
       invite_popup.gd        # 邀请弹层：订阅 social_changed、逐条接受/拒绝（class_name InvitePopup）
     room/
       room.tscn/.gd          # 选英雄页：装配成员行、候选列表、邀请与操作区
-      room_hero_card.gd      # 候选英雄卡：封面、水印、名字、悬停描边与外扩选中框（class_name RoomHeroCard）
+      room_hero_card.gd      # 候选英雄卡：封面、水印、名字，继承 SelectableBox 的外扩选中框（class_name RoomHeroCard）
       room_hero_detail_layer.gd # 悬停详情层：继承 DetailLayer，详情贴悬停卡外侧且不显示图片（class_name RoomHeroDetailLayer）
       room_player_row.gd     # 成员行：名字、确认状态与房主移除按钮（class_name RoomPlayerRow）
       room_candidate_list.gd # 本人候选卡列表：单行居中、创建与选中/悬停同步（class_name RoomCandidateList）
