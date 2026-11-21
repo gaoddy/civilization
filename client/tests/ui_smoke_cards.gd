@@ -123,13 +123,15 @@ func _ready() -> void:
         _expect(open_card.find_child("AttackPlate", true, false) is StatPlate, "卡面应有攻击底牌")
         _expect(open_card.find_child("HealthPlate", true, false) is StatPlate, "卡面应有血量底牌")
 
-    # 英雄卡：无星级、无攻防底牌、无时代象形。
+    # 英雄卡：无星级、无攻防底牌、无时代象形、无角标与技能文本。
     var hero_face := GalleryCardFace.build_hero("adam-smith", CardDB.hero("adam-smith"))
     add_child(hero_face)
     await get_tree().process_frame
     _expect(hero_face.find_child("CardFrame", true, false) == null, "英雄卡不应有卡框星级")
     _expect(hero_face.find_child("AttackPlate", true, false) == null, "英雄卡不应有攻击底牌")
     _expect(hero_face.find_child("EraGlyph", true, false) == null, "英雄卡不应有时代象形")
+    _expect(hero_face.find_child("CardBadge", true, false) == null, "英雄卡不应有角标")
+    _expect(hero_face.find_child("CardDesc", true, false) == null, "英雄卡不应显示技能文本")
     hero_face.queue_free()
 
     # 棋盘卡：有卡框，无时代象形；空身材不出现底牌装饰（文字仍为「—」）。
