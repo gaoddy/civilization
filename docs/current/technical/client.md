@@ -16,7 +16,7 @@ client/
   .gitignore                 # 忽略 .godot/ 与 *.uid
   autoload/
     screen_profile.gd        # 设备类型、逻辑基准、pt→画布换算、安全区与键盘边距
-    window_sizer.gd          # 桌面端启动时按屏幕可用区域 90% 设置窗口并居中；触控端跳过
+    window_sizer.gd          # 桌面端启动时按屏幕可用区域 90% 设置窗口并居中，宽度守住 16:9 下限；触控端跳过
     game_store.gd            # 认证、房间、PlayerView、赛后统计与引导进度的全局状态
     ws_client.gd             # WebSocketPeer、自动重连、信封编解码与分发
     card_db.gd               # 只读卡牌/技能展示表与科学分类树；展示文本按文本 id 从文本表取
@@ -101,7 +101,7 @@ client/
     taxonomy.json            # 分类树生成物：{nodes, playstyles}
 ```
 
-窗口启动时由 `WindowSizer` 按当前屏幕可用区域（`screen_get_usable_rect`，已排除菜单栏与 Dock）的 90% 设置尺寸并居中；无头模式下固定为逻辑基准尺寸，保证冒烟按 16:9 复现。`stretch/aspect` 为 `keep_width`：逻辑宽度按基准（桌面/iPad 1280、iPhone 960）等比缩放，逻辑高度随窗口高度扩展，窗口上下始终由内容铺满；窗口比基准更宽时左右留白。页面用全锚点布局适配视口高度。
+窗口启动时由 `WindowSizer` 按当前屏幕可用区域（`screen_get_usable_rect`，已排除菜单栏与 Dock）的 90% 设置尺寸并居中；无头模式下固定为逻辑基准尺寸，保证冒烟按 16:9 复现。`stretch/aspect` 为 `keep_width`：逻辑宽度按基准（桌面/iPad 1280、iPhone 960）等比缩放，逻辑高度随窗口高度扩展，窗口上下始终由内容铺满；窗口比基准更宽时左右留白。桌面窗口宽度另有下限：不小于高度按基准比例（16:9）换算的宽度，由 `ScreenProfile.fit_aspect_floor` 计算——启动开窗尺寸先套用下限（屏幕放不下时按宽度收窄高度），拖动缩放低于下限时优先加宽回下限，屏幕放不下则保持上一次合法尺寸；全屏、最大化与触控端不介入。页面用全锚点布局适配视口高度。
 
 ## 2. 全局状态与网络层
 
@@ -287,7 +287,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 ### 设备与布局
 
-- `ScreenProfile`（autoload）在启动时按设备设置 `content_scale_size`：iPhone 为 960×540，iPad 与桌面为 1280×720；`keep_width` 下宽度按基准等比缩放、高度随窗口扩展，不再固定 16:9 视口；`project.godot` 的 `display/window/handheld/orientation=4`（`SCREEN_SENSOR_LANDSCAPE`）锁定左右横屏。
+- `ScreenProfile`（autoload）在启动时按设备设置 `content_scale_size`：iPhone 为 960×540，iPad 与桌面为 1280×720；`keep_width` 下宽度按基准等比缩放、高度随窗口扩展，不再固定 16:9 视口；`fit_aspect_floor` 给出桌面窗口宽度下限（宽度 ≥ 高度 × 基准宽 ÷ 基准高），`project.godot` 的 `display/window/handheld/orientation=4`（`SCREEN_SENSOR_LANDSCAPE`）锁定左右横屏。
 - 设备判定：iOS 上按 `OS.get_model_name()` 前缀区分 iPad 与 iPhone；机型名不可用时按屏幕长宽比兜底。非 iOS 与无头环境一律按桌面处理。
 - 换算公式是纯函数：`canvas_scale`、`canvas_hit_min`、`canvas_from_pixels`、`canvas_insets`。`DisplayServer.get_display_safe_area()` 与 `virtual_keyboard_get_height()` 返回像素，按内容矩形换算为画布单位；内容矩形宽为基准宽 × 缩放、高等于窗口高，上下不留白，落在左右留白内的边距记零。
 - `UI.safe_area(page)` 把页面子节点整体移入 `SafeAreaMargin`：桌面四边为零；触控端取安全区四边，底部取安全区与键盘高度的较大值。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UI.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。
