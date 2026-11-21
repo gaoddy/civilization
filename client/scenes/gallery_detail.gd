@@ -15,7 +15,11 @@ func _init() -> void:
         token = "gallery-detail-width-compact"
     custom_minimum_size = Vector2(UITheme.metric(token), 0)
     size_flags_vertical = Control.SIZE_EXPAND_FILL
-    add_theme_stylebox_override("panel", UITheme.panel_style("surface"))
+    var panel_style := UITheme.panel_style("surface")
+    if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
+        # 手机详情收窄到 176，内边距同步收紧，给属性值留出换行宽度。
+        panel_style.set_content_margin_all(UITheme.space("space-md"))
+    add_theme_stylebox_override("panel", panel_style)
 
     _scroll = ScrollContainer.new()
     _scroll.name = "GalleryDetailScroll"
@@ -188,7 +192,8 @@ func _add_row(key_text: String, value_text: String) -> void:
     var row := HBoxContainer.new()
     row.add_theme_constant_override("separation", UITheme.space("space-sm"))
     var key := UI.label(key_text, UITheme.font_size("font-caption"), false)
-    key.custom_minimum_size = Vector2(64, 0)
+    var key_width := 52 if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE else 64
+    key.custom_minimum_size = Vector2(key_width, 0)
     key.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     key.vertical_alignment = VERTICAL_ALIGNMENT_TOP
     row.add_child(key)

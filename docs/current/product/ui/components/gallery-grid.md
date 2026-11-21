@@ -5,30 +5,33 @@
 
 ## 用途
 
-图鉴中区的卡面网格与分页：桌面 6 列、手机 4 列，每页张数按可见行数固定，只构建当前页，底部为上一页 / 页码 / 下一页；不设滚动容器。
+图鉴中区的卡面网格：桌面、iPad 与手机均为 6 列，网格纵向滚动，滚到接近底部时自动追加下一批；底部显示已加载张数与加载提示。不再有分页按钮。
 
 ## 属性与方法
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | `card_selected` | `signal(String)` | 点击某张卡面时发出卡牌 id |
-| `set_cards(ids, selected_id, hero = false)` | `void` | 用新的卡牌集合重建第 1 页；`hero` 为真时卡面走英雄样式 |
-| `select(selected_id)` | `void` | 只更新选中描边，不重建当前页 |
+| `set_cards(ids, selected_id, hero = false)` | `void` | 用新的卡牌集合重建首批并把滚动归零；`hero` 为真时卡面走英雄样式 |
+| `select(selected_id)` | `void` | 只更新已加载卡面的选中描边，不重建 |
 
-- 页大小取 `gallery-page-size`（18 = 6 列 × 3 行），手机取 `gallery-page-size-compact`（8 = 4 列 × 2 行）；列数取 `gallery-grid-columns`（6），手机取 `gallery-grid-columns-compact`（4）。
-- 内部节点名：`GalleryGridRows`、`GalleryEmpty`、`GalleryPager`、`GalleryPrev`、`GalleryPageLabel`、`GalleryNext`。
-- 网格直接铺在组件内，没有 `ScrollContainer`；每页正好填满可见高度，翻页代替滚动。
+- 列数取 `gallery-grid-columns`（6），手机取 `gallery-grid-columns-compact`（6）；列距桌面与 iPad 为 `space-lg`，手机为 `space-md`。
+- 每批张数取 `gallery-batch-size`（18），手机取 `gallery-batch-size-compact`（12）。
+- 内部节点名：`GalleryScroll`、`GalleryScrollBody`、`GalleryGridRows`、`GalleryLoadStatus`、`GalleryEmpty`。
 
 ## 变体与状态
 
-- 集合为空时隐藏网格与分页条，显示「没有符合条件的卡牌」。
-- `hero` 只影响卡面构建（无费用、时代与攻击/生命），分页与选中逻辑不变。
-- 页码文案为「第 N/M 页」；首页禁用上一页，末页禁用下一页。
-- 列/行间距 `space-lg`；网格不滚动，内容超出视口高度时按页切分。
+- 集合为空时隐藏滚动区与加载状态，显示「没有符合条件的卡牌」。
+- 触屏可在卡面上按住拖动滚动：卡面不消费指针事件，拖拽由滚动区按 Godot 内建触屏拖动处理；拖动不改变选中。
+- 首批构建后若内容高度不足一屏，自动继续加载，直到可滚动或全部加载完。
+- 滚动条距底部小于一张卡的高度时加载下一批；同一批只追加一次。
+- 底部状态：未加载完为「已显示 N / M 张 · 继续下滑加载」，全部加载完为「已显示 M / M 张 · 已全部加载」。
+- 改筛选、切换视图或重进图鉴时重建首批并回到顶部；选中卡不在结果内时页面会改为结果首张。
+- `hero` 只影响卡面构建（无费用、时代与攻击/生命），加载与选中逻辑不变。
 
 ## 事件
 
-- `card_selected(card_id)`：转发当前页任一卡面的点击。
+- `card_selected(card_id)`：转发任一已加载卡面的点击。
 
 ## 禁用场景
 

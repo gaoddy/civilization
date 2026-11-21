@@ -243,7 +243,7 @@ func _check_compact() -> void:
     await _check_gallery_hero_compact(compact)
 
 
-## 图鉴英雄视图在 iPhone 基准下：隐藏左侧目录，顶部筛选、网格、分页与详情不越界。
+## 图鉴英雄视图在 iPhone 基准下：隐藏左侧目录，顶部筛选、网格、滚动区与详情不越界。
 func _check_gallery_hero_compact(compact: Vector2) -> void:
     var host := Control.new()
     host.name = "CompactGalleryHost"
@@ -261,8 +261,7 @@ func _check_gallery_hero_compact(compact: Vector2) -> void:
             for node_name in [
                 "GalleryHeader",
                 "GalleryHeroCategories",
-                "GalleryGridRows",
-                "GalleryPager",
+                "GalleryScroll",
                 "GalleryDetail",
             ]:
                 var node := page.find_child(str(node_name), true, false) as Control
@@ -278,8 +277,8 @@ func _check_gallery_hero_compact(compact: Vector2) -> void:
                     )
             var toc := page.find_child("GalleryToc", true, false) as Control
             _check(
-                toc != null and not toc.is_visible_in_tree(),
-                "手机英雄视图不应显示左侧目录",
+                toc == null,
+                "手机英雄视图不应再有左侧目录",
             )
             var header := page.find_child("GalleryHeader", true, false) as Control
             var bar := page.find_child("GalleryHeroCategories", true, false) as Control

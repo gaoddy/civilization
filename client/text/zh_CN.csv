@@ -1265,6 +1265,8 @@ skill.virus-growth-once.text,使一个友方病毒随从获得一次成长
 ui.common.no_hero,未选英雄
 ui.gallery.back_lobby,返回大厅
 ui.gallery.back_match,返回对局
+ui.gallery.category_filter,分类：%s
+ui.gallery.category_panel_title,按玩法分类
 ui.gallery.chapter_all,全部
 ui.gallery.detail_empty,选择一张卡牌查看详情
 ui.gallery.effect,效果
@@ -1274,11 +1276,11 @@ ui.gallery.entry_match,图鉴
 ui.gallery.kind_all,全部
 ui.gallery.kind_effect,效果
 ui.gallery.kind_minion,随从
+ui.gallery.load_all_done,已全部加载
+ui.gallery.load_more_hint,继续下滑加载
+ui.gallery.loaded_stats,已显示 %d / %d 张
 ui.gallery.mode_hero,英雄
 ui.gallery.mode_minion,随从
-ui.gallery.next,下一页
-ui.gallery.page,第 %d/%d 页
-ui.gallery.prev,上一页
 ui.gallery.skills,技能
 ui.gallery.stats,%s / %s
 ui.gallery.title,卡牌图鉴
