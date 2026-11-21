@@ -1301,11 +1301,28 @@ ui.game.detail.eliminated,淘汰
 ui.game.detail.era,时代
 ui.game.detail.fictional,虚构
 ui.game.detail.food_chain,食物链
+ui.game.detail.gained,获得
 ui.game.detail.hero,英雄
 ui.game.detail.hero_power,英雄技能
 ui.game.detail.host,寄生
 ui.game.detail.hp,生命
 ui.game.detail.initial_stats,原始
+ui.game.detail.keyword.armor,受到伤害时，减免 %d 点伤害
+ui.game.detail.keyword.assemble,进入战场时，使你的其他机械随从各获得 %d 次成长
+ui.game.detail.keyword.battlecry,进入战场时触发卡面的战吼效果
+ui.game.detail.keyword.breed,回合开始时获得 +%d 生命
+ui.game.detail.keyword.contagion,造成伤害后，目标每回合 -1 生命
+ui.game.detail.keyword.deathrattle,死亡时触发卡面的亡语效果
+ui.game.detail.keyword.decompose,击杀随从或友方随从死亡后，获得其生命值
+ui.game.detail.keyword.divine_shield,抵消一次伤害
+ui.game.detail.keyword.evolve,从 +2/+2、护盾、复生中选择一个
+ui.game.detail.keyword.ignore_taunt,攻击时无视敌方嘲讽
+ui.game.detail.keyword.poison,造成伤害后，若目标仍存活则将其消灭
+ui.game.detail.keyword.reborn,以 1 点生命复活一次
+ui.game.detail.keyword.sow,死亡时召唤一个 1/1 的幼苗
+ui.game.detail.keyword.stealth,无法被单体攻击与单体效果选中，造成伤害后打破
+ui.game.detail.keyword.taunt,敌方攻击只能在嘲讽随从中选择
+ui.game.detail.keyword.windfury,每回合可攻击两次
 ui.game.detail.minions,随从
 ui.game.detail.not_recruited,未招募
 ui.game.detail.playstyle,玩法

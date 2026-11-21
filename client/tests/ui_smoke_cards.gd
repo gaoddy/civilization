@@ -401,6 +401,8 @@ func _ready() -> void:
         "缺失分类应显示未定：%s" % missing_detail,
     )
 
+    _check_minion_gained_keywords()
+
     await _check_hand_fit()
     await _check_cover_art_inset()
     await _check_card_frame()
@@ -798,6 +800,67 @@ func _shop_detail_text(card_id: String) -> String:
     box.free()
     layer.free()
     return text
+
+
+## 随从获得的关键词：摘要按固定顺序，之后逐条给出规则说明；卡面已有词不重复显示。
+func _check_minion_gained_keywords() -> void:
+    var gained_text := _minion_detail_text("aristotle", ["armor 2", "taunt"])
+    var summary := _minion_gained_summary("aristotle", ["armor 2", "taunt"])
+    _expect(
+        summary.contains("嘲讽、减伤 2"),
+        "获得行应按固定顺序摘要：%s" % summary,
+    )
+    _expect(
+        gained_text.contains("嘲讽：敌方攻击只能在嘲讽随从中选择"),
+        "嘲讽应给出规则说明：%s" % gained_text,
+    )
+    _expect(
+        gained_text.contains("减伤 2：受到伤害时，减免 2 点伤害"),
+        "减伤层数应代入说明：%s" % gained_text,
+    )
+
+    # 卡面自带的关键词不进入获得行；没有获得项时整行不显示。
+    _expect(
+        _minion_gained_summary("bruce-lee", ["windfury"]) == "",
+        "卡面已有连击不应重复进入获得行",
+    )
+
+    # 层数增加按完整字符串视为获得：卡面 armor 1，当前 armor 2；基础剧毒不重复。
+    var layered := _minion_gained_summary("box-jellyfish", ["poison", "armor 2"])
+    _expect(
+        layered.contains("减伤 2") and not layered.contains("剧毒"),
+        "层数增加应进入获得行，卡面已有剧毒不应重复：%s" % layered,
+    )
+
+
+func _minion_detail_text(card_id: String, keywords: Array) -> String:
+    var layer := GameDetailLayer.new()
+    var box := VBoxContainer.new()
+    layer._render_minion_detail(box, _minion_fixture(card_id, keywords))
+    var text := _node_text(box)
+    box.free()
+    layer.free()
+    return text
+
+
+func _minion_gained_summary(card_id: String, keywords: Array) -> String:
+    var layer := GameDetailLayer.new()
+    var box := VBoxContainer.new()
+    layer._render_minion_detail(box, _minion_fixture(card_id, keywords))
+    var row := box.find_child("DetailGainedKeywords", true, false)
+    var text := "" if row == null else _node_text(row)
+    box.free()
+    layer.free()
+    return text
+
+
+func _minion_fixture(card_id: String, keywords: Array) -> Dictionary:
+    return {
+        "cardId": card_id,
+        "keywords": keywords,
+        "attack": 3,
+        "health": 5,
+    }
 
 
 ## 对局英雄详情：顶部使用卡面美术，按 112:146 预留高度。
