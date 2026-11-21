@@ -26,6 +26,8 @@ class ClientBoundaryTest(unittest.TestCase):
             "sfx/freeze.wav",
             "sfx/unfreeze.wav",
             "sfx/shop_enter.wav",
+            "sfx/combat_start.wav",
+            "sfx/combat_end.wav",
             "cards/default/buy.wav",
             "cards/default/attack.wav",
             "cards/default/death.wav",

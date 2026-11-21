@@ -2,7 +2,7 @@
 """生成 v0.1 默认占位音效（合成波形，可随时替换为正式素材）。
 
 输出：
-- client/assets/audio/sfx/{reroll,freeze,unfreeze,shop_enter}.wav
+- client/assets/audio/sfx/{reroll,freeze,unfreeze,shop_enter,combat_start,combat_end}.wav
 - client/assets/audio/cards/default/{buy,attack,death}.wav
 
 逐卡音效放在 client/assets/audio/cards/<card_id>/<cue>.wav，运行时优先使用；
@@ -166,6 +166,28 @@ def build() -> None:
             _at(_bell(659.25, 0.45, 0.5, decay=5.0), 0.09),
             _at(_bell(783.99, 0.55, 0.55, decay=4.5), 0.18),
             _pad(_sweep(196, 220, 0.32, 0.18), 0.55),
+        ),
+    )
+
+    # 战斗开始：低频冲击起势，号角式上行把注意力拉进对局。
+    _write(
+        "sfx/combat_start.wav",
+        _mix(
+            _thump(130, 55, 0.24, 0.9),
+            _at(_noise(0.1, 0.28, smooth=10, seed=11), 0.0),
+            _at(_sweep(196, 392, 0.42, 0.5), 0.03),
+            _at(_bell(392, 0.45, 0.3, decay=4.5), 0.2),
+        ),
+    )
+
+    # 战斗结束：下行三音收束，中立提示结果已出，不区分胜负。
+    _write(
+        "sfx/combat_end.wav",
+        _mix(
+            _bell(659.25, 0.32, 0.45, decay=6.0),
+            _at(_bell(523.25, 0.36, 0.5, decay=5.5), 0.12),
+            _at(_bell(392.0, 0.62, 0.55, decay=4.0), 0.24),
+            _at(_thump(110, 55, 0.3, 0.35), 0.24),
         ),
     )
 
