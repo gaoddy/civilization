@@ -139,6 +139,10 @@ client/
     fixture.gd               # 冒烟用最小 PlayerView
     headless_game.tscn/.gd   # 无头对局驱动（1 客户端 + 7 机器人）
     wireframe_probe.tscn/.gd # 线框图探针：导出可见 Control 的全局矩形（`make ui-wireframe`）
+    view_preview.tscn/.gd    # 运行态视图预览：真实窗口装载页面/场景并注入夹具（`make ui-preview`）
+    preview_fixture.gd       # 预览夹具：`game`（八人对局 + 假连接）与 `none`（空态）
+    preview_focus.gd         # 预览聚焦层：目标控件外侧描边，不改页面树
+    previews/game_rail.gd    # 左栏积分榜单视图的 `SETUP` 构建脚本
   generated/
     protocol.gd              # schema 生成的 GDScript 常量
     cards.json               # 产品文档生成的卡牌展示表
@@ -259,6 +263,8 @@ client/
 | `make client-run-on-desktop` | 等价于 `make client-run CLIENT_DEVICE=desktop`，窗口按屏幕可用区自动收拢 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
 | `make client-smoke` | 用 glob 逐个运行十三个 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR` |
+| `make ui-preview` | 真实窗口装载指定页面/场景并注入夹具，`FOCUS` 高亮子节点；不截图，窗口保持打开；见 §5 |
+| `make ui-preview-check` | 与 `ui-preview` 参数相同但自动退出，按 `VIEW_PREVIEW_OK` / `VIEW_PREVIEW_FAIL` 判定；只用于本机 GUI 冒烟 |
 | `make client-export-ios` | 导出 Xcode 工程并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
 | `make m1b-e2e` | 启动服务端、Godot 无头客户端与 7 个 `sim bot`，要求输出 `M1B_E2E_OK` |
 | `make dev-bots` | 启动服务端（监听 `0.0.0.0`，手机可直连）与 7 个机器人并打印房间码，一局结束后自动准备下一局，供开发者用客户端作为第 8 人反复联调 |
@@ -317,6 +323,24 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - 无头驱动不等上一条意图确认就按新视图继续决策，服务端按最新状态拒绝属预期；因此 `errors` 与 `soft` 必须相等。驱动另外对同一回合的同一商店槽位只提交一次购买（刷新后允许再次购买），避免重复购买同一槽位。
 - 驱动按 `clientIntentId` 找回被拒意图，收到 `NO_VALID_TARGET` 时沿服务端下发的候选（`targetCandidates` 或待选 `candidates`，键为 `zone:id`）换下一个重发；队首待选为 `target` 时发 `ChooseTarget { target }`，不再一律当发现处理；`sim bot` 的处理方式相同（见[房间服务与联网](room-service/README.md) §12）。候选遍历完仍无合法目标时，本回合跳过该手牌（连续被拒 3 张且可结束时直接结束招募）；`ChooseTarget` 被拒则换下一个候选。否则会形成「重试 → 拒绝 → 再重试」的空转，直到演示超时。
 - 默认端口 `18080` 被其他进程占用时，脚本会因监听失败退出；用 `M1B_PORT=<端口> make m1b-e2e` 覆盖，脚本与客户端读取同一个变量。
+
+### 运行态视图预览
+
+`make ui-preview` 用真实窗口装载指定视图，注入本地夹具，不截图、不导出 PNG：
+
+```
+make ui-preview PAGE=game FIXTURE=game FOCUS=PlayersPanel   # 对局页，左栏积分榜描边
+make ui-preview PAGE=game DEVICE=phone                      # 对局页手机档位
+make ui-preview PAGE=gallery                                # 其他页面空态
+make ui-preview SCENE=res://pages/game/game.tscn            # 任意场景
+make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组件单视图
+```
+
+- `PAGE` 取 `client/pages` 下的页面名；`SCENE` 直接加载任意 `res://` 场景；`FOCUS` / `FOCUS_PATH` 在真实页面树里高亮目标并打印 `get_global_rect()`，不隐藏兄弟、不 reparent。
+- `FIXTURE=game` 注入八人对局视图与假连接；不传时按页面名自动选（`game`），其余页面为 `none` 空态。夹具只写 `GameStore` / `Net`，不连接服务端。
+- 页面脚本实现 `static func preview(opts: Dictionary = {}) -> Node` 时优先调用；没有 `.tscn` 的组件由 `SETUP` 脚本的 `static func build(opts)` 构建。
+- `make ui-preview-check` 与 `ui-preview` 参数相同，自动退出并按日志判定：`VIEW_PREVIEW_OK` 通过，`VIEW_PREVIEW_FAIL` 或 `SCRIPT ERROR` 失败；可用 `EXPECT=SeatRow=8` 断言节点数量。需要 GUI 会话，不接入 CI。
+- 预览只做查看与轻交互；点击返回/退出等真实导航会切走预览场景。真实联调仍用 `make dev-bots` + `make client-run`。
 
 ## 6. 国际化与文本表
 

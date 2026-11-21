@@ -146,7 +146,7 @@ func _seat_row(player: Dictionary, state: GameUiState, side: int) -> SelectableB
     var is_self := player_id == GameStore.player_id
     var alive := bool(player.get("alive", true))
     var row := SelectableBox.new()
-    row.name = "SeatRow"
+    row.name = "SeatRow_%s" % player_id
     row.set_meta("player_id", player_id)
     row.custom_minimum_size = Vector2(side, side)
     # 行宽由边长决定，在栏内水平居中；8 行按同一间距垂直居中。
@@ -402,3 +402,12 @@ func _track_detail(row: PanelContainer, player: Dictionary, hp_cap: int) -> void
         "player": player,
         "hpCap": hp_cap,
     })
+
+
+## 预览入口：用调用方给出的 GameUiState 构建左栏，避免为预览复制页面的状态装配。
+static func preview(opts: Dictionary = {}) -> Node:
+    var rail := GamePlayersRail.new()
+    var state: GameUiState = opts.get("state")
+    if state != null:
+        rail.refresh(state)
+    return rail

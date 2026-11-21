@@ -8,7 +8,7 @@ DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
 FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 
-.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke ui-wireframe client-export-templates client-export client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -174,6 +174,55 @@ ui-wireframe: client-import
 	fi
 	$(PYTHON) scripts/ui_wireframe.py --godot "$(GODOT)" \
 		$(if $(PAGE),--page $(PAGE),) $(if $(ALL),--all,) $(if $(DEVICE),--device $(DEVICE),)
+
+# 运行态视图预览：真实窗口装载页面/场景并注入夹具；不截图，窗口保持打开。
+# PAGE 取 client/pages 下的页面名；SCENE 直接给 res:// 场景；FOCUS 高亮同名子节点；
+# FOCUS_PATH 指定节点路径；FIXTURE=game 注入八人对局视图；SETUP 指定自定义构建脚本；
+# DEVICE=phone 切手机档位；EXPECT=SeatRow=8 断言节点数量（配合 ui-preview-check）。
+SCENE ?=
+FOCUS ?=
+FOCUS_PATH ?=
+FIXTURE ?=
+SETUP ?=
+EXPECT ?=
+PREVIEW_FRAMES ?= 12
+
+ui-preview: client-import
+	@if [ -z "$(PAGE)" ] && [ -z "$(SCENE)" ] && [ -z "$(SETUP)" ]; then \
+	  echo "用法：make ui-preview PAGE=game [FOCUS=PlayersPanel] [FIXTURE=game] [DEVICE=phone]" >&2; \
+	  echo "      make ui-preview SCENE=res://pages/game/game.tscn；组件用 SETUP=res://tests/previews/xxx.gd" >&2; \
+	  exit 1; \
+	fi
+	$(GODOT) --path client res://tests/view_preview.tscn -- \
+		$(if $(PAGE),--preview-page=$(PAGE),) \
+		$(if $(SCENE),--preview-scene=$(SCENE),) \
+		$(if $(FOCUS),--preview-focus=$(FOCUS),) \
+		$(if $(FOCUS_PATH),--preview-focus-path=$(FOCUS_PATH),) \
+		$(if $(FIXTURE),--preview-fixture=$(FIXTURE),) \
+		$(if $(SETUP),--preview-setup=$(SETUP),) \
+		$(if $(DEVICE),--preview-device=$(DEVICE),) \
+		$(if $(EXPECT),--preview-expect=$(EXPECT),) \
+		--preview-frames=$(PREVIEW_FRAMES)
+
+# 预览自检：窗口自动退出，按 VIEW_PREVIEW_* 日志判定；只用于本机 GUI 冒烟，不接入 CI。
+ui-preview-check: client-import
+	@if [ -z "$(PAGE)" ] && [ -z "$(SCENE)" ] && [ -z "$(SETUP)" ]; then \
+	  echo "用法：make ui-preview-check PAGE=game FOCUS=PlayersPanel EXPECT=SeatRow=8" >&2; \
+	  exit 1; \
+	fi
+	@mkdir -p output
+	@$(GODOT) --path client --quit-after 900 res://tests/view_preview.tscn -- \
+		$(if $(PAGE),--preview-page=$(PAGE),) \
+		$(if $(SCENE),--preview-scene=$(SCENE),) \
+		$(if $(FOCUS),--preview-focus=$(FOCUS),) \
+		$(if $(FOCUS_PATH),--preview-focus-path=$(FOCUS_PATH),) \
+		$(if $(FIXTURE),--preview-fixture=$(FIXTURE),) \
+		$(if $(SETUP),--preview-setup=$(SETUP),) \
+		$(if $(DEVICE),--preview-device=$(DEVICE),) \
+		$(if $(EXPECT),--preview-expect=$(EXPECT),) \
+		--preview-frames=$(PREVIEW_FRAMES) --preview-quit 2>&1 | tee output/ui_preview.log
+	@grep -q "VIEW_PREVIEW_OK" output/ui_preview.log
+	@! grep -qE "VIEW_PREVIEW_FAIL|SCRIPT ERROR" output/ui_preview.log
 
 # macOS 导出模板：目录按固定的 Godot 版本隔离，缺失时下载官方 tpz 并只拷贝其中的 templates/。
 client-export-templates: client-godot-check
