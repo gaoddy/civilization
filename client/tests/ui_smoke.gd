@@ -49,6 +49,7 @@ func _ready() -> void:
     await _check_stale_combat_not_shown()
     await _check_combat_placeholder_cleared()
     await _check_sfx_events()
+    await _check_sfx_initial_shop_enter()
     await _check_sfx_freeze()
     await _check_sfx_combat()
     await _check_target_pending_aim()
@@ -1475,6 +1476,36 @@ func _check_sfx_events() -> void:
     )
     _expect(_sfx_played(Sfx.CUE_CARD_BUY), "购入音效应加载到默认公共资源")
 
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+## 首回合 `GameStarted` 不带事件：首次招募视图补播一次商店入场，之后不重复。
+func _check_sfx_initial_shop_enter() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    GameStore.turn = 1
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    view["turn"] = 1
+    GameStore.view = view
+    _clear_combat()
+    Sfx.clear_log()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    _expect(
+        Sfx.count_cue(Sfx.CUE_SHOP_ENTER) == 1,
+        "首回合首次进入对局应补播一次商店入场音效",
+    )
+    GameStore.handle(Protocol.MSG_STATE_UPDATE, {"view": view, "events": []})
+    _expect(
+        Sfx.count_cue(Sfx.CUE_SHOP_ENTER) == 1,
+        "同一局内视图刷新不应重播商店入场音效",
+    )
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
