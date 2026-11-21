@@ -1,9 +1,10 @@
 class_name GameChoiceOverlay
-extends Control
+extends PopupLayer
 ## 对局页的选择浮层：发现待选显示一排候选卡面，进化待选显示一排选项块。
 ##
 ## 只负责呈现与点击；待选是否可操作由对局页的门槛判断控制，本组件不构造意图。
-## 同一份待选重复下发时不重建节点，避免每次视图刷新丢失悬停状态。
+## 同一份待选重复下发时不重建节点，避免每次视图刷新丢失悬停状态；遮罩、居中
+## 与显隐由 `PopupLayer` 承担。
 
 ## 点击第 `index` 个卡面或选项块；下标与该待选的候选 / 选项顺序一致。
 signal chosen(index: int)
@@ -25,9 +26,8 @@ var _signature := ""
 
 
 func _init() -> void:
+    super(PopupLayer.Placement.CENTER, SHADE_ALPHA, UITheme.color("color-bg"))
     name = "ChooserOverlay"
-    set_anchors_preset(Control.PRESET_FULL_RECT)
-    visible = false
 
 
 ## 展示一份待选；空候选项或目标待选不显示。
@@ -45,15 +45,10 @@ func show_choice(choice: Dictionary) -> void:
         visible = false
         return
     visible = true
-    add_child(_build_shade())
-    var center := CenterContainer.new()
-    center.name = "ChoiceCenter"
-    center.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(center)
     var box := VBoxContainer.new()
     box.name = "ChoiceBox"
     box.add_theme_constant_override("separation", UITheme.space("space-md"))
-    center.add_child(box)
+    set_content(box)
     var hint := UIControls.label(tr(str(HINT_KEYS[kind])), UITheme.font_size("font-body"))
     hint.name = "ChoiceHint"
     hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -78,15 +73,7 @@ func hide_choice() -> void:
 
 
 func _clear() -> void:
-    UIControls.clear(self)
-
-
-func _build_shade() -> ColorRect:
-    var shade := ColorRect.new()
-    shade.name = "ChoiceShade"
-    shade.color = UITheme.alpha("color-bg", SHADE_ALPHA)
-    shade.set_anchors_preset(Control.PRESET_FULL_RECT)
-    return shade
+    clear_content()
 
 
 ## 单个候选项：按钮承接点击，内部放卡面或选项文字。

@@ -35,6 +35,7 @@ client/
     wording.gd               # 枚举展示与错误文案取用（class_name UIWording）
     format.gd                # RFC3339 时间格式化（class_name UIFormat）
     controls.gd              # 共用控件构造：label、button、panel、margin、胶囊、背景、区块标题与空态（class_name UIControls）
+    popup_layer.gd           # 弹出层外壳：遮罩、居中/锚点/四向贴边定位与点击遮罩关闭（class_name PopupLayer）
     art.gd                   # 图片取用与铺层（class_name UIArt）
     drag_preview.gd          # 拖拽预览定位（class_name UIDrag）
     long_press.gd            # 长按判定：450ms 与 8 画布单位位移取消（class_name LongPressTracker），详情层与选英雄页共用
@@ -186,8 +187,9 @@ client/
 - 未连接时点击操作不会静默丢弃：状态栏提示「未连接，操作未发出」。客户端不维护目标重试表：目标只能取自视图候选，被拒后只提示错误并等待新视图。
 - 页面切换统一走 `UINavigation.navigate(page, path)`：`change_scene_to_file` 会立即把当前场景摘下，而页面仍连着 `GameStore` 等 autoload 信号；摘下后的回调再取 `get_tree()` 会得到 `null`。`UINavigation.navigate` 以「页面仍在树上」为唯一判定，离树页面的导航直接丢弃并返回 `false`，场景脚本不再直接调用 `get_tree().change_scene_to_file`。
 - 房间场景同时监听 `view_changed`：重连或晚到的视图显示对局已开始时直接进入对局；房间不存在或已不在房间时回大厅。
-- 大厅好友浮层是独立组件 `FriendsPanel`（`class_name FriendsPanel`），由大厅挂载，左下角 `FriendsButton` 打开、显示待处理申请数；组件自己订阅 `GameStore.social_changed`，读取 `GameStore` 的社交列表，不做本地排序：好友顺序、在线状态与最近队友次序都由服务端给出。添加好友按 6 位编号（`FriendRequest{toPlayerCode}`）；申请条目提供同意/拒绝，好友条目提供删除；编号或输入非法时只在浮层状态行提示，不发请求。服务端错误在浮层可见时就地显示，不跳回主页。
-- 邀请弹层是独立组件 `InvitePopup`（`class_name InvitePopup`），由大厅挂载；它自己订阅 `GameStore.social_changed`，按 `live_invites()` 过滤已过期条目并渲染遮罩 + 居中面板，条目显示邀请人名字、编号与房间码。接受与拒绝都发 `RespondInvite`（`accept` 为 `true`/`false`）并立即禁用该条按钮，结果清掉该条邀请后弹层自动隐藏；大厅只监听 `responded` 信号做状态文案。收到 `InviteAccepted` 后由 `GameStore` 自动补发 `JoinRoom{roomCode}`。
+- 大厅好友浮层是独立组件 `FriendsPanel`（`class_name FriendsPanel`），继承 `PopupLayer`，由大厅挂载，左下角 `FriendsButton` 打开、显示待处理申请数；组件自己订阅 `GameStore.social_changed`，读取 `GameStore` 的社交列表，不做本地排序：好友顺序、在线状态与最近队友次序都由服务端给出。添加好友按 6 位编号（`FriendRequest{toPlayerCode}`）；申请条目提供同意/拒绝，好友条目提供删除；编号或输入非法时只在浮层状态行提示，不发请求。服务端错误在浮层可见时就地显示，不跳回主页。
+- 邀请弹层是独立组件 `InvitePopup`（`class_name InvitePopup`），由大厅挂载；它自己订阅 `GameStore.social_changed`，按 `live_invites()` 过滤已过期条目并渲染居中面板（遮罩与居中由 `PopupLayer` 承担），条目显示邀请人名字、编号与房间码。接受与拒绝都发 `RespondInvite`（`accept` 为 `true`/`false`）并立即禁用该条按钮，结果清掉该条邀请后弹层自动隐藏；大厅只监听 `responded` 信号做状态文案。收到 `InviteAccepted` 后由 `GameStore` 自动补发 `JoinRoom{roomCode}`。
+- 弹出层外壳统一由 `PopupLayer`（`client/ui/popup_layer.gd`）承担：全屏遮罩、内容宿主、居中 / 锚点 / 四向贴边定位与点击遮罩关闭。`InvitePopup`、`FriendsPanel`、`GameChoiceOverlay`、`CombatIntro` 使用居中定位，`GalleryCategoryPanel` 使用锚点定位并在点遮罩时关闭；各组件只提供面板内容与遮罩参数，不重复搭建遮罩和居中容器。首局引导的四向挖空、座位战报的贴行定位与详情层的跟随指针不属于该外壳。
 - 房间页的邀请入口只列 `status == "online"` 的好友，其余按钮禁用；点击发 `InviteToRoom{friendId}`，结果由 `FriendInviteResult` 回写状态栏（已接受/未接受）。邀请成功的提示不改变房间成员，受邀者按普通 `JoinRoom` 入房后才出现在座位列表。
 - 商店使用 `HFlowContainer` 自动换行，左侧内容放入 `ScrollContainer`，1280×720 下不会因商店变长而溢出；手牌行同样使用 `HFlowContainer`，但槽位按 `card-width - hand-card-overlap` = 80 步进排列、行内 `h_separation` 为 0，1–10 张保持单行，卡片自身 112×146 向右溢出并与下一槽重叠。
 - 手牌卡使用与商店/棋盘一致的卡面语言（由 `HandCardFace` 构建；介绍、费用、时代象形与底部名称、攻击/类型/生命信息区），介绍不截断：信息区按文本向上扩展，字号在 11–8 之间逐档缩小、行距为 0，直到全文放下，角标最后添加并压在信息区之上；只能拖拽出牌（`HandCard._get_drag_data`），点击不产生意图；落点由 `BoardDrop` 判定：随从牌按指针位置换算插入下标、棋盘已满时任何落点都不接收，需要目标的效果牌只有落在服务端下发的候选（`targetCandidates`，区域为棋盘或手牌）上才提交，落点候选即目标；其它落点静默取消。拖拽数据带 `epoch`（`_view_epoch`）与 `targets`（候选的 `{zone, id}` 列表），视图重建后松手按取消处理。

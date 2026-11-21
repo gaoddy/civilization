@@ -1,10 +1,10 @@
 class_name InvitePopup
-extends Control
+extends PopupLayer
 ## 好友房间邀请弹窗：盖在宿主页面之上，逐条列出待处理邀请。
 ##
 ## 组件自己订阅 `GameStore.social_changed`，按 `live_invites()` 渲染；接受与拒绝
 ## 直接发 `RespondInvite`，结果仍以服务端回执为准。宿主只需挂进场景，可选连接
-## `responded` 更新自己的提示文案。
+## `responded` 更新自己的提示文案。遮罩、居中与显隐由 `PopupLayer` 承担。
 
 signal responded(invite_id: String, accept: bool)
 
@@ -12,26 +12,14 @@ var _list: VBoxContainer
 
 
 func _init() -> void:
+    super(PopupLayer.Placement.CENTER, 0.55)
     name = "InvitePopup"
-    set_anchors_preset(Control.PRESET_FULL_RECT)
     mouse_filter = Control.MOUSE_FILTER_STOP
-    visible = false
-
-    var dim := ColorRect.new()
-    dim.name = "InviteDim"
-    dim.color = Color(0, 0, 0, 0.55)
-    dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(dim)
-
-    var center := CenterContainer.new()
-    center.name = "InviteCenter"
-    center.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(center)
 
     var panel := UIControls.card_panel("raised")
     panel.name = "InvitePanel"
     panel.custom_minimum_size = Vector2(360, 0)
-    center.add_child(panel)
+    set_content(panel)
 
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", 8)

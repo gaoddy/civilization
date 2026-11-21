@@ -1,9 +1,10 @@
 class_name CombatIntro
-extends Control
+extends PopupLayer
 ## 战斗开场覆盖层：双方头像、名字与 VS 标记，约 1.2 秒后淡出。
 ##
 ## 与 `CombatFx` 一样按帧驱动，不用 `Tween`，便于无头冒烟按帧断言；只做视觉，
-## 显示期间由 `GameCombatView` 暂停演示推进。覆盖层忽略鼠标，不抢详情与输入。
+## 显示期间由 `GameCombatView` 暂停演示推进。覆盖层忽略鼠标，不抢详情与输入；
+## 遮罩与居中由 `PopupLayer` 承担。
 ##
 ## 身份取法与 `GameOpponentView` 一致：`heroCardId` 决定名字、底色与头像；
 ## 幽灵战对手块压暗并追加「幽灵」角标；对手缺失时回退首字色块与「未知英雄」。
@@ -32,30 +33,17 @@ var _opponent_block: VBoxContainer
 
 
 func _init() -> void:
+    super(PopupLayer.Placement.CENTER, 0.6, UITheme.color("color-bg"))
     name = "CombatIntro"
     mouse_filter = Control.MOUSE_FILTER_IGNORE
-    visible = false
-    set_anchors_preset(Control.PRESET_FULL_RECT)
-
-    var scrim := ColorRect.new()
-    scrim.name = "CombatIntroScrim"
-    scrim.color = UITheme.alpha("color-bg", 0.6)
     scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(scrim)
-
-    var center := CenterContainer.new()
-    center.name = "CombatIntroCenter"
-    center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    center.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(center)
 
     # 独立底板压住河道回合数与随从卡，避免 VS 列与底层文字互相重叠。
     _card = PanelContainer.new()
     _card.name = "CombatIntroCard"
     _card.add_theme_stylebox_override("panel", UITheme.panel_style("raised"))
     _card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    center.add_child(_card)
+    set_content(_card)
 
     _column = VBoxContainer.new()
     _column.name = "CombatIntroColumn"

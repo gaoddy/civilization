@@ -1,10 +1,10 @@
 class_name FriendsPanel
-extends Control
+extends PopupLayer
 ## 好友浮层：添加好友、处理申请、管理好友与从最近队友回加。
 ##
 ## 组件自己订阅 `GameStore.social_changed` 并渲染；接受、拒绝、删除与回加直接
 ## 发对应消息。宿主只负责打开/关闭，并把服务端错误转进浮层。Esc 与关闭按钮
-## 发出 `closed`，由页面决定收起。
+## 发出 `closed`，由页面决定收起；遮罩与居中由 `PopupLayer` 承担。
 
 signal closed
 
@@ -19,27 +19,15 @@ var _outgoing: Label
 
 
 func _init() -> void:
+    super(PopupLayer.Placement.CENTER, 0.58)
     name = "FriendsPanel"
-    set_anchors_preset(Control.PRESET_FULL_RECT)
     mouse_filter = Control.MOUSE_FILTER_STOP
-    visible = false
-
-    var dim := ColorRect.new()
-    dim.name = "FriendsDim"
-    dim.color = Color(0, 0, 0, 0.58)
-    dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-    dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    add_child(dim)
-
-    var center := CenterContainer.new()
-    center.name = "FriendsCenter"
-    center.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(center)
+    scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
     _panel = UIControls.card_panel("raised")
     _panel.name = "FriendsPanelCard"
     _panel.custom_minimum_size = Vector2(600, 0)
-    center.add_child(_panel)
+    set_content(_panel)
 
     var root := VBoxContainer.new()
     root.add_theme_constant_override("separation", UITheme.space("space-md"))
@@ -128,11 +116,11 @@ func _exit_tree() -> void:
 ## 打开浮层；列表按当前社交状态重算。
 func open() -> void:
     _render()
-    visible = true
+    open_layer()
 
 
 func close() -> void:
-    visible = false
+    close_layer()
 
 
 ## 服务端错误就地显示，不跳回大厅主页面。
