@@ -59,6 +59,15 @@ impl Engine {
     ) -> Option<MinionInstance> {
         let player = state.players.get(usize::from(seat))?;
         let base_id = *copies.iter().min()?;
+        // 金色继承 3 张合成材料实际从公共池扣除的份数，出售时按该值退还。
+        let pool_copies = player
+            .board
+            .iter()
+            .chain(player.hand.iter().filter_map(HandCard::minion))
+            .filter(|minion| copies.contains(&minion.instance_id))
+            .map(|minion| minion.pool_copies)
+            .fold(0u8, u8::saturating_add)
+            .min(3);
         let hand_slots = self.catalog.config.hand_slots;
         let base_board_index = player
             .board
@@ -77,6 +86,7 @@ impl Engine {
         // 三张副本已离场，再判断手牌是否真的没有空位（只有三张都在棋盘时才可能满）。
         let hand_full = player.hand.len() >= hand_slots;
         upgrade_to_golden(&self.catalog, &mut golden);
+        golden.pool_copies = pool_copies;
         golden.instance_id = new_id;
 
         if hand_full {

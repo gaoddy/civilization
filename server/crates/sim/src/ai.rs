@@ -49,8 +49,8 @@ pub fn plan(state: &GameState, seat: Seat, engine: &Engine, blocked: &[Intent]) 
     let candidates = [
         choose_pending(state, player, catalog, blocked),
         choose_hero_power(state, player, engine),
-        choose_fill_board(state, player, catalog),
-        choose_buy(state, player, catalog),
+        choose_fill_board(player, catalog),
+        choose_buy(player, catalog),
         can_upgrade(player, catalog).then_some(Intent::UpgradeEra),
         choose_reroll(player, catalog),
         choose_play_effect(player, catalog, blocked),
@@ -381,12 +381,7 @@ fn effect_matches_playstyle(card: &Card, dominant: Playstyle) -> bool {
 
 /// 商店中买得起且能放入手牌的候选里按降序键排列后的第一个槽位：
 /// 金币 → 卡牌等级 → 槽位下标小的优先。买入一律入手牌，因此只看手牌是否有空位。
-fn best_affordable(
-    state: &GameState,
-    player: &PlayerState,
-    catalog: &Catalog,
-    gold: u8,
-) -> Option<u8> {
+fn best_affordable(player: &PlayerState, catalog: &Catalog, gold: u8) -> Option<u8> {
     if player.hand.len() >= catalog.config.hand_slots {
         return None;
     }
@@ -401,10 +396,6 @@ fn best_affordable(
             continue;
         };
         if !effect_matches_playstyle(card, dominant) {
-            continue;
-        }
-        if card.card_type == CardType::Minion && state.pool.get(&card.id).copied().unwrap_or(0) == 0
-        {
             continue;
         }
         let cost = buy_cost(card);
@@ -422,8 +413,8 @@ fn best_affordable(
     best.map(|(_, slot)| slot)
 }
 
-fn choose_buy(state: &GameState, player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
-    best_affordable(state, player, catalog, player.gold).map(|slot| Intent::BuyMinion { slot })
+fn choose_buy(player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
+    best_affordable(player, catalog, player.gold).map(|slot| Intent::BuyMinion { slot })
 }
 
 /// 棋盘有空位时把手牌里的随从打上棋盘；手牌已满导致买不了牌时，
@@ -466,7 +457,7 @@ fn choose_play_effect(
     None
 }
 
-fn choose_fill_board(state: &GameState, player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
+fn choose_fill_board(player: &PlayerState, catalog: &Catalog) -> Option<Intent> {
     // 三连奖励牌先于普通随从打出：它是零费发现，保证奖励路径被覆盖。
     if let Some(index) = player
         .hand
@@ -498,7 +489,7 @@ fn choose_fill_board(state: &GameState, player: &PlayerState, catalog: &Catalog)
     }
     let (instance_id, golden) = weakest_minion(player, catalog)?;
     let gold_after = player.gold.saturating_add(if golden { 3 } else { 1 });
-    best_affordable(state, player, catalog, gold_after)?;
+    best_affordable(player, catalog, gold_after)?;
     Some(Intent::SellMinion {
         minion: instance_id,
     })
@@ -927,7 +918,7 @@ mod tests {
             frozen: false,
         })];
         assert_eq!(
-            choose_buy(&state, &state.players[0], &catalog),
+            choose_buy(&state.players[0], &catalog),
             Some(Intent::BuyMinion { slot: 0 }),
             "机械主导时可买带 play:machine 的跨玩法效果牌"
         );
@@ -942,7 +933,7 @@ mod tests {
             frozen: false,
         })];
         assert_eq!(
-            choose_buy(&state, &state.players[0], &catalog),
+            choose_buy(&state.players[0], &catalog),
             Some(Intent::BuyMinion { slot: 0 }),
             "哺乳纲主导时可买带 play:mammal 的跨玩法效果牌"
         );
@@ -953,9 +944,31 @@ mod tests {
             frozen: false,
         })];
         assert_eq!(
-            choose_buy(&state, &state.players[0], &catalog),
+            choose_buy(&state.players[0], &catalog),
             None,
             "哺乳纲主导时不买只有爬行纲/机械归属的效果牌"
+        );
+    }
+
+    #[test]
+    fn buy_accepts_shop_minion_with_empty_pool() {
+        // 商店里的份在抽取时已从公共池扣除，池计数为 0 不影响购买。
+        let catalog = embedded_catalog().expect("内置卡表应能加载");
+        let (_, mut state) =
+            Engine::new(catalog.clone(), [7; 32], rule_engine::playstyles::draw(7));
+        state.phase = Phase::Recruit;
+        state.turn = 1;
+        state.players[0].gold = 10;
+        state.players[0].shop = vec![Some(rule_engine::state::ShopSlot {
+            instance_id: 10,
+            card_id: "saman".into(),
+            frozen: false,
+        })];
+        state.pool.insert("saman".into(), 0);
+        assert_eq!(
+            choose_buy(&state.players[0], &catalog),
+            Some(Intent::BuyMinion { slot: 0 }),
+            "共享池为 0 不影响购买商店里已扣池的份"
         );
     }
 
@@ -974,14 +987,14 @@ mod tests {
             frozen: false,
         })];
         assert_eq!(
-            choose_buy(&state, &state.players[0], &catalog),
+            choose_buy(&state.players[0], &catalog),
             None,
             "哺乳玩家不买鱼的定向牌"
         );
 
         state.players[0].board = vec![MinionInstance::new(&catalog, 2, "clownfish", false)];
         assert_eq!(
-            choose_buy(&state, &state.players[0], &catalog),
+            choose_buy(&state.players[0], &catalog),
             Some(Intent::BuyMinion { slot: 0 }),
             "鱼纲玩家可以买鱼的定向牌"
         );

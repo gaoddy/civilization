@@ -177,17 +177,12 @@ pub(crate) fn check_buy(
         .checked_sub(cost)
         .ok_or_else(|| Reject::new(RejectCode::NotEnoughGold, format!("需要 {cost} 金币")))?;
 
-    if card_type == CardType::Minion && state.pool.get(&card_id).copied().unwrap_or(0) == 0 {
-        return Err(Reject::new(
-            RejectCode::ShopSlotEmpty,
-            format!("卡牌 {card_id} 的共享池已空"),
-        ));
-    }
     Ok(())
 }
 
-/// 购买：扣金币、清空槽位、从共享池扣 1 张，牌一律进入手牌。
+/// 购买：扣金币、清空槽位，牌一律进入手牌。
 ///
+/// 该份在商店抽取时已从共享池扣除，购买不再扣池，随从按 1 份扣池记录。
 /// 买入不入场，因此不触发战吼、不登记进化，也不需要目标与实例编号；
 /// 随从要上棋盘须另提交 `PlayCard`。随从买入后仍立即做三连判定（手牌参与三连）。
 fn buy(engine: &Engine, state: &mut GameState, seat: Seat, slot: u8) -> Result<Outcome, Reject> {
@@ -225,13 +220,8 @@ fn buy(engine: &Engine, state: &mut GameState, seat: Seat, slot: u8) -> Result<O
     if let Some(shop_slot) = player.shop.get_mut(usize::from(slot)) {
         *shop_slot = None;
     }
-    if card_type == CardType::Minion
-        && let Some(count) = state.pool.get_mut(&card_id)
-    {
-        *count = count.saturating_sub(1);
-    }
     match card_type {
-        CardType::Minion => player.hand.push(HandCard::Minion(new_minion(
+        CardType::Minion => player.hand.push(HandCard::Minion(new_pool_minion(
             &engine.catalog,
             instance_id,
             &card_id,
@@ -281,6 +271,7 @@ fn sell(state: &mut GameState, seat: Seat, minion: InstanceId) -> Result<Outcome
     let player = player(state, seat).expect("check_sell 已保证座位存在");
     let card_id = player.board[index].card_id.clone();
     let refund = if player.board[index].golden { 3 } else { 1 };
+    let pool_copies = player.board[index].pool_copies;
 
     let player = state
         .players
@@ -289,7 +280,7 @@ fn sell(state: &mut GameState, seat: Seat, minion: InstanceId) -> Result<Outcome
     player.board.remove(index);
     player.gold = player.gold.saturating_add(refund);
     let count = state.pool.entry(card_id).or_insert(0);
-    *count = count.saturating_add(1);
+    *count = count.saturating_add(u16::from(pool_copies));
 
     Ok(Outcome::with(vec![GameEvent::MinionSold { seat, minion }]))
 }
@@ -1218,21 +1209,26 @@ fn choose_discover(
     };
 
     state.pending.remove(index);
-    if let Some(count) = state.pool.get_mut(&card_id) {
-        *count = count.saturating_sub(1);
-    }
+    // 候选登记后池中份数可能已被其他操作消耗；只有实际扣到份才记为占用。
+    let charged = match state.pool.get_mut(&card_id) {
+        Some(count) if *count > 0 => {
+            *count -= 1;
+            true
+        }
+        _ => false,
+    };
     let instance_id = state.next_instance_id;
     state.next_instance_id = instance_id.saturating_add(1);
     let player = state
         .players
         .get_mut(usize::from(seat))
         .expect("check_choose_discover 已保证座位存在");
-    player.hand.push(HandCard::Minion(new_minion(
-        &engine.catalog,
-        instance_id,
-        &card_id,
-        false,
-    )));
+    let minion = if charged {
+        new_pool_minion(&engine.catalog, instance_id, &card_id, false)
+    } else {
+        new_minion(&engine.catalog, instance_id, &card_id, false)
+    };
+    player.hand.push(HandCard::Minion(minion));
 
     let mut events = vec![GameEvent::CardDiscovered { seat, card_id }];
     events.extend(engine.check_triple(state, seat));
@@ -1263,7 +1259,20 @@ pub(crate) fn roll_player(
     // 商店恢复为基础槽位数；追加槽位只在本次刷新结果中保留。
     let slot_count = engine.catalog.config.shop_slots;
 
-    let (rng, pool, playstyles) = (&mut state.rng, &state.pool, &state.enabled_playstyles);
+    // 未保留的旧槽位先把份归还公共池，再抽取新牌。冻结且位于基础槽位内的卡
+    // 跨回合保留，继续占用其份数。
+    for (index, slot) in old_shop.iter().enumerate() {
+        let Some(slot) = slot else { continue };
+        let kept = preserve_frozen && index < slot_count && slot.frozen;
+        if kept {
+            continue;
+        }
+        if let Some(count) = state.pool.get_mut(&slot.card_id) {
+            *count = count.saturating_add(1);
+        }
+    }
+
+    let (rng, pool, playstyles) = (&mut state.rng, &mut state.pool, &state.enabled_playstyles);
     // 冻结槽位沿用原实例编号；其余槽位在确定卡牌后统一分配新编号。
     let mut drawn: Vec<Option<(Option<InstanceId>, String, bool)>> = Vec::with_capacity(slot_count);
     for index in 0..slot_count {
@@ -1309,11 +1318,30 @@ pub(crate) fn roll_player(
     }
 }
 
+/// 出局时清空商店，并把未购买的随从份归还公共牌池。
+///
+/// 效果牌不在公共池中，`pool.get_mut` 返回 `None` 时自然跳过。
+pub(crate) fn return_shop_to_pool(state: &mut GameState, seat: Seat) {
+    let Some(player) = state.players.get_mut(usize::from(seat)) else {
+        return;
+    };
+    for slot in &mut player.shop {
+        let Some(existing) = slot.take() else {
+            continue;
+        };
+        if let Some(count) = state.pool.get_mut(&existing.card_id) {
+            *count = count.saturating_add(1);
+        }
+    }
+}
+
 /// 抽一张商店卡：先按整数权重选星级，再在合格候选中均匀抽取。
+///
+/// 抽到随从后立即从共享牌池扣除 1 份；效果牌不在池中，不扣。
 fn draw_shop_card(
     engine: &Engine,
     rng: &mut RngStreams,
-    pool: &BTreeMap<String, u16>,
+    pool: &mut BTreeMap<String, u16>,
     playstyles: &BTreeSet<Playstyle>,
     weights: &[u16; 7],
 ) -> Option<String> {
@@ -1329,7 +1357,11 @@ fn draw_shop_card(
             continue;
         }
         let index = rng.below(Stream::Shop, candidates.len() as u64) as usize;
-        return candidates.get(index).map(|card| card.id.clone());
+        let card = candidates.get(index).copied()?;
+        if let Some(count) = pool.get_mut(&card.id) {
+            *count = count.saturating_sub(1);
+        }
+        return Some(card.id.clone());
     }
     None
 }
@@ -1374,6 +1406,18 @@ pub(crate) fn new_minion(
     golden: bool,
 ) -> MinionInstance {
     MinionInstance::new(catalog, instance_id, card_id, golden)
+}
+
+/// 从公共牌池取 1 份创建的随从：出售时归还 1 份。
+pub(crate) fn new_pool_minion(
+    catalog: &Catalog,
+    instance_id: InstanceId,
+    card_id: &str,
+    golden: bool,
+) -> MinionInstance {
+    let mut minion = new_minion(catalog, instance_id, card_id, golden);
+    minion.pool_copies = 1;
+    minion
 }
 
 fn player(state: &GameState, seat: Seat) -> Result<&PlayerState, Reject> {
@@ -1574,20 +1618,6 @@ mod tests {
                 check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
                 expected: RejectCode::ShopSlotEmpty,
                 expected_message: Some("商店槽位 0 为空"),
-            },
-            Case {
-                name: "共享池为空买卡",
-                setup: Box::new(|| {
-                    let (engine, mut state) = setup(103);
-                    let card_id = minion_id(1);
-                    set_shop(&mut state, 0, &[Some(card_id.clone())]);
-                    state.pool.insert(card_id, 0);
-                    (engine, state)
-                }),
-                intent: Intent::BuyMinion { slot: 0 },
-                check: Box::new(|engine, state| check_buy(engine, state, 0, 0)),
-                expected: RejectCode::ShopSlotEmpty,
-                expected_message: None,
             },
             Case {
                 name: "共享池空且金币为 0 优先报金币不足",

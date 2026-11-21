@@ -930,13 +930,14 @@ fn combat_state_hash_matches_golden_baseline() {
     // 一个布尔值，金标准同步。
     // 移除 is_scholar 字段后随从哈希少写一个布尔值，金标准同步；战斗行为不变。
     // 移除仅参与哈希的 turns_in_era 后玩家哈希少写一个字段，金标准同步；规则行为不变。
+    // 随从新增 pool_copies（抽取占用的共享池份数）后哈希多写一个字节，金标准同步。
     // 行为不变，任何 GameState 字段或随机流消耗顺序变化仍会使该值改变。
     let (engine, mut state) = real_combat_state();
     let outcome = engine.resolve_combat(&mut state).unwrap();
     assert_eq!(outcome.reports.len(), 2);
     assert_eq!(
         format!("{:016x}", state_hash(&state)),
-        "710e73f7570d6ce3",
+        "64de3320a83e6447",
         "固定场景的 state_hash 金标准"
     );
 }

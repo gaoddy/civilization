@@ -769,6 +769,7 @@ fn resolve_settle(
         if let Some(player) = player_mut(state, seat) {
             player.eliminated = true;
         }
+        crate::recruit::return_shop_to_pool(state, seat);
         newly_eliminated.push(seat);
         events.push(GameEvent::PlayerEliminated {
             seat,
@@ -837,6 +838,7 @@ pub fn forfeit(state: &mut GameState, seat: Seat) -> Vec<GameEvent> {
         player.hp = 0;
         player.eliminated = true;
     }
+    crate::recruit::return_shop_to_pool(state, seat);
     state.ranking.insert(0, seat);
     let mut events = vec![GameEvent::PlayerEliminated {
         seat,

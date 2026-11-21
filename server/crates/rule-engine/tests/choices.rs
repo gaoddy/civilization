@@ -576,7 +576,16 @@ fn gain_minion_from_shop_removes_shop_slot() {
     assert!(!untouched.frozen);
     assert_eq!(state.players[0].hand.len(), 1);
     assert_eq!(state.players[0].hand[0].card_id(), card_id);
-    assert_eq!(pool_count(&state, &card_id), pool_before - 1, "池只扣一次");
+    assert_eq!(
+        state.players[0].hand[0].minion().unwrap().pool_copies,
+        1,
+        "商店槽位已在抽取时扣池，获得时不再扣池"
+    );
+    assert_eq!(
+        pool_count(&state, &card_id),
+        pool_before,
+        "池只扣一次（抽取时）"
+    );
 }
 
 #[test]

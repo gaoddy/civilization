@@ -69,7 +69,7 @@ fn pool_count(state: &GameState, card_id: &str) -> u16 {
 }
 
 #[test]
-fn buy_deducts_gold_and_pool_and_goes_to_hand() {
+fn buy_does_not_deduct_pool_and_goes_to_hand() {
     let (engine, mut state) = turn_started(1);
     let card_id = minion_id(1);
     set_shop(&mut state, 0, &[Some(card_id.clone())]);
@@ -89,7 +89,11 @@ fn buy_deducts_gold_and_pool_and_goes_to_hand() {
         }]
     );
     assert_eq!(state.players[0].gold, 0, "随从统一 3 金");
-    assert_eq!(pool_count(&state, &card_id), before_pool - 1);
+    assert_eq!(
+        pool_count(&state, &card_id),
+        before_pool,
+        "抽取时已扣池，购买不再扣"
+    );
     assert_eq!(state.players[0].shop[0], None);
     assert!(
         state.players[0].board.is_empty(),
@@ -101,6 +105,11 @@ fn buy_deducts_gold_and_pool_and_goes_to_hand() {
     );
     assert_eq!(state.players[0].hand.len(), 1);
     assert_eq!(state.players[0].hand[0].card_id(), card_id);
+    assert_eq!(
+        state.players[0].hand[0].minion().unwrap().pool_copies,
+        1,
+        "买到的份出售时归还 1 份"
+    );
     assert!(!state.players[0].hand[0].golden());
 }
 
@@ -192,9 +201,9 @@ fn buy_enters_hand_even_when_board_has_room() {
 fn sell_returns_gold_and_pool() {
     let (engine, mut state) = turn_started(7);
     let card_id = minion_id(1);
-    state.players[0]
-        .board
-        .push(minion(&engine.catalog, 42, &card_id));
+    let mut sold = minion(&engine.catalog, 42, &card_id);
+    sold.pool_copies = 1;
+    state.players[0].board.push(sold);
     state.players[0].gold = 0;
     let before_pool = pool_count(&state, &card_id);
 
@@ -221,6 +230,7 @@ fn sell_golden_returns_three() {
     let before_pool = pool_count(&state, &card_id);
     let mut golden = minion(&engine.catalog, 43, &card_id);
     golden.golden = true;
+    golden.pool_copies = 3;
     state.players[0].board.push(golden);
     state.players[0].gold = 0;
 
@@ -231,8 +241,8 @@ fn sell_golden_returns_three() {
     assert_eq!(state.players[0].gold, 3);
     assert_eq!(
         pool_count(&state, &card_id),
-        before_pool + 1,
-        "金色随从也只归还 1 份池"
+        before_pool + 3,
+        "金色随从按合成材料实际扣池份数归还"
     );
 }
 
