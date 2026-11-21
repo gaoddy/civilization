@@ -186,6 +186,11 @@ pub struct MinionInstance {
     pub instance_id: InstanceId,
     pub card_id: String,
     pub golden: bool,
+    /// 该实例创建时实际从共享牌池扣除的份数。
+    ///
+    /// 普通随从为 0 或 1；金色为其 3 张合成材料的合计，取值 0–3。
+    /// 未从公共池取得的副本（复制、三连奖励、回收等）为 0，出售时不退还份数。
+    pub pool_copies: u8,
     /// 攻击与生命的分层构成，`current` 为战斗与视图读取的当前量。
     pub stats: MinionStats,
     pub breed: i32,
@@ -214,6 +219,7 @@ impl MinionInstance {
             instance_id,
             card_id: card_id.to_string(),
             golden,
+            pool_copies: 0,
             stats: MinionStats::new(attack, health),
             breed: 0,
             breed_applied: 0,

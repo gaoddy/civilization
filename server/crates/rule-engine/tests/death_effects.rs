@@ -205,7 +205,7 @@ fn sow_summons_seedling_on_death() {
 }
 
 #[test]
-fn summon_card_deducts_pool_and_waits_when_empty() {
+fn summon_card_requires_pool_copy() {
     let (mut engine, _state) = setup_with_gold(31);
     add_card(
         &mut engine,
@@ -249,10 +249,10 @@ fn summon_card_deducts_pool_and_waits_when_empty() {
             ..CombatSetup::default()
         },
     );
-    assert_eq!(without_copy.summon_count, 1, "池空仍创建副本");
+    assert_eq!(without_copy.summon_count, 0, "池中无份时不召唤");
     assert!(
         !without_copy.pool_spent.contains_key("termite"),
-        "池空创建副本不扣池"
+        "未召唤不记录扣池"
     );
 }
 

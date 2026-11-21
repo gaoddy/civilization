@@ -11,7 +11,7 @@ use crate::data::{CardType, Catalog, Era, Playstyle, card_in_pool};
 use crate::effects::{Effect, EffectCtx, Params, Trigger, Zone};
 use crate::engine::Engine;
 use crate::events::GameEvent;
-use crate::recruit::new_minion;
+use crate::recruit::{new_minion, new_pool_minion};
 use crate::rng::Stream;
 use crate::state::{GameState, HandCard, ShopSlot};
 
@@ -167,8 +167,8 @@ impl Engine {
     /// - `level = current` 为玩家当前时代，其余为具体星级。
     /// - `from` 只接受 `shop`（省略同样按 `shop`）；其它取值在加载期已被拒绝
     ///   （`effects::parse`），这里不再做运行期兜底。
-    /// - `from = shop`：在有效商店槽位中按卡牌目录顺序选第一张合格随从，清空该槽位，
-    ///   共享池扣 1。没有合格槽位时不获得（不凭空从共享池取卡）。
+    /// - `from = shop`：在有效商店槽位中按卡牌目录顺序选第一张合格随从，清空该槽位。
+    ///   该份已在抽取时从公共池扣除，取得时不再二次扣池。没有合格槽位时不获得。
     /// - `to = hand`：进入手牌，手牌满时不获得；`to = board`：进入战场最右侧，
     ///   棋盘满时不获得；`to = shop` 不是合法目标，不获得。
     ///
@@ -217,9 +217,7 @@ impl Engine {
             return Vec::new();
         };
 
-        if let Some(count) = state.pool.get_mut(&card_id) {
-            *count = count.saturating_sub(1);
-        }
+        // 商店槽位的份已在抽取时从公共池扣除，取得时不再二次扣池。
         let instance_id = state.next_instance_id;
         let card_instance_id = state.players[usize::from(ctx.seat)]
             .shop
@@ -232,7 +230,7 @@ impl Engine {
             *shop_slot = None;
         }
         match to {
-            Zone::Hand => player.hand.push(HandCard::Minion(new_minion(
+            Zone::Hand => player.hand.push(HandCard::Minion(new_pool_minion(
                 &self.catalog,
                 card_instance_id,
                 &card_id,
@@ -241,12 +239,9 @@ impl Engine {
             Zone::Board => {
                 state.next_instance_id = instance_id.saturating_add(1);
                 // 新随从进入战场：先登记进化，再结算它自己的战吼与友方入场触发。
-                state.players[usize::from(ctx.seat)].board.push(new_minion(
-                    &self.catalog,
-                    instance_id,
-                    &card_id,
-                    false,
-                ));
+                state.players[usize::from(ctx.seat)]
+                    .board
+                    .push(new_pool_minion(&self.catalog, instance_id, &card_id, false));
                 self.register_evolve(state, ctx.seat, instance_id);
                 let _ = self.fire(
                     state,

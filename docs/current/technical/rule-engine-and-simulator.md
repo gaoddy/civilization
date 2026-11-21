@@ -170,6 +170,8 @@ impl Taxonomy {
 - 复制已有实例、显式 `Summon {card}`、复活是技能明确指定的结果，不走卡池判定。
 - 英雄卡不进商店；英雄候选由房间服务按同一入口过滤（见[房间服务与联网](room-service/README.md)）。
 
+**共享池占用口径**：`GameState.pool` 是「当前未被任何商店占用的份数」。`roll_player` 先归还未保留的旧槽位，再由 `draw_shop_card` 在选中后扣 1；`AddShopSlot` 同样即抽即扣。商店槽位只在购买/效果取走/刷新/出局时释放，因此被商店占用的份天然不会进入其他玩家的商店、发现候选、`GainMinion`、`Summon {card}` 与战斗 `Convert`/`Summon`。`MinionInstance.pool_copies: u8` 记录该实例实际从池中扣过的份数（普通 0/1、金色 0–3），出售时按它归还；`sell`、三连合成与 `state_hash` 都读写该字段。
+
 ### 3.5 开局玩法
 
 - `GameState.enabled_playstyles: BTreeSet<Playstyle>`，长度固定 5，永不包含 `Neutral`。

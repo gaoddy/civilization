@@ -24,7 +24,7 @@ use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::intent::{Reject, RejectCode};
 use crate::keyword::Keyword;
-use crate::recruit::new_minion;
+use crate::recruit::{new_minion, new_pool_minion};
 use crate::rng::{RngStreams, Stream};
 use crate::state::{
     GameState, HandCard, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat, base_stats,
@@ -1183,7 +1183,7 @@ impl Engine {
     // 招募侧召唤与复制
     // -----------------------------------------------------------------------
 
-    /// 执行 `Summon`：token 直接创建，card 从池中扣 1（池空创建副本）。
+    /// 执行 `Summon`：token 直接创建；card 必须从池中扣 1，池中无份时不召唤。
     fn summon_recruit_from_effect(
         &self,
         state: &mut GameState,
@@ -1283,7 +1283,8 @@ impl Engine {
 
     /// 在招募侧棋盘召唤一个随从；棋盘满时返回 `None`。
     ///
-    /// `position` 为 `None` 时追加到最右侧；`charge_pool` 为真且池中有份数时扣 1。
+    /// `position` 为 `None` 时追加到最右侧；`charge_pool` 为真时先扣 1 份池中份数，
+    /// 池中无份则返回 `None`、不召唤。
     pub(crate) fn summon_recruit(
         &self,
         state: &mut GameState,
@@ -1297,14 +1298,28 @@ impl Engine {
         if state.players.get(index)?.board.len() >= slots {
             return None;
         }
-        if charge_pool && let Some(count) = state.pool.get_mut(card_id) {
-            *count = count.saturating_sub(1);
-        }
+        // 池内卡必须从公共池扣到份才能召唤；池中无份时不召唤。
+        let charged = if charge_pool {
+            match state.pool.get_mut(card_id) {
+                Some(count) if *count > 0 => {
+                    *count -= 1;
+                    true
+                }
+                _ => return None,
+            }
+        } else {
+            false
+        };
         let id = state.next_instance_id;
         state.next_instance_id = id.saturating_add(1);
         let board = &mut state.players[index].board;
         let position = position.unwrap_or(board.len()).min(board.len());
-        board.insert(position, new_minion(&self.catalog, id, card_id, false));
+        let minion = if charged {
+            new_pool_minion(&self.catalog, id, card_id, false)
+        } else {
+            new_minion(&self.catalog, id, card_id, false)
+        };
+        board.insert(position, minion);
         self.fire_ally_summon_recruit(state, seat, id);
         Some(id)
     }
@@ -1436,6 +1451,8 @@ impl Engine {
         copy.stats.health.set_aura(0);
         copy.attacks_left = 0;
         copy.cannot_attack = false;
+        // 复制品未从公共池扣除份数，出售时不归还。
+        copy.pool_copies = 0;
         // 副本是新的入场，延迟战吼不继承来源的结算标记。
         copy.delayed_battlecry_used = false;
         copy
@@ -2376,7 +2393,10 @@ impl Engine {
                 .cards
                 .get(card_id)
                 .filter(|card| card.in_shop_pool)?;
-            field.record_pool_spend(card_id);
+            // 池中无份时不召唤，与招募侧召唤口径一致。
+            if !field.record_pool_spend(card_id) {
+                return None;
+            }
             return Some(new_minion(&self.catalog, 0, card_id, false));
         }
         None

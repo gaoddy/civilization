@@ -717,8 +717,8 @@ fn gain_minion_from_shop_moves_to_hand() {
     assert_eq!(player.hand[0].card_id(), expected);
     assert_eq!(
         state.pool.get(&expected).copied().unwrap_or(0),
-        pool_before - 1,
-        "共享池只扣一次"
+        pool_before,
+        "商店槽位已在抽取时扣池，获得时不再扣池"
     );
     assert_eq!(
         player.shop[0], None,

@@ -880,8 +880,8 @@ impl BattleField {
         true
     }
 
-    /// 记录一次召唤 card 的扣池；池中无剩余份数时不扣。
-    pub(crate) fn record_pool_spend(&mut self, card_id: &str) {
+    /// 记录一次召唤 card 的扣池；池中无剩余份数时不扣并返回 `false`。
+    pub(crate) fn record_pool_spend(&mut self, card_id: &str) -> bool {
         let available = self
             .pool
             .get(card_id)
@@ -891,6 +891,9 @@ impl BattleField {
         if available > 0 {
             let entry = self.pool_spent.entry(card_id.to_string()).or_insert(0);
             *entry = entry.saturating_add(1);
+            true
+        } else {
+            false
         }
     }
 

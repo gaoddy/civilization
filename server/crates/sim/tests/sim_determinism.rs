@@ -202,6 +202,10 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 2026-11-21 第二十二次重定：移除 `is_scholar` 与学者机制，攻击力 0 的随从
 /// 改为按普通随从成长（+1/+1），4 个学者专属技能替换为通用技能，同时移除
 /// `match_text`。成长结果与技能组合变化涉及参战卡牌，本批次 20 局哈希全部改变。
+///
+/// 2026-11-21 第二十三次重定：商店抽取即从共享牌池扣除并占用，刷新归还未保留
+/// 的份，随从实例新增 `pool_copies` 记录实际扣池份数并计入状态哈希；商店内容、
+/// 发现候选与 AI 购买路径随之改变，本批次 20 局哈希全部改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))
