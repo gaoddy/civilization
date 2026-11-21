@@ -88,8 +88,9 @@ func refresh(state: GameUiState) -> void:
         slot.setup(entry, float(card_step))
         if position == last_index:
             slot.custom_minimum_size.x = UITheme.stage_metric("card-width")
-        if bool(card.get("requiresTarget", false)):
-            entry.target_dropped.connect(_on_target_dropped)
+        # 需要目标的牌可以把另一张手牌当落点，信号由作为目标的卡发出：
+        # 每张手牌都要转发，不能只连接效果牌自身。
+        entry.target_dropped.connect(_on_target_dropped)
         entry.shop_dropped.connect(_on_card_shop_dropped)
         _row.add_child(slot)
 

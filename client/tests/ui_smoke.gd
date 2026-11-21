@@ -28,6 +28,7 @@ func _ready() -> void:
     await _check_hand_drag_cursor_rule()
     await _check_hand_drag_drops_on_board_blank()
     await _check_hand_drag_drops_on_minion_card()
+    await _check_effect_drag_drops_on_hand_minion()
     await _check_shop_drag_buys()
     await _check_drag_preview_keeps_pointer()
     await _check_board_drag_sells_over_shop_slot()
@@ -1939,6 +1940,66 @@ func _check_hand_drag_drops_on_minion_card() -> void:
             var intent: Dictionary = captured[0]
             _expect(str(intent.get("kind", "")) == Protocol.INTENT_PLAY_CARD, "落点意图应为出牌")
             _expect(int(intent.get("position", -1)) == 0, "落在首张卡上应插到下标 0，实际 %s" % [intent])
+        var viewport = instance.get_viewport()
+        if viewport != null and viewport.gui_is_dragging():
+            viewport.gui_cancel_drag()
+    instance.queue_free()
+    await get_tree().process_frame
+    _fake_disconnect()
+    GameStore.view = {}
+    GameStore.turn = 1
+
+
+## 效果牌拖到手牌随从目标：棋盘满时目标卡本身不可打出，落点仍必须转发出牌意图。
+func _check_effect_drag_drops_on_hand_minion() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    _fake_connect()
+    var view: Dictionary = FixtureScript.view()
+    view["self"]["board"] = []
+    for index in 7:
+        view["self"]["board"].append(FixtureScript.board_minion("mi_%d" % index, "baiyi", index))
+    var effect_card := FixtureScript.hand(
+        "yinshuashu", true, false, null, null, null, [{"zone": "hand", "id": "2002"}]
+    )
+    effect_card["index"] = 0
+    effect_card["instanceId"] = "2001"
+    var target_card := FixtureScript.hand("amoeba", false)
+    target_card["index"] = 1
+    target_card["instanceId"] = "2002"
+    view["self"]["hand"] = [effect_card, target_card]
+    view["self"]["affordances"]["handCards"] = [
+        {"index": 0, "playable": true, "disabledReason": null},
+        {"index": 1, "playable": false, "disabledReason": "NO_SPACE"},
+    ]
+    GameStore.view = view
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+    var effect_node = instance.find_child("HandCard0", true, false)
+    var target_node = instance.find_child("HandCard1", true, false)
+    _expect(effect_node != null and target_node != null, "场景应渲染效果牌与手牌随从")
+    if effect_node != null and target_node != null:
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        await _real_drag(
+            instance,
+            effect_node.get_global_rect().get_center(),
+            target_node.get_global_rect().get_center()
+        )
+        _expect(
+            captured.size() == 1,
+            "效果牌落在手牌随从上应产生一条出牌意图，实际 %d" % captured.size()
+        )
+        if captured.size() == 1:
+            var intent: Dictionary = captured[0]
+            _expect(str(intent.get("kind", "")) == Protocol.INTENT_PLAY_CARD, "落点意图应为出牌")
+            _expect(int(intent.get("handIndex", -1)) == 0, "出牌意图应带效果牌下标 0")
+            var target: Dictionary = intent.get("target", {})
+            _expect(str(target.get("zone", "")) == "hand", "目标应带手牌区域")
+            _expect(str(target.get("id", "")) == "2002", "目标应带所选随从实例编号")
         var viewport = instance.get_viewport()
         if viewport != null and viewport.gui_is_dragging():
             viewport.gui_cancel_drag()
