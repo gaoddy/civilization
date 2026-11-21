@@ -425,6 +425,49 @@ func _check_game_compact(compact: Vector2) -> void:
             var viewport := int(scroll.size.y)
             _check(content <= viewport,
                 "手机基准积分榜不应滚动：内容 %d > 视口 %d" % [content, viewport])
+        if rail != null:
+            var seat_rows: Array = []
+            for child in rail.get_children():
+                if child.has_meta("player_id"):
+                    seat_rows.append(child as Control)
+            _check(seat_rows.size() == 8, "手机基准积分榜应有 8 个座位行，实际 %d" % seat_rows.size())
+            if seat_rows.size() == 8:
+                # 8 行均分左栏高度：首行贴顶、末行贴底、行高一致。
+                var rail_rect := rail.get_global_rect()
+                var first_rect: Rect2 = seat_rows[0].get_global_rect()
+                var last_rect: Rect2 = seat_rows[seat_rows.size() - 1].get_global_rect()
+                _check(
+                    absf(first_rect.position.y - rail_rect.position.y) <= 1.0,
+                    "手机基准首行应贴左栏顶部：行顶 %.1f，左栏顶 %.1f"
+                    % [first_rect.position.y, rail_rect.position.y],
+                )
+                _check(
+                    absf(last_rect.end.y - rail_rect.end.y) <= 1.0,
+                    "手机基准末行应贴左栏底部：行底 %.1f，左栏底 %.1f"
+                    % [last_rect.end.y, rail_rect.end.y],
+                )
+                var min_height := first_rect.size.y
+                var max_height := first_rect.size.y
+                for row in seat_rows:
+                    var height: float = row.get_global_rect().size.y
+                    min_height = minf(min_height, height)
+                    max_height = maxf(max_height, height)
+                _check(
+                    max_height - min_height <= 1.0,
+                    "手机基准 8 行应均分左栏高度：最高 %.1f，最低 %.1f"
+                    % [max_height, min_height],
+                )
+                var avatar_box := seat_rows[0].find_child("SeatAvatar", true, false) as Control
+                var fallback_side := float(UITheme.stage_metric("avatar-rail"))
+                _check(
+                    avatar_box != null and avatar_box.size.x > fallback_side,
+                    "手机基准头像应随行高放大，实际 %s 不大于兜底 %.0f"
+                    % [str(avatar_box.size) if avatar_box != null else "缺失", fallback_side],
+                )
+                _check(
+                    avatar_box != null and is_equal_approx(avatar_box.size.x, avatar_box.size.y),
+                    "手机基准头像应为正方形",
+                )
         var bounds := Rect2(host.get_global_rect().position, compact).grow(1.0)
         for node_name in ["BoardRow", "HandStrip"]:
             var node := page.find_child(str(node_name), true, false) as Control
