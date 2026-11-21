@@ -93,11 +93,12 @@
 | `card-info-compact-height` | 56 | 无介绍时的卡面信息区高度，只容纳名称与数值 |
 | `hand-card-overlap` | 32 | 手牌相邻卡的交叠宽度；槽位步进 = `card-width - hand-card-overlap` = 80，十张单行 |
 | `hand-hover-scale` | 1.12 | 手牌悬停放大倍数，以底边中点为轴；小数令牌用 `UITheme.factor` 读取，不要用 `metric` |
-| `gallery-toc-width` | 140 | 图鉴分类目录宽度；手机 120 |
-| `gallery-detail-width` | 280 | 图鉴常驻详情宽度 |
-| `gallery-preview-width` | 200 | 图鉴详情卡面美术图宽度，手机 160；高度由 `UITheme.card_face_height` 按卡面比例计算 |
-| `gallery-page-size` | 18 | 图鉴每页卡面张数（6 列 × 3 行）；手机 8（4 列 × 2 行） |
-| `gallery-grid-columns` | 6 | 图鉴卡面网格列数；手机 4 |
+| `gallery-toc-width` | 140 | 桌面与 iPad 图鉴分类目录宽度；手机不使用左栏目录 |
+| `gallery-category-panel-width` | 360 | 手机图鉴分类面板宽度，两列排布「全部」与 13 个玩法 |
+| `gallery-detail-width` | 280 | 图鉴常驻详情宽度；手机 176 |
+| `gallery-preview-width` | 200 | 图鉴详情卡面美术图宽度；手机 128；高度由 `UITheme.card_face_height` 按卡面比例计算 |
+| `gallery-batch-size` | 18 | 图鉴每次滚动加载的卡面张数（6 列 × 3 行）；手机 12（6 列 × 2 行） |
+| `gallery-grid-columns` | 6 | 图鉴卡面网格列数；手机同为 6，列距取 `space-md` |
 | `aim-arc-width` | 2.5 | 选目标弧线与角标的线宽 |
 | `aim-dash` / `aim-gap` | 10 / 6 | 弧线虚线段长与间隔 |
 | `aim-dot-radius` | 2.5 | 弧线上流动光点的半径 |

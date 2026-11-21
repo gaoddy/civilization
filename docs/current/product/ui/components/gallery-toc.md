@@ -1,11 +1,11 @@
 # 图鉴分类目录
 
 > 状态：已实现
-> 入口：`GalleryToc.new()`，`client/scenes/gallery_toc.gd`（`class_name GalleryToc`）
+> 入口：`GalleryToc.new()` 与 `GalleryToc.new(true)`，`client/scenes/gallery_toc.gd`（`class_name GalleryToc`）；手机面板入口 `GalleryCategoryPanel`，`client/scenes/gallery_category_panel.gd`
 
 ## 用途
 
-图鉴随从视图左侧的分类筛选：「全部」与顶层分类的纵向单选列表，无标题，每项带当前计数；选中项下方展开「全部 / 随从 / 效果」二级筛选。英雄视图不显示本组件。
+图鉴随从视图的分类筛选：「全部」与 13 个玩法的单选列表，每项带当前计数。桌面与 iPad 显示为左侧竖列，选中项下方展开「全部 / 随从 / 效果」二级筛选；手机由分类面板以两列紧凑模式承载，只显示顶层分类，二级筛选由工具栏常驻。英雄视图不显示本组件。
 
 ## 属性与方法
 
@@ -21,9 +21,10 @@
 
 ## 变体与状态
 
-- 固定宽 `gallery-toc-width`（140），手机 `gallery-toc-width-compact`（120）；按钮纵向排列，间距 `space-xs`。
-- 顶层按钮为 `ghost` 变体的单选 `ButtonGroup`，文字左对齐、横向撑满、高 28。
-- 选中「全部」或任一顶层分类后，其下方显示二级按钮（节点名 `KindAll`、`KindMinion`、`KindEffect`），左侧缩进 `space-2xl`，使用独立 `ButtonGroup`。
+- 桌面与 iPad：固定宽 `gallery-toc-width`（140），按钮纵向排列，间距 `space-xs`，高 28。
+- 手机面板：`GalleryToc.new(true)` 使用两列 `GridContainer`，按钮高 32、间距 `space-xs`，不渲染二级项；面板宽 `gallery-category-panel-width`（360）。
+- 顶层按钮为 `ghost` 变体的单选 `ButtonGroup`，文字左对齐、横向撑满。
+- 桌面选中「全部」或任一顶层分类后，其下方显示二级按钮（节点名 `KindAll`、`KindMinion`、`KindEffect`），左侧缩进 `space-2xl`，使用独立 `ButtonGroup`；手机二级按钮为工具栏 `GalleryKindAll` / `GalleryKindMinion` / `GalleryKindEffect`。
 - 选中项用 `accent-row` 面板样式（圆角 `radius-sm`），文字转 `color-accent`；未选中文字为 `color-text-dim`。
 - 计数为 0 且未选中时禁用；当前选中项不禁用。二级项沿用同一规则。
 - 文字格式为「名称 计数」，如「哺乳纲 122」「机械 82」「随从 332」；计数按图鉴当前筛选口径计算，多玩法卡在多个分类中各计一次，「全部」按唯一卡牌 id 计。
