@@ -48,16 +48,16 @@ func _ready() -> void:
         if cost != null:
             _expect(str(cost.text) == str(CardDB.display_cost("aolinpike-jidian")), "CostBadge 文本应为展示费用")
             _expect(str(cost.text) == "2", "CostBadge 应显示该卡展示费用 2，实际：%s" % str(cost.text))
-        var era := open_card.find_child("EraBadge", true, false)
-        _expect(era != null, "商店卡右上角应有 EraBadge")
-        if era != null:
+        var era := open_card.find_child("EraGlyph", true, false)
+        _expect(era is EraGlyph, "商店卡右上角应有 EraGlyph")
+        if era is EraGlyph:
             _expect(
-                str(era.text) == UI.enum_text("era", str(CardDB.card("aolinpike-jidian").get("era", ""))),
-                "EraBadge 文本应为卡表时代的展示名",
+                (era as EraGlyph).era_id == str(CardDB.card("aolinpike-jidian").get("era", "")),
+                "时代象形应取卡表 era id",
             )
             _expect(
-                str(era.text) == TranslationServer.translate("enum.era.classical"),
-                "EraBadge 应显示时代文案，实际：%s" % str(era.text),
+                (era as EraGlyph).era_id == "classical",
+                "时代象形应取该卡的古典时代，实际：%s" % (era as EraGlyph).era_id,
             )
         _expect(open_card.find_child("FreezeOverlay", true, false) == null, "未冻结卡不应有冻结蒙层")
         _expect(open_card.find_child("FreezeGlyph", true, false) == null, "未冻结卡不应有「冻」字")
@@ -105,6 +105,46 @@ func _ready() -> void:
             _expect(not cost_rect.intersects(era_rect), "费用与时代角标不应相交")
             _expect(not cost_rect.intersects(name_rect), "费用角标不应与卡名相交")
             _expect(not era_rect.intersects(name_rect), "时代角标不应与卡名相交")
+        var frame := open_card.find_child("CardFrame", true, false)
+        _expect(frame is CardFrame, "卡面应有 CardFrame")
+        if frame is CardFrame:
+            var level := int(CardDB.card("aolinpike-jidian").get("level", 1))
+            _expect((frame as CardFrame).level == level, "卡框星级应取卡表 level")
+            _expect((frame as CardFrame).star_count == level, "卡框星数应等于 level")
+            _expect(
+                (frame as Control).size == (face_node as Control).size,
+                "卡框应铺满卡面",
+            )
+            var corners := open_card.find_child("CardCorners", true, false)
+            _expect(
+                corners is Control and (frame as Control).get_index() < (corners as Control).get_index(),
+                "卡框应绘制在角标之下",
+            )
+        _expect(open_card.find_child("AttackPlate", true, false) is StatPlate, "卡面应有攻击底牌")
+        _expect(open_card.find_child("HealthPlate", true, false) is StatPlate, "卡面应有血量底牌")
+
+    # 英雄卡：无星级、无攻防底牌、无时代象形。
+    var hero_face := GalleryCardFace.build_hero("adam-smith", CardDB.hero("adam-smith"))
+    add_child(hero_face)
+    await get_tree().process_frame
+    _expect(hero_face.find_child("CardFrame", true, false) == null, "英雄卡不应有卡框星级")
+    _expect(hero_face.find_child("AttackPlate", true, false) == null, "英雄卡不应有攻击底牌")
+    _expect(hero_face.find_child("EraGlyph", true, false) == null, "英雄卡不应有时代象形")
+    hero_face.queue_free()
+
+    # 棋盘卡：有卡框，无时代象形；空身材不出现底牌装饰（文字仍为「—」）。
+    var board_face := BoardCardFace.build({
+        "cardId": "aolinpike-jidian", "attack": 2, "health": 3,
+        "golden": false, "stealth": false,
+    })
+    add_child(board_face)
+    await get_tree().process_frame
+    _expect(board_face.find_child("CardFrame", true, false) is CardFrame, "棋盘卡应有卡框")
+    _expect(board_face.find_child("EraGlyph", true, false) == null, "棋盘卡不应有时代象形")
+    var effect_plate := StatPlate.create(StatPlate.ATTACK, "—", UITheme.font_size("font-title"), "CardAttack")
+    _expect(effect_plate.get_child(0).text == "—", "效果牌身材文字应保持「—」")
+    effect_plate.free()
+    board_face.queue_free()
 
     # 冻结卡：整卡蒙层 + 冰晶 + 右下「冻」字，且不再使用「冻」角标。
     var frozen_card := recruit.find_child("ShopSlot1", true, false)
@@ -380,8 +420,75 @@ func _ready() -> void:
 
     await _check_hand_fit()
     await _check_cover_art_inset()
+    await _check_card_frame()
+    await _check_stat_plate()
+    await _check_era_glyph()
+    _check_page_background()
     recruit.queue_free()
     _finish()
+
+
+## 卡框独立可建：记录星级、星数等于星级、不拦截鼠标。
+func _check_card_frame() -> void:
+    var frame := CardFrame.create(5)
+    frame.name = "StandaloneFrame"
+    add_child(frame)
+    frame.set_anchors_preset(Control.PRESET_TOP_LEFT)
+    frame.size = Vector2(112, 146)
+    await get_tree().process_frame
+    _expect(frame.level == 5, "CardFrame 应记录星级")
+    _expect(frame.star_count == 5, "CardFrame 星数应等于星级")
+    _expect(frame.mouse_filter == Control.MOUSE_FILTER_IGNORE, "卡框不应拦截鼠标")
+    frame.queue_free()
+
+
+## 攻防底牌：记录类型、尺寸随字号、内含带描边的数字。
+func _check_stat_plate() -> void:
+    for kind in ["attack", "health"]:
+        var plate := StatPlate.create(kind, "4", 14, "Card" + kind.capitalize())
+        add_child(plate)
+        await get_tree().process_frame
+        _expect(plate.kind == kind, "底牌应记录类型")
+        _expect(plate.custom_minimum_size == Vector2(18, 18), "14 号字底牌应为 18×18")
+        var label := plate.find_child("Card" + kind.capitalize(), true, false)
+        _expect(label is Label and (label as Label).text == "4", "底牌应包含数字 Label")
+        _expect(
+            (label as Label).get_theme_constant("outline_size") >= 1,
+            "数字应有描边",
+        )
+        for sample in ["", "—", " "]:
+            var blank := StatPlate.create(kind, sample, 14)
+            _expect(not blank.draws_chrome(), "空值「%s」不应画底牌" % sample)
+            blank.free()
+        var numeric := StatPlate.create(kind, "-1", 14)
+        _expect(numeric.draws_chrome(), "数字应画底牌")
+        numeric.free()
+        plate.queue_free()
+
+
+## 时代象形：七个时代都能建，记录 id、按尺寸占位、不拦截鼠标。
+func _check_era_glyph() -> void:
+    for era in ["prehistoric", "primitive", "classical", "feudal", "industrial", "modern", "future"]:
+        var glyph := EraGlyph.create(era, 14)
+        add_child(glyph)
+        await get_tree().process_frame
+        _expect(glyph.era_id == era, "时代象形应记录 era id")
+        _expect(glyph.custom_minimum_size == Vector2(14, 14), "卡面象形应为 14×14")
+        _expect(glyph.mouse_filter == Control.MOUSE_FILTER_IGNORE, "象形不应拦截鼠标")
+        glyph.queue_free()
+
+
+## 页面背景：纹理已导入、节点名固定、不拦截鼠标。
+func _check_page_background() -> void:
+    _expect(
+        ResourceLoader.exists("res://assets/ui/bg/bg_main.png"),
+        "页面背景纹理应已导入",
+    )
+    var background := UI.background()
+    _expect(background.name == "PageBackground", "背景节点名应为 PageBackground")
+    _expect(background.mouse_filter == Control.MOUSE_FILTER_IGNORE, "背景不应拦截鼠标")
+    _expect(background is TextureRect, "有纹理时应使用 TextureRect")
+    background.free()
 
 
 ## 手牌介绍不被截断：信息区向上扩展，字号缩到能放下全文；介绍不压名称与角标。

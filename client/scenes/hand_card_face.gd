@@ -25,11 +25,12 @@ static func build(card: Dictionary, measure_host: Node = null) -> Control:
         true,
         measure_host,
     )
+    CardFaceBase.add_frame(face_node, card_id)
     # 角标最后添加：介绍需要时信息区会向上扩展，角标必须压在信息区之上。
     CardFaceBase.add_corner_badges(
         face_node,
         str(CardDB.display_cost(card_id)),
-        UI.enum_text("era", str(entry.get("era", ""))),
+        str(entry.get("era", "")),
         badge_text,
         false,
     )

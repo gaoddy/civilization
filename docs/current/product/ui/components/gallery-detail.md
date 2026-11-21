@@ -15,12 +15,12 @@
 | `show_hero(card_id)` | `void` | 重建为指定英雄卡的详情；空 id 显示占位提示 |
 
 - 固定宽 `gallery-detail-width`（280），纵向撑满，面板样式 `surface`。
-- 内部节点名：`GalleryDetailScroll`、`GalleryDetailBody`、`GalleryDetailPreview`、`GalleryDetailArt`、`GalleryDetailArtPlaceholder`、`GalleryDetailName`、`GalleryDetailEffect`。
+- 内部节点名：`GalleryDetailScroll`、`GalleryDetailBody`、`GalleryDetailPreview`、`GalleryDetailArt`、`GalleryDetailArtPlaceholder`、`GalleryDetailNameRow`、`GalleryDetailName`、`GalleryDetailEraGlyph`、`GalleryDetailEffect`。
 
 ## 变体与状态
 
 - 空 id：「选择一张卡牌查看详情」居中显示，无其它内容。
-- 普通卡顺序固定：卡面美术图（200×260，手机 160×208）→ 名称 → 类型 → 科学分类 → 玩法 → 关联分类 → 时代 → 费用 → 原始 → 技能 → 效果。
+- 普通卡顺序固定：卡面美术图（200×260，手机 160×208）→ 名称（右侧带 24×24 时代象形 `GalleryDetailEraGlyph`）→ 类型 → 科学分类 → 玩法 → 关联分类 → 时代 → 费用 → 原始 → 技能 → 效果。
 - 英雄顺序固定：卡面美术图 → 名称 → 类型「英雄」→ 玩法 → 关联分类 → 技能列表；不显示科学分类、时代、费用与原始数值，也不再单独显示「技能」名称行。
 - 有 `card_face` 美术时显示等比放大的美术图；无美术时显示玩法色底与卡名首字占位。预览不再拼装卡面组件、费用/时代角标或卡面信息区。
 - 关联分类只显示 `prey:` / `host:`，格式为「捕食：…；寄生：…」；关联分类、时代、原始、技能、效果各自在数据为空时省略整行，不留空标签。

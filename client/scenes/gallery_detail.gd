@@ -54,7 +54,18 @@ func _show(card_id: String, hero: bool) -> void:
     var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-title-lg"))
     name_label.name = "GalleryDetailName"
     name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _box.add_child(name_label)
+    # 卡名行：名称居中占满，右侧放时代象形；英雄条目没有 era，自然不建象形。
+    var name_row := HBoxContainer.new()
+    name_row.name = "GalleryDetailNameRow"
+    name_row.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    name_row.add_child(name_label)
+    var name_era := str(entry.get("era", ""))
+    if name_era != "":
+        var glyph := EraGlyph.create(name_era, UITheme.metric("era-glyph-size-detail"))
+        glyph.name = "GalleryDetailEraGlyph"
+        name_row.add_child(glyph)
+    _box.add_child(name_row)
 
     if hero:
         var introduction := CardDB.hero_introduction(card_id)

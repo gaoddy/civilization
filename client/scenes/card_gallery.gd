@@ -51,11 +51,8 @@ func _init() -> void:
     set_anchors_preset(Control.PRESET_FULL_RECT)
     mouse_filter = Control.MOUSE_FILTER_STOP
 
-    var background := ColorRect.new()
+    var background := UI.background()
     background.name = "GalleryBackground"
-    background.color = UITheme.color("color-bg")
-    background.set_anchors_preset(Control.PRESET_FULL_RECT)
-    background.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(background)
 
     var margin := MarginContainer.new()

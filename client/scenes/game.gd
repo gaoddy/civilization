@@ -76,10 +76,7 @@ func _ready() -> void:
 # ── 构建 ──────────────────────────────────────────────────────────────────
 
 func _build() -> void:
-    var background := ColorRect.new()
-    background.color = UITheme.color("color-bg")
-    background.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(background)
+    add_child(UI.background())
 
     # iPhone 基准 960×540：页边距、页面间距与舞台间距整体收紧，结构与桌面一致。
     var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE

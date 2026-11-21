@@ -105,8 +105,11 @@
 | `aim-outline-width` | 2 | 命中候选呼吸描边的线宽 |
 | `aim-pulse` | 1.2 | 命中候选描边的呼吸周期（秒） |
 | `aim-cross` | 6 | 无效落点叉号的半边长 |
+| `era-glyph-size` | 14 | 卡面右上角时代象形边长 |
+| `era-glyph-size-detail` | 24 | 图鉴详情卡名旁时代象形边长 |
 
 - 瞄准相关令牌都是小数，统一用 `UITheme.factor` 读取；颜色只用语义层的 `color-accent`、`color-text-muted`、`color-danger`。
+- 攻防底牌边长不是独立令牌，按内嵌 Label 的字号推导：`边长 = 字号 + 4`（卡面默认 `font-title` 16 → 20；手牌 `font-body` 14 → 18；紧凑手牌 `font-caption` 11 → 15）。
 
 ### 5.1 手机基准紧凑值
 
@@ -150,6 +153,7 @@ iPhone 以 960×540 为基准，对局页通过 `UITheme.stage_metric(name)` 优
 | `machine` | 机械 | `slate-400` | `#93a6bd` |
 | `neutral` | 中立（仅缺省兜底，不是卡牌分类） | `sand-400` | `#cdb98c` |
 
+- 例外：卡框的透明底（`Color(0,0,0,0)`）与底牌数字的白字黑描边（`Color.WHITE` / `Color.BLACK`）直接用 Godot 常量，不新增语义令牌。
 - 新增原子色令牌：`cyan-400`、`teal-400`、`olive-400`、`amber-400`、`orange-400`、`magenta-400`；`blue-400`、`green-400`、`purple-400`、`rose-400`、`red-400`、`slate-400`、`sand-400` 沿用。
 - 14 个键的颜色互不重复（`red-400` 与语义 `color-danger` 同值，但中立色不与任何玩法色重复）；卡牌不再使用 `neutral`，该键只作未知玩法的兜底色；未知玩法色彩回退 `snow-500`。
 - 取值入口：`UITheme.playstyle_color(id)` 返回玩法色；`playstyle_cover(id)` 返回压暗 0.62 的玩法色，作为卡面与房间英雄候选卡的封面底色。未知 id 回退 `snow-500`。

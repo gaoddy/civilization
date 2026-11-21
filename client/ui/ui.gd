@@ -106,6 +106,28 @@ static func panel() -> PanelContainer:
     return PanelContainer.new()
 
 
+## 页面背景：整屏拉伸的纯质感深底；纹理缺失时退回纯色，不留空白页。
+static func background() -> Control:
+    var path := "res://assets/ui/bg/bg_main.png"
+    if ResourceLoader.exists(path):
+        var texture := ResourceLoader.load(path) as Texture2D
+        if texture != null:
+            var rect := TextureRect.new()
+            rect.name = "PageBackground"
+            rect.texture = texture
+            rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+            rect.stretch_mode = TextureRect.STRETCH_SCALE
+            rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+            rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+            return rect
+    var fallback := ColorRect.new()
+    fallback.name = "PageBackground"
+    fallback.color = UITheme.color("color-bg")
+    fallback.set_anchors_preset(Control.PRESET_FULL_RECT)
+    fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    return fallback
+
+
 ## 带视觉令牌的卡片容器；variant 见 UITheme.panel_style。
 static func card_panel(variant := "surface") -> PanelContainer:
     var node := PanelContainer.new()

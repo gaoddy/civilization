@@ -35,10 +35,7 @@ func _show_room_closed_reason() -> void:
 
 
 func _build() -> void:
-    var background := ColorRect.new()
-    background.color = UITheme.color("color-bg")
-    background.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(background)
+    add_child(UI.background())
 
     var margin := MarginContainer.new()
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)
