@@ -2,24 +2,37 @@ class_name GalleryToc
 extends VBoxContainer
 ## 图鉴分类目录：顶层分类的单选列表，首项为「全部」，选中项下展开随从 / 效果二级筛选。
 ##
-## 计数由页面按其它两维筛选换算后传入；本组件只呈现与发出选择。
+## 桌面与 iPad 为左侧竖列；手机由 `GalleryCategoryPanel` 以两列紧凑模式承载，
+## 只构建顶层分类，二级筛选在工具栏常驻。计数由页面换算后传入。
 
 signal taxon_selected(root_id: String)
 signal kind_selected(kind: String)
 
+var _compact := false
+var _list: Container
 
-func _init() -> void:
+
+## `compact` 为真时使用两列网格，且不显示二级筛选（由工具栏承担）。
+func _init(compact := false) -> void:
     name = "GalleryToc"
-    var token := "gallery-toc-width"
-    if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
-        token = "gallery-toc-width-compact"
-    custom_minimum_size = Vector2(UITheme.metric(token), 0)
-    add_theme_constant_override("separation", UITheme.space("space-xs"))
+    _compact = compact
+    if compact:
+        var grid := GridContainer.new()
+        grid.columns = 2
+        grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        grid.add_theme_constant_override("h_separation", UITheme.space("space-xs"))
+        grid.add_theme_constant_override("v_separation", UITheme.space("space-xs"))
+        add_child(grid)
+        _list = grid
+    else:
+        custom_minimum_size = Vector2(UITheme.metric("gallery-toc-width"), 0)
+        add_theme_constant_override("separation", UITheme.space("space-xs"))
+        _list = self
 
 
 ## `categories` 为 `{id, name}` 条目；`counts` 以分类 id 为键，空串表示全部。
 ## `kinds` 为二级筛选条目；`kind_counts` 以二级 id 为键，空串表示全部。
-## 二级筛选只挂在当前选中的顶层分类下。
+## 二级筛选只挂在当前选中的顶层分类下；紧凑模式不渲染二级项。
 func set_state(
     categories: Array,
     counts: Dictionary,
@@ -28,7 +41,7 @@ func set_state(
     kind_counts: Dictionary,
     selected_kind: String,
 ) -> void:
-    UI.clear(self)
+    UI.clear(_list)
     var group := ButtonGroup.new()
     group.allow_unpress = false
     _add_item("", tr("ui.gallery.toc_all"), int(counts.get("", 0)), selected == "", group, 0)
@@ -43,6 +56,8 @@ func set_state(
 
 
 func _add_kinds(kinds: Array, counts: Dictionary, selected: String) -> void:
+    if _compact:
+        return
     var group := ButtonGroup.new()
     group.allow_unpress = false
     var indent := UITheme.space("space-2xl")
@@ -73,7 +88,7 @@ func _add_item(
     button.button_pressed = selected
     button.disabled = count == 0 and not selected
     button.focus_mode = Control.FOCUS_ALL
-    button.custom_minimum_size = Vector2(0, 28)
+    button.custom_minimum_size = Vector2(0, 32 if _compact else 28)
     button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     button.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
     for state in ["normal", "hover", "pressed", "focus", "disabled"]:
@@ -92,7 +107,7 @@ func _add_item(
         else:
             taxon_selected.emit(id)
     )
-    add_child(button)
+    _list.add_child(button)
 
 
 func _indent(style: StyleBoxFlat, indent: int) -> StyleBoxFlat:

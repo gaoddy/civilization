@@ -1,5 +1,5 @@
 extends "res://tests/smoke_case.gd"
-## 卡牌图鉴冒烟：大厅全量页、章节/分类筛选、分页、常驻详情与对局覆盖层卡池。
+## 卡牌图鉴冒烟：大厅全量页、章节/分类筛选、滚动加载、常驻详情与对局覆盖层卡池。
 
 
 func _ready() -> void:
@@ -11,7 +11,8 @@ func _ready() -> void:
     await _check_empty_hero_pool()
     await _check_detail_art()
     await _check_empty_catalog()
-    await _check_pagination()
+    await _check_scroll_loading()
+    await _check_phone_layout()
     await _check_detail()
     await _check_skill_names()
     await _check_lobby_entry()
@@ -53,19 +54,16 @@ func _check_lobby_page() -> void:
     )
     var rows = instance.find_child("GalleryGridRows", true, false)
     _expect(rows != null and rows.columns == 6, "图鉴网格应为 6 列")
-    _expect(rows != null and rows.get_child_count() == 18, "首屏应只构建 18 张卡")
-    _expect(instance.find_child("GalleryScroll", true, false) == null, "图鉴网格不应再有滚动容器")
-    if rows != null and rows.get_child_count() > 0:
-        var last_tile := rows.get_child(rows.get_child_count() - 1) as Control
-        _expect(
-            last_tile != null
-                and last_tile.get_global_rect().end.y <= instance.get_viewport_rect().size.y,
-            "18 张应在一屏内放下，不出现纵向滚动",
-        )
-    var label = instance.find_child("GalleryPageLabel", true, false)
+    _expect(rows != null and rows.get_child_count() >= 18, "首屏至少加载一批 18 张卡")
+    var scroll = instance.find_child("GalleryScroll", true, false)
+    _expect(scroll is ScrollContainer, "图鉴网格应有滚动容器")
+    _expect(instance.find_child("GalleryPager", true, false) == null, "图鉴不应再有分页条")
+    _expect(instance.find_child("GalleryPrev", true, false) == null, "图鉴不应再有上一页按钮")
+    _expect(instance.find_child("GalleryNext", true, false) == null, "图鉴不应再有下一页按钮")
+    var status = instance.find_child("GalleryLoadStatus", true, false)
     _expect(
-        label != null and label.text == tr("ui.gallery.page") % [1, 24],
-        "432 张应按 18 张一页显示 1/24，实际：%s" % (label.text if label != null else "无"),
+        status != null and status.text.contains("已显示") and status.text.contains("继续下滑加载"),
+        "网格底部应显示已加载张数与加载提示，实际：%s" % (status.text if status != null else "无"),
     )
     var detail_name = instance.find_child("GalleryDetailName", true, false)
     _expect(detail_name != null and detail_name.text != "", "首屏应常驻选中首张卡")
@@ -493,22 +491,106 @@ func _check_empty_catalog() -> void:
     await get_tree().process_frame
 
 
-func _check_pagination() -> void:
+func _check_scroll_loading() -> void:
     var instance := await _mount_gallery()
     if instance == null:
         return
-    var next = instance.find_child("GalleryNext", true, false)
-    _expect(next != null and not next.disabled, "首屏「下一页」应可用")
-    if next != null:
-        await _push_click(instance, next.get_global_rect().get_center())
-    var label = instance.find_child("GalleryPageLabel", true, false)
+    var rows = instance.find_child("GalleryGridRows", true, false)
+    var scroll = instance.find_child("GalleryScroll", true, false) as ScrollContainer
+    if rows == null or scroll == null:
+        _expect(false, "图鉴缺少网格或滚动容器")
+        await _unmount(instance)
+        return
+    var before := rows.get_child_count()
+    _expect(before >= 18, "首屏应至少加载一批，实际：%d" % before)
+    # 首批布局与自动补足在随后几帧完成，等稳定后再模拟滚到底部。
+    await get_tree().process_frame
+    await get_tree().process_frame
+    scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
+    await get_tree().process_frame
+    await get_tree().process_frame
+    await get_tree().process_frame
     _expect(
-        label != null and label.text == tr("ui.gallery.page") % [2, 24],
-        "翻页后应显示 2/24，实际：%s" % (label.text if label != null else "无"),
+        rows.get_child_count() > before,
+        "滚到底部应加载下一批，实际：%d → %d" % [before, rows.get_child_count()],
     )
-    var prev = instance.find_child("GalleryPrev", true, false)
-    _expect(prev != null and not prev.disabled, "第二页「上一页」应可用")
+    var status = instance.find_child("GalleryLoadStatus", true, false)
+    _expect(
+        status != null and status.text.begins_with("已显示"),
+        "加载后应更新底部状态，实际：%s" % (status.text if status != null else "无"),
+    )
     await _unmount(instance)
+
+
+## 手机 960×540：分类面板替代左栏目录，6 列网格与 176 详情均不越界。
+func _check_phone_layout() -> void:
+    ScreenProfile.set_device_for_test("phone")
+    var host := Control.new()
+    host.name = "PhoneGalleryHost"
+    host.size = Vector2(960, 540)
+    add_child(host)
+    var page = load("res://scenes/gallery.tscn").instantiate()
+    host.add_child(page)
+    await get_tree().process_frame
+    await get_tree().process_frame
+    await get_tree().process_frame
+
+    var bounds := Rect2(host.get_global_rect().position, host.size).grow(1.0)
+    for node_name in ["GalleryHeader", "GalleryBody", "GalleryToolbar", "GalleryScroll", "GalleryDetail"]:
+        var node := page.find_child(str(node_name), true, false) as Control
+        _expect(node != null and node.is_visible_in_tree(), "手机图鉴缺少可见的 %s" % node_name)
+        if node != null:
+            _expect(
+                bounds.encloses(node.get_global_rect()),
+                "%s 在手机基准下越界：%s 不在 %s 内"
+                % [node_name, str(node.get_global_rect()), str(bounds)],
+            )
+    _expect(page.find_child("GalleryToc", true, false) == null, "手机随从视图不应再有左侧目录")
+
+    var rows := page.find_child("GalleryGridRows", true, false) as GridContainer
+    _expect(rows != null and rows.columns == 6, "手机网格应为 6 列")
+    _expect(rows != null and rows.get_child_count() >= 12, "手机首屏至少加载一批 12 张卡")
+    var detail := page.find_child("GalleryDetail", true, false) as Control
+    _expect(
+        detail != null and is_equal_approx(detail.size.x, UITheme.metric("gallery-detail-width-compact")),
+        "手机详情应按紧凑令牌宽度占位，实际：%s" % (detail.size.x if detail != null else "无"),
+    )
+
+    var button := page.find_child("GalleryCategoryButton", true, false) as Button
+    _expect(button != null, "手机缺少分类按钮")
+    if button != null:
+        await _push_click(page, button.get_global_rect().get_center())
+        var panel := page.find_child("GalleryCategoryPanel", true, false) as Control
+        var panel_body := page.find_child("GalleryCategoryBody", true, false) as Control
+        _expect(panel != null and panel.is_visible_in_tree(), "点分类按钮应打开分类面板")
+        var taxons := 0
+        if panel_body != null:
+            for child in panel_body.find_children("Taxon*", "Button", true, false):
+                taxons += 1
+            _expect(
+                bounds.encloses(panel_body.get_global_rect()),
+                "分类面板越界：%s 不在 %s 内" % [str(panel_body.get_global_rect()), str(bounds)],
+            )
+        _expect(taxons == 14, "分类面板应有全部 + 13 个玩法，实际：%d" % taxons)
+        var mammal: Button = null
+        if panel_body != null:
+            mammal = panel_body.find_child("Taxonmammal", true, false) as Button
+        if mammal != null:
+            await _push_click(page, mammal.get_global_rect().get_center())
+            _expect(panel != null and not panel.is_visible_in_tree(), "选中分类后应收起面板")
+            _expect(
+                button.text == tr("ui.gallery.category_filter") % CardDB.playstyle_name("mammal"),
+                "分类按钮应显示当前分类，实际：%s" % button.text,
+            )
+            var gallery := page.find_child("CardGallery", true, false) as CardGallery
+            _expect(
+                gallery != null and gallery.call("_filtered_ids").size() == 122,
+                "哺乳纲在未选时代时应有 122 张",
+            )
+
+    host.queue_free()
+    await get_tree().process_frame
+    ScreenProfile.set_device_for_test("desktop")
 
 
 func _check_detail() -> void:
@@ -522,12 +604,34 @@ func _check_detail() -> void:
         return
     var tile := rows.get_child(1) as GalleryCardTile
     var card_id := str(tile.card_id)
+    # 触屏拖拽靠 ScrollContainer 收到同一次按下起手，卡面不能吞掉按下事件。
+    var scroll := instance.find_child("GalleryScroll", true, false) as ScrollContainer
+    var press_reached := [false]
+    if scroll != null:
+        scroll.gui_input.connect(
+            func(event: InputEvent) -> void:
+                if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+                    press_reached[0] = true
+        )
     await _push_click(instance, tile.get_global_rect().get_center())
+    _expect(scroll != null and press_reached[0], "卡面按下应继续冒泡到滚动区，触屏拖拽才能滚动")
     var detail_name = instance.find_child("GalleryDetailName", true, false)
     _expect(
         detail_name != null and detail_name.text == CardDB.display_name(card_id),
         "点击第二张卡后详情应切换为 %s" % CardDB.display_name(card_id),
     )
+    await _real_drag(instance, tile.get_global_rect().get_center(), tile.get_global_rect().get_center() + Vector2(0, -60))
+    _expect(
+        detail_name != null and detail_name.text == CardDB.display_name(card_id),
+        "按下后拖动卡面视为滚动，不应切换详情",
+    )
+    var other := rows.get_child(2) as Control
+    if other != null:
+        await _real_drag(instance, tile.get_global_rect().get_center(), other.get_global_rect().get_center())
+        _expect(
+            detail_name != null and detail_name.text == CardDB.display_name(card_id),
+            "从当前卡拖到另一张卡松手不应切换详情",
+        )
     _expect(
         instance.find_child("GalleryDetailEraGlyph", true, false) == null,
         "普通卡详情卡名旁不应有时代象形",

@@ -45,6 +45,11 @@ var _toc: GalleryToc
 var _grid: GalleryGrid
 var _detail: GalleryDetail
 var _background: Control
+var _phone := false
+var _toolbar: HBoxContainer
+var _category_button: Button
+var _kind_bar: GalleryFilterBar
+var _category_panel: GalleryCategoryPanel
 
 
 ## 页面已提供整屏背景时关闭组件背景，避免两层背景缩放不一致。
@@ -55,6 +60,7 @@ func set_background_visible(value: bool) -> void:
 
 func _init() -> void:
     name = "CardGallery"
+    _phone = ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
     set_anchors_preset(Control.PRESET_FULL_RECT)
     mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -107,19 +113,52 @@ func _init() -> void:
     body.add_theme_constant_override("separation", UITheme.space("space-lg"))
     root.add_child(body)
 
-    _toc = GalleryToc.new()
-    _toc.taxon_selected.connect(_on_taxon_selected)
-    _toc.kind_selected.connect(_on_kind_selected)
-    body.add_child(_toc)
-
     _grid = GalleryGrid.new()
     _grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _grid.card_selected.connect(_on_card_selected)
-    body.add_child(_grid)
+
+    if _phone:
+        # 手机把目录收进分类面板，主体上方只留分类按钮与二级筛选。
+        var column := VBoxContainer.new()
+        column.name = "GalleryGridColumn"
+        column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        column.add_theme_constant_override("separation", UITheme.space("space-sm"))
+        body.add_child(column)
+
+        _toolbar = HBoxContainer.new()
+        _toolbar.name = "GalleryToolbar"
+        _toolbar.add_theme_constant_override("separation", UITheme.space("space-sm"))
+        column.add_child(_toolbar)
+
+        _category_button = UI.styled_button("", "default", 30)
+        _category_button.name = "GalleryCategoryButton"
+        _category_button.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
+        _category_button.pressed.connect(_on_category_pressed)
+        _toolbar.add_child(_category_button)
+
+        _kind_bar = GalleryFilterBar.new("GalleryKinds", "GalleryKind")
+        _kind_bar.alignment = FlowContainer.ALIGNMENT_BEGIN
+        _kind_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        _kind_bar.item_selected.connect(_on_kind_selected)
+        _toolbar.add_child(_kind_bar)
+
+        column.add_child(_grid)
+    else:
+        _toc = GalleryToc.new()
+        _toc.taxon_selected.connect(_on_taxon_selected)
+        _toc.kind_selected.connect(_on_kind_selected)
+        body.add_child(_toc)
+        body.add_child(_grid)
 
     _detail = GalleryDetail.new()
     body.add_child(_detail)
+
+    if _phone:
+        _category_panel = GalleryCategoryPanel.new()
+        _category_panel.taxon_selected.connect(_on_taxon_selected)
+        add_child(_category_panel)
 
 
 ## 载入卡牌集合与页面文案；重置视图、筛选并选中首张。
@@ -137,6 +176,8 @@ func set_catalog(card_ids: Array, title: String, close_text: String, hero_ids: V
     _kind = KIND_ALL
     _hero_taxon = ""
     _selected = ""
+    if _category_panel != null:
+        _category_panel.close()
     _rebuild()
 
 
@@ -144,7 +185,10 @@ func _unhandled_input(event: InputEvent) -> void:
     if not is_visible_in_tree():
         return
     if event.is_action_pressed("ui_cancel"):
-        closed.emit()
+        if _category_panel != null and _category_panel.is_open():
+            _category_panel.close()
+        else:
+            closed.emit()
         get_viewport().set_input_as_handled()
 
 
@@ -155,19 +199,28 @@ func _rebuild() -> void:
     _mode_bar.set_state(_mode, not _hero_ids.is_empty())
     _chapter_bar.visible = not hero
     _hero_bar.visible = hero
-    _toc.visible = not hero
+    if _phone:
+        _toolbar.visible = not hero
+        if hero and _category_panel.is_open():
+            _category_panel.close()
+    else:
+        _toc.visible = not hero
     if hero:
         _hero_bar.set_state(_hero_category_items(), _count_by_hero_category(), _hero_taxon)
     else:
         _chapter_bar.set_state(_chapter_items(), _count_by_era(), "" if _era == 0 else str(_era))
-        _toc.set_state(
-            _categories(),
-            _count_by_category(),
-            _taxon,
-            _kinds(),
-            _count_by_kind(),
-            _kind,
-        )
+        if _phone:
+            _kind_bar.set_state(_kinds(), _count_by_kind(), _kind)
+            _category_button.text = tr("ui.gallery.category_filter") % _taxon_name()
+        else:
+            _toc.set_state(
+                _categories(),
+                _count_by_category(),
+                _taxon,
+                _kinds(),
+                _count_by_kind(),
+                _kind,
+            )
     var filtered := _filtered_ids()
     if filtered.is_empty():
         _selected = ""
@@ -196,6 +249,26 @@ func _on_taxon_selected(root_id: String) -> void:
     _taxon = root_id
     _kind = KIND_ALL
     _rebuild()
+
+
+## 手机分类按钮：在工具栏下沿展开或收起分类面板。
+func _on_category_pressed() -> void:
+    if _category_panel.is_open():
+        _category_panel.close()
+        return
+    var origin := get_global_rect().position
+    var toolbar_rect := _toolbar.get_global_rect()
+    var anchor := Vector2(
+        toolbar_rect.position.x - origin.x,
+        toolbar_rect.end.y - origin.y + UITheme.space("space-xs"),
+    )
+    _category_panel.open(anchor, _categories(), _count_by_category(), _taxon)
+
+
+func _taxon_name() -> String:
+    if _taxon == "":
+        return tr("ui.gallery.toc_all")
+    return CardDB.playstyle_name(_taxon)
 
 
 func _on_hero_taxon_selected(root_id: String) -> void:
