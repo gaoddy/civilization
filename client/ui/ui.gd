@@ -183,7 +183,34 @@ static func styled_button(text: String, variant := "default", min_height := 30) 
     return node
 
 
-## 英雄头像块：没有图片资源，用玩法色块 + 名字首字表示。
+## 取美术贴图；路径为空、资源缺失或加载失败时返回 null，调用方回退程序化绘制。
+static func art_texture(path: String) -> Texture2D:
+    if path == "" or not ResourceLoader.exists(path):
+        return null
+    return ResourceLoader.load(path) as Texture2D
+
+
+## 铺满父容器的美术层；无图时返回 null。`stretch` 决定裁切方式：
+## 卡面与头像用 `COVERED`，竖版立绘用 `KEEP_ASPECT_CENTERED`。
+static func art_layer(
+    path: String,
+    node_name := "Art",
+    stretch := TextureRect.STRETCH_KEEP_ASPECT_COVERED,
+) -> TextureRect:
+    var texture := art_texture(path)
+    if texture == null:
+        return null
+    var art := TextureRect.new()
+    art.name = node_name
+    art.texture = texture
+    art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    art.stretch_mode = stretch
+    art.set_anchors_preset(Control.PRESET_FULL_RECT)
+    art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    return art
+
+
+## 英雄头像块：有头像纹理时叠图，否则用玩法色块 + 名字首字表示。
 static func avatar(hero_id: String, size := 34) -> PanelContainer:
     var node := PanelContainer.new()
     node.name = "Avatar"
@@ -196,19 +223,17 @@ static func avatar(hero_id: String, size := 34) -> PanelContainer:
     box.set_border_width_all(2)
     box.set_corner_radius_all(int(size * 0.3))
     node.add_theme_stylebox_override("panel", box)
-    var avatar_path := CardDB.art_path(hero_id, "avatar")
-    if avatar_path != "" and ResourceLoader.exists(avatar_path):
-        var texture := ResourceLoader.load(avatar_path) as Texture2D
-        if texture != null:
-            var art := TextureRect.new()
-            art.name = "AvatarArt"
-            art.texture = texture
-            art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-            art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-            art.set_anchors_preset(Control.PRESET_FULL_RECT)
-            art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-            node.add_child(art)
-            return node
+    var texture := art_texture(CardDB.art_path(hero_id, "avatar"))
+    if texture != null:
+        var art := TextureRect.new()
+        art.name = "AvatarArt"
+        art.texture = texture
+        art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+        art.set_anchors_preset(Control.PRESET_FULL_RECT)
+        art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        node.add_child(art)
+        return node
     var text := label(_avatar_initial(hero_id), int(size * 0.42), false)
     text.name = "Initial"
     text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

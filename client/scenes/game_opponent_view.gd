@@ -63,7 +63,8 @@ func _portrait(player: Dictionary) -> GamePortrait:
     )
     var portrait := GamePortrait.new()
     portrait.name = "OpponentPortrait"
-    portrait.setup(display, display.substr(0, 1) if display != "" else "?", tint, false)
+    var art_path := CardDB.art_path(hero_id, "avatar") if hero_id != "" else ""
+    portrait.setup(display, display.substr(0, 1) if display != "" else "?", tint, false, art_path)
     if hero_id != "" and detail != null and is_instance_valid(detail):
         detail.track(portrait, {"detail_kind": "hero", "heroId": hero_id})
     return portrait

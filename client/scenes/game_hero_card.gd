@@ -14,6 +14,8 @@ var era := 0
 
 var _cover: PanelContainer
 var _cover_mark: Label
+var _cover_art: TextureRect = null
+var _cover_art_path := ""
 var _name_label: Label
 var _era_label: Label
 var _hp_label: Label
@@ -87,11 +89,36 @@ func refresh(hero_id: String, hp: int, hp_cap: int, era: int) -> void:
 	_cover.add_theme_stylebox_override(
 		"panel", _cover_style(UITheme.playstyle_cover(playstyle) if hero_id != "" else UITheme.color("color-surface-sunken"))
 	)
+	_refresh_cover_art(hero_id)
 	_cover_mark.text = CardText.initial(hero_id) if hero_id != "" else "?"
 	_name_label.text = CardDB.display_name(hero_id) if hero_id != "" else TranslationServer.translate("ui.common.no_hero")
 	_era_label.text = CardDB.era_name(era) if era > 0 else "—"
 	_hp_label.text = ("%d/%d" % [hp, hp_cap]) if hp_cap > 0 else "—"
 	tooltip_text = _name_label.text
+
+
+## 封面头像：有素材时叠图并隐藏首字；方形头像四角向内收，落在封面圆角以内。
+func _refresh_cover_art(hero_id: String) -> void:
+	var path := CardDB.art_path(hero_id, "avatar") if hero_id != "" else ""
+	if path == _cover_art_path and (_cover_art != null or path == ""):
+		_cover_mark.visible = _cover_art == null
+		return
+	_cover_art_path = path
+	if _cover_art != null:
+		_cover.remove_child(_cover_art)
+		_cover_art.queue_free()
+		_cover_art = null
+	var art := UI.art_layer(path, "HeroCoverArt")
+	if art != null:
+		var inset := UITheme.metric("card-cover-inset")
+		art.offset_left = inset
+		art.offset_top = inset
+		art.offset_right = -inset
+		art.offset_bottom = -inset
+		_cover.add_child(art)
+		_cover.move_child(art, 0)
+		_cover_art = art
+	_cover_mark.visible = art == null
 
 
 func _stat_label(node_name: String, size: Vector2, border: Color) -> Label:

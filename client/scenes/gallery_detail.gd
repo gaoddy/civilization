@@ -49,7 +49,7 @@ func _show(card_id: String, hero: bool) -> void:
     _box.alignment = BoxContainer.ALIGNMENT_BEGIN
 
     var entry := CardDB.hero(card_id) if hero else CardDB.card(card_id)
-    _box.add_child(_build_preview(card_id, entry))
+    _box.add_child(_build_preview(card_id, entry, hero))
 
     var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-title-lg"))
     name_label.name = "GalleryDetailName"
@@ -113,8 +113,9 @@ func _show(card_id: String, hero: bool) -> void:
         _box.add_child(effect_label)
 
 
-## 预览区只显示卡面美术大图；无美术时用玩法色与首字占位，不再现场拼装卡面组件。
-func _build_preview(card_id: String, entry: Dictionary) -> Control:
+## 预览区显示美术大图：普通卡用卡面，英雄用立绘；无美术时用玩法色与首字占位，
+## 不再现场拼装卡面组件。
+func _build_preview(card_id: String, entry: Dictionary, hero := false) -> Control:
     var holder := CenterContainer.new()
     holder.name = "GalleryDetailPreview"
     holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -134,7 +135,7 @@ func _build_preview(card_id: String, entry: Dictionary) -> Control:
     frame.add_theme_stylebox_override("panel", style)
     holder.add_child(frame)
 
-    var texture := _card_face_texture(card_id)
+    var texture := _preview_texture(card_id, hero)
     if texture != null:
         var art := TextureRect.new()
         art.name = "GalleryDetailArt"
@@ -156,11 +157,8 @@ func _build_preview(card_id: String, entry: Dictionary) -> Control:
     return holder
 
 
-func _card_face_texture(card_id: String) -> Texture2D:
-    var path := CardDB.art_path(card_id, "card_face")
-    if path == "" or not ResourceLoader.exists(path):
-        return null
-    return ResourceLoader.load(path) as Texture2D
+func _preview_texture(card_id: String, hero: bool) -> Texture2D:
+    return UI.art_texture(CardDB.art_path(card_id, "portrait" if hero else "card_face"))
 
 
 func _preview_metric(name: String) -> int:
