@@ -49,6 +49,7 @@ const PAGES := [
 func _ready() -> void:
     await _check_early_safe_area()
     _check_control_defaults()
+    await _check_hero_cover_art()
     await _check_desktop()
     await _check_drag_preview()
     await _check_aim_local()
@@ -106,6 +107,22 @@ func _check_control_defaults() -> void:
         "边距默认宽度应为 space-lg 令牌，实际 %d"
         % default_margin.get_theme_constant("margin_left"))
     default_margin.free()
+
+
+## 对局页英雄卡封面：方形头像按完整图像等比显示，不裁掉上下。
+func _check_hero_cover_art() -> void:
+    ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
+    var card := GameHeroCard.new()
+    add_child(card)
+    card.refresh("darwin", 30, 40, 1)
+    await get_tree().process_frame
+    var art := card.find_child("HeroCoverArt", true, false) as TextureRect
+    _check(art != null, "英雄卡封面应加载头像素材")
+    if art != null:
+        _check(art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED,
+            "英雄卡封面应完整显示方形头像，当前拉伸模式 %d" % art.stretch_mode)
+    card.queue_free()
+    await get_tree().process_frame
 
 
 func _check_desktop() -> void:
@@ -270,11 +287,19 @@ func _check_touch() -> void:
     await get_tree().process_frame
 
 
-## iPhone 基准 960×540：六个页面在此尺寸下实例化，关键节点不得越界。
-## 无头视口固定 1280×720，手机基准因此被放大 1.333；真机 19.5:9 的内容框约
-## 960×443、缩放约 0.82，方向相反。精确换算以 `ui_smoke_platform` 的固定窗口断言为准。
+## 手机卡面必须保持桌面 112:146 的卡形，只缩尺寸不改变比例。
+func _check_card_ratio() -> void:
+    var width := UITheme.stage_metric("card-width")
+    var height := UITheme.stage_metric("card-height")
+    _check(
+        absi(width * 146 - height * 112) <= 60,
+        "手机卡面应保持 112:146 比例：%d×%d" % [width, height],
+    )
+
+
 func _check_compact() -> void:
     ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
+    _check_card_ratio()
     var compact := Vector2(960, 540)
     for page_case in PAGES:
         var host := Control.new()
@@ -385,6 +410,12 @@ func _check_game_compact(compact: Vector2) -> void:
     add_child(host)
     var page := await _instantiate_into("res://pages/game/game.tscn", host)
     if page != null:
+        # 横屏 Home 指示条约 21pt，按内容框换算约 28 画布单位；真机左栏可视高度因此更矮。
+        var area := _safe_area(page)
+        if area != null:
+            area.apply_for_test(Vector4i(0, 0, 0, 28), 0)
+            await get_tree().process_frame
+            await get_tree().process_frame
         var rail := page.find_child("PlayersRail", true, false) as Control
         var scroll: ScrollContainer = null
         if rail != null:
@@ -410,7 +441,7 @@ func _check_game_compact(compact: Vector2) -> void:
                 % [hand_row.get_global_rect().end.y, hand_strip.get_global_rect().end.y],
             )
             _check(
-                hand_strip.get_global_rect().end.y >= compact.y - 8.0,
+                hand_strip.get_global_rect().end.y >= compact.y - 28.0 - 8.0,
                 "手牌行应贴住页面底部，实际底边 %.1f" % hand_strip.get_global_rect().end.y,
             )
         _check_empty_desc(page.find_child("BoardRow", true, false), "棋盘卡")

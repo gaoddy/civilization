@@ -191,8 +191,8 @@ const SCENARIO := {
 	"rank-badge-size-compact": 14,
 	"freeze-crystal-gap": 14,
 	# iPhone 基准（960×540）的对局舞台紧凑值。
-	"card-width-compact": 84,
-	"card-height-compact": 92,
+	"card-width-compact": 70,
+	"card-height-compact": 91,
 	"card-info-height-compact": 60,
 	"hand-card-overlap-compact": 24,
 	"hero-row-height-compact": 64,
@@ -330,7 +330,7 @@ static func panel_style(variant: String) -> StyleBoxFlat:
 		"row":
 			box.set_content_margin_all(space("space-md"))
 		"row-compact":
-			box.set_content_margin_all(space("space-xs"))
+			box.set_content_margin_all(space("space-2xs"))
 		"raised":
 			box.bg_color = color("color-surface-raised")
 		"raised-tight":
@@ -350,7 +350,7 @@ static func panel_style(variant: String) -> StyleBoxFlat:
 			box.bg_color = alpha("color-accent", 0.12)
 			box.border_color = color("color-accent")
 		"accent-row-compact":
-			box.set_content_margin_all(space("space-xs"))
+			box.set_content_margin_all(space("space-2xs"))
 			box.bg_color = alpha("color-accent", 0.12)
 			box.border_color = color("color-accent")
 		"success":

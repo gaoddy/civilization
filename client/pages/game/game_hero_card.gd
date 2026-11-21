@@ -108,7 +108,9 @@ func _refresh_cover_art(hero_id: String) -> void:
 		_cover.remove_child(_cover_art)
 		_cover_art.queue_free()
 		_cover_art = null
-	var art := UIArt.layer(path, "HeroCoverArt")
+	var art := UIArt.layer(
+		path, "HeroCoverArt", TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	)
 	if art != null:
 		var inset := UITheme.stage_metric("card-cover-inset")
 		art.offset_left = inset

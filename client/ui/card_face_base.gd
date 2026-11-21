@@ -147,8 +147,10 @@ static func add_info(
 ) -> void:
     var desc_text := _desc_text(card_id, hero) if show_desc else ""
     var padding := UITheme.space("space-sm")
-    var name_token := "font-body-sm"
-    var stats_token := "font-title"
+    var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
+    # 手机卡面更窄：名称与数值各收一档，避免「攻击 · 类型 · 生命」挤成省略号。
+    var name_token := "font-caption" if compact else "font-body-sm"
+    var stats_token := "font-body" if compact else "font-title"
     var desc_font := UITheme.font_size("font-caption")
     var desc_max_lines := 2
     var desc_overrun := TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -157,7 +159,6 @@ static func add_info(
     )
     var fitting := desc_text != "" and fit_desc and _can_measure(measure_host)
     if fitting:
-        var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
         # 手牌卡不显示费用/时代之外的封面信息，名称与数值各收一档，把高度让给介绍。
         name_token = "font-caption"
         stats_token = "font-caption" if compact else "font-body"
