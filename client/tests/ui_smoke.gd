@@ -68,6 +68,7 @@ func _ready() -> void:
     await _check_disconnected_send()
     await _check_click_gates()
     await _check_error_notice_lifecycle()
+    await _check_status_notice_lifecycle()
     await _check_navigation_guard()
     await _check_error_route()
     await _check_reset_session()
@@ -3458,6 +3459,94 @@ func _check_error_notice_lifecycle() -> void:
     GameStore.view_changed.emit()
     await get_tree().process_frame
     _expect(str(status.text) == "", "回合变化后错误文案应收起，实际：%s" % status.text)
+
+    instance.queue_free()
+    _fake_disconnect()
+    GameStore.last_error = {}
+    GameStore.view = {}
+    GameStore.phase = ""
+    GameStore.turn = 1
+    GameStore.deadline = ""
+
+
+## 状态模态的生命周期：等待、连接提示去重、手动关闭与错误到期后的恢复。
+func _check_status_notice_lifecycle() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    GameStore.turn = 3
+    GameStore.deadline = ""
+    GameStore.view = {}
+    _fake_connect()
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
+    if instance == null:
+        _fake_disconnect()
+        return
+    var modal: Control = instance.find_child("StatusModal", true, false)
+    var overlay: Control = instance.find_child("ChooserOverlay", true, false)
+    var message: Label = instance.find_child("StatusMessage", true, false)
+    var confirm: Control = instance.find_child("StatusConfirm", true, false)
+    if modal == null or message == null or confirm == null:
+        _expect(false, "对局场景缺少状态模态节点")
+        instance.queue_free()
+        _fake_disconnect()
+        return
+    _expect(
+        modal.visible and message.text == TranslationServer.translate("ui.game.status.waiting_view"),
+        "空视图应显示等待提示，实际：%s" % message.text,
+    )
+    _expect(
+        overlay != null and modal.get_index() < overlay.get_index(),
+        "状态模态应压在选择浮层之下",
+    )
+
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = FixtureScript.view()
+    GameStore.view_changed.emit()
+    await get_tree().process_frame
+    _expect(not modal.visible, "收到视图后等待提示应收起")
+
+    _fake_disconnect()
+    GameStore.view_changed.emit()
+    await get_tree().process_frame
+    _expect(
+        modal.visible
+            and message.text == TranslationServer.translate("ui.game.status.disconnected"),
+        "断线应显示连接提示，实际：%s" % message.text,
+    )
+
+    confirm.pressed.emit()
+    await get_tree().process_frame
+    _expect(not modal.visible, "点「知道了」应收起连接提示")
+    GameStore.view_changed.emit()
+    await get_tree().process_frame
+    _expect(not modal.visible, "同一连接状态刷新时不应重复弹出")
+
+    GameStore.last_error = {"code": Protocol.ERROR_INVALID_STAGE}
+    GameStore.error_received.emit()
+    await get_tree().process_frame
+    _expect(
+        modal.visible and message.text == UIWording.error_text(Protocol.ERROR_INVALID_STAGE),
+        "错误应覆盖连接提示，实际：%s" % message.text,
+    )
+    instance._process(10.0)
+    _expect(
+        modal.visible
+            and message.text == TranslationServer.translate("ui.game.status.disconnected"),
+        "错误到期后应恢复连接提示，实际：%s" % message.text,
+    )
+
+    _fake_connect()
+    GameStore.view_changed.emit()
+    await get_tree().process_frame
+    _expect(not modal.visible, "重连后连接提示应收起")
+
+    GameStore.view = {}
+    GameStore.view_changed.emit()
+    await get_tree().process_frame
+    _expect(
+        modal.visible and message.text == TranslationServer.translate("ui.game.status.waiting_view"),
+        "视图清空后应回到等待提示，实际：%s" % message.text,
+    )
 
     instance.queue_free()
     _fake_disconnect()

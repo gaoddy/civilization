@@ -16,6 +16,7 @@ func _ready() -> void:
     await _check_hero_card()
     await _check_portrait()
     await _check_tool_buttons()
+    await _check_status_modal()
     await _check_recruit_river()
     await _check_combat_river()
     await _check_hero_row()
@@ -382,6 +383,63 @@ func _check_tool_buttons() -> void:
         _expect(hint.disabled and leave.disabled, "断线时提示与退出对局应禁用")
         _expect(not gallery.disabled, "断线时图鉴仍可用")
     tools.queue_free()
+    await get_tree().process_frame
+
+
+## 状态模态：居中面板取令牌宽度，面板与内容容器放行输入，只有「知道了」接收点击。
+func _check_status_modal() -> void:
+    var host: Control = await _host(Vector2(1280, 720))
+    var modal := GameStatusModal.new()
+    host.add_child(modal)
+    await get_tree().process_frame
+    await get_tree().process_frame
+    _expect(not modal.visible, "状态模态默认隐藏")
+
+    modal.show_status("未连接 · 正在重连", "danger", "详情")
+    await get_tree().process_frame
+    _expect(modal.visible and modal.is_layer_open(), "show_status 后模态应显示")
+    var message: Label = modal.find_child("StatusMessage", true, false)
+    var detail: Label = modal.find_child("StatusDetail", true, false)
+    var panel: Control = modal.find_child("StatusPanel", true, false)
+    var body: Control = modal.find_child("StatusBody", true, false)
+    var actions: Control = modal.find_child("StatusActions", true, false)
+    var confirm: Control = modal.find_child("StatusConfirm", true, false)
+    _expect(message != null and message.text == "未连接 · 正在重连", "模态应显示主文案")
+    _expect(detail != null and detail.visible and detail.text == "详情", "模态应显示次要说明")
+    _expect(
+        modal.mouse_filter == Control.MOUSE_FILTER_IGNORE
+            and modal.scrim.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+        "模态与遮罩应放行输入",
+    )
+    _expect(
+        panel != null
+            and panel.mouse_filter == Control.MOUSE_FILTER_IGNORE
+            and body != null
+            and body.mouse_filter == Control.MOUSE_FILTER_IGNORE
+            and actions != null
+            and actions.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+        "面板与内容容器应放行输入",
+    )
+    _expect(
+        confirm != null and confirm.mouse_filter == Control.MOUSE_FILTER_STOP,
+        "「知道了」按钮应接收点击",
+    )
+    if panel != null:
+        var width := UITheme.stage_metric("status-dialog-width")
+        _expect(
+            absf(panel.size.x - float(width)) <= 2.0,
+            "面板宽度应取 status-dialog-width，实际 %s" % panel.size.x,
+        )
+
+    var acked := [false]
+    modal.acknowledged.connect(func() -> void: acked[0] = true)
+    if confirm != null:
+        confirm.pressed.emit()
+        await get_tree().process_frame
+        _expect(acked[0] and not modal.visible, "点「知道了」应发出信号并收起")
+    modal.hide_status()
+    _expect(not modal.visible, "hide_status 应保持隐藏")
+    host.queue_free()
     await get_tree().process_frame
 
 
