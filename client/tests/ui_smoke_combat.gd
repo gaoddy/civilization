@@ -154,10 +154,19 @@ func _check_started_at_seek() -> void:
         int(Time.get_unix_time_from_system()) - 10
     ) + "Z"
     _set_combat(combat)
+    Sfx.clear_log()
     var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
         _clear_combat()
         return
+    _expect(
+        Sfx.count_cue(Sfx.CUE_COMBAT_START) == 0,
+        "续播到结束态不应补播战斗开始音效",
+    )
+    _expect(
+        Sfx.count_cue(Sfx.CUE_COMBAT_END) == 1,
+        "续播到结束态应补播一次战斗结束音效",
+    )
     var banner = instance.find_child("CombatBanner", true, false)
     _expect(
         banner != null

@@ -16,6 +16,8 @@ var _own_row: HFlowContainer
 ## 演示播放器（纯数据）与当前演示所属回合。
 var _combat := CombatPlayback.new()
 var _combat_turn := -1
+## 本场结束音效是否已播放；每场战斗重置，避免横幅刷新时重复。
+var _combat_end_cued := false
 ## 覆盖层演出：克隆卡碰撞往返、闪光、飘字与淡出。
 var _fx: CombatFx
 
@@ -121,6 +123,7 @@ func refresh(state: GameUiState) -> void:
 ## 进入非战斗阶段时丢弃本场演示归属，下一场战斗从头播放。
 func reset() -> void:
     _combat_turn = -1
+    _combat_end_cued = false
     _fx.clear()
     _river.set_combat_detail("", UITheme.color("color-accent"))
 
@@ -160,6 +163,7 @@ func finished() -> bool:
 ## 装载本场演示：战前阵容与动作序列，并按服务端 `startedAt` 对齐续播进度。
 func _start_combat(combat: Dictionary) -> void:
     _fx.clear()
+    _combat_end_cued = false
     var started_at := UI.unix_from_rfc3339(str(combat.get("startedAt", "")))
     _combat.start(
         combat.get("actions", []),
@@ -173,6 +177,9 @@ func _start_combat(combat: Dictionary) -> void:
     # 续播只对齐数据，不补演已经过去的动作。
     _combat.seek(elapsed_ms)
     _combat_turn = GameStore.turn
+    # 首条动作尚未应用才算“开战”；续播已进入中段时不补开战音。
+    if elapsed_ms < CombatPlayback.PACE_MS:
+        Sfx.play_cue(Sfx.CUE_COMBAT_START)
 
 
 ## 按动作类型开启演出；数值已在播放器中按服务端快照落地。
@@ -382,6 +389,9 @@ func _refresh_combat_banner() -> void:
     if not _combat.banner_visible():
         _river.set_combat_detail("", UITheme.color("color-accent"))
         return
+    if not _combat_end_cued:
+        _combat_end_cued = true
+        Sfx.play_cue(Sfx.CUE_COMBAT_END)
     var combat: Dictionary = GameStore.last_combat
     var result := _result(combat)
     var text := tr("ui.game.combat.banner") % [

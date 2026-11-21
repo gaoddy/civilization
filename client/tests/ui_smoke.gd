@@ -1556,11 +1556,15 @@ func _check_sfx_freeze() -> void:
     GameStore.phase = ""
 
 
-## 战斗演示按动作节奏播放攻守双方卡牌的攻击与死亡音效。
+## 战斗演示按动作节奏播放攻守双方卡牌的攻击与死亡音效；
+## 开战与结果横幅各一条音效，且每场只播一次。
 func _check_sfx_combat() -> void:
+    Sfx.clear_log()
     var instance := await _combat_instance("2030-01-01T00:00:00Z")
     if instance == null:
         return
+    _expect(Sfx.count_cue(Sfx.CUE_COMBAT_START) == 1, "战斗装载应播一次开始音效")
+    _expect(_sfx_played(Sfx.CUE_COMBAT_START), "战斗开始音效资源应可播放")
     Sfx.clear_log()
     instance._process(0.32)
     _expect(Sfx.count_cue(Sfx.CUE_CARD_ATTACK) == 1, "攻击动作应播一次攻击音效")
@@ -1574,6 +1578,13 @@ func _check_sfx_combat() -> void:
         _sfx_card_id(Sfx.CUE_CARD_DEATH) == "aristotle",
         "死亡音效应挂到阵亡卡牌",
     )
+    # 总时长 = 3 × 320 + 2000 = 2960ms；推进到横幅出现。
+    instance._process(2.4)
+    _expect(Sfx.count_cue(Sfx.CUE_COMBAT_END) == 1, "结果横幅出现应播一次结束音效")
+    _expect(_sfx_played(Sfx.CUE_COMBAT_END), "战斗结束音效资源应可播放")
+    instance._process(0.5)
+    _expect(Sfx.count_cue(Sfx.CUE_COMBAT_END) == 1, "结束音效不应重复")
+    _expect(Sfx.count_cue(Sfx.CUE_COMBAT_START) == 0, "战斗推进不应重复开始音效")
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
@@ -1643,10 +1654,19 @@ func _check_combat_resume_from_started_at() -> void:
         int(Time.get_unix_time_from_system()) - 1
     ) + "Z"
     _set_combat(combat)
+    Sfx.clear_log()
     var instance := await _check_scene("res://scenes/game.tscn", false)
     if instance == null:
         _clear_combat()
         return
+    _expect(
+        Sfx.count_cue(Sfx.CUE_COMBAT_START) == 0,
+        "续播进入战斗中段时不应补播战斗开始音效",
+    )
+    _expect(
+        Sfx.count_cue(Sfx.CUE_COMBAT_END) == 0,
+        "续播尚未到结果时不应播战斗结束音效",
+    )
     var own_row = instance.find_child("CombatOwnRow", true, false)
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
     var banner = instance.find_child("CombatBanner", true, false)

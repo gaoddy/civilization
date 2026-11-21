@@ -25,7 +25,7 @@ client/
     zh_CN.csv                # 唯一的运行时中文文本表（生成物 + 人工 key）
   assets/
     fonts/NotoSansSC-Regular-subset.ttf  # 默认主题字体（中文子集）；美术素材见 §10
-    audio/sfx/                           # 场景音效：刷新、冻结、解冻、商店入场；见 §11
+    audio/sfx/                           # 场景音效：刷新、冻结、解冻、商店入场、战斗开始/结束；见 §11
     audio/cards/default/                 # 卡牌默认音效：购入、攻击、死亡；逐卡覆盖见 §11
   ui/
     ui.gd                    # 场景共用控件工具、共享构件与统一导航入口（class_name UI）
@@ -204,7 +204,7 @@ client/
 | `make data` | 生成服务端数据（含 `taxonomy.json`）、`client/generated/{cards,skills,taxonomy}.json` 与文本表 `client/text/zh_CN.csv` |
 | `make data-check` | 比对服务端与客户端生成数据、文本表漂移，运行效果审计 |
 | `make assets` | 按 `ASSET_MAP` 对源立绘去水印，派生头像与卡面并重写 `client/assets/asset_manifest.json`；见 §10 |
-| `make sfx` | 生成 7 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
+| `make sfx` | 生成 9 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存 |
@@ -341,11 +341,11 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 ## 11. 音效层
 
-- 位置：`client/assets/audio/`。场景音效 `sfx/{reroll,freeze,unfreeze,shop_enter}.wav`；卡牌默认音效 `cards/default/{buy,attack,death}.wav`；逐卡覆盖为 `cards/<cardId>/{buy,attack,death}.wav`。
+- 位置：`client/assets/audio/`。场景音效 `sfx/{reroll,freeze,unfreeze,shop_enter,combat_start,combat_end}.wav`；卡牌默认音效 `cards/default/{buy,attack,death}.wav`；逐卡覆盖为 `cards/<cardId>/{buy,attack,death}.wav`。
 - 播放：`Sfx` 自动加载单例，8 路播放池轮转、统一 `-6 dB`；`play_cue(cue)` 播场景音效，`play_card(cardId, cue)` 播卡牌音效。卡牌音效先查逐卡路径，缺失回落默认目录；所有路径按需加载并缓存，文件缺失时静默跳过。
-- 触发：`game.gd` 监听 `GameStore.events_received`，同批含 `TurnStarted` 播商店入场、否则 `ShopRolled` 播刷新、每条 `MinionBought` 按 `cardId` 播购入；冻结/解冻由视图 `frozen` 变化判断，带重抽事件的批次不误判。`game_combat_view.gd` 在应用 `attack` / `death` 动作时按随从实例反查卡牌 id，播放攻击/死亡音效；`seek()` 续播不补播旧动作。
-- 资源：当前 7 个默认音效由 `make sfx` 调用 `scripts/gen_sfx.py` 合成，作为占位素材随源提交；正式素材可直接替换同名文件。`.import` 被 `client/.gitignore` 忽略，替换后运行 `make client-import`。
-- 测试：`tests/test_client_boundary.py` 断言 `Sfx` 注册与 7 个默认资源存在；`client/tests/ui_smoke.gd` 的 `_check_sfx_events`、`_check_sfx_freeze`、`_check_sfx_combat` 断言事件到 cue 的映射、次数与卡牌 id。
+- 触发：`game.gd` 监听 `GameStore.events_received`，同批含 `TurnStarted` 播商店入场、否则 `ShopRolled` 播刷新、每条 `MinionBought` 按 `cardId` 播购入；冻结/解冻由视图 `frozen` 变化判断，带重抽事件的批次不误判。`game_combat_view.gd` 在应用 `attack` / `death` 动作时按随从实例反查卡牌 id，播放攻击/死亡音效；战斗装载时按 `startedAt` 算出 `elapsed_ms`，小于 `PACE_MS` 才播开始音，结果横幅首次出现时播结束音并置本场标志；`seek()` 续播不补播旧动作，每场开始与 `reset()` 清零结束标志。
+- 资源：当前 9 个默认音效由 `make sfx` 调用 `scripts/gen_sfx.py` 合成，作为占位素材随源提交；正式素材可直接替换同名文件。`.import` 被 `client/.gitignore` 忽略，替换后运行 `make client-import`。
+- 测试：`tests/test_client_boundary.py` 断言 `Sfx` 注册与 9 个默认资源存在；`client/tests/ui_smoke.gd` 的 `_check_sfx_events`、`_check_sfx_freeze`、`_check_sfx_combat` 断言事件到 cue 的映射、次数与卡牌 id，并覆盖战斗开始/结束不重复与续播不补开始音；`client/tests/ui_smoke_combat.gd` 的 `_check_started_at_seek` 覆盖续播到结束态只补一次结束音。
 
 ## 相关文档
 
