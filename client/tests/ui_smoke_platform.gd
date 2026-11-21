@@ -7,6 +7,7 @@ var _failures := 0
 func _ready() -> void:
     _check_default_url()
     _check_stretch()
+    _check_window_floor()
     _check_desktop()
     _check_phone()
     _check_tablet()
@@ -28,6 +29,32 @@ func _check_stretch() -> void:
     _check(
         str(ProjectSettings.get_setting("display/window/stretch/aspect")) == "keep_width",
         "窗口缩放应为 keep_width",
+    )
+
+
+## 窗口宽度下限：宽度不小于高度 × 16:9；放不下时收窄高度，已更宽时不动。
+func _check_window_floor() -> void:
+    var base := ScreenProfile.BASE_CANVAS_TABLET
+    var screen := Vector2i(1920, 1080)
+    _check(
+        ScreenProfile.fit_aspect_floor(Vector2i(1600, 720), screen, base) == Vector2i(1600, 720),
+        "窗口比 16:9 更宽时不调整",
+    )
+    _check(
+        ScreenProfile.fit_aspect_floor(Vector2i(1280, 720), screen, base) == Vector2i(1280, 720),
+        "窗口正好 16:9 时不调整",
+    )
+    _check(
+        ScreenProfile.fit_aspect_floor(Vector2i(1000, 720), screen, base) == Vector2i(1280, 720),
+        "窗口过窄且屏幕放得下时加宽",
+    )
+    _check(
+        ScreenProfile.fit_aspect_floor(Vector2i(1000, 720), Vector2i.ZERO, base) == Vector2i(1280, 720),
+        "可用区域未知时仍加宽",
+    )
+    _check(
+        ScreenProfile.fit_aspect_floor(Vector2i(1360, 884), Vector2i(1512, 982), base) == Vector2i(1360, 765),
+        "窗口过窄且屏幕放不下时收窄高度",
     )
 
 

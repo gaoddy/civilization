@@ -97,6 +97,19 @@ static func canvas_hit_min(pt: float, px_per_pt: float, base: Vector2i, window_s
     return maxi(1, int(round(pt * px_per_pt / scale)))
 
 
+## 窗口宽度下限：宽度不得小于高度 ×（基准宽 ÷ 基准高），避免内容比基准比例更窄。
+## 宽度不足时优先加宽；加宽会超出可用区域时改为按宽度收窄高度。
+static func fit_aspect_floor(size: Vector2i, usable: Vector2i, base: Vector2i) -> Vector2i:
+    if base.x <= 0 or base.y <= 0 or size.x <= 0 or size.y <= 0:
+        return size
+    var min_width := _ceil_div(size.y * base.x, base.y)
+    if size.x >= min_width:
+        return size
+    if usable.x <= 0 or min_width <= usable.x:
+        return Vector2i(min_width, size.y)
+    return Vector2i(size.x, maxi(1, size.x * base.y / base.x))
+
+
 ## 内容矩形与安全矩形的差，换算为画布单位；左右留白内的边距为零。
 ## keep_width：宽度按基准等比缩放，高度始终等于窗口高度；宽度不足时左右居中留白。
 static func canvas_insets(window_size: Vector2, base: Vector2i, safe: Rect2i, window_position: Vector2) -> Vector4i:
@@ -113,6 +126,10 @@ static func canvas_insets(window_size: Vector2, base: Vector2i, safe: Rect2i, wi
         maxi(0, int(round(maxf(0.0, origin.x + content.x - safe_end.x) / scale))),
         maxi(0, int(round(maxf(0.0, origin.y + content.y - safe_end.y) / scale)))
     )
+
+
+static func _ceil_div(value: int, divisor: int) -> int:
+    return (value + divisor - 1) / divisor
 
 
 func _apply_base_canvas() -> void:
