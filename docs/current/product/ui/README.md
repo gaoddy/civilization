@@ -24,6 +24,7 @@
 | `client/ui/layout.gd`（`UILayout`） | 安全区包裹、内容框与共享图层 |
 | `client/ui/art.gd`（`UIArt`） | 图片取用与铺层（`texture` / `layer`） |
 | `client/ui/avatar.gd`、`hp_bar.gd`、`rank_badge.gd`、`skill_list.gd` | 单组件：头像块、血量条、名次角标、技能列表 |
+| `client/ui/selectable_box.gd`（`SelectableBox`） | 可选项框：内容容器、常态 / 悬停 / 选中描边与框内点击；见 [components/selectable-box.md](components/selectable-box.md) |
 | `client/ui/icons.gd`（`Icons`） | 代码绘制的矢量图标；清单与绘制约定见 [icons.md](icons.md) |
 | `client/text/zh_CN.csv` | 唯一的运行时中文文本表：卡牌与技能名称、效果、枚举展示、错误与页面文案；来源与取用规则见 [client.md](../../technical/client.md)「国际化与文本表」 |
 
@@ -49,6 +50,7 @@
 | 数值胶囊 | `UIControls.pill_label` | [components/pill.md](components/pill.md) |
 | 按钮变体 | `UIControls.styled_button` | [components/button.md](components/button.md) |
 | 卡片容器 | `UIControls.card_panel` | [components/card-panel.md](components/card-panel.md) |
+| 可选项框 | `SelectableBox`（`client/ui/selectable_box.gd`） | [components/selectable-box.md](components/selectable-box.md) |
 | 卡框与星级 | `CardFrame`（`client/ui/card_frame.gd`） | [tokens.md](tokens.md) |
 | 攻防底牌 | `StatPlate`（`client/ui/stat_plate.gd`） | [tokens.md](tokens.md) |
 | 时代象形 | `EraGlyph`（`client/ui/era_glyph.gd`） | [icons.md](icons.md) |

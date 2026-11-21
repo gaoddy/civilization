@@ -1,22 +1,16 @@
 class_name RoomHeroCard
-extends PanelContainer
+extends SelectableBox
 ## 选英雄页候选卡：只负责呈现，选择由页面统一处理。
 ##
 ## 选中态用外扩的金色边框表达，不额外加徽标；锁定只压暗卡面内容，
-## 选中框保持全亮，悬停详情仍可查看。
+## 选中框保持全亮，悬停详情仍可查看。外扩选中框与悬停描边由 `SelectableBox` 提供。
 
 var _card_size := Vector2.ZERO
 
 var hero_id := ""
-var selected := false
 var locked := false
 
-var _stack: Control
-var _frame: Panel
-var _normal_style: StyleBoxFlat
-var _hover_style: StyleBoxFlat
 var _built := false
-var _bound := false
 
 
 func setup(id: String, is_selected: bool, is_locked: bool) -> void:
@@ -30,25 +24,15 @@ func setup(id: String, is_selected: bool, is_locked: bool) -> void:
 	_build()
 	set_selected(is_selected)
 	set_locked(is_locked)
-	if not ScreenProfile.is_touch() and not _bound:
-		_bound = true
-		mouse_entered.connect(_on_mouse_entered)
-		mouse_exited.connect(_on_mouse_exited)
-
-
-func set_selected(value: bool) -> void:
-	selected = value
-	if _frame != null:
-		_frame.visible = value
 
 
 func set_locked(value: bool) -> void:
 	locked = value
-	if _stack == null:
+	if content() == null:
 		return
 	var alpha := UITheme.opacity("opacity-dim") if value else 1.0
-	for child in _stack.get_children():
-		if child == _frame:
+	for child in content().get_children():
+		if child.name == "SelectedFrame":
 			continue
 		var item := child as CanvasItem
 		if item != null:
@@ -60,18 +44,13 @@ func _build() -> void:
 		return
 	_built = true
 
-	_normal_style = UITheme.panel_style("raised")
+	var base_style := UITheme.panel_style("raised")
 	# 封面要铺满整张卡：面板样式默认带 `space-lg` 内边距，会把封面缩进一圈。
-	_normal_style.set_content_margin_all(0)
-	_hover_style = _normal_style.duplicate()
-	_hover_style.border_color = UITheme.color("color-border-strong")
-	add_theme_stylebox_override("panel", _normal_style)
+	base_style.set_content_margin_all(0)
+	configure(base_style, SelectableBox.Outline.OUTER, not ScreenProfile.is_touch())
 
-	_stack = Control.new()
-	_stack.name = "Stack"
-	_stack.custom_minimum_size = _card_size
-	_stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_stack)
+	var stack := content()
+	stack.custom_minimum_size = _card_size
 
 	var entry := CardDB.hero(hero_id)
 	var playstyle := CardDB.primary_playstyle(entry)
@@ -81,7 +60,7 @@ func _build() -> void:
 	cover.color = UITheme.playstyle_cover(playstyle)
 	cover.set_anchors_preset(Control.PRESET_FULL_RECT)
 	cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_stack.add_child(cover)
+	stack.add_child(cover)
 
 	# 有卡面时叠图并隐藏首字水印：方形卡面四角向内收，落在卡片圆角以内。
 	var cover_art := UIArt.layer(CardDB.art_path(hero_id, "card_face"), "CoverArt")
@@ -91,7 +70,7 @@ func _build() -> void:
 		cover_art.offset_top = inset
 		cover_art.offset_right = -inset
 		cover_art.offset_bottom = -inset
-		_stack.add_child(cover_art)
+		stack.add_child(cover_art)
 	else:
 		var watermark := UIControls.label(
 			CardDB.display_name(hero_id).substr(0, 1), UITheme.font_size("font-watermark"), false
@@ -102,7 +81,7 @@ func _build() -> void:
 		watermark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		watermark.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
 		watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_stack.add_child(watermark)
+		stack.add_child(watermark)
 
 	var name_label := UIControls.label(CardDB.display_name(hero_id), UITheme.font_size("font-title"), false)
 	name_label.name = "Name"
@@ -117,36 +96,4 @@ func _build() -> void:
 	name_style.bg_color = UITheme.alpha("color-bg", 0.72)
 	name_style.set_content_margin_all(0)
 	name_label.add_theme_stylebox_override("normal", name_style)
-	_stack.add_child(name_label)
-
-	_frame = Panel.new()
-	_frame.name = "SelectedFrame"
-	_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var grow := UITheme.space("space-2xs")
-	_frame.offset_left = -grow
-	_frame.offset_top = -grow
-	_frame.offset_right = grow
-	_frame.offset_bottom = grow
-	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var frame_style := StyleBoxFlat.new()
-	frame_style.bg_color = UITheme.color("color-transparent")
-	frame_style.border_color = UITheme.color("color-accent")
-	frame_style.set_border_width_all(2)
-	frame_style.set_corner_radius_all(UITheme.radius("radius-lg"))
-	_frame.add_theme_stylebox_override("panel", frame_style)
-	_frame.visible = false
-	_stack.add_child(_frame)
-
-
-func set_hovered(value: bool) -> void:
-	if _normal_style == null:
-		return
-	add_theme_stylebox_override("panel", _hover_style if value else _normal_style)
-
-
-func _on_mouse_entered() -> void:
-	set_hovered(true)
-
-
-func _on_mouse_exited() -> void:
-	set_hovered(false)
+	stack.add_child(name_label)
