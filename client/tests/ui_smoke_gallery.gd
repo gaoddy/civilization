@@ -344,8 +344,12 @@ func _check_hero_section() -> void:
     if rows != null and rows.get_child_count() > 0:
         var first_tile: Control = rows.get_child(0)
         _expect(
-            first_tile.find_child("CardBadge", true, false) != null,
-            "英雄卡面应有「英雄」角标",
+            first_tile.find_child("CardBadge", true, false) == null,
+            "英雄卡面不应有角标",
+        )
+        _expect(
+            first_tile.find_child("CardDesc", true, false) == null,
+            "英雄卡面不应显示技能文本",
         )
         _expect(
             first_tile.find_child("CostBadge", true, false) == null,
@@ -367,8 +371,8 @@ func _check_hero_section() -> void:
             "英雄详情应显示介绍：%s" % text,
         )
         _expect(
-            text.contains(TranslationServer.translate("ui.game.detail.hero")),
-            "英雄详情应标为英雄：%s" % text,
+            not text.contains(TranslationServer.translate("ui.game.detail.type")),
+            "英雄详情不应显示类型行：%s" % text,
         )
         _expect(
             not text.contains(TranslationServer.translate("ui.game.detail.taxonomy")),

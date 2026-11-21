@@ -75,7 +75,6 @@ func _show(card_id: String, hero: bool) -> void:
             intro.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
             intro.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
             _box.add_child(intro)
-        _add_row(tr("ui.game.detail.type"), tr("ui.game.detail.hero"))
         _add_row(tr("ui.game.detail.playstyle"), _playstyle_text(entry))
         var hero_associations := _association_text(entry)
         if hero_associations != "":
