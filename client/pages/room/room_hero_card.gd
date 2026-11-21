@@ -47,6 +47,8 @@ func _build() -> void:
 	var base_style := UITheme.panel_style("raised")
 	# 封面要铺满整张卡：面板样式默认带 `space-lg` 内边距，会把封面缩进一圈。
 	base_style.set_content_margin_all(0)
+	# 候选卡保持直角，外扩选中框也随之走直角，不被铺满的卡面遮住四角。
+	base_style.set_corner_radius_all(0)
 	configure(base_style, SelectableBox.Outline.OUTER, not ScreenProfile.is_touch())
 
 	var stack := content()
@@ -62,7 +64,7 @@ func _build() -> void:
 	cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stack.add_child(cover)
 
-	# 有卡面时叠图并隐藏首字水印：方形卡面四角向内收，落在卡片圆角以内。
+	# 有卡面时叠图并隐藏首字水印：方形卡面四角向内收，留出描边位置。
 	var cover_art := UIArt.layer(CardDB.art_path(hero_id, "card_face"), "CoverArt")
 	if cover_art != null:
 		var inset := UITheme.stage_metric("card-cover-inset")

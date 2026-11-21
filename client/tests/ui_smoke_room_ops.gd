@@ -43,6 +43,21 @@ func _check_host_controls() -> void:
         await _push_click(instance, hero_card.get_global_rect().get_center())
         var selected_frame = hero_card.find_child("SelectedFrame", true, false)
         _expect(selected_frame != null and selected_frame.is_visible_in_tree(), "点击候选卡应显示选中框")
+        if selected_frame != null:
+            var frame_style := selected_frame.get_theme_stylebox("panel") as StyleBoxFlat
+            _expect(
+                frame_style != null
+                and frame_style.corner_radius_top_left == 0
+                and frame_style.corner_radius_top_right == 0
+                and frame_style.corner_radius_bottom_left == 0
+                and frame_style.corner_radius_bottom_right == 0,
+                "候选卡选中框应是直角",
+            )
+        var card_style := hero_card.get_theme_stylebox("panel") as StyleBoxFlat
+        _expect(
+            card_style != null and card_style.corner_radius_top_left == 0,
+            "候选卡底板应是直角",
+        )
 
     var dissolve = instance.find_child("DissolveButton", true, false)
     _expect(dissolve != null and dissolve.is_visible_in_tree(), "房主应看到解散房间按钮")

@@ -59,10 +59,10 @@ HeroDetailLayer：悬停详情层（全屏，默认隐藏，忽略鼠标）
 
 ## 4. 候选卡
 
-- 卡面 `160×209`：有卡面美术时叠 `card_face`（按 112:146 比例，向内收 3px，四角落在卡片圆角内），否则铺玩法色（`UITheme.playstyle_cover`）并居中显示大号首字水印（`color-text` 16% 透明度）；名字在底部居中，叠在卡面上时带半透明底色。
+- 卡面 `160×209`：卡片为直角；有卡面美术时叠 `card_face`（按 112:146 比例，向内收 3px），否则铺玩法色（`UITheme.playstyle_cover`）并居中显示大号首字水印（`color-text` 16% 透明度）；名字在底部居中，叠在卡面上时带半透明底色。
 - 数据只取 `CardDB`：玩法决定封面色，名字来自卡表；不显示数值，避免与对局内的当前值混淆。
 - 悬停态把卡片描边切换为 `color-border-strong`；触控端不显示悬停描边。
-- 选中态由[可选项框](../components/selectable-box.md)的外扩变体表达：卡片外扩 `space-2xs` 的 `SelectedFrame`，透明底、2px `color-accent` 描边、`radius-lg` 圆角；不使用额外徽标或文字。
+- 选中态由[可选项框](../components/selectable-box.md)的外扩变体表达：卡片外扩 `space-2xs` 的 `SelectedFrame`，透明底、2px `color-accent` 描边、直角；选中框圆角跟随卡片底板，四角不被卡面遮挡；不使用额外徽标或文字。
 - 已确认时全部候选卡锁定：卡面内容降透明度，选中框保持全亮，卡片不再响应选择；悬停仍可看详情。
 - 有 `card_face` 美术的候选显示卡面图并隐藏首字水印；无美术或加载失败时回退玩法色与水印。
 

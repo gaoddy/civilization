@@ -365,6 +365,31 @@ func _ready() -> void:
     outer.queue_free()
     await get_tree().process_frame
 
+    # 选中框圆角跟随底板：直角底板得到直角选中框，不会弯进铺满的内容区。
+    var square := SelectableBox.new()
+    var square_base := UITheme.panel_style("raised")
+    square_base.set_content_margin_all(0)
+    square_base.set_corner_radius_all(0)
+    square.configure(square_base, SelectableBox.Outline.OUTER)
+    square.custom_minimum_size = Vector2(112, 146)
+    add_child(square)
+    await get_tree().process_frame
+    square.set_selected(true)
+    var square_frame := square.find_child("SelectedFrame", true, false) as Control
+    var square_style: StyleBoxFlat = null
+    if square_frame != null:
+        square_style = square_frame.get_theme_stylebox("panel") as StyleBoxFlat
+    _expect(
+        square_style != null
+        and square_style.corner_radius_top_left == 0
+        and square_style.corner_radius_top_right == 0
+        and square_style.corner_radius_bottom_left == 0
+        and square_style.corner_radius_bottom_right == 0,
+        "直角底板的选中框应保持直角",
+    )
+    square.queue_free()
+    await get_tree().process_frame
+
     # 关联分类行文案：界面直接展示该键，必须是「关联分类」而非旧的「关联玩法」。
     var association_label := str(TranslationServer.translate("ui.game.detail.association"))
     _expect(

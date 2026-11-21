@@ -87,7 +87,12 @@ func _build_frame() -> void:
 	frame_style.bg_color = UITheme.color("color-transparent")
 	frame_style.border_color = UITheme.color("color-accent")
 	frame_style.set_border_width_all(SELECTED_BORDER_WIDTH)
-	frame_style.set_corner_radius_all(UITheme.radius("radius-lg"))
+	# 选中框圆角跟随底板：底板是直角（如房间候选卡）时选中框也保持直角，
+	# 避免圆弧弯进内容区后被铺满的卡面遮住四角。
+	frame_style.corner_radius_top_left = _base_style.corner_radius_top_left
+	frame_style.corner_radius_top_right = _base_style.corner_radius_top_right
+	frame_style.corner_radius_bottom_right = _base_style.corner_radius_bottom_right
+	frame_style.corner_radius_bottom_left = _base_style.corner_radius_bottom_left
 	_frame.add_theme_stylebox_override("panel", frame_style)
 	_frame.visible = false
 	_content.add_child(_frame)

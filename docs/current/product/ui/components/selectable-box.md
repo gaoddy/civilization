@@ -28,12 +28,13 @@
 | 变体 / 状态 | 表现 |
 | --- | --- |
 | `Outline.INLINE` | 常态沿用底板 1px 描边；悬停改 `color-border-strong`；选中改 2px `color-accent`，选中优先于悬停 |
-| `Outline.OUTER` | 底板描边不变；悬停改 `color-border-strong`；选中在内容区外扩 `space-2xs` 显示 2px `color-accent`、`radius-lg` 的 `SelectedFrame` |
+| `Outline.OUTER` | 底板描边不变；悬停改 `color-border-strong`；选中在内容区外扩 `space-2xs` 显示 2px `color-accent` 的 `SelectedFrame`，圆角跟随底板 |
 | 按下 | 不改变样式；位移超过 12 画布单位视为拖拽，不发出 `activated` |
 
 - 悬停态只在 `hover_enabled` 为真时生效；触控端调用方传 `false`，保持无悬停态。
 
 - `OUTER` 以内容区为基准外扩；内容需要铺满整卡时，调用方使用零内边距底板，选中框才会落在整卡之外。
+- `OUTER` 的选中框四角半径逐角沿用底板样式：直角底板得到直角选中框，避免圆弧弯进铺满的内容区后被遮住。
 - 指针为手型；组件不处理键盘焦点，选中与点击语义由调用方决定。
 
 ## 事件
