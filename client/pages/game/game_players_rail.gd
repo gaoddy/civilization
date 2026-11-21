@@ -199,7 +199,9 @@ func _seat_row(player: Dictionary, state: GameUiState, avatar_size: int) -> Pane
     if player.get("rank") != null:
         var badge := RankBadge.create(int(player.get("rank")))
         badge.name = "SeatRankBadge"
-        badge.position = Vector2(-3, -3)
+        # 名次角标收进头像可选区域内，不再挂在头像外沿。
+        var badge_inset := UITheme.space("space-2xs")
+        badge.position = Vector2(badge_inset, badge_inset)
         badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
         avatar_box.add_child(badge)
         _ignore_mouse(badge)

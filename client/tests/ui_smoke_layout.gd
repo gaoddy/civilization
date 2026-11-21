@@ -109,18 +109,22 @@ func _check_control_defaults() -> void:
     default_margin.free()
 
 
-## 对局页英雄卡封面：方形头像按完整图像等比显示，不裁掉上下。
+## 对局页英雄卡封面：方形头像铺满整张方形卡，手机档位 64×64。
 func _check_hero_cover_art() -> void:
     ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
     var card := GameHeroCard.new()
     add_child(card)
-    card.refresh("darwin", 30, 40, 1)
+    card.refresh("darwin", 30, 40)
     await get_tree().process_frame
+    _check(card.custom_minimum_size == Vector2(64, 64),
+        "手机英雄卡应为 64×64，实际 %s" % str(card.custom_minimum_size))
     var art := card.find_child("HeroCoverArt", true, false) as TextureRect
     _check(art != null, "英雄卡封面应加载头像素材")
     if art != null:
-        _check(art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED,
-            "英雄卡封面应完整显示方形头像，当前拉伸模式 %d" % art.stretch_mode)
+        _check(art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED,
+            "英雄卡封面应裁切铺满，当前拉伸模式 %d" % art.stretch_mode)
+        _check(art.size.x >= card.size.x - 4.0 and art.size.y >= card.size.y - 4.0,
+            "英雄卡封面应铺满整卡，封面 %s，卡 %s" % [str(art.size), str(card.size)])
     card.queue_free()
     await get_tree().process_frame
 

@@ -42,7 +42,7 @@
 
 | 令牌 | 字号 | 用途 |
 | --- | --- | --- |
-| `font-micro` | 8 | 图标按钮的费用与次数角标、英雄卡的数值行 |
+| `font-micro` | 8 | 图标按钮的费用与次数角标 |
 | `font-caption` | 11 | 元信息、关键词、标记 |
 | `font-body-sm` | 12 | 手牌、顶部工具条状态文本与对手身份行 |
 | `font-body` | 14 | 区块标题、按钮 |
@@ -80,10 +80,7 @@
 | `river-height` | 32 | 对局页河道行高度，商店与棋盘、双方棋盘之间 |
 | `hero-row-height` | 84 | 对局页英雄行高度，容纳英雄卡与金币、技能列 |
 | `hero-meta-row-height` | 24 | 英雄行金币与被动技能标记所在行的高度，也是被动标记的边长 |
-| `hero-card-width` / `-height` | 64 / 84 | 英雄卡尺寸，与 `card-width` 同宽高比 |
-| `hero-cover-height` | 40 | 英雄卡玩法色封面高度 |
-| `hero-name-height` | 14 | 英雄卡名字行高度 |
-| `hero-stats-height` | 30 | 英雄卡底部时代与生命行高度 |
+| `hero-card-size` | 84 | 对局页英雄卡边长；方形卡与英雄行同高，头像裁切铺满整卡 |
 | `shop-icon-size` | 40 | 商店升时代、刷新、冻结与英雄技能图标按钮边长 |
 | `recruit-shop-gap` | 18 | 招募组合中商店操作与商店整体到河道的间距 |
 | `opponent-hp-width` | 360 | 战斗阶段对手身份块与血量条宽度 |
@@ -95,7 +92,7 @@
 | `hero-detail-width` | 160 | 选英雄页悬停详情与房间候选卡宽度，手机 120；高度由 `UITheme.card_face_height` 按卡面比例计算 |
 | `room-hero-detail-width` | 280 | 选英雄页悬停详情卡宽度；手机 200 |
 | `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
-| `rank-badge-size` | 18 | 座位行名次角标边长 |
+| `rank-badge-size` | 18 | 座位行名次圆形角标直径，圆角取直径一半；圆心收在头像内左上 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
 | `card-width` / `-height` | 112 / 146 | 商店、棋盘、手牌与战斗只读卡（含拖拽占位） |
 | `card-cover-inset` | 3 | 卡面美术向内收的距离，保证方形美术的四角落在卡面圆角以内 |
@@ -134,11 +131,12 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `avatar-rail-compact` | 40 | iPhone 座位行头像边长兜底值，左栏尺寸未解算时使用；实际边长按行高与左栏内宽解算 |
 | `seat-hp-bar-height-compact` | 4 | iPhone 座位行血量条高度 |
 | `seat-row-gap-compact` | 2 | iPhone 座位行间距 |
-| `rank-badge-size-compact` | 14 | iPhone 座位名次角标边长 |
+| `rank-badge-size-compact` | 14 | iPhone 座位名次圆形角标直径 |
 | `river-height-compact` | 24 | iPhone 河道行高度 |
 | `recruit-shop-gap-compact` | 10 | iPhone 商店整体到河道的间距 |
 | `shop-actions-height-compact` | 52 | iPhone 商店操作行高度 |
 | `hero-row-height-compact` | 64 | iPhone 英雄行高度 |
+| `hero-card-size-compact` | 64 | iPhone 英雄卡边长，与英雄行同高 |
 | `top-bar-height-compact` | 26 | iPhone 顶部工具条高度 |
 | `portrait-size-compact` | 48 | iPhone 售货员与对手英雄头像边长 |
 | `room-hero-detail-width-compact` | 200 | iPhone 选英雄页悬停详情卡宽度 |

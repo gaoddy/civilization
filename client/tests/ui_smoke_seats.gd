@@ -241,6 +241,37 @@ func _check_seat_rows() -> void:
             ranked != null and ranked.find_child("SeatRankBadge", true, false) != null,
             "%s 有 rank 时应显示名次角标" % player_id,
         )
+        if ranked == null:
+            continue
+        var badge_avatar := ranked.find_child("SeatAvatar", true, false) as Control
+        var badge := ranked.find_child("SeatRankBadge", true, false) as Control
+        _expect(
+            badge_avatar != null and badge != null
+                and badge_avatar.get_global_rect().encloses(badge.get_global_rect()),
+            "%s 名次角标应收在头像可选区域内：头像 %s，角标 %s"
+            % [
+                player_id,
+                str(badge_avatar.get_global_rect()) if badge_avatar != null else "缺失",
+                str(badge.get_global_rect()) if badge != null else "缺失",
+            ],
+        )
+        if badge != null:
+            var badge_box := badge.get_theme_stylebox("panel") as StyleBoxFlat
+            _expect(
+                badge_box != null
+                    and badge_box.corner_radius_top_left * 2 == int(badge.size.x),
+                "名次角标应为圆形，当前圆角 %s，边长 %s"
+                % [
+                    str(badge_box.corner_radius_top_left) if badge_box != null else "缺失",
+                    str(badge.size.x),
+                ],
+            )
+            var rank_text := badge.find_child("RankText", true, false) as Label
+            _expect(
+                rank_text != null
+                    and rank_text.get_theme_color("font_color") == UITheme.color("color-white"),
+                "名次角标数字应为白色",
+            )
     # 已淘汰仍然显示名次数字，整行压暗。
     var dead := _row_of(rail, "p7")
     var dead_badge = dead.find_child("SeatRankBadge", true, false) if dead != null else null

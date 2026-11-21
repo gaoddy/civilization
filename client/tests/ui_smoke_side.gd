@@ -65,8 +65,7 @@ func _unmount(instance: Node) -> void:
 ## 共享层：新 token、样式、图标入口、技能表与手牌拖拽门控。
 func _check_shared_layer() -> void:
     _expect(UITheme.metric("hero-row-height") == 84, "英雄行高应为 84")
-    _expect(UITheme.metric("hero-card-width") == 64, "英雄卡宽应为 64")
-    _expect(UITheme.metric("hero-card-height") == 84, "英雄卡高应为 84")
+    _expect(UITheme.metric("hero-card-size") == 84, "英雄卡边长应为 84")
     _expect(UITheme.metric("shop-icon-size") == 40, "商店图标按钮应为 40")
     _expect(UITheme.metric("river-height") == 32, "河道高应为 32")
     _expect(UITheme.metric("top-bar-height") == 28, "顶部栏高应为 28")
@@ -207,51 +206,56 @@ func _check_icon_button() -> void:
     await get_tree().process_frame
 
 
-## 英雄卡：尺寸、名字行、时代与生命两格及其左右顺序。
+## 英雄卡：方形边长、头像铺满、只保留右下角当前生命。
 func _check_hero_card() -> void:
     var card := GameHeroCard.new()
     add_child(card)
     await get_tree().process_frame
     _expect(
-        card.custom_minimum_size == Vector2(64, 84),
-        "英雄卡最小尺寸应为 64×84，实际 %s" % card.custom_minimum_size,
+        card.custom_minimum_size == Vector2(84, 84),
+        "英雄卡最小尺寸应为 84×84，实际 %s" % card.custom_minimum_size,
     )
-    card.refresh("adam-smith", 35, 40, 5)
+    card.refresh("adam-smith", 35, 40)
     await get_tree().process_frame
-    var name_label: Label = card.find_child("HeroCardName", true, false)
-    var era_label: Label = card.find_child("HeroEra", true, false)
-    var hp_label: Label = card.find_child("HeroHp", true, false)
-    _expect(name_label != null, "英雄卡应有名字行")
-    _expect(era_label != null and hp_label != null, "英雄卡应有时代与生命两格")
+    _expect(card.find_child("HeroCardName", true, false) == null, "英雄卡不应再显示名字行")
+    _expect(card.find_child("HeroEra", true, false) == null, "英雄卡不应再显示时代")
     _expect(card.find_child("HeroAttack", true, false) == null, "英雄卡不应再显示攻击力")
+    var hp_label: Label = card.find_child("HeroHp", true, false)
+    var hp_plate: Control = card.find_child("HeroHpPlate", true, false)
+    _expect(hp_label != null and hp_plate != null, "英雄卡应有右下角当前生命")
     var cover_art: TextureRect = card.find_child("HeroCoverArt", true, false)
     var cover_mark: Label = card.find_child("HeroCardMark", true, false)
     _expect(cover_art != null and cover_art.visible, "有头像素材的英雄卡应显示封面图")
+    _expect(
+        cover_art != null and cover_art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED,
+        "英雄卡封面应裁切铺满整卡",
+    )
     _expect(cover_mark != null and not cover_mark.visible, "有封面图时应隐藏首字")
-    card.refresh("", 0, 0, 0)
+    if hp_label != null and hp_plate != null:
+        _expect(hp_label.text == "35", "英雄卡生命只显示当前值，实际「%s」" % hp_label.text)
+        var card_rect := card.get_global_rect()
+        var plate_rect := hp_plate.get_global_rect()
+        _expect(
+            plate_rect.get_center().x > card_rect.get_center().x
+                and plate_rect.get_center().y > card_rect.get_center().y,
+            "生命牌应贴右下角：卡 %s，牌 %s" % [str(card_rect), str(plate_rect)],
+        )
+        _expect(
+            card_rect.encloses(plate_rect),
+            "生命牌应完全位于卡内：卡 %s，牌 %s" % [str(card_rect), str(plate_rect)],
+        )
+    _expect(card.tooltip_text == CardDB.display_name("adam-smith"), "英雄名应由 tooltip 承担")
+    card.refresh("", 0, 0)
     await get_tree().process_frame
     _expect(card.find_child("HeroCoverArt", true, false) == null, "无英雄时应移除封面图")
     _expect(
         card.find_child("HeroCardMark", true, false).visible,
         "无英雄时应显示首字",
     )
-    card.refresh("adam-smith", 35, 40, 5)
-    await get_tree().process_frame
-    if name_label != null and era_label != null and hp_label != null:
-        _expect(name_label.text == CardDB.display_name("adam-smith"), "英雄卡应显示英雄名")
-        _expect(hp_label.text == "35/40", "英雄卡生命应为 35/40")
-        _expect(era_label.text == CardDB.era_name(5), "英雄卡时代应为工业")
-        var stats_node: Control = card.find_child("HeroCardStats", true, false)
-        _expect(
-            stats_node != null
-                and name_label.get_global_rect().end.y <= stats_node.get_global_rect().position.y + 1,
-            "名字行应在数值行上方",
-        )
-        _expect(
-            era_label.get_global_rect().get_center().x
-                < hp_label.get_global_rect().get_center().x,
-            "数值顺序应为时代、生命",
-        )
+    _expect(
+        not (card.find_child("HeroHpPlate", true, false) as Control).visible,
+        "无英雄时应隐藏生命牌",
+    )
     card.queue_free()
     await get_tree().process_frame
 
@@ -450,7 +454,7 @@ func _check_hero_row() -> void:
     var card: Control = row.find_child("HeroCard", true, false)
     var gold: Label = row.find_child("GoldTile", true, false)
     var power: Control = row.find_child("HeroPowerButton0", true, false)
-    _expect(card != null and card.custom_minimum_size == Vector2(64, 84), "英雄行应含 64×84 英雄卡")
+    _expect(card != null and card.custom_minimum_size == Vector2(84, 84), "英雄行应含 84×84 英雄卡")
     _expect(gold != null and gold.text.contains("6"), "金币格应显示当前金币")
     _expect(
         gold != null and gold.text.contains(TranslationServer.translate("ui.game.side_panel.gold")),
@@ -873,7 +877,7 @@ func _check_recruit_stage() -> void:
     _expect(recruit != null and recruit.visible, "招募阶段应显示招募组合")
     _expect(combat != null and not combat.visible, "招募阶段不应显示战斗组合")
 
-    # 英雄行 84，英雄卡 64×84；名字在时代上方，时代在左、生命在右。
+    # 英雄行 84，英雄卡 84×84；头像铺满，右下角只显示当前生命。
     var hero_row: Control = instance.find_child("HeroRow", true, false)
     var hero_card: Control = instance.find_child("HeroCard", true, false)
     _expect(
@@ -881,32 +885,32 @@ func _check_recruit_stage() -> void:
         "英雄行高应为 84，实际 %.1f" % (0.0 if hero_row == null else hero_row.size.y),
     )
     _expect(
-        hero_card != null and hero_card.size == Vector2(64, 84),
-        "英雄卡应为 64×84，实际 %s" % ("null" if hero_card == null else str(hero_card.size)),
+        hero_card != null and hero_card.size == Vector2(84, 84),
+        "英雄卡应为 84×84，实际 %s" % ("null" if hero_card == null else str(hero_card.size)),
     )
     if hero_card != null:
-        var name_label: Label = hero_card.find_child("HeroCardName", true, false)
-        var era: Label = hero_card.find_child("HeroEra", true, false)
         var hp: Label = hero_card.find_child("HeroHp", true, false)
         _expect(
-            name_label != null and era != null and hp != null,
-            "英雄卡应含名字、时代与生命",
+            hp != null
+                and hero_card.find_child("HeroCardName", true, false) == null
+                and hero_card.find_child("HeroEra", true, false) == null,
+            "英雄卡只保留生命，不再显示名字与时代",
         )
         _expect(
             hero_card.find_child("HeroAttack", true, false) == null,
             "英雄卡不应再显示攻击力",
         )
-        if name_label != null and era != null and hp != null:
-            _expect(name_label.text.contains("达尔文"), "英雄卡应显示英雄名")
+        if hp != null:
+            _expect(hp.text == "35", "生命只显示当前值，实际「%s」" % hp.text)
+            var plate := hero_card.find_child("HeroHpPlate", true, false) as Control
             _expect(
-                name_label.get_global_rect().end.y <= era.get_global_rect().position.y,
-                "英雄名应在时代上方单独一行",
+                plate != null
+                    and plate.get_global_rect().get_center().x
+                        > hero_card.get_global_rect().get_center().x
+                    and plate.get_global_rect().get_center().y
+                        > hero_card.get_global_rect().get_center().y,
+                "生命牌应贴英雄卡右下角",
             )
-            _expect(
-                era.get_global_rect().get_center().x < hp.get_global_rect().get_center().x,
-                "时代应在左、生命在右",
-            )
-            _expect(hp.text == "35/40", "生命应显示当前/上限，实际「%s」" % hp.text)
 
     var power: Control = instance.find_child("HeroPowerButton0", true, false)
     _expect(power != null and power.size == Vector2(40, 40), "英雄技能图标应为 40×40")
