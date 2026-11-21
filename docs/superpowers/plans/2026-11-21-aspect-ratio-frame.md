@@ -1,5 +1,7 @@
 # 内容框宽高比与背景铺满 Implementation Plan
 
+> **历史计划（实施前快照）：** 本文保留当时的公式与示例代码，未随实现回改；实际结论以对应提交与 `docs/current/technical/client.md` 为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 让每个页面的内容固定为 16:9 居中显示，背景铺满整个视口且不变形，全端共用一套布局尺寸。
