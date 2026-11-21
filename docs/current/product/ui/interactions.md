@@ -1,7 +1,7 @@
 # 通用交互
 
 > 状态：已实现
-> 代码：`client/ui/ui.gd`、`client/ui/theme.gd`、`client/scenes/game.gd`、`client/scenes/card_gallery.gd`
+> 代码：`client/ui/controls.gd`、`client/ui/navigation.gd`、`client/ui/wording.gd`、`client/ui/theme.gd`、`client/pages/game/game.gd`、`client/ui/card_gallery.gd`
 
 本文记录桌面端已实现的通用交互；iOS 端的横屏、缩放、长按与命中尺寸差异见[移动端适配](mobile-adaptation.md)。
 
@@ -9,20 +9,20 @@
 
 | 状态 | 表现 | 规则 |
 | --- | --- | --- |
-| 默认 | `color-surface-raised` 底、`color-border` 描边 | `UI.styled_button` 统一设置 |
+| 默认 | `color-surface-raised` 底、`color-border` 描边 | `UIControls.styled_button` 统一设置 |
 | 悬停 | 底色提亮、描边转为 `color-border-strong` | 只改变视觉，不改变可用性 |
 | 按下 | 底色压暗 | 松开后发出一次操作 |
 | 聚焦 | 描边转为 `color-accent` | 键盘 `Tab` 可遍历主要操作 |
 | 禁用 | 底色退回 `color-surface`、文本转 `color-text-muted` | 禁用原因写入 `tooltip_text`，不只置灰 |
 
 - 主操作（倒计时悬停后翻出的「结束招募」）使用 `primary` 变体，其余使用 `default`；棋盘随从卡不放卡内按钮，换位与出售由拖拽完成。
-- 禁用原因取 `affordances` 的 `disabledReason`，经 `UI.error_text` 转为中文后放入 tooltip。
+- 禁用原因取 `affordances` 的 `disabledReason`，经 `UIWording.error_text` 转为中文后放入 tooltip。
 
 ## 2. 操作反馈
 
 - 操作发出后不等待本地确认，界面以下一条服务端视图为准；视图未变化前按钮保持原状态。
 - 发送失败（未连接）时顶部工具条的状态文本显示「未连接，操作未发出」，不静默丢弃。
-- 服务端错误在顶部工具条的状态文本显示固定中文文案，协议 `message` 只进 tooltip；错误去向由 `UI.error_route` 决定：认证类回登录并清会话，`NOT_IN_ROOM` / `ROOM_NOT_FOUND` 回大厅并清房间，其余留在当前页面。
+- 服务端错误在顶部工具条的状态文本显示固定中文文案，协议 `message` 只进 tooltip；错误去向由 `UINavigation.error_route` 决定：认证类回登录并清会话，`NOT_IN_ROOM` / `ROOM_NOT_FOUND` 回大厅并清房间，其余留在当前页面。
 
 ## 3. 弹层
 

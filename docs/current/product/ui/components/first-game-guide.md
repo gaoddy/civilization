@@ -1,7 +1,7 @@
 # 首局引导
 
 > 状态：已实现
-> 入口：`client/scenes/first_game_guide.gd`（`class_name FirstGameGuide`，`extends CanvasLayer`）
+> 入口：`client/pages/game/first_game_guide.gd`（`class_name FirstGameGuide`，`extends CanvasLayer`）
 > 验证：`make client-smoke`（`client/tests/ui_smoke_guide.tscn`）
 
 ## 用途
@@ -10,7 +10,7 @@
 
 ## 挂载与接口
 
-- 由 `client/scenes/game.gd` 在对局页装配完成后创建，`target_root` 指向对局页自身，节点名为 `FirstGameGuide`。
+- 由 `client/pages/game/game.gd` 在对局页装配完成后创建，`target_root` 指向对局页自身，节点名为 `FirstGameGuide`。
 - `start()`：优先恢复 `GameStore.guide_step`；否则检查本机 `seen` 记录，首次从第 1 步开始。
 - `show_manual()`：从第 1 步开始手动重看，不读写 `seen`。
 - `set_phase(phase, self_view)`：对局页每次刷新时同步阶段与本人视图，用于阶段门控和步骤 2/3 的条件跳过。

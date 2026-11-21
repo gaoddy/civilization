@@ -1,14 +1,14 @@
 # 结算页
 
 > 状态：已实现
-> 场景：`client/scenes/result.tscn`
-> 脚本：`client/scenes/result.gd`
+> 场景：`client/pages/result/result.tscn`
+> 脚本：`client/pages/result/result.gd`
 > 验证：`make client-smoke`（`client/tests/ui_smoke.tscn` 的 `_check_result`）
 
 ## 1. 目的、入口与返回
 
 - 目的：展示服务端下发的本局名次、本人本局统计与对局种子；数据只读，客户端不做推算。
-- 入口：对局页收到 `GameOver` 后由 `GameStore.game_over` 信号触发，导航到 `res://scenes/result.tscn`。
+- 入口：对局页收到 `GameOver` 后由 `GameStore.game_over` 信号触发，导航到 `res://pages/result/result.tscn`。
 - 返回：
   - `ConfirmButton`（文案「确定」）：点一次即 `GameStore.reset_room()`、`Net.relogin()` 并导航大厅；不再发送 `LeaveRoom`。
   - 本页只有一个返回入口，不提供「返回房间」。
@@ -79,7 +79,7 @@
 
 - 逻辑宽度固定 1280，高度随窗口扩展；面板最小宽 760，内容区纵向滚动，返回按钮不随内容滚动。
 - 页面只构建一次；名次最多 8 行、统计 12 行、阵容最多 7 行，不随对局刷新重建。
-- 不使用图片与字体资源，颜色、字号与间距来自 `UI` 与 `UITheme`。
+- 不使用图片与字体资源，颜色、字号与间距来自 `UIControls` 等共享构件与 `UITheme`。
 
 ## 7. 关联
 

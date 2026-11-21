@@ -136,7 +136,6 @@ const SCENARIO := {
 	"avatar-sm": 22,
 	"avatar-md": 30,
 	"avatar-lg": 38,
-	"hero-tile-width": 150,
 	"portrait-size": 64,
 	"hero-detail-width": 160,
 	"hero-detail-width-compact": 120,

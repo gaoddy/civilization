@@ -2,7 +2,7 @@
 
 > 状态：已实现
 > 定义：`client/ui/theme.gd`
-> 使用：页面与组件通过 `UITheme.metric` 与 `UI` 构件取值，不直接写视觉值。
+> 使用：页面与组件通过 `UITheme.metric` 与 `UIControls` 等共享构件取值，不直接写视觉值。
 
 ## 1. 分层
 
@@ -59,7 +59,7 @@
 | `space-2xl` | 24 | | | |
 | `space-3xl` | 32 | | | |
 
-语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行与幽灵身份块，经 `UI.apply_dim` 应用；`freeze-overlay-alpha` = 0.22，用于冻结蒙层自身，经 `self_modulate.a` 应用，不向下压暗冰晶与「冻」字。
+语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行与幽灵身份块，经 `UIControls.apply_dim` 应用；`freeze-overlay-alpha` = 0.22，用于冻结蒙层自身，经 `self_modulate.a` 应用，不向下压暗冰晶与「冻」字。
 
 ## 5. 组件与场景度量
 
@@ -86,7 +86,6 @@
 | `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
 | `rank-badge-size` | 18 | 座位行名次角标边长 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
-| `hero-tile-width` | 150 | 英雄小卡宽度（大厅与房间的英雄选择） |
 | `card-width` / `-height` | 112 / 146 | 商店、棋盘、手牌与战斗只读卡（含拖拽占位） |
 | `card-cover-inset` | 3 | 卡面美术向内收的距离，保证方形美术的四角落在卡面圆角以内 |
 | `card-info-height` | 90 | 有介绍时的卡面信息区基础高度，容纳名称与数值；手牌介绍超出时信息区向上扩展 |

@@ -1,7 +1,7 @@
 # 图鉴视图切换
 
 > 状态：已实现
-> 入口：`GalleryModeBar.new()`，`client/scenes/gallery_mode_bar.gd`（`class_name GalleryModeBar`）
+> 入口：`GalleryModeBar.new()`，`client/ui/gallery_mode_bar.gd`（`class_name GalleryModeBar`）
 
 ## 用途
 

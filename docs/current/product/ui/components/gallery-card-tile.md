@@ -1,7 +1,7 @@
 # 图鉴卡面单元
 
 > 状态：已实现
-> 入口：`GalleryCardTile.new(id, selected, hero = false)`，`client/scenes/gallery_card_tile.gd`（`class_name GalleryCardTile`）
+> 入口：`GalleryCardTile.new(id, selected, hero = false)`，`client/ui/gallery_card_tile.gd`（`class_name GalleryCardTile`）
 
 ## 用途
 

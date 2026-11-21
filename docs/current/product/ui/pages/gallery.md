@@ -1,15 +1,15 @@
 # 卡牌图鉴页
 
 > 状态：已实现
-> 场景：`client/scenes/gallery.tscn`
-> 脚本：`client/scenes/gallery.gd`；主体组件 `client/scenes/card_gallery.gd`（`CardGallery`）
+> 场景：`client/pages/gallery/gallery.tscn`
+> 脚本：`client/pages/gallery/gallery.gd`；主体组件 `client/ui/card_gallery.gd`（`CardGallery`）
 > 验证：`make client-smoke`（`client/tests/ui_smoke_gallery.tscn`）
 
 ## 1. 目的、入口与返回
 
 - 目的：只读浏览全部卡牌（含衍生物与生成卡等非池卡）的完整信息，在随从视图按时代与玩法筛选，在英雄视图按英雄玩法筛选；不读取房间、对局或手牌状态。
 - 入口：
-  - 大厅「卡牌图鉴」按钮，导航到 `scenes/gallery.tscn`，随从视图为全部卡牌（当前 432 张，其中 24 张非池卡），英雄视图为 32 张英雄卡。
+  - 大厅「卡牌图鉴」按钮，导航到 `pages/gallery/gallery.tscn`，随从视图为全部卡牌（当前 432 张，其中 24 张非池卡），英雄视图为 32 张英雄卡。
   - 对局顶部工具条右侧的「图鉴」按钮，以全屏覆盖层 `GalleryOverlay` 叠在对局页上，不切换场景，随从视图只含本局卡池（按 `view.enabledFactions` 复算，排除非池卡；默认夹具为 177 张），英雄视图只含本局玩法可用的英雄。
 - 返回：大厅页点「返回大厅」或按 `Esc` 回大厅；对局覆盖层点「返回对局」或按 `Esc` 只收起覆盖层，对局状态与拖拽、待选、战斗演示全部保留。
 
@@ -77,14 +77,14 @@
 | 卡牌展示表 | `CardDB.cards`（`generated/cards.json`，含非池卡与 `in_shop_pool`） |
 | 英雄展示表 | `CardDB.heroes`（`generated/heroes.json`），与 `cards` 分开，只含身份与技能 |
 | 卡名 | `CardDB.display_name`：`card.<id>.name` |
-| 类型 | `card_type` 经 `UI.enum_text("card_type")`；英雄视图固定显示「英雄」 |
+| 类型 | `card_type` 经 `UIWording.enum_text("card_type")`；英雄视图固定显示「英雄」 |
 | 科学分类 | `CardDB.taxon_path(taxon)` 的完整路径，以「 · 」连接；缺失显示「未定」 |
 | 分类目录 | `CardDB.playstyles` 的 13 个玩法按固定顺序展示，不含「中立」；效果牌与英雄不作为顶层分类 |
 | 英雄分类 | `CardDB.playstyles` 的 13 个玩法按同一顺序展示；英雄按全部 `play:` 归属归入对应玩法，带多条归属的英雄在多个分类中同时出现，不按单一玩法去重 |
 | 玩法分类归属 | 随从视图的卡牌按全部 `play:` 归属归入对应玩法；带多条归属的卡在多个分类中同时出现；「全部」按唯一卡牌 id 去重计数 |
 | 随从 / 效果二级筛选 | 「效果」取 `card_type = effect`，「随从」取其余条目；非池卡同样按自身 `card_type` 归类 |
 | 玩法与关联分类 | 玩法取 `CardText.playstyle_text`，拼接全部 `play:` 的展示名；关联分类取 `CardText.association_text`，只聚合 `prey:` / `host:` |
-| 时代 | `era` 经 `UI.enum_text("era")`；未识别的时代排在最后，且不算入任何时代章节 |
+| 时代 | `era` 经 `UIWording.enum_text("era")`；未识别的时代排在最后，且不算入任何时代章节 |
 | 费用与原始数值 | `display_cost`、`attack`、`health`；数值缺失显示「—」 |
 | 技能 | `skills[]` 经 `CardDB.skill_name` 取 `skill.<id>.name`，缺键返回空串并跳过（不显示内部 id） |
 | 效果文本 | `CardDB.display_text`：`skills[]` 的 `skill.<id>.text` 按顺序换行拼接，缺键跳过 |
@@ -100,7 +100,7 @@
 - 英雄顺序固定：卡面美术图 → 名称 → 类型「英雄」→ 玩法 → 关联分类（有才显示）→ 技能列表；不显示科学分类、时代、费用与原始数值，也不再单独显示「技能」名称行。
 - 预览区只显示美术大图（200×261，手机 128×167，按卡面 112:146 等比）：普通卡与英雄都取 `card_face`；不再拼装卡面组件与角标。
 - 玩法行展示全部 `play:` 归属，按固定玩法顺序用「、」连接；关联分类只聚合 `prey:` / `host:`，格式为「捕食：…；寄生：…」，两类都为空时省略该行。
-- 英雄技能列表按 `skills` 顺序逐条展示：技能名（没有名称时省略）、触发类型标签、完整技能文本；主动技能追加「费用 N · 每回合 N 次」。无技能时显示空态。该列表与选英雄页的悬停详情共用 `UI.skill_list`。
+- 英雄技能列表按 `skills` 顺序逐条展示：技能名（没有名称时省略）、触发类型标签、完整技能文本；主动技能追加「费用 N · 每回合 N 次」。无技能时显示空态。该列表与选英雄页的悬停详情共用 `SkillList.build`。
 - 费用显示为「N 金」；原始数值显示为「攻击 / 生命」，效果牌没有数值时显示「— / —」。
 - 详情区可纵向滚动；内容超出 280 宽时由文本换行，不做水平滚动。
 

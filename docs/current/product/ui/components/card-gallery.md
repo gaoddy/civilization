@@ -1,7 +1,7 @@
 # 卡牌图鉴
 
 > 状态：已实现
-> 入口：`CardGallery.new()`，`client/scenes/card_gallery.gd`（`class_name CardGallery`）
+> 入口：`CardGallery.new()`，`client/ui/card_gallery.gd`（`class_name CardGallery`）
 
 ## 用途
 
