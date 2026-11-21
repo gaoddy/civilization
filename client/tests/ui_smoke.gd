@@ -537,14 +537,18 @@ func _check_game() -> void:
         _expect(captured.is_empty(), "点击商店卡不应再发购买意图，实际 %s" % [captured])
         await _push_motion(instance, Vector2(-40, -40))
         _expect(not detail.is_visible_in_tree(), "移出商店卡矩形应隐藏详情面板")
-    # 生命、时代与金币随英雄行展示：英雄卡承载名字与数值，英雄侧列显示金币。
+    # 生命与金币随英雄行展示：英雄卡只显示当前生命，金币在英雄侧列。
     var hero_card = instance.find_child("HeroCard", true, false)
     var hero_text := "缺失" if hero_card == null else _node_text(hero_card)
-    for text in ["35/40", TranslationServer.translate("enum.era.primitive")]:
-        _expect(
-            hero_card != null and hero_text.contains(text),
-            "英雄行应显示「%s」，实际：%s" % [text, hero_text],
-        )
+    _expect(
+        hero_card != null and hero_text.contains("35"),
+        "英雄卡应显示当前生命 35，实际：%s" % hero_text,
+    )
+    _expect(
+        hero_card != null
+        and not hero_text.contains(TranslationServer.translate("enum.era.primitive")),
+        "英雄卡不应再显示时代，实际：%s" % hero_text,
+    )
     var gold_tile = instance.find_child("GoldTile", true, false)
     _expect(
         gold_tile != null and str(gold_tile.text).contains("6"),

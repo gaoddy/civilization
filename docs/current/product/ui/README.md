@@ -47,6 +47,7 @@
 | 组件 | 入口 | 文档 |
 | --- | --- | --- |
 | 头像块 | `Avatar.create` | [components/avatar.md](components/avatar.md) |
+| 头像框 | `AvatarFrame`（`client/ui/avatar_frame.gd`） | [components/avatar-frame.md](components/avatar-frame.md) |
 | 数值胶囊 | `UIControls.pill_label` | [components/pill.md](components/pill.md) |
 | 按钮变体 | `UIControls.styled_button` | [components/button.md](components/button.md) |
 | 卡片容器 | `UIControls.card_panel` | [components/card-panel.md](components/card-panel.md) |

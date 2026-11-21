@@ -474,6 +474,7 @@ func _ready() -> void:
     await _check_card_frame()
     await _check_stat_plate()
     await _check_era_glyph()
+    await _check_avatar_frame()
     _check_page_background()
     recruit.queue_free()
     _finish()
@@ -974,3 +975,47 @@ func _classification_text(entry: Dictionary) -> String:
     var text := _node_text(box)
     box.free()
     return text
+
+
+## 头像框：头像按圆角裁切，描边叠在头像之上，无图回退首字，内容叠层在描边之上。
+func _check_avatar_frame() -> void:
+    var frame := AvatarFrame.new()
+    frame.custom_minimum_size = Vector2(84, 84)
+    frame.size = Vector2(84, 84)
+    add_child(frame)
+    frame.configure(UITheme.playstyle_cover("mammal"), UITheme.playstyle_color("mammal"))
+    frame.set_glyph("达", UITheme.alpha("color-text", AvatarFrame.GLYPH_ALPHA))
+    await get_tree().process_frame
+
+    var clip := frame.find_child("AvatarFrameClip", true, false) as CanvasItem
+    var border := frame.find_child("AvatarFrameBorder", true, false) as Control
+    _expect(clip != null, "头像框应有裁切层")
+    _expect(
+        clip != null and clip.clip_children != CanvasItem.CLIP_CHILDREN_DISABLED,
+        "头像框裁切层应启用于子节点裁切",
+    )
+    _expect(
+        border != null and clip != null and border.get_index() > clip.get_index(),
+        "圆角描边应叠在裁切层之上",
+    )
+    _expect(
+        frame.content() != null and border != null and frame.content().get_index() > border.get_index(),
+        "内容叠层应位于描边之上",
+    )
+    _expect(frame.find_child("AvatarFrameArt", true, false) == null, "无素材时不应挂头像图")
+    var glyph := frame.find_child("AvatarFrameGlyph", true, false) as Label
+    _expect(glyph != null and glyph.visible, "无素材时应显示首字")
+
+    frame.set_art(CardDB.art_path("darwin", "avatar"))
+    await get_tree().process_frame
+    var art := frame.find_child("AvatarFrameArt", true, false) as TextureRect
+    _expect(art != null and art.visible, "有素材时应挂载头像图")
+    _expect(
+        art != null and art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED,
+        "头像图应按 cover 铺满",
+    )
+    _expect(art != null and clip != null and art.get_parent() == clip, "头像图应位于裁切层内")
+    _expect(glyph != null and not glyph.visible, "有素材时应隐藏首字")
+
+    frame.queue_free()
+    await get_tree().process_frame

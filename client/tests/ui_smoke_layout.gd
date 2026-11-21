@@ -118,7 +118,7 @@ func _check_hero_cover_art() -> void:
     await get_tree().process_frame
     _check(card.custom_minimum_size == Vector2(64, 64),
         "手机英雄卡应为 64×64，实际 %s" % str(card.custom_minimum_size))
-    var art := card.find_child("HeroCoverArt", true, false) as TextureRect
+    var art := card.find_child("AvatarFrameArt", true, false) as TextureRect
     _check(art != null, "英雄卡封面应加载头像素材")
     if art != null:
         _check(art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED,
