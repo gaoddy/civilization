@@ -9,7 +9,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::combat;
-use crate::effects::{Compare, Effect, EffectCtx, Op, Pick, Selector, Side, Trigger};
+use crate::effects::{Compare, Effect, EffectCtx, Op, Params, Pick, Selector, Side, Trigger};
 use crate::engine::Engine;
 use crate::state::{AuraEffect, GameState, InstanceId, MinionInstance, PlayerState, Seat};
 
@@ -152,7 +152,7 @@ impl Engine {
     ) -> bool {
         match effect.trigger {
             Trigger::Aura => true,
-            Trigger::ConditionalAura => effect.params.condition.as_ref().is_some_and(|condition| {
+            Trigger::ConditionalAura => effect.params.condition().is_some_and(|condition| {
                 self.condition_holds_on_board(state, player, condition, source)
             }),
             _ => false,
@@ -248,7 +248,10 @@ fn scaling_count(
     effect: &Effect,
     source: Option<InstanceId>,
 ) -> i32 {
-    if effect.params.per_attack.is_none() && effect.params.per_health.is_none() {
+    let Params::ModifyStats(params) = &effect.params else {
+        return 0;
+    };
+    if params.per_attack.is_none() && params.per_health.is_none() {
         return 0;
     }
     let Selector::Side { filters, .. } = &effect.selector else {
@@ -265,7 +268,7 @@ fn scaling_count(
                     .all(|filter| engine.filter_matches(state, filter, minion.instance_id, &ctx))
         })
         .count();
-    let max_count = effect.params.max_count.unwrap_or(6).max(0) as usize;
+    let max_count = params.max_count.unwrap_or(6).max(0) as usize;
     count.min(max_count) as i32
 }
 
@@ -362,24 +365,28 @@ fn aura_ctx(seat: Seat, source: Option<InstanceId>) -> EffectCtx {
 /// 友方随从」再加一次 `perAttack`/`perHealth`。金色不额外翻倍。
 fn accumulate(effect: &Effect, target: &mut AuraEffect, scale: i32) {
     match effect.op {
-        Op::ModifyStats => {
-            target.attack = target
-                .attack
-                .saturating_add(effect.params.attack.unwrap_or(0))
-                .saturating_add(effect.params.per_attack.unwrap_or(0).saturating_mul(scale));
-            target.health = target
-                .health
-                .saturating_add(effect.params.health.unwrap_or(0))
-                .saturating_add(effect.params.per_health.unwrap_or(0).saturating_mul(scale));
-        }
+        Op::ModifyStats => match &effect.params {
+            Params::ModifyStats(params) => {
+                target.attack = target
+                    .attack
+                    .saturating_add(params.attack.unwrap_or(0))
+                    .saturating_add(params.per_attack.unwrap_or(0).saturating_mul(scale));
+                target.health = target
+                    .health
+                    .saturating_add(params.health.unwrap_or(0))
+                    .saturating_add(params.per_health.unwrap_or(0).saturating_mul(scale));
+            }
+            _ => return,
+        },
         Op::GrantKeyword => {
-            let Some(keyword) = &effect.params.keyword else {
+            let Params::GrantKeyword(params) = &effect.params else {
                 return;
             };
+            let keyword = &params.keyword;
             // 与 `exec.rs` 的 GrantKeyword 分支一致：`armor N` 的层数写进
             // 关键词位图，多个光环来源的减伤自动累加。
             let name = keyword.keyword.as_str();
-            let layer = keyword.value.or(effect.params.value);
+            let layer = keyword.value.or(params.value);
             match (name, layer) {
                 (combat::ARMOR, Some(count)) => {
                     target

@@ -185,6 +185,7 @@ impl Taxonomy {
 - 经济与对局配置由生成器从产品数值文档口径抄录到 `config.json`（初始生命、棋盘/手牌/商店槽位、回合上限、伤害上下限、升时代费用、星级牌份数、商店概率、金币曲线）。
 - 输出确定性 JSON（UTF-8、两空格缩进、键排序、末尾换行）；生成物随源提交。
 - 引擎用 `include_str!` 嵌入 `server/data/v0.1/*.json`，加载期由 serde 校验结构化字段与枚举，再由 `validate` 校验跨字段组合；未知字段或非法组合直接失败。源文档 `effects` 仍写 DSL，由生成器编译为结构化数组，生成期用与 `validate` 同规则的 `check_structured` 预检，避免 `make data` 通过而引擎加载失败。
+- 效果参数按 `op` 类型化：`skills.json` 的 `params` 仍是扁平对象，自定义 `Effect` 反序列化按 `op` 把对象解码为 `Params` 的对应变体（如 `Params::Decompose(DecomposeParams)`），不属于该原语的字段与缺失的必填字段都在加载期被拒绝；跨字段规则（光环可用原语、`token`/`card` 二选一、`level` 取值等）仍由 `validate` 校验。执行层按变体解构，不再共享可空参数包。
 - `make data-check` 重新生成到临时文件并比对（含文本表漂移检测），同时运行 DSL 审计。
 
 ## 5. 命令
@@ -367,10 +368,18 @@ pub enum Op { /* 既有 */ Decompose }
 
 pub enum Basis { Original, CombatStart, PreKill }
 
-pub struct Params {
-    // 既有
+pub struct DecomposeParams {
     /// 分解取生命值的口径：original / combat_start / pre_kill。
-    pub basis: Option<Basis>,
+    pub basis: Basis,
+    /// 必填：permanent / combat；instant 由校验拒绝。
+    pub duration: Duration,
+    pub condition: Option<Condition>,
+    pub when: Option<Filter>,
+}
+
+pub enum Params {
+    // 其他原语的变体省略
+    Decompose(DecomposeParams),
 }
 ```
 
@@ -384,7 +393,7 @@ pub struct Params {
 | `pre_kill` | 承受致命伤害前的当前生命值 | `pre_kill_health[victim]` |
 
 - `BattleField` 持有 `combat_start_health` / `pre_kill_health` 两张 `BTreeMap<InstanceId, i32>`：构造时写入双方全部随从的当前生命值，召唤物在召唤时写入 `combat_start_health`；`apply_damage` 在本段伤害足以致死时、扣血前写入 `pre_kill_health`。
-- `duration` 必填，数据校验只接受 `permanent` / `combat`：`permanent` 走 `health.add_permanent`，`combat` 走 `health.add_turn`；`instant` 或省略由校验拒绝，执行期保守跳过。
+- `duration` 必填，数据校验只接受 `permanent` / `combat`：`permanent` 走 `health.add_permanent`，`combat` 走 `health.add_turn`；`instant` 由校验拒绝、省略由反序列化拒绝；执行期保守跳过。
 - 获得量为 ≤0、目标已离场、`event_target` 缺失或快照缺失时静默跳过，不报错。
 - 金色来源的双倍触发复用战斗效果的 `passes`：携带者金色时整段效果执行两遍，分解因此触发两次。
 - 触发时点由技能数据选择（`OnKill` / `OnFriendlyDeath` / `OnAllyKill`），引擎不限制 `Decompose` 只能配这些触发。

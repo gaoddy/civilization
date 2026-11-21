@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use rule_engine::combat::{effective_attack, effective_health};
 use rule_engine::data::{Card, CardType, Catalog, CategoryKind, Playstyle, Skill};
 use rule_engine::effects::{
-    Duration, Effect, EffectCtx, Op, Pick, Selector, Side, TargetRef, Trigger, Zone,
+    Duration, Effect, EffectCtx, Op, Params, Pick, Selector, Side, TargetRef, Trigger, Zone,
 };
 use rule_engine::engine::Engine;
 use rule_engine::intent::{Intent, Reject, RejectCode};
@@ -302,8 +302,8 @@ fn choose_hero_power_target(
             .or_else(|| candidates.first().copied());
     }
     if effect.op == Op::GrantKeyword
-        && effect.params.duration == Some(Duration::Permanent)
-        && let Some(keyword) = &effect.params.keyword
+        && let Params::GrantKeyword(params) = &effect.params
+        && params.duration == Some(Duration::Permanent)
     {
         return candidates
             .iter()
@@ -312,7 +312,7 @@ fn choose_hero_power_target(
             .filter(|target| {
                 board_minion(player, target.id).is_some_and(|minion| {
                     !rule_engine::combat::keyword_set(catalog, minion)
-                        .contains_name(&keyword.keyword)
+                        .contains_name(&params.keyword.keyword)
                 })
             })
             .min_by_key(|target| target.id);

@@ -6,7 +6,8 @@ use common::{categories_for, effects_of, minion, place, setup, test_catalog};
 use rule_engine::combat::{self, CombatAction, CombatLog, CombatSetup, simulate_with};
 use rule_engine::data::{Card, CardType, Playstyle, Skill};
 use rule_engine::effects::{
-    Duration, Effect, EffectCtx, Op, TargetRef, Trigger, Zone, effect_coverage, parse_effects,
+    Duration, Effect, EffectCtx, Op, Params, TargetRef, Trigger, Zone, effect_coverage,
+    parse_effects,
 };
 use rule_engine::engine::Engine;
 use rule_engine::events::GameEvent;
@@ -352,7 +353,10 @@ fn deal_damage_cannot_kill_floors_health_at_one() {
     place(&engine.catalog, &mut state, 1, 10, "yanhuashi");
 
     let mut damage = effect("OnCombatStart|DealDamage|enemy:all|amount=10");
-    damage.params.can_kill = Some(false);
+    let Params::DealDamage(params) = &mut damage.params else {
+        panic!("期望 DealDamage 参数");
+    };
+    params.can_kill = Some(false);
     let events = engine.apply_op(&mut state, &damage, &ctx(0), None);
 
     assert_eq!(events, vec![GameEvent::DamageTaken { seat: 1, amount: 4 }]);

@@ -1,8 +1,6 @@
 use crate::data::Playstyle;
 
-use super::{
-    Duration, Effect, Filter, FilterKey, Op, Params, Pick, Selector, TimesIf, Trigger, Zone,
-};
+use super::{Duration, Effect, Filter, FilterKey, Op, Params, Pick, Selector, Trigger, Zone};
 
 /// 光环触发允许的原语。
 pub(crate) const AURA_OPS: &[Op] = &[Op::ModifyStats, Op::GrantKeyword];
@@ -39,162 +37,27 @@ pub(crate) const WHEN_TRIGGERS: &[Trigger] = &[
     Trigger::OnKill,
     Trigger::OnAllyKill,
 ];
-/// `Params` 中所有可出现的 DSL 参数名。
-const PARAM_KEYS: &[&str] = &[
-    "times",
-    "count",
-    "amount",
-    "attack",
-    "health",
-    "perAttack",
-    "perHealth",
-    "maxCount",
-    "threshold",
-    "value",
-    "duration",
-    "canKill",
-    "healthOnly",
-    "statsOnly",
-    "timesIf",
-    "condition",
-    "when",
-    "keyword",
-    "token",
-    "card",
-    "to",
-    "from",
-    "type",
-    "pool",
-    "choose",
-    "free",
-    "era",
-    "level",
-    "state",
-    "basis",
-];
-
-pub(crate) type OpSpec = (
-    &'static [&'static str],
-    &'static [&'static str],
-    &'static [&'static [&'static str]],
-);
-
-pub(crate) fn op_spec(op: Op) -> OpSpec {
-    match op {
-        Op::Growth => (
-            &["times"],
-            &["healthOnly", "timesIf", "condition", "when"],
-            &[&["times"]],
-        ),
-        Op::ModifyStats => (
-            &[],
-            &[
-                "attack",
-                "health",
-                "perAttack",
-                "perHealth",
-                "maxCount",
-                "duration",
-                "canKill",
-                "condition",
-                "when",
-            ],
-            &[&["attack", "health"]],
-        ),
-        Op::GrantKeyword => (
-            &["keyword"],
-            &["value", "duration", "condition", "when"],
-            &[],
-        ),
-        Op::RemoveGrowth => (&[], &["condition", "when"], &[]),
-        Op::CannotAttack => (&[], &["duration"], &[]),
-        Op::DealDamage => (&["amount"], &["when", "canKill"], &[]),
-        Op::Summon => (
-            &["count"],
-            &["token", "card", "when"],
-            &[&["token", "card"]],
-        ),
-        Op::Copy => (&["to"], &["from", "type", "state"], &[]),
-        Op::Discover => (&["pool", "choose"], &[], &[]),
-        Op::RefreshShop => (&[], &["free"], &[]),
-        Op::AddShopSlot => (&["era", "count"], &[], &[]),
-        Op::GainMinion => (&["level", "to"], &["from"], &[]),
-        Op::GrantMinion => (&["level", "to"], &[], &[]),
-        Op::Decompose => (
-            &["basis", "duration"],
-            &["timesIf", "condition", "when"],
-            &[],
-        ),
-        Op::Mimic => (&["duration"], &["statsOnly"], &[]),
-        Op::Devour => (&["value"], &["duration", "when"], &[]),
-        Op::Detonate => (&["amount"], &["threshold", "when"], &[]),
-        Op::Convert => (
-            &["threshold"],
-            &["token", "card", "count", "when"],
-            &[&["token", "card"]],
-        ),
-        Op::Revive => (&["attack", "health"], &[], &[]),
-        Op::Recall => (&["to"], &[], &[]),
-        Op::Salvage => (&["pool", "count"], &[], &[]),
-        Op::Latent => (&["amount", "count"], &["threshold", "when"], &[]),
-    }
-}
-
-impl Params {
-    /// 该 DSL 参数在结构化字段中是否存在。
-    pub(crate) fn has(&self, key: &str) -> bool {
-        match key {
-            "times" => self.times.is_some(),
-            "count" => self.count.is_some(),
-            "amount" => self.amount.is_some(),
-            "attack" => self.attack.is_some(),
-            "health" => self.health.is_some(),
-            "perAttack" => self.per_attack.is_some(),
-            "perHealth" => self.per_health.is_some(),
-            "maxCount" => self.max_count.is_some(),
-            "threshold" => self.threshold.is_some(),
-            "value" => self.value.is_some(),
-            "duration" => self.duration.is_some(),
-            "canKill" => self.can_kill.is_some(),
-            "healthOnly" => self.health_only.is_some(),
-            "statsOnly" => self.stats_only.is_some(),
-            "timesIf" => self.times_if.is_some(),
-            "condition" => self.condition.is_some(),
-            "when" => self.when.is_some(),
-            "keyword" => self.keyword.is_some(),
-            "token" => self.token.is_some(),
-            "card" => self.card.is_some(),
-            "to" => self.to.is_some(),
-            "from" => self.from.is_some(),
-            "type" => self.card_type.is_some(),
-            "pool" => self.pool.is_some(),
-            "choose" => self.choose.is_some(),
-            "free" => self.free.is_some(),
-            "era" => self.era.is_some(),
-            "level" => self.level.is_some(),
-            "state" => self.state.is_some(),
-            "basis" => self.basis.is_some(),
-            _ => false,
-        }
-    }
-}
 
 /// 校验一段结构化效果，返回全部违规消息。
+///
+/// 参数的必填、互斥与枚举取值已在解析或加载期按原语类型化校验；这里只保留
+/// 类型层面无法表达、且需要读触发器或选择器的规则。
 pub fn validate_effect(effect: &Effect) -> Vec<String> {
     let mut errors = Vec::new();
-    let params = &effect.params;
-
     let is_aura = matches!(effect.trigger, Trigger::Aura | Trigger::ConditionalAura);
 
     if is_aura && !AURA_OPS.contains(&effect.op) {
         errors.push(format!("光环触发只能用 {AURA_OPS:?}，实为 {:?}", effect.op));
     }
 
-    // 群聚参数只属于光环的 ModifyStats；非光环同名原语不得携带。
-    if (params.per_attack.is_some() || params.per_health.is_some() || params.max_count.is_some())
-        && !(is_aura && effect.op == Op::ModifyStats)
-    {
-        errors.push("perAttack/perHealth/maxCount 只能用于光环的 ModifyStats".to_string());
+    // 群聚参数只属于光环的 ModifyStats。
+    if let Params::ModifyStats(params) = &effect.params {
+        let clustered = params.per_attack.is_some()
+            || params.per_health.is_some()
+            || params.max_count.is_some();
+        if clustered && !is_aura {
+            errors.push("perAttack/perHealth/maxCount 只能用于光环的 ModifyStats".to_string());
+        }
     }
 
     // 相邻选取只服务光环；其他触发器（战斗、招募）没有稳定的来源棋盘位置。
@@ -210,35 +73,16 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
         errors.push("Adjacent 只能用于光环".to_string());
     }
 
-    let (required, allowed, one_of) = op_spec(effect.op);
-    for key in required {
-        if !params.has(key) {
-            errors.push(format!("原语 {:?} 缺少参数 {key:?}", effect.op));
-        }
-    }
-    let allowed_all: Vec<&str> = required.iter().chain(allowed.iter()).copied().collect();
-    for key in PARAM_KEYS {
-        if params.has(key) && !allowed_all.contains(key) {
-            errors.push(format!("参数 {key:?} 不属于原语 {:?}", effect.op));
-        }
-    }
-    for group in one_of {
-        if !group.iter().any(|key| params.has(key)) {
-            errors.push(format!("原语 {:?} 缺少 {group:?} 之一", effect.op));
-        }
-    }
-
-    if let Some(times_if) = &params.times_if {
-        if effect.op != Op::Growth || params.times.is_none() {
-            errors.push("timesIf 只能与 Growth 的 times 同时出现".to_string());
-        }
+    if let Params::Growth(params) = &effect.params
+        && let Some(times_if) = &params.times_if
+    {
         if times_if.times < 0 {
             errors.push("timesIf 的次数不能为负".to_string());
         }
         validate_times_if_filter(times_if, &mut errors);
     }
 
-    if let Some(when) = &params.when {
+    if let Some(when) = effect.params.when() {
         if !WHEN_TRIGGERS.contains(&effect.trigger) {
             errors.push(format!(
                 "when 只能用于事件类触发，不能用于 {:?}",
@@ -254,114 +98,119 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
         }
     }
 
-    if let Some(condition) = &params.condition {
+    if let Some(condition) = effect.params.condition() {
         validate_condition_filter(&condition.filter, &mut errors);
         if condition.count < 0 {
             errors.push("condition 的 count 不能为负".to_string());
         }
     }
 
-    if effect.op == Op::Summon {
-        let present = usize::from(params.token.is_some()) + usize::from(params.card.is_some());
-        if present > 1 {
-            errors.push("Summon 的 token 与 card 只能二选一".to_string());
+    match &effect.params {
+        Params::Summon(params) => {
+            validate_token_or_card(
+                Op::Summon,
+                params.token.as_ref(),
+                params.card.as_ref(),
+                &mut errors,
+            );
         }
-    }
-
-    if effect.op == Op::Discover
-        && let Some(choose) = params.choose
-        && choose != 1
-    {
-        errors.push(format!("Discover 的 choose 必须为 1，实为 {choose}"));
-    }
-
-    if effect.op == Op::GainMinion
-        && let Some(from) = params.from
-        && from != Zone::Shop
-    {
-        errors.push(format!("GainMinion 的 from 只接受 shop，实为 {from:?}"));
-    }
-
-    // 从手牌复制的目标必须由玩家指定：禁止再出现「静默取手牌第一张」的数据。
-    if effect.op == Op::Copy
-        && params.from == Some(Zone::Hand)
-        && !matches!(
-            effect.selector,
-            Selector::Target {
-                zone: Zone::Hand,
-                ..
+        Params::Convert(params) => {
+            validate_token_or_card(
+                Op::Convert,
+                params.token.as_ref(),
+                params.card.as_ref(),
+                &mut errors,
+            );
+            if params.count.is_some_and(|count| count < 0) {
+                errors.push("Convert 的 count 不能为负".to_string());
             }
-        )
-    {
-        errors.push("Copy 从手牌复制必须使用 target:hand 选择器".to_string());
-    }
-
-    // 分解的生命值增量必须有明确时长：`permanent` 落盘，`combat` 本回合。
-    if effect.op == Op::Decompose
-        && params
-            .duration
-            .is_some_and(|duration| duration == Duration::Instant)
-    {
-        errors.push("Decompose 的 duration 只接受 permanent / combat".to_string());
-    }
-
-    // 拟态同样需要可回滚的时长：`instant` 会让关键词在记录时被丢弃。
-    if effect.op == Op::Mimic
-        && params
-            .duration
-            .is_some_and(|duration| duration == Duration::Instant)
-    {
-        errors.push("Mimic 的 duration 只接受 permanent / combat".to_string());
-    }
-
-    // 吞噬的攻击力上限不能为负。
-    if effect.op == Op::Devour && params.value.is_some_and(|value| value < 0) {
-        errors.push("Devour 的 value 不能为负".to_string());
-    }
-
-    if let Some(level) = &params.level
-        && level != "current"
-        && !(effect.op == Op::GrantMinion && level == "next")
-        && !is_digits(level)
-    {
-        errors.push(format!("level 非法 {level:?}"));
-    }
-
-    if effect.op == Op::GrantMinion && params.to != Some(Zone::Hand) {
-        errors.push(format!(
-            "GrantMinion 的 to 只接受 hand，实为 {:?}",
-            params.to
-        ));
-    }
-
-    for (name, value) in [
-        ("token", &params.token),
-        ("card", &params.card),
-        ("pool", &params.pool),
-        ("era", &params.era),
-    ] {
-        if value.as_ref().is_some_and(|text| text.is_empty()) {
-            errors.push(format!("参数 {name} 不能为空"));
         }
-    }
-
-    if let Some(keyword) = &params.keyword {
-        if !KEYWORD_BASES.contains(&keyword.keyword.as_str()) {
-            errors.push(format!("keyword 非法 {:?}", keyword.keyword));
-        }
-        let layer = keyword.value.or(params.value);
-        if matches!(
-            keyword.keyword.as_str(),
-            "breed" | "assemble" | "contagion" | "armor"
-        ) {
-            if layer.is_none() {
-                errors.push(format!("keyword {:?} 必须带层数", keyword.keyword));
-            } else if layer.is_some_and(|value| value < 0) {
-                errors.push(format!("keyword {:?} 的层数不能为负", keyword.keyword));
+        Params::ModifyStats(params) => {
+            if params.attack.is_none() && params.health.is_none() {
+                errors.push("原语 ModifyStats 缺少 [\"attack\", \"health\"] 之一".to_string());
             }
-        } else if layer.is_some() {
-            errors.push(format!("keyword {:?} 禁止层数与 value", keyword.keyword));
         }
+        Params::Discover(params) => {
+            if params.pool.is_empty() {
+                errors.push("参数 pool 不能为空".to_string());
+            }
+            if params.choose != 1 {
+                errors.push(format!(
+                    "Discover 的 choose 必须为 1，实为 {}",
+                    params.choose
+                ));
+            }
+        }
+        Params::RefreshShop(_) => {}
+        Params::AddShopSlot(params) => {
+            if params.era.is_empty() {
+                errors.push("参数 era 不能为空".to_string());
+            }
+            if params.count < 0 {
+                errors.push("AddShopSlot 的 count 不能为负".to_string());
+            }
+        }
+        Params::GainMinion(params) => {
+            validate_level(&params.level, false, &mut errors);
+            if params.from.is_some_and(|from| from != Zone::Shop) {
+                errors.push(format!(
+                    "GainMinion 的 from 只接受 shop，实为 {:?}",
+                    params.from
+                ));
+            }
+        }
+        Params::GrantMinion(params) => {
+            validate_level(&params.level, true, &mut errors);
+            if params.to != Zone::Hand {
+                errors.push(format!(
+                    "GrantMinion 的 to 只接受 hand，实为 {:?}",
+                    params.to
+                ));
+            }
+        }
+        Params::Copy(params) => {
+            // 从手牌复制的目标必须由玩家指定：禁止再出现「静默取手牌第一张」的数据。
+            if params.from == Some(Zone::Hand)
+                && !matches!(
+                    effect.selector,
+                    Selector::Target {
+                        zone: Zone::Hand,
+                        ..
+                    }
+                )
+            {
+                errors.push("Copy 从手牌复制必须使用 target:hand 选择器".to_string());
+            }
+        }
+        // 分解的生命值增量必须有明确时长：`permanent` 落盘，`combat` 本回合。
+        Params::Decompose(params) if params.duration == Duration::Instant => {
+            errors.push("Decompose 的 duration 只接受 permanent / combat".to_string());
+        }
+        // 拟态同样需要可回滚的时长：`instant` 会让关键词在记录时被丢弃。
+        Params::Mimic(params) if params.duration == Duration::Instant => {
+            errors.push("Mimic 的 duration 只接受 permanent / combat".to_string());
+        }
+        Params::Devour(params) => {
+            if params.value < 0 {
+                errors.push("Devour 的 value 不能为负".to_string());
+            }
+        }
+        Params::Salvage(params) => {
+            if params.pool.is_empty() {
+                errors.push("参数 pool 不能为空".to_string());
+            }
+            if params.count < 0 {
+                errors.push("Salvage 的 count 不能为负".to_string());
+            }
+        }
+        Params::GrantKeyword(params) => {
+            validate_keyword(
+                &params.keyword.keyword,
+                params.keyword.value.or(params.value),
+                &mut errors,
+            );
+        }
+        _ => {}
     }
 
     errors
@@ -380,6 +229,47 @@ pub fn validate_effects(effects: &[Effect]) -> Result<(), Vec<String>> {
     }
 }
 
+fn validate_token_or_card(
+    op: Op,
+    token: Option<&String>,
+    card: Option<&String>,
+    errors: &mut Vec<String>,
+) {
+    if token.is_none() && card.is_none() {
+        errors.push(format!("原语 {op:?} 缺少 [\"token\", \"card\"] 之一"));
+    }
+    if token.is_some() && card.is_some() {
+        errors.push(format!("{op:?} 的 token 与 card 只能二选一"));
+    }
+    for (name, value) in [("token", token), ("card", card)] {
+        if value.is_some_and(|text| text.is_empty()) {
+            errors.push(format!("参数 {name} 不能为空"));
+        }
+    }
+}
+
+fn validate_level(level: &str, allow_next: bool, errors: &mut Vec<String>) {
+    if level == "current" || is_digits(level) || (allow_next && level == "next") {
+        return;
+    }
+    errors.push(format!("level 非法 {level:?}"));
+}
+
+fn validate_keyword(base: &str, layer: Option<i32>, errors: &mut Vec<String>) {
+    if !KEYWORD_BASES.contains(&base) {
+        errors.push(format!("keyword 非法 {base:?}"));
+    }
+    if matches!(base, "breed" | "assemble" | "contagion" | "armor") {
+        match layer {
+            None => errors.push(format!("keyword {base:?} 必须带层数")),
+            Some(value) if value < 0 => errors.push(format!("keyword {base:?} 的层数不能为负")),
+            Some(_) => {}
+        }
+    } else if layer.is_some() {
+        errors.push(format!("keyword {base:?} 禁止层数与 value"));
+    }
+}
+
 fn validate_filter(filter: &Filter, check_value: bool, errors: &mut Vec<String>) {
     if filter.value.is_empty() {
         errors.push(format!("筛选 {:?} 缺少取值", filter.key.id()));
@@ -390,7 +280,7 @@ fn validate_filter(filter: &Filter, check_value: bool, errors: &mut Vec<String>)
 }
 
 /// `timesIf` 必须带值；键已在解析期枚举化。
-fn validate_times_if_filter(times_if: &TimesIf, errors: &mut Vec<String>) {
+fn validate_times_if_filter(times_if: &super::TimesIf, errors: &mut Vec<String>) {
     validate_filter_value(times_if.key, &times_if.value, errors);
 }
 

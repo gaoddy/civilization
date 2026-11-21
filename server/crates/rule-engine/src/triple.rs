@@ -9,7 +9,7 @@
 use std::collections::BTreeSet;
 
 use crate::data::{Card, CardType, Catalog, Playstyle, card_in_pool};
-use crate::effects::{Effect, EffectCtx};
+use crate::effects::{Effect, EffectCtx, Params};
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::rng::Stream;
@@ -140,7 +140,10 @@ impl Engine {
                 None => return Vec::new(),
             },
         };
-        if effect.params.choose.unwrap_or(1) == 0 {
+        let Params::Discover(params) = &effect.params else {
+            return Vec::new();
+        };
+        if params.choose == 0 {
             return Vec::new();
         }
         let candidates = self.draw_discover_candidates(state, level);

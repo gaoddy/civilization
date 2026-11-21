@@ -1,13 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::effects::{Effect, validate_effects};
 use crate::error::CatalogError;
 use crate::keyword::KeywordSet;
 use crate::taxonomy::Taxonomy;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CardType {
     #[serde(rename = "minion")]
     Minion,
