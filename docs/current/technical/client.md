@@ -68,6 +68,7 @@ client/
     board_drop.gd            # 我方棋盘落点：命中判定与插入下标（class_name BoardDrop）
     combat_playback.gd       # 战斗动作落地器：节奏与状态应用（class_name CombatPlayback）
     combat_fx.gd             # 战斗演出覆盖层：碰撞往返、闪光、飘字、淡出与出现（class_name CombatFx）
+    combat_intro.gd          # 战斗开场覆盖层：双方头像、VS 与「战斗开始」，帧驱动淡入淡出（class_name CombatIntro）
     result.tscn/.gd          # 结算：名次、本人本局数据、最终阵容、种子与返回入口
     first_game_guide.gd      # 首局非阻塞引导：目标高亮、底部提示条与本地 seen 记录（class_name FirstGameGuide）
     gallery.tscn/.gd         # 卡牌图鉴页：大厅入口，浏览全部卡牌
@@ -173,6 +174,7 @@ client/
 - 队首待选为 `target` 时由 `GameAimLayer` 进入待选模式：候选卡（棋盘、手牌、商店）靠建卡时写入的 `target_zone` / `target_id` 元数据被命中，候选显示金色角标；按住拖出弧线，松手命中发 `ChooseTarget { target }`，落空或 `Esc` 发 `AbandonTarget`；期间购买/刷新/升时代/冻结/结束招募/主动技能/出售/换位/拖拽全部禁用。页面每次刷新按队首待选调用 `begin_pending`，视图过期、归零、已结束招募、非招募阶段或离线时关闭瞄准。
 - 英雄技能瞄准：`GameHeroRow` 每个主动技能按钮的 `button_down` 发出 `hero_power_down(skill_id)`；页面按 id 取对应 `heroPowers` 条目，`requiresTarget` 为假时 `pressed` 直接发 `UseHeroPower { skillId }`；为真且候选非空时页面调用 `begin_skill(power_rect(skill_id), candidates)`，命中候选后补 `target` 发 `UseHeroPower`，落空或 `Esc` 取消、不发意图、不扣金币与次数；候选为空时该按钮禁用，原因为 `NO_VALID_TARGET`。多技能各自计次，一个技能用尽不影响另一个。
 - 效果牌拖拽的瞄准视觉由 `GameAimLayer` 的 `DRAG` 模式提供：`_process` 读 `gui_is_dragging()` 与 `gui_get_drag_data()`，拖拽数据带 `targets` 时按手牌实例编号定位起点并绘制；只画视觉，落点提交仍由 `BoardDrop` 与 `HandCard` 完成。拖拽数据里的 `targets` 必须复制后持有——瞄准层 `clear()` 会清空数组，直接引用会污染卡片的载荷。
+- 战斗开场与开始音效同一判定：`_start_combat` 按 `startedAt` 算出 `elapsed_ms`，小于 `CombatPlayback.PACE_MS` 才显示 `CombatIntro` 并播开始音；续播进入中段不补。`CombatIntro`（`INTRO_MS = 600`、`ENTER_MS = EXIT_MS = 160`）与 `CombatFx` 一样按帧驱动，身份取 `players` 中的本人条目与 `opponentPlayerId`，头像与底色复用 `CardDB` 与 `GamePortrait`，幽灵战压暗并加角标。身份列放在 `CombatIntroCard` 底板上（`panel_style("raised")`），避免与河道回合数、随从卡文字重叠；底板随整体缩放淡入淡出。开场显示期间 `GameCombatView.advance` 只推进开场并直接返回，播放器与碰撞演出都停在起点，首条动作从开场结束的下一帧开始计数。覆盖层最后挂载、铺满战斗组合、`mouse_filter = IGNORE`，`reset()` 收起。
 - 战斗演示由 `CombatPlayback` 驱动（`PACE_MS = 320`、`TAIL_MS = 2000`，节奏只在客户端，服务端不估算演示时长）：第 i 条动作在 `(i + 1) × 320ms` 应用，数值只取 `source`/`target`/`summon` 的服务端下发值，客户端不做加减；动作序列只含主动攻击，反击伤害已并入该条动作下发的快照。写入哪一行按动作的 `sourceSide`/`targetSide`（缺失时退回按 `minionId` 双侧查找）。幽灵战改为随机出局者的最终阵容，实例编号只在克隆内与己方重号时按需改写，因此两侧编号仍可判。动作播完并经过 `TAIL_MS` 后才显示胜负横幅。
 - 战斗行只渲染 `alive` 为真的随从：阵亡卡立即离场；播放器仍保留阵亡条目作为顺序锚点，复生把 `alive` 置回真后卡片在原相对位置重现。召唤按 `summon.position`（存活序列下标）插入，换算用 `CombatPlayback.alive_insert_index`，不会把阵亡锚点当计数。
 - 战斗视图的占位在演示全程固定：对手身份固定 `portrait-size`（64）、两条随从行的 `custom_minimum_size.y` 取 `card-height`，一方全灭后空行不塌陷；`CombatRiver` 恒取 `river-height`（32），`CombatBanner` 常驻显示回合数，播完追加结果文案，横幅切换不改变任何行高，整个战斗组合固定 418。

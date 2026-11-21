@@ -114,8 +114,8 @@ func _check_scene(path: String, free_after: bool) -> Node:
     return instance
 
 
-## 构造战斗阶段的场景，返回实例（调用方负责释放）。
-func _combat_instance(deadline: String) -> Node:
+## 构造战斗阶段的场景，返回实例（调用方负责释放）；`combat` 为空时用默认战报。
+func _combat_instance(deadline: String, combat: Dictionary = {}) -> Node:
     GameStore.player_id = "p0"
     GameStore.phase = Protocol.PHASE_COMBAT
     GameStore.turn = 3
@@ -124,7 +124,7 @@ func _combat_instance(deadline: String) -> Node:
     view["phase"] = Protocol.PHASE_COMBAT
     view["opponentPlayerId"] = "p2"
     GameStore.view = view
-    _set_combat(FixtureScript.combat_result())
+    _set_combat(combat if not combat.is_empty() else FixtureScript.combat_result())
     return await _check_scene("res://scenes/game.tscn", false)
 
 

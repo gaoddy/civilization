@@ -20,6 +20,8 @@ var _combat_turn := -1
 var _combat_end_cued := false
 ## 覆盖层演出：克隆卡碰撞往返、闪光、飘字与淡出。
 var _fx: CombatFx
+## 开战画面：双方对阵约 0.6 秒，显示期间暂停演示推进。
+var _intro: CombatIntro
 
 
 ## 舞台内小间距：iPhone 基准下再收紧一档。
@@ -76,6 +78,10 @@ func _init() -> void:
     _fx.set_anchors_preset(Control.PRESET_FULL_RECT)
     add_child(_fx)
 
+    # 开战画面最后加入，盖住阵容与碰撞演出；不参与布局、不拦截鼠标。
+    _intro = CombatIntro.new()
+    add_child(_intro)
+
 
 func _gap(node_name: String, height: int) -> Control:
     var gap := Control.new()
@@ -124,6 +130,7 @@ func refresh(state: GameUiState) -> void:
 func reset() -> void:
     _combat_turn = -1
     _combat_end_cued = false
+    _intro.clear()
     _fx.clear()
     _river.set_combat_detail("", UITheme.color("color-accent"))
 
@@ -143,6 +150,9 @@ func playing() -> bool:
 ## 先推进已有演出，再应用本帧到期动作并为其开启新演出：新克隆不会在同一帧
 ## 里被整段推进，飞行从原位开始。
 func advance(delta: float) -> void:
+    # 开战画面未结束：本帧只推进画面，动作与演出保持起点，避免首次攻击被遮挡。
+    if _intro.advance(delta * 1000.0):
+        return
     _fx.advance(delta)
     var events := _combat.advance(delta * 1000.0)
     _play_events(events)
@@ -177,9 +187,10 @@ func _start_combat(combat: Dictionary) -> void:
     # 续播只对齐数据，不补演已经过去的动作。
     _combat.seek(elapsed_ms)
     _combat_turn = GameStore.turn
-    # 首条动作尚未应用才算“开战”；续播已进入中段时不补开战音。
+    # 首条动作尚未应用才算“开战”；续播已进入中段时不补开战音与开场画面。
     if elapsed_ms < CombatPlayback.PACE_MS:
         Sfx.play_cue(Sfx.CUE_COMBAT_START)
+        _intro.present(_state)
 
 
 ## 按动作类型开启演出；数值已在播放器中按服务端快照落地。
