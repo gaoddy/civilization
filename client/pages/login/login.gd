@@ -48,11 +48,9 @@ func _build() -> void:
 
 
 func _add_field(parent: VBoxContainer, title: String, value: String) -> LineEdit:
-    parent.add_child(UIControls.label(title, 14))
-    var edit := LineEdit.new()
-    edit.text = value
-    parent.add_child(edit)
-    return edit
+    var field := LoginField.new(title, value)
+    parent.add_child(field)
+    return field.edit
 
 
 func _on_login_pressed() -> void:
