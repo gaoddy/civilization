@@ -169,9 +169,10 @@ static func canvas_hit_min(pt: float, px_per_pt: float, base: Vector2i, window_s
 
 #### 控件工厂约束
 
-- **所有按钮**：通过 `UIControls.button()` 创建，不直接 `new()`
-- **所有标签**：通过 `UIControls.label()` 创建，自动应用字体令牌
-- **所有输入框**：通过 `UIControls.line_edit()` 创建，自动应用高度与边距
+- **常规按钮**：通过 `UIControls.button()` / `UIControls.styled_button()` 创建，不直接 `new()`
+- **分组切换按钮**：图鉴筛选栏、目录与发现/进化候选项需要 `toggle_mode`、`button_group` 或自绘选中态，在组件内直接构造并复用 `UITheme.button_style()`
+- **标签**：通过 `UIControls.label()` 创建，字体大小由调用方传入 `UITheme.font_size()` 令牌
+- **输入框**：通过 `UIControls.line_edit()` 创建；桌面与按钮同高 34，触控端按 `hit_primary()` 抬升，最小宽度由调用方按场景给出
 
 ### 4. 页面统一入口
 
@@ -181,8 +182,8 @@ static func canvas_hit_min(pt: float, px_per_pt: float, base: Vector2i, window_s
 
 ```gdscript
 func _ready() -> void:
-    UILayout.safe_area(self)  # 自动创建内容框与安全区
-    # 后续构建页面内容...
+    _build()                  # 先建好页面内容与 PageBackground
+    UILayout.safe_area(self)  # 再把已有内容移入内容框与安全区
 ```
 
 #### 入口行为
@@ -196,19 +197,20 @@ func _ready() -> void:
 
 #### 页面约束
 
-- **所有页面**：`_ready()` 第一句必须是 `UILayout.safe_area(self)`
+- **所有页面**：在 `_ready()` 内建好页面内容并接好订阅后调用 `UILayout.safe_area(self)`；入口会把已有子节点移入安全区，因此必须在内容创建之后调用
 - **背景节点**：命名为 `PageBackground`，放在页面最外层
 - **内容节点**：直接作为页面子节点，会被自动移入安全区
 - **覆盖层**：详情层、战报层、瞄准层等覆盖层按 `ContentRoot` 缩放定位
 
 ### 5. 自动化验收保证
 
-`client/tests/ui_smoke_layout.gd` 验证跨设备一致性：
+`client/tests/ui_smoke_platform.gd` 验证设备基准与换算，`client/tests/ui_smoke_layout.gd` 验证页面布局与覆盖层：
 
 #### 验收场景
 
-- **设备基准**：桌面 / iPhone（960×540）/ iPad（1280×720）三档基准正确
-- **命中换算**：44pt→60/41、32pt→44/30 按设备换算正确
+- **设备基准**：桌面 / iPhone（960×540）/ iPad（1280×720）三档基准正确（`ui_smoke_platform`）
+- **命中换算**：44pt→60/41、32pt→44/30 按设备换算正确（`ui_smoke_platform`）
+- **输入框工厂**：桌面高 34、触控端不低于主操作命中高度（`ui_smoke_layout`）
 - **小屏布局**：960×540 下六个页面关键节点不越界
 - **内容框居中**：1280×800（16:10）与 1280×960（4:3）下内容框 contain 居中
 - **非 16:9 覆盖层**：超宽视口下瞄准层源矩形落在内容框局部坐标
@@ -328,7 +330,7 @@ static func keyboard_from_pixels(pixels: float, base: Vector2i, window_size: Vec
 
 ### 布局规则
 
-1. **所有页面**：`_ready()` 第一句必须是 `UILayout.safe_area(self)`
+1. **所有页面**：在 `_ready()` 内建好内容后调用 `UILayout.safe_area(self)`
 2. **所有坐标**：只在 `ContentRoot` 局部坐标系内计算，不直接使用视口坐标
 3. **所有尺寸**：按逻辑基准设计（1280×720 或 960×540），运行时自动缩放
 4. **背景节点**：命名为 `PageBackground`，放在页面最外层，铺满视口
@@ -342,7 +344,7 @@ static func keyboard_from_pixels(pixels: float, base: Vector2i, window_size: Vec
 
 ### 控件规则
 
-1. **所有按钮**：通过 `UIControls.button()` 创建
+1. **常规按钮**：通过 `UIControls.button()` / `UIControls.styled_button()` 创建；需要分组切换或自绘选中态的按钮按上文例外处理
 2. **所有标签**：通过 `UIControls.label()` 创建
 3. **所有输入框**：通过 `UIControls.line_edit()` 创建
 4. **触控命中**：控件工厂已自动换算，不需要手动调整高度
