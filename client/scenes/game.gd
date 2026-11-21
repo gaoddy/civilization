@@ -28,6 +28,11 @@ var _target_pending := false
 ## 已回报「演示播完」的回合；同一回合只回报一次。
 var _combat_ack_turn := -1
 
+# 音效：按商店槽位实例对比冻结标记，事件触发的重抽不推断冻结。
+var _shop_frozen: Dictionary = {}
+var _suppress_frozen_cue := false
+var _initial_shop_enter_done := false
+
 # 顶部工具条：状态文本与图鉴 / 提示 / 退出对局入口。
 var _top_bar: GameTopBar
 ## 状态文本当前承载的是连接提示：恢复连接时据此清空，避免误清错误文案。
@@ -63,6 +68,7 @@ var _guide: FirstGameGuide
 func _ready() -> void:
     _build()
     GameStore.view_changed.connect(_refresh)
+    GameStore.events_received.connect(_on_game_events)
     GameStore.error_received.connect(_on_error)
     GameStore.game_over.connect(_on_game_over)
     Net.connected.connect(_refresh_connection)
@@ -213,6 +219,8 @@ func _refresh() -> void:
     if view.is_empty():
         _top_bar.set_status(tr("ui.game.status.waiting_view"), UITheme.color("color-text-dim"))
         _guide.set_phase("", {})
+        _shop_frozen.clear()
+        _suppress_frozen_cue = false
         return
 
     var self_state: Dictionary = view.get("self", {})
@@ -223,6 +231,8 @@ func _refresh() -> void:
     var pending: Array = self_state.get("pendingChoices", [])
     _target_pending = not pending.is_empty() and str(pending[0].get("kind", "")) == "target"
     var state := _build_state(view, self_state, phase, recruited)
+    _track_shop_frozen(state)
+    _play_initial_shop_enter()
 
     _players_panel.refresh(state)
 
@@ -266,6 +276,87 @@ func _build_state(
     state.board_slots = maxi(int(view.get("boardSlots", 7)), 1)
     state.hp_cap = maxi(int(view.get("hpCap", 40)), 1)
     return state
+
+
+# ── 音效 ──────────────────────────────────────────────────────────────────
+
+## 首回合的商店入场：`GameStarted` 不带事件，页面首次拿到招募视图时补播一次。
+func _play_initial_shop_enter() -> void:
+    if _initial_shop_enter_done:
+        return
+    if GameStore.turn != 1 or GameStore.phase != Protocol.PHASE_RECRUIT:
+        return
+    if GameStore.view.is_empty():
+        return
+    _initial_shop_enter_done = true
+    Sfx.play_cue(Sfx.CUE_SHOP_ENTER)
+
+
+## 事件到音效：一封 `StateUpdate` 只处理一次，不按视图差异重复推断。
+##
+## 回合开始的自动重抽与 `TurnStarted` 同一批到达，只播商店入场音效；
+## 其余 `ShopRolled` 视为刷新（手动、首次免费、效果与升时代重抽）。
+func _on_game_events(events: Array) -> void:
+    var turn_started := false
+    var rolled := false
+    for entry in events:
+        if not (entry is Dictionary):
+            continue
+        var kind := str(entry.get("kind", ""))
+        if kind == Protocol.EVENT_TURN_STARTED:
+            turn_started = true
+        elif kind == Protocol.EVENT_SHOP_ROLLED:
+            rolled = true
+    # 重抽会整批换槽位，冻结差异不能当成玩家冻结/解冻。
+    if turn_started or rolled:
+        _suppress_frozen_cue = true
+    for entry in events:
+        if not (entry is Dictionary):
+            continue
+        if str(entry.get("kind", "")) == Protocol.EVENT_MINION_BOUGHT:
+            Sfx.play_card(str(entry.get("cardId", "")), Sfx.CUE_CARD_BUY)
+    if turn_started:
+        Sfx.play_cue(Sfx.CUE_SHOP_ENTER)
+    elif rolled:
+        Sfx.play_cue(Sfx.CUE_REROLL)
+
+
+## 冻结/解冻以服务端视图的 `frozen` 变化为准：同一槽位 false→true 或
+## true→false 才播；新建/移除槽位、重抽与进入新回合都不算。
+func _track_shop_frozen(state: GameUiState) -> void:
+    var frozen_now: Dictionary = {}
+    for slot in state.self_state.get("shop", []):
+        if not (slot is Dictionary) or slot.get("cardId") == null:
+            continue
+        var card_id := str(slot.get("cardId", ""))
+        var instance_id := str(slot.get("instanceId", ""))
+        var key := (
+            instance_id
+            if instance_id != ""
+            else "%d:%s" % [int(slot.get("index", -1)), card_id]
+        )
+        frozen_now[key] = bool(slot.get("frozen", false))
+    var froze := false
+    var unfroze := false
+    for key in frozen_now:
+        if not _shop_frozen.has(key):
+            continue
+        var was := bool(_shop_frozen[key])
+        var now := bool(frozen_now[key])
+        if now and not was:
+            froze = true
+        elif was and not now:
+            unfroze = true
+    _shop_frozen = frozen_now
+    if _suppress_frozen_cue:
+        _suppress_frozen_cue = false
+        return
+    if state.phase != Protocol.PHASE_RECRUIT:
+        return
+    if froze:
+        Sfx.play_cue(Sfx.CUE_FREEZE)
+    if unfroze:
+        Sfx.play_cue(Sfx.CUE_UNFREEZE)
 
 
 static func drag_gate(

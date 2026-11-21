@@ -7,7 +7,7 @@ DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
 FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 
-.PHONY: test lint audit data data-check docs-render assets font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-import client-run client-check client-smoke client-export-templates client-export client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -58,6 +58,10 @@ assets:
 		--avatars client/assets/characters/avatars \
 		--faces client/assets/cards/faces \
 		--manifest client/assets/asset_manifest.json
+
+# 默认占位音效：合成波形写入 client/assets/audio/，逐卡覆盖不在此生成。
+sfx:
+	$(PYTHON) scripts/gen_sfx.py
 
 # 内置中文字体子集：字符集取文本表 + ASCII + GB2312，需先装 fontTools（见脚本说明）。
 font-subset:

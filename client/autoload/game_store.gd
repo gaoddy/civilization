@@ -4,6 +4,8 @@ extends Node
 signal auth_changed
 signal room_changed
 signal view_changed
+## 一封 `StateUpdate` 携带的领域事件；只服务动画与音效，不作为状态来源。
+signal events_received(events: Array)
 signal game_started
 signal game_over
 ## 房间被解散或本人被移出；页面据此提示原因并回大厅。
@@ -91,7 +93,11 @@ func handle(type: String, payload: Dictionary) -> void:
             _apply_view(payload.get("view", {}))
             game_started.emit()
             view_changed.emit()
-        Protocol.MSG_STATE_UPDATE, Protocol.MSG_SNAPSHOT:
+        Protocol.MSG_STATE_UPDATE:
+            _apply_view(payload.get("view", {}))
+            _emit_events(payload.get("events", []))
+            view_changed.emit()
+        Protocol.MSG_SNAPSHOT:
             _apply_view(payload.get("view", {}))
             view_changed.emit()
         Protocol.MSG_PHASE_CHANGED:
@@ -124,6 +130,13 @@ func handle(type: String, payload: Dictionary) -> void:
             error_received.emit()
         _:
             pass
+
+
+## 事件只按消息转发一次：同一封 `StateUpdate` 的 `view_changed` 可能来自
+## 多个字段，音效与动画不能按视图差异重复推断。
+func _emit_events(value) -> void:
+    if value is Array and not value.is_empty():
+        events_received.emit(value)
 
 
 func _apply_view(value) -> void:

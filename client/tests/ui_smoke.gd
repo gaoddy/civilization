@@ -48,6 +48,9 @@ func _ready() -> void:
     await _check_summon_inserts_at_alive_rank()
     await _check_stale_combat_not_shown()
     await _check_combat_placeholder_cleared()
+    await _check_sfx_events()
+    await _check_sfx_freeze()
+    await _check_sfx_combat()
     await _check_target_pending_aim()
     await _check_pending_aim_abandon()
     await _check_skill_aim()
@@ -1425,6 +1428,141 @@ func _check_combat_playback() -> void:
     _clear_combat()
     GameStore.turn = 1
     GameStore.phase = ""
+
+
+## 事件到音效：刷新、回合开始入场与买牌各自只播一次，被拒操作没有事件也不响。
+func _check_sfx_events() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = FixtureScript.view()
+    _clear_combat()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+
+    Sfx.clear_log()
+    GameStore.handle(Protocol.MSG_STATE_UPDATE, {
+        "view": GameStore.view,
+        "events": [{"kind": Protocol.EVENT_SHOP_ROLLED}],
+    })
+    _expect(Sfx.count_cue(Sfx.CUE_REROLL) == 1, "手动刷新应播一次刷新音效")
+    _expect(Sfx.count_cue(Sfx.CUE_SHOP_ENTER) == 0, "手动刷新不应播商店入场音效")
+    _expect(_sfx_played(Sfx.CUE_REROLL), "刷新音效应加载到默认公共资源")
+
+    Sfx.clear_log()
+    GameStore.handle(Protocol.MSG_STATE_UPDATE, {
+        "view": GameStore.view,
+        "events": [
+            {"kind": Protocol.EVENT_TURN_STARTED, "turn": 4},
+            {"kind": Protocol.EVENT_SHOP_ROLLED},
+        ],
+    })
+    _expect(Sfx.count_cue(Sfx.CUE_SHOP_ENTER) == 1, "回合开始应播一次商店入场音效")
+    _expect(Sfx.count_cue(Sfx.CUE_REROLL) == 0, "回合开始不应叠刷新音效")
+
+    Sfx.clear_log()
+    GameStore.handle(Protocol.MSG_STATE_UPDATE, {
+        "view": GameStore.view,
+        "events": [{"kind": Protocol.EVENT_MINION_BOUGHT, "cardId": "huo"}],
+    })
+    _expect(Sfx.count_cue(Sfx.CUE_CARD_BUY) == 1, "买牌应播一次购入音效")
+    _expect(_sfx_card_id(Sfx.CUE_CARD_BUY) == "huo", "购入音效应带上卡牌 id")
+    _expect(
+        Sfx.card_path("huo", Sfx.CUE_CARD_BUY).ends_with("cards/default/buy.wav"),
+        "没有逐卡音效时应回落到默认目录",
+    )
+    _expect(_sfx_played(Sfx.CUE_CARD_BUY), "购入音效应加载到默认公共资源")
+
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+## 冻结/解冻按视图 `frozen` 变化各播一次；重抽不误判成冻结变化。
+func _check_sfx_freeze() -> void:
+    GameStore.player_id = "p0"
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    var view: Dictionary = FixtureScript.view()
+    GameStore.view = view
+    _clear_combat()
+    var instance := await _check_scene("res://scenes/game.tscn", false)
+    if instance == null:
+        return
+
+    Sfx.clear_log()
+    view["self"]["shop"][0]["frozen"] = true
+    GameStore.handle(Protocol.MSG_STATE_UPDATE, {"view": view, "events": []})
+    _expect(Sfx.count_cue(Sfx.CUE_FREEZE) == 1, "冻结标记出现应播一次冻结音效")
+    _expect(Sfx.count_cue(Sfx.CUE_UNFREEZE) == 0, "冻结时不应播解冻音效")
+
+    Sfx.clear_log()
+    view["self"]["shop"][3]["frozen"] = false
+    GameStore.handle(Protocol.MSG_STATE_UPDATE, {"view": view, "events": []})
+    _expect(Sfx.count_cue(Sfx.CUE_UNFREEZE) == 1, "冻结标记消失应播一次解冻音效")
+    _expect(Sfx.count_cue(Sfx.CUE_FREEZE) == 0, "解冻时不应播冻结音效")
+
+    Sfx.clear_log()
+    var rolled := FixtureScript.view()
+    rolled["self"]["shop"][3]["frozen"] = false
+    GameStore.handle(Protocol.MSG_STATE_UPDATE, {
+        "view": rolled,
+        "events": [{"kind": Protocol.EVENT_SHOP_ROLLED}],
+    })
+    _expect(Sfx.count_cue(Sfx.CUE_FREEZE) == 0, "刷新清掉冻结不应误播冻结音效")
+    _expect(Sfx.count_cue(Sfx.CUE_UNFREEZE) == 0, "刷新清掉冻结不应误播解冻音效")
+    _expect(Sfx.count_cue(Sfx.CUE_REROLL) == 1, "刷新事件本身仍应播刷新音效")
+
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+## 战斗演示按动作节奏播放攻守双方卡牌的攻击与死亡音效。
+func _check_sfx_combat() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    Sfx.clear_log()
+    instance._process(0.32)
+    _expect(Sfx.count_cue(Sfx.CUE_CARD_ATTACK) == 1, "攻击动作应播一次攻击音效")
+    _expect(
+        _sfx_card_id(Sfx.CUE_CARD_ATTACK) == "bruce-lee",
+        "攻击音效应挂到攻方卡牌",
+    )
+    instance._process(0.32)
+    _expect(Sfx.count_cue(Sfx.CUE_CARD_DEATH) == 1, "阵亡动作应播一次死亡音效")
+    _expect(
+        _sfx_card_id(Sfx.CUE_CARD_DEATH) == "aristotle",
+        "死亡音效应挂到阵亡卡牌",
+    )
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    _clear_combat()
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+func _sfx_played(cue: String) -> bool:
+    for entry in Sfx.cue_log:
+        if str(entry.get("cue", "")) == cue:
+            return bool(entry.get("played", false))
+    return false
+
+
+func _sfx_card_id(cue: String) -> String:
+    for entry in Sfx.cue_log:
+        if str(entry.get("cue", "")) == cue:
+            return str(entry.get("cardId", ""))
+    return ""
 
 
 ## 播完动作并经过 TAIL_MS 后才显示胜负横幅。
