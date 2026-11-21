@@ -10,7 +10,7 @@
 
 | 项 | 选择 | 说明 |
 | --- | --- | --- |
-| 引擎 | Godot 4 | 小版本在工程初始化时锁定 |
+| 引擎 | Godot 4 | 补丁版本固定 4.7.2，本机引擎不符时 make 直接失败 |
 | 脚本语言 | GDScript | 不使用 C# |
 | 目标平台 | 桌面端 | 首版只做桌面端 |
 | 网络 | WebSocket + JSON | 事件信封与消息清单见[联网与技术架构](network-architecture.md)第 5 节 |
@@ -29,7 +29,7 @@
 
 ## 4. 实现约定
 
-- 工程目录：`client/`，Godot 4.7，GDScript；主场景 `client/scenes/login.tscn`。
+- 工程目录：`client/`，Godot 4.7.2，GDScript；主场景 `client/scenes/login.tscn`。
 - 测试：`make client-smoke` 无头实例化五个场景；`tests/test_client_boundary.py` 断言客户端不引用规则实现；`make m1b-e2e` 用 1 个无头客户端 + 7 个 `sim bot` 打完一局。
 - 构建与导出：本机运行与 macOS 桌面端导出均已落地，命令与产物见[Godot 客户端](../../../../current/technical/client.md) §4 与 §8。
 - 未确定事项见[待确认事项](../../open-questions.md)。
