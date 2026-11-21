@@ -370,7 +370,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 - `UILayout.safe_area(page)` 在页面 `_ready()` 第一句调用，把页面内容移入 `ContentFrame → ContentRoot → SafeAreaMargin`；调用后新增的子节点按创建顺序自动移入安全区：`ContentFrame` 是 16:9 居中框，`ContentRoot` 以设计基准尺寸布局、按内容框高度缩放；`SafeAreaMargin` 内桌面四边为零，触控端取安全区四边，底部取安全区与键盘高度的较大值。整屏背景（`PageBackground`）留在包裹层外并置底，铺满视口，安全区只约束内容控件；图鉴页自带整屏背景时关闭 `CardGallery` 的组件背景。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UILayout.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。覆盖层（详情、瞄准、战报）随 `ContentRoot` 整体缩放，输入坐标先经画布与全局变换换算到内容框局部，再按层缩放换算矩形尺寸。
 - `UITheme.hit_primary()` / `hit_small()` 把 44pt / 32pt 换算为画布单位；`UIControls.button` 与 `UIControls.styled_button` 在触控端按此抬升最小高度，桌面端保留原值；`UIControls.line_edit` 桌面高 34，触控端同样按 `hit_primary()` 抬升。
 - 图鉴在 iPhone 基准下不再使用左栏目录，改由分类面板承载（`stage_metric("gallery-category-panel-width")` = 360）；详情宽 `stage_metric("gallery-detail-width")` = 176、内边距 `space-md`、属性标题列 52，详情卡图宽 `stage_metric("gallery-preview-width")` = 128（高度随 `card_face_height`）；网格仍为 6 列（`stage_metric("gallery-grid-columns")`），列距 `space-md`。英雄视图隐藏分类按钮与二级筛选，网格只让出详情宽度。桌面与 iPad 保持 140 目录、280 详情与 200 预览。
-- 对局页与内部组件统一用 `UITheme.stage_metric(name)` 取场景令牌：iPhone 优先取 `<name>-compact`（卡面 70×91、英雄行 64、河道 24、商店操作行 52、胶囊按钮 26、头像 48、图标按钮 36、座位行头像兜底 40（实际按行高解算）等），其余设备取原值；卡面紧凑值保持桌面 112:146 的卡形，只缩尺寸不改比例；页面边距与舞台间距在 iPhone 下同步收紧。桌面与 iPad 的舞台按窗口高度扩展（基准 720 高），iPhone 固定 540 高，纵向顺序与操作不变。
+- 对局页与内部组件统一用 `UITheme.stage_metric(name)` 取场景令牌：iPhone 优先取 `<name>-compact`（卡面 70×91、英雄行 64、河道 24、商店操作行 52、胶囊按钮 24（触控命中 32）、头像 48、图标按钮 36、座位行头像兜底 40（实际按行高解算）等），其余设备取原值；卡面紧凑值保持桌面 112:146 的卡形，只缩尺寸不改比例；页面边距与舞台间距在 iPhone 下同步收紧。桌面与 iPad 的舞台按窗口高度扩展（基准 720 高），iPhone 固定 540 高，纵向顺序与操作不变。
 
 ### 触控交互
 
