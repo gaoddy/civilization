@@ -74,7 +74,10 @@ static func safe_area(page: Control) -> SafeAreaMargin:
 
 
 ## 按页面尺寸把内容框收拢成基准比例，并缩放逻辑画布。
+## 页面子树被提前释放时绑定对象会失效，回调按空操作处理。
 static func _layout_content(page: Control, frame: Control, root: Control) -> void:
+    if not is_instance_valid(frame) or not is_instance_valid(root):
+        return
     var base := ScreenProfile.base_canvas()
     var rect := ScreenProfile.content_frame(page.size, base)
     if rect.size.x <= 0.0 or rect.size.y <= 0.0:

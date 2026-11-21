@@ -55,7 +55,8 @@ func _check_prefer_ipv4_url() -> void:
     )
 
 
-## 窗口缩放策略：keep_width 保证窗口上下始终由内容铺满。
+## 窗口缩放策略：keep_width 固定逻辑宽度、逻辑高度随窗口比例扩展；
+## 可见内容的比例与留白由 `ContentFrame` 的 contain 计算保证，不由此项拉伸。
 func _check_stretch() -> void:
     _check(
         str(ProjectSettings.get_setting("display/window/stretch/aspect")) == "keep_width",
@@ -91,6 +92,8 @@ func _check_launch_window() -> void:
         "真实 16:10 屏幕启动窗口收拢为 16:9")
     _check(ScreenProfile.launch_window_size(Vector2i.ZERO, base) == base,
         "可用区域未知时回退基准尺寸")
+    _check(ScreenProfile.launch_window_size(Vector2i(1, 1), base) == base,
+        "可用区域过小、取整为零时回退基准尺寸")
 
 
 func _check_desktop() -> void:
