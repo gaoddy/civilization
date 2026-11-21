@@ -6,6 +6,8 @@ extends RefCounted
 const SAFE_AREA_NAME := "SafeAreaMargin"
 const SAFE_LAYER_NAME := "SafeLayer"
 const PAGE_BACKGROUND_NAME := "PageBackground"
+const CONTENT_FRAME_NAME := "ContentFrame"
+const CONTENT_ROOT_NAME := "ContentRoot"
 
 
 static func clear(node: Node) -> void:
@@ -18,31 +20,43 @@ static func clear(node: Node) -> void:
 ##
 ## Viewport 在拖拽中每帧把预览控件的位置设成指针位置，直接偏移预览会被覆盖；
 ## 这里用包裹层承载被拖卡片，并按起手点 `at_position` 反向偏移。
-static func drag_preview(card: Control, at_position: Vector2) -> Control:
+static func drag_preview(card: Control, at_position: Vector2, context: Node = null) -> Control:
     var holder := Control.new()
     holder.name = "DragPreview"
     holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    # 预览卡本身不在树上，缩放要从发起拖拽的节点取。
+    var scale := root_scale(context if context != null else card)
+    holder.scale = Vector2(scale, scale)
     card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    card.position = -at_position
+    card.position = -at_position / scale
     holder.add_child(card)
     return holder
 
 
-## 页面安全区包裹：把页面内容移入 SafeAreaMargin，再挂回页面。
-## 整屏背景留在包裹层外并置底，安全区只约束内容；幂等：重复调用返回已存在的包裹层。
+## 页面安全区包裹：在页面与内容之间插入 16:9 内容框与逻辑画布，再把内容移入安全区。
+## 整屏背景留在内容框外并置底，安全区只约束内容；幂等：重复调用返回已存在的包裹层。
 static func safe_area(page: Control) -> SafeAreaMargin:
     if page == null:
         return null
     var existing := _safe_area_of(page)
     if existing != null:
         return existing
+    var frame := Control.new()
+    frame.name = CONTENT_FRAME_NAME
+    frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    page.add_child(frame)
+    var root := Control.new()
+    root.name = CONTENT_ROOT_NAME
+    root.size = Vector2(ScreenProfile.base_canvas())
+    root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    frame.add_child(root)
     var area := SafeAreaMargin.new()
     area.name = SAFE_AREA_NAME
-    page.add_child(area)
+    root.add_child(area)
     # 包裹层创建时页面可能已有尺寸：只设锚点会把当前零尺寸保留成负偏移。
     area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     for child in page.get_children():
-        if child == area:
+        if child == frame:
             continue
         if child.name == PAGE_BACKGROUND_NAME:
             page.move_child(child, 0)
@@ -51,7 +65,33 @@ static func safe_area(page: Control) -> SafeAreaMargin:
         # 重新挂入会触发 _exit_tree：依赖 _ready 重新建立订阅的组件需要再就绪一次。
         child.request_ready()
         area.add_child(child)
+    _layout_content(page, frame, root)
+    if not page.has_meta("content_layout_connected"):
+        page.set_meta("content_layout_connected", true)
+        page.resized.connect(_layout_content.bind(page, frame, root))
     return area
+
+
+## 按页面尺寸把内容框收拢成基准比例，并缩放逻辑画布。
+static func _layout_content(page: Control, frame: Control, root: Control) -> void:
+    var base := ScreenProfile.base_canvas()
+    var rect := ScreenProfile.content_frame(page.size, base)
+    if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+        return
+    frame.position = rect.position
+    frame.size = rect.size
+    var scale := rect.size.y / float(base.y)
+    root.scale = Vector2(scale, scale)
+
+
+## 向上查找内容框逻辑画布的缩放；不在内容框内时返回 1。
+static func root_scale(node: Node) -> float:
+    var current := node
+    while current != null:
+        if current is Control and str(current.name) == CONTENT_ROOT_NAME:
+            return (current as Control).scale.x
+        current = current.get_parent()
+    return 1.0
 
 
 ## 动态全屏覆盖层的挂载点：位于安全区内、内容之上，自身不拦截输入。
@@ -70,10 +110,7 @@ static func safe_layer(page: Control) -> Control:
 
 
 static func _safe_area_of(page: Control) -> SafeAreaMargin:
-    for child in page.get_children():
-        if child is SafeAreaMargin:
-            return child
-    return null
+    return page.find_child(SAFE_AREA_NAME, true, false) as SafeAreaMargin
 
 
 ## 页面导航入口。change_scene_to_file 会立即把当前场景摘下，摘下后的页面仍连着
@@ -120,7 +157,7 @@ static func background() -> Control:
             rect.name = "PageBackground"
             rect.texture = texture
             rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-            rect.stretch_mode = TextureRect.STRETCH_SCALE
+            rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
             rect.set_anchors_preset(Control.PRESET_FULL_RECT)
             rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
             return rect
