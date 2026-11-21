@@ -70,6 +70,12 @@ func pending_active() -> bool:
 	return _mode == Mode.PENDING
 
 
+## 待选模式在按下前是否已有可画内容：候选角标与来源环不依赖指针。
+## 触控端进入待选时还没有指针，弧线要等按下，但候选必须立刻可见。
+func draws_pending_guide() -> bool:
+	return _mode == Mode.PENDING and not _candidates.is_empty()
+
+
 ## 进入技能瞄准：按下按钮时调用，抬起由本层接管。
 func begin_skill(source_rect: Rect2, candidates: Array) -> void:
 	if candidates.is_empty():
@@ -320,7 +326,14 @@ func _board_rect(minion_id: String) -> Rect2:
 # ── 绘制 ──────────────────────────────────────────────────────────────────
 
 func _draw() -> void:
-	if _mode == Mode.NONE or not _pointer_valid:
+	if _mode == Mode.NONE:
+		return
+	# 触控待选按下前没有指针：先画出候选角标与来源环，按下后再续画弧线、箭头与描边。
+	if not _pointer_valid:
+		if draws_pending_guide():
+			_draw_candidate_marks(UITheme.color("color-accent"))
+			if _source_rect.size != Vector2.ZERO:
+				_draw_source_ring(_source_rect.get_center(), UITheme.color("color-text-muted"))
 		return
 	var accent := UITheme.color("color-accent")
 	var muted := UITheme.color("color-text-muted")
