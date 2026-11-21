@@ -33,6 +33,10 @@
 | `color-danger` | `#e2666b` | 失败、生命、断线 |
 | `color-info` | `#62a8e8` | 时代、中性提示 |
 | `color-highlight` | `#8fd3ff` | 结算页本人名次行与数据分组标题 |
+| `color-combat-tint` | `#ff8c8c` | 战斗受击闪白的目标色 |
+| `color-white` | `#ffffff` | 白色文字、描边与提亮基色 |
+| `color-black` | `#000000` | 黑色描边与遮罩基色 |
+| `color-transparent` | 透明 | StyleBox 无底色、无描边时的占位色 |
 
 ## 3. 字体
 
@@ -47,22 +51,25 @@
 | `font-title-xl` | 20 | 结算页本人名次与数据分区标题 |
 | `font-display` | 22 | 战斗结果横幅、弹层标题 |
 | `font-hero` | 28 | 结算页标题 |
+| `font-display-lg` | 30 | 登录页主标题 |
+| `font-watermark` | 72 | 房间候选卡的水印首字 |
 
 ## 4. 间距与圆角
 
 | 令牌 | 取值 | | 令牌 | 取值 |
 | --- | --- | --- | --- | --- |
-| `space-2xs` | 2 | | `radius-sm` | 4 |
-| `space-xs` | 4 | | `radius-md` | 8 |
-| `space-sm` | 6 | | `radius-lg` | 12 |
-| `space-md` | 8 | | `radius-pill` | 16 |
+| `space-none` | 0 | | `radius-sm` | 4 |
+| `space-2xs` | 2 | | `radius-md` | 8 |
+| `space-xs` | 4 | | `radius-lg` | 12 |
+| `space-sm` | 6 | | `radius-pill` | 16 |
+| `space-md` | 8 | | | |
 | `space-md-plus` | 10 | | | |
 | `space-lg` | 12 | | | |
 | `space-xl` | 16 | | | |
 | `space-2xl` | 24 | | | |
 | `space-3xl` | 32 | | | |
 
-语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行与幽灵身份块，经 `UIControls.apply_dim` 应用；`freeze-overlay-alpha` = 0.22，用于冻结蒙层自身，经 `self_modulate.a` 应用，不向下压暗冰晶与「冻」字。
+语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行、幽灵身份块与禁用图标，经 `UIControls.apply_dim` 或 `alpha("color-white", ...)` 应用；`freeze-overlay-alpha` = 0.22，用于冻结蒙层自身，经 `self_modulate.a` 应用，不向下压暗冰晶与「冻」字；`preview-dim` = 0.7，用于卡面预览压暗；遮罩透明度 `scrim-alpha` = 0.55、`scrim-alpha-friends` = 0.58、`scrim-alpha-strong` = 0.6、`scrim-alpha-gallery` = 0.62、`scrim-alpha-choice` = 0.72，按弹层场景取值。
 
 ## 5. 组件与场景度量
 
@@ -82,7 +89,8 @@
 | `opponent-hp-width` | 360 | 战斗阶段对手身份块与血量条宽度 |
 | `report-width` | 236 | 左栏战报浮层宽度 |
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
-| `avatar-rail` | 44 | 左栏座位行头像边长 |
+| `avatar-rail` | 44 | 左栏座位行头像边长；手机 40 |
+| `seat-row-gap` | 4 | 座位行间距；手机 2 |
 | `portrait-size` | 64 | 售货员与对手英雄头像块边长 |
 | `hero-detail-width` | 160 | 选英雄页悬停详情与房间候选卡宽度，手机 120；高度由 `UITheme.card_face_height` 按卡面比例计算 |
 | `room-hero-detail-width` | 280 | 选英雄页悬停详情卡宽度；手机 200 |
