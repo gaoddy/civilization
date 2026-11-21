@@ -15,7 +15,7 @@ func _ready() -> void:
     await _check_icon_button()
     await _check_hero_card()
     await _check_portrait()
-    await _check_top_bar()
+    await _check_tool_buttons()
     await _check_recruit_river()
     await _check_combat_river()
     await _check_hero_row()
@@ -68,7 +68,7 @@ func _check_shared_layer() -> void:
     _expect(UITheme.metric("hero-card-size") == 84, "英雄卡边长应为 84")
     _expect(UITheme.metric("shop-icon-size") == 40, "商店图标按钮应为 40")
     _expect(UITheme.metric("river-height") == 32, "河道高应为 32")
-    _expect(UITheme.metric("top-bar-height") == 28, "顶部栏高应为 28")
+    _expect(UITheme.metric("pill-button-height") == 26, "胶囊按钮高应为 26")
     _expect(UITheme.metric("recruit-shop-gap") == 18, "商店到河道的间距应为 18")
     _expect(UITheme.metric("opponent-hp-width") == 360, "对手血条宽应为 360")
     _expect(UITheme.metric("portrait-size") == 64, "头像尺寸应为 64")
@@ -356,31 +356,32 @@ func _host(size: Vector2) -> Control:
     return host
 
 
-## 顶部栏：状态文本、三个入口与连接态可用性。
-func _check_top_bar() -> void:
-    var bar := GameTopBar.new()
-    add_child(bar)
+## 右上角工具组：三枚胶囊按钮各自发出信号，断线时只禁用提示与退出对局。
+func _check_tool_buttons() -> void:
+    var tools := GameToolButtons.new()
+    add_child(tools)
     await get_tree().process_frame
     var signals: Array = []
-    bar.gallery_pressed.connect(func() -> void: signals.append("gallery"))
-    bar.hint_pressed.connect(func() -> void: signals.append("hint"))
-    bar.leave_game_pressed.connect(func() -> void: signals.append("leave"))
-    bar.set_status("正在重连", UITheme.color("color-text-dim"), "详情")
-    _expect(bar.status.text == "正在重连", "顶部栏应显示状态文本")
-    _expect(bar.status.tooltip_text == "详情", "顶部栏状态应带悬停详情")
-    var gallery: Button = bar.find_child("GalleryButton", true, false)
-    var hint: Button = bar.find_child("HintButton", true, false)
-    var leave: Button = bar.find_child("LeaveGameButton", true, false)
-    _expect(gallery != null and hint != null and leave != null, "顶部栏应有图鉴、提示与退出对局")
+    tools.gallery_pressed.connect(func() -> void: signals.append("gallery"))
+    tools.hint_pressed.connect(func() -> void: signals.append("hint"))
+    tools.leave_game_pressed.connect(func() -> void: signals.append("leave"))
+    var gallery: Button = tools.find_child("GalleryButton", true, false)
+    var hint: Button = tools.find_child("HintButton", true, false)
+    var leave: Button = tools.find_child("LeaveGameButton", true, false)
+    _expect(gallery != null and hint != null and leave != null, "工具组应有图鉴、提示与退出对局")
     if gallery != null and hint != null and leave != null:
+        _expect(
+            gallery is PillButton and hint is PillButton and leave is PillButton,
+            "三个入口应各自是胶囊按钮",
+        )
         gallery.pressed.emit()
         hint.pressed.emit()
         leave.pressed.emit()
         _expect(signals == ["gallery", "hint", "leave"], "三个入口应各自发出信号")
-        bar.set_connected(false)
+        tools.set_connected(false)
         _expect(hint.disabled and leave.disabled, "断线时提示与退出对局应禁用")
         _expect(not gallery.disabled, "断线时图鉴仍可用")
-    bar.queue_free()
+    tools.queue_free()
     await get_tree().process_frame
 
 
@@ -873,6 +874,7 @@ func _check_opponent_view() -> void:
 
 ## 招募阶段页面结构：无右栏；中央舞台自上而下为招募、战斗（隐藏）、英雄、手牌。
 func _check_recruit_stage() -> void:
+    _fake_connect()
     var view := _base_view(Protocol.PHASE_RECRUIT)
     var instance := await _mount(view)
     if instance == null:
@@ -885,10 +887,20 @@ func _check_recruit_stage() -> void:
         )
     _expect(instance.find_child("Header", true, false) == null, "顶栏节点不应存在")
     _expect(instance.find_child("LogText", true, false) == null, "事件流文本节点不应存在")
-    var top_bar: Control = instance.find_child("TopBar", true, false)
+    _expect(instance.find_child("TopBar", true, false) == null, "顶部工具条不应存在")
+    _expect(instance.find_child("StatusLabel", true, false) == null, "对局页不应再有状态文本标签")
+    var tools: Control = instance.find_child("GameTools", true, false)
     _expect(
-        top_bar != null and top_bar.find_child("StatusLabel", true, false) != null,
-        "顶部工具条应含状态文本",
+        tools != null
+            and tools.find_child("GalleryButton", true, false) != null
+            and tools.find_child("HintButton", true, false) != null
+            and tools.find_child("LeaveGameButton", true, false) != null,
+        "右上角工具组应含图鉴、提示与退出对局",
+    )
+    var status_modal: Control = instance.find_child("StatusModal", true, false)
+    _expect(
+        status_modal != null and not status_modal.visible,
+        "状态模态应存在且默认隐藏",
     )
 
     var center: Control = instance.find_child("CenterPanel", true, false)
@@ -1006,6 +1018,7 @@ func _check_recruit_stage() -> void:
         )
 
     await _unmount(instance)
+    _fake_disconnect()
 
 
 ## 招募倒计时悬停翻成结束招募；移出恢复倒计时，点击发 EndRecruit。

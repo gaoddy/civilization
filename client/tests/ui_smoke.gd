@@ -3295,9 +3295,9 @@ func _check_disconnected_send() -> void:
     if instance == null:
         return
     var reroll = instance.find_child("RerollButton", true, false)
-    var status = instance.find_child("StatusLabel", true, false)
+    var status = instance.find_child("StatusMessage", true, false)
     if reroll == null or status == null:
-        _expect(false, "对局场景缺少 RerollButton 或 StatusLabel")
+        _expect(false, "对局场景缺少 RerollButton 或 StatusMessage")
     else:
         reroll.pressed.emit()
         await get_tree().process_frame
@@ -3430,9 +3430,9 @@ func _check_error_notice_lifecycle() -> void:
     if instance == null:
         _fake_disconnect()
         return
-    var status = instance.find_child("StatusLabel", true, false)
+    var status = instance.find_child("StatusMessage", true, false)
     if status == null:
-        _expect(false, "对局场景缺少 StatusLabel")
+        _expect(false, "对局场景缺少 StatusMessage")
         instance.queue_free()
         _fake_disconnect()
         return
@@ -3442,22 +3442,22 @@ func _check_error_notice_lifecycle() -> void:
     await get_tree().process_frame
     _expect(
         str(status.text) == UIWording.error_text(Protocol.ERROR_INVALID_STAGE),
-        "错误应写入顶栏，实际：%s" % status.text,
+        "错误应写入状态模态，实际：%s" % status.text,
     )
     # 模拟经过错误文案停留时长；引擎帧不会在无头用例里推进这么久。
     instance._process(10.0)
-    _expect(str(status.text) == "", "错误文案应在到时后清空，实际：%s" % status.text)
+    _expect(str(status.text) == "", "错误模态应在到时后收起，实际：%s" % status.text)
 
     GameStore.error_received.emit()
     await get_tree().process_frame
-    _expect(str(status.text) != "", "错误应重新写入顶栏")
+    _expect(str(status.text) != "", "错误应重新写入状态模态")
     GameStore.turn = 4
     var next_view: Dictionary = FixtureScript.view()
     next_view["turn"] = 4
     GameStore.view = next_view
     GameStore.view_changed.emit()
     await get_tree().process_frame
-    _expect(str(status.text) == "", "回合变化后错误文案应清空，实际：%s" % status.text)
+    _expect(str(status.text) == "", "回合变化后错误文案应收起，实际：%s" % status.text)
 
     instance.queue_free()
     _fake_disconnect()
