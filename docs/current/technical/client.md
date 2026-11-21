@@ -15,8 +15,8 @@ client/
   icon.png                   # 应用图标 1024×1024；iOS 导出按尺寸缩放生成
   .gitignore                 # 忽略 .godot/ 与 *.uid
   autoload/
-    screen_profile.gd        # 设备类型、逻辑基准、pt→画布换算、安全区与键盘边距
-    window_sizer.gd          # 桌面端启动时按屏幕可用区域 90% 设置窗口并居中，宽度守住 16:9 下限；触控端跳过
+    screen_profile.gd        # 设备类型、逻辑基准、内容框比例、pt→画布换算、安全区与键盘边距
+    window_sizer.gd          # 桌面端启动时按屏幕可用区域 90% 设置窗口，收成 16:9 并居中；触控端跳过
     game_store.gd            # 认证、房间、PlayerView、赛后统计与引导进度的全局状态
     ws_client.gd             # WebSocketPeer、自动重连、信封编解码与分发
     card_db.gd               # 只读卡牌/技能展示表与科学分类树；展示文本按文本 id 从文本表取
@@ -101,7 +101,7 @@ client/
     taxonomy.json            # 分类树生成物：{nodes, playstyles}
 ```
 
-窗口启动时由 `WindowSizer` 按当前屏幕可用区域（`screen_get_usable_rect`，已排除菜单栏与 Dock）的 90% 设置尺寸并居中；无头模式下固定为逻辑基准尺寸，保证冒烟按 16:9 复现。`stretch/aspect` 为 `keep_width`：逻辑宽度按基准（桌面/iPad 1280、iPhone 960）等比缩放，逻辑高度随窗口高度扩展，窗口上下始终由内容铺满；窗口比基准更宽时左右留白。桌面窗口宽度另有下限：不小于高度按基准比例（16:9）换算的宽度，由 `ScreenProfile.fit_aspect_floor` 计算——启动开窗尺寸先套用下限（屏幕放不下时按宽度收窄高度），拖动缩放低于下限时优先加宽回下限，屏幕放不下则保持上一次合法尺寸；全屏、最大化与触控端不介入。页面用全锚点布局适配视口高度。
+窗口启动时由 `WindowSizer` 按当前屏幕可用区域（`screen_get_usable_rect`，已排除菜单栏与 Dock）的 90% 设置尺寸，再用 `ScreenProfile.launch_window_size` 收成 16:9 并居中；无头模式下固定为设计基准尺寸，保证冒烟按 16:9 复现。`stretch/aspect` 为 `keep_width`：逻辑宽度按设计基准（桌面/iPad 1280、iPhone 960）等比缩放，逻辑高度随窗口比例扩展。页面内容由 `UI.safe_area(page)` 包成三层：`PageBackground` 留在包裹层外，铺满整个视口并按等比裁切（`STRETCH_KEEP_ASPECT_COVERED`）；`ContentFrame` 由 `ScreenProfile.content_frame(viewport, base)` 算出，固定 16:9、按高度贴满、水平居中；`ContentRoot` 固定为设计基准尺寸，按 `frame_h / base_h` 整体缩放。内容始终完整、居中、不裁切——窗口比 16:9 更宽时左右露背景，更窄时上下露背景。窗口尺寸只在启动时设定一次，拖动缩放后不回弹，全屏、最大化与触控端不介入。
 
 ## 2. 全局状态与网络层
 
@@ -287,10 +287,10 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 ### 设备与布局
 
-- `ScreenProfile`（autoload）在启动时按设备设置 `content_scale_size`：iPhone 为 960×540，iPad 与桌面为 1280×720；`keep_width` 下宽度按基准等比缩放、高度随窗口扩展，不再固定 16:9 视口；`fit_aspect_floor` 给出桌面窗口宽度下限（宽度 ≥ 高度 × 基准宽 ÷ 基准高），`project.godot` 的 `display/window/handheld/orientation=4`（`SCREEN_SENSOR_LANDSCAPE`）锁定左右横屏。
+- `ScreenProfile`（autoload）在启动时按设备设置 `content_scale_size`：iPhone 为 960×540，iPad 与桌面为 1280×720；`keep_width` 下宽度按基准等比缩放、高度随窗口扩展。`content_frame(viewport, base)` 给出内容框：固定 16:9、按高度贴满、水平居中；`launch_window_size(usable, base)` 给出桌面启动窗口尺寸（可用区域 90% 收成 16:9），窗口拖动后不再介入。`project.godot` 的 `display/window/handheld/orientation=4`（`SCREEN_SENSOR_LANDSCAPE`）锁定左右横屏。
 - 设备判定：iOS 上按 `OS.get_model_name()` 前缀区分 iPad 与 iPhone；机型名不可用时按屏幕长宽比兜底。非 iOS 与无头环境一律按桌面处理。
-- 换算公式是纯函数：`canvas_scale`、`canvas_hit_min`、`canvas_from_pixels`、`canvas_insets`。`DisplayServer.get_display_safe_area()` 与 `virtual_keyboard_get_height()` 返回像素，按内容矩形换算为画布单位；内容矩形宽为基准宽 × 缩放、高等于窗口高，上下不留白，落在左右留白内的边距记零。
-- `UI.safe_area(page)` 把页面内容移入 `SafeAreaMargin`：桌面四边为零；触控端取安全区四边，底部取安全区与键盘高度的较大值。整屏背景（`PageBackground`）留在包裹层外并置底，背景铺满视口，安全区只约束内容控件；图鉴页自带整屏背景时关闭 `CardGallery` 的组件背景。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UI.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。
+- 换算公式是纯函数：`canvas_scale`、`canvas_hit_min`、`canvas_from_pixels`、`canvas_insets`。`DisplayServer.get_display_safe_area()` 与 `virtual_keyboard_get_height()` 返回像素，按内容矩形换算为画布单位；内容矩形即 `content_frame` 给出的 16:9 居中框，落在背景带内的边距记零。
+- `UI.safe_area(page)` 把页面内容移入 `ContentFrame → ContentRoot → SafeAreaMargin`：`ContentFrame` 是 16:9 居中框，`ContentRoot` 以设计基准尺寸布局、按内容框高度缩放；`SafeAreaMargin` 内桌面四边为零，触控端取安全区四边，底部取安全区与键盘高度的较大值。整屏背景（`PageBackground`）留在包裹层外并置底，铺满视口，安全区只约束内容控件；图鉴页自带整屏背景时关闭 `CardGallery` 的组件背景。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UI.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。覆盖层（详情、瞄准、战报）随 `ContentRoot` 整体缩放，输入坐标先经画布与全局变换换算到内容框局部，再按层缩放换算矩形尺寸。
 - `UITheme.hit_primary()` / `hit_small()` 把 44pt / 32pt 换算为画布单位；`UI.button` 与 `UI.styled_button` 在触控端按此抬升最小高度，桌面端保留原值。
 - 图鉴在 iPhone 基准下收窄目录（`gallery-toc-width-compact`）、详情（`gallery-detail-width-compact`）与详情卡图宽度（`gallery-preview-width-compact`，高度随 `card_face_height`），并改为 4 列（`gallery-grid-columns-compact`）；英雄视图隐藏目录，网格只让出详情宽度。桌面与 iPad 保持原令牌。
 - 对局页与内部组件统一用 `UITheme.stage_metric(name)` 取场景令牌：iPhone 优先取 `<name>-compact`（卡面 84×92、英雄行 64、河道 24、商店操作行 52、顶部工具条 26、头像 48、图标按钮 36、座位行头像 40 等），其余设备取原值；页面边距与舞台间距在 iPhone 下同步收紧。桌面与 iPad 的舞台按窗口高度扩展（基准 720 高），iPhone 固定 540 高，纵向顺序与操作不变。
