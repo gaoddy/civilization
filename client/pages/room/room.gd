@@ -413,7 +413,7 @@ func _on_room_closed() -> void:
         _status.text = tr("ui.room.kicked_notice")
     else:
         _status.text = tr("ui.room.dissolved_notice")
-    UI.navigate(self, "res://scenes/lobby.tscn")
+    UI.navigate(self, "res://pages/lobby/lobby.tscn")
 
 
 func _on_room_changed() -> void:
@@ -434,7 +434,7 @@ func _on_view_changed() -> void:
 
 
 func _goto_game() -> void:
-    UI.navigate(self, "res://scenes/game.tscn")
+    UI.navigate(self, "res://pages/game/game.tscn")
 
 
 func _error_route(code: String) -> String:
@@ -446,11 +446,11 @@ func _on_error() -> void:
     match _error_route(code):
         "lobby":
             GameStore.reset_room()
-            UI.navigate(self, "res://scenes/lobby.tscn")
+            UI.navigate(self, "res://pages/lobby/lobby.tscn")
             return
         "login":
             GameStore.reset_session()
-            UI.navigate(self, "res://scenes/login.tscn")
+            UI.navigate(self, "res://pages/login/login.tscn")
             return
     _status.text = UI.error_text(code)
     _status.tooltip_text = UI.error_tooltip(code)

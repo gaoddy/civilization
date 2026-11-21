@@ -95,7 +95,7 @@ func _expect_banner(combat: Dictionary, expected: Array, stage: String) -> void:
     view["opponentPlayerId"] = "p2"
     GameStore.view = view
     _set_combat(combat)
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _clear_combat()
         return
@@ -160,7 +160,7 @@ func _check_started_at_seek() -> void:
     ) + "Z"
     _set_combat(combat)
     Sfx.clear_log()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _clear_combat()
         return
@@ -313,7 +313,7 @@ func _check_combat_hides_countdown() -> void:
     view["phase"] = Protocol.PHASE_RECRUIT
     GameStore.view = view
     GameStore.deadline = "2030-01-01T00:00:00Z"
-    var recruit := await _check_scene("res://scenes/game.tscn", false)
+    var recruit := await _check_scene("res://pages/game/game.tscn", false)
     if recruit != null:
         var combat_river: Control = recruit.find_child("CombatRiver", true, false)
         _expect(
@@ -448,7 +448,7 @@ func _check_fixed_slots() -> void:
     view["opponentPlayerId"] = "p2"
     GameStore.view = view
     _set_combat(FixtureScript.combat_result_wipe())
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         _reset_store()
         return

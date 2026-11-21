@@ -78,7 +78,7 @@ func _on_connected() -> void:
 
 
 func _on_auth_changed() -> void:
-    UI.navigate(self, "res://scenes/lobby.tscn")
+    UI.navigate(self, "res://pages/lobby/lobby.tscn")
 
 
 func _on_disconnected() -> void:

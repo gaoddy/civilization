@@ -52,7 +52,7 @@ func _seed_social() -> void:
 
 func _check_lobby_social() -> void:
     _seed_social()
-    var instance := await _check_scene("res://scenes/lobby.tscn", false)
+    var instance := await _check_scene("res://pages/lobby/lobby.tscn", false)
     if instance == null:
         return
     await get_tree().process_frame
@@ -153,7 +153,7 @@ func _check_room_invites() -> void:
             "heroCandidates": ["adam-smith"],
         }
     ]
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
     await get_tree().process_frame

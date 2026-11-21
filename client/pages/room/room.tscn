@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scenes/room.gd" id="1"]
+[ext_resource type="Script" path="res://pages/room/room.gd" id="1"]
 
 [node name="Room" type="Control"]
 layout_mode = 3

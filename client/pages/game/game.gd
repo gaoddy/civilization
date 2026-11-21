@@ -808,10 +808,10 @@ func _on_error() -> void:
     match UI.error_route(code):
         "lobby":
             GameStore.reset_room()
-            UI.navigate(self, "res://scenes/lobby.tscn")
+            UI.navigate(self, "res://pages/lobby/lobby.tscn")
         "login":
             GameStore.reset_session()
-            UI.navigate(self, "res://scenes/login.tscn")
+            UI.navigate(self, "res://pages/login/login.tscn")
 
 
 func _on_hint_pressed() -> void:
@@ -824,9 +824,9 @@ func _on_leave_game() -> void:
     _guide.hide()
     GameStore.reset_room()
     Net.relogin()
-    UI.navigate(self, "res://scenes/lobby.tscn")
+    UI.navigate(self, "res://pages/lobby/lobby.tscn")
 
 
 func _on_game_over() -> void:
     _guide.hide()
-    UI.navigate(self, "res://scenes/result.tscn")
+    UI.navigate(self, "res://pages/result/result.tscn")

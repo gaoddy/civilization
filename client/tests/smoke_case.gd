@@ -125,7 +125,7 @@ func _combat_instance(deadline: String, combat: Dictionary = {}) -> Node:
     view["opponentPlayerId"] = "p2"
     GameStore.view = view
     _set_combat(combat if not combat.is_empty() else FixtureScript.combat_result())
-    return await _check_scene("res://scenes/game.tscn", false)
+    return await _check_scene("res://pages/game/game.tscn", false)
 
 
 func _stats_text(panel: Control) -> String:

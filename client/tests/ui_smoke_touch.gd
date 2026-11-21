@@ -104,7 +104,7 @@ func _check_room_touch_select() -> void:
         {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
          "heroCardId": null, "heroCandidates": ["gauss", "mozi"]},
     ]
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance == null:
         return
     var candidates := instance.find_child("HeroCandidates", true, false)
@@ -213,7 +213,7 @@ func _check_room_touch_select() -> void:
         {"playerId": "p0", "displayName": "玩家A", "ready": true, "isHost": true,
          "heroCardId": "gauss", "heroCandidates": ["gauss", "mozi"]},
     ]
-    var locked_instance := await _check_scene("res://scenes/room.tscn", false)
+    var locked_instance := await _check_scene("res://pages/room/room.tscn", false)
     if locked_instance != null:
         var locked_cards := locked_instance.find_child("HeroCandidates", true, false)
         var locked_panel := locked_instance.find_child("RoomHeroDetail", true, false)

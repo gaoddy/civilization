@@ -18,4 +18,4 @@ func _ready() -> void:
 
 
 func _on_closed() -> void:
-    UI.navigate(self, "res://scenes/lobby.tscn")
+    UI.navigate(self, "res://pages/lobby/lobby.tscn")

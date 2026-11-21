@@ -47,7 +47,7 @@ func _mount(view: Dictionary, combat: Dictionary = {}) -> Node:
         _clear_combat()
     else:
         _set_combat(combat)
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     await get_tree().process_frame
     return instance
 

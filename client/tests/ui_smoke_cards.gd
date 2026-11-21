@@ -741,7 +741,7 @@ func _check_room_skill_list() -> void:
         {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
          "heroCardId": null, "heroCandidates": ["gauss", "mozi", "luban", "shenkuo"]},
     ]
-    var instance := await _check_scene("res://scenes/room.tscn", false)
+    var instance := await _check_scene("res://pages/room/room.tscn", false)
     if instance != null:
         var candidates := instance.find_child("HeroCandidates", true, false)
         _expect(candidates != null and candidates.get_child_count() > 0, "选英雄页应渲染候选英雄")

@@ -199,4 +199,4 @@ func _on_confirm_pressed() -> void:
     # 不再向服务端发送离开房间请求。
     GameStore.reset_room()
     Net.relogin()
-    UI.navigate(self, "res://scenes/lobby.tscn")
+    UI.navigate(self, "res://pages/lobby/lobby.tscn")

@@ -8,37 +8,37 @@ var _failures := 0
 
 const PAGES := [
     {
-        "path": "res://scenes/login.tscn",
+        "path": "res://pages/login/login.tscn",
         "children": 1,
         "direct_names": [],
         "deep_names": [],
     },
     {
-        "path": "res://scenes/lobby.tscn",
+        "path": "res://pages/lobby/lobby.tscn",
         "children": 3,
         "direct_names": ["InvitePopup", "FriendsPanel"],
         "deep_names": ["GalleryButton", "FriendsButton"],
     },
     {
-        "path": "res://scenes/room.tscn",
+        "path": "res://pages/room/room.tscn",
         "children": 2,
         "direct_names": ["DraftPanel", "HeroDetailLayer"],
         "deep_names": ["ConfirmButton", "OtherPlayers", "HeroCandidates"],
     },
     {
-        "path": "res://scenes/game.tscn",
+        "path": "res://pages/game/game.tscn",
         "children": 6,
         "direct_names": ["AimLayer", "MinionDetailLayer", "ReportLayer", "ChooserOverlay", "FirstGameGuide"],
         "deep_names": ["CenterPanel", "StatusLabel", "PlayersPanel"],
     },
     {
-        "path": "res://scenes/result.tscn",
+        "path": "res://pages/result/result.tscn",
         "children": 1,
         "direct_names": [],
         "deep_names": ["ResultScroll", "ConfirmButton", "ResultActions"],
     },
     {
-        "path": "res://scenes/gallery.tscn",
+        "path": "res://pages/gallery/gallery.tscn",
         "children": 1,
         "direct_names": ["CardGallery"],
         "deep_names": ["GalleryHeader", "GalleryClose"],
@@ -134,7 +134,7 @@ func _check_aim_local() -> void:
     host.name = "AimHost"
     host.size = Vector2(1280, 480)
     add_child(host)
-    var page := await _instantiate_into("res://scenes/game.tscn", host)
+    var page := await _instantiate_into("res://pages/game/game.tscn", host)
     if page != null:
         var aim := page.find_child("AimLayer", true, false) as Control
         _check(aim != null, "对局页缺少 AimLayer")
@@ -249,7 +249,7 @@ func _check_gallery_hero_compact(compact: Vector2) -> void:
     host.name = "CompactGalleryHost"
     host.size = compact
     add_child(host)
-    var page := await _instantiate_into("res://scenes/gallery.tscn", host)
+    var page := await _instantiate_into("res://pages/gallery/gallery.tscn", host)
     if page != null:
         var mode_toggle := page.find_child("ModeToggle", true, false) as Button
         _check(mode_toggle != null and not mode_toggle.disabled, "视图切换应可用")
@@ -307,7 +307,7 @@ func _check_game_compact(compact: Vector2) -> void:
     host.name = "CompactGameHost"
     host.size = compact
     add_child(host)
-    var page := await _instantiate_into("res://scenes/game.tscn", host)
+    var page := await _instantiate_into("res://pages/game/game.tscn", host)
     if page != null:
         var rail := page.find_child("PlayersRail", true, false) as Control
         var scroll: ScrollContainer = null
@@ -399,7 +399,7 @@ func _check_game_tall(size: Vector2) -> void:
     host.name = "TallGameHost"
     host.size = size
     add_child(host)
-    var page := await _instantiate_into("res://scenes/game.tscn", host)
+    var page := await _instantiate_into("res://pages/game/game.tscn", host)
     if page != null:
         var bounds := Rect2(host.get_global_rect().position, size).grow(1.0)
         var frame := page.get_node_or_null(UI.CONTENT_FRAME_NAME) as Control

@@ -529,7 +529,7 @@ func _check_phone_layout() -> void:
     host.name = "PhoneGalleryHost"
     host.size = Vector2(960, 540)
     add_child(host)
-    var page = load("res://scenes/gallery.tscn").instantiate()
+    var page = load("res://pages/gallery/gallery.tscn").instantiate()
     host.add_child(page)
     await get_tree().process_frame
     await get_tree().process_frame
@@ -686,7 +686,7 @@ func _check_skill_names() -> void:
 func _check_lobby_entry() -> void:
     GameStore.player_id = "p0"
     GameStore.view = FixtureScript.view()
-    var instance := await _check_scene("res://scenes/lobby.tscn", false)
+    var instance := await _check_scene("res://pages/lobby/lobby.tscn", false)
     if instance == null:
         return
     var button = instance.find_child("GalleryButton", true, false)
@@ -703,7 +703,7 @@ func _check_match_overlay() -> void:
     GameStore.deadline = "2030-01-01T00:00:00Z"
     GameStore.view = FixtureScript.view()
     _clear_combat()
-    var instance := await _check_scene("res://scenes/game.tscn", false)
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
 
@@ -759,7 +759,7 @@ func _check_match_overlay() -> void:
 
 func _mount_gallery() -> Node:
     GameStore.player_id = "p0"
-    return await _check_scene("res://scenes/gallery.tscn", false)
+    return await _check_scene("res://pages/gallery/gallery.tscn", false)
 
 
 func _card_gallery(node: Node) -> CardGallery:

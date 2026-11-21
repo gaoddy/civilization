@@ -154,7 +154,7 @@ func _on_create_pressed() -> void:
 
 
 func _on_gallery_pressed() -> void:
-    UI.navigate(self, "res://scenes/gallery.tscn")
+    UI.navigate(self, "res://pages/gallery/gallery.tscn")
 
 
 func _on_friends_pressed() -> void:
@@ -180,7 +180,7 @@ func _on_invite_responded(_invite_id: String, accept: bool) -> void:
 
 
 func _on_room_changed() -> void:
-    UI.navigate(self, "res://scenes/room.tscn")
+    UI.navigate(self, "res://pages/room/room.tscn")
 
 
 func _on_auth_changed() -> void:
@@ -196,4 +196,4 @@ func _on_error() -> void:
         _friends.show_error(code)
     if UI.error_route(code) == "login":
         GameStore.reset_session()
-        UI.navigate(self, "res://scenes/login.tscn")
+        UI.navigate(self, "res://pages/login/login.tscn")
