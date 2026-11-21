@@ -50,6 +50,7 @@
 | 头像框 | `AvatarFrame`（`client/ui/avatar_frame.gd`） | [components/avatar-frame.md](components/avatar-frame.md) |
 | 数值胶囊 | `UIControls.pill_label` | [components/pill.md](components/pill.md) |
 | 按钮变体 | `UIControls.styled_button` | [components/button.md](components/button.md) |
+| 胶囊按钮 | `PillButton`（`client/ui/pill_button.gd`） | [components/pill-button.md](components/pill-button.md) |
 | 卡片容器 | `UIControls.card_panel` | [components/card-panel.md](components/card-panel.md) |
 | 可选项框 | `SelectableBox`（`client/ui/selectable_box.gd`） | [components/selectable-box.md](components/selectable-box.md) |
 | 卡框与星级 | `CardFrame`（`client/ui/card_frame.gd`） | [tokens.md](tokens.md) |
@@ -63,6 +64,8 @@
 | 图鉴卡面单元 | `GalleryCardTile` | [components/gallery-card-tile.md](components/gallery-card-tile.md) |
 | 图鉴常驻详情 | `GalleryDetail` | [components/gallery-detail.md](components/gallery-detail.md) |
 | 首局引导 | `FirstGameGuide` | [components/first-game-guide.md](components/first-game-guide.md) |
+| 对局工具组 | `GameToolButtons`（`client/pages/game/game_tool_buttons.gd`） | [pages/game.md](pages/game.md) |
+| 对局状态模态 | `GameStatusModal`（`client/pages/game/game_status_modal.gd`） | [components/game-status-modal.md](components/game-status-modal.md) |
 | 技能瞄准层 | `GameAimLayer`（`client/pages/game/game_aim_layer.gd`） | [components/aim-layer.md](components/aim-layer.md) |
 | 房间候选英雄卡 | `RoomHeroCard`（`client/pages/room/room_hero_card.gd`） | [pages/room.md](pages/room.md) |
 | 房间悬停详情层 | `RoomHeroDetailLayer`（`client/pages/room/room_hero_detail_layer.gd`） | [pages/room.md](pages/room.md) |

@@ -54,6 +54,7 @@ PopupLayer（Control，全屏，默认隐藏）
 | `FriendsPanel` | `CENTER` | 黑 0.58，遮罩放行 | 根节点拦截点击；Esc 与关闭按钮走 `closed` |
 | `GameChoiceOverlay` | `CENTER` | `color-bg` 0.72 | 拦截点击，待选状态由页面控制 |
 | `CombatIntro` | `CENTER` | `color-bg` 0.6 | 根节点与遮罩都放行，不抢详情与输入 |
+| `GameStatusModal` | `CENTER` | 黑 0.55，遮罩放行 | 提示面板接收点击，根节点与遮罩都忽略鼠标，状态提示不锁对局 |
 | `GalleryCategoryPanel` | `ANCHORED` | `color-bg` 0.62 | 点遮罩关闭 |
 
 ## 6. 不进外壳的浮层

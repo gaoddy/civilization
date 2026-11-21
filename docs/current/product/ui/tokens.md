@@ -44,7 +44,7 @@
 | --- | --- | --- |
 | `font-micro` | 8 | 图标按钮的费用与次数角标 |
 | `font-caption` | 11 | 元信息、关键词、标记 |
-| `font-body-sm` | 12 | 手牌、顶部工具条状态文本与对手身份行 |
+| `font-body-sm` | 12 | 手牌、胶囊按钮与对手身份行 |
 | `font-body` | 14 | 区块标题、按钮 |
 | `font-title` | 16 | 随从攻防、英雄名 |
 | `font-title-lg` | 18 | 图鉴详情的卡名 |
@@ -76,7 +76,8 @@
 | 令牌 | 取值 | 用途 |
 | --- | --- | --- |
 | `rail-width` | 88 | 左栏座位列宽度 |
-| `top-bar-height` | 28 | 对局页顶部工具条高度 |
+| `pill-button-height` | 26 | 胶囊按钮高度；触控端不低于次要操作命中高度 |
+| `status-dialog-width` | 360 | 对局状态模态的提示面板宽度 |
 | `river-height` | 32 | 对局页河道行高度，商店与棋盘、双方棋盘之间 |
 | `hero-row-height` | 84 | 对局页英雄行高度，容纳英雄卡与金币、技能列 |
 | `hero-meta-row-height` | 24 | 英雄行金币与被动技能标记所在行的高度，也是被动标记的边长 |
@@ -137,7 +138,8 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `shop-actions-height-compact` | 52 | iPhone 商店操作行高度 |
 | `hero-row-height-compact` | 64 | iPhone 英雄行高度 |
 | `hero-card-size-compact` | 64 | iPhone 英雄卡边长，与英雄行同高 |
-| `top-bar-height-compact` | 26 | iPhone 顶部工具条高度 |
+| `pill-button-height-compact` | 24 | iPhone 胶囊按钮高度 |
+| `status-dialog-width-compact` | 280 | iPhone 对局状态模态的提示面板宽度 |
 | `portrait-size-compact` | 48 | iPhone 售货员与对手英雄头像边长 |
 | `room-hero-detail-width-compact` | 200 | iPhone 选英雄页悬停详情卡宽度 |
 | `hero-detail-width-compact` | 120 | iPhone 选英雄页悬停详情与候选卡宽度；高度由 `card_face_height` 计算 |
