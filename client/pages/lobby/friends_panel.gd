@@ -167,88 +167,25 @@ func _render() -> void:
     if GameStore.incoming_requests.is_empty():
         _incoming_box.add_child(UIControls.empty_hint(tr("ui.lobby.no_requests")))
     for request in GameStore.incoming_requests:
-        _incoming_box.add_child(_request_row(request))
+        var row := FriendRequestRow.new(request)
+        row.responded.connect(_on_respond_pressed)
+        _incoming_box.add_child(row)
 
     UIControls.clear(_friends_box)
     if GameStore.friends.is_empty():
         _friends_box.add_child(UIControls.empty_hint(tr("ui.lobby.no_friends")))
     for friend in GameStore.friends:
-        _friends_box.add_child(_friend_row(friend))
+        var row := FriendRow.new(friend)
+        row.removed.connect(_on_remove_pressed)
+        _friends_box.add_child(row)
 
     UIControls.clear(_recent_box)
     if GameStore.recent_players.is_empty():
         _recent_box.add_child(UIControls.empty_hint(tr("ui.lobby.no_recent")))
     for player in GameStore.recent_players:
-        _recent_box.add_child(_recent_row(player))
-
-
-func _request_row(request: Dictionary) -> HBoxContainer:
-    var row := HBoxContainer.new()
-    row.add_theme_constant_override("separation", UITheme.space("space-md"))
-    var player_id := str(request.get("playerId", ""))
-    row.add_child(
-        UIControls.label(
-            tr("ui.lobby.request_incoming") % [
-                str(request.get("displayName", player_id)),
-                str(request.get("playerCode", "")),
-            ],
-            UITheme.font_size("font-body"),
-            false,
-        )
-    )
-    var accept := UIControls.button(tr("ui.lobby.accept"))
-    accept.name = "Accept_%s" % player_id
-    accept.pressed.connect(_on_respond_pressed.bind(player_id, true))
-    row.add_child(accept)
-    var decline := UIControls.button(tr("ui.lobby.decline"))
-    decline.name = "Decline_%s" % player_id
-    decline.pressed.connect(_on_respond_pressed.bind(player_id, false))
-    row.add_child(decline)
-    return row
-
-
-func _friend_row(friend: Dictionary) -> HBoxContainer:
-    var row := HBoxContainer.new()
-    row.add_theme_constant_override("separation", UITheme.space("space-md"))
-    var player_id := str(friend.get("playerId", ""))
-    var status := UIWording.enum_text("friend_status", str(friend.get("status", "offline")))
-    row.add_child(
-        UIControls.label(
-            tr("ui.lobby.friend_row") % [
-                str(friend.get("displayName", player_id)),
-                str(friend.get("playerCode", "")),
-                status,
-            ],
-            UITheme.font_size("font-body"),
-            false,
-        )
-    )
-    var remove := UIControls.button(tr("ui.lobby.remove_friend"))
-    remove.name = "Remove_%s" % player_id
-    remove.pressed.connect(_on_remove_pressed.bind(player_id))
-    row.add_child(remove)
-    return row
-
-
-func _recent_row(player: Dictionary) -> HBoxContainer:
-    var row := HBoxContainer.new()
-    row.add_theme_constant_override("separation", UITheme.space("space-md"))
-    var player_id := str(player.get("playerId", ""))
-    row.add_child(
-        UIControls.label(
-            tr("ui.lobby.recent_row") % [
-                str(player.get("displayName", player_id)),
-                str(player.get("playerCode", "")),
-            ],
-            UITheme.font_size("font-body"),
-            false,
-        )
-    )
-    var add := UIControls.button(tr("ui.lobby.add_friend"))
-    add.name = "AddRecent_%s" % player_id
-    add.pressed.connect(_on_add_recent_pressed.bind(str(player.get("playerCode", ""))))
-    row.add_child(add)
-    return row
+        var row := RecentPlayerRow.new(player)
+        row.add_requested.connect(_add_friend_by_code)
+        _recent_box.add_child(row)
 
 
 func _on_close() -> void:
@@ -257,10 +194,6 @@ func _on_close() -> void:
 
 func _on_add_friend_pressed() -> void:
     _add_friend_by_code(_add_input.text)
-
-
-func _on_add_recent_pressed(code: String) -> void:
-    _add_friend_by_code(code)
 
 
 func _add_friend_by_code(raw_code: String) -> void:
