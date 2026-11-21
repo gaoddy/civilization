@@ -20,10 +20,14 @@ func _init(id: String, selected := false, hero := false) -> void:
     tooltip_text = CardDB.display_name(id)
 
     configure(UITheme.panel_style("raised-flush"), SelectableBox.Outline.INLINE)
-    if hero:
-        content().add_child(GalleryCardFace.build_hero(id, CardDB.hero(id)))
-    else:
-        content().add_child(GalleryCardFace.build(id, CardDB.card(id)))
+    var face: Control = (
+        GalleryCardFace.build_hero(id, CardDB.hero(id))
+        if hero
+        else GalleryCardFace.build(id, CardDB.card(id))
+    )
+    content().add_child(face)
+    # 内容区是普通 Control，不参与布局：卡面按满幅锚点铺满卡片。
+    face.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     activated.connect(_on_activated)
     set_selected(selected)
 

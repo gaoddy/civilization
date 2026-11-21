@@ -296,6 +296,14 @@ func _ready() -> void:
         % [expected_playstyle, str(gallery_type.text) if gallery_type != null else "缺失"],
     )
     _expect(gallery_tile.find_child("CardDesc", true, false) == null, "图鉴卡不应显示效果文本")
+    var gallery_face := gallery_tile.find_child("CardFace", true, false) as Control
+    _expect(
+        gallery_face != null
+        and absf(gallery_face.size.x - (gallery_tile.size.x - 2.0)) <= 1.0
+        and absf(gallery_face.size.y - (gallery_tile.size.y - 2.0)) <= 1.0,
+        "图鉴卡面应铺满卡片内容区：卡 %s，卡面 %s"
+        % [str(gallery_tile.size), str(gallery_face.size) if gallery_face != null else "缺失"],
+    )
     gallery_tile.queue_free()
     await get_tree().process_frame
 

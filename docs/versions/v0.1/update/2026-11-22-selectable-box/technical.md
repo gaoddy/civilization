@@ -24,7 +24,7 @@
 
 - 文件：`client/ui/selectable_box.gd`，`class_name SelectableBox extends PanelContainer`。
 - `configure(base_style: StyleBoxFlat, outline := Outline.INLINE, hover_enabled := true)`：设置底板、描边变体与是否接悬停回调，每个实例只设置一次。
-- `content() -> Control`：内容容器，调用方把展示内容挂到这里。
+- `content() -> Control`：内容容器，调用方把展示内容挂到这里；内容区是普通 `Control`，不参与容器布局，内容需自行设置锚点或尺寸。
 - `set_selected(value: bool)` / `set_hovered(value: bool)`：切换选中与悬停态。
 - `signal activated`：左键在框内按下并在 `TAP_SLOP = 12` 画布单位内松开时发出，不携带参数。
 - 变体：`Outline.INLINE` 在面板描边上表达选中；`Outline.OUTER` 在内容区外扩 `space-2xs` 显示 `SelectedFrame`。
