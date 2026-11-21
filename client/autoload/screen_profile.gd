@@ -1,7 +1,7 @@
 extends Node
 ## 设备与布局能力：设备类型、逻辑基准、逻辑点到画布换算、安全区与键盘边距。
 ##
-## 只服务布局，不含业务规则。桌面端保持 1280×720 与零边距，行为与接入前一致。
+## 只服务布局，不含业务规则。桌面端保持 1280 宽基准与零边距，高度随窗口扩展。
 ## 换算公式是纯函数，冒烟用固定输入直接断言，不依赖真实设备。
 
 const BASE_CANVAS_PHONE := Vector2i(960, 540)
@@ -31,7 +31,7 @@ func is_touch() -> bool:
     return device_kind() != DEVICE_DESKTOP
 
 
-## 逻辑视口基准：iPhone 为 960×540，iPad 与桌面为 1280×720。
+## 逻辑宽度基准：iPhone 为 960×540，iPad 与桌面为 1280×720；高度随窗口扩展。
 func base_canvas() -> Vector2i:
     if device_kind() == DEVICE_PHONE:
         return BASE_CANVAS_PHONE
@@ -46,7 +46,7 @@ func hit_min(pt: float) -> int:
 
 
 ## 安全区四边边距，单位为画布单位，顺序为左、上、右、下。
-## 已落在等比缩放留白内的边距记零，不重复扣减。
+## 已落在左右留白内的边距记零，不重复扣减；窗口上下始终由内容铺满。
 func safe_insets() -> Vector4i:
     if not is_touch():
         return Vector4i.ZERO
@@ -97,13 +97,14 @@ static func canvas_hit_min(pt: float, px_per_pt: float, base: Vector2i, window_s
     return maxi(1, int(round(pt * px_per_pt / scale)))
 
 
-## 内容矩形与安全矩形的差，换算为画布单位；留白内的边距为零。
+## 内容矩形与安全矩形的差，换算为画布单位；左右留白内的边距为零。
+## keep_width：宽度按基准等比缩放，高度始终等于窗口高度；宽度不足时左右居中留白。
 static func canvas_insets(window_size: Vector2, base: Vector2i, safe: Rect2i, window_position: Vector2) -> Vector4i:
     var scale := canvas_scale(window_size, base)
     if scale <= 0.0:
         return Vector4i.ZERO
-    var content := Vector2(base) * scale
-    var origin := (window_size - content) * 0.5
+    var content := Vector2(base.x * scale, window_size.y)
+    var origin := Vector2((window_size.x - content.x) * 0.5, 0.0)
     var safe_position := Vector2(safe.position) - window_position
     var safe_end := Vector2(safe.end) - window_position
     return Vector4i(

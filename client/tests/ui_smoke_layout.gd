@@ -50,6 +50,7 @@ func _ready() -> void:
     await _check_desktop()
     await _check_touch()
     await _check_compact()
+    await _check_tall()
     ScreenProfile.set_device_for_test("")
     if _failures > 0:
         get_tree().quit(1)
@@ -247,6 +248,87 @@ func _check_game_compact(compact: Vector2) -> void:
             hand_card != null and hand_card.find_child("CardDesc", true, false) != null,
             "手牌卡应保留介绍",
         )
+    host.queue_free()
+    GameStore.view = saved_view
+    GameStore.turn = saved_turn
+    GameStore.phase = saved_phase
+    GameStore.player_id = saved_player
+    await get_tree().process_frame
+
+
+## 非 16:9 的逻辑高度：16:10 桌面 1280×800 与 iPad 4:3 1280×960 下
+## 六个页面铺满宿主，关键节点不越界；对局页手牌仍贴底。
+func _check_tall() -> void:
+    ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_DESKTOP)
+    for size in [Vector2(1280, 800), Vector2(1280, 960)]:
+        for page_case in PAGES:
+            var host := Control.new()
+            host.name = "TallHost"
+            host.size = size
+            add_child(host)
+            var page := await _instantiate_into(str(page_case["path"]), host)
+            if page != null:
+                _check(
+                    page.size.is_equal_approx(size),
+                    "%s 在 %s 下应铺满宿主，实际 %s"
+                    % [page_case["path"], str(size), str(page.size)],
+                )
+                var bounds := Rect2(host.get_global_rect().position, size).grow(1.0)
+                for node_name in page_case["deep_names"]:
+                    var node := page.find_child(str(node_name), true, false)
+                    _check(node is Control, "%s 的 %s 应为 Control" % [page_case["path"], node_name])
+                    if node is Control:
+                        _check(
+                            bounds.encloses((node as Control).get_global_rect()),
+                            "%s 的 %s 在 %s 下越界：%s"
+                            % [page_case["path"], node_name, str(size), str((node as Control).get_global_rect())],
+                        )
+            host.queue_free()
+            await get_tree().process_frame
+    await _check_game_tall(Vector2(1280, 800))
+
+
+## 16:10 高度下对局页：手牌行仍贴底，棋盘、商店与积分榜不越界。
+func _check_game_tall(size: Vector2) -> void:
+    var saved_view: Dictionary = GameStore.view
+    var saved_turn := GameStore.turn
+    var saved_phase := GameStore.phase
+    var saved_player := GameStore.player_id
+    GameStore.player_id = "p0"
+    GameStore.turn = 3
+    GameStore.phase = Protocol.PHASE_RECRUIT
+    GameStore.view = Fixture.game_view()
+
+    var host := Control.new()
+    host.name = "TallGameHost"
+    host.size = size
+    add_child(host)
+    var page := await _instantiate_into("res://scenes/game.tscn", host)
+    if page != null:
+        var bounds := Rect2(host.get_global_rect().position, size).grow(1.0)
+        var hand_strip := page.find_child("HandStrip", true, false) as Control
+        var hand_row := page.find_child("HandRow", true, false) as Control
+        _check(hand_strip != null, "对局页缺少 HandStrip")
+        if hand_strip != null:
+            _check(
+                bounds.encloses(hand_strip.get_global_rect()),
+                "手牌行在 %s 下越界：%s" % [str(size), str(hand_strip.get_global_rect())],
+            )
+            _check(
+                hand_strip.get_global_rect().end.y >= size.y - 8.0,
+                "手牌行应贴住页面底部，实际底边 %.1f" % hand_strip.get_global_rect().end.y,
+            )
+        if hand_row != null:
+            _check(
+                hand_row.get_global_rect().end.y >= size.y - 8.0,
+                "手牌卡应贴住页面底部，实际底边 %.1f" % hand_row.get_global_rect().end.y,
+            )
+        for node_name in ["BoardRow", "ShopRow", "PlayersPanel"]:
+            var node := page.find_child(str(node_name), true, false) as Control
+            _check(
+                node != null and bounds.encloses(node.get_global_rect()),
+                "%s 在 %s 下越界或缺失" % [node_name, str(size)],
+            )
     host.queue_free()
     GameStore.view = saved_view
     GameStore.turn = saved_turn
