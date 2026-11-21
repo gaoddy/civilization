@@ -6,15 +6,14 @@
 
 ## 用途
 
-同一玩家编号在本机第一次进入对局时，用非阻塞高亮与手牌上方的提示条介绍购买、出战、结束招募与战斗；不暂停对局、不拦截输入、不强制完成步骤。玩家可在对局顶部工具条点「提示」手动重看。
+对局页默认隐藏的非阻塞引导：玩家点顶部工具条「提示」后，用高亮与手牌上方的提示条介绍购买、出战、结束招募与战斗；不暂停对局、不拦截输入、不强制完成步骤。
 
 ## 挂载与接口
 
-- 由 `client/pages/game/game.gd` 在对局页装配完成后创建，`target_root` 指向对局页自身，节点名为 `FirstGameGuide`。
-- `start()`：优先恢复 `GameStore.guide_step`；否则检查本机 `seen` 记录，首次从第 1 步开始。
-- `show_manual()`：从第 1 步开始手动重看，不读写 `seen`。
-- `set_phase(phase, self_view)`：对局页每次刷新时同步阶段与本人视图，用于阶段门控和步骤 2/3 的条件跳过。
-- `hide()`：对局结束或离开对局时收起，不写 `seen`。
+- 由 `client/pages/game/game.gd` 在对局页装配完成后创建，`target_root` 指向对局页自身，节点名为 `FirstGameGuide`；进入对局时保持隐藏。
+- `show_manual()`：点顶部工具条「提示」时调用，从当前阶段对应的步骤开始展示。
+- `set_phase(phase, self_view)`：对局页每次刷新时同步阶段，用于阶段门控。
+- `hide()`：对局结束或离开对局时收起。
 
 ## 结构层级与节点
 
@@ -37,25 +36,22 @@ FirstGameGuide（CanvasLayer，layer 100）
 
 ## 步骤表
 
-| 步骤 | 阶段 | 目标节点 | 展示条件 | 文案键 |
-| --- | --- | --- | --- | --- |
-| 1 商店与金币 | `Recruit` | `ShopPanel`、`ShopRow`、`GoldTile` | 无 | `ui.guide.step1.title` / `ui.guide.step1.body` |
-| 2 出战 | `Recruit` | `HandRow`、`BoardRow` | 本人手牌非空 | `ui.guide.step2.title` / `ui.guide.step2.body` |
-| 3 结束招募 | `Recruit` | `RecruitEndButton`、`RecruitTimerLabel` | 本人棋盘非空 | `ui.guide.step3.title` / `ui.guide.step3.body` |
-| 4 战斗 | `Combat` | `CenterPanel`、`ReportLayer` | 无 | `ui.guide.step4.title` / `ui.guide.step4.body` |
+| 步骤 | 阶段 | 目标节点 | 文案键 |
+| --- | --- | --- | --- |
+| 1 商店与金币 | `Recruit` | `ShopPanel`、`ShopRow`、`GoldTile` | `ui.guide.step1.title` / `ui.guide.step1.body` |
+| 2 出战 | `Recruit` | `HandRow`、`BoardRow` | `ui.guide.step2.title` / `ui.guide.step2.body` |
+| 3 结束招募 | `Recruit` | `RecruitEndButton`、`RecruitTimerLabel` | `ui.guide.step3.title` / `ui.guide.step3.body` |
+| 4 战斗 | `Combat` | `CenterPanel`、`ReportLayer` | `ui.guide.step4.title` / `ui.guide.step4.body` |
 
-- 步骤 2/3 的条件不满足时自动跳到下一步，不阻塞后续步骤。
-- 阶段与步骤不匹配时隐藏引导但保留当前步骤；回到匹配阶段重新显示。
+- 从「提示」打开时从当前阶段对应的步骤开始，非招募/战斗阶段回退到第 1 步；之后按步骤顺序推进，不按手牌/棋盘条件跳步。
+- 引导打开期间阶段变化时切换到新阶段对应的步骤；`GameOver` 时收起。
 - `GoldTile` 是英雄行技能列顶部的金币格，供步骤 1 定位；步骤 3 的 `RecruitEndButton` 在倒计时悬停翻转后才可见，高亮取 `RecruitTimerLabel` 与翻转区的并集。
 
-## 本地记录与会话恢复
+## 打开与关闭
 
-- 文件：`user://first_game_guide.cfg`，`ConfigFile` 格式；段名 `seen`，键为 `playerId`，值为 `true`。
-- 读写失败只打印警告，不影响本局：读取失败按「未看过」处理，写入失败只影响下次是否再次自动展示。
-- `GameStore.player_id` 为空时不读写、不自动展示。
-- 当前步骤写回 `GameStore.guide_step`；`-1` 表示未在引导中。断线重连导致场景重建时，`start()` 从该值恢复当前步骤。
-- 跳过或完成时写入 `seen` 并清空 `guide_step`；手动重看不写 `seen`，关闭后同样清空会话步骤。
-- 对局结束只收起，不写 `seen`；未完成时下次进入对局仍会从第 1 步自动展示。
+- 进入对局不自动展示；只由顶部工具条「提示」打开。
+- 关闭方式为「跳过」或「完成」，只收起覆盖层，不改变对局状态。
+- 不读写本机记录，也不在断线重连导致场景重建后恢复引导。
 
 ## 禁用场景
 

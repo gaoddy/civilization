@@ -69,7 +69,7 @@ var _aim: GameAimLayer
 # 本局卡牌图鉴覆盖层：打开时盖住对局但不切换场景，关闭后对局状态原样保留。
 var _gallery: CardGallery
 
-# 首局引导：非阻塞覆盖层，步骤随阶段与本人视图变化。
+# 首局引导：由顶部「提示」打开的非阻塞覆盖层，步骤随阶段变化。
 var _guide: FirstGameGuide
 
 
@@ -82,7 +82,6 @@ func _ready() -> void:
     Net.connected.connect(_refresh_connection)
     Net.disconnected.connect(_refresh_connection)
     _refresh()
-    _guide.start()
     _update_timer()
     UILayout.safe_area(self)
 

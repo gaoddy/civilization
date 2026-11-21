@@ -2839,7 +2839,6 @@ func _check_skill_aim() -> void:
     var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
-    await _dismiss_guide(instance)
     var aim = instance.find_child("AimLayer", true, false)
     var power = instance.find_child("HeroPowerButton0", true, false)
     var card := _board_card(instance, "mi_1")
@@ -2912,7 +2911,6 @@ func _check_effect_drag_aim_visual() -> void:
     var instance := await _check_scene("res://pages/game/game.tscn", false)
     if instance == null:
         return
-    await _dismiss_guide(instance)
     var aim = instance.find_child("AimLayer", true, false)
     var card := instance.find_child("HandCard0", true, false)
     var target := _board_card(instance, "mi_1")
@@ -2950,14 +2948,6 @@ func _check_effect_drag_aim_visual() -> void:
     GameStore.view = {}
     GameStore.turn = 1
     _fake_disconnect()
-
-
-## 首局引导的底栏会盖住英雄技能按钮：真实输入用例先卸掉引导。
-func _dismiss_guide(instance: Node) -> void:
-    var guide := instance.find_child("FirstGameGuide", true, false)
-    if guide != null:
-        guide.queue_free()
-        await get_tree().process_frame
 
 
 ## 棋盘上按 `minion_id` 找随从卡。

@@ -36,8 +36,6 @@ var game_seed := ""
 var self_stats: Dictionary = {}
 ## `RoomClosed` 的原因：`kicked`（被移出）或 `dissolved`（房间解散）。
 var room_closed_reason := ""
-## 首局引导当前步骤；-1 表示未在引导中，供场景重建后恢复。
-var guide_step := -1
 var last_error: Dictionary = {}
 var last_combat: Dictionary = {}
 ## `last_combat` 所属回合；与当前 `turn` 不一致时不展示，避免旧战报被当成新战斗。
@@ -89,7 +87,6 @@ func handle(type: String, payload: Dictionary) -> void:
             phase = str(payload.get("phase", Protocol.PHASE_LOBBY))
             room_changed.emit()
         Protocol.MSG_GAME_STARTED:
-            guide_step = -1
             _apply_view(payload.get("view", {}))
             game_started.emit()
             view_changed.emit()
@@ -167,7 +164,6 @@ func reset_room() -> void:
     game_seed = ""
     self_stats = {}
     room_closed_reason = ""
-    guide_step = -1
     last_error = {}
     last_combat = {}
     last_combat_turn = -1
