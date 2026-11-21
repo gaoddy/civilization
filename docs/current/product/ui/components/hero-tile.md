@@ -31,4 +31,4 @@
 
 ## 使用者
 
-- 当前无页面使用（预留）：房间页候选英雄卡由 `room.gd` 私有实现，对局页英雄卡为 `GameHeroCard`（64×84）。
+- 当前无页面使用（预留）：房间页候选英雄卡为 `RoomHeroCard`（`client/scenes/room_hero_card.gd`），对局页英雄卡为 `GameHeroCard`（64×84）。

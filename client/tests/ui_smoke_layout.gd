@@ -21,8 +21,8 @@ const PAGES := [
     },
     {
         "path": "res://scenes/room.tscn",
-        "children": 4,
-        "direct_names": ["SkillDismissLayer", "DraftPanel", "SkillLayer"],
+        "children": 3,
+        "direct_names": ["DraftPanel", "HeroDetailLayer"],
         "deep_names": ["ConfirmButton", "OtherPlayers", "HeroCandidates"],
     },
     {

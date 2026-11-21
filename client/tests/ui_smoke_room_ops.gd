@@ -29,11 +29,19 @@ func _check_host_controls() -> void:
             hero_card.find_child("Watermark", true, false) == null,
             "有卡面图时不应显示首字水印",
         )
-        await _push_click(instance, hero_card.get_global_rect().get_center())
+        await _hover(instance, hero_card, hero_card.size * 0.5)
         _expect(
             instance.find_child("HeroPortrait", true, false) != null,
-            "技能浮层应显示英雄立绘",
+            "悬停详情应显示英雄立绘",
         )
+        var detail_panel = instance.find_child("RoomHeroDetail", true, false)
+        _expect(detail_panel != null and detail_panel.visible, "悬停应显示详情卡")
+        await _push_motion(instance, Vector2(4, 4))
+        _expect(detail_panel != null and not detail_panel.visible, "移出候选卡应关闭详情")
+
+        await _push_click(instance, hero_card.get_global_rect().get_center())
+        var selected_frame = hero_card.find_child("SelectedFrame", true, false)
+        _expect(selected_frame != null and selected_frame.is_visible_in_tree(), "点击候选卡应显示选中框")
 
     var dissolve = instance.find_child("DissolveButton", true, false)
     _expect(dissolve != null and dissolve.is_visible_in_tree(), "房主应看到解散房间按钮")

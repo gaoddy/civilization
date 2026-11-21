@@ -3,8 +3,7 @@ extends Control
 ##
 ## 本页不显示房间码，也没有离开房间入口；点卡选中、点确认一次完成「选英雄 + 准备」。
 ## 候选由服务端分配且只发给本人，因此这里从不展示别人的英雄。
-
-const CARD_SIZE := Vector2(160, 200)
+## 鼠标悬停候选卡时在候选行左右外侧显示详情，移开关闭；点击只切换选中框。
 
 var _others: HBoxContainer
 var _candidates: HBoxContainer
@@ -12,11 +11,18 @@ var _confirm: Button
 var _dissolve: Button
 var _status: Label
 var _invite_box: HBoxContainer
-var _dismiss: Control
-var _skill_layer: Control
-var _skill_panel: VBoxContainer
+var _detail_layer: RoomHeroDetailLayer
 
 var _selected_hero := ""
+var _rendered_ids: Array[String] = []
+## 最近一次鼠标事件的画布坐标；候选重建后据此判断指针是否仍停在原卡上。
+var _pointer := Vector2.ZERO
+
+var _touch_index := -1
+var _touch_start := Vector2.ZERO
+var _touch_elapsed_ms := 0.0
+var _touch_card: RoomHeroCard = null
+var _touch_cancelled := false
 
 
 func _ready() -> void:
@@ -38,20 +44,11 @@ func _ready() -> void:
 func _build() -> void:
     add_child(UI.background())
 
-    # 点浮层外的空白关闭选中：铺满全屏、位于内容之下，候选卡仍然优先接收点击。
-    _dismiss = Control.new()
-    _dismiss.name = "SkillDismissLayer"
-    _dismiss.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _dismiss.mouse_filter = Control.MOUSE_FILTER_STOP
-    _dismiss.visible = false
-    _dismiss.gui_input.connect(_on_dismiss_input)
-    add_child(_dismiss)
-
     # 面板铺满整屏、尺寸不随内容变化；内容块在面板内水平与垂直居中。
     var panel := UI.card_panel("surface")
     panel.name = "DraftPanel"
     panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-    # 面板只做视觉容器：空白处的点击要落到 `SkillDismissLayer`。
+    # 面板只做视觉容器：空白处的点击由页面 `_input` 处理，候选卡仍优先命中。
     panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(panel)
 
@@ -63,7 +60,7 @@ func _build() -> void:
     var root := VBoxContainer.new()
     root.name = "DraftColumn"
     root.add_theme_constant_override("separation", UITheme.space("space-md"))
-    # 页面容器一律放行鼠标：空白处的点击要落到 `SkillDismissLayer`，候选卡自己处理点击。
+    # 页面容器一律放行鼠标：空白处的点击落到页面 `_input`，候选卡仍优先接收悬停与点击。
     root.mouse_filter = Control.MOUSE_FILTER_IGNORE
     center.add_child(root)
 
@@ -121,32 +118,10 @@ func _build() -> void:
     _status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     root.add_child(_status)
 
-    _build_skill_layer()
-
-
-func _build_skill_layer() -> void:
-    # 视觉层在最上层但整体忽略鼠标：浮层不得挡住候选卡与确认按钮。
-    _skill_layer = Control.new()
-    _skill_layer.name = "SkillLayer"
-    _skill_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _skill_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _skill_layer.visible = false
-    add_child(_skill_layer)
-
-    var panel := UI.card_panel("raised")
-    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    panel.name = "SkillPanel"
-    panel.set_anchors_preset(Control.PRESET_CENTER)
-    panel.custom_minimum_size = Vector2(320, 0)
-    # 居中预设按控件当前位置摆放；尺寸由内容撑开时向两侧生长才是真正居中。
-    panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-    panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-    _skill_layer.add_child(panel)
-
-    _skill_panel = VBoxContainer.new()
-    _skill_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _skill_panel.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    panel.add_child(_skill_panel)
+    # 悬停详情层位于内容之上但整体忽略鼠标：详情不得挡住候选卡与确认按钮。
+    _detail_layer = RoomHeroDetailLayer.new()
+    add_child(_detail_layer)
+    _detail_layer.row = _candidates
 
 
 func _refresh() -> void:
@@ -156,7 +131,6 @@ func _refresh() -> void:
     _render_others()
     _render_candidates()
     _render_invites()
-    _show_skill(_selected_hero)
     _sync_state()
 
 
@@ -195,151 +169,165 @@ func _render_others() -> void:
         _others.add_child(UI.empty_hint(tr("ui.room.waiting_for_players")))
 
 
-## 底部：本人候选卡。选中态加描边，已确认后全部禁用。
+## 底部：本人候选卡。选中态用外扩边框，已确认后全部锁定但悬停仍可看详情。
 func _render_candidates() -> void:
-    UI.clear(_candidates)
-
     var candidates := GameStore.my_hero_candidates()
-    if candidates.is_empty():
-        _candidates.add_child(UI.empty_hint(tr("ui.room.assigning_hero")))
-        return
-
-    var locked := _is_confirmed()
+    var ids: Array[String] = []
     for hero_id in candidates:
-        var id := str(hero_id)
-        var card := _build_card(id, locked)
+        ids.append(str(hero_id))
+
+    if ids.is_empty():
+        if not _rendered_ids.is_empty() or _candidates.get_child_count() == 0:
+            _detail_layer.reset()
+            _clear_touch()
+            UI.clear(_candidates)
+            _candidates.add_child(UI.empty_hint(tr("ui.room.assigning_hero")))
+            _rendered_ids = []
+        return
+
+    # 候选未变化时只更新状态，不重建卡片：重建会丢掉正在悬停的详情。
+    if ids == _rendered_ids and _candidates.get_child_count() == ids.size():
+        var locked := _is_confirmed()
+        for index in ids.size():
+            var existing := _candidates.get_child(index) as RoomHeroCard
+            if existing != null:
+                existing.set_selected(ids[index] == _selected_hero)
+                existing.set_locked(locked)
+        return
+
+    var hovered := _detail_layer.visible_hero_id()
+    _detail_layer.reset()
+    _clear_touch()
+    UI.clear(_candidates)
+    var locked := _is_confirmed()
+    for id in ids:
+        var card := RoomHeroCard.new()
+        card.setup(id, id == _selected_hero, locked)
         _candidates.add_child(card)
+        _detail_layer.track(card, {"detail_kind": "hero", "heroId": id})
+    _rendered_ids = ids
+    # 容器要到下一帧才排好新卡位置；恢复悬停必须等布局完成，否则命中用的是旧矩形。
+    if hovered != "" and ids.has(hovered):
+        _restore_hover.call_deferred(hovered)
 
 
-## 候选卡：玩法色封面铺满、居中首字水印、底部居中名字。
-func _build_card(hero_id: String, locked: bool) -> PanelContainer:
-    var entry := CardDB.hero(hero_id)
-    var playstyle := CardDB.primary_playstyle(entry)
-    var card := PanelContainer.new()
-    card.name = "HeroCard_%s" % hero_id
-    card.custom_minimum_size = CARD_SIZE
-    card.mouse_filter = Control.MOUSE_FILTER_STOP
-
-    var box := UITheme.panel_style("raised")
-    # 封面要铺满整张卡：面板样式默认带 `space-lg` 内边距，会把封面缩进一圈。
-    box.set_content_margin_all(0)
-    if hero_id == _selected_hero:
-        box.border_color = UITheme.color("color-accent")
-        box.set_border_width_all(2)
-    card.add_theme_stylebox_override("panel", box)
-
-    var stack := Control.new()
-    stack.custom_minimum_size = CARD_SIZE
-    stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    card.add_child(stack)
-
-    var cover := ColorRect.new()
-    cover.color = UITheme.playstyle_cover(playstyle)
-    cover.set_anchors_preset(Control.PRESET_FULL_RECT)
-    cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    stack.add_child(cover)
-
-    # 有卡面时叠图并隐藏首字水印：方形卡面四角向内收，落在卡片圆角以内。
-    var cover_art := UI.art_layer(CardDB.art_path(hero_id, "card_face"), "CoverArt")
-    if cover_art != null:
-        var inset := UITheme.metric("card-cover-inset")
-        cover_art.offset_left = inset
-        cover_art.offset_top = inset
-        cover_art.offset_right = -inset
-        cover_art.offset_bottom = -inset
-        stack.add_child(cover_art)
-    else:
-        var watermark := UI.label(CardDB.display_name(hero_id).substr(0, 1), 72, false)
-        watermark.name = "Watermark"
-        watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
-        watermark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-        watermark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-        watermark.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
-        watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        stack.add_child(watermark)
-
-    var name_label := UI.label(CardDB.display_name(hero_id), UITheme.font_size("font-title"), false)
-    name_label.name = "Name"
-    name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    name_label.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-    name_label.offset_top = -UITheme.space("space-2xl")
-    name_label.offset_bottom = -UITheme.space("space-md")
-    name_label.add_theme_color_override("font_color", UITheme.color("color-text"))
-    name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    # 名字叠在卡面上：半透明底保证有图时仍然可读。
-    var name_style := StyleBoxFlat.new()
-    name_style.bg_color = UITheme.alpha("color-bg", 0.72)
-    name_style.set_content_margin_all(0)
-    name_label.add_theme_stylebox_override("normal", name_style)
-    stack.add_child(name_label)
-
-    if locked:
-        card.modulate = Color(1, 1, 1, UITheme.opacity("opacity-dim"))
-    else:
-        card.gui_input.connect(_on_card_input.bind(hero_id))
-    return card
-
-
-func _on_card_input(event: InputEvent, hero_id: String) -> void:
-    if not (event is InputEventMouseButton):
+## 候选重建后，若指针仍停在原英雄卡上则恢复悬停详情。
+func _restore_hover(hero_id: String) -> void:
+    if ScreenProfile.is_touch():
         return
-    var mouse := event as InputEventMouseButton
-    if not mouse.pressed or mouse.button_index != MOUSE_BUTTON_LEFT:
-        return
+    _sync_hover_styles()
+    for child in _candidates.get_children():
+        var card := child as RoomHeroCard
+        if card != null and card.hero_id == hero_id and card.get_global_rect().has_point(_pointer):
+            _detail_layer.show_for(card, hero_id)
+            return
+
+
+## 指针所在卡片显示悬停描边：重建后新卡收不到 `mouse_entered`，由页面按指针位置统一同步。
+func _sync_hover_styles() -> void:
+    for child in _candidates.get_children():
+        var card := child as RoomHeroCard
+        if card != null:
+            card.set_hovered(card.get_global_rect().has_point(_pointer))
+
+
+## 切换选中：只更新选中框，不重建候选卡；再次点击同一张保持选中。
+func _select(hero_id: String) -> void:
     if _is_confirmed():
         return
-    if _selected_hero == hero_id:
-        _select("")
-    else:
-        _select(hero_id)
-
-
-## 点浮层以外的空白：取消选中并收起浮层。
-func _on_dismiss_input(event: InputEvent) -> void:
-    if not (event is InputEventMouseButton):
-        return
-    var mouse := event as InputEventMouseButton
-    if mouse.pressed and mouse.button_index == MOUSE_BUTTON_LEFT:
-        _select("")
-
-
-## 切换选中态：重绘候选卡、换浮层内容并刷新按钮可用性。
-func _select(hero_id: String) -> void:
     _selected_hero = hero_id
-    _render_candidates()
-    _show_skill(hero_id)
+    for child in _candidates.get_children():
+        var card := child as RoomHeroCard
+        if card != null:
+            card.set_selected(card.hero_id == hero_id)
     _sync_state()
 
 
-func _show_skill(hero_id: String) -> void:
-    UI.clear(_skill_panel)
-    _dismiss.visible = hero_id != ""
-    if hero_id == "":
-        _skill_layer.visible = false
+## 桌面左键点击候选卡选中；触控端短按选中，长按交给详情层。
+func _input(event: InputEvent) -> void:
+    if ScreenProfile.is_touch():
+        if event is InputEventScreenTouch:
+            if event.pressed:
+                _begin_touch(event)
+            else:
+                _end_touch(event)
+        elif event is InputEventScreenDrag:
+            _drag_touch(event)
         return
-    # 浮层顶部叠立绘：竖版保持原始比例，无图时只显示文字内容。
-    var portrait := UI.art_layer(
-        CardDB.art_path(hero_id, "portrait"),
-        "HeroPortrait",
-        TextureRect.STRETCH_KEEP_ASPECT_CENTERED,
-    )
-    if portrait != null:
-        portrait.custom_minimum_size = Vector2(
-            UITheme.metric("hero-portrait-width"),
-            UITheme.metric("hero-portrait-height"),
-        )
-        portrait.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-        _skill_panel.add_child(portrait)
-    var title := UI.label(CardDB.display_name(hero_id), UITheme.font_size("font-title"), false)
-    _skill_panel.add_child(title)
-    var introduction := CardDB.hero_introduction(hero_id)
-    if introduction != "":
-        var intro := UI.label(introduction, UITheme.font_size("font-body-sm"))
-        intro.name = "HeroIntroduction"
-        intro.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-        _skill_panel.add_child(intro)
-    UI.skill_list(_skill_panel, CardDB.hero(hero_id).get("skills", []))
-    _skill_layer.visible = true
+    if event is InputEventMouseButton:
+        var mouse := event as InputEventMouseButton
+        _pointer = _canvas_point(mouse.position)
+        if mouse.pressed and mouse.button_index == MOUSE_BUTTON_LEFT:
+            var card := _card_at_point(_pointer)
+            if card != null:
+                _select(card.hero_id)
+    elif event is InputEventMouseMotion:
+        _pointer = _canvas_point((event as InputEventMouseMotion).position)
+        _sync_hover_styles()
+
+
+## 触控长按计时与详情层同源：都按帧 delta 累加，避免两套时钟在 450ms 附近判定不一致。
+func _process(delta: float) -> void:
+    if _touch_index == -1 or _touch_cancelled:
+        return
+    _touch_elapsed_ms += delta * 1000.0
+
+
+func _begin_touch(event: InputEventScreenTouch) -> void:
+    if _touch_index != -1 or _is_confirmed():
+        return
+    var point := _canvas_point(event.position)
+    var card := _card_at_point(point)
+    if card == null:
+        return
+    _touch_index = event.index
+    _touch_start = point
+    _touch_elapsed_ms = 0.0
+    _touch_card = card
+    _touch_cancelled = false
+
+
+func _drag_touch(event: InputEventScreenDrag) -> void:
+    if event.index != _touch_index or _touch_cancelled:
+        return
+    if _canvas_point(event.position).distance_to(_touch_start) > GameDetailLayer.TOUCH_CANCEL_DISTANCE:
+        _touch_cancelled = true
+
+
+func _end_touch(event: InputEventScreenTouch) -> void:
+    if event.index != _touch_index:
+        return
+    var card := _touch_card
+    var cancelled := _touch_cancelled
+    var elapsed := _touch_elapsed_ms
+    _clear_touch()
+    if card == null or not is_instance_valid(card) or cancelled or elapsed >= float(GameDetailLayer.LONG_PRESS_MS):
+        return
+    if _is_confirmed() or card.locked:
+        return
+    if not card.get_global_rect().has_point(_canvas_point(event.position)):
+        return
+    _select(card.hero_id)
+
+
+func _clear_touch() -> void:
+    _touch_index = -1
+    _touch_card = null
+    _touch_cancelled = false
+    _touch_elapsed_ms = 0.0
+
+
+## 视口坐标转为画布坐标，与详情层的 `_input` 命中同一坐标系。
+func _canvas_point(viewport_point: Vector2) -> Vector2:
+    return get_viewport().get_canvas_transform().affine_inverse() * viewport_point
+
+
+func _card_at_point(point: Vector2) -> RoomHeroCard:
+    for child in _candidates.get_children():
+        var card := child as RoomHeroCard
+        if card != null and card.is_visible_in_tree() and card.get_global_rect().has_point(point):
+            return card
+    return null
 
 
 ## 好友邀请入口：在线且不在房间内的好友可直接邀请，其余置灰。

@@ -162,7 +162,7 @@ func _check_room_null_hero() -> void:
     GameStore.room_players = []
 
 
-## 选英雄页：顶部只显示他人名字与确认状态，底部是本人候选卡，确认按钮与技能浮层就位。
+## 选英雄页：顶部只显示他人名字与确认状态，底部是本人候选卡，悬停详情与选中框就位。
 func _check_room_hero_picker() -> void:
     GameStore.player_id = "p0"
     GameStore.room_id = "r_test"
@@ -193,15 +193,20 @@ func _check_room_hero_picker() -> void:
     _expect(candidates != null and candidates.get_child_count() == 4,
         "本人候选应渲染 4 张卡，实际：%d" % (candidates.get_child_count() if candidates != null else 0))
 
-    var clickable := 0
+    var selectable := 0
     if candidates != null:
         for card in candidates.get_children():
-            if card is PanelContainer and card.gui_input.get_connections().size() > 0:
-                clickable += 1
-    _expect(clickable == 4, "未确认时 4 张候选卡都应可点，实际：%d" % clickable)
+            if card.has_method("set_selected") and card.get("locked") != true:
+                selectable += 1
+    _expect(selectable == 4, "未确认时 4 张候选卡都应可选，实际：%d" % selectable)
 
     _expect(instance.find_child("ConfirmButton", true, false) != null, "缺少 ConfirmButton")
-    _expect(instance.find_child("SkillLayer", true, false) != null, "缺少 SkillLayer")
+    var detail_layer := instance.find_child("HeroDetailLayer", true, false)
+    _expect(detail_layer != null, "缺少 HeroDetailLayer")
+    _expect(detail_layer != null and not detail_layer.visible, "悬停详情层初始应隐藏")
+    var detail_panel := instance.find_child("RoomHeroDetail", true, false)
+    _expect(detail_panel != null, "缺少 RoomHeroDetail")
+    _expect(detail_panel != null and not detail_panel.visible, "悬停详情卡初始应隐藏")
     var status := instance.find_child("StatusLabel", true, false)
     _expect(status != null, "缺少 StatusLabel")
 
@@ -245,29 +250,117 @@ func _check_room_hero_picker() -> void:
             ],
         )
 
-    # 点击第一张候选卡：进入选中态并弹出技能浮层。
+    # 悬停第一张候选卡：左右外侧显示详情，移出关闭；详情层不得拦截鼠标。
     if candidates != null and candidates.get_child_count() > 0:
         var first: Control = candidates.get_child(0)
-        first.emit_signal("gui_input", _press_event())
+        var hover_point := first.get_global_rect().get_center()
+        await _hover(instance, first, first.size * 0.5)
+        _expect(detail_layer != null and detail_layer.visible, "悬停候选卡应显示详情层")
+        _expect(detail_panel != null and detail_panel.visible, "悬停候选卡应显示详情卡")
+        _expect(
+            detail_panel != null and detail_panel.find_child("HeroPortrait", true, false) != null,
+            "悬停详情应显示英雄立绘",
+        )
+        _expect(detail_layer != null and not _blocks_mouse(detail_layer), "悬停详情层及其子节点不得拦截鼠标点击")
+        if detail_panel != null:
+            var row_rect: Rect2 = candidates.get_global_rect()
+            var left_rect: Rect2 = detail_panel.get_global_rect()
+            _expect(not left_rect.intersects(row_rect), "左侧卡片的详情不应遮挡候选行")
+            _expect(left_rect.end.x <= row_rect.position.x + 0.5, "左侧卡片的详情应挂在候选行左侧")
+
+            var fourth: Control = candidates.get_child(candidates.get_child_count() - 1)
+            await _hover(instance, fourth, fourth.size * 0.5)
+            var right_rect: Rect2 = detail_panel.get_global_rect()
+            _expect(not right_rect.intersects(row_rect), "右侧卡片的详情不应遮挡候选行")
+            _expect(right_rect.position.x >= row_rect.end.x - 0.5, "右侧卡片的详情应挂在候选行右侧")
+
+            # 详情卡尺寸必须跟随当前英雄内容收缩：面板不在容器内，只靠最小尺寸不会自动变矮。
+            var heights: Array[float] = []
+            for card in candidates.get_children():
+                var body: Control = card
+                await _hover(instance, body, body.size * 0.5)
+                heights.append(detail_panel.get_combined_minimum_size().y)
+            var shortest := 0
+            for index in heights.size():
+                if heights[index] < heights[shortest]:
+                    shortest = index
+            var short_card: Control = candidates.get_child(shortest)
+            await _hover(instance, short_card, short_card.size * 0.5)
+            _expect(
+                absf(detail_panel.size.y - heights[shortest]) <= 1.0,
+                "详情卡高度应等于当前英雄内容高度，实际 %s，期望 %s" % [
+                    detail_panel.size.y, heights[shortest],
+                ],
+            )
+        await _push_motion(instance, Vector2(4, 4))
+        _expect(detail_panel != null and not detail_panel.visible, "移出候选卡应关闭详情")
+
+        # 点击第一张候选卡：只加选中框，不弹居中浮层。
+        await _push_click(instance, hover_point)
+        var frame := candidates.get_child(0).find_child("SelectedFrame", true, false)
+        _expect(frame != null and frame.is_visible_in_tree(), "点击候选卡应显示选中框")
+        _expect(
+            frame != null
+            and frame.get_global_rect().size.x > candidates.get_child(0).get_global_rect().size.x
+            and frame.get_global_rect().size.y > candidates.get_child(0).get_global_rect().size.y,
+            "选中框应外扩到卡片之外",
+        )
+        await _push_click(instance, hover_point)
+        frame = candidates.get_child(0).find_child("SelectedFrame", true, false)
+        _expect(frame != null and frame.is_visible_in_tree(), "再次点击同一张应保持选中")
+        await _push_click(instance, Vector2(4, 4))
+        frame = candidates.get_child(0).find_child("SelectedFrame", true, false)
+        _expect(frame != null and frame.is_visible_in_tree(), "点空白不应取消选中")
+        _expect(detail_panel != null and not detail_panel.visible, "点空白应关闭悬停详情")
+
+        # 单独验证「空白点击」路径：只推送按下/松开，不推送移动事件。
+        var second_before := candidates.get_child(1)
+        await _hover(instance, second_before, second_before.size * 0.5)
+        _expect(detail_panel != null and detail_panel.visible, "空白点击前应先显示详情")
+        await _push_button(instance, Vector2(4, 4), true)
+        await _push_button(instance, Vector2(4, 4), false)
+        _expect(detail_panel != null and not detail_panel.visible, "空白点击（无移动）应关闭悬停详情")
+
+        # 点击另一张卡：选中框移动到新卡，原卡取消。
+        var other_card: Control = candidates.get_child(2)
+        await _push_click(instance, other_card.get_global_rect().get_center())
+        var moved_frame := candidates.get_child(2).find_child("SelectedFrame", true, false)
+        var old_frame := candidates.get_child(0).find_child("SelectedFrame", true, false)
+        _expect(moved_frame != null and moved_frame.is_visible_in_tree(), "点击另一张卡应移动选中框")
+        _expect(old_frame != null and not old_frame.is_visible_in_tree(), "点击另一张卡后原选中框应取消")
+        await _push_click(instance, hover_point)
+
+        # 候选重排：正在悬停的英雄仍在行内时，重建后应恢复悬停详情。
+        var second: Control = candidates.get_child(1)
+        await _hover(instance, second, second.size * 0.5)
+        _expect(detail_panel != null and detail_panel.visible, "重排前悬停应显示详情")
+        var reordered := GameStore.room_players.duplicate(true)
+        reordered[0]["heroCandidates"] = ["darwin", "mozi", "luban", "shenkuo"]
+        GameStore.room_players = reordered
+        GameStore.room_changed.emit()
         await get_tree().process_frame
-        var layer := instance.find_child("SkillLayer", true, false)
-        _expect(layer != null and layer.visible, "选中候选后应显示技能浮层")
+        await get_tree().process_frame
+        _expect(detail_panel != null and detail_panel.visible, "候选重排后应恢复悬停详情")
+        _expect(
+            detail_panel != null and detail_panel.find_child("HeroPortrait", true, false) != null,
+            "恢复的悬停详情应仍显示英雄立绘",
+        )
+        var restored := candidates.get_child(1) as RoomHeroCard
+        var restored_style = restored.get_theme_stylebox("panel")
+        _expect(
+            restored_style != null
+            and (restored_style as StyleBoxFlat).border_color == UITheme.color("color-border-strong"),
+            "恢复悬停时卡片也应恢复悬停描边",
+        )
+        await _push_motion(instance, Vector2(4, 4))
+        GameStore.room_players[0]["heroCandidates"] = ["gauss", "mozi", "luban", "shenkuo"]
+
         # 冒烟环境没有真实连接：确认按钮必须保持禁用，并给出未连接提示。
         _expect(confirm.disabled, "未连接时确认按钮必须禁用")
         _expect(
             str(status.text).contains(TranslationServer.translate("ui.room.not_connected")),
             "未连接时状态行应提示，实际：%s" % status.text,
         )
-
-        # 浮层整体不得拦截鼠标：它盖在候选行与确认按钮之上，一旦拦截就再也改不了选。
-        _expect(not _blocks_mouse(layer), "技能浮层及其子节点不得拦截鼠标点击")
-        # 点浮层以外的空白关闭选中。
-        var dismiss := instance.find_child("SkillDismissLayer", true, false)
-        _expect(dismiss != null and dismiss.visible, "选中后应出现关闭浮层的空白层")
-        if dismiss != null:
-            dismiss.emit_signal("gui_input", _press_event())
-            await get_tree().process_frame
-            _expect(not layer.visible, "点浮层外空白应关闭技能浮层")
 
     instance.queue_free()
 
@@ -285,8 +378,8 @@ func _check_room_hero_picker() -> void:
         var online_confirm := online.find_child("ConfirmButton", true, false)
         var online_status := online.find_child("StatusLabel", true, false)
         if online_cards != null and online_cards.get_child_count() > 0:
-            online_cards.get_child(0).emit_signal("gui_input", _press_event())
-            await get_tree().process_frame
+            var online_card: Control = online_cards.get_child(0)
+            await _push_click(online, online_card.get_global_rect().get_center())
             _expect(online_confirm != null and not online_confirm.disabled,
                 "已连接并选中后可确认")
             # 断线时 `Net` 先清掉连接再发信号，页面必须据此立刻重算状态。
@@ -316,24 +409,32 @@ func _check_room_hero_picker() -> void:
         _expect(locked_confirm != null and str(locked_confirm.text) == TranslationServer.translate("ui.room.confirmed"),
             "已确认后按钮文字应为「已确认」，实际：%s" % (str(locked_confirm.text) if locked_confirm != null else ""))
         var locked_cards = locked_instance.find_child("HeroCandidates", true, false)
-        if locked_cards != null:
-            var connected_count := 0
+        if locked_cards != null and locked_cards.get_child_count() > 0:
+            var all_locked := true
+            var selected_frames := 0
             for card in locked_cards.get_children():
-                if card is PanelContainer and card.gui_input.get_connections().size() > 0:
-                    connected_count += 1
-            _expect(connected_count == 0, "已确认后候选卡不得再响应点击，实际 %d 张仍可点" % connected_count)
+                if card.get("locked") != true:
+                    all_locked = false
+                var frame = card.find_child("SelectedFrame", true, false)
+                if frame != null and frame.is_visible_in_tree():
+                    selected_frames += 1
+            _expect(all_locked, "已确认后全部候选卡应锁定")
+            _expect(selected_frames == 1, "已确认后应保留一张选中框，实际：%d" % selected_frames)
+
+            # 已确认后点击其他卡不改变选中，悬停仍可看详情。
+            var locked_first: Control = locked_cards.get_child(0)
+            var locked_second: Control = locked_cards.get_child(1) if locked_cards.get_child_count() > 1 else locked_first
+            await _push_click(locked_instance, locked_second.get_global_rect().get_center())
+            var first_frame = locked_first.find_child("SelectedFrame", true, false)
+            _expect(first_frame != null and first_frame.is_visible_in_tree(), "已确认后点击其他卡不应改变选中")
+            await _hover(locked_instance, locked_second, locked_second.size * 0.5)
+            var locked_detail = locked_instance.find_child("RoomHeroDetail", true, false)
+            _expect(locked_detail != null and locked_detail.visible, "已确认后悬停仍应显示详情")
         locked_instance.queue_free()
 
     GameStore.room_id = ""
     GameStore.room_code = ""
     GameStore.room_players = []
-
-
-func _press_event() -> InputEventMouseButton:
-    var event := InputEventMouseButton.new()
-    event.button_index = MOUSE_BUTTON_LEFT
-    event.pressed = true
-    return event
 
 
 ## 递归检查控件树里是否有会拦截鼠标（STOP）的节点。
