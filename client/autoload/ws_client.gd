@@ -4,6 +4,7 @@ extends Node
 signal connected
 signal disconnected
 
+const BuildConfig = preload("res://generated/build_config.gd")
 const RETRY_SECONDS := 3.0
 const DESKTOP_URL := "ws://127.0.0.1:8080/ws"
 ## 移动端默认连开发机的 Bonjour 主机名：真机与开发机同一局域网即可直连，
@@ -34,12 +35,18 @@ func connect_to(target_url: String) -> void:
 
 
 ## 当前平台的默认调试地址：桌面端连本机，移动端连局域网内的开发机。
+## 发布构建优先使用生成的 `BuildConfig.SERVER_URL`（必须 `wss://`）。
 static func default_url() -> String:
-    return default_url_for(OS.has_feature("mobile"))
+    return default_url_for(OS.has_feature("mobile"), OS.has_feature("steam"))
 
 
 ## 平台到默认地址的纯函数，供冒烟按平台直接断言。
-static func default_url_for(mobile: bool) -> String:
+static func default_url_for(mobile: bool, steam := false) -> String:
+    var configured := str(BuildConfig.SERVER_URL).strip_edges()
+    if configured != "":
+        return configured
+    if steam:
+        return DESKTOP_URL
     return MOBILE_URL if mobile else DESKTOP_URL
 
 

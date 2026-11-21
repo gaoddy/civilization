@@ -6,15 +6,25 @@ extends VBoxContainer
 
 signal confirm_pressed
 signal dissolve_pressed
+signal steam_invite_pressed
 
 var confirm: Button
 var dissolve: Button
+var steam_invite: Button
 var status: Label
 
 
 func _init() -> void:
     name = "RoomActions"
     add_theme_constant_override("separation", UITheme.space("space-md"))
+
+    # Steam 构建多一个好友邀请入口；其余构建不创建，排版与原来一致。
+    if Platform.is_steam():
+        steam_invite = UIControls.button(tr("ui.room.invite_steam.entry"))
+        steam_invite.name = "SteamInviteButton"
+        steam_invite.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+        steam_invite.pressed.connect(func(): steam_invite_pressed.emit())
+        add_child(steam_invite)
 
     confirm = UIControls.styled_button(tr("ui.room.confirm"), "primary", 36)
     confirm.name = "ConfirmButton"
@@ -42,3 +52,11 @@ func set_state(selected_hero: String, confirmed: bool, connected: bool, is_host:
     confirm.disabled = selected_hero == "" or confirmed or not connected
     confirm.text = tr("ui.room.confirmed") if confirmed else tr("ui.room.confirm")
     dissolve.visible = is_host
+
+
+## Steam 邀请入口的可用性与禁用原因；非 Steam 构建没有该控件。
+func set_steam_available(available: bool, reason := "") -> void:
+    if steam_invite == null:
+        return
+    steam_invite.disabled = not available
+    steam_invite.tooltip_text = "" if available else reason
