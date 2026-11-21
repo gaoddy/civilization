@@ -3039,7 +3039,7 @@ func _check_evolve_choice_row() -> void:
     if row != null and row.get_child_count() == 3:
         var third_label = row.get_child(2).find_child("ChoiceLabel", true, false)
         _expect(
-            third_label != null and third_label.text == UI.enum_text("evolve", "stats"),
+            third_label != null and third_label.text == UIWording.enum_text("evolve", "stats"),
             "第 3 个选项块应显示 +2/+2",
         )
         var captured: Array = []
@@ -3447,7 +3447,7 @@ func _check_error_notice_lifecycle() -> void:
     GameStore.error_received.emit()
     await get_tree().process_frame
     _expect(
-        str(status.text) == UI.error_text(Protocol.ERROR_INVALID_STAGE),
+        str(status.text) == UIWording.error_text(Protocol.ERROR_INVALID_STAGE),
         "错误应写入顶栏，实际：%s" % status.text,
     )
     # 模拟经过错误文案停留时长；引擎帧不会在无头用例里推进这么久。
@@ -3487,7 +3487,7 @@ func _check_navigation_guard() -> void:
     var before = get_tree().current_scene
     remove_child(instance)
     _expect(not instance.is_inside_tree(), "移出树后房间场景应已离树")
-    _expect(not UI.navigate(instance, "res://pages/game/game.tscn"), "已离树的页面不应再执行导航")
+    _expect(not UINavigation.navigate(instance, "res://pages/game/game.tscn"), "已离树的页面不应再执行导航")
     GameStore.view_changed.emit()
     _expect(get_tree().current_scene == before, "已离树的房间场景不应改变当前场景")
     instance.queue_free()
@@ -3525,14 +3525,14 @@ func _check_reset_session() -> void:
 
 func _check_error_text() -> void:
     _expect(
-        UI.error_text("NOT_ENOUGH_GOLD") == TranslationServer.translate("error.NOT_ENOUGH_GOLD"),
+        UIWording.error_text("NOT_ENOUGH_GOLD") == TranslationServer.translate("error.NOT_ENOUGH_GOLD"),
         "NOT_ENOUGH_GOLD 应有中文文案",
     )
     _expect(
-        UI.error_text("INVALID_STAGE") == TranslationServer.translate("error.INVALID_STAGE"),
+        UIWording.error_text("INVALID_STAGE") == TranslationServer.translate("error.INVALID_STAGE"),
         "INVALID_STAGE 应有中文文案",
     )
-    _expect(UI.error_text("SOME_UNKNOWN_CODE") == "SOME_UNKNOWN_CODE", "未知错误码应回退为原文")
+    _expect(UIWording.error_text("SOME_UNKNOWN_CODE") == "SOME_UNKNOWN_CODE", "未知错误码应回退为原文")
 
 
 func _check_result() -> void:

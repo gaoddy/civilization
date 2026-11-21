@@ -38,7 +38,7 @@ func _ready() -> void:
     Net.connected.connect(_sync_state)
     Net.disconnected.connect(_sync_state)
     _refresh()
-    UI.safe_area(self)
+    UILayout.safe_area(self)
 
 
 func _build() -> void:
@@ -413,7 +413,7 @@ func _on_room_closed() -> void:
         _status.text = tr("ui.room.kicked_notice")
     else:
         _status.text = tr("ui.room.dissolved_notice")
-    UI.navigate(self, "res://pages/lobby/lobby.tscn")
+    UINavigation.navigate(self, UINavigation.PAGE_LOBBY)
 
 
 func _on_room_changed() -> void:
@@ -434,25 +434,25 @@ func _on_view_changed() -> void:
 
 
 func _goto_game() -> void:
-    UI.navigate(self, "res://pages/game/game.tscn")
+    UINavigation.navigate(self, UINavigation.PAGE_GAME)
 
 
 func _error_route(code: String) -> String:
-    return UI.error_route(code)
+    return UINavigation.error_route(code)
 
 
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
     match _error_route(code):
-        "lobby":
+        UINavigation.ROUTE_LOBBY:
             GameStore.reset_room()
-            UI.navigate(self, "res://pages/lobby/lobby.tscn")
+            UINavigation.navigate(self, UINavigation.PAGE_LOBBY)
             return
-        "login":
+        UINavigation.ROUTE_LOGIN:
             GameStore.reset_session()
-            UI.navigate(self, "res://pages/login/login.tscn")
+            UINavigation.navigate(self, UINavigation.PAGE_LOGIN)
             return
-    _status.text = UI.error_text(code)
-    _status.tooltip_text = UI.error_tooltip(code)
+    _status.text = UIWording.error_text(code)
+    _status.tooltip_text = UIWording.error_tooltip(code)
     # 请求被拒时没有新的 RoomUpdate：按当前状态重算按钮，否则会一直停在禁用。
     _sync_state()

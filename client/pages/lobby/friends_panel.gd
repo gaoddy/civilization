@@ -137,8 +137,8 @@ func close() -> void:
 
 ## 服务端错误就地显示，不跳回大厅主页面。
 func show_error(code: String) -> void:
-    _status.text = UI.error_text(code)
-    _status.tooltip_text = UI.error_tooltip(code)
+    _status.text = UIWording.error_text(code)
+    _status.tooltip_text = UIWording.error_tooltip(code)
     _status.add_theme_color_override("font_color", UITheme.color("color-danger"))
 
 
@@ -211,7 +211,7 @@ func _friend_row(friend: Dictionary) -> HBoxContainer:
     var row := HBoxContainer.new()
     row.add_theme_constant_override("separation", UITheme.space("space-md"))
     var player_id := str(friend.get("playerId", ""))
-    var status := UI.enum_text("friend_status", str(friend.get("status", "offline")))
+    var status := UIWording.enum_text("friend_status", str(friend.get("status", "offline")))
     row.add_child(
         UI.label(
             tr("ui.lobby.friend_row") % [

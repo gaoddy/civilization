@@ -3,13 +3,6 @@ extends RefCounted
 ## 场景共用的小工具与共享构件；只负责构建 Godot 控件，视觉取值来自 UITheme。
 
 
-const SAFE_AREA_NAME := "SafeAreaMargin"
-const SAFE_LAYER_NAME := "SafeLayer"
-const PAGE_BACKGROUND_NAME := "PageBackground"
-const CONTENT_FRAME_NAME := "ContentFrame"
-const CONTENT_ROOT_NAME := "ContentRoot"
-
-
 static func clear(node: Node) -> void:
     for child in node.get_children():
         node.remove_child(child)
@@ -25,108 +18,13 @@ static func drag_preview(card: Control, at_position: Vector2, context: Node = nu
     holder.name = "DragPreview"
     holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
     # 预览卡本身不在树上，缩放要从发起拖拽的节点取。
-    var scale := root_scale(context if context != null else card)
+    var scale := UILayout.root_scale(context if context != null else card)
     holder.scale = Vector2(scale, scale)
     card.mouse_filter = Control.MOUSE_FILTER_IGNORE
     # 起手点是内容框局部单位；包裹层按同一比例缩放，子节点偏移不能再除缩放。
     card.position = -at_position
     holder.add_child(card)
     return holder
-
-
-## 页面安全区包裹：在页面与内容之间插入 16:9 内容框与逻辑画布，再把内容移入安全区。
-## 整屏背景留在内容框外并置底，安全区只约束内容；幂等：重复调用返回已存在的包裹层。
-static func safe_area(page: Control) -> SafeAreaMargin:
-    if page == null:
-        return null
-    var existing := _safe_area_of(page)
-    if existing != null:
-        return existing
-    var frame := Control.new()
-    frame.name = CONTENT_FRAME_NAME
-    frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    page.add_child(frame)
-    var root := Control.new()
-    root.name = CONTENT_ROOT_NAME
-    root.size = Vector2(ScreenProfile.base_canvas())
-    root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    frame.add_child(root)
-    var area := SafeAreaMargin.new()
-    area.name = SAFE_AREA_NAME
-    root.add_child(area)
-    # 包裹层创建时页面可能已有尺寸：只设锚点会把当前零尺寸保留成负偏移。
-    area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    for child in page.get_children():
-        if child == frame:
-            continue
-        if child.name == PAGE_BACKGROUND_NAME:
-            page.move_child(child, 0)
-            continue
-        page.remove_child(child)
-        # 重新挂入会触发 _exit_tree：依赖 _ready 重新建立订阅的组件需要再就绪一次。
-        child.request_ready()
-        area.add_child(child)
-    _layout_content(page, frame, root)
-    if not page.has_meta("content_layout_connected"):
-        page.set_meta("content_layout_connected", true)
-        page.resized.connect(_layout_content.bind(page, frame, root))
-    return area
-
-
-## 按页面尺寸把内容框收拢成基准比例，并缩放逻辑画布。
-## 页面子树被提前释放时绑定对象会失效，回调按空操作处理。
-static func _layout_content(page: Control, frame: Control, root: Control) -> void:
-    if not is_instance_valid(frame) or not is_instance_valid(root):
-        return
-    var base := ScreenProfile.base_canvas()
-    var rect := ScreenProfile.content_frame(page.size, base)
-    if rect.size.x <= 0.0 or rect.size.y <= 0.0:
-        return
-    frame.position = rect.position
-    frame.size = rect.size
-    var scale := rect.size.y / float(base.y)
-    root.scale = Vector2(scale, scale)
-
-
-## 向上查找内容框逻辑画布的缩放；不在内容框内时返回 1。
-static func root_scale(node: Node) -> float:
-    var current := node
-    while current != null:
-        if current is Control and str(current.name) == CONTENT_ROOT_NAME:
-            return (current as Control).scale.x
-        current = current.get_parent()
-    return 1.0
-
-
-## 动态全屏覆盖层的挂载点：位于安全区内、内容之上，自身不拦截输入。
-static func safe_layer(page: Control) -> Control:
-    var area := safe_area(page)
-    if area == null:
-        return null
-    var layer := area.get_node_or_null(SAFE_LAYER_NAME) as Control
-    if layer == null:
-        layer = Control.new()
-        layer.name = SAFE_LAYER_NAME
-        layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        area.add_child(layer)
-        layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    return layer
-
-
-static func _safe_area_of(page: Control) -> SafeAreaMargin:
-    return page.find_child(SAFE_AREA_NAME, true, false) as SafeAreaMargin
-
-
-## 页面导航入口。change_scene_to_file 会立即把当前场景摘下，摘下后的页面仍连着
-## GameStore 等 autoload 信号，回调再取场景树会拿到 null；这里以「是否仍在树上」
-## 作为唯一判定，离树页面的导航直接丢弃。
-static func navigate(page: Node, path: String) -> bool:
-    if page == null or not is_instance_valid(page) or not page.is_inside_tree():
-        return false
-    var tree := page.get_tree()
-    if tree == null:
-        return false
-    return tree.change_scene_to_file(path) == OK
 
 
 static func label(text: String, size := 16, wrap := true) -> Label:
@@ -386,7 +284,7 @@ static func hero_tile(hero_id: String, width := 150) -> PanelContainer:
     var meta_parts := PackedStringArray()
     var playstyle := CardDB.primary_playstyle(entry) if hero_id != "" else ""
     if playstyle != "":
-        meta_parts.append(enum_text("playstyle", playstyle))
+        meta_parts.append(UIWording.enum_text("playstyle", playstyle))
     var meta := label(" · ".join(meta_parts) if not meta_parts.is_empty() else "—", UITheme.font_size("font-caption"), false)
     meta.name = "Meta"
     meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
@@ -413,7 +311,7 @@ static func skill_list(parent: VBoxContainer, skill_ids: Array) -> void:
         if bool(info.get("exists", false)):
             infos.append(info)
     if infos.is_empty():
-        parent.add_child(empty_hint(_translated_or_empty("ui.skill.empty")))
+        parent.add_child(empty_hint(UIWording.translated_or_empty("ui.skill.empty")))
         return
     var index := 0
     for info in infos:
@@ -447,8 +345,8 @@ static func skill_list(parent: VBoxContainer, skill_ids: Array) -> void:
 
         if bool(info.get("is_active", false)):
             var parts := PackedStringArray()
-            var cost_text := _translated_or_empty("ui.skill.cost")
-            var uses_text := _translated_or_empty("ui.skill.uses")
+            var cost_text := UIWording.translated_or_empty("ui.skill.cost")
+            var uses_text := UIWording.translated_or_empty("ui.skill.uses")
             var cost := int(info.get("cost", -1))
             var uses := int(info.get("uses", -1))
             if cost >= 0 and cost_text != "":
@@ -494,64 +392,3 @@ static func margin(container: Control, value := 12) -> MarginContainer:
     return node
 
 
-## 按枚举组与英文 id 取展示文案；缺键回退为 id。
-static func enum_text(group: String, id: String) -> String:
-    var key := "enum.%s.%s" % [group, id]
-    var text := TranslationServer.translate(key)
-    return id if text == key else text
-
-
-## 按完整文本 id 取文案；缺键返回空串，避免内部 id 泄露到界面。
-static func _translated_or_empty(key: String) -> String:
-    var text := TranslationServer.translate(key)
-    return "" if text == key else text
-
-
-## 错误码对应的展示文案；缺键回退为错误码。
-static func error_text(code: String) -> String:
-    var key := "error.%s" % code
-    var text := TranslationServer.translate(key)
-    return code if text == key else text
-
-
-## 按完整文本 id 取错误详情；空 id 或缺键返回空串，params 非空时按 % 格式化。
-static func error_text_by_id(id: String, params: Array = []) -> String:
-    if id == "":
-        return ""
-    var text := TranslationServer.translate(id)
-    if text == id:
-        return ""
-    if not params.is_empty():
-        text = text % params
-    return text
-
-
-## 错误提示的悬停详情：优先用服务端给出的 messageId 与参数，缺失时回退错误码文案。
-static func error_tooltip(code: String) -> String:
-    var raw_params = GameStore.last_error.get("messageParams", [])
-    var params: Array = raw_params if raw_params is Array else []
-    var detail := error_text_by_id(
-        str(GameStore.last_error.get("messageId", "")),
-        params,
-    )
-    return detail if detail != "" else error_text(code)
-
-
-## 错误码对应的页面去向：login、lobby 或空串（留在当前页面）。
-static func error_route(code: String) -> String:
-    if code in ["AUTH_FAILED", "TOKEN_EXPIRED", "SESSION_REPLACED"]:
-        return "login"
-    if code in ["NOT_IN_ROOM", "ROOM_NOT_FOUND"]:
-        return "lobby"
-    return ""
-
-
-## RFC3339 时间转 Unix 秒；共享给需要按 `phaseDeadline` 反推进度的视图。
-static func unix_from_rfc3339(value: String) -> float:
-    var text := value
-    if text.ends_with("Z"):
-        text = text.substr(0, text.length() - 1)
-    var dot := text.find(".")
-    if dot >= 0:
-        text = text.substr(0, dot)
-    return Time.get_unix_time_from_datetime_string(text)

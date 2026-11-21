@@ -84,7 +84,7 @@ func _ready() -> void:
     _refresh()
     _guide.start()
     _update_timer()
-    UI.safe_area(self)
+    UILayout.safe_area(self)
 
 
 # ── 构建 ──────────────────────────────────────────────────────────────────
@@ -481,7 +481,7 @@ func _open_gallery() -> void:
         _gallery.name = "GalleryOverlay"
         _gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
         _gallery.closed.connect(_close_gallery)
-        UI.safe_layer(self).add_child(_gallery)
+        UILayout.safe_layer(self).add_child(_gallery)
     var enabled: Array = GameStore.view.get("enabledFactions", [])
     _gallery.set_catalog(
         CardPool.card_ids(enabled),
@@ -796,22 +796,22 @@ func _aim_submit_allowed() -> bool:
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
     _top_bar.set_status(
-        UI.error_text(code),
+        UIWording.error_text(code),
         UITheme.color("color-danger"),
-        UI.error_tooltip(code),
+        UIWording.error_tooltip(code),
     )
     # 一次拒绝只提示一段时间；阶段/回合变化后的下一次刷新会提前清空。
     _error_notice = true
     _error_notice_left = ERROR_NOTICE_SECONDS
     _error_notice_phase = GameStore.phase
     _error_notice_turn = GameStore.turn
-    match UI.error_route(code):
-        "lobby":
+    match UINavigation.error_route(code):
+        UINavigation.ROUTE_LOBBY:
             GameStore.reset_room()
-            UI.navigate(self, "res://pages/lobby/lobby.tscn")
-        "login":
+            UINavigation.navigate(self, UINavigation.PAGE_LOBBY)
+        UINavigation.ROUTE_LOGIN:
             GameStore.reset_session()
-            UI.navigate(self, "res://pages/login/login.tscn")
+            UINavigation.navigate(self, UINavigation.PAGE_LOGIN)
 
 
 func _on_hint_pressed() -> void:
@@ -824,9 +824,9 @@ func _on_leave_game() -> void:
     _guide.hide()
     GameStore.reset_room()
     Net.relogin()
-    UI.navigate(self, "res://pages/lobby/lobby.tscn")
+    UINavigation.navigate(self, UINavigation.PAGE_LOBBY)
 
 
 func _on_game_over() -> void:
     _guide.hide()
-    UI.navigate(self, "res://pages/result/result.tscn")
+    UINavigation.navigate(self, UINavigation.PAGE_RESULT)

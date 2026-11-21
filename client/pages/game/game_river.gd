@@ -167,14 +167,14 @@ func set_combat_detail(detail: String, font_color: Color) -> void:
 func seconds_left() -> int:
     if _deadline == "":
         return -1
-    var deadline := UI.unix_from_rfc3339(_deadline)
+    var deadline := UIFormat.unix_from_rfc3339(_deadline)
     if deadline <= 0.0:
         return -1
     return maxi(int(ceil(deadline - Time.get_unix_time_from_system())), 0)
 
 
 func has_deadline() -> bool:
-    return _deadline != "" and UI.unix_from_rfc3339(_deadline) > 0.0
+    return _deadline != "" and UIFormat.unix_from_rfc3339(_deadline) > 0.0
 
 
 func _update_countdown() -> void:

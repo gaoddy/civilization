@@ -85,7 +85,7 @@ func _show(card_id: String, hero: bool) -> void:
     if associations != "":
         _add_row(tr("ui.game.detail.association"), associations)
     if era_id != "":
-        _add_row(tr("ui.game.detail.era"), UI.enum_text("era", era_id))
+        _add_row(tr("ui.game.detail.era"), UIWording.enum_text("era", era_id))
     _add_row(tr("ui.game.detail.cost"), tr("ui.game.detail.cost_value") % CardDB.display_cost(card_id))
     if entry.get("attack") != null or entry.get("health") != null:
         _add_row(
@@ -161,7 +161,7 @@ func _preview_metric(name: String) -> int:
 
 
 func _type_text(_card_id: String, entry: Dictionary) -> String:
-    return UI.enum_text("card_type", str(entry.get("card_type", "")))
+    return UIWording.enum_text("card_type", str(entry.get("card_type", "")))
 
 
 func _taxonomy_text(entry: Dictionary) -> String:

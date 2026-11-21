@@ -314,7 +314,7 @@ func _filtered_ids() -> Array:
 func _chapter_items() -> Array:
     var out: Array = [{"id": "", "name": tr("ui.gallery.chapter_all")}]
     for era in range(1, ERA_IDS.size() + 1):
-        out.append({"id": str(era), "name": UI.enum_text("era", ERA_IDS[era - 1])})
+        out.append({"id": str(era), "name": UIWording.enum_text("era", ERA_IDS[era - 1])})
     return out
 
 

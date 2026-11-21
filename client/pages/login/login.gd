@@ -15,7 +15,7 @@ func _ready() -> void:
     Net.disconnected.connect(_on_disconnected)
     GameStore.auth_changed.connect(_on_auth_changed)
     GameStore.error_received.connect(_on_error)
-    UI.safe_area(self)
+    UILayout.safe_area(self)
 
 
 func _build() -> void:
@@ -78,7 +78,7 @@ func _on_connected() -> void:
 
 
 func _on_auth_changed() -> void:
-    UI.navigate(self, "res://pages/lobby/lobby.tscn")
+    UINavigation.navigate(self, UINavigation.PAGE_LOBBY)
 
 
 func _on_disconnected() -> void:
@@ -88,6 +88,6 @@ func _on_disconnected() -> void:
 
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
-    _status.text = UI.error_text(code)
-    _status.tooltip_text = UI.error_tooltip(code)
+    _status.text = UIWording.error_text(code)
+    _status.tooltip_text = UIWording.error_tooltip(code)
     _login_button.disabled = false

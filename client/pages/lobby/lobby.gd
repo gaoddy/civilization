@@ -19,7 +19,7 @@ func _ready() -> void:
         _status.text = tr("ui.lobby.not_connected")
     _show_room_closed_reason()
     _render_friends_entry()
-    UI.safe_area(self)
+    UILayout.safe_area(self)
 
 
 ## 被移出或房间解散后回到大厅：在到达的页面上提示原因，读后清空。
@@ -154,7 +154,7 @@ func _on_create_pressed() -> void:
 
 
 func _on_gallery_pressed() -> void:
-    UI.navigate(self, "res://pages/gallery/gallery.tscn")
+    UINavigation.navigate(self, UINavigation.PAGE_GALLERY)
 
 
 func _on_friends_pressed() -> void:
@@ -180,7 +180,7 @@ func _on_invite_responded(_invite_id: String, accept: bool) -> void:
 
 
 func _on_room_changed() -> void:
-    UI.navigate(self, "res://pages/room/room.tscn")
+    UINavigation.navigate(self, UINavigation.PAGE_ROOM)
 
 
 func _on_auth_changed() -> void:
@@ -190,10 +190,10 @@ func _on_auth_changed() -> void:
 
 func _on_error() -> void:
     var code := str(GameStore.last_error.get("code", ""))
-    _status.text = UI.error_text(code)
-    _status.tooltip_text = UI.error_tooltip(code)
+    _status.text = UIWording.error_text(code)
+    _status.tooltip_text = UIWording.error_tooltip(code)
     if _friends.visible:
         _friends.show_error(code)
-    if UI.error_route(code) == "login":
+    if UINavigation.error_route(code) == UINavigation.ROUTE_LOGIN:
         GameStore.reset_session()
-        UI.navigate(self, "res://pages/login/login.tscn")
+        UINavigation.navigate(self, UINavigation.PAGE_LOGIN)

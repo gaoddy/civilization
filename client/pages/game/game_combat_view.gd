@@ -174,7 +174,7 @@ func finished() -> bool:
 func _start_combat(combat: Dictionary) -> void:
     _fx.clear()
     _combat_end_cued = false
-    var started_at := UI.unix_from_rfc3339(str(combat.get("startedAt", "")))
+    var started_at := UIFormat.unix_from_rfc3339(str(combat.get("startedAt", "")))
     _combat.start(
         combat.get("actions", []),
         combat.get("ownBoard", []),

@@ -140,7 +140,7 @@ func _refresh_powers(state: GameUiState, eliminated: bool) -> void:
             lines.append(tr("ui.game.detail.cost_value") % cost)
         var reason = power.get("disabledReason")
         if reason != null:
-            lines.append(UI.error_text(str(reason)))
+            lines.append(UIWording.error_text(str(reason)))
         button.tooltip_text = "\n".join(lines)
 
 

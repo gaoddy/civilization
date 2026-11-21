@@ -106,7 +106,7 @@ func _build_choice(kind: String, item: String, index: int) -> Button:
         button.tooltip_text = CardDB.display_text(item)
     else:
         _add_option_label(button, item)
-        button.tooltip_text = UI.enum_text("evolve", item)
+        button.tooltip_text = UIWording.enum_text("evolve", item)
     return button
 
 
@@ -129,7 +129,7 @@ func _add_card_face(button: Button, card_id: String) -> void:
 
 ## 进化选项：不是卡牌，只用同尺寸底板与居中文字。
 func _add_option_label(button: Button, option: String) -> void:
-    var label := UI.label(UI.enum_text("evolve", option), UITheme.font_size("font-body"), true)
+    var label := UI.label(UIWording.enum_text("evolve", option), UITheme.font_size("font-body"), true)
     label.name = "ChoiceLabel"
     label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

@@ -292,12 +292,12 @@ func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
     ]))
     var era := str(entry.get("era", ""))
     if era != "":
-        box.add_child(_detail_row(tr("ui.game.detail.era"), UI.enum_text("era", era)))
+        box.add_child(_detail_row(tr("ui.game.detail.era"), UIWording.enum_text("era", era)))
     var skill_text := CardDB.display_text(card_id)
     if skill_text != "":
         box.add_child(_detail_text_block(skill_text))
     if data.get("disabledReason") != null:
-        var reason := UI.label(UI.error_text(str(data.get("disabledReason"))), UITheme.font_size("font-body-sm"))
+        var reason := UI.label(UIWording.error_text(str(data.get("disabledReason"))), UITheme.font_size("font-body-sm"))
         reason.name = "DetailBlocked"
         reason.add_theme_color_override("font_color", UITheme.color("color-danger"))
         box.add_child(reason)
@@ -390,7 +390,7 @@ func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
         var h := int(health.get(layer, 0))
         if layer == "damage" and a == 0 and h == 0:
             continue
-        var label := UI.enum_text("stat_layer", layer)
+        var label := UIWording.enum_text("stat_layer", layer)
         if layer == "initial":
             box.add_child(_detail_row(label, "%d / %d" % [a, h]))
         elif layer == "damage":

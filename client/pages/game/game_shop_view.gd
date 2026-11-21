@@ -209,7 +209,7 @@ func _refresh_actions(state: GameUiState) -> void:
     )
     var upgrade_reason = aff.get("upgradeDisabledReason")
     if upgrade_reason != null:
-        upgrade_text += "\n" + UI.error_text(str(upgrade_reason))
+        upgrade_text += "\n" + UIWording.error_text(str(upgrade_reason))
     _upgrade_button.tooltip_text = upgrade_text
 
     _reroll_button.set_cost(int(state.self_state.get("rerollCost", 0)))

@@ -14,8 +14,8 @@ func _ready() -> void:
         tr("ui.gallery.title"),
         tr("ui.gallery.back_lobby"),
     )
-    UI.safe_area(self)
+    UILayout.safe_area(self)
 
 
 func _on_closed() -> void:
-    UI.navigate(self, "res://pages/lobby/lobby.tscn")
+    UINavigation.navigate(self, UINavigation.PAGE_LOBBY)

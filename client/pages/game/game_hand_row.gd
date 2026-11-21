@@ -117,7 +117,7 @@ func _build_card(card: Dictionary, state: GameUiState) -> HandCard:
     node.add_theme_stylebox_override("panel", UITheme.panel_style("raised-flush"))
     node.tooltip_text = CardDB.display_text(card_id)
     if card.get("disabledReason") != null:
-        node.tooltip_text = UI.error_text(str(card.get("disabledReason")))
+        node.tooltip_text = UIWording.error_text(str(card.get("disabledReason")))
 
     # 随从牌显示服务端给出的真实身材（含成长等全部层数），效果牌不显示身材。
     var golden := bool(card.get("golden", false))

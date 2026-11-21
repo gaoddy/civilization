@@ -57,7 +57,7 @@ static func _taxon_names(entry: Dictionary, kind: String) -> PackedStringArray:
 ## 详情类型行：只显示卡牌类别，玩法与分类由详情单独成行。
 static func type_text(entry: Dictionary) -> String:
     var card_type := str(entry.get("card_type", ""))
-    return UI.enum_text("card_type", card_type) if card_type != "" else "—"
+    return UIWording.enum_text("card_type", card_type) if card_type != "" else "—"
 
 
 ## 卡面数值：服务端或卡表缺失时用破折号占位。
@@ -112,7 +112,7 @@ static func keyword_layer(raw: String) -> String:
 
 ## 关键词展示名：枚举名加层数，如「减伤 2」；缺文案回退英文 id。
 static func keyword_name(raw: String) -> String:
-    var name := UI.enum_text("keyword", keyword_base(raw))
+    var name := UIWording.enum_text("keyword", keyword_base(raw))
     var layer := keyword_layer(raw)
     return "%s %s" % [name, layer] if layer != "" else name
 
