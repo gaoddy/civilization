@@ -1289,6 +1289,7 @@ ui.account.send_code,获取验证码
 ui.account.send_code_wait,%d 秒后可重发
 ui.account.sending_code,发送中…
 ui.account.title,账号
+ui.common.got_it,知道了
 ui.common.no_hero,未选英雄
 ui.gallery.back_lobby,返回大厅
 ui.gallery.back_match,返回对局
