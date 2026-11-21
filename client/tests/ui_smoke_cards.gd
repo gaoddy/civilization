@@ -730,7 +730,7 @@ func _check_room_skill_list() -> void:
     GameStore.phase = Protocol.PHASE_LOBBY
     GameStore.room_players = [
         {"playerId": "p0", "displayName": "玩家A", "ready": false, "isHost": true,
-         "heroCardId": null, "heroCandidates": ["gauss"]},
+         "heroCardId": null, "heroCandidates": ["gauss", "mozi", "luban", "shenkuo"]},
     ]
     var instance := await _check_scene("res://scenes/room.tscn", false)
     if instance != null:
@@ -764,19 +764,24 @@ func _check_room_skill_list() -> void:
                     text.contains(TranslationServer.translate("ui.skill.uses") % int(info.get("uses", -1))),
                     "悬停详情应显示每回合次数：%s" % text,
                 )
-                var face_found := false
-                var portrait_found := false
-                for node in panel.find_children("*", "TextureRect", true, false):
-                    var art := node as TextureRect
-                    if art.texture == null:
-                        continue
-                    var path := art.texture.resource_path
-                    if path.contains("cards/faces"):
-                        face_found = true
-                    if path.contains("portraits"):
-                        portrait_found = true
-                _expect(face_found, "悬停详情应显示卡面美术（cards/faces）")
-                _expect(not portrait_found, "悬停详情不应再显示立绘（portraits）")
+                _expect(
+                    panel.find_children("*", "TextureRect", true, false).is_empty(),
+                    "悬停详情不应显示任何图片",
+                )
+                # 中间候选卡：详情贴着该卡外侧，不再挂候选行外侧。
+                var third: Control = candidates.get_child(2)
+                await _hover(instance, third, third.size * 0.5)
+                var panel_rect: Rect2 = panel.get_global_rect()
+                var card_rect: Rect2 = third.get_global_rect()
+                _expect(not panel_rect.intersects(card_rect), "详情卡不得压住悬停的候选卡")
+                var gap := maxf(
+                    card_rect.position.x - panel_rect.end.x,
+                    panel_rect.position.x - card_rect.end.x,
+                )
+                _expect(
+                    gap <= UITheme.space("space-md"),
+                    "详情卡应贴着悬停卡外侧，实际间隙 %s" % gap,
+                )
         instance.queue_free()
         await get_tree().process_frame
     GameStore.room_id = ""

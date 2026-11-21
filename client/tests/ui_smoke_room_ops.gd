@@ -30,12 +30,13 @@ func _check_host_controls() -> void:
             "有卡面图时不应显示首字水印",
         )
         await _hover(instance, hero_card, hero_card.size * 0.5)
-        _expect(
-            instance.find_child("HeroPortrait", true, false) != null,
-            "悬停详情应显示英雄立绘",
-        )
         var detail_panel = instance.find_child("RoomHeroDetail", true, false)
         _expect(detail_panel != null and detail_panel.visible, "悬停应显示详情卡")
+        _expect(
+            detail_panel != null
+            and detail_panel.find_children("*", "TextureRect", true, false).is_empty(),
+            "悬停详情不应显示图片",
+        )
         await _push_motion(instance, Vector2(4, 4))
         _expect(detail_panel != null and not detail_panel.visible, "移出候选卡应关闭详情")
 
