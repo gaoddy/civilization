@@ -15,6 +15,8 @@ const ENV_DEVICE := "CIVILIZATION_DEVICE"
 
 var _device := ""
 var _forced := ""
+## 真机触控平台判定的测试覆盖：null 为自动判定，true / false 为强制值。
+var _native_touch_forced: Variant = null
 
 
 func _ready() -> void:
@@ -35,10 +37,23 @@ func is_touch() -> bool:
     return device_kind() != DEVICE_DESKTOP
 
 
+## 是否运行在真机触控平台：桌面与无头环境为假，iOS 等原生触控端为真。
+## 与 [method set_device_for_test] 对应，测试可覆盖判定并随后恢复自动。
+func is_native_touch() -> bool:
+    if _native_touch_forced != null:
+        return bool(_native_touch_forced)
+    return _is_native_touch_platform()
+
+
+## 测试入口：覆盖真机触控平台判定；传 null 恢复自动判定。
+func set_native_touch_for_test(value: Variant) -> void:
+    _native_touch_forced = value
+
+
 ## 桌面端通过环境变量模拟触控档位：鼠标事件会同时转成触摸事件。
 ## 同时接受鼠标与触摸的回调需要跳过鼠标，避免一次点击触发两次。
 func is_simulated_touch() -> bool:
-    return is_touch() and not _is_native_touch_platform()
+    return is_touch() and not is_native_touch()
 
 
 ## 逻辑宽度基准：iPhone 为 960×540，iPad 与桌面为 1280×720；高度随窗口扩展。

@@ -27,6 +27,7 @@ func _ready() -> void:
     await _check_opponent_view()
     await _check_recruit_stage()
     await _check_countdown_flip()
+    await _check_countdown_touch_single_intent()
     await _check_combat_stage()
     await _check_eliminated_stage()
     await _check_ghost_stage()
@@ -1113,6 +1114,46 @@ func _check_countdown_flip() -> void:
     await _push_motion(instance, Vector2(-40, -40))
     _expect(timer.visible and not end_button.visible, "移出倒计时区域应恢复剩余时间")
     await _unmount(instance)
+
+
+## 真机触控端一次触摸会同时产生触摸与模拟鼠标事件；结束招募只能发一条意图。
+func _check_countdown_touch_single_intent() -> void:
+    ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
+    ScreenProfile.set_native_touch_for_test(true)
+    var view := _base_view(Protocol.PHASE_RECRUIT)
+    var instance := await _mount(view)
+    if instance == null:
+        _restore_touch_test_input()
+        return
+
+    var flip: Control = instance.find_child("RecruitCountdownFlip", true, false)
+    _expect(flip != null, "河道右端应有倒计时翻转区域")
+    if flip != null:
+        var captured: Array = []
+        instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
+        var center := flip.get_global_rect().get_center()
+        await _push_motion(instance, center)
+        # 真机顺序：模拟鼠标按下先到，随后是触摸按下；两条都带同一次按压。
+        await _push_button(instance, center, true)
+        var touch := InputEventScreenTouch.new()
+        touch.index = 0
+        touch.position = center
+        touch.pressed = true
+        instance.get_viewport().push_input(touch, true)
+        await get_tree().process_frame
+        _expect(
+            captured.size() == 1
+                and str(captured[0].get("kind", "")) == Protocol.INTENT_END_RECRUIT,
+            "真机触控一次触摸只应发一条结束招募意图，实际 %s" % [captured],
+        )
+
+    await _unmount(instance)
+    _restore_touch_test_input()
+
+
+func _restore_touch_test_input() -> void:
+    ScreenProfile.set_native_touch_for_test(null)
+    ScreenProfile.set_device_for_test("")
 
 
 ## 战斗阶段页面结构：战斗组合替换招募组合，顶部恢复对手身份；英雄卡保留、技能图标隐藏。

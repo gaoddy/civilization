@@ -401,6 +401,8 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 详情层（`DetailLayer`）在触控端由长按状态机驱动：按下只登记第一个触点，450ms 显示，抬手隐藏；位移超过 8 个画布单位或模态浮层打开时取消。触控端忽略触摸模拟出的鼠标悬停与按下，桌面鼠标路径不变。状态机由 `LongPressTracker` 承担，阈值与计时方式只有一处实现。
 - 房间候选卡的悬停详情复用同一套状态机：`RoomHeroDetailLayer extends DetailLayer`，长按 450ms 显示、抬手隐藏；页面 `_input` 复用 `LongPressTracker` 独立跟踪短按，未取消、未到 450ms、抬手仍在起点卡内时才选中，长按与位移都不会改变选中。
 - `HandSlot` 在触摸释放、拖拽结束与重建卡片时显式复位缩放、`z_index` 与右侧槽位的 `mouse_filter`，弥补触控端没有 `mouse_exited` 的问题。
+- 招募河道倒计时的悬停翻转在触控端只认 `InputEventScreenTouch`，桌面只认鼠标事件：真机上一次触摸会同时产生触摸与模拟鼠标按下，两个分支都放行会发出两条 `EndRecruit`，后一条在阶段推进后收到 `INVALID_STAGE`。触控平台判定统一用 `ScreenProfile.is_touch()`；`is_simulated_touch()` 只描述桌面模拟档位，不能用来区分真机。
+- 冒烟用 `ScreenProfile.set_device_for_test` 覆盖设备档位、`set_native_touch_for_test` 覆盖真机触控判定，从而在桌面构造真机触控分支。
 - 单击、拖拽继续依赖 Godot 的 `emulate_mouse_from_touch`；`Esc` 返回在触控端由常驻返回按钮替代。
 
 ### 联调地址
