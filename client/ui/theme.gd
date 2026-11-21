@@ -145,7 +145,8 @@ const SEMANTIC_OPACITY := {
 
 const SCENARIO := {
 	"rail-width": 88,
-	"top-bar-height": 28,
+	"pill-button-height": 26,
+	"status-dialog-width": 360,
 	"river-height": 32,
 	"hero-row-height": 84,
 	"hero-meta-row-height": 24,
@@ -198,7 +199,8 @@ const SCENARIO := {
 	"shop-actions-height-compact": 52,
 	"river-height-compact": 24,
 	"recruit-shop-gap-compact": 10,
-	"top-bar-height-compact": 26,
+	"pill-button-height-compact": 24,
+	"status-dialog-width-compact": 280,
 	"portrait-size-compact": 48,
 	# 左栏 8 席需在 960×540 下一屏放下，座位行按紧凑值收缩。
 	"avatar-rail-compact": 40,
@@ -403,6 +405,40 @@ static func pill_style(variant: String) -> StyleBoxFlat:
 			box.border_color = Color(0, 0, 0, 0)
 		_:
 			pass
+	return box
+
+
+static func pill_button_style(variant: String, state: String) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.set_corner_radius_all(radius("radius-pill"))
+	box.content_margin_left = space("space-lg")
+	box.content_margin_right = space("space-lg")
+	box.content_margin_top = space("space-2xs")
+	box.content_margin_bottom = space("space-2xs")
+	var base := "color-surface-raised"
+	var border := "color-border"
+	match variant:
+		"primary":
+			base = "color-accent-strong"
+			border = "color-accent"
+		"danger":
+			base = "color-danger"
+			border = "color-danger"
+	box.bg_color = color(base)
+	box.border_color = color(border)
+	box.set_border_width_all(1)
+	match state:
+		"hover":
+			box.bg_color = box.bg_color.lightened(0.12)
+			if variant == "neutral":
+				box.border_color = color("color-border-strong")
+		"pressed":
+			box.bg_color = box.bg_color.darkened(0.18)
+		"focus":
+			box.border_color = color("color-accent")
+		"disabled":
+			box.bg_color = color("color-surface")
+			box.border_color = color("color-border")
 	return box
 
 
