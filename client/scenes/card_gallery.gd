@@ -44,6 +44,13 @@ var _close_button: Button
 var _toc: GalleryToc
 var _grid: GalleryGrid
 var _detail: GalleryDetail
+var _background: Control
+
+
+## 页面已提供整屏背景时关闭组件背景，避免两层背景缩放不一致。
+func set_background_visible(value: bool) -> void:
+    if _background != null:
+        _background.visible = value
 
 
 func _init() -> void:
@@ -51,9 +58,9 @@ func _init() -> void:
     set_anchors_preset(Control.PRESET_FULL_RECT)
     mouse_filter = Control.MOUSE_FILTER_STOP
 
-    var background := UI.background()
-    background.name = "GalleryBackground"
-    add_child(background)
+    _background = UI.background()
+    _background.name = "GalleryBackground"
+    add_child(_background)
 
     var margin := MarginContainer.new()
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)

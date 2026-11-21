@@ -5,6 +5,7 @@ extends RefCounted
 
 const SAFE_AREA_NAME := "SafeAreaMargin"
 const SAFE_LAYER_NAME := "SafeLayer"
+const PAGE_BACKGROUND_NAME := "PageBackground"
 
 
 static func clear(node: Node) -> void:
@@ -27,8 +28,8 @@ static func drag_preview(card: Control, at_position: Vector2) -> Control:
     return holder
 
 
-## 页面安全区包裹：把页面现有子节点整体移入 SafeAreaMargin，再挂回页面。
-## 幂等：重复调用返回已存在的包裹层，不重复移动节点。
+## 页面安全区包裹：把页面内容移入 SafeAreaMargin，再挂回页面。
+## 整屏背景留在包裹层外并置底，安全区只约束内容；幂等：重复调用返回已存在的包裹层。
 static func safe_area(page: Control) -> SafeAreaMargin:
     if page == null:
         return null
@@ -42,6 +43,9 @@ static func safe_area(page: Control) -> SafeAreaMargin:
     area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     for child in page.get_children():
         if child == area:
+            continue
+        if child.name == PAGE_BACKGROUND_NAME:
+            page.move_child(child, 0)
             continue
         page.remove_child(child)
         # 重新挂入会触发 _exit_tree：依赖 _ready 重新建立订阅的组件需要再就绪一次。
