@@ -32,6 +32,7 @@
 | `color-success` | `#5fce86` | 胜利、已准备 |
 | `color-danger` | `#e2666b` | 失败、生命、断线 |
 | `color-info` | `#62a8e8` | 时代、中性提示 |
+| `color-highlight` | `#8fd3ff` | 结算页本人名次行与数据分组标题 |
 
 ## 3. 字体
 
@@ -43,8 +44,9 @@
 | `font-body` | 14 | 区块标题、按钮 |
 | `font-title` | 16 | 随从攻防、英雄名 |
 | `font-title-lg` | 18 | 图鉴详情的卡名 |
+| `font-title-xl` | 20 | 结算页本人名次与数据分区标题 |
 | `font-display` | 22 | 战斗结果横幅、弹层标题 |
-| `font-hero` | 28 | 预留，当前页面未使用 |
+| `font-hero` | 28 | 结算页标题 |
 
 ## 4. 间距与圆角
 
@@ -54,6 +56,7 @@
 | `space-xs` | 4 | | `radius-md` | 8 |
 | `space-sm` | 6 | | `radius-lg` | 12 |
 | `space-md` | 8 | | `radius-pill` | 16 |
+| `space-md-plus` | 10 | | | |
 | `space-lg` | 12 | | | |
 | `space-xl` | 16 | | | |
 | `space-2xl` | 24 | | | |

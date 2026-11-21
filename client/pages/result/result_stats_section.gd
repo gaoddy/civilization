@@ -38,7 +38,7 @@ func _init(stats: Dictionary) -> void:
 
 func _group_label(text: String) -> Label:
     var label := UIControls.label(text, UITheme.font_size("font-title"))
-    label.add_theme_color_override("font_color", Color("8fd3ff"))
+    label.add_theme_color_override("font_color", UITheme.color("color-highlight"))
     return label
 
 

@@ -39,7 +39,7 @@ func _init() -> void:
     box.add_child(UIControls.section_title(tr("ui.lobby.invite_title")))
     _list = VBoxContainer.new()
     _list.name = "InviteList"
-    _list.add_theme_constant_override("separation", 10)
+    _list.add_theme_constant_override("separation", UITheme.space("space-md-plus"))
     box.add_child(_list)
 
 

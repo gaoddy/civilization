@@ -27,7 +27,7 @@ func _build() -> void:
 
     var box := VBoxContainer.new()
     box.custom_minimum_size = Vector2(440, 0)
-    box.add_theme_constant_override("separation", 10)
+    box.add_theme_constant_override("separation", UITheme.space("space-md-plus"))
     center.add_child(box)
 
     box.add_child(UIControls.label(tr("ui.login.title"), 30))

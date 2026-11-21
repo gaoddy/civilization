@@ -59,5 +59,5 @@
 - 详情层内容块拆至 `ui/detail_sections/`，公共辅助收为 `DetailKit`；`RoomHeroDetailLayer` 保留覆写点。
 - 长按状态机抽为 `LongPressTracker`，详情层与选英雄页共用；触控冒烟改读追踪器状态。
 - 图鉴页只保留背景、组件装配与返回大厅，未再拆新组件。
-- 结算页字号与间距按令牌取值；`20` / `10` 两档字号与 `10` 间距没有对应刻度，保留裸值，高亮色 `8fd3ff` 无令牌，同样保留，待设计系统扩展时收口。
+- 结算页字号、间距与高亮色全部按令牌取值；设计系统补充 `font-title-xl`（20）、`space-md-plus`（10）与 `color-highlight`（`#8fd3ff`），结算页与另外两处 10 间距的复用点一并替换，无遗留裸值。
 - 删除无调用方的 `UI.hero_tile`、`hero-tile.md` 与 `hero-tile-width` 令牌。

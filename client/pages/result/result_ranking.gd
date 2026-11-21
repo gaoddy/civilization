@@ -19,7 +19,7 @@ func _init(entries: Array, my_player_id: String, name_of: Callable) -> void:
             _int_of(entry, "damageDealt"),
         ], UITheme.font_size("font-title-lg"))
         if player_id == my_player_id:
-            row.modulate = Color("8fd3ff")
+            row.modulate = UITheme.color("color-highlight")
         add_child(row)
 
 

@@ -21,6 +21,7 @@ const PRIMITIVE_COLOR := {
 	"gold-600": "b98a2f",
 	"green-400": "5fce86",
 	"red-400": "e2666b",
+	"blue-300": "8fd3ff",
 	"blue-400": "62a8e8",
 	"cyan-400": "3fd0e0",
 	"teal-400": "3fc7ac",
@@ -42,6 +43,7 @@ const PRIMITIVE_FONT := {
 	"14": 14,
 	"16": 16,
 	"18": 18,
+	"20": 20,
 	"22": 22,
 	"28": 28,
 }
@@ -51,6 +53,7 @@ const PRIMITIVE_SPACE := {
 	"4": 4,
 	"6": 6,
 	"8": 8,
+	"10": 10,
 	"12": 12,
 	"16": 16,
 	"24": 24,
@@ -81,6 +84,7 @@ const SEMANTIC_COLOR := {
 	"color-success": "green-400",
 	"color-danger": "red-400",
 	"color-info": "blue-400",
+	"color-highlight": "blue-300",
 }
 
 const SEMANTIC_FONT := {
@@ -90,6 +94,7 @@ const SEMANTIC_FONT := {
 	"font-body": "14",
 	"font-title": "16",
 	"font-title-lg": "18",
+	"font-title-xl": "20",
 	"font-display": "22",
 	"font-hero": "28",
 }
@@ -99,6 +104,7 @@ const SEMANTIC_SPACE := {
 	"space-xs": "4",
 	"space-sm": "6",
 	"space-md": "8",
+	"space-md-plus": "10",
 	"space-lg": "12",
 	"space-xl": "16",
 	"space-2xl": "24",
