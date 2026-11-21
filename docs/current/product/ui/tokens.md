@@ -81,7 +81,7 @@
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
 | `avatar-rail` | 44 | 左栏座位行头像边长 |
 | `portrait-size` | 64 | 售货员与对手英雄头像块边长 |
-| `hero-portrait-width` / `-height` | 160 / 240 | 选英雄页悬停详情中的立绘尺寸 |
+| `hero-detail-width` | 160 | 选英雄页悬停详情与房间候选卡宽度，手机 120；高度由 `UITheme.card_face_height` 按卡面比例计算 |
 | `room-hero-detail-width` | 280 | 选英雄页悬停详情卡宽度；手机 200 |
 | `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
 | `rank-badge-size` | 18 | 座位行名次角标边长 |
@@ -95,7 +95,7 @@
 | `hand-hover-scale` | 1.12 | 手牌悬停放大倍数，以底边中点为轴；小数令牌用 `UITheme.factor` 读取，不要用 `metric` |
 | `gallery-toc-width` | 140 | 图鉴分类目录宽度；手机 120 |
 | `gallery-detail-width` | 280 | 图鉴常驻详情宽度 |
-| `gallery-preview-width` / `-height` | 200 / 260 | 图鉴详情卡面美术图尺寸；手机为 160 / 208 |
+| `gallery-preview-width` | 200 | 图鉴详情卡面美术图宽度，手机 160；高度由 `UITheme.card_face_height` 按卡面比例计算 |
 | `gallery-page-size` | 18 | 图鉴每页卡面张数（6 列 × 3 行）；手机 8（4 列 × 2 行） |
 | `gallery-grid-columns` | 6 | 图鉴卡面网格列数；手机 4 |
 | `aim-arc-width` | 2.5 | 选目标弧线与角标的线宽 |
@@ -132,7 +132,7 @@ iPhone 以 960×540 为基准，对局页通过 `UITheme.stage_metric(name)` 优
 | `top-bar-height-compact` | 26 | iPhone 顶部工具条高度 |
 | `portrait-size-compact` | 48 | iPhone 售货员与对手英雄头像边长 |
 | `room-hero-detail-width-compact` | 200 | iPhone 选英雄页悬停详情卡宽度 |
-| `hero-portrait-width-compact` / `-height-compact` | 120 / 180 | iPhone 选英雄页悬停详情立绘 |
+| `hero-detail-width-compact` | 120 | iPhone 选英雄页悬停详情与候选卡宽度；高度由 `card_face_height` 计算 |
 
 - 紧凑座位行（头像 40 + 血量条 4 + 行内边距 4 + 行距 2）让 8 席在 960×540 下一屏放下，左栏不出现滚动。
 

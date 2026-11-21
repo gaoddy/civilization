@@ -138,10 +138,8 @@ const SCENARIO := {
 	"avatar-lg": 38,
 	"hero-tile-width": 150,
 	"portrait-size": 64,
-	"hero-portrait-width": 160,
-	"hero-portrait-height": 240,
-	"hero-portrait-width-compact": 120,
-	"hero-portrait-height-compact": 180,
+	"hero-detail-width": 160,
+	"hero-detail-width-compact": 120,
 	"room-hero-detail-width": 280,
 	"room-hero-detail-width-compact": 200,
 	"card-width": 112,
@@ -155,13 +153,11 @@ const SCENARIO := {
 	"gallery-toc-width": 140,
 	"gallery-detail-width": 280,
 	"gallery-preview-width": 200,
-	"gallery-preview-height": 260,
 	"gallery-page-size": 18,
 	"gallery-grid-columns": 6,
 	"gallery-toc-width-compact": 120,
 	"gallery-detail-width-compact": 200,
 	"gallery-preview-width-compact": 160,
-	"gallery-preview-height-compact": 208,
 	"gallery-grid-columns-compact": 4,
 	"gallery-page-size-compact": 8,
 	"report-width": 236,
@@ -261,6 +257,12 @@ static func stage_metric(name: String) -> int:
 		if SCENARIO.has(compact):
 			return int(SCENARIO[compact])
 	return metric(name)
+
+
+## 卡面展示框高度：按 base 卡面令牌的 112:146 由宽度等比计算并取整。
+## 比例只取 `card-width` / `card-height`，不读 compact 值，避免手机端紧凑尺寸改变比例。
+static func card_face_height(width: int) -> int:
+	return roundi(float(width) * float(metric("card-height")) / float(metric("card-width")))
 
 
 ## 触控端主操作命中高度：44pt 换算为画布单位；桌面端保持 44。

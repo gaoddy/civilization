@@ -5,7 +5,7 @@ extends PanelContainer
 ## 选中态用外扩的金色边框表达，不额外加徽标；锁定只压暗卡面内容，
 ## 选中框保持全亮，悬停详情仍可查看。
 
-const CARD_SIZE := Vector2(160, 200)
+var _card_size := Vector2.ZERO
 
 var hero_id := ""
 var selected := false
@@ -22,7 +22,10 @@ var _bound := false
 func setup(id: String, is_selected: bool, is_locked: bool) -> void:
 	hero_id = id
 	name = "HeroCard_%s" % id
-	custom_minimum_size = CARD_SIZE
+	# 候选卡按卡面比例：宽度取详情宽度令牌，高度按 112:146 等比。
+	var width := UITheme.metric("hero-detail-width")
+	_card_size = Vector2(width, UITheme.card_face_height(width))
+	custom_minimum_size = _card_size
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build()
 	set_selected(is_selected)
@@ -66,7 +69,7 @@ func _build() -> void:
 
 	_stack = Control.new()
 	_stack.name = "Stack"
-	_stack.custom_minimum_size = CARD_SIZE
+	_stack.custom_minimum_size = _card_size
 	_stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_stack)
 

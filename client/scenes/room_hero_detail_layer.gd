@@ -38,18 +38,17 @@ func _detail_text_width() -> int:
 
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
 	var id := "" if hero_id == null else str(hero_id)
-	var portrait := UI.art_layer(
-		CardDB.art_path(id, "portrait"),
+	# 详情顶部叠卡面：按 112:146 比例铺满，无图时只显示文字内容。
+	var art := UI.art_layer(
+		CardDB.art_path(id, "card_face"),
 		"HeroPortrait",
-		TextureRect.STRETCH_KEEP_ASPECT_CENTERED,
+		TextureRect.STRETCH_KEEP_ASPECT_COVERED,
 	)
-	if portrait != null:
-		portrait.custom_minimum_size = Vector2(
-			UITheme.stage_metric("hero-portrait-width"),
-			UITheme.stage_metric("hero-portrait-height"),
-		)
-		portrait.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		box.add_child(portrait)
+	if art != null:
+		var width := UITheme.stage_metric("hero-detail-width")
+		art.custom_minimum_size = Vector2(width, UITheme.card_face_height(width))
+		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		box.add_child(art)
 	box.add_child(_detail_name(CardDB.display_name(id)))
 	var introduction := CardDB.hero_introduction(id)
 	if introduction != "":
