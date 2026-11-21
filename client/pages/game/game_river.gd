@@ -214,10 +214,12 @@ func _on_countdown_exited() -> void:
 func _on_countdown_input(event: InputEvent) -> void:
     if not (_phase == Protocol.PHASE_RECRUIT and _hovered and not _recruited):
         return
+    # 模拟触控档位下鼠标事件会同时产生触摸事件，只认触摸，避免一次点击触发两次。
     var pressed := false
-    if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+    if event is InputEventScreenTouch:
         pressed = event.pressed
-    elif event is InputEventScreenTouch:
+    elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
+            and not ScreenProfile.is_simulated_touch():
         pressed = event.pressed
     if pressed and not _end_button.disabled:
         end_recruit_pressed.emit()

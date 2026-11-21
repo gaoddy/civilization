@@ -251,10 +251,10 @@ client/
 | `make sfx` | 生成 9 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
-| `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗，用于模拟不同尺寸设备 |
-| `make client-run-on-iphone` | 等价于 `make client-run WIDTH=2622 HEIGHT=1206`，按 iPhone 17 Pro 横屏物理分辨率开窗 |
-| `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640`，按 iPad Air 11 横屏物理分辨率开窗 |
-| `make client-run-on-desktop` | 等价于 `make client-run`，窗口按屏幕可用区自动收拢 |
+| `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗；传 `CLIENT_DEVICE` 取 `phone`、`tablet` 或 `desktop` 时以该设备档位运行，用于在桌面模拟移动端 |
+| `make client-run-on-iphone` | 等价于 `make client-run WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone`，按 iPhone 17 Pro 横屏物理分辨率开窗并进入手机档位 |
+| `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet`，按 iPad Air 11 横屏物理分辨率开窗并进入平板档位 |
+| `make client-run-on-desktop` | 等价于 `make client-run CLIENT_DEVICE=desktop`，窗口按屏幕可用区自动收拢 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
 | `make client-smoke` | 用 glob 逐个运行十三个 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR` |
 | `make client-export-ios` | 导出 Xcode 工程并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
@@ -279,14 +279,16 @@ make client-run WIDTH=960 HEIGHT=540                 # 16:9 小窗
 make client-run WIDTH=2556 HEIGHT=1179               # iPhone 横屏物理像素
 ```
 
-指定尺寸只改变窗口大小并居中，设备类型仍按桌面处理（基准 1280×720、无安全区）；不传时窗口按屏幕可用区自动收拢。尺寸不合法或只传一个时命令直接报错，不启动客户端。
+指定尺寸只改变窗口大小并居中，不改变设备档位；不传时窗口按屏幕可用区自动收拢。尺寸不合法或只传一个时命令直接报错，不启动客户端。
 
-常用设备档封装成别名，三者等价于传对应尺寸，不改变其他行为：
+在桌面模拟移动端布局与触控交互时，用 `CLIENT_DEVICE` 指定设备档位：`phone` / `tablet` / `desktop`，忽略大小写与空白，其余值按平台自动判定（桌面即 `desktop`）。手机档使用 960×540 逻辑基准与紧凑卡面，触控端控件尺寸生效，并在启动时开启鼠标模拟触摸，卡牌长按详情、拖拽与瞄准走真实触控路径。非真机触控平台不读系统屏幕安全区与虚拟键盘，避免桌面整屏安全区算出错误边距。设备档位不改变默认连接地址：桌面模拟档位仍连 `ws://127.0.0.1:8080/ws`。
+
+常用设备档封装成别名，同时设置窗口尺寸与设备档位：
 
 ```
-make client-run-on-iphone                          # 等价 WIDTH=2622 HEIGHT=1206
-make client-run-on-ipad                            # 等价 WIDTH=2360 HEIGHT=1640
-make client-run-on-desktop                         # 等价不传尺寸
+make client-run-on-iphone                          # WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone
+make client-run-on-ipad                            # WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet
+make client-run-on-desktop                         # CLIENT_DEVICE=desktop
 ```
 
 `make client-run-on-<Tab>` 由 shell 自带的 make 目标补全列出三个别名，不必记具体像素。

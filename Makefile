@@ -116,30 +116,32 @@ client-import: client-godot-check
 # 桌面客户端统一从这里启动：先导入刷新全局类缓存。新增或改名 class_name
 # 脚本后直接跑 Godot 会沿用旧缓存，缺类的脚本编译失败，对局页可能只构建一半。
 # 模拟不同尺寸设备：make client-run WIDTH=960 HEIGHT=540；两者需同时为正整数，缺省按屏幕自动收拢。
+# 模拟设备档位：make client-run CLIENT_DEVICE=phone；phone / tablet / desktop，其余值按未指定处理。
 WIDTH ?=
 HEIGHT ?=
+CLIENT_DEVICE ?=
 
 client-run: client-import
 	@if [ -z "$(WIDTH)" ] && [ -z "$(HEIGHT)" ]; then \
-	  $(GODOT) --path client; \
+	  CIVILIZATION_DEVICE="$(CLIENT_DEVICE)" $(GODOT) --path client; \
 	elif [ "$(WIDTH)" -gt 0 ] 2>/dev/null && [ "$(HEIGHT)" -gt 0 ] 2>/dev/null; then \
-	  CIVILIZATION_WINDOW_SIZE="$(WIDTH)x$(HEIGHT)" $(GODOT) --path client; \
+	  CIVILIZATION_WINDOW_SIZE="$(WIDTH)x$(HEIGHT)" CIVILIZATION_DEVICE="$(CLIENT_DEVICE)" $(GODOT) --path client; \
 	else \
 	  echo "WIDTH 与 HEIGHT 需同时传入正整数：make client-run WIDTH=960 HEIGHT=540" >&2; \
 	  exit 1; \
 	fi
 
-# 设备档别名：等价于直接传 WIDTH/HEIGHT，只改窗口尺寸，设备档案仍按桌面。
+# 设备档别名：同时切换窗口尺寸与设备档案（布局基准、控件尺寸、触控输入）。
 # 目标名可被 shell 自带的 make 补全列出，`make client-run-on-<Tab>` 即可选择。
 # 尺寸取项目验收用机的横屏物理分辨率：iPhone 17 Pro、iPad Air 11。
 client-run-on-iphone:
-	$(MAKE) client-run WIDTH=2622 HEIGHT=1206
+	$(MAKE) client-run WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone
 
 client-run-on-ipad:
-	$(MAKE) client-run WIDTH=2360 HEIGHT=1640
+	$(MAKE) client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet
 
 client-run-on-desktop:
-	$(MAKE) client-run
+	$(MAKE) client-run CLIENT_DEVICE=desktop
 
 client-check:
 	$(MAKE) protocol-check

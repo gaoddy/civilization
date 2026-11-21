@@ -170,10 +170,12 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
 
 ## 点击行切换展开；重建在下一帧做，避免在自身输入回调里释放行。
 func _on_seat_input(event: InputEvent, player_id: String) -> void:
+    # 模拟触控档位下鼠标事件会同时产生触摸事件，只认触摸，避免一次点击翻两次。
     var pressed := false
-    if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+    if event is InputEventScreenTouch:
         pressed = event.pressed
-    elif event is InputEventScreenTouch:
+    elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
+            and not ScreenProfile.is_simulated_touch():
         pressed = event.pressed
     if not pressed:
         return
