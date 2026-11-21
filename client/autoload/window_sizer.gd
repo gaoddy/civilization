@@ -1,6 +1,7 @@
 extends Node
 ## 启动时把窗口按当前屏幕可用区域收拢成基准比例并居中。
 ## 拖动缩放后不再调整窗口尺寸；全屏、最大化与触控端不介入。
+## 环境变量 CIVILIZATION_WINDOW_SIZE 指定 `<宽>x<高>` 时改用该尺寸，供本地模拟不同设备。
 
 
 func _ready() -> void:
@@ -13,7 +14,11 @@ func _ready() -> void:
     var usable := _usable_rect()
     if usable.size.x <= 0 or usable.size.y <= 0:
         return
-    var target := ScreenProfile.launch_window_size(usable.size, ScreenProfile.base_canvas())
+    var target := ScreenProfile.parse_window_size(
+        OS.get_environment("CIVILIZATION_WINDOW_SIZE")
+    )
+    if target == Vector2i.ZERO:
+        target = ScreenProfile.launch_window_size(usable.size, ScreenProfile.base_canvas())
     var window := get_window()
     window.size = target
     window.position = usable.position + (usable.size - target) / 2

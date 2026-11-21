@@ -109,8 +109,19 @@ client-import:
 
 # 桌面客户端统一从这里启动：先导入刷新全局类缓存。新增或改名 class_name
 # 脚本后直接跑 Godot 会沿用旧缓存，缺类的脚本编译失败，对局页可能只构建一半。
+# 模拟不同尺寸设备：make client-run WIDTH=960 HEIGHT=540；两者需同时为正整数，缺省按屏幕自动收拢。
+WIDTH ?=
+HEIGHT ?=
+
 client-run: client-import
-	$(GODOT) --path client
+	@if [ -z "$(WIDTH)" ] && [ -z "$(HEIGHT)" ]; then \
+	  $(GODOT) --path client; \
+	elif [ "$(WIDTH)" -gt 0 ] 2>/dev/null && [ "$(HEIGHT)" -gt 0 ] 2>/dev/null; then \
+	  CIVILIZATION_WINDOW_SIZE="$(WIDTH)x$(HEIGHT)" $(GODOT) --path client; \
+	else \
+	  echo "WIDTH 与 HEIGHT 需同时传入正整数：make client-run WIDTH=960 HEIGHT=540" >&2; \
+	  exit 1; \
+	fi
 
 client-check:
 	$(MAKE) protocol-check

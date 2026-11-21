@@ -119,6 +119,20 @@ static func content_frame(viewport: Vector2, base: Vector2i) -> Rect2:
     return Rect2(Vector2((viewport.x - width) * 0.5, (viewport.y - height) * 0.5), Vector2(width, height))
 
 
+## 解析显式窗口尺寸 `<宽>x<高>`：宽高都必须是正整数。
+## 为空、格式不符或含非正数时返回零，由调用方回退默认启动窗口。
+static func parse_window_size(text: String) -> Vector2i:
+    var parts := text.strip_edges().split("x")
+    if parts.size() != 2:
+        return Vector2i.ZERO
+    if not parts[0].is_valid_int() or not parts[1].is_valid_int():
+        return Vector2i.ZERO
+    var size := Vector2i(int(parts[0]), int(parts[1]))
+    if size.x <= 0 or size.y <= 0:
+        return Vector2i.ZERO
+    return size
+
+
 ## 启动窗口：可用区域的 90%，再收拢成基准比例。
 ## 可用区域未知或过小、90% 取整后为 0 时回退基准尺寸，不返回零尺寸。
 static func launch_window_size(usable: Vector2i, base: Vector2i) -> Vector2i:
