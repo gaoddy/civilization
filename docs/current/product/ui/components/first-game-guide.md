@@ -22,7 +22,7 @@ FirstGameGuide（CanvasLayer，layer 100）
 └─ GuideOverlay（全屏，忽略鼠标）
    ├─ GuideShade0..3（四块压暗矩形，围出高亮窗口，忽略鼠标）
    ├─ GuideBarAnchor（全屏边距容器，忽略鼠标）
-   │  └─ GuideBar（手牌上方的提示条，接收点击）
+   │  └─ GuideBar（手牌上方、宽度随内容自适应并居中的提示条，接收点击）
    │     ├─ GuideTitle（步骤标题）
    │     ├─ GuideStep（「N/4」胶囊）
    │     ├─ GuideBody（步骤说明）
@@ -32,6 +32,7 @@ FirstGameGuide（CanvasLayer，layer 100）
 
 - 压暗层与锚点容器全部 `MOUSE_FILTER_IGNORE`，只有 `GuideBar` 接收点击；点击、拖拽、倒计时与其它对局操作照常到达底层控件。
 - 提示条停靠在贴底手牌上方（下边距 = `card-height` + `space-md` + `space-xl`），为手牌悬停放大的越界留出余量，不遮挡手牌与拖拽。
+- 提示条宽度随文案内容自适应并水平居中，不铺满整行；说明文案保持单行，文案变长时提示条随之变宽。
 - 高亮矩形取当前步骤目标节点的全局矩形并集，外扩 6px；目标缺失、离树或不可见时只隐藏压暗层，提示条与文案仍可展示。
 
 ## 步骤表

@@ -104,6 +104,8 @@ func _build() -> void:
 
     _bar = UIControls.card_panel("raised")
     _bar.name = "GuideBar"
+    # 宽度随内容自适应并水平居中，不铺满整行。
+    _bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     # 只有提示条自身接收点击，外层锚点与压暗层都放行。
     _bar.mouse_filter = Control.MOUSE_FILTER_STOP
     column.add_child(_bar)
@@ -123,6 +125,7 @@ func _build() -> void:
     _step_label.name = "GuideStep"
     header.add_child(_step_label)
 
+    # 单行不换行：文案宽度直接决定提示条宽度，保持内容自适应而不是撑满整行。
     _body = UIControls.label("", UITheme.font_size("font-body"), false)
     _body.name = "GuideBody"
     inner.add_child(_body)

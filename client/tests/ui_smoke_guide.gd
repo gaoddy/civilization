@@ -181,6 +181,18 @@ func _check_input_passthrough() -> void:
         bar != null and bar.mouse_filter == Control.MOUSE_FILTER_STOP,
         "提示条自身应接收点击",
     )
+    _expect(
+        bar != null and overlay != null and bar.size.x < overlay.size.x,
+        "提示条宽度应随内容自适应，不铺满整行",
+    )
+    if bar != null and overlay != null:
+        _expect(
+            is_equal_approx(
+                bar.get_global_rect().get_center().x,
+                overlay.get_global_rect().get_center().x,
+            ),
+            "提示条应水平居中",
+        )
     var captured: Array = []
     instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
     var slot := instance.find_child("ShopSlot0", true, false)
