@@ -50,12 +50,13 @@ func _check_detail_long_press() -> void:
     _expect(not layer.visible, "抬手应隐藏详情")
 
     # 按下后位移超过 8 个画布单位：取消长按。
+    var cancel_point := point + _cancel_shift(layer)
     await _push_touch(point, 0, true)
-    await _push_drag(point + Vector2(9, 0), 0)
+    await _push_drag(cancel_point, 0)
     await get_tree().create_timer(0.5).timeout
     await get_tree().process_frame
     _expect(not layer.visible, "位移超过阈值应取消长按")
-    await _push_touch(point + Vector2(9, 0), 0, false)
+    await _push_touch(cancel_point, 0, false)
     _expect(not layer.visible, "取消后抬手不应显示详情")
 
     # 多触点：第二个触点不改变第一个触点的长按归属。
@@ -112,6 +113,7 @@ func _check_room_touch_select() -> void:
         var second: Control = candidates.get_child(1)
         var point := first.get_global_rect().get_center()
         var panel := instance.find_child("RoomHeroDetail", true, false)
+        var touch_layer := instance.find_child("HeroDetailLayer", true, false)
         var first_frame := first.find_child("SelectedFrame", true, false)
         var second_frame := second.find_child("SelectedFrame", true, false)
 
@@ -125,7 +127,6 @@ func _check_room_touch_select() -> void:
             and float(instance.get("_touch_elapsed_ms")) >= float(GameDetailLayer.LONG_PRESS_MS),
             "页面应按与详情层相同的累计时钟判定长按",
         )
-        var touch_layer := instance.find_child("HeroDetailLayer", true, false)
         _expect(
             touch_layer != null and panel != null
             and touch_layer.get_global_rect().encloses(panel.get_global_rect()),
@@ -143,12 +144,13 @@ func _check_room_touch_select() -> void:
 
         # 在第二张上位移超过 8：取消长按且不选中。
         var second_point := second.get_global_rect().get_center()
+        var cancel_point := second_point + _cancel_shift(touch_layer)
         await _push_touch(second_point, 0, true)
-        await _push_drag(second_point + Vector2(9, 0), 0)
+        await _push_drag(cancel_point, 0)
         await get_tree().create_timer(0.5).timeout
         await get_tree().process_frame
         _expect(panel != null and not panel.visible, "位移超过阈值应取消长按")
-        await _push_touch(second_point + Vector2(9, 0), 0, false)
+        await _push_touch(cancel_point, 0, false)
         _expect(first_frame != null and first_frame.is_visible_in_tree(), "位移后不应改变原选中")
         _expect(second_frame != null and not second_frame.is_visible_in_tree(), "位移后不应选中第二张")
 
@@ -369,6 +371,15 @@ func _push_touch(canvas_point: Vector2, index: int, pressed: bool) -> void:
     event.pressed = pressed
     get_viewport().push_input(event, true)
     await get_tree().process_frame
+
+
+## 位移阈值以内容框局部单位计：手机基准内容在 1280×720 视口里被放大，
+## 视口像素要按该层的全局缩放换算，才能保证真正超过阈值。
+func _cancel_shift(layer: Control) -> Vector2:
+    if layer == null:
+        return Vector2(GameDetailLayer.TOUCH_CANCEL_DISTANCE + 1.0, 0.0)
+    var scale := maxf(layer.get_global_transform_with_canvas().get_scale().x, 0.001)
+    return Vector2(GameDetailLayer.TOUCH_CANCEL_DISTANCE * scale + 1.0, 0.0)
 
 
 func _push_drag(canvas_point: Vector2, index: int) -> void:

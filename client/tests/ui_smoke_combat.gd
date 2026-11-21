@@ -32,6 +32,7 @@ func _ready() -> void:
     await _check_combat_intro_ghost()
     await _check_combat_hides_countdown()
     await _check_attack_collision_flight()
+    await _check_fx_local_scaled()
     await _check_death_fades_after_strike()
     await _check_fixed_slots()
     _finish()
@@ -385,6 +386,33 @@ func _check_attack_collision_flight() -> void:
     instance.queue_free()
     await get_tree().process_frame
     _reset_store()
+
+
+## 缩放内容框下，演出层把画布坐标换算到自身局部时按整体变换计算，
+## 不能只减 `global_position`，否则克隆卡与伤害飘字会偏移。
+func _check_fx_local_scaled() -> void:
+    var host := Control.new()
+    host.size = Vector2(1280, 480)
+    add_child(host)
+    var frame := Control.new()
+    frame.size = Vector2(1280, 720)
+    frame.scale = Vector2(1280.0 / 1920.0, 1280.0 / 1920.0)
+    host.add_child(frame)
+    var card := Control.new()
+    card.position = Vector2(400, 300)
+    card.size = Vector2(84, 92)
+    frame.add_child(card)
+    var fx := CombatFx.new()
+    fx.size = Vector2(1280, 720)
+    frame.add_child(fx)
+    await get_tree().process_frame
+    var expected := fx.get_global_transform().affine_inverse() * card.global_position
+    _expect(
+        fx._local_point(card.global_position).is_equal_approx(expected),
+        "缩放内容框下演出层应把画布坐标换算为局部坐标",
+    )
+    host.queue_free()
+    await get_tree().process_frame
 
 
 ## 阵亡卡在攻方回位后消失：淡出时覆盖层仍有克隆，行内原卡已不可见。

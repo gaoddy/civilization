@@ -275,9 +275,9 @@ func _ignore_mouse(node: Node) -> void:
         _ignore_mouse(child)
 
 
-## 全局坐标换算到覆盖层局部坐标。
+## 全局坐标换算到覆盖层局部坐标；覆盖层随内容框缩放，不能只减 `global_position`。
 func _local_point(point: Vector2) -> Vector2:
-    return point - global_position
+    return get_global_transform().affine_inverse() * point
 
 
 func _reset_card(card: Control) -> void:

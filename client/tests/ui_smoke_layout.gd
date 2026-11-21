@@ -48,6 +48,8 @@ const PAGES := [
 
 func _ready() -> void:
     await _check_desktop()
+    await _check_drag_preview()
+    await _check_aim_local()
     await _check_touch()
     await _check_compact()
     await _check_tall()
@@ -71,7 +73,18 @@ func _check_desktop() -> void:
         var area := _safe_area(page)
         _check(area != null, "%s 缺少 SafeAreaMargin" % page_case["path"])
         if area != null:
-            _check(page.get_child_count() == 2, "%s 根节点应为背景 + SafeAreaMargin" % page_case["path"])
+            var frame := page.get_node_or_null(UI.CONTENT_FRAME_NAME) as Control
+            _check(frame != null and frame.get_parent() == page, "%s 应有 ContentFrame" % page_case["path"])
+            var root: Control = null
+            if frame != null:
+                root = frame.get_node_or_null(UI.CONTENT_ROOT_NAME) as Control
+            _check(root != null, "%s 的 ContentFrame 应包含 ContentRoot" % page_case["path"])
+            if root != null:
+                _check(root.size.is_equal_approx(Vector2(ScreenProfile.base_canvas())),
+                    "%s 的 ContentRoot 应为基准尺寸" % page_case["path"])
+                var ratio := root.size.x / root.size.y
+                _check(is_equal_approx(ratio, 16.0 / 9.0), "%s 的 ContentRoot 应保持基准比例" % page_case["path"])
+            _check(page.get_child_count() == 2, "%s 根节点应为背景 + ContentFrame" % page_case["path"])
             var background := page.get_node_or_null("PageBackground")
             _check(background != null and background.get_parent() == page,
                 "%s 背景应留在安全区外" % page_case["path"])
@@ -91,6 +104,49 @@ func _check_desktop() -> void:
                 "%s 重复调用后应只有一个 SafeAreaMargin" % page_case["path"])
         page.queue_free()
         await get_tree().process_frame
+
+
+## 拖拽预览在缩放内容框下仍与卡片同尺寸、起手点对齐。
+func _check_drag_preview() -> void:
+    var page := Control.new()
+    page.size = Vector2(1280, 480)
+    add_child(page)
+    var area := UI.safe_area(page)
+    var card := Control.new()
+    card.size = Vector2(84, 92)
+    area.add_child(card)
+    var scale := UI.root_scale(card)
+    area.remove_child(card)
+    var preview := UI.drag_preview(card, Vector2(10, 20), area)
+    _check(is_equal_approx(preview.scale.x, scale), "拖拽预览应按内容框缩放")
+    _check(card.position.is_equal_approx(Vector2(-10, -20)), "拖拽预览起手点应对齐")
+    preview.free()
+    page.queue_free()
+    await get_tree().process_frame
+
+
+## 超宽视口下瞄准层把全局矩形换算到内容框局部坐标。
+func _check_aim_local() -> void:
+    var host := Control.new()
+    host.name = "AimHost"
+    host.size = Vector2(1280, 480)
+    add_child(host)
+    var page := await _instantiate_into("res://scenes/game.tscn", host)
+    if page != null:
+        var aim := page.find_child("AimLayer", true, false) as Control
+        _check(aim != null, "对局页缺少 AimLayer")
+        if aim != null:
+            var global := Rect2(400, 100, 80, 80)
+            aim.begin_skill(global, [{"zone": "board", "id": "none"}])
+            var local: Rect2 = aim.source_rect_local()
+            _check(local.position.is_equal_approx(aim.get_global_transform().affine_inverse() * global.position),
+                "瞄准层源矩形应转为局部坐标")
+            _check(is_equal_approx(local.size.x, global.size.x / aim.get_global_transform().get_scale().x),
+                "瞄准层源矩形尺寸应除以内容框缩放")
+            _check(Rect2(Vector2.ZERO, aim.size).encloses(local), "瞄准层源矩形应落在层内")
+            aim.clear()
+    host.queue_free()
+    await get_tree().process_frame
 
 
 func _check_touch() -> void:
@@ -309,6 +365,10 @@ func _check_game_tall(size: Vector2) -> void:
     var page := await _instantiate_into("res://scenes/game.tscn", host)
     if page != null:
         var bounds := Rect2(host.get_global_rect().position, size).grow(1.0)
+        var frame := page.get_node_or_null(UI.CONTENT_FRAME_NAME) as Control
+        var bottom := size.y
+        if frame != null:
+            bottom = frame.get_global_rect().end.y
         var hand_strip := page.find_child("HandStrip", true, false) as Control
         var hand_row := page.find_child("HandRow", true, false) as Control
         _check(hand_strip != null, "对局页缺少 HandStrip")
@@ -318,13 +378,13 @@ func _check_game_tall(size: Vector2) -> void:
                 "手牌行在 %s 下越界：%s" % [str(size), str(hand_strip.get_global_rect())],
             )
             _check(
-                hand_strip.get_global_rect().end.y >= size.y - 8.0,
-                "手牌行应贴住页面底部，实际底边 %.1f" % hand_strip.get_global_rect().end.y,
+                hand_strip.get_global_rect().end.y >= bottom - 8.0,
+                "手牌行应贴住内容框底部，实际底边 %.1f" % hand_strip.get_global_rect().end.y,
             )
         if hand_row != null:
             _check(
-                hand_row.get_global_rect().end.y >= size.y - 8.0,
-                "手牌卡应贴住页面底部，实际底边 %.1f" % hand_row.get_global_rect().end.y,
+                hand_row.get_global_rect().end.y >= bottom - 8.0,
+                "手牌卡应贴住内容框底部，实际底边 %.1f" % hand_row.get_global_rect().end.y,
             )
         for node_name in ["BoardRow", "ShopRow", "PlayersPanel"]:
             var node := page.find_child(str(node_name), true, false) as Control
@@ -385,17 +445,19 @@ func _instantiate(path: String) -> Node:
 
 
 func _safe_area(page: Node) -> SafeAreaMargin:
-    for child in page.get_children():
-        if child is SafeAreaMargin:
-            return child
-    return null
+    return page.find_child(UI.SAFE_AREA_NAME, true, false) as SafeAreaMargin
 
 
 func _count_safe_areas(page: Node) -> int:
+    return _count_named(page, UI.SAFE_AREA_NAME)
+
+
+func _count_named(node: Node, node_name: String) -> int:
     var count := 0
-    for child in page.get_children():
-        if child is SafeAreaMargin:
+    for child in node.get_children():
+        if str(child.name) == node_name:
             count += 1
+        count += _count_named(child, node_name)
     return count
 
 

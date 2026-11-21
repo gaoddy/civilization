@@ -76,9 +76,9 @@ func begin_skill(source_rect: Rect2, candidates: Array) -> void:
 		return
 	_mode = Mode.SKILL
 	_source_id = ""
-	_source_rect = source_rect
+	_source_rect = _local_rect(source_rect)
 	_candidates = candidates.duplicate()
-	_pointer = get_global_mouse_position()
+	_pointer = _local_point(get_global_mouse_position())
 	_pointer_valid = true
 	_pressed = true
 	_touch_index = -1
@@ -97,9 +97,9 @@ func begin_pending(source_minion_id: String, candidates: Array) -> void:
 	var source := _find_control("board", source_minion_id)
 	_mode = Mode.PENDING
 	_source_id = source_minion_id
-	_source_rect = source.get_global_rect() if source != null else Rect2()
+	_source_rect = _local_rect(source.get_global_rect()) if source != null else Rect2()
 	_candidates = candidates.duplicate()
-	_pointer = get_global_mouse_position()
+	_pointer = _local_point(get_global_mouse_position())
 	_pointer_valid = not ScreenProfile.is_touch()
 	_pressed = false
 	_touch_index = -1
@@ -237,7 +237,7 @@ func _process(delta: float) -> void:
 		# 起点逐帧按来源卡当前矩形校准，视图重建后也能跟上。
 		_source_rect = _board_rect(_source_id)
 	if _mode == Mode.PENDING and not _pressed and not ScreenProfile.is_touch():
-		_set_pointer(get_global_mouse_position())
+		_set_pointer(_local_point(get_global_mouse_position()))
 	elif _mode != Mode.NONE and _pointer_valid:
 		# 视图重建可能移动候选卡：按住期间逐帧重判命中。
 		_update_hover()
@@ -266,8 +266,8 @@ func _refresh_drag_mode() -> void:
 	# 候选必须复制：`clear()` 会清空数组，直接持有拖拽数据里的数组会污染卡片的载荷。
 	_candidates = targets.duplicate()
 	_source_id = instance_id
-	_source_rect = source.get_global_rect()
-	_pointer = get_global_mouse_position()
+	_source_rect = _local_rect(source.get_global_rect())
+	_pointer = _local_point(get_global_mouse_position())
 	_pointer_valid = true
 	_update_hover()
 
@@ -309,12 +309,12 @@ func _candidate_rect(candidate: Dictionary) -> Rect2:
 	var control := _find_control(
 		str(candidate.get("zone", "")), str(candidate.get("id", ""))
 	)
-	return control.get_global_rect() if control != null else Rect2()
+	return _local_rect(control.get_global_rect()) if control != null else Rect2()
 
 
 func _board_rect(minion_id: String) -> Rect2:
 	var control := _find_control("board", minion_id)
-	return control.get_global_rect() if control != null else Rect2()
+	return _local_rect(control.get_global_rect()) if control != null else Rect2()
 
 
 # ── 绘制 ──────────────────────────────────────────────────────────────────
@@ -492,4 +492,21 @@ func _canvas_point(viewport_point: Vector2) -> Vector2:
 	var viewport := get_viewport()
 	if viewport == null:
 		return viewport_point
-	return viewport.get_canvas_transform().affine_inverse() * viewport_point
+	return _local_point(viewport.get_canvas_transform().affine_inverse() * viewport_point)
+
+
+## 全局画布矩形转本层局部矩形；尺寸按本层全局缩放换算。
+func _local_rect(global: Rect2) -> Rect2:
+	if global.size == Vector2.ZERO:
+		return Rect2()
+	var scale := get_global_transform().get_scale().x
+	return Rect2(_local_point(global.position), global.size / scale)
+
+
+func _local_point(global: Vector2) -> Vector2:
+	return get_global_transform().affine_inverse() * global
+
+
+## 冒烟只读：当前来源矩形，内容框局部坐标。
+func source_rect_local() -> Rect2:
+	return _source_rect
