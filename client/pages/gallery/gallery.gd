@@ -3,7 +3,7 @@ extends Control
 
 func _ready() -> void:
     # 页面自带整屏背景，图鉴组件不再叠一层；安全区只约束内容。
-    add_child(UI.background())
+    add_child(UIControls.background())
     var gallery := CardGallery.new()
     gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
     gallery.set_background_visible(false)

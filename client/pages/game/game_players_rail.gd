@@ -45,7 +45,7 @@ func _init() -> void:
     )
     scroll.add_child(_rail)
 
-    _report_panel = UI.card_panel("raised")
+    _report_panel = UIControls.card_panel("raised")
     _report_panel.name = "SeatReportPanel"
     _report_panel.custom_minimum_size = Vector2(UITheme.metric("report-width"), 0)
     _report_panel.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -54,12 +54,12 @@ func _init() -> void:
 
 func refresh(state: GameUiState) -> void:
     _last_state = state
-    UI.clear(_rail)
+    UIControls.clear(_rail)
     var players: Array = _sorted_players(state.view)
     if players.is_empty():
         _expanded_player_id = ""
         _hide_report()
-        _rail.add_child(UI.empty_hint(tr("ui.game.rail.empty")))
+        _rail.add_child(UIControls.empty_hint(tr("ui.game.rail.empty")))
         return
     # 记住的 id 在新视图里找不到就清空，否则保持展开。
     if _expanded_player_id != "" and not _has_player(players, _expanded_player_id):
@@ -115,14 +115,14 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     var is_self := player_id == GameStore.player_id
     var alive := bool(player.get("alive", true))
     var compact := _compact()
-    var panel := UI.card_panel(_row_variant(is_self, compact))
+    var panel := UIControls.card_panel(_row_variant(is_self, compact))
     panel.name = "SeatRow"
     panel.set_meta("player_id", player_id)
     panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     panel.mouse_filter = Control.MOUSE_FILTER_STOP
     panel.gui_input.connect(_on_seat_input.bind(player_id))
     if not alive:
-        UI.apply_dim(panel)
+        UIControls.apply_dim(panel)
 
     var box := VBoxContainer.new()
     box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -140,20 +140,20 @@ func _seat_row(player: Dictionary, state: GameUiState) -> PanelContainer:
     avatar_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
     box.add_child(avatar_box)
 
-    var avatar := UI.avatar(CardText.optional_text(player.get("heroCardId")), avatar_size)
+    var avatar := Avatar.create(CardText.optional_text(player.get("heroCardId")), avatar_size)
     avatar.mouse_filter = Control.MOUSE_FILTER_IGNORE
     avatar_box.add_child(avatar)
     _ignore_mouse(avatar)
 
     if player.get("rank") != null:
-        var badge := UI.rank_badge(int(player.get("rank")))
+        var badge := RankBadge.create(int(player.get("rank")))
         badge.name = "SeatRankBadge"
         badge.position = Vector2(-3, -3)
         badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
         avatar_box.add_child(badge)
         _ignore_mouse(badge)
 
-    var hp := UI.hp_bar(int(player.get("hp", 0)), state.hp_cap, avatar_size)
+    var hp := HpBar.create(int(player.get("hp", 0)), state.hp_cap, avatar_size)
     hp.name = "SeatHpBar"
     box.add_child(hp)
 
@@ -198,7 +198,7 @@ func _sync_report() -> void:
         detail.hide_panel()
     if _report_panel.get_parent() == null:
         report_layer.add_child(_report_panel)
-    UI.clear(_report_panel)
+    UIControls.clear(_report_panel)
     _report_panel.add_child(_report_block(player, _last_state.view))
     _report_panel.visible = true
     call_deferred("_position_report")
@@ -207,7 +207,7 @@ func _sync_report() -> void:
 func _hide_report() -> void:
     if _report_panel == null:
         return
-    UI.clear(_report_panel)
+    UIControls.clear(_report_panel)
     _report_panel.visible = false
     if detail != null and is_instance_valid(detail):
         detail.report_open = false
@@ -345,7 +345,7 @@ func _entry_text(entry: Dictionary, player_id: String, names: Dictionary) -> Str
 
 
 func _report_line(text: String) -> Label:
-    var line := UI.label(text, UITheme.font_size("font-caption"), false)
+    var line := UIControls.label(text, UITheme.font_size("font-caption"), false)
     line.mouse_filter = Control.MOUSE_FILTER_IGNORE
     line.custom_minimum_size = Vector2(
         UITheme.metric("report-width") - UITheme.space("space-lg") * 2,

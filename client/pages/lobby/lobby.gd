@@ -35,7 +35,7 @@ func _show_room_closed_reason() -> void:
 
 
 func _build() -> void:
-    add_child(UI.background())
+    add_child(UIControls.background())
 
     var margin := MarginContainer.new()
     margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -60,8 +60,8 @@ func _build() -> void:
     top.name = "LobbyTop"
     top.add_theme_constant_override("separation", UITheme.space("space-lg"))
     column.add_child(top)
-    top.add_child(UI.label(tr("ui.lobby.title"), UITheme.font_size("font-hero"), false))
-    _greeting = UI.label(
+    top.add_child(UIControls.label(tr("ui.lobby.title"), UITheme.font_size("font-hero"), false))
+    _greeting = UIControls.label(
         tr("ui.lobby.logged_in") % [GameStore.display_name, GameStore.player_code],
         UITheme.font_size("font-body"),
         false,
@@ -70,7 +70,7 @@ func _build() -> void:
     var top_spacer := Control.new()
     top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     top.add_child(top_spacer)
-    _status = UI.label("", UITheme.font_size("font-body-sm"))
+    _status = UIControls.label("", UITheme.font_size("font-body-sm"))
     _status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     top.add_child(_status)
 
@@ -80,7 +80,7 @@ func _build() -> void:
     center.size_flags_vertical = Control.SIZE_EXPAND_FILL
     column.add_child(center)
 
-    var panel := UI.card_panel("surface")
+    var panel := UIControls.card_panel("surface")
     panel.name = "LobbyActions"
     panel.custom_minimum_size = Vector2(620, 0)
     center.add_child(panel)
@@ -89,12 +89,12 @@ func _build() -> void:
     actions.add_theme_constant_override("separation", UITheme.space("space-lg"))
     panel.add_child(actions)
 
-    var create := UI.styled_button(tr("ui.lobby.create_room"), "primary", 50)
+    var create := UIControls.styled_button(tr("ui.lobby.create_room"), "primary", 50)
     create.name = "CreateRoomButton"
     create.pressed.connect(_on_create_pressed)
     actions.add_child(create)
 
-    actions.add_child(UI.label(tr("ui.lobby.join_section"), UITheme.font_size("font-title"), false))
+    actions.add_child(UIControls.label(tr("ui.lobby.join_section"), UITheme.font_size("font-title"), false))
     var join_row := HBoxContainer.new()
     join_row.add_theme_constant_override("separation", UITheme.space("space-md"))
     actions.add_child(join_row)
@@ -103,7 +103,7 @@ func _build() -> void:
     _code_input.custom_minimum_size = Vector2(220, 0)
     _code_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     join_row.add_child(_code_input)
-    var join := UI.button(tr("ui.lobby.join"))
+    var join := UIControls.button(tr("ui.lobby.join"))
     join.name = "JoinButton"
     join.pressed.connect(_on_join_pressed)
     join_row.add_child(join)
@@ -113,7 +113,7 @@ func _build() -> void:
     bottom.name = "LobbyBottom"
     bottom.add_theme_constant_override("separation", UITheme.space("space-md"))
     column.add_child(bottom)
-    _friends_button = UI.button("")
+    _friends_button = UIControls.button("")
     _friends_button.name = "FriendsButton"
     _friends_button.custom_minimum_size = Vector2(200, _friends_button.custom_minimum_size.y)
     _friends_button.pressed.connect(_on_friends_pressed)
@@ -121,7 +121,7 @@ func _build() -> void:
     var bottom_spacer := Control.new()
     bottom_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     bottom.add_child(bottom_spacer)
-    var gallery := UI.button(tr("ui.gallery.entry"))
+    var gallery := UIControls.button(tr("ui.gallery.entry"))
     gallery.name = "GalleryButton"
     gallery.custom_minimum_size = Vector2(200, gallery.custom_minimum_size.y)
     gallery.pressed.connect(_on_gallery_pressed)

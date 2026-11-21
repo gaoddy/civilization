@@ -41,7 +41,7 @@ func _init() -> void:
 	_cover.add_theme_stylebox_override("panel", _cover_style(UITheme.color("color-surface-sunken")))
 	lines.add_child(_cover)
 
-	_cover_mark = UI.label("?", UITheme.font_size("font-hero"), false)
+	_cover_mark = UIControls.label("?", UITheme.font_size("font-hero"), false)
 	_cover_mark.name = "HeroCardMark"
 	_cover_mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_cover_mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -49,7 +49,7 @@ func _init() -> void:
 	_cover_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_cover.add_child(_cover_mark)
 
-	_name_label = UI.label("", UITheme.font_size("font-micro"), false)
+	_name_label = UIControls.label("", UITheme.font_size("font-micro"), false)
 	_name_label.name = "HeroCardName"
 	_name_label.custom_minimum_size = Vector2(0, UITheme.stage_metric("hero-name-height"))
 	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -108,7 +108,7 @@ func _refresh_cover_art(hero_id: String) -> void:
 		_cover.remove_child(_cover_art)
 		_cover_art.queue_free()
 		_cover_art = null
-	var art := UI.art_layer(path, "HeroCoverArt")
+	var art := UIArt.layer(path, "HeroCoverArt")
 	if art != null:
 		var inset := UITheme.metric("card-cover-inset")
 		art.offset_left = inset
@@ -122,7 +122,7 @@ func _refresh_cover_art(hero_id: String) -> void:
 
 
 func _stat_label(node_name: String, size: Vector2, border: Color) -> Label:
-	var node := UI.label("", UITheme.font_size("font-micro"), false)
+	var node := UIControls.label("", UITheme.font_size("font-micro"), false)
 	node.name = node_name
 	node.custom_minimum_size = size
 	node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -63,7 +63,7 @@ func _gap(node_name: String, height: int) -> Control:
 
 
 func _build_board() -> PanelContainer:
-    var board_panel := UI.card_panel("bare")
+    var board_panel := UIControls.card_panel("bare")
     board_panel.name = "BoardPanel"
     board_panel.custom_minimum_size = Vector2(0, UITheme.stage_metric("card-height"))
 
@@ -122,7 +122,7 @@ func seconds_left() -> int:
 
 
 func _refresh_board(state: GameUiState) -> void:
-    UI.clear(_board_row)
+    UIControls.clear(_board_row)
     var aff: Dictionary = state.self_state.get("affordances", {})
     var board: Array = state.self_state.get("board", [])
     var slots := state.board_slots
@@ -169,7 +169,7 @@ func _minion_card(
     }
     panel.drag_allowed = can_rearrange and Net.is_open()
     if not panel.drag_allowed:
-        UI.apply_dim(panel)
+        UIControls.apply_dim(panel)
     return panel
 
 

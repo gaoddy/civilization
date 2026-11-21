@@ -35,7 +35,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
     var preview := duplicate() as Control
     preview.modulate = Color(1, 1, 1, 0.7)
     preview.custom_minimum_size = custom_minimum_size
-    set_drag_preview(UI.drag_preview(preview, grab, self))
+    set_drag_preview(UIDrag.preview(preview, grab, self))
     return payload.duplicate()
 
 

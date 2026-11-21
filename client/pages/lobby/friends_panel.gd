@@ -36,7 +36,7 @@ func _init() -> void:
     center.set_anchors_preset(Control.PRESET_FULL_RECT)
     add_child(center)
 
-    _panel = UI.card_panel("raised")
+    _panel = UIControls.card_panel("raised")
     _panel.name = "FriendsPanelCard"
     _panel.custom_minimum_size = Vector2(600, 0)
     center.add_child(_panel)
@@ -49,11 +49,11 @@ func _init() -> void:
     header.name = "FriendsHeader"
     header.add_theme_constant_override("separation", UITheme.space("space-sm"))
     root.add_child(header)
-    header.add_child(UI.label(tr("ui.lobby.friends_section"), UITheme.font_size("font-title-lg"), false))
+    header.add_child(UIControls.label(tr("ui.lobby.friends_section"), UITheme.font_size("font-title-lg"), false))
     var spacer := Control.new()
     spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     header.add_child(spacer)
-    var close_button := UI.button(tr("ui.lobby.close"))
+    var close_button := UIControls.button(tr("ui.lobby.close"))
     close_button.name = "FriendsClose"
     close_button.pressed.connect(_on_close)
     header.add_child(close_button)
@@ -79,19 +79,19 @@ func _init() -> void:
     _add_input.custom_minimum_size = Vector2(220, 0)
     _add_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     add_row.add_child(_add_input)
-    var add := UI.button(tr("ui.lobby.add_friend"))
+    var add := UIControls.button(tr("ui.lobby.add_friend"))
     add.name = "AddFriendButton"
     add.pressed.connect(_on_add_friend_pressed)
     add_row.add_child(add)
 
-    _status = UI.label("", UITheme.font_size("font-body-sm"))
+    _status = UIControls.label("", UITheme.font_size("font-body-sm"))
     body.add_child(_status)
 
-    _outgoing = UI.label("", UITheme.font_size("font-body-sm"))
+    _outgoing = UIControls.label("", UITheme.font_size("font-body-sm"))
     _outgoing.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     body.add_child(_outgoing)
 
-    body.add_child(UI.label(tr("ui.lobby.incoming_section"), UITheme.font_size("font-title"), false))
+    body.add_child(UIControls.label(tr("ui.lobby.incoming_section"), UITheme.font_size("font-title"), false))
     _incoming_box = VBoxContainer.new()
     _incoming_box.name = "IncomingRequests"
     _incoming_box.add_theme_constant_override("separation", UITheme.space("space-sm"))
@@ -102,7 +102,7 @@ func _init() -> void:
     _friends_box.add_theme_constant_override("separation", UITheme.space("space-sm"))
     body.add_child(_friends_box)
 
-    body.add_child(UI.label(tr("ui.lobby.recent_section"), UITheme.font_size("font-title"), false))
+    body.add_child(UIControls.label(tr("ui.lobby.recent_section"), UITheme.font_size("font-title"), false))
     _recent_box = VBoxContainer.new()
     _recent_box.name = "RecentPlayers"
     _recent_box.add_theme_constant_override("separation", UITheme.space("space-sm"))
@@ -163,21 +163,21 @@ func _render() -> void:
     _outgoing.visible = not GameStore.outgoing_requests.is_empty()
     _outgoing.text = tr("ui.lobby.outgoing_hint") % GameStore.outgoing_requests.size()
 
-    UI.clear(_incoming_box)
+    UIControls.clear(_incoming_box)
     if GameStore.incoming_requests.is_empty():
-        _incoming_box.add_child(UI.empty_hint(tr("ui.lobby.no_requests")))
+        _incoming_box.add_child(UIControls.empty_hint(tr("ui.lobby.no_requests")))
     for request in GameStore.incoming_requests:
         _incoming_box.add_child(_request_row(request))
 
-    UI.clear(_friends_box)
+    UIControls.clear(_friends_box)
     if GameStore.friends.is_empty():
-        _friends_box.add_child(UI.empty_hint(tr("ui.lobby.no_friends")))
+        _friends_box.add_child(UIControls.empty_hint(tr("ui.lobby.no_friends")))
     for friend in GameStore.friends:
         _friends_box.add_child(_friend_row(friend))
 
-    UI.clear(_recent_box)
+    UIControls.clear(_recent_box)
     if GameStore.recent_players.is_empty():
-        _recent_box.add_child(UI.empty_hint(tr("ui.lobby.no_recent")))
+        _recent_box.add_child(UIControls.empty_hint(tr("ui.lobby.no_recent")))
     for player in GameStore.recent_players:
         _recent_box.add_child(_recent_row(player))
 
@@ -187,7 +187,7 @@ func _request_row(request: Dictionary) -> HBoxContainer:
     row.add_theme_constant_override("separation", UITheme.space("space-md"))
     var player_id := str(request.get("playerId", ""))
     row.add_child(
-        UI.label(
+        UIControls.label(
             tr("ui.lobby.request_incoming") % [
                 str(request.get("displayName", player_id)),
                 str(request.get("playerCode", "")),
@@ -196,11 +196,11 @@ func _request_row(request: Dictionary) -> HBoxContainer:
             false,
         )
     )
-    var accept := UI.button(tr("ui.lobby.accept"))
+    var accept := UIControls.button(tr("ui.lobby.accept"))
     accept.name = "Accept_%s" % player_id
     accept.pressed.connect(_on_respond_pressed.bind(player_id, true))
     row.add_child(accept)
-    var decline := UI.button(tr("ui.lobby.decline"))
+    var decline := UIControls.button(tr("ui.lobby.decline"))
     decline.name = "Decline_%s" % player_id
     decline.pressed.connect(_on_respond_pressed.bind(player_id, false))
     row.add_child(decline)
@@ -213,7 +213,7 @@ func _friend_row(friend: Dictionary) -> HBoxContainer:
     var player_id := str(friend.get("playerId", ""))
     var status := UIWording.enum_text("friend_status", str(friend.get("status", "offline")))
     row.add_child(
-        UI.label(
+        UIControls.label(
             tr("ui.lobby.friend_row") % [
                 str(friend.get("displayName", player_id)),
                 str(friend.get("playerCode", "")),
@@ -223,7 +223,7 @@ func _friend_row(friend: Dictionary) -> HBoxContainer:
             false,
         )
     )
-    var remove := UI.button(tr("ui.lobby.remove_friend"))
+    var remove := UIControls.button(tr("ui.lobby.remove_friend"))
     remove.name = "Remove_%s" % player_id
     remove.pressed.connect(_on_remove_pressed.bind(player_id))
     row.add_child(remove)
@@ -235,7 +235,7 @@ func _recent_row(player: Dictionary) -> HBoxContainer:
     row.add_theme_constant_override("separation", UITheme.space("space-md"))
     var player_id := str(player.get("playerId", ""))
     row.add_child(
-        UI.label(
+        UIControls.label(
             tr("ui.lobby.recent_row") % [
                 str(player.get("displayName", player_id)),
                 str(player.get("playerCode", "")),
@@ -244,7 +244,7 @@ func _recent_row(player: Dictionary) -> HBoxContainer:
             false,
         )
     )
-    var add := UI.button(tr("ui.lobby.add_friend"))
+    var add := UIControls.button(tr("ui.lobby.add_friend"))
     add.name = "AddRecent_%s" % player_id
     add.pressed.connect(_on_add_recent_pressed.bind(str(player.get("playerCode", ""))))
     row.add_child(add)

@@ -84,7 +84,7 @@ func _build() -> void:
 	_stack.add_child(cover)
 
 	# 有卡面时叠图并隐藏首字水印：方形卡面四角向内收，落在卡片圆角以内。
-	var cover_art := UI.art_layer(CardDB.art_path(hero_id, "card_face"), "CoverArt")
+	var cover_art := UIArt.layer(CardDB.art_path(hero_id, "card_face"), "CoverArt")
 	if cover_art != null:
 		var inset := UITheme.metric("card-cover-inset")
 		cover_art.offset_left = inset
@@ -93,7 +93,7 @@ func _build() -> void:
 		cover_art.offset_bottom = -inset
 		_stack.add_child(cover_art)
 	else:
-		var watermark := UI.label(CardDB.display_name(hero_id).substr(0, 1), 72, false)
+		var watermark := UIControls.label(CardDB.display_name(hero_id).substr(0, 1), 72, false)
 		watermark.name = "Watermark"
 		watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
 		watermark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -102,7 +102,7 @@ func _build() -> void:
 		watermark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_stack.add_child(watermark)
 
-	var name_label := UI.label(CardDB.display_name(hero_id), UITheme.font_size("font-title"), false)
+	var name_label := UIControls.label(CardDB.display_name(hero_id), UITheme.font_size("font-title"), false)
 	name_label.name = "Name"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)

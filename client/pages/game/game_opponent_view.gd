@@ -17,10 +17,10 @@ func _init() -> void:
 
 
 func refresh(state: GameUiState) -> void:
-    UI.clear(self)
+    UIControls.clear(self)
     var opponent_id := CardText.optional_text(state.view.get("opponentPlayerId"))
     if opponent_id == "":
-        add_child(UI.empty_hint(tr("ui.game.side_panel.waiting_match")))
+        add_child(UIControls.empty_hint(tr("ui.game.side_panel.waiting_match")))
         return
     var player := _player(state.view, opponent_id)
     var ghost := GameStore.combat_is_current() and bool(GameStore.last_combat.get("mirror", false))
@@ -49,7 +49,7 @@ func _ghost_block(player: Dictionary, hp_cap: int) -> Control:
     block.add_theme_constant_override("separation", UITheme.space("space-md"))
     block.add_child(_portrait(player))
     block.add_child(_identity_column(player, hp_cap, true))
-    UI.apply_dim(block)
+    UIControls.apply_dim(block)
     return block
 
 
@@ -82,23 +82,23 @@ func _identity_column(player: Dictionary, hp_cap: int, ghost: bool) -> VBoxConta
     var display_name := CardText.optional_text(player.get("displayName"))
     if display_name == "":
         display_name = CardText.optional_text(player.get("playerId"))
-    var name_label := UI.label(display_name, UITheme.font_size("font-body-sm"), false)
+    var name_label := UIControls.label(display_name, UITheme.font_size("font-body-sm"), false)
     name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     name_label.max_lines_visible = 1
     name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
     name_row.add_child(name_label)
     if ghost:
-        var ghost_badge := UI.pill_label(tr("ui.game.side_panel.ghost"), "info", "font-caption")
+        var ghost_badge := UIControls.pill_label(tr("ui.game.side_panel.ghost"), "info", "font-caption")
         ghost_badge.name = "GhostBadge"
         name_row.add_child(ghost_badge)
     var rank = player.get("rank")
     if rank != null:
-        var rank_badge := UI.pill_label(tr("ui.game.side_panel.rank") % int(rank), "accent", "font-caption")
+        var rank_badge := UIControls.pill_label(tr("ui.game.side_panel.rank") % int(rank), "accent", "font-caption")
         rank_badge.name = "RankBadge"
         name_row.add_child(rank_badge)
 
     var hero_id := CardText.optional_text(player.get("heroCardId"))
-    var hero_label := UI.label(
+    var hero_label := UIControls.label(
         CardDB.display_name(hero_id) if hero_id != "" else tr("ui.game.side_panel.unknown_hero"),
         UITheme.font_size("font-body-sm"),
         false,
@@ -106,7 +106,7 @@ func _identity_column(player: Dictionary, hp_cap: int, ghost: bool) -> VBoxConta
     hero_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
     column.add_child(hero_label)
 
-    var meta := UI.label(tr("ui.game.side_panel.hp_line") % [
+    var meta := UIControls.label(tr("ui.game.side_panel.hp_line") % [
         int(player.get("hp", 0)),
         maxi(hp_cap, 1),
         CardText.era_text(int(player.get("era", 1))),
@@ -118,7 +118,7 @@ func _identity_column(player: Dictionary, hp_cap: int, ghost: bool) -> VBoxConta
 
     if not ghost:
         column.add_child(
-            UI.hp_bar(
+            HpBar.create(
                 int(player.get("hp", 0)),
                 hp_cap,
                 UITheme.metric("opponent-hp-width"),

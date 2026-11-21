@@ -66,7 +66,7 @@ static func create_face(card_id: String, show_desc: bool, hero := false) -> Cont
         var info_height := UITheme.stage_metric(
             "card-info-height" if desc_text != "" else "card-info-compact-height"
         )
-        var watermark := UI.label(CardText.initial(card_id), UITheme.font_size("font-hero"), false)
+        var watermark := UIControls.label(CardText.initial(card_id), UITheme.font_size("font-hero"), false)
         watermark.name = "CoverMark"
         watermark.set_anchors_preset(Control.PRESET_FULL_RECT)
         watermark.offset_bottom = -info_height
@@ -185,7 +185,7 @@ static func add_info(
         if desc_max_lines < 0:
             desc_overrun = TextServer.OVERRUN_NO_TRIMMING
         info_height = clampi(non_desc + int(fit["height"]), info_height, max_info)
-    var info := UI.card_panel("cover-info")
+    var info := UIControls.card_panel("cover-info")
     info.name = "CardInfo"
     info.mouse_filter = Control.MOUSE_FILTER_IGNORE
     info.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
@@ -205,7 +205,7 @@ static func add_info(
         desc_box.name = "CardDescBox"
         desc_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
         desc_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-        var desc_label := UI.label(desc_text, desc_font)
+        var desc_label := UIControls.label(desc_text, desc_font)
         desc_label.name = "CardDesc"
         desc_label.set_anchors_preset(Control.PRESET_FULL_RECT)
         desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -219,7 +219,7 @@ static func add_info(
         desc_box.add_child(desc_label)
         info_box.add_child(desc_box)
 
-    var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size(name_token), false)
+    var name_label := UIControls.label(CardDB.display_name(card_id), UITheme.font_size(name_token), false)
     name_label.name = "CardName"
     name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     name_label.max_lines_visible = 1
@@ -241,7 +241,7 @@ static func add_info(
         attack.name = "AttackPlate"
         stats_row.add_child(attack)
 
-    var type_label := UI.label(type_text, UITheme.font_size("font-caption"), false)
+    var type_label := UIControls.label(type_text, UITheme.font_size("font-caption"), false)
     type_label.name = "CardType"
     type_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -308,7 +308,7 @@ static func add_freeze(face_node: Control) -> void:
         line.mouse_filter = Control.MOUSE_FILTER_IGNORE
         crystals.add_child(line)
 
-    var glyph := UI.label(
+    var glyph := UIControls.label(
         TranslationServer.translate("ui.game.card.freeze_glyph"),
         UITheme.font_size("font-caption"),
         false,
@@ -363,7 +363,7 @@ static func _can_measure(host: Node) -> bool:
 
 ## 用与卡面介绍相同的换行与行距测量文本高度；测完立即释放，不进入绘制。
 static func _measure_text_height(text: String, width: int, font_size: int, host: Node) -> int:
-    var probe := UI.label(text, font_size)
+    var probe := UIControls.label(text, font_size)
     probe.max_lines_visible = -1
     probe.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
     probe.add_theme_constant_override("line_spacing", DESC_LINE_SPACING)
@@ -383,7 +383,7 @@ static func _line_height(font_size: int, host: Node) -> int:
         return int(_line_height_cache[font_size])
     if not _can_measure(host):
         return roundi(font_size * 1.45)
-    var probe := UI.label("A", font_size, false)
+    var probe := UIControls.label("A", font_size, false)
     probe.mouse_filter = Control.MOUSE_FILTER_IGNORE
     host.add_child(probe)
     var height := int(probe.get_minimum_size().y)
@@ -394,7 +394,7 @@ static func _line_height(font_size: int, host: Node) -> int:
 
 ## 窄卡角标：比胶囊更紧凑，避免两角标在 112 宽的商店卡上相撞。
 static func _corner_badge(text: String, variant: String) -> Label:
-    var badge := UI.pill_label(text, variant, "font-caption")
+    var badge := UIControls.pill_label(text, variant, "font-caption")
     var style := UITheme.pill_style(variant)
     style.content_margin_left = UITheme.space("space-xs")
     style.content_margin_right = UITheme.space("space-xs")

@@ -55,7 +55,7 @@ func _init() -> void:
     _passives.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     _meta.add_child(_passives)
 
-    _gold_tile = UI.pill_label("", "accent", "font-caption")
+    _gold_tile = UIControls.pill_label("", "accent", "font-caption")
     _gold_tile.name = "GoldTile"
     _gold_tile.custom_minimum_size = Vector2(
         0, UITheme.stage_metric("hero-meta-row-height")
@@ -69,7 +69,7 @@ func _init() -> void:
     _powers.add_theme_constant_override("separation", UITheme.space("space-xs"))
     _side.add_child(_powers)
 
-    _eliminated_label = UI.label(tr("ui.game.side_panel.eliminated"), UITheme.font_size("font-body-sm"), false)
+    _eliminated_label = UIControls.label(tr("ui.game.side_panel.eliminated"), UITheme.font_size("font-body-sm"), false)
     _eliminated_label.name = "EliminatedLabel"
     _eliminated_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _eliminated_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

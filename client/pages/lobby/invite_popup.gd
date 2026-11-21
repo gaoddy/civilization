@@ -28,7 +28,7 @@ func _init() -> void:
     center.set_anchors_preset(Control.PRESET_FULL_RECT)
     add_child(center)
 
-    var panel := UI.card_panel("raised")
+    var panel := UIControls.card_panel("raised")
     panel.name = "InvitePanel"
     panel.custom_minimum_size = Vector2(360, 0)
     center.add_child(panel)
@@ -36,7 +36,7 @@ func _init() -> void:
     var box := VBoxContainer.new()
     box.add_theme_constant_override("separation", 8)
     panel.add_child(box)
-    box.add_child(UI.section_title(tr("ui.lobby.invite_title")))
+    box.add_child(UIControls.section_title(tr("ui.lobby.invite_title")))
     _list = VBoxContainer.new()
     _list.name = "InviteList"
     _list.add_theme_constant_override("separation", 10)
@@ -59,7 +59,7 @@ func _exit_tree() -> void:
 func _refresh() -> void:
     if _list == null:
         return
-    UI.clear(_list)
+    UIControls.clear(_list)
     var invites: Array = GameStore.live_invites()
     visible = not invites.is_empty()
     for invite in invites:
@@ -71,7 +71,7 @@ func _invite_card(invite: Dictionary) -> VBoxContainer:
     var card := VBoxContainer.new()
     card.add_theme_constant_override("separation", 6)
     card.add_child(
-        UI.label(
+        UIControls.label(
             tr("ui.lobby.invite_text") % [
                 str(invite.get("fromDisplayName", "")),
                 str(invite.get("fromPlayerCode", "")),
@@ -82,11 +82,11 @@ func _invite_card(invite: Dictionary) -> VBoxContainer:
     )
     var row := HBoxContainer.new()
     row.add_theme_constant_override("separation", 8)
-    var accept := UI.button(tr("ui.lobby.accept_invite"))
+    var accept := UIControls.button(tr("ui.lobby.accept_invite"))
     accept.name = "AcceptInvite_%s" % invite_id
     accept.pressed.connect(_on_respond.bind(invite_id, true))
     row.add_child(accept)
-    var decline := UI.button(tr("ui.lobby.decline_invite"))
+    var decline := UIControls.button(tr("ui.lobby.decline_invite"))
     decline.name = "DeclineInvite_%s" % invite_id
     decline.pressed.connect(_on_respond.bind(invite_id, false))
     row.add_child(decline)

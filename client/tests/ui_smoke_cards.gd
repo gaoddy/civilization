@@ -469,7 +469,7 @@ func _check_page_background() -> void:
         ResourceLoader.exists("res://assets/ui/bg/bg_main.png"),
         "页面背景纹理应已导入",
     )
-    var background := UI.background()
+    var background := UIControls.background()
     _expect(background.name == "PageBackground", "背景节点名应为 PageBackground")
     _expect(background.mouse_filter == Control.MOUSE_FILTER_IGNORE, "背景不应拦截鼠标")
     _expect(background is TextureRect, "有纹理时应使用 TextureRect")
@@ -667,7 +667,7 @@ func _check_hero_skill_list() -> void:
     # 无技能时显示空态，不渲染空标签或费用行。
     var empty_box := VBoxContainer.new()
     add_child(empty_box)
-    UI.skill_list(empty_box, [])
+    SkillList.build(empty_box, [])
     await get_tree().process_frame
     _expect(
         _node_text(empty_box).contains(TranslationServer.translate("ui.skill.empty")),
@@ -696,7 +696,7 @@ func _check_skill_trigger_labels() -> void:
     }
     var box := VBoxContainer.new()
     add_child(box)
-    UI.skill_list(box, ["smoke-unknown-trigger"])
+    SkillList.build(box, ["smoke-unknown-trigger"])
     await get_tree().process_frame
     var text := _node_text(box)
     _expect(
@@ -717,7 +717,7 @@ func _check_skill_trigger_labels() -> void:
 
     var invalid_box := VBoxContainer.new()
     add_child(invalid_box)
-    UI.skill_list(invalid_box, ["does-not-exist"])
+    SkillList.build(invalid_box, ["does-not-exist"])
     await get_tree().process_frame
     _expect(
         _node_text(invalid_box).contains(TranslationServer.translate("ui.skill.empty")),

@@ -120,7 +120,7 @@ func _check_drag_preview() -> void:
     area.add_child(card)
     var scale := UILayout.root_scale(card)
     area.remove_child(card)
-    var preview := UI.drag_preview(card, Vector2(10, 20), area)
+    var preview := UIDrag.preview(card, Vector2(10, 20), area)
     _check(is_equal_approx(preview.scale.x, scale), "拖拽预览应按内容框缩放")
     _check(card.position.is_equal_approx(Vector2(-10, -20)), "拖拽预览起手点应对齐")
     preview.free()

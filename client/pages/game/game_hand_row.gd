@@ -72,7 +72,7 @@ func _init() -> void:
 
 
 func refresh(state: GameUiState) -> void:
-    UI.clear(_row)
+    UIControls.clear(_row)
     var hand: Array = state.self_state.get("hand", [])
     if hand.is_empty():
         _row.add_child(_empty_hint())
@@ -96,7 +96,7 @@ func refresh(state: GameUiState) -> void:
 
 
 func _empty_hint() -> Label:
-    var label := UI.empty_hint(tr("ui.game.hand.empty"))
+    var label := UIControls.empty_hint(tr("ui.game.hand.empty"))
     label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     # 空手牌时提示文本不能截断商店卡的落点。
     label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -143,7 +143,7 @@ func _build_card(card: Dictionary, state: GameUiState) -> HandCard:
     node.set_meta("target_id", str(card.get("instanceId", "")))
     node.drag_allowed = state.can_drag(playable)
     if not node.drag_allowed:
-        UI.apply_dim(node)
+        UIControls.apply_dim(node)
     return node
 
 

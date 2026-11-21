@@ -112,11 +112,11 @@ func refresh(state: GameUiState) -> void:
     _opponent_view.refresh(state)
     _river.refresh(state)
     if not GameStore.combat_is_current():
-        UI.clear(_opponent_row)
-        UI.clear(_own_row)
+        UIControls.clear(_opponent_row)
+        UIControls.clear(_own_row)
         _opponent_row.custom_minimum_size.x = 0
         _own_row.custom_minimum_size.x = 0
-        _opponent_row.add_child(UI.empty_hint(tr("ui.game.combat.waiting")))
+        _opponent_row.add_child(UIControls.empty_hint(tr("ui.game.combat.waiting")))
         _river.set_combat_detail("", UITheme.color("color-accent"))
         return
     var combat: Dictionary = GameStore.last_combat

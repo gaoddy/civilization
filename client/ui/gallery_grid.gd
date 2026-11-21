@@ -48,13 +48,13 @@ func _init() -> void:
     _grid.add_theme_constant_override("v_separation", UITheme.space(gap))
     _body.add_child(_grid)
 
-    _status = UI.label("", UITheme.font_size("font-caption"), false)
+    _status = UIControls.label("", UITheme.font_size("font-caption"), false)
     _status.name = "GalleryLoadStatus"
     _status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _status.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     _body.add_child(_status)
 
-    _empty = UI.empty_hint(tr("ui.gallery.empty"))
+    _empty = UIControls.empty_hint(tr("ui.gallery.empty"))
     _empty.name = "GalleryEmpty"
     _empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     _empty.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -80,7 +80,7 @@ func select(selected_id: String) -> void:
 
 
 func _rebuild() -> void:
-    UI.clear(_grid)
+    UIControls.clear(_grid)
     _tiles.clear()
     _loaded = 0
     var total := _ids.size()

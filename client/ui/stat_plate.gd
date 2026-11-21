@@ -19,7 +19,7 @@ static func create(kind_value: String, text: String, font_size: int, label_name 
 	var side := font_size + 4
 	node.custom_minimum_size = Vector2(side, side)
 	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var label := UI.label(text, font_size, false)
+	var label := UIControls.label(text, font_size, false)
 	label.name = label_name
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

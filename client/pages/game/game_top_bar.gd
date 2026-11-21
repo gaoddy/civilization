@@ -21,7 +21,7 @@ func _init() -> void:
     add_theme_constant_override("separation", UITheme.space("space-sm"))
     alignment = BoxContainer.ALIGNMENT_BEGIN
 
-    status = UI.label("", UITheme.font_size("font-body-sm"), false)
+    status = UIControls.label("", UITheme.font_size("font-body-sm"), false)
     status.name = "StatusLabel"
     status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -57,7 +57,7 @@ func set_connected(connected: bool) -> void:
 
 
 func _action_button(node_name: String, text: String) -> Button:
-    var button := UI.styled_button(text, "micro", 26)
+    var button := UIControls.styled_button(text, "micro", 26)
     button.name = node_name
     button.add_theme_font_size_override("font_size", UITheme.font_size("font-caption"))
     button.size_flags_vertical = Control.SIZE_SHRINK_CENTER

@@ -17,7 +17,7 @@ func _init() -> void:
 	custom_minimum_size = Vector2(side, side)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	add_theme_stylebox_override("panel", _panel_style(UITheme.color("color-border-strong")))
-	_glyph = UI.label("?", UITheme.font_size("font-hero"), false)
+	_glyph = UIControls.label("?", UITheme.font_size("font-hero"), false)
 	_glyph.name = "PortraitGlyph"
 	_glyph.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -66,7 +66,7 @@ func _apply_art(art_path: String) -> void:
 
 
 func _build_name_label() -> void:
-	_name_label = UI.label("", UITheme.font_size("font-caption"), false)
+	_name_label = UIControls.label("", UITheme.font_size("font-caption"), false)
 	_name_label.name = "PortraitName"
 	_name_label.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	_name_label.offset_top = -NAME_HEIGHT

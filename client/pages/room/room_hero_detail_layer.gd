@@ -44,7 +44,7 @@ func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
 		var intro := _detail_text_block(introduction)
 		intro.name = "HeroIntroduction"
 		box.add_child(intro)
-	UI.skill_list(box, CardDB.hero(id).get("skills", []))
+	SkillList.build(box, CardDB.hero(id).get("skills", []))
 	_ignore_mouse(box)
 
 

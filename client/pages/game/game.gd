@@ -90,7 +90,7 @@ func _ready() -> void:
 # ── 构建 ──────────────────────────────────────────────────────────────────
 
 func _build() -> void:
-    add_child(UI.background())
+    add_child(UIControls.background())
 
     # iPhone 基准 960×540：页边距、页面间距与舞台间距整体收紧，结构与桌面一致。
     var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE

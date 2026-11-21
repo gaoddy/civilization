@@ -42,7 +42,7 @@ func _init() -> void:
     mouse_filter = Control.MOUSE_FILTER_IGNORE
     visible = false
 
-    _panel = UI.card_panel("raised")
+    _panel = UIControls.card_panel("raised")
     _panel.name = "MinionDetailPanel"
     _panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _panel.custom_minimum_size = Vector2(UITheme.metric("detail-panel-width"), 0)
@@ -254,7 +254,7 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
         return
     if not is_instance_valid(_hover_card) or _hover_card != anchor:
         _hover_card = anchor
-    UI.clear(_panel)
+    UIControls.clear(_panel)
     var box := VBoxContainer.new()
     box.mouse_filter = Control.MOUSE_FILTER_IGNORE
     box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
@@ -297,7 +297,7 @@ func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
     if skill_text != "":
         box.add_child(_detail_text_block(skill_text))
     if data.get("disabledReason") != null:
-        var reason := UI.label(UIWording.error_text(str(data.get("disabledReason"))), UITheme.font_size("font-body-sm"))
+        var reason := UIControls.label(UIWording.error_text(str(data.get("disabledReason"))), UITheme.font_size("font-body-sm"))
         reason.name = "DetailBlocked"
         reason.add_theme_color_override("font_color", UITheme.color("color-danger"))
         box.add_child(reason)
@@ -326,7 +326,7 @@ func _render_seat_detail(box: VBoxContainer, player: Dictionary, hp_cap: int) ->
 func _render_seller_detail(box: VBoxContainer) -> void:
     box.add_child(_detail_name(tr("ui.game.detail.seller")))
     box.add_child(_detail_row(tr("ui.game.detail.status"), tr("ui.game.detail.shop_open")))
-    var hint := UI.label(
+    var hint := UIControls.label(
         tr("ui.game.detail.shop_hint"),
         UITheme.font_size("font-body-sm"),
     )
@@ -340,7 +340,7 @@ func _render_seller_detail(box: VBoxContainer) -> void:
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
     var id := "" if hero_id == null else str(hero_id)
     # 详情顶部叠卡面美术：按卡面比例铺满，无图时只显示文字内容。
-    var art := UI.art_layer(
+    var art := UIArt.layer(
         CardDB.art_path(id, "card_face"),
         "HeroDetailArt",
         TextureRect.STRETCH_KEEP_ASPECT_COVERED,
@@ -359,7 +359,7 @@ func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
     var skill_text := CardDB.hero_text(id)
     if skill_text == "":
         return
-    var heading := UI.label(tr("ui.game.detail.hero_power"), UITheme.font_size("font-caption"), false)
+    var heading := UIControls.label(tr("ui.game.detail.hero_power"), UITheme.font_size("font-caption"), false)
     heading.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     box.add_child(heading)
     box.add_child(_detail_text_block(skill_text))
@@ -455,7 +455,7 @@ func _append_association(box: VBoxContainer, entry: Dictionary) -> void:
 
 
 func _detail_name(text: String) -> Label:
-    var name_label := UI.label(text, UITheme.font_size("font-title"), false)
+    var name_label := UIControls.label(text, UITheme.font_size("font-title"), false)
     name_label.name = "DetailName"
     name_label.max_lines_visible = 1
     name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -470,7 +470,7 @@ func _detail_text_width() -> int:
 
 ## 详情里的介绍/技能文本块：按面板宽度换行，颜色弱于正文。
 func _detail_text_block(text: String) -> Label:
-    var label := UI.label(text, UITheme.font_size("font-body-sm"))
+    var label := UIControls.label(text, UITheme.font_size("font-body-sm"))
     label.name = "DetailText"
     label.custom_minimum_size = Vector2(_detail_text_width(), 0)
     label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -512,7 +512,7 @@ func _detail_row(prefix: String, value: String) -> HBoxContainer:
     var row := HBoxContainer.new()
     row.mouse_filter = Control.MOUSE_FILTER_IGNORE
     row.add_theme_constant_override("separation", UITheme.space("space-md"))
-    var key := UI.label(prefix, UITheme.font_size("font-body-sm"), false)
+    var key := UIControls.label(prefix, UITheme.font_size("font-body-sm"), false)
     key.mouse_filter = Control.MOUSE_FILTER_IGNORE
     key.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
     row.add_child(key)
@@ -520,7 +520,7 @@ func _detail_row(prefix: String, value: String) -> HBoxContainer:
     spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     row.add_child(spacer)
-    var text := UI.label(value, UITheme.font_size("font-body-sm"), false)
+    var text := UIControls.label(value, UITheme.font_size("font-body-sm"), false)
     text.mouse_filter = Control.MOUSE_FILTER_IGNORE
     text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     row.add_child(text)

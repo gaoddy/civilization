@@ -54,7 +54,7 @@ func show_choice(choice: Dictionary) -> void:
     box.name = "ChoiceBox"
     box.add_theme_constant_override("separation", UITheme.space("space-md"))
     center.add_child(box)
-    var hint := UI.label(tr(str(HINT_KEYS[kind])), UITheme.font_size("font-body"))
+    var hint := UIControls.label(tr(str(HINT_KEYS[kind])), UITheme.font_size("font-body"))
     hint.name = "ChoiceHint"
     hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -78,7 +78,7 @@ func hide_choice() -> void:
 
 
 func _clear() -> void:
-    UI.clear(self)
+    UIControls.clear(self)
 
 
 func _build_shade() -> ColorRect:
@@ -129,7 +129,7 @@ func _add_card_face(button: Button, card_id: String) -> void:
 
 ## 进化选项：不是卡牌，只用同尺寸底板与居中文字。
 func _add_option_label(button: Button, option: String) -> void:
-    var label := UI.label(UIWording.enum_text("evolve", option), UITheme.font_size("font-body"), true)
+    var label := UIControls.label(UIWording.enum_text("evolve", option), UITheme.font_size("font-body"), true)
     label.name = "ChoiceLabel"
     label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

@@ -121,7 +121,7 @@ func _init() -> void:
     _shop_row.add_theme_constant_override("separation", UITheme.space("space-md"))
     center.add_child(_shop_row)
 
-    _sell_hint = UI.label("", UITheme.font_size("font-caption"), false)
+    _sell_hint = UIControls.label("", UITheme.font_size("font-caption"), false)
     _sell_hint.name = "SellHint"
     _sell_hint.set_anchors_preset(Control.PRESET_TOP_RIGHT)
     _sell_hint.grow_horizontal = Control.GROW_DIRECTION_BEGIN
@@ -235,7 +235,7 @@ func _refresh_actions(state: GameUiState) -> void:
 func _refresh_shop(state: GameUiState) -> void:
     # 拖拽途中重建会整块换掉槽位：先按取消收尾，旧占位与旧卡随重建释放。
     _end_shop_drag()
-    UI.clear(_shop_row)
+    UIControls.clear(_shop_row)
     var aff: Dictionary = state.self_state.get("affordances", {})
     for slot in state.self_state.get("shop", []):
         var index := int(slot.get("index", 0))
@@ -267,7 +267,7 @@ func _refresh_shop(state: GameUiState) -> void:
                 "disabledReason": slot_aff.get("disabledReason"),
             })
         if not panel.drag_allowed:
-            UI.apply_dim(panel)
+            UIControls.apply_dim(panel)
         _shop_row.add_child(panel)
 
 

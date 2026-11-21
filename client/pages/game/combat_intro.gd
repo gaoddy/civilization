@@ -75,7 +75,7 @@ func _init() -> void:
     row.add_child(_vs_mark())
     _opponent_block = _build_slot(row, "CombatIntroOpponent")
 
-    var caption := UI.label(tr("ui.game.combat.intro"), UITheme.font_size("font-body"), false)
+    var caption := UIControls.label(tr("ui.game.combat.intro"), UITheme.font_size("font-body"), false)
     caption.name = "CombatIntroCaption"
     caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     caption.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
@@ -139,7 +139,7 @@ func _apply_progress() -> void:
 
 ## 一侧的纵向槽：头像、名字、英雄名，幽灵战追加角标并压暗。
 func _fill_slot(block: VBoxContainer, player: Dictionary, ghost: bool) -> void:
-    UI.clear(block)
+    UIControls.clear(block)
     block.modulate = Color(1, 1, 1, 1)
     var hero_id := CardText.optional_text(player.get("heroCardId"))
     var hero_name := (
@@ -166,25 +166,25 @@ func _fill_slot(block: VBoxContainer, player: Dictionary, ghost: bool) -> void:
     block.add_child(portrait)
 
     var name_text := display + (tr("ui.game.combat.ghost_suffix") if ghost else "")
-    var name_label := UI.label(name_text, UITheme.font_size("font-title"), false)
+    var name_label := UIControls.label(name_text, UITheme.font_size("font-title"), false)
     name_label.name = "CombatIntroName"
     name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     name_label.add_theme_color_override("font_color", UITheme.color("color-text"))
     block.add_child(name_label)
 
-    var hero_label := UI.label(hero_name, UITheme.font_size("font-caption"), false)
+    var hero_label := UIControls.label(hero_name, UITheme.font_size("font-caption"), false)
     hero_label.name = "CombatIntroHero"
     hero_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     hero_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
     block.add_child(hero_label)
 
     if ghost:
-        var badge := UI.pill_label(tr("ui.game.side_panel.ghost"), "info", "font-caption")
+        var badge := UIControls.pill_label(tr("ui.game.side_panel.ghost"), "info", "font-caption")
         badge.name = "GhostBadge"
         badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         badge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
         block.add_child(badge)
-        UI.apply_dim(block)
+        UIControls.apply_dim(block)
     _ignore_mouse(block)
 
 
@@ -214,7 +214,7 @@ func _vs_mark() -> HBoxContainer:
         line.mouse_filter = Control.MOUSE_FILTER_IGNORE
         mark.add_child(line)
         if side == 0:
-            var label := UI.label(tr("ui.game.combat.vs"), UITheme.font_size("font-hero"), false)
+            var label := UIControls.label(tr("ui.game.combat.vs"), UITheme.font_size("font-hero"), false)
             label.name = "CombatIntroVsLabel"
             label.add_theme_color_override("font_color", UITheme.color("color-accent"))
             label.mouse_filter = Control.MOUSE_FILTER_IGNORE

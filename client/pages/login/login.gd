@@ -19,7 +19,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-    add_child(UI.background())
+    add_child(UIControls.background())
 
     var center := CenterContainer.new()
     center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -30,8 +30,8 @@ func _build() -> void:
     box.add_theme_constant_override("separation", 10)
     center.add_child(box)
 
-    box.add_child(UI.label(tr("ui.login.title"), 30))
-    box.add_child(UI.label(tr("ui.login.subtitle"), 14))
+    box.add_child(UIControls.label(tr("ui.login.title"), 30))
+    box.add_child(UIControls.label(tr("ui.login.subtitle"), 14))
     box.add_child(HSeparator.new())
 
     _server = _add_field(box, tr("ui.login.server"), Net.default_url())
@@ -39,16 +39,16 @@ func _build() -> void:
     _code = _add_field(box, tr("ui.login.code"), "123456")
     _name = _add_field(box, tr("ui.login.display_name"), tr("ui.login.default_display_name"))
 
-    _login_button = UI.button(tr("ui.login.submit"))
+    _login_button = UIControls.button(tr("ui.login.submit"))
     _login_button.pressed.connect(_on_login_pressed)
     box.add_child(_login_button)
 
-    _status = UI.label("", 14)
+    _status = UIControls.label("", 14)
     box.add_child(_status)
 
 
 func _add_field(parent: VBoxContainer, title: String, value: String) -> LineEdit:
-    parent.add_child(UI.label(title, 14))
+    parent.add_child(UIControls.label(title, 14))
     var edit := LineEdit.new()
     edit.text = value
     parent.add_child(edit)

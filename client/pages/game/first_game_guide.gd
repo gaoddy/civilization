@@ -112,7 +112,7 @@ func _build() -> void:
     spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     column.add_child(spacer)
 
-    _bar = UI.card_panel("raised")
+    _bar = UIControls.card_panel("raised")
     _bar.name = "GuideBar"
     # 只有提示条自身接收点击，外层锚点与压暗层都放行。
     _bar.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -125,15 +125,15 @@ func _build() -> void:
     var header := HBoxContainer.new()
     header.add_theme_constant_override("separation", UITheme.space("space-sm"))
     inner.add_child(header)
-    _title = UI.label("", UITheme.font_size("font-title"), false)
+    _title = UIControls.label("", UITheme.font_size("font-title"), false)
     _title.name = "GuideTitle"
     _title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     header.add_child(_title)
-    _step_label = UI.pill_label("", "accent", "font-caption")
+    _step_label = UIControls.pill_label("", "accent", "font-caption")
     _step_label.name = "GuideStep"
     header.add_child(_step_label)
 
-    _body = UI.label("", UITheme.font_size("font-body"), false)
+    _body = UIControls.label("", UITheme.font_size("font-body"), false)
     _body.name = "GuideBody"
     inner.add_child(_body)
 
@@ -141,12 +141,12 @@ func _build() -> void:
     actions.alignment = BoxContainer.ALIGNMENT_END
     actions.add_theme_constant_override("separation", UITheme.space("space-sm"))
     inner.add_child(actions)
-    _skip = UI.styled_button("", "micro", 30)
+    _skip = UIControls.styled_button("", "micro", 30)
     _skip.name = "GuideSkip"
     _skip.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
     _skip.pressed.connect(_on_skip_pressed)
     actions.add_child(_skip)
-    _next = UI.styled_button("", "primary", 30)
+    _next = UIControls.styled_button("", "primary", 30)
     _next.name = "GuideNext"
     _next.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
     _next.pressed.connect(_on_next_pressed)

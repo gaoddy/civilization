@@ -64,7 +64,7 @@ func _init() -> void:
     set_anchors_preset(Control.PRESET_FULL_RECT)
     mouse_filter = Control.MOUSE_FILTER_STOP
 
-    _background = UI.background()
+    _background = UIControls.background()
     _background.name = "GalleryBackground"
     add_child(_background)
 
@@ -83,7 +83,7 @@ func _init() -> void:
     header.add_theme_constant_override("separation", UITheme.space("space-sm"))
     root.add_child(header)
 
-    _title = UI.label("", UITheme.font_size("font-display"), false)
+    _title = UIControls.label("", UITheme.font_size("font-display"), false)
     _title.name = "GalleryTitle"
     header.add_child(_title)
 
@@ -102,7 +102,7 @@ func _init() -> void:
     _hero_bar.visible = false
     header.add_child(_hero_bar)
 
-    _close_button = UI.styled_button("", "default", 32)
+    _close_button = UIControls.styled_button("", "default", 32)
     _close_button.name = "GalleryClose"
     _close_button.pressed.connect(_on_close)
     header.add_child(_close_button)
@@ -132,7 +132,7 @@ func _init() -> void:
         _toolbar.add_theme_constant_override("separation", UITheme.space("space-sm"))
         column.add_child(_toolbar)
 
-        _category_button = UI.styled_button("", "default", 30)
+        _category_button = UIControls.styled_button("", "default", 30)
         _category_button.name = "GalleryCategoryButton"
         _category_button.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
         _category_button.pressed.connect(_on_category_pressed)

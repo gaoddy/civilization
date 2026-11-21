@@ -37,7 +37,7 @@ func _init() -> void:
     box.add_theme_constant_override("separation", UITheme.space("space-md"))
     _panel.add_child(box)
 
-    var title := UI.label(tr("ui.gallery.category_panel_title"), UITheme.font_size("font-body"), false)
+    var title := UIControls.label(tr("ui.gallery.category_panel_title"), UITheme.font_size("font-body"), false)
     title.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
     box.add_child(title)
 

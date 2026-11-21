@@ -41,7 +41,7 @@ func set_state(
     kind_counts: Dictionary,
     selected_kind: String,
 ) -> void:
-    UI.clear(_list)
+    UIControls.clear(_list)
     var group := ButtonGroup.new()
     group.allow_unpress = false
     _add_item("", tr("ui.gallery.toc_all"), int(counts.get("", 0)), selected == "", group, 0)

@@ -47,7 +47,7 @@ func _init(river_mode := Mode.RECRUIT) -> void:
 
 
 func _build_recruit(layout: Control) -> void:
-    _turn_label = UI.label("", UITheme.font_size("font-body"), false)
+    _turn_label = UIControls.label("", UITheme.font_size("font-body"), false)
     _turn_label.name = "RecruitTurnLabel"
     _turn_label.set_anchors_preset(Control.PRESET_FULL_RECT)
     _turn_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -73,14 +73,14 @@ func _build_recruit(layout: Control) -> void:
     _countdown_flip.gui_input.connect(_on_countdown_input)
     layout.add_child(_countdown_flip)
 
-    _timer_label = UI.pill_label("—", "accent", "font-caption")
+    _timer_label = UIControls.pill_label("—", "accent", "font-caption")
     _timer_label.name = "RecruitTimerLabel"
     _timer_label.set_anchors_preset(Control.PRESET_FULL_RECT)
     _timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _timer_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _countdown_flip.add_child(_timer_label)
 
-    _end_button = UI.styled_button(tr("ui.game.side_panel.end_recruit"), "primary", 28)
+    _end_button = UIControls.styled_button(tr("ui.game.side_panel.end_recruit"), "primary", 28)
     _end_button.name = "RecruitEndButton"
     _end_button.set_anchors_preset(Control.PRESET_FULL_RECT)
     _end_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -89,7 +89,7 @@ func _build_recruit(layout: Control) -> void:
 
 
 func _build_combat(layout: Control) -> void:
-    _banner = UI.label("", UITheme.font_size("font-display"), false)
+    _banner = UIControls.label("", UITheme.font_size("font-display"), false)
     _banner.name = "CombatBanner"
     _banner.set_anchors_preset(Control.PRESET_FULL_RECT)
     _banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -98,7 +98,7 @@ func _build_combat(layout: Control) -> void:
     _banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
     layout.add_child(_banner)
 
-    _status_pill = UI.pill_label(tr("ui.game.side_panel.combat"), "info", "font-caption")
+    _status_pill = UIControls.pill_label(tr("ui.game.side_panel.combat"), "info", "font-caption")
     _status_pill.name = "CombatStatusPill"
     _status_pill.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
     _status_pill.offset_left = -STATUS_PILL_WIDTH

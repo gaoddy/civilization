@@ -10,13 +10,13 @@ func _ready() -> void:
 
 
 func _build() -> void:
-    add_child(UI.background())
+    add_child(UIControls.background())
 
     var center := CenterContainer.new()
     center.set_anchors_preset(Control.PRESET_FULL_RECT)
     add_child(center)
 
-    var panel := UI.panel()
+    var panel := UIControls.panel()
     panel.custom_minimum_size = Vector2(760, 0)
     panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
     center.add_child(panel)
@@ -44,23 +44,23 @@ func _build() -> void:
     content.add_theme_constant_override("separation", 10)
     scroll.add_child(content)
 
-    content.add_child(UI.label(tr("ui.result.title"), 28))
-    content.add_child(UI.label(_my_place_text(), 20))
+    content.add_child(UIControls.label(tr("ui.result.title"), 28))
+    content.add_child(UIControls.label(_my_place_text(), 20))
     content.add_child(HSeparator.new())
     content.add_child(_build_ranking())
 
     content.add_child(HSeparator.new())
-    content.add_child(UI.label(tr("ui.result.stats_title"), 20))
+    content.add_child(UIControls.label(tr("ui.result.stats_title"), 20))
     content.add_child(_build_stats_section())
 
-    content.add_child(UI.label(tr("ui.result.seed") % GameStore.game_seed, 14))
+    content.add_child(UIControls.label(tr("ui.result.seed") % GameStore.game_seed, 14))
 
     var actions := HBoxContainer.new()
     actions.name = "ResultActions"
     actions.add_theme_constant_override("separation", 10)
     layout.add_child(actions)
 
-    var confirm := UI.button(tr("ui.result.confirm"))
+    var confirm := UIControls.button(tr("ui.result.confirm"))
     confirm.name = "ConfirmButton"
     confirm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     confirm.pressed.connect(_on_confirm_pressed)
@@ -75,7 +75,7 @@ func _build_ranking() -> VBoxContainer:
     entries.sort_custom(func(a, b): return int(a.get("place", 99)) < int(b.get("place", 99)))
     for entry in entries:
         var player_id := str(entry.get("playerId", ""))
-        var row := UI.label(tr("ui.result.ranking_row") % [
+        var row := UIControls.label(tr("ui.result.ranking_row") % [
             _int_of(entry, "place"),
             GameStore.player_name(player_id),
             _int_of(entry, "survivedTurns"),
@@ -115,19 +115,19 @@ func _build_stats_section() -> VBoxContainer:
     section.add_child(_group_label(tr("ui.result.stat.skills")))
     section.add_child(_stat_row("ui.result.stat.hero_power_uses", _int_of(stats, "heroPowerUses")))
 
-    section.add_child(UI.label(tr("ui.result.board_title"), 18))
+    section.add_child(UIControls.label(tr("ui.result.board_title"), 18))
     section.add_child(_build_board(stats))
     return section
 
 
 func _group_label(text: String) -> Label:
-    var label := UI.label(text, 16)
+    var label := UIControls.label(text, 16)
     label.add_theme_color_override("font_color", Color("8fd3ff"))
     return label
 
 
 func _stat_row(label_key: String, value) -> Label:
-    var row := UI.label(tr("ui.result.stat_row") % [tr(label_key), str(value)], 16)
+    var row := UIControls.label(tr("ui.result.stat_row") % [tr(label_key), str(value)], 16)
     row.name = "StatRow_" + label_key.get_slice(".", 3)
     return row
 
@@ -142,7 +142,7 @@ func _combat_row(stats: Dictionary) -> HBoxContainer:
         ["ui.result.stat.combat_draws", "combatDraws"],
         ["ui.result.stat.combat_losses", "combatLosses"],
     ]:
-        var cell := UI.label(
+        var cell := UIControls.label(
             tr("ui.result.stat_row") % [tr(entry[0]), str(_int_of(stats, entry[1]))],
             16,
         )
@@ -157,7 +157,7 @@ func _build_board(stats: Dictionary) -> VBoxContainer:
     board.add_theme_constant_override("separation", 4)
     var items = stats.get("board", [])
     if not (items is Array) or items.is_empty():
-        board.add_child(UI.label(tr("ui.result.board_empty"), 16))
+        board.add_child(UIControls.label(tr("ui.result.board_empty"), 16))
         return board
     for item in items:
         if not (item is Dictionary):
@@ -166,7 +166,7 @@ func _build_board(stats: Dictionary) -> VBoxContainer:
         var card_name := CardDB.display_name(card_id)
         if bool(item.get("golden", false)):
             card_name += " ★"
-        board.add_child(UI.label(tr("ui.result.board_item") % [
+        board.add_child(UIControls.label(tr("ui.result.board_item") % [
             card_name,
             _int_of(item, "attack"),
             _int_of(item, "health"),

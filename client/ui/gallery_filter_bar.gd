@@ -20,7 +20,7 @@ func _init(node_name: String, button_prefix: String) -> void:
 
 ## `items` 为 `{id, name}` 条目；`counts` 以 id 为键，空串表示「全部」。
 func set_state(items: Array, counts: Dictionary, selected: String) -> void:
-    UI.clear(self)
+    UIControls.clear(self)
     var group := ButtonGroup.new()
     group.allow_unpress = false
     for item in items:

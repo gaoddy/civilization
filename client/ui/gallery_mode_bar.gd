@@ -15,7 +15,7 @@ var _button: Button
 
 func _init() -> void:
     name = "GalleryModeBar"
-    _button = UI.styled_button(tr("ui.gallery.mode_minion"), "default", 30)
+    _button = UIControls.styled_button(tr("ui.gallery.mode_minion"), "default", 30)
     _button.name = "ModeToggle"
     _button.custom_minimum_size = Vector2(56, 30)
     _button.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))

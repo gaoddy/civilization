@@ -45,17 +45,17 @@ func show_hero(card_id: String) -> void:
 
 
 func _show(card_id: String, hero: bool) -> void:
-    UI.clear(_box)
+    UIControls.clear(_box)
     if card_id == "":
         _box.alignment = BoxContainer.ALIGNMENT_CENTER
-        _box.add_child(UI.empty_hint(tr("ui.gallery.detail_empty")))
+        _box.add_child(UIControls.empty_hint(tr("ui.gallery.detail_empty")))
         return
     _box.alignment = BoxContainer.ALIGNMENT_BEGIN
 
     var entry := CardDB.hero(card_id) if hero else CardDB.card(card_id)
     _box.add_child(_build_preview(card_id, entry))
 
-    var name_label := UI.label(CardDB.display_name(card_id), UITheme.font_size("font-title-lg"))
+    var name_label := UIControls.label(CardDB.display_name(card_id), UITheme.font_size("font-title-lg"))
     name_label.name = "GalleryDetailName"
     name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     # 卡名行：名称居中占满；详情不显示时代象形，时代信息保留在下方的「时代」文字行。
@@ -65,7 +65,7 @@ func _show(card_id: String, hero: bool) -> void:
     if hero:
         var introduction := CardDB.hero_introduction(card_id)
         if introduction != "":
-            var intro := UI.label(introduction, UITheme.font_size("font-body-sm"))
+            var intro := UIControls.label(introduction, UITheme.font_size("font-body-sm"))
             intro.name = "GalleryDetailIntroduction"
             intro.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
             intro.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
@@ -74,7 +74,7 @@ func _show(card_id: String, hero: bool) -> void:
         var hero_associations := _association_text(entry)
         if hero_associations != "":
             _add_row(tr("ui.game.detail.association"), hero_associations)
-        UI.skill_list(_box, entry.get("skills", []))
+        SkillList.build(_box, entry.get("skills", []))
         return
 
     var era_id := str(entry.get("era", ""))
@@ -100,8 +100,8 @@ func _show(card_id: String, hero: bool) -> void:
         _add_row(tr("ui.gallery.skills"), skills)
     var effect := CardDB.display_text(card_id)
     if effect != "":
-        _box.add_child(UI.section_title(tr("ui.gallery.effect")))
-        var effect_label := UI.label(effect, UITheme.font_size("font-body-sm"))
+        _box.add_child(UIControls.section_title(tr("ui.gallery.effect")))
+        var effect_label := UIControls.label(effect, UITheme.font_size("font-body-sm"))
         effect_label.name = "GalleryDetailEffect"
         effect_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
         _box.add_child(effect_label)
@@ -138,7 +138,7 @@ func _build_preview(card_id: String, entry: Dictionary) -> Control:
         art.mouse_filter = Control.MOUSE_FILTER_IGNORE
         frame.add_child(art)
     else:
-        var placeholder := UI.label(CardText.initial(card_id), UITheme.font_size("font-hero"), false)
+        var placeholder := UIControls.label(CardText.initial(card_id), UITheme.font_size("font-hero"), false)
         placeholder.name = "GalleryDetailArtPlaceholder"
         placeholder.custom_minimum_size = size
         placeholder.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -150,7 +150,7 @@ func _build_preview(card_id: String, entry: Dictionary) -> Control:
 
 
 func _preview_texture(card_id: String) -> Texture2D:
-    return UI.art_texture(CardDB.art_path(card_id, "card_face"))
+    return UIArt.texture(CardDB.art_path(card_id, "card_face"))
 
 
 func _preview_metric(name: String) -> int:
@@ -191,13 +191,13 @@ func _skill_names(entry: Dictionary) -> String:
 func _add_row(key_text: String, value_text: String) -> void:
     var row := HBoxContainer.new()
     row.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    var key := UI.label(key_text, UITheme.font_size("font-caption"), false)
+    var key := UIControls.label(key_text, UITheme.font_size("font-caption"), false)
     var key_width := 52 if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE else 64
     key.custom_minimum_size = Vector2(key_width, 0)
     key.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     key.vertical_alignment = VERTICAL_ALIGNMENT_TOP
     row.add_child(key)
-    var value := UI.label(value_text, UITheme.font_size("font-body-sm"))
+    var value := UIControls.label(value_text, UITheme.font_size("font-body-sm"))
     value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     row.add_child(value)
     _box.add_child(row)
