@@ -1,6 +1,6 @@
 class_name Avatar
 extends RefCounted
-## 英雄头像块：有头像纹理时叠图，否则用玩法色块 + 名字首字表示。
+## 英雄头像块：方形；有头像纹理时叠图，否则用玩法色块 + 名字首字表示。
 
 
 static func create(hero_id: String, size := 34) -> PanelContainer:
@@ -13,7 +13,7 @@ static func create(hero_id: String, size := 34) -> PanelContainer:
     box.bg_color = tint.darkened(0.55)
     box.border_color = tint
     box.set_border_width_all(2)
-    box.set_corner_radius_all(int(size * 0.3))
+    box.set_corner_radius_all(0)
     node.add_theme_stylebox_override("panel", box)
     var texture := UIArt.texture(CardDB.art_path(hero_id, "avatar"))
     if texture != null:

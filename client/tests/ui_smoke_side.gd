@@ -262,6 +262,12 @@ func _check_portrait() -> void:
     add_child(portrait)
     await get_tree().process_frame
     _expect(portrait.custom_minimum_size == Vector2(64, 64), "头像最小尺寸应为 64×64")
+    var portrait_panel := portrait.get_theme_stylebox("panel") as StyleBoxFlat
+    _expect(
+        portrait_panel != null and portrait_panel.corner_radius_top_left == 0,
+        "头像块应为直角方形，实际圆角 %s"
+        % (portrait_panel.corner_radius_top_left if portrait_panel != null else "缺失")
+    )
     portrait.setup("售货员", "售", UITheme.playstyle_color("neutral"), true)
     await get_tree().process_frame
     _expect(_node_text(portrait).contains("售货员"), "头像应显示名字")

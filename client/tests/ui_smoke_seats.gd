@@ -206,6 +206,14 @@ func _check_seat_rows() -> void:
                 avatar_node != null and bar.get_index() > avatar_node.get_index(),
                 "血条层级应位于头像之上",
             )
+            var avatar_panel := (
+                avatar_node.get_theme_stylebox("panel") as StyleBoxFlat if avatar_node != null else null
+            )
+            _expect(
+                avatar_panel != null and avatar_panel.corner_radius_top_left == 0,
+                "头像块应为直角方形，实际圆角 %s"
+                % (avatar_panel.corner_radius_top_left if avatar_panel != null else "缺失"),
+            )
         var fixed := _fixed_text(row)
         _expect(not fixed.contains("HP"), "座位行内不应出现 HP 文本：%s" % fixed)
         _expect(
