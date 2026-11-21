@@ -6,15 +6,12 @@ extends Control
 ## 鼠标悬停候选卡时在悬停卡外侧显示详情，移开关闭；点击只切换选中框。
 
 var _others: HBoxContainer
-var _candidates: HBoxContainer
-var _confirm: Button
-var _dissolve: Button
-var _status: Label
-var _invite_box: HBoxContainer
+var _candidates: RoomCandidateList
+var _actions: RoomActionBar
+var _invite: RoomInviteRow
 var _detail_layer: RoomHeroDetailLayer
 
 var _selected_hero := ""
-var _rendered_ids: Array[String] = []
 ## 最近一次鼠标事件的画布坐标；候选重建后据此判断指针是否仍停在原卡上。
 var _pointer := Vector2.ZERO
 
@@ -76,47 +73,17 @@ func _build() -> void:
     title.mouse_filter = Control.MOUSE_FILTER_IGNORE
     root.add_child(title)
 
-    # 候选固定 4 张、单行展示：候选行按整行宽度居中，不决定面板尺寸。
-    _candidates = HBoxContainer.new()
-    _candidates.name = "HeroCandidates"
-    _candidates.alignment = BoxContainer.ALIGNMENT_CENTER
-    _candidates.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _candidates.add_theme_constant_override("separation", UITheme.space("space-md"))
+    _candidates = RoomCandidateList.new()
     root.add_child(_candidates)
 
-    # 邀请好友：只列出在线且不在房间里的好友；其余显示为禁用，避免必然失败的请求。
-    var invite_row := HBoxContainer.new()
-    invite_row.name = "InviteRow"
-    invite_row.alignment = BoxContainer.ALIGNMENT_CENTER
-    invite_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    invite_row.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    root.add_child(invite_row)
-    invite_row.add_child(UIControls.label(tr("ui.room.invite_section"), UITheme.font_size("font-body-sm"), false))
-    _invite_box = HBoxContainer.new()
-    _invite_box.name = "InviteFriends"
-    _invite_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _invite_box.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    invite_row.add_child(_invite_box)
+    _invite = RoomInviteRow.new()
+    _invite.invite_pressed.connect(_on_invite_pressed)
+    root.add_child(_invite)
 
-    _confirm = UIControls.styled_button(tr("ui.room.confirm"), "primary", 36)
-    _confirm.name = "ConfirmButton"
-    # 纵向容器默认拉满整行宽；确认键按自身宽度居中，与其他内容同轴。
-    _confirm.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-    _confirm.pressed.connect(_on_confirm_pressed)
-    root.add_child(_confirm)
-
-    # 解散房间只对房主开放；非房主不显示任何管理控件。
-    _dissolve = UIControls.button(tr("ui.room.dissolve"))
-    _dissolve.name = "DissolveButton"
-    _dissolve.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-    _dissolve.visible = false
-    _dissolve.pressed.connect(_on_dissolve_pressed)
-    root.add_child(_dissolve)
-
-    _status = UIControls.label("", UITheme.font_size("font-body-sm"))
-    _status.name = "StatusLabel"
-    _status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    root.add_child(_status)
+    _actions = RoomActionBar.new()
+    _actions.confirm_pressed.connect(_on_confirm_pressed)
+    _actions.dissolve_pressed.connect(_on_dissolve_pressed)
+    root.add_child(_actions)
 
     # 悬停详情层位于内容之上但整体忽略鼠标：详情不得挡住候选卡与确认按钮。
     _detail_layer = RoomHeroDetailLayer.new()
@@ -141,28 +108,11 @@ func _render_others() -> void:
     var shown := 0
     var can_manage := _is_host() and GameStore.phase == Protocol.PHASE_LOBBY
     for player in GameStore.room_players:
-        var player_id := str(player.get("playerId", ""))
-        if player_id == GameStore.player_id:
+        if str(player.get("playerId", "")) == GameStore.player_id:
             continue
-        var display := str(player.get("displayName", ""))
-        if display == "":
-            display = player_id
-        var ready := bool(player.get("ready", false))
-        var status := tr("ui.room.confirmed") if ready else tr("ui.room.unconfirmed")
-        var text := "%s · %s" % [display, status]
-
-        var row := HBoxContainer.new()
+        var row := RoomPlayerRow.new(player, can_manage)
         row.name = "OtherPlayer%d" % shown
-        row.alignment = BoxContainer.ALIGNMENT_CENTER
-        row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        row.add_theme_constant_override("separation", UITheme.space("space-sm"))
-        row.add_child(UIControls.pill_label(text, "success" if ready else "neutral"))
-        if can_manage:
-            var kick := UIControls.button(tr("ui.room.kick"))
-            kick.name = "Kick_%s" % player_id
-            kick.pressed.connect(_on_kick_pressed.bind(player_id))
-            row.add_child(kick)
-
+        row.kicked.connect(_on_kick_pressed)
         _others.add_child(row)
         shown += 1
     if shown == 0:
@@ -171,41 +121,27 @@ func _render_others() -> void:
 
 ## 底部：本人候选卡。选中态用外扩边框，已确认后全部锁定但悬停仍可看详情。
 func _render_candidates() -> void:
-    var candidates := GameStore.my_hero_candidates()
     var ids: Array[String] = []
-    for hero_id in candidates:
+    for hero_id in GameStore.my_hero_candidates():
         ids.append(str(hero_id))
+    var locked := _is_confirmed()
 
     if ids.is_empty():
-        if not _rendered_ids.is_empty() or _candidates.get_child_count() == 0:
+        if _candidates.show_empty():
             _detail_layer.reset()
             _clear_touch()
-            UIControls.clear(_candidates)
-            _candidates.add_child(UIControls.empty_hint(tr("ui.room.assigning_hero")))
-            _rendered_ids = []
         return
 
-    # 候选未变化时只更新状态，不重建卡片：重建会丢掉正在悬停的详情。
-    if ids == _rendered_ids and _candidates.get_child_count() == ids.size():
-        var locked := _is_confirmed()
-        for index in ids.size():
-            var existing := _candidates.get_child(index) as RoomHeroCard
-            if existing != null:
-                existing.set_selected(ids[index] == _selected_hero)
-                existing.set_locked(locked)
+    if not _candidates.changed(ids):
+        _candidates.apply_state(_selected_hero, locked)
         return
 
     var hovered := _detail_layer.visible_hero_id()
     _detail_layer.reset()
     _clear_touch()
-    UIControls.clear(_candidates)
-    var locked := _is_confirmed()
-    for id in ids:
-        var card := RoomHeroCard.new()
-        card.setup(id, id == _selected_hero, locked)
-        _candidates.add_child(card)
-        _detail_layer.track(card, {"detail_kind": "hero", "heroId": id})
-    _rendered_ids = ids
+    _candidates.rebuild(ids, _selected_hero, locked)
+    for card in _candidates.cards():
+        _detail_layer.track(card, {"detail_kind": "hero", "heroId": card.hero_id})
     # 容器要到下一帧才排好新卡位置；恢复悬停必须等布局完成，否则命中用的是旧矩形。
     if hovered != "" and ids.has(hovered):
         _restore_hover.call_deferred(hovered)
@@ -215,20 +151,15 @@ func _render_candidates() -> void:
 func _restore_hover(hero_id: String) -> void:
     if ScreenProfile.is_touch():
         return
-    _sync_hover_styles()
-    for child in _candidates.get_children():
-        var card := child as RoomHeroCard
-        if card != null and card.hero_id == hero_id and card.get_global_rect().has_point(_pointer):
-            _detail_layer.show_for(card, hero_id)
-            return
+    _candidates.sync_hover(_pointer)
+    var card := _candidates.find_card(hero_id)
+    if card != null and card.get_global_rect().has_point(_pointer):
+        _detail_layer.show_for(card, hero_id)
 
 
 ## 指针所在卡片显示悬停描边：重建后新卡收不到 `mouse_entered`，由页面按指针位置统一同步。
 func _sync_hover_styles() -> void:
-    for child in _candidates.get_children():
-        var card := child as RoomHeroCard
-        if card != null:
-            card.set_hovered(card.get_global_rect().has_point(_pointer))
+    _candidates.sync_hover(_pointer)
 
 
 ## 切换选中：只更新选中框，不重建候选卡；再次点击同一张保持选中。
@@ -236,10 +167,7 @@ func _select(hero_id: String) -> void:
     if _is_confirmed():
         return
     _selected_hero = hero_id
-    for child in _candidates.get_children():
-        var card := child as RoomHeroCard
-        if card != null:
-            card.set_selected(card.hero_id == hero_id)
+    _candidates.apply_state(hero_id, false)
     _sync_state()
 
 
@@ -258,7 +186,7 @@ func _input(event: InputEvent) -> void:
         var mouse := event as InputEventMouseButton
         _pointer = _canvas_point(mouse.position)
         if mouse.pressed and mouse.button_index == MOUSE_BUTTON_LEFT:
-            var card := _card_at_point(_pointer)
+            var card := _candidates.card_at(_pointer)
             if card != null:
                 _select(card.hero_id)
     elif event is InputEventMouseMotion:
@@ -277,7 +205,7 @@ func _begin_touch(event: InputEventScreenTouch) -> void:
     if _touch_index != -1 or _is_confirmed():
         return
     var point := _canvas_point(event.position)
-    var card := _card_at_point(point)
+    var card := _candidates.card_at(point)
     if card == null:
         return
     _touch_index = event.index
@@ -322,42 +250,23 @@ func _canvas_point(viewport_point: Vector2) -> Vector2:
     return get_viewport().get_canvas_transform().affine_inverse() * viewport_point
 
 
-func _card_at_point(point: Vector2) -> RoomHeroCard:
-    for child in _candidates.get_children():
-        var card := child as RoomHeroCard
-        if card != null and card.is_visible_in_tree() and card.get_global_rect().has_point(point):
-            return card
-    return null
-
-
-## 好友邀请入口：在线且不在房间内的好友可直接邀请，其余置灰。
+## 好友邀请入口的渲染由 RoomInviteRow 负责。
 func _render_invites() -> void:
-    if _invite_box == null:
+    if _invite == null:
         return
-    UIControls.clear(_invite_box)
-    if GameStore.friends.is_empty():
-        _invite_box.add_child(UIControls.empty_hint(tr("ui.room.no_friends_to_invite")))
-        return
-    for friend in GameStore.friends:
-        var player_id := str(friend.get("playerId", ""))
-        var friend_name := str(friend.get("displayName", player_id))
-        var button := UIControls.button(friend_name)
-        button.name = "Invite_%s" % player_id
-        button.disabled = str(friend.get("status", "")) != "online"
-        button.pressed.connect(_on_invite_pressed.bind(player_id, friend_name))
-        _invite_box.add_child(button)
+    _invite.render(GameStore.friends)
 
 
 func _on_invite_pressed(player_id: String, friend_name: String) -> void:
     Net.send(Protocol.MSG_INVITE_TO_ROOM, {"friendId": player_id})
-    _status.text = tr("ui.room.invite_sent") % friend_name
+    _actions.status.text = tr("ui.room.invite_sent") % friend_name
 
 
 func _on_invite_result() -> void:
     if bool(GameStore.last_invite_result.get("accepted", false)):
-        _status.text = tr("ui.room.invite_accepted")
+        _actions.status.text = tr("ui.room.invite_accepted")
     else:
-        _status.text = tr("ui.room.invite_declined")
+        _actions.status.text = tr("ui.room.invite_declined")
 
 
 func _is_confirmed() -> bool:
@@ -376,18 +285,16 @@ func _sync_state() -> void:
     var confirmed := _is_confirmed()
     var candidates := GameStore.my_hero_candidates()
     var connected := Net.is_open()
-    _confirm.disabled = _selected_hero == "" or confirmed or not connected
-    _confirm.text = tr("ui.room.confirmed") if confirmed else tr("ui.room.confirm")
-    _dissolve.visible = _is_host()
+    _actions.set_state(_selected_hero, confirmed, connected, _is_host())
 
     if confirmed:
-        _status.text = tr("ui.room.confirmed_hero") % CardDB.display_name(_selected_hero)
+        _actions.status.text = tr("ui.room.confirmed_hero") % CardDB.display_name(_selected_hero)
     elif not connected:
-        _status.text = tr("ui.room.not_connected")
+        _actions.status.text = tr("ui.room.not_connected")
     elif candidates.is_empty():
-        _status.text = tr("ui.room.assigning_hero")
+        _actions.status.text = tr("ui.room.assigning_hero")
     else:
-        _status.text = tr("ui.room.candidate_hint") % candidates.size()
+        _actions.status.text = tr("ui.room.candidate_hint") % candidates.size()
 
 
 func _on_confirm_pressed() -> void:
@@ -395,8 +302,8 @@ func _on_confirm_pressed() -> void:
         return
     Net.send(Protocol.MSG_SELECT_HERO_CARD, {"cardId": _selected_hero})
     Net.send(Protocol.MSG_READY, {"ready": true})
-    _status.text = tr("ui.room.submitted_hero") % CardDB.display_name(_selected_hero)
-    _confirm.disabled = true
+    _actions.status.text = tr("ui.room.submitted_hero") % CardDB.display_name(_selected_hero)
+    _actions.confirm.disabled = true
 
 
 func _on_kick_pressed(player_id: String) -> void:
@@ -410,9 +317,9 @@ func _on_dissolve_pressed() -> void:
 ## 被移出或房间解散：先写原因文案，再回大厅；房间状态已由 GameStore 清空。
 func _on_room_closed() -> void:
     if GameStore.room_closed_reason == "kicked":
-        _status.text = tr("ui.room.kicked_notice")
+        _actions.status.text = tr("ui.room.kicked_notice")
     else:
-        _status.text = tr("ui.room.dissolved_notice")
+        _actions.status.text = tr("ui.room.dissolved_notice")
     UINavigation.navigate(self, UINavigation.PAGE_LOBBY)
 
 
@@ -452,7 +359,7 @@ func _on_error() -> void:
             GameStore.reset_session()
             UINavigation.navigate(self, UINavigation.PAGE_LOGIN)
             return
-    _status.text = UIWording.error_text(code)
-    _status.tooltip_text = UIWording.error_tooltip(code)
+    _actions.status.text = UIWording.error_text(code)
+    _actions.status.tooltip_text = UIWording.error_tooltip(code)
     # 请求被拒时没有新的 RoomUpdate：按当前状态重算按钮，否则会一直停在禁用。
     _sync_state()
