@@ -414,6 +414,7 @@ cargo run -q -p sim -- bot --connect ws://127.0.0.1:8080/ws \
 
 ## 相关文档
 
+- [Steam 接入](steam-integration.md)
 - [房间服务与联网](room-service/README.md)
 - [规则引擎与模拟器](rule-engine-and-simulator.md)
 - [技术现状索引](README.md)
