@@ -672,12 +672,9 @@ func _check_detail_art() -> void:
         % (frame.custom_minimum_size if frame != null else "无"),
     )
 
-    var artless := ""
-    for card_id in CardDB.cards:
-        if CardDB.art_path(str(card_id), "card_face") == "":
-            artless = str(card_id)
-            break
-    _expect(artless != "", "应存在无卡面美术的卡牌用于占位用例")
+    # 卡面已全量接入，真实卡表里不再有无美术的卡；占位分支用不存在的卡 id 覆盖，
+    # 保证后续新增卡牌、美术未就绪时仍回退玩法色底与首字占位。
+    var artless := "__no_card_art__"
     detail.show_card(artless)
     await get_tree().process_frame
     _expect(
