@@ -49,9 +49,9 @@
 
 `idle → checking → starting_server → waiting_server → starting_bots → waiting_room_code → ready`；任一步失败进入 `failed`，记录原因，不阻塞页面其他手动操作。
 
-1. `checking`：用 `StreamPeerTCP` 探测 `127.0.0.1:8080`；连接成功时不启动服务端（视为复用已有开发服务端），探测停在 `CONNECTING` 超过 3 秒进入 `failed("server_check_timeout")`，其余情况进入 `starting_server`。探测只到 TCP 连接，不做 WebSocket 握手。
-2. `starting_server`：`OS.execute_with_pipe(room-service, ["--listen", "127.0.0.1:8080"], false)`，保存 pid 与 stdio。
-3. `waiting_server`：每帧轮询 TCP 连接，10 秒内未就绪进入 `failed`；就绪后 `server_ready` 信号发出。
+1. `checking`：用 `HTTPRequest` GET `http://127.0.0.1:8080/healthz`（超时 3 秒）；仅 `RESULT_SUCCESS` 且响应码 200 视为已有可复用服务端，直接复用并跳过启动；连接失败、超时、非 200 及其他结果都进入 `starting_server`。Godot 4.7.2 的 `StreamPeerTCP` 对已关闭端口会短暂误报 `CONNECTED`，因此不再用它判定复用。
+2. `starting_server`：`OS.execute_with_pipe(room-service, ["--listen", "127.0.0.1:8080"], false)`，保存 pid、stdio 与 stderr。
+3. `waiting_server`：每 0.25 秒重复同一健康检查；服务端进程退出时立即 `failed("server_exited")`，10 秒内未就绪进入 `failed("server_timeout")`；就绪后发出 `server_ready` 信号。
 4. `starting_bots`：`OS.execute_with_pipe(sim, ["dev", "--connect", "ws://127.0.0.1:8080/ws", "--intent-seed", "0"], false)`，保存 pid 与 stdio。
 5. `waiting_room_code`：每帧从 sim 的 stdio 读取行，匹配 `ROOM_CODE=<CODE>`；15 秒内未读到进入 `failed`；读到后保存 `room_code` 并发出 `room_code_ready(code)`。
 6. `ready`：登录与入房流程使用 `room_code`。
@@ -79,7 +79,13 @@
 
 - `client/tests/ui_smoke_local_server.gd/.tscn`：断言 `room_code_from_line` 的合法行、前后空白、空行、带前缀噪声、`DEV_DONE` 行；断言 `sidecar_paths` 在不存在目录时返回缺失与两份路径；断言无 `embedded_server` 特性时 `enabled` 为假。不启动任何进程。
 - `make client-check`；`make client-smoke SMOKE=local_server` 只跑新增用例。
-- 端到端人工验收（GUI 步骤尚未执行）：调试产物已由 `make client-export-local` 导出成功；以下 GUI 步骤尚未执行：打开产物 → 自动登录进大厅 → 自动进入机器人房间 → 选英雄并准备 → 自动开局；退出后 8080 不再由本产物启动的服务端监听（复用场景除外）。上述 GUI 端到端尚未在真实产物中验收，由主 agent 在 8080 空闲时执行；当前只完成构建级与静态校验。
+- 端到端验收（2026-11-22，8080 空闲，`44da067` 构建）：
+  - `make client-export-local` 退出 0，产物写入 `output/desktop-local/Civilization.app`。
+  - 启动产物后日志新增 `server ready on 127.0.0.1:8080` 与 `ROOM_CODE=222222`，无 `reuse server`。
+  - 自动登录：客户端进程与 `127.0.0.1:8080` 建立 ESTABLISHED 连接，服务端同时持有 8 条连接（`sim` 7 条 + 客户端 1 条）。
+  - 自动入房：以 `sim bot --room 222222` 探测返回 `ROOM_FULL 房间已满`，说明 8 个席位已满（7 个机器人 + 客户端）。
+  - 正常退出：`osascript -e 'quit app "Civilization"'` 后无 `room-service` / `sim` 残留，8080 释放。
+  - 未执行：验收时本机处于锁屏状态，无法在客户端内完成选英雄、准备与打完整局；该步需解锁后人工补验。
 - 发行回归：`make client-export` 已运行，产物 `Contents/MacOS/` 不含 `room-service`、`sim`；`client-export-steam` 未运行，按预设 `custom_features=""` 静态核对未启用 `embedded_server`，未实际导出验证。
 
 ## 5. 风险与约束
