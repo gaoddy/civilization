@@ -15,6 +15,8 @@ var _exit_button: Button
 var _steam_ticket := ""
 var _steam_persona := ""
 
+var _local_failed := false
+
 
 func _ready() -> void:
     UILayout.safe_area(self)
@@ -25,6 +27,12 @@ func _ready() -> void:
     GameStore.error_received.connect(_on_error)
     if Platform.is_steam():
         _begin_steam_login.call_deferred()
+    if LocalServer.enabled and LocalServer.auto_flow and _login_button != null:
+        # 先订阅再延迟触发：LocalServer 的 failed 也通过 call_deferred 发出，
+        # 在延迟回调里才订阅会漏掉启动阶段的失败。
+        LocalServer.server_ready.connect(_on_local_server_ready, CONNECT_ONE_SHOT)
+        LocalServer.failed.connect(_on_local_server_failed, CONNECT_ONE_SHOT)
+        _auto_login.call_deferred()
 
 
 func _build() -> void:
@@ -98,6 +106,28 @@ func _on_login_pressed() -> void:
         _on_connected()
     else:
         Net.connect_to(_server.text.strip_edges())
+
+
+## 调试包：本地服务就绪后用预填的开发账号自动提交登录。
+func _auto_login() -> void:
+    # failed 与自动登录都在 deferred 批次里，失败可能先到；此时不再进入连接态。
+    if _local_failed:
+        return
+    if LocalServer.is_server_ready():
+        _on_login_pressed()
+        return
+    _login_button.disabled = true
+    _status.text = tr("ui.login.connecting") % Net.default_url()
+
+
+func _on_local_server_ready() -> void:
+    _on_login_pressed()
+
+
+func _on_local_server_failed(reason: String) -> void:
+    _local_failed = true
+    _status.text = reason
+    _login_button.disabled = false
 
 
 ## Steam 自动登录：启动检查 → 取票 → 连接服务端 → 发认证。
