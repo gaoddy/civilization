@@ -1,6 +1,6 @@
 class_name GalleryGrid
 extends VBoxContainer
-## 图鉴卡面网格：6 列滚动网格，按批追加卡面，滚到接近底部时自动加载下一批。
+## 图鉴卡面网格：按可用宽度分列，按批追加卡面，滚到接近底部时自动加载下一批。
 ##
 ## 选中状态由页面传入；本组件发出点击卡牌，不读取筛选条件。
 
@@ -12,6 +12,7 @@ var _hero := false
 var _loaded := 0
 var _tiles: Array = []
 var _fill_serial := 0
+var _columns_ready := false
 
 var _scroll: ScrollContainer
 var _body: VBoxContainer
@@ -41,7 +42,8 @@ func _init() -> void:
 
     _grid = GridContainer.new()
     _grid.name = "GalleryGridRows"
-    _grid.columns = _columns()
+    # 列数在首次布局拿到宽度后计算一次；在此之前先按单列占位。
+    _grid.columns = 1
     _grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     var gap := "space-md" if _is_phone() else "space-lg"
     _grid.add_theme_constant_override("h_separation", UITheme.space(gap))
@@ -60,6 +62,15 @@ func _init() -> void:
     _empty.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _empty.visible = false
     add_child(_empty)
+
+
+func _ready() -> void:
+    # 容器在首次布局时才会给出真实宽度；最多重试几帧，避免拿到零宽后停在单列占位。
+    for _i in range(3):
+        await get_tree().process_frame
+        _apply_columns()
+        if _columns_ready:
+            return
 
 
 ## 用新的卡牌集合重建首批；`selected_id` 不在集合内时页面会选中首张。
@@ -152,8 +163,17 @@ func _is_phone() -> bool:
     return ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
 
 
-func _columns() -> int:
-    return UITheme.stage_metric("gallery-grid-columns")
+## 首次布局完成后按可用宽度确定列数，只计算一次：单次运行内逻辑画布宽度固定，
+## 窗口缩放由内容框整体缩放承担；安全区收窄后的宽度也已包含在内。
+## 纵向滚动条宽度始终预留，避免它出现后压到最后一列。
+func _apply_columns() -> void:
+    if _columns_ready or _scroll.size.x <= 0.0:
+        return
+    var card := float(UITheme.metric("card-width"))
+    var gap := float(UITheme.space("space-md" if _is_phone() else "space-lg"))
+    var scrollbar := _scroll.get_v_scroll_bar().get_combined_minimum_size().x
+    _grid.columns = maxi(1, int(floor((_scroll.size.x - scrollbar + gap) / (card + gap))))
+    _columns_ready = true
 
 
 func _batch_size() -> int:

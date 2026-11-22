@@ -189,9 +189,7 @@ const SCENARIO := {
 	"gallery-filter-panel-width": 240,
 	"gallery-preview-width": 200,
 	"gallery-batch-size": 27,
-	"gallery-grid-columns": 9,
 	"gallery-preview-width-compact": 128,
-	"gallery-grid-columns-compact": 6,
 	"gallery-batch-size-compact": 12,
 	# 座位悬停详情比通用详情宽一档，容纳一行战报文案。
 	"seat-detail-width": 236,

@@ -111,8 +111,7 @@
 | `gallery-drawer-width` | 420 | 图鉴详情抽屉宽度；手机不使用该值，改为贴底整宽 |
 | `gallery-filter-panel-width` | 240 | 图鉴筛选下拉展开后的条目面板宽度 |
 | `gallery-preview-width` | 200 | 图鉴详情卡面美术图宽度；手机 128；高度由 `UITheme.card_face_height` 按卡面比例计算 |
-| `gallery-batch-size` | 27 | 图鉴每次滚动加载的卡面张数（9 列 × 3 行）；手机 12（6 列 × 2 行） |
-| `gallery-grid-columns` | 9 | 图鉴卡面网格列数；手机 6，列距取 `space-md` |
+| `gallery-batch-size` | 27 | 图鉴每次滚动加载的卡面张数；手机 12 |
 | `aim-arc-width` | 2.5 | 选目标弧线与角标的线宽 |
 | `aim-dash` / `aim-gap` | 10 / 6 | 弧线虚线段长与间隔 |
 | `aim-dot-radius` | 2.5 | 弧线上流动光点的半径 |

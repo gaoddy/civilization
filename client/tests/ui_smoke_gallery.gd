@@ -1,5 +1,5 @@
 extends "res://tests/smoke_case.gd"
-## 卡牌图鉴冒烟：去标题、筛选下拉、9 列网格、详情浮层、手机档位与对局覆盖层卡池。
+## 卡牌图鉴冒烟：去标题、筛选下拉、按宽度动态分列、详情浮层、手机档位与对局覆盖层卡池。
 
 
 func _ready() -> void:
@@ -12,6 +12,7 @@ func _ready() -> void:
     await _check_detail_art()
     await _check_empty_catalog()
     await _check_scroll_loading()
+    await _check_dynamic_columns()
     await _check_phone_layout()
     await _check_tablet_layout()
     await _check_detail_drawer()
@@ -81,8 +82,9 @@ func _check_lobby_page() -> void:
         _filtered_count(instance) == 432,
         "大厅图鉴应有 432 张，实际：%d" % _filtered_count(instance),
     )
-    var rows = instance.find_child("GalleryGridRows", true, false)
-    _expect(rows != null and rows.columns == 9, "桌面图鉴网格应为 9 列")
+    var rows = instance.find_child("GalleryGridRows", true, false) as GridContainer
+    _expect(rows != null, "图鉴网格应有行容器")
+    await _expect_columns_fit(rows, "桌面")
     _expect(rows != null and rows.get_child_count() >= 27, "首屏至少加载一批 27 张卡")
     var scroll = instance.find_child("GalleryScroll", true, false)
     _expect(scroll is ScrollContainer, "图鉴网格应有滚动容器")
@@ -371,7 +373,58 @@ func _check_scroll_loading() -> void:
     await _unmount(instance)
 
 
-## 手机 960×540：6 列网格，头部筛选不越界，详情浮层从底部打开且不出屏。
+## 列数按可用宽度动态计算：容器变窄后列数减少，两种宽度都按最大可容纳列数铺满一行。
+func _check_dynamic_columns() -> void:
+    var wide_columns := await _columns_at_width(1200.0)
+    var narrow_columns := await _columns_at_width(700.0)
+    _expect(
+        wide_columns > narrow_columns,
+        "网格列数应随可用宽度变化：1200 宽 %d 列，700 宽 %d 列" % [wide_columns, narrow_columns],
+    )
+
+
+## 在指定宽度下挂载裸网格，返回解算后的列数；同时断言列数已铺满一行。
+func _columns_at_width(width: float) -> int:
+    var grid := GalleryGrid.new()
+    grid.size = Vector2(width, 600)
+    add_child(grid)
+    await get_tree().process_frame
+    grid.set_cards(CardDB.cards.keys().slice(0, 40), "", false)
+    for _i in range(3):
+        await get_tree().process_frame
+    var rows := grid.find_child("GalleryGridRows", true, false) as GridContainer
+    var columns := rows.columns if rows != null else 0
+    await _expect_columns_fit(rows, "%d 宽容器" % int(width))
+    grid.queue_free()
+    await get_tree().process_frame
+    return columns
+
+
+## 网格列数应为当前可用宽度下能放下的最大值：再多一列放不下，当前列数放得下。
+## 先等布局稳定，纵向滚动条出现后网格宽度才减去滚动条宽度。
+func _expect_columns_fit(rows: GridContainer, label: String) -> void:
+    await get_tree().process_frame
+    await get_tree().process_frame
+    if rows == null:
+        return
+    var card := float(UITheme.metric("card-width"))
+    var gap_name := (
+        "space-md" if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE else "space-lg"
+    )
+    var gap := float(UITheme.space(gap_name))
+    var width := rows.size.x
+    _expect(width > 0.0, "%s网格宽度不应为零" % label)
+    _expect(
+        float(rows.columns) * card + float(rows.columns - 1) * gap <= width + 0.5,
+        "%s网格列数 %d 超过一行可用宽度 %s" % [label, rows.columns, str(width)],
+    )
+    _expect(
+        float(rows.columns + 1) * card + float(rows.columns) * gap > width,
+        "%s网格未铺满一行：%d 列仍放得下更多，可用宽度 %s" % [label, rows.columns, str(width)],
+    )
+
+
+## 手机 960×540：列数按宽度动态计算，头部筛选不越界，详情浮层从底部打开且不出屏。
 func _check_phone_layout() -> void:
     ScreenProfile.set_device_for_test("phone")
     var host := Control.new()
@@ -397,7 +450,8 @@ func _check_phone_layout() -> void:
     _expect(page.find_child("GalleryToc", true, false) == null, "手机图鉴不应再有左侧目录")
 
     var rows := page.find_child("GalleryGridRows", true, false) as GridContainer
-    _expect(rows != null and rows.columns == 6, "手机网格应为 6 列")
+    _expect(rows != null, "手机图鉴缺少网格")
+    await _expect_columns_fit(rows, "手机")
     _expect(rows != null and rows.get_child_count() >= 12, "手机首屏至少加载一批 12 张卡")
 
     var layer := page.find_child("GalleryDetailLayer", true, false) as Control
@@ -461,7 +515,8 @@ func _check_tablet_layout() -> void:
         "平板头部高度应与工具行按钮同高，实际：%s" % (str(header.size) if header != null else "无"),
     )
     var rows := page.find_child("GalleryGridRows", true, false) as GridContainer
-    _expect(rows != null and rows.columns == 9, "平板图鉴网格应为 9 列")
+    _expect(rows != null, "平板图鉴缺少网格")
+    await _expect_columns_fit(rows, "平板")
     if rows != null and rows.get_child_count() > 0:
         var tile := rows.get_child(0) as Control
         await _push_click(page, tile.get_global_rect().get_center())

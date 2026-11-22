@@ -5,7 +5,7 @@
 
 ## 用途
 
-图鉴中区的卡面网格：桌面与 iPad 为 9 列、手机为 6 列，网格纵向滚动，滚到接近底部时自动追加下一批；底部显示已加载张数与加载提示。不再有分页按钮。
+图鉴中区的卡面网格：列数按网格可用宽度动态计算，网格纵向滚动，滚到接近底部时自动追加下一批；底部显示已加载张数与加载提示。不再有分页按钮。
 
 ## 属性与方法
 
@@ -15,8 +15,8 @@
 | `set_cards(ids, selected_id, hero = false)` | `void` | 用新的卡牌集合重建首批并把滚动归零；`hero` 为真时卡面走英雄样式 |
 | `select(selected_id)` | `void` | 只更新已加载卡面的选中描边，不重建 |
 
-- 列数取 `gallery-grid-columns`（9），手机取 `gallery-grid-columns-compact`（6）；列距桌面与 iPad 为 `space-lg`，手机为 `space-md`。
-- 每批张数取 `gallery-batch-size`（27，9 列 × 3 行），手机取 `gallery-batch-size-compact`（12，6 列 × 2 行）。
+- 列数在首次布局后按网格可用宽度计算一次：`floor((可用宽度 + 列距) / (卡宽 + 列距))`，可用宽度扣除纵向滚动条宽度；单次运行内逻辑画布宽度固定，窗口缩放由内容框整体缩放承担。桌面与 iPad 基准为 9 列，iPhone 基准为 7 列，安全区收窄时按实际宽度减少；列距桌面与 iPad 为 `space-lg`，手机为 `space-md`。
+- 每批张数取 `gallery-batch-size`（27），手机取 `gallery-batch-size-compact`（12）；批次不再与列数绑定，直接追加到同一网格。
 - 内部节点名：`GalleryScroll`、`GalleryScrollBody`、`GalleryGridRows`、`GalleryLoadStatus`、`GalleryEmpty`。
 
 ## 变体与状态
