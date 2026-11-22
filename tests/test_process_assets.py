@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -35,6 +36,47 @@ def run_assets(root: Path) -> subprocess.CompletedProcess:
         capture_output=True,
         text=True,
     )
+
+
+def run_covers(root: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--covers",
+            str(root / "covers"),
+            "--faces",
+            str(root / "faces"),
+            "--manifest",
+            str(root / "asset_manifest.json"),
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+
+def make_cover(
+    root: Path,
+    card_id: str,
+    *,
+    color=(10, 12, 20),
+    name="Single_main.png",
+    size=(448, 576),
+    watermark=True,
+    mtime=None,
+) -> Path:
+    card_dir = root / "covers" / card_id
+    card_dir.mkdir(parents=True, exist_ok=True)
+    im = Image.new("RGB", size, color)
+    if watermark:
+        for x in range(396, min(size[0], 444)):
+            for y in range(550, min(size[1], 572)):
+                im.putpixel((x, y), (240, 240, 240))
+    path = card_dir / name
+    im.save(path)
+    if mtime is not None:
+        os.utime(path, (mtime, mtime))
+    return path
 
 
 @unittest.skipUnless(HAS_PILLOW, "需要 Pillow（scripts/process_assets.py 的运行时依赖）")
@@ -92,6 +134,112 @@ class ManifestMergeTest(unittest.TestCase):
             assets["marie-curie"]["card_face"],
             "res://assets/cards/faces/card_marie-curie_face.png",
         )
+
+
+@unittest.skipUnless(HAS_PILLOW, "需要 Pillow（scripts/process_assets.py 的运行时依赖）")
+class CoverPipelineTest(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        for name in ("covers", "faces"):
+            (self.root / name).mkdir()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_clean_covers_resize_and_register_card_face(self):
+        make_cover(self.root, "aolinpike-jidian")
+
+        result = run_covers(self.root)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        face_path = self.root / "faces" / "card_aolinpike-jidian_face.png"
+        face = Image.open(face_path)
+        self.assertEqual(face.size, (448, 584))
+        self.assertLess(max(face.getpixel((420, 568))[:3]), 80)
+        assets = json.loads(
+            (self.root / "asset_manifest.json").read_text()
+        )["assets"]
+        self.assertEqual(
+            assets["aolinpike-jidian"],
+            {
+                "card_face": (
+                    "res://assets/cards/faces/card_aolinpike-jidian_face.png"
+                ),
+                "display": {"card_face": "112x146"},
+            },
+        )
+
+    def test_cover_merge_keeps_existing_portrait_fields(self):
+        manifest = self.root / "asset_manifest.json"
+        manifest.write_text(
+            json.dumps(
+                {
+                    "version": 1,
+                    "assets": {
+                        "aolinpike-jidian": {
+                            "portrait": "res://p.png",
+                            "avatar": "res://a.png",
+                            "card_face": "res://old.png",
+                            "display": {
+                                "portrait": "200x280",
+                                "avatar": "22/30/38",
+                                "card_face": "old",
+                            },
+                        }
+                    },
+                }
+            )
+        )
+        make_cover(self.root, "aolinpike-jidian")
+
+        result = run_covers(self.root)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        entry = json.loads(manifest.read_text())["assets"]["aolinpike-jidian"]
+        self.assertEqual(entry["portrait"], "res://p.png")
+        self.assertEqual(entry["avatar"], "res://a.png")
+        self.assertEqual(
+            entry["card_face"],
+            "res://assets/cards/faces/card_aolinpike-jidian_face.png",
+        )
+        self.assertEqual(entry["display"]["portrait"], "200x280")
+        self.assertEqual(entry["display"]["avatar"], "22/30/38")
+        self.assertEqual(entry["display"]["card_face"], "112x146")
+
+    def test_cover_rejects_unexpected_size(self):
+        make_cover(self.root, "wrong-size", size=(400, 500))
+
+        result = run_covers(self.root)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("448x576", result.stderr)
+        self.assertFalse(
+            (self.root / "faces" / "card_wrong-size_face.png").exists()
+        )
+        assets = json.loads(
+            (self.root / "asset_manifest.json").read_text()
+        )["assets"]
+        self.assertNotIn("wrong-size", assets)
+
+    def test_cover_uses_newest_image_in_card_dir(self):
+        make_cover(
+            self.root,
+            "aolinpike-jidian",
+            color=(200, 0, 0),
+            name="Single_old.png",
+            watermark=False,
+            mtime=1000,
+        )
+        make_cover(self.root, "aolinpike-jidian", name="Single_new.png")
+
+        result = run_covers(self.root)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        face = Image.open(
+            self.root / "faces" / "card_aolinpike-jidian_face.png"
+        )
+        self.assertLess(max(face.getpixel((224, 292))[:3]), 60)
 
 
 class AssetMapTest(unittest.TestCase):

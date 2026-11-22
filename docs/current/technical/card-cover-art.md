@@ -5,7 +5,7 @@
 
 ## 1. 风格基线
 
-卡片封面采用「深墨描金扁平插画 + 科学史纹样」风格，对应英文 prompt 描述 `stylized flat vector illustration`。该风格由首批 20 张试点素材确立，23 位英雄补齐时沿用，当前 43 项 `card_face` 素材风格一致。
+卡片封面采用「深墨描金扁平插画 + 科学史纹样」风格，对应英文 prompt 描述 `stylized flat vector illustration`。该风格由首批试点素材确立，英雄卡面补齐时沿用；英雄卡面与效果牌封面共用同一风格基线，效果牌封面的逐卡 prompt 见 `scripts/effect_cover_prompts.json`。
 
 | 要素 | 取值 | prompt 对应片段 |
 | --- | --- | --- |
@@ -66,9 +66,10 @@ Game character portrait, stylized flat vector illustration, half-body front-faci
 ## 4. 后处理约束
 
 1. 生成器在立绘右下角强制添加「AI生成 / WORKBUDDY」水印；prompt 中的 `no watermark` 不能阻止，`background: opaque` 与 `transparent` 对此同样无效。
-2. `scripts/process_assets.py` 的 `WM_BOX`（`886, 1452, 1016, 1535`）与采样行 `SAMPLE_Y = 1446` 是按首批素材设定的固定值。新批次水印的实际位置可能更靠右下并延伸到图片底边，执行 `make assets` 前须核对输出图右下角，确认无残留后才会派生卡面。
-3. 随从封面按 `448x576` 生成并去水印，再缩放到 448×584（112:146）；早期英雄封面由立绘中心裁切派生。头像由面部区域裁切到 256×256，仍从去水印后的立绘派生。
-4. 产物路径与清单登记见 [Godot 客户端](client.md) §10；改图后运行 `make client-import`。
+2. 立绘水印框由 `WM_BOX`（`886, 1452, 1016, 1535`）与采样行 `SAMPLE_Y = 1446` 固定，按首批立绘设定；新批次水印位置可能变化，执行 `make assets` 前须核对输出图右下角。
+3. 封面水印比立绘更靠右下，可贴到图片边缘。封面处理使用 `COVER_WM_BOX`（`392, 544, 452, 580`）、采样行 `COVER_SAMPLE_Y = 540` 与羽化宽度 `COVER_FEATHER = 4`；水印框越过图片的部分由脚本按边界裁剪，保证贴边像素也被完整填充。
+4. 效果牌封面按 `448x576` 生成；`make assets-covers` 取每个 `<card_id>/` 下最新的 PNG，去水印后缩放到 448×584（112:146）写入客户端卡面，清单只登记 `card_face`。早期英雄封面由立绘中心裁切派生，头像由面部区域裁切到 256×256，仍从去水印后的立绘派生。
+5. 产物路径与清单登记见 [Godot 客户端](client.md) §10；改图后先运行 `make assets-covers`（效果牌封面）或 `make assets`（英雄立绘），再运行 `make client-import`。
 
 ## 相关文档
 
