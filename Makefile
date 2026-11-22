@@ -6,9 +6,10 @@ GODOT_INSTALLED_VERSION = $(shell "$(GODOT)" --version 2>/dev/null | head -n 1 |
 GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates/$(GODOT_VERSION).stable
 DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
+ASSET_COVERS ?= output/effect-covers/generated
 FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 
-.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -59,6 +60,13 @@ assets:
 	$(PYTHON) scripts/process_assets.py --map "$(ASSET_MAP)" \
 		--portraits client/assets/characters/portraits \
 		--avatars client/assets/characters/avatars \
+		--faces client/assets/cards/faces \
+		--manifest client/assets/asset_manifest.json
+
+# 效果牌封面后处理：对 <card_id>/*.png 去水印，缩放到 448×584 写入客户端卡面。
+assets-covers:
+	@[ -d "$(ASSET_COVERS)" ] || { echo "assets-covers 需要封面目录 $(ASSET_COVERS)（<card_id>/*.png）" >&2; exit 1; }
+	$(PYTHON) scripts/process_assets.py --covers "$(ASSET_COVERS)" \
 		--faces client/assets/cards/faces \
 		--manifest client/assets/asset_manifest.json
 
