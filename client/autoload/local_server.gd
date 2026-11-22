@@ -9,7 +9,6 @@ signal room_code_ready(code: String)
 signal failed(reason: String)
 
 const SERVER_URL := "ws://127.0.0.1:8080/ws"
-const SERVER_PORT := 8080
 const SERVER_WAIT_SECONDS := 10.0
 const ROOM_CODE_WAIT_SECONDS := 15.0
 const HEALTH_TIMEOUT_SECONDS := 3.0
