@@ -400,6 +400,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 应用退出时 `_exit_tree` 只 `OS.kill` 本产物启动的 server 与 sim；复用已有服务端时不 kill。崩溃残留的 sim 进程不自动清理，避免误杀其他进程；下次启动若 8080 已被占用则直接复用。
 - 产物为 debug 构建并含调试符号，未签名，只保证本机运行；sidecar 为宿主架构（arm64），Intel Mac 需另行构建。
 - 发行链路（`macOS`、`Steam`、`iOS` 预设与 `make client-export` / `client-export-steam` / `client-export-ios`）不带 `embedded_server` 特性，也不复制 sidecar；编辑器运行与冒烟同样没有该特性，`LocalServer` 不启动任何进程。
+- 当前只完成构建级与静态校验（调试产物导出成功、sidecar 可执行、`make client-export` 产物不含 sidecar）；GUI 端到端（自动登录、自动入房、完成一局、退出后进程回收）尚未在真实产物中验收，由主 agent 在 8080 空闲时执行。
 
 ## 9. iOS 移动端
 
