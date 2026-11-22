@@ -5,7 +5,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from PIL import Image
+try:
+    from PIL import Image
+
+    HAS_PILLOW = True
+except ImportError:  # scripts/process_assets.py 的运行时依赖，缺失时跳过
+    HAS_PILLOW = False
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "process_assets.py"
@@ -32,6 +37,7 @@ def run_assets(root: Path) -> subprocess.CompletedProcess:
     )
 
 
+@unittest.skipUnless(HAS_PILLOW, "需要 Pillow（scripts/process_assets.py 的运行时依赖）")
 class ManifestMergeTest(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
