@@ -64,7 +64,7 @@ var _overlay: GameChoiceOverlay
 # 左栏战报浮层：位于详情层之上、选择浮层之下，允许覆盖中央舞台。
 var _report_layer: Control
 
-# 战斗结束演出：双方英雄卡冲入河道对冲；页面级覆盖层，位于详情层之下。
+# 战斗结束演出：双方英雄卡缓慢靠岸后猛击对冲；页面级覆盖层，位于详情层之下。
 var _hero_clash: CombatHeroClash
 ## 待启动的对冲请求：等下一次 `_process` 完成布局后再取矩形。
 var _pending_clash: Dictionary = {}

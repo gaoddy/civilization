@@ -258,7 +258,7 @@ func _restore_source(source: Control) -> void:
 
 ## 复制一张同尺寸卡面放进覆盖层；失败返回 null。
 func _clone_card(card: Control, clone_name: String) -> Control:
-    var clone := card.duplicate() as Control
+    var clone := _copy_card(card)
     if clone == null:
         return null
     clone.name = clone_name
@@ -268,6 +268,16 @@ func _clone_card(card: Control, clone_name: String) -> Control:
     clone.scale = Vector2.ONE
     clone.modulate = UITheme.color("color-white")
     return clone
+
+
+## 复制卡面：英雄卡按状态重建，其余卡面直接复制。
+##
+## `GameHeroCard` 的头像框在 `_init()` 里建子节点，`duplicate()` 会先跑一遍 `_init()`
+## 再把原节点子层复制进来，默认子层叠在上面会盖住头像与描边。
+func _copy_card(card: Control) -> Control:
+    if card is GameHeroCard:
+        return (card as GameHeroCard).replica()
+    return card.duplicate() as Control
 
 
 func _ignore_mouse(node: Node) -> void:
