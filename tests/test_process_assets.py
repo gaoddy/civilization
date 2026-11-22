@@ -94,5 +94,15 @@ class ManifestMergeTest(unittest.TestCase):
         )
 
 
+class AssetMapTest(unittest.TestCase):
+    def test_map_covers_every_committed_portrait(self):
+        portraits = ROOT / "client" / "assets" / "characters" / "portraits"
+        mapping = json.loads((portraits / "asset_map.json").read_text())
+        ids = {p.stem[3:-5] for p in portraits.glob("ch_*_full.png")}
+        self.assertEqual(set(mapping), ids)
+        for card_id, source in mapping.items():
+            self.assertTrue((portraits / source).is_file(), f"{card_id}: {source}")
+
+
 if __name__ == "__main__":
     unittest.main()

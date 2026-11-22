@@ -31,7 +31,7 @@ Game character portrait, stylized flat vector illustration, half-body front-faci
 2. `{主题符号}`：取下表对应条目，用英文写入 `faint` 之后；可含 2–3 个符号，用逗号连接。
 3. 固定尾 `No text, no letters, no watermark, no border.` 不省略。
 
-生成参数固定为 `size: 448x584`、`quality: high`、`background: opaque`；尺寸即卡面成品尺寸，比例 112:146。
+生成参数固定为 `size: 448x576`、`quality: high`、`background: opaque`；生成器把尺寸对齐到 16 的倍数，成品再按 112:146 缩放到 448×584。
 
 ## 3. 主题符号映射
 
@@ -67,7 +67,7 @@ Game character portrait, stylized flat vector illustration, half-body front-faci
 
 1. 生成器在立绘右下角强制添加「AI生成 / WORKBUDDY」水印；prompt 中的 `no watermark` 不能阻止，`background: opaque` 与 `transparent` 对此同样无效。
 2. `scripts/process_assets.py` 的 `WM_BOX`（`886, 1452, 1016, 1535`）与采样行 `SAMPLE_Y = 1446` 是按首批素材设定的固定值。新批次水印的实际位置可能更靠右下并延伸到图片底边，执行 `make assets` 前须核对输出图右下角，确认无残留后才会派生卡面。
-3. 卡面封面按 112:146 比例生成，落盘为 448×584：早期英雄封面由立绘中心裁切派生，随从封面直接按封面尺寸生成；头像由面部区域裁切到 256×256，仍从去水印后的立绘派生。
+3. 随从封面按 `448x576` 生成并去水印，再缩放到 448×584（112:146）；早期英雄封面由立绘中心裁切派生。头像由面部区域裁切到 256×256，仍从去水印后的立绘派生。
 4. 产物路径与清单登记见 [Godot 客户端](client.md) §10；改图后运行 `make client-import`。
 
 ## 相关文档

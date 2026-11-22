@@ -24,7 +24,12 @@ import argparse
 import json
 from pathlib import Path
 
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError as exc:  # pragma: no cover - depends on the local env
+    raise SystemExit(
+        "process_assets.py 需要 Pillow：python3 -m pip install pillow"
+    ) from exc
 
 # Watermark sits in the bottom-right corner of generated 1024x1536 images.
 # Region is sampled per-column from a clean row just above it so the local

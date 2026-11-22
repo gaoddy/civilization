@@ -260,7 +260,7 @@ client/
 | `make protocol-check` | 校验协议样例，并比对两处 GDScript 生成物漂移 |
 | `make data` | 生成服务端数据（含 `taxonomy.json`）、`client/generated/{cards,skills,taxonomy}.json` 与文本表 `client/text/zh_CN.csv` |
 | `make data-check` | 比对服务端与客户端生成数据、文本表漂移，运行效果审计 |
-| `make assets` | 按 `ASSET_MAP` 对源立绘去水印，派生头像与卡面并重写 `client/assets/asset_manifest.json`；见 §10 |
+| `make assets` | 按 `ASSET_MAP` 对源立绘去水印，派生头像与卡面并更新 `client/assets/asset_manifest.json`（保留清单内其它条目）；需安装 Pillow，见 §10 |
 | `make sfx` | 生成 9 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
@@ -455,7 +455,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 加载：`CardDB` 启动时读取清单到 `art`，提供 `has_art(id)` 与 `art_path(id, kind)`；清单缺失或条目缺字段时返回空串，不报错。
 - 卡面展示位：图鉴网格与详情、房间候选卡一律取 `card_face`，同一个 id 在英雄视图与随从视图显示同一张图；展示框宽高比固定 112:146，只给宽度时高度由 `UITheme.card_face_height(width)` 计算。头像位（对局英雄卡封面、座位头像、对手头像、`Avatar.create()`）仍取 `avatar`，不参与卡面比例；方形头像位统一由 `AvatarFrame` 按 `radius-md` 裁切，封面与描边由框提供；对局英雄卡封面按 `STRETCH_KEEP_ASPECT_COVERED` 铺满，超出的上下部分由头像框圆角裁掉；对局英雄详情与房间悬停详情不显示图片。
 - 回退：`UIArt.texture()` / `UIArt.layer()` 统一取图与铺层，纹理加载失败与无资源返回空；`CardFaceBase.create_face()` 用带卡面圆角的 Panel 绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；房间候选卡叠 `card_face`；对局英雄卡封面、座位头像与对手英雄卡用 `avatar`，`Avatar.create()` / `GamePortrait` / `GameHeroCard` 有头像纹理时叠 `AvatarFrameArt`（裁切层索引 0）并隐藏首字；图鉴详情用 `card_face`，对局英雄详情与房间悬停详情不显示图片。各类无图时回退玩法色块与首字（英雄卡封面回退玩法色与首字，图鉴详情省略图片）。页面背景缺图或加载失败时 `UIControls.background()` 回退 `color-bg` 纯色。
-- 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（默认 `client/assets/characters/portraits/asset_map.json`，内容为 `card_id → 源立绘文件名`）处理源立绘，并更新清单中对应条目；清单内不在映射中的条目（如直接生成的随从封面）原样保留。映射文件缺失时目标直接失败。源立绘的生成风格、prompt 模板、主题符号映射与去水印约束见 [卡片封面美术生成](card-cover-art.md)。
+- 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（`client/assets/characters/portraits/asset_map.json`，随仓库提交，内容为 `card_id → characters/portraits/ 下的立绘文件名`）处理源立绘，并更新清单中对应条目；清单内不在映射中的条目（如直接生成的随从封面）原样保留。映射文件缺失时目标直接失败。运行前需安装 Pillow（`python3 -m pip install pillow`）。源立绘的生成风格、prompt 模板、主题符号映射与去水印约束见 [卡片封面美术生成](card-cover-art.md)。
 - 批次：首批试点 20 张，覆盖 14 种玩法色与 7 个时代；其余卡牌继续走程序化绘制。源立绘随仓库提交。
 - 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；改图后运行 `make client-import`。
 
