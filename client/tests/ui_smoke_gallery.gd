@@ -55,6 +55,10 @@ func _check_lobby_page() -> void:
     )
     var header_height := float(UIControls.compact_button_height())
     _expect(
+        is_equal_approx(header_height, 22.0),
+        "桌面工具行按钮高度应为 22，实际：%d" % int(header_height),
+    )
+    _expect(
         header != null and is_equal_approx(header.size.y, header_height),
         "桌面图鉴头部高度应跟随工具行按钮高度（%d），实际：%s"
         % [int(header_height), str(header.size) if header != null else "无"],

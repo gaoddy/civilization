@@ -16,7 +16,7 @@
 
 - 节点名为 `GalleryModeBar`，按钮为 `ModeMinion` 与 `ModeHero`。
 - 两枚按钮共用一个 `ButtonGroup`，`allow_unpress = false`，始终有一段选中。
-- 按钮最小尺寸 56×`toolbar-button-height`（桌面 26、触控端抬到次要操作命中高度），`font-body-sm`；选中段为 `primary` 样式（金色底、深色字），另一段为 `default` 变体。
+- 按钮最小尺寸 56×`toolbar-button-height`（桌面 22、触控端抬到次要操作命中高度），`font-body-sm`；选中段为 `primary` 样式（金色底、深色字），另一段为 `default` 变体。
 
 ## 变体与状态
 

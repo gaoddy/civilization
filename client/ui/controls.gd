@@ -124,14 +124,14 @@ static func styled_button(text: String, variant := "default", min_height := 30) 
 
 
 ## 头部工具行次级按钮：桌面按工具行令牌固定高度，触控端抬到次要操作命中高度。
-## 比 `styled_button` 紧凑，用于图鉴头部这类单行工具行。
+## 比 `styled_button` 紧凑：上下内容边距只留 `space-2xs`，用于图鉴头部这类单行工具行。
 static func compact_button(text: String, variant := "default", min_width := 0) -> Button:
     var node := Button.new()
     node.text = text
     node.custom_minimum_size = Vector2(min_width, compact_button_height())
     node.focus_mode = Control.FOCUS_ALL
     for state in ["normal", "hover", "pressed", "focus", "disabled"]:
-        node.add_theme_stylebox_override(state, UITheme.button_style(variant, state))
+        node.add_theme_stylebox_override(state, UITheme.compact_button_style(variant, state))
     var text_color := UITheme.color("color-bg") if variant == "primary" else UITheme.color("color-text")
     node.add_theme_color_override("font_color", text_color)
     node.add_theme_color_override("font_hover_color", text_color)
