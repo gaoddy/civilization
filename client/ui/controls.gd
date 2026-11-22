@@ -130,7 +130,7 @@ static func compact_button(text: String, variant := "default", min_width := 0) -
     node.text = text
     node.custom_minimum_size = Vector2(min_width, compact_button_height())
     node.focus_mode = Control.FOCUS_ALL
-    for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+    for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
         node.add_theme_stylebox_override(state, UITheme.compact_button_style(variant, state))
     var text_color := UITheme.color("color-bg") if variant == "primary" else UITheme.color("color-text")
     node.add_theme_color_override("font_color", text_color)

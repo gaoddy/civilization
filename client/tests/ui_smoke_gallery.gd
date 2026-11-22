@@ -488,6 +488,29 @@ func _check_tablet_layout() -> void:
             "平板详情抽屉宽度应为 gallery-drawer-width，实际：%s" % str(drawer_rect),
         )
 
+    var minion := page.find_child("ModeMinion", true, false) as Button
+    var before_height := minion.size.y if minion != null else 0.0
+    var era_select := page.find_child("GalleryEraSelect", true, false) as Button
+    await _tap(page, era_select.get_global_rect().get_center())
+    await get_tree().process_frame
+    var chapter1 := page.find_child("Chapter1", true, false) as Button
+    if chapter1 != null:
+        await _tap(page, chapter1.get_global_rect().get_center())
+    await get_tree().process_frame
+    _expect(
+        minion != null and is_equal_approx(minion.size.y, before_height),
+        "触控选择筛选项后分段高度不应变化，实际：%s → %s"
+        % [str(before_height), str(minion.size) if minion != null else "无"],
+    )
+    if minion != null:
+        for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
+            var style := minion.get_theme_stylebox(state)
+            _expect(
+                style != null and is_equal_approx(style.expand_margin_top, expected_inset),
+                "触控选择筛选项后分段 %s 背景应保持负外扩，实际：%s"
+                % [state, str(style.expand_margin_top) if style != null else "无"],
+            )
+
     host.queue_free()
     await get_tree().process_frame
     ScreenProfile.set_device_for_test("desktop")
@@ -752,6 +775,17 @@ func _check_match_overlay() -> void:
 func _mount_gallery() -> Node:
     GameStore.player_id = "p0"
     return await _check_scene("res://pages/gallery/gallery.tscn", false)
+
+
+## 画布坐标处的触摸按下/松开事件，模拟真机触控。
+func _tap(instance: Node, canvas_point: Vector2) -> void:
+    for pressed in [true, false]:
+        var event := InputEventScreenTouch.new()
+        event.index = 0
+        event.pressed = pressed
+        event.position = canvas_point
+        instance.get_viewport().push_input(event, true)
+        await get_tree().process_frame
 
 
 ## 打开筛选下拉并点选条目；面板未出现时记为失败并返回。

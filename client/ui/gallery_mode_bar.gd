@@ -46,7 +46,7 @@ func _build_button(node_name: String, text: String) -> Button:
 
 func _apply_style(button: Button, active: bool) -> void:
     var variant := "primary" if active else "default"
-    for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+    for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
         button.add_theme_stylebox_override(state, UITheme.compact_button_style(variant, state))
     var font_color := UITheme.color("color-bg" if active else "color-text")
     for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
