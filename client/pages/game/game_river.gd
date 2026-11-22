@@ -3,7 +3,7 @@ extends PanelContainer
 ## 河道行：高 32，位于商店与棋盘之间、双方棋盘之间。
 ##
 ## 招募模式：左端剩余金币，中央回合数，右端倒计时（悬停翻成「结束招募」）。
-## 战斗模式：左端剩余金币，中央回合数与结果，右端「战斗中」；不创建招募倒计时节点。
+## 战斗模式：左端剩余金币，中央回合数，右端「战斗中」；结果文字由战斗结束的英雄对冲演出承载。
 
 enum Mode { RECRUIT, COMBAT }
 
@@ -16,7 +16,6 @@ const STATUS_PILL_WIDTH := 80.0
 var mode := Mode.RECRUIT
 
 var _turn_text := ""
-var _detail := ""
 var _deadline := ""
 var _phase := ""
 var _recruited := false
@@ -26,7 +25,7 @@ var _turn_label: Label = null
 var _countdown_flip: Control = null
 var _timer_label: Label = null
 var _end_button: Button = null
-var _banner: Label = null
+var _combat_turn_label: Label = null
 var _status_pill: Label = null
 var _gold_tile: Label = null
 
@@ -92,14 +91,14 @@ func _build_recruit(layout: Control) -> void:
 
 
 func _build_combat(layout: Control) -> void:
-    _banner = UIControls.label("", UITheme.font_size("font-display"), false)
-    _banner.name = "CombatBanner"
-    _banner.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _banner.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    _banner.add_theme_color_override("font_color", UITheme.color("color-accent"))
-    _banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    layout.add_child(_banner)
+    _combat_turn_label = UIControls.label("", UITheme.font_size("font-display"), false)
+    _combat_turn_label.name = "CombatTurnLabel"
+    _combat_turn_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _combat_turn_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _combat_turn_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    _combat_turn_label.add_theme_color_override("font_color", UITheme.color("color-accent"))
+    _combat_turn_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    layout.add_child(_combat_turn_label)
 
     _status_pill = UIControls.pill_label(tr("ui.game.side_panel.combat"), "info", "font-caption")
     _status_pill.name = "CombatStatusPill"
@@ -179,19 +178,7 @@ func _refresh_recruit(state: GameUiState) -> void:
 
 
 func _refresh_combat() -> void:
-    _banner.text = _turn_text if _detail == "" else "%s · %s" % [_turn_text, _detail]
-    if _detail == "":
-        _banner.add_theme_color_override("font_color", UITheme.color("color-accent"))
-
-
-## 战斗结果追加到回合数之后；`detail` 为空串时回到只显示回合数。
-func set_combat_detail(detail: String, font_color: Color) -> void:
-    if mode != Mode.COMBAT:
-        return
-    _detail = detail
-    _refresh_combat()
-    if detail != "":
-        _banner.add_theme_color_override("font_color", font_color)
+    _combat_turn_label.text = _turn_text
 
 
 ## 当前阶段剩余秒数：已成功解析的截止时间返回非负秒数（归零后保持 0），

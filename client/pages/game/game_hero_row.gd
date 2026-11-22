@@ -96,6 +96,13 @@ func power_rect(skill_id: String) -> Rect2:
     return button.get_global_rect() if button != null else Rect2()
 
 
+## 英雄卡：战斗结束对冲演出的我方来源；淘汰隐藏时返回 null。
+func hero_card() -> Control:
+    if _hero_card == null or not _hero_card.visible:
+        return null
+    return _hero_card
+
+
 func set_combat_mode(in_combat: bool) -> void:
     _in_combat = in_combat
     for button in _power_buttons.values():

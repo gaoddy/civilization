@@ -1316,14 +1316,10 @@ ui.gallery.title_match,本局卡牌图鉴
 ui.gallery.toc_all,全部
 ui.game.card.freeze_glyph,冻
 ui.game.card.stealth_glyph,潜
-ui.game.combat.banner,%s%s · 对 %s 造成 %d 点伤害
-ui.game.combat.draw,平局
 ui.game.combat.ghost_suffix,（幽灵）
 ui.game.combat.intro,战斗开始
-ui.game.combat.lose,失败
 ui.game.combat.vs,VS
 ui.game.combat.waiting,等待战斗动作…
-ui.game.combat.win,胜利
 ui.game.detail.alive,存活
 ui.game.detail.association,关联分类
 ui.game.detail.cost,费用

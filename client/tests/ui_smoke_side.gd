@@ -507,7 +507,7 @@ func _check_recruit_river() -> void:
     await get_tree().process_frame
 
 
-## 战斗河道：始终显示回合数，结果追加在后，右端只剩「战斗中」。
+## 战斗河道：始终只显示回合数，右端只剩「战斗中」。
 func _check_combat_river() -> void:
     var host: Control = await _host(Vector2(1148, 32))
     var river := GameRiver.new(GameRiver.Mode.COMBAT)
@@ -516,20 +516,19 @@ func _check_combat_river() -> void:
     await get_tree().process_frame
     river.refresh(_state_for(Protocol.PHASE_COMBAT, FixtureScript.game_view()))
     await get_tree().process_frame
-    var banner: Label = river.find_child("CombatBanner", true, false)
+    var turn_label: Label = river.find_child("CombatTurnLabel", true, false)
     var pill: Label = river.find_child("CombatStatusPill", true, false)
     var gold: Label = river.find_child("CombatGoldTile", true, false)
-    _expect(banner != null and banner.visible, "战斗河道应始终显示横幅")
+    _expect(turn_label != null and turn_label.visible, "战斗河道应始终显示回合数")
     _expect(gold != null and gold.text.contains("6"), "战斗河道左侧应显示金币")
     _expect(pill != null, "战斗河道右端应有战斗中胶囊")
     _expect(river.find_child("RecruitCountdownFlip", true, false) == null, "战斗河道不应创建倒计时")
-    if banner != null and pill != null:
-        _expect(banner.text == TranslationServer.translate("ui.game.side_panel.turn") % 3, "横幅应先显示回合数")
+    if turn_label != null and pill != null:
+        _expect(
+            turn_label.text == TranslationServer.translate("ui.game.side_panel.turn") % 3,
+            "战斗河道应只显示回合数，实际「%s」" % turn_label.text,
+        )
         _expect(pill.text == TranslationServer.translate("ui.game.side_panel.combat"), "右端应显示战斗中文案")
-        river.set_combat_detail("胜利", UITheme.color("color-success"))
-        _expect(banner.text == "%s · 胜利" % (TranslationServer.translate("ui.game.side_panel.turn") % 3), "结果应追加在回合数之后")
-        river.set_combat_detail("", UITheme.color("color-success"))
-        _expect(banner.text == TranslationServer.translate("ui.game.side_panel.turn") % 3, "清空结果后应只剩回合数")
     host.queue_free()
     await get_tree().process_frame
 

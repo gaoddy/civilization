@@ -7,6 +7,9 @@ extends HBoxContainer
 ## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
 var detail: DetailLayer = null
 
+## 当前对手英雄卡：战斗结束对冲演出的对手方来源；等待配对时为 null。
+var _hero_card: GameHeroCard = null
+
 
 func _init() -> void:
     name = "OpponentView"
@@ -17,6 +20,7 @@ func _init() -> void:
 
 
 func refresh(state: GameUiState) -> void:
+    _hero_card = null
     UIControls.clear(self)
     var opponent_id := CardText.optional_text(state.view.get("opponentPlayerId"))
     if opponent_id == "":
@@ -36,7 +40,9 @@ func _normal_block(player: Dictionary, hp_cap: int) -> Control:
     block.name = "OpponentIdentity"
     block.alignment = BoxContainer.ALIGNMENT_CENTER
     block.add_theme_constant_override("separation", UITheme.space("space-md"))
-    block.add_child(_portrait(player, hp_cap, true))
+    var portrait := _portrait(player, hp_cap, true)
+    _hero_card = portrait
+    block.add_child(portrait)
     block.add_child(_identity_column(player, hp_cap, false))
     return block
 
@@ -47,10 +53,19 @@ func _ghost_block(player: Dictionary, hp_cap: int) -> Control:
     block.name = "GhostIdentity"
     block.alignment = BoxContainer.ALIGNMENT_CENTER
     block.add_theme_constant_override("separation", UITheme.space("space-md"))
-    block.add_child(_portrait(player, hp_cap, false))
+    var portrait := _portrait(player, hp_cap, false)
+    _hero_card = portrait
+    block.add_child(portrait)
     block.add_child(_identity_column(player, hp_cap, true))
     UIControls.apply_dim(block)
     return block
+
+
+## 对手英雄卡：节点已释放或等待配对时返回 null。
+func hero_card() -> Control:
+    if _hero_card == null or not is_instance_valid(_hero_card):
+        return null
+    return _hero_card
 
 
 func _portrait(player: Dictionary, hp_cap: int, show_hp: bool) -> GameHeroCard:

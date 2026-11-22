@@ -64,6 +64,11 @@ var _overlay: GameChoiceOverlay
 # 左栏战报浮层：位于详情层之上、选择浮层之下，允许覆盖中央舞台。
 var _report_layer: Control
 
+# 战斗结束演出：双方英雄卡冲入河道对冲；页面级覆盖层，位于详情层之下。
+var _hero_clash: CombatHeroClash
+## 待启动的对冲请求：等下一次 `_process` 完成布局后再取矩形。
+var _pending_clash: Dictionary = {}
+
 # 随从详情：覆盖全屏但不拦截输入，层级位于内容与战报之上、选择浮层之下。
 var _detail: DetailLayer
 
@@ -122,6 +127,12 @@ func _build() -> void:
 	body.add_child(_center)
 
 	_build_tools(page_side, page_top)
+
+	# 对冲演出盖住中央舞台，但位于详情 / 瞄准 / 状态 / 选择层之下。
+	_hero_clash = CombatHeroClash.new()
+	_hero_clash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_hero_clash)
+	_combat_view.hero_clash_requested.connect(_on_hero_clash_requested)
 
 	_detail = DetailLayer.new()
 	add_child(_detail)
@@ -233,6 +244,9 @@ func _process(delta: float) -> void:
 	if _elapsed >= 0.25:
 		_elapsed = 0.0
 		_update_timer()
+	_start_pending_clash()
+	if _hero_clash.playing():
+		_hero_clash.advance(delta)
 	if _combat_view.playing():
 		_combat_view.advance(delta)
 	_report_combat_played()
@@ -459,13 +473,49 @@ func _set_combat_mode(in_combat: bool) -> void:
 	_recruit_view.visible = not in_combat
 	_combat_view.visible = in_combat
 	_hero_row.set_combat_mode(in_combat)
+	if not in_combat:
+		_pending_clash = {}
+		_hero_clash.clear()
+
+
+## 战斗视图请求结束演出：先记下，等下一次 `_process` 布局完成后再启动。
+func _on_hero_clash_requested(winner_side: String, damage: int) -> void:
+	_pending_clash = {"winner": winner_side, "damage": damage}
+
+
+## 启动待处理的对冲：首帧 / 重连时布局可能尚未完成，矩形为零时保留请求、下一帧再试。
+func _start_pending_clash() -> void:
+	if _pending_clash.is_empty():
+		return
+	var pending := _pending_clash
+	_pending_clash = {}
+	var own_card := _hero_row.hero_card()
+	var opponent_card := _combat_view.opponent_hero_card()
+	if own_card == null or opponent_card == null:
+		return
+	var river := _combat_view.river_rect()
+	if river.size.x <= 0.0 or river.size.y <= 0.0:
+		_pending_clash = pending
+		return
+	if _detail != null:
+		_detail.hide_panel()
+	_hero_clash.start(
+		own_card,
+		opponent_card,
+		river,
+		str(pending.get("winner", "")),
+		int(pending.get("damage", 0)),
+	)
 
 
 ## 演示播完后向服务端回报一次；断线时不发送也不重试（服务端把断线视为已回报）。
+## 对冲演出期间不回报：服务端推进到招募会清空战斗视图，演出会被截断。
 func _report_combat_played() -> void:
 	if GameStore.phase != Protocol.PHASE_COMBAT:
 		return
 	if not GameStore.combat_is_current() or not _combat_view.finished():
+		return
+	if _hero_clash.playing() or not _pending_clash.is_empty():
 		return
 	if _combat_ack_turn == GameStore.turn:
 		return

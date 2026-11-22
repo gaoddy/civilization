@@ -3,7 +3,11 @@ extends PanelContainer
 ## 战斗组合：高 438 = 对手英雄行 84 + 6 + 对手行 146 + 6 + 河道 44 + 6 + 我方行 146。
 ##
 ## 演示进度由 `CombatPlayback` 纯数据播放器驱动；页面只负责在演示中调用
-## `advance()`，本视图不发送任何意图。结果追加在河道的回合数之后。
+## `advance()`，本视图不发送任何意图。演示播完后发出一次英雄对冲请求，
+## 河道只保留回合数，不再追加胜负文字。
+
+## 演示播完、进入结果停留时发出：胜方 `own` / `opponent` / 空串（平局）与伤害。
+signal hero_clash_requested(winner_side: String, damage: int)
 
 ## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
 var detail: DetailLayer = null
@@ -16,8 +20,8 @@ var _own_row: HFlowContainer
 ## 演示播放器（纯数据）与当前演示所属回合。
 var _combat := CombatPlayback.new()
 var _combat_turn := -1
-## 本场结束音效是否已播放；每场战斗重置，避免横幅刷新时重复。
-var _combat_end_cued := false
+## 本场结束音效与对冲请求是否已发出；每场战斗重置，避免视图刷新时重复。
+var _clash_announced := false
 ## 覆盖层演出：克隆卡碰撞往返、闪光、飘字与淡出。
 var _fx: CombatFx
 ## 开战画面：双方对阵约 1.2 秒，显示期间暂停演示推进。
@@ -118,7 +122,6 @@ func refresh(state: GameUiState) -> void:
         _opponent_row.custom_minimum_size.x = 0
         _own_row.custom_minimum_size.x = 0
         _opponent_row.add_child(UIControls.empty_hint(tr("ui.game.combat.waiting")))
-        _river.set_combat_detail("", UITheme.color("color-accent"))
         return
     var combat: Dictionary = GameStore.last_combat
     if _combat_turn != GameStore.turn:
@@ -130,10 +133,9 @@ func refresh(state: GameUiState) -> void:
 ## 进入非战斗阶段时丢弃本场演示归属，下一场战斗从头播放。
 func reset() -> void:
     _combat_turn = -1
-    _combat_end_cued = false
+    _clash_announced = false
     _intro.clear()
     _fx.clear()
-    _river.set_combat_detail("", UITheme.color("color-accent"))
 
 
 ## 演示进行中：阶段为战斗、播放器属于本回合、有本回合战报且尚未播完。
@@ -174,7 +176,7 @@ func finished() -> bool:
 ## 装载本场演示：战前阵容与动作序列，并按服务端 `startedAt` 对齐续播进度。
 func _start_combat(combat: Dictionary) -> void:
     _fx.clear()
-    _combat_end_cued = false
+    _clash_announced = false
     var started_at := UIFormat.unix_from_rfc3339(str(combat.get("startedAt", "")))
     _combat.start(
         combat.get("actions", []),
@@ -361,55 +363,25 @@ func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
     )
 
 
-## 胜负与颜色：胜 success、负 danger、平 accent。
-func _result(combat: Dictionary) -> Dictionary:
-    var text := tr("ui.game.combat.draw")
-    var variant := "accent"
-    var winner = combat.get("winnerId")
-    if winner != null:
-        if str(winner) == GameStore.player_id:
-            text = tr("ui.game.combat.win")
-            variant = "success"
-        else:
-            text = tr("ui.game.combat.lose")
-            variant = "danger"
-    return {"text": text, "variant": variant}
+## 对手英雄卡：对冲演出的对手方来源；重建中或等待配对时为 null。
+func opponent_hero_card() -> Control:
+    return _opponent_view.hero_card()
 
 
-## 对手展示名：优先 `displayName`，缺失回退 `playerId`；幽灵战追加幽灵后缀。
-func _opponent_label() -> String:
-    var opponent_id := ""
-    if _state != null:
-        opponent_id = CardText.optional_text(_state.view.get("opponentPlayerId"))
-    var name := ""
-    if _state != null:
-        for player in _state.view.get("players", []):
-            if player is Dictionary and str(player.get("playerId", "")) == opponent_id:
-                name = CardText.optional_text(player.get("displayName"))
-                if name == "":
-                    name = CardText.optional_text(player.get("playerId"))
-                break
-    if name == "":
-        name = tr("ui.game.side_panel.unknown_hero")
-    if bool(GameStore.last_combat.get("mirror", false)):
-        name += tr("ui.game.combat.ghost_suffix")
-    return name
+## 战斗河道的全局矩形：对冲的相遇点以它的中心为准。
+func river_rect() -> Rect2:
+    return _river.get_global_rect()
 
 
-## 横幅：动作播完并经过 TAIL_MS 后才把结果追加到河道的回合数之后。
+## 结束播报：演示播完并经过 TAIL_MS 后播一次结束音、发出一次对冲请求。
 func _refresh_combat_banner() -> void:
-    if not _combat.banner_visible():
-        _river.set_combat_detail("", UITheme.color("color-accent"))
+    if not _combat.banner_visible() or _clash_announced:
         return
-    if not _combat_end_cued:
-        _combat_end_cued = true
-        Sfx.play_cue(Sfx.CUE_COMBAT_END)
+    _clash_announced = true
+    Sfx.play_cue(Sfx.CUE_COMBAT_END)
     var combat: Dictionary = GameStore.last_combat
-    var result := _result(combat)
-    var text := tr("ui.game.combat.banner") % [
-        str(result.get("text", "")),
-        "",
-        _opponent_label(),
-        int(combat.get("damage", 0)),
-    ]
-    _river.set_combat_detail(text, UITheme.color("color-" + str(result.get("variant", "accent"))))
+    var winner = combat.get("winnerId")
+    var winner_side := ""
+    if winner != null:
+        winner_side = "own" if str(winner) == GameStore.player_id else "opponent"
+    hero_clash_requested.emit(winner_side, int(combat.get("damage", 0)))

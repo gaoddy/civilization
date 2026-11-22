@@ -27,7 +27,7 @@ const PAGES := [
     },
     {
         "path": "res://pages/game/game.tscn",
-        "children": 8,
+        "children": 9,
         "direct_names": [
             "AimLayer",
             "MinionDetailLayer",
@@ -36,6 +36,7 @@ const PAGES := [
             "FirstGameGuide",
             "GameToolsOverlay",
             "StatusModal",
+            "CombatHeroClash",
         ],
         "deep_names": ["CenterPanel", "GameTools", "PlayersPanel"],
     },
