@@ -68,7 +68,7 @@ func _unmount(instance: Node) -> void:
 func _check_shared_layer() -> void:
     _expect(UITheme.metric("hero-row-height") == 84, "英雄行高应为 84")
     _expect(UITheme.metric("hero-card-size") == 84, "英雄卡边长应为 84")
-    _expect(UITheme.metric("shop-icon-size") == 40, "商店图标按钮应为 40")
+    _expect(UITheme.metric("shop-icon-size") == 56, "商店图标按钮应为 56")
     _expect(UITheme.metric("river-height") == 44, "河道高应为 44")
     _expect(UITheme.metric("pill-button-height") == 26, "胶囊按钮高应为 26")
     _expect(UITheme.metric("recruit-shop-gap") == 6, "商店到河道的间距应为 6")
@@ -159,15 +159,24 @@ func _check_popup_layer() -> void:
     await get_tree().process_frame
 
 
+## 图标按钮的当前档位边长（桌面 56、手机 48）。
+func _icon_size() -> Vector2:
+    return Vector2.ONE * float(UITheme.stage_metric("shop-icon-size"))
+
+
 ## 图标按钮：尺寸、费用角标、次数角标、激活与禁用表现。
 func _check_icon_button() -> void:
     var button := GameIconButton.new("upgrade", "Upgrade")
     add_child(button)
     await get_tree().process_frame
-    _expect(button.custom_minimum_size == Vector2(40, 40), "图标按钮应为 40×40")
+    _expect(button.custom_minimum_size == _icon_size(), "图标按钮应取 shop-icon-size 边长")
     var cost_badge: Label = button.find_child("UpgradeCostBadge", true, false)
     _expect(cost_badge != null, "图标按钮应有费用角标")
     if cost_badge != null:
+        _expect(
+            cost_badge.size.x >= button.size.x * 0.3,
+            "费用角标应随按钮等比放大",
+        )
         _expect(not cost_badge.visible, "默认无费用时不显示费用角标")
         button.set_cost(4)
         _expect(cost_badge.visible and cost_badge.text == "4", "费用角标应显示 4")
@@ -552,7 +561,7 @@ func _check_hero_row() -> void:
     _expect(card != null and card.custom_minimum_size == Vector2(84, 84), "英雄行应含 84×84 英雄卡")
     _expect(row.find_child("GoldTile", true, false) == null, "英雄行不应再显示金币")
     _expect(meta != null and meta.custom_minimum_size.y == 24, "英雄 meta 行应保持 24 高")
-    _expect(power != null and power.custom_minimum_size == Vector2(40, 40), "英雄技能应为 40×40 图标按钮")
+    _expect(power != null and power.custom_minimum_size == _icon_size(), "英雄技能按钮应取 shop-icon-size 边长")
     var uses_badge: Label = row.find_child("HeroPower0UsesBadge", true, false)
     _expect(uses_badge != null and not uses_badge.visible, "剩余 1 次时不显示次数角标")
 
@@ -733,7 +742,7 @@ func _check_shop_view() -> void:
     var reroll: Button = shop.find_child("RerollButton", true, false)
     var freeze: Button = shop.find_child("FreezeButton", true, false)
     _expect(actions != null and actions.get_global_rect().size.y == 84, "商店操作行高应为 84")
-    _expect(upgrade != null and upgrade.custom_minimum_size == Vector2(40, 40), "升级按钮应为 40×40")
+    _expect(upgrade != null and upgrade.custom_minimum_size == _icon_size(), "升级按钮应取 shop-icon-size 边长")
     _expect(seller != null and seller is GameHeroCard, "售货员应复用英雄卡组件")
     _expect(seller != null and seller.custom_minimum_size == Vector2(84, 84), "售货员应为 84×84")
     _expect(
@@ -745,8 +754,8 @@ func _check_shop_view() -> void:
         seller != null and seller.find_child("PortraitName", true, false) == null,
         "售货员不应再显示名字条",
     )
-    _expect(reroll != null and reroll.custom_minimum_size == Vector2(40, 40), "刷新按钮应为 40×40")
-    _expect(freeze != null and freeze.custom_minimum_size == Vector2(40, 40), "冻结按钮应为 40×40")
+    _expect(reroll != null and reroll.custom_minimum_size == _icon_size(), "刷新按钮应取 shop-icon-size 边长")
+    _expect(freeze != null and freeze.custom_minimum_size == _icon_size(), "冻结按钮应取 shop-icon-size 边长")
     if upgrade != null and seller != null and reroll != null:
         _expect(
             upgrade.get_global_rect().get_center().x < seller.get_global_rect().get_center().x,
@@ -1096,14 +1105,14 @@ func _check_recruit_stage() -> void:
             )
 
     var power: Control = instance.find_child("HeroPowerButton0", true, false)
-    _expect(power != null and power.size == Vector2(40, 40), "英雄技能图标应为 40×40")
+    _expect(power != null and power.size == _icon_size(), "英雄技能图标应取 shop-icon-size 边长")
     if power != null:
         _expect(power.find_child("HeroPower0CostBadge", true, false) != null, "技能应有费用角标")
         _expect(power.find_child("HeroPower0UsesBadge", true, false) != null, "技能应有次数角标")
     var gold_tile: Label = instance.find_child("RecruitGoldTile", true, false)
     _expect(gold_tile != null and gold_tile.text.contains("6"), "招募河道应显示金币")
 
-    # 商店操作行：升时代在售货员左侧，刷新与冻结在右侧，均为 40×40 图标按钮。
+    # 商店操作行：升时代在售货员左侧，刷新与冻结在右侧，均为 shop-icon-size 边长图标按钮。
     var seller: Control = instance.find_child("SellerTile", true, false)
     var upgrade: Control = instance.find_child("UpgradeButton", true, false)
     var reroll: Control = instance.find_child("RerollButton", true, false)
@@ -1114,7 +1123,7 @@ func _check_recruit_stage() -> void:
         "售货员不应再显示名字条",
     )
     for button in [upgrade, reroll, freeze]:
-        _expect(button != null and button.size == Vector2(40, 40), "商店操作应为 40×40 图标")
+        _expect(button != null and button.size == _icon_size(), "商店操作应取 shop-icon-size 边长")
     if seller != null and upgrade != null and reroll != null and freeze != null:
         _expect(
             upgrade.get_global_rect().end.x <= seller.get_global_rect().position.x

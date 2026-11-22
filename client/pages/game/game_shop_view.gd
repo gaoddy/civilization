@@ -73,7 +73,8 @@ func _init() -> void:
     var right := HBoxContainer.new()
     right.name = "ShopActionRight"
     right.alignment = BoxContainer.ALIGNMENT_CENTER
-    right.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    # 刷新与冻结之间留出费用角标的外扩量，避免角标压到相邻按钮。
+    right.add_theme_constant_override("separation", UITheme.space("space-md-plus"))
     actions.add_child(right)
 
     _reroll_button = GameIconButton.new("reroll", "Reroll")

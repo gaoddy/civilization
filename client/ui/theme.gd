@@ -153,7 +153,8 @@ const SCENARIO := {
 	"hero-row-height": 84,
 	"hero-meta-row-height": 24,
 	"hero-card-size": 84,
-	"shop-icon-size": 40,
+	# 图标按钮填满英雄行高度：被动 24 + 间距 4 + 图标 56 = 84。
+	"shop-icon-size": 56,
 	"recruit-shop-gap": 6,
 	"opponent-hp-width": 84,
 	"avatar-sm": 22,
@@ -206,9 +207,10 @@ const SCENARIO := {
 	"card-height-compact": 91,
 	"card-info-height-compact": 60,
 	"hand-card-overlap-compact": 24,
-	"hero-row-height-compact": 64,
+	"hero-row-height-compact": 76,
 	"hero-card-size-compact": 64,
-	"shop-icon-size-compact": 36,
+	# 手机英雄行：被动 24 + 间距 4 + 图标 48 = 76。
+	"shop-icon-size-compact": 48,
 	"river-height-compact": 30,
 	"river-gold-width-compact": 64,
 	"river-gold-height-compact": 20,
