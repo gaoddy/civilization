@@ -387,6 +387,21 @@ func _check_phone_layout() -> void:
     _expect(layer != null and layer.is_visible_in_tree(), "手机点击卡牌应打开详情浮层")
     var drawer := page.find_child("GalleryDrawer", true, false) as Control
     _expect(drawer != null and bounds.encloses(drawer.get_global_rect()), "手机详情抽屉不应越界")
+    var header := page.find_child("GalleryHeader", true, false) as Control
+    if drawer != null and header != null:
+        var drawer_rect := drawer.get_global_rect()
+        _expect(
+            is_equal_approx(drawer_rect.position.y, header.get_global_rect().end.y),
+            "手机详情抽屉应从头部下沿开始，实际：%s" % str(drawer_rect),
+        )
+        _expect(
+            is_equal_approx(drawer_rect.end.y, host.get_global_rect().end.y),
+            "手机详情抽屉应贴到页面底边，实际：%s" % str(drawer_rect),
+        )
+        _expect(
+            is_equal_approx(drawer_rect.size.x, float(UITheme.stage_metric("gallery-drawer-width"))),
+            "手机详情抽屉宽度应为 gallery-drawer-width，实际：%s" % str(drawer_rect),
+        )
     await _push_key(page, KEY_ESCAPE)
     _expect(layer != null and not layer.is_visible_in_tree(), "Esc 应只收起详情浮层")
 

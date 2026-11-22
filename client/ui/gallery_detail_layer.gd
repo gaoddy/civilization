@@ -3,7 +3,7 @@ extends Control
 ## 图鉴详情浮层：工具条以下的遮罩 + 右侧详情抽屉，承载 `GalleryDetail`。
 ##
 ## 点遮罩、关闭按钮或由页面按 Esc 收起；图层只管显隐与容器，内容与数据仍在
-## `GalleryDetail` 与页面层。手机档位改为贴底的整宽抽屉。
+## `GalleryDetail` 与页面层。桌面与手机都是贴右的整高抽屉，只差右侧外边距。
 
 signal closed
 
@@ -13,7 +13,7 @@ var _detail: GalleryDetail
 var _close_button: Button
 
 
-## `top` 为遮罩与桌面抽屉的顶边，由 `CardGallery` 按头部下沿传入。
+## `top` 为遮罩与抽屉的顶边，由 `CardGallery` 按头部下沿传入。
 func _init(top: int) -> void:
     name = "GalleryDetailLayer"
     set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -40,26 +40,21 @@ func _init(top: int) -> void:
     _drawer.add_theme_stylebox_override("panel", style)
     add_child(_drawer)
 
-    var phone := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
-    if phone:
-        _drawer.anchor_left = 0.0
-        _drawer.anchor_right = 1.0
-        _drawer.anchor_top = 0.3
-        _drawer.anchor_bottom = 1.0
-        _drawer.offset_left = UITheme.space("space-xl")
-        _drawer.offset_right = -UITheme.space("space-xl")
-        _drawer.offset_top = 0
-        _drawer.offset_bottom = -UITheme.space("space-xl")
-    else:
-        _drawer.anchor_left = 1.0
-        _drawer.anchor_right = 1.0
-        _drawer.anchor_top = 0.0
-        _drawer.anchor_bottom = 1.0
-        _drawer.offset_left = -(UITheme.stage_metric("gallery-drawer-width") + edge)
-        _drawer.offset_right = -edge
-        # 顶部对齐头部下沿，底部贴到页面底边，抽屉纵向占满头部以下的整块空间。
-        _drawer.offset_top = top
-        _drawer.offset_bottom = 0
+    # 手机与桌面同为右侧抽屉：宽度取同一令牌，仅右侧外边距按档位收窄。
+    var right_edge := (
+        UITheme.space("space-xl")
+        if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
+        else edge
+    )
+    _drawer.anchor_left = 1.0
+    _drawer.anchor_right = 1.0
+    _drawer.anchor_top = 0.0
+    _drawer.anchor_bottom = 1.0
+    _drawer.offset_left = -(UITheme.stage_metric("gallery-drawer-width") + right_edge)
+    _drawer.offset_right = -right_edge
+    # 顶部对齐头部下沿，底部贴到页面底边，抽屉纵向占满头部以下的整块空间。
+    _drawer.offset_top = top
+    _drawer.offset_bottom = 0
 
     var box := VBoxContainer.new()
     box.name = "GalleryDrawerBody"
