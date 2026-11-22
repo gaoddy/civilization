@@ -22,6 +22,9 @@ const ERA_IDS := [
 const MODE_MINION := "minion"
 const MODE_HERO := "hero"
 
+## 头部固定高度：桌面 32；触控端抬到主操作命中高度，与筛选下拉、返回按钮同高。
+const HEADER_HEIGHT := 32
+
 ## 选中顶层分类后展开的二级筛选：随从与效果牌。
 const KIND_ALL := ""
 const KIND_MINION := "minion"
@@ -77,6 +80,9 @@ func _init() -> void:
     var header := HBoxContainer.new()
     header.name = "GalleryHeader"
     header.add_theme_constant_override("separation", UITheme.space("space-sm"))
+    var header_height := _header_height()
+    header.custom_minimum_size = Vector2(0, header_height)
+    header.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
     root.add_child(header)
 
     _mode_bar = GalleryModeBar.new()
@@ -119,8 +125,13 @@ func _init() -> void:
     _filter_layer.item_selected.connect(_on_filter_selected)
     add_child(_filter_layer)
 
-    _detail_layer = GalleryDetailLayer.new()
+    _detail_layer = GalleryDetailLayer.new(UITheme.space("space-2xl") + header_height)
     add_child(_detail_layer)
+
+
+## 头部固定高度：桌面 32；触控端跟随主操作命中高度，避免头部随按钮高度变化。
+static func _header_height() -> int:
+    return UITheme.hit_primary() if ScreenProfile.is_touch() else HEADER_HEIGHT
 
 
 ## 载入卡牌集合与页面文案；重置视图、筛选并选中首张。

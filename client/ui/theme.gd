@@ -184,7 +184,7 @@ const SCENARIO := {
 	"detail-minion-width-dense": 360,
 	"detail-minion-width-dense-compact": 200,
 	# 图鉴：详情改为浮层抽屉，网格占满主体宽度；筛选面板挂在触发器下沿。
-	"gallery-drawer-width": 420,
+	"gallery-drawer-width": 320,
 	"gallery-filter-panel-width": 240,
 	"gallery-preview-width": 200,
 	"gallery-batch-size": 27,

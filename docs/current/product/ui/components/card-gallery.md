@@ -18,6 +18,7 @@
 - `close_text` 为已翻译文案。
 - 内部节点名：`GalleryBackground`、`GalleryHeader`、`GalleryModeBar`、`ModeMinion`、`ModeHero`、`GalleryEraSelect`、`GalleryPlaySelect`、`GalleryKindSelect`、`GalleryCount`、`GalleryClose`、`GalleryGrid`、`GalleryFilterPanel`、`GalleryDetailLayer`。
 - `GalleryHeader` 内依次为视图分段、三个筛选下拉、弹性空隙、计数与返回按钮；英雄视图隐藏 `GalleryEraSelect` 与 `GalleryKindSelect`。
+- 头部高度固定：桌面 32，触控端取主操作命中高度；切换视图或筛选不改变头部高度。
 - `GalleryFilterPanel` 与 `GalleryDetailLayer` 挂在组件根节点上，位于外边距之后，覆盖网格但不改变头部布局。
 
 ## 变体与状态

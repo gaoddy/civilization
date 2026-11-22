@@ -53,6 +53,10 @@ func _check_lobby_page() -> void:
         "图鉴头部不应横向溢出视口",
     )
     _expect(
+        header != null and is_equal_approx(header.size.y, 32.0),
+        "桌面图鉴头部高度应固定为 32，实际：%s" % (str(header.size) if header != null else "无"),
+    )
+    _expect(
         _filtered_count(instance) == 432,
         "大厅图鉴应有 432 张，实际：%d" % _filtered_count(instance),
     )
@@ -258,11 +262,17 @@ func _check_mode_filters() -> void:
         "史前章应有 86 张，实际：%d" % _filtered_count(instance),
     )
     var mode_hero := instance.find_child("ModeHero", true, false) as Button
+    var header := instance.find_child("GalleryHeader", true, false) as Control
+    var header_height := header.size.y if header != null else 0.0
     if mode_hero != null:
         await _push_click(instance, mode_hero.get_global_rect().get_center())
     _expect(
         _filtered_count(instance) == 32,
         "英雄视图不受时代筛选影响，实际：%d" % _filtered_count(instance),
+    )
+    _expect(
+        header != null and is_equal_approx(header.size.y, header_height),
+        "切换视图后头部高度应保持不变，实际：%s" % (str(header.size) if header != null else "无"),
     )
     var mode_minion := instance.find_child("ModeMinion", true, false) as Button
     if mode_minion != null:
@@ -406,6 +416,22 @@ func _check_detail_drawer() -> void:
         detail_name != null and detail_name.text == CardDB.display_name(card_id),
         "详情应切换为 %s" % CardDB.display_name(card_id),
     )
+    var header := instance.find_child("GalleryHeader", true, false) as Control
+    var drawer := instance.find_child("GalleryDrawer", true, false) as Control
+    if header != null and drawer != null:
+        var drawer_rect := drawer.get_global_rect()
+        _expect(
+            is_equal_approx(drawer_rect.position.y, header.get_global_rect().end.y),
+            "详情抽屉应从头部下沿开始，实际：%s" % str(drawer_rect),
+        )
+        _expect(
+            is_equal_approx(drawer_rect.end.y, layer.get_global_rect().end.y),
+            "详情抽屉应贴到页面底边，实际：%s" % str(drawer_rect),
+        )
+        _expect(
+            is_equal_approx(drawer_rect.size.x, float(UITheme.stage_metric("gallery-drawer-width"))),
+            "详情抽屉宽度应为 gallery-drawer-width，实际：%s" % str(drawer_rect),
+        )
     # 点遮罩关闭，网格仍保留选中。
     await _push_click(instance, Vector2(12, 360))
     _expect(layer != null and not layer.is_visible_in_tree(), "点遮罩应收起详情浮层")

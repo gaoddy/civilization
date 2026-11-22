@@ -7,29 +7,25 @@ extends Control
 
 signal closed
 
-const HEADER_HEIGHT := 32
-const DRAWER_TOP_GAP := 12
-
 var _scrim: ColorRect
 var _drawer: PanelContainer
 var _detail: GalleryDetail
 var _close_button: Button
 
 
-func _init() -> void:
+## `top` 为遮罩与桌面抽屉的顶边，由 `CardGallery` 按头部下沿传入。
+func _init(top: int) -> void:
     name = "GalleryDetailLayer"
     set_anchors_preset(Control.PRESET_FULL_RECT)
     mouse_filter = Control.MOUSE_FILTER_IGNORE
     visible = false
 
     var edge := UITheme.space("space-2xl")
-    var scrim_top := edge + HEADER_HEIGHT
-    var drawer_top := scrim_top + DRAWER_TOP_GAP
 
     _scrim = ColorRect.new()
     _scrim.name = "GalleryDetailScrim"
     _scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _scrim.offset_top = scrim_top
+    _scrim.offset_top = top
     var scrim_color := UITheme.color("color-bg")
     scrim_color.a = UITheme.opacity("scrim-alpha-gallery")
     _scrim.color = scrim_color
@@ -61,8 +57,9 @@ func _init() -> void:
         _drawer.anchor_bottom = 1.0
         _drawer.offset_left = -(UITheme.stage_metric("gallery-drawer-width") + edge)
         _drawer.offset_right = -edge
-        _drawer.offset_top = drawer_top
-        _drawer.offset_bottom = -edge
+        # 顶部对齐头部下沿，底部贴到页面底边，抽屉纵向占满头部以下的整块空间。
+        _drawer.offset_top = top
+        _drawer.offset_bottom = 0
 
     var box := VBoxContainer.new()
     box.name = "GalleryDrawerBody"
