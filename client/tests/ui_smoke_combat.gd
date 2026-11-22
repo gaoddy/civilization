@@ -1,6 +1,7 @@
 extends "res://tests/smoke_case.gd"
-## 战斗视图冒烟：顶部恢复对手英雄、双方随从行夹住河道，结果追加在河道回合数之后；
-## 演示播完只回报一次 `CombatPlayed`，战斗阶段不显示招募倒计时。
+## 战斗视图冒烟：顶部恢复对手英雄、双方随从行夹住河道，河道始终只显示回合数；
+## 演示播完后双方英雄卡冲入河道对冲，演出结束才回报一次 `CombatPlayed`，
+## 战斗阶段不显示招募倒计时。
 ##
 ## 断言在演示播放中与播放结束两种状态下都要成立。
 
@@ -24,7 +25,8 @@ class RecordingSocket extends RefCounted:
 
 func _ready() -> void:
     await _check_combat_center_only()
-    await _check_banner_variants()
+    await _check_clash_variants()
+    await _check_hero_clash()
     await _check_combat_played_once()
     await _check_started_at_seek()
     await _check_combat_intro_pauses_playback()
@@ -57,68 +59,115 @@ func _check_combat_center_only() -> void:
     GameStore.deadline = ""
 
 
-## 横幅文案：夹具胜者为我方，显示「胜利」、对手名与伤害；
-## 平局夹具显示「平局」与 0 伤害；幽灵战夹具追加「（幽灵）」。
-func _check_banner_variants() -> void:
+## 对冲演出按胜方区分：负局由对手顶退我方、伤害飘在我方一侧；平局双方弹回不飘伤害；
+## 幽灵战同样播放对冲。胜局细节由 `_check_hero_clash` 覆盖。
+func _check_clash_variants() -> void:
+    var lose := FixtureScript.combat_result()
+    lose["winnerId"] = "p2"
+    await _expect_clash_variant(lose, true, true, "负局")
     var draw := FixtureScript.combat_result()
     draw["winnerId"] = null
     draw["damage"] = 0
-    await _expect_banner(
-        draw,
-        [
-            TranslationServer.translate("ui.game.combat.draw"),
-            "机器人C",
-            "0",
-        ],
-        "平局",
-    )
+    await _expect_clash_variant(draw, false, false, "平局")
     var ghost := FixtureScript.combat_result()
     ghost["mirror"] = true
-    await _expect_banner(
-        ghost,
-        [
-            TranslationServer.translate("ui.game.combat.win"),
-            "机器人C" + TranslationServer.translate("ui.game.combat.ghost_suffix"),
-        ],
-        "幽灵战",
-    )
+    await _expect_clash_variant(ghost, true, false, "幽灵战")
 
 
-## 摆一份战报并推进到演示结束，断言横幅文案包含给定片段。
-func _expect_banner(combat: Dictionary, expected: Array, stage: String) -> void:
-    GameStore.player_id = "p0"
-    GameStore.phase = Protocol.PHASE_COMBAT
-    GameStore.turn = 3
-    GameStore.deadline = "2030-01-01T00:00:00Z"
-    var view := FixtureScript.game_view()
-    view["phase"] = Protocol.PHASE_COMBAT
-    view["opponentPlayerId"] = "p2"
-    GameStore.view = view
-    _set_combat(combat)
-    var instance := await _check_scene("res://pages/game/game.tscn", false)
+## 摆一份战报并推进到对冲命中，断言伤害飘字是否出现、是否落在败方一侧。
+func _expect_clash_variant(
+    combat: Dictionary,
+    expect_damage: bool,
+    expect_below: bool,
+    stage: String,
+) -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z", combat)
     if instance == null:
-        _clear_combat()
+        _reset_store()
         return
-    for _step in 12:
-        instance._process(0.4)
-    var banner = instance.find_child("CombatBanner", true, false)
-    _expect(banner != null and banner.visible, "%s横幅应可见" % stage)
-    if banner != null:
-        for piece in expected:
+    var clash = instance.find_child("CombatHeroClash", true, false)
+    _expect(clash != null, "%s对局页应有英雄对冲覆盖层" % stage)
+    if clash == null:
+        instance.queue_free()
+        await get_tree().process_frame
+        _reset_store()
+        return
+    if not _advance_to_clash(instance, clash):
+        _expect(false, "%s演示结束后应进入对冲演出" % stage)
+    else:
+        instance._process(CombatHeroClash.DASH_MS / 1000.0 + 0.05)
+        var damage_label = _fx_child(clash, "HeroClashDamage")
+        _expect(
+            (damage_label != null) == expect_damage,
+            "%s伤害飘字出现与否不符合预期（实际%s）"
+                % [stage, "有" if damage_label != null else "无"],
+        )
+        if damage_label != null:
+            var river: Control = instance.find_child("CombatRiver", true, false)
+            var center_y := river.get_global_rect().get_center().y if river != null else 0.0
+            var above: bool = damage_label.global_position.y < center_y
             _expect(
-                banner.text.contains(str(piece)),
-                "%s横幅应含「%s」，实际「%s」" % [stage, piece, banner.text]
+                above == not expect_below,
+                "%s伤害飘字应落在败方一侧，实际 y=%.1f / 河道中心 %.1f"
+                    % [stage, damage_label.global_position.y, center_y],
             )
     instance.queue_free()
     await get_tree().process_frame
-    GameStore.view = {}
-    _clear_combat()
-    GameStore.turn = 1
-    GameStore.phase = ""
-    GameStore.deadline = ""
+    _reset_store()
 
 
-## 战斗回报：演示播完后发送一次 `CombatPlayed`，同一回合继续推进不重复发送。
+## 胜局对冲：双方英雄卡冲入河道、胜方顶退败方、败方飘出伤害，随后回位并恢复原卡。
+func _check_hero_clash() -> void:
+    var instance := await _combat_instance("2030-01-01T00:00:00Z")
+    if instance == null:
+        return
+    var clash = instance.find_child("CombatHeroClash", true, false)
+    _expect(clash != null, "对局页应有英雄对冲覆盖层")
+    if clash == null:
+        instance.queue_free()
+        await get_tree().process_frame
+        _reset_store()
+        return
+    _expect(clash.mouse_filter == Control.MOUSE_FILTER_IGNORE, "对冲覆盖层不应拦截鼠标")
+    var own_card: Control = instance._hero_row.hero_card()
+    var opponent_card: Control = instance._combat_view.opponent_hero_card()
+    _expect(own_card != null, "我方英雄卡应可用于对冲")
+    _expect(opponent_card != null, "对手英雄卡应可用于对冲")
+    _expect(_advance_to_clash(instance, clash), "演示结束后应进入对冲演出")
+    _expect(clash.playing(), "对冲演出应处于进行中")
+    _expect(_fx_child(clash, "HeroClashOwn") != null, "对冲应克隆我方英雄卡")
+    _expect(_fx_child(clash, "HeroClashOpponent") != null, "对冲应克隆对手英雄卡")
+    _expect(own_card != null and own_card.modulate.a < 0.5, "对冲期间我方原卡应隐藏")
+    _expect(opponent_card != null and opponent_card.modulate.a < 0.5, "对冲期间对手原卡应隐藏")
+    instance._process(CombatHeroClash.DASH_MS / 1000.0 + 0.05)
+    var label = _fx_child(clash, "HeroClashDamage")
+    _expect(label != null, "胜局命中后应飘出伤害")
+    if label is Label:
+        _expect(
+            (label as Label).text == "-5",
+            "伤害数字应取服务端 damage，实际「%s」" % (label as Label).text,
+        )
+    instance._process(1.0)
+    _expect(not clash.playing(), "回位后对冲演出应结束")
+    _expect(_fx_child(clash, "HeroClashOwn") == null, "回位后我方克隆卡应释放")
+    _expect(_fx_child(clash, "HeroClashOpponent") == null, "回位后对手克隆卡应释放")
+    _expect(own_card != null and own_card.modulate.a > 0.5, "回位后我方原卡应恢复")
+    _expect(opponent_card != null and opponent_card.modulate.a > 0.5, "回位后对手原卡应恢复")
+    instance.queue_free()
+    await get_tree().process_frame
+    _reset_store()
+
+
+## 推进到对冲开始；最多 30 拍 0.2 秒，避免固定步数被开战画面与停留边界影响。
+func _advance_to_clash(instance: Node, clash: Node) -> bool:
+    for _step in 30:
+        instance._process(0.2)
+        if clash.playing():
+            return true
+    return false
+
+
+## 战斗回报：对冲演出结束后才发送一次 `CombatPlayed`，同一回合继续推进不重复发送。
 func _check_combat_played_once() -> void:
     var socket := RecordingSocket.new()
     Net.socket = socket
@@ -126,10 +175,13 @@ func _check_combat_played_once() -> void:
     if instance == null:
         _fake_disconnect()
         return
-    for _step in 12:
-        instance._process(0.4)
+    _expect(_advance_to_clash(instance, instance._hero_clash), "演示结束后应进入对冲演出")
     var sent := _sent_count(socket, Protocol.MSG_COMBAT_PLAYED)
-    _expect(sent == 1, "演示完成后应发送一次 CombatPlayed，实际 %d 次" % sent)
+    _expect(sent == 0, "对冲演出结束前不应发送 CombatPlayed，实际 %d 次" % sent)
+    for _step in 3:
+        instance._process(0.4)
+    sent = _sent_count(socket, Protocol.MSG_COMBAT_PLAYED)
+    _expect(sent == 1, "演出完成后应发送一次 CombatPlayed，实际 %d 次" % sent)
     for _step in 5:
         instance._process(0.4)
     sent = _sent_count(socket, Protocol.MSG_COMBAT_PLAYED)
@@ -172,13 +224,14 @@ func _check_started_at_seek() -> void:
         Sfx.count_cue(Sfx.CUE_COMBAT_END) == 1,
         "续播到结束态应补播一次战斗结束音效",
     )
-    var banner = instance.find_child("CombatBanner", true, false)
+    var turn_label: Label = instance.find_child("CombatTurnLabel", true, false)
+    var turn_text := TranslationServer.translate("ui.game.side_panel.turn") % 3
     _expect(
-        banner != null
-            and banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
-        "startedAt 已过去较久时首帧应直接进入结束态，实际「%s」"
-            % ("" if banner == null else banner.text),
+        turn_label != null and turn_label.text == turn_text,
+        "startedAt 已过去较久时首帧应直接进入结束态，河道实际「%s」"
+            % ("" if turn_label == null else turn_label.text),
     )
+    _expect(instance.find_child("CombatHeroClash", true, false) != null, "结束态应可进入英雄对冲")
     instance.queue_free()
     await get_tree().process_frame
     GameStore.view = {}
@@ -437,7 +490,7 @@ func _check_death_fades_after_strike() -> void:
     _reset_store()
 
 
-## 固定占位：一方随从全灭后该行高度与位置不变；结果出现前后两行与河道都不动。
+## 固定占位：一方随从全灭后该行高度与位置不变；对冲演出前后两行与河道都不动。
 func _check_fixed_slots() -> void:
     GameStore.player_id = "p0"
     GameStore.phase = Protocol.PHASE_COMBAT
@@ -455,10 +508,10 @@ func _check_fixed_slots() -> void:
     var opponent_row: Control = instance.find_child("CombatOpponentRow", true, false)
     var own_row: Control = instance.find_child("CombatOwnRow", true, false)
     var river: Control = instance.find_child("CombatRiver", true, false)
-    var banner: Label = instance.find_child("CombatBanner", true, false)
+    var turn_label: Label = instance.find_child("CombatTurnLabel", true, false)
     _expect(opponent_row != null and own_row != null, "战斗视图应有两行随从")
-    _expect(river != null and banner != null, "战斗视图应有河道与结果文本")
-    if opponent_row == null or own_row == null or river == null or banner == null:
+    _expect(river != null and turn_label != null, "战斗视图应有河道与回合数")
+    if opponent_row == null or own_row == null or river == null or turn_label == null:
         instance.queue_free()
         await get_tree().process_frame
         _reset_store()
@@ -495,7 +548,7 @@ func _check_fixed_slots() -> void:
         "对手行、河道、我方行应自上而下排列",
     )
     var turn_text := TranslationServer.translate("ui.game.side_panel.turn") % 3
-    _expect(banner.text == turn_text, "结果出现前河道只显示回合数，实际「%s」" % banner.text)
+    _expect(turn_label.text == turn_text, "演出前河道只显示回合数，实际「%s」" % turn_label.text)
 
     # 开战画面结束后，320ms 的阵亡动作让对手行清空；
     # 行高与两行位置都必须保持不变。
@@ -521,26 +574,30 @@ func _check_fixed_slots() -> void:
         "河道不应因对手清空而移动",
     )
 
-    # 推进到结果出现：结果追加在回合数之后，两行与河道都不动。
+    # 推进到对冲演出：河道只保留回合数，两行与河道都不动。
+    Sfx.clear_log()
     for _step in 8:
         instance._process(0.4)
     await get_tree().process_frame
     _expect(
-        banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
-        "演示播完后河道应显示结果，实际「%s」" % banner.text,
+        Sfx.count_cue(Sfx.CUE_COMBAT_END) == 1,
+        "演示播完后应发出一次结束演出请求",
     )
-    _expect(banner.text.contains(turn_text), "结果应追加在回合数之后，实际「%s」" % banner.text)
+    _expect(
+        turn_label.text == turn_text,
+        "对冲演出后河道仍只显示回合数，实际「%s」" % turn_label.text,
+    )
     _expect(
         is_equal_approx(river.size.y, river_height),
-        "结果出现不应改变河道高度，实际 %.1f" % river.size.y,
+        "演出出现不应改变河道高度，实际 %.1f" % river.size.y,
     )
     _expect(
         is_equal_approx(opponent_row.global_position.y, opponent_y),
-        "结果出现后对手行位置不变",
+        "演出出现后对手行位置不变",
     )
     _expect(
         is_equal_approx(own_row.global_position.y, own_y),
-        "结果出现后我方行位置不变",
+        "演出出现后我方行位置不变",
     )
 
     instance.queue_free()
@@ -596,7 +653,7 @@ func _sent_count(socket: RecordingSocket, type: String) -> int:
 ## 战斗组合节点：
 ## - 旧的双方英雄条必须不存在，顶部恢复对手身份块；
 ## - 对手行、河道、我方行必须保留且顺序固定；
-## - 结果文本播放前只有回合数，播放后追加结果。
+## - 河道在播放中与播放后都只显示回合数（结果由英雄对冲演出承载）。
 func _expect_combat_center(instance: Node, finished: bool) -> void:
     var stage := "播放结束后" if finished else "播放中"
     _expect(instance.find_child("CombatOpponentStrip", true, false) == null, "战斗视图不应有对手英雄条（%s）" % stage)
@@ -613,7 +670,7 @@ func _expect_combat_center(instance: Node, finished: bool) -> void:
             "对手英雄卡应为 84×84（%s）" % stage,
         )
 
-    var banner = instance.find_child("CombatBanner", true, false)
+    var turn_label = instance.find_child("CombatTurnLabel", true, false)
     var river = instance.find_child("CombatRiver", true, false)
     var combat_gold = instance.find_child("CombatGoldTile", true, false)
     _expect(
@@ -623,28 +680,19 @@ func _expect_combat_center(instance: Node, finished: bool) -> void:
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
     var own_row = instance.find_child("CombatOwnRow", true, false)
     _expect(river != null, "战斗河道应存在（%s）" % stage)
-    _expect(banner != null, "结果文本保留（%s）" % stage)
+    _expect(turn_label != null, "战斗河道应显示回合数（%s）" % stage)
     _expect(opponent_row != null, "对手随从行仍在（%s）" % stage)
     _expect(own_row != null, "我方随从行仍在（%s）" % stage)
     _expect_combat_row_order(instance)
 
-    if banner == null:
+    if turn_label == null:
         return
     var turn_text := TranslationServer.translate("ui.game.side_panel.turn") % GameStore.turn
-    if finished:
-        _expect(
-            banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
-            "动作播完并停留后应显示结果，实际「%s」" % banner.text,
-        )
-        _expect(
-            banner.text.contains(turn_text),
-            "结果应追加在回合数之后，实际「%s」" % banner.text,
-        )
-    else:
-        _expect(
-            banner.text == turn_text,
-            "动作播完前河道只显示回合数，实际「%s」" % banner.text,
-        )
+    _expect(
+        turn_label.text == turn_text,
+        "战斗河道应只显示回合数（%s），实际「%s」" % [stage, turn_label.text],
+    )
+    if not finished:
         if opponent_row != null:
             _expect(opponent_row.get_child_count() == 2, "对手随从行应为 2 张")
         if own_row != null:

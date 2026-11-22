@@ -160,9 +160,9 @@ func _strike(flight: Dictionary) -> void:
         _spawn_damage_label(flight["end"] + target.size * 0.5, damage)
 
 
-func _spawn_damage_label(center: Vector2, damage: int) -> void:
+func _spawn_damage_label(center: Vector2, damage: int, label_name := "CombatFxDamage") -> void:
     var label := UIControls.label("-%d" % damage, UITheme.font_size("font-display"), true)
-    label.name = "CombatFxDamage"
+    label.name = label_name
     label.add_theme_color_override("font_color", UITheme.color("color-danger"))
     label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(label)

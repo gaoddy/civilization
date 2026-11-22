@@ -42,7 +42,7 @@ func _ready() -> void:
     await _check_drag_cancelled_after_view_rebuild()
     await _check_drop_gate()
     await _check_combat_playback()
-    await _check_combat_banner_after_tail()
+    await _check_combat_clash_after_tail()
     await _check_combat_resume_from_started_at()
     await _check_combat_playback_uses_sides()
     await _check_combat_playback_new_actions()
@@ -1046,7 +1046,7 @@ func _check_hand_hover_in_combat() -> void:
 
 
 func _check_combat_layout() -> void:
-    # 战斗阶段：战斗视图替换招募视图，双方随从行与结果横幅取自 CombatResult。
+    # 战斗阶段：战斗视图替换招募视图，双方随从行夹住河道，河道只显示回合数。
     GameStore.player_id = "p0"
     GameStore.phase = "Combat"
     GameStore.turn = 3
@@ -1065,11 +1065,11 @@ func _check_combat_layout() -> void:
     _expect(recruit != null and not recruit.visible, "战斗阶段不应显示招募视图")
     var hand_panel = instance.find_child("HandStrip", true, false)
     _expect(hand_panel != null and hand_panel.visible, "演示期间手牌仍应可见")
-    var banner = instance.find_child("CombatBanner", true, false)
+    var turn_label = instance.find_child("CombatTurnLabel", true, false)
+    var turn_text := TranslationServer.translate("ui.game.side_panel.turn") % 3
     _expect(
-        banner != null
-            and not banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
-        "动作播完前不应显示结果",
+        turn_label != null and turn_label.text == turn_text,
+        "动作播完前河道只显示回合数，实际「%s」" % ("" if turn_label == null else turn_label.text),
     )
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
     _expect(opponent_row != null and opponent_row.get_child_count() == 2, "对手随从行应为 2 张")
@@ -1294,12 +1294,14 @@ func _check_stale_combat_not_shown() -> void:
         _clear_combat()
         return
     var own_row = instance.find_child("CombatOwnRow", true, false)
-    var banner = instance.find_child("CombatBanner", true, false)
+    var turn_label = instance.find_child("CombatTurnLabel", true, false)
+    var view_turn := int(view.get("turn", GameStore.turn))
+    var turn_text := TranslationServer.translate("ui.game.side_panel.turn") % view_turn
     _expect(own_row != null and own_row.get_child_count() == 0, "上一回合战报不应渲染随从行")
     _expect(
-        banner != null
-            and not banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
-        "上一回合战报不应显示结果",
+        turn_label != null and turn_label.text == turn_text,
+        "上一回合战报不应触发演出，河道应只显示回合数，实际「%s」"
+            % ("" if turn_label == null else turn_label.text),
     )
     # 事件流已删除（ui_smoke_side 断言 LogText 不存在），旧战报不再有日志行可查。
     instance.queue_free()
@@ -1624,29 +1626,36 @@ func _sfx_card_id(cue: String) -> String:
     return ""
 
 
-## 播完动作并经过 TAIL_MS 后才显示胜负横幅。
-func _check_combat_banner_after_tail() -> void:
+## 播完动作并经过 TAIL_MS 后才进入英雄对冲演出，河道始终只显示回合数。
+func _check_combat_clash_after_tail() -> void:
     var instance := await _combat_instance("2030-01-01T00:00:00Z")
     if instance == null:
         return
-    var banner = instance.find_child("CombatBanner", true, false)
-    var win_text := TranslationServer.translate("ui.game.combat.win")
+    var turn_label = instance.find_child("CombatTurnLabel", true, false)
+    var clash = instance.find_child("CombatHeroClash", true, false)
+    var turn_text := TranslationServer.translate("ui.game.side_panel.turn") % 3
     # 开战画面结束后才开始计数。
     instance._process(CombatIntro.INTRO_MS / 1000.0 + 0.1)
     for _step in range(4):
         instance._process(0.32)
     _expect(
-        banner != null and not banner.text.contains(win_text),
-        "动作刚播完且未到停留结束时不应显示结果",
+        clash != null and not clash.playing(),
+        "动作刚播完且未到停留结束时不应开始对冲",
+    )
+    _expect(
+        turn_label != null and turn_label.text == turn_text,
+        "演出前河道只显示回合数，实际「%s」" % ("" if turn_label == null else turn_label.text),
     )
     instance._process(2.0)
+    instance._process(0.05)
     _expect(
-        banner != null and banner.text.contains(win_text),
-        "停留结束后应显示结果横幅",
+        clash != null and clash.playing(),
+        "停留结束后应进入英雄对冲",
     )
     _expect(
-        banner != null and str(banner.text).contains(TranslationServer.translate("ui.game.combat.win")),
-        "横幅应显示胜负：%s" % ("" if banner == null else str(banner.text)),
+        turn_label != null and turn_label.text == turn_text,
+        "演出开始后河道仍只显示回合数，实际「%s」"
+            % ("" if turn_label == null else turn_label.text),
     )
     instance.queue_free()
     await get_tree().process_frame
@@ -1688,7 +1697,8 @@ func _check_combat_resume_from_started_at() -> void:
     )
     var own_row = instance.find_child("CombatOwnRow", true, false)
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
-    var banner = instance.find_child("CombatBanner", true, false)
+    var turn_label = instance.find_child("CombatTurnLabel", true, false)
+    var turn_text := TranslationServer.translate("ui.game.side_panel.turn") % 3
     _expect(
         own_row != null and own_row.get_child_count() == 4,
         "续播应按已过时间落地召唤：实际 %d 张" % (0 if own_row == null else own_row.get_child_count())
@@ -1699,9 +1709,9 @@ func _check_combat_resume_from_started_at() -> void:
         % (0 if opponent_row == null else opponent_row.get_child_count())
     )
     _expect(
-        banner != null
-            and not banner.text.contains(TranslationServer.translate("ui.game.combat.win")),
-        "停留结束前不应显示结果",
+        turn_label != null and turn_label.text == turn_text,
+        "停留结束前河道只显示回合数，实际「%s」"
+            % ("" if turn_label == null else turn_label.text),
     )
     instance.queue_free()
     await get_tree().process_frame
