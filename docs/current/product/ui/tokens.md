@@ -78,14 +78,14 @@
 | `rail-width` | 88 | 左栏座位列宽度 |
 | `pill-button-height` | 26 | 胶囊按钮高度；触控端不低于次要操作命中高度 |
 | `status-dialog-width` | 360 | 对局状态模态的提示面板宽度 |
-| `river-height` | 32 | 对局页河道行高度，商店与棋盘、双方棋盘之间 |
+| `river-height` | 44 | 对局页河道行高度，商店与棋盘、双方棋盘之间 |
 | `river-gold-width` | 72 | 河道左端金币胶囊宽度；手机 64 |
 | `river-gold-height` | 24 | 河道左端金币胶囊高度；手机 20 |
 | `hero-row-height` | 84 | 对局页英雄行高度，容纳英雄卡与技能列 |
 | `hero-meta-row-height` | 24 | 英雄行被动技能标记所在行的高度，也是被动标记的边长 |
 | `hero-card-size` | 84 | 对局页英雄卡边长；售货员与对手英雄复用同一尺寸，方形卡与英雄行同高，头像裁切铺满整卡 |
 | `shop-icon-size` | 40 | 商店升时代、刷新、冻结与英雄技能图标按钮边长 |
-| `recruit-shop-gap` | 18 | 招募组合中商店整体到河道的间距；战斗组合不再使用 |
+| `recruit-shop-gap` | 6 | 招募组合中商店整体到河道的间距，与战斗组合的舞台间距一致 |
 | `opponent-hp-width` | 84 | 战斗阶段对手身份列与血量条宽度，与英雄卡同宽；手机 64 |
 | `report-width` | 236 | 左栏战报浮层宽度 |
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
@@ -135,10 +135,10 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `seat-hp-bar-height-compact` | 4 | iPhone 座位行血量条高度 |
 | `seat-row-gap-compact` | 2 | iPhone 座位行间距 |
 | `rank-badge-size-compact` | 14 | iPhone 座位名次圆形角标直径 |
-| `river-height-compact` | 24 | iPhone 河道行高度 |
+| `river-height-compact` | 30 | iPhone 河道行高度 |
 | `river-gold-width-compact` | 64 | iPhone 河道金币胶囊宽度 |
 | `river-gold-height-compact` | 20 | iPhone 河道金币胶囊高度 |
-| `recruit-shop-gap-compact` | 10 | iPhone 商店整体到河道的间距 |
+| `recruit-shop-gap-compact` | 4 | iPhone 商店整体到河道的间距 |
 | `hero-row-height-compact` | 64 | iPhone 英雄行高度 |
 | `hero-card-size-compact` | 64 | iPhone 英雄卡、售货员与对手英雄卡边长，与英雄行同高 |
 | `opponent-hp-width-compact` | 64 | iPhone 对手身份列与血量条宽度 |
