@@ -1,6 +1,6 @@
 class_name GameCombatView
 extends PanelContainer
-## 战斗组合：高 418 = 对手 64 + 6 + 对手行 146 + 18 + 河道 32 + 6 + 我方行 146。
+## 战斗组合：高 426 = 对手英雄行 84 + 6 + 对手行 146 + 6 + 河道 32 + 6 + 我方行 146。
 ##
 ## 演示进度由 `CombatPlayback` 纯数据播放器驱动；页面只负责在演示中调用
 ## `advance()`，本视图不发送任何意图。结果追加在河道的回合数之后。
@@ -35,9 +35,10 @@ func _init() -> void:
     name = "CombatPanel"
     add_theme_stylebox_override("panel", UITheme.panel_style("bare"))
     custom_minimum_size = Vector2(
-        0, UITheme.stage_metric("portrait-size") + _stage_gap()
-            + UITheme.stage_metric("card-height") * 2 + UITheme.stage_metric("recruit-shop-gap")
-            + UITheme.stage_metric("river-height") + _stage_gap()
+        0, UITheme.stage_metric("hero-card-size")
+            + UITheme.stage_metric("card-height") * 2
+            + UITheme.stage_metric("river-height")
+            + _stage_gap() * 3
     )
     size_flags_vertical = Control.SIZE_EXPAND_FILL
     visible = false
@@ -58,7 +59,7 @@ func _init() -> void:
     _opponent_row = _new_flow_row("CombatOpponentRow")
     opponent_center.add_child(_opponent_row)
 
-    body.add_child(_gap("CombatRiverGap", UITheme.stage_metric("recruit-shop-gap")))
+    body.add_child(_gap("CombatRiverGap", _stage_gap()))
 
     _river = GameRiver.new(GameRiver.Mode.COMBAT)
     body.add_child(_river)

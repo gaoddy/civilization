@@ -52,6 +52,22 @@ func refresh(hero_id: String, hp: int, hp_cap: int) -> void:
 	tooltip_text = CardDB.display_name(hero_id) if hero_id != "" else ""
 
 
+## 非英雄头像：售货员等复用英雄卡的尺寸、圆角、描边与首字回退，隐藏生命牌。
+## 不调用 `refresh()`，避免封面退回 `color-surface-sunken`；描边取色与
+## `GamePortrait.setup()` 保持一致。
+func present_portrait(display_name: String, glyph: String, tint: Color, art_path := "") -> void:
+	hero_id = ""
+	hp = 0
+	hp_cap = 0
+	var glyph_color := tint.lightened(0.5)
+	glyph_color.a = GLYPH_ALPHA
+	configure(tint.darkened(0.55), tint)
+	set_art(art_path)
+	set_glyph(glyph, glyph_color)
+	_hp_plate.visible = false
+	tooltip_text = display_name
+
+
 ## 生命牌贴右下角，与英雄行 84 高无关；只显示当前值，上限由悬停详情给出。
 func _build_hp_plate() -> void:
 	var margin := MarginContainer.new()

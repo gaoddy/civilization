@@ -1389,6 +1389,7 @@ ui.game.side_panel.combat,战斗中
 ui.game.side_panel.eliminated,已淘汰 · 观战中
 ui.game.side_panel.end_recruit,结束招募
 ui.game.side_panel.era,时代
+ui.game.side_panel.era_board,%s · 随从 %d
 ui.game.side_panel.era_max,时代已满
 ui.game.side_panel.freeze,冻结
 ui.game.side_panel.ghost,幽灵

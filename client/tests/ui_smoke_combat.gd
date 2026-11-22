@@ -591,13 +591,21 @@ func _expect_combat_center(instance: Node, finished: bool) -> void:
     var opponent_view = instance.find_child("OpponentView", true, false)
     _expect(opponent_view != null, "战斗顶部应恢复对手身份块（%s）" % stage)
     if opponent_view != null:
+        var portrait = opponent_view.find_child("OpponentPortrait", true, false)
+        _expect(portrait != null, "对手身份块应含头像（%s）" % stage)
+        _expect(portrait is GameHeroCard, "对手头像应复用英雄卡组件（%s）" % stage)
         _expect(
-            opponent_view.find_child("OpponentPortrait", true, false) != null,
-            "对手身份块应含头像（%s）" % stage,
+            portrait != null and portrait.custom_minimum_size == Vector2(84, 84),
+            "对手英雄卡应为 84×84（%s）" % stage,
         )
 
     var banner = instance.find_child("CombatBanner", true, false)
     var river = instance.find_child("CombatRiver", true, false)
+    var combat_gold = instance.find_child("CombatGoldTile", true, false)
+    _expect(
+        combat_gold != null and combat_gold.is_visible_in_tree(),
+        "战斗河道应显示金币（%s）" % stage,
+    )
     var opponent_row = instance.find_child("CombatOpponentRow", true, false)
     var own_row = instance.find_child("CombatOwnRow", true, false)
     _expect(river != null, "战斗河道应存在（%s）" % stage)

@@ -5,7 +5,7 @@ extends RefCounted
 
 const FixtureScript = preload("res://tests/fixture.gd")
 
-const NAMES := ["game", "none"]
+const NAMES := ["game", "game_combat", "none"]
 
 
 ## 每次预览都从干净会话开始，避免上一次的状态残留。
@@ -15,6 +15,8 @@ static func apply(name: String) -> bool:
     match name:
         "game":
             return _game()
+        "game_combat":
+            return _game_combat()
         "none":
             return true
         _:
@@ -39,4 +41,17 @@ static func _game() -> bool:
     GameStore.view = view
     # 假装已连接，页面才会进可操作状态；不发起真实连接。
     Net.socket = FixtureScript.FakeSocket.new()
+    return true
+
+
+## 战斗态预览：同一局视图切到战斗阶段，并补齐当前回合战报，供对手镜像行与河道金币检查。
+static func _game_combat() -> bool:
+    if not _game():
+        return false
+    var view: Dictionary = GameStore.view
+    view["phase"] = Protocol.PHASE_COMBAT
+    view["opponentPlayerId"] = "p2"
+    GameStore.phase = Protocol.PHASE_COMBAT
+    GameStore.last_combat = FixtureScript.combat_result()
+    GameStore.last_combat_turn = GameStore.turn
     return true

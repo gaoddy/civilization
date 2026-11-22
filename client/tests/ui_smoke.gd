@@ -550,10 +550,10 @@ func _check_game() -> void:
         and not hero_text.contains(TranslationServer.translate("enum.era.primitive")),
         "英雄卡不应再显示时代，实际：%s" % hero_text,
     )
-    var gold_tile = instance.find_child("GoldTile", true, false)
+    var gold_tile = instance.find_child("RecruitGoldTile", true, false)
     _expect(
         gold_tile != null and str(gold_tile.text).contains("6"),
-        "英雄行应显示金币 6，实际：%s" % ("缺失" if gold_tile == null else gold_tile.text),
+        "招募河道应显示金币 6，实际：%s" % ("缺失" if gold_tile == null else gold_tile.text),
     )
     instance.queue_free()
     await get_tree().process_frame
