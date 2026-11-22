@@ -463,6 +463,20 @@ func _check_fixed_slots() -> void:
         await get_tree().process_frame
         _reset_store()
         return
+    var combat_panel: Control = instance.find_child("CombatPanel", true, false)
+    var panel_height := -1.0
+    var river_offset := -1.0
+    if combat_panel != null:
+        panel_height = combat_panel.size.y
+        river_offset = river.global_position.y - combat_panel.global_position.y
+    _expect(
+        combat_panel != null and is_equal_approx(panel_height, 438.0),
+        "战斗组合总高应为 438，实际 %.1f" % panel_height,
+    )
+    _expect(
+        is_equal_approx(river_offset, 242.0),
+        "战斗河道应位于组合顶部下方 242，实际 %.1f" % river_offset,
+    )
     var opponent_y := opponent_row.global_position.y
     var own_y := own_row.global_position.y
     var river_y := river.global_position.y

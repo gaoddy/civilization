@@ -69,9 +69,9 @@ func _check_shared_layer() -> void:
     _expect(UITheme.metric("hero-row-height") == 84, "英雄行高应为 84")
     _expect(UITheme.metric("hero-card-size") == 84, "英雄卡边长应为 84")
     _expect(UITheme.metric("shop-icon-size") == 40, "商店图标按钮应为 40")
-    _expect(UITheme.metric("river-height") == 32, "河道高应为 32")
+    _expect(UITheme.metric("river-height") == 44, "河道高应为 44")
     _expect(UITheme.metric("pill-button-height") == 26, "胶囊按钮高应为 26")
-    _expect(UITheme.metric("recruit-shop-gap") == 18, "商店到河道的间距应为 18")
+    _expect(UITheme.metric("recruit-shop-gap") == 6, "商店到河道的间距应为 6")
     _expect(UITheme.metric("opponent-hp-width") == 84, "对手血条宽应为 84")
     _expect(UITheme.metric("river-gold-width") == 72, "河道金币宽应为 72")
     _expect(UITheme.metric("river-gold-height") == 24, "河道金币高应为 24")
@@ -869,7 +869,14 @@ func _check_recruit_view() -> void:
     var river: Control = view.find_child("RecruitRiver", true, false)
     var board: Control = view.find_child("BoardPanel", true, false)
     _expect(shop != null and shop.get_global_rect().size.y == 236, "商店块高应为 236")
-    _expect(river != null and river.get_global_rect().size.y == 32, "河道高应为 32")
+    _expect(river != null and river.get_global_rect().size.y == 44, "河道高应为 44")
+    var river_offset := -1.0
+    if river != null:
+        river_offset = river.get_global_rect().position.y - view.get_global_rect().position.y
+    _expect(
+        is_equal_approx(river_offset, 242.0),
+        "招募河道应位于组合顶部下方 242，实际 %.1f" % river_offset,
+    )
     _expect(board != null and board.get_global_rect().size.y == 146, "棋盘块高应为 146")
     var turn: Label = view.find_child("RecruitTurnLabel", true, false)
     _expect(
