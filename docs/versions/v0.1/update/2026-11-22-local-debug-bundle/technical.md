@@ -85,7 +85,7 @@
   - 自动登录：客户端进程与 `127.0.0.1:8080` 建立 ESTABLISHED 连接，服务端同时持有 8 条连接（`sim` 7 条 + 客户端 1 条）。
   - 自动入房：以 `sim bot --room 222222` 探测返回 `ROOM_FULL 房间已满`，说明 8 个席位已满（7 个机器人 + 客户端）。
   - 正常退出：`osascript -e 'quit app "Civilization"'` 后无 `room-service` / `sim` 残留，8080 释放。
-  - 未执行：验收时本机处于锁屏状态，无法在客户端内完成选英雄、准备与打完整局；该步需解锁后人工补验。
+  - 未执行：界面内选英雄、准备并完成一局。验收时本机锁屏无法输入，用户已确认以连接级证据（服务端 8 条连接、`ROOM_FULL`）通过验收并跳过该步。
 - 发行回归：`make client-export` 已运行，产物 `Contents/MacOS/` 不含 `room-service`、`sim`；`client-export-steam` 未运行，按预设 `custom_features=""` 静态核对未启用 `embedded_server`，未实际导出验证。
 
 ## 5. 风险与约束
