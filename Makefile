@@ -119,31 +119,35 @@ client-import: client-godot-check
 # 脚本后直接跑 Godot 会沿用旧缓存，缺类的脚本编译失败，对局页可能只构建一半。
 # 模拟不同尺寸设备：make client-run WIDTH=960 HEIGHT=540；两者需同时为正整数，缺省按屏幕自动收拢。
 # 模拟设备档位：make client-run CLIENT_DEVICE=phone；phone / tablet / desktop，其余值按未指定处理。
+# 本地服务：LOCAL_SERVER=1 时由客户端内嵌启动 room-service 与 7 个机器人（sidecar 取
+# server/target/debug），服务端就绪后自动登录并自动入房，退出客户端时一并回收。
 WIDTH ?=
 HEIGHT ?=
 CLIENT_DEVICE ?=
+LOCAL_SERVER ?= 0
+SIDECAR_DIR ?= $(CURDIR)/server/target/debug
 
-client-run: client-import
+client-run: client-import $(if $(filter 1,$(LOCAL_SERVER)),m1b-build)
 	@if [ -z "$(WIDTH)" ] && [ -z "$(HEIGHT)" ]; then \
-	  CIVILIZATION_DEVICE="$(CLIENT_DEVICE)" $(GODOT) --path client; \
+	  CIVILIZATION_LOCAL_SERVER="$(LOCAL_SERVER)" CIVILIZATION_LOCAL_SERVER_DIR="$(SIDECAR_DIR)" CIVILIZATION_DEVICE="$(CLIENT_DEVICE)" $(GODOT) --path client; \
 	elif [ "$(WIDTH)" -gt 0 ] 2>/dev/null && [ "$(HEIGHT)" -gt 0 ] 2>/dev/null; then \
-	  CIVILIZATION_WINDOW_SIZE="$(WIDTH)x$(HEIGHT)" CIVILIZATION_DEVICE="$(CLIENT_DEVICE)" $(GODOT) --path client; \
+	  CIVILIZATION_LOCAL_SERVER="$(LOCAL_SERVER)" CIVILIZATION_LOCAL_SERVER_DIR="$(SIDECAR_DIR)" CIVILIZATION_WINDOW_SIZE="$(WIDTH)x$(HEIGHT)" CIVILIZATION_DEVICE="$(CLIENT_DEVICE)" $(GODOT) --path client; \
 	else \
 	  echo "WIDTH 与 HEIGHT 需同时传入正整数：make client-run WIDTH=960 HEIGHT=540" >&2; \
 	  exit 1; \
 	fi
 
-# 设备档别名：同时切换窗口尺寸与设备档案（布局基准、控件尺寸、触控输入）。
+# 设备档别名：同时切换窗口尺寸、设备档案（布局基准、控件尺寸、触控输入）并带上本地服务端与机器人。
 # 目标名可被 shell 自带的 make 补全列出，`make client-run-on-<Tab>` 即可选择。
 # 尺寸取项目验收用机的横屏物理分辨率：iPhone 17 Pro、iPad Air 11。
 client-run-on-iphone:
-	$(MAKE) client-run WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone
+	$(MAKE) client-run WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone LOCAL_SERVER=1
 
 client-run-on-ipad:
-	$(MAKE) client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet
+	$(MAKE) client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet LOCAL_SERVER=1
 
 client-run-on-desktop:
-	$(MAKE) client-run CLIENT_DEVICE=desktop
+	$(MAKE) client-run CLIENT_DEVICE=desktop LOCAL_SERVER=1
 
 # 单元测试筛选：TESTS=模块名（逗号或空格分隔）只跑对应 unittest，
 # 如 make client-check TESTS=test_i18n；指定时跳过 protocol-check、data-check 与 client-import。
