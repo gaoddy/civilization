@@ -32,16 +32,18 @@ func visible_hero_id() -> String:
 	return str(_hover_card.get_meta("detail_data", {}).get("heroId", ""))
 
 
-func _detail_text_width() -> int:
-	return UITheme.stage_metric("room-hero-detail-width") - UITheme.space("space-lg") * 2
+## 选英雄页固定使用英雄详情卡宽度，不随详情类别切换。
+func _panel_width(_kind: String) -> int:
+	return UITheme.stage_metric("room-hero-detail-width")
 
 
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
 	var id := "" if hero_id == null else str(hero_id)
-	box.add_child(_detail_name(CardDB.display_name(id)))
+	var kit := _kit("hero")
+	box.add_child(kit.name_label(CardDB.display_name(id)))
 	var introduction := CardDB.hero_introduction(id)
 	if introduction != "":
-		var intro := _detail_text_block(introduction)
+		var intro := kit.text_block(introduction)
 		intro.name = "HeroIntroduction"
 		box.add_child(intro)
 	SkillList.build(box, CardDB.hero(id).get("skills", []))

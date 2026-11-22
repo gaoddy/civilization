@@ -61,8 +61,6 @@ var _hero_row: GameHeroRow
 var _hand_row: GameHandRow
 
 var _overlay: GameChoiceOverlay
-# 左栏战报浮层：位于详情层之上、选择浮层之下，允许覆盖中央舞台。
-var _report_layer: Control
 
 # 战斗结束演出：双方英雄卡缓慢靠岸后猛击对冲；页面级覆盖层，位于详情层之下。
 var _hero_clash: CombatHeroClash
@@ -140,13 +138,6 @@ func _build() -> void:
 	_recruit_view.set_detail(_detail)
 	_combat_view.set_detail(_detail)
 	_hero_row.detail = _detail
-
-	_report_layer = Control.new()
-	_report_layer.name = "ReportLayer"
-	_report_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_report_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_report_layer)
-	_players_panel.report_layer = _report_layer
 
 	_aim = GameAimLayer.new()
 	_aim.set_anchors_preset(Control.PRESET_FULL_RECT)

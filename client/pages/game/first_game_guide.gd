@@ -34,7 +34,7 @@ const STEPS := [
     {
         "id": 4,
         "phase": Protocol.PHASE_COMBAT,
-        "targets": ["CenterPanel", "ReportLayer"],
+        "targets": ["CenterPanel"],
         "title": "ui.guide.step4.title",
         "body": "ui.guide.step4.body",
     },

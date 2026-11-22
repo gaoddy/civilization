@@ -1,29 +1,22 @@
 class_name GamePlayersRail
 extends PanelContainer
 ## 左栏座位列：按服务端名次升序（第 1 名在最上），每个座位是一个方形可选框，
-## 头像铺满框内，名次角标叠在左上、血条叠在头像底部内侧；点击展开该座位的战报。
+## 头像铺满框内，名次角标叠在左上、血条叠在头像底部内侧；悬停显示该座位的详情，
+## 详情里同时给出身份与对战记录，不再有点击展开的战报浮层。
 ##
-## 只读 `GameUiState.view`，不持有页面门控与意图；展开的座位按 `playerId`
-## 记住，刷新整块重建后同一玩家仍然展开。8 席固定一屏放下，不使用滚动容器；
+## 只读 `GameUiState.view`，不持有页面门控与意图。8 席固定一屏放下，不使用滚动容器；
 ## 座位行按栏内实际高度手动排布，不参与左栏最小尺寸，避免行高反过来撑大页面。
 
 ## 行描边宽度：由可选框底板绘制，头像内缩同宽，避免头像描边与框线叠成双线。
 const ROW_BORDER_WIDTH := 2
 
-## 当前展开战报的座位 id；空串表示全部收起。
-var _expanded_player_id := ""
-
-## 上一次刷新传入的快照：点击展开/收起时按它原地重建。
+## 上一次刷新传入的快照：左栏尺寸变化时按它原地重建。
 var _last_state: GameUiState
 
 ## 同页面的详情层，由页面注入；悬停座位行时登记。
 var detail: DetailLayer = null
 
-## 战报浮层，由页面注入；展开战报时挂在全屏层上，允许覆盖其他 UI。
-var report_layer: Control = null
-
 var _rail: Control
-var _report_panel: PanelContainer
 ## 最近一次构行使用的行边长；左栏尺寸变化后据此判断是否需要重排。
 var _last_side := 0
 
@@ -47,26 +40,15 @@ func _init() -> void:
     _rail.resized.connect(_on_rail_resized)
     box.add_child(_rail)
 
-    _report_panel = UIControls.card_panel("raised")
-    _report_panel.name = "SeatReportPanel"
-    _report_panel.custom_minimum_size = Vector2(UITheme.stage_metric("report-width"), 0)
-    _report_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-    _report_panel.visible = false
-
 
 func refresh(state: GameUiState) -> void:
     _last_state = state
     UIControls.clear(_rail)
     var players: Array = _sorted_players(state.view)
     if players.is_empty():
-        _expanded_player_id = ""
         _last_side = 0
-        _hide_report()
         _rail.add_child(UIControls.empty_hint(tr("ui.game.rail.empty")))
         return
-    # 记住的 id 在新视图里找不到就清空，否则保持展开。
-    if _expanded_player_id != "" and not _has_player(players, _expanded_player_id):
-        _expanded_player_id = ""
     var side := _seat_side(players.size())
     _last_side = side
     var rows: Array = []
@@ -75,7 +57,6 @@ func refresh(state: GameUiState) -> void:
         _rail.add_child(row)
         rows.append(row)
     _layout_rows(rows, side)
-    _sync_report()
 
 
 ## 座位行在栏内按边长排开：整组上下、左右居中；行尺寸由边长决定，不参与最小尺寸。
@@ -111,13 +92,6 @@ func _sorted_players(view: Dictionary) -> Array:
 static func _rank_value(player: Dictionary) -> int:
     var rank = player.get("rank")
     return int(rank) if rank != null else 1 << 20
-
-
-func _has_player(players: Array, player_id: String) -> bool:
-    for player in players:
-        if str(player.get("playerId", "")) == player_id:
-            return true
-    return false
 
 
 ## 座位行边长：栏内宽与「人均可用高度」的较小值；行就是头像的方形外框。
@@ -160,7 +134,7 @@ static func _row_style(is_self: bool) -> StyleBoxFlat:
     return box
 
 
-## 一个座位：方形可选框内头像铺满，名次角标与贴底血条叠在头像上。
+## 一个座位：方形框内头像铺满，名次角标与贴底血条叠在头像上。
 ## 头像自身描边透明，外框由行底板绘制，避免两层描边叠成粗线；淘汰整行压暗。
 func _seat_row(player: Dictionary, state: GameUiState, side: int) -> SelectableBox:
     var player_id := str(player.get("playerId", ""))
@@ -173,7 +147,6 @@ func _seat_row(player: Dictionary, state: GameUiState, side: int) -> SelectableB
     row.custom_minimum_size = Vector2.ZERO
     row.mouse_filter = Control.MOUSE_FILTER_STOP
     row.configure(_row_style(is_self), SelectableBox.Outline.INLINE, not ScreenProfile.is_touch())
-    row.activated.connect(_on_seat_activated.bind(player_id))
     if not alive:
         UIControls.apply_dim(row)
 
@@ -218,14 +191,8 @@ func _seat_row(player: Dictionary, state: GameUiState, side: int) -> SelectableB
         seat.add_child(badge)
         _ignore_mouse(badge)
 
-    _track_detail(row, player, state.hp_cap)
+    _track_detail(row, player, state)
     return row
-
-
-## 点击行切换展开；重建在下一帧做，避免在自身输入回调里释放行。
-func _on_seat_activated(player_id: String) -> void:
-    _expanded_player_id = "" if _expanded_player_id == player_id else player_id
-    call_deferred("_rebuild")
 
 
 func _rebuild() -> void:
@@ -234,178 +201,7 @@ func _rebuild() -> void:
     refresh(_last_state)
 
 
-## 战报不占左栏宽度：展开时放进全屏浮层，右侧可覆盖中区与右栏。
-func _sync_report() -> void:
-    if (
-        report_layer == null
-        or _last_state == null
-        or _expanded_player_id == ""
-    ):
-        _hide_report()
-        return
-    var player := _find_player(_expanded_player_id)
-    if player.is_empty():
-        _hide_report()
-        return
-    if detail != null and is_instance_valid(detail):
-        detail.report_open = true
-        detail.hide_panel()
-    if _report_panel.get_parent() == null:
-        report_layer.add_child(_report_panel)
-    UIControls.clear(_report_panel)
-    _report_panel.add_child(_report_block(player, _last_state.view))
-    _report_panel.visible = true
-    call_deferred("_position_report")
-
-
-func _hide_report() -> void:
-    if _report_panel == null:
-        return
-    UIControls.clear(_report_panel)
-    _report_panel.visible = false
-    if detail != null and is_instance_valid(detail):
-        detail.report_open = false
-
-
-func _position_report() -> void:
-    if _report_panel == null or not _report_panel.visible or report_layer == null:
-        return
-    var row := _find_row(_expanded_player_id)
-    if row == null:
-        _hide_report()
-        return
-    var panel_size := _report_panel.get_combined_minimum_size()
-    _report_panel.size = panel_size
-    var layer_rect := Rect2(Vector2.ZERO, report_layer.size)
-    var margin := UITheme.space("space-xs")
-    var gap := UITheme.space("space-sm")
-    var row_global := row.get_global_rect()
-    var layer_scale := report_layer.get_global_transform().get_scale().x
-    var row_rect := Rect2(
-        report_layer.get_global_transform().affine_inverse() * row_global.position,
-        row_global.size / layer_scale
-    )
-    var position := Vector2(row_rect.end.x + gap, row_rect.position.y)
-    position.x = clampf(
-        position.x,
-        margin,
-        maxf(margin, layer_rect.size.x - panel_size.x - margin)
-    )
-    position.y = clampf(
-        position.y,
-        margin,
-        maxf(margin, layer_rect.size.y - panel_size.y - margin)
-    )
-    _report_panel.position = position
-
-
-func _find_row(player_id: String) -> Control:
-    for child in _rail.get_children():
-        if child is Control and str(child.get_meta("player_id", "")) == player_id:
-            return child
-    return null
-
-
-func _find_player(player_id: String) -> Dictionary:
-    if _last_state == null:
-        return {}
-    for player in _last_state.view.get("players", []):
-        if str(player.get("playerId", "")) == player_id:
-            return player
-    return {}
-
-
-## 该座位参与过的战报；没有条目时显示「无战报」。
-func _report_block(player: Dictionary, view: Dictionary) -> VBoxContainer:
-    var player_id := str(player.get("playerId", ""))
-    var report := VBoxContainer.new()
-    report.name = "SeatReport"
-    report.set_meta("player_id", player_id)
-    report.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    report.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-
-    var entries := _combat_entries(view, player_id)
-    if entries.is_empty():
-        report.add_child(_report_line(tr("ui.game.rail.no_report")))
-        return report
-    var names := _player_names(view)
-    for entry in entries:
-        report.add_child(_report_line(_entry_text(entry, player_id, names)))
-    return report
-
-
-func _combat_entries(view: Dictionary, player_id: String) -> Array:
-    var entries: Array = []
-    for entry in view.get("combatLog", []):
-        if not (entry is Dictionary):
-            continue
-        var ids: Array = entry.get("participantIds", [])
-        for pid in ids:
-            if str(pid) == player_id:
-                entries.append(entry)
-                break
-    return entries
-
-
-func _player_names(view: Dictionary) -> Dictionary:
-    var names := {}
-    for player in view.get("players", []):
-        if player is Dictionary:
-            names[str(player.get("playerId", ""))] = CardText.optional_text(
-                player.get("displayName")
-            )
-    return names
-
-
-## 「第 N 回合 · 对手名 · 胜/负 · 伤害 X」；幽灵战对手写「幽灵（名字）」，
-## `ghostId` 为空时只写「幽灵」、不写空括号；伤害为 0 时省略伤害段。
-func _entry_text(entry: Dictionary, player_id: String, names: Dictionary) -> String:
-    var opponent_id := ""
-    for pid in entry.get("participantIds", []):
-        if str(pid) != player_id:
-            opponent_id = str(pid)
-            break
-    var opponent := str(names.get(opponent_id, opponent_id))
-    if bool(entry.get("mirror", false)):
-        var ghost_id := "" if entry.get("ghostId") == null else str(entry.get("ghostId"))
-        opponent = (
-            tr("ui.game.rail.ghost")
-            if ghost_id == ""
-            else tr("ui.game.rail.ghost_named") % str(names.get(ghost_id, ghost_id))
-        )
-
-    var winner_id := "" if entry.get("winnerId") == null else str(entry.get("winnerId"))
-    var loser_id := "" if entry.get("loserId") == null else str(entry.get("loserId"))
-    var result := tr("ui.game.rail.draw")
-    if winner_id == player_id:
-        result = tr("ui.game.rail.win")
-    elif loser_id == player_id or winner_id != "":
-        result = tr("ui.game.rail.lose")
-
-    var parts := PackedStringArray([
-        tr("ui.game.rail.turn") % int(entry.get("turn", 0)),
-        opponent,
-        result,
-    ])
-    var damage := int(entry.get("damage", 0))
-    if damage != 0:
-        parts.append(tr("ui.game.rail.damage") % damage)
-    return " · ".join(parts)
-
-
-func _report_line(text: String) -> Label:
-    var line := UIControls.label(text, UITheme.font_size("font-caption"), false)
-    line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    line.custom_minimum_size = Vector2(
-        UITheme.stage_metric("report-width") - UITheme.space("space-lg") * 2,
-        0,
-    )
-    line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    line.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    return line
-
-
-## 行内控件全部忽略鼠标，保证整行任意位置都能接收点击与悬停。
+## 行内控件全部忽略鼠标，保证整行任意位置都能接收悬停。
 func _ignore_mouse(node: Node) -> void:
     if node is Control:
         node.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -413,13 +209,15 @@ func _ignore_mouse(node: Node) -> void:
         _ignore_mouse(child)
 
 
-func _track_detail(row: PanelContainer, player: Dictionary, hp_cap: int) -> void:
+## 座位详情需要整份视图：对战记录按 `participantIds` 过滤时要查玩家名。
+func _track_detail(row: PanelContainer, player: Dictionary, state: GameUiState) -> void:
     if detail == null or not is_instance_valid(detail):
         return
     detail.track(row, {
         "detail_kind": "seat",
         "player": player,
-        "hpCap": hp_cap,
+        "hpCap": state.hp_cap,
+        "view": state.view,
     })
 
 

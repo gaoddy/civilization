@@ -1,6 +1,6 @@
 class_name DetailLayer
 extends Control
-## 随从详情浮层：覆盖全屏但不拦截输入，层级位于内容与战报之上、选择浮层之下。
+## 随从详情浮层：覆盖全屏但不拦截输入，层级位于内容之上、选择浮层之下。
 ##
 ## 卡片通过 `track()` 登记，本层用 `_input` 做跨子控件的矩形命中判断；
 ## 模态浮层打开时由页面把 `blocked` 置真，本层直接隐藏且不再响应悬停。
@@ -14,14 +14,14 @@ const DETAIL_SIDES := {
     "seller": ["bottom", "top"],
     "hero": ["left", "right"],
 }
+## 面板宽度令牌：座位详情要比通用详情宽一档，容纳一行战报文案。
+const DETAIL_WIDTHS := {"seat": "seat-detail-width"}
 ## 触控长按判定时长与位移取消阈值（画布单位），与选英雄页共用同一套取值。
 const LONG_PRESS_MS := LongPressTracker.DEFAULT_LONG_PRESS_MS
 const TOUCH_CANCEL_DISTANCE := LongPressTracker.DEFAULT_CANCEL_DISTANCE
 
 ## 模态浮层打开时置真：详情层会盖住浮层内容，直接隐藏且不再响应悬停。
 var blocked := false
-## 左栏战报浮层打开时置真：战报优先，悬停详情不再抢占画面。
-var report_open := false
 
 var _panel: PanelContainer
 var _cards: Array = []
@@ -39,7 +39,7 @@ func _init() -> void:
     _panel = UIControls.card_panel("raised")
     _panel.name = "MinionDetailPanel"
     _panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _panel.custom_minimum_size = Vector2(UITheme.stage_metric("detail-panel-width"), 0)
+    _panel.custom_minimum_size = Vector2(_panel_width("minion"), 0)
     _panel.visible = false
     add_child(_panel)
 
@@ -132,7 +132,7 @@ func _input_touch(event: InputEvent) -> void:
 
 ## 按下只登记触点与卡片，不立即显示；多触点只认第一个。
 func _begin_touch(event: InputEventScreenTouch) -> void:
-    if _touch.active() or blocked or report_open:
+    if _touch.active() or blocked:
         return
     var point := _canvas_point(event.position)
     var card := _card_at(point)
@@ -163,7 +163,7 @@ func _end_touch(event: InputEventScreenTouch) -> void:
 func _process(delta: float) -> void:
     if not _touch.active() or _touch.fired:
         return
-    if blocked or report_open or not is_instance_valid(_touch.target):
+    if blocked or not is_instance_valid(_touch.target):
         _clear_touch()
         return
     if not _touch.advance(delta):
@@ -209,7 +209,7 @@ func _card_at(point: Vector2) -> Control:
 
 func _update_detail_hover(point: Vector2) -> void:
     # 模态浮层打开时详情层会盖住浮层内容，直接隐藏且不再响应悬停。
-    if blocked or report_open:
+    if blocked:
         hide_panel()
         return
     var found := _card_at(point)
@@ -223,7 +223,7 @@ func _update_detail_hover(point: Vector2) -> void:
 
 
 func _show_detail(data: Dictionary, anchor: Control) -> void:
-    if blocked or report_open:
+    if blocked:
         return
     # 拖拽进行中不显示悬停详情：经过的卡与本次拖拽无关，弹出会遮挡并误导落点。
     if _is_dragging():
@@ -237,6 +237,7 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
     if anchor == _hover_card and _panel.visible:
         _place_detail(_local_rect(anchor.get_global_rect()), kind)
         return
+    _panel.custom_minimum_size = Vector2(_panel_width(kind), 0)
     if not is_instance_valid(_hover_card) or _hover_card != anchor:
         _hover_card = anchor
     UIControls.clear(_panel)
@@ -248,7 +249,7 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
     if kind == "shop":
         _render_shop_detail(box, data)
     elif kind == "seat":
-        _render_seat_detail(box, data.get("player", {}), int(data.get("hpCap", 0)))
+        _render_seat_detail(box, data)
     elif kind == "seller":
         _render_seller_detail(box)
     elif kind == "hero":
@@ -258,52 +259,56 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
 
     visible = true
     _panel.visible = true
+    # 面板不在容器内，只靠最小尺寸不会在换到更窄的类别时收缩。
+    _panel.reset_size()
     _place_detail(_local_rect(anchor.get_global_rect()), kind)
 
 
 ## 商店卡详情：类型、科学分类、玩法、关联分类、费用、原始数值、时代、
 ## 技能文本与不可购买原因。
 func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
-    ShopDetailSection.render(box, data, _kit())
+    ShopDetailSection.render(box, data, _kit("shop"))
 
 
-## 座位详情：名字、英雄、生命（当前/上限）、时代、随从数与状态。
-func _render_seat_detail(box: VBoxContainer, player: Dictionary, hp_cap: int) -> void:
-    SeatDetailSection.render(box, player, hp_cap, _kit())
+## 座位详情：名字、名次、英雄 · 时代 · 随从、生命与对战记录。
+func _render_seat_detail(box: VBoxContainer, data: Dictionary) -> void:
+    SeatDetailSection.render(
+        box,
+        data.get("player", {}),
+        int(data.get("hpCap", 0)),
+        data.get("view", {}),
+        _kit("seat"),
+    )
 
 
 ## 售货员详情：营业状态与可执行的商店操作，替代常驻文字。
 func _render_seller_detail(box: VBoxContainer) -> void:
-    SellerDetailSection.render(box, _kit())
+    SellerDetailSection.render(box, _kit("seller"))
 
 
 ## 我方英雄详情：介绍、玩法、关联分类与英雄技能；英雄卡不含科学分类与时代。
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
-    HeroDetailSection.render(box, hero_id, _kit())
+    HeroDetailSection.render(box, hero_id, _kit("hero"))
 
 
 ## 棋盘随从详情：名称、科学分类、玩法、关联分类与攻击/生命的构成分层。
 func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
-    MinionDetailSection.render(box, minion, _kit())
+    MinionDetailSection.render(box, minion, _kit("minion"))
 
 
-## 当前详情块的公共排版；文本宽度按面板令牌与子类覆写计算。
-func _kit() -> DetailKit:
-    return DetailKit.new(_detail_text_width())
+## 当前详情块的公共排版；文本宽度按面板令牌计算。
+func _kit(kind: String) -> DetailKit:
+    return DetailKit.new(_detail_text_width(kind))
 
 
-func _detail_name(text: String) -> Label:
-    return _kit().name_label(text)
+## 面板宽度：座位详情取座位令牌，其余详情共用通用详情宽度。
+func _panel_width(kind: String) -> int:
+    return UITheme.stage_metric(str(DETAIL_WIDTHS.get(kind, "detail-panel-width")))
 
 
 ## 面板宽度扣除卡片内边距后的文本宽度，供技能文本换行。
-func _detail_text_width() -> int:
-    return UITheme.stage_metric("detail-panel-width") - UITheme.space("space-lg") * 2
-
-
-## 详情里的介绍/技能文本块：按面板宽度换行，颜色弱于正文。
-func _detail_text_block(text: String) -> Label:
-    return _kit().text_block(text)
+func _detail_text_width(kind: String) -> int:
+    return _panel_width(kind) - UITheme.space("space-lg") * 2
 
 
 ## 详情定位：商店卡先右后左，棋盘卡先下后上；夹紧内容框且不覆盖当前卡片。

@@ -42,7 +42,7 @@ FirstGameGuide（CanvasLayer，layer 100）
 | 1 商店与金币 | `Recruit` | `ShopPanel`、`ShopRow`、`RecruitGoldTile` | `ui.guide.step1.title` / `ui.guide.step1.body` |
 | 2 出战 | `Recruit` | `HandRow`、`BoardRow` | `ui.guide.step2.title` / `ui.guide.step2.body` |
 | 3 结束招募 | `Recruit` | `RecruitEndButton`、`RecruitTimerLabel` | `ui.guide.step3.title` / `ui.guide.step3.body` |
-| 4 战斗 | `Combat` | `CenterPanel`、`ReportLayer` | `ui.guide.step4.title` / `ui.guide.step4.body` |
+| 4 战斗 | `Combat` | `CenterPanel` | `ui.guide.step4.title` / `ui.guide.step4.body` |
 
 - 从「提示」打开时从当前阶段对应的步骤开始，非招募/战斗阶段回退到第 1 步；之后按步骤顺序推进，不按手牌/棋盘条件跳步。
 - 引导打开期间阶段变化时切换到新阶段对应的步骤；`GameOver` 时收起。
