@@ -1,7 +1,7 @@
 # 通信协议
 
 > 状态：已实现
-> 依赖：[联网与技术架构](network-architecture.md)、[核心规则](../../product/rules/core-rules.md) §3、[协议设计](../../../superpowers/specs/2026-11-15-protocol-design.md)、[协议字段表](protocol-messages.md)
+> 依赖：[联网与技术架构](network-architecture.md)、[核心规则](../../product/rules/core-rules.md) §3、[协议字段表](protocol-messages.md)
 
 本文定义 v0.1 客户端与服务端的传输契约、消息规则与兼容演进；字段级清单由 schema 生成，见[协议字段表](protocol-messages.md)。唯一契约来源是 `protocol/schema/v1/`。
 
@@ -91,5 +91,4 @@
 
 - [协议字段表](protocol-messages.md)
 - [联网与技术架构](network-architecture.md)
-- [协议设计](../../../superpowers/specs/2026-11-15-protocol-design.md)
 - [核心规则](../../product/rules/core-rules.md)
