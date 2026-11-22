@@ -145,22 +145,45 @@ client-run-on-ipad:
 client-run-on-desktop:
 	$(MAKE) client-run CLIENT_DEVICE=desktop
 
+# 单元测试筛选：TESTS=模块名（逗号或空格分隔）只跑对应 unittest，
+# 如 make client-check TESTS=test_i18n；指定时跳过 protocol-check、data-check 与 client-import。
+TESTS ?=
 client-check:
-	$(MAKE) protocol-check
-	$(MAKE) data-check
-	$(PYTHON) -m unittest tests.test_client_boundary -v
-	$(PYTHON) -m unittest tests.test_client_style -v
-	$(PYTHON) -m unittest tests.test_i18n -v
-	$(MAKE) client-import
+	@if [ -n "$(TESTS)" ]; then \
+	  for m in $$(echo "$(TESTS)" | tr ',' ' '); do \
+	    case "$$m" in tests.*) ;; *) m="tests.$$m" ;; esac; \
+	    $(PYTHON) -m unittest "$$m" -v || exit 1; \
+	  done; \
+	else \
+	  $(MAKE) protocol-check && \
+	  $(MAKE) data-check && \
+	  $(PYTHON) -m unittest tests.test_client_boundary -v && \
+	  $(PYTHON) -m unittest tests.test_client_style -v && \
+	  $(PYTHON) -m unittest tests.test_i18n -v && \
+	  $(MAKE) client-import; \
+	fi
 
+# 冒烟场景筛选：SMOKE=场景名（逗号或空格分隔，省略 ui_smoke_ 前缀）只跑对应场景，
+# 如 make client-smoke SMOKE=combat；缺省跑 client/tests/ui_smoke*.tscn 全部。
+SMOKE ?=
 client-smoke: client-import
 	@mkdir -p output
-	@for scene in client/tests/ui_smoke*.tscn; do \
-	  name=$$(basename $$scene .tscn); \
-	  $(GODOT) --headless --path client res://tests/$$name.tscn 2>&1 | tee output/$$name.log; \
-	  grep -q "UI_SMOKE_OK" output/$$name.log || exit 1; \
-	  ! grep -q "SCRIPT ERROR" output/$$name.log || exit 1; \
-	done
+	@if [ -n "$(SMOKE)" ]; then \
+	  for name in $$(echo "$(SMOKE)" | tr ',' ' '); do \
+	    scene="client/tests/ui_smoke_$$name.tscn"; \
+	    [ -f "$$scene" ] || { echo "未找到冒烟场景：$$scene" >&2; exit 1; }; \
+	    $(GODOT) --headless --path client res://tests/ui_smoke_$$name.tscn 2>&1 | tee output/ui_smoke_$$name.log; \
+	    grep -q "UI_SMOKE_OK" output/ui_smoke_$$name.log || exit 1; \
+	    ! grep -q "SCRIPT ERROR" output/ui_smoke_$$name.log || exit 1; \
+	  done; \
+	else \
+	  for scene in client/tests/ui_smoke*.tscn; do \
+	    name=$$(basename $$scene .tscn); \
+	    $(GODOT) --headless --path client res://tests/$$name.tscn 2>&1 | tee output/$$name.log; \
+	    grep -q "UI_SMOKE_OK" output/$$name.log || exit 1; \
+	    ! grep -q "SCRIPT ERROR" output/$$name.log || exit 1; \
+	  done; \
+	fi
 
 # 页面线框图：无头装载真实场景解算布局，导出 SVG 与 PNG 到 output/wireframes/。
 # PAGE 取 client/pages 下的页面名（gallery、room 等）；ALL=1 生成全部；DEVICE=phone 出手机档位。

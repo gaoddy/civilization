@@ -47,7 +47,7 @@
 ### 命令与验证
 
 - 顶层入口统一走根目录 `Makefile`，不手写等效命令。
-- 全量检查：`make m1-check`（协议生成物、文档数据、测试、静态检查、确定性）；客户端另有 `make client-check`、`make client-smoke`。
+- 全量检查：`make m1-check`（协议生成物、文档数据、测试、静态检查、确定性）；客户端另有 `make client-check`、`make client-smoke`（`TESTS=<模块>`、`SMOKE=<场景>` 只跑单项，逗号分隔可多选）。
 - 页面线框图：`make ui-wireframe PAGE=gallery`（`ALL=1` 出全部页面，`DEVICE=phone` 出手机档位），无头解算真实布局后写到 `output/wireframes/`（忽略目录）。
 - 运行态视图预览：`make ui-preview PAGE=game FIXTURE=game FOCUS=PlayersPanel`（`SCENE=` 任意场景、`SETUP=` 组件脚本、`DEVICE=phone` 手机档位），真实窗口直接查看；自检用 `make ui-preview-check ... EXPECT=SeatRow=8`。
 - 服务端测试：`make test`（Python unittest + `cargo test --workspace`）；静态检查：`make lint`。
