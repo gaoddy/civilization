@@ -7,9 +7,10 @@ extends Control
 const OUTER_INSET := 1.2
 const MID_INSET := 2.4
 const INNER_INSET := 4.6
-const STAR_RADIUS := 2.15
-const STAR_GAP := 5.0
-const STAR_Y := 7.4
+## 星点按卡宽/高整体缩放；半径与间距取手机 70 宽手牌仍能塞进顶行角标间隙的上限。
+const STAR_RADIUS := 3.2
+const STAR_GAP := 7.0
+const STAR_Y := 9.0
 
 ## 卡牌等级；导出以便 `Node.duplicate()` 复制：拖拽预览与战斗克隆都由
 ## `duplicate()` 生成卡面，非导出脚本变量在副本里会回退成 1 星。
