@@ -19,6 +19,7 @@ func _ready() -> void:
         _top.status.text = tr("ui.lobby.not_connected")
     _show_room_closed_reason()
     _render_friends_entry()
+    _maybe_local_join()
 
 
 ## 被移出或房间解散后回到大厅：在到达的页面上提示原因，读后清空。
@@ -126,6 +127,33 @@ func _on_join_pressed() -> void:
         return
     _top.status.text = tr("ui.lobby.joining") % code
     Net.send(Protocol.MSG_JOIN_ROOM, {"code": code})
+
+
+## 调试包：本地启动器给出的房间码到达后自动入房；房间码只消费一次。
+func _maybe_local_join() -> void:
+    if not LocalServer.enabled or not LocalServer.auto_flow:
+        return
+    var code := LocalServer.consume_room_code()
+    if code != "":
+        _join_local_room(code)
+        return
+    LocalServer.room_code_ready.connect(_on_local_room_code_ready, CONNECT_ONE_SHOT)
+    LocalServer.failed.connect(_on_local_server_failed, CONNECT_ONE_SHOT)
+
+
+func _on_local_room_code_ready(_code: String) -> void:
+    var code := LocalServer.consume_room_code()
+    if code != "":
+        _join_local_room(code)
+
+
+func _join_local_room(code: String) -> void:
+    _actions.code_input.text = code
+    _on_join_pressed()
+
+
+func _on_local_server_failed(reason: String) -> void:
+    _top.status.text = reason
 
 
 func _on_invite_responded(_invite_id: String, accept: bool) -> void:

@@ -24,6 +24,7 @@ CardDB="*res://autoload/card_db.gd"
 Net="*res://autoload/ws_client.gd"
 Sfx="*res://autoload/sfx.gd"
 Platform="*res://autoload/platform.gd"
+LocalServer="*res://autoload/local_server.gd"
 
 [display]
 
