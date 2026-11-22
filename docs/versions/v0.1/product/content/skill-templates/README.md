@@ -18,6 +18,7 @@
 | `params` | 否 | 参数原文，可含 `{参数}` 占位；无参数时省略 |
 | `arg.<name>` | 否 | 参数声明，一行一个 |
 | `text` | 是 | 文案模板，可含占位符 |
+| `text_golden` | 否 | 金色文案模板；不填时按 `text` 自动翻倍数字参数，用于条件与阈值不翻倍的模板 |
 
 示例：
 
@@ -57,8 +58,8 @@ template: on-death-summon(token=seedling,count=1)
 | `taxon` | 分类节点 id | 卡面名词 | — |
 | `playstyle` | 玩法 id | 卡面名词 | — |
 | `keyword` | 关键词 id，可带层数（`breed 2`） | 名称 + 层数 | `.name`、`.level`、`.text` |
-| `int` | 整数 | 数字 | `.cn` → 中文数词 |
-| `count` | 整数 1–4 | 中文数词（一/两/三/四） | `.num` → 数字 |
+| `int` | 整数 | 数字 | `.cn` → 中文数词、`.x2` → 金色时 ×2 |
+| `count` | 整数 1–4 | 中文数词（一/两/三/四） | `.num` → 数字、`.x2` → 金色时 ×2 |
 | `duration` | `permanent` / `combat` | 空串 | `.suffix` → 「直到回合结束」/ 空 |
 
 - 未声明默认值的参数必须由实例提供；声明默认值的参数可省略。
@@ -70,6 +71,8 @@ template: on-death-summon(token=seedling,count=1)
 **效果**：把 `selector` / `params` 中的 `{参数}` 替换为实例值，与 `trigger`、`op` 拼成 `Trigger|Op|Selector|Params`，再走[关键词与机制](../../rules/keywords-and-mechanics.md) §9.4 的同一套校验与编译。关键词参数可拆成 `.name` / `.level` 两段写进效果段，缺失的分量整段省略。
 
 **文案**：占位符写作 `{name}` 或 `{name.modifier}`；未知占位符、未声明参数、缺失必填参数都是错误。`{duration.suffix}` 接在数字或拉丁字母后时，渲染器补一个空格（如「获得 +0/+1 直到回合结束」）。
+
+**金色文案**：金色状态默认把 `int`、`count` 与关键词层数 ×2；模板提供 `text_golden` 时改用该文案，并用 `.x2` 只标记需要翻倍的产出数值，条件与阈值占位符保持原值。实例的 `text_golden` 优先于模板。
 
 **覆盖**：实例写了 `text` 时直接使用覆盖文案，不再渲染。当前共 5 个实例保留覆盖，逐条原因见[技能规范与数据](../skill-system.md) §2.1「例外清单」。
 

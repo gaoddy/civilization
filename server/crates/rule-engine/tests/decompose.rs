@@ -2,7 +2,7 @@
 //!
 //! 覆盖 `OnKill` / `OnFriendlyDeath` / `OnAllyKill` 三种触发、`original` /
 //! `combat_start` / `pre_kill` 三种口径、`permanent` / `combat` 两种时长、
-//! 金色双触发、多分解随从独立触发、缺失事件目标静默跳过，以及复生不撤销
+//! 金色数值 ×2 单次结算、多分解随从独立触发、缺失事件目标静默跳过，以及复生不撤销
 //! 死亡快照。
 
 mod common;
@@ -233,7 +233,7 @@ fn combat_duration_uses_turn_layer() {
 }
 
 #[test]
-fn golden_decomposer_triggers_twice() {
+fn golden_decomposer_doubles_amount_once() {
     let (mut engine, _state) = setup_with_gold(31);
     decomposed(&mut engine, "decomposer", "original", "permanent");
     add_card(&mut engine, "corpse", 0, 4, &[]);
@@ -255,7 +255,7 @@ fn golden_decomposer_triggers_twice() {
     assert_eq!(
         final_minion(&golden_log, 11).stats.health.permanent,
         8,
-        "金色来源整段效果执行两遍"
+        "金色来源数值 ×2、单次结算"
     );
 }
 

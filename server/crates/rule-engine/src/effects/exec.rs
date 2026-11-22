@@ -125,6 +125,15 @@ impl Engine {
             effective.target = Some(id);
         }
 
+        // 金色来源：数值产出 ×2，单次结算；条件与阈值由 `doubled_outputs` 保留。
+        let doubled;
+        let effect = if effective.golden {
+            doubled = effect.doubled_outputs();
+            &doubled
+        } else {
+            effect
+        };
+
         if let Some(condition) = effect.params.condition()
             && !self.condition_holds(state, condition, &effective)
         {
@@ -365,19 +374,17 @@ impl Engine {
         self.run_effects(state, &effects, ctx)
     }
 
-    /// 依次执行一段已收集的效果；金色随从连续执行两遍。
+    /// 依次执行一段已收集的效果；金色由 [`Effect::doubled_outputs`] 在
+    /// [`Engine::apply_op`] 内按单次结算翻倍，这里不重复执行。
     fn run_effects(
         &self,
         state: &mut GameState,
         effects: &[Effect],
         ctx: &EffectCtx,
     ) -> Vec<GameEvent> {
-        let passes = if ctx.golden { 2 } else { 1 };
         let mut events = Vec::new();
-        for _ in 0..passes {
-            for effect in effects {
-                events.extend(self.apply_op(state, effect, ctx, None));
-            }
+        for effect in effects {
+            events.extend(self.apply_op(state, effect, ctx, None));
         }
         events
     }
@@ -1488,13 +1495,11 @@ impl Engine {
     }
 
     /// 回合开始传染致死：结算亡语（不含播种技能本身）。
+    /// 金色由 `apply_op` 内部按数值产出 ×2 单次结算。
     pub(crate) fn fire_death_recruit(&self, state: &mut GameState, card_id: &str, ctx: &EffectCtx) {
         let effects = self.recruit_effects_filtered(card_id, Trigger::OnDeath, Some(SOW_KEYWORD));
-        let passes = if ctx.golden { 2 } else { 1 };
-        for _ in 0..passes {
-            for effect in &effects {
-                let _ = self.apply_op(state, effect, ctx, None);
-            }
+        for effect in &effects {
+            let _ = self.apply_op(state, effect, ctx, None);
         }
     }
 
@@ -1734,7 +1739,8 @@ impl Engine {
         }
     }
 
-    /// 执行一组战斗内效果；金色来源连续执行两遍，每条效果后判定死亡。
+    /// 执行一组战斗内效果；每条效果后判定死亡。
+    /// 金色由 [`Engine::apply_combat_effect`] 按数值产出 ×2 单次结算。
     fn fire_combat_effects(
         &self,
         field: &mut BattleField,
@@ -1745,15 +1751,12 @@ impl Engine {
         if effects.is_empty() {
             return;
         }
-        let passes = if ctx.golden { 2 } else { 1 };
-        for _ in 0..passes {
-            if !field.take_trigger() {
-                return;
-            }
-            for effect in effects {
-                self.apply_combat_effect(field, rng, effect, &ctx);
-                field.resolve_deaths(Some(self), &self.catalog, rng);
-            }
+        if !field.take_trigger() {
+            return;
+        }
+        for effect in effects {
+            self.apply_combat_effect(field, rng, effect, &ctx);
+            field.resolve_deaths(Some(self), &self.catalog, rng);
         }
     }
 
@@ -1764,6 +1767,14 @@ impl Engine {
         effect: &Effect,
         ctx: &EffectCtx,
     ) {
+        // 金色来源：数值产出 ×2，单次结算；条件与阈值保持不变。
+        let doubled;
+        let effect = if ctx.golden {
+            doubled = effect.doubled_outputs();
+            &doubled
+        } else {
+            effect
+        };
         if let Some(condition) = effect.params.condition()
             && !self.combat_condition_holds(field, condition, ctx)
         {
@@ -1928,6 +1939,11 @@ impl Engine {
         }
         let Some(amount) = field.decompose_health(&self.catalog, victim, basis) else {
             return;
+        };
+        let amount = if ctx.golden {
+            amount.saturating_mul(2)
+        } else {
+            amount
         };
         if amount <= 0 {
             return;

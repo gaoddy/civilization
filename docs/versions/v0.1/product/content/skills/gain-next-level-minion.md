@@ -15,4 +15,4 @@ template: on-play-grant-minion
 
 ## 效果
 
-获得一张下一等级的随从
+获得一张获得此牌时你当前时代 +1 星的随从

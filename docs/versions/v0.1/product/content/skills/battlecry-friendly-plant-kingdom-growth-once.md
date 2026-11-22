@@ -2,6 +2,7 @@
 id: battlecry-friendly-plant-kingdom-growth-once
 keyword: battlecry
 text: 战吼：使一个友方植物界随从获得一次成长
+text_golden: 战吼：使一个友方植物界随从获得两次成长
 template: on-play-battlecry-growth-single-ps(playstyle=plant,times=1)
 ---
 

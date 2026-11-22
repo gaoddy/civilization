@@ -66,7 +66,8 @@ tests/                       # Python 标准库 unittest
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
 - 实例编号 `InstanceId` 由 `state.next_instance_id` 单调分配：商店每次刷新的每个槽位（含效果牌槽）各有一个，冻结保留原编号与冻结标记直到解冻或重抽；买入、入手牌、打出到棋盘都沿用该编号。三连合成时新建一个金色编号，`TripleFormed` 事件携带被合并的三张原始副本编号（实例本身不保存来源记录）。复制品按复制方式分配新编号。
 - `BuyMinion { slot }` 不带目标：买入一律进入手牌，不触战吼；手牌保留随从实例（含成长等状态），不再退回卡面基础值。`PlayCard` 与 `UseHeroPower` 带 `target: Option<TargetRef>`，M0 由 AI 按区域从本人棋盘、手牌、商店依次选择目标。
-- 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录来源星级 +1（封顶 6）。打出该牌由 `GrantMinion { level: next, to: hand }` 直接随机发放一张命中本局启用玩法、`in_shop_pool: true`、星级等于该记录的池内随从到手牌；不登记发现待选、不扣共享牌池，手牌满或无候选时奖励牌照常消耗。奖励效果牌自身 `in_shop_pool: false`，不进商店、不进任何候选、不扣共享牌池；普通效果牌按商店概率进入商店槽位，但同样不扣共享牌池。
+- 三连判定见核心规则 §6：合成后金色进入手牌（手牌满时留在棋盘最早副本的位置且不发奖励）；金色成功打出入场时发放一张 `triple-reward` 效果牌，牌上记录**发放时玩家当前时代 +1**（封顶 6），此后升时代不追溯。打出该牌由 `GrantMinion { level: next, to: hand }` 直接随机发放一张命中本局启用玩法、`in_shop_pool: true`、星级等于该记录的池内随从到手牌；不登记发现待选、不扣共享牌池，手牌满或无候选时奖励牌照常消耗。奖励效果牌自身 `in_shop_pool: false`，不进商店、不进任何候选、不扣共享牌池；普通效果牌按商店概率进入商店槽位，但同样不扣共享牌池。
+- 金色效果按「单次结算 + 数值产出 ×2」执行：`Effect::doubled_outputs()` 只翻倍 `Growth.times` / `times_if.times`、`ModifyStats` 的攻防与 `per_*`、`GrantKeyword` 层数、`DealDamage.amount`、`Summon` / `AddShopSlot` / `Salvage` 数量、`Revive` 攻防、`Detonate.amount`、`Convert.count`、`Latent.amount` / `count`；`condition`、`threshold`、`max_count`、`when`、`Devour.value`、`Discover.choose`、`SevenVoyages.turns_max` 保持原值。光环由 `accumulate(..., golden)` 显式 ×2，战斗传染每次叠 2 层，`Decompose` 在 `apply_combat_decompose` 翻倍获得量。
 - `PendingChoice::Target { seat, source, hand_card, hand_index, fire_ally_evolve }`：`hand_card` 是入场前的原手牌（含成长、护盾与金色标记），`hand_index` 是原手牌位置，放弃时按 `min(hand_index, len)` 插回；`fire_ally_evolve` 表示入场观察者是否推迟到目标结算后触发。目标待选期间该座位除 `ChooseTarget` 与 `AbandonTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。`ChooseTarget` 要求队首是目标待选、目标属于本人在对应区域的实体，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果，再按固定顺序补做被推迟的入场副作用：金色三连奖励 → `check_triple` → `fire_ally_evolve` 为真时触发入场观察者。`AbandonTarget` 要求来源随从仍在本人棋盘（否则 `NO_SUCH_MINION`），移除来源、把原牌插回原手牌位置、移除待选，不发战吼、不补奖励、不执行三连与入场观察者。发现与进化待选允许留到下回合；目标待选若在 `finish_recruit` 进入战斗前仍未选择，按同样规则退牌（来源仍在场时），随后照常推进阶段。
 - `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。视图同时下发 `targetCandidates`（引擎 `target_candidates` 的结果，只含本人棋盘/手牌/商店）、`instanceId`、`golden`，以及随从牌的 `attack` / `health`（当前值，含成长等全部层数）；效果牌这两项为 `null`，`golden` 恒为 `false`，奖励牌另带 `rewardLevel`（锁定的发放星级）。`requires_target` 为真且候选为空时 `playable=false`、`disabledReason=NO_VALID_TARGET`。
 - `SelfView.hero_powers` 按英雄卡 `skills` 顺序列出全部主动技能，每项带 `skill_id`、`uses_left`、`requires_target`、`target_candidates`、`can_use`、`disabled_reason`，目标口径与手牌一致；需要目标且候选为空时该技能 `can_use=false`、`disabled_reason=NO_VALID_TARGET`，不影响同一英雄的其他技能。`PendingChoiceView::Target` 同时下发 `candidates`。
@@ -398,7 +399,7 @@ pub enum Params {
 - `BattleField` 持有 `combat_start_health` / `pre_kill_health` 两张 `BTreeMap<InstanceId, i32>`：构造时写入双方全部随从的当前生命值，召唤物在召唤时写入 `combat_start_health`；`apply_damage` 在本段伤害足以致死时、扣血前写入 `pre_kill_health`。
 - `duration` 必填，数据校验只接受 `permanent` / `combat`：`permanent` 走 `health.add_permanent`，`combat` 走 `health.add_turn`；`instant` 由校验拒绝、省略由反序列化拒绝；执行期保守跳过。
 - 获得量为 ≤0、目标已离场、`event_target` 缺失或快照缺失时静默跳过，不报错。
-- 金色来源的双倍触发复用战斗效果的 `passes`：携带者金色时整段效果执行两遍，分解因此触发两次。
+- 金色来源的分解获得量 ×2、单次结算：`apply_combat_decompose` 在 `ctx.golden` 时把 `amount` 乘 2；条件与阈值参数不受影响。
 - 触发时点由技能数据选择（`OnKill` / `OnFriendlyDeath` / `OnAllyKill`），引擎不限制 `Decompose` 只能配这些触发。
 - 复生不撤销本次死亡事件：已经按死亡结算过的分解仍使用死前快照。
 

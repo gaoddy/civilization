@@ -183,8 +183,9 @@ func hero_introduction(id: String) -> String:
 
 
 ## 技能文本按技能顺序拼接；缺键的技能跳过。
-func display_text(id: String) -> String:
-    return _skill_text(card(id).get("skills", []))
+## `golden` 为真时优先取金色文案，缺键回落普通文案。
+func display_text(id: String, golden := false) -> String:
+    return _skill_text(card(id).get("skills", []), golden)
 
 
 ## 英雄技能文本：只读英雄卡自己的技能列表，不回落到同名随从卡。
@@ -192,11 +193,14 @@ func hero_text(id: String) -> String:
     return _skill_text(hero(id).get("skills", []))
 
 
-func _skill_text(skill_ids: Array) -> String:
+func _skill_text(skill_ids: Array, golden := false) -> String:
     var lines: Array = []
     for skill_id in skill_ids:
-        var key := "skill.%s.text" % str(skill_id)
+        var key := "skill.%s.text%s" % [str(skill_id), ".golden" if golden else ""]
         var line := tr(key)
+        if line == key and golden:
+            key = "skill.%s.text" % str(skill_id)
+            line = tr(key)
         if line == key:
             continue
         lines.append(line)

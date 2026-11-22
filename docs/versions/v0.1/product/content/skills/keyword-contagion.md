@@ -2,6 +2,7 @@
 id: keyword-contagion
 keyword: contagion
 template: keyword-self(keyword=contagion)
+text_golden: 传染：造成伤害后，目标每回合 -2 生命
 ---
 
 # keyword-contagion

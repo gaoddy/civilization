@@ -111,18 +111,16 @@ pub(crate) fn apply(
 
 /// 金色随从从手牌打出并成功入场：发放一张「三连奖励」效果牌。
 ///
-/// 星级在合成来源卡的基础上 +1、封顶 6 星，与玩家时代无关。
+/// 星级在获得奖励牌时锁定为玩家当前时代 +1（6 星封顶）；之后升时代不追溯。
 /// 战吼带目标时由 [`choose_target`] 在目标结算后调用；放弃时不发放。
-fn grant_triple_reward(engine: &Engine, state: &mut GameState, seat: Seat, hand_card: &HandCard) {
+fn grant_triple_reward(state: &mut GameState, seat: Seat, hand_card: &HandCard) {
     if !hand_card.golden() {
         return;
     }
-    let Some(level) = engine
-        .catalog
-        .cards
-        .get(hand_card.card_id())
-        .and_then(|card| card.level.checked_add(1))
-        .map(|level| level.min(6))
+    let Some(level) = state
+        .players
+        .get(usize::from(seat))
+        .map(|player| (player.era as u8).saturating_add(1).min(6))
     else {
         return;
     };
@@ -692,7 +690,7 @@ fn play_card(
                     level_override: None,
                 },
             );
-            grant_triple_reward(engine, state, seat, &hand_card);
+            grant_triple_reward(state, seat, &hand_card);
             events.extend(engine.check_triple(state, seat));
             engine.fire_evolve_after_enter(state, seat, instance_id);
             Ok(Outcome::with(events))
@@ -1077,7 +1075,7 @@ fn choose_target(
 
     state.pending.remove(index);
     let mut events = engine.fire_card(state, &card_id, Trigger::OnPlay, ctx);
-    grant_triple_reward(engine, state, seat, &hand_card);
+    grant_triple_reward(state, seat, &hand_card);
     events.extend(engine.check_triple(state, seat));
     if fire_ally_evolve {
         engine.fire_evolve_after_enter(state, seat, source);

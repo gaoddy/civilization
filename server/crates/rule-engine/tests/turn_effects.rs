@@ -368,7 +368,7 @@ fn turn_start_effect_runs_left_to_right() {
 }
 
 #[test]
-fn golden_turn_start_effect_runs_twice() {
+fn golden_turn_start_effect_doubles_amount_once() {
     let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "turn9");
     state.players[0].board[0].golden = true;
@@ -382,7 +382,11 @@ fn golden_turn_start_effect_runs_twice() {
             _ => None,
         })
         .collect();
-    assert_eq!(amounts, vec![9, 9], "金色随从的回合开始效果连续触发两次");
+    assert_eq!(
+        amounts,
+        vec![18],
+        "金色回合开始效果单次结算，9 点伤害翻倍为 18"
+    );
 }
 
 #[test]
@@ -1053,9 +1057,9 @@ fn latent_burst_with_zero_count_keeps_layers_and_marker() {
 }
 
 #[test]
-fn golden_latent_doubles_attack_but_bursts_once() {
-    // 金色按通用规则触发两遍：未达阈值时每层攻击力获得双倍；达到阈值时
-    // 第一遍爆发并清零层数、置 latent_used，第二遍层数为 0，因此只爆发一次。
+fn golden_latent_doubles_attack_and_burst_but_not_threshold() {
+    // 金色按「数值产出 ×2、单次结算」：每层攻击翻倍、爆发伤害翻倍；
+    // 阈值不翻倍，爆发仍每局最多一次。
     let (engine, mut state) = setup(1);
     place(&engine.catalog, &mut state, 0, 1, "latent");
     place(&engine.catalog, &mut state, 1, 2, "target");
@@ -1068,24 +1072,24 @@ fn golden_latent_doubles_attack_but_bursts_once() {
     assert_eq!(
         combat::effective_attack(&engine.catalog, latent),
         4,
-        "金色触发两遍，2 层获得 2 × 2 = 4 攻击力"
+        "金色每层攻击翻倍，2 层获得 2 × 2 = 4 攻击力"
     );
     assert!(!latent.latent_used);
 
     state.players[0].board[0].contagion = 3;
     engine.start_turn(&mut state).expect("开始回合应成功");
     let latent = &state.players[0].board[0];
-    assert_eq!(latent.contagion, 0, "第一遍爆发后清零层数");
-    assert!(latent.latent_used, "第一遍爆发后置 latent_used");
+    assert_eq!(latent.contagion, 0, "爆发后清零层数");
+    assert!(latent.latent_used, "爆发后置 latent_used");
     assert_eq!(
         combat::effective_attack(&engine.catalog, latent),
-        7,
-        "爆发遍按 3 层 +3，第二遍层数已清零只加 0"
+        10,
+        "爆发前按 3 层 × 2 = +6 攻击力"
     );
     assert_eq!(
         combat::effective_health(&engine.catalog, &state.players[1].board[0]),
-        7,
-        "爆发只结算一次，敌方全体只受到 3 点伤害"
+        4,
+        "爆发伤害 3 × 2 = 6，敌方全体受到 6 点伤害"
     );
 }
 

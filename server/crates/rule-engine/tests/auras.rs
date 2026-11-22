@@ -113,6 +113,29 @@ fn aura_buffs_all_friendly_machines_except_self_if_other() {
 }
 
 #[test]
+fn golden_aura_doubles_contribution() {
+    let (mut engine, mut state) = setup(23);
+    add_aura_source(
+        &mut engine,
+        "test-mech-other",
+        Playstyle::Machine,
+        "Aura|ModifyStats|friendly:all:playstyle=machine:other=true|attack=2,health=2,duration=permanent",
+    );
+    place(&engine.catalog, &mut state, 0, 1, "test-mech-other");
+    state.players[0].board[0].golden = true;
+    place(&engine.catalog, &mut state, 0, 2, "nanobot");
+
+    engine.recompute_auras(&mut state);
+
+    let aura = state.auras.get(&2).expect("另一台机械应获得光环");
+    assert_eq!(
+        (aura.attack, aura.health),
+        (4, 4),
+        "金色光环的 +2/+2 翻倍为 +4/+4"
+    );
+}
+
+#[test]
 fn aura_recomputes_when_source_leaves() {
     let (engine, mut state) = setup(23);
     // 固氮作物：你的植物随从获得 +1/+1（含自身）。

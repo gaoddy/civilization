@@ -165,7 +165,7 @@ EXPECT_ERA = {"prehistoric": 86, "primitive": 60, "classical": 45, "feudal": 57,
               "industrial": 41, "modern": 96, "future": 47}
 EXPECT_LEVEL = {1: 50, 2: 58, 3: 61, 4: 60, 5: 55, 6: 28, 7: 20}
 SKILL_FIELDS = ["id"]
-SKILL_OPTIONAL_FIELDS = {"text", "template", "keyword", "cost",
+SKILL_OPTIONAL_FIELDS = {"text", "text_golden", "template", "keyword", "cost",
                          "uses_per_turn", "name"}
 MINION_FIELDS = ["id", "name", "card_type", "taxon", "subtype", "level", "era",
                  "attack", "health"]

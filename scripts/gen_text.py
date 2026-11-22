@@ -81,7 +81,11 @@ def generated_entries(root):
     for doc in gen_card_data.load_docs(content, "skills"):
         if doc.get("name"):
             entries[f"skill.{doc['id']}.name"] = doc["name"]
-        entries[f"skill.{doc['id']}.text"] = renderer.instance_text(doc)
+        text = renderer.instance_text(doc)
+        entries[f"skill.{doc['id']}.text"] = text
+        golden = renderer.instance_text(doc, golden=True)
+        if golden != text:
+            entries[f"skill.{doc['id']}.text.golden"] = golden
 
     raw = validate_docs.load(
         "cards", ["id", "card_type", "taxon", "era"], root=content)

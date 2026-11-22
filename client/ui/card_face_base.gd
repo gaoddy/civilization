@@ -144,8 +144,9 @@ static func add_info(
     measure_host: Node = null,
     show_stats := true,
     hero := false,
+    golden := false,
 ) -> void:
-    var desc_text := _desc_text(card_id, hero) if show_desc else ""
+    var desc_text := _desc_text(card_id, hero, golden) if show_desc else ""
     var padding := UITheme.space("space-sm")
     var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
     # 手机卡面更窄：名称与数值各收一档，避免「攻击 · 类型 · 生命」挤成省略号。
@@ -340,9 +341,10 @@ static func set_stats(face_node: Control, attack_text: String, health_text: Stri
 
 ## 在给定宽度内选择能让介绍完整放下的最大字号；都放不下时退回最小字号，
 ## 并按可用高度给出最多行数（`lines` 为 -1 表示不限制行数）。
-## 卡面介绍：英雄只读英雄池，避免与同名随从的技能文本串用。
-static func _desc_text(card_id: String, hero: bool) -> String:
-    return CardDB.hero_text(card_id) if hero else CardDB.display_text(card_id)
+## 卡面介绍：英雄只读英雄池，避免与同名随从的技能文本串用；
+## 金色随从读取金色文案，缺键回落普通文案。
+static func _desc_text(card_id: String, hero: bool, golden := false) -> String:
+    return CardDB.hero_text(card_id) if hero else CardDB.display_text(card_id, golden)
 
 
 static func _fit_desc(text: String, width: int, available: int, host: Node) -> Dictionary:

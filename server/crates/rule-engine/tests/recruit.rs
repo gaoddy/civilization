@@ -1540,7 +1540,7 @@ fn choose_target_grants_deferred_golden_reward() {
             BATTLECRY_TARGET,
             true,
         )));
-    let expected_level = (engine.catalog.cards[BATTLECRY_TARGET].level + 1).min(6);
+    let expected_level = (state.players[0].era as u8).saturating_add(1).min(6);
 
     engine
         .apply(

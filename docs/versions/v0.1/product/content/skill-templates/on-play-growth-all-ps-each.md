@@ -7,4 +7,5 @@ selector: friendly:all:playstyle={playstyle}
 arg.playstyle: playstyle
 params: times=1
 text: 使你的{playstyle}随从各获得一次成长
+text_golden: 使你的{playstyle}随从各获得两次成长
 ---

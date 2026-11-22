@@ -12,7 +12,7 @@ static func render(box: VBoxContainer, minion: Dictionary, kit: DetailKit) -> vo
     var entry := CardDB.card(card_id)
     kit.append_classification(box, entry)
     kit.append_association(box, entry)
-    var skill_text := CardDB.display_text(card_id)
+    var skill_text := CardDB.display_text(card_id, bool(minion.get("golden", false)))
     if skill_text != "":
         box.add_child(kit.text_block(skill_text))
     kit.append_gained_keywords(box, minion)
