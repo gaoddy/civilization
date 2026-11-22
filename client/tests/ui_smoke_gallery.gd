@@ -449,6 +449,15 @@ func _check_tablet_layout() -> void:
         touch_header_height >= float(UITheme.hit_small()),
         "触控图鉴头部不应低于次要操作命中高度，实际：%d" % int(touch_header_height),
     )
+    var touch_style := UITheme.compact_button_style("default", "normal")
+    var token_height := float(UITheme.metric("toolbar-button-height"))
+    var expected_inset := -(touch_header_height - token_height) / 2.0
+    _expect(
+        is_equal_approx(touch_style.expand_margin_top, expected_inset)
+            and is_equal_approx(touch_style.expand_margin_bottom, expected_inset),
+        "触控工具行按钮背景应按令牌高度绘制，实际外扩：%s/%s"
+        % [str(touch_style.expand_margin_top), str(touch_style.expand_margin_bottom)],
+    )
     _expect(
         header != null and is_equal_approx(header.size.y, touch_header_height),
         "平板头部高度应取工具行按钮高度，实际：%s" % (str(header.size) if header != null else "无"),
