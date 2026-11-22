@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """从 v0.1 实体文档生成卡牌、技能与经济配置数据。
 
-只读 docs/versions/v0.1/product 下的实体文档与数值系统文档，输出确定性 JSON
+只读 docs/current/product 下的实体文档与数值系统文档，输出确定性 JSON
 到 server/data/v0.1/。front matter 解析复用 scripts/validate_docs.py，不重复实现。
 输出使用 ensure_ascii=False、indent=2、sort_keys=True，并以换行结尾。
 """
@@ -22,7 +22,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "server" / "data" / "v0.1"
 FILES = ("cards.json", "heroes.json", "skills.json", "config.json", "taxonomy.json")
 
-# 产品基线常量；来源 docs/versions/v0.1/product/systems/economy-and-numbers.md
+# 产品基线常量；来源 docs/current/product/systems/economy-and-numbers.md
 # 与 rules/ 下的核心规则（生命、槽位、回合上限、伤害上下限）。
 CONFIG = {
     "initial_hp": 40,
@@ -477,7 +477,7 @@ def parse_taxonomy(path):
 
 def build(root):
     """返回文件名到确定性 JSON 文本的映射。"""
-    content = pathlib.Path(root) / "docs" / "versions" / "v0.1" / "product" / "content"
+    content = pathlib.Path(root) / "docs" / "current" / "product" / "content"
     renderer = skill_templates.Renderer(content)
     cards = [card_entry(doc) for doc in load_docs(content, "cards")]
     heroes = [hero_entry(doc) for doc in load_docs(content, "heroes")]

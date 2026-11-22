@@ -25,7 +25,7 @@ class GenCardDataTest(unittest.TestCase):
     def test_skills_and_non_pool_cards(self):
         out = gen_card_data.build(ROOT)
         self.assertNotIn("tokens.json", out)
-        skills_dir = ROOT / "docs/versions/v0.1/product/content/skills"
+        skills_dir = ROOT / "docs/current/product/content/skills"
         expected = sum(1 for path in skills_dir.glob("*.md") if path.name != "README.md")
         self.assertEqual(len(json.loads(out["skills.json"])), expected)
         cards = json.loads(out["cards.json"])
@@ -50,7 +50,7 @@ class GenCardDataTest(unittest.TestCase):
 
     def test_config_matches_economy_doc(self):
         cfg = json.loads(gen_card_data.build(ROOT)["config.json"])
-        text = (ROOT / "docs/versions/v0.1/product/systems/economy-and-numbers.md").read_text()
+        text = (ROOT / "docs/current/product/systems/economy-and-numbers.md").read_text()
         costs = [int(n) for n in re.findall(r"\| [^|]+ → [^|]+ \| (\d+) \|", text)]
         self.assertEqual(costs, [5, 7, 9, 10, 11, 12])
         self.assertEqual(cfg["era_costs"], costs)

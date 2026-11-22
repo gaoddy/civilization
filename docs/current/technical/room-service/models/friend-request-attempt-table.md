@@ -28,7 +28,7 @@ CREATE INDEX friend_request_attempt_pair_idx
 | `friend_request_attempt_id` | `bigint` | 自增主键，仅用于唯一标识一次发送 | 不对外展示 |
 | `from_account_id` | `text` | 申请人账号标识，外键 `account.account_id` | 不对外展示 |
 | `to_account_id` | `text` | 收件人账号标识，外键 `account.account_id` | 不对外展示 |
-| `sent_at` | `timestamptz(3)` | 发送时刻，由服务端 `Clock` 写入；超过 24 小时不再计入 | 被拒绝后的重发限制，见[好友](../../../../versions/v0.1/product/systems/friends.md) |
+| `sent_at` | `timestamptz(3)` | 发送时刻，由服务端 `Clock` 写入；超过 24 小时不再计入 | 被拒绝后的重发限制，见[好友](../../../product/systems/friends.md) |
 
 ## 主键、索引与约束
 

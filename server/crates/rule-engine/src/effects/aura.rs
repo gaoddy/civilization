@@ -3,7 +3,7 @@
 //! 光环是静态派生效果：每次区域变化后从零全量重算，结果只写入
 //! [`GameState::auras`]，不改变随从的持久字段。战斗快照在结算层临时折叠。
 //!
-//! 规则口径见 `docs/versions/v0.1/product/rules/keywords-and-mechanics.md`
+//! 规则口径见 `docs/current/product/rules/keywords-and-mechanics.md`
 //! §3.2 与 §10。遍历顺序固定：座位升序、棋盘点顺序；不消耗随机流。
 
 use std::collections::{BTreeMap, BTreeSet};

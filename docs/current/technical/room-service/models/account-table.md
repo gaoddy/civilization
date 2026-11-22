@@ -30,7 +30,7 @@ CREATE INDEX account_display_name_idx ON account (display_name, account_id);
 | --- | --- | --- | --- |
 | `account_id` | `text` | 账号标识，主键；服务内即 `playerId` | 不对外展示 |
 | `phone` | `text` | 登录手机号，唯一；同一手机号恢复同一账号 | 登录凭据，不对外展示 |
-| `player_code` | `text` | 6 位数字玩家编号，唯一，`100000`–`999999` 循环分配 | 好友搜索、邀请与好友列表展示的玩家编号，见[好友](../../../../versions/v0.1/product/systems/friends.md) |
+| `player_code` | `text` | 6 位数字玩家编号，唯一，`100000`–`999999` 循环分配 | 好友搜索、邀请与好友列表展示的玩家编号，见[好友](../../../product/systems/friends.md) |
 | `display_name` | `text` | 展示名，非空；首次创建为 `玩家N`，重复登录不覆盖 | 大厅、房间座位与好友列表展示的名字 |
 | `ordinal` | `bigint` | 持久化自增序号，唯一 | 默认展示名 `玩家N` 的 `N` |
 | `created_at` | `timestamptz(3)` | 创建时刻，由服务端 `Clock` 写入 | 不对外展示 |

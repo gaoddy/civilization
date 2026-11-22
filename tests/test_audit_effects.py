@@ -4,7 +4,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import audit_effects
 import skill_templates
 import validate_docs
-SKILLS = ROOT / "docs/versions/v0.1/product/content/skills"
+SKILLS = ROOT / "docs/current/product/content/skills"
 
 def expected_counts():
     """按技能文档实际内容统计技能数与效果段数，避免写死数字。"""

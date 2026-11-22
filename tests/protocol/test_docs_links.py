@@ -12,9 +12,9 @@ LINK = re.compile(r"\]\(([^)#]+)(?:#[^)]*)?\)")
 
 class DocsLinksTest(unittest.TestCase):
     def test_protocol_doc_and_index_links_resolve(self):
-        for path in [DOCS / "versions/v0.1/technical/architecture/protocol.md",
-                     DOCS / "versions/v0.1/technical/architecture/README.md",
-                     DOCS / "versions/v0.1/technical/README.md"]:
+        for path in [DOCS / "current/technical/architecture/protocol.md",
+                     DOCS / "current/technical/architecture/README.md",
+                     DOCS / "current/technical/README.md"]:
             self.assertTrue(path.exists(), path)
             text = path.read_text()
             for target in LINK.findall(text):

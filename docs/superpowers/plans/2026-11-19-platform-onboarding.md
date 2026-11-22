@@ -827,7 +827,7 @@ git commit -m "feat(projects): 登记 civilization 项目与数据库"
 **Files:**
 - Create: `docs/current/technical/deployment/README.md`
 - Modify: `docs/current/technical/README.md`
-- Modify: `docs/versions/v0.1/technical/architecture/server-stack.md`
+- Modify: `docs/current/technical/architecture/server-stack.md`
 - Modify: `docs/versions/v0.1/open-questions.md`
 
 **Interfaces:**
@@ -849,7 +849,7 @@ git commit -m "feat(projects): 登记 civilization 项目与数据库"
 - [ ] **Step 2: 更新索引与技术基线**
 
 - `docs/current/technical/README.md` 表格增加一行：`[部署与接入](deployment/README.md)`，内容写「platform Kubernetes 接入、Helm 清单、镜像与发布入口、健康检查、客户端连接方式」，代码位置写 `deploy/helm`、`server/Dockerfile`、`Makefile`。
-- `docs/versions/v0.1/technical/architecture/server-stack.md`：
+- `docs/current/technical/architecture/server-stack.md`：
   - §1 部署行改为「单二进制 + Helm chart，部署到 platform 共享 Kubernetes；单实例」。
   - §5 删除「部署编排（容器编排方式、单实例到多实例的切分维度）」一条，改为链接 `../../../../current/technical/deployment/README.md`；保留多实例切分作为后续版本事项的一句说明。
 - `docs/versions/v0.1/open-questions.md` 移除「服务端部署编排与多实例切分维度」整行。
@@ -864,7 +864,7 @@ import pathlib, re
 docs = [
     pathlib.Path('docs/current/technical/deployment/README.md'),
     pathlib.Path('docs/current/technical/README.md'),
-    pathlib.Path('docs/versions/v0.1/technical/architecture/server-stack.md'),
+    pathlib.Path('docs/current/technical/architecture/server-stack.md'),
     pathlib.Path('docs/versions/v0.1/open-questions.md'),
 ]
 missing = []
@@ -884,7 +884,7 @@ Expected: `links ok`（只校验本次改动的四个文件）。
 
 ```bash
 git add docs/current/technical/deployment/README.md docs/current/technical/README.md \
-  docs/versions/v0.1/technical/architecture/server-stack.md docs/versions/v0.1/open-questions.md
+  docs/current/technical/architecture/server-stack.md docs/versions/v0.1/open-questions.md
 git commit -m "docs: 回写 platform 部署现状与客户端接入方式"
 ```
 

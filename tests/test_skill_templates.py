@@ -13,7 +13,7 @@ import validate_docs
 class NounTableTest(unittest.TestCase):
     def test_load_nouns_requires_all_tables(self):
         nouns = skill_templates.load_nouns(
-            ROOT / "docs/versions/v0.1/product/content/card-nouns.md")
+            ROOT / "docs/current/product/content/card-nouns.md")
         self.assertEqual(nouns.taxon["animalia"], "动物")
         self.assertEqual(nouns.playstyle["machine"], "机械")
         self.assertEqual(nouns.playstyle["fungus"], "真菌界")
@@ -198,6 +198,6 @@ class RenderTest(unittest.TestCase):
         }
         for skill_id, noun in cases.items():
             doc = validate_docs.parse_front_matter(
-                ROOT / f"docs/versions/v0.1/product/content/skills/{skill_id}.md")
+                ROOT / f"docs/current/product/content/skills/{skill_id}.md")
             self.assertEqual(self.renderer.instance_text(doc), doc["text"])
             self.assertIn(noun, self.renderer.instance_text({**doc, "text": None}))

@@ -2,7 +2,7 @@
 
 > 状态：已确认
 > 需求归属：v0.1
-> 产品规则：[product.md](../../versions/v0.1/update/2026-11-20-game-page-battlegrounds-layout/product.md)
+> 产品规则：[对局页](../../current/product/ui/pages/game.md)
 > 参考：炉石传说酒馆战棋官方对局界面（招募阶段与战斗阶段截图）
 
 ## 1. 意图与原因
@@ -45,7 +45,7 @@
 | 左排名栏 88 宽，8 行座位 | `game.md` §2 |
 | 客户端没有图片、字体与主题资源 | `docs/current/product/ui/README.md` §1 |
 | 服务端只在战斗阶段下发 `opponentPlayerId` | `server/crates/rule-engine/src/view.rs`、`settle.rs::finish_recruit` |
-| 战斗阶段当前不显示双方英雄条 | `docs/versions/v0.1/update/2026-11-17-game-hud-redesign/product.md` §2 |
+| 战斗阶段当前不显示双方英雄条 | `docs/current/product/ui/pages/game.md` §2 |
 
 ## 6. 方向比较
 

@@ -1,7 +1,7 @@
 # 卡牌合规护栏与说明回写 · 设计
 
 > 状态：待确认
-> 关联需求：[卡牌参数重排与玩法差异化](../../versions/v0.1/update/2026-11-18-card-differentiation/product.md)
+> 关联需求：[卡牌规范与数据](../../current/product/content/card-system.md)
 
 ## 1. 背景与目标
 
@@ -11,7 +11,7 @@
 2. 缺少从商店 / 招募入口出发的 `card_in_pool` 集成测试，现有测试只覆盖随从或直接调用 `card_in_pool`。
 3. `balance_report.py` 没有自动校验「4 费效果牌只能 6–7 星」与「多技能机制词汇归属」。
 
-目标：补齐上述三项，让 `make balance-check` 覆盖产品 §5.1 / §5.2 与 [数值与经济 §6](../../versions/v0.1/product/systems/economy-and-numbers.md) 的护栏；当前数据违规的卡在同一任务内修正。
+目标：补齐上述三项，让 `make balance-check` 覆盖产品 §5.1 / §5.2 与 [数值与经济 §6](../../current/product/systems/economy-and-numbers.md) 的护栏；当前数据违规的卡在同一任务内修正。
 
 非目标：不改玩法数量、卡牌 id / 卡名 / 时代 / 星级 / 科学分类、牌池份数、金币曲线、效果原语、引擎规则与客户端协议；不追求把 1000 局夺冠率收敛进 4%–12%（该问题已记录在 [open-questions](../../versions/v0.1/open-questions.md)）。
 
@@ -30,7 +30,7 @@
 平衡边界：<星级> 星 <攻击>/<生命>；攻击力取该星级<位置>，生命值取该星级<位置>；关键词折算 <N> 点，合计 <总强度>，<等于|低于> <上限> 上限<差额>。
 ```
 
-- 位置按 [数值与经济 §5](../../versions/v0.1/product/systems/economy-and-numbers.md) 的星级区间分档：下限 / 偏下 / 中位 / 偏上 / 上限。
+- 位置按 [数值与经济 §5](../../current/product/systems/economy-and-numbers.md) 的星级区间分档：下限 / 偏下 / 中位 / 偏上 / 上限。
 - 关键词折算复用 `scripts/validate_docs.py::keyword_cost`，上限复用 `CAP`，避免另立口径。
 - 无关键词折算时句子改为「无关键词折算，合计 …」。
 - 原句包含「最小星级」「时代」等关键词解锁说明时，保留该说明附在原句之后。

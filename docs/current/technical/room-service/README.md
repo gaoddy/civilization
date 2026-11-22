@@ -266,5 +266,5 @@ m1-check:
 - [Steam 接入](../steam-integration.md)
 - [规则引擎与模拟器](../rule-engine-and-simulator.md)
 - [技术现状索引](../README.md)
-- [服务端技术基线](../../../versions/v0.1/technical/architecture/server-stack.md)
-- [通信协议](../../../versions/v0.1/technical/architecture/protocol.md)
+- [服务端技术基线](../architecture/server-stack.md)
+- [通信协议](../architecture/protocol.md)

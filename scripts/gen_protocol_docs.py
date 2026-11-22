@@ -15,7 +15,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from validate_protocol import _resolve, load_mapping  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = ROOT / "docs" / "versions" / "v0.1" / "technical" / "architecture" / "protocol-messages.md"
+DEFAULT_OUTPUT = ROOT / "docs" / "current" / "technical" / "architecture" / "protocol-messages.md"
 
 
 def _load(schema_dir, filename):

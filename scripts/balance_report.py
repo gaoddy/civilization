@@ -9,7 +9,7 @@
 
 ``--check`` 有越界时退出码 1。
 
-规则来源：docs/versions/v0.1/update/2026-11-18-card-differentiation/product.md
+规则来源：docs/current/product/content/balance-analysis.md §2
 """
 
 import argparse

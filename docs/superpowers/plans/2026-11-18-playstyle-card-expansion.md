@@ -9,8 +9,8 @@
 **Tech Stack:** Rust（rule-engine、room-service）、Python（文档校验与数据生成）、JSON 协议与生成物、Godot 客户端文本表。
 
 **Spec:**
-- 产品规则：[product.md](../../versions/v0.1/update/2026-11-18-playstyle-expansion/product.md)
-- 技术方案：[technical.md](../../versions/v0.1/update/2026-11-18-playstyle-expansion/technical.md)
+- 产品规则：[关键词与机制](../../current/product/rules/keywords-and-mechanics.md)
+- 技术方案：[规则引擎与模拟器](../../current/technical/rule-engine-and-simulator.md)
 
 ## Global Constraints
 
@@ -469,8 +469,8 @@ git commit -m "feat(rule-engine): 潜伏与零件回收机制"
 ### Task 9: 分类树与 Token
 
 **Files:**
-- Modify: `docs/versions/v0.1/product/content/taxonomy.md`
-- Modify: `docs/versions/v0.1/product/content/tokens/README.md`
+- Modify: `docs/current/product/content/taxonomy.md`
+- Modify: `docs/current/product/content/tokens/README.md`
 - Modify: `server/data/v0.1/taxonomy.json`（生成物）
 - Modify: `client/generated/taxonomy.json`（生成物）
 - Test: `python3 scripts/validate_docs.py`
@@ -495,7 +495,7 @@ Expected: 分类树与 Token 校验通过；新卡尚未加入，数量期望暂
 - [ ] **Step 4: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/taxonomy.md docs/versions/v0.1/product/content/tokens/README.md server/data/v0.1/taxonomy.json client/generated/taxonomy.json
+git add docs/current/product/content/taxonomy.md docs/current/product/content/tokens/README.md server/data/v0.1/taxonomy.json client/generated/taxonomy.json
 git commit -m "data(content): 扩充玩法卡池的科学分类与 Token"
 ```
 
@@ -541,10 +541,10 @@ git commit -m "build(data): 接入玩法机制的校验与生成规则"
 ### Task 11: 鱼纲 / 真菌界 / 原生生物界卡牌
 
 **Files:**
-- Create: `docs/versions/v0.1/product/content/cards/<id>.md`（36 份）
-- Create: `docs/versions/v0.1/product/content/skills/<id>.md`（机制共享技能）
-- Modify: `docs/versions/v0.1/product/content/cards/README.md`
-- Modify: `docs/versions/v0.1/product/content/skills/README.md`
+- Create: `docs/current/product/content/cards/<id>.md`（36 份）
+- Create: `docs/current/product/content/skills/<id>.md`（机制共享技能）
+- Modify: `docs/current/product/content/cards/README.md`
+- Modify: `docs/current/product/content/skills/README.md`
 - Test: `python3 scripts/validate_docs.py`
 
 **Interfaces:**
@@ -571,17 +571,17 @@ Expected: 36 张新卡通过字段、分类、关键词、DSL、出处与属性�
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/cards docs/versions/v0.1/product/content/skills
+git add docs/current/product/content/cards docs/current/product/content/skills
 git commit -m "content(cards): 补充鱼纲、真菌界与原生生物界卡牌"
 ```
 
 ### Task 12: 头足纲 / 水螅纲 / 细菌域卡牌
 
 **Files:**
-- Create: `docs/versions/v0.1/product/content/cards/<id>.md`（33 份）
-- Create: `docs/versions/v0.1/product/content/skills/<id>.md`（机制共享技能）
-- Modify: `docs/versions/v0.1/product/content/cards/README.md`
-- Modify: `docs/versions/v0.1/product/content/skills/README.md`
+- Create: `docs/current/product/content/cards/<id>.md`（33 份）
+- Create: `docs/current/product/content/skills/<id>.md`（机制共享技能）
+- Modify: `docs/current/product/content/cards/README.md`
+- Modify: `docs/current/product/content/skills/README.md`
 - Test: `python3 scripts/validate_docs.py`
 
 **Interfaces:**
@@ -608,17 +608,17 @@ Expected: 新卡与既有卡全部通过。
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/cards docs/versions/v0.1/product/content/skills
+git add docs/current/product/content/cards docs/current/product/content/skills
 git commit -m "content(cards): 补充头足纲、水螅纲与细菌域卡牌"
 ```
 
 ### Task 13: 鸟纲 / 爬行纲 / 昆虫纲 / 机械卡牌
 
 **Files:**
-- Create: `docs/versions/v0.1/product/content/cards/<id>.md`（31 份）
-- Create: `docs/versions/v0.1/product/content/skills/<id>.md`（机制共享技能）
-- Modify: `docs/versions/v0.1/product/content/cards/README.md`
-- Modify: `docs/versions/v0.1/product/content/skills/README.md`
+- Create: `docs/current/product/content/cards/<id>.md`（31 份）
+- Create: `docs/current/product/content/skills/<id>.md`（机制共享技能）
+- Modify: `docs/current/product/content/cards/README.md`
+- Modify: `docs/current/product/content/skills/README.md`
 - Test: `python3 scripts/validate_docs.py`
 
 **Interfaces:**
@@ -645,17 +645,17 @@ Expected: 通过。
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/cards docs/versions/v0.1/product/content/skills
+git add docs/current/product/content/cards docs/current/product/content/skills
 git commit -m "content(cards): 补充鸟纲、爬行纲、昆虫纲与机械卡牌"
 ```
 
 ### Task 14: 哺乳纲 / 病毒 / 植物界补强
 
 **Files:**
-- Create: `docs/versions/v0.1/product/content/cards/<id>.md`（6 份）
-- Create: `docs/versions/v0.1/product/content/skills/<id>.md`（机制共享技能）
-- Modify: `docs/versions/v0.1/product/content/cards/README.md`
-- Modify: `docs/versions/v0.1/product/content/skills/README.md`
+- Create: `docs/current/product/content/cards/<id>.md`（6 份）
+- Create: `docs/current/product/content/skills/<id>.md`（机制共享技能）
+- Modify: `docs/current/product/content/cards/README.md`
+- Modify: `docs/current/product/content/skills/README.md`
 - Test: `python3 scripts/validate_docs.py`
 
 **Interfaces:**
@@ -682,7 +682,7 @@ Expected: 13 个玩法全部达标，总数 309/346。
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/cards docs/versions/v0.1/product/content/skills
+git add docs/current/product/content/cards docs/current/product/content/skills
 git commit -m "content(cards): 补强哺乳纲、病毒与植物界卡池"
 ```
 
@@ -692,12 +692,12 @@ git commit -m "content(cards): 补强哺乳纲、病毒与植物界卡池"
 - Modify: `server/data/v0.1/cards.json`、`skills.json`、`tokens.json`、`taxonomy.json`（生成物）
 - Modify: `client/generated/cards.json`、`skills.json`、`tokens.json`、`taxonomy.json`（生成物）
 - Modify: `client/text/zh_CN.csv`（生成物）
-- Modify: `docs/versions/v0.1/product/content/card-system.md`
-- Modify: `docs/versions/v0.1/product/content/skill-system.md`
-- Modify: `docs/versions/v0.1/product/rules/keywords-and-mechanics.md`
-- Modify: `docs/versions/v0.1/product/systems/economy-and-numbers.md`
-- Modify: `docs/versions/v0.1/product/content/cards/README.md`
-- Modify: `docs/versions/v0.1/product/content/skills/README.md`
+- Modify: `docs/current/product/content/card-system.md`
+- Modify: `docs/current/product/content/skill-system.md`
+- Modify: `docs/current/product/rules/keywords-and-mechanics.md`
+- Modify: `docs/current/product/systems/economy-and-numbers.md`
+- Modify: `docs/current/product/content/cards/README.md`
+- Modify: `docs/current/product/content/skills/README.md`
 - Modify: `tests/test_gen_data.py`（卡牌 346、随从 309、技能数与效果段数按实际）
 - Modify: `tests/test_audit_effects.py`（不再写死 131/122）
 - Test: `make data-check`
@@ -727,7 +727,7 @@ Expected: 退出码 0，无漂移；卡牌 346、随从 309、英雄 32。
 - [ ] **Step 5: 提交**
 
 ```bash
-git add server/data client/generated client/text docs/versions/v0.1/product scripts/validate_docs.py tests
+git add server/data client/generated client/text docs/current/product scripts/validate_docs.py tests
 git commit -m "data(content): 生成玩法扩充后的服务端与客户端数据"
 ```
 

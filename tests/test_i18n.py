@@ -161,7 +161,7 @@ class TextTableTest(unittest.TestCase):
 
     def test_content_keys_cover_all_entities(self):
         keys = set(_keys((ROOT / "client/text/zh_CN.csv").read_text(encoding="utf-8")))
-        content = ROOT / "docs/versions/v0.1/product/content"
+        content = ROOT / "docs/current/product/content"
         for doc in gen_card_data.load_docs(content, "cards"):
             self.assertIn(f"card.{doc['id']}.name", keys)
         for doc in gen_card_data.load_docs(content, "skills"):

@@ -24,7 +24,7 @@ CREATE INDEX friend_request_to_idx ON friend_request (to_account_id, sent_at DES
 
 | `keypath` | 类型 | 说明 | 与产品的对应关系 |
 | --- | --- | --- | --- |
-| `from_account_id` | `text` | 申请人账号标识，外键 `account.account_id` | 申请卡片展示的申请人，见[好友](../../../../versions/v0.1/product/systems/friends.md) |
+| `from_account_id` | `text` | 申请人账号标识，外键 `account.account_id` | 申请卡片展示的申请人，见[好友](../../../product/systems/friends.md) |
 | `to_account_id` | `text` | 收件人账号标识，外键 `account.account_id` | 不对外展示 |
 | `sent_at` | `timestamptz(3)` | 申请提交时刻，由服务端 `Clock` 写入；超过 7 天视为过期 | 申请卡片展示的发送时间 |
 

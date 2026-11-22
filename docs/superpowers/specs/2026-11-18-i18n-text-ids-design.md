@@ -2,7 +2,7 @@
 
 > 状态：待确认
 > 范围：客户端文案、卡牌 / 技能 / Token 展示文本、规则标识英文化、协议视图取值、文档与校验
-> 依据：[客户端技术基线](../../versions/v0.1/technical/architecture/client-stack.md)、[卡牌规范与数据](../../versions/v0.1/product/content/card-system.md)、[关键词与机制](../../versions/v0.1/product/rules/keywords-and-mechanics.md)
+> 依据：[客户端技术基线](../../current/technical/architecture/client-stack.md)、[卡牌规范与数据](../../current/product/content/card-system.md)、[关键词与机制](../../current/product/rules/keywords-and-mechanics.md)
 
 本文只描述国际化改造的目标、边界、机制与迁移方式；卡牌数值、技能效果与产品规则不在此复制，按链接引用。
 
@@ -51,7 +51,7 @@
 - 客户端 Godot 4.7 + GDScript，界面全部由代码构建，没有场景内静态文案；
 - 服务端 Rust，规则引擎消费 `server/data/v0.1/*.json`，数据由产品文档生成；
 - 客户端只消费服务端视图，不做规则判定；
-- 卡牌 / 技能 / Token 的源头是 `docs/versions/v0.1/product/content/` 下的实体文档；
+- 卡牌 / 技能 / Token 的源头是 `docs/current/product/content/` 下的实体文档；
 - 构建、生成与校验统一从 `make` 入口执行。
 
 ### 3.2 Godot 原生翻译的验证结论
@@ -195,7 +195,7 @@ locale/translations=PackedStringArray("res://text/zh_CN.zh_CN.translation")
 
 ### 7.2 关键词
 
-以 [关键词与机制](../../versions/v0.1/product/rules/keywords-and-mechanics.md) 的英文名为准，空格转下划线：
+以 [关键词与机制](../../current/product/rules/keywords-and-mechanics.md) 的英文名为准，空格转下划线：
 
 | 中文 | 英文名 | id |
 | --- | --- | --- |
@@ -340,7 +340,7 @@ locale/translations=PackedStringArray("res://text/zh_CN.zh_CN.translation")
 
 - `scripts/validate_docs.py` 使用英文 id 集合；
 - front matter id 与属性表中文名的映射由文档自身建立：同一 id 必须只有一个中文名；
-- 关键词 id 与 [关键词与机制](../../versions/v0.1/product/rules/keywords-and-mechanics.md) 的英文名一致；
+- 关键词 id 与 [关键词与机制](../../current/product/rules/keywords-and-mechanics.md) 的英文名一致；
 - `subtype` slug 合法且同一 slug 只有一个中文名；
 - `id=` 过滤值必须命中已存在的卡牌 id；
 - 文档统计按英文 id 计数，期望值不变。

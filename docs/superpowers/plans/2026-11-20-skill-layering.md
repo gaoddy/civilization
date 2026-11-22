@@ -34,7 +34,7 @@
 
 | 文件 | 动作 | 职责 |
 | --- | --- | --- |
-| `docs/versions/v0.1/product/content/card-nouns.md` | 新建 | 分类/玩法/特殊筛选值的卡面名词，以及关键词整段文案 |
+| `docs/current/product/content/card-nouns.md` | 新建 | 分类/玩法/特殊筛选值的卡面名词，以及关键词整段文案 |
 | `scripts/skill_templates.py` | 新建 | 模板与参数解析、名词表加载、效果展开、文案渲染 |
 | `scripts/gen_card_data.py` | 修改 | `skill_entry` 支持模板实例；旧 `effects` 路径保留到收尾 |
 | `scripts/gen_text.py` | 修改 | 技能文本取渲染结果 |
@@ -44,15 +44,15 @@
 | `Makefile` | 修改 | 新增 `docs-render`，`data-check` 接入文档漂移检查 |
 | `tests/test_skill_templates.py` | 新建 | 模板解析、展开、渲染、校验单测 |
 | `tests/test_skill_generation.py` | 新建 | 生成链双路径一致性与文档渲染单测 |
-| `docs/versions/v0.1/product/content/skill-templates/*.md` | 新建 | 40–60 个模板实体 |
-| `docs/versions/v0.1/product/content/skills/*.md` | 修改 | 247 份实例改成 `template` + 参数 |
+| `docs/current/product/content/skill-templates/*.md` | 新建 | 40–60 个模板实体 |
+| `docs/current/product/content/skills/*.md` | 修改 | 247 份实例改成 `template` + 参数 |
 
 ---
 
 ### Task 1: 卡面名词表与参数声明解析
 
 **Files:**
-- Create: `docs/versions/v0.1/product/content/card-nouns.md`
+- Create: `docs/current/product/content/card-nouns.md`
 - Create: `scripts/skill_templates.py`
 - Test: `tests/test_skill_templates.py`
 
@@ -71,7 +71,7 @@ import skill_templates
 class NounTableTest(unittest.TestCase):
     def test_load_nouns_requires_all_tables(self):
         nouns = skill_templates.load_nouns(
-            pathlib.Path("docs/versions/v0.1/product/content/card-nouns.md"))
+            pathlib.Path("docs/current/product/content/card-nouns.md"))
         self.assertEqual(nouns.taxon["animalia"], "动物")
         self.assertEqual(nouns.playstyle["machine"], "机械")
         self.assertEqual(nouns.special["scholar=true"], "学者")
@@ -104,7 +104,7 @@ Expected: PASS（2 tests）
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/card-nouns.md scripts/skill_templates.py tests/test_skill_templates.py
+git add docs/current/product/content/card-nouns.md scripts/skill_templates.py tests/test_skill_templates.py
 git commit -m "feat(data): 增加卡面名词表与模板参数声明解析"
 ```
 
@@ -258,7 +258,7 @@ Expected: PASS（7 tests）
 - [ ] **Step 5: 提交**
 
 ```bash
-git add scripts/skill_templates.py docs/versions/v0.1/product/content/skill-templates tests/test_skill_templates.py
+git add scripts/skill_templates.py docs/current/product/content/skill-templates tests/test_skill_templates.py
 git commit -m "feat(data): 实现技能模板效果展开与文案渲染"
 ```
 
@@ -503,8 +503,8 @@ git commit -m "feat(data): 增加模板迁移装配器与逐字校验"
 ### Task 8: 迁移战斗效果牌技能（OnPlayEffect，63）
 
 **Files:**
-- Create: `docs/versions/v0.1/product/content/skill-templates/*.md`（本批所需模板）
-- Modify: `docs/versions/v0.1/product/content/skills/*.md`（该批技能）
+- Create: `docs/current/product/content/skill-templates/*.md`（本批所需模板）
+- Modify: `docs/current/product/content/skills/*.md`（该批技能）
 
 - [ ] **Step 1: 写模板**
 
@@ -525,7 +525,7 @@ Expected: 校验通过；`生成数据无漂移`；diff 只包含 `content/skill
 - [ ] **Step 4: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/skill-templates docs/versions/v0.1/product/content/skills
+git add docs/current/product/content/skill-templates docs/current/product/content/skills
 git commit -m "refactor(data): 战斗效果牌技能迁移到模板实例"
 ```
 
@@ -534,8 +534,8 @@ git commit -m "refactor(data): 战斗效果牌技能迁移到模板实例"
 ### Task 9: 迁移亡语技能（OnDeath，39）
 
 **Files:**
-- Create: `docs/versions/v0.1/product/content/skill-templates/*.md`（本批模板）
-- Modify: `docs/versions/v0.1/product/content/skills/*.md`（OnDeath 技能）
+- Create: `docs/current/product/content/skill-templates/*.md`（本批模板）
+- Modify: `docs/current/product/content/skills/*.md`（OnDeath 技能）
 
 - [ ] **Step 1: 出拟合报告**
 
@@ -563,7 +563,7 @@ Expected: 校验通过；数据无漂移；diff 只含模板目录与 OnDeath �
 - [ ] **Step 6: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/skill-templates docs/versions/v0.1/product/content/skills
+git add docs/current/product/content/skill-templates docs/current/product/content/skills
 git commit -m "refactor(data): 亡语技能迁移到模板实例"
 ```
 
@@ -703,7 +703,7 @@ Expected: 全绿，数据无漂移
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/skill-templates docs/versions/v0.1/product/content/skills
+git add docs/current/product/content/skill-templates docs/current/product/content/skills
 git commit -m "refactor(data): 其余触发与关键词技能迁移到模板实例"
 ```
 
@@ -721,7 +721,7 @@ Expected: 完成；随后 `git status` 应无改动（迁移批次已逐字保�
 
 - [ ] **Step 2: 检查卡牌 diff 范围**
 
-Run: `git diff --stat`，`git diff -- docs/versions/v0.1/product/content/cards`
+Run: `git diff --stat`，`git diff -- docs/current/product/content/cards`
 Expected: 无卡牌 diff；若出现，只允许「## 效果」与属性派生行，逐条核对后修正
 
 - [ ] **Step 3: 全量验证**
@@ -732,7 +732,7 @@ Expected: 数据无漂移；全部单测通过；输出仍为「随从 309 张�
 - [ ] **Step 4: 提交（如有派生改动）**
 
 ```bash
-git add docs/versions/v0.1/product/content
+git add docs/current/product/content
 git commit -m "docs(data): 重算技能与卡牌派生文案"
 ```
 
@@ -741,11 +741,11 @@ git commit -m "docs(data): 重算技能与卡牌派生文案"
 ### Task 16: 文档回写、删除旧路径与最终验收
 
 **Files:**
-- Modify: `docs/versions/v0.1/product/content/skill-system.md`
-- Modify: `docs/versions/v0.1/product/content/skills/README.md`
-- Modify: `docs/versions/v0.1/product/content/card-system.md`（技能行口径）
-- Modify: `docs/versions/v0.1/product/rules/keywords-and-mechanics.md` §9.4
-- Create: `docs/versions/v0.1/product/content/skill-templates/README.md`
+- Modify: `docs/current/product/content/skill-system.md`
+- Modify: `docs/current/product/content/skills/README.md`
+- Modify: `docs/current/product/content/card-system.md`（技能行口径）
+- Modify: `docs/current/product/rules/keywords-and-mechanics.md` §9.4
+- Create: `docs/current/product/content/skill-templates/README.md`
 - Modify: `scripts/gen_card_data.py`、`scripts/validate_docs.py`（删除旧 `effects` 分支）
 - Delete: `scripts/skill_templates_propose.py`
 
@@ -765,7 +765,7 @@ Expected: 全绿；`git diff server/crates protocol client` 为空
 - [ ] **Step 4: 提交**
 
 ```bash
-git add docs/versions/v0.1/product scripts Makefile tests
+git add docs/current/product scripts Makefile tests
 git commit -m "refactor(data): 收尾技能分层迁移并回写文档"
 ```
 

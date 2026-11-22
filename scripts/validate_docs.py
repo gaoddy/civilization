@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""校验 docs/versions/v0.1/product/content 下的技能与卡牌实体文档，
+"""校验 docs/current/product/content 下的技能与卡牌实体文档，
 以及 docs/versions/v0.2/product/content 下的成就实体文档。
 
 只使用标准库；front matter 仅支持本项目生成的三种形式：
@@ -20,7 +20,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import i18n_terms
 import skill_templates
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v0.1" / "product" / "content"
+ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "current" / "product" / "content"
 V02_ROOT = pathlib.Path(__file__).resolve().parent.parent / "docs" / "versions" / "v0.2" / "product" / "content"
 RULES_FILE = ROOT.parent / "rules" / "keywords-and-mechanics.md"
 

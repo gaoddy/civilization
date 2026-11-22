@@ -38,7 +38,7 @@
 
 ## 设计
 
-### 新增 `docs/versions/v0.1/technical/architecture/client-stack.md`
+### 新增 `docs/current/technical/architecture/client-stack.md`
 
 标注「方案未实施」，内容固定为：
 

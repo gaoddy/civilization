@@ -1,6 +1,6 @@
 //! 回合结算：配对、把战斗接入回合、伤害、淘汰与排名。
 //!
-//! 规则口径见 `docs/versions/v0.1/product/rules/core-rules.md`
+//! 规则口径见 `docs/current/product/rules/core-rules.md`
 //! §5.3–§5.4、§7、§8.3。配对随机性只来自 [`Stream::Matchmaking`]，
 //! 战斗随机性全部发生在 [`crate::combat::simulate`] 内部；本模块不含浮点，
 //! 也不读取时间、环境或全局随机源。

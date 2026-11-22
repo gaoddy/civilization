@@ -58,7 +58,7 @@ tests/protocol/
   test_docs_consistency.py
   test_docs_links.py
 Makefile                      # test / protocol / protocol-check
-docs/versions/v0.1/technical/architecture/
+docs/current/technical/architecture/
   protocol.md                 # 人工规则文档
   protocol-messages.md        # 生成字段表
 docs/superpowers/specs/2026-11-15-protocol-design.md  # 已存在
@@ -326,7 +326,7 @@ git commit -m "feat(protocol): 生成 GDScript 协议常量"
 
 **Files:**
 - Create: `scripts/gen_protocol_docs.py`
-- Create: `docs/versions/v0.1/technical/architecture/protocol-messages.md`
+- Create: `docs/current/technical/architecture/protocol-messages.md`
 - Test: `tests/protocol/test_gen_protocol_docs.py`
 
 **Interfaces:**
@@ -375,7 +375,7 @@ Expected: PASS（2 个测试）。
 - [ ] **Step 5: 提交**
 
 ```bash
-git add scripts/gen_protocol_docs.py docs/versions/v0.1/technical/architecture/protocol-messages.md tests/protocol/test_gen_protocol_docs.py
+git add scripts/gen_protocol_docs.py docs/current/technical/architecture/protocol-messages.md tests/protocol/test_gen_protocol_docs.py
 git commit -m "feat(protocol): 生成协议字段表"
 ```
 
@@ -453,9 +453,9 @@ git commit -m "build: 新增 make test 与协议生成目标"
 ### Task 6: 人工协议文档
 
 **Files:**
-- Create: `docs/versions/v0.1/technical/architecture/protocol.md`
-- Modify: `docs/versions/v0.1/technical/architecture/README.md`
-- Modify: `docs/versions/v0.1/technical/README.md`
+- Create: `docs/current/technical/architecture/protocol.md`
+- Modify: `docs/current/technical/architecture/README.md`
+- Modify: `docs/current/technical/README.md`
 - Test: `tests/protocol/test_docs_links.py`
 
 **Interfaces:**
@@ -522,9 +522,9 @@ Expected: PASS。
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/technical/architecture/protocol.md \
-        docs/versions/v0.1/technical/architecture/README.md \
-        docs/versions/v0.1/technical/README.md \
+git add docs/current/technical/architecture/protocol.md \
+        docs/current/technical/architecture/README.md \
+        docs/current/technical/README.md \
         tests/protocol/test_docs_links.py
 git commit -m "docs: 新增 v0.1 通信协议规则文档"
 ```
@@ -534,9 +534,9 @@ git commit -m "docs: 新增 v0.1 通信协议规则文档"
 ### Task 7: 基线文档改写与全局一致性
 
 **Files:**
-- Modify: `docs/versions/v0.1/technical/architecture/network-architecture.md`
-- Modify: `docs/versions/v0.1/technical/architecture/server-stack.md`
-- Modify: `docs/versions/v0.1/technical/architecture/client-stack.md`
+- Modify: `docs/current/technical/architecture/network-architecture.md`
+- Modify: `docs/current/technical/architecture/server-stack.md`
+- Modify: `docs/current/technical/architecture/client-stack.md`
 - Modify: `docs/versions/v0.1/open-questions.md`
 - Test: `tests/protocol/test_docs_consistency.py`
 
@@ -588,7 +588,7 @@ Expected: 三条命令均退出 0。
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/technical docs/versions/v0.1/open-questions.md tests/protocol/test_docs_consistency.py
+git add docs/current/technical docs/versions/v0.1/open-questions.md tests/protocol/test_docs_consistency.py
 git commit -m "docs: 同步协议变更到联网与技术基线"
 ```
 
@@ -612,7 +612,7 @@ Expected: 输出为空（生成后无差异）。
 - [ ] **Step 3: 检查变更范围**
 
 Run: `git diff develop --stat`
-Expected: 只含 `protocol/`、`scripts/`、`tests/protocol/`、`Makefile`、`docs/versions/v0.1/technical/`、`docs/versions/v0.1/open-questions.md`、`docs/superpowers/specs/`；无 `server/`、`client/` 目录。
+Expected: 只含 `protocol/`、`scripts/`、`tests/protocol/`、`Makefile`、`docs/current/technical/`、`docs/versions/v0.1/open-questions.md`、`docs/superpowers/specs/`；无 `server/`、`client/` 目录。
 
 - [ ] **Step 4: 提交（若有遗漏修正）**
 

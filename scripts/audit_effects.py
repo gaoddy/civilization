@@ -17,7 +17,7 @@ import skill_templates
 import validate_docs
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-DEFAULT_SKILLS = ROOT / "docs" / "versions" / "v0.1" / "product" / "content" / "skills"
+DEFAULT_SKILLS = ROOT / "docs" / "current" / "product" / "content" / "skills"
 
 # 带层数/数值的关键词：赋予时必须带 value，其余关键词禁止 value。
 # breed / assemble 的层数写在 keyword 上（如「breed 2」），contagion 的层数写在 value 上。

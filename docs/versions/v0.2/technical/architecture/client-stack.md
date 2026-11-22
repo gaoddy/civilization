@@ -1,7 +1,7 @@
 # 客户端技术基线增量
 
 > 状态：方案未实施
-> 依赖：[v0.1 客户端技术基线](../../../v0.1/technical/architecture/client-stack.md)、[联网与技术架构](../../../v0.1/technical/architecture/network-architecture.md)
+> 依赖：[v0.1 客户端技术基线](../../../../current/technical/architecture/client-stack.md)、[联网与技术架构](../../../../current/technical/architecture/network-architecture.md)
 
 本文记录 v0.2 客户端相对 v0.1 的增量：移动端适配与两端验收；不重复 v0.1 已确定的引擎、语言与协议。
 
@@ -25,5 +25,5 @@
 
 ## 相关文档
 
-- [v0.1 客户端技术基线](../../../v0.1/technical/architecture/client-stack.md)
+- [v0.1 客户端技术基线](../../../../current/technical/architecture/client-stack.md)
 - [待确认事项](../../open-questions.md)

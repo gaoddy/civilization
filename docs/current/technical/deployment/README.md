@@ -1,7 +1,7 @@
 # 部署与接入
 
 > 状态：清单与发布入口已实现；集群首次发布尚未执行（见文末「待执行」）。
-> 关联：[服务端技术基线](../../../versions/v0.1/technical/architecture/server-stack.md)、[房间服务与联网](../room-service/README.md)。
+> 关联：[服务端技术基线](../architecture/server-stack.md)、[房间服务与联网](../room-service/README.md)。
 
 本文记录 `room-service` 接入 platform 共享 Kubernetes 环境的现状：环境、镜像、配置、发布命令、客户端连接方式与排障。
 

@@ -2,7 +2,7 @@
 
 > 状态：待审批
 > 日期：2026-11-14
-> 落点：直接改写 `docs/versions/v0.1/product/` 产品基线（v0.1 尚未实施，不保留旧口径）
+> 落点：直接改写 `docs/current/product/` 产品基线（v0.1 尚未实施，不保留旧口径）
 
 ## 1. 意图与原因
 
@@ -38,11 +38,11 @@
 
 | 约束 | 来源 |
 | --- | --- |
-| 一条效果只能使用既有触发时机与关键词词表 | [关键词与机制](../../versions/v0.1/product/rules/keywords-and-mechanics.md) §1、§8 |
-| 每次改动后必须通过 `python3 scripts/validate_docs.py` | [卡牌规范与数据](../../versions/v0.1/product/content/card-system.md) §校验 |
+| 一条效果只能使用既有触发时机与关键词词表 | [关键词与机制](../../current/product/rules/keywords-and-mechanics.md) §1、§8 |
+| 每次改动后必须通过 `python3 scripts/validate_docs.py` | [卡牌规范与数据](../../current/product/content/card-system.md) §校验 |
 | 单局 20 回合、40 点生命、20–30 分钟 | [v0.1 版本入口](../../versions/v0.1/README.md) |
 | 不新增关键词，除非同步更新词表与设计总纲 | [版本规划与风险](../../version-roadmap.md) §1 |
-| 学者攻击力固定 0，生命取同星级区间上浮 30% | [数值与经济](../../versions/v0.1/product/systems/economy-and-numbers.md) §5 |
+| 学者攻击力固定 0，生命取同星级区间上浮 30% | [数值与经济](../../current/product/systems/economy-and-numbers.md) §5 |
 
 ## 4. 方案对比
 
@@ -138,18 +138,18 @@
 
 | 文件 | 改动 |
 | --- | --- |
-| [design-overview.md](../../versions/v0.1/product/overview/design-overview.md) | §6.2 升级费用、§6.3 商店等级与星级、§6.7 时代、§6.9 伤害；"五时代"表述 |
-| [eras-and-scenarios.md](../../versions/v0.1/product/rules/eras-and-scenarios.md) | 七时代总表、推进表、各时代设计意图（新增古典、工业两节） |
-| [keywords-and-mechanics.md](../../versions/v0.1/product/rules/keywords-and-mechanics.md) | §7 解锁表改 7 行并按卡池最小星级反推；词表本身不变 |
-| [economy-and-numbers.md](../../versions/v0.1/product/systems/economy-and-numbers.md) | §2 升级表 6 行、§3 概率矩阵 7 行、§4 份数 7 行、§5 星级区间 7 行、§7 健康指标 |
-| [core-rules.md](../../versions/v0.1/product/rules/core-rules.md) | `UpgradeEra` 最大时代 5→7；伤害公式时代上限 |
-| [card-system.md](../../versions/v0.1/product/content/card-system.md) | `level` 1–7、总数与星级分布、新增卡规则 |
-| [hero-system.md](../../versions/v0.1/product/content/hero-system.md) 与 [modes-and-achievements.md](../../versions/v0.1/product/systems/modes-and-achievements.md) | 「每时代一位坐镇英雄」由 5 位改 7 位（扩展层口径） |
-| [balance-analysis.md](../../versions/v0.1/product/content/balance-analysis.md) | 按新星级与经济重算 |
+| [design-overview.md](../../current/product/overview/design-overview.md) | §6.2 升级费用、§6.3 商店等级与星级、§6.7 时代、§6.9 伤害；"五时代"表述 |
+| [eras-and-scenarios.md](../../current/product/rules/eras-and-scenarios.md) | 七时代总表、推进表、各时代设计意图（新增古典、工业两节） |
+| [keywords-and-mechanics.md](../../current/product/rules/keywords-and-mechanics.md) | §7 解锁表改 7 行并按卡池最小星级反推；词表本身不变 |
+| [economy-and-numbers.md](../../current/product/systems/economy-and-numbers.md) | §2 升级表 6 行、§3 概率矩阵 7 行、§4 份数 7 行、§5 星级区间 7 行、§7 健康指标 |
+| [core-rules.md](../../current/product/rules/core-rules.md) | `UpgradeEra` 最大时代 5→7；伤害公式时代上限 |
+| [card-system.md](../../current/product/content/card-system.md) | `level` 1–7、总数与星级分布、新增卡规则 |
+| [hero-system.md](../../current/product/content/hero-system.md) 与 [modes-and-achievements.md](../../current/product/systems/modes-and-achievements.md) | 「每时代一位坐镇英雄」由 5 位改 7 位（扩展层口径） |
+| [balance-analysis.md](../../current/product/content/balance-analysis.md) | 按新星级与经济重算 |
 | [v0.1/README.md](../../versions/v0.1/README.md)、[versions/README.md](../../versions/README.md)、[version-roadmap.md](../../version-roadmap.md) | 时代数、卡数、工程顺序、人周估算 |
 | [open-questions.md](../../versions/v0.1/open-questions.md) | 登记本次新增的待实测项 |
 | `scripts/validate_docs.py` | `ERAS` 增古典/工业；`RANGE`、`CAP` 增 7 星；`EXPECT_ERA`、`EXPECT_LEVEL`、`EXPECT_TRIBE` 重算；新增"关键词-时代一致性"校验 |
-| 新卡文档 | `docs/versions/v0.1/product/content/cards/` 下新增约 36 份 |
+| 新卡文档 | `docs/current/product/content/cards/` 下新增约 36 份 |
 | 技术文档 | 全局检索"五时代/1–5/星级 1–6"表述并同步 |
 
 ### 5.8 兼容性与迁移

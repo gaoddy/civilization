@@ -473,4 +473,4 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - [房间服务与联网](room-service/README.md)
 - [规则引擎与模拟器](rule-engine-and-simulator.md)
 - [技术现状索引](README.md)
-- [客户端技术基线](../../versions/v0.1/technical/architecture/client-stack.md)
+- [客户端技术基线](architecture/client-stack.md)

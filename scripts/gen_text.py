@@ -20,7 +20,7 @@ import validate_docs
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CSV_PATH = ROOT / "client" / "text" / "zh_CN.csv"
-CONTENT = pathlib.Path("docs") / "versions" / "v0.1" / "product" / "content"
+CONTENT = pathlib.Path("docs") / "current" / "product" / "content"
 
 
 def _unescape(value):

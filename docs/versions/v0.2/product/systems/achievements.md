@@ -1,6 +1,6 @@
 # 成就
 
-> 依赖：[设计总纲](../../../v0.1/product/overview/design-overview.md)、[模式](../../../v0.1/product/systems/modes.md)、[核心规则](../../../v0.1/product/rules/core-rules.md)
+> 依赖：[设计总纲](../../../../current/product/overview/design-overview.md)、[模式](../../../../current/product/systems/modes.md)、[核心规则](../../../../current/product/rules/core-rules.md)
 > 状态：方案未实施（Steam 侧成就契约与映射已实现，见[当前发行渠道与账号](../../../../current/product/accounts-and-distribution.md) §4）
 
 本文描述 v0.2 新增的局内成就系统与设计原则。归属版本产品基线的系统规则。
