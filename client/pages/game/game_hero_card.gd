@@ -68,6 +68,16 @@ func present_portrait(display_name: String, glyph: String, tint: Color, art_path
 	tooltip_text = display_name
 
 
+## 演出克隆：按当前英雄与生命重建一张同状态卡。
+##
+## `AvatarFrame` 在 `_init()` 里建子节点，`duplicate()` 会在副本上再跑一遍 `_init()`，
+## 默认子层叠在复制层之上，头像与描边会被盖住；英雄卡克隆一律走重建。
+func replica() -> GameHeroCard:
+	var copy := GameHeroCard.new()
+	copy.refresh(hero_id, hp, hp_cap)
+	return copy
+
+
 ## 生命牌贴右下角，与英雄行 84 高无关；只显示当前值，上限由悬停详情给出。
 func _build_hp_plate() -> void:
 	var margin := MarginContainer.new()
