@@ -97,11 +97,12 @@
 | `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
 | `rank-badge-size` | 18 | 座位行名次圆形角标直径，圆角取直径一半；圆心收在头像内左上 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
-| `card-width` / `-height` | 112 / 146 | 商店、棋盘、手牌与战斗只读卡（含拖拽占位） |
+| `card-width` / `-height` | 112 / 146 | 手牌、选择浮层候选与通用卡面（含拖拽占位） |
+| `minion-card-width` / `-height` | 112 / 146 | 棋盘与商店的随从卡（含拖拽占位）；桌面与 `card-*` 相同，手机放大一档到 78 / 102 |
 | `card-cover-inset` | 3 | 卡面美术向内收的距离，保证方形美术的四角落在卡面圆角以内 |
 | `card-info-height` | 90 | 有介绍时的卡面信息区基础高度，容纳名称与数值；手牌介绍超出时信息区向上扩展 |
 | `card-info-compact-height` | 56 | 无介绍时的卡面信息区高度，只容纳名称与数值 |
-| `hand-card-overlap` | 32 | 手牌相邻卡的交叠宽度；槽位步进 = `card-width - hand-card-overlap` = 80，十张单行 |
+| `hand-card-overlap` | 32 | 手牌相邻卡的交叠宽度；槽位步进 = `card-width - hand-card-overlap`，桌面 80、手机 46，十张单行 |
 | `hand-hover-scale` | 1.12 | 手牌悬停放大倍数，以底边中点为轴；小数令牌用 `UITheme.factor` 读取，不要用 `metric` |
 | `gallery-toc-width` | 140 | 桌面与 iPad 图鉴分类目录宽度；手机不使用左栏目录 |
 | `gallery-category-panel-width` | 360 | 手机图鉴分类面板宽度，两列排布「全部」与 13 个玩法 |
@@ -129,7 +130,8 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 
 | 令牌 | 取值 | 用途 |
 | --- | --- | --- |
-| `card-width-compact` / `card-height-compact` | 70 / 91 | iPhone 商店、棋盘、手牌与战斗只读卡；保持桌面 112:146 的卡形 |
+| `card-width-compact` / `card-height-compact` | 70 / 91 | iPhone 手牌与选择浮层候选卡；保持桌面 112:146 的卡形 |
+| `minion-card-width-compact` / `minion-card-height-compact` | 78 / 102 | iPhone 棋盘与商店的随从卡；比手牌大一档，保持 112:146 的卡形 |
 | `card-info-height-compact` | 60 | iPhone 有介绍时的卡面信息区（手牌） |
 | `avatar-rail-compact` | 40 | iPhone 座位行边长兜底值，左栏尺寸未解算时使用；实际边长按栏内宽与人均可用高度解算 |
 | `seat-hp-bar-height-compact` | 4 | iPhone 座位行血量条高度 |

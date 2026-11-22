@@ -41,7 +41,7 @@ func _init() -> void:
     name = "ShopView"
     custom_minimum_size = Vector2(
         0, UITheme.stage_metric("hero-card-size") + _stage_gap()
-            + UITheme.stage_metric("card-height")
+            + UITheme.stage_metric("minion-card-height")
     )
     add_theme_constant_override("separation", UITheme.space("space-none"))
 
@@ -98,7 +98,7 @@ func _init() -> void:
     _shop_panel.name = "ShopPanel"
     _shop_panel.style_variant = "bare"
     _shop_panel.hover_variant = "accent-bare"
-    _shop_panel.custom_minimum_size = Vector2(0, UITheme.stage_metric("card-height"))
+    _shop_panel.custom_minimum_size = Vector2(0, UITheme.stage_metric("minion-card-height"))
     _shop_panel.sell_dropped.connect(func(payload: Dictionary) -> void: sell_dropped.emit(payload))
     _shop_panel.hover_changed.connect(func(hovering: bool, refund: int) -> void: sell_hover.emit(hovering, refund))
     add_child(_shop_panel)
@@ -247,7 +247,7 @@ func _refresh_shop(state: GameUiState) -> void:
         var panel := ShopCard.new()
         panel.name = "ShopSlot%d" % index
         panel.add_theme_stylebox_override("panel", UITheme.panel_style("raised-flush"))
-        panel.custom_minimum_size = Vector2(UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height"))
+        panel.custom_minimum_size = Vector2(UITheme.stage_metric("minion-card-width"), UITheme.stage_metric("minion-card-height"))
         panel.payload = {
             "epoch": state.epoch,
             "shopSlot": index,
