@@ -903,10 +903,12 @@ fn four_pairs_emit_events_in_pairing_order_and_record_opponents() {
 #[test]
 fn action_cap_draw_uses_settle_seat_tiebreak() {
     let (mut engine, mut state) = Engine::new(test_catalog(), [12; 32], test_playstyles());
-    add_keyword_card(&mut engine.catalog, "wind", 1, 0, 1, "windfury");
-    add_minion_card(&mut engine.catalog, "wall", 1, 0, 100);
+    add_keyword_card(&mut engine.catalog, "wind", 1, 1, 100, "windfury");
+    add_minion_card(&mut engine.catalog, "wall", 1, 1, 500);
 
-    // 100 个 0 攻连击随从共 200 个令牌，把行动数推到上限而双方仍存活。
+    // 100 个 1 攻连击随从共 200 个令牌，把行动数推到上限而双方仍存活。
+    // 进一步抬高墙的生命，避免在到达上限前被击杀；双方都保留攻击力，
+    // 不触发无伤害僵局。
     state.phase = Phase::Combat;
     state.first_seat = 1;
     state.players[0].board = vec![minion(&engine.catalog, 500, "wall")];

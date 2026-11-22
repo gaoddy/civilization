@@ -345,11 +345,13 @@ fn resolve_combat(
 
 /// 本场真实战的胜者：`None` 表示平局。
 ///
-/// 双方同回合清场（两侧 survivors 都为空）一律平局；行动数到上限而双方仍有
-/// 存活者时仍按 §5.3 的生命 → 累计伤害 → 座位判胜。
+/// 双方同回合清场（两侧 survivors 都为空）与无伤害僵局（`log.stalemate`）
+/// 一律平局；行动数到上限而双方仍有存活者时仍按 §5.3 的生命 → 累计伤害 →
+/// 座位判胜。
 fn seat_winner(state: &GameState, log: &combat::CombatLog, a: Seat, b: Seat) -> Option<Seat> {
     match log.winner {
         Some(winner) => Some(winner),
+        None if log.stalemate => None,
         None if log.attacker_survivors.is_empty() && log.defender_survivors.is_empty() => None,
         None => Some(tie_break(state, a, b)),
     }
@@ -555,7 +557,7 @@ fn resolve_real(
 
 /// 幽灵战：落单座位对战一名出局者的最终阵容，按真实伤害结算。
 ///
-/// 双方同回合清场一律平局；幽灵获胜时落单座位按 [`damage_formula`] 扣血，
+/// 双方同回合清场或无伤害僵局一律平局；幽灵获胜时落单座位按 [`damage_formula`] 扣血，
 /// 落单座位获胜时计入 `last_won`/`last_winner`。幽灵侧不结算英雄被动，也不
 /// 写回牌池、手牌、持久棋盘或 `previous_opponent`；落单座位自己的成长/传染与
 /// 战斗日志副作用（召唤扣池、入手牌复制）照常写回，与真实战一致。
@@ -633,9 +635,11 @@ fn resolve_ghost(
     write_back_combat_log(catalog, state, &log);
     write_back_persistent(state, seat, &log.attacker_final);
 
-    // 双方同回合清场一律平局；幽灵侧清场而己方仍有存活才算幽灵获胜。
+    // 双方同回合清场或无伤害僵局一律平局；幽灵侧清场而己方仍有存活才算
+    // 幽灵获胜。
     let cleared = log.attacker_survivors.is_empty() && log.defender_survivors.is_empty();
-    let ghost_won = ghost_seat.is_some() && !cleared && log.attacker_survivors.is_empty();
+    let ghost_won =
+        ghost_seat.is_some() && !cleared && !log.stalemate && log.attacker_survivors.is_empty();
     // 星级和取「幽灵战前棋盘 × 幽灵存活」，口径同真实战的「胜方战前棋盘 × 存活」。
     let stars = ghost
         .iter()
@@ -649,14 +653,14 @@ fn resolve_ghost(
     } else {
         0
     };
-    if !ghost_won && !cleared {
+    if !ghost_won && !cleared && !log.stalemate {
         state.last_won.insert(seat);
         state.last_winner = Some(seat);
     }
 
     let winner = if ghost_won {
         ghost_seat
-    } else if cleared {
+    } else if cleared || log.stalemate {
         None
     } else {
         Some(seat)
@@ -1249,6 +1253,7 @@ mod tests {
             attacker_survivors: Vec::new(),
             defender_survivors: Vec::new(),
             winner: None,
+            stalemate: false,
             action_count: 0,
             trigger_count: 0,
             summon_count: 0,
@@ -1347,6 +1352,23 @@ mod tests {
         log.attacker_survivors = vec![1]; // 双方都还有存活者：行动上限，不是清场
         log.defender_survivors = vec![2];
         assert_eq!(seat_winner(&state, &log, 0, 1), Some(0));
+    }
+
+    #[test]
+    fn no_damage_stalemate_is_a_draw() {
+        let (_, mut state) = Engine::new(test_catalog(), [7; 32], test_playstyles());
+        state.players[0].hp = 30;
+        state.players[1].hp = 10;
+        let mut log = empty_log();
+        log.winner = None;
+        log.stalemate = true;
+        log.attacker_survivors = vec![1];
+        log.defender_survivors = vec![2];
+        assert_eq!(
+            seat_winner(&state, &log, 0, 1),
+            None,
+            "无伤害僵局优先于生命与座位判据"
+        );
     }
 
     #[test]
