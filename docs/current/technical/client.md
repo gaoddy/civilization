@@ -10,8 +10,8 @@
 
 ```
 client/
-  project.godot              # 主场景 login.tscn；autoload：ScreenProfile、WindowSizer、GameStore、CardDB、Net、Sfx
-  export_presets.cfg         # macOS 预设（Universal、未签名）与 iOS 预设（开发签名）
+  project.godot              # 主场景 login.tscn；autoload：ScreenProfile、WindowSizer、GameStore、CardDB、Net、Sfx、LocalServer
+  export_presets.cfg         # macOS 预设（Universal、未签名）、macOS 本地调试预设（embedded_server）与 iOS 预设（开发签名）
   icon.png                   # 应用图标 1024×1024；iOS 导出按尺寸缩放生成
   .gitignore                 # 忽略 .godot/ 与 *.uid
   autoload/
@@ -21,6 +21,7 @@ client/
     ws_client.gd             # WebSocketPeer、自动重连、信封编解码与分发
     card_db.gd               # 只读卡牌/技能展示表与科学分类树；展示文本按文本 id 从文本表取
     sfx.gd                   # 对局音效播放池、场景/卡牌资源路径与默认音效回落（autoload Sfx）
+    local_server.gd          # 单机调试包：启动内嵌 room-service 与 sim、读取房间码并交给登录/大厅自动流程（autoload LocalServer）
   text/
     zh_CN.csv                # 唯一的运行时中文文本表（生成物 + 人工 key）
   assets/
@@ -138,6 +139,7 @@ client/
     ui_smoke_touch.tscn/.gd  # 触控：长按详情、抬手隐藏、位移取消、手牌槽触摸复位
     ui_smoke_layout.tscn/.gd # 安全区包裹与命中尺寸；960×540、1280×800/1280×960 下六页面不越界，八人对局积分榜不滚动，手机随从卡放大而手牌与英雄卡不变
     ui_smoke_platform.tscn/.gd # 设备换算：画布缩放、pt→画布、安全区与键盘（固定输入断言）
+    ui_smoke_local_server.tscn/.gd # 本地调试：房间码行解析、sidecar 路径与无 embedded_server 特性时不启用
     smoke_case.gd            # 冒烟公共断言与场景装载
     fixture.gd               # 冒烟用最小 PlayerView
     headless_game.tscn/.gd   # 无头对局驱动（1 客户端 + 7 机器人）
@@ -266,7 +268,8 @@ client/
 | `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet`，按 iPad Air 11 横屏物理分辨率开窗并进入平板档位 |
 | `make client-run-on-desktop` | 等价于 `make client-run CLIENT_DEVICE=desktop`，窗口按屏幕可用区自动收拢 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
-| `make client-smoke` | 用 glob 逐个运行 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`；任一场景断言失败时不输出 `UI_SMOKE_OK`，目标以非 0 退出 |
+| `make client-smoke` | 用 glob 逐个运行 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`；任一场景断言失败时不输出 `UI_SMOKE_OK`，目标以非 0 退出；`SMOKE=<名称>` 只跑 `ui_smoke_<名称>.tscn` |
+| `make client-export-local` | 依赖 `client-export-templates`、`client-import` 与 `m1b-build`；导出调试用 `output/desktop-local/Civilization.app`，并把 debug 的 `room-service`、`sim` 复制进 `Contents/MacOS/`；仅 macOS、仅本机调试，见 §8 |
 | `make ui-preview` | 真实窗口装载指定页面/场景并注入夹具，`FOCUS` 高亮子节点；不截图，窗口保持打开；见 §5 |
 | `make ui-preview-check` | 与 `ui-preview` 参数相同但自动退出，按 `VIEW_PREVIEW_OK` / `VIEW_PREVIEW_FAIL` 判定；只用于本机 GUI 冒烟 |
 | `make client-export-ios` | 导出 Xcode 工程并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
@@ -385,6 +388,18 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - Universal 导出要求 `project.godot` 启用 `rendering/textures/vram_compression/import_etc2_astc` 与 `import_s3tc_bptc`，缺失时 Godot 会拒绝导出。
 - 产物未做正式签名与公证：`codesign/codesign=0` 禁用导出时的重签，但可执行文件仍保留 Godot 模板内置的 ad-hoc 签名。首次打开需右键「打开」，或在「系统设置 → 隐私与安全性」中放行；经 zip 下载后解压的副本同样会被 Gatekeeper 拦截。
 - 导出物内置默认服务器地址：桌面 `ws://127.0.0.1:8080/ws`，移动端 `ws://cooter.local:8080/ws`；登录页「服务器」字段仍可手改。连接前主机名先解析为 IPv4，避免双栈主机名拿到 IPv6。
+
+### 单机调试包
+
+`client/export_presets.cfg` 另提供只用于本机自测的预设 `macOS Local Debug`（`preset.3`）：`platform="macOS"`、`custom_features="embedded_server"`、Universal、bundle id 与应用名同发行预设、不签名，`export_path` 为 `../output/desktop-local/Civilization.app`，用 `--export-debug` 导出。
+
+- `make client-export-local` 清空 `output/desktop-local/` 后导出，再复制 `server/target/debug/room-service` 与 `server/target/debug/sim` 到 `Civilization.app/Contents/MacOS/` 并校验可执行；不 zip、不签名。
+- 调试包启动时 `LocalServer` autoload 生效（仅 `OS.has_feature("embedded_server")` 为真）：先探测 `127.0.0.1:8080`，已有进程监听则复用（不启动自己的服务端），否则启动 `room-service --listen 127.0.0.1:8080` 并等待最多 10 秒；服务端就绪后启动 `sim dev --connect ws://127.0.0.1:8080/ws --intent-seed 0`，最多 15 秒内从 stdout 读取 `ROOM_CODE=<码>`。server 与 sim 的 stdout/stderr 写入 `user://local_debug.log`。
+- 登录页在服务端就绪后用预填的开发账号（`13900000000` / `123456` / `玩家A`）自动登录；大厅拿到房间码后填入并自动加入。先到大厅后到房间码时订阅 `room_code_ready` 补发，房间码只消费一次。启动失败时状态标签显示 ASCII 失败原因（如 `server_timeout`、`sidecar_missing`），登录按钮恢复可用。
+- `CIVILIZATION_LOCAL_AUTO=0` 只关闭自动登录与自动入房，服务端与机器人仍会启动，便于手测登录/大厅流程。
+- 应用退出时 `_exit_tree` 只 `OS.kill` 本产物启动的 server 与 sim；复用已有服务端时不 kill。崩溃残留的 sim 进程不自动清理，避免误杀其他进程；下次启动若 8080 已被占用则直接复用。
+- 产物为 debug 构建并含调试符号，未签名，只保证本机运行；sidecar 为宿主架构（arm64），Intel Mac 需另行构建。
+- 发行链路（`macOS`、`Steam`、`iOS` 预设与 `make client-export` / `client-export-steam` / `client-export-ios`）不带 `embedded_server` 特性，也不复制 sidecar；编辑器运行与冒烟同样没有该特性，`LocalServer` 不启动任何进程。
 
 ## 9. iOS 移动端
 
