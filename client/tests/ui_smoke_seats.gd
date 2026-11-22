@@ -1,12 +1,11 @@
 extends "res://tests/smoke_case.gd"
-## 座位行冒烟：头像 + 名次角标 + 血条、点击展开战报、展开态跨刷新记忆、血量夹紧。
+## 座位行冒烟：头像 + 名次角标 + 血条、悬停详情内的身份与对战记录、血量夹紧与名次重排。
 
 func _ready() -> void:
     await _check_seat_rows()
-    await _check_report_toggle()
-    await _check_report_position_composed()
     await _check_seat_detail()
-    await _check_expanded_memory()
+    await _check_detail_variants()
+    await _check_detail_position_composed()
     await _check_hp_clamp()
     await _check_live_rank_order()
     _finish()
@@ -98,24 +97,12 @@ func _row_of(rail: Node, player_id: String) -> Node:
     return null
 
 
-func _reports(instance: Node) -> Array:
-    return instance.find_children("SeatReport", "", true, false)
-
-
-## 行内固定部分的文本：排除 SeatReport 子树（战报里本来就有对手名）。
+## 行内文本：座位行自身不显示名字、血量与时代，这些只在悬停详情里出现。
 ## 头像与血条都可以是纯图形；未定名次的行没有角标文本，空串是合法结果。
 func _fixed_text(row: Node) -> String:
     var text := ""
     for child in row.find_children("*", "Label", true, false):
-        var cursor: Node = child
-        var in_report := false
-        while cursor != null and cursor != row:
-            if cursor.name == "SeatReport":
-                in_report = true
-                break
-            cursor = cursor.get_parent()
-        if not in_report:
-            text += str(child.text) + "\n"
+        text += str(child.text) + "\n"
     return text
 
 
@@ -308,87 +295,6 @@ func _check_seat_rows() -> void:
     await get_tree().process_frame
 
 
-func _check_report_toggle() -> void:
-    var instance := await _open(_view_with_log())
-    if instance == null:
-        return
-    var rail = instance.find_child("PlayersRail", true, false)
-    var row := _row_of(rail, "p0") if rail != null else null
-    if row == null:
-        _expect(false, "缺少 p0 座位行")
-        instance.queue_free()
-        return
-    await _push_click(instance, row.get_global_rect().get_center())
-    await get_tree().process_frame
-    var reports := _reports(instance)
-    _expect(reports.size() == 1, "点击座位行应展开一块 SeatReport，实际 %d" % reports.size())
-    if reports.size() == 1:
-        _expect(str(reports[0].get_meta("player_id", "")) == "p0", "展开的战报应属于被点击的座位")
-        var text := _node_text(reports[0])
-        _expect(
-            text.contains(TranslationServer.translate("ui.game.rail.turn") % 2),
-            "战报应显示回合：%s" % text,
-        )
-        _expect(text.contains("机器人C"), "战报应显示对手名：%s" % text)
-        _expect(
-            text.contains(TranslationServer.translate("ui.game.rail.win")),
-            "战报应显示胜负：%s" % text,
-        )
-        _expect(
-            text.contains(TranslationServer.translate("ui.game.rail.damage") % 7),
-            "战报应显示伤害：%s" % text,
-        )
-    # 再点同一行收起。
-    row = _row_of(rail, "p0")
-    await _push_click(instance, row.get_global_rect().get_center())
-    await get_tree().process_frame
-    _expect(_reports(instance).is_empty(), "再次点击应收起战报")
-    instance.queue_free()
-    await get_tree().process_frame
-
-
-## 内容框原点非零且整体缩放时，战报仍贴在被点座位行右侧并留在浮层内。
-## 直接把全局坐标当局部坐标（忽略原点与缩放）的做法会在这里失败。
-func _check_report_position_composed() -> void:
-    var instance := await _open_composed(_view_with_log())
-    if instance == null:
-        return
-    var host := instance.get_parent() as Control
-    var rail = instance.find_child("PlayersRail", true, false)
-    var report_layer := instance.find_child("ReportLayer", true, false) as Control
-    var row := _row_of(rail, "p0") if rail != null else null
-    if row == null or report_layer == null:
-        _expect(false, "组合用例缺少 p0 座位行或 ReportLayer")
-        host.queue_free()
-        return
-    var layer_scale := report_layer.get_global_transform().get_scale().x
-    _expect(not is_equal_approx(layer_scale, 1.0),
-        "组合用例战报层应有非 1 缩放，实际 %.4f" % layer_scale)
-    var layer_origin := report_layer.get_global_position()
-    _expect(not layer_origin.is_zero_approx(),
-        "组合用例战报层应有非零原点，实际 %s" % str(layer_origin))
-    await _push_click(instance, row.get_global_rect().get_center())
-    await get_tree().process_frame
-    await get_tree().process_frame
-    row = _row_of(rail, "p0")
-    var panel := report_layer.find_child("SeatReportPanel", true, false) as Control
-    if row == null or panel == null or not panel.visible:
-        _expect(false, "组合用例未展开战报面板")
-        host.queue_free()
-        await get_tree().process_frame
-        return
-    var row_global: Rect2 = row.get_global_rect()
-    var gap := float(UITheme.space("space-sm")) * layer_scale
-    var expected := Vector2(row_global.end.x + gap, row_global.position.y)
-    var actual := panel.get_global_rect().position
-    _expect(actual.distance_to(expected) < 0.5,
-        "战报应贴在座位行右侧：实际 %s 期望 %s" % [str(actual), str(expected)])
-    _expect(report_layer.get_global_rect().grow(1.0).has_point(actual),
-        "战报应落在浮层内：%s" % str(actual))
-    host.queue_free()
-    await get_tree().process_frame
-
-
 func _check_seat_detail() -> void:
     var instance := await _open(_view_with_log())
     if instance == null:
@@ -404,108 +310,156 @@ func _check_seat_detail() -> void:
     _expect(panel != null and panel.is_visible_in_tree(), "悬停座位行应显示详情面板")
     var text := _node_text(panel) if panel != null else ""
     _expect(text.contains("玩家A"), "座位详情应显示名字：%s" % text)
-    _expect(text.contains("35/40"), "座位详情应显示生命当前/上限：%s" % text)
     _expect(
-        text.contains(TranslationServer.translate("enum.era.prehistoric")),
-        "座位详情应显示时代名：%s" % text,
+        text.contains(TranslationServer.translate("ui.game.side_panel.rank") % 1),
+        "座位详情顶部应显示名次：%s" % text,
     )
     _expect(
-        text.contains(TranslationServer.translate("ui.game.detail.alive")),
-        "座位详情应显示存活状态：%s" % text,
+        text.contains(CardDB.display_name("darwin")),
+        "座位详情顶部应显示英雄：%s" % text,
+    )
+    _expect(
+        text.contains(CardDB.era_name(1)),
+        "座位详情顶部应显示时代：%s" % text,
+    )
+    _expect(
+        text.contains("%s %d" % [TranslationServer.translate("ui.game.detail.minions"), 4]),
+        "座位详情顶部应显示随从数：%s" % text,
+    )
+    _expect(text.contains("35/40"), "座位详情应显示生命当前/上限：%s" % text)
+    for absent in [
+        "ui.game.detail.alive",
+        "ui.game.detail.eliminated",
+        "ui.game.detail.status",
+        "ui.game.detail.recruited",
+        "ui.game.detail.not_recruited",
+    ]:
+        var absent_text := TranslationServer.translate(absent)
+        _expect(
+            not text.contains(absent_text),
+            "座位详情不应再显示 %s：%s" % [absent, text],
+        )
+    _expect(
+        text.contains(TranslationServer.translate("ui.game.detail.combat_log")),
+        "座位详情应显示对战记录标题：%s" % text,
+    )
+    _expect(
+        text.contains(TranslationServer.translate("ui.game.rail.turn") % 2),
+        "对战记录应显示回合：%s" % text,
+    )
+    _expect(text.contains("机器人C"), "对战记录应显示对手名：%s" % text)
+    _expect(
+        text.contains(TranslationServer.translate("ui.game.rail.win")),
+        "对战记录应显示胜负：%s" % text,
+    )
+    _expect(
+        text.contains(TranslationServer.translate("ui.game.rail.damage") % 7),
+        "对战记录应显示伤害：%s" % text,
+    )
+    if panel != null:
+        _expect(
+            is_equal_approx(
+                panel.get_combined_minimum_size().x,
+                float(UITheme.stage_metric("seat-detail-width")),
+            ),
+            "座位详情宽度应取 seat-detail-width，实际 %.1f"
+            % panel.get_combined_minimum_size().x,
+        )
+    # 点击座位不再展开独立战报：对战信息只随悬停出现。
+    await _push_click(instance, row.get_global_rect().get_center())
+    await get_tree().process_frame
+    _expect(
+        instance.find_child("SeatReport", true, false) == null,
+        "点击座位不应再展开独立战报",
+    )
+    _expect(
+        instance.find_child("ReportLayer", true, false) == null,
+        "页面不应再有战报浮层",
     )
     instance.queue_free()
     await get_tree().process_frame
 
 
-func _check_expanded_memory() -> void:
-    var view := _view_with_log()
-    var instance := await _open(view)
+## 对战记录的边界：幽灵带名字、幽灵无归属者、没有参与战报的座位；
+## 指针移开后详情收起。
+func _check_detail_variants() -> void:
+    var instance := await _open(_view_with_log())
     if instance == null:
         return
     var rail = instance.find_child("PlayersRail", true, false)
-    var row := _row_of(rail, "p2") if rail != null else null
-    if row == null:
-        _expect(false, "缺少 p2 座位行")
-        instance.queue_free()
-        return
-    await _push_click(instance, row.get_global_rect().get_center())
-    await get_tree().process_frame
-    var reports := _reports(instance)
-    _expect(reports.size() == 1, "点击 p2 应展开战报")
-    if reports.size() == 1:
-        var text := _node_text(reports[0])
-        _expect(
-            text.contains(
-                TranslationServer.translate("ui.game.rail.ghost_named") % "机器人F"
-            ),
-            "幽灵战对手名应写幽灵归属者：%s" % text,
-        )
-        _expect(
-            text.contains(TranslationServer.translate("ui.game.rail.damage") % 5),
-            "幽灵战失利应显示伤害：%s" % text,
-        )
-    var expanded_row := _row_of(rail, "p2")
-    if expanded_row != null:
-        var fixed := _fixed_text(expanded_row)
-        _expect(not fixed.contains("机器人"), "展开行的固定部分不应含玩家名：%s" % fixed)
-        _expect(
-            not fixed.contains(
-                TranslationServer.translate("ui.game.rail.turn").split("%")[0]
-            ),
-            "展开行的固定部分不应含战报文本：%s" % fixed,
-        )
-    # 连续两次视图重建后仍按 playerId 恢复展开。
-    for i in range(2):
-        view["players"][2]["hp"] = 30 - i
-        GameStore.view = view
-        GameStore.view_changed.emit()
-        await get_tree().process_frame
-        await get_tree().process_frame
-        var kept := _reports(instance)
-        _expect(kept.size() == 1, "第 %d 次视图重建后战报应仍展开" % (i + 1))
-        if kept.size() == 1:
-            _expect(str(kept[0].get_meta("player_id", "")) == "p2", "重建后应恢复同一座位的战报")
-    # 展开另一行时旧的先收起，同屏只有一块。
-    row = _row_of(rail, "p4")
-    if row == null:
-        _expect(false, "缺少 p4 座位行")
-        instance.queue_free()
-        return
-    await _push_click(instance, row.get_global_rect().get_center())
-    await get_tree().process_frame
-    var switched := _reports(instance)
-    _expect(switched.size() == 1, "展开另一座位时同屏应只有一块战报")
-    if switched.size() == 1:
-        _expect(str(switched[0].get_meta("player_id", "")) == "p4", "新展开的战报应属于新座位")
-        _expect(
-            _node_text(switched[0]).contains(
-                TranslationServer.translate("ui.game.rail.no_report")
-            ),
-            "没有参与战报的座位应显示无战报",
-        )
-    # ghostId 为 null 的幽灵战只写「幽灵」，不出现空括号。
-    row = _row_of(rail, "p3")
-    if row == null:
-        _expect(false, "缺少 p3 座位行")
-        instance.queue_free()
-        return
-    await _push_click(instance, row.get_global_rect().get_center())
-    await get_tree().process_frame
-    var ghostless := _reports(instance)
-    _expect(ghostless.size() == 1, "点击 p3 应展开战报")
-    if ghostless.size() == 1:
-        var ghost_text := _node_text(ghostless[0])
-        _expect(
-            ghost_text.contains(TranslationServer.translate("ui.game.rail.ghost")),
-            "幽灵战应显示幽灵：%s" % ghost_text,
-        )
-        _expect(
-            not ghost_text.contains(
-                TranslationServer.translate("ui.game.rail.ghost_named") % ""
-            ),
-            "ghostId 为 null 时不应出现空括号：%s" % ghost_text,
-        )
+    var cases := [
+        ["p2", [
+            TranslationServer.translate("ui.game.rail.turn") % 3,
+            TranslationServer.translate("ui.game.rail.ghost_named") % "机器人F",
+            TranslationServer.translate("ui.game.rail.lose"),
+            TranslationServer.translate("ui.game.rail.damage") % 5,
+        ]],
+        ["p3", [
+            TranslationServer.translate("ui.game.rail.ghost"),
+            TranslationServer.translate("ui.game.rail.win"),
+        ]],
+        ["p4", [TranslationServer.translate("ui.game.rail.no_report")]],
+    ]
+    for case in cases:
+        var row := _row_of(rail, str(case[0])) if rail != null else null
+        if row == null:
+            _expect(false, "缺少 %s 座位行" % case[0])
+            continue
+        await _hover(instance, row, row.size / 2)
+        var panel = instance.find_child("MinionDetailPanel", true, false)
+        var text := _node_text(panel) if panel != null else ""
+        for expected in case[1]:
+            _expect(
+                text.contains(str(expected)),
+                "%s 的详情应包含 %s：%s" % [case[0], expected, text],
+            )
+        if str(case[0]) == "p3":
+            _expect(
+                not text.contains(TranslationServer.translate("ui.game.rail.ghost_named") % ""),
+                "ghostId 为 null 时不应出现空括号：%s" % text,
+            )
+    await _push_motion(instance, Vector2(-40, -40))
+    var panel = instance.find_child("MinionDetailPanel", true, false)
+    _expect(panel != null and not panel.is_visible_in_tree(), "指针移开后座位详情应收起")
     instance.queue_free()
+    await get_tree().process_frame
+
+
+## 内容框原点非零且整体缩放时，座位详情仍贴在行右侧并留在详情层内。
+## 直接把全局坐标当局部坐标（忽略原点与缩放）的做法会在这里失败。
+func _check_detail_position_composed() -> void:
+    var instance := await _open_composed(_view_with_log())
+    if instance == null:
+        return
+    var host := instance.get_parent() as Control
+    var rail = instance.find_child("PlayersRail", true, false)
+    var layer := instance.find_child("MinionDetailLayer", true, false) as Control
+    var row := _row_of(rail, "p0") if rail != null else null
+    if row == null or layer == null:
+        _expect(false, "组合用例缺少 p0 座位行或详情层")
+        host.queue_free()
+        return
+    var layer_scale := layer.get_global_transform().get_scale().x
+    _expect(not is_equal_approx(layer_scale, 1.0),
+        "组合用例详情层应有非 1 缩放，实际 %.4f" % layer_scale)
+    _expect(not layer.get_global_position().is_zero_approx(),
+        "组合用例详情层应有非零原点，实际 %s" % str(layer.get_global_position()))
+    await _hover(instance, row, row.size / 2)
+    var panel := instance.find_child("MinionDetailPanel", true, false) as Control
+    if panel == null or not panel.visible:
+        _expect(false, "组合用例未显示座位详情")
+        host.queue_free()
+        await get_tree().process_frame
+        return
+    var row_global: Rect2 = row.get_global_rect()
+    var gap := float(UITheme.space("space-sm")) * layer_scale
+    var expected := Vector2(row_global.end.x + gap, row_global.position.y)
+    var actual := panel.get_global_rect().position
+    _expect(actual.distance_to(expected) < 0.5,
+        "座位详情应贴在座位行右侧：实际 %s 期望 %s" % [str(actual), str(expected)])
+    _expect(layer.get_global_rect().grow(1.0).has_point(actual),
+        "座位详情应落在详情层内：%s" % str(actual))
+    host.queue_free()
     await get_tree().process_frame
 
 

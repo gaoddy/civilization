@@ -1325,6 +1325,7 @@ ui.game.combat.vs,VS
 ui.game.combat.waiting,等待战斗动作…
 ui.game.detail.alive,存活
 ui.game.detail.association,关联分类
+ui.game.detail.combat_log,对战记录
 ui.game.detail.cost,费用
 ui.game.detail.cost_value,%d 金
 ui.game.detail.current,当前

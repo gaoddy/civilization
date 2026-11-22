@@ -27,11 +27,10 @@ const PAGES := [
     },
     {
         "path": "res://pages/game/game.tscn",
-        "children": 9,
+        "children": 8,
         "direct_names": [
             "AimLayer",
             "MinionDetailLayer",
-            "ReportLayer",
             "ChooserOverlay",
             "FirstGameGuide",
             "GameToolsOverlay",

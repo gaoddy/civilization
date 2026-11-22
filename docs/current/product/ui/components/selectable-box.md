@@ -50,4 +50,4 @@
 
 - [图鉴卡面单元](gallery-card-tile.md)：`Outline.INLINE`。
 - [房间页](../pages/room.md) 的候选英雄卡：`Outline.OUTER`。
-- [对局页](../pages/game.md) 左栏座位行：`Outline.INLINE`，底板 2px 描边、`radius-md` 圆角、内容边距 2，头像铺满框内；只用悬停态，不调用 `set_selected`，`activated` 用于展开座位战报。
+- [对局页](../pages/game.md) 左栏座位行：`Outline.INLINE`，底板 2px 描边、`radius-md` 圆角、内容边距 2，头像铺满框内；只用悬停态，不调用 `set_selected`，座位行的 `activated` 不接行为，对战信息随悬停详情展示。
