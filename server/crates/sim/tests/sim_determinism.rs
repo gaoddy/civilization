@@ -210,6 +210,11 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 2026-11-22 第二十四次重定：郑和新增主动技能「七下西洋」，玩家状态新增
 /// `seven_voyages` 并计入状态哈希；AI 多一个可用的主动技能，对局路径与
 /// 随机流消耗随之改变，本批次 20 局哈希全部改变。
+///
+/// 2026-11-22 第二十五次重定：金色随从改为「数值产出 ×2、单次结算」，光环与
+/// 传染同步翻倍；三连奖励改为获得奖励牌时玩家当前时代的下一时代，不再按
+/// 卡牌等级取下一等级池。金色结算次数减少、奖励池筛选改变，本批次 20 局
+/// 哈希全部改变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

@@ -1,7 +1,7 @@
 mod common;
 
 use common::{minion, minion_id, set_shop, test_catalog, turn_started};
-use rule_engine::data::{CardType, card_in_pool};
+use rule_engine::data::{CardType, Era, card_in_pool};
 use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::events::GameEvent;
 use rule_engine::hash::state_hash;
@@ -417,7 +417,11 @@ fn reward_is_granted_only_when_golden_is_played() {
         .collect();
     assert_eq!(rewards.len(), 1, "打出金色后手牌多出一张奖励牌");
     assert_eq!(rewards[0].card_id(), REWARD_CARD_ID);
-    assert_eq!(rewards[0].reward_level(), Some(2), "来源卡 1 星 +1 为 2 星");
+    assert_eq!(
+        rewards[0].reward_level(),
+        Some(2),
+        "获得奖励牌时时代 1 +1 为 2 星"
+    );
     let board_card = test_catalog().cards.get(&card_id).cloned().unwrap();
     assert_eq!(board_card.level, 1, "夹具使用 1 星随从");
     assert_eq!(state.players[0].board[0].instance_id, golden.instance_id);
@@ -426,6 +430,8 @@ fn reward_is_granted_only_when_golden_is_played() {
 #[test]
 fn reward_level_caps_at_six() {
     let (engine, mut state) = turn_started(9);
+    // 时代 5 +1 应为 6 星；7 星时代也封顶 6。
+    state.players[0].era = Era::Industrial;
     let card_id = minion_id(7);
     state.players[0].board = vec![
         minion(&engine.catalog, 10, &card_id),
@@ -466,7 +472,65 @@ fn reward_level_caps_at_six() {
         .iter()
         .find(|card| card.reward_level().is_some())
         .expect("应发放奖励牌");
-    assert_eq!(reward.reward_level(), Some(6), "7 星来源的奖励封顶 6 星");
+    assert_eq!(
+        reward.reward_level(),
+        Some(6),
+        "时代 5 的奖励牌为 6 星且封顶"
+    );
+}
+
+#[test]
+fn reward_level_is_locked_when_granted() {
+    let (engine, mut state) = turn_started(13);
+    state.players[0].era = Era::Primitive;
+    let card_id = minion_id(1);
+    state.players[0].board = vec![
+        minion(&engine.catalog, 10, &card_id),
+        minion(&engine.catalog, 11, &card_id),
+        minion(&engine.catalog, 12, &card_id),
+    ];
+
+    engine.check_triple(&mut state, 0);
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("打出金色应成功");
+
+    let reward = state.players[0]
+        .hand
+        .iter()
+        .find(|card| card.reward_level().is_some())
+        .expect("应发放奖励牌");
+    assert_eq!(reward.reward_level(), Some(3), "时代 2 的奖励牌为 3 星");
+
+    // 获得奖励牌后再升时代：已锁定的星级不变，出牌仍按 3 星发放。
+    state.players[0].era = Era::Future;
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("打出奖励牌应成功");
+
+    let granted_id = state.players[0].hand[0].card_id();
+    let card = test_catalog()
+        .cards
+        .get(granted_id)
+        .cloned()
+        .expect("获得的随从应在目录中");
+    assert_eq!(card.level, 3, "奖励星级在获得时锁定，升时代不追溯");
 }
 
 #[test]

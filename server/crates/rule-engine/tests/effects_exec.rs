@@ -447,7 +447,38 @@ fn condition_gates_effect() {
 }
 
 #[test]
-fn golden_triggers_battlecry_twice() {
+fn golden_keeps_condition_threshold_but_doubles_output() {
+    let (engine, mut state) = setup(11);
+    place(&engine.catalog, &mut state, 0, 1, "buluozhanshi");
+    place(&engine.catalog, &mut state, 0, 2, "bruce-lee");
+    let gated = effect(
+        "OnActivate|Growth|friendly:single:playstyle=mammal|times=1,condition=count:friendly:playstyle=mammal:>=3",
+    );
+    let golden_ctx = EffectCtx {
+        source: Some(1),
+        golden: true,
+        target: Some(1),
+        ..ctx(0)
+    };
+
+    engine.apply_op(&mut state, &gated, &golden_ctx, None);
+    assert_eq!(
+        board_minion(&state, 0, 0).stats.attack.growth,
+        0,
+        "条件阈值不翻倍：两名人类仍不满足 >=3"
+    );
+
+    place(&engine.catalog, &mut state, 0, 3, "buluozhanshi");
+    engine.apply_op(&mut state, &gated, &golden_ctx, None);
+    assert_eq!(
+        board_minion(&state, 0, 0).stats.attack.growth,
+        2,
+        "条件仍按 3 判定，成长次数 ×2"
+    );
+}
+
+#[test]
+fn golden_battlecry_doubles_output() {
     let (engine, mut state) = setup(11);
     place(&engine.catalog, &mut state, 0, 1, "pink-ape");
 
@@ -464,7 +495,7 @@ fn golden_triggers_battlecry_twice() {
     assert_eq!(
         board_minion(&state, 0, 0).stats.attack.growth,
         4,
-        "金色整段效果连续执行两次"
+        "金色数值 ×2、单次结算"
     );
 }
 
@@ -801,12 +832,12 @@ fn golden_minion_played_from_hand_doubles_battlecry() {
     assert_eq!(
         board_minion(&state, 0, 0).stats.attack.growth,
         2,
-        "金色战吼连续触发两次，+1/+1 变为 +2/+2"
+        "金色战吼数值 ×2，+1/+1 变为 +2/+2"
     );
 }
 
 #[test]
-fn golden_on_use_responder_triggers_twice() {
+fn golden_on_use_responder_doubles_output() {
     fn responder_effect_count(golden: bool) -> usize {
         let (engine, mut state) = setup(11);
         let mut responder = minion(&engine.catalog, 1, "yanhuashi");
@@ -831,7 +862,7 @@ fn golden_on_use_responder_triggers_twice() {
     }
 
     assert_eq!(responder_effect_count(false), 1, "普通随从响应一次");
-    assert_eq!(responder_effect_count(true), 2, "金色随从响应两次");
+    assert_eq!(responder_effect_count(true), 2, "金色随从响应时数值 ×2");
 }
 
 #[test]
@@ -917,18 +948,18 @@ fn mimic_copies_current_stats_and_keywords_not_growth() {
         "拟态后获得嘲讽"
     );
 
-    // 金色连续触发两次：第二次以同一目标为准，不应叠加数值。
+    // 重复结算：仍以同一目标当前值为准，不应叠加数值。
     engine.apply_op(&mut state, &mimic, &mimic_ctx, None);
     let source = board_minion(&state, 0, 0);
     assert_eq!(
         combat::effective_attack(&engine.catalog, source),
         5,
-        "第二次触发仍为目标当前值"
+        "重复结算仍为目标当前值"
     );
     assert_eq!(
         combat::effective_health(&engine.catalog, source),
         5,
-        "第二次触发仍为目标当前值"
+        "重复结算仍为目标当前值"
     );
 
     let target = board_minion(&state, 1, 0);
@@ -1067,7 +1098,7 @@ fn mimic_allows_friendly_target_and_stats_only_skips_keywords() {
         "statsOnly 只复制攻防，不复制关键词"
     );
 
-    // 金色第二次触发仍以目标当前值为准，不叠加。
+    // 重复结算仍以目标当前值为准，不叠加。
     engine.apply_op(&mut state, &mimic, &mimic_ctx, None);
     let source = board_minion(&state, 0, 0);
     assert_eq!(combat::effective_attack(&engine.catalog, source), 5);

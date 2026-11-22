@@ -1232,10 +1232,15 @@ fn resolve_attack(
         }
     }
 
-    // (b) 传染只在造成实际伤害时叠加。
+    // (b) 传染只在造成实际伤害时叠加；金色攻击者层数 ×2。
     if attacker_keywords.contains(Keyword::Contagion) && damage > 0 {
+        let layers = if field.sides[attacking_side].minions[attacker_index].golden {
+            2
+        } else {
+            1
+        };
         let target = &mut field.sides[defending_side].minions[target_index];
-        target.contagion = target.contagion.saturating_add(1);
+        target.contagion = target.contagion.saturating_add(layers);
         let states = field.snapshots(catalog, &[target_id]);
         field.push_action(CombatAction::ContagionApplied { target: target_id }, states);
     }

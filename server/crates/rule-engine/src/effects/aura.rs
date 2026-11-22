@@ -87,6 +87,13 @@ impl Engine {
     ) -> BTreeMap<InstanceId, AuraEffect> {
         let mut computed = BTreeMap::new();
         for (source, effects) in self.aura_sources(player) {
+            // 金色来源的光环数值同样 ×2；英雄卡没有实例，不翻倍。
+            let golden = source.is_some_and(|id| {
+                player
+                    .board
+                    .iter()
+                    .any(|minion| minion.instance_id == id && minion.golden)
+            });
             for effect in effects {
                 if !self.aura_active(state, player, effect, source) {
                     continue;
@@ -94,7 +101,7 @@ impl Engine {
                 // 群聚的计数与目标无关，每段效果只算一次。
                 let scale = scaling_count(self, state, player, effect, source);
                 for target in aura_targets(self, state, effect, player, source) {
-                    accumulate(effect, computed.entry(target).or_default(), scale);
+                    accumulate(effect, computed.entry(target).or_default(), scale, golden);
                 }
             }
         }
@@ -362,19 +369,27 @@ fn aura_ctx(seat: Seat, source: Option<InstanceId>) -> EffectCtx {
 /// 把一段光环效果累加到目标派生值上；关键词幂等，数值相加。
 ///
 /// `scale` 是群聚计数：基础 `attack`/`health` 之外，每个被计入的「其他同玩法
-/// 友方随从」再加一次 `perAttack`/`perHealth`。金色不额外翻倍。
-fn accumulate(effect: &Effect, target: &mut AuraEffect, scale: i32) {
+/// 友方随从」再加一次 `perAttack`/`perHealth`。`golden` 为真时整段数值产出
+/// ×2，`scale` 与条件不变。
+fn accumulate(effect: &Effect, target: &mut AuraEffect, scale: i32, golden: bool) {
+    let multiplier = if golden { 2 } else { 1 };
     match effect.op {
         Op::ModifyStats => match &effect.params {
             Params::ModifyStats(params) => {
+                let contribution = params
+                    .attack
+                    .unwrap_or(0)
+                    .saturating_add(params.per_attack.unwrap_or(0).saturating_mul(scale));
                 target.attack = target
                     .attack
-                    .saturating_add(params.attack.unwrap_or(0))
-                    .saturating_add(params.per_attack.unwrap_or(0).saturating_mul(scale));
+                    .saturating_add(contribution.saturating_mul(multiplier));
+                let contribution = params
+                    .health
+                    .unwrap_or(0)
+                    .saturating_add(params.per_health.unwrap_or(0).saturating_mul(scale));
                 target.health = target
                     .health
-                    .saturating_add(params.health.unwrap_or(0))
-                    .saturating_add(params.per_health.unwrap_or(0).saturating_mul(scale));
+                    .saturating_add(contribution.saturating_mul(multiplier));
             }
             _ => return,
         },
@@ -389,9 +404,11 @@ fn accumulate(effect: &Effect, target: &mut AuraEffect, scale: i32) {
             let layer = keyword.value.or(params.value);
             match (name, layer) {
                 (combat::ARMOR, Some(count)) => {
-                    target
-                        .keywords
-                        .insert(&format!("{} {count}", combat::ARMOR));
+                    target.keywords.insert(&format!(
+                        "{} {}",
+                        combat::ARMOR,
+                        count.saturating_mul(multiplier)
+                    ));
                 }
                 _ => {
                     target.keywords.insert(name);

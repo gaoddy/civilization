@@ -528,6 +528,77 @@ pub enum Params {
 }
 
 impl Params {
+    /// 金色效果的数值产出翻倍：只翻倍实际产出的数值，条件与阈值原样保留。
+    ///
+    /// 金色按「单次结算 + 产出 ×2」处理，不再连续执行两遍。字段选择：
+    /// 成长次数、攻防加成、伤害、召唤/获得数量、关键词层数与复活攻防 ×2；
+    /// `condition`、`threshold`、`value`、`max_count`、`when` 等条件/上限不变。
+    pub fn doubled_outputs(&self) -> Params {
+        fn double(value: i32) -> i32 {
+            value.saturating_mul(2)
+        }
+        match self {
+            Params::Growth(p) => Params::Growth(GrowthParams {
+                times: double(p.times),
+                times_if: p.times_if.as_ref().map(|times_if| TimesIf {
+                    times: double(times_if.times),
+                    ..times_if.clone()
+                }),
+                ..p.clone()
+            }),
+            Params::ModifyStats(p) => Params::ModifyStats(ModifyStatsParams {
+                attack: p.attack.map(double),
+                health: p.health.map(double),
+                per_attack: p.per_attack.map(double),
+                per_health: p.per_health.map(double),
+                ..p.clone()
+            }),
+            Params::GrantKeyword(p) => Params::GrantKeyword(GrantKeywordParams {
+                keyword: KeywordSpec {
+                    keyword: p.keyword.keyword.clone(),
+                    value: p.keyword.value.map(double),
+                },
+                value: p.value.map(double),
+                ..p.clone()
+            }),
+            Params::DealDamage(p) => Params::DealDamage(DealDamageParams {
+                amount: double(p.amount),
+                ..p.clone()
+            }),
+            Params::Summon(p) => Params::Summon(SummonParams {
+                count: double(p.count),
+                ..p.clone()
+            }),
+            Params::AddShopSlot(p) => Params::AddShopSlot(AddShopSlotParams {
+                count: double(p.count),
+                ..p.clone()
+            }),
+            Params::Salvage(p) => Params::Salvage(SalvageParams {
+                count: double(p.count),
+                ..p.clone()
+            }),
+            Params::Revive(p) => Params::Revive(ReviveParams {
+                attack: double(p.attack),
+                health: double(p.health),
+            }),
+            Params::Detonate(p) => Params::Detonate(DetonateParams {
+                amount: double(p.amount),
+                ..p.clone()
+            }),
+            Params::Convert(p) => Params::Convert(ConvertParams {
+                count: p.count.map(double),
+                ..p.clone()
+            }),
+            Params::Latent(p) => Params::Latent(LatentParams {
+                amount: double(p.amount),
+                count: double(p.count),
+                ..p.clone()
+            }),
+            // 条件、阈值、上限与无数字产出的原语保持原样。
+            other => other.clone(),
+        }
+    }
+
     /// 条件筛选；只有部分原语携带。
     pub fn condition(&self) -> Option<&Condition> {
         match self {
@@ -566,6 +637,18 @@ pub struct Effect {
     pub op: Op,
     pub selector: Selector,
     pub params: Params,
+}
+
+impl Effect {
+    /// 金色来源的同一段效果：数值产出 ×2，选择器与条件保持不变。
+    pub fn doubled_outputs(&self) -> Effect {
+        Effect {
+            trigger: self.trigger,
+            op: self.op,
+            selector: self.selector.clone(),
+            params: self.params.doubled_outputs(),
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for Effect {
