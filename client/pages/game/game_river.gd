@@ -80,9 +80,17 @@ func _build_recruit(layout: Control) -> void:
     _timer_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _countdown_flip.add_child(_timer_label)
 
-    _end_button = UIControls.styled_button(tr("ui.game.side_panel.end_recruit"), "primary", 28)
+    # 结束招募按钮是倒计时块的翻转态：尺寸取倒计时块，去掉纵向内边距，
+    # 避免文字最小高度与触控命中高度把按钮撑出河道。
+    _end_button = UIControls.styled_button(
+        tr("ui.game.side_panel.end_recruit"), "primary", int(countdown_size.y)
+    )
     _end_button.name = "RecruitEndButton"
+    _end_button.custom_minimum_size = countdown_size
     _end_button.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _flatten_button_vertical(_end_button)
+    if phone:
+        _end_button.add_theme_font_size_override("font_size", UITheme.font_size("font-caption"))
     _end_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _end_button.visible = false
     _countdown_flip.add_child(_end_button)
@@ -131,6 +139,15 @@ func _build_gold(layout: Control, node_name: String) -> Label:
     gold.mouse_filter = Control.MOUSE_FILTER_IGNORE
     layout.add_child(gold)
     return gold
+
+
+## 固定高度胶囊内的翻转按钮：清掉纵向内边距，文字最小高度不再撑高按钮。
+func _flatten_button_vertical(button: Button) -> void:
+    for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+        var box := button.get_theme_stylebox(state) as StyleBoxFlat
+        if box != null:
+            box.content_margin_top = 0
+            box.content_margin_bottom = 0
 
 
 func _process(_delta: float) -> void:

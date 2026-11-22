@@ -1193,6 +1193,14 @@ func _check_countdown_touch_single_intent() -> void:
         instance.intent_sent.connect(func(intent: Dictionary) -> void: captured.append(intent))
         var center := flip.get_global_rect().get_center()
         await _push_motion(instance, center)
+        var end_button: Button = instance.find_child("RecruitEndButton", true, false)
+        _expect(end_button != null and end_button.visible, "悬停倒计时应翻出结束招募按钮")
+        if end_button != null:
+            _expect(
+                end_button.size.is_equal_approx(flip.size),
+                "手机端结束招募按钮应与倒计时块同尺寸，实际 %s / %s"
+                    % [str(end_button.size), str(flip.size)],
+            )
         # 真机顺序：模拟鼠标按下先到，随后是触摸按下；两条都带同一次按压。
         await _push_button(instance, center, true)
         var touch := InputEventScreenTouch.new()

@@ -199,11 +199,13 @@ func _build_center() -> VBoxContainer:
 	center.name = "CenterPanel"
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
 	center.add_theme_constant_override(
 		"separation",
-		UITheme.space("space-xs") if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
-		else UITheme.space("space-md")
+		UITheme.space("space-xs") if compact else UITheme.space("space-md")
 	)
+	# 手机基准：整组贴底，富余高度落在舞台顶部，河道不再贴着页面顶边。
+	center.alignment = BoxContainer.ALIGNMENT_END if compact else BoxContainer.ALIGNMENT_BEGIN
 
 	_recruit_view = GameRecruitView.new()
 	_recruit_view.reroll_pressed.connect(_on_reroll)
@@ -228,11 +230,14 @@ func _build_center() -> VBoxContainer:
 	_hand_row.shop_dropped.connect(_on_shop_dropped)
 	center.add_child(_hand_row)
 
-	# 只有中央舞台自身撑满：组合与英雄行按固定高度自上而下排列，
-	# 手牌吸收富余高度并保持卡片贴底。
+	# 只有中央舞台自身撑满：组合与英雄行按固定高度排列。
+	# 桌面由手牌吸收富余高度并保持卡片贴底；手机手牌固定卡高、整组贴底，
+	# 富余高度留在舞台顶部。
 	for view in [_recruit_view, _combat_view, _hero_row, _hand_row]:
 		(view as Control).size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	_hand_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_hand_row.size_flags_vertical = (
+		Control.SIZE_SHRINK_END if compact else Control.SIZE_EXPAND_FILL
+	)
 	return center
 
 

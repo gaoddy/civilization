@@ -169,6 +169,11 @@ const SCENARIO := {
 	"card-cover-inset": 3,
 	"card-info-height": 90,
 	"card-info-compact-height": 56,
+	# 随从卡（棋盘与商店）尺寸：手机端比手牌大一档，英雄卡不放大。
+	"minion-card-width": 112,
+	"minion-card-height": 146,
+	"minion-card-width-compact": 78,
+	"minion-card-height-compact": 102,
 	"hand-card-overlap": 32,
 	"hand-hover-scale": 1.12,
 	"detail-panel-width": 200,

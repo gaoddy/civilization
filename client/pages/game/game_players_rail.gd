@@ -4,7 +4,8 @@ extends PanelContainer
 ## 头像铺满框内，名次角标叠在左上、血条叠在头像底部内侧；点击展开该座位的战报。
 ##
 ## 只读 `GameUiState.view`，不持有页面门控与意图；展开的座位按 `playerId`
-## 记住，刷新整块重建后同一玩家仍然展开。8 席固定一屏放下，不使用滚动容器。
+## 记住，刷新整块重建后同一玩家仍然展开。8 席固定一屏放下，不使用滚动容器；
+## 座位行按栏内实际高度手动排布，不参与左栏最小尺寸，避免行高反过来撑大页面。
 
 ## 行描边宽度：由可选框底板绘制，头像内缩同宽，避免头像描边与框线叠成双线。
 const ROW_BORDER_WIDTH := 2
@@ -21,7 +22,7 @@ var detail: DetailLayer = null
 ## 战报浮层，由页面注入；展开战报时挂在全屏层上，允许覆盖其他 UI。
 var report_layer: Control = null
 
-var _rail: VBoxContainer
+var _rail: Control
 var _report_panel: PanelContainer
 ## 最近一次构行使用的行边长；左栏尺寸变化后据此判断是否需要重排。
 var _last_side := 0
@@ -35,13 +36,13 @@ func _init() -> void:
     box.add_theme_constant_override("separation", UITheme.space("space-sm"))
     add_child(box)
 
-    _rail = VBoxContainer.new()
+    # 普通 Control 承载座位行：行按边长手动排布并垂直居中，行高不进入最小尺寸，
+    # 左栏高度因此只由布局分配决定（8 席不滚动，也不把行高拉伸到均分高度）。
+    _rail = Control.new()
     _rail.name = "PlayersRail"
     _rail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _rail.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    # 8 个方形座位行按边长排开后垂直居中；不滚动，也不再把行高拉伸到均分高度。
-    _rail.alignment = BoxContainer.ALIGNMENT_CENTER
-    _rail.add_theme_constant_override("separation", UITheme.stage_metric("seat-row-gap"))
+    _rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
     # 尺寸变化后按新的可用空间重算边长；监听左栏自身，避免旧边长撑住布局。
     _rail.resized.connect(_on_rail_resized)
     box.add_child(_rail)
@@ -68,9 +69,27 @@ func refresh(state: GameUiState) -> void:
         _expanded_player_id = ""
     var side := _seat_side(players.size())
     _last_side = side
+    var rows: Array = []
     for player in players:
-        _rail.add_child(_seat_row(player, state, side))
+        var row := _seat_row(player, state, side)
+        _rail.add_child(row)
+        rows.append(row)
+    _layout_rows(rows, side)
     _sync_report()
+
+
+## 座位行在栏内按边长排开：整组上下、左右居中；行尺寸由边长决定，不参与最小尺寸。
+func _layout_rows(rows: Array, side: int) -> void:
+    if rows.is_empty():
+        return
+    var gap := UITheme.stage_metric("seat-row-gap")
+    var total := rows.size() * side + maxi(rows.size() - 1, 0) * gap
+    var top := maxi(int((_rail.size.y - float(total)) * 0.5), 0)
+    var left := maxi(int((_rail.size.x - float(side)) * 0.5), 0)
+    for index in rows.size():
+        var row := rows[index] as Control
+        row.position = Vector2(left, top + index * (side + gap))
+        row.size = Vector2(side, side)
 
 
 ## 按服务端下发的 `rank` 升序排列，第 1 名在最上；名次相同或缺失时按座位号，
@@ -109,8 +128,10 @@ func _seat_side(count: int) -> int:
         return fallback
     if _rail.size.x <= 0.0 or _rail.size.y <= 0.0:
         return fallback
+    # 栏内实际高度即可用高度：座位行手动排布，不再把自身高度撑进最小尺寸。
+    var basis := int(_rail.size.y)
     var gap := UITheme.stage_metric("seat-row-gap")
-    var by_height := int(floor((_rail.size.y - float(gap * (count - 1))) / float(count)))
+    var by_height := int(floor((basis - float(gap * (count - 1))) / float(count)))
     var by_width := int(floor(_rail.size.x))
     return maxi(mini(by_height, by_width), ROW_BORDER_WIDTH * 2 + 1)
 
@@ -148,10 +169,8 @@ func _seat_row(player: Dictionary, state: GameUiState, side: int) -> SelectableB
     var row := SelectableBox.new()
     row.name = "SeatRow_%s" % player_id
     row.set_meta("player_id", player_id)
-    row.custom_minimum_size = Vector2(side, side)
-    # 行宽由边长决定，在栏内水平居中；8 行按同一间距垂直居中。
-    row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-    row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    # 行尺寸由 `_layout_rows` 按边长写入；最小尺寸保持 0，避免行高反推左栏最小高度。
+    row.custom_minimum_size = Vector2.ZERO
     row.mouse_filter = Control.MOUSE_FILTER_STOP
     row.configure(_row_style(is_self), SelectableBox.Outline.INLINE, not ScreenProfile.is_touch())
     row.activated.connect(_on_seat_activated.bind(player_id))

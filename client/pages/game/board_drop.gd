@@ -67,8 +67,8 @@ func begin_drag(payload: Dictionary) -> void:
     _spacer.name = "BoardDragSpacer"
     _spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _spacer.custom_minimum_size = Vector2(
-        UITheme.stage_metric("card-width"),
-        UITheme.stage_metric("card-height")
+        UITheme.stage_metric("minion-card-width"),
+        UITheme.stage_metric("minion-card-height")
     )
     add_child(_spacer)
     move_child(_spacer, card.get_index())
@@ -192,8 +192,8 @@ func _place_hand_preview(gap: int) -> void:
         _hand_spacer.name = "HandDragSpacer"
         _hand_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
         _hand_spacer.custom_minimum_size = Vector2(
-            UITheme.stage_metric("card-width"),
-            UITheme.stage_metric("card-height")
+            UITheme.stage_metric("minion-card-width"),
+            UITheme.stage_metric("minion-card-height")
         )
         add_child(_hand_spacer)
     var target := _hand_spacer_child_index(gap)

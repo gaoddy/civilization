@@ -500,6 +500,52 @@ func _check_game_compact(compact: Vector2) -> void:
             hand_card != null and hand_card.find_child("CardDesc", true, false) != null,
             "手牌卡应保留介绍",
         )
+        # 手机只放大棋盘与商店的随从卡；手牌与英雄卡保持原尺寸。
+        var minion_size := Vector2(
+            UITheme.stage_metric("minion-card-width"),
+            UITheme.stage_metric("minion-card-height"),
+        )
+        var shop_slot := page.find_child("ShopSlot0", true, false) as Control
+        _check(
+            shop_slot != null and shop_slot.size.is_equal_approx(minion_size),
+            "手机商店卡应为 %s，实际 %s"
+            % [str(minion_size), str(shop_slot.size) if shop_slot != null else "缺失"],
+        )
+        var board_minion := page.find_child("BoardMinion0", true, false) as Control
+        _check(
+            board_minion != null and board_minion.size.is_equal_approx(minion_size),
+            "手机棋盘卡应为 %s，实际 %s"
+            % [str(minion_size), str(board_minion.size) if board_minion != null else "缺失"],
+        )
+        var card_size := Vector2(
+            UITheme.stage_metric("card-width"), UITheme.stage_metric("card-height")
+        )
+        var hand_card_node := page.find_child("HandCard0", true, false) as Control
+        _check(
+            hand_card_node != null and hand_card_node.size.is_equal_approx(card_size),
+            "手机手牌卡应保持 %s，实际 %s"
+            % [str(card_size), str(hand_card_node.size) if hand_card_node != null else "缺失"],
+        )
+        var hero_side := page.find_child("HeroSide", true, false) as Control
+        var hero_size := float(UITheme.stage_metric("hero-card-size"))
+        _check(
+            hero_side != null and is_equal_approx(hero_side.size.x, hero_size),
+            "手机英雄卡不应放大：应为 %.0f，实际 %.0f"
+            % [hero_size, hero_side.size.x if hero_side != null else -1.0],
+        )
+        # 舞台整组贴底，富余高度留在顶部，河道不再贴住页面顶边。
+        var center_panel := page.find_child("CenterPanel", true, false) as Control
+        var recruit_panel := page.find_child("RecruitPanel", true, false) as Control
+        _check(
+            center_panel != null and recruit_panel != null
+                and recruit_panel.get_global_rect().position.y
+                    >= center_panel.get_global_rect().position.y + 1.0,
+            "手机舞台应把富余高度留在顶部，实际组合顶 %.1f，舞台顶 %.1f"
+            % [
+                recruit_panel.get_global_rect().position.y if recruit_panel != null else -1.0,
+                center_panel.get_global_rect().position.y if center_panel != null else -1.0,
+            ],
+        )
     host.queue_free()
     GameStore.view = saved_view
     GameStore.turn = saved_turn
