@@ -950,6 +950,10 @@ func _check_opponent_view() -> void:
         "对手英雄卡应为 84×84",
     )
     _expect(
+        portrait != null and portrait.size == Vector2(84, 84),
+        "对手英雄卡桌面档位应保持 84×84，实际 %s" % str(portrait.size if portrait != null else Vector2.ZERO),
+    )
+    _expect(
         _node_text(opponent).contains("机器人C"),
         "对手视图应显示展示名，实际「%s」" % _node_text(opponent),
     )
@@ -986,6 +990,25 @@ func _check_opponent_view() -> void:
         _node_text(opponent).contains(TranslationServer.translate("ui.game.side_panel.waiting_match")),
         "无对手时应显示等待配对",
     )
+
+    # 手机档位：身份列被窄宽挤压后比英雄卡高，英雄卡必须保持正方形并居中，不被拉伸成长方形。
+    ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
+    var compact_host: Control = await _host(Vector2(960, 540))
+    var compact_opponent := GameOpponentView.new()
+    compact_host.add_child(compact_opponent)
+    compact_opponent.refresh(_state_for(Protocol.PHASE_COMBAT, view))
+    await get_tree().process_frame
+    var compact_portrait: Control = compact_opponent.find_child("OpponentPortrait", true, false)
+    _expect(compact_portrait != null, "手机档位对手应显示头像")
+    if compact_portrait != null:
+        _expect(
+            compact_portrait.size == Vector2(64, 64),
+            "手机档位对手英雄卡应为 64×64，实际 %s" % str(compact_portrait.size),
+        )
+    compact_host.queue_free()
+    ScreenProfile.set_device_for_test("")
+    await get_tree().process_frame
+
     host.queue_free()
     await get_tree().process_frame
 
