@@ -123,7 +123,7 @@ static func styled_button(text: String, variant := "default", min_height := 30) 
     return node
 
 
-## 头部工具行次级按钮：桌面按工具行令牌固定高度，触控端抬到次要操作命中高度。
+## 头部工具行次级按钮：所有档位按工具行令牌固定高度。
 ## 比 `styled_button` 紧凑：上下内容边距只留 `space-2xs`，用于图鉴头部这类单行工具行。
 static func compact_button(text: String, variant := "default", min_width := 0) -> Button:
     var node := Button.new()
@@ -142,12 +142,9 @@ static func compact_button(text: String, variant := "default", min_width := 0) -
     return node
 
 
-## 工具行次级按钮高度：桌面取令牌，触控端不低于次要操作命中高度。
+## 工具行次级按钮高度：所有档位统一取令牌，命中区与视觉高度一致，不做隐形外扩。
 static func compact_button_height() -> int:
-    var height := UITheme.metric("toolbar-button-height")
-    if ScreenProfile.is_touch():
-        return maxi(height, UITheme.hit_small())
-    return height
+    return UITheme.metric("toolbar-button-height")
 
 
 ## 淘汰或失效的行：统一降低透明度，不改变布局。

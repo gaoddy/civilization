@@ -518,15 +518,9 @@ static func button_style(variant: String, state: String) -> StyleBoxFlat:
 
 
 ## 工具行次级按钮样式：在通用按钮样式上把上下内容边距收到 `space-2xs`。
-## 用于图鉴头部这类单行工具行，按钮最小高度随字号行高收紧。
-## 触控端控件高度仍取命中下限，背景与边框用负外扩边距按令牌高度绘制，观感与桌面一致。
+## 用于图鉴头部这类单行工具行，按钮最小高度随字号行高收紧，所有档位一致。
 static func compact_button_style(variant: String, state: String) -> StyleBoxFlat:
 	var box := button_style(variant, state)
 	box.content_margin_top = space("space-2xs")
 	box.content_margin_bottom = space("space-2xs")
-	if ScreenProfile.is_touch():
-		var visual := metric("toolbar-button-height")
-		var inset := float(maxi(visual, hit_small()) - visual) / 2.0
-		box.expand_margin_top = -inset
-		box.expand_margin_bottom = -inset
 	return box

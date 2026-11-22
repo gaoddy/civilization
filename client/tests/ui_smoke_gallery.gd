@@ -444,23 +444,21 @@ func _check_tablet_layout() -> void:
         await get_tree().process_frame
 
     var header := page.find_child("GalleryHeader", true, false) as Control
-    var touch_header_height := float(UIControls.compact_button_height())
+    var toolbar_height := float(UIControls.compact_button_height())
     _expect(
-        touch_header_height >= float(UITheme.hit_small()),
-        "触控图鉴头部不应低于次要操作命中高度，实际：%d" % int(touch_header_height),
+        is_equal_approx(toolbar_height, float(UITheme.metric("toolbar-button-height"))),
+        "触控工具行按钮高度应与视觉一致，实际：%d" % int(toolbar_height),
     )
     var touch_style := UITheme.compact_button_style("default", "normal")
-    var token_height := float(UITheme.metric("toolbar-button-height"))
-    var expected_inset := -(touch_header_height - token_height) / 2.0
     _expect(
-        is_equal_approx(touch_style.expand_margin_top, expected_inset)
-            and is_equal_approx(touch_style.expand_margin_bottom, expected_inset),
-        "触控工具行按钮背景应按令牌高度绘制，实际外扩：%s/%s"
+        is_zero_approx(touch_style.expand_margin_top)
+            and is_zero_approx(touch_style.expand_margin_bottom),
+        "触控工具行按钮背景不应外扩，实际：%s/%s"
         % [str(touch_style.expand_margin_top), str(touch_style.expand_margin_bottom)],
     )
     _expect(
-        header != null and is_equal_approx(header.size.y, touch_header_height),
-        "平板头部高度应取工具行按钮高度，实际：%s" % (str(header.size) if header != null else "无"),
+        header != null and is_equal_approx(header.size.y, toolbar_height),
+        "平板头部高度应与工具行按钮同高，实际：%s" % (str(header.size) if header != null else "无"),
     )
     var rows := page.find_child("GalleryGridRows", true, false) as GridContainer
     _expect(rows != null and rows.columns == 9, "平板图鉴网格应为 9 列")
@@ -503,11 +501,17 @@ func _check_tablet_layout() -> void:
         % [str(before_height), str(minion.size) if minion != null else "无"],
     )
     if minion != null:
+        _expect(
+            is_equal_approx(minion.size.y, toolbar_height),
+            "触控分段高度应等于工具行高度，实际：%s" % str(minion.size),
+        )
         for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
             var style := minion.get_theme_stylebox(state)
             _expect(
-                style != null and is_equal_approx(style.expand_margin_top, expected_inset),
-                "触控选择筛选项后分段 %s 背景应保持负外扩，实际：%s"
+                style != null
+                    and is_zero_approx(style.expand_margin_top)
+                    and is_zero_approx(style.expand_margin_bottom),
+                "触控选择筛选项后分段 %s 背景不应外扩，实际：%s"
                 % [state, str(style.expand_margin_top) if style != null else "无"],
             )
 
