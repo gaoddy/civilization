@@ -110,6 +110,7 @@ OP_JSON = {
     "Recall": "recall",
     "Salvage": "salvage",
     "Latent": "latent",
+    "SevenVoyages": "seven_voyages",
 }
 
 # timesIf 的键与取值域；与 validate_docs.FILTER_KEYS / check_filter_value 一致。
@@ -297,6 +298,7 @@ def _json_params(params):
             "perHealth",
             "maxCount",
             "threshold",
+            "turns_max",
         ):
             name = {
                 "perAttack": "per_attack",

@@ -12,7 +12,7 @@
 
 use crate::combat;
 use crate::data::Era;
-use crate::effects::{EVOLVE_CHOICES, EffectCtx, TargetRef, Trigger};
+use crate::effects::{EVOLVE_CHOICES, EffectCtx, Op, TargetRef, Trigger};
 use crate::engine::Engine;
 use crate::intent::RejectCode;
 use crate::recruit::{
@@ -48,6 +48,10 @@ pub struct HeroPowerView {
     pub target_candidates: Vec<TargetRef>,
     pub can_use: bool,
     pub disabled_reason: Option<RejectCode>,
+    /// 七下西洋剩余航行回合；无航程或非七下西洋为 `None`。
+    pub voyage_remaining: Option<u8>,
+    /// 七下西洋已累计、未到账的金币；无航程为 0。
+    pub voyage_pending: u16,
 }
 
 /// 本座位自己的私密数据与可操作项。
@@ -339,6 +343,15 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                             Err(reject) => (false, Some(reject.code)),
                         },
                     };
+                    let voyage = if engine
+                        .skill_effects_of(skill_id, Trigger::OnActivate)
+                        .iter()
+                        .any(|effect| effect.op == Op::SevenVoyages)
+                    {
+                        player.seven_voyages
+                    } else {
+                        None
+                    };
                     HeroPowerView {
                         skill_id: skill_id.to_string(),
                         uses_left,
@@ -346,6 +359,8 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
                         target_candidates,
                         can_use,
                         disabled_reason,
+                        voyage_remaining: voyage.map(|state| state.remaining),
+                        voyage_pending: voyage.map_or(0, |state| state.pending),
                     }
                 })
                 .collect()

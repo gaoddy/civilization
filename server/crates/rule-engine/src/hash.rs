@@ -338,6 +338,16 @@ fn hash_player(hasher: &mut Hasher, player: &PlayerState) {
     hasher.bool(player.first_refresh_pending);
     hasher.bool(player.recruit_done);
     hasher.bool(player.froze_this_turn);
+
+    match &player.seven_voyages {
+        Some(voyage) => {
+            hasher.u8(1);
+            hasher.u8(voyage.remaining);
+            hasher.u16(voyage.pending);
+            hasher.u8(voyage.total);
+        }
+        None => hasher.u8(0),
+    }
 }
 
 fn hash_minions(hasher: &mut Hasher, minions: &[MinionInstance]) {

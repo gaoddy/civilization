@@ -242,6 +242,8 @@ fn self_to_protocol(
                     .map(target_to_protocol)
                     .collect(),
                 uses_left: u64::from(power.uses_left),
+                voyage_pending: u64::from(power.voyage_pending),
+                voyage_remaining: power.voyage_remaining.map(i64::from),
             })
             .collect(),
         hp: i64::from(view.hp),

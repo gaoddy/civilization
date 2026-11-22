@@ -281,6 +281,7 @@
 | 获得随从 | `GainMinion {from, level, to}` | 主动技能专用 |
 | 发放随从 | `GrantMinion {level, to}` | 随机获得一张命中本局启用玩法、`in_shop_pool: true` 的随从进手牌；`level=next` 为来源星级 +1（6 星封顶）；不扣共享牌池，无候选时照常消耗 |
 | 分解 | `Decompose {selector, basis, duration}` | 获得事件目标的生命值；`selector` 固定 `self`，`basis` / `duration` 必填 |
+| 七下西洋 | `SevenVoyages {turns_max}` | 主动技能专用；随机 1–`turns_max` 个航行回合，每回合按战绩累计金币，航程结束后的招募阶段开始一次性到账 |
 
 光环不单设原语：静态光环在 §8 登记为 `Aura` / `ConditionalAura` 触发，其动作写 `ModifyStats` 或 `GrantKeyword`，并显式带 `duration=permanent`。
 
@@ -338,6 +339,7 @@
 | `pool` / `choose` | 发现池、可选数量 | `Discover` |
 | `free` | `true` / `false` | 免费刷新 |
 | `era` / `level` | `current` 或具体值 | 商店槽位时代、获得随从的星级；`GrantMinion` 的 `level` 另接受 `next`（来源星级 +1，6 星封顶） |
+| `turns_max` | 整数 1–7 | 七下西洋的航程回合数上限 |
 
 示例：
 

@@ -72,6 +72,7 @@ pub enum Op {
     Recall,
     Salvage,
     Latent,
+    SevenVoyages,
 }
 
 /// 选择器的阵营。
@@ -487,6 +488,14 @@ pub struct LatentParams {
     pub when: Option<Filter>,
 }
 
+/// `SevenVoyages` 的参数。
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SevenVoyagesParams {
+    /// 航程回合数上限；实际回合数在 1..=turns_max 内随机。
+    pub turns_max: u8,
+}
+
 /// 单段效果的参数；每个原语只携带自己需要的字段。
 ///
 /// 数据文件仍用 `"params": { ... }` 的扁平对象，加载时按 `op` 解码为对应变体，
@@ -515,6 +524,7 @@ pub enum Params {
     Recall(RecallParams),
     Salvage(SalvageParams),
     Latent(LatentParams),
+    SevenVoyages(SevenVoyagesParams),
 }
 
 impl Params {
@@ -617,5 +627,6 @@ fn decode_params(op: Op, params: Option<serde_json::Value>) -> Result<Params, St
         Op::Recall => Params::Recall(decode(value)?),
         Op::Salvage => Params::Salvage(decode(value)?),
         Op::Latent => Params::Latent(decode(value)?),
+        Op::SevenVoyages => Params::SevenVoyages(decode(value)?),
     })
 }

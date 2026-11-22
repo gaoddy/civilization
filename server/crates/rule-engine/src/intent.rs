@@ -63,6 +63,8 @@ pub enum RejectCode {
     TargetNotAllowed,
     /// 待选（如发现）的候选下标非法。
     InvalidChoice,
+    /// 七下西洋已有进行中的航程。
+    SevenVoyagesActive,
 }
 
 impl RejectCode {
@@ -81,6 +83,7 @@ impl RejectCode {
             Self::NoValidTarget => "NO_VALID_TARGET",
             Self::TargetNotAllowed => "TARGET_NOT_ALLOWED",
             Self::InvalidChoice => "INVALID_CHOICE",
+            Self::SevenVoyagesActive => "SEVEN_VOYAGES_ACTIVE",
         }
     }
 }

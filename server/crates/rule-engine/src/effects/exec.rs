@@ -27,7 +27,8 @@ use crate::keyword::Keyword;
 use crate::recruit::{new_minion, new_pool_minion};
 use crate::rng::{RngStreams, Stream};
 use crate::state::{
-    GameState, HandCard, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat, base_stats,
+    GameState, HandCard, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat,
+    SevenVoyagesState, base_stats,
 };
 use crate::triple::REWARD_CARD_ID;
 
@@ -204,6 +205,7 @@ impl Engine {
             // 新玩法的原语在招募阶段尚无数据使用；结算由各玩法机制任务接入。
             Op::Detonate | Op::Convert | Op::Revive | Op::Recall | Op::Salvage => Vec::new(),
             Op::Latent => self.apply_latent(state, effect, ctx),
+            Op::SevenVoyages => self.apply_seven_voyages(state, effect, ctx),
         }
     }
 
@@ -1110,6 +1112,33 @@ impl Engine {
             self.resolve_recruit_deaths(state, seat);
         }
         events
+    }
+
+    /// 主动技能「七下西洋」：随机确定航程回合数并写入航程状态。
+    ///
+    /// 随机数只取 [`Stream::Effects`]，每次激活恰好消费一次；支付与每回合次数
+    /// 由 `recruit::use_hero_power` 在调用前完成。
+    fn apply_seven_voyages(
+        &self,
+        state: &mut GameState,
+        effect: &Effect,
+        ctx: &EffectCtx,
+    ) -> Vec<GameEvent> {
+        let Params::SevenVoyages(params) = &effect.params else {
+            return Vec::new();
+        };
+        let turns_max = params.turns_max.clamp(1, 7);
+        let roll = state.rng.below(Stream::Effects, u64::from(turns_max));
+        let turns = u8::try_from(roll).unwrap_or(0) + 1;
+        let Some(player) = state.players.get_mut(usize::from(ctx.seat)) else {
+            return Vec::new();
+        };
+        player.seven_voyages = Some(SevenVoyagesState {
+            remaining: turns,
+            pending: 0,
+            total: turns,
+        });
+        Vec::new()
     }
 
     /// 招募阶段对单个随从造成伤害：先消耗圣盾，再扣减伤，剩余伤害写入永久层。

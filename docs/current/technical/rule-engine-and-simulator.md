@@ -60,7 +60,7 @@ tests/                       # Python 标准库 unittest
 ## 2. 引擎边界
 
 - `Engine::apply(state, seat, intent)` 是唯一的状态变更入口，返回 `Outcome`（本意图产生的事件）；拒绝时返回 `Reject { code, message }` 且不改变状态。
-- 拒绝码与核心规则 §3 一致：`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NOT_ACTIVE_SKILL`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE`。
+- 拒绝码与核心规则 §3 一致：`NOT_ENOUGH_GOLD`、`SHOP_SLOT_EMPTY`、`NO_SPACE`、`INVALID_STAGE`、`NO_SUCH_MINION`、`ALREADY_MAX_ERA`、`CARD_NOT_IN_HAND`、`HERO_POWER_LIMIT`、`NOT_ACTIVE_SKILL`、`NO_VALID_TARGET`、`TARGET_NOT_ALLOWED`、`INVALID_CHOICE`、`SEVEN_VOYAGES_ACTIVE`。
 - 协议十三种意图：`BuyMinion`、`SellMinion`、`RerollShop`、`UpgradeEra`、`PlayCard`、`RearrangeBoard`、`FreezeShop`、`UnfreezeShop`、`UseHeroPower`、`EndRecruit`、`ChooseDiscover`、`ChooseTarget`、`AbandonTarget`。`UnfreezeShop` 与 `FreezeShop` 对称：指定槽位解冻该槽位，`None` 解冻全部非空槽位，不重抽、不改实例编号、不消耗随机流。`UnfreezeShop` 要求本回合冻结过商店（`PlayerState::froze_this_turn`，回合开始清零），否则返回 `INVALID_STAGE`；冻结标记本身跨回合保留，只由解冻或重抽（手动刷新、升时代）清除。`ChooseDiscover`、`ChooseTarget` 与 `AbandonTarget` 都用于消费引擎产生的 `PendingChoice`（发现/进化、目标）；`PendingChoice` 本身是引擎内部状态，不直接出现在协议里。`AbandonTarget` 只消费本座位队首的目标待选，撤销本次出牌并把原牌退回原手牌位置；没有待选或队首不是目标待选时返回 `INVALID_CHOICE`。
 - `PlayCard { hand_index, position, target }`：`position` 只对随从牌生效，是入场后的插入下标，`None` 表示追加到最右；超出当前随从数返回 `INVALID_CHOICE`。效果牌不带落点：目标缺失或不在合法池内时整条意图返回 `NO_VALID_TARGET`，合法池为空时效果落空、意图仍生效。效果牌与主动技能的 `target` 是 `TargetRef { zone, id }`，`zone` 取 `hand` / `shop` / `board`；提交时先校验实例是否属于本人在该区域，再进入合法池校验，不符返回 `NO_VALID_TARGET`。随从牌入场后判定战吼：未带 `target` 且服务端算出候选非空时只推入 `PendingChoice::Target`，由 `ChooseTarget { target }` 指定目标，本次意图内不发金色「三连奖励」、不执行 `check_triple`、不触发入场观察者；候选为空（含被过滤器收窄为空）时战吼直接落空、不产生待选，这些入场副作用照基线顺序立即执行。
 - 阶段不匹配时，`recruit::apply` 对全部招募意图（含 `UpgradeEra`、`RerollShop` 等）统一返回 `INVALID_STAGE`；`EndRecruit` 另有「本座位已结束招募」时仍处于 `Recruit`、返回成功且无副作用。
@@ -70,7 +70,7 @@ tests/                       # Python 标准库 unittest
 - `PendingChoice::Target { seat, source, hand_card, hand_index, fire_ally_evolve }`：`hand_card` 是入场前的原手牌（含成长、护盾与金色标记），`hand_index` 是原手牌位置，放弃时按 `min(hand_index, len)` 插回；`fire_ally_evolve` 表示入场观察者是否推迟到目标结算后触发。目标待选期间该座位除 `ChooseTarget` 与 `AbandonTarget` 外一切招募意图（含 `EndRecruit`）返回 `INVALID_STAGE`。`ChooseTarget` 要求队首是目标待选、目标属于本人在对应区域的实体，且通过该牌 `OnPlay` 效果的合法池校验，否则返回 `INVALID_CHOICE` / `NO_VALID_TARGET`；消费后立即按 `OnPlay` 结算该牌效果，再按固定顺序补做被推迟的入场副作用：金色三连奖励 → `check_triple` → `fire_ally_evolve` 为真时触发入场观察者。`AbandonTarget` 要求来源随从仍在本人棋盘（否则 `NO_SUCH_MINION`），移除来源、把原牌插回原手牌位置、移除待选，不发战吼、不补奖励、不执行三连与入场观察者。发现与进化待选允许留到下回合；目标待选若在 `finish_recruit` 进入战斗前仍未选择，按同样规则退牌（来源仍在场时），随后照常推进阶段。
 - `HandCardView.requires_target` 由效果选择器决定：`Selector::Target` 或 `friendly:single`（`Side` + `Pick::Single`）即为需要目标，随从牌恒为 `false`。视图同时下发 `targetCandidates`（引擎 `target_candidates` 的结果，只含本人棋盘/手牌/商店）、`instanceId`、`golden`，以及随从牌的 `attack` / `health`（当前值，含成长等全部层数）；效果牌这两项为 `null`，`golden` 恒为 `false`，奖励牌另带 `rewardLevel`（锁定的发放星级）。`requires_target` 为真且候选为空时 `playable=false`、`disabledReason=NO_VALID_TARGET`。
 - `SelfView.hero_powers` 按英雄卡 `skills` 顺序列出全部主动技能，每项带 `skill_id`、`uses_left`、`requires_target`、`target_candidates`、`can_use`、`disabled_reason`，目标口径与手牌一致；需要目标且候选为空时该技能 `can_use=false`、`disabled_reason=NO_VALID_TARGET`，不影响同一英雄的其他技能。`PendingChoiceView::Target` 同时下发 `candidates`。
-- `UseHeroPower { skill_id, target }` 只校验并结算 `skill_id` 自身的 `OnActivate` 效果；同一英雄的其它主动技能不随本次意图结算，也不扣金币与次数。
+- `UseHeroPower { skill_id, target }` 只校验并结算 `skill_id` 自身的 `OnActivate` 效果；同一英雄的其它主动技能不随本次意图结算，也不扣金币与次数。含 `SevenVoyages` 的技能在费用与次数校验后先检查是否已有进行中的航程（有则返回 `SEVEN_VOYAGES_ACTIVE`），通过后先扣金币与次数，再用 `Stream::Effects` 掷出航程回合数。
 - `EndRecruit` 只结束本座位；全员（未出局）结束后才进入 `Combat` 并发出 `PhaseChanged`，重复 `EndRecruit` 成功且无副作用。
 - `settle::finish_recruit` 幂等：`Recruit` 阶段（超时路径）生成配对并切 `Combat`；`Combat` 阶段只补齐一次配对，不重复发事件、不重复配对。
 - 阶段推进由驱动方按固定顺序调用 `finish_recruit` / `resolve_combat` / `resolve_settle` / `start_turn`，引擎不自行推进时间。
@@ -277,9 +277,10 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 | 规则章节 | 用例文件 |
 | --- | --- |
 | 核心规则 §2 阶段状态机、§7 淘汰排名、§8 边界 | `rule-engine/tests/settle.rs`、`recruit.rs` |
-| 核心规则 §3 十三种意图与 11 个失败码 | `rule-engine/tests/recruit.rs`、`choices.rs` |
+| 核心规则 §3 十三种意图与十三个失败码 | `rule-engine/tests/recruit.rs`、`choices.rs` |
 | 核心规则 §4 招募细则 | `rule-engine/tests/recruit.rs`、`choices.rs`；商店重试后仍空即空槽，此时 `BuyMinion` 返回 `SHOP_SLOT_EMPTY`（`reroll_with_empty_star_retries_then_leaves_slot_empty`、`reroll_with_exhausted_pool_leaves_empty_slots_and_buy_rejects`） |
 | 核心规则 §5 战斗与伤害公式 | `rule-engine/tests/combat.rs` |
+| 核心规则 §5.6 七下西洋 | `rule-engine/src/settle.rs`、`src/recruit.rs`（内联用例）、`tests/catalog.rs`、`effects_exec.rs`、`combat.rs` |
 | 核心规则 §6 三连与发现 | `rule-engine/tests/triple.rs`、`choices.rs` |
 | 关键词机制 §1–§3 | `rule-engine/tests/turn_effects.rs`、`death_effects.rs`、`effects_exec.rs`、`auras.rs`、`combat.rs` |
 | 关键词机制 §9、§10 | `rule-engine/tests/effects_parse.rs`、`catalog.rs`、`effects_exec.rs` |
@@ -400,3 +401,12 @@ pub enum Params {
 - 金色来源的双倍触发复用战斗效果的 `passes`：携带者金色时整段效果执行两遍，分解因此触发两次。
 - 触发时点由技能数据选择（`OnKill` / `OnFriendlyDeath` / `OnAllyKill`），引擎不限制 `Decompose` 只能配这些触发。
 - 复生不撤销本次死亡事件：已经按死亡结算过的分解仍使用死前快照。
+
+### 10.3 七下西洋（SevenVoyages）
+
+- 数据：`skill-templates/activate-seven-voyages.md` 编译为 `on_activate | SevenVoyages | self | { turns_max }`；`turns_max` 取值 1–7、默认 7，校验要求 `OnActivate` 与 `Selector::SelfCard`。
+- 激活：`recruit::check_hero_power` 在费用与次数校验后检查「技能含 `Op::SevenVoyages` 且 `player.seven_voyages.is_some()`」，命中返回 `SEVEN_VOYAGES_ACTIVE`；通过后先扣金币与次数，再由 `apply_seven_voyages` 以 `state.rng.below(Stream::Effects, turns_max) + 1` 得到 n，写入 `SevenVoyagesState { remaining: n, pending: 0, total: n }`。激活当回合计为第 1 个航行回合，当回合战斗结算即累计第一笔。
+- 结算：`resolve_real` 与 `resolve_ghost` 在战斗改变棋盘前截取本方快照（`board_a` / `board_b` / `own_board`），`board_slots` 取 `catalog.config.board_slots`（v0.1 为 7）；占位数 = 快照长度，空位数 = `board_slots - 占位数`。`voyage_result` 以 `seat_winner` 判定：`None`（双方同回合清场）为平，胜者为本座位为胜，否则为负；触行动上限的平局仍按 `seat_winner` 的胜/负口径。胜利或平局取 `max(占位数, 空位数)`，失败取 `min`，累计进 `pending`（`u16` 饱和加）并把 `remaining` 减 1；`remaining == 0` 后不再累计。
+- 到账：`Engine::start_turn` 给未出局座位分配当回合正常金币后检查 `seven_voyages`：`remaining == 0` 时把 `pending` 夹到 `u8` 上限并饱和加到 `gold`，随后清除状态，使该技能可再次使用；`remaining > 0` 时原样保留。到账不设上限，也不跨回合保留（未到账前 `pending` 属于航程状态，不计入金币）；航行途中出局或对局结束不会再走 `start_turn`，未到账的累计作废。
+- 状态与视图：`PlayerState.seven_voyages: Option<SevenVoyagesState>` 只在激活后存在；`view::HeroPowerView` 仅对含 `Op::SevenVoyages` 的技能下发 `voyage_remaining` 与 `voyage_pending`，协议字段为 `voyageRemaining`（`null` 或 0–7）与 `voyagePending`（≥0）。
+- 哈希：`hash_player` 先写存在标记（1/0），存在时再写 `remaining`、`pending`、`total`；航程状态变化会改变状态哈希。

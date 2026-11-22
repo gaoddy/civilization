@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::data::{Card, CardType, Catalog, Era, Playstyle, card_in_pool};
-use crate::effects::{EffectCtx, TargetRef, Trigger, target_in_other_zone, target_in_own_zone};
+use crate::effects::{EffectCtx, Op, TargetRef, Trigger, target_in_other_zone, target_in_own_zone};
 use crate::engine::Engine;
 use crate::events::GameEvent;
 use crate::intent::{Intent, Outcome, Reject, RejectCode};
@@ -875,6 +875,17 @@ pub(crate) fn check_hero_power(
         return Err(Reject::new(
             RejectCode::HeroPowerLimit,
             format!("技能 {skill_id} 本回合已用尽（{limit} 次）"),
+        ));
+    }
+    // 七下西洋同一时间只能有一个航程；到账后才能再次启航。
+    let is_voyage = engine
+        .skill_effects_of(skill_id, Trigger::OnActivate)
+        .iter()
+        .any(|effect| effect.op == Op::SevenVoyages);
+    if is_voyage && player.seven_voyages.is_some() {
+        return Err(Reject::new(
+            RejectCode::SevenVoyagesActive,
+            format!("技能 {skill_id} 已有进行中的航程"),
         ));
     }
     player
@@ -1983,5 +1994,48 @@ mod tests {
             pending_before - 1,
             "apply 应消费该进化待选"
         );
+    }
+
+    #[test]
+    fn seven_voyages_activation_starts_voyage_and_rejects_repeat() {
+        let (engine, mut state) = setup(117);
+        state.players[0].hero = Some("zhenghe".to_string());
+        state.players[0].gold = 3;
+        let before = state_hash(&state);
+
+        let outcome = engine
+            .apply(
+                &mut state,
+                0,
+                Intent::UseHeroPower {
+                    skill_id: "seven-voyages".to_string(),
+                    target: None,
+                },
+            )
+            .expect("金币足够时应能启航");
+        assert!(outcome.events.is_empty(), "启航本身不产生事件");
+        let voyage = state.players[0]
+            .seven_voyages
+            .expect("启航后应有进行中的航程");
+        assert!((1..=7).contains(&voyage.remaining), "航程回合数应在 1–7");
+        assert_eq!(
+            voyage.remaining, voyage.total,
+            "激活回合计为第 1 个航行回合"
+        );
+        assert_eq!(voyage.pending, 0, "启航当回合尚未结算收益");
+        assert_eq!(state.players[0].gold, 0, "先支付 3 金币");
+        assert_eq!(state.players[0].hero_uses.get("seven-voyages"), Some(&1));
+        assert_ne!(before, state_hash(&state), "状态哈希应包含航程");
+
+        // 下一回合次数重置，但航程进行中仍不能再次启航。
+        state.players[0].hero_uses.clear();
+        let reject = check_hero_power(&engine, &state, 0, "seven-voyages")
+            .expect_err("航程进行中不能再次启航");
+        assert_eq!(reject.code, RejectCode::SevenVoyagesActive);
+
+        // 到账后航程清空，可以再次启航。
+        state.players[0].seven_voyages = None;
+        state.players[0].gold = 3;
+        check_hero_power(&engine, &state, 0, "seven-voyages").expect("到账后可以再次启航");
     }
 }

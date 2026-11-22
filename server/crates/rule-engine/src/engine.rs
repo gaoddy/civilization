@@ -76,6 +76,7 @@ impl Engine {
                 first_refresh_pending: true,
                 recruit_done: false,
                 froze_this_turn: false,
+                seven_voyages: None,
             })
             .collect();
 
@@ -215,11 +216,21 @@ impl Engine {
         self.recompute_auras(state);
 
         // 回合开始效果全部结算后，才发金币并刷新商店。
+        // 七下西洋在航程结束后的这个时点一次性到账，与当回合正常金币相加；
+        // 到账后清空航程，允许同一招募阶段再次启航。
         for player in &mut state.players {
             if player.eliminated {
                 continue;
             }
             player.gold = gold;
+            if let Some(voyage) = player.seven_voyages.take() {
+                if voyage.remaining == 0 {
+                    let pending = u8::try_from(voyage.pending).unwrap_or(u8::MAX);
+                    player.gold = player.gold.saturating_add(pending);
+                } else {
+                    player.seven_voyages = Some(voyage);
+                }
+            }
         }
         for seat in 0..state.players.len() {
             if state.players[seat].eliminated {

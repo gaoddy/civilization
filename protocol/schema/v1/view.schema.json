@@ -180,14 +180,16 @@
     "HeroPower": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["skillId", "usesLeft", "requiresTarget", "targetCandidates", "canUse", "disabledReason"],
+      "required": ["skillId", "usesLeft", "requiresTarget", "targetCandidates", "canUse", "disabledReason", "voyageRemaining", "voyagePending"],
       "properties": {
         "skillId": { "type": "string" },
         "usesLeft": { "type": "integer", "minimum": 0 },
         "requiresTarget": { "type": "boolean", "description": "该主动技能是否需要玩家指定单一目标" },
         "targetCandidates": { "type": "array", "items": { "$ref": "view.schema.json#/$defs/TargetRef" }, "description": "该主动技能的合法目标" },
         "canUse": { "type": "boolean" },
-        "disabledReason": { "type": ["string", "null"], "description": "不可使用该技能时的错误码" }
+        "disabledReason": { "type": ["string", "null"], "description": "不可使用该技能时的错误码" },
+        "voyageRemaining": { "type": ["integer", "null"], "minimum": 0, "maximum": 7, "description": "七下西洋剩余航行回合；没有航程时为 null" },
+        "voyagePending": { "type": "integer", "minimum": 0, "description": "七下西洋已累计、未到账的金币；没有航程时为 0" }
       }
     },
     "GameEvent": {

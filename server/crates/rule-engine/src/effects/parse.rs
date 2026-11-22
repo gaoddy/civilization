@@ -48,6 +48,7 @@ const OPS: &[(&str, Op)] = &[
     ("Recall", Op::Recall),
     ("Salvage", Op::Salvage),
     ("Latent", Op::Latent),
+    ("SevenVoyages", Op::SevenVoyages),
 ];
 
 /// 把单个技能的 `effects` 字符串解析为类型化 AST。

@@ -982,6 +982,7 @@ error.ROOM_NOT_FOUND,房间不存在
 error.ROOM_NOT_READY,房间尚未满足开局条件
 error.SEQUENCE_STALE,消息序号过期
 error.SESSION_REPLACED,账号已在其他位置登录
+error.SEVEN_VOYAGES_ACTIVE,已有进行中的航程
 error.SHOP_SLOT_EMPTY,商店槽位为空
 error.STEAM_AUTH_FAILED,Steam 登录失败
 error.STEAM_DISABLED,此版本未启用 Steam 登录
@@ -1186,6 +1187,8 @@ skill.revive-1.text,复苏：以 +1/+1 复活一次
 skill.revive-2.text,复苏：以 +2/+2 复活一次
 skill.revive-3.text,复苏：以 +3/+3 复活一次
 skill.salvage-machine.text,零件回收：死亡时获得一张随机机械随从牌
+skill.seven-voyages.name,七下西洋
+skill.seven-voyages.text,随机确定航程 n（1 至 7）。此后每个航行回合结束时按当回合战绩结算：胜利或平局取棋盘占位数与空位数中的较大者，失败取较小者，累计至航程结束；航程结束后的招募阶段开始时，累计金币一次性到账。
 skill.shout.name,呐喊
 skill.shout.text,使一个友方随从获得一次成长
 skill.sonnet.name,十四行诗
@@ -1407,6 +1410,7 @@ ui.game.side_panel.unfreeze,解冻
 ui.game.side_panel.unknown_hero,未知英雄
 ui.game.side_panel.upgrade,升时代
 ui.game.side_panel.upgrade_cost,升时代 %d 金
+ui.game.side_panel.voyage_status,航程（剩 %d 回合，已累计 %d 金）
 ui.game.side_panel.waiting_match,等待配对
 ui.game.side_panel.waiting_settle,等待结算
 ui.game.status.disconnected,未连接 · 正在重连

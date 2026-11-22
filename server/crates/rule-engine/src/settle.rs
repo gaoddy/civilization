@@ -355,6 +355,54 @@ fn seat_winner(state: &GameState, log: &combat::CombatLog, a: Seat, b: Seat) -> 
     }
 }
 
+/// 一场战斗对某座位的七下西洋结算结果。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum VoyageResult {
+    Win,
+    Loss,
+    Draw,
+}
+
+/// 由战斗胜者与座位得出七下西洋的胜负平口径。
+fn voyage_result(winner: Option<Seat>, seat: Seat) -> VoyageResult {
+    match winner {
+        None => VoyageResult::Draw,
+        Some(winner) if winner == seat => VoyageResult::Win,
+        Some(_) => VoyageResult::Loss,
+    }
+}
+
+/// 累计一个航行回合的收益并推进剩余回合。
+///
+/// 占位数取战斗前棋盘快照；胜负平按 max/min 取收益，累计值延迟到航程结束后的
+/// 招募阶段开始一次性到账。
+fn accumulate_voyage(
+    state: &mut GameState,
+    seat: Seat,
+    occupied: usize,
+    result: VoyageResult,
+    board_slots: usize,
+) {
+    let Some(player) = state.players.get_mut(usize::from(seat)) else {
+        return;
+    };
+    let Some(voyage) = player.seven_voyages.as_mut() else {
+        return;
+    };
+    if voyage.remaining == 0 {
+        return;
+    }
+    let occupied = u8::try_from(occupied.min(board_slots)).unwrap_or(u8::MAX);
+    let slots = u8::try_from(board_slots).unwrap_or(u8::MAX);
+    let empty = slots.saturating_sub(occupied);
+    let gained = match result {
+        VoyageResult::Win | VoyageResult::Draw => occupied.max(empty),
+        VoyageResult::Loss => occupied.min(empty),
+    };
+    voyage.pending = voyage.pending.saturating_add(u16::from(gained));
+    voyage.remaining -= 1;
+}
+
 fn resolve_real(
     engine: &Engine,
     state: &mut GameState,
@@ -404,6 +452,21 @@ fn resolve_real(
     write_back_persistent(state, a, &log.attacker_final);
     write_back_persistent(state, b, &log.defender_final);
     let winner = seat_winner(state, &log, a, b);
+    let board_slots = engine.catalog.config.board_slots;
+    accumulate_voyage(
+        state,
+        a,
+        board_a.len(),
+        voyage_result(winner, a),
+        board_slots,
+    );
+    accumulate_voyage(
+        state,
+        b,
+        board_b.len(),
+        voyage_result(winner, b),
+        board_slots,
+    );
     let damage = match winner {
         Some(winner) => {
             let loser = if winner == a { b } else { a };
@@ -583,6 +646,13 @@ fn resolve_ghost(
     } else {
         Some(seat)
     };
+    accumulate_voyage(
+        state,
+        seat,
+        own_board.len(),
+        voyage_result(winner, seat),
+        catalog.config.board_slots,
+    );
 
     reports.insert(
         seat,
@@ -1181,5 +1251,94 @@ mod tests {
         log.attacker_survivors = vec![1]; // 双方都还有存活者：行动上限，不是清场
         log.defender_survivors = vec![2];
         assert_eq!(seat_winner(&state, &log, 0, 1), Some(0));
+    }
+
+    #[test]
+    fn voyage_result_maps_winner_and_draw() {
+        assert_eq!(voyage_result(None, 0), VoyageResult::Draw);
+        assert_eq!(voyage_result(Some(0), 0), VoyageResult::Win);
+        assert_eq!(voyage_result(Some(1), 0), VoyageResult::Loss);
+    }
+
+    #[test]
+    fn voyage_yield_uses_max_on_win_and_draw_min_on_loss() {
+        for (occupied, expected_win, expected_loss) in [(2, 5u16, 2u16), (4, 4, 3), (0, 7, 0)] {
+            for (result, expected) in [
+                (VoyageResult::Win, expected_win),
+                (VoyageResult::Draw, expected_win),
+                (VoyageResult::Loss, expected_loss),
+            ] {
+                let (_, mut state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
+                state.players[0].seven_voyages = Some(crate::state::SevenVoyagesState {
+                    remaining: 2,
+                    pending: 0,
+                    total: 2,
+                });
+                accumulate_voyage(&mut state, 0, occupied, result, 7);
+                let voyage = state.players[0].seven_voyages.expect("累计后航程应保留");
+                assert_eq!(voyage.pending, expected, "占位 {occupied} 的收益");
+                assert_eq!(voyage.remaining, 1, "每次结算推进一个航行回合");
+            }
+        }
+    }
+
+    #[test]
+    fn voyage_payout_arrives_once_on_next_turn() {
+        let (engine, mut state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
+        state.players[0].seven_voyages = Some(crate::state::SevenVoyagesState {
+            remaining: 1,
+            pending: 0,
+            total: 1,
+        });
+        accumulate_voyage(&mut state, 0, 3, VoyageResult::Win, 7);
+        let pending = state.players[0]
+            .seven_voyages
+            .expect("航程尚未到账")
+            .pending;
+        assert_eq!(pending, 4);
+
+        engine.start_turn(&mut state).expect("开始下一回合应成功");
+        assert_eq!(
+            state.players[0].gold,
+            engine.catalog.config.gold_curve[0] + pending as u8,
+            "航程累计金币应与正常金币一起到账"
+        );
+        assert!(
+            state.players[0].seven_voyages.is_none(),
+            "到账后清空航程，允许再次启航"
+        );
+    }
+
+    #[test]
+    fn voyage_pending_is_not_paid_before_final_turn() {
+        let (engine, mut state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
+        state.players[0].seven_voyages = Some(crate::state::SevenVoyagesState {
+            remaining: 3,
+            pending: 7,
+            total: 3,
+        });
+        engine.start_turn(&mut state).expect("开始下一回合应成功");
+        assert_eq!(
+            state.players[0].gold, engine.catalog.config.gold_curve[0],
+            "航程未结束时不到账"
+        );
+        assert_eq!(
+            state.players[0].seven_voyages.expect("航程应保留").pending,
+            7
+        );
+    }
+
+    #[test]
+    fn state_hash_includes_seven_voyages() {
+        use crate::hash::state_hash;
+
+        let (_, state) = Engine::new(test_catalog(), [9; 32], test_playstyles());
+        let mut changed = state.clone();
+        changed.players[0].seven_voyages = Some(crate::state::SevenVoyagesState {
+            remaining: 3,
+            pending: 7,
+            total: 3,
+        });
+        assert_ne!(state_hash(&state), state_hash(&changed));
     }
 }

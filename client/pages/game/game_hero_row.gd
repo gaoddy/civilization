@@ -133,6 +133,11 @@ func _refresh_powers(state: GameUiState, eliminated: bool) -> void:
         ])
         if cost >= 0:
             lines.append(tr("ui.game.detail.cost_value") % cost)
+        var voyage_remaining = power.get("voyageRemaining")
+        if voyage_remaining != null:
+            lines.append(tr("ui.game.side_panel.voyage_status") % [
+                int(voyage_remaining), int(power.get("voyagePending", 0)),
+            ])
         var reason = power.get("disabledReason")
         if reason != null:
             lines.append(UIWording.error_text(str(reason)))

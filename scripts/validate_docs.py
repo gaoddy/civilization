@@ -101,7 +101,7 @@ EFFECT_OPS = {
     "Growth", "ModifyStats", "GrantKeyword", "RemoveGrowth", "CannotAttack",
     "DealDamage", "Summon", "Copy", "Discover", "RefreshShop", "AddShopSlot",
     "GainMinion", "Decompose", "Mimic", "Devour", "Detonate", "Convert", "Revive",
-    "Recall", "Salvage", "Latent", "GrantMinion",
+    "Recall", "Salvage", "Latent", "SevenVoyages", "GrantMinion",
 }
 SELECTOR_SIDES = {"friendly", "enemy", "both", "self", "target"}
 SELECTOR_TARGET_ZONES = {"hand", "shop", "board"}
@@ -112,7 +112,7 @@ FILTER_KEYS = {"taxon", "playstyle", "play", "prey", "host", "subtype", "id", "t
 DURATIONS = {"permanent", "combat"}
 DECOMPOSE_BASES = {"original", "combat_start", "pre_kill"}
 NUMERIC_KEYS = {"times", "count", "amount", "attack", "health", "value",
-                "perAttack", "perHealth", "maxCount", "threshold"}
+                "perAttack", "perHealth", "maxCount", "threshold", "turns_max"}
 AURA_OPS = {"ModifyStats", "GrantKeyword"}
 OP_SPEC = {
     "Growth": ({"times"}, {"healthOnly", "timesIf", "condition", "when"}, {("times",)}),
@@ -139,6 +139,7 @@ OP_SPEC = {
     "Recall": ({"to"}, set(), set()),
     "Salvage": ({"pool", "count"}, set(), set()),
     "Latent": ({"amount", "count"}, {"threshold", "when"}, set()),
+    "SevenVoyages": ({"turns_max"}, set(), set()),
 }
 # 群聚参数只允许出现在光环的 ModifyStats 上。
 CROWD_PARAMS = {"perAttack", "perHealth", "maxCount"}
@@ -1155,7 +1156,7 @@ def skill_field_errors(skill):
     if has_cost != has_uses:
         messages.append(f"{name}: cost 与 uses_per_turn 必须成对出现")
     if has_cost:
-        if type(skill["cost"]) is not int or not 0 <= skill["cost"] <= 2:
+        if type(skill["cost"]) is not int or not 0 <= skill["cost"] <= 3:
             messages.append(f"{name}: 技能费用越界 {skill['cost']!r}")
         if has_uses and (type(skill["uses_per_turn"]) is not int
                          or skill["uses_per_turn"] not in (1, 2)):
@@ -1169,8 +1170,8 @@ def check_skills():
     global KEYWORD_LABELS
     KEYWORD_LABELS = keyword_labels()
     skills = load("skills", SKILL_FIELDS)
-    if len(skills) != 254:
-        fail(f"技能数量 {len(skills)}，期望 254")
+    if len(skills) != 255:
+        fail(f"技能数量 {len(skills)}，期望 255")
     dup = [v for v, n in collections.Counter(s["id"] for s in skills).items() if n > 1]
     if dup:
         fail(f"技能 id 重复: {dup}")
