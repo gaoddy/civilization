@@ -672,7 +672,13 @@ func _check_detail_art() -> void:
         % (frame.custom_minimum_size if frame != null else "无"),
     )
 
-    detail.show_card("alan-turing")
+    var artless := ""
+    for card_id in CardDB.cards:
+        if CardDB.art_path(str(card_id), "card_face") == "":
+            artless = str(card_id)
+            break
+    _expect(artless != "", "应存在无卡面美术的卡牌用于占位用例")
+    detail.show_card(artless)
     await get_tree().process_frame
     _expect(
         detail.find_child("GalleryDetailArt", true, false) == null,
