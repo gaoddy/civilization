@@ -11,7 +11,7 @@ fn loads_all_committed_data() {
     let catalog = test_catalog();
     assert_eq!(catalog.cards.len(), 432);
     assert_eq!(catalog.heroes.len(), 32);
-    assert_eq!(catalog.skills().len(), 254);
+    assert_eq!(catalog.skills().len(), 255);
     assert_eq!(
         catalog
             .cards
@@ -252,6 +252,21 @@ fn rejects_invalid_summon_and_discover() {
 
     let discover = r#"[{"trigger":"on_activate","op":"discover","selector":{"kind":"self"},"params":{"pool":"playstyle","choose":2}}]"#;
     let effects: Vec<Effect> = serde_json::from_str(discover).unwrap();
+    assert!(validate_effects(&effects).is_err());
+}
+
+#[test]
+fn rejects_seven_voyages_off_activate_or_self() {
+    let off_activate = r#"[{"trigger":"on_play","op":"seven_voyages","selector":{"kind":"self"},"params":{"turns_max":7}}]"#;
+    let effects: Vec<Effect> = serde_json::from_str(off_activate).unwrap();
+    assert!(validate_effects(&effects).is_err());
+
+    let off_self = r#"[{"trigger":"on_activate","op":"seven_voyages","selector":{"kind":"side","side":"friendly","pick":"all","filters":[]},"params":{"turns_max":7}}]"#;
+    let effects: Vec<Effect> = serde_json::from_str(off_self).unwrap();
+    assert!(validate_effects(&effects).is_err());
+
+    let out_of_range = r#"[{"trigger":"on_activate","op":"seven_voyages","selector":{"kind":"self"},"params":{"turns_max":8}}]"#;
+    let effects: Vec<Effect> = serde_json::from_str(out_of_range).unwrap();
     assert!(validate_effects(&effects).is_err());
 }
 

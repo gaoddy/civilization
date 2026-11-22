@@ -31,7 +31,7 @@ DECOMPOSE_BASES = validate_docs.DECOMPOSE_BASES
 # 新机制原语的目标侧约定（技术方案 §3）；选择器白名单仍以 validate_docs 为准。
 ENEMY_TARGET_OPS = {"Devour", "Detonate", "Convert"}
 FRIENDLY_OR_ENEMY_TARGET_OPS = {"Mimic"}
-SELF_TARGET_OPS = {"Revive", "Recall", "Salvage", "Latent"}
+SELF_TARGET_OPS = {"Revive", "Recall", "Salvage", "Latent", "SevenVoyages"}
 
 
 @dataclasses.dataclass

@@ -628,6 +628,40 @@ func _check_hero_row() -> void:
             events == ["pressed:mass-energy-equivalence", "down:light-speed-strike"],
             "两个主动技能应各自发出带 skill_id 的信号",
         )
+
+    # 七下西洋：tooltip 展示航程剩余回合与已累计金币。
+    var voyage_view := FixtureScript.game_view()
+    voyage_view["self"]["heroCardId"] = "zhenghe"
+    voyage_view["self"]["heroPowers"] = [
+        {
+            "skillId": "free-refresh",
+            "usesLeft": 1,
+            "requiresTarget": false,
+            "targetCandidates": [],
+            "canUse": true,
+            "disabledReason": null,
+            "voyageRemaining": null,
+            "voyagePending": 0,
+        },
+        {
+            "skillId": "seven-voyages",
+            "usesLeft": 1,
+            "requiresTarget": false,
+            "targetCandidates": [],
+            "canUse": false,
+            "disabledReason": "SEVEN_VOYAGES_ACTIVE",
+            "voyageRemaining": 3,
+            "voyagePending": 12,
+        },
+    ]
+    row.refresh(_state_for(Protocol.PHASE_RECRUIT, voyage_view))
+    await get_tree().process_frame
+    var voyage_button: Control = row.find_child("HeroPowerButton1", true, false)
+    _expect(voyage_button != null, "郑和应显示两个主动技能按钮")
+    if voyage_button != null:
+        var voyage_text: String = tr("ui.game.side_panel.voyage_status") % [3, 12]
+        _expect(voyage_button.tooltip_text.contains(voyage_text), "七下西洋 tooltip 应显示航程进度")
+        _expect(voyage_button.disabled, "航程进行中七下西洋不可用")
     host.queue_free()
     await get_tree().process_frame
 

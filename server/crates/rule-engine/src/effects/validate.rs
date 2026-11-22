@@ -210,6 +210,24 @@ pub fn validate_effect(effect: &Effect) -> Vec<String> {
                 &mut errors,
             );
         }
+        // 七下西洋只由主动技能结算：选择自身、无目标，回合数上限必须在 1–7。
+        Params::SevenVoyages(params) => {
+            if !(1..=7).contains(&params.turns_max) {
+                errors.push(format!(
+                    "SevenVoyages 的 turns_max 必须在 1–7，实为 {}",
+                    params.turns_max
+                ));
+            }
+            if effect.trigger != Trigger::OnActivate {
+                errors.push(format!(
+                    "SevenVoyages 只能由 OnActivate 触发，实为 {:?}",
+                    effect.trigger
+                ));
+            }
+            if !matches!(effect.selector, Selector::SelfCard) {
+                errors.push("SevenVoyages 只能选择自身".to_string());
+            }
+        }
         _ => {}
     }
 

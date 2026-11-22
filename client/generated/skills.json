@@ -3833,6 +3833,24 @@
     "uses_per_turn": null
   },
   {
+    "cost": 3,
+    "effects": [
+      {
+        "op": "seven_voyages",
+        "params": {
+          "turns_max": 7
+        },
+        "selector": {
+          "kind": "self"
+        },
+        "trigger": "on_activate"
+      }
+    ],
+    "id": "seven-voyages",
+    "keyword": null,
+    "uses_per_turn": 1
+  },
+  {
     "cost": 1,
     "effects": [
       {

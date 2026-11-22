@@ -2209,6 +2209,7 @@ impl ::std::convert::From<ErrorMessage> for Error {
 ///    "CARD_NOT_IN_HAND",
 ///    "HERO_NOT_SELECTED",
 ///    "HERO_POWER_LIMIT",
+///    "SEVEN_VOYAGES_ACTIVE",
 ///    "NOT_ACTIVE_SKILL",
 ///    "INVALID_CHOICE",
 ///    "NO_VALID_TARGET",
@@ -2283,6 +2284,8 @@ pub enum ErrorCode {
     HeroNotSelected,
     #[serde(rename = "HERO_POWER_LIMIT")]
     HeroPowerLimit,
+    #[serde(rename = "SEVEN_VOYAGES_ACTIVE")]
+    SevenVoyagesActive,
     #[serde(rename = "NOT_ACTIVE_SKILL")]
     NotActiveSkill,
     #[serde(rename = "INVALID_CHOICE")]
@@ -2379,6 +2382,7 @@ impl ::std::fmt::Display for ErrorCode {
             Self::CardNotInHand => f.write_str("CARD_NOT_IN_HAND"),
             Self::HeroNotSelected => f.write_str("HERO_NOT_SELECTED"),
             Self::HeroPowerLimit => f.write_str("HERO_POWER_LIMIT"),
+            Self::SevenVoyagesActive => f.write_str("SEVEN_VOYAGES_ACTIVE"),
             Self::NotActiveSkill => f.write_str("NOT_ACTIVE_SKILL"),
             Self::InvalidChoice => f.write_str("INVALID_CHOICE"),
             Self::NoValidTarget => f.write_str("NO_VALID_TARGET"),
@@ -2436,6 +2440,7 @@ impl ::std::str::FromStr for ErrorCode {
             "CARD_NOT_IN_HAND" => Ok(Self::CardNotInHand),
             "HERO_NOT_SELECTED" => Ok(Self::HeroNotSelected),
             "HERO_POWER_LIMIT" => Ok(Self::HeroPowerLimit),
+            "SEVEN_VOYAGES_ACTIVE" => Ok(Self::SevenVoyagesActive),
             "NOT_ACTIVE_SKILL" => Ok(Self::NotActiveSkill),
             "INVALID_CHOICE" => Ok(Self::InvalidChoice),
             "NO_VALID_TARGET" => Ok(Self::NoValidTarget),
@@ -3889,7 +3894,9 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///    "requiresTarget",
 ///    "skillId",
 ///    "targetCandidates",
-///    "usesLeft"
+///    "usesLeft",
+///    "voyagePending",
+///    "voyageRemaining"
 ///  ],
 ///  "properties": {
 ///    "canUse": {
@@ -3919,6 +3926,20 @@ impl ::std::convert::From<&HandCard> for HandCard {
 ///    "usesLeft": {
 ///      "type": "integer",
 ///      "minimum": 0.0
+///    },
+///    "voyagePending": {
+///      "description": "七下西洋已累计、未到账的金币；没有航程时为 0",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "voyageRemaining": {
+///      "description": "七下西洋剩余航行回合；没有航程时为 null",
+///      "type": [
+///        "integer",
+///        "null"
+///      ],
+///      "maximum": 7.0,
+///      "minimum": 0.0
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -3943,6 +3964,12 @@ pub struct HeroPower {
     pub target_candidates: ::std::vec::Vec<TargetRef>,
     #[serde(rename = "usesLeft")]
     pub uses_left: u64,
+    ///七下西洋已累计、未到账的金币；没有航程时为 0
+    #[serde(rename = "voyagePending")]
+    pub voyage_pending: u64,
+    ///七下西洋剩余航行回合；没有航程时为 null
+    #[serde(rename = "voyageRemaining")]
+    pub voyage_remaining: ::std::option::Option<i64>,
 }
 impl ::std::convert::From<&HeroPower> for HeroPower {
     fn from(value: &HeroPower) -> Self {

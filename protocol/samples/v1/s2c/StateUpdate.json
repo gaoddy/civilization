@@ -201,7 +201,9 @@
             "requiresTarget": false,
             "targetCandidates": [],
             "canUse": true,
-            "disabledReason": null
+            "disabledReason": null,
+            "voyageRemaining": null,
+            "voyagePending": 0
           }
         ]
       },

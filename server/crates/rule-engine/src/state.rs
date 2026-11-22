@@ -330,6 +330,20 @@ impl HandCard {
     }
 }
 
+/// 七下西洋的航程状态。
+///
+/// 激活回合记为第 1 个航行回合；每回合战斗结算后 `remaining` 减 1，
+/// 收益累加到 `pending`；减到 0 后的下一个招募阶段开始一次性到账并清空。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SevenVoyagesState {
+    /// 剩余航行回合数；为 0 时等待到账。
+    pub remaining: u8,
+    /// 已累计、尚未到账的金币。
+    pub pending: u16,
+    /// 本次航程总回合数，供视图展示。
+    pub total: u8,
+}
+
 /// 单个玩家的状态。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlayerState {
@@ -352,6 +366,8 @@ pub struct PlayerState {
     /// 本回合是否冻结过商店。解冻只在冻结的当回合可用，进入下一回合后清零；
     /// 冻结标记本身跨回合保留，只由手动刷新或解冻清除。
     pub froze_this_turn: bool,
+    /// 进行中的七下西洋航程；没有航程时为 `None`。
+    pub seven_voyages: Option<SevenVoyagesState>,
 }
 
 /// 等待玩家做出的选择。

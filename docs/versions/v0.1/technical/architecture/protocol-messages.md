@@ -544,6 +544,8 @@
 | `targetCandidates` | array<TargetRef> | 是 | 该主动技能的合法目标 |
 | `canUse` | boolean | 是 |  |
 | `disabledReason` | string | null | 是 | 不可使用该技能时的错误码 |
+| `voyageRemaining` | integer | null | 是 | 七下西洋剩余航行回合；没有航程时为 null |
+| `voyagePending` | integer | 是 | 七下西洋已累计、未到账的金币；没有航程时为 0 |
 
 ### GameEvent
 

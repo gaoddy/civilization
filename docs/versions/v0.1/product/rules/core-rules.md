@@ -48,7 +48,7 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 | `RearrangeBoard` | 处于 `Recruit` | 无 | 把随从移动到指定站位，原位及其右侧依次移位 | `NO_SUCH_MINION` |
 | `FreezeShop` | 处于 `Recruit` | 无 | 冻结当前槽位到下回合开始 | — |
 | `UnfreezeShop` | 处于 `Recruit` | 无 | 解冻指定槽位或全部已冻结槽位 | — |
-| `UseHeroPower` | 处于 `Recruit`；技能是英雄卡上的主动技能；费用足够；本回合次数未用尽 | −技能的 `cost` | 使用所选英雄卡上的一个主动技能，次数受该技能 `uses_per_turn` 限制 | `NOT_ACTIVE_SKILL` / `NOT_ENOUGH_GOLD` / `HERO_POWER_LIMIT` / `NO_VALID_TARGET` |
+| `UseHeroPower` | 处于 `Recruit`；技能是英雄卡上的主动技能；费用足够；本回合次数未用尽；七下西洋没有进行中的航程 | −技能的 `cost` | 使用所选英雄卡上的一个主动技能，次数受该技能 `uses_per_turn` 限制 | `NOT_ACTIVE_SKILL` / `NOT_ENOUGH_GOLD` / `HERO_POWER_LIMIT` / `NO_VALID_TARGET` / `SEVEN_VOYAGES_ACTIVE` |
 | `EndRecruit` | 处于 `Recruit` | 无 | 本玩家结束招募 | — |
 | `ChooseDiscover` | 存在本座位的发现或进化待选 | 无 | 消费最靠前的待选 | `INVALID_CHOICE` |
 | `ChooseTarget` | 存在本座位的目标待选 | 无 | 以指定目标结算该待选的战吼，随后补做被推迟的金色奖励、三连判定与入场观察者 | `NO_VALID_TARGET` |
@@ -56,7 +56,7 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 
 **通用规则**：同一回合内，`BuyMinion` / `RerollShop` / `UpgradeEra` / `PlayCard` / `UseHeroPower` 共用同一个金币池，顺序不限；金币不跨回合累积，多余部分清零。
 
-**补充返回码**：`NOT_ACTIVE_SKILL`（`UseHeroPower` 提交的是被动技能；被动技能没有 `cost`，只在触发条件满足时结算）；`NO_VALID_TARGET`（效果需要指定单一目标、存在合法候选但未指定、指定了不在候选内的目标，或目标区域与实例实际所在区域不一致；没有合法候选时主动技能不可用并返回该错误，随从战吼与效果牌则效果落空、意图仍可提交；`ChooseTarget` 指定的目标不在候选内时同样返回该码；见 [卡牌规范与数据](../content/card-system.md) §2.1「英雄卡」）；`TARGET_NOT_ALLOWED`（招募阶段试图指定敌方目标）；`INVALID_CHOICE`（`ChooseDiscover` 的候选索引不合法）。
+**补充返回码**：`NOT_ACTIVE_SKILL`（`UseHeroPower` 提交的是被动技能；被动技能没有 `cost`，只在触发条件满足时结算）；`NO_VALID_TARGET`（效果需要指定单一目标、存在合法候选但未指定、指定了不在候选内的目标，或目标区域与实例实际所在区域不一致；没有合法候选时主动技能不可用并返回该错误，随从战吼与效果牌则效果落空、意图仍可提交；`ChooseTarget` 指定的目标不在候选内时同样返回该码；见 [卡牌规范与数据](../content/card-system.md) §2.1「英雄卡」）；`TARGET_NOT_ALLOWED`（招募阶段试图指定敌方目标）；`INVALID_CHOICE`（`ChooseDiscover` 的候选索引不合法）；`SEVEN_VOYAGES_ACTIVE`（七下西洋已有进行中的航程，到账后航程清空才能再次启航）。
 
 ## 4. 招募阶段细则
 
@@ -161,6 +161,15 @@ Lobby ──(8 人就绪)──→ Recruit ──(全员 EndRecruit 或超时)�
 - 兜底：到下一回合招募截止时刻仍有座位未回报时，服务端强制结算并按已确认结果推进。断线座位视为已回报，不影响其余座位等待。
 - 战斗中客户端隐藏招募倒计时，状态行显示「战斗中」；结算后恢复剩余秒数。
 - 战斗只影响招募剩余时长，不影响金币、商店与结算结果。
+
+### 5.6 七下西洋
+
+- 激活回合计为第 1 个航行回合；每次战斗结算后剩余航行回合减 1。
+- 每回合收益在战斗结算时按战斗前己方棋盘计算：占位数为棋盘随从数，空位数为 `7 − 占位数`；胜或平取 `max(占位数, 空位数)`，负取 `min(占位数, 空位数)`；收益只累计，不到账。
+- 战斗内召唤的随从与衍生物不计入占位数；幽灵战同样计入航行回合并结算。
+- 平局只指双方同回合清场；行动数到上限后按 §5.3 判出的胜负按胜负结算。
+- 第 n 个航行回合结算后的下一个招募阶段开始时，累计金币一次性加到当回合正常金币上；航程随即清空，可在同一招募阶段再次启航。
+- 航程结束前被淘汰或对局结束，累计金币不再到账。
 
 ## 6. 三连与发现
 

@@ -15,6 +15,7 @@
         "CARD_NOT_IN_HAND",
         "HERO_NOT_SELECTED",
         "HERO_POWER_LIMIT",
+        "SEVEN_VOYAGES_ACTIVE",
         "NOT_ACTIVE_SKILL",
         "INVALID_CHOICE",
         "NO_VALID_TARGET",

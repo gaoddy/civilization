@@ -1519,6 +1519,7 @@ fn error_code_of(code: RejectCode) -> ErrorCode {
         RejectCode::NoValidTarget => ErrorCode::NoValidTarget,
         RejectCode::TargetNotAllowed => ErrorCode::TargetNotAllowed,
         RejectCode::InvalidChoice => ErrorCode::InvalidChoice,
+        RejectCode::SevenVoyagesActive => ErrorCode::SevenVoyagesActive,
     }
 }
 

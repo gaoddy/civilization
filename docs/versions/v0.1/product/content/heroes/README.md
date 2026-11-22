@@ -33,4 +33,4 @@
 | [特斯拉](tesla.md) | 鸟纲、机械 | alternating-current |
 | [莱特兄弟](wright-brothers.md) | 机械 | combat-optimal-attack |
 | [张仲景](zhangzhongjing.md) | 哺乳纲 | cold-damage-treatise |
-| [郑和](zhenghe.md) | 哺乳纲 | free-refresh |
+| [郑和](zhenghe.md) | 哺乳纲 | free-refresh；seven-voyages |

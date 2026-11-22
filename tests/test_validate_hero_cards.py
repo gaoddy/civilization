@@ -185,7 +185,7 @@ class ActiveSkillFieldTest(unittest.TestCase):
         self.assertTrue(any("必须成对出现" in m for m in messages), messages)
 
     def test_cost_out_of_range_is_rejected(self):
-        messages = self.errors(cost=3, uses_per_turn=1)
+        messages = self.errors(cost=4, uses_per_turn=1)
         self.assertTrue(any("技能费用越界" in m for m in messages), messages)
 
     def test_uses_out_of_range_is_rejected(self):
@@ -198,6 +198,7 @@ class ActiveSkillFieldTest(unittest.TestCase):
 
     def test_legal_active_skill_passes(self):
         self.assertEqual(self.errors(cost=1, uses_per_turn=2), [])
+        self.assertEqual(self.errors(cost=3, uses_per_turn=1), [])
 
     def test_named_passive_skill_passes(self):
         skill = {"_file": "observation.md", "id": "observation", "name": "观测",
