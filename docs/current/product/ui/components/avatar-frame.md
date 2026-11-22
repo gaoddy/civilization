@@ -40,5 +40,5 @@
 ## 使用者
 
 - [头像块](avatar.md)：`Avatar.create` 基于本组件，座位行使用；玩法色封面 + 玩法色 2px 描边；座位行的 `Avatar.create` 传透明描边色，外框改由座位可选框底板绘制。
-- 对局页的 `GamePortrait`（对手、售货员、战斗开场）：基于本组件，名字条挂在 `clipped_content()`，随头像收进圆角。
-- [对局页](../pages/game.md) 的英雄卡：`GameHeroCard` 继承本组件，头像取英雄 `avatar`，描边取玩法色，生命牌挂在 `content()`。
+- 对局页的 `GamePortrait`（战斗开场）：基于本组件，名字条挂在 `clipped_content()`，随头像收进圆角。
+- [对局页](../pages/game.md) 的英雄卡：`GameHeroCard` 继承本组件，头像取英雄 `avatar`，描边取玩法色，生命牌挂在 `content()`；我方英雄、对手英雄与售货员复用同一组件与 `hero-card-size`，售货员经 `present_portrait` 隐藏生命牌。

@@ -1,6 +1,6 @@
 class_name GameHeroRow
 extends HBoxContainer
-## 英雄行：高 84，英雄卡在左，金币、被动技能标记与全部主动技能在右侧窄列。
+## 英雄行：高 84，英雄卡在左，被动技能标记与全部主动技能在右侧窄列。
 ##
 ## 只发技能按钮信号（带技能 id）；是否可点由 `refresh(state)` 按页面门控决定。
 ## 被动技能只按英雄卡展示，不参与交互、不置灰，也不发信号。
@@ -16,7 +16,6 @@ var detail: DetailLayer = null
 var _hero_card: GameHeroCard
 var _side: VBoxContainer
 var _meta: HBoxContainer
-var _gold_tile: Label
 var _passives: HBoxContainer
 var _passive_chips: Dictionary = {}
 var _powers: HBoxContainer
@@ -45,6 +44,7 @@ func _init() -> void:
 
     _meta = HBoxContainer.new()
     _meta.name = "HeroMeta"
+    _meta.custom_minimum_size = Vector2(0, UITheme.stage_metric("hero-meta-row-height"))
     _meta.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     _meta.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     _side.add_child(_meta)
@@ -54,14 +54,6 @@ func _init() -> void:
     _passives.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     _passives.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     _meta.add_child(_passives)
-
-    _gold_tile = UIControls.pill_label("", "accent", "font-caption")
-    _gold_tile.name = "GoldTile"
-    _gold_tile.custom_minimum_size = Vector2(
-        0, UITheme.stage_metric("hero-meta-row-height")
-    )
-    _gold_tile.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _meta.add_child(_gold_tile)
 
     _powers = HBoxContainer.new()
     _powers.name = "HeroPowers"
@@ -90,9 +82,6 @@ func refresh(state: GameUiState) -> void:
     if hero_id != "" and detail != null and is_instance_valid(detail):
         detail.track(_hero_card, {"detail_kind": "hero", "heroId": hero_id})
 
-    _gold_tile.text = "%d %s" % [
-        int(self_state.get("gold", 0)), tr("ui.game.side_panel.gold")
-    ]
     var eliminated := state.self_eliminated()
     _hero_card.visible = not eliminated
     _side.visible = not eliminated
@@ -214,7 +203,7 @@ func _sync_power_buttons(powers: Array) -> void:
         _power_buttons[skill_id] = button
 
 
-## 被动技能标记：与金币同高的静态格，只提供悬停文案，不发信号、不置灰。
+## 被动技能标记：保持 24 高 meta 行的静态格，只提供悬停文案，不发信号、不置灰。
 class PassiveSkillChip extends Control:
     const GLYPH_INSET := 4.0
     const GLYPH_STROKE := 1.6

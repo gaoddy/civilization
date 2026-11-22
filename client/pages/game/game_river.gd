@@ -2,8 +2,8 @@ class_name GameRiver
 extends PanelContainer
 ## 河道行：高 32，位于商店与棋盘之间、双方棋盘之间。
 ##
-## 招募模式：中央回合数，右端倒计时（悬停翻成「结束招募」）。
-## 战斗模式：中央回合数与结果，右端「战斗中」；不创建招募倒计时节点。
+## 招募模式：左端剩余金币，中央回合数，右端倒计时（悬停翻成「结束招募」）。
+## 战斗模式：左端剩余金币，中央回合数与结果，右端「战斗中」；不创建招募倒计时节点。
 
 enum Mode { RECRUIT, COMBAT }
 
@@ -28,6 +28,7 @@ var _timer_label: Label = null
 var _end_button: Button = null
 var _banner: Label = null
 var _status_pill: Label = null
+var _gold_tile: Label = null
 
 
 func _init(river_mode := Mode.RECRUIT) -> void:
@@ -87,6 +88,8 @@ func _build_recruit(layout: Control) -> void:
     _end_button.visible = false
     _countdown_flip.add_child(_end_button)
 
+    _gold_tile = _build_gold(layout, "RecruitGoldTile")
+
 
 func _build_combat(layout: Control) -> void:
     _banner = UIControls.label("", UITheme.font_size("font-display"), false)
@@ -110,6 +113,26 @@ func _build_combat(layout: Control) -> void:
     _status_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
     layout.add_child(_status_pill)
 
+    _gold_tile = _build_gold(layout, "CombatGoldTile")
+
+
+## 河道左端金币胶囊：两条河道用不同节点名，避免隐藏实例被 `find_child` 命中。
+func _build_gold(layout: Control, node_name: String) -> Label:
+    var gold := UIControls.pill_label("", "accent", "font-caption")
+    gold.name = node_name
+    var width := UITheme.stage_metric("river-gold-width")
+    var height := UITheme.stage_metric("river-gold-height")
+    gold.custom_minimum_size = Vector2(width, height)
+    gold.set_anchors_preset(Control.PRESET_CENTER_LEFT)
+    gold.offset_left = UITheme.space("space-xs")
+    gold.offset_right = UITheme.space("space-xs") + width
+    gold.offset_top = -height * 0.5
+    gold.offset_bottom = height * 0.5
+    gold.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    gold.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    layout.add_child(gold)
+    return gold
+
 
 func _process(_delta: float) -> void:
     if mode == Mode.RECRUIT:
@@ -124,10 +147,19 @@ func refresh(state: GameUiState) -> void:
     _deadline = GameStore.deadline if GameStore.deadline != "" else view_deadline
     _recruited = state.recruited
     _turn_text = tr("ui.game.side_panel.turn") % int(state.view.get("turn", GameStore.turn))
+    _refresh_gold(state)
     if mode == Mode.RECRUIT:
         _refresh_recruit(state)
     else:
         _refresh_combat()
+
+
+## 金币在两条河道都显示；淘汰后只观战，隐藏金币。
+func _refresh_gold(state: GameUiState) -> void:
+    _gold_tile.text = "%d %s" % [
+        int(state.self_state.get("gold", 0)), tr("ui.game.side_panel.gold")
+    ]
+    _gold_tile.visible = not state.self_eliminated()
 
 
 func _refresh_recruit(state: GameUiState) -> void:

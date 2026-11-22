@@ -72,7 +72,9 @@ func _check_shared_layer() -> void:
     _expect(UITheme.metric("river-height") == 32, "河道高应为 32")
     _expect(UITheme.metric("pill-button-height") == 26, "胶囊按钮高应为 26")
     _expect(UITheme.metric("recruit-shop-gap") == 18, "商店到河道的间距应为 18")
-    _expect(UITheme.metric("opponent-hp-width") == 360, "对手血条宽应为 360")
+    _expect(UITheme.metric("opponent-hp-width") == 84, "对手血条宽应为 84")
+    _expect(UITheme.metric("river-gold-width") == 72, "河道金币宽应为 72")
+    _expect(UITheme.metric("river-gold-height") == 24, "河道金币高应为 24")
     _expect(UITheme.metric("portrait-size") == 64, "头像尺寸应为 64")
     _expect(UITheme.font_size("font-micro") == 8, "微型字号应为 8")
     _expect(UITheme.panel_style("bare").content_margin_left == 0, "bare 样式内容边距应为 0")
@@ -460,7 +462,9 @@ func _check_recruit_river() -> void:
     var flip: Control = river.find_child("RecruitCountdownFlip", true, false)
     var timer: Label = river.find_child("RecruitTimerLabel", true, false)
     var end_button: Button = river.find_child("RecruitEndButton", true, false)
+    var gold: Label = river.find_child("RecruitGoldTile", true, false)
     _expect(turn != null and flip != null and timer != null and end_button != null, "招募河道节点应齐全")
+    _expect(gold != null and gold.text.contains("6"), "招募河道左侧应显示金币")
     if turn == null or flip == null or timer == null or end_button == null:
         river.queue_free()
         await get_tree().process_frame
@@ -514,7 +518,9 @@ func _check_combat_river() -> void:
     await get_tree().process_frame
     var banner: Label = river.find_child("CombatBanner", true, false)
     var pill: Label = river.find_child("CombatStatusPill", true, false)
+    var gold: Label = river.find_child("CombatGoldTile", true, false)
     _expect(banner != null and banner.visible, "战斗河道应始终显示横幅")
+    _expect(gold != null and gold.text.contains("6"), "战斗河道左侧应显示金币")
     _expect(pill != null, "战斗河道右端应有战斗中胶囊")
     _expect(river.find_child("RecruitCountdownFlip", true, false) == null, "战斗河道不应创建倒计时")
     if banner != null and pill != null:
@@ -542,14 +548,11 @@ func _check_hero_row() -> void:
     await get_tree().process_frame
 
     var card: Control = row.find_child("HeroCard", true, false)
-    var gold: Label = row.find_child("GoldTile", true, false)
+    var meta: Control = row.find_child("HeroMeta", true, false)
     var power: Control = row.find_child("HeroPowerButton0", true, false)
     _expect(card != null and card.custom_minimum_size == Vector2(84, 84), "英雄行应含 84×84 英雄卡")
-    _expect(gold != null and gold.text.contains("6"), "金币格应显示当前金币")
-    _expect(
-        gold != null and gold.text.contains(TranslationServer.translate("ui.game.side_panel.gold")),
-        "金币格应带金币文案",
-    )
+    _expect(row.find_child("GoldTile", true, false) == null, "英雄行不应再显示金币")
+    _expect(meta != null and meta.custom_minimum_size.y == 24, "英雄 meta 行应保持 24 高")
     _expect(power != null and power.custom_minimum_size == Vector2(40, 40), "英雄技能应为 40×40 图标按钮")
     var uses_badge: Label = row.find_child("HeroPower0UsesBadge", true, false)
     _expect(uses_badge != null and not uses_badge.visible, "剩余 1 次时不显示次数角标")
@@ -682,7 +685,7 @@ func _check_hand_row() -> void:
 
 ## 商店视图：操作行围绕售货员、六个卡槽、费用角标与冻结激活态。
 func _check_shop_view() -> void:
-    var host: Control = await _host(Vector2(1148, 216))
+    var host: Control = await _host(Vector2(1148, 236))
     var shop := GameShopView.new()
     shop.set_anchors_preset(Control.PRESET_TOP_WIDE)
     host.add_child(shop)
@@ -696,9 +699,14 @@ func _check_shop_view() -> void:
     var seller: Control = shop.find_child("SellerTile", true, false)
     var reroll: Button = shop.find_child("RerollButton", true, false)
     var freeze: Button = shop.find_child("FreezeButton", true, false)
-    _expect(actions != null and actions.get_global_rect().size.y == 64, "商店操作行高应为 64")
+    _expect(actions != null and actions.get_global_rect().size.y == 84, "商店操作行高应为 84")
     _expect(upgrade != null and upgrade.custom_minimum_size == Vector2(40, 40), "升级按钮应为 40×40")
-    _expect(seller != null and seller.custom_minimum_size == Vector2(64, 64), "售货员应为 64×64")
+    _expect(seller != null and seller is GameHeroCard, "售货员应复用英雄卡组件")
+    _expect(seller != null and seller.custom_minimum_size == Vector2(84, 84), "售货员应为 84×84")
+    _expect(
+        seller != null and not (seller.find_child("HeroHpPlate", true, false) as Control).visible,
+        "售货员不应显示生命牌",
+    )
     _expect(seller != null and seller.find_child("AvatarFrameArt", true, false) != null, "售货员应显示立绘贴图")
     _expect(
         seller != null and seller.find_child("PortraitName", true, false) == null,
@@ -836,7 +844,7 @@ func _check_freeze_toggle() -> void:
 
 ## 招募组合：商店、河道、棋盘的顺序与高度。
 func _check_recruit_view() -> void:
-    var host: Control = await _host(Vector2(1148, 418))
+    var host: Control = await _host(Vector2(1148, 438))
     var view := GameRecruitView.new()
     view.set_anchors_preset(Control.PRESET_TOP_WIDE)
     host.add_child(view)
@@ -854,13 +862,13 @@ func _check_recruit_view() -> void:
         "招募组合子节点顺序不符：%s" % [names],
     )
     _expect(
-        absf(view.get_combined_minimum_size().y - 418.0) < 1.0,
-        "招募组合总高应为 418，实际 %s" % view.get_combined_minimum_size().y,
+        absf(view.get_combined_minimum_size().y - 438.0) < 1.0,
+        "招募组合总高应为 438，实际 %s" % view.get_combined_minimum_size().y,
     )
     var shop: Control = view.find_child("ShopView", true, false)
     var river: Control = view.find_child("RecruitRiver", true, false)
     var board: Control = view.find_child("BoardPanel", true, false)
-    _expect(shop != null and shop.get_global_rect().size.y == 216, "商店块高应为 216")
+    _expect(shop != null and shop.get_global_rect().size.y == 236, "商店块高应为 236")
     _expect(river != null and river.get_global_rect().size.y == 32, "河道高应为 32")
     _expect(board != null and board.get_global_rect().size.y == 146, "棋盘块高应为 146")
     var turn: Label = view.find_child("RecruitTurnLabel", true, false)
@@ -879,7 +887,7 @@ func _check_recruit_view() -> void:
 ## 对手视图：普通对手显示头像、名字与血量条；幽灵战换身份块并去掉血量条；
 ## 对手为空时显示等待配对。
 func _check_opponent_view() -> void:
-    var host: Control = await _host(Vector2(1148, 64))
+    var host: Control = await _host(Vector2(1148, 84))
     var opponent := GameOpponentView.new()
     host.add_child(opponent)
     await get_tree().process_frame
@@ -894,14 +902,20 @@ func _check_opponent_view() -> void:
     var portrait: Control = opponent.find_child("OpponentPortrait", true, false)
     _expect(normal != null, "普通对手应显示身份块")
     _expect(
-        portrait != null and portrait.custom_minimum_size == Vector2(64, 64),
-        "对手头像应为 64×64",
+        portrait != null and portrait is GameHeroCard,
+        "对手头像应复用英雄卡组件",
+    )
+    _expect(
+        portrait != null and portrait.custom_minimum_size == Vector2(84, 84),
+        "对手英雄卡应为 84×84",
     )
     _expect(
         _node_text(opponent).contains("机器人C"),
         "对手视图应显示展示名，实际「%s」" % _node_text(opponent),
     )
     _expect(opponent.find_child("HpBar", true, false) != null, "普通对手应有血量条")
+    var hp_plate: Control = portrait.find_child("HeroHpPlate", true, false) if portrait != null else null
+    _expect(hp_plate != null and hp_plate.visible, "普通对手英雄卡应显示生命牌")
     _expect(
         portrait != null and portrait.find_child("AvatarFrameArt", true, false) != null,
         "对手头像有素材时应显示头像图",
@@ -916,6 +930,11 @@ func _check_opponent_view() -> void:
     _expect(opponent.find_child("GhostIdentity", true, false) != null, "幽灵战应显示幽灵身份块")
     _expect(opponent.find_child("GhostBadge", true, false) != null, "幽灵战应有幽灵角标")
     _expect(opponent.find_child("HpBar", true, false) == null, "幽灵战不应显示血量条")
+    var ghost_portrait: Control = opponent.find_child("OpponentPortrait", true, false)
+    var ghost_plate: Control = (
+        ghost_portrait.find_child("HeroHpPlate", true, false) if ghost_portrait != null else null
+    )
+    _expect(ghost_plate != null and not ghost_plate.visible, "幽灵战英雄卡应隐藏生命牌")
     _clear_combat()
 
     var empty_view := FixtureScript.game_view()
@@ -1018,14 +1037,15 @@ func _check_recruit_stage() -> void:
     if power != null:
         _expect(power.find_child("HeroPower0CostBadge", true, false) != null, "技能应有费用角标")
         _expect(power.find_child("HeroPower0UsesBadge", true, false) != null, "技能应有次数角标")
-    _expect(instance.find_child("GoldTile", true, false) != null, "英雄行应显示金币")
+    var gold_tile: Label = instance.find_child("RecruitGoldTile", true, false)
+    _expect(gold_tile != null and gold_tile.text.contains("6"), "招募河道应显示金币")
 
     # 商店操作行：升时代在售货员左侧，刷新与冻结在右侧，均为 40×40 图标按钮。
     var seller: Control = instance.find_child("SellerTile", true, false)
     var upgrade: Control = instance.find_child("UpgradeButton", true, false)
     var reroll: Control = instance.find_child("RerollButton", true, false)
     var freeze: Control = instance.find_child("FreezeButton", true, false)
-    _expect(seller != null and seller.size == Vector2(64, 64), "售货员应为 64×64")
+    _expect(seller != null and seller.size == Vector2(84, 84), "售货员应为 84×84")
     _expect(
         seller != null and seller.find_child("PortraitName", true, false) == null,
         "售货员不应再显示名字条",

@@ -13,7 +13,7 @@ const STEPS := [
     {
         "id": 1,
         "phase": Protocol.PHASE_RECRUIT,
-        "targets": ["ShopPanel", "ShopRow", "GoldTile"],
+        "targets": ["ShopPanel", "ShopRow", "RecruitGoldTile"],
         "title": "ui.guide.step1.title",
         "body": "ui.guide.step1.body",
     },

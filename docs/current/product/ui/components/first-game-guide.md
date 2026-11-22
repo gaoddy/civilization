@@ -39,14 +39,14 @@ FirstGameGuide（CanvasLayer，layer 100）
 
 | 步骤 | 阶段 | 目标节点 | 文案键 |
 | --- | --- | --- | --- |
-| 1 商店与金币 | `Recruit` | `ShopPanel`、`ShopRow`、`GoldTile` | `ui.guide.step1.title` / `ui.guide.step1.body` |
+| 1 商店与金币 | `Recruit` | `ShopPanel`、`ShopRow`、`RecruitGoldTile` | `ui.guide.step1.title` / `ui.guide.step1.body` |
 | 2 出战 | `Recruit` | `HandRow`、`BoardRow` | `ui.guide.step2.title` / `ui.guide.step2.body` |
 | 3 结束招募 | `Recruit` | `RecruitEndButton`、`RecruitTimerLabel` | `ui.guide.step3.title` / `ui.guide.step3.body` |
 | 4 战斗 | `Combat` | `CenterPanel`、`ReportLayer` | `ui.guide.step4.title` / `ui.guide.step4.body` |
 
 - 从「提示」打开时从当前阶段对应的步骤开始，非招募/战斗阶段回退到第 1 步；之后按步骤顺序推进，不按手牌/棋盘条件跳步。
 - 引导打开期间阶段变化时切换到新阶段对应的步骤；`GameOver` 时收起。
-- `GoldTile` 是英雄行技能列顶部的金币格，供步骤 1 定位；步骤 3 的 `RecruitEndButton` 在倒计时悬停翻转后才可见，高亮取 `RecruitTimerLabel` 与翻转区的并集。
+- `RecruitGoldTile` 是招募河道左端的金币胶囊，供步骤 1 定位；步骤 3 的 `RecruitEndButton` 在倒计时悬停翻转后才可见，高亮取 `RecruitTimerLabel` 与翻转区的并集。
 
 ## 打开与关闭
 

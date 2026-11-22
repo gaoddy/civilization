@@ -474,7 +474,7 @@ func _check_game_compact(compact: Vector2) -> void:
                     "手机基准头像应为正方形",
                 )
         var bounds := Rect2(host.get_global_rect().position, compact).grow(1.0)
-        for node_name in ["BoardRow", "HandStrip"]:
+        for node_name in ["BoardRow", "HandStrip", "RecruitGoldTile"]:
             var node := page.find_child(str(node_name), true, false) as Control
             _check(node != null, "对局页缺少 %s" % node_name)
             if node != null:

@@ -79,17 +79,19 @@
 | `pill-button-height` | 26 | 胶囊按钮高度；触控端不低于次要操作命中高度 |
 | `status-dialog-width` | 360 | 对局状态模态的提示面板宽度 |
 | `river-height` | 32 | 对局页河道行高度，商店与棋盘、双方棋盘之间 |
-| `hero-row-height` | 84 | 对局页英雄行高度，容纳英雄卡与金币、技能列 |
-| `hero-meta-row-height` | 24 | 英雄行金币与被动技能标记所在行的高度，也是被动标记的边长 |
-| `hero-card-size` | 84 | 对局页英雄卡边长；方形卡与英雄行同高，头像裁切铺满整卡 |
+| `river-gold-width` | 72 | 河道左端金币胶囊宽度；手机 64 |
+| `river-gold-height` | 24 | 河道左端金币胶囊高度；手机 20 |
+| `hero-row-height` | 84 | 对局页英雄行高度，容纳英雄卡与技能列 |
+| `hero-meta-row-height` | 24 | 英雄行被动技能标记所在行的高度，也是被动标记的边长 |
+| `hero-card-size` | 84 | 对局页英雄卡边长；售货员与对手英雄复用同一尺寸，方形卡与英雄行同高，头像裁切铺满整卡 |
 | `shop-icon-size` | 40 | 商店升时代、刷新、冻结与英雄技能图标按钮边长 |
-| `recruit-shop-gap` | 18 | 招募组合中商店操作与商店整体到河道的间距 |
-| `opponent-hp-width` | 360 | 战斗阶段对手身份块与血量条宽度 |
+| `recruit-shop-gap` | 18 | 招募组合中商店整体到河道的间距；战斗组合不再使用 |
+| `opponent-hp-width` | 84 | 战斗阶段对手身份列与血量条宽度，与英雄卡同宽；手机 64 |
 | `report-width` | 236 | 左栏战报浮层宽度 |
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
 | `avatar-rail` | 44 | 左栏座位行边长兜底值，左栏尺寸未解算时使用；实际边长取栏内宽与人均可用高度的较小值，头像边长再减两侧描边 4，手机兜底 40 |
 | `seat-row-gap` | 4 | 座位行间距；手机 2 |
-| `portrait-size` | 64 | 售货员与对手英雄头像块边长 |
+| `portrait-size` | 64 | `CombatIntro` 等仍使用 `GamePortrait` 的头像块边长；售货员与对手英雄改用 `hero-card-size` |
 | `hero-detail-width` | 160 | 选英雄页悬停详情与房间候选卡宽度，手机 120；高度由 `UITheme.card_face_height` 按卡面比例计算 |
 | `room-hero-detail-width` | 280 | 选英雄页悬停详情卡宽度；手机 200 |
 | `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
@@ -134,13 +136,15 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `seat-row-gap-compact` | 2 | iPhone 座位行间距 |
 | `rank-badge-size-compact` | 14 | iPhone 座位名次圆形角标直径 |
 | `river-height-compact` | 24 | iPhone 河道行高度 |
+| `river-gold-width-compact` | 64 | iPhone 河道金币胶囊宽度 |
+| `river-gold-height-compact` | 20 | iPhone 河道金币胶囊高度 |
 | `recruit-shop-gap-compact` | 10 | iPhone 商店整体到河道的间距 |
-| `shop-actions-height-compact` | 52 | iPhone 商店操作行高度 |
 | `hero-row-height-compact` | 64 | iPhone 英雄行高度 |
-| `hero-card-size-compact` | 64 | iPhone 英雄卡边长，与英雄行同高 |
+| `hero-card-size-compact` | 64 | iPhone 英雄卡、售货员与对手英雄卡边长，与英雄行同高 |
+| `opponent-hp-width-compact` | 64 | iPhone 对手身份列与血量条宽度 |
 | `pill-button-height-compact` | 24 | iPhone 胶囊按钮高度 |
 | `status-dialog-width-compact` | 280 | iPhone 对局状态模态的提示面板宽度 |
-| `portrait-size-compact` | 48 | iPhone 售货员与对手英雄头像边长 |
+| `portrait-size-compact` | 48 | iPhone `CombatIntro` 等仍使用 `GamePortrait` 的头像块边长 |
 | `room-hero-detail-width-compact` | 200 | iPhone 选英雄页悬停详情卡宽度 |
 | `hero-detail-width-compact` | 120 | iPhone 选英雄页悬停详情与候选卡宽度；高度由 `card_face_height` 计算 |
 

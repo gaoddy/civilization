@@ -40,14 +40,14 @@ func _stage_gap() -> int:
 func _init() -> void:
     name = "ShopView"
     custom_minimum_size = Vector2(
-        0, UITheme.stage_metric("shop-actions-height") + _stage_gap()
+        0, UITheme.stage_metric("hero-card-size") + _stage_gap()
             + UITheme.stage_metric("card-height")
     )
     add_theme_constant_override("separation", UITheme.space("space-none"))
 
     var actions := HBoxContainer.new()
     actions.name = "ShopActions"
-    actions.custom_minimum_size = Vector2(0, UITheme.stage_metric("shop-actions-height"))
+    actions.custom_minimum_size = Vector2(0, UITheme.stage_metric("hero-card-size"))
     actions.alignment = BoxContainer.ALIGNMENT_CENTER
     actions.add_theme_constant_override("separation", UITheme.space("space-lg"))
     add_child(actions)
@@ -58,15 +58,14 @@ func _init() -> void:
     _upgrade_button.pressed.connect(func() -> void: upgrade_pressed.emit())
     actions.add_child(_upgrade_button)
 
-    var seller := GamePortrait.new()
+    var seller := GameHeroCard.new()
     seller.name = "SellerTile"
     seller.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     # 立绘已能表达身份，操作行不再附「售货员」名字条；悬停详情保持不变。
-    seller.setup(
+    seller.present_portrait(
         tr("ui.game.side_panel.seller"),
         tr("ui.game.side_panel.seller_glyph"),
         UITheme.playstyle_color("neutral"),
-        false,
         SELLER_ART,
     )
     actions.add_child(seller)

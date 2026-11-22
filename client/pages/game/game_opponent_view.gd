@@ -1,8 +1,8 @@
 class_name GameOpponentView
 extends HBoxContainer
-## 战斗阶段顶部对手：64×64 头像 + 名字、英雄、HP 行与血量条。
+## 战斗阶段顶部对手：84×84 英雄卡 + 84 宽身份列，与我方英雄行镜像。
 ##
-## 只读展示，不发信号：对方为空显示等待配对；幽灵战只换身份块并去掉血量条。
+## 只读展示，不发信号：对方为空显示等待配对；幽灵战压暗英雄卡、隐藏生命牌与血量条。
 
 ## 卡片详情登记入口，由对局页注入；独立实例化时可为 null。
 var detail: DetailLayer = null
@@ -10,7 +10,7 @@ var detail: DetailLayer = null
 
 func _init() -> void:
     name = "OpponentView"
-    custom_minimum_size = Vector2(0, UITheme.stage_metric("portrait-size"))
+    custom_minimum_size = Vector2(0, UITheme.stage_metric("hero-card-size"))
     size_flags_horizontal = Control.SIZE_EXPAND_FILL
     alignment = BoxContainer.ALIGNMENT_CENTER
     add_theme_constant_override("separation", UITheme.space("space-md"))
@@ -30,54 +30,52 @@ func refresh(state: GameUiState) -> void:
         add_child(_normal_block(player, state.hp_cap))
 
 
-## 普通对手：头像 + 身份列（名字、英雄、HP 行、血量条）。
+## 普通对手：英雄卡 + 身份列（名字/名次、HP 行、血量条）。
 func _normal_block(player: Dictionary, hp_cap: int) -> Control:
     var block := HBoxContainer.new()
     block.name = "OpponentIdentity"
     block.alignment = BoxContainer.ALIGNMENT_CENTER
     block.add_theme_constant_override("separation", UITheme.space("space-md"))
-    block.add_child(_portrait(player))
+    block.add_child(_portrait(player, hp_cap, true))
     block.add_child(_identity_column(player, hp_cap, false))
     return block
 
 
-## 幽灵战：身份列带幽灵角标、无血量条，整块压暗。
+## 幽灵战：英雄卡隐藏生命牌，身份列带幽灵角标与时代/随从数，整块压暗。
 func _ghost_block(player: Dictionary, hp_cap: int) -> Control:
     var block := HBoxContainer.new()
     block.name = "GhostIdentity"
     block.alignment = BoxContainer.ALIGNMENT_CENTER
     block.add_theme_constant_override("separation", UITheme.space("space-md"))
-    block.add_child(_portrait(player))
+    block.add_child(_portrait(player, hp_cap, false))
     block.add_child(_identity_column(player, hp_cap, true))
     UIControls.apply_dim(block)
     return block
 
 
-func _portrait(player: Dictionary) -> GamePortrait:
+func _portrait(player: Dictionary, hp_cap: int, show_hp: bool) -> GameHeroCard:
     var hero_id := CardText.optional_text(player.get("heroCardId"))
-    var display := CardDB.display_name(hero_id) if hero_id != "" else tr("ui.game.side_panel.unknown_hero")
-    var tint := (
-        UITheme.playstyle_color(CardDB.primary_playstyle(CardDB.hero(hero_id)))
-        if hero_id != ""
-        else UITheme.color("color-border-strong")
-    )
-    var portrait := GamePortrait.new()
+    var portrait := GameHeroCard.new()
     portrait.name = "OpponentPortrait"
-    var art_path := CardDB.art_path(hero_id, "avatar") if hero_id != "" else ""
-    portrait.setup(display, display.substr(0, 1) if display != "" else "?", tint, false, art_path)
+    portrait.refresh(
+        hero_id,
+        int(player.get("hp", 0)) if show_hp else 0,
+        hp_cap if show_hp else 0,
+    )
     if hero_id != "" and detail != null and is_instance_valid(detail):
         detail.track(portrait, {"detail_kind": "hero", "heroId": hero_id})
     return portrait
 
 
 func _identity_column(player: Dictionary, hp_cap: int, ghost: bool) -> VBoxContainer:
+    var width := UITheme.stage_metric("opponent-hp-width")
     var column := VBoxContainer.new()
-    column.custom_minimum_size = Vector2(UITheme.stage_metric("opponent-hp-width"), 0)
+    column.custom_minimum_size = Vector2(width, 0)
     column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     column.add_theme_constant_override("separation", UITheme.space("space-2xs"))
 
     var name_row := HBoxContainer.new()
-    name_row.add_theme_constant_override("separation", UITheme.space("space-xs"))
+    name_row.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     column.add_child(name_row)
     var display_name := CardText.optional_text(player.get("displayName"))
     if display_name == "":
@@ -87,44 +85,46 @@ func _identity_column(player: Dictionary, hp_cap: int, ghost: bool) -> VBoxConta
     name_label.max_lines_visible = 1
     name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
     name_row.add_child(name_label)
-    if ghost:
-        var ghost_badge := UIControls.pill_label(tr("ui.game.side_panel.ghost"), "info", "font-caption")
-        ghost_badge.name = "GhostBadge"
-        name_row.add_child(ghost_badge)
     var rank = player.get("rank")
     if rank != null:
         var rank_badge := UIControls.pill_label(tr("ui.game.side_panel.rank") % int(rank), "accent", "font-caption")
         rank_badge.name = "RankBadge"
         name_row.add_child(rank_badge)
 
-    var hero_id := CardText.optional_text(player.get("heroCardId"))
-    var hero_label := UIControls.label(
-        CardDB.display_name(hero_id) if hero_id != "" else tr("ui.game.side_panel.unknown_hero"),
-        UITheme.font_size("font-body-sm"),
-        false,
-    )
-    hero_label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
-    column.add_child(hero_label)
-
-    var meta := UIControls.label(tr("ui.game.side_panel.hp_line") % [
-        int(player.get("hp", 0)),
-        maxi(hp_cap, 1),
-        CardText.era_text(int(player.get("era", 1))),
-        int(player.get("boardCount", 0)),
-    ], UITheme.font_size("font-caption"), false)
-    meta.clip_text = true
-    meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
-    column.add_child(meta)
-
-    if not ghost:
+    if ghost:
+        var ghost_badge := UIControls.pill_label(tr("ui.game.side_panel.ghost"), "info", "font-caption")
+        ghost_badge.name = "GhostBadge"
+        ghost_badge.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+        column.add_child(ghost_badge)
+        column.add_child(_meta_label(tr("ui.game.side_panel.era_board") % [
+            CardText.era_text(int(player.get("era", 1))),
+            int(player.get("boardCount", 0)),
+        ]))
+    else:
+        var meta := _meta_label(tr("ui.game.side_panel.hp_line") % [
+            int(player.get("hp", 0)),
+            maxi(hp_cap, 1),
+            CardText.era_text(int(player.get("era", 1))),
+            int(player.get("boardCount", 0)),
+        ])
+        # 84 宽身份列放不下整行 HP 文案，允许在词间换行，避免裁切丢失时代与随从数。
+        meta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        column.add_child(meta)
         column.add_child(
             HpBar.create(
                 int(player.get("hp", 0)),
                 hp_cap,
-                UITheme.stage_metric("opponent-hp-width"),
+                width,
             )
         )
     return column
+
+
+func _meta_label(text: String) -> Label:
+    var meta := UIControls.label(text, UITheme.font_size("font-caption"), false)
+    meta.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    meta.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
+    return meta
 
 
 func _player(view: Dictionary, player_id: String) -> Dictionary:
