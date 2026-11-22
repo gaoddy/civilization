@@ -182,7 +182,7 @@ impl Taxonomy {
 
 ## 4. 卡牌数据生成
 
-- 唯一数据源：`docs/versions/v0.1/product/content/` 下的卡牌、技能实体文档与 `taxonomy.md`；`scripts/gen_card_data.py` 复用 `validate_docs.py` 的 front matter 与分类树解析。
+- 唯一数据源：`docs/current/product/content/` 下的卡牌、技能实体文档与 `taxonomy.md`；`scripts/gen_card_data.py` 复用 `validate_docs.py` 的 front matter 与分类树解析。
 - 分类树与玩法清单由 `taxonomy.md` §1 / §2 解析为 `taxonomy.json`（`{nodes, playstyles}`）；客户端生成物 `client/generated/taxonomy.json` 同源。展示名不进 JSON，由文本表 `enum.taxon.<id>` 与 `enum.playstyle.<id>` 提供。
 - 生成数据只含规则与标识，不含展示文本：`cards.json`、`skills.json` 没有 `name`、`text` 字段。卡牌 `card_type` / `categories` / `taxon` / `era` / `subtype`、`in_shop_pool`，技能与效果中的 `keyword`、DSL 筛选与枚举（`playstyle`、`taxon`、`play`、`prey`、`host`、`type`、`keyword`、进化选项等）一律为英文 id（如 `minion`、`mammal`、`felidae`、`industrial`、`ignore_taunt`）。展示文本由 `scripts/gen_text.py` 汇总到 `client/text/zh_CN.csv`，按 `card.<id>.name`、`skill.<id>.text` 等文本 id 取用；非池卡同样使用 `card.<id>.name`。
 - 经济与对局配置由生成器从产品数值文档口径抄录到 `config.json`（初始生命、棋盘/手牌/商店槽位、回合上限、伤害上下限、升时代费用、星级牌份数、商店概率、金币曲线）。
@@ -239,7 +239,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 | 分类与玩法 | `make data-check`、`python3 scripts/validate_docs.py`、`make test` | 分类树节点、父链、叶子层级与卡牌 `taxon` 全覆盖；`playstyles::draw` 同 seed 固定 5 个玩法；`Engine::new` 拒绝 `Neutral` 与重复玩法；`card_in_pool` 与筛选键由引擎测试覆盖 |
 | 稳定性 | `make m0-batch`、`make m0-report` | `make m0-batch` 退出码 0，无错误输出；产物 `output/m0-batch.json` 的 `games` 数为 1000（每局一条日志）。`make m0-report` 以 `sim check --expect-games 1000` 断言批量日志 `games` = 1000（批量退出码 0、异常/超时 0 的「无缺局」口径），局数不符即非零退出 |
 | 可判定 | `make m0-batch`、`make m0-report` | `sim check`（由 `make m0-report` 调用）逐局断言 `ranking.len() == 8`、座位恰为 0–7、名次 1–8 连续，任一局不满足即非零退出并给出异常局数；`sim report` 也内置同一校验，stdout 仅输出 JSON。契约另由 `sim_cli::single_game_produces_ranking_and_hash`、`batch_of_ten_all_ranked`、`check_fails_on_incomplete_ranking` 固化 |
-| 数值基线 | `make m0-report`（`output/m0-report.log`） | 退出码 0；`wins_by_playstyle`、`win_rate_permille_by_playstyle`、`avg_turns`、`era_upgrade_turns_by_seat`、`avg_era_upgrade_turn`、`triples_per_game`、`games_reaching_turn_20`、`survivors_at_turn_20`、`avg_damage_per_loss` 均有值；越界与口径问题登记[平衡问题](../../versions/v0.1/product/content/balance-questions.md) |
+| 数值基线 | `make m0-report`（`output/m0-report.log`） | 退出码 0；`wins_by_playstyle`、`win_rate_permille_by_playstyle`、`avg_turns`、`era_upgrade_turns_by_seat`、`avg_era_upgrade_turn`、`triples_per_game`、`games_reaching_turn_20`、`survivors_at_turn_20`、`avg_damage_per_loss` 均有值；越界与口径问题登记[平衡问题](../product/content/balance-questions.md) |
 
 ## 7. 报告字段口径
 

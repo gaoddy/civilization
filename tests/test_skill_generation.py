@@ -13,7 +13,7 @@ import render_docs
 import skill_templates
 import validate_docs
 
-CONTENT = ROOT / "docs/versions/v0.1/product/content"
+CONTENT = ROOT / "docs/current/product/content"
 
 
 def build_fixture(tmp):

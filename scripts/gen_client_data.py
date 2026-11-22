@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """从 v0.1 实体文档生成客户端只读展示表。
 
-只读 docs/versions/v0.1/product 下的实体文档，输出确定性 JSON 到
+只读 docs/current/product 下的实体文档，输出确定性 JSON 到
 client/generated/。只输出展示费用与规则字段，文本由文本表提供；客户端不做规则计算。
 费用只用于展示：随从购买费用固定 3，效果牌取文档 cost。
 """
@@ -32,7 +32,7 @@ def _display_card(doc):
 
 def build(root):
     """返回文件名到确定性 JSON 文本的映射。"""
-    content = pathlib.Path(root) / "docs" / "versions" / "v0.1" / "product" / "content"
+    content = pathlib.Path(root) / "docs" / "current" / "product" / "content"
     renderer = skill_templates.Renderer(content)
     cards = [_display_card(doc) for doc in gen_card_data.load_docs(content, "cards")]
     heroes = [gen_card_data.hero_entry(doc) for doc in gen_card_data.load_docs(content, "heroes")]

@@ -9,8 +9,8 @@
 **Tech Stack:** Python（文档校验、数据生成、一次性迁移脚本）、Rust（rule-engine、sim）、JSON 生成物、Godot 文本表。
 
 **Spec:**
-- 产品规则：[product.md](../../versions/v0.1/update/2026-11-18-card-differentiation/product.md)
-- 技术方案：[technical.md](../../versions/v0.1/update/2026-11-18-card-differentiation/technical.md)
+- 产品规则：[平衡测算](../../current/product/content/balance-analysis.md)
+- 技术方案：[规则引擎与模拟器](../../current/technical/rule-engine-and-simulator.md)
 
 ## Global Constraints
 
@@ -195,15 +195,15 @@ git commit -m "feat(balance): 新增玩法身材与效果牌平衡报告"
 
 **Files:**
 - Modify: `scripts/validate_docs.py`
-- Modify: `docs/versions/v0.1/product/content/cards/juelei.md`
-- Modify: `docs/versions/v0.1/product/content/cards/sea-anemone.md`
-- Modify: `docs/versions/v0.1/product/content/cards/shuishengjue.md`
-- Modify: `docs/versions/v0.1/product/content/cards/nitaizhangyu.md`
-- Modify: `docs/versions/v0.1/product/content/cards/shizuniao.md`
-- Modify: `docs/versions/v0.1/product/content/cards/sibadayongshi.md`
-- Modify: `docs/versions/v0.1/product/content/cards/tufu.md`
-- Modify: `docs/versions/v0.1/product/content/cards/xiake.md`
-- Modify: `docs/versions/v0.1/product/content/cards/yuanshijixiekuilei.md`
+- Modify: `docs/current/product/content/cards/juelei.md`
+- Modify: `docs/current/product/content/cards/sea-anemone.md`
+- Modify: `docs/current/product/content/cards/shuishengjue.md`
+- Modify: `docs/current/product/content/cards/nitaizhangyu.md`
+- Modify: `docs/current/product/content/cards/shizuniao.md`
+- Modify: `docs/current/product/content/cards/sibadayongshi.md`
+- Modify: `docs/current/product/content/cards/tufu.md`
+- Modify: `docs/current/product/content/cards/xiake.md`
+- Modify: `docs/current/product/content/cards/yuanshijixiekuilei.md`
 - Create: `tests/test_validate_balance_rules.py`
 - Create: `server/crates/rule-engine/tests/pool_filter.rs`
 
@@ -399,7 +399,7 @@ cd server && cargo test --workspace
 cd ..
 git add scripts/validate_docs.py tests/test_validate_balance_rules.py \
   server/crates/rule-engine/tests/pool_filter.rs \
-  docs/versions/v0.1/product/content/cards/{juelei,sea-anemone,shuishengjue,nitaizhangyu,shizuniao,sibadayongshi,tufu,xiake,yuanshijixiekuilei}.md
+  docs/current/product/content/cards/{juelei,sea-anemone,shuishengjue,nitaizhangyu,shizuniao,sibadayongshi,tufu,xiake,yuanshijixiekuilei}.md
 git commit -m "feat(cards): 放开效果牌玩法关联并收紧技能数量校验"
 ```
 
@@ -543,7 +543,7 @@ git commit -m "feat(sim): AI 打出效果牌"
 
 `output/rebalance.py` 要求：
 
-- 解析 `docs/versions/v0.1/product/content/cards/*.md` 的 front matter 与「## 属性」表。
+- 解析 `docs/current/product/content/cards/*.md` 的 front matter 与「## 属性」表。
 - 角色来源：优先 `output/role-overrides.json`（`{"card_id": "tank|output|balanced|function"}`）；否则按设计说明的「定位：」与技能关键词推断：含减伤/复苏/嘲讽/繁衍/生命成长 → tank；含俯冲/连击/最优攻击/高攻击 → output；含光环/战吼成长/召唤/分裂 → function；其余 balanced。
 - **英雄卡跳过**：`is_hero` 为真的卡不参与批量重排，保持现有身材；`plan` 另列「英雄偏离表」，列出攻血比超出本玩法目标带的英雄，由人工在 `output/role-overrides.json` 中单独指定数值。
 - 攻血比：tank 取玩法目标带下沿，output 取上沿，balanced 取中值，function 取中值 −0.01。
@@ -615,7 +615,7 @@ Expected: EXIT 0。
 - [ ] **Step 7: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/cards server/data/v0.1 client server/crates
+git add docs/current/product/content/cards server/data/v0.1 client server/crates
 git commit -m "feat(cards): 重排哺乳纲与中立随从身材"
 ```
 
@@ -656,7 +656,7 @@ Run: `make data-check && make test`
 Expected: EXIT 0。
 
 ```bash
-git add docs/versions/v0.1/product/content/cards server/data/v0.1 client server/crates
+git add docs/current/product/content/cards server/data/v0.1 client server/crates
 git commit -m "feat(cards): 重排鸟爬行鱼昆虫头足水螅身材"
 ```
 
@@ -714,7 +714,7 @@ Run: `make data-check && make test`
 Expected: EXIT 0。
 
 ```bash
-git add docs/versions/v0.1/product/content/cards server/data/v0.1 client server/crates
+git add docs/current/product/content/cards server/data/v0.1 client server/crates
 git commit -m "feat(cards): 重排植物真菌原生细菌病毒机械身材"
 ```
 
@@ -723,8 +723,8 @@ git commit -m "feat(cards): 重排植物真菌原生细菌病毒机械身材"
 ### Task 6: 63 张效果牌与配套技能
 
 **Files:**
-- Create: 63 个卡牌文档 `docs/versions/v0.1/product/content/cards/<id>.md`
-- Create: 新技能文档 `docs/versions/v0.1/product/content/skills/<id>.md`
+- Create: 63 个卡牌文档 `docs/current/product/content/cards/<id>.md`
+- Create: 新技能文档 `docs/current/product/content/skills/<id>.md`
 - Modify: `scripts/validate_docs.py`（效果牌 100、技能数、`EXPECT_ERA`）
 - Modify: `tests/test_gen_data.py`（346→409、197→实际技能数）
 - Modify: `server/crates/rule-engine/tests/catalog.rs`（346→409、197→实际技能数）
@@ -762,7 +762,7 @@ git commit -m "feat(cards): 重排植物真菌原生细菌病毒机械身材"
 
 - [ ] **Step 3: 生成并重出数据**
 
-先补 2 个衍生 Token（写入 `docs/versions/v0.1/product/content/tokens/README.md` 注册表）：
+先补 2 个衍生 Token（写入 `docs/current/product/content/tokens/README.md` 注册表）：
 
 | id | 名称 | 攻击力 | 生命值 | 玩法 | 科学分类 | 生成来源 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -836,8 +836,8 @@ Expected: `100 39 61`；13 个玩法 id 各 3 张。
 
 ```bash
 make data-check
-git add docs/versions/v0.1/product/content/cards docs/versions/v0.1/product/content/skills \
-  docs/versions/v0.1/product/content/tokens/README.md \
+git add docs/current/product/content/cards docs/current/product/content/skills \
+  docs/current/product/content/tokens/README.md \
   scripts/validate_docs.py tests/test_gen_data.py server/data/v0.1 client \
   server/crates/rule-engine/tests/{catalog.rs,effects_exec.rs,combat.rs} server/crates/sim/tests
 git commit -m "feat(cards): 扩增 63 张效果牌与定向玩法关联"
@@ -998,7 +998,7 @@ Expected: 每个玩法 40–120‰；`avg_turns` 16–19；`survivors_at_turn_20
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/cards docs/versions/v0.1/product/content/skills \
+git add docs/current/product/content/cards docs/current/product/content/skills \
   server/data/v0.1 client server/crates
 git commit -m "feat(balance): 收敛玩法胜率并重定模拟金标准"
 ```
@@ -1008,12 +1008,12 @@ git commit -m "feat(balance): 收敛玩法胜率并重定模拟金标准"
 ### Task 8: 文档回写与全量验证
 
 **Files:**
-- Modify: `docs/versions/v0.1/product/content/card-system.md`
-- Modify: `docs/versions/v0.1/product/systems/economy-and-numbers.md`
-- Modify: `docs/versions/v0.1/product/content/balance-analysis.md`
-- Modify: `docs/versions/v0.1/product/content/cards/README.md`
-- Modify: `docs/versions/v0.1/product/content/skills/README.md`
-- Modify: `docs/versions/v0.1/product/content/taxonomy.md`
+- Modify: `docs/current/product/content/card-system.md`
+- Modify: `docs/current/product/systems/economy-and-numbers.md`
+- Modify: `docs/current/product/content/balance-analysis.md`
+- Modify: `docs/current/product/content/cards/README.md`
+- Modify: `docs/current/product/content/skills/README.md`
+- Modify: `docs/current/product/content/taxonomy.md`
 - Modify: `docs/current/technical/rule-engine-and-simulator.md`
 
 **Interfaces:**

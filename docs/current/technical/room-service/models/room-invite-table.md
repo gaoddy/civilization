@@ -29,7 +29,7 @@ CREATE INDEX room_invite_expiry_idx ON room_invite (expires_at);
 | `keypath` | 类型 | 说明 | 与产品的对应关系 |
 | --- | --- | --- | --- |
 | `invite_id` | `text` | 邀请标识，主键，形如 `inv_<uuid>` | 邀请弹窗回执用的邀请编号 |
-| `from_account_id` | `text` | 邀请人账号标识，外键 `account.account_id` | 邀请弹窗展示的邀请人，见[房间与邀请](../../../../versions/v0.1/product/systems/rooms-and-invites.md) |
+| `from_account_id` | `text` | 邀请人账号标识，外键 `account.account_id` | 邀请弹窗展示的邀请人，见[房间与邀请](../../../product/systems/rooms-and-invites.md) |
 | `to_account_id` | `text` | 被邀请人账号标识，外键 `account.account_id` | 邀请弹窗的接收者 |
 | `room_id` | `text` | 目标房间标识，仅进程内有效 | 不对外展示 |
 | `room_code` | `text` | 目标房间码，6 位大写字母数字 | 邀请弹窗展示、接受后 `JoinRoom` 使用的房间码 |

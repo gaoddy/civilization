@@ -6,7 +6,7 @@
 //! `OnTurnStart` / `OnFirstRefresh` 六个触发时机。光环由 Task 11 实现；
 //! 发现候选取自 `triple.rs`，进化见 `evolve.rs`；战斗内触发由 Task 13 实现。
 //!
-//! 规则口径见 `docs/versions/v0.1/product/rules/keywords-and-mechanics.md`
+//! 规则口径见 `docs/current/product/rules/keywords-and-mechanics.md`
 //! §2、§3、§8、§9、§10。所有随机性只来自 [`Stream::Effects`]，集合与遍历顺序
 //! 全部确定。
 

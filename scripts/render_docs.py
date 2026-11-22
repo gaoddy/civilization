@@ -18,7 +18,7 @@ import skill_templates
 import validate_docs
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-CONTENT = pathlib.Path("docs") / "versions" / "v0.1" / "product" / "content"
+CONTENT = pathlib.Path("docs") / "current" / "product" / "content"
 
 README = "README.md"
 LINK_RE = re.compile(r"^\[([a-z0-9-]+)\]\(([a-z0-9-]+)\.md\)$")

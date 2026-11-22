@@ -53,7 +53,7 @@ git commit -m "docs: 七时代扩展设计与实施计划"
 ### Task 1: 七时代总表与推进规则
 
 **Files:**
-- Modify: `docs/versions/v0.1/product/rules/eras-and-scenarios.md`
+- Modify: `docs/current/product/rules/eras-and-scenarios.md`
 
 **Interfaces:**
 - Produces: 七时代总表（时代、商店等级、开放星级、升级费用、关键词首次可用、设计意图），供 Task 2/3/4 引用。
@@ -92,13 +92,13 @@ git commit -m "docs: 七时代扩展设计与实施计划"
 Run: `python3 scripts/validate_docs.py`
 Expected: 退出码 0（文档改动不影响校验）。
 
-Run: `grep -n "五时代\|五个时代\|1–5" docs/versions/v0.1/product/rules/eras-and-scenarios.md`
+Run: `grep -n "五时代\|五个时代\|1–5" docs/current/product/rules/eras-and-scenarios.md`
 Expected: 无输出。
 
 - [ ] **Step 6: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/rules/eras-and-scenarios.md
+git add docs/current/product/rules/eras-and-scenarios.md
 git commit -m "docs: 时代规则扩展为七段演进"
 ```
 
@@ -107,7 +107,7 @@ git commit -m "docs: 时代规则扩展为七段演进"
 ### Task 2: 关键词解锁表
 
 **Files:**
-- Modify: `docs/versions/v0.1/product/rules/keywords-and-mechanics.md`（§7）
+- Modify: `docs/current/product/rules/keywords-and-mechanics.md`（§7）
 
 **Interfaces:**
 - Consumes: Task 1 的七时代顺序。
@@ -135,13 +135,13 @@ git commit -m "docs: 时代规则扩展为七段演进"
 Run: `python3 scripts/validate_docs.py`
 Expected: 退出码 0。
 
-Run: `grep -n "史前 | 繁衍" docs/versions/v0.1/product/rules/keywords-and-mechanics.md`
+Run: `grep -n "史前 | 繁衍" docs/current/product/rules/keywords-and-mechanics.md`
 Expected: 命中新的 7 行表头附近。
 
 - [ ] **Step 4: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/rules/keywords-and-mechanics.md
+git add docs/current/product/rules/keywords-and-mechanics.md
 git commit -m "docs: 关键词解锁表按七时代重排"
 ```
 
@@ -150,7 +150,7 @@ git commit -m "docs: 关键词解锁表按七时代重排"
 ### Task 3: 数值与经济
 
 **Files:**
-- Modify: `docs/versions/v0.1/product/systems/economy-and-numbers.md`
+- Modify: `docs/current/product/systems/economy-and-numbers.md`
 
 **Interfaces:**
 - Consumes: Task 1 的费用与等级。
@@ -208,13 +208,13 @@ git commit -m "docs: 关键词解锁表按七时代重排"
 Run: `python3 scripts/validate_docs.py`
 Expected: 退出码 0。
 
-Run: `grep -n "1–5\|1–6\|5 时代" docs/versions/v0.1/product/systems/economy-and-numbers.md`
+Run: `grep -n "1–5\|1–6\|5 时代" docs/current/product/systems/economy-and-numbers.md`
 Expected: 无输出。
 
 - [ ] **Step 7: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/systems/economy-and-numbers.md
+git add docs/current/product/systems/economy-and-numbers.md
 git commit -m "docs: 经济与星级数值扩展到七档"
 ```
 
@@ -223,9 +223,9 @@ git commit -m "docs: 经济与星级数值扩展到七档"
 ### Task 4: 总纲、核心规则与概念口径
 
 **Files:**
-- Modify: `docs/versions/v0.1/product/overview/design-overview.md`
-- Modify: `docs/versions/v0.1/product/rules/core-rules.md`
-- Modify: `docs/versions/v0.1/product/overview/concept-and-positioning.md`
+- Modify: `docs/current/product/overview/design-overview.md`
+- Modify: `docs/current/product/rules/core-rules.md`
+- Modify: `docs/current/product/overview/concept-and-positioning.md`
 - Modify: `docs/versions/v0.1/README.md`
 
 **Interfaces:**
@@ -266,13 +266,13 @@ git commit -m "docs: 经济与星级数值扩展到七档"
 Run: `python3 scripts/validate_docs.py`
 Expected: 退出码 0。
 
-Run: `grep -rn "五时代\|五个时代\|1–5\|1–6" docs/versions/v0.1/product/overview docs/versions/v0.1/product/rules docs/versions/v0.1/README.md`
+Run: `grep -rn "五时代\|五个时代\|1–5\|1–6" docs/current/product/overview docs/current/product/rules docs/versions/v0.1/README.md`
 Expected: 无输出（历史规划文档不在本命令范围）。
 
 - [ ] **Step 6: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/overview docs/versions/v0.1/product/rules/core-rules.md docs/versions/v0.1/README.md
+git add docs/current/product/overview docs/current/product/rules/core-rules.md docs/versions/v0.1/README.md
 git commit -m "docs: 总纲与核心规则同步七时代口径"
 ```
 
@@ -349,7 +349,7 @@ git commit -m "test: 校验脚本支持七时代与关键词最小星级"
 ### Task 6: 古典文明内容（14 随从 + 2 效果牌）
 
 **Files:**
-- Create: `docs/versions/v0.1/product/content/cards/<id>.md`（16 份）
+- Create: `docs/current/product/content/cards/<id>.md`（16 份）
 - Modify: `scripts/validate_docs.py`（EXPECT_* 与类型计数）
 
 **Interfaces:**
@@ -403,7 +403,7 @@ Expected: 退出码 0；末行 `随从 150 张、效果牌 34 张、技能 118 �
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/cards scripts/validate_docs.py
+git add docs/current/product/content/cards scripts/validate_docs.py
 git commit -m "feat: 补齐古典文明卡牌"
 ```
 
@@ -412,7 +412,7 @@ git commit -m "feat: 补齐古典文明卡牌"
 ### Task 7: 工业社会内容（14 随从 + 2 效果牌）
 
 **Files:**
-- Create: `docs/versions/v0.1/product/content/cards/<id>.md`（16 份）
+- Create: `docs/current/product/content/cards/<id>.md`（16 份）
 - Modify: `scripts/validate_docs.py`
 
 **Interfaces:**
@@ -464,7 +464,7 @@ Expected: 退出码 0；末行 `随从 164 张、效果牌 36 张、技能 118 �
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/cards scripts/validate_docs.py
+git add docs/current/product/content/cards scripts/validate_docs.py
 git commit -m "feat: 补齐工业社会卡牌"
 ```
 
@@ -473,7 +473,7 @@ git commit -m "feat: 补齐工业社会卡牌"
 ### Task 8: 七星级内容（12 随从）
 
 **Files:**
-- Create: `docs/versions/v0.1/product/content/cards/<id>.md`（12 份）
+- Create: `docs/current/product/content/cards/<id>.md`（12 份）
 - Modify: `scripts/validate_docs.py`
 
 **Interfaces:**
@@ -520,7 +520,7 @@ Expected: 退出码 0；末行 `随从 176 张、效果牌 36 张、技能 118 �
 - [ ] **Step 5: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content/cards scripts/validate_docs.py
+git add docs/current/product/content/cards scripts/validate_docs.py
 git commit -m "feat: 补齐七星级终局卡牌"
 ```
 
@@ -529,9 +529,9 @@ git commit -m "feat: 补齐七星级终局卡牌"
 ### Task 9: 卡牌规范、平衡测算与技能索引
 
 **Files:**
-- Modify: `docs/versions/v0.1/product/content/card-system.md`
-- Modify: `docs/versions/v0.1/product/content/balance-analysis.md`
-- Modify: `docs/versions/v0.1/product/content/skills/README.md`
+- Modify: `docs/current/product/content/card-system.md`
+- Modify: `docs/current/product/content/balance-analysis.md`
+- Modify: `docs/current/product/content/skills/README.md`
 
 **Interfaces:**
 - Consumes: Task 5 的诊断输出、Task 8 的最终卡池。
@@ -577,13 +577,13 @@ Expected: 得到每个技能的最新引用数。只更新被新卡引用的行�
 Run: `python3 scripts/validate_docs.py`
 Expected: 退出码 0。
 
-Run: `grep -n "136\|168\|1–6" docs/versions/v0.1/product/content/card-system.md`
+Run: `grep -n "136\|168\|1–6" docs/current/product/content/card-system.md`
 Expected: 无输出。
 
 - [ ] **Step 7: 提交**
 
 ```bash
-git add docs/versions/v0.1/product/content
+git add docs/current/product/content
 git commit -m "docs: 回写七时代卡池统计与平衡口径"
 ```
 
@@ -594,9 +594,9 @@ git commit -m "docs: 回写七时代卡池统计与平衡口径"
 **Files:**
 - Modify: `docs/versions/README.md`
 - Modify: `docs/version-roadmap.md`
-- Modify: `docs/versions/v0.1/product/content/hero-system.md`
-- Modify: `docs/versions/v0.1/product/systems/modes-and-achievements.md`
-- Modify: `docs/versions/v0.1/product/rules/README.md`
+- Modify: `docs/current/product/content/hero-system.md`
+- Modify: `docs/current/product/systems/modes-and-achievements.md`
+- Modify: `docs/current/product/rules/README.md`
 - Modify: `docs/versions/v0.1/open-questions.md`
 
 **Interfaces:**
@@ -606,7 +606,7 @@ git commit -m "docs: 回写七时代卡池统计与平衡口径"
 - [ ] **Step 1: versions/README.md 与规则索引**
 
 - `docs/versions/README.md`：v0.1 描述改为「七时代、六流派、212 张卡与 13 位英雄」。
-- `docs/versions/v0.1/product/rules/README.md`：「五时代推进」改为「七时代推进」。
+- `docs/current/product/rules/README.md`：「五时代推进」改为「七时代推进」。
 
 - [ ] **Step 2: version-roadmap.md 改规划口径**
 
@@ -624,9 +624,9 @@ git commit -m "docs: 回写七时代卡池统计与平衡口径"
 
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
-| 7 星池每张 5 份在 8 人局是否过少 | 平衡 | M0 模拟后校准 | [数值与经济](../../versions/v0.1/product/systems/economy-and-numbers.md) |
-| 升满七段的实测回合是否落在 12–14 | 节奏 | M0 模拟后校准 | [数值与经济](../../versions/v0.1/product/systems/economy-and-numbers.md) |
-| 古典段一次开放三个关键词是否让前期复杂度陡增 | 平衡 | 观察新手首局 | [关键词与机制](../../versions/v0.1/product/rules/keywords-and-mechanics.md) |
+| 7 星池每张 5 份在 8 人局是否过少 | 平衡 | M0 模拟后校准 | [数值与经济](../../current/product/systems/economy-and-numbers.md) |
+| 升满七段的实测回合是否落在 12–14 | 节奏 | M0 模拟后校准 | [数值与经济](../../current/product/systems/economy-and-numbers.md) |
+| 古典段一次开放三个关键词是否让前期复杂度陡增 | 平衡 | 观察新手首局 | [关键词与机制](../../current/product/rules/keywords-and-mechanics.md) |
 | 七时代是否需要重估 22–31 人周 | 排期 | M0 前重估 | [版本规划与风险](../../version-roadmap.md) |
 
 - [ ] **Step 5: 验证**

@@ -2,7 +2,7 @@
 
 > 日期：2026-11-19
 > 范围：dev + prod，含对外 WebSocket 域名
-> 关联：`platform/PROJECT_ONBOARDING.md`、`docs/versions/v0.1/technical/architecture/server-stack.md`、`docs/versions/v0.1/open-questions.md`
+> 关联：`platform/PROJECT_ONBOARDING.md`、`docs/current/technical/architecture/server-stack.md`、`docs/versions/v0.1/open-questions.md`
 
 ## 1. 目标
 
@@ -207,7 +207,7 @@ dev 的 Gateway 证书为自签或非公共 CA 签发，Godot 默认校验会拒
 ### 5.8 文档回写
 
 - 新增 `docs/current/technical/deployment/README.md`：环境、hostname、镜像、发布命令、验证与排障。
-- 更新 `docs/versions/v0.1/technical/architecture/server-stack.md`：部署一行改为「Helm chart + platform 共享 Kubernetes；单实例」；未确定事项中删除部署编排，链接到新文档。
+- 更新 `docs/current/technical/architecture/server-stack.md`：部署一行改为「Helm chart + platform 共享 Kubernetes；单实例」；未确定事项中删除部署编排，链接到新文档。
 - 更新 `docs/versions/v0.1/open-questions.md`：移除「服务端部署编排与多实例切分维度」一行，多实例切分仍作为后续版本事项保留在技术文档。
 - 客户端不新增代码；部署文档写明大厅地址填 `wss://civilization.dev.platform.internal/ws`。
 

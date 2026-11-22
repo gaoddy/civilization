@@ -31,7 +31,7 @@
 - 客户端平台：macOS 桌面端（Godot 4 + GDScript）；移动端在 v0.2。
 - 视觉主题：客户端 UI 只有深色一套，不实现浅色主题与主题切换；UI 验证不做浅色检查。
 - 包名：`com.civilization.banner`（macOS bundle id），应用名 `Civilization`。
-- 初始版本号：`v0.1`，对应 `docs/versions/v0.1/`。
+- 初始版本号：`v0.1`；版本记录在 `docs/versions/v0.1/`，已实现的产品与技术基线在 `docs/current/`。
 
 ### 仓库与入口
 
@@ -39,7 +39,7 @@
 - 客户端：`client/`，Godot 4.7.2 + GDScript，入口场景 `client/pages/login/login.tscn`。
 - 客户端引擎补丁版本固定 `4.7.2`（`Makefile` 的 `GODOT_VERSION`）；`make client-import` 与导出目标先校验本机引擎，版本不符直接失败。
 - 规则引擎：`server/crates/rule-engine`，纯库，不依赖网络、数据库、时钟或文件 I/O；所有对局结算只在这里。
-- 卡牌数据：唯一数据源在 `docs/versions/v0.1/product/content/`，生成到 `server/data/v0.1/` 与客户端生成物；生成物随源提交。
+- 卡牌数据：唯一数据源在 `docs/current/product/content/`，生成到 `server/data/v0.1/` 与客户端生成物；生成物随源提交。
 - 协议契约：唯一来源 `protocol/schema/v1/`；生成物 `protocol/generated/protocol.rs`、`protocol/generated/protocol.gd` 与 `client/generated/protocol.gd` 随源提交。
 - 数据库迁移：`server/migrations/`，启动时由 `sqlx::migrate!` 执行。
 - 部署：`deploy/helm/` 与 `server/Dockerfile`，入口为 `make deploy-*`。
@@ -64,5 +64,5 @@
 ### 文档
 
 - `docs/` 骨架：`current/` 写已实现状态，`versions/<版本>/` 写未实现或规划中的版本，`docs/plan/` 放实施计划（本地忽略、不提交）。
-- 版本入口：`docs/versions/v0.1/README.md`；验收记录：`docs/versions/v0.1/acceptance.md`；平衡问题：`docs/versions/v0.1/product/content/balance-questions.md`。
+- 版本入口：`docs/versions/v0.1/README.md`；验收记录：`docs/versions/v0.1/acceptance.md`；平衡问题：`docs/current/product/content/balance-questions.md`。
 - 跨版本路线：`docs/version-roadmap.md`。

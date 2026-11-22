@@ -1,10 +1,10 @@
 # 天梯与匹配
 
-> 依赖：[核心规则](../../../v0.1/product/rules/core-rules.md)、[设计总纲](../../../v0.1/product/overview/design-overview.md)（§6.11、§6.12）、[模式](../../../v0.1/product/systems/modes.md)、[成就](achievements.md)、[好友](../../../v0.1/product/systems/friends.md)、[房间与邀请](../../../v0.1/product/systems/rooms-and-invites.md)
+> 依赖：[核心规则](../../../../current/product/rules/core-rules.md)、[设计总纲](../../../../current/product/overview/design-overview.md)（§6.11、§6.12）、[模式](../../../../current/product/systems/modes.md)、[成就](achievements.md)、[好友](../../../../current/product/systems/friends.md)、[房间与邀请](../../../../current/product/systems/rooms-and-invites.md)
 > 状态：方案未实施
 > 版本：v0.2 增量
 
-本文描述 v0.2 新增的自动匹配与天梯积分、段位、排行榜；v0.1 的房间与邀请规则见[房间与邀请](../../../v0.1/product/systems/rooms-and-invites.md)，本文不重复。归属版本产品基线的系统规则。
+本文描述 v0.2 新增的自动匹配与天梯积分、段位、排行榜；v0.1 的房间与邀请规则见[房间与邀请](../../../../current/product/systems/rooms-and-invites.md)，本文不重复。归属版本产品基线的系统规则。
 
 ## 1. 定位与范围
 
@@ -105,7 +105,7 @@
 - 断线后可在对局结束前重连，重连回到原座位并恢复当前状态。
 - 断线超过 30 秒进入 AI 托管；托管按现有规则继续对局并正常计分，玩家重连后可随时接管。
 - 主动退出：已淘汰的玩家按淘汰名次结算；仍在场的玩家按第 8 名结算；不额外扣分，不禁赛。
-- 第 20 回合强制结束时，按[设计总纲](../../../v0.1/product/overview/design-overview.md) §6.11 的固定优先级排名并计分。
+- 第 20 回合强制结束时，按[设计总纲](../../../../current/product/overview/design-overview.md) §6.11 的固定优先级排名并计分。
 - 匹配对局结束后房间解散，玩家回到主界面；继续排位需要重新发起匹配。
 - 好友小队在对局结束后保留小队关系，由队长决定是否再次匹配。
 - 服务器维护或对局异常中断时，该局不计分，玩家积分保持不变。
@@ -154,8 +154,8 @@
 
 ## 相关文档
 
-- [房间与邀请](../../../v0.1/product/systems/rooms-and-invites.md)
-- [好友](../../../v0.1/product/systems/friends.md)
-- [模式](../../../v0.1/product/systems/modes.md)
+- [房间与邀请](../../../../current/product/systems/rooms-and-invites.md)
+- [好友](../../../../current/product/systems/friends.md)
+- [模式](../../../../current/product/systems/modes.md)
 - [成就](achievements.md)
 - [待确认事项](../../open-questions.md)

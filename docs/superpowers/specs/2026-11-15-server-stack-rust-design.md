@@ -50,7 +50,7 @@
 
 ## 设计
 
-### 新增 `docs/versions/v0.1/technical/architecture/server-stack.md`
+### 新增 `docs/current/technical/architecture/server-stack.md`
 
 标注「方案未实施」，内容固定为：
 

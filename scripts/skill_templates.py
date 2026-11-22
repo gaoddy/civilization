@@ -9,7 +9,7 @@ import dataclasses
 import pathlib
 import re
 
-CONTENT = pathlib.Path("docs") / "versions" / "v0.1" / "product" / "content"
+CONTENT = pathlib.Path("docs") / "current" / "product" / "content"
 TEMPLATE_DIR = "skill-templates"
 NOUN_FILE = "card-nouns.md"
 

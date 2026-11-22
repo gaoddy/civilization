@@ -1,8 +1,8 @@
 # v0.1
 
-本文是 v0.1 的版本入口，描述版本主题、目标、能力清单、状态与文档导航；不复制产品与技术基线内容。
+本文是 v0.1 的版本入口，描述版本主题、目标、能力清单、状态与文档导航；已实现的产品与技术基线在 [docs/current/](../../current/README.md)，本文件只保留版本记录。
 
-> 状态：开发中（M0–M3 能力已实现；M2 断线重连一致性由自动化用例覆盖，M3 不做单独验收记录）
+> 状态：已完成（M0–M3 与剩余四项能力均已实现；M2 断线重连一致性由自动化用例覆盖，M3 不做单独验收记录）
 
 ## 主题
 
@@ -44,26 +44,26 @@ M0–M1b 之后的首版剩余能力已实现：赛后数据回顾、房间生�
 
 按依赖链阅读：总览与规则 → 数值 → 内容 → 系统规则 → 技术约束。
 
-1. [设计总纲](product/overview/design-overview.md) 与[概念与定位](product/overview/concept-and-positioning.md)
-2. [核心规则](product/rules/core-rules.md)、[关键词与机制](product/rules/keywords-and-mechanics.md)、[时代与场景](product/rules/eras-and-scenarios.md)
-3. [数值与经济](product/systems/economy-and-numbers.md)
-4. [卡牌规范与数据](product/content/card-system.md) 与[卡牌索引](product/content/cards/README.md)；英雄卡见[英雄卡索引](product/content/heroes/README.md)
-5. [技能规范与数据](product/content/skill-system.md) 与[技能索引](product/content/skills/README.md)
-6. [平衡测算](product/content/balance-analysis.md)（从卡表回算的校验输出）与[平衡问题](product/content/balance-questions.md)（未解决的平衡与节奏问题）
-7. [模式](product/systems/modes.md)、[房间与邀请](product/systems/rooms-and-invites.md) 与[好友](product/systems/friends.md)
-8. [联网与技术架构](technical/architecture/network-architecture.md)
+1. [设计总纲](../../current/product/overview/design-overview.md) 与[概念与定位](../../current/product/overview/concept-and-positioning.md)
+2. [核心规则](../../current/product/rules/core-rules.md)、[关键词与机制](../../current/product/rules/keywords-and-mechanics.md)、[时代与场景](../../current/product/rules/eras-and-scenarios.md)
+3. [数值与经济](../../current/product/systems/economy-and-numbers.md)
+4. [卡牌规范与数据](../../current/product/content/card-system.md) 与[卡牌索引](../../current/product/content/cards/README.md)；英雄卡见[英雄卡索引](../../current/product/content/heroes/README.md)
+5. [技能规范与数据](../../current/product/content/skill-system.md) 与[技能索引](../../current/product/content/skills/README.md)
+6. [平衡测算](../../current/product/content/balance-analysis.md)（从卡表回算的校验输出）与[平衡问题](../../current/product/content/balance-questions.md)（未解决的平衡与节奏问题）
+7. [模式](../../current/product/systems/modes.md)、[房间与邀请](../../current/product/systems/rooms-and-invites.md) 与[好友](../../current/product/systems/friends.md)
+8. [联网与技术架构](../../current/technical/architecture/network-architecture.md)
 
 ## 文档导航
 
-- 产品基线：[product/README.md](product/README.md)
-- 技术基线：[technical/README.md](technical/README.md)
-- 玩家向介绍：[游戏介绍](product/overview/game-intro.md)
+- 产品状态：[产品状态](../../current/product/README.md)
+- 技术现状：[技术现状](../../current/technical/README.md)
+- 玩家向介绍：[游戏介绍](../../current/product/overview/game-intro.md)
 - 未确认事项：[open-questions.md](open-questions.md)
-- 平衡问题：[balance-questions.md](product/content/balance-questions.md)
+- 平衡问题：[balance-questions.md](../../current/product/content/balance-questions.md)
 - 验收记录：[acceptance.md](acceptance.md)
 - 已实现现状：[当前实现状态](../../current/README.md)
 - 跨版本路线：[版本路线与风险](../../version-roadmap.md)、[内容素材库](../../content-backlog.md)
 
 ## 数据与校验
 
-卡牌与技能实体文档是唯一数据源；卡牌字段规范（英雄卡见 §2.1）见[卡牌规范与数据](product/content/card-system.md)，技能字段规范见[技能规范与数据](product/content/skill-system.md)；每次修改后运行 `python3 scripts/validate_docs.py`。
+卡牌与技能实体文档是唯一数据源；卡牌字段规范（英雄卡见 §2.1）见[卡牌规范与数据](../../current/product/content/card-system.md)，技能字段规范见[技能规范与数据](../../current/product/content/skill-system.md)；每次修改后运行 `python3 scripts/validate_docs.py`。

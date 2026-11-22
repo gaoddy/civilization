@@ -46,7 +46,7 @@
 
 ### 4.1 技能模板
 
-路径：`docs/versions/v0.1/product/content/skill-templates/<id>.md`，文件名等于 `id`。模板是技术实体，`skill-templates/README.md` 说明它与实例的分工。
+路径：`docs/current/product/content/skill-templates/<id>.md`，文件名等于 `id`。模板是技术实体，`skill-templates/README.md` 说明它与实例的分工。
 
 front matter 字段：
 
@@ -223,7 +223,7 @@ template: on-play-refresh-shop(free=true); on-play-gain-minion(level=current,to=
 
 ### 5.4 卡面名词表
 
-路径：`docs/versions/v0.1/product/content/card-nouns.md`，三张表：
+路径：`docs/current/product/content/card-nouns.md`，三张表：
 
 | 表 | 键 | 值 |
 | --- | --- | --- |

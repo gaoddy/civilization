@@ -1,7 +1,7 @@
 # 发行渠道与账号
 
 > 状态：已实现（Steam 契约与适配）；6 个成就的运行时未实现
-> 关联：[v0.2 发行渠道与账号基线](../../versions/v0.2/product/systems/accounts-and-distribution.md)、[Steam 接入技术现状](../technical/steam-integration.md)、[成就](../../versions/v0.2/product/systems/achievements.md)
+> 关联：[Steam 接入技术现状](../technical/steam-integration.md)、[成就](../../versions/v0.2/product/systems/achievements.md)、[Steam 上线操作清单](../../versions/v0.2/technical/steam-onboarding.md)
 
 本文记录已实现的 macOS Steam 渠道、Steam 登录、手机号绑定、Steam 好友邀请与成就同步契约；不重复对局规则与 v0.1 手机号登录。
 

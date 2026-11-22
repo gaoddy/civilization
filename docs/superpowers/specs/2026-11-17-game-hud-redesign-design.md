@@ -241,8 +241,8 @@ pub fn rank_of(state: &GameState, seat: Seat) -> Option<u8> {
 - 36 张效果牌按「## 出处」的年代归入七时代，映射表见 §10，逐条可在实现时改。
 - 效果牌 `era` 只用于展示：商店抽取只看 `level`、`tribe` 与共享池（`recruit.rs::is_eligible`），不读 `era`。
 - 同步修订规范文档，否则 `card-system.md` 的「仅随从」与校验脚本直接矛盾：
-  - `docs/versions/v0.1/product/content/card-system.md`：`era` 字段说明改为两类牌都必填，校验覆盖一行补「效果牌时代分布」。
-  - `docs/versions/v0.1/product/content/cards/README.md`：效果牌的「数值」列补上时代。
+  - `docs/current/product/content/card-system.md`：`era` 字段说明改为两类牌都必填，校验覆盖一行补「效果牌时代分布」。
+  - `docs/current/product/content/cards/README.md`：效果牌的「数值」列补上时代。
 - 生成物 `server/data/v0.1/cards.json` 与 `client/generated/cards.json` 由 `make data` 重新生成。
 
 ### 7.5 卡表 `era` 是中文名，不是序号
@@ -388,15 +388,15 @@ let opponent_seat = state.pairings.iter().find_map(|pairing| {
 ```
 
 - `CombatResult.mirror` 仍为 `true`；`winner_id` 现在是「幽灵战打赢时的自己」，`damage` 是真实伤害。
-- `docs/versions/v0.1/technical/architecture/protocol-messages.md:105` 对 `mirror` 与 `damage` 的说明要改。
+- `docs/current/technical/architecture/protocol-messages.md:105` 对 `mirror` 与 `damage` 的说明要改。
 
 #### 7.7.6 规则文档
 
 | 文件 | 改动 |
 | --- | --- |
-| `docs/versions/v0.1/product/rules/core-rules.md:187` | 落单座位对战**一名随机出局者的最终阵容**，必有对战；失败正常扣血、获胜计入胜者；幽灵按空壳结算（无英雄被动、无手牌、不写回） |
-| `docs/versions/v0.1/product/overview/design-overview.md:113` | 同上口径 |
-| `docs/versions/v0.1/product/overview/game-intro.md:215` | 「镜像幽灵」条目改为「幽灵阵容：随机一名出局者的最终阵容」 |
+| `docs/current/product/rules/core-rules.md:187` | 落单座位对战**一名随机出局者的最终阵容**，必有对战；失败正常扣血、获胜计入胜者；幽灵按空壳结算（无英雄被动、无手牌、不写回） |
+| `docs/current/product/overview/design-overview.md:113` | 同上口径 |
+| `docs/current/product/overview/game-intro.md:215` | 「镜像幽灵」条目改为「幽灵阵容：随机一名出局者的最终阵容」 |
 | `docs/current/technical/rule-engine-and-simulator.md:194` | `renumber_ghost` 说明保留，补「幽灵来源改为随机出局者，随机走 `Stream::Matchmaking`」 |
 | `docs/current/technical/room-service.md:124` | 镜像战口径改为幽灵战，说明 `opponentPlayerId` 是幽灵归属座位 |
 
@@ -507,9 +507,9 @@ let opponent_seat = state.pairings.iter().find_map(|pairing| {
 | 引擎 | `server/crates/rule-engine/src/view.rs`、`server/crates/rule-engine/src/settle.rs`、`server/crates/rule-engine/src/effects/aura.rs`、`server/crates/rule-engine/src/state.rs`、`server/crates/rule-engine/src/hash.rs`、`server/crates/rule-engine/tests/{view,settle,combat,combat_damage,turn_effects,auras}.rs` |
 | 房间服务 | `server/crates/room-service/src/view.rs`、`game.rs`、`filter.rs`、`tests/{game,filter}.rs` |
 | 机器人 | `server/crates/sim/tests/sim_bot.rs` 的手写 `PlayerView` JSON |
-| 卡牌数据 | 36 份 `docs/versions/v0.1/product/content/cards/<效果牌 id>.md`、`scripts/validate_docs.py`、`server/data/v0.1/cards.json`、`client/generated/cards.json` |
+| 卡牌数据 | 36 份 `docs/current/product/content/cards/<效果牌 id>.md`、`scripts/validate_docs.py`、`server/data/v0.1/cards.json`、`client/generated/cards.json` |
 | 客户端 | `client/scenes/game.gd`、`game_ui_state.gd`、`game_card_face.gd`、`game_detail_layer.gd`、`game_players_rail.gd`、`game_side_panel.gd`、`game_recruit_view.gd`、`game_combat_view.gd`、`client/autoload/game_store.gd`、`client/ui/ui.gd`、`client/ui/theme.gd`、`client/tests/smoke_case.gd`、`client/tests/ui_smoke*.gd`、`client/tests/fixture.gd`、`Makefile` |
-| 文档 | `docs/current/product/ui/pages/game.md`、`tokens.md`、`interactions.md`、`components/avatar.md`、`docs/current/technical/client.md`、`room-service.md`、`rule-engine-and-simulator.md`、`docs/versions/v0.1/product/rules/core-rules.md`、`overview/design-overview.md`、`overview/game-intro.md`、`technical/architecture/protocol-messages.md`、`docs/versions/v0.1/product/content/card-system.md`、`docs/versions/v0.1/product/content/cards/README.md`、`docs/versions/v0.1/update/` 需求目录 |
+| 文档 | `docs/current/product/ui/pages/game.md`、`tokens.md`、`interactions.md`、`components/avatar.md`、`docs/current/technical/client.md`、`room-service.md`、`rule-engine-and-simulator.md`、`docs/current/product/rules/core-rules.md`、`overview/design-overview.md`、`overview/game-intro.md`、`technical/architecture/protocol-messages.md`、`docs/current/product/content/card-system.md`、`docs/current/product/content/cards/README.md`、`docs/current/product/` 已实现内容 |
 
 ### 9.2 兼容
 

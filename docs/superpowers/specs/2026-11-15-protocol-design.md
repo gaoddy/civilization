@@ -1,12 +1,12 @@
 # v0.1 客户端与服务端通信协议设计
 
 > 状态：待确认
-> 依赖：[联网与技术架构](../../versions/v0.1/technical/architecture/network-architecture.md)、[服务端技术基线](../../versions/v0.1/technical/architecture/server-stack.md)、[客户端技术基线](../../versions/v0.1/technical/architecture/client-stack.md)、[核心规则](../../versions/v0.1/product/rules/core-rules.md) §3
+> 依赖：[联网与技术架构](../../current/technical/architecture/network-architecture.md)、[服务端技术基线](../../current/technical/architecture/server-stack.md)、[客户端技术基线](../../current/technical/architecture/client-stack.md)、[核心规则](../../current/product/rules/core-rules.md) §3
 > 决策方式：已在对话中选定「全量可见视图」与「独立 IDL 生成两端」，本文只记录落地方案。
 
 ## 意图与原因
 
-M1 单房间联调需要客户端与服务端按同一份契约对接。现有 [联网与技术架构](../../versions/v0.1/technical/architecture/network-architecture.md) 锁定了协议骨架（WebSocket + JSON、信封、消息清单、重连、隐藏信息），但没有字段级契约、契约来源、版本字段、鉴权与心跳规则。本文补齐这些，使两端可以各自实现并通过同一批样例验证。
+M1 单房间联调需要客户端与服务端按同一份契约对接。现有 [联网与技术架构](../../current/technical/architecture/network-architecture.md) 锁定了协议骨架（WebSocket + JSON、信封、消息清单、重连、隐藏信息），但没有字段级契约、契约来源、版本字段、鉴权与心跳规则。本文补齐这些，使两端可以各自实现并通过同一批样例验证。
 
 ## 目标
 
@@ -24,7 +24,7 @@ M1 单房间联调需要客户端与服务端按同一份契约对接。现有 [
 
 ## 本轮交付范围
 
-- 交付：`protocol/` 下的 JSON Schema、样例、生成脚本与校验脚本；`make protocol` 与 `make protocol-check`；`docs/versions/v0.1/technical/architecture/protocol.md`；相关基线文档改写。
+- 交付：`protocol/` 下的 JSON Schema、样例、生成脚本与校验脚本；`make protocol` 与 `make protocol-check`；`docs/current/technical/architecture/protocol.md`；相关基线文档改写。
 - 不交付：`server/` 与 `client/` 工程、Cargo workspace、Godot 工程，以及写进工程目录的生成物。
 - 接入点：工程建立后，`make protocol` 把生成物输出到对应工程目录；在那之前，生成物只落在仓库根的 `protocol/generated/`，Rust 类型生成在服务端 workspace 出现后启用。
 
@@ -173,7 +173,7 @@ C 的额外成本集中在 GDScript 侧：无成熟代码生成器，只生成�
 
 ### 5. 意图载荷
 
-`Intent.payload` 用内部标签区分意图名，与 [核心规则](../../versions/v0.1/product/rules/core-rules.md) §3 一一对应：
+`Intent.payload` 用内部标签区分意图名，与 [核心规则](../../current/product/rules/core-rules.md) §3 一一对应：
 
 ```json
 {
@@ -224,7 +224,7 @@ C 的额外成本集中在 GDScript 侧：无成熟代码生成器，只生成�
   - `samples/v1/*.json`：合法样例，两端测试共用。
 - 生成物（本轮随源提交，放在 `protocol/generated/`）：
   - `protocol/generated/protocol.gd`：由 `scripts/gen_protocol_gdscript.py` 生成，含消息类型、意图名、错误码、阶段与事件名的常量，以及按 schema 生成的 `PlayerView` 字段名常量。客户端工程建立后由 `make protocol` 输出到 `client/scripts/protocol/`。
-  - `docs/versions/v0.1/technical/architecture/protocol-messages.md`：由 `scripts/gen_protocol_docs.py` 从 schema 生成的字段表；人工维护的 `protocol.md` 只写规则与链接，不复制字段。
+  - `docs/current/technical/architecture/protocol-messages.md`：由 `scripts/gen_protocol_docs.py` 从 schema 生成的字段表；人工维护的 `protocol.md` 只写规则与链接，不复制字段。
   - `protocol/generated/protocol.rs`：由 `typify` 从 schema 生成；服务端 Cargo workspace 建立后启用并提交，本轮只保留生成命令与说明，不产出该文件。
 - 构建入口：`make protocol` 重新生成全部生成物；`make protocol-check` 重新生成后比较工作区，差异即失败。
 - 客户端不实现完整运行时 schema 校验：解析样例与真实消息时只检查 `type`、`v` 与关键字段存在性；字段级契约由 Rust 端与样例校验保证。
@@ -262,17 +262,17 @@ C 的额外成本集中在 GDScript 侧：无成熟代码生成器，只生成�
 
 ## 需要同步改写的文档
 
-- [联网与技术架构](../../versions/v0.1/technical/architecture/network-architecture.md)：§5.1 信封补 `v`、`id`、`replyTo` 与 `ts` 格式；§5.2 `StateDelta` 改为 `StateUpdate` 并改语义；§5.3 序列示例同步；§5.4 补重复意图的结果说明；§6.2 重连改为直接返回 `Snapshot` 不补发增量。
-- [服务端技术基线](../../versions/v0.1/technical/architecture/server-stack.md)：工程形态补 `protocol/` IDL 目录与生成链路。
-- [客户端技术基线](../../versions/v0.1/technical/architecture/client-stack.md)：补 GDScript 生成物位置与"无完整运行时校验"的边界。
+- [联网与技术架构](../../current/technical/architecture/network-architecture.md)：§5.1 信封补 `v`、`id`、`replyTo` 与 `ts` 格式；§5.2 `StateDelta` 改为 `StateUpdate` 并改语义；§5.3 序列示例同步；§5.4 补重复意图的结果说明；§6.2 重连改为直接返回 `Snapshot` 不补发增量。
+- [服务端技术基线](../../current/technical/architecture/server-stack.md)：工程形态补 `protocol/` IDL 目录与生成链路。
+- [客户端技术基线](../../current/technical/architecture/client-stack.md)：补 GDScript 生成物位置与"无完整运行时校验"的边界。
 - [待确认事项](../../versions/v0.1/open-questions.md)：新增或收敛令牌有效期、IDL 目录落点、GDScript 生成器维护成本三项。
-- 新增 `docs/versions/v0.1/technical/architecture/protocol.md`（人工规则）与 `protocol-messages.md`（生成字段表）。
+- 新增 `docs/current/technical/architecture/protocol.md`（人工规则）与 `protocol-messages.md`（生成字段表）。
 
 ## 留给实现者
 
 - JSON Schema 的文件切分粒度与命名；生成器的具体实现与 CI 接入方式。
-- `PlayerView` 内领域对象（随从、技能、商店槽位）的完整字段清单，按 [卡牌规范与数据](../../versions/v0.1/product/content/card-system.md) 与前端渲染需要确定。
-- `CombatResult` 的动作序列字段结构，需覆盖 [核心规则](../../versions/v0.1/product/rules/core-rules.md) §5 的每种动作类型。
+- `PlayerView` 内领域对象（随从、技能、商店槽位）的完整字段清单，按 [卡牌规范与数据](../../current/product/content/card-system.md) 与前端渲染需要确定。
+- `CombatResult` 的动作序列字段结构，需覆盖 [核心规则](../../current/product/rules/core-rules.md) §5 的每种动作类型。
 - 好友与邀请消息的字段结构，M2 前补齐。
 - 令牌存储、短信服务商与验证码有效期属服务端实现，不在协议内。
 

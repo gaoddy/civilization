@@ -15,7 +15,7 @@
 
 | 版本 | 状态 | 文档 |
 | --- | --- | --- |
-| v0.1 | 开发中 | [v0.1](versions/v0.1/README.md) |
+| v0.1 | 已完成 | [v0.1](versions/v0.1/README.md) |
 | v0.2 | 规划中 | [v0.2](versions/v0.2/README.md) |
 
 版本状态与后续版本的内容增量见[版本总览](versions/README.md)。
@@ -29,4 +29,4 @@
 
 ## 数据与校验
 
-卡牌实体文档是唯一数据源，索引于[卡牌索引](versions/v0.1/product/content/cards/README.md)；32 张英雄卡在 `content/heroes/` 单独索引于[英雄卡索引](versions/v0.1/product/content/heroes/README.md)；一致性由 `python3 scripts/validate_docs.py` 校验。
+卡牌实体文档是唯一数据源，索引于[卡牌索引](current/product/content/cards/README.md)；32 张英雄卡在 `content/heroes/` 单独索引于[英雄卡索引](current/product/content/heroes/README.md)；一致性由 `python3 scripts/validate_docs.py` 校验。

@@ -4,7 +4,7 @@
 //! 召唤、复制）的接入点。所有输入都是只读快照，`simulate` 在克隆上结算，
 //! 调用方的棋盘不会被修改；随机性只来自 [`Stream::Combat`]。
 //!
-//! 规则口径见 `docs/versions/v0.1/product/rules/core-rules.md` §5.1–§5.4
+//! 规则口径见 `docs/current/product/rules/core-rules.md` §5.1–§5.4
 //! 与 `keywords-and-mechanics.md` §1、§2.3–§2.7、§10。
 
 use std::collections::{BTreeMap, BTreeSet};

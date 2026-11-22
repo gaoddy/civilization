@@ -157,8 +157,8 @@
 
 ### 8.1 删除
 
-- `docs/versions/v0.1/product/content/hero-system.md`
-- `docs/versions/v0.1/product/content/heroes/`（13 份 + README）
+- `docs/current/product/content/hero-system.md`
+- `docs/current/product/content/heroes/`（13 份 + README）
 
 ### 8.2 新增
 

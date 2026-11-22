@@ -1,7 +1,7 @@
 # 内容素材库
 
 > 状态：未排期
-> 来源：[卡牌规范与数据](versions/v0.1/product/content/card-system.md) §4.3、§4.4 与 §6
+> 来源：[卡牌规范与数据](current/product/content/card-system.md) §4.3、§4.4 与 §6
 
 本文登记未进入 v0.1 卡池、保留给后续版本的素材及再评估方向；不描述后续版本的具体排期与卡牌数值。跨版本文档。
 
@@ -33,8 +33,8 @@
 | 伦琴 / 普朗克 / 海森堡 / 麦克斯韦 / 拉瓦锡 / 开普勒 / 哥白尼 / 欧拉 / 费米 | 学者 | 数量太多，先保留作后续扩展 | 按学科分批上线 |
 | 弗洛伊德 / 李斯特 / 莫顿 / 列文虎克 / 弗莱明 | 学者 | 机制为空 | 医学/心理学子标签 |
 
-**已作为英雄卡上线**：亚当·斯密（人类）、爱迪生（机械）、巴斯德（病毒）已作为 v0.1 英雄卡上线，同时保留同 id、同名的随从卡在随从池，见[英雄卡索引](versions/v0.1/product/content/heroes/README.md)与[卡牌索引](versions/v0.1/product/content/cards/README.md)。
+**已作为英雄卡上线**：亚当·斯密（人类）、爱迪生（机械）、巴斯德（病毒）已作为 v0.1 英雄卡上线，同时保留同 id、同名的随从卡在随从池，见[英雄卡索引](current/product/content/heroes/README.md)与[卡牌索引](current/product/content/cards/README.md)。
 
 ## 相关文档
 
-- [卡牌规范与数据](versions/v0.1/product/content/card-system.md)
+- [卡牌规范与数据](current/product/content/card-system.md)

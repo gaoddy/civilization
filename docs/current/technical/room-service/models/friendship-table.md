@@ -34,4 +34,4 @@ CREATE INDEX friendship_friend_idx ON friendship (friend_id);
 - 外键：两列均引用 `account (account_id)`，`ON DELETE CASCADE`。
 - 检查：`friendship_not_self` 禁止自己与自己建立关系。
 - 索引：`friendship_friend_idx (friend_id)`，用于反查某人的好友。
-- 关系成对写入：同意申请或建立关系时同时写入两个方向，删除时同时删除两个方向；读取到此表即双方互为好友，好友列表与邀请前提均以此为准，见[好友](../../../../versions/v0.1/product/systems/friends.md)。
+- 关系成对写入：同意申请或建立关系时同时写入两个方向，删除时同时删除两个方向；读取到此表即双方互为好友，好友列表与邀请前提均以此为准，见[好友](../../../product/systems/friends.md)。

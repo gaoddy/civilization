@@ -27,7 +27,7 @@
 | A2. 源文档也结构化 | 改 131 个技能文档，并扩展自研 front-matter 解析器 | 未采用：改动面与风险最大 |
 | A3. 源文档也结构化 + PyYAML | 同上，引入第三方依赖 | 未采用：项目当前无第三方 Python 依赖 |
 
-因此：**DSL 是作者格式，结构化 JSON 是编译产物。** `docs/versions/v0.1/product/content/skills/*.md` 不变；`validate_docs.py` 的 DSL 校验保留，但参数与语义规则随引擎对齐（`DealDamage.canKill`、移除未实现的 `source`）。
+因此：**DSL 是作者格式，结构化 JSON 是编译产物。** `docs/current/product/content/skills/*.md` 不变；`validate_docs.py` 的 DSL 校验保留，但参数与语义规则随引擎对齐（`DealDamage.canKill`、移除未实现的 `source`）。
 
 ## 3. 数据模型
 
@@ -227,7 +227,7 @@ pub struct KeywordSpec { pub keyword: String, pub value: Option<i32> }
 
 不改：
 
-- `docs/versions/v0.1/product/content/skills/*.md`
+- `docs/current/product/content/skills/*.md`
 - `protocol/`、`room-service` 业务逻辑、客户端 `.gd`
 
 ## 8. 测试与验收
