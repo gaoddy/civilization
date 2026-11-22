@@ -13,6 +13,7 @@ func _ready() -> void:
     await _check_empty_catalog()
     await _check_scroll_loading()
     await _check_phone_layout()
+    await _check_tablet_layout()
     await _check_detail_drawer()
     await _check_detail()
     await _check_skill_names()
@@ -404,6 +405,54 @@ func _check_phone_layout() -> void:
         )
     await _push_key(page, KEY_ESCAPE)
     _expect(layer != null and not layer.is_visible_in_tree(), "Esc 应只收起详情浮层")
+
+    host.queue_free()
+    await get_tree().process_frame
+    ScreenProfile.set_device_for_test("desktop")
+
+
+## 平板 1280×720（触控）：头部取触控高度，详情抽屉贴右整高、右侧留 24。
+func _check_tablet_layout() -> void:
+    ScreenProfile.set_device_for_test("tablet")
+    var host := Control.new()
+    host.name = "TabletGalleryHost"
+    host.size = Vector2(1280, 720)
+    add_child(host)
+    var page = load("res://pages/gallery/gallery.tscn").instantiate()
+    host.add_child(page)
+    for _i in range(3):
+        await get_tree().process_frame
+
+    var header := page.find_child("GalleryHeader", true, false) as Control
+    _expect(
+        header != null and is_equal_approx(header.size.y, float(UITheme.hit_primary())),
+        "平板头部高度应取触控主操作高度，实际：%s" % (str(header.size) if header != null else "无"),
+    )
+    var rows := page.find_child("GalleryGridRows", true, false) as GridContainer
+    _expect(rows != null and rows.columns == 9, "平板图鉴网格应为 9 列")
+    if rows != null and rows.get_child_count() > 0:
+        var tile := rows.get_child(0) as Control
+        await _push_click(page, tile.get_global_rect().get_center())
+    var drawer := page.find_child("GalleryDrawer", true, false) as Control
+    if header != null and drawer != null:
+        var drawer_rect := drawer.get_global_rect()
+        var host_rect := host.get_global_rect()
+        _expect(
+            is_equal_approx(drawer_rect.position.y, header.get_global_rect().end.y),
+            "平板详情抽屉应从头部下沿开始，实际：%s" % str(drawer_rect),
+        )
+        _expect(
+            is_equal_approx(drawer_rect.end.y, host_rect.end.y),
+            "平板详情抽屉应贴到页面底边，实际：%s" % str(drawer_rect),
+        )
+        _expect(
+            is_equal_approx(drawer_rect.end.x, host_rect.end.x - UITheme.space("space-2xl")),
+            "平板详情抽屉右侧应留外边距 24，实际：%s" % str(drawer_rect),
+        )
+        _expect(
+            is_equal_approx(drawer_rect.size.x, float(UITheme.stage_metric("gallery-drawer-width"))),
+            "平板详情抽屉宽度应为 gallery-drawer-width，实际：%s" % str(drawer_rect),
+        )
 
     host.queue_free()
     await get_tree().process_frame
