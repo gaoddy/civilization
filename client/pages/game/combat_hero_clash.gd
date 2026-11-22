@@ -1,15 +1,20 @@
 class_name CombatHeroClash
 extends CombatFx
-## 战斗结束演出：双方英雄卡冲入战斗河道中央对冲，胜方顶退败方，败方闪白并飘出伤害。
+## 战斗结束演出：双方英雄卡缓慢移到河道两岸，蓄势后猛地一击冲进河道中央，
+## 胜方顶退败方，败方闪白并飘出伤害。
 ##
 ## 本层挂在页面级覆盖层位置上，克隆只持有抓取时的矩形与克隆节点；原卡随后被重建、
 ## 隐藏或淘汰都不影响演出，恢复原卡时统一做有效性判断。
 ##
 ## 时间轴由页面每帧调用 [`advance`] 推进，不用 `Tween`，无头冒烟测试可按帧断言：
-## 冲入 → 顶退（命中反馈）→ 停顿 → 回位。平局双方互顶后弹回，不飘伤害。
+## 靠岸 → 蓄势 → 猛击（命中反馈）→ 顶退 → 停顿 → 回位。平局双方互顶后弹回，不飘伤害。
 
-## 双方从原位冲到河道中央的时长（毫秒）。
-const DASH_MS := 260.0
+## 双方从原位缓慢移到河道两岸的时长（毫秒）。
+const APPROACH_MS := 650.0
+## 靠岸后蓄势停顿的时长（毫秒）。
+const BREATH_MS := 120.0
+## 猛地一击冲进河道中央的时长（毫秒）。
+const STRIKE_MS := 140.0
 ## 胜方顶、败方退的时长（毫秒）。
 const PUSH_MS := 140.0
 ## 顶退后停顿的时长（毫秒）。
@@ -17,8 +22,15 @@ const HOLD_MS := 80.0
 ## 回到原位的时长（毫秒）。
 const RETURN_MS := 300.0
 
+## 演出开始到双方相撞的时长（毫秒）；冒烟用例按它推进到命中。
+const HIT_MS := APPROACH_MS + BREATH_MS + STRIKE_MS
+## 演出总时长（毫秒）；冒烟用例按它推进到结束。
+const TOTAL_MS := HIT_MS + PUSH_MS + HOLD_MS + RETURN_MS
+
 ## 相遇间隙占英雄卡高度的比例。
 const GAP_RATIO := 0.08
+## 靠岸时卡边与河道边之间的间隙占英雄卡高度的比例。
+const BANK_GAP_RATIO := 0.08
 ## 胜方顶进占英雄卡高度的比例。
 const WIN_PUSH_RATIO := 0.18
 ## 败方击退占英雄卡高度的比例。
@@ -56,9 +68,22 @@ func start(
     var card_h := own_clone.size.y
     var center := _local_point(river_global.get_center())
     var gap := card_h * GAP_RATIO
+    var bank_gap := card_h * BANK_GAP_RATIO
     var own_from := _local_point(own_card.global_position)
     var opp_from := _local_point(opponent_card.global_position)
-    # 对手在上、我方在下，双方卡面在河道中心上下贴合，见面后各让半段间隙。
+    # 对手在上、我方在下：先各自移到河道上下两岸，见面点在河道中心上下贴合。
+    var river_top := _local_point(
+        Vector2(river_global.get_center().x, river_global.position.y)
+    ).y
+    var river_bottom := _local_point(
+        Vector2(river_global.get_center().x, river_global.end.y)
+    ).y
+    var own_bank := Vector2(
+        center.x - own_clone.size.x * 0.5, river_bottom + bank_gap
+    )
+    var opp_bank := Vector2(
+        center.x - opp_clone.size.x * 0.5, river_top - bank_gap - opp_clone.size.y
+    )
     var own_meet := Vector2(center.x - own_clone.size.x * 0.5, center.y + gap * 0.5)
     var opp_meet := Vector2(
         center.x - opp_clone.size.x * 0.5, center.y - gap * 0.5 - opp_clone.size.y
@@ -86,6 +111,8 @@ func start(
         "opp_source": opponent_card,
         "own_from": own_from,
         "opp_from": opp_from,
+        "own_bank": own_bank,
+        "opp_bank": opp_bank,
         "own_meet": own_meet,
         "opp_meet": opp_meet,
         "own_target": own_target,
@@ -109,29 +136,44 @@ func advance(delta: float) -> void:
         return
     _clash["t"] = float(_clash["t"]) + delta * 1000.0
     var t := float(_clash["t"])
-    if t <= DASH_MS:
-        var k := t / DASH_MS
-        own_clone.position = _clash["own_from"].lerp(_clash["own_meet"], k)
-        opp_clone.position = _clash["opp_from"].lerp(_clash["opp_meet"], k)
+    if t <= APPROACH_MS:
+        var k := _ease_in_out(t / APPROACH_MS)
+        own_clone.position = _clash["own_from"].lerp(_clash["own_bank"], k)
+        opp_clone.position = _clash["opp_from"].lerp(_clash["opp_bank"], k)
+        return
+    if t <= APPROACH_MS + BREATH_MS:
+        own_clone.position = _clash["own_bank"]
+        opp_clone.position = _clash["opp_bank"]
+        return
+    if t <= HIT_MS:
+        var k := (t - APPROACH_MS - BREATH_MS) / STRIKE_MS
+        k = k * k
+        own_clone.position = _clash["own_bank"].lerp(_clash["own_meet"], k)
+        opp_clone.position = _clash["opp_bank"].lerp(_clash["opp_meet"], k)
         return
     if not bool(_clash["struck"]):
         _clash["struck"] = true
         _clash_hit()
-    if t <= DASH_MS + PUSH_MS:
-        var k := (t - DASH_MS) / PUSH_MS
+    if t <= HIT_MS + PUSH_MS:
+        var k := (t - HIT_MS) / PUSH_MS
         own_clone.position = _clash["own_meet"].lerp(_clash["own_target"], k)
         opp_clone.position = _clash["opp_meet"].lerp(_clash["opp_target"], k)
         return
-    if t <= DASH_MS + PUSH_MS + HOLD_MS:
+    if t <= HIT_MS + PUSH_MS + HOLD_MS:
         own_clone.position = _clash["own_target"]
         opp_clone.position = _clash["opp_target"]
         return
-    if t <= DASH_MS + PUSH_MS + HOLD_MS + RETURN_MS:
-        var k := (t - DASH_MS - PUSH_MS - HOLD_MS) / RETURN_MS
+    if t <= TOTAL_MS:
+        var k := (t - HIT_MS - PUSH_MS - HOLD_MS) / RETURN_MS
         own_clone.position = _clash["own_target"].lerp(_clash["own_from"], k)
         opp_clone.position = _clash["opp_target"].lerp(_clash["opp_from"], k)
         return
     _finish_clash()
+
+
+## 缓慢靠拢的平滑曲线：起步与靠岸都放慢，避免被读成冲刺。
+func _ease_in_out(k: float) -> float:
+    return k * k * (3.0 - 2.0 * k)
 
 
 ## 演出是否仍在进行。

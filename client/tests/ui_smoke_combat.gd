@@ -1,6 +1,6 @@
 extends "res://tests/smoke_case.gd"
 ## 战斗视图冒烟：顶部恢复对手英雄、双方随从行夹住河道，河道始终只显示回合数；
-## 演示播完后双方英雄卡冲入河道对冲，演出结束才回报一次 `CombatPlayed`，
+## 演示播完后双方英雄卡缓慢靠岸再猛击对冲，演出结束才回报一次 `CombatPlayed`，
 ## 战斗阶段不显示招募倒计时。
 ##
 ## 断言在演示播放中与播放结束两种状态下都要成立。
@@ -95,7 +95,7 @@ func _expect_clash_variant(
     if not _advance_to_clash(instance, clash):
         _expect(false, "%s演示结束后应进入对冲演出" % stage)
     else:
-        instance._process(CombatHeroClash.DASH_MS / 1000.0 + 0.05)
+        instance._process(CombatHeroClash.HIT_MS / 1000.0 + 0.05)
         var damage_label = _fx_child(clash, "HeroClashDamage")
         _expect(
             (damage_label != null) == expect_damage,
@@ -116,7 +116,7 @@ func _expect_clash_variant(
     _reset_store()
 
 
-## 胜局对冲：双方英雄卡冲入河道、胜方顶退败方、败方飘出伤害，随后回位并恢复原卡。
+## 胜局对冲：双方英雄卡靠岸后猛击、胜方顶退败方、败方飘出伤害，随后回位并恢复原卡。
 func _check_hero_clash() -> void:
     var instance := await _combat_instance("2030-01-01T00:00:00Z")
     if instance == null:
@@ -137,9 +137,17 @@ func _check_hero_clash() -> void:
     _expect(clash.playing(), "对冲演出应处于进行中")
     _expect(_fx_child(clash, "HeroClashOwn") != null, "对冲应克隆我方英雄卡")
     _expect(_fx_child(clash, "HeroClashOpponent") != null, "对冲应克隆对手英雄卡")
+    _expect(
+        _clone_keeps_avatar(_fx_child(clash, "HeroClashOwn"), own_card),
+        "我方英雄克隆卡应保留头像与描边",
+    )
+    _expect(
+        _clone_keeps_avatar(_fx_child(clash, "HeroClashOpponent"), opponent_card),
+        "对手英雄克隆卡应保留头像与描边",
+    )
     _expect(own_card != null and own_card.modulate.a < 0.5, "对冲期间我方原卡应隐藏")
     _expect(opponent_card != null and opponent_card.modulate.a < 0.5, "对冲期间对手原卡应隐藏")
-    instance._process(CombatHeroClash.DASH_MS / 1000.0 + 0.05)
+    instance._process(CombatHeroClash.HIT_MS / 1000.0 + 0.05)
     var label = _fx_child(clash, "HeroClashDamage")
     _expect(label != null, "胜局命中后应飘出伤害")
     if label is Label:
@@ -178,7 +186,8 @@ func _check_combat_played_once() -> void:
     _expect(_advance_to_clash(instance, instance._hero_clash), "演示结束后应进入对冲演出")
     var sent := _sent_count(socket, Protocol.MSG_COMBAT_PLAYED)
     _expect(sent == 0, "对冲演出结束前不应发送 CombatPlayed，实际 %d 次" % sent)
-    for _step in 3:
+    # 演出总时长约 1.43 秒；按 0.4 秒一拍推进到结束之后。
+    for _step in 4:
         instance._process(0.4)
     sent = _sent_count(socket, Protocol.MSG_COMBAT_PLAYED)
     _expect(sent == 1, "演出完成后应发送一次 CombatPlayed，实际 %d 次" % sent)
@@ -629,6 +638,29 @@ func _fx_child(fx: Node, node_name: String) -> Control:
         if str(child.name) == node_name and not child.is_queued_for_deletion():
             return child
     return null
+
+
+## 克隆卡必须和原件一样带头像与描边：`duplicate()` 会把 `_init()` 建的默认子层
+## 叠在复制层之上，头像与描边被盖住，直接复制会在这里失败。
+func _clone_keeps_avatar(clone: Control, source: Control) -> bool:
+    if clone == null or source == null:
+        return false
+    if clone.get_child_count() != source.get_child_count():
+        return false
+    var clone_art := clone.find_child("AvatarFrameArt", true, false) as TextureRect
+    var source_art := source.find_child("AvatarFrameArt", true, false) as TextureRect
+    if clone_art == null or source_art == null or clone_art.texture != source_art.texture:
+        return false
+    var clone_ring = _ring_color(clone)
+    return clone_ring != null and clone_ring == _ring_color(source)
+
+
+func _ring_color(card: Control) -> Variant:
+    var border := card.find_child("AvatarFrameBorder", true, false) as Panel
+    if border == null:
+        return null
+    var box := border.get_theme_stylebox("panel") as StyleBoxFlat
+    return box.border_color if box != null else null
 
 
 ## 清空战斗摆位，回到初始状态。
