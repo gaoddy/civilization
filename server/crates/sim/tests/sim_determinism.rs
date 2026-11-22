@@ -215,6 +215,10 @@ fn same_seed_reproduces_event_sequence_hash() {
 /// 传染同步翻倍；三连奖励改为获得奖励牌时玩家当前时代的下一时代，不再按
 /// 卡牌等级取下一等级池。金色结算次数减少、奖励池筛选改变，本批次 20 局
 /// 哈希全部改变。
+///
+/// 2026-11-23 第二十六次重定：战斗新增「双方都没有能造成伤害的随从」僵局
+/// 直接判平，不再打满 200 次行动后按生命、累计伤害与座位分胜负；涉及对局
+/// 结果改变，本批次第 7、8 局（下标 6、7）哈希改变，其余不变。
 #[test]
 fn batch_final_hashes_match_golden_baseline() {
     let golden: Value = serde_json::from_str(include_str!("golden/seed-1-games-20.json"))

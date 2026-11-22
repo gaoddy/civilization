@@ -246,9 +246,9 @@ fn divine_shield_blocks_one_hit() {
 #[test]
 fn windfury_attacks_twice() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a1", 0, 10, &["windfury"]);
-    add_card(&mut catalog, "a2", 0, 10, &[]);
-    add_card(&mut catalog, "b", 0, 20, &[]);
+    add_card(&mut catalog, "a1", 1, 100, &["windfury"]);
+    add_card(&mut catalog, "a2", 1, 100, &[]);
+    add_card(&mut catalog, "b", 1, 100, &[]);
 
     let log = simulate(
         &catalog,
@@ -458,8 +458,8 @@ fn death_queue_orders_attacker_side_then_left_to_right() {
 #[test]
 fn combat_stops_at_200_actions() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 0, 1, &["windfury"]);
-    add_card(&mut catalog, "b", 0, 100, &[]);
+    add_card(&mut catalog, "a", 1, 100, &["windfury"]);
+    add_card(&mut catalog, "b", 1, 1000, &[]);
 
     // 攻击方 100 个连击随从 = 200 个令牌，足以把行动数推到上限。
     let attacker_board: Vec<MinionInstance> = (1..=100)
@@ -612,7 +612,7 @@ fn defender_acts_first_when_first_seat_is_defender() {
 fn zero_attack_minion_granted_windfury_attacks_twice() {
     let mut catalog = test_catalog();
     add_card_with(&mut catalog, "zero", Playstyle::Neutral, 0, 10, &[]);
-    add_card(&mut catalog, "b", 0, 20, &[]);
+    add_card(&mut catalog, "b", 1, 100, &[]);
 
     let mut zero = minion(&catalog, 1, "zero");
     zero.granted
@@ -1217,9 +1217,9 @@ fn combat_copy_to_board_fizzles_when_board_is_full() {
 #[test]
 fn rounds_reset_when_a_side_finishes() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a1", 0, 100, &[]);
-    add_card(&mut catalog, "a2", 0, 100, &[]);
-    add_card(&mut catalog, "b", 0, 100, &[]);
+    add_card(&mut catalog, "a1", 1, 100, &[]);
+    add_card(&mut catalog, "a2", 1, 100, &[]);
+    add_card(&mut catalog, "b", 1, 100, &[]);
 
     let log = simulate(
         &catalog,
@@ -1242,10 +1242,10 @@ fn rounds_reset_when_a_side_finishes() {
 #[test]
 fn unequal_side_sizes_advance_independently() {
     let mut catalog = test_catalog();
-    add_card(&mut catalog, "a", 0, 100, &[]);
-    add_card(&mut catalog, "b1", 0, 100, &[]);
-    add_card(&mut catalog, "b2", 0, 100, &[]);
-    add_card(&mut catalog, "b3", 0, 100, &[]);
+    add_card(&mut catalog, "a", 1, 100, &[]);
+    add_card(&mut catalog, "b1", 1, 100, &[]);
+    add_card(&mut catalog, "b2", 1, 100, &[]);
+    add_card(&mut catalog, "b3", 1, 100, &[]);
 
     let log = simulate(
         &catalog,
@@ -1525,4 +1525,172 @@ fn lowest_attack_pick_breaks_ties_leftmost() {
     );
     assert_eq!(log.defender_final[1].health(), 100);
     assert_eq!(log.defender_final[2].health(), 100);
+}
+
+// ---- 无伤害僵局 ----
+
+#[test]
+fn zero_attack_boards_draw_without_actions() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "zero", 0, 5, &[]);
+
+    let log = combat_log(
+        &catalog,
+        &[minion(&catalog, 1, "zero")],
+        &[minion(&catalog, 2, "zero")],
+    );
+
+    assert!(log.stalemate, "双方都没有能造成伤害的随从");
+    assert!(log.actions.is_empty(), "开战即僵局，不产生攻击动作");
+    assert_eq!(log.winner, None);
+    assert_eq!(log.attacker_survivors, vec![1], "存活阵容仍记入战报");
+    assert_eq!(log.defender_survivors, vec![2]);
+}
+
+#[test]
+fn stalemate_after_trade_stops_remaining_actions() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "duelist", 1, 1, &[]);
+    add_card(&mut catalog, "wall", 1, 1, &["taunt"]);
+    add_card(&mut catalog, "tank", 0, 10, &[]);
+
+    let log = combat_log(
+        &catalog,
+        &[minion(&catalog, 1, "duelist"), minion(&catalog, 2, "tank")],
+        &[minion(&catalog, 3, "wall"), minion(&catalog, 4, "tank")],
+    );
+
+    assert!(log.stalemate, "双方正攻随从互换后只剩 0 攻随从");
+    assert_eq!(log.winner, None);
+    assert!(!log.actions.is_empty(), "互换产生的动作保留");
+    assert_eq!(log.attacker_survivors, vec![2]);
+    assert_eq!(log.defender_survivors, vec![4]);
+}
+
+#[test]
+fn one_sided_attack_is_not_stalemate() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "zero", 0, 1, &[]);
+    add_card(&mut catalog, "brute", 3, 3, &[]);
+
+    let log = combat_log(
+        &catalog,
+        &[minion(&catalog, 1, "zero")],
+        &[minion(&catalog, 2, "brute")],
+    );
+
+    assert!(!log.stalemate, "一方仍有能造成伤害的随从");
+    assert_eq!(log.winner, Some(1), "0 攻一方按既有规则落败");
+}
+
+#[test]
+fn permanently_cannot_attack_is_stalemate() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "brute", 3, 3, &[]);
+
+    let mut attacker = minion(&catalog, 1, "brute");
+    attacker.cannot_attack = true;
+    let mut defender = minion(&catalog, 2, "brute");
+    defender.cannot_attack = true;
+
+    let log = combat_log(&catalog, &[attacker], &[defender]);
+
+    assert!(log.stalemate, "双方整场都无法出手");
+    assert!(log.actions.is_empty());
+    assert_eq!(log.winner, None);
+}
+
+#[test]
+fn combat_start_disable_does_not_count_as_stalemate() {
+    let mut catalog = test_catalog();
+    add_card(&mut catalog, "attacker", 3, 10, &[]);
+    add_effect_skill(
+        &mut catalog,
+        "attacker",
+        "attacker-self-cant-attack",
+        "trait",
+        "OnCombatStart|CannotAttack|friendly:all|duration=combat",
+    );
+    add_card(&mut catalog, "zero", 0, 10, &[]);
+
+    let (engine, _) = Engine::new(catalog.clone(), [7; 32], test_playstyles());
+    let log = simulate_with(
+        &engine,
+        &[minion(&catalog, 1, "attacker")],
+        &[minion(&catalog, 2, "zero")],
+        0,
+        1,
+        0,
+        &mut rng(),
+        Default::default(),
+    );
+
+    assert!(!log.stalemate, "临时禁攻不改变入场时算出的出手次数");
+    assert_eq!(log.winner, Some(0), "攻击方仍能造成伤害并获胜");
+}
+
+#[test]
+fn real_combat_stalemate_is_a_draw_event() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [4; 32], test_playstyles());
+    add_card(&mut engine.catalog, "zero", 0, 10, &[]);
+    state.phase = Phase::Combat;
+    for seat in 2..8 {
+        state.players[seat].eliminated = true;
+    }
+    state.players[0].board = vec![minion(&engine.catalog, 10, "zero")];
+    state.players[1].board = vec![minion(&engine.catalog, 20, "zero")];
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 1,
+        ghost: None,
+    }];
+
+    let outcome = engine.resolve_combat(&mut state).unwrap();
+
+    let report = outcome.reports.get(&0).expect("座位 0 的报告");
+    assert_eq!(report.winner, None);
+    assert_eq!(report.damage, 0, "僵局平局不扣血");
+    assert!(report.actions.is_empty());
+    assert!(state.pending_settle.is_empty(), "双方都不受伤害");
+    assert!(
+        outcome.events.iter().any(|event| matches!(
+            event,
+            rule_engine::events::GameEvent::CombatDrawn { a: 0, b: 1 }
+        )),
+        "发出平局事件"
+    );
+}
+
+#[test]
+fn ghost_stalemate_is_a_draw_without_damage() {
+    let (mut engine, mut state) = Engine::new(test_catalog(), [3; 32], test_playstyles());
+    add_card(&mut engine.catalog, "zero", 0, 10, &[]);
+    state.phase = Phase::Combat;
+    for seat in 1..8 {
+        state.players[seat].eliminated = true;
+    }
+    state.players[0].board = vec![minion(&engine.catalog, 1, "zero")];
+    state.players[3].board = vec![minion(&engine.catalog, 2, "zero")];
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 0,
+        ghost: Some(3),
+    }];
+
+    let outcome = engine.resolve_combat(&mut state).unwrap();
+
+    let report = outcome.reports.get(&0).expect("座位 0 的报告");
+    assert!(report.mirror);
+    assert_eq!(report.winner, None);
+    assert_eq!(report.damage, 0, "僵局平局不扣血");
+    assert!(report.actions.is_empty());
+    assert!(state.pending_settle.is_empty());
+    assert!(!state.last_won.contains(&0), "僵局不计为本场胜者");
+    assert!(
+        outcome.events.iter().any(|event| matches!(
+            event,
+            rule_engine::events::GameEvent::CombatDrawn { a: 0, b: 0 }
+        )),
+        "幽灵战同样发出平局事件"
+    );
 }

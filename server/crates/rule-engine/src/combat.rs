@@ -148,6 +148,8 @@ pub struct CombatLog {
     pub attacker_survivors: Vec<InstanceId>,
     pub defender_survivors: Vec<InstanceId>,
     pub winner: Option<Seat>,
+    /// 双方仍有存活者、但双方都没有能造成伤害的随从：直接判平。
+    pub stalemate: bool,
     pub action_count: u16,
     /// 本场战斗累计触发的效果次数。
     pub trigger_count: u16,
@@ -383,6 +385,21 @@ impl SideBoard {
             .collect()
     }
 
+    /// 该侧是否存在能造成伤害的随从：存活、整场能出手且当前攻击力大于 0。
+    ///
+    /// 「整场能出手」按入场时的 `starting_tokens` 判断：战斗开始时施加的
+    /// 「本回合无法攻击」不改变入场时算出的行动次数，后续轮次会按该次数
+    /// 恢复出手；入场前就无法攻击的随从行动次数恒为 0，整场不会出手。
+    fn can_deal_damage(&self, catalog: &Catalog) -> bool {
+        self.minions
+            .iter()
+            .zip(&self.alive)
+            .zip(&self.starting_tokens)
+            .any(|((minion, alive), tokens)| {
+                *alive && *tokens > 0 && effective_attack(catalog, minion) > 0
+            })
+    }
+
     /// 该侧进入新一轮：指针回到最左，存活随从恢复本轮行动次数。
     fn reset_round(&mut self) {
         self.pointer = 0;
@@ -609,6 +626,14 @@ impl BattleField {
             .iter()
             .filter(|alive| **alive)
             .count()
+    }
+
+    /// 双方都没有能造成伤害的随从：战斗无法再产生伤害，直接判平。
+    ///
+    /// 效果触发都依赖受伤、死亡、召唤、主动攻击或入场；双方都打不出伤害时
+    /// 这些事件不会发生，因此不需要再遍历卡牌效果。
+    fn no_damage_stalemate(&self, catalog: &Catalog) -> bool {
+        (0..2).all(|side| !self.sides[side].can_deal_damage(catalog))
     }
 
     /// 向量下标之前（不含该下标）的存活随从数量，用于对外发存活序列下标。
@@ -1537,9 +1562,15 @@ fn simulate_inner(
 
     let mut action_count: u16 = 0;
     let mut attacker_turn = first == attacker_seat;
+    let mut stalemate = false;
 
     while action_count < MAX_ACTIONS {
         if field.sides[0].alive_count() == 0 || field.sides[1].alive_count() == 0 {
+            break;
+        }
+        // 双方都还有存活者，但都没有能造成伤害的随从：战斗无法推进，直接判平。
+        if field.no_damage_stalemate(catalog) {
+            stalemate = true;
             break;
         }
 
@@ -1592,10 +1623,20 @@ fn simulate_inner(
 
     let attacker_alive = field.sides[0].alive_count();
     let defender_alive = field.sides[1].alive_count();
+    // 行动上限恰好落在最后一个能造成伤害的随从阵亡之后：同样按僵局判平。
+    if action_count >= MAX_ACTIONS
+        && attacker_alive > 0
+        && defender_alive > 0
+        && field.no_damage_stalemate(catalog)
+    {
+        stalemate = true;
+    }
     let winner = match (attacker_alive, defender_alive) {
         (0, 0) => None,
         (0, _) => Some(defender_seat),
         (_, 0) => Some(attacker_seat),
+        // 双方都没有能造成伤害的随从：直接判平，不按生命或座位分胜负。
+        _ if stalemate => None,
         // 行动数到达上限而双方仍有存活者：这不是同回合清场，由结算层按
         // §5.3（生命 → 累计伤害 → 座位）分出胜负。
         _ if action_count >= MAX_ACTIONS => None,
@@ -1620,6 +1661,7 @@ fn simulate_inner(
         attacker_survivors: field.sides[0].survivors(),
         defender_survivors: field.sides[1].survivors(),
         winner,
+        stalemate,
         action_count,
         trigger_count: field.triggers,
         summon_count: field.summon_count,

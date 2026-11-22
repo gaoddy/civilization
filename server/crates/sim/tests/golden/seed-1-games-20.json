@@ -48424,8 +48424,8 @@
       "turns": 20
     },
     {
-      "event_hash": "89ee32e00c196d14",
-      "final_hash": "2947ec8dd9b7b67d",
+      "event_hash": "86f5d107b29ee935",
+      "final_hash": "8188e83b1e51ae3c",
       "intents": [
         {
           "intent": {
@@ -50337,7 +50337,7 @@
             "kind": "use_hero_power",
             "skill_id": "biology-evolve",
             "target": {
-              "id": 463,
+              "id": 462,
               "zone": "board"
             }
           },
@@ -50426,7 +50426,7 @@
           "intent": {
             "kind": "choose_target",
             "target": {
-              "id": 471,
+              "id": 470,
               "zone": "board"
             }
           },
@@ -50724,7 +50724,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 493,
+              "id": 492,
               "zone": "board"
             }
           },
@@ -50851,7 +50851,7 @@
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 457,
+              "id": 456,
               "zone": "board"
             }
           },
@@ -51267,7 +51267,7 @@
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 493,
+              "id": 492,
               "zone": "board"
             }
           },
@@ -51418,7 +51418,7 @@
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 576,
+              "id": 575,
               "zone": "board"
             }
           },
@@ -51488,7 +51488,7 @@
           "intent": {
             "kind": "choose_target",
             "target": {
-              "id": 748,
+              "id": 747,
               "zone": "board"
             }
           },
@@ -51511,7 +51511,7 @@
             "kind": "use_hero_power",
             "skill_id": "biology-evolve",
             "target": {
-              "id": 585,
+              "id": 584,
               "zone": "board"
             }
           },
@@ -51696,7 +51696,7 @@
           "intent": {
             "kind": "choose_target",
             "target": {
-              "id": 475,
+              "id": 474,
               "zone": "board"
             }
           },
@@ -51722,7 +51722,7 @@
           "intent": {
             "kind": "choose_target",
             "target": {
-              "id": 475,
+              "id": 474,
               "zone": "board"
             }
           },
@@ -51826,7 +51826,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 481,
+              "id": 480,
               "zone": "board"
             }
           },
@@ -51903,7 +51903,7 @@
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 613,
+              "id": 612,
               "zone": "board"
             }
           },
@@ -52042,7 +52042,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 619,
+              "id": 618,
               "zone": "board"
             }
           },
@@ -52059,7 +52059,7 @@
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 748,
+              "id": 747,
               "zone": "board"
             }
           },
@@ -52107,7 +52107,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 457,
+              "id": 456,
               "zone": "board"
             }
           },
@@ -52124,7 +52124,7 @@
             "kind": "use_hero_power",
             "skill_id": "biology-evolve",
             "target": {
-              "id": 809,
+              "id": 808,
               "zone": "board"
             }
           },
@@ -52454,7 +52454,7 @@
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 783,
+              "id": 782,
               "zone": "board"
             }
           },
@@ -52558,7 +52558,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 619,
+              "id": 618,
               "zone": "board"
             }
           },
@@ -52575,7 +52575,7 @@
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 800,
+              "id": 799,
               "zone": "board"
             }
           },
@@ -52994,7 +52994,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 695,
+              "id": 694,
               "zone": "board"
             }
           },
@@ -53023,7 +53023,7 @@
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 784,
+              "id": 783,
               "zone": "board"
             }
           },
@@ -53075,7 +53075,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 493,
+              "id": 492,
               "zone": "board"
             }
           },
@@ -53178,7 +53178,7 @@
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 873,
+              "id": 872,
               "zone": "board"
             }
           },
@@ -53231,7 +53231,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 457,
+              "id": 456,
               "zone": "board"
             }
           },
@@ -53243,7 +53243,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 457,
+              "id": 456,
               "zone": "board"
             }
           },
@@ -53298,7 +53298,7 @@
             "kind": "use_hero_power",
             "skill_id": "biology-evolve",
             "target": {
-              "id": 880,
+              "id": 879,
               "zone": "board"
             }
           },
@@ -53350,7 +53350,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 807,
+              "id": 806,
               "zone": "board"
             }
           },
@@ -53420,7 +53420,7 @@
           "intent": {
             "kind": "choose_target",
             "target": {
-              "id": 471,
+              "id": 470,
               "zone": "board"
             }
           },
@@ -53530,7 +53530,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 481,
+              "id": 480,
               "zone": "board"
             }
           },
@@ -53622,7 +53622,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 695,
+              "id": 694,
               "zone": "board"
             }
           },
@@ -53634,7 +53634,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 695,
+              "id": 694,
               "zone": "board"
             }
           },
@@ -53827,7 +53827,7 @@
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 876,
+              "id": 875,
               "zone": "board"
             }
           },
@@ -53866,7 +53866,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 457,
+              "id": 456,
               "zone": "board"
             }
           },
@@ -53878,7 +53878,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 457,
+              "id": 456,
               "zone": "board"
             }
           },
@@ -53890,7 +53890,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 457,
+              "id": 456,
               "zone": "board"
             }
           },
@@ -53942,7 +53942,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 807,
+              "id": 806,
               "zone": "board"
             }
           },
@@ -54198,7 +54198,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 695,
+              "id": 694,
               "zone": "board"
             }
           },
@@ -54275,7 +54275,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 493,
+              "id": 492,
               "zone": "board"
             }
           },
@@ -54377,7 +54377,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 457,
+              "id": 456,
               "zone": "board"
             }
           },
@@ -54473,7 +54473,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 807,
+              "id": 806,
               "zone": "board"
             }
           },
@@ -54629,6 +54629,393 @@
         {
           "intent": {
             "kind": "end_recruit"
+          },
+          "seat": 6
+        },
+        {
+          "intent": {
+            "kind": "use_hero_power",
+            "skill_id": "faraday-cage",
+            "target": {
+              "id": 908,
+              "zone": "board"
+            }
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 0
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 1
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "hand_index": 0,
+            "kind": "play_card",
+            "position": null,
+            "target": null
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 2
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 4
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 3
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "hand_index": 6,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 492,
+              "zone": "board"
+            }
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "hand_index": 6,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 492,
+              "zone": "board"
+            }
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "hand_index": 6,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 264,
+              "zone": "board"
+            }
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 7
+        },
+        {
+          "phase": "finish_recruit"
+        },
+        {
+          "phase": "resolve_combat"
+        },
+        {
+          "phase": "resolve_settle"
+        },
+        {
+          "phase": "start_turn"
+        },
+        {
+          "intent": {
+            "kind": "use_hero_power",
+            "skill_id": "evolution-discovery",
+            "target": null
+          },
+          "seat": 0
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 3
+          },
+          "seat": 1
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 4
+          },
+          "seat": 1
+        },
+        {
+          "intent": {
+            "kind": "upgrade_era"
+          },
+          "seat": 1
+        },
+        {
+          "intent": {
+            "hand_index": 8,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 456,
+              "zone": "board"
+            }
+          },
+          "seat": 1
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 2
+          },
+          "seat": 1
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 3
+          },
+          "seat": 1
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 1
+        },
+        {
+          "intent": {
+            "hand_index": 6,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 456,
+              "zone": "board"
+            }
+          },
+          "seat": 1
+        },
+        {
+          "intent": {
+            "hand_index": 7,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 456,
+              "zone": "board"
+            }
+          },
+          "seat": 1
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 1
+        },
+        {
+          "intent": {
+            "kind": "use_hero_power",
+            "skill_id": "biology-evolve",
+            "target": {
+              "id": 880,
+              "zone": "board"
+            }
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 0
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "hand_index": 0,
+            "kind": "play_card",
+            "position": null,
+            "target": null
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "hand_index": 6,
+            "kind": "play_card",
+            "position": null,
+            "target": null
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 3
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 1
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 1
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "hand_index": 8,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 462,
+              "zone": "board"
+            }
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "hand_index": 8,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 806,
+              "zone": "board"
+            }
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "upgrade_era"
+          },
+          "seat": 3
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 3
+        },
+        {
+          "intent": {
+            "kind": "use_hero_power",
+            "skill_id": "binomial-nomenclature",
+            "target": null
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 2
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "upgrade_era"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "upgrade_era"
+          },
+          "seat": 5
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 5
+        },
+        {
+          "intent": {
+            "kind": "use_hero_power",
+            "skill_id": "evolution-discovery",
+            "target": null
+          },
+          "seat": 6
+        },
+        {
+          "intent": {
+            "kind": "upgrade_era"
+          },
+          "seat": 6
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 6
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
           },
           "seat": 6
         },
@@ -54653,29 +55040,7 @@
         {
           "intent": {
             "kind": "buy_minion",
-            "slot": 1
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "hand_index": 0,
-            "kind": "play_card",
-            "position": null,
-            "target": null
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
             "slot": 2
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
           },
           "seat": 7
         },
@@ -54689,17 +55054,23 @@
         {
           "intent": {
             "kind": "buy_minion",
-            "slot": 3
+            "slot": 5
           },
           "seat": 7
         },
         {
           "intent": {
-            "hand_index": 6,
+            "kind": "reroll_shop"
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "hand_index": 7,
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 493,
+              "id": 492,
               "zone": "board"
             }
           },
@@ -54707,11 +55078,18 @@
         },
         {
           "intent": {
-            "hand_index": 6,
+            "kind": "buy_minion",
+            "slot": 2
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "hand_index": 7,
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 493,
+              "id": 492,
               "zone": "board"
             }
           },
@@ -54719,7 +55097,26 @@
         },
         {
           "intent": {
-            "hand_index": 6,
+            "kind": "buy_minion",
+            "slot": 1
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "hand_index": 7,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 264,
+              "zone": "board"
+            }
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "hand_index": 8,
             "kind": "play_card",
             "position": null,
             "target": {
@@ -54758,32 +55155,14 @@
         {
           "intent": {
             "kind": "buy_minion",
-            "slot": 3
+            "slot": 0
           },
           "seat": 1
         },
         {
           "intent": {
             "kind": "buy_minion",
-            "slot": 4
-          },
-          "seat": 1
-        },
-        {
-          "intent": {
-            "kind": "upgrade_era"
-          },
-          "seat": 1
-        },
-        {
-          "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 457,
-              "zone": "board"
-            }
+            "slot": 1
           },
           "seat": 1
         },
@@ -54796,38 +55175,13 @@
         },
         {
           "intent": {
-            "kind": "buy_minion",
-            "slot": 3
-          },
-          "seat": 1
-        },
-        {
-          "intent": {
             "kind": "reroll_shop"
           },
           "seat": 1
         },
         {
           "intent": {
-            "hand_index": 6,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 457,
-              "zone": "board"
-            }
-          },
-          "seat": 1
-        },
-        {
-          "intent": {
-            "hand_index": 7,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 457,
-              "zone": "board"
-            }
+            "kind": "reroll_shop"
           },
           "seat": 1
         },
@@ -54842,7 +55196,7 @@
             "kind": "use_hero_power",
             "skill_id": "biology-evolve",
             "target": {
-              "id": 881,
+              "id": 1011,
               "zone": "board"
             }
           },
@@ -54866,7 +55220,17 @@
         },
         {
           "intent": {
-            "hand_index": 6,
+            "kind": "choose_target",
+            "target": {
+              "id": 1381,
+              "zone": "board"
+            }
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "hand_index": 7,
             "kind": "play_card",
             "position": null,
             "target": null
@@ -54876,14 +55240,14 @@
         {
           "intent": {
             "kind": "buy_minion",
-            "slot": 3
+            "slot": 1
           },
           "seat": 2
         },
         {
           "intent": {
             "kind": "buy_minion",
-            "slot": 1
+            "slot": 4
           },
           "seat": 2
         },
@@ -54895,8 +55259,19 @@
         },
         {
           "intent": {
-            "kind": "buy_minion",
-            "slot": 1
+            "kind": "reroll_shop"
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
           },
           "seat": 2
         },
@@ -54912,7 +55287,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 463,
+              "id": 806,
               "zone": "board"
             }
           },
@@ -54924,7 +55299,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 807,
+              "id": 462,
               "zone": "board"
             }
           },
@@ -54939,6 +55314,18 @@
         {
           "intent": {
             "kind": "upgrade_era"
+          },
+          "seat": 3
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 3
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
           },
           "seat": 3
         },
@@ -54959,13 +55346,26 @@
         {
           "intent": {
             "kind": "buy_minion",
-            "slot": 2
+            "slot": 3
           },
           "seat": 4
         },
         {
           "intent": {
-            "kind": "upgrade_era"
+            "kind": "buy_minion",
+            "slot": 1
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
           },
           "seat": 4
         },
@@ -54989,6 +55389,18 @@
         },
         {
           "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 5
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 5
+        },
+        {
+          "intent": {
             "kind": "end_recruit"
           },
           "seat": 5
@@ -55003,491 +55415,12 @@
         },
         {
           "intent": {
-            "kind": "upgrade_era"
-          },
-          "seat": 6
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 6
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 6
-        },
-        {
-          "intent": {
             "kind": "use_hero_power",
             "skill_id": "faraday-cage",
             "target": {
-              "id": 910,
+              "id": 1041,
               "zone": "board"
             }
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 0
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 2
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 4
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 5
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "hand_index": 7,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 493,
-              "zone": "board"
-            }
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 2
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "hand_index": 7,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 493,
-              "zone": "board"
-            }
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 1
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "hand_index": 7,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 264,
-              "zone": "board"
-            }
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 264,
-              "zone": "board"
-            }
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 7
-        },
-        {
-          "phase": "finish_recruit"
-        },
-        {
-          "phase": "resolve_combat"
-        },
-        {
-          "phase": "resolve_settle"
-        },
-        {
-          "phase": "start_turn"
-        },
-        {
-          "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "evolution-discovery",
-            "target": null
-          },
-          "seat": 0
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 0
-          },
-          "seat": 1
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 1
-          },
-          "seat": 1
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 2
-          },
-          "seat": 1
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 1
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 1
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 1
-        },
-        {
-          "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "biology-evolve",
-            "target": {
-              "id": 1012,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 0
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 0,
-            "kind": "play_card",
-            "position": null,
-            "target": null
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "choose_target",
-            "target": {
-              "id": 1380,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 7,
-            "kind": "play_card",
-            "position": null,
-            "target": null
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 1
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 4
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 0
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 0,
-            "kind": "play_card",
-            "position": null,
-            "target": null
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "choose_target",
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 0,
-            "kind": "play_card",
-            "position": null,
-            "target": null
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "choose_target",
-            "target": {
-              "id": 1380,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 4
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 2
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 6,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 3
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 7,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 7,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 7,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "upgrade_era"
-          },
-          "seat": 3
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 3
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 3
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 3
-        },
-        {
-          "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "binomial-nomenclature",
-            "target": null
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 3
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 1
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "evolution-discovery",
-            "target": null
-          },
-          "seat": 6
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 6
-        },
-        {
-          "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "faraday-cage",
-            "target": {
-              "id": 1042,
-              "zone": "board"
-            }
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 0
           },
           "seat": 7
         },
@@ -55495,6 +55428,13 @@
           "intent": {
             "kind": "buy_minion",
             "slot": 3
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 0
           },
           "seat": 7
         },
@@ -55518,20 +55458,7 @@
         },
         {
           "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 493,
-              "zone": "board"
-            }
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 4
+            "kind": "reroll_shop"
           },
           "seat": 7
         },
@@ -55541,7 +55468,7 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 493,
+              "id": 492,
               "zone": "board"
             }
           },
@@ -55599,93 +55526,6 @@
         },
         {
           "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "biology-evolve",
-            "target": {
-              "id": 1460,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 1
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 3
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 4
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 1
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
             "kind": "buy_minion",
             "slot": 2
           },
@@ -55693,69 +55533,8 @@
         },
         {
           "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
             "kind": "buy_minion",
-            "slot": 4
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 5
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
+            "slot": 3
           },
           "seat": 2
         },
@@ -55763,99 +55542,51 @@
           "intent": {
             "kind": "upgrade_era"
           },
-          "seat": 3
+          "seat": 2
         },
         {
           "intent": {
-            "kind": "reroll_shop"
+            "hand_index": 8,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 806,
+              "zone": "board"
+            }
           },
-          "seat": 3
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 3
-        },
-        {
-          "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "binomial-nomenclature",
-            "target": null
-          },
-          "seat": 4
+          "seat": 2
         },
         {
           "intent": {
             "kind": "buy_minion",
-            "slot": 3
+            "slot": 0
           },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 4
-          },
-          "seat": 4
+          "seat": 2
         },
         {
           "intent": {
             "kind": "reroll_shop"
           },
-          "seat": 4
+          "seat": 2
         },
         {
           "intent": {
-            "kind": "reroll_shop"
+            "hand_index": 8,
+            "kind": "play_card",
+            "position": null,
+            "target": {
+              "id": 806,
+              "zone": "board"
+            }
           },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "evolution-discovery",
-            "target": null
-          },
-          "seat": 6
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 6
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 3
-          },
-          "seat": 7
+          "seat": 2
         },
         {
           "intent": {
             "kind": "buy_minion",
             "slot": 5
           },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 7
+          "seat": 2
         },
         {
           "intent": {
@@ -55863,56 +55594,15 @@
             "kind": "play_card",
             "position": null,
             "target": {
-              "id": 783,
+              "id": 462,
               "zone": "board"
             }
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 3
-          },
-          "seat": 7
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 7
-        },
-        {
-          "phase": "finish_recruit"
-        },
-        {
-          "phase": "resolve_combat"
-        },
-        {
-          "phase": "resolve_settle"
-        },
-        {
-          "phase": "start_turn"
-        },
-        {
-          "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "evolution-discovery",
-            "target": null
-          },
-          "seat": 0
-        },
-        {
-          "intent": {
-            "kind": "buy_minion",
-            "slot": 1
           },
           "seat": 2
         },
         {
           "intent": {
-            "kind": "buy_minion",
-            "slot": 3
+            "kind": "end_recruit"
           },
           "seat": 2
         },
@@ -55920,106 +55610,109 @@
           "intent": {
             "kind": "upgrade_era"
           },
-          "seat": 2
+          "seat": 3
         },
         {
           "intent": {
             "kind": "reroll_shop"
           },
-          "seat": 2
+          "seat": 3
         },
         {
           "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
+            "kind": "end_recruit"
           },
-          "seat": 2
+          "seat": 3
+        },
+        {
+          "intent": {
+            "kind": "use_hero_power",
+            "skill_id": "binomial-nomenclature",
+            "target": null
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 4
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "buy_minion",
+            "slot": 5
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "upgrade_era"
+          },
+          "seat": 5
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 5
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 5
+        },
+        {
+          "intent": {
+            "kind": "use_hero_power",
+            "skill_id": "evolution-discovery",
+            "target": null
+          },
+          "seat": 6
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 6
         },
         {
           "intent": {
             "kind": "buy_minion",
             "slot": 0
           },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "hand_index": 8,
-            "kind": "play_card",
-            "position": null,
-            "target": {
-              "id": 807,
-              "zone": "board"
-            }
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 3
-        },
-        {
-          "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "binomial-nomenclature",
-            "target": null
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "upgrade_era"
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 4
-        },
-        {
-          "intent": {
-            "kind": "use_hero_power",
-            "skill_id": "evolution-discovery",
-            "target": null
-          },
-          "seat": 6
-        },
-        {
-          "intent": {
-            "kind": "upgrade_era"
-          },
           "seat": 7
         },
         {
           "intent": {
-            "kind": "reroll_shop"
+            "kind": "buy_minion",
+            "slot": 1
           },
           "seat": 7
         },
@@ -56046,19 +55739,127 @@
             "kind": "use_hero_power",
             "skill_id": "evolution-discovery",
             "target": null
+          },
+          "seat": 0
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
           },
           "seat": 0
         },
         {
           "intent": {
             "kind": "buy_minion",
-            "slot": 2
+            "slot": 4
           },
           "seat": 2
         },
         {
           "intent": {
             "kind": "upgrade_era"
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 3
+        },
+        {
+          "intent": {
+            "kind": "use_hero_power",
+            "skill_id": "binomial-nomenclature",
+            "target": null
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "upgrade_era"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 4
+        },
+        {
+          "intent": {
+            "kind": "use_hero_power",
+            "skill_id": "evolution-discovery",
+            "target": null
+          },
+          "seat": 6
+        },
+        {
+          "intent": {
+            "kind": "upgrade_era"
+          },
+          "seat": 7
+        },
+        {
+          "intent": {
+            "kind": "end_recruit"
+          },
+          "seat": 7
+        },
+        {
+          "phase": "finish_recruit"
+        },
+        {
+          "phase": "resolve_combat"
+        },
+        {
+          "phase": "resolve_settle"
+        },
+        {
+          "phase": "start_turn"
+        },
+        {
+          "intent": {
+            "kind": "use_hero_power",
+            "skill_id": "evolution-discovery",
+            "target": null
+          },
+          "seat": 0
+        },
+        {
+          "intent": {
+            "kind": "upgrade_era"
+          },
+          "seat": 2
+        },
+        {
+          "intent": {
+            "kind": "reroll_shop"
           },
           "seat": 2
         },
@@ -56160,12 +55961,6 @@
         },
         {
           "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
             "kind": "end_recruit"
           },
           "seat": 2
@@ -56238,12 +56033,6 @@
         },
         {
           "intent": {
-            "kind": "upgrade_era"
-          },
-          "seat": 2
-        },
-        {
-          "intent": {
             "kind": "reroll_shop"
           },
           "seat": 2
@@ -56283,12 +56072,6 @@
           "seat": 6
         },
         {
-          "intent": {
-            "kind": "end_recruit"
-          },
-          "seat": 7
-        },
-        {
           "phase": "finish_recruit"
         },
         {
@@ -56307,12 +56090,6 @@
             "target": null
           },
           "seat": 0
-        },
-        {
-          "intent": {
-            "kind": "reroll_shop"
-          },
-          "seat": 2
         },
         {
           "intent": {
@@ -56386,11 +56163,11 @@
         },
         {
           "place": 7,
-          "seat": 1
+          "seat": 5
         },
         {
           "place": 8,
-          "seat": 5
+          "seat": 1
         }
       ],
       "seed": 7,
@@ -56406,81 +56183,80 @@
           2,
           2,
           2,
-          2,
           3,
           3,
+          3,
           2,
-          2,
-          4,
+          3,
           3,
           2,
           5,
           3,
-          5,
-          4,
-          2,
-          2,
-          4,
-          2,
           4,
           4,
           2,
           2,
           5,
+          2,
+          2,
+          4,
+          3,
+          2,
+          4,
           5,
           4,
+          3,
+          3,
           2,
           2,
           2,
           2,
+          3,
+          4,
+          2,
+          5,
+          2,
+          2,
+          3,
+          3,
           3,
           3,
           4,
-          3,
-          2,
-          4,
-          2,
-          3,
-          3,
-          3,
-          3,
-          3,
-          6,
           5,
           4,
           5,
-          3,
-          4,
-          7,
-          2,
-          4,
-          7,
+          5,
           4,
           4,
-          7,
-          6,
-          7,
-          6,
-          9,
-          6,
-          4,
-          7,
           8,
+          4,
+          4,
+          5,
+          4,
+          5,
+          7,
+          6,
+          6,
+          4,
+          6,
+          7,
+          7,
+          7,
           8
         ],
         "era_upgrade_turns": [
           11,
           13,
-          16,
+          15,
           12,
           13,
           12,
           12,
           14
         ],
-        "survivors_at_end": 3,
+        "survivors_at_end": 4,
         "survivors_at_turn_20": 5,
-        "triples": 30,
+        "triples": 29,
         "turns": 20,
         "winner_playstyle": "reptile",
         "winner_seat": 0
@@ -56488,8 +56264,8 @@
       "turns": 20
     },
     {
-      "event_hash": "b26ce748d931b20c",
-      "final_hash": "fd4995a5a4617423",
+      "event_hash": "0adb7bf330ea0fe2",
+      "final_hash": "fdc78115ad9ae1e3",
       "intents": [
         {
           "intent": {
@@ -64081,7 +63857,6 @@
           2,
           4,
           4,
-          2,
           2,
           2,
           2,
@@ -155912,8 +155687,8 @@
     "5f3f254d8003cb04",
     "524a099341a2ae9a",
     "46a8363b83d74d5e",
-    "2947ec8dd9b7b67d",
-    "fd4995a5a4617423",
+    "8188e83b1e51ae3c",
+    "fdc78115ad9ae1e3",
     "3fc877661e67ed7d",
     "adb28734c3de8c9b",
     "651cd8dc1f0f47a5",

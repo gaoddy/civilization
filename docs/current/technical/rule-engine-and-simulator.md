@@ -326,6 +326,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 ## 10. 战斗伤害、复生与快照
 
 - 行动轮次：`SideBoard` 每侧一个指针，双方逐拍交替出手，同一侧按站位从左到右、跳过阵亡与不能攻击的随从。指针越过该侧末尾后，该侧下一次轮到回到最左，并恢复全部存活随从的本轮行动次数（普通 1 次、连击 2 次），循环至一方全灭或 200 次行动上限；两侧轮次各自独立。连击在同一拍连续结算两次，两次独立选目标，第一次击杀目标后第二次重新选目标；攻击者第一次攻击后阵亡则第二次不进行。复生保留本轮剩余行动次数，召唤与复生按插入位置决定本轮是否轮到。
+- 无伤害僵局：每拍开始先检查双方是否都没有能造成伤害的随从——存活、`starting_tokens > 0`、`effective_attack > 0`。用 `starting_tokens` 而不是 `cannot_attack` 字段：战斗开始时施加的临时禁攻不改变入场时算出的行动次数，后续轮次会按该次数恢复出手。两侧都没有时置 `CombatLog.stalemate` 并结束模拟，已产生的动作保留；结算层据此判平，不走行动上限后的生命 → 累计伤害 → 座位判据。效果触发都依赖受伤、死亡、召唤、主动攻击或入场，僵局下这些事件不会发生，因此不遍历卡牌效果。
 - 选目标：先排除仍在潜行的随从，全部潜行时固定选择最左侧存活随从；攻击者带 `ignore_taunt` 时在全部可选中随从中随机，否则有可选中嘲讽时只在嘲讽中随机，否则在全部可选中随从中随机。
 - `BattleField::apply_damage(id, amount, can_kill)`（`server/crates/rule-engine/src/combat.rs`）是唯一的战斗掉血入口，只扣 `stats.health.current`；`deal_damage` 是同义包装。攻击主伤害与反击伤害都走它。`can_kill = false` 时最多把当前生命降到 1，`can_kill = true` 时允许降到 0 或更低，由死亡判定按 `current <= 0` 处理。
 - 战斗棋盘与招募棋盘同容量：`BattleField::has_room`（`alive_count(side) < catalog.config.board_slots`，v0.1 为 7）是所有进场路径的唯一闸门——召唤效果（含左邻插入与追加）、`Copy` 到棋盘、死亡结算的播种召唤、复生，容量不足时一律作废：不扣牌池、不生成实例编号、不触发 `OnAllySummon`、不增加 `summon_count`。阵亡随从留在向量里但不计数。
@@ -333,10 +334,10 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 - `append` / `insert_at` 返回 `Option<InstanceId>`，容量不足返回 `None`，调用方据此跳过召唤计数与联动触发。写入 `CombatAction::Summon.position` 的是 `alive_rank`——该随从在**存活随从序列**中的下标（已阵亡条目不计数），值域由 `board_slots` 决定；向量下标仍用于维持阵亡锚点的顺序。
 - 复生直接调用 `MinionStats::revive_to(1)`，把 `current` 置为 1，允许大于层和；这是 `current` 正向偏离层和的唯一入口，不复用 `apply_damage`。
 - `SideBoard` 不再持有独立生命数组，战斗内所有当前生命读写都落在 `stats.health.current`。
-- `CombatLog` 除动作序列外记录与动作同序同长的 `states`：每条动作执行后受影响随从的快照 `MinionSnapshot { instance_id, attack, health, alive }`——`attack` 只记录主动攻击这一条，带攻方与受方两个快照，反击伤害已并入快照（不再单独记录反击动作）；`death`/`reborn`/`contagion`/`summon` 各带一个。召唤动作 `CombatAction::Summon { minion, card_id, golden, seat, position }` 记录插入位置，`position` 是该随从在存活随从序列中的下标（阵亡条目不计数，上界由 `board_slots` 决定），召唤物不在战前快照中，位置只从该字段读取；它的那条快照带召唤瞬间的实际攻防（含光环折叠与战斗内加成），房间服务用它填展示数值。
+- `CombatLog` 除动作序列外记录与动作同序同长的 `states`：每条动作执行后受影响随从的快照 `MinionSnapshot { instance_id, attack, health, alive }`——`attack` 只记录主动攻击这一条，带攻方与受方两个快照，反击伤害已并入快照（不再单独记录反击动作）；`death`/`reborn`/`contagion`/`summon` 各带一个。`CombatLog.stalemate` 标记无伤害僵局；为真时 `winner` 为空，结算层判平。召唤动作 `CombatAction::Summon { minion, card_id, golden, seat, position }` 记录插入位置，`position` 是该随从在存活随从序列中的下标（阵亡条目不计数，上界由 `board_slots` 决定），召唤物不在战前快照中，位置只从该字段读取；它的那条快照带召唤瞬间的实际攻防（含光环折叠与战斗内加成），房间服务用它填展示数值。
 - 战后 `write_back_persistent`（`server/crates/rule-engine/src/settle.rs`）只回写 `contagion` 与 `stats.*.growth`；持久棋盘上的随从按层和重算当前值（满血进入下一回合），死亡不改变持久棋盘，战斗伤害、回合效果与光环都不回写。
 - 进入结算时 `clear_combat_duration` 调用 `clear_turn` 清除攻防的 `turn` 层，同时保留 `granted` 的时长清理与禁攻规则。
-- 幽灵战（`settle.rs::resolve_ghost`）的幽灵来自 `state.ranking`（全部出局者，最近出局在前）：每回合用 `Stream::Matchmaking` 随机抽一名，可能连续抽到同一人；没有出局者时幽灵为空阵容，落单座位仍产生配对与战报。幽灵取其最终棋盘（死亡时的真实数值，保留成长与永久增益），并按幽灵自己的光环来源（`player_auras`）折叠一次；不结算英雄被动、不产生手牌、不写回牌池与持久棋盘。若幽灵与己方棋盘实例编号重号，`renumber_ghost` 只在本次模拟的克隆上改号。双方同回合清场判平局；幽灵获胜时落单座位按伤害公式扣血，落单座位获胜时计入 `last_won`/`last_winner`。
+- 幽灵战（`settle.rs::resolve_ghost`）的幽灵来自 `state.ranking`（全部出局者，最近出局在前）：每回合用 `Stream::Matchmaking` 随机抽一名，可能连续抽到同一人；没有出局者时幽灵为空阵容，落单座位仍产生配对与战报。幽灵取其最终棋盘（死亡时的真实数值，保留成长与永久增益），并按幽灵自己的光环来源（`player_auras`）折叠一次；不结算英雄被动、不产生手牌、不写回牌池与持久棋盘。若幽灵与己方棋盘实例编号重号，`renumber_ghost` 只在本次模拟的克隆上改号。双方同回合清场或双方都无伤害来源时判平局；幽灵获胜时落单座位按伤害公式扣血，落单座位获胜时计入 `last_won`/`last_winner`。
 - 光环只经 `fold_auras` 折叠进克隆：把 `state.auras` 的派生值写入克隆的 `aura` 层并保留「光环失效不致死」的夹紧，持久实例的 `aura` 层始终为 0。
 - `state.auras` 由引擎在固定时机重算：`recompute_auras` 全量扫描全部未出局座位并整体替换，用于开局、回合开始、招募结束（`Engine::finish_recruit`）与结算（`Engine::resolve_settle`）；`recompute_auras_for(seat)` 只重算单个座位，供 `Engine::apply` 在每条意图成功后调用——移除并重建该座位棋盘的条目，同时清理已不在任何未出局玩家棋盘上的陈旧条目，结果与全量重算一致。
 - `hash.rs` 编码 `stats` 各分量（含 `current`）；编码变化会改变状态哈希，同代码重放仍保持确定。
@@ -417,7 +418,7 @@ pub enum Params {
 
 - 数据：`skill-templates/activate-seven-voyages.md` 编译为 `on_activate | SevenVoyages | self | { turns_max }`；`turns_max` 取值 1–7、默认 7，校验要求 `OnActivate` 与 `Selector::SelfCard`。
 - 激活：`recruit::check_hero_power` 在费用与次数校验后检查「技能含 `Op::SevenVoyages` 且 `player.seven_voyages.is_some()`」，命中返回 `SEVEN_VOYAGES_ACTIVE`；通过后先扣金币与次数，再由 `apply_seven_voyages` 以 `state.rng.below(Stream::Effects, turns_max) + 1` 得到 n，写入 `SevenVoyagesState { remaining: n, pending: 0, total: n }`。激活当回合计为第 1 个航行回合，当回合战斗结算即累计第一笔。
-- 结算：`resolve_real` 与 `resolve_ghost` 在战斗改变棋盘前截取本方快照（`board_a` / `board_b` / `own_board`），`board_slots` 取 `catalog.config.board_slots`（v0.1 为 7）；占位数 = 快照长度，空位数 = `board_slots - 占位数`。`voyage_result` 以 `seat_winner` 判定：`None`（双方同回合清场）为平，胜者为本座位为胜，否则为负；触行动上限的平局仍按 `seat_winner` 的胜/负口径。胜利或平局取 `max(占位数, 空位数)`，失败取 `min`，累计进 `pending`（`u16` 饱和加）并把 `remaining` 减 1；`remaining == 0` 后不再累计。
+- 结算：`resolve_real` 与 `resolve_ghost` 在战斗改变棋盘前截取本方快照（`board_a` / `board_b` / `own_board`），`board_slots` 取 `catalog.config.board_slots`（v0.1 为 7）；占位数 = 快照长度，空位数 = `board_slots - 占位数`。`voyage_result` 以 `seat_winner` 判定：`None`（双方同回合清场或无伤害僵局）为平，胜者为本座位为胜，否则为负；触行动上限的平局仍按 `seat_winner` 的胜/负口径。胜利或平局取 `max(占位数, 空位数)`，失败取 `min`，累计进 `pending`（`u16` 饱和加）并把 `remaining` 减 1；`remaining == 0` 后不再累计。
 - 到账：`Engine::start_turn` 给未出局座位分配当回合正常金币后检查 `seven_voyages`：`remaining == 0` 时把 `pending` 夹到 `u8` 上限并饱和加到 `gold`，随后清除状态，使该技能可再次使用；`remaining > 0` 时原样保留。到账不设上限，也不跨回合保留（未到账前 `pending` 属于航程状态，不计入金币）；航行途中出局或对局结束不会再走 `start_turn`，未到账的累计作废。
 - 状态与视图：`PlayerState.seven_voyages: Option<SevenVoyagesState>` 只在激活后存在；`view::HeroPowerView` 仅对含 `Op::SevenVoyages` 的技能下发 `voyage_remaining` 与 `voyage_pending`，协议字段为 `voyageRemaining`（`null` 或 0–7）与 `voyagePending`（≥0）。
 - 哈希：`hash_player` 先写存在标记（1/0），存在时再写 `remaining`、`pending`、`total`；航程状态变化会改变状态哈希。
