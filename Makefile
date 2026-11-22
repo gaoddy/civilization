@@ -8,7 +8,7 @@ DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
 ASSET_MAP ?= client/assets/characters/portraits/asset_map.json
 FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 
-.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
@@ -272,6 +272,19 @@ client-export: client-export-templates client-import
 	"$(GODOT)" --headless --path client --export-release "macOS" "$(CURDIR)/output/desktop/Civilization.app"
 	test -x output/desktop/Civilization.app/Contents/MacOS/Civilization
 	ditto -c -k --sequesterRsrc --keepParent output/desktop/Civilization.app output/desktop/Civilization-macos.zip
+
+# 本地调试包：启用 embedded_server 特性，内嵌 room-service 与 sim，只用于本机自测。
+client-export-local: client-export-templates client-import m1b-build
+	@[ "$$(uname -s)" = "Darwin" ] || { echo "client-export-local 仅支持 macOS（当前 $$(uname -s)）" >&2; exit 1; }
+	rm -rf output/desktop-local
+	mkdir -p output/desktop-local
+	"$(GODOT)" --headless --path client --export-debug "macOS Local Debug" "$(CURDIR)/output/desktop-local/Civilization.app"
+	test -x output/desktop-local/Civilization.app/Contents/MacOS/Civilization
+	cp server/target/debug/room-service server/target/debug/sim output/desktop-local/Civilization.app/Contents/MacOS/
+	chmod +x output/desktop-local/Civilization.app/Contents/MacOS/room-service output/desktop-local/Civilization.app/Contents/MacOS/sim
+	test -x output/desktop-local/Civilization.app/Contents/MacOS/room-service
+	test -x output/desktop-local/Civilization.app/Contents/MacOS/sim
+	@echo "本地调试产物：output/desktop-local/Civilization.app"
 
 # Steam 发行构建参数：SERVER_URL 必须是 wss://，STEAM_APP_ID 为 Steamworks App ID。
 SERVER_URL ?=
