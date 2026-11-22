@@ -2662,6 +2662,108 @@
       "display": {
         "card_face": "112x146"
       }
+    },
+    "fangzhen": {
+      "card_face": "res://assets/cards/faces/card_fangzhen_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "fusheng": {
+      "card_face": "res://assets/cards/faces/card_fusheng_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "guangyixiangduilun": {
+      "card_face": "res://assets/cards/faces/card_guangyixiangduilun_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "jianshou": {
+      "card_face": "res://assets/cards/faces/card_jianshou_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "jinhualun": {
+      "card_face": "res://assets/cards/faces/card_jinhualun_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "kangshengsu": {
+      "card_face": "res://assets/cards/faces/card_kangshengsu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "linjia-bilei": {
+      "card_face": "res://assets/cards/faces/card_linjia-bilei_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "panghuang": {
+      "card_face": "res://assets/cards/faces/card_panghuang_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "qiuzhuangshandian": {
+      "card_face": "res://assets/cards/faces/card_qiuzhuangshandian_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shengzhang": {
+      "card_face": "res://assets/cards/faces/card_shengzhang_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "tiaoxin": {
+      "card_face": "res://assets/cards/faces/card_tiaoxin_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "weizu": {
+      "card_face": "res://assets/cards/faces/card_weizu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "xunjie": {
+      "card_face": "res://assets/cards/faces/card_xunjie_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yinshuashu": {
+      "card_face": "res://assets/cards/faces/card_yinshuashu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "zaisheng": {
+      "card_face": "res://assets/cards/faces/card_zaisheng_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "zhinengdengjia": {
+      "card_face": "res://assets/cards/faces/card_zhinengdengjia_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "zuqun-qianxi": {
+      "card_face": "res://assets/cards/faces/card_zuqun-qianxi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
     }
   }
 }
