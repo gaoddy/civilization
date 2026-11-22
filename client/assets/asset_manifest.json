@@ -430,6 +430,1740 @@
         "avatar": "22/30/38",
         "card_face": "112x146"
       }
+    },
+    "agi": {
+      "card_face": "res://assets/cards/faces/card_agi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "airplane": {
+      "card_face": "res://assets/cards/faces/card_airplane_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "alan-turing": {
+      "card_face": "res://assets/cards/faces/card_alan-turing_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "albatross": {
+      "card_face": "res://assets/cards/faces/card_albatross_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "ammonite-token": {
+      "card_face": "res://assets/cards/faces/card_ammonite-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "amoeba-larva-3-3-token": {
+      "card_face": "res://assets/cards/faces/card_amoeba-larva-3-3-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "amoeba-larva-token-1": {
+      "card_face": "res://assets/cards/faces/card_amoeba-larva-token-1_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "amoeba-larva-token-2": {
+      "card_face": "res://assets/cards/faces/card_amoeba-larva-token-2_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "amoeba": {
+      "card_face": "res://assets/cards/faces/card_amoeba_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "ant": {
+      "card_face": "res://assets/cards/faces/card_ant_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "argonaut": {
+      "card_face": "res://assets/cards/faces/card_argonaut_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "aristotle": {
+      "card_face": "res://assets/cards/faces/card_aristotle_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "artificial-womb": {
+      "card_face": "res://assets/cards/faces/card_artificial-womb_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "aspergillus": {
+      "card_face": "res://assets/cards/faces/card_aspergillus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "bacillus-anthracis": {
+      "card_face": "res://assets/cards/faces/card_bacillus-anthracis_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "bacteria-token-2": {
+      "card_face": "res://assets/cards/faces/card_bacteria-token-2_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "bacteria-token-4": {
+      "card_face": "res://assets/cards/faces/card_bacteria-token-4_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "bacteriophage": {
+      "card_face": "res://assets/cards/faces/card_bacteriophage_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "baiyi": {
+      "card_face": "res://assets/cards/faces/card_baiyi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "bee": {
+      "card_face": "res://assets/cards/faces/card_bee_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "bingdushizu": {
+      "card_face": "res://assets/cards/faces/card_bingdushizu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "bisheng": {
+      "card_face": "res://assets/cards/faces/card_bisheng_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "black-death": {
+      "card_face": "res://assets/cards/faces/card_black-death_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "blue-ringed-octopus": {
+      "card_face": "res://assets/cards/faces/card_blue-ringed-octopus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "box-jellyfish": {
+      "card_face": "res://assets/cards/faces/card_box-jellyfish_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "boxer": {
+      "card_face": "res://assets/cards/faces/card_boxer_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "bruce-lee": {
+      "card_face": "res://assets/cards/faces/card_bruce-lee_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "buluozhanshi": {
+      "card_face": "res://assets/cards/faces/card_buluozhanshi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "butterfly": {
+      "card_face": "res://assets/cards/faces/card_butterfly_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "cailun": {
+      "card_face": "res://assets/cards/faces/card_cailun_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "carp": {
+      "card_face": "res://assets/cards/faces/card_carp_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "changmaoshou": {
+      "card_face": "res://assets/cards/faces/card_changmaoshou_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "chengbang-gongmin": {
+      "card_face": "res://assets/cards/faces/card_chengbang-gongmin_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "cholera": {
+      "card_face": "res://assets/cards/faces/card_cholera_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "clostridium-tetani": {
+      "card_face": "res://assets/cards/faces/card_clostridium-tetani_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "clownfish": {
+      "card_face": "res://assets/cards/faces/card_clownfish_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "cobra": {
+      "card_face": "res://assets/cards/faces/card_cobra_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "coelacanth": {
+      "card_face": "res://assets/cards/faces/card_coelacanth_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "colossal-squid": {
+      "card_face": "res://assets/cards/faces/card_colossal-squid_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "coral-polyp-token": {
+      "card_face": "res://assets/cards/faces/card_coral-polyp-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "coral-polyp": {
+      "card_face": "res://assets/cards/faces/card_coral-polyp_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "cordyceps-token": {
+      "card_face": "res://assets/cards/faces/card_cordyceps-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "cordyceps": {
+      "card_face": "res://assets/cards/faces/card_cordyceps_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "crocodile": {
+      "card_face": "res://assets/cards/faces/card_crocodile_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "crow": {
+      "card_face": "res://assets/cards/faces/card_crow_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "cuttlefish": {
+      "card_face": "res://assets/cards/faces/card_cuttlefish_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "dengue-virus": {
+      "card_face": "res://assets/cards/faces/card_dengue-virus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "dianbaoji": {
+      "card_face": "res://assets/cards/faces/card_dianbaoji_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "dianhua-jiaohuanji": {
+      "card_face": "res://assets/cards/faces/card_dianhua-jiaohuanji_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "difference-engine": {
+      "card_face": "res://assets/cards/faces/card_difference-engine_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "dolly": {
+      "card_face": "res://assets/cards/faces/card_dolly_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "dongxuehuajia": {
+      "card_face": "res://assets/cards/faces/card_dongxuehuajia_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "doushouchang-shizi": {
+      "card_face": "res://assets/cards/faces/card_doushouchang-shizi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "dragonfly": {
+      "card_face": "res://assets/cards/faces/card_dragonfly_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "dunkleosteus": {
+      "card_face": "res://assets/cards/faces/card_dunkleosteus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "dushe": {
+      "card_face": "res://assets/cards/faces/card_dushe_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "dyson-sphere": {
+      "card_face": "res://assets/cards/faces/card_dyson-sphere_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "e-coli": {
+      "card_face": "res://assets/cards/faces/card_e-coli_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "ebola": {
+      "card_face": "res://assets/cards/faces/card_ebola_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "einstein-fridge": {
+      "card_face": "res://assets/cards/faces/card_einstein-fridge_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "engineered-virus": {
+      "card_face": "res://assets/cards/faces/card_engineered-virus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "ergot": {
+      "card_face": "res://assets/cards/faces/card_ergot_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "euclid": {
+      "card_face": "res://assets/cards/faces/card_euclid_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "euglena": {
+      "card_face": "res://assets/cards/faces/card_euglena_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "famingjia": {
+      "card_face": "res://assets/cards/faces/card_famingjia_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "fangzhiji": {
+      "card_face": "res://assets/cards/faces/card_fangzhiji_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "feijiehe": {
+      "card_face": "res://assets/cards/faces/card_feijiehe_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "feiyan": {
+      "card_face": "res://assets/cards/faces/card_feiyan_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "fengche": {
+      "card_face": "res://assets/cards/faces/card_fengche_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "fermi": {
+      "card_face": "res://assets/cards/faces/card_fermi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "fish-fry-token": {
+      "card_face": "res://assets/cards/faces/card_fish-fry-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "fly-agaric": {
+      "card_face": "res://assets/cards/faces/card_fly-agaric_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "flying-fish": {
+      "card_face": "res://assets/cards/faces/card_flying-fish_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "foraminifera": {
+      "card_face": "res://assets/cards/faces/card_foraminifera_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "fusion-reactor": {
+      "card_face": "res://assets/cards/faces/card_fusion-reactor_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "ganlanshu": {
+      "card_face": "res://assets/cards/faces/card_ganlanshu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "gear": {
+      "card_face": "res://assets/cards/faces/card_gear_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "gecko": {
+      "card_face": "res://assets/cards/faces/card_gecko_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "giant-jellyfish": {
+      "card_face": "res://assets/cards/faces/card_giant-jellyfish_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "giant-squid": {
+      "card_face": "res://assets/cards/faces/card_giant-squid_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "giardia": {
+      "card_face": "res://assets/cards/faces/card_giardia_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "ginkgo": {
+      "card_face": "res://assets/cards/faces/card_ginkgo_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "godel": {
+      "card_face": "res://assets/cards/faces/card_godel_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "golden-eagle": {
+      "card_face": "res://assets/cards/faces/card_golden-eagle_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "gongchangzhu": {
+      "card_face": "res://assets/cards/faces/card_gongchangzhu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "gongchengchui": {
+      "card_face": "res://assets/cards/faces/card_gongchengchui_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "gongchengta": {
+      "card_face": "res://assets/cards/faces/card_gongchengta_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "gongjianshou": {
+      "card_face": "res://assets/cards/faces/card_gongjianshou_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "gongyegongren": {
+      "card_face": "res://assets/cards/faces/card_gongyegongren_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "great-white-shark": {
+      "card_face": "res://assets/cards/faces/card_great-white-shark_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "guanzhuangbingdu": {
+      "card_face": "res://assets/cards/faces/card_guanzhuangbingdu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "guoying": {
+      "card_face": "res://assets/cards/faces/card_guoying_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "gutenberg": {
+      "card_face": "res://assets/cards/faces/card_gutenberg_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "haikouichthys": {
+      "card_face": "res://assets/cards/faces/card_haikouichthys_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "heisenberg": {
+      "card_face": "res://assets/cards/faces/card_heisenberg_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "hela-cell-token": {
+      "card_face": "res://assets/cards/faces/card_hela-cell-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "hela-cell": {
+      "card_face": "res://assets/cards/faces/card_hela-cell_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "hippocrates": {
+      "card_face": "res://assets/cards/faces/card_hippocrates_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "hiv": {
+      "card_face": "res://assets/cards/faces/card_hiv_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "homer": {
+      "card_face": "res://assets/cards/faces/card_homer_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "honey-fungus": {
+      "card_face": "res://assets/cards/faces/card_honey-fungus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "hongshulin": {
+      "card_face": "res://assets/cards/faces/card_hongshulin_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "huangrebing": {
+      "card_face": "res://assets/cards/faces/card_huangrebing_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "huochongdui": {
+      "card_face": "res://assets/cards/faces/card_huochongdui_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "huoqiangshou": {
+      "card_face": "res://assets/cards/faces/card_huoqiangshou_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "hybrid-rice": {
+      "card_face": "res://assets/cards/faces/card_hybrid-rice_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "hydra": {
+      "card_face": "res://assets/cards/faces/card_hydra_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "influenza": {
+      "card_face": "res://assets/cards/faces/card_influenza_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "jianchihu": {
+      "card_face": "res://assets/cards/faces/card_jianchihu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "juelei": {
+      "card_face": "res://assets/cards/faces/card_juelei_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "juhua": {
+      "card_face": "res://assets/cards/faces/card_juhua_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "juxi": {
+      "card_face": "res://assets/cards/faces/card_juxi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "juying": {
+      "card_face": "res://assets/cards/faces/card_juying_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "juzi": {
+      "card_face": "res://assets/cards/faces/card_juzi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "kanzi": {
+      "card_face": "res://assets/cards/faces/card_kanzi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "koko": {
+      "card_face": "res://assets/cards/faces/card_koko_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "komodo-dragon": {
+      "card_face": "res://assets/cards/faces/card_komodo-dragon_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "kongzi": {
+      "card_face": "res://assets/cards/faces/card_kongzi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "kuangquanbing": {
+      "card_face": "res://assets/cards/faces/card_kuangquanbing_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "lactobacillus": {
+      "card_face": "res://assets/cards/faces/card_lactobacillus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "langqunshouling": {
+      "card_face": "res://assets/cards/faces/card_langqunshouling_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "lianjinshushi": {
+      "card_face": "res://assets/cards/faces/card_lianjinshushi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "lier": {
+      "card_face": "res://assets/cards/faces/card_lier_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "likeciti": {
+      "card_face": "res://assets/cards/faces/card_likeciti_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "lizard": {
+      "card_face": "res://assets/cards/faces/card_lizard_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "locust": {
+      "card_face": "res://assets/cards/faces/card_locust_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "luomajuntuanbing": {
+      "card_face": "res://assets/cards/faces/card_luomajuntuanbing_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "maitian": {
+      "card_face": "res://assets/cards/faces/card_maitian_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "majidun-changqiangbing": {
+      "card_face": "res://assets/cards/faces/card_majidun-changqiangbing_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "malaria": {
+      "card_face": "res://assets/cards/faces/card_malaria_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "mammoth": {
+      "card_face": "res://assets/cards/faces/card_mammoth_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "mantis": {
+      "card_face": "res://assets/cards/faces/card_mantis_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "meganeura": {
+      "card_face": "res://assets/cards/faces/card_meganeura_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "meikuang-jinsique": {
+      "card_face": "res://assets/cards/faces/card_meikuang-jinsique_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "menghu": {
+      "card_face": "res://assets/cards/faces/card_menghu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "mengmalieren": {
+      "card_face": "res://assets/cards/faces/card_mengmalieren_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "mengmaxiang": {
+      "card_face": "res://assets/cards/faces/card_mengmaxiang_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "mianhua": {
+      "card_face": "res://assets/cards/faces/card_mianhua_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "michelangelo": {
+      "card_face": "res://assets/cards/faces/card_michelangelo_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "mimic-octopus": {
+      "card_face": "res://assets/cards/faces/card_mimic-octopus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "moon-jellyfish": {
+      "card_face": "res://assets/cards/faces/card_moon-jellyfish_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "moses": {
+      "card_face": "res://assets/cards/faces/card_moses_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "muhammad-ali": {
+      "card_face": "res://assets/cards/faces/card_muhammad-ali_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "mushroom": {
+      "card_face": "res://assets/cards/faces/card_mushroom_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "mycobacterium-tuberculosis": {
+      "card_face": "res://assets/cards/faces/card_mycobacterium-tuberculosis_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "nami-bingdu": {
+      "card_face": "res://assets/cards/faces/card_nami-bingdu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "nami-fengqun": {
+      "card_face": "res://assets/cards/faces/card_nami-fengqun_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "nanobot": {
+      "card_face": "res://assets/cards/faces/card_nanobot_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "nautilus": {
+      "card_face": "res://assets/cards/faces/card_nautilus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "neanderthal": {
+      "card_face": "res://assets/cards/faces/card_neanderthal_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "neiranji": {
+      "card_face": "res://assets/cards/faces/card_neiranji_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "neutral-token-2-2": {
+      "card_face": "res://assets/cards/faces/card_neutral-token-2-2_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "newton": {
+      "card_face": "res://assets/cards/faces/card_newton_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "nitaizhangyu": {
+      "card_face": "res://assets/cards/faces/card_nitaizhangyu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "nitrogen-crop": {
+      "card_face": "res://assets/cards/faces/card_nitrogen-crop_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "niuwen": {
+      "card_face": "res://assets/cards/faces/card_niuwen_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "norovirus": {
+      "card_face": "res://assets/cards/faces/card_norovirus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "nupao": {
+      "card_face": "res://assets/cards/faces/card_nupao_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "nushou": {
+      "card_face": "res://assets/cards/faces/card_nushou_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "octopus-larva-token": {
+      "card_face": "res://assets/cards/faces/card_octopus-larva-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "octopus-larva": {
+      "card_face": "res://assets/cards/faces/card_octopus-larva_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "orchid": {
+      "card_face": "res://assets/cards/faces/card_orchid_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "ostrich": {
+      "card_face": "res://assets/cards/faces/card_ostrich_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "paramecium": {
+      "card_face": "res://assets/cards/faces/card_paramecium_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "parrot": {
+      "card_face": "res://assets/cards/faces/card_parrot_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "patrol-mech": {
+      "card_face": "res://assets/cards/faces/card_patrol-mech_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "peafowl": {
+      "card_face": "res://assets/cards/faces/card_peafowl_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "penguin": {
+      "card_face": "res://assets/cards/faces/card_penguin_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "penicillium": {
+      "card_face": "res://assets/cards/faces/card_penicillium_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "phonograph": {
+      "card_face": "res://assets/cards/faces/card_phonograph_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "pink-ape": {
+      "card_face": "res://assets/cards/faces/card_pink-ape_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "plasmodium": {
+      "card_face": "res://assets/cards/faces/card_plasmodium_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "plato": {
+      "card_face": "res://assets/cards/faces/card_plato_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "portuguese-man-of-war": {
+      "card_face": "res://assets/cards/faces/card_portuguese-man-of-war_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "puffball": {
+      "card_face": "res://assets/cards/faces/card_puffball_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "pufferfish": {
+      "card_face": "res://assets/cards/faces/card_pufferfish_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "pulley": {
+      "card_face": "res://assets/cards/faces/card_pulley_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "pythagoras": {
+      "card_face": "res://assets/cards/faces/card_pythagoras_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "python": {
+      "card_face": "res://assets/cards/faces/card_python_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "qinghao": {
+      "card_face": "res://assets/cards/faces/card_qinghao_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "qishi": {
+      "card_face": "res://assets/cards/faces/card_qishi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "quantum-computer": {
+      "card_face": "res://assets/cards/faces/card_quantum-computer_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "queen-bee": {
+      "card_face": "res://assets/cards/faces/card_queen-bee_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "qulv-feichuan": {
+      "card_face": "res://assets/cards/faces/card_qulv-feichuan_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "radiolarian": {
+      "card_face": "res://assets/cards/faces/card_radiolarian_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "red-coral": {
+      "card_face": "res://assets/cards/faces/card_red-coral_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "renzhe": {
+      "card_face": "res://assets/cards/faces/card_renzhe_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "revived-mammoth": {
+      "card_face": "res://assets/cards/faces/card_revived-mammoth_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "rice-cooker": {
+      "card_face": "res://assets/cards/faces/card_rice-cooker_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "robot-dog": {
+      "card_face": "res://assets/cards/faces/card_robot-dog_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "sagan": {
+      "card_face": "res://assets/cards/faces/card_sagan_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "salmon": {
+      "card_face": "res://assets/cards/faces/card_salmon_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "saltwater-crocodile": {
+      "card_face": "res://assets/cards/faces/card_saltwater-crocodile_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "saman": {
+      "card_face": "res://assets/cards/faces/card_saman_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "schizont-token": {
+      "card_face": "res://assets/cards/faces/card_schizont-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "schrodinger": {
+      "card_face": "res://assets/cards/faces/card_schrodinger_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "sea-anemone": {
+      "card_face": "res://assets/cards/faces/card_sea-anemone_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "sea-turtle": {
+      "card_face": "res://assets/cards/faces/card_sea-turtle_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "seabird-token": {
+      "card_face": "res://assets/cards/faces/card_seabird-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "seedling": {
+      "card_face": "res://assets/cards/faces/card_seedling_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "self-driving-car": {
+      "card_face": "res://assets/cards/faces/card_self-driving-car_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shannon": {
+      "card_face": "res://assets/cards/faces/card_shannon_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shifujiang": {
+      "card_face": "res://assets/cards/faces/card_shifujiang_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shiitake": {
+      "card_face": "res://assets/cards/faces/card_shiitake_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shijieshu": {
+      "card_face": "res://assets/cards/faces/card_shijieshu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shijunti": {
+      "card_face": "res://assets/cards/faces/card_shijunti_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shilunche": {
+      "card_face": "res://assets/cards/faces/card_shilunche_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shiyanxiaoshu": {
+      "card_face": "res://assets/cards/faces/card_shiyanxiaoshu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shizijun": {
+      "card_face": "res://assets/cards/faces/card_shizijun_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shizuniao": {
+      "card_face": "res://assets/cards/faces/card_shizuniao_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shizushou": {
+      "card_face": "res://assets/cards/faces/card_shizushou_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shoupijiang": {
+      "card_face": "res://assets/cards/faces/card_shoupijiang_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shuiche": {
+      "card_face": "res://assets/cards/faces/card_shuiche_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shuishengjue": {
+      "card_face": "res://assets/cards/faces/card_shuishengjue_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "shuizhong": {
+      "card_face": "res://assets/cards/faces/card_shuizhong_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "sibadayongshi": {
+      "card_face": "res://assets/cards/faces/card_sibadayongshi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "smallpox": {
+      "card_face": "res://assets/cards/faces/card_smallpox_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "soft-coral": {
+      "card_face": "res://assets/cards/faces/card_soft-coral_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "space-elevator": {
+      "card_face": "res://assets/cards/faces/card_space-elevator_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "space-rice": {
+      "card_face": "res://assets/cards/faces/card_space-rice_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "spore-token-1": {
+      "card_face": "res://assets/cards/faces/card_spore-token-1_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "spore-token-2": {
+      "card_face": "res://assets/cards/faces/card_spore-token-2_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "spore-token-3": {
+      "card_face": "res://assets/cards/faces/card_spore-token-3_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "squid": {
+      "card_face": "res://assets/cards/faces/card_squid_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "staghorn-coral": {
+      "card_face": "res://assets/cards/faces/card_staghorn-coral_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "staphylococcus": {
+      "card_face": "res://assets/cards/faces/card_staphylococcus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "steam-engine": {
+      "card_face": "res://assets/cards/faces/card_steam-engine_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "stentor": {
+      "card_face": "res://assets/cards/faces/card_stentor_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "streptococcus": {
+      "card_face": "res://assets/cards/faces/card_streptococcus_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "sugeladi": {
+      "card_face": "res://assets/cards/faces/card_sugeladi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "suishimaobing": {
+      "card_face": "res://assets/cards/faces/card_suishimaobing_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "synthetic-cell-token": {
+      "card_face": "res://assets/cards/faces/card_synthetic-cell-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "synthetic-cell": {
+      "card_face": "res://assets/cards/faces/card_synthetic-cell_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "tai": {
+      "card_face": "res://assets/cards/faces/card_tai_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "taikongziminzhe": {
+      "card_face": "res://assets/cards/faces/card_taikongziminzhe_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "tanju": {
+      "card_face": "res://assets/cards/faces/card_tanju_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "telephone": {
+      "card_face": "res://assets/cards/faces/card_telephone_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "tengman": {
+      "card_face": "res://assets/cards/faces/card_tengman_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "termite-king": {
+      "card_face": "res://assets/cards/faces/card_termite-king_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "termite-token": {
+      "card_face": "res://assets/cards/faces/card_termite-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "tielu-gongren": {
+      "card_face": "res://assets/cards/faces/card_tielu-gongren_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "tortoise": {
+      "card_face": "res://assets/cards/faces/card_tortoise_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "toushiji": {
+      "card_face": "res://assets/cards/faces/card_toushiji_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "truffle": {
+      "card_face": "res://assets/cards/faces/card_truffle_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "trypanosome": {
+      "card_face": "res://assets/cards/faces/card_trypanosome_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "tufu": {
+      "card_face": "res://assets/cards/faces/card_tufu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "tuna": {
+      "card_face": "res://assets/cards/faces/card_tuna_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "turing-machine": {
+      "card_face": "res://assets/cards/faces/card_turing-machine_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "turritopsis": {
+      "card_face": "res://assets/cards/faces/card_turritopsis_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "vampire-squid": {
+      "card_face": "res://assets/cards/faces/card_vampire-squid_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "vertical-farm": {
+      "card_face": "res://assets/cards/faces/card_vertical-farm_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "vibrio-cholerae": {
+      "card_face": "res://assets/cards/faces/card_vibrio-cholerae_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "volvox-cell-token": {
+      "card_face": "res://assets/cards/faces/card_volvox-cell-token_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "volvox": {
+      "card_face": "res://assets/cards/faces/card_volvox_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "von-neumann": {
+      "card_face": "res://assets/cards/faces/card_von-neumann_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "vorticella": {
+      "card_face": "res://assets/cards/faces/card_vorticella_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "wandou": {
+      "card_face": "res://assets/cards/faces/card_wandou_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "watt": {
+      "card_face": "res://assets/cards/faces/card_watt_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "weijingzhanshi": {
+      "card_face": "res://assets/cards/faces/card_weijingzhanshi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "whale-shark": {
+      "card_face": "res://assets/cards/faces/card_whale-shark_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "wireless-telegraph": {
+      "card_face": "res://assets/cards/faces/card_wireless-telegraph_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "worker-bee-token-1": {
+      "card_face": "res://assets/cards/faces/card_worker-bee-token-1_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "worker-bee-token-2": {
+      "card_face": "res://assets/cards/faces/card_worker-bee-token-2_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "wuyi": {
+      "card_face": "res://assets/cards/faces/card_wuyi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "xiake": {
+      "card_face": "res://assets/cards/faces/card_xiake_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "xiangrikui": {
+      "card_face": "res://assets/cards/faces/card_xiangrikui_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "xiluoduode": {
+      "card_face": "res://assets/cards/faces/card_xiluoduode_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "xinge": {
+      "card_face": "res://assets/cards/faces/card_xinge_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "xingji-jianzhang": {
+      "card_face": "res://assets/cards/faces/card_xingji-jianzhang_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "xray-machine": {
+      "card_face": "res://assets/cards/faces/card_xray-machine_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "xunhuozhe": {
+      "card_face": "res://assets/cards/faces/card_xunhuozhe_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yadian-wenyi": {
+      "card_face": "res://assets/cards/faces/card_yadian-wenyi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yanhuashi": {
+      "card_face": "res://assets/cards/faces/card_yanhuashi_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yeast": {
+      "card_face": "res://assets/cards/faces/card_yeast_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yelang": {
+      "card_face": "res://assets/cards/faces/card_yelang_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yersinia-pestis": {
+      "card_face": "res://assets/cards/faces/card_yersinia-pestis_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yezhu": {
+      "card_face": "res://assets/cards/faces/card_yezhu_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yuanlaoyuan-yiyuan": {
+      "card_face": "res://assets/cards/faces/card_yuanlaoyuan-yiyuan_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yuanlongping": {
+      "card_face": "res://assets/cards/faces/card_yuanlongping_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yuanshijixiekuilei": {
+      "card_face": "res://assets/cards/faces/card_yuanshijixiekuilei_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yuanshizhenjun": {
+      "card_face": "res://assets/cards/faces/card_yuanshizhenjun_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "yuzhouteng": {
+      "card_face": "res://assets/cards/faces/card_yuzhouteng_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "zhangheng": {
+      "card_face": "res://assets/cards/faces/card_zhangheng_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "zhanma": {
+      "card_face": "res://assets/cards/faces/card_zhanma_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "zhanxiang": {
+      "card_face": "res://assets/cards/faces/card_zhanxiang_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "zhengqi-jiche": {
+      "card_face": "res://assets/cards/faces/card_zhengqi-jiche_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "zhihui-jushou": {
+      "card_face": "res://assets/cards/faces/card_zhihui-jushou_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "zhugeliang": {
+      "card_face": "res://assets/cards/faces/card_zhugeliang_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
+    },
+    "zhulin": {
+      "card_face": "res://assets/cards/faces/card_zhulin_face.png",
+      "display": {
+        "card_face": "112x146"
+      }
     }
   }
 }
