@@ -177,7 +177,7 @@
 | [revive-2](revive-2.md) | 无 | 复苏：以 +2/+2 复活一次 | 1 |
 | [revive-3](revive-3.md) | 无 | 复苏：以 +3/+3 复活一次 | 1 |
 | [salvage-machine](salvage-machine.md) | 无 | 零件回收：死亡时获得一张随机机械随从牌 | 1 |
-| [seven-voyages](seven-voyages.md) | 无 | 随机确定航程 n（1–7）。此后每个航行回合结束时按当回合战绩结算：胜利或平局取棋盘占位数与空位数中的较大者，失败取较小者，累计至航程结束；航程结束后的招募阶段开始时，累计金币一次性到账。 | 1 |
+| [seven-voyages](seven-voyages.md) | 无 | 随机确定航程 n（1 至 7）。此后每个航行回合结束时按当回合战绩结算：胜利或平局取棋盘占位数与空位数中的较大者，失败取较小者，累计至航程结束；航程结束后的招募阶段开始时，累计金币一次性到账。 | 1 |
 | [shout](shout.md) | 无 | 使一个友方随从获得一次成长 | 30 |
 | [sonnet](sonnet.md) | 无 | 使你的所有随从获得一次成长 | 0 |
 | [trigger-2-humans-self-plus-1-attack](trigger-2-humans-self-plus-1-attack.md) | 无 | 若你控制至少 2 个人科随从，获得 +1 攻击力 | 1 |

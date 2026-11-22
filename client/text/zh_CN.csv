@@ -1188,7 +1188,7 @@ skill.revive-2.text,复苏：以 +2/+2 复活一次
 skill.revive-3.text,复苏：以 +3/+3 复活一次
 skill.salvage-machine.text,零件回收：死亡时获得一张随机机械随从牌
 skill.seven-voyages.name,七下西洋
-skill.seven-voyages.text,随机确定航程 n（1–7）。此后每个航行回合结束时按当回合战绩结算：胜利或平局取棋盘占位数与空位数中的较大者，失败取较小者，累计至航程结束；航程结束后的招募阶段开始时，累计金币一次性到账。
+skill.seven-voyages.text,随机确定航程 n（1 至 7）。此后每个航行回合结束时按当回合战绩结算：胜利或平局取棋盘占位数与空位数中的较大者，失败取较小者，累计至航程结束；航程结束后的招募阶段开始时，累计金币一次性到账。
 skill.shout.name,呐喊
 skill.shout.text,使一个友方随从获得一次成长
 skill.sonnet.name,十四行诗
