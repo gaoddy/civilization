@@ -18,7 +18,7 @@
 - `close_text` 为已翻译文案。
 - 内部节点名：`GalleryBackground`、`GalleryHeader`、`GalleryModeBar`、`ModeMinion`、`ModeHero`、`GalleryEraSelect`、`GalleryPlaySelect`、`GalleryKindSelect`、`GalleryCount`、`GalleryClose`、`GalleryGrid`、`GalleryFilterPanel`、`GalleryDetailLayer`。
 - `GalleryHeader` 内依次为视图分段、三个筛选下拉、弹性空隙、计数与返回按钮；英雄视图隐藏 `GalleryEraSelect` 与 `GalleryKindSelect`。
-- 头部高度跟随工具行次级按钮：所有档位取 `toolbar-button-height`（26），命中区与视觉一致；视图分段、筛选下拉与返回按钮与头部同高；切换视图或筛选不改变头部高度。
+- 头部高度跟随工具行按钮：所有档位取 `toolbar-button-height`（26），命中区与视觉一致；视图分段与返回按钮使用全局胶囊按钮，筛选下拉复用胶囊按钮样式，三者与头部同高；切换视图或筛选不改变头部高度。
 - `GalleryFilterPanel` 与 `GalleryDetailLayer` 挂在组件根节点上，位于外边距之后，覆盖网格但不改变头部布局。
 
 ## 变体与状态

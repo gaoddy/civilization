@@ -515,12 +515,3 @@ static func button_style(variant: String, state: String) -> StyleBoxFlat:
 		_:
 			pass
 	return box
-
-
-## 工具行次级按钮样式：在通用按钮样式上把上下内容边距收到 `space-2xs`。
-## 用于图鉴头部这类单行工具行，按钮最小高度随字号行高收紧，所有档位一致。
-static func compact_button_style(variant: String, state: String) -> StyleBoxFlat:
-	var box := button_style(variant, state)
-	box.content_margin_top = space("space-2xs")
-	box.content_margin_bottom = space("space-2xs")
-	return box

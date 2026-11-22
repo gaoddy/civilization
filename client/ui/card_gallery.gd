@@ -107,7 +107,7 @@ func _init() -> void:
     _count_label.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     header.add_child(_count_label)
 
-    _close_button = UIControls.compact_button("")
+    _close_button = PillButton.new("", "neutral", UITheme.metric("toolbar-button-height"))
     _close_button.name = "GalleryClose"
     _close_button.pressed.connect(_on_close)
     header.add_child(_close_button)
@@ -126,9 +126,9 @@ func _init() -> void:
     add_child(_detail_layer)
 
 
-## 头部高度跟随工具行次级按钮：桌面 26；触控端抬到次要操作命中高度。
+## 头部高度跟随工具行按钮：三端统一取 `toolbar-button-height`。
 static func _header_height() -> int:
-    return UIControls.compact_button_height()
+    return UITheme.metric("toolbar-button-height")
 
 
 ## 载入卡牌集合与页面文案；重置视图、筛选并选中首张。

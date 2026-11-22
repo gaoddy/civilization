@@ -32,11 +32,11 @@ func set_state(mode: String, hero_available: bool) -> void:
 
 
 func _build_button(node_name: String, text: String) -> Button:
-    var button := UIControls.compact_button(text, "default", 56)
+    var button := PillButton.new(text, "neutral", UITheme.metric("toolbar-button-height"))
     button.name = node_name
+    button.custom_minimum_size.x = 56
     button.toggle_mode = true
     button.button_group = _group
-    button.focus_mode = Control.FOCUS_ALL
     button.pressed.connect(func() -> void:
         mode_selected.emit(MODE_HERO if button == _hero else MODE_MINION)
     )
@@ -45,10 +45,4 @@ func _build_button(node_name: String, text: String) -> Button:
 
 
 func _apply_style(button: Button, active: bool) -> void:
-    var variant := "primary" if active else "default"
-    for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
-        button.add_theme_stylebox_override(state, UITheme.compact_button_style(variant, state))
-    var font_color := UITheme.color("color-bg" if active else "color-text")
-    for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-        button.add_theme_color_override(state, font_color)
-    button.add_theme_color_override("font_disabled_color", UITheme.color("color-text-muted"))
+    (button as PillButton).set_variant("primary" if active else "neutral")

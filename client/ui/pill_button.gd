@@ -9,12 +9,14 @@ const VARIANTS := ["neutral", "primary", "danger"]
 var variant := "neutral"
 
 
-func _init(text_value := "", variant_value := "neutral") -> void:
+## `height` 为 0 时取全局胶囊高度（触控端抬到次要操作命中下限）；
+## 传正值则固定为该高度，用于需要三端一致的场景，例如图鉴头部工具行。
+func _init(text_value := "", variant_value := "neutral", height_value := 0) -> void:
 	variant = variant_value if VARIANTS.has(variant_value) else "neutral"
 	text = text_value
 	focus_mode = Control.FOCUS_ALL
-	var height := UITheme.stage_metric("pill-button-height")
-	if ScreenProfile.is_touch():
+	var height := UITheme.stage_metric("pill-button-height") if height_value <= 0 else height_value
+	if height_value <= 0 and ScreenProfile.is_touch():
 		height = maxi(height, UITheme.hit_small())
 	custom_minimum_size = Vector2(0, height)
 	add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
@@ -28,7 +30,7 @@ func set_variant(value: String) -> void:
 
 
 func _apply_styles() -> void:
-	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+	for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
 		add_theme_stylebox_override(state, UITheme.pill_button_style(variant, state))
 	var text_color := (
 		UITheme.color("color-bg")

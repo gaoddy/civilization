@@ -53,7 +53,7 @@ func _check_lobby_page() -> void:
         header != null and header.get_global_rect().end.x <= instance.get_viewport_rect().size.x,
         "图鉴头部不应横向溢出视口",
     )
-    var header_height := float(UIControls.compact_button_height())
+    var header_height := float(UITheme.metric("toolbar-button-height"))
     _expect(
         is_equal_approx(header_height, 26.0),
         "工具行按钮高度应为 26，实际：%d" % int(header_height),
@@ -444,12 +444,12 @@ func _check_tablet_layout() -> void:
         await get_tree().process_frame
 
     var header := page.find_child("GalleryHeader", true, false) as Control
-    var toolbar_height := float(UIControls.compact_button_height())
+    var toolbar_height := float(UITheme.metric("toolbar-button-height"))
     _expect(
         is_equal_approx(toolbar_height, float(UITheme.metric("toolbar-button-height"))),
         "触控工具行按钮高度应与视觉一致，实际：%d" % int(toolbar_height),
     )
-    var touch_style := UITheme.compact_button_style("default", "normal")
+    var touch_style := UITheme.pill_button_style("neutral", "normal")
     _expect(
         is_zero_approx(touch_style.expand_margin_top)
             and is_zero_approx(touch_style.expand_margin_bottom),
