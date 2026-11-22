@@ -22,9 +22,6 @@ const ERA_IDS := [
 const MODE_MINION := "minion"
 const MODE_HERO := "hero"
 
-## 头部固定高度：桌面 32；触控端抬到主操作命中高度，与筛选下拉、返回按钮同高。
-const HEADER_HEIGHT := 32
-
 ## 选中顶层分类后展开的二级筛选：随从与效果牌。
 const KIND_ALL := ""
 const KIND_MINION := "minion"
@@ -110,7 +107,7 @@ func _init() -> void:
     _count_label.add_theme_color_override("font_color", UITheme.color("color-text-muted"))
     header.add_child(_count_label)
 
-    _close_button = UIControls.styled_button("", "default", 32)
+    _close_button = UIControls.compact_button("")
     _close_button.name = "GalleryClose"
     _close_button.pressed.connect(_on_close)
     header.add_child(_close_button)
@@ -129,9 +126,9 @@ func _init() -> void:
     add_child(_detail_layer)
 
 
-## 头部固定高度：桌面 32；触控端跟随主操作命中高度，避免头部随按钮高度变化。
+## 头部高度跟随工具行次级按钮：桌面 26；触控端抬到次要操作命中高度。
 static func _header_height() -> int:
-    return UITheme.hit_primary() if ScreenProfile.is_touch() else HEADER_HEIGHT
+    return UIControls.compact_button_height()
 
 
 ## 载入卡牌集合与页面文案；重置视图、筛选并选中首张。

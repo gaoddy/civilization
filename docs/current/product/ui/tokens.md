@@ -77,6 +77,7 @@
 | --- | --- | --- |
 | `rail-width` | 88 | 左栏座位列宽度 |
 | `pill-button-height` | 26 | 胶囊按钮高度；触控端不低于次要操作命中高度 |
+| `toolbar-button-height` | 26 | 头部工具行次级按钮基线高度；触控端不低于次要操作命中高度 |
 | `status-dialog-width` | 360 | 对局状态模态的提示面板宽度 |
 | `river-height` | 44 | 对局页河道行高度，商店与棋盘、双方棋盘之间 |
 | `river-gold-width` | 72 | 河道左端金币胶囊宽度；手机 64 |

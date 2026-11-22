@@ -32,13 +32,11 @@ func set_state(mode: String, hero_available: bool) -> void:
 
 
 func _build_button(node_name: String, text: String) -> Button:
-    var button := UIControls.button(text)
+    var button := UIControls.compact_button(text, "default", 56)
     button.name = node_name
     button.toggle_mode = true
     button.button_group = _group
     button.focus_mode = Control.FOCUS_ALL
-    button.custom_minimum_size = Vector2(56, 30)
-    button.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
     button.pressed.connect(func() -> void:
         mode_selected.emit(MODE_HERO if button == _hero else MODE_MINION)
     )

@@ -123,6 +123,33 @@ static func styled_button(text: String, variant := "default", min_height := 30) 
     return node
 
 
+## 头部工具行次级按钮：桌面按工具行令牌固定高度，触控端抬到次要操作命中高度。
+## 比 `styled_button` 紧凑，用于图鉴头部这类单行工具行。
+static func compact_button(text: String, variant := "default", min_width := 0) -> Button:
+    var node := Button.new()
+    node.text = text
+    node.custom_minimum_size = Vector2(min_width, compact_button_height())
+    node.focus_mode = Control.FOCUS_ALL
+    for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+        node.add_theme_stylebox_override(state, UITheme.button_style(variant, state))
+    var text_color := UITheme.color("color-bg") if variant == "primary" else UITheme.color("color-text")
+    node.add_theme_color_override("font_color", text_color)
+    node.add_theme_color_override("font_hover_color", text_color)
+    node.add_theme_color_override("font_pressed_color", text_color)
+    node.add_theme_color_override("font_focus_color", text_color)
+    node.add_theme_color_override("font_disabled_color", UITheme.color("color-text-muted"))
+    node.add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
+    return node
+
+
+## 工具行次级按钮高度：桌面取令牌，触控端不低于次要操作命中高度。
+static func compact_button_height() -> int:
+    var height := UITheme.metric("toolbar-button-height")
+    if ScreenProfile.is_touch():
+        return maxi(height, UITheme.hit_small())
+    return height
+
+
 ## 淘汰或失效的行：统一降低透明度，不改变布局。
 static func apply_dim(node: CanvasItem) -> void:
     node.modulate = UITheme.alpha("color-white", UITheme.opacity("opacity-dim"))

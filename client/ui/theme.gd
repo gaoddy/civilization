@@ -146,6 +146,7 @@ const SEMANTIC_OPACITY := {
 const SCENARIO := {
 	"rail-width": 88,
 	"pill-button-height": 26,
+	"toolbar-button-height": 26,
 	"status-dialog-width": 360,
 	"river-height": 44,
 	"river-gold-width": 72,

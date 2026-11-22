@@ -53,10 +53,26 @@ func _check_lobby_page() -> void:
         header != null and header.get_global_rect().end.x <= instance.get_viewport_rect().size.x,
         "图鉴头部不应横向溢出视口",
     )
+    var header_height := float(UIControls.compact_button_height())
     _expect(
-        header != null and is_equal_approx(header.size.y, 32.0),
-        "桌面图鉴头部高度应固定为 32，实际：%s" % (str(header.size) if header != null else "无"),
+        header != null and is_equal_approx(header.size.y, header_height),
+        "桌面图鉴头部高度应跟随工具行按钮高度（%d），实际：%s"
+        % [int(header_height), str(header.size) if header != null else "无"],
     )
+    for node_name in [
+        "ModeMinion",
+        "ModeHero",
+        "GalleryEraSelect",
+        "GalleryPlaySelect",
+        "GalleryKindSelect",
+        "GalleryClose",
+    ]:
+        var control := instance.find_child(node_name, true, false) as Control
+        _expect(
+            control != null and is_equal_approx(control.size.y, header_height),
+            "头部控件应与工具行按钮同高：%s，实际：%s"
+            % [node_name, str(control.size) if control != null else "无"],
+        )
     _expect(
         _filtered_count(instance) == 432,
         "大厅图鉴应有 432 张，实际：%d" % _filtered_count(instance),
@@ -424,9 +440,14 @@ func _check_tablet_layout() -> void:
         await get_tree().process_frame
 
     var header := page.find_child("GalleryHeader", true, false) as Control
+    var touch_header_height := float(UIControls.compact_button_height())
     _expect(
-        header != null and is_equal_approx(header.size.y, float(UITheme.hit_primary())),
-        "平板头部高度应取触控主操作高度，实际：%s" % (str(header.size) if header != null else "无"),
+        touch_header_height >= float(UITheme.hit_small()),
+        "触控图鉴头部不应低于次要操作命中高度，实际：%d" % int(touch_header_height),
+    )
+    _expect(
+        header != null and is_equal_approx(header.size.y, touch_header_height),
+        "平板头部高度应取工具行按钮高度，实际：%s" % (str(header.size) if header != null else "无"),
     )
     var rows := page.find_child("GalleryGridRows", true, false) as GridContainer
     _expect(rows != null and rows.columns == 9, "平板图鉴网格应为 9 列")

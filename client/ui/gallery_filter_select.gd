@@ -12,7 +12,7 @@ func _init(node_name: String, dimension: String) -> void:
     name = node_name
     _dimension = dimension
     focus_mode = Control.FOCUS_ALL
-    custom_minimum_size = Vector2(0, 32)
+    custom_minimum_size = Vector2(0, UIControls.compact_button_height())
     add_theme_font_size_override("font_size", UITheme.font_size("font-body-sm"))
     for state in ["normal", "hover", "pressed", "focus", "disabled"]:
         add_theme_stylebox_override(state, UITheme.button_style("default", state))
