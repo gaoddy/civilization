@@ -8,7 +8,7 @@
 
 统一全屏弹出层的「壳」：遮罩、内容宿主、定位、显隐与点击遮罩关闭。内容、按钮与业务状态仍由各业务组件自己构建，外壳不读取 `GameStore`，不发请求。
 
-覆盖的场景：邀请弹窗、好友浮层、选择浮层、战斗开场与手机图鉴分类面板。
+覆盖的场景：邀请弹窗、好友浮层、选择浮层、战斗开场与图鉴筛选面板。
 
 ## 2. 结构
 
@@ -55,7 +55,7 @@ PopupLayer（Control，全屏，默认隐藏）
 | `GameChoiceOverlay` | `CENTER` | `color-bg` 0.72 | 拦截点击，待选状态由页面控制 |
 | `CombatIntro` | `CENTER` | `color-bg` 0.6 | 根节点与遮罩都放行，不抢详情与输入 |
 | `GameStatusModal` | `CENTER` | 黑 0.55，遮罩放行 | 面板与内部容器放行输入，只有「知道了」按钮接收点击，状态提示不锁对局 |
-| `GalleryCategoryPanel` | `ANCHORED` | `color-bg` 0.62 | 点遮罩关闭 |
+| `GalleryFilterPanel` | `ANCHORED` | `color-bg` 0.0（全透明） | 点遮罩关闭，只负责接收「点外部关闭」 |
 
 ## 6. 不进外壳的浮层
 
@@ -67,4 +67,4 @@ PopupLayer（Control，全屏，默认隐藏）
 ## 7. 验证
 
 - `make client-check`、`make client-smoke`：`ui_smoke_side` 覆盖居中、锚点夹紧、底边贴边与内容替换。
-- 邀请、好友、选择、战斗开场与手机图鉴分类面板的既有冒烟场景全部通过。
+- 邀请、好友、选择、战斗开场与图鉴筛选面板的既有冒烟场景全部通过。

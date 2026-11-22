@@ -19,11 +19,12 @@
 | 技能列表 | `SkillList.build`（`client/ui/skill_list.gd`） | 本文件 |
 | 卡牌图鉴 | `CardGallery`（`client/ui/card_gallery.gd`） | [card-gallery.md](card-gallery.md) |
 | 图鉴视图切换 | `GalleryModeBar` | [gallery-mode-bar.md](gallery-mode-bar.md) |
-| 图鉴顶部筛选栏 | `GalleryFilterBar` | [gallery-filter-bar.md](gallery-filter-bar.md) |
-| 图鉴分类目录 | `GalleryToc` | [gallery-toc.md](gallery-toc.md) |
+| 图鉴筛选下拉 | `GalleryFilterSelect` | [gallery-filter-select.md](gallery-filter-select.md) |
+| 图鉴筛选面板 | `GalleryFilterPanel` | [gallery-filter-panel.md](gallery-filter-panel.md) |
 | 图鉴卡面网格 | `GalleryGrid` | [gallery-grid.md](gallery-grid.md) |
 | 图鉴卡面单元 | `GalleryCardTile` | [gallery-card-tile.md](gallery-card-tile.md) |
-| 图鉴常驻详情 | `GalleryDetail` | [gallery-detail.md](gallery-detail.md) |
+| 图鉴详情浮层 | `GalleryDetailLayer` | [gallery-detail-layer.md](gallery-detail-layer.md) |
+| 图鉴详情 | `GalleryDetail` | [gallery-detail.md](gallery-detail.md) |
 | 详情层 | `DetailLayer`（`client/ui/detail_layer.gd`） | 本文件 |
 | 首局引导 | `FirstGameGuide`（`client/pages/game/first_game_guide.gd`） | [first-game-guide.md](first-game-guide.md) |
 | 技能瞄准层 | `GameAimLayer`（`client/pages/game/game_aim_layer.gd`） | [aim-layer.md](aim-layer.md) |
@@ -36,7 +37,7 @@
 - 长按判定由 `LongPressTracker`（`client/ui/long_press.gd`）承担，详情层与选英雄页共用同一套 450ms 阈值与 8 画布单位的位移取消距离。
 - 可选项框由 `SelectableBox`（`client/ui/selectable_box.gd`）承担内容承载、常态 / 悬停 / 选中三态描边与框内点击；`RoomHeroCard` 与 `GalleryCardTile` 继承它，分别使用外扩与内联两种选中描边。
 - 头像框由 `AvatarFrame`（`client/ui/avatar_frame.gd`）承担圆角头像裁切、头像之上的圆角描边与首字回退；`GameHeroCard` 继承它，业务内容（生命牌）挂在 `content()`；`Avatar` 与 `GamePortrait` 同样基于它，满宽贴底的名字条挂在 `clipped_content()`。
-- 弹出层外壳由 `PopupLayer`（`client/ui/popup_layer.gd`）承担遮罩、居中 / 锚点 / 四向贴边定位与点击遮罩关闭；`InvitePopup`、`FriendsPanel`、`GameChoiceOverlay`、`CombatIntro` 与 `GalleryCategoryPanel` 继承它，内容仍由各自构建。
+- 弹出层外壳由 `PopupLayer`（`client/ui/popup_layer.gd`）承担遮罩、居中 / 锚点 / 四向贴边定位与点击遮罩关闭；`InvitePopup`、`FriendsPanel`、`GameChoiceOverlay`、`CombatIntro` 与图鉴筛选面板 `GalleryFilterPanel` 继承它，内容仍由各自构建。
 
 - `UIControls.section_title(text)`：区块标题，`font-body` 字号、`color-text-dim` 颜色，单行不换行。
 - `UIControls.empty_hint(text)`：居中占位提示，`font-body-sm` 字号、`color-text-muted` 颜色，用于空棋盘、空手牌、无对手。

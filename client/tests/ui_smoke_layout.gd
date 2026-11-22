@@ -356,7 +356,7 @@ func _check_lobby_inputs(page: Node, host: Control, compact: Vector2) -> void:
     _check(visible > 0, "大厅在 960×540 下应有可见输入框")
 
 
-## 图鉴英雄视图在 iPhone 基准下：隐藏左侧目录，顶部筛选、网格、滚动区与详情不越界。
+## 图鉴英雄视图在 iPhone 基准下：隐藏时代与类型筛选，玩法筛选、网格与滚动区不越界。
 func _check_gallery_hero_compact(compact: Vector2) -> void:
     var host := Control.new()
     host.name = "CompactGalleryHost"
@@ -364,18 +364,17 @@ func _check_gallery_hero_compact(compact: Vector2) -> void:
     add_child(host)
     var page := await _instantiate_into("res://pages/gallery/gallery.tscn", host)
     if page != null:
-        var mode_toggle := page.find_child("ModeToggle", true, false) as Button
-        _check(mode_toggle != null and not mode_toggle.disabled, "视图切换应可用")
-        if mode_toggle != null:
-            mode_toggle.pressed.emit()
+        var mode_hero := page.find_child("ModeHero", true, false) as Button
+        _check(mode_hero != null and not mode_hero.disabled, "英雄视图切换应可用")
+        if mode_hero != null:
+            mode_hero.pressed.emit()
             await get_tree().process_frame
             await get_tree().process_frame
             var bounds := Rect2(host.get_global_rect().position, compact).grow(1.0)
             for node_name in [
                 "GalleryHeader",
-                "GalleryHeroCategories",
+                "GalleryPlaySelect",
                 "GalleryScroll",
-                "GalleryDetail",
             ]:
                 var node := page.find_child(str(node_name), true, false) as Control
                 _check(
@@ -388,17 +387,21 @@ func _check_gallery_hero_compact(compact: Vector2) -> void:
                         "%s 在英雄视图越界：%s 不在 %s 内"
                         % [node_name, str(node.get_global_rect()), str(bounds)],
                     )
-            var toc := page.find_child("GalleryToc", true, false) as Control
+            var era_select := page.find_child("GalleryEraSelect", true, false) as Control
             _check(
-                toc == null,
+                era_select == null or not era_select.is_visible_in_tree(),
+                "英雄视图不应显示时代筛选",
+            )
+            _check(
+                page.find_child("GalleryToc", true, false) == null,
                 "手机英雄视图不应再有左侧目录",
             )
             var header := page.find_child("GalleryHeader", true, false) as Control
-            var bar := page.find_child("GalleryHeroCategories", true, false) as Control
+            var bar := page.find_child("GalleryPlaySelect", true, false) as Control
             _check(
                 header != null and bar != null
                     and header.get_global_rect().encloses(bar.get_global_rect()),
-                "英雄分类栏应位于头部内",
+                "玩法筛选应位于头部内",
             )
     host.queue_free()
     await get_tree().process_frame

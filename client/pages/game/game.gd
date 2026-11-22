@@ -584,7 +584,6 @@ func _open_gallery() -> void:
 	var enabled: Array = GameStore.view.get("enabledFactions", [])
 	_gallery.set_catalog(
 		CardPool.card_ids(enabled),
-		tr("ui.gallery.title_match"),
 		tr("ui.gallery.back_match"),
 		CardPool.hero_ids(enabled),
 	)

@@ -1499,14 +1499,13 @@ ui.common.got_it,知道了
 ui.common.no_hero,未选英雄
 ui.gallery.back_lobby,返回大厅
 ui.gallery.back_match,返回对局
-ui.gallery.category_filter,分类：%s
-ui.gallery.category_panel_title,按玩法分类
 ui.gallery.chapter_all,全部
 ui.gallery.detail_empty,选择一张卡牌查看详情
 ui.gallery.effect,效果
 ui.gallery.empty,没有符合条件的卡牌
 ui.gallery.entry,卡牌图鉴
 ui.gallery.entry_match,图鉴
+ui.gallery.filter_kind,类型
 ui.gallery.kind_all,全部
 ui.gallery.kind_effect,效果
 ui.gallery.kind_minion,随从
@@ -1515,10 +1514,9 @@ ui.gallery.load_more_hint,继续下滑加载
 ui.gallery.loaded_stats,已显示 %d / %d 张
 ui.gallery.mode_hero,英雄
 ui.gallery.mode_minion,随从
+ui.gallery.result_count,%d 张
 ui.gallery.skills,技能
 ui.gallery.stats,%s / %s
-ui.gallery.title,卡牌图鉴
-ui.gallery.title_match,本局卡牌图鉴
 ui.gallery.toc_all,全部
 ui.game.card.freeze_glyph,冻
 ui.game.card.stealth_glyph,潜

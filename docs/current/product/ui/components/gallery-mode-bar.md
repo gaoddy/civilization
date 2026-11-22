@@ -5,24 +5,24 @@
 
 ## 用途
 
-图鉴标题右侧的视图切换：同一时刻只显示当前视图的一个按钮，点击切到另一视图，决定顶部筛选栏、左侧目录与网格使用哪套卡池与筛选。
+图鉴头部的视图分段：并排显示「随从」「英雄」两个按钮，当前视图高亮，点击切到另一视图，决定筛选下拉与网格使用哪套卡池与筛选。
 
 ## 属性与方法
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| `mode_selected(mode)` | `signal(String)` | 切到另一视图；`minion` 为随从，`hero` 为英雄 |
-| `set_state(mode, hero_available)` | `void` | 同步按钮文字、当前视图与可用性 |
+| `mode_selected(mode)` | `signal(String)` | 点击某一分段时发出；`minion` 为随从，`hero` 为英雄 |
+| `set_state(mode, hero_available)` | `void` | 同步分段选中态、样式与英雄分段可用性 |
 
-- 节点名为 `GalleryModeBar`，按钮为 `ModeToggle`。
-- 按钮文字为当前视图名称：`ui.gallery.mode_minion`（随从）或 `ui.gallery.mode_hero`（英雄）；不并列显示两个选项。
-- 按钮使用 `primary` 样式，高 30，`font-body-sm`。
+- 节点名为 `GalleryModeBar`，按钮为 `ModeMinion` 与 `ModeHero`。
+- 两枚按钮共用一个 `ButtonGroup`，`allow_unpress = false`，始终有一段选中。
+- 按钮最小尺寸 56×30，`font-body-sm`；选中段为 `primary` 样式（金色底、深色字），另一段为 `default` 变体。
 
 ## 变体与状态
 
 - 默认随从视图；每次打开图鉴由页面重置为随从。
-- 英雄集合为空时按钮禁用并显示「随从」，当前视图保持随从。
-- 点击当前按钮不直接改变状态，而是发出另一视图；由页面更新筛选后再回写按钮文字。
+- 英雄集合为空时英雄分段禁用，当前视图保持随从。
+- 点击当前分段时页面忽略重复选择；由页面先更新筛选，再回写分段状态。
 
 ## 禁用场景
 

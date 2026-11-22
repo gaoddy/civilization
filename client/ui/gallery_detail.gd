@@ -1,34 +1,38 @@
 class_name GalleryDetail
-extends PanelContainer
-## 图鉴常驻详情：选中卡的卡面美术图与类型、分类、玩法、数值、技能文本。
+extends ScrollContainer
+## 图鉴详情内容：选中卡的卡面美术图与类型、分类、玩法、数值、技能文本。
 ##
-## 只读展示；数据全部来自 `CardDB` 的只读展示表。
+## 只读展示；数据全部来自 `CardDB` 的只读展示表。外层抽屉的尺寸、遮罩与
+## 关闭方式由 `GalleryDetailLayer` 提供。
 
-var _scroll: ScrollContainer
 var _box: VBoxContainer
 
 
 func _init() -> void:
     name = "GalleryDetail"
-    custom_minimum_size = Vector2(UITheme.stage_metric("gallery-detail-width"), 0)
+    horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    size_flags_horizontal = Control.SIZE_EXPAND_FILL
     size_flags_vertical = Control.SIZE_EXPAND_FILL
-    var panel_style := UITheme.panel_style("surface")
-    if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
-        # 手机详情收窄到 176，内边距同步收紧，给属性值留出换行宽度。
-        panel_style.set_content_margin_all(UITheme.space("space-md"))
-    add_theme_stylebox_override("panel", panel_style)
 
-    _scroll = ScrollContainer.new()
-    _scroll.name = "GalleryDetailScroll"
-    _scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    _scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-    add_child(_scroll)
+    var margin := MarginContainer.new()
+    margin.name = "GalleryDetailMargin"
+    margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    var padding := (
+        UITheme.space("space-md")
+        if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
+        else UITheme.space("space-xl")
+    )
+    for side in ["left", "right", "top", "bottom"]:
+        margin.add_theme_constant_override("margin_" + side, padding)
+    add_child(margin)
 
     _box = VBoxContainer.new()
     _box.name = "GalleryDetailBody"
     _box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _box.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    _scroll.add_child(_box)
+    margin.add_child(_box)
 
 
 ## 空 id 显示占位提示；否则重建详情内容。

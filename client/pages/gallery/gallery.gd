@@ -12,7 +12,6 @@ func _ready() -> void:
     gallery.closed.connect(_on_closed)
     gallery.set_catalog(
         CardDB.cards.keys(),
-        tr("ui.gallery.title"),
         tr("ui.gallery.back_lobby"),
     )
 

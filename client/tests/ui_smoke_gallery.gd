@@ -1,5 +1,5 @@
 extends "res://tests/smoke_case.gd"
-## 卡牌图鉴冒烟：大厅全量页、章节/分类筛选、滚动加载、常驻详情与对局覆盖层卡池。
+## 卡牌图鉴冒烟：去标题、筛选下拉、9 列网格、详情浮层、手机档位与对局覆盖层卡池。
 
 
 func _ready() -> void:
@@ -13,6 +13,7 @@ func _ready() -> void:
     await _check_empty_catalog()
     await _check_scroll_loading()
     await _check_phone_layout()
+    await _check_detail_drawer()
     await _check_detail()
     await _check_skill_names()
     await _check_lobby_entry()
@@ -20,25 +21,33 @@ func _ready() -> void:
     _finish()
 
 
+## 页面骨架：没有标题与左栏，头部是视图分段 + 三个筛选下拉 + 计数 + 返回。
 func _check_lobby_page() -> void:
     var instance := await _mount_gallery()
     if instance == null:
         return
-    _expect(instance.find_child("GalleryTitle", true, false) != null, "图鉴页缺少标题")
+    _expect(instance.find_child("GalleryTitle", true, false) == null, "图鉴页不应再显示标题")
     var header = instance.find_child("GalleryHeader", true, false)
-    var chapters = instance.find_child("GalleryChapters", true, false)
+    var mode_bar = instance.find_child("GalleryModeBar", true, false)
+    var minion = instance.find_child("ModeMinion", true, false)
+    var hero = instance.find_child("ModeHero", true, false)
     _expect(
-        header != null and chapters != null and chapters.get_parent() == header,
-        "时代章节栏应与标题、返回按钮同处头部一行",
+        header != null and mode_bar != null and mode_bar.get_parent() == header,
+        "视图切换应与筛选、返回同处头部一行",
     )
-    _expect(instance.find_child("GallerySubtitle", true, false) == null, "头部不应再有副标题胶囊")
-    _expect(instance.find_child("GalleryCount", true, false) == null, "头部不应再有计数")
-    var same_row := true
-    if chapters != null:
-        for child in chapters.get_children():
-            if child is Button and not is_equal_approx(child.position.y, chapters.get_child(0).position.y):
-                same_row = false
-    _expect(same_row, "时代章节按钮应保持在头部同一行")
+    _expect(minion != null and hero != null, "视图切换应为随从 / 英雄两个分段")
+    _expect(
+        minion != null and minion.button_pressed and minion.text == tr("ui.gallery.mode_minion"),
+        "图鉴默认应处于随从视图",
+    )
+    _expect(instance.find_child("GalleryToc", true, false) == null, "图鉴不应再有左侧分类目录")
+    _expect(instance.find_child("GalleryCategoryPanel", true, false) == null, "图鉴不应再有手机分类面板")
+    _expect(instance.find_child("GallerySubtitle", true, false) == null, "头部不应有副标题")
+    var count = instance.find_child("GalleryCount", true, false)
+    _expect(count != null and count.text.contains("432"), "头部应显示结果计数 432")
+    for node_name in ["GalleryEraSelect", "GalleryPlaySelect", "GalleryKindSelect"]:
+        var select := instance.find_child(node_name, true, false) as Button
+        _expect(select != null and select.text.contains("全部"), "筛选下拉缺少初始值：%s" % node_name)
     _expect(
         header != null and header.get_global_rect().end.x <= instance.get_viewport_rect().size.x,
         "图鉴头部不应横向溢出视口",
@@ -47,111 +56,70 @@ func _check_lobby_page() -> void:
         _filtered_count(instance) == 432,
         "大厅图鉴应有 432 张，实际：%d" % _filtered_count(instance),
     )
-    var all_button = instance.find_child("ChapterAll", true, false)
-    _expect(
-        all_button != null and all_button.text.contains("432") and all_button.text.contains("\n"),
-        "章节按钮应为名称在上、计数在下，实际：%s" % (all_button.text if all_button != null else "无"),
-    )
     var rows = instance.find_child("GalleryGridRows", true, false)
-    _expect(rows != null and rows.columns == 6, "图鉴网格应为 6 列")
-    _expect(rows != null and rows.get_child_count() >= 18, "首屏至少加载一批 18 张卡")
+    _expect(rows != null and rows.columns == 9, "桌面图鉴网格应为 9 列")
+    _expect(rows != null and rows.get_child_count() >= 27, "首屏至少加载一批 27 张卡")
     var scroll = instance.find_child("GalleryScroll", true, false)
     _expect(scroll is ScrollContainer, "图鉴网格应有滚动容器")
     _expect(instance.find_child("GalleryPager", true, false) == null, "图鉴不应再有分页条")
-    _expect(instance.find_child("GalleryPrev", true, false) == null, "图鉴不应再有上一页按钮")
-    _expect(instance.find_child("GalleryNext", true, false) == null, "图鉴不应再有下一页按钮")
     var status = instance.find_child("GalleryLoadStatus", true, false)
     _expect(
         status != null and status.text.contains("已显示") and status.text.contains("继续下滑加载"),
         "网格底部应显示已加载张数与加载提示，实际：%s" % (status.text if status != null else "无"),
     )
-    var detail_name = instance.find_child("GalleryDetailName", true, false)
-    _expect(detail_name != null and detail_name.text != "", "首屏应常驻选中首张卡")
-
-    _expect(instance.find_child("Taxonneutral", true, false) == null, "分类目录不应再有中立")
-    _expect(instance.find_child("Taxonmammal", true, false) != null, "分类目录缺少哺乳纲")
-    _expect(instance.find_child("Taxonmachine", true, false) != null, "分类目录缺少机械")
-    _expect(instance.find_child("Taxoneffect", true, false) == null, "效果牌不应作为顶层分类")
-    _expect(instance.find_child("Taxonscience", true, false) == null, "科学分类不应作为顶层分类")
-    _expect(instance.find_child("Taxonhero", true, false) == null, "英雄不应作为左侧分类")
-
-    var mode_bar = instance.find_child("GalleryModeBar", true, false)
-    var mode_toggle = instance.find_child("ModeToggle", true, false)
+    var initial_layer := instance.find_child("GalleryDetailLayer", true, false) as Control
     _expect(
-        mode_bar != null and mode_toggle != null,
-        "标题右侧缺少随从 / 英雄视图切换",
+        initial_layer != null and not initial_layer.is_visible_in_tree(),
+        "进入图鉴不应自动打开详情浮层",
     )
+    var first_tile: GalleryCardTile = null
+    if rows != null and rows.get_child_count() > 0:
+        first_tile = rows.get_child(0) as GalleryCardTile
     _expect(
-        mode_toggle != null and mode_toggle.text == tr("ui.gallery.mode_minion"),
-        "图鉴默认应显示随从视图，实际：%s" % (mode_toggle.text if mode_toggle != null else "无"),
-    )
-    _expect(
-        instance.find_child("ModeMinion", true, false) == null
-            and instance.find_child("ModeHero", true, false) == null,
-        "视图切换应只显示当前视图的一个按钮",
-    )
-
-    var toc = instance.find_child("GalleryToc", true, false)
-    var detail = instance.find_child("GalleryDetail", true, false)
-    var body = instance.find_child("GalleryBody", true, false)
-    _expect(
-        toc != null and toc.get_child_count() > 0 and str(toc.get_child(0).name) == "TaxonAll",
-        "分类列表不应再有标题，首项应为「全部」",
-    )
-    _expect(
-        toc != null and toc.size.x >= UITheme.metric("gallery-toc-width"),
-        "分类目录应按令牌宽度占位",
-    )
-    _expect(
-        detail != null and is_equal_approx(detail.size.x, UITheme.metric("gallery-detail-width")),
-        "常驻详情应按令牌宽度占位，实际：%s" % (detail.size.x if detail != null else "无"),
-    )
-    _expect(
-        body != null and body.get_global_rect().end.x <= instance.get_viewport_rect().size.x,
-        "图鉴主体不应横向溢出视口",
+        first_tile != null and first_tile.selected,
+        "进入图鉴应预选中首张卡并保留选中描边",
     )
     await _unmount(instance)
 
 
+## 时代与玩法下拉：计数、禁用与清除。
 func _check_filters() -> void:
     var instance := await _mount_gallery()
     if instance == null:
         return
 
-    var chapter = instance.find_child("Chapter1", true, false)
-    _expect(chapter != null, "章节栏缺少史前章")
-    if chapter != null:
-        await _push_click(instance, chapter.get_global_rect().get_center())
+    await _pick(instance, "GalleryEraSelect", "Chapter1")
     _expect(
         _filtered_count(instance) == 86,
         "史前章应有 86 张，实际：%d" % _filtered_count(instance),
     )
 
-    chapter = instance.find_child("Chapter7", true, false)
-    _expect(chapter != null, "章节栏缺少未来章")
-    if chapter != null:
-        await _push_click(instance, chapter.get_global_rect().get_center())
-    var fish = instance.find_child("Taxonfish", true, false)
-    _expect(fish != null, "分类目录缺少鱼纲")
+    await _pick(instance, "GalleryEraSelect", "Chapter7")
+    _expect(
+        _filtered_count(instance) == 47,
+        "未来章应有 47 张，实际：%d" % _filtered_count(instance),
+    )
+    # 未来章下没有鱼纲卡时该分类应禁用。
+    var select := instance.find_child("GalleryPlaySelect", true, false) as Button
+    await _push_click(instance, select.get_global_rect().get_center())
+    await get_tree().process_frame
+    var fish = instance.find_child("TaxonFish", true, false)
     _expect(fish != null and fish.disabled, "未来章下没有鱼纲卡时该分类应禁用")
-    var mammal = instance.find_child("Taxonmammal", true, false)
-    _expect(mammal != null, "分类目录缺少哺乳纲")
+    var mammal = instance.find_child("TaxonMammal", true, false)
+    _expect(mammal != null, "玩法下拉缺少哺乳纲")
     if mammal != null:
         await _push_click(instance, mammal.get_global_rect().get_center())
-
     _expect(
         _filtered_count(instance) == 15,
         "未来 + 哺乳纲应有 15 张，实际：%d" % _filtered_count(instance),
     )
 
-    var all_taxon = instance.find_child("TaxonAll", true, false)
-    _expect(all_taxon != null, "分类目录缺少「全部」")
-    if all_taxon != null:
-        await _push_click(instance, all_taxon.get_global_rect().get_center())
-    var all_chapter = instance.find_child("ChapterAll", true, false)
-    _expect(all_chapter != null, "章节栏缺少「全部」")
-    if all_chapter != null:
-        await _push_click(instance, all_chapter.get_global_rect().get_center())
+    await _pick(instance, "GalleryEraSelect", "ChapterAll")
+    _expect(
+        _filtered_count(instance) == 122,
+        "清除时代后应保留哺乳纲的 122 张，实际：%d" % _filtered_count(instance),
+    )
+    await _pick(instance, "GalleryPlaySelect", "TaxonAll")
     _expect(
         _filtered_count(instance) == 432,
         "清除筛选后应恢复 432 张，实际：%d" % _filtered_count(instance),
@@ -159,64 +127,295 @@ func _check_filters() -> void:
     await _unmount(instance)
 
 
-## 13 个玩法顶层分类与随从 / 效果二级筛选；多玩法卡按全部归属计数。
+## 13 个玩法与随从 / 效果二级筛选；多玩法卡按全部归属计数。
 func _check_categories_and_kinds() -> void:
     var instance := await _mount_gallery()
     if instance == null:
         return
-    var mammal_taxon = instance.find_child("Taxonmammal", true, false)
-    _expect(mammal_taxon != null, "分类目录缺少哺乳纲")
-    if mammal_taxon != null:
-        await _push_click(instance, mammal_taxon.get_global_rect().get_center())
+    await _pick(instance, "GalleryPlaySelect", "TaxonMammal")
     _expect(
         _filtered_count(instance) == 122,
         "哺乳纲应有 122 张，实际：%d" % _filtered_count(instance),
     )
 
-    var kind_minion = instance.find_child("KindMinion", true, false)
-    var kind_effect = instance.find_child("KindEffect", true, false)
-    _expect(
-        instance.find_child("KindAll", true, false) != null
-            and kind_minion != null
-            and kind_effect != null,
-        "选中顶层分类后应展开随从 / 效果二级目录",
-    )
-    if kind_minion != null:
-        await _push_click(instance, kind_minion.get_global_rect().get_center())
+    await _pick(instance, "GalleryKindSelect", "KindMinion")
     _expect(
         _filtered_count(instance) == 97,
         "哺乳纲 + 随从应有 97 张，实际：%d" % _filtered_count(instance),
     )
-    # 二级筛选重建后旧节点已释放，必须重新取当前节点。
-    kind_effect = instance.find_child("KindEffect", true, false)
-    if kind_effect != null:
-        await _push_click(instance, kind_effect.get_global_rect().get_center())
+    await _pick(instance, "GalleryKindSelect", "KindEffect")
     _expect(
         _filtered_count(instance) == 25,
         "哺乳纲 + 效果应有 25 张，实际：%d" % _filtered_count(instance),
     )
 
-    mammal_taxon = instance.find_child("Taxonmammal", true, false)
-    _expect(mammal_taxon != null, "分类目录缺少哺乳纲")
-    if mammal_taxon != null:
-        await _push_click(instance, mammal_taxon.get_global_rect().get_center())
+    # 切换顶层分类时二级筛选回到「全部」。
+    await _pick(instance, "GalleryPlaySelect", "TaxonMammal")
     _expect(
         _filtered_count(instance) == 122,
         "哺乳纲顶层应有 122 张，实际：%d" % _filtered_count(instance),
     )
-    var kind_all = instance.find_child("KindAll", true, false)
+    var kind_select := instance.find_child("GalleryKindSelect", true, false) as Button
     _expect(
-        kind_all != null and kind_all.button_pressed,
-        "切换顶层分类后二级筛选应回到全部",
+        kind_select != null and kind_select.text.contains(tr("ui.gallery.kind_all")),
+        "切换顶层分类后二级筛选应回到全部，实际：%s" % (kind_select.text if kind_select != null else "无"),
     )
 
-    var all_taxon = instance.find_child("TaxonAll", true, false)
-    if all_taxon != null:
-        await _push_click(instance, all_taxon.get_global_rect().get_center())
+    await _pick(instance, "GalleryPlaySelect", "TaxonAll")
     _expect(
         _filtered_count(instance) == 432,
         "清除分类筛选后应恢复 432 张，实际：%d" % _filtered_count(instance),
     )
+    await _unmount(instance)
+
+
+## 随从 / 英雄视图：英雄视图隐藏时代与类型，玩法下拉改用英雄分类。
+func _check_hero_section() -> void:
+    var instance := await _mount_gallery()
+    if instance == null:
+        return
+    var mode_hero := instance.find_child("ModeHero", true, false) as Button
+    _expect(mode_hero != null, "头部缺少英雄视图分段")
+    if mode_hero != null:
+        await _push_click(instance, mode_hero.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 32,
+        "英雄视图应有 32 张，实际：%d" % _filtered_count(instance),
+    )
+    var era_select := instance.find_child("GalleryEraSelect", true, false) as Control
+    var kind_select := instance.find_child("GalleryKindSelect", true, false) as Control
+    _expect(era_select == null or not era_select.is_visible_in_tree(), "英雄视图不应显示时代筛选")
+    _expect(kind_select == null or not kind_select.is_visible_in_tree(), "英雄视图不应显示类型筛选")
+    var play_select := instance.find_child("GalleryPlaySelect", true, false) as Control
+    _expect(
+        play_select != null and play_select.is_visible_in_tree(),
+        "英雄视图应显示玩法筛选",
+    )
+
+    await _pick(instance, "GalleryPlaySelect", "HeroCategoryMammal")
+    _expect(
+        _filtered_count(instance) == 20,
+        "英雄哺乳纲应有 20 张，实际：%d" % _filtered_count(instance),
+    )
+    await _pick(instance, "GalleryPlaySelect", "HeroCategoryAll")
+    _expect(
+        _filtered_count(instance) == 32,
+        "英雄分类清空后应恢复 32 张，实际：%d" % _filtered_count(instance),
+    )
+
+    var rows = instance.find_child("GalleryGridRows", true, false)
+    if rows != null and rows.get_child_count() > 0:
+        var first_tile: Control = rows.get_child(0)
+        _expect(first_tile.find_child("CardBadge", true, false) == null, "英雄卡面不应有角标")
+        _expect(first_tile.find_child("CardDesc", true, false) == null, "英雄卡面不应显示技能文本")
+        _expect(first_tile.find_child("CostBadge", true, false) == null, "英雄卡面不应有费用角标")
+        _expect(
+            first_tile.find_child("CardAttack", true, false) == null
+                and first_tile.find_child("CardHealth", true, false) == null,
+            "英雄卡面不应有攻击与生命",
+        )
+        await _push_click(instance, first_tile.get_global_rect().get_center())
+        var layer := instance.find_child("GalleryDetailLayer", true, false) as Control
+        _expect(layer != null and layer.is_visible_in_tree(), "点击英雄卡应打开详情浮层")
+        var detail_name := instance.find_child("GalleryDetailName", true, false)
+        _expect(detail_name != null and detail_name.text != "", "英雄详情应显示卡名")
+        var intro := instance.find_child("GalleryDetailIntroduction", true, false)
+        _expect(intro != null and intro.text != "", "英雄详情应显示介绍")
+        var text := _node_text(instance.find_child("GalleryDetail", true, false))
+        _expect(
+            not text.contains(TranslationServer.translate("ui.game.detail.type")),
+            "英雄详情不应显示类型行：%s" % text,
+        )
+        _expect(
+            not text.contains(TranslationServer.translate("ui.game.detail.taxonomy")),
+            "英雄详情不应显示科学分类：%s" % text,
+        )
+        _expect(
+            not text.contains(TranslationServer.translate("ui.game.detail.era")),
+            "英雄详情不应显示时代：%s" % text,
+        )
+
+    # 切回随从视图恢复普通卡池、时代与类型筛选。
+    var mode_minion := instance.find_child("ModeMinion", true, false) as Button
+    if mode_minion != null:
+        await _push_click(instance, mode_minion.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 432,
+        "切回随从视图应恢复 432 张，实际：%d" % _filtered_count(instance),
+    )
+    _expect(era_select != null and era_select.is_visible_in_tree(), "切回随从视图应恢复时代筛选")
+    await _unmount(instance)
+
+
+## 切换视图保留各视图筛选：随从视图选中的时代在英雄视图往返后仍然生效。
+func _check_mode_filters() -> void:
+    var instance := await _mount_gallery()
+    if instance == null:
+        return
+    await _pick(instance, "GalleryEraSelect", "Chapter1")
+    _expect(
+        _filtered_count(instance) == 86,
+        "史前章应有 86 张，实际：%d" % _filtered_count(instance),
+    )
+    var mode_hero := instance.find_child("ModeHero", true, false) as Button
+    if mode_hero != null:
+        await _push_click(instance, mode_hero.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 32,
+        "英雄视图不受时代筛选影响，实际：%d" % _filtered_count(instance),
+    )
+    var mode_minion := instance.find_child("ModeMinion", true, false) as Button
+    if mode_minion != null:
+        await _push_click(instance, mode_minion.get_global_rect().get_center())
+    _expect(
+        _filtered_count(instance) == 86,
+        "切回随从视图应保留史前筛选，实际：%d" % _filtered_count(instance),
+    )
+    await _unmount(instance)
+
+
+## 本局没有可用英雄时，英雄分段禁用且保持随从视图。
+func _check_empty_hero_pool() -> void:
+    var gallery := CardGallery.new()
+    gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
+    add_child(gallery)
+    gallery.set_catalog(CardDB.cards.keys(), tr("ui.gallery.back_lobby"), [])
+    await get_tree().process_frame
+    var hero := gallery.find_child("ModeHero", true, false) as Button
+    _expect(hero != null and hero.disabled, "没有可用英雄时应禁用英雄分段")
+    _expect(
+        hero != null and not hero.button_pressed,
+        "没有可用英雄时应保持随从视图",
+    )
+    _expect(gallery.call("_filtered_ids").size() == 432, "没有可用英雄时随从视图仍为 432 张")
+    gallery.queue_free()
+    await get_tree().process_frame
+
+
+## 空图鉴：没有卡片时只显示空态与 0 张计数，详情保持收起。
+func _check_empty_catalog() -> void:
+    var gallery := CardGallery.new()
+    gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
+    add_child(gallery)
+    gallery.set_catalog([], tr("ui.gallery.back_lobby"))
+    await get_tree().process_frame
+    _expect(gallery.call("_filtered_ids").size() == 0, "空图鉴不应有可展示卡牌")
+    var empty := gallery.find_child("GalleryEmpty", true, false)
+    _expect(empty != null and empty.is_visible_in_tree(), "空图鉴应显示空态")
+    var count := gallery.find_child("GalleryCount", true, false) as Label
+    _expect(count != null and count.text.contains("0"), "空图鉴计数应为 0")
+    var layer := gallery.find_child("GalleryDetailLayer", true, false) as Control
+    _expect(layer != null and not layer.is_visible_in_tree(), "空图鉴不应打开详情浮层")
+    gallery.queue_free()
+    await get_tree().process_frame
+
+
+func _check_scroll_loading() -> void:
+    var instance := await _mount_gallery()
+    if instance == null:
+        return
+    var rows = instance.find_child("GalleryGridRows", true, false)
+    var scroll = instance.find_child("GalleryScroll", true, false) as ScrollContainer
+    if rows == null or scroll == null:
+        _expect(false, "图鉴缺少网格或滚动容器")
+        await _unmount(instance)
+        return
+    var before := rows.get_child_count()
+    _expect(before >= 27, "首屏应至少加载一批，实际：%d" % before)
+    await get_tree().process_frame
+    await get_tree().process_frame
+    scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
+    await get_tree().process_frame
+    await get_tree().process_frame
+    await get_tree().process_frame
+    _expect(
+        rows.get_child_count() > before,
+        "滚到底部应加载下一批，实际：%d → %d" % [before, rows.get_child_count()],
+    )
+    var status = instance.find_child("GalleryLoadStatus", true, false)
+    _expect(
+        status != null and status.text.begins_with("已显示"),
+        "加载后应更新底部状态，实际：%s" % (status.text if status != null else "无"),
+    )
+    await _unmount(instance)
+
+
+## 手机 960×540：6 列网格，头部筛选不越界，详情浮层从底部打开且不出屏。
+func _check_phone_layout() -> void:
+    ScreenProfile.set_device_for_test("phone")
+    var host := Control.new()
+    host.name = "PhoneGalleryHost"
+    host.size = Vector2(960, 540)
+    add_child(host)
+    var page = load("res://pages/gallery/gallery.tscn").instantiate()
+    host.add_child(page)
+    await get_tree().process_frame
+    await get_tree().process_frame
+    await get_tree().process_frame
+
+    var bounds := Rect2(host.get_global_rect().position, host.size).grow(1.0)
+    for node_name in ["GalleryHeader", "GalleryEraSelect", "GalleryPlaySelect", "GalleryScroll"]:
+        var node := page.find_child(str(node_name), true, false) as Control
+        _expect(node != null and node.is_visible_in_tree(), "手机图鉴缺少可见的 %s" % node_name)
+        if node != null:
+            _expect(
+                bounds.encloses(node.get_global_rect()),
+                "%s 在手机基准下越界：%s 不在 %s 内"
+                % [node_name, str(node.get_global_rect()), str(bounds)],
+            )
+    _expect(page.find_child("GalleryToc", true, false) == null, "手机图鉴不应再有左侧目录")
+
+    var rows := page.find_child("GalleryGridRows", true, false) as GridContainer
+    _expect(rows != null and rows.columns == 6, "手机网格应为 6 列")
+    _expect(rows != null and rows.get_child_count() >= 12, "手机首屏至少加载一批 12 张卡")
+
+    var layer := page.find_child("GalleryDetailLayer", true, false) as Control
+    _expect(layer != null and not layer.is_visible_in_tree(), "手机进入图鉴不应打开详情")
+    var tile := rows.get_child(0) as Control
+    if tile != null:
+        await _push_click(page, tile.get_global_rect().get_center())
+    _expect(layer != null and layer.is_visible_in_tree(), "手机点击卡牌应打开详情浮层")
+    var drawer := page.find_child("GalleryDrawer", true, false) as Control
+    _expect(drawer != null and bounds.encloses(drawer.get_global_rect()), "手机详情抽屉不应越界")
+    await _push_key(page, KEY_ESCAPE)
+    _expect(layer != null and not layer.is_visible_in_tree(), "Esc 应只收起详情浮层")
+
+    host.queue_free()
+    await get_tree().process_frame
+    ScreenProfile.set_device_for_test("desktop")
+
+
+## 详情浮层：点卡打开、点遮罩与 Esc 关闭，选中描边同步。
+func _check_detail_drawer() -> void:
+    var instance := await _mount_gallery()
+    if instance == null:
+        return
+    var rows = instance.find_child("GalleryGridRows", true, false)
+    if rows == null or rows.get_child_count() < 2:
+        _expect(false, "图鉴网格不足两张卡")
+        await _unmount(instance)
+        return
+    var tile := rows.get_child(1) as GalleryCardTile
+    var card_id := str(tile.card_id)
+    await _push_click(instance, tile.get_global_rect().get_center())
+    var layer := instance.find_child("GalleryDetailLayer", true, false) as Control
+    _expect(layer != null and layer.is_visible_in_tree(), "点击卡牌应打开详情浮层")
+    _expect(tile.selected, "打开详情后卡面应保持选中描边")
+    var detail_name = instance.find_child("GalleryDetailName", true, false)
+    _expect(
+        detail_name != null and detail_name.text == CardDB.display_name(card_id),
+        "详情应切换为 %s" % CardDB.display_name(card_id),
+    )
+    # 点遮罩关闭，网格仍保留选中。
+    await _push_click(instance, Vector2(12, 360))
+    _expect(layer != null and not layer.is_visible_in_tree(), "点遮罩应收起详情浮层")
+    _expect(tile.selected, "收起浮层后应保留选中描边")
+    # 重新打开后按 Esc 先收浮层。
+    await _push_click(instance, tile.get_global_rect().get_center())
+    _expect(layer != null and layer.is_visible_in_tree(), "再次点卡应重新打开详情浮层")
+    await _push_key(instance, KEY_ESCAPE)
+    _expect(layer != null and not layer.is_visible_in_tree(), "Esc 应先收起详情浮层")
+    _expect(instance.is_inside_tree(), "收起详情不应离开图鉴页")
     await _unmount(instance)
 
 
@@ -269,330 +468,6 @@ func _check_detail_art() -> void:
     await get_tree().process_frame
 
 
-## 随从 / 英雄视图切换：英雄视图隐藏左侧目录，英雄分类顶部居中，详情走英雄口径。
-func _check_hero_section() -> void:
-    var instance := await _mount_gallery()
-    if instance == null:
-        return
-    var mode_toggle = instance.find_child("ModeToggle", true, false)
-    _expect(mode_toggle != null, "标题右侧缺少视图切换")
-    if mode_toggle != null:
-        await _push_click(instance, mode_toggle.get_global_rect().get_center())
-    _expect(
-        mode_toggle != null and mode_toggle.text == tr("ui.gallery.mode_hero"),
-        "切到英雄视图后按钮应显示英雄，实际：%s"
-        % (mode_toggle.text if mode_toggle != null else "无"),
-    )
-    _expect(
-        _filtered_count(instance) == 32,
-        "英雄视图应有 32 张，实际：%d" % _filtered_count(instance),
-    )
-    var toc = instance.find_child("GalleryToc", true, false)
-    _expect(
-        toc != null and not toc.is_visible_in_tree(),
-        "英雄视图不应显示左侧分类目录",
-    )
-    var chapters = instance.find_child("GalleryChapters", true, false)
-    _expect(
-        chapters != null and not chapters.is_visible_in_tree(),
-        "英雄视图不应显示时代章节",
-    )
-    var hero_bar = instance.find_child("GalleryHeroCategories", true, false)
-    _expect(
-        hero_bar != null and hero_bar.is_visible_in_tree(),
-        "英雄视图应显示顶部居中的英雄分类栏",
-    )
-    var kind_all = instance.find_child("KindAll", true, false)
-    _expect(
-        kind_all == null or not kind_all.is_visible_in_tree(),
-        "英雄视图不应展开随从/效果二级筛选",
-    )
-    var hero_all = instance.find_child("HeroCategoryAll", true, false)
-    _expect(
-        hero_all != null and hero_all.text.contains("32"),
-        "英雄分类「全部」应计 32 张，实际：%s" % (hero_all.text if hero_all != null else "无"),
-    )
-    var header = instance.find_child("GalleryHeader", true, false) as Control
-    var body = instance.find_child("GalleryBody", true, false) as Control
-    var view_size: Vector2 = instance.get_viewport_rect().size
-    _expect(
-        header != null and header.get_global_rect().end.x <= view_size.x,
-        "英雄视图头部不应横向溢出视口",
-    )
-    _expect(
-        body != null and body.get_global_rect().end.x <= view_size.x,
-        "英雄视图主体不应横向溢出视口",
-    )
-    var hero_rows = instance.find_child("GalleryGridRows", true, false) as Control
-    _expect(
-        hero_rows != null and hero_rows.get_global_rect().end.y <= view_size.y,
-        "英雄视图网格不应纵向溢出视口",
-    )
-    var mammal = instance.find_child("HeroCategoryMammal", true, false)
-    _expect(
-        mammal != null and mammal.text.contains("20"),
-        "英雄分类哺乳纲应计 20 张，实际：%s" % (mammal.text if mammal != null else "无"),
-    )
-    var fungus = instance.find_child("HeroCategoryFungus", true, false)
-    _expect(
-        fungus != null and fungus.disabled,
-        "没有英雄的玩法分类应显示并禁用",
-    )
-    if mammal != null:
-        await _push_click(instance, mammal.get_global_rect().get_center())
-    _expect(
-        _filtered_count(instance) == 20,
-        "英雄哺乳纲应有 20 张，实际：%d" % _filtered_count(instance),
-    )
-    hero_all = instance.find_child("HeroCategoryAll", true, false)
-    if hero_all != null:
-        await _push_click(instance, hero_all.get_global_rect().get_center())
-    _expect(
-        _filtered_count(instance) == 32,
-        "英雄分类清空后应恢复 32 张，实际：%d" % _filtered_count(instance),
-    )
-    var rows = instance.find_child("GalleryGridRows", true, false)
-    if rows != null and rows.get_child_count() > 0:
-        var first_tile: Control = rows.get_child(0)
-        _expect(
-            first_tile.find_child("CardBadge", true, false) == null,
-            "英雄卡面不应有角标",
-        )
-        _expect(
-            first_tile.find_child("CardDesc", true, false) == null,
-            "英雄卡面不应显示技能文本",
-        )
-        _expect(
-            first_tile.find_child("CostBadge", true, false) == null,
-            "英雄卡面不应有费用角标",
-        )
-        _expect(
-            first_tile.find_child("CardAttack", true, false) == null
-                and first_tile.find_child("CardHealth", true, false) == null,
-            "英雄卡面不应有攻击与生命",
-        )
-    var detail = instance.find_child("GalleryDetail", true, false)
-    var detail_name = instance.find_child("GalleryDetailName", true, false)
-    _expect(detail_name != null and detail_name.text != "", "英雄视图应常驻选中首张英雄")
-    if detail != null:
-        var text := _node_text(detail)
-        var intro = instance.find_child("GalleryDetailIntroduction", true, false)
-        _expect(
-            intro != null and intro.text != "",
-            "英雄详情应显示介绍：%s" % text,
-        )
-        _expect(
-            not text.contains(TranslationServer.translate("ui.game.detail.type")),
-            "英雄详情不应显示类型行：%s" % text,
-        )
-        _expect(
-            not text.contains(TranslationServer.translate("ui.game.detail.taxonomy")),
-            "英雄详情不应显示科学分类：%s" % text,
-        )
-        _expect(
-            not text.contains(TranslationServer.translate("ui.game.detail.era")),
-            "英雄详情不应显示时代：%s" % text,
-        )
-    # 切回随从视图恢复普通卡池、左侧目录与时代章节。
-    if mode_toggle != null:
-        await _push_click(instance, mode_toggle.get_global_rect().get_center())
-    _expect(
-        mode_toggle != null and mode_toggle.text == tr("ui.gallery.mode_minion"),
-        "切回随从视图后按钮应显示随从，实际：%s"
-        % (mode_toggle.text if mode_toggle != null else "无"),
-    )
-    _expect(
-        _filtered_count(instance) == 432,
-        "切回随从视图应恢复 432 张，实际：%d" % _filtered_count(instance),
-    )
-    toc = instance.find_child("GalleryToc", true, false)
-    _expect(
-        toc != null and toc.is_visible_in_tree(),
-        "切回随从视图应恢复左侧分类目录",
-    )
-    chapters = instance.find_child("GalleryChapters", true, false)
-    _expect(
-        chapters != null and chapters.is_visible_in_tree(),
-        "切回随从视图应恢复时代章节",
-    )
-    await _unmount(instance)
-
-
-## 切换视图保留各视图筛选：随从视图选中的时代在英雄视图往返后仍然生效。
-func _check_mode_filters() -> void:
-    var instance := await _mount_gallery()
-    if instance == null:
-        return
-    var chapter = instance.find_child("Chapter1", true, false)
-    if chapter != null:
-        await _push_click(instance, chapter.get_global_rect().get_center())
-    _expect(
-        _filtered_count(instance) == 86,
-        "史前章应有 86 张，实际：%d" % _filtered_count(instance),
-    )
-    var mode_toggle = instance.find_child("ModeToggle", true, false)
-    if mode_toggle != null:
-        await _push_click(instance, mode_toggle.get_global_rect().get_center())
-    _expect(
-        _filtered_count(instance) == 32,
-        "英雄视图不受时代筛选影响，实际：%d" % _filtered_count(instance),
-    )
-    if mode_toggle != null:
-        await _push_click(instance, mode_toggle.get_global_rect().get_center())
-    _expect(
-        _filtered_count(instance) == 86,
-        "切回随从视图应保留史前筛选，实际：%d" % _filtered_count(instance),
-    )
-    await _unmount(instance)
-
-
-## 本局没有可用英雄时，英雄视图切换禁用且保持随从视图。
-func _check_empty_hero_pool() -> void:
-    var gallery := CardGallery.new()
-    gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(gallery)
-    gallery.set_catalog(
-        CardDB.cards.keys(),
-        tr("ui.gallery.title"),
-        tr("ui.gallery.back_lobby"),
-        [],
-    )
-    await get_tree().process_frame
-    var mode_toggle = gallery.find_child("ModeToggle", true, false)
-    _expect(
-        mode_toggle != null and mode_toggle.disabled,
-        "没有可用英雄时应禁用视图切换",
-    )
-    _expect(
-        mode_toggle != null and mode_toggle.text == tr("ui.gallery.mode_minion"),
-        "没有可用英雄时应保持随从视图",
-    )
-    _expect(gallery.call("_filtered_ids").size() == 432, "没有可用英雄时随从视图仍为 432 张")
-    gallery.queue_free()
-    await get_tree().process_frame
-
-
-## 空图鉴：没有章节、没有卡片，只显示空态与详情占位。
-func _check_empty_catalog() -> void:
-    var gallery := CardGallery.new()
-    gallery.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(gallery)
-    gallery.set_catalog(
-        [],
-        tr("ui.gallery.title"),
-        tr("ui.gallery.back_lobby"),
-    )
-    await get_tree().process_frame
-    _expect(gallery.call("_filtered_ids").size() == 0, "空图鉴不应有可展示卡牌")
-    var empty := gallery.find_child("GalleryEmpty", true, false)
-    _expect(empty != null and empty.is_visible_in_tree(), "空图鉴应显示空态")
-    _expect(gallery.find_child("GalleryDetailName", true, false) == null, "空图鉴不应有详情卡名")
-    gallery.queue_free()
-    await get_tree().process_frame
-
-
-func _check_scroll_loading() -> void:
-    var instance := await _mount_gallery()
-    if instance == null:
-        return
-    var rows = instance.find_child("GalleryGridRows", true, false)
-    var scroll = instance.find_child("GalleryScroll", true, false) as ScrollContainer
-    if rows == null or scroll == null:
-        _expect(false, "图鉴缺少网格或滚动容器")
-        await _unmount(instance)
-        return
-    var before := rows.get_child_count()
-    _expect(before >= 18, "首屏应至少加载一批，实际：%d" % before)
-    # 首批布局与自动补足在随后几帧完成，等稳定后再模拟滚到底部。
-    await get_tree().process_frame
-    await get_tree().process_frame
-    scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
-    await get_tree().process_frame
-    await get_tree().process_frame
-    await get_tree().process_frame
-    _expect(
-        rows.get_child_count() > before,
-        "滚到底部应加载下一批，实际：%d → %d" % [before, rows.get_child_count()],
-    )
-    var status = instance.find_child("GalleryLoadStatus", true, false)
-    _expect(
-        status != null and status.text.begins_with("已显示"),
-        "加载后应更新底部状态，实际：%s" % (status.text if status != null else "无"),
-    )
-    await _unmount(instance)
-
-
-## 手机 960×540：分类面板替代左栏目录，6 列网格与 176 详情均不越界。
-func _check_phone_layout() -> void:
-    ScreenProfile.set_device_for_test("phone")
-    var host := Control.new()
-    host.name = "PhoneGalleryHost"
-    host.size = Vector2(960, 540)
-    add_child(host)
-    var page = load("res://pages/gallery/gallery.tscn").instantiate()
-    host.add_child(page)
-    await get_tree().process_frame
-    await get_tree().process_frame
-    await get_tree().process_frame
-
-    var bounds := Rect2(host.get_global_rect().position, host.size).grow(1.0)
-    for node_name in ["GalleryHeader", "GalleryBody", "GalleryToolbar", "GalleryScroll", "GalleryDetail"]:
-        var node := page.find_child(str(node_name), true, false) as Control
-        _expect(node != null and node.is_visible_in_tree(), "手机图鉴缺少可见的 %s" % node_name)
-        if node != null:
-            _expect(
-                bounds.encloses(node.get_global_rect()),
-                "%s 在手机基准下越界：%s 不在 %s 内"
-                % [node_name, str(node.get_global_rect()), str(bounds)],
-            )
-    _expect(page.find_child("GalleryToc", true, false) == null, "手机随从视图不应再有左侧目录")
-
-    var rows := page.find_child("GalleryGridRows", true, false) as GridContainer
-    _expect(rows != null and rows.columns == 6, "手机网格应为 6 列")
-    _expect(rows != null and rows.get_child_count() >= 12, "手机首屏至少加载一批 12 张卡")
-    var detail := page.find_child("GalleryDetail", true, false) as Control
-    _expect(
-        detail != null and is_equal_approx(detail.size.x, UITheme.metric("gallery-detail-width-compact")),
-        "手机详情应按紧凑令牌宽度占位，实际：%s" % (detail.size.x if detail != null else "无"),
-    )
-
-    var button := page.find_child("GalleryCategoryButton", true, false) as Button
-    _expect(button != null, "手机缺少分类按钮")
-    if button != null:
-        await _push_click(page, button.get_global_rect().get_center())
-        var panel := page.find_child("GalleryCategoryPanel", true, false) as Control
-        var panel_body := page.find_child("GalleryCategoryBody", true, false) as Control
-        _expect(panel != null and panel.is_visible_in_tree(), "点分类按钮应打开分类面板")
-        var taxons := 0
-        if panel_body != null:
-            for child in panel_body.find_children("Taxon*", "Button", true, false):
-                taxons += 1
-            _expect(
-                bounds.encloses(panel_body.get_global_rect()),
-                "分类面板越界：%s 不在 %s 内" % [str(panel_body.get_global_rect()), str(bounds)],
-            )
-        _expect(taxons == 14, "分类面板应有全部 + 13 个玩法，实际：%d" % taxons)
-        var mammal: Button = null
-        if panel_body != null:
-            mammal = panel_body.find_child("Taxonmammal", true, false) as Button
-        if mammal != null:
-            await _push_click(page, mammal.get_global_rect().get_center())
-            _expect(panel != null and not panel.is_visible_in_tree(), "选中分类后应收起面板")
-            _expect(
-                button.text == tr("ui.gallery.category_filter") % CardDB.playstyle_name("mammal"),
-                "分类按钮应显示当前分类，实际：%s" % button.text,
-            )
-            var gallery := page.find_child("CardGallery", true, false) as CardGallery
-            _expect(
-                gallery != null and gallery.call("_filtered_ids").size() == 122,
-                "哺乳纲在未选时代时应有 122 张",
-            )
-
-    host.queue_free()
-    await get_tree().process_frame
-    ScreenProfile.set_device_for_test("desktop")
-
-
 func _check_detail() -> void:
     var instance := await _mount_gallery()
     if instance == null:
@@ -620,11 +495,6 @@ func _check_detail() -> void:
         detail_name != null and detail_name.text == CardDB.display_name(card_id),
         "点击第二张卡后详情应切换为 %s" % CardDB.display_name(card_id),
     )
-    await _real_drag(instance, tile.get_global_rect().get_center(), tile.get_global_rect().get_center() + Vector2(0, -60))
-    _expect(
-        detail_name != null and detail_name.text == CardDB.display_name(card_id),
-        "按下后拖动卡面视为滚动，不应切换详情",
-    )
     var other := rows.get_child(2) as Control
     if other != null:
         await _real_drag(instance, tile.get_global_rect().get_center(), other.get_global_rect().get_center())
@@ -637,15 +507,8 @@ func _check_detail() -> void:
         "普通卡详情卡名旁不应有时代象形",
     )
     var detail_text := _node_text(instance.find_child("GalleryDetail", true, false))
-    _expect(
-        detail_text.contains(tr("ui.game.detail.type")),
-        "详情应包含类型行",
-    )
-    _expect(
-        detail_text.contains(tr("ui.game.detail.taxonomy")),
-        "详情应包含分类行",
-    )
-    # 随从与效果卡都不画时代象形。
+    _expect(detail_text.contains(tr("ui.game.detail.type")), "详情应包含类型行")
+    _expect(detail_text.contains(tr("ui.game.detail.taxonomy")), "详情应包含分类行")
     for probe_id in ["adam-smith", "aolinpike-jidian"]:
         var probe := GalleryDetail.new()
         add_child(probe)
@@ -747,12 +610,17 @@ func _check_match_overlay() -> void:
 
     await _push_click(instance, button.get_global_rect().get_center())
     _expect(overlay.is_visible_in_tree(), "再次点击图鉴入口应重新打开")
-    var key := InputEventKey.new()
-    key.keycode = KEY_ESCAPE
-    key.physical_keycode = KEY_ESCAPE
-    key.pressed = true
-    instance.get_viewport().push_input(key, true)
-    await get_tree().process_frame
+    # 打开详情后，Esc 只收详情；再按一次才收图鉴。
+    var rows := instance.find_child("GalleryGridRows", true, false)
+    if rows != null and rows.get_child_count() > 0:
+        var tile := rows.get_child(0) as Control
+        await _push_click(instance, tile.get_global_rect().get_center())
+        var layer := instance.find_child("GalleryDetailLayer", true, false) as Control
+        _expect(layer != null and layer.is_visible_in_tree(), "对局图鉴点击卡牌应打开详情浮层")
+        await _push_key(instance, KEY_ESCAPE)
+        _expect(layer != null and not layer.is_visible_in_tree(), "Esc 应先收起详情浮层")
+        _expect(overlay.is_visible_in_tree(), "收起详情后图鉴覆盖层应保留")
+    await _push_key(instance, KEY_ESCAPE)
     _expect(not overlay.is_visible_in_tree(), "Esc 应收起图鉴")
     await _unmount(instance)
 
@@ -760,6 +628,22 @@ func _check_match_overlay() -> void:
 func _mount_gallery() -> Node:
     GameStore.player_id = "p0"
     return await _check_scene("res://pages/gallery/gallery.tscn", false)
+
+
+## 打开筛选下拉并点选条目；面板未出现时记为失败并返回。
+func _pick(instance: Node, select_name: String, item_name: String) -> void:
+    var select := instance.find_child(select_name, true, false) as Button
+    if select == null:
+        _expect(false, "缺少筛选触发器 %s" % select_name)
+        return
+    await _push_click(instance, select.get_global_rect().get_center())
+    await get_tree().process_frame
+    var item := instance.find_child(item_name, true, false) as Button
+    if item == null:
+        _expect(false, "筛选面板缺少 %s" % item_name)
+        return
+    await _push_click(instance, item.get_global_rect().get_center())
+    await get_tree().process_frame
 
 
 func _card_gallery(node: Node) -> CardGallery:
