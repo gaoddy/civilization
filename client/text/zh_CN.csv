@@ -993,134 +993,247 @@ error.TOKEN_EXPIRED.invalid_token,令牌无效或已过期
 error.UNKNOWN_TYPE,未知消息类型
 skill.activate-friendly-growth-twice.name,推演
 skill.activate-friendly-growth-twice.text,使一个友方随从获得两次成长
+skill.activate-friendly-growth-twice.text.golden,使一个友方随从获得四次成长
 skill.alternating-current.name,交流电
 skill.alternating-current.text,使一个友方随从获得无视嘲讽直到回合结束
 skill.aura-adjacent-mammal.text,相邻的友方哺乳纲随从获得 +2/+2
+skill.aura-adjacent-mammal.text.golden,相邻的友方哺乳纲随从获得 +4/+4
 skill.aura-all-plus-0-plus-1.text,你的随从获得 +0/+1
+skill.aura-all-plus-0-plus-1.text.golden,你的随从获得 +0/+2
 skill.aura-all-plus-0-plus-2.text,你的随从获得 +0/+2
+skill.aura-all-plus-0-plus-2.text.golden,你的随从获得 +0/+4
 skill.aura-biology-plus-0-plus-1.text,你的动物随从获得 +0/+1
+skill.aura-biology-plus-0-plus-1.text.golden,你的动物随从获得 +0/+2
 skill.aura-biology-plus-1-plus-1.text,你的动物随从获得 +1/+1
+skill.aura-biology-plus-1-plus-1.text.golden,你的动物随从获得 +2/+2
 skill.aura-mech-optimal-attack.text,你的机械随从获得无视嘲讽
 skill.aura-mech-plus-2-plus-2.text,你的机械随从获得 +2/+2
+skill.aura-mech-plus-2-plus-2.text.golden,你的机械随从获得 +4/+4
 skill.aura-other-biology-plus-1-attack.text,你的其他动物随从获得 +1 攻击力
+skill.aura-other-biology-plus-1-attack.text.golden,你的其他动物随从获得 +2 攻击力
 skill.aura-other-fish-plus-0-plus-1.text,你的其他鱼纲随从获得 +0/+1
+skill.aura-other-fish-plus-0-plus-1.text.golden,你的其他鱼纲随从获得 +0/+2
 skill.aura-other-insect-plus-0-plus-1.text,你的其他昆虫纲随从获得 +0/+1
+skill.aura-other-insect-plus-0-plus-1.text.golden,你的其他昆虫纲随从获得 +0/+2
 skill.aura-other-mech-plus-1-plus-1.text,你的其他机械随从获得 +1/+1
+skill.aura-other-mech-plus-1-plus-1.text.golden,你的其他机械随从获得 +2/+2
 skill.aura-other-plants-plus-0-plus-1.text,你的其他植物随从获得 +0/+1
+skill.aura-other-plants-plus-0-plus-1.text.golden,你的其他植物随从获得 +0/+2
 skill.aura-other-plus-0-plus-1.text,你的其他随从获得 +0/+1
+skill.aura-other-plus-0-plus-1.text.golden,你的其他随从获得 +0/+2
 skill.aura-other-plus-0-plus-2.text,你的其他随从获得 +0/+2
+skill.aura-other-plus-0-plus-2.text.golden,你的其他随从获得 +0/+4
 skill.aura-other-plus-0-plus-3.text,你的其他随从获得 +0/+3
+skill.aura-other-plus-0-plus-3.text.golden,你的其他随从获得 +0/+6
 skill.aura-other-protozoa-plus-1-attack.text,你的其他原生生物界随从获得 +1 攻击力
+skill.aura-other-protozoa-plus-1-attack.text.golden,你的其他原生生物界随从获得 +2 攻击力
 skill.aura-plant-plus-1-plus-1.text,你的植物随从获得 +1/+1
+skill.aura-plant-plus-1-plus-1.text.golden,你的植物随从获得 +2/+2
 skill.aura-plant-plus-2-plus-2.text,你的植物随从获得 +2/+2
+skill.aura-plant-plus-2-plus-2.text.golden,你的植物随从获得 +4/+4
 skill.aura-school-fish-1.text,群聚：你的其他鱼纲随从获得 +1/+0；每有一个其他鱼纲随从，再获得 +0/+1
+skill.aura-school-fish-1.text.golden,群聚：你的其他鱼纲随从获得 +2/+0；每有一个其他鱼纲随从，再获得 +0/+2
 skill.aura-school-fish-2.text,群聚：你的其他鱼纲随从获得 +1/+1；每有一个其他鱼纲随从，再获得 +1 攻击力
+skill.aura-school-fish-2.text.golden,群聚：你的其他鱼纲随从获得 +2/+2；每有一个其他鱼纲随从，再获得 +2 攻击力
 skill.aura-school-mammal.text,群聚：你的其他哺乳纲随从获得 +1/+1；每有一个其他哺乳纲随从，再获得 +1 攻击力
+skill.aura-school-mammal.text.golden,群聚：你的其他哺乳纲随从获得 +2/+2；每有一个其他哺乳纲随从，再获得 +2 攻击力
 skill.battlecry-all-biology-growth-once.text,战吼：使你的所有动物随从获得一次成长
+skill.battlecry-all-biology-growth-once.text.golden,战吼：使你的所有动物随从获得两次成长
 skill.battlecry-all-friendly-growth-once.text,战吼：使你的所有随从获得一次成长
+skill.battlecry-all-friendly-growth-once.text.golden,战吼：使你的所有随从获得两次成长
 skill.battlecry-all-friendly-growth-twice.text,战吼：使你的所有随从获得两次成长
+skill.battlecry-all-friendly-growth-twice.text.golden,战吼：使你的所有随从获得四次成长
 skill.battlecry-all-friendly-plus-0-plus-1.text,战吼：使你的所有随从获得 +0/+1
+skill.battlecry-all-friendly-plus-0-plus-1.text.golden,战吼：使你的所有随从获得 +0/+2
 skill.battlecry-all-mech-growth-once-no-keyword.text,战吼：使你的所有机械随从获得一次成长
+skill.battlecry-all-mech-growth-once-no-keyword.text.golden,战吼：使你的所有机械随从获得两次成长
 skill.battlecry-all-mech-growth-once.text,战吼：使你的所有机械随从获得一次成长
+skill.battlecry-all-mech-growth-once.text.golden,战吼：使你的所有机械随从获得两次成长
 skill.battlecry-copy-hand-minion.text,战吼：复制一张你手牌中的随从牌
 skill.battlecry-friendly-archers-plus-2-attack.text,战吼：使你的弓箭手获得 +2 攻击力
+skill.battlecry-friendly-archers-plus-2-attack.text.golden,战吼：使你的弓箭手获得 +4 攻击力
 skill.battlecry-friendly-bacteria-plus-0-plus-1.text,战吼：使一个友方细菌域随从获得 +0/+1
+skill.battlecry-friendly-bacteria-plus-0-plus-1.text.golden,战吼：使一个友方细菌域随从获得 +0/+2
 skill.battlecry-friendly-bird-growth-once.text,战吼：使一个友方鸟纲随从获得一次成长
+skill.battlecry-friendly-bird-growth-once.text.golden,战吼：使一个友方鸟纲随从获得两次成长
 skill.battlecry-friendly-fish-growth-once.text,战吼：使一个友方鱼纲随从获得一次成长
+skill.battlecry-friendly-fish-growth-once.text.golden,战吼：使一个友方鱼纲随从获得两次成长
 skill.battlecry-friendly-fungus-growth-once.text,战吼：使一个友方真菌界随从获得一次成长
+skill.battlecry-friendly-fungus-growth-once.text.golden,战吼：使一个友方真菌界随从获得两次成长
 skill.battlecry-friendly-growth-once.text,战吼：使一个友方随从获得一次成长
+skill.battlecry-friendly-growth-once.text.golden,战吼：使一个友方随从获得两次成长
 skill.battlecry-friendly-growth-plant-twice.text,战吼：使一个友方随从获得一次成长；若其为植物，改为两次
+skill.battlecry-friendly-growth-plant-twice.text.golden,战吼：使一个友方随从获得两次成长；若其为植物，改为四次
 skill.battlecry-friendly-growth-twice.text,战吼：使一个友方随从获得两次成长
+skill.battlecry-friendly-growth-twice.text.golden,战吼：使一个友方随从获得四次成长
 skill.battlecry-friendly-human-plus-0-plus-1.text,战吼：使一个友方人科随从获得 +0/+1
+skill.battlecry-friendly-human-plus-0-plus-1.text.golden,战吼：使一个友方人科随从获得 +0/+2
 skill.battlecry-friendly-mech-growth-once.text,战吼：使一个友方机械随从获得一次成长
+skill.battlecry-friendly-mech-growth-once.text.golden,战吼：使一个友方机械随从获得两次成长
 skill.battlecry-friendly-plant-growth-once.text,战吼：使一个友方植物随从获得一次成长
+skill.battlecry-friendly-plant-growth-once.text.golden,战吼：使一个友方植物随从获得两次成长
 skill.battlecry-friendly-plant-kingdom-growth-once.text,战吼：使一个友方植物界随从获得一次成长
+skill.battlecry-friendly-plant-kingdom-growth-once.text.golden,战吼：使一个友方植物界随从获得两次成长
 skill.battlecry-friendly-plus-0-plus-1.text,战吼：使一个友方随从获得 +0/+1
+skill.battlecry-friendly-plus-0-plus-1.text.golden,战吼：使一个友方随从获得 +0/+2
 skill.battlecry-friendly-plus-0-plus-2.text,战吼：使一个友方随从获得 +0/+2
+skill.battlecry-friendly-plus-0-plus-2.text.golden,战吼：使一个友方随从获得 +0/+4
 skill.battlecry-friendly-plus-1-attack.text,战吼：使一个友方随从获得 +1 攻击力
+skill.battlecry-friendly-plus-1-attack.text.golden,战吼：使一个友方随从获得 +2 攻击力
 skill.battlecry-friendly-plus-1-health.text,战吼：使一个友方随从获得 +1 生命值
+skill.battlecry-friendly-plus-1-health.text.golden,战吼：使一个友方随从获得 +2 生命值
 skill.battlecry-friendly-protozoa-growth-once.text,战吼：使一个友方原生生物界随从获得一次成长
+skill.battlecry-friendly-protozoa-growth-once.text.golden,战吼：使一个友方原生生物界随从获得两次成长
 skill.battlecry-friendly-virus-plus-1-attack.text,战吼：使一个友方病毒随从获得 +1 攻击力
+skill.battlecry-friendly-virus-plus-1-attack.text.golden,战吼：使一个友方病毒随从获得 +2 攻击力
 skill.battlecry-other-bird-plus-1-plus-1.text,战吼：使你的其他鸟纲随从获得 +1/+1
+skill.battlecry-other-bird-plus-1-plus-1.text.golden,战吼：使你的其他鸟纲随从获得 +2/+2
 skill.battlecry-other-friendly-humans-plus-1-attack.text,战吼：使你的其他人科随从获得 +1 攻击力
+skill.battlecry-other-friendly-humans-plus-1-attack.text.golden,战吼：使你的其他人科随从获得 +2 攻击力
 skill.battlecry-other-insect-growth-once.text,战吼：使你的其他昆虫纲随从获得一次成长
+skill.battlecry-other-insect-growth-once.text.golden,战吼：使你的其他昆虫纲随从获得两次成长
 skill.battlecry-plant-growth-twice.text,战吼：使一个友方植物随从获得两次成长
+skill.battlecry-plant-growth-twice.text.golden,战吼：使一个友方植物随从获得四次成长
 skill.battlecry-random-enemy-damage-1.text,战吼：对随机一个敌方随从造成 1 点伤害
+skill.battlecry-random-enemy-damage-1.text.golden,战吼：对随机一个敌方随从造成 2 点伤害
 skill.battlecry-random-enemy-damage-2.text,战吼：对随机一个敌方随从造成 2 点伤害
+skill.battlecry-random-enemy-damage-2.text.golden,战吼：对随机一个敌方随从造成 4 点伤害
 skill.battlecry-self-growth-twice.text,战吼：获得两次成长
+skill.battlecry-self-growth-twice.text.golden,战吼：获得四次成长
 skill.battlecry-self-plus-1-health.text,战吼：获得 +1 生命值
+skill.battlecry-self-plus-1-health.text.golden,战吼：获得 +2 生命值
 skill.battlecry-summon-2-worker-bees.text,战吼：召唤两个 2/2 的工蜂
+skill.battlecry-summon-2-worker-bees.text.golden,战吼：召唤四个 2/2 的工蜂
 skill.battlecry-summon-3-3-synthetic-cell.text,战吼：召唤一个 3/3 的合成细胞（幼体）
+skill.battlecry-summon-3-3-synthetic-cell.text.golden,战吼：召唤两个 3/3 的合成细胞（幼体）
 skill.binomial-nomenclature.name,双名法
 skill.binomial-nomenclature.text,使你的所有动物随从获得一次成长
+skill.binomial-nomenclature.text.golden,使你的所有动物随从获得两次成长
 skill.biology-evolve.name,获得性状
 skill.biology-evolve.text,使一个友方动物随从获得进化
 skill.cold-damage-treatise.name,伤寒论
 skill.cold-damage-treatise.text,使你的所有随从获得 +0/+1
+skill.cold-damage-treatise.text.golden,使你的所有随从获得 +0/+2
 skill.combat-optimal-attack.name,航线
 skill.combat-optimal-attack.text,使一个友方随从获得无视嘲讽直到回合结束
 skill.combat-random-enemy-damage-3.text,战斗开始时对随机一个敌方随从造成 3 点伤害
+skill.combat-random-enemy-damage-3.text.golden,战斗开始时对随机一个敌方随从造成 6 点伤害
 skill.combatstart-all-enemies-contagion-1.text,战斗开始时，使敌方所有随从获得 1 层传染
+skill.combatstart-all-enemies-contagion-1.text.golden,战斗开始时，使敌方所有随从获得 2 层传染
 skill.combatstart-all-enemies-contagion-2.text,战斗开始时，使敌方所有随从获得 2 层传染
+skill.combatstart-all-enemies-contagion-2.text.golden,战斗开始时，使敌方所有随从获得 4 层传染
 skill.combatstart-all-enemies-damage-2.text,战斗开始时，对敌方所有随从造成 2 点伤害
+skill.combatstart-all-enemies-damage-2.text.golden,战斗开始时，对敌方所有随从造成 4 点伤害
 skill.combatstart-all-enemies-damage-3.text,战斗开始时，对敌方所有随从造成 3 点伤害
+skill.combatstart-all-enemies-damage-3.text.golden,战斗开始时，对敌方所有随从造成 6 点伤害
 skill.combatstart-all-enemies-damage-4.text,战斗开始时，对敌方所有随从造成 4 点伤害
+skill.combatstart-all-enemies-damage-4.text.golden,战斗开始时，对敌方所有随从造成 8 点伤害
 skill.combatstart-all-enemies-damage-5.text,战斗开始时，对敌方所有随从造成 5 点伤害
+skill.combatstart-all-enemies-damage-5.text.golden,战斗开始时，对敌方所有随从造成 10 点伤害
 skill.combatstart-all-enemies-minus-1-attack.text,战斗开始时，使敌方所有随从获得 -1 攻击力
+skill.combatstart-all-enemies-minus-1-attack.text.golden,战斗开始时，使敌方所有随从获得 -2 攻击力
 skill.combatstart-if-2-biology-self-plus-2-attack.text,战斗开始时，若你控制至少 2 个动物，获得 +2 攻击力
+skill.combatstart-if-2-biology-self-plus-2-attack.text.golden,战斗开始时，若你控制至少 2 个动物，获得 +4 攻击力
 skill.combatstart-leftmost-and-adjacent-damage-2.text,战斗开始时，对敌方最左侧随从及其相邻随从造成 2 点伤害
+skill.combatstart-leftmost-and-adjacent-damage-2.text.golden,战斗开始时，对敌方最左侧随从及其相邻随从造成 4 点伤害
 skill.combatstart-leftmost-damage-3.text,战斗开始时，对敌方最左侧随从造成 3 点伤害
+skill.combatstart-leftmost-damage-3.text.golden,战斗开始时，对敌方最左侧随从造成 6 点伤害
 skill.combatstart-leftmost-damage-4.text,战斗开始时，对敌方最左侧随从造成 4 点伤害
+skill.combatstart-leftmost-damage-4.text.golden,战斗开始时，对敌方最左侧随从造成 8 点伤害
 skill.combatstart-leftmost-damage-6.text,战斗开始时，对敌方最左侧随从造成 6 点伤害
+skill.combatstart-leftmost-damage-6.text.golden,战斗开始时，对敌方最左侧随从造成 12 点伤害
 skill.combatstart-lowest-attack-enemy-damage-3.text,战斗开始时，对攻击力最低的敌方随从造成 3 点伤害
+skill.combatstart-lowest-attack-enemy-damage-3.text.golden,战斗开始时，对攻击力最低的敌方随从造成 6 点伤害
 skill.combatstart-random-enemy-contagion-1.text,战斗开始时，使一个随机敌方随从获得 1 层传染
+skill.combatstart-random-enemy-contagion-1.text.golden,战斗开始时，使一个随机敌方随从获得 2 层传染
 skill.combatstart-random-enemy-contagion-2.text,战斗开始时，使一个随机敌方随从获得 2 层传染
+skill.combatstart-random-enemy-contagion-2.text.golden,战斗开始时，使一个随机敌方随从获得 4 层传染
 skill.combatstart-random-enemy-damage-2.text,战斗开始时，随机对一个敌方随从造成 2 点伤害
+skill.combatstart-random-enemy-damage-2.text.golden,战斗开始时，随机对一个敌方随从造成 4 点伤害
 skill.combatstart-random-enemy-minus-2-attack.text,战斗开始时，使一个随机敌方随从获得 -2 攻击力直到回合结束
+skill.combatstart-random-enemy-minus-2-attack.text.golden,战斗开始时，使一个随机敌方随从获得 -4 攻击力直到回合结束
 skill.combatstart-remove-all-human-growth.text,战斗开始时，移除所有人科随从的全部成长
 skill.combatstart-remove-top-attack-enemy-growth.text,战斗开始时，移除敌方攻击力最高随从的全部成长
 skill.combatstart-top-attack-enemy-cant-attack.text,战斗开始时，使敌方攻击力最高的随从本回合无法攻击
 skill.combatstart-top-attack-enemy-minus-0-minus-2.text,战斗开始时，使敌方攻击力最高的随从获得 -0/-2
+skill.combatstart-top-attack-enemy-minus-0-minus-2.text.golden,战斗开始时，使敌方攻击力最高的随从获得 -0/-4
 skill.convert-3.text,转化：战斗开始时，若一个敌方随从有 3 层传染，消灭它并召唤一个 2/2 的细菌
+skill.convert-3.text.golden,转化：战斗开始时，若一个敌方随从有 3 层传染，消灭它并召唤2个 2/2 的细菌
 skill.convert-4.text,转化：战斗开始时，若一个敌方随从有 4 层传染，消灭它并召唤一个 4/4 的细菌
+skill.convert-4.text.golden,转化：战斗开始时，若一个敌方随从有 4 层传染，消灭它并召唤2个 4/4 的细菌
 skill.deathrattle-all-enemies-contagion-1.text,亡语：使敌方所有随从获得 1 层传染
+skill.deathrattle-all-enemies-contagion-1.text.golden,亡语：使敌方所有随从获得 2 层传染
 skill.deathrattle-all-enemies-damage-2.text,亡语：对敌方所有随从造成 2 点伤害
+skill.deathrattle-all-enemies-damage-2.text.golden,亡语：对敌方所有随从造成 4 点伤害
 skill.deathrattle-all-enemies-humans-minus-2-health.text,亡语：使敌方所有人科随从获得 -2 生命
+skill.deathrattle-all-enemies-humans-minus-2-health.text.golden,亡语：使敌方所有人科随从获得 -4 生命
 skill.deathrattle-all-enemies-minus-1-health.text,亡语：使敌方所有随从获得 -1 生命
+skill.deathrattle-all-enemies-minus-1-health.text.golden,亡语：使敌方所有随从获得 -2 生命
 skill.deathrattle-all-friendly-plus-0-plus-1.text,亡语：使你的所有随从获得 +0/+1
+skill.deathrattle-all-friendly-plus-0-plus-1.text.golden,亡语：使你的所有随从获得 +0/+2
 skill.deathrattle-friendly-bacteria-growth-once.text,亡语：使一个友方细菌域随从获得一次成长
+skill.deathrattle-friendly-bacteria-growth-once.text.golden,亡语：使一个友方细菌域随从获得两次成长
 skill.deathrattle-friendly-cnidarian-growth-once.text,亡语：使一个友方水螅纲随从获得一次成长
+skill.deathrattle-friendly-cnidarian-growth-once.text.golden,亡语：使一个友方水螅纲随从获得两次成长
 skill.deathrattle-friendly-insect-growth-twice.text,亡语：使一个友方昆虫纲随从获得两次成长
+skill.deathrattle-friendly-insect-growth-twice.text.golden,亡语：使一个友方昆虫纲随从获得四次成长
 skill.deathrattle-friendly-protozoa-growth-once.text,亡语：使一个友方原生生物界随从获得一次成长
+skill.deathrattle-friendly-protozoa-growth-once.text.golden,亡语：使一个友方原生生物界随从获得两次成长
 skill.deathrattle-random-enemy-damage-2.text,亡语：对随机一个敌方随从造成 2 点伤害
+skill.deathrattle-random-enemy-damage-2.text.golden,亡语：对随机一个敌方随从造成 4 点伤害
 skill.deathrattle-random-enemy-hp-minus-1.text,亡语：使随机一个敌方随从获得 -1 生命值
+skill.deathrattle-random-enemy-hp-minus-1.text.golden,亡语：使随机一个敌方随从获得 -2 生命值
 skill.deathrattle-random-enemy-minus-1-attack.text,亡语：使随机一个敌方随从获得 -1 攻击力
+skill.deathrattle-random-enemy-minus-1-attack.text.golden,亡语：使随机一个敌方随从获得 -2 攻击力
 skill.deathrattle-random-enemy-minus-1-health.text,亡语：使随机一个敌方随从获得 -1 生命
+skill.deathrattle-random-enemy-minus-1-health.text.golden,亡语：使随机一个敌方随从获得 -2 生命
 skill.deathrattle-summon-1-worker-bee.text,分裂：死亡时召唤一个 1/1 的工蜂
+skill.deathrattle-summon-1-worker-bee.text.golden,分裂：死亡时召唤两个 1/1 的工蜂
 skill.deathrattle-summon-2-2-hela-cell-clone.text,亡语：召唤一个 2/2 的海拉细胞（复制体）
+skill.deathrattle-summon-2-2-hela-cell-clone.text.golden,亡语：召唤两个 2/2 的海拉细胞（复制体）
 skill.deathrattle-summon-2-ammonites.text,分裂：死亡时召唤两个 5/5 的菊石幼体
+skill.deathrattle-summon-2-ammonites.text.golden,分裂：死亡时召唤四个 5/5 的菊石幼体
 skill.deathrattle-summon-2-amoeba-larvae-2-2.text,分裂：死亡时召唤两个 2/2 的变形虫幼体
+skill.deathrattle-summon-2-amoeba-larvae-2-2.text.golden,分裂：死亡时召唤四个 2/2 的变形虫幼体
 skill.deathrattle-summon-2-coral-polyps.text,分裂：死亡时召唤两个 1/1 的珊瑚虫
+skill.deathrattle-summon-2-coral-polyps.text.golden,分裂：死亡时召唤四个 1/1 的珊瑚虫
 skill.deathrattle-summon-2-seabirds.text,分裂：死亡时召唤两个 3/3 的海鸟
+skill.deathrattle-summon-2-seabirds.text.golden,分裂：死亡时召唤四个 3/3 的海鸟
 skill.deathrattle-summon-2-spores-2-2.text,分裂：死亡时召唤两个 2/2 的孢子
+skill.deathrattle-summon-2-spores-2-2.text.golden,分裂：死亡时召唤四个 2/2 的孢子
 skill.deathrattle-summon-3-spores-3-3.text,分裂：死亡时召唤三个 3/3 的孢子
+skill.deathrattle-summon-3-spores-3-3.text.golden,分裂：死亡时召唤六个 3/3 的孢子
 skill.deathrattle-summon-3-termites.text,分裂：死亡时召唤三个 2/2 的白蚁
+skill.deathrattle-summon-3-termites.text.golden,分裂：死亡时召唤六个 2/2 的白蚁
 skill.deathrattle-summon-4-volvox-cells.text,分裂：死亡时召唤四个 1/1 的团藻细胞
+skill.deathrattle-summon-4-volvox-cells.text.golden,分裂：死亡时召唤八个 1/1 的团藻细胞
 skill.deathrattle-summon-amoeba-larva-1.text,分裂：死亡时召唤一个 1/1 的变形虫幼体
+skill.deathrattle-summon-amoeba-larva-1.text.golden,分裂：死亡时召唤两个 1/1 的变形虫幼体
 skill.deathrattle-summon-coral-polyp.text,分裂：死亡时召唤一个 1/1 的珊瑚虫
+skill.deathrattle-summon-coral-polyp.text.golden,分裂：死亡时召唤两个 1/1 的珊瑚虫
 skill.deathrattle-summon-cordyceps.text,分裂：死亡时召唤一个 3/3 的虫草
+skill.deathrattle-summon-cordyceps.text.golden,分裂：死亡时召唤两个 3/3 的虫草
 skill.deathrattle-summon-fish-fry-2.text,分裂：死亡时召唤两个 1/1 的鱼苗
+skill.deathrattle-summon-fish-fry-2.text.golden,分裂：死亡时召唤四个 1/1 的鱼苗
 skill.deathrattle-summon-fish-fry-3.text,分裂：死亡时召唤三个 1/1 的鱼苗
+skill.deathrattle-summon-fish-fry-3.text.golden,分裂：死亡时召唤六个 1/1 的鱼苗
 skill.deathrattle-summon-octopus-larva-1.text,分裂：死亡时召唤一个 1/1 的章鱼幼体
+skill.deathrattle-summon-octopus-larva-1.text.golden,分裂：死亡时召唤两个 1/1 的章鱼幼体
 skill.deathrattle-summon-schizont.text,分裂：死亡时召唤一个 3/3 的裂殖体
+skill.deathrattle-summon-schizont.text.golden,分裂：死亡时召唤两个 3/3 的裂殖体
 skill.deathrattle-summon-spore-token-1.text,分裂：死亡时召唤一个 1/1 的孢子
+skill.deathrattle-summon-spore-token-1.text.golden,分裂：死亡时召唤两个 1/1 的孢子
 skill.deathrattle-summon-spore-token-2.text,分裂：死亡时召唤一个 2/2 的孢子
+skill.deathrattle-summon-spore-token-2.text.golden,分裂：死亡时召唤两个 2/2 的孢子
 skill.deathrattle-summon-termite.text,亡语：召唤一个 1/2 的白蚁
+skill.deathrattle-summon-termite.text.golden,亡语：召唤两个 1/2 的白蚁
 skill.decompose-ally-kill-pre-kill.text,分解：友方随从击杀敌方随从后，获得其被击杀前的生命值
 skill.decompose-friendly-death-original.text,分解：友方随从死亡后，获得其原始生命值
 skill.decompose-kill-original.text,分解：本随从击杀随从后，获得其原始生命值
 skill.detonate-1.text,引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 1 点伤害
+skill.detonate-1.text.golden,引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 2 点伤害
 skill.detonate-2.text,引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 2 点伤害
+skill.detonate-2.text.golden,引爆：战斗开始时，移除一个敌方随从的全部传染层，每层造成 4 点伤害
 skill.devour-1.text,吞噬：战斗开始时，消灭一个攻击力不高于 1 的敌方随从，在本场战斗内永久获得其攻击力与生命值
 skill.devour-2.text,吞噬：战斗开始时，消灭一个攻击力不高于 2 的敌方随从，在本场战斗内永久获得其攻击力与生命值
 skill.devour-3.text,吞噬：战斗开始时，消灭一个攻击力不高于 3 的敌方随从，在本场战斗内永久获得其攻击力与生命值
@@ -1128,6 +1241,7 @@ skill.devour-4.text,吞噬：战斗开始时，消灭一个攻击力不高于 4 
 skill.dive-1.text,俯冲：战斗开始时，对攻击力最低的敌方随从造成等同于自身攻击力的伤害
 skill.division-of-labor.name,分工
 skill.division-of-labor.text,使一个友方人科随从获得一次成长；若你控制至少 3 个人科随从，改为两次
+skill.division-of-labor.text.golden,使一个友方人科随从获得两次成长；若你控制至少 3 个人科随从，改为四次
 skill.efficient-algorithm.name,高效算法
 skill.efficient-algorithm.text,刷新商店并获得一张当前星级的随从
 skill.enemy-random-cannot-attack.name,非攻
@@ -1138,41 +1252,58 @@ skill.faraday-cage.name,法拉第笼
 skill.faraday-cage.text,使一个友方随从获得护盾
 skill.free-refresh.name,启航
 skill.free-refresh.text,免费刷新一次商店
-skill.gain-next-level-minion.text,获得一张下一等级的随从
+skill.gain-next-level-minion.text,获得一张获得此牌时你当前时代 +1 星的随从
 skill.heredity.name,遗传
 skill.heredity.text,使一个友方植物随从获得一次成长
+skill.heredity.text.golden,使一个友方植物随从获得两次成长
 skill.human-growth-twice.name,技艺
 skill.human-growth-twice.text,使一个友方人科随从获得两次成长
+skill.human-growth-twice.text.golden,使一个友方人科随从获得四次成长
 skill.invention-factory.name,发明工厂
 skill.invention-factory.text,使你的其他机械随从各获得一次成长
+skill.invention-factory.text.golden,使你的其他机械随从各获得两次成长
 skill.keyword-armor-1.text,减伤 1：受到伤害时，减免 1 点伤害
+skill.keyword-armor-1.text.golden,减伤 2：受到伤害时，减免 2 点伤害
 skill.keyword-armor-2.text,减伤 2：受到伤害时，减免 2 点伤害
+skill.keyword-armor-2.text.golden,减伤 4：受到伤害时，减免 4 点伤害
 skill.keyword-assemble-1.text,装配 1：进入战场时，使你的其他机械随从各获得 1 次成长
+skill.keyword-assemble-1.text.golden,装配 2：进入战场时，使你的其他机械随从各获得 2 次成长
 skill.keyword-assemble-2.text,装配 2：进入战场时，使你的其他机械随从各获得 2 次成长
+skill.keyword-assemble-2.text.golden,装配 4：进入战场时，使你的其他机械随从各获得 4 次成长
 skill.keyword-breed-1.text,繁衍 1：回合开始时获得 +1 生命
+skill.keyword-breed-1.text.golden,繁衍 2：回合开始时获得 +2 生命
 skill.keyword-breed-2.text,繁衍 2：回合开始时获得 +2 生命
+skill.keyword-breed-2.text.golden,繁衍 4：回合开始时获得 +4 生命
 skill.keyword-breed-3.text,繁衍 3：回合开始时获得 +3 生命
+skill.keyword-breed-3.text.golden,繁衍 6：回合开始时获得 +6 生命
 skill.keyword-contagion.text,传染：造成伤害后，目标每回合 -1 生命
+skill.keyword-contagion.text.golden,传染：造成伤害后，目标每回合 -2 生命
 skill.keyword-divine-shield.text,护盾：抵消一次伤害
 skill.keyword-evolve.text,进化：从 +2/+2、护盾、复生中选择一个
 skill.keyword-ignore-taunt.text,无视嘲讽：攻击时无视敌方嘲讽
 skill.keyword-poison.text,剧毒：造成伤害后，若目标仍存活则将其消灭
 skill.keyword-reborn.text,复生：以 1 点生命复活一次
 skill.keyword-sow.text,播种：死亡时召唤一个 1/1 的幼苗
+skill.keyword-sow.text.golden,播种：死亡时召唤两个 1/1 的幼苗
 skill.keyword-stealth.text,潜行：无法被单体攻击与单体效果选中，造成伤害后打破
 skill.keyword-taunt.text,嘲讽
 skill.keyword-windfury.text,连击：每回合可攻击两次
 skill.latent-3.text,潜伏：回合开始时，每有 1 层传染获得 +1 攻击力；达到 3 层时对敌方所有随从造成 3 点伤害
+skill.latent-3.text.golden,潜伏：回合开始时，每有 1 层传染获得 +2 攻击力；达到 3 层时对敌方所有随从造成 6 点伤害
 skill.light-speed-strike.name,光速出击
 skill.light-speed-strike.text,使一个友方随从本回合获得连击
 skill.mass-energy-equivalence.name,质能方程
 skill.mass-energy-equivalence.text,使你的所有随从获得一次成长
+skill.mass-energy-equivalence.text.golden,使你的所有随从获得两次成长
 skill.materia-medica.name,本草纲目
 skill.materia-medica.text,使一个友方植物随从获得两次成长
+skill.materia-medica.text.golden,使一个友方植物随从获得四次成长
 skill.mechanism-art.name,机关术
 skill.mechanism-art.text,使一个友方机械随从获得一次成长
+skill.mechanism-art.text.golden,使一个友方机械随从获得两次成长
 skill.microbiology.name,微生物学
 skill.microbiology.text,战斗开始时使敌方最左侧随从获得 1 层传染
+skill.microbiology.text.golden,战斗开始时使敌方最左侧随从获得 2 层传染
 skill.mimic-1.text,战吼：复制一个友方随从的当前攻击力与生命值直到本回合结束
 skill.mimic-2.text,拟态：战斗开始时，复制一个敌方随从的当前攻击力与生命值直到本回合结束
 skill.mimic-3.text,拟态：战斗开始时，复制一个敌方随从的当前攻击力、生命值与关键词直到本回合结束
@@ -1180,100 +1311,164 @@ skill.observation.name,观测
 skill.observation.text,每回合首次刷新时额外出现一张当前时代的随机随从
 skill.radiation.name,放射
 skill.radiation.text,战斗开始时对随机一个敌方随从造成 2 点伤害
+skill.radiation.text.golden,战斗开始时对随机一个敌方随从造成 4 点伤害
 skill.radium.name,镭
 skill.radium.text,使一个友方随从获得两次成长
+skill.radium.text.golden,使一个友方随从获得四次成长
 skill.recall-1.text,回手：死亡时返回手牌并保留成长
 skill.revive-1.text,复苏：以 +1/+1 复活一次
+skill.revive-1.text.golden,复苏：以 +2/+2 复活一次
 skill.revive-2.text,复苏：以 +2/+2 复活一次
+skill.revive-2.text.golden,复苏：以 +4/+4 复活一次
 skill.revive-3.text,复苏：以 +3/+3 复活一次
+skill.revive-3.text.golden,复苏：以 +6/+6 复活一次
 skill.salvage-machine.text,零件回收：死亡时获得一张随机机械随从牌
 skill.seven-voyages.name,七下西洋
 skill.seven-voyages.text,随机确定航程 n（1 至 7）。此后每个航行回合结束时按当回合战绩结算：胜利或平局取棋盘占位数与空位数中的较大者，失败取较小者，累计至航程结束；航程结束后的招募阶段开始时，累计金币一次性到账。
+skill.seven-voyages.text.golden,随机确定航程 n（1 至 14）。此后每个航行回合结束时按当回合战绩结算：胜利或平局取棋盘占位数与空位数中的较大者，失败取较小者，累计至航程结束；航程结束后的招募阶段开始时，累计金币一次性到账。
 skill.shout.name,呐喊
 skill.shout.text,使一个友方随从获得一次成长
+skill.shout.text.golden,使一个友方随从获得两次成长
 skill.sonnet.name,十四行诗
 skill.sonnet.text,使你的所有随从获得一次成长
+skill.sonnet.text.golden,使你的所有随从获得两次成长
 skill.trigger-2-humans-self-plus-1-attack.text,若你控制至少 2 个人科随从，获得 +1 攻击力
+skill.trigger-2-humans-self-plus-1-attack.text.golden,若你控制至少 2 个人科随从，获得 +2 攻击力
 skill.trigger-2-humans-self-plus-1-plus-1.text,若你控制至少 2 个人科随从，获得 +1/+1
+skill.trigger-2-humans-self-plus-1-plus-1.text.golden,若你控制至少 2 个人科随从，获得 +2/+2
 skill.trigger-3-humans-self-plus-1-plus-1.text,若你控制至少 3 个人科随从，获得 +1/+1
+skill.trigger-3-humans-self-plus-1-plus-1.text.golden,若你控制至少 3 个人科随从，获得 +2/+2
 skill.trigger-3-humans-self-plus-2-attack.text,若你控制至少 3 个人科随从，获得 +2 攻击力
+skill.trigger-3-humans-self-plus-2-attack.text.golden,若你控制至少 3 个人科随从，获得 +4 攻击力
 skill.trigger-all-friendly-growth-once.text,使你的随从各获得一次成长
+skill.trigger-all-friendly-growth-once.text.golden,使你的随从各获得两次成长
 skill.trigger-all-friendly-growth-twice.text,使你的随从获得两次成长
+skill.trigger-all-friendly-growth-twice.text.golden,使你的随从获得四次成长
 skill.trigger-all-friendly-plus-0-plus-1.text,使你的随从获得 +0/+1
+skill.trigger-all-friendly-plus-0-plus-1.text.golden,使你的随从获得 +0/+2
 skill.trigger-all-friendly-plus-1-plus-1.text,使你的所有随从获得 +1/+1
+skill.trigger-all-friendly-plus-1-plus-1.text.golden,使你的所有随从获得 +2/+2
 skill.trigger-all-mech-growth-once.text,使你的机械随从各获得一次成长
+skill.trigger-all-mech-growth-once.text.golden,使你的机械随从各获得两次成长
 skill.trigger-bacteria-single-armor-2-this-turn.text,使一个友方细菌域随从获得减伤 2 直到回合结束
+skill.trigger-bacteria-single-armor-2-this-turn.text.golden,使一个友方细菌域随从获得减伤 4 直到回合结束
 skill.trigger-bird-single-windfury-this-turn.text,使一个友方鸟纲随从获得连击直到回合结束
 skill.trigger-cephalopod-single-poison.text,使一个友方头足纲随从获得剧毒
 skill.trigger-cnidarian-all-plus-0-plus-4.text,使你的水螅纲随从获得 +0/+4
+skill.trigger-cnidarian-all-plus-0-plus-4.text.golden,使你的水螅纲随从获得 +0/+8
 skill.trigger-cnidarian-single-poison-this-turn.text,使一个友方水螅纲随从获得剧毒直到回合结束
 skill.trigger-cnidarian-single-reborn.text,使一个友方水螅纲随从获得复生
 skill.trigger-copy-friendly-minion.text,复制一个友方随从
 skill.trigger-copy-hand-minion.text,复制你手牌中的一张随从牌
 skill.trigger-discover-tribe-minion.text,发现一张本局玩法的随从
 skill.trigger-enemy-death-self-plus-1-plus-1.text,每当一个敌方随从死亡，获得 +1/+1
+skill.trigger-enemy-death-self-plus-1-plus-1.text.golden,每当一个敌方随从死亡，获得 +2/+2
 skill.trigger-fish-all-growth-once.text,使你的鱼纲随从获得一次成长
+skill.trigger-fish-all-growth-once.text.golden,使你的鱼纲随从获得两次成长
 skill.trigger-fish-all-reborn.text,使你的鱼纲随从获得复生
 skill.trigger-fish-single-plus-0-plus-2.text,使一个友方鱼纲随从获得 +0/+2
+skill.trigger-fish-single-plus-0-plus-2.text.golden,使一个友方鱼纲随从获得 +0/+4
 skill.trigger-friendly-biology-play-plus-1-attack.text,每当一个友方动物随从进入战场，获得 +1 攻击力
+skill.trigger-friendly-biology-play-plus-1-attack.text.golden,每当一个友方动物随从进入战场，获得 +2 攻击力
 skill.trigger-friendly-death-self-plus-1-attack.text,每当一个友方随从死亡，获得 +1 攻击力
+skill.trigger-friendly-death-self-plus-1-attack.text.golden,每当一个友方随从死亡，获得 +2 攻击力
 skill.trigger-friendly-evolve-self-plus-1-plus-1.text,每当一个友方随从进化，获得 +1/+1
+skill.trigger-friendly-evolve-self-plus-1-plus-1.text.golden,每当一个友方随从进化，获得 +2/+2
 skill.trigger-friendly-growth-extra-plus-0-plus-1.text,每当一个友方随从获得成长，它额外获得 +0/+1
+skill.trigger-friendly-growth-extra-plus-0-plus-1.text.golden,每当一个友方随从获得成长，它额外获得 +0/+2
 skill.trigger-friendly-growth-self-plus-1-attack.text,每当一个友方随从获得成长，获得 +1 攻击力
+skill.trigger-friendly-growth-self-plus-1-attack.text.golden,每当一个友方随从获得成长，获得 +2 攻击力
 skill.trigger-friendly-growth-thrice.text,使一个友方随从获得三次成长
+skill.trigger-friendly-growth-thrice.text.golden,使一个友方随从获得六次成长
 skill.trigger-friendly-growth-twice.text,使一个友方随从获得两次成长
+skill.trigger-friendly-growth-twice.text.golden,使一个友方随从获得四次成长
 skill.trigger-friendly-human-death-plus-1-plus-1.text,每当一个友方人科随从死亡，获得 +1/+1
+skill.trigger-friendly-human-death-plus-1-plus-1.text.golden,每当一个友方人科随从死亡，获得 +2/+2
 skill.trigger-friendly-human-play-plus-1-attack.text,每当一个友方人科随从进入战场，获得 +1 攻击力
+skill.trigger-friendly-human-play-plus-1-attack.text.golden,每当一个友方人科随从进入战场，获得 +2 攻击力
 skill.trigger-friendly-human-taunt-until-turn-end.text,使一个友方人科随从获得嘲讽直到回合结束
 skill.trigger-friendly-plant-breed-2.text,使一个友方植物随从获得繁衍 2
+skill.trigger-friendly-plant-breed-2.text.golden,使一个友方植物随从获得繁衍 4
 skill.trigger-friendly-plant-sow.text,使一个友方植物随从获得播种
 skill.trigger-friendly-plus-0-plus-4-this-turn.text,使一个友方随从获得 +0/+4 直到回合结束
+skill.trigger-friendly-plus-0-plus-4-this-turn.text.golden,使一个友方随从获得 +0/+8 直到回合结束
 skill.trigger-friendly-plus-1-plus-1.text,使一个友方随从获得 +1/+1
+skill.trigger-friendly-plus-1-plus-1.text.golden,使一个友方随从获得 +2/+2
 skill.trigger-friendly-plus-2-attack-this-turn.text,使一个友方随从获得 +2 攻击力直到回合结束
+skill.trigger-friendly-plus-2-attack-this-turn.text.golden,使一个友方随从获得 +4 攻击力直到回合结束
 skill.trigger-friendly-plus-2-attack.text,使一个友方随从获得 +2 攻击力
+skill.trigger-friendly-plus-2-attack.text.golden,使一个友方随从获得 +4 攻击力
 skill.trigger-friendly-single-armor-2-this-turn.text,使一个友方随从获得减伤 2 直到回合结束
+skill.trigger-friendly-single-armor-2-this-turn.text.golden,使一个友方随从获得减伤 4 直到回合结束
 skill.trigger-friendly-single-divine-shield.text,使一个友方随从获得护盾
 skill.trigger-friendly-single-growth-once.text,使一个友方随从获得一次成长
+skill.trigger-friendly-single-growth-once.text.golden,使一个友方随从获得两次成长
 skill.trigger-friendly-single-plus-0-plus-1-this-turn.text,使一个友方随从获得 +0/+1 直到回合结束
+skill.trigger-friendly-single-plus-0-plus-1-this-turn.text.golden,使一个友方随从获得 +0/+2 直到回合结束
 skill.trigger-friendly-single-plus-0-plus-2.text,使一个友方随从获得 +0/+2
+skill.trigger-friendly-single-plus-0-plus-2.text.golden,使一个友方随从获得 +0/+4
 skill.trigger-friendly-single-plus-1-plus-1-this-turn.text,使一个友方随从获得 +1/+1 直到回合结束
+skill.trigger-friendly-single-plus-1-plus-1-this-turn.text.golden,使一个友方随从获得 +2/+2 直到回合结束
 skill.trigger-friendly-single-plus-2-plus-2.text,使一个友方随从获得 +2/+2
+skill.trigger-friendly-single-plus-2-plus-2.text.golden,使一个友方随从获得 +4/+4
 skill.trigger-friendly-single-poison-this-turn.text,使一个友方随从获得剧毒直到回合结束
 skill.trigger-friendly-single-reborn.text,使一个友方随从获得复生
 skill.trigger-friendly-single-stealth-this-turn.text,使一个友方随从获得潜行直到回合结束
 skill.trigger-friendly-taunt-until-turn-end.text,使一个友方随从获得嘲讽直到回合结束
 skill.trigger-fungus-single-plus-0-plus-3.text,使一个友方真菌随从获得 +0/+3
+skill.trigger-fungus-single-plus-0-plus-3.text.golden,使一个友方真菌随从获得 +0/+6
 skill.trigger-insect-all-plus-1-plus-1.text,使你的昆虫纲随从获得 +1/+1
+skill.trigger-insect-all-plus-1-plus-1.text.golden,使你的昆虫纲随从获得 +2/+2
 skill.trigger-insect-single-reborn.text,使一个友方昆虫纲随从获得复生
 skill.trigger-machine-all-growth-once.text,使你的机械随从获得一次成长
+skill.trigger-machine-all-growth-once.text.golden,使你的机械随从获得两次成长
 skill.trigger-machine-all-plus-1-plus-1.text,使你的机械随从获得 +1/+1
+skill.trigger-machine-all-plus-1-plus-1.text.golden,使你的机械随从获得 +2/+2
 skill.trigger-machine-single-reborn.text,使一个友方机械随从获得复生
 skill.trigger-mammal-all-growth-once.text,使你的哺乳纲随从获得一次成长
+skill.trigger-mammal-all-growth-once.text.golden,使你的哺乳纲随从获得两次成长
 skill.trigger-mammal-all-plus-1-plus-1.text,使你的哺乳纲随从获得 +1/+1
+skill.trigger-mammal-all-plus-1-plus-1.text.golden,使你的哺乳纲随从获得 +2/+2
 skill.trigger-mammal-all-plus-2-attack.text,使你的哺乳纲随从获得 +2 攻击力
+skill.trigger-mammal-all-plus-2-attack.text.golden,使你的哺乳纲随从获得 +4 攻击力
 skill.trigger-mech-optimal-attack-this-turn.text,你的机械随从获得无视嘲讽直到回合结束
 skill.trigger-minion-windfury-this-turn.text,使一个随从本回合获得连击
 skill.trigger-other-friendly-humans-plus-1-attack.text,使你的其他人科随从各获得 +1 攻击力
+skill.trigger-other-friendly-humans-plus-1-attack.text.golden,使你的其他人科随从各获得 +2 攻击力
 skill.trigger-plant-all-breed-2.text,使你的植物随从获得繁衍 2
+skill.trigger-plant-all-breed-2.text.golden,使你的植物随从获得繁衍 4
 skill.trigger-plant-all-growth-twice.text,使你的植物随从获得两次成长
+skill.trigger-plant-all-growth-twice.text.golden,使你的植物随从获得四次成长
 skill.trigger-play-effect-friendly-plus-0-plus-1.text,每当你使用一张效果牌，使一个友方随从获得 +0/+1
+skill.trigger-play-effect-friendly-plus-0-plus-1.text.golden,每当你使用一张效果牌，使一个友方随从获得 +0/+2
 skill.trigger-protozoa-single-growth-twice.text,使一个友方原生生物界随从获得两次成长
+skill.trigger-protozoa-single-growth-twice.text.golden,使一个友方原生生物界随从获得四次成长
 skill.trigger-protozoa-single-taunt-this-turn.text,使一个友方原生生物界随从获得嘲讽直到回合结束
 skill.trigger-refresh-shop-free.text,刷新商店
 skill.trigger-reptile-all-plus-0-plus-3.text,使你的爬行纲随从获得 +0/+3
+skill.trigger-reptile-all-plus-0-plus-3.text.golden,使你的爬行纲随从获得 +0/+6
 skill.trigger-reptile-single-armor-2-this-turn.text,使一个友方爬行纲随从获得减伤 2 直到回合结束
+skill.trigger-reptile-single-armor-2-this-turn.text.golden,使一个友方爬行纲随从获得减伤 4 直到回合结束
 skill.trigger-reptile-single-poison-this-turn.text,使一个友方爬行纲随从获得剧毒直到回合结束
 skill.trigger-summon-1-neutral-token-2-2.text,召唤一个 2/2 的随从
+skill.trigger-summon-1-neutral-token-2-2.text.golden,召唤两个 2/2 的随从
 skill.trigger-summon-2-amoeba-larva-3-3.text,召唤两个 3/3 的变形虫幼体
+skill.trigger-summon-2-amoeba-larva-3-3.text.golden,召唤四个 3/3 的变形虫幼体
 skill.trigger-summon-2-neutral-token-2-2.text,召唤两个 2/2 的随从
+skill.trigger-summon-2-neutral-token-2-2.text.golden,召唤四个 2/2 的随从
 skill.trigger-summon-2-spores-2-2.text,召唤两个 2/2 的孢子
+skill.trigger-summon-2-spores-2-2.text.golden,召唤四个 2/2 的孢子
 skill.trigger-summon-2-worker-bees.text,召唤两个 2/2 的工蜂
+skill.trigger-summon-2-worker-bees.text.golden,召唤四个 2/2 的工蜂
 skill.trigger-turn-start-self-plus-0-plus-1.text,回合开始时获得 +0/+1
+skill.trigger-turn-start-self-plus-0-plus-1.text.golden,回合开始时获得 +0/+2
 skill.trigger-virus-single-plus-1-plus-2.text,使一个友方病毒随从获得 +1/+2
+skill.trigger-virus-single-plus-1-plus-2.text.golden,使一个友方病毒随从获得 +2/+4
 skill.universal-manuscript.name,万能手稿
 skill.universal-manuscript.text,复制一张你手牌中的随从牌
 skill.virus-growth-once.name,培养
 skill.virus-growth-once.text,使一个友方病毒随从获得一次成长
+skill.virus-growth-once.text.golden,使一个友方病毒随从获得两次成长
 ui.account.back,返回大厅
 ui.account.bind,绑定
 ui.account.binding,绑定中…

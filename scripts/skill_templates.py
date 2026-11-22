@@ -98,6 +98,7 @@ class Template:
     params: str | None
     text: str
     args: tuple[ArgSpec, ...]
+    golden_text: str | None = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -106,7 +107,8 @@ class TemplateCall:
     args: dict[str, str]
 
 
-TEMPLATE_FIELDS = {"id", "kind", "trigger", "op", "selector", "params", "text"}
+TEMPLATE_FIELDS = {"id", "kind", "trigger", "op", "selector", "params", "text",
+                   "text_golden"}
 TEMPLATE_KINDS = ("effect", "keyword")
 
 
@@ -129,15 +131,16 @@ def parse_template(doc, file):
     names = [spec.name for spec in args]
     if len(names) != len(set(names)):
         raise ValueError(f"{file}: 参数声明重复")
+    golden_text = str(doc["text_golden"]) if doc.get("text_golden") else None
     if kind == "effect":
         for field in ("trigger", "op", "selector"):
             if field not in doc:
                 raise ValueError(f"{file}: 效果模板缺少 {field}")
         return Template(template_id, kind, str(doc["trigger"]), str(doc["op"]),
                         str(doc["selector"]), doc.get("params"),
-                        str(doc["text"]), args)
+                        str(doc["text"]), args, golden_text)
     return Template(template_id, kind, None, None, None, None,
-                    str(doc["text"]), args)
+                    str(doc["text"]), args, golden_text)
 
 
 def load_templates(content):
@@ -209,7 +212,7 @@ def parse_arg_spec(name, raw):
 
 _CN_NUMBERS = {1: "一", 2: "两", 3: "三", 4: "四", 5: "五", 6: "六",
                7: "七", 8: "八", 9: "九", 10: "十"}
-_PLACEHOLDER = re.compile(r"\{([a-zA-Z][a-zA-Z0-9_]*)(?:\.([a-z]+))?\}")
+_PLACEHOLDER = re.compile(r"\{([a-zA-Z][a-zA-Z0-9_]*)(?:\.([a-z0-9]+))?\}")
 _KEYWORD_RE = re.compile(r"^([a-z_]+)(?: (\d+))?$")
 _DURATION_VALUES = ("permanent", "combat")
 
@@ -361,22 +364,39 @@ class Renderer:
 
     # ---- 文案 ----
 
-    def text(self, call):
+    def text(self, call, golden=False, pattern=None, auto_double=None):
+        """渲染实例文案。
+
+        `golden` 为真时进入金色口径：默认把所有数字参数（`int` / `count` /
+        关键词层数）翻倍；`pattern` 可换成模板的 `text_golden`，此时
+        `auto_double=False`，由占位修饰符 `.x2` 显式标记要翻倍的产出数值。
+        """
         template = self._template(call)
         _, values = self._arg_values(template, call)
         specs = {spec.name: spec for spec in template.args}
+        if golden and auto_double is None:
+            auto_double = True
+        if golden and auto_double:
+            values = {
+                name: self._golden_value(specs[name], value)
+                for name, value in values.items()
+            }
+        source = pattern if pattern is not None else template.text
 
         output = []
         position = 0
-        for match in _PLACEHOLDER.finditer(template.text):
+        for match in _PLACEHOLDER.finditer(source):
             name, modifier = match.groups()
             if name not in specs:
                 raise ValueError(f"模板 {template.id} 文案引用未声明参数 {name!r}")
             value = values.get(name)
             if value is None:
                 raise ValueError(f"模板 {template.id} 缺少参数 {name}")
-            output.append(template.text[position:match.start()])
-            rendered = self._render_value(specs[name], modifier, value)
+            output.append(source[position:match.start()])
+            rendered = self._render_value(
+                specs[name], modifier, value, golden=golden,
+                auto_double=bool(auto_double),
+            )
             # 时长后缀接在数字或拉丁字母后时补一个空格，与现有排版一致。
             prefix = "".join(output)
             if modifier == "suffix" and rendered and prefix \
@@ -384,10 +404,20 @@ class Renderer:
                 output.append(" ")
             output.append(rendered)
             position = match.end()
-        output.append(template.text[position:])
+        output.append(source[position:])
         return "".join(output)
 
-    def _render_value(self, spec, modifier, value):
+    def _golden_value(self, spec, value):
+        """金色状态下把数字参数翻倍；非数字参数原样返回。"""
+        if spec.type in ("int", "count"):
+            return str(int(value) * 2)
+        if spec.type == "keyword":
+            match = _KEYWORD_RE.fullmatch(value)
+            if match and match.group(2):
+                return f"{match.group(1)} {int(match.group(2)) * 2}"
+        return value
+
+    def _render_value(self, spec, modifier, value, golden=False, auto_double=False):
         if spec.type in ("token", "card"):
             entry = self.tokens.get(value) or self.cards[value]
             if modifier is None:
@@ -407,11 +437,15 @@ class Renderer:
                 return value
             if modifier == "cn":
                 return _CN_NUMBERS.get(int(value), value)
+            if modifier == "x2":
+                return str(int(value) * (2 if golden else 1))
         elif spec.type == "count":
             if modifier in (None, "cn"):
                 return _CN_NUMBERS[int(value)]
             if modifier == "num":
                 return str(int(value))
+            if modifier == "x2":
+                return str(int(value) * (2 if golden else 1))
         elif spec.type == "duration":
             if modifier is None:
                 return ""
@@ -447,8 +481,19 @@ class Renderer:
             segments.extend(self.expand(call))
         return tuple(segments)
 
-    def instance_text(self, doc):
+    def instance_text(self, doc, golden=False):
+        if golden and doc.get("text_golden"):
+            return str(doc["text_golden"])
         if doc.get("text"):
             return str(doc["text"])
-        parts = [self.text(call) for call in parse_template_field(doc["template"])]
+        parts = []
+        for call in parse_template_field(doc["template"]):
+            template = self._template(call)
+            if golden and template.golden_text:
+                parts.append(self.text(
+                    call, golden=True, pattern=template.golden_text,
+                    auto_double=False,
+                ))
+            else:
+                parts.append(self.text(call, golden=golden))
         return "；".join(parts)

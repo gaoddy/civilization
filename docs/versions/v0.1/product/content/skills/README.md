@@ -139,7 +139,7 @@
 | [evolution-discovery](evolution-discovery.md) | 无 | 发现一张本局启用的玩法随从 | 1 |
 | [faraday-cage](faraday-cage.md) | 无 | 使一个友方随从获得护盾 | 1 |
 | [free-refresh](free-refresh.md) | 无 | 免费刷新一次商店 | 1 |
-| [gain-next-level-minion](gain-next-level-minion.md) | 无 | 获得一张下一等级的随从 | 1 |
+| [gain-next-level-minion](gain-next-level-minion.md) | 无 | 获得一张获得此牌时你当前时代 +1 星的随从 | 1 |
 | [heredity](heredity.md) | 无 | 使一个友方植物随从获得一次成长 | 1 |
 | [human-growth-twice](human-growth-twice.md) | 无 | 使一个友方人科随从获得两次成长 | 1 |
 | [invention-factory](invention-factory.md) | 无 | 使你的其他机械随从各获得一次成长 | 2 |

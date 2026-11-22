@@ -2,6 +2,7 @@
 id: deathrattle-summon-termite
 keyword: deathrattle
 text: 亡语：召唤一个 1/2 的白蚁
+text_golden: 亡语：召唤两个 1/2 的白蚁
 template: on-death-summon-card(card=baiyi,count=1)
 ---
 
