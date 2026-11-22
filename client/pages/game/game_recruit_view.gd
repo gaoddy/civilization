@@ -65,12 +65,12 @@ func _gap(node_name: String, height: int) -> Control:
 func _build_board() -> PanelContainer:
     var board_panel := UIControls.card_panel("bare")
     board_panel.name = "BoardPanel"
-    board_panel.custom_minimum_size = Vector2(0, UITheme.stage_metric("card-height"))
+    board_panel.custom_minimum_size = Vector2(0, UITheme.stage_metric("minion-card-height"))
 
     # 棋盘行整体居中；棋盘槽宽固定、最大 7 张，不会超出舞台宽度。
     var board_scroll := Control.new()
     board_scroll.name = "BoardScroll"
-    board_scroll.custom_minimum_size = Vector2(0, UITheme.stage_metric("card-height"))
+    board_scroll.custom_minimum_size = Vector2(0, UITheme.stage_metric("minion-card-height"))
     board_scroll.mouse_filter = Control.MOUSE_FILTER_IGNORE
     board_panel.add_child(board_scroll)
 
@@ -141,8 +141,8 @@ func _refresh_board(state: GameUiState) -> void:
     # HFlowContainer 的最小尺寸只按子卡计算：棋盘为空时高度会收缩为 0，
     # 拖放区随之消失。显式给出整行宽高，既保留整行拖放区，也让不足满槽的卡片居中。
     _board_row.custom_minimum_size = Vector2(
-        slots * UITheme.stage_metric("card-width") + maxi(slots - 1, 0) * UITheme.space("space-md"),
-        UITheme.stage_metric("card-height"),
+        slots * UITheme.stage_metric("minion-card-width") + maxi(slots - 1, 0) * UITheme.space("space-md"),
+        UITheme.stage_metric("minion-card-height"),
     )
 
 

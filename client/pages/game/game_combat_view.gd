@@ -40,7 +40,7 @@ func _init() -> void:
     add_theme_stylebox_override("panel", UITheme.panel_style("bare"))
     custom_minimum_size = Vector2(
         0, UITheme.stage_metric("hero-card-size")
-            + UITheme.stage_metric("card-height") * 2
+            + UITheme.stage_metric("minion-card-height") * 2
             + UITheme.stage_metric("river-height")
             + _stage_gap() * 3
     )
@@ -100,7 +100,7 @@ func _new_flow_row(node_name: String) -> HFlowContainer:
     var row := HFlowContainer.new()
     row.name = node_name
     # 行高常驻：一方随从全灭时该行不塌陷，两行在演示全程保持位置。
-    row.custom_minimum_size = Vector2(0, UITheme.stage_metric("card-height"))
+    row.custom_minimum_size = Vector2(0, UITheme.stage_metric("minion-card-height"))
     row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     row.add_theme_constant_override("h_separation", UITheme.space("space-md"))
     row.add_theme_constant_override("v_separation", UITheme.space("space-md"))
@@ -359,7 +359,7 @@ func _reconcile_row(row: HFlowContainer, minions: Array) -> void:
     # HFlowContainer 的最小宽度只按单张卡计算；显式给出整行宽度才能保持单行居中。
     var count := alive.size()
     row.custom_minimum_size.x = (
-        count * UITheme.stage_metric("card-width") + maxi(count - 1, 0) * UITheme.space("space-md")
+        count * UITheme.stage_metric("minion-card-width") + maxi(count - 1, 0) * UITheme.space("space-md")
     )
 
 
