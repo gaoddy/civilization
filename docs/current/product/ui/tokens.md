@@ -95,6 +95,7 @@
 | `hero-detail-width` | 160 | 选英雄页悬停详情与房间候选卡宽度，手机 120；高度由 `UITheme.card_face_height` 按卡面比例计算 |
 | `room-hero-detail-width` | 280 | 选英雄页悬停详情卡宽度；手机 200 |
 | `seat-hp-bar-height` | 6 | 座位行与战斗对手身份块的血量条高度 |
+| `seat-detail-hp-bar-height` | 16 | 座位详情里叠「当前/上限」数字的生命条高度，圆角取高度一半 |
 | `rank-badge-size` | 18 | 座位行名次圆形角标直径，圆角取直径一半；圆心收在头像内左上 |
 | `freeze-crystal-gap` | 14 | 冻结冰晶细线间距 |
 | `card-width` / `-height` | 112 / 146 | 手牌、选择浮层候选与通用卡面（含拖拽占位） |

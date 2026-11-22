@@ -1,7 +1,8 @@
 class_name SeatDetailSection
 extends RefCounted
 ## 座位详情：顶部紧凑身份（名字、名次、英雄 · 时代 · 随从），
-## 下方生命与对战记录；对战记录一行一条，没有条目时只显示「无战报」。
+## 下方生命条（当前/上限数字叠在条上）与对战记录；对战记录不设标题，
+## 一行一条，没有条目时只显示「无战报」。
 
 const META_SEPARATOR := " · "
 
@@ -15,10 +16,6 @@ static func render(
 ) -> void:
     box.add_child(_header(player, kit))
     box.add_child(_meta_line(player, kit))
-    box.add_child(kit.row(
-        TranslationServer.translate("ui.game.detail.hp"),
-        "%d/%d" % [int(player.get("hp", 0)), maxi(hp_cap, 0)],
-    ))
     box.add_child(_hp_bar(player, hp_cap, kit))
     box.add_child(_divider())
     box.add_child(_combat_log(player, view))
@@ -64,14 +61,19 @@ static func _meta_line(player: Dictionary, kit: DetailKit) -> Label:
     return line
 
 
-## 生命条占满面板内容宽度，圆角取高度一半成胶囊，与座位行上的血条同形。
+## 生命条占满面板内容宽度，圆角取高度一半成胶囊；当前/上限数字居中叠在条上，
+## 不再另起「生命」行。
 static func _hp_bar(player: Dictionary, hp_cap: int, kit: DetailKit) -> Control:
-    var height := UITheme.stage_metric("seat-hp-bar-height")
+    var height := UITheme.stage_metric("seat-detail-hp-bar-height")
+    var hp := int(player.get("hp", 0))
+    var cap := maxi(hp_cap, 0)
     var bar := HpBar.create(
-        int(player.get("hp", 0)),
-        maxi(hp_cap, 0),
+        hp,
+        cap,
         kit.text_width,
         int(height * 0.5),
+        height,
+        "%d/%d" % [hp, cap],
     )
     bar.name = "DetailHpBar"
     return bar
@@ -92,19 +94,12 @@ static func _divider() -> Control:
     return margin
 
 
-## 对战记录：标题下按回合升序逐条列出；一条一行，对手名过长时省略。
+## 对战记录：不设标题，按回合升序逐条列出；一条一行，对手名过长时省略。
 static func _combat_log(player: Dictionary, view: Dictionary) -> VBoxContainer:
     var log_box := VBoxContainer.new()
     log_box.name = "SeatCombatLog"
     log_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
     log_box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-
-    var title := _caption(
-        TranslationServer.translate("ui.game.detail.combat_log"),
-        "color-text-muted",
-    )
-    title.name = "SeatCombatTitle"
-    log_box.add_child(title)
 
     var player_id := str(player.get("playerId", ""))
     var entries := combat_entries(view, player_id)
