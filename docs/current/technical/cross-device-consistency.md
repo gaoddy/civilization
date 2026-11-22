@@ -116,7 +116,7 @@ static func stage_metric(name: String) -> int:
 | --- | --- | --- |
 | `card-width` | 112 | 84 |
 | `card-height` | 146 | 92 |
-| `hero-row-height` | 84 | 64 |
+| `hero-row-height` | 84 | 76 |
 
 开发者只调用 `UITheme.stage_metric("card-width")`，iPhone 自动返回 84，其他设备返回 112。
 
