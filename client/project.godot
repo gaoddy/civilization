@@ -47,6 +47,13 @@ locale/fallback="zh_CN"
 
 allow_insecure_tls=false
 
+[importer_defaults]
+
+texture={
+"compress/high_quality": true,
+"compress/mode": 2
+}
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

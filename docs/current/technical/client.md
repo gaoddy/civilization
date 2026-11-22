@@ -458,7 +458,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 回退：`UIArt.texture()` / `UIArt.layer()` 统一取图与铺层，纹理加载失败与无资源返回空；`CardFaceBase.create_face()` 用带卡面圆角的 Panel 绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；房间候选卡叠 `card_face`；对局英雄卡封面、座位头像与对手英雄卡用 `avatar`，`Avatar.create()` / `GamePortrait` / `GameHeroCard` 有头像纹理时叠 `AvatarFrameArt`（裁切层索引 0）并隐藏首字；图鉴详情用 `card_face`，对局英雄详情与房间悬停详情不显示图片。各类无图时回退玩法色块与首字（英雄卡封面回退玩法色与首字，图鉴详情省略图片）。页面背景缺图或加载失败时 `UIControls.background()` 回退 `color-bg` 纯色。
 - 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（`client/assets/characters/portraits/asset_map.json`，随仓库提交，内容为 `card_id → characters/portraits/ 下的立绘文件名`）处理源立绘，并更新清单中对应条目；清单内不在映射中的条目（如直接生成的随从封面）原样保留。映射文件缺失时目标直接失败。效果牌封面走 `make assets-covers`：取每个 `<card_id>/` 下最新的 PNG，去水印后缩放到 448×584，清单只写入 `card_face` 与 `display.card_face`，保留条目已有的 `portrait` / `avatar`。运行前需安装 Pillow（`python3 -m pip install pillow`）。封面生成风格、prompt 模板、主题符号映射与去水印约束见 [卡片封面美术生成](card-cover-art.md)。
 - 批次：英雄与已生成的随从、效果牌封面随仓库提交，统一按卡面 112:146 展示；尚无封面的卡牌继续走程序化绘制，由玩法色与首字回退。
-- 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；改图后运行 `make client-import`。
+- 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；`client/project.godot` 的 `[importer_defaults]` 为 `texture` 统一设置 `compress/mode=2`（VRAM 压缩）与 `compress/high_quality=true`，桌面走 BPTC、iOS 走 ASTC。448×584 卡面单张冷加载由约 6ms 降到约 0.2ms，图鉴一批 27 张的解码停顿从约 160ms 降到个位毫秒数。改图后运行 `make client-import`；调整导入默认值后需先删除对应的 `.png.import` 或 `client/.godot`，否则已有 `.import` 里的旧参数仍生效。
 
 ## 11. 音效层
 
