@@ -400,27 +400,39 @@ func _columns_at_width(width: float) -> int:
     return columns
 
 
-## 网格列数应为当前可用宽度下能放下的最大值：再多一列放不下，当前列数放得下。
+## 网格列数应为当前可用宽度下能放下的最大值，卡宽平分剩余宽度：
+## 整行铺满、右侧不留空，卡面不小于基础卡宽，再多一列会放不下。
 ## 先等布局稳定，纵向滚动条出现后网格宽度才减去滚动条宽度。
 func _expect_columns_fit(rows: GridContainer, label: String) -> void:
     await get_tree().process_frame
     await get_tree().process_frame
     if rows == null:
         return
-    var card := float(UITheme.metric("card-width"))
     var gap_name := (
         "space-md" if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE else "space-lg"
     )
     var gap := float(UITheme.space(gap_name))
+    var base := float(UITheme.metric("card-width"))
     var width := rows.size.x
     _expect(width > 0.0, "%s网格宽度不应为零" % label)
+    if rows.get_child_count() == 0:
+        return
+    var tile := rows.get_child(0) as Control
+    var card := tile.size.x
     _expect(
-        float(rows.columns) * card + float(rows.columns - 1) * gap <= width + 0.5,
-        "%s网格列数 %d 超过一行可用宽度 %s" % [label, rows.columns, str(width)],
+        card >= base - 0.5,
+        "%s卡面应不小于基础卡宽 %d，实际 %s" % [label, int(base), str(card)],
+    )
+    var last := rows.get_child(mini(rows.columns, rows.get_child_count()) - 1) as Control
+    _expect(
+        last != null and absf(last.get_rect().end.x - width) <= 1.0,
+        "%s一行应铺满网格：最后一列右缘 %s，网格宽 %s"
+        % [label, str(last.get_rect().end.x) if last != null else "无", str(width)],
     )
     _expect(
-        float(rows.columns + 1) * card + float(rows.columns) * gap > width,
-        "%s网格未铺满一行：%d 列仍放得下更多，可用宽度 %s" % [label, rows.columns, str(width)],
+        float(rows.columns + 1) * base + float(rows.columns) * gap > width,
+        "%s网格列数应尽量多，避免过度放大：%d 列，可用宽度 %s"
+        % [label, rows.columns, str(width)],
     )
 
 

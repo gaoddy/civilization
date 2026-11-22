@@ -15,7 +15,8 @@
 | `set_cards(ids, selected_id, hero = false)` | `void` | 用新的卡牌集合重建首批并把滚动归零；`hero` 为真时卡面走英雄样式 |
 | `select(selected_id)` | `void` | 只更新已加载卡面的选中描边，不重建 |
 
-- 列数在首次布局后按网格可用宽度计算一次：`floor((可用宽度 + 列距) / (卡宽 + 列距))`，可用宽度扣除纵向滚动条宽度；单次运行内逻辑画布宽度固定，窗口缩放由内容框整体缩放承担。桌面与 iPad 基准为 9 列，iPhone 基准为 7 列，安全区收窄时按实际宽度减少；列距桌面与 iPad 为 `space-lg`，手机为 `space-md`。
+- 列数在首次布局后按网格可用宽度计算一次：`floor((可用宽度 + 列距) / (基础卡宽 + 列距))`，可用宽度扣除纵向滚动条宽度；单次运行内逻辑画布宽度固定，窗口缩放由内容框整体缩放承担。桌面与 iPad 基准为 9 列，iPhone 基准为 7 列，安全区收窄时按实际宽度减少；列距桌面与 iPad 为 `space-lg`，手机为 `space-md`。
+- 卡宽按列数平分整行宽度（不小于基础卡宽 `card-width` = 112），卡高沿用 112:146 比例，列宽取整后的余量由网格按列均分，整行贴到右缘、右侧不留空。
 - 每批张数取 `gallery-batch-size`（27），手机取 `gallery-batch-size-compact`（12）；批次不再与列数绑定，直接追加到同一网格。
 - 内部节点名：`GalleryScroll`、`GalleryScrollBody`、`GalleryGridRows`、`GalleryLoadStatus`、`GalleryEmpty`。
 

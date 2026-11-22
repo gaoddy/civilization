@@ -14,7 +14,7 @@
 | `card_id` | `String` | 卡牌 id |
 | `set_selected(value)` | `void` | 切换选中描边；继承自 `SelectableBox` |
 
-- 最小尺寸为 `card-width` × `card-height`（112×146）。
+- 默认最小尺寸为 `card-width` × `card-height`（112×146）；图鉴网格会按可用宽度放大到铺满整行，由网格写入 `custom_minimum_size` 并让列参与横向扩展。
 - 卡面按满幅锚点铺满可选项框的内容区，不依赖容器撑开。
 - 节点名为 `GalleryCard_<id>`；原生 tooltip 为卡名。
 - 普通卡面由 `GalleryCardFace.build` 构建：原始攻防、玩法、`display_cost` 与时代，不显示效果文本。
