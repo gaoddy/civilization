@@ -10,7 +10,10 @@ use crate::events::GameEvent;
 use crate::intent::{Intent, Outcome, Reject};
 use crate::recruit;
 use crate::rng::{RngStreams, Stream};
-use crate::state::{GameState, InstanceId, Phase, PlayerState, Seat};
+use crate::state::{
+    GameState, InstanceId, Phase, PlayerState, Seat, StatSourceLayer, StatSourceOrigin,
+    StatSystemSource,
+};
 
 /// 固定 8 人对局。
 const PLAYER_COUNT: Seat = 8;
@@ -100,6 +103,7 @@ impl Engine {
             ranking,
             next_instance_id: 1,
             auras: BTreeMap::new(),
+            aura_sources: BTreeMap::new(),
         }
     }
 
@@ -279,6 +283,12 @@ impl Engine {
                 layers
             };
             minion.stats.health.add_growth(amount);
+            minion.record_stat_source(
+                StatSourceLayer::Growth,
+                StatSourceOrigin::System(StatSystemSource::Breed),
+                0,
+                amount,
+            );
             // `breed_applied` 记录本实例累计已通过繁衍获得的生命。
             minion.breed_applied = minion.breed_applied.saturating_add(amount);
         }
@@ -318,6 +328,12 @@ impl Engine {
         for minion in &mut player.board {
             if minion.contagion > 0 {
                 minion.stats.health.add_permanent(-minion.contagion);
+                minion.record_stat_source(
+                    StatSourceLayer::Permanent,
+                    StatSourceOrigin::System(StatSystemSource::Contagion),
+                    0,
+                    -minion.contagion,
+                );
             }
         }
         self.resolve_recruit_deaths(state, seat);

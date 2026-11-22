@@ -17,8 +17,8 @@ use crate::events::GameEvent;
 use crate::recruit::new_minion;
 use crate::rng::Stream;
 use crate::state::{
-    AuraEffect, GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase, PlayerState,
-    Seat,
+    AuraEffect, AuraSource, GameState, HandCard, InstanceId, MinionInstance, PendingChoice, Phase,
+    PlayerState, Seat, StatSource, StatSourceLayer, StatSourceOrigin, StatSystemSource,
 };
 
 /// 配对在放弃"排除上一场对手"前最多重洗的次数。
@@ -414,8 +414,18 @@ fn resolve_real(
     let catalog = &engine.catalog;
     let (a, b) = (pairing.a, pairing.b);
     // 快照必须在战斗改变棋盘之前截取；光环只折叠进战斗克隆。
-    let board_a = fold_auras(catalog, &state.auras, board_of(state, a));
-    let board_b = fold_auras(catalog, &state.auras, board_of(state, b));
+    let board_a = fold_auras(
+        catalog,
+        &state.auras,
+        &state.aura_sources,
+        board_of(state, a),
+    );
+    let board_b = fold_auras(
+        catalog,
+        &state.auras,
+        &state.aura_sources,
+        board_of(state, b),
+    );
 
     let first = match state.last_winner {
         Some(winner) if winner == a || winner == b => winner,
@@ -560,7 +570,12 @@ fn resolve_ghost(
     let catalog = &engine.catalog;
     let seat = pairing.a;
     let ghost_seat = pairing.ghost;
-    let own_board = fold_auras(catalog, &state.auras, board_of(state, seat));
+    let own_board = fold_auras(
+        catalog,
+        &state.auras,
+        &state.aura_sources,
+        board_of(state, seat),
+    );
     let ghost = ghost_board(engine, state, ghost_seat);
     let (ghost, next_instance_id) = renumber_ghost(state, &own_board, ghost_seat, ghost);
 
@@ -687,11 +702,15 @@ fn resolve_ghost(
 /// 把光环派生值折叠进一份棋盘克隆，供战斗模拟使用。
 ///
 /// 原始随从不受影响：数值写入克隆的 `aura` 层，关键词以永久授予追加（同名只
-/// 保留一次）。若目标在折叠前生命 > 0、折叠后 ≤ 0，则收窄负向生命修正，使总
-/// 生命恰好为 1（§3.2「光环失效不致死」）。
+/// 保留一次），并按来源卡把 Aura 层来源整体替换进克隆的账本。若目标在折叠前
+/// 生命 > 0、折叠后 ≤ 0，则收窄负向生命修正，使总生命恰好为 1（§3.2
+/// 「光环失效不致死」）；夹紧差额并入生命增量最负的来源（同值按卡 id 升序），
+/// 没有负向来源时追加一条 [`StatSystemSource::AuraFloor`]，保证来源之和等于
+/// 聚合层。
 pub fn fold_auras(
     catalog: &Catalog,
     auras: &BTreeMap<InstanceId, AuraEffect>,
+    aura_sources: &BTreeMap<InstanceId, Vec<AuraSource>>,
     board: &[MinionInstance],
 ) -> Vec<MinionInstance> {
     let mut folded = board.to_vec();
@@ -707,6 +726,35 @@ pub fn fold_auras(
         }
         minion.stats.attack.set_aura(attack);
         minion.stats.health.set_aura(health);
+
+        let mut sources = aura_sources
+            .get(&minion.instance_id)
+            .cloned()
+            .unwrap_or_default();
+        let mut floor = None;
+        if health != aura.health {
+            // 逐来源之和必须等于夹紧后的聚合值；差额并入最负的生命来源。
+            let diff = health - sources.iter().map(|source| source.health).sum::<i32>();
+            if diff != 0 {
+                match most_negative_source(&sources) {
+                    Some(index) => {
+                        sources[index].health = sources[index].health.saturating_add(diff);
+                    }
+                    None => floor = Some(diff),
+                }
+            }
+        }
+        let mut rows: Vec<StatSource> = sources.into_iter().map(aura_stat_source).collect();
+        if let Some(health) = floor {
+            rows.push(StatSource {
+                layer: StatSourceLayer::Aura,
+                origin: StatSourceOrigin::System(StatSystemSource::AuraFloor),
+                attack: 0,
+                health,
+            });
+        }
+        minion.replace_aura_sources(rows);
+
         for keyword in aura.keywords.names() {
             if !minion
                 .granted
@@ -720,6 +768,35 @@ pub fn fold_auras(
     folded
 }
 
+/// 生命增量最负的来源下标；同值按来源卡 id 升序取第一个。
+fn most_negative_source(sources: &[AuraSource]) -> Option<usize> {
+    sources
+        .iter()
+        .enumerate()
+        .filter(|(_, source)| source.health < 0)
+        .min_by(|(_, a), (_, b)| {
+            a.health
+                .cmp(&b.health)
+                .then_with(|| a.card_id.cmp(&b.card_id))
+        })
+        .map(|(index, _)| index)
+}
+
+/// 把一条逐来源光环增量转成克隆账本条目。
+///
+/// 空卡 id 代表来源卡缺失，写成 `None`，由视图层回退「未知来源」。
+fn aura_stat_source(source: AuraSource) -> StatSource {
+    StatSource {
+        layer: StatSourceLayer::Aura,
+        origin: StatSourceOrigin::Card {
+            card_id: (!source.card_id.is_empty()).then_some(source.card_id),
+            skill_id: None,
+        },
+        attack: source.attack,
+        health: source.health,
+    }
+}
+
 /// 幽灵阵容：幽灵归属座位（已出局）的最终棋盘，按它自己的光环来源折叠一次。
 ///
 /// 只在本次模拟的克隆上生效，不写回 `state.auras`。`None` 与未知座位都返回
@@ -729,8 +806,13 @@ pub fn ghost_board(engine: &Engine, state: &GameState, ghost: Option<Seat>) -> V
     let Some(corpse) = ghost.and_then(|seat| player(state, seat)) else {
         return Vec::new();
     };
-    let auras = engine.player_auras(state, corpse);
-    fold_auras(&engine.catalog, &auras, &corpse.board)
+    let breakdown = engine.player_auras(state, corpse);
+    fold_auras(
+        &engine.catalog,
+        &breakdown.totals,
+        &breakdown.sources,
+        &corpse.board,
+    )
 }
 
 /// 为幽灵战准备阵容：把所有与己方棋盘重号的实例编号换成新号。
@@ -781,6 +863,7 @@ fn clear_combat_duration(state: &mut GameState) {
         for minion in &mut player.board {
             minion.stats.attack.clear_turn();
             minion.stats.health.clear_turn();
+            minion.clear_turn_sources();
             minion
                 .granted
                 .retain(|(_, duration)| *duration != Duration::Combat);
@@ -1033,12 +1116,25 @@ fn write_back_persistent(state: &mut GameState, seat: Seat, final_board: &[Minio
             // 延迟战吼只在首次进入战斗时结算一次，标记必须回到持久棋盘，
             // 否则每场战斗都会重放同一条战吼。
             stored.delayed_battlecry_used |= updated.delayed_battlecry_used;
-            for (stored_stat, updated_stat) in [
-                (&mut stored.stats.attack, &updated.stats.attack),
-                (&mut stored.stats.health, &updated.stats.health),
-            ] {
-                stored_stat.add_growth(updated_stat.growth.saturating_sub(stored_stat.growth));
-            }
+            let attack_delta = updated
+                .stats
+                .attack
+                .growth
+                .saturating_sub(stored.stats.attack.growth);
+            let health_delta = updated
+                .stats
+                .health
+                .growth
+                .saturating_sub(stored.stats.health.growth);
+            stored.stats.attack.add_growth(attack_delta);
+            stored.stats.health.add_growth(health_delta);
+            // 持久棋盘保留原有成长来源；战斗内新增的成长合并为一条「战斗成长」。
+            stored.record_stat_source(
+                StatSourceLayer::Growth,
+                StatSourceOrigin::System(StatSystemSource::CombatGrowth),
+                attack_delta,
+                health_delta,
+            );
             for stat in [&mut stored.stats.attack, &mut stored.stats.health] {
                 debug_assert_eq!(stat.aura, 0, "持久实例不应携带光环层");
                 stat.revive_to(stat.layers());

@@ -30,7 +30,8 @@
             "aura": 0,
             "damage": 3,
             "current": 1
-          }
+          },
+          "sources": []
         },
         "keywords": [
           "battlecry"
@@ -63,7 +64,8 @@
             "aura": 0,
             "damage": 3,
             "current": 1
-          }
+          },
+          "sources": []
         },
         "keywords": [
           "battlecry"

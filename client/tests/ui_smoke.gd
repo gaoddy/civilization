@@ -14,6 +14,8 @@ func _ready() -> void:
     await _check_room_null_hero()
     await _check_room_hero_picker()
     await _check_game()
+    await _check_minion_detail_dense()
+    await _check_minion_detail_unknown_source()
     await _check_game_layout()
     await _check_hand_overlap_layout()
     await _check_hand_shows_server_stats()
@@ -144,6 +146,363 @@ func _check_detail_without_stats() -> void:
     GameStore.deadline = ""
     GameStore.turn = 1
     GameStore.phase = ""
+
+
+## 来源超过 8 行：详情宽度 360，来源按层切成两列；手机档位回落到 200 与单列。
+func _check_minion_detail_dense() -> void:
+    var sources := [
+        {"layer": "aura", "kind": "card", "cardId": "aristotle",
+         "skillId": null, "attack": 0, "health": 1},
+        {"layer": "permanent", "kind": "card", "cardId": "kongzi",
+         "skillId": "activate-friendly-growth-twice", "attack": 1, "health": 1},
+        {"layer": "permanent", "kind": "evolve", "cardId": null,
+         "skillId": null, "attack": 0, "health": 1},
+        {"layer": "permanent", "kind": "breed", "cardId": null,
+         "skillId": null, "attack": 1, "health": 0},
+        {"layer": "permanent", "kind": "contagion", "cardId": null,
+         "skillId": null, "attack": 0, "health": 1},
+        {"layer": "permanent", "kind": "revive", "cardId": null,
+         "skillId": null, "attack": 1, "health": 0},
+        {"layer": "turn", "kind": "recall", "cardId": null,
+         "skillId": null, "attack": 1, "health": 0},
+        {"layer": "turn", "kind": "combat_growth", "cardId": null,
+         "skillId": null, "attack": 0, "health": 1},
+        {"layer": "turn", "kind": "aura_floor", "cardId": null,
+         "skillId": null, "attack": 1, "health": 0},
+        # 技能缺失时仍应回退到卡名，而不是泄露技能 id。
+        {"layer": "turn", "kind": "card", "cardId": "kongzi",
+         "skillId": "no-such-skill", "attack": 1, "health": 0},
+    ]
+    var view: Dictionary = FixtureScript.view()
+    var minion: Dictionary = FixtureScript.board_minion("mi_sources", "kongzi", 0)
+    minion["stats"] = {
+        "attack": {"initial": 4, "permanent": 3, "turn": 3, "aura": 0, "damage": 0, "current": 10},
+        "health": {"initial": 7, "permanent": 3, "turn": 1, "aura": 1, "damage": 0, "current": 12},
+        "sources": sources,
+    }
+    view["self"]["board"] = [minion]
+    view["self"]["affordances"]["boardMinions"] = [
+        {"index": 0, "sellable": true, "disabledReason": null},
+    ]
+    var names := [
+        CardDB.display_name("aristotle"),
+        "%s · %s" % [
+            CardDB.skill_name("activate-friendly-growth-twice"),
+            CardDB.display_name("kongzi"),
+        ],
+        TranslationServer.translate("enum.stat_source_kind.evolve"),
+        TranslationServer.translate("enum.stat_source_kind.breed"),
+        TranslationServer.translate("enum.stat_source_kind.contagion"),
+        TranslationServer.translate("enum.stat_source_kind.revive"),
+        TranslationServer.translate("enum.stat_source_kind.recall"),
+        TranslationServer.translate("enum.stat_source_kind.combat_growth"),
+        TranslationServer.translate("enum.stat_source_kind.aura_floor"),
+        CardDB.display_name("kongzi"),
+    ]
+
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = view
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
+    if instance != null:
+        var detail = instance.find_child("MinionDetailPanel", true, false)
+        var card = instance.find_child("BoardMinion0", true, false)
+        if detail == null or card == null:
+            _expect(false, "密集来源用例缺少详情面板或棋盘随从")
+        else:
+            await _hover(instance, card, card.size / 2)
+            var text := _node_text(detail)
+            for name in names:
+                _expect(text.contains(name), "密集来源详情应包含「%s」：%s" % [name, text])
+            _expect(
+                is_equal_approx(
+                    detail.custom_minimum_size.x,
+                    360.0,
+                ),
+                "超过 8 行来源时详情宽度应为 360，实际 %.1f"
+                % detail.custom_minimum_size.x,
+            )
+            var rows := detail.find_children("DetailStatSourceRow*", "HBoxContainer", true, false)
+            _expect(rows.size() == 10, "应渲染 10 行来源，实际 %d" % rows.size())
+            var columns := detail.find_children(
+                "DetailStatSourceColumns*", "HBoxContainer", true, false
+            )
+            _expect(columns.size() == 3, "三层来源应各分两列，实际 %d 组" % columns.size())
+            for column in columns:
+                _expect(column.get_child_count() == 2,
+                    "每组来源应有两个列容器，实际 %d" % column.get_child_count())
+                if column.get_child_count() != 2:
+                    continue
+                var left := column.get_child(0)
+                var right := column.get_child(1)
+                var count := left.get_child_count() + right.get_child_count()
+                _expect(
+                    left.get_child_count() == int(ceil(float(count) / 2.0)),
+                    "左列应取 ceil(n/2)，n=%d，实际左列 %d" % [count, left.get_child_count()],
+                )
+            var box := detail.get_child(0)
+            var total_panel := detail.find_child("DetailStatTotalPanel", true, false)
+            var aura_layer := detail.find_child("DetailStatLayer_aura", true, false)
+            var permanent_layer := detail.find_child("DetailStatLayer_permanent", true, false)
+            var turn_layer := detail.find_child("DetailStatLayer_turn", true, false)
+            var expected_names := {
+                "aura": [CardDB.display_name("aristotle")],
+                "permanent": [
+                    "%s · %s" % [
+                        CardDB.skill_name("activate-friendly-growth-twice"),
+                        CardDB.display_name("kongzi"),
+                    ],
+                    TranslationServer.translate("enum.stat_source_kind.evolve"),
+                    TranslationServer.translate("enum.stat_source_kind.breed"),
+                    TranslationServer.translate("enum.stat_source_kind.contagion"),
+                    TranslationServer.translate("enum.stat_source_kind.revive"),
+                ],
+                "turn": [
+                    TranslationServer.translate("enum.stat_source_kind.recall"),
+                    TranslationServer.translate("enum.stat_source_kind.combat_growth"),
+                    TranslationServer.translate("enum.stat_source_kind.aura_floor"),
+                    CardDB.display_name("kongzi"),
+                ],
+            }
+            var expected_values := {
+                "aura": [["+0", "+1"]],
+                "permanent": [
+                    ["+1", "+1"], ["+0", "+1"], ["+1", "+0"],
+                    ["+0", "+1"], ["+1", "+0"],
+                ],
+                "turn": [
+                    ["+1", "+0"], ["+0", "+1"], ["+1", "+0"], ["+1", "+0"],
+                ],
+            }
+            _expect(box is VBoxContainer, "详情面板内容应为 VBoxContainer")
+            if box is VBoxContainer:
+                for group in [
+                    ["aura", aura_layer, permanent_layer],
+                    ["permanent", permanent_layer, turn_layer],
+                    ["turn", turn_layer, total_panel],
+                ]:
+                    var layer: String = group[0]
+                    var layer_node: Node = group[1]
+                    var next_node: Node = group[2]
+                    var columns_node := detail.find_child(
+                        "DetailStatSourceColumns_%s" % layer, true, false
+                    )
+                    _expect_between(
+                        box, layer_node, columns_node, next_node,
+                        "%s 来源列应紧跟层小计" % layer,
+                    )
+                    if columns_node == null or columns_node.get_child_count() != 2:
+                        continue
+                    var ordered_rows: Array = []
+                    ordered_rows.append_array(columns_node.get_child(0).get_children())
+                    ordered_rows.append_array(columns_node.get_child(1).get_children())
+                    var expected_layer_names: Array = expected_names[layer]
+                    var expected_layer_values: Array = expected_values[layer]
+                    for index in expected_layer_names.size():
+                        var row := _expect_source_row(
+                            detail, layer, index,
+                            expected_layer_names[index], expected_layer_values[index]
+                        )
+                        if row != null and index < ordered_rows.size():
+                            _expect(
+                                ordered_rows[index] == row,
+                                "%s 层第 %d 条来源应位于左列优先的读取顺序" % [layer, index],
+                            )
+        instance.queue_free()
+        await get_tree().process_frame
+
+    # 手机档位是触控档，悬停不会触发详情；直接让详情层渲染一次以校验宽度与单列。
+    ScreenProfile.set_device_for_test(ScreenProfile.DEVICE_PHONE)
+    GameStore.view = view.duplicate(true)
+    var phone := await _check_scene("res://pages/game/game.tscn", false)
+    if phone != null:
+        var phone_detail = phone.find_child("MinionDetailPanel", true, false)
+        var phone_card = phone.find_child("BoardMinion0", true, false)
+        var phone_layer = phone.find_child("MinionDetailLayer", true, false)
+        if phone_detail == null or phone_card == null or phone_layer == null:
+            _expect(false, "手机档位缺少详情面板、棋盘随从或详情层")
+        else:
+            phone_layer._show_detail(phone_card.get_meta("detail_data", {}), phone_card)
+            await get_tree().process_frame
+            var phone_text := _node_text(phone_detail)
+            _expect(
+                is_equal_approx(
+                    phone_detail.custom_minimum_size.x,
+                    200.0,
+                ),
+                "手机档位详情宽度应为 200，实际 %.1f"
+                % phone_detail.custom_minimum_size.x,
+            )
+            _expect(
+                phone_detail.find_children(
+                    "DetailStatSourceColumns*", "HBoxContainer", true, false
+                ).is_empty(),
+                "手机档位来源区应保持单列",
+            )
+            for name in names:
+                _expect(phone_text.contains(name),
+                    "手机档位来源详情应包含「%s」：%s" % [name, phone_text])
+        phone.queue_free()
+        await get_tree().process_frame
+    ScreenProfile.set_device_for_test("")
+    GameStore.view = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+## 卡表缺失的来源行仍显示，名称回退为「未知来源」。
+func _check_minion_detail_unknown_source() -> void:
+    var view: Dictionary = FixtureScript.view()
+    var minion: Dictionary = FixtureScript.board_minion("mi_unknown", "kongzi", 0)
+    minion["stats"] = {
+        "attack": {"initial": 2, "permanent": 1, "turn": 0, "aura": 0, "damage": 0, "current": 3},
+        "health": {"initial": 2, "permanent": 1, "turn": 1, "aura": 0, "damage": 0, "current": 4},
+        "sources": [
+            {"layer": "permanent", "kind": "card", "cardId": "no-such-card",
+             "skillId": null, "attack": 1, "health": 1},
+            {"layer": "turn", "kind": "unknown", "cardId": null,
+             "skillId": null, "attack": 0, "health": 1},
+        ],
+    }
+    view["self"]["board"] = [minion]
+    view["self"]["affordances"]["boardMinions"] = [
+        {"index": 0, "sellable": true, "disabledReason": null},
+    ]
+    GameStore.player_id = "p0"
+    GameStore.phase = "Recruit"
+    GameStore.turn = 3
+    GameStore.deadline = "2030-01-01T00:00:00Z"
+    GameStore.view = view
+    var instance := await _check_scene("res://pages/game/game.tscn", false)
+    if instance == null:
+        return
+    var detail = instance.find_child("MinionDetailPanel", true, false)
+    var card = instance.find_child("BoardMinion0", true, false)
+    if detail == null or card == null:
+        _expect(false, "缺失来源用例缺少详情面板或棋盘随从")
+    else:
+        await _hover(instance, card, card.size / 2)
+        var text := _node_text(detail)
+        _expect(
+            text.contains(TranslationServer.translate("ui.game.detail.source.unknown")),
+            "卡表缺失的来源应显示「未知来源」：%s" % text,
+        )
+        _expect(not text.contains("no-such-card"), "来源行不应泄露卡牌 id：%s" % text)
+        _expect(not text.contains("unknown"), "未知 kind 不应泄露原始 id：%s" % text)
+        var rows := detail.find_children("DetailStatSourceRow*", "HBoxContainer", true, false)
+        _expect(rows.size() == 2, "应渲染 2 行来源，实际 %d" % rows.size())
+        if not rows.is_empty():
+            _expect(
+                _stat_values(rows[0]) == ["+1", "+1"],
+                "来源行仍应显示攻击与生命增量：%s" % [_stat_values(rows[0])],
+            )
+        var permanent_row := _expect_source_row(
+            detail, "permanent", 0,
+            TranslationServer.translate("ui.game.detail.source.unknown"), ["+1", "+1"]
+        )
+        var turn_row := _expect_source_row(
+            detail, "turn", 0,
+            TranslationServer.translate("ui.game.detail.source.unknown"), ["+0", "+1"]
+        )
+        _expect(
+            permanent_row != null and turn_row != null,
+            "卡表缺失与未知 kind 两条来源都应渲染",
+        )
+    instance.queue_free()
+    await get_tree().process_frame
+    GameStore.view = {}
+    GameStore.turn = 1
+    GameStore.phase = ""
+
+
+## 取数值构成行的攻击/生命两列文本（只收集右对齐的数值标签）。
+func _stat_values(row: Node) -> Array:
+    var values: Array = []
+    if row == null:
+        return values
+    for child in row.get_children():
+        if child is Label and (child as Label).horizontal_alignment == HORIZONTAL_ALIGNMENT_RIGHT:
+            values.append(str((child as Label).text))
+    return values
+
+
+## 按节点名或层标记找到层行，断言攻击/生命两列。
+func _expect_stat_values(
+    detail: Node,
+    node_name: String,
+    layer: String,
+    expected: Array,
+    label: String,
+) -> void:
+    var row: Node = null
+    if layer == "":
+        row = detail.find_child(node_name, true, false)
+    else:
+        for candidate in detail.find_children("DetailStatLayer*", "HBoxContainer", true, false):
+            if str(candidate.get_meta("layer", "")) == layer:
+                row = candidate
+                break
+    _expect(row != null, "缺少「%s」层行" % label)
+    if row == null:
+        return
+    var actual := _stat_values(row)
+    _expect(actual == expected, "「%s」应为 %s，实际 %s" % [label, expected, actual])
+
+
+## 来源行名称：直接取行内名称标签，避免整块面板 contains 掩盖行级错误。
+func _source_name_text(row: Node) -> String:
+    if row == null:
+        return ""
+    var label := row.find_child("DetailStatSourceName", true, false) as Label
+    return "" if label == null else str(label.text)
+
+
+## 断言指定层第 index 条来源的名称与数值，并返回该行。
+func _expect_source_row(
+    detail: Node,
+    layer: String,
+    index: int,
+    expected_name: String,
+    expected_values: Array,
+) -> Node:
+    var row := detail.find_child("DetailStatSourceRow_%s_%d" % [layer, index], true, false)
+    _expect(row != null, "缺少 %s 层第 %d 条来源行" % [layer, index])
+    if row == null:
+        return null
+    var actual_name := _source_name_text(row)
+    _expect(
+        actual_name == expected_name,
+        "%s 层第 %d 条来源名应为「%s」，实际「%s」" % [layer, index, expected_name, actual_name],
+    )
+    var actual_values := _stat_values(row)
+    _expect(
+        actual_values == expected_values,
+        "%s 层第 %d 条来源数值应为 %s，实际 %s" % [layer, index, expected_values, actual_values],
+    )
+    return row
+
+
+## 断言 node 在容器中位于 before 之后、after 之前；after 为空时只校验前边界。
+func _expect_between(
+    box: Node,
+    before: Node,
+    node: Node,
+    after: Node,
+    message: String,
+) -> void:
+    var children := box.get_children()
+    var before_index := children.find(before)
+    var node_index := children.find(node)
+    var after_index := -1 if after == null else children.find(after)
+    _expect(before_index >= 0 and node_index >= 0, "%s：缺少节点" % message)
+    if before_index < 0 or node_index < 0:
+        return
+    var passes := node_index > before_index and (
+        after == null or (after_index >= 0 and node_index < after_index)
+    )
+    _expect(passes, "%s：实际顺序 %s" % [message, children])
 
 
 func _check_room_null_hero() -> void:
@@ -488,27 +847,98 @@ func _check_game() -> void:
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y * 0.3))
         _expect(detail.is_visible_in_tree(), "悬停棋盘随从应显示详情面板")
         var text := _node_text(detail)
+        var stat_order := [
+            TranslationServer.translate("ui.game.detail.stat.base"),
+            TranslationServer.translate("ui.game.detail.stat.aura"),
+            TranslationServer.translate("ui.game.detail.stat.permanent"),
+            TranslationServer.translate("ui.game.detail.stat.turn"),
+            TranslationServer.translate("ui.game.detail.stat.total"),
+        ]
         for expected in [
-            TranslationServer.translate("enum.stat_layer.initial"),
-            "3 / 4",
-            TranslationServer.translate("enum.stat_layer.permanent"),
-            "+1 / +2",
-            TranslationServer.translate("enum.stat_layer.turn"),
-            "+0 / -2",
-            TranslationServer.translate("enum.stat_layer.aura"),
-            "+0 / +1",
-            TranslationServer.translate("enum.stat_layer.damage"),
-            "0 / -3",
-            TranslationServer.translate("ui.game.detail.current"),
-            "4 / 2",
+            stat_order[0],
+            stat_order[1],
+            stat_order[2],
+            stat_order[3],
+            stat_order[4],
+            CardDB.display_name("aristotle"),
+            "%s · %s" % [
+                CardDB.skill_name("activate-friendly-growth-twice"),
+                CardDB.display_name("kongzi"),
+            ],
+            TranslationServer.translate("enum.stat_source_kind.evolve"),
         ]:
             _expect(text.contains(expected), "详情面板应包含「%s」：%s" % [expected, text])
+        var previous := -1
+        for label in stat_order:
+            var position := text.find(label)
+            _expect(position > previous, "数值构成顺序应以「%s」推进：%s" % [label, text])
+            previous = position
+        _expect_stat_values(detail, "DetailStatBase", "", ["4", "7"], stat_order[0])
+        _expect_stat_values(detail, "", "aura", ["+1", "+1"], stat_order[1])
+        _expect_stat_values(detail, "", "permanent", ["+1", "+3"], stat_order[2])
+        _expect_stat_values(detail, "", "turn", ["+0", "+0"], stat_order[3])
+        _expect_stat_values(detail, "DetailStatTotal", "", ["6", "11"], stat_order[4])
+        var total_panel = detail.find_child("DetailStatTotalPanel", true, false)
+        _expect(total_panel != null, "合计行应带 ink-700 底色容器")
+        if total_panel != null:
+            var total_style := total_panel.get_theme_stylebox("panel") as StyleBoxFlat
+            _expect(
+                total_style != null and total_style.bg_color == UITheme.color("ink-700"),
+                "合计行底色应为 ink-700",
+            )
+        var box := detail.get_child(0)
+        _expect(box is VBoxContainer, "详情面板内容应为 VBoxContainer")
+        if box is VBoxContainer:
+            var aura_layer := detail.find_child("DetailStatLayer_aura", true, false)
+            var permanent_layer := detail.find_child("DetailStatLayer_permanent", true, false)
+            var turn_layer := detail.find_child("DetailStatLayer_turn", true, false)
+            var aura_row := _expect_source_row(
+                detail, "aura", 0, CardDB.display_name("aristotle"), ["+0", "+1"]
+            )
+            var permanent_name := "%s · %s" % [
+                CardDB.skill_name("activate-friendly-growth-twice"),
+                CardDB.display_name("kongzi"),
+            ]
+            var permanent_first := _expect_source_row(
+                detail, "permanent", 0, permanent_name, ["+1", "+1"]
+            )
+            var permanent_second := _expect_source_row(
+                detail, "permanent", 1,
+                TranslationServer.translate("enum.stat_source_kind.evolve"),
+                ["+0", "+2"],
+            )
+            _expect_between(
+                box, aura_layer, aura_row, permanent_layer, "光环来源应紧跟光环层小计"
+            )
+            _expect_between(
+                box, permanent_layer, permanent_first, turn_layer, "永久来源应紧跟永久层小计"
+            )
+            _expect_between(
+                box, permanent_first, permanent_second, turn_layer, "永久来源应保持顺序"
+            )
+            _expect_between(
+                box, turn_layer, total_panel, null, "合计应在层小计与来源之后"
+            )
+        for absent in [
+            TranslationServer.translate("enum.stat_layer.damage"),
+            TranslationServer.translate("ui.game.detail.current"),
+        ]:
+            _expect(not text.contains(absent), "详情面板不应包含「%s」：%s" % [absent, text])
         _expect(not text.contains("-0"), "非负构成项应带 +：%s" % text)
+        _expect(
+            is_equal_approx(
+                detail.custom_minimum_size.x,
+                280.0,
+            ),
+            "随从详情宽度应为 280，实际 %.1f" % detail.custom_minimum_size.x,
+        )
         _expect(card.find_child("Actions", true, false) == null, "棋盘随从卡不应再显示出售/移位按钮")
         _expect(detail.mouse_filter == Control.MOUSE_FILTER_IGNORE, "详情面板不应拦截鼠标")
         _expect(
             not detail.get_global_rect().intersects(card.get_global_rect()),
-            "棋盘详情面板应挂在卡片上下方且不覆盖卡片"
+            "棋盘详情面板应挂在卡片上下方且不覆盖卡片：详情 %s，卡片 %s" % [
+                detail.get_global_rect(), card.get_global_rect(),
+            ]
         )
         await _hover(instance, card, Vector2(card.size.x / 2, card.size.y + 24))
         _expect(not detail.is_visible_in_tree(), "移出棋盘随从矩形应隐藏详情面板")

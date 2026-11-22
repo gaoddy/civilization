@@ -11,7 +11,21 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::combat;
 use crate::effects::{Compare, Effect, EffectCtx, Op, Params, Pick, Selector, Side, Trigger};
 use crate::engine::Engine;
-use crate::state::{AuraEffect, GameState, InstanceId, MinionInstance, PlayerState, Seat};
+use crate::state::{
+    AuraEffect, AuraSource, GameState, InstanceId, MinionInstance, PlayerState, Seat,
+};
+
+/// 某名玩家光环重算的成对结果：聚合派生值与逐来源增量。
+///
+/// 两个字段的目标集合一致；来源按来源卡 id 合并并升序排列，
+/// 保证相同输入得到稳定顺序。
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct AuraBreakdown {
+    /// 每个目标实例的光环聚合派生值。
+    pub totals: BTreeMap<InstanceId, AuraEffect>,
+    /// 每个目标实例按来源卡合并后的逐来源增量。
+    pub sources: BTreeMap<InstanceId, Vec<AuraSource>>,
+}
 
 impl Engine {
     /// 全量重算所有未出局玩家的光环派生值。
@@ -19,7 +33,8 @@ impl Engine {
     /// 来源为各玩家棋盘上的每个随从，以及该玩家英雄卡；效果只作用于来源
     /// **同一玩家**的棋盘。缺失卡牌、空棋盘与空条件都退化为无光环。
     pub fn recompute_auras(&self, state: &mut GameState) {
-        let mut computed: BTreeMap<InstanceId, AuraEffect> = BTreeMap::new();
+        let mut totals: BTreeMap<InstanceId, AuraEffect> = BTreeMap::new();
+        let mut sources: BTreeMap<InstanceId, Vec<AuraSource>> = BTreeMap::new();
 
         let mut seats: Vec<Seat> = state
             .players
@@ -33,10 +48,13 @@ impl Engine {
             let Some(player) = state.players.iter().find(|player| player.seat == seat) else {
                 continue;
             };
-            computed.extend(self.player_auras(state, player));
+            let breakdown = self.player_auras(state, player);
+            totals.extend(breakdown.totals);
+            sources.extend(breakdown.sources);
         }
 
-        state.auras = computed;
+        state.auras = totals;
+        state.aura_sources = sources;
     }
 
     /// 只重算一个座位的棋盘光环。
@@ -56,12 +74,12 @@ impl Engine {
             .map(|minion| minion.instance_id)
             .collect();
         let computed = if player.eliminated {
-            BTreeMap::new()
+            AuraBreakdown::default()
         } else {
             self.player_auras(state, player)
         };
         debug_assert!(
-            computed.keys().all(|id| own_ids.contains(id)),
+            computed.totals.keys().all(|id| own_ids.contains(id)),
             "光环目标必须属于来源玩家自己的棋盘"
         );
         let live_ids: BTreeSet<InstanceId> = state
@@ -70,22 +88,26 @@ impl Engine {
             .filter(|player| !player.eliminated)
             .flat_map(|player| player.board.iter().map(|minion| minion.instance_id))
             .collect();
+        // 聚合条目与逐来源条目必须同口径清理，否则两者会指向不同的目标集合。
         state
             .auras
             .retain(|id, _| !own_ids.contains(id) && live_ids.contains(id));
-        state.auras.extend(computed);
+        state
+            .aura_sources
+            .retain(|id, _| !own_ids.contains(id) && live_ids.contains(id));
+        state.auras.extend(computed.totals);
+        state.aura_sources.extend(computed.sources);
     }
 
-    /// 某名玩家棋盘与其英雄卡产生的全部光环派生值。
+    /// 某名玩家棋盘与其英雄卡产生的全部光环派生值，聚合与逐来源成对返回。
     ///
-    /// 不读取也不写入 `state.auras`，因此对已出局玩家的最终阵容同样可用
-    /// （幽灵战按出局者自己的光环来源折叠一次）。实例编号全局唯一，直接合并。
-    pub fn player_auras(
-        &self,
-        state: &GameState,
-        player: &PlayerState,
-    ) -> BTreeMap<InstanceId, AuraEffect> {
-        let mut computed = BTreeMap::new();
+    /// 不读取也不写入 `state.auras` / `state.aura_sources`，因此对已出局玩家的
+    /// 最终阵容同样可用（幽灵战按出局者自己的光环来源折叠一次）。实例编号全局
+    /// 唯一，直接合并。逐来源按来源卡 id 合并：两张同名光环卡、同一张卡的多段
+    /// 光环都合并为一行；英雄光环使用英雄卡 id，缺失时为空串。
+    pub fn player_auras(&self, state: &GameState, player: &PlayerState) -> AuraBreakdown {
+        let mut totals = BTreeMap::new();
+        let mut sources: BTreeMap<InstanceId, BTreeMap<String, (i32, i32)>> = BTreeMap::new();
         for (source, effects) in self.aura_sources(player) {
             // 金色来源的光环数值同样 ×2；英雄卡没有实例，不翻倍。
             let golden = source.is_some_and(|id| {
@@ -94,18 +116,42 @@ impl Engine {
                     .iter()
                     .any(|minion| minion.instance_id == id && minion.golden)
             });
+            let card_id = aura_card_id(player, source);
             for effect in effects {
                 if !self.aura_active(state, player, effect, source) {
                     continue;
                 }
                 // 群聚的计数与目标无关，每段效果只算一次。
                 let scale = scaling_count(self, state, player, effect, source);
+                let delta = stat_delta(effect, scale, golden);
                 for target in aura_targets(self, state, effect, player, source) {
-                    accumulate(effect, computed.entry(target).or_default(), scale, golden);
+                    accumulate(effect, totals.entry(target).or_default(), scale, golden);
+                    let row = sources
+                        .entry(target)
+                        .or_default()
+                        .entry(card_id.clone())
+                        .or_default();
+                    row.0 = row.0.saturating_add(delta.0);
+                    row.1 = row.1.saturating_add(delta.1);
                 }
             }
         }
-        computed
+        // `BTreeMap` 的第二个键已按卡 id 升序，展开后顺序稳定。
+        let sources = sources
+            .into_iter()
+            .map(|(id, rows)| {
+                let rows = rows
+                    .into_iter()
+                    .map(|(card_id, (attack, health))| AuraSource {
+                        card_id,
+                        attack,
+                        health,
+                    })
+                    .collect();
+                (id, rows)
+            })
+            .collect();
+        AuraBreakdown { totals, sources }
     }
 
     /// 收集某玩家所有光环来源：棋盘点顺序的随从，然后是英雄卡。
@@ -364,6 +410,44 @@ fn aura_ctx(seat: Seat, source: Option<InstanceId>) -> EffectCtx {
         golden: false,
         level_override: None,
     }
+}
+
+/// 光环来源卡 id：棋盘随从取自身卡 id，英雄取英雄卡 id；缺失时为空串。
+fn aura_card_id(player: &PlayerState, source: Option<InstanceId>) -> String {
+    match source {
+        Some(id) => player
+            .board
+            .iter()
+            .find(|minion| minion.instance_id == id)
+            .map(|minion| minion.card_id.clone())
+            .unwrap_or_default(),
+        None => player.hero.clone().unwrap_or_default(),
+    }
+}
+
+/// 一段光环效果对攻防的增量；只有 `ModifyStats` 产生数值，关键词贡献为 0。
+///
+/// 与 [`accumulate`] 共用同一套计算（含金色 ×2），保证逐来源之和恒等于聚合层。
+fn stat_delta(effect: &Effect, scale: i32, golden: bool) -> (i32, i32) {
+    let Op::ModifyStats = effect.op else {
+        return (0, 0);
+    };
+    let Params::ModifyStats(params) = &effect.params else {
+        return (0, 0);
+    };
+    let multiplier = if golden { 2 } else { 1 };
+    (
+        params
+            .attack
+            .unwrap_or(0)
+            .saturating_add(params.per_attack.unwrap_or(0).saturating_mul(scale))
+            .saturating_mul(multiplier),
+        params
+            .health
+            .unwrap_or(0)
+            .saturating_add(params.per_health.unwrap_or(0).saturating_mul(scale))
+            .saturating_mul(multiplier),
+    )
 }
 
 /// 把一段光环效果累加到目标派生值上；关键词幂等，数值相加。

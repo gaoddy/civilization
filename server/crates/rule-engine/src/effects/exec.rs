@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::combat::{self, BattleField, CombatAction, CombatSetup, DamageSource};
 use crate::data::{
-    CardFilterFacts, CardType, Catalog, Playstyle, card_in_pool, play_bit, play_categories,
+    CardFilterFacts, CardType, Catalog, Playstyle, SkillId, card_in_pool, play_bit, play_categories,
 };
 use crate::effects::{
     CopyState, Duration, Effect, Filter, FilterKey, Op, Params, Pick, Selector, Side, TargetRef,
@@ -28,7 +28,7 @@ use crate::recruit::{new_minion, new_pool_minion};
 use crate::rng::{RngStreams, Stream};
 use crate::state::{
     GameState, HandCard, InstanceId, MinionInstance, Modifier, Phase, PlayerState, Seat,
-    SevenVoyagesState, base_stats,
+    SevenVoyagesState, StatSourceLayer, StatSourceOrigin, base_stats,
 };
 use crate::triple::REWARD_CARD_ID;
 
@@ -54,6 +54,32 @@ pub struct EffectCtx {
     pub level_override: Option<u8>,
 }
 
+/// 一条属性写入的来源：打出该效果的卡牌与技能，两者都可能缺失。
+///
+/// 来源卡由执行入口确定（效果牌、棋盘随从或英雄卡）；技能由收集阶段保留。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct EffectOrigin {
+    pub(crate) card_id: Option<String>,
+    pub(crate) skill_id: Option<SkillId>,
+}
+
+impl EffectOrigin {
+    /// 转换为来源账本中的卡牌来源。
+    fn stat_origin(&self) -> StatSourceOrigin {
+        StatSourceOrigin::Card {
+            card_id: self.card_id.clone(),
+            skill_id: self.skill_id,
+        }
+    }
+}
+
+/// 一条带所属技能的效果；收集时保留技能身份，执行时写入来源账本。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SourcedEffect {
+    pub(crate) skill: Option<SkillId>,
+    pub(crate) effect: Effect,
+}
+
 impl Engine {
     /// 执行某个触发时机下、由上下文确定的卡牌效果。
     ///
@@ -67,8 +93,8 @@ impl Engine {
             | Trigger::OnActivate
             | Trigger::OnTurnStart
             | Trigger::OnFirstRefresh => {
-                let effects = self.owner_effects(state, trigger, &ctx);
-                self.run_effects(state, &effects, &ctx)
+                let (origin_card, effects) = self.owner_effects(state, trigger, &ctx);
+                self.run_effects(state, &effects, origin_card.as_deref(), &ctx)
             }
             Trigger::OnUse => self.fire_on_use(state, &ctx),
             _ => Vec::new(),
@@ -99,8 +125,9 @@ impl Engine {
         trigger: Trigger,
         ctx: EffectCtx,
     ) -> Vec<GameEvent> {
-        let effects = self.skill_effects_of(skill_id, trigger);
-        self.run_effects(state, &effects, &ctx)
+        let effects = self.skill_effects_of_sourced(skill_id, trigger);
+        let origin_card = self.origin_card_for(state, &ctx);
+        self.run_effects(state, &effects, origin_card.as_deref(), &ctx)
     }
 
     /// 执行一段效果；`chosen` 可用于覆盖 `target` 选择器的显式目标。
@@ -109,6 +136,18 @@ impl Engine {
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
+        chosen: Option<InstanceId>,
+    ) -> Vec<GameEvent> {
+        self.apply_op_from(state, effect, ctx, None, chosen)
+    }
+
+    /// 带来源执行一段效果；`origin` 为 `None` 时不写入来源账本。
+    fn apply_op_from(
+        &self,
+        state: &mut GameState,
+        effect: &Effect,
+        ctx: &EffectCtx,
+        origin: Option<&EffectOrigin>,
         chosen: Option<InstanceId>,
     ) -> Vec<GameEvent> {
         let mut effective = *ctx;
@@ -150,12 +189,12 @@ impl Engine {
 
         match effect.op {
             Op::Growth => {
-                self.apply_growth(state, effect, &targets);
+                self.apply_growth(state, effect, &targets, origin);
                 self.fire_ally_growth_recruit(state, ctx.seat, &targets);
                 Vec::new()
             }
             Op::ModifyStats => {
-                self.apply_modify_stats(state, effect, &targets);
+                self.apply_modify_stats(state, effect, &targets, origin);
                 Vec::new()
             }
             Op::GrantKeyword => {
@@ -167,6 +206,7 @@ impl Engine {
                     if let Some((_, minion)) = locate_mut(state, id) {
                         minion.stats.attack.remove_growth();
                         minion.stats.health.remove_growth();
+                        minion.remove_growth_sources();
                     }
                 }
                 Vec::new()
@@ -190,7 +230,7 @@ impl Engine {
                 }
                 Vec::new()
             }
-            Op::DealDamage => self.apply_deal_damage(state, effect, &targets),
+            Op::DealDamage => self.apply_deal_damage(state, effect, &targets, origin),
             Op::RefreshShop => self.apply_refresh_shop(state, effect, ctx),
             Op::AddShopSlot => self.apply_add_shop_slot(state, effect, ctx),
             Op::GainMinion => self.apply_gain_minion(state, effect, ctx),
@@ -204,16 +244,16 @@ impl Engine {
             // 分解只发生在战斗内；招募阶段没有事件目标，落空。
             Op::Decompose => Vec::new(),
             Op::Mimic => {
-                self.apply_mimic(state, effect, &targets, ctx);
+                self.apply_mimic(state, effect, &targets, ctx, origin);
                 Vec::new()
             }
             Op::Devour => {
-                self.apply_devour(state, effect, &targets, ctx);
+                self.apply_devour(state, effect, &targets, ctx, origin);
                 Vec::new()
             }
             // 新玩法的原语在招募阶段尚无数据使用；结算由各玩法机制任务接入。
             Op::Detonate | Op::Convert | Op::Revive | Op::Recall | Op::Salvage => Vec::new(),
-            Op::Latent => self.apply_latent(state, effect, ctx),
+            Op::Latent => self.apply_latent(state, effect, ctx, origin),
             Op::SevenVoyages => self.apply_seven_voyages(state, effect, ctx),
         }
     }
@@ -284,83 +324,154 @@ impl Engine {
         }
     }
 
-    /// 本次触发所归属的卡牌效果：棋盘实例走随从池，无实例的主动/回合触发走英雄池。
-    fn owner_effects(&self, state: &GameState, trigger: Trigger, ctx: &EffectCtx) -> Vec<Effect> {
+    /// 本次触发所归属的来源卡与效果：棋盘实例走随从池，无实例的主动/回合触发走英雄池。
+    ///
+    /// 返回的卡牌 id 是该段效果所有写入的归因来源；效果本身保留技能身份。
+    fn owner_effects(
+        &self,
+        state: &GameState,
+        trigger: Trigger,
+        ctx: &EffectCtx,
+    ) -> (Option<String>, Vec<SourcedEffect>) {
         match trigger {
-            Trigger::OnPlay | Trigger::OnPlayEffect => ctx
-                .source
-                .and_then(|id| board_card_id(state, ctx.seat, id))
-                .map(|card_id| self.effects_of(&card_id, trigger))
-                .unwrap_or_default(),
+            Trigger::OnPlay | Trigger::OnPlayEffect => {
+                match ctx.source.and_then(|id| board_card_id(state, ctx.seat, id)) {
+                    Some(card_id) => (
+                        Some(card_id.clone()),
+                        self.effects_of_sourced(&card_id, trigger),
+                    ),
+                    None => (None, Vec::new()),
+                }
+            }
             Trigger::OnActivate | Trigger::OnTurnStart | Trigger::OnFirstRefresh => {
                 match ctx.source {
-                    Some(id) => board_card_id(state, ctx.seat, id)
-                        .map(|card_id| self.effects_of(&card_id, trigger))
-                        .unwrap_or_default(),
-                    None => state
+                    Some(id) => match board_card_id(state, ctx.seat, id) {
+                        Some(card_id) => (
+                            Some(card_id.clone()),
+                            self.effects_of_sourced(&card_id, trigger),
+                        ),
+                        None => (None, Vec::new()),
+                    },
+                    None => match state
                         .players
                         .get(usize::from(ctx.seat))
                         .and_then(|player| player.hero.as_deref())
-                        .map(|hero_id| self.hero_effects_of(hero_id, trigger))
-                        .unwrap_or_default(),
+                    {
+                        Some(hero_id) => (
+                            Some(hero_id.to_string()),
+                            self.hero_effects_of_sourced(hero_id, trigger),
+                        ),
+                        None => (None, Vec::new()),
+                    },
                 }
             }
-            _ => Vec::new(),
+            _ => (None, Vec::new()),
         }
     }
 
-    /// 收集一张卡牌在指定触发时机下的效果，按技能顺序与文本顺序执行。
-    /// 收集一张卡在指定触发时机下的全部效果。
+    /// 技能或英雄主动效果执行时的来源卡：棋盘随从优先，否则取该座位英雄卡。
+    ///
+    /// 仅用于 `fire_skill` 这类技能身份先于卡牌确定的入口；招募阶段主动技能
+    /// 的来源实例为 `None`，此时归因到英雄卡。
+    fn origin_card_for(&self, state: &GameState, ctx: &EffectCtx) -> Option<String> {
+        match ctx.source {
+            Some(id) => board_card_id(state, ctx.seat, id),
+            None => state
+                .players
+                .get(usize::from(ctx.seat))
+                .and_then(|player| player.hero.clone()),
+        }
+    }
+
+    /// 收集一张卡在指定触发时机下的全部效果，保留所属技能。
     ///
     /// 与执行路径的过滤口径一致：只取该时机、且招募阶段的 `OnPlay` 不含敌方选择器
     /// （这类战吼延迟到战斗开始，§2.7.4）。
-    pub(crate) fn effects_of(&self, card_id: &str, trigger: Trigger) -> Vec<Effect> {
+    pub(crate) fn effects_of_sourced(&self, card_id: &str, trigger: Trigger) -> Vec<SourcedEffect> {
         let Some(card) = self.catalog.cards.get(card_id) else {
             return Vec::new();
         };
-        self.skill_effects(&card.skills, trigger)
+        self.skill_effects_sourced(&card.skills, trigger)
     }
 
     /// 收集一张英雄卡在指定触发时机下的效果；英雄查询只走英雄池。
-    pub(crate) fn hero_effects_of(&self, hero_id: &str, trigger: Trigger) -> Vec<Effect> {
+    pub(crate) fn hero_effects_of_sourced(
+        &self,
+        hero_id: &str,
+        trigger: Trigger,
+    ) -> Vec<SourcedEffect> {
         let Some(hero) = self.catalog.heroes.get(hero_id) else {
             return Vec::new();
         };
-        self.skill_effects(&hero.skills, trigger)
+        self.skill_effects_sourced(&hero.skills, trigger)
     }
 
-    /// 收集单个技能在指定触发时机下的效果。
+    /// 收集单个技能在指定触发时机下的效果，保留技能身份。
     ///
     /// 与 `effects_of` 的过滤口径一致：只取该时机、且招募阶段的 `OnPlay` 不含敌方选择器。
-    pub(crate) fn skill_effects_of(&self, skill_id: &str, trigger: Trigger) -> Vec<Effect> {
-        let Some(skill) = self.catalog.skill_by_name(skill_id) else {
+    pub(crate) fn skill_effects_of_sourced(
+        &self,
+        skill_id: &str,
+        trigger: Trigger,
+    ) -> Vec<SourcedEffect> {
+        let Some(id) = self.catalog.skill_id(skill_id) else {
             return Vec::new();
         };
-        skill
+        self.catalog
+            .skill(id)
             .effects
             .iter()
             .filter(|effect| effect.trigger == trigger)
             .filter(|effect| !(trigger == Trigger::OnPlay && is_enemy_selector(&effect.selector)))
-            .cloned()
+            .map(|effect| SourcedEffect {
+                skill: Some(id),
+                effect: effect.clone(),
+            })
             .collect()
     }
 
-    fn skill_effects(&self, skills: &[crate::data::SkillId], trigger: Trigger) -> Vec<Effect> {
+    /// 收集一组技能在指定触发时机下的效果，逐条保留所属技能。
+    fn skill_effects_sourced(&self, skills: &[SkillId], trigger: Trigger) -> Vec<SourcedEffect> {
         let mut effects = Vec::new();
         for skill_id in skills {
-            effects.extend(
-                self.catalog
-                    .skill(*skill_id)
-                    .effects
-                    .iter()
-                    .filter(|effect| effect.trigger == trigger)
-                    .filter(|effect| {
-                        !(trigger == Trigger::OnPlay && is_enemy_selector(&effect.selector))
-                    })
-                    .cloned(),
-            );
+            for effect in self.catalog.skill(*skill_id).effects.iter() {
+                if effect.trigger != trigger {
+                    continue;
+                }
+                if trigger == Trigger::OnPlay && is_enemy_selector(&effect.selector) {
+                    continue;
+                }
+                effects.push(SourcedEffect {
+                    skill: Some(*skill_id),
+                    effect: effect.clone(),
+                });
+            }
         }
         effects
+    }
+
+    /// 收集一张卡牌在指定触发时机下的效果，按技能顺序与文本顺序执行。
+    pub(crate) fn effects_of(&self, card_id: &str, trigger: Trigger) -> Vec<Effect> {
+        self.effects_of_sourced(card_id, trigger)
+            .into_iter()
+            .map(|sourced| sourced.effect)
+            .collect()
+    }
+
+    /// 收集一张英雄卡在指定触发时机下的效果；英雄查询只走英雄池。
+    pub(crate) fn hero_effects_of(&self, hero_id: &str, trigger: Trigger) -> Vec<Effect> {
+        self.hero_effects_of_sourced(hero_id, trigger)
+            .into_iter()
+            .map(|sourced| sourced.effect)
+            .collect()
+    }
+
+    /// 收集单个技能在指定触发时机下的效果。
+    pub(crate) fn skill_effects_of(&self, skill_id: &str, trigger: Trigger) -> Vec<Effect> {
+        self.skill_effects_of_sourced(skill_id, trigger)
+            .into_iter()
+            .map(|sourced| sourced.effect)
+            .collect()
     }
 
     pub(crate) fn run_card_effects(
@@ -370,21 +481,28 @@ impl Engine {
         trigger: Trigger,
         ctx: &EffectCtx,
     ) -> Vec<GameEvent> {
-        let effects = self.effects_of(card_id, trigger);
-        self.run_effects(state, &effects, ctx)
+        let effects = self.effects_of_sourced(card_id, trigger);
+        self.run_effects(state, &effects, Some(card_id), ctx)
     }
 
     /// 依次执行一段已收集的效果；金色由 [`Effect::doubled_outputs`] 在
-    /// [`Engine::apply_op`] 内按单次结算翻倍，这里不重复执行。
+    /// [`Engine::apply_op_from`] 内按单次结算翻倍，这里不重复执行。
+    ///
+    /// `origin_card` 是打出该段效果的卡牌；每条效果再叠加自身的技能身份。
     fn run_effects(
         &self,
         state: &mut GameState,
-        effects: &[Effect],
+        effects: &[SourcedEffect],
+        origin_card: Option<&str>,
         ctx: &EffectCtx,
     ) -> Vec<GameEvent> {
         let mut events = Vec::new();
-        for effect in effects {
-            events.extend(self.apply_op(state, effect, ctx, None));
+        for sourced in effects {
+            let origin = EffectOrigin {
+                card_id: origin_card.map(str::to_string),
+                skill_id: sourced.skill,
+            };
+            events.extend(self.apply_op_from(state, &sourced.effect, ctx, Some(&origin), None));
         }
         events
     }
@@ -808,7 +926,13 @@ impl Engine {
         }
     }
 
-    fn apply_growth(&self, state: &mut GameState, effect: &Effect, targets: &[InstanceId]) {
+    fn apply_growth(
+        &self,
+        state: &mut GameState,
+        effect: &Effect,
+        targets: &[InstanceId],
+        origin: Option<&EffectOrigin>,
+    ) {
         let Params::Growth(params) = &effect.params else {
             return;
         };
@@ -825,16 +949,32 @@ impl Engine {
                 }
                 _ => base_times,
             };
-            if health_only {
+            let (attack, health) = if health_only {
                 minion.stats.health.add_growth(times);
+                (0, times)
             } else {
                 minion.stats.attack.add_growth(times);
                 minion.stats.health.add_growth(times);
+                (times, times)
+            };
+            if let Some(origin) = origin {
+                minion.record_stat_source(
+                    StatSourceLayer::Growth,
+                    origin.stat_origin(),
+                    attack,
+                    health,
+                );
             }
         }
     }
 
-    fn apply_modify_stats(&self, state: &mut GameState, effect: &Effect, targets: &[InstanceId]) {
+    fn apply_modify_stats(
+        &self,
+        state: &mut GameState,
+        effect: &Effect,
+        targets: &[InstanceId],
+        origin: Option<&EffectOrigin>,
+    ) {
         let Params::ModifyStats(params) = &effect.params else {
             return;
         };
@@ -843,13 +983,18 @@ impl Engine {
         let turn_scoped = params.duration == Some(Duration::Combat);
         for id in targets {
             if let Some((_, minion)) = locate_mut(state, *id) {
-                if turn_scoped {
+                let layer = if turn_scoped {
                     minion.stats.attack.add_turn(attack);
                     minion.stats.health.add_turn(health);
+                    StatSourceLayer::Turn
                 } else {
                     // `Instant` 在数据中未使用；保持现有「永不清除」语义。
                     minion.stats.attack.add_permanent(attack);
                     minion.stats.health.add_permanent(health);
+                    StatSourceLayer::Permanent
+                };
+                if let Some(origin) = origin {
+                    minion.record_stat_source(layer, origin.stat_origin(), attack, health);
                 }
             }
         }
@@ -923,6 +1068,7 @@ impl Engine {
         effect: &Effect,
         targets: &[InstanceId],
         ctx: &EffectCtx,
+        origin: Option<&EffectOrigin>,
     ) {
         let Some(source_id) = ctx.source else {
             return;
@@ -959,15 +1105,20 @@ impl Engine {
             // 触发时增量为 0，因此以最后一次结果为准，不会叠加。
             let attack = target_attack.saturating_sub(source.attack());
             let health = target_health.saturating_sub(source.health());
-            match duration {
+            let layer = match duration {
                 Duration::Combat => {
                     source.stats.attack.add_turn(attack);
                     source.stats.health.add_turn(health);
+                    StatSourceLayer::Turn
                 }
                 Duration::Permanent | Duration::Instant | Duration::Aura => {
                     source.stats.attack.add_permanent(attack);
                     source.stats.health.add_permanent(health);
+                    StatSourceLayer::Permanent
                 }
+            };
+            if let Some(origin) = origin {
+                source.record_stat_source(layer, origin.stat_origin(), attack, health);
             }
             for keyword in keywords {
                 record_grant(source, &keyword, duration, false);
@@ -987,6 +1138,7 @@ impl Engine {
         effect: &Effect,
         targets: &[InstanceId],
         ctx: &EffectCtx,
+        origin: Option<&EffectOrigin>,
     ) {
         let Some(source_id) = ctx.source else {
             return;
@@ -1023,6 +1175,14 @@ impl Engine {
             };
             source.stats.attack.add_permanent(base_attack);
             source.stats.health.add_permanent(base_health);
+            if let Some(origin) = origin {
+                source.record_stat_source(
+                    StatSourceLayer::Permanent,
+                    origin.stat_origin(),
+                    base_attack,
+                    base_health,
+                );
+            }
         }
     }
 
@@ -1052,6 +1212,7 @@ impl Engine {
         state: &mut GameState,
         effect: &Effect,
         ctx: &EffectCtx,
+        origin: Option<&EffectOrigin>,
     ) -> Vec<GameEvent> {
         let Some(source_id) = ctx.source else {
             return Vec::new();
@@ -1072,10 +1233,11 @@ impl Engine {
             return Vec::new();
         };
         let amount = params.amount.max(0);
-        source
-            .stats
-            .attack
-            .add_permanent(layers.saturating_mul(amount));
+        let bonus = layers.saturating_mul(amount);
+        source.stats.attack.add_permanent(bonus);
+        if let Some(origin) = origin {
+            source.record_stat_source(StatSourceLayer::Permanent, origin.stat_origin(), bonus, 0);
+        }
 
         // `count = 0` 时没有爆发可结算：不清层、不置标记，避免白白消耗
         // 「每局一次」的爆发机会。
@@ -1102,7 +1264,7 @@ impl Engine {
                 if combat::effective_health(&self.catalog, minion) <= 0 {
                     continue;
                 }
-                let dealt = self.deal_recruit_damage(minion, count);
+                let dealt = self.deal_recruit_damage(minion, count, origin);
                 if dealt > 0 {
                     events.push(GameEvent::DamageTaken {
                         seat: target.seat,
@@ -1152,7 +1314,12 @@ impl Engine {
     ///
     /// 返回实际造成的伤害；圣盾抵消或减伤归零时为 0。生命值 ≤ 0 的随从由
     /// [`Engine::resolve_recruit_deaths`] 统一移除，这里不重复判定。
-    fn deal_recruit_damage(&self, minion: &mut MinionInstance, amount: i32) -> i32 {
+    fn deal_recruit_damage(
+        &self,
+        minion: &mut MinionInstance,
+        amount: i32,
+        origin: Option<&EffectOrigin>,
+    ) -> i32 {
         let amount = amount.max(0);
         if amount == 0 {
             return 0;
@@ -1170,6 +1337,9 @@ impl Engine {
             return 0;
         }
         minion.stats.health.add_permanent(-dealt);
+        if let Some(origin) = origin {
+            minion.record_stat_source(StatSourceLayer::Permanent, origin.stat_origin(), 0, -dealt);
+        }
         dealt
     }
 
@@ -1178,6 +1348,7 @@ impl Engine {
         state: &mut GameState,
         effect: &Effect,
         targets: &[InstanceId],
+        origin: Option<&EffectOrigin>,
     ) -> Vec<GameEvent> {
         let Params::DealDamage(params) = &effect.params else {
             return Vec::new();
@@ -1198,6 +1369,10 @@ impl Engine {
                 -amount
             };
             minion.stats.health.add_turn(health);
+            if let Some(origin) = origin {
+                // 效果的负向生命修正落在本回合层；受击本身不产生来源。
+                minion.record_stat_source(StatSourceLayer::Turn, origin.stat_origin(), 0, health);
+            }
             // 事件记录实际损失的生命值；负向修改可能被 `canKill=false` 夹紧。
             events.push(GameEvent::DamageTaken {
                 seat,
@@ -1483,8 +1658,10 @@ impl Engine {
         };
         copy.stats.attack.clear_turn();
         copy.stats.health.clear_turn();
+        copy.clear_turn_sources();
         copy.stats.attack.set_aura(0);
         copy.stats.health.set_aura(0);
+        copy.replace_aura_sources(Vec::new());
         copy.attacks_left = 0;
         copy.cannot_attack = false;
         // 复制品未从公共池扣除份数，出售时不归还。
@@ -1495,20 +1672,19 @@ impl Engine {
     }
 
     /// 回合开始传染致死：结算亡语（不含播种技能本身）。
-    /// 金色由 `apply_op` 内部按数值产出 ×2 单次结算。
+    /// 金色由 `apply_op_from` 内部按数值产出 ×2 单次结算。
     pub(crate) fn fire_death_recruit(&self, state: &mut GameState, card_id: &str, ctx: &EffectCtx) {
-        let effects = self.recruit_effects_filtered(card_id, Trigger::OnDeath, Some(SOW_KEYWORD));
-        for effect in &effects {
-            let _ = self.apply_op(state, effect, ctx, None);
-        }
+        let effects =
+            self.recruit_effects_filtered_sourced(card_id, Trigger::OnDeath, Some(SOW_KEYWORD));
+        let _ = self.run_effects(state, &effects, Some(card_id), ctx);
     }
 
-    fn recruit_effects_filtered(
+    fn recruit_effects_filtered_sourced(
         &self,
         card_id: &str,
         trigger: Trigger,
         skip_keyword: Option<&str>,
-    ) -> Vec<Effect> {
+    ) -> Vec<SourcedEffect> {
         let Some(card) = self.catalog.cards.get(card_id) else {
             return Vec::new();
         };
@@ -1525,7 +1701,10 @@ impl Engine {
                     .effects
                     .iter()
                     .filter(|effect| effect.trigger == trigger)
-                    .cloned(),
+                    .map(|effect| SourcedEffect {
+                        skill: Some(*skill_id),
+                        effect: effect.clone(),
+                    }),
             );
         }
         effects
@@ -1560,7 +1739,7 @@ impl Engine {
                     golden: false,
                     level_override: None,
                 };
-                self.fire_combat_effects(field, rng, &effects, ctx);
+                self.fire_combat_effects(field, rng, &effects, ctx, Some(hero));
             }
         }
 
@@ -1602,7 +1781,7 @@ impl Engine {
             golden: minion.golden,
             level_override: None,
         };
-        self.fire_combat_effects(field, rng, &effects, ctx);
+        self.fire_combat_effects(field, rng, &effects, ctx, Some(&minion.card_id));
     }
 
     /// 延迟战吼：招募阶段因目标在敌方而未结算的 `OnPlay` 效果。
@@ -1624,10 +1803,10 @@ impl Engine {
         let Some((side, _)) = field.locate(id) else {
             return;
         };
-        let effects: Vec<Effect> = self
+        let effects: Vec<SourcedEffect> = self
             .combat_effects(&minion.card_id, Trigger::OnPlay)
             .into_iter()
-            .filter(|effect| is_enemy_selector(&effect.selector))
+            .filter(|sourced| is_enemy_selector(&sourced.effect.selector))
             .collect();
         if effects.is_empty() {
             return;
@@ -1643,7 +1822,7 @@ impl Engine {
             golden: minion.golden,
             level_override: None,
         };
-        self.fire_combat_effects(field, rng, &effects, ctx);
+        self.fire_combat_effects(field, rng, &effects, ctx, Some(&minion.card_id));
     }
 
     /// 死亡结算中的亡语；播种技能本身由死亡结算单独处理。
@@ -1655,7 +1834,7 @@ impl Engine {
         ctx: EffectCtx,
     ) {
         let effects = self.combat_effects_filtered(card_id, Trigger::OnDeath, Some(SOW_KEYWORD));
-        self.fire_combat_effects(field, rng, &effects, ctx);
+        self.fire_combat_effects(field, rng, &effects, ctx, Some(card_id));
     }
 
     /// 读取 `OnDeath | Revive` 的声明加成；没有该效果时返回 `None`。
@@ -1665,8 +1844,8 @@ impl Engine {
     pub(crate) fn death_revive(&self, card_id: &str) -> Option<(i32, i32)> {
         self.combat_effects(card_id, Trigger::OnDeath)
             .into_iter()
-            .find_map(|effect| match effect.op {
-                Op::Revive => match &effect.params {
+            .find_map(|sourced| match sourced.effect.op {
+                Op::Revive => match &sourced.effect.params {
                     Params::Revive(params) => Some((params.attack, params.health)),
                     _ => None,
                 },
@@ -1680,9 +1859,9 @@ impl Engine {
     pub(crate) fn death_recall(&self, card_id: &str) -> bool {
         self.combat_effects(card_id, Trigger::OnDeath)
             .into_iter()
-            .any(|effect| {
+            .any(|sourced| {
                 matches!(
-                    &effect.params,
+                    &sourced.effect.params,
                     Params::Recall(params) if params.to == Zone::Hand
                 )
             })
@@ -1735,18 +1914,21 @@ impl Engine {
                 golden: minion.golden,
                 level_override: None,
             };
-            self.fire_combat_effects(field, rng, &effects, ctx);
+            self.fire_combat_effects(field, rng, &effects, ctx, Some(&minion.card_id));
         }
     }
 
     /// 执行一组战斗内效果；每条效果后判定死亡。
     /// 金色由 [`Engine::apply_combat_effect`] 按数值产出 ×2 单次结算。
+    ///
+    /// `origin_card` 是效果来源卡；每条效果再叠加所属技能后写入战斗克隆账本。
     fn fire_combat_effects(
         &self,
         field: &mut BattleField,
         rng: &mut RngStreams,
-        effects: &[Effect],
+        effects: &[SourcedEffect],
         ctx: EffectCtx,
+        origin_card: Option<&str>,
     ) {
         if effects.is_empty() {
             return;
@@ -1754,8 +1936,12 @@ impl Engine {
         if !field.take_trigger() {
             return;
         }
-        for effect in effects {
-            self.apply_combat_effect(field, rng, effect, &ctx);
+        for sourced in effects {
+            let origin = origin_card.map(|card_id| StatSourceOrigin::Card {
+                card_id: Some(card_id.to_string()),
+                skill_id: sourced.skill,
+            });
+            self.apply_combat_effect(field, rng, &sourced.effect, &ctx, origin.as_ref());
             field.resolve_deaths(Some(self), &self.catalog, rng);
         }
     }
@@ -1766,6 +1952,7 @@ impl Engine {
         rng: &mut RngStreams,
         effect: &Effect,
         ctx: &EffectCtx,
+        origin: Option<&StatSourceOrigin>,
     ) {
         // 金色来源：数值产出 ×2，单次结算；条件与阈值保持不变。
         let doubled;
@@ -1805,7 +1992,7 @@ impl Engine {
                         }
                         _ => base_times,
                     };
-                    field.add_growth(id, times, health_only);
+                    field.add_growth(id, times, health_only, origin);
                     if let Some((side, _)) = field.locate(id) {
                         self.fire_combat_board_trigger(
                             field,
@@ -1828,7 +2015,7 @@ impl Engine {
                     duration: params.duration.unwrap_or(Duration::Instant),
                 };
                 for id in targets {
-                    field.modify_stats(id, modifier.clone());
+                    field.modify_stats(id, modifier.clone(), origin);
                 }
             }
             Op::GrantKeyword => {
@@ -1898,9 +2085,9 @@ impl Engine {
                 }
             }
             // 分解：取事件目标（被分解随从）的生命值，加到选择器选出的随从上。
-            Op::Decompose => self.apply_combat_decompose(field, effect, &targets, ctx),
-            Op::Mimic => self.apply_combat_mimic(field, effect, &targets, ctx),
-            Op::Devour => self.apply_combat_devour(field, effect, &targets, ctx),
+            Op::Decompose => self.apply_combat_decompose(field, effect, &targets, ctx, origin),
+            Op::Mimic => self.apply_combat_mimic(field, effect, &targets, ctx, origin),
+            Op::Devour => self.apply_combat_devour(field, effect, &targets, ctx, origin),
             Op::Detonate => self.apply_combat_detonate(field, effect, &targets, ctx),
             Op::Convert => self.apply_combat_convert(field, rng, effect, &targets, ctx),
             Op::Salvage => self.apply_combat_salvage(field, rng, effect, ctx),
@@ -1924,6 +2111,7 @@ impl Engine {
         effect: &Effect,
         targets: &[InstanceId],
         ctx: &EffectCtx,
+        origin: Option<&StatSourceOrigin>,
     ) {
         let Params::Decompose(params) = &effect.params else {
             return;
@@ -1952,11 +2140,20 @@ impl Engine {
             let Some(minion) = field.minion_mut(*id) else {
                 continue;
             };
-            match duration {
-                Duration::Permanent => minion.stats.health.add_permanent(amount),
-                Duration::Combat => minion.stats.health.add_turn(amount),
+            let layer = match duration {
+                Duration::Permanent => {
+                    minion.stats.health.add_permanent(amount);
+                    StatSourceLayer::Permanent
+                }
+                Duration::Combat => {
+                    minion.stats.health.add_turn(amount);
+                    StatSourceLayer::Turn
+                }
                 // 数据校验拒绝 `instant`；执行期保守跳过。
-                Duration::Instant | Duration::Aura => {}
+                Duration::Instant | Duration::Aura => continue,
+            };
+            if let Some(origin) = origin {
+                minion.record_stat_source(layer, origin.clone(), 0, amount);
             }
         }
     }
@@ -1973,6 +2170,7 @@ impl Engine {
         effect: &Effect,
         targets: &[InstanceId],
         ctx: &EffectCtx,
+        origin: Option<&StatSourceOrigin>,
     ) {
         let Some(source_id) = ctx.source else {
             return;
@@ -2014,7 +2212,7 @@ impl Engine {
                 duration,
             };
 
-            field.modify_stats(source_id, modifier);
+            field.modify_stats(source_id, modifier, origin);
             if let Some(source) = field.minion_mut(source_id) {
                 for keyword in keywords {
                     record_grant(source, &keyword, duration, false);
@@ -2041,6 +2239,7 @@ impl Engine {
         effect: &Effect,
         targets: &[InstanceId],
         ctx: &EffectCtx,
+        origin: Option<&StatSourceOrigin>,
     ) {
         let Some(source_id) = ctx.source else {
             return;
@@ -2087,6 +2286,14 @@ impl Engine {
             if let Some(source) = field.minion_mut(source_id) {
                 source.stats.attack.add_permanent(base_attack);
                 source.stats.health.add_permanent(base_health);
+                if let Some(origin) = origin {
+                    source.record_stat_source(
+                        StatSourceLayer::Permanent,
+                        origin.clone(),
+                        base_attack,
+                        base_health,
+                    );
+                }
             }
             let states = field.snapshots(&self.catalog, &[source_id, *target_id]);
             field.push_action(
@@ -2496,16 +2703,16 @@ impl Engine {
         }
     }
 
-    fn combat_effects(&self, card_id: &str, trigger: Trigger) -> Vec<Effect> {
+    fn combat_effects(&self, card_id: &str, trigger: Trigger) -> Vec<SourcedEffect> {
         self.combat_effects_filtered(card_id, trigger, None)
     }
 
     /// 英雄的战斗时机效果：技能只走英雄池，同名随从卡的战斗技能不参与。
-    fn combat_hero_effects(&self, hero_id: &str, trigger: Trigger) -> Vec<Effect> {
+    fn combat_hero_effects(&self, hero_id: &str, trigger: Trigger) -> Vec<SourcedEffect> {
         let Some(hero) = self.catalog.heroes.get(hero_id) else {
             return Vec::new();
         };
-        self.skill_effects(&hero.skills, trigger)
+        self.skill_effects_sourced(&hero.skills, trigger)
     }
 
     fn combat_effects_filtered(
@@ -2513,7 +2720,7 @@ impl Engine {
         card_id: &str,
         trigger: Trigger,
         skip_keyword: Option<&str>,
-    ) -> Vec<Effect> {
+    ) -> Vec<SourcedEffect> {
         let Some(card) = self.catalog.cards.get(card_id) else {
             return Vec::new();
         };
@@ -2530,7 +2737,10 @@ impl Engine {
                     .effects
                     .iter()
                     .filter(|effect| effect.trigger == trigger)
-                    .cloned(),
+                    .map(|effect| SourcedEffect {
+                        skill: Some(*skill_id),
+                        effect: effect.clone(),
+                    }),
             );
         }
         effects

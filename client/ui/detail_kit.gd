@@ -6,6 +6,8 @@ extends RefCounted
 
 ## 科学分类完整路径的连接符。
 const TAXON_PATH_SEPARATOR := " › "
+## 数值构成的数值列宽；表头、层小计与来源行共用，保证上下对齐。
+const STAT_VALUE_WIDTH := 40
 
 var text_width := 0
 
@@ -50,6 +52,110 @@ func row(prefix: String, value: String) -> HBoxContainer:
     text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     node.add_child(text)
     return node
+
+
+## 数值构成表头：左侧「来源」，右侧「攻击」「生命」，字号与颜色弱于正文。
+static func stat_header_row() -> HBoxContainer:
+    var node := _stat_row()
+    node.add_child(_stat_name(
+        TranslationServer.translate("ui.game.detail.stat.source"), "color-text-dim"
+    ))
+    node.add_child(_stat_value(
+        TranslationServer.translate("ui.game.detail.stat.attack"), "color-text-dim"
+    ))
+    node.add_child(_stat_value(
+        TranslationServer.translate("ui.game.detail.stat.health"), "color-text-dim"
+    ))
+    return node
+
+
+## 数值构成层小计：名称前带 4px 圆点；零层由调用方传 `snow-500` 同时压暗文字。
+static func layer_row(
+    label: String,
+    dot_color: String,
+    attack_text: String,
+    health_text: String,
+) -> HBoxContainer:
+    var node := _stat_row()
+    if dot_color != "":
+        node.add_child(_stat_dot(dot_color))
+    var color_name := "snow-500" if dot_color == "snow-500" else "color-text"
+    node.add_child(_stat_name(label, color_name))
+    node.add_child(_stat_value(attack_text, color_name))
+    node.add_child(_stat_value(health_text, color_name))
+    return node
+
+
+## 合计行：与层小计同列，外加 `ink-700` 底色强调；不新增边距以免改变面板宽度。
+static func total_row(label: String, attack_text: String, health_text: String) -> PanelContainer:
+    var panel := PanelContainer.new()
+    panel.name = "DetailStatTotalPanel"
+    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var style := StyleBoxFlat.new()
+    style.bg_color = UITheme.color("ink-700")
+    style.set_corner_radius_all(UITheme.radius("radius-sm"))
+    panel.add_theme_stylebox_override("panel", style)
+    var row := layer_row(label, "", attack_text, health_text)
+    row.name = "DetailStatTotal"
+    panel.add_child(row)
+    return panel
+
+
+## 来源行：名称缩进并可换行，不截断不省略；数值右对齐。
+static func source_row(name: String, attack_text: String, health_text: String) -> HBoxContainer:
+    var node := _stat_row()
+    var indent := Control.new()
+    indent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    indent.custom_minimum_size = Vector2(UITheme.space("space-sm"), 0)
+    node.add_child(indent)
+    var label := UIControls.label(name, UITheme.font_size("font-body-sm"))
+    label.name = "DetailStatSourceName"
+    label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+    label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    label.add_theme_color_override("font_color", UITheme.color("color-text-dim"))
+    node.add_child(label)
+    node.add_child(_stat_value(attack_text, "color-text"))
+    node.add_child(_stat_value(health_text, "color-text"))
+    return node
+
+
+static func _stat_row() -> HBoxContainer:
+    var node := HBoxContainer.new()
+    node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    node.add_theme_constant_override("separation", UITheme.space("space-md"))
+    return node
+
+
+static func _stat_name(text: String, color_name: String) -> Label:
+    var node := UIControls.label(text, UITheme.font_size("font-body-sm"), false)
+    node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    node.add_theme_color_override("font_color", UITheme.color(color_name))
+    return node
+
+
+static func _stat_value(text: String, color_name: String) -> Label:
+    var node := UIControls.label(text, UITheme.font_size("font-body-sm"), false)
+    node.custom_minimum_size = Vector2(STAT_VALUE_WIDTH, 0)
+    node.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    node.add_theme_color_override("font_color", UITheme.color(color_name))
+    return node
+
+
+static func _stat_dot(color_name: String) -> Control:
+    var dot := Panel.new()
+    dot.name = "StatDot"
+    dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    dot.custom_minimum_size = Vector2(UITheme.space("space-xs"), UITheme.space("space-xs"))
+    dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    var style := StyleBoxFlat.new()
+    style.bg_color = UITheme.color(color_name)
+    style.set_corner_radius_all(int(UITheme.space("space-xs") / 2))
+    dot.add_theme_stylebox_override("panel", style)
+    return dot
 
 
 ## 科学分类与玩法：分类路径缺失显示「未定」，卡表无该实体时整组跳过。

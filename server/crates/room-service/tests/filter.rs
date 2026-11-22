@@ -18,7 +18,7 @@ use rule_engine::combat::{self, CombatAction};
 use rule_engine::data::{Catalog, Playstyle};
 use rule_engine::events::GameEvent;
 use rule_engine::settle::SeatCombatReport;
-use rule_engine::state::{MinionInstance, Seat};
+use rule_engine::state::{MinionInstance, Seat, StatSourceLayer, StatSourceOrigin};
 
 const CARDS_JSON: &str = include_str!("../../../data/v0.1/cards.json");
 const HEROES_JSON: &str = include_str!("../../../data/v0.1/heroes.json");
@@ -888,4 +888,31 @@ fn combat_death_and_reborn_carry_target_state() {
     assert_eq!(reborn.minion_id, "102");
     assert!(reborn.alive);
     assert_eq!(reborn.health, 1, "复生后生命为 1");
+}
+
+/// `board_minion_from` 复用同一套分层映射，来源必须随 `stats.sources` 下发。
+#[test]
+fn board_minion_from_maps_stat_sources() {
+    let mut minion = minion(401);
+    minion.stats.attack.add_permanent(2);
+    minion.stats.health.add_permanent(1);
+    minion.record_stat_source(
+        StatSourceLayer::Permanent,
+        StatSourceOrigin::Card {
+            card_id: Some("baiyi".to_string()),
+            skill_id: None,
+        },
+        2,
+        1,
+    );
+
+    let mapped = room_service::view::board_minion_from(&catalog(), 0, &minion, false);
+    let stats = mapped.stats.expect("应下发分层构成");
+    assert_eq!(stats.sources.len(), 1, "来源应映射进协议");
+    let source = &stats.sources[0];
+    assert_eq!(source.layer, protocol::MinionStatSourceLayer::Permanent);
+    assert_eq!(source.kind, protocol::MinionStatSourceKind::Card);
+    assert_eq!(source.card_id.as_deref(), Some("baiyi"));
+    assert_eq!(source.skill_id, None);
+    assert_eq!((source.attack, source.health), (2, 1));
 }

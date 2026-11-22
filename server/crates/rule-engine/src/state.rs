@@ -5,7 +5,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-use crate::data::{Catalog, Era, Playstyle};
+use crate::data::{Catalog, Era, Playstyle, SkillId};
 use crate::effects::Duration;
 use crate::rng::RngStreams;
 
@@ -153,6 +153,52 @@ impl MinionStats {
     }
 }
 
+/// 来源账本中的分层，与 [`StatComponent`] 的增量层一一对应。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StatSourceLayer {
+    /// 可移除的成长；展示时并入永久层。
+    Growth,
+    Permanent,
+    Turn,
+    /// 光环重算时整体替换。
+    Aura,
+}
+
+/// 规则引擎内部结算、不对应某张卡牌效果的系统来源。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StatSystemSource {
+    Evolve,
+    Breed,
+    Contagion,
+    Revive,
+    Recall,
+    CombatGrowth,
+    AuraFloor,
+    Unknown,
+}
+
+/// 一条属性增量的来源；卡牌与技能都可能缺失。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StatSourceOrigin {
+    Card {
+        card_id: Option<String>,
+        skill_id: Option<SkillId>,
+    },
+    System(StatSystemSource),
+}
+
+/// 随从属性账本中的一条来源记录。
+///
+/// 只服务展示，不参与规则判定，也不进入 `state_hash`；
+/// 数值语义仍以 [`StatComponent`] 的各层为准。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StatSource {
+    pub layer: StatSourceLayer,
+    pub origin: StatSourceOrigin,
+    pub attack: i32,
+    pub health: i32,
+}
+
 /// 某个棋盘实例当前生效的光环派生值。
 ///
 /// 光环只存在于派生缓存中，绝不写入 [`MinionInstance`] 的持久实例或
@@ -164,6 +210,14 @@ pub struct AuraEffect {
     pub keywords: crate::keyword::KeywordSet,
     /// 受到任一光环作用；用于战斗快照的生命下限 1。
     pub floor_one: bool,
+}
+
+/// 单张贴光环卡的逐实例增量；同名光环卡合并为一行。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AuraSource {
+    pub card_id: String,
+    pub attack: i32,
+    pub health: i32,
 }
 
 /// 解析卡牌的基础攻防；金色按卡面 ×2。
@@ -193,6 +247,8 @@ pub struct MinionInstance {
     pub pool_copies: u8,
     /// 攻击与生命的分层构成，`current` 为战斗与视图读取的当前量。
     pub stats: MinionStats,
+    /// 各层属性增量的来源账本；只服务展示，不参与规则判定。
+    pub stat_sources: Vec<StatSource>,
     pub breed: i32,
     pub breed_applied: i32,
     pub contagion: i32,
@@ -221,6 +277,7 @@ impl MinionInstance {
             golden,
             pool_copies: 0,
             stats: MinionStats::new(attack, health),
+            stat_sources: Vec::new(),
             breed: 0,
             breed_applied: 0,
             contagion: 0,
@@ -252,6 +309,53 @@ impl MinionInstance {
 
     pub fn stats_view_mut(&mut self) -> &mut MinionStats {
         &mut self.stats
+    }
+
+    /// 记录一条属性增量来源；同 `(layer, origin)` 合并累加，增量为 0 时忽略。
+    pub fn record_stat_source(
+        &mut self,
+        layer: StatSourceLayer,
+        origin: StatSourceOrigin,
+        attack: i32,
+        health: i32,
+    ) {
+        if attack == 0 && health == 0 {
+            return;
+        }
+        if let Some(existing) = self
+            .stat_sources
+            .iter_mut()
+            .find(|source| source.layer == layer && source.origin == origin)
+        {
+            existing.attack = existing.attack.saturating_add(attack);
+            existing.health = existing.health.saturating_add(health);
+            return;
+        }
+        self.stat_sources.push(StatSource {
+            layer,
+            origin,
+            attack,
+            health,
+        });
+    }
+
+    /// 移除成长层来源；永久层不受影响。
+    pub fn remove_growth_sources(&mut self) {
+        self.stat_sources
+            .retain(|source| source.layer != StatSourceLayer::Growth);
+    }
+
+    /// 移除本回合临时来源。
+    pub fn clear_turn_sources(&mut self) {
+        self.stat_sources
+            .retain(|source| source.layer != StatSourceLayer::Turn);
+    }
+
+    /// 用新的光环来源整体替换旧的光环来源。
+    pub fn replace_aura_sources(&mut self, sources: Vec<StatSource>) {
+        self.stat_sources
+            .retain(|source| source.layer != StatSourceLayer::Aura);
+        self.stat_sources.extend(sources);
     }
 }
 
@@ -426,4 +530,6 @@ pub struct GameState {
     pub next_instance_id: InstanceId,
     /// 按实例编号索引的光环派生值；每次区域变化后全量重算。
     pub auras: BTreeMap<InstanceId, AuraEffect>,
+    /// 按实例编号索引的光环逐来源增量；与 `auras` 同生命周期，成对更新。
+    pub aura_sources: BTreeMap<InstanceId, Vec<AuraSource>>,
 }

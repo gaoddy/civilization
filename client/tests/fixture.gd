@@ -67,8 +67,16 @@ static func view() -> Dictionary:
                     "keywords": ["battlecry"],
                     "sellable": true,
                     "stats": {
-                        "attack": {"initial": 3, "permanent": 1, "turn": 0, "aura": 0, "damage": 0, "current": 4},
-                        "health": {"initial": 4, "permanent": 2, "turn": -2, "aura": 1, "damage": 3, "current": 2},
+                        "attack": {"initial": 4, "permanent": 1, "turn": 0, "aura": 1, "damage": 2, "current": 4},
+                        "health": {"initial": 7, "permanent": 3, "turn": 0, "aura": 1, "damage": 3, "current": 8},
+                        "sources": [
+                            {"layer": "aura", "kind": "card", "cardId": "aristotle",
+                             "skillId": null, "attack": 0, "health": 1},
+                            {"layer": "permanent", "kind": "card", "cardId": "kongzi",
+                             "skillId": "activate-friendly-growth-twice", "attack": 1, "health": 1},
+                            {"layer": "permanent", "kind": "evolve", "cardId": null,
+                             "skillId": null, "attack": 0, "health": 2},
+                        ],
                     },
                 },
             ],

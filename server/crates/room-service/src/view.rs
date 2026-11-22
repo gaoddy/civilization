@@ -11,8 +11,8 @@ use protocol::view::{
     PlayerSummary, PlayerView, ShopAffordance, ShopSlot,
 };
 use protocol::{
-    HeroPower, MinionStatBreakdown, MinionStats, PlayerViewSelf, ProtocolError, TargetRef,
-    TargetZone,
+    HeroPower, MinionStatBreakdown, MinionStatSource, MinionStatSourceKind, MinionStatSourceLayer,
+    MinionStats, PlayerViewSelf, ProtocolError, TargetRef, TargetZone,
 };
 use rule_engine::combat;
 use rule_engine::data::Catalog;
@@ -23,7 +23,7 @@ use std::num::NonZeroU64;
 use rule_engine::state::{MinionInstance, Phase};
 use rule_engine::view::{
     MinionStatsView, PendingChoiceView, PlayerSummaryView, SeatView, SelfView, ShopSlotView,
-    StatBreakdownView, stats_breakdown,
+    StatBreakdownView, StatSourceKindView, StatSourceLayerView, StatSourceView, stats_breakdown,
 };
 
 /// 座位上的玩家身份：协议里只需要 `playerId` 与展示名。
@@ -114,7 +114,7 @@ pub fn board_minion_from(
         keywords: combat::keyword_set(catalog, minion).names(),
         minion_id: minion.instance_id.to_string(),
         sellable,
-        stats: Some(stats_to_protocol(&stats_breakdown(minion))),
+        stats: Some(stats_to_protocol(&stats_breakdown(catalog, minion))),
         stealth: combat::has_stealth(catalog, minion),
     }
 }
@@ -332,6 +332,33 @@ fn stats_to_protocol(stats: &MinionStatsView) -> MinionStats {
     MinionStats {
         attack: breakdown_to_protocol(&stats.attack),
         health: breakdown_to_protocol(&stats.health),
+        sources: stats.sources.iter().map(stat_source_to_protocol).collect(),
+    }
+}
+
+/// 引擎来源转协议；枚举一一对应，卡牌与技能 id 原样下发。
+fn stat_source_to_protocol(source: &StatSourceView) -> MinionStatSource {
+    MinionStatSource {
+        attack: i64::from(source.attack),
+        card_id: source.card_id.clone(),
+        health: i64::from(source.health),
+        kind: match source.kind {
+            StatSourceKindView::Card => MinionStatSourceKind::Card,
+            StatSourceKindView::Evolve => MinionStatSourceKind::Evolve,
+            StatSourceKindView::Breed => MinionStatSourceKind::Breed,
+            StatSourceKindView::Contagion => MinionStatSourceKind::Contagion,
+            StatSourceKindView::Revive => MinionStatSourceKind::Revive,
+            StatSourceKindView::Recall => MinionStatSourceKind::Recall,
+            StatSourceKindView::CombatGrowth => MinionStatSourceKind::CombatGrowth,
+            StatSourceKindView::AuraFloor => MinionStatSourceKind::AuraFloor,
+            StatSourceKindView::Unknown => MinionStatSourceKind::Unknown,
+        },
+        layer: match source.layer {
+            StatSourceLayerView::Aura => MinionStatSourceLayer::Aura,
+            StatSourceLayerView::Permanent => MinionStatSourceLayer::Permanent,
+            StatSourceLayerView::Turn => MinionStatSourceLayer::Turn,
+        },
+        skill_id: source.skill_id.clone(),
     }
 }
 

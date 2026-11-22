@@ -4625,6 +4625,301 @@ impl ::std::convert::From<&MinionStatBreakdown> for MinionStatBreakdown {
         value.clone()
     }
 }
+///随从某项属性的一条来源；数值为合并后的增量，可为负
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "随从某项属性的一条来源；数值为合并后的增量，可为负",
+///  "type": "object",
+///  "required": [
+///    "attack",
+///    "cardId",
+///    "health",
+///    "kind",
+///    "layer",
+///    "skillId"
+///  ],
+///  "properties": {
+///    "attack": {
+///      "description": "攻击力增量，可为负",
+///      "type": "integer"
+///    },
+///    "cardId": {
+///      "description": "来源卡 id；系统来源或卡表缺失时为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    },
+///    "health": {
+///      "description": "生命值增量，可为负",
+///      "type": "integer"
+///    },
+///    "kind": {
+///      "description": "来源类型；卡牌效果为 card，其余为规则引擎的系统写入",
+///      "type": "string",
+///      "enum": [
+///        "card",
+///        "evolve",
+///        "breed",
+///        "contagion",
+///        "revive",
+///        "recall",
+///        "combat_growth",
+///        "aura_floor",
+///        "unknown"
+///      ]
+///    },
+///    "layer": {
+///      "description": "来源所属的聚合层；成长已并入 permanent",
+///      "type": "string",
+///      "enum": [
+///        "aura",
+///        "permanent",
+///        "turn"
+///      ]
+///    },
+///    "skillId": {
+///      "description": "来源技能 id；无技能或卡表缺失时为 null",
+///      "type": [
+///        "string",
+///        "null"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct MinionStatSource {
+    ///攻击力增量，可为负
+    pub attack: i64,
+    ///来源卡 id；系统来源或卡表缺失时为 null
+    #[serde(rename = "cardId")]
+    pub card_id: ::std::option::Option<::std::string::String>,
+    ///生命值增量，可为负
+    pub health: i64,
+    ///来源类型；卡牌效果为 card，其余为规则引擎的系统写入
+    pub kind: MinionStatSourceKind,
+    ///来源所属的聚合层；成长已并入 permanent
+    pub layer: MinionStatSourceLayer,
+    ///来源技能 id；无技能或卡表缺失时为 null
+    #[serde(rename = "skillId")]
+    pub skill_id: ::std::option::Option<::std::string::String>,
+}
+impl ::std::convert::From<&MinionStatSource> for MinionStatSource {
+    fn from(value: &MinionStatSource) -> Self {
+        value.clone()
+    }
+}
+///来源类型；卡牌效果为 card，其余为规则引擎的系统写入
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "来源类型；卡牌效果为 card，其余为规则引擎的系统写入",
+///  "type": "string",
+///  "enum": [
+///    "card",
+///    "evolve",
+///    "breed",
+///    "contagion",
+///    "revive",
+///    "recall",
+///    "combat_growth",
+///    "aura_floor",
+///    "unknown"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum MinionStatSourceKind {
+    #[serde(rename = "card")]
+    Card,
+    #[serde(rename = "evolve")]
+    Evolve,
+    #[serde(rename = "breed")]
+    Breed,
+    #[serde(rename = "contagion")]
+    Contagion,
+    #[serde(rename = "revive")]
+    Revive,
+    #[serde(rename = "recall")]
+    Recall,
+    #[serde(rename = "combat_growth")]
+    CombatGrowth,
+    #[serde(rename = "aura_floor")]
+    AuraFloor,
+    #[serde(rename = "unknown")]
+    Unknown,
+}
+impl ::std::convert::From<&Self> for MinionStatSourceKind {
+    fn from(value: &MinionStatSourceKind) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for MinionStatSourceKind {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Card => f.write_str("card"),
+            Self::Evolve => f.write_str("evolve"),
+            Self::Breed => f.write_str("breed"),
+            Self::Contagion => f.write_str("contagion"),
+            Self::Revive => f.write_str("revive"),
+            Self::Recall => f.write_str("recall"),
+            Self::CombatGrowth => f.write_str("combat_growth"),
+            Self::AuraFloor => f.write_str("aura_floor"),
+            Self::Unknown => f.write_str("unknown"),
+        }
+    }
+}
+impl ::std::str::FromStr for MinionStatSourceKind {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "card" => Ok(Self::Card),
+            "evolve" => Ok(Self::Evolve),
+            "breed" => Ok(Self::Breed),
+            "contagion" => Ok(Self::Contagion),
+            "revive" => Ok(Self::Revive),
+            "recall" => Ok(Self::Recall),
+            "combat_growth" => Ok(Self::CombatGrowth),
+            "aura_floor" => Ok(Self::AuraFloor),
+            "unknown" => Ok(Self::Unknown),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for MinionStatSourceKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for MinionStatSourceKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for MinionStatSourceKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///来源所属的聚合层；成长已并入 permanent
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "来源所属的聚合层；成长已并入 permanent",
+///  "type": "string",
+///  "enum": [
+///    "aura",
+///    "permanent",
+///    "turn"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum MinionStatSourceLayer {
+    #[serde(rename = "aura")]
+    Aura,
+    #[serde(rename = "permanent")]
+    Permanent,
+    #[serde(rename = "turn")]
+    Turn,
+}
+impl ::std::convert::From<&Self> for MinionStatSourceLayer {
+    fn from(value: &MinionStatSourceLayer) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for MinionStatSourceLayer {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Aura => f.write_str("aura"),
+            Self::Permanent => f.write_str("permanent"),
+            Self::Turn => f.write_str("turn"),
+        }
+    }
+}
+impl ::std::str::FromStr for MinionStatSourceLayer {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "aura" => Ok(Self::Aura),
+            "permanent" => Ok(Self::Permanent),
+            "turn" => Ok(Self::Turn),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for MinionStatSourceLayer {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for MinionStatSourceLayer {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for MinionStatSourceLayer {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
 ///随从攻击与生命的分层构成
 ///
 /// <details><summary>JSON schema</summary>
@@ -4635,7 +4930,8 @@ impl ::std::convert::From<&MinionStatBreakdown> for MinionStatBreakdown {
 ///  "type": "object",
 ///  "required": [
 ///    "attack",
-///    "health"
+///    "health",
+///    "sources"
 ///  ],
 ///  "properties": {
 ///    "attack": {
@@ -4643,6 +4939,13 @@ impl ::std::convert::From<&MinionStatBreakdown> for MinionStatBreakdown {
 ///    },
 ///    "health": {
 ///      "$ref": "#/$defs/MinionStatBreakdown"
+///    },
+///    "sources": {
+///      "description": "逐来源加成；按层排序后下发，各层之和等于对应聚合层",
+///      "type": "array",
+///      "items": {
+///        "$ref": "#/$defs/MinionStatSource"
+///      }
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -4654,6 +4957,8 @@ impl ::std::convert::From<&MinionStatBreakdown> for MinionStatBreakdown {
 pub struct MinionStats {
     pub attack: MinionStatBreakdown,
     pub health: MinionStatBreakdown,
+    ///逐来源加成；按层排序后下发，各层之和等于对应聚合层
+    pub sources: ::std::vec::Vec<MinionStatSource>,
 }
 impl ::std::convert::From<&MinionStats> for MinionStats {
     fn from(value: &MinionStats) -> Self {

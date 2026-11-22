@@ -128,7 +128,25 @@
                 "aura": 0,
                 "damage": 0,
                 "current": 2
-              }
+              },
+              "sources": [
+                {
+                  "layer": "permanent",
+                  "kind": "card",
+                  "cardId": "huo",
+                  "skillId": null,
+                  "attack": 0,
+                  "health": -2
+                },
+                {
+                  "layer": "turn",
+                  "kind": "card",
+                  "cardId": "huo",
+                  "skillId": null,
+                  "attack": -1,
+                  "health": 0
+                }
+              ]
             },
             "keywords": [
               "battlecry"
