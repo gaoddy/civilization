@@ -72,6 +72,9 @@ func _portrait(player: Dictionary, hp_cap: int, show_hp: bool) -> GameHeroCard:
     var hero_id := CardText.optional_text(player.get("heroCardId"))
     var portrait := GameHeroCard.new()
     portrait.name = "OpponentPortrait"
+    # 手机档位身份列换行后比英雄卡高；英雄卡按最小尺寸居中，不随容器拉伸成长方形。
+    portrait.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     portrait.refresh(
         hero_id,
         int(player.get("hp", 0)) if show_hp else 0,
