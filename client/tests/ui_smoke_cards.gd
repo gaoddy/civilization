@@ -962,24 +962,15 @@ func _minion_fixture(card_id: String, keywords: Array) -> Dictionary:
     }
 
 
-## 对局英雄详情：顶部使用卡面美术，按 112:146 预留高度。
+## 对局英雄详情：不显示卡面美术，只保留文字内容。
 func _check_hero_detail_art() -> void:
     var layer := DetailLayer.new()
     var box := VBoxContainer.new()
     layer._render_hero_detail(box, "gauss")
-    var art := box.find_child("HeroDetailArt", true, false) as TextureRect
-    _expect(art != null, "英雄详情应有 HeroDetailArt 卡面美术")
-    if art != null:
-        _expect(
-            art.texture != null and art.texture.resource_path.contains("cards/faces"),
-            "英雄详情应使用卡面美术，实际：%s"
-            % (art.texture.resource_path if art.texture != null else "无纹理"),
-        )
-        var size := art.custom_minimum_size
-        _expect(
-            size.x > 0.0 and absf(size.y - size.x * 146.0 / 112.0) <= 1.0,
-            "英雄详情美术宽高比应为 112:146，实际 %s" % size,
-        )
+    _expect(
+        box.find_child("HeroDetailArt", true, false) == null,
+        "英雄详情不应显示卡面美术",
+    )
     box.free()
     layer.free()
 
