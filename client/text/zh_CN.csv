@@ -1325,7 +1325,6 @@ ui.game.combat.vs,VS
 ui.game.combat.waiting,等待战斗动作…
 ui.game.detail.alive,存活
 ui.game.detail.association,关联分类
-ui.game.detail.combat_log,对战记录
 ui.game.detail.cost,费用
 ui.game.detail.cost_value,%d 金
 ui.game.detail.current,当前
@@ -1337,7 +1336,6 @@ ui.game.detail.gained,获得
 ui.game.detail.hero,英雄
 ui.game.detail.hero_power,英雄技能
 ui.game.detail.host,寄生
-ui.game.detail.hp,生命
 ui.game.detail.initial_stats,原始
 ui.game.detail.keyword.armor,受到伤害时，减免 %d 点伤害
 ui.game.detail.keyword.assemble,进入战场时，使你的其他机械随从各获得 %d 次成长

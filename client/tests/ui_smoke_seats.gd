@@ -326,7 +326,29 @@ func _check_seat_detail() -> void:
         text.contains("%s %d" % [TranslationServer.translate("ui.game.detail.minions"), 4]),
         "座位详情顶部应显示随从数：%s" % text,
     )
-    _expect(text.contains("35/40"), "座位详情应显示生命当前/上限：%s" % text)
+    var hp_bar = panel.find_child("DetailHpBar", true, false) if panel != null else null
+    var hp_label: Label = null
+    if hp_bar != null:
+        hp_label = hp_bar.find_child("HpLabel", true, false) as Label
+    _expect(
+        hp_label != null and hp_label.text == "35/40",
+        "生命当前/上限应直接叠在生命条上：%s" % text,
+    )
+    _expect(
+        hp_bar != null
+            and is_equal_approx(
+                hp_bar.size.y,
+                float(UITheme.stage_metric("seat-detail-hp-bar-height")),
+            ),
+        "详情生命条高度应取 seat-detail-hp-bar-height，实际 %s"
+        % (str(hp_bar.size.y) if hp_bar != null else "缺失"),
+    )
+    _expect(
+        hp_label != null
+            and hp_bar.get_global_rect().encloses(hp_label.get_global_rect()),
+        "生命当前/上限数字应落在生命条范围内",
+    )
+    _expect(not text.contains("生命"), "座位详情不应再显示「生命」字样：%s" % text)
     for absent in [
         "ui.game.detail.alive",
         "ui.game.detail.eliminated",
@@ -339,10 +361,7 @@ func _check_seat_detail() -> void:
             not text.contains(absent_text),
             "座位详情不应再显示 %s：%s" % [absent, text],
         )
-    _expect(
-        text.contains(TranslationServer.translate("ui.game.detail.combat_log")),
-        "座位详情应显示对战记录标题：%s" % text,
-    )
+    _expect(not text.contains("对战记录"), "座位详情不应再显示「对战记录」标题：%s" % text)
     _expect(
         text.contains(TranslationServer.translate("ui.game.rail.turn") % 2),
         "对战记录应显示回合：%s" % text,

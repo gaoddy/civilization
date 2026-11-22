@@ -189,6 +189,8 @@ const SCENARIO := {
 	"gallery-batch-size-compact": 12,
 	# 座位悬停详情比通用详情宽一档，容纳一行战报文案。
 	"seat-detail-width": 236,
+	# 详情里的生命条要容纳居中的当前/上限数字，比座位行上的血条高一档。
+	"seat-detail-hp-bar-height": 16,
 	"avatar-rail": 44,
 	"seat-row-gap": 4,
 	"seat-hp-bar-height": 6,

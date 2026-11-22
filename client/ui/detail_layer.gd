@@ -270,7 +270,7 @@ func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
     ShopDetailSection.render(box, data, _kit("shop"))
 
 
-## 座位详情：名字、名次、英雄 · 时代 · 随从、生命与对战记录。
+## 座位详情：名字、名次、英雄 · 时代 · 随从、叠字生命条与无标题对战记录。
 func _render_seat_detail(box: VBoxContainer, data: Dictionary) -> void:
     SeatDetailSection.render(
         box,
