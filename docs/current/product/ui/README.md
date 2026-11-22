@@ -58,11 +58,12 @@
 | 时代象形 | `EraGlyph`（`client/ui/era_glyph.gd`） | [icons.md](icons.md) |
 | 卡牌图鉴 | `CardGallery`（`client/ui/card_gallery.gd`） | [components/card-gallery.md](components/card-gallery.md) |
 | 图鉴视图切换 | `GalleryModeBar` | [components/gallery-mode-bar.md](components/gallery-mode-bar.md) |
-| 图鉴顶部筛选栏 | `GalleryFilterBar` | [components/gallery-filter-bar.md](components/gallery-filter-bar.md) |
-| 图鉴分类目录 | `GalleryToc` | [components/gallery-toc.md](components/gallery-toc.md) |
+| 图鉴筛选下拉 | `GalleryFilterSelect` | [components/gallery-filter-select.md](components/gallery-filter-select.md) |
+| 图鉴筛选面板 | `GalleryFilterPanel` | [components/gallery-filter-panel.md](components/gallery-filter-panel.md) |
 | 图鉴卡面网格 | `GalleryGrid` | [components/gallery-grid.md](components/gallery-grid.md) |
 | 图鉴卡面单元 | `GalleryCardTile` | [components/gallery-card-tile.md](components/gallery-card-tile.md) |
-| 图鉴常驻详情 | `GalleryDetail` | [components/gallery-detail.md](components/gallery-detail.md) |
+| 图鉴详情浮层 | `GalleryDetailLayer` | [components/gallery-detail-layer.md](components/gallery-detail-layer.md) |
+| 图鉴详情 | `GalleryDetail` | [components/gallery-detail.md](components/gallery-detail.md) |
 | 首局引导 | `FirstGameGuide` | [components/first-game-guide.md](components/first-game-guide.md) |
 | 对局工具组 | `GameToolButtons`（`client/pages/game/game_tool_buttons.gd`） | [pages/game.md](pages/game.md) |
 | 对局状态模态 | `GameStatusModal`（`client/pages/game/game_status_modal.gd`） | [components/game-status-modal.md](components/game-status-modal.md) |
