@@ -12,10 +12,12 @@ const SERVER_URL := "ws://127.0.0.1:8080/ws"
 const SERVER_PORT := 8080
 const SERVER_WAIT_SECONDS := 10.0
 const ROOM_CODE_WAIT_SECONDS := 15.0
-const SERVER_CHECK_WAIT_SECONDS := 3.0
+const HEALTH_TIMEOUT_SECONDS := 3.0
+const HEALTH_RETRY_SECONDS := 0.25
 
 const ROOM_CODE_PREFIX := "ROOM_CODE="
 const LISTEN_ADDRESS := "127.0.0.1:8080"
+const HEALTH_URL := "http://127.0.0.1:8080/healthz"
 const LOG_PATH := "user://local_debug.log"
 
 enum State {
@@ -43,7 +45,10 @@ var _server_stderr: FileAccess = null
 var _sim_stdout: FileAccess = null
 var _sim_stderr: FileAccess = null
 var _log: FileAccess = null
-var _probe: StreamPeerTCP = null
+var _health: HTTPRequest = null
+var _health_in_flight := false
+var _health_retry_elapsed := 0.0
+var _watchdog_pid := -1
 var _wait_elapsed := 0.0
 var _server_ready_emitted := false
 var _room_code_emitted := false
@@ -62,7 +67,12 @@ func _ready() -> void:
         return
     _server_path = str(paths["server"])
     _sim_path = str(paths["sim"])
+    _health = HTTPRequest.new()
+    _health.timeout = HEALTH_TIMEOUT_SECONDS
+    _health.request_completed.connect(_on_health_completed)
+    add_child(_health)
     _state = State.CHECKING
+    _request_health()
 
 
 func _process(delta: float) -> void:
@@ -70,11 +80,12 @@ func _process(delta: float) -> void:
         return
     match _state:
         State.CHECKING:
-            _wait_elapsed += delta
-            _poll_checking()
+            # 由 HTTPRequest 回调推进状态，不在这里计时。
+            pass
         State.WAITING_SERVER:
             _drain_pipes()
             _wait_elapsed += delta
+            _health_retry_elapsed += delta
             _poll_waiting_server()
         State.WAITING_ROOM_CODE:
             _drain_pipes()
@@ -91,7 +102,10 @@ func _process(delta: float) -> void:
 
 
 func _exit_tree() -> void:
-    _close_probe()
+    # 先停看护，避免正常退出后它再按旧 pid 执行一次 kill。
+    if _watchdog_pid > 0:
+        OS.kill(_watchdog_pid)
+        _watchdog_pid = -1
     # 只回收本进程启动的子进程；复用已有服务端时 pid 保持 -1。
     if _server_pid > 0:
         OS.kill(_server_pid)
@@ -132,32 +146,43 @@ static func sidecar_paths(base_dir: String) -> Dictionary:
     }
 
 
-func _poll_checking() -> void:
-    var status := _probe_status()
-    if status == StreamPeerTCP.STATUS_CONNECTED:
-        _close_probe()
-        _log_line("reuse server on " + LISTEN_ADDRESS)
+func _request_health() -> void:
+    if _health == null or _health_in_flight:
+        return
+    _health_in_flight = true
+    if _health.request(HEALTH_URL) != OK:
+        _health_in_flight = false
+        _on_health_result(false)
+
+
+func _on_health_completed(
+    result: int, response_code: int, _headers: PackedStringArray, _body: PackedByteArray
+) -> void:
+    _health_in_flight = false
+    _on_health_result(result == HTTPRequest.RESULT_SUCCESS and response_code == 200)
+
+
+func _on_health_result(healthy: bool) -> void:
+    if healthy:
+        if _state == State.CHECKING:
+            _log_line("reuse server on " + LISTEN_ADDRESS)
+        elif _state == State.WAITING_SERVER:
+            _log_line("server ready on " + LISTEN_ADDRESS)
+        else:
+            return
         _finish_server_wait()
         return
-    if status == StreamPeerTCP.STATUS_CONNECTING:
-        if _wait_elapsed >= SERVER_CHECK_WAIT_SECONDS:
-            _close_probe()
-            _fail("server_check_timeout")
+    if _state == State.CHECKING:
+        # 连接失败、超时或非 200 都视为没有可复用服务端。
+        _start_server()
         return
-    _close_probe()
-    _start_server()
+    _health_retry_elapsed = 0.0
 
 
 func _poll_waiting_server() -> void:
-    var status := _probe_status()
-    if status == StreamPeerTCP.STATUS_CONNECTING:
-        return
-    if status == StreamPeerTCP.STATUS_CONNECTED:
-        _close_probe()
-        _log_line("server ready on " + LISTEN_ADDRESS)
-        _finish_server_wait()
-        return
-    _close_probe()
+    if _health_retry_elapsed >= HEALTH_RETRY_SECONDS:
+        _health_retry_elapsed = 0.0
+        _request_health()
     if _server_pid > 0 and not OS.is_process_running(_server_pid):
         _fail("server_exited")
         return
@@ -183,6 +208,7 @@ func _start_server() -> void:
     _server_stdout = result.get("stdio") as FileAccess
     _server_stderr = result.get("stderr") as FileAccess
     _wait_elapsed = 0.0
+    _health_retry_elapsed = 0.0
     _state = State.WAITING_SERVER
 
 
@@ -199,13 +225,15 @@ func _start_bots() -> void:
     _sim_stderr = result.get("stderr") as FileAccess
     _wait_elapsed = 0.0
     _state = State.WAITING_ROOM_CODE
+    _start_watchdog()
 
 
 func _finish_server_wait() -> void:
+    if _server_ready_emitted:
+        return
+    _server_ready_emitted = true
     _wait_elapsed = 0.0
-    if not _server_ready_emitted:
-        _server_ready_emitted = true
-        server_ready.emit()
+    server_ready.emit()
     _start_bots()
 
 
@@ -224,22 +252,21 @@ func _spawn(path: String, args: PackedStringArray) -> Dictionary:
     return OS.execute_with_pipe(path, args, false)
 
 
-func _probe_status() -> int:
-    if _probe == null:
-        _probe = StreamPeerTCP.new()
-        var error := _probe.connect_to_host("127.0.0.1", SERVER_PORT)
-        if error != OK:
-            return StreamPeerTCP.STATUS_ERROR
-    _probe.poll()
-    return _probe.get_status()
-
-
-func _close_probe() -> void:
-    if _probe == null:
+func _start_watchdog() -> void:
+    # SIGTERM 会让引擎跳过 `_exit_tree`，由看护进程在应用消失后兜底回收子进程。
+    if _watchdog_pid > 0:
         return
-    if _probe.get_status() == StreamPeerTCP.STATUS_CONNECTED:
-        _probe.disconnect_from_host()
-    _probe = null
+    if _server_pid <= 0 and _sim_pid <= 0:
+        return
+    var script := (
+        "while kill -0 %d 2>/dev/null; do sleep 0.1; done; "
+        + "if [ %d -gt 0 ]; then kill -9 %d 2>/dev/null; fi; "
+        + "if [ %d -gt 0 ]; then kill -9 %d 2>/dev/null; fi"
+    ) % [OS.get_process_id(), _server_pid, _server_pid, _sim_pid, _sim_pid]
+    var result := OS.execute_with_pipe("/bin/sh", PackedStringArray(["-c", script]), false)
+    _watchdog_pid = int(result.get("pid", -1))
+    if _watchdog_pid <= 0:
+        _log_line("watchdog_unavailable")
 
 
 func _drain_pipes() -> void:
@@ -288,5 +315,7 @@ func _fail(reason: String) -> void:
         return
     _state = State.FAILED
     _log_line("failed: " + reason)
+    # 失败时可能已有子进程存活，确保看护进程已启动。
+    _start_watchdog()
     # autoload `_ready` 早于主场景，延迟到场景订阅信号之后再发。
     failed.emit.call_deferred(reason)
