@@ -1,7 +1,8 @@
 extends Node
-## 本地调试服务：仅在带 `embedded_server` 特性的调试导出里启动 room-service 与 sim。
+## 本地调试服务：在带 `embedded_server` 特性的调试导出，或设置了
+## `CIVILIZATION_LOCAL_SERVER=1` 的编辑器运行里启动 room-service 与 sim。
 ##
-## 编辑器、冒烟与发行包都没有该特性，`enabled` 保持 false，不产生任何进程。
+## 冒烟与发行包都不满足启用条件，`enabled` 保持 false，不产生任何进程。
 ## 启动流程与失败原因见 technical.md §3.2–3.3。
 
 signal server_ready
@@ -15,6 +16,9 @@ const HEALTH_TIMEOUT_SECONDS := 3.0
 const HEALTH_RETRY_SECONDS := 0.25
 
 const ROOM_CODE_PREFIX := "ROOM_CODE="
+const ENV_ENABLED := "CIVILIZATION_LOCAL_SERVER"
+## 编辑器运行时 sidecar 不在 Godot 可执行文件旁，用该变量指定目录。
+const ENV_SIDECAR_DIR := "CIVILIZATION_LOCAL_SERVER_DIR"
 const LISTEN_ADDRESS := "127.0.0.1:8080"
 const HEALTH_URL := "http://127.0.0.1:8080/healthz"
 const LOG_PATH := "user://local_debug.log"
@@ -53,12 +57,14 @@ var _room_code_emitted := false
 
 
 func _ready() -> void:
-    enabled = OS.has_feature("embedded_server")
+    enabled = should_enable(OS.has_feature("embedded_server"), OS.get_environment(ENV_ENABLED))
     auto_flow = OS.get_environment("CIVILIZATION_LOCAL_AUTO") != "0"
     if not enabled:
         return
     _open_log()
-    var base_dir := OS.get_executable_path().get_base_dir()
+    var base_dir := sidecar_base_dir(
+        OS.get_executable_path().get_base_dir(), OS.get_environment(ENV_SIDECAR_DIR)
+    )
     var paths := sidecar_paths(base_dir)
     if not paths["server_exists"] or not paths["sim_exists"]:
         _fail("sidecar_missing")
@@ -127,6 +133,17 @@ static func room_code_from_line(line: String) -> String:
     if not trimmed.begins_with(ROOM_CODE_PREFIX):
         return ""
     return trimmed.trim_prefix(ROOM_CODE_PREFIX).strip_edges()
+
+
+## 启用条件：调试导出带 `embedded_server` 特性，或开发入口显式设置环境变量。
+static func should_enable(has_embedded_feature: bool, env_value: String) -> bool:
+    return has_embedded_feature or env_value.strip_edges() == "1"
+
+
+## sidecar 目录：环境变量优先，调试包回退到可执行文件同级目录。
+static func sidecar_base_dir(executable_dir: String, env_dir: String) -> String:
+    var override := env_dir.strip_edges()
+    return override if override != "" else executable_dir
 
 
 static func sidecar_paths(base_dir: String) -> Dictionary:

@@ -263,10 +263,10 @@ client/
 | `make sfx` | 生成 9 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | `godot --headless --path client --import`，检查工程可导入 |
-| `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗；传 `CLIENT_DEVICE` 取 `phone`、`tablet` 或 `desktop` 时以该设备档位运行，用于在桌面模拟移动端 |
-| `make client-run-on-iphone` | 等价于 `make client-run WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone`，按 iPhone 17 Pro 横屏物理分辨率开窗并进入手机档位 |
-| `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet`，按 iPad Air 11 横屏物理分辨率开窗并进入平板档位 |
-| `make client-run-on-desktop` | 等价于 `make client-run CLIENT_DEVICE=desktop`，窗口按屏幕可用区自动收拢 |
+| `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗；传 `CLIENT_DEVICE` 取 `phone`、`tablet` 或 `desktop` 时以该设备档位运行，用于在桌面模拟移动端。传 `LOCAL_SERVER=1` 时内嵌启动本机服务端与 7 个机器人并自动登录入房，见 §5 |
+| `make client-run-on-iphone` | 等价于 `make client-run WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone LOCAL_SERVER=1`，按 iPhone 17 Pro 横屏物理分辨率开窗并进入手机档位，同时带上本地服务端与机器人 |
+| `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet LOCAL_SERVER=1`，按 iPad Air 11 横屏物理分辨率开窗并进入平板档位，同时带上本地服务端与机器人 |
+| `make client-run-on-desktop` | 等价于 `make client-run CLIENT_DEVICE=desktop LOCAL_SERVER=1`，窗口按屏幕可用区自动收拢，同时带上本地服务端与机器人 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
 | `make client-smoke` | 用 glob 逐个运行 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`；任一场景断言失败时不输出 `UI_SMOKE_OK`，目标以非 0 退出；`SMOKE=<名称>` 只跑 `ui_smoke_<名称>.tscn` |
 | `make client-export-local` | 依赖 `client-export-templates`、`client-import` 与 `m1b-build`；导出调试用 `output/desktop-local/Civilization.app`，并把 debug 的 `room-service`、`sim` 复制进 `Contents/MacOS/`；仅 macOS、仅本机调试，见 §8 |
@@ -307,6 +307,8 @@ make client-run-on-desktop                         # CLIENT_DEVICE=desktop
 ```
 
 `make client-run-on-<Tab>` 由 shell 自带的 make 目标补全列出三个别名，不必记具体像素。
+
+三个别名都带本地服务（等价于追加 `LOCAL_SERVER=1`）：客户端启动后由 `LocalServer` 在 `server/target/debug` 下内嵌拉起 `room-service` 与 7 个机器人，服务端就绪后自动登录，拿到房间码后自动入房，无需另开终端跑 `make dev-bots`。客户端正常退出时一并回收它自己启动的服务端与机器人（`Ctrl-C` 同进程组一并结束）；若 8080 上已有可复用的服务端则直接复用，既不再启动也不回收。内嵌服务端只监听 `127.0.0.1:8080`，真机联调仍需用 `make dev-bots`。
 
 客户端一律用 `make client-run` 启动：它会先 `--import` 刷新全局类缓存。直接跑 `Godot --path client` 时，若工程新增或改名过 `class_name` 脚本而缓存未更新，依赖它的脚本编译失败，对局页会缺整块区域（例如中央舞台整体不构建，只剩右上角工具组与左栏）。
 
@@ -394,12 +396,13 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 `client/export_presets.cfg` 另提供只用于本机自测的预设 `macOS Local Debug`（`preset.3`）：`platform="macOS"`、`custom_features="embedded_server"`、Universal、bundle id 与应用名同发行预设、不签名，`export_path` 为 `../output/desktop-local/Civilization.app`，用 `--export-debug` 导出。
 
 - `make client-export-local` 清空 `output/desktop-local/` 后导出，再复制 `server/target/debug/room-service` 与 `server/target/debug/sim` 到 `Civilization.app/Contents/MacOS/` 并校验可执行；不 zip、不签名。
-- 调试包启动时 `LocalServer` autoload 生效（仅 `OS.has_feature("embedded_server")` 为真）：先探测 `127.0.0.1:8080`，已有进程监听则复用（不启动自己的服务端），否则启动 `room-service --listen 127.0.0.1:8080` 并等待最多 10 秒；服务端就绪后启动 `sim dev --connect ws://127.0.0.1:8080/ws --intent-seed 0`，最多 15 秒内从 stdout 读取 `ROOM_CODE=<码>`。server 与 sim 的 stdout/stderr 写入 `user://local_debug.log`。
+- `LocalServer` autoload 的启用条件：调试包由导出特性 `embedded_server` 启用；编辑器运行由环境变量 `CIVILIZATION_LOCAL_SERVER=1` 启用（Godot 4.7.2 没有命令行注入自定义特性的参数）。sidecar 目录取 `CIVILIZATION_LOCAL_SERVER_DIR`，为空时回退到可执行文件同级目录；`make client-run LOCAL_SERVER=1` 传入 `server/target/debug`。
+- 启用后先探测 `127.0.0.1:8080`，已有进程监听则复用（不启动自己的服务端），否则启动 `room-service --listen 127.0.0.1:8080` 并等待最多 10 秒；服务端就绪后启动 `sim dev --connect ws://127.0.0.1:8080/ws --intent-seed 0`，最多 15 秒内从 stdout 读取 `ROOM_CODE=<码>`。server 与 sim 的 stdout/stderr 写入 `user://local_debug.log`。
 - 登录页在服务端就绪后用预填的开发账号（`13900000000` / `123456` / `玩家A`）自动登录；大厅拿到房间码后填入并自动加入。先到大厅后到房间码时订阅 `room_code_ready` 补发，房间码只消费一次。启动失败时状态标签显示 ASCII 失败原因（如 `server_timeout`、`sidecar_missing`），登录按钮恢复可用。
 - `CIVILIZATION_LOCAL_AUTO=0` 只关闭自动登录与自动入房，服务端与机器人仍会启动，便于手测登录/大厅流程。
-- 应用退出时 `_exit_tree` 只 `OS.kill` 本产物启动的 server 与 sim；复用已有服务端时不 kill。崩溃残留的 sim 进程不自动清理，避免误杀其他进程；下次启动若 8080 已被占用则直接复用。
+- 客户端正常退出时 `_exit_tree` 只 `OS.kill` 自己启动的 server 与 sim；复用已有服务端时不 kill。崩溃残留的 sim 进程不自动清理，避免误杀其他进程；下次启动若 8080 已被占用则直接复用。
 - 产物为 debug 构建并含调试符号，未签名，只保证本机运行；sidecar 为宿主架构（arm64），Intel Mac 需另行构建。
-- 发行链路（`macOS`、`Steam`、`iOS` 预设与 `make client-export` / `client-export-steam` / `client-export-ios`）不带 `embedded_server` 特性，也不复制 sidecar；编辑器运行与冒烟同样没有该特性，`LocalServer` 不启动任何进程。
+- 发行链路（`macOS`、`Steam`、`iOS` 预设与 `make client-export` / `client-export-steam` / `client-export-ios`）不带 `embedded_server` 特性，也不复制 sidecar；冒烟与直接 `make client-run` 不设置 `CIVILIZATION_LOCAL_SERVER`，`LocalServer` 不启动任何进程。
 - 当前只完成构建级与静态校验（调试产物导出成功、sidecar 可执行、`make client-export` 产物不含 sidecar）；GUI 端到端（自动登录、自动入房、完成一局、退出后进程回收）尚未在真实产物中验收，由主 agent 在 8080 空闲时执行。
 
 ## 9. iOS 移动端

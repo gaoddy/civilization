@@ -1,5 +1,5 @@
 extends Node
-## 本地调试服务冒烟：只断言纯函数与无特性时的启用状态，不启动任何进程。
+## 本地调试服务冒烟：只断言纯函数与默认不启用状态，不启动任何进程。
 
 var _failures := 0
 
@@ -14,7 +14,13 @@ func _ready() -> void:
     _check(paths["server"].ends_with("/room-service"), "服务端路径")
     _check(paths["sim"].ends_with("/sim"), "机器人路径")
     _check(not paths["server_exists"] and not paths["sim_exists"], "缺失时不启用")
-    _check(not LocalServer.enabled, "无 embedded_server 特性时不启用")
+    _check(LocalServer.should_enable(true, ""), "带特性时启用")
+    _check(LocalServer.should_enable(false, "1"), "环境变量启用")
+    _check(not LocalServer.should_enable(false, ""), "无特性且无环境变量时不启用")
+    _check(not LocalServer.should_enable(false, "0"), "环境变量为 0 时不启用")
+    _check(LocalServer.sidecar_base_dir("/exec", "/sidecar") == "/sidecar", "sidecar 目录覆盖")
+    _check(LocalServer.sidecar_base_dir("/exec", "  ") == "/exec", "sidecar 目录回退")
+    _check(not LocalServer.enabled, "无 embedded_server 特性且无环境变量时不启用")
     if _failures > 0:
         get_tree().quit(1)
         return
