@@ -1,6 +1,8 @@
 extends Node
 ## 文本表内容夹具：下方中文值断言校验文本表与取词接口，不是界面文案断言。
 
+var _failures := 0
+
 
 func _ready() -> void:
     _check_font_coverage()
@@ -19,6 +21,9 @@ func _ready() -> void:
     _check(UIWording.error_text("ROOM_NOT_FOUND") == "房间不存在", "错误码文案")
     _check(UIWording.error_text_by_id("error.AUTH_FAILED.invalid_code") == "短信验证码错误", "错误详情")
     _check(UIWording.error_text_by_id("error.DOES_NOT_EXIST") == "", "缺键回退为空串")
+    if _failures > 0:
+        get_tree().quit(1)
+        return
     print("UI_SMOKE_OK")
     get_tree().quit(0)
 
@@ -44,4 +49,4 @@ func _check_font_coverage() -> void:
 func _check(ok: bool, label: String) -> void:
     if not ok:
         push_error("TEXT_SMOKE_FAIL: " + label)
-        get_tree().quit(1)
+        _failures += 1

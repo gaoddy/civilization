@@ -266,7 +266,7 @@ client/
 | `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet`，按 iPad Air 11 横屏物理分辨率开窗并进入平板档位 |
 | `make client-run-on-desktop` | 等价于 `make client-run CLIENT_DEVICE=desktop`，窗口按屏幕可用区自动收拢 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
-| `make client-smoke` | 用 glob 逐个运行十三个 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR` |
+| `make client-smoke` | 用 glob 逐个运行 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`；任一场景断言失败时不输出 `UI_SMOKE_OK`，目标以非 0 退出 |
 | `make ui-preview` | 真实窗口装载指定页面/场景并注入夹具，`FOCUS` 高亮子节点；不截图，窗口保持打开；见 §5 |
 | `make ui-preview-check` | 与 `ui-preview` 参数相同但自动退出，按 `VIEW_PREVIEW_OK` / `VIEW_PREVIEW_FAIL` 判定；只用于本机 GUI 冒烟 |
 | `make client-export-ios` | 导出 Xcode 工程并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
