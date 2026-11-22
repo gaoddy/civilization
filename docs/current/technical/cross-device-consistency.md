@@ -404,4 +404,3 @@ make client-run WIDTH=1280 HEIGHT=800
 - [移动端适配](../product/ui/mobile-adaptation.md)：产品层面的适配规则
 - [客户端技术现状](client.md) §9：移动端适配实现
 - [v0.1 验收](../../versions/v0.1/acceptance.md) §3：iOS 适配验收记录
-- [16:9 内容框设计](../../superpowers/specs/2026-11-21-aspect-ratio-frame-design.md)：设计决策记录

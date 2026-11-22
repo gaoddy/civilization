@@ -10,7 +10,7 @@ DOCS = ROOT / "docs"
 
 class DocsConsistencyTest(unittest.TestCase):
     def test_no_state_delta_anywhere(self):
-        # docs/superpowers 是设计与计划记录，允许出现「StateDelta 更名为 StateUpdate」这类历史说明。
+        # 只扫描 versions 与 current；本地忽略的 .superpowers/ 过程记录不参与检索。
         offenders = [str(p) for base in (DOCS / "versions", DOCS / "current")
                      for p in base.rglob("*.md") if "StateDelta" in p.read_text()]
         self.assertEqual(offenders, [])
