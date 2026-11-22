@@ -82,14 +82,41 @@
         "current": { "type": "integer", "minimum": 0, "description": "当前实际值" }
       }
     },
+    "MinionStatSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layer", "kind", "cardId", "skillId", "attack", "health"],
+      "description": "随从某项属性的一条来源；数值为合并后的增量，可为负",
+      "properties": {
+        "layer": {
+          "type": "string",
+          "enum": ["aura", "permanent", "turn"],
+          "description": "来源所属的聚合层；成长已并入 permanent"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["card", "evolve", "breed", "contagion", "revive", "recall", "combat_growth", "aura_floor", "unknown"],
+          "description": "来源类型；卡牌效果为 card，其余为规则引擎的系统写入"
+        },
+        "cardId": { "type": ["string", "null"], "description": "来源卡 id；系统来源或卡表缺失时为 null" },
+        "skillId": { "type": ["string", "null"], "description": "来源技能 id；无技能或卡表缺失时为 null" },
+        "attack": { "type": "integer", "description": "攻击力增量，可为负" },
+        "health": { "type": "integer", "description": "生命值增量，可为负" }
+      }
+    },
     "MinionStats": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["attack", "health"],
+      "required": ["attack", "health", "sources"],
       "description": "随从攻击与生命的分层构成",
       "properties": {
         "attack": { "$ref": "view.schema.json#/$defs/MinionStatBreakdown" },
-        "health": { "$ref": "view.schema.json#/$defs/MinionStatBreakdown" }
+        "health": { "$ref": "view.schema.json#/$defs/MinionStatBreakdown" },
+        "sources": {
+          "type": "array",
+          "items": { "$ref": "view.schema.json#/$defs/MinionStatSource" },
+          "description": "逐来源加成；按层排序后下发，各层之和等于对应聚合层"
+        }
       }
     },
     "CombatLogEntry": {

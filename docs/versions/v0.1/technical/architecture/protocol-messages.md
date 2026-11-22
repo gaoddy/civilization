@@ -461,12 +461,24 @@
 | `damage` | integer | 是 | 层和与当前值之差 |
 | `current` | integer | 是 | 当前实际值 |
 
+### MinionStatSource
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `layer` | enum | 是 | 来源所属的聚合层；成长已并入 permanent |
+| `kind` | enum | 是 | 来源类型；卡牌效果为 card，其余为规则引擎的系统写入 |
+| `cardId` | string | null | 是 | 来源卡 id；系统来源或卡表缺失时为 null |
+| `skillId` | string | null | 是 | 来源技能 id；无技能或卡表缺失时为 null |
+| `attack` | integer | 是 | 攻击力增量，可为负 |
+| `health` | integer | 是 | 生命值增量，可为负 |
+
 ### MinionStats
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `attack` | MinionStatBreakdown | 是 |  |
 | `health` | MinionStatBreakdown | 是 |  |
+| `sources` | array<MinionStatSource> | 是 | 逐来源加成；按层排序后下发，各层之和等于对应聚合层 |
 
 ### CombatLogEntry
 

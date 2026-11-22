@@ -177,6 +177,11 @@ const SCENARIO := {
 	"hand-card-overlap": 32,
 	"hand-hover-scale": 1.12,
 	"detail-panel-width": 200,
+	# 棋盘随从详情：默认 280；来源超过 8 行时桌面加宽到 360，手机两档同宽保持单列。
+	"detail-minion-width": 280,
+	"detail-minion-width-compact": 200,
+	"detail-minion-width-dense": 360,
+	"detail-minion-width-dense-compact": 200,
 	"gallery-toc-width": 140,
 	"gallery-detail-width": 280,
 	"gallery-preview-width": 200,

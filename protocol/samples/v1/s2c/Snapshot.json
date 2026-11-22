@@ -104,7 +104,8 @@
                 "aura": 0,
                 "damage": 2,
                 "current": 2
-              }
+              },
+              "sources": []
             },
             "keywords": [
               "battlecry"

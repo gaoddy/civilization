@@ -157,6 +157,7 @@ fn aura_health_floor_is_one() {
     let folded = fold_auras(
         &engine.catalog,
         &state.auras,
+        &state.aura_sources,
         &state.players[0].board.clone(),
     );
     let folded_insect = folded
@@ -276,6 +277,7 @@ fn aura_folds_into_combat_snapshot_only() {
     let folded = fold_auras(
         &engine.catalog,
         &state.auras,
+        &state.aura_sources,
         &state.players[0].board.clone(),
     );
     let folded_minion = folded
@@ -579,6 +581,7 @@ fn aura_grant_keyword_keeps_armor_layer() {
     let folded = fold_auras(
         &engine.catalog,
         &state.auras,
+        &state.aura_sources,
         &state.players[0].board.clone(),
     );
     let folded_target = folded
@@ -622,6 +625,7 @@ fn aura_armor_stacks_across_sources() {
     let folded = fold_auras(
         &engine.catalog,
         &state.auras,
+        &state.aura_sources,
         &state.players[0].board.clone(),
     );
     let folded_target = folded

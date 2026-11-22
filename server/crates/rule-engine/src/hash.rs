@@ -357,6 +357,8 @@ fn hash_minions(hasher: &mut Hasher, minions: &[MinionInstance]) {
     }
 }
 
+/// 随从哈希不包含 `stat_sources`：来源是展示派生数据，聚合层已完整表达数值语义，
+/// 哈希它只会放大合并顺序的影响。
 fn hash_minion(hasher: &mut Hasher, minion: &MinionInstance) {
     hasher.u64(minion.instance_id);
     hasher.str(&minion.card_id);

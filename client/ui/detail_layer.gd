@@ -39,7 +39,7 @@ func _init() -> void:
     _panel = UIControls.card_panel("raised")
     _panel.name = "MinionDetailPanel"
     _panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _panel.custom_minimum_size = Vector2(_panel_width("minion"), 0)
+    _panel.custom_minimum_size = Vector2(_panel_width_for("minion", {}), 0)
     _panel.visible = false
     add_child(_panel)
 
@@ -237,7 +237,8 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
     if anchor == _hover_card and _panel.visible:
         _place_detail(_local_rect(anchor.get_global_rect()), kind)
         return
-    _panel.custom_minimum_size = Vector2(_panel_width(kind), 0)
+    var width := _panel_width_for(kind, data)
+    _panel.custom_minimum_size = Vector2(width, 0)
     if not is_instance_valid(_hover_card) or _hover_card != anchor:
         _hover_card = anchor
     UIControls.clear(_panel)
@@ -255,7 +256,7 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
     elif kind == "hero":
         _render_hero_detail(box, data.get("heroId"))
     else:
-        _render_minion_detail(box, data.get("minion", {}))
+        _render_minion_detail(box, data.get("minion", {}), width)
 
     visible = true
     _panel.visible = true
@@ -267,7 +268,7 @@ func _show_detail(data: Dictionary, anchor: Control) -> void:
 ## 商店卡详情：类型、科学分类、玩法、关联分类、费用、原始数值、时代、
 ## 技能文本与不可购买原因。
 func _render_shop_detail(box: VBoxContainer, data: Dictionary) -> void:
-    ShopDetailSection.render(box, data, _kit("shop"))
+    ShopDetailSection.render(box, data, _kit("shop", data))
 
 
 ## 座位详情：名字、名次、英雄 · 时代 · 随从、生命与对战记录。
@@ -277,28 +278,37 @@ func _render_seat_detail(box: VBoxContainer, data: Dictionary) -> void:
         data.get("player", {}),
         int(data.get("hpCap", 0)),
         data.get("view", {}),
-        _kit("seat"),
+        _kit("seat", data),
     )
 
 
 ## 售货员详情：营业状态与可执行的商店操作，替代常驻文字。
 func _render_seller_detail(box: VBoxContainer) -> void:
-    SellerDetailSection.render(box, _kit("seller"))
+    SellerDetailSection.render(box, _kit("seller", {}))
 
 
 ## 我方英雄详情：介绍、玩法、关联分类与英雄技能；英雄卡不含科学分类与时代。
 func _render_hero_detail(box: VBoxContainer, hero_id: Variant) -> void:
-    HeroDetailSection.render(box, hero_id, _kit("hero"))
+    HeroDetailSection.render(box, hero_id, _kit("hero", {}))
 
 
 ## 棋盘随从详情：名称、科学分类、玩法、关联分类与攻击/生命的构成分层。
-func _render_minion_detail(box: VBoxContainer, minion: Dictionary) -> void:
-    MinionDetailSection.render(box, minion, _kit("minion"))
+## `width` 缺省时按来源行数自行取档，兼容只检查文本的调用方。
+func _render_minion_detail(box: VBoxContainer, minion: Dictionary, width: int = -1) -> void:
+    var resolved := width if width >= 0 else MinionDetailSection.panel_width(minion)
+    MinionDetailSection.render(box, minion, _kit("minion", {"minion": minion}), resolved)
 
 
 ## 当前详情块的公共排版；文本宽度按面板令牌计算。
-func _kit(kind: String) -> DetailKit:
-    return DetailKit.new(_detail_text_width(kind))
+func _kit(kind: String, data: Dictionary = {}) -> DetailKit:
+    return DetailKit.new(_detail_text_width(kind, data))
+
+
+## 面板宽度：随从详情按来源行数在 280 / 360 间切换，其余详情沿用原令牌。
+func _panel_width_for(kind: String, data: Dictionary) -> int:
+    if kind == "minion":
+        return MinionDetailSection.panel_width(data.get("minion", {}))
+    return _panel_width(kind)
 
 
 ## 面板宽度：座位详情取座位令牌，其余详情共用通用详情宽度。
@@ -307,8 +317,8 @@ func _panel_width(kind: String) -> int:
 
 
 ## 面板宽度扣除卡片内边距后的文本宽度，供技能文本换行。
-func _detail_text_width(kind: String) -> int:
-    return _panel_width(kind) - UITheme.space("space-lg") * 2
+func _detail_text_width(kind: String, data: Dictionary = {}) -> int:
+    return _panel_width_for(kind, data) - UITheme.space("space-lg") * 2
 
 
 ## 详情定位：商店卡先右后左，棋盘卡先下后上；夹紧内容框且不覆盖当前卡片。

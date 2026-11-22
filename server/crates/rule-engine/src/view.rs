@@ -11,7 +11,7 @@
 //! 时，除 `can_end_recruit` 外的布尔值一律为 `false`（重复 `EndRecruit` 幂等成功）。
 
 use crate::combat;
-use crate::data::Era;
+use crate::data::{Catalog, Era};
 use crate::effects::{EVOLVE_CHOICES, EffectCtx, Op, TargetRef, Trigger};
 use crate::engine::Engine;
 use crate::intent::RejectCode;
@@ -22,6 +22,7 @@ use crate::recruit::{
 use crate::settle;
 use crate::state::{
     GameState, MinionInstance, PendingChoice, Phase, PlayerState, Seat, StatComponent,
+    StatSourceLayer, StatSourceOrigin, StatSystemSource,
 };
 
 /// 一个座位当前可见的全部状态。
@@ -121,11 +122,46 @@ pub struct StatBreakdownView {
     pub current: i32,
 }
 
+/// 属性来源在视图中的分层；成长已并入永久层。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum StatSourceLayerView {
+    Aura,
+    Permanent,
+    Turn,
+}
+
+/// 属性来源的类型；卡牌效果与规则引擎的系统写入分列。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum StatSourceKindView {
+    Card,
+    Evolve,
+    Breed,
+    Contagion,
+    Revive,
+    Recall,
+    CombatGrowth,
+    AuraFloor,
+    Unknown,
+}
+
+/// 一条合并后的属性来源；展示文案由客户端按 id 组合。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StatSourceView {
+    pub layer: StatSourceLayerView,
+    pub kind: StatSourceKindView,
+    pub card_id: Option<String>,
+    pub skill_id: Option<String>,
+    pub attack: i32,
+    pub health: i32,
+}
+
 /// 随从攻击与生命的分层构成视图。
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct MinionStatsView {
     pub attack: StatBreakdownView,
     pub health: StatBreakdownView,
+    /// 逐来源增量；已按层合并、过滤并排序。
+    pub sources: Vec<StatSourceView>,
 }
 
 /// 棋盘随从的公开视图。
@@ -461,7 +497,12 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
         .collect();
 
     // 棋盘数值与关键词必须先折叠光环，否则客户端看到的是未加成的数值。
-    let folded_board = settle::fold_auras(&engine.catalog, &state.auras, &player.board);
+    let folded_board = settle::fold_auras(
+        &engine.catalog,
+        &state.auras,
+        &state.aura_sources,
+        &player.board,
+    );
     let board = folded_board
         .iter()
         .enumerate()
@@ -472,7 +513,7 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
             golden: minion.golden,
             attack: combat::effective_attack(&engine.catalog, minion),
             health: combat::effective_health(&engine.catalog, minion),
-            stats: stats_breakdown(minion),
+            stats: stats_breakdown(&engine.catalog, minion),
             keywords: combat::keyword_set(&engine.catalog, minion).names(),
             stealth: combat::has_stealth(&engine.catalog, minion),
         })
@@ -597,11 +638,145 @@ pub fn view(engine: &Engine, state: &GameState, seat: Seat) -> Option<SeatView> 
 /// `current` 先取 [`MinionInstance::attack`] / [`MinionInstance::health`]
 /// （已夹非负），再反推 `damage`，因此招募期负血量会被 `damage` 吸收。
 /// 服务层的协议映射复用它，保证规则引擎与服务端视图口径一致。
-pub fn stats_breakdown(minion: &MinionInstance) -> MinionStatsView {
+///
+/// `catalog` 只用于把来源账本里的 [`crate::data::SkillId`] 还原成字符串 id；
+/// 来源是展示派生数据，不改变数值语义，各层来源和必须等于对应聚合层。
+pub fn stats_breakdown(catalog: &Catalog, minion: &MinionInstance) -> MinionStatsView {
+    let attack = breakdown(&minion.stats.attack, minion.attack());
+    let health = breakdown(&minion.stats.health, minion.health());
+    let sources = stat_source_views(catalog, minion);
+    debug_assert_eq!(
+        source_layer_sum(&sources, StatSourceLayerView::Aura),
+        (attack.aura, health.aura),
+        "光环来源之和应等于光环层聚合值"
+    );
+    debug_assert_eq!(
+        source_layer_sum(&sources, StatSourceLayerView::Permanent),
+        (attack.permanent, health.permanent),
+        "永久来源之和应等于永久层聚合值"
+    );
+    debug_assert_eq!(
+        source_layer_sum(&sources, StatSourceLayerView::Turn),
+        (attack.turn, health.turn),
+        "回合来源之和应等于本回合层聚合值"
+    );
     MinionStatsView {
-        attack: breakdown(&minion.stats.attack, minion.attack()),
-        health: breakdown(&minion.stats.health, minion.health()),
+        attack,
+        health,
+        sources,
     }
+}
+
+/// 来源合并键：层、类型、卡牌 id、技能 id。
+type SourceMergeKey = (
+    StatSourceLayerView,
+    StatSourceKindView,
+    Option<String>,
+    Option<String>,
+);
+
+/// 把来源账本合并、过滤并排序成视图行。
+///
+/// - `Growth` 与 `Permanent` 合并为永久层，同 `(kind, card_id, skill_id)` 求和；
+/// - 数值为 0 的来源不输出；某层聚合值与生命都为 0 时整层不输出；
+/// - 按光环 → 永久 → 本回合、层内 `|attack| + |health|` 降序排列，
+///   再按 `card_id`、`skill_id`、`kind` 升序稳定。
+fn stat_source_views(catalog: &Catalog, minion: &MinionInstance) -> Vec<StatSourceView> {
+    use std::collections::BTreeMap;
+
+    let mut merged: BTreeMap<SourceMergeKey, (i32, i32)> = BTreeMap::new();
+
+    for source in &minion.stat_sources {
+        let layer = match source.layer {
+            StatSourceLayer::Growth | StatSourceLayer::Permanent => StatSourceLayerView::Permanent,
+            StatSourceLayer::Turn => StatSourceLayerView::Turn,
+            StatSourceLayer::Aura => StatSourceLayerView::Aura,
+        };
+        let (kind, card_id, skill_id) = match &source.origin {
+            StatSourceOrigin::Card { card_id, skill_id } => (
+                StatSourceKindView::Card,
+                card_id.clone(),
+                skill_id.map(|id| catalog.skill_name(id).to_string()),
+            ),
+            StatSourceOrigin::System(system) => (system_kind(*system), None, None),
+        };
+        let entry = merged
+            .entry((layer, kind, card_id, skill_id))
+            .or_insert((0, 0));
+        entry.0 = entry.0.saturating_add(source.attack);
+        entry.1 = entry.1.saturating_add(source.health);
+    }
+
+    let mut rows: Vec<StatSourceView> = merged
+        .into_iter()
+        .filter_map(|((layer, kind, card_id, skill_id), (attack, health))| {
+            (attack != 0 || health != 0).then_some(StatSourceView {
+                layer,
+                kind,
+                card_id,
+                skill_id,
+                attack,
+                health,
+            })
+        })
+        .collect();
+
+    // 零层过滤：聚合值为 0 的层不输出任何来源，即使来源互相抵消。
+    let layer_totals = [
+        source_layer_sum(&rows, StatSourceLayerView::Aura),
+        source_layer_sum(&rows, StatSourceLayerView::Permanent),
+        source_layer_sum(&rows, StatSourceLayerView::Turn),
+    ];
+    rows.retain(|row| {
+        let total = layer_totals[match row.layer {
+            StatSourceLayerView::Aura => 0,
+            StatSourceLayerView::Permanent => 1,
+            StatSourceLayerView::Turn => 2,
+        }];
+        total != (0, 0)
+    });
+
+    rows.sort_by(|left, right| {
+        let left_weight =
+            u64::from(left.attack.unsigned_abs()) + u64::from(left.health.unsigned_abs());
+        let right_weight =
+            u64::from(right.attack.unsigned_abs()) + u64::from(right.health.unsigned_abs());
+        left.layer
+            .cmp(&right.layer)
+            .then_with(|| right_weight.cmp(&left_weight))
+            .then_with(|| left.card_id.cmp(&right.card_id))
+            .then_with(|| left.skill_id.cmp(&right.skill_id))
+            .then_with(|| left.kind.cmp(&right.kind))
+    });
+
+    rows
+}
+
+/// 系统来源到视图类型的映射；新增系统来源时这里必须同步。
+fn system_kind(source: StatSystemSource) -> StatSourceKindView {
+    match source {
+        StatSystemSource::Evolve => StatSourceKindView::Evolve,
+        StatSystemSource::Breed => StatSourceKindView::Breed,
+        StatSystemSource::Contagion => StatSourceKindView::Contagion,
+        StatSystemSource::Revive => StatSourceKindView::Revive,
+        StatSystemSource::Recall => StatSourceKindView::Recall,
+        StatSystemSource::CombatGrowth => StatSourceKindView::CombatGrowth,
+        StatSystemSource::AuraFloor => StatSourceKindView::AuraFloor,
+        StatSystemSource::Unknown => StatSourceKindView::Unknown,
+    }
+}
+
+/// 某一层来源的攻防合计；用于零层过滤与调试断言。
+fn source_layer_sum(sources: &[StatSourceView], layer: StatSourceLayerView) -> (i32, i32) {
+    sources.iter().filter(|source| source.layer == layer).fold(
+        (0, 0),
+        |(attack, health), source| {
+            (
+                attack.saturating_add(source.attack),
+                health.saturating_add(source.health),
+            )
+        },
+    )
 }
 
 /// 单项属性的分层构成；`permanent` 合并成长与其他永久增量。

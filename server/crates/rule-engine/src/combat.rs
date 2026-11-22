@@ -15,7 +15,10 @@ use crate::engine::Engine;
 use crate::keyword::{Keyword, KeywordSet};
 use crate::recruit::new_minion;
 use crate::rng::{RngStreams, Stream};
-use crate::state::{InstanceId, MinionInstance, Modifier, Seat, base_stats};
+use crate::state::{
+    InstanceId, MinionInstance, Modifier, Seat, StatSourceLayer, StatSourceOrigin,
+    StatSystemSource, base_stats,
+};
 
 /// 每场战斗的行动上限，防止死亡循环。
 const MAX_ACTIONS: u16 = 200;
@@ -716,40 +719,64 @@ impl BattleField {
         Some(id)
     }
 
-    pub(crate) fn modify_stats(&mut self, id: InstanceId, modifier: Modifier) {
+    /// 写入攻防修正，并把增量记入来源账本。
+    ///
+    /// `origin` 为效果来源（卡牌 + 技能）；系统写入（复苏等）由调用方直接记账。
+    pub(crate) fn modify_stats(
+        &mut self,
+        id: InstanceId,
+        modifier: Modifier,
+        origin: Option<&StatSourceOrigin>,
+    ) {
         let Some((side, index)) = self.locate(id) else {
             return;
         };
         let minion = &mut self.sides[side].minions[index];
         // 分层写入自身会同步 `current`，不再维护平行生命数组。
-        match modifier.duration {
+        let layer = match modifier.duration {
             Duration::Combat => {
                 minion.stats.attack.add_turn(modifier.attack);
                 minion.stats.health.add_turn(modifier.health);
+                StatSourceLayer::Turn
             }
             // `Instant` 在数据中未使用；保持现有「永不清除」语义。
             Duration::Permanent | Duration::Instant | Duration::Aura => {
                 minion.stats.attack.add_permanent(modifier.attack);
                 minion.stats.health.add_permanent(modifier.health);
+                StatSourceLayer::Permanent
             }
+        };
+        if let Some(origin) = origin {
+            minion.record_stat_source(layer, origin.clone(), modifier.attack, modifier.health);
         }
     }
 
     /// 获得成长；`health_only` 时只增加生命。
-    pub(crate) fn add_growth(&mut self, id: InstanceId, times: i32, health_only: bool) {
+    pub(crate) fn add_growth(
+        &mut self,
+        id: InstanceId,
+        times: i32,
+        health_only: bool,
+        origin: Option<&StatSourceOrigin>,
+    ) {
         let Some((side, index)) = self.locate(id) else {
             return;
         };
         let minion = &mut self.sides[side].minions[index];
-        if health_only {
+        let (attack, health) = if health_only {
             minion.stats.health.add_growth(times);
+            (0, times)
         } else {
             minion.stats.attack.add_growth(times);
             minion.stats.health.add_growth(times);
+            (times, times)
+        };
+        if let Some(origin) = origin {
+            minion.record_stat_source(StatSourceLayer::Growth, origin.clone(), attack, health);
         }
     }
 
-    /// 移除全部成长，同时扣减当前生命。
+    /// 移除全部成长，同时扣减当前生命并清空成长来源。
     pub(crate) fn remove_growth(&mut self, id: InstanceId) {
         let Some(minion) = self.minion_mut(id) else {
             return;
@@ -758,6 +785,7 @@ impl BattleField {
         // `remove_growth` 会按生命层增量同步扣减 `current`。
         minion.stats.attack.remove_growth();
         minion.stats.health.remove_growth();
+        minion.remove_growth_sources();
     }
 
     /// 唯一的战斗掉血入口：只写 `stats.health.current`。
@@ -1006,6 +1034,12 @@ impl BattleField {
                             let minion = &mut self.sides[side].minions[index_now];
                             minion.stats.attack.add_permanent(bonus_attack);
                             minion.stats.health.add_permanent(bonus_health);
+                            minion.record_stat_source(
+                                StatSourceLayer::Permanent,
+                                StatSourceOrigin::System(StatSystemSource::Revive),
+                                bonus_attack,
+                                bonus_health,
+                            );
                             // 以分层和在场的成长、永久增量恢复生命，清除战斗伤害。
                             let restored = minion.stats.health.layers().max(1);
                             minion.stats.health.revive_to(restored);
@@ -1026,8 +1060,22 @@ impl BattleField {
                             // 成长、繁衍、传染、授予关键词、金色原样保留。
                             hand_minion.stats.attack.clear_turn();
                             hand_minion.stats.health.clear_turn();
+                            hand_minion.clear_turn_sources();
                             hand_minion.stats.attack.set_aura(0);
                             hand_minion.stats.health.set_aura(0);
+                            hand_minion.replace_aura_sources(Vec::new());
+                            // 回手保留成长；来源统一记作「回手」，与卡牌效果归因区分。
+                            let recall_attack = hand_minion.stats.attack.growth;
+                            let recall_health = hand_minion.stats.health.growth;
+                            hand_minion
+                                .stat_sources
+                                .retain(|source| source.layer != StatSourceLayer::Growth);
+                            hand_minion.record_stat_source(
+                                StatSourceLayer::Growth,
+                                StatSourceOrigin::System(StatSystemSource::Recall),
+                                recall_attack,
+                                recall_health,
+                            );
                             hand_minion
                                 .stats
                                 .attack

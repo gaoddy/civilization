@@ -8,7 +8,10 @@ mod common;
 use common::started;
 use rule_engine::data::Catalog;
 use rule_engine::engine::Engine;
-use rule_engine::state::{AuraEffect, GameState, MinionInstance};
+use rule_engine::state::{
+    AuraEffect, AuraSource, GameState, MinionInstance, StatSourceLayer, StatSourceOrigin,
+    StatSystemSource,
+};
 use rule_engine::view::{BoardMinionView, view};
 
 /// 卡面 3/3 的普通随从。
@@ -40,6 +43,19 @@ fn catalog(engine: &Engine) -> &Catalog {
     &engine.catalog
 }
 
+/// 直接改分层数值的测试夹具必须同步来源账本，否则视图的调试断言不成立。
+fn record(minion: &mut MinionInstance, layer: StatSourceLayer, attack: i32, health: i32) {
+    if attack == 0 && health == 0 {
+        return;
+    }
+    minion.record_stat_source(
+        layer,
+        StatSourceOrigin::System(StatSystemSource::Unknown),
+        attack,
+        health,
+    );
+}
+
 #[test]
 fn layers_and_current_agree_without_damage() {
     let (engine, mut state) = started(7);
@@ -50,6 +66,9 @@ fn layers_and_current_agree_without_damage() {
     minion.stats.health.add_growth(1);
     minion.stats.health.add_permanent(2);
     minion.stats.health.add_turn(-1);
+    record(&mut minion, StatSourceLayer::Growth, 1, 1);
+    record(&mut minion, StatSourceLayer::Permanent, 2, 2);
+    record(&mut minion, StatSourceLayer::Turn, 3, -1);
     state.players[0].board.push(minion);
 
     let stats = first_board_minion(&engine, &state).stats;
@@ -97,6 +116,8 @@ fn zero_attack_layers_accumulate_normally() {
     let mut minion = MinionInstance::new(catalog(&engine), 1, SCHOLAR, false);
     minion.stats.attack.add_permanent(4);
     minion.stats.health.add_growth(2);
+    record(&mut minion, StatSourceLayer::Permanent, 4, 0);
+    record(&mut minion, StatSourceLayer::Growth, 0, 2);
     state.players[0].board.push(minion);
 
     let stats = first_board_minion(&engine, &state).stats;
@@ -124,6 +145,7 @@ fn damage_is_absorbed_into_breakdown() {
     let mut minion = MinionInstance::new(catalog(&engine), 1, FOUR, false);
     minion.stats.health.add_permanent(1);
     minion.stats.health.apply_damage(3);
+    record(&mut minion, StatSourceLayer::Permanent, 0, 1);
     state.players[0].board.push(minion);
 
     let stats = first_board_minion(&engine, &state).stats;
@@ -183,6 +205,14 @@ fn folded_aura_is_reflected_in_breakdown() {
             keywords: Default::default(),
             floor_one: false,
         },
+    );
+    state.aura_sources.insert(
+        1,
+        vec![AuraSource {
+            card_id: FOUR.to_string(),
+            attack: 2,
+            health: 1,
+        }],
     );
 
     let stats = first_board_minion(&engine, &state).stats;

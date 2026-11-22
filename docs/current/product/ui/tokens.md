@@ -88,6 +88,8 @@
 | `recruit-shop-gap` | 6 | 招募组合中商店整体到河道的间距，与战斗组合的舞台间距一致 |
 | `opponent-hp-width` | 84 | 战斗阶段对手身份列与血量条宽度，与英雄卡同宽；手机 64 |
 | `seat-detail-width` | 236 | 座位悬停详情面板宽度，比通用详情宽一档以容纳一行战报 |
+| `detail-minion-width` | 280 | 棋盘与战斗随从详情单列宽度 |
+| `detail-minion-width-dense` | 360 | 来源超过 8 行时的双列宽度；只有大于基础宽度时才生效 |
 | `avatar-sm` / `-md` / `-lg` | 22 / 30 / 38 | 头像块边长 |
 | `avatar-rail` | 44 | 左栏座位行边长兜底值，左栏尺寸未解算时使用；实际边长取栏内宽与人均可用高度的较小值，头像边长再减两侧描边 4，手机兜底 40 |
 | `seat-row-gap` | 4 | 座位行间距；手机 2 |
@@ -149,7 +151,10 @@ iPhone 以 960×540 为宽度基准（高度随窗口扩展），对局页通过
 | `portrait-size-compact` | 48 | iPhone `CombatIntro` 等仍使用 `GamePortrait` 的头像块边长 |
 | `room-hero-detail-width-compact` | 200 | iPhone 选英雄页悬停详情卡宽度 |
 | `hero-detail-width-compact` | 120 | iPhone 选英雄页悬停详情与候选卡宽度；高度由 `card_face_height` 计算 |
+| `detail-minion-width-compact` | 200 | iPhone 棋盘与战斗随从详情单列宽度 |
+| `detail-minion-width-dense-compact` | 200 | iPhone 双列档位与基础同宽，来源超过 8 行时实际保持单列 |
 
+- 随从详情按 `stats.sources` 行数选宽：不超过 8 行取 `detail-minion-width`；超过 8 行且 `detail-minion-width-dense` 大于当前档位基础宽度时取 dense，否则保持基础宽度。手机两档都是 200，因此来源再多也保持单列。
 - 座位行边长取栏内宽与人均可用高度的较小值（960×540 下约 57），不再使用固定行内边距；头像边长 = 行边长 − 4，血量条叠在头像底部内侧、不额外占高；行距 2 让 8 席一屏放下，左栏不出现滚动。
 
 ## 6. 玩法色

@@ -12,7 +12,10 @@
 use crate::data::Playstyle;
 use crate::effects::{Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
-use crate::state::{GameState, InstanceId, MinionInstance, PendingChoice, Seat};
+use crate::state::{
+    GameState, InstanceId, MinionInstance, PendingChoice, Seat, StatSourceLayer, StatSourceOrigin,
+    StatSystemSource,
+};
 
 /// 进化的三项选项，下标即 `Intent::ChooseDiscover.choice` 的取值。
 ///
@@ -186,6 +189,12 @@ fn apply_evolve_option(minion: &mut MinionInstance, option: &str) {
         "stats" => {
             minion.stats.attack.add_permanent(EVOLVE_STATS);
             minion.stats.health.add_permanent(EVOLVE_STATS);
+            minion.record_stat_source(
+                StatSourceLayer::Permanent,
+                StatSourceOrigin::System(StatSystemSource::Evolve),
+                EVOLVE_STATS,
+                EVOLVE_STATS,
+            );
         }
         CHOICE_DIVINE_SHIELD => {
             minion

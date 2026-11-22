@@ -11,7 +11,7 @@ use rule_engine::effects::{TargetRef, Zone};
 use rule_engine::engine::Engine;
 use rule_engine::intent::RejectCode;
 use rule_engine::state::{
-    AuraEffect, GameState, HandCard, MinionInstance, PendingChoice, Phase, Seat,
+    AuraEffect, AuraSource, GameState, HandCard, MinionInstance, PendingChoice, Phase, Seat,
 };
 use rule_engine::view::{
     Affordances, PendingChoiceView, PlayerSummaryView, SeatView, SelfView, placement_of, view,
@@ -456,6 +456,15 @@ fn board_view_folds_auras_into_stats_and_keywords() {
             keywords: rule_engine::keyword::KeywordSet::from_names(["divine_shield", "光环测试词"]),
             floor_one: true,
         },
+    );
+    // 来源账本与聚合光环成对出现，视图断言来源和等于光环层。
+    state.aura_sources.insert(
+        1,
+        vec![AuraSource {
+            card_id: card.clone(),
+            attack: 2,
+            health: 1,
+        }],
     );
 
     let after = view(&engine, &state, 0)

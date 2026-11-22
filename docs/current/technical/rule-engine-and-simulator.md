@@ -312,6 +312,16 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 - 读取口 `attack()` / `health()` 返回 `max(0, current)`；各层照常累积。战斗内部死亡判定直接用原始 `stats.health.current <= 0`，不经过非负夹紧。
 - 视图 `view::MinionStatsView` / `StatBreakdownView` 把攻防映射为 `initial`、`permanent`（= `growth + permanent`）、`turn`、`aura`、`damage`、`current` 六项；在可达的下发状态下满足 `initial + permanent + turn + aura - damage == current`（复生造成的负 `damage` 只存在于战斗内部，不下发）。`health.current` 在视图中夹到 0，招募期负血量由 `damage` 吸收。`BoardMinion` 协议的 `stats` 与顶层 `attack` / `health` 复用同一口径。
 
+**来源账本与下发：**
+
+- `MinionInstance` 额外维护 `stat_sources: Vec<StatSource>` 展示账本，条目为 `{ layer, origin, attack, health }`。`StatSourceLayer` 为 `Growth` / `Permanent` / `Turn` / `Aura`；`StatSourceOrigin` 为卡牌 `Card { card_id, skill_id }` 或系统 `System(StatSystemSource)`，后者取 `Evolve` / `Breed` / `Contagion` / `Revive` / `Recall` / `CombatGrowth` / `AuraFloor` / `Unknown`。
+- 所有写数值的入口在写入分量后调用 `record_stat_source`：按 `(layer, origin)` 合并、攻防分别累加，攻防双 0 时不记录。`remove_growth_sources`、`clear_turn_sources`、`replace_aura_sources` 与 `remove_growth`、`clear_turn`、`set_aura(0)` 成对调用，保证账本跟随分量清理。
+- 账本只服务展示，聚合层已完整表达数值语义，`hash.rs` 不编码来源，`state_hash` 不受来源顺序影响；来源在视图层显式排序，重放与确定性不受影响。
+- 视图 `MinionStatsView.sources` 由 `view::stat_source_views` 生成：`Growth` 与 `Permanent` 合并为 `Permanent` 层，同 `(kind, card_id, skill_id)` 再求和；攻防双 0 的来源不输出，某层聚合值为 0 时整层来源都不输出；排序为层序 `Aura → Permanent → Turn`，层内按 `|attack| + |health|` 降序，再按 `card_id`、`skill_id`、`kind` 升序。`kind` 升序取 `StatSourceKindView` 的枚举声明序（`Card` → `Evolve` → `Breed` → `Contagion` → `Revive` → `Recall` → `CombatGrowth` → `AuraFloor` → `Unknown`），不是字符串字典序。`stats_breakdown` 用 `debug_assert_eq!` 断言每层来源和等于对应聚合层。
+- 协议 `MinionStats.sources` 为必填数组，元素 `MinionStatSource` 字段为 `layer` / `kind` / `cardId` / `skillId` / `attack` / `health`；`layer` 枚举 `aura` / `permanent` / `turn`，`kind` 枚举 `card` / `evolve` / `breed` / `contagion` / `revive` / `recall` / `combat_growth` / `aura_floor` / `unknown`，`cardId` / `skillId` 为 `string | null`，攻防可为负。`room-service::view::to_protocol` 逐项映射，战斗报告的 `board_minion_from` 复用同一映射。
+- 光环来源由 `GameState.aura_sources: BTreeMap<InstanceId, Vec<AuraSource>>` 提供，与 `state.auras` 由 `recompute_auras` / `recompute_auras_for` 成对重算；逐来源按来源卡 id 合并，英雄光环使用英雄卡 id，卡表缺失时为空串。`fold_auras` 把 Aura 层来源整体替换进折叠克隆的账本，持久实例的 `aura` 层与 Aura 来源始终为空；触发「光环失效不致死」夹紧时，差额并入生命增量最负的来源（同值按卡 id 升序），没有负向来源时追加一条 `System(AuraFloor)`，保证来源之和等于聚合层。
+- 回手与战斗成长：战斗回手时清除临时层与 Aura 来源，保留成长数值但把成长来源整体替换为一条 `System(Recall)`，不再保留原始成长来源卡；`write_back_persistent` 保留持久棋盘原有的成长来源，只把 `updated.growth - stored.growth` 的差值补记为一条 `System(CombatGrowth)`，战斗克隆里的技能级来源只留在快照、不回写持久棋盘。
+
 ## 10. 战斗伤害、复生与快照
 
 - 行动轮次：`SideBoard` 每侧一个指针，双方逐拍交替出手，同一侧按站位从左到右、跳过阵亡与不能攻击的随从。指针越过该侧末尾后，该侧下一次轮到回到最左，并恢复全部存活随从的本轮行动次数（普通 1 次、连击 2 次），循环至一方全灭或 200 次行动上限；两侧轮次各自独立。连击在同一拍连续结算两次，两次独立选目标，第一次击杀目标后第二次重新选目标；攻击者第一次攻击后阵亡则第二次不进行。复生保留本轮剩余行动次数，召唤与复生按插入位置决定本轮是否轮到。
