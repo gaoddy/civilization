@@ -48,7 +48,6 @@ var _log: FileAccess = null
 var _health: HTTPRequest = null
 var _health_in_flight := false
 var _health_retry_elapsed := 0.0
-var _watchdog_pid := -1
 var _wait_elapsed := 0.0
 var _server_ready_emitted := false
 var _room_code_emitted := false
@@ -102,10 +101,6 @@ func _process(delta: float) -> void:
 
 
 func _exit_tree() -> void:
-    # 先停看护，避免正常退出后它再按旧 pid 执行一次 kill。
-    if _watchdog_pid > 0:
-        OS.kill(_watchdog_pid)
-        _watchdog_pid = -1
     # 只回收本进程启动的子进程；复用已有服务端时 pid 保持 -1。
     if _server_pid > 0:
         OS.kill(_server_pid)
@@ -225,7 +220,6 @@ func _start_bots() -> void:
     _sim_stderr = result.get("stderr") as FileAccess
     _wait_elapsed = 0.0
     _state = State.WAITING_ROOM_CODE
-    _start_watchdog()
 
 
 func _finish_server_wait() -> void:
@@ -250,23 +244,6 @@ func _open_log() -> void:
 func _spawn(path: String, args: PackedStringArray) -> Dictionary:
     # 3 参调用返回 stdio / stderr / pid；两条管道都能独立读取。
     return OS.execute_with_pipe(path, args, false)
-
-
-func _start_watchdog() -> void:
-    # SIGTERM 会让引擎跳过 `_exit_tree`，由看护进程在应用消失后兜底回收子进程。
-    if _watchdog_pid > 0:
-        return
-    if _server_pid <= 0 and _sim_pid <= 0:
-        return
-    var script := (
-        "while kill -0 %d 2>/dev/null; do sleep 0.1; done; "
-        + "if [ %d -gt 0 ]; then kill -9 %d 2>/dev/null; fi; "
-        + "if [ %d -gt 0 ]; then kill -9 %d 2>/dev/null; fi"
-    ) % [OS.get_process_id(), _server_pid, _server_pid, _sim_pid, _sim_pid]
-    var result := OS.execute_with_pipe("/bin/sh", PackedStringArray(["-c", script]), false)
-    _watchdog_pid = int(result.get("pid", -1))
-    if _watchdog_pid <= 0:
-        _log_line("watchdog_unavailable")
 
 
 func _drain_pipes() -> void:
@@ -315,7 +292,5 @@ func _fail(reason: String) -> void:
         return
     _state = State.FAILED
     _log_line("failed: " + reason)
-    # 失败时可能已有子进程存活，确保看护进程已启动。
-    _start_watchdog()
     # autoload `_ready` 早于主场景，延迟到场景订阅信号之后再发。
     failed.emit.call_deferred(reason)
