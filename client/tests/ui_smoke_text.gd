@@ -9,6 +9,22 @@ func _ready() -> void:
     _check(CardDB.display_name("adam-smith") == "亚当·斯密", "卡名")
     _check(CardDB.display_name("seedling") == "幼苗", "衍生物卡名")
     _check(CardDB.display_text("adam-smith").contains("成长"), "技能文本")
+    _check(
+        CardDB.display_text("fengche").contains("回合开始时获得 +0/+1"),
+        "普通技能文本"
+    )
+    _check(
+        CardDB.display_text("fengche", true).contains("回合开始时获得 +0/+2"),
+        "金色技能文本翻倍"
+    )
+    _check(
+        CardDB.display_text("dengue-virus", true).contains("达到 3 层"),
+        "金色文案阈值不翻倍"
+    )
+    _check(
+        CardDB.display_text("alan-turing", true) == CardDB.display_text("alan-turing"),
+        "无金色文案时回落普通文案"
+    )
     _check(CardDB.era_name(5) == "工业", "时代名")
     _check(UIWording.enum_text("playstyle", "mammal") == "哺乳纲", "玩法名")
     _check(CardDB.playstyle_name("neutral") == "中立", "CardDB 玩法名")

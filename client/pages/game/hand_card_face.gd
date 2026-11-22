@@ -24,6 +24,9 @@ static func build(card: Dictionary, measure_host: Node = null) -> Control:
         true,
         true,
         measure_host,
+        true,
+        false,
+        golden,
     )
     CardFaceBase.add_frame(face_node, card_id)
     # 角标最后添加：介绍需要时信息区会向上扩展，角标必须压在信息区之上。
