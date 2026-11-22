@@ -104,7 +104,13 @@ def main() -> None:
     for d in (avatars, faces):
         d.mkdir(parents=True, exist_ok=True)
 
-    manifest: dict = {"version": 1, "assets": {}}
+    # Keep entries written outside this pipeline (e.g. covers generated
+    # directly at card-face size) instead of rebuilding the manifest from the
+    # mapping alone.
+    manifest_path = Path(args.manifest)
+    assets: dict = {}
+    if manifest_path.exists():
+        assets = json.loads(manifest_path.read_text()).get("assets", {})
     for card_id, src in mapping.items():
         src_path = portraits / src
         if not src_path.exists():
@@ -115,7 +121,7 @@ def main() -> None:
         clean.save(portraits / f"ch_{card_id}_full.png")
         derive_avatar(clean).save(avatars / f"ch_{card_id}_ava.png")
         derive_face_cover(clean).save(faces / f"card_{card_id}_face.png")
-        manifest["assets"][card_id] = {
+        assets[card_id] = {
             "portrait": f"res://assets/characters/portraits/ch_{card_id}_full.png",
             "avatar": f"res://assets/characters/avatars/ch_{card_id}_ava.png",
             "card_face": f"res://assets/cards/faces/card_{card_id}_face.png",
@@ -127,8 +133,9 @@ def main() -> None:
         }
         print(f"processed {card_id}")
 
-    Path(args.manifest).write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
-    print(f"wrote {args.manifest} ({len(manifest['assets'])} cards)")
+    manifest = {"version": 1, "assets": assets}
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
+    print(f"wrote {args.manifest} ({len(assets)} cards)")
 
 
 if __name__ == "__main__":
