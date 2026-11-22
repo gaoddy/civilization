@@ -12,6 +12,7 @@ const SERVER_URL := "ws://127.0.0.1:8080/ws"
 const SERVER_PORT := 8080
 const SERVER_WAIT_SECONDS := 10.0
 const ROOM_CODE_WAIT_SECONDS := 15.0
+const SERVER_CHECK_WAIT_SECONDS := 3.0
 
 const ROOM_CODE_PREFIX := "ROOM_CODE="
 const LISTEN_ADDRESS := "127.0.0.1:8080"
@@ -38,7 +39,9 @@ var _sim_path := ""
 var _server_pid := -1
 var _sim_pid := -1
 var _server_stdout: FileAccess = null
+var _server_stderr: FileAccess = null
 var _sim_stdout: FileAccess = null
+var _sim_stderr: FileAccess = null
 var _log: FileAccess = null
 var _probe: StreamPeerTCP = null
 var _wait_elapsed := 0.0
@@ -67,6 +70,7 @@ func _process(delta: float) -> void:
         return
     match _state:
         State.CHECKING:
+            _wait_elapsed += delta
             _poll_checking()
         State.WAITING_SERVER:
             _drain_pipes()
@@ -136,6 +140,9 @@ func _poll_checking() -> void:
         _finish_server_wait()
         return
     if status == StreamPeerTCP.STATUS_CONNECTING:
+        if _wait_elapsed >= SERVER_CHECK_WAIT_SECONDS:
+            _close_probe()
+            _fail("server_check_timeout")
         return
     _close_probe()
     _start_server()
@@ -174,6 +181,7 @@ func _start_server() -> void:
         _fail("server_spawn_failed")
         return
     _server_stdout = result.get("stdio") as FileAccess
+    _server_stderr = result.get("stderr") as FileAccess
     _wait_elapsed = 0.0
     _state = State.WAITING_SERVER
 
@@ -188,6 +196,7 @@ func _start_bots() -> void:
         _fail("bots_spawn_failed")
         return
     _sim_stdout = result.get("stdio") as FileAccess
+    _sim_stderr = result.get("stderr") as FileAccess
     _wait_elapsed = 0.0
     _state = State.WAITING_ROOM_CODE
 
@@ -211,7 +220,7 @@ func _open_log() -> void:
 
 
 func _spawn(path: String, args: PackedStringArray) -> Dictionary:
-    # 4.7.2 的 execute_with_pipe 只重定向 stdout；stderr 跟随启动本进程的终端。
+    # 3 参调用返回 stdio / stderr / pid；两条管道都能独立读取。
     return OS.execute_with_pipe(path, args, false)
 
 
@@ -235,6 +244,8 @@ func _close_probe() -> void:
 
 func _drain_pipes() -> void:
     _drain_stream(_server_stdout)
+    _drain_stream(_server_stderr)
+    _drain_stream(_sim_stderr)
     _drain_sim()
     if _log != null:
         _log.flush()
