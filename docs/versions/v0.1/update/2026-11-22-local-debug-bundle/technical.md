@@ -79,7 +79,7 @@
 
 - `client/tests/ui_smoke_local_server.gd/.tscn`：断言 `room_code_from_line` 的合法行、前后空白、空行、带前缀噪声、`DEV_DONE` 行；断言 `sidecar_paths` 在不存在目录时返回缺失与两份路径；断言无 `embedded_server` 特性时 `enabled` 为假。不启动任何进程。
 - `make client-check`；`make client-smoke SMOKE=local_server` 只跑新增用例。
-- 端到端人工验收（尚未执行）：计划为 `make client-export-local` 成功 → 打开产物 → 自动登录进大厅 → 自动进入机器人房间 → 选英雄并准备 → 自动开局；退出后 8080 不再由本产物启动的服务端监听（复用场景除外）。GUI 端到端（自动登录、自动入房、完成一局、退出后进程回收）尚未在真实产物中验收，由主 agent 在 8080 空闲时执行；当前只完成构建级与静态校验。
+- 端到端人工验收（GUI 步骤尚未执行）：调试产物已由 `make client-export-local` 导出成功；以下 GUI 步骤尚未执行：打开产物 → 自动登录进大厅 → 自动进入机器人房间 → 选英雄并准备 → 自动开局；退出后 8080 不再由本产物启动的服务端监听（复用场景除外）。上述 GUI 端到端尚未在真实产物中验收，由主 agent 在 8080 空闲时执行；当前只完成构建级与静态校验。
 - 发行回归：`make client-export` 已运行，产物 `Contents/MacOS/` 不含 `room-service`、`sim`；`client-export-steam` 未运行，按预设 `custom_features=""` 静态核对未启用 `embedded_server`，未实际导出验证。
 
 ## 5. 风险与约束

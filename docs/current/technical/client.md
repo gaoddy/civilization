@@ -10,7 +10,7 @@
 
 ```
 client/
-  project.godot              # 主场景 login.tscn；autoload：ScreenProfile、WindowSizer、GameStore、CardDB、Net、Sfx、LocalServer
+  project.godot              # 主场景 login.tscn；autoload：ScreenProfile、WindowSizer、GameStore、CardDB、Net、Sfx、Platform、LocalServer
   export_presets.cfg         # macOS 预设（Universal、未签名）、macOS 本地调试预设（embedded_server）与 iOS 预设（开发签名）
   icon.png                   # 应用图标 1024×1024；iOS 导出按尺寸缩放生成
   .gitignore                 # 忽略 .godot/ 与 *.uid
