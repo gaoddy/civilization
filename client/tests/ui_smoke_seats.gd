@@ -432,6 +432,16 @@ func _check_detail_variants() -> void:
                 text.contains(str(expected)),
                 "%s 的详情应包含 %s：%s" % [case[0], expected, text],
             )
+        if str(case[0]) == "p2" and panel != null:
+            var log_box = panel.find_child("SeatCombatLog", true, false)
+            var entry_names: Array = []
+            if log_box != null:
+                for line in log_box.get_children():
+                    entry_names.append(str(line.name))
+            _expect(
+                entry_names == ["SeatCombatEntry_3", "SeatCombatEntry_2"],
+                "对战记录应按回合倒序（最新在上），实际 %s" % str(entry_names),
+            )
         if str(case[0]) == "p3":
             _expect(
                 not text.contains(TranslationServer.translate("ui.game.rail.ghost_named") % ""),

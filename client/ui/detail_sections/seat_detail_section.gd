@@ -94,7 +94,7 @@ static func _divider() -> Control:
     return margin
 
 
-## 对战记录：不设标题，按回合升序逐条列出；一条一行，对手名过长时省略。
+## 对战记录：不设标题，按回合倒序逐条列出（最新一场在最上）；一条一行，对手名过长时省略。
 static func _combat_log(player: Dictionary, view: Dictionary) -> VBoxContainer:
     var log_box := VBoxContainer.new()
     log_box.name = "SeatCombatLog"
@@ -109,6 +109,7 @@ static func _combat_log(player: Dictionary, view: Dictionary) -> VBoxContainer:
             "color-text-muted",
         ))
         return log_box
+    entries.reverse()
     var names := player_names(view)
     for entry in entries:
         log_box.add_child(_entry_line(entry, player_id, names))
@@ -153,7 +154,7 @@ static func _caption(text: String, color_name: String) -> Label:
     return label
 
 
-## 该座位参与过的战报，保持 `view.combatLog` 的回合升序。
+## 该座位参与过的战报，保持 `view.combatLog` 的回合升序；展示顺序由调用方决定。
 static func combat_entries(view: Dictionary, player_id: String) -> Array:
     var entries: Array = []
     for entry in view.get("combatLog", []):
