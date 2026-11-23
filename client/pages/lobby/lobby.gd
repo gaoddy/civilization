@@ -5,6 +5,7 @@ var _top: LobbyTopBar
 var _actions: LobbyActions
 var _bottom: LobbyBottomBar
 var _friends: FriendsPanel
+var _queue: QueuePanel
 var _invite_popup: InvitePopup
 
 
@@ -15,6 +16,9 @@ func _ready() -> void:
     GameStore.error_received.connect(_on_error)
     GameStore.auth_changed.connect(_on_auth_changed)
     GameStore.social_changed.connect(_render_friends_entry)
+    GameStore.match_found.connect(_on_match_found)
+    GameStore.game_started.connect(_on_game_started)
+    Net.disconnected.connect(_on_disconnected)
     if not Net.is_open():
         _top.status.text = tr("ui.lobby.not_connected")
     _show_room_closed_reason()
@@ -67,6 +71,7 @@ func _build() -> void:
     column.add_child(center)
 
     _actions = LobbyActions.new()
+    _actions.match_pressed.connect(_on_match_pressed)
     _actions.create_pressed.connect(_on_create_pressed)
     _actions.join_pressed.connect(_on_join_pressed)
     center.add_child(_actions)
@@ -81,6 +86,11 @@ func _build() -> void:
     _friends = FriendsPanel.new()
     _friends.closed.connect(_close_friends)
     add_child(_friends)
+
+    # 匹配排队浮层盖住主页；邀请弹窗后挂载，保持邀请始终在最上层。
+    _queue = QueuePanel.new()
+    _queue.cancel_pressed.connect(_on_queue_cancel)
+    add_child(_queue)
 
     # 邀请弹窗是独立组件：自己订阅社交状态并处理响应，大厅只负责提示文案。
     # 后挂载保证邀请始终盖在好友浮层之上。
@@ -102,6 +112,33 @@ func _render_friends_entry() -> void:
 func _on_create_pressed() -> void:
     _top.status.text = tr("ui.lobby.creating")
     Net.send(Protocol.MSG_CREATE_ROOM, {})
+
+
+func _on_match_pressed() -> void:
+    if not Net.is_open():
+        _top.status.text = tr("ui.lobby.not_connected")
+        return
+    _top.status.text = tr("ui.lobby.matching")
+    GameStore.join_queue()
+
+
+func _on_queue_cancel() -> void:
+    GameStore.leave_queue()
+    _top.status.text = tr("ui.lobby.match_cancelled")
+
+
+func _on_match_found(_seat: int) -> void:
+    _top.status.text = tr("ui.lobby.match_found")
+
+
+## 匹配房不下发大厅 `RoomUpdate`，以 `GameStarted` 作为进入对局的唯一信号。
+func _on_game_started() -> void:
+    UINavigation.navigate(self, UINavigation.PAGE_GAME)
+
+
+func _on_disconnected() -> void:
+    GameStore.abandon_queue()
+    _top.status.text = tr("ui.login.disconnected")
 
 
 func _on_gallery_pressed() -> void:

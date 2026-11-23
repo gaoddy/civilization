@@ -46,7 +46,7 @@ use protocol::server::{
     AchievementState, FriendInvite as FriendInviteMessage, FriendInviteResult, FriendRequestItem,
     FriendUpdate as FriendUpdateMessage, FriendUpdateFriendsItem, FriendUpdateFriendsItemStatus,
     FriendUpdateOutgoingItem, FriendUpdateRecentItem, FriendUpdateRecentItemRelation,
-    InviteAccepted, PhoneCodeSent, RoomClosed, RoomInviteCode,
+    InviteAccepted, MatchFound, PhoneCodeSent, QueueState, RoomClosed, RoomInviteCode,
 };
 use protocol::{ClientEnvelope, ClientMessage, ServerEnvelope};
 use rule_engine::state::Phase;
@@ -60,6 +60,7 @@ use crate::auth::Session;
 use crate::envelope::SeatChannel;
 use crate::error::error_message;
 use crate::game::{GameTask, RoomCommand, SeatUpdate, UpdateKind};
+use crate::queue::{DEFAULT_RATING, QueueEntry, QueueStateData};
 use crate::room::{SEAT_COUNT, seed_for_code};
 use crate::social::{FriendStatus, InviteOutcome, Relation, SocialError, SocialSnapshot};
 
@@ -68,6 +69,12 @@ const OUTBOUND_CAPACITY: usize = 64;
 
 /// 房间计时检查的间隔。
 const TICK_INTERVAL: Duration = Duration::from_millis(100);
+
+/// 匹配队列推进间隔。
+const QUEUE_TICK_INTERVAL: Duration = Duration::from_millis(200);
+
+/// 匹配房等待 8 个连接挂上房间 task 的宽限；超时后按已连接座位开局。
+const RANKED_ATTACH_GRACE_MS: u64 = 3_000;
 
 /// 连接关闭时留给写端冲刷已入队消息的时长。
 const FLUSH_TIMEOUT: Duration = Duration::from_millis(200);
@@ -140,12 +147,22 @@ impl RoomHub {
     }
 }
 
-/// 连接 task 的控制通道消息：社交下行等不经过房间的消息由连接自己发出。
-pub struct ControlMessage {
-    /// 下行消息类型。
-    pub kind: &'static str,
-    /// 已序列化的载荷。
-    pub payload: Value,
+/// 连接 task 的控制通道消息：社交下行与匹配入房由连接自己完成。
+pub enum ControlMessage {
+    /// 下行消息；连接 task 编码后经自己的序号序列发送。
+    Payload {
+        /// 下行消息类型。
+        kind: &'static str,
+        /// 已序列化的载荷。
+        payload: Value,
+    },
+    /// 匹配成功：连接下发 `MatchFound` 并挂到指定房间 task。
+    EnterRoom {
+        /// 匹配房 id。
+        room_id: String,
+        /// 服务端分配的座位号（0 起）。
+        seat: u8,
+    },
 }
 
 /// 在线连接登记项。
@@ -313,7 +330,45 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
         tokio::select! {
             biased;
             Some(control) = control_rx.recv() => {
-                send_value(&out_tx, &mut direct, &floor, control.kind, &control.payload);
+                match control {
+                    ControlMessage::Payload { kind, payload } => {
+                        send_value(&out_tx, &mut direct, &floor, kind, &payload);
+                    }
+                    ControlMessage::EnterRoom { room_id, seat } => {
+                        let Some(authorized) = session.clone() else { continue; };
+                        // 匹配成局后玩家可能已自行创建/加入房间：以连接本地状态为准。
+                        if room.is_some() {
+                            continue;
+                        }
+                        let Some(handle) = state.hub.lock().await.get(&room_id) else {
+                            send_error(
+                                &out_tx,
+                                &mut direct,
+                                &floor,
+                                "ROOM_NOT_FOUND",
+                                "匹配房间不存在",
+                                false,
+                            );
+                            continue;
+                        };
+                        let generation = next_generation();
+                        // `MatchFound` 必须先于 `Attach` 编码：房间 task 一旦开始给该座位
+                        // 推送，就会与本连接共用同一个序号下限。
+                        let found = MatchFound {
+                            room_id: room_id.clone(),
+                            seat: i64::from(seat),
+                        };
+                        send_payload(&out_tx, &mut direct, &floor, "MatchFound", &found);
+                        let _ = handle.tx.send(RoomMessage::Attach {
+                            player_id: authorized.player_id.clone(),
+                            out: out_tx.clone(),
+                            floor: floor.clone(),
+                            generation,
+                        });
+                        room = Some((room_id, handle.tx, generation));
+                        notify_presence(&state, &authorized.player_id).await;
+                    }
+                }
             }
             item = read.next() => {
                 let Some(item) = item else { break; };
@@ -469,6 +524,9 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                                 control: control_tx.clone(),
                             },
                         );
+                        // 新连接不继承旧连接的排队状态：客户端重连后无法恢复排队浮层，
+                        // 留着会让再次入队返回 QUEUE_ALREADY。
+                        state.queue.lock().await.remove(&authorized.player_id);
                         session = Some(authorized.clone());
                         send_payload(
                             &out_tx,
@@ -650,6 +708,28 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                     );
                     continue;
                 }
+                // 进房即退出匹配队列；先取队列锁再取房间锁，与匹配驱动顺序一致。
+                let in_room = {
+                    let mut queue = state.queue.lock().await;
+                    queue.remove(&authorized.player_id);
+                    state
+                        .rooms
+                        .lock()
+                        .await
+                        .room_of_player(&authorized.player_id)
+                        .is_some()
+                };
+                if in_room {
+                    send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "ALREADY_IN_ROOM",
+                        "已在房间中",
+                        false,
+                    );
+                    continue;
+                }
                 let created = state.rooms.lock().await.create(&authorized, &state.catalog);
                 let seed = seed_for_code(&created.code);
                 let (tx, rx) = mpsc::unbounded_channel();
@@ -695,6 +775,7 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                     );
                     continue;
                 }
+                state.queue.lock().await.remove(&authorized.player_id);
                 let joined = {
                     let mut rooms = state.rooms.lock().await;
                     rooms
@@ -771,6 +852,7 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                     );
                     continue;
                 }
+                state.queue.lock().await.remove(&authorized.player_id);
                 let joined = {
                     let mut rooms = state.rooms.lock().await;
                     rooms
@@ -802,6 +884,66 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                         false,
                     ),
                 }
+            }
+            ClientMessage::JoinQueue(_) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                if room.is_some() {
+                    send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        "QUEUE_IN_ROOM",
+                        "已在房间中，不能匹配",
+                        false,
+                    );
+                    continue;
+                }
+                let now = state.clock.now_ms();
+                // 锁顺序固定为 队列 → 房间，与匹配驱动建房保持一致。
+                let (joined, driver, snapshot) = {
+                    let mut queue = state.queue.lock().await;
+                    let in_room = {
+                        let rooms = state.rooms.lock().await;
+                        rooms.room_of_player(&authorized.player_id).is_some()
+                    };
+                    if in_room {
+                        (Err(crate::queue::QueueError::InRoom), false, None)
+                    } else {
+                        let result = queue.join(authorized.clone(), DEFAULT_RATING, now);
+                        let driver = result.is_ok() && queue.begin_driver();
+                        let snapshot = queue.state(&authorized.player_id, now);
+                        (result, driver, snapshot)
+                    }
+                };
+                match joined {
+                    Ok(()) => {
+                        if let Some(state_data) = snapshot {
+                            send_queue_state(&out_tx, &mut direct, &floor, state_data);
+                        }
+                        if driver {
+                            spawn_queue_driver(state.clone());
+                        }
+                    }
+                    Err(error) => send_error(
+                        &out_tx,
+                        &mut direct,
+                        &floor,
+                        &error.code().to_string(),
+                        &error.to_string(),
+                        false,
+                    ),
+                }
+            }
+            ClientMessage::LeaveQueue(_) => {
+                let Some(authorized) = session.clone() else {
+                    send_error(&out_tx, &mut direct, &floor, "AUTH_FAILED", "请先认证", false);
+                    continue;
+                };
+                // 取消排队幂等；客户端自行收起排队浮层，不需要服务端回执。
+                state.queue.lock().await.remove(&authorized.player_id);
             }
             ClientMessage::Reconnect(request) => {
                 // 真实重连路径：新 WS 连接 → AuthRequest(token) → Reconnect。
@@ -1139,6 +1281,8 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                         .await;
                     }
                     Ok(InviteOutcome::Accepted(invite)) => {
+                        // 接受邀请意味着即将进房：立刻退出匹配队列。
+                        state.queue.lock().await.remove(&authorized.player_id);
                         let joinable = {
                             let rooms = state.rooms.lock().await;
                             match rooms.room(&invite.room_id) {
@@ -1264,6 +1408,8 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
             .await
             .remove_if(&authorized.player_id, conn_id)
     {
+        // 断线即退出匹配队列；驱动下一轮也会按在线状态兜底清理。
+        state.queue.lock().await.remove(&authorized.player_id);
         notify_presence(&state, &authorized.player_id).await;
     }
 
@@ -1354,6 +1500,8 @@ fn map_room_message(
         | ClientMessage::AuthRequest(_)
         | ClientMessage::CreateRoom(_)
         | ClientMessage::JoinRoom(_)
+        | ClientMessage::JoinQueue(_)
+        | ClientMessage::LeaveQueue(_)
         | ClientMessage::RequestAccount(_)
         | ClientMessage::RequestPhoneCode(_)
         | ClientMessage::BindPhone(_)
@@ -1599,7 +1747,13 @@ async fn send_social(state: &AppState, player_id: &str, kind: &'static str, payl
         return;
     }
     let connections = state.connections.lock().await;
-    connections.try_send(player_id, ControlMessage { kind, payload });
+    connections.try_send(
+        player_id,
+        ControlMessage::Payload {
+            kind,
+            payload,
+        },
+    );
 }
 
 /// 下发一条已序列化的协议消息；序列化失败时静默丢弃。
@@ -1612,6 +1766,130 @@ async fn send_protocol<T: Serialize>(
     if let Ok(value) = serde_json::to_value(message) {
         send_social(state, player_id, kind, value).await;
     }
+}
+
+/// 把排队状态转成协议载荷。
+fn queue_state_payload(data: QueueStateData) -> QueueState {
+    QueueState {
+        rating_window: data.rating_window.and_then(|window| u64::try_from(window).ok()),
+        waiting_ms: data.waiting_ms,
+        // 契约上限 8：队列里可能暂存第九人，展示只按一局需要的人数封顶。
+        waiting_players: data.waiting_players.min(SEAT_COUNT) as i64,
+    }
+}
+
+/// 经连接自己的下行通道发送一条 `QueueState`。
+fn send_queue_state(
+    out: &mpsc::Sender<ServerEnvelope>,
+    channel: &mut SeatChannel,
+    floor: &SeqFloor,
+    data: QueueStateData,
+) {
+    send_payload(out, channel, floor, "QueueState", &queue_state_payload(data));
+}
+
+/// 启动匹配驱动：每 200ms 推进一次队列，成局后建房并通知连接。
+///
+/// 队列为空时驱动自行退出；连接层的下一次入队会重新拉起。
+fn spawn_queue_driver(state: AppState) {
+    tokio::spawn(async move {
+        let mut ticker = time::interval(QUEUE_TICK_INTERVAL);
+        ticker.set_missed_tick_behavior(MissedTickBehavior::Skip);
+        loop {
+            ticker.tick().await;
+            let now = state.clock.now_ms();
+            let (notices, formed, empty) = {
+                // 锁顺序固定为 队列 → 连接 → 房间，与入队/建房路径一致。
+                let mut queue = state.queue.lock().await;
+                let stale = {
+                    let connections = state.connections.lock().await;
+                    let rooms = state.rooms.lock().await;
+                    queue.retain(|entry| {
+                        connections.is_online(&entry.session.player_id)
+                            && rooms.room_of_player(&entry.session.player_id).is_none()
+                    })
+                };
+                if !stale.is_empty() {
+                    eprintln!("room-service: 匹配移出 {} 名失效玩家", stale.len());
+                }
+                let mut tick = queue.tick(now);
+                let formed = match tick.formed.take() {
+                    Some(entries) => {
+                        let sessions: Vec<Session> =
+                            entries.iter().map(|entry| entry.session.clone()).collect();
+                        let created = {
+                            // 持队列锁建房：与 CreateRoom 的「先移出队列、再建房」串行，
+                            // 避免同一玩家同时被匹配进房又自己建房。
+                            let mut rooms = state.rooms.lock().await;
+                            rooms.create_match(&sessions, &state.catalog)
+                        };
+                        match created {
+                            Ok(room) => Some((room, entries)),
+                            Err(error) => {
+                                eprintln!("room-service: 匹配建房失败: {error}");
+                                None
+                            }
+                        }
+                    }
+                    None => None,
+                };
+                let empty = queue.is_empty();
+                if empty {
+                    queue.end_driver();
+                }
+                (tick.notices, formed, empty)
+            };
+            if !notices.is_empty() {
+                let connections = state.connections.lock().await;
+                for notice in notices {
+                    connections.try_send(
+                        &notice.player_id,
+                        ControlMessage::Payload {
+                            kind: "QueueState",
+                            payload: serde_json::to_value(queue_state_payload(notice.state))
+                                .unwrap_or_else(|_| Value::Object(serde_json::Map::new())),
+                        },
+                    );
+                }
+            }
+            if let Some((room, entries)) = formed {
+                activate_match_room(&state, room, entries).await;
+            }
+            if empty {
+                break;
+            }
+        }
+    });
+}
+
+/// 匹配房建房成功后登记 hub、启动房间 task，并通知 8 名玩家入房。
+async fn activate_match_room(state: &AppState, room: crate::room::Room, entries: Vec<QueueEntry>) {
+    let seed = room.seed;
+    let (tx, rx) = mpsc::unbounded_channel();
+    state.hub.lock().await.insert(
+        room.id.clone(),
+        RoomHandle {
+            tx,
+            code: room.code.clone(),
+            seed,
+        },
+    );
+    spawn_room_task(state.clone(), room.id.clone(), seed, rx);
+    let connections = state.connections.lock().await;
+    for (seat, entry) in entries.iter().enumerate() {
+        let _ = connections.try_send(
+            &entry.session.player_id,
+            ControlMessage::EnterRoom {
+                room_id: room.id.clone(),
+                seat: seat as u8,
+            },
+        );
+    }
+    eprintln!(
+        "room-service: match formed room={} players={}",
+        room.id,
+        entries.len()
+    );
 }
 
 /// 房间码派生的确定性对局种子（FNV-1a 64 位）。
@@ -1628,6 +1906,7 @@ fn spawn_room_task(
         game: None,
         senders: BTreeMap::new(),
         presence_end_notified: false,
+        ranked_start_deadline_ms: None,
     };
     tokio::spawn(async move {
         let mut ticker = time::interval(TICK_INTERVAL);
@@ -1657,6 +1936,8 @@ struct RoomTask {
     senders: BTreeMap<String, SeatSender>,
     /// 是否已向好友推送过「对局结束」状态，避免重复通知。
     presence_end_notified: bool,
+    /// 匹配房等待连接挂载的截止时刻；非匹配房恒为 `None`。
+    ranked_start_deadline_ms: Option<u64>,
 }
 
 impl RoomTask {
@@ -1728,8 +2009,12 @@ impl RoomTask {
             self.deliver(updates).await;
             return;
         }
-        // 大厅没有对局：只处理断线宽限超时的座位释放。
         let now = self.state.clock.now_ms();
+        // 匹配房没有大厅阶段：连接挂上后立即开局，最多等一个短暂宽限。
+        if self.try_start_ranked(now).await {
+            return;
+        }
+        // 大厅没有对局：只处理断线宽限超时的座位释放。
         let expired = {
             let mut rooms = self.state.rooms.lock().await;
             rooms.tick_disconnects(&self.room_id, now)
@@ -1741,6 +2026,31 @@ impl RoomTask {
             self.senders.remove(&player_id);
         }
         self.broadcast_room_update().await;
+    }
+
+    /// 匹配房是否已满足开局条件；满足时直接构造对局并启动。
+    ///
+    /// 8 个连接全部挂上时立即开局；有玩家迟迟未挂上（例如入房通知丢失）时，
+    /// 等待 [`RANKED_ATTACH_GRACE_MS`] 后按已挂载座位开局，未挂载座位仍可通过
+    /// 既有 `Reconnect` 回到原座位。
+    async fn try_start_ranked(&mut self, now: u64) -> bool {
+        let ready = {
+            let rooms = self.state.rooms.lock().await;
+            rooms
+                .room(&self.room_id)
+                .is_some_and(|room| room.ranked && room.phase == Phase::Recruit)
+        };
+        if !ready {
+            return false;
+        }
+        let deadline = *self
+            .ranked_start_deadline_ms
+            .get_or_insert_with(|| now.saturating_add(RANKED_ATTACH_GRACE_MS));
+        if self.senders.len() < SEAT_COUNT && now < deadline {
+            return false;
+        }
+        self.start_ranked_game().await;
+        true
     }
 
     async fn attach(
@@ -1774,9 +2084,15 @@ impl RoomTask {
             };
             self.deliver(updates).await;
         } else {
-            let result = {
+            let (result, ranked) = {
                 let mut rooms = self.state.rooms.lock().await;
-                rooms.mark_reconnected(&self.room_id, &player_id)
+                let ranked = rooms
+                    .room(&self.room_id)
+                    .is_some_and(|room| room.ranked);
+                (
+                    rooms.mark_reconnected(&self.room_id, &player_id),
+                    ranked,
+                )
             };
             if result.is_err() {
                 // 宽限期已过、座位已被释放：连接不再属于该房间。
@@ -1785,7 +2101,10 @@ impl RoomTask {
                 self.senders.remove(&player_id);
                 return;
             }
-            self.send_room_update_to(&player_id).await;
+            // 匹配房跳过大厅阶段：不向客户端下发 `RoomUpdate`，等 `GameStarted`。
+            if !ranked {
+                self.send_room_update_to(&player_id).await;
+            }
         }
     }
 
@@ -1862,11 +2181,18 @@ impl RoomTask {
         }
         // 大厅断线保留座位与候选一个宽限期，重连能拿回同一组；超时由 tick 释放。
         let now = self.state.clock.now_ms();
-        let result = {
+        let (result, ranked) = {
             let mut rooms = self.state.rooms.lock().await;
-            rooms.mark_disconnected(&self.room_id, &player_id, now)
+            let ranked = rooms
+                .room(&self.room_id)
+                .is_some_and(|room| room.ranked);
+            (
+                rooms.mark_disconnected(&self.room_id, &player_id, now),
+                ranked,
+            )
         };
-        if result.is_ok() {
+        // 匹配房没有大厅视图需要广播。
+        if result.is_ok() && !ranked {
             self.broadcast_room_update().await;
         }
     }
@@ -2091,7 +2417,7 @@ impl RoomTask {
         };
 
         let seed = self.seed;
-        let mut game = match GameTask::new(
+        let game = match GameTask::new(
             self.state.catalog.clone(),
             seed,
             playstyles,
@@ -2121,6 +2447,58 @@ impl RoomTask {
             }
         }
 
+        self.activate_game(game).await;
+    }
+
+    /// 匹配房开局：阶段已由 `RoomRegistry::create_match` 推进到 `Recruit`。
+    ///
+    /// 与大厅开局共用 [`RoomTask::activate_game`] 的发送端绑定与开局通知。
+    async fn start_ranked_game(&mut self) {
+        self.ranked_start_deadline_ms = None;
+        let prepared = {
+            let rooms = self.state.rooms.lock().await;
+            let Some(room) = rooms.room(&self.room_id) else {
+                return;
+            };
+            let mut heroes = BTreeMap::new();
+            for (&seat, slot) in room.slots() {
+                let Some(hero) = slot.hero_card_id.clone() else {
+                    eprintln!(
+                        "room-service: 匹配房 room={} seat={seat} 缺少英雄",
+                        self.room_id
+                    );
+                    return;
+                };
+                heroes.insert(seat, hero);
+            }
+            (heroes, room.players(), room.playstyles)
+        };
+        let (heroes, players, playstyles) = prepared;
+        let game = match GameTask::new(
+            self.state.catalog.clone(),
+            self.seed,
+            playstyles,
+            heroes,
+            players,
+            self.state.clock.clone(),
+            self.state.achievements.clone(),
+        ) {
+            Ok(game) => game
+                .with_room_id(self.room_id.clone())
+                .with_ranked(true),
+            Err(error) => {
+                eprintln!(
+                    "room-service: 匹配房构造对局失败 room={}: {error}",
+                    self.room_id
+                );
+                return;
+            }
+        };
+        self.activate_game(game).await;
+    }
+
+    /// 对局已构造成功：绑定各连接发送端、下发 `GameStarted` 并进入对局状态。
+    async fn activate_game(&mut self, mut game: GameTask) {
         // 每次建连的发送端都先绑定（首次连接也走这里），随后 `GameStarted` 用同一
         // 座位通道编号，保证序号连续。
         for (player_id, sender) in &self.senders {
@@ -2475,6 +2853,7 @@ mod tests {
             game: None,
             senders: BTreeMap::new(),
             presence_end_notified: false,
+            ranked_start_deadline_ms: None,
         };
         task.start_game().await;
 
@@ -2517,6 +2896,7 @@ mod tests {
             game: None,
             senders: BTreeMap::new(),
             presence_end_notified: false,
+            ranked_start_deadline_ms: None,
         };
         task.senders.insert(
             player_id.clone(),

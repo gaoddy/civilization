@@ -77,6 +77,11 @@
 | --- | --- | --- | --- |
 | `friendId` | string | 是 |  |
 
+### JoinQueue
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+
 ### JoinRoom
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -88,6 +93,11 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `targetPlayerId` | string | 是 | 要被移出房间的玩家 playerId |
+
+### LeaveQueue
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
 
 ### LeaveRoom
 
@@ -282,6 +292,13 @@
 | `inviteId` | string | 是 |  |
 | `roomCode` | string | 是 |  |
 
+### MatchFound
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `roomId` | string | 是 |  |
+| `seat` | integer | 是 | 服务端分配的座位号（0 起） |
+
 ### PhaseChanged
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -295,6 +312,14 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `expiresAt` | string | 是 | 验证码失效时刻 |
+
+### QueueState
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `waitingMs` | integer | 是 | 本人已等待时长（毫秒） |
+| `waitingPlayers` | integer | 是 | 当前队列里的玩家数，客户端显示为「已凑 X/8」 |
+| `ratingWindow` | integer | null | 是 | 当前匹配积分半径；null 表示不限积分 |
 
 ### RoomClosed
 

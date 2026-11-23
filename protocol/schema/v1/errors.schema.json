@@ -54,6 +54,9 @@
         "CODE_INVALID",
         "CODE_EXPIRED",
         "ALREADY_IN_ROOM",
+        "QUEUE_ALREADY",
+        "QUEUE_IN_ROOM",
+        "QUEUE_NOT_JOINED",
         "INTERNAL_ERROR"
       ],
       "description": "稳定错误码，只增不改"

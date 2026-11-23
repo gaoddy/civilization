@@ -1526,3 +1526,47 @@ async fn host_dissolve_notifies_members_and_invalidates_code_over_real_ws() {
     );
     println!("dissolve ok: code={code} invalidated");
 }
+
+#[test]
+fn create_room_is_not_ranked() {
+    let clock = FixedClock::new(1_000_000);
+    let mut store = SessionStore::new();
+    let host = session(&mut store, &clock, "房主");
+    let mut registry = RoomRegistry::with_seed(0);
+    let room = registry.create(&host, &catalog());
+    assert!(!room.ranked, "普通房间局不计入天梯");
+    assert_eq!(room.phase, Phase::Lobby, "房间局仍从大厅开始");
+}
+
+#[test]
+fn create_match_fills_eight_seats_and_advances_to_recruit() {
+    let clock = FixedClock::new(1_000_000);
+    let mut store = SessionStore::new();
+    let players: Vec<Session> = (0..SEAT_COUNT)
+        .map(|index| session(&mut store, &clock, &format!("匹配{index}")))
+        .collect();
+
+    let mut registry = RoomRegistry::with_seed(0);
+    let room = registry
+        .create_match(&players, &catalog())
+        .expect("8 名玩家应能直接建立匹配房");
+
+    assert!(room.ranked, "匹配局必须标记 ranked");
+    assert_eq!(room.phase, Phase::Recruit, "匹配房跳过大厅直接进入招募");
+    assert_eq!(room.slots().len(), SEAT_COUNT, "匹配房应满座");
+    assert_eq!(room.host_id, players[0].player_id, "房主记为第一人");
+    assert!(
+        registry.room(&room.id).is_some_and(|stored| stored.ranked),
+        "注册表持有同一匹配房"
+    );
+
+    for (index, player) in players.iter().enumerate() {
+        let seat = room
+            .seat_of(&player.player_id)
+            .unwrap_or_else(|| panic!("{} 应占用一个座位", player.player_id));
+        assert_eq!(usize::from(seat), index, "座位按入队顺序分配");
+        let slot = room.slot(seat).expect("座位上的玩家");
+        assert!(slot.ready, "匹配局座位视为已准备");
+        assert!(slot.hero_card_id.is_some(), "匹配局应自动选好英雄");
+    }
+}

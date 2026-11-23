@@ -15,6 +15,7 @@ pub mod filter;
 pub mod game;
 pub mod net;
 pub mod phone_code;
+pub mod queue;
 pub mod room;
 pub mod social;
 pub mod steam;
@@ -111,6 +112,8 @@ pub struct AppState {
     /// 账号身份：数据库写穿与内存缓存；同一手机号恢复同一账号。
     pub accounts: Arc<Mutex<account::AccountStore>>,
     pub rooms: Arc<Mutex<RoomRegistry>>,
+    /// 自动匹配队列；单实例内存队列，成局后直接建房。
+    pub queue: Arc<Mutex<queue::MatchQueue>>,
     pub clock: Arc<dyn Clock>,
     pub catalog: Catalog,
     /// 已创建房间 → 房间任务入口（含房间码与对局种子）。
@@ -140,6 +143,7 @@ impl AppState {
             sessions: Arc::new(Mutex::new(SessionStore::new())),
             accounts: Arc::new(Mutex::new(account::AccountStore::new())),
             rooms: Arc::new(Mutex::new(RoomRegistry::new())),
+            queue: Arc::new(Mutex::new(queue::MatchQueue::new())),
             clock,
             catalog: load_catalog()?,
             hub: Arc::new(Mutex::new(net::RoomHub::default())),
@@ -167,6 +171,7 @@ impl AppState {
             sessions: Arc::new(Mutex::new(SessionStore::new())),
             accounts: Arc::new(Mutex::new(accounts)),
             rooms: Arc::new(Mutex::new(RoomRegistry::new())),
+            queue: Arc::new(Mutex::new(queue::MatchQueue::new())),
             clock,
             catalog,
             hub: Arc::new(Mutex::new(net::RoomHub::default())),

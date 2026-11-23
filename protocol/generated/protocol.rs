@@ -2248,6 +2248,9 @@ impl ::std::convert::From<ErrorMessage> for Error {
 ///    "CODE_INVALID",
 ///    "CODE_EXPIRED",
 ///    "ALREADY_IN_ROOM",
+///    "QUEUE_ALREADY",
+///    "QUEUE_IN_ROOM",
+///    "QUEUE_NOT_JOINED",
 ///    "INTERNAL_ERROR"
 ///  ]
 ///}
@@ -2362,6 +2365,12 @@ pub enum ErrorCode {
     CodeExpired,
     #[serde(rename = "ALREADY_IN_ROOM")]
     AlreadyInRoom,
+    #[serde(rename = "QUEUE_ALREADY")]
+    QueueAlready,
+    #[serde(rename = "QUEUE_IN_ROOM")]
+    QueueInRoom,
+    #[serde(rename = "QUEUE_NOT_JOINED")]
+    QueueNotJoined,
     #[serde(rename = "INTERNAL_ERROR")]
     InternalError,
 }
@@ -2421,6 +2430,9 @@ impl ::std::fmt::Display for ErrorCode {
             Self::CodeInvalid => f.write_str("CODE_INVALID"),
             Self::CodeExpired => f.write_str("CODE_EXPIRED"),
             Self::AlreadyInRoom => f.write_str("ALREADY_IN_ROOM"),
+            Self::QueueAlready => f.write_str("QUEUE_ALREADY"),
+            Self::QueueInRoom => f.write_str("QUEUE_IN_ROOM"),
+            Self::QueueNotJoined => f.write_str("QUEUE_NOT_JOINED"),
             Self::InternalError => f.write_str("INTERNAL_ERROR"),
         }
     }
@@ -2479,6 +2491,9 @@ impl ::std::str::FromStr for ErrorCode {
             "CODE_INVALID" => Ok(Self::CodeInvalid),
             "CODE_EXPIRED" => Ok(Self::CodeExpired),
             "ALREADY_IN_ROOM" => Ok(Self::AlreadyInRoom),
+            "QUEUE_ALREADY" => Ok(Self::QueueAlready),
+            "QUEUE_IN_ROOM" => Ok(Self::QueueInRoom),
+            "QUEUE_NOT_JOINED" => Ok(Self::QueueNotJoined),
             "INTERNAL_ERROR" => Ok(Self::InternalError),
             _ => Err("invalid value".into()),
         }
@@ -4468,6 +4483,30 @@ impl ::std::convert::From<&InviteToRoom> for InviteToRoom {
         value.clone()
     }
 }
+///`JoinQueue`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct JoinQueue {}
+impl ::std::convert::From<&JoinQueue> for JoinQueue {
+    fn from(value: &JoinQueue) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for JoinQueue {
+    fn default() -> Self {
+        Self {}
+    }
+}
 ///`JoinRoom`
 ///
 /// <details><summary>JSON schema</summary>
@@ -4531,6 +4570,30 @@ impl ::std::convert::From<&KickMember> for KickMember {
         value.clone()
     }
 }
+///`LeaveQueue`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct LeaveQueue {}
+impl ::std::convert::From<&LeaveQueue> for LeaveQueue {
+    fn from(value: &LeaveQueue) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for LeaveQueue {
+    fn default() -> Self {
+        Self {}
+    }
+}
 ///`LeaveRoom`
 ///
 /// <details><summary>JSON schema</summary>
@@ -4553,6 +4616,45 @@ impl ::std::convert::From<&LeaveRoom> for LeaveRoom {
 impl ::std::default::Default for LeaveRoom {
     fn default() -> Self {
         Self {}
+    }
+}
+///`MatchFound`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "roomId",
+///    "seat"
+///  ],
+///  "properties": {
+///    "roomId": {
+///      "type": "string"
+///    },
+///    "seat": {
+///      "description": "服务端分配的座位号（0 起）",
+///      "type": "integer",
+///      "maximum": 7.0,
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct MatchFound {
+    #[serde(rename = "roomId")]
+    pub room_id: ::std::string::String,
+    ///服务端分配的座位号（0 起）
+    pub seat: i64,
+}
+impl ::std::convert::From<&MatchFound> for MatchFound {
+    fn from(value: &MatchFound) -> Self {
+        value.clone()
     }
 }
 ///单项属性的分层构成；在可达的下发状态下 initial + permanent + turn + aura - damage = current
@@ -5704,6 +5806,61 @@ pub struct PlayerViewSelf {
 }
 impl ::std::convert::From<&PlayerViewSelf> for PlayerViewSelf {
     fn from(value: &PlayerViewSelf) -> Self {
+        value.clone()
+    }
+}
+///`QueueState`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "ratingWindow",
+///    "waitingMs",
+///    "waitingPlayers"
+///  ],
+///  "properties": {
+///    "ratingWindow": {
+///      "description": "当前匹配积分半径；null 表示不限积分",
+///      "type": [
+///        "integer",
+///        "null"
+///      ],
+///      "minimum": 0.0
+///    },
+///    "waitingMs": {
+///      "description": "本人已等待时长（毫秒）",
+///      "type": "integer",
+///      "minimum": 0.0
+///    },
+///    "waitingPlayers": {
+///      "description": "当前队列里的玩家数，客户端显示为「已凑 X/8」",
+///      "type": "integer",
+///      "maximum": 8.0,
+///      "minimum": 0.0
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct QueueState {
+    ///当前匹配积分半径；null 表示不限积分
+    #[serde(rename = "ratingWindow")]
+    pub rating_window: ::std::option::Option<u64>,
+    ///本人已等待时长（毫秒）
+    #[serde(rename = "waitingMs")]
+    pub waiting_ms: u64,
+    ///当前队列里的玩家数，客户端显示为「已凑 X/8」
+    #[serde(rename = "waitingPlayers")]
+    pub waiting_players: i64,
+}
+impl ::std::convert::From<&QueueState> for QueueState {
+    fn from(value: &QueueState) -> Self {
         value.clone()
     }
 }

@@ -106,6 +106,8 @@ pub struct Room {
     pub seed: u64,
     /// 本局启用的 5 个玩法；创建房间时由本局种子抽取，回房重置时随新种子重抽。
     pub playstyles: [Playstyle; 5],
+    /// 是否自动匹配局；房间局为 `false`，匹配局为 `true`，只有匹配局计入天梯。
+    pub ranked: bool,
     /// 座位 → 玩家；只保存已占用座位，键即座位号（0 起）。
     slots: BTreeMap<Seat, PlayerSlot>,
     /// 一次性邀请 token；只在大厅阶段创建，消费或过期即移除。
@@ -364,15 +366,7 @@ impl RoomRegistry {
     ///
     /// 建房时立即给房主切出一组候选英雄，使房主不等其他人也能看到自己的候选。
     pub fn create(&mut self, host: &Session, catalog: &Catalog) -> Room {
-        let (id, code) = loop {
-            let sequence = self.next_room_seq;
-            self.next_room_seq = self.next_room_seq.saturating_add(1);
-            let id = format!("room_{sequence}");
-            let code = encode_code(sequence);
-            if !self.rooms.contains_key(&id) && !self.by_code.contains_key(&code) {
-                break (id, code);
-            }
-        };
+        let (id, code) = self.allocate_id();
 
         let mut slots = BTreeMap::new();
         slots.insert(0, PlayerSlot::from_session(host));
@@ -386,6 +380,7 @@ impl RoomRegistry {
             seed,
             // 玩法在房间创建时确定：必须先于英雄候选分配，之后到本局结束保持不变。
             playstyles: rule_engine::playstyles::draw(seed),
+            ranked: false,
             slots,
             invite_tokens: BTreeMap::new(),
         };
@@ -394,6 +389,86 @@ impl RoomRegistry {
         self.rooms.insert(id.clone(), room.clone());
         self.by_code.insert(code, id);
         room
+    }
+
+    /// 自动匹配建房：跳过大厅准备流程，8 名玩家直接满座并推进到 `Recruit`。
+    ///
+    /// 座位按传入顺序分配，`host_id` 记为第一人；每名玩家自动从本人候选中选第一张
+    /// 英雄并置为已准备，再复用 [`Self::start_heroes`] + [`Self::commit_start`]
+    /// 完成阶段推进。匹配局不暴露房主操作（无邀请、无踢人、无解散）。
+    ///
+    /// # Errors
+    ///
+    /// 人数不是 8、或英雄池为空导致某人没有候选时返回错误，注册表不留下半成品房间。
+    pub fn create_match(
+        &mut self,
+        players: &[Session],
+        catalog: &Catalog,
+    ) -> Result<Room, RoomError> {
+        if players.len() != SEAT_COUNT {
+            return Err(RoomError::RoomNotReady);
+        }
+        let (id, code) = self.allocate_id();
+        let seed = seed_for_code(&code);
+        let mut slots = BTreeMap::new();
+        for (seat, player) in players.iter().enumerate() {
+            let mut slot = PlayerSlot::from_session(player);
+            // 匹配局没有大厅确认步骤：座位直接视为已准备，英雄在下面自动选定。
+            slot.ready = true;
+            slots.insert(seat as Seat, slot);
+        }
+        let mut room = Room {
+            id: id.clone(),
+            code: code.clone(),
+            host_id: players[0].player_id.clone(),
+            phase: Phase::Lobby,
+            seed,
+            playstyles: rule_engine::playstyles::draw(seed),
+            ranked: true,
+            slots,
+            invite_tokens: BTreeMap::new(),
+        };
+        for player in players {
+            room.assign_candidates(&player.player_id, catalog);
+            let Some(hero) = room
+                .candidates_of(&player.player_id)
+                .and_then(|candidates| candidates.first().cloned())
+            else {
+                return Err(RoomError::Unknown("匹配局没有可用英雄".to_string()));
+            };
+            if let Some(slot) = room.slot_mut(&player.player_id) {
+                slot.hero_card_id = Some(hero);
+            }
+        }
+
+        self.rooms.insert(id.clone(), room);
+        self.by_code.insert(code, id.clone());
+        // 全员已准备且已选英雄：复用既有开局校验把阶段推进到 `Recruit`。
+        if let Err(error) = self.start_heroes(&id, &players[0].player_id) {
+            self.remove(&id);
+            return Err(error);
+        }
+        if let Err(error) = self.commit_start(&id) {
+            self.remove(&id);
+            return Err(error);
+        }
+        self.rooms
+            .get(&id)
+            .cloned()
+            .ok_or_else(|| RoomError::Unknown("匹配房建好后立即丢失".to_string()))
+    }
+
+    /// 分配下一个房间标识与房间码；同一进程内单调且不复用。
+    fn allocate_id(&mut self) -> (RoomId, String) {
+        loop {
+            let sequence = self.next_room_seq;
+            self.next_room_seq = self.next_room_seq.saturating_add(1);
+            let id = format!("room_{sequence}");
+            let code = encode_code(sequence);
+            if !self.rooms.contains_key(&id) && !self.by_code.contains_key(&code) {
+                break (id, code);
+            }
+        }
     }
 
     /// 按玩家查所在房间与座位；不在任何房间返回 `None`。

@@ -55,6 +55,18 @@
       "required": [],
       "properties": {}
     },
+    "JoinQueue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "LeaveQueue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
     "KickMember": {
       "type": "object",
       "additionalProperties": false,
@@ -209,6 +221,34 @@
           "enum": ["kicked", "dissolved"],
           "description": "kicked：被房主移出；dissolved：房间已解散"
         }
+      }
+    },
+    "QueueState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["waitingMs", "waitingPlayers", "ratingWindow"],
+      "properties": {
+        "waitingMs": { "type": "integer", "minimum": 0, "description": "本人已等待时长（毫秒）" },
+        "waitingPlayers": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8,
+          "description": "当前队列里的玩家数，客户端显示为「已凑 X/8」"
+        },
+        "ratingWindow": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "当前匹配积分半径；null 表示不限积分"
+        }
+      }
+    },
+    "MatchFound": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roomId", "seat"],
+      "properties": {
+        "roomId": { "type": "string" },
+        "seat": { "type": "integer", "minimum": 0, "maximum": 7, "description": "服务端分配的座位号（0 起）" }
       }
     },
     "GameStarted": {

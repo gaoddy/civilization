@@ -984,6 +984,9 @@ error.NO_VALID_TARGET,需要选择目标
 error.PHONE_ALREADY_BOUND,该手机号已绑定其他账号
 error.PHONE_CODE_UNAVAILABLE,验证码发送不可用，请稍后重试
 error.PHONE_INVALID,手机号格式不正确
+error.QUEUE_ALREADY,已在匹配队列中
+error.QUEUE_IN_ROOM,已在房间中，不能匹配
+error.QUEUE_NOT_JOINED,不在匹配队列中
 error.RATE_LIMITED,操作过于频繁，请稍后再试
 error.ROOM_FULL,房间已满
 error.ROOM_NOT_FOUND,房间不存在
@@ -1664,6 +1667,10 @@ ui.lobby.join,加入
 ui.lobby.join_section,加入已有房间
 ui.lobby.joining,正在加入 %s …
 ui.lobby.logged_in,已登录：%s  编号 %s
+ui.lobby.match,匹配
+ui.lobby.match_cancelled,已取消匹配
+ui.lobby.match_found,匹配成功，正在进入对局…
+ui.lobby.matching,正在匹配…
 ui.lobby.no_friends,还没有好友
 ui.lobby.no_recent,还没有最近对局
 ui.lobby.no_requests,没有待处理的好友申请
@@ -1700,6 +1707,12 @@ ui.login.steam.unavailable,Steam 暂不可用，请稍后重试
 ui.login.submit,登录
 ui.login.subtitle,开发环境登录，验证码固定 123456
 ui.login.title,文明：七时代演进
+ui.queue.cancel,取消匹配
+ui.queue.players,已凑齐 %d/8
+ui.queue.title,正在匹配
+ui.queue.waiting,等待 %s
+ui.queue.window,匹配范围 ±%d 分
+ui.queue.window_unlimited,匹配范围不限积分
 ui.result.board_empty,无随从
 ui.result.board_item,%s  %d/%d
 ui.result.board_title,最终阵容

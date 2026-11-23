@@ -227,6 +227,8 @@ pub struct GameTask {
     hero_uses_baseline: [u32; SEAT_COUNT],
     seed: u64,
     room_id: String,
+    /// 是否自动匹配局；只做透传，胜负与积分结算在 T02 接入。
+    ranked: bool,
     /// 对局开始时刻（Unix epoch 毫秒），用于观察日志的单局时长。
     started_at_ms: u64,
     /// 按座位累计的意图总数与拒绝数，用于观察日志的意图拒绝率。
@@ -337,6 +339,7 @@ impl GameTask {
             hero_uses_baseline: [0; SEAT_COUNT],
             seed,
             room_id: String::new(),
+            ranked: false,
             started_at_ms,
             intent_counts: [0; SEAT_COUNT],
             rejection_counts: [0; SEAT_COUNT],
@@ -360,6 +363,18 @@ impl GameTask {
     pub fn with_room_id(mut self, room_id: impl Into<String>) -> Self {
         self.room_id = room_id.into();
         self
+    }
+
+    /// 标记本局是否为自动匹配局；只透传给结算层，不改变对局规则。
+    #[must_use]
+    pub fn with_ranked(mut self, ranked: bool) -> Self {
+        self.ranked = ranked;
+        self
+    }
+
+    /// 本局是否计入天梯。
+    pub fn ranked(&self) -> bool {
+        self.ranked
     }
 
     /// 玩家所在座位；不在房间里返回 `None`。
