@@ -12,7 +12,7 @@
 
 | 内容 | 范围 |
 | --- | --- |
-| Android 端适配 | 横屏布局、缩放基准、触控与安全区沿用 iOS 已定规则；与桌面端、iOS 共用同一份客户端工程与协议；目标设备与导出形态见[待确认事项](open-questions.md) |
+| Android 端适配 | Android 手机与平板横屏适配；缩放、触控、安全区、返回键与键盘规则沿用 iOS；APK 侧载与 Google Play AAB 并存，见[Android 端适配](product/ui/android-adaptation.md) |
 | 服务端上线 | prod 环境部署、域名与 TLS、数据库迁移与健康检查；沿用 `make deploy` 发布通道 |
 | 发行渠道与账号 | macOS Steam 国际版构建、Steam 自动登录、手机号绑定、Steam 成就同步与 Steam 好友邀请；契约与适配已实现，见[当前发行渠道与账号](../../current/product/accounts-and-distribution.md) |
 | 成就 | 6 个局内成就接入运行时 |
