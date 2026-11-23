@@ -86,7 +86,7 @@ func _build_header(card_id: String, entry: Dictionary, hero: bool) -> Control:
         else UITheme.space("space-lg")
     )
     header.add_theme_constant_override("separation", gap)
-    header.add_child(_build_preview(card_id, entry))
+    header.add_child(_build_preview(card_id, entry, hero))
 
     var info := VBoxContainer.new()
     info.name = "GalleryDetailInfo"
@@ -109,7 +109,7 @@ func _build_header(card_id: String, entry: Dictionary, hero: bool) -> Control:
     else:
         info.add_child(_build_meta(card_id, entry))
 
-    _add_playstyle_row(info, entry)
+    _add_row(info, tr("ui.game.detail.playstyle"), _playstyle_text(entry))
     var associations := _association_text(entry)
     if associations != "":
         _add_row(info, tr("ui.game.detail.association"), associations)
@@ -139,44 +139,63 @@ func _build_meta(card_id: String, entry: Dictionary) -> Control:
     return meta
 
 
-## 封面按卡面比例固定：桌面 160×209、手机 112×146；无美术时用玩法色与首字占位。
-func _build_preview(card_id: String, entry: Dictionary) -> Control:
+## 封面按卡面比例固定：桌面 160×209、手机 112×146；卡框复用 `CardFrame`，
+## 无美术时用玩法色与首字占位。
+func _build_preview(card_id: String, entry: Dictionary, hero: bool) -> Control:
     var width := UITheme.stage_metric("gallery-preview-width")
     var size := Vector2(width, UITheme.card_face_height(width))
     var inset := UITheme.stage_metric("card-cover-inset")
-    var inner := size - Vector2(inset * 2, inset * 2)
 
-    var frame := PanelContainer.new()
-    frame.name = "GalleryDetailArtFrame"
-    frame.custom_minimum_size = size
-    frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-    frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var holder := Control.new()
+    holder.name = "GalleryDetailArtFrame"
+    holder.custom_minimum_size = size
+    holder.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+    holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+    # 封面底色与卡面一致：玩法色压暗，用圆角面板避免方形色块盖住四角圆弧。
+    var cover := Panel.new()
+    cover.name = "GalleryDetailCover"
     var style := StyleBoxFlat.new()
     style.bg_color = UITheme.playstyle_cover(CardDB.primary_playstyle(entry))
     style.set_corner_radius_all(UITheme.radius("radius-md"))
-    style.set_content_margin_all(inset)
-    frame.add_theme_stylebox_override("panel", style)
+    style.set_content_margin_all(0)
+    cover.add_theme_stylebox_override("panel", style)
+    cover.set_anchors_preset(Control.PRESET_FULL_RECT)
+    cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    holder.add_child(cover)
 
     var texture := _preview_texture(card_id)
     if texture != null:
         var art := TextureRect.new()
         art.name = "GalleryDetailArt"
         art.texture = texture
-        art.custom_minimum_size = inner
         art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
         art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+        art.set_anchors_preset(Control.PRESET_FULL_RECT)
+        art.offset_left = inset
+        art.offset_top = inset
+        art.offset_right = -inset
+        art.offset_bottom = -inset
         art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        frame.add_child(art)
+        holder.add_child(art)
     else:
         var placeholder := UIControls.label(CardText.initial(card_id), UITheme.font_size("font-hero"), false)
         placeholder.name = "GalleryDetailArtPlaceholder"
-        placeholder.custom_minimum_size = inner
+        placeholder.set_anchors_preset(Control.PRESET_FULL_RECT)
+        placeholder.offset_left = inset
+        placeholder.offset_top = inset
+        placeholder.offset_right = -inset
+        placeholder.offset_bottom = -inset
         placeholder.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         placeholder.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
         placeholder.add_theme_color_override("font_color", UITheme.alpha("color-text", 0.16))
         placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        frame.add_child(placeholder)
-    return frame
+        holder.add_child(placeholder)
+
+    # 公共卡框压在封面之上：描边与星级和网格、对局卡面一致；英雄没有星级。
+    var level := 0 if hero else int(entry.get("level", 1))
+    holder.add_child(CardFrame.create(level))
+    return holder
 
 
 func _preview_texture(card_id: String) -> Texture2D:
@@ -192,34 +211,9 @@ func _taxonomy_text(entry: Dictionary) -> String:
     return " · ".join(path) if not path.is_empty() else tr("ui.game.detail.undetermined")
 
 
-## 玩法行展示全部 `play:` 归属，每个玩法前加 6px 玩法色圆点，按固定玩法顺序排列。
-func _add_playstyle_row(parent: VBoxContainer, entry: Dictionary) -> void:
-    var row := HBoxContainer.new()
-    row.name = "GalleryDetailPlaystyleRow"
-    row.add_theme_constant_override("separation", UITheme.space("space-sm"))
-    row.add_child(_key_label(tr("ui.game.detail.playstyle")))
-    var values := HFlowContainer.new()
-    values.name = "GalleryDetailPlaystyles"
-    values.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    values.add_theme_constant_override("h_separation", UITheme.space("space-md"))
-    values.add_theme_constant_override("v_separation", UITheme.space("space-2xs"))
-    var plays := CardDB.play_categories(entry)
-    if plays.is_empty():
-        values.add_child(_value_label(tr("ui.game.detail.undetermined")))
-    else:
-        for play in plays:
-            var item := HBoxContainer.new()
-            item.add_theme_constant_override("separation", UITheme.space("space-2xs"))
-            var dot := ColorRect.new()
-            dot.custom_minimum_size = Vector2(6, 6)
-            dot.color = UITheme.playstyle_color(play)
-            dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-            dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-            item.add_child(dot)
-            item.add_child(_value_label(CardDB.playstyle_name(play)))
-            values.add_child(item)
-    row.add_child(values)
-    parent.add_child(row)
+## 玩法行展示全部 `play:` 归属，按固定玩法顺序用「、」分隔。
+func _playstyle_text(entry: Dictionary) -> String:
+    return CardText.playstyle_text(entry)
 
 
 ## 关联分类行只展示 prey / host，格式为「捕食：…；寄生：…」。
