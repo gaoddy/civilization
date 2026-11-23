@@ -602,6 +602,14 @@ func _check_detail_drawer() -> void:
     await _push_click(instance, tile.get_global_rect().get_center())
     var layer := instance.find_child("GalleryDetailLayer", true, false) as Control
     _expect(layer != null and layer.is_visible_in_tree(), "点击卡牌应打开详情浮层")
+    _expect(
+        instance.find_child("GalleryDetailClose", true, false) == null,
+        "详情抽屉不应再有右上角关闭按钮",
+    )
+    _expect(
+        instance.find_child("GalleryDrawerBar", true, false) == null,
+        "详情抽屉不应再有顶部按钮栏",
+    )
     _expect(tile.selected, "打开详情后卡面应保持选中描边")
     var detail_name = instance.find_child("GalleryDetailName", true, false)
     _expect(
@@ -666,10 +674,12 @@ func _check_detail_art() -> void:
         "英雄与随从详情应使用同一张卡面",
     )
     var frame := detail.find_child("GalleryDetailArtFrame", true, false) as Control
+    var preview_width := UITheme.stage_metric("gallery-preview-width")
+    var expected_preview := Vector2(preview_width, UITheme.card_face_height(preview_width))
     _expect(
-        frame != null and frame.custom_minimum_size == Vector2(200, 261),
-        "详情预览框应按卡面比例显示为 200×261，实际：%s"
-        % (frame.custom_minimum_size if frame != null else "无"),
+        frame != null and frame.custom_minimum_size == expected_preview,
+        "详情预览框应按卡面比例显示为 %s，实际：%s"
+        % [str(expected_preview), frame.custom_minimum_size if frame != null else "无"],
     )
 
     # 卡面已全量接入，真实卡表里不再有无美术的卡；占位分支用不存在的卡 id 覆盖，
@@ -728,8 +738,37 @@ func _check_detail() -> void:
         "普通卡详情卡名旁不应有时代象形",
     )
     var detail_text := _node_text(instance.find_child("GalleryDetail", true, false))
-    _expect(detail_text.contains(tr("ui.game.detail.type")), "详情应包含类型行")
-    _expect(detail_text.contains(tr("ui.game.detail.taxonomy")), "详情应包含分类行")
+    var entry := CardDB.card(card_id)
+    var meta := instance.find_child("GalleryDetailMeta", true, false) as Label
+    _expect(meta != null and not meta.text.is_empty(), "详情首行应有一行元信息")
+    if meta != null:
+        _expect(
+            meta.text.contains(UIWording.enum_text("card_type", str(entry.get("card_type", "")))),
+            "元信息应包含类型：%s" % meta.text,
+        )
+        _expect(
+            meta.text.contains(tr("ui.game.detail.cost_value") % CardDB.display_cost(card_id)),
+            "元信息应包含费用：%s" % meta.text,
+        )
+        if entry.get("attack") != null or entry.get("health") != null:
+            var stats := tr("ui.gallery.stats_labeled") % [
+                CardText.stat_text(entry.get("attack")),
+                CardText.stat_text(entry.get("health")),
+            ]
+            _expect(
+                meta.text.contains(stats),
+                "元信息应包含带标签的攻防「%s」：%s" % [stats, meta.text],
+            )
+    var taxonomy := CardDB.taxon_path(str(entry.get("taxon", "")))
+    _expect(
+        not taxonomy.is_empty() and detail_text.contains(str(taxonomy[0])),
+        "详情应包含科学分类：%s" % detail_text,
+    )
+    if CardDB.display_text(card_id) != "":
+        _expect(
+            instance.find_child("GalleryDetailEffectLine0", true, false) != null,
+            "效果应逐行显示在封面下方：%s" % detail_text,
+        )
     for probe_id in ["adam-smith", "aolinpike-jidian"]:
         var probe := GalleryDetail.new()
         add_child(probe)
