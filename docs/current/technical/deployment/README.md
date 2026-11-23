@@ -14,8 +14,11 @@
 | 数据库库名 / 角色 | `civilization` / `civilization` | 同 dev |
 | 数据库入口 | `pgbouncer:6432` | 写 `pgbouncer:6432`；读入口 `pgbouncer-read:6432` 可选 |
 | 配额档位 | `small` | `small` |
+| 公网入口 | `civilization.satori.host` | 待定 |
 
 namespace、ResourceQuota、LimitRange、默认拒绝 NetworkPolicy、DNS、Gateway 入站与共享服务出站由 platform 按 `deploy/projects/civilization.yaml` 登记表生成；本仓库不重复声明。
+
+dev 的公网入口由 satori 宿主 nginx 终止 TLS，反代到 dev Gateway NodePort；站点配置源文件为 [deploy/nginx/civilization.satori.host.conf](../../../../deploy/nginx/civilization.satori.host.conf)，证书由 certbot 维护。
 
 ## 2. 镜像
 
@@ -63,6 +66,8 @@ dev 节点没有 `*.platform.internal` 的 DNS，也不信任 dev 自签证书�
 
 `ENV` 只接受 `dev` 或 `prod`，写成其他值会直接报错，不会回落到 dev 的 namespace 与域名。`deploy-render` 的 stdout 只有清单，可直接管道给 `kubectl apply -f -`。
 
+公网入口：satori 宿主 nginx 站点 `/etc/nginx/sites-available/civilization.satori.host` 由 [deploy/nginx/civilization.satori.host.conf](../../../../deploy/nginx/civilization.satori.host.conf) 安装，反代到 `https://10.66.66.4:32715`（dev Gateway NodePort），Host 与 SNI 改写为 `civilization.dev.platform.internal`。首次安装先只启用 80 段，用 `certbot certonly --webroot -w /var/www/letsencrypt -d civilization.satori.host` 签发证书，再启用 443 段。
+
 prod 首次新增 hostname 时，platform 侧还需要同步 satori nginx 转发：`make sync-satori-prod-nginx SERVER=<ssh-target>`。
 
 ## 5. 客户端
@@ -70,13 +75,12 @@ prod 首次新增 hostname 时，platform 侧还需要同步 satori nginx 转发
 大厅服务端地址填：
 
 ```text
-wss://civilization.dev.platform.internal/ws
+wss://civilization.satori.host/ws
 ```
 
-dev 的 Gateway 证书不是公共 CA 签发，且 `*.platform.internal` 不在公共 DNS 中：
+公网域名由 satori 宿主 nginx 终止 TLS 后反代到 dev Gateway，证书为公共 CA 签发，客户端不需要 hosts 或 `network/allow_insecure_tls`。
 
-- 开发者机器用 hosts 把 `civilization.dev.platform.internal` 指向 Gateway 节点（dev 为 `192.168.31.5`）。
-- 打开客户端项目设置 `network/allow_insecure_tls`（`client/project.godot`，默认 `false`）。生产构建不得打开。
+局域网直连或排障时仍可用 `wss://civilization.dev.platform.internal/ws`：把该域名指向 Gateway 节点（dev 为 `192.168.31.5`），并打开客户端项目设置 `network/allow_insecure_tls`（`client/project.godot`，默认 `false`）。生产构建不得打开。
 
 ## 6. 运行约束
 
@@ -92,11 +96,13 @@ dev 的 Gateway 证书不是公共 CA 签发，且 `*.platform.internal` 不在�
 | Pod `ImagePullBackOff` | 镜像是否导入目标节点 | 在目标机 `ctr -n k8s.io images ls` 确认；重新 `make deploy-load` |
 | 重新导入镜像后行为未变 | 是否执行 rollout restart | `make deploy-rollout` |
 | 域名 404 / 502 | HTTPRoute 是否 Accepted、Service 端口、Pod 就绪 | `kubectl describe httproute civilization-server -n <namespace>`；核对 namespace 标签 |
-| 客户端 TLS 报错 | hosts 与 `network/allow_insecure_tls` | 按第 5 节配置；生产不要打开 |
+| 客户端 TLS 报错 | 公网域名证书或内网 hosts 与 `network/allow_insecure_tls` | 公网域名检查 satori nginx；内网按第 5 节配置；生产不要打开 |
+| 公网域名 502 | satori nginx 到 `10.66.66.4:32715` 是否可达、Gateway Pod 是否就绪 | 从 satori 执行 `curl -k https://10.66.66.4:32715/healthz`；检查 `kubectl -n civilization-dev get pods` |
 | 迁移失败 | 数据库是否可达、角色是否有 DDL 权限 | 查看 Pod 日志中的 `执行数据库迁移失败`；必要时先手工确认库与角色 |
 
 ## 8. 发布记录与待执行
 
 - 2026-11-23 dev 首次发布：platform 登记、namespace 与数据库创建、`make deploy ENV=dev` 完成；Pod 1/1 Running，`/healthz`、`/readyz` 返回 200，`/ws` 握手返回 101。提交 `41955f7a`。
-- prod 待执行：platform 三项目标、`make deploy ENV=prod` 与 satori nginx 同步；prod 连接地址、TLS 与首次发布尚未验证。
+- 2026-11-23 dev 公网入口：`civilization.satori.host` 证书签发、satori nginx 站点上线；`/healthz`、`/readyz` 返回 200，`/ws` 握手返回 101。
+- prod 待执行：platform 三项目标、`make deploy ENV=prod` 与 satori nginx 同步；prod 对外域名、TLS 与首次发布尚未验证。
 - 空闲长连接表现尚未观察。
