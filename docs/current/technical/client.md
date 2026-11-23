@@ -264,7 +264,7 @@ client/
 | `make assets-covers` | 对 `ASSET_COVERS`（默认 `output/effect-covers/generated`）下 `<card_id>/*.png` 去水印，缩放到 448×584 写入 `client/assets/cards/faces/`，只登记 `card_face` 与 `display.card_face`；需安装 Pillow，见 §10 |
 | `make sfx` | 生成 9 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
-| `make client-import` | `godot --headless --path client --import`，检查工程可导入；`client/project.godot` 显式打开 `editor/import/use_multiple_threads`，PNG 纹理导入走线程池 |
+| `make client-import` | 导入客户端工程，默认用 `godot --headless --path client --import`（CPU 压缩）；`CLIENT_IMPORT_GPU=1` 改走非无头导入（仅 S3TC/HDR 纹理能用 GPU 压缩），`auto` 按图形会话自动判断。PNG 纹理导入本身走线程池，见 §10 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗；传 `CLIENT_DEVICE` 取 `phone`、`tablet` 或 `desktop` 时以该设备档位运行，用于在桌面模拟移动端。传 `LOCAL_SERVER=1` 时内嵌启动本机服务端与 7 个机器人并自动登录入房，见 §5 |
 | `make client-run-on-iphone` | 等价于 `make client-run WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone LOCAL_SERVER=1`，按 iPhone 17 Pro 横屏物理分辨率开窗并进入手机档位，同时带上本地服务端与机器人 |
 | `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet LOCAL_SERVER=1`，按 iPad Air 11 横屏物理分辨率开窗并进入平板档位，同时带上本地服务端与机器人 |
@@ -281,6 +281,8 @@ client/
 Godot 可执行文件通过 `GODOT` 变量覆盖，默认自动探测 `godot` 或 `/Applications/Godot.app/Contents/MacOS/Godot`。引擎补丁版本固定为 `4.7.2`（`Makefile` 的 `GODOT_VERSION`）；`make client-import` 及所有依赖它的客户端目标会先校验本机引擎，版本不符直接失败。
 
 `make data`、`make data-check`、`make protocol`、`make protocol-check`、`make test`、`make client-check` 与 `make m0-check`、`make m1-check` 中互不依赖的步骤由 `scripts/run_parallel.py` 并行执行：默认并行度取 CPU 数（上限 8），`JOBS=<n>` 可覆盖，`JOBS=1` 退回串行。任一命令失败时其余命令仍执行完毕，目标以非 0 退出并汇总失败命令与退出码；单条命令输出超过 12,000 字符时保留末尾。
+
+导入压缩：`make client-import` 默认 `CLIENT_IMPORT_GPU=0`，走 `--headless` 并用 CPU 压缩。原因是当前卡面为 `compress/high_quality=true` 的 RGBA8，导入选择 BPTC（BC7），而 Godot 4.7 的 Betsy GPU 压缩只覆盖 S3TC（BC1/BC3）与 BC6H，BC7 明确不支持；实测非无头冷导入与 headless 耗时一致，且没有 `Betsy: Encoding` 日志。headless 显示服务固定拒绝创建 RenderingDevice，所以 headless 导入只能 CPU 压缩。需要 GPU 时设 `CLIENT_IMPORT_GPU=1` 去掉 `--headless`：Betsy 能创建 RenderingDevice 时用 GPU 压缩 BC1/BC3/BC4/BC5/BC6（即改用 `compress/high_quality=false` 的 S3TC 或 HDR 纹理后才会生效），否则回落 CPU；无图形会话时由命令自身失败并回退 headless。`CLIENT_IMPORT_GPU=auto` 用 `DISPLAY` / `WAYLAND_DISPLAY` 或 macOS 的 `launchctl print gui/<uid>` 判断图形会话。非无头导入会按引擎格式重写 `client/project.godot`（去掉默认值设置、重排 section），命令会提示检查 diff。ETC2/ASTC 始终不走 GPU。
 
 ## 5. 运行方式
 

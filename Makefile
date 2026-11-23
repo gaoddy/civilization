@@ -2,6 +2,9 @@ PYTHON ?= python3
 GODOT ?= $(shell command -v godot 2>/dev/null || echo /Applications/Godot.app/Contents/MacOS/Godot)
 # 补丁版本固定，导出模板目录与之精确一致；本机引擎不符时由 client-godot-check 拒绝执行。
 GODOT_VERSION := 4.7.2
+# 导入压缩策略，默认 0（headless + CPU 压缩）：auto=有图形会话时非无头导入（Betsy 优先用 GPU，失败回落 CPU）；
+# 1=强制非无头。headless 下引擎不允许创建 RenderingDevice，GPU 压缩不可用。
+CLIENT_IMPORT_GPU ?= 0
 GODOT_INSTALLED_VERSION = $(shell "$(GODOT)" --version 2>/dev/null | head -n 1 | cut -d. -f1-3)
 GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates/$(GODOT_VERSION).stable
 DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
@@ -132,8 +135,35 @@ client-godot-check:
 	@[ "$(GODOT_INSTALLED_VERSION)" = "$(GODOT_VERSION)" ] || { echo "Godot 版本不符：需要 $(GODOT_VERSION)，当前 $(GODOT_INSTALLED_VERSION)" >&2; exit 1; }
 
 # 客户端工程导入与静态边界检查。
+# 默认 headless（CPU 压缩）：当前卡面是 high_quality=true 的 BC7，而 Godot 只对
+# S3TC/BC6H 走 Betsy GPU 压缩，BC7 只能 CPU，非无头导入没有收益还会弹出编辑器窗口。
+# CLIENT_IMPORT_GPU=1 手动切非无头（改用 S3TC/HDR 纹理后才有 GPU 加速）；
+# auto 按图形会话自动判断，CI 与无 GUI 环境回落到 headless。
 client-import: client-godot-check
-	$(GODOT) --headless --path client --import
+	@mode="$(CLIENT_IMPORT_GPU)"; \
+	case "$$mode" in \
+	  auto|1|0) ;; \
+	  *) echo "CLIENT_IMPORT_GPU 取值应为 auto、1 或 0" >&2; exit 2 ;; \
+	esac; \
+	if [ "$$mode" = "auto" ]; then \
+	  if [ -n "$$DISPLAY" ] || [ -n "$$WAYLAND_DISPLAY" ] || { command -v launchctl >/dev/null 2>&1 && launchctl print "gui/$$(id -u)" >/dev/null 2>&1; }; then \
+	    mode=1; \
+	  else \
+	    mode=0; \
+	  fi; \
+	fi; \
+	if [ "$$mode" = "1" ]; then \
+	  echo "client-import：非无头导入（仅 S3TC/HDR 纹理走 GPU 压缩）"; \
+	  snapshot="$$(mktemp)"; cp client/project.godot "$$snapshot" 2>/dev/null || true; \
+	  $(GODOT) --path client --import || { echo "非无头导入失败，回退 headless" >&2; $(GODOT) --headless --path client --import; }; \
+	  if [ -f "$$snapshot" ] && ! cmp -s "$$snapshot" client/project.godot; then \
+	    echo "提示：非无头导入按引擎格式重写了 client/project.godot，提交前请检查 diff" >&2; \
+	  fi; \
+	  rm -f "$$snapshot"; \
+	else \
+	  echo "client-import：headless 导入（CPU 压缩）"; \
+	  $(GODOT) --headless --path client --import; \
+	fi
 
 # 桌面客户端统一从这里启动：先导入刷新全局类缓存。新增或改名 class_name
 # 脚本后直接跑 Godot 会沿用旧缓存，缺类的脚本编译失败，对局页可能只构建一半。
