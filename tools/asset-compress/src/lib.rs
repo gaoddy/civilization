@@ -10,6 +10,7 @@ pub mod gate;
 pub mod godot;
 pub mod plan;
 pub mod run;
+pub mod uid;
 
 pub use cli::{Args, Backend, Quality};
 pub use format::Format;
