@@ -218,6 +218,28 @@ sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
 - `bot/brain.rs` **只读** `PlayerView`（含服务端算好的 `affordances`）与静态卡表，不链接引擎判定、不读时钟与环境变量、不使用浮点；优先级固定为：消费 `pendingChoices`（发现/进化发 `ChooseDiscover`，目标待选取 `candidates` 中第一个未被拒绝的 `TargetRef`）→ 被拒出手达 3 张且可结束时 `EndRecruit` → 打最小下标且未被拒绝的可打手牌 → 买最贵可买槽位 → 升时代 → 刷新 → `EndRecruit`。出牌时若手牌视图 `requiresTarget` 为真，从该牌的 `targetCandidates` 预填第一个未被拒绝的目标；被拒后沿候选列表换下一个，候选遍历完才记入阻塞集合本回合跳过该牌。候选为空时不填（效果落空）。
 - `sim/src/ai.rs` 的 `PendingChoice::Target` 分支与定向效果牌/英雄技能按 `Selector::Target { zone }` 依次尝试本人棋盘、手牌与商店的实例编号；视图驱动的新逻辑在 `bot/brain.rs`。复制手牌类效果的行为变化使 M0 金标准重新冻结（见[规则引擎与模拟器](../rule-engine-and-simulator.md) §9）。
 
+## 12.1 `sim load` 并发容量压测
+
+`sim load` 复用 `sim bot` 的机器人完成建房、入房与开局，按 `rooms × 8` 个机器人驱动真实协议：
+
+```
+sim load --serve-room-service PATH | --connect ws://HOST:PORT/ws
+         --scenario steady|ramp --rooms N
+         [--rooms-max M --step K --step-ms T] [--duration-ms T]
+         [--start-timeout-ms T] [--sample-ms T] [--intent-seed N]
+         [--out PATH] [--server-log PATH]
+         [--ssh-host HOST --ssh-pid PID]
+         [--fresh-server-per-step] [--allow-remote-ramp] [--quiet]
+```
+
+- **steady**：维持 `rooms` 个活跃房间，一局结束立即补位，持续 `duration-ms`；输出活跃峰值、已开局/已结束/启动失败、开局时延 p50/p95、意图速率、服务端与压测器 CPU/RSS。
+- **ramp**：按 `rooms → rooms+step → … ≤ rooms-max` 逐档压测，每档 `step-ms`；启动失败率 >10‰、开局 p95 >10s 或 server+generator CPU 接近机器核数时判为不健康/受限于生成器，停止爬坡并把前一档记为上限。
+- 每档结束向全部机器人发停止信号；机器人发送 `LeaveRoom`，对局中按弃权结算，存活数降到 1 时 `GameOver` 并销毁房间，不等待 30 秒断线宽限。失败房间同样清理，避免大厅座位挂满宽限期。
+- 身份：每个机器人按全局序号注入唯一手机号（`sim bot` 由名字派生的手机号在多房间时可能撞号）；`--quiet` 关闭逐条错误输出。
+- 本机模式自动以 `--listen 127.0.0.1:0` 起停 `room-service`，服务端日志持续 drain 到 `--server-log`，采样用 `ps`；远端 `--connect` 可用 `--ssh-host` + `--ssh-pid` 经 ssh 读 `/proc/<pid>`。远端 ramp 默认拒绝，需显式 `--allow-remote-ramp`（房间会清理，但账号与会话在服务端累积）。
+- 健康档至少一个时退出码为 0；报告字段与上限判定写 `--out`（默认 stdout），服务端日志默认 `output/loadtest-server.log`。
+- 远端 `wss://` 尚未支持（`tokio-tungstenite` 未启用 TLS feature）：压远端前用 `kubectl port-forward` 或 `ssh -L` 转成本地 `ws://`。
+
 ## 13. 命令与验收证据
 
 `make m1-check` 汇总 M1a 验收，目标体为：

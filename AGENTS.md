@@ -59,6 +59,7 @@
   - 断线重连一致性：`cargo test -p room-service --test reconnect`；
   - 客户端到服务端：`make m1b-e2e`。
 - 模拟器基线：`make m0-determinism`、`make m0-batch`、`make m0-report`。
+- 并发容量压测：`make load-build` 后 `make loadtest`（稳态，默认 10 局/30s）、`make loadtest-ramp`（爬坡找上限）、`make loadtest-smoke`（2 局/5s 冒烟）；报告写 `output/loadtest-*.json`。
 - 本地联调：`make dev-bots` 起服务端与 7 个机器人；客户端用 `make client-run`，桌面端产物用 `make client-export`，iOS 真机用 `make client-run-ios`（默认第一台已连接的 iPhone）。
 - 数据库：`make db-up`、`make db-test`、`make db-reset`。
 - 慢命令阈值：`120s`；预计超过该时长的命令放后台执行，读末尾输出与退出状态。
