@@ -1,6 +1,15 @@
 namespace: civilization-dev
 image:
   tag: dev
+# 压测依据：3 房间（24 人）实测 966m/54Mi，原 512Mi 在 10 房间（80 人）被 OOMKilled；
+# 10 房间实测 3278m/113Mi，因此 dev 限制提到 4 核 / 2Gi。
+resources:
+  requests:
+    cpu: 500m
+    memory: 256Mi
+  limits:
+    cpu: "4"
+    memory: 2Gi
 httpRoute:
   gatewayNamespace: platform-dev
   hostnames:
