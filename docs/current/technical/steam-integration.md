@@ -1,6 +1,6 @@
 # Steam 接入
 
-> 状态：已实现（Steam 契约与适配）；6 个成就运行时未实现，签名/公证/上传与真实验票待外部配置
+> 状态：已实现（Steam 契约与适配、6 个成就运行时）；签名/公证/上传与真实验票待外部配置
 > 关联：[发行渠道与账号](../product/accounts-and-distribution.md)、[Godot 客户端](client.md)、[房间服务与联网](room-service/README.md)、[部署与接入](deployment/README.md)
 
 本文记录 Steam 渠道在客户端、协议、服务端与构建发布上的落点、边界和验证方式。
@@ -60,7 +60,7 @@
 - 配置：`STEAM_WEB_API_KEY` 与 `STEAM_APP_ID` 同时存在才启用验票；任一缺失为 `STEAM_DISABLED`，手机号登录不受影响。日志不记录票据、publisher key、验证码与完整手机号。
 - 绑定：只允许 Steam 账号绑定一次；同号重复请求幂等，占用他人手机号返回 `PHONE_ALREADY_BOUND`；事务内 `SELECT ... FOR UPDATE` 后检查并更新。
 - 邀请：`CreateRoomInvite` 要求已入房且处于大厅；`RedeemRoomInvite` 复用 `JoinRoom` 的阶段、容量与 `RoomUpdate` 路径；已在房间返回 `ALREADY_IN_ROOM`。
-- 成就：`server/data/v0.2/achievements.json` 由 `scripts/gen_achievement_data.py` 从成就实体文档生成，`AchievementCatalog` 建立 `achievement_id → steam_api_name` 映射；认证/重连下发空状态，运行时落地后走同一映射与路径。
+- 成就：`server/data/v0.2/achievements.json` 由 `scripts/gen_achievement_data.py` 从成就实体文档生成，`AchievementCatalog` 建立 `achievement_id → steam_api_name` 映射；认证/重连下发账号已解锁状态，局内首次解锁下发 `AchievementUnlocked`，账号级记录存于 `account_achievement` 表，同一账号只同步一次。
 
 ## 4. 构建与发布
 
@@ -89,7 +89,7 @@
 
 真正接入 Steam 时的后台、证书、上传与验收步骤见 [Steam 上线操作清单](../../versions/v0.2/technical/steam-onboarding.md)。
 
-- 6 个局内成就的运行时（事件、状态、奖励与 UI）未实现；当前只交付 Steam 契约、映射与空状态下发。
+- 6 个局内成就的运行时（触发、奖励、下发与账号级解锁）已实现；真实 Steam 同步仍待 Steamworks 后台与票据配置。本版不做成就弹窗、成就列表或结算页展示。
 - 真实 Steam 票据校验需要 Steamworks 后台 App ID 与 Web API key；CI 不访问 Steam。
 - Apple Developer ID、公证凭据、Steamworks depot 与商店页未配置；签名、公证与上传脚本已就绪但未实测。
 - 生产短信通道未接入，绑定验证码在生产不可用。

@@ -17,5 +17,6 @@
 | v0.1 M2 联机内测 | 已实现 | 断线重连一致性由 `room-service/tests/reconnect.rs` 用例覆盖；不设真人完成率验收，口径见 [v0.1 验收记录](../versions/v0.1/acceptance.md) §2 | [房间服务与联网](technical/room-service/README.md) §10 |
 | v0.1 M3 桌面端上线 | 已实现 | macOS 桌面端可完成完整对局；iOS 端已实现横屏、分设备缩放基准、触控与安全区，开发签名真机包已产出（`output/ios/Civilization-ios.ipa`）；不设单独验收记录，也不记录崩溃率、意图拒绝率与单局时长 | [Godot 客户端](technical/client.md) §8、§9 |
 | v0.2 Steam 渠道与账号 | 已实现（契约与适配） | `make test`、`make client-check`、`make client-smoke`（17 个场景）通过；`make client-export-steam` 以测试参数产出包并通过 dylib 架构校验 | [Steam 接入](technical/steam-integration.md) |
+| v0.2 成就运行时 | 已实现 | `cargo test -p rule-engine -p room-service`、`make lint`、`make data-check`、`make m0-determinism` 与独立库 `persistence` 测试通过；真实 Steam 同步待外部配置 | [成就运行时](../versions/v0.2/technical/achievements-runtime.md) |
 
 v0.1 剩余四项能力（赛后数据回顾、房间生命周期、首局界面引导、macOS 桌面端导出）已实现，现状见 [v0.1 版本说明](../versions/v0.1/README.md) 与下列实现文档。
