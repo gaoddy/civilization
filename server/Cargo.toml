@@ -11,3 +11,9 @@ resolver = "3"
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
+
+# 当前 macOS 链接器在 release 默认 strip=debuginfo 下生成的 sqlx 过程宏 dylib
+# 会报 `mis-aligned LINKEDIT string pool` 并被 dyld 拒绝加载；保留其调试符号可规避。
+# 只影响编译期过程宏，不影响 room-service 产物与运行时行为。
+[profile.release.package.sqlx-macros]
+strip = "none"
