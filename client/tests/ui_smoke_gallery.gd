@@ -681,6 +681,8 @@ func _check_detail_art() -> void:
         "详情预览框应按卡面比例显示为 %s，实际：%s"
         % [str(expected_preview), frame.custom_minimum_size if frame != null else "无"],
     )
+    var card_frame := detail.find_child("CardFrame", true, false) as CardFrame
+    _expect(card_frame != null, "详情封面应复用公共卡框 CardFrame")
 
     # 卡面已全量接入，真实卡表里不再有无美术的卡；占位分支用不存在的卡 id 覆盖，
     # 保证后续新增卡牌、美术未就绪时仍回退玩法色底与首字占位。
