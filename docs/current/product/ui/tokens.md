@@ -69,7 +69,7 @@
 | `space-2xl` | 24 | | | |
 | `space-3xl` | 32 | | | |
 
-语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行、幽灵身份块与禁用图标，经 `UIControls.apply_dim` 或 `alpha("color-white", ...)` 应用；`freeze-overlay-alpha` = 0.22，用于冻结蒙层自身，经 `self_modulate.a` 应用，不向下压暗冰晶与「冻」字；`preview-dim` = 0.7，用于卡面预览压暗；遮罩透明度 `scrim-alpha` = 0.55、`scrim-alpha-friends` = 0.58、`scrim-alpha-strong` = 0.6、`scrim-alpha-gallery` = 0.62、`scrim-alpha-choice` = 0.72，按弹层场景取值。
+语义透明度：`opacity-dim` = 0.45，用于被淘汰的座位行、幽灵身份块与禁用图标，经 `UIControls.apply_dim` 或 `alpha("color-white", ...)` 应用；`freeze-overlay-alpha` = 0.22，用于冻结蒙层自身，经 `self_modulate.a` 应用，不向下压暗冰晶与「冻」字；`preview-dim` = 0.7，用于卡面预览压暗；遮罩透明度 `scrim-alpha` = 0.55、`scrim-alpha-friends` = 0.58、`scrim-alpha-strong` = 0.6、`scrim-alpha-gallery` = 0.62、`scrim-alpha-choice` = 0.72，按弹层场景取值；页面容器语义面板 `page-surface-alpha` = 0.92，经 `alpha("color-surface", opacity("page-surface-alpha"))` 应用。
 
 ## 5. 组件与场景度量
 

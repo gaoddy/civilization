@@ -16,20 +16,21 @@
 ## 2. 结构层级
 
 ```text
-背景（color-bg，铺满）
-└─ 外边距（space-2xl）
-   └─ 纵向根容器（间距 space-md）
-      ├─ 头部（横向一行，间距 space-sm，高 32 固定）
-      │  ├─ 视图分段 GalleryModeBar：ModeMinion（随从）/ ModeHero（英雄）
-      │  ├─ GalleryEraSelect：时代 · <当前值> ▾
-      │  ├─ GalleryPlaySelect：玩法 · <当前值> ▾
-      │  ├─ GalleryKindSelect：类型 · <当前值> ▾
-      │  ├─ 弹性空隙
-      │  ├─ GalleryCount：<N> 张
-      │  └─ 返回按钮：返回大厅 / 返回对局
-      ├─ 卡面网格 GalleryGrid（列数按可用宽度计算，纵向滚动分批追加）
-   ├─ 筛选面板层 GalleryFilterPanel（锚点定位，默认隐藏）
-   └─ 详情浮层 GalleryDetailLayer（默认隐藏）：头部以下的遮罩 + 右侧详情抽屉
+软件背景 PageBackground（bg_main，整窗 cover）
+└─ 页面容器 PageBody → PageSurface（语义面板，设计画布尺寸）
+   └─ 外边距（space-2xl）
+      └─ 纵向根容器（间距 space-md）
+         ├─ 头部（横向一行，间距 space-sm，高 32 固定）
+         │  ├─ 视图分段 GalleryModeBar：ModeMinion（随从）/ ModeHero（英雄）
+         │  ├─ GalleryEraSelect：时代 · <当前值> ▾
+         │  ├─ GalleryPlaySelect：玩法 · <当前值> ▾
+         │  ├─ GalleryKindSelect：类型 · <当前值> ▾
+         │  ├─ 弹性空隙
+         │  ├─ GalleryCount：<N> 张
+         │  └─ 返回按钮：返回大厅 / 返回对局
+         ├─ 卡面网格 GalleryGrid（列数按可用宽度计算，纵向滚动分批追加）
+      ├─ 筛选面板层 GalleryFilterPanel（锚点定位，默认隐藏）
+      └─ 详情浮层 GalleryDetailLayer（默认隐藏）：头部以下的遮罩 + 右侧详情抽屉
 ```
 
 - 头部只占一行，不显示「卡片图鉴 / 本局卡片图鉴」标题与副标题；视图分段、筛选下拉、计数与返回同处一行。
@@ -103,7 +104,7 @@
 
 ## 6. 适配与性能
 
-- 页面内容固定 16:9 居中，桌面与 iPad 以 1280×720、iPhone 以 960×540 为设计基准，窗口比例变化只在内容框外露出背景；图鉴没有竖屏布局。
+- 页面内容固定 16:9 居中，桌面与 iPad 以 1280×720、iPhone 以 960×540 为设计基准，窗口比例变化只在内容框外露出软件背景；页面容器背景随内容框缩放。图鉴没有竖屏布局。
 - 网格列数按可用宽度计算：桌面与 iPad 基准 9 列、手机基准 7 列，列距桌面 `space-lg`（12）、手机 `space-md`（8）；卡宽按列数平分整行宽度并等比放大，卡高保持 112:146，右侧不留空。
 - 网格按批加载：桌面每批 27 张，手机每批 12 张；首批不足一屏时自动继续加载。滚动到底部附近追加下一批，只保留已加载批次，不重建已可见卡面。
 - 头部一行容纳视图分段、三个下拉、计数与返回；控件宽度由文字决定，手机基准下整体不越界。
