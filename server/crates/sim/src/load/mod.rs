@@ -11,6 +11,7 @@ pub mod proc;
 pub mod room;
 pub mod sample;
 
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
@@ -118,14 +119,26 @@ pub struct StepReport {
     pub status: &'static str,
     /// 非健康时的原因。
     pub reason: Option<String>,
+    /// 单档实际时长。
+    pub elapsed_ms: u64,
     /// 同时存活的房间峰值。
     pub active_games_peak: usize,
+    /// 发起的房间尝试总数（每个补位计一次）。
+    pub attempts: usize,
     /// 达到全员开局的房间数。
     pub games_started: usize,
     /// 8 个机器人都收到 `GameOver` 的房间数。
     pub games_finished: usize,
     /// 启动失败房间数。
     pub start_failures: usize,
+    /// 启动失败原因分布；键为归一化后的失败类别。
+    pub failure_kinds: BTreeMap<String, usize>,
+    /// 开局后运行期失败原因分布；与启动失败分开统计。
+    pub runtime_failure_kinds: BTreeMap<String, usize>,
+    /// 首次启动失败距本档开始的毫秒数。
+    pub first_failure_ms: Option<u64>,
+    /// 最近一次启动失败距本档开始的毫秒数。
+    pub last_failure_ms: Option<u64>,
     /// 被停止信号中止的房间数。
     pub cancelled_rooms: usize,
     /// 开局时延。
@@ -179,12 +192,30 @@ struct ResidenceRaw {
     cancelled_rooms: usize,
     latencies: Vec<u64>,
     failures: Vec<String>,
+    failure_kinds: BTreeMap<String, usize>,
+    runtime_failure_kinds: BTreeMap<String, usize>,
+    first_failure_ms: Option<u64>,
+    last_failure_ms: Option<u64>,
+    last_started_ms: Option<u64>,
+    consecutive_failures: usize,
+    last_failure_kind: Option<String>,
+    aborted: Option<String>,
 }
 
+/// 连续启动失败达到该值、且距最近一次开局已超过 [`SUCCESS_STALL_MS`] 时判定后端不可达。
+///
+/// 后端断开时每次尝试只需毫秒级，不设上限会在几十秒内产生数百万次补位与数 GB 内存；
+/// 该判定把「链路断了」与「服务端变慢」区分开，并立即结束本档。
+const MAX_CONSECUTIVE_FAILURES: usize = 50;
+/// 允许的连续失败时长；短于该时长的链路抖动由重试自行恢复。
+const SUCCESS_STALL_MS: u64 = 10_000;
+
 impl ResidenceRaw {
-    fn record(&mut self, result: room::RoomResult) {
+    fn record(&mut self, result: room::RoomResult, elapsed_ms: u64) {
         if result.started {
             self.started += 1;
+            self.consecutive_failures = 0;
+            self.last_started_ms = Some(elapsed_ms);
             if let Some(latency) = result.start_latency_ms {
                 self.latencies.push(latency);
             }
@@ -195,13 +226,93 @@ impl ResidenceRaw {
             self.cancelled_rooms += 1;
         } else {
             self.start_failures += 1;
+            self.consecutive_failures += 1;
+            self.first_failure_ms.get_or_insert(elapsed_ms);
+            self.last_failure_ms = Some(elapsed_ms);
         }
+        let kinds = if result.started {
+            &mut self.runtime_failure_kinds
+        } else {
+            &mut self.failure_kinds
+        };
+        let index = result.index;
         for message in result.failures {
+            let kind = failure_kind(&message);
+            if !result.started {
+                self.last_failure_kind = Some(kind.clone());
+            }
+            *kinds.entry(kind).or_default() += 1;
             if self.failures.len() < 20 {
-                self.failures.push(message);
+                self.failures.push(format!("#{index} {message}"));
             }
         }
     }
+
+    /// 判定后端是否已经不可达；一旦判定成立，本档不再补位。
+    ///
+    /// 连续失败达到阈值后，再看距最近一次开局（或本档开始）的时长：短于
+    /// [`SUCCESS_STALL_MS`] 时允许链路抖动恢复，超过才判定不可达。
+    fn unreachable_reason(&mut self, elapsed_ms: u64) -> Option<String> {
+        if self.aborted.is_some() || self.consecutive_failures < MAX_CONSECUTIVE_FAILURES {
+            return None;
+        }
+        let since_success = match self.last_started_ms {
+            Some(started) => elapsed_ms.saturating_sub(started),
+            None => elapsed_ms,
+        };
+        if since_success < SUCCESS_STALL_MS {
+            return None;
+        }
+        let kind = self.last_failure_kind.as_deref().unwrap_or("未知原因");
+        let reason = format!(
+            "连续 {} 次启动失败、{}s 内无房间开局，判定后端不可达（最后失败：{kind}）",
+            self.consecutive_failures,
+            since_success / 1000
+        );
+        self.aborted = Some(reason.clone());
+        Some(reason)
+    }
+}
+
+/// 把失败消息归一化成可聚合的类别。
+///
+/// 只保留「阶段 + 错误码」或可稳定复现的底层原因，丢掉房间码、玩家名等逐次变化的部分；
+/// 同一类失败在报告里合并计数，便于长窗口排查。
+fn failure_kind(message: &str) -> String {
+    // 建房失败由房间编排层加前缀；加入机器人的失败没有前缀，因此阶段是可选的。
+    let (stage, rest) = match message.strip_prefix("建房失败: ") {
+        Some(rest) => ("建房/", rest),
+        None => ("", message),
+    };
+    for prefix in ["进入房间失败: ", "认证失败: "] {
+        if let Some(detail) = rest.strip_prefix(prefix) {
+            let code = detail.split_whitespace().next().unwrap_or(detail);
+            let phase = prefix.trim_end_matches(": ");
+            return format!("{stage}{phase}:{code}");
+        }
+    }
+    if rest.starts_with("连接 ")
+        && let Some((_, cause)) = rest.rsplit_once(" 失败: ")
+    {
+        // 建连失败要保留底层原因：拒绝连接说明端口/转发没了，超时说明链路黑洞。
+        return format!("{stage}连接失败: {cause}");
+    }
+    if let Some(detail) = rest.strip_prefix("WebSocket 读取失败: ") {
+        let cause = detail.rsplit(": ").next().unwrap_or(detail);
+        return format!("{stage}WebSocket 读取: {cause}");
+    }
+    if let Some(detail) = rest.strip_prefix("WebSocket 发送失败: ") {
+        let cause = detail.rsplit(": ").next().unwrap_or(detail);
+        return format!("{stage}WebSocket 发送: {cause}");
+    }
+    if let Some(detail) = rest.strip_prefix("WebSocket 解析下行载荷失败: ") {
+        return format!("{stage}下行载荷解析失败: {detail}");
+    }
+    if rest.ends_with("内未全员开局") {
+        return "全员开局超时".into();
+    }
+    let trimmed: String = rest.chars().take(60).collect();
+    format!("{stage}{trimmed}")
 }
 
 /// 生成 ramp 档位；非法参数返回错误。
@@ -328,10 +439,16 @@ pub async fn run(config: LoadConfig) -> Result<LoadReport, String> {
             rooms,
             status,
             reason: reason.clone(),
+            elapsed_ms: began.elapsed().as_millis().try_into().unwrap_or(u64::MAX),
             active_games_peak: raw.active_peak,
+            attempts: raw.attempts,
             games_started: raw.started,
             games_finished: raw.finished_rooms,
             start_failures: raw.start_failures,
+            failure_kinds: raw.failure_kinds.clone(),
+            runtime_failure_kinds: raw.runtime_failure_kinds.clone(),
+            first_failure_ms: raw.first_failure_ms,
+            last_failure_ms: raw.last_failure_ms,
             cancelled_rooms: raw.cancelled_rooms,
             start_latency_ms: LatencyReport { p50, p95 },
             intents_per_sec: intents as f64 / elapsed,
@@ -381,6 +498,9 @@ fn evaluate(
     contended: bool,
     config: &LoadConfig,
 ) -> (&'static str, Option<String>) {
+    if let Some(reason) = &raw.aborted {
+        return ("unhealthy", Some(reason.clone()));
+    }
     if raw.attempts == 0 {
         return ("unhealthy", Some("未发起任何房间".into()));
     }
@@ -430,7 +550,8 @@ async fn run_residence(
     let mut stops: Vec<watch::Sender<bool>> = Vec::new();
     let mut outstanding = 0_usize;
     let mut raw = ResidenceRaw::default();
-    let deadline = Instant::now() + Duration::from_millis(duration_ms);
+    let began = Instant::now();
+    let deadline = began + Duration::from_millis(duration_ms);
     let mut stopped = false;
 
     loop {
@@ -472,7 +593,15 @@ async fn run_residence(
             match done_rx.recv().await {
                 Some(result) => {
                     outstanding -= 1;
-                    raw.record(result);
+                    let elapsed_ms =
+                        began.elapsed().as_millis().try_into().unwrap_or(u64::MAX);
+                    raw.record(result, elapsed_ms);
+                    if raw.unreachable_reason(elapsed_ms).is_some() && !stopped {
+                        for stop in &stops {
+                            let _ = stop.send(true);
+                        }
+                        stopped = true;
+                    }
                 }
                 None => break,
             }
@@ -483,7 +612,15 @@ async fn run_residence(
             result = done_rx.recv() => match result {
                 Some(result) => {
                     outstanding -= 1;
-                    raw.record(result);
+                    let elapsed_ms =
+                        began.elapsed().as_millis().try_into().unwrap_or(u64::MAX);
+                    raw.record(result, elapsed_ms);
+                    if raw.unreachable_reason(elapsed_ms).is_some() && !stopped {
+                        for stop in &stops {
+                            let _ = stop.send(true);
+                        }
+                        stopped = true;
+                    }
                 }
                 None => break,
             },
@@ -500,7 +637,7 @@ async fn run_residence(
 
 #[cfg(test)]
 mod tests {
-    use super::{percentile, ramp_steps};
+    use super::{ResidenceRaw, failure_kind, percentile, ramp_steps, room};
 
     #[test]
     fn ramp_ladder_includes_bounds() {
@@ -517,6 +654,93 @@ mod tests {
         assert!(ramp_steps(0, 10, 1).is_err());
         assert!(ramp_steps(10, 10, 0).is_err());
         assert!(ramp_steps(20, 10, 1).is_err());
+    }
+
+    #[test]
+    fn failure_kind_keeps_stage_and_code() {
+        assert_eq!(
+            failure_kind("建房失败: 进入房间失败: ALREADY_IN_ROOM 已在房间中"),
+            "建房/进入房间失败:ALREADY_IN_ROOM"
+        );
+        assert_eq!(
+            failure_kind("建房失败: 认证失败: INTERNAL_ERROR 存储不可用"),
+            "建房/认证失败:INTERNAL_ERROR"
+        );
+        assert_eq!(
+            failure_kind("进入房间失败: ROOM_FULL 房间已满"),
+            "进入房间失败:ROOM_FULL"
+        );
+        assert_eq!(
+            failure_kind(
+                "建房失败: 连接 ws://127.0.0.1:18080/ws 失败: \
+                 IO error: Connection refused (os error 61)"
+            ),
+            "建房/连接失败: IO error: Connection refused (os error 61)"
+        );
+        assert_eq!(
+            failure_kind(
+                "建房失败: WebSocket 读取失败: WebSocket protocol error: \
+                 Connection reset without closing handshake"
+            ),
+            "建房/WebSocket 读取: Connection reset without closing handshake"
+        );
+        assert_eq!(
+            failure_kind("WebSocket 读取失败: WebSocket protocol error: \
+                 Connection reset without closing handshake"),
+            "WebSocket 读取: Connection reset without closing handshake"
+        );
+        assert_eq!(failure_kind("10000ms 内未全员开局"), "全员开局超时");
+    }
+
+    #[test]
+    fn consecutive_failures_only_abort_after_stall_window() {
+        let failure = || room::RoomResult {
+            failures: vec!["建房失败: 连接 ws://127.0.0.1:18080/ws 失败: \
+                 IO error: Connection refused (os error 61)"
+                .into()],
+            ..room::RoomResult::default()
+        };
+        let mut raw = ResidenceRaw::default();
+        for _ in 0..super::MAX_CONSECUTIVE_FAILURES {
+            raw.record(failure(), 500);
+        }
+        assert!(raw.unreachable_reason(9_999).is_none(), "抖动窗口内不应判定");
+
+        let mut raw = ResidenceRaw::default();
+        for _ in 0..super::MAX_CONSECUTIVE_FAILURES {
+            raw.record(failure(), 500);
+        }
+        let reason = raw
+            .unreachable_reason(super::SUCCESS_STALL_MS)
+            .expect("超过停摆窗口应判定后端不可达");
+        assert!(reason.contains("后端不可达"), "{reason}");
+        assert!(reason.contains("Connection refused"), "{reason}");
+    }
+
+    #[test]
+    fn one_started_room_resets_consecutive_failures() {
+        let mut raw = ResidenceRaw::default();
+        for _ in 0..super::MAX_CONSECUTIVE_FAILURES {
+            raw.record(
+                room::RoomResult {
+                    failures: vec!["建房失败: 连接 ws://x 失败: refused".into()],
+                    ..room::RoomResult::default()
+                },
+                500,
+            );
+        }
+        raw.record(
+            room::RoomResult {
+                started: true,
+                start_latency_ms: Some(300),
+                ..room::RoomResult::default()
+            },
+            12_000,
+        );
+        assert!(
+            raw.unreachable_reason(60_000).is_none(),
+            "有房间开局后不应判定不可达"
+        );
     }
 
     #[test]

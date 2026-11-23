@@ -39,6 +39,8 @@ pub struct RoomSpec {
 /// 一个房间的运行结果。
 #[derive(Debug, Default)]
 pub struct RoomResult {
+    /// 房间序号；决定本房间 8 个机器人的手机号与展示名。
+    pub index: usize,
     /// 8 个机器人是否全部收到 `GameStarted`。
     pub started: bool,
     /// 从房间任务开始到全员开局的毫秒数。
@@ -73,7 +75,10 @@ async fn run(
     let (events_tx, mut events_rx) = mpsc::unbounded_channel();
     let (code_tx, code_rx) = oneshot::channel();
     let mut bots: JoinSet<Result<BotFinish, String>> = JoinSet::new();
-    let mut result = RoomResult::default();
+    let mut result = RoomResult {
+        index: spec.index,
+        ..RoomResult::default()
+    };
 
     bots.spawn(client::run_with(
         BotConfig {
