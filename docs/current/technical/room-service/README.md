@@ -224,13 +224,16 @@ sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
 
 ```make
 m1-check:
-	$(MAKE) protocol-rs-check
-	$(MAKE) protocol-check
-	$(MAKE) data-check
-	$(MAKE) test
-	$(MAKE) lint
-	$(MAKE) m0-determinism
+	$(PYTHON) scripts/run_parallel.py \
+		"$(MAKE) --no-print-directory protocol-rs-check" \
+		"$(MAKE) --no-print-directory protocol-check" \
+		"$(MAKE) --no-print-directory data-check" \
+		"$(MAKE) --no-print-directory test" \
+		"$(MAKE) --no-print-directory lint" \
+		"$(MAKE) --no-print-directory m0-determinism"
 ```
+
+六项互不依赖，默认按 CPU 数（上限 8）并行执行；`JOBS=<n>` 覆盖并行度，`JOBS=1` 退回串行。任一目标失败时其余目标仍执行完毕，整体非 0 退出并汇总失败命令。
 
 **e2e 由 `make test` 覆盖**：`make test` 的 `cargo test --workspace` 已包含 `room-service/tests/e2e.rs`（真实 WebSocket 起 8 个 bot 打完一局），因此 `m1-check` 不单独再跑一次 e2e，避免重复起 8 个 bot。
 

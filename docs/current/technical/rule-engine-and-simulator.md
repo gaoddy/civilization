@@ -198,12 +198,12 @@ impl Taxonomy {
 | `make test` | Python unittest 与 `cargo test --workspace` |
 | `make lint` | `cargo fmt --check` 与 `cargo clippy --workspace --all-targets -- -D warnings` |
 | `make audit` | effects DSL 审计 |
-| `make data` / `make data-check` | 生成卡牌数据 / 比对漂移并审计 |
+| `make data` / `make data-check` | 生成卡牌数据 / 比对漂移并审计；四条生成或七项检查由 `scripts/run_parallel.py` 并行执行（`JOBS` 控制并行度，生成物确定性不变） |
 | `make protocol` / `make protocol-check` | 生成协议 GDScript 常量与字段表 / 漂移检测 |
 | `make m0-determinism` | 运行 `sim_determinism::replay_same_log_100_times_has_same_hash`：同一局用 `sim replay` 重放 100 次，终局状态哈希与事件序列哈希全部一致 |
 | `make m0-batch` | 1000 局 8 AI 批量对局（seed 1），写入 `output/m0-batch.json` |
-| `make m0-check` | `make data-check && make test && make lint && make m0-determinism`（计划中的 M0 汇总门禁） |
-| `make m1-check` | M1a 汇合门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism`；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service/README.md) |
+| `make m0-check` | `data-check`、`test`、`lint`、`m0-determinism` 四项并行执行（计划中的 M0 汇总门禁），任一失败整体非 0 |
+| `make m1-check` | M1a 汇合门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism` 六项并行执行；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service/README.md) |
 | `make m0-report` | 先校验批量日志（`sim check --expect-games 1000`：局数、每局 8 名排名），再生成基线报告（字段口径见第 7 节）；输出同时写入 `output/m0-report.log`。可用 `M0_BATCH_LOG`、`M0_GAMES` 指向其他批量日志与局数 |
 | `make dev-bots` | 本地联调：起服务端与 7 个机器人，打印房间码后等开发者作为第 8 人入座；一局结束后自动建下一局（房间码每局递增，机器人意图种子每局 +1），`Ctrl-C` 退出，`DEV_ROUNDS=<正整数>` 限定局数，`DEV_INTENT_SEED` 指定起始意图种子。`DEV_PORT` 默认 8080，端口被占用时直接失败 |
 | `python3 scripts/validate_docs.py` | 文档与实体数据校验 |
@@ -226,7 +226,7 @@ M0 确定性 AI（`sim/src/ai.rs`）针对效果牌补充三条规则：
 
 ## 6. 验证方式
 
-验证矩阵：`make data-check && python3 scripts/validate_docs.py && make m0-check && make m0-batch && make m0-report`（其中 `make m0-check` = `make data-check && make test && make lint && make m0-determinism`）。
+验证矩阵：`make data-check && python3 scripts/validate_docs.py && make m0-check && make m0-batch && make m0-report`（其中 `make m0-check` 并行执行 `data-check`、`test`、`lint` 与 `m0-determinism`）。
 
 每个 M0 标准类别由下列命令与字段支撑；表中「报告字段」指 `make m0-report` 输出的 JSON 字段。
 
