@@ -27,7 +27,33 @@ impl CpuEncoder {
 }
 
 impl Encoder for CpuEncoder {
+    fn encode_batch(
+        &self,
+        items: &[(&[u8], u32, u32)],
+        fmt: Format,
+    ) -> Vec<Result<Vec<u8>, EncodeError>> {
+        use rayon::prelude::*;
+        // 批内并行后每张只用一个 astcenc 线程，避免 jobs² 超订。
+        items
+            .par_iter()
+            .map(|&(rgba, w, h)| self.encode_threads(rgba, w, h, fmt, 1))
+            .collect()
+    }
+
     fn encode(&self, rgba: &[u8], w: u32, h: u32, fmt: Format) -> Result<Vec<u8>, EncodeError> {
+        self.encode_threads(rgba, w, h, fmt, self.jobs)
+    }
+}
+
+impl CpuEncoder {
+    fn encode_threads(
+        &self,
+        rgba: &[u8],
+        w: u32,
+        h: u32,
+        fmt: Format,
+        threads: usize,
+    ) -> Result<Vec<u8>, EncodeError> {
         if w == 0 || h == 0 || rgba.len() != w as usize * h as usize * 4 {
             return Err(EncodeError::BadSize { w, h });
         }
@@ -38,7 +64,7 @@ impl Encoder for CpuEncoder {
                     .clone()
                     .build()
                     .map_err(|e| EncodeError::Astc(format!("{e:?}")))?;
-                let mut ctx = Context::with_threads(self.jobs, cfg)
+                let mut ctx = Context::with_threads(threads, cfg)
                     .map_err(|e| EncodeError::Astc(format!("{e:?}")))?;
                 let img = Image {
                     extents: Extents::new(w, h),

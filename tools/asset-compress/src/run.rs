@@ -45,6 +45,8 @@ pub enum Error {
     Ctex(ctex::CtexError),
     /// 源文件没有可用的文件名。
     BadPath(PathBuf),
+    /// 从输入目录向上找不到 `project.godot`。
+    NoProject(PathBuf),
 }
 
 impl std::fmt::Display for Error {
@@ -55,6 +57,11 @@ impl std::fmt::Display for Error {
             Error::Encode(e) => write!(f, "{e}"),
             Error::Ctex(e) => write!(f, "{e}"),
             Error::BadPath(p) => write!(f, "无法从路径取名：{}", p.display()),
+            Error::NoProject(p) => write!(
+                f,
+                "在 {} 的上级目录里找不到 project.godot，无法确定 res:// 路径",
+                p.display()
+            ),
         }
     }
 }
@@ -101,14 +108,56 @@ pub fn run_one(
     enc: &dyn Encoder,
 ) -> Result<RunOutcome, Error> {
     let source = std::fs::read(src_png)?;
-    let img = image::load_from_memory(&source)?.to_rgba8();
-    let (w, h) = (img.width(), img.height());
+    let decoded = decode_png_bytes(&source)?;
+    let bc7 = enc.encode(&decoded.rgba, decoded.width, decoded.height, Format::Bc7)?;
+    let astc = enc.encode(&decoded.rgba, decoded.width, decoded.height, Format::Astc4x4)?;
+    write_outputs(
+        src_png,
+        &source,
+        res_path,
+        out_dir,
+        decoded.width,
+        decoded.height,
+        [&bc7, &astc],
+    )
+}
 
-    let mut dests = Vec::with_capacity(2);
-    for fmt in [Format::Bc7, Format::Astc4x4] {
-        let blocks = enc.encode(img.as_raw(), w, h, fmt)?;
-        dests.push(ctex::encode_ctex(fmt, w, h, &blocks)?);
-    }
+/// 解码后的像素。
+pub struct Decoded {
+    pub rgba: Vec<u8>,
+    pub width: u32,
+    pub height: u32,
+}
+
+pub fn decode_png(src_png: &Path) -> Result<Decoded, Error> {
+    decode_png_bytes(&std::fs::read(src_png)?)
+}
+
+fn decode_png_bytes(source: &[u8]) -> Result<Decoded, Error> {
+    let img = image::load_from_memory(source)?.to_rgba8();
+    let (width, height) = (img.width(), img.height());
+    Ok(Decoded {
+        rgba: img.into_raw(),
+        width,
+        height,
+    })
+}
+
+/// 写出一张图的全部产物；`blocks` 顺序固定为 `[BC7, ASTC]`。
+#[allow(clippy::too_many_arguments)]
+pub fn write_outputs(
+    src_png: &Path,
+    source: &[u8],
+    res_path: &str,
+    out_dir: &Path,
+    w: u32,
+    h: u32,
+    blocks: [&[u8]; 2],
+) -> Result<RunOutcome, Error> {
+    let dests = [
+        ctex::encode_ctex(Format::Bc7, w, h, blocks[0])?,
+        ctex::encode_ctex(Format::Astc4x4, w, h, blocks[1])?,
+    ];
 
     let file_name = src_png
         .file_name()
@@ -122,7 +171,7 @@ pub fn run_one(
     write_atomic(&out_dir.join(format!("{base}.bptc.ctex")), &dests[0])?;
     write_atomic(&out_dir.join(format!("{base}.astc.ctex")), &dests[1])?;
 
-    let source_md5 = md5::source_md5(&source);
+    let source_md5 = md5::source_md5(source);
     let dest_md5 = md5::dest_md5(&dests);
     let md5_text = md5::render_md5(&source_md5, &dest_md5);
     write_atomic(&out_dir.join(format!("{base}.md5")), md5_text.as_bytes())?;
@@ -168,4 +217,148 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let tmp = PathBuf::from(tmp);
     std::fs::write(&tmp, bytes)?;
     std::fs::rename(&tmp, path)
+}
+
+// ---------------------------------------------------------------------------
+// 批量执行
+
+use std::time::{Duration, Instant};
+
+#[derive(Debug)]
+pub struct RunReport {
+    pub encoded: usize,
+    pub skipped: usize,
+    pub wall: Duration,
+}
+
+/// 从 `input` 向上找含 `project.godot` 的目录。
+pub fn project_root(input: &Path) -> Option<PathBuf> {
+    let mut dir = if input.is_dir() {
+        input.to_path_buf()
+    } else {
+        input.parent()?.to_path_buf()
+    };
+    loop {
+        if dir.join("project.godot").exists() {
+            return Some(dir);
+        }
+        if !dir.pop() {
+            return None;
+        }
+    }
+}
+
+/// 递归收集 PNG，按路径排序（保证每次运行顺序稳定）。
+pub fn find_pngs(dir: &Path) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    let mut stack = vec![dir.to_path_buf()];
+    while let Some(d) = stack.pop() {
+        let Ok(rd) = std::fs::read_dir(&d) else { continue };
+        for e in rd.flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                stack.push(p);
+            } else if p.extension().is_some_and(|x| x == "png") {
+                out.push(p);
+            }
+        }
+    }
+    out.sort();
+    out
+}
+
+fn res_path_of(root: &Path, file: &Path) -> String {
+    let rel = file.strip_prefix(root).unwrap_or(file);
+    format!("res://{}", rel.to_string_lossy().replace('\\', "/"))
+}
+
+fn out_base(root: &Path, file: &Path) -> (PathBuf, String, String) {
+    let res = res_path_of(root, file);
+    let name = file.file_name().and_then(|s| s.to_str()).unwrap_or_default();
+    let base = format!("{name}-{}", md5::source_md5(res.as_bytes()));
+    (root.join(".godot/imported"), res, base)
+}
+
+/// 是否需要重编：源 md5 与现有 `.md5` 一致且两个产物都在。
+pub fn needs_encode(root: &Path, file: &Path, source: &[u8]) -> Result<bool, Error> {
+    let (out_dir, _, base) = out_base(root, file);
+    let existing = std::fs::read_to_string(out_dir.join(format!("{base}.md5"))).ok();
+    if matches!(
+        crate::plan::decide(source, existing.as_deref()),
+        crate::plan::Work::Skip
+    ) && out_dir.join(format!("{base}.bptc.ctex")).exists()
+        && out_dir.join(format!("{base}.astc.ctex")).exists()
+    {
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+/// 目录批量编码。按固定张数分批，避免全量 RGBA 同时驻留。
+pub fn run_all(enc: &dyn Encoder, input: &Path, jobs: usize) -> Result<RunReport, Error> {
+    use rayon::prelude::*;
+
+    let started = Instant::now();
+    let root = project_root(input).ok_or_else(|| Error::NoProject(input.to_path_buf()))?;
+    let out_dir = root.join(".godot/imported");
+    std::fs::create_dir_all(&out_dir)?;
+
+    let mut pending: Vec<(PathBuf, Vec<u8>)> = Vec::new();
+    let mut skipped = 0usize;
+    for file in find_pngs(input) {
+        let source = std::fs::read(&file)?;
+        if needs_encode(&root, &file, &source)? {
+            pending.push((file, source));
+        } else {
+            skipped += 1;
+        }
+    }
+
+    let chunk = (jobs * 8).max(8);
+    let mut encoded = 0usize;
+    for group in pending.chunks(chunk) {
+        let decoded: Vec<Result<Decoded, Error>> = group
+            .par_iter()
+            .map(|(_, source)| decode_png_bytes(source))
+            .collect();
+        let decoded = decoded.into_iter().collect::<Result<Vec<_>, _>>()?;
+        let refs: Vec<(&[u8], u32, u32)> = decoded
+            .iter()
+            .map(|d| (d.rgba.as_slice(), d.width, d.height))
+            .collect();
+        let bc7 = enc.encode_batch(&refs, Format::Bc7);
+        let astc = enc.encode_batch(&refs, Format::Astc4x4);
+        for (i, (file, source)) in group.iter().enumerate() {
+            let bc7 = bc7[i].as_ref().map_err(|e| Error::Encode(clone_err(e)))?;
+            let astc = astc[i].as_ref().map_err(|e| Error::Encode(clone_err(e)))?;
+            let (out_dir, res, _) = out_base(&root, file);
+            write_outputs(
+                file,
+                source,
+                &res,
+                &out_dir,
+                decoded[i].width,
+                decoded[i].height,
+                [bc7, astc],
+            )?;
+            encoded += 1;
+        }
+    }
+
+    Ok(RunReport {
+        encoded,
+        skipped,
+        wall: started.elapsed(),
+    })
+}
+
+fn clone_err(e: &crate::encode::EncodeError) -> crate::encode::EncodeError {
+    match e {
+        crate::encode::EncodeError::BadSize { w, h } => crate::encode::EncodeError::BadSize {
+            w: *w,
+            h: *h,
+        },
+        crate::encode::EncodeError::Astc(m) => crate::encode::EncodeError::Astc(m.clone()),
+        crate::encode::EncodeError::Bc7(m) => crate::encode::EncodeError::Bc7(m.clone()),
+    }
 }

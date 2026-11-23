@@ -258,6 +258,48 @@ impl GpuEncoder {
 }
 
 impl Encoder for GpuEncoder {
+    fn encode_batch(
+        &self,
+        items: &[(&[u8], u32, u32)],
+        fmt: Format,
+    ) -> Vec<Result<Vec<u8>, EncodeError>> {
+        match fmt {
+            Format::Bc7 => {
+                let valid: Vec<(&[u8], u32, u32)> = items
+                    .iter()
+                    .copied()
+                    .filter(|&(rgba, w, h)| {
+                        w > 0
+                            && h > 0
+                            && w % 4 == 0
+                            && h % 4 == 0
+                            && rgba.len() == w as usize * h as usize * 4
+                    })
+                    .collect();
+                let mut encoded = GpuEncoder::encode_batch(self, &valid).into_iter();
+                items
+                    .iter()
+                    .map(|&(rgba, w, h)| {
+                        let ok = w > 0
+                            && h > 0
+                            && w % 4 == 0
+                            && h % 4 == 0
+                            && rgba.len() == w as usize * h as usize * 4;
+                        if ok {
+                            Ok(encoded.next().expect("批量输出与输入一一对应"))
+                        } else {
+                            Err(EncodeError::BadSize { w, h })
+                        }
+                    })
+                    .collect()
+            }
+            Format::Astc4x4 => items
+                .iter()
+                .map(|_| Err(EncodeError::Astc("GPU 层只负责 BC7".into())))
+                .collect(),
+        }
+    }
+
     fn encode(&self, rgba: &[u8], w: u32, h: u32, fmt: Format) -> Result<Vec<u8>, EncodeError> {
         match fmt {
             Format::Bc7 => {

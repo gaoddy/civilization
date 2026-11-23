@@ -5,9 +5,11 @@
 
 pub mod cpu;
 pub mod gpu;
+pub mod hybrid;
 
 pub use cpu::CpuEncoder;
 pub use gpu::{GpuEncoder, GpuError};
+pub use hybrid::StandardEncoder;
 
 use crate::Format;
 
@@ -33,4 +35,13 @@ impl std::error::Error for EncodeError {}
 
 pub trait Encoder: Sync {
     fn encode(&self, rgba: &[u8], w: u32, h: u32, fmt: Format) -> Result<Vec<u8>, EncodeError>;
+
+    /// 批量编码；顺序与输入一致。默认逐张编码，GPU/CPU 执行层各自覆盖。
+    fn encode_batch(
+        &self,
+        items: &[(&[u8], u32, u32)],
+        fmt: Format,
+    ) -> Vec<Result<Vec<u8>, EncodeError>> {
+        items.iter().map(|&(rgba, w, h)| self.encode(rgba, w, h, fmt)).collect()
+    }
 }

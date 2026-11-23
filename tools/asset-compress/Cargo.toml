@@ -13,6 +13,4 @@ rayon = "1"
 wgpu = "30"
 pollster = "0.4"
 md-5 = "0.10"
-
-[dev-dependencies]
 bcn-decode = "0.1"
