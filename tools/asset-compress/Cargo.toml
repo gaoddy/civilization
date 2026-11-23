@@ -1,0 +1,18 @@
+[workspace]
+
+[package]
+name = "asset-compress"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+image = { version = "0.25", default-features = false, features = ["png"] }
+astcenc-rs = "0.2"
+intel_tex_2 = "0.5"
+rayon = "1"
+wgpu = "30"
+pollster = "0.4"
+md-5 = "0.10"
+
+[dev-dependencies]
+bcn-decode = "0.1"

@@ -1,0 +1,9 @@
+/Users/gaoddy/Projects/Civilization/.worktrees/feature-gpu-texture-compress/tools/asset-compress/target/debug/build/clang-sys-2d660e3223cc2a29/build_script_build-2d660e3223cc2a29.d: /Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build.rs /Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/macros.rs /Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/common.rs /Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/dynamic.rs /Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/static.rs
+
+/Users/gaoddy/Projects/Civilization/.worktrees/feature-gpu-texture-compress/tools/asset-compress/target/debug/build/clang-sys-2d660e3223cc2a29/build_script_build-2d660e3223cc2a29: /Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build.rs /Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/macros.rs /Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/common.rs /Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/dynamic.rs /Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/static.rs
+
+/Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build.rs:
+/Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/macros.rs:
+/Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/common.rs:
+/Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/dynamic.rs:
+/Users/gaoddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clang-sys-1.9.1/build/static.rs:
