@@ -4,8 +4,10 @@
 //! ASTC 4x4 16B/块），由 `godot::ctex` 包装成 GST2 容器。
 
 pub mod cpu;
+pub mod gpu;
 
 pub use cpu::CpuEncoder;
+pub use gpu::{GpuEncoder, GpuError};
 
 use crate::Format;
 
