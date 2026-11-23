@@ -265,6 +265,7 @@ client/
 | `make sfx` | 生成 9 个默认合成占位音效到 `client/assets/audio/`；逐卡覆盖见 §11 |
 | `make font-subset` | 由文本表 + ASCII + GB2312 生成内置中文字体子集 `client/assets/fonts/NotoSansSC-Regular-subset.ttf`；见 §6 |
 | `make client-import` | 导入客户端工程，默认用 `godot --headless --path client --import`（CPU 压缩）；`CLIENT_IMPORT_GPU=1` 改走非无头导入（仅 S3TC/HDR 纹理能用 GPU 压缩），`auto` 按图形会话自动判断。PNG 纹理导入本身走线程池，见 §10 |
+| `make client-cache-copy` | 从主检出复制 `client/.godot/imported` 与全部 `*.import` 旁车到当前 worktree，跳过纹理冷编码；随后照常 `make client-import` 只补增量产物。在主检出执行时为空跑；主检出缺缓存时失败并提示先执行 `client-import`，见 §10 |
 | `make client-run` | 先导入再启动桌面客户端；新增或改名 `class_name` 脚本后必须走这个入口，否则沿用旧全局类缓存。同时传 `WIDTH=<宽> HEIGHT=<高>` 时按指定像素开窗；传 `CLIENT_DEVICE` 取 `phone`、`tablet` 或 `desktop` 时以该设备档位运行，用于在桌面模拟移动端。传 `LOCAL_SERVER=1` 时内嵌启动本机服务端与 7 个机器人并自动登录入房，见 §5 |
 | `make client-run-on-iphone` | 等价于 `make client-run WIDTH=2622 HEIGHT=1206 CLIENT_DEVICE=phone LOCAL_SERVER=1`，按 iPhone 17 Pro 横屏物理分辨率开窗并进入手机档位，同时带上本地服务端与机器人 |
 | `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet LOCAL_SERVER=1`，按 iPad Air 11 横屏物理分辨率开窗并进入平板档位，同时带上本地服务端与机器人 |
@@ -468,7 +469,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 批次：英雄与已生成的随从、效果牌封面随仓库提交，统一按卡面 112:146 展示；尚无封面的卡牌继续走程序化绘制，由玩法色与首字回退。
 - 离线产物：纹理压缩产物由 `tools/asset-compress` 生成（`make asset-compress`），不依赖 Godot。BC7 走 GPU（wgpu/Metal，`standard` 档：60 张卡面 mean 44.05 dB、min 39.58 dB），ASTC 4x4 走 CPU astcenc `PRESET_MEDIUM`（与 Godot 同档，单张产物与 Godot 逐字节一致）；写出 `.ctex`、`.import`、`.md5` 后，`make client-import` 不会重导（实测 540 张 0 变更）。质量门禁用 `make asset-compress-check`。全量 540 张在 M1 Max 上约 50s，瓶颈是 ASTC 的 CPU 编码。
 - 渲染后端：`client/project.godot` 的 `rendering_method` 为 `forward_plus`（macOS 走 Metal），`rendering_method.mobile` 为 `gl_compatibility`。桌面 OpenGL 3.3 不提供 BPTC，GLES3 会把 BC7 纹理逐张解码成 RGBA8 并输出 `BPTC_RGBA not supported by hardware` 警告；Forward+ 直接使用 BC7，移动端的 GLES3 使用 ASTC。
-- 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；`client/project.godot` 的 `[importer_defaults]` 为 `texture` 统一设置 `compress/mode=2`（VRAM 压缩）与 `compress/high_quality=true`，桌面（Forward+）走 BPTC、iOS 走 ASTC；`[editor]` 的 `import/use_multiple_threads=true` 显式固定线程池导入（引擎默认即为 true，PNG 由 `ResourceImporterTexture` 处理并支持线程导入）。448×584 卡面单张冷加载由约 6ms 降到约 0.2ms，图鉴一批 27 张的解码停顿从约 160ms 降到个位毫秒数。改图后运行 `make client-import`；调整导入默认值后需先删除对应的 `.png.import` 或 `client/.godot`，否则已有 `.import` 里的旧参数仍生效。
+- 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；`client/project.godot` 的 `[importer_defaults]` 为 `texture` 统一设置 `compress/mode=2`（VRAM 压缩）与 `compress/high_quality=true`，桌面（Forward+）走 BPTC、iOS 走 ASTC；`[editor]` 的 `import/use_multiple_threads=true` 显式固定线程池导入（引擎默认即为 true，PNG 由 `ResourceImporterTexture` 处理并支持线程导入）。448×584 卡面单张冷加载由约 6ms 降到约 0.2ms，图鉴一批 27 张的解码停顿从约 160ms 降到个位毫秒数。改图后运行 `make client-import`；调整导入默认值后需先删除对应的 `.png.import` 或 `client/.godot`，否则已有 `.import` 里的旧参数仍生效。新 worktree 首次导入前先运行 `make client-cache-copy` 复用主检出的导入缓存，再执行 `make client-import`；缓存按源图 md5 校验，worktree 内改过的资源仍会重导。
 
 ## 11. 音效层
 
