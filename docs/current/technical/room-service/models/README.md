@@ -4,7 +4,8 @@
 
 | 文档 | 内容 |
 | --- | --- |
-| [account 表](account-table.md) | 手机号 → 持久化账号、6 位玩家编号与展示名 |
+| [account 表](account-table.md) | 手机号 / Steam ID → 持久化账号、6 位玩家编号与展示名 |
+| [account_achievement 表](account-achievement-table.md) | 账号级成就首次解锁记录 |
 | [friendship 表](friendship-table.md) | 双向好友关系 |
 | [friend_request 表](friend-request-table.md) | 待处理好友申请与发送时刻 |
 | [friend_request_attempt 表](friend-request-attempt-table.md) | 24 小时内好友申请发送次数记录 |

@@ -26,6 +26,15 @@ const EDUCATION_SUBTYPES: usize = 5;
 /// 触发成就所需的成长结算次数（生物进化）。
 const BIOLOGICAL_GROWTH_EVENTS: u8 = 3;
 
+/// 成就奖励的结算阶段，决定金币类奖励的到账时点。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum AchievementPhase {
+    /// 招募与回合开始：金币当回合到账。
+    Recruit,
+    /// 战斗结算：金币顺延到下一回合。
+    Combat,
+}
+
 /// 一局内可触发的成就。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Achievement {
@@ -78,16 +87,28 @@ impl Engine {
         seat: Seat,
         achievement: Achievement,
     ) {
-        self.trigger_achievement_on(state, seat, achievement, None);
+        self.trigger_achievement_in(state, seat, achievement, AchievementPhase::Recruit);
     }
 
-    /// 同 [`Engine::trigger_achievement`]，`target` 为奖励需要作用的随从。
+    /// 同 [`Engine::trigger_achievement`]，按给定阶段结算奖励。
+    pub(crate) fn trigger_achievement_in(
+        &self,
+        state: &mut GameState,
+        seat: Seat,
+        achievement: Achievement,
+        phase: AchievementPhase,
+    ) {
+        self.trigger_achievement_on(state, seat, achievement, None, phase);
+    }
+
+    /// 同 [`Engine::trigger_achievement_in`]，`target` 为奖励需要作用的随从。
     fn trigger_achievement_on(
         &self,
         state: &mut GameState,
         seat: Seat,
         achievement: Achievement,
         target: Option<InstanceId>,
+        phase: AchievementPhase,
     ) {
         let Some(player) = state.players.get_mut(usize::from(seat)) else {
             return;
@@ -95,13 +116,14 @@ impl Engine {
         if !player.achievements.unlocked.insert(achievement) {
             return;
         }
-        self.apply_achievement_reward(state, seat, achievement, target);
+        self.apply_achievement_reward(state, seat, achievement, target, phase);
     }
 
-    /// 记录一次招募阶段的成长结算（每个被命中的随从一次）。
+    /// 记录一次成长结算（每个被命中的随从一次），不做成就判定。
     ///
     /// `times` 是本次成长层数；层数不重复计数，一次结算只记 1 次。
-    pub(crate) fn record_growth_achievement(
+    /// 招募、回合开始与战斗内的成长都走这里；结算时点由调用方决定。
+    pub(crate) fn record_growth_event(
         &self,
         state: &mut GameState,
         seat: Seat,
@@ -116,25 +138,77 @@ impl Engine {
             .cards
             .get(card_id)
             .and_then(|card| card.subtype.clone());
-        {
-            let Some(player) = state.players.get_mut(usize::from(seat)) else {
+        let Some(player) = state.players.get_mut(usize::from(seat)) else {
+            return;
+        };
+        let progress = &mut player.achievements;
+        progress.growth_events = progress.growth_events.saturating_add(1);
+        if let Some(subtype) = subtype {
+            progress.grown_subtypes.insert(subtype);
+        }
+    }
+
+    /// 按当前阶段结算成长类成就（生物进化、有教无类）。
+    ///
+    /// 同一阶段的多次成长合并判定：招募阶段在意图结束后调用，
+    /// 回合开始在发金币后调用，战斗在写回后调用。
+    pub(crate) fn evaluate_growth_achievements(
+        &self,
+        state: &mut GameState,
+        seat: Seat,
+        phase: AchievementPhase,
+    ) {
+        let (growth_events, subtypes) = {
+            let Some(progress) = state
+                .players
+                .get(usize::from(seat))
+                .map(|player| &player.achievements)
+            else {
                 return;
             };
-            let progress = &mut player.achievements;
-            progress.growth_events = progress.growth_events.saturating_add(1);
-            if let Some(subtype) = subtype {
-                progress.grown_subtypes.insert(subtype);
-            }
-        }
-        let (growth_events, subtypes) = {
-            let progress = &state.players[usize::from(seat)].achievements;
             (progress.growth_events, progress.grown_subtypes.len())
         };
         if growth_events >= BIOLOGICAL_GROWTH_EVENTS {
-            self.trigger_achievement(state, seat, Achievement::BiologicalEvolution);
+            self.trigger_achievement_in(state, seat, Achievement::BiologicalEvolution, phase);
         }
         if subtypes >= EDUCATION_SUBTYPES {
-            self.trigger_achievement(state, seat, Achievement::EducationForAll);
+            self.trigger_achievement_in(state, seat, Achievement::EducationForAll, phase);
+        }
+    }
+
+    /// 任意途径进入招募棋盘：蒸汽机入场触发机器轰鸣。
+    ///
+    /// 手牌打出、效果召唤与效果复制都走这里；三连合成与站位调整不算入场。
+    pub(crate) fn on_minion_entered_board(&self, state: &mut GameState, seat: Seat, card_id: &str) {
+        if card_id == STEAM_ENGINE_CARD_ID {
+            self.trigger_achievement(state, seat, Achievement::MachinesRoar);
+        }
+    }
+
+    /// 战斗结算后应用某一侧的成长与蒸汽机入场记录。
+    ///
+    /// 同一次战斗内多个成长合并判定；战斗中的金币奖励顺延到下一回合，
+    /// 有教无类在写回后立刻发牌。
+    pub(crate) fn apply_combat_achievements(
+        &self,
+        state: &mut GameState,
+        seat: Seat,
+        side: usize,
+        log: &combat::CombatLog,
+    ) {
+        for (event_side, card_id) in &log.growth_events {
+            if *event_side == side {
+                self.record_growth_event(state, seat, card_id, 1);
+            }
+        }
+        self.evaluate_growth_achievements(state, seat, AchievementPhase::Combat);
+        if log.entered_machines.contains(&side) {
+            self.trigger_achievement_in(
+                state,
+                seat,
+                Achievement::MachinesRoar,
+                AchievementPhase::Combat,
+            );
         }
     }
 
@@ -173,7 +247,13 @@ impl Engine {
             }
         }
         if let Some(instance_id) = found {
-            self.trigger_achievement_on(state, seat, Achievement::TuringMoment, Some(instance_id));
+            self.trigger_achievement_on(
+                state,
+                seat,
+                Achievement::TuringMoment,
+                Some(instance_id),
+                AchievementPhase::Recruit,
+            );
         }
     }
 
@@ -183,18 +263,31 @@ impl Engine {
         seat: Seat,
         achievement: Achievement,
         target: Option<InstanceId>,
+        phase: AchievementPhase,
     ) {
         match achievement {
             Achievement::BiologicalEvolution => {
                 if let Some(player) = state.players.get_mut(usize::from(seat)) {
-                    player.gold = player.gold.saturating_add(1);
+                    match phase {
+                        AchievementPhase::Recruit => {
+                            player.gold = player.gold.saturating_add(1);
+                        }
+                        AchievementPhase::Combat => {
+                            player.achievements.next_turn_gold_bonus =
+                                player.achievements.next_turn_gold_bonus.saturating_add(1);
+                        }
+                    }
                 }
             }
             Achievement::EducationForAll => self.grant_random_effect_card(state, seat),
             Achievement::Genetics => self.grant_plant_discover(state, seat),
             Achievement::MachinesRoar => {
                 if let Some(player) = state.players.get_mut(usize::from(seat)) {
-                    player.achievements.machine_discount_turn = Some(state.turn);
+                    let turn = match phase {
+                        AchievementPhase::Recruit => state.turn,
+                        AchievementPhase::Combat => state.turn.saturating_add(1),
+                    };
+                    player.achievements.machine_discount_turn = Some(turn);
                 }
             }
             Achievement::OneSmallStep => {

@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+use crate::achievements;
 use crate::combat;
 use crate::data::{CardType, Catalog, Era, Playstyle};
 use crate::effects::{EffectCtx, Trigger};
@@ -251,6 +252,10 @@ impl Engine {
             }
             events.extend(self.roll_shop(state, seat as Seat));
         }
+        // 回合开始的繁衍与成长效果统一在发金币后判定：金币奖励当回合可用。
+        for &seat in &seats {
+            self.evaluate_growth_achievements(state, seat, achievements::AchievementPhase::Recruit);
+        }
         self.recompute_auras(state);
         Ok(events)
     }
@@ -265,6 +270,7 @@ impl Engine {
         let outcome = recruit::apply(self, state, seat, intent)?;
         self.recompute_auras_for(state, seat);
         self.check_keyword_achievements(state, seat);
+        self.evaluate_growth_achievements(state, seat, achievements::AchievementPhase::Recruit);
         Ok(outcome)
     }
 
@@ -279,28 +285,38 @@ impl Engine {
     /// 固定层数来自卡牌所引用技能 `keyword` 中的「繁衍 N」（无数字按 1）。
     /// 繁衍只加生命、不加攻击，攻击力为 0 的随从也只获得生命。
     fn apply_breed(&self, state: &mut GameState, seat: Seat) {
-        let Some(player) = state.players.get_mut(usize::from(seat)) else {
-            return;
-        };
-        for minion in &mut player.board {
-            let layers = self
-                .static_breed(&minion.card_id)
-                .saturating_add(minion.breed);
-            // 金色随从的关键词触发两次；繁衍等价于 N×2。
-            let amount = if minion.golden {
-                layers.saturating_mul(2)
-            } else {
-                layers
+        let mut grown: Vec<(String, i32)> = Vec::new();
+        {
+            let Some(player) = state.players.get_mut(usize::from(seat)) else {
+                return;
             };
-            minion.stats.health.add_growth(amount);
-            minion.record_stat_source(
-                StatSourceLayer::Growth,
-                StatSourceOrigin::System(StatSystemSource::Breed),
-                0,
-                amount,
-            );
-            // `breed_applied` 记录本实例累计已通过繁衍获得的生命。
-            minion.breed_applied = minion.breed_applied.saturating_add(amount);
+            for minion in &mut player.board {
+                let layers = self
+                    .static_breed(&minion.card_id)
+                    .saturating_add(minion.breed);
+                // 金色随从的关键词触发两次；繁衍等价于 N×2。
+                let amount = if minion.golden {
+                    layers.saturating_mul(2)
+                } else {
+                    layers
+                };
+                minion.stats.health.add_growth(amount);
+                minion.record_stat_source(
+                    StatSourceLayer::Growth,
+                    StatSourceOrigin::System(StatSystemSource::Breed),
+                    0,
+                    amount,
+                );
+                // `breed_applied` 记录本实例累计已通过繁衍获得的生命。
+                minion.breed_applied = minion.breed_applied.saturating_add(amount);
+                if amount > 0 {
+                    grown.push((minion.card_id.clone(), amount));
+                }
+            }
+        }
+        // 繁衍属于成长来源；只记录，成就判定统一放到发金币之后。
+        for (card_id, amount) in grown {
+            self.record_growth_event(state, seat, &card_id, amount);
         }
     }
 

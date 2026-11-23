@@ -31,12 +31,12 @@
   },
   {
     "affects_power": true,
-    "condition": "本局使用过「蒸汽机」",
+    "condition": "本局有「蒸汽机」进入战场",
     "count": 1,
     "event": "卡牌使用",
     "id": "machines-roar",
     "name": "机器轰鸣",
-    "reward": "你的机械随从本回合费用 −1（最低 1）",
+    "reward": "你的机械随从费用 −1（最低 1）：招募内触发当回合生效，战斗内触发下一次招募生效",
     "steam_api_name": "MACHINES_ROAR"
   },
   {

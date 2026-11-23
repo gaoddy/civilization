@@ -111,9 +111,9 @@ protocol/
 ### 6.1 持久化
 
 - 连接：入口读取 `DATABASE_URL`，`Db::connect` 建池（10 条连接，5 秒获取超时）并执行 `sqlx::migrate!("../../migrations")`；随后 `AccountStore::load`、`SocialStore::load` 全量载入，再绑定端口。数据库连不上时进程直接失败，不静默降级。
-- 表：`account`、`friendship`、`friend_request`、`friend_request_attempt`、`recent_opponent`、`room_invite` 六张表，基线迁移 `server/migrations/0001_baseline.sql`；逐表说明见 [表文档](models/README.md)。时间列统一 `TIMESTAMPTZ(3)`，值由注入的 `Clock` 传入，不用数据库 `now()`。
+- 表：`account`、`account_achievement`、`friendship`、`friend_request`、`friend_request_attempt`、`recent_opponent`、`room_invite` 七张表，基线迁移 `server/migrations/0001_baseline.sql`；逐表说明见 [表文档](models/README.md)。时间列统一 `TIMESTAMPTZ(3)`，值由注入的 `Clock` 传入，不用数据库 `now()`。
 - 写穿：申请（申请行 + 发送记录）、处理申请（删申请 + 建双向好友 + 清双方发送记录）、删除好友（双向关系 + 两个方向申请与记录）、记录对局（逐对写入并裁剪到 20 人）、创建邀请（先清过期再写）各自在一个事务内完成；事务提交后才改内存。失败时映射为 `SocialError::Storage` / `INTERNAL_ERROR`，内存保持原状。
-- 载入：`load_social` 先删除过期的申请、发送记录与邀请，再按上限读回；`AccountStore` 重建手机号索引与编号索引，`SocialStore` 重建好友、申请、发送记录、最近对局与邀请。
+- 载入：`load_social` 先删除过期的申请、发送记录与邀请，再按上限读回；`AccountStore` 重建手机号 / Steam ID 索引、编号索引与账号成就集合，`SocialStore` 重建好友、申请、发送记录、最近对局与邀请。
 - 邀请 id 为 `inv_<uuid>`，跨重启与多实例不依赖进程内自增序号；房间本身仍在进程内，重启后邀请指向的房间已不存在，接受时按 `ROOM_NOT_FOUND` 失败。
 - 测试：`room-service/tests/persistence.rs` 为每个用例建独立 schema（`CREATE SCHEMA` + `search_path`），在真实 PostgreSQL 上验证重启恢复；`make db-up` / `make db-test` / `make db-reset` 封装起库、跑持久化测试与重建库。未设置 `TEST_DATABASE_URL` / `DATABASE_URL` 时用例打印跳过原因并返回。
 
@@ -248,14 +248,14 @@ m1-check:
 | 静态检查 | `make lint` → `cargo fmt --check`、`cargo clippy --workspace --all-targets -- -D warnings` | 无警告 | 0 |
 | 确定性 | `make m0-determinism` → `cargo test -p sim --test sim_determinism replay_same_log_100_times_has_same_hash` | `1 passed`（约 26 s） | 0 |
 
-持久化证据由 `make db-test` 单独提供：先 `make db-up` 启动 `postgres:16`，`tests/persistence.rs` 的 5 个用例在真实数据库上全部通过（账号身份恢复、社交数据跨重启恢复、过期数据不载入、重启后重新登录、固定时钟下邀请窗口不变）。
+持久化证据由 `make db-test` 单独提供：先 `make db-up` 启动 `postgres:16`，`tests/persistence.rs` 的 9 个用例在真实数据库上全部通过（账号身份恢复、Steam 身份恢复、手机号绑定、账号成就解锁恢复、社交数据跨重启恢复、过期数据不载入、重启后重新登录、固定时钟下邀请窗口不变、迁移可重复执行）。
 
 ## 14. 与设计的偏差
 
 1. 设计 §5.4 写 `view(state, seat, catalog) -> PlayerView`；因 `rule-engine` 不依赖 `protocol`，改为引擎返回自有 `SeatView`，由 `room-service::view::to_protocol` 做机械映射。规则判定仍全部在引擎。
 2. 设计 §5.5 写「AI 决策改为同时接受 `PlayerView`」；为保住 M0 基线（`ai.rs` 的策略直接决定 1000 局基线数值），改为新增 view 驱动的 `sim/src/bot/brain.rs`，`ai.rs` 仍只读引擎状态、不接受 `PlayerView`（本需求只加了 `PendingChoice::Target` 的确定性分支与 `PlayCard.position: None`）。
 3. 设计 §5.2 要求存 `tokenHash` 与 connection；实现中仍保存明文 token，但已建立 `ConnectionRegistry` 连接索引用于好友在线状态与房间外推送。令牌只存在于内存、有效期 24 小时、不落盘；`Session` 的 `Debug` 输出已把 `token` 标为 `<redacted>`，避免日志泄漏。
-4. 设计把 PostgreSQL 列为账号、好友、房间元数据、意图日志与遥测的落点；本轮只落账号身份与社交数据（好友、申请、最近对局、房间邀请），房间、对局状态、意图日志与遥测仍在进程内或尚未实现。未配置 `DATABASE_URL` 时保留纯内存模式供本地开发并打印提示；配置后连不上数据库时进程直接失败，不静默降级。
+4. 设计把 PostgreSQL 列为账号、好友、房间元数据、意图日志与遥测的落点；本轮只落账号身份、账号成就与社交数据（好友、申请、最近对局、房间邀请），房间、对局状态、意图日志与遥测仍在进程内或尚未实现。未配置 `DATABASE_URL` 时保留纯内存模式供本地开发并打印提示；配置后连不上数据库时进程直接失败，不静默降级。
 
 ## 15. 对局观察日志
 

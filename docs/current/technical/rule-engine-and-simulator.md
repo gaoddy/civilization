@@ -26,6 +26,7 @@ server/
       src/effects/           # 结构化效果校验（validate）、解释执行（exec）、光环（auras）；parse 仅保留为 DSL 作者工具
       src/intent.rs          # 协议十三种意图（含 ChooseDiscover、ChooseTarget、AbandonTarget）与 11 个规则拒绝码（各自映射到对应的协议错误码）
       src/engine.rs          # Engine::new（含玩法参数）/ apply / start_game / start_turn
+      src/achievements.rs    # 局内成就标识、成长记账与各阶段奖励结算
       src/recruit.rs         # 商店、买/卖/刷新/冻结/升时代/打出/结束招募
       src/triple.rs          # 三连与发现
       src/combat.rs          # 战斗模拟
@@ -107,6 +108,7 @@ pub struct Card {
 - `Playstyle::ALL` 固定 13 项且不含 `Neutral`；`id()` / `from_id()` 是数据文件与协议中的玩法 id；`ordinal()` 是状态哈希中的序号（0..13，`Neutral` 为 13）。`Neutral` 只服务引擎内部哨兵，不进入卡牌 `categories`，也不参与 `Playstyle::ALL`。
 - `CategoryKind` 对应卡牌 `categories` 的三种前缀：`Play`（`play:`）、`Prey`（`prey:`）、`Host`（`host:`）；每条为 `{ kind, value }`。
 - 卡牌不再区分独立 Token 实体：衍生物、生成卡（三连奖励）与普通卡共用 `Card` 结构，靠 `in_shop_pool` 区分。`in_shop_pool: false` 的卡不要求 `play:`，其 `taxon`、`era`、`subtype`、`level` 等字段照常参与筛选与展示。
+- 成就映射数据在 `server/data/v0.2/achievements.json`，由 `scripts/gen_achievement_data.py` 从 v0.2 成就实体文档生成；规则引擎只使用其中的 `id` 与 `steam_api_name`，条件文本不参与解析。
 
 ### 3.2 分类树
 

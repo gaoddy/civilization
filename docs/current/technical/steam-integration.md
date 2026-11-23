@@ -43,7 +43,7 @@
 
 新增错误码：`STEAM_AUTH_FAILED`、`STEAM_UNAVAILABLE`、`STEAM_DISABLED`、`PHONE_INVALID`、`PHONE_ALREADY_BOUND`、`PHONE_CODE_UNAVAILABLE`、`CODE_INVALID`、`CODE_EXPIRED`、`ALREADY_IN_ROOM`。
 
-认证成功后下行顺序为 `AuthResult` → `AccountView` → `AchievementState`（当前为空列表），随后推送在线状态；旧客户端按未知类型忽略。
+认证成功后下行顺序为 `AuthResult` → `AccountView` → `AchievementState`（账号已解锁的成就 id 列表，按 id 升序），随后推送在线状态；旧客户端按未知类型忽略。
 
 ## 3. 服务端
 

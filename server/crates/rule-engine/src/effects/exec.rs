@@ -969,7 +969,7 @@ impl Engine {
                 }
                 (minion.card_id.clone(), times)
             };
-            self.record_growth_achievement(state, seat, &card_id, times);
+            self.record_growth_event(state, seat, &card_id, times);
         }
     }
 
@@ -1536,6 +1536,7 @@ impl Engine {
             new_minion(&self.catalog, id, card_id, false)
         };
         board.insert(position, minion);
+        self.on_minion_entered_board(state, seat, card_id);
         self.fire_ally_summon_recruit(state, seat, id);
         Some(id)
     }
@@ -1621,6 +1622,7 @@ impl Engine {
             }
         }
 
+        let mut entered: Vec<String> = Vec::new();
         for mut copy in copies {
             let player = &mut state.players[usize::from(ctx.seat)];
             match to {
@@ -1637,11 +1639,15 @@ impl Engine {
                         let id = state.next_instance_id;
                         state.next_instance_id = id.saturating_add(1);
                         copy.instance_id = id;
+                        entered.push(copy.card_id.clone());
                         player.board.push(copy);
                     }
                 }
                 Zone::Shop => {}
             }
+        }
+        for card_id in entered {
+            self.on_minion_entered_board(state, ctx.seat, &card_id);
         }
         self.check_triple(state, ctx.seat)
     }

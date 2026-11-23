@@ -2,14 +2,62 @@ mod common;
 
 use std::collections::BTreeSet;
 
-use common::{minion, place, set_shop, setup, test_catalog, test_playstyles};
+use common::{effects_of, minion, place, set_shop, setup, test_catalog, test_playstyles};
 use rule_engine::achievements::{Achievement, STEAM_ENGINE_CARD_ID};
-use rule_engine::data::{Era, Playstyle, card_has_playstyle};
+use rule_engine::data::{Card, CardType, Catalog, Era, Playstyle, Skill, card_has_playstyle};
 use rule_engine::effects::Duration;
 use rule_engine::engine::Engine;
 use rule_engine::hash::state_hash;
 use rule_engine::intent::Intent;
-use rule_engine::state::{GameState, HandCard, PendingChoice};
+use rule_engine::settle::Pairing;
+use rule_engine::state::{GameState, HandCard, PendingChoice, Phase};
+
+/// 往目录里插入一张带指定技能的合成随从卡。
+fn add_skill_card(
+    catalog: &mut Catalog,
+    id: &str,
+    subtype: Option<&str>,
+    attack: i32,
+    health: i32,
+    raw: &str,
+) {
+    let skill_id = catalog.insert_skill(Skill {
+        id: format!("{id}-skill"),
+        keyword: None,
+        effects: effects_of(raw),
+        cost: None,
+        uses_per_turn: None,
+    });
+    catalog.cards.insert(
+        id.to_string(),
+        Card {
+            id: id.to_string(),
+            card_type: CardType::Minion,
+            in_shop_pool: true,
+            taxon: "hominidae".to_string(),
+            categories: Vec::new(),
+            subtype: subtype.map(str::to_string),
+            level: 1,
+            era: None,
+            attack: Some(attack),
+            health: Some(health),
+            skills: vec![skill_id],
+            cost: Some(1),
+        },
+    );
+}
+
+/// 把引擎摆到战斗阶段，并设置一场固定配对。
+fn combat_pairing(state: &mut GameState) {
+    state.phase = Phase::Combat;
+    state.first_seat = 0;
+    state.last_winner = None;
+    state.pairings = vec![Pairing {
+        a: 0,
+        b: 1,
+        ghost: None,
+    }];
+}
 
 /// 引擎内的成就标识必须与生成数据一一对应，防止实体文档与运行时漂移。
 #[test]
@@ -141,16 +189,27 @@ fn education_for_all_requires_five_distinct_grown_subtypes() {
 }
 
 #[test]
-fn breed_does_not_count_as_growth() {
+fn breed_growth_counts_and_grants_biological_gold_this_turn() {
     let (engine, mut state) = setup(8);
-    place(&engine.catalog, &mut state, 0, 1, "baiyi");
+    for index in 0..3u64 {
+        place(&engine.catalog, &mut state, 0, 1 + index, "baiyi");
+    }
 
     engine.start_turn(&mut state).expect("开始回合应成功");
 
-    assert_eq!(
-        state.players[0].achievements.growth_events, 0,
-        "繁衍不属于招募阶段 Growth 结算"
+    let progress = &state.players[0].achievements;
+    assert_eq!(progress.growth_events, 3, "繁衍属于成长结算");
+    assert!(
+        progress
+            .unlocked
+            .contains(&Achievement::BiologicalEvolution)
     );
+    let expected = engine.catalog.config.gold_curve[1].saturating_add(1);
+    assert_eq!(
+        state.players[0].gold, expected,
+        "繁衍触发的 +1 金币当回合可用"
+    );
+    assert_eq!(progress.next_turn_gold_bonus, 0);
 }
 
 #[test]
@@ -271,4 +330,153 @@ fn turing_moment_triggers_when_machine_has_ignore_taunt_and_windfury() {
     let gear = &state.players[0].board[0];
     assert_eq!(gear.stats.attack.permanent, 2);
     assert_eq!(gear.stats.health.permanent, 2);
+}
+
+#[test]
+fn combat_growth_counts_once_and_defers_biological_gold() {
+    let (mut engine, mut state) = setup(11);
+    add_skill_card(
+        &mut engine.catalog,
+        "combat-grower",
+        None,
+        10,
+        10,
+        "OnCombatStart|Growth|friendly:all|times=1",
+    );
+    add_skill_card(&mut engine.catalog, "plain-a", None, 10, 10, "[]");
+    add_skill_card(&mut engine.catalog, "plain-b", None, 10, 10, "[]");
+    add_skill_card(&mut engine.catalog, "punching-bag", None, 1, 1, "[]");
+
+    state.turn = 5;
+    state.players[0].gold = 3;
+    state.players[0].board = vec![
+        minion(&engine.catalog, 10, "combat-grower"),
+        minion(&engine.catalog, 11, "plain-a"),
+        minion(&engine.catalog, 12, "plain-b"),
+    ];
+    state.players[1].board = vec![minion(&engine.catalog, 20, "punching-bag")];
+    combat_pairing(&mut state);
+
+    engine.resolve_combat(&mut state).expect("战斗结算应成功");
+
+    let progress = &state.players[0].achievements;
+    assert_eq!(
+        progress.growth_events, 3,
+        "每个被成长的随从计 1 次，战斗写回不重复计"
+    );
+    assert!(
+        progress
+            .unlocked
+            .contains(&Achievement::BiologicalEvolution)
+    );
+    assert_eq!(state.players[0].gold, 3, "战斗中的金币奖励不顺延到当回合");
+    assert_eq!(progress.next_turn_gold_bonus, 1);
+
+    let expected = engine.catalog.config.gold_curve[5].saturating_add(1);
+    engine.start_turn(&mut state).expect("开始回合应成功");
+    assert_eq!(state.players[0].gold, expected, "战斗奖励在下一回合到账");
+}
+
+#[test]
+fn education_for_all_grants_effect_immediately_after_combat() {
+    let (mut engine, mut state) = setup(12);
+    let skill_id = engine.catalog.insert_skill(Skill {
+        id: "combat-growth-all".to_string(),
+        keyword: None,
+        effects: effects_of("OnCombatStart|Growth|friendly:all|times=1"),
+        cost: None,
+        uses_per_turn: None,
+    });
+    engine
+        .catalog
+        .cards
+        .get_mut("qinghao")
+        .expect("测试卡应存在")
+        .skills
+        .push(skill_id);
+    add_skill_card(&mut engine.catalog, "punching-bag", None, 1, 1, "[]");
+
+    state.turn = 4;
+    for (index, card_id) in ["qinghao", "juhua", "maitian", "zhulin", "tai"]
+        .into_iter()
+        .enumerate()
+    {
+        state.players[0]
+            .board
+            .push(minion(&engine.catalog, 30 + index as u64, card_id));
+    }
+    state.players[1].board = vec![minion(&engine.catalog, 40, "punching-bag")];
+    combat_pairing(&mut state);
+
+    engine.resolve_combat(&mut state).expect("战斗结算应成功");
+
+    let progress = &state.players[0].achievements;
+    assert!(progress.unlocked.contains(&Achievement::EducationForAll));
+    assert_eq!(progress.grown_subtypes.len(), 5);
+    assert_eq!(state.players[0].hand.len(), 1, "战斗结算后立刻发放效果牌");
+    assert!(matches!(state.players[0].hand[0], HandCard::Effect { .. }));
+    assert_eq!(progress.next_turn_gold_bonus, 1);
+}
+
+#[test]
+fn machines_roar_triggers_when_steam_engine_is_summoned_in_recruit() {
+    let (mut engine, mut state) = setup(13);
+    add_skill_card(
+        &mut engine.catalog,
+        "summoner",
+        None,
+        2,
+        2,
+        "OnPlay|Summon|self|card=steam-engine,count=1",
+    );
+    state.players[0]
+        .hand
+        .push(HandCard::Minion(minion(&engine.catalog, 50, "summoner")));
+    state.pool.insert(STEAM_ENGINE_CARD_ID.to_string(), 5);
+
+    engine
+        .apply(
+            &mut state,
+            0,
+            Intent::PlayCard {
+                hand_index: 0,
+                position: None,
+                target: None,
+            },
+        )
+        .expect("打出召唤随从应成功");
+
+    let progress = &state.players[0].achievements;
+    assert!(progress.unlocked.contains(&Achievement::MachinesRoar));
+    assert_eq!(progress.machine_discount_turn, Some(state.turn));
+}
+
+#[test]
+fn machines_roar_triggers_when_steam_engine_is_summoned_in_combat() {
+    let (mut engine, mut state) = setup(14);
+    add_skill_card(
+        &mut engine.catalog,
+        "mech-bomb",
+        None,
+        1,
+        1,
+        "OnDeath|Summon|self|card=steam-engine,count=1",
+    );
+    add_skill_card(&mut engine.catalog, "club", None, 10, 10, "[]");
+
+    state.turn = 7;
+    state.players[0].board = vec![minion(&engine.catalog, 60, "mech-bomb")];
+    state.players[1].board = vec![minion(&engine.catalog, 61, "club")];
+    state.pool.insert(STEAM_ENGINE_CARD_ID.to_string(), 5);
+    combat_pairing(&mut state);
+
+    engine.resolve_combat(&mut state).expect("战斗结算应成功");
+
+    let progress = &state.players[0].achievements;
+    assert!(progress.unlocked.contains(&Achievement::MachinesRoar));
+    assert_eq!(
+        progress.machine_discount_turn,
+        Some(8),
+        "战斗内触发的折扣留到下一次招募"
+    );
 }

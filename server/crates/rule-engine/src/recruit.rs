@@ -4,7 +4,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::achievements::{Achievement, STEAM_ENGINE_CARD_ID};
+use crate::achievements::Achievement;
 use crate::data::{Card, CardType, Catalog, Era, Playstyle, card_has_playstyle, card_in_pool};
 use crate::effects::{EffectCtx, Op, TargetRef, Trigger, target_in_other_zone, target_in_own_zone};
 use crate::engine::Engine;
@@ -660,9 +660,7 @@ fn play_card(
             player.hand.remove(index);
             player.board.insert(insert_index, minion);
 
-            if hand_card.card_id() == STEAM_ENGINE_CARD_ID {
-                engine.trigger_achievement(state, seat, Achievement::MachinesRoar);
-            }
+            engine.on_minion_entered_board(state, seat, hand_card.card_id());
 
             // 先登记进化、再结算战吼（关键词机制 §2.2）。登记了进化的来源等到
             // 玩家选择结算完再触发 OnAllyEvolve；战吼带出的效果牌与响应在本次

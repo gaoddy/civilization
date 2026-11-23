@@ -37,8 +37,8 @@ const ACHIEVEMENTS_JSON: &str = include_str!("../../../data/v0.2/achievements.js
 
 /// 成就定义目录：成就 id → Steamworks 成就 API 名。
 ///
-/// 成就运行时尚未实现，本目录只承担 Steam 侧的映射与下发；判定与奖励仍由
-/// v0.2 成就运行时负责。
+/// 判定与奖励由规则引擎的成就运行时负责；本目录只承担 Steam 侧映射，
+/// 供房间服务在账号首次解锁时下发。
 #[derive(Clone, Debug, Default)]
 pub struct AchievementCatalog {
     by_id: BTreeMap<String, String>,

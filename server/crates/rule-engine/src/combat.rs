@@ -9,6 +9,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::achievements::STEAM_ENGINE_CARD_ID;
 use crate::data::{Catalog, Playstyle};
 use crate::effects::{Basis, Duration, EffectCtx, Trigger};
 use crate::engine::Engine;
@@ -163,6 +164,10 @@ pub struct CombatLog {
     pub hand_minions: Vec<CombatHandMinion>,
     /// 战斗使用的下一个实例编号；调用方可据此推进 `GameState::next_instance_id`。
     pub next_instance_id: InstanceId,
+    /// 战斗内触发的成长结算：`(阵营, 随从卡牌 id)`，每个被成长的随从一条。
+    pub growth_events: Vec<(usize, String)>,
+    /// 战斗内进入战场的蒸汽机阵营。
+    pub entered_machines: Vec<usize>,
     /// 战斗结束时的攻击方随从克隆；供结算层回写持久字段（传染、成长）。
     pub attacker_final: Vec<MinionInstance>,
     /// 战斗结束时的防守方随从克隆；供结算层回写持久字段（传染、成长）。
@@ -477,6 +482,10 @@ pub struct BattleField {
     pub(crate) pre_kill_health: BTreeMap<InstanceId, i32>,
     /// 待触发的击杀记录；死亡队列处理完后按记录顺序触发钩子。
     pub(crate) pending_kills: Vec<KillRecord>,
+    /// 战斗内触发的成长结算：`(阵营, 随从卡牌 id)`，每个被成长的随从一条。
+    pub(crate) growth_events: Vec<(usize, String)>,
+    /// 战斗内进入战场的蒸汽机阵营。
+    pub(crate) entered_machines: Vec<usize>,
 }
 
 impl BattleField {
@@ -536,6 +545,8 @@ impl BattleField {
             combat_start_health,
             pre_kill_health: BTreeMap::new(),
             pending_kills: Vec::new(),
+            growth_events: Vec::new(),
+            entered_machines: Vec::new(),
         }
     }
 
@@ -687,6 +698,9 @@ impl BattleField {
         self.sides[side].alive.push(true);
         self.sides[side].starting_tokens.push(tokens);
         self.combat_start_health.insert(id, health);
+        if card_id == STEAM_ENGINE_CARD_ID {
+            self.entered_machines.push(side);
+        }
         let index = self.sides[side].minions.len() - 1;
         let position = self.alive_rank(side, index);
         let states = self.snapshots(catalog, &[id]);
@@ -729,6 +743,9 @@ impl BattleField {
         board.alive.insert(position, true);
         board.starting_tokens.insert(position, tokens);
         self.combat_start_health.insert(id, health);
+        if card_id == STEAM_ENGINE_CARD_ID {
+            self.entered_machines.push(side);
+        }
         let rank = self.alive_rank(side, position);
         let states = self.snapshots(catalog, &[id]);
         self.push_action(
@@ -787,6 +804,10 @@ impl BattleField {
         let Some((side, index)) = self.locate(id) else {
             return;
         };
+        if times > 0 {
+            let card_id = self.sides[side].minions[index].card_id.clone();
+            self.growth_events.push((side, card_id));
+        }
         let minion = &mut self.sides[side].minions[index];
         let (attack, health) = if health_only {
             minion.stats.health.add_growth(times);
@@ -1669,6 +1690,8 @@ fn simulate_inner(
         hand_copies: std::mem::take(&mut field.hand_copies),
         hand_minions: std::mem::take(&mut field.hand_minions),
         next_instance_id: field.next_instance_id,
+        growth_events: std::mem::take(&mut field.growth_events),
+        entered_machines: std::mem::take(&mut field.entered_machines),
         attacker_final: field.sides[0].minions.clone(),
         defender_final: field.sides[1].minions.clone(),
     }

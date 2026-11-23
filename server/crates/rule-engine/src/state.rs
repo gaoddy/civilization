@@ -457,7 +457,7 @@ pub struct SevenVoyagesState {
 pub struct AchievementProgress {
     /// 本局已触发的成就。
     pub unlocked: BTreeSet<Achievement>,
-    /// 招募阶段累计成长结算次数（生物进化）。
+    /// 累计成长结算次数（生物进化）；招募、回合开始与战斗内成长都计入。
     pub growth_events: u8,
     /// 获得过成长的随从 `subtype`（有教无类）。
     pub grown_subtypes: BTreeSet<String>,

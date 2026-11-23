@@ -463,6 +463,9 @@ fn resolve_real(
     // 战斗内写入的传染层数（以及成长记录）需要回到持久棋盘；其余字段保持不变。
     write_back_persistent(state, a, &log.attacker_final);
     write_back_persistent(state, b, &log.defender_final);
+    // 战斗内成长与入场在写回后统一结算：写回本身不重复计成长。
+    engine.apply_combat_achievements(state, a, 0, &log);
+    engine.apply_combat_achievements(state, b, 1, &log);
     let winner = seat_winner(state, &log, a, b);
     let board_slots = engine.catalog.config.board_slots;
     accumulate_voyage(
@@ -634,6 +637,8 @@ fn resolve_ghost(
     log.states = kept_states;
     write_back_combat_log(catalog, state, &log);
     write_back_persistent(state, seat, &log.attacker_final);
+    // 幽灵侧（side 1）的成长与入场不归落单座位，按阵营过滤后只结算己方。
+    engine.apply_combat_achievements(state, seat, 0, &log);
 
     // 双方同回合清场或无伤害僵局一律平局；幽灵侧清场而己方仍有存活才算
     // 幽灵获胜。
@@ -1261,6 +1266,8 @@ mod tests {
             hand_copies: Vec::new(),
             hand_minions: Vec::new(),
             next_instance_id: 1,
+            growth_events: Vec::new(),
+            entered_machines: Vec::new(),
             attacker_final: Vec::new(),
             defender_final: Vec::new(),
         }
