@@ -353,17 +353,20 @@ client-export-templates: client-godot-check
 	  echo "导出模板已安装：$(GODOT_TEMPLATE_DIR)"; \
 	fi
 
-# 客户端导出环境：开发构建默认连 dev 公网入口，正式构建读取正式地址。
-# 正式地址当前为空，配置后才能导出 ENV=prod；未配置时直接失败，避免把开发包当正式包。
+# 客户端导出环境：local / dev / prod，默认 local。ENV 与 env 等价，同时传且值不同直接失败。
+# local 写空配置，客户端运行时按平台回落本机调试地址；dev 写开发公网入口；prod 读正式地址
+# （当前为空，配置前导出直接失败，避免把开发包当正式包）。
 CLIENT_DEV_SERVER_URL ?= wss://civilization.satori.host/ws
 CLIENT_PROD_SERVER_URL ?=
-# iOS 真机开发运行仍默认连开发机局域网，可用 CLIENT_DEV_SERVER_URL 覆盖。
-IOS_DEV_SERVER_URL ?= ws://cooter.local:8080/ws
-CLIENT_SERVER_URL = $(if $(filter prod,$(ENV)),$(CLIENT_PROD_SERVER_URL),$(CLIENT_DEV_SERVER_URL))
+CLIENT_ENV = $(if $(and $(filter command line environment,$(origin ENV)),$(strip $(ENV))),$(strip $(ENV)),$(if $(and $(filter command line environment,$(origin env)),$(strip $(env))),$(strip $(env)),local))
+CLIENT_SERVER_URL = $(if $(filter prod,$(CLIENT_ENV)),$(CLIENT_PROD_SERVER_URL),$(if $(filter dev,$(CLIENT_ENV)),$(CLIENT_DEV_SERVER_URL),))
+CLIENT_REQUIRE_SERVER = $(if $(filter prod,$(CLIENT_ENV)),--require-server,$(if $(filter dev,$(CLIENT_ENV)),--require-url,))
 
 client-env-check:
-	@$(if $(filter dev prod,$(ENV)),,$(error 客户端构建 ENV 只能是 dev 或 prod，收到：$(ENV)))
-	@$(if $(filter prod,$(ENV)),$(if $(strip $(CLIENT_PROD_SERVER_URL)),,$(error ENV=prod 需要 CLIENT_PROD_SERVER_URL=wss://...，当前为空)),)
+	@$(if $(and $(filter command line environment,$(origin ENV)),$(filter command line environment,$(origin env)),$(strip $(ENV)),$(strip $(env))),$(if $(filter $(strip $(ENV)),$(strip $(env))),,$(error ENV 与 env 不能同时传不同值：ENV=$(ENV) env=$(env))),)
+	@$(if $(filter local dev prod,$(CLIENT_ENV)),,$(error 客户端构建 ENV 只能是 local / dev / prod，收到：$(CLIENT_ENV)))
+	@$(if $(filter dev,$(CLIENT_ENV)),$(if $(strip $(CLIENT_DEV_SERVER_URL)),,$(error ENV=dev 需要 CLIENT_DEV_SERVER_URL（ws:// 或 wss://...），当前为空)),)
+	@$(if $(filter prod,$(CLIENT_ENV)),$(if $(strip $(CLIENT_PROD_SERVER_URL)),,$(error ENV=prod 需要 CLIENT_PROD_SERVER_URL=wss://...，当前为空)),)
 
 # 未签名 Universal .app 与 zip 产物。Gatekeeper 放行方式见 docs/current/technical/client.md。
 client-export: client-env-check client-export-templates client-import
@@ -372,7 +375,7 @@ client-export: client-env-check client-export-templates client-import
 	backup=$$(mktemp); \
 	cp client/generated/build_config.gd "$$backup"; \
 	trap 'cp "$$backup" client/generated/build_config.gd; rm -f "$$backup"' EXIT; \
-	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(if $(filter prod,$(ENV)),--require-server,); \
+	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
 	mkdir -p output/desktop; \
 	rm -rf output/desktop/Civilization.app output/desktop/Civilization-macos.zip; \
 	"$(GODOT)" --headless --path client --export-release "macOS" "$(CURDIR)/output/desktop/Civilization.app"; \
@@ -479,7 +482,7 @@ client-export-ios: client-env-check client-export-templates client-import
 	backup=$$(mktemp); \
 	cp client/generated/build_config.gd "$$backup"; \
 	trap 'cp "$$backup" client/generated/build_config.gd; rm -f "$$backup"' EXIT; \
-	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(if $(filter prod,$(ENV)),--require-server,); \
+	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
 	mkdir -p output/ios; \
 	rm -rf output/ios/Civilization output/ios/Civilization.xcodeproj output/ios/Civilization.xcframework \
 	  output/ios/MoltenVK.xcframework output/ios/libgodot_camera.*.xcframework \
@@ -504,8 +507,7 @@ client-export-ios: client-env-check client-export-templates client-import
 IOS_DEVICE ?=
 IOS_LAUNCH ?= 1
 
-# 真机联调仍默认连开发机局域网；显式传 CLIENT_DEV_SERVER_URL 可覆盖。
-client-run-ios: CLIENT_DEV_SERVER_URL = $(IOS_DEV_SERVER_URL)
+# 真机联调默认走 local：空配置，客户端按移动端回落开发机局域网地址。
 client-run-ios: client-export-ios
 	IOS_DEVICE="$(IOS_DEVICE)" IOS_LAUNCH="$(IOS_LAUNCH)" bash scripts/ios_run.sh
 
@@ -518,23 +520,33 @@ export ANDROID_KEYSTORE_PATH ANDROID_KEYSTORE_USER ANDROID_KEYSTORE_PASSWORD
 
 # Android 侧载 APK：arm64、横屏、包名 com.civilization.banner，release keystore 签名。
 # 缺少任一 ANDROID_KEYSTORE_* 或 keystore 文件时直接失败，不产出未签名包。
-client-export-android: client-export-templates client-import
+client-export-android: client-env-check client-export-templates client-import
 	@[ -f "$(GODOT_TEMPLATE_DIR)/android_release.apk" ] || { echo "缺少 Android 导出模板：$(GODOT_TEMPLATE_DIR)/android_release.apk" >&2; exit 1; }
 	@[ -n "$$ANDROID_KEYSTORE_PATH" ] || { echo "需要 ANDROID_KEYSTORE_PATH（release keystore 路径）" >&2; exit 1; }
 	@[ -n "$$ANDROID_KEYSTORE_USER" ] || { echo "需要 ANDROID_KEYSTORE_USER（keystore alias）" >&2; exit 1; }
 	@[ -n "$$ANDROID_KEYSTORE_PASSWORD" ] || { echo "需要 ANDROID_KEYSTORE_PASSWORD（keystore 口令）" >&2; exit 1; }
 	@[ -f "$$ANDROID_KEYSTORE_PATH" ] || { echo "Android keystore 不存在：$$ANDROID_KEYSTORE_PATH" >&2; exit 1; }
+	@set -e; \
+	backup=$$(mktemp); \
+	cp client/generated/build_config.gd "$$backup"; \
+	trap 'cp "$$backup" client/generated/build_config.gd; rm -f "$$backup"' EXIT; \
+	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
 	GODOT="$(GODOT)" GODOT_TEMPLATE_DIR="$(GODOT_TEMPLATE_DIR)" ANDROID_OUTPUT="$(ANDROID_OUTPUT)" \
 	  bash scripts/android_export.sh apk
 
 # Android 商店 AAB：与 APK 同一 keystore 与 arm64 预设，走 Gradle 构建。
 # 首次导出会在 client/android/build 安装构建模板，导出后由脚本清理。
-client-export-android-aab: client-export-templates client-import
+client-export-android-aab: client-env-check client-export-templates client-import
 	@[ -f "$(GODOT_TEMPLATE_DIR)/android_source.zip" ] || { echo "缺少 Android 构建模板：$(GODOT_TEMPLATE_DIR)/android_source.zip" >&2; exit 1; }
 	@[ -n "$$ANDROID_KEYSTORE_PATH" ] || { echo "需要 ANDROID_KEYSTORE_PATH（release keystore 路径）" >&2; exit 1; }
 	@[ -n "$$ANDROID_KEYSTORE_USER" ] || { echo "需要 ANDROID_KEYSTORE_USER（keystore alias）" >&2; exit 1; }
 	@[ -n "$$ANDROID_KEYSTORE_PASSWORD" ] || { echo "需要 ANDROID_KEYSTORE_PASSWORD（keystore 口令）" >&2; exit 1; }
 	@[ -f "$$ANDROID_KEYSTORE_PATH" ] || { echo "Android keystore 不存在：$$ANDROID_KEYSTORE_PATH" >&2; exit 1; }
+	@set -e; \
+	backup=$$(mktemp); \
+	cp client/generated/build_config.gd "$$backup"; \
+	trap 'cp "$$backup" client/generated/build_config.gd; rm -f "$$backup"' EXIT; \
+	SERVER_URL="$(CLIENT_SERVER_URL)" STEAM_APP_ID="" $(PYTHON) scripts/gen_build_config.py $(CLIENT_REQUIRE_SERVER); \
 	GODOT="$(GODOT)" GODOT_TEMPLATE_DIR="$(GODOT_TEMPLATE_DIR)" ANDROID_OUTPUT="$(ANDROID_OUTPUT)" \
 	  bash scripts/android_export.sh aab
 

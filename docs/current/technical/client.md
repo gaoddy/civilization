@@ -272,12 +272,12 @@ client/
 | `make client-run-on-ipad` | 等价于 `make client-run WIDTH=2360 HEIGHT=1640 CLIENT_DEVICE=tablet LOCAL_SERVER=1`，按 iPad Air 11 横屏物理分辨率开窗并进入平板档位，同时带上本地服务端与机器人 |
 | `make client-run-on-desktop` | 等价于 `make client-run CLIENT_DEVICE=desktop LOCAL_SERVER=1`，窗口按屏幕可用区自动收拢，同时带上本地服务端与机器人 |
 | `make client-check` | 协议/数据/文本表漂移 + 客户端边界断言 + 国际化断言 + 工程导入 |
-| `make client-env-check` | 校验客户端导出的 `ENV` 只能是 `dev` 或 `prod`；`ENV=prod` 时 `CLIENT_PROD_SERVER_URL` 必填，未配置直接失败 |
+| `make client-env-check` | 校验客户端构建环境只能是 `local`、`dev` 或 `prod`，默认 `local`；`ENV` 与 `env` 等价，同时传且值不同直接失败；`dev`/`prod` 分别要求 `CLIENT_DEV_SERVER_URL` / `CLIENT_PROD_SERVER_URL`，未配置直接失败 |
 | `make client-smoke` | 用 glob 逐个运行 `ui_smoke*.tscn` 冒烟场景，要求各自输出 `UI_SMOKE_OK` 且无 `SCRIPT ERROR`；任一场景断言失败时不输出 `UI_SMOKE_OK`，目标以非 0 退出；`SMOKE=<名称>` 只跑 `ui_smoke_<名称>.tscn` |
 | `make client-export-local` | 依赖 `client-export-templates`、`client-import` 与 `m1b-build`；导出调试用 `output/desktop-local/Civilization.app`，并把 debug 的 `room-service`、`sim` 复制进 `Contents/MacOS/`；仅 macOS、仅本机调试，见 §8 |
 | `make ui-preview` | 真实窗口装载指定页面/场景并注入夹具，`FOCUS` 高亮子节点；不截图，窗口保持打开；见 §5 |
 | `make ui-preview-check` | 与 `ui-preview` 参数相同但自动退出，按 `VIEW_PREVIEW_OK` / `VIEW_PREVIEW_FAIL` 判定；只用于本机 GUI 冒烟 |
-| `make client-export-ios` | 按 `ENV` 写入服务器地址后导出 Xcode 工程，并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
+| `make client-export-ios` | 按 `ENV`/`env` 写入对应环境地址（默认 `local` 写空配置）后导出 Xcode 工程，并用 `xcodebuild` 自动签名，打包 `output/ios/Civilization-ios.ipa`；见 §9 |
 | `make client-export-android` | 导出 arm64 APK 到 `output/android/Civilization.apk`；签名参数从 `ANDROID_KEYSTORE_*` 环境变量读取，缺失时失败；见 §9 |
 | `make client-export-android-aab` | 导出 arm64 AAB 到 `output/android/Civilization.aab`；同一 keystore 签名，走 Gradle 构建；见 §9 |
 | `make m1b-e2e` | 启动服务端、Godot 无头客户端与 7 个 `sim bot`，要求输出 `M1B_E2E_OK` |
@@ -395,15 +395,15 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 | 命令 | 内容 |
 | --- | --- |
 | `make client-export-templates` | 按 `Makefile` 固定的 `4.7.2` 检查 `$HOME/Library/Application Support/Godot/export_templates/4.7.2.stable/`；缺失时下载并解压官方 `Godot_v4.7.2-stable_export_templates.tpz`，只安装其中的 `templates/` |
-| `make client-env-check` | 校验 `ENV` 只能是 `dev` 或 `prod`；`ENV=prod` 时 `CLIENT_PROD_SERVER_URL` 必填，未配置直接失败 |
-| `make client-export` | 依赖 `client-env-check`、`client-export-templates` 与 `client-import`；按 `ENV` 临时写入服务器地址后清空旧产物、导出 `output/desktop/Civilization.app`，校验 `Contents/MacOS/Civilization` 可执行，再用 `ditto` 打包 `output/desktop/Civilization-macos.zip` |
+| `make client-env-check` | 校验客户端构建环境只能是 `local`、`dev` 或 `prod`，默认 `local`；`ENV` 与 `env` 等价，同时传且值不同直接失败；`dev`/`prod` 分别要求 `CLIENT_DEV_SERVER_URL` / `CLIENT_PROD_SERVER_URL`，未配置直接失败 |
+| `make client-export` | 依赖 `client-env-check`、`client-export-templates` 与 `client-import`；按 `ENV`/`env` 临时写入对应环境地址后清空旧产物、导出 `output/desktop/Civilization.app`，校验 `Contents/MacOS/Civilization` 可执行，再用 `ditto` 打包 `output/desktop/Civilization-macos.zip` |
 
-- 服务器地址按 `ENV` 选择：`ENV=dev`（默认）写入 `CLIENT_DEV_SERVER_URL`，默认 `wss://civilization.satori.host/ws`；`ENV=prod` 写入 `CLIENT_PROD_SERVER_URL`，当前为空，配置前导出直接失败。导出过程用 `trap` 恢复仓库内的空配置，失败也不会留下脏文件。
+- 客户端构建环境分 `local`、`dev`、`prod` 三档，默认 `local`；参数可写 `ENV=` 或 `env=`，两者等价，同时传且值不同直接失败。`local` 写入空配置，客户端运行时按平台回落本机调试地址；`dev` 写入 `CLIENT_DEV_SERVER_URL`，默认 `wss://civilization.satori.host/ws`；`prod` 写入 `CLIENT_PROD_SERVER_URL`，当前为空，配置前导出直接失败。`dev`/`prod` 必须提供非空地址，`prod` 还必须是 `wss://`；`dev` 可用 `ws://` 连局域网调试端口。导出过程用 `trap` 恢复仓库内的空配置，失败也不会留下脏文件。
 
 - 两个目标只在 macOS 上可用，非 Darwin 主机直接报错退出；本机引擎版本与固定版本不符时同样退出非 0。
 - Universal 导出要求 `project.godot` 启用 `rendering/textures/vram_compression/import_etc2_astc` 与 `import_s3tc_bptc`，缺失时 Godot 会拒绝导出。
 - 产物未做正式签名与公证：`codesign/codesign=0` 禁用导出时的重签，但可执行文件仍保留 Godot 模板内置的 ad-hoc 签名。首次打开需右键「打开」，或在「系统设置 → 隐私与安全性」中放行；经 zip 下载后解压的副本同样会被 Gatekeeper 拦截。
-- 导出物内置服务器地址由构建环境决定：release 导出按 `ENV` 写入非空地址（`dev` 为 `wss://civilization.satori.host/ws`，`prod` 取 `CLIENT_PROD_SERVER_URL`）；编辑器运行与 `client-export-local` 仍为空配置，回落到桌面 `ws://127.0.0.1:8080/ws`、移动端 `ws://cooter.local:8080/ws`。登录页不提供服务器输入，运行时始终使用构建配置或平台默认值。连接前主机名先解析为 IPv4，避免双栈主机名拿到 IPv6。
+- 导出物内置服务器地址由构建环境决定：release 导出按 `ENV`/`env` 写入地址（`local` 为空配置，`dev` 为 `wss://civilization.satori.host/ws`，`prod` 取 `CLIENT_PROD_SERVER_URL`）；编辑器运行与 `client-export-local` 同样为空配置，回落到桌面 `ws://127.0.0.1:8080/ws`、移动端 `ws://cooter.local:8080/ws`。登录页不提供服务器输入，运行时始终使用构建配置或平台默认值。连接前主机名先解析为 IPv4，避免双栈主机名拿到 IPv6。
 
 ### 单机调试包
 
@@ -452,10 +452,11 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 | 命令 | 内容 |
 | --- | --- |
-| `make client-export-ios` | 依赖 `client-export-templates` 与 `client-import`；导出 `output/ios/Civilization.xcodeproj`，用 `xcodebuild`（scheme `Civilization`、`-allowProvisioningUpdates`）构建 Release，再把 `Civilization.app` 装入 `Payload/` 打包为 `output/ios/Civilization-ios.ipa` |
+| `make client-export-ios` | 依赖 `client-export-templates` 与 `client-import`；按 `ENV`/`env` 写入对应环境地址（默认 `local` 写空配置），导出 `output/ios/Civilization.xcodeproj`，用 `xcodebuild`（scheme `Civilization`、`-allowProvisioningUpdates`）构建 Release，再把 `Civilization.app` 装入 `Payload/` 打包为 `output/ios/Civilization-ios.ipa` |
 | `make client-run-ios` | 依赖 `client-export-ios`，用 `xcrun devicectl` 把 `output/ios/build/Build/Products/Release-iphoneos/Civilization.app` 安装到 iPhone 并启动 `com.civilization.banner` |
 
 - 只在 macOS 上可用；模板目录缺少 `ios.zip` 时直接退出非 0。
+- 构建环境与桌面导出一致：`client-export-ios` 与 `client-run-ios` 接受 `ENV`/`env`（默认 `local`）。`local` 写空配置，真机按移动端回落 `ws://cooter.local:8080/ws`；`ENV=dev` 写入 dev 公网入口，`ENV=prod` 取 `CLIENT_PROD_SERVER_URL`。
 - 导出前必须存在 `application/config/icon`（当前 `res://icon.png`）；缺少图标时 Godot 导出失败。图标由 `scripts/gen_app_icon.py` 生成，随源提交。
 - 签名依赖 Xcode 登录 Apple 团队账号并登记目标真机；缺少账号或描述文件时 `xcodebuild` 失败并打印签名错误，不产出未签名包。
 - 构建产物在 `output/ios/build/Build/Products/Release-iphoneos/`；`output/` 不提交。
@@ -469,6 +470,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - 系统返回键与手势：autoload `SystemBack` 监听 `NOTIFICATION_WM_GO_BACK_REQUEST`，顺序为可关闭浮层（`FriendsPanel`、`GalleryFilterPanel`、`GalleryDetailLayer`）→ 当前场景 `system_back()` → 忽略。账号页执行常驻返回按钮动作，图鉴页回大厅，对局页收起图鉴覆盖层；大厅、房间、结算、登录与对局其它状态没有返回动作，返回键忽略且不退出应用。邀请弹窗、匹配排队浮层、发现 / 进化选择与状态模态有待处理业务状态，不随返回键关闭。
 - 导出预设：`Android`（APK，`gradle_build/export_format=0`，沿用导出模板的 SDK 版本）与 `Android AAB`（`export_format=1`，Gradle 构建，`minSdk 24`、`targetSdk 35`）。两者包名 `com.civilization.banner`、应用名 `Civilization`、arm64-v8a、`package/signed=true`、`screen/immersive_mode=true`、`screen/edge_to_edge=true`。
 - 签名：`make client-export-android` / `client-export-android-aab` 只从 `ANDROID_KEYSTORE_PATH`、`ANDROID_KEYSTORE_USER`、`ANDROID_KEYSTORE_PASSWORD` 读取，缺失时目标失败，不产出未签名包。`scripts/android_export.sh` 在导出期间把参数临时写入预设，退出时恢复备份；AAB 首次导出临时安装 Gradle 构建模板并在结束后删除 `client/android/`。口令不进入仓库或命令行。
+- 构建环境：两个 Android 导出目标接受 `ENV`/`env`（默认 `local`），导出期间把地址写入 `client/generated/build_config.gd` 并在退出时恢复空配置；`local` 写空配置，真机按移动端回落开发机局域网地址。
 - 导出前置条件：Godot 编辑器设置 `export/android/java_sdk_path` 指向 JDK 17+，并配置 `export/android/android_sdk_path`；APK 需要 `android_release.apk` 模板，AAB 另需 `android_source.zip`。`make client-export-android*` 不修改编辑器设置，缺失时由 Godot 报错。
 - 已知问题：`client/addons/godotsteam/godotsteam.gdextension` 声明了 Android / Linux / Windows 库，但仓库只保留 macOS 二进制；Android 产物内会出现 0 字节的 `libgodotsteam*.so` 与 `libsteam_api.so`，导出日志报无法打开对应文件。产物仍可生成，Android 端运行时的扩展加载行为未验证。
 - 验证记录（2026-11-23）：`make client-check` 退出码 0（目标内包含 `client-import`）；`make client-export-android` 与 `make client-export-android-aab` 在隔离 HOME（JBR 21 临时编辑设置）与临时测试 keystore 下成功产出 APK / AAB，`apksigner verify` 与 `jarsigner -verify` 通过。Android 手机与平板真机、系统返回手势与软键盘手测未验证（本机无已连接 Android 设备）。

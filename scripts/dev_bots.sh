@@ -23,7 +23,7 @@ done
 if (exec 3<>"/dev/tcp/127.0.0.1/${PORT}") 2>/dev/null; then
   exec 3>&-
   echo "端口 ${PORT} 已被占用，用 make dev-bots DEV_PORT=$((PORT + 1)) 换端口"
-  echo "换端口后需用 CLIENT_DEV_SERVER_URL=ws://127.0.0.1:$((PORT + 1))/ws 重新构建客户端（登录页已不提供服务器输入）"
+  echo "换端口后需用 ENV=dev CLIENT_DEV_SERVER_URL=ws://127.0.0.1:$((PORT + 1))/ws 重新构建客户端（登录页已不提供服务器输入）"
   exit 1
 fi
 

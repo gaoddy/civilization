@@ -3,9 +3,9 @@
 
 三档用法：
 
-- 编辑器运行与本地调试包不传参数，生成空配置，客户端回落到本机调试地址；
-- `make client-export ENV=prod` / `client-export-ios ENV=prod` 传 `--require-server`，
-  `SERVER_URL` 必须是 `wss://` 地址，缺值直接失败；
+- 编辑器运行、`local` 档与本地调试包不传参数，生成空配置，客户端按平台回落到本机调试地址；
+- `make client-export ENV=dev|prod` / `client-export-ios ENV=dev|prod` 要求 `SERVER_URL` 非空：
+  `dev` 传 `--require-url`，允许 `ws://` 局域网地址；`prod` 传 `--require-server`，必须是 `wss://`；
 - `make client-export-steam` 传 `--require`，在地址之外还要求 `STEAM_APP_ID`。
 """
 
@@ -49,9 +49,14 @@ def main(argv: list[str] | None = None) -> int:
         help="Steam 发布构建：SERVER_URL 与 STEAM_APP_ID 必须提供，且地址必须是 wss://",
     )
     parser.add_argument(
+        "--require-url",
+        action="store_true",
+        help="dev 构建：SERVER_URL 必须提供，允许 ws:// 局域网地址",
+    )
+    parser.add_argument(
         "--require-server",
         action="store_true",
-        help="正式构建：SERVER_URL 必须提供且是 wss://，不要求 STEAM_APP_ID",
+        help="prod 构建：SERVER_URL 必须提供且是 wss://，不要求 STEAM_APP_ID",
     )
     parser.add_argument("--output", type=pathlib.Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args(argv)
@@ -60,9 +65,10 @@ def main(argv: list[str] | None = None) -> int:
     raw_app_id = os.environ.get("STEAM_APP_ID", "").strip()
 
     try:
-        if args.require or args.require_server:
+        if args.require or args.require_server or args.require_url:
             if not server_url:
-                raise ValueError("正式构建需要 SERVER_URL")
+                raise ValueError("dev/prod 构建需要 SERVER_URL")
+        if args.require or args.require_server:
             if not server_url.startswith("wss://"):
                 raise ValueError(f"SERVER_URL 必须是 wss:// 地址：{server_url}")
         if args.require and not raw_app_id:
