@@ -55,6 +55,7 @@ make m1b-e2e
 | 2026-11-21 | 移动端主机名连接 | 通过 | `Net.prefer_ipv4_url` 把主机名解析为 IPv4 后再连接；`ui_smoke_platform` 覆盖主机名替换、解析失败保留、IP 字面量与 IPv6 字面量；真实解析 `ws://cooter.local:8080/ws` 可连；iPad 重装后真机复看通过 |
 | 2026-11-21 | 弹出层公共外壳 | 自动化通过 | `ui_smoke_side` 断言 `PopupLayer` 的内容替换、居中、锚点夹紧与底边贴边；邀请、好友、选择、战斗开场与图鉴分类面板的既有场景全部通过 |
 | 2026-11-21 | 非 16:9 窗口背景铺满 | 自动化与截图验证通过 | `stretch/aspect` 由 `keep_width` 改为 `expand`：1428×440、960×800、1280×720 三档逻辑视口均铺满窗口，内容框居中，框外露出 `PageBackground` 纹理而非引擎黑边；`ui_smoke_platform` 断言同步为 `expand` |
+| 2026-11-23 | `make client-check` / `make client-smoke` / `make m1b-e2e` | 退出码 0 / 17 个场景全部 `UI_SMOKE_OK` / `M1B_E2E_OK` | 当前基线复跑，无 `SCRIPT ERROR`；`m1b-e2e` 输出 `M1B_E2E_OK place=2 ranking=8 intents=166 soft_errors=0` |
 
 ### 3.2 真机项
 
