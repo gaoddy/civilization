@@ -99,10 +99,12 @@ wss://civilization.satori.host/ws
 | 客户端 TLS 报错 | 公网域名证书或内网 hosts 与 `network/allow_insecure_tls` | 公网域名检查 satori nginx；内网按第 5 节配置；生产不要打开 |
 | 公网域名 502 | satori nginx 到 `10.66.66.4:32715` 是否可达、Gateway Pod 是否就绪 | 从 satori 执行 `curl -k https://10.66.66.4:32715/healthz`；检查 `kubectl -n civilization-dev get pods` |
 | 迁移失败 | 数据库是否可达、角色是否有 DDL 权限 | 查看 Pod 日志中的 `执行数据库迁移失败`；必要时先手工确认库与角色 |
+| `migration N was previously applied but has been modified` | 开发阶段是否改过基线迁移文件 | 开发阶段基线变更按约定需要重建库：清空 dev 库 `public` schema 后 rollout，让迁移重新执行；生产阶段不得修改基线 |
 
 ## 8. 发布记录与待执行
 
 - 2026-11-23 dev 首次发布：platform 登记、namespace 与数据库创建、`make deploy ENV=dev` 完成；Pod 1/1 Running，`/healthz`、`/readyz` 返回 200，`/ws` 握手返回 101。提交 `41955f7a`。
 - 2026-11-23 dev 公网入口：`civilization.satori.host` 证书签发、satori nginx 站点上线；`/healthz`、`/readyz` 返回 200，`/ws` 握手返回 101。
+- 2026-11-23 dev v0.2 发布：提交 `0da42b7c`（成就运行时等 v0.2 服务端增量）。发布时基线迁移已随开发阶段变更，原有 dev 库因 checksum 不匹配拒绝启动；确认各表 0 行后重建 `public` schema 并重新执行迁移。Pod 1/1 Running，`/healthz`、`/readyz` 返回 200，`/ws` 握手返回 101。Secret 未注入 `STEAM_WEB_API_KEY` / `STEAM_APP_ID`，Steam 相关能力保持 `STEAM_DISABLED`。
 - prod 待执行：platform 三项目标、`make deploy ENV=prod` 与 satori nginx 同步；prod 对外域名、TLS 与首次发布尚未验证。
 - 空闲长连接表现尚未观察。
