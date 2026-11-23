@@ -4,7 +4,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::data::{Card, CardType, Catalog, Era, Playstyle, card_in_pool};
+use crate::achievements::{Achievement, STEAM_ENGINE_CARD_ID};
+use crate::data::{Card, CardType, Catalog, Era, Playstyle, card_has_playstyle, card_in_pool};
 use crate::effects::{EffectCtx, Op, TargetRef, Trigger, target_in_other_zone, target_in_own_zone};
 use crate::engine::Engine;
 use crate::events::GameEvent;
@@ -135,6 +136,22 @@ fn grant_triple_reward(state: &mut GameState, seat: Seat, hand_card: &HandCard) 
     }
 }
 
+/// 商店买入价：随从固定 3 金币，效果牌取卡面费用。
+///
+/// 机器轰鸣触发当回合，机械随从便宜 1 金币（下限 1）。
+fn buy_cost(state: &GameState, seat: Seat, card: &Card) -> u8 {
+    match card.card_type {
+        CardType::Minion => {
+            let discounted = card_has_playstyle(card, Playstyle::Machine)
+                && state.players.get(usize::from(seat)).is_some_and(|player| {
+                    player.achievements.machine_discount_turn == Some(state.turn)
+                });
+            if discounted { 2 } else { 3 }
+        }
+        CardType::Effect => card.cost.unwrap_or(3),
+    }
+}
+
 /// `BuyMinion` 的只读预检：只校验该意图自身的条件，不修改状态、不消耗随机流。
 ///
 /// **不校验** `Recruit` 阶段、`recruit_done` 与 `eliminated`；调用方（视图层）
@@ -160,11 +177,7 @@ pub(crate) fn check_buy(
             format!("商店卡牌 {card_id} 不在目录中"),
         )
     })?;
-    let card_type = card.card_type;
-    let cost = match card_type {
-        CardType::Minion => 3,
-        CardType::Effect => card.cost.unwrap_or(3),
-    };
+    let cost = buy_cost(state, seat, card);
     let config = &engine.catalog.config;
     let current = player(state, seat)?;
     if current.hand.len() >= config.hand_slots {
@@ -200,10 +213,7 @@ fn buy(engine: &Engine, state: &mut GameState, seat: Seat, slot: u8) -> Result<O
         .get(&card_id)
         .expect("check_buy 已保证卡牌在目录中");
     let card_type = card.card_type;
-    let cost = match card_type {
-        CardType::Minion => 3,
-        CardType::Effect => card.cost.unwrap_or(3),
-    };
+    let cost = buy_cost(state, seat, card);
     let current = player(state, seat).expect("check_buy 已保证座位存在");
     let remaining_gold = current
         .gold
@@ -440,12 +450,17 @@ fn upgrade(engine: &Engine, state: &mut GameState, seat: Seat) -> Result<Outcome
         .checked_sub(cost)
         .expect("check_upgrade 已保证金币足够");
 
-    let player = state
-        .players
-        .get_mut(usize::from(seat))
-        .expect("check_upgrade 已保证座位存在");
-    player.gold = remaining_gold;
-    player.era = next;
+    {
+        let player = state
+            .players
+            .get_mut(usize::from(seat))
+            .expect("check_upgrade 已保证座位存在");
+        player.gold = remaining_gold;
+        player.era = next;
+    }
+    if next == Era::Future {
+        engine.trigger_achievement(state, seat, Achievement::OneSmallStep);
+    }
 
     // 升时代附带的免费重抽取消冻结、也不消耗本回合的免费刷新（core-rules.md:61）。
     roll_player(engine, state, seat, false);
@@ -644,6 +659,10 @@ fn play_card(
                 .expect("check_play_card 已保证座位存在");
             player.hand.remove(index);
             player.board.insert(insert_index, minion);
+
+            if hand_card.card_id() == STEAM_ENGINE_CARD_ID {
+                engine.trigger_achievement(state, seat, Achievement::MachinesRoar);
+            }
 
             // 先登记进化、再结算战吼（关键词机制 §2.2）。登记了进化的来源等到
             // 玩家选择结算完再触发 OnAllyEvolve；战吼带出的效果牌与响应在本次

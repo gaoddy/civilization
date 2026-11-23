@@ -189,7 +189,7 @@ impl Engine {
 
         match effect.op {
             Op::Growth => {
-                self.apply_growth(state, effect, &targets, origin);
+                self.apply_growth(state, ctx.seat, effect, &targets, origin);
                 self.fire_ally_growth_recruit(state, ctx.seat, &targets);
                 Vec::new()
             }
@@ -929,6 +929,7 @@ impl Engine {
     fn apply_growth(
         &self,
         state: &mut GameState,
+        seat: Seat,
         effect: &Effect,
         targets: &[InstanceId],
         origin: Option<&EffectOrigin>,
@@ -940,31 +941,35 @@ impl Engine {
         let health_only = params.health_only == Some(true);
 
         for id in targets {
-            let Some((_, minion)) = locate_mut(state, *id) else {
-                continue;
-            };
-            let times = match &params.times_if {
-                Some(times_if) if self.times_if_matches(&minion.card_id, times_if) => {
-                    times_if.times
+            let (card_id, times) = {
+                let Some((_, minion)) = locate_mut(state, *id) else {
+                    continue;
+                };
+                let times = match &params.times_if {
+                    Some(times_if) if self.times_if_matches(&minion.card_id, times_if) => {
+                        times_if.times
+                    }
+                    _ => base_times,
+                };
+                let (attack, health) = if health_only {
+                    minion.stats.health.add_growth(times);
+                    (0, times)
+                } else {
+                    minion.stats.attack.add_growth(times);
+                    minion.stats.health.add_growth(times);
+                    (times, times)
+                };
+                if let Some(origin) = origin {
+                    minion.record_stat_source(
+                        StatSourceLayer::Growth,
+                        origin.stat_origin(),
+                        attack,
+                        health,
+                    );
                 }
-                _ => base_times,
+                (minion.card_id.clone(), times)
             };
-            let (attack, health) = if health_only {
-                minion.stats.health.add_growth(times);
-                (0, times)
-            } else {
-                minion.stats.attack.add_growth(times);
-                minion.stats.health.add_growth(times);
-                (times, times)
-            };
-            if let Some(origin) = origin {
-                minion.record_stat_source(
-                    StatSourceLayer::Growth,
-                    origin.stat_origin(),
-                    attack,
-                    health,
-                );
-            }
+            self.record_growth_achievement(state, seat, &card_id, times);
         }
     }
 

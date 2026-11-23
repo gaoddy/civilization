@@ -15,7 +15,7 @@
 | Android 端适配 | Android 手机与平板横屏适配；缩放、触控、安全区、返回键与键盘规则沿用 iOS；APK 侧载与 Google Play AAB 并存，见[Android 端适配](product/ui/android-adaptation.md) |
 | 服务端上线 | prod 环境部署、域名与 TLS、数据库迁移与健康检查；沿用 `make deploy` 发布通道 |
 | 发行渠道与账号 | macOS Steam 国际版构建、Steam 自动登录、手机号绑定、Steam 成就同步与 Steam 好友邀请；契约与适配已实现，见[当前发行渠道与账号](../../current/product/accounts-and-distribution.md) |
-| 成就 | 6 个局内成就接入运行时 |
+| 成就 | 6 个局内成就接入运行时；触发、奖励、Steam 下发与账号级解锁已实现 |
 | 自动匹配 | 8 人按积分匹配，等待时间逐级放宽；房间局仍不计分 |
 | 天梯 | 会战自动匹配局计分，动态积分差、8 段位与全服榜；房间局仍不计分 |
 

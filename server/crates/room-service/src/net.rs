@@ -40,6 +40,7 @@ use axum::http::StatusCode;
 use axum::response::Response;
 use axum::routing::get;
 use futures_util::{SinkExt, StreamExt};
+use protocol::AchievementStateUnlockedItem;
 use protocol::RoomClosedReason;
 use protocol::server::{
     AchievementState, FriendInvite as FriendInviteMessage, FriendInviteResult, FriendRequestItem,
@@ -481,17 +482,29 @@ async fn handle_socket(state: AppState, socket: WebSocket) {
                         {
                             send_payload(&out_tx, &mut direct, &floor, "AccountView", &view);
                         }
-                        // 成就状态：成就运行时尚未实现，没有可下发的解锁记录，先下发空列表。
-                        // 运行时落地后用 `state.achievements.steam_api_name` 生成同结构条目，
-                        // `AchievementUnlocked` 走同一映射。非 Steam 客户端按类型忽略。
+                        // 成就状态：账号级已解锁记录，按成就 id 升序；缺少 Steam
+                        // 映射的历史记录不下发。非 Steam 客户端按类型忽略。
+                        let unlocked = state
+                            .accounts
+                            .lock()
+                            .await
+                            .unlocked_achievements(&authorized.player_id)
+                            .into_iter()
+                            .filter_map(|achievement_id| {
+                                let steam_api_name =
+                                    state.achievements.steam_api_name(&achievement_id)?;
+                                Some(AchievementStateUnlockedItem {
+                                    achievement_id,
+                                    steam_api_name: steam_api_name.to_string(),
+                                })
+                            })
+                            .collect();
                         send_payload(
                             &out_tx,
                             &mut direct,
                             &floor,
                             "AchievementState",
-                            &AchievementState {
-                                unlocked: Vec::new(),
-                            },
+                            &AchievementState { unlocked },
                         );
                         // 本人与好友都需要看到最新的在线状态与社交视图。
                         notify_presence(&state, &authorized.player_id).await;
@@ -2085,6 +2098,7 @@ impl RoomTask {
             heroes,
             players,
             self.state.clock.clone(),
+            self.state.achievements.clone(),
         ) {
             Ok(game) => game.with_room_id(self.room_id.clone()),
             Err(error) => {
@@ -2152,6 +2166,32 @@ impl RoomTask {
     /// 本批出现 `GameOver` 时，全部投递完成后结束对局并销毁房间：清空发送端、
     /// 从注册表删除房间（房间码立即失效），随后 `retire_if_done` 摘除 hub 条目并退出。
     async fn deliver_excluding(&mut self, updates: Vec<SeatUpdate>, excluded: Option<&str>) {
+        // 成就解锁先做账号级去重：同一账号只同步一次 Steam 解锁；落库失败不阻断
+        // 对局，按首次解锁继续下发，客户端仍按 `steamApiName` 幂等处理。
+        let now_ms = self.state.clock.now_ms();
+        let mut synchronized = Vec::with_capacity(updates.len());
+        for update in updates {
+            if let UpdateKind::AchievementUnlocked { achievement_id, .. } = &update.kind {
+                match self
+                    .state
+                    .accounts
+                    .lock()
+                    .await
+                    .unlock_achievement(&update.player_id, achievement_id, now_ms)
+                    .await
+                {
+                    Ok(true) => {}
+                    Ok(false) => continue,
+                    Err(error) => eprintln!(
+                        "room-service: 记录成就解锁失败 player={} achievement={achievement_id}: {}",
+                        update.player_id, error.message
+                    ),
+                }
+            }
+            synchronized.push(update);
+        }
+        let updates = synchronized;
+
         let Some(game) = self.game.as_mut() else {
             return;
         };

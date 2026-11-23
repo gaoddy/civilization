@@ -8,7 +8,8 @@
 
 use std::collections::BTreeSet;
 
-use crate::data::{Card, CardType, Catalog, Playstyle, card_in_pool};
+use crate::achievements::Achievement;
+use crate::data::{Card, CardType, Catalog, Playstyle, card_has_playstyle, card_in_pool};
 use crate::effects::{Effect, EffectCtx, Params};
 use crate::engine::Engine;
 use crate::events::GameEvent;
@@ -34,12 +35,20 @@ impl Engine {
             let Some(golden) = self.form_golden(state, seat, &copies) else {
                 break;
             };
+            let plant = self
+                .catalog
+                .cards
+                .get(&card_id)
+                .is_some_and(|card| card_has_playstyle(card, Playstyle::Plant));
             events.push(GameEvent::TripleFormed {
                 seat,
                 card_id,
                 golden_instance_id: golden.instance_id,
                 sources: copies.clone(),
             });
+            if plant {
+                self.trigger_achievement(state, seat, Achievement::Genetics);
+            }
         }
         events
     }
@@ -111,12 +120,25 @@ impl Engine {
     /// 合格池按卡牌 id 顺序枚举，随机只走 [`Stream::Discover`]，且每抽一张推进一次；
     /// 三连发现与效果发现共用这一口径（关键词机制 §8 的「三选一」）。
     fn draw_discover_candidates(&self, state: &mut GameState, level: u8) -> Vec<String> {
+        self.draw_discover_candidates_for(state, level, None)
+    }
+
+    /// 同 [`Engine::draw_discover_candidates`]，可额外限制玩法（成就奖励用）。
+    pub(crate) fn draw_discover_candidates_for(
+        &self,
+        state: &mut GameState,
+        level: u8,
+        playstyle: Option<Playstyle>,
+    ) -> Vec<String> {
         let mut remaining: Vec<String> = self
             .catalog
             .cards
             .values()
             .filter(|candidate| {
                 is_discover_candidate(candidate, level, &state.enabled_playstyles, &state.pool)
+            })
+            .filter(|candidate| {
+                playstyle.is_none_or(|playstyle| card_has_playstyle(candidate, playstyle))
             })
             .map(|candidate| candidate.id.clone())
             .collect();

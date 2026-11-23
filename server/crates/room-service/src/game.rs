@@ -23,11 +23,14 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-use protocol::server::{CombatResult, ErrorMessage, GameOver, GameStarted, Snapshot, StateUpdate};
+use protocol::server::{
+    AchievementUnlocked, CombatResult, ErrorMessage, GameOver, GameStarted, Snapshot, StateUpdate,
+};
 use protocol::view::{CombatLogEntry, GameEvent as ProtocolGameEvent};
 use protocol::{
     ErrorCode, GameOverRankingItem, ProtocolError, SelfStats, SelfStatsBoardItem, ServerEnvelope,
 };
+use rule_engine::achievements::Achievement;
 use rule_engine::data::{Catalog, Playstyle};
 use rule_engine::effects::{TargetRef as EngineTargetRef, Zone as EngineZone};
 use rule_engine::engine::Engine;
@@ -41,6 +44,7 @@ use rule_engine::view::view;
 use serde_json::{Map, Value};
 use tokio::sync::mpsc;
 
+use crate::AchievementCatalog;
 use crate::clock::Clock;
 use crate::envelope::SeatChannel;
 use crate::filter::{combat_result, for_seat};
@@ -181,6 +185,11 @@ pub enum UpdateKind {
     CombatResult(Box<CombatResult>),
     /// 对局结束：排名与公开种子。
     GameOver(GameOver),
+    /// 本局首次达成的成就；账号级去重与 Steam 同步在房间投递层完成。
+    AchievementUnlocked {
+        achievement_id: String,
+        steam_api_name: String,
+    },
     /// 被拒绝的意图；`clientIntentId` 与请求一致。
     Error(ErrorMessage),
 }
@@ -198,6 +207,10 @@ pub enum Deduped {
 pub struct GameTask {
     engine: Engine,
     state: GameState,
+    /// 成就 id → Steam API 名；用于把局内解锁转成下行消息。
+    achievements: Arc<AchievementCatalog>,
+    /// 上次观察到的各座位本局已解锁成就；用于只推送新解锁。
+    achievement_seen: [BTreeSet<Achievement>; SEAT_COUNT],
     /// `playerId → 座位`；座位由服务端认定，客户端不能指定。
     seat_of: BTreeMap<String, Seat>,
     /// 按座位索引的玩家身份，长度固定为 [`SEAT_COUNT`]。
@@ -276,6 +289,7 @@ impl GameTask {
         heroes: BTreeMap<Seat, String>,
         players: Vec<PlayerSlot>,
         clock: Arc<dyn Clock>,
+        achievements: Arc<AchievementCatalog>,
     ) -> Result<Self, EngineError> {
         if players.len() != SEAT_COUNT {
             return Err(EngineError(format!(
@@ -312,6 +326,8 @@ impl GameTask {
         Ok(Self {
             engine,
             state,
+            achievements,
+            achievement_seen: std::array::from_fn(|_| BTreeSet::new()),
             seat_of,
             seats,
             channels,
@@ -512,6 +528,16 @@ impl GameTask {
                 ("Snapshot", payload_map(&snapshot)?)
             }
             UpdateKind::GameOver(game_over) => ("GameOver", payload_map(game_over)?),
+            UpdateKind::AchievementUnlocked {
+                achievement_id,
+                steam_api_name,
+            } => (
+                "AchievementUnlocked",
+                payload_map(&AchievementUnlocked {
+                    achievement_id: achievement_id.clone(),
+                    steam_api_name: steam_api_name.clone(),
+                })?,
+            ),
             UpdateKind::Error(error) => ("Error", payload_map(error)?),
         };
 
@@ -528,7 +554,15 @@ impl GameTask {
     }
 
     /// 处理一条命令，返回要发给各座位的更新；不等待网络。
+    ///
+    /// 命令执行后统一比对成就解锁集合，把本批新解锁追加为对应座位的更新。
     pub fn handle(&mut self, cmd: RoomCommand) -> Vec<SeatUpdate> {
+        let mut updates = self.handle_command(cmd);
+        self.append_achievement_updates(&mut updates);
+        updates
+    }
+
+    fn handle_command(&mut self, cmd: RoomCommand) -> Vec<SeatUpdate> {
         match cmd {
             RoomCommand::Ready { player_id, .. } | RoomCommand::SelectHero { player_id, .. } => {
                 // 对局开始后大厅操作一律属于当前阶段不允许。
@@ -573,6 +607,12 @@ impl GameTask {
     /// 连接状态无关地按时发生；断线标记只影响可观测的在线状态，安排在推进之后，
     /// 不会改变原有阶段推进的调用次数与顺序。
     pub fn tick(&mut self) -> Vec<SeatUpdate> {
+        let mut updates = self.tick_inner();
+        self.append_achievement_updates(&mut updates);
+        updates
+    }
+
+    fn tick_inner(&mut self) -> Vec<SeatUpdate> {
         let mut updates = Vec::new();
         if self.clock.now_ms() >= self.phase_deadline_ms {
             updates = match self.state.phase {
@@ -583,6 +623,40 @@ impl GameTask {
         }
         self.expire_disconnects();
         updates
+    }
+
+    /// 把本批新解锁的成就追加为对应座位的更新。
+    ///
+    /// `Achievement::ALL` 的顺序由解锁集合的 `BTreeSet` 保证；同一批内按座位升序、
+    /// 同一座位内按成就顺序追加，保持确定性。未知成就没有 Steam 映射时跳过。
+    fn append_achievement_updates(&mut self, updates: &mut Vec<SeatUpdate>) {
+        for (seat, player) in self.state.players.iter().enumerate() {
+            let seen = &mut self.achievement_seen[seat];
+            let new: Vec<Achievement> = player
+                .achievements
+                .unlocked
+                .difference(seen)
+                .copied()
+                .collect();
+            if new.is_empty() {
+                continue;
+            }
+            seen.extend(new.iter().copied());
+            let player_id = self.seats[seat].player_id.clone();
+            for achievement in new {
+                let Some(steam_api_name) = self.achievements.steam_api_name(achievement.id())
+                else {
+                    continue;
+                };
+                updates.push(SeatUpdate {
+                    player_id: player_id.clone(),
+                    kind: UpdateKind::AchievementUnlocked {
+                        achievement_id: achievement.id().to_string(),
+                        steam_api_name: steam_api_name.to_string(),
+                    },
+                });
+            }
+        }
     }
 
     /// 记录一个参战座位已播完本场演示；全部参战座位回报后立即结算。
@@ -1536,10 +1610,11 @@ mod tests {
     use std::collections::BTreeMap;
     use std::sync::Arc;
 
+    use rule_engine::achievements::Achievement;
     use rule_engine::data::{Catalog, Playstyle};
     use rule_engine::state::{MinionInstance, Pairing, Phase, Seat};
 
-    use super::{RoomCommand, combat_deadline, recruit_seconds};
+    use super::{RoomCommand, UpdateKind, combat_deadline, recruit_seconds};
     use crate::clock::FixedClock;
     use crate::envelope::SeatChannel;
     use crate::game::GameTask;
@@ -1565,6 +1640,34 @@ mod tests {
 
     fn task() -> GameTask {
         task_at(FixedClock::new(1_000_000))
+    }
+
+    #[test]
+    fn achievement_updates_are_emitted_once_with_steam_mapping() {
+        let mut task = task();
+        task.state.players[0]
+            .achievements
+            .unlocked
+            .insert(Achievement::BiologicalEvolution);
+
+        let mut updates = Vec::new();
+        task.append_achievement_updates(&mut updates);
+        assert_eq!(updates.len(), 1);
+        assert_eq!(updates[0].player_id, task.seats[0].player_id);
+        match &updates[0].kind {
+            UpdateKind::AchievementUnlocked {
+                achievement_id,
+                steam_api_name,
+            } => {
+                assert_eq!(achievement_id, "biological-evolution");
+                assert_eq!(steam_api_name, "BIOLOGICAL_EVOLUTION");
+            }
+            other => panic!("期望成就解锁更新，实际为 {other:?}"),
+        }
+
+        updates.clear();
+        task.append_achievement_updates(&mut updates);
+        assert!(updates.is_empty(), "同一解锁不应重复推送");
     }
 
     /// 测试固定玩法：覆盖各级随从，保证商店不至于因池过小而全空。
@@ -1605,8 +1708,16 @@ mod tests {
                 disconnected_at_ms: None,
             })
             .collect();
-        GameTask::new(catalog, 7, playstyles(), heroes, players, Arc::new(clock))
-            .expect("开局应当成功")
+        GameTask::new(
+            catalog,
+            7,
+            playstyles(),
+            heroes,
+            players,
+            Arc::new(clock),
+            Arc::new(crate::AchievementCatalog::embedded()),
+        )
+        .expect("开局应当成功")
     }
 
     /// 构造 0 号与 1 号座位对战、其余座位已淘汰的局面；调用后阶段为 `Combat`，
