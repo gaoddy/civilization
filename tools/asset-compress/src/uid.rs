@@ -60,12 +60,11 @@ fn scan(root: &Path) -> BTreeSet<String> {
             let path = entry.path();
             if path.is_dir() {
                 stack.push(path);
-            } else if path.extension().is_some_and(|e| e == "import") {
-                if let Ok(text) = std::fs::read_to_string(&path) {
-                    if let Some(uid) = import::existing_uid(&text) {
-                        used.insert(uid);
-                    }
-                }
+            } else if path.extension().is_some_and(|e| e == "import")
+                && let Ok(text) = std::fs::read_to_string(&path)
+                && let Some(uid) = import::existing_uid(&text)
+            {
+                used.insert(uid);
             }
         }
     }

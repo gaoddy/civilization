@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use crate::encode::{EncodeError, Encoder};
 use crate::format::Format;
 use crate::godot::{ctex, import, md5};
+use crate::uid::UidBook;
 
 /// 没有现成 `.import` 时使用的 Godot 4 默认纹理参数（与现网产物一致）。
 pub const DEFAULT_PARAMS: &str = "[params]\n\n\
@@ -111,6 +112,7 @@ pub fn run_one(
     let decoded = decode_png_bytes(&source)?;
     let bc7 = enc.encode(&decoded.rgba, decoded.width, decoded.height, Format::Bc7)?;
     let astc = enc.encode(&decoded.rgba, decoded.width, decoded.height, Format::Astc4x4)?;
+    let mut uids = UidBook::new(root_of(out_dir));
     write_outputs(
         src_png,
         &source,
@@ -119,7 +121,18 @@ pub fn run_one(
         decoded.width,
         decoded.height,
         [&bc7, &astc],
+        &mut uids,
     )
+}
+
+/// `out_dir` 是 `<root>/.godot/imported`，向上两级即项目根；取不到时退回
+/// `out_dir` 本身（扫描不到 uid，等价于不做去重）。
+fn root_of(out_dir: &Path) -> PathBuf {
+    out_dir
+        .parent()
+        .and_then(Path::parent)
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| out_dir.to_path_buf())
 }
 
 /// 解码后的像素。
@@ -153,6 +166,7 @@ pub fn write_outputs(
     w: u32,
     h: u32,
     blocks: [&[u8]; 2],
+    uids: &mut UidBook,
 ) -> Result<RunOutcome, Error> {
     let dests = [
         ctex::encode_ctex(Format::Bc7, w, h, blocks[0])?,
@@ -179,7 +193,7 @@ pub fn write_outputs(
     let uid = existing
         .as_deref()
         .and_then(import::existing_uid)
-        .unwrap_or_else(|| import::new_uid(&format!("{res_path}:{source_md5}")));
+        .unwrap_or_else(|| uids.allocate(&format!("{res_path}:{source_md5}")));
     let params = existing
         .as_deref()
         .and_then(params_of)
@@ -320,6 +334,7 @@ pub fn run_all(enc: &dyn Encoder, input: &Path, jobs: usize) -> Result<RunReport
 
     let chunk = (jobs * 8).max(8);
     let mut encoded = 0usize;
+    let mut uids = UidBook::new(&root);
     for group in pending.chunks(chunk) {
         let decoded: Vec<Result<Decoded, Error>> = group
             .par_iter()
@@ -344,6 +359,7 @@ pub fn run_all(enc: &dyn Encoder, input: &Path, jobs: usize) -> Result<RunReport
                 decoded[i].width,
                 decoded[i].height,
                 [bc7, astc],
+                &mut uids,
             )?;
             encoded += 1;
         }
