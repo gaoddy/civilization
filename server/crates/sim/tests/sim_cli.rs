@@ -338,3 +338,69 @@ fn check_fails_on_incomplete_ranking() {
     let check = report::check_m0_batch(&batch, Some(4)).expect("完整批量应通过");
     assert_eq!(check.ranking_entries, 32);
 }
+
+#[test]
+fn load_requires_exactly_one_server_source() {
+    let (code, _, stderr) = run(&["load"]);
+    assert_ne!(code, 0, "缺少服务端来源应非零退出");
+    assert!(stderr.contains("缺少 --connect"), "stderr: {stderr}");
+
+    let (code, _, stderr) = run(&[
+        "load",
+        "--connect",
+        "ws://127.0.0.1:1/ws",
+        "--serve-room-service",
+        "room-service",
+    ]);
+    assert_ne!(code, 0, "同时提供两种来源应非零退出");
+    assert!(stderr.contains("只能二选一"), "stderr: {stderr}");
+}
+
+#[test]
+fn load_rejects_unknown_scenario() {
+    let (code, _, stderr) = run(&[
+        "load",
+        "--connect",
+        "ws://127.0.0.1:1/ws",
+        "--scenario",
+        "spike",
+    ]);
+    assert_ne!(code, 0, "未知场景应非零退出");
+    assert!(stderr.contains("未知场景"), "stderr: {stderr}");
+}
+
+#[test]
+fn load_ramp_rejects_zero_step_before_connecting() {
+    let (code, _, stderr) = run(&[
+        "load",
+        "--connect",
+        "ws://127.0.0.1:1/ws",
+        "--scenario",
+        "ramp",
+        "--rooms",
+        "1",
+        "--rooms-max",
+        "2",
+        "--step",
+        "0",
+        "--allow-remote-ramp",
+    ]);
+    assert_ne!(code, 0, "step 为 0 应非零退出");
+    assert!(stderr.contains("--step"), "stderr: {stderr}");
+}
+
+#[test]
+fn load_ssh_sampling_requires_pid() {
+    let (code, _, stderr) = run(&[
+        "load",
+        "--connect",
+        "ws://127.0.0.1:1/ws",
+        "--ssh-host",
+        "example.invalid",
+    ]);
+    assert_ne!(code, 0, "只给 ssh 主机应非零退出");
+    assert!(
+        stderr.contains("--ssh-host 与 --ssh-pid"),
+        "stderr: {stderr}"
+    );
+}

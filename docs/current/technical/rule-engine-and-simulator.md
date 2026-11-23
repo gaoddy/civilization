@@ -207,10 +207,16 @@ impl Taxonomy {
 | `make m0-check` | `data-check`、`test`、`lint`、`m0-determinism` 四项并行执行（计划中的 M0 汇总门禁），任一失败整体非 0 |
 | `make m1-check` | M1a 汇合门禁：`protocol-rs-check`、`protocol-check`、`data-check`、`test`、`lint`、`m0-determinism` 六项并行执行；e2e 由 `make test` 覆盖，详见[房间服务与联网](room-service/README.md) |
 | `make m0-report` | 先校验批量日志（`sim check --expect-games 1000`：局数、每局 8 名排名），再生成基线报告（字段口径见第 7 节）；输出同时写入 `output/m0-report.log`。可用 `M0_BATCH_LOG`、`M0_GAMES` 指向其他批量日志与局数 |
+| `make load-build` | release 构建 `room-service` 与 `sim`，供压测使用（debug 结果与线上不可比） |
+| `make loadtest` | 并发容量稳态压测：本机起 `room-service`，维持 `LOAD_ROOMS`（默认 10）个活跃房间并补位 `LOAD_DURATION_MS`（默认 30000），报告写 `output/loadtest-steady.json` |
+| `make loadtest-ramp` | 爬坡找上限：从 `LOAD_ROOMS` 到 `LOAD_ROOMS_MAX`（默认 100）按 `LOAD_STEP`（默认 10）逐档压测，每档 `LOAD_STEP_MS`（默认 20000），报告写 `output/loadtest-ramp.json` |
+| `make loadtest-smoke` | 压测冒烟：2 局稳态 5 秒，报告写 `output/loadtest-smoke.json`，任一健康档存在即退出码 0 |
 | `make dev-bots` | 本地联调：起服务端与 7 个机器人，打印房间码后等开发者作为第 8 人入座；一局结束后自动建下一局（房间码每局递增，机器人意图种子每局 +1），`Ctrl-C` 退出，`DEV_ROUNDS=<正整数>` 限定局数，`DEV_INTENT_SEED` 指定起始意图种子。`DEV_PORT` 默认 8080，端口被占用时直接失败 |
 | `python3 scripts/validate_docs.py` | 文档与实体数据校验 |
 
-模拟器直接调用：`sim play --seed N`、`sim batch --games N --seed N --out PATH`、`sim replay --log PATH`、`sim report --log PATH`、`sim check --log PATH [--expect-games N]`、`sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID [--room CODE] [--create] [--intent-seed N]`、`sim dev --connect ws://HOST:PORT/ws [--intent-seed N]`；参数错误、模拟失败或日志校验不通过以非零码退出。`sim bot` 的细节见[房间服务与联网](room-service/README.md)第 12 节。
+模拟器直接调用：`sim play --seed N`、`sim batch --games N --seed N --out PATH`、`sim replay --log PATH`、`sim report --log PATH`、`sim check --log PATH [--expect-games N]`、`sim bot --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID [--room CODE] [--create] [--intent-seed N]`、`sim dev --connect ws://HOST:PORT/ws [--intent-seed N]`、`sim load --serve-room-service PATH | --connect ws://HOST:PORT/ws --scenario steady|ramp --rooms N [其余压测参数]`；参数错误、模拟失败或日志校验不通过以非零码退出。`sim bot` 的细节见[房间服务与联网](room-service/README.md)第 12 节。
+
+`sim load` 复用 `sim bot` 的机器人协议：steady 维持指定房间数并在一局结束后补位，ramp 逐档递增并在首个不健康档停止。每档结束对全部机器人发停止信号，机器人发送 `LeaveRoom`；对局中按下弃权结算，存活数降到 1 时服务端进入 `GameOver` 并立即销毁房间，不依赖断线宽限。默认 `--serve-room-service` 自动起停本机服务端并每秒采样 CPU/RSS；`--connect` 压远端地址，可用 `--ssh-host` + `--ssh-pid` 读 `/proc` 采样。健康判据为启动失败率（默认 ≤10‰）、开局时延 p95（默认 ≤10s）与 server+generator CPU 是否接近机器核数；同机压测在报告中标记 `coHosted` 并记录生成器开销。远端 `wss://` 尚未支持，压远端需先经端口转发转成 `ws://`。
 
 单局日志除 `final_hash` 外还记录 `event_hash`：`play_game` 把 `start_game` 与每次引擎调用返回的事件按顺序送入 `rule-engine::hash::EventHasher`；`replay` 按同一顺序累计后逐项比对事件序列哈希、终局状态哈希与排名，任一不一致即返回错误。日志缺少 `event_hash` 时 `report::game_from_json` 拒绝解析。
 

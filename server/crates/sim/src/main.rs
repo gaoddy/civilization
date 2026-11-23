@@ -1,13 +1,15 @@
-//! 模拟器命令行：`play`、`batch`、`replay`、`report`、`check`、`bot`、`dev` 七个子命令。
+//! 模拟器命令行：`play`、`batch`、`replay`、`report`、`check`、`bot`、`dev`、`load`
+//! 八个子命令。
 //!
 //! 结果写入 stdout（JSON）；任何参数错误、模拟失败或日志不一致都以非零码退出，
-//! 并只向 stderr 输出原因。不读时钟与环境变量。
+//! 并只向 stderr 输出原因。除 `load` 的进程管理与采样外，不读时钟与环境变量。
 
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use serde_json::Value;
+use sim::load::{LoadConfig, RemoteSample, Scenario};
 use sim::report;
 
 const USAGE: &str = "用法：
@@ -19,7 +21,14 @@ const USAGE: &str = "用法：
   sim bot    --connect ws://HOST:PORT/ws --name NAME --hero CARD_ID
              [--room CODE] [--create] [--intent-seed N]
   sim dev    --connect ws://HOST:PORT/ws [--intent-seed N]
-             起 7 个机器人建房并加入，打印房间码后等第 8 人（开发者）";
+             起 7 个机器人建房并加入，打印房间码后等第 8 人（开发者）
+  sim load   --serve-room-service PATH | --connect ws://HOST:PORT/ws
+             --scenario steady|ramp --rooms N [--rooms-max M --step K --step-ms T]
+             [--duration-ms T] [--start-timeout-ms T] [--sample-ms T]
+             [--out PATH] [--server-log PATH] [--intent-seed N]
+             [--ssh-host HOST --ssh-pid PID]
+             [--fresh-server-per-step] [--allow-remote-ramp] [--quiet]
+             本机起服务端并采样，或压远端地址；输出 JSON 报告";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -117,6 +126,7 @@ fn run(args: &[String]) -> Result<(), String> {
         }
         "bot" => run_bot(rest),
         "dev" => run_dev(rest),
+        "load" => run_load(rest),
         "--help" | "-h" | "help" => {
             println!("{USAGE}");
             Ok(())
@@ -215,6 +225,133 @@ fn run_dev(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
+/// `sim load`：并发对局压测。
+///
+/// 报告写到 `--out`（未提供时写 stdout）；至少一个健康档时退出码为 0。
+fn run_load(args: &[String]) -> Result<(), String> {
+    let options = parse_options_with_flags(
+        args,
+        &[
+            "--connect",
+            "--serve-room-service",
+            "--scenario",
+            "--rooms",
+            "--rooms-max",
+            "--step",
+            "--duration-ms",
+            "--step-ms",
+            "--start-timeout-ms",
+            "--sample-ms",
+            "--intent-seed",
+            "--out",
+            "--server-log",
+            "--ssh-host",
+            "--ssh-pid",
+            "--max-start-failure-permille",
+            "--max-start-p95-ms",
+        ],
+        &["--fresh-server-per-step", "--allow-remote-ramp", "--quiet"],
+    )?;
+
+    let url = options.values.get("--connect").cloned();
+    let server_bin = options
+        .values
+        .get("--serve-room-service")
+        .map(PathBuf::from);
+    match (&url, &server_bin) {
+        (Some(_), Some(_)) => {
+            return Err("--connect 与 --serve-room-service 只能二选一".into());
+        }
+        (None, None) => {
+            return Err("缺少 --connect 或 --serve-room-service".into());
+        }
+        _ => {}
+    }
+
+    let scenario = match options
+        .values
+        .get("--scenario")
+        .map(String::as_str)
+        .unwrap_or("steady")
+    {
+        "steady" => Scenario::Steady,
+        "ramp" => Scenario::Ramp,
+        other => return Err(format!("未知场景 {other}；支持 steady 或 ramp")),
+    };
+    let rooms = options.usize_or("--rooms", 10)?;
+    if rooms == 0 {
+        return Err("--rooms 必须大于 0".into());
+    }
+    let remote_sample = match (
+        options.values.get("--ssh-host"),
+        options.values.get("--ssh-pid"),
+    ) {
+        (Some(host), Some(_)) => Some(RemoteSample {
+            host: host.clone(),
+            pid: options.u32_or("--ssh-pid", 0)?,
+        }),
+        (None, None) => None,
+        _ => return Err("--ssh-host 与 --ssh-pid 必须同时提供".into()),
+    };
+
+    let catalog = sim::embedded_catalog().map_err(|err| err.to_string())?;
+    let hero = catalog
+        .heroes
+        .values()
+        .next()
+        .map(|hero| hero.id.clone())
+        .ok_or_else(|| "卡表没有英雄卡".to_string())?;
+
+    let config = LoadConfig {
+        scenario,
+        url,
+        server_bin,
+        server_log: options
+            .values
+            .get("--server-log")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("output/loadtest-server.log")),
+        rooms,
+        rooms_max: options.usize_or("--rooms-max", 100)?,
+        step: options.usize_or("--step", 10)?,
+        duration_ms: options.u64_or("--duration-ms", 30_000)?,
+        step_ms: options.u64_or("--step-ms", 20_000)?,
+        start_timeout_ms: options.u64_or("--start-timeout-ms", 15_000)?,
+        sample_ms: options.u64_or("--sample-ms", 1_000)?,
+        intent_seed: options.u64_or("--intent-seed", 0)?,
+        hero,
+        quiet: options.values.contains_key("--quiet"),
+        remote_sample,
+        fresh_server_per_step: options.values.contains_key("--fresh-server-per-step"),
+        allow_remote_ramp: options.values.contains_key("--allow-remote-ramp"),
+        max_start_failure_permille: options.u32_or("--max-start-failure-permille", 10)?,
+        max_start_p95_ms: options.u64_or("--max-start-p95-ms", 10_000)?,
+    };
+    let out = options.values.get("--out").map(PathBuf::from);
+
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .map_err(|err| format!("创建 tokio 运行时失败: {err}"))?;
+    let report = runtime.block_on(sim::load::run(config))?;
+    let value =
+        serde_json::to_value(&report).map_err(|err| format!("序列化压测报告失败: {err}"))?;
+    match &out {
+        Some(path) => write_json(path, &value)?,
+        None => print_json(&value)?,
+    }
+
+    if !report.steps.iter().any(|step| step.status == "healthy") {
+        let reason = report
+            .limit
+            .reason
+            .clone()
+            .unwrap_or_else(|| "没有健康档".to_string());
+        return Err(format!("压测判定不健康：{reason}"));
+    }
+    Ok(())
+}
+
 fn print_json(value: &Value) -> Result<(), String> {
     let text =
         serde_json::to_string_pretty(value).map_err(|err| format!("序列化 JSON 失败: {err}"))?;
@@ -279,6 +416,28 @@ impl Options {
             ));
         }
         Ok(usize::from(players))
+    }
+
+    /// 可选无符号整数；未提供时用默认值。
+    fn usize_or(&self, key: &str, default: usize) -> Result<usize, String> {
+        match self.values.get(key) {
+            Some(_) => self.required_usize(key),
+            None => Ok(default),
+        }
+    }
+
+    /// 可选无符号整数；未提供时用默认值。
+    fn u64_or(&self, key: &str, default: u64) -> Result<u64, String> {
+        match self.values.get(key) {
+            Some(_) => self.required_u64(key),
+            None => Ok(default),
+        }
+    }
+
+    /// 可选 `u32`；越界返回错误。
+    fn u32_or(&self, key: &str, default: u32) -> Result<u32, String> {
+        let value = self.u64_or(key, u64::from(default))?;
+        u32::try_from(value).map_err(|_| format!("参数 {key} 超出 u32 范围：{value}"))
     }
 }
 

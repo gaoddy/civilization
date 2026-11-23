@@ -1,10 +1,12 @@
 //! 模拟器库：确定性 AI、整局驱动、批量运行与基线报告。
 //!
-//! 所有随机性只来自 [`Engine::new`] 注入的种子；本库不读时钟、不读环境变量，
-//! 不使用浮点参与任何判定。
+//! 所有随机性只来自 [`Engine::new`] 注入的种子；AI、规则与批量模拟不读时钟、
+//! 不读环境变量，不使用浮点参与任何判定。例外是 [`load`]：它管理本机服务端进程、
+//! 采样资源并驱动真实网络机器人，只用于压测，不参与规则计算。
 
 pub mod ai;
 pub mod bot;
+pub mod load;
 pub mod report;
 
 use std::collections::{BTreeMap, BTreeSet};

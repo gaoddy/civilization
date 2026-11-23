@@ -20,7 +20,7 @@ FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 # 独立步骤的并行度：留空按 CPU 数（上限 8），JOBS=1 退回串行。
 JOBS ?=
 
-.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-cache-copy client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke client-env-check asset-compress asset-compress-check ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios client-export-android client-export-android-aab m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report load-build loadtest loadtest-ramp loadtest-smoke m1-check client-godot-check client-import client-cache-copy client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke client-env-check asset-compress asset-compress-check ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios client-export-android client-export-android-aab m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
@@ -623,3 +623,34 @@ m0-report:
 	@mkdir -p ../output
 	cd server && cargo run -q --release -p sim -- check --log $(M0_BATCH_LOG) --expect-games $(M0_GAMES)
 	cd server && cargo run -q --release -p sim -- report --log $(M0_BATCH_LOG) 2>&1 | tee ../output/m0-report.log
+
+# 并发对局压测：release 产物 + 本机 room-service 自动起停；报告写 output/（忽略目录）。
+LOAD_SERVER_BIN ?= server/target/release/room-service
+LOAD_SIM_BIN ?= server/target/release/sim
+LOAD_ROOMS ?= 10
+LOAD_DURATION_MS ?= 30000
+LOAD_ROOMS_MAX ?= 100
+LOAD_STEP ?= 10
+LOAD_STEP_MS ?= 20000
+
+load-build:
+	cd server && cargo build --release -p room-service -p sim
+
+loadtest: load-build
+	@mkdir -p output
+	$(LOAD_SIM_BIN) load --serve-room-service $(LOAD_SERVER_BIN) \
+		--scenario steady --rooms $(LOAD_ROOMS) --duration-ms $(LOAD_DURATION_MS) \
+		--out output/loadtest-steady.json
+
+loadtest-ramp: load-build
+	@mkdir -p output
+	$(LOAD_SIM_BIN) load --serve-room-service $(LOAD_SERVER_BIN) \
+		--scenario ramp --rooms $(LOAD_ROOMS) --rooms-max $(LOAD_ROOMS_MAX) \
+		--step $(LOAD_STEP) --step-ms $(LOAD_STEP_MS) \
+		--out output/loadtest-ramp.json
+
+loadtest-smoke: load-build
+	@mkdir -p output
+	$(LOAD_SIM_BIN) load --serve-room-service $(LOAD_SERVER_BIN) \
+		--scenario steady --rooms 2 --duration-ms 5000 \
+		--out output/loadtest-smoke.json
