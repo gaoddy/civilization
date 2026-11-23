@@ -5,12 +5,14 @@
 
 mod common;
 
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
 
 use common::{ClientWs, connect_with_retry, database_url, start_server_with_db, test_db};
 use futures_util::{SinkExt, StreamExt};
 use protocol::{ErrorCode, FriendUpdate, RoomUpdate, ServerEnvelope, ServerMessage};
+use room_service::rating::{MatchRecord, RankedConfig, RatingStore};
 use room_service::social::{FriendStatus, SocialError, SocialStore};
 use room_service::{AccountStore, Clock, FixedClock, SystemClock};
 use serde_json::{Value, json};
@@ -586,4 +588,110 @@ async fn ping_succeeds_and_migrations_are_repeatable() {
     room_service::Db::connect(&url)
         .await
         .expect("重复连接与迁移应幂等");
+}
+
+/// 天梯结算、排行榜、宗师快照与最近战绩跨重启恢复。
+///
+/// 段位阈值压到 1000 附近，让一局 8 人同分对局就能覆盖宗师判定；宗师上限
+/// 取 3，验证「积分够但名次在快照外」显示大师。
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn ranked_settlement_survives_restart() {
+    const NAME: &str = "ranked_settlement_survives_restart";
+    let Some(store) = test_db().await else {
+        skip(NAME);
+        return;
+    };
+
+    let mut accounts = AccountStore::load(store.db.clone())
+        .await
+        .expect("账号应能载入");
+    let mut ids = Vec::new();
+    for index in 0..8 {
+        let phone = format!("1390000{index:04}");
+        let account = accounts
+            .login(&phone, Some(&format!("玩家{}", index + 1)), NOW)
+            .await
+            .expect("账号应能创建");
+        ids.push(account.player_id);
+    }
+
+    let config = RankedConfig::from_json(
+        r#"{
+            "masterRankLimit": 3,
+            "tiers": [
+                {"id": "apprentice", "minRating": 0},
+                {"id": "bronze", "minRating": 900},
+                {"id": "silver", "minRating": 1000},
+                {"id": "gold", "minRating": 1001},
+                {"id": "platinum", "minRating": 1002},
+                {"id": "diamond", "minRating": 1003},
+                {"id": "master", "minRating": 1004},
+                {"id": "grandmaster", "minRating": 1005}
+            ]
+        }"#,
+    )
+    .expect("测试配置应通过校验");
+
+    let mut ratings = RatingStore::load(store.db.clone())
+        .await
+        .expect("积分应能载入");
+    let start: BTreeMap<String, i32> = ids.iter().map(|id| (id.clone(), 1000)).collect();
+    let placements: Vec<(String, u8)> = ids
+        .iter()
+        .enumerate()
+        .map(|(index, id)| (id.clone(), u8::try_from(index + 1).expect("名次应合法")))
+        .collect();
+    let record = MatchRecord {
+        match_id: "m_db",
+        room_id: "room_db",
+        seed: "seed",
+        finished_at_ms: NOW,
+    };
+    let results = ratings
+        .settle_match(&config, &record, &placements, &start)
+        .await
+        .expect("结算应写入数据库");
+    assert_eq!(results[0].rating_delta, 100);
+    assert_eq!(results[0].rating_after, 1100);
+    assert_eq!(results[7].rating_after, 900);
+
+    ratings
+        .ensure_master_snapshot(&config, NOW, &ids)
+        .await
+        .expect("宗师快照应写入数据库");
+    assert_eq!(ratings.tier(&config, &ids[0], 1100), "grandmaster");
+    assert_eq!(
+        ratings.tier(&config, &ids[3], 1014),
+        "master",
+        "积分达到宗师线但名次在快照外时显示大师"
+    );
+
+    // 模拟重启：积分、排行榜、宗师快照与最近战绩都从库恢复。
+    let reloaded = RatingStore::load(store.db.clone())
+        .await
+        .expect("重启后积分应能载入");
+    assert_eq!(reloaded.rating_of(&ids[0]), 1100);
+    assert_eq!(reloaded.rating_of(&ids[7]), 900);
+    assert_eq!(
+        reloaded.summary(&config, &ids[7]).highest_rating,
+        1000,
+        "首次扣分不能抹掉初始最高积分"
+    );
+    assert_eq!(reloaded.tier(&config, &ids[0], 1100), "grandmaster");
+    let rows = reloaded
+        .leaderboard(&ids, 100)
+        .await
+        .expect("排行榜应能查询");
+    assert_eq!(rows.len(), 8);
+    assert_eq!(rows[0].player_id, ids[0]);
+    assert_eq!(rows[7].player_id, ids[7]);
+    let recent = reloaded
+        .recent_for(&ids[0])
+        .await
+        .expect("最近战绩应能查询");
+    assert_eq!(recent.len(), 1);
+    assert_eq!(recent[0].placement, 1);
+    assert_eq!(recent[0].rating_after, 1100);
+
+    store.cleanup().await;
 }

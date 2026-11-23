@@ -1,6 +1,6 @@
 # 天梯与匹配技术方案
 
-> 状态：方案未实施
+> 状态：已实现（v0.2 自动匹配、天梯积分、排行榜与个人主页）
 > 关联：[天梯与匹配](../product/systems/ranked-and-matchmaking.md)、[服务端技术基线](../../../current/technical/architecture/server-stack.md)、[协议总览](../../../current/technical/architecture/protocol.md)、[客户端技术基线](../../../current/technical/architecture/client-stack.md)
 
 本文记录 v0.2 自动匹配与天梯的落点、契约、数据模型与验证方式；产品规则以[天梯与匹配](../product/systems/ranked-and-matchmaking.md)为准，本文不重复数值。
@@ -36,7 +36,7 @@
 - `AccountView` 增加 `rating`、`tier`、`highestTier`。
 - `GameOver` 增加 `ratingDelta`、`ratingAfter`、`tierBefore`、`tierAfter`；房间局四项为 `null`。
 
-错误码：`QUEUE_ALREADY`、`QUEUE_IN_ROOM`、`QUEUE_NOT_JOINED`、`PROFILE_FORBIDDEN`。
+错误码：`QUEUE_ALREADY`、`QUEUE_IN_ROOM`、`QUEUE_NOT_JOINED`。非好友查看个人主页只隐藏最近战绩，不返回错误。
 
 ## 3. 服务端
 
@@ -69,7 +69,7 @@
 - 配置项：K、匹配窗口、段位区间、宗师名次上限。
 - 服务端启动时从环境变量 `RANKED_CONFIG` 读取 JSON；未设置时使用代码内默认值（与产品文档一致）。
 - 解析失败直接启动失败，不降级到默认值。
-- 配置随 Helm values 注入；调整后需要重新发布使新配置生效。段位不落库，每次按当前配置与积分计算；历史最高段位按历史最高积分与当前配置计算。
+- 配置随 Helm values 注入；调整后需要重新发布使新配置生效。段位不落库，每次按当前配置与积分计算；历史最高段位按历史最高积分与当前配置计算，宗师还要求账号历史上进入过宗师榜快照。
 
 ### 3.5 排行与个人主页
 

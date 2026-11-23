@@ -80,3 +80,48 @@ CREATE TABLE account_achievement (
     unlocked_at TIMESTAMPTZ(3) NOT NULL,
     PRIMARY KEY (account_id, achievement_id)
 );
+
+-- 天梯积分：新账号首次结算时插入，初始 1000；未插入时按 1000 处理。
+-- updated_at 记录最近一次积分变化时刻，同分按它先到先得。
+CREATE TABLE account_rating (
+    account_id TEXT PRIMARY KEY REFERENCES account (account_id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL DEFAULT 1000 CHECK (rating >= 0),
+    highest_rating INTEGER NOT NULL DEFAULT 1000 CHECK (highest_rating >= 0),
+    updated_at TIMESTAMPTZ(3) NOT NULL
+);
+
+CREATE INDEX account_rating_leaderboard_idx
+    ON account_rating (rating DESC, updated_at ASC, account_id ASC);
+
+-- 一局天梯对局；房间局不写此表。
+CREATE TABLE ranked_match (
+    match_id TEXT PRIMARY KEY,
+    room_id TEXT NOT NULL,
+    finished_at TIMESTAMPTZ(3) NOT NULL,
+    seed TEXT NOT NULL
+);
+
+CREATE INDEX ranked_match_finished_idx ON ranked_match (finished_at DESC);
+
+-- 每人结算结果：最近 10 局与历史最高段位的数据来源。
+CREATE TABLE ranked_result (
+    match_id TEXT NOT NULL REFERENCES ranked_match (match_id) ON DELETE CASCADE,
+    account_id TEXT NOT NULL REFERENCES account (account_id) ON DELETE CASCADE,
+    placement SMALLINT NOT NULL CHECK (placement BETWEEN 1 AND 8),
+    rating_before INTEGER NOT NULL CHECK (rating_before >= 0),
+    rating_delta INTEGER NOT NULL,
+    rating_after INTEGER NOT NULL CHECK (rating_after >= 0),
+    PRIMARY KEY (match_id, account_id)
+);
+
+CREATE INDEX ranked_result_account_idx ON ranked_result (account_id);
+
+-- 宗师榜每日快照：只保留前 master_rank_limit 名，作为次日宗师判定依据。
+CREATE TABLE master_snapshot (
+    snapshot_day DATE NOT NULL,
+    account_id TEXT NOT NULL REFERENCES account (account_id) ON DELETE CASCADE,
+    rank INTEGER NOT NULL CHECK (rank >= 1),
+    PRIMARY KEY (snapshot_day, account_id)
+);
+
+CREATE INDEX master_snapshot_rank_idx ON master_snapshot (snapshot_day, rank);

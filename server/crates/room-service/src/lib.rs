@@ -16,6 +16,7 @@ pub mod game;
 pub mod net;
 pub mod phone_code;
 pub mod queue;
+pub mod rating;
 pub mod room;
 pub mod social;
 pub mod steam;
@@ -114,6 +115,10 @@ pub struct AppState {
     pub rooms: Arc<Mutex<RoomRegistry>>,
     /// 自动匹配队列；单实例内存队列，成局后直接建房。
     pub queue: Arc<Mutex<queue::MatchQueue>>,
+    /// 天梯参数：K、匹配窗口、段位区间与宗师名次上限。
+    pub ranked: Arc<rating::RankedConfig>,
+    /// 天梯积分、最近战绩与宗师快照；未配置数据库时只存在进程内。
+    pub ratings: Arc<Mutex<rating::RatingStore>>,
     pub clock: Arc<dyn Clock>,
     pub catalog: Catalog,
     /// 已创建房间 → 房间任务入口（含房间码与对局种子）。
@@ -139,11 +144,14 @@ impl AppState {
     ///
     /// 卡表加载失败、或英雄卡为空 / 分类字段不合法时返回错误文本。
     pub fn new(clock: Arc<dyn Clock>) -> Result<Self, String> {
+        let ranked = Arc::new(rating::RankedConfig::default());
         Ok(Self {
             sessions: Arc::new(Mutex::new(SessionStore::new())),
             accounts: Arc::new(Mutex::new(account::AccountStore::new())),
             rooms: Arc::new(Mutex::new(RoomRegistry::new())),
-            queue: Arc::new(Mutex::new(queue::MatchQueue::new())),
+            queue: Arc::new(Mutex::new(queue::MatchQueue::with_config(ranked.clone()))),
+            ranked,
+            ratings: Arc::new(Mutex::new(rating::RatingStore::new())),
             clock,
             catalog: load_catalog()?,
             hub: Arc::new(Mutex::new(net::RoomHub::default())),
@@ -167,11 +175,15 @@ impl AppState {
         let catalog = load_catalog()?;
         let accounts = account::AccountStore::load(db.clone()).await?;
         let social = social::SocialStore::load(db.clone(), clock.now_ms()).await?;
+        let ratings = rating::RatingStore::load(db.clone()).await?;
+        let ranked = Arc::new(rating::RankedConfig::default());
         Ok(Self {
             sessions: Arc::new(Mutex::new(SessionStore::new())),
             accounts: Arc::new(Mutex::new(accounts)),
             rooms: Arc::new(Mutex::new(RoomRegistry::new())),
-            queue: Arc::new(Mutex::new(queue::MatchQueue::new())),
+            queue: Arc::new(Mutex::new(queue::MatchQueue::with_config(ranked.clone()))),
+            ranked,
+            ratings: Arc::new(Mutex::new(ratings)),
             clock,
             catalog,
             hub: Arc::new(Mutex::new(net::RoomHub::default())),
@@ -192,6 +204,15 @@ impl AppState {
     /// 装配 Steam 校验器；未调用时为 `Disabled`。
     pub fn with_steam(mut self, verifier: steam::SteamVerifier) -> Self {
         self.steam = Arc::new(verifier);
+        self
+    }
+
+    /// 用启动时解析的天梯参数替换默认配置；队列窗口同步生效。
+    #[must_use]
+    pub fn with_ranked_config(mut self, config: rating::RankedConfig) -> Self {
+        let ranked = Arc::new(config);
+        self.queue = Arc::new(Mutex::new(queue::MatchQueue::with_config(ranked.clone())));
+        self.ranked = ranked;
         self
     }
 }
@@ -278,11 +299,27 @@ pub async fn bind_with_steam(
     db: Option<Arc<db::Db>>,
     verifier: steam::SteamVerifier,
 ) -> Result<(SocketAddr, Router), String> {
+    bind_with_config(listen, clock, db, verifier, rating::RankedConfig::default()).await
+}
+
+/// 同 [`bind_with_steam`]，并注入启动时解析的天梯参数。
+///
+/// # Errors
+///
+/// 同 [`bind_with_steam`]。
+pub async fn bind_with_config(
+    listen: &str,
+    clock: Arc<dyn Clock>,
+    db: Option<Arc<db::Db>>,
+    verifier: steam::SteamVerifier,
+    ranked: rating::RankedConfig,
+) -> Result<(SocketAddr, Router), String> {
     let state = match db {
         Some(db) => AppState::with_database(clock, db).await?,
         None => AppState::new(clock)?,
     };
-    let (addr, router) = bind_router(listen, state.with_steam(verifier)).await?;
+    let state = state.with_ranked_config(ranked).with_steam(verifier);
+    let (addr, router) = bind_router(listen, state).await?;
     Ok((addr, router))
 }
 
@@ -323,7 +360,10 @@ async fn bind_router(listen: &str, state: AppState) -> Result<(SocketAddr, Route
         .local_addr()
         .map_err(|err| format!("读取监听地址失败: {err}"))?;
     drop(listener);
-    Ok((addr, net::router(state)))
+    let router = net::router(state.clone());
+    // 宗师榜每日快照：启动即补齐当天，之后按分钟检查 UTC 日切。
+    net::spawn_master_snapshot_driver(state);
+    Ok((addr, router))
 }
 
 /// 绑定监听地址并构造路由，便于测试拿到系统分配的真实端口。

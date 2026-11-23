@@ -6,6 +6,7 @@ extends HBoxContainer
 signal friends_pressed
 signal gallery_pressed
 signal account_pressed
+signal leaderboard_pressed
 
 var friends_button: Button
 var account_button: Button
@@ -30,6 +31,11 @@ func _init() -> void:
     var spacer := Control.new()
     spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     add_child(spacer)
+    var leaderboard := UIControls.button(tr("ui.leaderboard.entry"))
+    leaderboard.name = "LeaderboardButton"
+    leaderboard.custom_minimum_size = Vector2(180, leaderboard.custom_minimum_size.y)
+    leaderboard.pressed.connect(func(): leaderboard_pressed.emit())
+    add_child(leaderboard)
     var gallery := UIControls.button(tr("ui.gallery.entry"))
     gallery.name = "GalleryButton"
     gallery.custom_minimum_size = Vector2(200, gallery.custom_minimum_size.y)

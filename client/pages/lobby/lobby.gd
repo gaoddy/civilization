@@ -15,6 +15,7 @@ func _ready() -> void:
     GameStore.room_changed.connect(_on_room_changed)
     GameStore.error_received.connect(_on_error)
     GameStore.auth_changed.connect(_on_auth_changed)
+    GameStore.account_changed.connect(_render_rank)
     GameStore.social_changed.connect(_render_friends_entry)
     GameStore.match_found.connect(_on_match_found)
     GameStore.game_started.connect(_on_game_started)
@@ -23,6 +24,7 @@ func _ready() -> void:
         _top.status.text = tr("ui.lobby.not_connected")
     _show_room_closed_reason()
     _render_friends_entry()
+    _render_rank()
     _maybe_local_join()
 
 
@@ -62,6 +64,7 @@ func _build() -> void:
 
     _top = LobbyTopBar.new()
     _top.set_identity(GameStore.display_name, GameStore.player_code)
+    _top.rank_pressed.connect(_on_rank_pressed)
     column.add_child(_top)
 
     var center := CenterContainer.new()
@@ -81,6 +84,7 @@ func _build() -> void:
     _bottom.friends_pressed.connect(_on_friends_pressed)
     _bottom.gallery_pressed.connect(_on_gallery_pressed)
     _bottom.account_pressed.connect(_on_account_pressed)
+    _bottom.leaderboard_pressed.connect(_on_leaderboard_pressed)
     column.add_child(_bottom)
 
     _friends = FriendsPanel.new()
@@ -147,6 +151,22 @@ func _on_gallery_pressed() -> void:
 
 func _on_account_pressed() -> void:
     UINavigation.navigate(self, UINavigation.PAGE_ACCOUNT)
+
+
+func _on_leaderboard_pressed() -> void:
+    UINavigation.navigate(self, UINavigation.PAGE_LEADERBOARD)
+
+
+func _on_rank_pressed() -> void:
+    if GameStore.player_id == "":
+        return
+    GameStore.open_profile(GameStore.player_id, UINavigation.PAGE_LOBBY)
+    UINavigation.navigate(self, UINavigation.PAGE_PROFILE)
+
+
+## 段位与积分随账号视图刷新；未收到账号视图时隐藏入口。
+func _render_rank() -> void:
+    _top.set_ranked(GameStore.my_tier(), GameStore.my_rating())
 
 
 func _on_friends_pressed() -> void:

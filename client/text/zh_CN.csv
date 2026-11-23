@@ -1644,6 +1644,12 @@ ui.guide.step3.body,准备好后结束招募，倒计时结束会自动进入战
 ui.guide.step3.title,结束招募
 ui.guide.step4.body,战斗自动进行，结果可在战报中查看。
 ui.guide.step4.title,战斗
+ui.leaderboard.back,返回大厅
+ui.leaderboard.empty,暂无排行数据
+ui.leaderboard.entry,排行榜
+ui.leaderboard.loading,正在加载排行榜
+ui.leaderboard.row,第 %d 名  %s · %s · %d 分
+ui.leaderboard.title,全服排行榜
 ui.lobby.accept,同意
 ui.lobby.accept_invite,接受
 ui.lobby.accepting_invite,正在接受邀请…
@@ -1676,6 +1682,7 @@ ui.lobby.no_recent,还没有最近对局
 ui.lobby.no_requests,没有待处理的好友申请
 ui.lobby.not_connected,未连接服务器
 ui.lobby.outgoing_hint,已发送 %d 条好友申请
+ui.lobby.rank,段位 %s · %d 分
 ui.lobby.recent_row,%s（%s）
 ui.lobby.recent_section,最近队友
 ui.lobby.reconnected,连接已恢复
@@ -1707,6 +1714,20 @@ ui.login.steam.unavailable,Steam 暂不可用，请稍后重试
 ui.login.submit,登录
 ui.login.subtitle,开发环境登录，验证码固定 123456
 ui.login.title,文明：七时代演进
+ui.profile.back,返回
+ui.profile.empty_recent,暂无最近战绩
+ui.profile.field_row,%s：%s
+ui.profile.hidden,—
+ui.profile.highest_tier,历史最高段位
+ui.profile.loading,正在加载个人主页
+ui.profile.rating,当前积分
+ui.profile.recent_hidden,最近战绩仅本人与好友可见
+ui.profile.recent_row,第 %d 名  %s 分 → %d 分
+ui.profile.recent_title,最近 10 局
+ui.profile.tier,当前段位
+ui.profile.title,个人主页
+ui.profile.top4,前 4 名比例
+ui.profile.top4_value,%d%%
 ui.queue.cancel,取消匹配
 ui.queue.players,已凑齐 %d/8
 ui.queue.title,正在匹配
@@ -1717,10 +1738,14 @@ ui.result.board_empty,无随从
 ui.result.board_item,%s  %d/%d
 ui.result.board_title,最终阵容
 ui.result.confirm,确定
+ui.result.demoted,降级
 ui.result.my_place,你的名次：第 %d 名
 ui.result.my_place_unrecorded,你的名次：未记录
 ui.result.place_row,第 %d 名   %s
+ui.result.promoted,晋级
 ui.result.ranking_row,第 %d 名  %s · 存活 %d 回合 · 伤害 %d
+ui.result.rating_delta,积分 %s 分 · 当前 %d 分
+ui.result.rating_title,天梯积分
 ui.result.seed,对局种子：%s
 ui.result.stat.buys,购买
 ui.result.stat.combat,战斗
@@ -1741,6 +1766,7 @@ ui.result.stat.survived_turns,存活回合
 ui.result.stat.triples,三连
 ui.result.stat_row,%s：%s
 ui.result.stats_title,本局数据
+ui.result.tier_change,段位 %s → %s
 ui.result.title,对局结束
 ui.room.assigning_hero,正在分配英雄…
 ui.room.candidate_hint,从你的 %d 张候选里选一张，确认后不可更改。
@@ -1791,3 +1817,11 @@ ui.skill.trigger.on_use,使用效果牌时
 ui.skill.trigger.passive,常驻
 ui.skill.trigger.unknown,未知
 ui.skill.uses,每回合 %d 次
+ui.tier.apprentice,学徒
+ui.tier.bronze,青铜
+ui.tier.diamond,钻石
+ui.tier.gold,黄金
+ui.tier.grandmaster,宗师
+ui.tier.master,大师
+ui.tier.platinum,铂金
+ui.tier.silver,白银

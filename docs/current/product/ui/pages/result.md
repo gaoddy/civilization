@@ -27,6 +27,7 @@
                │  └─ ResultContent（间距 10）
                │     ├─ 标题「对局结束」
                │     ├─ 本人名次「你的名次：第 N 名」/「你的名次：未记录」
+               │     ├─ RatingBlock（仅天梯局）：RatingDelta / TierChange / TierTrend
                │     ├─ 分隔线
                │     ├─ RankingList：按 `place` 升序的 8 人名次行，本人行高亮
                │     ├─ 分隔线
@@ -39,6 +40,7 @@
 
 - 内容再长也不会把返回入口挤出屏幕；返回按钮始终固定在面板底部。
 - `RankingList` 的每一行文案为「第 N 名 · 玩家名 · 存活 N 回合 · 伤害 N」，缺失字段按 0 展示。
+- `RatingBlock` 只在天梯局出现：`RatingDelta` 显示实际入账变化与结算后积分，`TierChange` 显示段位前后，`TierTrend` 在段位上升/下降时显示「晋级」/「降级」。房间局四项为 `null`，整块不显示。
 - `StatsSection` 共 12 个 `StatRow_*`：存活回合、最终生命、最终时代、剩余金币、购买、出售、刷新、三连、造成伤害、承受伤害、战斗（胜/平/负三格并排）、英雄技能使用。
 - `BoardList` 逐项显示最终阵容「卡名（金色加 ★） 攻击/生命」；为空时只显示一行「无随从」占位。
 
@@ -53,6 +55,9 @@
 | 名次列表缺失 | `ranking` 为空 | `RankingList` 为空，页面其余区域照常展示 | 点「确定」回大厅 |
 | 房间已销毁 | 收到 `GameOver` | 房间在对局结束时已销毁，旧房间码失效；结算页不显示房间状态提示 | 点「确定」回大厅 |
 | 离线 | `Net` 未连接 | 本页数据来自 `GameStore`，展示不受影响；返回大厅时重新连接并认证 | 重连后进入大厅 |
+| 房间局 | `ratingDelta` 为 `null` | 不显示 `RatingBlock`，其余内容照常 | 点「确定」回大厅 |
+| 天梯局段位不变 | `tierBefore == tierAfter` | 只显示积分变化与段位前后，不显示晋级/降级提示 | 点「确定」回大厅 |
+| 天梯局跨段位 | `tierBefore != tierAfter` | 显示「晋级」或「降级」提示 | 点「确定」回大厅 |
 | 无权限 | — | 页面没有按角色区分的操作，也不提供数据修改 | — |
 | 达到上限 | — | 名次最多 8 行；最终阵容最多 7 项（服务端限制） | — |
 
@@ -65,6 +70,8 @@
 | 本人统计 | `GameStore.self_stats`：`place`、`survivedTurns`、`finalHp`、`finalEra`、`remainingGold`、`damageDealt`、`damageTaken`、`buys`、`sells`、`rerolls`、`triples`、`combatWins`、`combatDraws`、`combatLosses`、`heroPowerUses`、`board` |
 | 最终阵容 | `self_stats.board[]`：`cardId`、`golden`、`attack`、`health`，按服务端站位顺序 |
 | 对局种子 | `GameStore.game_seed` |
+| 天梯积分变化 | `GameStore.rating_delta`、`rating_after`，来自 `GameOver.ratingDelta`、`ratingAfter` |
+| 段位前后 | `GameStore.tier_before`、`tier_after`，来自 `GameOver.tierBefore`、`tierAfter`；段位顺序只用于判断晋级/降级方向 |
 | 卡名与时代名 | `CardDB.display_name`、`CardDB.era_name` |
 
 - 所有数值与名次直接取服务端下发值；客户端不做四舍五入、二次计算或重新排序（只按 `place` 升序展示）。缺失字段统一经 `_int_of` 回退为 0，`finalEra` 为 0 时 `CardDB.era_name` 原样返回 `0`。

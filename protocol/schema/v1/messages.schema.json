@@ -67,6 +67,20 @@
       "required": [],
       "properties": {}
     },
+    "RequestLeaderboard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "RequestProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "playerId": { "type": "string", "description": "要查看的玩家；缺省为本人" }
+      }
+    },
     "KickMember": {
       "type": "object",
       "additionalProperties": false,
@@ -381,8 +395,25 @@
     "GameOver": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["ranking", "seed"],
+      "required": ["ranking", "seed", "ratingDelta", "ratingAfter", "tierBefore", "tierAfter"],
       "properties": {
+        "ratingDelta": {
+          "type": ["integer", "null"],
+          "description": "本局实际入账积分变化；房间局为 null"
+        },
+        "ratingAfter": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "结算后个人总分；房间局为 null"
+        },
+        "tierBefore": {
+          "type": ["string", "null"],
+          "description": "结算前段位 id；房间局为 null"
+        },
+        "tierAfter": {
+          "type": ["string", "null"],
+          "description": "结算后段位 id；房间局为 null"
+        },
         "ranking": {
           "type": "array",
           "items": {
@@ -605,14 +636,20 @@
     "AccountView": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["playerId", "playerCode", "displayName", "steamBound", "phoneBound"],
+      "required": [
+        "playerId", "playerCode", "displayName", "steamBound", "phoneBound",
+        "rating", "tier", "highestTier"
+      ],
       "properties": {
         "playerId": { "type": "string", "description": "内部不透明标识，不向玩家展示" },
         "playerCode": { "type": "string", "description": "6 位玩家编号" },
         "displayName": { "type": "string" },
         "steamBound": { "type": "boolean", "description": "账号是否绑定 Steam 身份" },
         "phoneBound": { "type": "boolean", "description": "账号是否绑定手机号" },
-        "maskedPhone": { "type": ["string", "null"], "description": "前 3 位与后 4 位保留，其余用 *；未绑定为 null" }
+        "maskedPhone": { "type": ["string", "null"], "description": "前 3 位与后 4 位保留，其余用 *；未绑定为 null" },
+        "rating": { "type": "integer", "minimum": 0, "description": "当前天梯积分；未结算过为 1000" },
+        "tier": { "type": "string", "description": "当前段位 id" },
+        "highestTier": { "type": "string", "description": "历史最高段位 id，按最高积分与当前配置计算" }
       }
     },
     "PhoneCodeSent": {
@@ -659,6 +696,68 @@
       "properties": {
         "achievementId": { "type": "string" },
         "steamApiName": { "type": "string" }
+      }
+    },
+    "Leaderboard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries"],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rank", "playerId", "displayName", "tier", "rating"],
+            "properties": {
+              "rank": { "type": "integer", "minimum": 1, "maximum": 100 },
+              "playerId": { "type": "string", "description": "内部不透明标识，用于跳转个人主页" },
+              "displayName": { "type": "string" },
+              "tier": { "type": "string", "description": "段位 id" },
+              "rating": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "PlayerProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "playerId", "displayName", "rating", "tier", "highestTier",
+        "recentVisible", "top4Ratio", "recent"
+      ],
+      "properties": {
+        "playerId": { "type": "string", "description": "内部不透明标识，不向玩家展示" },
+        "displayName": { "type": "string" },
+        "rating": { "type": "integer", "minimum": 0 },
+        "tier": { "type": "string", "description": "当前段位 id" },
+        "highestTier": { "type": "string", "description": "历史最高段位 id" },
+        "recentVisible": {
+          "type": "boolean",
+          "description": "最近 10 局是否对请求者可见；仅本人与好友为 true"
+        },
+        "top4Ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "最近 10 局中名次前 4 的比例；不可见或无记录时为 0"
+        },
+        "recent": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["placement", "ratingDelta", "ratingAfter", "finishedAt"],
+            "properties": {
+              "placement": { "type": "integer", "minimum": 1, "maximum": 8 },
+              "ratingDelta": { "type": "integer", "description": "实际入账积分变化" },
+              "ratingAfter": { "type": "integer", "minimum": 0 },
+              "finishedAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
       }
     }
   }

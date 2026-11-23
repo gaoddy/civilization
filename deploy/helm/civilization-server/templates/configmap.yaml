@@ -7,3 +7,4 @@ metadata:
     {{- include "civilization-server.labels" . | nindent 4 }}
 data:
   listen-addr: {{ .Values.config.listenAddr | quote }}
+  ranked-config: {{ .Values.config.rankedConfig | toJson | quote }}

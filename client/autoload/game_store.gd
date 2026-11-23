@@ -28,6 +28,10 @@ signal steam_invite_rejected(reason: String)
 signal queue_changed
 ## 自动匹配成局；参数为分配的座位号，房间 id 已写入 `room_id`。
 signal match_found(seat: int)
+## 全服排行榜已更新；排行榜页据此重排。
+signal leaderboard_changed
+## 个人主页已更新；个人主页据此重排。
+signal profile_changed
 
 var player_id := ""
 var player_code := ""
@@ -47,6 +51,19 @@ var unlocked_achievements: Dictionary = {}
 var room_id := ""
 var room_code := ""
 var room_players: Array = []
+
+## 本次结算的实际积分变化与段位前后；房间局四项为 null/空串。
+var rating_delta = null
+var rating_after = null
+var tier_before := ""
+var tier_after := ""
+## 最近一次查询的全服排行榜条目。
+var leaderboard: Array = []
+## 最近一次查询的个人主页；未查询时为空字典。
+var profile: Dictionary = {}
+## 个人主页目标玩家与返回页面，由入口页写入。
+var profile_target := ""
+var profile_return_page := ""
 
 ## 最近一条 `QueueState`；未排队时为空字典。
 var queue_state: Dictionary = {}
@@ -176,8 +193,19 @@ func handle(type: String, payload: Dictionary) -> void:
             ranking = payload.get("ranking", [])
             game_seed = str(payload.get("seed", ""))
             self_stats = payload.get("selfStats", {})
+            # 房间局四项为 null；客户端只搬运，不在本地算分。
+            rating_delta = payload.get("ratingDelta")
+            rating_after = payload.get("ratingAfter")
+            tier_before = str(payload.get("tierBefore", "") if payload.get("tierBefore") != null else "")
+            tier_after = str(payload.get("tierAfter", "") if payload.get("tierAfter") != null else "")
             phase = Protocol.PHASE_GAME_OVER
             game_over.emit()
+        Protocol.MSG_LEADERBOARD:
+            leaderboard = payload.get("entries", [])
+            leaderboard_changed.emit()
+        Protocol.MSG_PLAYER_PROFILE:
+            profile = payload
+            profile_changed.emit()
         Protocol.MSG_ROOM_CLOSED:
             # `reset_room` 会清空关闭原因，先暂存再在清空后写回，页面才能区分提示文案。
             var reason := str(payload.get("reason", ""))
@@ -229,6 +257,10 @@ func reset_room() -> void:
     ranking = []
     game_seed = ""
     self_stats = {}
+    rating_delta = null
+    rating_after = null
+    tier_before = ""
+    tier_after = ""
     room_closed_reason = ""
     last_error = {}
     last_combat = {}
@@ -249,6 +281,10 @@ func clear_game_view() -> void:
     view = {}
     ranking = []
     self_stats = {}
+    rating_delta = null
+    rating_after = null
+    tier_before = ""
+    tier_after = ""
     last_combat = {}
     last_combat_turn = -1
     timer_seconds = -1
@@ -302,6 +338,10 @@ func reset_session() -> void:
     token = ""
     display_name = ""
     account = {}
+    leaderboard = []
+    profile = {}
+    profile_target = ""
+    profile_return_page = ""
     phone_code_expires_at = ""
     unlocked_achievements = {}
     pending_steam_invite = ""
@@ -349,6 +389,36 @@ func _flush_pending_steam_invite() -> void:
 
 func request_account() -> void:
     Net.send(Protocol.MSG_REQUEST_ACCOUNT, {})
+
+
+## 请求全服排行榜；结果经 `MSG_LEADERBOARD` 写入 `leaderboard`。
+func request_leaderboard() -> void:
+    Net.send(Protocol.MSG_REQUEST_LEADERBOARD, {})
+
+
+## 当前账号的段位 id（服务端下发；未登录或缺失时为空串）。
+func my_tier() -> String:
+    return str(account.get("tier", ""))
+
+
+## 当前账号积分；服务端未下发时为 0。
+func my_rating() -> int:
+    var value = account.get("rating", 0)
+    return 0 if value == null else int(value)
+
+
+## 打开个人主页：记录目标玩家与返回页面，由页面负责导航。
+func open_profile(target_player_id: String, return_page: String) -> void:
+    profile_target = target_player_id
+    profile_return_page = return_page
+
+
+## 请求个人主页；`target_player_id` 为空时请求本人。
+func request_profile(target_player_id := "") -> void:
+    var payload := {}
+    if target_player_id != "":
+        payload["playerId"] = target_player_id
+    Net.send(Protocol.MSG_REQUEST_PROFILE, payload)
 
 
 func request_phone_code(phone: String) -> void:

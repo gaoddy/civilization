@@ -10,6 +10,9 @@
     "displayName": "Ada",
     "steamBound": true,
     "phoneBound": true,
-    "maskedPhone": "138****0000"
+    "maskedPhone": "138****0000",
+    "rating": 1122,
+    "tier": "silver",
+    "highestTier": "gold"
   }
 }

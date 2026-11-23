@@ -20,7 +20,8 @@ pub mod client {
         AuthRequest, BindPhone, CombatPlayed, CreateRoom, CreateRoomInvite, DissolveRoom,
         FriendRemove, FriendRequest, FriendRespond, IntentMessage, InviteToRoom, JoinQueue,
         JoinRoom, KickMember, LeaveQueue, LeaveRoom, Ready, Reconnect, RedeemRoomInvite,
-        RequestAccount, RequestPhoneCode, RequestSnapshot, RespondInvite, SelectHeroCard,
+        RequestAccount, RequestLeaderboard, RequestPhoneCode, RequestProfile, RequestSnapshot,
+        RespondInvite, SelectHeroCard,
     };
 }
 
@@ -30,8 +31,9 @@ pub mod server {
         AccountView, AchievementState, AchievementUnlocked, AuthResult, CombatResult, ErrorMessage,
         FriendInvite, FriendInviteResult, FriendRequestItem, FriendUpdate, FriendUpdateFriendsItem,
         FriendUpdateFriendsItemStatus, FriendUpdateOutgoingItem, FriendUpdateRecentItem,
-        FriendUpdateRecentItemRelation, GameOver, GameStarted, InviteAccepted, MatchFound,
-        PhaseChanged, PhoneCodeSent, QueueState, RoomClosed, RoomInviteCode, RoomUpdate, SelfStats,
+        FriendUpdateRecentItemRelation, GameOver, GameStarted, InviteAccepted, Leaderboard,
+        LeaderboardEntriesItem, MatchFound, PhaseChanged, PhoneCodeSent, PlayerProfile,
+        PlayerProfileRecentItem, QueueState, RoomClosed, RoomInviteCode, RoomUpdate, SelfStats,
         Snapshot, StateUpdate, TimerWarning,
     };
 }
@@ -92,6 +94,8 @@ pub enum ClientMessage {
     BindPhone(BindPhone),
     CreateRoomInvite(CreateRoomInvite),
     RedeemRoomInvite(RedeemRoomInvite),
+    RequestLeaderboard(RequestLeaderboard),
+    RequestProfile(RequestProfile),
 }
 
 /// 下行信封判别结果。只做 `type` → payload 的分派，不含任何业务规则。
@@ -119,10 +123,12 @@ pub enum ServerMessage {
     RoomInviteCode(RoomInviteCode),
     AchievementState(AchievementState),
     AchievementUnlocked(AchievementUnlocked),
+    Leaderboard(Leaderboard),
+    PlayerProfile(PlayerProfile),
 }
 
 /// 已知 s2c 消息类型名，与 `messages.json#/directions/s2c` 一致。
-const SERVER_MESSAGE_TYPES: [&str; 22] = [
+const SERVER_MESSAGE_TYPES: [&str; 24] = [
     "AuthResult",
     "RoomUpdate",
     "RoomClosed",
@@ -145,6 +151,8 @@ const SERVER_MESSAGE_TYPES: [&str; 22] = [
     "RoomInviteCode",
     "AchievementState",
     "AchievementUnlocked",
+    "Leaderboard",
+    "PlayerProfile",
 ];
 
 /// 从 payload 值反序列化；失败统一为 `BAD_PAYLOAD`。
@@ -182,6 +190,8 @@ impl ClientEnvelope {
             "BindPhone" => parse_payload(payload()).map(ClientMessage::BindPhone),
             "CreateRoomInvite" => parse_payload(payload()).map(ClientMessage::CreateRoomInvite),
             "RedeemRoomInvite" => parse_payload(payload()).map(ClientMessage::RedeemRoomInvite),
+            "RequestLeaderboard" => parse_payload(payload()).map(ClientMessage::RequestLeaderboard),
+            "RequestProfile" => parse_payload(payload()).map(ClientMessage::RequestProfile),
             _ => Err(ProtocolError("UNKNOWN_TYPE")),
         }
     }
@@ -264,6 +274,8 @@ impl ServerEnvelope {
             "AchievementUnlocked" => {
                 parse_payload(payload()).map(ServerMessage::AchievementUnlocked)
             }
+            "Leaderboard" => parse_payload(payload()).map(ServerMessage::Leaderboard),
+            "PlayerProfile" => parse_payload(payload()).map(ServerMessage::PlayerProfile),
             _ => Err(ProtocolError("UNKNOWN_TYPE")),
         }
     }

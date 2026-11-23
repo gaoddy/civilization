@@ -11,6 +11,7 @@ pub mod hash;
 pub mod intent;
 pub mod keyword;
 pub mod playstyles;
+pub mod rating;
 pub mod recruit;
 pub mod rng;
 pub mod settle;

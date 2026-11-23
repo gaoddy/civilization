@@ -15,9 +15,9 @@ const PAGES := [
     },
     {
         "path": "res://pages/lobby/lobby.tscn",
-        "children": 3,
-        "direct_names": ["InvitePopup", "FriendsPanel"],
-        "deep_names": ["GalleryButton", "FriendsButton"],
+        "children": 4,
+        "direct_names": ["InvitePopup", "FriendsPanel", "QueuePanel"],
+        "deep_names": ["GalleryButton", "FriendsButton", "LeaderboardButton"],
     },
     {
         "path": "res://pages/room/room.tscn",
@@ -50,6 +50,18 @@ const PAGES := [
         "children": 1,
         "direct_names": ["CardGallery"],
         "deep_names": ["GalleryHeader", "GalleryClose"],
+    },
+    {
+        "path": "res://pages/leaderboard/leaderboard.tscn",
+        "children": 1,
+        "direct_names": [],
+        "deep_names": ["LeaderboardScroll", "LeaderboardList", "BackButton"],
+    },
+    {
+        "path": "res://pages/profile/profile.tscn",
+        "children": 1,
+        "direct_names": [],
+        "deep_names": ["ProfileScroll", "ProfileContent", "BackButton"],
     },
 ]
 

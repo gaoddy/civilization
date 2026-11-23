@@ -377,6 +377,25 @@ impl GameTask {
         self.ranked
     }
 
+    /// 终局名次：按第 1 名起的顺序返回 `(playerId, 名次)`。
+    ///
+    /// 仅在 `GameOver` 阶段有值；未结束时返回空数组。名次与 `GameOver.ranking`
+    /// 使用同一份 `state.ranking`。
+    pub fn placements(&self) -> Vec<(String, u8)> {
+        if self.state.phase != Phase::GameOver {
+            return Vec::new();
+        }
+        self.state
+            .ranking
+            .iter()
+            .enumerate()
+            .filter_map(|(index, seat)| {
+                let place = u8::try_from(index + 1).ok()?;
+                Some((self.seats[usize::from(*seat)].player_id.clone(), place))
+            })
+            .collect()
+    }
+
     /// 玩家所在座位；不在房间里返回 `None`。
     pub fn seat_of(&self, player_id: &str) -> Option<Seat> {
         self.seat_of.get(player_id).copied()
@@ -1253,6 +1272,11 @@ impl GameTask {
             ranking,
             seed: format!("{:016x}", self.seed),
             self_stats: Some(self.self_stats(seat)),
+            // 房间局不计分；匹配局由房间投递层在发送前按结算结果填入。
+            rating_delta: None,
+            rating_after: None,
+            tier_before: None,
+            tier_after: None,
         }
     }
 

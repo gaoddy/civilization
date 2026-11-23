@@ -1,0 +1,24 @@
+{
+  "v": 1,
+  "id": "m_playerprofile",
+  "type": "PlayerProfile",
+  "ts": "2026-11-15T10:00:00Z",
+  "seq": 111,
+  "payload": {
+    "playerId": "p_03",
+    "displayName": "Ada",
+    "rating": 1122,
+    "tier": "silver",
+    "highestTier": "gold",
+    "recentVisible": true,
+    "top4Ratio": 0.5,
+    "recent": [
+      {
+        "placement": 2,
+        "ratingDelta": 41,
+        "ratingAfter": 1122,
+        "finishedAt": "2026-11-15T09:30:00Z"
+      }
+    ]
+  }
+}

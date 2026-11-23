@@ -11,6 +11,8 @@ const PAGE_GAME := "res://pages/game/game.tscn"
 const PAGE_RESULT := "res://pages/result/result.tscn"
 const PAGE_GALLERY := "res://pages/gallery/gallery.tscn"
 const PAGE_ACCOUNT := "res://pages/account/account.tscn"
+const PAGE_LEADERBOARD := "res://pages/leaderboard/leaderboard.tscn"
+const PAGE_PROFILE := "res://pages/profile/profile.tscn"
 
 const ROUTE_LOGIN := "login"
 const ROUTE_LOBBY := "lobby"

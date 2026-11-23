@@ -128,11 +128,22 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 
+### RequestLeaderboard
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+
 ### RequestPhoneCode
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `phone` | string | 是 | 待绑定的手机号 |
+
+### RequestProfile
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `playerId` | string | 否 | 要查看的玩家；缺省为本人 |
 
 ### RequestSnapshot
 
@@ -164,6 +175,9 @@
 | `steamBound` | boolean | 是 | 账号是否绑定 Steam 身份 |
 | `phoneBound` | boolean | 是 | 账号是否绑定手机号 |
 | `maskedPhone` | string | null | 否 | 前 3 位与后 4 位保留，其余用 *；未绑定为 null |
+| `rating` | integer | 是 | 当前天梯积分；未结算过为 1000 |
+| `tier` | string | 是 | 当前段位 id |
+| `highestTier` | string | 是 | 历史最高段位 id，按最高积分与当前配置计算 |
 
 ### AchievementState
 
@@ -271,6 +285,10 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
+| `ratingDelta` | integer | null | 是 | 本局实际入账积分变化；房间局为 null |
+| `ratingAfter` | integer | null | 是 | 结算后个人总分；房间局为 null |
+| `tierBefore` | string | null | 是 | 结算前段位 id；房间局为 null |
+| `tierAfter` | string | null | 是 | 结算后段位 id；房间局为 null |
 | `ranking` | array<object> | 是 |  |
 | `ranking[].playerId` | string | 是 |  |
 | `ranking[].place` | integer | 是 |  |
@@ -292,6 +310,17 @@
 | `inviteId` | string | 是 |  |
 | `roomCode` | string | 是 |  |
 
+### Leaderboard
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `entries` | array<object> | 是 |  |
+| `entries[].rank` | integer | 是 |  |
+| `entries[].playerId` | string | 是 | 内部不透明标识，用于跳转个人主页 |
+| `entries[].displayName` | string | 是 |  |
+| `entries[].tier` | string | 是 | 段位 id |
+| `entries[].rating` | integer | 是 |  |
+
 ### MatchFound
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -312,6 +341,23 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `expiresAt` | string | 是 | 验证码失效时刻 |
+
+### PlayerProfile
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `playerId` | string | 是 | 内部不透明标识，不向玩家展示 |
+| `displayName` | string | 是 |  |
+| `rating` | integer | 是 |  |
+| `tier` | string | 是 | 当前段位 id |
+| `highestTier` | string | 是 | 历史最高段位 id |
+| `recentVisible` | boolean | 是 | 最近 10 局是否对请求者可见；仅本人与好友为 true |
+| `top4Ratio` | number | 是 | 最近 10 局中名次前 4 的比例；不可见或无记录时为 0 |
+| `recent` | array<object> | 是 |  |
+| `recent[].placement` | integer | 是 |  |
+| `recent[].ratingDelta` | integer | 是 | 实际入账积分变化 |
+| `recent[].ratingAfter` | integer | 是 |  |
+| `recent[].finishedAt` | string | 是 |  |
 
 ### QueueState
 

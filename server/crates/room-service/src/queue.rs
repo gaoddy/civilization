@@ -10,11 +10,13 @@
 //!   积分差从最小到大，再按入队时间与 `player_id` 排序，取前 8 人。
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::sync::Arc;
 
 use crate::auth::Session;
+use crate::rating::RankedConfig;
 
-/// 新账号初始积分；积分存储接入持久化前（T02）所有玩家都按此积分匹配。
-pub const DEFAULT_RATING: i32 = 1000;
+/// 新账号初始积分；匹配积分由调用方按账号实际积分传入。
+pub use crate::rating::DEFAULT_RATING;
 
 /// 初始匹配窗口（±分）。
 pub const INITIAL_RATING_WINDOW: i32 = 150;
@@ -113,8 +115,10 @@ impl std::fmt::Display for QueueError {
 impl std::error::Error for QueueError {}
 
 /// 进程内匹配队列。
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct MatchQueue {
+    /// 窗口与最近对手排除参数；由服务配置注入。
+    config: Arc<RankedConfig>,
     entries: BTreeMap<String, QueueEntry>,
     /// `player_id → 最近若干局的对手集合`，队首为最近一局。
     recent: BTreeMap<String, VecDeque<BTreeSet<String>>>,
@@ -124,10 +128,27 @@ pub struct MatchQueue {
     driver_running: bool,
 }
 
+impl Default for MatchQueue {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MatchQueue {
-    /// 空队列。
+    /// 空队列，使用默认天梯配置。
     pub fn new() -> Self {
-        Self::default()
+        Self::with_config(Arc::new(RankedConfig::default()))
+    }
+
+    /// 空队列，使用注入的匹配窗口与最近对手参数。
+    pub fn with_config(config: Arc<RankedConfig>) -> Self {
+        Self {
+            config,
+            entries: BTreeMap::new(),
+            recent: BTreeMap::new(),
+            reported_window: BTreeMap::new(),
+            driver_running: false,
+        }
     }
 
     /// 当前排队人数。
@@ -150,12 +171,7 @@ impl MatchQueue {
     /// # Errors
     ///
     /// 玩家已在队列里返回 [`QueueError::Already`]；房间态由调用方先判定。
-    pub fn join(
-        &mut self,
-        session: Session,
-        rating: i32,
-        now_ms: u64,
-    ) -> Result<(), QueueError> {
+    pub fn join(&mut self, session: Session, rating: i32, now_ms: u64) -> Result<(), QueueError> {
         let player_id = session.player_id.clone();
         if self.entries.contains_key(&player_id) {
             return Err(QueueError::Already);
@@ -165,8 +181,11 @@ impl MatchQueue {
             rating,
             joined_at_ms: now_ms,
         };
-        self.reported_window
-            .insert(player_id.clone(), rating_window(&entry, now_ms));
+        self.reported_window.insert(
+            player_id.clone(),
+            self.config
+                .window_for(now_ms.saturating_sub(entry.joined_at_ms)),
+        );
         self.entries.insert(player_id, entry);
         Ok(())
     }
@@ -182,7 +201,9 @@ impl MatchQueue {
         self.entries.get(player_id).map(|entry| QueueStateData {
             waiting_ms: now_ms.saturating_sub(entry.joined_at_ms),
             waiting_players: self.entries.len(),
-            rating_window: rating_window(entry, now_ms),
+            rating_window: self
+                .config
+                .window_for(now_ms.saturating_sub(entry.joined_at_ms)),
         })
     }
 
@@ -294,7 +315,9 @@ impl MatchQueue {
         let waiting_players = self.entries.len();
         let mut notices = Vec::new();
         for (player_id, entry) in &self.entries {
-            let window = rating_window(entry, now_ms);
+            let window = self
+                .config
+                .window_for(now_ms.saturating_sub(entry.joined_at_ms));
             let reported = self.reported_window.get(player_id).copied();
             if reported == Some(window) {
                 continue;
@@ -315,22 +338,25 @@ impl MatchQueue {
     /// 两名玩家是否可以在 `now_ms` 组成同一局。
     fn pair_eligible(&self, a: &QueueEntry, b: &QueueEntry, now_ms: u64) -> bool {
         let diff = (i64::from(a.rating) - i64::from(b.rating)).abs();
-        let window_ok = match (rating_window(a, now_ms), rating_window(b, now_ms)) {
+        let window_ok = match (
+            self.config
+                .window_for(now_ms.saturating_sub(a.joined_at_ms)),
+            self.config
+                .window_for(now_ms.saturating_sub(b.joined_at_ms)),
+        ) {
             (None, None) => true,
             // 一方不限积分时仍受另一方窗口约束：刚入队的玩家不应被长等待玩家拉进大分差局。
             (None, Some(window)) | (Some(window), None) => diff <= i64::from(window),
             // 两人各自可接受的窗口取更严格的一方。
             (Some(left), Some(right)) => diff <= i64::from(left.min(right)),
         };
-        window_ok
-            && !self.recently_played(a, b, now_ms)
-            && !self.recently_played(b, a, now_ms)
+        window_ok && !self.recently_played(a, b, now_ms) && !self.recently_played(b, a, now_ms)
     }
 
     /// 玩家是否在最近 [`RECENT_OPPONENT_MATCHES`] 局里与对手同局；
-    /// 本人等待满 [`RECENT_OPPONENT_RELAX_MS`] 后不再排除。
+    /// 本人等待满配置的放宽时长后不再排除。
     fn recently_played(&self, player: &QueueEntry, other: &QueueEntry, now_ms: u64) -> bool {
-        if now_ms.saturating_sub(player.joined_at_ms) >= RECENT_OPPONENT_RELAX_MS {
+        if now_ms.saturating_sub(player.joined_at_ms) >= self.config.recent_opponent_relax_ms {
             return false;
         }
         self.recent
@@ -340,20 +366,6 @@ impl MatchQueue {
                     .iter()
                     .any(|opponents| opponents.contains(&other.session.player_id))
             })
-    }
-}
-
-/// 当前积分窗口；`None` 表示不限。
-fn rating_window(entry: &QueueEntry, now_ms: u64) -> Option<i32> {
-    let waited = now_ms.saturating_sub(entry.joined_at_ms);
-    if waited < WINDOW_RELAX_STEP_MS {
-        Some(INITIAL_RATING_WINDOW)
-    } else if waited < WINDOW_RELAX_STEP_MS * 2 {
-        Some(RELAXED_RATING_WINDOW)
-    } else if waited < UNLIMITED_AFTER_MS {
-        Some(WIDE_RATING_WINDOW)
-    } else {
-        None
     }
 }
 
@@ -403,16 +415,14 @@ mod tests {
 
     #[test]
     fn window_relaxes_at_thirty_sixty_ninety_seconds() {
-        let sessions = sessions(1);
-        let queue = queue_with(&sessions, DEFAULT_RATING, 0);
-        let entry = &queue.entries[&sessions[0].player_id];
-        assert_eq!(rating_window(entry, 0), Some(150));
-        assert_eq!(rating_window(entry, 29_999), Some(150));
-        assert_eq!(rating_window(entry, 30_000), Some(300));
-        assert_eq!(rating_window(entry, 59_999), Some(300));
-        assert_eq!(rating_window(entry, 60_000), Some(500));
-        assert_eq!(rating_window(entry, 89_999), Some(500));
-        assert_eq!(rating_window(entry, 90_000), None);
+        let config = RankedConfig::default();
+        assert_eq!(config.window_for(0), Some(150));
+        assert_eq!(config.window_for(29_999), Some(150));
+        assert_eq!(config.window_for(30_000), Some(300));
+        assert_eq!(config.window_for(59_999), Some(300));
+        assert_eq!(config.window_for(60_000), Some(500));
+        assert_eq!(config.window_for(89_999), Some(500));
+        assert_eq!(config.window_for(90_000), None);
     }
 
     #[test]
@@ -453,12 +463,7 @@ mod tests {
         assert_eq!(formed.len(), SEATS_PER_MATCH);
         assert_eq!(queue.len(), 1);
         let formed_ids: BTreeSet<String> = ids(&formed).into_iter().collect();
-        let remaining = queue
-            .entries
-            .keys()
-            .next()
-            .expect("应剩 1 名玩家")
-            .clone();
+        let remaining = queue.entries.keys().next().expect("应剩 1 名玩家").clone();
         assert!(
             !formed_ids.contains(&remaining),
             "留在队列的必须是未成局的玩家"
@@ -500,10 +505,7 @@ mod tests {
             .expect("重新入队成功");
         assert!(queue.tick(0).formed.is_none(), "1000 分差不能立即成局");
         assert!(queue.tick(60_000).formed.is_none(), "±500 仍不够");
-        assert!(
-            queue.tick(90_000).formed.is_some(),
-            "90 秒后不限积分应成局"
-        );
+        assert!(queue.tick(90_000).formed.is_some(), "90 秒后不限积分应成局");
     }
 
     #[test]
@@ -539,16 +541,15 @@ mod tests {
 
         // 同一批人在 1 秒后重新排队：互相都是最近对手，不能立刻成局。
         for session in &sessions {
-            queue.join(session.clone(), DEFAULT_RATING, 1_000).expect("重新入队成功");
+            queue
+                .join(session.clone(), DEFAULT_RATING, 1_000)
+                .expect("重新入队成功");
         }
         assert!(
             queue.tick(1_000).formed.is_none(),
             "等待不足 60 秒时应排除最近对手"
         );
-        assert!(
-            queue.tick(60_999).formed.is_none(),
-            "60 秒前仍排除最近对手"
-        );
+        assert!(queue.tick(60_999).formed.is_none(), "60 秒前仍排除最近对手");
         assert!(
             queue.tick(61_000).formed.is_some(),
             "等待满 60 秒后放宽对手排除"
