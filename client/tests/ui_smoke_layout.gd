@@ -37,7 +37,7 @@ const PAGES := [
             "StatusModal",
             "CombatHeroClash",
         ],
-        "deep_names": ["CenterPanel", "GameTools", "PlayersPanel"],
+        "deep_names": ["CenterPanel", "GameTools", "PlayersPanel", "BodyRow"],
     },
     {
         "path": "res://pages/result/result.tscn",
@@ -99,6 +99,12 @@ func _check_early_safe_area() -> void:
     _check(first.get_parent() == area and second.get_parent() == area,
         "后加入的内容应在安全区内")
     _check(first.get_index() < second.get_index(), "安全区应保持加入顺序")
+    var body := page.find_child(UILayout.PAGE_BODY_NAME, true, false) as Control
+    _check(body != null and body.get_parent() != page,
+        "先调用 safe_area 应创建设计画布内的 PageBody")
+    if body != null:
+        _check(body.find_child(UILayout.PAGE_SURFACE_NAME, false, false) != null,
+            "PageBody 应包含 PageSurface")
     page.queue_free()
     await get_tree().process_frame
 
@@ -165,6 +171,33 @@ func _check_desktop() -> void:
                     "%s 的 ContentRoot 应为基准尺寸" % page_case["path"])
                 var ratio := root.size.x / root.size.y
                 _check(is_equal_approx(ratio, 16.0 / 9.0), "%s 的 ContentRoot 应保持基准比例" % page_case["path"])
+                var body := root.get_node_or_null(UILayout.PAGE_BODY_NAME) as Control
+                _check(body != null, "%s 的 ContentRoot 应包含 PageBody" % page_case["path"])
+                if body != null:
+                    _check(body.get_parent() == root,
+                        "%s 的 PageBody 应直接挂在 ContentRoot 下" % page_case["path"])
+                    _check(body.size.is_equal_approx(Vector2(ScreenProfile.base_canvas())),
+                        "%s 的 PageBody 应为设计画布尺寸，实际 %s" % [page_case["path"], str(body.size)])
+                    var surface := body.get_node_or_null(UILayout.PAGE_SURFACE_NAME) as Control
+                    _check(surface != null and surface.get_parent() == body,
+                        "%s 的 PageBody 应包含 PageSurface" % page_case["path"])
+                    if surface != null:
+                        _check(surface.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+                            "%s 的 PageSurface 应放行输入" % page_case["path"])
+                        _check(surface.size.is_equal_approx(Vector2(ScreenProfile.base_canvas())),
+                            "%s 的 PageSurface 应铺满页面容器" % page_case["path"])
+                        if str(page_case["path"]).ends_with("game.tscn"):
+                            _check(surface is TextureRect,
+                                "%s 的对局页 PageSurface 应为纹理图" % page_case["path"])
+                            if surface is TextureRect:
+                                var texture := (surface as TextureRect).texture
+                                _check(texture != null and str(texture.resource_path).ends_with("bg_game_desktop.png"),
+                                    "%s 的桌面档位应使用 bg_game_desktop.png" % page_case["path"])
+                        else:
+                            _check(surface is Panel,
+                                "%s 的非对局页 PageSurface 应为语义面板" % page_case["path"])
+                _check(area.get_parent() == body,
+                    "%s 的 SafeAreaMargin 应挂在 PageBody 下" % page_case["path"])
             _check(page.get_child_count() == 2, "%s 根节点应为背景 + ContentFrame" % page_case["path"])
             var background := page.get_node_or_null("PageBackground")
             _check(background != null and background.get_parent() == page,
@@ -185,6 +218,10 @@ func _check_desktop() -> void:
             _check(again == area, "%s 重复调用应返回同一个 SafeAreaMargin" % page_case["path"])
             _check(_count_safe_areas(page) == 1,
                 "%s 重复调用后应只有一个 SafeAreaMargin" % page_case["path"])
+            _check(_count_named(page, UILayout.PAGE_BODY_NAME) == 1,
+                "%s 重复调用后应只有一个 PageBody" % page_case["path"])
+            _check(_count_named(page, UILayout.PAGE_SURFACE_NAME) == 1,
+                "%s 重复调用后应只有一个 PageSurface" % page_case["path"])
         page.queue_free()
         await get_tree().process_frame
 
@@ -295,6 +332,11 @@ func _check_touch() -> void:
         "键盘收起后底部应回到安全区 10，实际 %s" % str(_margins(area)))
     _check(UILayout.safe_area(page) == area, "触控夹具重复调用应返回同一个 SafeAreaMargin")
     _check(_count_safe_areas(page) == 1, "触控夹具重复调用后应只有一个 SafeAreaMargin")
+    await get_tree().process_frame
+    var body := page.find_child(UILayout.PAGE_BODY_NAME, true, false) as Control
+    _check(body != null and body.size.is_equal_approx(Vector2(ScreenProfile.base_canvas())),
+        "安全区边距变化不应改变 PageBody 的设计画布尺寸，实际 %s"
+            % (str(body.size) if body != null else "无 PageBody"))
     page.queue_free()
     await get_tree().process_frame
 
@@ -322,6 +364,13 @@ func _check_compact() -> void:
         if page != null:
             _check(page.size.is_equal_approx(compact),
                 "%s 在 960×540 下应铺满宿主，实际 %s" % [page_case["path"], str(page.size)])
+            if str(page_case["path"]).ends_with("game.tscn"):
+                var surface := page.find_child(UILayout.PAGE_SURFACE_NAME, true, false) as Control
+                _check(surface is TextureRect, "手机档位对局页 PageSurface 应为纹理图")
+                if surface is TextureRect:
+                    var texture := (surface as TextureRect).texture
+                    _check(texture != null and str(texture.resource_path).ends_with("bg_game_phone.png"),
+                        "手机档位对局页应使用 bg_game_phone.png")
             for node_name in page_case["deep_names"]:
                 var node := page.find_child(str(node_name), true, false)
                 _check(node is Control, "%s 的 %s 应为 Control" % [page_case["path"], node_name])

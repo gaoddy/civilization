@@ -9,14 +9,18 @@ const SAFE_LAYER_NAME := "SafeLayer"
 const PAGE_BACKGROUND_NAME := "PageBackground"
 const CONTENT_FRAME_NAME := "ContentFrame"
 const CONTENT_ROOT_NAME := "ContentRoot"
+const PAGE_BODY_NAME := "PageBody"
+const PAGE_SURFACE_NAME := "PageSurface"
 const ADOPT_PENDING_META := "content_layout_adopt_pending"
 const ADOPT_CONNECTED_META := "content_layout_adopts"
 
 
-## 页面安全区包裹：在页面与内容之间插入 16:9 内容框与逻辑画布，再把内容移入安全区。
-## 页面可在建内容前调用；之后加入的直接子节点会按顺序补收进安全区。
-## 整屏背景留在内容框外并置底，安全区只约束内容；幂等：重复调用返回已存在的包裹层。
-static func safe_area(page: Control) -> SafeAreaMargin:
+## 页面安全区包裹：在页面与内容之间插入 16:9 内容框、逻辑画布、页面容器与安全区，
+## 再把内容移入安全区。页面可在建内容前调用；之后加入的直接子节点会按顺序补收进安全区。
+## 整屏软件背景留在内容框外并置底；页面容器 `PageBody` 覆盖设计画布并承载页面自己的背景，
+## `page_texture` 非空时作为容器背景，否则用统一语义面板。安全区只约束内容；
+## 幂等：重复调用返回已存在的包裹层，后传背景参数不再生效。
+static func safe_area(page: Control, page_texture := "") -> SafeAreaMargin:
     if page == null:
         return null
     var existing := _safe_area_of(page)
@@ -31,9 +35,16 @@ static func safe_area(page: Control) -> SafeAreaMargin:
     root.size = Vector2(ScreenProfile.base_canvas())
     root.mouse_filter = Control.MOUSE_FILTER_IGNORE
     frame.add_child(root)
+    # 页面容器：与设计画布同尺寸，页面自己的背景挂在它上面，安全区只约束内容。
+    var body := Control.new()
+    body.name = PAGE_BODY_NAME
+    body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    root.add_child(body)
+    body.add_child(UIControls.page_surface(page_texture))
     var area := SafeAreaMargin.new()
     area.name = SAFE_AREA_NAME
-    root.add_child(area)
+    body.add_child(area)
     # 包裹层创建时页面可能已有尺寸：只设锚点会把当前零尺寸保留成负偏移。
     area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _adopt_children(page, frame, area)
@@ -65,7 +76,7 @@ static func _adopt_children(page: Control, frame: Control, area: SafeAreaMargin)
     if not is_instance_valid(frame) or not is_instance_valid(area):
         return
     for child in page.get_children():
-        if child == frame:
+        if child == frame or str(child.name) == PAGE_BODY_NAME:
             continue
         if str(child.name) == PAGE_BACKGROUND_NAME:
             page.move_child(child, 0)

@@ -31,11 +31,11 @@ client/
   ui/
     theme.gd                 # 三层视觉令牌与 StyleBox 工厂（class_name UITheme）
     safe_area.gd             # 页面安全区包裹（class_name SafeAreaMargin），触控端叠加键盘边距；整屏背景留在包裹层外
-    layout.gd                # 安全区、内容框与共享图层（class_name UILayout）
+    layout.gd                # 安全区、内容框、设计画布页面容器与共享图层（class_name UILayout）
     navigation.gd            # 页面路径常量、统一导航与错误码去向（class_name UINavigation）
     wording.gd               # 枚举展示与错误文案取用（class_name UIWording）
     format.gd                # RFC3339 时间格式化（class_name UIFormat）
-    controls.gd              # 共用控件构造：label、button、panel、margin、胶囊、背景、区块标题与空态（class_name UIControls）
+    controls.gd              # 共用控件构造：label、button、panel、margin、胶囊、背景、页面容器背景、区块标题与空态（class_name UIControls）
     pill_button.gd           # 胶囊按钮：neutral/primary/danger 三变体（class_name PillButton）
     popup_layer.gd           # 弹出层外壳：遮罩、居中/锚点/四向贴边定位与点击遮罩关闭（class_name PopupLayer）
     art.gd                   # 图片取用与铺层（class_name UIArt）
@@ -157,7 +157,7 @@ client/
     taxonomy.json            # 分类树生成物：{nodes, playstyles}
 ```
 
-窗口启动时由 `WindowSizer` 按当前屏幕可用区域（`screen_get_usable_rect`，已排除菜单栏与 Dock）的 90% 设置尺寸，再用 `ScreenProfile.launch_window_size` 收成 16:9 并居中；无头模式下固定为设计基准尺寸，保证冒烟按 16:9 复现。`stretch/aspect` 为 `expand`：逻辑视口按设计基准（桌面/iPad 1280×720、iPhone 960×540）等比缩放后铺满整个窗口，宽度与高度都随窗口比例扩展，比例不匹配时内容框外的背景带由页面背景填满，不露引擎黑边。页面内容由 `UILayout.safe_area(page)` 包成三层：`PageBackground` 留在包裹层外，铺满整个视口并按等比裁切（`STRETCH_KEEP_ASPECT_COVERED`）；`ContentFrame` 由 `ScreenProfile.content_frame(viewport, base)` 按 contain 算出，固定 16:9、受限一侧贴满、另一侧居中留背景；`ContentRoot` 固定为设计基准尺寸，按 `frame_h / base_h` 整体缩放。内容始终完整、居中、不裁切——窗口比 16:9 更宽时左右露背景，更窄时上下露背景。窗口尺寸只在启动时设定一次，拖动缩放后不回弹，全屏、最大化与触控端不介入。
+窗口启动时由 `WindowSizer` 按当前屏幕可用区域（`screen_get_usable_rect`，已排除菜单栏与 Dock）的 90% 设置尺寸，再用 `ScreenProfile.launch_window_size` 收成 16:9 并居中；无头模式下固定为设计基准尺寸，保证冒烟按 16:9 复现。`stretch/aspect` 为 `expand`：逻辑视口按设计基准（桌面/iPad 1280×720、iPhone 960×540）等比缩放后铺满整个窗口，宽度与高度都随窗口比例扩展，比例不匹配时内容框外的背景带由页面背景填满，不露引擎黑边。页面内容由 `UILayout.safe_area(page, page_texture)` 包成多层：`PageBackground` 留在包裹层外，铺满整个视口并按等比裁切（`STRETCH_KEEP_ASPECT_COVERED`），作为所有页面共用的软件背景；`ContentFrame` 由 `ScreenProfile.content_frame(viewport, base)` 按 contain 算出，固定 16:9、受限一侧贴满、另一侧居中留背景；`ContentRoot` 固定为设计基准尺寸，按 `frame_h / base_h` 整体缩放；`ContentRoot` 内是设计画布尺寸的 `PageBody`，其子节点 `PageSurface` 承载页面自己的背景（对局页传设备档位分区图，其余页面用统一语义面板），`SafeAreaMargin` 只约束内容。内容始终完整、居中、不裁切——窗口比 16:9 更宽时左右露背景，更窄时上下露背景。窗口尺寸只在启动时设定一次，拖动缩放后不回弹，全屏、最大化与触控端不介入。
 
 ## 2. 全局状态与网络层
 
@@ -418,7 +418,7 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 - `ScreenProfile`（autoload）在启动时按设备设置 `content_scale_size`：iPhone 为 960×540，iPad 与桌面为 1280×720；`expand` 下按基准等比缩放后逻辑视口铺满整个窗口，宽度与高度都随窗口比例扩展。`content_frame(viewport, base)` 给出内容框：固定 16:9 的 contain 区域（受限一侧贴满，另一侧居中留背景）；`launch_window_size(usable, base)` 给出桌面启动窗口尺寸（可用区域 90% 收成 16:9），窗口拖动后不再介入。`project.godot` 的 `display/window/handheld/orientation=4`（`SCREEN_SENSOR_LANDSCAPE`）锁定左右横屏。
 - 设备判定：iOS 上按 `OS.get_model_name()` 前缀区分 iPad 与 iPhone；机型名不可用时按屏幕长宽比兜底。非 iOS 与无头环境一律按桌面处理。
 - 换算公式是纯函数：`canvas_scale`、`canvas_hit_min`、`canvas_from_pixels`、`canvas_insets`。`DisplayServer.get_display_safe_area()` 与 `virtual_keyboard_get_height()` 返回像素，按内容矩形换算为画布单位；内容矩形即 `content_frame` 给出的 16:9 居中框，落在背景带内的边距记零。键盘高度由 `keyboard_from_pixels` 先与底部背景带抵消，只有越过内容框底边的部分才换算为让位高度。
-- `UILayout.safe_area(page)` 在页面 `_ready()` 第一句调用，把页面内容移入 `ContentFrame → ContentRoot → SafeAreaMargin`；调用后新增的子节点按创建顺序自动移入安全区：`ContentFrame` 是 16:9 居中框，`ContentRoot` 以设计基准尺寸布局、按内容框高度缩放；`SafeAreaMargin` 内桌面四边为零，触控端取安全区四边，底部取安全区与键盘高度的较大值。整屏背景（`PageBackground`）留在包裹层外并置底，铺满视口，安全区只约束内容控件；图鉴页自带整屏背景时关闭 `CardGallery` 的组件背景。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UILayout.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。覆盖层（详情、瞄准）随 `ContentRoot` 整体缩放，输入坐标先经画布与全局变换换算到内容框局部，再按层缩放换算矩形尺寸。
+- `UILayout.safe_area(page, page_texture)` 在页面 `_ready()` 第一句调用，把页面内容移入 `ContentFrame → ContentRoot → PageBody → SafeAreaMargin`；调用后新增的子节点按创建顺序自动移入安全区：`ContentFrame` 是 16:9 居中框，`ContentRoot` 以设计基准尺寸布局、按内容框高度缩放；`PageBody` 与设计画布同尺寸，`PageSurface` 是它承载的页面背景（`page_texture` 非空时按容器尺寸拉伸，否则为 `panel_style("page")` 语义面板）；`SafeAreaMargin` 内桌面四边为零，触控端取安全区四边，底部取安全区与键盘高度的较大值。整屏软件背景（`PageBackground`）留在包裹层外并置底，铺满视口，安全区只约束内容控件；图鉴页自带整屏背景时关闭 `CardGallery` 的组件背景。键盘边距只在页面内 `LineEdit` 获得焦点期间逐帧读取。`UILayout.safe_layer(page)` 供对局内图鉴覆盖层等动态全屏节点挂载。覆盖层（详情、瞄准）随 `ContentRoot` 整体缩放，输入坐标先经画布与全局变换换算到内容框局部，再按层缩放换算矩形尺寸。
 - `UITheme.hit_primary()` / `hit_small()` 把 44pt / 32pt 换算为画布单位；`UIControls.button` 与 `UIControls.styled_button` 在触控端按此抬升最小高度，桌面端保留原值；`UIControls.line_edit` 桌面高 34，触控端同样按 `hit_primary()` 抬升。
 - 图鉴在 iPhone 基准下按可用宽度分列（960 宽为 7 列，安全区收窄时按实际宽度减少），列距 `space-md`，卡宽按列数平分并等比放大、整行贴满，每批 12 张；详情改为贴底整宽抽屉，从页面高度 30% 处开始、左右与底部各 16，抽屉内边距 `space-md`、属性标题列 52，卡图宽 `stage_metric("gallery-preview-width")` = 128（高度随 `card_face_height`）。头部仍为一行的两段视图、时代 / 玩法 / 类型下拉、计数与返回；筛选面板宽 `gallery-filter-panel-width` = 240，挂在触发按钮下沿。桌面与 iPad 基准 9 列、420 抽屉与 200 预览。
 - 对局页与内部组件统一用 `UITheme.stage_metric(name)` 取场景令牌：iPhone 优先取 `<name>-compact`（手牌卡 70×91、随从卡 78×102、英雄行 76、河道 30、商店操作行 64、胶囊按钮 24（触控命中 32）、头像 48、图标按钮 48、座位行头像兜底 40（实际按行高解算）等），其余设备取原值；卡面紧凑值保持桌面 112:146 的卡形，只缩尺寸不改比例；页面边距与舞台间距在 iPhone 下同步收紧。桌面与 iPad 的舞台按窗口高度扩展（基准 720 高），iPhone 固定 540 高，纵向顺序与操作不变。
@@ -456,10 +456,10 @@ make ui-preview SETUP=res://tests/previews/game_rail.gd     # 无 .tscn 的组�
 
 ## 10. 美术素材层
 
-- 位置：`client/assets/`。`characters/portraits/ch_<id>_full.png` 为去水印立绘，`characters/avatars/ch_<id>_ava.png` 为 256² 方形头像（方形裁切、四角不透明），`cards/faces/card_<id>_face.png` 为 448×584 卡面封面；`asset_manifest.json` 按卡牌 id 登记三类路径与展示尺寸。`assets/ui/bg/bg_main.png` 为通用页面背景纹理（512×512，整屏拉伸，不平铺）；`assets/ui/bg/bg_game_desktop.png`（1280×720）与 `bg_game_phone.png`（960×540）为对局页专用分区背景，按 Godot 运行态导出的真实控件矩形构图（深墨描金氛围底、河道横线对齐河道区、商店/棋盘/手牌区不画卡框），只有对局页按设备档位加载，其余页面仍用通用底图。
+- 位置：`client/assets/`。`characters/portraits/ch_<id>_full.png` 为去水印立绘，`characters/avatars/ch_<id>_ava.png` 为 256² 方形头像（方形裁切、四角不透明），`cards/faces/card_<id>_face.png` 为 448×584 卡面封面；`asset_manifest.json` 按卡牌 id 登记三类路径与展示尺寸。`assets/ui/bg/bg_main.png` 为所有页面共用的软件背景纹理（512×512，整窗拉伸，不平铺）；`assets/ui/bg/bg_game_desktop.png`（1280×720）与 `bg_game_phone.png`（960×540）为对局页 `PageSurface` 的分区背景，按 Godot 运行态导出的真实控件矩形构图（深墨描金氛围底、河道横线对齐河道区、商店/棋盘/手牌区不画卡框），按设备档位在设计画布内拉伸，不再承担整窗背景。
 - 加载：`CardDB` 启动时读取清单到 `art`，提供 `has_art(id)` 与 `art_path(id, kind)`；清单缺失或条目缺字段时返回空串，不报错。
 - 卡面展示位：图鉴网格与详情、房间候选卡一律取 `card_face`，同一个 id 在英雄视图与随从视图显示同一张图；展示框宽高比固定 112:146，只给宽度时高度由 `UITheme.card_face_height(width)` 计算。头像位（对局英雄卡封面、座位头像、对手头像、`Avatar.create()`）仍取 `avatar`，不参与卡面比例；方形头像位统一由 `AvatarFrame` 按 `radius-md` 裁切，封面与描边由框提供；对局英雄卡封面按 `STRETCH_KEEP_ASPECT_COVERED` 铺满，超出的上下部分由头像框圆角裁掉；对局英雄详情与房间悬停详情不显示图片。
-- 回退：`UIArt.texture()` / `UIArt.layer()` 统一取图与铺层，纹理加载失败与无资源返回空；`CardFaceBase.create_face()` 用带卡面圆角的 Panel 绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；房间候选卡叠 `card_face`；对局英雄卡封面、座位头像与对手英雄卡用 `avatar`，`Avatar.create()` / `GamePortrait` / `GameHeroCard` 有头像纹理时叠 `AvatarFrameArt`（裁切层索引 0）并隐藏首字；图鉴详情用 `card_face`，对局英雄详情与房间悬停详情不显示图片。各类无图时回退玩法色块与首字（英雄卡封面回退玩法色与首字，图鉴详情省略图片）。页面背景由 `UIControls.background(path)` 加载，默认取通用底图、可传专用路径；缺图或加载失败时回退 `color-bg` 纯色。
+- 回退：`UIArt.texture()` / `UIArt.layer()` 统一取图与铺层，纹理加载失败与无资源返回空；`CardFaceBase.create_face()` 用带卡面圆角的 Panel 绘制玩法色封面，有卡面纹理时叠 `CoverArt`（向内收 3px，方形四角落在圆角内）并隐藏首字水印，否则保留纯色封面与首字；房间候选卡叠 `card_face`；对局英雄卡封面、座位头像与对手英雄卡用 `avatar`，`Avatar.create()` / `GamePortrait` / `GameHeroCard` 有头像纹理时叠 `AvatarFrameArt`（裁切层索引 0）并隐藏首字；图鉴详情用 `card_face`，对局英雄详情与房间悬停详情不显示图片。各类无图时回退玩法色块与首字（英雄卡封面回退玩法色与首字，图鉴详情省略图片）。软件背景由 `UIControls.background()` 加载通用底图，缺图或加载失败时回退 `color-bg` 纯色；页面容器背景由 `UIControls.page_surface(path)` 创建，传对局分区图时按容器尺寸拉伸，缺图时回退统一语义面板。
 - 生成：`make assets` 调用 `scripts/process_assets.py`，按 `ASSET_MAP`（`client/assets/characters/portraits/asset_map.json`，随仓库提交，内容为 `card_id → characters/portraits/ 下的立绘文件名`）处理源立绘，并更新清单中对应条目；清单内不在映射中的条目（如直接生成的随从封面）原样保留。映射文件缺失时目标直接失败。效果牌封面走 `make assets-covers`：取每个 `<card_id>/` 下最新的 PNG，去水印后缩放到 448×584，清单只写入 `card_face` 与 `display.card_face`，保留条目已有的 `portrait` / `avatar`。逐张处理按 `--jobs`（默认 CPU 数、上限 8）分给子进程并行执行，清单条目与日志顺序仍按串行顺序产出，`--jobs 1` 退回串行。运行前需安装 Pillow（`python3 -m pip install pillow`）。封面生成风格、prompt 模板、主题符号映射与去水印约束见 [卡片封面美术生成](card-cover-art.md)。
 - 批次：英雄与已生成的随从、效果牌封面随仓库提交，统一按卡面 112:146 展示；尚无封面的卡牌继续走程序化绘制，由玩法色与首字回退。
 - 导入：图片 `.import` 由 Godot 生成并被 `client/.gitignore` 忽略；`client/project.godot` 的 `[importer_defaults]` 为 `texture` 统一设置 `compress/mode=2`（VRAM 压缩）与 `compress/high_quality=true`，桌面走 BPTC、iOS 走 ASTC；`[editor]` 的 `import/use_multiple_threads=true` 显式固定线程池导入（引擎默认即为 true，PNG 由 `ResourceImporterTexture` 处理并支持线程导入）。448×584 卡面单张冷加载由约 6ms 降到约 0.2ms，图鉴一批 27 张的解码停顿从约 160ms 降到个位毫秒数。改图后运行 `make client-import`；调整导入默认值后需先删除对应的 `.png.import` 或 `client/.godot`，否则已有 `.import` 里的旧参数仍生效。

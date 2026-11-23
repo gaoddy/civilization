@@ -14,18 +14,19 @@
 ## 2. 结构层级
 
 ```text
-背景（全屏）
-DraftPanel：卡片面板（surface，铺满整屏，忽略鼠标）
-└─ ContentCenter：居中容器（忽略鼠标）
-   └─ 纵向容器（间距 8，忽略鼠标）
-      ├─ OtherPlayers：其他玩家的「名字 · 已确认/未确认」胶囊行（水平居中）
-      │  └─ 房主且阶段为等待区时，每行追加移除按钮 `Kick_<playerId>`
-      ├─ 小标题「请选择英雄」（居中）
-      ├─ HeroCandidates：本人候选英雄卡（`RoomHeroCard`，HBoxContainer，水平居中）
-      ├─ InviteRow：「邀请好友」标签 + 在线好友按钮行（水平居中）
-      ├─ ConfirmButton：确认（主按钮，高 36，按自身宽度居中）
-      ├─ DissolveButton：解散房间（仅房主可见，按自身宽度居中）
-      └─ StatusLabel：状态行（居中）
+软件背景 PageBackground（bg_main，整窗 cover）
+└─ 页面容器 PageBody → PageSurface（语义面板，设计画布尺寸）
+   └─ DraftPanel：卡片面板（surface，铺满整屏，忽略鼠标）
+      └─ ContentCenter：居中容器（忽略鼠标）
+         └─ 纵向容器（间距 8，忽略鼠标）
+            ├─ OtherPlayers：其他玩家的「名字 · 已确认/未确认」胶囊行（水平居中）
+            │  └─ 房主且阶段为等待区时，每行追加移除按钮 `Kick_<playerId>`
+            ├─ 小标题「请选择英雄」（居中）
+            ├─ HeroCandidates：本人候选英雄卡（`RoomHeroCard`，HBoxContainer，水平居中）
+            ├─ InviteRow：「邀请好友」标签 + 在线好友按钮行（水平居中）
+            ├─ ConfirmButton：确认（主按钮，高 36，按自身宽度居中）
+            ├─ DissolveButton：解散房间（仅房主可见，按自身宽度居中）
+            └─ StatusLabel：状态行（居中）
 HeroDetailLayer：悬停详情层（全屏，默认隐藏，忽略鼠标）
 └─ RoomHeroDetail：详情卡（名字 + 介绍 + 技能，贴在悬停卡外侧，不显示图片）
 ```
@@ -103,7 +104,7 @@ HeroDetailLayer：悬停详情层（全屏，默认隐藏，忽略鼠标）
 
 ## 8. 适配
 
-- 页面内容固定 16:9 居中，桌面与 iPad 以 1280×720、iPhone 以 960×540 为设计基准，窗口比例变化只在内容框外露出背景；候选固定 4 张（服务端 `CANDIDATE_COUNT = 4`），用 `HBoxContainer` 单行展示并水平居中。
+- 页面内容固定 16:9 居中，桌面与 iPad 以 1280×720、iPhone 以 960×540 为设计基准，窗口比例变化只在内容框外露出软件背景；页面容器背景随内容框缩放。候选固定 4 张（服务端 `CANDIDATE_COUNT = 4`），用 `HBoxContainer` 单行展示并水平居中。
 - 面板铺满内容框且尺寸只由内容框决定；确认键、候选行与状态行在内容块内同轴居中。
 - 桌面与手机都按悬停卡贴边定位：详情宽桌面 280、手机 200，与卡片间隙 `space-sm`，允许覆盖相邻候选卡；手机长按浮层同样不拦截输入。
 - 详情只跟随指针：桌面指针移出候选卡即关闭，空白处按下/松开（无移动）同样关闭；触控抬手即关闭。

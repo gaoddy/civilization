@@ -43,23 +43,27 @@ static func content_frame(viewport: Vector2, base: Vector2i) -> Rect2:
     )
 ```
 
-#### 三层布局结构
+#### 布局结构
 
 页面调用 `UILayout.safe_area(self)` 后自动创建：
 
 ```
 Page (视口全尺寸)
-├─ PageBackground (铺满,cover)
+├─ PageBackground (铺满,cover，软件背景)
 └─ ContentFrame (16:9 contain 居中)
    └─ ContentRoot (固定基准尺寸,整体缩放)
-      └─ SafeAreaMargin (安全区)
-         └─ 页面内容
+      └─ PageBody (设计画布尺寸，页面容器)
+         ├─ PageSurface (页面容器背景：语义面板或对局分区图)
+         └─ SafeAreaMargin (安全区)
+            └─ 页面内容
 ```
 
-- **PageBackground**：铺满整个视口，按 `STRETCH_KEEP_ASPECT_COVERED` 裁切，露出的部分即背景带
+- **PageBackground**：所有页面共用的软件背景，铺满整个视口，按 `STRETCH_KEEP_ASPECT_COVERED` 裁切，露出的部分即背景带
 - **ContentFrame**：16:9 内容框，contain 居中，逻辑坐标原点
 - **ContentRoot**：固定基准尺寸（1280×720 或 960×540），整体缩放到 ContentFrame 大小
-- **SafeAreaMargin**：安全区边距，只在刘海等侵入内容框时生效
+- **PageBody**：与设计画布同尺寸的页面容器，承载页面自己的背景；不随安全区收缩
+- **PageSurface**：`PageBody` 的背景层，`safe_area(page, page_texture)` 传图时为按容器尺寸拉伸的 `TextureRect`，否则为统一语义面板
+- **SafeAreaMargin**：安全区边距，只在刘海等侵入内容框时生效，只约束内容
 
 #### 画布缩放
 
@@ -74,14 +78,14 @@ static func canvas_scale(window_size: Vector2, base: Vector2i) -> float:
 
 #### 背景层
 
-`PageBackground` 留在 `ContentFrame` 外，按 `STRETCH_KEEP_ASPECT_COVERED` 铺满整个视口：
+背景分两层：最底层 `PageBackground` 留在 `ContentFrame` 外，按 `STRETCH_KEEP_ASPECT_COVERED` 铺满整个视口，是所有页面共用的软件背景；内容框内 `PageBody` 的 `PageSurface` 覆盖设计画布（1280×720 或 960×540），承载页面自己的背景，跟随 `ContentRoot` 缩放，不做整窗裁切。
 
-- **16:9 设备**：背景完全被内容框遮挡，无背景带
+- **16:9 设备**：内容框铺满视口，框外无背景带；页面容器背景与控件坐标严格对齐
 - **超宽设备**（16:10、21:9）：左右各露出背景带
 - **更高设备**（4:3、iPad）：上下各露出背景带
 - **iPhone 19.5:9**：左右各约 9% 背景带
 
-背景纹理不参与内容缩放，只负责视觉填充。
+软件背景纹理不参与内容缩放，只负责视觉填充；页面容器纹理随 `ContentRoot` 等比缩放，保持与设计画布内控件坐标对齐。
 
 ### 2. 三层视觉令牌系统
 
@@ -182,24 +186,26 @@ static func canvas_hit_min(pt: float, px_per_pt: float, base: Vector2i, window_s
 
 ```gdscript
 func _ready() -> void:
-    UILayout.safe_area(self)  # 自动创建内容框与安全区
+    UILayout.safe_area(self)  # 自动创建内容框、页面容器与安全区
+    # 对局页可传自己的分区背景：UILayout.safe_area(self, _page_texture())
     # 后续构建页面内容；新增子节点自动移入安全区
 ```
 
 #### 入口行为
 
-`UILayout.safe_area(page)` 会：
+`UILayout.safe_area(page, page_texture)` 会：
 
 1. 创建 `ContentFrame` 与 `ContentRoot`
-2. 把页面原有子节点移入 `SafeAreaMargin`
-3. 订阅后续新增子节点，自动移入安全区并保持创建顺序
-4. 把 `PageBackground` 留在框外置底
-5. 订阅视口变化自动重新布局
+2. 在 `ContentRoot` 内创建 `PageBody`，并加入 `PageSurface`（`page_texture` 非空时为纹理，否则为语义面板）
+3. 在 `PageBody` 内创建 `SafeAreaMargin`，把页面原有子节点移入
+4. 订阅后续新增子节点，自动移入安全区并保持创建顺序
+5. 把 `PageBackground` 留在框外置底
+6. 订阅视口变化自动重新布局
 
 #### 页面约束
 
-- **所有页面**：`_ready()` 第一句必须是 `UILayout.safe_area(self)`；之后创建的内容节点自动移入安全区
-- **背景节点**：命名为 `PageBackground`，放在页面最外层
+- **所有页面**：`_ready()` 第一句必须是 `UILayout.safe_area(self)` 或 `UILayout.safe_area(self, page_texture)`；之后创建的内容节点自动移入安全区
+- **背景节点**：软件背景命名为 `PageBackground`，放在页面最外层；页面容器背景由 `PageBody` 下的 `PageSurface` 承载，不单独放在页面根节点
 - **内容节点**：直接作为页面子节点，会被自动移入安全区
 - **覆盖层**：详情层、战报层、瞄准层等覆盖层按 `ContentRoot` 缩放定位
 
@@ -216,6 +222,7 @@ func _ready() -> void:
 - **内容框居中**：1280×800（16:10）与 1280×960（4:3）下内容框 contain 居中
 - **非 16:9 覆盖层**：超宽视口下瞄准层源矩形落在内容框局部坐标
 - **安全区背景**：六个页面 `PageBackground` 留在安全区外
+- **页面容器**：六个页面都有设计画布尺寸的 `PageBody` 与唯一 `PageSurface`，重复调用 `safe_area` 不重复创建；对局页 `PageSurface` 按档位使用 `bg_game_desktop.png` / `bg_game_phone.png`
 
 #### 真机验收
 
@@ -322,7 +329,7 @@ static func keyboard_from_pixels(pixels: float, base: Vector2i, window_size: Vec
 | --- | --- |
 | `client/autoload/screen_profile.gd` | 设备检测、逻辑基准、画布缩放、安全区与键盘换算 |
 | `client/autoload/window_sizer.gd` | 桌面端启动窗口按基准比例收拢居中 |
-| `client/ui/layout.gd` | 创建三层布局结构（ContentFrame + ContentRoot + SafeAreaMargin） |
+| `client/ui/layout.gd` | 创建布局结构（ContentFrame + ContentRoot + PageBody/PageSurface + SafeAreaMargin） |
 | `client/ui/theme.gd` | 三层视觉令牌与设备自动切换 |
 | `client/ui/controls.gd` | 统一控件工厂与触控命中自动换算 |
 | `client/tests/ui_smoke_layout.gd` | 跨设备一致性自动化验收 |
@@ -331,10 +338,10 @@ static func keyboard_from_pixels(pixels: float, base: Vector2i, window_size: Vec
 
 ### 布局规则
 
-1. **所有页面**：`_ready()` 第一句必须是 `UILayout.safe_area(self)`
+1. **所有页面**：`_ready()` 第一句必须是 `UILayout.safe_area(self)` 或 `UILayout.safe_area(self, page_texture)`
 2. **所有坐标**：只在 `ContentRoot` 局部坐标系内计算，不直接使用视口坐标
 3. **所有尺寸**：按逻辑基准设计（1280×720 或 960×540），运行时自动缩放
-4. **背景节点**：命名为 `PageBackground`，放在页面最外层，铺满视口
+4. **背景节点**：软件背景命名为 `PageBackground`，放在页面最外层铺满视口；页面自己的背景挂在 `PageBody.PageSurface`，与设计画布同尺寸
 
 ### 令牌规则
 
@@ -362,11 +369,12 @@ static func keyboard_from_pixels(pixels: float, base: Vector2i, window_size: Vec
 
 ### Q: 为什么不直接用 Godot 的 `content_scale_mode`？
 
-A: Godot 的 `canvas_items` + `expand` 只能保证画布铺满视口，无法保证 16:9 内容框居中与背景带填充。我们需要三层结构：
+A: Godot 的 `canvas_items` + `expand` 只能保证画布铺满视口，无法保证 16:9 内容框居中与背景带填充。我们需要多层结构：
 
-- **PageBackground**：铺满视口，cover 裁切
+- **PageBackground**：铺满视口的软件背景，cover 裁切
 - **ContentFrame**：16:9 contain 居中
 - **ContentRoot**：固定基准尺寸，整体缩放
+- **PageBody / PageSurface**：设计画布内的页面容器与页面背景
 
 这是炉石传说的做法，不是 Godot 内置功能。
 

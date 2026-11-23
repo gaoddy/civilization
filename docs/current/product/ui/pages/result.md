@@ -17,22 +17,23 @@
 ## 2. 结构层级
 
 ```text
-背景（全屏，深色）
-└─ CenterContainer（全屏）
-   └─ 面板（最小宽 760）
-      └─ 外边距 24
-         └─ 纵向容器（间距 12）
-            ├─ ResultScroll（纵向滚动，占满剩余高度，禁用横向滚动）
-            │  └─ ResultContent（间距 10）
-            │     ├─ 标题「对局结束」
-            │     ├─ 本人名次「你的名次：第 N 名」/「你的名次：未记录」
-            │     ├─ 分隔线
-            │     ├─ RankingList：按 `place` 升序的 8 人名次行，本人行高亮
-            │     ├─ 分隔线
-            │     ├─ 小标题「本局数据」
-            │     ├─ StatsSection：12 个 `StatRow_*`、分组标签与 BoardList
-            │     └─ 对局种子行
-            └─ ResultActions（固定在滚动区之外）
+软件背景 PageBackground（bg_main，整窗 cover）
+└─ 页面容器 PageBody → PageSurface（语义面板，设计画布尺寸）
+   └─ CenterContainer（全屏）
+      └─ 面板（最小宽 760）
+         └─ 外边距 24
+            └─ 纵向容器（间距 12）
+               ├─ ResultScroll（纵向滚动，占满剩余高度，禁用横向滚动）
+               │  └─ ResultContent（间距 10）
+               │     ├─ 标题「对局结束」
+               │     ├─ 本人名次「你的名次：第 N 名」/「你的名次：未记录」
+               │     ├─ 分隔线
+               │     ├─ RankingList：按 `place` 升序的 8 人名次行，本人行高亮
+               │     ├─ 分隔线
+               │     ├─ 小标题「本局数据」
+               │     ├─ StatsSection：12 个 `StatRow_*`、分组标签与 BoardList
+               │     └─ 对局种子行
+               └─ ResultActions（固定在滚动区之外）
                └─ ConfirmButton：「确定」，回大厅
 ```
 

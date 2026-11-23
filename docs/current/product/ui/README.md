@@ -9,7 +9,7 @@
 ## 1. 视觉语言
 
 - 深色酒馆基调：近黑的背景、分层卡片、金色强调，状态色只表达结果（成功、危险、信息）。
-- 资源约束：工程没有字体与主题资源文件，界面由 Godot 内置控件与 `StyleBoxFlat` 构建；位图资源只有卡牌立绘、头像、卡面与页面背景（通用底图 `assets/ui/bg/bg_main.png`，对局页另有按真实控件矩形构图的 `bg_game_desktop.png` / `bg_game_phone.png`），清单与回退规则见 [client.md](../../technical/client.md#10-美术素材层)。英雄「头像」无素材时仍是玩法色块加名字首字的排版块。
+- 资源约束：工程没有字体与主题资源文件，界面由 Godot 内置控件与 `StyleBoxFlat` 构建；位图资源只有卡牌立绘、头像、卡面与页面背景（所有页面共用的软件背景 `assets/ui/bg/bg_main.png`；对局页另有挂在 `PageBody.PageSurface`、按真实控件矩形构图的分区背景 `bg_game_desktop.png` / `bg_game_phone.png`），清单与回退规则见 [client.md](../../technical/client.md#10-美术素材层)。英雄「头像」无素材时仍是玩法色块加名字首字的排版块。
 - 代码绘制：卡框（`CardFrame`）、顶部星级、时代象形（`EraGlyph`）与攻防底牌（`StatPlate`）由代码绘制，不占位图；入口见第 4 节组件表。稀有度不是展示维度，卡面以 `level` 的 1–7 星表达成长档位。
 - 深浅色：只有深色一套，不实现浅色主题与主题切换，UI 评审不做浅色检查。
 

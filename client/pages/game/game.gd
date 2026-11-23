@@ -81,7 +81,7 @@ var _guide: FirstGameGuide
 
 
 func _ready() -> void:
-	UILayout.safe_area(self)
+	UILayout.safe_area(self, _page_texture())
 	_build()
 	GameStore.view_changed.connect(_refresh)
 	GameStore.events_received.connect(_on_game_events)
@@ -95,10 +95,16 @@ func _ready() -> void:
 
 # ── 构建 ──────────────────────────────────────────────────────────────────
 
+## 对局页页面容器背景：按设备档位取分区构图，坐标对齐设计画布内的真实控件矩形。
+func _page_texture() -> String:
+	if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE:
+		return "res://assets/ui/bg/bg_game_phone.png"
+	return "res://assets/ui/bg/bg_game_desktop.png"
+
+
 func _build() -> void:
-	# 对局页背景按分区构图：桌面/iPad 与 iPhone 各一张，坐标对齐真实控件矩形。
-	var bg_path := "res://assets/ui/bg/bg_game_phone.png" if ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE else "res://assets/ui/bg/bg_game_desktop.png"
-	add_child(UIControls.background(bg_path))
+	# 最底层是软件背景；对局分区图挂在 PageBody 的 PageSurface 上，随 16:9 内容框缩放。
+	add_child(UIControls.background())
 
 	# iPhone 基准 960×540：页边距、页面间距与舞台间距整体收紧，结构与桌面一致。
 	var compact := ScreenProfile.device_kind() == ScreenProfile.DEVICE_PHONE
@@ -115,6 +121,7 @@ func _build() -> void:
 	add_child(margin)
 
 	var body := HBoxContainer.new()
+	body.name = "BodyRow"
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override(
 		"separation", UITheme.space("space-sm") if compact else UITheme.space("space-lg")

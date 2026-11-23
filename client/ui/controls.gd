@@ -4,6 +4,8 @@ extends RefCounted
 ##
 ## 只构建 Godot 控件，视觉取值来自 UITheme；业务状态由调用方设置。
 
+const PAGE_SURFACE_NAME := "PageSurface"
+
 
 static func clear(node: Node) -> void:
     for child in node.get_children():
@@ -46,8 +48,8 @@ static func panel() -> PanelContainer:
     return PanelContainer.new()
 
 
-## 页面背景：整屏拉伸的深底纹理；纹理缺失时退回纯色，不留空白页。
-## 默认用共用底图；对局页按设备档位传专用分区背景，其余页面不传参、行为不变。
+## 软件背景：铺满整个窗口的深底纹理；纹理缺失时退回纯色，不留空白页。
+## 所有页面统一使用共用底图，页面自己的背景交给 `page_surface`。
 static func background(path := "res://assets/ui/bg/bg_main.png") -> Control:
     if ResourceLoader.exists(path):
         var texture := ResourceLoader.load(path) as Texture2D
@@ -66,6 +68,29 @@ static func background(path := "res://assets/ui/bg/bg_main.png") -> Control:
     fallback.set_anchors_preset(Control.PRESET_FULL_RECT)
     fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
     return fallback
+
+
+## 页面容器背景：设计画布内的一层，覆盖 `PageBody` 整块。
+## 传入对局分区图时按同尺寸拉伸（内容框与图同为 16:9，不产生裁切）；
+## 不传或纹理缺失时退回统一语义面板，不留空白页。
+static func page_surface(texture_path := "") -> Control:
+    if texture_path != "" and ResourceLoader.exists(texture_path):
+        var texture := ResourceLoader.load(texture_path) as Texture2D
+        if texture != null:
+            var rect := TextureRect.new()
+            rect.name = PAGE_SURFACE_NAME
+            rect.texture = texture
+            rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+            rect.stretch_mode = TextureRect.STRETCH_SCALE
+            rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+            rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+            return rect
+    var panel := Panel.new()
+    panel.name = PAGE_SURFACE_NAME
+    panel.add_theme_stylebox_override("panel", UITheme.panel_style("page"))
+    panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+    panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    return panel
 
 
 ## 带视觉令牌的卡片容器；variant 见 UITheme.panel_style。

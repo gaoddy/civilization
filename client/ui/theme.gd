@@ -139,6 +139,8 @@ const SEMANTIC_OPACITY := {
 	"scrim-alpha-strong": 0.6,
 	"scrim-alpha-gallery": 0.62,
 	"scrim-alpha-choice": 0.72,
+	# 页面容器统一语义面板：略透，配合圆角与描边把设计画布从软件背景上分出来。
+	"page-surface-alpha": 0.92,
 }
 
 # ── 组件与场景层 ──────────────────────────────────────────────────────────
@@ -388,6 +390,13 @@ static func panel_style(variant: String) -> StyleBoxFlat:
 			box.set_content_margin_all(space("space-sm"))
 			box.bg_color = alpha("color-surface-sunken", 0.92)
 			box.border_color = Color(0, 0, 0, 0)
+		"page":
+			# 页面容器背景：覆盖 16:9 设计画布，边距为零，不参与内容排版。
+			box.set_corner_radius_all(radius("radius-lg"))
+			box.set_content_margin_all(0)
+			box.bg_color = alpha("color-surface", opacity("page-surface-alpha"))
+			box.border_color = color("color-border")
+			box.set_border_width_all(1)
 		_:
 			pass
 	return box
