@@ -38,6 +38,21 @@ pub enum CtexError {
     PayloadLen { got: usize, want: usize },
 }
 
+impl std::fmt::Display for CtexError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CtexError::Oversized { width, height } => {
+                write!(f, "纹理尺寸 {width}x{height} 超出 .ctex u16 上限")
+            }
+            CtexError::PayloadLen { got, want } => {
+                write!(f, ".ctex 负载长度 {got}，应为 {want}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for CtexError {}
+
 pub fn expected_payload_len(w: u32, h: u32) -> usize {
     (w as usize).div_ceil(4) * (h as usize).div_ceil(4) * 16
 }

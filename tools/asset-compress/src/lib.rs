@@ -3,9 +3,12 @@
 //! 分层：CLI/编排 → 编码器（CPU exact / GPU standard）→ Godot 产物 writer。
 
 pub mod cli;
+pub mod encode;
 pub mod format;
 pub mod godot;
 pub mod plan;
+pub mod run;
 
 pub use cli::{Args, Backend, Quality};
 pub use format::Format;
+pub use run::{run_one, Error, RunOutcome};
