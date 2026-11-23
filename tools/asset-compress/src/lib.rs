@@ -5,6 +5,7 @@
 pub mod cli;
 pub mod format;
 pub mod godot;
+pub mod plan;
 
 pub use cli::{Args, Backend, Quality};
 pub use format::Format;
