@@ -20,11 +20,13 @@
 | Steamworks 后台 App ID、6 个成就的 API 名与图标、depot 与商店页配置未建 | 发行与成就同步 | 发布前配置 | [发行渠道与账号](../../current/product/accounts-and-distribution.md) |
 | Apple Developer ID、公证账号与 macOS 签名证书未准备 | 发行 | 发布前准备 | [发行渠道与账号](../../current/product/accounts-and-distribution.md) |
 
-## 移动端与版本范围
+## Android 端适配
 
 | 问题 | 影响范围 | 待确认 | 来源 |
 | --- | --- | --- | --- |
-| 移动端目标设备、断点与安全区处理 | UI 与适配 | UI 设计确定 | [客户端技术基线](technical/architecture/client-stack.md) |
+| 目标设备是否覆盖平板，以及 Android 手机的档位与安全区实机验证范围 | UI 与适配 | 适配前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
+| 导出与分发形态：APK 侧载、Google Play AAB 或两者并存，以及签名与发布方式 | 发行 | 上线前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
+| 系统返回键与手势、软键盘弹出处理是否与 iOS 常驻返回按钮和键盘让位规则一致 | UI 与适配 | 适配前确定 | [客户端技术基线](technical/architecture/client-stack.md) |
 
 ## 观战与视图
 
