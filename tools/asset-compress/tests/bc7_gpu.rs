@@ -83,12 +83,11 @@ fn gpu_bc7_keeps_alpha_on_translucent_blocks() {
     let gpu = GpuEncoder::new().unwrap();
     let (w, h) = (64u32, 64u32);
     let mut rgba = Vec::with_capacity((w * h * 4) as usize);
-    for y in 0..h {
+    for _y in 0..h {
         for x in 0..w {
             let a = (255 - x * 4) as u8;
-            rgba.extend_from_slice(&[200, 120, 80, a.min(255)]);
+            rgba.extend_from_slice(&[200, 120, 80, a]);
         }
-        let _ = y;
     }
     assert!(rgba.chunks(4).any(|p| p[3] != 255), "样本必须含半透明像素");
     let blocks = gpu.encode(&rgba, w, h, Format::Bc7).unwrap();

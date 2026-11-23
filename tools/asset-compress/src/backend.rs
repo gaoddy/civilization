@@ -34,12 +34,7 @@ pub fn resolve_backend(backend: Backend, quality: Quality, gpu_ok: bool) -> Resu
             }
         }
         Backend::Auto => {
-            if gpu_ok {
-                Ok(Plan {
-                    quality,
-                    used_cpu_fallback: false,
-                })
-            } else if quality == Quality::Exact {
+            if gpu_ok || quality == Quality::Exact {
                 Ok(Plan {
                     quality,
                     used_cpu_fallback: false,

@@ -42,6 +42,7 @@
 - 卡牌数据：唯一数据源在 `docs/current/product/content/`，生成到 `server/data/v0.1/` 与客户端生成物；生成物随源提交。
 - 协议契约：唯一来源 `protocol/schema/v1/`；生成物 `protocol/generated/protocol.rs`、`protocol/generated/protocol.gd` 与 `client/generated/protocol.gd` 随源提交。
 - 数据库迁移：`server/migrations/`，启动时由 `sqlx::migrate!` 执行。
+- 纹理压缩工具：`tools/asset-compress/`，独立 Rust crate（不属于 `server/` workspace），把 `client/assets/**/*.png` 编码成 Godot 可识别的 BPTC/ASTC 产物与 `.import`/`.md5`；入口 `tools/asset-compress/src/main.rs`。
 - 部署：`deploy/helm/` 与 `server/Dockerfile`，入口为 `make deploy-*`。
 
 ### 命令与验证
@@ -50,6 +51,7 @@
 - 全量检查：`make m1-check`（协议生成物、文档数据、测试、静态检查、确定性）；客户端另有 `make client-check`、`make client-smoke`（`TESTS=<模块>`、`SMOKE=<场景>` 只跑单项，逗号分隔可多选）。
 - 页面线框图：`make ui-wireframe PAGE=gallery`（`ALL=1` 出全部页面，`DEVICE=phone` 出手机档位），无头解算真实布局后写到 `output/wireframes/`（忽略目录）。
 - 运行态视图预览：`make ui-preview PAGE=game FIXTURE=game FOCUS=PlayersPanel`（`SCENE=` 任意场景、`SETUP=` 组件脚本、`DEVICE=phone` 手机档位），真实窗口直接查看；自检用 `make ui-preview-check ... EXPECT=SeatRow=8`。
+- 纹理产物：`make asset-compress`（增量，源图未变按 source_md5 跳过）、`make asset-compress-check`（工具测试 + clippy + 60 张卡面 BC7 门禁）。
 - 服务端测试：`make test`（Python unittest + `cargo test --workspace`）；静态检查：`make lint`。
 - 文档与数据：`make data-check`、`python3 scripts/validate_docs.py`。
 - 端到端入口：
