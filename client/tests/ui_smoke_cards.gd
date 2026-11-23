@@ -501,6 +501,7 @@ func _ready() -> void:
     await _check_era_glyph()
     await _check_avatar_frame()
     _check_page_background()
+    _check_page_surface()
     recruit.queue_free()
     _finish()
 
@@ -573,6 +574,32 @@ func _check_page_background() -> void:
             "背景应按等比裁切铺满视口",
         )
     background.free()
+
+
+## 页面容器背景：无纹理时退回语义面板，有纹理时铺满页面容器、不拦截鼠标。
+func _check_page_surface() -> void:
+    var panel := UIControls.page_surface()
+    _expect(panel.name == "PageSurface", "页面容器背景节点名应为 PageSurface")
+    _expect(panel is Panel, "无纹理时页面容器背景应为语义面板")
+    _expect(panel.mouse_filter == Control.MOUSE_FILTER_IGNORE, "页面容器背景不应拦截鼠标")
+    var style := UITheme.panel_style("page")
+    _expect(style.content_margin_left == 0, "页面容器面板不应产生内边距")
+    _expect(style.bg_color.a < 1.0, "页面容器面板应保留透明度")
+    _expect(style.corner_radius_top_left > 0, "页面容器面板应带圆角")
+    _expect(style.border_width_top > 0, "页面容器面板应带描边")
+    panel.free()
+
+    _expect(
+        ResourceLoader.exists("res://assets/ui/bg/bg_game_desktop.png"),
+        "对局分区背景纹理应已导入",
+    )
+    var surface := UIControls.page_surface("res://assets/ui/bg/bg_game_desktop.png")
+    _expect(surface is TextureRect, "有纹理时页面容器背景应使用 TextureRect")
+    if surface is TextureRect:
+        var rect := surface as TextureRect
+        _expect(rect.expand_mode == TextureRect.EXPAND_IGNORE_SIZE, "页面容器背景应忽略纹理原始尺寸")
+        _expect(rect.stretch_mode == TextureRect.STRETCH_SCALE, "页面容器背景应按容器尺寸拉伸")
+    surface.free()
 
 
 ## 手牌介绍不被截断：信息区向上扩展，字号缩到能放下全文；介绍不压名称与角标。

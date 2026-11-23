@@ -72,12 +72,14 @@ class ClientStyleTest(unittest.TestCase):
             self.assertTrue(path.is_file(), f"缺少页面脚本 {relative}")
             body = function_body(path.read_text(encoding="utf-8").splitlines(), "_ready")
             statement = first_statement(body)
-            if statement != "UILayout.safe_area(self)":
+            # 允许页面同时传入自己的容器背景（对局页按设备档位选择分区图）。
+            if not re.fullmatch(r"UILayout\.safe_area\(self(?:,\s*.+)?\)", statement):
                 offenders.append(f"{relative}: {statement or '<空>'}")
         self.assertEqual(
             offenders,
             [],
-            "页面 `_ready()` 第一句必须是 `UILayout.safe_area(self)`：\n" + "\n".join(offenders),
+            "页面 `_ready()` 第一句必须是 `UILayout.safe_area(self[, page_texture])`：\n"
+            + "\n".join(offenders),
         )
 
     def test_colors_use_tokens(self):
