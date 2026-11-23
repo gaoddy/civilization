@@ -173,8 +173,6 @@ pub fn write_outputs(
 
     let source_md5 = md5::source_md5(source);
     let dest_md5 = md5::dest_md5(&dests);
-    let md5_text = md5::render_md5(&source_md5, &dest_md5);
-    write_atomic(&out_dir.join(format!("{base}.md5")), md5_text.as_bytes())?;
 
     let import_path = import_path(src_png);
     let existing = std::fs::read_to_string(&import_path).ok();
@@ -191,6 +189,11 @@ pub fn write_outputs(
     if import_changed {
         write_atomic(&import_path, text.as_bytes())?;
     }
+
+    // `.md5` 是「产物完整」的提交标记，必须最后落盘：中途失败时它缺席，
+    // 下次运行就会重编，而不是永久跳过一份残缺产物。
+    let md5_text = md5::render_md5(&source_md5, &dest_md5);
+    write_atomic(&out_dir.join(format!("{base}.md5")), md5_text.as_bytes())?;
 
     Ok(RunOutcome {
         source_md5,
@@ -279,7 +282,7 @@ fn out_base(root: &Path, file: &Path) -> (PathBuf, String, String) {
     (root.join(".godot/imported"), res, base)
 }
 
-/// 是否需要重编：源 md5 与现有 `.md5` 一致且两个产物都在。
+/// 是否需要重编：源 md5 与现有 `.md5` 一致，且两个产物与 `.import` 都在。
 pub fn needs_encode(root: &Path, file: &Path, source: &[u8]) -> Result<bool, Error> {
     let (out_dir, _, base) = out_base(root, file);
     let existing = std::fs::read_to_string(out_dir.join(format!("{base}.md5"))).ok();
@@ -288,6 +291,7 @@ pub fn needs_encode(root: &Path, file: &Path, source: &[u8]) -> Result<bool, Err
         crate::plan::Work::Skip
     ) && out_dir.join(format!("{base}.bptc.ctex")).exists()
         && out_dir.join(format!("{base}.astc.ctex")).exists()
+        && import_path(file).exists()
     {
         return Ok(false);
     }

@@ -74,14 +74,16 @@ impl CpuEncoder {
                     .map_err(|e| EncodeError::Astc(format!("{e:?}")))
             }
             Format::Bc7 => {
-                if w % 4 != 0 || h % 4 != 0 {
-                    return Err(EncodeError::BadSize { w, h });
-                }
+                let padded = super::pad_to_blocks(rgba, w, h);
+                let (data, pw, ph) = match &padded {
+                    Some((d, pw, ph)) => (d.as_slice(), *pw, *ph),
+                    None => (rgba, w, h),
+                };
                 let surf = RgbaSurface {
-                    width: w,
-                    height: h,
-                    stride: w * 4,
-                    data: rgba,
+                    width: pw,
+                    height: ph,
+                    stride: pw * 4,
+                    data,
                 };
                 Ok(bc7::compress_blocks(&bc7::alpha_basic_settings(), &surf))
             }

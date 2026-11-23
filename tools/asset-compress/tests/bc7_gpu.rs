@@ -96,5 +96,5 @@ fn gpu_bc7_keeps_alpha_on_translucent_blocks() {
     let alpha_src: Vec<u8> = rgba.chunks(4).map(|p| p[3]).collect();
     let alpha_dst: Vec<u8> = d.chunks(4).map(|p| p[3]).collect();
     let p = psnr(&alpha_src, &alpha_dst);
-    assert!(p >= 35.0, "alpha PSNR {p:.2}");
+    assert!(p >= 40.0, "alpha PSNR {p:.2} < 40");
 }

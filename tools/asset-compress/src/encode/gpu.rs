@@ -68,7 +68,7 @@ impl GpuEncoder {
         })
     }
 
-    /// 批量编码；返回顺序与输入一致。输入尺寸须为 4 的倍数。
+    /// 批量编码；返回顺序与输入一致。非 4 倍数尺寸先按边缘复制补齐。
     pub fn encode_batch(&self, items: &[(&[u8], u32, u32)]) -> Vec<Vec<u8>> {
         let mut out = Vec::with_capacity(items.len());
         let mut start = 0;
@@ -97,8 +97,14 @@ impl GpuEncoder {
         }
         let mut jobs = Vec::with_capacity(items.len());
         for &(rgba, w, h) in items {
-            assert!(w > 0 && h > 0 && w % 4 == 0 && h % 4 == 0, "GPU 编码要求 4 的倍数：{w}x{h}");
+            assert!(w > 0 && h > 0, "GPU 编码要求非零尺寸：{w}x{h}");
             assert_eq!(rgba.len(), w as usize * h as usize * 4, "{w}x{h} 像素长度不符");
+            // 补齐后的尺寸才是上传与分块的依据；补齐像素不进入纹理。
+            let padded = super::pad_to_blocks(rgba, w, h);
+            let (rgba, w, h) = match &padded {
+                Some((d, pw, ph)) => (d.as_slice(), *pw, *ph),
+                None => (rgba, w, h),
+            };
             let blocks_x = w.div_ceil(4);
             let blocks_y = h.div_ceil(4);
             let out_len = (blocks_x * blocks_y * 16) as usize;
@@ -265,26 +271,16 @@ impl Encoder for GpuEncoder {
     ) -> Vec<Result<Vec<u8>, EncodeError>> {
         match fmt {
             Format::Bc7 => {
-                let valid: Vec<(&[u8], u32, u32)> = items
-                    .iter()
-                    .copied()
-                    .filter(|&(rgba, w, h)| {
-                        w > 0
-                            && h > 0
-                            && w % 4 == 0
-                            && h % 4 == 0
-                            && rgba.len() == w as usize * h as usize * 4
-                    })
-                    .collect();
+                let fits = |&(rgba, w, h): &(&[u8], u32, u32)| {
+                    w > 0 && h > 0 && rgba.len() == w as usize * h as usize * 4
+                };
+                let valid: Vec<(&[u8], u32, u32)> =
+                    items.iter().copied().filter(fits).collect();
                 let mut encoded = GpuEncoder::encode_batch(self, &valid).into_iter();
                 items
                     .iter()
                     .map(|&(rgba, w, h)| {
-                        let ok = w > 0
-                            && h > 0
-                            && w % 4 == 0
-                            && h % 4 == 0
-                            && rgba.len() == w as usize * h as usize * 4;
+                        let ok = fits(&(rgba, w, h));
                         if ok {
                             Ok(encoded.next().expect("批量输出与输入一一对应"))
                         } else {
@@ -303,7 +299,7 @@ impl Encoder for GpuEncoder {
     fn encode(&self, rgba: &[u8], w: u32, h: u32, fmt: Format) -> Result<Vec<u8>, EncodeError> {
         match fmt {
             Format::Bc7 => {
-                if w == 0 || h == 0 || w % 4 != 0 || h % 4 != 0 || rgba.len() != w as usize * h as usize * 4 {
+                if w == 0 || h == 0 || rgba.len() != w as usize * h as usize * 4 {
                     return Err(EncodeError::BadSize { w, h });
                 }
                 Ok(self.encode_batch(&[(rgba, w, h)]).pop().unwrap())

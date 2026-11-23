@@ -11,8 +11,8 @@
 //! 20  4   mipmap_limit = 0xFFFFFFFF
 //! 24  12  reserved = 0
 //! 36  4   data_format = 0
-//! 40  2   width (u16)
-//! 42  2   height (u16)
+//! 40  2   width (u16, 块对齐后的尺寸；Godot 对非 4 倍数素材也写对齐值)
+//! 42  2   height (u16, 同上)
 //! 44  4   mipmaps = 0
 //! 48  4   format (22 = BC7, 35 = ASTC 4x4)
 //! 52  ... payload = ceil(w/4) * ceil(h/4) * 16
@@ -58,7 +58,8 @@ pub fn expected_payload_len(w: u32, h: u32) -> usize {
 }
 
 pub fn encode_ctex(fmt: Format, w: u32, h: u32, blocks: &[u8]) -> Result<Vec<u8>, CtexError> {
-    if w == 0 || h == 0 || w > u16::MAX as u32 || h > u16::MAX as u32 {
+    let (pw, ph) = (w.div_ceil(4) * 4, h.div_ceil(4) * 4);
+    if w == 0 || h == 0 || pw > u16::MAX as u32 || ph > u16::MAX as u32 {
         return Err(CtexError::Oversized { width: w, height: h });
     }
     let want = expected_payload_len(w, h);
@@ -75,8 +76,10 @@ pub fn encode_ctex(fmt: Format, w: u32, h: u32, blocks: &[u8]) -> Result<Vec<u8>
     out.extend_from_slice(&u32::MAX.to_le_bytes());
     out.extend_from_slice(&[0u8; 12]);
     out.extend_from_slice(&0u32.to_le_bytes());
-    out.extend_from_slice(&(w as u16).to_le_bytes());
-    out.extend_from_slice(&(h as u16).to_le_bytes());
+    // 这对 u16 是 GPU 纹理尺寸，必须块对齐：非 4 倍数时写补齐后的值，
+    // 纹理本身仍按上面的 u32 尺寸取用（实测 Godot 对 5×7 写 5/7 + 8/8）。
+    out.extend_from_slice(&(pw as u16).to_le_bytes());
+    out.extend_from_slice(&(ph as u16).to_le_bytes());
     out.extend_from_slice(&0u32.to_le_bytes());
     out.extend_from_slice(&fmt.format_id().to_le_bytes());
     out.extend_from_slice(blocks);
