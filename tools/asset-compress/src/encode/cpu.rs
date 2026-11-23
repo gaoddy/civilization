@@ -1,0 +1,92 @@
+//! CPU exact 编码器：astcenc `PRESET_MEDIUM`（与 Godot 同档）+ ISPC BC7。
+//!
+//! astcenc 的 `Context` 持有裸指针且 `Config` 不可复制，所以这里保存
+//! `ConfigBuilder`（可克隆），每次编码新建上下文。上下文分配开销远小于编码本身。
+
+use astcenc_rs::{ConfigBuilder, Context, Extents, Image, Swizzle, PRESET_MEDIUM};
+use intel_tex_2::{RgbaSurface, bc7};
+
+use super::{EncodeError, Encoder};
+use crate::Format;
+
+pub struct CpuEncoder {
+    jobs: usize,
+    astc: ConfigBuilder,
+}
+
+impl CpuEncoder {
+    pub fn new(jobs: usize) -> Self {
+        let astc = ConfigBuilder::new()
+            .with_block_size(Extents::new(4, 4))
+            .with_preset(PRESET_MEDIUM);
+        Self {
+            jobs: jobs.max(1),
+            astc,
+        }
+    }
+}
+
+impl Encoder for CpuEncoder {
+    fn encode_batch(
+        &self,
+        items: &[(&[u8], u32, u32)],
+        fmt: Format,
+    ) -> Vec<Result<Vec<u8>, EncodeError>> {
+        use rayon::prelude::*;
+        // 批内并行后每张只用一个 astcenc 线程，避免 jobs² 超订。
+        items
+            .par_iter()
+            .map(|&(rgba, w, h)| self.encode_threads(rgba, w, h, fmt, 1))
+            .collect()
+    }
+
+    fn encode(&self, rgba: &[u8], w: u32, h: u32, fmt: Format) -> Result<Vec<u8>, EncodeError> {
+        self.encode_threads(rgba, w, h, fmt, self.jobs)
+    }
+}
+
+impl CpuEncoder {
+    fn encode_threads(
+        &self,
+        rgba: &[u8],
+        w: u32,
+        h: u32,
+        fmt: Format,
+        threads: usize,
+    ) -> Result<Vec<u8>, EncodeError> {
+        if w == 0 || h == 0 || rgba.len() != w as usize * h as usize * 4 {
+            return Err(EncodeError::BadSize { w, h });
+        }
+        match fmt {
+            Format::Astc4x4 => {
+                let cfg = self
+                    .astc
+                    .clone()
+                    .build()
+                    .map_err(|e| EncodeError::Astc(format!("{e:?}")))?;
+                let mut ctx = Context::with_threads(threads, cfg)
+                    .map_err(|e| EncodeError::Astc(format!("{e:?}")))?;
+                let img = Image {
+                    extents: Extents::new(w, h),
+                    data: vec![rgba.to_vec()],
+                };
+                ctx.compress::<u8, _, _>(&img, Swizzle::rgba())
+                    .map_err(|e| EncodeError::Astc(format!("{e:?}")))
+            }
+            Format::Bc7 => {
+                let padded = super::pad_to_blocks(rgba, w, h);
+                let (data, pw, ph) = match &padded {
+                    Some((d, pw, ph)) => (d.as_slice(), *pw, *ph),
+                    None => (rgba, w, h),
+                };
+                let surf = RgbaSurface {
+                    width: pw,
+                    height: ph,
+                    stride: pw * 4,
+                    data,
+                };
+                Ok(bc7::compress_blocks(&bc7::alpha_basic_settings(), &surf))
+            }
+        }
+    }
+}

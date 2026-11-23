@@ -5,6 +5,11 @@ GODOT_VERSION := 4.7.2
 # 导入压缩策略，默认 0（headless + CPU 压缩）：auto=有图形会话时非无头导入（Betsy 优先用 GPU，失败回落 CPU）；
 # 1=强制非无头。headless 下引擎不允许创建 RenderingDevice，GPU 压缩不可用。
 CLIENT_IMPORT_GPU ?= 0
+# 纹理产物（PNG → BPTC/ASTC + .import/.md5）由独立工具生成，Godot 只做扫描；
+# 工具与质量门禁说明见 AGENTS.md「仓库与入口」。
+ASSET_COMPRESS_DIR := tools/asset-compress
+ASSET_COMPRESS_QUALITY ?= standard
+ASSET_COMPRESS_BACKEND ?= auto
 GODOT_INSTALLED_VERSION = $(shell "$(GODOT)" --version 2>/dev/null | head -n 1 | cut -d. -f1-3)
 GODOT_TEMPLATE_DIR := $(HOME)/Library/Application Support/Godot/export_templates/$(GODOT_VERSION).stable
 DATABASE_URL ?= postgres://postgres:postgres@127.0.0.1:5432/civilization
@@ -15,7 +20,7 @@ FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 # 独立步骤的并行度：留空按 CPU 数（上限 8），JOBS=1 退回串行。
 JOBS ?=
 
-.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke asset-compress asset-compress-check ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
@@ -164,6 +169,18 @@ client-import: client-godot-check
 	  echo "client-import：headless 导入（CPU 压缩）"; \
 	  $(GODOT) --headless --path client --import; \
 	fi
+
+# 重新生成 client/assets 下全部 PNG 的 VRAM 压缩产物（BPTC + ASTC）。
+# 源图未变时按 source_md5 跳过，因此重复执行是增量空跑。
+asset-compress:
+	cd $(ASSET_COMPRESS_DIR) && cargo run --release -- --input ../../client/assets \
+	  --quality $(ASSET_COMPRESS_QUALITY) --backend $(ASSET_COMPRESS_BACKEND)
+
+# 工具自身的测试、静态检查与 60 张卡面的 BC7 质量门禁。
+asset-compress-check:
+	cd $(ASSET_COMPRESS_DIR) && cargo test --release && cargo clippy -- -D warnings
+	cd $(ASSET_COMPRESS_DIR) && cargo run --release -- --input ../../client/assets/cards/faces \
+	  --quality standard --backend gpu --check
 
 # 桌面客户端统一从这里启动：先导入刷新全局类缓存。新增或改名 class_name
 # 脚本后直接跑 Godot 会沿用旧缓存，缺类的脚本编译失败，对局页可能只构建一半。
