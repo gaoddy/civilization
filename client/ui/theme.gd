@@ -187,11 +187,12 @@ const SCENARIO := {
 	"detail-minion-width-dense": 360,
 	"detail-minion-width-dense-compact": 200,
 	# 图鉴：详情改为浮层抽屉，网格占满主体宽度；筛选面板挂在触发器下沿。
-	"gallery-drawer-width": 320,
+	"gallery-drawer-width": 440,
 	"gallery-filter-panel-width": 240,
-	"gallery-preview-width": 200,
+	"gallery-preview-width": 160,
 	"gallery-batch-size": 27,
-	"gallery-preview-width-compact": 128,
+	"gallery-drawer-width-compact": 400,
+	"gallery-preview-width-compact": 112,
 	"gallery-batch-size-compact": 12,
 	# 座位悬停详情比通用详情宽一档，容纳一行战报文案。
 	"seat-detail-width": 236,

@@ -2,7 +2,7 @@ class_name GalleryDetailLayer
 extends Control
 ## 图鉴详情浮层：工具条以下的遮罩 + 右侧详情抽屉，承载 `GalleryDetail`。
 ##
-## 点遮罩、关闭按钮或由页面按 Esc 收起；图层只管显隐与容器，内容与数据仍在
+## 点遮罩或由页面按 Esc 收起；图层只管显隐与容器，内容与数据仍在
 ## `GalleryDetail` 与页面层。桌面与手机都是贴右的整高抽屉，只差右侧外边距。
 
 signal closed
@@ -10,7 +10,6 @@ signal closed
 var _scrim: ColorRect
 var _drawer: PanelContainer
 var _detail: GalleryDetail
-var _close_button: Button
 
 
 ## `top` 为遮罩与抽屉的顶边，由 `CardGallery` 按头部下沿传入。
@@ -60,19 +59,6 @@ func _init(top: int) -> void:
     box.name = "GalleryDrawerBody"
     box.add_theme_constant_override("separation", UITheme.space("space-2xs"))
     _drawer.add_child(box)
-
-    var bar := HBoxContainer.new()
-    bar.name = "GalleryDrawerBar"
-    box.add_child(bar)
-    var spacer := Control.new()
-    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    bar.add_child(spacer)
-    _close_button = UIControls.styled_button("×", "ghost", 24)
-    _close_button.name = "GalleryDetailClose"
-    _close_button.custom_minimum_size = Vector2(24, 24)
-    _close_button.add_theme_font_size_override("font_size", UITheme.font_size("font-body"))
-    _close_button.pressed.connect(close)
-    bar.add_child(_close_button)
 
     _detail = GalleryDetail.new()
     _detail.size_flags_vertical = Control.SIZE_EXPAND_FILL

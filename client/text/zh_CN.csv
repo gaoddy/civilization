@@ -1517,6 +1517,7 @@ ui.gallery.mode_minion,随从
 ui.gallery.result_count,%d 张
 ui.gallery.skills,技能
 ui.gallery.stats,%s / %s
+ui.gallery.stats_labeled,攻 %s / 血 %s
 ui.gallery.toc_all,全部
 ui.game.card.freeze_glyph,冻
 ui.game.card.stealth_glyph,潜
