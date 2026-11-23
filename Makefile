@@ -20,7 +20,7 @@ FONT_SOURCE ?= output/fonts/NotoSansSC[wght].ttf
 # 独立步骤的并行度：留空按 CPU 数（上限 8），JOBS=1 退回串行。
 JOBS ?=
 
-.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke client-env-check asset-compress asset-compress-check ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
+.PHONY: test lint audit data data-check docs-render assets assets-covers sfx font-subset balance-check protocol protocol-check protocol-rs protocol-rs-check m0-check m0-determinism m0-batch m0-report m1-check client-godot-check client-import client-cache-copy client-run client-run-on-iphone client-run-on-ipad client-run-on-desktop client-check client-smoke client-env-check asset-compress asset-compress-check ui-wireframe ui-preview ui-preview-check client-export-templates client-export client-export-local client-export-steam client-notarize steam-upload client-export-ios client-run-ios m1b-build m1b-e2e dev-bots db-up db-down db-reset db-test deploy-render deploy-lint deploy-check-env deploy-image deploy-load deploy-preflight deploy-apply deploy-rollout deploy-status deploy-smoke deploy
 
 test:
 	$(PYTHON) scripts/run_parallel.py $(if $(JOBS),--jobs $(JOBS),) \
@@ -169,6 +169,23 @@ client-import: client-godot-check
 	  echo "client-import：headless 导入（CPU 压缩）"; \
 	  $(GODOT) --headless --path client --import; \
 	fi
+
+# 新 worktree 的 Godot 导入缓存不跨目录共享，冷导入会重编全部 BC7 纹理。
+# 从主检出复制已导入的 .godot/imported 与 *.import 旁车，随后 make client-import
+# 只补翻译、类缓存等增量产物。缓存按源图 md5 校验，worktree 分支改过的资源仍会重导。
+client-cache-copy:
+	@set -eu; \
+	main="$$(dirname "$$(git rev-parse --path-format=absolute --git-common-dir)")"; \
+	here="$$(pwd -P)"; \
+	if [ "$$here" = "$$main" ]; then echo "client-cache-copy：当前是主检出，无需复制缓存"; exit 0; fi; \
+	[ -d "$$main/client/.godot/imported" ] || { echo "client-cache-copy：主检出缺少导入缓存，请先执行：cd $$main && make client-import" >&2; exit 1; }; \
+	( cd "$$main/client" && find .godot/imported -type f -print0 && \
+	  find . -name '*.import' -not -path './.godot/*' -print0 ) | \
+	while IFS= read -r -d '' f; do \
+	  mkdir -p "client/$$(dirname "$$f")"; \
+	  cp -p "$$main/client/$$f" "client/$$f"; \
+	done; \
+	echo "client-cache-copy：已从 $$main 复制导入缓存"
 
 # 重新生成 client/assets 下全部 PNG 的 VRAM 压缩产物（BPTC + ASTC）。
 # 源图未变时按 source_md5 跳过，因此重复执行是增量空跑。
